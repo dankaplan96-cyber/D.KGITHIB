@@ -46,7 +46,7 @@ export class Renderer {
     this.camera = camera;
     const c = (this.composer = new EffectComposer(this.renderer));
     c.addPass(new RenderPass(scene, camera));
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.5, 0.82);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.35, 0.92);
     c.addPass(this.bloom);
     c.addPass(new OutputPass());
     this.retroPass = new ShaderPass(RetroShader);

@@ -1,14 +1,17 @@
-// Procedural low-poly character rigs + a pose-blending animator.
-// LBA2 used hierarchical bodies driven by keyframed animations ("ANIM" files);
-// here each animation is a function producing target joint angles,
-// and joints ease toward them, which gives smooth blending for free.
+// Procedural character models + pose-blending animator.
+//
+// Bodies are sculpted from lathe and tapered shapes (no boxes) with
+// caricature proportions: big egg-shaped heads, large eyes, slim tapered
+// limbs, mitten hands, rounded boots and a flared tunic. LBA2 drove
+// hierarchical bodies with keyframed animations; here each animation is a
+// function of time producing target joint angles that the joints ease
+// toward, so states blend into each other.
 import * as THREE from 'three';
-import { damp } from './math.js';
-
+import { damp, angleDiff, clamp } from './math.js';
 import { textures } from './textures.js';
 
-// LBA2 draws a shaded quad under every actor instead of real shadows
-// (AfficheShadow / DrawShadow in the original source). This is its remaster.
+// ------------------------------------------------------------------ blob shadow
+// LBA2 draws a shaded quad under every actor (AfficheShadow / DrawShadow).
 let blobGeo = null, blobMat = null;
 export function createBlobShadow(radius) {
   blobGeo ??= new THREE.CircleGeometry(1, 20);
@@ -28,26 +31,35 @@ export function placeBlobShadow(m, physics, x, y, z) {
   if (g > t.heightAt(x, z) + 0.05) _n.set(0, 1, 0); // standing on a brick: flat
   m.quaternion.setFromUnitVectors(_z, _n);
   m.position.set(x, g + 0.05, z);
+  // shrinks and fades with height so a jump's landing spot stays readable
   const k = Math.max(0.35, 1 - (y - g) * 0.15);
   m.scale.setScalar(m.userData.r * k);
 }
 
+// ------------------------------------------------------------------ materials & shapes
 const matCache = new Map();
 export function mat(color, opts = {}) {
   const key = color + JSON.stringify(opts);
-  if (!matCache.has(key)) matCache.set(key, new THREE.MeshStandardMaterial({ color, roughness: 0.8, metalness: 0, ...opts }));
+  if (!matCache.has(key)) matCache.set(key, new THREE.MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, ...opts }));
   return matCache.get(key);
 }
 
-function part(geo, material, parent, x = 0, y = 0, z = 0) {
+const geoCache = new Map();
+const cached = (key, make) => { if (!geoCache.has(key)) geoCache.set(key, make()); return geoCache.get(key); };
+// profile: [[radius, y], ...] bottom to top
+const lathe = (key, profile, segs = 12) => cached(key, () => new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), segs));
+const taper = (r0, r1, h, segs = 8) => cached(`t${r0}${r1}${h}${segs}`, () => { const g = new THREE.CylinderGeometry(r1, r0, h, segs); g.translate(0, -h / 2, 0); return g; });
+const ball = (r, w = 10, h = 8) => cached(`b${r}${w}${h}`, () => new THREE.SphereGeometry(r, w, h));
+
+function part(geo, material, parent, x = 0, y = 0, z = 0, sx = 1, sy = 1, sz = 1) {
   const m = new THREE.Mesh(geo, material);
   m.position.set(x, y, z);
-  m.castShadow = false; // characters use LBA-style blob shadows instead
+  m.scale.set(sx, sy, sz);
+  m.castShadow = false; // characters use LBA-style blob shadows
   m.receiveShadow = true;
   parent.add(m);
   return m;
 }
-
 function joint(parent, x, y, z) {
   const g = new THREE.Group();
   g.position.set(x, y, z);
@@ -56,169 +68,201 @@ function joint(parent, x, y, z) {
 }
 
 /**
- * opts: skin, tunic, pants, hair, boots, scale, ponytail, ears, helmet, visor, beard, robe, staff, gun, hat, apron, pads
+ * opts: skin, tunic, pants, hair, boots, eyes, scale, ponytail, bun, ears (rabbibunny),
+ * trunk (grobo), esmer, beard, robe, apron, hat, staff, belt, collar, sleeves
  */
 export function createHumanoid(opts = {}) {
-  const o = {
-    skin: '#f0c49b', tunic: '#2d6fdc', pants: '#efe6cf', hair: '#3b2414', boots: '#5a3b22', scale: 1, ...opts,
-  };
+  const o = { skin: '#f0c49b', tunic: '#2d6fdc', pants: '#efe6cf', hair: '#3b2414', boots: '#5a3b22', belt: '#6b4423', eyes: '#2a2018', scale: 1, ...opts };
   const root = new THREE.Group();
   const body = joint(root, 0, 0, 0);
   const hips = joint(body, 0, 0.95, 0);
-
+  const skinMat = mat(o.skin, { roughness: 0.7 });
   const tunicMat = mat(o.tunic);
-  const skinMat = mat(o.skin);
   const pantsMat = mat(o.pants);
+  const hairMat = mat(o.hair, { roughness: 0.9 });
+  const bootMat = mat(o.boots, { roughness: 0.7 });
 
-  // torso
+  // ---- torso: lathe tunic with a flared hem
   const torso = joint(hips, 0, 0.05, 0);
-  part(new THREE.CapsuleGeometry(0.27, 0.42, 3, 8), tunicMat, torso, 0, 0.32, 0);
-  if (o.pads) {
-    part(new THREE.SphereGeometry(0.16, 10, 8), mat(o.pads, { metalness: 0.5, roughness: 0.35 }), torso, 0.3, 0.6, 0);
-    part(new THREE.SphereGeometry(0.16, 10, 8), mat(o.pads, { metalness: 0.5, roughness: 0.35 }), torso, -0.3, 0.6, 0);
-  }
-  part(new THREE.CylinderGeometry(0.285, 0.285, 0.08, 14), mat('#6b4423'), torso, 0, 0.08, 0); // belt
-  if (o.apron) part(new THREE.BoxGeometry(0.4, 0.5, 0.05), mat(o.apron), torso, 0, 0.15, 0.25);
+  const hem = o.robe ? [[0.46, -0.98], [0.4, -0.6], [0.3, -0.25]] : [[0.31, -0.28], [0.29, -0.16]];
+  const bodyShape = o.trunk
+    ? [[0.36, -0.3], [0.42, -0.05], [0.44, 0.2], [0.38, 0.45], [0.24, 0.6], [0.12, 0.66]]
+    : [...hem, [0.235, 0.05], [0.27, 0.28], [0.27, 0.42], [0.2, 0.56], [0.1, 0.63], [0.07, 0.66]];
+  part(lathe(`torso${o.robe ? 'r' : ''}${o.trunk ? 'g' : ''}`, bodyShape, 14), tunicMat, torso, 0, 0, 0, 1, 1, 0.82);
+  part(lathe('belt', [[0.245, 0.0], [0.25, 0.04], [0.25, 0.1], [0.245, 0.13]], 14), mat(o.belt), torso, 0, -0.02, 0, o.trunk ? 1.7 : 1, 1, o.trunk ? 1.4 : 0.84);
+  part(ball(0.045, 6, 4), mat('#d8b04a', { metalness: 0.5, roughness: 0.4 }), torso, 0, 0.04, o.trunk ? 0.34 : 0.21, 1.3, 1, 0.6);
+  if (o.collar) part(lathe('collar', [[0.16, 0.0], [0.2, 0.04], [0.15, 0.08]], 12), mat(o.collar), torso, 0, 0.56, 0, 1, 1, 0.85);
+  if (o.apron) part(lathe('apron', [[0.27, -0.25], [0.25, 0.2], [0.0, 0.21]], 8), mat(o.apron), torso, 0, 0, 0.03, 1, 1, 0.82);
 
-  // head
-  const neck = joint(torso, 0, 0.78, 0);
-  const head = joint(neck, 0, 0.18, 0);
-  part(new THREE.SphereGeometry(0.25, 10, 8), skinMat, head, 0, 0, 0);
-  const eyeMat = mat('#1a1a22', { roughness: 0.2 });
-  part(new THREE.SphereGeometry(0.035, 8, 6), eyeMat, head, 0.09, 0.03, 0.22);
-  part(new THREE.SphereGeometry(0.035, 8, 6), eyeMat, head, -0.09, 0.03, 0.22);
-  part(new THREE.SphereGeometry(0.05, 8, 6), skinMat, head, 0, -0.03, 0.25); // nose
-  const hairMat = mat(o.hair);
-  if (!o.helmet && !o.hat) {
-    const cap = part(new THREE.SphereGeometry(0.262, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat, head, 0, 0.02, -0.01);
-    cap.rotation.x = -0.25;
+  // ---- head: egg shape, big eyes, rounded nose
+  const neck = joint(torso, 0, 0.64, 0);
+  part(taper(0.07, 0.065, 0.12, 8), skinMat, neck, 0, 0.12, 0);
+  const head = joint(neck, 0, 0.3, 0);
+  const headProfile = o.trunk
+    ? [[0, -0.22], [0.16, -0.19], [0.26, -0.04], [0.27, 0.12], [0.2, 0.25], [0, 0.3]]
+    : [[0, -0.24], [0.11, -0.21], [0.2, -0.08], [0.225, 0.08], [0.2, 0.22], [0.12, 0.3], [0, 0.32]];
+  part(lathe(o.trunk ? 'headG' : 'head', headProfile, 14), skinMat, head, 0, 0, 0, 1, 1, 1.05);
+  const eyeWhite = mat('#ffffff', { roughness: 0.3 });
+  const pupil = mat(o.eyes, { roughness: 0.2 });
+  const eyes = [];
+  for (const sx of [-1, 1]) {
+    const e = joint(head, sx * 0.085, 0.06, o.trunk ? 0.22 : 0.19);
+    part(ball(0.06, 10, 8), eyeWhite, e, 0, 0, 0, 1, 1.25, 0.6);
+    part(ball(0.032, 8, 6), pupil, e, sx * -0.005, -0.005, 0.03);
+    eyes.push(e);
   }
+  // brows
+  for (const sx of [-1, 1]) {
+    const b = part(cached('brow', () => new THREE.CapsuleGeometry(0.014, 0.07, 2, 4)), hairMat, head, sx * 0.09, 0.15, o.trunk ? 0.24 : 0.2);
+    b.rotation.z = Math.PI / 2 + sx * 0.15;
+  }
+  if (!o.trunk && !o.ears) part(ball(0.055, 8, 6), skinMat, head, 0, -0.03, 0.225, 0.9, 0.8, 1.4); // nose
+  part(cached('mouth', () => new THREE.CapsuleGeometry(0.012, 0.06, 2, 4)), mat('#5a2a20'), head, 0, -0.12, o.trunk ? 0.24 : 0.2).rotation.z = Math.PI / 2;
+  if (!o.ears && !o.trunk) for (const sx of [-1, 1]) part(ball(0.045, 6, 5), skinMat, head, sx * 0.215, 0.0, -0.01, 0.5, 1, 0.8);
+
+  // hair: cap + fringe; Quetches all wear a ponytail
   let tail = null;
-  if (o.ponytail) {
-    tail = joint(head, 0, 0.12, -0.2);
+  if (!o.hat && !o.trunk && !o.ears && !o.esmer) {
+    const cap = part(cached('hcap', () => new THREE.SphereGeometry(0.235, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.52)), hairMat, head, 0, 0.06, -0.025, 1, 1.05, 1.08);
+    cap.rotation.x = -0.32;
+    for (let i = -2; i <= 2; i++) {
+      const f = part(cached('fringe', () => new THREE.ConeGeometry(0.05, 0.12, 5)), hairMat, head, i * 0.055, 0.22, 0.17);
+      f.rotation.set(2.7, 0, i * 0.2);
+    }
+  }
+  if (o.ponytail !== false && !o.trunk && !o.ears && !o.esmer) {
+    const tie = joint(head, 0, 0.1, -0.22);
+    part(cached('tie', () => new THREE.TorusGeometry(0.045, 0.018, 6, 10)), mat(o.tie || '#c8452f'), tie, 0, 0, 0);
+    tail = joint(tie, 0, 0, -0.02);
     let seg = tail;
-    const segs = [];
-    for (let i = 0; i < 4; i++) {
-      const s = joint(seg, 0, i === 0 ? 0 : -0.13, 0);
-      part(new THREE.SphereGeometry(0.075 - i * 0.012, 8, 6), hairMat, s, 0, -0.06, 0);
-      segs.push(s);
+    tail.segs = [];
+    for (let i = 0; i < 5; i++) {
+      const s = joint(seg, 0, i === 0 ? 0 : -0.1, 0);
+      part(ball(0.06 - i * 0.008, 8, 6), hairMat, s, 0, -0.05, 0, 1, 1.4, 1);
+      tail.segs.push(s);
       seg = s;
     }
-    tail.segs = segs;
   }
+  if (o.bun) part(ball(0.1, 8, 6), hairMat, head, 0, 0.22, -0.16);
   if (o.ears) {
-    const earMat = mat(o.ears);
+    // Rabbibunny: round muzzle, buck teeth, long ears
+    const furMat = mat(o.ears, { roughness: 0.95 });
+    part(ball(0.11, 8, 6), furMat, head, 0, -0.07, 0.15, 1.2, 0.9, 1);
+    part(ball(0.035, 6, 4), mat('#ff8fb0'), head, 0, -0.02, 0.255);
+    part(cached('teeth', () => new THREE.BoxGeometry(0.06, 0.05, 0.02)), mat('#ffffff'), head, 0, -0.14, 0.235);
     for (const sx of [-1, 1]) {
-      const e = joint(head, sx * 0.1, 0.2, -0.02);
-      e.rotation.z = -sx * 0.15;
-      const m = part(new THREE.CapsuleGeometry(0.06, 0.38, 2, 6), earMat, e, 0, 0.22, 0);
-      m.scale.z = 0.5;
+      const e = joint(head, sx * 0.09, 0.25, -0.02);
+      e.rotation.z = -sx * 0.12;
+      part(lathe('ear', [[0, 0], [0.06, 0.06], [0.07, 0.25], [0.045, 0.42], [0, 0.47]], 8), furMat, e, 0, 0, 0, 1, 1, 0.45);
+      part(lathe('earin', [[0, 0.04], [0.035, 0.1], [0.04, 0.25], [0, 0.4]], 6), mat('#ffb6c8'), e, 0, 0, 0.02, 1, 1, 0.3);
     }
   }
   if (o.trunk) {
-    // Grobo: elephant-like islander
-    const trunkMat = mat(o.skin);
-    let seg = joint(head, 0, -0.02, 0.22);
-    for (let i = 0; i < 4; i++) {
-      part(new THREE.CylinderGeometry(0.075 - i * 0.012, 0.085 - i * 0.012, 0.16, 6), trunkMat, seg, 0, -0.07, 0);
-      seg.rotation.x = i === 0 ? 0.5 : 0.25;
-      seg = joint(seg, 0, -0.15, 0);
+    // Grobo: trunk and big flapping ears
+    let seg = joint(head, 0, -0.02, 0.24);
+    for (let i = 0; i < 5; i++) {
+      part(taper(0.08 - i * 0.011, 0.07 - i * 0.011, 0.14, 8), skinMat, seg, 0, 0, 0);
+      seg.rotation.x = i === 0 ? 0.55 : 0.22;
+      seg = joint(seg, 0, -0.13, 0);
     }
     for (const sx of [-1, 1]) {
-      const e = part(new THREE.SphereGeometry(0.22, 8, 6), trunkMat, head, sx * 0.27, 0.02, -0.02);
-      e.scale.set(0.25, 1, 0.9);
+      const e = part(ball(0.22, 10, 8), skinMat, head, sx * 0.28, 0.04, -0.02, 0.22, 1.05, 0.95);
+      e.rotation.y = sx * 0.3;
     }
   }
-  if (o.ears) {
-    part(new THREE.SphereGeometry(0.045, 6, 4), mat('#ff8fb0'), head, 0, -0.01, 0.27); // rabbibunny nose
-  }
-  if (o.helmet) {
-    part(new THREE.SphereGeometry(0.29, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.6), mat(o.helmet, { metalness: 0.6, roughness: 0.35 }), head, 0, 0.02, 0);
-    if (o.visor) {
-      const v = part(new THREE.BoxGeometry(0.32, 0.06, 0.06), new THREE.MeshStandardMaterial({ color: o.visor, emissive: o.visor, emissiveIntensity: 3 }), head, 0, 0.04, 0.24);
-      v.castShadow = false;
-      root.userData.visor = v;
-    }
+  if (o.esmer) {
+    // Xil the Esmer: our own design — tall domed skull with a ridge and gill fins
+    part(lathe('dome', [[0.2, 0.12], [0.22, 0.22], [0.17, 0.36], [0, 0.42]], 12), skinMat, head, 0, 0.02, -0.02);
+    part(cached('ridge', () => new THREE.BoxGeometry(0.03, 0.18, 0.3)), mat(o.ridge || '#4a8a70'), head, 0, 0.35, -0.04);
+    for (const sx of [-1, 1]) { const f = part(cached('fin', () => new THREE.ConeGeometry(0.06, 0.2, 4)), mat(o.ridge || '#4a8a70'), head, sx * 0.22, -0.02, -0.03); f.rotation.z = sx * 1.9; }
   }
   if (o.hat) {
-    part(new THREE.CylinderGeometry(0.42, 0.42, 0.04, 16), mat(o.hat), head, 0, 0.14, 0);
-    part(new THREE.CylinderGeometry(0.2, 0.25, 0.22, 14), mat(o.hat), head, 0, 0.25, 0);
+    part(cached('brim', () => new THREE.CylinderGeometry(0.4, 0.42, 0.04, 16)), mat(o.hat), head, 0, 0.2, 0);
+    part(lathe('crown', [[0.21, 0], [0.2, 0.16], [0.15, 0.22], [0, 0.23]], 12), mat(o.hat), head, 0, 0.21, 0);
   }
   if (o.beard) {
-    const b = part(new THREE.ConeGeometry(0.2, 0.55, 10), mat(o.beard), head, 0, -0.32, 0.12);
-    b.rotation.x = Math.PI + 0.25;
+    const b = part(lathe('beard', [[0, -0.32], [0.08, -0.22], [0.16, -0.05], [0.18, 0.03]], 10), mat(o.beard), head, 0, -0.1, 0.07, 1, 1, 0.75);
+    b.rotation.x = 0.1;
   }
 
-  // arms
+  // ---- arms: tapered upper/forearm, mitten hands
+  const sleeve = o.sleeves ? mat(o.sleeves) : tunicMat;
+  const shoulderX = o.trunk ? 0.42 : 0.3;
   const mkArm = (sx) => {
-    const sh = joint(torso, sx * 0.36, 0.6, 0);
-    part(new THREE.CapsuleGeometry(0.075, 0.24, 2, 6), tunicMat, sh, 0, -0.16, 0);
-    const el = joint(sh, 0, -0.34, 0);
-    part(new THREE.CapsuleGeometry(0.065, 0.22, 2, 6), skinMat, el, 0, -0.14, 0);
-    const hand = joint(el, 0, -0.3, 0);
-    part(new THREE.SphereGeometry(0.075, 8, 6), skinMat, hand, 0, 0, 0);
+    const sh = joint(torso, sx * shoulderX, 0.5, 0);
+    part(ball(0.085, 8, 6), sleeve, sh, 0, 0, 0);
+    part(taper(0.08, 0.062, 0.32, 8), sleeve, sh, 0, 0, 0);
+    const el = joint(sh, 0, -0.32, 0);
+    part(taper(0.058, 0.048, 0.28, 8), skinMat, el, 0, 0, 0);
+    const hand = joint(el, 0, -0.3, 0.01);
+    part(ball(0.068, 8, 6), skinMat, hand, 0, -0.02, 0, 0.9, 1.2, 0.7);
+    part(ball(0.03, 6, 4), skinMat, hand, sx * -0.05, 0.01, 0.03);
     return { sh, el, hand };
   };
   const armL = mkArm(1), armR = mkArm(-1);
-  if (o.gun) {
-    const g = part(new THREE.BoxGeometry(0.1, 0.12, 0.55), mat('#2a2d33', { metalness: 0.7, roughness: 0.3 }), armR.hand, 0, -0.02, 0.18);
-    root.userData.muzzle = joint(armR.hand, 0, 0, 0.5);
-    g.castShadow = true;
-  }
   if (o.staff) {
-    const s = part(new THREE.CylinderGeometry(0.04, 0.04, 2.0, 8), mat('#7a5230'), armL.hand, 0, 0.3, 0);
-    s.rotation.x = 0.1;
-    const orb = part(new THREE.SphereGeometry(0.12, 12, 10), new THREE.MeshStandardMaterial({ color: '#9ff', emissive: '#4cf', emissiveIntensity: 2.5 }), armL.hand, 0, 1.33, 0.1);
+    part(taper(0.035, 0.03, 2.0, 6), mat('#7a5230'), armL.hand, 0, 1.5, 0.02);
+    const orb = part(ball(0.11, 12, 10), new THREE.MeshStandardMaterial({ color: '#bff', emissive: '#4cf', emissiveIntensity: 1.2 }), armL.hand, 0, 1.6, 0.02);
     orb.castShadow = false;
   }
 
-  // legs
+  // ---- legs: tapered with rounded boots
   const mkLeg = (sx) => {
-    const hip = joint(hips, sx * 0.14, 0, 0);
-    part(new THREE.CapsuleGeometry(0.095, 0.3, 2, 6), pantsMat, hip, 0, -0.2, 0);
+    const hip = joint(hips, sx * 0.12, 0, 0);
+    part(taper(0.1, 0.075, 0.44, 8), pantsMat, hip, 0, 0, 0);
     const knee = joint(hip, 0, -0.44, 0);
-    part(new THREE.CapsuleGeometry(0.085, 0.28, 2, 6), pantsMat, knee, 0, -0.18, 0);
-    const foot = part(new THREE.BoxGeometry(0.16, 0.1, 0.3), mat(o.boots), knee, 0, -0.42, 0.06);
+    part(taper(0.072, 0.06, 0.4, 8), pantsMat, knee, 0, 0, 0);
+    const foot = joint(knee, 0, -0.4, 0);
+    part(ball(0.085, 10, 6), bootMat, foot, 0, -0.03, 0.07, 1, 0.75, 1.75);
+    part(taper(0.075, 0.08, 0.14, 8), bootMat, foot, 0, 0.1, 0);
     return { hip, knee, foot };
   };
   const legL = mkLeg(1), legR = mkLeg(-1);
-  if (o.robe) {
-    legL.hip.visible = legR.hip.visible = false;
-    part(new THREE.ConeGeometry(0.48, 1.0, 14, 1, true), mat(o.robe, { side: THREE.DoubleSide }), hips, 0, -0.45, 0);
-  }
+  if (o.robe) { legL.hip.visible = legR.hip.visible = false; }
 
   root.scale.setScalar(o.scale);
-  const rig = new Rig(root, { body, hips, torso, neck, head, tail, armL, armR, legL, legR });
-  return rig;
+  return new Rig(root, { body, hips, torso, neck, head, tail, armL, armR, legL, legR, eyes });
 }
 
+// ------------------------------------------------------------------ animator
 export class Rig {
   constructor(root, j) {
     this.root = root;
     this.j = j;
     this.phase = 0;
-    this.t = 0;
+    this.t = Math.random() * 10;
     this.actionT = 0;
     this.anim = 'idle';
     this.flash = 0;
     this._mats = null;
+    this.lookAt = null;       // world position to look toward
+    this.lean = 0;            // forward lean from acceleration
+    this.roll = 0;            // sideways lean from turning
+    this.blinkT = 2 + Math.random() * 3;
+    this.fidgetT = 4 + Math.random() * 6;
+    this.fidget = 0;
+    this.gesture = 0;
+    this.landT = 0;
+    this.hipsRest = j.hips.position.y;
+    this.armSpread = j.skirt ? 0.03 : 0.1;
+    this.skirtLag = 0;
   }
 
   play(anim) {
     if (this.anim !== anim) {
       this.anim = anim;
       this.actionT = 0;
+      if (anim === 'talk') this.gesture = Math.floor(Math.random() * 3);
     }
   }
 
-  // Briefly tint the whole body (hit feedback).
   hitFlash() { this.flash = 1; }
+  land(strength = 1) { this.landT = 0.22 * strength; }
 
   _collectMats() {
     this._mats = [];
     this.root.traverse((m) => {
       if (m.isMesh && m.material && !this._mats.includes(m.material)) {
-        // clone so flashing one actor doesn't flash all
         m.material = m.material.clone();
         this._mats.push(m.material);
       }
@@ -227,71 +271,100 @@ export class Rig {
     this._baseIntensity = this._mats.map((m) => m.emissiveIntensity);
   }
 
+  // speed is the real ground speed in m/s so the feet don't slide
   update(dt, speed = 0) {
     const j = this.j;
     this.t += dt;
     this.actionT += dt;
     const a = this.anim;
-    const T = {}; // target rotations (x unless noted)
-    let hipsY = 0.95, bodyRotX = 0, bodyRotZ = 0, torsoX = 0, torsoY = 0, headX = 0;
+    const T = {};
+    let hipsY = 0.95, bodyRotX = 0, torsoX = 0, torsoY = 0, torsoZ = 0, headX = 0, headY = 0, headZ = 0;
 
     const walkLike = a === 'walk' || a === 'run' || a === 'sneak';
     if (walkLike) {
-      const freq = a === 'run' ? 2.0 : a === 'sneak' ? 1.0 : 1.55;
-      this.phase += dt * Math.max(0.6, speed) * freq;
-      const s = Math.sin(this.phase * 2.2);
-      const c = Math.cos(this.phase * 2.2);
-      const amp = a === 'run' ? 0.95 : a === 'sneak' ? 0.5 : 0.6;
+      // one full cycle = two steps; stride grows with speed
+      const stride = a === 'run' ? 2.2 : a === 'sneak' ? 0.9 : 1.25;
+      this.phase += (speed * dt / stride) * Math.PI * 2;
+      const s = Math.sin(this.phase), c = Math.cos(this.phase);
+      const amp = a === 'run' ? 0.85 : a === 'sneak' ? 0.45 : 0.55;
       T.legL = s * amp; T.legR = -s * amp;
-      T.kneeL = Math.max(0, -c) * amp * 1.3 + 0.1;
-      T.kneeR = Math.max(0, c) * amp * 1.3 + 0.1;
-      T.armL = -s * amp * 0.8; T.armR = s * amp * 0.8;
-      T.elL = -0.3 - (a === 'run' ? 0.9 : 0.2); T.elR = T.elL;
-      hipsY = 0.95 + Math.abs(c) * (a === 'run' ? 0.08 : 0.04);
-      if (a === 'run') torsoX = 0.25;
+      T.kneeL = Math.max(0, -c) * amp * 1.6 + 0.08;
+      T.kneeR = Math.max(0, c) * amp * 1.6 + 0.08;
+      T.footL = -T.legL * 0.4 - T.kneeL * 0.3; T.footR = -T.legR * 0.4 - T.kneeR * 0.3;
+      T.armL = -s * amp * 0.85; T.armR = s * amp * 0.85;
+      T.elL = -0.25 - (a === 'run' ? 1.0 : 0.15) - Math.max(0, s) * 0.2; T.elR = -0.25 - (a === 'run' ? 1.0 : 0.15) - Math.max(0, -s) * 0.2;
+      hipsY = 0.95 - 0.03 + Math.abs(c) * (a === 'run' ? 0.07 : 0.035);
+      torsoY = s * (a === 'run' ? 0.12 : 0.07);
+      headY = -torsoY * 0.8;
+      torsoX = a === 'run' ? 0.22 : 0.04;
       if (a === 'sneak') {
-        hipsY = 0.72; torsoX = 0.45; headX = -0.35;
-        T.armL = 0.9; T.armR = 0.9; T.elL = -1.1; T.elR = -1.1;
-        T.kneeL += 0.6; T.kneeR += 0.6; T.legL -= 0.3; T.legR -= 0.3;
+        hipsY = 0.74; torsoX = 0.45; headX = -0.38;
+        T.armL = 0.6 + s * 0.15; T.armR = 0.6 - s * 0.15; T.elL = -1.3; T.elR = -1.3;
+        T.kneeL += 0.65; T.kneeR += 0.65; T.legL -= 0.35; T.legR -= 0.35;
       }
-    } else if (a === 'idle' || a === 'talk') {
-      const b = Math.sin(this.t * 1.8);
-      hipsY = 0.95 + b * 0.008;
-      T.armL = 0.05 + b * 0.03; T.armR = 0.05 - b * 0.03;
-      T.elL = -0.15; T.elR = -0.15;
-      T.legL = 0; T.legR = 0; T.kneeL = 0.02; T.kneeR = 0.02;
-      if (a === 'talk') { headX = Math.sin(this.t * 6) * 0.08; T.armR = -0.4 + Math.sin(this.t * 4) * 0.25; T.elR = -0.9; }
+    } else if (a === 'idle' || a === 'talk' || a === 'listen') {
+      const b = Math.sin(this.t * 1.7);
+      hipsY = 0.95 + b * 0.006;
+      torsoX = -0.02 + b * 0.012;
+      T.armL = 0.04 + b * 0.025; T.armR = 0.04 - b * 0.025;
+      T.elL = -0.18; T.elR = -0.18;
+      T.legL = 0.02; T.legR = -0.02; T.kneeL = 0.03; T.kneeR = 0.03;
+      // idle fidgets: look around, weight shift, scratch head
+      if (a === 'idle') {
+        this.fidgetT -= dt;
+        if (this.fidgetT <= 0) { this.fidget = 1 + Math.floor(Math.random() * 3); this.fidgetT = 5 + Math.random() * 7; this.fidgetStart = this.t; }
+        const ft = this.t - (this.fidgetStart ?? -99);
+        if (this.fidget && ft < 2.2) {
+          const k = Math.sin((ft / 2.2) * Math.PI);
+          if (this.fidget === 1) headY = Math.sin(ft * 2.5) * 0.6 * k;
+          if (this.fidget === 2) { torsoZ = 0.06 * k; T.legL = 0.12 * k; T.kneeL = 0.2 * k; }
+          if (this.fidget === 3) { T.armR = -2.4 * k; T.elR = -1.9 * k; headZ = 0.15 * k; }
+        } else this.fidget = 0;
+      }
+      if (a === 'talk') {
+        // a few different gestures while speaking
+        const g = this.gesture, w = Math.sin(this.t * 5);
+        headX = Math.sin(this.t * 7) * 0.05;
+        if (g === 0) { T.armR = -0.6 + w * 0.25; T.elR = -1.0; }
+        if (g === 1) { T.armL = -0.5 + w * 0.2; T.armR = -0.5 - w * 0.2; T.elL = -1.1; T.elR = -1.1; }
+        if (g === 2) { T.armR = -0.3; T.elR = -1.6 + w * 0.3; torsoZ = 0.04; }
+      }
+      if (a === 'listen') { headX = 0.06; headZ = Math.sin(this.t * 0.8) * 0.05; }
     } else if (a === 'hide') {
       hipsY = 0.5; torsoX = 0.7; headX = -0.4;
       T.legL = -1.4; T.legR = -1.4; T.kneeL = 2.2; T.kneeR = 2.2;
       T.armL = -0.5; T.armR = -0.5; T.elL = -1.6; T.elR = -1.6;
+    } else if (a === 'sit') {
+      hipsY = 0.48; torsoX = 0.05;
+      T.legL = -1.5; T.legR = -1.5; T.kneeL = 1.5; T.kneeR = 1.5;
+      T.armL = -0.3; T.armR = -0.3; T.elL = -0.8; T.elR = -0.8;
+      headX = 0.25 + Math.sin(this.t * 1.2) * 0.04; // dozing
     } else if (a === 'jump' || a === 'fall') {
-      T.legL = -0.9; T.legR = 0.3; T.kneeL = 1.3; T.kneeR = 0.5;
-      T.armL = -2.4; T.armR = -2.2; T.elL = -0.3; T.elR = -0.3;
-      torsoX = 0.15;
+      const up = a === 'jump';
+      T.legL = up ? -0.9 : -0.4; T.legR = up ? 0.35 : 0.1; T.kneeL = up ? 1.4 : 0.6; T.kneeR = up ? 0.6 : 0.4;
+      T.armL = up ? -2.3 : -1.2; T.armR = up ? -2.1 : -1.4; T.elL = -0.3; T.elR = -0.3;
+      torsoX = up ? 0.15 : 0;
     } else if (a === 'punch' || a === 'punch2') {
       const r = a === 'punch';
-      const k = Math.min(1, this.actionT / 0.09);
-      torsoY = (r ? -0.5 : 0.5) * k;
+      const k = Math.min(1, this.actionT / 0.08);
+      torsoY = (r ? -0.55 : 0.55) * k;
       T.armR = r ? -1.55 * k : 0.3; T.elR = r ? -0.1 : -1.8;
       T.armL = r ? 0.3 : -1.55 * k; T.elL = r ? -1.8 : -0.1;
-      T.legL = -0.3; T.legR = 0.3; T.kneeL = 0.3; T.kneeR = 0.2;
-      hipsY = 0.9;
+      T.legL = -0.35; T.legR = 0.35; T.kneeL = 0.35; T.kneeR = 0.25;
+      hipsY = 0.88;
     } else if (a === 'kick') {
       const k = Math.min(1, this.actionT / 0.12);
-      T.legR = -1.6 * k; T.kneeR = 0.15; T.legL = 0.2; T.kneeL = 0.3;
+      T.legR = -1.6 * k; T.kneeR = 0.15; T.legL = 0.2; T.kneeL = 0.35;
       T.armL = -0.8; T.armR = 0.6; T.elL = -1.2; T.elR = -1.0;
       torsoX = -0.3 * k;
     } else if (a === 'throw') {
       const k = this.actionT / 0.3;
-      T.armR = k < 0.45 ? -2.8 : -1.2; T.elR = k < 0.45 ? -0.9 : 0;
-      T.armL = 0.4; T.elL = -0.4;
-      torsoY = k < 0.45 ? 0.4 : -0.35;
-      T.legL = -0.3; T.legR = 0.3; T.kneeL = 0.2; T.kneeR = 0.1;
-    } else if (a === 'shoot') {
-      T.armR = -1.5; T.elR = 0; T.armL = -1.2; T.elL = -0.7; torsoY = 0.3;
+      T.armR = k < 0.4 ? -2.8 : -1.1; T.elR = k < 0.4 ? -1.0 : 0;
+      T.armL = 0.5; T.elL = -0.5;
+      torsoY = k < 0.4 ? 0.45 : -0.4;
+      T.legL = -0.35; T.legR = 0.35; T.kneeL = 0.25; T.kneeR = 0.1;
     } else if (a === 'hurt') {
-      torsoX = -0.5; headX = 0.3; T.armL = 0.7; T.armR = 0.7; T.elL = -0.8; T.elR = -0.8;
+      torsoX = -0.5; headX = 0.35; T.armL = 0.8; T.armR = 0.8; T.elL = -0.9; T.elR = -0.9; hipsY = 0.9;
     } else if (a === 'dead') {
       bodyRotX = -Math.PI / 2; hipsY = 0.3;
       T.armL = -2.8; T.armR = -2.6;
@@ -299,36 +372,85 @@ export class Rig {
       const b = Math.abs(Math.sin(this.t * 6));
       hipsY = 0.95 + b * 0.15;
       T.armL = -2.9; T.armR = -2.9; T.elL = -0.2; T.elR = -0.2;
+    } else if (a === 'search') {
+      // rummaging in a cupboard or a chest
+      const w = Math.sin(this.t * 9);
+      torsoX = 0.35; T.armL = -1.2 + w * 0.2; T.armR = -1.2 - w * 0.2; T.elL = -0.6; T.elR = -0.6; headX = 0.2;
     }
 
-    const R = 18;
-    const set = (obj, key, v, axis = 'x') => { obj.rotation[axis] = damp(obj.rotation[axis], v ?? 0, R, dt); };
-    set(j.legL.hip, 'legL', T.legL); set(j.legR.hip, 'legR', T.legR);
-    set(j.legL.knee, 'kneeL', T.kneeL); set(j.legR.knee, 'kneeR', T.kneeR);
-    set(j.armL.sh, 'armL', T.armL); set(j.armR.sh, 'armR', T.armR);
-    set(j.armL.el, 'elL', T.elL); set(j.armR.el, 'elR', T.elR);
-    j.hips.position.y = damp(j.hips.position.y, hipsY, R, dt);
-    j.torso.rotation.x = damp(j.torso.rotation.x, torsoX, R, dt);
-    j.torso.rotation.y = damp(j.torso.rotation.y, torsoY, R, dt);
-    j.head.rotation.x = damp(j.head.rotation.x, headX, R, dt);
-    j.body.rotation.x = damp(j.body.rotation.x, bodyRotX, 8, dt);
-    j.body.rotation.z = damp(j.body.rotation.z, bodyRotZ, 8, dt);
-    // arms hang slightly outward
-    j.armL.sh.rotation.z = 0.08; j.armR.sh.rotation.z = -0.08;
+    // landing squash
+    if (this.landT > 0) {
+      this.landT -= dt;
+      const k = Math.max(0, this.landT / 0.22);
+      hipsY -= 0.16 * k; T.kneeL = (T.kneeL || 0) + 0.7 * k; T.kneeR = (T.kneeR || 0) + 0.7 * k; T.legL = (T.legL || 0) - 0.35 * k; T.legR = (T.legR || 0) - 0.35 * k; torsoX += 0.2 * k;
+    }
+    // momentum leans
+    torsoX += this.lean;
+    torsoZ += this.roll;
 
-    // ponytail secondary motion
+    // head looks toward a point of interest (in body space)
+    if (this.lookAt && a !== 'dead') {
+      const p = this.root.position, ry = this.root.rotation.y;
+      const want = Math.atan2(this.lookAt.x - p.x, this.lookAt.z - p.z);
+      const rel = clamp(angleDiff(ry, want), -1.1, 1.1);
+      headY += rel * 0.75;
+      torsoY += rel * 0.25;
+      const dy = this.lookAt.y - (p.y + 1.6 * this.root.scale.y);
+      const dh = Math.hypot(this.lookAt.x - p.x, this.lookAt.z - p.z) || 1;
+      headX += clamp(-Math.atan2(dy, dh), -0.5, 0.4);
+    }
+
+    const R = 16;
+    const set = (obj, v, axis = 'x', r = R) => { obj.rotation[axis] = damp(obj.rotation[axis], v ?? 0, r, dt); };
+    set(j.legL.hip, T.legL); set(j.legR.hip, T.legR);
+    set(j.legL.knee, T.kneeL); set(j.legR.knee, T.kneeR);
+    set(j.legL.foot, T.footL); set(j.legR.foot, T.footR);
+    set(j.armL.sh, T.armL); set(j.armR.sh, T.armR);
+    set(j.armL.el, T.elL); set(j.armR.el, T.elR);
+    j.hips.position.y = damp(j.hips.position.y, this.hipsRest + (hipsY - 0.95) * (this.hipsRest / 0.95), R, dt);
+    set(j.torso, torsoX); set(j.torso, torsoY, 'y'); set(j.torso, torsoZ, 'z', 8);
+    set(j.head, headX, 'x', 10); set(j.head, headY, 'y', 8); set(j.head, headZ, 'z', 8);
+    set(j.body, bodyRotX, 'x', 8);
+    j.armL.sh.rotation.z = this.armSpread; j.armR.sh.rotation.z = -this.armSpread;
+    // pelvis counter-rotates against the shoulders while walking
+    if (walkLike) j.hips.rotation.y = damp(j.hips.rotation.y, -torsoY * 0.8, R, dt); else j.hips.rotation.y = damp(j.hips.rotation.y, 0, 8, dt);
+
+    // tunic panels follow the legs with a little drag (cloth follow-through)
+    if (j.skirt) {
+      const lL = j.legL.hip.rotation.x, lR = j.legR.hip.rotation.x;
+      this.skirtLag = damp(this.skirtLag, Math.min(speed, 7) * 0.035 + this.lean * 0.6, 4, dt);
+      const sp2 = 10;
+      set(j.skirt.F, Math.min(lL, lR, 0) * 0.85 + this.skirtLag * 0.25, 'x', sp2);
+      set(j.skirt.B, Math.max(lL, lR, 0) * 0.85 + this.skirtLag, 'x', sp2);
+      set(j.skirt.L, lL * 0.55 + this.skirtLag * 0.5, 'x', sp2);
+      set(j.skirt.R, lR * 0.55 + this.skirtLag * 0.5, 'x', sp2);
+      set(j.skirt.L, -this.roll * 0.5 + 0.02, 'z', 6);
+      set(j.skirt.R, -this.roll * 0.5 - 0.02, 'z', 6);
+    }
+
+    // blinking
+    this.blinkT -= dt;
+    const blink = this.blinkT < 0.12;
+    if (this.blinkT < 0) this.blinkT = 2 + Math.random() * 4;
+    for (const e of j.eyes) e.scale.y = blink ? 0.12 : 1;
+
+    // ponytail follows motion with lag
     if (j.tail) {
-      const sway = Math.sin(this.t * 3) * 0.1 + (speed > 0.1 ? 0.5 + Math.sin(this.phase * 4.4) * 0.15 : 0.15);
-      j.tail.segs.forEach((s, i) => { s.rotation.x = damp(s.rotation.x, sway * (i + 1) * 0.35, 10, dt); });
+      const sway = 0.15 + Math.min(speed, 7) * 0.08 + Math.sin(this.phase * 2) * Math.min(speed, 7) * 0.02;
+      j.tail.segs.forEach((s, i) => {
+        s.rotation.x = damp(s.rotation.x, sway * (i + 1) * 0.3 + Math.sin(this.t * 2 + i) * 0.03, 9 - i, dt);
+        s.rotation.z = damp(s.rotation.z, -this.roll * (i + 1) * 0.6, 8, dt);
+      });
     }
 
     if (this.flash > 0) {
       if (!this._mats) this._collectMats();
       this.flash = Math.max(0, this.flash - dt * 4);
       this._mats.forEach((m, i) => {
-        m.emissive.copy(this._baseEmissive[i]).lerp(new THREE.Color(1, 1, 1), this.flash);
+        m.emissive.copy(this._baseEmissive[i]).lerp(_white, this.flash);
         m.emissiveIntensity = Math.max(this._baseIntensity[i], this.flash * 1.2);
       });
     }
   }
 }
+const _white = new THREE.Color(1, 1, 1);

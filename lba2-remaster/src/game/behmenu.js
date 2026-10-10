@@ -4,11 +4,11 @@
 // the behaviour's name underneath, and an info panel with life, magic
 // (bar length grows with magic level), kashes, keys and clover boxes.
 import * as THREE from 'three';
-import { createHumanoid } from '../engine/rig.js';
+import { createCharacter } from './characters.js';
 import { BEHAVIOURS } from './actors.js';
 import { t } from './i18n.js';
 
-const POSE = { normal: ['idle', 0], athletic: ['run', 2.4], aggressive: ['punch', 0], discreet: ['sneak', 1] };
+const POSE = { normal: ['idle', 0], athletic: ['run', 6.5], aggressive: ['punch', 0], discreet: ['sneak', 1.6] };
 
 export class BehaviourMenu {
   constructor(game, heroLook) {
@@ -23,7 +23,7 @@ export class BehaviourMenu {
     this.scene.add(d);
     this.cam = new THREE.PerspectiveCamera(28, 100 / 120, 0.1, 50);
     this.rigs = BEHAVIOURS.map((b, i) => {
-      const r = createHumanoid(heroLook);
+      const r = createCharacter(heroLook);
       r.root.position.x = i * 6;
       this.scene.add(r.root);
       return r;

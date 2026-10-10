@@ -400,7 +400,7 @@ class Game {
     const s = this.speaker;
     this.bubble.visible = !!s && this.state === 'dialog';
     if (!this.bubble.visible) return;
-    const top = s.pos.y + 2.1 * (s.rig.root.scale.y || 1);
+    const top = s.pos.y + (s.rig.height || 2.0) * (s.rig.root.scale.y || 1);
     const right = new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld, 0);
     const side = this.bubbleSide ? 1 : -1;
     const k = this.room ? 0.6 : 1;

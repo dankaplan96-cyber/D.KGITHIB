@@ -2,12 +2,13 @@
 // projectiles, pickups and particles.
 import * as THREE from 'three';
 import { createHumanoid, createBlobShadow, placeBlobShadow } from '../engine/rig.js';
+import { createCharacter } from './characters.js';
 import { TrackRunner } from '../engine/scripts.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // Twinsen: blue tunic, light trousers, brown ponytail
-export const HERO_LOOK = { tunic: '#2a66d9', pants: '#f2ead6', hair: '#4a2a14', boots: '#6b4423', ponytail: true };
+export const HERO_LOOK = 'twinsen';
 
 export class Actor {
   constructor(game, rig, x, z, radius = 0.45) {
@@ -43,7 +44,7 @@ export class Actor {
 // ------------------------------------------------------------------ hero
 export class Hero extends Actor {
   constructor(game, x, z) {
-    super(game, createHumanoid(HERO_LOOK), x, z, 0.4);
+    super(game, createCharacter('twinsen'), x, z, 0.4);
     this.isHero = true;
     this.behaviour = 'normal';
     this.maxHp = 10; this.hp = 10;
@@ -175,7 +176,7 @@ export class Hero extends Actor {
     else if (this.hiding) anim = 'hide';
     else if (this.speed > 0.3) anim = beh === 'discreet' ? 'sneak' : this.speed > 4.5 ? 'run' : 'walk';
     this.rig.play(anim);
-    this.rig.update(dt, this.speed / 3);
+    this.rig.update(dt, this.speed);
     // blink while invulnerable
     this.rig.root.visible = this.invuln <= 0 || Math.floor(this.invuln * 20) % 2 === 0;
     this.sync();
@@ -232,7 +233,7 @@ export class Hero extends Actor {
 // ------------------------------------------------------------------ NPC
 export class NPC extends Actor {
   constructor(game, def) {
-    super(game, createHumanoid(def.look), def.x, def.z, 0.45);
+    super(game, def.char ? createCharacter(def.char) : createHumanoid(def.look), def.x, def.z, 0.45);
     this.def = def;
     this.name = def.name;
     this.track = def.track ? new TrackRunner(def.track) : null;
@@ -256,7 +257,7 @@ export class NPC extends Actor {
     }
     this.game.physics.fall(this, dt);
     this.rig.play(this.talking ? 'talk' : moving ? 'walk' : this.forceAnim || 'idle');
-    this.rig.update(dt, moving ? 0.5 : 0);
+    this.rig.update(dt, moving ? 1.3 : 0);
     this.sync();
   }
 }
@@ -439,7 +440,7 @@ export class Sentinel extends Actor {
     P.fall(this, dt);
     if (this.hurtT > 0) anim = 'hurt';
     this.rig.play(anim);
-    this.rig.update(dt, sp / 3);
+    this.rig.update(dt, sp);
     this.sync();
 
     // ? / ! indicator
@@ -886,7 +887,7 @@ export class Mite extends Actor {
     if (sp > 0 && this.hurtT <= 0) g.physics.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     this.applyKnockback(dt);
     g.physics.fall(this, dt);
-    this.rig.update(dt, sp / 3);
+    this.rig.update(dt, sp);
     this.sync();
   }
 }

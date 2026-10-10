@@ -29,15 +29,15 @@ export class Prologue {
     const well = W.well;
     const kids = { x: V.x - 7, z: V.z + 8 };
     return [
-      { id: 'zoe', name: 'n_zoe', color: '#ffb0d0', ...R.house.npcSpots.zoe, angle: R.house.npcSpots.zoe.a, look: { tunic: '#3f9a6a', robe: '#3f9a6a', hair: '#8a3a1a', ponytail: true, skin: '#f0c49b' } },
-      { id: 'arthur', name: 'n_arthur', color: '#ffe070', ...R.house.npcSpots.arthur, angle: R.house.npcSpots.arthur.a, look: { tunic: '#2a66d9', pants: '#f2ead6', hair: '#6a3a1a', scale: 0.62 }, anim: 'hide' },
-      { id: 'gilbert', name: 'n_gilbert', color: '#ffb070', x: well.x + 2.4, z: well.z + 1.6, angle: Math.atan2(-1.2, 1.3), look: { tunic: '#b8483b', pants: '#5a4a3a', hair: '#c0c0c0', beard: '#c0c0c0', skin: '#e6b993' }, anim: 'talk' },
-      { id: 'mira', name: 'n_mira', color: '#d8a8ff', x: well.x + 1.2, z: well.z + 2.9, angle: Math.atan2(1.2, -1.3), look: { tunic: '#3b5bb8', pants: '#3b5bb8', ears: '#f4e9dc', skin: '#f4e9dc', hair: '#f4e9dc', apron: '#dfe6f5' }, anim: 'talk' },
-      { id: 'pippa', name: 'n_pippa', color: '#ffb070', x: V.x + 7, z: V.z + 2.7, angle: 0, look: { tunic: '#e58a3a', pants: '#6a4a8a', ears: '#f4e9dc', apron: '#ffffff', skin: '#f4e9dc', hair: '#f4e9dc' } },
-      { id: 'doran', name: 'n_doran', color: '#8fd3ff', x: W.pierStart.x, z: W.pierStart.z + 2.2, angle: Math.PI, look: { tunic: '#2f8a6a', pants: '#3a4a6a', hat: '#d8b94a', trunk: true, skin: '#8fa3b8', hair: '#8fa3b8', scale: 1.15 }, anim: 'hide' },
-      { id: 'xil', name: 'n_xil', color: '#9fffc8', x: W.pierEnd.x + 1.5, z: W.pierEnd.z, angle: Math.PI / 2, look: { tunic: '#6a3a9a', robe: '#6a3a9a', skin: '#7fc8a8', hair: '#7fc8a8', scale: 1.12 } },
-      { id: 'tim', name: 'n_tim', color: '#ffd27a', x: kids.x, z: kids.z, angle: Math.PI / 2, look: { tunic: '#e0c03a', pants: '#3a5a9a', scale: 0.7, hair: '#c06a2a' }, anim: 'talk' },
-      { id: 'lulu', name: 'n_lulu', color: '#ff9ad0', x: kids.x + 1.3, z: kids.z, angle: -Math.PI / 2, look: { tunic: '#e05a9a', robe: '#e05a9a', scale: 0.66, hair: '#2a1a10' } },
+      { id: 'zoe', name: 'n_zoe', char: 'zoe', color: '#ffb0d0', ...R.house.npcSpots.zoe, angle: R.house.npcSpots.zoe.a, look: { tunic: '#3f9a6a', robe: '#3f9a6a', hair: '#8a3a1a', ponytail: true, skin: '#f0c49b' } },
+      { id: 'arthur', name: 'n_arthur', char: 'arthur', color: '#ffe070', ...R.house.npcSpots.arthur, angle: R.house.npcSpots.arthur.a, look: { tunic: '#2a66d9', pants: '#f2ead6', hair: '#6a3a1a', scale: 0.62 }, anim: 'hide' },
+      { id: 'gilbert', name: 'n_gilbert', char: 'gilbert', color: '#ffb070', x: well.x + 2.4, z: well.z + 1.6, angle: Math.atan2(-1.2, 1.3), look: { tunic: '#b8483b', pants: '#5a4a3a', hair: '#c0c0c0', beard: '#c0c0c0', skin: '#e6b993' }, anim: 'talk' },
+      { id: 'mira', name: 'n_mira', char: 'mira', color: '#d8a8ff', x: well.x + 1.2, z: well.z + 2.9, angle: Math.atan2(1.2, -1.3), look: { tunic: '#3b5bb8', pants: '#3b5bb8', ears: '#f4e9dc', skin: '#f4e9dc', hair: '#f4e9dc', apron: '#dfe6f5' }, anim: 'talk' },
+      { id: 'pippa', name: 'n_pippa', char: 'pippa', color: '#ffb070', x: W.stall.x, z: W.stall.z, angle: W.stall.a, look: { tunic: '#e58a3a', pants: '#6a4a8a', ears: '#f4e9dc', apron: '#ffffff', skin: '#f4e9dc', hair: '#f4e9dc' } },
+      { id: 'doran', name: 'n_doran', char: 'doran', color: '#8fd3ff', x: W.pierStart.x, z: W.pierStart.z + 2.2, angle: Math.PI, look: { tunic: '#2f8a6a', pants: '#3a4a6a', hat: '#d8b94a', trunk: true, skin: '#8fa3b8', hair: '#8fa3b8', scale: 1.15 }, anim: 'hide' },
+      { id: 'xil', name: 'n_xil', char: 'xil', color: '#9fffc8', x: W.pierEnd.x + 1.5, z: W.pierEnd.z, angle: Math.PI / 2, look: { tunic: '#6a3a9a', robe: '#6a3a9a', skin: '#7fc8a8', hair: '#7fc8a8', scale: 1.12 } },
+      { id: 'tim', name: 'n_tim', char: 'tim', color: '#ffd27a', x: kids.x, z: kids.z, angle: Math.PI / 2, look: { tunic: '#e0c03a', pants: '#3a5a9a', scale: 0.7, hair: '#c06a2a' }, anim: 'talk' },
+      { id: 'lulu', name: 'n_lulu', char: 'lulu', color: '#ff9ad0', x: kids.x + 1.3, z: kids.z, angle: -Math.PI / 2, look: { tunic: '#e05a9a', robe: '#e05a9a', scale: 0.66, hair: '#2a1a10' } },
     ];
   }
 
