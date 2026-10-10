@@ -273,6 +273,7 @@ export class Rig {
 
   // speed is the real ground speed in m/s so the feet don't slide
   update(dt, speed = 0) {
+    if (!(dt > 0)) return; // a negative step would make every damped joint diverge
     const j = this.j;
     this.t += dt;
     this.actionT += dt;

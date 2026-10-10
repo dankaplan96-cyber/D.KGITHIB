@@ -91,11 +91,26 @@ function islandSplat(x, z, h, slope, w) {
     w[3] = Math.max(w[3], smoothstep(12, 8, cd + n * 2) * 2);
   }
   const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
-  w[4] = smoothstep(10, 7.5, vd + n * 1.5) * 3;
+  w[4] = smoothstep(9.9, 9.0, vd) * 3; // the square, edged by a curb ring (town.js)
   if (vd < 30) w[4] = Math.max(w[4], smoothstep(0.35, -0.25, streetDist(x, z) + n * 0.25) * 3);
+  // in town the ground between the streets is brown soil with lawns (Citadel Island)
+  if (vd < 36 && h > 0.8) {
+    const soil = townSoil(x, z, n) * (1 - Math.min(1, w[4] / 1.5)); // never on the paving
+    w[3] = Math.max(w[3], soil * 2.5);
+    w[0] *= 1 - soil * 0.95;
+  }
   const fd = Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z));
   if (fd < 11) w[4] = 3;
+  { const pave = 1 - Math.min(1, w[4] / 1.5); w[3] *= pave; w[0] *= pave; w[1] *= pave; } // paving covers paths, soil and grass
   if (w[2] > 0) { w[0] *= 1 - Math.min(1, w[2]); w[3] *= 1 - Math.min(1, w[2]); }
+}
+
+// how much bare soil (vs lawn) the town ground shows at x,z
+function townSoil(x, z, n = 0) {
+  const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
+  if (vd > 36) return 0;
+  const lawn = smoothstep(-0.08, 0.12, fbm(x * 0.07 + 3.1, z * 0.07 - 1.7, 2) + n * 0.15);
+  return (1 - smoothstep(24, 36, vd)) * (1 - lawn);
 }
 
 function add(scene, geo, material, x, y, z, { rx = 0, ry = 0, rz = 0, cast = true, receive = true } = {}) {
@@ -176,11 +191,11 @@ export function buildWorld(parentScene) {
     if (trees.some((t) => Math.hypot(t.x - x, t.z - z) < 3.0)) continue;
     const kr = rand();
     const kind = forest ? (kr < 0.55 ? 'pine' : kr < 0.8 ? 'tall' : 'round') : (kr < 0.25 ? 'pine' : kr < 0.4 ? 'tall' : kr < 0.55 ? 'fruit' : 'round');
-    trees.push({ x, z, h: H(x, z), s: 0.85 + rand() * 0.45, kind, ry: rand() * 6.28 });
+    trees.push({ x, z, h: H(x, z), s: 0.72 + rand() * 0.35, kind, ry: rand() * 6.28 });
   }
   // a few hand-placed trees and bushes around town
   for (const [x, z, kind, s] of [[-56, -21, 'round', 1.1], [-45, -21, 'fruit', 1.0], [-38, -12, 'round', 0.9], [-26, -11, 'tall', 1.0], [-51, 9.5, 'fruit', 0.95],
-    [-37, 11, 'round', 1.05], [-24, 3, 'tall', 1.1], [-60, -12, 'pine', 1.0], [-59.5, 8.5, 'round', 0.9], [-34.5, -23, 'pine', 1.1]]) trees.push({ x, z, h: H(x, z), s, kind, ry: x * 1.7 });
+    [-37, 11, 'round', 1.05], [-24, 3, 'tall', 1.1], [-60, -12, 'pine', 1.0], [-59.5, 8.5, 'round', 0.9], [-34.5, -23, 'pine', 1.1]]) trees.push({ x, z, h: H(x, z), s: s * 0.8, kind, ry: x * 1.7 });
   const bushes = [];
   for (const [x, z] of [[-54.6, -10.6], [-47.0, -18.9], [-41.8, -19.2], [-36.5, -6.5], [-33.0, 4.2], [-53.2, 6.8], [-48.6, 11.6], [-40.6, 13.8], [-27.6, -13.7], [-58.4, -1.8], [-26.5, 9.6]]) bushes.push({ x, z, h: H(x, z), s: 0.9 + ((x * 7) % 1 + 1) % 1 * 0.4, ry: z });
   for (let i = 0; i < 600 && bushes.length < 120; i++) {
@@ -223,14 +238,14 @@ export function buildWorld(parentScene) {
     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.5) continue;
     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 32 && (streetDist(x, z) < 0.5 || inHouse(x, z, 0.4))) continue;
     if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < 11) continue;
-    if (pathDist(x, z) < 1.4) continue;
+    if (pathDist(x, z) < 1.4 || townSoil(x, z) > 0.3) continue;
     grass.push({ x, z, h: h + 0.06, s: 0.7 + rand() * 0.8, ry: rand() * 6.28 });
     if (rand() < 0.1) flowers.push({ x: x + 0.3, z: z + 0.2, h: H(x + 0.3, z + 0.2), s: 0.8 + rand() * 0.5, ry: rand() * 6 });
   }
   // denser grass along the house walls and fences in town
   for (let i = 0; i < 4000; i++) {
     const x = POI.village.x + (rand() - 0.5) * 50, z = POI.village.z + (rand() - 0.5) * 50;
-    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.5 || streetDist(x, z) < 0.4 || inHouse(x, z, 0.25) || !inHouse(x, z, 1.4)) continue;
+    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.5 || streetDist(x, z) < 0.4 || inHouse(x, z, 0.25) || !inHouse(x, z, 1.4) || townSoil(x, z) > 0.5) continue;
     grass.push({ x, z, h: H(x, z) + 0.04, s: 0.8 + rand() * 0.6, ry: rand() * 6.28 });
     if (rand() < 0.15) flowers.push({ x, z, h: H(x, z), s: 0.9, ry: rand() * 6 });
   }

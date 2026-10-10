@@ -15,7 +15,7 @@ import { clamp, damp, dampAngle } from './math.js';
 const UNIT = 1 / 750; // LBA2 world units per metre (hero ≈ 1400 units tall)
 const A = (a) => (a / 4096) * Math.PI * 2;
 const LBA_VIEWS = [
-  { pitch: A(300), dist: 10500 * UNIT },
+  { pitch: A(300), dist: 11800 * UNIT }, // a little further than PERSO.CPP so Twinsen fills ~16% of the height, as in the 640×480 game
   { pitch: A(530), dist: 17000 * UNIT },
 ];
 const LBA_FOV = (2 * Math.atan(240 / 600) * 180) / Math.PI; // 43.6°

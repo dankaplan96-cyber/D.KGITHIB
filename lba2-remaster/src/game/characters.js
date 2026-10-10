@@ -17,15 +17,15 @@ const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 
 // ------------------------------------------------------------------ cast
 export const LOOKS = {
   twinsen: {
-    race: 'quetch', outfit: 'bell', hem: 0.4, hemW: 0.9, neckR: 0.042, tunic: '#7fb2ec', tunicTrim: '#5f92d0', pants: '#e8dcc0', shoes: '#7a4a24',
-    hair: '#5a3418', skin: '#f2c49a', hairStyle: 'twinsen', nose: 'ball', eyes: '#2a4a8a', mouth: 'open', medallion: true, headS: 0.92, neck: 0.16,
+    race: 'quetch', outfit: 'bell', hem: 0.5, hemW: 0.66, neckR: 0.05, shoulders: 1.18, stoop: 0.035, chin: 1.35, tunic: '#7fb2ec', tunicTrim: '#5f92d0', pants: '#e8dcc0', shoes: '#7a4a24',
+    hair: '#5a3418', skin: '#f2c49a', hairStyle: 'twinsen', nose: 'ball', eyes: '#2a4a8a', mouth: 'smile', brow: 1.5, medallion: true, headS: 0.95, neck: 0.085,
   },
   zoe: {
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
     hair: '#7a3416', skin: '#f0c49b', hairStyle: 'bun', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 0.9, neck: 0.13, height: 0.95,
   },
   arthur: {
-    race: 'quetch', kid: true, outfit: 'bell', hem: 0.36, tunic: '#7fb2ec', tunicTrim: '#5f92d0', pants: '#e8dcc0', shoes: '#7a4a24',
+    race: 'quetch', kid: true, outfit: 'bell', hem: 0.38, hemW: 0.72, tunic: '#7fb2ec', tunicTrim: '#5f92d0', pants: '#e8dcc0', shoes: '#7a4a24',
     hair: '#6a3a1a', skin: '#f2c49a', hairStyle: 'twinsen', nose: 'ball', eyes: '#2a4a8a', mouth: 'open', height: 0.62, neck: 0.1,
   },
   gilbert: {
@@ -82,7 +82,7 @@ function design(L) {
   const headP = bone('head', [0, neckP[1] + neckLen, neckP[2] + (L.stoop || 0) * 0.4], 'neck');
   const Hc = add(headP, [0, 0.13 * hs, 0]);
   B.head.tip = add(Hc, [0, 0.18 * hs, 0]);
-  const shX = (grobo ? 0.33 : 0.2) * slim * (kid ? 0.95 : 1), shY = ty + 0.47 * torsoLen;
+  const shX = (grobo ? 0.33 : 0.2) * slim * (kid ? 0.95 : 1) * (L.shoulders || 1), shY = ty + 0.47 * torsoLen;
   const armLen = (esmer ? 1.15 : kid ? 0.78 : 1);
   const legX = (grobo ? 0.15 : 0.1) * slim;
   for (const [s, sx] of [['L', 1], ['R', -1]]) {
@@ -145,7 +145,7 @@ function design(L) {
     // Quetch: tall oval skull, narrow jaw, small chin, big nose, small ears
     e(add(Hc, [0, 0.03 * hs, -0.015]), [0.118 * hs, 0.165 * hs, 0.13 * hs], 'head', 'skin', 'head');
     e(add(Hc, [0, -0.065 * hs, 0.02 * hs]), [0.098 * hs, 0.1 * hs, 0.1 * hs], 'head', 'skin', 'head');
-    e(add(Hc, [0, -0.135 * hs, 0.045 * hs]), [0.048 * hs, 0.04 * hs, 0.048 * hs], 'head', 'skin', 'head');
+    e(add(Hc, [0, -0.135 * hs, 0.045 * hs]), [0.048 * hs * (L.chin || 1), 0.04 * hs * (L.chin || 1), 0.048 * hs * (L.chin || 1)], 'head', 'skin', 'head');
     for (const sx of [1, -1]) e(add(Hc, [sx * 0.06 * hs, -0.04 * hs, 0.065 * hs]), [0.04 * hs, 0.035 * hs, 0.04 * hs], 'head', 'cheek', 'head');
     for (const sx of [1, -1]) e(add(Hc, [sx * 0.118 * hs, -0.005, -0.005]), [0.016, 0.038, 0.028], 'head', 'skin', 'head');
     const nz = 0.12 * hs;
@@ -176,11 +176,11 @@ function design(L) {
       });
     } else {
       e(add(Hc, [0, 0.045 * hs, -0.02]), [0.125 * hs, 0.17 * hs, 0.138 * hs], 'head', 'hair', 'hair', {
-        clip: hairline(0.11 * hs, -0.1 * hs),
+        clip: L.hairStyle === 'twinsen' ? hairline(0.135 * hs, -0.07 * hs) : hairline(0.11 * hs, -0.1 * hs),
         wobble: (x, y, z) => Math.sin(Math.atan2(x - Hc[0], z - Hc[2]) * 16 + y * 20) * 0.003,
       });
-      // a small swept fringe
-      e(add(Hc, [0.025 * hs, 0.125 * hs, 0.07 * hs]), [0.075 * hs, 0.035 * hs, 0.06 * hs], 'head', 'hair', 'hair');
+      // a small swept fringe (Twinsen combs his hair back)
+      if (L.hairStyle !== 'twinsen') e(add(Hc, [0.025 * hs, 0.125 * hs, 0.07 * hs]), [0.075 * hs, 0.035 * hs, 0.06 * hs], 'head', 'hair', 'hair');
     }
     const chain = (pts, radii, mat = 'hair') => {
       // a bone per segment so the hair swings
@@ -196,9 +196,8 @@ function design(L) {
       // high, hooked ponytail swept back from the crown
       // (it leaves the back of the crown almost level, so from the front it reads as a tuft, not a bun)
       const p0 = add(Hc, [0, 0.115 * hs, -0.11 * hs]);
-      chain([p0, add(p0, [0, 0.03 * hs, -0.085 * hs]), add(p0, [0, 0.015 * hs, -0.175 * hs]), add(p0, [0, -0.045 * hs, -0.235 * hs]), add(p0, [0, -0.13 * hs, -0.25 * hs]), add(p0, [0, -0.21 * hs, -0.225 * hs])],
-        [0.044 * hs, 0.054 * hs, 0.052 * hs, 0.044 * hs, 0.032 * hs, 0.015 * hs]);
-      e(add(p0, [0, 0.005, -0.012]), [0.054 * hs, 0.026 * hs, 0.05 * hs], 'tail0', 'tie', 'tie');
+      chain([p0, add(p0, [0, 0.045 * hs, -0.07 * hs]), add(p0, [0, 0.05 * hs, -0.15 * hs]), add(p0, [0, 0.0, -0.205 * hs]), add(p0, [0, -0.075 * hs, -0.215 * hs])],
+        [0.036 * hs, 0.04 * hs, 0.034 * hs, 0.024 * hs, 0.01 * hs]);
     } else if (L.hairStyle === 'tail') {
       const p0 = add(Hc, [0, 0.04 * hs, -0.13 * hs]);
       chain([p0, add(p0, [0, -0.08, -0.04]), add(p0, [0, -0.17, -0.05]), add(p0, [0, -0.25, -0.04])], [0.045, 0.042, 0.032, 0.014]);
@@ -232,12 +231,17 @@ function design(L) {
     return Math.sin(Math.atan2(x, z) * 9 + t * 1.5) * amp * t;
   };
   if (L.outfit === 'bell') {
-    // Twinsen's wide tunic: narrow neckline, rounded sloping shoulders, bell to mid-calf, thick hem
-    const top = neckP[1] - 0.025;
-    ccone(top, hemY, 0.065, hemR, 'skirt', 'tunic', 'tunic', { sz: 0.8, wobble: folds(ty + 0.2, 0.008) });
-    for (const sx of [1, -1]) e([sx * 0.11 * wide, shY - 0.02, 0], [0.13 * wide, 0.085, 0.105], 'torso', 'tunic', 'tunic');
-    e([0, ty + 0.25, 0.0], [0.2 * wide, 0.26, 0.15], 'torso', 'tunic', 'tunic');
-    torus([0, hemY + 0.008, 0], hemR - 0.006, 0.009, 'skirt', 'tunicTrim', 'tunic', { sz: 0.8 });
+    // Twinsen's tunic (after the LBA2 model): broad rounded shoulders and a
+    // deep chest, a straight-cut smock that flares only a little and stops at
+    // the knee so the trousers show, a darker hem band and a round collar
+    const top = neckP[1] - 0.03;
+    const chestR = 0.2 * wide * (L.shoulders || 1);
+    for (const sx of [1, -1]) e([sx * shX * 0.78, shY - 0.03, 0], [0.12 * wide, 0.095, 0.115], 'torso', 'tunic', 'tunic');
+    e([0, ty + 0.3, 0.012], [chestR, 0.24, 0.155], 'torso', 'tunic', 'tunic');
+    e([0, top - 0.01, 0.0], [0.085, 0.04, 0.075], 'torso', 'tunicTrim', 'tunic');
+    ccone(ty + 0.3, hemY, chestR * 0.99, hemR, 'skirt', 'tunic', 'tunic', { sz: 0.7, wobble: folds(ty + 0.05, 0.006) });
+    ccone(hemY + 0.04, hemY, hemR * 0.985, hemR + 0.006, 'skirt', 'tunicTrim', 'hem', { sz: 0.7, round: 0.006 });
+    G.hem = 0.006;
   } else {
     // fitted tunic / dress / robe with a belt
     const waistK = L.slim ? 0.84 : 1.05;
@@ -266,11 +270,13 @@ function design(L) {
     G[g] = 0.03;
     const thick = (grobo ? 1.35 : 1) * slim * (kid ? 0.95 : 1);
     if (L.outfit === 'bell') {
-      // wide kimono sleeve flaring to the wrist
-      cone(add(sh, [-sx * 0.02, -0.02, 0]), el, 0.07 * thick, 0.085 * thick, 'sh' + s, 'tunic', g);
-      const end = lerp3(el, hd, 0.72);
-      cone(el, end, 0.082 * thick, 0.118 * thick, 'el' + s, 'tunic', g, { sz: 0.85 });
-      torus(end, 0.106 * thick, 0.013, 'el' + s, 'tunicTrim', 'cuff' + s, { sz: 0.85 });
+      // wide straight sleeve, slightly flared, ending above the wrist
+      cone(add(sh, [-sx * 0.02, -0.02, 0]), el, 0.078 * thick, 0.074 * thick, 'sh' + s, 'tunic', g);
+      const end = lerp3(el, hd, 0.7);
+      cone(el, end, 0.074 * thick, 0.088 * thick, 'el' + s, 'tunic', g, { sz: 0.9 });
+      torus(end, 0.08 * thick, 0.012, 'el' + s, 'tunicTrim', 'cuff' + s, { sz: 0.9 });
+      cone(el, add(hd, [0, 0.01, 0]), 0.042 * thick, 0.034 * thick, 'el' + s, 'skin', g + 'f');
+      G[g + 'f'] = 0.025;
       G['cuff' + s] = 0.01;
     } else {
       const sleeve = L.outfit === 'robe' || L.outfit === 'dress' ? 0.92 : 0.5;
@@ -288,7 +294,7 @@ function design(L) {
     const hp = B['hip' + s].pos, kn = B['knee' + s].pos, ft = B['foot' + s].pos;
     const g = 'leg' + s;
     G[g] = 0.03;
-    const thick = (grobo ? 1.5 : 1) * slim * (kid ? 0.92 : 1) * (L.outfit === 'bell' ? 0.85 : 1);
+    const thick = (grobo ? 1.5 : 1) * slim * (kid ? 0.92 : 1) * (L.outfit === 'bell' ? 1.12 : 1);
     cone(hp, kn, 0.075 * thick, 0.058 * thick, 'hip' + s, 'pants', g);
     cone(kn, add(ft, [0, 0.0, 0]), 0.056 * thick, 0.046 * thick, 'knee' + s, 'pants', g);
   }
@@ -315,7 +321,6 @@ function design(L) {
   };
   const paint = (p, m, col) => {
     if (m === 'fur' && L.furDark && p.y > Hc[1] + 0.1 * hs) col.lerp(new THREE.Color(L.furDark), Math.min(1, (p.y - Hc[1] - 0.1) * 4));
-    if (m === 'tunic' && L.outfit === 'bell') col.multiplyScalar(0.94 + 0.06 * Math.sin(p.y * 260)); // knit rows
   };
   const top = B.head.tip[1] + (bunny ? 0.5 : 0.2);
   const halfW = L.outfit === 'bell' ? 0.6 : grobo ? 0.72 : 0.55;
@@ -420,8 +425,8 @@ function addFace(def, bones, L) {
     }
     head.add(g);
     eyes.push(g);
-    const brow = new THREE.Mesh(new THREE.CapsuleGeometry(0.009 * def.hs, 0.045 * def.hs, 2, 6), new THREE.MeshStandardMaterial({ color: L.hair || L.furDark || '#3a2a1a', roughness: 0.9 }));
-    brow.rotation.z = Math.PI / 2 - sx * 0.2;
+    const brow = new THREE.Mesh(new THREE.CapsuleGeometry(0.009 * def.hs * (L.brow || 1), 0.05 * def.hs, 2, 6), new THREE.MeshStandardMaterial({ color: L.hair || L.furDark || '#3a2a1a', roughness: 0.9 }));
+    brow.rotation.z = Math.PI / 2 - sx * (L.brow ? 0.08 : 0.2);
     brow.position.set(sx * F.eyeX * 1.05, Hc[1] - hp[1] + F.eyeY + F.eyeR * 1.55, Hc[2] - hp[2] + F.eyeZ + 0.004);
     head.add(brow);
   }
@@ -453,8 +458,8 @@ function addMedallion(def, bones) {
   const torso = bones.torso, tp = def.bones.torso.pos;
   const gold = new THREE.MeshStandardMaterial({ color: '#e0b030', metalness: 0.65, roughness: 0.35 });
   const g = new THREE.Group();
-  g.position.set(0, 0.34, 0.172);
-  g.rotation.x = -0.12;
+  g.position.set(0, 0.35, 0.2);
+  g.rotation.x = -0.25;
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.012, 24), gold);
   disc.rotation.x = Math.PI / 2;
   g.add(disc);
@@ -467,8 +472,8 @@ function addMedallion(def, bones) {
   torso.add(g);
   // red cord: tube around the neck down to the medal, in torso space
   const ny = def.bones.neck.pos[1] - tp[1];
-  const pts = [[0.012, 0.37, 0.168], [0.04, ny - 0.07, 0.11], [0.05, ny - 0.03, 0.02], [0.03, ny - 0.02, -0.045], [0, ny - 0.02, -0.055],
-    [-0.03, ny - 0.02, -0.045], [-0.05, ny - 0.03, 0.02], [-0.04, ny - 0.07, 0.11], [-0.012, 0.37, 0.168]].map((p) => new THREE.Vector3(...p));
+  const pts = [[0.012, 0.38, 0.196], [0.045, ny - 0.07, 0.13], [0.05, ny - 0.03, 0.02], [0.03, ny - 0.02, -0.045], [0, ny - 0.02, -0.055],
+    [-0.03, ny - 0.02, -0.045], [-0.05, ny - 0.03, 0.02], [-0.045, ny - 0.07, 0.13], [-0.012, 0.38, 0.196]].map((p) => new THREE.Vector3(...p));
   const cord = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.006, 6), new THREE.MeshStandardMaterial({ color: '#c0302a', roughness: 0.6 }));
   torso.add(cord);
 }

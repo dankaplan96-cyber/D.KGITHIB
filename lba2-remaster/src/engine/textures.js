@@ -115,39 +115,34 @@ export function makeTextures() {
     }
     T.dirt = toTex(c);
   }
-  // cobblestones (streets and the square): irregular rounded setts from a
-  // tileable Voronoi pattern, each stone with its own tone, a lit top-left
-  // shoulder, a shaded rim and dark sandy joints between them
+  // paving (streets and the square), as on Citadel Island: grey rectangular
+  // setts laid in running bond, each a little different in tone and wear,
+  // bevelled edges catching the light, dark joints
   {
-    const N = 512, G = 14; // 14×14 stones per tile
+    const N = 512, ROWS = 10, PER = 5;
     const [c, x] = canvas(N); const r = rng(15);
-    const pts = [];
-    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) pts.push([(i + 0.5 + (r() - 0.5) * 0.7) / G, (j + 0.5 + (r() - 0.5) * 0.7) / G, 0.78 + r() * 0.34, r()]);
-    const img = x.createImageData(N, N), d = img.data;
-    for (let py = 0; py < N; py++) for (let px = 0; px < N; px++) {
-      const u = px / N, v = py / N;
-      const ci = Math.floor(u * G), cj = Math.floor(v * G);
-      let d1 = 9, d2 = 9, best = null, bx = 0, by = 0;
-      for (let dj = -2; dj <= 2; dj++) for (let di = -2; di <= 2; di++) {
-        const ii = ((ci + di) % G + G) % G, jj = ((cj + dj) % G + G) % G;
-        const p = pts[jj * G + ii];
-        const qx = p[0] + Math.floor((ci + di) / G), qy = p[1] + Math.floor((cj + dj) / G);
-        const dd = Math.hypot(u - qx, v - qy);
-        if (dd < d1) { d2 = d1; d1 = dd; best = p; bx = u - qx; by = v - qy; } else if (dd < d2) d2 = dd;
+    x.fillStyle = '#4a4640'; x.fillRect(0, 0, N, N);
+    const rh = N / ROWS, bw = N / PER, gap = 3;
+    for (let j = 0; j < ROWS; j++) {
+      const off = (j % 2) * bw / 2 + (r() - 0.5) * 6;
+      for (let i = -1; i <= PER; i++) {
+        const x0 = i * bw + off + gap / 2, y0 = j * rh + gap / 2, w = bw - gap - r() * 3, h = rh - gap;
+        const tone = 128 + Math.floor(r() * 34), warm = r() * 10;
+        const base = `rgb(${tone + warm},${tone + warm * 0.4},${tone - 4})`;
+        for (const ox of [-N, 0, N]) {
+          x.fillStyle = base; x.beginPath(); x.roundRect(x0 + ox, y0, w, h, 6); x.fill();
+          // bevel: light top/left, dark bottom/right
+          x.fillStyle = 'rgba(255,250,235,0.22)'; x.fillRect(x0 + ox + 3, y0 + 2, w - 6, 4); x.fillRect(x0 + ox + 2, y0 + 3, 4, h - 6);
+          x.fillStyle = 'rgba(30,26,20,0.28)'; x.fillRect(x0 + ox + 3, y0 + h - 6, w - 6, 4); x.fillRect(x0 + ox + w - 6, y0 + 3, 4, h - 6);
+          // wear and grain
+          for (let k = 0; k < 14; k++) {
+            x.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
+            x.beginPath(); x.ellipse(x0 + ox + 8 + r() * (w - 16), y0 + 6 + r() * (h - 12), 3 + r() * 10, 2 + r() * 5, r() * 3, 0, 7); x.fill();
+          }
+          if (r() < 0.2) { x.strokeStyle = 'rgba(40,36,30,0.4)'; x.lineWidth = 1; x.beginPath(); x.moveTo(x0 + ox + r() * w, y0 + 2); x.lineTo(x0 + ox + r() * w, y0 + h - 2); x.stroke(); }
+        }
       }
-      const edge = (d2 - d1) * G;                       // 0 at the joint, ~1 in the middle
-      const stone = Math.min(1, Math.max(0, (edge - 0.07) / 0.12));
-      const dome = Math.min(1, edge * 1.6);
-      const light = 1 + (-bx - by) * G * 0.55 * (1 - dome) + dome * 0.06; // lit from the top-left
-      const grain = (Math.sin(px * 1.7 + py * 0.9) * Math.sin(px * 0.6 - py * 1.3)) * 0.04 + (r() - 0.5) * 0.06;
-      const t = best[2] * (light + grain);
-      const warm = best[3];
-      const sr = (150 + warm * 22) * t, sg = (144 + warm * 12) * t, sb = (132 - warm * 6) * t; // grey-beige stones, some warmer
-      const jr = 92, jg = 82, jb = 66;                    // sandy joints
-      const k = (py * N + px) * 4;
-      d[k] = jr + (sr - jr) * stone; d[k + 1] = jg + (sg - jg) * stone; d[k + 2] = jb + (sb - jb) * stone; d[k + 3] = 255;
     }
-    x.putImageData(img, 0, 0);
     T.cobble = toTex(c);
   }
   // plaster wall

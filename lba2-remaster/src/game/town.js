@@ -44,7 +44,7 @@ const HOUSES = [
     windows: [{ side: 'front', x: -2.3 }, { side: 'front', x: -0.2, w: 0.7 }, { side: 'left', x: -1.2 }, { side: 'right', x: 1.2 }, { side: 'back', x: 0 }] },
   { id: 'stone', x: -31.5, z: -16.5, ry: -0.3, w: 6.2, d: 5.2, h: 3.0, door: { x: -0.9 }, wall: 'stone', roof: 'roofBlue', shutters: '#3f9a6a', chimneyX: 0.3,
     windows: [{ side: 'front', x: 1.4 }, { side: 'left', x: 0 }, { side: 'right', x: -0.6, y: 1.4, w: 0.6, h: 0.7 }] },
-  { id: 'shop', x: -30, z: 0.5, ry: -Math.PI / 2, w: 7, d: 5.6, h: 3.4, door: { x: -1.6, arch: false }, wall: 'plaster', tint: '#f6e0c8', roof: 'roof', shutters: '#c8452f', awning: '#c8452f', awningW: 3.4, awningX: 0.6, beams: true,
+  { id: 'shop', x: -30, z: 0.5, ry: -Math.PI / 2, w: 7, d: 5.6, h: 3.4, door: { x: -1.6, arch: false }, wall: 'stone', tint: '#f4f0ea', roof: 'roof', shutters: '#c8452f', awning: '#c8452f', awningW: 3.4, awningX: 0.6, beams: true,
     windows: [{ side: 'front', x: 0.9, y: 0.9, w: 1.6, h: 1.2, noShutters: true }, { side: 'right', x: 0.4 }, { side: 'left', x: 0.8 }] },
   { id: 'water', x: -56, z: 3, ry: Math.PI / 2 + 0.25, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.6 }, wall: 'plaster', tint: '#dfe8f2', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'right', x: 0 }] },
@@ -95,7 +95,7 @@ function barrel(parent, x, y, z, r) {
 }
 function bench(parent, x, y, z, ry) {
   const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; parent.add(g);
-  const wood = texMat('wood', 0.4, 2, '#c08050');
+  const wood = texMat('wood', 0.4, 2, '#d8443a');
   for (let i = 0; i < 3; i++) put(g, new THREE.BoxGeometry(1.7, 0.05, 0.13), wood, 0, 0.46, -0.16 + i * 0.16);
   for (let i = 0; i < 2; i++) { const b = put(g, new THREE.BoxGeometry(1.7, 0.05, 0.12), wood, 0, 0.72 + i * 0.16, -0.31); b.rotation.x = -0.18; }
   const iron = mat('#2f3236', 0.5, { metalness: 0.5 });
@@ -106,16 +106,23 @@ function bench(parent, x, y, z, ry) {
   }
   return g;
 }
+// Citadel street lamp (as in LBA2): grey post on a stepped pyramid base, two
+// curled arms like a lyre, a big blue glass globe on top
 function lamp(parent, x, y, z) {
   const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
-  const iron = mat('#2a2c30', 0.45, { metalness: 0.55 });
-  put(g, new THREE.CylinderGeometry(0.14, 0.2, 0.35, 8), iron, 0, 0.17, 0);
-  put(g, new THREE.CylinderGeometry(0.05, 0.065, 2.8, 8), iron, 0, 1.6, 0);
-  put(g, new THREE.TorusGeometry(0.16, 0.025, 6, 12, Math.PI), iron, 0.16, 3.0, 0).rotation.z = 0;
-  const lan = new THREE.Group(); lan.position.set(0.32, 2.75, 0); g.add(lan);
-  put(lan, new THREE.ConeGeometry(0.2, 0.18, 4), iron, 0, 0.32, 0, Math.PI / 4);
-  put(lan, new THREE.BoxGeometry(0.26, 0.36, 0.26), new THREE.MeshStandardMaterial({ color: '#fff0c8', emissive: '#ffcf80', emissiveIntensity: 0.9, transparent: true, opacity: 0.9 }), 0, 0.06, 0, Math.PI / 4, false);
-  for (const a of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) put(lan, new THREE.BoxGeometry(0.03, 0.4, 0.03), iron, Math.cos(a + Math.PI / 4) * 0.18, 0.06, Math.sin(a + Math.PI / 4) * 0.18);
+  const metal = mat('#7d8088', 0.55, { metalness: 0.35 });
+  put(g, new THREE.CylinderGeometry(0.2, 0.36, 0.3, 4), metal, 0, 0.15, 0, Math.PI / 4);
+  put(g, new THREE.CylinderGeometry(0.12, 0.2, 0.25, 4), metal, 0, 0.42, 0, Math.PI / 4);
+  put(g, new THREE.CylinderGeometry(0.055, 0.085, 2.2, 6), metal, 0, 1.6, 0);
+  put(g, new THREE.CylinderGeometry(0.1, 0.07, 0.16, 8), metal, 0, 2.72, 0);
+  for (const sx of [-1, 1]) {
+    // each arm: a curve that leaves the post, bends outwards and curls back in
+    const pts = [[0.04, 2.25], [0.22, 2.42], [0.34, 2.68], [0.33, 2.92], [0.22, 3.0], [0.16, 2.9]].map(([px, py]) => new THREE.Vector3(px * sx, py, 0));
+    put(g, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.035, 6), metal, 0, 0, 0);
+  }
+  const glass = new THREE.MeshStandardMaterial({ color: '#2f7fd8', roughness: 0.22, metalness: 0.1, emissive: '#3a8cff', emissiveIntensity: 0.25 });
+  put(g, new THREE.SphereGeometry(0.34, 22, 16), glass, 0, 3.12, 0);
+  put(g, new THREE.CylinderGeometry(0.04, 0.06, 0.1, 8), metal, 0, 3.5, 0);
   return g;
 }
 function fence(parent, H, a, b, r) {
@@ -246,11 +253,17 @@ function curbs(parent, H) {
       const t = d / len, w = (s.w[i] + (s.w[i + 1] - s.w[i]) * t) / 2 + 0.12;
       for (const side of [-1, 1]) {
         const x = a[0] + (b[0] - a[0]) * t + nx * w * side, z = a[1] + (b[1] - a[1]) * t + nz * w * side;
-        if (Math.hypot(x - V.x, z - V.z) < 9.5) continue; // the square has no curbs
+        if (Math.hypot(x - V.x, z - V.z) < 9.9) continue; // inside the square
         if (streetDist(x, z) < -0.05) continue;          // inside another street
         pos.push([x, H(x, z), z, ang]);
       }
     }
+  }
+  // a ring of curb stones around the square, open where the streets leave it
+  for (let a = 0; a < Math.PI * 2; a += 0.55 / 9.4) {
+    const x = V.x + Math.sin(a) * 9.4, z = V.z + Math.cos(a) * 9.4;
+    if (streetDist(x, z) < 0.15) continue;
+    pos.push([x, H(x, z), z, a + Math.PI / 2]);
   }
   const geo = new THREE.BoxGeometry(0.2, 0.16, 0.56, 1, 1, 1);
   const im = new THREE.InstancedMesh(geo, mat('#b9b3a8', 0.9), pos.length);
@@ -269,14 +282,15 @@ export function buildTown(scene, W) {
   const r = rng(77);
   W.houses = [];
   const houseInfo = {};
+  const built = [];
   for (const [i, hd] of HOUSES.entries()) {
-    const built = buildHouse({ ...hd, seed: i + 3 });
+    built[i] = buildHouse({ ...hd, seed: i + 3 });
     const g = H(hd.x, hd.z);
-    built.group.position.set(hd.x, g - 0.05, hd.z);
-    built.group.rotation.y = hd.ry;
-    scene.add(built.group);
-    for (const c of built.colliders) physics.add({ type: 'box', x: hd.x, z: hd.z, hw: c.hw, hd: c.hd, rot: hd.ry, top: g + c.top });
-    const dz = built.door.z, dx = built.door.x;
+    built[i].group.position.set(hd.x, g - 0.05, hd.z);
+    built[i].group.rotation.y = hd.ry;
+    scene.add(built[i].group);
+    for (const c of built[i].colliders) physics.add({ type: 'box', x: hd.x, z: hd.z, hw: c.hw, hd: c.hd, rot: hd.ry, top: g + c.top });
+    const dz = built[i].door.z, dx = built[i].door.x;
     const door = { x: hd.x + Math.sin(hd.ry) * dz + Math.cos(hd.ry) * dx, z: hd.z + Math.cos(hd.ry) * dz - Math.sin(hd.ry) * dx };
     const info = { x: hd.x, z: hd.z, ry: hd.ry, w: hd.w, d: hd.d, g, door, id: hd.id };
     W.houses.push(info);
@@ -315,7 +329,7 @@ export function buildTown(scene, W) {
   // lamps around the square and along the streets
   for (const [i, [x, z]] of [[V.x + 4.6, V.z - 5.6], [-44.8, 4.8], [-44.6, -10.6], [-35.4, -0.2], [-55, -6.6]].entries()) {
     lamp(scene, x, H(x, z), z);
-    if (i < 2) { const l = new THREE.PointLight('#ffb36b', 10, 13, 2); l.position.set(x + 0.32, H(x, z) + 2.8, z); scene.add(l); W.lights.push(l); }
+    if (i < 2) { const l = new THREE.PointLight('#9cc8ff', 6, 11, 2); l.position.set(x, H(x, z) + 3.1, z); scene.add(l); W.lights.push(l); }
     physics.add({ type: 'cyl', x, z, r: 0.2, top: H(x, z) + 3, seeThrough: true });
   }
   // benches facing the well
@@ -350,6 +364,39 @@ export function buildTown(scene, W) {
   stoneWall(scene, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));
   for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); pot(scene, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }
   curbs(scene, H);
+
+  // houses between the camera and Twinsen fade out (each house gets its own
+  // copies of the shared materials so only that house turns see-through)
+  const fades = HOUSES.map((hd, i) => {
+    const h = W.houses[i], mats = new Map();
+    built[i].group.traverse((o) => {
+      if (!o.isMesh) return;
+      if (!mats.has(o.material)) mats.set(o.material, o.material.clone());
+      o.material = mats.get(o.material);
+    });
+    return { h, top: h.g + hd.h + built[i].gableH + 0.6, mats: [...mats.values()], f: 1 };
+  });
+  const sample = new THREE.Vector3();
+  W.fadeOccluders = (cam, hero, dt) => {
+    for (const F of fades) {
+      const { h } = F;
+      let hit = false;
+      for (const hy of [0.4, 1.0, 1.8]) for (let k = 1; k < 16 && !hit; k++) {
+        sample.set(hero.x, hero.y + hy, hero.z).lerp(cam.position, k / 16);
+        const dx = sample.x - h.x, dz = sample.z - h.z;
+        const lx = dx * Math.cos(h.ry) - dz * Math.sin(h.ry), lz = dx * Math.sin(h.ry) + dz * Math.cos(h.ry);
+        if (Math.abs(lx) < h.w / 2 + 0.6 && Math.abs(lz) < h.d / 2 + 0.6 && sample.y < F.top) hit = true;
+      }
+      const goal = hit ? 0.1 : 1;
+      F.f += (goal - F.f) * (1 - Math.exp(-dt * 8));
+      const see = F.f < 0.98;
+      for (const m of F.mats) {
+        if (m.transparent !== see) { m.transparent = see; m.needsUpdate = true; }
+        m.opacity = see ? F.f : 1;
+        m.depthWrite = !see;
+      }
+    }
+  };
 
   // laundry flutters in the wind
   W.updaters.push((dt, t) => { W.laundry.forEach((c, i) => { c.rotation.x = Math.sin(t * 2.1 + i) * 0.12 * (0.4 + W.storm); }); });

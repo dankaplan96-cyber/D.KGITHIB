@@ -113,7 +113,7 @@ export class Terrain {
                    + texture2D(tSand, tuv * 1.2).rgb * vSplat.y
                    + texture2D(tRock, vec2(vWPos.x + vWPos.z, vWPos.y * 1.6) * 0.16).rgb * vSplat.z
                    + texture2D(tDirt, tuv * 1.3).rgb * vSplat.w
-                   + texture2D(tCobble, vWPos.xz * 0.2).rgb * vSplat2;
+                   + texture2D(tCobble, vWPos.xz * 0.25).rgb * vSplat2;
           diffuseColor.rgb *= tex;`);
     };
     mat.customProgramCacheKey = () => 'terrain-splat';

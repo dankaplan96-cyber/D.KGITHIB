@@ -559,7 +559,8 @@ class Game {
 
   // ------------------------------------------------ main loop
   loop(now) {
-    const dt = Math.min(0.05, (now - this.last) / 1000);
+    // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
+    const dt = Math.max(0, Math.min(0.05, (now - this.last) / 1000));
     this.last = now;
     if (!this.testFreeze) this.frame(dt, true);
     requestAnimationFrame((t2) => this.loop(t2));
@@ -689,6 +690,7 @@ class Game {
     this.hud.stats(h);
     if (!this.room) this.hud.drawMinimap();
     this.camRig.update(dt, h.pos, h.angle, h.speed > 0.5, input);
+    if (!this.room) this.world.fadeOccluders?.(this.camera, h.pos, dt);
   }
 }
 

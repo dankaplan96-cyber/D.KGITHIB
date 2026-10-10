@@ -251,14 +251,14 @@ export function buildHouse(opts) {
     aw.position.set(o.awningX ?? 0, o.awningY ?? 2.55, o.d / 2 + 0.02);
     g.add(aw);
     const w = o.awningW ?? 2.6;
-    const geo = new THREE.CylinderGeometry(0.9, 0.9, w, 16, 1, true, -Math.PI / 2, Math.PI * 0.42);
+    const geo = new THREE.CylinderGeometry(0.9, 0.9, w, 16, 1, true, Math.PI * 0.08, Math.PI * 0.42); // quarter dome from the wall out and down
     geo.rotateZ(Math.PI / 2);
     const stripes = stripeTexture(o.awning);
     const m = mesh(geo, new THREE.MeshStandardMaterial({ map: stripes, side: THREE.DoubleSide, roughness: 0.9 }), aw, 0, -0.9, 0.0);
     m.scale.set(1, 1, 1);
     // scalloped valance
     for (let i = 0; i < Math.round(w / 0.3); i++) {
-      const v = mesh(new THREE.CircleGeometry(0.15, 10, Math.PI, Math.PI), new THREE.MeshStandardMaterial({ color: i % 2 ? '#ffffff' : o.awning, side: THREE.DoubleSide }), aw, -w / 2 + 0.15 + i * 0.3, -0.42, 0.88);
+      const v = mesh(new THREE.CircleGeometry(0.15, 10, Math.PI, Math.PI), new THREE.MeshStandardMaterial({ color: i % 2 ? '#ffffff' : o.awning, side: THREE.DoubleSide }), aw, -w / 2 + 0.15 + i * 0.3, -0.62, 0.87);
       v.castShadow = false;
     }
     for (const sx of [-1, 1]) mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 6), plain('#3a3a3a', 0.5), aw, sx * (w / 2 - 0.05), -0.35, 0.45).rotation.x = 1.1;
