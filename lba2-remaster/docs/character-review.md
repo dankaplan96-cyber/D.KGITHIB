@@ -143,3 +143,79 @@ weight lets it droop a touch, moving it streams back slightly and bounces with e
 | Ball leaves the hand at the right moment | pass | held in the hand during the wind-up, released at the whip |
 | No pops between clips | not yet verified frame by frame at full rate | |
 | Recognisable at game distance | awaiting the user's judgement | `twinsen-v3-ingame-house.png` |
+
+## 8. Fidelity pass (v4) — faithful to LBA2's Twinsen, not a redesign
+
+Brief from the user: the result wasn't close enough to the original. Detail (face, hair, clothes, medallion,
+proportions) comes from the classic Twinsen render the user sent; silhouette, colours, scale and readability come
+from the LBA2 in-game model (screenshot crops #47 ¾ front, #38 ¾ side, #23 back, see §1). Where they disagree the
+in-game model sets the shape and the render sets the details. The only video available was the recording of the
+*current* version, so it was used for diagnosis only; no original gameplay footage is reachable from this
+environment, so no animation timing was copied from the original (marked as design decisions in §5).
+
+Comparison boards use the same cameras, light and distances before and after (`scratchpad/board.mjs`,
+`gamecam.mjs`): `captures/characters/twinsen-v4-model-views.png` (front / ¾ / side / back, silhouette, head
+front/¾/side), `twinsen-v4-before-after.png` (colour, silhouette and the real game camera in the house and the
+town at play size), `twinsen-v4-motion-poses.png` (walk, run, jump, throw). The boards with the reference images
+next to the model are kept outside the repository (the references are copyrighted) and were sent to the user.
+
+### Diagnosis of v3 (before), concrete
+
+1. Sleeves were closed balloons ending at the elbow, on ball shoulders — the reference sleeves are bells hanging
+   from a sloped shoulder, widening to an open hem at hip level; together with the chest they make the upper
+   body a trapezoid ("cape" read in #47/#23).
+2. No waist: the body was a straight tube. Reference: a clear waist (render), a thin orange belt (game).
+3. Tunic too pale (`#93c6ee`); the game's is a medium blue, darker on the skirt.
+4. Head too round and wide, jaw not tapering, eyes far apart, a big ball nose on a bridge, a wide grin.
+5. Neck hidden under the collar; the references show a narrow, visible neck.
+6. Hair: a brown cap over the whole skull; the game shows dark hair only on the crown and as a strip down
+   the back of the head, with the tuft rising from the back of the crown.
+7. Shoes: shapeless lumps hidden under the hem.
+
+### What was rebuilt
+
+- Sculpt primitive `bell` (src/engine/sculpt.js): the shell of a tapered capsule cut flat across its axis — an
+  open sleeve with a thin cloth wall. The arms surface is sculpted at 0.7× the body cell so the wall holds.
+- Outfit `tw` (characters.js): sloped yoke instead of ball shoulders, a softer narrower chest, waist 0.122,
+  thin orange belt, skirt flaring from the waist to hem 0.135 with soft folds and a thin hem; sleeves
+  shoulder r 0.085 → elbow 0.155 → bell hem 0.205, ending just above the hand.
+- Head: egg skull 1.03 tall, width ×1.08, jaw 0.88, chin 0.9, cheeks halved; eyes ×1.5, oval ×1.18, set into the
+  head; ball nose without the bridge; small open mouth; warm skin `#efab70`; neck 0.095 long, r 0.033.
+- Hair `#3a2414`: crown cap (hairline 0.25 front / 0.1 back) plus a central strip down the back (#23); the
+  ponytail rises from the back of the crown and arches back (#38; the render's is the same gesture, longer).
+- Medallion placed by marching the body's distance field to the cloth surface (no floating, no sinking); the
+  strap follows the surface; strap colour red-brown `#8e3a24`.
+- Shoes: rounded with a clear toe box and heel, ×1.12, brown `#94502a`, peeking under the hem. Hands ×1.2.
+
+### Checks, each separately (v4)
+
+| Check | Result | Notes |
+|---|---|---|
+| Head and face shape | closer | oval narrowing to the chin; big white oval eyes, small round nose, open mouth |
+| Neck height | matches | visible and narrow (game: long; render: shorter — between the two) |
+| Sleeve volume | matches the game read | bells from the shoulder to hip level; render's sleeves are even fuller |
+| Shoulder : waist ratio | matches | trapezoid upper body, clear waist under it |
+| Tunic length | matches | to the ankle, shoes peek (game); render's is shorter (mid-calf) |
+| Hair shape | matches | crown + back strip + rising tuft; not a ball, cylinder or hat |
+| Shoe size | close | rounded with a toe; game shows orange slippers, render brown — brown chosen per the brief |
+| Medallion position | matches | upper chest, on the cloth, red-brown strap |
+| Colour blocks | matches the game | medium blue, darker skirt, orange belt, brown shoes, dark hair, warm skin |
+
+### Differences that remain (honest list)
+
+- The sleeves are rigid bells that follow the arm; they don't hang with gravity when the arm is raised (the
+  original's are rigid polygons too, but its sleeve hem is more horizontal than ours at rest).
+- Eyes: we follow the render (big). The in-game model has small eyes; at play size ours read bigger.
+- The skirt flares a little more (A-line) than the in-game one, which is closer to a straight column.
+- The ponytail length is a reconstruction between the game's compact tuft and the render's longer one;
+  no reference shows it from straight behind in detail.
+- Hands: palm, fingers and thumb are modelled; the game's are simple balls at this distance.
+- Animation timing could not be studied from original footage (not reachable); motion is designed, not copied.
+
+### Source and export
+
+- Source: the `twinsen` entry in `LOOKS` and the `tw` outfit/sleeve/head code in `src/game/characters.js`,
+  the `bell` primitive in `src/engine/sculpt.js`.
+- Export: `art/characters/twinsen/export/twinsen.obj` (rest pose, vertex colours, 78k vertices, 19 parts) via
+  `node tools/export-character.mjs twinsen`; the game loads the same geometry from `assets/bake.bin`.
+

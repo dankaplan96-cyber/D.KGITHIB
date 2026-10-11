@@ -50,6 +50,15 @@ function sdCappedCone(px, py, pz, p) {
   const sgn = cbx < 0 && cay < 0 ? -1 : 1;
   return sgn * Math.sqrt(Math.min(cax * cax + cay * cay, cbx * cbx + cby * cby)) * Math.min(1, p.sz || 1) - (p.round || 0);
 }
+// open bell (a wide sleeve): the shell of a tapered capsule from a (r1) to b (r2), wall thickness `wall`,
+// cut flat through b across the axis so the wide end is open and shows the cloth's thickness
+function sdBell(px, py, pz, p) {
+  const dc = sdRoundCone(px, py, pz, p);
+  const shell = Math.abs(dc + p.wall * 0.5) - p.wall * 0.5;
+  const ax = p.b[0] - p.a[0], ay = p.b[1] - p.a[1], az = p.b[2] - p.a[2], l = Math.hypot(ax, ay, az);
+  const t = ((px - p.b[0]) * ax + (py - p.b[1]) * ay + (pz - p.b[2]) * az) / l;
+  return Math.max(shell, t);
+}
 function sdTorusY(px, py, pz, p) {
   const x = px - p.c[0], y = py - p.c[1], z = (pz - p.c[2]) / (p.sz || 1);
   const q = Math.hypot(x, z) - p.R;
@@ -67,6 +76,7 @@ function prim(px, py, pz, p) {
     case 'torus': d = sdTorusY(px, py, pz, p); break;
     case 'box': d = sdBox(px, py, pz, p); break;
     case 'ccone': d = sdCappedCone(px, py, pz, p); break;
+    case 'bell': d = sdBell(px, py, pz, p); break;
   }
   if (p.cutBelow != null) d = Math.max(d, p.cutBelow - py);      // flat sole etc.
   if (p.cutAbove != null) d = Math.max(d, py - p.cutAbove);
@@ -92,7 +102,7 @@ export function makeSDF(prims, groups, joinK = 0.015) {
   for (const p of solid.concat(subs)) {
     let c, r;
     if (p.type === 'ell') { c = p.c; r = Math.max(...p.r); }
-    else if (p.type === 'cone') { c = p.a.map((v, i) => (v + p.b[i]) / 2); r = Math.hypot(p.a[0] - p.b[0], p.a[1] - p.b[1], p.a[2] - p.b[2]) / 2 + Math.max(p.r1, p.r2); }
+    else if (p.type === 'cone' || p.type === 'bell') { c = p.a.map((v, i) => (v + p.b[i]) / 2); r = Math.hypot(p.a[0] - p.b[0], p.a[1] - p.b[1], p.a[2] - p.b[2]) / 2 + Math.max(p.r1, p.r2); }
     else if (p.type === 'torus') { c = p.c; r = p.R * (p.sz || 1) + p.r; }
     else if (p.type === 'ccone') { c = p.c; r = Math.hypot(p.h, Math.max(p.rb, p.rt)) + (p.round || 0); }
     else { c = p.c; r = Math.hypot(...p.h); }
