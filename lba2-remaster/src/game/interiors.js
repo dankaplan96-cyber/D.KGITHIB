@@ -1234,11 +1234,11 @@ function buildLightTop(scene, physics) {
   k.add(lathe([[0.001, 0], [0.08, 0], [0.09, 0.04], [0.05, 0.08], [0.06, 0.12], [0.001, 0.16]], 12), brass, hx, 0.75, hz);
   const stepGeo = slab('lhstep', (s) => { const a = 0.32, r0 = 0.06, r1 = hr - 0.03; s.moveTo(Math.cos(-a) * r0, Math.sin(-a) * r0); s.lineTo(Math.cos(-a) * r1, Math.sin(-a) * r1); s.absarc(0, 0, r1, -a, a, false); s.lineTo(Math.cos(a) * r0, Math.sin(a) * r0); s.lineTo(Math.cos(-a) * r0, Math.sin(-a) * r0); }, 0.05, 0.008);
   for (let i = 0; i < 8; i++) { const ph = -i * 0.6, y = -0.035 - i * 0.18; k.add(stepGeo, MAT.tread('#7e8a90'), hx, y, hz, ph - Math.PI / 2, { rx: -Math.PI / 2 }); }
-  const gap = 0.62, rr0 = gap, rr1 = Math.PI * 2 - gap, rRad = hr + 0.08;
+  const gap = 0.75, rr0 = gap, rr1 = Math.PI * 2 - gap, rRad = hr + 0.08;
   for (let i = 0; i <= 6; i++) { const ph = rr0 + ((rr1 - rr0) * i) / 6, [x, z] = pol(ph, rRad); k.add(cyl(0.02, 0.026, 0.95, 6), brass, hx + x, 0.475, hz + z); }
   arc(rRad, 0.024, rr0, rr1, 0.95, brass, hx, hz); arc(rRad, 0.014, rr0, rr1, 0.5, brass, hx, hz);
   for (let i = 0; i < 7; i++) { const ph = rr0 + ((rr1 - rr0) * (i + 0.5)) / 7, [x, z] = pol(ph, rRad); B.col(hx + x, hz + z, rRad * Math.tan((rr1 - rr0) / 14) + 0.04, 0.07, 1.0, { rot: ph, noStand: true, seeThrough: true }); }
-  R.exits.push({ ...B.world(hx, hz + 0.3), r: 0.45, to: 'outdoor-lighthouse' });
+  R.exits.push({ ...B.world(hx, hz + 0.3), r: 0.6, to: 'outdoor-lighthouse' });
   R.spawn = { ...B.world(hx, hz + 1.25), a: -Math.PI / 2 };
 
   // --- the lens on its pedestal, turning; the lamp's glow
