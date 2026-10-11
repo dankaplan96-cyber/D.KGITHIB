@@ -22,7 +22,7 @@
 // edges, real thickness, painted textures with world-scaled UVs, static parts merged per material.
 //
 // Heights the story may need: walking level Y0 = 6.0, platform deck DECK = 6.42 (both world y), cloud sea
-// R.cloudY = -6. Mill brakes are 3.0 m above the ground; the old mill's balcony (R.millTop.y) is 8.75 m up.
+// R.cloudY = -3. Mill brakes are 3.0 m above the ground; the old mill's balcony (R.millTop.y) is 8.75 m up.
 import * as THREE from 'three';
 import { textures } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
@@ -32,7 +32,7 @@ import { rugTex } from './props.js';
 export const ZEELICH = { x: 2400, z: 0 };
 const Y0 = 6.0;              // walking level of the island
 const DECK = Y0 + 0.42;      // drill platform deck (one step up from the neck)
-const CLOUD_Y = Y0 - 12;     // the sea of clouds
+const CLOUD_Y = Y0 - 9;      // the sea of clouds
 
 // ================================================================== layout (local coordinates)
 // island outline (clockwise from the dock), smoothed before use
@@ -152,19 +152,19 @@ const sailTex = (a = '#f6eadc', b = '#e88aa4') => ctex('sail' + a + b, 128, 256,
 // soft cloud puffs, tileable, transparent (alpha) or on a solid ground
 const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
   const r = rng(solid ? 77 : 78);
-  if (solid) { x.fillStyle = '#d6a2c8'; x.fillRect(0, 0, S, S); } else x.clearRect(0, 0, S, S);
-  for (let i = 0; i < (solid ? 60 : 40); i++) {
-    const px = r() * S, py = r() * S, rr = 26 + r() * 52;
-    for (let k = 0; k < 6; k++) {
-      const qx = px + (r() - 0.5) * rr * 1.7, qy = py + (r() - 0.5) * rr * 0.8, q = rr * (0.45 + r() * 0.5);
-      const shade = r() < 0.35;
-      wrap9(S, (ox, oy) => {
-        const g = x.createRadialGradient(qx + ox, qy + oy - q * 0.25, 0, qx + ox, qy + oy, q);
-        if (shade && solid) { g.addColorStop(0, 'rgba(196,150,206,0.6)'); g.addColorStop(1, 'rgba(196,150,206,0)'); }
-        else { g.addColorStop(0, 'rgba(255,250,252,0.95)'); g.addColorStop(0.55, 'rgba(255,236,244,0.55)'); g.addColorStop(1, 'rgba(255,240,248,0)'); }
-        x.fillStyle = g; x.fillRect(qx + ox - q, qy + oy - q, q * 2, q * 2);
-      });
-    }
+  if (solid) { x.fillStyle = '#d0a0cc'; x.fillRect(0, 0, S, S); } else x.clearRect(0, 0, S, S);
+  // billows: a lavender shadow under each puff, then the sunlit puff with a soft rim
+  for (let i = 0; i < (solid ? 46 : 26); i++) {
+    const px = r() * S, py = r() * S, rr = 18 + r() * 36;
+    const parts = [];
+    for (let k = 0; k < 7; k++) parts.push([px + (r() - 0.5) * rr * 2.0, py + (r() - 0.5) * rr * 0.7, rr * (0.45 + r() * 0.45)]);
+    for (const pass of [0, 1]) for (const [qx, qy, q] of parts) wrap9(S, (ox, oy) => {
+      const cx = qx + ox, cy = qy + oy + (pass ? 0 : q * 0.28);
+      const g = x.createRadialGradient(cx - q * 0.2, cy - q * 0.25, 0, cx, cy, q);
+      if (!pass) { g.addColorStop(0, 'rgba(150,110,170,0.5)'); g.addColorStop(0.8, 'rgba(160,120,180,0.3)'); g.addColorStop(1, 'rgba(160,120,180,0)'); }
+      else { g.addColorStop(0, 'rgba(255,253,250,1)'); g.addColorStop(0.55, 'rgba(255,242,248,0.95)'); g.addColorStop(0.85, 'rgba(244,214,236,0.55)'); g.addColorStop(1, 'rgba(240,210,236,0)'); }
+      x.fillStyle = g; x.fillRect(cx - q, cy - q, q * 2, q * 2);
+    });
   }
 });
 const puffTex = () => ctex('puff', 128, 128, (x, S) => {
@@ -496,7 +496,7 @@ export function buildZeelich(scene, physics) {
   const R = {
     id: 'zeelich', outdoor: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
     music: 'zeelich', cloudY: CLOUD_Y,
-    env: { fog: '#efcade', sun: '#fff0dc', hemiSky: '#f8e2ff', hemiGround: '#a07c9c', sunI: 2.5, hemiI: 1.3, fogRange: [60, 240] },
+    env: { fog: '#efcade', sun: '#fff0dc', hemiSky: '#f8e2ff', hemiGround: '#a07c9c', sunI: 2.5, hemiI: 1.3, fogRange: [85, 300] },
   };
 
   buildGround();
@@ -619,7 +619,7 @@ export function buildZeelich(scene, physics) {
     // walkable bricks: 1 m strips across the island, 0.4 m inside the edge
     stripBricks(ISL, 0.4, Y0);
     // a few big boulders hanging off the rim
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 12; i++) {
       const k = Math.floor(r() * n), [px, pz] = ring[k], [nx, nz] = nrm[k];
       if (px < -46 && Math.abs(pz) < 5) continue;
       if (px > 34 && Math.abs(pz) < 8) continue;
@@ -1196,7 +1196,7 @@ export function buildZeelich(scene, physics) {
     const old = !!m.old;
     const H = old ? 12.0 : 10.0, R0 = old ? 2.5 : 2.2, R1 = old ? 2.0 : 1.75;
     const Rat = (y) => R0 + (R1 - R0) * (y / H);
-    const wallM = old ? tm('stone', { color: '#f4e4ee' }) : tm('plasterWall', { color: m.id === 'east' ? '#f6eef0' : '#efe2f4' });
+    const wallM = old ? tm('stone', { color: '#fff2fa' }) : tm('plasterWall', { color: m.id === 'east' ? '#f6eef0' : '#efe2f4' });
     const tiles = tm(tileTex(m.id === 'south' ? '#c84a7a' : '#2f8a9a', '#e8b84a', '#3a72c4'), { rough: 0.45 });
     const stoneM = tm('stone', { color: '#e0cce0' });
     // tower, plinth, bands, door, windows
@@ -1222,7 +1222,7 @@ export function buildZeelich(scene, physics) {
     else MB.add(lathe([[R1 + 0.25, 0], [R1 + 0.5, 0.5], [R1 + 0.45, 1.1], [R1 * 0.75, 1.9], [0.45, 2.6], [0.12, 3.1], [0.03, 3.6]], 24, 1.1), tm(domeTex(m.id === 'east' ? '#3a9aa0' : '#8a5ac0', m.id === 'east' ? '#b8fff0' : '#e8c8ff'), { rough: 0.38 }), 0, capY, 0);
     MB.add(cached('millfin', () => lathe([[0, 0], [0.08, 0], [0.14, 0.15], [0.05, 0.3], [0.02, 0.8], [0, 0.82]], 8)), brassM(), 0, capY + (old ? 3.1 : 3.5), 0);
     // nacelle and axle out to the hub
-    const hubY = old ? H + 1.6 : H + 1.2, axL = old ? 4.7 : 3.9;
+    const hubY = old ? H + 1.6 : H + 1.2, axL = old ? 5.3 : 3.9;
     const fx = Math.sin(face), fz = Math.cos(face);
     MB.add(boxUV(bbox(1.3, 1.1, axL - 0.6, 0.1, 1), TILE.teal), old ? tm('wood', { color: '#a88870' }) : tealM(), fx * (axL - 0.6) / 2, hubY, fz * (axL - 0.6) / 2, 0, face, 0);
     MB.add(boxUV(bbox(1.42, 0.14, axL - 0.4, 0.04, 1), 1.6), brassM(), fx * (axL - 0.6) / 2, hubY + 0.6, fz * (axL - 0.6) / 2, 0, face, 0);
@@ -1255,7 +1255,7 @@ export function buildZeelich(scene, physics) {
     const bp = m.brake, rb = Rat(3) + 0.75;
     const bx = Math.sin(bp) * rb, bz = Math.cos(bp) * rb, by = 3.0;
     MB.add(boxUV(bbox(0.16, 0.16, 0.8, 0.03, 1), 1), darkSteel(), Math.sin(bp) * (Rat(3) + 0.3), by - 0.55, Math.cos(bp) * (Rat(3) + 0.3), 0, bp, 0);
-    MB.add(cyl(0.035, 0.035, H - 3.2, 6, 1), darkSteel(), Math.sin(bp) * (Rat(6) + 0.12), 3.2 + (H - 3.2) / 2, Math.cos(bp) * (Rat(6) + 0.12), 0, 0, (R0 - R1) / H * (bp > 0 ? 1 : 1) * 0);
+    { const rTop = old ? 8.4 : H - 0.5; rod(MB, [Math.sin(bp) * (Rat(3.2) + 0.1), 3.2, Math.cos(bp) * (Rat(3.2) + 0.1)], [Math.sin(bp) * (Rat(rTop) + 0.1), rTop, Math.cos(bp) * (Rat(rTop) + 0.1)], 0.03, brassM(), 6); }
     const lever = new THREE.Group(); lever.position.set(bx, by - 0.55, bz); lever.rotation.y = bp; G.add(lever);
     mesh(lever, cyl(0.05, 0.05, 0.75, 8, 1), brassM(), 0, 0.3, 0);
     mesh(lever, cached('bullring', () => new THREE.TorusGeometry(0.56, 0.07, 8, 28)), brassM(), 0, 0.7, 0.05);
@@ -1270,10 +1270,10 @@ export function buildZeelich(scene, physics) {
       const stone = tm('stone', { color: '#e8d2de' });
       tops.forEach((ty, k) => {
         const phi = phi0 + k * dphi, inner = Rat(ty) - 0.25, outer = rs + 0.66, mid = (inner + outer) / 2;
-        MB.add(boxUV(bbox(1.32, 0.4, outer - inner, 0.07, 1), 1.2), stone, Math.sin(phi) * mid, ty - 0.2, Math.cos(phi) * mid, 0, phi, 0);
+        MB.add(boxUV(bbox(1.5, 0.4, outer - inner, 0.07, 1), 1.2), stone, Math.sin(phi) * mid, ty - 0.2, Math.cos(phi) * mid, 0, phi, 0);
         if (k > 0) MB.add(cached('corbel', () => { const s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(0.9, 0); s.quadraticCurveTo(0.2, -0.1, 0, -0.8); s.lineTo(0, 0); const g = new THREE.ExtrudeGeometry(s, { depth: 0.5, bevelEnabled: false }); g.translate(0, 0, -0.25); g.rotateY(-Math.PI / 2); return boxUV(g, 1); }), stone, Math.sin(phi) * (Rat(ty) - 0.05), ty - 0.4, Math.cos(phi) * (Rat(ty) - 0.05), 0, phi, 0);
-        else MB.add(boxUV(bbox(1.32, ty - 0.4, 1.3, 0.06, 1), 1.2), stone, Math.sin(phi) * rs, (ty - 0.4) / 2, Math.cos(phi) * rs, 0, phi, 0);
-        col({ type: 'box', x: m.x + Math.sin(phi) * rs, z: m.z + Math.cos(phi) * rs, hw: 0.66, hd: 0.64, rot: phi, top: Y0 + ty, bottom: k === 0 ? undefined : Y0 + ty - 0.4 });
+        else MB.add(boxUV(bbox(1.5, ty - 0.4, 1.3, 0.06, 1), 1.2), stone, Math.sin(phi) * rs, (ty - 0.4) / 2, Math.cos(phi) * rs, 0, phi, 0);
+        col({ type: 'box', x: m.x + Math.sin(phi) * rs, z: m.z + Math.cos(phi) * rs, hw: 0.75, hd: 0.64, rot: phi, top: Y0 + ty, bottom: k === 0 ? undefined : Y0 + ty - 0.4 });
       });
       // the gallery: a ring of planks with a gap where the last stones arrive
       const balY = 8.75, gap0 = phi0 + 4 * dphi - 0.29, gap1 = phi0 + 5 * dphi + 0.39;
@@ -1491,7 +1491,7 @@ export function buildZeelich(scene, physics) {
     mesh(pad, cached('padring', () => new THREE.RingGeometry(PAD.r - 0.35, PAD.r - 0.08, 32).rotateX(-Math.PI / 2)), tm('hazard', { rough: 0.6 }), 0, 0.03, 0, 0, { cast: false });
     mesh(pad, cached('padem', () => new THREE.PlaneGeometry(1.4, 1.4).rotateX(-Math.PI / 2)), emblemMaterial(), 0, 0.04, 0, 0, { cast: false });
     for (let k = 0; k < 4; k++) mesh(pad, cached('padrail', () => cyl(0.06, 0.06, 1.0, 8, 1)), brassM(), Math.sin(k * Math.PI / 2 + 0.6) * (PAD.r - 0.12), 0.5, Math.cos(k * Math.PI / 2 + 0.6) * (PAD.r - 0.12));
-    const padCol = col({ type: 'cyl', x: PAD.x, z: PAD.z, r: PAD.r, top: DECK, seeThrough: true });
+    const padCol = col({ type: 'cyl', x: PAD.x, z: PAD.z, r: SHAFT_R + 0.15, top: DECK, seeThrough: true }); // overlaps the deck: no gap to fall in
     // the derrick over the shaft: four lattice legs, girts, X braces, crown block, a hanging top drive
     const dH = 15, legB = 3.4, legT = 0.7;
     const leg = (sx, sz, y) => [PAD.x + sx * lerp(legB, legT, y / dH), DECK + y, PAD.z + sz * lerp(legB, legT, y / dH)];
@@ -1500,7 +1500,7 @@ export function buildZeelich(scene, physics) {
     for (let y = 3; y <= dH; y += 3) for (let i = 0; i < 4; i++) {
       const [ax, az] = corners[i], [bx, bz] = corners[(i + 1) % 4];
       member(PB, leg(ax, az, y), leg(bx, bz, y), 0.16, brassM(), 1, 0.03);
-      if (y > 3 || i % 2 === 1) { member(PB, leg(ax, az, y - 3), leg(bx, bz, y), 0.1, darkSteel(), 1, 0.02); member(PB, leg(bx, bz, y - 3), leg(ax, az, y), 0.1, darkSteel(), 1, 0.02); }
+      if (y > 3 || i % 2 === 0) { member(PB, leg(ax, az, y - 3), leg(bx, bz, y), 0.1, darkSteel(), 1, 0.02); member(PB, leg(bx, bz, y - 3), leg(ax, az, y), 0.1, darkSteel(), 1, 0.02); }
     }
     PB.add(boxUV(bbox(2.2, 0.9, 2.2, 0.1, 1), TILE.brass), brassM(), PAD.x, DECK + dH + 0.45, PAD.z);
     PB.add(cached('sheave', () => new THREE.TorusGeometry(0.55, 0.12, 8, 20)), darkSteel(), PAD.x, DECK + dH + 1.2, PAD.z);
@@ -1652,20 +1652,20 @@ export function buildZeelich(scene, physics) {
       updaters.push((dt, t) => { map.offset.set(t * speed, t * speed * 0.6); });
       return pl;
     };
-    mk(cloudTex(true), CLOUD_Y - 2.5, 9, '#ffffff', 1, 0.0015, false);
-    mk(cloudTex(false), CLOUD_Y, 6, '#ffffff', 0.9, 0.003, true);
-    mk(cloudTex(false), CLOUD_Y + 1.8, 4, '#ffe8f2', 0.6, -0.002, true);
+    mk(cloudTex(true), CLOUD_Y - 2.5, 16, '#ffffff', 1, 0.0012, false);
+    mk(cloudTex(false), CLOUD_Y, 11, '#ffffff', 0.9, 0.002, true);
+    mk(cloudTex(false), CLOUD_Y + 1.8, 7, '#fff0f6', 0.6, -0.0015, true);
     // big puffs hugging the cliffs and drifting further out
     const ring = resample(ISL, 7);
     const puffs = [];
-    const pm2 = new THREE.SpriteMaterial({ map: puffTex(), color: '#fff0f6', transparent: true, depthWrite: false, fog: true, opacity: 0.95 });
+    const pm2 = new THREE.SpriteMaterial({ map: puffTex(), color: '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
     const add = (x, y, z, s) => { const sp = new THREE.Sprite(pm2); sp.position.set(x, y, z); sp.scale.set(s * 1.6, s, 1); group.add(sp); puffs.push({ sp, y, ph: r() * 6 }); };
     let cx = 0, cz = 0; for (const [x, z] of ISL) { cx += x; cz += z; } cx /= ISL.length; cz /= ISL.length;
-    for (const [x, z] of ring) {
+    ring.forEach(([x, z], i) => {
       const dx = x - cx, dz = z - cz, l = Math.hypot(dx, dz);
-      add(x + (dx / l) * (2 + r() * 6), CLOUD_Y + 1.5 + r() * 2.5, z + (dz / l) * (2 + r() * 6), 9 + r() * 8);
-      if (r() < 0.5) add(x + (dx / l) * (16 + r() * 30), CLOUD_Y + 1 + r() * 3, z + (dz / l) * (16 + r() * 30), 14 + r() * 12);
-    }
+      if (i % 2 === 0) add(x + (dx / l) * (1 + r() * 4), CLOUD_Y + 0.5 + r() * 2, z + (dz / l) * (1 + r() * 4), 6 + r() * 5);
+      if (r() < 0.25) add(x + (dx / l) * (20 + r() * 40), CLOUD_Y + 1 + r() * 3, z + (dz / l) * (20 + r() * 40), 10 + r() * 10);
+    });
     for (const [x, z] of [[50, 0], [46, -9], [56, 8], [-58, 0], [-62, 6]]) add(x, CLOUD_Y + 2.5, z, 12 + r() * 6);
     updaters.push((dt, t) => { for (const p of puffs) p.sp.position.y = p.y + Math.sin(t * 0.25 + p.ph) * 0.4; });
   }
@@ -1722,7 +1722,8 @@ export function buildZeelich(scene, physics) {
           c.push(cc.r, cc.g, cc.b);
         }
         g.setAttribute('color', new THREE.Float32BufferAttribute(c, 3)); g.deleteAttribute('uv');
-        g.computeVertexNormals();
+        // smooth normals (the icosahedron is unindexed): bend them toward the blob's radial direction
+        const N = g.attributes.normal; for (let i = 0; i < p.count; i++) { nn.fromBufferAttribute(p, i).normalize(); N.setXYZ(i, nn.x, nn.y, nn.z); }
         parts.push([g, bx, by, bz]);
       }
       const out = compose(parts.map(([g, x = 0, y = 0, z = 0]) => [g.attributes.uv ? g : (g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2)), g), x, y, z]), true);
@@ -1744,7 +1745,7 @@ export function buildZeelich(scene, physics) {
     // rocks along the rim and in the grass
     const rocks = [[], [], []];
     for (const it of rimRocks) rocks[Math.floor(r() * 3)].push(it);
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 14; i++) {
       const x = -48 + r() * 84, z = -28 + r() * 56;
       if (!onIsland(x, z, 1.2) || !isClear(x, z, 1.5)) continue;
       const s = 0.25 + r() * 0.5;
