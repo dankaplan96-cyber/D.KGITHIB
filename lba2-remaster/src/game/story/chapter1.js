@@ -194,7 +194,7 @@ export class Chapter1 extends ChapterBase {
           });
         }
         if (!f.c1_water) return c([['vesk', 'c1_vesk_wait']]);
-        if (!f.c1_tour) return c([['vesk', 'c1_vesk_tour1'], ['hero', 'c1_tw_tour1'], ['vesk', 'c1_vesk_tour2'], ['hero', 'c1_tw_tour2'], ['vesk', 'c1_vesk_tour3']], () => {
+        if (!f.c1_tour) return c([['vesk', 'c1_vesk_tour1'], ['vesk', 'c1_vesk_tour1b'], ['hero', 'c1_tw_tour1b'], ['hero', 'c1_tw_tour1'], ['vesk', 'c1_vesk_tour2'], ['hero', 'c1_tw_tour2'], ['vesk', 'c1_vesk_tour3']], () => {
           f.c1_tour = true; f.c1_needZoe = true; this.story.refreshCast(); g.updateObjective(); g.save(false);
         });
         if (f.c1_zoeDone && !f.c1_veskGone) return c([['zoe', 'c1_conf_zoe1'], ['vesk', 'c1_conf_vesk1'], ['hero', 'c1_conf_tw1'], ['vesk', 'c1_conf_vesk2'], ['zoe', 'c1_conf_zoe2'], ['vesk', 'c1_conf_vesk3'], ['hero', 'c1_conf_tw2'], ['vesk', 'c1_conf_vesk4']], () => this.veskLeaves());
@@ -208,9 +208,9 @@ export class Chapter1 extends ChapterBase {
         return c([['doran', f.c1_task ? 'c1_doran_drones' : 'c1_doran_idle']]);
       case 'xil': return c([['xil', f.c1_water ? 'c1_xil_2' : 'c1_xil_1']]);
       case 'pippa':
-        this.chain([['pippa', f.c1_veskGone ? 'c1_pippa_2' : 'c1_pippa_1']], () => g.openShop());
+        this.chain([['pippa', f.c1_veskGone ? 'c1_pippa_2' : f.c1_water ? 'c1_pippa_heat' : 'c1_pippa_1']], () => g.openShop());
         return true;
-      case 'tim': case 'lulu': return c([[id, id === 'tim' ? 'c1_tim' : 'c1_lulu']]);
+      case 'tim': case 'lulu': return c([[id, 'c1_' + id + (f.c1_water ? '_heat' : '')]]);
     }
     return false;
   }

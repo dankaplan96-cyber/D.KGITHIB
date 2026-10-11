@@ -93,6 +93,7 @@ class Game {
     this.input = new Input(this.renderer.canvas);
     this.camRig = new CameraRig(this.camera, this.terrain, this.physics);
     this.particles = new Particles(this.scene);
+    this.world.particles = this.particles;
     this.pickups = new Pickups(this);
     this.bolts = new Bolts(this);
     this.ball = new MagicBall(this);

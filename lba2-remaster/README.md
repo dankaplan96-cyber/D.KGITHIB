@@ -1,122 +1,99 @@
-# LBA3 — ההתעוררות (פרולוג)
+# LBA3: The Awakening
 
-המשך מעריצים לא רשמי ל־**Little Big Adventure 2**. הוא רץ בדפדפן, ובנוי בארכיטקטורה ובאסתטיקה של המנוע המקורי.
+An unofficial fan continuation of **Little Big Adventure 2**, playable in the browser and built after
+the original engine's architecture and look.
 
-> פרויקט מעריצים לא מסחרי. אין קשר ל־Adeline Software או ל־[2.21].
-> הדמויות והעולם שייכים לבעליהם. הסיפור הוא הצעה מקורית ולא עלילה רשמית.
-> אין במשחק אף נכס מקורי: כל המודלים, הטקסטורות, הצלילים והמוזיקה נוצרים בקוד.
+> Non-commercial fan project, not affiliated with Adeline Software or [2.21]. The characters and world
+> belong to their owners; the story is an original proposal, not an official plot. No original game
+> assets are included: models, textures, sound and music are made for this project (see
+> `ASSET_MANIFEST.md`).
 
-## הפרולוג
+## The story
 
-עברו 12 שנים מסוף LBA2. באר העיר באי המצודה מפסיקה לספק מים.
+Twelve years after LBA2, the well in Citadel Island's square runs dry.
 
-1. **הבית** (חדר איזומטרי כמו במקור): זואי שולחת את טווינסן לבדוק מה קרה, וארתור רוצה לבוא. כדור הקסם וההולומפה מחכים בארון, וזואי לא נותנת לצאת בלעדיהם.
-2. **הכיכר**: גילברט ומירה ממשרד המים מתווכחים על חשבון המים, ומי שמתווך ביניהם מקבל את מפתח מכסה הבאר.
-3. **הנמל**: קסיל, סוחר אסמרי, לא מצליח לפרוק ציוד של "המיזם המשותף", ודורן מנהל הנמל ישן. החותמת מביאה סולם חבלים.
-4. **רשות**: טים זרק משהו לבאר ומסרב להודות. כשמתגנבים אליו במצב דיסקרטי שומעים אותו מספר ללולו על אבן זוהרת וחמה מהחוף.
-5. **תחתית הבאר** (מערה איזומטרית): מים חמימים ואדים, גבישים שלא היו שם קודם, וקרדיות גביש. מעירים בכדור הקסם שלושה גבישים כדי לפרוץ את חומת הגבישים.
-6. כדור הקסם נמשך אל הקיר, ואז נשמע הקול של סנדל: *"טווינסן. מישהו הגיע אליה."*
+- **Prologue — The Well.** Twinsen climbs down the well, finds warm water and growing crystals, and
+  hears Sendell: *"Someone has reached her."*
+- **Chapter 1 — The Joint Project.** Vesk, chief engineer of a Twinsun–Zeelich drilling project,
+  brings heat and light to the island. Twinsen restores the town's water; Zoé sneaks into the project
+  office and finds an evacuation plan that saves 30% of the people.
+- **Chapter 2 — Zeelich.** Baldino's network: the lighthouse signal, the windmills, the valves, and a
+  setback at the dock when the plan is confiscated.
+- **Chapter 3 — The Shell.** Down the bore shaft to the engine room, the crystal galleries, Sendell
+  herself, and the core, where the drill is turned into a shield with everyone's help.
+- **Epilogue — Home.** Dinner on Bug Street, a few days late.
 
-נשארו באי גם תוכן רשות, ציוד ועוד:
-- צוקי הלחישה עם אבני המדרך.
-- ארגז האספקה הישן במחנה של פאנפרוק.
-- חנות לשיקויים ולגביש קסם.
-- רעידות אדמה קטנות שמבשרות על ההמשך.
+`STORY_BIBLE.md` and `WORLD_MAP.md` have the full outline, the cast and the regions.
 
-## הרצה
+## Running
 
-מודולים מסוג ES לא נטענים מ־`file://`, ולכן צריך שרת סטטי:
+ES modules don't load from `file://`, so use any static server:
 
 ```bash
 cd lba2-remaster
 python3 -m http.server 8000
-# ואז לפתוח את http://localhost:8000
+# then open http://localhost:8000
 ```
 
-אפשר גם לפרסם את התיקייה ב־GitHub Pages כמו שהיא. אין שלב build, ו־three.js
-כלול בתיקייה (`vendor/`), כך שהמשחק עובד גם בלי חיבור לאינטרנט. רק הגופן Rubik
-נטען מ־Google Fonts.
+There is no build step and three.js is vendored (`vendor/`), so the game runs offline; only the Rubik
+font comes from Google Fonts.
 
-## מה נלקח מהמקור (לפי מידע ציבורי)
+**Controls:** arrows/WASD to move, Space for the behaviour action (jump, attack, hide), E to talk,
+inspect or pick up, F to throw the magic ball, 1–4, Tab or Ctrl for the behaviours, M for the
+holomap, I or J for the inventory and journal, Q to switch the camera, Enter to recentre it, V for the
+1997 look, Esc for the menu. Keys can be remapped in Settings; gamepad and touch are supported.
 
-| המקור, 1997 | ברימאסטר |
-|---|---|
-| ארבע התנהגויות: רגיל, אתלטי, אגרסיבי, דיסקרטי, כולל החלפה עם Ctrl וחצים | אותן ארבע, עם 1–4 / Tab / Ctrl+חצים / LB-RB |
-| מקש הפעולה עושה משהו אחר בכל התנהגות | קפיצה, צירוף אגרוף־אגרוף־בעיטה, הסתתרות, דיבור/חיפוש |
-| הכדור הקסום: המסלול והקפיצות תלויים בהתנהגות וברמת הקסם, והוא מפעיל מתגים | אותו דבר, והכדור חוזר אל היד |
-| עלי תלתן (חיים נוספים), נקודות חיים וקסם, מטבעות | אותו דבר, וגביש קסם בחנות מעלה רמה |
-| Holomap | הולומפה עם סמנים של המשימה, ובנוסף מיני־מפה |
-| חיפוש חפצים נסתרים במצב רגיל | נקודות חיפוש (באר, חביות, גדם) |
-| מבנה המנוע: אקטורים, Life script, Track script, Zones | `src/engine/scripts.js`: ‏`TrackRunner` (GOTO/WAIT/ANGLE/LABEL/LOOP), אזורים מסוג text/checkpoint/scenaric/hit |
-| מצלמה איזומטרית קבועה | מצלמת LBA2 היא ברירת המחדל. אפשר לעבור למצלמה חופשית בהגדרות |
-| שליטת "טנק" | אפשרות "שליטה קלאסית". ברירת המחדל היא תנועה יחסית למצלמה |
+**Saves** are automatic at checkpoints and on room changes (browser local storage). The save format is
+versioned: older saves are migrated and a backup of the old copy is kept; an unreadable save is set
+aside and a new game starts.
 
-## האסטטיקה של LBA2: מה נלקח מקוד המקור
-
-הכיוון האמנותי מבוסס על קוד המנוע המקורי, שפורסם ב־GPL (`2point21/lba2-classic`).
-מהקוד לקחתי רק נתונים והתנהגויות. לא הועתק ממנו קוד:
-
-| במקור | ברימאסטר |
-|---|---|
-| מצלמת חוץ קבועה שמתמרכזת מחדש כשטווינסן מתקרב לקצה המסך (`PERSO.CPP`: `Xp<80 \|\| Xp>539 …`), ומרכוז מאחוריו ב־Enter | מצלמת "LBA2" זהה. ברימאסטר היא גולשת בין השוטים, ובמראה 1997 היא חותכת כמו במקור |
-| שתי זוויות מצלמה: `DefAlphaCam {300, 530}`, `DefVueDistance {10500, 17000}`, מוקד 600 | שתי מצלמות (מקש Q): ‏26° ב־14 מ', ו־47° ב־23 מ', עם FOV של 43.6° |
-| נקודת המבט ממוקמת `DISTANCE_VISEE` מטרים לפני טווינסן | המצלמה מסתכלת 3.3 מ' קדימה בכיוון ההליכה |
-| צל "ריבוע מוצלל" מתחת לכל דמות (`AfficheShadow`), בלי צללים מוטלים | צל עגול ורך מתחת לכל דמות ולכדור |
-| שמיים שטוחים עם עננים מרוצפים (`DrawSky`) וערפל ליניארי לצבע אחיד (`SetFog(12000, 48000)`) | תקרת עננים זזה, וערפל ליניארי לצבע הרקע. במראה 1997 הטווח קצר כמו במקור |
-| ים: מישור שטוח עם טקסטורה | ים עם טקסטורה מצוירת, ומעליה קצף חוף וגלים |
-| ממשק "Incrust": מונים שמופיעים לכמה שניות רק כשמשהו משתנה, ומספרים צפים מעל חפצים | ממשק LBA2: המסך נקי, ופאנל החיים והקסם מופיע רק בשינוי או כשהחיים נמוכים |
-| תפריט התנהגויות (Ctrl): ארבע מסגרות עם טווינסן בתלת־ממד ומתחתן פאנל של חיים, קסם (אורך הסרגל לפי רמת הקסם), כסף, מפתחות ותיבות תלתן | אותו דבר. המשחק נעצר כל עוד Ctrl לחוץ |
-| תיבת דיאלוג ברוחב המסך, מוצללת וממוסגרת, בצבע ובגרדיאנט שונים לכל דמות, ובועה מעל הדובר | אותו דבר |
-| בחירה בתפריט מסומנת ב"פס אש" (`DrawFireBar`) | פס אש מונפש |
-| גזעים: קוואצ'ים, ארנבונים, גרובואים | הסוחרת היא ארנבונה, והדייג הוא גרובו עם חדק |
-
-כל הטקסטורות מצוירות בקוד בזמן הטעינה (`src/engine/textures.js`): דשא, חול, סלע, שביל,
-אבני ריצוף, טיח, רעפים, עץ, ים ועננים.
-
-## מה חדש ב־2026
-
-- תאורה PBR, צללים רכים, טון־מיפינג ACES ו־Bloom
-- שמיים דינמיים עם עננים, ים עם גלים וקצף חוף, גשם, ברקים ורעמים. כשמסיימים את המשחק הסערה מתפוגגת והשמש יוצאת
-- עשב ועצים שזזים ברוח
-- התגנבות מודרנית: מד חשד עם "?" ו־"!" מעל השומרים, קו ראייה ושמיעה של ריצה
-- מוזיקה גנרטיבית שמשתנה לפי המצב (מינורית בסערה, מז'ורית אחריה) ושכבת קרב דינמית
-- מקש **V** מחליף מיד בין מראה 1997 (רזולוציה נמוכה, פיקסלים, הצללה שטוחה, דיתרינג) לבין מראה 2026
-- שמירה אוטומטית בנקודות ביקורת, תמיכה בגיימפד ובמסך מגע, עברית ואנגלית (RTL מלא)
-- מקש E לאינטראקציה עובד בכל התנהגות. ב־1997 צריך היה לעבור קודם למצב רגיל
-
-## מבנה הקוד
+## Code layout
 
 ```
-src/engine/   – המנוע, בלי תלות במשחק
-  terrain.js     מפת גבהים. בדיקת הגובה משתמשת באותם משולשים שמצוירים על המסך
-  physics.js     "לבנים" (גלילים ותיבות), מדרגות, שיפוע מקסימלי, ים חוסם, קו ראייה
-  scripts.js     Track/Life/Zones בסגנון LBA2
-  rig.js         דמויות פרוצדורליות ואנימציה בשילוב פוזות
-  environment.js שמיים, ים, גשם, ברקים, ערפל ותאורה. הכול נשלט מפרמטר "storm" אחד
-  renderer.js    פוסט־פרוססינג ומצב 1997
-  camera.js      מצלמה חופשית עם התחמקות ממכשולים, או מצלמה איזומטרית קלאסית
-  audio.js       סינתזה של כל האפקטים והמוזיקה ב־WebAudio
-  input.js       מקלדת, גיימפד ומגע
-src/game/     – תוכן המשחק
-  world.js       האי המצודה
-  interiors.js   חדרים איזומטריים: הבית של טווינסן והמערה בתחתית הבאר
-  prologue.js    הסיפור: דמויות, דיאלוגים, משימות, קטע הסיום
-  actors.js      טווינסן, תושבים, קרדיות גביש, כדור הקסם (עם סיוע כיוון עדין)
-  behmenu.js     תפריט ההתנהגויות (Ctrl)
-  hud.js / i18n.js  ממשק וטקסטים בעברית ובאנגלית
-src/main.js   – לולאת המשחק: מצבים, מעבר בין חדרים, שמירה וחיבור לסיפור
+src/engine/    engine, no game content
+  terrain.js     heightfield; height queries use the same triangles that are drawn
+  physics.js     cylinders and boxes, steps, max slope, line of sight
+  scripts.js     LBA2-style Track/Life scripts and zones
+  rig.js         skeletons and pose-blended animation
+  sculpt.js      skinning helpers shared by the characters
+  environment.js sky, sea, rain, fog and light
+  renderer.js    post-processing and the 1997 look
+  camera.js      the LBA2 fixed camera and a free camera
+  audio.js       sound effects; music.js: the music controller
+  input.js       keyboard, gamepad, touch
+src/game/      game content
+  world.js, town.js, island.js, cliffs.js, vegetation.js   Citadel Island
+  zeelich.js     Zeelich
+  interiors.js   isometric rooms (houses, the well cave, the underground installation)
+  characters.js  character looks; loads the Blender-built meshes in assets/poly
+  actors.js, enemies.js, behmenu.js, hud.js, inventory.js
+  story/         one module per chapter (prologue, chapter1–3, epilogue) and the director (index.js)
+  text/          all player-facing text, in English
+src/main.js    game loop, states, rooms, saving
+tools/blender/ Blender (bpy) scripts that build every character: twinsen_poly.py, cast_poly.py
+tests/         headless playthrough tests (see tests/README.md)
 ```
 
-## רימאסטר "אמיתי" עם הנכסים המקוריים
+## Characters
 
-קוד המקור של מנוע LBA2 שוחרר ב־2021 ברישיון GPLv2
-(`github.com/2point21/lba2-classic`, ותרומות נכנסות ל־`lba2-classic-community`).
-הרישיון חל על הקוד בלבד. הגרפיקה, המודלים והסאונד המקוריים אינם חופשיים ואסור להפיץ אותם.
-לכן הפרויקט הזה בונה מחדש את המערכות ולא כולל שום נכס מקורי. מי שיש לו עותק חוקי
-(GOG/Steam) יכול לבנות את lba2-classic-community ולהריץ אותו עם קובצי הנתונים שלו.
+Every character is a low-poly model built in Blender from Python (`tools/blender/`), skinned to the
+game's skeletons (`art/characters/skeletons.json`, dumped by `tools/dump-skeletons.mjs`), and exported
+as JSON to `assets/poly/`. The `.blend` sources are in `art/characters/`. Rebuild with:
 
-## בדיקות
+```bash
+python tools/blender/twinsen_poly.py art/characters/skeletons.json assets/poly
+python tools/blender/cast_poly.py art/characters/skeletons.json assets/poly
+```
 
-`window.game.step(seconds)` מריץ את הסימולציה צעד־צעד בלי רינדור. כך עבר
-בדפדפן headless הפרולוג כולו, מהפתיחה ועד הסיום: שיחת הפתיחה, הארון, שלוש המשימות בעיר,
-הירידה לבאר, הקרב בקרדיות, שלושת הגבישים, קטע סנדל, מסך הסיום והשמירה.
+## Tests
+
+`window.game.step(seconds)` advances the simulation without rendering, so whole chapters can be played
+in a headless browser. The scripts in `tests/` do this for the prologue, chapters 1 and 2 and the save
+migration; each checks story flags, objectives and page errors along the way.
+
+## About the original engine
+
+The LBA2 engine source was released under GPLv2 in 2021 (`github.com/2point21/lba2-classic`). The
+licence covers the code only; the original art, models and sound are not free. This project read the
+source for behaviour and numbers (camera angles and distances, behaviours, ball rules) and copied no
+code. If you own the game (GOG/Steam), you can build `lba2-classic-community` and run it with your data.

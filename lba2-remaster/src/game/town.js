@@ -125,6 +125,43 @@ function lamp(parent, x, y, z) {
   put(g, new THREE.CylinderGeometry(0.04, 0.06, 0.1, 8), metal, 0, 3.5, 0);
   return g;
 }
+function heatPosts(parent, W, spots) {
+  const { H, physics } = W;
+  const teal = mat('#2c7f86', 0.45, { metalness: 0.35 }), brass = mat('#c89a3c', 0.35, { metalness: 0.6 });
+  const crystal = new THREE.MeshStandardMaterial({ color: '#6a4a3a', roughness: 0.25, emissive: '#ff9a3c', emissiveIntensity: 0, flatShading: true });
+  const geo = {
+    base: new THREE.CylinderGeometry(0.2, 0.24, 0.16, 8),
+    pipe: new THREE.CylinderGeometry(0.075, 0.075, 1.05, 10),
+    collar: new THREE.CylinderGeometry(0.105, 0.105, 0.07, 12),
+    cup: new THREE.CylinderGeometry(0.17, 0.09, 0.14, 8, 1, true),
+    gem: new THREE.OctahedronGeometry(0.15, 0).scale(1, 1.5, 1),
+  };
+  const posts = [];
+  for (const [x, z] of spots) {
+    const y = H(x, z) - 0.04;
+    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = posts.length * 1.7; g.scale.setScalar(1.3); parent.add(g);
+    put(g, geo.base, teal, 0, 0.08, 0);
+    put(g, geo.pipe, teal, 0, 0.66, 0);
+    for (const cy of [0.2, 0.62, 1.12]) put(g, geo.collar, brass, 0, cy, 0);
+    const cup = put(g, geo.cup, brass, 0, 1.24, 0); cup.material = brass; cup.castShadow = false;
+    put(g, geo.gem, crystal, 0, 1.4, 0, 0, false);
+    physics.add({ type: 'cyl', x, z, r: 0.2, top: y + 1.95, noStand: true, seeThrough: true });
+    posts.push({ x, y: y + 1.82, z });
+  }
+  let level = 0, puffT = 0;
+  W.updaters.push((dt, t) => {
+    const on = W.station?.active ? 1 : 0;
+    level += (on - level) * Math.min(1, dt * 0.8);
+    crystal.emissiveIntensity = level * (1.3 + Math.sin(t * 2.2) * 0.25);
+    crystal.color.setRGB(0.42 + level * 0.5, 0.29 + level * 0.3, 0.23);
+    if (level > 0.5 && W.particles && (puffT -= dt) <= 0) {
+      puffT = 0.6;
+      const p = posts[Math.floor(Math.random() * posts.length)];
+      W.particles.burst(p.x, p.y + 0.25, p.z, '#ffe2c0', 1, 0.5);
+    }
+  });
+  return { posts, get level() { return level; } };
+}
 function fence(parent, H, a, b, r) {
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const ang = Math.atan2(b[0] - a[0], b[1] - a[1]);
@@ -404,6 +441,16 @@ export function buildTown(scene, W) {
   };
 
   // laundry flutters in the wind
+  // the Joint Project's heat posts: a teal pipe with brass collars and a crystal cap by every front door and at
+  // Pippa's stall, fed from the station's heat line. Dark until the station runs (chapter 1, once the water is
+  // back), then they glow and breathe a little warm air: the benefit the town sees before the evacuation plan.
+  W.heatPosts = heatPosts(scene, W, [
+    ...W.houses.map((hs) => {
+      let nx = hs.door.x - hs.x, nz = hs.door.z - hs.z; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l;
+      return [hs.door.x + nx * 1.0 - nz * 1.45, hs.door.z + nz * 1.0 + nx * 1.45];
+    }),
+    [W.stall.x + Math.cos(W.stall.a) * 2.3, W.stall.z - Math.sin(W.stall.a) * 2.3],
+  ]);
   W.updaters.push((dt, t) => { W.laundry.forEach((c, i) => { c.rotation.x = Math.sin(t * 2.1 + i) * 0.12 * (0.4 + W.storm); }); });
   return { houseInfo, at };
 }

@@ -9,7 +9,7 @@ deterministic stepping via `game.step()`. Real-GPU frame rates are **not yet mea
 - SDF sculpt pipeline with auto-skinning (engine/sculpt.js); 10 character designs (game/characters.js).
 - Twinsen redesign after LBA2 reference (turnaround in docs/docs-twinsen-turnaround.png).
 - House kit (architecture.js), town layout (town.js), sculpted trees/rocks/grass (vegetation.js), paving texture.
-- LBA2 exterior camera; Twinsen ≈16% of screen height (docs/docs-reference-compare.png).
+- LBA2 exterior camera; Twinsen ≈16% of screen height (docs/docs-reference-compare.png; the original reference frame is no longer stored in the repo).
 - House cutaway when a house hides Twinsen.
 - Fix: negative first-frame dt made NPC rigs diverge.
 - Walk and ball throw animation frames verified (docs/docs-walk-throw.png).
