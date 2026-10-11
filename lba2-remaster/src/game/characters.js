@@ -29,13 +29,15 @@ export const LOOKS = {
     mouth: 'line', medallion: true, medalR: 0.085, medalY: 0.24, medalSides: 8, headS: 1.4, neck: 0.17,
   },
   zoe: {
+    // (design interpretation in LBA2's style: a long red dress with a white collar and a yellow sash tied in a
+    // bow, auburn hair in a long high ponytail)
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
-    hair: '#7a3416', skin: '#f0c49b', hairStyle: 'bun', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 0.9, neck: 0.13, height: 0.95,
+    hair: '#8a3a16', skin: '#f0c49b', hairStyle: 'longtail', collarFlat: '#f6efe0', bow: true, tie: '#f4d27a', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 1.0, neck: 0.11, height: 0.95,
   },
   arthur: {
     // a curious kid: knee tunic in his father's blue with an orange belt, scuffed knees, a spiky tuft
     race: 'quetch', kid: true, outfit: 'tunic', hem: 0.36, tunic: '#5a9ad8', tunicTrim: '#2f6aa8', belt: '#f07a28', pants: '#e8dcc0', shoes: '#d9653a',
-    hair: '#6a3a1a', skin: '#f2c49a', hairStyle: 'tail', nose: 'ball', noseS: 0.9, eyes: '#2a4a8a', mouth: 'open', height: 0.62, neck: 0.1,
+    hair: '#6a3a1a', skin: '#f2c49a', hairStyle: 'tuft', nose: 'ball', noseS: 0.9, eyes: '#2a4a8a', mouth: 'open', height: 0.62, neck: 0.1,
   },
   gilbert: {
     race: 'quetch', outfit: 'tunic', hem: 0.62, belly: 0.1, stoop: 0.1, tunic: '#b8483b', tunicTrim: '#7a2a20', belt: '#3a2a1a', pants: '#4a5a6a', shoes: '#3a2a1a',
@@ -228,7 +230,7 @@ function design(L) {
       });
     } else {
       e(add(Hc, [0, 0.045 * hs, -0.02]), [0.125 * hs * Math.max(1, (L.skullW || 1) * 0.93), 0.17 * hs, 0.138 * hs], 'head', 'hair', 'hair', {
-        clip: (L.hairStyle === 'twinsen' || L.hairStyle === 'bun')
+        clip: (L.hairStyle === 'twinsen' || (L.hairStyle === 'bun' || L.hairStyle === 'longtail'))
           // (LBA2 #23, back view: besides the cap, the hair runs as a dark strip down the back of the head)
           ? (L.hairStrip ? ((x, y, z) => Math.min(hairline((L.hairFront ?? 0.2) * hs, (L.hairBack ?? -0.035) * hs)(x, y, z), Math.max(Math.abs(x - Hc[0]) - 0.055 * hs, z - (Hc[2] - 0.06 * hs), Hc[1] - 0.06 * hs - y) * 0.8))
             : hairline((L.hairFront ?? 0.2) * hs, (L.hairBack ?? -0.035) * hs))
@@ -236,7 +238,7 @@ function design(L) {
         wobble: (x, y, z) => Math.sin(Math.atan2(x - Hc[0], z - Hc[2]) * 16 + y * 20) * 0.003,
       });
       // a small swept fringe (Twinsen combs his hair back)
-      if (L.hairStyle !== 'twinsen' && L.hairStyle !== 'bun') e(add(Hc, [0.025 * hs, 0.125 * hs, 0.07 * hs]), [0.075 * hs, 0.035 * hs, 0.06 * hs], 'head', 'hair', 'hair');
+      if (L.hairStyle !== 'twinsen' && L.hairStyle !== 'bun' && L.hairStyle !== 'longtail') e(add(Hc, [0.025 * hs, 0.125 * hs, 0.07 * hs]), [0.075 * hs, 0.035 * hs, 0.06 * hs], 'head', 'hair', 'hair');
     }
     const chain = (pts, radii, mat = 'hair') => {
       // a bone per segment so the hair swings
@@ -248,7 +250,7 @@ function design(L) {
       }
       G.tail = 0.035;
     };
-    if (L.hairStyle === 'bun') {
+    if ((L.hairStyle === 'bun' || L.hairStyle === 'longtail')) {
       // LBA2 Twinsen: a little cap of hair on the back of the crown and a bun of three balls behind the head
       const HH = 2.1;
       const balls = [[0.044, 0.125, -0.07], [0.034, 0.09, -0.12], [0.025, 0.055, -0.148]].map(([r, y, z]) => [r * HH, y * HH, z * HH]);
@@ -282,7 +284,7 @@ function design(L) {
       const p0 = add(Hc, [0, 0.04 * hs, -0.13 * hs]);
       chain([p0, add(p0, [0, -0.08, -0.04]), add(p0, [0, -0.17, -0.05]), add(p0, [0, -0.25, -0.04])], [0.045, 0.042, 0.032, 0.014]);
       e(p0, [0.048, 0.022, 0.044], 'tail0', 'tie', 'tie');
-    } else if (L.hairStyle === 'bun') {
+    } else if ((L.hairStyle === 'bun' || L.hairStyle === 'longtail')) {
       const p0 = add(Hc, [0, 0.09 * hs, -0.12 * hs]);
       e(add(p0, [0, 0.03, -0.03]), [0.075, 0.07, 0.07], 'head', 'hair', 'hair', { wobble: (x, y, z) => Math.sin(Math.atan2(x, y) * 12) * 0.004 });
       chain([add(p0, [0, -0.01, -0.06]), add(p0, [0, -0.12, -0.1]), add(p0, [0, -0.26, -0.09]), add(p0, [0, -0.38, -0.06])], [0.042, 0.04, 0.03, 0.012]);

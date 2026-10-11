@@ -82,16 +82,20 @@ def build(name):
         return {'torso': 1 - arm * 0.6, 'sh' + s: arm * 0.6}
 
     torso = b.P('torso', tunic, w_torso, 50)
-    tw = 0.155 * wide
+    tw = 0.168 * wide
     loft(torso, [
         ring(waistY - 0.01, tw, 0.115 * wide + belly * 0.7, -0.095 * wide, N, 0.75, cz=zc(waistY)),
         ring((waistY + chestY) / 2, tw * 1.08 + belly * 0.3, 0.125 * wide + belly, -0.1 * wide, N, 0.72, cz=zc((waistY + chestY) / 2)),
-        ring(chestY, 0.19 * wide, 0.13 * wide + belly * 0.5, -0.105 * wide, N, 0.7, cz=zc(chestY)),
+        ring(chestY, 0.2 * wide, 0.135 * wide + belly * 0.5, -0.11 * wide, N, 0.7, cz=zc(chestY)),
         ring(shY + 0.015, shX + 0.035 * wide, 0.095 * wide, -0.09 * wide, N, 0.6, cz=zc(shY)),
         ring(neckY - 0.005, 0.075 * wide, 0.06 * wide, -0.055 * wide, N, 0.9, cz=neckZ),
     ], cap_top=True)
     if L.get('collar'):
-        tube(b.P('collar', trim, 'neck', 40), (0, neckY - 0.03, neckZ), (0, neckY + 0.07, neckZ + 0.005), 0.07, 0.065, 10, cap=False)
+        tube(b.P('collar', L.get('collarColor') or trim, 'neck', 40), (0, neckY - 0.03, neckZ), (0, neckY + 0.07, neckZ + 0.005), 0.07, 0.065, 10, cap=False)
+    if L.get('collarFlat'):  # a round flat collar lying on the shoulders
+        cl = b.P('collarFlat', L['collarFlat'], w_torso, 40)
+        loft(cl, [ring(shY + 0.01, shX * 0.72, 0.11 * wide, -0.095 * wide, N, 0.8, cz=zc(shY)),
+                  ring(neckY - 0.01, 0.085 * wide, 0.07 * wide, -0.06 * wide, N, 0.9, cz=neckZ)])
     if L.get('buttons'):
         bt = b.P('buttons', L.get('buckle') or '#d8b04a', 'torso', 30)
         for k in range(4):
@@ -127,7 +131,14 @@ def build(name):
     belt = b.P('belt', L.get('belt', '#5a3a1a'), 'torso', 50)
     loft(belt, [ring(waistY - 0.02, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY)),
                 ring(waistY + 0.035, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY))])
-    if L.get('buckle') or outfit != 'robe':
+    if L.get('bow'):  # a sash bow at the back of the waist
+        bw = b.P('bow', L.get('belt', '#f4d27a'), 'torso', 40)
+        bz = -0.1 * wide + zc(waistY)
+        for sxx in (1, -1):
+            sphere(bw, (sxx * 0.05, waistY + 0.01, bz - 0.02), 0.045, 7, 5, (1.2, 0.7, 0.45))
+            tube(bw, (sxx * 0.015, waistY - 0.01, bz - 0.02), (sxx * 0.05, waistY - 0.2, bz - 0.03), 0.02, 0.012, 5, squash=0.4)
+        sphere(bw, (0, waistY + 0.01, bz - 0.025), 0.022, 6, 4)
+    if (L.get('buckle') or outfit != 'robe') and not L.get('bow'):
         fz = 0.118 * wide + belly * 0.72 + zc(waistY)
         box(b.P('buckle', L.get('buckle') or '#d8b04a', 'torso', 20), -0.03, 0.03, waistY - 0.025, waistY + 0.04, fz - 0.01, fz + 0.012)
     if L.get('apron'):
@@ -160,12 +171,12 @@ def build(name):
     # ---------------------------------------------------------------- arms and hands
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
-        ra = (0.075 if grobo else 0.058) * slim * (0.92 if kid else 1)
+        ra = (0.08 if grobo else 0.066) * slim * (0.92 if kid else 1)
         up = b.P('upper' + s, tunic, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s: smooth(e + 0.06, e - 0.04, p[1])}, 50)
         tube(up, (sh[0] - sx * 0.02, sh[1] + 0.03, sh[2]), el, ra * 1.05, ra, 8)
         wrist = lerp(el, hd, 0.82)
-        tube(b.P('fore' + s, tunic, 'el' + s, 50), el, wrist, ra, ra * 0.85, 8)
-        tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, 0.7), lerp(el, hd, 0.86), ra * 0.95, ra * 0.95, 8)
+        tube(b.P('fore' + s, tunic, 'el' + s, 50), el, wrist, ra, ra * 1.08, 8)  # (sleeves widen a little toward the cuff)
+        tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, 0.72), lerp(el, hd, 0.86), ra * 1.12, ra * 1.12, 8)
         hr = (0.062 if grobo else 0.046) * (0.9 if kid else 1)
         sphere(b.P('hand' + s, skin, 'hand' + s, 180), (hd[0], hd[1] - 0.035, hd[2] + 0.01), hr, 8, 6)
         if L.get('brace') and s == 'R':
@@ -173,7 +184,7 @@ def build(name):
 
     # ---------------------------------------------------------------- neck and head
     head_w = lambda p: {'head': 1.0}
-    nr = (0.075 if grobo else 0.045) * (1.0 if not kid else 0.9)
+    nr = (0.075 if grobo else 0.052) * (1.0 if not kid else 0.9)
     tube(b.P('neck', skin, lambda p: {'neck': 1 - smooth(headY - 0.02, headY + 0.04, p[1]), 'head': smooth(headY - 0.02, headY + 0.04, p[1])}, 60),
          (0, neckY - 0.04, neckZ), (0, headY + 0.08, headZ), nr, nr * 0.95, 8)
     # LBA2 heads are big: scale the design's head about the chin (quetch/esmer ×1.2, bunny ×1.1)
@@ -241,12 +252,32 @@ def build(name):
         if style == 'bun':
             for i, (dy, dz, r) in enumerate(((0.012, -0.075, 0.042), (-0.02, -0.105, 0.03))):
                 sphere(b.P('bun%d' % i, hair, tails[i] if i < len(tails) else 'head', 180), (0, my(0.95 + dy), mz(-0.03 + dz)), r * sx_, 9, 6)
-        elif style == 'tail':
-            for i, (dy, dz, r) in enumerate(((-0.01, -0.07, 0.034), (-0.045, -0.095, 0.028), (-0.08, -0.105, 0.022))):
-                sphere(b.P('tail%d' % i, hair, tails[i] if i < len(tails) else 'head', 180), (0, my(0.95 + dy), mz(-0.03 + dz)), r * sx_, 8, 6)
+        elif style in ('tail', 'longtail'):
+            # a ponytail tied high at the back of the crown: tapered segments down the back, each on a tail bone
+            long = style == 'longtail'
+            # (below the head the points follow the body: the nape, then between the shoulder blades)
+            backZ = -0.1 * wide + zc(shY)
+            if long:
+                pts = [(0, my(0.95), Hc[2] - hd_ * 0.82), (0, my(0.89), Hc[2] - hd_ * 1.02), (0, headY - 0.01, Hc[2] - hd_ * 0.98),
+                       (0, shY - 0.06, backZ - 0.05), (0, shY - 0.3, backZ - 0.035)]
+            else:
+                pts = [(0, my(0.95), Hc[2] - hd_ * 0.82), (0, my(0.9), Hc[2] - hd_ * 1.05), (0, headY + 0.04, Hc[2] - hd_ * 1.08), (0, headY - 0.05, Hc[2] - hd_ * 1.0)]
+            rad = [0.034, 0.03, 0.026, 0.018, 0.01] if long else [0.03, 0.026, 0.02, 0.012]
+            for i in range(len(pts) - 1):
+                bone = tails[min(i, len(tails) - 1)] if tails else 'head'
+                tube(b.P('tail%d' % i, hair, bone, 60), pts[i], pts[i + 1], rad[i] * sx_, rad[i + 1] * sx_, 7)
+            sphere(b.P('tie', L.get('tie') or L.get('belt') or hair, tails[0] if tails else 'head', 180), pts[0], 0.022 * sx_, 7, 5)
+        elif style == 'tuft':
+            # a spiky tuft over the forehead (Arthur)
+            tf = b.P('tuft', hair, head_w, 30)
+            for dx, dy, dz in ((-0.025, 0.06, 0.05), (0.0, 0.075, 0.035), (0.025, 0.06, 0.05), (0.0, 0.05, 0.08)):
+                tube(tf, (dx * sx_, my(0.94), mz(0.0 + dz * 0.4)), (dx * 1.4 * sx_, my(0.94 + dy), mz(dz)), 0.024 * sx_, 0.003, 6)
         elif style == 'pigtails':
             for sxx in (1, -1):
-                sphere(b.P('pig', hair, head_w, 180), (sxx * 0.07 * sx_, my(0.9), mz(-0.01)), 0.03 * sx_, 8, 6)
+                pg = b.P('pig', hair, head_w, 60)
+                tube(pg, (sxx * 0.068 * sx_, my(0.905), mz(-0.02)), (sxx * 0.095 * sx_, my(0.8), mz(-0.035)), 0.026 * sx_, 0.02 * sx_, 7)
+                tube(pg, (sxx * 0.095 * sx_, my(0.8), mz(-0.035)), (sxx * 0.09 * sx_, my(0.7), mz(-0.03)), 0.02 * sx_, 0.008 * sx_, 7)
+                sphere(b.P('ribbon', L.get('belt') or '#ffffff', head_w, 40), (sxx * 0.07 * sx_, my(0.905), mz(-0.02)), 0.02 * sx_, 6, 4)
         elif style == 'bald' and L.get('hair') and not L.get('crest'):
             for sxx in (1, -1):  # tufts over the ears
                 sphere(b.P('tuft', hair, head_w, 180), (sxx * 0.07 * sx_, my(0.875), mz(0.0)), 0.028 * sx_, 7, 5, (0.8, 1.0, 1.2))
