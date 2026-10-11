@@ -231,9 +231,10 @@ function design(L) {
         chain([p0, add(p0, [0, 0.03 * hs, -0.07 * hs]), add(p0, [0, 0.025 * hs, -0.14 * hs]), add(p0, [0, -0.02 * hs, -0.18 * hs]), add(p0, [0, -0.075 * hs, -0.17 * hs])],
           [0.04 * hs, 0.046 * hs, 0.038 * hs, 0.027 * hs, 0.011 * hs]);
       } else {
-        // classic Twinsen: a big, thick ponytail that rises from the crown and sweeps up and back
-        chain([p0, add(p0, [0, 0.1 * hs, -0.025 * hs]), add(p0, [0, 0.185 * hs, -0.08 * hs]), add(p0, [0, 0.215 * hs, -0.165 * hs]), add(p0, [0, 0.17 * hs, -0.235 * hs])],
-          [0.062 * hs, 0.066 * hs, 0.056 * hs, 0.04 * hs, 0.024 * hs]);
+        // classic Twinsen: a thick ponytail tied at the back of the crown; it lifts a little, arcs
+        // backwards and its weight bends the end down (a hook, not an upright spike)
+        chain([p0, add(p0, [0, 0.065 * hs, -0.06 * hs]), add(p0, [0, 0.085 * hs, -0.135 * hs]), add(p0, [0, 0.04 * hs, -0.205 * hs]), add(p0, [0, -0.055 * hs, -0.235 * hs])],
+          [0.057 * hs, 0.06 * hs, 0.05 * hs, 0.036 * hs, 0.022 * hs]);
       }
     } else if (L.hairStyle === 'tail') {
       const p0 = add(Hc, [0, 0.04 * hs, -0.13 * hs]);

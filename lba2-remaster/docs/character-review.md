@@ -124,3 +124,9 @@ high camera; it now rises before it hooks back.
 
 Status: **awaiting the user's judgement** — the earlier "pass" marks in §6 were for the LBA2-screenshot
 version and are superseded by this redesign.
+
+User follow-up: "the ponytail stands too upright and doesn't look natural". Two causes: the modelled shape rose
+too steeply, and the rig's follow-through bent every segment upward (even at rest, and up to ~2 rad of total bend
+at a run). Now the tail lifts a little from the back of the crown, arcs back and its tip hangs down; at rest its
+weight lets it droop a touch, moving it streams back slightly and bounces with each step
+(`captures/characters/twinsen-v3-ponytail.png`: review views + game camera in the house).

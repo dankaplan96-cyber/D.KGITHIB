@@ -529,9 +529,12 @@ export class Rig {
 
     // ponytail follows motion with lag
     if (j.tail) {
-      const sway = 0.15 + Math.min(speed, 7) * 0.08 + Math.sin(this.phase * 2) * Math.min(speed, 7) * 0.02;
+      // (+x lifts a backward-pointing tail) at rest its weight lets it hang a touch; moving, the air streams
+      // it back a little and every footfall bounces it — never so much that it stands up like a spike
+      const v = Math.min(speed, 7);
+      const sway = -0.04 + v * 0.022 + Math.sin(this.phase * 2) * v * 0.012 - (this.lean || 0) * 0.2;
       j.tail.segs.forEach((s, i) => {
-        s.rotation.x = damp(s.rotation.x, sway * (i + 1) * 0.3 + Math.sin(this.t * 2 + i) * 0.03, 9 - i, dt);
+        s.rotation.x = damp(s.rotation.x, sway * (i + 1) * 0.28 + Math.sin(this.t * 2 + i) * 0.02, 9 - i, dt);
         s.rotation.z = damp(s.rotation.z, -this.roll * (i + 1) * 0.6, 8, dt);
       });
     }
