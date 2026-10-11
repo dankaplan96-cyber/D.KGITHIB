@@ -619,32 +619,6 @@ export function buildWorld(parentScene) {
     }
   }
 
-  // ---------- signs ----------
-  const sign = (x, z, ry, key) => {
-    const g = H(x, z);
-    add(scene, new THREE.BoxGeometry(0.15, 1.8, 0.15), mat('#6b4a2e'), x, g + 0.9, z);
-    add(scene, new THREE.BoxGeometry(1.4, 0.7, 0.1), mat('#c9a66b'), x, g + 1.6, z, { ry });
-    physics.add({ type: 'cyl', x, z, r: 0.2, top: g + 2, seeThrough: true });
-    W.signs.push({ x, z, key });
-  };
-  sign(V.x + 15, V.z - 4, 0.2, 'sign_village');
-  sign(-25, -30, 0.6, 'sign_lighthouse');
-  sign(14, -10, 0, 'sign_cliffs');
-  sign(-8, 40, 0.8, 'sign_camp');
-  sign(32, 38, 1.2, 'sign_fort');
-
-  // ---------- breakable crates ----------
-  const crateMat = mat('#a0703c', { roughness: 0.85 });
-  const crate = (x, z) => {
-    const g = H(x, z);
-    const m = add(scene, new THREE.BoxGeometry(1, 1, 1), crateMat, x, g + 0.5, z, { ry: x * 0.3 });
-    const edges = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), new THREE.LineBasicMaterial({ color: '#5a3a1a' }));
-    m.add(edges);
-    const c = physics.add({ type: 'box', x, z, hw: 0.5, hd: 0.5, rot: x * 0.3, top: g + 1, seeThrough: true });
-    W.crates.push({ mesh: m, c, x, z, y: g + 0.5, alive: true });
-  };
-  [[-30, 0], [-31, 1.3], [-52, -2], [3, 46], [14, 46], [15, 47.3], [-2, 58], [38, 30], [25, -9], [-16, -54]].forEach(([x, z]) => crate(x, z));
-
   // ---------- zones (LBA-style) ----------
   zones.add({ type: 'checkpoint', id: 'cp_village', x: V.x, z: V.z, r: 8 });
   zones.add({ type: 'checkpoint', id: 'cp_lighthouse', x: POI.sage.x, z: POI.sage.z + 3, r: 6 });
@@ -660,10 +634,6 @@ export function buildWorld(parentScene) {
     { id: 'barrels', x: W.barrels.x, z: W.barrels.z, r: 2.0, reward: 'flask' },
     { id: 'stump', x: 46, z: -2, r: 2.0, reward: 'clover' },
   ];
-  // the stump
-  add(scene, new THREE.CylinderGeometry(0.7, 0.9, 0.8, 10), mat('#6b4a2e'), 46, H(46, -2) + 0.4, -2);
-  physics.add({ type: 'cyl', x: 46, z: -2, r: 0.8, top: H(46, -2) + 0.8, seeThrough: true });
-
   W.storm = 1;
   W.update = (dt, t) => {
     swayU.uTime.value = t;

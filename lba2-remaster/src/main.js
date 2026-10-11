@@ -353,8 +353,19 @@ class Game {
   findInteractable() {
     const h = this.hero, W = this.world;
     let best = null, bd = 1e9;
-    const consider = (d, max, o) => { if (d < max && d < bd) { bd = d; best = o; } };
-    const dist = (x, z) => Math.hypot(h.pos.x - x, h.pos.z - z);
+    // ranking: distance, plus a penalty for things off to the side or behind Twinsen (so what he faces wins),
+    // and people a little ahead of signs and searches when they are about as close
+    const fx = Math.sin(h.angle), fz = Math.cos(h.angle);
+    const consider = (d, max, o) => {
+      if (!(d < max)) return;
+      const s = d + (o.kind === 'npc' ? -0.35 : 0);
+      if (s < bd) { bd = s; best = o; }
+    };
+    const dist = (x, z) => {
+      const dx = x - h.pos.x, dz = z - h.pos.z, d = Math.hypot(dx, dz);
+      const facing = d > 1e-3 ? (dx * fx + dz * fz) / d : 1;
+      return d + (1 - facing) * 0.45;
+    };
     for (const n of this.npcs) if (n.present && !n.def.noTalk) consider(dist(n.pos.x, n.pos.z), 2.6, { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk' });
     if (!this.room) {
       for (const s of W.signs) consider(dist(s.x, s.z), 2.0, { kind: 'sign', sign: s, label: 'p_read' });

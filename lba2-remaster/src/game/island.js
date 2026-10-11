@@ -2124,6 +2124,43 @@ function buildPipeline(W, root, r) {
   B.build();
 }
 
+// ================================================================== dressing: crates, signposts, the stump
+// Breakable crates keep their order in W.crates (saves store broken ones by index).
+const CRATES = [[-30, 0], [-31, 1.3], [-52, -2], [3, 46], [14, 46], [16.0, 46.4], [-2, 58], [38, 30], [25, -9], [-16, -54]];
+function buildDressing(W, root, r) {
+  const grp = new THREE.Group(); grp.name = 'dressing'; root.add(grp);
+  for (const [x, z] of CRATES) {
+    const g = W.H(x, z), ry = x * 0.3;
+    const m = crateMesh(1); m.position.set(x, g - 0.02, z); m.rotation.y = ry; grp.add(m);
+    const c = W.physics.add({ type: 'box', x, z, hw: 0.5, hd: 0.5, rot: ry, top: g + 1, seeThrough: true });
+    W.crates.push({ mesh: m, c, x, z, y: g + 0.5, alive: true });
+  }
+  // signposts (language-free pictograms; the text shows when read)
+  const A = PICT;
+  signpost(W, grp, -27.0, -8.2, -Math.PI / 2 + 0.2, 'w_sign_town', (c) => { A.well(c, 150, 66); A.arrow(c, 70, 64, -1, 1.1); });
+  signpost(W, grp, -25.0, -30.0, 0.6, 'w_sign_lighthouse', (c) => { A.tower(c, 90, 66); A.arrow(c, 175, 64, 1, 1.1); });
+  signpost(W, grp, 14.0, -10.2, 0.0, 'w_sign_cliffs', (c) => { A.cliff(c, 100, 66); A.arrow(c, 190, 64, 1, 0.9); });
+  signpost(W, grp, -3.6, 42.6, -0.9, 'w_sign_depot', (c) => { A.gear(c, 128, 64, 30); });
+  signpost(W, grp, 28.6, 40.6, -0.6, 'w_sign_station', (c) => { A.gear(c, 90, 64, 26); A.arrow(c, 180, 64, 1, 1.0); });
+  signpost(W, grp, -18.9, 35.0, Math.PI / 2 + 0.25, 'w_sign_orchard', (c) => { A.drop(c, 96, 64); A.cross(c, 166, 64); });
+  signpost(W, grp, 22.6, 46.8, -0.5, 'w_sign_pipe', (c) => { A.drop(c, 80, 64); c.fillRect(110, 52, 110, 24); c.fillStyle = '#d2ae74'; for (let i = 0; i < 4; i++) c.fillRect(124 + i * 26, 50, 5, 28); c.fillStyle = '#3a2410'; });
+  signpost(W, grp, -59.2, -7.4, -Math.PI / 2 - 0.3, 'w_sign_harbour', (c) => { A.anchor(c, 150, 70); A.arrow(c, 70, 64, -1, 1.1); });
+  // the stump where a clover hides: sculpted roots and bark, a cut top with rings
+  {
+    const x = 46, z = -2, g = W.H(x, z);
+    const geo = cached('stump', () => sculptRigid({ key: 'stump', prims: [
+      { type: 'ccone', c: [0, 0.32, 0], h: 0.36, rb: 0.62, rt: 0.5, round: 0.05, mat: 'b', group: 'a', wobble: (px, py, pz) => Math.sin(Math.atan2(pz, px) * 9) * 0.025 + Math.sin(py * 13 + px * 5) * 0.01 },
+      ...[0, 1.3, 2.4, 3.6, 4.9].map((a, i) => ({ type: 'cone', a: [Math.cos(a) * 0.35, 0.22, Math.sin(a) * 0.35], b: [Math.cos(a) * (0.95 + (i % 2) * 0.2), -0.08, Math.sin(a) * (0.95 + (i % 2) * 0.2)], r1: 0.2, r2: 0.06, mat: 'b', group: 'a' })),
+      { type: 'ell', c: [0, 0.69, 0], r: [0.5, 0.04, 0.5], mat: 'w', group: 'top', cutBelow: 0.66 },
+      { type: 'cone', a: [0.28, 0.6, 0.1], b: [0.36, 0.95, 0.16], r1: 0.07, r2: 0.04, mat: 'b', group: 'a' },
+    ], groups: { a: 0.1, top: 0.02 }, joinK: 0.03, colors: { b: '#6a4a30', w: '#d8b888' },
+    paint: (p, m, c) => { if (m === 'w' || p.y > 0.66) { const rr = Math.hypot(p.x, p.z); c.set(rr > 0.44 ? '#6a4a30' : '#d8b888').offsetHSL(0, 0, Math.sin(rr * 60) * 0.06); } else c.offsetHSL(0, 0, Math.sin(Math.atan2(p.z, p.x) * 23 + p.y * 9) * 0.05); },
+    bounds: { min: [-1.3, -0.15, -1.3], max: [1.3, 1.05, 1.3] }, cell: 0.04 }));
+    mesh(grp, geo, VC(), x, g - 0.05, z, 0.7);
+    W.physics.add({ type: 'cyl', x, z, r: 0.65, top: g + 0.68, seeThrough: true });
+  }
+}
+
 // ================================================================== entry
 export function buildIsland(scene, W) {
   const r = rng(4242);
@@ -2135,6 +2172,7 @@ export function buildIsland(scene, W) {
   const T2 = performance.now();
   buildDepot(W, scene, r);
   buildPipeline(W, scene, r);
+  buildDressing(W, scene, r);
   console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms, depot+pipe ${(performance.now() - T2) | 0} ms`);
   W.island = { keepClear };
 }
