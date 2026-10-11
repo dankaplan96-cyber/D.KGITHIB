@@ -13,7 +13,7 @@
 - [ ] V4 Lighting: contact shadows, character/background separation, no plastic look (LBA ramp everywhere).
 
 ## 2. Story to the end
-- [ ] S1 Chapter 2 setback: the evacuation plan confiscated at the Zeelich dock, recovered in the depot;
+- [x] S1 Chapter 2 setback: the evacuation plan confiscated at the Zeelich dock, recovered in the depot;
       Nara/Oku react to it.
 - [ ] S2 Chapter 3 — The Shell: shaft, deep installation, galleries, Sendell, the core; puzzles from known
       mechanics; guardian boss; allies by radio; Vesk's turn. Done when: playable from ch2 end to the epilogue.
@@ -34,5 +34,5 @@
 - [ ] M3 Ambient/environment SFX: water, wind, machinery, footsteps per surface.
 
 ## 6. Reliability
-- [ ] R1 Save format version + migration; save/load tests at each chapter boundary and mid-quest.
+- [~] R1 Save format version + migration; save/load tests at each chapter boundary and mid-quest.
 - [ ] R2 Full automated playthrough new game → credits; performance note with test conditions.

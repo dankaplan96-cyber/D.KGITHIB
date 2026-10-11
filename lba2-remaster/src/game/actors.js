@@ -705,7 +705,7 @@ export class MagicBall {
       const tx = hero.pos.x, ty = hero.pos.y + 1.4, tz = hero.pos.z;
       const d = new THREE.Vector3(tx - this.pos.x, ty - this.pos.y, tz - this.pos.z);
       const len = d.length();
-      if (len < 0.7) {
+      if (len < 0.7 || len > 40) { // (caught, or the hero changed rooms while it was out)
         this.state = 'idle';
         this.mesh.visible = false;
         g.audio.play('catch');
