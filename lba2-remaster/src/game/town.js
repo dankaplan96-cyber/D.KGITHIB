@@ -125,6 +125,37 @@ function lamp(parent, x, y, z) {
   put(g, new THREE.CylinderGeometry(0.04, 0.06, 0.1, 8), metal, 0, 3.5, 0);
   return g;
 }
+function bunting(parent, W, lamps) {
+  const { H } = W;
+  const cols = ['#e8433a', '#f4c430', '#3a8fd8', '#f6efe0', '#58b04a', '#e87ab0'].map((c) => new THREE.Color(c));
+  // lamps in order around the square; string each to the next when they are close enough
+  const pts = lamps.map(([x, z]) => new THREE.Vector3(x, H(x, z) + 2.78, z)).sort((a, b) => Math.atan2(a.z - V.z, a.x - V.x) - Math.atan2(b.z - V.z, b.x - V.x));
+  const pos = [], col = [], ropes = [];
+  pts.forEach((a, i) => {
+    const b = pts[(i + 1) % pts.length], len = a.distanceTo(b);
+    if (len > 17) return;
+    const sag = 0.25 + len * 0.045;
+    const at = (u) => new THREE.Vector3().lerpVectors(a, b, u).add(new THREE.Vector3(0, -Math.sin(u * Math.PI) * sag, 0));
+    ropes.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(Array.from({ length: 9 }, (_, k) => at(k / 8))), 24, 0.013, 4));
+    const n = Math.floor(len / 0.46);
+    for (let k = 1; k < n; k++) {
+      const p0 = at((k - 0.38) / n), p1 = at((k + 0.38) / n), pm = at(k / n);
+      const tip = pm.clone().add(new THREE.Vector3(0, -0.34, 0));
+      const c = cols[(k + i * 2) % cols.length];
+      for (const v of [p0, p1, tip]) { pos.push(v.x, v.y, v.z); col.push(c.r, c.g, c.b); }
+    }
+  });
+  const grp = new THREE.Group(); grp.visible = false; parent.add(grp);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.computeVertexNormals();
+  const flags = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide }));
+  flags.castShadow = true; grp.add(flags);
+  const rope = mat('#d8c8a0', 0.9);
+  for (const r of ropes) grp.add(new THREE.Mesh(r, rope));
+  return { group: grp, setVisible(on) { grp.visible = !!on; } };
+}
 function heatPosts(parent, W, spots) {
   const { H, physics } = W;
   const teal = mat('#2c7f86', 0.45, { metalness: 0.35 }), brass = mat('#c89a3c', 0.35, { metalness: 0.6 });
@@ -451,6 +482,8 @@ export function buildTown(scene, W) {
     }),
     [W.stall.x + Math.cos(W.stall.a) * 2.3, W.stall.z - Math.sin(W.stall.a) * 2.3],
   ]);
+  // epilogue: bunting strung between the square's lamps (hidden until the town celebrates)
+  W.bunting = bunting(scene, W, [[V.x + 4.6, V.z - 5.6], [-44.8, 4.8], [-44.6, -10.6], [-35.4, -0.2], [-55, -6.6]]);
   W.updaters.push((dt, t) => { W.laundry.forEach((c, i) => { c.rotation.x = Math.sin(t * 2.1 + i) * 0.12 * (0.4 + W.storm); }); });
   return { houseInfo, at };
 }

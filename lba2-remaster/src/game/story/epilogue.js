@@ -28,6 +28,7 @@ export class Epilogue extends ChapterBase {
     const g = this.game, h = g.hero;
     h.swapBody?.('twinsen');
     h.hasBall = true; h.noBehaviours = false;
+    g.world.bunting?.setVisible(true);
     g.enterRoom('house', null, true);
     g.audio.setMood?.('home');
     this.story.refreshCast();
@@ -55,7 +56,7 @@ export class Epilogue extends ChapterBase {
     this.chain([[npc.def.id, key]]);
     return true;
   }
-  applyFlags() {}
+  applyFlags() { this.game.world.bunting?.setVisible(this.on()); }
   objective() { return this.goal(this.f.ep_dinner ? 'ep_obj_free' : 'ep_obj_home'); }
   journal() { return [{ key: 'ep_j_home', done: !!this.f.ep_dinner }]; }
 }

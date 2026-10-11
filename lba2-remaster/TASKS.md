@@ -22,7 +22,7 @@
 
 ## 3. World and exploration
 - [ ] W1 Optional discoveries with consequences (a shortcut, a locked workshop, a repaired machine changing a route).
-- [ ] W2 Familiar places change after events (NPC lines, objects, routes) — tracked per chapter.
+- [~] W2 Familiar places change after events (NPC lines, objects, routes) — tracked per chapter. Done so far: heat posts light up after the water returns (ch1); bunting over the square and new lines for everyone in the epilogue.
 
 ## 4. Animation and interaction
 - [ ] A1 Talking gestures, pick-up/use reaches, NPCs face speakers, contextual idle chores.
