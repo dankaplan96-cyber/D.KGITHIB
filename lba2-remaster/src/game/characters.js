@@ -8,7 +8,7 @@
 // silhouettes between races. Bodies are one skinned surface; hands with
 // separate fingers and shoes are finer rigid sculpts attached to bones.
 import * as THREE from 'three';
-import { buildSculpted, sculptRigid, makeSDF } from '../engine/sculpt.js';
+import { buildSculpted, sculptRigid, makeSDF, assemble } from '../engine/sculpt.js';
 import { Rig } from '../engine/rig.js';
 
 const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -21,6 +21,7 @@ export const LOOKS = {
     // with flat shoulders and broad sleeves, thin orange belt, a nearly straight robe to the ankles, small
     // orange shoes, ball hands; a tall narrow egg head on a long thin neck, small eyes, a cap of hair on the
     // back of the crown and a bun of three balls; a big gold medallion on a gold cord. Colours from its palette.
+    poly: 'twinsen', // the low-poly model (tools/blender/twinsen_poly.py); the sculpt below is the fallback
     race: 'quetch', outfit: 'lba', hem: 0.1, hemW: 0.92, skirtDepth: 0.8, neckR: 0.05, shoulders: 0.95, armLen: 1.12, armSpread: 0.2,
     tunic: '#2a86ad', tunicTrim: '#2a86ad', belt: '#d36b4b', pants: '#2a86ad', shoes: '#d36b4b', slippers: true, cord: '#f7bb57', handBall: 0.075,
     hair: '#634327', skin: '#e2bc90', hairStyle: 'bun', hairFront: 0.62, hairBack: 0.3, noEars: true, skull: 'egg', skullY: 0.96, skullW: 1.04, jaw: 0.9, chin: 0.9, cheeks: 0.3,
@@ -100,6 +101,8 @@ export const LOOKS = {
     eyes: '#e8c040', height: 1.1,
   },
 };
+
+LOOKS.twinsenSculpt = { ...LOOKS.twinsen, poly: null };
 
 // ------------------------------------------------------------------ body design
 function design(L) {
@@ -793,6 +796,8 @@ export function createCharacter(lookName, overrides = {}) {
   const L = { ...(LOOKS[lookName] || LOOKS.twinsen), ...overrides };
   const key = lookName + JSON.stringify(overrides);
   const def = defs[key] ??= splitArms({ ...design(L), key });
+  const poly = L.poly && POLY[L.poly];
+  if (poly) return polyCharacter(L, def, poly);
   const { mesh, bones } = buildSculpted(def);
   const root = new THREE.Group();
   root.add(mesh);
@@ -808,6 +813,10 @@ export function createCharacter(lookName, overrides = {}) {
     rigid(handDef(L, sx), bones['hand' + s]);
     rigid(shoeDef(L), bones['foot' + s]);
   }
+  return finishRig(L, def, root, mesh, bones, eyes);
+}
+
+function finishRig(L, def, root, mesh, bones, eyes) {
   const tailSegs = Object.keys(bones).filter((k) => /^tail\d/.test(k)).sort().map((k) => bones[k]);
   const tail = tailSegs.length ? Object.assign(bones.tail0, { segs: tailSegs }) : null;
   const j = {
@@ -824,4 +833,56 @@ export function createCharacter(lookName, overrides = {}) {
   root.scale.setScalar(L.height ? (L.kid ? L.height / 0.78 : L.height) : 1);
   return rig;
 }
-export async function preloadCharacters() {}
+
+// ------------------------------------------------------------------ polygon models (made in Blender)
+// A look with `poly: name` uses assets/poly/<name>.json (tools/blender/*.py): unindexed triangles with
+// normals, vertex colours and skin weights by bone name, rigged to the same skeleton as the sculpted body
+// so every animation drives it; eyes are separate small meshes on the head (they blink).
+const POLY = {};
+const polyGeo = {};
+function polyColors(list) {
+  const out = new Float32Array(list.length), c = new THREE.Color(), seen = new Map();
+  for (let i = 0; i < list.length; i += 3) {
+    const k = (list[i] << 16) | (list[i + 1] << 8) | list[i + 2];
+    if (!seen.has(k)) { c.setRGB(list[i] / 255, list[i + 1] / 255, list[i + 2] / 255, THREE.SRGBColorSpace); seen.set(k, [c.r, c.g, c.b]); }
+    out.set(seen.get(k), i);
+  }
+  return out;
+}
+function polyGeometry(def, P) {
+  const names = Object.keys(def.bones);
+  const map = P.bones.map((b) => names.indexOf(b));
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(P.pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(P.nrm, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(polyColors(P.col), 3));
+  geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(P.si.map((i) => Math.max(0, map[i])), 4));
+  geo.setAttribute('skinWeight', new THREE.Float32BufferAttribute(P.sw, 4));
+  geo.computeBoundingSphere();
+  return geo;
+}
+const polyEyeMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4 });
+function polyCharacter(L, def, P) {
+  const { mesh, bones } = assemble(def, polyGeo[L.poly] ??= polyGeometry(def, P));
+  mesh.material.side = THREE.DoubleSide; // the cape and robe are open shells, seen from below when jumping
+  const root = new THREE.Group();
+  root.add(mesh);
+  const hp = def.bones.head.pos;
+  const eyes = P.eyes.map((e) => {
+    const g = new THREE.Group();
+    g.position.set(e.pivot[0] - hp[0], e.pivot[1] - hp[1], e.pivot[2] - hp[2]);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(e.pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(polyColors(e.col), 3));
+    geo.computeVertexNormals();
+    g.add(new THREE.Mesh(geo, polyEyeMat));
+    bones[e.bone].add(g);
+    return g;
+  });
+  return finishRig(L, def, root, mesh, bones, eyes);
+}
+export async function preloadCharacters() {
+  await Promise.all(['twinsen'].map(async (n) => {
+    try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
+  }));
+}

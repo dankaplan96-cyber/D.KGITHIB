@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { Renderer } from './engine/renderer.js';
 import { loadBake } from './engine/sculpt.js';
+import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { Input, applyBindings, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
@@ -784,4 +785,4 @@ class Game {
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
-(noBake ? Promise.resolve(false) : loadBake('assets/bake.bin').catch(() => false)).then(() => { window.game = new Game(); });
+Promise.all([noBake ? Promise.resolve(false) : loadBake('assets/bake.bin').catch(() => false), preloadCharacters()]).then(() => { window.game = new Game(); });

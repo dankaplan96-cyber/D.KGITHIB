@@ -218,7 +218,8 @@ function boneLayout(def) {
   return { names, worldPos, rootName };
 }
 
-function assemble(def, geo) {
+// (also used for polygon models made outside the sculptor: same skeleton, same material)
+export function assemble(def, geo) {
   const { names, worldPos, rootName } = boneLayout(def);
   const bones = {};
   names.forEach((nm) => { const b = new THREE.Bone(); b.name = nm; bones[nm] = b; });

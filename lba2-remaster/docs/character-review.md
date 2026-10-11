@@ -258,3 +258,40 @@ Prologue and chapter-1 playthrough tests pass.
 Still different: the render's orange-ish hairline band isn't reproduced; at the game camera the face is ~20 px
 tall, so the eyes and mouth read as dots and a dark spot — the face matters most in close-ups and dialogue.
 
+
+## 11. Pass 7 — the original model, rebuilt as polygons in Blender
+
+The user chose the original in-game model as the target and asked for a polygon modeller. Twinsen is now a
+low-poly mesh (1,175 triangles; the original has 1,228) built in Blender from the original's measured
+sections: `tools/blender/twinsen_poly.py` (source), `art/characters/twinsen/twinsen_poly.blend` (armature,
+vertex groups), exported to `assets/poly/twinsen.json` and loaded by `preloadCharacters()`.
+
+How it is built, all in fractions of the height H (the measured values from the original model):
+- **Cape:** a single shell from the collar (±0.12 H at 0.74 H) out to ±0.214 H. Its hem sits at 0.41 H at
+  the sleeves and rises to 0.45 H over the belt.
+- **Belt:** a band at 0.41–0.47 H, just inside the cape.
+- **Robe:** almost straight, about ±0.16 H wide and ±0.13 H deep.
+- **Head:** a faceted block. It is widest at the eyes, carries a small wedge nose and diamond eyes, and is
+  tilted back by 10° like the original's rest pose.
+- **Hair, hands, shoes, medallion:** three hair balls (a cap plus a two-ball bun), ball hands at ±0.178 H,
+  wedge shoes, and an octagonal medallion on a cord.
+
+How it is skinned (the same way LBA2 skins its models):
+- The cape's sides follow the arms, so the cape opens and stretches in the throw and jump, as in the original's clips.
+- The robe follows the four skirt bones by direction.
+- The bun rides the hair bones.
+- The eyes are separate meshes so they can blink.
+
+It uses the game's own skeleton, so all animations drive it unchanged. The sculpted version remains as a
+fallback and as `twinsenSculpt` for comparisons.
+
+Captures: `captures/characters/twinsen-poly-views.png`, `twinsen-poly-ingame-house.png`, `twinsen-poly-ingame-plaza.png`.
+The prologue, chapter-1 and chapter-2 playthroughs pass.
+
+Remaining differences:
+- **Shading:** the original uses ramp shading (16 shades per colour). Ours uses standard lighting, so the
+  blue is flatter.
+- **Medallion emblem:** the "S" on the medallion is not modelled.
+- **Robe deformation:** the original's robe halves follow the thighs, so they scissor. Ours swings on four
+  skirt bones.
+- **Face:** small differences in the facets.

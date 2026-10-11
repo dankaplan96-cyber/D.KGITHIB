@@ -59,7 +59,7 @@ const propDark = new THREE.MeshStandardMaterial({ color: matMode === 'sil' ? '#c
 const box = (w, h, d, x, y, z, m = propMat) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y + h / 2, z); scene.add(b); return b; };
 
 // ---- characters
-if (q.get('baked') === '1' && CH.preloadCharacters) await CH.preloadCharacters(names);
+if (CH.preloadCharacters) await CH.preloadCharacters(names); // (polygon models; baked geometry with &baked=1)
 const slots = [];
 for (const n of names) for (const v of views || [presetYaw]) slots.push([n, v]);
 const gap = +(q.get('gap') || (views ? 0.95 : 1.05));
