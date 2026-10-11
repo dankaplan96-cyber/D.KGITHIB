@@ -1593,7 +1593,7 @@ export function instrumentRack(k, { w = 1.2, d = 0.5, h = 2.2, kind = 'shaft', c
   return { hw: w / 2 + 0.04, hd: d / 2 + 0.04, top: h };
 }
 // cargo crate with stencil and steel corners
-export function cargoCrate(k, { w = 0.8, h = 0.7, d = 0.8, color = '#2e4a46' } = {}) {
+export function cargoCrate(k, { w = 0.8, h = 0.7, d = 0.8, color = '#4a6e62' } = {}) {
   const m = MAT.paint(color, 0.7), st = MAT.steel(), sm = MAT.map(CANV.stencil(color), 0.75);
   k.add(rbox(w - 0.02, h - 0.02, d - 0.02, 0.02), m, 0, h / 2, 0);
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(rbox(0.08, h, 0.08, 0.015), st, sx * (w / 2 - 0.035), h / 2, sz * (d / 2 - 0.035));
@@ -1633,7 +1633,7 @@ export function holoTable(k, { w = 2.0, d = 1.3, h = 0.92 } = {}) {
   k.add(rbox(w - 0.3, 0.1, d - 0.3, 0.02), ir, 0, 0.05, 0);
   k.add(rbox(w - 0.4, h - 0.2, d - 0.4, 0.04), body, 0, 0.1 + (h - 0.2) / 2, 0);
   k.add(rbox(w, 0.08, d, 0.03), br, 0, h - 0.04, 0);
-  k.add(plane(w - 0.14, d - 0.14), MAT.screen(CANV.blueprint(), 0.55), 0, h + 0.002, 0, 0, { rx: -Math.PI / 2 });
+  k.add(plane(w - 0.14, d - 0.14), MAT.screen(CANV.blueprint(), 0.55), 0, h + 0.012, 0, 0, { rx: -Math.PI / 2 });
   for (const sx of [-1, 1]) k.add(rbox(0.06, 0.05, d - 0.1, 0.012), br, sx * (w / 2 - 0.03), h + 0.02, 0);
   // cyan strip lights round the base
   k.add(rbox(w - 0.38, 0.025, 0.02, 0.006), MAT.glow('#9ff4ff', '#22d4ff', 2), 0, 0.2, (d - 0.4) / 2 + 0.01);
@@ -1659,8 +1659,37 @@ export function mapTable(k, { w = 1.6, d = 1.0, h = 0.9 } = {}) {
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(lathe([[0.05, 0], [0.06, 0.03], [0.035, 0.1], [0.03, h - 0.12], [0.045, h - 0.08]], 8), ir, sx * (w / 2 - 0.12), 0, sz * (d / 2 - 0.12));
   k.add(rbox(w - 0.2, 0.1, d - 0.2, 0.02), MAT.plates(TEAL, 0.6), 0, h - 0.13, 0);
   k.add(rbox(w, 0.07, d, 0.03), br, 0, h - 0.035, 0);
-  k.add(plane(w - 0.12, d - 0.12), MAT.screen(CANV.screen('map'), 0.9), 0, h + 0.002, 0, 0, { rx: -Math.PI / 2 });
+  k.add(plane(w - 0.12, d - 0.12), MAT.screen(CANV.screen('map'), 0.9), 0, h + 0.012, 0, 0, { rx: -Math.PI / 2 });
   for (const [px, pz, c] of [[-0.3, -0.15, '#ffb040'], [0.25, 0.12, '#5ff4ff'], [0.05, -0.05, '#ff5040']]) { k.add(cyl(0.006, 0.006, 0.12, 4), MAT.steel(), px * w / 1.6, h + 0.06, pz); k.add(sphere(0.022, 8, 6), MAT.glow(c, c, 1.4), px * w / 1.6, h + 0.13, pz); }
   k.add(cyl(0.012, 0.012, w * 0.5, 6), br, w * 0.15, h + 0.02, d / 2 - 0.15, 0.3, { rz: Math.PI / 2 });
   return { hw: w / 2, hd: d / 2, top: h };
+}
+// floor grating over a glowing conduit trench (w along x, d along z), flush with the floor
+export function glowGrate(k, w, d, { hue = '#5ff4ff' } = {}) {
+  const t = tex('grate' + hue, () => canvasTex(256, 128, (x, W, H) => {
+    const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0a3a44'); g.addColorStop(0.5, hue); g.addColorStop(1, '#0a3a44');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < 6; i++) { x.fillStyle = 'rgba(255,255,255,0.5)'; x.beginPath(); x.ellipse(20 + i * 44, 64, 14, 40, 0, 0, 7); x.fill(); }
+    x.fillStyle = '#2a2a32'; for (let xx = 0; xx < W; xx += 16) x.fillRect(xx, 0, 6, H);
+    x.fillStyle = '#3a3a44'; for (let y = 0; y < H; y += 32) x.fillRect(0, y, W, 5);
+  }));
+  t.wrapS = THREE.RepeatWrapping;
+  k.add(plane(w, d), M('grate' + t.uuid, () => std({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.8, roughness: 0.5, metalness: 0.4 }, 0, { noShadow: true })), 0, 0.012, 0, 0, { rx: -Math.PI / 2 });
+  const br = MAT.brass();
+  for (const s of [-1, 1]) { k.add(rbox(w + 0.12, 0.03, 0.06, 0.01), br, 0, 0.015, s * (d / 2 + 0.03)); k.add(rbox(0.06, 0.03, d, 0.01), br, s * (w / 2 + 0.03), 0.015, 0); }
+}
+// horizontal pressure tank on cradles, with gauges and pipes; long axis x
+export function pressureTank(k, { l = 1.8, r = 0.45, color = '#3f8a86' } = {}) {
+  const m = MAT.paint(color, 0.45), br = MAT.brass(), ir = MAT.iron();
+  const prof = [[0.001, -l / 2 - r * 0.45], [r * 0.5, -l / 2 - r * 0.38], [r * 0.85, -l / 2 - r * 0.2], [r, -l / 2], [r, l / 2], [r * 0.85, l / 2 + r * 0.2], [r * 0.5, l / 2 + r * 0.38], [0.001, l / 2 + r * 0.45]];
+  k.add(lathe(prof, 20), m, 0, r + 0.25, 0, 0, { rz: Math.PI / 2 });
+  for (const x of [-l / 2 + 0.05, -l / 6, l / 6, l / 2 - 0.05]) k.add(torus(r + 0.01, 0.025, 5, 24), br, x, r + 0.25, 0, Math.PI / 2);
+  for (const x of [-l / 3, l / 3]) { k.add(rbox(0.14, 0.4, r * 1.6, 0.03), ir, x, 0.2, 0); }
+  k.add(rbox(l + 0.2, 0.08, r * 1.7, 0.02), ir, 0, 0.04, 0);
+  k.at(0.2, r * 2 + 0.3, 0, 0, () => { k.add(cyl(0.03, 0.03, 0.12, 8), br, 0, -0.03, 0); k.at(0, 0.14, 0, 0, () => gauge(k, { r: 0.1, v: 0.86, stem: false })); });
+  k.add(pipe([[-l / 2 - r * 0.3, r + 0.25, 0], [-l / 2 - r * 0.7, r + 0.25, 0], [-l / 2 - r * 0.7, 0, 0]], 0.06, 0.15, 10), MAT.copper(), 0, 0, 0);
+  k.add(pipe([[-0.3, r * 2 + 0.2, 0], [-0.3, r * 2 + 0.55, 0], [-0.3, r * 2 + 0.55, -0.6]], 0.045, 0.12, 8), MAT.copper(), 0, 0, 0);
+  k.at(-0.3, r * 2 + 0.44, 0.0, Math.PI / 2, () => valveWheel(k, { r: 0.12 }));
+  k.add(rbox(0.36, 0.14, 0.01, 0.005), br, 0.4, r + 0.25, r + 0.005);
+  return { hw: l / 2 + r * 0.8, hd: r + 0.05, top: r * 2 + 0.6 };
 }

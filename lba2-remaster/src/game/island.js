@@ -1515,9 +1515,9 @@ function buildStation(W, root, r) {
   }
 
   // --- office and control buildings, doors facing the yard (north)
-  const office = techBuilding(W, grp, 43.2, 45.5, 0, { w: 6.2, d: 4.4, h: 3.0, picto: pictoTex('office'), roofKit: 'vent',
+  const office = techBuilding(W, grp, 43.2, 45.5, Math.PI, { w: 6.2, d: 4.4, h: 3.0, picto: pictoTex('office'), roofKit: 'vent',
     wins: [{ side: 'front', x: -1.9, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'front', x: 1.9, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'left', x: 0, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'right', x: 0, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'back', x: -1.5, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'back', x: 1.5, y: 1.0, w: 0.85, h: 0.85, round: true }] });
-  const control = techBuilding(W, grp, 50.3, 45.6, 0, { w: 5.0, d: 4.2, h: 3.0, picto: pictoTex('control'), roofKit: 'dish',
+  const control = techBuilding(W, grp, 50.3, 45.6, Math.PI, { w: 5.0, d: 4.2, h: 3.0, picto: pictoTex('control'), roofKit: 'dish',
     wins: [{ side: 'front', x: -1.6, y: 1.0, w: 0.75, h: 1.0, win: true }, { side: 'front', x: 1.75, y: 1.0, w: 0.75, h: 1.0, win: true }, { side: 'right', x: 0, y: 1.0, w: 0.8, h: 0.8, round: true }, { side: 'left', x: 0, y: 1.0, w: 0.8, h: 0.8, round: true }] });
 
   // --- transit beam pad: stepped round platform, hazard ring, emitter, the horned arch, the light column
@@ -1616,7 +1616,11 @@ function buildStation(W, root, r) {
 export function buildIsland(scene, W) {
   const r = rng(4242);
   W.signs = W.signs || [];
+  const T0 = performance.now();
   buildHarbour(W, scene, r);
+  const T1 = performance.now();
   buildStation(W, scene, r);
+  const T2 = performance.now();
+  console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms`);
   W.island = { keepClear };
 }

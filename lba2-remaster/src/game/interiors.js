@@ -513,7 +513,8 @@ function buildOffice(scene, physics) {
 
   // --- public side: runner rug, bench, plants, water cooler, notice board
   k.at(2.45, 0, -0.5, Math.PI / 2, () => P.rug(k, 3.6, 1.3, ['#2a5a6a', '#8a3a2a', '#e0b050', '#f0e0b8', '#1a2a30'], 11));
-  B.put(3.62, 0.95, -Math.PI / 2, P.bench, { w: 1.5 }, { noStand: true, seeThrough: true });
+  B.put(3.62, 0.95, -Math.PI / 2, P.bench, { w: 1.5, noCol: true });
+  B.col(3.62, 0.95, 0.75, 0.2, 0.7, { rot: -Math.PI / 2, noStand: true, seeThrough: true });
   B.put(3.6, BZ + 0.42, 0, P.pottedPlant, { s: 1.05 });
   B.put(3.5, 3.0, 0, P.pottedPlant, { kind: 'spiky', s: 1.15, potColor: '#3a6fb0' });
   B.put(1.55, BZ + 0.3, 0, P.waterCooler, { empty: true });
@@ -669,7 +670,7 @@ function buildProjOffice(scene, physics) {
   B.put(lk2, BZ + 0.28, 0, P.locker, { w: 0.9, d: 0.5, h: 1.95 });
   R.searches.push({ id: 'locker2', ...B.world(lk2, BZ + 1.15), r: 1.3 });
   B.put(-0.05, BZ + 0.45, 0.1, P.cargoCrate, { w: 0.8, h: 0.75, d: 0.8 });
-  k.at(-0.05, 0.75, BZ + 0.45, -0.15, () => P.cargoCrate(k, { w: 0.62, h: 0.6, d: 0.62, color: '#3a5a50' }));
+  k.at(-0.05, 0.75, BZ + 0.45, -0.15, () => P.cargoCrate(k, { w: 0.62, h: 0.6, d: 0.62, color: '#5f8068' }));
   B.col(-0.05, BZ + 0.45, 0.42, 0.42, 1.35, { noStand: true });
   cover(-0.05, BZ + 0.45, 0.6);
   deskAt(1.65, BZ + 0.45, 0, ['bars', 'radar'], 3, [1.75, BZ + 1.28, Math.PI + 0.25]);
@@ -677,7 +678,7 @@ function buildProjOffice(scene, physics) {
   // --- crate stack inside the door: hides the entrance from the room
   const c2x = 3.4, c2z = BZ + 1.65;
   B.put(c2x, c2z, 0.05, P.cargoCrate, { w: 0.95, h: 0.85, d: 0.85 });
-  k.at(c2x + 0.05, 0.85, c2z, -0.1, () => P.cargoCrate(k, { w: 0.75, h: 0.7, d: 0.75, color: '#3a5a50' }));
+  k.at(c2x + 0.05, 0.85, c2z, -0.1, () => P.cargoCrate(k, { w: 0.75, h: 0.7, d: 0.75, color: '#5f8068' }));
   B.col(c2x, c2z, 0.48, 0.44, 1.55, { noStand: true });
   B.put(c2x + 0.35, c2z + 0.85, 0, P.barrel, { r: 0.28, h: 0.8, pal: 'grey' });
   cover(c2x, c2z, 0.7);
@@ -687,7 +688,7 @@ function buildProjOffice(scene, physics) {
   for (let i = 0; i < 2; i++) B.put(LX + 0.33, -3.55 + i * 0.5, Math.PI / 2, P.filingCabinet, { color: '#5a7a76', h: 1.32 });
   cover(LX + 0.4, -3.3, 0.6);
   B.put(LX + 0.5, -1.95, 0.08, P.cargoCrate, { w: 0.85, h: 0.8, d: 0.85 });
-  k.at(LX + 0.48, 0.8, -1.95, 0.25, () => P.cargoCrate(k, { w: 0.65, h: 0.62, d: 0.65, color: '#3a5a50' }));
+  k.at(LX + 0.48, 0.8, -1.95, 0.25, () => P.cargoCrate(k, { w: 0.65, h: 0.62, d: 0.65, color: '#5f8068' }));
   B.col(LX + 0.5, -1.95, 0.45, 0.45, 1.42, { noStand: true });
   cover(LX + 0.5, -1.95, 0.6);
   const lk1 = -0.35;
@@ -720,10 +721,10 @@ function buildProjOffice(scene, physics) {
   B.put(lk3x, lk3z, 0, P.locker, { w: 0.9, d: 0.5, h: 1.95 });
   R.searches.push({ id: 'locker3', ...B.world(lk3x, lk3z + 0.9), r: 1.3 });
   B.put(3.55, 2.3, 0.15, P.cargoCrate, { w: 0.75, h: 0.75, d: 0.75 });
-  k.at(3.55, 0.75, 2.3, -0.2, () => P.cargoCrate(k, { w: 0.58, h: 0.55, d: 0.58, color: '#3a5a50' }));
+  k.at(3.55, 0.75, 2.3, -0.2, () => P.cargoCrate(k, { w: 0.58, h: 0.55, d: 0.58, color: '#5f8068' }));
   B.col(3.55, 2.3, 0.4, 0.4, 1.3, { noStand: true });
   B.put(3.5, 3.5, -0.1, P.cargoCrate, { w: 0.8, h: 0.8, d: 0.8 });
-  k.at(3.5, 0.8, 3.5, 0.2, () => P.cargoCrate(k, { w: 0.6, h: 0.6, d: 0.6, color: '#3a5a50' }));
+  k.at(3.5, 0.8, 3.5, 0.2, () => P.cargoCrate(k, { w: 0.6, h: 0.6, d: 0.6, color: '#5f8068' }));
   B.col(3.5, 3.5, 0.42, 0.42, 1.4, { noStand: true });
   cover(3.55, 2.3, 0.55); cover(3.5, 3.5, 0.6);
 
@@ -733,8 +734,12 @@ function buildProjOffice(scene, physics) {
   B.put(5.9, 4.4, 0, P.barrel, { r: 0.3, h: 0.85, pal: 'grey' });
   cover(-2.2, 4.35, 0.6);
 
+  k.at(tX, 0, tZ, 0, () => P.rug(k, 4.4, 3.0, ['#2e5e5a', '#d9a94a', '#5fb8b0', '#e8f0e0', '#14302e'], 21));
+  B.put(-4.5, 4.5, Math.PI, P.bench, { w: 1.4, pal: 'grey', noCol: true });
+  B.col(-4.5, 4.5, 0.7, 0.2, 0.7, { noStand: true, seeThrough: true });
   // --- hanging industrial lamps and light
-  for (const [x, z] of [[-3.4, -2.2], [2.4, 1.2]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, 2.55, H + 0.2, { shade: '#2e4a48' }));
+  B.light('#e8f0ff', 4, 8, -3.6, 2.4, 3.0);
+  for (const [x, z] of [[-3.4, -2.2], [2.4, 1.2]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, 2.55, H + 0.2, { shade: '#3f8a86' }));
   B.light('#e8f0ff', 7, 10, -3.2, 2.5, -1.8);
   B.light('#e8f0ff', 6, 10, 2.6, 2.5, 1.4);
   const holoLight = B.light('#5ff4ff', 5, 6, tX, 1.9, tZ);
@@ -801,7 +806,9 @@ function buildControl(scene, physics) {
   shaftTex.wrapS = shaftTex.wrapT = THREE.RepeatWrapping; shaftTex.repeat.set(5, 4);
   const shaftMat = new THREE.MeshStandardMaterial({ map: shaftTex, emissive: '#ffffff', emissiveMap: shaftTex, emissiveIntensity: 1.0, roughness: 0.6, side: THREE.BackSide });
   const sx = winX - 3.0, sz = BZ - t - 3.1, sr = 3.1, outer = BZ - t;
-  const clampTop = (geo, cap) => { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) { const z = p.getZ(i) + sz, lim = 3.05 - 0.93 * (outer - z); if (p.getY(i) > Math.min(cap, lim)) p.setY(i, Math.min(cap, lim)); } p.needsUpdate = true; geo.computeVertexNormals(); };
+  // keep every vertex inside the band seen through the glass: above it the wall
+  // would not hide it, below it the camera would see it under the room's slab
+  const clampTop = (geo, cap) => { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) { const d = outer - (p.getZ(i) + sz), hi = Math.min(cap, 3.05 - 0.93 * d), lo = -0.75 - 0.93 * d; p.setY(i, Math.max(lo, Math.min(hi, p.getY(i)))); } p.needsUpdate = true; geo.computeVertexNormals(); };
   const shaftGeo = new THREE.CylinderGeometry(sr, sr, 18, 40, 24, true); shaftGeo.translate(0, -7, 0); clampTop(shaftGeo, 2.6);
   const shaft = new THREE.Mesh(shaftGeo, shaftMat); shaft.position.set(sx, 0, sz); B.group.add(shaft);
   const beamMat = new THREE.MeshBasicMaterial({ color: '#7ff8ff', transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
@@ -809,9 +816,6 @@ function buildControl(scene, physics) {
   const beam = new THREE.Mesh(beamGeo, beamMat); beam.position.set(sx, 0, sz); B.group.add(beam);
   const coreGeo = new THREE.CylinderGeometry(0.16, 0.16, 16, 10, 16, true); coreGeo.translate(0, -7, 0); clampTop(coreGeo, 2);
   const core = new THREE.Mesh(coreGeo, new THREE.MeshBasicMaterial({ color: '#e8ffff' })); core.position.set(sx, 0, sz); B.group.add(core);
-  const rings = [];
-  const ringMat = new THREE.MeshBasicMaterial({ color: '#aaffff', transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
-  for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(sr - 0.15, 0.06, 6, 48), ringMat); r.rotation.x = Math.PI / 2; r.position.set(sx, -1 - i * 1.6, sz); B.group.add(r); rings.push(r); }
   const shaftLight = B.light('#5ff4ff', 14, 11, winX, 1.9, BZ + 0.9);
 
   // --- brass railing and hazard strip before the viewport
@@ -849,10 +853,16 @@ function buildControl(scene, physics) {
 
   // --- the map table and the rest of the floor
   B.put(1.9, 1.3, -0.15, P.mapTable, { w: 1.7, d: 1.05 });
-  k.at(1.9, 0, 1.3, 0, () => P.hangingLamp(k, 2.4, H + 0.2, { shade: '#2e4a48' }));
-  B.put(-2.2, 2.3, 0.4, P.officeChair, { color: '#2e4a48' }, { noStand: true });
-  for (const [x, z, s] of [[4.9, 2.8, 0.85], [5.4, 3.75, 0.7]]) B.put(x, z, 0.2 + x, P.cargoCrate, { w: s, h: s * 0.9, d: s });
-  B.put(4.6, 3.95, 0, P.barrel, { r: 0.3, h: 0.85, pal: 'grey' });
+  k.at(1.9, 0, 1.3, 0, () => P.hangingLamp(k, 2.4, H + 0.2, { shade: '#3f8a86' }));
+  k.at(-3.0, 0, 2.3, 0, () => P.rug(k, 2.4, 1.6, ['#2e4a48', '#d9a94a', '#5ff4ff', '#e8f4ff', '#14201e'], 13));
+  B.put(-3.0, 2.1, 0, P.desk, { w: 1.4, d: 0.72, metal: MAT.plates(teal, 0.7), leather: '#1e3a38' });
+  k.at(-3.0, 0.78, 2.1, 0, () => { k.at(-0.3, 0, -0.1, 0, () => P.monitor(k, { kind: 'wave', w: 0.42, h: 0.3 })); P.papers(k, 0.35, 0, 0.1, 4, 21, 'project'); P.ledger(k, 0.3, 0.01, -0.12, 0.2, '#1e3a38'); });
+  B.put(-2.85, 2.85, Math.PI - 0.4, P.officeChair, { color: '#2e4a48' }, { noStand: true });
+  k.at(-1.75, 0, 0.1, 0, () => P.glowGrate(k, 4.3, 0.55));
+  B.put(3.4, 3.5, 0, P.pressureTank, { l: 1.6, r: 0.42 });
+  for (const [x, z, s] of [[5.45, 2.6, 0.85], [5.5, 3.65, 0.7]]) B.put(x, z, 0.2 + x, P.cargoCrate, { w: s, h: s * 0.9, d: s });
+  B.put(4.85, 4.25, 0, P.barrel, { r: 0.3, h: 0.85, pal: 'grey' });
+  k.at(winX, 0, cz + 0.4, 0, () => P.hangingLamp(k, 2.6, H + 0.2, { shade: '#3f8a86' }));
   // cable spool lying on its side, toolbox
   k.at(-4.6, 0, 3.6, 0.6, () => {
     for (const s of [-1, 1]) k.add(cyl(0.42, 0.42, 0.05, 20), MAT.wood('grey'), s * 0.22, 0.42, 0, 0, { rz: Math.PI / 2 });
@@ -861,7 +871,6 @@ function buildControl(scene, physics) {
   B.ccol(-4.6, 3.6, 0.45, 0.85, { noStand: true });
   k.at(-0.8, 0, 3.7, -0.3, () => { k.add(rbox(0.5, 0.22, 0.24, 0.02), MAT.paint('#c8302a', 0.45), 0, 0.11, 0); k.add(pipe([[-0.15, 0.22, 0], [-0.12, 0.3, 0], [0.12, 0.3, 0], [0.15, 0.22, 0]], 0.012, 0.03, 5), MAT.iron(), 0, 0, 0); });
   B.col(-0.8, 3.7, 0.28, 0.16, 0.3, { noStand: true, seeThrough: true, rot: -0.3 });
-  k.at(-3.3, 0, 0.7, 0, () => P.rug(k, 2.0, 1.2, ['#2e4a48', '#d9a94a', '#5ff4ff', '#e8f4ff', '#14201e'], 13));
 
   B.light('#ffe8c8', 7, 10, 1.6, 2.6, 1.0);
   B.light('#9ff4ff', 2.5, 4.5, LX + 1.2, 1.6, -0.4);
@@ -873,7 +882,6 @@ function buildControl(scene, physics) {
     shaftMat.emissiveIntensity = p;
     beamMat.opacity = 0.28 + Math.sin(tt * 3.1) * 0.08;
     shaftLight.intensity = shaftLight.userData.base * p;
-    rings.forEach((r, i) => { r.position.y = 0.6 - ((tt * 0.8 + i * 1.6) % 6.4); });
     screens.forEach((m, i) => { m.emissiveIntensity = 1.3 * (0.92 + Math.sin(tt * (5 + i) + i) * 0.06); });
   });
 

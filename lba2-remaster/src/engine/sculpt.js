@@ -194,7 +194,7 @@ const geoCache = new Map();
 export function buildSculpted(def) {
   let geo = def.key && geoCache.get(def.key);
   if (!geo) {
-    geo = sculptGeometry(def);
+    geo = fromBake(def) || sculptGeometry(def);
     if (def.key) geoCache.set(def.key, geo);
   }
   return assemble(def, geo);
@@ -234,9 +234,118 @@ function assemble(def, geo) {
 const rigidCache = new Map();
 export function sculptRigid(def) {
   if (def.key && rigidCache.has(def.key)) return rigidCache.get(def.key);
-  const geo = sculptGeometry({ ...def, rigid: true });
+  const d = { ...def, rigid: true };
+  const geo = fromBake(d) || sculptGeometry(d);
   if (def.key) rigidCache.set(def.key, geo);
   return geo;
+}
+
+// ---------------------------------------------------------------- bake
+// Sculpting is CPU-heavy (seconds per character), so `tools/bake.mjs` saves every
+// sculpted geometry once (quantised) to assets/bake.bin; at start-up the game loads
+// it and only re-sculpts models whose design changed (fingerprint mismatch).
+function fnv(str) {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+  return (h >>> 0).toString(16);
+}
+export function fingerprint(def) {
+  const rep = (k, v) => (typeof v === 'function' ? v.toString() : v);
+  return fnv(JSON.stringify([def.prims, def.groups, def.joinK, def.colors, def.bounds, def.cell, def.rigid, def.hard, def.bones, def.chains, def.bias, def.paint && def.paint.toString()], rep));
+}
+const BAKE = new Map();
+export const bakeStats = { hit: 0, miss: 0, missed: [] };
+function fromBake(def) {
+  if (!def.key) return null;
+  const fp = fingerprint(def);
+  const b = BAKE.get(def.key);
+  if (!b || b.fp !== fp) { bakeStats.miss++; bakeStats.missed.push(def.key); stamp(def, fp); return null; }
+  bakeStats.hit++;
+  const g = new THREE.BufferGeometry();
+  const n = b.n, q = b.q;
+  const pos = new Float32Array(n * 3);
+  for (let i = 0; i < n * 3; i++) pos[i] = q.min[i % 3] + (b.pos[i] / 65535) * (q.max[i % 3] - q.min[i % 3]);
+  const nor = new Float32Array(n * 3);
+  for (let i = 0; i < n * 3; i++) nor[i] = b.nor[i] / 127;
+  const col = new Float32Array(n * 3);
+  for (let i = 0; i < n * 3; i++) col[i] = b.col[i] / 255;
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  if (b.si) {
+    g.setAttribute('skinIndex', new THREE.BufferAttribute(new Uint16Array(b.si), 4));
+    const sw = new Float32Array(n * 4);
+    for (let i = 0; i < n; i++) { let t = 0; for (let k = 0; k < 4; k++) t += b.sw[i * 4 + k]; for (let k = 0; k < 4; k++) sw[i * 4 + k] = t ? b.sw[i * 4 + k] / t : (k ? 0 : 1); }
+    g.setAttribute('skinWeight', new THREE.BufferAttribute(sw, 4));
+  }
+  g.setIndex(new THREE.BufferAttribute(b.idx, 1));
+  g.computeBoundingSphere();
+  g.userData.bake = { key: def.key, fp };
+  return g;
+}
+// remember key + fingerprint on freshly sculpted geometry (picked up by serializeBake)
+const pendingStamp = new Map();
+function stamp(def, fp) { pendingStamp.set(def.key, fp); }
+
+export async function loadBake(url) {
+  const res = await fetch(url);
+  if (!res.ok) return false;
+  const buf = await res.arrayBuffer();
+  const hl = new DataView(buf).getUint32(0, true);
+  const head = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 4, hl)));
+  const base = 4 + hl;
+  const view = (T, off, len) => new T(buf.slice(base + off, base + off + len * T.BYTES_PER_ELEMENT));
+  for (const e of head.entries) {
+    BAKE.set(e.key, {
+      fp: e.fp, n: e.n, q: e.q,
+      pos: view(Uint16Array, e.pos, e.n * 3), nor: view(Int8Array, e.nor, e.n * 3), col: view(Uint8Array, e.col, e.n * 3),
+      si: e.si != null ? view(Uint8Array, e.si, e.n * 4) : null, sw: e.sw != null ? view(Uint8Array, e.sw, e.n * 4) : null,
+      idx: e.big ? view(Uint32Array, e.idx, e.ni) : view(Uint16Array, e.idx, e.ni),
+    });
+  }
+  return true;
+}
+
+// everything sculpted so far → one binary (header JSON + aligned blobs)
+export function serializeBake() {
+  const entries = [], blobs = [];
+  let off = 0;
+  const push = (arr) => { const pad = (8 - (off % 8)) % 8; if (pad) { blobs.push(new Uint8Array(pad)); off += pad; } const at = off; blobs.push(new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength)); off += arr.byteLength; return at; };
+  for (const [key, geo] of [...geoCache, ...rigidCache]) {
+    const fp = geo.userData.bake?.fp || pendingStamp.get(key);
+    if (!fp) continue;
+    const P = geo.attributes.position.array, N = geo.attributes.normal.array, C = geo.attributes.color.array, n = P.length / 3;
+    const min = [Infinity, Infinity, Infinity], max = [-Infinity, -Infinity, -Infinity];
+    for (let i = 0; i < n * 3; i++) { const a = i % 3; if (P[i] < min[a]) min[a] = P[i]; if (P[i] > max[a]) max[a] = P[i]; }
+    const qp = new Uint16Array(n * 3), qn = new Int8Array(n * 3), qc = new Uint8Array(n * 3);
+    for (let i = 0; i < n * 3; i++) {
+      const a = i % 3, r = max[a] - min[a] || 1;
+      qp[i] = Math.round(((P[i] - min[a]) / r) * 65535);
+      qn[i] = Math.round(Math.max(-1, Math.min(1, N[i])) * 127);
+      qc[i] = Math.round(Math.max(0, Math.min(1, C[i])) * 255);
+    }
+    const e = { key, fp, n, q: { min, max } };
+    e.pos = push(qp); e.nor = push(qn); e.col = push(qc);
+    if (geo.attributes.skinIndex) {
+      const SI = geo.attributes.skinIndex.array, SW = geo.attributes.skinWeight.array;
+      const si = new Uint8Array(n * 4), sw = new Uint8Array(n * 4);
+      for (let i = 0; i < n * 4; i++) { si[i] = SI[i]; sw[i] = Math.round(SW[i] * 255); }
+      e.si = push(si); e.sw = push(sw);
+    }
+    const I = geo.index.array; e.ni = I.length; e.big = n > 65535;
+    e.idx = push(e.big ? new Uint32Array(I) : new Uint16Array(I));
+    entries.push(e);
+  }
+  const head = new TextEncoder().encode(JSON.stringify({ v: 1, entries }));
+  const hpad = (8 - ((4 + head.length) % 8)) % 8;
+  const total = 4 + head.length + hpad + off;
+  const out = new Uint8Array(total);
+  new DataView(out.buffer).setUint32(0, head.length + hpad, true);
+  out.set(head, 4);
+  for (let i = 0; i < hpad; i++) out[4 + head.length + i] = 32; // spaces: still valid JSON
+  let p = 4 + head.length + hpad;
+  for (const b of blobs) { out.set(b, p); p += b.length; }
+  return out;
 }
 
 function sculptGeometry(def) {

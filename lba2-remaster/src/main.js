@@ -3,6 +3,7 @@
 // the story itself is in src/game/prologue.js.
 import * as THREE from 'three';
 import { Renderer } from './engine/renderer.js';
+import { loadBake } from './engine/sculpt.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { Input } from './engine/input.js';
@@ -53,10 +54,14 @@ class Game {
     this.renderer = new Renderer($('#game'));
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 2500);
+    const tm = performance.now(); this.loadTimes = {};
     this.world = buildWorld(this.scene);
+    this.loadTimes.world = performance.now() - tm;
     this.terrain = this.world.terrain;
     this.physics = this.world.physics;
+    let tr = performance.now();
     this.rooms = buildInteriors(this.scene, this.physics);
+    this.loadTimes.rooms = performance.now() - tr;
     this.room = null;
     this.env = new Environment(this.scene, this.terrain);
     this.renderer.setup(this.scene, this.camera);
@@ -89,7 +94,10 @@ class Game {
     this.trans = null;
     this.cutscene = null;
 
+    tr = performance.now();
     this.spawnActors();
+    this.loadTimes.actors = performance.now() - tr;
+    this.loadTimes.total = performance.now() - tm;
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
     this.applySettings();
@@ -718,4 +726,7 @@ class Game {
   }
 }
 
-window.game = new Game();
+// Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
+// missing or changed since the bake is sculpted at load as before.
+const noBake = new URLSearchParams(location.search).has('nobake');
+(noBake ? Promise.resolve(false) : loadBake('assets/bake.bin').catch(() => false)).then(() => { window.game = new Game(); });

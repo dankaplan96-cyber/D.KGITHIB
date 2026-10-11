@@ -21,7 +21,7 @@ export const LOOKS = {
     // sleeves, orange belt at ~45% of the height, orange slippers, egg-shaped head with a high bare
     // forehead, small eyes, a strong nose, hair as a back cap with a high topknot, long neck
     race: 'quetch', outfit: 'robe2', hem: 0.075, hemW: 0.74, neckR: 0.042, shoulders: 1.08, stoop: 0.03, chin: 1.25, tunic: '#4f93d2', tunicTrim: '#2f6aa8', belt: '#f07a28', pants: '#2f6aa8', shoes: '#d9653a', slippers: true,
-    hair: '#4a2a14', skin: '#f2c49a', hairStyle: 'twinsen', skull: 'egg', eyeScale: 0.66, noseS: 1.2, nose: 'ball', eyes: '#2a4a8a', mouth: 'smile', brow: 1.3, medallion: true, chain: true, headS: 1.0, neck: 0.115,
+    hair: '#4a2a14', skin: '#f2c49a', hairStyle: 'twinsen', skull: 'egg', eyeScale: 0.66, noseS: 1.2, nose: 'ball', eyes: '#2a4a8a', mouth: 'line', brow: 1.9, browFlat: true, jaw: 1.12, medallion: true, chain: true, headS: 1.0, neck: 0.11,
   },
   zoe: {
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
@@ -167,7 +167,8 @@ function design(L) {
     // Quetch: tall oval skull, narrow jaw, small chin, big nose, small ears
     const egg = L.skull === 'egg' ? (L.skullY || 1.13) : 1; // a taller skull with a high forehead
     e(add(Hc, [0, 0.03 * hs + (egg - 1) * 0.1, -0.015]), [0.115 * hs, 0.165 * hs * egg, 0.128 * hs], 'head', 'skin', 'head');
-    e(add(Hc, [0, -0.065 * hs, 0.02 * hs]), [0.098 * hs, 0.1 * hs, 0.1 * hs], 'head', 'skin', 'head');
+    const jw = L.jaw || 1;
+    e(add(Hc, [0, -0.065 * hs - (jw - 1) * 0.04, 0.02 * hs]), [0.098 * hs * jw, 0.1 * hs * jw, 0.1 * hs], 'head', 'skin', 'head');
     e(add(Hc, [0, -0.135 * hs, 0.045 * hs]), [0.048 * hs * (L.chin || 1), 0.04 * hs * (L.chin || 1), 0.048 * hs * (L.chin || 1)], 'head', 'skin', 'head');
     for (const sx of [1, -1]) e(add(Hc, [sx * 0.06 * hs, -0.04 * hs, 0.065 * hs]), [0.04 * hs, 0.035 * hs, 0.04 * hs], 'head', 'cheek', 'head');
     for (const sx of [1, -1]) e(add(Hc, [sx * 0.118 * hs, -0.005, -0.005]), [0.016, 0.038, 0.028], 'head', 'skin', 'head');
@@ -220,11 +221,12 @@ function design(L) {
     if (L.hairStyle === 'twinsen') {
       // high, hooked ponytail swept back from the crown
       // (it leaves the back of the crown almost level, so from the front it reads as a tuft, not a bun)
-      const p0 = add(Hc, [0, (L.skull === 'egg' ? 0.17 : 0.115) * hs, (L.skull === 'egg' ? -0.085 : -0.11) * hs]);
+      const p0 = add(Hc, [0, (L.skull === 'egg' ? 0.14 : 0.115) * hs, (L.skull === 'egg' ? -0.12 : -0.11) * hs]);
       if (L.skull === 'egg') {
         // LBA2: a compact knot on top of the crown that curls back
-        chain([p0, add(p0, [0, 0.05 * hs, -0.04 * hs]), add(p0, [0, 0.055 * hs, -0.1 * hs]), add(p0, [0, 0.015 * hs, -0.14 * hs]), add(p0, [0, -0.035 * hs, -0.135 * hs])],
-          [0.045 * hs, 0.05 * hs, 0.042 * hs, 0.03 * hs, 0.012 * hs]);
+        // tied at the back of the crown, sticking out backwards and hooking down
+        chain([p0, add(p0, [0, 0.03 * hs, -0.07 * hs]), add(p0, [0, 0.025 * hs, -0.14 * hs]), add(p0, [0, -0.02 * hs, -0.18 * hs]), add(p0, [0, -0.075 * hs, -0.17 * hs])],
+          [0.04 * hs, 0.046 * hs, 0.038 * hs, 0.027 * hs, 0.011 * hs]);
       } else {
         chain([p0, add(p0, [0, 0.045 * hs, -0.07 * hs]), add(p0, [0, 0.05 * hs, -0.15 * hs]), add(p0, [0, 0.0, -0.205 * hs]), add(p0, [0, -0.075 * hs, -0.215 * hs])],
           [0.036 * hs, 0.04 * hs, 0.034 * hs, 0.024 * hs, 0.01 * hs]);
@@ -416,7 +418,7 @@ function design(L) {
   const top = B.head.tip[1] + (bunny ? 0.5 : 0.2);
   const halfW = L.outfit === 'bell' || L.outfit === 'robe2' ? 0.62 : grobo ? 0.72 : 0.55;
   return {
-    prims: P, groups: G, joinK: 0.012, bones: B, chains, colors, paint, hard: ['belt', 'tunicTrim', 'buckle', 'visor', 'brassDark', 'hardhat'],
+    prims: P, groups: G, joinK: 0.012, bones: B, chains, colors, paint, hard: ['belt', 'buckle', 'visor', 'brassDark', 'hardhat'],
     bounds: { min: [-halfW, 0.0, -0.55], max: [halfW, top, 0.5] },
     cell: kid ? 0.012 : 0.014,
     face, Hc, hs, hipsY,
@@ -523,7 +525,7 @@ function addFace(def, bones, L) {
     head.add(g);
     eyes.push(g);
     const brow = new THREE.Mesh(new THREE.CapsuleGeometry(0.009 * def.hs * (L.brow || 1), 0.05 * def.hs, 2, 6), new THREE.MeshStandardMaterial({ color: L.hair || L.furDark || '#3a2a1a', roughness: 0.9 }));
-    brow.rotation.z = Math.PI / 2 - sx * (L.brow ? 0.08 : 0.2);
+    brow.rotation.z = Math.PI / 2 - sx * (L.browFlat ? -0.05 : L.brow ? 0.08 : 0.2);
     brow.position.set(sx * F.eyeX * 1.05, Hc[1] - hp[1] + F.eyeY + F.eyeR * 1.55, Hc[2] - hp[2] + F.eyeZ + 0.004);
     head.add(brow);
   }
@@ -533,6 +535,12 @@ function addFace(def, bones, L) {
     const m = new THREE.Mesh(new THREE.SphereGeometry(0.022 * def.hs, 12, 8), matMouth);
     m.scale.set(1, 0.6, 0.35);
     m.position.set(0, my, mz);
+    head.add(m);
+  } else if (L.mouth === 'line') {
+    // a straight, slightly downturned mouth: calm and grown-up
+    const m = new THREE.Mesh(new THREE.CapsuleGeometry(0.0065, 0.042 * def.hs, 2, 6), matMouth);
+    m.rotation.z = Math.PI / 2;
+    m.position.set(0, my, mz + 0.004);
     head.add(m);
   } else if (L.race !== 'grobo') {
     const m = new THREE.Mesh(new THREE.TorusGeometry(0.024 * def.hs, 0.005, 6, 12, Math.PI * 0.8), matMouth);

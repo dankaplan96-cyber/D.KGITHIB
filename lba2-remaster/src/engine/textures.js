@@ -518,6 +518,16 @@ function islandTextures(T) {
     speckle(x, S, r, 600, ['#7a756c', '#d0cbc2'], 0.45, 0.3);
     T.concrete = toTex(c);
   }
+  // neutral painted sheet metal (tinted per use): chipped paint, streaks, grime at the bottom
+  {
+    const [c, x] = canvas(S); const r = rng(112);
+    x.fillStyle = '#d4d4d4'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 26, ['#c8c8c8', '#e0e0e0', '#bcbcbc'], 15, 50, 0.45);
+    for (let i = 0; i < 70; i++) { const px = r() * S, py = r() * S; x.strokeStyle = `rgba(90,80,70,${0.08 + r() * 0.12})`; x.lineWidth = 1 + r() * 2; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (r() - 0.5) * 3, py + 10 + r() * 40); x.stroke(); }
+    for (let i = 0; i < 50; i++) { x.fillStyle = r() < 0.6 ? 'rgba(120,100,80,0.45)' : 'rgba(250,250,250,0.5)'; x.beginPath(); x.ellipse(r() * S, r() * S, 1 + r() * 4, 1 + r() * 2, r() * 3, 0, 7); x.fill(); }
+    const g = x.createLinearGradient(0, 0, 0, S); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.75, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(70,55,40,0.25)'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+    T.metal = toTex(c);
+  }
 }
 
 let cache = null;
