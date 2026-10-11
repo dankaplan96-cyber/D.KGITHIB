@@ -57,6 +57,9 @@ Captures: `captures/characters/twinsen-before-knee-tunic.png` (front/side/back),
 - Pipeline: `hard` materials in sculpt.js stop colour blending at belt/trim edges.
 - Arthur got his own kid design (knee tunic, belt like his father, tuft), not a scaled Twinsen.
 - New chapter-1 cast: Vesk, worker, guard (`captures/characters/cast-ch1.png`).
+- Arms are a second skinned surface on the same skeleton (`splitArms` in characters.js). Found in the close-up
+  recording: with the arms down the wide sleeve touched the robe, the two were fused into one surface, and on the
+  back-swing the robe tore open into stretched strips. Sculpted apart, the sleeve slides over the robe instead.
 
 ## 5. Changes made (animation — rig.js / actors.js)
 
@@ -68,6 +71,11 @@ to the hand bone), release event at 0.18 s (ball leaves from the hand position),
 hit: directional recoil from the hit side, short lock; heavy hit: knockdown → get-up; clover revive:
 knockdown → get-up with sparkle; talk: 5 gestures without repeating, listeners turn to the speaker;
 pick-up (crouch and reach), use (two-handed crank), door (push).
+
+Fixes from reviewing the recordings (session 3): run arms pump close to the body (swing biased behind the hip,
+elbow folds more on the forward swing — before, the forward arm reached out at shoulder height); in a long robe
+the run's heel fold is capped and the back robe panel follows the folded heel, so the foot no longer pokes
+through the back of the robe.
 
 ## 6. Criteria (§12) — status with evidence
 

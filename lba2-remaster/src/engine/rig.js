@@ -299,6 +299,18 @@ export class Rig {
       T.footL = -T.legL * 0.4 - T.kneeL * 0.3; T.footR = -T.legR * 0.4 - T.kneeR * 0.3;
       T.armL = -s * amp * 0.85; T.armR = s * amp * 0.85;
       T.elL = -0.25 - (a === 'run' ? 1.0 : 0.15) - Math.max(0, s) * 0.2; T.elR = -0.25 - (a === 'run' ? 1.0 : 0.15) - Math.max(0, -s) * 0.2;
+      if (a === 'run') {
+        // in a long robe the heel can't kick up high behind (it would poke through the cloth)
+        if (this.j.skirt) {
+          T.kneeL = Math.min(T.kneeL, 0.7); T.kneeR = Math.min(T.kneeR, 0.7);
+          T.legL = Math.min(T.legL, 0.42); T.legR = Math.min(T.legR, 0.42);
+          T.footL = -T.legL * 0.4 - T.kneeL * 0.3; T.footR = -T.legR * 0.4 - T.kneeR * 0.3;
+        }
+        // running arms pump close to the body: the swing sits behind the hip (forward arm stops at the
+        // chest, it never reaches out) and the elbow folds more on the forward swing
+        T.armL = 0.22 - s * amp * 0.7; T.armR = 0.22 + s * amp * 0.7;
+        T.elL = -1.25 - Math.max(0, s) * 0.45; T.elR = -1.25 - Math.max(0, -s) * 0.45;
+      }
       hipsY = 0.95 - 0.03 + Math.abs(c) * (a === 'run' ? 0.07 : 0.035);
       torsoY = s * (a === 'run' ? 0.12 : 0.07);
       headY = -torsoY * 0.8;
@@ -500,7 +512,9 @@ export class Rig {
       this.skirtLag = damp(this.skirtLag, Math.min(speed, 7) * 0.035 + this.lean * 0.6, 4, dt);
       const sp2 = 10;
       set(j.skirt.F, Math.min(lL, lR, 0) * 0.85 + this.skirtLag * 0.25, 'x', sp2);
-      set(j.skirt.B, Math.max(lL, lR, 0) * 0.85 + this.skirtLag, 'x', sp2);
+      // the back panel also makes room for a heel folded up behind (runs, jumps)
+      const kL = j.legL.knee.rotation.x, kR = j.legR.knee.rotation.x;
+      set(j.skirt.B, Math.max(lL + Math.max(0, kL) * 0.6, lR + Math.max(0, kR) * 0.6, 0) * 1.0 + this.skirtLag, 'x', sp2);
       set(j.skirt.L, lL * 0.55 + this.skirtLag * 0.5, 'x', sp2);
       set(j.skirt.R, lR * 0.55 + this.skirtLag * 0.5, 'x', sp2);
       set(j.skirt.L, -this.roll * 0.5 + 0.02, 'z', 6);

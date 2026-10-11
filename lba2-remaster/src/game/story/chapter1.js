@@ -273,6 +273,7 @@ export class Chapter1 extends ChapterBase {
     const spot = { x: ps.x - 2.5, z: ps.z + 1.2 };
     const gang = F.gangway || { x: F.x, z: F.z + 2 };
     let tt = 0, spoke = false;
+    this._veskDue = null;
     // the camera watches from the quay, over Twinsen's shoulder
     const camPos = new THREE.Vector3(ps.x + 9, g.physics.groundAt(ps.x, ps.z) + 6.5, ps.z + 9);
     g.camRig.override = { pos: camPos, look: new THREE.Vector3(gang.x, F.y ?? 1.2, gang.z) };
@@ -285,12 +286,15 @@ export class Chapter1 extends ChapterBase {
       if (tt > 0.2 && !this._horn1) { this._horn1 = true; g.audio.play('horn'); }
       if (tt > 5.8 && !this._horn2) { this._horn2 = true; g.audio.play('horn'); g.camRig.shake(0.15); }
       if (tt > 6.4 && !vesk.present) { vesk.setPresent(true); vesk.placeAt({ x: gang.x, z: gang.z, a: Math.atan2(spot.x - gang.x, spot.z - gang.z) }); }
-      if (vesk.present && tt < 10) {
+      if (vesk.present) {
         const d = Math.hypot(spot.x - vesk.pos.x, spot.z - vesk.pos.z);
-        if (d > 0.3) {
+        // (if something blocks his path he is placed on his mark: the scene must never hang)
+        this._veskDue ??= tt + d / 1.5 + 3;
+        if (tt > this._veskDue && d > 0.3) vesk.placeAt({ x: spot.x, z: spot.z, a: vesk.angle });
+        else if (d > 0.3) {
           vesk.angle = Math.atan2(spot.x - vesk.pos.x, spot.z - vesk.pos.z);
-          g.physics.move(vesk, Math.sin(vesk.angle) * 1.3 * dt, Math.cos(vesk.angle) * 1.3 * dt);
-          vesk.controlled = true; vesk.rig.play('walk'); vesk.rig.update(dt, 1.3); vesk.sync();
+          g.physics.move(vesk, Math.sin(vesk.angle) * 1.5 * dt, Math.cos(vesk.angle) * 1.5 * dt);
+          vesk.controlled = true; vesk.rig.play('walk'); vesk.rig.update(dt, 1.5); vesk.sync();
         } else if (!spoke) {
           spoke = true;
           vesk.controlled = false;

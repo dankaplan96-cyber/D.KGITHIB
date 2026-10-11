@@ -119,7 +119,7 @@ export class Hero extends Actor {
     // one-shot actions (use, pick up, open door, knockdown/get-up) own the body
     if (this.actT > 0) {
       this.actT -= dt;
-      if (this.actCb && this.actT <= this.actAt) { const cb = this.actCb; this.actCb = null; cb(); }
+      if (this.actCb && this.actT <= this.actFireT) { const cb = this.actCb; this.actCb = null; cb(); }
       if (this.actT <= 0 && this.actNext) { const n = this.actNext; this.actNext = null; this.act(...n); }
     }
     const locked = this.attackT > 0 || this.hiding || this.hurtT > 0.15 || this.actT > 0 || (this.throwT > 0.4);
@@ -250,7 +250,7 @@ export class Hero extends Actor {
 
   // play a one-shot body action that locks movement; cb fires when `at` seconds remain
   act(anim, dur, cb = null, at = 0, next = null) {
-    this.actAnim = anim; this.actT = dur; this.actCb = cb; this.actAt = at; this.actNext = next;
+    this.actAnim = anim; this.actT = dur; this.actCb = cb; this.actFireT = at; this.actNext = next;
     this.rig.play(anim); this.rig.actionT = 0;
     this.vel.set(0, 0);
   }

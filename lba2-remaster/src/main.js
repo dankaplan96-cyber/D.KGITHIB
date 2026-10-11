@@ -360,8 +360,9 @@ class Game {
       for (const s of W.signs) consider(dist(s.x, s.z), 2.0, { kind: 'sign', sign: s, label: 'p_read' });
       for (const s of W.searchSpots) if (!this.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'search', spot: s, label: 'p_search' });
     }
-    this.story.chapters[0].baseInteractables(consider, dist, this.story.cur);
+    // the chapter's own interactions first: on a tie (same spot) they win over the generic ones
     this.story.interactables(consider, dist);
+    this.story.chapters[0].baseInteractables(consider, dist, this.story.cur);
     return best;
   }
 

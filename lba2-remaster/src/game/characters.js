@@ -600,14 +600,33 @@ function addMedallion(def, bones, L = {}) {
 }
 
 // ------------------------------------------------------------------ public API
+// Split a body design into body + arms (sleeves, forearms, cuffs), sculpted separately.
+const ARM = /^((arm|cuff)[LR]|brace)/;
+function splitArms(def) {
+  const B = def.bones;
+  const ys = ['shL', 'shR', 'handL', 'handR'].map((b) => B[b].pos[1]);
+  const arms = {
+    ...def, key: def.key + '#arms',
+    prims: def.prims.filter((p) => p.sub || ARM.test(p.group)),
+    bounds: { min: [def.bounds.min[0], Math.max(0, Math.min(...ys) - 0.14), def.bounds.min[2]], max: [def.bounds.max[0], Math.max(...ys) + 0.16, def.bounds.max[2]] },
+  };
+  return { ...def, prims: def.prims.filter((p) => p.sub || !ARM.test(p.group)), arms };
+}
+
 const defs = {};
 export function createCharacter(lookName, overrides = {}) {
   const L = { ...(LOOKS[lookName] || LOOKS.twinsen), ...overrides };
   const key = lookName + JSON.stringify(overrides);
-  const def = defs[key] ??= { ...design(L), key };
+  const def = defs[key] ??= splitArms({ ...design(L), key });
   const { mesh, bones } = buildSculpted(def);
   const root = new THREE.Group();
   root.add(mesh);
+  // the arms are a second skinned surface on the same skeleton: a sleeve that touches the robe at rest
+  // would otherwise be fused into it and tear the robe open (stretched strips) when the arm swings
+  const arms = new THREE.SkinnedMesh(buildSculpted(def.arms).mesh.geometry, mesh.material);
+  arms.frustumCulled = false;
+  mesh.add(arms);
+  arms.bind(mesh.skeleton, mesh.bindMatrix);
   const eyes = addFace(def, bones, L);
   if (L.medallion) addMedallion(def, bones, L);
   for (const [s, sx] of [['L', 1], ['R', -1]]) {
