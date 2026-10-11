@@ -160,6 +160,8 @@ class RoomBuilder {
           for (const yy of [0.25, h - 0.3]) k.add(rbox(0.04, 0.12, 0.08, 0.01), MAT.iron(), -0.01, yy, 0);
         });
       }
+    } else if (p.kind === 'round') {
+      this.roundWindow(p, o, t);
     } else if (p.kind === 'window') {
       const fw = 0.1;
       k.add(rbox(w + 0.24, 0.06, 0.24, 0.02), p.sill || fm, a, y0 - 0.01, 0.06);
@@ -181,6 +183,19 @@ class RoomBuilder {
         for (const s of [-1, 1]) k.add(cg, softMat, a + s * (w / 2 + 0.12), y0 - 0.2, 0.12, 0, { sx: s });
       }
     }
+  }
+  // round (Esmer) window: a plaster plate with a circular hole fills the opening, brass ring, glazing bars
+  roundWindow(p, o, t) {
+    const k = this.k, fm = p.frame || MAT.brass(), a = p.at, w = p.w, h = p.h, rr = p.r, cy = p.y0 + h / 2;
+    k.add(slab(`rwin${w}|${h}|${rr}|${t}`, (s) => { s.moveTo(-w / 2, -h / 2); s.lineTo(w / 2, -h / 2); s.lineTo(w / 2, h / 2); s.lineTo(-w / 2, h / 2); s.lineTo(-w / 2, -h / 2); const hp = new THREE.Path(); hp.absarc(0, 0, rr, 0, Math.PI * 2, true); s.holes.push(hp); }, t, 0), o.body, a, cy, -t / 2);
+    k.add(cyl(rr, rr, t, 28, true), MAT.flat(p.reveal || '#d8cce4', 0.9, { side: THREE.DoubleSide }), a, cy, -t / 2, 0, { rx: Math.PI / 2 });
+    k.add(torus(rr + 0.035, 0.045, 8, 32), fm, a, cy, 0.015);
+    k.add(torus(rr + 0.1, 0.018, 5, 32), fm, a, cy, 0.01);
+    for (let i = 0; i < 4; i++) { const b = (i / 4) * Math.PI * 2 + Math.PI / 4; k.add(sphere(0.022, 6, 4), fm, a + Math.cos(b) * (rr + 0.1), cy + Math.sin(b) * (rr + 0.1), 0.03); }
+    const gz = -t * 0.5;
+    k.add(P.disc(rr, 28), p.glass || MAT.glass('#f0e6ff', 0.28), a, cy, gz);
+    k.add(torus(rr * 0.42, 0.016, 4, 20), fm, a, cy, gz + 0.02);
+    for (let i = 0; i < 4; i++) k.add(rbox(0.03, rr * 2, 0.03, 0.008), fm, a, cy, gz + 0.02, 0, { rz: (i * Math.PI) / 4 });
   }
   light(color, intensity, dist, x, y, z) {
     const l = new THREE.PointLight(color, 0, dist, 2);
@@ -232,6 +247,13 @@ function outsideView(kind) {
       const gl = x.createRadialGradient(128, 70, 4, 128, 70, 140); gl.addColorStop(0, 'rgba(120,240,255,0.55)'); gl.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gl; x.fillRect(0, 0, W, H);
       x.fillStyle = '#7a7890'; x.fillRect(0, 196, W, 60); x.fillStyle = 'rgba(0,0,0,0.35)'; for (let xx = 0; xx < W; xx += 32) x.fillRect(xx, 196, 2, 60);
       x.fillStyle = '#c8f8ff'; x.beginPath(); x.arc(128, 66, 9, 0, 7); x.fill();
+    } else if (kind === 'zeelich') {
+      // Zeelich: violet sky, pink cloud banks, Esmer domes
+      g.addColorStop(0, '#b89ae0'); g.addColorStop(0.6, '#f0d8f0'); g.addColorStop(1, '#f8e8ec'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.fillStyle = 'rgba(255,240,250,0.85)'; for (const [cx, cy, rw] of [[60, 70, 60], [190, 50, 50], [130, 120, 70]]) { x.beginPath(); x.ellipse(cx, cy, rw, 13, 0, 0, 7); x.fill(); }
+      x.fillStyle = '#8a6aa8'; for (const [cx, rw] of [[50, 46], [150, 60], [235, 40]]) { x.beginPath(); x.ellipse(cx, 200, rw, rw * 0.8, 0, Math.PI, 0); x.fill(); x.fillRect(cx - rw, 200, rw * 2, 60); }
+      x.fillStyle = '#e8c8f0'; for (const cx of [50, 150, 235]) { x.beginPath(); x.arc(cx, 150, 5, 0, 7); x.fill(); }
+      x.fillStyle = '#6a5088'; x.fillRect(0, 236, W, 20);
     } else if (kind === 'night') {
       g.addColorStop(0, '#1a2a4a'); g.addColorStop(1, '#3a5a8a'); x.fillStyle = g; x.fillRect(0, 0, W, H);
     }
@@ -967,10 +989,331 @@ function buildControl(scene, physics) {
   return B.finish();
 }
 
+// sagging cable between two points (a little catenary), as pipe points
+const sag = (a, b, s, n = 8) => Array.from({ length: n + 1 }, (_, i) => { const t = i / n; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - s * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t]; });
+// same material, drawn from both sides (thin shells seen from inside and out)
+const twoSided = (m) => M('ds' + m.uuid, () => { const c = m.clone(); c.side = THREE.DoubleSide; return c; });
+// soft additive glow sprite
+const glowTex = () => M('glowtex', () => canvasTex(128, 128, (x, W) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,240,200,0.6)'); g.addColorStop(1, 'rgba(255,220,160,0)'); x.fillStyle = g; x.fillRect(0, 0, W, W); }));
+function glowSprite(color, size, opacity = 0.8) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }));
+  s.scale.setScalar(size);
+  return s;
+}
+
+// ------------------------------------------------------------------ Baldino's workshop (Zeelich)
+// Esmer house: lilac plaster under a vaulted ceiling springing from the walls, round windows, brass and
+// wood; crammed with the old inventor's projects. The override key is assembled at the workbench.
+function buildWorkshop(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'workshop', 1500, 0);
+  const R = B.room, k = B.k;
+  const W = 8, D = 7, H = 3.4, t = 0.4;
+  R.view = 10.9;
+  R.follow = 0.22;
+  const doorX = 2.75, benchX = -0.9;
+  const wood = MAT.wood('dark'), brass = MAT.brass(), lilac = MAT.plaster('#e4d8ee'), capM = MAT.plaster('#cbb6df');
+  const zv = outsideView('zeelich');
+  const round = (at, yc, r) => ({ kind: 'round', at, r, w: 2 * r + 0.12, h: 2 * r + 0.12, y0: yc - r - 0.06, view: zv });
+  B.shell({
+    W, D, H, t,
+    floor: MAT.planks('honey'), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
+    body: lilac, low: MAT.wainscot('red'), dado: 0.95, rail: wood, cap: capM, beam: wood,
+    posts: wood, postsAt: (L) => [0.48, L - 0.48],
+    back: [
+      { kind: 'door', at: doorX, w: 1.2, h: 2.3, y0: 0, leaf: MAT.wood('red'), leafAngle: 1.95, view: zv, frame: wood },
+      round(benchX, 2.58, 0.38),
+    ],
+    left: [round(-1.25, 2.86, 0.28), round(2.45, 2.02, 0.46)],
+  });
+  const BZ = -D / 2, LX = -W / 2;
+  R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'zeelich-workshop' });
+  R.spawn = { ...B.world(doorX, BZ + 1.55), a: 0 };
+
+  // --- the vault springing from the two far walls: a curved cove, brass ribs, a plaster rim
+  const c = 0.95, T = 0.9, th = 0.08, vault = twoSided(MAT.plaster('#efe7f6'));
+  const cove = (sx) => (s) => {
+    const N = 10;
+    for (let i = 0; i <= N; i++) { const a = (T * i) / N, px = sx * (c - c * Math.cos(a)), py = c * Math.sin(a); if (i) s.lineTo(px, py); else s.moveTo(px, py); }
+    for (let i = N; i >= 0; i--) { const a = (T * i) / N; s.lineTo(sx * (c - (c + th) * Math.cos(a)), (c + th) * Math.sin(a)); }
+  };
+  k.add(slab('wcoveL', cove(1), D, 0), vault, LX, H, 0);
+  k.add(slab('wcoveB', cove(-1), W, 0), vault, 0, H, BZ, Math.PI / 2);
+  const ci = c * (1 - Math.cos(T)), cyT = H + c * Math.sin(T);
+  k.add(rbox(0.16, 0.09, D, 0.035), capM, LX + ci + 0.03, cyT + 0.02, 0);
+  k.add(rbox(W, 0.09, 0.16, 0.035), capM, 0, cyT + 0.02, BZ + ci + 0.03);
+  for (const x of [-2.6, 0.75, 2.0, 3.55]) k.add(torus(c - 0.02, 0.03, 5, 12, T), brass, x, H, BZ + c, -Math.PI / 2, { rz: Math.PI - T });
+  for (const z of [-2.45, 0.0, 1.35, 3.3]) k.add(torus(c - 0.02, 0.03, 5, 12, T), brass, LX + c, H, z, 0, { rz: Math.PI - T });
+
+  // --- the pot-bellied stove in the corner, tiled heat shield, stovepipe into the wall, coal scuttle
+  const stX = -3.25, stZ = -2.75;
+  B.put(stX, stZ, Math.PI / 4, P.potStove, {});
+  const tiles = MAT.tiles('#7a5aa0', '#efe6d6', '#cfc4b4', true, 6);
+  k.add(rbox(1.3, 1.6, 0.04, 0.01), tiles, -3.35, 0.9, BZ + 0.05);
+  k.add(rbox(0.04, 1.6, 1.25, 0.01), tiles, LX + 0.05, 0.9, -2.88);
+  k.add(rbox(1.36, 0.05, 0.08, 0.015), brass, -3.35, 1.72, BZ + 0.06);
+  k.add(rbox(0.08, 0.05, 1.3, 0.015), brass, LX + 0.06, 1.72, -2.88);
+  k.add(pipe([[stX, 1.2, stZ], [stX, 2.45, stZ], [stX, 2.75, BZ - 0.1]], 0.08, 0.25, 12), MAT.iron(), 0, 0, 0);
+  k.add(torus(0.1, 0.015, 5, 16), brass, stX, 1.9, stZ, 0, { rx: Math.PI / 2 });
+  k.add(torus(0.12, 0.02, 5, 16), MAT.iron(), stX, 2.74, BZ + 0.02);
+  k.add(cyl(0.008, 0.008, 0.2, 4), brass, stX, 1.7, stZ, 0, { rz: Math.PI / 2 });
+  k.at(-2.5, 0, BZ + 0.35, 0.4, () => {
+    k.add(lathe([[0.001, 0], [0.15, 0], [0.17, 0.26], [0.2, 0.3], [0.14, 0.33], [0.001, 0.05]], 14), MAT.copper(), 0, 0, 0);
+    for (let i = 0; i < 6; i++) k.add(sphere(0.05, 6, 4), MAT.flat('#1e1e22', 0.9), Math.cos(i * 1.1) * 0.08, 0.27 + (i % 2) * 0.03, Math.sin(i * 1.1) * 0.08);
+  });
+  B.ccol(-2.5, BZ + 0.35, 0.2, 0.35, { noStand: true });
+  const stoveLight = B.light('#ff8a3a', 3.2, 4.5, stX + 0.6, 0.6, stZ + 0.6);
+
+  // --- the workbench: pegboard of tools above, the round window over it, parts laid out on top
+  const bZ = BZ + 0.45;
+  B.put(benchX, bZ, 0, P.workbench, { w: 2.4, d: 0.78 });
+  k.at(benchX, 1.58, BZ, 0, () => P.toolBoard(k, 2.1, 0.74));
+  const by = 0.9;
+  k.at(benchX - 0.95, by, bZ - 0.15, 0.5, () => P.deskLamp(k, { shade: '#7a5aa0' }));
+  P.hammer(k, benchX - 0.5, by, bZ + 0.2, 0.3);
+  P.wrench(k, benchX - 0.15, by, bZ + 0.25, -0.6);
+  P.screwdriver(k, benchX + 0.25, by, bZ + 0.22, 1.2);
+  P.oilCan(k, benchX + 0.95, by, bZ - 0.2, 0.4);
+  for (const [x, z, r, n] of [[0.05, 0.05, 0.09, 14], [0.32, -0.08, 0.06, 10], [0.48, 0.12, 0.045, 8], [-0.35, -0.12, 0.07, 12]]) k.add(P.gearGeo(r, n, 0.016), brass, benchX + x, by + 0.01, bZ + z, 0, { rx: -Math.PI / 2 });
+  k.add(plane(0.42, 0.56), MAT.map(P.CANV.plan('key'), 0.9), benchX - 0.15, by + 0.004, bZ - 0.12, 0.15, { rx: -Math.PI / 2 });
+  P.bulb(k, benchX + 0.6, by, bZ + 0.18, 1.1);
+  k.add(P.helixGeo(0.03, 0.12, 9, 0.005), MAT.copper(), benchX + 0.72, by + 0.03, bZ + 0.05, 0, { rz: Math.PI / 2 });
+  k.add(lathe([[0.001, 0], [0.05, 0], [0.055, 0.08], [0.045, 0.1], [0.001, 0.1]], 12), MAT.flat('#f2ead6', 0.35), benchX + 0.5, by, bZ - 0.2);
+  // Baldino's stool
+  k.at(benchX - 1.35, 0, BZ + 1.05, 0, () => { k.add(lathe([[0.001, 0.6], [0.18, 0.6], [0.19, 0.64], [0.001, 0.66]], 16), MAT.wood('honey'), 0, 0, 0); for (let i = 0; i < 3; i++) k.add(cyl(0.02, 0.025, 0.62, 6), wood, Math.sin(i * 2.09) * 0.12, 0.31, Math.cos(i * 2.09) * 0.12, 0, { rx: Math.cos(i * 2.09) * 0.12, rz: -Math.sin(i * 2.09) * 0.12 }); });
+  B.ccol(benchX - 1.35, BZ + 1.05, 0.2, 0.66, { noStand: true, seeThrough: true });
+
+  // --- the radio he talks to Arthur on, its aerial lead up into the vault, plans pinned around it
+  const rX = 1.38;
+  B.put(rX, BZ + 0.32, 0, P.radioDesk, {});
+  B.put(rX - 0.05, BZ + 1.0, Math.PI + 0.15, P.chair, { pal: 'dark', cushion: '#7a5aa0' }, { noStand: true, seeThrough: true });
+  k.add(pipe([[rX + 0.2, 1.2, BZ + 0.05], [rX + 0.2, 2.75, BZ + 0.05], [rX + 0.4, H + 0.4, BZ + 0.45]], 0.012, 0.15, 5), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
+  for (const y of [1.6, 2.2]) k.add(torus(0.02, 0.006, 4, 8), MAT.flat('#efe6d6', 0.4), rX + 0.2, y, BZ + 0.04, Math.PI / 2);
+  k.at(rX, 1.9, BZ, 0, () => P.pinnedSheet(k, 0.48, 0.64, P.CANV.plan('radio'), 0.04));
+  k.at(0.62, 1.72, BZ, 0, () => P.pinnedSheet(k, 0.5, 0.66, P.CANV.plan('flyer'), -0.05));
+  // a spare propeller hung by the door
+  k.at(3.68, 1.95, BZ + 0.08, -Math.PI / 2, () => P.propeller(k, 0.55));
+
+  // --- left wall: curio shelves, chalkboard, drafting table under the big round window
+  B.put(LX + 0.22, -1.25, Math.PI / 2, P.curioShelf, { w: 1.4, h: 2.2, d: 0.4, seed: 4 });
+  k.at(LX, 1.66, 0.62, Math.PI / 2, () => P.chalkboard(k, 1.7, 1.0));
+  k.at(LX, 2.62, 0.62, Math.PI / 2, () => P.pinnedSheet(k, 0.42, 0.52, P.CANV.plan('mill'), 0.06));
+  B.put(LX + 0.55, 2.45, Math.PI / 2, P.draftingTable, P.CANV.plan('flyer'));
+  k.at(LX + 1.3, 0, 2.35, 0, () => { k.add(lathe([[0.001, 0.62], [0.17, 0.62], [0.18, 0.66], [0.001, 0.68]], 16), MAT.wood('honey'), 0, 0, 0); k.add(cyl(0.03, 0.04, 0.62, 8), MAT.iron(), 0, 0.31, 0); k.add(lathe([[0.001, 0], [0.2, 0], [0.18, 0.04], [0.001, 0.05]], 14), MAT.iron(), 0, 0, 0); });
+  B.ccol(LX + 1.3, 2.35, 0.2, 0.68, { noStand: true, seeThrough: true });
+
+  // --- the floor: the half-built flying machine, the planet model, a coil, crates
+  const fX = 1.0, fZ = 1.0;
+  const fm = B.put(fX, fZ, 0, P.flyingMachine, {});
+  const pk = new Kit(fm.prop); P.propeller(pk, 0.62); pk.flush();
+  P.oilCan(k, fX + 1.55, 0, fZ - 0.95, 1.2);
+  k.at(2.75, 0, 2.95, 0.3, () => { k.add(rbox(0.55, 0.24, 0.26, 0.02), MAT.paint('#3f6a8a', 0.45), 0, 0.12, 0); k.add(pipe([[-0.17, 0.24, 0], [-0.14, 0.33, 0], [0.14, 0.33, 0], [0.17, 0.24, 0]], 0.012, 0.03, 5), MAT.iron(), 0, 0, 0); });
+  B.col(2.75, 2.95, 0.3, 0.16, 0.34, { noStand: true, seeThrough: true, rot: 0.3 });
+  k.add(pipe(sag([0.2, 2.95, BZ + 0.3], [fX + 0.95, 1.2, fZ + 0.1], 0.4, 10), 0.014, 0.1, 5), MAT.flat('#a8302a', 0.6), 0, 0, 0);
+  const gX = -2.35, gZ = 1.05;
+  k.at(-1.75, 0, 0.75, 0, () => P.rug(k, 3.0, 2.1, ['#5a3a7a', '#c8a050', '#e0b8e8', '#f4ece0', '#2a1a3a'], 17));
+  const globe = B.put(gX, gZ, 0.3, P.shellGlobe, { r: 0.34 });
+  B.light('#c8a8ff', 1.6, 2.6, gX + 0.3, globe.cy, gZ + 0.3);
+  // a spark coil in the near corner
+  const coilX = -3.4, coilZ = 3.0;
+  k.at(coilX, 0, coilZ, 0, () => {
+    k.add(rbox(0.5, 0.3, 0.5, 0.03), wood, 0, 0.15, 0);
+    k.add(rbox(0.54, 0.04, 0.54, 0.015), brass, 0, 0.31, 0);
+    k.add(cyl(0.1, 0.1, 0.8, 16), MAT.flat('#e8dcc0', 0.6), 0, 0.73, 0);
+    k.add(P.helixGeo(0.105, 0.72, 30, 0.006, 4), MAT.copper(), 0, 0.36, 0);
+    k.add(torus(0.13, 0.05, 8, 20), MAT.steel(), 0, 1.18, 0, 0, { rx: Math.PI / 2 });
+    k.add(sphere(0.06, 12, 8), MAT.glow('#e0d0ff', '#9a6aff', 1.6), 0, 1.25, 0);
+  });
+  B.ccol(coilX, coilZ, 0.32, 1.3, { noStand: true });
+  const spark = glowSprite('#c8a0ff', 0.7, 0.6); spark.position.set(coilX, 1.26, coilZ); B.group.add(spark);
+  B.put(3.55, 2.95, 0, P.barrel, { r: 0.28, h: 0.78, pal: 'red' });
+  B.put(3.5, 2.0, 0.2, P.crate, 0.6);
+  k.at(3.5, 0.6, 2.0, -0.3, () => { k.add(P.gearGeo(0.16, 18, 0.03), brass, 0, 0.02, 0, 0, { rx: -Math.PI / 2 }); k.add(P.gearGeo(0.09, 12, 0.025), MAT.copper(), 0.12, 0.05, 0.12, 0, { rx: -Math.PI / 2 }); });
+
+  // --- festoon cables along the walls and the hanging lamps
+  k.add(pipe(sag([-3.7, 3.02, BZ + 0.12], [0.2, 3.02, BZ + 0.12], 0.22, 12), 0.012, 0.1, 5), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
+  k.add(pipe(sag([LX + 0.12, 3.0, -3.2], [LX + 0.12, 3.0, 1.0], 0.25, 12), 0.012, 0.1, 5), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
+  for (const [x, z, y] of [[benchX, -2.35, 2.25], [fX, fZ - 0.2, 2.45], [-2.3, 0.4, 2.4]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, y, H + 0.6, { shade: '#8a6a3a' }));
+  B.light('#ffcf8a', 7.5, 10, fX, 2.3, fZ - 0.2);
+  B.light('#ffd090', 5, 6.5, benchX, 2.1, -2.4);
+  B.light('#ffd8a0', 4, 6, -2.3, 2.2, 0.5);
+  B.light('#ffdca8', 2.2, 3, benchX - 0.95, 1.2, bZ + 0.1);
+  B.light('#eadcff', 2.5, 4.5, LX + 0.9, 2.0, 2.45);
+  B.light('#eadcff', 2.2, 4, doorX, 1.7, BZ + 0.9);
+
+  R.updaters.push((dt, tt) => {
+    stoveLight.intensity = stoveLight.userData.base * (0.85 + Math.sin(tt * 11) * 0.1 + Math.sin(tt * 7) * 0.05);
+    globe.spin.rotation.y = tt * 0.25;
+    fm.prop.rotation.x = tt * 0.35;
+    spark.material.opacity = 0.35 + 0.3 * Math.max(0, Math.sin(tt * 13) * Math.sin(tt * 3.7));
+  });
+  const face = (x, z, tx, tz) => ({ ...B.world(x, z), a: Math.atan2(tx - x, tz - z) });
+  const bal = [benchX - 0.5, BZ + 1.2];
+  R.npcSpots = { baldino: { ...B.world(bal[0], bal[1]), a: 0.3 }, zoe: face(0.15, -1.25, bal[0], bal[1]), twinsen: face(-1.1, -0.45, bal[0], bal[1]) };
+  R.searches.push({ id: 'bench', ...B.world(benchX + 0.55, BZ + 1.15), r: 1.0 });
+  R.searches.push({ id: 'globe', ...B.world(gX + 0.7, gZ + 0.45), r: 1.1 });
+  return B.finish();
+}
+
+// ------------------------------------------------------------------ the Citadel lighthouse's lamp room
+// Round room: the far half is glazed all the way round between an iron dado and a plaster band (sky and
+// sea behind, the gallery railing outside), the near half is cut down to a low rim like every interior.
+// The big Fresnel lens turns in the middle; the old transmitter Zoe uses stands against the glazing.
+function buildLightTop(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'lighttop', 1600, 0);
+  const R = B.room, k = B.k;
+  const Rr = 3.0, t = 0.3, H = 3.2, sill = 0.95, gTop = 2.62, rimH = 0.5;
+  R.view = 10.6;
+  R.follow = 0.15;
+  const brass = MAT.brass(), ironP = MAT.paint('#2e3a40', 0.45), white = twoSided(MAT.plaster('#eef0ee'));
+  const dado = twoSided(MAT.plates('#3f6670', 1)), stone = MAT.stone('sand', 1.4);
+  const pol = (phi, r) => [Math.sin(phi) * r, Math.cos(phi) * r];
+  const face2 = (a, b, p0, pl, segs = 64) => new THREE.LatheGeometry([new THREE.Vector2(a[0], a[1]), new THREE.Vector2(b[0], b[1])], segs, p0, pl);
+  // horizontal ring arc (radius rad) from phi0 to phi1 at height y, around (cx, cz)
+  const arc = (rad, tube, phi0, phi1, y, m, cx = 0, cz = 0, o = {}) => k.add(torus(rad, tube, o.rs || 5, o.ts || Math.max(8, Math.round((phi1 - phi0) * 12)), phi1 - phi0), m, cx, y, cz, 0, { rx: Math.PI / 2, rz: Math.PI / 2 - phi1, ...(o.sz ? { sz: o.sz } : {}) });
+  const F0 = (3 * Math.PI) / 4, F1 = (7 * Math.PI) / 4; // far (tall, glazed) half
+  const N0 = -Math.PI / 4, N1 = (3 * Math.PI) / 4; // near (cut-down) half
+
+  // --- floor with the stair well cut out, the tower masonry under it, the gallery deck outside
+  const hx = Math.sin(F0) * 2.0, hz = Math.cos(F0) * 2.0, hr = 0.62;
+  const ringShape = (ro) => { const s = new THREE.Shape(); s.absarc(0, 0, ro, 0, Math.PI * 2, false); const h = new THREE.Path(); h.absarc(hx, -hz, hr, 0, Math.PI * 2, true); s.holes.push(h); return s; };
+  const fg = new THREE.ExtrudeGeometry(ringShape(Rr + 0.02), { depth: 0.1, bevelEnabled: false, curveSegments: 24 });
+  k.add(fg, MAT.tread('#7e8a90'), 0, -0.1, 0, 0, { rx: -Math.PI / 2 });
+  const sg = new THREE.ExtrudeGeometry(ringShape(Rr + t), { depth: 1.3, bevelEnabled: false, curveSegments: 24 });
+  k.add(sg, stone, 0, -1.42, 0, 0, { rx: -Math.PI / 2 });
+  B.ccol(0, 0, Rr, 0, { seeThrough: true, bottom: -1 });
+  const go = Rr + t + 0.72;
+  const deck = new THREE.RingGeometry(Rr + t - 0.02, go, 72, 1); deck.userData.keepUV = true;
+  k.add(deck, MAT.tread('#5a6468'), 0, -0.04, 0, 0, { rx: -Math.PI / 2 });
+  k.add(face2([go, -0.04], [go, -0.16], 0, Math.PI * 2, 72), twoSided(ironP), 0, 0, 0);
+  for (let i = 0; i < 24; i++) { const ph = (i / 24) * Math.PI * 2, [x, z] = pol(ph, Rr + t + 0.3); k.add(rbox(0.62, 0.34, 0.16, 0.03), stone, x, -0.33, z, ph - Math.PI / 2, { rz: 0 }); }
+  // the gallery railing (only the near half can be seen past the rim)
+  const gr = go - 0.08;
+  for (let ph = N0 - 0.15; ph <= N1 + 0.16; ph += Math.PI / 14) { const [x, z] = pol(ph, gr); k.add(cyl(0.02, 0.025, 1.0, 6), ironP, x, 0.46, z); k.add(sphere(0.03, 6, 4), ironP, x, 0.98, z); }
+  arc(gr, 0.025, N0 - 0.15, N1 + 0.16, 0.95, ironP); arc(gr, 0.014, N0 - 0.15, N1 + 0.16, 0.5, ironP); arc(gr, 0.014, N0 - 0.15, N1 + 0.16, 0.08, ironP);
+
+  // --- far half: iron dado, sill, glazing with diagonal astragals, plaster band, the vault springing
+  k.add(face2([Rr, sill], [Rr, 0], F0, Math.PI), dado, 0, 0, 0);
+  k.add(face2([Rr - 0.09, sill], [Rr + t, sill], F0, Math.PI), white, 0, 0, 0);
+  k.add(face2([Rr - 0.09, sill - 0.06], [Rr - 0.09, sill], F0, Math.PI), brass, 0, 0, 0);
+  arc(Rr - 0.02, 0.03, F0, F1, 0.1, brass);
+  arc(Rr - 0.02, 0.025, F0, F1, sill - 0.12, brass);
+  const pano = M('lamppanoMat', () => { const m = new THREE.MeshBasicMaterial({ map: P.CANV.pano(), side: THREE.BackSide }); m.userData.noShadow = true; return m; });
+  const glz = new THREE.CylinderGeometry(Rr + 0.12, Rr + 0.12, gTop - sill, 64, 1, true, F0, Math.PI);
+  k.add(glz, pano, 0, (sill + gTop) / 2, 0);
+  k.add(face2([Rr, gTop], [Rr + 0.12, gTop], F0, Math.PI), white, 0, 0, 0);
+  k.add(face2([Rr, H], [Rr, gTop], F0, Math.PI), white, 0, 0, 0);
+  arc(Rr - 0.015, 0.03, F0, F1, sill + 0.02, brass); arc(Rr - 0.015, 0.03, F0, F1, gTop - 0.02, brass); arc(Rr - 0.02, 0.04, F0, F1, H - 0.08, MAT.wood('dark'));
+  const bays = 8, bw = Math.PI / bays, aR = Rr + 0.03;
+  const helix = (p0, p1) => Array.from({ length: 7 }, (_, i) => { const u = i / 6, ph = p0 + (p1 - p0) * u; return [Math.sin(ph) * aR, sill + (gTop - sill) * u, Math.cos(ph) * aR]; });
+  for (let i = 0; i <= bays; i++) {
+    const ph = F0 + i * bw, [x, z] = pol(ph, Rr + 0.03);
+    k.add(rbox(0.06, gTop - sill, 0.07, 0.015), ironP, x, (sill + gTop) / 2, z, ph);
+    if (i < bays) { k.add(pipe(helix(ph, ph + bw), 0.016, 0.05, 5), ironP, 0, 0, 0); k.add(pipe(helix(ph + bw, ph), 0.016, 0.05, 5), ironP, 0, 0, 0); }
+  }
+  const cR = 0.9, cT = 0.85, coveProf = Array.from({ length: 9 }, (_, i) => { const a = (cT * i) / 8; return new THREE.Vector2(Rr - cR * (1 - Math.cos(a)), H + cR * Math.sin(a)); });
+  k.add(new THREE.LatheGeometry(coveProf, 64, F0, Math.PI), white, 0, 0, 0);
+  const cTopR = Rr - cR * (1 - Math.cos(cT)), cTopY = H + cR * Math.sin(cT);
+  arc(cTopR, 0.06, F0, F1, cTopY + 0.02, MAT.plaster('#d8dcd8'), 0, 0, { sz: 0.6 });
+  for (let i = 0; i <= 4; i++) { const ph = F0 + i * (Math.PI / 4); k.add(pipe(coveProf.map((v) => [Math.sin(ph) * (v.x - 0.02), v.y, Math.cos(ph) * (v.x - 0.02)]), 0.028, 0.1, 5), brass, 0, 0, 0); }
+  // piers where the cut-away begins
+  for (const ph of [F0, F1]) { const [x, z] = pol(ph, Rr + t / 2 - 0.05); k.add(rbox(t + 0.2, H + 0.1, 0.16, 0.04), white, x, (H + 0.1) / 2, z, ph - Math.PI / 2); k.add(rbox(t + 0.3, 0.1, 0.22, 0.03), MAT.wood('dark'), x, rimH + 0.02, z, ph - Math.PI / 2); }
+
+  // --- near half: the low rim
+  k.add(face2([Rr, rimH], [Rr, 0], N0, Math.PI), dado, 0, 0, 0);
+  k.add(face2([Rr + t, -0.05], [Rr + t, rimH], N0, Math.PI), twoSided(stone), 0, 0, 0);
+  arc(Rr + t / 2, t / 2 + 0.05, N0, N1, rimH + 0.02, MAT.wood('dark'), 0, 0, { rs: 6, sz: 0.4 });
+  arc(Rr - 0.02, 0.03, N0, N1, 0.1, brass);
+  // wall colliders all the way round
+  const NC = 28;
+  for (let i = 0; i < NC; i++) { const ph = ((i + 0.5) / NC) * Math.PI * 2, [x, z] = pol(ph, Rr + t / 2); B.col(x, z, (Rr + t / 2) * Math.tan(Math.PI / NC) + 0.03, t / 2, H, { rot: ph }); }
+
+  // --- the spiral stair down the tower: well, newel, wedge steps, a railing round the opening
+  k.add(face2([hr, 0], [hr, -1.42], 0, Math.PI * 2, 28), twoSided(MAT.stone('slate', 1)), hx, 0, hz);
+  k.add(P.disc(hr, 28), MAT.flat('#0a0a0c', 1), hx, -1.4, hz, 0, { rx: -Math.PI / 2 });
+  k.add(torus(hr, 0.035, 5, 32), brass, hx, 0.0, hz, 0, { rx: Math.PI / 2 });
+  k.add(cyl(0.06, 0.06, 2.3, 10), ironP, hx, -0.4, hz);
+  k.add(lathe([[0.001, 0], [0.08, 0], [0.09, 0.04], [0.05, 0.08], [0.06, 0.12], [0.001, 0.16]], 12), brass, hx, 0.75, hz);
+  const stepGeo = slab('lhstep', (s) => { const a = 0.32, r0 = 0.06, r1 = hr - 0.03; s.moveTo(Math.cos(-a) * r0, Math.sin(-a) * r0); s.lineTo(Math.cos(-a) * r1, Math.sin(-a) * r1); s.absarc(0, 0, r1, -a, a, false); s.lineTo(Math.cos(a) * r0, Math.sin(a) * r0); s.lineTo(Math.cos(-a) * r0, Math.sin(-a) * r0); }, 0.05, 0.008);
+  for (let i = 0; i < 8; i++) { const ph = -i * 0.6, y = -0.035 - i * 0.18; k.add(stepGeo, MAT.tread('#7e8a90'), hx, y, hz, ph - Math.PI / 2, { rx: -Math.PI / 2 }); }
+  const gap = 0.62, rr0 = gap, rr1 = Math.PI * 2 - gap, rRad = hr + 0.08;
+  for (let i = 0; i <= 6; i++) { const ph = rr0 + ((rr1 - rr0) * i) / 6, [x, z] = pol(ph, rRad); k.add(cyl(0.02, 0.026, 0.95, 6), brass, hx + x, 0.475, hz + z); }
+  arc(rRad, 0.024, rr0, rr1, 0.95, brass, hx, hz); arc(rRad, 0.014, rr0, rr1, 0.5, brass, hx, hz);
+  for (let i = 0; i < 7; i++) { const ph = rr0 + ((rr1 - rr0) * (i + 0.5)) / 7, [x, z] = pol(ph, rRad); B.col(hx + x, hz + z, rRad * Math.tan((rr1 - rr0) / 14) + 0.04, 0.07, 1.0, { rot: ph, noStand: true, seeThrough: true }); }
+  R.exits.push({ ...B.world(hx, hz + 0.3), r: 0.45, to: 'outdoor-lighthouse' });
+  R.spawn = { ...B.world(hx, hz + 1.25), a: -Math.PI / 2 };
+
+  // --- the lens on its pedestal, turning; the lamp's glow
+  B.put(0, 0, 0, P.lensPedestal, {}, { noStand: true });
+  const lensPivot = new THREE.Group(); lensPivot.position.set(0, 0.78, 0); B.group.add(lensPivot);
+  const lk = new Kit(lensPivot); const lens = P.fresnelLens(lk); lk.flush();
+  B.ccol(0, 0, 0.7, 0.78 + lens.height, { noStand: true });
+  const lampY = 0.78 + 0.83;
+  const glow = glowSprite('#ffe2a0', 1.9, 0.75); glow.position.set(0, lampY, 0); B.group.add(glow);
+  const lampLight = B.light('#ffe2a8', 7, 7.5, 0, lampY, 0);
+
+  // --- the transmitter cabinet: three big dials, valves and a signal lamp on top
+  const loc = (cx, cz, ry, lx, lz) => [cx + lx * Math.cos(ry) + lz * Math.sin(ry), cz - lx * Math.sin(ry) + lz * Math.cos(ry)];
+  const phC = (200 * Math.PI) / 180, [cX, cZ] = pol(phC, 2.42), cRy = phC + Math.PI;
+  const tc = B.put(cX, cZ, cRy, P.transmitterCabinet, {});
+  { const [x, z] = loc(cX, cZ, cRy, 0, tc.shelfZ); B.col(x, z, tc.hw, 0.16, tc.shelfY, { rot: cRy, noStand: true, seeThrough: true }); }
+  // logbook of frequencies and a pencil on the writing shelf
+  k.at(cX, tc.shelfY, cZ, cRy, () => { P.ledger(k, 0.55, 0, tc.shelfZ, 0.1, '#2a4a3a'); P.papers(k, -0.55, 0, tc.shelfZ, 2, 31, 'ledger'); k.add(cyl(0.005, 0.005, 0.16, 5), MAT.paint('#d8a13b', 0.5), 0.1, 0.008, tc.shelfZ + 0.05, 0.5, { rz: Math.PI / 2 }); });
+  const txLight = new THREE.PointLight('#ff9a50', 0, 4, 2);
+  { const [x, z] = loc(cX, cZ, cRy, 0.75, 0.2); txLight.position.set(x, tc.top + 0.3, z); } B.group.add(txLight);
+  const dialSet = tc.dials.map((pv, i) => {
+    const d = { id: 'dial' + (i + 1), mesh: pv, value: 1, target: 0, set(v) { this.value = ((v % 3) + 3) % 3; this.target = -(this.value - 1) * (Math.PI / 3); } };
+    d.set(1); pv.rotation.z = d.target;
+    return d;
+  });
+  R.dials = dialSet;
+  R.transmitter = {
+    on: false,
+    setOn(b) { this.on = !!b; tc.tubeMat.emissiveIntensity = b ? 2.4 : 0.05; tc.lampMat.emissiveIntensity = b ? 3 : 0; tc.faceMat.emissiveIntensity = b ? 1.6 : 0; txLight.intensity = b ? 3 : 0; },
+  };
+  tc.dx.forEach((dx, i) => { const [x, z] = loc(cX, cZ, cRy, dx, tc.shelfZ + 0.62); R.searches.push({ id: 'dial' + (i + 1), ...B.world(x, z), r: 0.45 }); });
+
+  // --- the microphone on its little table, its cable to the cabinet
+  const phM = (250 * Math.PI) / 180, [mX, mZ] = pol(phM, 2.35), mRy = phM + Math.PI;
+  B.put(mX, mZ, mRy, P.sideTable, {});
+  k.at(mX, 0.62, mZ, mRy, () => P.microphone(k));
+  { const [ex, ez] = loc(cX, cZ, cRy, -tc.hw + 0.05, 0.0); k.add(pipe([[mX, 0.62, mZ], [mX, 0.02, mZ + 0.0], [(mX + ex) / 2, 0.02, (mZ + ez) / 2 + 0.1], [ex, 0.02, ez], [ex, 0.4, ez]], 0.012, 0.12, 5), MAT.flat('#1a1a1a', 0.6), 0, 0, 0); }
+  { const [x, z] = pol(phM, 1.62); R.searches.push({ id: 'mic', ...B.world(x, z), r: 0.45 }); R.npcSpots = { zoe: { ...B.world(x, z), a: Math.atan2(mX - x, mZ - z) } }; }
+
+  // --- the keeper's desk with the logbook, chair, oil lamp; paraffin drums; near-rim odds and ends
+  const phD = (282 * Math.PI) / 180, [dX, dZ] = pol(phD, 2.45), dRy = phD + Math.PI;
+  B.put(dX, dZ, dRy, P.desk, { w: 1.2, d: 0.6, pal: 'dark', leather: '#2a4a3a' });
+  k.at(dX, 0.78, dZ, dRy, () => {
+    P.ledger(k, 0.05, 0, 0.05, -0.1, '#5a2a1a');
+    k.at(-0.42, 0, -0.1, 0, () => { k.add(lathe([[0.001, 0], [0.07, 0], [0.075, 0.02], [0.03, 0.04], [0.06, 0.1], [0.05, 0.14], [0.02, 0.16], [0.001, 0.16]], 12), brass, 0, 0, 0); k.add(lathe([[0.04, 0], [0.05, 0.06], [0.04, 0.14], [0.025, 0.2], [0.03, 0.22]], 12), MAT.glass('#fff4d8', 0.45), 0, 0.16, 0); k.add(cyl(0.008, 0.008, 0.03, 5), MAT.glow('#fff0b0', '#ffb030', 3), 0, 0.2, 0); });
+    k.add(cyl(0.03, 0.035, 0.42, 10), brass, 0.42, 0.04, -0.12, 0.6, { rz: Math.PI / 2 });
+    P.bookStack(k, -0.4, 0, 0.15, 2, 9);
+  });
+  { const [x, z] = pol(phD, 1.72); B.put(x, z, phD, P.chair, { pal: 'dark', cushion: '#3f6670' }, { noStand: true, seeThrough: true }); }
+  { const [x, z] = pol(phD - 0.05, Rr - 0.02); k.at(x, 1.75, z, phD + Math.PI, () => P.wallClock(k, 0.16)); }
+  for (const [deg, r] of [[318, 2.55], [329, 2.6]]) { const [x, z] = pol((deg * Math.PI) / 180, r); B.put(x, z, deg, P.barrel, { r: 0.21, h: 0.6, pal: 'grey' }); k.add(cyl(0.03, 0.03, 0.04, 8), brass, x + 0.06, 0.6, z); }
+  { const [x, z] = pol((15 * Math.PI) / 180, 2.55); k.at(x, 0, z, 0.3, () => { k.add(lathe([[0.001, 0], [0.13, 0], [0.16, 0.3], [0.001, 0.3]], 14), MAT.paint('#c8302a', 0.45), 0, 0, 0); k.add(torus(0.15, 0.01, 4, 10, Math.PI), MAT.iron(), 0, 0.3, 0, 0); k.add(cyl(0.14, 0.14, 0.01, 12), MAT.flat('#d8c890', 0.9), 0, 0.27, 0); }); B.ccol(x, z, 0.18, 0.32, { noStand: true }); }
+  { const [x, z] = pol((50 * Math.PI) / 180, 2.55); k.at(x, 0, z, 0, () => { for (let i = 0; i < 4; i++) k.add(torus(0.22 - i * 0.03, 0.035, 5, 16), MAT.cloth('#c9a66b', '#7a5a30'), 0, 0.035 + i * 0.06, 0, 0, { rx: Math.PI / 2 }); }); B.ccol(x, z, 0.26, 0.3, { noStand: true, seeThrough: true }); }
+  { const [x, z] = pol((-20 * Math.PI) / 180, 2.5); B.put(x, z, 0.4, P.crate, 0.5); }
+
+  // --- light: cool daylight from the glazing, the lamp's warm glow
+  B.light('#dceeff', 5, 8, -1.6, 2.3, -1.6);
+  B.light('#e4f2ff', 3.5, 7, 1.4, 2.4, 0.9);
+  B.light('#d0e4ff', 2.5, 6, -2.0, 1.6, 1.2);
+  R.updaters.push((dt, tt) => {
+    lensPivot.rotation.y = tt * 0.3;
+    const p = 0.9 + Math.sin(tt * 2.3) * 0.06;
+    lampLight.intensity = lampLight.userData.base * p; lens.glowMat.emissiveIntensity = 3 * p; glow.material.opacity = 0.7 * p;
+    for (const d of R.dials) { const e = d.target - d.mesh.rotation.z; d.mesh.rotation.z += Math.abs(e) < 0.002 ? e : e * Math.min(1, dt * 10); }
+    if (R.transmitter.on) { const b = 0.75 + 0.25 * Math.sin(tt * 6); tc.lampMat.emissiveIntensity = 3 * b; txLight.intensity = 3 * b; }
+  });
+  return B.finish();
+}
+
 export function buildInteriors(scene, physics) {
   const rooms = {
     house: buildHouse(scene, physics), well: buildWell(scene, physics),
     office: buildOffice(scene, physics), projoffice: buildProjOffice(scene, physics), control: buildControl(scene, physics),
+    workshop: buildWorkshop(scene, physics), lighttop: buildLightTop(scene, physics),
   };
   // rooms' colliders are always active but far from the island, so they never interfere
   return rooms;

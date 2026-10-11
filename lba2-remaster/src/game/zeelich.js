@@ -152,15 +152,15 @@ const sailTex = (a = '#f6eadc', b = '#e88aa4') => ctex('sail' + a + b, 128, 256,
 // soft cloud puffs, tileable, transparent (alpha) or on a solid ground
 const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
   const r = rng(solid ? 77 : 78);
-  if (solid) { x.fillStyle = '#f1cfe0'; x.fillRect(0, 0, S, S); } else x.clearRect(0, 0, S, S);
-  for (let i = 0; i < (solid ? 70 : 46); i++) {
+  if (solid) { x.fillStyle = '#d6a2c8'; x.fillRect(0, 0, S, S); } else x.clearRect(0, 0, S, S);
+  for (let i = 0; i < (solid ? 60 : 40); i++) {
     const px = r() * S, py = r() * S, rr = 26 + r() * 52;
     for (let k = 0; k < 6; k++) {
       const qx = px + (r() - 0.5) * rr * 1.7, qy = py + (r() - 0.5) * rr * 0.8, q = rr * (0.45 + r() * 0.5);
       const shade = r() < 0.35;
       wrap9(S, (ox, oy) => {
         const g = x.createRadialGradient(qx + ox, qy + oy - q * 0.25, 0, qx + ox, qy + oy, q);
-        if (shade && solid) { g.addColorStop(0, 'rgba(214,170,214,0.55)'); g.addColorStop(1, 'rgba(214,170,214,0)'); }
+        if (shade && solid) { g.addColorStop(0, 'rgba(196,150,206,0.6)'); g.addColorStop(1, 'rgba(196,150,206,0)'); }
         else { g.addColorStop(0, 'rgba(255,250,252,0.95)'); g.addColorStop(0.55, 'rgba(255,236,244,0.55)'); g.addColorStop(1, 'rgba(255,240,248,0)'); }
         x.fillStyle = g; x.fillRect(qx + ox - q, qy + oy - q, q * 2, q * 2);
       });
@@ -207,7 +207,7 @@ const workshopSignTex = () => ctex('wsign', 256, 160, (x, W, H) => {
   x.fillStyle = '#fff2a8'; x.beginPath(); x.arc(212, 44, 14, 0, 7); x.fill(); x.fillStyle = '#c8a040'; x.fillRect(206, 56, 12, 8);
 }, false);
 // awning stripes
-const stripeTex = (a, b) => ctex('stripe' + a + b, 64, 64, (x, S) => { for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? b : a; x.fillRect((i * S) / 4, 0, S / 4, S); } x.fillStyle = 'rgba(0,0,0,0.08)'; for (let i = 0; i < 40; i++) x.fillRect(Math.random() * S, Math.random() * S, 1, 4); });
+const stripeTex = (a, b) => ctex('stripe' + a + b, 64, 64, (x, S) => { for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? b : a; x.fillRect((i * S) / 4, 0, S / 4, S); } const r = rng(a.length + 9); x.fillStyle = 'rgba(0,0,0,0.08)'; for (let i = 0; i < 40; i++) x.fillRect(r() * S, r() * S, 1, 4); });
 
 // ================================================================== geometry helpers (as island.js)
 const GC = new Map();
@@ -569,7 +569,7 @@ export function buildZeelich(scene, physics) {
   // ================================================================ ground: island top, grassy lip, cliffs
   function buildGround() {
     const top = slabGeo(ISL, 0.6, TILE.grass);
-    const ground = mesh(group, top, tm('grass', { color: '#f2e6b8', rough: 0.95 }), 0, Y0 - 0.6, 0, 0, { cast: false });
+    const ground = mesh(group, top, tm('grass', { color: '#fff2c4', rough: 0.95 }), 0, Y0 - 0.6, 0, 0, { cast: false });
     void ground;
     // cliff skirt: rings of the outline going down and in, a turf lip on top, strata of lilac-ochre rock
     const ring = resample(ISL, 1.6), n = ring.length;
@@ -624,7 +624,7 @@ export function buildZeelich(scene, physics) {
       if (px < -46 && Math.abs(pz) < 5) continue;
       if (px > 34 && Math.abs(pz) < 8) continue;
       const s = 0.8 + r() * 1.6;
-      rimRocks.push({ x: px + nx * (0.2 + r() * 0.6), y: Y0 - 0.6 - r() * 1.2, z: pz + nz * (0.2 + r() * 0.6), ry: r() * 6, s, color: new THREE.Color('#d8b8c8').multiplyScalar(0.85 + r() * 0.2) });
+      rimRocks.push({ x: px + nx * (0.2 + r() * 0.6), y: Y0 - 0.6 - r() * 1.2, z: pz + nz * (0.2 + r() * 0.6), ry: r() * 6, s, color: new THREE.Color('#fff0ff').multiplyScalar(0.95 + r() * 0.15) });
     }
   }
   function stripBricks(P, inset, top) {
@@ -1196,11 +1196,11 @@ export function buildZeelich(scene, physics) {
     const old = !!m.old;
     const H = old ? 12.0 : 10.0, R0 = old ? 2.5 : 2.2, R1 = old ? 2.0 : 1.75;
     const Rat = (y) => R0 + (R1 - R0) * (y / H);
-    const wallM = old ? tm('rubble', { color: '#f0dce8' }) : tm('plasterWall', { color: m.id === 'east' ? '#f6eef0' : '#efe2f4' });
+    const wallM = old ? tm('stone', { color: '#f4e4ee' }) : tm('plasterWall', { color: m.id === 'east' ? '#f6eef0' : '#efe2f4' });
     const tiles = tm(tileTex(m.id === 'south' ? '#c84a7a' : '#2f8a9a', '#e8b84a', '#3a72c4'), { rough: 0.45 });
     const stoneM = tm('stone', { color: '#e0cce0' });
     // tower, plinth, bands, door, windows
-    MB.add(lathe([[R0 + 0.35, 0], [R0 + 0.35, 0.45], [R0 + 0.1, 0.55], [R0, 0.6], [R1, H], [R1 + 0.2, H + 0.05], [R1 + 0.2, H + 0.35], [0, H + 0.35]], 28, old ? TILE.rubble : TILE.plaster), wallM, 0, 0, 0);
+    MB.add(lathe([[R0 + 0.35, 0], [R0 + 0.35, 0.45], [R0 + 0.1, 0.55], [R0, 0.6], [R1, H], [R1 + 0.2, H + 0.05], [R1 + 0.2, H + 0.35], [0, H + 0.35]], 28, old ? TILE.stone : TILE.plaster), wallM, 0, 0, 0);
     MB.add(lathe([[R0 + 0.36, 0], [R0 + 0.36, 0.46], [0, 0.46]], 28, 1.6), stoneM, 0, 0, 0);
     for (const y of old ? [H * 0.45] : [H * 0.33, H * 0.66]) MB.add(cyl(Rat(y) + 0.02, Rat(y) + 0.02, 0.4, 28, 1, true), tiles, 0, y, 0);
     MB.add(cyl(R1 + 0.05, R1 + 0.05, 0.42, 28, 1, true), tiles, 0, H - 0.25, 0);
@@ -1267,7 +1267,7 @@ export function buildZeelich(scene, physics) {
     if (old) {
       const phi0 = 0.9, dphi = (30 * Math.PI) / 180, rs = 3.475;
       const tops = [1.25, 2.5, 3.75, 5.0, 6.25, 7.5];
-      const stone = tm('rubble', { color: '#e0c8d8' });
+      const stone = tm('stone', { color: '#e8d2de' });
       tops.forEach((ty, k) => {
         const phi = phi0 + k * dphi, inner = Rat(ty) - 0.25, outer = rs + 0.66, mid = (inner + outer) / 2;
         MB.add(boxUV(bbox(1.32, 0.4, outer - inner, 0.07, 1), 1.2), stone, Math.sin(phi) * mid, ty - 0.2, Math.cos(phi) * mid, 0, phi, 0);
@@ -1422,7 +1422,7 @@ export function buildZeelich(scene, physics) {
     for (const [x, z] of [[4.6, 24.6], [23.4, 9.6]]) {
       B.add(lathe([[0, 0], [0.4, 0], [0.4, 0.12], [0.15, 0.2], [0.1, 6.5], [0.15, 6.6], [0, 6.65]], 12, TILE.teal), tealM(), x, Y0, z);
       B.add(bbox(1.4, 0.12, 0.16, 0.03, 1), brassM(), x, Y0 + 6.5, z, 0, Math.atan2(14 - x, 17 - z) + Math.PI / 2, 0);
-      for (const s of [-0.5, 0.5]) { const a = Math.atan2(14 - x, 17 - z); B.add(cached('flood', () => lathe([[0, 0], [0.18, 0], [0.26, 0.26], [0.26, 0.32], [0, 0.32]], 12).rotateX(Math.PI / 2 + 0.5)), darkSteel(), x + Math.cos(a) * s, Y0 + 6.72, z - Math.sin(a) * s, 0, a, 0); }
+      for (const s of [-0.5, 0.5]) { const a = Math.atan2(14 - x, 17 - z); B.add(cached('flood', () => lathe([[0, 0], [0.12, 0], [0.18, 0.18], [0.18, 0.22], [0, 0.22]], 12).rotateX(Math.PI / 2 + 0.5)), brassM(), x + Math.cos(a) * s, Y0 + 6.72, z - Math.sin(a) * s, 0, a, 0); B.add(cached('floodL', () => new THREE.CircleGeometry(0.17, 14).translate(0, 0, 0.225).rotateX(0.5)), pm('#fffbe8', 0.3, { emissive: '#fff4c8', emissiveIntensity: 2.0 }), x + Math.cos(a) * s, Y0 + 6.72, z - Math.sin(a) * s, 0, a, 0); }
       col({ type: 'cyl', x, z, r: 0.4, top: Y0 + 6.5, seeThrough: true });
     }
     keepClear(D.x0 - 1, D.z0 - 1, D.x1 + 1, D.z1 + 1);
@@ -1483,9 +1483,7 @@ export function buildZeelich(scene, physics) {
       }
     }
     // the shaft: glowing rings going down, a bore glow at the bottom
-    const shaftM = tm('plates', { color: '#3a6a70', rough: 0.5, metal: 0.4, side: THREE.BackSide });
     mesh(group, cyl(SHAFT_R, SHAFT_R, 14, 24, 2, true), tm('teal', { color: '#5a8a90', rough: 0.5, metal: 0.4, side: THREE.BackSide }), PAD.x, DECK - 7, PAD.z, 0, { cast: false });
-    void shaftM;
     for (let k = 1; k <= 5; k++) PB.add(cached('shring', () => new THREE.TorusGeometry(SHAFT_R - 0.05, 0.06, 6, 30).rotateX(Math.PI / 2)), glowCyan(), PAD.x, DECK - k * 2.3, PAD.z);
     PB.add(cached('bore', () => new THREE.CircleGeometry(SHAFT_R, 24).rotateX(-Math.PI / 2)), pm('#bff8ff', 0.3, { emissive: '#40e0ff', emissiveIntensity: 2.6 }), PAD.x, DECK - 13.5, PAD.z);
     PB.add(cached('shlip', () => lathe([[SHAFT_R - 0.02, -0.1], [SHAFT_R + 0.35, -0.1], [SHAFT_R + 0.35, 0.06], [SHAFT_R - 0.02, 0.06]], 32)), brassM(), PAD.x, DECK, PAD.z);
@@ -1657,7 +1655,7 @@ export function buildZeelich(scene, physics) {
       return pl;
     };
     mk(cloudTex(true), CLOUD_Y - 2.5, 9, '#ffffff', 1, 0.0015, false);
-    mk(cloudTex(false), CLOUD_Y, 6, '#fff4f8', 0.85, 0.003, true);
+    mk(cloudTex(false), CLOUD_Y, 6, '#ffffff', 0.9, 0.003, true);
     mk(cloudTex(false), CLOUD_Y + 1.8, 4, '#ffe8f2', 0.6, -0.002, true);
     // big puffs hugging the cliffs and drifting further out
     const ring = resample(ISL, 7);
@@ -1752,10 +1750,10 @@ export function buildZeelich(scene, physics) {
       const x = -48 + r() * 84, z = -28 + r() * 56;
       if (!onIsland(x, z, 1.2) || !isClear(x, z, 1.5)) continue;
       const s = 0.25 + r() * 0.5;
-      rocks[i % 3].push({ x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#e8c8d8').multiplyScalar(0.85 + r() * 0.2) });
+      rocks[i % 3].push({ x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#fff0ff').multiplyScalar(0.95 + r() * 0.15) });
       if (s > 0.45) col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true });
     }
-    const rockMat = pm('#ffffff', 0.9, { vertexColors: true });
+    const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#3a2030', emissiveIntensity: 0.4 });
     rocks.forEach((list, v) => { if (list.length) instances(group, rockGeometry(v + 1), rockMat, list); });
     // grass clumps and flowers
     const grass = [], flowers = [[], [], [], []];
