@@ -1016,7 +1016,7 @@ function buildWorkshop(scene, physics) {
   const round = (at, yc, r) => ({ kind: 'round', at, r, w: 2 * r + 0.12, h: 2 * r + 0.12, y0: yc - r - 0.06, view: zv });
   B.shell({
     W, D, H, t,
-    floor: MAT.planks('honey'), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
+    floor: MAT.planks('dark'), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
     body: lilac, low: MAT.wainscot('lav'), dado: 0.95, rail: wood, cap: capM, beam: wood,
     posts: wood, postsAt: (L) => [0.48, L - 0.48],
     back: [
@@ -1108,7 +1108,6 @@ function buildWorkshop(scene, physics) {
   P.oilCan(k, fX + 1.55, 0, fZ - 0.95, 1.2);
   k.at(2.75, 0, 2.95, 0.3, () => { k.add(rbox(0.55, 0.24, 0.26, 0.02), MAT.paint('#3f6a8a', 0.45), 0, 0.12, 0); k.add(pipe([[-0.17, 0.24, 0], [-0.14, 0.33, 0], [0.14, 0.33, 0], [0.17, 0.24, 0]], 0.012, 0.03, 5), MAT.iron(), 0, 0, 0); });
   B.col(2.75, 2.95, 0.3, 0.16, 0.34, { noStand: true, seeThrough: true, rot: 0.3 });
-  k.add(pipe(sag([0.2, 2.95, BZ + 0.3], [fX + 0.95, 1.2, fZ + 0.1], 0.4, 10), 0.014, 0.1, 5), MAT.flat('#a8302a', 0.6), 0, 0, 0);
   const gX = -2.35, gZ = 1.05;
   k.at(-1.75, 0, 0.75, 0, () => P.rug(k, 3.0, 2.1, ['#5a3a7a', '#c8a050', '#e0b8e8', '#f4ece0', '#2a1a3a'], 17));
   const globe = B.put(gX, gZ, 0.3, P.shellGlobe, { r: 0.34 });
@@ -1132,7 +1131,7 @@ function buildWorkshop(scene, physics) {
   // --- festoon cables along the walls and the hanging lamps
   k.add(pipe(sag([-3.7, 3.02, BZ + 0.12], [0.2, 3.02, BZ + 0.12], 0.22, 12), 0.012, 0.1, 5), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
   k.add(pipe(sag([LX + 0.12, 3.0, -3.2], [LX + 0.12, 3.0, 1.0], 0.25, 12), 0.012, 0.1, 5), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
-  for (const [x, z, y] of [[benchX, -2.35, 2.25], [fX, fZ - 0.2, 2.45], [-2.3, 0.4, 2.4]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, y, H + 0.6, { shade: '#8a6a3a' }));
+  for (const [x, z, y] of [[benchX, -2.4, 2.6], [fX, fZ - 0.2, 2.65], [-2.3, 0.4, 2.6]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, y, H + 0.6, { shade: '#8a6a3a' }));
   B.light('#ffcf8a', 7.5, 10, fX, 2.3, fZ - 0.2);
   B.light('#ffd090', 5, 6.5, benchX, 2.1, -2.4);
   B.light('#ffd8a0', 4, 6, -2.3, 2.2, 0.5);
@@ -1162,7 +1161,7 @@ function buildLightTop(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'lighttop', 1600, 0);
   const R = B.room, k = B.k;
   const Rr = 3.0, t = 0.3, H = 3.2, sill = 0.95, gTop = 2.62, rimH = 0.5;
-  R.view = 10.6;
+  R.view = 9.8;
   R.follow = 0.15;
   const brass = MAT.brass(), ironP = MAT.paint('#2e3a40', 0.45), white = twoSided(MAT.plaster('#eef0ee'));
   const dado = twoSided(MAT.plates('#3f6670', 1)), stone = MAT.stone('sand', 1.4);
@@ -1260,6 +1259,10 @@ function buildLightTop(scene, physics) {
   k.at(cX, tc.shelfY, cZ, cRy, () => { P.ledger(k, 0.55, 0, tc.shelfZ, 0.1, '#2a4a3a'); P.papers(k, -0.55, 0, tc.shelfZ, 2, 31, 'ledger'); k.add(cyl(0.005, 0.005, 0.16, 5), MAT.paint('#d8a13b', 0.5), 0.1, 0.008, tc.shelfZ + 0.05, 0.5, { rz: Math.PI / 2 }); });
   const txLight = new THREE.PointLight('#ff9a50', 0, 4, 2);
   { const [x, z] = loc(cX, cZ, cRy, 0.75, 0.2); txLight.position.set(x, tc.top + 0.3, z); } B.group.add(txLight);
+  // glows over the valves and the signal lamp, shown while transmitting
+  const txGlows = [];
+  for (let i = 0; i < 5; i++) { const [x, z] = loc(cX, cZ, cRy, -0.6 + i * 0.3, -0.04); const g = glowSprite('#ffb060', 0.32, 0.8); g.position.set(x, 1.7 + 0.21, z); g.visible = false; B.group.add(g); txGlows.push(g); }
+  { const [x, z] = loc(cX, cZ, cRy, 1.9 / 2 - 0.2, 0.08); const g = glowSprite('#ff5030', 0.6, 0.9); g.position.set(x, 1.7 + 0.2, z); g.visible = false; B.group.add(g); txGlows.push(g); }
   const dialSet = tc.dials.map((pv, i) => {
     const d = { id: 'dial' + (i + 1), mesh: pv, value: 1, target: 0, set(v) { this.value = ((v % 3) + 3) % 3; this.target = -(this.value - 1) * (Math.PI / 3); } };
     d.set(1); pv.rotation.z = d.target;
@@ -1268,7 +1271,7 @@ function buildLightTop(scene, physics) {
   R.dials = dialSet;
   R.transmitter = {
     on: false,
-    setOn(b) { this.on = !!b; tc.tubeMat.emissiveIntensity = b ? 2.4 : 0.05; tc.lampMat.emissiveIntensity = b ? 3 : 0; tc.faceMat.emissiveIntensity = b ? 1.6 : 0; txLight.intensity = b ? 3 : 0; },
+    setOn(b) { this.on = !!b; tc.tubeMat.emissiveIntensity = b ? 3.2 : 0.05; tc.lampMat.emissiveIntensity = b ? 3 : 0; tc.faceMat.emissiveIntensity = b ? 1.6 : 0; txLight.intensity = b ? 3 : 0; txGlows.forEach((g) => { g.visible = !!b; }); },
   };
   tc.dx.forEach((dx, i) => { const [x, z] = loc(cX, cZ, cRy, dx, tc.shelfZ + 0.62); R.searches.push({ id: 'dial' + (i + 1), ...B.world(x, z), r: 0.45 }); });
 
@@ -1304,7 +1307,7 @@ function buildLightTop(scene, physics) {
     const p = 0.9 + Math.sin(tt * 2.3) * 0.06;
     lampLight.intensity = lampLight.userData.base * p; lens.glowMat.emissiveIntensity = 3 * p; glow.material.opacity = 0.7 * p;
     for (const d of R.dials) { const e = d.target - d.mesh.rotation.z; d.mesh.rotation.z += Math.abs(e) < 0.002 ? e : e * Math.min(1, dt * 10); }
-    if (R.transmitter.on) { const b = 0.75 + 0.25 * Math.sin(tt * 6); tc.lampMat.emissiveIntensity = 3 * b; txLight.intensity = 3 * b; }
+    if (R.transmitter.on) { const b = 0.75 + 0.25 * Math.sin(tt * 6); tc.lampMat.emissiveIntensity = 3 * b; txLight.intensity = 3 * b; txGlows[5].material.opacity = 0.9 * b; }
   });
   return B.finish();
 }

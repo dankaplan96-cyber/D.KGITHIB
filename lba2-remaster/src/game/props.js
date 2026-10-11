@@ -2041,13 +2041,17 @@ export function flyingMachine(k) {
   const wood = MAT.wood('honey'), red = MAT.paint('#b8483b', 0.45), br = MAT.brass(), cloth = MAT.cloth('#efe2c4', '#c8b490'), ir = MAT.iron();
   trestle(k, -0.75, 0.62, 0.7); trestle(k, 0.55, 0.62, 0.7);
   const cy = 0.92;
-  // fuselage: covered nose half, bare ribs and stringers behind
-  const prof = [[0.001, 0], [0.12, 0.04], [0.24, 0.2], [0.3, 0.45], [0.31, 0.7], [0.29, 1.0], [0.22, 1.35], [0.14, 1.65], [0.07, 1.9], [0.001, 2.0]];
-  const R = (y) => { for (let i = 1; i < prof.length; i++) if (y <= prof[i][1]) { const [r0, y0] = prof[i - 1], [r1, y1] = prof[i]; return r0 + (r1 - r0) * (y - y0) / (y1 - y0); } return 0.001; };
-  // lathe y runs tail(-) -> nose(+) along +x after rz = -PI/2; nose at x = +1.0
-  k.add(lathe(prof.filter(([, y]) => y <= 0.7).concat([[0.001, 0.7]]).reverse().map(([a, b]) => [a, 2.0 - b]).reverse(), 18), red, 1.0, cy, 0, 0, { rz: Math.PI / 2 });
-  for (let i = 0; i < 6; i++) { const y = 0.75 + i * 0.2; k.add(torus(R(2.0 - y) + 0.005, 0.012, 4, 20), wood, 1.0 - y, cy, 0, Math.PI / 2); }
-  for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + 0.3; const pts = []; for (let j = 0; j <= 6; j++) { const y = 0.68 + j * 0.2; const rr = R(2.0 - y); pts.push([1.0 - y, cy + Math.sin(a) * rr, Math.cos(a) * rr]); } k.add(pipe(pts, 0.009, 0.05, 4), wood, 0, 0, 0); }
+  // fuselage along x (s = distance back from the nose at x = 1.0): covered nose, bare ribs and stringers behind
+  const F = [[0, 0.3], [0.3, 0.31], [0.7, 0.29], [1.1, 0.22], [1.5, 0.13], [1.85, 0.05], [2.0, 0.01]];
+  const Fr = (sv) => { for (let i = 1; i < F.length; i++) if (sv <= F[i][0]) { const [s0, r0] = F[i - 1], [s1, r1] = F[i]; return r0 + (r1 - r0) * (sv - s0) / (s1 - s0); } return 0.01; };
+  const cover = 0.78;
+  k.add(lathe([[0.001, 0], ...[0, 0.15, 0.3, 0.45, 0.6, cover].map((sv) => [Fr(sv), sv]), [0.001, cover]], 20), red, 1.0, cy, 0, 0, { rz: Math.PI / 2 });
+  k.add(torus(Fr(cover) + 0.005, 0.018, 5, 22), MAT.wood('dark'), 1.0 - cover, cy, 0, Math.PI / 2);
+  for (let i = 0; i < 6; i++) { const sv = 0.95 + i * 0.18; k.add(torus(Fr(sv) + 0.005, 0.012, 4, 20), wood, 1.0 - sv, cy, 0, Math.PI / 2); }
+  for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + 0.3; const pts = []; for (let j = 0; j <= 6; j++) { const sv = cover + j * ((1.96 - cover) / 6), rr = Fr(sv); pts.push([1.0 - sv, cy + Math.sin(a) * rr, Math.cos(a) * rr]); } k.add(pipe(pts, 0.009, 0.05, 4), wood, 0, 0, 0); }
+  // a riveted brass band and an access panel left off the nose
+  k.add(torus(0.305, 0.012, 4, 22), br, 1.0 - 0.3, cy, 0, Math.PI / 2);
+  k.add(rbox(0.2, 0.012, 0.16, 0.004), MAT.flat('#1a1210', 0.8), 0.62, cy + 0.302, 0.0);
   // cockpit: seat, little windscreen, stick
   k.add(rbox(0.3, 0.05, 0.3, 0.02), MAT.leather('#5a3a22'), 0.05, cy - 0.12, 0);
   k.add(rbox(0.06, 0.3, 0.3, 0.02), MAT.leather('#5a3a22'), -0.12, cy + 0.02, 0, 0, { rz: 0.2 });
@@ -2056,7 +2060,6 @@ export function flyingMachine(k) {
   k.add(torus(0.16, 0.01, 4, 12, Math.PI), br, 0.37, cy + 0.26, 0, Math.PI / 2, { rx: 0 });
   // engine cowling and hub
   k.add(lathe([[0.3, 0], [0.3, 0.08], [0.24, 0.16], [0.1, 0.2], [0.001, 0.21]], 18), br, 1.0, cy, 0, 0, { rz: -Math.PI / 2 });
-  for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2; k.add(cyl(0.035, 0.035, 0.14, 8), ir, 1.06, cy + Math.sin(a) * 0.22, Math.cos(a) * 0.22, 0, { rz: Math.PI / 2 }); }
   const prop = k.pivot(1.24, cy, 0, 0);
   // wings: right one canvassed, left one still a skeleton of ribs on its spar
   const span = 1.25, chord = 0.5, wx = 0.15;
@@ -2076,7 +2079,8 @@ export function flyingMachine(k) {
 // propeller blades (two), in the YZ plane about local x; built into a pivot group via a kit
 export function propeller(k, l = 0.62) {
   const wood = MAT.wood('red');
-  for (const s of [-1, 1]) k.add(slab('propblade' + l, (sh) => { sh.moveTo(0, -0.03); sh.quadraticCurveTo(l * 0.4, -0.07, l, -0.03); sh.quadraticCurveTo(l + 0.02, 0, l, 0.03); sh.quadraticCurveTo(l * 0.4, 0.06, 0, 0.03); }, 0.03, 0.008), wood, 0, 0, 0, Math.PI / 2, { rz: s > 0 ? Math.PI / 2 : -Math.PI / 2, rx: s * 0.25 });
+  const blade = slab('propblade' + l, (sh) => { sh.moveTo(-0.03, 0); sh.quadraticCurveTo(-0.075, l * 0.4, -0.035, l); sh.quadraticCurveTo(0, l + 0.025, 0.035, l); sh.quadraticCurveTo(0.065, l * 0.4, 0.03, 0); sh.lineTo(-0.03, 0); }, 0.03, 0.008);
+  for (const rz of [0, Math.PI]) k.add(blade, wood, 0, 0, 0, Math.PI / 2 + 0.35, { rz });
   k.add(lathe([[0.001, 0], [0.07, 0], [0.06, 0.06], [0.03, 0.1], [0.001, 0.11]], 12), MAT.brass(), 0, 0, 0, 0, { rz: -Math.PI / 2 });
 }
 // the planet model in its cracked crystal shell, on a brass tripod. Returns {spin} (a group to rotate).
