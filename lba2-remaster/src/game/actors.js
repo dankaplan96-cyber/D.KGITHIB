@@ -290,7 +290,7 @@ export class Hero extends Actor {
     const g = this.game;
     this.hp -= n;
     this.invuln = 1.1;
-    this.hurtT = 0.3;
+    this.hurtT = 0.4;
     g.audio.play('hurt');
     g.hud.hurt();
     g.camRig.shake(0.3);

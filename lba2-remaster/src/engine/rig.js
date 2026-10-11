@@ -367,6 +367,12 @@ export class Rig {
       T.legL = up ? -0.9 : -0.4; T.legR = up ? 0.35 : 0.1; T.kneeL = up ? 1.4 : 0.6; T.kneeR = up ? 0.6 : 0.4;
       T.armL = up ? -2.3 : -1.2; T.armR = up ? -2.1 : -1.4; T.elL = -0.3; T.elR = -0.3;
       torsoX = up ? 0.15 : 0;
+      if (this.j.skirt) {
+        // robed: knees tucked together (split legs would flare the robe into a bell),
+        // arms out to the sides for balance rather than both straight up
+        T.legL = up ? -0.55 : -0.3; T.legR = up ? -0.4 : -0.2; T.kneeL = up ? 1.0 : 0.5; T.kneeR = up ? 0.85 : 0.45;
+        T.armL = up ? -1.3 : -0.9; T.armR = up ? -1.1 : -1.0; T.elL = -0.5; T.elR = -0.5; armOut = 0.7;
+      }
     } else if (a === 'punch' || a === 'punch2') {
       const r = a === 'punch';
       const k = Math.min(1, this.actionT / 0.08);
@@ -380,6 +386,8 @@ export class Rig {
       T.legR = -1.6 * k; T.kneeR = 0.15; T.legL = 0.2; T.kneeL = 0.35;
       T.armL = -0.8; T.armR = 0.6; T.elL = -1.2; T.elR = -1.0;
       torsoX = -0.3 * k;
+      // in a long robe: a low front kick (the cloth can't follow a high one; the leg would tear through it)
+      if (this.j.skirt) { T.legR = -0.85 * k; T.kneeR = 0.35 * (1 - k) + 0.05; T.kneeL = 0.45; torsoX = -0.4 * k; hipsY = 0.92; }
     } else if (a === 'throw') {
       // windup (arm cocked behind the head, body twisted back) → release (whip
       // forward, step into it) → recovery (follow-through, settle)
@@ -448,8 +456,8 @@ export class Rig {
     } else if (a === 'hurt') {
       // recoil away from where the hit came from (hitDir: 0 = front, ±π/2 = sides, π = back)
       const hd = this.hitDir || 0, fx = Math.cos(hd), sx2 = Math.sin(hd);
-      torsoX = -0.5 * fx; torsoZ = 0.45 * sx2; headX = 0.35 * fx; headZ = 0.3 * sx2;
-      T.armL = 0.8 * fx - 0.4; T.armR = 0.8 * fx - 0.4; T.elL = -0.9; T.elR = -0.9; hipsY = 0.9;
+      torsoX = -0.7 * fx; torsoZ = 0.55 * sx2; headX = 0.45 * fx; headZ = 0.35 * sx2;
+      T.armL = 0.9 * fx - 0.6; T.armR = 0.9 * fx - 0.6; T.elL = -1.0; T.elR = -1.0; hipsY = 0.86; armOut = 0.5;
       T.legL = -0.25 * fx; T.legR = 0.2 * fx; T.kneeL = 0.25; T.kneeR = 0.25;
     } else if (a === 'dead') {
       bodyRotX = -Math.PI / 2; hipsY = 0.3;
@@ -511,7 +519,7 @@ export class Rig {
       const lL = j.legL.hip.rotation.x, lR = j.legR.hip.rotation.x;
       this.skirtLag = damp(this.skirtLag, Math.min(speed, 7) * 0.035 + this.lean * 0.6, 4, dt);
       const sp2 = 10;
-      set(j.skirt.F, Math.min(lL, lR, 0) * 0.85 + this.skirtLag * 0.25, 'x', sp2);
+      set(j.skirt.F, Math.min(lL, lR, 0) * 1.0 + this.skirtLag * 0.25, 'x', sp2);
       // the back panel also makes room for a heel folded up behind (runs, jumps)
       const kL = j.legL.knee.rotation.x, kR = j.legR.knee.rotation.x;
       set(j.skirt.B, Math.max(lL + Math.max(0, kL) * 0.6, lR + Math.max(0, kR) * 0.6, 0) * 1.0 + this.skirtLag, 'x', sp2);
