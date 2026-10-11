@@ -294,7 +294,8 @@ function sculptGeometry(def) {
     col.set(def.colors[m] || '#ff00ff');
     if (def.paint) def.paint(p, m, col, owner);
     // soften colour borders between materials (avoids stair-stepped seams)
-    if (out.second && out.gap < def.cell * 0.9) {
+    // (materials listed in def.hard keep a crisp edge: belts, trims, eyes on fur…)
+    if (out.second && out.gap < def.cell * 0.9 && !(def.hard && (def.hard.includes(m) || def.hard.includes(out.second.mat)))) {
       const c2 = new THREE.Color(def.colors[out.second.mat] || '#ff00ff');
       if (def.paint) def.paint(p, out.second.mat, c2, out.second);
       col.lerp(c2, 0.5 * (1 - out.gap / (def.cell * 0.9)));

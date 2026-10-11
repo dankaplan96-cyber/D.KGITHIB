@@ -225,6 +225,13 @@ function outsideView(kind) {
     } else if (kind === 'mist') {
       g.addColorStop(0, '#c8c4d8'); g.addColorStop(1, '#eeeaf4'); x.fillStyle = g; x.fillRect(0, 0, W, H);
       x.fillStyle = 'rgba(255,255,255,0.7)'; for (let i = 0; i < 8; i++) { x.beginPath(); x.ellipse(Math.random() * W, Math.random() * H, 60, 14, 0, 0, 7); x.fill(); }
+    } else if (kind === 'fort') {
+      // a stone corridor of the old fortress, lit by a project lamp
+      x.fillStyle = '#2a2e38'; x.fillRect(0, 0, W, H);
+      for (let y = 0; y < H; y += 22) for (let xx = (y / 22) % 2 * 20; xx < W; xx += 40) { x.fillStyle = `rgba(${90 + (xx * 7 + y) % 30},${96 + (xx * 3) % 26},${110 + (y * 5) % 30},0.55)`; x.fillRect(xx + 2, y + 2, 36, 18); }
+      const gl = x.createRadialGradient(128, 70, 4, 128, 70, 140); gl.addColorStop(0, 'rgba(120,240,255,0.55)'); gl.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = gl; x.fillRect(0, 0, W, H);
+      x.fillStyle = '#7a7890'; x.fillRect(0, 196, W, 60); x.fillStyle = 'rgba(0,0,0,0.35)'; for (let xx = 0; xx < W; xx += 32) x.fillRect(xx, 196, 2, 60);
+      x.fillStyle = '#c8f8ff'; x.beginPath(); x.arc(128, 66, 9, 0, 7); x.fill();
     } else if (kind === 'night') {
       g.addColorStop(0, '#1a2a4a'); g.addColorStop(1, '#3a5a8a'); x.fillStyle = g; x.fillRect(0, 0, W, H);
     }
@@ -484,8 +491,401 @@ function buildWell(scene, physics) {
   return R;
 }
 
+// ------------------------------------------------------------------ Citadel's Water Office (Gilbert & Mira)
+function buildOffice(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'office', 1200, 0);
+  const R = B.room, k = B.k;
+  const W = 8, D = 7, H = 3.0;
+  R.view = 10.2;
+  R.follow = 0.22;
+  const doorX = 2.7, rail = MAT.wood('dark');
+  B.shell({
+    W, D, H, t: 0.4,
+    floor: MAT.tiles('#b8643c', '#e6d6ae', '#7a5a40', true, 4), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
+    body: MAT.paper('#dde4cc', '#3f6f62', 'diamond'), low: MAT.wainscot('dark'), dado: 1.1, rail, cap: rail, beam: rail,
+    posts: rail, postsAt: (L) => [0.48, L - 0.48],
+    back: [{ kind: 'door', at: doorX, w: 1.15, h: 2.2, y0: 0, leaf: MAT.wood('honey'), leafAngle: 1.95, view: outsideView('citadel') }],
+    left: [{ kind: 'window', at: 1.25, w: 0.95, h: 1.1, y0: 1.15, curtain: '#3f6f8a', view: outsideView('sky') }],
+  });
+  const BZ = -D / 2, LX = -W / 2;
+  R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'outdoor-office' });
+  R.spawn = { ...B.world(doorX, BZ + 1.9), a: 0 };
+
+  // --- public side: runner rug, bench, plants, water cooler, notice board
+  k.at(2.45, 0, -0.5, Math.PI / 2, () => P.rug(k, 3.6, 1.3, ['#2a5a6a', '#8a3a2a', '#e0b050', '#f0e0b8', '#1a2a30'], 11));
+  B.put(3.62, 0.95, -Math.PI / 2, P.bench, { w: 1.5 }, { noStand: true, seeThrough: true });
+  B.put(3.6, BZ + 0.42, 0, P.pottedPlant, { s: 1.05 });
+  B.put(3.5, 3.0, 0, P.pottedPlant, { kind: 'spiky', s: 1.15, potColor: '#3a6fb0' });
+  B.put(1.55, BZ + 0.3, 0, P.waterCooler, { empty: true });
+  k.at(1.0, 1.72, BZ, 0, () => P.noticeBoard(k, 0.72, 0.52, 3));
+  k.at(1.05, 2.42, BZ, 0, () => P.wallClock(k, 0.17));
+  // umbrella stand by the door
+  k.at(3.55, 0, -2.35, 0, () => {
+    k.add(lathe([[0.001, 0], [0.14, 0], [0.15, 0.04], [0.13, 0.5], [0.15, 0.52], [0.13, 0.53], [0.12, 0.06], [0.001, 0.06]], 14), MAT.brass(), 0, 0, 0);
+    for (const [a, c] of [[0.2, '#2a2a3a'], [-0.25, '#8a2a22']]) { k.add(lathe([[0.001, 0], [0.06, 0.25], [0.035, 0.6], [0.001, 0.7]], 8), MAT.cloth(c, '#000'), Math.sin(a) * 0.05, 0.25, Math.cos(a) * 0.05, 0, { rz: a }); k.add(torus(0.04, 0.008, 4, 10, Math.PI), MAT.wood('dark'), Math.sin(a) * 0.3, 1.0, 0, 0, { rz: a }); }
+  });
+  B.ccol(3.55, -2.35, 0.17, 0.6, { noStand: true });
+
+  // --- the service counter (public side faces +x), bell, register, sign
+  const cX = 0.9, cZ = 0.65;
+  B.put(cX, cZ, Math.PI / 2, P.counter, { w: 3.1, pal: 'honey', top: MAT.wood('dark') });
+  const cy = 1.05;
+  P.deskBell(k, cX + 0.12, cy, -0.1);
+  P.ledger(k, cX - 0.02, cy, 1.25, Math.PI / 2 + 0.1, '#2a4a7a');
+  P.papers(k, cX + 0.05, cy, 1.85, 3, 4);
+  k.at(cX - 0.15, cy, -0.6, Math.PI / 2 + 0.4, () => P.telephone(k));
+  k.add(lathe([[0.001, 0], [0.035, 0], [0.04, 0.03], [0.02, 0.05], [0.022, 0.06], [0.001, 0.06]], 10), MAT.glass('#1a2a5a', 0.85), cX - 0.15, cy, 0.5);
+  k.add(cyl(0.004, 0.002, 0.24, 4), MAT.flat('#f4efe2', 0.7), cX - 0.13, cy + 0.12, 0.5, 0, { rz: -0.35 });
+  k.at(cX + 0.05, cy, 0.55, Math.PI / 2, () => { k.add(rbox(0.26, 0.04, 0.08, 0.01), MAT.wood('dark'), 0, 0.02, 0); k.add(rbox(0.24, 0.07, 0.01, 0.003), MAT.brass(), 0, 0.07, 0.0, 0, { rx: -0.3 }); });
+  k.at(cX, 2.3, cZ, Math.PI / 2, () => P.hangingSign(k, 1.1, 0.28, P.CANV.sign('WATER'), H - 2.3));
+  // Gilbert's stool behind the counter
+  k.at(0.05, 0, 1.55, 0, () => { k.add(lathe([[0.001, 0.66], [0.19, 0.66], [0.2, 0.7], [0.001, 0.72]], 16), MAT.wood('honey'), 0, 0, 0); for (let i = 0; i < 3; i++) k.add(cyl(0.02, 0.025, 0.68, 6), MAT.wood('dark'), Math.sin(i * 2.09) * 0.12, 0.33, Math.cos(i * 2.09) * 0.12, 0, { rx: Math.cos(i * 2.09) * 0.12, rz: -Math.sin(i * 2.09) * 0.12 }); k.add(torus(0.12, 0.01, 4, 14), MAT.brass(), 0, 0.25, 0, 0, { rx: Math.PI / 2 }); });
+  B.ccol(0.05, 1.55, 0.2, 0.72, { noStand: true, seeThrough: true });
+
+  // --- the filing wall: three cabinets, box files, rolled plans
+  for (let i = 0; i < 3; i++) B.put(-3.62 + i * 0.5, BZ + 0.33, 0, P.filingCabinet, { color: ['#6f7f6a', '#6a7a70', '#6f7f6a'][i], open: i === 1 ? 1 : -1 });
+  const ft = 1.335;
+  for (let i = 0; i < 6; i++) k.add(rbox(0.07, 0.3, 0.26, 0.008), MAT.cloth(['#7a2a22', '#2a4a7a', '#2f5e3a', '#8a6a2a'][i % 4], '#000'), -3.25 + i * 0.08, ft + 0.15, BZ + 0.32, 0, { rz: i === 5 ? -0.25 : 0 });
+  for (let i = 0; i < 4; i++) k.add(cyl(0.035, 0.035, 0.55, 10), MAT.flat(['#efe6cc', '#e2d4a8'][i % 2], 0.9), -2.6 + (i % 2) * 0.08, ft + 0.04 + Math.floor(i / 2) * 0.07, BZ + 0.3 + (i % 2) * 0.03, 0.2, { rz: Math.PI / 2 });
+  k.at(-3.68, ft, BZ + 0.3, 0, () => P.pottedPlant(k, { kind: 'spiky', s: 0.42, potColor: '#c8a040' }));
+
+  // --- the mains: pipe along the walls, drop with a valve wheel, gauge board
+  const pz = BZ + 0.13;
+  P.pipeline(k, [[LX + 0.13, 2.62, -2.35], [LX + 0.13, 2.62, pz], [0.2, 2.62, pz], [0.2, 0.0, pz]], 0.065, MAT.copper());
+  k.add(lathe([[0.15, 0], [0.15, 0.04], [0.09, 0.07], [0.08, 0.09]], 14), MAT.brass(), 0.2, 0, pz);
+  for (const x of [-3.4, -2.2, -1.0]) k.add(rbox(0.06, 0.16, 0.14, 0.01), MAT.iron(), x, 2.62, BZ + 0.06);
+  k.at(0.2, 1.15, pz + 0.075, 0, () => P.valveWheel(k, { r: 0.17 }));
+  B.col(0.2, pz, 0.1, 0.1, 2.7);
+  k.add(rbox(1.45, 0.6, 0.04, 0.02), MAT.wood('dark'), -1.0, 1.62, BZ + 0.02);
+  k.add(rbox(1.35, 0.5, 0.01, 0.01), MAT.wainscot('dark'), -1.0, 1.62, BZ + 0.042);
+  [[-1.45, 0.12, '#c8452f'], [-1.0, 0.08, '#c8452f'], [-0.55, 0.15, '#3a6fb0']].forEach(([x, v, z], i) => {
+    k.at(x, 1.66, BZ + 0.04, 0, () => P.gauge(k, { r: 0.13, v, zone: z, stem: false }));
+    k.add(pipe([[x, 2.62, pz], [x, 2.2, pz], [x, 1.82, BZ + 0.1]], 0.022, 0.08, 6), MAT.copper(), 0, 0, 0);
+    k.add(rbox(0.16, 0.05, 0.01, 0.004), MAT.brass(), x, 1.42, BZ + 0.05);
+  });
+
+  // --- the big painted map of the island's pipes, with its picture lamp
+  const mapZ = -1.05;
+  k.at(LX, 1.88, mapZ, Math.PI / 2, () => {
+    P.frame(k, 2.5, 1.55, P.CANV.pipemap(), { mat: MAT.wood('dark'), prof: 0.08 });
+    for (const [px, py] of [[-1.13, 0.66], [1.13, 0.66], [-1.13, -0.66], [1.13, -0.66]]) k.add(sphere(0.022, 8, 6), MAT.brass(), px, py, 0.06);
+    k.add(rbox(0.5, 0.08, 0.015, 0.006), MAT.brass(), 0, -0.86, 0.02);
+    k.add(pipe([[0, 0.92, 0.02], [0, 1.0, 0.18], [0, 0.98, 0.3]], 0.012, 0.05, 6), MAT.brass(), 0, 0, 0);
+    k.add(rbox(0.62, 0.07, 0.12, 0.03), MAT.brass(), 0, 0.99, 0.32, 0, { rx: 0.4 });
+    k.add(rbox(0.56, 0.02, 0.05, 0.006), MAT.glow('#fff4d8', '#ffd890', 2.2), 0, 0.95, 0.32);
+  });
+  R.searches.push({ id: 'pipemap', ...B.world(LX + 1.05, mapZ), r: 1.3 });
+
+  // --- Mira's desk under the side window, chair, bookcase, waste basket
+  const dX = -2.25, dZ = 1.75;
+  B.put(dX, dZ, Math.PI / 2, P.desk, { w: 1.6, d: 0.75, pal: 'dark', leather: '#2f5a3a' });
+  k.at(dX - 0.2, 0.78, 1.15, Math.PI / 2, () => P.deskLamp(k));
+  P.ledger(k, dX + 0.05, 0.78, 1.85, Math.PI / 2 - 0.15, '#7a2a22');
+  P.bookStack(k, dX - 0.22, 0.78, 2.35, 3, 8);
+  P.papers(k, dX + 0.12, 0.78, 1.3, 4, 9);
+  k.add(lathe([[0.001, 0], [0.03, 0], [0.035, 0.02], [0.025, 0.035], [0.001, 0.035]], 10), MAT.glass('#1a2a5a', 0.85), dX + 0.15, 0.78, 2.3);
+  k.at(dX + 0.12, 0.78, 2.1, 0.4, () => { k.add(rbox(0.06, 0.03, 0.04, 0.008), MAT.wood('red'), 0, 0.015, 0); k.add(lathe([[0.001, 0], [0.012, 0], [0.01, 0.06], [0.02, 0.08], [0.001, 0.09]], 8), MAT.wood('dark'), 0, 0.03, 0); });
+  B.put(-1.4, 2.05, -Math.PI / 2 + 0.5, P.officeChair, { color: '#7a2a22' }, { noStand: true, seeThrough: true });
+  B.put(LX + 0.2, 2.75, Math.PI / 2, P.bookcase, { w: 1.0, h: 2.0, pal: 'dark', seed: 3 });
+  k.at(-1.55, 0, 2.95, 0, () => {
+    k.add(lathe([[0.001, 0], [0.13, 0], [0.17, 0.34], [0.18, 0.35], [0.16, 0.35], [0.12, 0.02], [0.001, 0.02]], 14), MAT.wood('pale'), 0, 0, 0);
+    for (let i = 0; i < 3; i++) k.add(soft({ key: 'crumple' + i, prims: [{ type: 'ell', c: [0, 0, 0], r: [0.06, 0.05, 0.055], group: 'p', mat: 'p', wobble: (x, y, z) => Math.sin(x * 90 + i) * Math.sin(y * 80) * 0.012 }], groups: { p: 0.01 }, colors: { p: '#f2ead6' }, bounds: { min: [-0.09, -0.08, -0.08], max: [0.09, 0.08, 0.08] }, cell: 0.012 }), softMat, Math.cos(i * 2) * 0.06, 0.32 + i * 0.03, Math.sin(i * 2) * 0.06);
+  });
+  B.ccol(-1.55, 2.95, 0.18, 0.4, { noStand: true, seeThrough: true });
+
+  // --- lamps and light
+  k.at(cX, 0, -0.35, 0, () => P.hangingLamp(k, 2.2, H + 0.2, { shade: '#3f6f62' }));
+  k.at(2.4, 0, 1.2, 0, () => P.hangingLamp(k, 2.2, H + 0.2, { shade: '#3f6f62' }));
+  B.light('#ffd6a0', 7, 10, 1.6, 2.0, 0.4);
+  B.light('#ffe2b0', 2.4, 3.5, dX + 0.2, 1.2, 1.2);
+  B.light('#ffe8c0', 3.2, 4.2, LX + 0.8, 2.6, mapZ);
+  B.light('#e8f4ff', 3, 5, doorX, 1.6, BZ + 1.0);
+  B.light('#e8f4ff', 2.2, 4, LX + 1.0, 1.8, 1.25);
+
+  R.npcSpots = { gilbert: { ...B.world(0.12, 0.35), a: Math.PI / 2 }, mira: { ...B.world(-1.2, 0.95), a: -Math.PI / 2 - 0.35 } };
+  return B.finish();
+}
+
+// ------------------------------------------------------------------ the Joint Project's office (Zoe's stealth segment)
+function buildProjOffice(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'projoffice', 1300, 0);
+  const R = B.room, k = B.k;
+  const W = 13, D = 10, H = 3.4, t = 0.5;
+  R.view = 14.6;
+  R.follow = 0.3;
+  const doorX = 4.8;
+  const brass = MAT.brass(), teal = '#3f8a86';
+  const L = W + 2 * t, LL = D + t;
+  B.shell({
+    W, D, H, t, slabH: 0.8,
+    floor: MAT.tiles('#8e8aa0', '#b4b0c2', '#4a4858', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
+    body: MAT.stone('blue', 2), low: MAT.plates(teal, 1), dado: 1.15, rail: brass, cap: MAT.stone('slate', 1.4), beam: MAT.iron(),
+    posts: MAT.iron(), postsAt: (len) => (len === L ? [-4.75, -1.92, 0.58, 3.2, 6.42].map((x) => x + W / 2 + t) : [-4.92, -1.2, 0.55, 3.0].map((z) => D / 2 + t - z)),
+    back: [{ kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, view: outsideView('fort'), sill: MAT.stone('slate', 1) }],
+  });
+  const BZ = -D / 2, LX = -W / 2;
+  R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'outdoor-projoffice' });
+  R.spawn = { ...B.world(doorX, BZ + 1.3), a: 0 };
+  R.cover = [];
+  const cover = (x, z, r) => R.cover.push({ ...B.world(x, z), r });
+  const glowC = MAT.glow('#9ff4ff', '#22d4ff', 1.8);
+
+  // --- project fittings on the old stone: cyan strip on the brass dado rail, conduits, sconces
+  k.add(rbox(doorX - 0.75 - LX, 0.025, 0.02, 0.006), glowC, (LX + doorX - 0.75) / 2, 1.2, BZ + 0.065);
+  k.add(rbox(W / 2 - doorX - 0.75, 0.025, 0.02, 0.006), glowC, (W / 2 + doorX + 0.75) / 2, 1.2, BZ + 0.065);
+  k.add(rbox(0.02, 0.025, D, 0.006), glowC, LX + 0.065, 1.2, 0);
+  P.pipeline(k, [[LX + 0.12, 2.95, D / 2], [LX + 0.12, 2.95, BZ + 0.12], [W / 2, 2.95, BZ + 0.12]], 0.06, MAT.paint(teal, 0.45), brass);
+  k.add(pipe([[LX + 0.1, 3.12, D / 2], [LX + 0.1, 3.12, BZ + 0.1], [W / 2, 3.12, BZ + 0.1]], 0.035, 0.15, 8), brass, 0, 0, 0);
+  for (const x of [-1.92, 3.2]) k.at(x, 2.25, BZ, 0, () => P.wallSconce(k, { glow: '#5ff4ff' }));
+  for (const z of [-1.2, 3.0]) k.at(LX, 2.25, z, Math.PI / 2, () => P.wallSconce(k, { glow: '#5ff4ff' }));
+  // Funfrock's legacy: the pale patch where his portrait hung, its hooks still there
+  k.at(LX + 0.005, 2.25, -3.3, Math.PI / 2, () => {
+    k.add(plane(0.95, 1.15), MAT.flat('#b8c2cc', 0.95, { transparent: true, opacity: 0.35, depthWrite: false }), 0, 0, 0.004);
+    for (const sx of [-0.3, 0.3]) k.add(torus(0.025, 0.007, 4, 8), MAT.iron(), sx, 0.6, 0.02);
+  });
+  // the project's banner over the first desk
+  k.at(-3.6, 2.35, BZ, 0, () => {
+    k.add(cyl(0.018, 0.018, 1.3, 8), brass, 0, 0.82, 0.1, 0, { rz: Math.PI / 2 });
+    for (const s of [-1, 1]) k.add(sphere(0.035, 8, 6), brass, s * 0.67, 0.82, 0.1);
+    k.add(plane(1.05, 1.58), MAT.map(P.CANV.banner(), 0.9, { side: THREE.DoubleSide, alphaTest: 0.5 }), 0, 0.02, 0.09);
+  });
+
+  // --- back wall: archive shelving, desk 1, locker 2 (with cover), crates, desk 2
+  B.put(-5.65, BZ + 0.22, 0, P.bookcase, { w: 1.0, h: 2.1, pal: 'grey', seed: 6 });
+  const deskAt = (x, z, ry, kinds, seed, chair = null) => {
+    B.put(x, z, ry, P.desk, { w: 1.5, d: 0.75, metal: MAT.plates(teal, 0.7), leather: '#1e3a38' });
+    k.at(x, 0.78, z, ry, () => {
+      kinds.forEach((kd, i) => k.at((i - (kinds.length - 1) / 2) * 0.62, 0, -0.12, 0, () => P.monitor(k, { kind: kd, w: 0.44, h: 0.32 })));
+      P.papers(k, 0.45, 0, 0.18, 3, seed, 'project');
+      P.papers(k, -0.5, 0, 0.2, 2, seed + 1, 'form');
+      k.add(lathe([[0.001, 0], [0.04, 0], [0.045, 0.1], [0.04, 0.1], [0.035, 0.01], [0.001, 0.01]], 10), MAT.flat('#e8d8b0', 0.4), -0.15, 0, 0.22);
+    });
+    if (chair) B.put(chair[0], chair[1], chair[2], P.officeChair, { color: '#2e4a48' }, { noStand: true });
+    cover(x, z, 0.8);
+  };
+  deskAt(-3.6, BZ + 0.45, 0, ['text', 'wave'], 1, [-3.5, BZ + 1.28, Math.PI - 0.3]);
+  B.put(-2.38, BZ + 0.4, 0, P.pottedPlant, { s: 1.15, potColor: '#4a5a6a' });
+  const lk2 = -1.25;
+  B.put(lk2, BZ + 0.28, 0, P.locker, { w: 0.9, d: 0.5, h: 1.95 });
+  R.searches.push({ id: 'locker2', ...B.world(lk2, BZ + 1.15), r: 1.3 });
+  B.put(-0.05, BZ + 0.45, 0.1, P.cargoCrate, { w: 0.8, h: 0.75, d: 0.8 });
+  k.at(-0.05, 0.75, BZ + 0.45, -0.15, () => P.cargoCrate(k, { w: 0.62, h: 0.6, d: 0.62, color: '#3a5a50' }));
+  B.col(-0.05, BZ + 0.45, 0.42, 0.42, 1.35, { noStand: true });
+  cover(-0.05, BZ + 0.45, 0.6);
+  deskAt(1.65, BZ + 0.45, 0, ['bars', 'radar'], 3, [1.75, BZ + 1.28, Math.PI + 0.25]);
+
+  // --- crate stack inside the door: hides the entrance from the room
+  const c2x = 3.4, c2z = BZ + 1.65;
+  B.put(c2x, c2z, 0.05, P.cargoCrate, { w: 0.95, h: 0.85, d: 0.85 });
+  k.at(c2x + 0.05, 0.85, c2z, -0.1, () => P.cargoCrate(k, { w: 0.75, h: 0.7, d: 0.75, color: '#3a5a50' }));
+  B.col(c2x, c2z, 0.48, 0.44, 1.55, { noStand: true });
+  B.put(c2x + 0.35, c2z + 0.85, 0, P.barrel, { r: 0.28, h: 0.8, pal: 'grey' });
+  cover(c2x, c2z, 0.7);
+  B.put(6.0, BZ + 0.45, 0, P.pottedPlant, { kind: 'spiky', s: 1.2, potColor: '#4a5a6a' });
+
+  // --- left wall: filing cabinets, crates, locker 1, desk 3, plant
+  for (let i = 0; i < 2; i++) B.put(LX + 0.33, -3.55 + i * 0.5, Math.PI / 2, P.filingCabinet, { color: '#5a7a76', h: 1.32 });
+  cover(LX + 0.4, -3.3, 0.6);
+  B.put(LX + 0.5, -1.95, 0.08, P.cargoCrate, { w: 0.85, h: 0.8, d: 0.85 });
+  k.at(LX + 0.48, 0.8, -1.95, 0.25, () => P.cargoCrate(k, { w: 0.65, h: 0.62, d: 0.65, color: '#3a5a50' }));
+  B.col(LX + 0.5, -1.95, 0.45, 0.45, 1.42, { noStand: true });
+  cover(LX + 0.5, -1.95, 0.6);
+  const lk1 = -0.35;
+  B.put(LX + 0.28, lk1, Math.PI / 2, P.locker, { w: 0.9, d: 0.5, h: 1.95 });
+  R.searches.push({ id: 'locker1', ...B.world(LX + 1.15, lk1), r: 1.3 });
+  deskAt(LX + 0.42, 1.75, Math.PI / 2, ['map'], 5, [LX + 1.25, 1.65, -Math.PI / 2 + 0.3]);
+  B.put(LX + 0.45, 3.35, 0, P.pottedPlant, { s: 1.2, potColor: '#4a5a6a' });
+  B.put(LX + 0.55, 4.4, 0.2, P.cargoCrate, { w: 0.8, h: 0.7, d: 0.8 });
+
+  // --- centre: the blueprint table with the hologram of the planet's shell
+  const tX = -1.0, tZ = 0.2;
+  const fp = B.put(tX, tZ, 0, P.holoTable, { w: 2.2, d: 1.3 });
+  for (let i = 0; i < 3; i++) k.add(cyl(0.035, 0.035, 0.7, 10), MAT.flat(['#d8e4f0', '#c8d8ec'][i % 2], 0.9), tX + 0.75, 0.95 + i * 0.07, tZ + 0.45 - i * 0.04, 0.3 + i * 0.2, { rz: Math.PI / 2 });
+  cover(tX, tZ, 1.1);
+  B.put(1.25, -1.45, 0, P.pottedPlant, { kind: 'spiky', s: 1.1, potColor: '#4a5a6a' });
+  B.put(-2.8, 1.95, 0, P.pottedPlant, { s: 1.15, potColor: '#4a5a6a' });
+  B.put(1.3, 1.95, 0.3, P.cargoCrate, { w: 0.65, h: 0.6, d: 0.65 });
+  cover(1.25, -1.45, 0.45); cover(-2.8, 1.95, 0.45); cover(1.3, 1.95, 0.45);
+
+  // --- east strip: a double desk island, locker 3 with crate cover
+  B.put(3.82, 0, -Math.PI / 2, P.desk, { w: 1.3, d: 0.7, metal: MAT.plates(teal, 0.7), leather: '#1e3a38' });
+  B.put(4.52, 0, Math.PI / 2, P.desk, { w: 1.3, d: 0.7, metal: MAT.plates(teal, 0.7), leather: '#1e3a38' });
+  k.at(3.95, 0.78, 0.25, -Math.PI / 2, () => P.monitor(k, { kind: 'shaft', w: 0.44, h: 0.32 }));
+  k.at(4.4, 0.78, -0.25, Math.PI / 2, () => P.monitor(k, { kind: 'text', w: 0.44, h: 0.32 }));
+  P.papers(k, 3.85, 0.78, -0.35, 3, 11, 'project');
+  P.ledger(k, 4.5, 0.78, 0.35, 0.3, '#1e3a38');
+  B.put(3.05, -0.2, Math.PI / 2 + 0.3, P.officeChair, { color: '#2e4a48' }, { noStand: true });
+  cover(4.17, 0, 0.9);
+  const lk3x = 4.75, lk3z = 2.5;
+  B.put(lk3x, lk3z, 0, P.locker, { w: 0.9, d: 0.5, h: 1.95 });
+  R.searches.push({ id: 'locker3', ...B.world(lk3x, lk3z + 0.9), r: 1.3 });
+  B.put(3.55, 2.3, 0.15, P.cargoCrate, { w: 0.75, h: 0.75, d: 0.75 });
+  k.at(3.55, 0.75, 2.3, -0.2, () => P.cargoCrate(k, { w: 0.58, h: 0.55, d: 0.58, color: '#3a5a50' }));
+  B.col(3.55, 2.3, 0.4, 0.4, 1.3, { noStand: true });
+  B.put(3.5, 3.5, -0.1, P.cargoCrate, { w: 0.8, h: 0.8, d: 0.8 });
+  k.at(3.5, 0.8, 3.5, 0.2, () => P.cargoCrate(k, { w: 0.6, h: 0.6, d: 0.6, color: '#3a5a50' }));
+  B.col(3.5, 3.5, 0.42, 0.42, 1.4, { noStand: true });
+  cover(3.55, 2.3, 0.55); cover(3.5, 3.5, 0.6);
+
+  // --- the near side: low crates and a plant
+  B.put(-2.2, 4.35, 0.1, P.cargoCrate, { w: 0.9, h: 0.75, d: 0.8 });
+  B.put(0.7, 4.45, 0, P.pottedPlant, { s: 1.1, potColor: '#4a5a6a' });
+  B.put(5.9, 4.4, 0, P.barrel, { r: 0.3, h: 0.85, pal: 'grey' });
+  cover(-2.2, 4.35, 0.6);
+
+  // --- hanging industrial lamps and light
+  for (const [x, z] of [[-3.4, -2.2], [2.4, 1.2]]) k.at(x, 0, z, 0, () => P.hangingLamp(k, 2.55, H + 0.2, { shade: '#2e4a48' }));
+  B.light('#e8f0ff', 7, 10, -3.2, 2.5, -1.8);
+  B.light('#e8f0ff', 6, 10, 2.6, 2.5, 1.4);
+  const holoLight = B.light('#5ff4ff', 5, 6, tX, 1.9, tZ);
+  B.light('#9ff4ff', 2, 5, doorX, 2.0, BZ + 0.8);
+  R.updaters.push((dt, tt) => {
+    fp.holo.rotation.y = tt * 0.4;
+    fp.shell.rotation.x = Math.sin(tt * 0.3) * 0.15;
+    fp.core.scale.setScalar(1 + Math.sin(tt * 3) * 0.12);
+    holoLight.intensity = holoLight.userData.base * (0.85 + Math.sin(tt * 3) * 0.15);
+  });
+
+  // the guard's loop around the blueprint table (world coords)
+  R.patrol = [[-3.6, -2.5], [2.3, -2.5], [2.3, 2.9], [-0.6, 3.1], [-3.6, 2.9]].map(([x, z]) => [B.cx + x, B.cz + z]);
+  return B.finish();
+}
+
+// ------------------------------------------------------------------ the station's control room
+function buildControl(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'control', 1400, 0);
+  const R = B.room, k = B.k;
+  const W = 12, D = 9, H = 3.6, t = 0.5;
+  R.view = 13.6;
+  R.follow = 0.3;
+  const doorX = 4.3, winX = -1.6, winW = 3.8, winY = 0.8, winH = 2.2;
+  const brass = MAT.brass(), teal = '#3f8a86';
+  B.shell({
+    W, D, H, t, slabH: 0.8,
+    floor: MAT.tiles('#7a7890', '#9c9aae', '#46445a', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
+    body: MAT.plates('#8d8a9c', 1), low: MAT.plates(teal, 1), dado: 1.1, rail: brass, cap: MAT.iron(), beam: brass,
+    posts: MAT.iron(), postsAt: (len) => (len === W + 2 * t ? [-5.9, 1.15, 3.3, 5.92].map((x) => x + W / 2 + t) : [-4.42, -1.9, 1.2, 3.0].map((z) => D / 2 + t - z)),
+    back: [
+      { kind: 'hatch', at: winX, w: winW, h: winH, y0: winY },
+      { kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, frame: MAT.iron(), view: outsideView('fort'), sill: MAT.stone('slate', 1) },
+    ],
+  });
+  const BZ = -D / 2, LX = -W / 2;
+  R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'outdoor-control' });
+  R.spawn = { ...B.world(doorX, BZ + 1.5), a: 0 };
+
+  // --- the viewport onto the bore shaft: riveted brass frame, mullions, glass
+  const fw = 0.2;
+  k.at(winX, 0, BZ, 0, () => {
+    const x0 = -winW / 2, x1 = winW / 2, y0 = winY, y1 = winY + winH;
+    k.add(rbox(winW + 2 * fw, fw, 0.16, 0.05), brass, 0, y1 + fw / 2 - 0.02, 0.06);
+    k.add(rbox(winW + 2 * fw + 0.1, fw + 0.04, 0.2, 0.05), brass, 0, y0 - fw / 2 + 0.02, 0.08);
+    for (const x of [x0 - fw / 2 + 0.02, x1 + fw / 2 - 0.02]) k.add(rbox(fw, winH + 2 * fw, 0.16, 0.05), brass, x, (y0 + y1) / 2, 0.06);
+    for (let i = 0; i <= 12; i++) { const x = x0 - 0.1 + i * ((winW + 0.2) / 12); for (const y of [y0 - 0.1, y1 + 0.1]) k.add(sphere(0.022, 6, 4), MAT.iron(), x, y, 0.15); }
+    for (let i = 0; i <= 6; i++) for (const x of [x0 - 0.1, x1 + 0.1]) k.add(sphere(0.022, 6, 4), MAT.iron(), x, y0 + i * (winH / 6), 0.15);
+    for (const x of [-winW / 6, winW / 6]) { k.add(rbox(0.08, winH, 0.1, 0.02), MAT.iron(), x * 1.5, (y0 + y1) / 2, -0.12); }
+    k.add(rbox(winW, 0.07, 0.1, 0.02), MAT.iron(), 0, y0 + winH * 0.62, -0.12);
+    for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.04, winH, t), MAT.iron(), s * (winW / 2 - 0.02), (y0 + y1) / 2, -t / 2);
+    k.add(new THREE.BoxGeometry(winW, 0.04, t), MAT.iron(), 0, y1 - 0.02, -t / 2);
+    k.add(new THREE.BoxGeometry(winW, 0.04, t), MAT.iron(), 0, y0 + 0.02, -t / 2);
+    k.add(plane(winW, winH), MAT.glass('#a8f4ff', 0.1), 0, (y0 + y1) / 2, -0.17);
+  });
+  // the shaft itself, built behind the wall and trimmed to what the iso camera
+  // can see through the glass (the camera looks down ~0.93 m per metre of depth)
+  const shaftTex = P.canvasTex(256, 512, (x, Wd, Hd) => {
+    const g = x.createLinearGradient(0, 0, 0, Hd); g.addColorStop(0, '#0e2e36'); g.addColorStop(1, '#0a4a58'); x.fillStyle = g; x.fillRect(0, 0, Wd, Hd);
+    for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(${20 + (i * 37) % 40},${70 + (i * 13) % 60},${90 + (i * 7) % 60},0.5)`; x.fillRect((i * 97) % Wd, (i * 61) % Hd, 18 + (i % 5) * 6, 10 + (i % 3) * 5); }
+    for (let y = 16; y < Hd; y += 64) { const gg = x.createLinearGradient(0, y - 8, 0, y + 8); gg.addColorStop(0, 'rgba(95,244,255,0)'); gg.addColorStop(0.5, 'rgba(180,255,255,0.95)'); gg.addColorStop(1, 'rgba(95,244,255,0)'); x.fillStyle = gg; x.fillRect(0, y - 8, Wd, 16); }
+    for (let xx = 0; xx < Wd; xx += 64) { x.fillStyle = 'rgba(95,244,255,0.35)'; x.fillRect(xx, 0, 3, Hd); x.fillStyle = 'rgba(0,0,0,0.4)'; x.fillRect(xx + 3, 0, 4, Hd); }
+  });
+  shaftTex.wrapS = shaftTex.wrapT = THREE.RepeatWrapping; shaftTex.repeat.set(5, 4);
+  const shaftMat = new THREE.MeshStandardMaterial({ map: shaftTex, emissive: '#ffffff', emissiveMap: shaftTex, emissiveIntensity: 1.0, roughness: 0.6, side: THREE.BackSide });
+  const sx = winX - 3.0, sz = BZ - t - 3.1, sr = 3.1, outer = BZ - t;
+  const clampTop = (geo, cap) => { const p = geo.attributes.position; for (let i = 0; i < p.count; i++) { const z = p.getZ(i) + sz, lim = 3.05 - 0.93 * (outer - z); if (p.getY(i) > Math.min(cap, lim)) p.setY(i, Math.min(cap, lim)); } p.needsUpdate = true; geo.computeVertexNormals(); };
+  const shaftGeo = new THREE.CylinderGeometry(sr, sr, 18, 40, 24, true); shaftGeo.translate(0, -7, 0); clampTop(shaftGeo, 2.6);
+  const shaft = new THREE.Mesh(shaftGeo, shaftMat); shaft.position.set(sx, 0, sz); B.group.add(shaft);
+  const beamMat = new THREE.MeshBasicMaterial({ color: '#7ff8ff', transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const beamGeo = new THREE.CylinderGeometry(0.55, 0.9, 16, 20, 16, true); beamGeo.translate(0, -7, 0); clampTop(beamGeo, 2);
+  const beam = new THREE.Mesh(beamGeo, beamMat); beam.position.set(sx, 0, sz); B.group.add(beam);
+  const coreGeo = new THREE.CylinderGeometry(0.16, 0.16, 16, 10, 16, true); coreGeo.translate(0, -7, 0); clampTop(coreGeo, 2);
+  const core = new THREE.Mesh(coreGeo, new THREE.MeshBasicMaterial({ color: '#e8ffff' })); core.position.set(sx, 0, sz); B.group.add(core);
+  const rings = [];
+  const ringMat = new THREE.MeshBasicMaterial({ color: '#aaffff', transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+  for (let i = 0; i < 4; i++) { const r = new THREE.Mesh(new THREE.TorusGeometry(sr - 0.15, 0.06, 6, 48), ringMat); r.rotation.x = Math.PI / 2; r.position.set(sx, -1 - i * 1.6, sz); B.group.add(r); rings.push(r); }
+  const shaftLight = B.light('#5ff4ff', 14, 11, winX, 1.9, BZ + 0.9);
+
+  // --- brass railing and hazard strip before the viewport
+  const rz = BZ + 0.75, rx0 = winX - winW / 2 - 0.1, rx1 = winX + winW / 2 + 0.1;
+  P.railing(k, [[rx0, BZ + 0.05], [rx0, rz], [rx1, rz], [rx1, BZ + 0.05]], { h: 1.0 });
+  B.col((rx0 + rx1) / 2, BZ + 0.4, (rx1 - rx0) / 2 + 0.05, 0.4, 1.0, { noStand: true, seeThrough: true });
+  k.add(plane(rx1 - rx0 + 0.4, 0.28), MAT.hazard(), (rx0 + rx1) / 2, 0.006, rz + 0.25, 0, { rx: -Math.PI / 2 });
+  k.add(plane(rx1 - rx0 - 0.1, 0.62), MAT.tread('#8d8a9c'), (rx0 + rx1) / 2, 0.005, BZ + 0.38, 0, { rx: -Math.PI / 2 });
+
+  // --- Vesk's main console: a curved bank facing the viewport
+  const cz = BZ + 1.85;
+  B.put(winX, cz, 0, P.console_, { w: 2.0, kinds: ['shaft', 'wave'], levers: 3 });
+  const wing = 1.2, wa = 0.45;
+  B.put(winX - 1.0 - Math.cos(wa) * wing / 2, cz + Math.sin(wa) * wing / 2, wa, P.console_, { w: wing, kinds: ['bars'], levers: 2 });
+  B.put(winX + 1.0 + Math.cos(wa) * wing / 2, cz + Math.sin(wa) * wing / 2, -wa, P.console_, { w: wing, kinds: ['radar'], levers: 1 });
+  k.add(pipe([[winX - 0.6, 0.02, cz - 0.42], [winX - 0.6, 0.02, BZ + 0.85], [winX - 2.4, 0.02, BZ + 0.85]], 0.03, 0.15, 6), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
+
+  // --- left wall: the worker's console, an instrument rack, a big valve
+  B.put(LX + 0.45, -0.4, Math.PI / 2, P.console_, { w: 2.0, kinds: ['text', 'map'], levers: 2 });
+  k.add(pipe([[LX + 0.12, 3.1, -0.9], [LX + 0.12, 1.7, -0.9], [LX + 0.2, 1.62, -0.9]], 0.035, 0.1, 6), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
+  k.add(pipe([[LX + 0.12, 3.1, 0.1], [LX + 0.12, 1.7, 0.1], [LX + 0.2, 1.62, 0.1]], 0.03, 0.1, 6), MAT.flat('#a8302a', 0.6), 0, 0, 0);
+  B.put(LX + 0.27, 2.2, Math.PI / 2, P.instrumentRack, { w: 1.3, kind: 'bars' });
+  P.pipeline(k, [[LX + 0.25, 0, 3.75], [LX + 0.25, 2.3, 3.75], [LX, 2.3, 3.75]], 0.1, MAT.paint(teal, 0.45), brass);
+  k.at(LX + 0.37, 1.25, 3.75, Math.PI / 2, () => P.valveWheel(k, { r: 0.24, color: '#c8302a' }));
+  k.at(LX + 0.05, 1.8, 3.2, Math.PI / 2, () => P.gauge(k, { r: 0.14, v: 0.82 }));
+  B.ccol(LX + 0.25, 3.75, 0.2, 2.4);
+
+  // --- back wall right of the viewport: instrument rack and fuse cabinet
+  B.put(1.35, BZ + 0.27, 0, P.instrumentRack, { w: 1.2, kind: 'shaft' });
+  B.put(2.75, BZ + 0.25, 0, P.locker, { w: 0.85, d: 0.45, h: 2.0, color: '#5a5a6e', doors: 1 });
+
+  // --- cable trays along the top of both walls
+  k.at(0, 3.12, BZ, 0, () => P.cableTray(k, W - 0.2));
+  k.at(LX, 3.12, 0.1, Math.PI / 2, () => P.cableTray(k, D - 0.4));
+
+  // --- the map table and the rest of the floor
+  B.put(1.9, 1.3, -0.15, P.mapTable, { w: 1.7, d: 1.05 });
+  k.at(1.9, 0, 1.3, 0, () => P.hangingLamp(k, 2.4, H + 0.2, { shade: '#2e4a48' }));
+  B.put(-2.2, 2.3, 0.4, P.officeChair, { color: '#2e4a48' }, { noStand: true });
+  for (const [x, z, s] of [[4.9, 2.8, 0.85], [5.4, 3.75, 0.7]]) B.put(x, z, 0.2 + x, P.cargoCrate, { w: s, h: s * 0.9, d: s });
+  B.put(4.6, 3.95, 0, P.barrel, { r: 0.3, h: 0.85, pal: 'grey' });
+  // cable spool lying on its side, toolbox
+  k.at(-4.6, 0, 3.6, 0.6, () => {
+    for (const s of [-1, 1]) k.add(cyl(0.42, 0.42, 0.05, 20), MAT.wood('grey'), s * 0.22, 0.42, 0, 0, { rz: Math.PI / 2 });
+    k.add(cyl(0.3, 0.3, 0.42, 16), MAT.flat('#1a1a1a', 0.6), 0, 0.42, 0, 0, { rz: Math.PI / 2 });
+  });
+  B.ccol(-4.6, 3.6, 0.45, 0.85, { noStand: true });
+  k.at(-0.8, 0, 3.7, -0.3, () => { k.add(rbox(0.5, 0.22, 0.24, 0.02), MAT.paint('#c8302a', 0.45), 0, 0.11, 0); k.add(pipe([[-0.15, 0.22, 0], [-0.12, 0.3, 0], [0.12, 0.3, 0], [0.15, 0.22, 0]], 0.012, 0.03, 5), MAT.iron(), 0, 0, 0); });
+  B.col(-0.8, 3.7, 0.28, 0.16, 0.3, { noStand: true, seeThrough: true, rot: -0.3 });
+  k.at(-3.3, 0, 0.7, 0, () => P.rug(k, 2.0, 1.2, ['#2e4a48', '#d9a94a', '#5ff4ff', '#e8f4ff', '#14201e'], 13));
+
+  B.light('#ffe8c8', 7, 10, 1.6, 2.6, 1.0);
+  B.light('#9ff4ff', 2.5, 4.5, LX + 1.2, 1.6, -0.4);
+  B.light('#9ff4ff', 2, 5, doorX, 2.0, BZ + 0.8);
+  const screens = ['shaft', 'wave', 'bars', 'radar', 'text', 'map'].map((kd) => MAT.screen(P.CANV.screen(kd)));
+  R.updaters.push((dt, tt) => {
+    shaftTex.offset.y = (tt * 0.12) % 1;
+    const p = 0.85 + Math.sin(tt * 2.2) * 0.12 + Math.sin(tt * 7.3) * 0.04;
+    shaftMat.emissiveIntensity = p;
+    beamMat.opacity = 0.28 + Math.sin(tt * 3.1) * 0.08;
+    shaftLight.intensity = shaftLight.userData.base * p;
+    rings.forEach((r, i) => { r.position.y = 0.6 - ((tt * 0.8 + i * 1.6) % 6.4); });
+    screens.forEach((m, i) => { m.emissiveIntensity = 1.3 * (0.92 + Math.sin(tt * (5 + i) + i) * 0.06); });
+  });
+
+  R.npcSpots = { vesk: { ...B.world(winX, cz + 0.85), a: Math.PI }, worker: { ...B.world(LX + 1.35, -0.4), a: -Math.PI / 2 } };
+  return B.finish();
+}
+
 export function buildInteriors(scene, physics) {
-  const rooms = { house: buildHouse(scene, physics), well: buildWell(scene, physics) };
+  const rooms = {
+    house: buildHouse(scene, physics), well: buildWell(scene, physics),
+    office: buildOffice(scene, physics), projoffice: buildProjOffice(scene, physics), control: buildControl(scene, physics),
+  };
   // rooms' colliders are always active but far from the island, so they never interfere
   return rooms;
 }

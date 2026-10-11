@@ -834,10 +834,789 @@ function bench(W, parent, x, z, ry) {
   W.physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: y + 0.5, noStand: true, seeThrough: true });
 }
 
+// ================================================================== more geometry helpers
+// box-projected UVs in the geometry's own space (1 texture tile per `tile` metres):
+// faces pointing up get (x,z), faces pointing sideways get (x|z, y)
+function boxUV(geo, tile = 1) {
+  if (!geo.attributes.normal) geo.computeVertexNormals();
+  const p = geo.attributes.position, n = geo.attributes.normal;
+  if (!geo.attributes.uv) geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(p.count * 2), 2));
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < p.count; i++) {
+    const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), az = Math.abs(n.getZ(i));
+    let u, v;
+    if (ay > ax && ay > az) { u = p.getX(i); v = p.getZ(i); }
+    else if (ax > az) { u = p.getZ(i) * Math.sign(n.getX(i) || 1); v = p.getY(i); }
+    else { u = -p.getX(i) * Math.sign(n.getZ(i) || 1); v = p.getY(i); }
+    uv.setXY(i, u / tile, v / tile);
+  }
+  uv.needsUpdate = true;
+  return geo;
+}
+// a straight structural member (square section, bevelled) from a to b
+const _ux = new THREE.Vector3(1, 0, 0);
+function memberMatrix(a, b, roll = 0) {
+  const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+  const d = B.clone().sub(A), len = d.length();
+  const q = new THREE.Quaternion().setFromUnitVectors(_ux, d.normalize());
+  if (roll) q.multiply(new THREE.Quaternion().setFromAxisAngle(_ux, roll));
+  return { m: new THREE.Matrix4().compose(A.add(B).multiplyScalar(0.5), q, new THREE.Vector3(1, 1, 1)), len };
+}
+function member(batch, a, b, w, mat, tile = 1, round = 0.02) {
+  const { m, len } = memberMatrix(a, b);
+  batch.addM(bbox(+len.toFixed(2), w, w, round, tile), mat, m);
+}
+// a cylinder between two points (pipes, rods)
+const _uy = new THREE.Vector3(0, 1, 0);
+function rodMatrix(a, b) {
+  const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+  const d = B.clone().sub(A), len = d.length();
+  const q = new THREE.Quaternion().setFromUnitVectors(_uy, d.normalize());
+  return { m: new THREE.Matrix4().compose(A.add(B).multiplyScalar(0.5), q, new THREE.Vector3(1, 1, 1)), len, q };
+}
+// wall panel in XY (x along, y up) extruded toward +z by t, with holes [{x,y,w,h,arch|round}]
+function panelGeo(len, h, t, holes = [], tile = 2.2) {
+  const s = new THREE.Shape();
+  s.moveTo(-len / 2, 0); s.lineTo(len / 2, 0); s.lineTo(len / 2, h); s.lineTo(-len / 2, h); s.lineTo(-len / 2, 0);
+  for (const o of holes) {
+    const p = new THREE.Path();
+    if (o.round) { p.absarc(o.x, o.y + o.h / 2, o.w / 2, 0, Math.PI * 2, true); s.holes.push(p); continue; }
+    const x0 = o.x - o.w / 2, x1 = o.x + o.w / 2, y0 = o.y, y1 = o.y + o.h;
+    p.moveTo(x0, y0); p.lineTo(x1, y0);
+    if (o.arch) { p.lineTo(x1, y1 - o.w / 2); p.absarc(o.x, y1 - o.w / 2, o.w / 2, 0, Math.PI, false); }
+    else { p.lineTo(x1, y1); p.lineTo(x0, y1); }
+    p.lineTo(x0, y0);
+    s.holes.push(p);
+  }
+  const g = new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false, curveSegments: 14 });
+  return boxUV(g, tile);
+}
+// steam puffs: a small pool of soft sprites that rise, grow and fade
+let puffTex = null;
+function steamSystem(parent, n = 40) {
+  puffTex ??= canvasTex(64, 64, (x) => {
+    const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(0.45, 'rgba(240,248,255,0.45)'); g.addColorStop(1, 'rgba(240,248,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+  });
+  const pool = [];
+  for (let i = 0; i < n; i++) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, color: '#f4f8ff', transparent: true, opacity: 0, depthWrite: false, fog: true }));
+    s.visible = false; parent.add(s); pool.push({ s, life: 0, max: 1, vx: 0, vy: 0, vz: 0, size: 1 });
+  }
+  let k = 0;
+  return {
+    emit(x, y, z, { vx = 0, vy = 1.4, vz = 0, size = 0.8, life = 1.6, spread = 0.25 } = {}) {
+      const p = pool[k++ % n];
+      p.s.position.set(x + (Math.random() - 0.5) * spread, y, z + (Math.random() - 0.5) * spread);
+      p.vx = vx + (Math.random() - 0.5) * 0.4; p.vy = vy * (0.8 + Math.random() * 0.4); p.vz = vz + (Math.random() - 0.5) * 0.4;
+      p.life = 0; p.max = life * (0.8 + Math.random() * 0.4); p.size = size; p.s.visible = true;
+    },
+    update(dt) {
+      for (const p of pool) {
+        if (!p.s.visible) continue;
+        p.life += dt;
+        const k2 = p.life / p.max;
+        if (k2 >= 1) { p.s.visible = false; continue; }
+        p.s.position.x += p.vx * dt; p.s.position.y += p.vy * dt; p.s.position.z += p.vz * dt;
+        p.vy *= 1 - dt * 0.6;
+        p.s.scale.setScalar(p.size * (0.5 + k2 * 1.6));
+        p.s.material.opacity = Math.sin(Math.min(1, k2 * 3) * Math.PI / 2) * (1 - k2) * 0.75;
+      }
+    },
+  };
+}
+// Houses between the camera and Twinsen fade out (town.js); the same for
+// the fortress walls, towers and project buildings: each fader owns clones
+// of its materials so only that piece turns see-through.
+function addFader(W, group, x0, z0, x1, z1, top) {
+  const mats = new Map();
+  group.traverse((o) => {
+    if (!o.isMesh) return;
+    const list = Array.isArray(o.material) ? o.material : [o.material];
+    const out = list.map((m) => { if (!mats.has(m)) mats.set(m, m.clone()); return mats.get(m); });
+    o.material = Array.isArray(o.material) ? out : out[0];
+  });
+  const F = { x0, z0, x1, z1, top, mats: [...mats.values()], f: 1 };
+  if (!W._faders) {
+    W._faders = [];
+    const prev = W.fadeOccluders;
+    const sample = new THREE.Vector3();
+    W.fadeOccluders = (cam, hero, dt) => {
+      prev?.(cam, hero, dt);
+      for (const E of W._faders) {
+        let hit = false;
+        // only when Twinsen is near; the samples run from his feet/head to the camera
+        if (hero.x > E.x0 - 18 && hero.x < E.x1 + 18 && hero.z > E.z0 - 18 && hero.z < E.z1 + 18) {
+          for (const hy of [0.3, 1.0, 1.8]) for (let k = 1; k < 18 && !hit; k++) {
+            sample.set(hero.x, hero.y + hy, hero.z).lerp(cam.position, k / 18);
+            if (sample.x > E.x0 && sample.x < E.x1 && sample.z > E.z0 && sample.z < E.z1 && sample.y < E.top) hit = true;
+          }
+        }
+        const goal = hit ? 0.12 : 1;
+        E.f += (goal - E.f) * (1 - Math.exp(-dt * 8));
+        const see = E.f < 0.98;
+        for (const m of E.mats) {
+          if (m.transparent !== see && !m.userData.alwaysTransparent) { m.transparent = see; m.needsUpdate = true; }
+          m.opacity = see ? E.f * (m.userData.baseOpacity ?? 1) : (m.userData.baseOpacity ?? 1);
+          if (!m.userData.alwaysTransparent) m.depthWrite = !see;
+        }
+      }
+    };
+  }
+  for (const m of F.mats) { if (m.transparent) { m.userData.alwaysTransparent = true; m.userData.baseOpacity = m.opacity; } }
+  W._faders.push(F);
+  return F;
+}
+
+// ================================================================== the Joint Project station
+// Funfrock's old fortress (grey-blue ashlar, battered walls with a walk-top
+// and merlons, round towers with slate cones, a gatehouse with a portcullis),
+// taken over by the Joint Project: a drill derrick over a glowing shaft,
+// riveted tanks, flanged pipes, deck plates, an office, a control building
+// and the transit beam pad (Otringal's horned ring arch).
+const FW = { H: 4.2, T: 2.0 };          // walk-top height, wall thickness
+const GATE = { z: 36, w: 3.6, h: 4.0, x0: 32.9, x1: 37.3, half: 4.3, top: 6.9 };
+
+function fortWallGeo(L) {
+  return cached('fwall' + L, () => {
+    const H = FW.H, s = new THREE.Shape();
+    s.moveTo(-1.0, -2.6); s.lineTo(1.42, -2.6); s.lineTo(1.42, 0.0);
+    s.lineTo(1.06, H - 0.5); s.lineTo(1.24, H - 0.32); s.lineTo(1.24, H - 0.06); s.lineTo(1.08, H - 0.06);
+    s.lineTo(1.08, H + 0.55); s.lineTo(0.42, H + 0.55); s.lineTo(0.42, H); s.lineTo(-0.92, H); s.lineTo(-1.0, H - 0.08);
+    s.lineTo(-1.0, -2.6);
+    const g = new THREE.ExtrudeGeometry(s, { depth: L, bevelEnabled: false });
+    g.rotateY(-Math.PI / 2); g.translate(L / 2, 0, 0);
+    return boxUV(g, TILE.fortStone);
+  });
+}
+function towerGeo() {
+  return cached('ftower', () => {
+    const H = FW.H;
+    const body = lathe([[0, -2.6], [3.25, -2.6], [3.25, 0], [2.88, H + 1.3], [3.12, H + 1.55], [3.12, H + 1.85], [2.92, H + 1.9], [2.92, H + 2.5], [0, H + 2.5]], 30, TILE.fortStone);
+    const roof = lathe([[0, 0], [3.62, 0], [3.62, 0.16], [3.36, 0.34], [2.6, 1.2], [1.7, 2.35], [0.85, 3.5], [0.28, 4.4], [0.0, 4.6]], 30, TILE.slate);
+    roof.translate(0, H + 2.45, 0);
+    const fin = lathe([[0, 0], [0.16, 0], [0.12, 0.25], [0.06, 0.5], [0.13, 0.62], [0.06, 0.74], [0.02, 1.25], [0, 1.3]], 10);
+    fin.translate(0, H + 2.45 + 4.45, 0);
+    return { body, roof, fin };
+  });
+}
+function bannerTex() {
+  return cached('bannerTex', () => canvasTex(128, 320, (x, w, h) => {
+    x.fillStyle = '#1f6e6c'; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 40; i++) { x.fillStyle = `rgba(255,255,255,${Math.random() * 0.04})`; x.fillRect(0, Math.random() * h, w, 2); }
+    x.strokeStyle = '#d8b060'; x.lineWidth = 8; x.strokeRect(10, 10, w - 20, h - 40);
+    x.drawImage(emblem().image, 14, 70, 100, 100);
+    x.fillStyle = '#d8b060';
+    for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(i * 26 + 4, h - 30); x.lineTo(i * 26 + 17, h); x.lineTo(i * 26 + 30, h - 30); x.fill(); }
+    x.fillStyle = '#1f6e6c'; x.fillRect(0, h - 34, w, 6);
+  }));
+}
+function bannerGeo() {
+  return cached('banner', () => {
+    const g = new THREE.PlaneGeometry(1.1, 2.75, 6, 10), p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) { const y = p.getY(i), x = p.getX(i); p.setZ(i, Math.sin(x * 4.5 + y * 1.3) * 0.05 + (1.375 - y) * 0.02); }
+    g.computeVertexNormals(); g.translate(0, -1.375, 0);
+    return g;
+  });
+}
+
+function buildFortress(W, root, g) {
+  const F = STATION, S = F.half, H = FW.H;
+  const stoneM = tm('fortStone', { color: '#e6eaf2' });
+  const slateM = tm('slate', { color: '#c8d0e0', rough: 0.7 });
+  const ironM = pm('#2a2d33', 0.45, { metalness: 0.6 });
+  const slitM = pm('#14161a', 0.9);
+  const merlonGeo = cached('merlon', () => boxUV(bbox(0.95, 0.82, 0.62, 0.05, 1).translate(0, 0.41, 0), TILE.fortStone));
+  const P = W.physics;
+  // --- curtain walls: one fader group per side
+  const sides = [
+    { id: 'N', x: F.x, z: F.z - S, ry: Math.PI, L: 2 * S, box: [F.x - S, F.z - S - 1.6, F.x + S, F.z - S + 1.2] },
+    { id: 'S', x: F.x, z: F.z + S, ry: 0, L: 2 * S, box: [F.x - S, F.z + S - 1.2, F.x + S, F.z + S + 1.6] },
+    { id: 'E', x: F.x + S, z: F.z, ry: Math.PI / 2, L: 2 * S, box: [F.x + S - 1.2, F.z - S, F.x + S + 1.6, F.z + S] },
+  ];
+  const wz0 = F.z - S, wz1 = GATE.z - GATE.half, wz2 = GATE.z + GATE.half, wz3 = F.z + S;
+  sides.push({ id: 'W1', x: F.x - S, z: (wz0 + wz1) / 2, ry: -Math.PI / 2, L: wz1 - wz0, box: [F.x - S - 1.6, wz0, F.x - S + 1.2, wz1] });
+  sides.push({ id: 'W2', x: F.x - S, z: (wz2 + wz3) / 2, ry: -Math.PI / 2, L: wz3 - wz2, box: [F.x - S - 1.6, wz2, F.x - S + 1.2, wz3] });
+  for (const sd of sides) {
+    const grp = new THREE.Group(); root.add(grp);
+    const B = new Batch(grp);
+    B.add(fortWallGeo(+sd.L.toFixed(2)), stoneM, sd.x, g, sd.z, 0, sd.ry, 0);
+    const n = Math.floor(sd.L / 1.75), list = [];
+    const at = frame(sd.x, sd.z, sd.ry);
+    for (let i = 0; i < n; i++) {
+      const lx = -sd.L / 2 + (i + 0.5) * (sd.L / n);
+      if (Math.abs(lx) > sd.L / 2 - 0.9 && sd.L > 20) continue; // the towers cover the ends
+      const [x, z] = at(lx, 0.75);
+      list.push({ x, y: g + H + 0.55, z, ry: sd.ry + (Math.sin(i * 7.3) * 0.02), sy: 0.94 + Math.abs(Math.sin(i * 3.1)) * 0.12 });
+    }
+    instances(grp, merlonGeo, stoneM, list);
+    // arrow slits on the outer face, the odd drain spout
+    for (let i = 1; i < n - 1; i += 3) {
+      const lx = -sd.L / 2 + (i + 0.5) * (sd.L / n);
+      const [x, z] = at(lx, 1.09);
+      B.add(bbox(0.16, 0.95, 0.12, 0.02, 1), slitM, x, g + H - 1.9, z, 0, sd.ry, 0);
+    }
+    B.build();
+    const [x0, z0, x1, z1] = sd.box;
+    P.add({ type: 'box', x: (x0 + x1) / 2, z: (z0 + z1) / 2, hw: (x1 - x0) / 2, hd: (z1 - z0) / 2, rot: 0, top: g + H + 1.4 });
+    addFader(W, grp, x0 - 0.3, z0 - 0.3, x1 + 0.3, z1 + 0.3, g + H + 1.4);
+  }
+  // --- corner towers
+  const T = towerGeo();
+  for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    const x = F.x + cx * S, z = F.z + cz * S;
+    const grp = new THREE.Group(); root.add(grp);
+    const B = new Batch(grp);
+    B.add(T.body, stoneM, x, g, z, 0, cx * 0.7 + cz, 0);
+    B.add(T.roof, slateM, x, g, z);
+    B.add(T.fin, ironM, x, g, z);
+    for (let k = 0; k < 4; k++) {
+      const a = Math.atan2(cx, cz) + (k - 1.5) * 0.55;
+      B.add(bbox(0.16, 0.9, 0.2, 0.02, 1), slitM, x + Math.sin(a) * 3.0, g + 2.6 + (k % 2) * 1.6, z + Math.cos(a) * 3.0, 0, a, 0);
+    }
+    B.build();
+    P.add({ type: 'cyl', x, z, r: 3.25, top: g + H + 7 });
+    addFader(W, grp, x - 3.4, z - 3.4, x + 3.4, z + 3.4, g + H + 7);
+  }
+  // --- gatehouse with an arched passage
+  const gh = new THREE.Group(); root.add(gh);
+  {
+    const B = new Batch(gh);
+    const D = GATE.x1 - GATE.x0, Wd = GATE.half * 2, top = GATE.top;
+    const s = new THREE.Shape();
+    s.moveTo(-GATE.half, -2.6); s.lineTo(GATE.half, -2.6); s.lineTo(GATE.half, top); s.lineTo(-GATE.half, top); s.lineTo(-GATE.half, -2.6);
+    const hole = new THREE.Path(), hw = GATE.w / 2;
+    hole.moveTo(-hw, 0); hole.lineTo(hw, 0); hole.lineTo(hw, GATE.h - hw); hole.absarc(0, GATE.h - hw, hw, 0, Math.PI, false); hole.lineTo(-hw, 0);
+    s.holes.push(hole);
+    const geo = new THREE.ExtrudeGeometry(s, { depth: D, bevelEnabled: false, curveSegments: 16 });
+    geo.rotateY(Math.PI / 2);
+    boxUV(geo, TILE.fortStone);
+    B.add(geo, stoneM, GATE.x0, g, GATE.z);
+    // arch voussoirs and a plinth course on the outer face
+    const ring = new THREE.Shape();
+    ring.absarc(0, GATE.h - hw, hw + 0.42, 0, Math.PI, false); ring.lineTo(-hw, GATE.h - hw); ring.absarc(0, GATE.h - hw, hw, Math.PI, 0, true); ring.lineTo(hw + 0.42, GATE.h - hw);
+    const rg = new THREE.ExtrudeGeometry(ring, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 1, curveSegments: 16 });
+    rg.rotateY(-Math.PI / 2); boxUV(rg, 1.4);
+    B.add(rg, tm('stone', { color: '#c8ccd4' }), GATE.x0 + 0.02, g, GATE.z);
+    for (const sz of [-1, 1]) {
+      B.add(bbox(0.5, 0.7, Wd / 2 - hw + 0.1, 0.05, 1), stoneM, GATE.x0 - 0.15, g + 0.25, GATE.z + sz * (hw + (Wd / 2 - hw) / 2 + 0.05));
+      B.add(bbox(0.16, 1.0, 0.12, 0.02, 1), slitM, GATE.x0 - 0.01, g + 3.2, GATE.z + sz * (hw + 1.3));
+    }
+    // corbelled parapet with merlons on three sides
+    B.add(bbox(D + 0.5, 0.3, Wd + 0.5, 0.05, 1), stoneM, (GATE.x0 + GATE.x1) / 2, g + top - 0.15, GATE.z);
+    const list = [];
+    for (let i = 0; i < 5; i++) list.push({ x: GATE.x0 + 0.12, y: g + top, z: GATE.z - GATE.half + 0.6 + i * ((Wd - 1.2) / 4), ry: Math.PI / 2 });
+    for (const sz of [-1, 1]) for (let i = 1; i < 3; i++) list.push({ x: GATE.x0 - 0.05 + i * (D / 2.6), y: g + top, z: GATE.z + sz * (GATE.half - 0.18), ry: 0 });
+    instances(gh, merlonGeo, stoneM, list);
+    // the project's banners on the old gate
+    for (const sz of [-1, 1]) {
+      const bm = new THREE.MeshStandardMaterial({ map: bannerTex(), roughness: 0.85, side: THREE.DoubleSide });
+      const b = mesh(gh, bannerGeo(), bm, GATE.x0 - 0.12, g + top - 0.35, GATE.z + sz * (hw + 1.35), -Math.PI / 2, { cast: false });
+      void b;
+      B.add(cyl(0.035, 0.035, 1.3, 6).rotateX(Math.PI / 2), tm('brass', { rough: 0.4, metal: 0.7 }), GATE.x0 - 0.14, g + top - 0.3, GATE.z + sz * (hw + 1.35));
+    }
+    B.build();
+  }
+  P.add({ type: 'box', x: (GATE.x0 + GATE.x1) / 2, z: GATE.z - GATE.w / 2 - (GATE.half - GATE.w / 2) / 2, hw: (GATE.x1 - GATE.x0) / 2, hd: (GATE.half - GATE.w / 2) / 2, rot: 0, top: g + GATE.top + 0.8 });
+  P.add({ type: 'box', x: (GATE.x0 + GATE.x1) / 2, z: GATE.z + GATE.w / 2 + (GATE.half - GATE.w / 2) / 2, hw: (GATE.x1 - GATE.x0) / 2, hd: (GATE.half - GATE.w / 2) / 2, rot: 0, top: g + GATE.top + 0.8 });
+  // portcullis: an iron grid in a slot, spiked at the bottom; rises into the gatehouse
+  const pc = new THREE.Group(); root.add(pc);
+  {
+    const gw = GATE.w + 0.3, gh2 = GATE.h + 0.2, parts = [];
+    for (let i = 0; i < 9; i++) {
+      const z = -gw / 2 + 0.15 + i * ((gw - 0.3) / 8);
+      parts.push([bbox(0.1, gh2, 0.1, 0.02, 1), 0, gh2 / 2 + 0.1, z]);
+      parts.push([cyl(0.0, 0.07, 0.24, 6), 0, 0.02, z, Math.PI, 0, 0]);
+    }
+    for (let j = 0; j < 6; j++) parts.push([bbox(0.08, 0.09, gw, 0.02, 1), 0.02, 0.45 + j * 0.72, 0]);
+    mesh(pc, compose(parts), ironM, 0, 0, 0);
+    pc.position.set(34.05, g, GATE.z);
+  }
+  const pcCol = P.add({ type: 'box', x: 34.05, z: GATE.z, hw: 0.25, hd: GATE.w / 2 + 0.1, rot: 0, top: g + GATE.h + 0.2 });
+  addFader(W, gh, GATE.x0 - 0.6, GATE.z - GATE.half - 0.3, GATE.x1 + 0.3, GATE.z + GATE.half + 0.3, g + GATE.top + 0.8);
+  const gate = { mesh: pc, c: pcCol, open: false, t: 0, x: GATE.x0 - 1.9, z: GATE.z, y0: g };
+  W.gate = gate;
+  W.updaters.push((dt) => {
+    const want = gate.open ? 1 : 0;
+    if (gate.t === want) return;
+    gate.t = gate.open ? Math.min(1, gate.t + dt * 0.55) : Math.max(0, gate.t - dt * 0.8);
+    pc.position.y = gate.y0 + smoothstep(0, 1, gate.t) * 2.5;
+    pcCol.enabled = gate.t < 0.6;
+  });
+  W.arena = { x: F.x, z: F.z, half: S - 1 };
+}
+
+// ------------------------------------------------------------------ project kit
+const brassM = () => tm('brass', { rough: 0.38, metal: 0.75 });
+const tealM = () => tm('teal', { rough: 0.55, metal: 0.3 });
+const darkSteel = () => pm('#3a4048', 0.5, { metalness: 0.55 });
+// a flanged pipe run through points [x,y,z]: straight lengths, ball fittings at the bends, flanges
+function pipeRun(B, pts, r, { mat = tm('pipe', { rough: 0.5, metal: 0.35 }), flange = brassM(), every = 2.6 } = {}) {
+  const fl = cached('flange' + r, () => { const g = cyl(r * 1.42, r * 1.42, 0.09, 14); return g; });
+  const bolt = cached('fbolt' + r, () => compose(Array.from({ length: 8 }, (_, i) => { const a = (i / 8) * Math.PI * 2; return [cyl(0.025, 0.025, 0.13, 5), Math.cos(a) * r * 1.22, 0, Math.sin(a) * r * 1.22]; })));
+  for (let i = 0; i < pts.length - 1; i++) {
+    const { m, len, q } = rodMatrix(pts[i], pts[i + 1]);
+    B.addM(cyl(r, r, +len.toFixed(2), 14, TILE.pipe), mat, m);
+    const n = Math.max(1, Math.round(len / every));
+    for (let k = 0; k <= n; k++) {
+      if ((k === 0 && i > 0) || (k === n && i < pts.length - 2)) continue; // bends get a fitting instead
+      const t2 = k / n;
+      const p = new THREE.Vector3(...pts[i]).lerp(new THREE.Vector3(...pts[i + 1]), Math.min(0.985, Math.max(0.015, t2)));
+      const fm = new THREE.Matrix4().compose(p, q, new THREE.Vector3(1, 1, 1));
+      B.addM(fl, flange, fm); B.addM(bolt, darkSteel(), fm);
+    }
+  }
+  for (let i = 1; i < pts.length - 1; i++) {
+    B.add(cached('fit' + r, () => new THREE.SphereGeometry(r * 1.22, 14, 10)), mat, ...pts[i]);
+  }
+}
+// riveted tank: concrete plinth, teal shell with brass bands, dome, ladder, gauge, emblem
+function dialTex() {
+  return cached('dialTex', () => canvasTex(64, 64, (x) => {
+    x.fillStyle = '#f4efe0'; x.beginPath(); x.arc(32, 32, 30, 0, 7); x.fill();
+    x.strokeStyle = '#3a3020'; x.lineWidth = 2; for (let i = 0; i < 9; i++) { const a = Math.PI * 0.75 + (i / 8) * Math.PI * 1.5; x.beginPath(); x.moveTo(32 + Math.cos(a) * 22, 32 + Math.sin(a) * 22); x.lineTo(32 + Math.cos(a) * 28, 32 + Math.sin(a) * 28); x.stroke(); }
+    x.strokeStyle = '#d03020'; x.lineWidth = 5; x.beginPath(); x.arc(32, 32, 25, Math.PI * 0.05, Math.PI * 0.25); x.stroke();
+  }));
+}
+function gauge(B, parent, x, y, z, ry, s = 1) {
+  B.add(cached('gaugeBody', () => lathe([[0, 0], [0.16, 0], [0.17, 0.03], [0.17, 0.09], [0.15, 0.1], [0, 0.1]], 16)), brassM(), x, y, z, Math.PI / 2, ry, 0, s);
+  const face = mesh(parent, cached('dialq', () => new THREE.CircleGeometry(0.14, 20)), pm('#ffffff', 0.4, { map: dialTex() }), x + Math.sin(ry) * 0.101 * s, y, z + Math.cos(ry) * 0.101 * s, ry, { cast: false });
+  face.scale.setScalar(s);
+  const needle = mesh(parent, cached('needle', () => bbox(0.02, 0.12, 0.01, 0.004, 1).translate(0, 0.05, 0)), pm('#202020', 0.5), x + Math.sin(ry) * 0.11 * s, y, z + Math.cos(ry) * 0.11 * s, ry, { cast: false });
+  needle.scale.setScalar(s); needle.rotation.z = 1.2;
+  return needle;
+}
+function tankGeo(r, h) {
+  return cached(`tank${r},${h}`, () => {
+    const shell = lathe([[0, 0], [r + 0.02, 0], [r, 0.5], [r, h - 0.5], [r * 0.93, h - 0.22], [r * 0.72, h + 0.02], [r * 0.38, h + 0.2], [0, h + 0.25]], 32, TILE.teal);
+    const plinth = lathe([[0, -0.2], [r + 0.42, -0.2], [r + 0.42, 0.18], [r + 0.34, 0.26], [0, 0.26]], 32, TILE.concrete);
+    const bands = compose([0.55, h * 0.38, h * 0.7, h - 0.5].map((y) => [new THREE.TorusGeometry(r + 0.025, 0.055, 6, 40).rotateX(Math.PI / 2), 0, y, 0]).concat([[lathe([[0, 0], [0.42, 0], [0.42, 0.1], [0.34, 0.16], [0.3, 0.22], [0, 0.24]], 16), 0, h + 0.18, 0]]));
+    const rail = [], rungs = [];
+    for (const s of [-0.24, 0.24]) rail.push([cyl(0.03, 0.03, h - 0.2, 6), r + 0.2, 0.3 + (h - 0.2) / 2, s]);
+    for (let y = 0.6; y < h; y += 0.32) rungs.push([cyl(0.02, 0.02, 0.48, 5).rotateX(Math.PI / 2), r + 0.2, y, 0]);
+    for (const y of [0.8, h - 0.4]) for (const s of [-0.24, 0.24]) rail.push([cyl(0.025, 0.025, 0.22, 5).rotateZ(Math.PI / 2), r + 0.09, y, s]);
+    return { shell, plinth, bands, ladder: compose(rail.concat(rungs)) };
+  });
+}
+function tank(W, root, B, x, z, r, h, ry, face, g, vents) {
+  const T = tankGeo(r, h);
+  B.add(T.plinth, tm('concrete', { color: '#d8d4cc' }), x, g, z);
+  B.add(T.shell, tealM(), x, g + 0.26, z, 0, ry, 0);
+  B.add(T.bands, brassM(), x, g + 0.26, z, 0, ry, 0);
+  B.add(T.ladder, darkSteel(), x, g + 0.26, z, 0, ry, 0);
+  // curved emblem decal facing the yard
+  const th = 1.3 / r, ea = face;
+  const dec = mesh(root, cached('tdec' + r, () => new THREE.CylinderGeometry(r + 0.012, r + 0.012, 1.3, 10, 1, true, -th / 2, th)), emblemMaterial(), x, g + 0.26 + h * 0.55, z, ea, { cast: false });
+  void dec;
+  W.physics.add({ type: 'cyl', x, z, r: r + 0.42, top: g + h + 0.6 });
+  vents.push({ x, y: g + h + 0.55, z });
+}
+// Zeelich-tech module building: riveted teal walls with real openings, brass
+// corner posts and cornice, a brass barrel roof, round windows, a hazard-
+// framed sliding door. Door on the local +z face. Returns the group.
+function techBuilding(W, root, x, z, ry, { w, d, h, wins = [], picto = null, roofKit = 'vent', key }) {
+  const g = W.H(x, z);
+  const grp = new THREE.Group(); grp.position.set(x, g, z); grp.rotation.y = ry; root.add(grp);
+  const B = new Batch(grp);
+  const t = 0.24, base = 0.32;
+  const wallM = tm('teal', { rough: 0.6, metal: 0.25, color: '#e8f4f2' }), brass = brassM();
+  const conc = tm('concrete', { color: '#cfcac0' });
+  B.add(boxUV(bbox(w + 0.36, base, d + 0.36, 0.05, 1), TILE.concrete), conc, 0, base / 2 - 0.02, 0);
+  const door = { x: 0, y: 0, w: 1.2, h: 2.25 };
+  const holes = { front: [door], back: [], left: [], right: [] };
+  for (const o of wins) holes[o.side].push(o);
+  const sides = [
+    { n: 'front', len: w, pos: [0, base, d / 2 - t], ry: 0 },
+    { n: 'back', len: w, pos: [0, base, -d / 2 + t], ry: Math.PI },
+    { n: 'left', len: d - 2 * t, pos: [-w / 2 + t, base, 0], ry: -Math.PI / 2 },
+    { n: 'right', len: d - 2 * t, pos: [w / 2 - t, base, 0], ry: Math.PI / 2 },
+  ];
+  const glass = pm('#7fd8e8', 0.12, { metalness: 0.3, emissive: '#3ab8d0', emissiveIntensity: 0.35 });
+  for (const sd of sides) {
+    const geo = panelGeo(+sd.len.toFixed(3), h, t, holes[sd.n], TILE.teal);
+    const m4 = new THREE.Matrix4().compose(new THREE.Vector3(...sd.pos), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, sd.ry, 0)), new THREE.Vector3(1, 1, 1));
+    B.addM(geo, wallM, m4);
+    const at = (lx, ly, lz) => new THREE.Vector3(lx, ly, lz).applyMatrix4(m4);
+    for (const o of holes[sd.n]) {
+      if (o.round) {
+        const c = at(o.x, o.y + o.h / 2, t + 0.03);
+        B.add(cached('porth' + o.w, () => new THREE.TorusGeometry(o.w / 2 + 0.04, 0.07, 8, 24)), brass, c.x, c.y, c.z, 0, sd.ry, 0);
+        const c2 = at(o.x, o.y + o.h / 2, t * 0.4);
+        B.add(cached('portg' + o.w, () => new THREE.CircleGeometry(o.w / 2, 20)), glass, c2.x, c2.y, c2.z, 0, sd.ry, 0);
+        for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2, c3 = at(o.x + Math.cos(a) * (o.w / 2 + 0.04), o.y + o.h / 2 + Math.sin(a) * (o.w / 2 + 0.04), t + 0.09); B.add(cached('rivet', () => new THREE.SphereGeometry(0.03, 6, 4)), brass, c3.x, c3.y, c3.z); }
+      } else if (o.win) {
+        const c = at(o.x, o.y + o.h / 2, t * 0.4);
+        B.add(bbox(o.w, o.h, 0.04, 0.01, 1), glass, c.x, c.y, c.z, 0, sd.ry, 0);
+        for (const [fx, fy, fw, fh] of [[0, -o.h / 2 - 0.06, o.w + 0.3, 0.12], [0, o.h / 2 + 0.06, o.w + 0.3, 0.12], [-o.w / 2 - 0.06, 0, 0.12, o.h], [o.w / 2 + 0.06, 0, 0.12, o.h], [0, 0, 0.05, o.h]]) {
+          const c4 = at(o.x + fx, o.y + o.h / 2 + fy, t + 0.03);
+          B.add(bbox(fw, fh, 0.1, 0.02, 1), brass, c4.x, c4.y, c4.z, 0, sd.ry, 0);
+        }
+      } else {
+        // sliding door (dark teal, brass bands, a porthole) in a hazard-striped frame
+        const c = at(o.x, base * 0 + 1.12, t * 0.35);
+        B.add(bbox(1.16, 2.22, 0.08, 0.02, TILE.teal), tm('teal', { rough: 0.5, metal: 0.35, color: '#8ab4b4' }), c.x, c.y, c.z, 0, sd.ry, 0);
+        for (const yy of [0.35, 1.9]) { const c5 = at(o.x, yy, t * 0.35 + 0.05); B.add(bbox(1.1, 0.07, 0.03, 0.01, 1), brass, c5.x, c5.y, c5.z, 0, sd.ry, 0); }
+        const c6 = at(o.x, 1.45, t * 0.35 + 0.05);
+        B.add(cached('dporth', () => new THREE.TorusGeometry(0.17, 0.035, 6, 18)), brass, c6.x, c6.y, c6.z, 0, sd.ry, 0);
+        B.add(cached('dportg', () => new THREE.CircleGeometry(0.16, 16)), glass, c6.x, c6.y, c6.z - 0.01 * 0, 0, sd.ry, 0);
+        const haz = tm('hazard', { rough: 0.6 });
+        for (const [fx, fy, fw, fh] of [[-0.68, 1.15, 0.16, 2.42], [0.68, 1.15, 0.16, 2.42], [0, 2.38, 1.52, 0.16]]) {
+          const c7 = at(o.x + fx, fy, t + 0.04);
+          B.add(boxUV(bbox(fw, fh, 0.1, 0.02, 1), TILE.hazard), haz, c7.x, c7.y, c7.z, 0, sd.ry, 0);
+        }
+        // canopy and emblem over the door, a step
+        const c8 = at(o.x, 2.72, t + 0.35);
+        B.add(cached('canopy', () => { const s = new THREE.Shape(); s.moveTo(-0.95, 0); s.quadraticCurveTo(0, 0.5, 0.95, 0); s.lineTo(0.95, -0.08); s.quadraticCurveTo(0, 0.42, -0.95, -0.08); s.lineTo(-0.95, 0); const gg = new THREE.ExtrudeGeometry(s, { depth: 0.75, bevelEnabled: false }); gg.translate(0, 0, -0.375); return boxUV(gg, TILE.brass); }), brass, c8.x, c8.y, c8.z, 0, sd.ry, 0);
+        const c9 = at(o.x, -base + 0.1, t + 0.45);
+        B.add(boxUV(bbox(1.7, 0.2, 0.7, 0.04, 1), TILE.deck), tm('deck', { rough: 0.6, metal: 0.3 }), c9.x, c9.y, c9.z, 0, sd.ry, 0);
+        if (picto) {
+          const cp = at(o.x + 1.02, 1.55, t + 0.04);
+          B.add(bbox(0.5, 0.5, 0.04, 0.02, 1), brass, cp.x, cp.y, cp.z, 0, sd.ry, 0);
+          const pq = mesh(grp, cached('pictq', () => new THREE.PlaneGeometry(0.42, 0.42)), pm('#ffffff', 0.6, { map: picto }), cp.x + Math.sin(sd.ry) * 0.025, cp.y, cp.z + Math.cos(sd.ry) * 0.025, sd.ry, { cast: false });
+          void pq;
+        }
+      }
+    }
+  }
+  // brass corner posts, base band and cornice
+  for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) B.add(bbox(0.36, h + 0.1, 0.36, 0.06, 1), brass, cx * (w / 2 - 0.05), base + h / 2, cz * (d / 2 - 0.05));
+  for (const sz of [-1, 1]) { B.add(boxUV(bbox(w + 0.34, 0.28, 0.32, 0.05, 1), TILE.brass), brass, 0, base + h, sz * (d / 2)); B.add(boxUV(bbox(w + 0.04, 0.2, 0.3, 0.04, 1), TILE.teal), tm('teal', { color: '#80a8a8', rough: 0.6 }), 0, base + 0.1, sz * (d / 2 + 0.02)); }
+  for (const sx of [-1, 1]) { B.add(boxUV(bbox(0.32, 0.28, d + 0.34, 0.05, 1), TILE.brass), brass, sx * (w / 2), base + h, 0); B.add(boxUV(bbox(0.3, 0.2, d, 0.04, 1), TILE.teal), tm('teal', { color: '#80a8a8', rough: 0.6 }), sx * (w / 2 + 0.02), base + 0.1, 0); }
+  // barrel roof along x with closed ends
+  const rise = 0.75, a = w / 2 + 0.35;
+  const roof = cached(`broof${w},${d}`, () => {
+    const s = new THREE.Shape();
+    s.moveTo(-a, 0); s.quadraticCurveTo(0, 2 * rise, a, 0); s.lineTo(a, -0.16); s.quadraticCurveTo(0, 2 * rise - 0.16, -a, -0.16); s.lineTo(-a, 0);
+    const gg = new THREE.ExtrudeGeometry(s, { depth: d + 0.7, bevelEnabled: false, curveSegments: 16 });
+    gg.translate(0, 0, -(d + 0.7) / 2);
+    return boxUV(gg, TILE.brass);
+  });
+  B.add(roof, tm('brass', { rough: 0.45, metal: 0.6, color: '#d8c8a8' }), 0, base + h + 0.12, 0);
+  const endG = cached(`broofE${w}`, () => { const s = new THREE.Shape(); s.moveTo(-w / 2, 0); s.quadraticCurveTo(0, 2 * (rise - 0.1), w / 2, 0); s.lineTo(-w / 2, 0); const gg = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: false, curveSegments: 16 }); gg.translate(0, 0, -d / 2); return boxUV(gg, TILE.teal); });
+  B.add(endG, wallM, 0, base + h + 0.1, 0);
+  const em = mesh(grp, cached('emq', () => new THREE.PlaneGeometry(1, 1)), emblemMaterial(), 0, base + h + 0.12 + rise * 0.42, d / 2 + 0.012, 0, { cast: false });
+  em.scale.setScalar(0.56);
+  // seam ribs over the roof
+  for (let k = -2; k <= 2; k++) B.add(cached(`rib${w}`, () => { const pts = []; for (let i = 0; i <= 12; i++) { const u = -1 + i / 6; pts.push([u * a, (1 - u * u) * rise + 0.02, 0]); } return tube(pts, 0.04, 6, 1); }), brass, 0, base + h + 0.12, k * (d + 0.5) / 5);
+  // roof kit
+  const ry0 = base + h + 0.12 + rise;
+  if (roofKit === 'vent') {
+    B.add(boxUV(bbox(1.0, 0.5, 0.9, 0.06, 1), TILE.teal), tealM(), -w * 0.22, ry0 - 0.05, 0);
+    B.add(cached('fanring', () => new THREE.TorusGeometry(0.34, 0.05, 6, 20).rotateX(Math.PI / 2)), brass, -w * 0.22, ry0 + 0.22, 0);
+    B.add(cyl(0.02, 0.02, 1.6, 5, 1), darkSteel(), w * 0.3, ry0 + 0.6, 0.2);
+    B.add(cached('antball', () => new THREE.SphereGeometry(0.07, 8, 6)), glowCyan(), w * 0.3, ry0 + 1.42, 0.2);
+  } else {
+    // dish antenna on a tripod and a beacon cupola
+    const dish = cached('dish', () => lathe([[0, 0], [0.3, 0.02], [0.6, 0.12], [0.75, 0.24], [0.73, 0.26], [0.58, 0.15], [0.29, 0.06], [0, 0.04]], 20));
+    B.add(dish, tm('concrete', { color: '#f0eee8', rough: 0.5 }), w * 0.22, ry0 + 0.75, 0, -0.7, 0.6, 0);
+    B.add(cyl(0.05, 0.07, 0.8, 8, 1), darkSteel(), w * 0.22, ry0 + 0.3, 0);
+    B.add(cyl(0.02, 0.02, 0.5, 5, 1), brass, w * 0.22 + 0.15, ry0 + 0.95, 0.12, -0.7, 0.6, 0);
+    B.add(lathe([[0, 0], [0.42, 0], [0.42, 0.2], [0.34, 0.24], [0.34, 0.6], [0.4, 0.62], [0.3, 0.82], [0.08, 0.9], [0, 0.92]], 16), brass, -w * 0.25, ry0 - 0.1, 0);
+    B.add(cached('beacon', () => new THREE.SphereGeometry(0.22, 14, 10)), glowCyan(), -w * 0.25, ry0 + 0.32, 0);
+  }
+  B.build();
+  W.physics.add({ type: 'box', x, z, hw: w / 2 + 0.2, hd: d / 2 + 0.2, rot: ry, top: g + base + h + 1.0 });
+  const f = frame(x, z, ry);
+  const [dx, dz] = f(0, d / 2 + 1.0);
+  addFader(W, grp, Math.min(x - w / 2, x - d / 2) - 0.4, Math.min(z - d / 2, z - w / 2) - 0.4, Math.max(x + w / 2, x + d / 2) + 0.4, Math.max(z + d / 2, z + w / 2) + 0.4, g + base + h + 1.2);
+  void key;
+  return { grp, door: { x: dx, z: dz } };
+}
+function pictoTex(kind) {
+  return cached('picto' + kind, () => canvasTex(64, 64, (x) => {
+    x.fillStyle = '#16403f'; x.fillRect(0, 0, 64, 64);
+    x.fillStyle = '#bff8ff'; x.strokeStyle = '#bff8ff'; x.lineWidth = 3;
+    if (kind === 'office') { x.fillRect(16, 12, 26, 34); x.fillStyle = '#16403f'; for (let i = 0; i < 4; i++) x.fillRect(20, 18 + i * 7, 18, 2.5); x.fillStyle = '#bff8ff'; x.fillRect(22, 18, 26, 34); x.fillStyle = '#16403f'; for (let i = 0; i < 4; i++) x.fillRect(26, 24 + i * 7, 18, 2.5); }
+    else { x.beginPath(); x.arc(32, 36, 20, Math.PI, 0); x.stroke(); x.beginPath(); x.moveTo(32, 36); x.lineTo(46, 22); x.stroke(); x.beginPath(); x.arc(32, 36, 4, 0, 7); x.fill(); x.fillRect(10, 44, 44, 6); }
+  }));
+}
+
+// glow textures for the shaft and the transit beam
+function radialTex(stops) {
+  return cached('radial' + stops.join(), () => canvasTex(128, 128, (x) => {
+    const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    stops.forEach(([k, c]) => g.addColorStop(k, c));
+    x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  }));
+}
+function beamTex() {
+  return cached('beamTex', () => {
+    const t = canvasTex(64, 256, (x, w, h) => {
+      const g = x.createLinearGradient(0, h, 0, 0);
+      g.addColorStop(0, 'rgba(220,255,255,1)'); g.addColorStop(0.25, 'rgba(120,240,255,0.7)'); g.addColorStop(1, 'rgba(60,200,255,0)');
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+      x.globalCompositeOperation = 'destination-out';
+      for (let i = 0; i < 18; i++) { x.fillStyle = `rgba(0,0,0,${0.15 + Math.random() * 0.3})`; x.fillRect(Math.random() * w, 0, 2 + Math.random() * 6, h); }
+    });
+    t.wrapS = THREE.RepeatWrapping;
+    return t;
+  });
+}
+// Otringal's horned ring arch, sculpted as one smooth piece (ring in the YZ plane)
+function archGeo() {
+  return cached('arch', () => {
+    const Rc = 1.75, tr = 0.27, cy = 1.62;
+    const prims = [];
+    const N = 22;
+    for (let i = 0; i < N; i++) {
+      const a0 = (i / N) * Math.PI * 2, a1 = ((i + 1) / N) * Math.PI * 2;
+      prims.push({ type: 'cone', a: [0, cy + Math.sin(a0) * Rc, Math.cos(a0) * Rc], b: [0, cy + Math.sin(a1) * Rc, Math.cos(a1) * Rc], r1: tr, r2: tr, mat: 'r', group: 'ring' });
+    }
+    for (const s of [-1, 1]) {
+      const p0 = [0, cy + Math.sin(0.95) * Rc, s * Math.cos(0.95) * Rc];
+      const chain = [p0, [0, cy + 2.05, s * 1.62], [0, cy + 2.75, s * 2.02], [0, cy + 3.4, s * 2.0], [0, cy + 3.85, s * 1.62]];
+      const rr = [0.33, 0.27, 0.19, 0.11, 0.035];
+      for (let k = 0; k < chain.length - 1; k++) prims.push({ type: 'cone', a: chain[k], b: chain[k + 1], r1: rr[k], r2: rr[k + 1], mat: k > 2 ? 't' : 'h', group: 'horn' + s, sz: 0.85 });
+      // feet clasping the ring
+      prims.push({ type: 'box', c: [0, 0.32, s * 1.32], h: [0.42, 0.34, 0.5], round: 0.12, mat: 'f', group: 'foot' + s });
+      prims.push({ type: 'cone', a: [0, 0.5, s * 1.25], b: [0, cy + Math.sin(-0.75) * Rc, s * Math.cos(-0.75) * Rc], r1: 0.3, r2: 0.22, mat: 'f', group: 'foot' + s });
+    }
+    return sculptRigid({ key: 'arch', prims, groups: { ring: 0.05, horn1: 0.12, 'horn-1': 0.12, foot1: 0.1, 'foot-1': 0.1 }, joinK: 0.14,
+      colors: { r: '#2f8c8a', h: '#2a8280', t: '#1f6664', f: '#c89a48' },
+      paint: (p, m, c) => { c.offsetHSL(0, 0, Math.sin(p.y * 7 + p.z * 5) * 0.025 + (m === 'r' ? Math.max(0, p.x) * 0.15 : 0)); },
+      bounds: { min: [-0.5, -0.05, -2.45], max: [0.5, cy + 4.0, 2.45] }, cell: 0.055 });
+  });
+}
+
+function buildStation(W, root, r) {
+  const F = STATION, g = W.H(F.x, F.z);
+  buildFortress(W, root, g);
+  const P = W.physics;
+  const grp = new THREE.Group(); grp.name = 'station'; root.add(grp);
+  const B = new Batch(grp);
+  const vents = [];
+  const anim = { drill: null, block: null, needles: [], pistons: [], fans: [] };
+  const haz = tm('hazard', { rough: 0.6 }), deck = tm('deck', { rough: 0.6, metal: 0.3 });
+  const conc = tm('concrete', { color: '#d8d4cc' });
+
+  // --- the bore: concrete pad, deck plates with hazard borders, the shaft collar, the derrick
+  const BX = 51.5, BZ = 31.0;
+  {
+    B.add(boxUV(bbox(9.6, 0.26, 9.6, 0.06, 1), TILE.concrete), conc, BX, g + 0.11, BZ);
+    B.add(boxUV(bbox(8.8, 0.06, 8.8, 0.02, 1), TILE.deck), deck, BX, g + 0.26, BZ);
+    for (const s of [-1, 1]) {
+      B.add(boxUV(bbox(8.8, 0.07, 0.32, 0.02, 1), TILE.hazard), haz, BX, g + 0.27, BZ + s * 4.25);
+      B.add(boxUV(bbox(0.32, 0.07, 8.2, 0.02, 1), TILE.hazard), haz, BX + s * 4.25, g + 0.27, BZ);
+    }
+    P.add({ type: 'box', x: BX, z: BZ, hw: 4.8, hd: 4.8, rot: 0, top: g + 0.29, seeThrough: true });
+    // shaft collar: teal steel ring with a brass lip and bolted flange
+    const collar = lathe([[2.0, 0.0], [2.0, 1.05], [2.12, 1.16], [2.62, 1.16], [2.66, 1.06], [2.62, 0.4], [2.82, 0.3], [2.82, 0.0]], 40, TILE.teal);
+    B.add(collar, tealM(), BX, g + 0.28, BZ);
+    B.add(cached('lip', () => new THREE.TorusGeometry(2.38, 0.07, 6, 48).rotateX(Math.PI / 2)), brassM(), BX, g + 0.28 + 1.17, BZ);
+    const bolts = [];
+    for (let i = 0; i < 24; i++) { const a = (i / 24) * Math.PI * 2; bolts.push({ x: BX + Math.cos(a) * 2.72, y: g + 0.28 + 0.34, z: BZ + Math.sin(a) * 2.72 }); }
+    instances(grp, cached('hexbolt', () => cyl(0.06, 0.06, 0.1, 6)), darkSteel(), bolts, { cast: false });
+    // inside: dark walls glowing from below, the cyan core
+    const inner = new THREE.CylinderGeometry(1.98, 1.98, 1.06, 32, 4, true);
+    { const c = [], p = inner.attributes.position; for (let i = 0; i < p.count; i++) { const k = (p.getY(i) + 0.53) / 1.06; const col = new THREE.Color('#5ff0ff').lerp(new THREE.Color('#0c1a20'), Math.pow(k, 0.6)); c.push(col.r, col.g, col.b); } inner.setAttribute('color', new THREE.Float32BufferAttribute(c, 3)); }
+    mesh(grp, inner, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide }), BX, g + 0.28 + 0.53, BZ, 0, { cast: false });
+    const coreMat = new THREE.MeshBasicMaterial({ map: radialTex([[0, '#ffffff'], [0.18, '#c8ffff'], [0.45, '#2ad8f0'], [0.8, '#0a4a5a'], [1, '#081820']]), toneMapped: false });
+    const core = mesh(grp, new THREE.CircleGeometry(1.99, 40).rotateX(-Math.PI / 2), coreMat, BX, g + 0.3, BZ, 0, { cast: false });
+    core.receiveShadow = false;
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: radialTex([[0, 'rgba(160,250,255,0.9)'], [0.4, 'rgba(60,210,255,0.35)'], [1, 'rgba(0,120,200,0)']]), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+    halo.position.set(BX, g + 1.4, BZ); halo.scale.set(5.5, 3.2, 1); grp.add(halo);
+    const coreLight = new THREE.PointLight('#5ae8ff', 6, 12, 2); coreLight.position.set(BX, g + 1.2, BZ); grp.add(coreLight);
+    anim.core = { coreMat, halo, coreLight };
+    // cross beams carrying the rotary table
+    for (const ry of [0, Math.PI / 2]) B.add(boxUV(bbox(5.4, 0.22, 0.3, 0.03, 1), TILE.teal), tealM(), BX, g + 0.28 + 1.27, BZ, 0, ry, 0);
+    B.add(lathe([[0, 0], [0.75, 0], [0.78, 0.06], [0.78, 0.18], [0.6, 0.24], [0.2, 0.26], [0, 0.26]], 24), brassM(), BX, g + 0.28 + 1.36, BZ);
+    P.add({ type: 'cyl', x: BX, z: BZ, r: 2.85, top: g + 0.28 + 1.4 });
+    // derrick: four brass legs tapering to the crown, teal girts and X braces
+    const y0 = g + 0.29, Ht = 11.5, b0 = 2.85, b1 = 0.72;
+    const hwAt = (y) => b0 + (b1 - b0) * (y / Ht);
+    const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    for (const [cx, cz] of corners) member(B, [BX + cx * b0, y0, BZ + cz * b0], [BX + cx * b1, y0 + Ht, BZ + cz * b1], 0.24, brassM(), 1.2);
+    const lv = [0.15, 2.6, 5.0, 7.3, 9.5, 11.3];
+    for (let i = 0; i < lv.length; i++) {
+      const y = lv[i], hw = hwAt(y);
+      for (let k = 0; k < 4; k++) {
+        const [ax, az] = corners[k], [bx, bz] = corners[(k + 1) % 4];
+        member(B, [BX + ax * hw, y0 + y, BZ + az * hw], [BX + bx * hw, y0 + y, BZ + bz * hw], i === 0 ? 0.2 : 0.14, tealM(), 1.2);
+        if (i < lv.length - 1) {
+          const y2 = lv[i + 1], hw2 = hwAt(y2);
+          member(B, [BX + ax * hw, y0 + y, BZ + az * hw], [BX + bx * hw2, y0 + y2, BZ + bz * hw2], 0.09, tealM(), 1.2);
+          member(B, [BX + bx * hw, y0 + y, BZ + bz * hw], [BX + ax * hw2, y0 + y2, BZ + az * hw2], 0.09, tealM(), 1.2);
+        }
+      }
+    }
+    // feet plates, a hazard-striped band at the working platform, the crown block
+    for (const [cx, cz] of corners) {
+      B.add(boxUV(bbox(0.7, 0.14, 0.7, 0.03, 1), TILE.brass), brassM(), BX + cx * b0, y0 + 0.07, BZ + cz * b0);
+      P.add({ type: 'cyl', x: BX + cx * b0, z: BZ + cz * b0, r: 0.4, top: g + Ht, seeThrough: true });
+    }
+    const wy = 5.0, whw = hwAt(wy) + 0.35;
+    for (const s of [-1, 1]) {
+      B.add(boxUV(bbox(whw * 2, 0.08, 0.7, 0.02, 1), TILE.deck), deck, BX, y0 + wy + 0.12, BZ + s * (whw - 0.35));
+      B.add(boxUV(bbox(0.7, 0.08, whw * 2 - 1.4, 0.02, 1), TILE.deck), deck, BX + s * (whw - 0.35), y0 + wy + 0.12, BZ);
+      B.add(boxUV(bbox(whw * 2 + 0.06, 0.16, 0.06, 0.02, 1), TILE.hazard), haz, BX, y0 + wy + 0.1, BZ + s * whw);
+      B.add(boxUV(bbox(0.06, 0.16, whw * 2, 0.02, 1), TILE.hazard), haz, BX + s * whw, y0 + wy + 0.1, BZ);
+      for (const yy of [0.55, 1.05]) { B.add(cyl(0.03, 0.03, whw * 2, 6).rotateZ(Math.PI / 2), brassM(), BX, y0 + wy + 0.15 + yy, BZ + s * whw); B.add(cyl(0.03, 0.03, whw * 2, 6).rotateX(Math.PI / 2), brassM(), BX + s * whw, y0 + wy + 0.15 + yy, BZ); }
+    }
+    B.add(boxUV(bbox(2.1, 0.75, 2.1, 0.1, 1), TILE.teal), tealM(), BX, y0 + Ht + 0.3, BZ);
+    B.add(boxUV(bbox(2.3, 0.14, 2.3, 0.05, 1), TILE.brass), brassM(), BX, y0 + Ht + 0.72, BZ);
+    for (const s of [-0.35, 0.35]) B.add(cached('sheave', () => new THREE.TorusGeometry(0.42, 0.09, 8, 22)), brassM(), BX + s, y0 + Ht + 1.05, BZ);
+    B.add(cyl(0.025, 0.025, 2.2, 5, 1), darkSteel(), BX + 0.7, y0 + Ht + 1.8, BZ + 0.7);
+    B.add(cached('antball', () => new THREE.SphereGeometry(0.07, 8, 6)), glowCyan(), BX + 0.7, y0 + Ht + 2.9, BZ + 0.7);
+    B.add(cached('beacon', () => new THREE.SphereGeometry(0.22, 14, 10)), glowCyan(), BX, y0 + Ht + 0.95, BZ, 0, 0, 0, 0.7);
+    for (const s of [-1, 1]) { const e = mesh(grp, cached('emq', () => new THREE.PlaneGeometry(1, 1)), emblemMaterial(), BX, y0 + Ht + 0.3, BZ + s * 1.06, s > 0 ? 0 : Math.PI, { cast: false }); e.scale.setScalar(0.66); }
+    // drill string, travelling block on its cables
+    const drill = new THREE.Group(); drill.position.set(BX, 0, BZ); grp.add(drill);
+    mesh(drill, cyl(0.13, 0.13, Ht - 1.6, 10, 1), tm('brass', { rough: 0.3, metal: 0.8, color: '#e0d0b0' }), 0, y0 + 0.6 + (Ht - 1.6) / 2, 0);
+    mesh(drill, bbox(0.42, 0.9, 0.42, 0.05, 1), tealM(), 0, y0 + 2.6, 0);
+    for (let k = 0; k < 3; k++) mesh(drill, cyl(0.2, 0.2, 0.12, 12), brassM(), 0, y0 + 1.7 + k * 2.6, 0);
+    anim.drill = drill;
+    const block = new THREE.Group(); block.position.set(BX, y0 + 8.4, BZ); grp.add(block);
+    mesh(block, bbox(0.75, 1.0, 0.5, 0.1, 1), tm('teal', { color: '#f0c040', rough: 0.5 }), 0, 0, 0);
+    mesh(block, boxUV(bbox(0.78, 0.22, 0.53, 0.04, 1), TILE.hazard), haz, 0, -0.42, 0);
+    for (const s of [-0.25, 0.25]) mesh(block, cyl(0.02, 0.02, 2.6, 4), darkSteel(), s, 1.8, 0);
+    anim.block = block;
+  }
+
+  // --- tanks along the north wall, pipes to the bore and across the gate lane to the pump
+  tank(W, grp, B, 40.2, 27.9, 2.0, 5.0, Math.PI * 0.5, Math.PI * 0.8, g, vents);
+  tank(W, grp, B, 44.6, 27.0, 1.45, 3.7, Math.PI * 0.62, Math.PI * 0.95, g, vents);
+  anim.needles.push(gauge(B, grp, 42.18, g + 1.7, 28.4, Math.PI / 2));
+  pipeRun(B, [[42.1, g + 0.75, 27.5], [43.3, g + 0.75, 27.5]], 0.22);
+  pipeRun(B, [[46.0, g + 0.75, 27.0], [47.4, g + 0.75, 27.0], [47.4, g + 0.75, 29.6], [49.1, g + 0.75, 29.6]], 0.22);
+  for (const [x, z] of [[47.4, 28.2]]) { B.add(boxUV(bbox(0.5, 0.55, 0.5, 0.04, 1), TILE.concrete), conc, x, g + 0.27, z); }
+  P.add({ type: 'box', x: 47.4, z: 28.3, hw: 0.4, hd: 1.4, rot: 0, top: g + 1.0, noStand: true, seeThrough: true });
+  // the big main: up from tank 1, over the gate lane on a trestle bridge, down to the pump
+  const yB = g + 4.3;
+  const MX = 39.4;
+  pipeRun(B, [[MX, g + 1.0, 29.6], [MX, yB, 29.6], [MX, yB, 41.4], [MX, g + 0.85, 41.4], [MX, g + 0.85, 43.7], [38.75, g + 0.85, 43.7]], 0.26);
+  for (const z of [32.6, 39.6]) {
+    for (const s of [-1, 1]) member(B, [MX + s * 1.1, g, z], [MX + s * 0.2, yB - 0.3, z], 0.18, tealM(), 1.2);
+    B.add(boxUV(bbox(2.0, 0.18, 0.3, 0.03, 1), TILE.teal), tealM(), MX, yB - 0.32, z);
+    B.add(cached('saddle', () => new THREE.TorusGeometry(0.29, 0.05, 6, 16, Math.PI).rotateZ(Math.PI)), brassM(), MX, yB, z, 0, 0, 0);
+    for (const s of [-1, 1]) { B.add(boxUV(bbox(0.5, 0.12, 0.5, 0.02, 1), TILE.brass), brassM(), MX + s * 1.1, g + 0.06, z); P.add({ type: 'cyl', x: MX + s * 1.05, z, r: 0.22, top: yB, seeThrough: true }); }
+  }
+  // a project sign hung under the bridge over the lane
+  {
+    B.add(boxUV(bbox(0.12, 1.1, 2.6, 0.03, 1), TILE.brass), brassM(), MX, yB - 1.0, 36.0);
+    for (const s of [-1, 1]) B.add(cyl(0.02, 0.02, 0.55, 5, 1), darkSteel(), MX, yB - 0.42, 36.0 + s * 1.1);
+    for (const s of [-1, 1]) { const e = mesh(grp, cached('emq', () => new THREE.PlaneGeometry(1, 1)), emblemMaterial(), MX + s * 0.07, yB - 1.0, 36.0, s > 0 ? Math.PI / 2 : -Math.PI / 2, { cast: false }); e.scale.setScalar(0.9); }
+  }
+  P.add({ type: 'cyl', x: MX, z: 29.6, r: 0.4, top: yB, seeThrough: true });
+  P.add({ type: 'box', x: MX, z: 42.5, hw: 0.35, hd: 1.3, rot: 0, top: g + 1.2, noStand: true, seeThrough: true });
+  // pump: concrete bed, pump casing, ribbed motor, flywheel; the main leaves through the west wall
+  {
+    const PX = 38.0, PZ = 43.9;
+    B.add(boxUV(bbox(2.6, 0.3, 2.2, 0.05, 1), TILE.concrete), conc, PX, g + 0.13, PZ);
+    B.add(lathe([[0, -0.55], [0.5, -0.55], [0.58, -0.4], [0.58, 0.4], [0.5, 0.55], [0, 0.55]], 20, TILE.teal).rotateZ(Math.PI / 2), tealM(), PX + 0.2, g + 0.85, PZ - 0.2);
+    const motor = cached('motor', () => { const pts = [[0, -0.45]]; for (let i = 0; i <= 12; i++) pts.push([i % 2 ? 0.4 : 0.44, -0.45 + i * 0.075]); pts.push([0, 0.45]); return lathe(pts, 18).rotateX(Math.PI / 2); });
+    B.add(motor, brassM(), PX + 0.2, g + 0.85, PZ + 0.75);
+    const fly = mesh(grp, cached('flywheel', () => compose([[new THREE.TorusGeometry(0.42, 0.07, 8, 24)], ...[0, 1, 2].map((k) => [bbox(0.84, 0.06, 0.05, 0.01, 1), 0, 0, 0, 0, 0, (k * Math.PI) / 3]), [cyl(0.1, 0.1, 0.12, 10).rotateX(Math.PI / 2)]])), darkSteel(), PX + 0.2, g + 0.85, PZ + 1.32);
+    anim.fans.push(fly);
+    anim.needles.push(gauge(B, grp, PX - 0.45, g + 1.45, PZ - 0.2, -Math.PI / 2, 1.2));
+    pipeRun(B, [[PX - 0.35, g + 0.85, PZ - 0.2], [PX - 1.0, g + 0.85, PZ - 0.2], [PX - 1.0, g + 2.9, PZ - 0.2], [33.4, g + 2.9, PZ - 0.2]], 0.26);
+    P.add({ type: 'box', x: PX, z: PZ, hw: 1.35, hd: 1.15, rot: 0, top: g + 1.6, noStand: true, seeThrough: true });
+    vents.push({ x: PX + 0.2, y: g + 1.5, z: PZ - 0.2, small: true });
+  }
+
+  // --- office and control buildings, doors facing the yard (north)
+  const office = techBuilding(W, grp, 43.2, 45.5, 0, { w: 6.2, d: 4.4, h: 3.0, picto: pictoTex('office'), roofKit: 'vent',
+    wins: [{ side: 'front', x: -1.9, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'front', x: 1.9, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'left', x: 0, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'right', x: 0, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'back', x: -1.5, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'back', x: 1.5, y: 1.0, w: 0.85, h: 0.85, round: true }] });
+  const control = techBuilding(W, grp, 50.3, 45.6, 0, { w: 5.0, d: 4.2, h: 3.0, picto: pictoTex('control'), roofKit: 'dish',
+    wins: [{ side: 'front', x: -1.6, y: 1.0, w: 0.75, h: 1.0, win: true }, { side: 'front', x: 1.75, y: 1.0, w: 0.75, h: 1.0, win: true }, { side: 'right', x: 0, y: 1.0, w: 0.8, h: 0.8, round: true }, { side: 'left', x: 0, y: 1.0, w: 0.8, h: 0.8, round: true }] });
+
+  // --- transit beam pad: stepped round platform, hazard ring, emitter, the horned arch, the light column
+  const BP = { x: 56.4, z: 40.4 };
+  const padTop = g + 0.48;
+  {
+    const plat = boxUV(lathe([[0, 0.48], [2.35, 0.48], [2.45, 0.44], [2.55, 0.26], [3.0, 0.26], [3.08, 0.2], [3.12, 0.0], [0, 0.0]], 48), TILE.deck);
+    B.add(plat, deck, BP.x, g, BP.z);
+    B.add(cached('padring', () => { const gg = new THREE.RingGeometry(1.95, 2.3, 48, 1); gg.rotateX(-Math.PI / 2); return boxUV(gg, 0.9); }), haz, BP.x, padTop + 0.005, BP.z);
+    B.add(cached('padedge', () => new THREE.TorusGeometry(2.42, 0.07, 6, 48).rotateX(Math.PI / 2)), brassM(), BP.x, padTop - 0.03, BP.z);
+    B.add(cached('emitRing', () => new THREE.TorusGeometry(1.0, 0.09, 8, 36).rotateX(Math.PI / 2)), brassM(), BP.x, padTop + 0.02, BP.z);
+    const emit = new THREE.MeshBasicMaterial({ map: radialTex([[0, '#ffffff'], [0.3, '#bff8ff'], [0.75, '#2ac8e8'], [1, '#0a5060']]), toneMapped: false });
+    mesh(grp, new THREE.CircleGeometry(0.98, 32).rotateX(-Math.PI / 2), emit, BP.x, padTop + 0.012, BP.z, 0, { cast: false });
+    P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 2.5, top: padTop, seeThrough: true });
+    P.add({ type: 'cyl', x: BP.x, z: BP.z, r: 3.1, top: g + 0.26, seeThrough: true });
+    // the arch stands across the pad: its ring faces west, toward the gate
+    const arch = mesh(grp, archGeo(), VC(), BP.x, padTop - 0.12, BP.z, 0);
+    void arch;
+    B.add(cached('archInner', () => new THREE.TorusGeometry(1.48, 0.06, 8, 48).rotateY(Math.PI / 2)), tm('brass', { rough: 0.3, metal: 0.8, color: '#d06040' }), BP.x, padTop - 0.12 + 1.62, BP.z);
+    for (const s of [-1, 1]) P.add({ type: 'cyl', x: BP.x, z: BP.z + s * 1.5, r: 0.5, top: padTop + 5, seeThrough: true });
+    // light column
+    const colM = new THREE.MeshBasicMaterial({ map: beamTex(), color: '#9ff4ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
+    const col1 = mesh(grp, new THREE.CylinderGeometry(1.15, 1.25, 26, 28, 1, true).translate(0, 13, 0), colM, BP.x, padTop, BP.z, 0, { cast: false });
+    const colM2 = colM.clone(); colM2.color.set('#ffffff');
+    const col2 = mesh(grp, new THREE.CylinderGeometry(0.45, 0.55, 26, 18, 1, true).translate(0, 13, 0), colM2, BP.x, padTop, BP.z, 0, { cast: false });
+    col1.visible = col2.visible = false;
+    const beamLight = new THREE.PointLight('#7af0ff', 0, 14, 2); beamLight.position.set(BP.x, padTop + 1.5, BP.z); grp.add(beamLight);
+    anim.beam = { colM, colM2, col1, col2, beamLight, emit, k: 0, on: false };
+  }
+
+  // --- floodlight masts, crates, barrels, deck walkway from the gate
+  for (const [x, z] of [[58.2, 25.8], [37.6, 47.0]]) {
+    B.add(lathe([[0, 0], [0.42, 0], [0.42, 0.12], [0.16, 0.2], [0.11, 7.0], [0.16, 7.1], [0, 7.15]], 12, TILE.teal), tealM(), x, g, z);
+    B.add(boxUV(bbox(1.8, 0.12, 0.16, 0.03, 1), TILE.brass), brassM(), x, g + 7.0, z, 0, Math.atan2(48 - x, 36 - z) + Math.PI / 2, 0);
+    for (const s of [-0.65, 0.65]) {
+      const a = Math.atan2(48 - x, 36 - z);
+      const lx = x + Math.cos(a) * s, lz = z - Math.sin(a) * s;
+      B.add(cached('flood', () => lathe([[0, 0], [0.2, 0], [0.3, 0.3], [0.3, 0.36], [0, 0.36]], 14).rotateX(Math.PI / 2 + 0.5)), darkSteel(), lx, g + 7.25, lz, 0, a, 0);
+      B.add(cached('floodL', () => new THREE.CircleGeometry(0.27, 16).translate(0, 0, 0.37).rotateX(0.5)), pm('#fffbe8', 0.3, { emissive: '#fff4c8', emissiveIntensity: 2.0 }), lx, g + 7.25, lz, 0, a, 0);
+    }
+    P.add({ type: 'cyl', x, z, r: 0.42, top: g + 7, seeThrough: true });
+  }
+  crateStack(W, grp, [[58.3, 31.4, 2], [58.6, 32.6, 1], [57.2, 32.2, 1, 0.8]], r);
+  techCrates(W, grp, [[57.8, 34.6, 2, 0.95], [58.4, 36.0, 1, 0.95]], r);
+  barrels(W, grp, [[36.9, 41.0], [37.6, 41.4], [37.1, 40.1, false]], r);
+  // walkway plates from the gate passage to the pad
+  for (let x = 38.0; x < 53.4; x += 1.6) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);
+  B.build();
+
+  // --- machinery animation and steam (setActive), the beam (setBeam)
+  const steam = steamSystem(grp, 48);
+  let active = false, emitT = 0;
+  const st = {
+    x: F.x, z: F.z,
+    office: { door: office.door }, control: { door: control.door },
+    beamPad: { x: BP.x, y: padTop, z: BP.z }, bore: { x: BX, z: BZ },
+    active: false, beam: false,
+    setActive(on) { active = !!on; st.active = active; },
+    setBeam(on) { anim.beam.on = !!on; st.beam = !!on; if (on) { anim.beam.col1.visible = anim.beam.col2.visible = true; } },
+  };
+  W.station = st;
+  W.updaters.push((dt, t) => {
+    steam.update(dt);
+    const run = active ? 1 : 0.15;
+    anim.drill.rotation.y += dt * (active ? 2.6 : 0.0);
+    anim.block.position.y = g + 0.29 + 8.4 + (active ? Math.sin(t * 0.6) * 0.5 : 0);
+    for (const f of anim.fans) f.rotation.z += dt * (active ? 5 : 0);
+    anim.needles.forEach((n, i) => { n.rotation.z = (active ? -0.4 : 1.1) + Math.sin(t * (2 + i) + i) * (active ? 0.12 : 0.02); });
+    const pulse = 0.8 + Math.sin(t * (active ? 3.2 : 1.1)) * 0.2;
+    anim.core.coreLight.intensity = (active ? 9 : 4) * pulse;
+    anim.core.halo.material.opacity = (active ? 0.95 : 0.55) * pulse;
+    if (active) {
+      emitT -= dt;
+      if (emitT <= 0) {
+        emitT = 0.12;
+        const v = vents[Math.floor(Math.random() * vents.length)];
+        steam.emit(v.x, v.y, v.z, { size: v.small ? 0.5 : 0.9, vy: 1.6, life: 1.8 });
+        if (Math.random() < 0.5) steam.emit(BX + (Math.random() - 0.5) * 2.4, g + 1.6, BZ + (Math.random() - 0.5) * 2.4, { size: 1.1, vy: 1.1, life: 2.2 });
+      }
+    }
+    // the transit beam fades in and out
+    const B2 = anim.beam;
+    B2.k += ((B2.on ? 1 : 0) - B2.k) * (1 - Math.exp(-dt * 3));
+    const flick = 0.9 + Math.sin(t * 23) * 0.05 + Math.sin(t * 7.1) * 0.05;
+    B2.colM.opacity = B2.k * 0.55 * flick; B2.colM2.opacity = B2.k * 0.8 * flick;
+    B2.colM.map.offset.x = t * 0.15;
+    B2.beamLight.intensity = B2.k * 18;
+    if (B2.k < 0.01 && !B2.on) B2.col1.visible = B2.col2.visible = false;
+    void run;
+  });
+  // a lamp-light over the yard so the station reads at dusk
+  const yl = new THREE.PointLight('#c8f0ff', 4, 22, 1.8); yl.position.set(F.x, g + 7.5, F.z + 2); grp.add(yl); W.lights.push(yl);
+}
+
 // ================================================================== entry
 export function buildIsland(scene, W) {
   const r = rng(4242);
   W.signs = W.signs || [];
   buildHarbour(W, scene, r);
+  buildStation(W, scene, r);
   W.island = { keepClear };
 }

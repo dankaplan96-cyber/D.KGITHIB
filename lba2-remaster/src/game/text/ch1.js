@@ -5,6 +5,9 @@ Object.assign(STR.he, {
   n_vesk: 'וסק', n_worker: 'עובד המיזם', n_guard: 'שומר המיזם', n_radio: 'קול ברדיו', n_baldino: 'בלדינו',
   p_valve: 'סובב', p_look: 'הסתכל',
 
+  c1_arrive_1: 'המעבורת של המיזם נכנסת לנמל בלי קול. אין לה מפרש ואין לה משוטים, רק אור כחלחל שמתחת לשדרית.',
+  c1_vesk_speech: 'תושבי המצודה! שמי וסק. המיזם המשותף מביא לכם חום, אור ומים... טוב, את המים נחזיר בקרוב. מבטיח.',
+  c1_gil_speech: '"נחזיר בקרוב". ככה אמר גם פאנפרוק על המיסים.',
   c1_tw_morning: 'היא? מי זו "היא"? סנדל לא אמר יותר מזה... והכדור חזר אליי רק אחרי שהקיר נרגע.',
   c1_gil_morning: 'טווינסן! ירדת לשם כל הלילה? הבאר עדיין יבשה. ותשמע את זה: מעבורת המיזם המשותף נכנסת היום לנמל. אומרים שהמהנדס הראשי בעצמו עליה.',
   c1_tw_morning2: '(קודם הביתה. זואי בטח לא ישנה כל הלילה.)',
@@ -133,6 +136,9 @@ Object.assign(STR.en, {
   n_vesk: 'Vesk', n_worker: 'Project worker', n_guard: 'Project guard', n_radio: 'Voice on the radio', n_baldino: 'Baldino',
   p_valve: 'Turn', p_look: 'Look',
 
+  c1_arrive_1: 'The project ferry glides into the harbour without a sound. No sail, no oars — only a bluish light under the keel.',
+  c1_vesk_speech: 'Citizens of Citadel! My name is Vesk. The Joint Project brings you warmth, light and water... well, the water we will return shortly. I promise.',
+  c1_gil_speech: '"Shortly." That\'s what Funfrock said about the taxes.',
   c1_tw_morning: '"Her"? Who is "her"? Sendell said nothing more... and the ball only came back once the wall calmed down.',
   c1_gil_morning: "Twinsen! Were you down there all night? The well's still dry. And listen: the Joint Project ferry docks today. They say the chief engineer himself is on board.",
   c1_tw_morning2: "(Home first. Zoe can't have slept a wink.)",

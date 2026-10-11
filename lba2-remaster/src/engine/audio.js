@@ -2,6 +2,8 @@
 // synthesised with WebAudio, so the remaster ships without any of the
 // original (copyrighted) sound or music files.
 
+import { Music } from './music.js';
+
 const NOTE = (n) => 440 * Math.pow(2, (n - 69) / 12);
 
 export class AudioEngine {
@@ -41,7 +43,9 @@ export class AudioEngine {
     this.noiseBuf = this._noise(2);
     this.applyVolumes();
     this._ambient();
-    this._startMusic();
+    this.music = new Music(this);
+    this.music.setTheme(this.mood);
+    this.music.start();
   }
 
   applyVolumes() {
@@ -111,7 +115,7 @@ export class AudioEngine {
     this.windGain.gain.setTargetAtTime(0.25 * f + 0.03, t, 0.5);
   }
 
-  setMood(m) { this.mood = m; }
+  setMood(m) { this.mood = m; this.music?.setTheme(m); }
   setCombat(c) { this.combat = c; }
 
   // ---- music: generative, mood-driven (storm = minor, clear = major) ----
@@ -255,6 +259,7 @@ export class AudioEngine {
       case 'door': this._burst({ dur: 1.2, vol: 0.25, f: 300, f1: 80 }); this._tone({ type: 'sawtooth', f0: 70, f1: 50, dur: 1.2, vol: 0.06 }); break;
       case 'rumble': this._burst({ dur: 1.5, vol: 0.3, f: 200, f1: 60 }); break;
       case 'thunder': this._burst({ dur: 2.8, vol: 0.5, f: 400, f1: 40 }); this._burst({ dur: 0.3, vol: 0.3, f: 3000, f1: 300 }); break;
+      case 'horn': this._tone({ type: 'sawtooth', f0: 147, f1: 140, dur: 1.4, vol: 0.12 }); this._tone({ type: 'sawtooth', f0: 220, f1: 210, dur: 1.4, vol: 0.08 }); break;
       case 'deny': this._tone({ type: 'square', f0: 200, f1: 150, dur: 0.15, vol: 0.08 }); break;
       case 'victory': [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => this._tone({ type: 'triangle', f0: f, dur: 0.5, vol: 0.12, at: i * 0.14 })); break;
     }

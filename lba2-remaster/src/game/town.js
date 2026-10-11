@@ -289,7 +289,7 @@ export function buildTown(scene, W) {
     built[i].group.position.set(hd.x, g - 0.05, hd.z);
     built[i].group.rotation.y = hd.ry;
     scene.add(built[i].group);
-    for (const c of built[i].colliders) physics.add({ type: 'box', x: hd.x, z: hd.z, hw: c.hw, hd: c.hd, rot: hd.ry, top: g + c.top });
+    for (const c of built[i].colliders) physics.add({ type: 'box', x: hd.x, z: hd.z, hw: c.hw, hd: c.hd, rot: hd.ry, top: g + c.top, fades: true });
     const dz = built[i].door.z, dx = built[i].door.x;
     const door = { x: hd.x + Math.sin(hd.ry) * dz + Math.cos(hd.ry) * dx, z: hd.z + Math.cos(hd.ry) * dz - Math.sin(hd.ry) * dx };
     const info = { x: hd.x, z: hd.z, ry: hd.ry, w: hd.w, d: hd.d, g, door, id: hd.id };
@@ -377,12 +377,17 @@ export function buildTown(scene, W) {
     return { h, top: h.g + hd.h + built[i].gableH + 0.6, mats: [...mats.values()], f: 1 };
   });
   const sample = new THREE.Vector3();
+  const CORRIDOR = [[0, 0.4], [0, 1.0], [0, 1.8], [-3, 1.0], [3, 1.0], [-1.5, 2.6], [1.5, 2.6]];
+  const right = new THREE.Vector3();
   W.fadeOccluders = (cam, hero, dt) => {
+    right.setFromMatrixColumn(cam.matrixWorld, 0).setY(0).normalize();
     for (const F of fades) {
       const { h } = F;
       let hit = false;
-      for (const hy of [0.4, 1.0, 1.8]) for (let k = 1; k < 16 && !hit; k++) {
-        sample.set(hero.x, hero.y + hy, hero.z).lerp(cam.position, k / 16);
+      // a corridor of sight lines: to Twinsen and to points 3 m either side of him, so a
+      // house that would fill the foreground of the shot fades too, not only one that hides him
+      for (const [ox, hy] of CORRIDOR) for (let k = 1; k < 16 && !hit; k++) {
+        sample.set(hero.x + right.x * ox, hero.y + hy, hero.z + right.z * ox).lerp(cam.position, k / 16);
         const dx = sample.x - h.x, dz = sample.z - h.z;
         const lx = dx * Math.cos(h.ry) - dz * Math.sin(h.ry), lz = dx * Math.sin(h.ry) + dz * Math.cos(h.ry);
         if (Math.abs(lx) < h.w / 2 + 0.6 && Math.abs(lz) < h.d / 2 + 0.6 && sample.y < F.top) hit = true;

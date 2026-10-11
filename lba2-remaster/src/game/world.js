@@ -9,6 +9,7 @@ import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
+import { buildIsland, keepClear } from './island.js';
 
 export const POI = {
   start: { x: -38, z: 4 },
@@ -42,9 +43,9 @@ const BAY = { x1: QUAY.x0 - 0.1, z0: QUAY.z0 + 0.6, z1: QUAY.z1 - 0.6 };
 export const PATHS = [
   [[-42, -4], [-30, -30], [-14, -55], [2, -72]],
   [[-42, -4], [-28, 18], [-6, 42], [8, 52]],
-  [[8, 52], [26, 44], [36, 36]],
+  [[8, 52], [26, 44], [32.5, 36]],
   [[-42, -4], [-12, -8], [14, -7], [33, -7]],
-  [[36, 36], [40, 16], [34, -2]],
+  [[31.5, 34], [30.5, 21], [37, 14], [34, -2]],
 ];
 
 export function pathDist(x, z) {
@@ -141,7 +142,7 @@ function baseHeight(x, z) {
   // Funfrock's fortress on its rock
   {
     const F = POI.fort, s = F.half + 3;
-    const d = boxDist(x, z, F.x - s, F.z - s, F.x + s, F.z + s);
+    const d = boxDist(x, z, F.x - s - 3, F.z - s, F.x + s, F.z + s); // a forecourt before the west gate
     h = lerp(h, level(1), 1 - smoothstep(0, 2.2, d));
   }
   // harbour: the basin and the quay
@@ -265,6 +266,7 @@ function islandSplat(x, z, h, slope, w) {
   if (boxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 - 1, QUAY.z1) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
   const fd = Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z));
   if (fd < POI.fort.half) w[4] = 3;
+  if (boxDist(x, z, POI.fort.x - POI.fort.half - 5, POI.fort.z - 4.5, POI.fort.x - POI.fort.half + 1, POI.fort.z + 4.5) < n * 1.2) w[4] = 3; // the forecourt
   { const pave = 1 - Math.min(1, w[4] / 1.5); w[3] *= pave; w[0] *= pave; w[1] *= pave; w[2] *= pave; } // paving covers paths, soil and grass
   if (w[2] > 0) { w[0] *= 1 - Math.min(1, w[2]); w[3] *= 1 - Math.min(1, w[2]); w[1] *= 1 - Math.min(1, w[2]); }
 }
@@ -404,6 +406,7 @@ export function buildWorld(parentScene) {
     if (terrain.slopeAt(x, z) > 0.55) return false;
     for (const e of exclusions) if (Math.hypot(x - e.x, z - e.z) < e.r) return false;
     if (pathDist(x, z) < clear) return false;
+    if (keepClear(x, z, 0.5)) return false;
     return true;
   };
   const trees = [];
@@ -465,6 +468,7 @@ export function buildWorld(parentScene) {
     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 32 && (streetDist(x, z) < 0.5 || inHouse(x, z, 0.4))) continue;
     if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < 11) continue;
     if (pathDist(x, z) < 1.4 || townSoil(x, z) > 0.3) continue;
+    if (keepClear(x, z, -0.6)) continue;
     grass.push({ x, z, h: h + 0.06, s: 0.7 + rand() * 0.8, ry: rand() * 6.28 });
     if (rand() < 0.1) flowers.push({ x: x + 0.3, z: z + 0.2, h: H(x + 0.3, z + 0.2), s: 0.8 + rand() * 0.5, ry: rand() * 6 });
   }
@@ -493,32 +497,9 @@ export function buildWorld(parentScene) {
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15));
   for (const r of rocks) if (r.s > 0.6) physics.add({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.1, top: r.h + r.s * 0.95, seeThrough: true });
 
-  // pier
-  {
-    let px = V.x - 14;
-    while (H(px, V.z) > 0.5 && px > -120) px -= 0.5;
-    const len = 18;
-    const top = Math.max(1.0, H(px, V.z) + 0.4);
-    const cx = px - len / 2 + 0.5;
-    add(scene, new THREE.BoxGeometry(len, 0.25, 2.6), mat('#8b6440'), cx, top - 0.12, V.z);
-    for (let i = 0; i < 7; i++) for (const s of [-1, 1]) add(scene, new THREE.CylinderGeometry(0.14, 0.14, 4, 6), mat('#5b4028'), px - i * 2.8, top - 2, V.z + s * 1.2);
-    physics.add({ type: 'box', x: cx, z: V.z, hw: len / 2, hd: 1.3, rot: 0, top, seeThrough: true });
-    W.pierEnd = { x: px - len + 2.5, z: V.z, y: top };
-    W.pierStart = { x: px + 1.5, z: V.z };
-    // little boat
-    const bx = px - len + 1, bz = V.z + 3.2;
-    const boat = new THREE.Group();
-    const hull = new THREE.Mesh(new THREE.BoxGeometry(4, 0.8, 1.6), mat('#c0392b'));
-    hull.position.y = 0.2; boat.add(hull);
-    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 3.5), mat('#ddd'));
-    mast.position.y = 2; boat.add(mast);
-    const sail = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.4), mat('#f4efe2', { side: THREE.DoubleSide }));
-    sail.position.set(0.8, 2.2, 0); boat.add(sail);
-    boat.position.set(bx, 0, bz);
-    boat.traverse((o) => { if (o.isMesh) o.castShadow = true; });
-    scene.add(boat);
-    W.updaters.push((dt, t) => { boat.position.y = Math.sin(t * 1.3) * 0.15 * (0.5 + W.storm); boat.rotation.z = Math.sin(t * 1.1) * 0.06 * (0.5 + W.storm * 2); });
-  }
+  // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------
+  W.signs = [];
+  buildIsland(scene, W);
 
   // ---------- lighthouse ----------
   {
@@ -684,66 +665,7 @@ export function buildWorld(parentScene) {
     W.updaters.push((dt) => { if (W.chest.open) { W.chest.openT = Math.min(1, W.chest.openT + dt * 2); lidPivot.rotation.x = -W.chest.openT * 1.9; } });
   }
 
-  // ---------- Old fort ----------
-  {
-    const F = POI.fort, g = H(F.x, F.z), s = F.half;
-    const stone = mat('#9a9184', { roughness: 0.95 });
-    const wall = (x, z, w, d) => {
-      add(scene, new THREE.BoxGeometry(w, 6, d), stone, x, g + 3, z);
-      physics.add({ type: 'box', x, z, hw: w / 2, hd: d / 2, rot: 0, top: g + 6 });
-      // crenellations
-      const n = Math.floor(Math.max(w, d) / 1.6);
-      for (let i = 0; i < n; i++) {
-        const k = (i + 0.5) / n - 0.5;
-        add(scene, new THREE.BoxGeometry(w > d ? 0.8 : d === w ? 0.8 : 1.4, 0.8, w > d ? 1.4 : 0.8), stone, x + (w > d ? k * w : 0), g + 6.4, z + (w > d ? 0 : k * d));
-      }
-    };
-    wall(F.x, F.z - s, 2 * s, 1.4); // north
-    wall(F.x, F.z + s, 2 * s, 1.4); // south
-    wall(F.x + s, F.z, 1.4, 2 * s); // east
-    // west wall with a gate gap
-    const gap = 2.4;
-    const seg = (2 * s - 2 * gap) / 2;
-    wall(F.x - s, F.z - gap - seg / 2, 1.4, seg);
-    wall(F.x - s, F.z + gap + seg / 2, 1.4, seg);
-    for (const [cx, cz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
-      const x = F.x + cx * s, z = F.z + cz * s;
-      add(scene, new THREE.CylinderGeometry(1.9, 2.1, 8.5, 12), stone, x, g + 4.25, z);
-      add(scene, new THREE.ConeGeometry(2.4, 2.4, 12), mat('#5a6170'), x, g + 9.7, z);
-      physics.add({ type: 'cyl', x, z, r: 2.1, top: g + 9 });
-    }
-    // banners (Sentinel colours)
-    for (const dz of [-gap - 1.2, gap + 1.2]) {
-      add(scene, new THREE.PlaneGeometry(1.2, 2.6), mat('#7a1f2a', { side: THREE.DoubleSide }), F.x - s - 0.75, g + 4, F.z + dz, { ry: Math.PI / 2 });
-    }
-    // gate
-    const gateMat = mat('#4a3420', { roughness: 0.8 });
-    const gate = add(scene, new THREE.BoxGeometry(0.5, 5, gap * 2), gateMat, F.x - s, g + 2.5, F.z);
-    for (let i = -2; i <= 2; i++) {
-      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.6, 5, 0.12), mat('#3a3a3a', { metalness: 0.7 }));
-      bar.position.z = i * 0.9; gate.add(bar);
-    }
-    const gc = physics.add({ type: 'box', x: F.x - s, z: F.z, hw: 0.4, hd: gap, rot: 0, top: g + 6 });
-    W.gate = { mesh: gate, c: gc, open: false, t: 0, x: F.x - s - 1.2, z: F.z, y0: g + 2.5 };
-    W.updaters.push((dt) => {
-      if (!W.gate.open) return;
-      W.gate.t = Math.min(1, W.gate.t + dt * 0.6);
-      gate.position.y = W.gate.y0 - W.gate.t * 5.2;
-    });
-    // inner decor: braziers
-    for (const [ox, oz] of [[6, -6], [6, 6]]) {
-      const x = F.x + ox, z = F.z + oz;
-      add(scene, new THREE.CylinderGeometry(0.5, 0.3, 1.2, 10), mat('#333', { metalness: 0.6 }), x, g + 0.6, z);
-      add(scene, new THREE.ConeGeometry(0.4, 0.9, 8), new THREE.MeshStandardMaterial({ color: '#ff9a3a', emissive: '#ff5a00', emissiveIntensity: 4 }), x, g + 1.6, z, { cast: false });
-      physics.add({ type: 'cyl', x, z, r: 0.55, top: g + 1.2, noStand: true, seeThrough: true });
-    }
-    const fl = new THREE.PointLight('#ff7a30', 18, 24, 2);
-    fl.position.set(F.x + 6, g + 3, F.z); scene.add(fl);
-    W.arena = { x: F.x, z: F.z, half: s - 1 };
-  }
-
   // ---------- signs ----------
-  W.signs = [];
   const sign = (x, z, ry, key) => {
     const g = H(x, z);
     add(scene, new THREE.BoxGeometry(0.15, 1.8, 0.15), mat('#6b4a2e'), x, g + 0.9, z);

@@ -59,7 +59,7 @@ export class CameraRig {
       const z = t.z + Math.cos(yaw) * cp * d;
       const y = t.y + 1.4 + sp * d;
       for (const c of P.near(x, z)) {
-        if (!c.enabled || c.top < y || c.bottom > y) continue;
+        if (!c.enabled || c.fades || c.top < y || c.bottom > y) continue; // houses fade instead of pushing the camera
         if (c.type === 'cyl') {
           if (Math.hypot(x - c.x, z - c.z) < (c.camR ?? c.r) + 0.3) return Math.max(2, d - 0.6);
         } else if (P._inside(c, x, z, 0.3)) return Math.max(2, d - 0.6);

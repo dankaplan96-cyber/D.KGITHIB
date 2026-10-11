@@ -271,10 +271,9 @@ export class Prologue extends ChapterBase {
         g.updateObjective();
         this.chain([['hero', 'pr_cave_1'], ['hero', 'pr_cave_2']], () => g.save(false));
       }
-    } else if (id === 'house') g.audio.setMood('calm');
+    }
   }
   onExitRoom(id) {
-    if (id === 'well') this.game.audio.setMood('calm');
   }
 
   // restore world state from saved flags

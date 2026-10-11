@@ -56,7 +56,7 @@ export class Chapter1 extends ChapterBase {
     const gateIn = { x: W.gate.x + 3.2, z: W.gate.z };
     switch (id) {
       case 'vesk':
-        if (f.c1_veskGone) return null;
+        if (f.c1_veskGone || !f.c1_arrived) return null;
         if (!f.c1_water) return { x: ps.x - 2.5, z: ps.z + 1.2, a: -Math.PI / 2 };
         if (f.c1_zoeDone) return st ? { x: st.beamPad.x + 1.6, z: st.beamPad.z, a: -Math.PI / 2 } : gateIn;
         return R.control?.npcSpots?.vesk ?? gateIn;
@@ -258,6 +258,57 @@ export class Chapter1 extends ChapterBase {
     this.chain([['narrator', 'c1_water_1'], ['hero', 'c1_tw_water']], () => { g.updateObjective(); g.save(false); });
   }
 
+  // ---------------------------------------------------------------- Vesk arrives
+  // The project ferry glides in without a sound, a horn, the gangway, and Vesk
+  // walks down to the quay where half the town is waiting.
+  startArrival() {
+    const g = this.game, W = g.world, F = W.ferry, h = g.hero, f = this.f;
+    this.arriving = true;
+    g.setState('cutscene');
+    F.setVisible(true);
+    F.cols?.forEach?.((c) => (c.enabled = false));
+    const base = F.group.position.clone();
+    const ps = W.pierStart;
+    const vesk = this.npc('vesk');
+    const spot = { x: ps.x - 2.5, z: ps.z + 1.2 };
+    const gang = F.gangway || { x: F.x, z: F.z + 2 };
+    let tt = 0, spoke = false;
+    // the camera watches from the quay, over Twinsen's shoulder
+    const camPos = new THREE.Vector3(ps.x + 9, g.physics.groundAt(ps.x, ps.z) + 6.5, ps.z + 9);
+    g.camRig.override = { pos: camPos, look: new THREE.Vector3(gang.x, F.y ?? 1.2, gang.z) };
+    h.angle = Math.atan2(gang.x - h.pos.x, gang.z - h.pos.z);
+    g.cutscene = (dt) => {
+      tt += dt;
+      const k = Math.min(1, tt / 6), e = 1 - Math.pow(1 - k, 3);
+      F.group.position.set(base.x - (1 - e) * 34, base.y, base.z - (1 - e) * 6);
+      F.group.rotation.y = (1 - e) * 0.25;
+      if (tt > 0.2 && !this._horn1) { this._horn1 = true; g.audio.play('horn'); }
+      if (tt > 5.8 && !this._horn2) { this._horn2 = true; g.audio.play('horn'); g.camRig.shake(0.15); }
+      if (tt > 6.4 && !vesk.present) { vesk.setPresent(true); vesk.placeAt({ x: gang.x, z: gang.z, a: Math.atan2(spot.x - gang.x, spot.z - gang.z) }); }
+      if (vesk.present && tt < 10) {
+        const d = Math.hypot(spot.x - vesk.pos.x, spot.z - vesk.pos.z);
+        if (d > 0.3) {
+          vesk.angle = Math.atan2(spot.x - vesk.pos.x, spot.z - vesk.pos.z);
+          g.physics.move(vesk, Math.sin(vesk.angle) * 1.3 * dt, Math.cos(vesk.angle) * 1.3 * dt);
+          vesk.controlled = true; vesk.rig.play('walk'); vesk.rig.update(dt, 1.3); vesk.sync();
+        } else if (!spoke) {
+          spoke = true;
+          vesk.controlled = false;
+          g.cutscene = null;
+          g.camRig.override = null;
+          F.group.position.copy(base); F.group.rotation.y = 0;
+          f.c1_arrived = true;
+          this.arriving = false;
+          F.setVisible(true);
+          this.story.refreshCast();
+          g.setState('play');
+          this.chain([['narrator', 'c1_arrive_1'], ['vesk', 'c1_vesk_speech'], ['gilbert', 'c1_gil_speech']], () => { g.updateObjective(); g.save(false); });
+        }
+      }
+      h.rig.play('idle'); h.rig.update(dt, 0); h.sync();
+    };
+  }
+
   // ---------------------------------------------------------------- Zoe's segment
   startZoe() {
     const g = this.game, f = this.f, h = g.hero, R = g.rooms.projoffice;
@@ -345,16 +396,28 @@ export class Chapter1 extends ChapterBase {
 
   // Doran takes Twinsen to Zeelich on the project ferry
   toZeelich() {
-    const g = this.game;
-    g.startTransition(() => { this.story.nextChapter(); });
+    const g = this.game, f = this.f;
+    g.startTransition(() => {
+      if (this.story.chapters.length > 2) { this.story.nextChapter(); return; }
+      // chapter 2 isn't in this build yet: close the chapter properly
+      f.c1_done = true;
+      g.save(false);
+      g.setState('ending');
+      g.hud.show(false);
+      g.showScreen('ending');
+      g.audio.setMood('ending');
+    });
   }
+  afterEnding() { this.game.updateObjective(); }
 
   // ---------------------------------------------------------------- per frame
   update(dt) {
     const g = this.game, f = this.f, h = g.hero, W = g.world;
     if (!f.c1_started) return;
     // the ferry is in the harbour once Vesk has arrived
-    W.ferry?.setVisible?.(!f.c1_veskGone || f.c1_radio);
+    if (!this.arriving) W.ferry?.setVisible?.(!!f.c1_arrived);
+    // first time Twinsen comes down to the harbour after talking to Zoe: the ferry docks
+    if (f.c1_home && !f.c1_arrived && !g.room && g.state === 'play' && W.ferry && W.pierStart && Math.hypot(h.pos.x - W.pierStart.x, h.pos.z - W.pierStart.z) < 16) this.startArrival();
     // the well steams once the hot water is back
     if (f.c1_water && !g.room) {
       this.steamT -= dt;
@@ -408,6 +471,7 @@ export class Chapter1 extends ChapterBase {
     const npcAt = (id, label) => { const n = this.npc(id); if (n?.present) m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 7, edge: true, label: label && t(label) }); };
     if (!f.c1_started) return m;
     if (!f.c1_home) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
+    else if (!f.c1_arrived) m.push({ x: W.pierStart.x, z: W.pierStart.z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_task) npcAt('vesk', 'n_vesk');
     else if (!f.c1_water && (f.c1_map || f.c1_task)) for (const v of W.valves || []) if (!v.open) m.push({ x: v.x, z: v.z, kind: 'star', color: gold, r: 6, edge: true, label: t('c1_valve_' + v.id) });
     if (f.c1_water && !f.c1_tour) npcAt('vesk', 'n_vesk');

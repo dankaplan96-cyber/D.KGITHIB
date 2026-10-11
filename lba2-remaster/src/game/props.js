@@ -1041,3 +1041,626 @@ export function coatStand(k) {
   k.add(lathe([[0.001, 0], [0.2, 0], [0.21, 0.015], [0.12, 0.025], [0.11, 0.13], [0.09, 0.15], [0.001, 0.15]], 16), MAT.cloth('#6a4a2a', '#2a1a0a'), 0.05, 1.73, 0.12, 0, { rx: 0.35 });
   k.add(soft({ key: 'scarf', prims: [{ type: 'cone', a: [0, 0, 0], b: [0.02, -0.7, 0.04], r1: 0.05, r2: 0.04, group: 's', mat: 's', wobble: (x, y) => Math.sin(y * 30) * 0.006 }, { type: 'cone', a: [0, 0, 0], b: [-0.08, -0.55, 0.06], r1: 0.05, r2: 0.04, group: 's', mat: 's' }], groups: { s: 0.03 }, colors: { s: '#3f9a6a' }, paint: (p, m, c) => { if (Math.sin(p.y * 40) > 0.6) c.set('#e8d070'); }, bounds: { min: [-0.2, -0.8, -0.1], max: [0.15, 0.08, 0.15] }, cell: 0.018 }), softMat, -0.14, 1.66, -0.05);
 }
+
+// ================================================================ office & station kit
+// Painted one-off canvases for the Water Office and the Joint Project's rooms,
+// and the furniture/machines that wear them (filing cabinets, counters,
+// gauges, consoles, lockers, a blueprint table with a hologram...).
+export function disc(r, segs = 24) { return cached(`dc${r3(r)},${segs}`, () => { const g = new THREE.CircleGeometry(r, segs); g.userData.keepUV = true; return g; }); }
+const serif = (px, bold = true) => `${bold ? 'bold ' : ''}${px}px Georgia, 'Times New Roman', serif`;
+const ageing = (x, W, H, r, n = 30) => {
+  blotch(x, W, H, r, n, ['#b89a60', '#f4ecd0', '#a08050'], 20, 90, 0.18);
+  const v = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.max(W, H) * 0.7);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(90,60,20,0.35)'); x.fillStyle = v; x.fillRect(0, 0, W, H);
+};
+// smooth closed path through points
+function blobPath(x, pts) {
+  x.beginPath();
+  const n = pts.length, mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  let m = mid(pts[n - 1], pts[0]); x.moveTo(m[0], m[1]);
+  for (let i = 0; i < n; i++) { const p = pts[i], q = mid(p, pts[(i + 1) % n]); x.quadraticCurveTo(p[0], p[1], q[0], q[1]); }
+  x.closePath();
+}
+function islandPts(cx, cy, R, sx, k = 1, seed = 0) {
+  const pts = [];
+  for (let i = 0; i < 40; i++) {
+    const a = (i / 40) * Math.PI * 2;
+    const rr = R * k * (1 + 0.12 * Math.sin(3 * a + 1 + seed) + 0.07 * Math.sin(5 * a + 2) + 0.04 * Math.sin(9 * a + 0.5 + seed));
+    pts.push([cx + Math.cos(a) * rr * sx, cy + Math.sin(a) * rr]);
+  }
+  return pts;
+}
+function screenFX(x, W, H, r) {
+  for (let y = 0; y < H; y += 3) { x.fillStyle = 'rgba(0,0,0,0.22)'; x.fillRect(0, y, W, 1); }
+  const v = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.max(W, H) * 0.65);
+  v.addColorStop(0, 'rgba(120,255,255,0.08)'); v.addColorStop(1, 'rgba(0,0,0,0.55)'); x.fillStyle = v; x.fillRect(0, 0, W, H);
+}
+const fakeText = (x, x0, y0, w, lines, lh, col, r, size = 3) => {
+  x.fillStyle = col;
+  for (let i = 0; i < lines; i++) { let xx = x0; const end = x0 + w * (i === lines - 1 ? 0.5 : 0.75 + r() * 0.25); while (xx < end) { const ww = 6 + r() * 26; x.fillRect(xx, y0 + i * lh, Math.min(ww, end - xx), size); xx += ww + 5; } }
+};
+
+export const CANV = {
+  // gauge dial face (green / amber / red zones)
+  dial: (zone = '#c8452f', face = '#f2ead2') => tex('dial' + zone + face, () => canvasTex(128, 128, (x) => {
+    x.fillStyle = face; x.fillRect(0, 0, 128, 128);
+    const g = x.createRadialGradient(56, 50, 8, 64, 64, 66); g.addColorStop(0, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(110,80,40,0.4)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+    x.translate(64, 64);
+    const A = (t) => Math.PI * 0.75 + t * Math.PI * 1.5;
+    x.lineWidth = 7;
+    for (const [a, b, c] of [[0, 0.55, '#4f9a50'], [0.55, 0.8, '#e0b030'], [0.8, 1, zone]]) { x.strokeStyle = c; x.beginPath(); x.arc(0, 0, 45, A(a), A(b)); x.stroke(); }
+    x.strokeStyle = '#2a2018';
+    for (let i = 0; i <= 30; i++) { const a = A(i / 30), r0 = i % 5 ? 50 : 42; x.lineWidth = i % 5 ? 1.2 : 2.6; x.beginPath(); x.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); x.lineTo(Math.cos(a) * 56, Math.sin(a) * 56); x.stroke(); }
+    x.fillStyle = '#2a2018'; x.font = serif(12); x.textAlign = 'center'; x.textBaseline = 'middle';
+    for (let i = 0; i <= 6; i++) { const a = A(i / 6); x.fillText(String(i * 2), Math.cos(a) * 32, Math.sin(a) * 32); }
+    x.font = 'bold 9px sans-serif'; x.fillText('BAR', 0, 22);
+    x.lineWidth = 6; x.strokeStyle = 'rgba(40,30,20,0.45)'; x.beginPath(); x.arc(0, 0, 61, 0, 7); x.stroke();
+  })),
+  clock: () => tex('clockface', () => canvasTex(128, 128, (x) => {
+    x.fillStyle = '#f4eedc'; x.fillRect(0, 0, 128, 128); x.translate(64, 64);
+    x.fillStyle = '#2a2018'; x.font = serif(14); x.textAlign = 'center'; x.textBaseline = 'middle';
+    const R = ['XII', 'I', 'II', 'III', 'IIII', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+    for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2 - Math.PI / 2; x.save(); x.translate(Math.cos(a) * 44, Math.sin(a) * 44); x.font = serif(i % 3 ? 10 : 13); x.fillText(R[i], 0, 0); x.restore(); }
+    for (let i = 0; i < 60; i++) { const a = (i / 60) * Math.PI * 2; x.fillRect(Math.cos(a) * 56 - 1, Math.sin(a) * 56 - 1, 2, 2); }
+    x.lineWidth = 5; x.strokeStyle = 'rgba(40,30,20,0.4)'; x.beginPath(); x.arc(0, 0, 61, 0, 7); x.stroke();
+  })),
+  // the Water Office's painted map of the island's mains
+  pipemap: () => tex('pipemap', () => canvasTex(1024, 640, (x, W, H) => {
+    const r = rng(1234);
+    x.fillStyle = '#e9dcb4'; x.fillRect(0, 0, W, H);
+    blotch(x, W, H, r, 50, ['#d8c498', '#f4ead0', '#cdb684'], 30, 120, 0.3);
+    // sea wash and wave hatching inside the border
+    x.fillStyle = 'rgba(96,150,160,0.42)'; x.fillRect(40, 40, W - 80, H - 80);
+    x.strokeStyle = 'rgba(40,90,110,0.35)'; x.lineWidth = 1.5;
+    for (let i = 0; i < 90; i++) { const px = 60 + r() * (W - 140), py = 60 + r() * (H - 120); x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + 7, py - 5, px + 14, py); x.quadraticCurveTo(px + 21, py + 5, px + 28, py); x.stroke(); }
+    // island: coast ripples, sand, two terraces of green
+    const cx = 520, cy = 330;
+    for (const [k, a] of [[1.1, 0.12], [1.06, 0.2], [1.03, 0.3]]) { blobPath(x, islandPts(cx, cy, 240, 1.4, k)); x.strokeStyle = `rgba(40,90,110,${a})`; x.lineWidth = 3; x.stroke(); }
+    blobPath(x, islandPts(cx, cy, 240, 1.4)); x.fillStyle = '#dcc68a'; x.fill(); x.strokeStyle = '#5a4a2a'; x.lineWidth = 3.5; x.stroke();
+    blobPath(x, islandPts(cx - 10, cy - 6, 240, 1.4, 0.84, 0.4)); x.fillStyle = '#a9b878'; x.fill(); x.strokeStyle = 'rgba(70,80,40,0.6)'; x.lineWidth = 2; x.stroke();
+    blobPath(x, islandPts(cx - 40, cy - 30, 240, 1.3, 0.5, 1.1)); x.fillStyle = '#93a666'; x.fill(); x.stroke();
+    // cliff hachures along the terrace edge
+    x.strokeStyle = 'rgba(70,60,30,0.45)'; x.lineWidth = 1.2;
+    for (const [px, py] of islandPts(cx - 10, cy - 6, 240, 1.4, 0.84, 0.4)) { const dx = px - cx, dy = py - cy, l = Math.hypot(dx, dy); x.beginPath(); x.moveTo(px, py); x.lineTo(px + dx / l * 9, py + dy / l * 9); x.stroke(); }
+    // fortress (upper left)
+    const fx = 372, fy = 214;
+    x.fillStyle = '#6a6a72'; x.fillRect(fx - 30, fy - 22, 60, 44);
+    for (let i = 0; i < 6; i++) x.fillRect(fx - 30 + i * 11, fy - 30, 7, 9);
+    x.fillStyle = '#4a4a52'; x.fillRect(fx - 8, fy, 16, 22);
+    x.strokeStyle = '#2a2a30'; x.lineWidth = 2; x.strokeRect(fx - 30, fy - 22, 60, 44);
+    x.fillStyle = '#2a2a30'; x.fillRect(fx + 20, fy - 58, 2, 30); x.fillStyle = '#c8452f'; x.beginPath(); x.moveTo(fx + 22, fy - 58); x.lineTo(fx + 40, fy - 52); x.lineTo(fx + 22, fy - 46); x.fill();
+    // town (lower right): little red-roofed houses
+    const tx = 694, ty = 404;
+    for (let i = 0; i < 9; i++) {
+      const hx = tx - 50 + (i % 3) * 36 + (r() - 0.5) * 8, hy = ty - 26 + Math.floor(i / 3) * 26;
+      x.fillStyle = '#f2e6c8'; x.fillRect(hx, hy, 24, 15); x.strokeStyle = '#5a4a2a'; x.lineWidth = 1.2; x.strokeRect(hx, hy, 24, 15);
+      x.fillStyle = '#b84a2a'; x.beginPath(); x.moveTo(hx - 3, hy); x.lineTo(hx + 12, hy - 10); x.lineTo(hx + 27, hy); x.fill();
+    }
+    // lighthouse at the east tip, harbour pier in the south
+    x.fillStyle = '#f0ece0'; x.fillRect(888, 270, 10, 30); x.fillStyle = '#c8452f'; x.fillRect(886, 262, 14, 9);
+    x.fillStyle = '#8a8070'; x.fillRect(600, 540, 14, 50);
+    // the main: fortress -> town (dark casing, blue water core, dashed flow)
+    const line = [[fx + 30, fy + 6], [446, 226], [500, 262], [532, 318], [590, 336], [640, 368], [tx - 54, ty - 18]];
+    const stroke = (w, c, dash = []) => { x.setLineDash(dash); x.lineWidth = w; x.strokeStyle = c; x.lineJoin = x.lineCap = 'round'; x.beginPath(); line.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.stroke(); x.setLineDash([]); };
+    stroke(15, '#1e3550'); stroke(9, '#3f8ad0'); stroke(2, '#e8f4ff', [10, 8]);
+    for (const [a, b] of line.slice(1, -1)) { x.fillStyle = '#1e3550'; x.beginPath(); x.arc(a, b, 7, 0, 7); x.fill(); x.fillStyle = '#e8f4ff'; x.beginPath(); x.arc(a, b, 3, 0, 7); x.fill(); }
+    // branches to the well and the harbour
+    x.lineWidth = 6; x.strokeStyle = '#1e3550'; x.beginPath(); x.moveTo(532, 318); x.lineTo(470, 380); x.lineTo(470, 430); x.moveTo(640, 368); x.lineTo(612, 470); x.lineTo(606, 540); x.stroke();
+    x.lineWidth = 3; x.strokeStyle = '#6fb0e8'; x.stroke();
+    x.fillStyle = '#1e3550'; x.beginPath(); x.arc(470, 438, 10, 0, 7); x.fill(); x.fillStyle = '#6fb0e8'; x.beginPath(); x.arc(470, 438, 6, 0, 7); x.fill();
+    // three red valve marks
+    [[466, 240, 'I'], [561, 327, 'II'], [656, 380, 'III']].forEach(([a, b, n]) => {
+      x.fillStyle = '#fff6e0'; x.beginPath(); x.arc(a, b, 17, 0, 7); x.fill();
+      x.lineWidth = 4; x.strokeStyle = '#c0281e'; x.beginPath(); x.arc(a, b, 15, 0, 7); x.stroke();
+      x.fillStyle = '#c0281e'; x.beginPath(); x.moveTo(a - 9, b - 7); x.lineTo(a, b); x.lineTo(a - 9, b + 7); x.closePath(); x.moveTo(a + 9, b - 7); x.lineTo(a, b); x.lineTo(a + 9, b + 7); x.closePath(); x.fill();
+      x.font = serif(22); x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(n, a + 2, b - 34);
+    });
+    // labels
+    x.fillStyle = '#3a2a14'; x.textAlign = 'center'; x.font = serif(18);
+    x.fillText('FORTRESS', fx, fy + 48); x.fillText('CITADEL', tx - 10, ty + 40); x.font = serif(14, false); x.fillText('well', 470, 466); x.fillText('harbour', 606, 600);
+    // compass rose
+    x.save(); x.translate(900, 120);
+    for (let i = 0; i < 8; i++) { x.rotate(Math.PI / 4); x.fillStyle = i % 2 ? '#3a2a14' : '#a8382a'; x.beginPath(); x.moveTo(0, -(i % 2 ? 30 : 46)); x.lineTo(7, 0); x.lineTo(-7, 0); x.fill(); }
+    x.strokeStyle = '#3a2a14'; x.lineWidth = 2; x.beginPath(); x.arc(0, 0, 20, 0, 7); x.stroke(); x.font = serif(16); x.fillStyle = '#3a2a14'; x.fillText('N', 0, -54); x.restore();
+    // title cartouche and legend
+    x.fillStyle = 'rgba(244,234,204,0.92)'; x.fillRect(64, 500, 300, 96); x.strokeStyle = '#3a2a14'; x.lineWidth = 2; x.strokeRect(64, 500, 300, 96); x.strokeRect(69, 505, 290, 86);
+    x.fillStyle = '#3a2a14'; x.textAlign = 'left'; x.font = serif(22); x.fillText('CITADEL WATER MAINS', 82, 534);
+    x.font = serif(13, false); x.fillStyle = '#1e3550'; x.fillRect(84, 552, 30, 7); x.fillStyle = '#3a2a14'; x.fillText('main pipe', 124, 560);
+    x.strokeStyle = '#c0281e'; x.lineWidth = 3; x.beginPath(); x.arc(234, 556, 7, 0, 7); x.stroke(); x.fillText('bypass valve', 248, 560);
+    x.fillText('scale  0 ——— 100 m', 84, 582);
+    // border
+    x.strokeStyle = '#3a2a14'; x.lineWidth = 4; x.strokeRect(30, 30, W - 60, H - 60); x.lineWidth = 1.5; x.strokeRect(40, 40, W - 80, H - 80);
+    for (let i = 0; i < 12; i++) { x.fillStyle = i % 2 ? '#3a2a14' : '#e9dcb4'; x.fillRect(40 + i * ((W - 80) / 12), 30, (W - 80) / 12, 6); x.fillRect(40 + i * ((W - 80) / 12), H - 36, (W - 80) / 12, 6); }
+    ageing(x, W, H, r, 24);
+    // pencilled notes
+    x.strokeStyle = 'rgba(60,50,40,0.6)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(561, 327); x.lineTo(760, 250); x.stroke();
+    x.fillStyle = 'rgba(60,50,40,0.75)'; x.font = 'italic 16px Georgia, serif'; x.fillText('pressure low?', 766, 250);
+  })),
+  // blueprint of the planet's shell (project table)
+  blueprint: () => tex('blueprint', () => canvasTex(512, 512, (x, W, H) => {
+    const r = rng(77);
+    x.fillStyle = '#1d3f78'; x.fillRect(0, 0, W, H);
+    blotch(x, W, H, r, 14, ['#2a5294', '#163266'], 40, 120, 0.4);
+    for (let i = 0; i <= W; i += 16) { x.fillStyle = i % 64 ? 'rgba(200,230,255,0.08)' : 'rgba(200,230,255,0.2)'; x.fillRect(i, 0, 1, H); x.fillRect(0, i, W, 1); }
+    x.strokeStyle = '#e8f4ff'; x.lineWidth = 3; x.beginPath(); x.arc(256, 290, 200, Math.PI * 1.05, Math.PI * 1.95); x.stroke();
+    x.setLineDash([8, 6]); x.lineWidth = 2; x.beginPath(); x.arc(256, 290, 150, 0, 7); x.stroke(); x.beginPath(); x.arc(256, 290, 138, 0, 7); x.stroke(); x.setLineDash([]);
+    const g = x.createRadialGradient(256, 290, 4, 256, 290, 70); g.addColorStop(0, 'rgba(160,255,255,0.9)'); g.addColorStop(1, 'rgba(160,255,255,0)'); x.fillStyle = g; x.beginPath(); x.arc(256, 290, 70, 0, 7); x.fill();
+    x.strokeStyle = '#e8f4ff'; x.lineWidth = 2; x.beginPath(); x.arc(256, 290, 44, 0, 7); x.stroke();
+    // the bore: from the surface down to the shell
+    x.lineWidth = 2; x.beginPath(); x.moveTo(248, 90); x.lineTo(248, 140); x.lineTo(256, 152); x.lineTo(264, 140); x.lineTo(264, 90); x.stroke();
+    x.fillStyle = '#ffd890'; x.beginPath(); x.moveTo(250, 140); x.lineTo(256, 151); x.lineTo(262, 140); x.fill();
+    // leader lines + labels
+    x.font = 'bold 14px monospace'; x.fillStyle = '#e8f4ff'; x.lineWidth = 1;
+    for (const [ax, ay, bx, by, s] of [[264, 110, 360, 70, 'BORE 3'], [390, 230, 440, 190, 'SHELL'], [290, 300, 400, 380, 'ESSENCE ?'], [120, 150, 60, 110, 'CRUST']]) { x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke(); x.fillText(s, bx + (bx > 256 ? 4 : -50), by - 4); }
+    // dimension arrows
+    x.beginPath(); x.moveTo(470, 90); x.lineTo(470, 152); x.moveTo(464, 98); x.lineTo(470, 90); x.lineTo(476, 98); x.moveTo(464, 144); x.lineTo(470, 152); x.lineTo(476, 144); x.stroke();
+    // title block
+    x.strokeStyle = '#e8f4ff'; x.lineWidth = 2; x.strokeRect(330, 430, 170, 70); x.beginPath(); x.moveTo(330, 456); x.lineTo(500, 456); x.moveTo(420, 456); x.lineTo(420, 500); x.stroke();
+    x.font = 'bold 13px monospace'; x.fillText('JOINT PROJECT', 340, 449);
+    fakeText(x, 336, 466, 80, 3, 9, 'rgba(232,244,255,0.7)', r, 2); fakeText(x, 426, 466, 70, 3, 9, 'rgba(232,244,255,0.7)', r, 2);
+    fakeText(x, 20, 440, 260, 5, 12, 'rgba(232,244,255,0.5)', r, 2);
+    for (let i = 0; i < 3000; i++) { x.fillStyle = r() < 0.5 ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.05)'; x.fillRect(r() * W, r() * H, 2, 2); }
+  })),
+  // glowing terminal screens
+  screen: (kind = 'wave', hue = '#5ff4ff') => tex('scr' + kind + hue, () => canvasTex(256, 192, (x, W, H) => {
+    const r = rng(kind.length * 31 + hue.length);
+    x.fillStyle = '#031418'; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(95,244,255,0.12)'; x.lineWidth = 1;
+    for (let i = 0; i < W; i += 16) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
+    for (let i = 0; i < H; i += 16) { x.beginPath(); x.moveTo(0, i); x.lineTo(W, i); x.stroke(); }
+    x.strokeStyle = hue; x.fillStyle = hue; x.shadowColor = hue; x.shadowBlur = 6;
+    if (kind === 'wave') {
+      x.lineWidth = 3; x.beginPath(); for (let i = 0; i <= W; i += 3) x.lineTo(i, 110 + Math.sin(i * 0.06) * 34 * Math.sin(i * 0.013 + 1) + Math.sin(i * 0.31) * 4); x.stroke();
+      fakeText(x, 14, 14, 140, 3, 12, hue, r, 4);
+    } else if (kind === 'bars') {
+      for (let i = 0; i < 12; i++) { const h = 30 + r() * 110; x.fillStyle = i === 8 ? '#ffb040' : hue; x.fillRect(18 + i * 19, 170 - h, 12, h); }
+      fakeText(x, 14, 12, 200, 1, 12, hue, r, 5);
+    } else if (kind === 'shaft') {
+      x.lineWidth = 2; x.strokeRect(96, 20, 64, 160);
+      for (let i = 0; i < 8; i++) { x.globalAlpha = 0.3 + (i / 8) * 0.7; x.fillRect(100, 24 + i * 19, 56, 12); } x.globalAlpha = 1;
+      x.fillStyle = '#ffb040'; x.beginPath(); x.moveTo(118, 150); x.lineTo(128, 172); x.lineTo(138, 150); x.fill();
+      x.fillStyle = hue; fakeText(x, 172, 30, 70, 8, 16, hue, r, 4); fakeText(x, 12, 30, 70, 8, 16, hue, r, 4);
+    } else if (kind === 'radar') {
+      x.lineWidth = 2; for (const rr of [30, 55, 80]) { x.beginPath(); x.arc(128, 96, rr, 0, 7); x.stroke(); }
+      x.beginPath(); x.moveTo(48, 96); x.lineTo(208, 96); x.moveTo(128, 16); x.lineTo(128, 176); x.stroke();
+      const g = x.createRadialGradient(128, 96, 0, 128, 96, 80); g.addColorStop(0, 'rgba(95,244,255,0.5)'); g.addColorStop(1, 'rgba(95,244,255,0)'); x.fillStyle = g; x.beginPath(); x.moveTo(128, 96); x.arc(128, 96, 80, -1.2, -0.4); x.fill();
+      x.fillStyle = '#ffb040'; for (let i = 0; i < 5; i++) { x.beginPath(); x.arc(128 + (r() - 0.5) * 120, 96 + (r() - 0.5) * 120, 3, 0, 7); x.fill(); }
+    } else if (kind === 'map') {
+      blobPath(x, islandPts(128, 100, 62, 1.4)); x.lineWidth = 2; x.stroke(); x.globalAlpha = 0.2; x.fill(); x.globalAlpha = 1;
+      x.fillStyle = '#ffb040'; x.beginPath(); x.arc(92, 76, 5, 0, 7); x.fill(); x.fillStyle = hue; x.beginPath(); x.arc(160, 118, 4, 0, 7); x.fill();
+      fakeText(x, 12, 168, 230, 1, 12, hue, r, 4);
+    } else {
+      fakeText(x, 14, 14, 228, 12, 14, hue, r, 5);
+      x.fillRect(14, 182, 10, 4);
+    }
+    x.shadowBlur = 0;
+    screenFX(x, W, H, r);
+  })),
+  // typed office papers / ledgers
+  doc: (kind = 'form') => tex('doc' + kind, () => canvasTex(128, 176, (x, W, H) => {
+    const r = rng(kind.length * 5 + 3);
+    x.fillStyle = kind === 'ledger' ? '#f2ead0' : '#f6f1e2'; x.fillRect(0, 0, W, H);
+    if (kind === 'ledger') {
+      x.strokeStyle = 'rgba(60,110,170,0.5)'; x.lineWidth = 1; for (let y = 22; y < H; y += 9) { x.beginPath(); x.moveTo(4, y); x.lineTo(W - 4, y); x.stroke(); }
+      x.strokeStyle = 'rgba(190,50,40,0.6)'; for (const xx of [24, 92]) { x.beginPath(); x.moveTo(xx, 8); x.lineTo(xx, H - 4); x.stroke(); }
+      x.strokeStyle = 'rgba(30,30,60,0.75)'; x.lineWidth = 1.2;
+      for (let y = 20; y < H - 10; y += 9) { if (r() < 0.2) continue; x.beginPath(); let xx = 28; x.moveTo(xx, y); while (xx < 28 + 30 + r() * 30) { xx += 3; x.lineTo(xx, y - 1 - r() * 4); } x.stroke(); x.beginPath(); x.moveTo(98, y); x.lineTo(98 + r() * 22, y - 2); x.stroke(); }
+    } else {
+      x.fillStyle = kind === 'project' ? '#2e6e6a' : '#3a4a6a'; x.fillRect(10, 10, W - 20, 12);
+      fakeText(x, 12, 32, W - 24, 12, 10, 'rgba(40,40,50,0.7)', r, 2);
+      if (kind === 'form') { x.strokeStyle = 'rgba(190,40,30,0.7)'; x.lineWidth = 3; x.beginPath(); x.arc(92, 146, 16, 0, 7); x.stroke(); x.font = 'bold 10px sans-serif'; x.fillStyle = 'rgba(190,40,30,0.7)'; x.fillText('OK', 85, 150); }
+    }
+  })),
+  // a hanging cloth banner with the Joint Project's emblem
+  banner: () => tex('banner', () => canvasTex(256, 384, (x, W, H) => {
+    const r = rng(9);
+    x.fillStyle = '#245e5c'; x.fillRect(0, 0, W, H);
+    blotch(x, W, H, r, 20, ['#1a4644', '#2e7270'], 20, 80, 0.4);
+    x.strokeStyle = '#d9a94a'; x.lineWidth = 8; x.strokeRect(14, 14, W - 28, H - 70);
+    x.lineWidth = 2; x.strokeRect(26, 26, W - 52, H - 94);
+    x.fillStyle = '#d9a94a'; x.beginPath(); x.moveTo(0, H - 50); x.lineTo(W / 2, H); x.lineTo(W, H - 50); x.lineTo(W, H - 44); x.lineTo(W / 2, H - 4); x.lineTo(0, H - 44); x.fill();
+    // emblem: planet in a horned ring, glowing core, the two worlds' stars
+    x.translate(W / 2, 160);
+    x.lineWidth = 10; x.strokeStyle = '#d9a94a'; x.beginPath(); x.arc(0, 0, 74, Math.PI * 0.15, Math.PI * 0.85, true); x.stroke();
+    x.beginPath(); x.moveTo(-70, 26); x.quadraticCurveTo(-96, -10, -80, -60); x.moveTo(70, 26); x.quadraticCurveTo(96, -10, 80, -60); x.stroke();
+    const g = x.createRadialGradient(0, 0, 4, 0, 0, 52); g.addColorStop(0, '#e8ffff'); g.addColorStop(0.5, '#5ff4ff'); g.addColorStop(1, '#1a6a78'); x.fillStyle = g; x.beginPath(); x.arc(0, 0, 50, 0, 7); x.fill();
+    x.lineWidth = 3; x.strokeStyle = '#e8ffff'; x.beginPath(); x.ellipse(0, 0, 66, 16, -0.3, 0, 7); x.stroke();
+    x.fillStyle = '#ffe890'; for (const sx of [-1, 1]) { x.beginPath(); x.arc(sx * 40, -104, 9, 0, 7); x.fill(); }
+    x.font = serif(20); x.fillStyle = '#d9a94a'; x.textAlign = 'center'; x.fillText('TWINSUN · ZEELICH', 0, 110);
+  })),
+  // stencilled crate side
+  stencil: (base = '#2e4a46') => tex('stencil' + base, () => canvasTex(128, 128, (x, W, H) => {
+    const r = rng(base.length + 2);
+    x.fillStyle = base; x.fillRect(0, 0, W, H);
+    blotch(x, W, H, r, 10, ['#1a2a28', '#4a6a64'], 10, 40, 0.3);
+    x.strokeStyle = 'rgba(232,220,180,0.75)'; x.lineWidth = 6; x.beginPath(); x.arc(64, 56, 24, 0, 7); x.stroke();
+    x.beginPath(); x.ellipse(64, 56, 36, 9, -0.3, 0, 7); x.lineWidth = 3; x.stroke();
+    x.fillStyle = 'rgba(232,220,180,0.75)'; for (const sx of [44, 84]) { x.beginPath(); x.moveTo(sx, 96); x.lineTo(sx + 8, 106); x.lineTo(sx + 3, 106); x.lineTo(sx + 3, 116); x.lineTo(sx - 3, 116); x.lineTo(sx - 3, 106); x.lineTo(sx - 8, 106); x.fill(); }
+  })),
+  // a little painted shop-sign board
+  sign: (text, bg = '#2a4a7a', fg = '#f4e8c8') => tex('sign' + text + bg, () => canvasTex(512, 128, (x, W, H) => {
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    x.strokeStyle = fg; x.lineWidth = 5; x.strokeRect(10, 10, W - 20, H - 20);
+    // water drop
+    x.fillStyle = '#7fc8f0'; x.beginPath(); x.moveTo(60, 30); x.bezierCurveTo(84, 62, 84, 98, 60, 98); x.bezierCurveTo(36, 98, 36, 62, 60, 30); x.fill();
+    x.fillStyle = fg; x.font = serif(54); x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2 + 30, H / 2 + 3);
+  })),
+};
+TEX.hazard = () => tex('hazard', () => {
+  const S = 128, [c, x] = cnv(S); const r = rng(5);
+  x.fillStyle = '#1e1e22'; x.fillRect(0, 0, S, S);
+  x.fillStyle = '#e8b830';
+  for (let i = -2; i < 4; i++) { x.beginPath(); x.moveTo(i * 64, 0); x.lineTo(i * 64 + 32, 0); x.lineTo(i * 64 + 32 + S, S); x.lineTo(i * 64 + S, S); x.fill(); }
+  blotch(x, S, S, r, 12, ['#3a3020', '#c8c0a0'], 6, 24, 0.25);
+  return toTex(c);
+});
+MAT.hazard = () => M('hazard', () => std({ map: TEX.hazard(), roughness: 0.6, metalness: 0.2 }, 0.5));
+MAT.screen = (t, k = 1.3) => M('scr' + t.uuid + k, () => std({ map: t, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: k, roughness: 0.25 }, 0, { noShadow: true }));
+MAT.leather = (c = '#7a2a22') => M('lea' + c, () => std({ map: TEX.fabric(c, '#000000'), roughness: 0.55 }, 0.5));
+
+// ---- furniture ---------------------------------------------------------
+// steel filing cabinet; front +z
+export function filingCabinet(k, { w = 0.48, d = 0.62, h = 1.32, n = 4, color = '#6f7f6a', open = -1 } = {}) {
+  const body = MAT.paint(color, 0.5), br = MAT.brass(), card = MAT.flat('#f4efe2', 0.9);
+  k.add(rbox(w - 0.02, 0.07, d - 0.06, 0.01), MAT.iron(), 0, 0.035, -0.02);
+  k.add(rbox(w, h - 0.07, d, 0.02), body, 0, 0.07 + (h - 0.07) / 2, 0);
+  k.add(rbox(w + 0.02, 0.03, d + 0.02, 0.012), body, 0, h, 0);
+  const dh = (h - 0.12) / n;
+  const handle = pipe([[-0.075, 0, 0], [-0.065, 0, 0.03], [0.065, 0, 0.03], [0.075, 0, 0]], 0.007, 0.012, 5);
+  for (let i = 0; i < n; i++) {
+    const y = 0.1 + dh * (i + 0.5), oz = i === open ? 0.32 : 0;
+    if (oz) {
+      k.add(rbox(w - 0.08, dh - 0.06, oz, 0.006), MAT.paint(color, 0.6), 0, y - 0.01, d / 2 + oz / 2 - 0.02);
+      for (let j = 0; j < 6; j++) k.add(rbox(w - 0.12, dh - 0.1 - (j % 2) * 0.03, 0.01, 0.003), MAT.flat(['#e8d8a0', '#f2ead6', '#c8b880'][j % 3], 0.9), 0, y, d / 2 + 0.04 + j * 0.045, 0, { rx: -0.15 });
+    }
+    k.add(rbox(w - 0.05, dh - 0.03, 0.03, 0.01), body, 0, y, d / 2 + 0.005 + oz, 0, { jit: true });
+    k.add(handle, br, 0, y - dh * 0.18, d / 2 + 0.02 + oz);
+    k.add(rbox(0.1, 0.055, 0.008, 0.003), br, 0, y + dh * 0.17, d / 2 + 0.022 + oz);
+    k.add(plane(0.082, 0.04), card, 0, y + dh * 0.17, d / 2 + 0.027 + oz);
+  }
+  return { hw: w / 2 + 0.01, hd: d / 2 + 0.03, top: h + 0.015 };
+}
+// panelled service counter; public side +z
+export function counter(k, { w = 3, d = 0.62, h = 1.05, pal = 'honey', top = null } = {}) {
+  const m = MAT.wood(pal), md = MAT.wood(darker(pal));
+  k.add(rbox(w - 0.06, 0.1, d - 0.1, 0.02), md, 0, 0.05, -0.02);
+  k.add(rbox(w - 0.04, h - 0.16, d - 0.06, 0.02), m, 0, 0.1 + (h - 0.16) / 2, -0.01);
+  const n = Math.max(1, Math.round(w / 0.8)), pw = (w - 0.1) / n;
+  for (let i = 0; i < n; i++) {
+    const x = -w / 2 + 0.05 + pw * (i + 0.5);
+    k.add(rbox(pw - 0.14, h - 0.4, 0.03, 0.02), md, x, 0.12 + (h - 0.4) / 2 + 0.04, d / 2 - 0.035);
+    k.add(rbox(pw - 0.26, h - 0.54, 0.03, 0.025), m, x, 0.12 + (h - 0.4) / 2 + 0.04, d / 2 - 0.02, 0, { jit: true });
+  }
+  for (let i = 0; i <= n; i++) k.add(rbox(0.08, h - 0.14, 0.06, 0.015), md, -w / 2 + 0.05 + pw * i, 0.1 + (h - 0.14) / 2, d / 2 - 0.03);
+  k.add(rbox(w + 0.04, 0.035, d + 0.06, 0.012), md, 0, h - 0.075, 0.01);
+  k.add(rbox(w + 0.1, 0.06, d + 0.12, 0.025), top || m, 0, h - 0.03, 0.03, 0, { jit: true });
+  return { hw: w / 2 + 0.05, hd: d / 2 + 0.09, top: h };
+}
+export function deskBell(k, x, y, z) {
+  k.add(lathe([[0.001, 0], [0.05, 0], [0.052, 0.012], [0.001, 0.012]], 12), MAT.wood('dark'), x, y, z);
+  k.add(lathe([[0.001, 0.012], [0.045, 0.014], [0.044, 0.028], [0.034, 0.048], [0.016, 0.058], [0.001, 0.06]], 14), MAT.brass(), x, y, z);
+  k.add(lathe([[0.001, 0], [0.006, 0], [0.006, 0.018], [0.011, 0.022], [0.001, 0.027]], 6), MAT.brass(), x, y + 0.058, z);
+}
+const knob = () => lathe([[0.001, 0], [0.016, 0], [0.01, 0.015], [0.018, 0.025], [0.001, 0.032]], 8);
+// pedestal desk with leather inlay; the knee-hole/sitter side is +z
+export function desk(k, { w = 1.5, d = 0.75, h = 0.78, pal = 'dark', leather = '#2f5a3a', metal = null } = {}) {
+  const m = metal || MAT.wood(pal), md = metal ? MAT.iron() : MAT.wood(darker(pal)), br = MAT.brass();
+  k.add(rbox(w, 0.05, d, 0.02), m, 0, h - 0.025, 0, 0, { jit: true });
+  if (leather) k.add(rbox(w - 0.22, 0.012, d - 0.2, 0.004), MAT.leather(leather), 0, h + 0.002, 0.01);
+  const pw = 0.42;
+  for (const sx of [-1, 1]) {
+    const px = sx * (w / 2 - pw / 2 - 0.03);
+    k.add(rbox(pw, h - 0.13, d - 0.08, 0.015), m, px, 0.08 + (h - 0.13) / 2, -0.01);
+    k.add(rbox(pw + 0.02, 0.08, d - 0.04, 0.015), md, px, 0.04, -0.01);
+    for (let i = 0; i < 3; i++) {
+      const y = 0.22 + i * 0.165;
+      k.add(rbox(pw - 0.06, 0.14, 0.025, 0.01), md, px, y, d / 2 - 0.04);
+      k.add(knob(), br, px, y, d / 2 - 0.03, 0, { rx: Math.PI / 2 });
+    }
+  }
+  k.add(rbox(w - 2 * pw - 0.08, 0.1, 0.03, 0.01), md, 0, h - 0.11, d / 2 - 0.04);
+  k.add(knob(), br, 0, h - 0.11, d / 2 - 0.03, 0, { rx: Math.PI / 2 });
+  k.add(rbox(w - 2 * pw, h - 0.25, 0.03, 0.01), md, 0, (h - 0.25) / 2 + 0.1, -d / 2 + 0.06);
+  return { hw: w / 2, hd: d / 2, top: h };
+}
+// swivel chair (five-star base); faces +z
+export function officeChair(k, { color = '#7a2a22' } = {}) {
+  const ir = MAT.iron(), br = MAT.brass(), le = MAT.leather(color);
+  for (let i = 0; i < 5; i++) { const a = i * 1.2566; k.add(rbox(0.3, 0.035, 0.05, 0.012), ir, Math.sin(a) * 0.14, 0.07, Math.cos(a) * 0.14, a + Math.PI / 2); k.add(sphere(0.028, 8, 6), ir, Math.sin(a) * 0.28, 0.03, Math.cos(a) * 0.28); }
+  k.add(cyl(0.025, 0.03, 0.36, 8), br, 0, 0.26, 0);
+  k.add(pillowGeo(0.46, 0.09, 0.44, color, 'chairseat'), softMat, 0, 0.48, 0);
+  k.add(rbox(0.44, 0.48, 0.07, 0.035), le, 0, 0.8, -0.22, 0, { rx: -0.12 });
+  k.add(rbox(0.04, 0.3, 0.03, 0.01), ir, 0, 0.55, -0.24, 0, { rx: -0.1 });
+  for (const sx of [-1, 1]) k.add(pipe([[sx * 0.24, 0.46, 0.14], [sx * 0.25, 0.64, 0.12], [sx * 0.25, 0.64, -0.14], [sx * 0.24, 0.56, -0.2]], 0.014, 0.04, 6), br, 0, 0, 0);
+  return { r: 0.3, top: 0.62 };
+}
+// open ledger lying on a surface
+export function ledger(k, x, y, z, ry = 0, color = '#7a2a22') {
+  k.at(x, y, z, ry, () => {
+    k.add(rbox(0.46, 0.012, 0.31, 0.004), MAT.cloth(color, '#000000'), 0, 0.006, 0);
+    for (const s of [-1, 1]) {
+      k.add(rbox(0.21, 0.018, 0.28, 0.006), MAT.flat('#efe6cc', 0.9), s * 0.11, 0.02, 0, 0, { rz: s * 0.05 });
+      k.add(plane(0.2, 0.27), MAT.map(CANV.doc('ledger'), 0.9), s * 0.11, 0.031 + 0.004, 0, 0, { rx: -Math.PI / 2, rz: s * 0.05 });
+    }
+    k.add(cyl(0.012, 0.012, 0.29, 6), MAT.flat('#efe6cc', 0.9), 0, 0.022, 0, 0, { rx: Math.PI / 2 });
+  });
+}
+// a few loose sheets
+export function papers(k, x, y, z, n = 3, seed = 1, kind = 'form') {
+  const r = rng(seed * 13 + 7);
+  for (let i = 0; i < n; i++) k.add(plane(0.21, 0.29), MAT.map(CANV.doc(kind), 0.9), x + (r() - 0.5) * 0.12, y + 0.003 + i * 0.002, z + (r() - 0.5) * 0.1, (r() - 0.5) * 1.2, { rx: -Math.PI / 2 });
+}
+// banker's lamp: brass stand, green glass shade
+export function deskLamp(k, { shade = '#2f8a4a' } = {}) {
+  const br = MAT.brass();
+  k.add(lathe([[0.001, 0], [0.09, 0], [0.095, 0.015], [0.06, 0.03], [0.02, 0.04], [0.001, 0.04]], 14), br, 0, 0, 0);
+  k.add(cyl(0.011, 0.011, 0.3, 6), br, 0, 0.18, 0);
+  k.add(cached('lampshade', () => new THREE.CylinderGeometry(0.075, 0.075, 0.3, 14, 1, true, 0, Math.PI)), MAT.glow(shade, shade, 0.7), 0, 0.34, 0.02, Math.PI / 2, { rz: Math.PI / 2 });
+  k.add(rbox(0.3, 0.012, 0.012, 0.004), br, 0, 0.34, 0.095);
+  k.add(cyl(0.02, 0.02, 0.24, 8), MAT.glow('#fff4d8', '#ffd890', 2.2), 0, 0.33, 0.02, 0, { rz: Math.PI / 2 });
+  k.add(cyl(0.003, 0.003, 0.1, 3), br, 0.06, 0.26, 0.07);
+  k.add(sphere(0.008, 6, 4), br, 0.06, 0.21, 0.07);
+}
+// candlestick telephone
+export function telephone(k) {
+  const ir = MAT.flat('#1e1c1a', 0.35, { metalness: 0.3 }), br = MAT.brass();
+  k.add(lathe([[0.001, 0], [0.06, 0], [0.062, 0.012], [0.03, 0.03], [0.012, 0.05], [0.012, 0.22], [0.025, 0.23], [0.035, 0.26], [0.001, 0.27]], 12), ir, 0, 0, 0);
+  k.add(rbox(0.012, 0.06, 0.012, 0.004), br, 0.02, 0.2, 0);
+  k.add(lathe([[0.001, 0], [0.018, 0], [0.03, 0.06], [0.026, 0.065], [0.012, 0.01], [0.001, 0.01]], 10), ir, 0.03, 0.19, 0, 0, { rz: Math.PI });
+  k.add(pipe([[0, 0.02, 0], [0.12, 0.02, 0.04], [0.16, 0.0, 0.1]], 0.005, 0.04, 4), ir, 0, 0, 0);
+}
+// office water cooler; the big bottle can be empty
+export function waterCooler(k, { empty = true } = {}) {
+  const body = MAT.paint('#e8e2d0', 0.45), blue = MAT.paint('#3a6fb0', 0.4), st = MAT.steel();
+  k.add(rbox(0.36, 0.06, 0.36, 0.01), MAT.iron(), 0, 0.03, 0);
+  k.add(rbox(0.34, 0.92, 0.34, 0.03), body, 0, 0.52, 0);
+  k.add(rbox(0.28, 0.3, 0.02, 0.01), blue, 0, 0.75, 0.17);
+  k.add(rbox(0.36, 0.04, 0.36, 0.015), body, 0, 0.995, 0);
+  k.add(lathe([[0.001, 0], [0.09, 0], [0.11, 0.02], [0.11, 0.06], [0.06, 0.07], [0.001, 0.07]], 14), st, 0, 1.0, 0);
+  // taps and drip tray
+  for (const [sx, c] of [[-0.06, '#3a6fb0'], [0.06, '#c8452f']]) { k.add(rbox(0.04, 0.05, 0.05, 0.01), st, sx, 0.84, 0.19); k.add(sphere(0.016, 6, 4), MAT.flat(c, 0.4), sx, 0.88, 0.2); }
+  k.add(rbox(0.2, 0.025, 0.08, 0.008), st, 0, 0.62, 0.2);
+  // inverted 19-litre bottle (glass), with a last splash in the neck
+  const gl = MAT.glass('#cfeaff', empty ? 0.22 : 0.45);
+  k.add(lathe([[0.001, 0], [0.03, 0], [0.032, 0.06], [0.06, 0.1], [0.13, 0.16], [0.135, 0.22], [0.13, 0.25], [0.135, 0.3], [0.135, 0.42], [0.12, 0.47], [0.001, 0.48]], 18), gl, 0, 1.04, 0);
+  for (const y of [0.22, 0.3]) k.add(torus(0.134, 0.006, 4, 18), gl, 0, 1.04 + y, 0, 0, { rx: Math.PI / 2 });
+  if (empty) k.add(cyl(0.028, 0.028, 0.04, 8), MAT.glass('#4f9ad8', 0.6), 0, 1.07, 0);
+  else k.add(lathe([[0.001, 0], [0.028, 0], [0.12, 0.15], [0.128, 0.36], [0.001, 0.36]], 14), MAT.glass('#4f9ad8', 0.5), 0, 1.05, 0);
+  // paper-cup tube
+  k.add(cyl(0.035, 0.035, 0.32, 10), st, 0.2, 0.68, 0.06);
+  k.add(lathe([[0.001, 0], [0.022, 0], [0.034, 0.07], [0.001, 0.07]], 8), MAT.flat('#f4efe2', 0.8), 0.2, 0.47, 0.06);
+  return { hw: 0.2, hd: 0.2, top: 1.5 };
+}
+// wall-mounted pressure gauge facing +z (origin at the wall)
+export function gauge(k, { r = 0.11, zone = '#c8452f', v = 0.4, stem = true } = {}) {
+  const br = MAT.brass();
+  k.add(lathe([[0.001, 0], [r * 1.1, 0], [r * 1.14, 0.02], [r * 1.12, 0.05], [r * 0.96, 0.05]], 20), br, 0, 0, 0.04, 0, { rx: Math.PI / 2 });
+  k.add(torus(r * 1.04, r * 0.08, 6, 24), br, 0, 0, 0.09);
+  k.add(disc(r, 24), MAT.map(CANV.dial(zone), 0.5), 0, 0, 0.085);
+  const a = Math.PI * 0.75 + v * Math.PI * 1.5;
+  k.add(rbox(r * 0.85, 0.01, 0.006, 0.002), MAT.flat('#a8201a', 0.4), Math.cos(a) * r * 0.36, -Math.sin(a) * r * 0.36, 0.092, 0, { rz: -a });
+  k.add(sphere(0.012, 6, 4), br, 0, 0, 0.094);
+  if (stem) { k.add(cyl(0.018, 0.018, 0.12, 8), br, 0, -r * 1.1 - 0.05, 0.06); k.add(rbox(0.05, 0.03, 0.05, 0.008), br, 0, -r * 1.1 - 0.12, 0.06); }
+  // glass
+  k.add(disc(r * 1.02, 24), MAT.glass('#ffffff', 0.12), 0, 0, 0.1);
+}
+// hand wheel for a valve, in the XY plane facing +z
+export function valveWheel(k, { r = 0.16, color = '#b8302a' } = {}) {
+  const m = MAT.paint(color, 0.4);
+  k.add(torus(r, r * 0.12, 6, 24), m, 0, 0, 0);
+  for (let i = 0; i < 4; i++) k.add(rbox(r * 1.9, r * 0.12, r * 0.1, 0.004), m, 0, 0, 0, 0, { rz: (i * Math.PI) / 4 + 0.3 });
+  k.add(cyl(r * 0.22, r * 0.22, r * 0.4, 10), MAT.brass(), 0, 0, 0, 0, { rx: Math.PI / 2 });
+}
+// pipe run with flanges at each bend and every ~1.2 m along axis-aligned segments
+export function pipeline(k, pts, r = 0.06, mat = null, flMat = null) {
+  const m = mat || MAT.copper(), fm = flMat || MAT.brass();
+  k.add(pipe(pts, r, Math.max(0.12, r * 3), 10), m, 0, 0, 0);
+  const ring = (p, d) => {
+    const ax = Math.abs(d[0]) > 0.5 ? 'x' : Math.abs(d[1]) > 0.5 ? 'y' : 'z';
+    const o = ax === 'x' ? { ry: Math.PI / 2 } : ax === 'y' ? { rx: Math.PI / 2 } : {};
+    k.add(cyl(r * 1.45, r * 1.45, 0.05, 12), fm, p[0], p[1], p[2], o.ry || 0, ax === 'y' ? {} : { rx: Math.PI / 2 });
+  };
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i], L = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+    const d = [(b[0] - a[0]) / L, (b[1] - a[1]) / L, (b[2] - a[2]) / L];
+    const n = Math.floor(L / 1.2);
+    for (let j = 1; j <= n; j++) { const t = j / (n + 1); ring([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t], d); }
+  }
+}
+// hanging sign on two chains (centre at the board), faces +z
+export function hangingSign(k, w, h, t, top) {
+  k.add(rbox(w + 0.06, h + 0.06, 0.05, 0.02), MAT.wood('dark'), 0, 0, 0);
+  for (const s of [-1, 1]) k.add(plane(w, h), MAT.map(t, 0.6), 0, 0, s * 0.027, s > 0 ? 0 : Math.PI);
+  for (const sx of [-1, 1]) { k.add(cyl(0.006, 0.006, top - h / 2, 4), MAT.iron(), sx * w * 0.38, h / 2 + (top - h / 2) / 2, 0); k.add(torus(0.02, 0.005, 4, 8), MAT.brass(), sx * w * 0.38, h / 2 + 0.02, 0); }
+}
+// cork notice board with pinned notes, faces +z
+export function noticeBoard(k, w = 0.8, h = 0.55, seed = 1) {
+  const r = rng(seed * 3 + 1);
+  k.add(rbox(w + 0.06, h + 0.06, 0.03, 0.012), MAT.wood('dark'), 0, 0, 0.015);
+  k.add(plane(w, h), MAT.cloth('#b8885a', '#6a4a2a'), 0, 0, 0.032);
+  for (let i = 0; i < 5; i++) {
+    const px = (r() - 0.5) * (w - 0.2), py = (r() - 0.5) * (h - 0.2);
+    k.add(plane(0.15, 0.2), MAT.map(CANV.doc(i % 2 ? 'form' : 'ledger'), 0.9), px, py, 0.036 + i * 0.001, 0, { rz: (r() - 0.5) * 0.3 });
+    k.add(sphere(0.012, 6, 4), MAT.flat(['#c8452f', '#3a6fb0', '#e9c46a'][i % 3], 0.4), px, py + 0.08, 0.045);
+  }
+}
+export function wallClock(k, r = 0.2) {
+  k.add(lathe([[0.001, 0], [r, 0], [r * 1.06, 0.03], [r, 0.06]], 24), MAT.wood('dark'), 0, 0, 0, 0, { rx: Math.PI / 2 });
+  k.add(torus(r * 0.98, 0.02, 6, 24), MAT.brass(), 0, 0, 0.06);
+  k.add(disc(r * 0.94, 24), MAT.map(CANV.clock(), 0.5), 0, 0, 0.055);
+  k.add(rbox(0.012, r * 0.55, 0.005, 0.002), MAT.flat('#1a1a1a'), Math.sin(-0.6) * -r * 0.25, r * 0.22, 0.062, 0, { rz: 0.6 });
+  k.add(rbox(0.012, r * 0.8, 0.005, 0.002), MAT.flat('#1a1a1a'), r * 0.33, -0.06, 0.064, 0, { rz: 2.0 });
+}
+
+// ---- Joint Project kit -------------------------------------------------
+const TEAL = '#3f8a86';
+// tall riveted locker with louvred doors and brass trim; front +z
+export function locker(k, { w = 0.9, d = 0.5, h = 1.95, color = TEAL, doors = 2, ajar = false } = {}) {
+  const body = MAT.plates(color, 0.7), door = MAT.paint(color, 0.45), dk = MAT.paint('#1e3a38', 0.6), br = MAT.brass();
+  k.add(rbox(w + 0.02, 0.1, d, 0.015), MAT.iron(), 0, 0.05, 0);
+  k.add(rbox(w, h - 0.18, d, 0.02), body, 0, 0.1 + (h - 0.18) / 2, 0);
+  k.add(rbox(w + 0.06, 0.08, d + 0.06, 0.02), br, 0, h - 0.04, 0);
+  const dw = (w - 0.06) / doors, dh = h - 0.3;
+  for (let i = 0; i < doors; i++) {
+    const x = -w / 2 + 0.03 + dw * (i + 0.5);
+    const open = ajar && i === doors - 1;
+    k.at(open ? x + dw / 2 - 0.01 : x, 0, d / 2 + 0.012, open ? 0.9 : 0, () => {
+      const ox = open ? -dw / 2 + 0.01 : 0;
+      k.add(rbox(dw - 0.03, dh, 0.025, 0.008), door, ox, 0.13 + dh / 2, 0);
+      for (let j = 0; j < 5; j++) k.add(rbox(dw * 0.55, 0.018, 0.02, 0.004), dk, ox, 0.13 + dh - 0.16 - j * 0.045, 0.014, 0, { rx: -0.5 });
+      for (let j = 0; j < 4; j++) k.add(rbox(dw * 0.55, 0.018, 0.02, 0.004), dk, ox, 0.32 + j * 0.045, 0.014, 0, { rx: -0.5 });
+      k.add(rbox(0.03, 0.16, 0.025, 0.006), br, ox + (i % 2 ? -1 : 1) * (dw / 2 - 0.07), 0.13 + dh * 0.48, 0.022);
+      k.add(rbox(0.09, 0.05, 0.008, 0.003), br, ox, 0.13 + dh * 0.62, 0.016);
+      k.add(plane(0.07, 0.03), MAT.flat('#f4efe2', 0.9), ox, 0.13 + dh * 0.62, 0.021);
+    });
+    if (open) { k.add(rbox(dw - 0.04, dh - 0.04, 0.01, 0.004), MAT.flat('#14201e', 0.9), x, 0.13 + dh / 2, d / 2 - 0.01); for (let j = 0; j < 3; j++) k.add(rbox(0.2, 0.3, 0.04, 0.01), MAT.cloth(['#e8d8a0', '#7a2a22', '#2a4a7a'][j], '#000'), x - 0.08 + j * 0.06, 0.45 + j * 0.02, d / 2 - 0.08, 0, { rz: 0.06 * j }); }
+  }
+  // emblem plate with a cyan glow
+  k.add(rbox(0.16, 0.16, 0.02, 0.06), br, 0, h - 0.24, d / 2 + 0.02);
+  k.add(sphere(0.04, 10, 6), MAT.glow('#9ff4ff', '#22d4ff', 1.8), 0, h - 0.24, d / 2 + 0.03, 0, { sz: 0.4 });
+  for (const sx of [-1, 1]) k.add(rbox(0.035, h - 0.12, 0.04, 0.012), br, sx * (w / 2 + 0.005), 0.06 + (h - 0.12) / 2, d / 2 - 0.01);
+  return { hw: w / 2 + 0.03, hd: d / 2 + 0.04, top: h };
+}
+// metal-framed monitor/terminal on a stand; front +z
+export function monitor(k, { w = 0.52, h = 0.38, kind = 'text', hue = '#5ff4ff', brass = true } = {}) {
+  const fr = brass ? MAT.brass() : MAT.iron(), cs = MAT.paint('#2e4a48', 0.5);
+  k.add(lathe([[0.001, 0], [0.12, 0], [0.12, 0.02], [0.04, 0.04], [0.001, 0.04]], 12), fr, 0, 0, 0);
+  k.add(cyl(0.025, 0.03, 0.12, 8), fr, 0, 0.1, 0);
+  k.add(rbox(w + 0.06, h + 0.06, 0.24, 0.04), cs, 0, 0.16 + h / 2, -0.06);
+  k.add(rbox(w + 0.08, h + 0.08, 0.04, 0.02), fr, 0, 0.16 + h / 2, 0.06);
+  k.add(plane(w, h), MAT.screen(CANV.screen(kind, hue)), 0, 0.16 + h / 2, 0.081);
+}
+// sloped control console with screens, dials, buttons and levers; operator on +z
+export function console_(k, { w = 2, d = 0.8, kinds = ['wave', 'bars'], levers = 3, hue = '#5ff4ff', color = TEAL } = {}) {
+  const body = MAT.plates(color, 0.6), br = MAT.brass(), ir = MAT.iron(), dk = MAT.paint('#26302e', 0.5);
+  k.add(rbox(w, 0.1, d - 0.08, 0.015), ir, 0, 0.05, -0.03);
+  k.add(rbox(w - 0.02, 0.72, d - 0.12, 0.03), body, 0, 0.46, -0.05);
+  k.add(rbox(w + 0.04, 0.04, d - 0.06, 0.015), br, 0, 0.83, -0.03);
+  // sloped desk panel
+  const sl = 0.42;
+  k.add(rbox(w, 0.06, 0.46, 0.02), dk, 0, 0.93, 0.08, 0, { rx: sl });
+  k.add(rbox(w + 0.04, 0.035, 0.06, 0.015), br, 0, 0.86, 0.33);
+  // riser with screens
+  k.add(rbox(w, 0.62, 0.22, 0.03), body, 0, 1.3, -d / 2 + 0.12);
+  k.add(rbox(w + 0.06, 0.06, 0.3, 0.025), br, 0, 1.63, -d / 2 + 0.13);
+  const n = kinds.length, sw = (w - 0.2) / n;
+  kinds.forEach((kd, i) => {
+    const x = -w / 2 + 0.1 + sw * (i + 0.5);
+    k.add(rbox(sw - 0.04, 0.42, 0.04, 0.02), br, x, 1.3, -d / 2 + 0.23);
+    k.add(plane(sw - 0.12, 0.34), MAT.screen(CANV.screen(kd, hue)), x, 1.3, -d / 2 + 0.252);
+  });
+  // gauges along the top of the slope
+  const gy = (t) => 0.93 + 0.03 + Math.cos(sl) * 0 - Math.sin(sl) * (t - 0.08);
+  const gN = Math.max(2, Math.round(w / 0.5));
+  for (let i = 0; i < gN; i++) {
+    const x = -w / 2 + 0.2 + i * ((w - 0.4) / Math.max(1, gN - 1));
+    k.at(x, gy(-0.05) + 0.01, -0.05, 0, () => k.add(disc(0.055, 18), MAT.map(CANV.dial(i % 2 ? '#c8452f' : '#3a6fb0'), 0.5), 0, 0, 0, 0, { rx: -Math.PI / 2 + sl }));
+    k.at(x, gy(-0.05) + 0.012, -0.05, 0, () => k.add(torus(0.058, 0.008, 5, 18), br, 0, 0, 0, 0, { rx: -Math.PI / 2 + sl }));
+  }
+  // buttons
+  const cols = ['#e03a3a', '#e9c46a', '#5fd05f', '#5ff4ff'];
+  for (let i = 0; i < Math.round(w / 0.12); i++) {
+    const x = -w / 2 + 0.12 + i * 0.11, t = 0.16;
+    k.add(cyl(0.02, 0.022, 0.025, 8), cols[i % 4] === '#5ff4ff' ? MAT.glow('#9ff4ff', '#22d4ff', 1.5) : MAT.glow(cols[i % 4], cols[i % 4], 0.6), x, gy(t) + 0.03, t, 0, { rx: sl });
+  }
+  // levers on the right of the slope
+  for (let i = 0; i < levers; i++) {
+    const x = w / 2 - 0.14 - i * 0.12, t = 0.27;
+    k.add(rbox(0.06, 0.03, 0.12, 0.01), ir, x, gy(t) + 0.03, t, 0, { rx: sl });
+    k.add(cyl(0.01, 0.01, 0.2, 6), MAT.steel(), x, gy(t) + 0.12, t + 0.02, 0, { rx: sl - 0.4 + i * 0.35 });
+    k.add(sphere(0.026, 8, 6), MAT.paint(i === 0 ? '#c8302a' : '#2a2a2e', 0.3), x, gy(t) + 0.21, t + 0.02 + Math.sin(sl - 0.4 + i * 0.35) * 0.1);
+  }
+  return { hw: w / 2 + 0.02, hd: d / 2 + 0.02, top: 1.66 };
+}
+// tall instrument cabinet: dials, a screen, big knife switch; front +z
+export function instrumentRack(k, { w = 1.2, d = 0.5, h = 2.2, kind = 'shaft', color = TEAL } = {}) {
+  const body = MAT.plates(color, 0.7), br = MAT.brass(), ir = MAT.iron();
+  k.add(rbox(w + 0.04, 0.1, d + 0.02, 0.015), ir, 0, 0.05, 0);
+  k.add(rbox(w, h - 0.2, d, 0.03), body, 0, 0.1 + (h - 0.2) / 2, 0);
+  k.add(rbox(w + 0.08, 0.1, d + 0.08, 0.03), br, 0, h - 0.05, 0);
+  k.at(0, 1.45, d / 2, 0, () => {
+    k.add(rbox(w * 0.7, 0.5, 0.04, 0.02), br, 0, 0, 0.01);
+    k.add(plane(w * 0.62, 0.42), MAT.screen(CANV.screen(kind)), 0, 0, 0.032);
+  });
+  for (let i = 0; i < 3; i++) k.at(-w / 2 + 0.2 + i * ((w - 0.4) / 2), 0.98, d / 2, 0, () => gauge(k, { r: 0.09, v: 0.3 + i * 0.22, stem: false }));
+  // knife switch
+  k.at(0, 0.55, d / 2, 0, () => {
+    k.add(rbox(0.36, 0.26, 0.04, 0.01), MAT.paint('#2a2018', 0.7), 0, 0, 0.02);
+    for (const sx of [-0.08, 0.08]) { k.add(rbox(0.03, 0.06, 0.05, 0.006), MAT.copper(), sx, -0.06, 0.06); k.add(rbox(0.025, 0.2, 0.012, 0.004), MAT.copper(), sx, 0.04, 0.12, 0, { rx: -0.6 }); }
+    k.add(cyl(0.012, 0.012, 0.24, 6), MAT.paint('#1e1e1e', 0.4), 0, 0.12, 0.17, 0, { rz: Math.PI / 2 });
+  });
+  for (const sx of [-1, 1]) for (const y of [0.3, h - 0.35]) k.add(sphere(0.022, 6, 4), br, sx * (w / 2 - 0.06), y, d / 2 + 0.005);
+  return { hw: w / 2 + 0.04, hd: d / 2 + 0.04, top: h };
+}
+// cargo crate with stencil and steel corners
+export function cargoCrate(k, { w = 0.8, h = 0.7, d = 0.8, color = '#2e4a46' } = {}) {
+  const m = MAT.paint(color, 0.7), st = MAT.steel(), sm = MAT.map(CANV.stencil(color), 0.75);
+  k.add(rbox(w - 0.02, h - 0.02, d - 0.02, 0.02), m, 0, h / 2, 0);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(rbox(0.08, h, 0.08, 0.015), st, sx * (w / 2 - 0.035), h / 2, sz * (d / 2 - 0.035));
+  for (const y of [0.04, h - 0.04]) { k.add(rbox(w - 0.1, 0.06, 0.04, 0.01), m, 0, y, d / 2 - 0.005); k.add(rbox(0.04, 0.06, d - 0.1, 0.01), m, w / 2 - 0.005, y, 0); }
+  k.add(plane(Math.min(w, h) * 0.75, Math.min(w, h) * 0.75), sm, 0, h / 2, d / 2 + 0.002);
+  k.add(plane(Math.min(d, h) * 0.75, Math.min(d, h) * 0.75), sm, w / 2 + 0.002, h / 2, 0, Math.PI / 2);
+  return { hw: w / 2, hd: d / 2, top: h };
+}
+// brass railing along a polyline [[x,z],...] (posts, top and mid rail)
+export function railing(k, pts, { h = 1.0, mat = null, step = 0.9 } = {}) {
+  const m = mat || MAT.brass();
+  const post = lathe([[0.03, 0], [0.045, 0.02], [0.03, 0.05], [0.02, 0.1], [0.02, h - 0.06], [0.03, h - 0.03], [0.001, h]], 8);
+  for (let i = 0; i < pts.length; i++) {
+    k.add(post, m, pts[i][0], 0, pts[i][1]);
+    if (i) {
+      const [ax, az] = pts[i - 1], [bx, bz] = pts[i], L = Math.hypot(bx - ax, bz - az), n = Math.floor(L / step);
+      for (let j = 1; j < n + 1; j++) { const t = j / (n + 1); k.add(post, m, ax + (bx - ax) * t, 0, az + (bz - az) * t); }
+    }
+  }
+  for (const y of [h - 0.02, h * 0.5]) k.add(pipe(pts.map(([x, z]) => [x, y, z]), y > h * 0.6 ? 0.025 : 0.014, 0.12, 8), m, 0, 0, 0);
+}
+// cable tray along local x (length L), with sagging cables; wall at -z
+export function cableTray(k, L, { cables = ['#1a1a1a', '#a8302a', '#2a4a8a', '#1a1a1a'] } = {}) {
+  const st = MAT.iron();
+  k.add(rbox(L, 0.02, 0.28, 0.006), st, 0, 0, 0.16);
+  k.add(rbox(L, 0.08, 0.02, 0.006), st, 0, 0.04, 0.3);
+  for (let x = -L / 2 + 0.3; x < L / 2; x += 1.1) k.add(rbox(0.04, 0.12, 0.3, 0.008), st, x, -0.05, 0.15);
+  cables.forEach((c, i) => {
+    const z = 0.07 + i * 0.055, pts = [];
+    for (let j = 0; j <= 8; j++) { const t = j / 8; pts.push([-L / 2 + t * L, 0.035 + Math.sin(t * 7 + i) * 0.006, z]); }
+    k.add(pipe(pts, 0.022, 0.1, 6), MAT.flat(c, 0.6), 0, 0, 0);
+  });
+}
+// blueprint table with a hologram projector; returns {holo: Group} for animation
+export function holoTable(k, { w = 2.0, d = 1.3, h = 0.92 } = {}) {
+  const br = MAT.brass(), ir = MAT.iron(), body = MAT.plates(TEAL, 0.6);
+  k.add(rbox(w - 0.3, 0.1, d - 0.3, 0.02), ir, 0, 0.05, 0);
+  k.add(rbox(w - 0.4, h - 0.2, d - 0.4, 0.04), body, 0, 0.1 + (h - 0.2) / 2, 0);
+  k.add(rbox(w, 0.08, d, 0.03), br, 0, h - 0.04, 0);
+  k.add(plane(w - 0.14, d - 0.14), MAT.screen(CANV.blueprint(), 0.55), 0, h + 0.002, 0, 0, { rx: -Math.PI / 2 });
+  for (const sx of [-1, 1]) k.add(rbox(0.06, 0.05, d - 0.1, 0.012), br, sx * (w / 2 - 0.03), h + 0.02, 0);
+  // cyan strip lights round the base
+  k.add(rbox(w - 0.38, 0.025, 0.02, 0.006), MAT.glow('#9ff4ff', '#22d4ff', 2), 0, 0.2, (d - 0.4) / 2 + 0.01);
+  k.add(rbox(0.02, 0.025, d - 0.38, 0.006), MAT.glow('#9ff4ff', '#22d4ff', 2), (w - 0.4) / 2 + 0.01, 0.2, 0);
+  // projector puck
+  k.add(lathe([[0.001, 0], [0.2, 0], [0.22, 0.03], [0.16, 0.06], [0.08, 0.07], [0.001, 0.07]], 18), br, 0, h, 0);
+  k.add(disc(0.075, 18), MAT.glow('#e8ffff', '#5ff4ff', 2.5), 0, h + 0.072, 0, 0, { rx: -Math.PI / 2 });
+  // the hologram (animated by the room): shell, core, bore, beam
+  const holo = k.pivot(0, h + 0.75, 0, 0);
+  const add = (geo, color, op, wire = false) => { const mm = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, wireframe: wire }); const me = new THREE.Mesh(geo, mm); holo.add(me); return me; };
+  const shell = add(new THREE.IcosahedronGeometry(0.46, 2), '#5ff4ff', 0.55, true);
+  add(new THREE.SphereGeometry(0.44, 20, 14), '#1a8aa8', 0.18);
+  const core = add(new THREE.SphereGeometry(0.15, 14, 10), '#e0b8ff', 0.9);
+  add(new THREE.TorusGeometry(0.6, 0.008, 4, 40), '#5ff4ff', 0.6).rotation.x = Math.PI / 2 - 0.3;
+  const bore = add(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 6), '#ffb040', 0.9); bore.position.y = 0.5;
+  const beamGeo = new THREE.CylinderGeometry(0.42, 0.08, 0.75, 18, 1, true); beamGeo.translate(0, -0.375, 0);
+  const beam = add(beamGeo, '#5ff4ff', 0.12); beam.material.side = THREE.DoubleSide;
+  return { hw: w / 2, hd: d / 2, top: h, holo, shell, core };
+}
+// chart table with a glowing island map; front +z
+export function mapTable(k, { w = 1.6, d = 1.0, h = 0.9 } = {}) {
+  const br = MAT.brass(), ir = MAT.iron();
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(lathe([[0.05, 0], [0.06, 0.03], [0.035, 0.1], [0.03, h - 0.12], [0.045, h - 0.08]], 8), ir, sx * (w / 2 - 0.12), 0, sz * (d / 2 - 0.12));
+  k.add(rbox(w - 0.2, 0.1, d - 0.2, 0.02), MAT.plates(TEAL, 0.6), 0, h - 0.13, 0);
+  k.add(rbox(w, 0.07, d, 0.03), br, 0, h - 0.035, 0);
+  k.add(plane(w - 0.12, d - 0.12), MAT.screen(CANV.screen('map'), 0.9), 0, h + 0.002, 0, 0, { rx: -Math.PI / 2 });
+  for (const [px, pz, c] of [[-0.3, -0.15, '#ffb040'], [0.25, 0.12, '#5ff4ff'], [0.05, -0.05, '#ff5040']]) { k.add(cyl(0.006, 0.006, 0.12, 4), MAT.steel(), px * w / 1.6, h + 0.06, pz); k.add(sphere(0.022, 8, 6), MAT.glow(c, c, 1.4), px * w / 1.6, h + 0.13, pz); }
+  k.add(cyl(0.012, 0.012, w * 0.5, 6), br, w * 0.15, h + 0.02, d / 2 - 0.15, 0.3, { rz: Math.PI / 2 });
+  return { hw: w / 2, hd: d / 2, top: h };
+}

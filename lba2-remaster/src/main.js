@@ -19,6 +19,8 @@ import { Story } from './game/story/index.js';
 import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1';
+// music per interior; outdoors it follows the area (see updatePlay)
+const ROOM_MUSIC = { house: 'home', well: 'cave', office: 'home', projoffice: 'stealth', control: 'station' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
 const $ = (s) => document.querySelector(s);
@@ -147,6 +149,7 @@ class Game {
       this.lastSafe = { x: sp.x, z: sp.z };
       this.camRig.setIso(R);
       this.doorCool = 1;
+      this.audio.setMood(ROOM_MUSIC[id] || 'citadel');
       this.story.onEnterRoom(id);
       if (this.state !== 'title') this.save(false);
     };
@@ -167,6 +170,7 @@ class Game {
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
       this.doorCool = 1;
+      this.audio.setMood('citadel');
       if (R) this.story.onExitRoom(R.id);
       if (this.state !== 'title') this.save(false);
     };
@@ -694,6 +698,12 @@ class Game {
     this.safeT = (this.safeT || 0) - dt;
     if (!this.room && this.safeT <= 0 && h.onGround && h.pos.y > 0.4) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
 
+    // outdoor music follows the area: the station inside the old fortress has its own theme
+    if (!this.room && this.audio.music) {
+      const F = POI.fort, inFort = Math.abs(h.pos.x - F.x) < F.half + 2 && Math.abs(h.pos.z - F.z) < F.half + 2;
+      const want = inFort ? 'station' : 'citadel';
+      if (this.audio.music.want !== want && ['station', 'citadel'].includes(this.audio.music.want)) this.audio.setMood(want);
+    }
     // adaptive combat music
     const chasing = this.enemies.some((e) => e.alive && e.present && (e.state === 'chase' || e.state === 'windup'));
     this.combat = lerp(this.combat, chasing ? 1 : 0, 1 - Math.exp(-dt * 1.5));
