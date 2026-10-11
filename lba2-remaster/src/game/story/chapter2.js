@@ -320,7 +320,7 @@ export class Chapter2 extends ChapterBase {
   toShell() {
     const g = this.game, f = this.f;
     g.startTransition(() => {
-      if (this.story.chapters.length > 3) { this.story.nextChapter(); return; }
+      if (this.story.chapters.length > 3 && g.rooms.c3shaft) { this.story.nextChapter(); return; } // (chapter 3's rooms built)
       f.c2_done = true;
       g.save(false);
       g.setState('ending');

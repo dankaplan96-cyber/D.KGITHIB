@@ -367,7 +367,97 @@ export class Drone extends Actor {
   }
 }
 
+// ------------------------------------------------------------------ the bore's guardian (chapter 3 boss)
+// A big maintenance drone that defends the conversion pylons. The ball can't break it: a hit stuns it
+// for a few seconds (the window to line up a bank shot on a pylon). Its attack is readable: it stops,
+// glows and hums for over a second, then fires a fan of three bolts — step sideways or duck behind a
+// pylon. Each converted pylon makes it a little quicker; when the third is converted it loses power.
+export class Guardian extends Drone {
+  constructor(game, def) {
+    super(game, def);
+    this.rig.root.scale.setScalar(2.1);
+    this.shadow.scale.multiplyScalar(2.2);
+    this.hover = 2.6; this.hitR = 1.4; this.hitH = 4.2;
+    this.arena = def.arena || null;
+    this.level = 0; this.stunT = 0;
+    this.hp = this.maxHp = 1e9;
+    this.group = def.group || 'core';
+    this.state = 'chase';
+  }
+  setLevel(n) { this.level = n; }
+  damage(n, from) {
+    if (!this.alive) return;
+    const g = this.game;
+    this.rig.hitFlash();
+    g.audio.play('hit');
+    g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 22, 4);
+    this.state = 'stunned'; this.stateT = 0; this.stunT = 2.6;
+    if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 5, Math.cos(a) * 5); }
+  }
+  powerDown() {
+    if (!this.alive) return;
+    const g = this.game;
+    this.state = 'dead'; this.deadT = 0;
+    g.audio.play('break'); g.camRig.shake(0.35);
+    g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 40, 6);
+  }
+  // keep circling the hero at a firing distance, inside the arena
+  update(dt) {
+    if (!this.present) return;
+    if (!this.alive) { super.update(dt); return; }
+    const g = this.game, hero = g.hero, P = g.physics;
+    this.stateT += dt;
+    let face = this.angleTo(hero), sp = 0;
+    const d = this.distTo(hero);
+    if (this.state === 'stunned') {
+      // sags, sparks, can't attack
+      this.hover = Math.max(1.4, this.hover - dt * 2.5);
+      this.rig.play('hurt');
+      if (Math.random() < dt * 10) g.particles.burst(this.pos.x, this.pos.y + this.hover + 0.6, this.pos.z, '#bff4ff', 2, 2);
+      face = null;
+      if (this.stateT > this.stunT) { this.state = 'chase'; this.stateT = 0; this.coolT = 0.8; }
+    } else {
+      this.hover = Math.min(2.6, this.hover + dt * 1.5);
+      this.rig.mood = 'alert';
+      if (this.state === 'chase') {
+        sp = d > 7 ? 2.3 : d < 4.5 ? -1.6 : 0;
+        // strafe a little so it doesn't sit in one place
+        const side = Math.sin(this.stateT * 0.9) * 1.2;
+        P.move(this, Math.cos(this.angle) * side * dt, -Math.sin(this.angle) * side * dt);
+        this.coolT = Math.max(0, this.coolT - dt);
+        if (this.coolT <= 0 && d < 12 && !hero.dead) { this.state = 'windup'; this.stateT = 0; g.audio.play('alert'); }
+        this.rig.play('idle');
+      } else if (this.state === 'windup') {
+        // the tell: stops, glows, hums
+        this.rig.play('windup');
+        const tell = 1.35 - this.level * 0.15;
+        if (Math.random() < dt * 14) g.particles.burst(this.pos.x + Math.sin(this.angle) * 1.1, this.pos.y + this.hover - 0.6, this.pos.z + Math.cos(this.angle) * 1.1, '#ffb070', 1, 1);
+        if (this.stateT > tell) {
+          const from = new THREE.Vector3(this.pos.x + Math.sin(this.angle) * 1.1, this.pos.y + this.hover - 0.8, this.pos.z + Math.cos(this.angle) * 1.1);
+          const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
+          const dir = to.sub(from).normalize();
+          for (const off of [-0.32, 0, 0.32]) g.bolts.fire(from.clone(), dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), off), 8.5, 1);
+          g.audio.play('zap');
+          this.rig.play('fire');
+          this.state = 'chase'; this.stateT = 0; this.coolT = 2.8 - this.level * 0.5;
+        }
+      }
+    }
+    if (face != null) this.angle = dampAngle(this.angle, face, 3, dt);
+    if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
+    if (this.arena) {
+      const A = this.arena;
+      this.pos.x = Math.min(A.x1 - 1, Math.max(A.x0 + 1, this.pos.x));
+      this.pos.z = Math.min(A.z1 - 1, Math.max(A.z0 + 1, this.pos.z));
+    }
+    this.applyKnockback(dt);
+    this.rig.update(dt);
+    this.syncHover();
+  }
+}
+
 export function createEnemy(game, def) {
+  if (def.kind === 'guardian') return new Guardian(game, def);
   if (def.kind === 'drone') return new Drone(game, def);
   return new Mite(game, def);
 }

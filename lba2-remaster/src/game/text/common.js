@@ -35,7 +35,7 @@ Object.assign(STR.en, {
   chapter_1: 'The Joint Project',
   chapter_2: 'Zeelich',
   chapter_3: 'The Shell',
-  chapter_4: 'Epilogue',
+  chapter_4: 'Home',
   idle_generic: 'Hello, Twinsen.',
   ending_title: 'End of Chapter 1',
   ending_text: 'The project ferry leaves the harbour for the skies of Zeelich. Baldino is waiting there. So is Vesk.',

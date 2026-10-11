@@ -5,6 +5,8 @@ import { t } from '../i18n.js';
 import { Prologue } from './prologue.js';
 import { Chapter1 } from './chapter1.js';
 import { Chapter2 } from './chapter2.js';
+import { Chapter3 } from './chapter3.js';
+import { Epilogue } from './epilogue.js';
 import '../text/common.js';
 
 export const CHAPTERS = ['prologue', 'ch1', 'ch2', 'ch3', 'epilogue'];
@@ -12,7 +14,7 @@ export const CHAPTERS = ['prologue', 'ch1', 'ch2', 'ch3', 'epilogue'];
 export class Story {
   constructor(game) {
     this.game = game;
-    this.chapters = [new Prologue(this), new Chapter1(this), new Chapter2(this)];
+    this.chapters = [new Prologue(this), new Chapter1(this), new Chapter2(this), new Chapter3(this), new Epilogue(this)];
   }
   // later chapters are registered by their modules (keeps imports one-way)
   register(ch) { this.chapters.push(ch); }
@@ -42,7 +44,8 @@ export class Story {
     this.f.chapter = (this.f.chapter || 0) + 1;
     const c = this.cur;
     this.refreshCast();
-    g.hud.chapterCard(t('chapter_n', { n: this.index }), t('chapter_' + this.index));
+    // (the epilogue's card shows only its title)
+    g.hud.chapterCard(this.index >= 4 ? '' : t('chapter_n', { n: this.index }), t('chapter_' + this.index));
     c.begin();
     this.refreshCast();
     g.updateObjective();

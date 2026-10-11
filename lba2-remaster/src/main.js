@@ -514,7 +514,7 @@ class Game {
   ballHitTest(p) {
     for (const e of this.enemies) {
       if (!e.alive || !e.present) continue;
-      if (Math.hypot(p.x - e.pos.x, p.z - e.pos.z) < 0.75 && p.y > e.pos.y - 0.2 && p.y < e.pos.y + 2) {
+      if (Math.hypot(p.x - e.pos.x, p.z - e.pos.z) < (e.hitR || 0.75) && p.y > e.pos.y - 0.2 && p.y < e.pos.y + (e.hitH || 2)) {
         e.damage(this.ball.damage, p);
         return true;
       }
@@ -531,7 +531,7 @@ class Game {
   ballAimTargets() {
     const out = [];
     for (const e of this.enemies) if (e.alive && e.present) out.push({ x: e.pos.x, y: e.pos.y + (e instanceof Drone ? e.hover : 0.45), z: e.pos.z });
-    if (this.room) { for (const t2 of this.room.ballTargets) if (!t2.node?.lit) out.push(t2); }
+    if (this.room) { for (const t2 of this.room.ballTargets) if (!t2.node?.lit && !t2.done) out.push(t2); }
     else if (!this.world.target.hit) out.push(this.world.target);
     return out.concat(this.story.ballTargets());
   }
