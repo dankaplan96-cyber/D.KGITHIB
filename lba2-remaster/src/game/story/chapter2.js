@@ -57,7 +57,9 @@ export class Chapter2 extends ChapterBase {
       case 'oku': return S.esmer2;
       case 'doran': return S.doran;
       case 'vesk': return f.c2_veskDown ? null : S.vesk;
-      case 'guard': return f.c2_shield ? { x: plat.gate.x + 0.5, z: plat.gate.z + 3.2, a: -Math.PI / 2 } : S.guard;
+      case 'guard':
+        if (f.c2_started && !f.c2_planTaken && Z.dock) return { x: Z.dock.x + 1.6, z: Z.dock.z + 1.2, a: Math.PI }; // (meets the ferry)
+        return f.c2_shield ? { x: plat.gate.x + 0.5, z: plat.gate.z + 3.2, a: -Math.PI / 2 } : S.guard;
       case 'zoe': return f.c2_zoeStart && !f.c2_broadcast ? null : undefined;
       case 'worker': return null;
     }
@@ -72,7 +74,21 @@ export class Chapter2 extends ChapterBase {
     Z.ferry?.setVisible?.(true);
     this.story.refreshCast();
     this.chain([['narrator', 'c2_arrive'], ['doran', 'c2_doran_1'], ['hero', 'c2_tw_arrive']], () => {
-      this.f.c2_started = true; g.updateObjective(); g.save(false);
+      this.f.c2_started = true;
+      this.story.refreshCast();
+      this.confiscate();
+    });
+  }
+  // the setback: the project's guard meets the ferry and takes the evacuation plan (it ends up in the depot)
+  confiscate() {
+    const g = this.game, f = this.f;
+    if (f.c2_planTaken || !f.c1_plan) { g.updateObjective(); g.save(false); return; }
+    this.chain([['guard', 'c2_guard_dock1'], ['hero', 'c2_tw_dock1'], ['guard', 'c2_guard_dock2']], () => {
+      f.c2_planTaken = true;
+      g.audio.play('deny');
+      g.hud.toast('c2_toast_plan_taken');
+      this.story.refreshCast();
+      this.chain([['hero', 'c2_tw_dock2']], () => { g.updateObjective(); g.save(false); });
     });
   }
 
@@ -123,6 +139,7 @@ export class Chapter2 extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero, Z = this.Z;
     switch (it.kind) {
       case 'c2cog':
+        if (f.c2_planTaken && !f.c2_okuOK) { this.chain([['hero', 'c2_cog_ask']]); return true; }
         h.act('pickup', 0.9, () => {
           f.c2_cog = true; g.audio.play('shard');
           this.chain([['hero', 'c2_got_cog']], () => { g.hud.toast('c2_toast_cog'); g.updateObjective(); g.save(false); });
@@ -131,7 +148,13 @@ export class Chapter2 extends ChapterBase {
       case 'c2locker':
         h.act('use', 1.0, () => {
           f.c2_cyl = true; g.audio.play('chest');
-          this.chain([['hero', 'c2_got_cyl']], () => { g.hud.toast('c2_toast_cyl'); g.updateObjective(); g.save(false); });
+          const back = f.c2_planTaken && !f.c2_planBack;
+          if (back) f.c2_planBack = true;
+          this.chain([['hero', 'c2_got_cyl'], ...(back ? [['hero', 'c2_got_plan']] : [])], () => {
+            g.hud.toast('c2_toast_cyl');
+            if (back) g.hud.toast('c2_toast_plan_back');
+            g.updateObjective(); g.save(false);
+          });
         }, 0.5);
         return true;
       case 'c2console':
@@ -166,10 +189,13 @@ export class Chapter2 extends ChapterBase {
     switch (id) {
       case 'doran': return c([['doran', 'c2_doran_idle']]);
       case 'nara':
+        if (f.c2_planBack && !f.c2_naraSaw) return c([['hero', 'c2_tw_show_nara'], ['nara', 'c2_nara_plan']], () => { f.c2_naraSaw = true; g.save(false); });
         if (f.c2_shield) return c([['nara', 'c2_nara_after']]);
         if (!f.c2_metNara) return c([['nara', 'c2_nara_1'], ['nara', 'c2_nara_2'], ['nara', 'c2_nara_3']], () => { f.c2_metNara = true; });
         return c([['nara', f.c2_plan ? 'c2_nara_2' : 'c2_nara_3']]);
       case 'oku':
+        if (f.c2_planBack && !f.c2_okuOK) return c([['hero', 'c2_tw_show_oku'], ['oku', 'c2_oku_plan']], () => { f.c2_okuOK = true; g.updateObjective(); g.save(false); });
+        if (f.c2_plan && f.c2_planTaken && !f.c2_okuOK && !f.c2_cog) return c([['oku', 'c2_oku_1'], ['oku', 'c2_oku_ask']]);
         if (this.millsBraked() >= 3) return c([['oku', 'c2_oku_after']]);
         if (f.c2_plan && !f.c2_cog) return c([['oku', 'c2_oku_mill']]);
         return c([['oku', 'c2_oku_1'], ['oku', 'c2_oku_2']]);
@@ -377,6 +403,8 @@ export class Chapter2 extends ChapterBase {
     const f = this.f;
     return [
       { key: 'c2_j_arrive', done: !!f.c2_started },
+      ...(f.c2_planTaken ? [{ key: 'c2_j_taken', done: true }] : []),
+      ...(f.c2_okuOK ? [{ key: 'c2_j_back', done: true }] : []),
       { key: 'c2_j_bal', done: !!f.c2_plan },
       { key: 'c2_j_parts', done: !!(f.c2_cog && f.c2_cyl) },
       { key: 'c2_j_key', done: !!f.c2_key },

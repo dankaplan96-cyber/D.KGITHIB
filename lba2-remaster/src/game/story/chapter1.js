@@ -491,7 +491,7 @@ export class Chapter1 extends ChapterBase {
     const f = this.f, out = [];
     if (f.c1_map && !f.c1_water) out.push({ id: 'pipemap', icon: 'map' });
     if (f.c1_needZoe && !f.c1_plan) out.push({ id: 'leaflet', icon: 'leaflet' });
-    if (f.c1_plan) out.push({ id: 'evacplan', icon: 'plan' });
+    if (f.c1_plan && (!f.c2_planTaken || f.c2_planBack)) out.push({ id: 'evacplan', icon: 'plan' }); // (confiscated on Zeelich until recovered)
     return out;
   }
   journal() {
