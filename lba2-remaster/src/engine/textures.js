@@ -295,7 +295,229 @@ export function makeTextures() {
     x.fillStyle = g; x.fillRect(0, 0, 64, 64);
     T.blob = toTex(c, false);
   }
+  islandTextures(T);
   return T;
+}
+
+// ------------------------------------------------------------------ island kit
+// Textures for the outdoor island (island.js): cliffs, rubble walls, planks,
+// and the Joint Project's "Zeelich tech" metals.
+function rivetRow(x, x0, y0, x1, y1, n, r = 2.2) {
+  for (let i = 0; i <= n; i++) {
+    const px = x0 + (x1 - x0) * (i / n), py = y0 + (y1 - y0) * (i / n);
+    x.fillStyle = 'rgba(0,0,0,0.35)'; x.beginPath(); x.arc(px + 0.8, py + 1, r, 0, 7); x.fill();
+    const g = x.createRadialGradient(px - r * 0.4, py - r * 0.4, 0, px, py, r);
+    g.addColorStop(0, 'rgba(255,255,240,0.9)'); g.addColorStop(1, 'rgba(120,110,90,0.6)');
+    x.fillStyle = g; x.beginPath(); x.arc(px, py, r, 0, 7); x.fill();
+  }
+}
+
+function islandTextures(T) {
+  const S = 256;
+  // cliff rock (LBA2 Citadel cliffs): grey-violet, horizontal strata, faceted
+  // light planes and dark cracks; used triplanar on the terrain
+  {
+    const N = 512;
+    const [c, x] = canvas(N); const r = rng(101);
+    x.fillStyle = '#8e8796'; x.fillRect(0, 0, N, N);
+    // strata bands
+    let y = 0;
+    while (y < N) {
+      const h = 18 + r() * 40, tone = r();
+      x.fillStyle = tone < 0.33 ? '#7c7586' : tone < 0.66 ? '#a29bab' : '#918a99';
+      wrap(N, (ox, oy) => { x.beginPath(); x.moveTo(ox, y + oy); for (let k = 0; k <= N; k += 32) x.lineTo(k + ox, y + oy + Math.sin(k * 0.03 + y) * 4); x.lineTo(N + ox, y + h + oy); x.lineTo(ox, y + h + oy); x.fill(); });
+      y += h;
+    }
+    // faceted chunks: light top planes, dark undersides
+    for (let i = 0; i < 160; i++) {
+      const px = r() * N, py = r() * N, w = 14 + r() * 40, h = 8 + r() * 22;
+      const pts = [[0, 0], [w * (0.4 + r() * 0.3), -h * (0.3 + r() * 0.4)], [w, r() * h * 0.2], [w * (0.5 + r() * 0.3), h], [w * 0.1, h * (0.6 + r() * 0.3)]];
+      const tone = r();
+      x.fillStyle = tone < 0.4 ? 'rgba(220,214,226,0.55)' : tone < 0.75 ? 'rgba(70,62,82,0.45)' : 'rgba(150,140,160,0.5)';
+      wrap(N, (ox, oy) => { x.beginPath(); pts.forEach(([a, b], k) => (k ? x.lineTo(px + a + ox, py + b + oy) : x.moveTo(px + a + ox, py + b + oy))); x.closePath(); x.fill(); });
+      // highlight edge on top
+      x.strokeStyle = 'rgba(245,240,250,0.5)'; x.lineWidth = 1.5;
+      wrap(N, (ox, oy) => { x.beginPath(); x.moveTo(px + ox, py + oy); x.lineTo(px + pts[1][0] + ox, py + pts[1][1] + oy); x.lineTo(px + pts[2][0] + ox, py + pts[2][1] + oy); x.stroke(); });
+    }
+    // dark cracks, mostly horizontal with vertical joints
+    x.strokeStyle = 'rgba(40,32,48,0.7)'; x.lineWidth = 2;
+    for (let i = 0; i < 70; i++) {
+      let px = r() * N, py = r() * N;
+      const vert = r() < 0.35;
+      const pts = [[px, py]];
+      for (let k = 0; k < 5; k++) { px += vert ? (r() - 0.5) * 10 : 10 + r() * 22; py += vert ? 8 + r() * 14 : (r() - 0.5) * 9; pts.push([px, py]); }
+      wrap(N, (ox, oy) => { x.beginPath(); pts.forEach(([a, b], k) => (k ? x.lineTo(a + ox, b + oy) : x.moveTo(a + ox, b + oy))); x.stroke(); });
+    }
+    speckle(x, N, r, 900, ['#d8d2de', '#5c5468', '#b4adbc'], 0.5, 0.3);
+    T.cliff = toTex(c);
+  }
+  // rubble stone (LBA2 harbour houses and embankments): rounded irregular
+  // stones, lit from the upper left, dark mortar
+  {
+    const N = 256;
+    const [c, x] = canvas(N); const r = rng(102);
+    x.fillStyle = '#3e3a3a'; x.fillRect(0, 0, N, N);
+    const stones = [];
+    for (let i = 0; i < 900 && stones.length < 90; i++) {
+      const px = r() * N, py = r() * N, rx = 9 + r() * 13, ry = 7 + r() * 8;
+      let ok = true;
+      for (const s of stones) {
+        let dx = Math.abs(s[0] - px), dy = Math.abs(s[1] - py);
+        dx = Math.min(dx, N - dx); dy = Math.min(dy, N - dy);
+        if ((dx / (s[2] + rx)) ** 2 + (dy / (s[3] + ry)) ** 2 < 0.62) { ok = false; break; }
+      }
+      if (ok) stones.push([px, py, rx, ry, r() * 0.6 - 0.3, r()]);
+    }
+    for (const [px, py, rx, ry, rot, tone] of stones) {
+      const base = 120 + tone * 70;
+      wrap(N, (ox, oy) => {
+        x.save(); x.translate(px + ox, py + oy); x.rotate(rot);
+        x.fillStyle = 'rgba(20,16,16,0.5)'; x.beginPath(); x.ellipse(1.5, 2, rx, ry, 0, 0, 7); x.fill();
+        const g = x.createRadialGradient(-rx * 0.35, -ry * 0.45, 0, 0, 0, Math.max(rx, ry) * 1.1);
+        g.addColorStop(0, `rgb(${base + 70},${base + 66},${base + 62})`);
+        g.addColorStop(0.55, `rgb(${base},${base - 4},${base - 6})`);
+        g.addColorStop(1, `rgb(${base - 60},${base - 64},${base - 64})`);
+        x.fillStyle = g; x.beginPath(); x.ellipse(0, 0, rx, ry, 0, 0, 7); x.fill();
+        x.restore();
+      });
+    }
+    speckle(x, N, r, 300, ['#e8e2da', '#2a2626'], 0.35, 0.3);
+    T.rubble = toTex(c);
+  }
+  // weathered planks (pier deck, plank roofs): horizontal boards, nail heads
+  {
+    const [c, x] = canvas(S); const r = rng(103);
+    const n = 8, h = S / n;
+    for (let j = 0; j < n; j++) {
+      const tone = r();
+      x.fillStyle = tone < 0.33 ? '#8d6e52' : tone < 0.66 ? '#9b7b5c' : '#82664c';
+      x.fillRect(0, j * h, S, h);
+      x.strokeStyle = 'rgba(60,40,24,0.28)'; x.lineWidth = 1;
+      for (let k = 0; k < 5; k++) { const py = j * h + 3 + r() * (h - 6); x.beginPath(); x.moveTo(0, py); x.bezierCurveTo(S / 3, py + (r() - 0.5) * 4, S * 0.66, py + (r() - 0.5) * 4, S, py); x.stroke(); }
+      x.fillStyle = 'rgba(255,240,220,0.18)'; x.fillRect(0, j * h + 1, S, 2);
+      x.fillStyle = 'rgba(30,18,8,0.75)'; x.fillRect(0, j * h + h - 2, S, 2);
+      const cut = r() * S; x.fillRect(cut, j * h, 2, h);
+      x.fillStyle = 'rgba(30,24,20,0.7)';
+      for (const px of [cut + 6, cut - 6, (cut + S / 2) % S]) { x.beginPath(); x.arc(px, j * h + h * 0.3, 1.3, 0, 7); x.arc(px, j * h + h * 0.7, 1.3, 0, 7); x.fill(); }
+    }
+    speckle(x, S, r, 200, ['#5a4430', '#c8b090'], 0.3, 0.3);
+    T.planks = toTex(c);
+  }
+  // brushed brass plates with rivet rows at the seams
+  {
+    const [c, x] = canvas(S); const r = rng(104);
+    x.fillStyle = '#b8924a'; x.fillRect(0, 0, S, S);
+    for (let i = 0; i < 260; i++) { const py = r() * S; x.strokeStyle = r() < 0.5 ? 'rgba(255,230,170,0.16)' : 'rgba(90,60,20,0.14)'; x.lineWidth = 1 + r(); x.beginPath(); x.moveTo(0, py); x.lineTo(S, py + (r() - 0.5) * 2); x.stroke(); }
+    blotches(x, S, r, 14, ['#8a6a30', '#d8b468', '#a07a38'], 20, 60, 0.35);
+    for (const py of [0, S / 2]) { x.fillStyle = 'rgba(60,40,10,0.55)'; x.fillRect(0, py, S, 2); x.fillStyle = 'rgba(255,235,180,0.35)'; x.fillRect(0, py + 2, S, 1); rivetRow(x, 6, py + 8, S - 6, py + 8, 10); }
+    for (const px of [0, S / 2]) { x.fillStyle = 'rgba(60,40,10,0.5)'; x.fillRect(px, 0, 2, S); }
+    T.brass = toTex(c);
+  }
+  // teal-painted steel plates (Zeelich tech): rivets, chipped paint, grime
+  {
+    const [c, x] = canvas(S); const r = rng(105);
+    x.fillStyle = '#2f8c8a'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 26, ['#277a78', '#38a09c', '#2c8482', '#24706e'], 20, 60, 0.5);
+    for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+      const px = i * S / 2, py = j * S / 2;
+      x.strokeStyle = 'rgba(10,40,40,0.6)'; x.lineWidth = 3; x.strokeRect(px + 1.5, py + 1.5, S / 2 - 3, S / 2 - 3);
+      x.strokeStyle = 'rgba(150,230,220,0.25)'; x.lineWidth = 1; x.strokeRect(px + 4, py + 4, S / 2 - 8, S / 2 - 8);
+      rivetRow(x, px + 9, py + 9, px + S / 2 - 9, py + 9, 6, 2);
+      rivetRow(x, px + 9, py + S / 2 - 9, px + S / 2 - 9, py + S / 2 - 9, 6, 2);
+    }
+    for (let i = 0; i < 40; i++) { x.fillStyle = r() < 0.5 ? 'rgba(160,150,130,0.6)' : 'rgba(110,70,40,0.35)'; x.beginPath(); x.ellipse(r() * S, r() * S, 1 + r() * 4, 1 + r() * 2, r() * 3, 0, 7); x.fill(); }
+    const g = x.createLinearGradient(0, 0, 0, S); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(30,25,15,0.18)'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+    T.teal = toTex(c);
+  }
+  // yellow-black hazard stripes, worn
+  {
+    const [c, x] = canvas(128); const r = rng(106);
+    x.fillStyle = '#1e1e1c'; x.fillRect(0, 0, 128, 128);
+    x.fillStyle = '#e8b51e';
+    for (let i = -2; i < 4; i++) { x.beginPath(); x.moveTo(i * 64, 0); x.lineTo(i * 64 + 32, 0); x.lineTo(i * 64 + 32 + 128, 128); x.lineTo(i * 64 + 128, 128); x.fill(); }
+    speckle(x, 128, r, 120, ['#5a5040', '#2a2620', '#c8a040'], 0.6, 0.4);
+    T.hazard = toTex(c);
+  }
+  // lavender-grey metal deck plate with a diamond tread and seams (#07/#60)
+  {
+    const [c, x] = canvas(S); const r = rng(107);
+    x.fillStyle = '#8f8a9c'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 16, ['#857f92', '#9a95a6'], 20, 60, 0.4);
+    for (let j = 0; j < 16; j++) for (let i = 0; i < 16; i++) {
+      const px = i * 16 + (j % 2) * 8, py = j * 16 + 8, a = (i + j) % 2 ? 0.6 : -0.6;
+      x.save(); x.translate(px, py); x.rotate(a);
+      x.fillStyle = 'rgba(40,36,50,0.4)'; x.fillRect(-5, -0.5, 10, 3);
+      x.fillStyle = 'rgba(230,226,240,0.45)'; x.fillRect(-5, -1.5, 10, 1.5);
+      x.restore();
+    }
+    x.fillStyle = 'rgba(30,26,40,0.7)'; x.fillRect(0, 0, S, 3); x.fillRect(0, 0, 3, S);
+    rivetRow(x, 8, 8, S - 8, 8, 12, 2); rivetRow(x, 8, 8, 8, S - 8, 12, 2);
+    T.deck = toTex(c);
+  }
+  // blue-grey slate shingles (Funfrock-era tower roofs)
+  {
+    const [c, x] = canvas(S); const r = rng(108);
+    x.fillStyle = '#2c3240'; x.fillRect(0, 0, S, S);
+    const rows = 10, cols = 9, w = S / cols, h = S / rows;
+    for (let j = 0; j < rows; j++) for (let i = -1; i <= cols; i++) {
+      const px = i * w + (j % 2) * w / 2, py = j * h, tone = 80 + r() * 40;
+      const g = x.createLinearGradient(0, py, 0, py + h * 1.3);
+      g.addColorStop(0, `rgb(${tone - 10},${tone},${tone + 18})`); g.addColorStop(1, `rgb(${tone - 40},${tone - 34},${tone - 20})`);
+      x.fillStyle = g; x.beginPath(); x.roundRect(px + 1, py, w - 2, h * 1.25, [0, 0, 5, 5]); x.fill();
+    }
+    T.slate = toTex(c);
+  }
+  // Funfrock's fortress masonry: big grey-blue ashlar blocks, weathered
+  {
+    const [c, x] = canvas(S); const r = rng(109);
+    x.fillStyle = '#4a4f58'; x.fillRect(0, 0, S, S);
+    const rows = 5, rh = S / rows;
+    for (let j = 0; j < rows; j++) {
+      let xx = -r() * 60;
+      while (xx < S) {
+        const w = 60 + r() * 50, tone = 120 + r() * 36;
+        wrap(S, (ox) => {
+          const g = x.createLinearGradient(0, j * rh, 0, j * rh + rh);
+          g.addColorStop(0, `rgb(${tone + 14},${tone + 20},${tone + 30})`); g.addColorStop(1, `rgb(${tone - 22},${tone - 18},${tone - 8})`);
+          x.fillStyle = g; x.beginPath(); x.roundRect(xx + ox + 2, j * rh + 2, w - 4, rh - 4, 4); x.fill();
+        });
+        xx += w;
+      }
+    }
+    blotches(x, S, r, 20, ['#3a4048', '#6a7480', '#55606a'], 15, 50, 0.3);
+    for (let i = 0; i < 18; i++) { const px = r() * S, py = r() * S; x.strokeStyle = 'rgba(30,30,36,0.5)'; x.lineWidth = 1; x.beginPath(); x.moveTo(px, py); x.lineTo(px + (r() - 0.5) * 20, py + 6 + r() * 14); x.stroke(); }
+    speckle(x, S, r, 400, ['#2e3238', '#a8b0bc'], 0.4, 0.3);
+    T.fortStone = toTex(c);
+  }
+  // chain-link mesh (alpha), for the depot fence
+  {
+    const [c, x] = canvas(64);
+    x.clearRect(0, 0, 64, 64);
+    x.strokeStyle = '#c8ccd0'; x.lineWidth = 2.2;
+    for (let i = -2; i < 4; i++) { x.beginPath(); x.moveTo(i * 32, 0); x.lineTo(i * 32 + 64, 64); x.stroke(); x.beginPath(); x.moveTo(i * 32 + 64, 0); x.lineTo(i * 32, 64); x.stroke(); }
+    x.strokeStyle = 'rgba(60,64,70,0.8)'; x.lineWidth = 0.8;
+    for (let i = -2; i < 4; i++) { x.beginPath(); x.moveTo(i * 32 + 1, 0); x.lineTo(i * 32 + 65, 64); x.stroke(); }
+    T.chain = toTex(c);
+  }
+  // pipeline sections: teal steel with longitudinal weld seam and circumferential rivet bands
+  {
+    const [c, x] = canvas(S); const r = rng(110);
+    x.fillStyle = '#3a8f8c'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 22, ['#2f7f7c', '#46a09c', '#357f7c'], 15, 50, 0.45);
+    for (const px of [0, S / 2]) { x.fillStyle = 'rgba(10,40,40,0.55)'; x.fillRect(px, 0, 3, S); rivetRow(x, px + 9, 6, px + 9, S - 6, 12, 2.2); }
+    x.fillStyle = 'rgba(200,255,250,0.12)'; x.fillRect(0, S * 0.2, S, S * 0.08);
+    for (let i = 0; i < 30; i++) { x.fillStyle = 'rgba(120,80,50,0.3)'; x.beginPath(); x.ellipse(r() * S, r() * S, 1 + r() * 5, 1 + r() * 2, 0, 0, 7); x.fill(); }
+    T.pipe = toTex(c);
+  }
+  // concrete / poured stone (pads, plinths of machines)
+  {
+    const [c, x] = canvas(S); const r = rng(111);
+    x.fillStyle = '#a9a39a'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 30, ['#9c968c', '#b8b2a8', '#a39d92'], 15, 50, 0.5);
+    x.fillStyle = 'rgba(60,56,50,0.6)'; x.fillRect(0, 0, S, 2); x.fillRect(0, 0, 2, S);
+    speckle(x, S, r, 600, ['#7a756c', '#d0cbc2'], 0.45, 0.3);
+    T.concrete = toTex(c);
+  }
 }
 
 let cache = null;

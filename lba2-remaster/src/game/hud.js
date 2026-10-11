@@ -111,6 +111,16 @@ export class HUD {
     this.promptEl.classList.add('show');
   }
 
+  // big chapter title that fades in and out over the game
+  chapterCard(small, title) {
+    const el = document.querySelector('#chapter');
+    el.querySelector('small').textContent = small;
+    el.querySelector('h2').textContent = title;
+    el.classList.add('show');
+    clearTimeout(this._chT);
+    this._chT = setTimeout(() => el.classList.remove('show'), 3800);
+  }
+
   toast(key, vars) {
     const msg = t(key, vars);
     const d = document.createElement('div');

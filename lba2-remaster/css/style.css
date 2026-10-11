@@ -239,3 +239,30 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.6); border: 
 
 /* LBA3 prologue: no shards */
 #shards, .binfo .shardrow { display: none !important; }
+
+/* chapter title card */
+#chapter { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none; opacity: 0; transition: opacity 0.9s ease; z-index: 40; text-shadow: 0 3px 12px rgba(0,0,0,0.8); color: #fff; }
+#chapter.show { opacity: 1; }
+#chapter small { font-size: 1.1rem; letter-spacing: 0.3em; color: #ffd890; text-transform: uppercase; }
+#chapter h2 { font-size: clamp(2rem, 5vw, 3.6rem); margin: 0.3em 0 0; font-weight: 700; }
+
+/* inventory + journal (I / J) */
+#inventory { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(5, 12, 20, 0.55); }
+#inventory.hidden { display: none; }
+.inv-panel { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(260px, 1.2fr); gap: 22px; width: min(920px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 18px 22px; background: rgba(8, 16, 28, 0.88); color: var(--ink); text-align: start; }
+.inv-panel h2 { margin: 0 0 10px; color: var(--accent); font-size: 20px; }
+.inv-panel h3 { margin: 14px 0 4px; font-size: 15px; color: #ffd890; }
+.inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.inv-item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; background: rgba(255,255,255,0.04); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
+.inv-item img { width: 52px; height: 52px; }
+.inv-item em { position: absolute; top: 4px; inset-inline-end: 6px; font-style: normal; font-weight: 800; color: #ffe35a; font-size: 12px; }
+.inv-item.sel { border-color: var(--accent); background: rgba(255, 220, 120, 0.12); }
+.inv-desc { min-height: 3em; margin: 10px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-dim); }
+.inv-journal ul { margin: 0; padding-inline-start: 18px; font-size: 14px; line-height: 1.5; }
+.inv-journal li.done { color: var(--ink-dim); }
+.inv-obj b { display: block; color: #ffe35a; }
+.inv-obj .s { display: block; color: var(--ink-dim); font-size: 14px; }
+.inv-obj .s.ok { text-decoration: line-through; opacity: 0.7; }
+.inv-hint { grid-column: 1 / -1; font-size: 12px; color: var(--ink-dim); text-align: center; }
+@media (max-width: 640px) { .inv-panel { grid-template-columns: 1fr; } .inv-grid { grid-template-columns: repeat(3, 1fr); } }

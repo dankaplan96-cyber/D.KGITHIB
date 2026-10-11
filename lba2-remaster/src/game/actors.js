@@ -56,9 +56,24 @@ export class Hero extends Actor {
     this.invuln = 0; this.attackT = 0; this.combo = 0; this.comboWindow = 0; this.hitDone = true;
     this.throwT = 0; this.hurtT = 0; this.hiding = false; this.dead = false;
     this.speed = 0; this.stepAcc = 0;
+    this.vel = new THREE.Vector2();
+    this.actT = 0;
     this.prevPos = this.pos.clone();
   }
   get mpMax() { return 6 + this.magicLevel * 2; }
+
+  // Play as someone else for a while (Zoe's segments): swap the body, keep the controller.
+  swapBody(look) {
+    const g = this.game;
+    this.bodies ??= { twinsen: this.rig };
+    this.bodies[look] ??= createCharacter(look);
+    if (this.rig === this.bodies[look]) return;
+    g.scene.remove(this.rig.root);
+    this.rig = this.bodies[look];
+    g.scene.add(this.rig.root);
+    this.body = look;
+    this.sync();
+  }
 
   visibility() {
     if (this.hiding) return 0.12;
@@ -80,33 +95,43 @@ export class Hero extends Actor {
     this.invuln = Math.max(0, this.invuln - dt);
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.comboWindow = Math.max(0, this.comboWindow - dt);
-    this.throwT = Math.max(0, this.throwT - dt);
     this.mp = Math.min(this.mpMax, this.mp + dt * 0.35);
+    this.coyote = this.onGround ? 0.12 : Math.max(0, (this.coyote || 0) - dt);
+    this.jumpBuf = Math.max(0, (this.jumpBuf || 0) - dt);
 
-    if (this.dead) { this.rig.play('dead'); this.rig.update(dt, 0); this.sync(); return; }
+    if (this.dead) { this.rig.play('dead'); this.rig.update(dt, 0); P.fall(this, dt); this.sync(); return; }
 
     // behaviour switching (1-4, Tab, gamepad bumpers, LBA-style Ctrl + left/right)
     const wheel = input.down('wheel');
-    for (let i = 0; i < 4; i++) if (input.pressed('b' + (i + 1))) this.setBehaviour(BEHAVIOURS[i]);
-    const idx = BEHAVIOURS.indexOf(this.behaviour);
-    if (input.pressed('cycle') || input.pressed('next') || (wheel && input.pressed('right'))) this.setBehaviour(BEHAVIOURS[(idx + 1) % 4]);
-    if (input.pressed('prev') || (wheel && input.pressed('left'))) this.setBehaviour(BEHAVIOURS[(idx + 3) % 4]);
-    g.hud.wheel(wheel);
+    if (!this.noBehaviours) {
+      for (let i = 0; i < 4; i++) if (input.pressed('b' + (i + 1))) this.setBehaviour(BEHAVIOURS[i]);
+      const idx = BEHAVIOURS.indexOf(this.behaviour);
+      if (input.pressed('cycle') || input.pressed('next') || (wheel && input.pressed('right'))) this.setBehaviour(BEHAVIOURS[(idx + 1) % 4]);
+      if (input.pressed('prev') || (wheel && input.pressed('left'))) this.setBehaviour(BEHAVIOURS[(idx + 3) % 4]);
+      g.hud.wheel(wheel);
+    }
 
     const mv = wheel ? { x: 0, y: 0 } : input.move();
     const beh = this.behaviour;
-    const maxSpeed = { normal: 3.4, athletic: 7.2, aggressive: 3.9, discreet: 1.8 }[beh];
+    const maxSpeed = { normal: 3.4, athletic: 7.2, aggressive: 3.9, discreet: 1.8 }[beh] * (this.speedK || 1);
     this.hiding = beh === 'discreet' && input.down('action') && this.onGround && !wheel;
-    let vx = 0, vz = 0;
-    const locked = this.attackT > 0 || this.hiding || this.hurtT > 0.15;
+    let wx = 0, wz = 0, turning = 0;
+    // one-shot actions (use, pick up, open door, knockdown/get-up) own the body
+    if (this.actT > 0) {
+      this.actT -= dt;
+      if (this.actCb && this.actT <= this.actAt) { const cb = this.actCb; this.actCb = null; cb(); }
+      if (this.actT <= 0 && this.actNext) { const n = this.actNext; this.actNext = null; this.act(...n); }
+    }
+    const locked = this.attackT > 0 || this.hiding || this.hurtT > 0.15 || this.actT > 0 || (this.throwT > 0.4);
 
     if (!locked) {
       if (g.settings.controls === 'classic') {
         // LBA tank controls: left/right rotate, up/down walk
         this.angle -= mv.x * 3.4 * dt;
+        turning = -mv.x;
         const f = mv.y > 0 ? mv.y : mv.y * 0.55;
-        vx = Math.sin(this.angle) * f * maxSpeed;
-        vz = Math.cos(this.angle) * f * maxSpeed;
+        wx = Math.sin(this.angle) * f * maxSpeed;
+        wz = Math.cos(this.angle) * f * maxSpeed;
       } else {
         const m = Math.hypot(mv.x, mv.y);
         if (m > 0.08) {
@@ -115,22 +140,42 @@ export class Hero extends Actor {
           const rx = Math.cos(yaw), rz = -Math.sin(yaw);
           const dx = rx * mv.x + fx * mv.y, dz = rz * mv.x + fz * mv.y;
           const target = Math.atan2(dx, dz);
-          this.angle = dampAngle(this.angle, target, 14, dt);
-          const sp = maxSpeed * Math.min(1, m);
-          vx = (dx / m) * sp;
-          vz = (dz / m) * sp;
+          const diff = angleDiff(this.angle, target);
+          // from a standstill a big turn is a turn-on-the-spot first, then the walk starts
+          const still = Math.hypot(this.vel.x, this.vel.y) < 0.6;
+          this.angle = dampAngle(this.angle, target, still ? 9 : 12, dt);
+          turning = clamp(diff * 3, -1, 1);
+          const sp = maxSpeed * Math.min(1, m) * (still && Math.abs(diff) > 1.2 ? 0.15 : Math.max(0.25, Math.cos(Math.min(Math.abs(diff), 1.5))));
+          wx = Math.sin(this.angle) * sp;
+          wz = Math.cos(this.angle) * sp;
         }
       }
     } else if (this.attackT > 0) {
       // small lunge while punching
-      vx = Math.sin(this.angle) * 1.2; vz = Math.cos(this.angle) * 1.2;
+      wx = Math.sin(this.angle) * 1.2; wz = Math.cos(this.angle) * 1.2;
     }
+    // weight: accelerate and brake instead of snapping to speed (less grip in the air)
+    const prevFwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
+    const accel = !this.onGround ? 3 : (wx || wz) ? (beh === 'athletic' ? 9 : 12) : 14;
+    const k = 1 - Math.exp(-accel * dt);
+    this.vel.x += (wx - this.vel.x) * k; this.vel.y += (wz - this.vel.y) * k;
+    const fwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
+    this.rig.lean = clamp(((fwd - prevFwd) / Math.max(dt, 1e-3)) * 0.012, -0.18, 0.22);
+    this.rig.roll = clamp(turning * Math.min(1, Math.hypot(this.vel.x, this.vel.y) / 4) * 0.12, -0.15, 0.15);
+    this.rig.turn = turning;
 
     this.prevPos.copy(this.pos);
-    P.move(this, vx * dt, vz * dt);
+    P.move(this, this.vel.x * dt, this.vel.y * dt);
     this.applyKnockback(dt);
+    const wasAir = !this.onGround;
     const landed = P.fall(this, dt);
-    if (landed && landed < -6) { g.audio.play('land'); g.particles.burst(this.pos.x, this.pos.y + 0.1, this.pos.z, '#cbb994', 8, 2); }
+    if (landed) {
+      const v = -landed;
+      if (v > 13) { this.damage(2, null); this.act('knockdown', 0.45, null, 0, ['getup', 0.8]); }
+      else if (v > 6) { this.rig.land(Math.min(1.2, v / 10)); g.audio.play('land'); g.particles.burst(this.pos.x, this.pos.y + 0.1, this.pos.z, '#cbb994', 8, 2); }
+      else if (wasAir) this.rig.land(0.4);
+      if (this.jumpBuf > 0 && beh === 'athletic') this.jump();
+    }
     if (this.pos.y < -3) this.respawnFromFall();
     this.speed = Math.hypot(this.pos.x - this.prevPos.x, this.pos.z - this.prevPos.z) / Math.max(dt, 1e-4);
 
@@ -142,9 +187,9 @@ export class Hero extends Actor {
     }
 
     // behaviour action (Space / A)
-    if (!wheel && input.pressed('action')) {
-      if (beh === 'athletic' && this.onGround) {
-        this.vy = 9.6; this.onGround = false; g.audio.play('jump');
+    if (!wheel && input.pressed('action') && this.actT <= 0) {
+      if (beh === 'athletic') {
+        if (this.onGround || this.coyote > 0) this.jump(); else this.jumpBuf = 0.15;
       } else if (beh === 'aggressive' && this.attackT <= 0) {
         this.combo = this.comboWindow > 0 ? (this.combo + 1) % 3 : 0;
         this.rig.play(['punch', 'punch2', 'kick'][this.combo]);
@@ -164,43 +209,76 @@ export class Hero extends Actor {
       }
       if (this.attackT <= 0) this.comboWindow = 0.45;
     }
-    if (!wheel && (input.pressed('interact'))) g.tryInteract();
+    if (!wheel && input.pressed('interact') && this.actT <= 0) g.tryInteract();
     if (!wheel && (input.pressed('ball') || input.pressed('click'))) this.throwBall();
+    // the ball leaves the hand at the end of the windup
+    if (this.throwT > 0) {
+      this.throwT -= dt;
+      if (this.throwPending && this.throwT <= 0.42) { this.throwPending = false; g.ball.launch(this, this.throwBeh, this.throwLevel, this.throwStrong); g.audio.play('throw'); }
+    }
 
-    // animation
+    // animation state
     let anim = 'idle';
-    if (this.hurtT > 0) anim = 'hurt';
+    if (this.actT > 0) anim = this.actAnim;
+    else if (this.hurtT > 0) anim = 'hurt';
     else if (this.attackT > 0) anim = this.rig.anim;
     else if (this.throwT > 0) anim = 'throw';
-    else if (!this.onGround) anim = 'jump';
+    else if (!this.onGround) anim = this.vy > 0.5 ? 'jump' : 'fall';
     else if (this.hiding) anim = 'hide';
     else if (this.speed > 0.3) anim = beh === 'discreet' ? 'sneak' : this.speed > 4.5 ? 'run' : 'walk';
+    else if (Math.abs(turning) > 0.5) anim = turning > 0 ? 'turnR' : 'turnL';
     this.rig.play(anim);
     this.rig.update(dt, this.speed);
     // blink while invulnerable
-    this.rig.root.visible = this.invuln <= 0 || Math.floor(this.invuln * 20) % 2 === 0;
+    this.rig.root.visible = this.invuln <= 0.5 || Math.floor(this.invuln * 20) % 2 === 0;
     this.sync();
+  }
+
+  // anticipation: a quick crouch, then the take-off (in the air already? jump now)
+  jump() {
+    this.prevRunSpeed = Math.hypot(this.vel.x, this.vel.y);
+    this.coyote = 0; this.jumpBuf = 0;
+    if (!this.onGround) { this.takeOff(); return; }
+    this.act('jumpPrep', 0.09, () => this.takeOff(), 0.001);
+  }
+  takeOff() {
+    this.vy = 9.6; this.onGround = false; this.actT = 0;
+    this.vel.x = Math.sin(this.angle) * Math.max(Math.hypot(this.vel.x, this.vel.y), this.prevRunSpeed || 0);
+    this.vel.y = Math.cos(this.angle) * Math.max(Math.hypot(this.vel.x, this.vel.y), this.prevRunSpeed || 0);
+    this.game.audio.play('jump');
+  }
+
+  // play a one-shot body action that locks movement; cb fires when `at` seconds remain
+  act(anim, dur, cb = null, at = 0, next = null) {
+    this.actAnim = anim; this.actT = dur; this.actCb = cb; this.actAt = at; this.actNext = next;
+    this.rig.play(anim); this.rig.actionT = 0;
+    this.vel.set(0, 0);
+  }
+  // turn toward a point, then act (valves, levers, doors, pick-ups)
+  actAt(x, z, anim, dur, cb, at = 0) {
+    this.angle = Math.atan2(x - this.pos.x, z - this.pos.z);
+    this.act(anim, dur, cb, at);
   }
 
   respawnFromFall() {
     const p = this.game.lastSafe;
     this.pos.set(p.x, this.game.physics.groundAt(p.x, p.z), p.z);
-    this.vy = 0; this.onGround = true;
+    this.vy = 0; this.onGround = true; this.vel.set(0, 0);
     this.damage(1, null);
   }
 
   throwBall() {
     const g = this.game;
-    if (!this.hasBall || g.ball.state !== 'idle' || this.throwT > 0 || this.hiding) return;
+    if (!this.hasBall || g.ball.state !== 'idle' || this.throwT > 0 || this.hiding || this.actT > 0) return;
     let strong = true;
     if (this.mp >= 1) this.mp -= 1; else { strong = false; g.hud.toast('toast_nomp'); }
-    this.throwT = 0.3;
+    this.throwT = 0.6;
+    this.throwPending = true; this.throwBeh = this.behaviour; this.throwLevel = strong ? this.magicLevel : 1; this.throwStrong = strong;
     this.rig.play('throw'); this.rig.actionT = 0;
-    g.ball.launch(this, this.behaviour, strong ? this.magicLevel : 1, strong);
-    g.audio.play('throw');
+    g.ball.holdIn(this);
   }
 
-  damage(n, from) {
+  damage(n, from, heavy = false) {
     if (this.invuln > 0 || this.dead) return;
     const g = this.game;
     this.hp -= n;
@@ -212,19 +290,27 @@ export class Hero extends Actor {
     if (from) {
       const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z);
       this.kb.set(Math.sin(a) * 7, Math.cos(a) * 7);
+      this.rig.hitDir = angleDiff(this.angle, a + Math.PI); // 0 = hit from the front
+      if (heavy && this.hp > 0) { this.angle = a + Math.PI; this.act('knockdown', 0.5, null, 0, ['getup', 0.8]); }
     }
     if (this.hp <= 0) {
       if (this.clovers > 0) {
+        // LBA2: a clover leaf revives you on the spot with full life
         this.clovers--;
-        this.hp = this.maxHp;
-        g.hud.toast('toast_clover');
-        g.audio.play('heal');
-        g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#6fe36f', 30, 4);
+        this.hp = 0;
+        this.invuln = 3;
+        this.act('knockdown', 0.9, null, 0, ['getup', 0.9, () => {
+          this.hp = this.maxHp; this.mp = this.mpMax;
+          g.hud.toast('toast_clover');
+          g.audio.play('heal');
+          g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#6fe36f', 30, 4);
+        }, 0.6]);
       } else {
         this.hp = 0;
         this.dead = true;
         g.audio.play('die');
-        setTimeout(() => g.gameOver(), 1600);
+        this.deathT = 2.2;
+        setTimeout(() => g.gameOver(), 2200);
       }
     }
   }
@@ -239,13 +325,32 @@ export class NPC extends Actor {
     this.track = def.track ? new TrackRunner(def.track) : null;
     this.angle = def.angle ?? 0;
     this.talking = false;
+    this.listenTo = null;
     this.forceAnim = def.anim || null;
+    this.present = true;
+  }
+  setPresent(on) {
+    this.present = on;
+    this.rig.root.visible = on;
+    if (this.shadow) this.shadow.visible = on;
+    if (this.collider) this.collider.enabled = on;
+  }
+  // put the NPC somewhere (chapter placement): {x, z, a, anim, track}
+  placeAt(p) {
+    this.pos.set(p.x, this.game.physics.groundAt(p.x, p.z), p.z);
+    if (p.a != null) this.angle = this.targetAngle = p.a;
+    this.forceAnim = p.anim ?? null;
+    if ('track' in p) this.track = p.track ? new TrackRunner(p.track) : null;
+    this.sync();
   }
   update(dt) {
+    if (!this.present || this.controlled) return;
     const hero = this.game.hero;
     const near = this.distTo(hero) < 3.2;
     let moving = false;
-    if (this.talking || near) {
+    if (this.listenTo && this.listenTo !== this) {
+      this.angle = dampAngle(this.angle, this.angleTo(this.listenTo), 6, dt);
+    } else if (this.talking || near) {
       this.angle = dampAngle(this.angle, this.angleTo(hero), 6, dt);
     } else if (this.track) {
       const s = this.track.step(this, dt);
@@ -256,7 +361,7 @@ export class NPC extends Actor {
       } else if (this.targetAngle != null) this.angle = dampAngle(this.angle, this.targetAngle, 4, dt);
     }
     this.game.physics.fall(this, dt);
-    this.rig.play(this.talking ? 'talk' : moving ? 'walk' : this.forceAnim || 'idle');
+    this.rig.play(this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
     this.rig.update(dt, moving ? 1.3 : 0);
     this.sync();
   }
@@ -508,14 +613,14 @@ export class MagicBall {
     this.pos = new THREE.Vector3();
     this.vel = new THREE.Vector3();
     this.mat = new THREE.MeshStandardMaterial({ color: '#ffe68a', emissive: '#ffc400', emissiveIntensity: 3, roughness: 0.2 });
-    this.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 12), this.mat);
+    this.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), this.mat);
     this.mesh.visible = false;
     game.scene.add(this.mesh);
     this.shadow = createBlobShadow(0.3);
     this.shadow.visible = false;
     game.scene.add(this.shadow);
     this.trail = [];
-    const tg = new THREE.SphereGeometry(0.12, 8, 6);
+    const tg = new THREE.SphereGeometry(0.085, 8, 6);
     for (let i = 0; i < 10; i++) {
       const m = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ color: '#ffd04a', transparent: true, opacity: 0.5 - i * 0.045, blending: THREE.AdditiveBlending, depthWrite: false }));
       m.scale.setScalar(1 - i * 0.08);
@@ -526,13 +631,29 @@ export class MagicBall {
     this.history = [];
   }
 
+  // the ball sits in Twinsen's right hand during the wind-up
+  holdIn(hero) {
+    this.state = 'inhand';
+    this.holder = hero;
+    this.mesh.visible = true;
+    this.mat.emissiveIntensity = 0.6;
+    this.followHand();
+  }
+  followHand() {
+    const hand = this.holder?.rig.j?.armR?.hand;
+    if (hand) { hand.updateWorldMatrix(true, false); hand.getWorldPosition(this.mesh.position); this.mesh.position.y -= 0.08; }
+    else this.mesh.position.set(this.holder.pos.x, this.holder.pos.y + 1.4, this.holder.pos.z);
+  }
+
   launch(hero, beh, level, strong) {
     const t = BALL_THROW[beh];
     this.level = level;
     this.damage = level;
     this.bounces = strong ? 1 + level : 1;
     this.bounceK = t.bounce;
-    this.pos.set(hero.pos.x + Math.sin(hero.angle) * 0.5, hero.pos.y + 1.6, hero.pos.z + Math.cos(hero.angle) * 0.5);
+    // released from the hand, at the hand's position (the release event of the throw)
+    if (this.state === 'inhand') { this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, hero.pos.y + 1.2); }
+    else this.pos.set(hero.pos.x + Math.sin(hero.angle) * 0.5, hero.pos.y + 1.6, hero.pos.z + Math.cos(hero.angle) * 0.5);
     this.vel.set(Math.sin(hero.angle) * t.f, t.up, Math.cos(hero.angle) * t.f);
     this.state = 'fly';
     this.life = 0;
@@ -542,7 +663,8 @@ export class MagicBall {
   }
 
   update(dt) {
-    this.shadow.visible = this.state !== 'idle' && this.state !== 'held';
+    this.shadow.visible = this.state !== 'idle' && this.state !== 'held' && this.state !== 'inhand';
+    if (this.state === 'inhand') { this.followHand(); this.trail.forEach((m) => (m.visible = false)); return; }
     if (this.state === 'idle' || this.state === 'held') { this.trail.forEach((m) => (m.visible = false)); return; }
     const g = this.game, P = g.physics;
     this.life += dt;

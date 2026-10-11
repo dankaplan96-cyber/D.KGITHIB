@@ -7,13 +7,15 @@ import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { Input } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
-import { lerp, angleDiff } from './engine/math.js';
+import { lerp, angleDiff, dampAngle } from './engine/math.js';
 import { buildWorld, POI } from './game/world.js';
 import { buildInteriors } from './game/interiors.js';
-import { Hero, NPC, Mite, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
+import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
+import { createEnemy, Drone } from './game/enemies.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
-import { Prologue } from './game/prologue.js';
+import { Inventory } from './game/inventory.js';
+import { Story } from './game/story/index.js';
 import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1';
@@ -66,8 +68,9 @@ class Game {
     this.bolts = new Bolts(this);
     this.ball = new MagicBall(this);
     this.hud = new HUD(this);
+    this.inventory = new Inventory(this);
     this.hud.buildMapImage(this.terrain);
-    this.story = new Prologue(this);
+    this.story = new Story(this);
 
     this.state = 'loading';
     this.time = 0;
@@ -105,7 +108,7 @@ class Game {
   spawnActors() {
     this.hero = new Hero(this, POI.start.x, POI.start.z);
     this.npcs = this.story.npcDefs().map((d) => new NPC(this, d));
-    this.enemies = this.story.enemyDefs().map((d) => new Mite(this, d));
+    this.enemies = this.story.enemyDefs().map((d) => createEnemy(this, d));
     this.story.decorate();
     COINS.forEach(([x, z], i) => this.pickups.spawn('coin', x, this.physics.groundAt(x, z) + 0.5, z, { id: 'c' + i }));
     // reward on top of the Whispering Cliffs (optional ball + jumping puzzle)
@@ -140,7 +143,7 @@ class Game {
       const h = this.hero;
       h.pos.set(sp.x, this.physics.groundAt(sp.x, sp.z), sp.z);
       h.angle = sp.a ?? 0;
-      h.vy = 0; h.onGround = true;
+      h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
       this.lastSafe = { x: sp.x, z: sp.z };
       this.camRig.setIso(R);
       this.doorCool = 1;
@@ -160,7 +163,7 @@ class Game {
       const h = this.hero;
       h.pos.set(to.x, this.physics.groundAt(to.x, to.z), to.z);
       h.angle = to.a ?? 0;
-      h.vy = 0; h.onGround = true;
+      h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
       this.doorCool = 1;
@@ -330,7 +333,7 @@ class Game {
   mapMarkers() {
     const m = [];
     m.push({ x: POI.village.x, z: POI.village.z, color: '#fff', r: 3, label: t('sign_village').split('·')[0].trim() });
-    for (const n of this.npcs) if (Math.abs(n.pos.x) < 200) m.push({ x: n.pos.x, z: n.pos.z, color: '#5ab0ff', r: 3 });
+    for (const n of this.npcs) if (n.present && Math.abs(n.pos.x) < 200) m.push({ x: n.pos.x, z: n.pos.z, color: '#5ab0ff', r: 3 });
     return m.concat(this.story.markers());
   }
 
@@ -340,11 +343,12 @@ class Game {
     let best = null, bd = 1e9;
     const consider = (d, max, o) => { if (d < max && d < bd) { bd = d; best = o; } };
     const dist = (x, z) => Math.hypot(h.pos.x - x, h.pos.z - z);
-    for (const n of this.npcs) consider(dist(n.pos.x, n.pos.z), 2.6, { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk' });
+    for (const n of this.npcs) if (n.present && !n.def.noTalk) consider(dist(n.pos.x, n.pos.z), 2.6, { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk' });
     if (!this.room) {
       for (const s of W.signs) consider(dist(s.x, s.z), 2.0, { kind: 'sign', sign: s, label: 'p_read' });
       for (const s of W.searchSpots) if (!this.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'search', spot: s, label: 'p_search' });
     }
+    this.story.chapters[0].baseInteractables(consider, dist, this.story.cur);
     this.story.interactables(consider, dist);
     return best;
   }
@@ -434,7 +438,7 @@ class Game {
   meleeHit(hero, dmg, range) {
     let any = false;
     for (const e of this.enemies) {
-      if (!e.alive) continue;
+      if (!e.alive || !e.present) continue;
       const d = hero.distTo(e);
       if (d < range + e.radius && Math.abs(angleDiff(hero.angle, hero.angleTo(e))) < 0.95 && Math.abs(e.pos.y - hero.pos.y) < 1.5) {
         e.damage(dmg, hero.pos); any = true;
@@ -451,7 +455,7 @@ class Game {
 
   ballHitTest(p) {
     for (const e of this.enemies) {
-      if (!e.alive) continue;
+      if (!e.alive || !e.present) continue;
       if (Math.hypot(p.x - e.pos.x, p.z - e.pos.z) < 0.75 && p.y > e.pos.y - 0.2 && p.y < e.pos.y + 2) {
         e.damage(this.ball.damage, p);
         return true;
@@ -468,10 +472,10 @@ class Game {
   // things the magic ball may curve toward
   ballAimTargets() {
     const out = [];
-    for (const e of this.enemies) if (e.alive) out.push({ x: e.pos.x, y: e.pos.y + (e instanceof Mite ? 0.45 : 1.1), z: e.pos.z });
+    for (const e of this.enemies) if (e.alive && e.present) out.push({ x: e.pos.x, y: e.pos.y + (e instanceof Drone ? e.hover : 0.45), z: e.pos.z });
     if (this.room) { for (const t2 of this.room.ballTargets) if (!t2.node?.lit) out.push(t2); }
     else if (!this.world.target.hit) out.push(this.world.target);
-    return out;
+    return out.concat(this.story.ballTargets());
   }
 
   hitTarget(silent = false) {
@@ -589,11 +593,20 @@ class Game {
         this.hud.updateDialog(dt);
         if (input.pressed('interact') || input.pressed('action') || input.pressed('click') || input.pressed('recenter')) this.hud.advance();
         this.updateBubble();
-        this.hero.rig.play('idle'); this.hero.rig.update(dt, 0); this.hero.sync();
+        {
+          // Twinsen gestures when he speaks and turns to whoever else is talking
+          const h = this.hero, sp = this.speaker;
+          if (sp && sp !== h && sp.pos && h.distTo(sp) < 6) h.angle = dampAngle(h.angle, h.angleTo(sp), 5, dt);
+          h.rig.play(sp === h ? 'talk' : sp ? 'listen' : 'idle'); h.rig.update(dt, 0); h.sync();
+        }
         for (const n of this.npcs) n.update(dt);
         this.camRig.update(dt, this.hero.pos, this.hero.angle, false, input);
         break;
       case 'shop': this.hud.shopNav(input); this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null); break;
+      case 'inventory':
+        this.inventory.nav(input);
+        if (input.pressed('inventory') || input.pressed('pause') || input.pressed('interact')) { this.inventory.show(false); this.setState('play'); }
+        break;
       case 'map':
         this.hud.drawHolomap(this.time);
         if (input.pressed('map') || input.pressed('pause')) { $('#holomap').classList.add('hidden'); this.setState('play'); }
@@ -648,6 +661,7 @@ class Game {
     this.dirty = true;
     if (input.pressed('pause')) { this.pause(); return; }
     if (input.pressed('map') && h.hasBall) { this.setState('map'); $('#holomap').classList.remove('hidden'); return; }
+    if (input.pressed('inventory')) { this.setState('inventory'); this.inventory.show(true); this.audio.play('select'); return; }
     if (input.down('wheel')) {
       // hold Ctrl: behaviour menu, world frozen
       const i = BEHAVIOURS.indexOf(h.behaviour);
@@ -681,7 +695,7 @@ class Game {
     if (!this.room && this.safeT <= 0 && h.onGround && h.pos.y > 0.4) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
 
     // adaptive combat music
-    const chasing = this.enemies.some((e) => e.alive && e.state === 'chase');
+    const chasing = this.enemies.some((e) => e.alive && e.present && (e.state === 'chase' || e.state === 'windup'));
     this.combat = lerp(this.combat, chasing ? 1 : 0, 1 - Math.exp(-dt * 1.5));
     this.audio.setCombat(this.combat);
 

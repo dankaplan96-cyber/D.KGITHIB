@@ -14,6 +14,7 @@ const KEYMAP = {
   cycle: ['Tab'],
   wheel: ['ControlLeft', 'ControlRight'],
   map: ['KeyM'],
+  inventory: ['KeyI', 'KeyJ'],
   pause: ['Escape', 'KeyP'],
   camL: ['KeyZ'], camR: ['KeyC'],
   retro: ['KeyV'],

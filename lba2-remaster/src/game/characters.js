@@ -508,3 +508,4 @@ export function createCharacter(lookName, overrides = {}) {
   root.scale.setScalar(L.height ? (L.kid ? L.height / 0.78 : L.height) : 1);
   return rig;
 }
+export async function preloadCharacters() {}

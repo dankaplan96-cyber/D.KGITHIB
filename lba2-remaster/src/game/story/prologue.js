@@ -7,21 +7,17 @@
 // At the bottom: warm water, crystals that weren't there before, and the
 // magic ball pulled toward the wall. Then Sendell speaks.
 import * as THREE from 'three';
-import { POI } from './world.js';
-import { t } from './i18n.js';
+import { POI } from '../world.js';
+import { t } from '../i18n.js';
+import { ChapterBase } from './base.js';
 
 const V = POI.village;
 
-export const SPEAKER_COLORS = {
-  hero: '#8fc2ff', narrator: '#ffffff', sendell: '#bff4ff',
-};
-
-export class Prologue {
-  constructor(game) {
-    this.game = game;
+export class Prologue extends ChapterBase {
+  constructor(story) {
+    super(story);
     this.tremorT = 50;
   }
-  get f() { return this.game.flags; }
 
   // ---------------------------------------------------------------- actors
   npcDefs() {
@@ -78,27 +74,23 @@ export class Prologue {
     ], () => { this.f.intro = true; g.updateObjective(); g.save(false); }));
   }
 
-  speaker(id) {
-    const g = this.game;
-    if (id === 'hero') return g.hero;
-    return g.npcs.find((n) => n.def.id === id) || null;
+  items() {
+    const f = this.f, out = [];
+    if (f.key && !f.prologueDone) out.push({ id: 'lidkey', icon: 'key' });
+    if (f.stamp && !f.rope) out.push({ id: 'stamp', icon: 'stamp' });
+    if (f.rope && !f.inWell) out.push({ id: 'rope', icon: 'rope' });
+    return out;
   }
-
-  // Run a conversation between several speakers: [[speakerId, textKey], ...]
-  chain(lines, done) {
-    const g = this.game;
-    const next = (i) => {
-      if (i >= lines.length) { done?.(); return; }
-      const [id, key] = lines[i];
-      const sp = this.speaker(id);
-      const name = id === 'narrator' ? '' : 'n_' + (id === 'hero' ? 'hero' : id);
-      const text = Array.isArray(t(key)) ? t(key) : [t(key)];
-      if (sp && sp !== g.hero) sp.talking = true;
-      g.say(name, text, () => { if (sp && sp !== g.hero) sp.talking = false; next(i + 1); }, sp, SPEAKER_COLORS[id]);
-    };
-    next(0);
+  journal() {
+    const f = this.f;
+    return [
+      { key: 'pr_j_well', done: !!f.wellSeen },
+      { key: 'pr_j_key', done: !!f.key },
+      { key: 'pr_j_rope', done: !!f.rope },
+      { key: 'pr_j_cave', done: !!f.inWell },
+      { key: 'pr_j_sendell', done: !!f.sendellHeard },
+    ].filter((l, i, a) => i === 0 || a[i - 1].done || l.done);
   }
-
   objective() {
     const f = this.f, h = this.game.hero;
     const s = (ok, key) => `<span class="s ${ok ? 'ok' : ''}">◆ ${t(key)}</span>`;
@@ -145,15 +137,22 @@ export class Prologue {
     return true;
   }
 
+  // world interactions that exist in every chapter (called by the director)
+  baseInteractables(consider, dist, cur) {
+    const g = this.game, W = g.world;
+    if (!g.room) {
+      const open = new Set(cur.doors().map((d) => d.house));
+      W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', label: 'p_door' }); });
+      if (!W.chest.open) consider(dist(W.chest.x, W.chest.z), 2.2, { kind: 'chest', label: 'p_open' });
+    } else {
+      for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
+    }
+  }
   interactables(consider, dist) {
     const g = this.game, W = g.world;
     if (!g.room) {
       consider(dist(W.well.x, W.well.z), 2.6, { kind: 'well', label: 'p_well' });
-      W.houses.slice(1).forEach((h) => consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', label: 'p_door' }));
-      if (!W.chest.open) consider(dist(W.chest.x, W.chest.z), 2.2, { kind: 'chest', label: 'p_open' });
       consider(dist(W.gate.x, W.gate.z), 3.0, { kind: 'fortgate', label: 'p_gate' });
-    } else {
-      for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
     }
   }
 
@@ -161,12 +160,11 @@ export class Prologue {
     const g = this.game, f = this.f, h = g.hero;
     switch (it.kind) {
       case 'roomsearch':
+        if (it.spot.id !== 'cupboard') return false;
         g.searched.push(it.spot.id);
         g.audio.play('chest');
-        if (it.spot.id === 'cupboard') {
-          h.hasBall = true;
-          g.say('n_hero', t('pr_cupboard'), () => { g.hud.toast('pr_toast_ball'); g.updateObjective(); g.save(false); }, h);
-        }
+        h.hasBall = true;
+        g.say('n_hero', t('pr_cupboard'), () => { g.hud.toast('pr_toast_ball'); g.updateObjective(); g.save(false); }, h);
         return true;
       case 'well':
         if (f.prologueDone) { g.say('n_hero', t('pr_well_after'), null, h); return true; }
@@ -175,6 +173,17 @@ export class Prologue {
         if (!f.rope) { g.say('n_hero', t('pr_well_rope'), () => g.updateObjective(), h); return true; }
         g.say('n_hero', t('pr_well_go'), () => { g.audio.play('door'); g.enterRoom('well'); }, h);
         return true;
+      case 'fortgate':
+        g.audio.play('deny');
+        g.say('', [t('pr_fort')]);
+        return true;
+    }
+    return false;
+  }
+
+  baseInteract(it) {
+    const g = this.game, f = this.f, h = g.hero;
+    switch (it.kind) {
       case 'locked':
         g.say('n_hero', t('pr_locked'), null, h);
         return true;
@@ -185,18 +194,27 @@ export class Prologue {
         for (let i = 0; i < 8; i++) g.pickups.spawn('coin', g.world.chest.x, g.physics.groundAt(g.world.chest.x, g.world.chest.z) + 1.2, g.world.chest.z, { pop: true });
         g.say('', [t('pr_chest')]);
         return true;
-      case 'fortgate':
-        g.audio.play('deny');
-        g.say('', [t('pr_fort')]);
+      case 'roomsearch':
+        g.searched.push(it.spot.id);
+        g.audio.play('chest');
+        if (it.spot.reward) g.pickups.spawn(it.spot.reward, it.spot.x, g.physics.groundAt(it.spot.x, it.spot.z) + 1, it.spot.z, { pop: true });
+        else g.say('n_hero', t('gen_search_nothing'), null, h);
         return true;
     }
     return false;
+  }
+  // an NPC the current chapter has nothing special for
+  baseTalk(npc) {
+    const id = npc.def.id;
+    if (id === 'pippa') return this.chain([['pippa', 'pr_pippa']], () => this.game.openShop());
+    const key = 'idle_' + id + '_' + (this.f.chapter || 0);
+    this.chain([[id, t(key) !== key ? key : 'idle_generic']]);
   }
 
   talk(npc) {
     const g = this.game, f = this.f, h = g.hero;
     const id = npc.def.id;
-    const c = (lines, done) => this.chain(lines, done);
+    const c = (lines, done) => { this.chain(lines, done); return true; };
     switch (id) {
       case 'zoe':
         if (f.prologueDone) return c([['zoe', 'pr_zoe_after']]);
@@ -237,8 +255,10 @@ export class Prologue {
         f.kidsAsked = true;
         return c([['tim', 'pr_tim_1'], ['lulu', 'pr_lulu_1'], ['hero', 'pr_tw_kids']]);
       case 'pippa':
-        return this.chain([['pippa', 'pr_pippa']], () => g.openShop());
+        this.chain([['pippa', 'pr_pippa']], () => g.openShop());
+        return true;
     }
+    return false;
   }
 
   onEnterRoom(id) {
@@ -342,12 +362,9 @@ export class Prologue {
     g.ball.state = 'idle';
     g.ball.mesh.visible = false;
     g.rooms.well.vein.power = 0;
-    g.updateObjective();
-    g.save(false);
-    g.setState('ending');
-    g.hud.show(false);
-    g.showScreen('ending');
     g.audio.play('victory');
+    // on to chapter 1: fade out of the cave, title card, morning in the square
+    g.startTransition(() => this.story.nextChapter());
   }
   afterEnding() {
     // back to the surface, the ball returns home

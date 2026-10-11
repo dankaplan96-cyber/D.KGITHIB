@@ -252,7 +252,7 @@ export class Rig {
     if (this.anim !== anim) {
       this.anim = anim;
       this.actionT = 0;
-      if (anim === 'talk') this.gesture = Math.floor(Math.random() * 3);
+      if (anim === 'talk') { let gsel; do gsel = Math.floor(Math.random() * 5); while (gsel === this.gesture); this.gesture = gsel; }
     }
   }
 
@@ -279,15 +279,20 @@ export class Rig {
     this.actionT += dt;
     const a = this.anim;
     const T = {};
-    let hipsY = 0.95, bodyRotX = 0, torsoX = 0, torsoY = 0, torsoZ = 0, headX = 0, headY = 0, headZ = 0;
+    let armOut = 0, hipsY = 0.95, bodyRotX = 0, torsoX = 0, torsoY = 0, torsoZ = 0, headX = 0, headY = 0, headZ = 0;
 
     const walkLike = a === 'walk' || a === 'run' || a === 'sneak';
     if (walkLike) {
       // one full cycle = two steps; stride grows with speed
-      const stride = a === 'run' ? 2.2 : a === 'sneak' ? 0.9 : 1.25;
-      this.phase += (speed * dt / stride) * Math.PI * 2;
+      // amplitude grows a little with speed; one cycle = two steps whose length matches
+      // the swing of the planted leg (2·L·sin amp), so a planted foot doesn't slide
+      const amp = a === 'run' ? 0.62 + Math.min(speed, 8) * 0.03 : a === 'sneak' ? 0.42 : 0.42 + Math.min(speed, 4) * 0.035;
+      const legL = this.hipsRest * this.root.scale.y * 0.95;
+      const stride = 4 * legL * Math.sin(amp) * (a === 'run' ? 1.25 : 1); // runs have a flight phase
+      // the sneak lingers on each contact (careful placing), the others are even
+      const dph = (speed * dt / stride) * Math.PI * 2;
+      this.phase += a === 'sneak' ? dph * (0.55 + 0.9 * Math.abs(Math.sin(this.phase))) : dph;
       const s = Math.sin(this.phase), c = Math.cos(this.phase);
-      const amp = a === 'run' ? 0.85 : a === 'sneak' ? 0.45 : 0.55;
       T.legL = s * amp; T.legR = -s * amp;
       T.kneeL = Math.max(0, -c) * amp * 1.6 + 0.08;
       T.kneeR = Math.max(0, c) * amp * 1.6 + 0.08;
@@ -297,7 +302,7 @@ export class Rig {
       hipsY = 0.95 - 0.03 + Math.abs(c) * (a === 'run' ? 0.07 : 0.035);
       torsoY = s * (a === 'run' ? 0.12 : 0.07);
       headY = -torsoY * 0.8;
-      torsoX = a === 'run' ? 0.22 : 0.04;
+      torsoX = a === 'run' ? 0.12 + Math.min(speed, 8) * 0.018 : 0.03 + speed * 0.01;
       if (a === 'sneak') {
         hipsY = 0.74; torsoX = 0.45; headX = -0.38;
         T.armL = 0.6 + s * 0.15; T.armR = 0.6 - s * 0.15; T.elL = -1.3; T.elR = -1.3;
@@ -307,6 +312,9 @@ export class Rig {
       const b = Math.sin(this.t * 1.7);
       hipsY = 0.95 + b * 0.006;
       torsoX = -0.02 + b * 0.012;
+      // slow weight shift from one leg to the other (every ~7 s)
+      const ws = Math.sin(this.t * 0.9) * Math.max(0, Math.sin(this.t * 0.31)) ;
+      torsoZ = ws * 0.03; this.hipShift = ws;
       T.armL = 0.04 + b * 0.025; T.armR = 0.04 - b * 0.025;
       T.elL = -0.18; T.elR = -0.18;
       T.legL = 0.02; T.legR = -0.02; T.kneeL = 0.03; T.kneeR = 0.03;
@@ -329,6 +337,8 @@ export class Rig {
         if (g === 0) { T.armR = -0.6 + w * 0.25; T.elR = -1.0; }
         if (g === 1) { T.armL = -0.5 + w * 0.2; T.armR = -0.5 - w * 0.2; T.elL = -1.1; T.elR = -1.1; }
         if (g === 2) { T.armR = -0.3; T.elR = -1.6 + w * 0.3; torsoZ = 0.04; }
+        if (g === 3) { T.armL = -0.9 + w * 0.15; T.elL = -0.4; T.armR = 0.1; headZ = 0.08; torsoY = 0.12; } // presenting an idea
+        if (g === 4) { T.armL = -0.35; T.armR = -0.35; T.elL = -1.7; T.elR = -1.7; torsoX = 0.06; headX = 0.08 + w * 0.04; } // hands together, earnest
       }
       if (a === 'listen') { headX = 0.06; headZ = Math.sin(this.t * 0.8) * 0.05; }
     } else if (a === 'hide') {
@@ -359,13 +369,76 @@ export class Rig {
       T.armL = -0.8; T.armR = 0.6; T.elL = -1.2; T.elR = -1.0;
       torsoX = -0.3 * k;
     } else if (a === 'throw') {
-      const k = this.actionT / 0.3;
-      T.armR = k < 0.4 ? -2.8 : -1.1; T.elR = k < 0.4 ? -1.0 : 0;
-      T.armL = 0.5; T.elL = -0.5;
-      torsoY = k < 0.4 ? 0.45 : -0.4;
-      T.legL = -0.35; T.legR = 0.35; T.kneeL = 0.25; T.kneeR = 0.1;
+      // windup (arm cocked behind the head, body twisted back) → release (whip
+      // forward, step into it) → recovery (follow-through, settle)
+      const t = this.actionT;
+      if (t < 0.18) {
+        const k = Math.min(1, t / 0.1);
+        T.armR = -3.0 * k; T.elR = -1.7 * k; T.armL = -0.9 * k; T.elL = -0.5;
+        torsoY = 0.55 * k; torsoX = -0.12 * k; headY = -0.3 * k;
+        T.legL = -0.15; T.legR = 0.2; T.kneeL = 0.15; T.kneeR = 0.25; hipsY = 0.93;
+      } else if (t < 0.32) {
+        T.armR = -1.25; T.elR = -0.05; T.armL = 0.45; T.elL = -0.7;
+        torsoY = -0.5; torsoX = 0.22; headY = 0.25;
+        T.legL = -0.5; T.legR = 0.4; T.kneeL = 0.35; T.kneeR = 0.15; hipsY = 0.9;
+      } else {
+        T.armR = -0.55; T.elR = -0.25; T.armL = 0.2; T.elL = -0.4;
+        torsoY = -0.2; torsoX = 0.1;
+        T.legL = -0.25; T.legR = 0.2; T.kneeL = 0.2; T.kneeR = 0.1; hipsY = 0.93;
+      }
+    } else if (a === 'jumpPrep') {
+      // anticipation: sink into the knees, arms swing back
+      hipsY = 0.78; torsoX = 0.3; T.legL = -0.6; T.legR = -0.6; T.kneeL = 1.1; T.kneeR = 1.1; T.footL = -0.5; T.footR = -0.5;
+      T.armL = 0.6; T.armR = 0.6; T.elL = -0.3; T.elR = -0.3;
+    } else if (a === 'fall') {
+      // coming down: arms up and out for balance, legs reaching for the ground
+      const w = Math.sin(this.t * 11) * 0.15;
+      T.armL = -1.9 + w; T.armR = -1.7 - w; T.elL = -0.4; T.elR = -0.4;
+      armOut = 0.5;
+      T.legL = -0.35; T.legR = 0.15; T.kneeL = 0.45; T.kneeR = 0.3; torsoX = -0.05;
+    } else if (a === 'pickup') {
+      // bend the knees and reach down, then straighten up holding it
+      const t = this.actionT, k = t < 0.35 ? t / 0.35 : t < 0.55 ? 1 : Math.max(0, 1 - (t - 0.55) / 0.35);
+      hipsY = 0.95 - 0.36 * k; torsoX = 0.75 * k; headX = 0.2 * k;
+      T.legL = -1.0 * k; T.legR = -0.6 * k; T.kneeL = 1.7 * k; T.kneeR = 1.2 * k; T.footL = -0.6 * k; T.footR = -0.5 * k;
+      T.armR = -1.1 * k; T.elR = -0.2; T.armL = -0.4 * k; T.elL = -0.6;
+    } else if (a === 'use') {
+      // both hands on a wheel/lever, cranking
+      const w = Math.sin(this.actionT * 7);
+      T.armL = -1.35 + w * 0.25; T.armR = -1.35 - w * 0.25; T.elL = -0.9 + w * 0.2; T.elR = -0.9 - w * 0.2;
+      torsoX = 0.18 + Math.abs(w) * 0.06; torsoY = w * 0.12; hipsY = 0.9;
+      T.legL = -0.35; T.legR = 0.3; T.kneeL = 0.35; T.kneeR = 0.2;
+    } else if (a === 'door') {
+      // a step forward and a firm push with the right hand
+      const k = Math.min(1, this.actionT / 0.25);
+      T.armR = -1.45 * k; T.elR = -0.35 + k * 0.3; T.armL = 0.2; T.elL = -0.3;
+      torsoX = 0.2 * k; torsoY = -0.15 * k;
+      T.legL = -0.45 * k; T.legR = 0.3 * k; T.kneeL = 0.25; T.kneeR = 0.15; hipsY = 0.92;
+    } else if (a === 'knockdown') {
+      // thrown on the back: tip over the heels, arms flung, land and bounce
+      const k = Math.min(1, this.actionT / 0.32);
+      bodyRotX = -1.45 * k * k; hipsY = 0.95 - 0.7 * k;
+      T.armL = -2.4 * k; T.armR = -2.2 * k; T.elL = -0.3; T.elR = -0.3;
+      T.legL = -0.6 * k; T.legR = -0.3 * k; T.kneeL = 0.6; T.kneeR = 0.4; headX = 0.4 * k;
+    } else if (a === 'getup') {
+      // roll up from the ground: sit, knee, stand
+      const k = Math.min(1, this.actionT / 0.8);
+      const up = k * k * (3 - 2 * k);
+      bodyRotX = -1.45 * (1 - up); hipsY = 0.25 + 0.7 * up;
+      T.legL = -1.4 * (1 - up); T.legR = -0.5 * (1 - up); T.kneeL = 2.0 * (1 - up); T.kneeR = 1.1 * (1 - up);
+      T.armL = -0.6 * (1 - up); T.armR = 0.5 * (1 - up); torsoX = 0.6 * Math.sin(up * Math.PI);
+    } else if (a === 'turnL' || a === 'turnR') {
+      // turning on the spot: a small step with the inside foot
+      const sgn = a === 'turnL' ? 1 : -1, w = Math.sin(this.actionT * 14);
+      T.legL = Math.max(0, w) * -0.35; T.legR = Math.max(0, -w) * -0.35;
+      T.kneeL = Math.max(0, w) * 0.6; T.kneeR = Math.max(0, -w) * 0.6;
+      torsoY = sgn * 0.15; headY = sgn * 0.3; T.armL = 0.05; T.armR = 0.05; T.elL = -0.2; T.elR = -0.2;
     } else if (a === 'hurt') {
-      torsoX = -0.5; headX = 0.35; T.armL = 0.8; T.armR = 0.8; T.elL = -0.9; T.elR = -0.9; hipsY = 0.9;
+      // recoil away from where the hit came from (hitDir: 0 = front, ±π/2 = sides, π = back)
+      const hd = this.hitDir || 0, fx = Math.cos(hd), sx2 = Math.sin(hd);
+      torsoX = -0.5 * fx; torsoZ = 0.45 * sx2; headX = 0.35 * fx; headZ = 0.3 * sx2;
+      T.armL = 0.8 * fx - 0.4; T.armR = 0.8 * fx - 0.4; T.elL = -0.9; T.elR = -0.9; hipsY = 0.9;
+      T.legL = -0.25 * fx; T.legR = 0.2 * fx; T.kneeL = 0.25; T.kneeR = 0.25;
     } else if (a === 'dead') {
       bodyRotX = -Math.PI / 2; hipsY = 0.3;
       T.armL = -2.8; T.armR = -2.6;
@@ -388,6 +461,8 @@ export class Rig {
     // momentum leans
     torsoX += this.lean;
     torsoZ += this.roll;
+    // turning: the head leads, the chest follows, the pelvis comes last
+    if (this.turn) { headY += this.turn * 0.35; torsoY += this.turn * 0.12; }
 
     // head looks toward a point of interest (in body space)
     if (this.lookAt && a !== 'dead') {
@@ -401,7 +476,7 @@ export class Rig {
       headX += clamp(-Math.atan2(dy, dh), -0.5, 0.4);
     }
 
-    const R = 16;
+    const R = a === 'throw' || a === 'punch' || a === 'punch2' || a === 'kick' ? 30 : 16;
     const set = (obj, v, axis = 'x', r = R) => { obj.rotation[axis] = damp(obj.rotation[axis], v ?? 0, r, dt); };
     set(j.legL.hip, T.legL); set(j.legR.hip, T.legR);
     set(j.legL.knee, T.kneeL); set(j.legR.knee, T.kneeR);
@@ -412,9 +487,12 @@ export class Rig {
     set(j.torso, torsoX); set(j.torso, torsoY, 'y'); set(j.torso, torsoZ, 'z', 8);
     set(j.head, headX, 'x', 10); set(j.head, headY, 'y', 8); set(j.head, headZ, 'z', 8);
     set(j.body, bodyRotX, 'x', 8);
-    j.armL.sh.rotation.z = this.armSpread; j.armR.sh.rotation.z = -this.armSpread;
+    this._armOut = damp(this._armOut || 0, armOut, 8, dt);
+    j.armL.sh.rotation.z = this.armSpread + this._armOut; j.armR.sh.rotation.z = -this.armSpread - this._armOut;
     // pelvis counter-rotates against the shoulders while walking
     if (walkLike) j.hips.rotation.y = damp(j.hips.rotation.y, -torsoY * 0.8, R, dt); else j.hips.rotation.y = damp(j.hips.rotation.y, 0, 8, dt);
+    // idle weight shift tilts the pelvis toward the standing leg
+    j.hips.rotation.z = damp(j.hips.rotation.z, (a === 'idle' || a === 'talk' || a === 'listen') ? -(this.hipShift || 0) * 0.05 : 0, 4, dt);
 
     // tunic panels follow the legs with a little drag (cloth follow-through)
     if (j.skirt) {

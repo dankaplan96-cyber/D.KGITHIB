@@ -104,16 +104,27 @@ export class Terrain {
     const uniforms = { tGrass: { value: T.grass }, tSand: { value: T.sand }, tRock: { value: T.rock }, tDirt: { value: T.dirt }, tCobble: { value: T.cobble } };
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, uniforms);
-      sh.vertexShader = 'attribute vec4 splat; attribute float splat2; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos;\n' +
-        sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vSplat = splat; vSplat2 = splat2; vWPos = (modelMatrix * vec4(position, 1.0)).xyz;');
-      sh.fragmentShader = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos;\n' +
+      sh.vertexShader = 'attribute vec4 splat; attribute float splat2; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec3 vWNrm;\n' +
+        sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vSplat = splat; vSplat2 = splat2; vWPos = (modelMatrix * vec4(position, 1.0)).xyz; vWNrm = normalize(mat3(modelMatrix) * normal);');
+      sh.fragmentShader = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec3 vWNrm;\n' +
         sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
           vec2 tuv = vWPos.xz * 0.22;
-          vec3 tex = texture2D(tGrass, tuv).rgb * vSplat.x
-                   + texture2D(tSand, tuv * 1.2).rgb * vSplat.y
-                   + texture2D(tRock, vec2(vWPos.x + vWPos.z, vWPos.y * 1.6) * 0.16).rgb * vSplat.z
-                   + texture2D(tDirt, tuv * 1.3).rgb * vSplat.w
-                   + texture2D(tCobble, vWPos.xz * 0.25).rgb * vSplat2;
+          // cliffs: triplanar rock so steep faces show undistorted strata
+          vec3 bw = pow(abs(normalize(vWNrm)), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
+          vec3 rock = texture2D(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14).rgb * bw.x
+                    + texture2D(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14).rgb * bw.z
+                    + texture2D(tRock, vWPos.xz * 0.14).rgb * bw.y;
+          // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
+          vec4 sp = vSplat; float sp2 = vSplat2;
+          float rk = smoothstep(0.28, 0.62, sp.z);
+          float rest = 1.0 - sp.z;
+          float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
+          sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
+          vec3 tex = texture2D(tGrass, tuv).rgb * sp.x
+                   + texture2D(tSand, tuv * 1.2).rgb * sp.y
+                   + rock * sp.z
+                   + texture2D(tDirt, tuv * 1.3).rgb * sp.w
+                   + texture2D(tCobble, vWPos.xz * 0.25).rgb * sp2;
           diffuseColor.rgb *= tex;`);
     };
     mat.customProgramCacheKey = () => 'terrain-splat';
