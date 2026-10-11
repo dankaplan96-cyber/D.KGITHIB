@@ -51,3 +51,22 @@ deterministic stepping via `game.step()`. Real-GPU frame rates are **not yet mea
 - Dark crease on the tunic when the arm is raised.
 - Chapter 1 ends on an end-of-chapter screen (chapters 2–3 not built yet).
 - Zoe's stealth room is verified by script (teleporting between lockers), not yet by a human-like route.
+
+## Session 4 (full game: visual standard, story to the end, soundtrack)
+- English only; all player text rewritten; LTR; language picker removed (text tables kept).
+- Characters: every look is a Blender low-poly model (tools/blender/lbapoly.py, cast_poly.py, twinsen_poly.py;
+  sources art/characters/*.blend; skeletons art/characters/skeletons.json from tools/dump-skeletons.mjs) with
+  LBA2-style ramp shading (LbaMaterial). Twinsen measured against the original; Zoé redesigned (interpretation);
+  distinct hairstyles; fuller torsos/sleeves. Captures: captures/characters/.
+- Citadel terrain: faceted rock faces on the terrace cliffs (src/game/cliffs.js), mossier grass, browner soil.
+  Before/after from the game camera: captures/world/.
+- Story: STORY_BIBLE.md, WORLD_MAP.md. Chapter 2 setback (plan confiscated, recovered, Oku/Nara react) —
+  verified by the ch2 playthrough. Chapter 3 + epilogue written (src/game/story/chapter3.js, epilogue.js,
+  text/ch3.js, Guardian boss in enemies.js); waiting for the underground rooms (parallel build) to test.
+- Soundtrack: parallel build (FluidSynth + FluidR3 GM soundfont; draft orchestral quality; not verifiable by ear
+  here — no audio device).
+
+### Verified this session
+- prologue, chapter 1, chapter 2 automated playthroughs (headless Chromium + SwiftShader) pass after each change.
+### Not yet verified
+- Chapter 3 / epilogue in game (rooms pending). Real-GPU performance. Music by ear.
