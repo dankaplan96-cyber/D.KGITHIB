@@ -176,7 +176,9 @@ export function t(key, vars) {
 // LBA3 – The Awakening: prologue texts (original fan story)
 Object.assign(STR.he, {
   logo_sub: 'ההתעוררות',
-  title_sub: 'פרולוג · המשך מעריצים לא רשמי ל־Little Big Adventure 2',
+  title_sub: 'פרולוג, פרק 1 ופרק 2 · המשך מעריצים לא רשמי ל־Little Big Adventure 2',
+  demo_badge: 'גרסת דמו',
+  to_title: 'לתפריט הראשי',
   disclaimer: 'פרויקט מעריצים לא מסחרי. אינו קשור ל־Adeline Software או ל־[2.21]. הדמויות והעולם שייכים לבעליהם; הסיפור, המודלים, הצלילים והמוזיקה נוצרו מחדש.',
   map_title: 'הולומפה · האי המצודה',
   toast_coins: '+{n} קאשים',
@@ -276,7 +278,9 @@ Object.assign(STR.he, {
 
 Object.assign(STR.en, {
   logo_sub: 'THE AWAKENING',
-  title_sub: 'Prologue · an unofficial fan sequel to Little Big Adventure 2',
+  title_sub: 'Prologue, chapters 1 and 2 · an unofficial fan sequel to Little Big Adventure 2',
+  demo_badge: 'DEMO',
+  to_title: 'Main menu',
   disclaimer: 'Non-commercial fan project. Not affiliated with Adeline Software or [2.21]. Characters and world belong to their owners; story, models, sounds and music are recreated.',
   map_title: 'Holomap · Citadel Island',
   toast_coins: '+{n} kashes',

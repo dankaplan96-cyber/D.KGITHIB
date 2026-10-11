@@ -106,6 +106,7 @@ kbd { display: inline-block; min-width: 24px; padding: 1px 7px; border-radius: 6
 .logo-bottom { font-size: clamp(30px, 6.5vw, 66px); color: #e9f3ff; letter-spacing: 0.2em; margin-top: 4px; }
 :root[dir=rtl] .logo-bottom { letter-spacing: 0.02em; }
 .logo .sub { margin-top: 14px; color: var(--ink); font-size: clamp(13px, 2vw, 17px); opacity: 0.9; }
+.demo-badge { display: inline-block; margin-top: 12px; padding: 4px 16px; border-radius: 4px; background: linear-gradient(#f7d06a, #c8902a); color: #3a2208; font-weight: 700; letter-spacing: 0.12em; font-size: clamp(12px, 1.8vw, 15px); box-shadow: 0 2px 6px rgba(0,0,0,0.4); transform: rotate(-2deg); }
 .menu { display: flex; flex-direction: column; gap: 10px; min-width: min(320px, 100%); }
 .menu button, .langs button { padding: 13px 22px; font-size: 18px; font-weight: 700; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.18); background: rgba(12, 24, 36, 0.8); color: var(--ink); cursor: pointer; transition: all 0.15s; }
 .menu button:hover, .menu button:focus-visible, .menu button.sel { border-color: var(--accent); background: rgba(255, 207, 74, 0.15); transform: translateY(-1px); outline: none; }

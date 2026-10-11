@@ -102,7 +102,7 @@ Object.assign(STR.he, {
   it_cyl: 'גליל קוד', itd_cyl: 'מארון מחסן המיזם. "גישה לרציף. לא להוציא".',
   it_okey: 'מפתח עקיפה', itd_okey: 'המצאה של בלדינו. פותח את מגן הרציף, אם הטחנות בלומות.',
   ending2_title: 'סוף פרק 2 · זיליך',
-  ending2_text: 'המעלית שוקעת בפיר, והאור הוורוד של זיליך נעלם מעל.<br>למטה, מתחת לקליפה, משהו נושם.<br><br><b>פרק 3 · הקליפה</b> בגרסה הבאה.',
+  ending2_text: 'המעלית שוקעת בפיר, והאור הוורוד של זיליך נעלם מעל.<br>למטה, מתחת לקליפה, משהו נושם.<br><br><b>סוף הדמו · תודה ששיחקתם!</b><br>פרק 3 · הקליפה, יגיע בגרסה הבאה.',
 });
 
 Object.assign(STR.en, {
@@ -198,5 +198,5 @@ Object.assign(STR.en, {
   it_cyl: 'Code cylinder', itd_cyl: 'From the project depot\'s locker. "Platform access. Do not remove."',
   it_okey: 'Override key', itd_okey: "Baldino's invention. Opens the platform shield, if the mills are braked.",
   ending2_title: 'End of chapter 2 · Zeelich',
-  ending2_text: "The lift sinks into the shaft, and Zeelich's pink light disappears above.<br>Below, under the shell, something is breathing.<br><br><b>Chapter 3 · The Shell</b> in the next build.",
+  ending2_text: "The lift sinks into the shaft, and Zeelich's pink light disappears above.<br>Below, under the shell, something is breathing.<br><br><b>End of the demo · thank you for playing!</b><br>Chapter 3 · The Shell, comes in the next build.",
 });
