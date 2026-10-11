@@ -785,4 +785,4 @@ class Game {
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
-Promise.all([noBake ? Promise.resolve(false) : loadBake('assets/bake.bin').catch(() => false), preloadCharacters()]).then(() => { window.game = new Game(); });
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters()]).then(() => { window.game = new Game(); });
