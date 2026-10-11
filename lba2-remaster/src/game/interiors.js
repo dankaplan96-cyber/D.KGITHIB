@@ -358,45 +358,120 @@ function buildHouse(scene, physics) {
 }
 
 // ------------------------------------------------------------------ the well
+// LBA2's caves (#34–36): dressed slate blocks, rough slate outcrops, clusters of
+// onion-shaped stalagmites, round blue rocks, iron railings between stone posts.
+const stalTex = () => P.canvasTex(16, 256, (x, W, H) => {
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#d8c0a8'); g.addColorStop(0.45, '#b89880'); g.addColorStop(0.85, '#6a5048'); g.addColorStop(1, '#3a2a28');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let y = 10; y < H; y += 22) { x.fillStyle = 'rgba(60,40,30,0.35)'; x.fillRect(0, y, W, 4); x.fillStyle = 'rgba(255,240,220,0.3)'; x.fillRect(0, y + 4, W, 3); }
+});
+function stalagmites(k, n, s, seed, mat) {
+  for (let i = 0; i < n; i++) {
+    const a = i * 2.4 + seed, rr = i === 0 ? 0 : 0.18 + ((i * 37 + seed * 11) % 10) / 10 * 0.32 * s, h = s * (1.25 - (rr / s) * 1.1) * (0.75 + ((i * 53 + seed) % 7) / 14);
+    const prof = [[0.001, 0], [0.13, 0], [0.15, 0.07], [0.1, 0.18], [0.12, 0.28], [0.075, 0.42], [0.09, 0.52], [0.05, 0.66], [0.06, 0.74], [0.025, 0.88], [0.001, 1.0]].map(([px, py]) => [px * Math.max(0.6, h) * 0.9, py * h]);
+    k.add(lathe(prof, 10), mat, Math.cos(a) * rr, 0, Math.sin(a) * rr, a, { rx: (Math.cos(a * 3) * 0.08), rz: Math.sin(a * 2) * 0.08 });
+  }
+}
+function slateRock(seed, colors = ['#5c626a', '#464b52']) {
+  return soft({
+    key: 'slaterock' + seed + colors[0],
+    prims: [0, 1, 2, 3].map((i) => { const a = i * 1.9 + seed; return { type: 'ell', c: i ? [Math.cos(a) * 0.45, 0.2 + (i % 2) * 0.2, Math.sin(a) * 0.4] : [0, 0.3, 0], r: i ? [0.45, 0.4, 0.42] : [0.75, 0.55, 0.65], group: 'r', mat: 'r', wobble: (x, y, z) => (Math.abs(Math.sin(x * 6.1 + y * 2.3 + seed)) + Math.abs(Math.sin(z * 5.3 - x * 1.7)) + Math.abs(Math.sin(y * 7.1 + z * 2.9))) * 0.04 - 0.06 }; }),
+    groups: { r: 0.15 }, colors: { r: colors[0] },
+    paint: (p, m, c) => { c.lerp(new THREE.Color(colors[1]), 0.5 + Math.sin(p.x * 9 + p.z * 7) * Math.sin(p.y * 11) * 0.5); c.offsetHSL(0, 0, (p.y - 0.3) * 0.12); },
+    bounds: { min: [-1.3, -0.4, -1.2], max: [1.3, 1.1, 1.2] }, cell: 0.07,
+  });
+}
+function blueRocks() {
+  return soft({
+    key: 'bluerocks',
+    prims: [[0, 0.2, 0, 0.24], [0.33, 0.15, 0.1, 0.18], [-0.28, 0.16, 0.16, 0.19], [0.1, 0.13, -0.3, 0.16], [-0.12, 0.42, 0.02, 0.15], [0.2, 0.1, 0.36, 0.12]].map(([x, y, z, r], i) => ({ type: 'ell', c: [x, y, z], r: [r, r * 0.9, r], group: 'b' + i, mat: 'b', wobble: (a, b, c) => Math.sin(a * 30 + c * 20) * 0.006 })),
+    groups: { b0: 0.01, b1: 0.01, b2: 0.01, b3: 0.01, b4: 0.01, b5: 0.01 }, joinK: 0.015, colors: { b: '#2f5f96' },
+    paint: (p, m, c) => { c.offsetHSL(0, 0, (p.y - 0.15) * 0.5 + Math.sin(p.x * 40) * 0.02); },
+    bounds: { min: [-0.6, -0.1, -0.6], max: [0.6, 0.65, 0.6] }, cell: 0.025,
+  });
+}
 function buildWell(scene, physics) {
-  const TX = textures();
   const B = new RoomBuilder(scene, physics, 'well', 1100, 0);
-  const R = B.room;
+  const R = B.room, k = B.k;
   const W = 21, D = 14, H = 4;
   R.view = 15;
   R.follow = 0.6;
   R.cave = true;
-  const rock = texMat(TX.rock, 4, 1.5);
-  B.floor(W, D, texMat(TX.rock, 6, 4, { color: '#9a8e80' }));
-  B.walls(W, D, H, rock, rock);
-  // rough wall bumps
-  for (let i = 0; i < 14; i++) {
-    const along = -W / 2 + 1 + i * (W / 14);
-    const s = 1 + (i % 3) * 0.4;
-    B.box(s, H * (0.7 + (i % 2) * 0.3), 1.2, rock, along, H * 0.35, -D / 2 + 0.4);
+  const slate = MAT.stone('slate', 2), slate1 = MAT.stone('slate', 1.2), iron = MAT.iron();
+  B.shell({
+    W, D, H, t: 0.5, slabH: 0.9,
+    floor: MAT.stone('slate', 3.6), slab: MAT.rubble('slate'), rimMat: MAT.rubble('slate'),
+    body: slate, rail: MAT.stone('slate', 1), cap: MAT.stone('slate', 1.4), rimH: 0.55,
+  });
+  const rockMat = M('slaterockmat', () => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 }));
+  const stalMat = M('stalmat', () => new THREE.MeshStandardMaterial({ map: stalTex(), roughness: 0.6 }));
+  // dressed slate blocks and rough outcrops along the far walls
+  const block = (x, z, w, d, h, ry = 0) => {
+    k.add(rbox(w, h, d, 0.07), slate1, x, h / 2, z, ry, { jit: true });
+    k.add(rbox(w - 0.22, 0.05, d - 0.22, 0.02), MAT.rubble('slate'), x, h + 0.01, z, ry);
+    B.col(x, z, w / 2, d / 2, h, { rot: ry });
+  };
+  [[-9.6, -6.35, 1.7, 1.3, 1.9], [-7.55, -6.5, 1.4, 1.0, 1.0], [-4.6, -6.5, 1.6, 1.0, 1.4], [-1.3, -6.5, 1.4, 1.0, 0.85],
+    [-9.85, -2.2, 1.3, 1.6, 1.25], [-9.85, 0.4, 1.3, 1.4, 2.1], [-9.9, 6.2, 1.2, 1.2, 0.8]].forEach(([x, z, w, d, h]) => block(x, z, w, d, h));
+  k.add(rbox(1.2, 0.8, 1.0, 0.06), slate1, -9.6, 1.9 + 0.4, -6.4, 0.1, { jit: true });
+  for (const [x, z, s, ry, sd] of [[-10.2, -4.6, 1.2, 0.4, 1], [-10.1, 3.4, 1.3, 1.2, 2], [-6.0, -6.9, 1.1, 2.0, 3], [1.4, -6.85, 1.2, 0.7, 1], [9.8, -1.6, 1.0, 2.6, 2], [-10.2, 1.7, 0.9, 0.3, 3]]) {
+    k.add(slateRock(sd), rockMat, x, 0, z, ry, { sx: s, sy: s * 1.3, sz: s });
+    B.ccol(x, z, 0.75 * s, 1.1 * s * 1.3);
   }
-  for (let i = 0; i < 9; i++) {
-    const along = -D / 2 + 1 + i * (D / 9);
-    B.box(1.2, H * (0.65 + (i % 2) * 0.35), 1 + (i % 3) * 0.4, rock, -W / 2 + 0.4, H * 0.35, along);
-  }
-  // dividing rock wall with a gap that crystals have grown shut
+  // dividing slate wall with a gap the crystals have grown shut
   const gx = 4.5;
-  B.box(1.2, H, 5.2, rock, gx, H / 2, -4.4);
-  B.box(1.2, 1.1, 5.2, rock, gx, 0.55, 4.4); // near half drawn low so the iso camera can see past it
+  for (let i = 0; i < 4; i++) { const z = -6.4 + i * 1.3, h = H - (i % 2) * 0.35; k.add(rbox(1.2, h, 1.28, 0.08), slate1, gx, h / 2, z, (i % 2) * 0.03, { jit: true }); }
+  for (let i = 0; i < 4; i++) { const z = 2.45 + i * 1.3, h = 1.1 - (i % 2) * 0.12; k.add(rbox(1.2, h, 1.28, 0.08), slate1, gx, h / 2, z, (i % 2) * 0.04, { jit: true }); }
   B.col(gx, -4.4, 0.6, 2.6, H);
   B.col(gx, 4.4, 0.6, 2.6, H);
-  // pillars
+  // pillars of stacked slate drums on a plinth
   for (const [px, pz, pr] of [[-3, 1.5, 0.7], [1.5, -2.5, 0.6], [-6.5, -2, 0.8]]) {
-    B.mesh(new THREE.CylinderGeometry(pr * 0.8, pr, H, 7), rock, px, H / 2, pz);
-    physics.add({ type: 'cyl', x: B.cx + px, z: B.cz + pz, r: pr, top: H });
+    k.add(rbox(pr * 2.3, 0.35, pr * 2.3, 0.06), slate1, px, 0.175, pz, 0.2);
+    let y = 0.35;
+    for (let i = 0; y < H - 0.1; i++) { const h = Math.min(0.9 + (i % 2) * 0.25, H - y); k.add(lathe([[pr * 0.82, 0], [pr * 0.86, 0.04], [pr * 0.86, h - 0.04], [pr * 0.82, h]], 12), slate1, px, y, pz, i * 0.7); y += h; }
+    k.add(rbox(pr * 2.2, 0.3, pr * 2.2, 0.06), slate1, px, H - 0.15, pz, 0.2);
+    B.ccol(px, pz, pr, H);
   }
+  // stalagmite clusters and blue rocks
+  for (const [x, z, n, s, sd] of [[-8.6, -5.4, 6, 1.0, 1], [-2.6, -5.95, 5, 0.9, 2], [3.25, -6.2, 7, 1.1, 3], [-4.0, 2.4, 4, 0.8, 4], [6.6, 5.0, 6, 1.0, 5], [9.7, 1.6, 5, 1.0, 6], [-6.9, 6.1, 5, 0.8, 7], [2.3, 6.2, 4, 0.75, 8], [-9.1, -3.6, 4, 0.8, 9]]) {
+    k.at(x, 0, z, 0, () => stalagmites(k, n + 2, s * 1.45, sd, stalMat));
+    B.ccol(x, z, 0.35 + s * 0.45, s * 1.6);
+  }
+  for (const [x, z, s, ry] of [[-0.3, -6.25, 1.2, 0], [9.6, -3.4, 1.4, 1], [-9.6, 4.9, 1.2, 2], [5.75, 2.6, 1.1, 0.5]]) { k.add(blueRocks(), softMat, x, 0, z, ry, { sx: s, sy: s, sz: s }); B.ccol(x, z, 0.45 * s, 0.6 * s); }
+  // iron railing between stone posts along the near ledge
+  const rz = D / 2 - 0.35;
+  const posts = [-9.4, -6.6, -3.8, -1.0, 1.8];
+  for (const x of posts) {
+    k.add(rbox(0.36, 1.25, 0.36, 0.05), slate1, x, 0.625, rz);
+    k.add(rbox(0.46, 0.12, 0.46, 0.04), slate1, x, 1.3, rz);
+    k.add(torus(0.13, 0.02, 4, 12), iron, x, 1.4, rz, 0, { rx: Math.PI / 2 });
+    for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; k.add(cyl(0.008, 0.02, 0.14, 4), iron, x + Math.cos(a) * 0.13, 1.47, rz + Math.sin(a) * 0.13); }
+  }
+  for (let i = 1; i < posts.length; i++) {
+    const a = posts[i - 1] + 0.2, b = posts[i] - 0.2;
+    for (const y of [0.15, 0.95]) k.add(cyl(0.018, 0.018, b - a, 6), iron, (a + b) / 2, y, rz, 0, { rz: Math.PI / 2 });
+    for (let x = a + 0.12; x < b; x += 0.16) { k.add(cyl(0.012, 0.012, 1.0, 5), iron, x, 0.55, rz); k.add(lathe([[0.001, 0], [0.022, 0.02], [0.001, 0.08]], 5), iron, x, 1.05, rz); }
+  }
+  B.col((posts[0] + posts[posts.length - 1]) / 2, rz, (posts[posts.length - 1] - posts[0]) / 2 + 0.2, 0.2, 1.3, { seeThrough: true });
+  // blue-globe lantern posts
+  const lantern = (x, z) => {
+    k.add(lathe([[0.12, 0], [0.12, 0.12], [0.05, 0.2], [0.04, 1.6], [0.07, 1.65], [0.06, 1.7]], 10), iron, x, 0, z);
+    k.add(sphere(0.14, 12, 10), MAT.glow('#bfe4ff', '#4a9aff', 1.6), x, 1.84, z);
+    k.add(lathe([[0.001, 0.0], [0.1, 0.0], [0.04, 0.05], [0.001, 0.06]], 10), iron, x, 1.96, z);
+    B.ccol(x, z, 0.14, 2.0);
+    B.light('#8ac4ff', 3.5, 6, x, 1.9, z);
+  };
+  lantern(-1.2, 5.2); lantern(7.2, 2.4);
 
-  // warm puddles with steam
+  // warm puddles ringed with stones, with steam
   const puddleMat = new THREE.MeshStandardMaterial({ color: '#4fb8c8', emissive: '#1a6a7a', emissiveIntensity: 0.6, roughness: 0.1, transparent: true, opacity: 0.85 });
   const puddles = [[-6, 3, 1.4], [-1.5, -4.5, 1.1], [2, 3.5, 1.3], [7.5, -3.5, 1.2]];
   for (const [px, pz, pr] of puddles) {
-    const m = new THREE.Mesh(new THREE.CircleGeometry(pr, 20), puddleMat);
-    m.rotation.x = -Math.PI / 2; m.position.set(px, 0.02, pz); B.group.add(m);
+    const m = new THREE.Mesh(new THREE.CircleGeometry(pr, 24), puddleMat);
+    m.rotation.x = -Math.PI / 2; m.position.set(px, 0.025, pz); B.group.add(m);
+    const n = Math.round(pr * 9);
+    for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + px; k.add(sphere(0.13 + (i % 3) * 0.04, 7, 5), slate1, px + Math.cos(a) * (pr + 0.06), 0.02, pz + Math.sin(a) * (pr + 0.06), a, { sy: 0.45 }); }
   }
   const NS = 90;
   const sp = new Float32Array(NS * 3), sd = [];
@@ -416,7 +491,7 @@ function buildWell(scene, physics) {
   });
 
   // crystals that "weren't there before"
-  const crystalMat = (c, e, k = 1.5) => new THREE.MeshStandardMaterial({ color: c, emissive: e, emissiveIntensity: k, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.92 });
+  const crystalMat = (c, e, kk = 1.5) => new THREE.MeshStandardMaterial({ color: c, emissive: e, emissiveIntensity: kk, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.92 });
   const cyan = crystalMat('#aef6ff', '#2ad0ff', 1.6), violet = crystalMat('#e0c0ff', '#9a4aff', 1.4);
   const cluster = (x, y, z, n, s, m) => {
     for (let i = 0; i < n; i++) {
@@ -427,12 +502,13 @@ function buildWell(scene, physics) {
       B.group.add(c);
     }
   };
-  [[-9.6, 1.5, -4], [-9.6, 2.2, 3], [-3, 2.5, -6.6], [2.5, 1.5, -6.6], [-6, 0.3, -6.4]].forEach(([x, y, z], i) => cluster(x, y, z, 5, 0.35, i % 2 ? violet : cyan));
+  [[-9.8, 1.6, -4], [-9.85, 2.4, 3], [-3, 1.9, -6.7], [2.5, 1.4, -6.7], [-6, 0.4, -6.5]].forEach(([x, y, z], i) => cluster(x, y, z, 5, 0.35, i % 2 ? violet : cyan));
 
-  // three crystal nodes to wake with the magic ball
+  // three crystal nodes on carved slate pedestals, to wake with the magic ball
   R.nodes = [];
   for (const [nx, nz] of [[-5, -4], [0.5, -5.2], [1, 4.8]]) {
-    B.mesh(new THREE.CylinderGeometry(0.5, 0.65, 0.9, 7), rock, nx, 0.45, nz);
+    k.add(lathe([[0.001, 0], [0.66, 0], [0.68, 0.1], [0.56, 0.18], [0.44, 0.3], [0.4, 0.62], [0.5, 0.72], [0.58, 0.84], [0.56, 0.9], [0.001, 0.9]], 14), slate1, nx, 0, nz);
+    k.add(torus(0.5, 0.03, 5, 20), iron, nx, 0.86, nz, 0, { rx: Math.PI / 2 });
     physics.add({ type: 'cyl', x: B.cx + nx, z: B.cz + nz, r: 0.6, top: 0.9 });
     const m = crystalMat('#8a9aa8', '#000000', 0);
     const c = B.mesh(new THREE.OctahedronGeometry(0.4, 0), m, nx, 1.55, nz);
@@ -466,7 +542,8 @@ function buildWell(scene, physics) {
     vein.add(c);
   }
   B.group.add(vein);
-  // on the far (north) wall of the last chamber, where the iso camera can see it
+  // the cracked slate around the vein
+  for (const [x, s, sd] of [[5.9, 1.0, 1], [10.0, 1.1, 3]]) k.add(slateRock(sd), rockMat, x, 0, -D / 2 + 0.55, x, { sx: s, sy: s * 1.6, sz: s * 0.8 });
   B.col(8, -D / 2 + 0.9, 2.3, 0.9, H);
   const veinLight = B.light('#40d8ff', 22, 16, 8, 2.2, -D / 2 + 3);
   R.vein = { ...B.world(8, -D / 2 + 1.9), y: 1.7, mat: veinMat, light: veinLight, power: 0 };
@@ -480,15 +557,16 @@ function buildWell(scene, physics) {
 
   // the rope Twinsen came down on, under a shaft of daylight
   const ropeX = -8, ropeZ = 4.5;
-  B.mesh(new THREE.CylinderGeometry(0.05, 0.05, 6, 6), mat('#c9a66b'), ropeX, 3, ropeZ);
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 8, 16, 1, true), new THREE.MeshBasicMaterial({ color: '#fff4d0', transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+  k.add(cyl(0.045, 0.045, 6, 6), MAT.cloth('#c9a66b', '#7a5a30'), ropeX, 3, ropeZ);
+  for (let i = 0; i < 3; i++) k.add(torus(0.18 - i * 0.03, 0.04, 5, 14), MAT.cloth('#c9a66b', '#7a5a30'), ropeX + 0.1, 0.05 + i * 0.07, ropeZ + 0.05, 0, { rx: Math.PI / 2 });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 8, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#fff4d0', transparent: true, opacity: 0.07, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
   shaft.position.set(ropeX, 3.5, ropeZ); B.group.add(shaft);
   B.light('#fff1d0', 8, 8, ropeX, 3.5, ropeZ);
-  B.light('#9a6aff', 6, 10, 0, 2.5, 0);
+  B.light('#9a6aff', 4, 10, 0, 2.5, 0);
   R.exits.push({ ...B.world(ropeX, ropeZ), r: 0.7, to: 'outdoor-well' });
   R.spawn = { ...B.world(ropeX + 1.4, ropeZ - 1.2), a: Math.PI * 0.75 };
   R.mites = [B.world(-2, -1.5), B.world(2.5, 1), B.world(-4.5, 4.5), B.world(3, -4)];
-  return R;
+  return B.finish();
 }
 
 // ------------------------------------------------------------------ Citadel's Water Office (Gilbert & Mira)

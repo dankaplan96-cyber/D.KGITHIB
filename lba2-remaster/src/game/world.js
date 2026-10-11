@@ -499,6 +499,7 @@ export function buildWorld(parentScene) {
 
   // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------
   W.signs = [];
+  W.pathDist = pathDist;
   buildIsland(scene, W);
 
   // ---------- lighthouse ----------
@@ -616,53 +617,6 @@ export function buildWorld(parentScene) {
       add(scene, new THREE.BoxGeometry(0.9, 3 + (i % 2), 0.6), stoneMat, x, H(x, z) + 1.5, z, { ry: -a });
       physics.add({ type: 'cyl', x, z, r: 0.6, top: H(x, z) + 3.5 });
     }
-  }
-
-  // ---------- Sentinel camp ----------
-  {
-    const C = POI.camp, g = H(C.x, C.z);
-    const tent = (x, z, ry, col) => {
-      const tg = H(x, z);
-      add(scene, new THREE.ConeGeometry(2.4, 3.0, 6), mat(col, { roughness: 0.9 }), x, tg + 1.5, z, { ry });
-      physics.add({ type: 'cyl', x, z, r: 2.0, top: tg + 3 });
-    };
-    tent(C.x - 7, C.z - 3, 0.3, '#59606b');
-    tent(C.x + 7, C.z - 4, 1.1, '#4d5560');
-    tent(C.x - 5, C.z + 7, 0.8, '#59606b');
-    tent(C.x + 6, C.z + 7, 0.1, '#4d5560');
-    // campfire
-    const fx = C.x, fz = C.z;
-    for (let i = 0; i < 4; i++) add(scene, new THREE.CylinderGeometry(0.12, 0.12, 1.4, 6), mat('#4b3020'), fx, g + 0.15, fz, { rz: Math.PI / 2, ry: (i * Math.PI) / 4 });
-    const flameMat = new THREE.MeshStandardMaterial({ color: '#ffb347', emissive: '#ff6a00', emissiveIntensity: 4, transparent: true, opacity: 0.9 });
-    const flame = add(scene, new THREE.ConeGeometry(0.45, 1.2, 8), flameMat, fx, g + 0.75, fz, { cast: false });
-    const fl = new THREE.PointLight('#ff8a3a', 25, 18, 2);
-    fl.position.set(fx, g + 1.5, fz); scene.add(fl);
-    physics.add({ type: 'cyl', x: fx, z: fz, r: 0.8, top: g + 0.6, noStand: true, seeThrough: true });
-    W.updaters.push((dt, t) => {
-      const f = 0.85 + Math.sin(t * 13) * 0.08 + Math.sin(t * 7.3) * 0.07;
-      flame.scale.set(f, 0.9 + Math.sin(t * 9) * 0.15, f);
-      fl.intensity = 22 * f;
-    });
-    // palisade
-    for (let i = 0; i < 26; i++) {
-      const a = (i / 26) * Math.PI * 2;
-      if (Math.abs(Math.sin(a / 2 - 0.9)) < 0.18) continue; // entrances
-      if (Math.abs(Math.sin(a / 2 - 2.6)) < 0.14) continue;
-      const x = C.x + Math.cos(a) * 13.5, z = C.z + Math.sin(a) * 13.5;
-      add(scene, new THREE.CylinderGeometry(0.22, 0.25, 2.6, 6), mat('#6b4a2e'), x, H(x, z) + 1.0, z);
-      physics.add({ type: 'cyl', x, z, r: 0.5, top: H(x, z) + 2.4, seeThrough: true });
-    }
-    // chest
-    const K = POI.chest, kg = H(K.x, K.z);
-    const chest = new THREE.Group(); chest.position.set(K.x, kg, K.z); chest.rotation.y = Math.PI; scene.add(chest);
-    const body = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.7, 0.8), mat('#8a5528')); body.position.y = 0.35; body.castShadow = true; chest.add(body);
-    const band = new THREE.Mesh(new THREE.BoxGeometry(1.34, 0.12, 0.84), mat('#d4a93a', { metalness: 0.8, roughness: 0.3 })); band.position.y = 0.55; chest.add(band);
-    const lidPivot = new THREE.Group(); lidPivot.position.set(0, 0.7, -0.4); chest.add(lidPivot);
-    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.3, 12, 1, false, 0, Math.PI), mat('#8a5528'));
-    lid.rotation.z = Math.PI / 2; lid.rotation.y = Math.PI / 2; lid.position.z = 0.4; lid.castShadow = true; lidPivot.add(lid);
-    physics.add({ type: 'box', x: K.x, z: K.z, hw: 0.7, hd: 0.45, rot: 0, top: kg + 1.0, noStand: true, seeThrough: true });
-    W.chest = { x: K.x, z: K.z, lidPivot, open: false, openT: 0 };
-    W.updaters.push((dt) => { if (W.chest.open) { W.chest.openT = Math.min(1, W.chest.openT + dt * 2); lidPivot.rotation.x = -W.chest.openT * 1.9; } });
   }
 
   // ---------- signs ----------

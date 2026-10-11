@@ -21,15 +21,22 @@ import './text/world.js';
 export const HARBOUR = { quayX: -74.5, z: -4, pierLen: 16.5, pierW: 3.2, deck: 1.75 };
 export const LIGHTHOUSE = { x: 2, z: -80, half: 2.35, cottage: { x: 11.5, z: -71.5, ry: -Math.PI / 2 - 0.2 } };
 export const STATION = { x: 48, z: 36, half: 13, wall: 2.0 };
-export const DEPOT = { x0: -1, x1: 19, z0: 44, z1: 60, gateW: [44.6, 48.2], gateE: [45.4, 49.0] };
-export const ORCHARD = { x: -29.2, z: 27.4, half: 2.6, ry: 0.74 };
-// the water main from the station to the edge of town (where it goes underground)
+export const DEPOT = { x0: -1, x1: 19, z0: 44, z1: 60, gateW: [44.0, 48.2], gateE: [45.4, 49.0] };
+const DEPOT_VALVE = { x: 16.0, z: 50.6 };
+const DEPOT_LOOP_X = [4.0, 13.0]; // where the drones' loop crosses under the main
+// the orchard valve: iron cage centre (x,z, half size) and the drop point of the bypass (dx,dz)
+export const ORCHARD = { x: -22.2, z: 32.5, half: 1.8, dx: -22.4, dz: 32.6 };
+export const ORCHARD_SHOT = { x: -15.2, z: 32.0 }; // where to stand for the magic-ball shot
+// the water main from the station to the edge of town (where it dives into the meter portal)
 export const PIPE = [
-  [35.6, 40.6], [31.2, 43.4], [26.8, 47.6], [19.0, 50.6], [13.0, 50.6], [6.0, 50.6], [-1.0, 50.0],
-  [-8.6, 45.2], [-19.0, 35.6], [-25.8, 29.0], [-30.6, 23.6], [-33.4, 19.4],
+  [33.4, 43.7], [30.2, 45.2], [26.4, 47.6], [21.6, 50.6], [19.5, 50.6], [-1.0, 50.6], [-5.5, 48.4], [-10.0, 44.6],
+  [-17.6, 37.8], [-22.4, 33.6], [-27.6, 31.0], [-31.4, 27.4], [-33.4, 21.6], [-34.6, 17.4],
 ];
-export const PIPE_DIVE = 9; // index where the main dives into the ground (towards town)
-export const BRANCH = [[58.6, 24.0], [58.2, 10.0], [57.0, -4.0], [55.6, -13.6]]; // to the Whispering Cliffs reservoir
+const METER = { x: -35.0, z: 16.0, ry: Math.PI / 2 };
+export const BRANCH = [[53.5, 25.4], [53.5, 21.0], [55.6, 14.0], [57.6, 4.0], [57.0, -6.0], [55.8, -12.9]]; // to the Whispering Cliffs reservoir
+const CLIFF_VALVE = { z: -17.6 };
+const POI_PLATEAU = { h: 14 };
+const POI_CHEST = { x: 9, z: 57 };
 
 export function keepClear(x, z, pad = 0) {
   if (x > HARBOUR.quayX - 20 && x < -60 + pad && z > -14 - pad && z < 8 + pad) return true;
@@ -37,7 +44,8 @@ export function keepClear(x, z, pad = 0) {
   if (Math.hypot(x - LIGHTHOUSE.cottage.x, z - LIGHTHOUSE.cottage.z) < 6 + pad) return true;
   if (Math.max(Math.abs(x - STATION.x), Math.abs(z - STATION.z)) < STATION.half + 3.5 + pad) return true;
   if (x > DEPOT.x0 - 2 - pad && x < DEPOT.x1 + 2 + pad && z > DEPOT.z0 - 2 - pad && z < DEPOT.z1 + 2 + pad) return true;
-  if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) < 4.5 + pad) return true;
+  if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) < 4.0 + pad) return true;
+  if (Math.hypot(x - METER.x, z - METER.z) < 2.5 + pad) return true;
   if (polyDist(PIPE, x, z) < 1.4 + pad || polyDist(BRANCH, x, z) < 1.4 + pad) return true;
   return false;
 }
@@ -1609,7 +1617,508 @@ function buildStation(W, root, r) {
     void run;
   });
   // a lamp-light over the yard so the station reads at dusk
-  const yl = new THREE.PointLight('#c8f0ff', 4, 22, 1.8); yl.position.set(F.x, g + 7.5, F.z + 2); grp.add(yl); W.lights.push(yl);
+
+}
+
+// ================================================================== the project depot (the old camp)
+// A fenced yard: chain-link panels on teal posts with two wide open gates,
+// containers, crate stacks, a handcart, floodlight masts, Funfrock's old
+// chest, the depot bypass valve and the drones' patrol loop.
+function chainMat() {
+  return cached('chainMat', () => {
+    const map = textures().chain.clone(); map.needsUpdate = true; map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    const m = new THREE.MeshStandardMaterial({ map, color: '#c8d0d4', roughness: 0.5, metalness: 0.5, alphaTest: 0.35, side: THREE.DoubleSide });
+    return m;
+  });
+}
+function chainGeo(len, h) {
+  return cached(`chain${len.toFixed(2)},${h}`, () => { const g = new THREE.PlaneGeometry(len, h); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * len / 0.32, uv.getY(i) * h / 0.32); return g; });
+}
+// fence from a to b on posts (every ~2.6 m), top + bottom rail, chain-link panels
+function meshFence(W, root, B, a, b, h = 2.2) {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  const n = Math.max(1, Math.round(len / 2.6));
+  const ry = Math.atan2(b[0] - a[0], b[1] - a[1]) - Math.PI / 2;
+  const post = cached('fpost' + h, () => compose([[cyl(0.06, 0.06, h + 0.1, 8, 1), 0, (h + 0.1) / 2, 0], [cyl(0.09, 0.09, 0.08, 8), 0, h + 0.12, 0], [cyl(0.16, 0.2, 0.25, 8), 0, 0.05, 0]]));
+  for (let i = 0; i <= n; i++) {
+    const x = a[0] + (b[0] - a[0]) * (i / n), z = a[1] + (b[1] - a[1]) * (i / n);
+    B.add(post, tealM(), x, W.H(x, z) - 0.08, z);
+  }
+  for (let i = 0; i < n; i++) {
+    const x0 = a[0] + (b[0] - a[0]) * (i / n), z0 = a[1] + (b[1] - a[1]) * (i / n);
+    const x1 = a[0] + (b[0] - a[0]) * ((i + 1) / n), z1 = a[1] + (b[1] - a[1]) * ((i + 1) / n);
+    const xm = (x0 + x1) / 2, zm = (z0 + z1) / 2, y = (W.H(x0, z0) + W.H(x1, z1)) / 2;
+    const sl = len / n;
+    B.add(chainGeo(sl - 0.1, h - 0.15), chainMat(), xm, y + 0.08 + (h - 0.15) / 2, zm, 0, ry, 0);
+    for (const yy of [0.08, h]) B.add(cyl(0.035, 0.035, sl, 6, 1).rotateZ(Math.PI / 2), darkSteel(), xm, y + yy, zm, 0, ry, 0);
+  }
+  W.physics.add({ type: 'box', x: (a[0] + b[0]) / 2, z: (a[1] + b[1]) / 2, hw: len / 2, hd: 0.12, rot: ry, top: W.H(a[0], a[1]) + h + 0.1, seeThrough: true, noStand: true });
+}
+// an open gate leaf (frame + mesh) hinged at `hinge`, swung to angle ry
+function gateLeaf(W, root, B, hinge, ry, len, h = 2.1) {
+  const [x, z] = hinge, y = W.H(x, z);
+  const f = frame(x, z, ry);
+  const pts = [[0, 0.1], [len, 0.1], [len, h], [0, h]];
+  for (let i = 0; i < 4; i++) {
+    const [ax, ay] = pts[i], [bx, by] = pts[(i + 1) % 4];
+    const [wx0, wz0] = f(ax, 0), [wx1, wz1] = f(bx, 0);
+    member(B, [wx0, y + ay, wz0], [wx1, y + by, wz1], 0.07, tealM(), 1, 0.015);
+  }
+  const [dx0, dz0] = f(0, 0), [dx1, dz1] = f(len, 0);
+  member(B, [dx0, y + 0.1, dz0], [dx1, y + h, dz1], 0.05, tealM(), 1, 0.01);
+  const [mx, mz] = f(len / 2, 0);
+  B.add(chainGeo(len - 0.12, h - 0.15), chainMat(), mx, y + 0.1 + (h - 0.1) / 2, mz, 0, ry, 0);
+  B.add(cyl(0.1, 0.1, h + 0.3, 8, 1), darkSteel(), x, y + (h + 0.3) / 2, z);
+  // a yellow-black stripe plate on the leaf
+  const [px, pz] = f(len * 0.5, 0.05);
+  B.add(boxUV(bbox(len * 0.6, 0.18, 0.03, 0.01, 1), TILE.hazard), tm('hazard', { rough: 0.6 }), px, y + 1.1, pz, 0, ry, 0);
+  W.physics.add({ type: 'box', x: mx, z: mz, hw: len / 2, hd: 0.1, rot: ry, top: y + h, seeThrough: true, noStand: true });
+}
+// steel shipping container: frame, corrugated sides (ribs), doors with locking bars
+function containerGeo() {
+  return cached('container', () => {
+    const L = 6.0, Wd = 2.44, Hh = 2.6;
+    const body = [], frameP = [], ribs = [];
+    body.push([boxUV(bbox(L - 0.2, Hh - 0.24, Wd - 0.12, 0.02, 1), 2.6), 0, Hh / 2, 0]);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      frameP.push([bbox(0.16, Hh, 0.16, 0.02, 1), sx * (L / 2 - 0.08), Hh / 2, sz * (Wd / 2 - 0.08)]);
+      frameP.push([bbox(0.2, 0.16, 0.2, 0.02, 1), sx * (L / 2 - 0.09), 0.08, sz * (Wd / 2 - 0.09)]);
+      frameP.push([bbox(0.2, 0.16, 0.2, 0.02, 1), sx * (L / 2 - 0.09), Hh - 0.08, sz * (Wd / 2 - 0.09)]);
+    }
+    for (const s of [-1, 1]) for (const y of [0.1, Hh - 0.1]) frameP.push([bbox(L - 0.3, 0.14, 0.1, 0.02, 1), 0, y, s * (Wd / 2 - 0.05)]);
+    for (const s of [-1, 1]) for (const y of [0.1, Hh - 0.1]) frameP.push([bbox(0.1, 0.14, Wd - 0.3, 0.02, 1), s * (L / 2 - 0.05), y, 0]);
+    for (let x = -L / 2 + 0.3; x < L / 2 - 0.25; x += 0.27) for (const s of [-1, 1]) ribs.push([boxUV(bbox(0.13, Hh - 0.38, 0.06, 0.015, 1), 2.6), x, Hh / 2, s * (Wd / 2 - 0.04)]);
+    for (let z = -Wd / 2 + 0.3; z < Wd / 2 - 0.2; z += 0.27) ribs.push([boxUV(bbox(0.06, Hh - 0.38, 0.13, 0.015, 1), 2.6), -L / 2 + 0.04, Hh / 2, z]);
+    // doors on +x: two leaves with locking bars and handles
+    const door = [];
+    for (const s of [-1, 1]) door.push([boxUV(bbox(0.06, Hh - 0.36, Wd / 2 - 0.16, 0.015, 1), 2.6), L / 2 - 0.02, Hh / 2, s * (Wd / 4 - 0.02)]);
+    for (const zz of [-0.85, -0.35, 0.35, 0.85]) {
+      door.push([cyl(0.025, 0.025, Hh - 0.3, 6), L / 2 + 0.05, Hh / 2, zz]);
+      door.push([bbox(0.05, 0.05, 0.22, 0.01, 1), L / 2 + 0.08, 1.1, zz + 0.1]);
+    }
+    return { body: compose(body.concat(ribs, door)), frame: compose(frameP) };
+  });
+}
+function container(W, root, B, x, z, ry, color) {
+  const C = containerGeo(), y = W.H(x, z);
+  B.add(C.body, tm('metal', { color, rough: 0.6, metal: 0.25 }), x, y, z, 0, ry, 0);
+  B.add(C.frame, tm('metal', { color: new THREE.Color(color).multiplyScalar(0.7).getStyle(), rough: 0.55, metal: 0.3 }), x, y, z, 0, ry, 0);
+  const f = frame(x, z, ry);
+  for (const s of [-1, 1]) { const [ex, ez] = f(0.4, s * 1.245); const e = mesh(root, cached('emq', () => new THREE.PlaneGeometry(1, 1)), emblemMaterial(), ex, y + 1.4, ez, ry + (s > 0 ? 0 : Math.PI), { cast: false }); e.scale.setScalar(1.1); }
+  W.physics.add({ type: 'box', x, z, hw: 3.05, hd: 1.25, rot: ry, top: y + 2.6 });
+}
+// two-wheeled handcart loaded with crates
+function handcart(W, root, B, x, z, ry, r) {
+  const y = W.H(x, z), f = frame(x, z, ry);
+  const wood = tm('wood', { color: '#b08458' });
+  const at = (lx, ly, lz) => { const [wx, wz] = f(lx, lz); return [wx, y + ly, wz]; };
+  B.add(boxUV(bbox(1.9, 0.08, 1.15, 0.02, 1), TILE.planks), tm('planks', { color: '#e0c8a8' }), ...at(0, 0.62, 0), 0, ry, 0);
+  for (const s of [-1, 1]) {
+    B.add(boxUV(bbox(1.9, 0.3, 0.06, 0.02, 1), TILE.wood), wood, ...at(0, 0.8, s * 0.58), 0, ry, 0);
+    member(B, at(0.95, 0.66, s * 0.45), at(2.1, 0.92, s * 0.32), 0.07, wood, 1, 0.015);
+    const wheel = cached('cartwheel', () => compose([[new THREE.TorusGeometry(0.42, 0.05, 6, 22)], ...[0, 1, 2, 3].map((k) => [bbox(0.84, 0.04, 0.04, 0.01, 1), 0, 0, 0, 0, 0, (k * Math.PI) / 4]), [cyl(0.07, 0.07, 0.14, 8).rotateX(Math.PI / 2)]]));
+    B.add(wheel, darkSteel(), ...at(-0.2, 0.44, s * 0.66), 0, ry, 0);
+  }
+  member(B, at(-0.2, 0.44, -0.7), at(-0.2, 0.44, 0.7), 0.06, darkSteel(), 1, 0.01);
+  B.add(bbox(0.06, 0.6, 0.06, 0.01, 1), wood, ...at(0.85, 0.32, 0), 0, ry, 0);
+  const [cx, cz] = f(-0.1, 0.0);
+  const C = crateGeo(), [ma, mb] = crateMats();
+  const items = [{ x: cx, y: y + 0.66, z: cz, ry: ry + 0.1, s: 0.7 }, { x: f(0.55, 0.15)[0], y: y + 0.66, z: f(0.55, 0.15)[1], ry: ry - 0.2, s: 0.55 }, { x: f(-0.05, 0.05)[0], y: y + 1.36, z: f(-0.05, 0.05)[1], ry: ry + 0.35, s: 0.5 }];
+  instances(root, C.planks, ma, items); instances(root, C.frame, mb, items);
+  W.physics.add({ type: 'box', x, z, hw: 1.2, hd: 0.75, rot: ry, top: y + 1.4, seeThrough: true, noStand: true });
+}
+function floodMast(W, B, x, z, ax, az, h = 7) {
+  const g = W.H(x, z), a = Math.atan2(ax - x, az - z);
+  B.add(lathe([[0, 0], [0.42, 0], [0.42, 0.12], [0.16, 0.2], [0.11, h], [0.16, h + 0.1], [0, h + 0.15]], 12, TILE.teal), tealM(), x, g, z);
+  B.add(boxUV(bbox(1.8, 0.12, 0.16, 0.03, 1), TILE.brass), brassM(), x, g + h, z, 0, a + Math.PI / 2, 0);
+  for (const s of [-0.65, 0.65]) {
+    const lx = x + Math.cos(a) * s, lz = z - Math.sin(a) * s;
+    B.add(cached('flood', () => lathe([[0, 0], [0.2, 0], [0.3, 0.3], [0.3, 0.36], [0, 0.36]], 14).rotateX(Math.PI / 2 + 0.5)), darkSteel(), lx, g + h + 0.25, lz, 0, a, 0);
+    B.add(cached('floodL', () => new THREE.CircleGeometry(0.27, 16).translate(0, 0, 0.37).rotateX(0.5)), pm('#fffbe8', 0.3, { emissive: '#fff4c8', emissiveIntensity: 2.0 }), lx, g + h + 0.25, lz, 0, a, 0);
+  }
+  W.physics.add({ type: 'cyl', x, z, r: 0.42, top: g + h, seeThrough: true });
+}
+
+// Funfrock's old strongbox: dark planks, iron bands and corner irons, a domed lid
+function chestGeo() {
+  return cached('chest', () => {
+    const wood = [], iron = [];
+    wood.push([boxUV(bbox(1.24, 0.66, 0.76, 0.04, 1), 0.9), 0, 0.37, 0]);
+    for (const x of [-0.42, 0, 0.42]) iron.push([bbox(0.08, 0.7, 0.8, 0.012, 1), x, 0.37, 0]);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) iron.push([bbox(0.16, 0.7, 0.16, 0.02, 1), sx * 0.58, 0.37, sz * 0.34]);
+    iron.push([bbox(1.3, 0.06, 0.82, 0.015, 1), 0, 0.06, 0]);
+    iron.push([bbox(0.24, 0.26, 0.05, 0.02, 1), 0, 0.56, 0.4]);
+    iron.push([cyl(0.04, 0.04, 0.03, 8).rotateX(Math.PI / 2), 0, 0.52, 0.43]);
+    for (const s of [-1, 1]) iron.push([new THREE.TorusGeometry(0.09, 0.022, 6, 12, Math.PI).rotateZ(Math.PI).rotateY(Math.PI / 2), s * 0.66, 0.5, 0]);
+    // domed lid, built in pivot space (hinge at the back top edge)
+    const s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(0.8, 0); s.quadraticCurveTo(0.82, 0.3, 0.4, 0.34); s.quadraticCurveTo(-0.02, 0.3, 0, 0);
+    const lidW = extrude(s, 1.24, 0.9); lidW.rotateY(-Math.PI / 2); lidW.translate(0.62, 0, -0.02); boxUV(lidW, 0.9);
+    const lidI = [];
+    for (const x of [-0.42, 0, 0.42]) { const sb = new THREE.Shape(); sb.moveTo(-0.02, -0.02); sb.lineTo(0.83, -0.02); sb.quadraticCurveTo(0.85, 0.33, 0.4, 0.37); sb.quadraticCurveTo(-0.05, 0.33, -0.02, -0.02); const gb = extrude(sb, 0.08); gb.rotateY(-Math.PI / 2); gb.translate(x + 0.04, 0, -0.02); lidI.push([gb]); }
+    return { wood: compose(wood), iron: compose(iron), lidWood: lidW, lidIron: compose(lidI) };
+  });
+}
+
+function buildDepot(W, root, r) {
+  const D = DEPOT, P = W.physics;
+  const grp = new THREE.Group(); grp.name = 'depot'; root.add(grp);
+  const B = new Batch(grp);
+  // fence with two wide open gates where the path runs through
+  meshFence(W, grp, B, [D.x0, D.z0], [D.x1, D.z0]);
+  meshFence(W, grp, B, [D.x0, D.z1], [D.x1, D.z1]);
+  meshFence(W, grp, B, [D.x0, D.gateW[1]], [D.x0, D.z1]);
+  meshFence(W, grp, B, [D.x1, D.z0], [D.x1, D.gateE[0]]);
+  meshFence(W, grp, B, [D.x1, D.gateE[1]], [D.x1, D.z1]);
+  gateLeaf(W, grp, B, [D.x0, D.gateW[0]], Math.PI - 0.3, 2.0);
+  gateLeaf(W, grp, B, [D.x0, D.gateW[1]], -Math.PI + 0.3, 2.0);
+  gateLeaf(W, grp, B, [D.x1, D.gateE[0]], 0.3, 1.75);
+  gateLeaf(W, grp, B, [D.x1, D.gateE[1]], -0.3, 1.75);
+  // containers, crates, cart, masts
+  container(W, grp, B, 14.6, 58.2, 0, '#c8503a');
+  container(W, grp, B, 1.8, 55.4, Math.PI / 2, '#3a8a86');
+  crateStack(W, grp, [[17.6, 53.6, 2], [17.5, 54.8, 1], [17.9, 52.6, 1, 0.8], [11.0, 45.2, 1, 0.9], [12.0, 45.0, 2, 0.8]], r);
+  techCrates(W, grp, [[6.0, 58.6, 2, 0.95], [7.2, 58.9, 1, 0.95], [17.6, 56.0, 1, 0.9]], r);
+  barrels(W, grp, [[8.4, 44.8], [9.2, 44.7], [8.7, 45.8, true]], r);
+  handcart(W, grp, B, 6.4, 45.7, 0.2, r);
+  floodMast(W, B, -0.4, 59.4, 9, 52);
+  floodMast(W, B, 18.4, 44.6, 9, 52);
+  // Funfrock's chest, half-buried among the project crates
+  {
+    const K = POI_CHEST, kg = W.H(K.x, K.z);
+    const chest = new THREE.Group(); chest.position.set(K.x, kg, K.z); chest.rotation.y = Math.PI; grp.add(chest);
+    const C = chestGeo();
+    const darkWood = tm('planks', { color: '#9a7a62' }), iron = pm('#30333a', 0.45, { metalness: 0.6 });
+    mesh(chest, C.wood, darkWood); mesh(chest, C.iron, iron);
+    const lidPivot = new THREE.Group(); lidPivot.position.set(0, 0.7, -0.4); chest.add(lidPivot);
+    mesh(lidPivot, C.lidWood, darkWood); mesh(lidPivot, C.lidIron, iron);
+    // Funfrock's red emblem on the lock plate
+    const em = mesh(chest, cached('ffq', () => new THREE.CircleGeometry(0.07, 12)), pm('#a02020', 0.5, { emissive: '#400000' }), 0, 0.58, 0.43, 0, { cast: false });
+    void em;
+    P.add({ type: 'box', x: K.x, z: K.z, hw: 0.7, hd: 0.45, rot: 0, top: kg + 1.0, noStand: true, seeThrough: true });
+    W.chest = { x: K.x, z: K.z, lidPivot, open: false, openT: 0 };
+    W.updaters.push((dt) => { if (W.chest.open) { W.chest.openT = Math.min(1, W.chest.openT + dt * 2); lidPivot.rotation.x = -W.chest.openT * 1.9; } });
+  }
+  // the drones' patrol loop (walkable, clear of every prop by > 1 m)
+  W.depot = { x: (D.x0 + D.x1) / 2, z: (D.z0 + D.z1) / 2, patrol: [[4.0, 48.6], [8.6, 48.0], [13.0, 48.6], [13.0, 55.2], [8.6, 55.6], [4.0, 55.2]], valve: { ...DEPOT_VALVE } };
+  B.build();
+}
+
+// ================================================================== the water main and the three bypass valves
+// Funfrock's old pipeline, refitted by the project: riveted teal sections
+// with brass flanges on A-frame trestles (high enough to walk under), from
+// the station's west wall past the depot and the old orchard to the edge of
+// town, where it dives into a concrete portal with a flow meter. A branch
+// leaves the station's north wall for the reservoir on the Whispering Cliffs.
+function chaikin(P, n = 2) {
+  let pts = P.map((p) => p.slice());
+  for (let k = 0; k < n; k++) {
+    const out = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [ax, az] = pts[i], [bx, bz] = pts[i + 1];
+      out.push([ax * 0.75 + bx * 0.25, az * 0.75 + bz * 0.25], [ax * 0.25 + bx * 0.75, az * 0.25 + bz * 0.75]);
+    }
+    out.push(pts[pts.length - 1]);
+    pts = out;
+  }
+  return pts;
+}
+// sample a plan route every ds and lift it clear of the ground
+function pipeProfile(W, route, { clear = 2.75, y0 = null, fix = [], ds = 0.5 } = {}) {
+  const P = chaikin(route, 2);
+  const xs = [], zs = [];
+  for (let i = 0; i < P.length - 1; i++) {
+    const [ax, az] = P[i], [bx, bz] = P[i + 1], L = Math.hypot(bx - ax, bz - az), n = Math.max(1, Math.ceil(L / ds));
+    for (let k = 0; k < n; k++) { xs.push(ax + (bx - ax) * (k / n)); zs.push(az + (bz - az) * (k / n)); }
+  }
+  xs.push(P[P.length - 1][0]); zs.push(P[P.length - 1][1]);
+  const n = xs.length, gr = xs.map((x, i) => W.H(x, zs[i]));
+  const R = 6;
+  let y = gr.map((_, i) => { let m = -1e9; for (let k = Math.max(0, i - R); k <= Math.min(n - 1, i + R); k++) m = Math.max(m, gr[k]); return m + clear; });
+  for (let pass = 0; pass < 4; pass++) {
+    y = y.map((_, i) => { let s = 0, c = 0; for (let k = Math.max(0, i - 5); k <= Math.min(n - 1, i + 5); k++) { s += y[k]; c++; } return s / c; });
+    y = y.map((v, i) => Math.max(v, gr[i] + clear - 0.3));
+  }
+  // pinned heights (where the main meets a wall or a valve)
+  for (const f of fix) {
+    let bi = 0, bd = 1e9;
+    for (let i = 0; i < n; i++) { const d = Math.hypot(xs[i] - f.x, zs[i] - f.z); if (d < bd) { bd = d; bi = i; } }
+    const span = f.span ?? 8;
+    for (let i = 0; i < n; i++) { const d = Math.abs(i - bi) * ds; if (d < span) y[i] = lerp(y[i], f.y, smoothstep(span, span * 0.35, d)); }
+  }
+  if (y0 != null) for (let i = 0; i < n; i++) { const d = i * ds; if (d < 6) y[i] = lerp(y0, y[i], smoothstep(0, 6, d)); }
+  return { xs, zs, y, gr, n, ds };
+}
+function supportGeo() {
+  return cached('psupport', () => ({ pad: boxUV(bbox(0.5, 0.18, 0.5, 0.04, 1), TILE.concrete) }));
+}
+// draw a profile as a pipe: tube, flanges, trestles; returns sampled points
+function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = () => false, from = 0, to = null } = {}) {
+  const { xs, zs, y, gr, ds } = prof;
+  const i1 = to ?? prof.n - 1;
+  const pts = [];
+  for (let i = from; i <= i1; i += 2) pts.push([xs[i], y[i], zs[i]]);
+  if ((i1 - from) % 2) pts.push([xs[i1], y[i1], zs[i1]]);
+  const curve = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)), false, 'centripetal');
+  const len = curve.getLength();
+  const tg = new THREE.TubeGeometry(curve, Math.ceil(len * 1.6), r, 14, false);
+  const uv = tg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) * len) / TILE.pipe, (uv.getY(i) * Math.PI * 2 * r) / TILE.pipe);
+  B.add(tg, tm('pipe', { rough: 0.5, metal: 0.35 }), 0, 0, 0);
+  const fl = cached('flange' + r, () => cyl(r * 1.42, r * 1.42, 0.09, 14));
+  const bolt = cached('fbolt' + r, () => compose(Array.from({ length: 8 }, (_, i) => { const a = (i / 8) * Math.PI * 2; return [cyl(0.025, 0.025, 0.13, 5), Math.cos(a) * r * 1.22, 0, Math.sin(a) * r * 1.22]; })));
+  const q = new THREE.Quaternion();
+  for (let s = every * 0.5; s < len - 0.5; s += every) {
+    const u = s / len, p = curve.getPointAt(u), t = curve.getTangentAt(u);
+    q.setFromUnitVectors(_uy, t);
+    const m = new THREE.Matrix4().compose(p, q, new THREE.Vector3(1, 1, 1));
+    B.addM(fl, brassM(), m); B.addM(bolt, darkSteel(), m);
+  }
+  // A-frame trestles
+  let last = -1e9;
+  for (let i = from + 4; i <= i1 - 4; i++) {
+    const s = (i - from) * ds;
+    if (s - last < supEvery) continue;
+    const x = xs[i], z = zs[i];
+    if (avoid(x, z)) continue;
+    last = s;
+    const tx = xs[Math.min(i1, i + 1)] - xs[i - 1], tz = zs[Math.min(i1, i + 1)] - zs[i - 1], tl = Math.hypot(tx, tz) || 1;
+    const nx = -tz / tl, nz = tx / tl, py = y[i] - r - 0.04;
+    const ga = W.H(x + nx * 0.95, z + nz * 0.95), gb = W.H(x - nx * 0.95, z - nz * 0.95);
+    member(B, [x + nx * 0.95, ga - 0.1, z + nz * 0.95], [x + nx * 0.22, py, z + nz * 0.22], 0.16, tealM(), 1.2, 0.03);
+    member(B, [x - nx * 0.95, gb - 0.1, z - nz * 0.95], [x - nx * 0.22, py, z - nz * 0.22], 0.16, tealM(), 1.2, 0.03);
+    member(B, [x + nx * 0.62, (ga + py) * 0.45, z + nz * 0.62], [x - nx * 0.62, (gb + py) * 0.45, z - nz * 0.62], 0.1, tealM(), 1.2, 0.02);
+    member(B, [x + nx * 0.45, py - 0.06, z + nz * 0.45], [x - nx * 0.45, py - 0.06, z - nz * 0.45], 0.14, brassM(), 1, 0.02);
+    B.add(cached('saddle' + r, () => new THREE.TorusGeometry(r + 0.03, 0.045, 6, 16, Math.PI).rotateZ(Math.PI)), brassM(), x, py + r + 0.04, z, 0, Math.atan2(tx, tz) + Math.PI / 2, 0);
+    const pad = supportGeo().pad;
+    B.add(pad, tm('concrete', { color: '#d0ccc4' }), x + nx * 0.95, ga - 0.02, z + nz * 0.95);
+    B.add(pad, tm('concrete', { color: '#d0ccc4' }), x - nx * 0.95, gb - 0.02, z - nz * 0.95);
+    for (const sgn of [-1, 1]) W.physics.add({ type: 'cyl', x: x + sgn * nx * 0.9, z: z + sgn * nz * 0.9, r: 0.24, top: py, seeThrough: true });
+  }
+  return { curve, pts };
+}
+// index of the profile sample nearest to (x,z)
+function nearestSample(prof, x, z) { let bi = 0, bd = 1e9; for (let i = 0; i < prof.n; i++) { const d = Math.hypot(prof.xs[i] - x, prof.zs[i] - z); if (d < bd) { bd = d; bi = i; } } return bi; }
+
+// ------------------------------------------------------------------ valve
+// globe valve body with flanges (axis = local Y), a bonnet and a stem, a big
+// red hand-wheel on the stem; a little lamp turns from red to cyan when open
+function valveParts() {
+  return cached('valveParts', () => ({
+    body: lathe([[0, -0.5], [0.3, -0.5], [0.3, -0.41], [0.2, -0.39], [0.22, -0.3], [0.36, -0.14], [0.38, 0], [0.36, 0.14], [0.22, 0.3], [0.2, 0.39], [0.3, 0.41], [0.3, 0.5], [0, 0.5]], 22),
+    bolts: compose([-0.455, 0.455].flatMap((yy) => Array.from({ length: 8 }, (_, i) => { const a = (i / 8) * Math.PI * 2; return [cyl(0.028, 0.028, 0.14, 6), Math.cos(a) * 0.25, yy, Math.sin(a) * 0.25]; }))),
+    bonnet: lathe([[0, 0], [0.2, 0], [0.2, 0.06], [0.13, 0.1], [0.12, 0.34], [0.16, 0.36], [0.16, 0.42], [0.06, 0.46], [0, 0.46]], 16),
+    stem: cyl(0.035, 0.035, 1, 8),
+    wheel: compose([[new THREE.TorusGeometry(0.44, 0.05, 8, 30).rotateX(Math.PI / 2)], ...[0, 1, 2, 3, 4].map((k) => [bbox(0.86, 0.045, 0.06, 0.012, 1), 0, 0, 0, 0, (k * Math.PI) / 5, 0]), [cyl(0.09, 0.09, 0.12, 12)]]),
+    grip: compose(Array.from({ length: 10 }, (_, i) => { const a = (i / 10) * Math.PI * 2; return [new THREE.SphereGeometry(0.06, 8, 6).scale(1, 1.3, 1), Math.cos(a) * 0.44, 0, Math.sin(a) * 0.44]; })),
+  }));
+}
+// body at `b` with the pipe along `axis`; stem from the body along `dir` (unit) for `stem` m
+function makeValve(W, root, B, id, kind, b, axis, dir, stem = 0.65) {
+  const V = valveParts();
+  const qa = new THREE.Quaternion().setFromUnitVectors(_uy, new THREE.Vector3(...axis).normalize());
+  const mb = new THREE.Matrix4().compose(new THREE.Vector3(...b), qa, new THREE.Vector3(1, 1, 1));
+  const bodyM = tm('metal', { color: '#5a6a74', rough: 0.5, metal: 0.5 });
+  B.addM(V.body, bodyM, mb); B.addM(V.bolts, darkSteel(), mb);
+  const qd = new THREE.Quaternion().setFromUnitVectors(_uy, new THREE.Vector3(...dir).normalize());
+  const vg = new THREE.Group(); vg.position.set(...b); vg.quaternion.copy(qd); root.add(vg);
+  mesh(vg, V.bonnet, bodyM, 0, 0.3, 0);
+  mesh(vg, V.stem, brassM(), 0, 0.3 + stem / 2, 0).scale.y = stem;
+  const pivot = new THREE.Group(); pivot.position.y = 0.3 + stem; vg.add(pivot);
+  mesh(pivot, V.wheel, pm('#c8382a', 0.5, { metalness: 0.3 }));
+  mesh(pivot, V.grip, pm('#2a2a2a', 0.7));
+  const lampM = pm('#ff4a3a', 0.4, { emissive: '#ff2a1a', emissiveIntensity: 1.6 }).clone();
+  mesh(vg, cached('vlamp', () => new THREE.SphereGeometry(0.075, 12, 8)), lampM, 0.24, 0.46, 0, { cast: false });
+  mesh(vg, cached('vlampc', () => cyl(0.05, 0.06, 0.08, 10)), darkSteel(), 0.24, 0.39, 0);
+  const wc = new THREE.Vector3(0, 0.3 + stem, 0).applyQuaternion(qd).add(new THREE.Vector3(...b));
+  const v = {
+    id, kind, x: wc.x, y: wc.y, z: wc.z, open: false, spin: 0,
+    setOpen(instant = false) {
+      if (v.opened) return;
+      v.opened = true; v.open = true;
+      lampM.color.set('#7af0ff'); lampM.emissive.set('#20c8ff');
+      if (instant) { pivot.rotation.y = -Math.PI * 4; return; }
+      v.spin = 1.1;
+    },
+  };
+  v.body = { x: b[0], y: b[1], z: b[2] };
+  v.pivot = pivot;
+  return v;
+}
+
+// ------------------------------------------------------------------ the iron cage in the old orchard
+function cage(W, root, B, cx, cz, half, gateSide = 'E') {
+  const y = W.H(cx, cz), h = 2.45;
+  const iron = pm('#2c2f34', 0.45, { metalness: 0.6 });
+  const bar = cached('cagebar', () => compose([[cyl(0.022, 0.022, h - 0.05, 6), 0, (h - 0.05) / 2, 0], [cyl(0.0, 0.05, 0.16, 6), 0, h + 0.03, 0]]));
+  const sides = [[[-half, -half], [half, -half]], [[half, -half], [half, half]], [[half, half], [-half, half]], [[-half, half], [-half, -half]]];
+  const bars = [];
+  sides.forEach(([a, b2], si) => {
+    const L = Math.hypot(b2[0] - a[0], b2[1] - a[1]), n = Math.round(L / 0.15);
+    for (let i = 0; i < n; i++) { const k = (i + 0.5) / n; bars.push({ x: cx + a[0] + (b2[0] - a[0]) * k, y: y - 0.05, z: cz + a[1] + (b2[1] - a[1]) * k }); }
+    const ry = Math.atan2(b2[0] - a[0], b2[1] - a[1]) - Math.PI / 2, mx = cx + (a[0] + b2[0]) / 2, mz = cz + (a[1] + b2[1]) / 2;
+    for (const yy of [0.18, 1.3, h - 0.12]) B.add(bbox(L, 0.06, 0.07, 0.012, 1), iron, mx, y + yy, mz, 0, ry, 0);
+    B.add(boxUV(bbox(L + 0.3, 0.3, 0.32, 0.04, 1), TILE.stone), tm('stone', { color: '#d0ccc4' }), mx, y + 0.1, mz, 0, ry, 0);
+    W.physics.add({ type: 'box', x: mx, z: mz, hw: L / 2 + 0.1, hd: 0.14, rot: ry, top: y + 2.42, seeThrough: true, noStand: true });
+    void si;
+  });
+  instances(root, bar, iron, bars);
+  for (const [px, pz] of [[-half, -half], [half, -half], [half, half], [-half, half]]) {
+    B.add(boxUV(bbox(0.22, h + 0.25, 0.22, 0.03, 1), TILE.stone), tm('stone', { color: '#d8d4cc' }), cx + px, y + (h + 0.25) / 2, cz + pz);
+    B.add(cached('postcap', () => lathe([[0, 0], [0.17, 0], [0.17, 0.06], [0.1, 0.12], [0.06, 0.2], [0, 0.24]], 8)), tm('stone', { color: '#d8d4cc' }), cx + px, y + h + 0.25, cz + pz);
+  }
+  // padlocked gate (chain + lock) on one side
+  const gx = gateSide === 'E' ? cx + half + 0.05 : cx, gz = cz;
+  B.add(cached('chainlink', () => compose(Array.from({ length: 7 }, (_, i) => [new THREE.TorusGeometry(0.035, 0.012, 5, 8), 0, -i * 0.055, 0, 0, (i % 2) * Math.PI / 2, 0]))), pm('#8a8a90', 0.4, { metalness: 0.7 }), gx, y + 1.42, gz);
+  B.add(bbox(0.1, 0.13, 0.05, 0.015, 1), pm('#c8a040', 0.35, { metalness: 0.8 }), gx + 0.02, y + 1.0, gz);
+  B.add(new THREE.TorusGeometry(0.035, 0.012, 5, 10, Math.PI).rotateY(Math.PI / 2), pm('#9a9aa0', 0.4, { metalness: 0.7 }), gx + 0.02, y + 1.07, gz);
+}
+
+// ------------------------------------------------------------------ the water meter where the main dives
+function waterTex() {
+  return cached('waterTex', () => {
+    const t = canvasTex(64, 128, (x, w, h) => {
+      x.fillStyle = '#2a7ac8'; x.fillRect(0, 0, w, h);
+      for (let i = 0; i < 26; i++) { x.fillStyle = `rgba(${200 + Math.random() * 55},${230 + Math.random() * 25},255,${0.25 + Math.random() * 0.4})`; const y = Math.random() * h; x.beginPath(); x.ellipse(Math.random() * w, y, 2 + Math.random() * 10, 1 + Math.random() * 3, 0, 0, 7); x.fill(); }
+    });
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    return t;
+  });
+}
+function buildMeter(W, root, B, x, z, ry, yIn) {
+  const g = W.H(x, z), f = frame(x, z, ry);
+  const conc = tm('concrete', { color: '#d8d4cc' });
+  // concrete portal block the main dives into, with a brass coping
+  B.add(boxUV(bbox(2.2, 1.6, 2.0, 0.08, 1), TILE.concrete), conc, x, g + 0.7, z, 0, ry, 0);
+  B.add(boxUV(bbox(2.4, 0.16, 2.2, 0.05, 1), TILE.brass), brassM(), x, g + 1.55, z, 0, ry, 0);
+  B.add(boxUV(bbox(1.7, 0.08, 1.5, 0.03, 1), TILE.deck), tm('deck', { rough: 0.6, metal: 0.3 }), x, g + 1.66, z, 0, ry, 0);
+  // the flow meter: a big dial and a glass sight tube in a brass frame, facing +z (local)
+  const [mx, mz] = f(0, 1.02);
+  const dial = mesh(root, cached('bigdial', () => new THREE.CircleGeometry(0.34, 28)), pm('#ffffff', 0.4, { map: dialTex() }), mx, g + 0.95, mz, ry, { cast: false });
+  void dial;
+  B.add(cached('dialring', () => new THREE.TorusGeometry(0.36, 0.05, 8, 28)), brassM(), mx, g + 0.95, mz, 0, ry, 0);
+  const needle = mesh(root, cached('bigneedle', () => bbox(0.035, 0.3, 0.012, 0.005, 1).translate(0, 0.12, 0)), pm('#1a1a1a', 0.5), mx + Math.sin(ry) * 0.012, g + 0.95, mz + Math.cos(ry) * 0.012, ry, { cast: false });
+  const [sx, sz] = f(0.78, 1.04);
+  const glassM = pm('#d8f4ff', 0.05, { transparent: true, opacity: 0.35, metalness: 0.2, depthWrite: false });
+  mesh(root, cyl(0.12, 0.12, 1.2, 14), glassM, sx, g + 0.95, sz, 0, { cast: false });
+  const waterM = new THREE.MeshStandardMaterial({ map: waterTex(), color: '#ffffff', roughness: 0.2, emissive: '#1a5a9a', emissiveIntensity: 0.4, transparent: true, opacity: 0.0 });
+  const water = mesh(root, cyl(0.1, 0.1, 1.15, 12), waterM, sx, g + 0.95, sz, 0, { cast: false });
+  for (const yy of [0.33, 1.57]) B.add(cyl(0.17, 0.17, 0.1, 14), brassM(), sx, g + yy, sz);
+  const lampM = pm('#304050', 0.4, { emissive: '#000000' }).clone();
+  const [lx, lz] = f(-0.78, 1.03);
+  mesh(root, cached('mlamp', () => new THREE.SphereGeometry(0.12, 12, 8)), lampM, lx, g + 1.2, lz, 0, { cast: false });
+  B.add(cyl(0.09, 0.11, 0.12, 12).rotateX(Math.PI / 2), darkSteel(), lx, g + 1.2, lz - 0.0, 0, ry, 0);
+  W.physics.add({ type: 'box', x, z, hw: 1.15, hd: 1.05, rot: ry, top: g + 1.7 });
+  let k = 0, goal = 0, off = 0;
+  W.updaters.push((dt) => {
+    k += (goal - k) * (1 - Math.exp(-dt * 1.5));
+    needle.rotation.z = 2.2 - k * 4.0 + Math.sin(performance.now() * 0.013) * 0.02 * k;
+    off += dt * k * 1.4;
+    waterTex().offset.y = -off;
+    waterM.opacity = Math.min(1, k * 2.5) * 0.9;
+    water.scale.y = Math.max(0.02, Math.min(1, k * 1.4));
+    water.position.y = g + 0.375 + 0.575 * water.scale.y;
+    lampM.emissive.set(k > 0.05 ? '#20c8ff' : '#000000'); lampM.emissiveIntensity = 1.5 * Math.min(1, k * 3);
+  });
+  return (v) => { goal = Math.max(0, Math.min(1, v)); };
+}
+
+function buildPipeline(W, root, r) {
+  const grp = new THREE.Group(); grp.name = 'pipeline'; root.add(grp);
+  const B = new Batch(grp);
+  const gSt = W.H(STATION.x, STATION.z);
+  const pathDist = W.pathDist || (() => 99);
+  const D = DEPOT;
+  const avoid = (x, z) => {
+    if (x > D.x0 - 2 && x < D.x1 + 2 && z > D.z0 - 1 && z < D.z1 + 1) {
+      if (Math.abs(x - D.x0) < 0.9 || Math.abs(x - D.x1) < 0.9) return true;
+      for (const px of DEPOT_LOOP_X) if (Math.abs(x - px) < 1.4) return true;
+      if (x > DEPOT_VALVE.x - 2.4 && x < DEPOT_VALVE.x + 2.4) return true;
+    }
+    if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) < ORCHARD.half + 1.4) return true;
+    if (Math.max(Math.abs(x - STATION.x), Math.abs(z - STATION.z)) < STATION.half + 1.6) return true;
+    return pathDist(x, z) < 1.7;
+  };
+  // --- the main
+  const prof = pipeProfile(W, PIPE, { y0: gSt + 2.9, fix: [{ x: DEPOT_VALVE.x, z: DEPOT_VALVE.z, y: W.H(DEPOT_VALVE.x, DEPOT_VALVE.z) + 3.0, span: 7 }] });
+  drawPipe(W, B, prof, { avoid });
+  const valves = [];
+  // depot: a bypass loop hanging under the main, valve in the middle
+  {
+    const V = DEPOT_VALVE, g = W.H(V.x, V.z), i = nearestSample(prof, V.x, V.z), ym = prof.y[i], zl = prof.zs[i];
+    const yl = g + 0.72;
+    pipeRun(B, [[V.x - 1.6, ym, zl], [V.x - 1.6, yl, zl], [V.x - 0.5, yl, zl]], 0.17);
+    pipeRun(B, [[V.x + 0.5, yl, zl], [V.x + 1.6, yl, zl], [V.x + 1.6, ym, zl]], 0.17);
+    for (const s of [-1, 1]) {
+      B.add(cached('tee', () => new THREE.SphereGeometry(0.36, 14, 10)), tm('pipe', { rough: 0.5, metal: 0.35 }), V.x + s * 1.6, ym, zl);
+      B.add(boxUV(bbox(0.42, 0.42, 0.42, 0.04, 1), TILE.concrete), tm('concrete', { color: '#d0ccc4' }), V.x + s * 1.6, g + 0.2, zl);
+      member(B, [V.x + s * 1.6, g + 0.38, zl], [V.x + s * 1.6, yl - 0.18, zl], 0.1, tealM(), 1, 0.02);
+    }
+    const v = makeValve(W, grp, B, 'depot', 'use', [V.x, yl, zl], [1, 0, 0], [0, 1, 0], 0.42);
+    valves.push(v);
+    W.physics.add({ type: 'box', x: V.x, z: zl, hw: 1.85, hd: 0.36, rot: 0, top: yl + 0.6, noStand: true, seeThrough: true });
+    // a hazard-striped kerb plate under it and a warning plate
+    B.add(boxUV(bbox(3.9, 0.06, 1.2, 0.02, 1), TILE.hazard), tm('hazard', { rough: 0.6 }), V.x, g + 0.03, zl);
+  }
+  // orchard: a stub from the main drops into an iron cage; the wheel faces the path
+  {
+    const O = ORCHARD, g = W.H(O.x, O.z), i = nearestSample(prof, O.dx, O.dz + 1.0), ym = prof.y[i];
+    pipeRun(B, [[prof.xs[i], ym, prof.zs[i]], [O.dx, ym, O.dz], [O.dx, g + 2.55, O.dz]], 0.2);
+    B.add(cached('tee', () => new THREE.SphereGeometry(0.36, 14, 10)), tm('pipe', { rough: 0.5, metal: 0.35 }), prof.xs[i], ym, prof.zs[i]);
+    pipeRun(B, [[O.dx, g + 1.55, O.dz], [O.dx, g - 0.2, O.dz]], 0.2);
+    B.add(lathe([[0, 0], [0.48, 0], [0.48, 0.22], [0.4, 0.28], [0, 0.28]], 18, TILE.concrete), tm('concrete', { color: '#d0ccc4' }), O.dx, g - 0.05, O.dz);
+    const v = makeValve(W, grp, B, 'orchard', 'ball', [O.dx, g + 2.05, O.dz], [0, 1, 0], [1, 0, 0], 0.5);
+    valves.push(v);
+    W.physics.add({ type: 'cyl', x: O.dx, z: O.dz, r: 0.4, top: g + 2.7, seeThrough: true });
+    cage(W, grp, B, O.x, O.z, O.half, 'E');
+  }
+  // the dive into the meter portal at the edge of town
+  {
+    const last = prof.n - 1, ex = prof.xs[last], ez = prof.zs[last], ey = prof.y[last];
+    const g = W.H(METER.x, METER.z);
+    pipeRun(B, [[ex, ey, ez], [METER.x, ey, METER.z], [METER.x, g + 1.62, METER.z]], 0.3);
+    W.setWaterFlow = buildMeter(W, grp, B, METER.x, METER.z, METER.ry, ey);
+  }
+  // --- the branch to the reservoir on the Whispering Cliffs
+  {
+    const yb = gSt + 3.4;
+    pipeRun(B, [[BRANCH[0][0], gSt + 0.3, BRANCH[0][1]], [BRANCH[0][0], yb, BRANCH[0][1]]], 0.24);
+    const bp = pipeProfile(W, BRANCH, { y0: yb, clear: 2.6 });
+    drawPipe(W, B, bp, { r: 0.24, avoid });
+    const last = bp.n - 1, rx = bp.xs[last], rz = bp.zs[last], ry0 = bp.y[last];
+    const top = POI_PLATEAU.h + 0.85, vz = CLIFF_VALVE.z;
+    pipeRun(B, [[rx, ry0, rz], [rx, top, rz], [rx, top, vz + 0.55]], 0.24);
+    // riser clamps into the rock
+    for (let yy = ry0 + 1.8; yy < top - 0.8; yy += 2.2) member(B, [rx, yy, rz], [rx, yy, rz - 0.9], 0.1, darkSteel(), 1, 0.02);
+    const v = makeValve(W, grp, B, 'cliff', 'use', [rx, top, vz], [0, 0, 1], [0, 1, 0], 0.4);
+    valves.push(v);
+    const cg = W.H(rx, vz - 3.2);
+    pipeRun(B, [[rx, top, vz - 0.55], [rx, top, vz - 2.3], [rx, cg + 1.35, vz - 2.3]], 0.24);
+    // a small cistern: stone drum, brass rim, a teal lid
+    const cx = rx, cz = vz - 3.1;
+    B.add(lathe([[0, 0], [1.0, 0], [1.0, 1.1], [1.08, 1.16], [1.08, 1.26], [0.9, 1.26], [0.9, 1.2], [0, 1.2]], 24, TILE.stone), tm('stone', { color: '#d8d4cc' }), cx, cg - 0.1, cz);
+    B.add(cached('cisrim', () => new THREE.TorusGeometry(1.05, 0.05, 6, 32).rotateX(Math.PI / 2)), brassM(), cx, cg + 1.08, cz);
+    B.add(lathe([[0, 0], [0.92, 0], [0.7, 0.18], [0.2, 0.28], [0, 0.3]], 20, TILE.teal), tealM(), cx, cg + 1.18, cz);
+    W.physics.add({ type: 'cyl', x: cx, z: cz, r: 1.08, top: cg + 1.45 });
+    W.physics.add({ type: 'box', x: rx, z: (vz + 0.6 + vz - 2.3) / 2, hw: 0.3, hd: (2.9) / 2, rot: 0, top: top + 0.3, noStand: true, seeThrough: true });
+  }
+  W.valves = valves;
+  // turning a wheel: two turns over ~1.1 s and a hiss of steam
+  const steam = steamSystem(grp, 30);
+  let hiss = 0;
+  W.updaters.push((dt) => {
+    steam.update(dt);
+    for (const v of valves) {
+      if (v.spin > 0) {
+        v.spin = Math.max(0, v.spin - dt);
+        v.pivot.rotation.y -= dt * (Math.PI * 4 / 1.1);
+        v.hiss = 1.8;
+      }
+      if (v.hiss > 0) {
+        v.hiss -= dt; hiss -= dt;
+        if (hiss <= 0) { hiss = 0.07; steam.emit(v.body.x, v.body.y + 0.2, v.body.z, { size: 0.55, vy: 1.6, life: 1.2, spread: 0.4 }); }
+      }
+    }
+  });
+  B.build();
 }
 
 // ================================================================== entry
@@ -1621,6 +2130,8 @@ export function buildIsland(scene, W) {
   const T1 = performance.now();
   buildStation(W, scene, r);
   const T2 = performance.now();
-  console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms`);
+  buildDepot(W, scene, r);
+  buildPipeline(W, scene, r);
+  console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms, depot+pipe ${(performance.now() - T2) | 0} ms`);
   W.island = { keepClear };
 }
