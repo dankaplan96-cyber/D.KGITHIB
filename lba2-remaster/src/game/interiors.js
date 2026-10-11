@@ -8,12 +8,12 @@ import { textures } from '../engine/textures.js';
 import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, soft, softMat, canvasTex } from './props.js';
 import * as P from './props.js';
 
-const texMat = (tex, rx, ry, extra = {}) => {
+export const texMat = (tex, rx, ry, extra = {}) => {
   const t = tex.clone(); t.needsUpdate = true; t.repeat.set(rx, ry);
   return new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, ...extra });
 };
 
-class RoomBuilder {
+export class RoomBuilder {
   constructor(scene, physics, id, cx, cz) {
     this.physics = physics;
     this.cx = cx; this.cz = cz;
@@ -990,12 +990,12 @@ function buildControl(scene, physics) {
 }
 
 // sagging cable between two points (a little catenary), as pipe points
-const sag = (a, b, s, n = 8) => Array.from({ length: n + 1 }, (_, i) => { const t = i / n; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - s * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t]; });
+export const sag = (a, b, s, n = 8) => Array.from({ length: n + 1 }, (_, i) => { const t = i / n; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - s * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t]; });
 // same material, drawn from both sides (thin shells seen from inside and out)
-const twoSided = (m) => M('ds' + m.uuid, () => { const c = m.clone(); c.side = THREE.DoubleSide; return c; });
+export const twoSided = (m) => M('ds' + m.uuid, () => { const c = m.clone(); c.side = THREE.DoubleSide; return c; });
 // soft additive glow sprite
 const glowTex = () => M('glowtex', () => canvasTex(128, 128, (x, W) => { const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,240,200,0.6)'); g.addColorStop(1, 'rgba(255,220,160,0)'); x.fillStyle = g; x.fillRect(0, 0, W, W); }));
-function glowSprite(color, size, opacity = 0.8) {
+export function glowSprite(color, size, opacity = 0.8) {
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex(), color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false }));
   s.scale.setScalar(size);
   return s;
