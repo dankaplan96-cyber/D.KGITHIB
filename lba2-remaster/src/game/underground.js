@@ -539,10 +539,414 @@ function buildShaft(scene, physics) {
   return room;
 }
 
+// ================================================================ 2. c3deep — the project's deep installation
+// A machinery hall cut into the rock: the bore's transmission in the corner, heat exchanger 2 in the middle,
+// three coolant valves (A on the wall, B on the drain branch, C up on the catwalk), a hinged stair that a ball
+// switch lowers, a heavy cooling shutter on to the galleries. Floor-level coolant runs in grated trenches;
+// whatever a valve feeds lights up with flowing coolant when it is open.
+const concreteTex = () => M('ugconcrete', () => tiled(canvasTex(512, 512, (x, W, H) => {
+  const r = rng(77);
+  x.fillStyle = '#86868c'; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 70; i++) { const px = r() * W, py = r() * H, rr = 20 + r() * 80, g = x.createRadialGradient(px, py, 0, px, py, rr); g.addColorStop(0, r() < 0.6 ? 'rgba(40,40,50,0.16)' : 'rgba(255,255,255,0.12)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(px - rr, py - rr, rr * 2, rr * 2); }
+  for (let i = 0; i < 3000; i++) { x.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.14)'; x.fillRect(r() * W, r() * H, 1.5, 1.5); }
+  // 2 m slabs: sawn joints with a light lip
+  x.fillStyle = 'rgba(30,30,36,0.7)'; x.fillRect(0, 0, W, 3); x.fillRect(0, 0, 3, H); x.fillRect(0, H / 2, W, 3); x.fillRect(W / 2, 0, 3, H);
+  x.fillStyle = 'rgba(255,255,255,0.15)'; x.fillRect(0, 3, W, 2); x.fillRect(3, 0, 2, H); x.fillRect(0, H / 2 + 3, W, 2); x.fillRect(W / 2 + 3, 0, 2, H);
+  // oil stains and hairline cracks
+  for (let i = 0; i < 6; i++) { const px = r() * W, py = r() * H, rr = 12 + r() * 30; x.fillStyle = 'rgba(30,26,20,0.22)'; x.beginPath(); x.ellipse(px, py, rr, rr * 0.7, r() * 3, 0, 7); x.fill(); }
+  x.strokeStyle = 'rgba(30,30,36,0.35)'; x.lineWidth = 1;
+  for (let i = 0; i < 12; i++) { let px = r() * W, py = r() * H; x.beginPath(); x.moveTo(px, py); for (let j = 0; j < 6; j++) { px += (r() - 0.5) * 30; py += (r() - 0.5) * 30; x.lineTo(px, py); } x.stroke(); }
+}), 1, 1));
+// flowing coolant: bright streaks moving along u
+const flowTex = () => M('ugflow', () => tiled(canvasTex(256, 64, (x, W, H) => {
+  const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#0a3a48'); g.addColorStop(0.5, '#38e8ff'); g.addColorStop(1, '#0a3a48');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 9; i++) { const px = (i / 9) * W + (i % 3) * 7, gg = x.createLinearGradient(px, 0, px + 26, 0); gg.addColorStop(0, 'rgba(255,255,255,0)'); gg.addColorStop(0.6, 'rgba(230,255,255,0.9)'); gg.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gg; x.fillRect(px, H * 0.25, 26, H * 0.5); }
+}), 1, 1));
+// the cooling circuit as painted on the wall plate (the clue: A and C feed the exchanger, B dumps to the drain)
+const diagramTex = () => M('ugdiagram', () => canvasTex(768, 512, (x, W, H) => {
+  x.fillStyle = '#e8e0c8'; x.fillRect(0, 0, W, H);
+  const r = rng(5);
+  for (let i = 0; i < 30; i++) { const px = r() * W, py = r() * H, rr = 20 + r() * 60, g = x.createRadialGradient(px, py, 0, px, py, rr); g.addColorStop(0, 'rgba(120,100,60,0.12)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(px - rr, py - rr, rr * 2, rr * 2); }
+  x.fillStyle = '#2a5e5a'; x.fillRect(0, 0, W, 64);
+  x.fillStyle = '#efe2bf'; x.font = "bold 34px 'Arial Narrow', Arial, sans-serif"; x.textBaseline = 'middle';
+  x.fillText('COOLING LOOP 2  ·  BORE EXCHANGER', 24, 33);
+  x.strokeStyle = '#2a5e5a'; x.lineWidth = 5; x.strokeRect(6, 6, W - 12, H - 12);
+  // pipes
+  const pipeL = (pts, col = '#2a7a9a', w = 12) => { x.strokeStyle = col; x.lineWidth = w; x.lineJoin = 'round'; x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.stroke(); };
+  pipeL([[90, 400], [90, 300], [330, 300]]);            // A → exchanger
+  pipeL([[190, 110], [520, 110], [520, 230]]);          // C (upper level) → exchanger
+  pipeL([[520, 370], [520, 420], [660, 420], [660, 460]], '#7a7a80'); // B → drain
+  // arrows of flow
+  x.fillStyle = '#2a7a9a';
+  for (const [ax, ay, rot] of [[230, 300, 0], [380, 110, 0], [520, 190, Math.PI / 2]]) { x.save(); x.translate(ax, ay); x.rotate(rot); x.beginPath(); x.moveTo(-14, -16); x.lineTo(16, 0); x.lineTo(-14, 16); x.fill(); x.restore(); }
+  // exchanger
+  x.fillStyle = '#3f8a86'; x.strokeStyle = '#1e3a38'; x.lineWidth = 4;
+  x.beginPath(); x.roundRect(330, 230, 300, 140, 60); x.fill(); x.stroke();
+  x.strokeStyle = 'rgba(232,224,200,0.7)'; x.lineWidth = 3; for (let i = 0; i < 7; i++) { x.beginPath(); x.moveTo(380 + i * 32, 248); x.lineTo(380 + i * 32, 352); x.stroke(); }
+  x.fillStyle = '#efe2bf'; x.font = "bold 26px 'Arial Narrow', Arial, sans-serif"; x.fillText('EXCHANGER', 412, 300);
+  // valves: bow-tie symbol + letter
+  const valve = (vx, vy, label, vert = false) => {
+    x.save(); x.translate(vx, vy); if (vert) x.rotate(Math.PI / 2);
+    x.fillStyle = '#c8302a'; x.strokeStyle = '#1e1e22'; x.lineWidth = 3;
+    x.beginPath(); x.moveTo(-26, -20); x.lineTo(26, 20); x.lineTo(26, -20); x.lineTo(-26, 20); x.closePath(); x.fill(); x.stroke();
+    x.restore();
+    x.fillStyle = '#1e1e22'; x.font = "bold 44px 'Arial Narrow', Arial, sans-serif"; x.fillText(label, vx - 13, vy + (vert ? 0 : -48));
+  };
+  valve(90, 360, 'A', true); valve(190, 110, 'C'); valve(590, 420, 'B');
+  x.fillStyle = '#4a4a50'; x.font = "bold 20px 'Arial Narrow', Arial, sans-serif";
+  x.fillText('FLOOR', 40, 470); x.fillText('CATWALK', 150, 160); x.fillText('DRAIN', 690, 486);
+  // the drain, crossed out in red
+  x.strokeStyle = '#4a4a50'; x.lineWidth = 4; x.beginPath(); x.arc(660, 470, 22, 0, 7); x.stroke();
+  x.strokeStyle = '#d02a20'; x.lineWidth = 12; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(612, 380); x.lineTo(708, 476); x.moveTo(708, 380); x.lineTo(612, 476); x.stroke();
+}));
+// distant passage painted behind a doorway (rock tunnel, a glow at its end)
+const passageView = (glow, key) => M('ugpass' + key, () => { const t = canvasTex(256, 256, (x, W, H) => {
+  x.fillStyle = '#0e0c12'; x.fillRect(0, 0, W, H);
+  const g = x.createRadialGradient(W / 2, H * 0.62, 4, W / 2, H * 0.62, 110); g.addColorStop(0, glow); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.strokeStyle = 'rgba(160,150,170,0.25)'; x.lineWidth = 3; for (let i = 1; i < 5; i++) { const s = 1 - i * 0.18; x.strokeRect(W / 2 - W * 0.45 * s, H * 0.62 - H * 0.55 * s, W * 0.9 * s, H * 0.95 * s); }
+  x.fillStyle = 'rgba(120,110,120,0.35)'; x.beginPath(); x.moveTo(0, H); x.lineTo(W * 0.38, H * 0.7); x.lineTo(W * 0.62, H * 0.7); x.lineTo(W, H); x.fill();
+}); const m = new THREE.MeshBasicMaterial({ map: t }); m.userData.noShadow = true; return m; });
+
+function buildDeep(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'c3deep', 1900, 0);
+  const R = B.room, k = B.k, kt = new Kit(B.group);
+  const W = 22, D = 16, H = 5.8, t = 0.5, UY = 3.0;
+  R.view = 18.4; R.follow = 0.32; R.music = 'under'; R.upperY = UY;
+  const BZ = -D / 2, LX = -W / 2;
+  const doorX = 5.7, entZ = 5.0;
+  B.shell({
+    W, D, H, t, slabH: 0.9,
+    floor: M('ugconcM', () => stdM({ map: concreteTex(), roughness: 0.82 }, 4)), slab: MAT.rubble('grey'), rimMat: MAT.stone('slate', 1.4),
+    body: MAT.plates('#6a747c', 1), low: MAT.plates(TEAL, 1), dado: 1.3, rail: brass(), cap: iron(), beam: iron(),
+    posts: iron(), postsAt: (len) => (len === W + 2 * t ? [1.0, 4.4, 7.6, 12.0, 14.6, 18.6, 21.4].map((x) => x + 0.5) : [1.2, 4.5, 8.2, 12.8].map((z) => z + 0.5)),
+    back: [{ kind: 'door', at: doorX, w: 2.6, h: 2.9, y0: 0, frame: iron(), view: passageView('rgba(90,220,255,0.55)', 'gal'), sill: MAT.stone('slate', 1) }],
+    left: [{ kind: 'door', at: entZ, w: 1.6, h: 2.5, y0: 0, frame: iron(), view: passageView('rgba(255,210,150,0.5)', 'shaft'), sill: MAT.stone('slate', 1) }],
+  });
+  // raw rock above the panelling: the hall is cut into the mountain
+  const rock = rockMat('#c4b8b0');
+  k.at(LX - t, H + 0.05, BZ, 0, () => rockWallRun(k, W + t, 1.1, 41, rock, { tiers: 1, depth: 1.1, step: 1.15, top: 0.2 }));
+  k.at(LX, H + 0.05, D / 2 + t, Math.PI / 2, () => rockWallRun(k, D + t, 1.1, 43, rock, { tiers: 1, depth: 1.1, step: 1.15, top: 0.2 }));
+
+  // --- coolant materials, one per valve (dark when shut, flowing cyan when open)
+  const flowMats = {};
+  const flowMat = (id) => (flowMats[id] ??= (() => { const tx = flowTex().clone(); tx.needsUpdate = true; tx.wrapS = tx.wrapT = THREE.RepeatWrapping; const m = stdM({ color: '#28343a', emissive: '#ffffff', emissiveMap: tx, emissiveIntensity: 0, roughness: 0.25, metalness: 0.3 }); m.userData.flow = tx; return m; })());
+  const glassPipe = (pts, r, id) => {
+    const g = pipe(pts, r, 0.25, 10).clone(), L = pts.reduce((a, p, i) => a + (i ? Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1], p[2] - pts[i - 1][2]) : 0), 0);
+    const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * L * 0.6);
+    const me = new THREE.Mesh(g, flowMat(id)); me.receiveShadow = true; B.group.add(me);
+    for (const p of pts.slice(1, -1)) k.add(sphere(r * 1.35, 10, 8), brass(), p[0], p[1], p[2]);
+    return me;
+  };
+  // a grated trench in the floor whose coolant glows (from a to b along x or z)
+  const trench = (ax, az, bx, bz, id) => {
+    const L = Math.hypot(bx - ax, bz - az), ry = -Math.atan2(bz - az, bx - ax);
+    const gp = new THREE.Group(); gp.position.set((ax + bx) / 2, 0.006, (az + bz) / 2); gp.rotation.y = ry; B.group.add(gp);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(L, 0.42), flowMat(id)); m.rotation.x = -Math.PI / 2; m.geometry.attributes.uv.array.forEach((v, i, a) => { if (i % 2 === 0) a[i] = v * L * 0.6; }); gp.add(m);
+    k.at((ax + bx) / 2, 0, (az + bz) / 2, ry, () => {
+      for (let x = -L / 2 + 0.12; x < L / 2; x += 0.2) k.add(rbox(0.05, 0.03, 0.5, 0.008), iron(), x, 0.018, 0);
+      for (const s of [-1, 1]) k.add(rbox(L + 0.1, 0.035, 0.07, 0.01), brass(), 0, 0.018, s * 0.27);
+    });
+  };
+  // valve: a riser with a flanged body and a hand wheel facing +z in its frame
+  const wheels = {};
+  const valveAt = (id, x, z, ry, wy) => {
+    k.at(x, 0, z, ry, () => {
+      k.add(cyl(0.16, 0.16, wy - 0.2, 12), tealP(), 0, (wy - 0.2) / 2, 0);
+      k.add(cyl(0.26, 0.26, 0.06, 14), brass(), 0, wy - 0.42, 0);
+      k.add(sphere(0.26, 14, 10), MAT.paint('#3a4448', 0.45), 0, wy - 0.2, 0, 0, { sy: 0.8 });
+      k.add(cyl(0.26, 0.26, 0.06, 14), brass(), 0, wy + 0.02, 0);
+      k.add(cyl(0.05, 0.05, 0.5, 8), MAT.steel(), 0, wy - 0.2, 0.25, 0, { rx: Math.PI / 2 });
+      // id plate
+      k.at(0.36, wy - 0.25, 0.05, 0, () => signPlate(k, 0.26, 0.26, M('ugvlbl' + id, () => stdM({ map: canvasTex(64, 64, (c) => { c.fillStyle = '#e8b830'; c.fillRect(0, 0, 64, 64); c.fillStyle = '#1e1e22'; c.font = "bold 50px 'Arial Narrow', Arial"; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(id, 32, 35); }), roughness: 0.6 }))));
+    });
+    const piv = new THREE.Group(); B.group.add(piv);
+    const [ox, oz] = [x + Math.sin(ry) * 0.5, z + Math.cos(ry) * 0.5];
+    piv.position.set(ox, wy - 0.2, oz); piv.rotation.y = ry;
+    const wk = new Kit(piv); P.valveWheel(wk, { r: 0.28, color: '#c8302a' }); wk.flush();
+    wheels[id] = piv;
+    return { x: ox, z: oz };
+  };
+
+  // --- heat exchanger 2: a teal shell-and-tube body on cradles, finned cooler on top, sight glasses
+  const EX = { x: 2.8, z: -2.4 }, EL = 4.4, ER = 1.15, EY = 1.6;
+  k.at(EX.x, 0, EX.z, 0, () => {
+    const prof = [[0.001, -EL / 2 - ER * 0.5], [ER * 0.55, -EL / 2 - ER * 0.42], [ER * 0.88, -EL / 2 - ER * 0.2], [ER, -EL / 2], [ER, EL / 2], [ER * 0.88, EL / 2 + ER * 0.2], [ER * 0.55, EL / 2 + ER * 0.42], [0.001, EL / 2 + ER * 0.5]];
+    k.add(lathe(prof, 28), MAT.paint(TEAL, 0.4), 0, EY, 0, 0, { rz: Math.PI / 2 });
+    for (const x of [-EL / 2, EL / 2]) { k.add(torus(ER + 0.04, 0.08, 6, 32), brass(), x, EY, 0, Math.PI / 2); for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; k.add(sphere(0.045, 6, 4), iron(), x + Math.sign(x) * 0.06, EY + Math.sin(a) * (ER + 0.04), Math.cos(a) * (ER + 0.04)); } }
+    for (const x of [-EL / 6, EL / 6]) k.add(torus(ER + 0.02, 0.04, 5, 32), brass(), x, EY, 0, Math.PI / 2);
+    for (const x of [-EL / 3, EL / 3]) { k.add(rbox(0.3, EY - 0.3, 2.0, 0.04), iron(), x, (EY - 0.3) / 2, 0); k.add(rbox(0.5, 0.12, 2.3, 0.03), iron(), x, 0.06, 0); }
+    // the fin bank of the cooler riding on top
+    k.add(rbox(EL - 0.4, 0.14, 1.1, 0.03), iron(), 0, EY + ER + 0.05, 0);
+    for (let i = 0; i < 22; i++) k.add(rbox(0.04, 0.55, 1.0, 0.008), MAT.steel(), -EL / 2 + 0.4 + i * ((EL - 0.8) / 21), EY + ER + 0.4, 0);
+    k.add(rbox(EL - 0.3, 0.06, 1.16, 0.02), brass(), 0, EY + ER + 0.7, 0);
+    // nameplate and gauges on the front
+    k.at(-0.6, EY + 0.15, ER + 0.02, 0, () => signPlate(k, 1.2, 0.4, signMat(['EXCHANGER 2', 'BORE COOLING'], { w: 384, h: 128, emblem: false })));
+    for (const [x, v] of [[0.8, 0.85], [1.3, 0.6]]) k.at(x, EY + 0.25, ER + 0.03, 0, () => P.gauge(k, { r: 0.13, v, stem: false }));
+  });
+  B.col(EX.x, EX.z, EL / 2 + ER * 0.5, ER + 0.1, EY + ER + 0.75, { noStand: true });
+  const sight = [];
+  for (const x of [-1.3, 0.1]) {
+    const m = stdM({ color: '#401810', emissive: '#ff6a20', emissiveIntensity: 1.2, roughness: 0.2 }, 0, { noShadow: true });
+    const me = new THREE.Mesh(new THREE.CircleGeometry(0.17, 20), m); me.position.set(EX.x + x, EY - 0.2, EX.z + ER + 0.01); B.group.add(me);
+    k.add(torus(0.19, 0.035, 6, 20), brass(), EX.x + x, EY - 0.2, EX.z + ER + 0.02);
+    sight.push(m);
+  }
+  const exLight = B.light('#ff8a40', 3, 5, EX.x - 0.6, EY, EX.z + ER + 1.0);
+
+  // --- valve A: on the left wall; its trench runs to the exchanger's left head
+  const VA = { z: EX.z };
+  const pa = valveAt('A', LX + 0.32, VA.z, Math.PI / 2, 1.25);
+  k.add(rbox(0.6, 0.4, 0.5, 0.04), MAT.stone('slate', 1), LX + 0.3, 0.2, VA.z);
+  trench(LX + 0.45, VA.z, EX.x - EL / 2 - 0.6, VA.z, 'A');
+  glassPipe([[EX.x - EL / 2 - 0.6, -0.1, VA.z], [EX.x - EL / 2 - 0.6, 0.9, VA.z], [EX.x - EL / 2 - 0.3, EY, VA.z]], 0.13, 'A');
+  // --- valve C: on the catwalk, back wall; its high run bridges over to the exchanger's top
+  const VC = { x: -8.6 };
+  const pc = valveAt('C', VC.x, BZ + 0.3, 0, 1.2 + UY);
+  const highY = 5.0;
+  glassPipe([[VC.x, UY + 1.45, BZ + 0.3], [VC.x, highY, BZ + 0.3], [EX.x, highY, BZ + 0.3], [EX.x, highY, EX.z], [EX.x, EY + ER + 0.75, EX.z]], 0.14, 'C', 3);
+  for (const x of [-5.5, -2.0, 1.2]) { k.add(rbox(0.1, 0.6, 0.5, 0.02), iron(), x, highY + 0.1, BZ + 0.2); k.add(torus(0.17, 0.03, 5, 14), brass(), x, highY, BZ + 0.3, Math.PI / 2); }
+  k.add(rbox(0.2, 0.2, 0.2, 0.03), brass(), EX.x, highY, BZ + 0.3);
+  k.add(rbox(0.2, 0.2, 0.2, 0.03), brass(), EX.x, highY, EX.z);
+  // --- valve B: the drain branch from the exchanger's right head to a floor drain (the red X on the plate)
+  const VB = { x: 7.0, z: 0.6 }, DR = { x: 7.0, z: 3.4 };
+  const pb = valveAt('B', VB.x, VB.z, Math.PI / 4, 1.2);
+  k.add(pipe([[EX.x + EL / 2 + 0.55, EY, EX.z], [VB.x, EY, EX.z], [VB.x, EY, VB.z - 0.1], [VB.x, 1.3, VB.z]], 0.14, 0.3, 10), MAT.paint('#7a7a80', 0.4), 0, 0, 0);
+  kt.add(rbox(0.12, EY, 0.12, 0.02), iron(), VB.x, EY / 2, EX.z);
+  trench(VB.x, VB.z + 0.4, DR.x, DR.z - 0.6, 'B');
+  k.add(P.disc(0.62, 24), MAT.flat('#141418', 0.9), DR.x, 0.008, DR.z, 0, { rx: -Math.PI / 2 });
+  for (let i = -2; i <= 2; i++) k.add(rbox(1.1 * Math.cos(Math.asin(Math.min(0.95, Math.abs(i) * 0.22))), 0.04, 0.06, 0.01), iron(), DR.x, 0.02, DR.z + i * 0.22);
+  k.add(new THREE.RingGeometry(0.66, 0.92, 28), hazard(), DR.x, 0.012, DR.z, 0, { rx: -Math.PI / 2 });
+  k.at(DR.x + 1.3, 0, DR.z + 0.2, -Math.PI / 4, () => { k.add(cyl(0.04, 0.04, 1.3, 6), iron(), 0, 0.65, 0); k.at(0, 1.35, 0.02, 0, () => signPlate(k, 0.6, 0.36, signMat(['DRAIN', 'NOT UNDER LOAD'], { w: 256, h: 150, bg: '#6a2a24', emblem: false }))); });
+  B.ccol(DR.x + 1.3, DR.z + 0.2, 0.12, 1.6, { noStand: true, seeThrough: true });
+  const drainGlow = glowSprite('#40e0ff', 1.6, 0); drainGlow.position.set(DR.x, 0.3, DR.z); B.group.add(drainGlow);
+
+  R.valves = [];
+  const vdefs = [['A', pa, 0, 1.25], ['B', pb, 0, 1.2], ['C', pc, UY, UY + 1.2]];
+  for (const [id, p, y, wy] of vdefs) {
+    R.valves.push({ id, ...B.world(p.x, p.z), y, wheelY: wy, open: false, turn: 0, setOpen(b) { this.open = !!b; refresh(); } });
+  }
+  const refresh = () => {
+    const st = Object.fromEntries(R.valves.map((v) => [v.id, v.open]));
+    const good = st.A && st.C && !st.B;
+    for (const m of sight) { m.emissive.set(good ? '#40e8ff' : st.A || st.C ? '#ffb040' : '#ff5a20'); m.color.set(good ? '#103a48' : '#401810'); }
+    exLight.color.set(good ? '#60e0ff' : '#ff8a40');
+  };
+  refresh();
+
+  // --- the catwalk along the back wall (deck at UY), the hinged stair, the gantry with the ball switch
+  const CW = { x0: LX, x1: 0.6, z0: BZ, z1: BZ + 2.3 };
+  const cwL = CW.x1 - CW.x0, cwX = (CW.x0 + CW.x1) / 2, cwZ = (CW.z0 + CW.z1) / 2;
+  k.add(rbox(cwL, 0.08, CW.z1 - CW.z0, 0.02), deck(), cwX, UY - 0.04, cwZ);
+  k.add(rbox(cwL, 0.32, 0.1, 0.02), tealP(), cwX, UY - 0.22, CW.z1 - 0.05);
+  k.add(rbox(cwL, 0.1, 0.12, 0.02), hazard(), cwX, UY - 0.05, CW.z1 - 0.02);
+  for (let x = CW.x0 + 1.2; x < CW.x1; x += 3.0) k.at(x, 0, BZ + 0.25, 0, () => { k.add(rbox(0.16, 0.5, 2.1, 0.02), tealP(), 0, UY - 0.35, 1.0); });
+  const posts = [-9.4, -3.4, -0.2];
+  for (const x of posts) { k.at(x, 0, CW.z1 - 0.2, 0, () => column(k, UY - 0.08, 0.26)); B.ccol(x, CW.z1 - 0.2, 0.2, UY - 0.1, { noStand: true }); }
+  B.col(cwX, cwZ, cwL / 2, (CW.z1 - CW.z0) / 2, UY, { bottom: UY - 0.35, seeThrough: true });
+  const stX = -6.0, stW = 1.3;
+  k.at(0, UY, 0, 0, () => {
+    P.railing(k, [[CW.x0 + 0.1, CW.z1 - 0.06], [stX - stW / 2 - 0.05, CW.z1 - 0.06]], { h: 1.05, step: 1.0 });
+    P.railing(k, [[stX + stW / 2 + 0.05, CW.z1 - 0.06], [CW.x1 - 0.06, CW.z1 - 0.06], [CW.x1 - 0.06, BZ + 0.05]], { h: 1.05, step: 1.0 });
+  });
+  B.col((CW.x0 + stX - stW / 2) / 2, CW.z1 - 0.06, (stX - stW / 2 - CW.x0) / 2, 0.1, UY + 1.1, { bottom: UY - 0.1, noStand: true, seeThrough: true });
+  B.col((stX + stW / 2 + CW.x1) / 2, CW.z1 - 0.06, (CW.x1 - stX - stW / 2) / 2, 0.1, UY + 1.1, { bottom: UY - 0.1, noStand: true, seeThrough: true });
+  B.col(CW.x1 - 0.06, cwZ, 0.1, (CW.z1 - CW.z0) / 2, UY + 1.1, { bottom: UY - 0.1, noStand: true, seeThrough: true });
+  // the hinged stair: 6 steps from the floor (z0) up to the catwalk edge; pivot at the top edge
+  const nS = 6, tread = 0.7, sz0 = CW.z1 + nS * tread, rise = UY / (nS + 0);
+  const flight = new THREE.Group(); flight.position.set(stX, UY, CW.z1); B.group.add(flight);
+  const fk = new Kit(flight);
+  const ang0 = Math.atan2(UY, nS * tread), flen = Math.hypot(UY, nS * tread);
+  for (const s of [-1, 1]) fk.add(rbox(0.08, 0.3, flen + 0.2, 0.02), tealP(), s * (stW / 2), -UY / 2 - 0.05, nS * tread / 2, 0, { rx: ang0 });
+  for (let i = 1; i <= nS; i++) { const zz = nS * tread - (i - 0.5) * tread, yy = i * rise - UY; fk.add(rbox(stW - 0.1, 0.06, tread - 0.06, 0.015), deck(), 0, yy - 0.03, zz); fk.add(rbox(stW - 0.1, 0.04, 0.07, 0.01), hazard(), 0, yy - 0.01, zz + tread / 2 - 0.07); fk.add(rbox(stW - 0.1, rise - 0.06, 0.03, 0.01), tealP(), 0, yy - rise / 2, zz + tread / 2 - 0.02); }
+  for (const s of [-1, 1]) fk.add(pipe([[s * (stW / 2), 0.9, 0.1], [s * (stW / 2), -UY + 1.0, nS * tread]], 0.025, 0.1, 6), brass(), 0, 0, 0);
+  fk.flush();
+  // stair step colliders (enabled when lowered)
+  const stepCols = [];
+  for (let i = 1; i <= nS; i++) stepCols.push(B.col(stX, sz0 - (i - 0.5) * tread, stW / 2, tread / 2 + 0.1, i * rise, { enabled: false }));
+  const STOW = -ang0; // raised: hinged up level with the deck, hanging on its chains
+  flight.rotation.x = STOW;
+  // gantry over the stair foot with the winch, the chains, and the ball switch
+  const gZ = sz0 + 0.6, gH = 4.8;
+  for (const s of [-1, 1]) { kt.at(stX + s * 1.25, 0, gZ, 0, () => column(kt, gH, 0.26)); B.ccol(stX + s * 1.25, gZ, 0.2, gH, { noStand: true }); }
+  kt.at(stX, gH, gZ, 0, () => ibeam(kt, 2.9, 0.36, 0.26));
+  kt.at(stX, gH + 0.38, gZ, 0, () => { kt.add(rbox(0.9, 0.42, 0.55, 0.05), teal(), 0, 0, 0); kt.add(cyl(0.22, 0.22, 0.7, 14), iron(), 0, 0.02, 0.38, 0, { rz: Math.PI / 2 }); kt.add(torus(0.2, 0.05, 6, 16), brass(), 0, 0.02, 0.38, Math.PI / 2); });
+  const chains = [];
+  for (const s of [-1, 1]) { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 1, 5), iron()); c.castShadow = false; B.group.add(c); chains.push({ c, s }); }
+  const swTarget = { x: stX, y: 4.15, z: gZ + 0.3 };
+  const swMat = stdM({ color: '#ff8a2a', emissive: '#ff6a00', emissiveIntensity: 1.8, roughness: 0.4 });
+  const sw = new THREE.Group(); sw.position.set(swTarget.x, swTarget.y, swTarget.z); sw.rotation.y = Math.PI / 4; B.group.add(sw);
+  { const m1 = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.1, 10, 24), swMat); sw.add(m1); const m2 = new THREE.Mesh(new THREE.CircleGeometry(0.34, 20), MAT.flat('#f4efe2', 0.6, { side: THREE.DoubleSide })); sw.add(m2); const m3 = new THREE.Mesh(new THREE.CircleGeometry(0.12, 16), swMat); m3.position.z = 0.01; sw.add(m3); }
+  kt.add(cyl(0.03, 0.03, gH - swTarget.y - 0.3, 6), iron(), swTarget.x, (gH + swTarget.y + 0.4) / 2, swTarget.z);
+  B.light('#ffb070', 2.5, 4, swTarget.x + 0.6, swTarget.y - 0.4, swTarget.z + 0.6);
+  R.ballSwitch = { ...B.world(swTarget.x, swTarget.z), y: swTarget.y, on: false, setOn(b) { this.on = !!b; swMat.color.set(b ? '#6aff7a' : '#ff8a2a'); swMat.emissive.set(b ? '#20d040' : '#ff6a00'); } };
+  R.ballTargets.push({ ...B.world(swTarget.x, swTarget.z), y: swTarget.y, r: 0.9, ballSwitch: true });
+  let stairT = 0, stairGoal = 0;
+  R.ladder = {
+    ...B.world(stX, sz0 + 0.2), lowered: false,
+    lower(instant = false) { this.lowered = true; stairGoal = 1; if (instant) stairT = 1; stepCols.forEach((c) => { c.enabled = true; }); },
+  };
+  const placeChains = () => {
+    // chains from the winch drum to the stair's free end
+    const e = new THREE.Vector3(0, -UY, nS * tread).applyEuler(flight.rotation).add(flight.position);
+    for (const { c, s } of chains) {
+      const a = new THREE.Vector3(stX + s * 0.3, gH + 0.38, gZ + 0.38), b = new THREE.Vector3(e.x + s * (stW / 2), e.y + 0.1, e.z);
+      c.position.copy(a).add(b).multiplyScalar(0.5); c.scale.set(1, a.distanceTo(b), 1); c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+    }
+  };
+  placeChains();
+
+  // --- the cooling shutter: a heavy hazard-striped door that rolls up into the wall once cooled
+  const shutter = new THREE.Group(); shutter.position.set(doorX, 0, BZ + 0.12); B.group.add(shutter);
+  const sk = new Kit(shutter);
+  sk.add(rbox(2.7, 3.0, 0.18, 0.04), MAT.plates('#5a6670', 1), 0, 1.5, 0);
+  for (let i = 0; i < 7; i++) sk.add(rbox(2.66, 0.05, 0.22, 0.01), iron(), 0, 0.2 + i * 0.42, 0);
+  sk.add(rbox(2.7, 0.42, 0.21, 0.03), hazard(), 0, 0.22, 0);
+  sk.at(0, 1.7, 0.1, 0, () => signPlate(sk, 1.4, 0.46, signMat(['HEAT SHUTTER', 'OPENS AT COOLING'], { w: 384, h: 126, bg: '#6a2a24', emblem: false })));
+  sk.flush();
+  for (const s of [-1, 1]) k.at(doorX + s * 1.5, 0, BZ + 0.18, 0, () => column(k, 3.2, 0.3));
+  k.at(doorX, 3.3, BZ + 0.2, 0, () => ibeam(k, 3.4, 0.4, 0.3));
+  k.add(rbox(3.2, 0.42, 0.5, 0.05), tealP(), doorX, 3.7, BZ + 0.2);
+  const lamp = new THREE.Mesh(sphere(0.09, 10, 8), stdM({ color: '#ffd0c0', emissive: '#ff3020', emissiveIntensity: 2.2 }, 0, { noShadow: true })); lamp.position.set(doorX + 1.2, 3.62, BZ + 0.48); B.group.add(lamp);
+  const doorCol = B.col(doorX, BZ + 0.6, 1.45, 0.6, 3.0);
+  let shutT = 0, shutGoal = 0;
+  R.coolDoor = { ...B.world(doorX, BZ + 0.6), isOpen: false, collider: doorCol, open(instant = false) { this.isOpen = true; shutGoal = 1; if (instant) shutT = 1; doorCol.enabled = false; lamp.material.emissive.set('#30ff60'); } };
+  k.add(plane(2.6, 1.8), M('ughatch', () => stdM({ map: tiled(P.TEX.hazard().clone(), 3, 2), roughness: 0.6 })), doorX, 0.008, BZ + 1.2, 0, { rx: -Math.PI / 2 });
+  R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.8, to: 'c3-gallery' });
+  R.exits.push({ ...B.world(LX + 0.45, entZ), r: 0.75, to: 'c3-shaft' });
+  R.spawn = { ...B.world(LX + 1.7, entZ), a: Math.PI / 2 };
+
+  // --- the bore's transmission in the corner: the drill string coming down, a ring gear and its motor
+  const TX = { x: 9.5, z: -6.2 };
+  const tstring = new THREE.Group(); tstring.position.set(TX.x, 0, TX.z); B.group.add(tstring);
+  { const sm = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 12, 18, 1, true), M('ugstring', () => { const m = stdM({ map: drillTex(), roughness: 0.4, metalness: 0.55 }); m.map.repeat.set(2, 9); return m; })); sm.position.y = 6; sm.castShadow = false; tstring.add(sm); }
+  const gear = new THREE.Mesh(P.gearGeo(1.35, 36, 0.3, 0.4), brass()); gear.rotation.x = -Math.PI / 2; gear.position.y = 1.45; tstring.add(gear);
+  k.add(lathe([[0.6, 0], [1.6, 0], [1.6, 1.2], [1.45, 1.3], [0.6, 1.3]], 28), teal(), TX.x, 0, TX.z);
+  k.add(torus(1.6, 0.05, 5, 28), hazard(), TX.x, 0.05, TX.z, 0, { rx: Math.PI / 2 });
+  const pin = new THREE.Mesh(P.gearGeo(0.45, 12, 0.3, 0.3), brass()); pin.rotation.x = -Math.PI / 2; pin.position.set(TX.x - 1.65, 1.45, TX.z + 0.4); B.group.add(pin);
+  k.add(lathe([[0.001, 0], [0.55, 0], [0.6, 0.1], [0.6, 1.0], [0.5, 1.1], [0.001, 1.1]], 20), tealP(), TX.x - 1.65, 1.75, TX.z + 0.4);
+  k.add(rbox(1.2, 1.75, 1.2, 0.06), MAT.plates('#5a6670', 1), TX.x - 1.65, 0.88, TX.z + 0.4);
+  for (let i = 0; i < 4; i++) k.add(rbox(0.9, 0.04, 0.02, 0.005), dark(), TX.x - 1.65, 0.6 + i * 0.18, TX.z + 1.01);
+  for (let y = 3.0; y < 9; y += 2.0) { kt.add(torus(0.8, 0.07, 6, 24), tealP(), TX.x, y, TX.z, 0, { rx: Math.PI / 2 }); for (let i = 0; i < 3; i++) { const a = i * 2.1 + 0.4; kt.add(rbox(0.1, 0.1, 1.5, 0.02), iron(), TX.x + Math.sin(a) * 1.3, y, TX.z + Math.cos(a) * 1.3, a); } }
+  B.ccol(TX.x, TX.z, 1.65, 3.0, { noStand: true });
+  B.col(TX.x - 1.65, TX.z + 0.4, 0.62, 0.62, 2.9, { noStand: true });
+  k.at(TX.x - 0.3, 2.2, BZ + 0.02, 0, () => signPlate(k, 1.0, 0.36, signMat(['BORE 1', 'DRIVE'], { w: 320, h: 116, bg: '#6a2a24' })));
+
+  // --- cover on the lower floor for the drone's rounds
+  R.cover = [];
+  const cover = (x, z, r) => R.cover.push({ ...B.world(x, z), r });
+  crateStack(B, -8.4, 2.0, 0.15, [[1.1, 0.85, 1.0], [0.85, 0.7, 0.8, null, -0.2]]); cover(-8.4, 2.0, 0.8);
+  crateStack(B, -7.4, 0.3, -0.1, [[0.9, 0.8, 0.9]]); cover(-7.4, 0.3, 0.6);
+  // a stack of big pipe sections on chocks
+  const psX = -2.2, psZ = 3.0;
+  k.at(psX, 0, psZ, 0, () => {
+    for (const x of [-1.2, 1.2]) k.add(rbox(0.25, 0.22, 1.7, 0.03), MAT.wood('grey'), x, 0.11, 0);
+    const rr = 0.36;
+    [[-0.38, 0], [0.38, 0], [0, 1]].forEach(([z, row]) => { const y = 0.22 + rr + row * rr * 1.7; k.add(cyl(rr, rr, 3.2, 18, true), twoSided(MAT.paint('#6a7880', 0.45)), 0, y, z * (row ? 0 : 1), 0, { rz: Math.PI / 2 }); for (const s of [-1, 1]) k.add(torus(rr, 0.04, 5, 18), brass(), s * 1.6, y, z * (row ? 0 : 1), Math.PI / 2); });
+  });
+  B.col(psX, psZ, 1.65, 0.8, 1.75, { noStand: true }); cover(psX, psZ, 1.2);
+  // the parked tug and its trailer
+  const cgX = 3.2, cgZ = 3.4;
+  k.at(cgX, 0, cgZ, 0.05, () => {
+    k.add(rbox(1.4, 0.7, 1.1, 0.08), MAT.paint('#d8a13b', 0.45), -1.1, 0.6, 0);
+    k.add(rbox(0.7, 0.55, 1.0, 0.06), MAT.paint('#d8a13b', 0.45), -1.45, 1.2, 0);
+    k.add(rbox(0.5, 0.05, 0.9, 0.02), MAT.glass('#bfe6ff', 0.4), -1.08, 1.25, 0, 0, { rz: 0.4 });
+    for (const sx of [-1.5, -0.6, 0.6, 1.5]) for (const sz of [-0.52, 0.52]) k.add(cyl(0.24, 0.24, 0.16, 16), dark(), sx, 0.24, sz, 0, { rx: Math.PI / 2 });
+    k.add(rbox(2.0, 0.12, 1.1, 0.03), deck(), 0.95, 0.5, 0);
+    k.at(0.75, 0.56, 0, 0.1, () => P.cargoCrate(k, { w: 0.8, h: 0.7, d: 0.8 }));
+    k.at(1.5, 0.56, 0.1, -0.2, () => P.barrel(k, { r: 0.28, h: 0.8, pal: 'grey' }));
+    k.add(sphere(0.07, 8, 6), MAT.glow('#fff4c0', '#ffd060', 2), -1.82, 0.85, 0.35);
+    k.add(sphere(0.07, 8, 6), MAT.glow('#fff4c0', '#ffd060', 2), -1.82, 0.85, -0.35);
+  });
+  B.col(cgX, cgZ, 2.0, 0.6, 1.5, { rot: 0.05, noStand: true }); cover(cgX - 1.0, cgZ, 0.8); cover(cgX + 0.9, cgZ, 0.8);
+  crateStack(B, 7.8, 5.9, 0.2, [[1.0, 0.85, 0.9], [0.7, 0.6, 0.7, null, 0.3]]); cover(7.8, 5.9, 0.7);
+  // a pump skid by the exchanger
+  const puX = -1.4, puZ = -4.6;
+  k.at(puX, 0, puZ, 0, () => {
+    k.add(rbox(1.8, 0.12, 1.0, 0.03), iron(), 0, 0.06, 0);
+    k.add(lathe([[0.001, 0], [0.38, 0], [0.4, 0.05], [0.4, 0.75], [0.3, 0.85], [0.001, 0.85]], 18), tealP(), -0.4, 0.5, 0, 0, { rz: Math.PI / 2 });
+    k.add(cyl(0.42, 0.42, 0.36, 18), MAT.paint('#3a4448', 0.45), 0.5, 0.55, 0, 0, { rz: Math.PI / 2 });
+    k.add(pipe([[0.5, 0.97, 0], [0.5, 1.3, 0], [1.3, 1.3, 0], [1.3, EY, 0.0]], 0.09, 0.15, 8), MAT.paint('#7a7a80', 0.4), 0, 0, 0);
+  });
+  B.col(puX, puZ, 0.95, 0.55, 1.4, { noStand: true }); cover(puX, puZ, 0.6);
+  for (const [x, z] of [[9.9, -2.6], [10.4, -1.9], [9.8, -1.2]]) B.put(x, z, 0, P.barrel, { r: 0.3, h: 0.85, pal: 'grey' });
+  // tool lockers and a fire point under the catwalk, a workbench by the entrance
+  for (let i = 0; i < 3; i++) B.put(-4.3 + i * 0.95, BZ + 0.28, 0, P.locker, { w: 0.9, d: 0.5, h: 1.95 });
+  k.at(-1.0, 1.4, BZ + 0.02, 0, () => { k.add(rbox(0.5, 0.7, 0.06, 0.02), MAT.paint('#c8302a', 0.4), 0, 0, 0.03); k.add(lathe([[0.001, 0], [0.09, 0], [0.09, 0.42], [0.04, 0.5], [0.001, 0.5]], 12), MAT.paint('#c8302a', 0.35), 0, -0.3, 0.17); });
+  B.put(LX + 0.45, -5.6, Math.PI / 2, P.instrumentRack, { w: 1.2, kind: 'bars' });
+  B.put(LX + 0.42, 0.4, Math.PI / 2, P.console_, { w: 1.4, kinds: ['wave'], levers: 2 });
+
+  // gas bottles on a trolley, a hose reel, pallets by the near rim
+  k.at(-5.6, 0, 6.9, 0.1, () => {
+    k.add(rbox(1.2, 0.1, 0.6, 0.02), iron(), 0, 0.2, 0);
+    for (const sx of [-0.45, 0.45]) k.add(cyl(0.12, 0.12, 0.08, 12), dark(), sx, 0.12, 0.32, 0, { rx: Math.PI / 2 });
+    k.add(pipe([[-0.6, 0.2, -0.25], [-0.6, 1.1, -0.25], [-0.6, 1.1, 0.25], [-0.6, 0.2, 0.25]], 0.02, 0.06, 5), iron(), 0, 0, 0);
+    for (const [x, c] of [[-0.3, '#3a6fb0'], [0.0, '#c8302a'], [0.3, '#3a6fb0']]) { k.add(lathe([[0.001, 0], [0.13, 0], [0.13, 0.95], [0.08, 1.08], [0.03, 1.12], [0.001, 1.12]], 12), MAT.paint(c, 0.4), x, 0.25, 0); k.add(cyl(0.03, 0.03, 0.1, 6), brass(), x, 1.4, 0); }
+  });
+  B.col(-5.6, 6.9, 0.65, 0.35, 1.4, { rot: 0.1, noStand: true });
+  k.at(-0.6, 0, 6.9, 0, () => { for (const s of [-1, 1]) k.add(cyl(0.5, 0.5, 0.06, 18), MAT.paint('#c8302a', 0.45), 0, 0.55, s * 0.22, 0, { rx: Math.PI / 2 }); k.add(cyl(0.34, 0.34, 0.44, 16), MAT.flat('#e8b830', 0.6), 0, 0.55, 0, 0, { rx: Math.PI / 2 }); for (let i = 0; i < 4; i++) k.add(torus(0.36, 0.04, 5, 18), MAT.flat('#d8a020', 0.6), 0, 0.55, -0.15 + i * 0.1); k.add(rbox(0.1, 0.55, 0.6, 0.02), iron(), 0, 0.27, 0); });
+  B.ccol(-0.6, 6.9, 0.5, 1.05, { noStand: true });
+  k.at(1.4, 0, 6.8, -0.1, () => { for (let i = 0; i < 4; i++) { k.add(rbox(1.2, 0.04, 1.0, 0.01), MAT.wood('pale'), 0, 0.12 + i * 0.15, 0); for (const z of [-0.4, 0, 0.4]) k.add(rbox(1.2, 0.1, 0.12, 0.01), MAT.wood('honey'), 0, 0.05 + i * 0.15, z); } });
+  B.col(1.4, 6.8, 0.6, 0.5, 0.64, { rot: -0.1, noStand: true });
+
+  // --- the diagram on the left wall by the entrance
+  const dgZ = 2.3;
+  k.at(LX + 0.04, 1.75, dgZ, Math.PI / 2, () => { k.add(rbox(1.68, 1.16, 0.06, 0.02), brass(), 0, 0, 0.02); k.add(plane(1.56, 1.04), M('ugdiagM', () => stdM({ map: diagramTex(), roughness: 0.7 })), 0, 0, 0.055); for (const [sx, sy] of [[-0.78, 0.52], [0.78, 0.52], [-0.78, -0.52], [0.78, -0.52]]) k.add(sphere(0.025, 6, 4), iron(), sx, sy, 0.06); });
+  k.at(LX + 0.35, 2.55, dgZ, Math.PI / 2, () => wallLamp(k, { arm: 0.25 }));
+  B.light('#fff0d0', 3, 4, LX + 1.2, 2.3, dgZ);
+  R.diagram = { ...B.world(LX + 0.9, dgZ), y: 1.75 };
+  // painted walkway lines: entrance → stair → shutter
+  const line = (ax, az, bx, bz) => { const L = Math.hypot(bx - ax, bz - az); k.add(plane(L, 0.1), MAT.flat('#e8b830', 0.7), (ax + bx) / 2, 0.004, (az + bz) / 2, -Math.atan2(bz - az, bx - ax), { rx: -Math.PI / 2 }); };
+  for (const off of [-0.7, 0.7]) { line(LX + 0.6, entZ + off, -1.0, entZ + off); }
+  line(doorX - 0.8, -5.0, doorX - 0.8, -4.0); line(doorX + 0.8, -5.0, doorX + 0.8, -0.8);
+
+  // --- light: high bay lamps, wall lamps, the cyan of the coolant and the shutter's warning lamp
+  for (const [x, z] of [[-6.0, 2.4], [0.8, 1.0], [6.8, -2.0]]) { k.at(x, 0, z, 0, () => P.hangingLamp(k, 4.2, H + 0.2, { shade: TEAL })); B.light('#ffe6c4', 8, 10, x, 3.9, z); }
+  for (const [x, z, ry] of [[LX, -5.0, Math.PI / 2], [-6.8, BZ, 0], [2.2, BZ, 0]]) { k.at(x, ry ? 2.6 : UY + 1.6, z, ry, () => wallLamp(k)); }
+  B.light('#ffe2b8', 4, 7, -6.8, UY + 1.6, BZ + 1.2);
+  B.light('#ffe2b8', 4, 7, 2.2, 2.4, BZ + 1.2);
+  B.light('#ff6a40', 2.5, 4, doorX, 3.2, BZ + 1.0);
+  B.light('#c8d0e8', 2.5, 26, 0, 8, 2);
+
+  flushNoShadow(kt);
+  let wasFlow = '';
+  R.updaters.push((dt, tt) => {
+    tstring.rotation.y = tt * 1.1;
+    pin.rotation.z = -tt * 1.1 * (1.35 / 0.45);
+    // stair and shutter animation
+    if (stairT < stairGoal) { stairT = Math.min(1, stairT + dt / 1.6); const e = stairT * stairT * (3 - 2 * stairT); flight.rotation.x = STOW * (1 - e); placeChains(); }
+    else if (stairT >= 1 && flight.rotation.x !== 0) { flight.rotation.x = 0; placeChains(); }
+    if (shutT < shutGoal) { shutT = Math.min(1, shutT + dt / 2.2); shutter.position.y = 3.1 * shutT * shutT * (3 - 2 * shutT); }
+    else if (shutT >= 1) shutter.position.y = 3.1;
+    // valve wheels spin toward their state; coolant flows
+    for (const v of R.valves) {
+      const goal = v.open ? 1 : 0; v.turn += Math.sign(goal - v.turn) * Math.min(Math.abs(goal - v.turn), dt * 1.2);
+      wheels[v.id].children.forEach((c) => { c.rotation.z = -v.turn * Math.PI * 3; });
+      const m = flowMats[v.id];
+      m.emissiveIntensity = 1.5 * v.turn;
+      m.color.setRGB(0.16 + 0.1 * v.turn, 0.2 + 0.3 * v.turn, 0.23 + 0.35 * v.turn);
+      m.userData.flow.offset.x = -tt * 0.9;
+    }
+    const st = R.valves.map((v) => +v.open).join('');
+    if (st !== wasFlow) { wasFlow = st; refresh(); }
+    drainGlow.material.opacity = 0.7 * R.valves[1].turn;
+    exLight.intensity = exLight.userData.base * (0.8 + Math.sin(tt * 3) * 0.2);
+    lamp.material.emissiveIntensity = R.coolDoor.isOpen ? 2.2 : 1.2 + Math.max(0, Math.sin(tt * 4)) * 1.6;
+  });
+
+  // the drone's loop over the lower floor (world coords): round the pipe stack, the tug and the exchanger
+  R.patrol = [[-4.2, 0.9], [5.6, -0.3], [5.6, 5.5], [0.4, 5.6], [-4.6, 5.4]].map(([x, z]) => [B.cx + x, B.cz + z]);
+  const room = B.finish();
+  room.center.set(B.cx - 0.6, 0, B.cz - 0.8);
+  return room;
+}
+
 // ================================================================ registration
 export function buildUnderground(scene, physics) {
   const rooms = {
     c3shaft: buildShaft(scene, physics),
+    c3deep: buildDeep(scene, physics),
   };
   return rooms;
 }
