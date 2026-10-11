@@ -11,6 +11,9 @@ export const STR = {
     camera: 'מצלמה', cam_lba: 'LBA2 – שוט קבוע שמתמרכז מחדש', cam_free: 'חופשית (עכבר / סטיק)',
     hud: 'ממשק', hud_lba: 'LBA2 – נקי, מופיע רק כשמשהו משתנה', hud_modern: 'מודרני – מפה, משימה וסרגלים קבועים',
     music: 'מוזיקה', sfx: 'אפקטים',
+    text_speed: 'מהירות טקסט', ts_slow: 'איטית', ts_normal: 'רגילה', ts_fast: 'מהירה', ts_instant: 'מיידית',
+    text_size: 'גודל כתוביות', tsz_normal: 'רגיל', tsz_large: 'גדול',
+    shake_set: 'רעידות מצלמה', sh_on: 'מלאות', sh_reduced: 'מופחתות', sh_off: 'כבויות',
     disclaimer: 'פרויקט מעריצים לא מסחרי. אינו קשור ל־Adeline Software או ל־[2.21]. כל המודלים, הצלילים והמוזיקה נוצרו מחדש בקוד.',
     controls_html: `
       <tr><td>WASD / חצים</td><td>תנועה</td></tr>
@@ -85,6 +88,9 @@ export const STR = {
     camera: 'Camera', cam_lba: 'LBA2 – fixed shot that re-centres', cam_free: 'Free (mouse / stick)',
     hud: 'Interface', hud_lba: 'LBA2 – clean, appears only when something changes', hud_modern: 'Modern – map, objective and bars always on',
     music: 'Music', sfx: 'Effects',
+    text_speed: 'Text speed', ts_slow: 'Slow', ts_normal: 'Normal', ts_fast: 'Fast', ts_instant: 'Instant',
+    text_size: 'Subtitle size', tsz_normal: 'Normal', tsz_large: 'Large',
+    shake_set: 'Camera shake', sh_on: 'Full', sh_reduced: 'Reduced', sh_off: 'Off',
     disclaimer: 'Non-commercial fan project. Not affiliated with Adeline Software or [2.21]. All models, sounds and music are recreated in code.',
     controls_html: `
       <tr><td>WASD / Arrows</td><td>Move</td></tr>

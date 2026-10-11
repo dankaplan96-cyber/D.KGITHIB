@@ -46,7 +46,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'he', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, ...store.get(SET_KEY) };
+    this.settings = { lang: 'he', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     if (!store.get(SET_KEY) && !navigator.language.startsWith('he')) this.settings.lang = 'en';
     setLang(this.settings.lang);
@@ -333,6 +333,10 @@ class Game {
     this.env.setFogRange(...(retro ? [18, 72] : [45, 190]));
     this.env.waterU.uWaveAmp.value = retro ? 0.3 : 1;
     this.hud.setStyle(s.hud === 'lba');
+    // comfort: dialogue speed (LBA2 types 50 chars/s), subtitle size, camera shake
+    this.hud.textRate = { slow: 28, normal: 50, fast: 95, instant: 1e9 }[s.textSpeed] ?? 50;
+    document.body.classList.toggle('big-text', s.textSize === 'large');
+    this.camRig.shakeScale = { on: 1, reduced: 0.35, off: 0 }[s.shake] ?? 1;
     this.audio.vol.music = s.music;
     this.audio.vol.sfx = s.sfx;
     this.audio.applyVolumes();

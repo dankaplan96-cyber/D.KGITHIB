@@ -49,7 +49,7 @@ export class CameraRig {
   setIso(room) { this.iso = room; this.lba.init = false; if (room) this.isoFocus = null; }
   toggleView() { this.view = 1 - this.view; }
   recenter() { this.lba.behind = true; }
-  shake(s = 0.35) { this.shakeT = Math.max(this.shakeT, s); }
+  shake(s = 0.35) { this.shakeT = Math.max(this.shakeT, s * (this.shakeScale ?? 1)); }
 
   occluded(t, cp, sp, yaw, maxD) {
     if (!this.physics) return maxD;

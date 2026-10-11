@@ -181,7 +181,7 @@ export class HUD {
     const D = this.dialog;
     if (!this.talking || D.shown >= D.full.length) return;
     const before = Math.floor(D.shown);
-    D.shown = Math.min(D.full.length, D.shown + dt * 55);
+    D.shown = Math.min(D.full.length, D.shown + dt * (this.textRate ?? 50));
     const now = Math.floor(D.shown);
     if (now !== before) {
       D.text.textContent = D.full.slice(0, now);
