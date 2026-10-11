@@ -167,6 +167,38 @@ export function grassClumpGeometry(seed = 1, blades = 9) {
 }
 
 // Small wild flower: a thin stem with a five-petal head
+// A tulip for the flower beds (LBA2's Citadel has dense beds of red, yellow and blue tulips): a taller
+// stem, two blade leaves and a cup of three petals, big enough to read at the game camera's distance.
+export function tulipGeometry(petal = '#e8343a') {
+  const parts = [], cols = [];
+  const stem = new THREE.CylinderGeometry(0.011, 0.014, 0.44, 4); stem.translate(0, 0.22, 0);
+  parts.push([stem, '#3f7d2e']);
+  for (const s of [1, -1]) {
+    const leaf = new THREE.ConeGeometry(0.035, 0.3, 3); leaf.scale(1, 1, 0.3);
+    leaf.rotateZ(s * 0.35); leaf.translate(s * 0.045, 0.14, 0);
+    parts.push([leaf, '#4c8f34']);
+  }
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2;
+    const pet = new THREE.SphereGeometry(0.05, 6, 5, 0, Math.PI * 2, 0, Math.PI * 0.75); pet.scale(0.75, 1.25, 0.55);
+    pet.rotateY(a); pet.translate(Math.cos(a) * 0.022, 0.48, Math.sin(a) * 0.022);
+    parts.push([pet, petal]);
+  }
+  const geos = parts.map(([g, col]) => {
+    const c = new THREE.Color(col);
+    for (let k = 0; k < g.attributes.position.count; k++) cols.push(c.r, c.g, c.b);
+    g.deleteAttribute('uv');
+    if (g.index) { const ng = g.toNonIndexed(); return ng; }
+    return g;
+  });
+  // (colours were pushed per indexed vertex; rebuild them for the non-indexed copies)
+  const cols2 = [];
+  geos.forEach((g, i) => { const c = new THREE.Color(parts[i][1]); for (let k = 0; k < g.attributes.position.count; k++) cols2.push(c.r, c.g, c.b); });
+  const merged = mergeGeos(geos);
+  merged.setAttribute('color', new THREE.Float32BufferAttribute(cols2, 3));
+  return merged;
+}
+
 export function flowerGeometry(petal = '#ffffff') {
   const stem = new THREE.CylinderGeometry(0.008, 0.01, 0.36, 4); stem.translate(0, 0.18, 0);
   const parts = [stem];

@@ -120,7 +120,16 @@ export class Terrain {
           float rest = 1.0 - sp.z;
           float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
           sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
-          vec3 tex = texture2D(tGrass, tuv).rgb * sp.x
+          // crisp soil edges too (paths and town soil): the grass/soil share is re-split per pixel with a
+          // short ramp, wobbled by the grass texture so the edge looks painted, not ruled
+          vec3 gtex = texture2D(tGrass, tuv).rgb;
+          float gs = sp.x + sp.w;
+          if (gs > 0.001) {
+            float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;
+            float dk = smoothstep(0.42, 0.58, d);
+            sp.x = gs * (1.0 - dk); sp.w = gs * dk;
+          }
+          vec3 tex = gtex * sp.x
                    + texture2D(tSand, tuv * 1.2).rgb * sp.y
                    + rock * sp.z
                    + texture2D(tDirt, tuv * 1.3).rgb * sp.w

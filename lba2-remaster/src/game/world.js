@@ -8,7 +8,7 @@ import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/mat
 import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist } from './town.js';
-import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
+import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry } from './vegetation.js';
 import { buildIsland, keepClear } from './island.js';
 import { buildCliffRocks } from './cliffs.js';
 
@@ -250,7 +250,7 @@ function islandSplat(x, z, h, slope, w) {
   w[3] = 0; w[4] = 0;
   if (h > 0.8) {
     const pd = pathDist(x, z);
-    w[3] = smoothstep(2.4, 1.2, pd + n * 0.6) * 2;
+    w[3] = smoothstep(2.05, 1.55, pd + n * 0.35) * 2.4; // (a fairly clean edge, as LBA2's paths)
     const cd = boxDist(x, z, POI.camp.x - 11, POI.camp.z - 8, POI.camp.x + 11, POI.camp.z + 8);
     w[3] = Math.max(w[3], smoothstep(1.5, -1.5, cd + n * 2) * 2);
   }
@@ -490,6 +490,51 @@ export function buildWorld(parentScene) {
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
   ['#ffd84a', '#ff6fa3', '#ffffff', '#b28cff', '#ff8a3d'].forEach((col, k) => mkInst(flowerGeometry(col), flowerMat, flowers.filter((f, i) => i % 5 === k), false));
+
+  // tulip beds on the grass beside the paths and around town (dense, one colour per bed, as on LBA2's Citadel)
+  const BED_COLS = ['#e8343a', '#ffd23a', '#3a6fe8', '#ff7ab0', '#f4f4f0'];
+  const beds = BED_COLS.map(() => []);
+  const bedOk = (x, z) => {
+    const h = H(x, z);
+    if (h < 1.3 || terrain.slopeAt(x, z) > 0.35) return false;
+    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.8) return false;
+    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 34 && (streetDist(x, z) < 0.7 || inHouse(x, z, 0.5))) return false;
+    if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < 15) return false;
+    if (pathDist(x, z) < 1.7 || keepClear(x, z, 0.2)) return false;
+    return true;
+  };
+  const addBed = (cx, cz, k, n, rx, rz, rot) => {
+    for (let i = 0; i < n; i++) {
+      const u = (rand() - 0.5) * 2, v = (rand() - 0.5) * 2;
+      if (u * u + v * v > 1) { i--; continue; }
+      const x = cx + Math.cos(rot) * u * rx - Math.sin(rot) * v * rz, z = cz + Math.sin(rot) * u * rx + Math.cos(rot) * v * rz;
+      if (!bedOk(x, z)) continue;
+      beds[k].push({ x, z, h: H(x, z), s: 1.05 + rand() * 0.35, ry: rand() * 6.28 });
+    }
+  };
+  let bedN = 0;
+  for (const path of PATHS) {
+    for (let i = 0; i < path.length - 1; i++) {
+      const [x0, z0] = path[i], [x1, z1] = path[i + 1];
+      const L = Math.hypot(x1 - x0, z1 - z0), tx = (x1 - x0) / L, tz = (z1 - z0) / L;
+      for (let d = 3 + rand() * 3; d < L - 3; d += 5 + rand() * 4) {
+        const side = rand() < 0.5 ? 1 : -1, off = 2.3 + rand() * 0.8;
+        const cx = x0 + tx * d - tz * off * side, cz = z0 + tz * d + tx * off * side;
+        if (!bedOk(cx, cz)) continue;
+        addBed(cx, cz, bedN++ % BED_COLS.length, 34 + Math.floor(rand() * 16), 1.3 + rand() * 0.7, 0.55, Math.atan2(tz, tx));
+      }
+    }
+  }
+  // beds along the town's house fronts
+  for (const hs of W.houses || []) {
+    for (let k = 0; k < 2; k++) {
+      const a = rand() * 6.28, r = 3.4 + rand() * 1.2;
+      const cx = hs.x + Math.cos(a) * r, cz = hs.z + Math.sin(a) * r;
+      if (bedOk(cx, cz)) addBed(cx, cz, bedN++ % BED_COLS.length, 24 + Math.floor(rand() * 10), 1.1, 0.45, a + Math.PI / 2);
+    }
+  }
+  beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false); });
+  W.flowerBeds = { beds: bedN, tulips: beds.reduce((a, l) => a + l.length, 0) };
 
   const rocks = [];
   for (let i = 0; i < 600 && rocks.length < 140; i++) {
