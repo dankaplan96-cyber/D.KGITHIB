@@ -21,7 +21,22 @@ import { Inventory } from './game/inventory.js';
 import { Story } from './game/story/index.js';
 import { t, setLang } from './game/i18n.js';
 
-const SAVE_KEY = 'lba3_save_v1';
+const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
+const SAVE_VERSION = 2;
+// Bring an older save up to the current format. Returns null when the data can't be a save.
+// v1 → v2: lists that early saves could lack are filled in; the version is stamped.
+export function migrateSave(raw) {
+  if (!raw || typeof raw !== 'object' || !raw.hero || typeof raw.hero !== 'object') return null;
+  const s = JSON.parse(JSON.stringify(raw));
+  let v = s.v || 1;
+  if (v < 2) {
+    s.flags = s.flags && typeof s.flags === 'object' ? s.flags : {};
+    for (const k of ['killed', 'collected', 'searched', 'crates']) if (!Array.isArray(s[k])) s[k] = [];
+    v = 2;
+  }
+  s.v = v;
+  return s;
+}
 // music per interior; outdoors it follows the area (see updatePlay)
 const ROOM_MUSIC = { house: 'home', well: 'cave', office: 'home', projoffice: 'stealth', control: 'station', workshop: 'home', lighttop: 'home' };
 const SET_KEY = 'sunshard_settings_v1';
@@ -204,7 +219,7 @@ class Game {
   snapshot() {
     const h = this.hero;
     return {
-      v: 1,
+      v: SAVE_VERSION,
       room: this.room?.id || null,
       hero: { x: this.room ? h.pos.x : this.lastSafe.x, z: this.room ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour },
       flags: this.flags, killed: this.killed, collected: this.collected, searched: this.searched, crates: this.brokenCrates,
@@ -226,11 +241,12 @@ class Game {
     this.brokenCrates = s.crates || [];
     for (const e of this.enemies) if (this.killed.includes(e.id)) { e.state = 'dead'; e.deadT = 99; e.rig.root.visible = false; }
     for (const p of [...this.pickups.list]) if (p.id && this.collected.includes(p.id)) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
-    this.brokenCrates.forEach((i) => this.breakCrate(this.world.crates[i], true));
+    this.brokenCrates.forEach((i) => { if (this.world.crates[i]) this.breakCrate(this.world.crates[i], true); });
     if (this.flags.target) this.hitTarget(true);
     this.story.applyFlags();
     const at = { x: s.hero.x, z: s.hero.z, a: 0 };
-    if (s.room) this.enterRoom(s.room, at, true);
+    if (s.room && this.rooms[s.room]) this.enterRoom(s.room, at, true);
+    else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
   }
 
@@ -241,8 +257,22 @@ class Game {
     this.story.start();
   }
   startContinue() {
-    const s = store.get(SAVE_KEY);
-    if (s) this.applySave(s);
+    const raw = store.get(SAVE_KEY);
+    const s = migrateSave(raw);
+    // an older format is kept untouched next to the migrated save
+    if (raw && s && raw.v !== SAVE_VERSION) store.set(SAVE_KEY + '_backup_v' + (raw.v || 1), raw);
+    try {
+      if (!s) throw new Error('unreadable save');
+      this.applySave(s);
+    } catch (e) {
+      // never delete a save we couldn't read: set it aside and start fresh
+      console.error('save load failed', e);
+      if (raw) store.set(SAVE_KEY + '_unreadable', raw);
+      store.del(SAVE_KEY);
+      this.startNew();
+      this.hud.toast('toast_save_error');
+      return;
+    }
     this.beginPlay();
     this.setState('play');
   }

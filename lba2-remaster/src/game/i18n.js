@@ -111,7 +111,7 @@ export const STR = {
       <tr><td>Gamepad</td><td>A action · B ball · X talk · Y holomap · LB/RB behaviour · LT menu · R3 recenter · Start pause</td></tr>`,
     beh_normal: 'Normal', beh_athletic: 'Athletic', beh_aggressive: 'Aggressive', beh_discreet: 'Discreet',
     p_talk: 'Talk', p_search: 'Inspect', p_read: 'Read', p_open: 'Open', p_shop: 'Shop', p_gate: 'Inspect',
-    toast_saved: 'Game saved', toast_clover: 'A clover leaf saved you!',
+    toast_saved: 'Game saved', toast_clover: 'A clover leaf saved you!', toast_save_error: "The save couldn't be loaded. It was kept aside; starting a new game.",
     toast_magic: 'Magic level {n}!', toast_nomp: 'Not enough magic: weak throw',
     toast_flask: 'Found a magic flask!', toast_clover_found: 'Found a clover leaf!',
     toast_nothing: 'Nothing here.', toast_stones: 'The stones rise!',
