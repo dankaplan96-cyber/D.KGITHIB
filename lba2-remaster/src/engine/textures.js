@@ -61,12 +61,12 @@ export function makeTextures() {
   // grass: bright LBA green with painted tufts
   {
     const [c, x] = canvas(S); const r = rng(11);
-    x.fillStyle = '#5a9e3c'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#4d8f33', '#6fb048', '#57983a', '#7cb854'], 20, 60, 0.6);
+    x.fillStyle = '#4f8c36'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#437c2d', '#5f9a40', '#4a8531', '#6aa448'], 20, 60, 0.6);
     x.lineCap = 'round';
     for (let i = 0; i < 700; i++) {
       const px = r() * S, py = r() * S, l = 3 + r() * 5, a = -Math.PI / 2 + (r() - 0.5) * 0.9;
-      x.strokeStyle = ['#3f8526', '#8ed35a', '#4c9a2f', '#a4dd6a'][Math.floor(r() * 4)];
+      x.strokeStyle = ['#35702a', '#7cba4e', '#40812b', '#8fc65c'][Math.floor(r() * 4)];
       x.lineWidth = 1 + r();
       wrap(S, (ox, oy) => { x.beginPath(); x.moveTo(px + ox, py + oy); x.lineTo(px + ox + Math.cos(a) * l, py + oy + Math.sin(a) * l); x.stroke(); });
     }
@@ -104,13 +104,13 @@ export function makeTextures() {
   // dirt path
   {
     const [c, x] = canvas(S); const r = rng(14);
-    x.fillStyle = '#b48a58'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#a07a4a', '#c39a66', '#9a7044'], 15, 40, 0.6);
+    x.fillStyle = '#9c6c44'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#8a5c38', '#ab7b52', '#80543a'], 15, 40, 0.6);
     for (let i = 0; i < 120; i++) {
       const px = r() * S, py = r() * S, rr = 1.5 + r() * 3.5;
       wrap(S, (ox, oy) => {
         x.fillStyle = 'rgba(80,58,36,0.5)'; x.beginPath(); x.ellipse(px + ox + 0.8, py + oy + 0.8, rr, rr * 0.7, 0, 0, 7); x.fill();
-        x.fillStyle = ['#cdb08a', '#a99274', '#d8c4a0'][i % 3]; x.beginPath(); x.ellipse(px + ox, py + oy, rr, rr * 0.7, 0, 0, 7); x.fill();
+        x.fillStyle = ['#b8946e', '#957a60', '#c4a682'][i % 3]; x.beginPath(); x.ellipse(px + ox, py + oy, rr, rr * 0.7, 0, 0, 7); x.fill();
       });
     }
     T.dirt = toTex(c);

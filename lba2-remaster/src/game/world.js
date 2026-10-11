@@ -10,6 +10,7 @@ import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
 import { buildIsland, keepClear } from './island.js';
+import { buildCliffRocks } from './cliffs.js';
 
 export const POI = {
   start: { x: -38, z: 4 },
@@ -349,6 +350,7 @@ function add(scene, geo, material, x, y, z, { rx = 0, ry = 0, rz = 0, cast = tru
   return m;
 }
 
+let W_cliffs = null;
 export function buildWorld(parentScene) {
   // everything outdoors lives in one group so interiors can hide it
   const scene = new THREE.Group();
@@ -361,6 +363,10 @@ export function buildWorld(parentScene) {
   const physics = new Physics(terrain);
   const zones = new ZoneSystem();
   const H = (x, z) => terrain.heightAt(x, z);
+  // faceted rock faces on the terrace cliffs (not on the path ramps or the paved quay)
+  W_cliffs = buildCliffRocks(scene, terrain, TX.cliff, {
+    skip: (x, z) => pathDist(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
+  });
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped,
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,
