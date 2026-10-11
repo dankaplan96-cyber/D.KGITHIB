@@ -639,7 +639,7 @@ export function buildZeelich(scene, physics) {
         for (const S of [A, Bz]) { const o = S.find(([s0, s1]) => s1 > m0 && s0 < m1); if (!o) { hi = lo; break; } lo = Math.max(lo, o[0]); hi = Math.min(hi, o[1]); }
         lo += inset; hi -= inset;
         if (hi - lo < 0.4) continue;
-        col({ type: 'box', x: (xa + xb) / 2, z: (lo + hi) / 2, hw: (xb - xa) / 2 + 0.006, hd: (hi - lo) / 2, rot: 0, top, seeThrough: true });
+        col({ type: 'box', x: (xa + xb) / 2, z: (lo + hi) / 2, hw: (xb - xa) / 2 + 0.08, hd: (hi - lo) / 2, rot: 0, top, seeThrough: true });
       }
     }
   }
@@ -1470,17 +1470,15 @@ export function buildZeelich(scene, physics) {
     for (const s of [-1, 1]) rail([40.25, s * 7.25], [40.25, s * 6.2]);
     // walkable deck around the shaft, and the neck step
     const P2 = PLATFORM;
-    {
-      let x0 = 40;
-      for (let x = x0 + 0.05; x < 60.5 - 0.3; x += 1) {
-        const xa = x, xb = Math.min(x + 1, 60.2), xm = (xa + xb) / 2;
-        const I = zIntervals(P2, xa)[0], J = zIntervals(P2, xb)[0];
-        if (!I || !J) continue;
-        const lo = Math.max(I[0], J[0]) + 0.35, hi = Math.min(I[1], J[1]) - 0.35;
-        const cut = Math.abs(xm - PAD.x) < SHAFT_R + 0.5 ? Math.sqrt(Math.max(0, SHAFT_R * SHAFT_R - Math.max(0, Math.min(Math.abs(xa - PAD.x), Math.abs(xb - PAD.x))) ** 2)) : 0;
-        const ivs = cut > 0 && !(xa < PAD.x && xb > PAD.x && false) ? [[lo, PAD.z - Math.max(cut, xa < PAD.x && xb > PAD.x ? SHAFT_R : 0)], [PAD.z + Math.max(cut, xa < PAD.x && xb > PAD.x ? SHAFT_R : 0), hi]] : [[lo, hi]];
-        for (const [l, h] of ivs) if (h - l > 0.3) col({ type: 'box', x: xm, z: (l + h) / 2, hw: (xb - xa) / 2 + 0.005, hd: (h - l) / 2, rot: 0, top: DECK, seeThrough: true });
-      }
+    for (let x = 40.05; x < 60.2; x += 1) {
+      const xa = x, xb = Math.min(x + 1, 60.2), xm = (xa + xb) / 2;
+      const I = zIntervals(P2, xa + 0.01)[0], J = zIntervals(P2, xb - 0.01)[0];
+      if (!I || !J) continue;
+      const lo = Math.max(I[0], J[0]) + 0.35, hi = Math.min(I[1], J[1]) - 0.35;
+      const dx = xa <= PAD.x && xb >= PAD.x ? 0 : Math.min(Math.abs(xa - PAD.x), Math.abs(xb - PAD.x));
+      const ext = dx < SHAFT_R ? Math.sqrt(SHAFT_R * SHAFT_R - dx * dx) : 0;
+      const ivs = ext > 0 ? [[lo, PAD.z - ext], [PAD.z + ext, hi]] : [[lo, hi]];
+      for (const [l, h] of ivs) if (h - l > 0.3) col({ type: 'box', x: xm, z: (l + h) / 2, hw: (xb - xa) / 2 + 0.08, hd: (h - l) / 2, rot: 0, top: DECK, seeThrough: true });
     }
     // the shaft: glowing rings going down, a bore glow at the bottom
     mesh(group, cyl(SHAFT_R, SHAFT_R, 14, 24, 2, true), tm('teal', { color: '#5a8a90', rough: 0.5, metal: 0.4, side: THREE.BackSide }), PAD.x, DECK - 7, PAD.z, 0, { cast: false });
