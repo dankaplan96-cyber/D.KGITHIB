@@ -17,18 +17,15 @@ const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 
 // ------------------------------------------------------------------ cast
 export const LOOKS = {
   twinsen: {
-    // Fidelity pass (docs/character-review.md §8): detail from the classic render, silhouette/colour/scale
-    // from the LBA2 in-game model. Medium-blue tunic (lighter top, darker skirt), bell sleeves that make the
-    // upper silhouette, a clear waist with a thin orange belt, skirt flaring to the ankle, rounded brown
-    // shoes; a tall oval head narrowing to the chin on a narrow visible neck, big white oval eyes with blue
-    // irises set high and close, a small round nose, a simple open mouth, small ears, warm skin; dark hair
-    // only at the top and back with the ponytail; the gold medallion on a red-brown strap.
-    race: 'quetch', outfit: 'tw', sleeve: 'puff', noBelt: true, hem: 0.2, hemW: 0.94, shoeBall: true, shoeS: 1.45, neckR: 0.034, shoulders: 0.96, sleeveW: 1.12,
-    tunic: '#94c8ef', tunicTrim: '#7fb8e6', belt: '#ec7a34', pants: '#7a4422', shoes: '#7a4422', cord: '#c8402a',
-    hair: '#6a3a1a', skin: '#f6b260', hairStyle: 'twinsen', tail: 'classic', tailLen: 1.0, hairFront: 0.13, hairBack: -0.13,
-    skull: 'egg', skullY: 1.03, skullW: 1.32, jaw: 1.1, chin: 1.0, cheeks: 0.35,
-    eyeScale: 1.78, eyeOval: 1.15, eyeGap: 1.04, eyeUp: 0.014, eyeIn: 0.018, lookUp: 0.14, lookOut: 0.06, noseS: 0.8, nose: 'round', noSocket: true, eyes: '#2f6fd0', noLid: true, noBrow: true,
-    mouth: 'wide', mouthW: 1.3, mouthH: 0.8, mouthUp: 0.0, mouthDark: '#2a0e08', medallion: true, medalR: 0.1, medalY: 0.31, handS: 1.45, headS: 1.3, neck: 0.15,
+    // LBA2's in-game Twinsen, measured on the original model (docs/character-review.md §11): cape-like robe
+    // with flat shoulders and broad sleeves, thin orange belt, a nearly straight robe to the ankles, small
+    // orange shoes, ball hands; a tall narrow egg head on a long thin neck, small eyes, a cap of hair on the
+    // back of the crown and a bun of three balls; a big gold medallion on a gold cord. Colours from its palette.
+    race: 'quetch', outfit: 'lba', hem: 0.1, hemW: 0.92, skirtDepth: 0.8, neckR: 0.05, shoulders: 0.95, armLen: 1.12, armSpread: 0.2,
+    tunic: '#2a86ad', tunicTrim: '#2a86ad', belt: '#d36b4b', pants: '#2a86ad', shoes: '#d36b4b', slippers: true, cord: '#f7bb57', handBall: 0.075,
+    hair: '#634327', skin: '#e2bc90', hairStyle: 'bun', hairFront: 0.62, hairBack: 0.3, noEars: true, skull: 'egg', skullY: 1.1, skullW: 0.95, jaw: 0.9, chin: 0.9, cheeks: 0.3,
+    eyeScale: 0.82, eyeOval: 0.5, eyeGap: 1.12, eyeUp: 0.03, eyes: '#1b4b67', eyeWhite: '#c8c0d4', noLid: true, noBrow: true, nose: 'ball', noseS: 0.9,
+    mouth: 'line', medallion: true, medalR: 0.085, medalY: 0.24, medalSides: 8, headS: 1.4, neck: 0.12,
   },
   zoe: {
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
@@ -129,7 +126,7 @@ function design(L) {
   const Hc = add(headP, [0, 0.13 * hs, 0]);
   B.head.tip = add(Hc, [0, 0.18 * hs, 0]);
   const shX = (grobo ? 0.33 : 0.2) * slim * (kid ? 0.95 : 1) * (L.shoulders || 1), shY = ty + 0.47 * torsoLen;
-  const armLen = (esmer ? 1.15 : kid ? 0.78 : 1);
+  const armLen = (esmer ? 1.15 : kid ? 0.78 : 1) * (L.armLen || 1);
   const legX = (grobo ? 0.15 : 0.1) * slim;
   for (const [s, sx] of [['L', 1], ['R', -1]]) {
     const sh = bone('sh' + s, [sx * shX, shY, 0], 'torso');
@@ -140,7 +137,7 @@ function design(L) {
     bone('foot' + s, [sx * legX, 0.1, 0], 'knee' + s, { tip: [sx * legX, 0.03, 0.15] });
   }
   const hemY = Math.max(0.06, L.hem ?? 0.5);
-  const hemR = (L.hemW ?? 1) * (L.outfit === 'robe2' || L.outfit === 'tw' ? 0.36 : L.outfit === 'bell' ? 0.43 : L.outfit === 'dress' ? 0.34 : L.outfit === 'robe' ? 0.32 : 0.27) * wide * (kid ? 0.92 : 1) + belly * 0.4;
+  const hemR = (L.hemW ?? 1) * (L.outfit === 'robe2' || L.outfit === 'tw' || L.outfit === 'lba' ? 0.36 : L.outfit === 'bell' ? 0.43 : L.outfit === 'dress' ? 0.34 : L.outfit === 'robe' ? 0.32 : 0.27) * wide * (kid ? 0.92 : 1) + belly * 0.4;
   for (const [nm, dx, dz] of [['skirtF', 0, 1], ['skirtB', 0, -1], ['skirtL', 1, 0], ['skirtR', -1, 0]]) {
     bone(nm, [dx * 0.08, ty - 0.04, dz * 0.06], 'hips', { tip: [dx * hemR * 0.9, hemY, dz * hemR * 0.75], noSeg: true });
   }
@@ -196,7 +193,7 @@ function design(L) {
     e(add(Hc, [0, -0.135 * hs, 0.045 * hs]), [0.048 * hs * (L.chin || 1), 0.04 * hs * (L.chin || 1), 0.048 * hs * (L.chin || 1)], 'head', 'skin', 'head');
     const ck = L.cheeks ?? 1;
     if (ck > 0) for (const sx of [1, -1]) e(add(Hc, [sx * 0.06 * hs, -0.04 * hs, 0.065 * hs]), [0.04 * hs * ck, 0.035 * hs * ck, 0.04 * hs * ck], 'head', 'cheek', 'head');
-    for (const sx of [1, -1]) e(add(Hc, [sx * 0.118 * hs, -0.005, -0.005]), [0.016, 0.038, 0.028], 'head', 'skin', 'head');
+    if (!L.noEars) for (const sx of [1, -1]) e(add(Hc, [sx * 0.118 * hs, -0.005, -0.005]), [0.016, 0.038, 0.028], 'head', 'skin', 'head');
     const nz = 0.12 * hs;
     const ns = L.noseS || 1;
     if (L.nose === 'round') e(add(Hc, [0, -0.022 * hs, nz + 0.028 * ns]), [0.036 * hs * ns, 0.034 * hs * ns, 0.034 * hs * ns], 'head', 'nose', 'head');
@@ -228,7 +225,7 @@ function design(L) {
       });
     } else {
       e(add(Hc, [0, 0.045 * hs, -0.02]), [0.125 * hs * Math.max(1, (L.skullW || 1) * 0.93), 0.17 * hs, 0.138 * hs], 'head', 'hair', 'hair', {
-        clip: L.hairStyle === 'twinsen'
+        clip: (L.hairStyle === 'twinsen' || L.hairStyle === 'bun')
           // (LBA2 #23, back view: besides the cap, the hair runs as a dark strip down the back of the head)
           ? (L.hairStrip ? ((x, y, z) => Math.min(hairline((L.hairFront ?? 0.2) * hs, (L.hairBack ?? -0.035) * hs)(x, y, z), Math.max(Math.abs(x - Hc[0]) - 0.055 * hs, z - (Hc[2] - 0.06 * hs), Hc[1] - 0.06 * hs - y) * 0.8))
             : hairline((L.hairFront ?? 0.2) * hs, (L.hairBack ?? -0.035) * hs))
@@ -236,7 +233,7 @@ function design(L) {
         wobble: (x, y, z) => Math.sin(Math.atan2(x - Hc[0], z - Hc[2]) * 16 + y * 20) * 0.003,
       });
       // a small swept fringe (Twinsen combs his hair back)
-      if (L.hairStyle !== 'twinsen') e(add(Hc, [0.025 * hs, 0.125 * hs, 0.07 * hs]), [0.075 * hs, 0.035 * hs, 0.06 * hs], 'head', 'hair', 'hair');
+      if (L.hairStyle !== 'twinsen' && L.hairStyle !== 'bun') e(add(Hc, [0.025 * hs, 0.125 * hs, 0.07 * hs]), [0.075 * hs, 0.035 * hs, 0.06 * hs], 'head', 'hair', 'hair');
     }
     const chain = (pts, radii, mat = 'hair') => {
       // a bone per segment so the hair swings
@@ -248,7 +245,19 @@ function design(L) {
       }
       G.tail = 0.035;
     };
-    if (L.hairStyle === 'twinsen') {
+    if (L.hairStyle === 'bun') {
+      // LBA2 Twinsen: a little cap of hair on the back of the crown and a bun of three balls behind the head
+      const HH = 2.1;
+      const balls = [[0.044, 0.125, -0.07], [0.034, 0.09, -0.12], [0.025, 0.055, -0.148]].map(([r, y, z]) => [r * HH, y * HH, z * HH]);
+      let parent = 'head';
+      balls.forEach(([r, y, z], i) => {
+        const c = add(Hc, [0, y, z]);
+        bone('tail' + i, c, parent); parent = 'tail' + i; hairBits.push('tail' + i);
+        e(c, [r, r, r], 'tail' + i, 'hair', 'tail');
+      });
+      B['tail' + (balls.length - 1)].tip = add(Hc, [0, balls[2][1] - 0.05, balls[2][2] - 0.02]);
+      G.tail = 0.03;
+    } else if (L.hairStyle === 'twinsen') {
       // high, hooked ponytail swept back from the crown
       // (it leaves the back of the crown almost level, so from the front it reads as a tuft, not a bun)
       const p0 = add(Hc, [0, (L.skull === 'egg' ? 0.14 : 0.115) * hs, (L.skull === 'egg' ? -0.12 : -0.11) * hs]);
@@ -314,7 +323,20 @@ function design(L) {
     const t = Math.min(1, (top - y) / Math.max(0.15, top - hemY));
     return Math.sin(Math.atan2(x, z) * 9 + t * 1.5) * amp * t;
   };
-  if (L.outfit === 'tw') {
+  if (L.outfit === 'lba') {
+    // LBA2's in-game Twinsen (measured on the original model, fractions of the height H ≈ 2.1): a cape-like
+    // upper robe from flat shoulders (±0.12 H at 0.74 H) whose sides are the sleeves (they hang from the
+    // shoulders to 0.41 H, out to ±0.21 H); a thin orange belt at 0.41–0.48 H; a nearly straight robe from the
+    // belt to the ankles (±0.16 H wide, ±0.13 H deep); the neck shows above the collar.
+    const HH = 2.1, f = (v) => v * HH;
+    e([0, f(0.725), f(0.012)], [f(0.118), f(0.03), f(0.07)], 'torso', 'tunic', 'tunic');
+    ccone(f(0.735), f(0.47), f(0.112), f(0.1), 'torso', 'tunic', 'tunic', { sz: 0.66, cz: f(0.03) });
+    ccone(f(0.47), hemY, f(0.112), hemR, 'skirt', 'tunic', 'tunic', { sz: L.skirtDepth || 0.8, cz: f(0.015), wobble: folds(f(0.44), 0.01) });
+    ccone(hemY + 0.035, hemY, hemR * 0.995, hemR + 0.004, 'skirt', 'tunicTrim', 'hem', { sz: L.skirtDepth || 0.8, cz: f(0.015), round: 0.006 });
+    G.hem = 0.006;
+    P.push({ type: 'ccone', c: [0, f(0.445), f(0.03)], h: f(0.033), rt: f(0.108), rb: f(0.11), round: 0.008, sz: 0.74, bone: 'torso', mat: 'belt', group: 'belt' });
+    G.belt = 0.004;
+  } else if (L.outfit === 'tw') {
     // Twinsen (LBA2 in-game model + the classic render): ONE continuous tunic. A soft upper body whose
     // width mostly comes from the bell sleeves hanging over it (no ball shoulders: a sloped yoke runs from
     // the collar to the shoulder points), a clear waist with a thin orange belt, and a skirt that flares
@@ -403,7 +425,15 @@ function design(L) {
     const g = 'arm' + s;
     G[g] = 0.03;
     const thick = (grobo ? 1.35 : 1) * slim * (kid ? 0.95 : 1);
-    if (L.outfit === 'tw' && L.sleeve === 'puff') {
+    if (L.outfit === 'lba') {
+      // the cape's sides: a broad, flat sleeve hanging from the shoulder, its hem cut level at 0.41 H
+      const HH = 2.1;
+      // (a slanted wedge from the neck line out to the hem's outer corner, cut level at the hem: with the torso
+      // it makes the original's trapezoid — a straight shoulder slope from ±0.12 H at 0.74 H to ±0.21 H at 0.41 H)
+      cone([sx * 0.085 * HH, 0.715 * HH, 0.02 * HH], [sx * 0.155 * HH, 0.43 * HH, 0.025 * HH], 0.03 * HH, 0.062 * HH, 'sh' + s, 'tunic', g, { sz: 1.45, cutBelow: 0.41 * HH });
+      cone(el, add(hd, [0, 0.01, 0]), 0.03, 0.026, 'el' + s, 'skin', g + 'f');
+      G[g] = 0.03; G[g + 'f'] = 0.02;
+    } else if (L.outfit === 'tw' && L.sleeve === 'puff') {
       // the classic render: a huge rounded puff hanging from the shoulder — narrow at the top, widest around
       // the elbow, closing again at the wrist where the hand comes out (no shoulder pads: the volume is cloth)
       const sw = L.sleeveW || 1;
@@ -499,11 +529,11 @@ function design(L) {
   const waistY = ty - 0.06;
   const paint = (p, m, col) => {
     // LBA2 robe: the lower robe reads darker than the top
-    if ((L.outfit === 'robe2' || L.outfit === 'tw') && m === 'tunic' && p.y < waistY) col.multiplyScalar(0.8 + 0.12 * Math.min(1, p.y / waistY));
+    if ((L.outfit === 'robe2' || L.outfit === 'tw' || L.outfit === 'lba') && m === 'tunic' && p.y < waistY) col.multiplyScalar(0.8 + 0.12 * Math.min(1, p.y / waistY));
     if (m === 'fur' && L.furDark && p.y > Hc[1] + 0.1 * hs) col.lerp(new THREE.Color(L.furDark), Math.min(1, (p.y - Hc[1] - 0.1) * 4));
   };
   const top = B.head.tip[1] + (bunny ? 0.5 : L.hairStyle === 'twinsen' ? 0.34 : 0.2);
-  const halfW = L.outfit === 'bell' || L.outfit === 'robe2' || L.outfit === 'tw' ? 0.62 : grobo ? 0.72 : 0.55;
+  const halfW = L.outfit === 'bell' || L.outfit === 'robe2' || L.outfit === 'tw' || L.outfit === 'lba' ? 0.62 : grobo ? 0.72 : 0.55;
   return {
     prims: P, groups: G, joinK: 0.012, bones: B, chains, colors, paint, hard: ['belt', 'buckle', 'visor', 'brassDark', 'hardhat'],
     bounds: { min: [-halfW, 0.0, -0.55], max: [halfW, top, 0.5] },
@@ -522,6 +552,12 @@ function handDef(L, sx) {
   const m = L.race === 'bunny' ? 'fur' : 'skin';
   const P = [];
   const add2 = (o) => P.push({ bone: 'h', mat: m, group: 'h', ...o });
+  if (L.handBall) {
+    // LBA2: the hands are plain balls
+    add2({ type: 'ell', c: [0, -0.045, 0.012], r: [L.handBall, L.handBall, L.handBall] });
+    return { key: `handball-${L.handBall}-${L.skin}`, prims: P, groups: { h: 0.01 }, colors: { skin: L.skin || '#f0c49b', fur: L.fur || '#fff' },
+      bounds: { min: [-0.1, -0.15, -0.09], max: [0.1, 0.06, 0.11] }, cell: 0.004 };
+  }
   add2({ type: 'cone', a: [0, 0.035 * k, 0], b: [0, -0.02 * k, 0.004], r1: 0.022 * k, r2: 0.025 * k });
   add2({ type: 'ell', c: [0, -0.055 * k, 0.008 * k], r: [0.022 * k, 0.048 * k, 0.04 * k] });
   for (let i = 0; i < 4; i++) {
@@ -597,7 +633,7 @@ function addFace(def, bones, L) {
     const g = new THREE.Group();
     g.position.set(sx * F.eyeX, Hc[1] - hp[1] + F.eyeY, Hc[2] - hp[2] + F.eyeZ);
     const r = F.eyeR;
-    const w = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), matWhite);
+    const w = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), L.eyeWhite ? new THREE.MeshStandardMaterial({ color: L.eyeWhite, roughness: 0.35 }) : matWhite);
     w.scale.set(1, 1.12 * (L.eyeOval || 1), 0.78);
     g.add(w);
     const iris = new THREE.Mesh(new THREE.SphereGeometry(r * 0.5, 12, 8), new THREE.MeshStandardMaterial({ color: L.eyes || '#3a2a1a', roughness: 0.25 }));
@@ -707,7 +743,7 @@ function addMedallion(def, bones, L = {}) {
   g.position.set(0, my, mz);
   g.rotation.x = -0.2;
   const R0 = L.medalR ?? (L.chain ? 0.06 : 0.045);
-  const disc = new THREE.Mesh(new THREE.CylinderGeometry(R0, R0, 0.012, 24), gold);
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(R0, R0, 0.012, L.medalSides || 24), gold);
   disc.rotation.x = Math.PI / 2;
   g.add(disc);
   const rim = new THREE.Mesh(new THREE.TorusGeometry(R0 - 0.002, 0.0055, 6, 24), gold);

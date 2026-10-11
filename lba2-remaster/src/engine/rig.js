@@ -288,7 +288,7 @@ export class Rig {
       // the swing of the planted leg (2·L·sin amp), so a planted foot doesn't slide
       const amp = a === 'run' ? 0.62 + Math.min(speed, 8) * 0.03 : a === 'sneak' ? 0.42 : 0.42 + Math.min(speed, 4) * 0.035;
       const legL = this.hipsRest * this.root.scale.y * 0.95;
-      const stride = 4 * legL * Math.sin(amp) * (a === 'run' ? 1.25 : 1); // runs have a flight phase
+      const stride = 4 * legL * Math.sin(amp) * (a === 'run' ? 1.55 : 1); // runs have a flight phase (LBA2: 1.9 H per cycle)
       // the sneak lingers on each contact (careful placing), the others are even
       const dph = (speed * dt / stride) * Math.PI * 2;
       this.phase += a === 'sneak' ? dph * (0.55 + 0.9 * Math.abs(Math.sin(this.phase))) : dph;
@@ -321,7 +321,7 @@ export class Rig {
         T.kneeL += 0.65; T.kneeR += 0.65; T.legL -= 0.35; T.legR -= 0.35;
       }
     } else if (a === 'idle' || a === 'talk' || a === 'listen') {
-      const b = Math.sin(this.t * 1.7);
+      const b = Math.sin(this.t * 2.99); // LBA2's idle loop: 2.1 s
       hipsY = 0.95 + b * 0.006;
       torsoX = -0.02 + b * 0.012;
       // slow weight shift from one leg to the other (every ~7 s)
@@ -389,15 +389,15 @@ export class Rig {
       // in a long robe: a low front kick (the cloth can't follow a high one; the leg would tear through it)
       if (this.j.skirt) { T.legR = -0.85 * k; T.kneeR = 0.35 * (1 - k) + 0.05; T.kneeL = 0.45; torsoX = -0.4 * k; hipsY = 0.92; }
     } else if (a === 'throw') {
-      // windup (arm cocked behind the head, body twisted back) → release (whip
-      // forward, step into it) → recovery (follow-through, settle)
+      // LBA2's throw (1.22 s there, 1.0 s here): a slow windup with the ball held high behind the head →
+      // the whip and release at the half → follow-through and settle
       const t = this.actionT;
-      if (t < 0.18) {
-        const k = Math.min(1, t / 0.1);
-        T.armR = -3.0 * k; T.elR = -1.7 * k; T.armL = -0.9 * k; T.elL = -0.5;
-        torsoY = 0.55 * k; torsoX = -0.12 * k; headY = -0.3 * k;
-        T.legL = -0.15; T.legR = 0.2; T.kneeL = 0.15; T.kneeR = 0.25; hipsY = 0.93;
-      } else if (t < 0.32) {
+      if (t < 0.5) {
+        const k = Math.min(1, t / 0.4), e = k * k * (3 - 2 * k);
+        T.armR = -3.0 * e; T.elR = -1.7 * e; T.armL = -0.9 * e; T.elL = -0.5;
+        torsoY = 0.55 * e; torsoX = -0.12 * e; headY = -0.3 * e;
+        T.legL = -0.15; T.legR = 0.2; T.kneeL = 0.15 + 0.1 * e; T.kneeR = 0.25; hipsY = 0.95 - 0.03 * e;
+      } else if (t < 0.68) {
         T.armR = -1.25; T.elR = -0.05; T.armL = 0.45; T.elL = -0.7;
         torsoY = -0.5; torsoX = 0.22; headY = 0.25;
         T.legL = -0.5; T.legR = 0.4; T.kneeL = 0.35; T.kneeR = 0.15; hipsY = 0.9;

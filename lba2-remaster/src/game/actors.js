@@ -113,7 +113,9 @@ export class Hero extends Actor {
 
     const mv = wheel ? { x: 0, y: 0 } : input.move();
     const beh = this.behaviour;
-    const maxSpeed = { normal: 3.4, athletic: 7.2, aggressive: 3.9, discreet: 1.8 }[beh] * (this.speedK || 1);
+    // LBA2 (measured on the original anims): walk 0.93 H/s, athletic run 2.29 H/s → with H ≈ 2.1 m about 2 and
+    // 4.8 m/s; a little faster here so the bigger islands stay pleasant to cross
+    const maxSpeed = { normal: 2.4, athletic: 5.4, aggressive: 2.7, discreet: 1.4 }[beh] * (this.speedK || 1);
     this.hiding = beh === 'discreet' && input.down('action') && this.onGround && !wheel;
     let wx = 0, wz = 0, turning = 0;
     // one-shot actions (use, pick up, open door, knockdown/get-up) own the body
@@ -122,12 +124,12 @@ export class Hero extends Actor {
       if (this.actCb && this.actT <= this.actFireT) { const cb = this.actCb; this.actCb = null; cb(); }
       if (this.actT <= 0 && this.actNext) { const n = this.actNext; this.actNext = null; this.act(...n); }
     }
-    const locked = this.attackT > 0 || this.hiding || this.hurtT > 0.15 || this.actT > 0 || (this.throwT > 0.4);
+    const locked = this.attackT > 0 || this.hiding || this.hurtT > 0.15 || this.actT > 0 || (this.throwT > 0.45);
 
     if (!locked) {
       if (g.settings.controls === 'classic') {
         // LBA tank controls: left/right rotate, up/down walk
-        this.angle -= mv.x * 3.4 * dt;
+        this.angle -= mv.x * 1.9 * dt; // LBA2 turns in place at ~100°/s
         turning = -mv.x;
         const f = mv.y > 0 ? mv.y : mv.y * 0.55;
         wx = Math.sin(this.angle) * f * maxSpeed;
@@ -221,7 +223,7 @@ export class Hero extends Actor {
     // the ball leaves the hand at the end of the windup
     if (this.throwT > 0) {
       this.throwT -= dt;
-      if (this.throwPending && this.throwT <= 0.42) { this.throwPending = false; g.ball.launch(this, this.throwBeh, this.throwLevel, this.throwStrong); g.audio.play('throw'); }
+      if (this.throwPending && this.throwT <= 0.5) { this.throwPending = false; g.ball.launch(this, this.throwBeh, this.throwLevel, this.throwStrong); g.audio.play('throw'); }
     }
 
     // animation state
@@ -232,7 +234,7 @@ export class Hero extends Actor {
     else if (this.throwT > 0) anim = 'throw';
     else if (!this.onGround || this.sliding) anim = this.vy > 0.5 ? 'jump' : 'fall';
     else if (this.hiding) anim = 'hide';
-    else if (this.speed > 0.3) anim = beh === 'discreet' ? 'sneak' : this.speed > 4.5 ? 'run' : 'walk';
+    else if (this.speed > 0.3) anim = beh === 'discreet' ? 'sneak' : this.speed > 3.6 ? 'run' : 'walk';
     else if (Math.abs(turning) > 0.5) anim = turning > 0 ? 'turnR' : 'turnL';
     this.rig.play(anim);
     this.rig.update(dt, this.speed);
@@ -279,7 +281,7 @@ export class Hero extends Actor {
     if (!this.hasBall || g.ball.state !== 'idle' || this.throwT > 0 || this.hiding || this.actT > 0) return;
     let strong = true;
     if (this.mp >= 1) this.mp -= 1; else { strong = false; g.hud.toast('toast_nomp'); }
-    this.throwT = 0.6;
+    this.throwT = 1.0; // LBA2's throw: 1.22 s, the ball leaves the hand halfway (0.62 s)
     this.throwPending = true; this.throwBeh = this.behaviour; this.throwLevel = strong ? this.magicLevel : 1; this.throwStrong = strong;
     this.rig.play('throw'); this.rig.actionT = 0;
     g.ball.holdIn(this);

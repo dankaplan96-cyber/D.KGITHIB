@@ -135,7 +135,7 @@ export class Mite extends Actor {
       this.rig.play('idle');
     } else if (this.state === 'chase') {
       this.angle = dampAngle(this.angle, this.angleTo(hero), 8, dt);
-      sp = d > 1.6 ? 3.2 : 0;
+      sp = d > 1.6 ? 2.5 : 0;
       this.rig.play('walk');
       if (d < 1.9 && this.coolT <= 0 && this.hurtT <= 0) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
       if (d > 14) this.state = 'idle';
@@ -321,7 +321,7 @@ export class Drone extends Actor {
       face = this.angleTo(hero);
       if (sees) { this.lostT = 0; this.last = { x: hero.pos.x, z: hero.pos.z }; } else this.lostT += dt;
       // keep a firing distance of 4–6 m
-      sp = d > 6 ? 2.8 : d < 3.5 ? -1.6 : 0;
+      sp = d > 6 ? 2.2 : d < 3.5 ? -1.4 : 0;
       if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
       if (this.lostT > 3) { this.state = 'search'; this.stateT = 0; }
       if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 24) { this.state = 'search'; this.stateT = 0; }
