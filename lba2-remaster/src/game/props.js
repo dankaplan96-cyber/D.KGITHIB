@@ -1693,3 +1693,598 @@ export function pressureTank(k, { l = 1.8, r = 0.45, color = '#3f8a86' } = {}) {
   k.add(rbox(0.36, 0.14, 0.01, 0.005), br, 0.4, r + 0.25, r + 0.005);
   return { hw: l / 2 + r * 0.8, hd: r + 0.05, top: r * 2 + 0.6 };
 }
+
+// ================================================================ Baldino's workshop & the lighthouse lamp room
+// Painted sheets (blueprints, chalk diagrams, dial faces, the lamp room's panorama) and the inventor's
+// clutter: workbench with vice, pegboard of tools, pot-bellied stove, curio shelves of jars, coils and
+// bulbs, a half-built flying machine, the planet model in its cracked crystal shell, the radio sets.
+const chalkStroke = (x, r, pts, w = 2.2, col = 'rgba(240,240,228,0.85)') => {
+  x.strokeStyle = col; x.lineWidth = w; x.lineCap = x.lineJoin = 'round';
+  x.beginPath(); pts.forEach(([a, b], i) => { const j = () => (r() - 0.5) * 1.6; if (i) x.lineTo(a + j(), b + j()); else x.moveTo(a, b); }); x.stroke();
+};
+const scrawl = (x, r, x0, y0, w, lines, lh, col, size = 1.6) => {
+  x.strokeStyle = col; x.lineWidth = size; x.lineCap = 'round';
+  for (let i = 0; i < lines; i++) {
+    let xx = x0; const end = x0 + w * (0.55 + r() * 0.45);
+    while (xx < end) { const ww = 8 + r() * 26; x.beginPath(); x.moveTo(xx, y0 + i * lh); for (let s = 0; s < ww; s += 3) x.lineTo(xx + s, y0 + i * lh - Math.abs(Math.sin(s * 0.9 + i)) * size * 2.4); x.stroke(); xx += ww + 6; }
+  }
+};
+function gearPath(x, cx, cy, r, n, hole = 0.3) {
+  const ri = r * (1 - Math.min(0.22, 2.4 / n));
+  x.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * Math.PI * 2, s = (Math.PI * 2) / n;
+    for (const [rr, f] of [[ri, 0], [r, 0.2], [r, 0.45], [ri, 0.65]]) x.lineTo(cx + Math.cos(a + s * f) * rr, cy + Math.sin(a + s * f) * rr);
+  }
+  x.closePath(); x.moveTo(cx + r * hole, cy); x.arc(cx, cy, r * hole, 0, Math.PI * 2);
+}
+CANV.chalk = () => tex('chalkboard', () => canvasTex(640, 400, (x, W, H) => {
+  const r = rng(404);
+  x.fillStyle = '#2c3a33'; x.fillRect(0, 0, W, H);
+  blotch(x, W, H, r, 40, ['#3a4a42', '#24302a', '#56645c'], 20, 90, 0.35);
+  // old wiped-out smears
+  x.strokeStyle = 'rgba(220,226,210,0.07)'; x.lineWidth = 26; for (let i = 0; i < 9; i++) { x.beginPath(); x.moveTo(r() * W, r() * H); x.quadraticCurveTo(r() * W, r() * H, r() * W, r() * H); x.stroke(); }
+  const ch = 'rgba(240,240,228,0.88)', yel = 'rgba(250,228,140,0.9)', pink = 'rgba(250,170,200,0.85)', cy = 'rgba(160,230,250,0.85)';
+  // the planet in its shell, with the crack and the bore
+  const px = 140, py = 190;
+  const circ = (rr, col, w = 2.4, dash = 0) => { const pts = []; for (let i = 0; i <= 48; i++) { const a = (i / 48) * Math.PI * 2; pts.push([px + Math.cos(a) * rr, py + Math.sin(a) * rr]); } if (dash) x.setLineDash([9, 7]); chalkStroke(x, r, pts, w, col); x.setLineDash([]); };
+  circ(56, ch, 3); circ(92, cy, 2.4, 1); circ(100, cy, 1.6, 1);
+  chalkStroke(x, r, [[px + 60, py - 66], [px + 70, py - 58], [px + 64, py - 50], [px + 76, py - 44], [px + 70, py - 36]], 3, pink);
+  chalkStroke(x, r, [[px - 4, py - 56], [px - 4, py - 100], [px - 12, py - 92], [px - 4, py - 100], [px + 4, py - 92]], 2.2, yel);
+  for (let i = 0; i < 4; i++) { const a = -2.6 + i * 0.5; chalkStroke(x, r, [[px + Math.cos(a) * 30, py + Math.sin(a) * 26], [px + Math.cos(a + 0.3) * 18, py + Math.sin(a + 0.4) * 14]], 2, ch); }
+  x.font = 'italic 22px Georgia, serif'; x.fillStyle = yel; x.fillText('Ø ≈ 2·10⁴', px - 60, py + 140); x.fillStyle = pink; x.fillText('!!', px + 82, py - 74);
+  // gear train in the middle
+  x.strokeStyle = ch; x.lineWidth = 2.2;
+  gearPath(x, 330, 130, 46, 16); x.stroke(); gearPath(x, 398, 168, 30, 11); x.stroke(); gearPath(x, 440, 116, 22, 8); x.stroke();
+  chalkStroke(x, r, [[330, 130], [398, 168]], 1.2, yel); chalkStroke(x, r, [[398, 168], [440, 116]], 1.2, yel);
+  x.font = 'italic 20px Georgia, serif'; x.fillStyle = ch; x.fillText('16 : 11 : 8', 300, 224);
+  // the key: three dials and a toothed cylinder
+  for (const [i, n] of [[0, 'I'], [1, 'II'], [2, 'III']]) {
+    const cx = 500 + i * 46, cyy = 278;
+    chalkStroke(x, r, Array.from({ length: 25 }, (_, j) => [cx + Math.cos(j / 24 * Math.PI * 2) * 18, cyy + Math.sin(j / 24 * Math.PI * 2) * 18]), 2.2, ch);
+    chalkStroke(x, r, [[cx, cyy], [cx + Math.cos(-1.2 + i * 0.9) * 15, cyy + Math.sin(-1.2 + i * 0.9) * 15]], 2.6, yel);
+    x.font = '16px Georgia, serif'; x.fillStyle = ch; x.fillText(n, cx - 6, cyy + 38);
+  }
+  chalkStroke(x, r, [[470, 330], [610, 330], [610, 352], [470, 352], [470, 330]], 2.4, ch);
+  for (let i = 0; i < 8; i++) chalkStroke(x, r, [[480 + i * 16, 352], [484 + i * 16, 362], [488 + i * 16, 352]], 2, ch);
+  x.font = 'bold 30px Georgia, serif'; x.fillStyle = pink; x.fillText('?', 616, 300);
+  // formulae, arrows and scribbles
+  x.font = 'italic 24px Georgia, serif'; x.fillStyle = ch;
+  x.fillText('∑ ω²·r = k', 268, 300); x.fillText('Δt ≈ 3/7', 268, 340); x.fillText('E·λ', 20, 46);
+  chalkStroke(x, r, [[248, 190], [278, 172], [268, 168], [278, 172], [276, 182]], 2, ch);
+  scrawl(x, r, 470, 40, 150, 4, 22, ch, 1.4); scrawl(x, r, 30, 360, 180, 1, 20, ch, 1.4);
+  chalkStroke(x, r, [[466, 18], [466, 380]], 1.2, 'rgba(240,240,228,0.25)');
+  for (let i = 0; i < 3000; i++) { x.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.05)'; x.fillRect(r() * W, r() * H, 2, 2); }
+}));
+// pinned plans: 'flyer' (blueprint), 'key', 'mill', 'radio' (ink on yellowed paper)
+CANV.plan = (kind = 'flyer') => tex('plan' + kind, () => canvasTex(384, 512, (x, W, H) => {
+  const r = rng(kind.length * 17 + 3);
+  const blue = kind === 'flyer';
+  x.fillStyle = blue ? '#24508e' : '#eadcb4'; x.fillRect(0, 0, W, H);
+  blotch(x, W, H, r, 18, blue ? ['#2c5c9e', '#1c4078'] : ['#d8c490', '#f4ead0', '#c8b07a'], 30, 110, 0.35);
+  const ink = blue ? 'rgba(232,244,255,0.92)' : 'rgba(46,36,26,0.88)', red = blue ? 'rgba(255,200,120,0.95)' : 'rgba(170,40,30,0.85)';
+  if (blue) for (let i = 0; i <= W; i += 16) { x.fillStyle = i % 64 ? 'rgba(200,230,255,0.07)' : 'rgba(200,230,255,0.18)'; x.fillRect(i, 0, 1, H); x.fillRect(0, i, W, 1); }
+  x.strokeStyle = ink; x.fillStyle = ink; x.lineWidth = 2.2; x.lineJoin = x.lineCap = 'round';
+  x.strokeRect(14, 14, W - 28, H - 28);
+  if (kind === 'flyer') {
+    // side view: teardrop fuselage, propeller, wing, tail; and a plan view below
+    x.beginPath(); x.moveTo(300, 150); x.bezierCurveTo(300, 110, 200, 104, 120, 132); x.lineTo(60, 146); x.lineTo(120, 160); x.bezierCurveTo(200, 190, 300, 190, 300, 150); x.stroke();
+    x.beginPath(); x.ellipse(306, 150, 6, 58, 0, 0, 7); x.stroke(); x.beginPath(); x.arc(306, 150, 7, 0, 7); x.fill();
+    x.beginPath(); x.moveTo(84, 140); x.lineTo(64, 96); x.lineTo(96, 100); x.lineTo(112, 134); x.stroke();
+    x.beginPath(); x.moveTo(176, 118); x.quadraticCurveTo(196, 96, 224, 112); x.stroke();
+    for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(140 + i * 26, 128 - i * 1.5); x.lineTo(140 + i * 26, 168 + i); x.stroke(); }
+    x.beginPath(); x.moveTo(110, 300); x.lineTo(300, 300); x.lineTo(316, 320); x.lineTo(300, 340); x.lineTo(110, 340); x.lineTo(70, 320); x.closePath(); x.stroke();
+    x.beginPath(); x.moveTo(170, 300); x.lineTo(150, 226); x.lineTo(230, 226); x.lineTo(240, 300); x.moveTo(170, 340); x.lineTo(150, 414); x.lineTo(230, 414); x.lineTo(240, 340); x.stroke();
+    for (let i = 1; i < 5; i++) { x.beginPath(); x.moveTo(150 + i * 18, 228); x.lineTo(166 + i * 15, 300); x.stroke(); }
+    x.setLineDash([6, 5]); x.beginPath(); x.moveTo(40, 200); x.lineTo(344, 200); x.stroke(); x.setLineDash([]);
+    x.font = 'bold 13px monospace'; x.fillText('B-7  "LIBELLULE"', 30, 470); x.fillText('1:20', 300, 470);
+    x.lineWidth = 1; x.beginPath(); x.moveTo(60, 196 - 12); x.lineTo(306, 196 - 12); x.stroke();
+  } else if (kind === 'key') {
+    // exploded view of a three-dial key
+    x.beginPath(); x.ellipse(192, 120, 60, 18, 0, 0, 7); x.stroke(); x.beginPath(); x.moveTo(132, 120); x.lineTo(132, 190); x.moveTo(252, 120); x.lineTo(252, 190); x.stroke(); x.beginPath(); x.ellipse(192, 190, 60, 18, 0, 0, Math.PI); x.stroke();
+    for (let i = 0; i < 3; i++) { const y = 250 + i * 46; x.beginPath(); x.ellipse(192, y, 52, 14, 0, 0, 7); x.stroke(); for (let t = 0; t < 12; t++) { const a = (t / 12) * Math.PI * 2; x.beginPath(); x.moveTo(192 + Math.cos(a) * 52, y + Math.sin(a) * 14); x.lineTo(192 + Math.cos(a) * 60, y + Math.sin(a) * 17); x.stroke(); } x.font = 'italic 18px Georgia, serif'; x.fillText(['I', 'II', 'III'][i], 268, y + 6); }
+    x.setLineDash([5, 5]); x.beginPath(); x.moveTo(192, 60); x.lineTo(192, 400); x.stroke(); x.setLineDash([]);
+    x.beginPath(); x.moveTo(176, 400); x.lineTo(176, 450); x.lineTo(186, 460); x.lineTo(198, 450); x.lineTo(208, 460); x.lineTo(208, 400); x.stroke();
+    x.strokeStyle = red; x.fillStyle = red; x.lineWidth = 3; x.beginPath(); x.arc(192, 120, 22, 0, 7); x.stroke(); x.font = 'italic 16px Georgia, serif'; x.fillText('cristal', 222, 82);
+    x.fillStyle = ink; scrawl(x, r, 30, 40, 120, 2, 16, ink, 1.2);
+  } else if (kind === 'mill') {
+    x.lineWidth = 2; gearPath(x, 140, 170, 70, 20); x.stroke(); gearPath(x, 250, 140, 42, 12); x.stroke(); gearPath(x, 250, 260, 30, 9); x.stroke();
+    x.beginPath(); x.moveTo(60, 380); x.lineTo(320, 380); x.moveTo(190, 380); x.lineTo(190, 300); x.lineTo(150, 260); x.stroke();
+    x.strokeStyle = red; x.lineWidth = 3; x.beginPath(); x.moveTo(250, 260); x.lineTo(320, 320); x.stroke(); x.beginPath(); x.arc(320, 320, 8, 0, 7); x.stroke();
+    x.fillStyle = ink; scrawl(x, r, 40, 420, 280, 3, 18, ink, 1.2);
+  } else {
+    // circuit with three valves feeding an aerial
+    for (let i = 0; i < 3; i++) { const cx = 90 + i * 100; x.beginPath(); x.arc(cx, 200, 30, 0, 7); x.stroke(); x.beginPath(); x.moveTo(cx - 14, 214); x.lineTo(cx + 14, 214); x.moveTo(cx - 14, 192); x.lineTo(cx + 14, 192); x.moveTo(cx, 182); x.lineTo(cx, 170); x.stroke(); x.beginPath(); x.moveTo(cx, 170); x.lineTo(cx, 120); x.lineTo(cx + 100 > 300 ? 330 : cx + 100, 120); x.stroke(); }
+    x.beginPath(); x.moveTo(330, 120); x.lineTo(330, 50); x.moveTo(310, 50); x.lineTo(350, 50); x.moveTo(316, 60); x.lineTo(344, 60); x.moveTo(322, 70); x.lineTo(338, 70); x.stroke();
+    for (let i = 0; i < 6; i++) { x.beginPath(); x.moveTo(60 + i * 40, 300); x.lineTo(68 + i * 40, 290); x.lineTo(76 + i * 40, 310); x.lineTo(84 + i * 40, 300); x.stroke(); }
+    x.beginPath(); x.moveTo(40, 300); x.lineTo(340, 300); x.stroke();
+    x.fillStyle = ink; scrawl(x, r, 40, 360, 300, 5, 20, ink, 1.2);
+    x.strokeStyle = red; x.lineWidth = 3; x.beginPath(); x.ellipse(190, 200, 140, 52, 0, 0, 7); x.stroke();
+  }
+  if (!blue) { x.fillStyle = ink; scrawl(x, r, 30, H - 60, 200, 2, 16, ink, 1.2); }
+  ageing(x, W, H, r, blue ? 10 : 22);
+  for (let i = 0; i < 2000; i++) { x.fillStyle = r() < 0.5 ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)'; x.fillRect(r() * W, r() * H, 2, 2); }
+}));
+// tuning dial face with three marked positions: sun, wave, star at -60°, 0°, +60° from the top
+CANV.tuning = (ring = '#3a6fb0') => tex('tuning' + ring, () => canvasTex(256, 256, (x) => {
+  x.fillStyle = '#efe6cc'; x.fillRect(0, 0, 256, 256);
+  const g = x.createRadialGradient(110, 100, 10, 128, 128, 130); g.addColorStop(0, 'rgba(255,255,255,0.4)'); g.addColorStop(1, 'rgba(110,80,40,0.35)'); x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  x.translate(128, 128);
+  x.lineWidth = 16; x.strokeStyle = ring; x.beginPath(); x.arc(0, 0, 104, -Math.PI / 2 - 1.3, -Math.PI / 2 + 1.3); x.stroke();
+  x.strokeStyle = '#2a2018';
+  for (let i = 0; i <= 26; i++) { const a = -Math.PI / 2 - 1.3 + (i / 26) * 2.6, r0 = i % 2 ? 92 : 84; x.lineWidth = i % 2 ? 1.5 : 3; x.beginPath(); x.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); x.lineTo(Math.cos(a) * 112, Math.sin(a) * 112); x.stroke(); }
+  // the three marked positions: sun (0), wave (1), star (2)
+  const sym = [
+    (cx, cy) => { x.fillStyle = '#d88a1a'; x.beginPath(); x.arc(cx, cy, 11, 0, 7); x.fill(); x.strokeStyle = '#d88a1a'; x.lineWidth = 3.5; for (let j = 0; j < 8; j++) { const b = (j / 8) * Math.PI * 2; x.beginPath(); x.moveTo(cx + Math.cos(b) * 15, cy + Math.sin(b) * 15); x.lineTo(cx + Math.cos(b) * 22, cy + Math.sin(b) * 22); x.stroke(); } },
+    (cx, cy) => { x.strokeStyle = '#2a5a9a'; x.lineWidth = 4.5; x.lineCap = 'round'; for (const dy of [-7, 7]) { x.beginPath(); for (let j = 0; j <= 20; j++) x.lineTo(cx - 20 + j * 2, cy + dy + Math.sin(j * 0.63) * 5); x.stroke(); } },
+    (cx, cy) => { x.fillStyle = '#5a3a9a'; x.beginPath(); for (let j = 0; j < 10; j++) { const b = -Math.PI / 2 + (j / 10) * Math.PI * 2, rr = j % 2 ? 9 : 21; x.lineTo(cx + Math.cos(b) * rr, cy + Math.sin(b) * rr); } x.fill(); },
+  ];
+  sym.forEach((f, i) => {
+    const a = -Math.PI / 2 + (i - 1) * (Math.PI / 3);
+    x.fillStyle = '#a8201a'; x.beginPath(); x.moveTo(Math.cos(a) * 118, Math.sin(a) * 118); x.lineTo(Math.cos(a - 0.09) * 96, Math.sin(a - 0.09) * 96); x.lineTo(Math.cos(a + 0.09) * 96, Math.sin(a + 0.09) * 96); x.fill();
+    f(Math.cos(a) * 60, Math.sin(a) * 60);
+  });
+  x.lineWidth = 8; x.strokeStyle = 'rgba(40,30,20,0.45)'; x.beginPath(); x.arc(0, 0, 124, 0, 7); x.stroke();
+}));
+// the lamp room's glazing: sky, sea horizon and the gallery railing outside
+CANV.pano = () => tex('lamppano', () => {
+  const t = canvasTex(1024, 256, (x, W, H) => {
+    const r = rng(88);
+    const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#7fb6ea'); g.addColorStop(0.55, '#d8ecf8'); g.addColorStop(0.62, '#e8f2f8'); g.addColorStop(0.63, '#4a90c8'); g.addColorStop(1, '#2a6aa4');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < 18; i++) { x.fillStyle = `rgba(255,255,255,${0.5 + r() * 0.35})`; const cx = r() * W, cy = 20 + r() * 110, rw = 40 + r() * 90; for (let j = 0; j < 4; j++) { x.beginPath(); x.ellipse(cx + (j - 1.5) * rw * 0.4, cy - Math.sin(j) * 6, rw * 0.45, 9 + r() * 8, 0, 0, 7); x.fill(); } }
+    x.strokeStyle = 'rgba(255,255,255,0.45)'; x.lineWidth = 1.5; for (let i = 0; i < 70; i++) { const y = 166 + r() * 90, xx = r() * W; x.beginPath(); x.moveTo(xx, y); x.lineTo(xx + 8 + r() * 14, y); x.stroke(); }
+    // a far island and a sail
+    x.fillStyle = '#7a8a9a'; x.beginPath(); x.moveTo(600, 160); x.quadraticCurveTo(660, 140, 720, 160); x.fill();
+    x.fillStyle = '#f4f0e4'; x.beginPath(); x.moveTo(240, 168); x.lineTo(252, 146); x.lineTo(254, 168); x.fill();
+    // the gallery railing just outside
+    x.fillStyle = '#26303a';
+    x.fillRect(0, 190, W, 6); x.fillRect(0, 222, W, 4);
+    for (let xx = 8; xx < W; xx += 32) { x.fillRect(xx, 190, 4, 66); x.beginPath(); x.arc(xx + 2, 189, 4, 0, 7); x.fill(); }
+    x.fillStyle = 'rgba(0,0,0,0.25)'; x.fillRect(0, 248, W, 8);
+  });
+  t.wrapS = THREE.RepeatWrapping; t.repeat.set(2, 1);
+  return t;
+});
+// the planet's surface (equirectangular): sea, islands, the cloud band
+CANV.planet = () => tex('planetmap', () => canvasTex(256, 128, (x, W, H) => {
+  const r = rng(12);
+  x.fillStyle = '#2f6fb0'; x.fillRect(0, 0, W, H);
+  blotch(x, W, H, r, 30, ['#3a86c8', '#245a98'], 8, 30, 0.5);
+  for (let i = 0; i < 16; i++) { const cx = r() * W, cy = 18 + r() * (H - 36), rr = 4 + r() * 12; x.fillStyle = '#d8c488'; x.beginPath(); x.ellipse(cx, cy, rr * 1.3, rr, r() * 3, 0, 7); x.fill(); x.fillStyle = '#5f9e4a'; x.beginPath(); x.ellipse(cx, cy, rr * 0.9, rr * 0.65, r() * 3, 0, 7); x.fill(); }
+  x.fillStyle = 'rgba(240,240,250,0.55)'; x.fillRect(0, H / 2 - 4, W, 8);
+  x.fillStyle = 'rgba(255,255,255,0.8)'; x.fillRect(0, 0, W, 8); x.fillRect(0, H - 8, W, 8);
+}));
+// hardboard pegboard
+CANV.pegboard = () => tex('pegboard', () => {
+  const t = canvasTex(128, 128, (x, W, H) => {
+    x.fillStyle = '#a8784a'; x.fillRect(0, 0, W, H);
+    const r = rng(3); blotch(x, W, H, r, 8, ['#b88858', '#946640'], 10, 30, 0.4);
+    x.fillStyle = '#2a1a10'; for (let i = 8; i < W; i += 16) for (let j = 8; j < H; j += 16) { x.beginPath(); x.arc(i, j, 2.4, 0, 7); x.fill(); }
+  });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+});
+
+// gear wheel in the XY plane, extruded along z (centred), with a bore and lightening holes
+export function gearGeo(r, n = 12, th = 0.02, hole = 0.25) {
+  return slab(`gear${r3(r)},${n},${r3(hole)}`, (s) => {
+    const ri = r * (1 - Math.min(0.22, 2.4 / n));
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2, st = (Math.PI * 2) / n;
+      [[ri, 0], [r, 0.2], [r, 0.45], [ri, 0.65]].forEach(([rr, f], j) => { const px = Math.cos(a + st * f) * rr, py = Math.sin(a + st * f) * rr; if (!i && !j) s.moveTo(px, py); else s.lineTo(px, py); });
+    }
+    s.closePath();
+    const h = new THREE.Path(); h.absarc(0, 0, r * hole, 0, Math.PI * 2, true); s.holes.push(h);
+    if (r > 0.08) for (let i = 0; i < 4; i++) { const a = (i / 4) * Math.PI * 2 + 0.4, hh = new THREE.Path(); hh.absarc(Math.cos(a) * ri * 0.6, Math.sin(a) * ri * 0.6, ri * 0.17, 0, Math.PI * 2, true); s.holes.push(hh); }
+  }, th, Math.min(0.004, th / 4));
+}
+// helix of wire (coil) standing on y=0
+export function helixGeo(r, h, turns, wr, radial = 5) {
+  return cached(`hx${r3(r)},${r3(h)},${turns},${r3(wr)},${radial}`, () => {
+    const c = new THREE.Curve();
+    c.getPoint = (t, v = new THREE.Vector3()) => v.set(Math.cos(t * turns * Math.PI * 2) * r, t * h, Math.sin(t * turns * Math.PI * 2) * r);
+    const g = new THREE.TubeGeometry(c, Math.ceil(turns * 16), wr, radial, false);
+    g.userData.keepUV = true;
+    return g;
+  });
+}
+// light bulb standing on its cap at (x, y, z)
+export function bulb(k, x, y, z, s = 1, lit = false) {
+  k.add(lathe([[0.001, 0], [0.016 * s, 0], [0.019 * s, 0.008 * s], [0.017 * s, 0.016 * s], [0.019 * s, 0.024 * s], [0.017 * s, 0.032 * s], [0.02 * s, 0.036 * s], [0.001, 0.036 * s]], 8), MAT.brass(), x, y, z);
+  k.add(lathe([[0.018 * s, 0], [0.03 * s, 0.03 * s], [0.048 * s, 0.075 * s], [0.045 * s, 0.11 * s], [0.025 * s, 0.13 * s], [0.001, 0.135 * s]], 12), lit ? MAT.glow('#fff4d0', '#ffd890', 2.2) : MAT.glass('#f4f0e0', 0.4), x, y + 0.034 * s, z);
+  k.add(torus(0.014 * s, 0.003, 3, 8, Math.PI), MAT.glow('#ffc890', '#ff8a2a', lit ? 2.5 : 0.4), x, y + 0.09 * s, z);
+}
+// small hand tools lying flat (y = surface)
+export function wrench(k, x, y, z, ry = 0, s = 1, mat = null) {
+  const m = mat || MAT.steel();
+  k.at(x, y, z, ry, () => {
+    k.add(rbox(0.2 * s, 0.01, 0.025 * s, 0.004), m, 0, 0.006, 0);
+    k.add(torus(0.022 * s, 0.009 * s, 4, 10, Math.PI * 1.5), m, 0.11 * s, 0.008, 0, 0, { rx: Math.PI / 2, rz: 0.8 });
+    k.add(torus(0.018 * s, 0.008 * s, 4, 10), m, -0.11 * s, 0.008, 0, 0, { rx: Math.PI / 2 });
+  });
+}
+export function hammer(k, x, y, z, ry = 0) {
+  k.at(x, y, z, ry, () => {
+    k.add(cyl(0.012, 0.014, 0.3, 6), MAT.wood('honey'), 0, 0.014, 0, 0, { rz: Math.PI / 2 });
+    k.add(rbox(0.045, 0.04, 0.11, 0.01), MAT.iron(), 0.15, 0.022, 0);
+  });
+}
+export function screwdriver(k, x, y, z, ry = 0, c = '#c8452f') {
+  k.at(x, y, z, ry, () => {
+    k.add(lathe([[0.001, 0], [0.014, 0], [0.017, 0.03], [0.016, 0.09], [0.008, 0.1], [0.001, 0.1]], 8), MAT.paint(c, 0.4), 0, 0.016, 0, 0, { rz: Math.PI / 2 });
+    k.add(cyl(0.004, 0.004, 0.13, 5), MAT.steel(), -0.165, 0.016, 0, 0, { rz: Math.PI / 2 });
+  });
+}
+export function oilCan(k, x, y, z, ry = 0) {
+  k.at(x, y, z, ry, () => {
+    k.add(lathe([[0.001, 0], [0.06, 0], [0.065, 0.01], [0.06, 0.07], [0.03, 0.09], [0.012, 0.1], [0.001, 0.1]], 12), MAT.copper(), 0, 0, 0);
+    k.add(pipe([[0, 0.09, 0], [0.04, 0.16, 0], [0.12, 0.22, 0]], 0.006, 0.03, 5), MAT.brass(), 0, 0, 0);
+    k.add(torus(0.03, 0.006, 4, 8, Math.PI), MAT.brass(), -0.07, 0.06, 0, 0, { rz: Math.PI / 2 });
+  });
+}
+// heavy workbench: butcher-block top, vice at the front right, drawers, lower shelf; front +z
+export function workbench(k, { w = 2.4, d = 0.78, h = 0.9 } = {}) {
+  const m = MAT.wood('honey'), md = MAT.wood('dark'), br = MAT.brass();
+  k.add(rbox(w, 0.08, d, 0.02), m, 0, h - 0.04, 0, 0, { jit: true });
+  for (let i = 0; i < Math.floor(w / 0.12); i++) k.add(new THREE.BoxGeometry(0.004, 0.081, d - 0.02), md, -w / 2 + 0.12 * (i + 1), h - 0.04, 0);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(rbox(0.1, h - 0.08, 0.1, 0.015), md, sx * (w / 2 - 0.1), (h - 0.08) / 2, sz * (d / 2 - 0.1));
+  k.add(rbox(w - 0.14, 0.04, d - 0.14, 0.01), m, 0, 0.18, 0);
+  for (const sz of [-1, 1]) k.add(rbox(w - 0.2, 0.1, 0.04, 0.01), md, 0, h - 0.14, sz * (d / 2 - 0.1));
+  // a bank of drawers under the left end
+  for (let i = 0; i < 2; i++) { k.add(rbox(0.5, 0.15, 0.03, 0.01), m, -w / 2 + 0.45, h - 0.17 - i * 0.17, d / 2 - 0.06); k.add(torus(0.025, 0.006, 4, 8, Math.PI), br, -w / 2 + 0.45, h - 0.19 - i * 0.17, d / 2 - 0.04, 0, { rz: Math.PI }); }
+  k.add(rbox(0.54, 0.36, d - 0.2, 0.01), md, -w / 2 + 0.45, h - 0.26, 0);
+  // tool rack along the back edge: chisels and files standing in holes
+  k.add(rbox(w - 0.1, 0.06, 0.08, 0.01), md, 0, h + 0.03, -d / 2 + 0.05);
+  for (let i = 0; i < 9; i++) { const x = -w / 2 + 0.25 + i * 0.09; k.add(cyl(0.012, 0.014, 0.14, 6), MAT.wood(i % 2 ? 'red' : 'honey'), x, h + 0.12, -d / 2 + 0.05); k.add(cyl(0.004, 0.004, 0.06, 4), MAT.steel(), x, h + 0.02, -d / 2 + 0.05); }
+  // vice
+  k.at(w / 2 - 0.32, h, d / 2 - 0.08, 0, () => {
+    const ir = MAT.paint('#3a4a5a', 0.45), st = MAT.steel();
+    k.add(rbox(0.18, 0.06, 0.2, 0.012), ir, 0, 0.03, -0.04);
+    k.add(rbox(0.2, 0.11, 0.06, 0.012), ir, 0, 0.11, -0.06);
+    k.add(rbox(0.2, 0.11, 0.06, 0.012), ir, 0, 0.11, 0.1);
+    for (const z of [-0.025, 0.065]) k.add(rbox(0.19, 0.05, 0.012, 0.003), st, 0, 0.14, z);
+    k.add(rbox(0.12, 0.05, 0.14, 0.01), ir, 0, 0.05, 0.07);
+    k.add(cyl(0.014, 0.014, 0.24, 8), st, 0, 0.08, 0.18, 0, { rx: Math.PI / 2 });
+    k.add(cyl(0.008, 0.008, 0.24, 6), st, 0, 0.08, 0.3, 0, { rz: Math.PI / 2 });
+    for (const sx of [-1, 1]) k.add(sphere(0.016, 6, 4), st, sx * 0.12, 0.08, 0.3);
+    // a brass part clamped in the jaws
+    k.add(cyl(0.03, 0.03, 0.12, 12), br, 0, 0.2, 0.02, 0, { rz: Math.PI / 2 });
+  });
+  return { hw: w / 2, hd: d / 2 + 0.06, top: h };
+}
+// pegboard with hanging tools, faces +z (origin at the wall, board centre)
+export function toolBoard(k, w = 2.0, h = 0.8) {
+  const st = MAT.steel(), md = MAT.wood('dark');
+  k.add(rbox(w + 0.06, h + 0.06, 0.03, 0.01), md, 0, 0, 0.015);
+  const pm = MAT.map(CANV.pegboard(), 0.85); pm.map.repeat.set(w * 4, h * 4);
+  k.add(plane(w, h), pm, 0, 0, 0.032);
+  const z = 0.05;
+  // spanners by size, a saw, a hammer, pliers, a coil of wire, a brace drill
+  for (let i = 0; i < 5; i++) { const s = 0.6 + i * 0.12, x = -w / 2 + 0.15 + i * 0.09; k.add(rbox(0.02 * s, 0.2 * s, 0.008, 0.003), st, x, 0.1 - i * 0.012, z); k.add(torus(0.02 * s, 0.008 * s, 4, 10, Math.PI * 1.5), st, x, 0.1 - i * 0.012 + 0.11 * s, z, 0, { rz: -Math.PI / 4 }); k.add(torus(0.016 * s, 0.007 * s, 4, 10), st, x, 0.1 - i * 0.012 - 0.11 * s, z); }
+  k.at(-w / 2 + 0.85, 0.05, z, 0, () => { k.add(slab('sawblade', (s) => { s.moveTo(-0.22, -0.05); for (let i = 0; i <= 14; i++) s.lineTo(-0.22 + i * 0.03, i % 2 ? -0.07 : -0.05); s.lineTo(0.2, 0.04); s.lineTo(-0.22, 0.05); }, 0.004, 0), st, 0, 0, 0); k.add(slab('sawgrip', (s) => { s.moveTo(0.18, -0.06); s.lineTo(0.32, -0.08); s.quadraticCurveTo(0.36, 0, 0.32, 0.08); s.lineTo(0.18, 0.06); }, 0.025, 0.006), MAT.wood('red'), 0, 0, 0.01); });
+  k.add(cyl(0.012, 0.014, 0.3, 6), MAT.wood('honey'), -w / 2 + 1.38, -0.02, z + 0.01);
+  k.add(rbox(0.11, 0.045, 0.04, 0.01), MAT.iron(), -w / 2 + 1.38, 0.14, z + 0.01);
+  k.at(-w / 2 + 1.6, 0.04, z, 0, () => { for (const s of [-1, 1]) { k.add(rbox(0.018, 0.16, 0.012, 0.004), MAT.paint('#c8452f', 0.5), s * 0.025, -0.06, 0, 0, { rz: s * 0.18 }); k.add(rbox(0.014, 0.07, 0.012, 0.004), st, s * 0.006, 0.06, 0, 0, { rz: -s * 0.1 }); } });
+  k.add(helixGeo(0.07, 0.04, 6, 0.004), MAT.copper(), w / 2 - 0.22, -0.18, z + 0.04, 0, { rx: Math.PI / 2 });
+  k.add(torus(0.08, 0.012, 5, 16), MAT.cloth('#c9a66b', '#7a5a30'), w / 2 - 0.22, 0.14, z + 0.01);
+  for (const [x, y] of [[-w / 2 + 0.6, 0.25], [w / 2 - 0.45, 0.2], [0.1, -0.25]]) k.add(gearGeo(0.06, 10, 0.012), MAT.brass(), x, y, z);
+}
+// pinned sheet (plan or chalk) on a wall, faces +z
+export function pinnedSheet(k, w, h, t, tilt = 0) {
+  k.add(plane(w, h), MAT.map(t, 0.9), 0, 0, 0.012, 0, { rz: tilt });
+  for (const [sx, sy] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { const px = sx * (w / 2 - 0.03), py = sy * (h / 2 - 0.03); k.add(sphere(0.014, 6, 4), MAT.flat(sy > 0 ? '#c8452f' : '#e9c46a', 0.4), px * Math.cos(tilt) - py * Math.sin(tilt), px * Math.sin(tilt) + py * Math.cos(tilt), 0.02); }
+}
+// slate chalkboard with a wooden frame and a chalk ledge, faces +z
+export function chalkboard(k, w = 1.6, h = 1.0) {
+  const md = MAT.wood('honey');
+  k.add(rbox(w + 0.12, h + 0.12, 0.04, 0.015), md, 0, 0, 0.02);
+  k.add(plane(w, h), MAT.map(CANV.chalk(), 0.95), 0, 0, 0.042);
+  k.add(rbox(w + 0.1, 0.03, 0.09, 0.01), md, 0, -h / 2 - 0.05, 0.06);
+  for (let i = 0; i < 3; i++) k.add(cyl(0.008, 0.008, 0.07, 5), MAT.flat(['#f4f2e8', '#f4e08a', '#f4b0c8'][i], 0.9), -w / 2 + 0.2 + i * 0.1, -h / 2 - 0.025, 0.07, 0.3 * i, { rz: Math.PI / 2 });
+  k.add(rbox(0.13, 0.035, 0.05, 0.01), MAT.wood('dark'), w / 2 - 0.25, -h / 2 - 0.018, 0.07);
+}
+// pot-bellied stove with a glowing grate; door faces +z
+export function potStove(k) {
+  const ir = MAT.iron(), br = MAT.brass(), fire = MAT.glow('#ffb347', '#ff6a00', 2.6), black = MAT.paint('#26272c', 0.5);
+  for (let i = 0; i < 3; i++) { const a = i * 2.094 + 0.5; k.add(pipe([[Math.cos(a) * 0.22, 0.3, Math.sin(a) * 0.22], [Math.cos(a) * 0.3, 0.14, Math.sin(a) * 0.3], [Math.cos(a) * 0.34, 0.01, Math.sin(a) * 0.34]], 0.024, 0.08, 6), ir, 0, 0, 0); k.add(sphere(0.035, 8, 6), ir, Math.cos(a) * 0.34, 0.02, Math.sin(a) * 0.34, 0, { sy: 0.6 }); }
+  k.add(lathe([[0.001, 0.26], [0.24, 0.26], [0.27, 0.3], [0.3, 0.34], [0.36, 0.48], [0.38, 0.62], [0.36, 0.78], [0.3, 0.9], [0.24, 0.98], [0.21, 1.03], [0.23, 1.06], [0.16, 1.1], [0.12, 1.12], [0.12, 1.16], [0.001, 1.16]], 20), black, 0, 0, 0);
+  for (const [y, rr] of [[0.33, 0.3], [0.79, 0.36], [1.04, 0.225]]) k.add(torus(rr, 0.018, 5, 24), br, 0, y, 0, 0, { rx: Math.PI / 2 });
+  // firebox door with a grille in front of the fire
+  k.at(0, 0.6, 0.355, 0, () => {
+    k.add(lathe([[0.001, 0], [0.16, 0], [0.17, 0.02], [0.15, 0.03], [0.001, 0.03]], 18), ir, 0, 0, 0, 0, { rx: Math.PI / 2 });
+    k.add(disc(0.12, 18), fire, 0, 0, 0.032);
+    for (let i = -3; i <= 3; i++) k.add(rbox(0.014, 0.24 - Math.abs(i) * 0.025, 0.014, 0.004), ir, i * 0.034, 0, 0.04);
+    k.add(sphere(0.022, 8, 6), br, 0.13, 0, 0.05);
+  });
+  k.add(rbox(0.22, 0.06, 0.03, 0.01), fire, 0, 0.36, 0.3);
+  k.add(rbox(0.26, 0.1, 0.03, 0.01), ir, 0, 0.36, 0.31);
+  // the collar the stovepipe rises from
+  k.add(cyl(0.085, 0.09, 0.08, 14), ir, 0, 1.2, 0);
+  return { r: 0.4, top: 1.16 };
+}
+// open curio shelves crammed with jars, coils, bulbs, boxes and gears; front +z
+export function curioShelf(k, { w = 1.4, h = 2.2, d = 0.4, seed = 1, shelves = 5 } = {}) {
+  const m = MAT.wood('red'), md = MAT.wood('dark'), r = rng(seed * 41 + 3);
+  for (const sx of [-1, 1]) k.add(rbox(0.05, h, d, 0.012), m, sx * (w / 2 - 0.025), h / 2, 0);
+  k.add(rbox(w + 0.08, 0.06, d + 0.05, 0.02), md, 0, h, 0);
+  k.add(rbox(w - 0.06, h - 0.1, 0.02, 0.005), md, 0, h / 2, -d / 2 + 0.01);
+  const step = (h - 0.1) / shelves;
+  const jarC = ['#3a6fb0', '#d8a13b', '#b8483b', '#3f8a5a', '#7a5ab0', '#e0d8c0'];
+  for (let i = 0; i < shelves; i++) {
+    const y = 0.06 + i * step;
+    k.add(rbox(w - 0.08, 0.03, d - 0.02, 0.008), m, 0, y, 0);
+    let x = -w / 2 + 0.1;
+    while (x < w / 2 - 0.12) {
+      const t = r(), z = -0.04 + r() * 0.08, top = y + 0.015;
+      if (t < 0.3) { const kd = ['jar', 'bottle', 'crock', 'jar'][Math.floor(r() * 4)]; jar(k, x + 0.05, top, z, kd, jarC[Math.floor(r() * jarC.length)], 0.75 + r() * 0.3); x += 0.13; }
+      else if (t < 0.45) { k.add(helixGeo(0.045, 0.1 + r() * 0.06, 8, 0.006), MAT.copper(), x + 0.05, top + 0.01, z); k.add(cyl(0.035, 0.035, 0.14, 8), MAT.wood('pale'), x + 0.05, top + 0.075, z); x += 0.13; }
+      else if (t < 0.6) { bulb(k, x + 0.04, top, z - 0.04, 1); bulb(k, x + 0.1, top, z + 0.05, 0.8); x += 0.16; }
+      else if (t < 0.72) { const bw = 0.14 + r() * 0.12, bh = 0.08 + r() * 0.12; k.add(rbox(bw, bh, 0.2, 0.01), MAT.cloth(['#8a6a3a', '#5a4a3a', '#a85a3a', '#3a5a6a'][Math.floor(r() * 4)], '#000'), x + bw / 2, top + bh / 2, 0, (r() - 0.5) * 0.2); x += bw + 0.03; }
+      else if (t < 0.82) { const gr = 0.05 + r() * 0.05; k.add(gearGeo(gr, 10 + Math.floor(r() * 6), 0.015), MAT.brass(), x + gr, top + gr, -0.08, 0.2, { rx: -0.25 }); x += gr * 2 + 0.03; }
+      else if (t < 0.9) { books(k, x, x + 0.22, top, -d / 2 + 0.03, d - 0.08, Math.floor(r() * 99)); x += 0.24; }
+      else { k.add(lathe([[0.001, 0], [0.05, 0], [0.05, 0.08], [0.03, 0.1], [0.03, 0.14], [0.001, 0.14]], 10), MAT.glass('#bfe6ff', 0.5), x + 0.05, top, z); k.add(cyl(0.035, 0.035, 0.03, 10), MAT.glow('#9ff4c0', '#2ad08a', 1.2), x + 0.05, top + 0.02, z); x += 0.13; }
+    }
+  }
+  return { hw: w / 2 + 0.04, hd: d / 2 + 0.03, top: h + 0.03 };
+}
+// sawhorse trestle, beam along z
+function trestle(k, x, h, l) {
+  const md = MAT.wood('grey');
+  k.add(rbox(0.08, 0.08, l, 0.012), md, x, h - 0.04, 0);
+  for (const sz of [-1, 1]) for (const sx of [-1, 1]) k.add(rbox(0.05, h, 0.05, 0.01), md, x + sx * 0.12, h / 2 - 0.02, sz * (l / 2 - 0.08), 0, { rz: sx * 0.24 });
+  for (const sz of [-1, 1]) k.add(rbox(0.3, 0.04, 0.03, 0.008), md, x, 0.25, sz * (l / 2 - 0.08));
+}
+// Baldino's half-built flying machine on trestles; nose (and propeller) toward +x.
+// Returns the propeller pivot (spins about local x).
+export function flyingMachine(k) {
+  const wood = MAT.wood('honey'), red = MAT.paint('#b8483b', 0.45), br = MAT.brass(), cloth = MAT.cloth('#efe2c4', '#c8b490'), ir = MAT.iron();
+  trestle(k, -0.75, 0.62, 0.7); trestle(k, 0.55, 0.62, 0.7);
+  const cy = 0.92;
+  // fuselage: covered nose half, bare ribs and stringers behind
+  const prof = [[0.001, 0], [0.12, 0.04], [0.24, 0.2], [0.3, 0.45], [0.31, 0.7], [0.29, 1.0], [0.22, 1.35], [0.14, 1.65], [0.07, 1.9], [0.001, 2.0]];
+  const R = (y) => { for (let i = 1; i < prof.length; i++) if (y <= prof[i][1]) { const [r0, y0] = prof[i - 1], [r1, y1] = prof[i]; return r0 + (r1 - r0) * (y - y0) / (y1 - y0); } return 0.001; };
+  // lathe y runs tail(-) -> nose(+) along +x after rz = -PI/2; nose at x = +1.0
+  k.add(lathe(prof.filter(([, y]) => y <= 0.7).concat([[0.001, 0.7]]).reverse().map(([a, b]) => [a, 2.0 - b]).reverse(), 18), red, 1.0, cy, 0, 0, { rz: Math.PI / 2 });
+  for (let i = 0; i < 6; i++) { const y = 0.75 + i * 0.2; k.add(torus(R(2.0 - y) + 0.005, 0.012, 4, 20), wood, 1.0 - y, cy, 0, Math.PI / 2); }
+  for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2 + 0.3; const pts = []; for (let j = 0; j <= 6; j++) { const y = 0.68 + j * 0.2; const rr = R(2.0 - y); pts.push([1.0 - y, cy + Math.sin(a) * rr, Math.cos(a) * rr]); } k.add(pipe(pts, 0.009, 0.05, 4), wood, 0, 0, 0); }
+  // cockpit: seat, little windscreen, stick
+  k.add(rbox(0.3, 0.05, 0.3, 0.02), MAT.leather('#5a3a22'), 0.05, cy - 0.12, 0);
+  k.add(rbox(0.06, 0.3, 0.3, 0.02), MAT.leather('#5a3a22'), -0.12, cy + 0.02, 0, 0, { rz: 0.2 });
+  k.add(cyl(0.012, 0.012, 0.3, 5), ir, 0.22, cy, 0, 0, { rz: -0.3 });
+  k.add(plane(0.3, 0.16), MAT.glass('#cfeaff', 0.45), 0.36, cy + 0.33, 0, Math.PI / 2, { rx: -0.5 });
+  k.add(torus(0.16, 0.01, 4, 12, Math.PI), br, 0.37, cy + 0.26, 0, Math.PI / 2, { rx: 0 });
+  // engine cowling and hub
+  k.add(lathe([[0.3, 0], [0.3, 0.08], [0.24, 0.16], [0.1, 0.2], [0.001, 0.21]], 18), br, 1.0, cy, 0, 0, { rz: -Math.PI / 2 });
+  for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2; k.add(cyl(0.035, 0.035, 0.14, 8), ir, 1.06, cy + Math.sin(a) * 0.22, Math.cos(a) * 0.22, 0, { rz: Math.PI / 2 }); }
+  const prop = k.pivot(1.24, cy, 0, 0);
+  // wings: right one canvassed, left one still a skeleton of ribs on its spar
+  const span = 1.25, chord = 0.5, wx = 0.15;
+  k.add(cyl(0.025, 0.025, span * 2 + 0.5, 8), wood, wx, cy + 0.12, 0, 0, { rx: Math.PI / 2 });
+  k.add(rbox(chord, 0.035, span, 0.015), cloth, wx - 0.05, cy + 0.12, span / 2 + 0.25);
+  for (let i = 0; i <= 5; i++) k.add(rbox(chord + 0.02, 0.04, 0.02, 0.006), wood, wx - 0.05, cy + 0.12, 0.25 + i * (span / 5));
+  k.add(rbox(chord + 0.04, 0.05, 0.05, 0.015), red, wx - 0.05, cy + 0.12, span + 0.25);
+  for (let i = 0; i <= 5; i++) k.add(slab('wingrib', (s) => { s.moveTo(-0.25, 0); s.quadraticCurveTo(-0.05, 0.08, 0.27, 0.0); s.quadraticCurveTo(0.0, -0.02, -0.25, 0); }, 0.015, 0.004), wood, wx - 0.05, cy + 0.11, -0.25 - i * (span / 5));
+  k.add(cyl(0.012, 0.012, span, 6), wood, wx - 0.27, cy + 0.12, -0.25 - span / 2, 0, { rx: Math.PI / 2 });
+  // wire bracing and struts
+  for (const s of [-1, 1]) { k.add(cyl(0.012, 0.012, 0.5, 6), ir, wx, cy - 0.12, s * 0.55, 0, { rx: s * 0.9 }); }
+  // tail: tailplane and fin frame
+  k.add(rbox(0.3, 0.03, 0.7, 0.01), cloth, -0.85, cy + 0.02, 0);
+  k.add(slab('finframe', (s) => { s.moveTo(0, 0); s.lineTo(0.3, 0); s.lineTo(0.1, 0.36); s.lineTo(-0.02, 0.36); s.lineTo(0, 0); const h = new THREE.Path(); h.moveTo(0.04, 0.04); h.lineTo(0.22, 0.04); h.lineTo(0.08, 0.3); h.lineTo(0.03, 0.3); h.lineTo(0.04, 0.04); s.holes.push(h); }, 0.02, 0.004), wood, -0.98, cy + 0.03, 0);
+  return { hw: 1.3, hd: span + 0.3, top: 1.35, prop };
+}
+// propeller blades (two), in the YZ plane about local x; built into a pivot group via a kit
+export function propeller(k, l = 0.62) {
+  const wood = MAT.wood('red');
+  for (const s of [-1, 1]) k.add(slab('propblade' + l, (sh) => { sh.moveTo(0, -0.03); sh.quadraticCurveTo(l * 0.4, -0.07, l, -0.03); sh.quadraticCurveTo(l + 0.02, 0, l, 0.03); sh.quadraticCurveTo(l * 0.4, 0.06, 0, 0.03); }, 0.03, 0.008), wood, 0, 0, 0, Math.PI / 2, { rz: s > 0 ? Math.PI / 2 : -Math.PI / 2, rx: s * 0.25 });
+  k.add(lathe([[0.001, 0], [0.07, 0], [0.06, 0.06], [0.03, 0.1], [0.001, 0.11]], 12), MAT.brass(), 0, 0, 0, 0, { rz: -Math.PI / 2 });
+}
+// the planet model in its cracked crystal shell, on a brass tripod. Returns {spin} (a group to rotate).
+export function shellGlobe(k, { r = 0.34 } = {}) {
+  const br = MAT.brass(), wood = MAT.wood('dark');
+  for (let i = 0; i < 3; i++) { const a = i * 2.094; k.add(pipe([[Math.cos(a) * 0.4, 0.0, Math.sin(a) * 0.4], [Math.cos(a) * 0.26, 0.4, Math.sin(a) * 0.26], [Math.cos(a) * 0.08, 0.72, Math.sin(a) * 0.08]], 0.018, 0.12, 6), br, 0, 0, 0); k.add(sphere(0.03, 8, 6), br, Math.cos(a) * 0.4, 0.02, Math.sin(a) * 0.4); }
+  k.add(torus(0.22, 0.012, 4, 20), br, 0, 0.38, 0, 0, { rx: Math.PI / 2 });
+  k.add(lathe([[0.001, 0], [0.12, 0], [0.13, 0.03], [0.06, 0.06], [0.04, 0.12], [0.001, 0.12]], 16), wood, 0, 0.7, 0);
+  const cy = 0.82 + r + 0.06;
+  // meridian ring in the XY plane and the horizon ring
+  k.add(torus(r + 0.06, 0.014, 5, 40, Math.PI * 1.6), br, 0, cy, 0, 0, { rz: -Math.PI * 1.3 });
+  k.add(torus(r + 0.1, 0.018, 5, 40), br, 0, cy, 0, 0, { rx: Math.PI / 2 });
+  for (const s of [-1, 1]) k.add(rbox(0.04, 0.12, 0.04, 0.01), br, s * (r + 0.1), cy - 0.06, 0);
+  k.add(cyl(0.012, 0.012, 0.16, 6), br, 0, 0.82 + 0.02, 0);
+  const spin = k.pivot(0, cy, 0, 0);
+  const planet = new THREE.Mesh(new THREE.SphereGeometry(r * 0.62, 28, 18), new THREE.MeshStandardMaterial({ map: CANV.planet(), roughness: 0.6 }));
+  planet.castShadow = true; spin.add(planet);
+  // crystal shell: an icosphere with a chunk broken out, crack lines and shards drifting out
+  const shellGeo = new THREE.IcosahedronGeometry(r, 2).toNonIndexed();
+  const P = shellGeo.attributes.position, keep = [], hole = new THREE.Vector3(0.6, 0.55, 0.58).normalize(), c = new THREE.Vector3(), v = new THREE.Vector3();
+  for (let i = 0; i < P.count; i += 3) {
+    c.set(0, 0, 0); for (let j = 0; j < 3; j++) c.add(v.fromBufferAttribute(P, i + j)); c.normalize();
+    if (c.dot(hole) > 0.86) continue;
+    for (let j = 0; j < 3; j++) keep.push(P.getX(i + j), P.getY(i + j), P.getZ(i + j));
+  }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(keep, 3)); sg.computeVertexNormals();
+  const crystal = new THREE.MeshStandardMaterial({ color: '#cfe8ff', emissive: '#7a5aff', emissiveIntensity: 0.35, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.4, flatShading: true, side: THREE.DoubleSide, depthWrite: false });
+  const shell = new THREE.Mesh(sg, crystal); spin.add(shell);
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(sg, 1), new THREE.LineBasicMaterial({ color: '#e8f4ff', transparent: true, opacity: 0.55 }));
+  spin.add(edges);
+  const crackMat = new THREE.MeshBasicMaterial({ color: '#ff9ad8' });
+  const crack = (a0, a1, b0, b1, n) => { const pts = []; for (let i = 0; i <= n; i++) { const t = i / n, th = a0 + (a1 - a0) * t + Math.sin(i * 2.7) * 0.06, ph = b0 + (b1 - b0) * t + Math.cos(i * 3.1) * 0.06; pts.push(new THREE.Vector3(Math.cos(ph) * Math.cos(th), Math.sin(ph), Math.cos(ph) * Math.sin(th)).multiplyScalar(r * 1.01)); } return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), n * 3, 0.004, 3), crackMat); };
+  spin.add(crack(0.3, -0.8, 0.6, 0.0, 8)); spin.add(crack(1.1, 1.9, 0.5, -0.3, 8)); spin.add(crack(0.9, 0.5, 0.2, -0.6, 6));
+  for (let i = 0; i < 4; i++) { const s = new THREE.Mesh(new THREE.TetrahedronGeometry(0.035 + i * 0.008), crystal); s.position.copy(hole).multiplyScalar(r + 0.07 + i * 0.05).add(new THREE.Vector3(Math.sin(i * 2) * 0.05, Math.cos(i * 3) * 0.05, 0)); s.rotation.set(i, i * 2, 0); spin.add(s); }
+  return { r: 0.45, top: cy + r, spin, cy };
+}
+// Baldino's radio: a valve set on a small table, morse key, headphones and microphone; front +z
+export function radioDesk(k) {
+  const m = MAT.wood('dark'), mh = MAT.wood('honey'), br = MAT.brass(), bk = MAT.paint('#1e1c1a', 0.35);
+  const h = 0.76, w = 0.95, d = 0.6;
+  k.add(rbox(w, 0.05, d, 0.015), mh, 0, h - 0.025, 0, 0, { jit: true });
+  const leg = turnedLeg(h - 0.05);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(leg, m, sx * (w / 2 - 0.07), 0, sz * (d / 2 - 0.07));
+  k.add(rbox(w - 0.1, 0.03, d - 0.1, 0.01), m, 0, 0.18, 0);
+  k.add(rbox(0.4, 0.22, 0.3, 0.02), MAT.wood('red'), -0.15, 0.3, -0.02);
+  // the set
+  k.at(-0.05, h, -0.1, 0, () => {
+    k.add(rbox(0.66, 0.4, 0.34, 0.02), m, 0, 0.2, 0);
+    k.add(plane(0.6, 0.32), bk, 0, 0.2, 0.172);
+    for (const [x, zc] of [[-0.18, '#3a6fb0'], [0.06, '#c8452f']]) { k.add(disc(0.075, 20), MAT.map(CANV.dial(zc), 0.5), x, 0.22, 0.175); k.add(torus(0.078, 0.008, 4, 18), br, x, 0.22, 0.176); k.add(cyl(0.025, 0.03, 0.04, 10), bk, x, 0.22, 0.19, 0, { rx: Math.PI / 2 }); }
+    k.add(rbox(0.12, 0.08, 0.01, 0.004), MAT.glow('#ffe8b0', '#ff9a2a', 0.9), 0.22, 0.27, 0.175);
+    for (let i = 0; i < 3; i++) k.add(cyl(0.014, 0.016, 0.02, 8), br, 0.17 + i * 0.05, 0.1, 0.18, 0, { rx: Math.PI / 2 });
+    // valves on top behind a brass cage
+    for (let i = 0; i < 3; i++) { k.add(lathe([[0.025, 0], [0.028, 0.05], [0.026, 0.12], [0.015, 0.15], [0.001, 0.16]], 10), MAT.glass('#f4e8c8', 0.45), -0.18 + i * 0.12, 0.4, -0.04); k.add(cyl(0.008, 0.008, 0.08, 5), MAT.glow('#ffc070', '#ff7a1a', 1.8), -0.18 + i * 0.12, 0.46, -0.04); }
+    for (let i = 0; i < 6; i++) k.add(cyl(0.004, 0.004, 0.2, 4), br, -0.27 + i * 0.1, 0.5, 0.06);
+    k.add(rbox(0.62, 0.015, 0.02, 0.004), br, 0, 0.6, 0.06);
+    // aerial terminal
+    k.add(rbox(0.06, 0.04, 0.06, 0.01), MAT.flat('#e8e0cc', 0.4), 0.25, 0.42, -0.1);
+  });
+  // morse key, headphones, microphone
+  k.at(0.33, h, 0.14, -0.3, () => { k.add(rbox(0.1, 0.02, 0.16, 0.006), m, 0, 0.01, 0); k.add(rbox(0.016, 0.012, 0.14, 0.004), br, 0, 0.04, 0, 0, { rx: 0.06 }); k.add(cyl(0.018, 0.018, 0.012, 10), bk, 0, 0.05, 0.06); });
+  k.at(-0.3, h, 0.18, 0.4, () => { for (const s of [-1, 1]) k.add(cyl(0.04, 0.04, 0.03, 12), bk, s * 0.09, 0.03, 0, 0, { rz: Math.PI / 2 }); k.add(torus(0.09, 0.008, 4, 14, Math.PI), MAT.leather('#3a2a1a'), 0, 0.03, 0, 0, { rx: -Math.PI / 2 + 0.2 }); });
+  k.at(0.06, h, 0.18, 0, () => { k.add(lathe([[0.001, 0], [0.05, 0], [0.05, 0.015], [0.015, 0.025], [0.001, 0.025]], 12), bk, 0, 0, 0); k.add(cyl(0.007, 0.007, 0.16, 5), MAT.steel(), 0, 0.1, 0); k.add(torus(0.045, 0.008, 4, 16), MAT.steel(), 0, 0.22, 0); k.add(cyl(0.03, 0.03, 0.03, 12), bk, 0, 0.22, 0, 0, { rx: Math.PI / 2 }); });
+  return { hw: w / 2, hd: d / 2, top: h };
+}
+// drafting table: slanted board on a cast stand, with a plan pinned to it; front +z
+export function draftingTable(k, t = null) {
+  const ir = MAT.iron(), m = MAT.wood('pale');
+  for (const sx of [-1, 1]) { k.add(rbox(0.06, 0.04, 0.6, 0.01), ir, sx * 0.4, 0.02, 0); k.add(cyl(0.025, 0.03, 0.8, 8), ir, sx * 0.4, 0.42, 0); }
+  k.add(cyl(0.015, 0.015, 0.8, 6), ir, 0, 0.25, 0, 0, { rz: Math.PI / 2 });
+  k.at(0, 0.92, 0, 0, () => {
+    k.add(rbox(1.0, 0.04, 0.7, 0.012), m, 0, 0, 0, 0, { rx: 0.35 });
+    if (t) k.add(plane(0.62, 0.46), MAT.map(t, 0.9), -0.05, 0.022 * Math.cos(0.35) + 0.002, 0.0, 0, { rx: -Math.PI / 2 + 0.35 });
+    k.add(rbox(1.0, 0.02, 0.04, 0.006), MAT.wood('dark'), 0, -0.1, 0.36, 0, { rx: 0.35 });
+  });
+  k.add(rbox(0.6, 0.012, 0.04, 0.004), MAT.wood('dark'), 0.05, 1.0, -0.05, 0.3, { rx: 0.35 });
+  return { hw: 0.5, hd: 0.36, top: 1.1 };
+}
+
+// ---- lighthouse lamp room ------------------------------------------------
+const lensGlass = () => M('lensglass', () => std({ color: '#d8f4ff', roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.42, emissive: '#ffe6a8', emissiveIntensity: 0.4, depthWrite: false }, 0, { noShadow: true }));
+// cast-iron pedestal with the clockwork drum the lens turns on (origin on the floor)
+export function lensPedestal(k) {
+  const ir = MAT.paint('#2e3a40', 0.45), br = MAT.brass();
+  k.add(lathe([[0.001, 0], [0.62, 0], [0.62, 0.06], [0.52, 0.1], [0.4, 0.18], [0.3, 0.3], [0.26, 0.55], [0.32, 0.62], [0.42, 0.68], [0.5, 0.72], [0.5, 0.78], [0.001, 0.78]], 24), ir, 0, 0, 0);
+  k.add(torus(0.5, 0.02, 5, 32), br, 0, 0.75, 0, 0, { rx: Math.PI / 2 });
+  k.add(torus(0.6, 0.015, 5, 32), br, 0, 0.06, 0, 0, { rx: Math.PI / 2 });
+  // clockwork box with a winding crank and weight chain
+  k.at(0, 0.38, 0.27, 0, () => {
+    k.add(rbox(0.3, 0.26, 0.12, 0.02), br, 0, 0, 0);
+    k.add(disc(0.09, 20), MAT.map(CANV.clock(), 0.5), 0, 0.02, 0.062);
+    k.add(pipe([[0.12, -0.06, 0.06], [0.12, -0.06, 0.14], [0.22, -0.06, 0.14], [0.22, -0.06, 0.2]], 0.01, 0.03, 5), MAT.steel(), 0, 0, 0);
+    k.add(cyl(0.02, 0.02, 0.08, 8), MAT.wood('dark'), 0.22, -0.06, 0.24, 0, { rx: Math.PI / 2 });
+  });
+  for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; k.add(sphere(0.022, 6, 4), br, Math.sin(a) * 0.56, 0.08, Math.cos(a) * 0.56); }
+  return { r: 0.62, top: 0.78 };
+}
+// the first-order Fresnel lens: beehive of glass prism rings round eight bullseye panels, brass frame
+// (origin at its base). Built on its own kit so the room can turn it. Returns {glowMat}.
+export function fresnelLens(k) {
+  const g = lensGlass(), br = MAT.brass();
+  const R = 0.58, y0 = 0.1, band0 = 0.55, band1 = 1.1;
+  k.add(lathe([[R - 0.08, 0], [R + 0.05, 0], [R + 0.06, 0.06], [R + 0.02, 0.1], [R - 0.08, 0.1]], 32), br, 0, 0, 0);
+  // lower catadioptric rings
+  for (let i = 0; i < 6; i++) { const y = y0 + i * ((band0 - y0) / 6), rr = R * (0.72 + i * 0.05); k.add(lathe([[rr, 0], [rr + 0.07, 0.03], [rr + 0.02, 0.07], [rr, 0.07]], 32), g, 0, y, 0); }
+  // central drum: eight flat bullseye panels with concentric rings
+  const side = 2 * R * Math.tan(Math.PI / 8), bh = band1 - band0;
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    k.at(Math.sin(a) * R, band0 + bh / 2, Math.cos(a) * R, a, () => {
+      k.add(plane(side, bh), g, 0, 0, 0);
+      for (let j = 1; j <= 3; j++) k.add(torus(0.07 * j, 0.012, 4, 24), g, 0, 0, 0.01);
+      k.add(sphere(0.06, 14, 10), g, 0, 0, 0.0, 0, { sz: 0.4 });
+    });
+    const ca = a + Math.PI / 8, cr = R / Math.cos(Math.PI / 8);
+    k.add(cyl(0.018, 0.018, band1 - y0 + 0.5, 6), br, Math.sin(ca) * (cr + 0.01), (y0 + band1 + 0.5) / 2, Math.cos(ca) * (cr + 0.01));
+  }
+  k.add(torus(R + 0.06, 0.025, 5, 32), br, 0, band0 - 0.01, 0, 0, { rx: Math.PI / 2 });
+  k.add(torus(R + 0.06, 0.025, 5, 32), br, 0, band1 + 0.01, 0, 0, { rx: Math.PI / 2 });
+  // upper catadioptric rings closing into a dome
+  for (let i = 0; i < 8; i++) { const t = i / 8, y = band1 + 0.04 + t * 0.52, rr = R * Math.cos(t * 1.15) * 0.98; k.add(lathe([[rr, 0], [rr + 0.07, 0.025], [rr + 0.015, 0.06], [rr, 0.06]], 32), g, 0, y, 0); }
+  k.add(torus(R + 0.03, 0.02, 5, 32), br, 0, band1 + 0.6, 0, 0, { rx: Math.PI / 2 });
+  // brass crown and ventilator
+  k.add(lathe([[0.001, 0], [R * 0.45, 0], [R * 0.42, 0.05], [0.18, 0.12], [0.08, 0.16], [0.08, 0.26], [0.12, 0.28], [0.12, 0.32], [0.001, 0.36]], 20), br, 0, band1 + 0.58, 0);
+  // the burner and its incandescent mantle inside
+  k.add(cyl(0.03, 0.04, 0.6, 10), br, 0, y0 + 0.3, 0);
+  const glowMat = new THREE.MeshStandardMaterial({ color: '#fff4d0', emissive: '#ffd890', emissiveIntensity: 3, roughness: 0.4 });
+  glowMat.userData.noShadow = true;
+  k.add(lathe([[0.001, 0], [0.07, 0.02], [0.09, 0.12], [0.07, 0.24], [0.001, 0.27]], 14), glowMat, 0, band0 + bh / 2 - 0.14, 0);
+  return { glowMat, height: band1 + 0.95, R: R + 0.1 };
+}
+// radio transmitter cabinet with three big tuning dials (separate pivots for the room to turn),
+// valve tubes and a signal lamp on top; operator on +z. Returns dial pivots (rotate about local z) and
+// the two materials the room lights up.
+export function transmitterCabinet(k, { w = 1.9, h = 1.7, d = 0.52 } = {}) {
+  const m = MAT.wood('dark'), mh = MAT.wood('red'), br = MAT.brass(), bk = MAT.paint('#1c1b1a', 0.35), ir = MAT.iron();
+  const tubeMat = new THREE.MeshStandardMaterial({ color: '#ffd8a0', emissive: '#ff8a2a', emissiveIntensity: 0.05, roughness: 0.3 });
+  const lampMat = new THREE.MeshStandardMaterial({ color: '#7a2a22', emissive: '#ff3a1a', emissiveIntensity: 0.0, roughness: 0.25, transparent: true, opacity: 0.9 });
+  const faceMat = new THREE.MeshStandardMaterial({ color: '#2a2a2a', emissive: '#ffcf80', emissiveIntensity: 0.0, roughness: 0.4 });
+  tubeMat.userData.noShadow = lampMat.userData.noShadow = faceMat.userData.noShadow = true;
+  k.add(rbox(w + 0.04, 0.1, d + 0.02, 0.02), ir, 0, 0.05, 0);
+  k.add(rbox(w, h - 0.1, d, 0.03), m, 0, 0.1 + (h - 0.1) / 2, 0, 0, { jit: true });
+  k.add(rbox(w + 0.08, 0.06, d + 0.06, 0.025), mh, 0, h + 0.03, 0);
+  for (const sx of [-1, 1]) k.add(rbox(0.06, h - 0.1, 0.05, 0.015), mh, sx * (w / 2 - 0.02), 0.1 + (h - 0.1) / 2, d / 2);
+  // lower doors with louvres
+  for (const sx of [-1, 1]) {
+    k.add(rbox(w / 2 - 0.1, 0.62, 0.03, 0.012), mh, sx * (w / 4 - 0.01), 0.45, d / 2 + 0.005);
+    for (let j = 0; j < 6; j++) k.add(rbox(w / 2 - 0.26, 0.018, 0.02, 0.004), m, sx * (w / 4 - 0.01), 0.3 + j * 0.055, d / 2 + 0.022, 0, { rx: -0.5 });
+    k.add(sphere(0.022, 8, 6), br, sx * 0.08, 0.5, d / 2 + 0.03);
+  }
+  // writing shelf
+  const sy = 0.84, sd = 0.28;
+  k.add(rbox(w + 0.02, 0.05, sd + 0.04, 0.015), mh, 0, sy, d / 2 + sd / 2 - 0.02);
+  for (const sx of [-1, 1]) k.add(slab('shelfbr', (s) => { s.moveTo(0, 0); s.lineTo(sd - 0.04, 0); s.quadraticCurveTo(0.04, -0.04, 0, -0.2); s.lineTo(0, 0); }, 0.03, 0.006), br, sx * (w / 2 - 0.1), sy - 0.025, d / 2, -Math.PI / 2);
+  // black front panel with the three dials and their scales
+  const py = 1.22, ph = 0.6, pz = d / 2 + 0.006;
+  k.add(rbox(w - 0.14, ph, 0.012, 0.004), bk, 0, py, pz);
+  for (const sy2 of [py - ph / 2 + 0.03, py + ph / 2 - 0.03]) for (let i = 0; i < 6; i++) k.add(sphere(0.012, 6, 4), br, -w / 2 + 0.12 + i * ((w - 0.24) / 5), sy2, pz + 0.008);
+  const dx = [-0.6, 0, 0.6], rings = ['#3f8a5a', '#d8a13b', '#c8452f'];
+  const dials = dx.map((x, i) => {
+    k.add(lathe([[0.001, 0], [0.19, 0], [0.2, 0.015], [0.185, 0.03], [0.001, 0.03]], 28), br, x, py - 0.02, pz, 0, { rx: Math.PI / 2 });
+    k.add(disc(0.17, 28), MAT.map(CANV.tuning(rings[i]), 0.5), x, py - 0.02, pz + 0.031);
+    k.add(rbox(0.16, 0.04, 0.01, 0.004), br, x, py - 0.24, pz + 0.01);
+    k.add(rbox(0.12, 0.02, 0.004, 0.002), MAT.flat('#efe6cc', 0.6), x, py - 0.24, pz + 0.016);
+    const outer = k.pivot(x, py - 0.02, pz + 0.035, 0);
+    const inner = new THREE.Group(); outer.add(inner);
+    const add = (geo, mm, px, pyy, pzz, rot = null) => { const me = new THREE.Mesh(geo, mm); me.position.set(px, pyy, pzz); if (rot) me.rotation.set(...rot); me.castShadow = true; inner.add(me); return me; };
+    add(cyl(0.065, 0.075, 0.06, 18), bk, 0, 0, 0.03, [Math.PI / 2, 0, 0]);
+    add(torus(0.07, 0.008, 4, 18), br, 0, 0, 0.04);
+    add(rbox(0.026, 0.18, 0.018, 0.006), bk, 0, 0.09, 0.05);
+    add(rbox(0.014, 0.05, 0.008, 0.003), MAT.flat('#e8402a', 0.4), 0, 0.15, 0.06);
+    add(sphere(0.03, 10, 8), MAT.paint('#a8201a', 0.3), 0, 0.19, 0.06);
+    return inner;
+  });
+  // meter and signal lamp between the dials, the ON AIR plate above
+  k.at(-0.3, py + 0.18, pz, 0, () => gauge(k, { r: 0.07, v: 0.15, stem: false }));
+  k.at(0.3, py + 0.18, pz, 0, () => gauge(k, { r: 0.07, v: 0.1, zone: '#3a6fb0', stem: false }));
+  k.add(rbox(0.36, 0.08, 0.012, 0.004), br, 0, py + 0.22, pz + 0.006);
+  k.add(plane(0.32, 0.06), faceMat, 0, py + 0.22, pz + 0.014);
+  // valve tubes on top behind a brass rail, and the big signal lamp
+  for (let i = 0; i < 5; i++) {
+    const x = -0.6 + i * 0.3;
+    k.add(cyl(0.05, 0.05, 0.04, 12), bk, x, h + 0.08, -0.04);
+    k.add(lathe([[0.04, 0], [0.045, 0.08], [0.043, 0.2], [0.03, 0.25], [0.012, 0.27], [0.001, 0.28]], 12), MAT.glass('#f4e8d8', 0.35), x, h + 0.1, -0.04);
+    k.add(cyl(0.016, 0.016, 0.14, 6), tubeMat, x, h + 0.2, -0.04);
+    k.add(torus(0.028, 0.004, 3, 10), ir, x, h + 0.22, -0.04, 0, { rx: Math.PI / 2 });
+  }
+  for (const sx of [-1, 1]) k.add(cyl(0.012, 0.012, 0.3, 6), br, sx * (w / 2 - 0.08), h + 0.2, d / 2 - 0.06);
+  k.add(cyl(0.012, 0.012, w - 0.16, 6), br, 0, h + 0.35, d / 2 - 0.06, 0, { rz: Math.PI / 2 });
+  k.at(w / 2 - 0.2, h + 0.06, 0.08, 0, () => {
+    k.add(lathe([[0.001, 0], [0.09, 0], [0.09, 0.05], [0.07, 0.07], [0.001, 0.07]], 14), br, 0, 0, 0);
+    k.add(lathe([[0.07, 0], [0.075, 0.06], [0.06, 0.12], [0.03, 0.16], [0.001, 0.17]], 14), lampMat, 0, 0.07, 0);
+    for (let i = 0; i < 4; i++) k.add(cyl(0.004, 0.004, 0.17, 4), br, Math.sin(i * 1.57) * 0.078, 0.15, Math.cos(i * 1.57) * 0.078, 0, { rz: Math.sin(i * 1.57) * 0.2, rx: -Math.cos(i * 1.57) * 0.2 });
+  });
+  // aerial lead-in
+  k.add(pipe([[-w / 2 + 0.15, h + 0.06, -d / 2 + 0.08], [-w / 2 + 0.15, h + 0.5, -d / 2 + 0.08], [-w / 2 + 0.15, h + 0.8, -d / 2 - 0.2]], 0.01, 0.1, 4), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
+  return { hw: w / 2 + 0.04, hd: d / 2 + 0.04, top: h + 0.06, dials, tubeMat, lampMat, faceMat, shelfY: sy + 0.025, shelfZ: d / 2 + sd / 2 - 0.02, dx };
+}
+// desk microphone: chrome ring on springs round a carbon puck, on a weighted stand; faces +z
+export function microphone(k) {
+  const st = MAT.steel(), bk = MAT.paint('#1c1b1a', 0.35);
+  k.add(lathe([[0.001, 0], [0.08, 0], [0.085, 0.015], [0.05, 0.03], [0.015, 0.04], [0.001, 0.04]], 14), bk, 0, 0, 0);
+  k.add(cyl(0.008, 0.008, 0.26, 6), st, 0, 0.17, 0);
+  k.add(torus(0.025, 0.006, 4, 10, Math.PI), st, 0, 0.3, 0, Math.PI / 2, { rz: Math.PI });
+  k.at(0, 0.38, 0, 0, () => {
+    k.add(torus(0.075, 0.012, 6, 24), st, 0, 0, 0);
+    k.add(cyl(0.04, 0.04, 0.03, 16), bk, 0, 0, 0, 0, { rx: Math.PI / 2 });
+    k.add(disc(0.034, 16), MAT.cloth('#5a5a5a', '#2a2a2a'), 0, 0, 0.016);
+    for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; k.add(cyl(0.003, 0.003, 0.03, 3), st, Math.cos(a) * 0.057, Math.sin(a) * 0.057, 0, 0, { rz: a + Math.PI / 2 }); }
+  });
+}
