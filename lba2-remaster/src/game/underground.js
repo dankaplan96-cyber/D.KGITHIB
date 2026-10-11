@@ -195,8 +195,8 @@ function cableRun(k, pts, r = 0.03, s = 0.15) {
   k.add(pipe(all, r, 0.08, 6), cable(), 0, 0, 0);
 }
 // crates of the project (teal-green, stencil) stacked; returns collider top
-function crateStack(B, x, z, ry, sizes) {
-  const k = B.k; let y = 0, top = 0;
+function crateStack(B, x, z, ry, sizes, y0 = 0) {
+  const k = B.k; let y = y0, top = y0;
   sizes.forEach(([w, h, d, c, dr], i) => { k.at(x, y, z, ry + (dr || 0), () => P.cargoCrate(k, { w, h, d, color: c || ['#4a6e62', '#5f8068', '#3f6a70'][i % 3] })); y += h; top = y; });
   const [w0, , d0] = sizes[0];
   B.col(x, z, w0 / 2, d0 / 2, top, { rot: ry, noStand: true });
@@ -942,11 +942,243 @@ function buildDeep(scene, physics) {
   return room;
 }
 
+// ================================================================ 3. c3gallery — the crystal galleries
+// A big cave of giant crystals (the well's species, grown huge) split by a chasm. The walking level is a
+// rock shelf at DY on both sides; the chasm floor is 3.3 m below (a fall hurts, and a rough stair of ledges
+// leads back up to the start side). Three crystal pillars stand in the chasm: lighting one with the ball
+// raises its set of stepping stones. Vesk's crew crossed on a steel bridge that has since fallen in.
+function buildGallery(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'c3gallery', 2000, 0);
+  const R = B.room, k = B.k, kt = new Kit(B.group);
+  const W = 26, D = 20, DY = 3.0, CY = -0.3, WH = 5.4, t = 0.7;
+  const CX0 = -5, CX1 = 5; // the chasm
+  R.view = 20.5; R.follow = 0.28; R.cave = true; R.music = 'under'; R.deckY = DY;
+  const BZ = -D / 2, LX = -W / 2;
+  const rock = rockMat('#b0a4b4'), rockD = rockMat('#7c7088'), rockC = rockMat('#948aa4');
+  const floor = floorMat('#6e6474', 'rgba(36,26,48,0.4)', 'gallery');
+  const entZ = 5.0, exX = 8.6;
+
+  // --- the two shelves and the chasm floor
+  const shelf = (x0, x1) => {
+    const w = x1 - x0, cx = (x0 + x1) / 2;
+    k.add(new THREE.BoxGeometry(w, DY + 1.2, D + 2 * t), rockC, cx, (DY - 1.2) / 2, 0);
+    k.add(new THREE.BoxGeometry(w, 0.08, D), floor, cx, DY - 0.03, 0);
+    B.col(cx, 0, w / 2, D / 2, DY, { seeThrough: true, bottom: -2 });
+  };
+  shelf(LX - t, CX0); shelf(CX1, W / 2 + t);
+  k.add(new THREE.BoxGeometry(CX1 - CX0, 0.9, D + 2 * t), rockD, 0, CY - 0.45, 0);
+  k.add(new THREE.BoxGeometry(CX1 - CX0, 0.06, D), floorMat('#3e3646', 'rgba(20,10,30,0.5)', 'chasm'), 0, CY + 0.02, 0);
+  B.col(0, 0, (CX1 - CX0) / 2 + 0.6, D / 2 + 0.3, CY, { seeThrough: true, bottom: -2 }); // overlaps the shelves: no seam
+  // cliff faces of the chasm: faceted boulders jammed along both edges, below the lip
+  const cliff = (x, dir, seed) => {
+    const r = rng(seed);
+    for (let z = -D / 2 + 0.4; z < D / 2; z += 1.2 + r() * 0.5) {
+      for (const [y0, sy] of [[CY - 0.1, 1.5 + r() * 0.6], [1.15, 1.0 + r() * 0.5]]) k.add(rockGeo(Math.floor(r() * 40)), rockC, x + dir * (0.1 + r() * 0.25), y0, z, r() * 6, { sx: 0.7 + r() * 0.3, sy, sz: 0.9 + r() * 0.4 });
+    }
+    // the lip: a bevelled rim along the edge, catching the crystal light
+    k.add(rbox(0.5, 0.22, D, 0.08), rock, x - dir * 0.15, DY - 0.08, 0);
+  };
+  cliff(CX0, 1, 51); cliff(CX1, -1, 57);
+  // crystal debris and glowing cracks on the chasm floor
+  for (const [x, z, s, sd] of [[-2.6, -8.0, 0.5, 1], [2.8, -4.4, 0.4, 2], [-3.4, 3.8, 0.35, 3], [0.6, 7.6, 0.5, 4], [3.6, 1.6, 0.3, 5], [-0.6, -2.6, 0.3, 6]]) k.at(x, CY, z, sd, () => crystals(k, 4, s, sd + 60, [CYAN(), VIOLET(), DIM()]));
+  const crackMat = M('ugcrack', () => stdM({ color: '#d8f8ff', emissive: '#40d8ff', emissiveIntensity: 1.6, roughness: 0.3 }, 0, { noShadow: true }));
+  { const r = rng(9); for (let c = 0; c < 7; c++) { let x = (r() - 0.5) * 8, z = (r() - 0.5) * 18; const pts = [[x, CY + 0.06, z]]; for (let j = 0; j < 6; j++) { x = Math.max(CX0 + 0.4, Math.min(CX1 - 0.4, x + (r() - 0.5) * 1.6)); z += (r() - 0.5) * 2.4; pts.push([x, CY + 0.06, z]); } k.add(pipe(pts, 0.035, 0.2, 4), crackMat, 0, 0, 0); } }
+  motes(B, [[0, -6, 4], [0, 0, 4], [0, 6, 4]], { n: 70, color: '#a8e8ff', size: 0.45, op: 0.18, hmax: 2.4, speed: 0.25, y0: CY });
+
+  // --- walls: rough rock rising from the chasm floor to above the shelves
+  const bwH = WH + DY - CY, a0 = exX - 1.9 - (LX - t);
+  k.at(LX - t, CY, BZ, 0, () => rockWallRun(k, a0, bwH, 61, rock, { tiers: 3, depth: 1.2, step: 1.8, top: 0.3 }));
+  k.at(exX + 1.9, CY, BZ, 0, () => rockWallRun(k, W / 2 + t - exX - 1.9, bwH, 62, rock, { tiers: 3, depth: 1.2, step: 1.8, top: 0.3 }));
+  k.add(new THREE.BoxGeometry(3.8, bwH, 0.6), rock, exX, CY + bwH / 2, BZ - 0.78);
+  k.add(new THREE.BoxGeometry(3.8, bwH - (DY - CY) - 3.7, 0.9), rock, exX, DY + 3.7 + (bwH - (DY - CY) - 3.7) / 2, BZ - 0.3);
+  k.at(LX, DY, D / 2 + t, Math.PI / 2, () => {
+    // left wall, broken by the tunnel from the deep installation
+    const a = D / 2 + t - entZ;
+    rockWallRun(k, a - 1.4, WH, 63, rock, { tiers: 2, depth: 1.1, step: 1.7, top: 0.3 });
+    k.at(a + 1.4, 0, 0, 0, () => rockWallRun(k, D + t - a - 1.4, WH, 64, rock, { tiers: 2, depth: 1.1, step: 1.7, top: 0.3 }));
+    k.add(new THREE.BoxGeometry(2.9, WH - 2.7, 1.0), rock, a, 2.7 + (WH - 2.7) / 2, -0.7);
+    k.add(rockGeo(5), rock, a, 2.5, -0.4, 0.4, { sx: 2.0, sy: 1.6, sz: 0.8 });
+  });
+  B.col(0, BZ - 0.35 + 0.3, W / 2 + t, 0.65, DY + WH);
+  // left wall colliders either side of the tunnel
+  B.col(LX - 0.05, (entZ + 1.4 + D / 2) / 2, 0.65, (D / 2 - entZ - 1.4) / 2 + t, DY + WH);
+  B.col(LX - 0.05, (entZ - 1.4 - D / 2) / 2, 0.65, (entZ - 1.4 + D / 2) / 2 + t, DY + WH);
+  // near rims (low) and their colliders
+  const rimH = 0.55, rr = rng(71);
+  k.add(new THREE.BoxGeometry(CX0 - LX + t, rimH, t), rock, (LX - t + CX0) / 2, DY + rimH / 2, D / 2 + t / 2);
+  k.add(new THREE.BoxGeometry(W / 2 + t - CX1, rimH, t), rock, (CX1 + W / 2 + t) / 2, DY + rimH / 2, D / 2 + t / 2);
+  k.add(new THREE.BoxGeometry(t, rimH, D + t), rock, W / 2 + t / 2, DY + rimH / 2, -t / 2);
+  for (let x = LX; x < W / 2 + t; x += 1.1 + rr() * 0.6) { if (x > CX0 - 0.3 && x < CX1 + 0.3) continue; k.add(rockGeo(Math.floor(rr() * 30)), rock, x, DY + rimH * 0.5, D / 2 + t * 0.5, rr() * 6, { sx: 0.6 + rr() * 0.4, sy: rimH * (0.6 + rr() * 0.6), sz: t * 0.75 }); }
+  for (let z = -D / 2; z < D / 2 + t; z += 1.1 + rr() * 0.6) k.add(rockGeo(Math.floor(rr() * 30)), rock, W / 2 + t * 0.5, DY + rimH * 0.5, z, rr() * 6, { sx: t * 0.75, sy: rimH * (0.6 + rr() * 0.6), sz: 0.6 + rr() * 0.4 });
+  k.add(new THREE.BoxGeometry(CX1 - CX0, 0.5, t), rockD, 0, CY + 0.25, D / 2 + t / 2);
+  B.col(0, D / 2 + t / 2, W / 2 + t, t / 2, DY + WH);
+  B.col(W / 2 + t / 2, 0, t / 2, D / 2 + t, DY + WH);
+
+  // --- the way back up from the chasm floor: rough ledges against the start cliff (near end)
+  const ledges = 7;
+  for (let i = 1; i <= ledges; i++) {
+    const top = CY + (i * (DY - CY)) / ledges, z = 9.3 - (i - 1) * 0.72, x = CX0 + 0.65;
+    k.add(rockGeo(80 + i, { rough: 0.18, flat: 0.6 }), rockC, x, CY, z, i, { sx: 0.75, sy: (top - CY) / 1.6, sz: 0.55 });
+    k.add(rbox(1.2, 0.12, 0.75, 0.05), rock, x, top - 0.06, z, i * 0.3);
+    B.col(x, z, 0.65, 0.42, top);
+  }
+
+  // --- the entrance tunnel from the deep installation: rough rock, project shoring, a lamp
+  k.at(LX, DY, entZ, Math.PI / 2, () => {
+    k.add(new THREE.BoxGeometry(2.6, 0.08, 3.2), floor, 0, -0.03, -1.4);
+    for (let z = -0.4; z > -3.0; z -= 1.1) { for (const s of [-1, 1]) k.add(rbox(0.18, 2.6, 0.18, 0.03), MAT.wood('grey'), s * 1.15, 1.3, z); k.add(rbox(2.6, 0.2, 0.22, 0.03), MAT.wood('grey'), 0, 2.6, z); }
+    k.add(plane(2.4, 2.8), MAT.flat('#060508', 1), 0, 1.4, -3.0);
+    for (const s of [-1, 1]) for (let z = -0.6; z > -3; z -= 1.0) k.add(rockGeo(90 + Math.round(-z * 5) + (s > 0 ? 7 : 0)), rockD, s * 1.55, 0, z, z, { sx: 0.7, sy: 1.6, sz: 0.8 });
+    k.at(-1.0, 2.2, -0.2, Math.PI / 2, () => wallLamp(k, { arm: 0.25 }));
+  });
+  B.light('#ffdcb0', 4.5, 6, LX + 1.2, DY + 2.2, entZ);
+  // the crew's marks at the edge: hazard posts and tape, a survey tripod, a warning board
+  const tape = [[-5.4, 6.8], [-5.4, 3.6], [-5.4, -0.2], [-5.4, -3.8]];
+  tape.forEach(([x, z]) => k.at(x, DY, z, 0, () => { k.add(cyl(0.05, 0.06, 1.0, 8), MAT.paint('#e8b830', 0.5), 0, 0.5, 0); k.add(rbox(0.12, 0.08, 0.12, 0.02), hazard(), 0, 0.85, 0); }));
+  for (let i = 1; i < tape.length; i++) if (i !== 2) k.add(pipe(sag([tape[i - 1][0], DY + 0.85, tape[i - 1][1]], [tape[i][0], DY + 0.85, tape[i][1]], 0.12, 6), 0.02, 0.05, 4), MAT.flat('#e8b830', 0.6), 0, 0, 0);
+  k.at(-6.2, DY, 1.9, -0.4, () => { k.add(cyl(0.04, 0.04, 1.5, 6), iron(), 0, 0.75, 0); k.at(0, 1.6, 0.02, 0, () => signPlate(k, 0.9, 0.5, signMat(['DANGER', 'BRIDGE OUT'], { w: 320, h: 170, bg: '#6a2a24', emblem: false }))); });
+  B.ccol(-6.2, 1.9, 0.12, DY + 2.0, { noStand: true, seeThrough: true });
+  k.at(-7.8, DY, -6.6, 2.4, () => floodlight(k, { h: 1.5, tilt: 0.3 })); B.ccol(-7.8, -6.6, 0.35, DY + 2, { noStand: true });
+  B.light('#fff0d0', 4, 8, -7.4, DY + 1.6, -5.9);
+  crateStack(B, -11.6, -1.4, 0.2, [[0.9, 0.75, 0.9], [0.7, 0.55, 0.7, null, 0.3]], DY);
+  crateStack(B, -10.6, -2.4, -0.3, [[0.7, 0.6, 0.7]], DY);
+
+  // --- the fallen bridge: a steel walkway torn from the far side, hanging into the chasm
+  const fb = { x: CX1, z: 8.2 };
+  tilt(kt, fb.x, DY - 0.1, fb.z, -Math.PI / 2, 1.0, 0.15, () => {
+    kt.add(rbox(1.4, 0.08, 5.2, 0.02), deck(), 0, 0, 2.6);
+    for (const s of [-1, 1]) { kt.add(rbox(0.08, 0.3, 5.2, 0.02), tealP(), s * 0.7, -0.1, 2.6); kt.add(pipe([[s * 0.68, 0.9, 0.2], [s * 0.68, 0.9, 4.9]], 0.025, 0.05, 6), brass(), 0, 0, 0); for (let z = 0.4; z < 5; z += 1.1) kt.add(cyl(0.02, 0.02, 0.9, 5), brass(), s * 0.68, 0.45, z); }
+    kt.add(rbox(1.4, 0.08, 0.3, 0.02), hazard(), 0, 0.05, 5.1);
+  });
+  k.at(fb.x + 0.3, DY, fb.z, 0, () => { k.add(rbox(0.6, 0.25, 1.8, 0.04), iron(), 0, 0.12, 0); for (const s of [-1, 1]) k.add(cyl(0.06, 0.06, 0.2, 8), brass(), 0, 0.3, s * 0.7); });
+  k.at(-5.3, DY, 8.4, 0, () => { k.add(rbox(0.6, 0.25, 1.8, 0.04), iron(), 0, 0.12, 0); k.add(rbox(0.5, 0.06, 1.4, 0.02), deck(), 0.45, 0.24, 0, 0, { rz: -0.5 }); });
+
+  // --- three crystal pillars in the chasm, each with a heart the ball can wake
+  R.pillars = [];
+  const PIL = [{ x: -2.4, z: -3.9, h: 8.5, s: 0.95 }, { x: 2.5, z: -4.7, h: 9.5, s: 1.0 }, { x: 0.1, z: -8.3, h: 10.5, s: 1.1 }];
+  PIL.forEach((p, i) => {
+    const g = new THREE.Group(); B.group.add(g);
+    const pk = new Kit(g);
+    const body = stdM({ color: '#8a90b0', emissive: '#3a2a7a', emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.93, flatShading: true }, 0, { noShadow: true });
+    const heart = stdM({ color: '#9aa4b8', emissive: '#203048', emissiveIntensity: 0.3, roughness: 0.1, flatShading: true }, 0, { noShadow: true });
+    const r = rng(300 + i);
+    pk.add(rockGeo(200 + i), rockD, p.x, CY, p.z, i, { sx: 1.6 * p.s, sy: 1.1, sz: 1.5 * p.s });
+    pk.add(crystalGeo(), body, p.x, CY, p.z, i, { sx: 0.75 * p.s, sy: p.h, sz: 0.75 * p.s, rx: 0.05, rz: -0.06 });
+    for (let j = 0; j < 7; j++) { const a = (j / 7) * Math.PI * 2 + r(), d = 0.5 + r() * 0.5; pk.add(crystalGeo(), body, p.x + Math.cos(a) * d * p.s, CY, p.z + Math.sin(a) * d * p.s, r() * 3, { sx: (0.25 + r() * 0.2) * p.s, sy: p.h * (0.3 + r() * 0.45), sz: (0.25 + r() * 0.2) * p.s, rx: Math.cos(a) * 0.25, rz: -Math.sin(a) * 0.25 }); }
+    // the heart: a fat crystal set into the pillar's face toward the start shelf, at shelf height
+    const hx = p.x - 0.75 * p.s, hy = DY + 1.6, hz = p.z;
+    pk.add(new THREE.OctahedronGeometry(0.55, 0), heart, hx, hy, hz, 0.4, { sy: 1.5 });
+    pk.flush();
+    const light = B.light('#7af0ff', 0, 9, hx - 0.8, hy + 0.5, hz);
+    light.userData.base = 0.0;
+    const glow = glowSprite('#9ff4ff', 2.6, 0); glow.position.set(hx - 0.1, hy, hz); B.group.add(glow);
+    B.ccol(p.x, p.z, 0.85 * p.s, DY + 6);
+    const pl = {
+      i, ...B.world(hx, hz), y: hy, lit: false, light, t: 0,
+      setLit(b) { this.lit = !!b; },
+    };
+    pl.body = body; pl.heart = heart; pl.glow = glow;
+    R.pillars.push(pl);
+    R.ballTargets.push({ ...B.world(hx, hz), y: hy, r: 1.0, pillar: i });
+  });
+
+  // --- the stepping stones, three sets, raised from the chasm floor (colliders only when up)
+  const SP = [[-3.6, 2.6], [-1.9, 1.2], [0.0, 0.0], [1.6, -1.5], [3.85, -1.9]], SETS = [[0, 1], [2], [3, 4]], SR = 0.65;
+  const stoneGroup = new THREE.Group(); B.group.add(stoneGroup);
+  const stones = SP.map(([x, z], j) => {
+    const g = new THREE.Group(); g.position.set(x, 0, z); stoneGroup.add(g);
+    const sk = new Kit(g);
+    sk.add(lathe([[0.001, -4.2], [SR * 1.05, -4.2], [SR * 1.1, -1.2], [SR, -0.15], [SR - 0.08, 0], [0.001, 0]], 7), rock, 0, 0, 0, j);
+    sk.add(cyl(SR - 0.06, SR - 0.04, 0.05, 7), rock, 0, 0.0, 0, j);
+    tilt(sk, SR * 0.8, -0.6, 0, j * 1.3, 0, -0.9, () => crystals(sk, 3, 0.35, 400 + j, [CYAN(), VIOLET()]));
+    sk.add(torus(SR - 0.12, 0.03, 4, 7), crackMat, 0, 0.012, 0, j, { rx: Math.PI / 2 });
+    sk.flush();
+    const low = CY - 0.9;
+    g.position.y = low;
+    const c = B.ccol(x, z, SR, low, { enabled: false });
+    return { g, c, low, top: DY - 0.02, t: -1, delay: 0 };
+  });
+  const raised = [false, false, false];
+  R.stones = {
+    group: stoneGroup, sets: SETS.map((s) => s.map((j) => stones[j])), raised,
+    raise(i, instant = false) {
+      if (raised[i]) return; raised[i] = true;
+      SETS[i].forEach((j, n) => { const s = stones[j]; s.c.enabled = true; s.t = instant ? 99 : -n * 0.35; });
+    },
+  };
+
+  // --- giant crystals: the gallery's forest, on the shelves and up the walls
+  const giant = (x, y, z, n, s, sd, mats, ry = 0, rx = 0, rz = 0) => tilt(kt, x, y, z, ry, rx, rz, () => crystals(kt, n, s, sd, mats, 0.45));
+  giant(-11.6, DY, -8.6, 7, 2.2, 501, [CYAN(), VIOLET(), CYAN()], 0.3, 0.12, 0.1);
+  giant(-12.2, DY, -3.6, 5, 1.3, 502, [VIOLET(), CYAN()], 0, 0, -0.35);
+  giant(-7.0, DY, -9.4, 6, 1.6, 503, [CYAN(), VIOLET()], 0, 0.3, 0);
+  giant(8.8, DY, -9.3, 4, 1.1, 504, [VIOLET(), CYAN()], 0, 0.35, 0);
+  giant(12.0, DY, -6.0, 6, 1.9, 505, [CYAN(), VIOLET(), CYAN()], 0, 0, 0.3);
+  giant(11.6, DY, 3.0, 5, 1.4, 506, [VIOLET(), CYAN()], 0, 0, 0.25);
+  giant(-12.0, DY, 8.6, 4, 1.0, 507, [CYAN(), VIOLET()], 0, -0.2, -0.2);
+  giant(-3.6, CY, -9.4, 5, 1.6, 508, [VIOLET(), CYAN()], 0, 0.25, 0);
+  giant(6.6, DY, 8.8, 3, 0.8, 509, [CYAN(), DIM()], 0, -0.3, 0);
+  for (const [x, z, r] of [[-11.6, -8.6, 1.6], [-12.2, -3.6, 0.9], [-7.0, -9.4, 1.1], [8.8, -9.3, 0.8], [12.0, -6.0, 1.3], [11.6, 3.0, 1.0], [-12.0, 8.6, 0.7], [6.6, 8.8, 0.6]]) B.ccol(x, z, r, DY + 4, { noStand: true });
+  // crystals breaking out of the walls high up
+  for (const [x, y, z, ry, s, sd] of [[LX + 0.3, DY + 2.6, -6.0, Math.PI / 2, 0.8, 520], [LX + 0.3, DY + 3.2, 1.2, Math.PI / 2, 0.6, 521], [-3.0, DY + 2.8, BZ + 0.3, 0, 0.9, 522], [3.8, DY + 3.4, BZ + 0.3, 0, 0.7, 523], [10.5, DY + 2.4, BZ + 0.3, 0, 0.6, 524]]) tilt(kt, x, y, z, ry, Math.PI / 2 - 0.3, 0, () => crystals(kt, 6, s, sd, [CYAN(), VIOLET(), DIM()], 0.6));
+  // rocks on the shelves
+  for (const [x, z, s, sy, sd] of [[-9.6, 8.2, 1.1, 0.9, 531], [-8.8, -2.2, 0.7, 0.6, 532], [9.6, 7.6, 1.0, 0.8, 533], [7.4, -6.6, 0.9, 1.1, 534], [11.8, -1.8, 0.8, 0.7, 535]]) { k.add(rockGeo(sd), rock, x, DY, z, sd, { sx: s, sy, sz: s }); B.ccol(x, z, s * 0.85, DY + sy * 1.2, { noStand: true }); }
+  { const r = rng(77); for (let i = 0; i < 110; i++) { const x = (r() - 0.5) * (W - 1), z = (r() - 0.5) * (D - 1); if (x > CX0 - 0.6 && x < CX1 + 0.6) continue; if (Math.hypot(x - (LX + 1.5), z - entZ) < 1.8 || Math.hypot(x - exX, z - BZ) < 2.2) continue; const s = 0.08 + r() * r() * 0.3; k.add(rockGeo(Math.floor(r() * 30), { detail: 0 }), rockD, x, DY - 0.02, z, r() * 6, { sx: s * (1 + r()), sy: s * 0.8, sz: s }); } }
+
+  // --- the far side: an old carved arch in the back wall, smooth pale stone — the way to Sendell
+  const old = MAT.stone('lav', 1.6), oldC = MAT.plaster('#d8d4e4');
+  k.at(exX, DY, BZ, 0, () => {
+    const aw = 2.2, ah = 3.0;
+    k.add(slab('ugarch', (s) => { s.moveTo(-aw / 2 - 0.6, 0); s.lineTo(-aw / 2, 0); s.lineTo(-aw / 2, ah - aw / 2); s.absarc(0, ah - aw / 2, aw / 2, Math.PI, 0, true); s.lineTo(aw / 2, 0); s.lineTo(aw / 2 + 0.6, 0); s.lineTo(aw / 2 + 0.6, ah + 0.7); s.lineTo(-aw / 2 - 0.6, ah + 0.7); s.lineTo(-aw / 2 - 0.6, 0); }, 0.5, 0.06), old, 0, 0, 0.05);
+    k.add(torus(aw / 2 + 0.22, 0.09, 6, 24, Math.PI), oldC, 0, ah - aw / 2, 0.32);
+    for (const sx of [-1, 1]) k.add(rbox(0.32, ah - aw / 2, 0.2, 0.06), oldC, sx * (aw / 2 + 0.22), (ah - aw / 2) / 2, 0.32);
+    // the two suns over the keystone, worn
+    for (const [sx, rr] of [[-0.32, 0.2], [0.3, 0.14]]) { k.add(P.disc(rr, 18), oldC, sx, ah + 0.32, 0.31); k.add(torus(rr + 0.07, 0.02, 4, 18), oldC, sx, ah + 0.32, 0.31); }
+    k.add(new THREE.BoxGeometry(aw, ah, 0.2), MAT.flat('#04060c', 1), 0, ah / 2, -0.4);
+    for (const s of [-1, 1]) k.add(rbox(0.7, 0.22, 0.7, 0.05), old, s * 1.2, 0.11, 0.55);
+  });
+  const archGlow = glowSprite('#7ab8ff', 2.4, 0.35); archGlow.position.set(exX, DY + 1.3, BZ - 0.2); B.group.add(archGlow);
+  B.light('#6aa8ff', 4, 7, exX, DY + 1.8, BZ + 1.4);
+  R.exits.push({ ...B.world(exX, BZ + 0.6), r: 0.85, to: 'c3-sendell' });
+  R.exits.push({ ...B.world(LX + 0.45, entZ), r: 0.8, to: 'c3-deep' });
+  R.spawn = { ...B.world(LX + 1.8, entZ), a: Math.PI / 2 };
+  R.mites = [B.world(-9.0, 2.6), B.world(-8.2, -5.6), B.world(8.4, -3.4), B.world(9.0, 4.8)];
+
+  // --- light: cold crystal light from below and from the clusters, a dim violet fill
+  for (const [x, y, z, c, i, d] of [[-10.5, DY + 2, -7.4, '#5ae0ff', 7, 9], [11.0, DY + 2, -5.0, '#5ae0ff', 6, 9], [-10.8, DY + 1.6, 7.6, '#b07aff', 3.5, 7], [10.6, DY + 1.6, 3.6, '#b07aff', 4, 7], [-3.0, DY - 0.5, -8.4, '#9a6aff', 5, 8], [0, CY + 1.2, 0, '#40c8ff', 6, 9], [0, CY + 1.2, 6.5, '#40c8ff', 3, 7]]) B.light(c, i, d, x, y, z);
+  B.light('#b8a8d8', 2.5, 30, 0, DY + 7, 2);
+
+  flushNoShadow(kt);
+  R.updaters.push((dt, tt) => {
+    for (const s of stones) {
+      if (s.t < -0.5 && !s.c.enabled) continue;
+      s.t += dt;
+      const kk = smoothstep(0, 1.5, s.t);
+      const y = lerp(s.low, s.top, kk);
+      s.g.position.y = y + (kk > 0 && kk < 1 ? Math.sin(s.t * 40) * 0.02 : 0);
+      s.c.top = y;
+    }
+    for (const p of R.pillars) {
+      p.t = Math.max(0, Math.min(1, p.t + (p.lit ? dt : -dt) / 1.2));
+      const e = p.t, pulse = 0.85 + Math.sin(tt * 2 + p.i) * 0.15;
+      p.body.emissive.setRGB(0.23 + 0.0 * e, 0.16 + 0.55 * e, 0.48 + 0.42 * e); p.body.emissiveIntensity = 0.35 + 0.75 * e * pulse;
+      p.heart.emissive.setRGB(0.13 + 0.4 * e, 0.19 + 0.75 * e, 0.28 + 0.72 * e); p.heart.emissiveIntensity = 0.3 + 2.0 * e * pulse;
+      p.heart.color.setRGB(0.6 + 0.3 * e, 0.64 + 0.34 * e, 0.72 + 0.28 * e);
+      p.light.intensity = 9 * e * pulse; p.glow.material.opacity = 0.75 * e * pulse;
+    }
+    archGlow.material.opacity = 0.3 + Math.sin(tt * 0.8) * 0.06;
+  });
+  const room = B.finish();
+  room.center.set(B.cx - 2.0, 0, B.cz - 2.0);
+  return room;
+}
+
 // ================================================================ registration
 export function buildUnderground(scene, physics) {
   const rooms = {
     c3shaft: buildShaft(scene, physics),
     c3deep: buildDeep(scene, physics),
+    c3gallery: buildGallery(scene, physics),
   };
   return rooms;
 }
