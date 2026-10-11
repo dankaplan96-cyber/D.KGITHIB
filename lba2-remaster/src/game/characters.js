@@ -796,8 +796,9 @@ export function createCharacter(lookName, overrides = {}) {
   const L = { ...(LOOKS[lookName] || LOOKS.twinsen), ...overrides };
   const key = lookName + JSON.stringify(overrides);
   const def = defs[key] ??= splitArms({ ...design(L), key });
-  const poly = L.poly && POLY[L.poly];
-  if (poly) return polyCharacter(L, def, poly);
+  const polyName = 'poly' in L ? L.poly : lookName; // (every look has a Blender model unless poly: null)
+  const poly = polyName && POLY[polyName];
+  if (poly) return polyCharacter({ ...L, poly: polyName }, def, poly);
   const { mesh, bones } = buildSculpted(def);
   const root = new THREE.Group();
   root.add(mesh);
@@ -909,7 +910,9 @@ function polyCharacter(L, def, P) {
   return finishRig(L, def, root, mesh, bones, eyes);
 }
 export async function preloadCharacters() {
-  await Promise.all(['twinsen'].map(async (n) => {
+  let names = ['twinsen'];
+  try { const r = await fetch('assets/poly/index.json'); if (r.ok) names = await r.json(); } catch { /* twinsen only */ }
+  await Promise.all(names.map(async (n) => {
     try { const r = await fetch(`assets/poly/${n}.json`); if (r.ok) POLY[n] = await r.json(); } catch { /* falls back to the sculpt */ }
   }));
 }
