@@ -123,7 +123,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 .keys { border-collapse: collapse; max-width: 760px; background: var(--panel); border-radius: 14px; overflow: hidden; text-align: start; }
 .keys td { padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 15px; }
 .keys td:first-child { font-weight: 700; color: var(--accent); white-space: nowrap; }
-#ending { background: radial-gradient(ellipse at center, rgba(255, 200, 120, 0.12), rgba(5, 12, 20, 0.7)); }
+#ending { background: radial-gradient(ellipse at center, rgba(5, 12, 20, 0.72), rgba(5, 12, 20, 0.92)); }
+#ending p { background: rgba(5, 12, 20, 0.55); padding: 16px 22px; border-radius: 10px; }
 #loading { background: var(--bg); }
 .spinner { width: 48px; height: 48px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.15); border-top-color: var(--accent); animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
