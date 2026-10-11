@@ -11,6 +11,7 @@ import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
 import { buildWorld, POI } from './game/world.js';
 import { buildInteriors } from './game/interiors.js';
+import { buildZeelich } from './game/zeelich.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
 import { createEnemy, Drone } from './game/enemies.js';
 import { BehaviourMenu } from './game/behmenu.js';
@@ -62,6 +63,10 @@ class Game {
     let tr = performance.now();
     this.rooms = buildInteriors(this.scene, this.physics);
     this.loadTimes.rooms = performance.now() - tr;
+    // outdoor regions are rooms flagged `outdoor`: LBA camera, own sky, doors to their own interiors
+    tr = performance.now();
+    this.rooms.zeelich = buildZeelich(this.scene, this.physics);
+    this.loadTimes.zeelich = performance.now() - tr;
     this.room = null;
     this.env = new Environment(this.scene, this.terrain);
     this.renderer.setup(this.scene, this.camera);
@@ -148,16 +153,16 @@ class Game {
       R.group.visible = true;
       R.lights.forEach((l) => { l.intensity = l.userData.base; });
       this.world.root.visible = false;
-      this.env.setInterior(true);
+      if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true); }
       const sp = spawn || R.spawn;
       const h = this.hero;
       h.pos.set(sp.x, this.physics.groundAt(sp.x, sp.z), sp.z);
       h.angle = sp.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
       this.lastSafe = { x: sp.x, z: sp.z };
-      this.camRig.setIso(R);
+      this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
-      this.audio.setMood(ROOM_MUSIC[id] || 'citadel');
+      this.audio.setMood(R.music || ROOM_MUSIC[id] || 'citadel');
       this.story.onEnterRoom(id);
       if (this.state !== 'title') this.save(false);
     };
@@ -170,6 +175,7 @@ class Game {
       if (R) { R.group.visible = false; R.lights.forEach((l) => { l.intensity = 0; }); }
       this.room = null;
       this.world.root.visible = true;
+      this.env.setRegion(null);
       this.env.setInterior(false);
       const h = this.hero;
       h.pos.set(to.x, this.physics.groundAt(to.x, to.z), to.z);
@@ -187,7 +193,7 @@ class Game {
 
   // where the hero is on the island map (inside a room: where that room is)
   mapHero() {
-    if (!this.room) return this.hero;
+    if (!this.room || this.room.outdoor) return this.hero;
     const pos = this.room.id === 'house' ? this.world.houses[0] : this.world.well;
     return { pos: { x: pos.x, z: pos.z }, angle: this.hero.angle };
   }
@@ -601,13 +607,22 @@ class Game {
     if (this.room) {
       for (const e of this.room.exits) {
         if (Math.hypot(h.pos.x - e.x, h.pos.z - e.z) < e.r) {
-          if (this.story.canExit(this.room)) { this.audio.play('door'); this.exitRoom(this.story.exitTo(e.to)); }
+          if (this.story.canExit(this.room)) {
+            this.audio.play('door');
+            // an exit leads outdoors on Citadel, or into another room/region ({ room, x, z, a })
+            const to = this.story.exitTo(e.to);
+            if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(to);
+          }
           this.doorCool = 1.5;
           return;
         }
       }
-    } else {
+    }
+    // doors: on Citadel (no region) or in the outdoor region the hero is in
+    if (!this.room || this.room.outdoor) {
+      const region = this.room?.id;
       for (const d of this.story.doors()) {
+        if ((d.region || undefined) !== region) continue;
         if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('door'); this.enterRoom(d.room); return; }
       }
     }
@@ -744,7 +759,7 @@ class Game {
 
     // remember a safe spot to return to after a fall
     this.safeT = (this.safeT || 0) - dt;
-    if (!this.room && this.safeT <= 0 && h.onGround && h.pos.y > 0.4) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
+    if ((!this.room || this.room.outdoor) && this.safeT <= 0 && h.onGround && h.pos.y > 0.4) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
 
     // outdoor music follows the area: the station inside the old fortress has its own theme
     if (!this.room && this.audio.music) {

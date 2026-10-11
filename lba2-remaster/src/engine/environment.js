@@ -149,8 +149,15 @@ export class Environment {
   // indoors: no sky, sea, rain or fog; black around the room like LBA2's interiors
   setInterior(on) {
     this.interior = on;
-    this.water.visible = this.clouds.visible = !on;
+    this.water.visible = this.clouds.visible = !on && !this.region;
     this.scene.background = on ? (this._black ??= new THREE.Color('#000000')) : this.fog.color;
+  }
+  // outdoor region with its own sky (Zeelich: a pink-violet sky above a sea of clouds). The Citadel sea,
+  // cloud ceiling and rain are hidden; the region brings its own cloud sea. null = back to Citadel.
+  setRegion(r) {
+    this.region = r || null;
+    this.water.visible = this.clouds.visible = !r && !this.interior;
+    if (r) { this._rp = Object.fromEntries(Object.entries(r).filter(([, v]) => typeof v === 'string').map(([k, v]) => [k, C(v)])); }
   }
   // [near, far] fog distances; the classic look uses the original's short range
   setFogRange(near, far) { this.fogRange = [near, far]; }
@@ -196,6 +203,17 @@ export class Environment {
     this.sun.position.copy(focus).addScaledVector(this.sunDir, 80);
     this.sun.target.position.copy(focus);
 
+    if (this.region) {
+      // the region's fixed palette (no storm there)
+      const R = this.region, P = this._rp;
+      this.fog.color.copy(P.fog);
+      this.fog.near = (R.fogRange || this.fogRange)[0]; this.fog.far = (R.fogRange || this.fogRange)[1];
+      this.sun.color.copy(P.sun); this.sun.intensity = R.sunI ?? 2.4;
+      this.hemi.color.copy(P.hemiSky); this.hemi.groundColor.copy(P.hemiGround); this.hemi.intensity = R.hemiI ?? 1.2;
+      this.scene.background = this.fog.color;
+      this.rain.visible = false;
+      return;
+    }
     const op = s * 0.5;
     this.rain.visible = op > 0.02 && !this.interior;
     if (this.rain.visible) {
