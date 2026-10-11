@@ -861,10 +861,37 @@ function polyGeometry(def, P) {
   geo.computeBoundingSphere();
   return geo;
 }
-const polyEyeMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.4 });
+// LBA2's look: each colour is a ramp of shades (near-black → the colour → pale), picked by how much the surface
+// faces one fixed light — intensity = clamp(N·L, 0.1, 1), as in the original's shading — instead of scene lighting.
+// (a MeshStandardMaterial subclass so clones keep the shader and the hurt flash still works through emissive)
+export const LBA_LIGHT = { value: new THREE.Vector3(-0.45, 1, 0.6).normalize() };
+export const LBA_LEVEL = { value: 1 };
+class LbaMaterial extends THREE.MeshStandardMaterial {
+  constructor(params) {
+    super({ vertexColors: true, roughness: 1, metalness: 0, ...params });
+    this.onBeforeCompile = (sh) => {
+      sh.uniforms.uLbaLight = LBA_LIGHT;
+      sh.uniforms.uLbaLevel = LBA_LEVEL;
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', `#include <common>
+uniform vec3 uLbaLight;
+uniform float uLbaLevel;
+vec3 lbaRamp(vec3 base, vec3 n) {
+  float t = clamp(dot(n, uLbaLight), 0.1, 1.0);
+  vec3 lo = base * 0.12;
+  vec3 hi = mix(base * 1.5, vec3(1.0), 0.3); // (the top of a ramp stays the colour's hue: pale blue, not white)
+  return (t < 0.6 ? mix(lo, base, t / 0.6) : mix(base, hi, (t - 0.6) / 0.4)) * uLbaLevel;
+}`)
+        .replace('vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
+          'vec3 outgoingLight = lbaRamp(diffuseColor.rgb, inverseTransformDirection(normal, viewMatrix)) + totalEmissiveRadiance;');
+    };
+    this.customProgramCacheKey = () => 'lba-ramp';
+  }
+}
+const polyEyeMat = new LbaMaterial();
 function polyCharacter(L, def, P) {
   const { mesh, bones } = assemble(def, polyGeo[L.poly] ??= polyGeometry(def, P));
-  mesh.material.side = THREE.DoubleSide; // the cape and robe are open shells, seen from below when jumping
+  mesh.material = new LbaMaterial({ side: THREE.DoubleSide }); // (the cape and robe are open shells)
   const root = new THREE.Group();
   root.add(mesh);
   const hp = def.bones.head.pos;

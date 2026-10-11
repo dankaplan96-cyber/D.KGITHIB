@@ -23,7 +23,7 @@ SPREAD = skel['armSpread']
 S = 2.1  # the game's height for H (top of the hair)
 
 COL = {
-    'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#d8704e', 'skin': '#e2bc90', 'hair': '#634327',
+    'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#e98c6c', 'skin': '#e2bc90', 'hair': '#634327',
     'white': '#dcd8ec', 'iris': '#2a6a9a', 'medal': '#c89e53', 'medalFace': '#ddb468', 'cord': '#f7bb57',
 }
 
@@ -195,40 +195,79 @@ neck = Part('neck', 'skin', lambda p: {'neck': 1 - smooth(0.79, 0.83, p[1]), 'he
 loft(neck, [ring(0.735, 0.027, 0.078, 0.022, 8, 1.0), ring(0.83, 0.027, 0.078, 0.022, 8, 1.0)])
 PARTS.append(neck)
 
-HEAD = [  # (y, half-width, front, back)
-    (0.79, 0.03, 0.085, 0.035), (0.81, 0.055, 0.112, 0.0), (0.84, 0.07, 0.132, -0.018), (0.87, 0.077, 0.134, -0.026),
-    (0.90, 0.077, 0.127, -0.026), (0.93, 0.068, 0.108, -0.022), (0.952, 0.046, 0.076, -0.012), (0.962, 0.016, 0.04, 0.0),
+# the head: horizontal sections of the original (half outlines from the front centre round the side to the back
+# centre, as displayed — the head already carries its slight upward tilt). The lower face juts furthest forward
+# (a short snout at 0.82–0.89 H), the forehead slopes back above the eyes, the section is a wedge pointing forward.
+HEAD = [
+    (0.822, [(0, 0.143), (0.045, 0.105), (0.055, 0.075), (0.028, 0.045), (0, 0.025)]),
+    (0.847, [(0, 0.153), (0.03, 0.134), (0.056, 0.115), (0.077, 0.069), (0.051, 0.02), (0, 0.0)]),
+    (0.870, [(0, 0.15), (0.034, 0.13), (0.058, 0.115), (0.076, 0.07), (0.068, 0.02), (0.033, -0.008), (0, -0.016)]),
+    (0.890, [(0, 0.141), (0.036, 0.126), (0.058, 0.113), (0.076, 0.07), (0.072, 0.025), (0.035, -0.012), (0, -0.026)]),
+    (0.908, [(0, 0.119), (0.035, 0.114), (0.059, 0.1), (0.073, 0.076), (0.071, 0.024), (0.035, -0.014), (0, -0.024)]),
+    (0.935, [(0, 0.109), (0.029, 0.105), (0.045, 0.097), (0.06, 0.06), (0.061, 0.02), (0.03, -0.005), (0, -0.011)]),
+    (0.950, [(0, 0.08), (0.04, 0.072), (0.054, 0.05), (0.05, 0.02), (0.02, 0.0), (0, -0.005)]),
 ]
-HP = 0.88
-head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=62, tilted=True)
-loft(head, [ring(y, hw, zf, zb, 14, HP) for y, hw, zf, zb in HEAD], cap_bottom=True, cap_top=True)
+K = 7  # points per half outline after resampling
+
+
+def resample(half, k):
+    seg = [math.dist(half[i], half[i + 1]) for i in range(len(half) - 1)]
+    tot = sum(seg)
+    out = []
+    for j in range(k):
+        d, i = tot * j / (k - 1), 0
+        while i < len(seg) - 1 and d > seg[i]:
+            d -= seg[i]
+            i += 1
+        t = min(1, d / seg[i]) if seg[i] else 0
+        out.append((half[i][0] + (half[i + 1][0] - half[i][0]) * t, half[i][1] + (half[i + 1][1] - half[i][1]) * t))
+    return out
+
+
+def head_ring(y, half):
+    h = resample(half, K)
+    # around: front centre → left side (+x) → back centre → right side (−x), counter-clockwise seen from above
+    pts = [(x, y, z) for x, z in h] + [(-x, y, z) for x, z in reversed(h[1:-1])]
+    return pts
+
+
+head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=50)
+rings = [head_ring(y, hh) for y, hh in HEAD]
+loft(head, rings)
+# chin and crown: close the ends on a point
+n = len(rings[0])
+o = len(head.v)
+head.add([(0, 0.799, 0.095)], [])
+head.f += [[(i + 1) % n, i, o] for i in range(n)]
+top0 = (len(rings) - 1) * n
+head.add([(0, 0.956, 0.035)], [])
+head.f += [[top0 + i, top0 + (i + 1) % n, o + 1] for i in range(n)]
 PARTS.append(head)
 
 
 def head_front(x, y):
     # z of the face surface at (x, y), for placing the eyes on it
-    for (y0, w0, f0, _), (y1, w1, f1, _) in zip(HEAD, HEAD[1:]):
+    for (y0, h0), (y1, h1) in zip(HEAD, HEAD[1:]):
         if y0 <= y <= y1:
             t = (y - y0) / (y1 - y0)
-            hw, zf = w0 + (w1 - w0) * t, f0 + (f1 - f0) * t
-            s = min(1, abs(x) / hw) ** (1 / HP)
-            c = math.sqrt(max(0, 1 - s * s))
-            return zf * c ** HP
+            def fz(h):
+                pts = resample(h, 25)
+                for (xa, za), (xb, zb) in zip(pts, pts[1:]):
+                    if xa <= abs(x) <= xb:
+                        u = (abs(x) - xa) / (xb - xa) if xb > xa else 0
+                        return za + (zb - za) * u
+                return pts[0][1]
+            return fz(h0) + (fz(h1) - fz(h0)) * t
     return 0.1
 
 
-nose = Part('nose', 'skin', lambda p: {'head': 1.0}, angle=20, tilted=True)
-nose.add([(-0.014, 0.842, 0.128), (0.014, 0.842, 0.128), (0.0, 0.88, 0.128), (0.0, 0.85, 0.158)],
-         [[0, 1, 3], [2, 0, 3], [1, 2, 3]])
-PARTS.append(nose)
-
-hair = Part('hair', 'hair', lambda p: {'head': 1.0}, angle=180, tilted=True)
-sphere(hair, (0.0, 0.951, -0.045), 0.05, 10, 7)
+hair = Part('hair', 'hair', lambda p: {'head': 1.0}, angle=180)
+sphere(hair, (-0.004, 0.95, -0.05), 0.05, 10, 7)
 PARTS.append(hair)
-bun1 = Part('bun1', 'hair', lambda p: {'tail0': 1.0}, angle=180, tilted=True)
+bun1 = Part('bun1', 'hair', lambda p: {'tail0': 1.0}, angle=180)
 sphere(bun1, (0.0, 0.924, -0.104), 0.035, 9, 6)
 PARTS.append(bun1)
-bun2 = Part('bun2', 'hair', lambda p: {'tail1': 1.0}, angle=180, tilted=True)
+bun2 = Part('bun2', 'hair', lambda p: {'tail1': 1.0}, angle=180)
 sphere(bun2, (0.0, 0.887, -0.121), 0.025, 8, 5)
 PARTS.append(bun2)
 
@@ -257,13 +296,13 @@ PARTS.append(cord)
 # eyes (separate, so they can blink): a flat diamond on the face, the iris a smaller one on top of it
 EYES = []
 for sx in (1, -1):
-    cx, cy = sx * 0.035, 0.895
+    cx, cy = sx * 0.037, 0.896
     cz = head_front(cx, cy) + 0.003
     def on_face(dx, dy, lift=0.0):
         return (cx + dx, cy + dy, head_front(cx + dx, cy + dy) + 0.003 + lift)
-    white = [on_face(-0.023, 0), on_face(0, -0.013), on_face(0.023, 0), on_face(0, 0.013)]
+    white = [on_face(-0.025, -0.002), on_face(0, -0.014), on_face(0.025, 0.002), on_face(0, 0.015)]
     iris = [on_face(sx * 0.004 - 0.01, -0.001, 0.0015), on_face(sx * 0.004, -0.011, 0.0015), on_face(sx * 0.004 + 0.01, -0.001, 0.0015), on_face(sx * 0.004, 0.009, 0.0015)]
-    EYES.append({'pivot': tilt((cx, cy, cz)), 'tris': [([tilt(q) for q in white], 'white'), ([tilt(q) for q in iris], 'iris')]})
+    EYES.append({'pivot': (cx, cy, cz), 'tris': [(white, 'white'), (iris, 'iris')]})
 
 
 # ------------------------------------------------------------------ arms: model in the display pose, store the rest pose

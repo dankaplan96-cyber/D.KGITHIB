@@ -288,9 +288,20 @@ fallback and as `twinsenSculpt` for comparisons.
 Captures: `captures/characters/twinsen-poly-views.png`, `twinsen-poly-ingame-house.png`, `twinsen-poly-ingame-plaza.png`.
 The prologue, chapter-1 and chapter-2 playthroughs pass.
 
+**Follow-up (the user: "it still doesn't look good"):**
+- **Shading:** the material now shades like LBA2 (`LbaMaterial` in `characters.js`). Each colour runs on a
+  ramp, from near-black through the colour itself to a pale tint of the same hue. The shade is picked by
+  clamp(N·L, 0.1, 1) from one fixed light, instead of the scene's physically based lighting. This gives the
+  original's bright, high-contrast blue in place of a flat grey-blue.
+- **Head:** rebuilt from the original's head sections. The lower face juts furthest forward (a short snout
+  at 0.82–0.89 H, z 0.15 H), the forehead slopes back above the eyes, and each section is a wedge pointing
+  forward. There is no separate nose.
+- **Shoes:** salmon, like the original.
+
+Captures: `twinsen-poly-views.png` and `twinsen-poly-motion.png`.
+
 Remaining differences:
-- **Shading:** the original uses ramp shading (16 shades per colour). Ours uses standard lighting, so the
-  blue is flatter.
+- **Style mix:** the other characters still use standard lighting.
 - **Medallion emblem:** the "S" on the medallion is not modelled.
 - **Robe deformation:** the original's robe halves follow the thighs, so they scissor. Ours swings on four
   skirt bones.
