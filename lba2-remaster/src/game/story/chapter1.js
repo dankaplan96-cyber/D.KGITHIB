@@ -243,7 +243,7 @@ export class Chapter1 extends ChapterBase {
     g.updateObjective();
     g.save(false);
     if (v.id === 'depot') this.story.refreshCast(); // the depot drones stand down
-    if (n >= 3) setTimeout(() => this.waterReturns(), 900);
+    if (n >= 3) this.waterT = 0.9; // (game time: pauses with the game, see update)
   }
 
   // all three valves open: the water comes back to the well — hot
@@ -418,6 +418,7 @@ export class Chapter1 extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f, h = g.hero, W = g.world;
     if (!f.c1_started) return;
+    if (this.waterT > 0 && g.state === 'play' && (this.waterT -= dt) <= 0) this.waterReturns();
     // the ferry is in the harbour once Vesk has arrived
     if (!this.arriving) W.ferry?.setVisible?.(!!f.c1_arrived);
     // first time Twinsen comes down to the harbour after talking to Zoe: the ferry docks
@@ -449,6 +450,8 @@ export class Chapter1 extends ChapterBase {
   applyFlags(past, current) {
     const g = this.game, f = this.f, W = g.world;
     for (const v of W.valves || []) if (f['c1_valve_' + v.id]) this.openValve(v, true);
+    // a save from between the third valve and the water scene must not leave the chapter stuck
+    if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) f.c1_water = true;
     if (f.c1_water) { W.gate.open = true; W.station?.setActive?.(true); }
     // a save made during Zoe's segment resumes at its start
     if (f.c1_zoeStart && !f.c1_zoeDone) { f.c1_zoeStart = false; f.c1_plan = false; }
