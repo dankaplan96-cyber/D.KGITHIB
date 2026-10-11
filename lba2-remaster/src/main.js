@@ -22,7 +22,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1';
 // music per interior; outdoors it follows the area (see updatePlay)
-const ROOM_MUSIC = { house: 'home', well: 'cave', office: 'home', projoffice: 'stealth', control: 'station' };
+const ROOM_MUSIC = { house: 'home', well: 'cave', office: 'home', projoffice: 'stealth', control: 'station', workshop: 'home', lighttop: 'home' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
 const $ = (s) => document.querySelector(s);

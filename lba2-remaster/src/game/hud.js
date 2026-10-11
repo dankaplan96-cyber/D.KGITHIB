@@ -3,7 +3,7 @@
 import { t, getLang } from './i18n.js';
 import { BEHAVIOURS } from './actors.js';
 import { PATHS } from './world.js';
-import { Color } from 'three';
+import { Color, Vector3 } from 'three';
 
 const $ = (s) => document.querySelector(s);
 
@@ -87,7 +87,7 @@ export class HUD {
     d.textContent = text;
     d.style.color = color;
     $('#floats').appendChild(d);
-    (this.floats ??= []).push({ d, p: pos.clone(), t: 0 });
+    (this.floats ??= []).push({ d, p: new Vector3(pos.x, pos.y, pos.z), t: 0 });
   }
   updateFloats(dt, camera) {
     if (!this.floats) return;

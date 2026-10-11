@@ -4,6 +4,7 @@
 import { t } from '../i18n.js';
 import { Prologue } from './prologue.js';
 import { Chapter1 } from './chapter1.js';
+import { Chapter2 } from './chapter2.js';
 import '../text/common.js';
 
 export const CHAPTERS = ['prologue', 'ch1', 'ch2', 'ch3', 'epilogue'];
@@ -11,7 +12,7 @@ export const CHAPTERS = ['prologue', 'ch1', 'ch2', 'ch3', 'epilogue'];
 export class Story {
   constructor(game) {
     this.game = game;
-    this.chapters = [new Prologue(this), new Chapter1(this)];
+    this.chapters = [new Prologue(this), new Chapter1(this), new Chapter2(this)];
   }
   // later chapters are registered by their modules (keeps imports one-way)
   register(ch) { this.chapters.push(ch); }

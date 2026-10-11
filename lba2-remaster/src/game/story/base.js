@@ -70,6 +70,6 @@ export class ChapterBase {
   }
 
   // objective line helpers
-  goal(key) { return `<b>${t(key)}</b>`; }
-  sub(ok, key) { return `<span class="s ${ok ? 'ok' : ''}">◆ ${t(key)}</span>`; }
+  goal(key, p) { return `<b>${t(key, p)}</b>`; }
+  sub(ok, key, p) { return `<span class="s ${ok ? 'ok' : ''}">◆ ${t(key, p)}</span>`; }
 }

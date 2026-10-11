@@ -81,6 +81,23 @@ export const LOOKS = {
     race: 'grobo', outfit: 'tunic', hem: 0.58, skin: '#9aa8b8', tunic: '#245a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#d8b04a', pants: '#203a48', shoes: '#2a2a2a',
     eyes: '#2a2a2a', helmet: '#2f7a84', buttons: true, height: 1.05,
   },
+  baldino: {
+    // the old inventor (an ally since LBA1): short and round-shouldered, a bald dome with white tufts over
+    // the ears, a big white moustache, round brass goggles pushed up, a leather apron over a green work smock
+    race: 'quetch', outfit: 'tunic', hem: 0.5, belly: 0.09, stoop: 0.09, tunic: '#4f7a3a', tunicTrim: '#33522a', belt: '#5a3a1a', buckle: '#d8b04a',
+    pants: '#5a4a3a', shoes: '#4a2e1a', apron: '#8a5a32', skin: '#f0c098', hairStyle: 'bald', hair: '#f4f4f0', moustache: true, goggles: true,
+    nose: 'ball', noseS: 1.25, eyes: '#4a6a8a', eyeScale: 0.9, mouth: 'smile', brow: 1.6, headS: 1.08, neck: 0.06, height: 0.9,
+  },
+  nara: {
+    // Esmer stall-keeper on the Zeelich street: tall and slim, a coral robe with a gold trim
+    race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#9ad0b8', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
+    eyes: '#e8a040', height: 1.06,
+  },
+  oku: {
+    // an old Esmer who remembers the Zeelich of before: stooped, a deep-teal robe, a white sash
+    race: 'esmer', outfit: 'robe', hem: 0.06, stoop: 0.14, belly: 0.05, skin: '#7fb4a0', ridge: '#3a6a5a', tunic: '#2a6a72', tunicTrim: '#e8e0d0', belt: '#e8e0d0', pants: '#1a3a40', shoes: '#2a2020',
+    eyes: '#d8c060', hat: '#e8d8b0', height: 0.94,
+  },
   xil: {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#86c8a8', ridge: '#3e7a62', tunic: '#5a3a8a', tunicTrim: '#c8a0ff', belt: '#c8a0ff', pants: '#3a2a5a', shoes: '#2a2040',
     eyes: '#e8c040', height: 1.1,
