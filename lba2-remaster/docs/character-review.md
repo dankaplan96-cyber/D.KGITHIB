@@ -130,3 +130,16 @@ too steeply, and the rig's follow-through bent every segment upward (even at res
 at a run). Now the tail lifts a little from the back of the crown, arcs back and its tip hangs down; at rest its
 weight lets it droop a touch, moving it streams back slightly and bounces with each step
 (`captures/characters/twinsen-v3-ponytail.png`: review views + game camera in the house).
+
+### Motion check of the redesign (close-up recording, 720×405, 30 fps, headless software GL)
+
+| Criterion (§12) | Status | Evidence |
+|---|---|---|
+| Walk/run synced with movement, no sliding visible | pass (by eye, frame sheets) | recording frames 30–180 |
+| Robe: no penetration when walking/running | pass | arms are a separate surface; heel fold capped in a robe |
+| Jump: robe stays a robe | pass after fix | knees tucked together, arms out (was: legs split, robe flared into a bell) |
+| Kick: leg doesn't tear through the robe | pass after fix | low front kick for robed characters, front panel follows |
+| Hit: readable recoil, heavy hit knocks down | pass after fix | stronger recoil 0.4 s; knockdown → get-up |
+| Ball leaves the hand at the right moment | pass | held in the hand during the wind-up, released at the whip |
+| No pops between clips | not yet verified frame by frame at full rate | |
+| Recognisable at game distance | awaiting the user's judgement | `twinsen-v3-ingame-house.png` |
