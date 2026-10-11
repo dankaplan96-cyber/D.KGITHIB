@@ -53,7 +53,9 @@ export class Story {
     const g = this.game;
     for (const n of g.npcs) {
       let p;
-      for (let i = 0; i <= this.index; i++) { const r = this.chapters[i].place(n.def.id); if (r !== undefined) p = r; }
+      // every chapter is asked: a later chapter hides its own cast before it begins
+      // (returns null), and the latest chapter that has an opinion wins
+      for (let i = 0; i < this.chapters.length; i++) { const r = this.chapters[i].place(n.def.id); if (r !== undefined && (i <= this.index || r === null)) p = r; }
       if (p === undefined) continue;
       n.setPresent(!!p);
       if (p) n.placeAt(p);
