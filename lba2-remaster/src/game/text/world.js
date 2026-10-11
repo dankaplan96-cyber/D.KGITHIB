@@ -14,13 +14,13 @@ Object.assign(STR.he, {
 });
 
 Object.assign(STR.en, {
-  w_sign_town: 'Town square · Citadel Island',
-  w_sign_harbour: '← Harbour · Project ferry to Zeelich',
-  w_sign_quay: 'Citadel Island harbour · Doran, fisherman. Hands off the nets!',
+  w_sign_town: 'Town Square · Citadel Island',
+  w_sign_harbour: '← Harbour · Ferry to Zeelich',
+  w_sign_quay: 'Citadel Harbour · Hands off the nets!',
   w_sign_lighthouse: '↑ Lighthouse',
   w_sign_cliffs: '→ Whispering Cliffs · Mind the drop!',
-  w_sign_depot: 'Joint Project depot · Staff only',
-  w_sign_station: "→ Joint Project station (in FunFrock's old fortress)",
-  w_sign_pipe: 'Joint Project water main · No climbing!',
-  w_sign_orchard: 'The old orchard · Valve locked. Keep out.',
+  w_sign_depot: 'Joint Project Depot · Staff Only',
+  w_sign_station: '→ Joint Project Station (old fortress)',
+  w_sign_pipe: 'Joint Project Water Main · No Climbing',
+  w_sign_orchard: 'Old Orchard · Valve locked. Keep out.',
 });

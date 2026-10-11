@@ -48,9 +48,10 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'he', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
-    if (!store.get(SET_KEY) && !navigator.language.startsWith('he')) this.settings.lang = 'en';
+    // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
+    this.settings.lang = 'en';
     setLang(this.settings.lang);
 
     this.renderer = new Renderer($('#game'));
@@ -286,7 +287,6 @@ class Game {
       if (!b) return;
       this.audio.init();
       if (b.dataset.act) { this.audio.play('select'); this.act(b.dataset.act); }
-      if (b.dataset.lang) { this.settings.lang = b.dataset.lang; this.applySettings(); }
       const seg = b.closest('.seg');
       if (seg && b.dataset.v) { this.settings[seg.dataset.setting] = b.dataset.v; this.applySettings(); this.syncSettingsUI(); }
     });
@@ -354,7 +354,6 @@ class Game {
     document.documentElement.dir = s.lang === 'he' ? 'rtl' : 'ltr';
     document.querySelectorAll('[data-i18n]').forEach((e) => { e.textContent = t(e.dataset.i18n); });
     document.querySelectorAll('[data-i18n-html]').forEach((e) => { e.innerHTML = t(e.dataset.i18nHtml); });
-    document.querySelectorAll('.langs button').forEach((b) => b.classList.toggle('sel', b.dataset.lang === s.lang));
     this.hud.refreshText();
     this.renderer.setQuality(s.quality);
     const retro = s.visual === '1997';
