@@ -23,11 +23,12 @@ export const LOOKS = {
     // shoes; a tall oval head narrowing to the chin on a narrow visible neck, big white oval eyes with blue
     // irises set high and close, a small round nose, a simple open mouth, small ears, warm skin; dark hair
     // only at the top and back with the ponytail; the gold medallion on a red-brown strap.
-    race: 'quetch', outfit: 'tw', hem: 0.135, shoeToe: true, shoeS: 1.12, hemW: 0.84, neckR: 0.033, shoulders: 0.96, sleeveW: 1.0, sleeveEnd: 0.93,
-    tunic: '#4f9ad6', tunicTrim: '#3d80c0', belt: '#ec7a34', pants: '#3d80c0', shoes: '#94502a', cord: '#8e3a24',
-    hair: '#3a2414', skin: '#efab70', hairStyle: 'twinsen', tail: 'classic', hairFront: 0.25, hairBack: 0.1, hairStrip: true, skull: 'egg', skullY: 1.03, skullW: 1.08, jaw: 0.88, chin: 0.9, cheeks: 0.5,
-    eyeScale: 1.5, eyeOval: 1.18, eyeGap: 1.06, eyeUp: 0.012, eyeIn: 0.022, noseS: 1.0, nose: 'ball', noseBridge: false, eyes: '#2f6fd0', noLid: true, noBrow: true,
-    mouth: 'open', mouthS: 1.7, mouthUp: -0.02, medallion: true, medalR: 0.056, handS: 1.2, headS: 1.22, neck: 0.095,
+    race: 'quetch', outfit: 'tw', sleeve: 'puff', noBelt: true, hem: 0.2, hemW: 0.94, shoeBall: true, shoeS: 1.45, neckR: 0.034, shoulders: 0.96, sleeveW: 1.12,
+    tunic: '#94c8ef', tunicTrim: '#7fb8e6', belt: '#ec7a34', pants: '#7a4422', shoes: '#7a4422', cord: '#c8402a',
+    hair: '#6a3a1a', skin: '#f2ae68', hairStyle: 'twinsen', tail: 'classic', tailLen: 1.0, hairFront: 0.2, hairBack: 0.1, hairStrip: true,
+    skull: 'egg', skullY: 1.03, skullW: 1.08, jaw: 0.88, chin: 0.9, cheeks: 0.5,
+    eyeScale: 1.5, eyeOval: 1.18, eyeGap: 1.06, eyeUp: 0.012, eyeIn: 0.022, noseS: 0.82, nose: 'ball', noseBridge: false, eyes: '#2f6fd0', noLid: true, noBrow: true,
+    mouth: 'open', mouthS: 2.0, mouthUp: -0.02, mouthDark: '#2a0e08', medallion: true, medalR: 0.1, medalY: 0.31, handS: 1.45, headS: 1.3, neck: 0.1,
   },
   zoe: {
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
@@ -243,7 +244,8 @@ function design(L) {
         // backwards and its weight bends the end down (a hook, not an upright spike)
         // (LBA2 #38/#23: a compact tuft rising from the back of the crown and arching back; the render
         // shows the same gesture, longer — the length here is the in-game one, a reconstruction choice)
-        chain([p0, add(p0, [0, 0.075 * hs, -0.035 * hs]), add(p0, [0, 0.12 * hs, -0.1 * hs]), add(p0, [0, 0.105 * hs, -0.17 * hs]), add(p0, [0, 0.045 * hs, -0.205 * hs])],
+        const tl = L.tailLen || 1;
+        chain([p0, add(p0, [0, 0.085 * hs * tl, -0.03 * hs]), add(p0, [0, 0.15 * hs * tl, -0.085 * hs]), add(p0, [0, 0.16 * hs * tl, -0.16 * hs * tl]), add(p0, [0, 0.11 * hs * tl, -0.215 * hs * tl])],
           [0.056 * hs, 0.06 * hs, 0.05 * hs, 0.036 * hs, 0.022 * hs]);
       }
     } else if (L.hairStyle === 'tail') {
@@ -302,11 +304,22 @@ function design(L) {
     const top = neckP[1] - 0.025;
     const waistY = ty - 0.06;
     const chestR = 0.15 * wide;
+    if (L.sleeve === 'puff') {
+      // the classic render: the upper tunic is ONE big soft mass from the collar to the hips that the puffed
+      // sleeves sink into; the medallion lies on its top. Below it a wide, nearly straight skirt.
+      const mb = ty - 0.12;
+      // (full in front as well, so from the front it reads as one dome with the puffs at its sides — not as
+      // two lobes either side of a narrow chest)
+      e([0, ty + 0.23, 0.02], [0.29 * wide, 0.35, 0.215], 'torso', 'tunic', 'tunic', { wobble: (x, y, z) => Math.sin(Math.atan2(x, z) * 7 + y * 4) * 0.004 });
+      e([0, top, 0.0], [0.056, 0.03, 0.054], 'torso', 'tunicTrim', 'tunic');
+      ccone(mb + 0.08, hemY, 0.22 * wide, hemR, 'skirt', 'tunic', 'tunic', { sz: 0.8, wobble: folds(mb, 0.012) });
+    } else {
     e([0, shY - 0.03, -0.005], [shX * 1.02, 0.065, 0.105], 'torso', 'tunic', 'tunic');
     e([0, ty + 0.27, 0.012], [chestR, 0.235, 0.135], 'torso', 'tunic', 'tunic');
     e([0, top, 0.0], [0.056, 0.03, 0.054], 'torso', 'tunicTrim', 'tunic');
     ccone(ty + 0.2, waistY, chestR * 0.96, 0.122 * wide, 'torso', 'tunic', 'tunic', { sz: 0.82 });
     ccone(waistY + 0.012, hemY, 0.126 * wide, hemR, 'skirt', 'tunic', 'tunic', { sz: 0.84, wobble: folds(waistY - 0.03, 0.013) });
+    }
     ccone(hemY + 0.03, hemY, hemR * 0.995, hemR + 0.004, 'skirt', 'tunicTrim', 'hem', { sz: 0.84, round: 0.006 });
     G.hem = 0.008;
     if (!L.noBelt) { P.push({ type: 'ccone', c: [0, waistY, 0.0], h: 0.013, rt: 0.13 * wide, rb: 0.132 * wide, round: 0.006, sz: 0.83, bone: 'torso', mat: 'belt', group: 'belt' }); G.belt = 0.003; }
@@ -372,7 +385,18 @@ function design(L) {
     const g = 'arm' + s;
     G[g] = 0.03;
     const thick = (grobo ? 1.35 : 1) * slim * (kid ? 0.95 : 1);
-    if (L.outfit === 'tw') {
+    if (L.outfit === 'tw' && L.sleeve === 'puff') {
+      // the classic render: a huge rounded puff hanging from the shoulder — narrow at the top, widest around
+      // the elbow, closing again at the wrist where the hand comes out (no shoulder pads: the volume is cloth)
+      const sw = L.sleeveW || 1;
+      const wr = lerp3(el, hd, 0.86);
+      // (starts close to the neck so its top flows into the dome of the upper tunic — no notch at the shoulder)
+      cone(add(sh, [-sx * 0.09, 0.02, -0.02]), add(el, [0, 0, -0.03]), 0.1 * thick, 0.19 * thick * sw, 'sh' + s, 'tunic', g);
+      cone(add(el, [0, 0, -0.03]), wr, 0.19 * thick * sw, 0.065 * thick, 'el' + s, 'tunic', g);
+      torus(wr, 0.058 * thick, 0.012, 'el' + s, 'tunicTrim', 'cuff' + s);
+      cone(el, add(hd, [0, 0.01, 0]), 0.036 * thick, 0.03 * thick, 'el' + s, 'skin', g + 'f');
+      G[g] = 0.06; G[g + 'f'] = 0.02; G['cuff' + s] = 0.008;
+    } else if (L.outfit === 'tw') {
       // a bell: narrow at the shoulder, opening wide below the elbow; the open end is cut flat with a thin
       // wall (sdBell) so it reads as cloth with a hole the hand comes out of, not a balloon
       const sw = L.sleeveW || 1;
@@ -510,6 +534,11 @@ function shoeDef(L) {
     s({ type: 'cone', a: [0, -0.07, 0.12 * k], b: [0, -0.058, 0.215 * k], r1: 0.045 * k, r2: 0.012 * k });
     s({ type: 'ell', c: [0, -0.065, -0.035], r: [0.055 * k, 0.04, 0.06] });
     P.push({ type: 'cone', a: [0, 0.06, 0], b: [0, -0.04, 0.01], r1: 0.04 * k, r2: 0.046 * k, bone: 'f', mat: 'sock', group: 'f' });
+  } else if (L.shoeBall) {
+    // the classic render's shoes: big round domes, a little longer than wide, flat underneath
+    const q = k * (L.shoeS || 1);
+    s({ type: 'ell', c: [0, -0.04, 0.055 * q], r: [0.075 * q, 0.062 * q, 0.11 * q] });
+    P.push({ type: 'cone', a: [0, 0.06, 0], b: [0, -0.02, 0.01], r1: 0.04 * k, r2: 0.048 * k, bone: 'f', mat: 'sock', group: 'f' });
   } else if (L.shoeToe) {
     // rounded shoe with a clear toe and direction: a full rounded toe box, a lower vamp, a heel
     const q = k * (L.shoeS || 1);
@@ -524,7 +553,7 @@ function shoeDef(L) {
     P.push({ type: 'cone', a: [0, 0.06, 0], b: [0, -0.02, 0.01], r1: 0.042 * k, r2: 0.05 * k, bone: 'f', mat: 'sock', group: 'f' });
   }
   return {
-    key: `shoe-${L.race}-${kid}-${L.shoes}-${!!L.slippers}-${L.shoeToe ? 't' + (L.shoeS || 1) : ''}`, prims: P, groups: { f: 0.03, n: 0 }, colors: { shoe: L.shoes || '#6b4423', sock: L.pants || '#e8dcc0', nail: '#f4f0e0' },
+    key: `shoe-${L.race}-${kid}-${L.shoes}-${!!L.slippers}-${L.shoeToe ? 't' + (L.shoeS || 1) : ''}${L.shoeBall ? 'b' + (L.shoeS || 1) : ''}`, prims: P, groups: { f: 0.03, n: 0 }, colors: { shoe: L.shoes || '#6b4423', sock: L.pants || '#e8dcc0', nail: '#f4f0e0' },
     paint: (p, m, col) => { if (m === 'shoe' && p.y < -0.085) col.multiplyScalar(0.55); },
     bounds: { min: [-0.13, -0.11, -0.13], max: [0.13, 0.08, 0.3] }, cell: 0.0055,
   };
@@ -585,7 +614,7 @@ function addFace(def, bones, L) {
   // mouth: Twinsen's little open "o", a gentle smile for others
   const my = Hc[1] - hp[1] + F.mouthY, mz = Hc[2] - hp[2] + F.mouthZ;
   if (L.mouth === 'open') {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(0.022 * def.hs * (L.mouthS || 1), 12, 8), matMouth);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.022 * def.hs * (L.mouthS || 1), 12, 8), L.mouthDark ? new THREE.MeshStandardMaterial({ color: L.mouthDark, roughness: 0.7 }) : matMouth);
     m.scale.set(1.25, L.mouthS ? 0.5 : 0.62, L.mouthS ? 0.18 : 0.35);
     m.position.set(0, my, mz);
     head.add(m);
@@ -640,7 +669,7 @@ function addMedallion(def, bones, L = {}) {
   const torso = bones.torso, tp = def.bones.torso.pos;
   const gold = new THREE.MeshStandardMaterial({ color: '#e0b030', metalness: 0.65, roughness: 0.35 });
   const g = new THREE.Group();
-  const my = L.chain ? 0.3 : 0.35;
+  const my = L.medalY ?? (L.chain ? 0.3 : 0.35);
   // rest it on the chest: march the body's distance field from the front to the cloth surface
   const sdf = makeSDF(def.prims, def.groups, def.joinK);
   const surfZ = (y, x = 0) => { for (let z = 0.4; z > -0.1; z -= 0.004) if (sdf(x, tp[1] + y, z) < 0) return z; return 0.18; };
@@ -660,7 +689,7 @@ function addMedallion(def, bones, L = {}) {
   torso.add(g);
   // red cord: tube around the neck down to the medal, in torso space
   const ny = def.bones.neck.pos[1] - tp[1];
-  const yb = L.chain ? 0.33 : 0.38;
+  const yb = (L.medalY ?? (L.chain ? 0.3 : 0.35)) + (L.medalR ?? 0.045) * 0.7;
   // the strap runs over the cloth: each point is pushed out to the surface along its direction from the neck
   const zr = (y) => surfZ(y) + 0.006;
   const pts = [[0.012, yb, zr(yb)], [0.045, ny - 0.07, Math.max(0.13, zr(ny - 0.07))], [0.05, ny - 0.03, 0.02], [0.03, ny - 0.02, -0.045], [0, ny - 0.02, -0.055],
@@ -679,6 +708,9 @@ function splitArms(def) {
     ...def, key: def.key + '#arms',
     prims: def.prims.filter((p) => p.sub || ARM.test(p.group)),
     cell: def.prims.some((p) => p.type === 'bell') ? def.cell * 0.7 : def.cell,
+    // a sleeve moves with its own arm only: blending its top with the torso stretches the cloth into streaks
+    // when the arm is raised (the top of a big sleeve sits close to the neck)
+    chains: { ...def.chains, shL: ['shL', 'elL'], shR: ['shR', 'elR'] },
     bounds: { min: [def.bounds.min[0], Math.max(0, Math.min(...ys) - 0.14), def.bounds.min[2]], max: [def.bounds.max[0], Math.max(...ys) + 0.16, def.bounds.max[2]] },
   };
   return { ...def, prims: def.prims.filter((p) => p.sub || !ARM.test(p.group)), arms };

@@ -219,3 +219,24 @@ next to the model are kept outside the repository (the references are copyrighte
 - Export: `art/characters/twinsen/export/twinsen.obj` (rest pose, vertex colours, 78k vertices, 19 parts) via
   `node tools/export-character.mjs twinsen`; the game loads the same geometry from `assets/bake.bin`.
 
+## 9. Pass 5 — the classic render is the target
+
+User: "closer, but still far from the character I want", attaching the classic render again. So the render now
+sets the shape too, not only the details. Measured on it (H = figure height): the sleeves are huge rounded
+**puffs** — narrow at the shoulder, widest around the elbow, closing at the wrist where the hand comes out — and
+with the upper tunic they form one soft mass about 0.5 H wide from the collar to the hips; below it a wide, nearly
+straight skirt to ~0.13 H; big round brown shoes; head ≈ 0.22 H on a long thin neck; a large medallion (≈ 0.1 H)
+on a red cord; pale sky blue; no visible belt or waist.
+
+Changes: `sleeve: 'puff'` (two round cones shoulder→elbow→wrist with a small cuff; the arm mesh is weighted to
+the arm bones only, so raising an arm doesn't stretch the cloth near the neck); the upper tunic is one dome
+from the collar to the hips, full in front so the front reads as one mass rather than two lobes; a wide skirt;
+`shoeBall` shoes ×1.45; hands ×1.45; head ×1.3; pale blue `#94c8ef`; medallion R 0.1 on a red cord; nose
+reduced; dark open mouth. Captures: `captures/characters/twinsen-v5-model-views.png`,
+`twinsen-v5-head-and-game.png`. Prologue and chapter-1 playthrough tests pass.
+
+Still different from the render: the sleeves are rigid with the arm (no cloth drape when raised); the render's
+sleeve has fine vertical pleats we don't model; its hair cap covers the whole top with an orange hairline that we
+haven't reproduced; the skirt here is slightly A-shaped where the render's is straighter; the pose in the render
+(waving) is a gesture, not the rest pose.
+
