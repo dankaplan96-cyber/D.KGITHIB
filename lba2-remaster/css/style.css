@@ -272,3 +272,10 @@ body.big-text #dialog .text { font-size: clamp(24px, 3.3vw, 32px) !important; li
 body.big-text #dialog .name { font-size: 17px !important; }
 body.big-text #objective { font-size: 17px !important; max-width: min(440px, 60vw); }
 body.big-text #toast, body.big-text .toast { font-size: 18px !important; }
+
+/* ---------- key rebinding ---------- */
+#controls h2 { margin: 18px 0 4px; font-size: 20px; }
+#controls .hint { margin: 0 0 10px; opacity: 0.75; font-size: 14px; }
+#rebind { max-width: 760px; }
+#rebind .keybtn { min-width: 110px; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.06); color: #ffe35a; font-weight: 800; font-size: 15px; cursor: pointer; }
+#rebind .keybtn.wait { border-color: var(--accent); color: #fff; animation: bob 0.6s infinite alternate; }

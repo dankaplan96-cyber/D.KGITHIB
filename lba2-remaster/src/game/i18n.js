@@ -11,6 +11,8 @@ export const STR = {
     camera: 'מצלמה', cam_lba: 'LBA2 – שוט קבוע שמתמרכז מחדש', cam_free: 'חופשית (עכבר / סטיק)',
     hud: 'ממשק', hud_lba: 'LBA2 – נקי, מופיע רק כשמשהו משתנה', hud_modern: 'מודרני – מפה, משימה וסרגלים קבועים',
     music: 'מוזיקה', sfx: 'אפקטים',
+    rebind_title: 'שינוי מקשים', rebind_hint: 'לחץ על מקש כדי לשנות אותו · Esc לביטול', rebind_press: 'לחץ מקש…', rebind_reset: 'איפוס מקשים',
+    kb_up: 'קדימה', kb_down: 'אחורה', kb_left: 'שמאלה', kb_right: 'ימינה', kb_action: 'פעולת התנהגות', kb_interact: 'דיבור / שימוש', kb_ball: 'כדור קסם', kb_view: 'מצלמה קרובה/רחוקה', kb_recenter: 'מרכוז מצלמה', kb_map: 'הולומפה', kb_inventory: 'חפצים ויומן', kb_pause: 'הפסקה',
     text_speed: 'מהירות טקסט', ts_slow: 'איטית', ts_normal: 'רגילה', ts_fast: 'מהירה', ts_instant: 'מיידית',
     text_size: 'גודל כתוביות', tsz_normal: 'רגיל', tsz_large: 'גדול',
     shake_set: 'רעידות מצלמה', sh_on: 'מלאות', sh_reduced: 'מופחתות', sh_off: 'כבויות',
@@ -25,6 +27,7 @@ export const STR = {
       <tr><td>F / קליק שמאלי</td><td>זריקת הכדור הקסום</td></tr>
       <tr><td>גרירת עכבר · Z / C</td><td>סיבוב מצלמה (במצלמה חופשית)</td></tr>
       <tr><td>M</td><td>הולומפה</td></tr>
+      <tr><td>I / J</td><td>חפצים ויומן</td></tr>
       <tr><td>V</td><td>מעבר מיידי בין מראה 1997 ל־2026</td></tr>
       <tr><td>Esc / P</td><td>הפסקה</td></tr>
       <tr><td>גיימפד</td><td>A פעולה · B כדור · X דיבור · Y מפה · LB/RB התנהגות · LT תפריט · R3 מרכוז · Start הפסקה</td></tr>`,
@@ -88,6 +91,8 @@ export const STR = {
     camera: 'Camera', cam_lba: 'LBA2 – fixed shot that re-centres', cam_free: 'Free (mouse / stick)',
     hud: 'Interface', hud_lba: 'LBA2 – clean, appears only when something changes', hud_modern: 'Modern – map, objective and bars always on',
     music: 'Music', sfx: 'Effects',
+    rebind_title: 'Change keys', rebind_hint: 'Click a key to change it · Esc to cancel', rebind_press: 'Press a key…', rebind_reset: 'Reset keys',
+    kb_up: 'Forward', kb_down: 'Back', kb_left: 'Left', kb_right: 'Right', kb_action: 'Behaviour action', kb_interact: 'Talk / use', kb_ball: 'Magic ball', kb_view: 'Camera near/far', kb_recenter: 'Recenter camera', kb_map: 'Holomap', kb_inventory: 'Items & journal', kb_pause: 'Pause',
     text_speed: 'Text speed', ts_slow: 'Slow', ts_normal: 'Normal', ts_fast: 'Fast', ts_instant: 'Instant',
     text_size: 'Subtitle size', tsz_normal: 'Normal', tsz_large: 'Large',
     shake_set: 'Camera shake', sh_on: 'Full', sh_reduced: 'Reduced', sh_off: 'Off',
@@ -102,6 +107,7 @@ export const STR = {
       <tr><td>F / Left click</td><td>Throw the magic ball</td></tr>
       <tr><td>Mouse drag · Z / C</td><td>Rotate camera (free camera)</td></tr>
       <tr><td>M</td><td>Holomap</td></tr>
+      <tr><td>I / J</td><td>Items and journal</td></tr>
       <tr><td>V</td><td>Instantly toggle 1997 / 2026 look</td></tr>
       <tr><td>Esc / P</td><td>Pause</td></tr>
       <tr><td>Gamepad</td><td>A action · B ball · X talk · Y map · LB/RB behaviour · LT menu · R3 re-centre · Start pause</td></tr>`,

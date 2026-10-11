@@ -6,7 +6,7 @@ import { Renderer } from './engine/renderer.js';
 import { loadBake } from './engine/sculpt.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
-import { Input } from './engine/input.js';
+import { Input, applyBindings, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
 import { buildWorld, POI } from './game/world.js';
@@ -292,7 +292,8 @@ class Game {
       case 'continue': this.startContinue(); break;
       case 'new': if (this.dirty) this.reloadInto('new'); else this.startNew(); break;
       case 'settings': this.prevScreen = this.screen; this.showScreen('settings'); break;
-      case 'controls': this.prevScreen = this.screen; this.showScreen('controls'); break;
+      case 'controls': this.prevScreen = this.screen; this.showScreen('controls'); this.buildRebind(); break;
+      case 'resetkeys': this.settings.keys = {}; this.applySettings(); this.buildRebind(); break;
       case 'back': this.showScreen(this.prevScreen || 'title'); break;
       case 'resume': this.hideScreens(); this.setState('play'); break;
       case 'quit': this.save(false); this.reloadInto('title'); break;
@@ -316,8 +317,31 @@ class Game {
     document.querySelectorAll('[data-range]').forEach((r) => { r.value = this.settings[r.dataset.range]; });
   }
 
+  // key rebinding (controls screen): click an action, press the new key
+  buildRebind() {
+    const el = $('#rebind');
+    if (!el) return;
+    el.innerHTML = '';
+    for (const a of REBINDABLE) {
+      const lab = document.createElement('label'); lab.textContent = t('kb_' + a);
+      const b = document.createElement('button'); b.className = 'keybtn'; b.textContent = keyLabel(keyFor(a));
+      b.addEventListener('click', () => {
+        b.textContent = t('rebind_press'); b.classList.add('wait');
+        const on = (e) => {
+          e.preventDefault(); e.stopPropagation();
+          removeEventListener('keydown', on, true);
+          if (e.code !== 'Escape') { this.settings.keys = { ...(this.settings.keys || {}), [a]: e.code }; this.applySettings(); }
+          this.buildRebind();
+        };
+        addEventListener('keydown', on, true);
+      });
+      el.append(lab, b);
+    }
+  }
+
   applySettings() {
     const s = this.settings;
+    applyBindings(s.keys || {});
     setLang(s.lang);
     document.documentElement.lang = s.lang;
     document.documentElement.dir = s.lang === 'he' ? 'rtl' : 'ltr';

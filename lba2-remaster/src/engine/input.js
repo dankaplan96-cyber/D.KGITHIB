@@ -20,6 +20,25 @@ const KEYMAP = {
   retro: ['KeyV'],
 };
 
+// Rebinding: an action's first key can be replaced (the arrows / F-keys alternatives stay)
+const DEFAULT_KEYS = JSON.parse(JSON.stringify(KEYMAP));
+export const REBINDABLE = ['up', 'down', 'left', 'right', 'action', 'interact', 'ball', 'view', 'recenter', 'map', 'inventory', 'pause'];
+export function keyFor(action) { return KEYMAP[action]?.[0]; }
+export function applyBindings(over = {}) {
+  for (const a of Object.keys(DEFAULT_KEYS)) KEYMAP[a] = [...DEFAULT_KEYS[a]];
+  for (const [a, code] of Object.entries(over)) {
+    if (!KEYMAP[a] || !code) continue;
+    // a key does one thing: take it away from any other action first
+    for (const b of Object.keys(KEYMAP)) if (b !== a) KEYMAP[b] = KEYMAP[b].filter((c) => c !== code);
+    KEYMAP[a] = [code, ...KEYMAP[a].slice(1).filter((c) => c !== code)];
+  }
+}
+export function keyLabel(code) {
+  if (!code) return '—';
+  const named = { Space: 'Space', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Enter: 'Enter', NumpadEnter: 'Enter', Escape: 'Esc', Tab: 'Tab', ControlLeft: 'Ctrl', ControlRight: 'Ctrl', ShiftLeft: 'Shift', ShiftRight: 'Shift', AltLeft: 'Alt', AltRight: 'Alt' };
+  return named[code] ?? code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'Num ');
+}
+
 // Standard gamepad mapping
 const PADMAP = { action: [0], ball: [1], interact: [2], map: [3], prev: [4], next: [5], wheel: [6], view: [10], recenter: [11], pause: [9], up: [12], down: [13], left: [14], right: [15] };
 
