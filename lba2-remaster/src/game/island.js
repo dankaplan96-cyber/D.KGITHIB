@@ -25,7 +25,7 @@ export const DEPOT = { x0: -1, x1: 19, z0: 44, z1: 60, gateW: [44.0, 48.2], gate
 const DEPOT_VALVE = { x: 16.0, z: 50.6 };
 const DEPOT_LOOP_X = [4.0, 13.0]; // where the drones' loop crosses under the main
 // the orchard valve: iron cage centre (x,z, half size) and the drop point of the bypass (dx,dz)
-export const ORCHARD = { x: -22.2, z: 32.5, half: 1.8, dx: -22.4, dz: 32.6 };
+export const ORCHARD = { x: -21.9, z: 32.55, half: 2.0, dx: -22.4, dz: 32.6 };
 export const ORCHARD_SHOT = { x: -15.2, z: 32.0 }; // where to stand for the magic-ball shot
 // the water main from the station to the edge of town (where it dives into the meter portal)
 export const PIPE = [
@@ -2061,13 +2061,16 @@ function buildPipeline(W, root, r) {
   // orchard: a stub from the main drops into an iron cage; the wheel faces the path
   {
     const O = ORCHARD, g = W.H(O.x, O.z), i = nearestSample(prof, O.dx, O.dz + 1.0), ym = prof.y[i];
-    pipeRun(B, [[prof.xs[i], ym, prof.zs[i]], [O.dx, ym, O.dz], [O.dx, g + 2.55, O.dz]], 0.2);
+    const vy = g + 2.65;
+    pipeRun(B, [[prof.xs[i], ym, prof.zs[i]], [O.dx, ym, O.dz], [O.dx, vy + 0.5, O.dz]], 0.2);
     B.add(cached('tee', () => new THREE.SphereGeometry(0.36, 14, 10)), tm('pipe', { rough: 0.5, metal: 0.35 }), prof.xs[i], ym, prof.zs[i]);
-    pipeRun(B, [[O.dx, g + 1.55, O.dz], [O.dx, g - 0.2, O.dz]], 0.2);
+    pipeRun(B, [[O.dx, vy - 0.5, O.dz], [O.dx, g - 0.2, O.dz]], 0.2);
     B.add(lathe([[0, 0], [0.48, 0], [0.48, 0.22], [0.4, 0.28], [0, 0.28]], 18, TILE.concrete), tm('concrete', { color: '#d0ccc4' }), O.dx, g - 0.05, O.dz);
-    const v = makeValve(W, grp, B, 'orchard', 'ball', [O.dx, g + 2.05, O.dz], [0, 1, 0], [1, 0, 0], 0.5);
+    // a bracket from the old column steadies the tall valve
+    member(B, [O.dx - 0.9, g, O.dz], [O.dx - 0.18, vy - 0.7, O.dz], 0.1, darkSteel(), 1, 0.02);
+    const v = makeValve(W, grp, B, 'orchard', 'ball', [O.dx, vy, O.dz], [0, 1, 0], [1, 0, 0], 0.5);
     valves.push(v);
-    W.physics.add({ type: 'cyl', x: O.dx, z: O.dz, r: 0.4, top: g + 2.7, seeThrough: true });
+    W.physics.add({ type: 'cyl', x: O.dx, z: O.dz, r: 0.4, top: vy + 0.6, seeThrough: true });
     cage(W, grp, B, O.x, O.z, O.half, 'E');
   }
   // the dive into the meter portal at the edge of town
