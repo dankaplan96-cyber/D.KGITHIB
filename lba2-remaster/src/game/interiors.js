@@ -1017,7 +1017,7 @@ function buildWorkshop(scene, physics) {
   B.shell({
     W, D, H, t,
     floor: MAT.planks('honey'), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
-    body: lilac, low: MAT.wainscot('red'), dado: 0.95, rail: wood, cap: capM, beam: wood,
+    body: lilac, low: MAT.wainscot('lav'), dado: 0.95, rail: wood, cap: capM, beam: wood,
     posts: wood, postsAt: (L) => [0.48, L - 0.48],
     back: [
       { kind: 'door', at: doorX, w: 1.2, h: 2.3, y0: 0, leaf: MAT.wood('red'), leafAngle: 1.95, view: zv, frame: wood },

@@ -2095,7 +2095,7 @@ export function shellGlobe(k, { r = 0.34 } = {}) {
   const planet = new THREE.Mesh(new THREE.SphereGeometry(r * 0.62, 28, 18), new THREE.MeshStandardMaterial({ map: CANV.planet(), roughness: 0.6 }));
   planet.castShadow = true; spin.add(planet);
   // crystal shell: an icosphere with a chunk broken out, crack lines and shards drifting out
-  const shellGeo = new THREE.IcosahedronGeometry(r, 2).toNonIndexed();
+  const shellGeo = new THREE.IcosahedronGeometry(r, 2);
   const P = shellGeo.attributes.position, keep = [], hole = new THREE.Vector3(0.6, 0.55, 0.58).normalize(), c = new THREE.Vector3(), v = new THREE.Vector3();
   for (let i = 0; i < P.count; i += 3) {
     c.set(0, 0, 0); for (let j = 0; j < 3; j++) c.add(v.fromBufferAttribute(P, i + j)); c.normalize();
