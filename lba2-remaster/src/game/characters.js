@@ -25,10 +25,10 @@ export const LOOKS = {
     // only at the top and back with the ponytail; the gold medallion on a red-brown strap.
     race: 'quetch', outfit: 'tw', sleeve: 'puff', noBelt: true, hem: 0.2, hemW: 0.94, shoeBall: true, shoeS: 1.45, neckR: 0.034, shoulders: 0.96, sleeveW: 1.12,
     tunic: '#94c8ef', tunicTrim: '#7fb8e6', belt: '#ec7a34', pants: '#7a4422', shoes: '#7a4422', cord: '#c8402a',
-    hair: '#6a3a1a', skin: '#f2ae68', hairStyle: 'twinsen', tail: 'classic', tailLen: 1.0, hairFront: 0.2, hairBack: 0.1, hairStrip: true,
-    skull: 'egg', skullY: 1.03, skullW: 1.08, jaw: 0.88, chin: 0.9, cheeks: 0.5,
-    eyeScale: 1.5, eyeOval: 1.18, eyeGap: 1.06, eyeUp: 0.012, eyeIn: 0.022, noseS: 0.82, nose: 'ball', noseBridge: false, eyes: '#2f6fd0', noLid: true, noBrow: true,
-    mouth: 'open', mouthS: 2.0, mouthUp: -0.02, mouthDark: '#2a0e08', medallion: true, medalR: 0.1, medalY: 0.31, handS: 1.45, headS: 1.3, neck: 0.1,
+    hair: '#6a3a1a', skin: '#f6b260', hairStyle: 'twinsen', tail: 'classic', tailLen: 1.0, hairFront: 0.13, hairBack: -0.13,
+    skull: 'egg', skullY: 1.03, skullW: 1.32, jaw: 1.1, chin: 1.0, cheeks: 0.35,
+    eyeScale: 1.78, eyeOval: 1.15, eyeGap: 1.04, eyeUp: 0.014, eyeIn: 0.018, lookUp: 0.14, lookOut: 0.06, noseS: 0.8, nose: 'round', noSocket: true, eyes: '#2f6fd0', noLid: true, noBrow: true,
+    mouth: 'wide', mouthW: 1.3, mouthH: 0.8, mouthUp: 0.0, mouthDark: '#2a0e08', medallion: true, medalR: 0.1, medalY: 0.31, handS: 1.45, headS: 1.3, neck: 0.15,
   },
   zoe: {
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
@@ -182,13 +182,14 @@ function design(L) {
     for (const sx of [1, -1]) e(add(Hc, [sx * 0.118 * hs, -0.005, -0.005]), [0.016, 0.038, 0.028], 'head', 'skin', 'head');
     const nz = 0.12 * hs;
     const ns = L.noseS || 1;
-    if (L.nose === 'ball') { e(add(Hc, [0, -0.02 * hs, nz + 0.03 * ns]), [0.044 * hs * ns, 0.04 * hs * ns, 0.048 * hs * ns], 'head', 'nose', 'head'); if (L.noseBridge !== false) cone(add(Hc, [0, 0.03 * hs, nz - 0.01]), add(Hc, [0, -0.012 * hs, nz + 0.03 * ns]), 0.016 * hs, 0.03 * hs * ns, 'head', 'skin', 'head'); }
+    if (L.nose === 'round') e(add(Hc, [0, -0.022 * hs, nz + 0.028 * ns]), [0.036 * hs * ns, 0.034 * hs * ns, 0.034 * hs * ns], 'head', 'nose', 'head');
+    else if (L.nose === 'ball') { e(add(Hc, [0, -0.02 * hs, nz + 0.03 * ns]), [0.044 * hs * ns, 0.04 * hs * ns, 0.048 * hs * ns], 'head', 'nose', 'head'); if (L.noseBridge !== false) cone(add(Hc, [0, 0.03 * hs, nz - 0.01]), add(Hc, [0, -0.012 * hs, nz + 0.03 * ns]), 0.016 * hs, 0.03 * hs * ns, 'head', 'skin', 'head'); }
     else if (L.nose === 'long') { cone(add(Hc, [0, 0.03, nz - 0.02]), add(Hc, [0, -0.055 * hs, nz + 0.075]), 0.022, 0.03, 'head', 'nose', 'head'); }
     else e(add(Hc, [0, -0.025 * hs, nz + 0.012]), [0.026 * hs, 0.024 * hs, 0.028 * hs], 'head', 'nose', 'head');
     const es = L.eyeScale || 1;
     Object.assign(face, { eyeX: 0.048 * hs * (L.eyeGap || 1), eyeY: 0.045 * hs + (1 - es) * 0.02 + (L.eyeUp || 0) * hs, eyeZ: 0.102 * hs + (1 - es) * 0.012 - (L.eyeIn || 0) * hs, eyeR: 0.034 * hs * es, mouthY: -0.095 * hs + (L.mouthUp || 0) * hs, mouthZ: 0.112 * hs });
   }
-  for (const sx of [1, -1]) P.push({ type: 'ell', c: add(Hc, [sx * face.eyeX, face.eyeY, face.eyeZ + 0.006]), r: [face.eyeR * 1.05, face.eyeR * 1.1, face.eyeR * 0.8], sub: true, k: 0.012 });
+  if (!L.noSocket) for (const sx of [1, -1]) P.push({ type: 'ell', c: add(Hc, [sx * face.eyeX, face.eyeY, face.eyeZ + 0.006]), r: [face.eyeR * 1.05, face.eyeR * 1.1, face.eyeR * 0.8], sub: true, k: 0.012 });
 
   // neck: long and thin for Quetches
   const neckR = L.neckR ?? (grobo ? 0.1 : bunny ? 0.05 : esmer ? 0.045 : 0.034 * (kid ? 1.1 : 1));
@@ -209,7 +210,7 @@ function design(L) {
         wobble: (x, y, z) => Math.sin(Math.atan2(x - Hc[0], z - Hc[2]) * 18) * 0.003,
       });
     } else {
-      e(add(Hc, [0, 0.045 * hs, -0.02]), [0.125 * hs, 0.17 * hs, 0.138 * hs], 'head', 'hair', 'hair', {
+      e(add(Hc, [0, 0.045 * hs, -0.02]), [0.125 * hs * Math.max(1, (L.skullW || 1) * 0.93), 0.17 * hs, 0.138 * hs], 'head', 'hair', 'hair', {
         clip: L.hairStyle === 'twinsen'
           // (LBA2 #23, back view: besides the cap, the hair runs as a dark strip down the back of the head)
           ? (L.hairStrip ? ((x, y, z) => Math.min(hairline((L.hairFront ?? 0.2) * hs, (L.hairBack ?? -0.035) * hs)(x, y, z), Math.max(Math.abs(x - Hc[0]) - 0.055 * hs, z - (Hc[2] - 0.06 * hs), Hc[1] - 0.06 * hs - y) * 0.8))
@@ -310,7 +311,7 @@ function design(L) {
       const mb = ty - 0.12;
       // (full in front as well, so from the front it reads as one dome with the puffs at its sides — not as
       // two lobes either side of a narrow chest)
-      e([0, ty + 0.23, 0.02], [0.29 * wide, 0.35, 0.215], 'torso', 'tunic', 'tunic', { wobble: (x, y, z) => Math.sin(Math.atan2(x, z) * 7 + y * 4) * 0.004 });
+      e([0, ty + 0.2, 0.02], [0.29 * wide, 0.33, 0.215], 'torso', 'tunic', 'tunic', { wobble: (x, y, z) => Math.sin(Math.atan2(x, z) * 7 + y * 4) * 0.004 });
       e([0, top, 0.0], [0.056, 0.03, 0.054], 'torso', 'tunicTrim', 'tunic');
       ccone(mb + 0.08, hemY, 0.22 * wide, hemR, 'skirt', 'tunic', 'tunic', { sz: 0.8, wobble: folds(mb, 0.012) });
     } else {
@@ -583,11 +584,11 @@ function addFace(def, bones, L) {
     w.scale.set(1, 1.12 * (L.eyeOval || 1), 0.78);
     g.add(w);
     const iris = new THREE.Mesh(new THREE.SphereGeometry(r * 0.5, 12, 8), new THREE.MeshStandardMaterial({ color: L.eyes || '#3a2a1a', roughness: 0.25 }));
-    iris.position.set(-sx * r * 0.12, -r * 0.02, r * 0.58);
+    iris.position.set(-sx * r * 0.12 + sx * r * (L.lookOut || 0), -r * 0.02 + r * (L.lookUp || 0), r * 0.58);
     iris.scale.set(1, 1.1, 0.45);
     g.add(iris);
     const pupil = new THREE.Mesh(new THREE.SphereGeometry(r * 0.27, 10, 6), matPupil);
-    pupil.position.set(-sx * r * 0.12, -r * 0.02, r * 0.7);
+    pupil.position.set(-sx * r * 0.12 + sx * r * (L.lookOut || 0), -r * 0.02 + r * (L.lookUp || 0), r * 0.7);
     pupil.scale.set(1, 1.1, 0.4);
     g.add(pupil);
     const hi = new THREE.Mesh(new THREE.SphereGeometry(r * 0.1, 6, 4), matHi);
@@ -618,6 +619,18 @@ function addFace(def, bones, L) {
     m.scale.set(1.25, L.mouthS ? 0.5 : 0.62, L.mouthS ? 0.18 : 0.35);
     m.position.set(0, my, mz);
     head.add(m);
+  } else if (L.mouth === 'wide') {
+    // the classic render: a wide open mouth — flat along the top, round underneath, dark inside — with a thin
+    // lower lip; about as wide as the two eyes together
+    const w = 0.05 * def.hs * (L.mouthW || 1);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), new THREE.MeshStandardMaterial({ color: L.mouthDark || '#2a0e08', roughness: 0.8, side: THREE.DoubleSide }));
+    m.scale.set(w, w * (L.mouthH || 0.6), w * 0.32);
+    m.position.set(0, my, mz - 0.004);
+    head.add(m);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(1, 0.085, 6, 24, Math.PI), new THREE.MeshStandardMaterial({ color: L.lip || '#d07a48', roughness: 0.7 }));
+    lip.rotation.z = Math.PI; lip.scale.set(w * 1.02, w * ((L.mouthH || 0.6) + 0.02), w * 0.5);
+    lip.position.set(0, my, mz - 0.002);
+    head.add(lip);
   } else if (L.mouth === 'grin') {
     // an open, friendly smile: a dark half-moon with the corners turned up
     const m = new THREE.Mesh(new THREE.SphereGeometry(0.03 * def.hs, 16, 10, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), matMouth);

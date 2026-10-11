@@ -240,3 +240,21 @@ sleeve has fine vertical pleats we don't model; its hair cap covers the whole to
 haven't reproduced; the skirt here is slightly A-shaped where the render's is straighter; the pose in the render
 (waving) is a gesture, not the rest pose.
 
+## 10. Pass 6 — the face, after the classic render
+
+User: "everything, mostly the face". Measured on the render at the same scale as ours: the head is almost as wide
+as tall (≈ 0.85 vs our 0.66) and widest at the eyes, narrowing to a short round chin; the two eyes are big white
+ovals that almost touch, irises glancing up; the hair covers the top and back of the head down to just above the
+eyes; a small round nose right below the eyes; a WIDE open mouth (about the width of both eyes) — flat on top,
+round below, dark inside, with a lower lip; a long thin neck between head and tunic.
+
+Changes: skull width ×1.32 (hair cap widened with it), jaw 1.1, cheeks reduced; eyes ×1.78, oval, touching, no
+eye sockets, irises up/out; new `nose: 'round'` (a simple ball, ×0.8); new `mouth: 'wide'` (half-dome, dark,
+with a lower lip); hairline 0.13 in front and −0.13 behind (covers the back); neck 0.15 and the tunic's dome
+lowered so the neck shows; skin `#f6b260`.
+Captures: `captures/characters/twinsen-v6-model-views.png`, `twinsen-v6-face.png`, `twinsen-v6-ingame-house.png`.
+Prologue and chapter-1 playthrough tests pass.
+
+Still different: the render's orange-ish hairline band isn't reproduced; at the game camera the face is ~20 px
+tall, so the eyes and mouth read as dots and a dark spot — the face matters most in close-ups and dialogue.
+
