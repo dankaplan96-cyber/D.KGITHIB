@@ -32,9 +32,22 @@ deterministic stepping via `game.step()`. Real-GPU frame rates are **not yet mea
   device) — **unverified by ear**.
 - Houses fade along a view corridor; the camera no longer swings away because of houses.
 
+## Session 3 (chapter 1 to release quality — gameplay and animation first)
+- Full chapter-1 playthrough test (`scratchpad/ch1.mjs`, real systems: talk, doors, use, ball throws, save → reload →
+  continue) passes end to end with no errors: new game → arrival → task → pipe map → 3 valves → save/load (flags
+  identical) → water → tour → Zoe's stealth segment (plan found) → Vesk leaves → radio → ferry → end screen.
+- Reachability check (BFS with the real physics: walking, steps, jumps ≤ 1.5 m): every valve, door, the pier, the
+  station gate and the depot are reachable on foot from Twinsen's house.
+- Bugs found and fixed: arrival cutscene could hang forever; `act()` overwrote the `actAt()` method (second "use"
+  crashed); room search won ties over the pipe map; save between the third valve and the water scene softlocked;
+  interaction picked a signpost over Zoe (now facing-weighted, people first); water scene used wall-clock time.
+- Animation fixes from close-up recordings: sleeves tore the robe (arms are now a separate skinned surface on the
+  same skeleton), run arms reached forward (now pump close to the body), heel poked through the robe when running.
+- Island (station in the old fortress, depot, pipeline, 3 valves, harbour, ferry, signposts) and interiors (water
+  office, project office, control room, upgraded well cave) built from the prop kit.
+
 ## Known problems
-- Outer island areas (lighthouse, camp, fortress, harbour shed) still use primitive geometry.
-- Interiors furniture is box-based.
 - Character geometry is sculpted at load (~1–2 s per character in SwiftShader).
 - Dark crease on the tunic when the arm is raised.
-- Prologue ends on a "to be continued" screen (chapters 1–3 not built yet).
+- Chapter 1 ends on an end-of-chapter screen (chapters 2–3 not built yet).
+- Zoe's stealth room is verified by script (teleporting between lockers), not yet by a human-like route.
