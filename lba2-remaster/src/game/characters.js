@@ -17,11 +17,14 @@ const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 
 // ------------------------------------------------------------------ cast
 export const LOOKS = {
   twinsen: {
-    // after the LBA2 in-game model (docs/character-review.md): ankle-length robe with wide cape-like
-    // sleeves, orange belt at ~45% of the height, orange slippers, egg-shaped head with a high bare
-    // forehead, small eyes, a strong nose, hair as a back cap with a high topknot, long neck
-    race: 'quetch', outfit: 'robe2', hem: 0.075, hemW: 0.74, neckR: 0.042, shoulders: 1.08, stoop: 0.03, chin: 1.25, tunic: '#4f93d2', tunicTrim: '#2f6aa8', belt: '#f07a28', pants: '#2f6aa8', shoes: '#d9653a', slippers: true,
-    hair: '#4a2a14', skin: '#f2c49a', hairStyle: 'twinsen', skull: 'egg', eyeScale: 0.66, noseS: 1.2, nose: 'ball', eyes: '#2a4a8a', mouth: 'line', brow: 1.9, browFlat: true, jaw: 1.12, medallion: true, chain: true, headS: 1.0, neck: 0.11,
+    // after the classic Twinsen render (user reference): pale sky-blue tunic to mid-shin with huge
+    // balloon sleeves, no belt, big round brown shoes; big round eyes with blue irises, a round nose,
+    // an open friendly smile, brown hair with a large ponytail sweeping up and back from the crown,
+    // the gold medallion on a red cord. Young and upright (no stoop).
+    race: 'quetch', outfit: 'robe2', noBelt: true, hem: 0.15, hemW: 0.78, neckR: 0.04, shoulders: 1.05, sleeveW: 1.3,
+    tunic: '#93c6ee', tunicTrim: '#80b6e6', pants: '#7a4a22', shoes: '#7a4a22',
+    hair: '#6e3e1c', skin: '#f6bd8c', hairStyle: 'twinsen', hairFront: 0.26, skull: 'round', eyeScale: 1.42, noseS: 1.15, nose: 'ball', eyes: '#3d7fd6', noLid: true, handS: 1.35,
+    mouth: 'grin', noBrow: true, medallion: true, medalR: 0.058, headS: 1.38, neck: 0.06,
   },
   zoe: {
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
@@ -202,7 +205,7 @@ function design(L) {
       });
     } else {
       e(add(Hc, [0, 0.045 * hs, -0.02]), [0.125 * hs, 0.17 * hs, 0.138 * hs], 'head', 'hair', 'hair', {
-        clip: L.hairStyle === 'twinsen' ? hairline(0.2 * hs, -0.035 * hs) : hairline(0.11 * hs, -0.1 * hs),
+        clip: L.hairStyle === 'twinsen' ? hairline((L.hairFront ?? 0.2) * hs, -0.035 * hs) : hairline(0.11 * hs, -0.1 * hs),
         wobble: (x, y, z) => Math.sin(Math.atan2(x - Hc[0], z - Hc[2]) * 16 + y * 20) * 0.003,
       });
       // a small swept fringe (Twinsen combs his hair back)
@@ -228,8 +231,9 @@ function design(L) {
         chain([p0, add(p0, [0, 0.03 * hs, -0.07 * hs]), add(p0, [0, 0.025 * hs, -0.14 * hs]), add(p0, [0, -0.02 * hs, -0.18 * hs]), add(p0, [0, -0.075 * hs, -0.17 * hs])],
           [0.04 * hs, 0.046 * hs, 0.038 * hs, 0.027 * hs, 0.011 * hs]);
       } else {
-        chain([p0, add(p0, [0, 0.045 * hs, -0.07 * hs]), add(p0, [0, 0.05 * hs, -0.15 * hs]), add(p0, [0, 0.0, -0.205 * hs]), add(p0, [0, -0.075 * hs, -0.215 * hs])],
-          [0.036 * hs, 0.04 * hs, 0.034 * hs, 0.024 * hs, 0.01 * hs]);
+        // classic Twinsen: a big, thick ponytail that rises from the crown and sweeps up and back
+        chain([p0, add(p0, [0, 0.1 * hs, -0.025 * hs]), add(p0, [0, 0.185 * hs, -0.08 * hs]), add(p0, [0, 0.215 * hs, -0.165 * hs]), add(p0, [0, 0.17 * hs, -0.235 * hs])],
+          [0.062 * hs, 0.066 * hs, 0.056 * hs, 0.04 * hs, 0.024 * hs]);
       }
     } else if (L.hairStyle === 'tail') {
       const p0 = add(Hc, [0, 0.04 * hs, -0.13 * hs]);
@@ -294,10 +298,12 @@ function design(L) {
     ccone(hemY + 0.05, hemY, hemR * 0.99, hemR + 0.006, 'skirt', 'tunicTrim', 'hem', { sz: 0.8, round: 0.008 });
     G.hem = 0.006;
     // the belt is its own hard-edged band sitting on the robe (no colour bleeding)
-    P.push({ type: 'ccone', c: [0, waistY, 0], h: 0.028, rt: 0.205 * wide, rb: 0.208 * wide, round: 0.01, sz: 0.8, bone: 'torso', mat: 'belt', group: 'belt' });
-    e([0.06, waistY - 0.005, 0.208 * wide * 0.8 + 0.01], [0.032, 0.026, 0.02], 'torso', 'belt', 'belt');
-    cone([0.06, waistY - 0.015, 0.208 * wide * 0.8 + 0.014], [0.08, waistY - 0.13, 0.208 * wide * 0.8 + 0.03], 0.013, 0.009, 'skirt', 'belt', 'belt');
-    G.belt = 0.004;
+    if (!L.noBelt) {
+      P.push({ type: 'ccone', c: [0, waistY, 0], h: 0.028, rt: 0.205 * wide, rb: 0.208 * wide, round: 0.01, sz: 0.8, bone: 'torso', mat: 'belt', group: 'belt' });
+      e([0.06, waistY - 0.005, 0.208 * wide * 0.8 + 0.01], [0.032, 0.026, 0.02], 'torso', 'belt', 'belt');
+      cone([0.06, waistY - 0.015, 0.208 * wide * 0.8 + 0.014], [0.08, waistY - 0.13, 0.208 * wide * 0.8 + 0.03], 0.013, 0.009, 'skirt', 'belt', 'belt');
+      G.belt = 0.004;
+    }
   } else if (L.outfit === 'bell') {
     // Twinsen's tunic (after the LBA2 model): broad rounded shoulders and a
     // deep chest, a straight-cut smock that flares only a little and stops at
@@ -343,10 +349,11 @@ function design(L) {
       // wide kimono sleeve: from the shoulder it opens into a bell that hangs past the elbow,
       // so with the arms down it reads like a short cape (LBA2 Twinsen)
       // a straight-sided funnel (no puff): narrow at the shoulder, widest at the cuff
-      cone(add(sh, [-sx * 0.015, -0.01, 0]), el, 0.07 * thick, 0.095 * thick, 'sh' + s, 'tunic', g);
+      const sw = L.sleeveW || 1;
+      cone(add(sh, [-sx * 0.015, -0.01, 0]), el, 0.07 * thick * Math.min(sw, 1.12), 0.095 * thick * sw, 'sh' + s, 'tunic', g);
       const end = lerp3(el, hd, 0.8);
-      cone(el, end, 0.095 * thick, 0.14 * thick, 'el' + s, 'tunic', g, { sz: 0.75 });
-      torus(end, 0.133 * thick, 0.011, 'el' + s, 'tunicTrim', 'cuff' + s, { sz: 0.75 });
+      cone(el, end, 0.095 * thick * sw, 0.14 * thick * sw, 'el' + s, 'tunic', g, { sz: 0.75 });
+      torus(end, 0.133 * thick * sw, 0.011, 'el' + s, 'tunicTrim', 'cuff' + s, { sz: 0.75 });
       cone(el, add(hd, [0, 0.01, 0]), 0.04 * thick, 0.033 * thick, 'el' + s, 'skin', g + 'f');
       G[g + 'f'] = 0.025;
       G['cuff' + s] = 0.01;
@@ -415,7 +422,7 @@ function design(L) {
     if (L.outfit === 'robe2' && m === 'tunic' && p.y < waistY) col.multiplyScalar(0.8 + 0.12 * Math.min(1, p.y / waistY));
     if (m === 'fur' && L.furDark && p.y > Hc[1] + 0.1 * hs) col.lerp(new THREE.Color(L.furDark), Math.min(1, (p.y - Hc[1] - 0.1) * 4));
   };
-  const top = B.head.tip[1] + (bunny ? 0.5 : 0.2);
+  const top = B.head.tip[1] + (bunny ? 0.5 : L.hairStyle === 'twinsen' ? 0.34 : 0.2);
   const halfW = L.outfit === 'bell' || L.outfit === 'robe2' ? 0.62 : grobo ? 0.72 : 0.55;
   return {
     prims: P, groups: G, joinK: 0.012, bones: B, chains, colors, paint, hard: ['belt', 'buckle', 'visor', 'brassDark', 'hardhat'],
@@ -431,7 +438,7 @@ function mixHex(a, b, t) { return '#' + new THREE.Color(a).lerp(new THREE.Color(
 // Hands: palm, four long fingers and a thumb (hand-bone space, fingers down)
 function handDef(L, sx) {
   const kid = !!L.kid, grobo = L.race === 'grobo';
-  const k = (kid ? 0.85 : 1.1) * (grobo ? 1.3 : 1);
+  const k = (kid ? 0.85 : 1.1) * (grobo ? 1.3 : 1) * (L.handS || 1);
   const m = L.race === 'bunny' ? 'fur' : 'skin';
   const P = [];
   const add2 = (o) => P.push({ bone: 'h', mat: m, group: 'h', ...o });
@@ -444,7 +451,7 @@ function handDef(L, sx) {
   }
   add2({ type: 'cone', a: [-sx * 0.01 * k, -0.035 * k, 0.03 * k], b: [-sx * 0.03 * k, -0.075 * k, 0.055 * k], r1: 0.013 * k, r2: 0.011 * k });
   return {
-    key: `hand-${L.race}-${kid}-${sx}-${L.skin || L.fur}`, prims: P, groups: { h: 0.012 }, colors: { skin: L.skin || '#f0c49b', fur: L.fur || '#fff' },
+    key: `hand-${L.race}-${kid}-${sx}-${L.skin || L.fur}-${L.handS || 1}`, prims: P, groups: { h: 0.012 }, colors: { skin: L.skin || '#f0c49b', fur: L.fur || '#fff' },
     bounds: { min: [-0.06 * k, -0.2 * k, -0.05 * k], max: [0.06 * k, 0.06 * k, 0.09 * k] }, cell: 0.0035,
   };
 }
@@ -516,7 +523,7 @@ function addFace(def, bones, L) {
     const lid = new THREE.Mesh(new THREE.SphereGeometry(r * 1.08, 16, 6, 0, Math.PI * 2, 0, Math.PI * 0.26), new THREE.MeshStandardMaterial({ color: L.skin || L.fur || '#f0c49b', roughness: 0.7 }));
     lid.scale.set(1.02, 1.14, 0.84);
     lid.rotation.x = 0.4;
-    g.add(lid);
+    if (!L.noLid) g.add(lid);
     if (L.lashes) {
       const l = new THREE.Mesh(new THREE.TorusGeometry(r * 1.02, r * 0.1, 4, 12, Math.PI), matPupil);
       l.position.z = r * 0.2; l.rotation.x = -0.4; l.scale.set(1, 1.1, 1);
@@ -524,6 +531,7 @@ function addFace(def, bones, L) {
     }
     head.add(g);
     eyes.push(g);
+    if (L.noBrow) continue;
     const brow = new THREE.Mesh(new THREE.CapsuleGeometry(0.009 * def.hs * (L.brow || 1), 0.05 * def.hs, 2, 6), new THREE.MeshStandardMaterial({ color: L.hair || L.furDark || '#3a2a1a', roughness: 0.9 }));
     brow.rotation.z = Math.PI / 2 - sx * (L.browFlat ? -0.05 : L.brow ? 0.08 : 0.2);
     brow.position.set(sx * F.eyeX * 1.05, Hc[1] - hp[1] + F.eyeY + F.eyeR * 1.55, Hc[2] - hp[2] + F.eyeZ + 0.004);
@@ -536,6 +544,16 @@ function addFace(def, bones, L) {
     m.scale.set(1, 0.6, 0.35);
     m.position.set(0, my, mz);
     head.add(m);
+  } else if (L.mouth === 'grin') {
+    // an open, friendly smile: a dark half-moon with the corners turned up
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.03 * def.hs, 16, 10, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), matMouth);
+    m.scale.set(1.45, 0.95, 0.4);
+    m.position.set(0, my + 0.012 * def.hs, mz + 0.002);
+    head.add(m);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(0.034 * def.hs, 0.0045, 6, 16, Math.PI), new THREE.MeshStandardMaterial({ color: '#c8705a', roughness: 0.6 }));
+    lip.rotation.set(0, 0, Math.PI); lip.scale.set(1.28, 0.85, 1);
+    lip.position.set(0, my + 0.012 * def.hs, mz + 0.004);
+    head.add(lip);
   } else if (L.mouth === 'line') {
     // a straight, slightly downturned mouth: calm and grown-up
     const m = new THREE.Mesh(new THREE.CapsuleGeometry(0.0065, 0.042 * def.hs, 2, 6), matMouth);
@@ -579,7 +597,7 @@ function addMedallion(def, bones, L = {}) {
   const g = new THREE.Group();
   g.position.set(0, L.chain ? 0.3 : 0.35, L.chain ? 0.19 : 0.2);
   g.rotation.x = -0.2;
-  const R0 = L.chain ? 0.06 : 0.045;
+  const R0 = L.medalR ?? (L.chain ? 0.06 : 0.045);
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(R0, R0, 0.012, 24), gold);
   disc.rotation.x = Math.PI / 2;
   g.add(disc);

@@ -114,6 +114,16 @@ export class Physics {
     return { h: g, brick };
   }
 
+  // Standing on bare terrain steeper than walkable? Returns the downhill direction (actors slide and can't
+  // jump from there — otherwise a cliff can be climbed by hopping from one steep landing to the next).
+  steepAt(x, z, y = Infinity, limit = MAX_SLOPE * 1.35) {
+    if (this.groundInfo(x, z, y).brick) return null;
+    const e = 0.25, H = (a, b) => this.terrain.heightAt(a, b);
+    const gx = (H(x + e, z) - H(x - e, z)) / (2 * e), gz = (H(x, z + e) - H(x, z - e)) / (2 * e);
+    const s = Math.hypot(gx, gz);
+    return s > limit ? { slope: s, dx: -gx / s, dz: -gz / s } : null;
+  }
+
   // Is there a solid brick at this point above height y?
   blockedAt(x, z, y, r = 0) {
     for (const c of this.near(x, z)) {

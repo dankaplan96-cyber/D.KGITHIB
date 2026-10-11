@@ -93,3 +93,34 @@ through the back of the robe.
 | Works outdoors / indoors / normal screen size | not yet verified | |
 | Export loads without missing parts | pass | game loads, no errors (err.mjs) |
 | Several characters together, performance noted | partial | 6 characters built in 15.5 s in SwiftShader (software GL); real-GPU frame rate not measured |
+
+## 7. Pass 3 — the user's verdict: "the character doesn't look like him at all"
+
+The user played the build, saw Twinsen in the house and rejected the look, attaching the classic Twinsen
+render as the reference (not redistributed here). Next to it, the LBA2-screenshot version read as an old
+monk: dark mid-blue floor-length robe, small sunken eyes under thick brows that looked like glasses, an
+almost bald egg head with a small topknot, a flat mouth, a stoop.
+
+Changes, measured against the reference:
+
+| Feature | Before (pass 2) | Reference | Now |
+|---|---|---|---|
+| Tunic colour | mid blue `#4f93d2`, darker lower half | pale sky blue | `#93c6ee` |
+| Length | ankle (0.04 H) | mid-shin, shoes show | hem 0.15 H |
+| Sleeves | funnel, 0.14 at the cuff | huge balloons | ×1.3 (`sleeveW`) |
+| Belt | orange band with knot | none | none (`noBelt`) |
+| Head size | headS 1.0 | big, cartoon | 1.38 |
+| Eyes | 66 %, upper lid, thick flat brows | big round, white, blue iris, no brows | 142 %, no lid, no brows |
+| Mouth | straight line | open smile | open grin with lip |
+| Hair | back cap + small topknot, high bare egg skull | brown, big ponytail rising from the crown and curling back | round skull, hairline 0.26, thick 4-bone ponytail rising then hooking back |
+| Medallion | gold chain | gold on a red cord | red cord, R 0.058 |
+| Shoes | orange pointed slippers | big round brown shoes | round brown |
+| Posture | stoop 0.03, long neck | upright, short neck | no stoop, neck 0.06 |
+
+Captures: `captures/characters/twinsen-v3-classic-4views.png` (front, ¾, side, back),
+`captures/characters/twinsen-v3-ingame-house.png` (the game camera in the house, where the user saw him).
+At game distance the ponytail first swept back almost horizontally and read like a pointed hat from the
+high camera; it now rises before it hooks back.
+
+Status: **awaiting the user's judgement** — the earlier "pass" marks in §6 were for the LBA2-screenshot
+version and are superseded by this redesign.

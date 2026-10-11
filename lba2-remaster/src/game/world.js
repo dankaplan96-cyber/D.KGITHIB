@@ -554,8 +554,9 @@ export function buildWorld(parentScene) {
     const dx = P.x - S.x, dz = P.z - S.z;
     const dl = Math.hypot(dx, dz);
     const ux = dx / dl, uz = dz / dl;
-    // last stone just outside the cliff edge
-    const edge = dl - (P.r + 1.6) / Math.hypot(ux, uz * 1.15);
+    // the last stone stands wholly on the plateau's flat top, so you step off it onto level ground
+    // (stepping onto the steep cliff face beside it would slide you back down)
+    const edge = dl - (P.r - 1.4) / Math.hypot(ux, uz * 1.15);
     const base = H(S.x, S.z);
     const n = Math.ceil((P.h - base) / 1.05);
     W.stones = [];

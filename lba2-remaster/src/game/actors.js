@@ -96,7 +96,7 @@ export class Hero extends Actor {
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.comboWindow = Math.max(0, this.comboWindow - dt);
     this.mp = Math.min(this.mpMax, this.mp + dt * 0.35);
-    this.coyote = this.onGround ? 0.12 : Math.max(0, (this.coyote || 0) - dt);
+    this.coyote = this.onGround && !this.sliding ? 0.12 : Math.max(0, (this.coyote || 0) - dt);
     this.jumpBuf = Math.max(0, (this.jumpBuf || 0) - dt);
 
     if (this.dead) { this.rig.play('dead'); this.rig.update(dt, 0); P.fall(this, dt); this.sync(); return; }
@@ -169,12 +169,19 @@ export class Hero extends Actor {
     this.applyKnockback(dt);
     const wasAir = !this.onGround;
     const landed = P.fall(this, dt);
+    // too steep to stand on: slide down (and no jumping from here)
+    const steep = this.onGround ? P.steepAt(this.pos.x, this.pos.z, this.pos.y) : null;
+    this.sliding = !!steep;
+    if (steep) {
+      P.move(this, steep.dx * 5 * dt, steep.dz * 5 * dt);
+      this.vel.set(steep.dx * 2.5, steep.dz * 2.5);
+    }
     if (landed) {
       const v = -landed;
       if (v > 13) { this.damage(2, null); this.act('knockdown', 0.45, null, 0, ['getup', 0.8]); }
       else if (v > 6) { this.rig.land(Math.min(1.2, v / 10)); g.audio.play('land'); g.particles.burst(this.pos.x, this.pos.y + 0.1, this.pos.z, '#cbb994', 8, 2); }
       else if (wasAir) this.rig.land(0.4);
-      if (this.jumpBuf > 0 && beh === 'athletic') this.jump();
+      if (this.jumpBuf > 0 && beh === 'athletic' && !this.sliding) this.jump();
     }
     if (this.pos.y < -3) this.respawnFromFall();
     this.speed = Math.hypot(this.pos.x - this.prevPos.x, this.pos.z - this.prevPos.z) / Math.max(dt, 1e-4);
@@ -189,7 +196,7 @@ export class Hero extends Actor {
     // behaviour action (Space / A)
     if (!wheel && input.pressed('action') && this.actT <= 0) {
       if (beh === 'athletic') {
-        if (this.onGround || this.coyote > 0) this.jump(); else this.jumpBuf = 0.15;
+        if ((this.onGround && !this.sliding) || this.coyote > 0) this.jump(); else this.jumpBuf = 0.15;
       } else if (beh === 'aggressive' && this.attackT <= 0) {
         this.combo = this.comboWindow > 0 ? (this.combo + 1) % 3 : 0;
         this.rig.play(['punch', 'punch2', 'kick'][this.combo]);
@@ -223,7 +230,7 @@ export class Hero extends Actor {
     else if (this.hurtT > 0) anim = 'hurt';
     else if (this.attackT > 0) anim = this.rig.anim;
     else if (this.throwT > 0) anim = 'throw';
-    else if (!this.onGround) anim = this.vy > 0.5 ? 'jump' : 'fall';
+    else if (!this.onGround || this.sliding) anim = this.vy > 0.5 ? 'jump' : 'fall';
     else if (this.hiding) anim = 'hide';
     else if (this.speed > 0.3) anim = beh === 'discreet' ? 'sneak' : this.speed > 4.5 ? 'run' : 'walk';
     else if (Math.abs(turning) > 0.5) anim = turning > 0 ? 'turnR' : 'turnL';
