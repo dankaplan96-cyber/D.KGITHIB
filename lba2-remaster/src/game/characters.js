@@ -23,9 +23,9 @@ export const LOOKS = {
     // back of the crown and a bun of three balls; a big gold medallion on a gold cord. Colours from its palette.
     race: 'quetch', outfit: 'lba', hem: 0.1, hemW: 0.92, skirtDepth: 0.8, neckR: 0.05, shoulders: 0.95, armLen: 1.12, armSpread: 0.2,
     tunic: '#2a86ad', tunicTrim: '#2a86ad', belt: '#d36b4b', pants: '#2a86ad', shoes: '#d36b4b', slippers: true, cord: '#f7bb57', handBall: 0.075,
-    hair: '#634327', skin: '#e2bc90', hairStyle: 'bun', hairFront: 0.62, hairBack: 0.3, noEars: true, skull: 'egg', skullY: 1.1, skullW: 0.95, jaw: 0.9, chin: 0.9, cheeks: 0.3,
-    eyeScale: 0.82, eyeOval: 0.5, eyeGap: 1.12, eyeUp: 0.03, eyes: '#1b4b67', eyeWhite: '#c8c0d4', noLid: true, noBrow: true, nose: 'ball', noseS: 0.9,
-    mouth: 'line', medallion: true, medalR: 0.085, medalY: 0.24, medalSides: 8, headS: 1.4, neck: 0.12,
+    hair: '#634327', skin: '#e2bc90', hairStyle: 'bun', hairFront: 0.62, hairBack: 0.3, noEars: true, skull: 'egg', skullY: 0.96, skullW: 1.04, jaw: 0.9, chin: 0.9, cheeks: 0.3,
+    eyeScale: 0.82, eyeOval: 0.5, eyeGap: 1.12, eyeUp: 0.03, eyes: '#1b4b67', eyeWhite: '#c8c0d4', noLid: true, noBrow: true, nose: 'ball', noseS: 0.72,
+    mouth: 'line', medallion: true, medalR: 0.085, medalY: 0.24, medalSides: 8, headS: 1.4, neck: 0.17,
   },
   zoe: {
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
@@ -330,11 +330,17 @@ function design(L) {
     // belt to the ankles (±0.16 H wide, ±0.13 H deep); the neck shows above the collar.
     const HH = 2.1, f = (v) => v * HH;
     e([0, f(0.725), f(0.012)], [f(0.118), f(0.03), f(0.07)], 'torso', 'tunic', 'tunic');
-    ccone(f(0.735), f(0.47), f(0.112), f(0.1), 'torso', 'tunic', 'tunic', { sz: 0.66, cz: f(0.03) });
+    // the yoke: shoulders rounding out from the collar (±0.12 H at 0.74 H, ±0.16 at 0.70, ±0.18 at 0.66 —
+    // the measured outline) and meeting the sleeves' outer edge, so cape and sleeves read as one shape
+    e([0, f(0.62), f(0.015)], [f(0.205), f(0.15), f(0.088)], 'torso', 'tunic', 'tunic');
+    // (the robe under the cape and the belt ignore the shoulders when skinning: the arm hangs right beside
+    // them, and a raised arm would drag the belt up into a diagonal streak)
+    const still = ['torso', 'hips', 'neck'];
+    ccone(f(0.735), f(0.47), f(0.112), f(0.1), 'torso', 'tunic', 'tunic', { sz: 0.66, cz: f(0.03), chain: still });
     ccone(f(0.47), hemY, f(0.112), hemR, 'skirt', 'tunic', 'tunic', { sz: L.skirtDepth || 0.8, cz: f(0.015), wobble: folds(f(0.44), 0.01) });
     ccone(hemY + 0.035, hemY, hemR * 0.995, hemR + 0.004, 'skirt', 'tunicTrim', 'hem', { sz: L.skirtDepth || 0.8, cz: f(0.015), round: 0.006 });
     G.hem = 0.006;
-    P.push({ type: 'ccone', c: [0, f(0.445), f(0.03)], h: f(0.033), rt: f(0.108), rb: f(0.11), round: 0.008, sz: 0.74, bone: 'torso', mat: 'belt', group: 'belt' });
+    P.push({ type: 'ccone', c: [0, f(0.445), f(0.03)], h: f(0.033), rt: f(0.108), rb: f(0.11), round: 0.008, sz: 0.74, bone: 'torso', mat: 'belt', group: 'belt', chain: still });
     G.belt = 0.004;
   } else if (L.outfit === 'tw') {
     // Twinsen (LBA2 in-game model + the classic render): ONE continuous tunic. A soft upper body whose
@@ -430,7 +436,7 @@ function design(L) {
       const HH = 2.1;
       // (a slanted wedge from the neck line out to the hem's outer corner, cut level at the hem: with the torso
       // it makes the original's trapezoid — a straight shoulder slope from ±0.12 H at 0.74 H to ±0.21 H at 0.41 H)
-      cone([sx * 0.085 * HH, 0.715 * HH, 0.02 * HH], [sx * 0.155 * HH, 0.43 * HH, 0.025 * HH], 0.03 * HH, 0.062 * HH, 'sh' + s, 'tunic', g, { sz: 1.45, cutBelow: 0.41 * HH });
+      cone([sx * 0.115 * HH, 0.6 * HH, 0.02 * HH], [sx * 0.135 * HH, 0.43 * HH, 0.025 * HH], 0.07 * HH, 0.075 * HH, 'sh' + s, 'tunic', g, { sz: 1.45, cutBelow: 0.41 * HH });
       cone(el, add(hd, [0, 0.01, 0]), 0.03, 0.026, 'el' + s, 'skin', g + 'f');
       G[g] = 0.03; G[g + 'f'] = 0.02;
     } else if (L.outfit === 'tw' && L.sleeve === 'puff') {
@@ -813,6 +819,7 @@ export function createCharacter(lookName, overrides = {}) {
   const rig = new Rig(root, j);
   rig.mesh = mesh;
   rig.height = def.bones.head.tip[1];
+  if (L.armSpread != null) rig.armSpread = L.armSpread;
   rig.bell = L.outfit === 'bell';
   root.scale.setScalar(L.height ? (L.kid ? L.height / 0.78 : L.height) : 1);
   return rig;

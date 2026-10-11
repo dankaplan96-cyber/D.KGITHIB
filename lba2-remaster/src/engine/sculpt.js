@@ -426,7 +426,7 @@ function sculptGeometry(def) {
     colors[i * 3] = col.r * shade; colors[i * 3 + 1] = col.g * shade; colors[i * 3 + 2] = col.b * shade;
     if (def.rigid) continue;
     // weights: candidate bones from the owner's chain, inverse distance to bone segments
-    const cands = def.chains[owner?.bone] || [owner?.bone || rootName];
+    const cands = owner?.chain || def.chains[owner?.bone] || [owner?.bone || rootName]; // (a primitive may narrow its own chain)
     const ws = [];
     for (const bn of cands) {
       const d = distSeg(p, seg[bn]) + 0.01;
