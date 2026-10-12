@@ -12,7 +12,9 @@
 - [ ] V3 Apply the standard to the rest of Citadel, the interiors and Zeelich.
 - [ ] V4 Lighting: contact shadows, character/background separation, no plastic look (LBA ramp everywhere).
 
-## 2. Story to the end
+## 2. Story to the end (12 chapters, see STORY_BIBLE.md)
+- [x] Chapters 4–10 playable with tests (tests/chapter4–10.mjs).
+- [ ] Split the current chapter 'shell' into 11 The Shell and 12 The Core (five pylons, one per station).
 - [x] S1 Chapter 2 setback: the evacuation plan confiscated at the Zeelich dock, recovered in the depot;
       Nara/Oku react to it.
 - [x] S2 Chapter 3 — The Shell: shaft, deep installation, galleries, Sendell, the core; puzzles from known
@@ -26,7 +28,17 @@
 
 ## 4. Animation and interaction
 - [ ] A1 Talking gestures, pick-up/use reaches, NPCs face speakers, contextual idle chores.
-- [ ] A2 Ball: release timing, trapped-ball recovery, distinct hit feedback.
+- [x] A2 Ball: release timing, trapped-ball recovery, distinct hit feedback (combat pass, docs/COMBAT.md).
+
+## 4b. Combat (docs/COMBAT.md)
+- [x] C1 Input: attack/dodge/focus/swap/selector actions, mouse aim, gamepad layout, buffer, rebinding.
+- [x] C2 Targeting: soft target with line of sight, lock-on with release rules, switch, marker, target health bar.
+- [x] C3 Ball: explicit states, substepped collision, ricochet rules, charge, recall, never lost, preview arc.
+- [x] C4 Sword (chapter 6) with a 3-strike combo, heavy strike, swept hits in active frames; dodge with i-frames.
+- [x] C5 Enemy roles: cautious mite, drone with aim-line tell, shielded sentry, crawler with slam ring; attack
+      director, grace periods, poise; difficulty / aim assist / lock mode settings.
+- [x] C6 Pulse tool (chapter 10) and encounters on Desert Island and the Hamalayi ridge.
+- [ ] C7 Feel checks with a real gamepad and touch screen; audio balance by ear (not possible here).
 
 ## 5. Music and sound (parallel agent, then integration)
 - [x] M1 Pipeline + Main Theme, Village, Well; music manager (crossfades, combat hysteresis, ducking, volumes).

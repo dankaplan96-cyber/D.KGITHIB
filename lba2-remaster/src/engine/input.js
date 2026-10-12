@@ -18,11 +18,18 @@ const KEYMAP = {
   pause: ['Escape', 'KeyP'],
   camL: ['KeyZ'], camR: ['KeyC'],
   retro: ['KeyV'],
+  // combat (the mouse adds: left button attack, right button focus, wheel switches target)
+  attack: ['KeyK'],
+  dodge: ['ShiftLeft', 'ShiftRight'],
+  focus: ['KeyL'],
+  swap: ['KeyR'],
+  weapons: ['KeyX'],
+  tswitch: ['KeyT'],
 };
 
 // Rebinding: an action's first key can be replaced (the arrows / F-keys alternatives stay)
 const DEFAULT_KEYS = JSON.parse(JSON.stringify(KEYMAP));
-export const REBINDABLE = ['up', 'down', 'left', 'right', 'action', 'interact', 'ball', 'view', 'recenter', 'map', 'inventory', 'pause'];
+export const REBINDABLE = ['up', 'down', 'left', 'right', 'action', 'interact', 'attack', 'ball', 'dodge', 'focus', 'tswitch', 'swap', 'weapons', 'view', 'recenter', 'map', 'inventory', 'pause'];
 export function keyFor(action) { return KEYMAP[action]?.[0]; }
 export function applyBindings(over = {}) {
   for (const a of Object.keys(DEFAULT_KEYS)) KEYMAP[a] = [...DEFAULT_KEYS[a]];
@@ -35,12 +42,16 @@ export function applyBindings(over = {}) {
 }
 export function keyLabel(code) {
   if (!code) return '—';
-  const named = { Space: 'Space', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Enter: 'Enter', NumpadEnter: 'Enter', Escape: 'Esc', Tab: 'Tab', ControlLeft: 'Ctrl', ControlRight: 'Ctrl', ShiftLeft: 'Shift', ShiftRight: 'Shift', AltLeft: 'Alt', AltRight: 'Alt' };
+  const named = { Space: 'Space', ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', Enter: 'Enter', NumpadEnter: 'Enter', Escape: 'Esc', Tab: 'Tab', ControlLeft: 'Ctrl', ControlRight: 'Ctrl', ShiftLeft: 'Shift', ShiftRight: 'Shift', Mouse0: 'Left Click', Mouse2: 'Right Click', AltLeft: 'Alt', AltRight: 'Alt' };
   return named[code] ?? code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'Num ');
 }
 
-// Standard gamepad mapping
-const PADMAP = { action: [0], ball: [1], interact: [2], map: [3], prev: [4], next: [5], wheel: [6], view: [10], recenter: [11], pause: [9], up: [12], down: [13], left: [14], right: [15] };
+// Standard gamepad mapping. A: behaviour action (talks when something is in reach) · B: dodge · X: attack
+// (hold: charge / heavy) · Y: magic ball (again: recall) · LB: quick weapon swap · RB: focus · LT: behaviour
+// menu · RT: weapon selector · View: holomap · Menu: pause · L3: camera distance · R3: switch target
+// (recenter the camera when nothing is focused) · D-pad: move / menus
+const PADMAP = { action: [0], dodge: [1], attack: [2], ball: [3], swap: [4], focus: [5], wheel: [6], weapons: [7], map: [8], pause: [9], view: [10], r3: [11], up: [12], down: [13], left: [14], right: [15] };
+export const PAD_LABELS = { action: 'A', dodge: 'B', attack: 'X', ball: 'Y', swap: 'LB', focus: 'RB', wheel: 'LT', weapons: 'RT', map: 'View', pause: 'Menu', view: 'L3', tswitch: 'R3', interact: 'A' };
 
 export class Input {
   constructor(canvas) {
@@ -49,7 +60,7 @@ export class Input {
     this.now = new Set();
     this.prev = new Set();
     this.touch = { x: 0, y: 0, active: false, buttons: new Set() };
-    this.mouse = { dx: 0, dy: 0, down: false, clicked: false, moved: 0 };
+    this.mouse = { dx: 0, dy: 0, down: false, clicked: false, moved: 0, x: 0, y: 0, lastMove: -1e9, left: false, leftTap: false, right: false, rightDrag: false, rightTap: false, wheel: 0, inside: false };
     this.pad = null;
     this.padAxes = [0, 0, 0, 0];
     this.lastDevice = 'kbd';
@@ -64,22 +75,35 @@ export class Input {
     addEventListener('keyup', (e) => this.keys.delete(e.code));
     addEventListener('blur', () => this.keys.clear());
 
+    // mouse: left = attack (and a click advances dialogue), right = focus (a right or middle drag turns the
+    // free camera instead), wheel = switch target; the cursor is the aim
+    const M = this.mouse;
     canvas.addEventListener('pointerdown', (e) => {
       if (e.pointerType === 'touch') return;
-      this.mouse.down = true; this.mouse.moved = 0;
+      this.lastDevice = 'kbd';
+      if (e.button === 0) { M.left = true; M.leftTap = true; M.moved = 0; M.down = true; }
+      if (e.button === 2) { M.right = true; M.rightDrag = false; M.moved = 0; }
+      if (e.button === 1) { M.mid = true; e.preventDefault(); }
       canvas.setPointerCapture(e.pointerId);
     });
     canvas.addEventListener('pointermove', (e) => {
-      if (!this.mouse.down || e.pointerType === 'touch') return;
-      this.mouse.dx += e.movementX; this.mouse.dy += e.movementY;
-      this.mouse.moved += Math.abs(e.movementX) + Math.abs(e.movementY);
+      if (e.pointerType === 'touch') return;
+      M.x = e.clientX; M.y = e.clientY; M.lastMove = performance.now(); M.inside = true;
+      if (M.right || M.mid) {
+        M.moved += Math.abs(e.movementX) + Math.abs(e.movementY);
+        if (M.mid || M.moved > 8) { M.rightDrag = M.right; M.dx += e.movementX; M.dy += e.movementY; }
+      } else if (M.left) M.moved += Math.abs(e.movementX) + Math.abs(e.movementY);
     });
+    canvas.addEventListener('pointerleave', () => { M.inside = false; });
     canvas.addEventListener('pointerup', (e) => {
       if (e.pointerType === 'touch') return;
-      if (this.mouse.down && this.mouse.moved < 6 && e.button === 0) this.mouse.clicked = true;
-      this.mouse.down = false;
+      if (e.button === 0) { if (M.left && M.moved < 6) M.clicked = true; M.left = false; M.down = false; }
+      if (e.button === 2) { if (M.right && !M.rightDrag) M.rightTap = true; M.right = false; M.rightDrag = false; }
+      if (e.button === 1) M.mid = false;
     });
+    canvas.addEventListener('wheel', (e) => { M.wheel += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    addEventListener('blur', () => { M.left = M.right = M.mid = false; });
     this._setupTouch();
   }
 
@@ -145,6 +169,15 @@ export class Input {
     for (const [a, codes] of Object.entries(KEYMAP)) if (codes.some((c) => this.keys.has(c) || this.taps.has(c))) this.now.add(a);
     this.taps.clear();
     for (const b of this.touch.buttons) this.now.add(b);
+    const M = this.mouse;
+    // a tap shorter than one frame still counts (leftTap/rightTap remember it)
+    if (M.left || M.leftTap) this.now.add('attack');
+    M.leftTap = false;
+    if ((M.right && !M.rightDrag) || M.rightTap) this.now.add('focus');
+    M.rightTap = false;
+    this.wheelSteps = M.wheel; M.wheel = 0;
+    if (this.wheelSteps) this.now.add('tswitch');
+    this.padAction = false;
 
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
     this.pad = null;
@@ -156,6 +189,13 @@ export class Input {
       for (const [a, idx] of Object.entries(PADMAP)) {
         if (idx.some((i) => this.pad.buttons[i]?.pressed)) { this.now.add(a); this.lastDevice = 'pad'; }
       }
+      if (this.now.has('action') && this.lastDevice === 'pad') this.padAction = true;
+      // R3: switch target when something is focused, otherwise recenter (the game decides; both are offered)
+      if (this.now.has('r3')) { this.now.add('tswitch'); this.now.add('recenterPad'); }
+      // the left stick also drives menus and the behaviour menu (as the d-pad does)
+      const [ax, ay] = this.padAxes;
+      if (ax < -0.6) this.now.add('left'); if (ax > 0.6) this.now.add('right');
+      if (ay < -0.6) this.now.add('up'); if (ay > 0.6) this.now.add('down');
       if (this.padAxes.some((v) => v !== 0)) this.lastDevice = 'pad';
     }
     if (this.mouse.clicked) { this.now.add('click'); this.mouse.clicked = false; }
@@ -167,10 +207,13 @@ export class Input {
   // Movement vector: x = right, y = forward. Magnitude 0..1.
   move() {
     let x = 0, y = 0;
-    if (this.down('left')) x -= 1;
-    if (this.down('right')) x += 1;
-    if (this.down('up')) y += 1;
-    if (this.down('down')) y -= 1;
+    const stick = this.padAxes[0] !== 0 || this.padAxes[1] !== 0;
+    if (!stick) {
+      if (this.down('left')) x -= 1;
+      if (this.down('right')) x += 1;
+      if (this.down('up')) y += 1;
+      if (this.down('down')) y -= 1;
+    }
     x += this.padAxes[0] + this.touch.x;
     y += -this.padAxes[1] + this.touch.y;
     const m = Math.hypot(x, y);
@@ -189,4 +232,6 @@ export class Input {
   }
 
   clearEdges() { this.prev = new Set(this.now); }
+  // the mouse cursor is a live aim if it moved over the canvas recently
+  mouseAiming() { const M = this.mouse; return M.inside && this.lastDevice === 'kbd' && performance.now() - M.lastMove < 2500; }
 }

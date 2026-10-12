@@ -5,10 +5,30 @@ import { createHumanoid, createBlobShadow, placeBlobShadow } from '../engine/rig
 import { createCharacter } from './characters.js';
 import { TrackRunner } from '../engine/scripts.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
+import { HeroCombat } from './combat.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // Twinsen: blue tunic, light trousers, brown ponytail
 export const HERO_LOOK = 'twinsen';
+
+// The sword Yorna gives Twinsen (chapter 6): a short, slightly curved blade with a brass guard. Built along
+// the hand's -y (the continuation of the forearm), so arm swings read as blade swings.
+function buildSword() {
+  const g = new THREE.Group();
+  const steel = new THREE.MeshStandardMaterial({ color: '#d8e0e8', metalness: 0.8, roughness: 0.25 });
+  const brass = new THREE.MeshStandardMaterial({ color: '#e0b25a', metalness: 0.7, roughness: 0.35 });
+  const grip = new THREE.MeshStandardMaterial({ color: '#5a3a24', roughness: 0.8 });
+  const add = (geo, m, y, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.rotation.z = rz; o.castShadow = true; g.add(o); return o; };
+  add(new THREE.CylinderGeometry(0.022, 0.024, 0.16, 8), grip, 0.0);
+  add(new THREE.SphereGeometry(0.032, 8, 6), brass, 0.09);
+  add(new THREE.BoxGeometry(0.2, 0.03, 0.05), brass, -0.09);
+  const blade = new THREE.Shape(); blade.moveTo(-0.022, 0); blade.lineTo(0.024, 0); blade.quadraticCurveTo(0.03, -0.4, 0.008, -0.72); blade.lineTo(-0.01, -0.66); blade.quadraticCurveTo(-0.02, -0.35, -0.022, 0);
+  const bg = new THREE.ExtrudeGeometry(blade, { depth: 0.012, bevelEnabled: true, bevelSize: 0.004, bevelThickness: 0.004, bevelSegments: 1 }); bg.translate(0, 0, -0.006);
+  add(bg, steel, -0.1);
+  g.rotation.x = -0.25; // a little forward of the forearm line
+  g.position.y = -0.05;
+  return g;
+}
 
 export class Actor {
   constructor(game, rig, x, z, radius = 0.45) {
@@ -53,8 +73,10 @@ export class Hero extends Actor {
     this.hasKey = false;
     this.hasBall = false; // still in the cupboard at home
     this.shards = [false, false, false];
-    this.invuln = 0; this.attackT = 0; this.combo = 0; this.comboWindow = 0; this.hitDone = true;
-    this.throwT = 0; this.hurtT = 0; this.hiding = false; this.dead = false;
+    this.invuln = 0; this.hurtT = 0; this.hiding = false; this.dead = false;
+    // weapons: the ball (once found), the sword (chapter 6), Baldino's pulse tool (chapter 10), fists always
+    this.hasSword = false; this.hasPulse = false; this.weapon = 'ball'; this.prevWeapon = 'fists';
+    this.combat = new HeroCombat(this);
     this.speed = 0; this.stepAcc = 0;
     this.vel = new THREE.Vector2();
     this.actT = 0;
@@ -96,7 +118,6 @@ export class Hero extends Actor {
     const P = g.physics;
     this.invuln = Math.max(0, this.invuln - dt);
     this.hurtT = Math.max(0, this.hurtT - dt);
-    this.comboWindow = Math.max(0, this.comboWindow - dt);
     this.mp = Math.min(this.mpMax, this.mp + dt * 0.35);
     this.coyote = this.onGround && !this.sliding ? 0.12 : Math.max(0, (this.coyote || 0) - dt);
     this.jumpBuf = Math.max(0, (this.jumpBuf || 0) - dt);
@@ -126,14 +147,22 @@ export class Hero extends Actor {
       if (this.actCb && this.actT <= this.actFireT) { const cb = this.actCb; this.actCb = null; cb(); }
       if (this.actT <= 0 && this.actNext) { const n = this.actNext; this.actNext = null; this.act(...n); }
     }
-    const locked = this.attackT > 0 || this.hiding || this.hurtT > 0.15 || this.actT > 0 || (this.throwT > 0.45);
+    // combat: attacks, the dodge, the ball throw (camera-relative move direction for aiming and dodging)
+    const mvDir = this.moveDir(mv, g);
+    this.wantsMove = Math.hypot(mv.x, mv.y) > 0.3;
+    const cs = this.combat.update(dt, input, mvDir, {
+      blocked: wheel || this.hiding || this.hurtT > 0.15 || this.actT > 0 || g.trans || !this.hasBall && this.noBehaviours,
+      actionAttack: beh === 'aggressive' && !wheel && input.pressed('action'),
+    });
+    const locked = cs.lock || this.hiding || this.hurtT > 0.15 || this.actT > 0;
+    const speedK = cs.speedK ?? 1;
 
     if (!locked) {
       if (g.settings.controls === 'classic') {
         // LBA tank controls: left/right rotate, up/down walk
         this.angle -= mv.x * 1.9 * dt; // LBA2 turns in place at ~100°/s
         turning = -mv.x;
-        const f = mv.y > 0 ? mv.y : mv.y * 0.55;
+        const f = (mv.y > 0 ? mv.y : mv.y * 0.55) * speedK;
         wx = Math.sin(this.angle) * f * maxSpeed;
         wz = Math.cos(this.angle) * f * maxSpeed;
       } else {
@@ -143,24 +172,29 @@ export class Hero extends Actor {
           const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
           const rx = Math.cos(yaw), rz = -Math.sin(yaw);
           const dx = rx * mv.x + fx * mv.y, dz = rz * mv.x + fz * mv.y;
-          const target = Math.atan2(dx, dz);
+          // while aiming or charging the body keeps facing the aim; the feet still move where asked
+          const target = cs.face ?? Math.atan2(dx, dz);
           const diff = angleDiff(this.angle, target);
           // from a standstill a big turn is a turn-on-the-spot first, then the walk starts
           const still = Math.hypot(this.vel.x, this.vel.y) < 0.6;
           this.angle = dampAngle(this.angle, target, still ? 9 : 12, dt);
           turning = clamp(diff * 3, -1, 1);
-          const sp = maxSpeed * Math.min(1, m) * (still && Math.abs(diff) > 1.2 ? 0.15 : Math.max(0.25, Math.cos(Math.min(Math.abs(diff), 1.5))));
-          wx = Math.sin(this.angle) * sp;
-          wz = Math.cos(this.angle) * sp;
-        }
+          if (cs.face != null) {
+            // aiming: walk (slower) in the stick's direction without turning the body away
+            const sp = maxSpeed * Math.min(1, m) * speedK, d = Math.hypot(dx, dz) || 1;
+            wx = (dx / d) * sp; wz = (dz / d) * sp;
+          } else {
+            const sp = maxSpeed * Math.min(1, m) * speedK * (still && Math.abs(diff) > 1.2 ? 0.15 : Math.max(0.25, Math.cos(Math.min(Math.abs(diff), 1.5))));
+            wx = Math.sin(this.angle) * sp;
+            wz = Math.cos(this.angle) * sp;
+          }
+        } else if (cs.face != null) this.angle = dampAngle(this.angle, cs.face, 12, dt);
       }
-    } else if (this.attackT > 0) {
-      // small lunge while punching
-      wx = Math.sin(this.angle) * 1.2; wz = Math.cos(this.angle) * 1.2;
     }
+    if (cs.drive) { wx = cs.drive.x; wz = cs.drive.z; }
     // weight: accelerate and brake instead of snapping to speed (less grip in the air)
     const prevFwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
-    const accel = !this.onGround ? 3 : (wx || wz) ? (beh === 'athletic' ? 9 : 12) : 14;
+    const accel = cs.drive ? 40 : !this.onGround ? 3 : (wx || wz) ? (beh === 'athletic' ? 9 : 12) : 14;
     const k = 1 - Math.exp(-accel * dt);
     this.vel.x += (wx - this.vel.x) * k; this.vel.y += (wz - this.vel.y) * k;
     const fwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
@@ -197,43 +231,23 @@ export class Hero extends Actor {
       if (this.stepAcc > stride) { this.stepAcc = 0; if (beh !== 'discreet') g.audio.play('step-' + (g.surfaceAt?.(this.pos) || 'stone')); }
     }
 
-    // behaviour action (Space / A)
-    if (!wheel && input.pressed('action') && this.actT <= 0) {
+    // behaviour action (Space / A): jump (Athletic), talk (Normal); Aggressive attacks through the combat
+    // controller above (the same moves as the attack button), Discreet hides (held)
+    if (!wheel && input.pressed('action') && this.actT <= 0 && !this.combat.busy) {
       if (beh === 'athletic') {
         if ((this.onGround && !this.sliding) || this.coyote > 0) this.jump(); else this.jumpBuf = 0.15;
-      } else if (beh === 'aggressive' && this.attackT <= 0) {
-        this.combo = this.comboWindow > 0 ? (this.combo + 1) % 3 : 0;
-        this.rig.play(['punch', 'punch2', 'kick'][this.combo]);
-        this.rig.actionT = 0;
-        this.attackT = this.combo === 2 ? 0.42 : 0.3;
-        this.hitDone = false;
-        g.audio.play('punch');
-      } else if (beh === 'normal') {
+      } else if (beh === 'normal' || (input.padAction && g.findInteractable())) {
         g.tryInteract();
       }
     }
-    if (this.attackT > 0) {
-      this.attackT -= dt;
-      if (!this.hitDone && this.attackT < (this.combo === 2 ? 0.26 : 0.18)) {
-        this.hitDone = true;
-        g.meleeHit(this, this.combo === 2 ? 2 : 1, this.combo === 2 ? 1.9 : 1.6);
-      }
-      if (this.attackT <= 0) this.comboWindow = 0.45;
-    }
-    if (!wheel && input.pressed('interact') && this.actT <= 0) g.tryInteract();
-    if (!wheel && (input.pressed('ball') || input.pressed('click'))) this.throwBall();
-    // the ball leaves the hand at the end of the windup
-    if (this.throwT > 0) {
-      this.throwT -= dt;
-      if (this.throwPending && this.throwT <= 0.5) { this.throwPending = false; g.ball.launch(this, this.throwBeh, this.throwLevel, this.throwStrong); g.audio.play('throw'); }
-    }
+    if (!wheel && input.pressed('interact') && this.actT <= 0 && !this.combat.busy) g.tryInteract();
 
+    if (this.hasSword || this.swordMesh) this.showSword(this.combat.weapon === 'sword');
     // animation state
     let anim = 'idle';
     if (this.actT > 0) anim = this.actAnim;
     else if (this.hurtT > 0) anim = 'hurt';
-    else if (this.attackT > 0) anim = this.rig.anim;
-    else if (this.throwT > 0) anim = 'throw';
+    else if (cs.anim) anim = cs.anim;
     else if (!this.onGround || this.sliding) anim = this.vy > 0.5 ? 'jump' : 'fall';
     else if (this.hiding) anim = 'hide';
     else if (this.speed > 0.3) anim = beh === 'discreet' ? 'sneak' : this.speed > 3.6 ? 'run' : 'walk';
@@ -278,20 +292,28 @@ export class Hero extends Actor {
     this.damage(1, null);
   }
 
-  throwBall() {
-    const g = this.game;
-    if (!this.hasBall || g.ball.state !== 'idle' || this.throwT > 0 || this.hiding || this.actT > 0) return;
-    let strong = true;
-    if (this.mp >= 1) this.mp -= 1; else { strong = false; g.hud.toast('toast_nomp'); }
-    this.throwT = 1.0; // LBA2's throw: 1.22 s, the ball leaves the hand halfway (0.62 s)
-    this.throwPending = true; this.throwBeh = this.behaviour; this.throwLevel = strong ? this.magicLevel : 1; this.throwStrong = strong;
-    this.rig.play('throw'); this.rig.actionT = 0;
-    g.ball.holdIn(this);
+  // camera-relative world direction of the stick (classic controls: relative to the facing)
+  moveDir(mv, g) {
+    if (g.settings.controls === 'classic') { const a = this.angle; return { x: Math.sin(a) * mv.y - Math.cos(a) * mv.x, z: Math.cos(a) * mv.y + Math.sin(a) * mv.x }; }
+    const yaw = g.camRig.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+    return { x: rx * mv.x + fx * mv.y, z: rz * mv.x + fz * mv.y };
+  }
+  // the sword in the hand (only while it is the equipped weapon)
+  showSword(on) {
+    const hand = this.rig.j?.armR?.hand;
+    if (!hand) return;
+    if (!this.swordMesh) this.swordMesh = buildSword();
+    if (on && this.swordMesh.parent !== hand) hand.add(this.swordMesh);
+    this.swordMesh.visible = !!on && this.body !== 'zoe' && this.body !== 'worker';
   }
 
   damage(n, from, heavy = false) {
     if (this.invuln > 0 || this.dead) return;
     const g = this.game;
+    // the dodge's window: a clean miss, shown and heard
+    if (this.combat.iframes()) { if (!this.dodgedT || g.time - this.dodgedT > 0.3) { this.dodgedT = g.time; g.audio.play('dodged'); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#bfe8ff', 6, 2); } return; }
+    n *= g.combatDir?.diff.dmg ?? 1;
+    this.combat.reset();
     this.hp -= n;
     this.invuln = 1.1;
     this.hurtT = 0.4;
@@ -610,12 +632,24 @@ export class Sentinel extends Actor {
 }
 
 // ------------------------------------------------------------------ magic ball
+// The magic ball's throw styles per behaviour (speed f, lift up, bounce damping on the ground)
 const BALL_THROW = {
-  normal: { f: 11, up: 6, bounce: 0.7 },
-  athletic: { f: 15, up: 9.5, bounce: 0.8 },
+  normal: { f: 13, up: 5, bounce: 0.7 },
+  athletic: { f: 15, up: 8, bounce: 0.8 },
   aggressive: { f: 19, up: 2.5, bounce: 0.6 },
-  discreet: { f: 7, up: 3, bounce: 0.5 },
+  discreet: { f: 9, up: 3, bounce: 0.5 },
 };
+// Flight rules (kept deliberately simple, so puzzles never depend on luck):
+//  - states: idle (ready, in the pocket) → inhand (wind-up / charge) → fly → impact (a beat at the hit) →
+//    return (homing back to the hand, passes through scenery, never damages) → idle.
+//  - movement is substepped (≤ BALL_STEP per step), so it can't tunnel through thin walls or small targets.
+//  - walls and the ground reflect it (wall bounces lose 15% speed); water swallows it (it returns).
+//  - bounces allowed: 1, +1 from magic level 3, +1 for a charged throw. Damage: the magic level, +1 charged.
+//  - each target is hit at most once per throw. A quick throw returns after its first hit; a charged throw
+//    with bounces left ricochets on to the nearest other visible enemy within 8 m.
+//  - limits: 2.6 s of flight, then it returns; a return that takes over 2.5 s (or a scene change) puts it
+//    straight back in the hand. The ball can't be lost.
+const BALL_STEP = 0.12, BALL_R = 0.14;
 
 export class MagicBall {
   constructor(game) {
@@ -639,123 +673,230 @@ export class MagicBall {
       game.scene.add(m);
       this.trail.push(m);
     }
+    // the aiming preview while charging: a few faint dots along the first arc
+    this.dots = [];
+    const dg = new THREE.SphereGeometry(0.05, 6, 4), dm = new THREE.MeshBasicMaterial({ color: '#fff0b0', transparent: true, opacity: 0.55, depthWrite: false });
+    for (let i = 0; i < 9; i++) { const d = new THREE.Mesh(dg, dm); d.visible = false; game.scene.add(d); this.dots.push(d); }
     this.history = [];
+    this.hits = new Set();
+    this.charge = 0;
   }
+  get ready() { return this.state === 'idle'; }
 
   // the ball sits in Twinsen's right hand during the wind-up
   holdIn(hero) {
     this.state = 'inhand';
     this.holder = hero;
     this.mesh.visible = true;
+    this.charge = 0;
     this.mat.emissiveIntensity = 0.6;
+    this.mesh.scale.setScalar(1);
     this.followHand();
   }
+  cancelHold() { if (this.state === 'inhand') this.toHand(true); }
+  setCharge(k) { this.charge = k; this.mat.emissiveIntensity = 0.6 + k * 3.2; this.mesh.scale.setScalar(1 + k * 0.35 + (k >= 1 ? Math.sin(this.game.time * 30) * 0.05 : 0)); }
   followHand() {
     const hand = this.holder?.rig.j?.armR?.hand;
     if (hand) { hand.updateWorldMatrix(true, false); hand.getWorldPosition(this.mesh.position); this.mesh.position.y -= 0.08; }
     else this.mesh.position.set(this.holder.pos.x, this.holder.pos.y + 1.4, this.holder.pos.z);
   }
+  canRecall() { return this.state === 'fly' && this.life > 0.2; }
+  recall() { if (this.state === 'fly' || this.state === 'impact') { this.state = 'return'; this.retT = 0; this.game.audio.play('recall'); } }
+  // back in the pocket, now (scene change, load, a stuck return)
+  toHand(silent = false) {
+    this.state = 'idle'; this.mesh.visible = false; this.shadow.visible = false; this.mesh.scale.setScalar(1);
+    this.trail.forEach((m) => (m.visible = false)); this.preview(null);
+    if (!silent) this.game.audio.play('catch');
+  }
+  reset() { this.toHand(true); }
 
-  launch(hero, beh, level, strong) {
-    const t = BALL_THROW[beh];
+  // velocity for a throw along aim (or at a target), with the behaviour's style
+  launchVelocity(hero, beh, aim, target, charged) {
+    const t = BALL_THROW[beh] || BALL_THROW.normal;
+    const f = t.f * (charged ? 1.3 : 1);
+    const from = this.pos;
+    if (target) {
+      const tp = target.pos || target;
+      const ty = target.pos ? tp.y + (target.hover ?? 0) + (target.aimY ?? 0.5) : tp.y;
+      const dx = tp.x - from.x, dz = tp.z - from.z, d = Math.hypot(dx, dz) || 1;
+      const tt = Math.max(0.12, d / f);
+      return new THREE.Vector3((dx / d) * f, (ty - from.y + 0.5 * 22 * tt * tt) / tt, (dz / d) * f);
+    }
+    return new THREE.Vector3(aim.x * f, t.up * (charged ? 0.75 : 1), aim.z * f);
+  }
+
+  launch(hero, beh, level, opts = {}) {
+    const t = BALL_THROW[beh] || BALL_THROW.normal;
+    const charged = !!opts.charged;
     this.level = level;
-    this.damage = level;
-    this.bounces = strong ? 1 + level : 1;
+    this.charged = charged;
+    this.damage = level + (charged ? 1 : 0);
+    this.bounces = 1 + (level >= 3 ? 1 : 0) + (charged ? 1 : 0);
     this.bounceK = t.bounce;
-    // released from the hand, at the hand's position (the release event of the throw)
+    // released from the hand, at the hand's position (the release frame of the throw)
     if (this.state === 'inhand') { this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, hero.pos.y + 1.2); }
     else this.pos.set(hero.pos.x + Math.sin(hero.angle) * 0.5, hero.pos.y + 1.6, hero.pos.z + Math.cos(hero.angle) * 0.5);
-    this.vel.set(Math.sin(hero.angle) * t.f, t.up, Math.cos(hero.angle) * t.f);
+    const aim = opts.aim || { x: Math.sin(hero.angle), z: Math.cos(hero.angle) };
+    this.vel.copy(this.launchVelocity(hero, beh, aim, opts.target, charged));
     this.state = 'fly';
-    this.life = 0;
+    this.life = 0; this.retT = 0;
+    this.hits = new Set();
     this.history = [];
     this.mesh.visible = true;
-    this.mat.emissiveIntensity = strong ? 3 : 1;
+    this.mesh.scale.setScalar(charged ? 1.3 : 1);
+    this.mat.emissiveIntensity = charged ? 4 : 2.2;
+    this.preview(null);
+  }
+
+  // a short dotted arc of the first 0.7 s (charging only)
+  preview(hero, aim, full) {
+    if (!hero) { this.dots.forEach((d) => (d.visible = false)); return; }
+    const beh = hero.behaviour, g = this.game;
+    const tgt = g.targeting?.throwTarget(aim);
+    const p = this.mesh.position.clone();
+    const save = this.pos.clone(); this.pos.copy(p);
+    const v = this.launchVelocity(hero, beh, aim, tgt, !!full);
+    this.pos.copy(save);
+    const P = g.physics;
+    let alive = true;
+    this.dots.forEach((d, i) => {
+      const tt = 0.06 + i * 0.075;
+      const x = p.x + v.x * tt, z = p.z + v.z * tt, y = p.y + v.y * tt - 11 * tt * tt;
+      if (alive && (P.solidAt(x, z, y, 0.1) || y < P.groundAt(x, z, y + 0.5))) alive = false;
+      d.visible = alive; if (alive) d.position.set(x, y, z);
+    });
   }
 
   update(dt) {
-    this.shadow.visible = this.state !== 'idle' && this.state !== 'held' && this.state !== 'inhand';
+    const g = this.game, P = g.physics;
+    this.shadow.visible = this.state === 'fly' || this.state === 'return' || this.state === 'impact';
     if (this.state === 'inhand') { this.followHand(); this.trail.forEach((m) => (m.visible = false)); return; }
     if (this.state === 'idle' || this.state === 'held') { this.trail.forEach((m) => (m.visible = false)); return; }
-    const g = this.game, P = g.physics;
     this.life += dt;
-    if (this.state === 'fly') {
-      this.vel.y -= 22 * dt;
-      this.assist(dt);
-      // hits first, so targets mounted on posts register before the post deflects the ball
-      if (g.ballHitTest(this.pos)) {
-        g.particles.burst(this.pos.x, this.pos.y, this.pos.z, '#ffe27a', 16, 5);
-        this.state = 'return';
-        return;
-      }
-      const nx = this.pos.x + this.vel.x * dt, nz = this.pos.z + this.vel.z * dt;
-      if (P.blockedAt(nx, nz, this.pos.y - 0.4, 0.15)) {
-        this.vel.x *= -0.8; this.vel.z *= -0.8;
-        this.bounce();
-      } else { this.pos.x = nx; this.pos.z = nz; }
-      this.pos.y += this.vel.y * dt;
-      const gy = P.groundAt(this.pos.x, this.pos.z, this.pos.y) + 0.17;
-      if (this.pos.y < gy) {
-        this.pos.y = gy;
-        this.vel.y = Math.max(4, Math.abs(this.vel.y) * this.bounceK);
-        this.bounce();
-      }
-      if (gy < 0.2 && this.pos.y < 0.3) this.state = 'return'; // fell in the sea
-      if (this.life > 2.6) this.state = 'return';
+    if (this.state === 'impact') {
+      // a beat at the point of impact, then home
+      this.impactT -= dt;
+      if (this.impactT <= 0) { this.state = 'return'; this.retT = 0; }
+    } else if (this.state === 'fly') {
+      const sp = this.vel.length();
+      const n = Math.max(1, Math.ceil((sp * dt) / BALL_STEP));
+      const h = dt / n;
+      for (let i = 0; i < n && this.state === 'fly'; i++) this.substep(h, i === 0 ? dt : 0);
+      if (this.state === 'fly' && this.life > 2.6) { this.state = 'return'; this.retT = 0; }
     } else if (this.state === 'return') {
+      this.retT += dt;
       const hero = g.hero;
       const tx = hero.pos.x, ty = hero.pos.y + 1.4, tz = hero.pos.z;
       const d = new THREE.Vector3(tx - this.pos.x, ty - this.pos.y, tz - this.pos.z);
       const len = d.length();
-      if (len < 0.7 || len > 40) { // (caught, or the hero changed rooms while it was out)
-        this.state = 'idle';
-        this.mesh.visible = false;
-        g.audio.play('catch');
-        return;
-      }
-      this.pos.addScaledVector(d.normalize(), Math.min(len, 24 * dt));
+      if (len < 0.7) { this.toHand(); return; }
+      if (len > 60 || this.retT > 2.5) { this.toHand(); return; } // never lost
+      this.pos.addScaledVector(d.normalize(), Math.min(len, (22 + this.retT * 14) * dt));
     }
     this.mesh.position.copy(this.pos);
     placeBlobShadow(this.shadow, P, this.pos.x, this.pos.y, this.pos.z);
     this.history.unshift(this.pos.clone());
     if (this.history.length > 20) this.history.pop();
     this.trail.forEach((m, i) => {
-      const h = this.history[i * 2 + 1];
-      m.visible = !!h && !g.renderer.retro;
-      if (h) m.position.copy(h);
+      const hh = this.history[i * 2 + 1];
+      m.visible = !!hh && !g.renderer.retro;
+      if (hh) m.position.copy(hh);
     });
   }
 
-  // 2026 aim assist: during the first second the ball bends gently toward
-  // an enemy or target that is roughly ahead (mites are small and low).
+  substep(h, frameDt) {
+    const g = this.game, P = g.physics;
+    this.vel.y -= 22 * h;
+    if (frameDt) this.assist(frameDt);
+    // targets first, so things mounted on posts register before the post deflects the ball
+    const hit = g.ballHitTest(this.pos, this);
+    if (hit) { this.onHit(hit); return; }
+    const nx = this.pos.x + this.vel.x * h, nz = this.pos.z + this.vel.z * h;
+    const y = this.pos.y;
+    if (P.solidAt(nx, nz, y, BALL_R)) {
+      // reflect off the face it struck: test each axis on its own
+      const bx = P.solidAt(nx, this.pos.z, y, BALL_R), bz = P.solidAt(this.pos.x, nz, y, BALL_R);
+      if (bx || !bz) this.vel.x *= -1;
+      if (bz || !bx) this.vel.z *= -1;
+      this.vel.x *= 0.85; this.vel.z *= 0.85;
+      this.bounce('wall');
+    } else { this.pos.x = nx; this.pos.z = nz; }
+    this.pos.y += this.vel.y * h;
+    const gy = P.groundAt(this.pos.x, this.pos.z, this.pos.y + 0.3) + 0.17;
+    if (this.pos.y < gy) {
+      if (gy < 0.2) { this.state = 'return'; this.retT = 0; return; } // into the sea
+      this.pos.y = gy;
+      this.vel.y = Math.max(4, Math.abs(this.vel.y) * this.bounceK);
+      this.bounce('ground');
+    }
+  }
+
+  onHit(hit) {
+    const g = this.game;
+    if (hit.enemy) this.hits.add(hit.enemy);
+    g.impact(this.pos.x, this.pos.y, this.pos.z, hit.material || 'magic', hit.result || 'hit', 0.6);
+    // a charged throw with bounces left goes on to the next enemy
+    if (this.charged && this.bounces > 0 && hit.enemy) {
+      const next = this.nextTarget(hit.enemy);
+      if (next) {
+        this.bounces--;
+        const sp = Math.max(12, Math.hypot(this.vel.x, this.vel.z));
+        const ty = next.pos.y + (next.hover ?? 0) + (next.aimY ?? 0.5);
+        const dx = next.pos.x - this.pos.x, dz = next.pos.z - this.pos.z, d = Math.hypot(dx, dz), tt = Math.max(0.1, d / sp);
+        this.vel.set((dx / d) * sp, (ty - this.pos.y + 11 * tt * tt) / tt, (dz / d) * sp);
+        g.audio.play('bounce');
+        return;
+      }
+    }
+    this.state = 'impact'; this.impactT = 0.07;
+  }
+  nextTarget(from) {
+    const g = this.game; let best = null, bd = 8;
+    for (const e of g.enemies) {
+      if (!e.alive || !e.present || this.hits.has(e) || e === from) continue;
+      const d = Math.hypot(e.pos.x - this.pos.x, e.pos.z - this.pos.z);
+      if (d < bd && g.physics.lineOfSight(this.pos.x, this.pos.y, this.pos.z, e.pos.x, e.pos.y + 0.6, e.pos.z)) { bd = d; best = e; }
+    }
+    return best;
+  }
+
+  // gentle mid-flight help during the first half second, toward a target roughly ahead and in sight
   assist(dt) {
-    if (this.life > 1.1) return;
+    if (this.life > 0.5) return;
+    const g = this.game;
+    const cone = g.targeting?.cone?.() ?? 0.42;
+    if (cone <= 0) return;
     const sp = Math.hypot(this.vel.x, this.vel.z);
     if (sp < 1) return;
     const hx = this.vel.x / sp, hz = this.vel.z / sp;
+    const cosMax = Math.cos(cone * 0.7);
     let best = null, bd = 9;
-    for (const t of this.game.ballAimTargets()) {
+    for (const t of g.ballAimTargets()) {
+      if (t.enemy && this.hits.has(t.enemy)) continue;
       const dx = t.x - this.pos.x, dz = t.z - this.pos.z;
       const d = Math.hypot(dx, dz);
       if (d < 0.3 || d > bd) continue;
-      if ((dx * hx + dz * hz) / d < 0.82) continue; // within ~35°
+      if ((dx * hx + dz * hz) / d < cosMax) continue;
+      if (!g.physics.clearTo(this.pos.x, this.pos.y, this.pos.z, t.x, t.y, t.z, 0.8)) continue;
       best = t; bd = d;
     }
     if (!best) return;
     const dx = best.x - this.pos.x, dz = best.z - this.pos.z, d = Math.hypot(dx, dz);
-    const k = Math.min(1, dt * 5);
+    const k = Math.min(1, dt * 4);
     const nx = hx + (dx / d - hx) * k, nz = hz + (dz / d - hz) * k, nl = Math.hypot(nx, nz);
     this.vel.x = (nx / nl) * sp; this.vel.z = (nz / nl) * sp;
     const tFly = d / sp;
     const wantVy = (best.y - this.pos.y) / Math.max(tFly, 0.12) + 11 * tFly;
-    this.vel.y += (wantVy - this.vel.y) * Math.min(1, dt * 6);
+    this.vel.y += (wantVy - this.vel.y) * Math.min(1, dt * 5);
   }
 
-  bounce() {
+  bounce(kind) {
     this.bounces--;
-    this.game.audio.play('bounce');
-    this.game.particles.burst(this.pos.x, this.pos.y, this.pos.z, '#ffe9a0', 5, 2);
-    if (this.bounces < 0) this.state = 'return';
+    const g = this.game;
+    g.audio.play('bounce');
+    g.particles.burst(this.pos.x, this.pos.y, this.pos.z, '#ffe9a0', 5, 2);
+    if (this.bounces < 0) { this.state = 'return'; this.retT = 0; }
+    void kind;
   }
 }
 

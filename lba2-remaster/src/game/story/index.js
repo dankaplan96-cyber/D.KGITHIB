@@ -104,6 +104,8 @@ export class Story {
   interact(it) { return this.cur.interact(it) || this.chapters[0].baseInteract(it); }
   talk(npc) { if (!this.cur.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
+  meleeHit(o) { return this.cur.meleeHit?.(o) || false; }
+  pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
   ballTargets() { return this.cur.ballTargets(); }
   update(dt) { this.cur.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); }

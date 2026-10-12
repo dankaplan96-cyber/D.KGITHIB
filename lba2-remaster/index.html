@@ -35,8 +35,10 @@
     <div id="prompt"></div>
     <div id="toast"></div>
     <div id="bossbar" class="hidden"><span></span><div><i></i></div></div>
+    <div id="weapon"><span class="ico"></span><span class="name"></span><span class="ready"></span><span class="alt"></span></div>
     <button id="pausebtn" aria-label="pause">II</button>
   </div>
+  <div id="wsel" class="hidden"><div class="slot" data-dir="up"></div><div class="slot" data-dir="right"></div><div class="slot" data-dir="down"></div><div class="slot" data-dir="left"></div><div class="mid"></div></div>
   <div id="vignette"></div>
 
   <div id="floats"></div>
@@ -61,8 +63,11 @@
     <div id="stick"><i></i></div>
     <div class="tbtns">
       <button data-touch="action">⬤</button>
+      <button data-touch="attack">⚔</button>
       <button data-touch="ball">✦</button>
+      <button data-touch="dodge">»</button>
       <button data-touch="interact">✋</button>
+      <button data-touch="swap">⇄</button>
       <button data-touch="cycle">⟳</button>
       <button data-touch="map">⌖</button>
     </div>
@@ -114,6 +119,12 @@
       <div class="seg" data-setting="textSize"><button data-v="normal" data-i18n="tsz_normal"></button><button data-v="large" data-i18n="tsz_large"></button></div>
       <label data-i18n="shake_set"></label>
       <div class="seg" data-setting="shake"><button data-v="on" data-i18n="sh_on"></button><button data-v="reduced" data-i18n="sh_reduced"></button><button data-v="off" data-i18n="sh_off"></button></div>
+      <label data-i18n="difficulty"></label>
+      <div class="seg" data-setting="difficulty"><button data-v="gentle" data-i18n="df_gentle"></button><button data-v="normal" data-i18n="df_normal"></button><button data-v="hard" data-i18n="df_hard"></button></div>
+      <label data-i18n="aim_assist"></label>
+      <div class="seg" data-setting="aimAssist"><button data-v="off" data-i18n="aa_off"></button><button data-v="low" data-i18n="aa_low"></button><button data-v="normal" data-i18n="aa_normal"></button><button data-v="high" data-i18n="aa_high"></button></div>
+      <label data-i18n="lock_mode"></label>
+      <div class="seg" data-setting="lockMode"><button data-v="toggle" data-i18n="lm_toggle"></button><button data-v="hold" data-i18n="lm_hold"></button></div>
       <label data-i18n="music"></label>
       <input type="range" min="0" max="1" step="0.05" data-range="music">
       <label data-i18n="sfx"></label>

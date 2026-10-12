@@ -1,0 +1,197 @@
+// Combat systems test, in the developer arena (?arena / game.devArena()). Each check prints PASS/FAIL with
+// the measured values. Covers: input buffer and combo, active-frame timing and single hits, walls blocking
+// melee and targeting, the dodge's invulnerability, the ball at low frame rates (no tunnelling), recall,
+// scene changes, presses during dialogue, lock-on, the sentry's shield and guard break, the crawler's slam,
+// the ball switch, weapon save/load, and dodge distance at 30 vs 60 fps.
+import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
+const errs = [];
+page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 4).join('\n')));
+page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const ev = (f, a) => page.evaluate(f, a);
+let fails = 0;
+const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, JSON.stringify(info)); };
+await page.goto('http://localhost:8123/', { waitUntil: 'load', timeout: 180000 });
+await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
+await ev(() => {
+  const G = window.game; G.testFreeze = true;
+  G.devArena();
+  const E = (id) => G.enemies.find((e) => e.id === id);
+  window.C = {
+    G, E,
+    step(s, dt = 1 / 60) { for (let t = 0; t < s - 1e-9; t += dt) G.frame(dt, false); },
+    press(code, hold = 0) { G.input.keys.add(code); G.input.taps.add(code); C.step(1 / 60); if (!hold) G.input.keys.delete(code); },
+    release(code) { G.input.keys.delete(code); },
+    // park every enemy far away except the ones named, and reset the hero
+    only(ids = [], heroAt = [6194, 8], a = 0) {
+      for (const e of G.enemies) { if (!e.id?.startsWith('a_')) continue; const on = ids.includes(e.id); e.setPresent(on); }
+      const h = G.hero; h.pos.set(heroAt[0], G.physics.groundAt(heroAt[0], heroAt[1]), heroAt[1]); h.angle = a; h.vel.set(0, 0); h.hp = h.maxHp; h.invuln = 0; h.dead = false; h.hurtT = 0; h.actT = 0;
+      G.resetCombat(); G.combatDir.grace = 0; G.state = 'play';
+    },
+    put(id, x, z, a = 0) { const e = E(id); e.pos.set(x, G.physics.groundAt(x, z), z); e.angle = a; e.kb?.set(0, 0); e.sync?.(); return e; },
+  };
+});
+
+// 1. sword: hit only in the active frames, exactly once; combo continues from a buffered press
+let r = await ev(() => {
+  const { G, E } = C; C.only(['a_dummy'], [6194, 4], 0); C.put('a_dummy', 6194, 5.5);
+  const d = E('a_dummy'); d.hits = 0; G.hero.combat.equip('sword', true);
+  C.press('KeyK'); const startup = []; for (let i = 0; i < 6; i++) { C.step(1 / 60); startup.push(d.hits); }
+  C.step(0.25); const afterFirst = d.hits;
+  // press again in the second half of recovery → the next strike of the combo
+  const combo0 = G.hero.combat.combo; C.press('KeyK'); C.step(0.5);
+  return { startupHits: startup, afterFirst, combo0, combo1: G.hero.combat.combo, total: d.hits, anim: G.hero.rig.anim };
+});
+check('sword: no damage before the active frames', r.startupHits[3] === 0, r);
+check('sword: one hit per swing', r.afterFirst === 1, r);
+check('sword: buffered press continues the combo', r.combo1 === 1 && r.total === 2, r);
+
+// 2. a press during a long startup does not queue a chain of attacks
+r = await ev(() => {
+  const { G, E } = C; C.only(['a_dummy'], [6194, 4], 0); C.put('a_dummy', 6194, 5.5); const d = E('a_dummy'); d.hits = 0;
+  for (let i = 0; i < 6; i++) { C.press('KeyK'); C.step(0.02); }
+  C.step(2.0);
+  return { hits: d.hits, busy: G.hero.combat.busy };
+});
+check('mashing does not chain more than the combo allows', r.hits <= 3 && !r.busy, r);
+
+// 3. melee never reaches through a wall; targeting ignores enemies behind walls
+r = await ev(() => {
+  const { G, E } = C; C.only(['a_mite'], [6198, 3.3], Math.PI);  // the wall runs x 6195..6201 at z = 2 (0.4 thick)
+  const m = C.put('a_mite', 6198, 1.0); m.state = 'idle'; m.hp = m.maxHp = 50; m.coolT = 99;
+  G.hero.combat.equip('sword', true);
+  C.press('KeyK'); C.step(0.6);
+  const picked = G.targeting.pick({ x: 0, z: -1 }, 9, 0.6);
+  return { hp: m.hp, picked: picked?.id || null };
+});
+check('sword blocked by the wall', r.hp === 50, r);
+check('targeting skips enemies behind walls', r.picked === null, r);
+
+// 4. the dodge: invulnerable in its window, not outside it; moves about its distance
+r = await ev(() => {
+  const { G } = C; C.only([], [6190, 6], 0); const h = G.hero;
+  const x0 = h.pos.x; G.input.keys.add('KeyD'); C.press('ShiftLeft'); C.step(0.06);
+  h.damage(1, null); const hpIn = h.hp;
+  C.step(0.5); G.input.keys.delete('KeyD');
+  h.invuln = 0; h.damage(1, null); const hpOut = h.hp;
+  return { hpIn, hpOut, moved: +Math.hypot(h.pos.x - x0, 0).toFixed(2), max: h.maxHp };
+});
+check('dodge: hit during the hop misses', r.hpIn === r.max, r);
+check('dodge: hit after it lands', r.hpOut < r.max, r);
+
+// 5. the ball at 15 fps does not pass through the wall; it comes back and is ready again
+r = await ev(() => {
+  const { G } = C; C.only([], [6198, 7], Math.PI); G.hero.combat.equip('ball', true);
+  G.input.mouse.inside = false;
+  // Aggressive: the flat, fast throw (19 m/s → 1.3 m per frame at 15 fps); the wall is 0.4 m thick, 2.2 m high
+  G.hero.behaviour = 'aggressive';
+  C.press('KeyF'); let minZ = 99, crossed = false, prev = null;
+  for (let i = 0; i < 40; i++) { C.step(1 / 15, 1 / 15); const b = G.ball; if (b.state === 'fly') { minZ = Math.min(minZ, b.pos.z); if (prev && prev.z > 2.2 && b.pos.z < 1.8 && Math.min(prev.y, b.pos.y) < 2.2 + 0.14) crossed = true; prev = b.pos.clone(); } }
+  G.hero.behaviour = 'normal';
+  C.step(3);
+  return { minZ: +minZ.toFixed(2), crossed, state: G.ball.state };
+});
+check('ball: no tunnelling through a thin wall at 15 fps', !r.crossed, r);
+check('ball: back in hand afterwards', r.state === 'idle', r);
+
+// 6. one press, one ball; pressing again while it flies calls it back
+r = await ev(() => {
+  const { G } = C; C.only([], [6190, 8], Math.PI / 2);
+  C.press('KeyF'); C.step(0.1); C.press('KeyF'); const st1 = G.ball.state;
+  C.step(0.25); C.press('KeyF'); const st2 = G.ball.state;
+  C.step(3); return { st1, st2, end: G.ball.state };
+});
+check('ball: a second press before 0.2 s does not recall or duplicate', r.st1 === 'fly' || r.st1 === 'inhand', r);
+check('ball: recall', r.st2 === 'return' && r.end === 'idle', r);
+
+// 7. scene change while the ball flies → the ball is home, combat state reset
+r = await ev(() => {
+  const { G } = C; C.only([], [6190, 8], Math.PI / 2);
+  C.press('KeyF'); C.step(0.3); const flying = G.ball.state;
+  G.enterRoom('house', null, true); const after = G.ball.state, busy = G.hero.combat.busy;
+  G.devArena(); return { flying, after, busy };
+});
+check('scene change returns the ball and clears combat', r.flying === 'fly' && r.after === 'idle' && !r.busy, r);
+
+// 8. a press made during dialogue does not fire when it closes
+r = await ev(() => {
+  const { G, E } = C; C.only(['a_dummy'], [6194, 4], 0); C.put('a_dummy', 6194, 5.5); const d = E('a_dummy'); d.hits = 0;
+  G.hero.combat.equip('sword', true);
+  G.say('', ['Test line.'], () => {});
+  C.press('KeyK'); C.step(0.1);
+  G.input.taps.add('KeyE'); C.step(0.05); for (let i = 0; i < 40 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); C.step(0.05); }
+  C.step(0.6);
+  return { state: G.state, hits: d.hits, busy: G.hero.combat.busy };
+});
+check('no attack fires after dialogue closes', r.state === 'play' && r.hits === 0, r);
+
+// 9. lock-on: takes the visible target, lets go when it dies
+r = await ev(() => {
+  const { G, E } = C; C.only(['a_mite'], [6190, -6], Math.PI / 2); const m = C.put('a_mite', 6194, -6); m.state = 'idle'; m.hp = 1; m.coolT = 99;
+  C.press('KeyL'); C.step(0.1); const locked = G.targeting.lock?.id;
+  m.damage(5, G.hero.pos); C.step(0.1);
+  return { locked, after: G.targeting.lock?.id || null };
+});
+check('lock-on picks the target and releases it on defeat', r.locked === 'a_mite' && r.after === null, r);
+
+// 10. the sentry: blocks a frontal slash, a heavy strike breaks its guard, a hit from behind lands
+r = await ev(() => {
+  const { G, E } = C; C.only(['a_sentry'], [6192, -2], -Math.PI / 2); const s = C.put('a_sentry', 6190.4, -2, Math.PI / 2);
+  s.state = 'chase'; s.hp = s.maxHp = 30; s.coolT = 99; G.hero.combat.equip('sword', true);
+  C.press('KeyK'); C.step(0.5); const hpBlock = s.hp, st1 = s.state;
+  C.only(['a_sentry'], [6192, -2], -Math.PI / 2); C.put('a_sentry', 6190.4, -2, Math.PI / 2); s.coolT = 99;
+  // heavy: hold the button through the first strike, release
+  s.state = 'chase'; G.input.keys.add('KeyK'); G.input.taps.add('KeyK'); C.step(1.0); G.input.keys.delete('KeyK'); C.step(0.8);
+  const st2 = s.state, hpHeavy = s.hp;
+  return { hpBlock, st1, st2, hpHeavy, d: +G.hero.distTo(s).toFixed(2), anim: G.hero.rig.anim, holding: G.hero.combat.holding };
+});
+check('sentry blocks a frontal slash', r.hpBlock === 30, r);
+check('heavy strike breaks the guard', r.hpHeavy < 30 && (r.st2 === 'stagger' || r.st2 === 'chase'), r);
+
+// 11. the crawler's slam: hurts inside its ring, missed with a dodge
+r = await ev(() => {
+  const { G, E } = C; C.only(['a_crawler'], [6200, -5], Math.PI); const c = C.put('a_crawler', 6200, -7.5, 0);
+  c.state = 'windup'; c.stateT = 0; c.hp = 50; const h = G.hero; const hp0 = h.hp;
+  C.step(1.4); const hit = h.hp < hp0;
+  C.only(['a_crawler'], [6200, -5], Math.PI); C.put('a_crawler', 6200, -7.5, 0); c.state = 'windup'; c.stateT = 0; c.coolT = 0;
+  C.step(0.85); G.input.keys.add('KeyS'); C.press('ShiftLeft'); C.step(0.6); G.input.keys.delete('KeyS');
+  return { hit, dodgedHp: h.hp, max: h.maxHp };
+});
+check('crawler slam hurts inside the ring', r.hit, r);
+check('crawler slam dodged', r.dodgedHp === r.max, r);
+
+// 12. the ball switch opens the gate (aimed by the assist)
+r = await ev(() => {
+  const { G } = C; C.only([], [6186.5, -9.5], Math.PI); const R = G.rooms.arena; R.gate.set(false); R.ballTargets[0].done = false;
+  G.hero.combat.equip('ball', true);
+  G.hero.angle = Math.atan2(R.ballTargets[0].x - G.hero.pos.x, R.ballTargets[0].z - G.hero.pos.z);
+  C.press('KeyF'); C.step(2);
+  return { open: R.gate.open };
+});
+check('ball switch opens the gate', r.open, r);
+
+// 13. weapons survive save / load (no duplicates, the equipped one kept)
+r = await ev(() => {
+  const { G } = C; const h = G.hero; h.hasSword = true; h.hasPulse = false; h.weapon = 'sword'; h.prevWeapon = 'ball';
+  const snap = G.snapshot(); h.hasSword = false; h.weapon = 'fists';
+  snap.room = null; G.applySave(snap);
+  return { hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prev: h.prevWeapon, owned: h.combat.owned() };
+});
+check('weapons saved and restored', r.hasSword && !r.hasPulse && r.weapon === 'sword' && r.owned.join() === 'ball,sword,fists', r);
+
+// 14. frame-rate independence of the dodge
+r = await ev(() => {
+  const { G } = C; G.devArena(); const out = [];
+  for (const dt of [1 / 30, 1 / 60]) {
+    C.only([], [6190, 6], 0); const h = G.hero; const x0 = h.pos.x;
+    G.input.keys.add('KeyD'); G.input.keys.add('ShiftLeft'); G.input.taps.add('ShiftLeft'); C.step(dt, dt); G.input.keys.delete('ShiftLeft'); G.input.keys.delete('KeyD');
+    C.step(0.5, dt); out.push(+Math.abs(h.pos.x - x0).toFixed(2)); C.step(1.0, dt);
+  }
+  return { d30: out[0], d60: out[1] };
+});
+check('dodge distance consistent at 30 and 60 fps', Math.abs(r.d30 - r.d60) < 0.35 && r.d60 > 2, r);
+
+console.log(errs.length ? errs.join('\n') : 'no errors');
+console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+await browser.close();

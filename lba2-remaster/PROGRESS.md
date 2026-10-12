@@ -102,3 +102,29 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - All five headless suites pass: prologue, chapters 1, 2, 3 (to the end screen and free roam), save migration.
 - Playable link republished (same URL) with the soundtrack.
 - Not verified: real-GPU performance; music and ambience by ear; a human playthrough.
+
+## Session: chapters 9–10 and the combat overhaul (headless Chromium + SwiftShader, deterministic stepping)
+- Chapter 9 The Council (upper district: antechamber, council chamber, project archive with stealth and a borrowed
+  coat) and Chapter 10 Baldino's Network (five relays at five stations, Hesk's glider between the islands, the
+  valve room under the water office). tests/chapter9.mjs and tests/chapter10.mjs pass.
+- Combat overhaul, all values in src/game/combat.js; design and rules in docs/COMBAT.md.
+  - Dedicated attack, dodge, focus, swap and weapon-wheel actions, with mouse aim and a gamepad layout.
+  - A 0.22 s input buffer.
+  - Soft targeting and lock-on with line of sight.
+  - The magic ball: explicit states, substepped collision (no tunnelling), rule-based ricochets, charged
+    throw, recall, recovery limits.
+  - The sword from Yorna in chapter 6: a 3-strike combo, a heavy strike, hits only in active frames along the
+    swept arc.
+  - Dodge with invulnerability frames.
+  - Enemy roles: cautious mite, drone with an aim-line tell, shielded sentry automaton, crystal crawler with a
+    slam ring.
+  - An attack director that limits simultaneous attackers, plus grace periods.
+  - Baldino's pulse tool in chapter 10.
+  - Difficulty, aim-assist and lock-mode settings.
+- Verified: tests/combat.mjs (developer arena `?arena`), 22/22 checks. Full story regression: prologue,
+  chapters 1–10 and save migration all pass with no page errors.
+- Found and fixed along the way:
+  - Line of sight sampled every 0.8 m and skipped thin walls (now 0.25 m).
+  - The ball used the character step-up rule against walls, so the top 0.55 m of a wall let it through.
+  - Switches weren't auto-aimed after the stricter collision (the chapter 5 hatch).
+- Not verified: feel with a real gamepad or touch screen, sound by ear, real-GPU frame rate.

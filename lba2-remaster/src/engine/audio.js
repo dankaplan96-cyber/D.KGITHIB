@@ -227,6 +227,26 @@ export class AudioEngine {
       case 'rumble': this._burst({ dur: 1.5, vol: 0.3, f: 200, f1: 60 }); break;
       case 'thunder': this._burst({ dur: 2.8, vol: 0.5, f: 400, f1: 40 }); this._burst({ dur: 0.3, vol: 0.3, f: 3000, f1: 300 }); break;
       case 'horn': this._tone({ type: 'sawtooth', f0: 147, f1: 140, dur: 1.4, vol: 0.12 }); this._tone({ type: 'sawtooth', f0: 220, f1: 210, dur: 1.4, vol: 0.08 }); break;
+      // combat: distinct materials, readable timing cues
+      case 'swing': this._burst({ dur: 0.14, vol: 0.18, f: 900, f1: 3200, type: 'bandpass', q: 2.5 }); break;
+      case 'swingHeavy': this._burst({ dur: 0.22, vol: 0.24, f: 500, f1: 2400, type: 'bandpass', q: 2 }); this._tone({ type: 'sine', f0: 140, f1: 90, dur: 0.18, vol: 0.06 }); break;
+      case 'hitFlesh': this._burst({ dur: 0.1, vol: 0.28, f: 900, f1: 180 }); this._tone({ type: 'sine', f0: 160, f1: 70, dur: 0.1, vol: 0.12 }); break;
+      case 'hitCrystal': this._tone({ type: 'triangle', f0: 2400, f1: 1800, dur: 0.16, vol: 0.08 }); this._tone({ type: 'triangle', f0: 3600, f1: 3100, dur: 0.12, vol: 0.05 }); this._burst({ dur: 0.08, vol: 0.18, f: 4000, f1: 1500, type: 'highpass' }); break;
+      case 'hitMachine': this._tone({ type: 'square', f0: 520, f1: 300, dur: 0.1, vol: 0.06 }); this._burst({ dur: 0.12, vol: 0.22, f: 2600, f1: 600, type: 'bandpass', q: 3 }); break;
+      case 'clang': this._tone({ type: 'triangle', f0: 1450, f1: 1380, dur: 0.35, vol: 0.09 }); this._tone({ type: 'triangle', f0: 2170, f1: 2100, dur: 0.25, vol: 0.05 }); this._burst({ dur: 0.05, vol: 0.25, f: 5000, f1: 2500, type: 'highpass' }); break;
+      case 'hitStone': this._burst({ dur: 0.14, vol: 0.3, f: 600, f1: 120 }); break;
+      case 'hitWood': this._tone({ type: 'triangle', f0: 260, f1: 160, dur: 0.09, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.18, f: 1400, f1: 400 }); break;
+      case 'whoosh': this._burst({ dur: 0.2, vol: 0.14, f: 400, f1: 1600, type: 'bandpass', q: 1.5 }); break;
+      case 'dodged': this._tone({ type: 'sine', f0: 1200, f1: 1700, dur: 0.12, vol: 0.06 }); break;
+      case 'charge': this._tone({ type: 'sine', f0: 300, f1: 760, dur: 0.75, vol: 0.06 }); break;
+      case 'chargeFull': this._tone({ type: 'triangle', f0: 1568, dur: 0.12, vol: 0.08 }); this._tone({ type: 'triangle', f0: 2093, dur: 0.18, vol: 0.06, at: 0.06 }); break;
+      case 'throwHeavy': this._burst({ dur: 0.3, vol: 0.2, f: 500, f1: 3000, type: 'bandpass', q: 3 }); this._tone({ f0: 600, f1: 1400, dur: 0.2, vol: 0.06 }); break;
+      case 'notReady': this._tone({ type: 'square', f0: 240, dur: 0.04, vol: 0.05 }); this._tone({ type: 'square', f0: 200, dur: 0.05, vol: 0.05, at: 0.06 }); break;
+      case 'recall': this._tone({ f0: 1400, f1: 700, dur: 0.18, vol: 0.08 }); break;
+      case 'lockOn': this._tone({ type: 'triangle', f0: 880, f1: 1320, dur: 0.07, vol: 0.06 }); break;
+      case 'equip': this._burst({ dur: 0.06, vol: 0.12, f: 3000, f1: 1500, type: 'bandpass', q: 4 }); this._tone({ type: 'triangle', f0: 700, dur: 0.05, vol: 0.06 }); break;
+      case 'pulse': this._tone({ type: 'sawtooth', f0: 90, f1: 60, dur: 0.35, vol: 0.1 }); this._tone({ type: 'sine', f0: 1800, f1: 300, dur: 0.3, vol: 0.06 }); this._burst({ dur: 0.25, vol: 0.18, f: 3000, f1: 400, type: 'bandpass', q: 2 }); break;
+      case 'slam': this._burst({ dur: 0.5, vol: 0.4, f: 300, f1: 50 }); this._tone({ type: 'sine', f0: 90, f1: 40, dur: 0.4, vol: 0.2 }); break;
       case 'deny': this._tone({ type: 'square', f0: 200, f1: 150, dur: 0.15, vol: 0.08 }); break;
       case 'victory': [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => this._tone({ type: 'triangle', f0: f, dur: 0.5, vol: 0.12, at: i * 0.14 })); break;
     }

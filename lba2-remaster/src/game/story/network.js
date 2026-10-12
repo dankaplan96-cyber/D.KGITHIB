@@ -27,7 +27,7 @@ export class Network extends ChapterBase {
   region() { return REGION_OF[this.room()] || 'citadel'; }
   done() { return STATIONS.filter((s) => this.f['c10_' + s]).length; }
   boreDrones() { return this.game.enemies.filter((e) => /^ndrone/.test(e.def?.id || '')); }
-  ridgeMites() { return this.game.enemies.filter((e) => /^nmite/.test(e.def?.id || '')); }
+  ridgeMites() { return this.game.enemies.filter((e) => /^nmite|^ncrawler/.test(e.def?.id || '')); }
 
   // where Hesk's glider comes down on each island, and where Hesk waits beside it
   landing(r) {
@@ -70,9 +70,16 @@ export class Network extends ChapterBase {
       const b = D.bore, P = [0, 1, 2, 3, 4, 5].map((k) => { const a = (k / 6) * Math.PI * 2 + i * 2.1; return [b.x + Math.cos(a) * 7, b.z + Math.sin(a) * 7]; });
       out.push({ id: 'ndrone' + i, kind: 'drone', group: 'nbore', x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore });
     }
+    if (D?.bore && D.post) {
+      // a lone sentry automaton at the post's gate: met on its own before the drones at the bore
+      const gt = D.post.gate;
+      out.push({ id: 'nsentry', kind: 'sentry', x: gt.x + 1.5, z: gt.z + 2.5, angle: 0, group: 'npost', when: (f) => this.isCur(f) && !!f.c10_started && !f.c10_bore });
+    }
     if (M?.observatory) {
       const d = M.observatory.door, g = M.monastery.gate;
-      [0.45, 0.62, 0.8].forEach((t, i) => out.push({ id: 'nmite' + i, kind: 'mite', x: g.x + (d.x - g.x) * t + (i - 1) * 1.5, z: g.z + (d.z - g.z) * t, when: (f) => this.isCur(f) && !!f.c10_pim && !f.c10_dome }));
+      // on the open ridge: a crystal crawler on its own, then two mites near the dome's door
+      out.push({ id: 'ncrawler', kind: 'crawler', x: g.x + (d.x - g.x) * 0.5, z: g.z + (d.z - g.z) * 0.5, group: 'nridge', when: (f) => this.isCur(f) && !!f.c10_pim && !f.c10_dome });
+      [0.86, 0.9].forEach((t, i) => out.push({ id: 'nmite' + i, kind: 'mite', x: g.x + (d.x - g.x) * t + (i ? 2 : -2), z: g.z + (d.z - g.z) * t, group: 'nridge2', when: (f) => this.isCur(f) && !!f.c10_pim && !f.c10_dome }));
     }
     return out;
   }
@@ -102,8 +109,11 @@ export class Network extends ChapterBase {
     g.hero.swapBody?.('twinsen'); g.hero.hasBall = true; g.hero.disguised = false;
     if (this.R.workshop) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
     this.story.refreshCast();
-    this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
-      f.c10_started = true; g.hud.toast('c10_toast_relays'); this.story.refreshCast(); g.updateObjective(); g.save(false);
+    this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
+      f.c10_started = true; f.c10_pulse = true;
+      g.hero.hasPulse = true;
+      g.hud.toast('c10_toast_relays'); setTimeout(() => g.hud.toast('c10_toast_pulse'), 1800);
+      this.story.refreshCast(); g.updateObjective(); g.save(false);
     });
   }
 
@@ -258,6 +268,14 @@ export class Network extends ChapterBase {
     }
     return false;
   }
+  // the pulse tool stalls the north mill too (machinery: the tool's other use)
+  pulseHit(o) {
+    const f = this.f;
+    if (!this.isCur() || this.room() !== 'zeelich' || !f.c10_okuAsk || f.c10_millBraked) return false;
+    const m = this.Z.mills[0], dx = m.brake.x - o.x, dz = m.brake.z - o.z, d = Math.hypot(dx, dz);
+    if (d > o.range + 1.5 || (dx * o.fx + dz * o.fz) / d < Math.cos(o.cone + 0.3)) return false;
+    return this.ballHit({ x: m.brake.x, y: m.brake.y, z: m.brake.z });
+  }
   ballTargets() {
     const f = this.f;
     if (!this.isCur() || this.room() !== 'zeelich' || !f.c10_okuAsk || f.c10_millBraked) return [];
@@ -338,6 +356,8 @@ export class Network extends ChapterBase {
   }
   applyFlags() {
     const f = this.f, on = this.isCur();
+    // the pulse tool is Twinsen's from here on (older saves past this chapter get it too)
+    if (f.c10_pulse || this.story.index > this.pos) this.game.hero.hasPulse = true;
     for (const gl of this.gliders || []) gl.visible = on;
     for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && (!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); r.userData.setOn?.(!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); }
     if (!on || !this.Z) return;

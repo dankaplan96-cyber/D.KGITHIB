@@ -1,10 +1,8 @@
 # NEXT ACTION
 
-The story is complete from a new game to the end screen (prologue → chapters 1–3 → epilogue → free roam).
+Story: chapters 1–10 are playable with tests; combat overhaul done (docs/COMBAT.md, tests/combat.mjs).
 
-1. (Done: playable link republished with the full game and the music, 88 files.)
-2. Visual pass at game distance on the underground rooms' lighting (interiors still receive the global sun;
-   `R.cave` is unused) and on Zeelich street life.
-3. W1/W2: one more optional discovery with a consequence on Zeelich; Citadel lines for chapter 2 (Twinsen away).
-4. Animation A1/A2: talking gestures, use/pick-up reach timing, ball hit feedback.
-5. Music and ambience: check balance by ear (not possible in this environment) — list in docs/MUSIC.md.
+1. Visual remaster pass (in progress): baseline captures, renderer image quality (MSAA in the bloom path,
+   shadow texel snapping), Twinsen and Zoé, the representative Citadel street and interior, then the regions.
+2. Split chapter 'shell' into 11 The Shell / 12 The Core (five pylons, one per station).
+3. Republish the playable artifact once the visual pass is coherent.

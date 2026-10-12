@@ -21,7 +21,9 @@ import { buildHamalayi } from './game/hamalayi.js';
 import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
 import { buildValveRoom } from './game/valveroom.js';
+import { buildArena, enterArena } from './game/arena.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
+import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
 import { createEnemy, Drone } from './game/enemies.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
@@ -79,7 +81,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
@@ -109,6 +111,7 @@ class Game {
     Object.assign(this.rooms, buildObsRoom(this.scene, this.physics));
     Object.assign(this.rooms, buildUpper3(this.scene, this.physics));
     this.rooms.valves = buildValveRoom(this.scene, this.physics);
+    this.rooms.arena = buildArena(this.scene, this.physics);
     this.loadTimes.desert = performance.now() - tr;
     this.loadTimes.zeelich = performance.now() - tr;
     this.room = null;
@@ -124,6 +127,9 @@ class Game {
     this.pickups = new Pickups(this);
     this.bolts = new Bolts(this);
     this.ball = new MagicBall(this);
+    this.targeting = new Targeting(this);
+    this.combatDir = new CombatDirector(this);
+    this.hitStop = 0;
     this.hud = new HUD(this);
     this.inventory = new Inventory(this);
     this.hud.buildMapImage(this.terrain);
@@ -239,6 +245,7 @@ class Game {
       if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true); }
       const sp = spawn || R.spawn;
       const h = this.hero;
+      this.resetCombat();
       h.pos.set(sp.x, this.physics.groundAt(sp.x, sp.z), sp.z);
       h.angle = sp.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
@@ -262,6 +269,7 @@ class Game {
       this.env.setRegion(null);
       this.env.setInterior(false);
       const h = this.hero;
+      this.resetCombat();
       h.pos.set(to.x, this.physics.groundAt(to.x, to.z), to.z);
       h.angle = to.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
@@ -274,6 +282,11 @@ class Game {
       if (this.state !== 'title') this.save(false);
     };
     if (instant) go(); else this.startTransition(go);
+  }
+
+  // a scene change: the ball comes home, shots in the air vanish, nobody may attack straight away
+  resetCombat() {
+    this.ball?.reset(); this.bolts?.clear(); this.hero?.combat?.reset(); this.targeting?.release(); this.combatDir?.reset(); this.hitStop = 0;
   }
 
   // where the hero is on the island map (inside a room: where that room is)
@@ -289,12 +302,14 @@ class Game {
     return {
       v: SAVE_VERSION,
       room: this.room?.id || null,
-      hero: { x: this.room ? h.pos.x : this.lastSafe.x, z: this.room ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour },
+      hero: { x: this.room ? h.pos.x : this.lastSafe.x, z: this.room ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon },
       flags: this.flags, killed: this.killed, collected: this.collected, searched: this.searched, crates: this.brokenCrates,
     };
   }
+  // the developer combat yard (?arena): never saved, never part of the story
+  devArena() { return enterArena(this); }
   save(toast = true) {
-    if (this.hero.dead || this.state === 'title') return;
+    if (this.hero.dead || this.state === 'title' || this.room?.id === 'arena') return;
     store.set(SAVE_KEY, this.snapshot());
     if (toast) this.hud.toast('toast_saved');
   }
@@ -302,6 +317,10 @@ class Game {
     const h = this.hero;
     Object.assign(h, { hp: s.hero.hp, mp: s.hero.mp, magicLevel: s.hero.magicLevel, clovers: s.hero.clovers, coins: s.hero.coins, hasBall: !!s.hero.hasBall });
     h.behaviour = s.hero.behaviour || 'normal';
+    // weapons: what was owned, what was in hand (never more than one of each; unknown names fall back)
+    h.hasSword = !!s.hero.hasSword; h.hasPulse = !!s.hero.hasPulse;
+    h.weapon = WEAPONS.includes(s.hero.weapon) ? s.hero.weapon : 'ball';
+    h.prevWeapon = WEAPONS.includes(s.hero.prevWeapon) ? s.hero.prevWeapon : 'fists';
     this.flags = s.flags || {};
     this.killed = s.killed || [];
     this.collected = s.collected || [];
@@ -359,7 +378,13 @@ class Game {
     $('#fade').classList.add('on');
     setTimeout(() => location.reload(), 500);
   }
-  setState(s) { this.state = s; }
+  setState(s) {
+    const was = this.state;
+    this.state = s;
+    // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
+    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene') this.combatDir?.calm(0.6); }
+    if (s !== 'play') this.targeting?.hide();
+  }
   gameOver() {
     this.setState('gameover');
     this.hud.show(false);
@@ -602,47 +627,74 @@ class Game {
   }
 
   // ------------------------------------------------ combat hooks
-  meleeHit(hero, dmg, range) {
+  // sword / fists against the world: crates, and anything a chapter wants struck (ropes, ice, levers)
+  meleeWorld(hero, D, a0, a1, hitSet) {
     let any = false;
-    for (const e of this.enemies) {
-      if (!e.alive || !e.present) continue;
-      const d = hero.distTo(e);
-      if (d < range + e.radius && Math.abs(angleDiff(hero.angle, hero.angleTo(e))) < 0.95 && Math.abs(e.pos.y - hero.pos.y) < 1.5) {
-        e.damage(dmg, hero.pos); any = true;
-      }
-    }
+    const inArc = (x, z, r) => {
+      const d = Math.hypot(x - hero.pos.x, z - hero.pos.z);
+      if (d > D.reach + r) return false;
+      const rel = angleDiff(hero.angle, Math.atan2(x - hero.pos.x, z - hero.pos.z));
+      const pad = Math.atan2(r, Math.max(d, 0.3));
+      return rel >= a0 - pad && rel <= a1 + pad;
+    };
     if (!this.room) for (const c of this.world.crates) {
-      if (!c.alive) continue;
-      const d = Math.hypot(c.x - hero.pos.x, c.z - hero.pos.z);
-      const a = Math.atan2(c.x - hero.pos.x, c.z - hero.pos.z);
-      if (d < range + 0.5 && Math.abs(angleDiff(hero.angle, a)) < 1) { this.breakCrate(c); any = true; }
+      if (!c.alive || hitSet.has(c) || !inArc(c.x, c.z, 0.5)) continue;
+      hitSet.add(c); this.breakCrate(c); this.impact(c.x, c.y, c.z, 'wood', 'break'); any = true;
     }
-    if (any) this.camRig.shake(0.12);
+    if (this.story.meleeHit?.({ hero, move: D, inArc, hitSet })) any = true;
+    return any;
   }
 
-  ballHitTest(p) {
+  // the ball's hit test: returns what it struck ({enemy?, material, result}) or null
+  ballHitTest(p, ball = this.ball) {
     for (const e of this.enemies) {
-      if (!e.alive || !e.present) continue;
+      if (!e.alive || !e.present || ball?.hits?.has(e)) continue;
       if (Math.hypot(p.x - e.pos.x, p.z - e.pos.z) < (e.hitR || 0.75) && p.y > e.pos.y - 0.2 && p.y < e.pos.y + (e.hitH || 2)) {
-        e.damage(this.ball.damage, p);
-        return true;
+        const res = e.ballHit ? e.ballHit(ball, p) : (e.damage(ball.damage, p), 'hit');
+        return { enemy: e, material: res === 'blocked' ? 'armor' : (e.material || 'flesh'), result: res };
       }
     }
-    if (this.story.ballHit(p)) return true;
-    if (this.room) return false;
-    for (const c of this.world.crates) if (c.alive && p.distanceTo(new THREE.Vector3(c.x, c.y, c.z)) < 0.9) { this.breakCrate(c); return true; }
+    if (this.story.ballHit(p)) return { material: 'machine', result: 'switch' };
+    // switches a room offers by itself ({x,y,z,r, onHit()})
+    if (this.room) { for (const t2 of this.room.ballTargets) if (t2.onHit && !t2.done && Math.hypot(p.x - t2.x, p.y - t2.y, p.z - t2.z) < (t2.r || 0.7)) { t2.onHit(); return { material: 'machine', result: 'switch' }; } return null; }
+    for (const c of this.world.crates) if (c.alive && p.distanceTo(new THREE.Vector3(c.x, c.y, c.z)) < 0.9) { this.breakCrate(c); return { material: 'wood', result: 'break' }; }
     const T = this.world.target;
-    if (!T.hit && Math.hypot(p.x - T.x, p.y - T.y, p.z - T.z) < 1.25) { this.hitTarget(); return true; }
-    return false;
+    if (!T.hit && Math.hypot(p.x - T.x, p.y - T.y, p.z - T.z) < 1.25) { this.hitTarget(); return { material: 'wood', result: 'switch' }; }
+    return null;
   }
 
   // things the magic ball may curve toward
   ballAimTargets() {
     const out = [];
-    for (const e of this.enemies) if (e.alive && e.present) out.push({ x: e.pos.x, y: e.pos.y + (e instanceof Drone ? e.hover : 0.45), z: e.pos.z });
+    for (const e of this.enemies) if (e.alive && e.present) out.push({ x: e.pos.x, y: e.pos.y + (e instanceof Drone ? e.hover : 0.45), z: e.pos.z, enemy: e });
     if (this.room) { for (const t2 of this.room.ballTargets) if (!t2.node?.lit && !t2.done) out.push(t2); }
     else if (!this.world.target.hit) out.push(this.world.target);
     return out.concat(this.story.ballTargets());
+  }
+
+  // contact feedback: a short burst, a material sound, a little shake
+  impact(x, y, z, material = 'flesh', result = 'hit', scale = 1) {
+    const C = { flesh: '#ffe0b0', crystal: '#9ff4ff', machine: '#ffd27a', armor: '#ffffff', stone: '#d8ccb0', wood: '#c8904a', magic: '#ffe27a', none: '#a8b8c8' }[material] || '#ffffff';
+    const snd = result === 'blocked' ? 'clang' : result === 'immune' ? 'notReady' : { flesh: 'hitFlesh', crystal: 'hitCrystal', machine: 'hitMachine', armor: 'clang', stone: 'hitStone', wood: 'hitWood', magic: 'hit' }[material] || 'hit';
+    this.audio.play(snd);
+    this.particles.burst(x, y, z, C, Math.round((result === 'blocked' ? 10 : 8) * scale), result === 'blocked' ? 5 : 3.5);
+    if (result !== 'immune') this.camRig.shake(result === 'blocked' ? 0.12 : 0.08 * scale);
+  }
+
+  // the cursor's point in the world, on the plane at Twinsen's chest height (null when the mouse isn't aiming)
+  mouseAim() {
+    const I = this.input;
+    if (!I.mouseAiming() || this.settings.mouseAim === 'off') return null;
+    const r = this.renderer.canvas.getBoundingClientRect();
+    const nx = ((I.mouse.x - r.left) / r.width) * 2 - 1, ny = -((I.mouse.y - r.top) / r.height) * 2 + 1;
+    this._ray ??= new THREE.Raycaster();
+    this._ray.setFromCamera({ x: nx, y: ny }, this.camera);
+    const o = this._ray.ray.origin, d = this._ray.ray.direction;
+    const py = this.hero.pos.y + 1.0;
+    if (Math.abs(d.y) < 1e-4) return null;
+    const tt = (py - o.y) / d.y;
+    if (tt <= 0) return null;
+    return { x: o.x + d.x * tt, z: o.z + d.z * tt };
   }
 
   hitTarget(silent = false) {
@@ -862,6 +914,22 @@ class Game {
       return;
     }
     this.behMenu.show(false);
+    // weapon selector (hold X / RT): the world slows to a crawl while choosing
+    if (input.down('weapons') && h.combat.owned().length > 1) {
+      this.hud.weaponSelect(true, h, input);
+      dt *= 0.12;
+    } else if (this.hud.wselOpen) { const w = this.hud.weaponSelect(false, h, input); if (w) h.combat.equip(w); }
+    if (input.pressed('swap')) h.combat.swap();
+    // focus / lock-on (toggle or hold, per settings) and switching targets
+    const T = this.targeting, lockHold = this.settings.lockMode === 'hold';
+    const aim = h.combat.lastAim || { x: Math.sin(h.angle), z: Math.cos(h.angle) };
+    if (lockHold) { if (input.down('focus') && !T.lock) T.toggleLock(aim); else if (!input.down('focus') && T.lock) T.release(); }
+    else if (input.pressed('focus')) T.toggleLock(aim);
+    if (input.pressed('tswitch') && T.lock) T.cycle(input.wheelSteps < 0 ? -1 : 1);
+    if (input.pressed('recenterPad') && !T.lock) this.camRig.recenter();
+    // hit-stop: a few frames of near-stillness on a solid sword hit (input is still read)
+    if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.1; }
+    this.combatDir.update(dt);
     if (input.pressed('recenter')) this.camRig.recenter();
     if (input.pressed('view')) this.camRig.toggleView();
     this.saveTimer -= dt;
@@ -872,6 +940,9 @@ class Game {
     for (const n of this.npcs) n.update(dt);
     for (const e of this.enemies) e.update(dt);
     this.ball.update(dt);
+    const c = h.combat;
+    T.update(dt, c.lastAim || aim, !!(c.throwing || c.holding || c.move));
+    this.hud.weapon(h);
     this.bolts.update(dt);
     if (!this.room) this.world.zones.update(h.pos, { enter: (z) => this.onZoneEnter(z) });
     this.checkDoors();

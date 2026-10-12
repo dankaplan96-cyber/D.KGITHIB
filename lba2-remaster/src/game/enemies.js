@@ -88,6 +88,8 @@ function createMiteRig() {
   return rig;
 }
 
+// A cautious close-range attacker: it circles at a safe distance until the director lets it attack, rears
+// up (the tell), lunges, then sits low for a moment (the opening). Any hit staggers it (it's small).
 export class Mite extends Actor {
   constructor(game, def) {
     super(game, createMiteRig(), def.x, def.z, 0.4);
@@ -99,33 +101,39 @@ export class Mite extends Actor {
     this.home = { x: def.x, z: def.z };
     this.wanderT = Math.random() * 3; this.deadT = 0; this.hurtT = 0; this.stateT = 0; this.coolT = 0;
     this.angle = Math.random() * 6;
+    this.circle = Math.random() < 0.5 ? 1 : -1;
     this.present = true;
+    this.material = 'crystal'; this.aimY = 0.4; this.markY = 0.9; this.hitH = 1.0; this.recentHitT = 0;
   }
   get alive() { return this.state !== 'dead'; }
   setPresent(on) { this.present = on; this.rig.root.visible = on && (this.alive || this.deadT < 1.2); this.shadow.visible = on && this.alive; }
   alert() { if (this.alive && this.state === 'idle') this.state = 'chase'; }
+  melee(D) { this.damage(D.dmg, this.game.hero.pos); return 'hit'; }
+  ballHit(ball, p) { this.damage(ball.damage, p); return 'hit'; }
   damage(n, from) {
     if (!this.alive) return;
     const g = this.game;
-    this.hp -= n; this.rig.hitFlash(); this.hurtT = 0.35;
-    g.audio.play('hit');
-    g.particles.burst(this.pos.x, this.pos.y + 0.5, this.pos.z, '#9ff4ff', 14, 4);
-    if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 9, Math.cos(a) * 9); }
-    this.state = 'chase'; this.coolT = 0.6; // a hit interrupts the bite
-    if (this.hp <= 0) { this.state = 'dead'; g.audio.play('break'); g.particles.burst(this.pos.x, this.pos.y + 0.4, this.pos.z, '#bff8ff', 30, 5); g.onEnemyKilled(this); }
+    this.hp -= n; this.rig.hitFlash(); this.hurtT = 0.35; this.recentHitT = 2.5;
+    g.particles.burst(this.pos.x, this.pos.y + 0.5, this.pos.z, '#9ff4ff', 10, 4);
+    if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 8, Math.cos(a) * 8); }
+    // a hit interrupts the bite (small: always staggers)
+    if (this.state === 'windup' || this.state === 'lunge') g.combatDir?.done(this);
+    this.state = 'chase'; this.coolT = 0.7;
+    if (this.hp <= 0) { this.state = 'dead'; g.combatDir?.done(this); g.audio.play('break'); g.particles.burst(this.pos.x, this.pos.y + 0.4, this.pos.z, '#bff8ff', 30, 5); g.onEnemyKilled(this); }
   }
   update(dt) {
     if (!this.present) return;
-    const g = this.game, hero = g.hero;
+    const g = this.game, hero = g.hero, D = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.coolT = Math.max(0, this.coolT - dt);
+    this.recentHitT = Math.max(0, this.recentHitT - dt);
     if (!this.alive) {
       this.deadT += dt; this.rig.play('dead'); this.rig.update(dt, 0);
       if (this.deadT > 1.2) this.rig.root.visible = false;
       this.sync(); return;
     }
     const d = this.distTo(hero);
-    let sp = 0;
+    let sp = 0, side = 0;
     this.stateT += dt;
     if (this.state === 'idle') {
       this.wanderT -= dt;
@@ -135,25 +143,36 @@ export class Mite extends Actor {
       this.rig.play('idle');
     } else if (this.state === 'chase') {
       this.angle = dampAngle(this.angle, this.angleTo(hero), 8, dt);
-      sp = d > 1.6 ? 2.5 : 0;
       this.rig.play('walk');
-      if (d < 1.9 && this.coolT <= 0 && this.hurtT <= 0) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
-      if (d > 14) this.state = 'idle';
+      // close in to striking distance; without permission to attack, circle at a wary distance
+      const may = d < 2.0 && this.coolT <= 0 && this.hurtT <= 0 && !hero.dead && (g.combatDir?.canAttack(this) ?? true);
+      if (may) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
+      else if (d > 2.6) sp = 2.5;
+      else { side = this.circle * 1.4; sp = d < 2.0 ? -0.8 : 0; if (Math.random() < dt * 0.4) this.circle *= -1; }
+      // too far from home, or he got away: go back
+      if (d > 14 || Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 20) { this.state = 'idle'; g.combatDir?.done(this); }
     } else if (this.state === 'windup') {
-      // rear up for 0.5 s: the player's cue to dodge, block or hit first
+      // rear up: the cue to dodge or strike first
       this.angle = dampAngle(this.angle, this.angleTo(hero), 5, dt);
       this.rig.play('windup');
-      if (this.stateT > 0.5) { this.state = 'lunge'; this.stateT = 0; }
+      if (this.stateT > 0.5 * D.windup) { this.state = 'lunge'; this.stateT = 0; }
     } else if (this.state === 'lunge') {
       sp = 6;
       this.rig.play('lunge');
       if (d < 1.0 && !this.bit) { this.bit = true; hero.damage(1, this.pos); }
-      if (this.stateT > 0.18) { this.state = 'chase'; this.coolT = 1.1; this.bit = false; }
+      if (this.stateT > 0.18) { this.state = 'recover'; this.stateT = 0; this.bit = false; g.combatDir?.done(this); }
+    } else if (this.state === 'recover') {
+      // the opening: low and slow for a moment
+      this.rig.play('idle');
+      if (this.stateT > 0.6) { this.state = 'chase'; this.coolT = 1.0 * D.cool; }
     }
-    if (sp > 0 && this.hurtT <= 0) g.physics.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
+    if ((sp || side) && this.hurtT <= 0) {
+      const P = g.physics, fx = Math.sin(this.angle), fz = Math.cos(this.angle);
+      P.move(this, (fx * sp + fz * side) * dt, (fz * sp - fx * side) * dt);
+    }
     this.applyKnockback(dt);
     g.physics.fall(this, dt);
-    this.rig.update(dt, sp);
+    this.rig.update(dt, Math.abs(sp) + Math.abs(side) * 0.6);
     this.sync();
   }
 }
@@ -252,21 +271,40 @@ export class Drone extends Actor {
     this.hover = 1.3;
     this.present = true;
     this.shadow.scale.multiplyScalar(0.8);
+    this.material = 'machine'; this.recentHitT = 0; this.staggers = []; this.steadyT = 0; this.stunT = 0;
+    // the firing tell: a thin line toward Twinsen that brightens through the wind-up
+    this.aimLine = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 4, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5), new THREE.MeshBasicMaterial({ color: '#ff5a3a', transparent: true, opacity: 0, depthWrite: false }));
+    this.aimLine.visible = false; game.scene.add(this.aimLine);
   }
+  get aimY() { return this.hover; }
+  get markY() { return this.hover + 0.7; }
+  melee(D) { this.damage(D.dmg, this.game.hero.pos, D.poise); return 'hit'; }
+  ballHit(ball, p) { this.damage(ball.damage, p, ball.charged ? 3 : 1); return 'hit'; }
+  // Baldino's pulse: the rotor stutters, it sags and can't fire for a while
+  pulse(C) { if (!this.alive) return; this.state = 'stunned'; this.stateT = 0; this.stunT = C.stun; this.rig.hitFlash(); this.game.combatDir?.done(this); this.aimLine.visible = false; this.game.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 14, 3); }
   get alive() { return this.state !== 'dead'; }
   setPresent(on) { this.present = on; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
-  damage(n, from) {
+  damage(n, from, poise = 1) {
     if (!this.alive) return;
     const g = this.game;
-    this.hp -= n; this.rig.hitFlash(); this.hurtT = 0.5;
-    this.rig.play('hurt');
-    g.audio.play('hit');
-    g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ffd27a', 16, 4);
-    if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 8, Math.cos(a) * 8); }
-    if (this.state !== 'chase') { this.state = 'chase'; this.rig.mood = 'alert'; }
-    this.coolT = Math.max(this.coolT, 0.8); // stagger cancels a charging shot
+    this.hp -= n; this.rig.hitFlash(); this.recentHitT = 2.5;
+    g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ffd27a', 10, 4);
+    if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 7, Math.cos(a) * 7); }
+    // stagger cancels a charging shot, but not endlessly: after two staggers in 2 s it steadies for a moment
+    const now = g.time; this.staggers = this.staggers.filter((t) => now - t < 2);
+    if (this.state === 'stunned') { /* already down */ }
+    else if (this.steadyT > 0 && poise < 3) { /* shrugs it off: flashes, keeps its action */ }
+    else {
+      this.hurtT = 0.45; this.rig.play('hurt'); this.staggers.push(now);
+      if (this.staggers.length >= 2) this.steadyT = 1.6;
+      if (this.state === 'windup') g.combatDir?.done(this);
+      if (this.state !== 'chase') { this.state = 'chase'; this.rig.mood = 'alert'; }
+      this.coolT = Math.max(this.coolT, 0.8);
+      this.aimLine.visible = false;
+    }
     if (this.hp <= 0) {
+      g.combatDir?.done(this); this.aimLine.visible = false;
       this.state = 'dead'; this.deadT = 0;
       g.audio.play('break'); g.camRig.shake(0.2);
       g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ff9a3a', 30, 6);
@@ -286,10 +324,23 @@ export class Drone extends Actor {
   }
   update(dt) {
     if (!this.present) return;
-    const g = this.game, hero = g.hero, P = g.physics;
+    const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.coolT = Math.max(0, this.coolT - dt);
+    this.recentHitT = Math.max(0, this.recentHitT - dt);
+    this.steadyT = Math.max(0, this.steadyT - dt);
     this.stateT += dt;
+    if (this.state !== 'windup' || !this.alive) this.aimLine.visible = false;
+    if (this.state === 'stunned' && this.alive) {
+      // sagging, sparking, harmless
+      this.sagged = true; this.hover = Math.max(0.7, this.hover - dt * 2.5);
+      this.rig.play('hurt'); this.rig.mood = 'search';
+      if (Math.random() < dt * 8) g.particles.burst(this.pos.x, this.pos.y + this.hover + 0.3, this.pos.z, '#bff4ff', 2, 2);
+      if (this.stateT > this.stunT) { this.state = 'chase'; this.stateT = 0; this.coolT = 0.6; }
+      this.applyKnockback(dt); this.rig.update(dt); this.syncHover(); return;
+    }
+    // back up to its working height after a stun (whatever height the story gave it)
+    if (this.alive && !(this instanceof Guardian)) { if (!this.sagged) this.baseHover = this.hover; else { this.hover = Math.min(this.baseHover, this.hover + dt * 1.5); if (this.hover >= this.baseHover) this.sagged = false; } }
     if (!this.alive) {
       // drops out of the air, smokes, then the wreck disappears
       this.deadT += dt;
@@ -322,21 +373,28 @@ export class Drone extends Actor {
       if (sees) { this.lostT = 0; this.last = { x: hero.pos.x, z: hero.pos.z }; } else this.lostT += dt;
       // keep a firing distance of 4–6 m
       sp = d > 6 ? 2.2 : d < 3.5 ? -1.4 : 0;
-      if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
-      if (this.lostT > 3) { this.state = 'search'; this.stateT = 0; }
+      if (sees && d < 8 && this.coolT <= 0 && this.hurtT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
+      if (this.lostT > 3) { this.state = 'search'; this.stateT = 0; g.combatDir?.done(this); }
       if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 24) { this.state = 'search'; this.stateT = 0; }
     } else if (this.state === 'windup') {
       // 0.7 s charge: prongs crackle, eye pulses — the cue to dodge or hide
       face = this.angleTo(hero);
       this.rig.play('windup');
-      if (this.hurtT > 0) { this.state = 'chase'; this.stateT = 0; }
-      else if (this.stateT > 0.7) {
+      const tell = 0.75 * DF.windup;
+      // the aim line: where the shot will go, brightening until it fires
+      const L = this.aimLine, from = new THREE.Vector3(this.pos.x, this.pos.y + this.hover - 0.4, this.pos.z), to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
+      L.visible = true; L.position.copy(from); L.lookAt(to); L.scale.set(1, 1, from.distanceTo(to)); L.material.opacity = 0.15 + 0.6 * Math.min(1, this.stateT / tell);
+      // no clear shot: give up the attack rather than fire into a wall
+      if (!this.sees(hero)) { this.state = 'chase'; this.stateT = 0; g.combatDir?.done(this); }
+      else if (this.hurtT > 0) { this.state = 'chase'; this.stateT = 0; }
+      else if (this.stateT > tell) {
         const from = new THREE.Vector3(this.pos.x + Math.sin(this.angle) * 0.5, this.pos.y + this.hover - 0.4, this.pos.z + Math.cos(this.angle) * 0.5);
         const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
         g.bolts.fire(from, to.sub(from).normalize(), 9, 1);
         g.audio.play('zap');
-        this.state = 'chase'; this.stateT = 0; this.coolT = 1.6;
+        this.state = 'chase'; this.stateT = 0; this.coolT = 1.6 * DF.cool;
         this.rig.play('fire');
+        g.combatDir?.done(this);
       }
     } else if (this.state === 'search') {
       this.rig.mood = 'search';
@@ -456,8 +514,249 @@ export class Guardian extends Drone {
   }
 }
 
+// ------------------------------------------------------------------ the sentry automaton (protected)
+// A squat brass automaton of the Joint Project with a round shield. From the front its shield turns the
+// ball and the sword away (a clang, sparks, Twinsen is pushed back). Its attack is a shield bash: it pulls
+// the shield back and its eye flares (the tell), lunges, then stands open for a second (the opening). A
+// heavy sword strike, a charged ball or the pulse tool breaks its guard; so does a hit from behind.
+function createSentryRig() {
+  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
+  const brass = new THREE.MeshStandardMaterial({ color: '#c8a050', metalness: 0.55, roughness: 0.38 });
+  const teal = new THREE.MeshStandardMaterial({ color: '#2f7a84', metalness: 0.3, roughness: 0.5 });
+  const dark = new THREE.MeshStandardMaterial({ color: '#2a3036', metalness: 0.4, roughness: 0.55 });
+  const eyeMat = new THREE.MeshStandardMaterial({ color: '#9ff4ff', emissive: '#30d0ff', emissiveIntensity: 2.2 });
+  const add = (parent, geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; parent.add(o); return o; };
+  const lathe = (pts, n = 18) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), n);
+  // barrel torso, a domed head with one eye, a skirt of plates
+  add(body, lathe([[0.001, 0.55], [0.38, 0.6], [0.46, 0.85], [0.44, 1.2], [0.34, 1.38], [0.001, 1.42]]), brass, 0, 0, 0);
+  add(body, new THREE.TorusGeometry(0.45, 0.04, 6, 24).rotateX(Math.PI / 2), teal, 0, 0.9, 0);
+  const head = new THREE.Group(); head.position.y = 1.42; body.add(head);
+  add(head, new THREE.SphereGeometry(0.24, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), teal, 0, 0, 0);
+  add(head, new THREE.CylinderGeometry(0.25, 0.25, 0.08, 18), dark, 0, 0.02, 0);
+  const eye = add(head, new THREE.SphereGeometry(0.07, 10, 8), eyeMat, 0, 0.1, 0.2);
+  // legs: two short pistons with round feet
+  const legs = [-1, 1].map((sx) => { const g = new THREE.Group(); g.position.set(sx * 0.2, 0.6, 0); body.add(g); add(g, new THREE.CylinderGeometry(0.08, 0.1, 0.5, 8), dark, 0, -0.27, 0); add(g, new THREE.SphereGeometry(0.13, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), brass, 0, -0.55, 0.04); return g; });
+  // the shield arm (left) and the club arm (right)
+  const shieldArm = new THREE.Group(); shieldArm.position.set(0.5, 1.15, 0.05); body.add(shieldArm);
+  add(shieldArm, new THREE.CylinderGeometry(0.06, 0.06, 0.4, 8), dark, 0, -0.18, 0);
+  const shield = new THREE.Group(); shield.position.set(-0.05, -0.32, 0.42); shieldArm.add(shield);
+  add(shield, new THREE.CylinderGeometry(0.52, 0.52, 0.06, 28).rotateX(Math.PI / 2), brass, 0, 0, 0);
+  add(shield, new THREE.TorusGeometry(0.52, 0.035, 6, 28), teal, 0, 0, 0.03);
+  add(shield, new THREE.SphereGeometry(0.1, 10, 8), teal, 0, 0, 0.05);
+  const clubArm = new THREE.Group(); clubArm.position.set(-0.5, 1.15, 0); body.add(clubArm);
+  add(clubArm, new THREE.CylinderGeometry(0.06, 0.06, 0.45, 8), dark, 0, -0.2, 0);
+  add(clubArm, new THREE.CylinderGeometry(0.07, 0.05, 0.6, 8), teal, 0, -0.45, 0.22).rotation.x = 1.3;
+  const rig = {
+    root, anim: 'idle', t: 0, flash: 0, actionT: 0, guard: 1,
+    play(a) { if (a !== this.anim) { this.anim = a; this.actionT = 0; } }, hitFlash() { this.flash = 1; },
+    update(dt, speed = 0) {
+      this.t += dt; this.actionT += dt;
+      const a = this.anim, w = Math.sin(this.t * 9) * Math.min(1, speed);
+      legs[0].rotation.x = w * 0.5; legs[1].rotation.x = -w * 0.5;
+      body.position.y = Math.abs(w) * 0.04 + (a === 'stagger' ? -0.1 : 0);
+      // shield: up in front (guard), pulled back (wind-up), swung (bash), dropped (open/stagger/stunned)
+      const sh = a === 'windup' ? -0.9 : a === 'bash' ? 0.5 : a === 'open' || a === 'stagger' || a === 'stunned' ? 0.9 : 0;
+      shieldArm.rotation.y += ((a === 'bash' ? -0.5 : 0) - shieldArm.rotation.y) * Math.min(1, dt * 14);
+      shieldArm.rotation.x += (sh * 0.7 - shieldArm.rotation.x) * Math.min(1, dt * 12);
+      shield.position.x += ((a === 'open' || a === 'stagger' || a === 'stunned' ? 0.25 : -0.05) - shield.position.x) * Math.min(1, dt * 10);
+      clubArm.rotation.x += ((a === 'windup' ? -1.6 : a === 'bash' ? -0.4 : 0) - clubArm.rotation.x) * Math.min(1, dt * 12);
+      body.rotation.z = a === 'stagger' || a === 'stunned' ? Math.sin(this.actionT * 18) * 0.08 : 0;
+      if (a === 'dead') { body.rotation.x = Math.min(1.5, body.rotation.x + dt * 3); body.position.y = -0.2; }
+      this.flash = Math.max(0, this.flash - dt * 4);
+      eyeMat.color.set(a === 'windup' || a === 'bash' ? '#ff5a3a' : a === 'stunned' ? '#7a8a90' : '#9ff4ff');
+      eyeMat.emissive.copy(eyeMat.color).multiplyScalar(0.8);
+      eyeMat.emissiveIntensity = (a === 'windup' ? 3 + Math.sin(this.actionT * 30) : a === 'stunned' ? 0.2 : 2) + this.flash * 2;
+      brass.emissive.setRGB(this.flash * 0.6, this.flash * 0.6, this.flash * 0.6);
+    },
+  };
+  void eye; rig.j = {};
+  return rig;
+}
+
+export class Sentry extends Actor {
+  constructor(game, def) {
+    super(game, createSentryRig(), def.x, def.z, 0.6);
+    this.def = def; this.id = def.id; this.group = def.group || 'sentry';
+    this.hp = this.maxHp = def.hp || 6;
+    this.state = 'idle'; this.stateT = 0; this.coolT = 0; this.deadT = 0; this.hurtT = 0;
+    this.home = { x: def.x, z: def.z };
+    this.angle = def.angle ?? 0;
+    this.present = true;
+    this.material = 'armor'; this.aimY = 1.0; this.markY = 1.75; this.hitR = 0.85; this.hitH = 1.9; this.recentHitT = 0;
+  }
+  get alive() { return this.state !== 'dead'; }
+  setPresent(on) { this.present = on; this.rig.root.visible = on && (this.alive || this.deadT < 2); this.shadow.visible = on && this.alive; }
+  alert() { if (this.alive && this.state === 'idle') { this.state = 'chase'; this.stateT = 0; } }
+  guarding() { return this.state === 'idle' || this.state === 'chase' || this.state === 'windup'; }
+  // is the hit coming at the shield? (a cone in front)
+  facesShield(from) { return this.guarding() && Math.abs(angleDiff(this.angle, Math.atan2(from.x - this.pos.x, from.z - this.pos.z))) < 1.15; }
+  melee(D, h) {
+    if (this.facesShield(h.pos)) {
+      if (D.guardBreak) { this.breakGuard(); this.damage(Math.ceil(D.dmg / 2), h.pos); return 'hit'; }
+      this.blocked(h.pos); return 'blocked';
+    }
+    this.damage(D.dmg, h.pos); return 'hit';
+  }
+  ballHit(ball, p) {
+    if (this.facesShield(this.game.hero.pos)) {
+      if (ball.charged) { this.breakGuard(); this.damage(1, p); return 'hit'; }
+      this.blocked(p); return 'blocked';
+    }
+    this.damage(ball.damage, p); return 'hit';
+  }
+  pulse(C) { if (!this.alive) return; this.state = 'stunned'; this.stateT = 0; this.stunT = C.shieldDown; this.rig.hitFlash(); this.game.combatDir?.done(this); }
+  blocked(from) {
+    this.rig.hitFlash(); this.recentHitT = 2;
+    if (this.state === 'idle') { this.state = 'chase'; this.stateT = 0; }
+    void from;
+  }
+  breakGuard() { const g = this.game; this.state = 'stagger'; this.stateT = 0; g.combatDir?.done(this); g.audio.play('clang'); g.camRig.shake(0.15); }
+  damage(n, from) {
+    if (!this.alive) return;
+    const g = this.game;
+    this.hp -= n; this.rig.hitFlash(); this.recentHitT = 2.5; this.hurtT = 0.2;
+    if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 3, Math.cos(a) * 3); } // heavy: barely moves
+    if (this.state === 'idle') { this.state = 'chase'; this.stateT = 0; }
+    if (this.hp <= 0) { this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.25); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#ffd27a', 30, 5); g.onEnemyKilled(this); }
+  }
+  update(dt) {
+    if (!this.present) return;
+    const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
+    this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.recentHitT = Math.max(0, this.recentHitT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
+    if (!this.alive) { this.deadT += dt; this.rig.play('dead'); this.rig.update(dt, 0); if (this.deadT > 2) this.rig.root.visible = false; this.sync(); return; }
+    const d = this.distTo(hero);
+    let sp = 0, face = null;
+    const sees = !hero.dead && d < 9 && hero.visibility() > 0.2 && P.lineOfSight(this.pos.x, this.pos.y + 1.4, this.pos.z, hero.pos.x, hero.pos.y + 1.1, hero.pos.z);
+    switch (this.state) {
+      case 'idle':
+        this.rig.play('idle');
+        if (sees && (d < 6 || Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 1)) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert'); }
+        break;
+      case 'chase':
+        face = this.angleTo(hero); this.rig.play('walk');
+        sp = d > 1.9 ? 1.7 : 0;
+        if (d < 2.4 && this.coolT <= 0 && this.stateT > 0.4 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('alert'); }
+        // it won't follow far from its post
+        if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 14 || d > 16) { this.state = 'home'; this.stateT = 0; g.combatDir?.done(this); }
+        break;
+      case 'windup':
+        face = this.angleTo(hero); this.rig.play('windup');
+        if (this.stateT > 0.7 * DF.windup) { this.state = 'bash'; this.stateT = 0; this.hitDone = false; }
+        break;
+      case 'bash':
+        this.rig.play('bash'); sp = 4.2;
+        if (!this.hitDone && d < 1.5 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(2, this.pos, true); g.audio.play('clang'); }
+        if (this.stateT > 0.28) { this.state = 'open'; this.stateT = 0; g.combatDir?.done(this); }
+        break;
+      case 'open':
+        // the opening: shield down, panting steam
+        this.rig.play('open');
+        if (Math.random() < dt * 6) g.particles.burst(this.pos.x, this.pos.y + 1.5, this.pos.z, '#e8e8e8', 1, 1);
+        if (this.stateT > 1.1) { this.state = 'chase'; this.stateT = 0; this.coolT = 1.4 * DF.cool; }
+        break;
+      case 'stagger':
+        this.rig.play('stagger');
+        if (this.stateT > 1.3) { this.state = 'chase'; this.stateT = 0; this.coolT = 0.8; }
+        break;
+      case 'stunned':
+        this.rig.play('stunned');
+        if (Math.random() < dt * 8) g.particles.burst(this.pos.x, this.pos.y + 1.5, this.pos.z, '#bff4ff', 2, 2);
+        if (this.stateT > this.stunT) { this.state = 'chase'; this.stateT = 0; this.coolT = 0.6; }
+        break;
+      case 'home': {
+        const dx = this.home.x - this.pos.x, dz = this.home.z - this.pos.z;
+        this.rig.play('walk');
+        if (Math.hypot(dx, dz) < 0.5) { this.state = 'idle'; this.stateT = 0; this.hp = Math.min(this.maxHp, this.hp + 2); }
+        else { face = Math.atan2(dx, dz); sp = 1.5; }
+        if (sees && d < 5) { this.state = 'chase'; this.stateT = 0; }
+        break;
+      }
+    }
+    if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'bash' ? 1 : 3.5, dt);
+    if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
+    this.applyKnockback(dt);
+    P.fall(this, dt);
+    this.rig.update(dt, sp);
+    this.sync();
+  }
+}
+
+// ------------------------------------------------------------------ the crystal crawler (heavy)
+// A mite grown huge. Slow; it controls space with a ground slam: it rears up and a ring spreads on the
+// ground around it (the tell, a full second), then crashes down — anyone inside the ring and on the ground
+// is knocked over. After a slam it sits stunned for a moment, crystals dim (the opening). Light hits only
+// flash it; heavy strikes and charged throws stagger it briefly.
+export class Crawler extends Mite {
+  constructor(game, def) {
+    super(game, def);
+    this.radius = 0.9;
+    this.rig.root.scale.setScalar(2.1);
+    this.shadow.scale.multiplyScalar(2.2);
+    this.hp = this.maxHp = def.hp || 12;
+    this.material = 'stone'; this.aimY = 0.9; this.markY = 2.0; this.hitR = 1.2; this.hitH = 2.0;
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff8a5a', transparent: true, opacity: 0, depthWrite: false }));
+    ring.visible = false; game.scene.add(ring); this.ring = ring;
+    this.slamR = 3.0;
+  }
+  melee(D) { this.damage(D.dmg, this.game.hero.pos, D.poise); return 'hit'; }
+  ballHit(ball, p) { this.damage(ball.damage, p, ball.charged ? 4 : 1); return 'hit'; }
+  damage(n, from, poise = 1) {
+    if (!this.alive) return;
+    const g = this.game;
+    this.hp -= n; this.rig.hitFlash(); this.recentHitT = 2.5;
+    g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#bff8ff', 8, 4);
+    // heavy: only big hits stagger it, and never during a slam already falling
+    if (poise >= 3 && this.state !== 'slam') { this.hurtT = 0.5; if (this.state === 'windup') { this.state = 'chase'; this.ring.visible = false; g.combatDir?.done(this); } this.coolT = Math.max(this.coolT, 0.8); }
+    if (this.hp <= 0) { this.state = 'dead'; this.ring.visible = false; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.35); g.particles.burst(this.pos.x, this.pos.y + 0.8, this.pos.z, '#bff8ff', 50, 6); g.onEnemyKilled(this); }
+  }
+  update(dt) {
+    if (!this.present) return;
+    const g = this.game, hero = g.hero, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
+    this.hurtT = Math.max(0, this.hurtT - dt); this.coolT = Math.max(0, this.coolT - dt); this.recentHitT = Math.max(0, this.recentHitT - dt);
+    if (!this.alive) { this.ring.visible = false; super.update(dt); return; }
+    const d = this.distTo(hero);
+    this.stateT += dt;
+    let sp = 0;
+    if (this.state === 'idle') {
+      this.rig.play('idle');
+      if (d < 9 && !hero.dead && hero.visibility() > 0.2) { this.state = 'chase'; this.stateT = 0; g.audio.play('alert'); }
+    } else if (this.state === 'chase') {
+      this.angle = dampAngle(this.angle, this.angleTo(hero), 3, dt);
+      this.rig.play('walk');
+      sp = d > 2.2 ? 1.6 : 0;
+      if (d < this.slamR + 0.3 && this.coolT <= 0 && this.hurtT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
+      if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 16 || d > 18) { this.state = 'idle'; g.combatDir?.done(this); }
+    } else if (this.state === 'windup') {
+      this.rig.play('windup');
+      const tell = 1.0 * DF.windup, k = Math.min(1, this.stateT / tell);
+      this.ring.visible = true; this.ring.position.set(this.pos.x, this.pos.y + 0.06, this.pos.z);
+      this.ring.scale.setScalar(this.slamR * (0.3 + 0.7 * k)); this.ring.material.opacity = 0.25 + 0.5 * k;
+      if (this.stateT > tell) { this.state = 'slam'; this.stateT = 0; }
+    } else if (this.state === 'slam') {
+      this.rig.play('lunge');
+      if (!this.slammed) {
+        this.slammed = true; g.audio.play('slam'); g.camRig.shake(0.4);
+        g.particles.burst(this.pos.x, this.pos.y + 0.2, this.pos.z, '#d8ccb0', 30, 5);
+        if (d < this.slamR + hero.radius && hero.onGround) hero.damage(2, this.pos, true);
+      }
+      this.ring.material.opacity *= 0.8;
+      if (this.stateT > 0.25) { this.state = 'recover'; this.stateT = 0; this.slammed = false; this.ring.visible = false; g.combatDir?.done(this); }
+    } else if (this.state === 'recover') {
+      this.rig.play('idle');
+      if (this.stateT > 1.3) { this.state = 'chase'; this.stateT = 0; this.coolT = 1.2 * DF.cool; }
+    } else this.state = 'chase';
+    if (sp && this.hurtT <= 0) g.physics.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
+    this.applyKnockback(dt);
+    g.physics.fall(this, dt);
+    this.rig.update(dt, sp * 0.5);
+    this.sync();
+  }
+}
+
 export function createEnemy(game, def) {
   if (def.kind === 'guardian') return new Guardian(game, def);
+  if (def.kind === 'sentry') return new Sentry(game, def);
+  if (def.kind === 'crawler') return new Crawler(game, def);
   if (def.kind === 'drone') return new Drone(game, def);
   return new Mite(game, def);
 }

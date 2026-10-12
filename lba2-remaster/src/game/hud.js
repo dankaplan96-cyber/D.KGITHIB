@@ -4,6 +4,8 @@ import { t, getLang } from './i18n.js';
 import { BEHAVIOURS } from './actors.js';
 import { PATHS } from './world.js';
 import { Color, Vector3 } from 'three';
+import { WEAPON_INFO } from './combat.js';
+import { keyFor, keyLabel } from '../engine/input.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -72,6 +74,48 @@ export class HUD {
     $('#coins b').textContent = h.coins;
     $('#keyicon').classList.toggle('hidden', !h.hasKey);
     document.querySelectorAll('#shards i').forEach((e, i) => e.classList.toggle('got', h.shards[i]));
+  }
+
+  // the weapon in hand (and the ball's readiness / the pulse tool's recharge)
+  weapon(h) {
+    const el = $('#weapon'); if (!el) return;
+    const c = h.combat, w = c.weapon, g = this.game;
+    if (this._w !== w) { this._w = w; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = t('wp_' + w); this.weaponShowT = 2.5; }
+    const alt = h.prevWeapon && c.has(h.prevWeapon) && h.prevWeapon !== w ? h.prevWeapon : null;
+    const altTxt = alt ? `${keyLabel(keyFor('swap'))}: ${t('wp_' + alt)}` : '';
+    if (this._alt !== altTxt) { this._alt = altTxt; el.querySelector('.alt').textContent = altTxt; }
+    const r = el.querySelector('.ready');
+    const ballOut = h.hasBall && !g.ball.ready;
+    r.classList.toggle('out', w === 'ball' && ballOut);
+    r.classList.toggle('cool', w === 'pulse' && c.pulseCool > 0);
+    if (w === 'pulse') r.style.setProperty('--k', `${100 * (1 - c.pulseCool / 5)}%`);
+    r.style.display = w === 'ball' || w === 'pulse' ? '' : 'none';
+    this.weaponShowT = Math.max(0, (this.weaponShowT || 0) - 1 / 60);
+    const engaged = c.busy || g.targeting?.lock || g.combat > 0.3;
+    el.classList.toggle('show', this.weaponShowT > 0 || !!engaged);
+    if (this.flashT > 0) { this.flashT -= 1 / 60; if (this.flashT <= 0) el.classList.remove('flash'); }
+  }
+  weaponFlash() { const el = $('#weapon'); el?.classList.add('flash'); this.flashT = 0.25; this.weaponShowT = 1.5; }
+  // the selector ring: open while held; returns the chosen weapon when it closes
+  weaponSelect(open, h, input) {
+    const el = $('#wsel'); if (!el) return null;
+    const DIRS = { up: 'ball', right: 'sword', down: 'pulse', left: 'fists' };
+    if (open) {
+      if (!this.wselOpen) {
+        this.wselOpen = true; this.wselPick = h.combat.weapon; el.classList.remove('hidden');
+        for (const s of el.querySelectorAll('.slot')) { const w = DIRS[s.dataset.dir], has = h.combat.has(w); s.classList.toggle('empty', !has); s.innerHTML = has ? `${WEAPON_INFO[w].icon}<small>${t('wp_' + w)}</small>` : ''; }
+      }
+      const mv = input.move();
+      if (Math.hypot(mv.x, mv.y) > 0.5) {
+        const dir = Math.abs(mv.x) > Math.abs(mv.y) ? (mv.x > 0 ? 'right' : 'left') : (mv.y > 0 ? 'up' : 'down');
+        if (h.combat.has(DIRS[dir]) && this.wselPick !== DIRS[dir]) { this.wselPick = DIRS[dir]; this.game.audio.play('blip'); }
+      }
+      if (input.wheelSteps) { const own = h.combat.owned(); const i = own.indexOf(this.wselPick); this.wselPick = own[(i + (input.wheelSteps > 0 ? 1 : own.length - 1)) % own.length]; }
+      for (const s of el.querySelectorAll('.slot')) s.classList.toggle('sel', DIRS[s.dataset.dir] === this.wselPick);
+      return null;
+    }
+    this.wselOpen = false; el.classList.add('hidden');
+    return this.wselPick;
   }
 
   objective(html) {

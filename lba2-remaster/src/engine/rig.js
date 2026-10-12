@@ -13,6 +13,8 @@ import { textures } from './textures.js';
 // ------------------------------------------------------------------ blob shadow
 // LBA2 draws a shaded quad under every actor (AfficheShadow / DrawShadow).
 let blobGeo = null, blobMat = null;
+const STRIKE = new Set(['slash1', 'slash2', 'slash3', 'heavy', 'throwQuick', 'dodge']);
+const FAST = new Set(['throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 export function createBlobShadow(radius) {
   blobGeo ??= new THREE.CircleGeometry(1, 20);
   blobMat ??= new THREE.MeshBasicMaterial({ map: textures().blob, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, fog: true });
@@ -388,6 +390,62 @@ export class Rig {
       torsoX = -0.3 * k;
       // in a long robe: a low front kick (the cloth can't follow a high one; the leg would tear through it)
       if (this.j.skirt) { T.legR = -0.85 * k; T.kneeR = 0.35 * (1 - k) + 0.05; T.kneeL = 0.45; torsoX = -0.4 * k; hipsY = 0.92; }
+    } else if (a === 'slash1' || a === 'slash2' || a === 'slash3' || a === 'heavy') {
+      // sword strikes: anticipation (wind back), contact (fast sweep), follow-through, settle. Timing comes
+      // from the move (atk.s / atk.a / atk.r) so the blade crosses the target exactly in the active frames.
+      const A = this.atk || { s: 0.12, a: 0.1, r: 0.25 }, t = this.actionT;
+      const ph = t < A.s ? 0 : t < A.s + A.a ? 1 : 2;
+      const k = ph === 0 ? t / A.s : ph === 1 ? (t - A.s) / A.a : Math.min(1, (t - A.s - A.a) / Math.max(0.05, A.r));
+      const e = k * k * (3 - 2 * k);
+      if (a === 'slash1' || a === 'slash2') {
+        // horizontal sweeps: the chest carries the arm across; the hips and the back foot drive it
+        const sg = a === 'slash1' ? 1 : -1;
+        const tY = ph === 0 ? sg * 0.95 * e : ph === 1 ? sg * (0.95 - 2.0 * e) : sg * (-1.05 + 0.75 * e);
+        torsoY = tY; headY = -tY * 0.45;
+        T.armR = ph === 0 ? -1.0 - 0.3 * e : -1.35; T.elR = ph === 0 ? -0.9 * e : -0.15;
+        T.armL = -0.4; T.elL = -0.9; armOut = 0.25;
+        T.legL = -0.45; T.legR = 0.35; T.kneeL = 0.4; T.kneeR = 0.2; hipsY = 0.88;
+        torsoX = 0.12 + (ph === 1 ? 0.1 : 0);
+      } else {
+        // overhead (slash3) / heavy: blade high behind the head, then down through the target
+        const big = a === 'heavy' ? 1.15 : 1;
+        if (ph === 0) { T.armR = -2.9 * e * big; T.elR = -0.6 * e; torsoX = -0.18 * e; torsoY = 0.25 * e; hipsY = 0.93; }
+        else if (ph === 1) { T.armR = -2.9 * big + 2.1 * e; T.elR = -0.6 + 0.5 * e; torsoX = -0.18 + 0.6 * e; torsoY = 0.25 - 0.3 * e; hipsY = 0.93 - 0.1 * e; }
+        else { T.armR = -0.75 - 0.25 * e; T.elR = -0.15; torsoX = 0.42 - 0.3 * e; torsoY = -0.05; hipsY = 0.83 + 0.08 * e; }
+        T.armL = ph === 0 ? -2.3 * e : -0.6; T.elL = -0.6;
+        T.legL = -0.6; T.legR = 0.4; T.kneeL = 0.6; T.kneeR = 0.25;
+      }
+    } else if (a === 'heavyCharge') {
+      // holding a heavy strike: blade raised, weight back, a slight tremble when ready
+      const w = Math.sin(this.t * 40) * 0.03;
+      T.armR = -2.95 + w; T.elR = -0.7; T.armL = -2.2; T.elL = -0.6; torsoX = -0.2; torsoY = 0.3;
+      T.legL = -0.55; T.legR = 0.45; T.kneeL = 0.65; T.kneeR = 0.35; hipsY = 0.86;
+    } else if (a === 'dodge') {
+      // a quick low hop the asked way: the body leans into it, knees tuck, arms balance
+      const A = this.atk || {}, rel = A.rel || 0, k = Math.min(1, this.actionT / 0.36);
+      const hop = Math.sin(k * Math.PI);
+      const side = Math.sin(rel), fwd = Math.cos(rel);
+      torsoZ = -side * 0.45 * hop; torsoX = fwd * 0.35 * hop; headZ = side * 0.2 * hop;
+      hipsY = 0.95 - 0.22 * hop;
+      T.legL = -0.5 * hop - fwd * 0.3 * hop; T.legR = -0.3 * hop + fwd * 0.2 * hop; T.kneeL = 1.0 * hop; T.kneeR = 0.8 * hop;
+      T.armL = -0.7 * hop; T.armR = -0.5 * hop; T.elL = -0.6; T.elR = -0.6; armOut = 0.6 * hop;
+    } else if (a === 'throwQuick') {
+      // the quick throw: a short wind-up, the whip and release at 0.16 s, follow-through
+      const t = this.actionT;
+      if (t < 0.16) { const e = t / 0.16; T.armR = -2.7 * e; T.elR = -1.5 * e; T.armL = -0.7 * e; torsoY = 0.45 * e; torsoX = -0.08 * e; T.legL = -0.15; T.legR = 0.2; T.kneeL = 0.2; T.kneeR = 0.25; hipsY = 0.94; }
+      else if (t < 0.26) { T.armR = -1.25; T.elR = -0.05; T.armL = 0.4; T.elL = -0.7; torsoY = -0.45; torsoX = 0.2; headY = 0.2; T.legL = -0.45; T.legR = 0.35; T.kneeL = 0.3; T.kneeR = 0.15; hipsY = 0.9; }
+      else { T.armR = -0.5; T.elR = -0.25; T.armL = 0.15; T.elL = -0.4; torsoY = -0.15; torsoX = 0.08; T.legL = -0.2; T.legR = 0.15; T.kneeL = 0.15; T.kneeR = 0.1; hipsY = 0.93; }
+    } else if (a === 'charge') {
+      // charging the ball: arm high behind the head, the body coiled, the off hand pointing the aim
+      const e = Math.min(1, this.actionT / 0.25), w = Math.sin(this.t * 30) * 0.02;
+      T.armR = -3.0 * e + w; T.elR = -1.7 * e; T.armL = -1.3 * e; T.elL = -0.1;
+      torsoY = 0.6 * e; torsoX = -0.15 * e; headY = -0.45 * e;
+      T.legL = -0.3; T.legR = 0.35; T.kneeL = 0.35; T.kneeR = 0.3; hipsY = 0.9;
+    } else if (a === 'pulse') {
+      // Baldino's pulse tool: both hands forward, a recoil
+      const k = Math.min(1, this.actionT / 0.08), back = Math.max(0, 1 - (this.actionT - 0.08) / 0.24);
+      T.armR = -1.45 * k; T.armL = -1.4 * k; T.elR = -0.2; T.elL = -0.2; torsoX = 0.1 - 0.25 * back * k; hipsY = 0.9;
+      T.legL = -0.4; T.legR = 0.35; T.kneeL = 0.3; T.kneeR = 0.2;
     } else if (a === 'throw') {
       // LBA2's throw (1.22 s there, 1.0 s here): a slow windup with the ball held high behind the head →
       // the whip and release at the half → follow-through and settle
@@ -496,7 +554,8 @@ export class Rig {
       headX += clamp(-Math.atan2(dy, dh), -0.5, 0.4);
     }
 
-    const R = a === 'throw' || a === 'punch' || a === 'punch2' || a === 'kick' ? 30 : 16;
+    // strikes track their poses tightly (lag ≈ 18 ms) so the blade crosses the target in the active frames
+    const R = STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : 16;
     const set = (obj, v, axis = 'x', r = R) => { obj.rotation[axis] = damp(obj.rotation[axis], v ?? 0, r, dt); };
     set(j.legL.hip, T.legL); set(j.legR.hip, T.legR);
     set(j.legL.knee, T.kneeL); set(j.legR.knee, T.kneeR);

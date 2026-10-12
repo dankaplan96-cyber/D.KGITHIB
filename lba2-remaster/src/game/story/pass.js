@@ -7,6 +7,10 @@
 // the ball again). The station thaws the winch. Twinsen winches the villagers up the cliff in two trips,
 // fighting off ice mites in between, and Yorna cranks him up last. At the monastery she points him to the
 // ridge path and the observatory. → chapter 7 (The Observatory).
+//
+// The sword: when the lift is ready Yorna gives Twinsen her brother's blade. The platform is moored by a
+// frozen rope (cut it with the sword: a safe first use), then the ice mites come up with the first trip.
+import * as THREE from 'three';
 import { ChapterBase } from './base.js';
 import '../text/ch6.js';
 
@@ -16,6 +20,34 @@ export class Pass extends ChapterBase {
   get M() { return this.game.rooms.hamalayi; }
   inM() { return this.game.room?.id === 'hamalayi'; }
   mitesLeft() { return this.game.enemies.filter((e) => e.def?.id?.startsWith('imite') && e.present && e.alive).length; }
+
+  // the platform's frozen mooring rope (cut with the sword before the first trip)
+  decorate() {
+    const M = this.M;
+    if (!M?.group) return;
+    const w = M.lift.winch, gp = M.group.position, gy = this.game.physics.groundAt(w.x + 1.4, w.z - 0.8);
+    const g = new THREE.Group(); g.position.set(w.x + 1.4 - gp.x, gy - gp.y, w.z - 0.8 - gp.z); M.group.add(g);
+    const wood = new THREE.MeshStandardMaterial({ color: '#6a4a2a', roughness: 0.85 }), rope = new THREE.MeshStandardMaterial({ color: '#c8b890', roughness: 0.9 }), ice = new THREE.MeshStandardMaterial({ color: '#dff4ff', roughness: 0.2, transparent: true, opacity: 0.8 });
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 1.1, 8), wood); post.position.y = 0.55; post.castShadow = true; g.add(post);
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1.6, 6), rope); r.position.set(-0.7, 0.75, 0.35); r.rotation.z = 1.25; r.rotation.y = 0.45; g.add(r);
+    const crust = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.5, 6), ice); crust.position.set(-0.35, 0.85, 0.18); crust.rotation.z = 1.25; g.add(crust);
+    this.rope = { x: w.x + 1.0, z: w.z - 0.6, mesh: r, crust };
+  }
+  cutRope(silent = false) {
+    if (!this.rope) return;
+    this.rope.mesh.visible = false; this.rope.crust.visible = false;
+    if (silent) return;
+    const g = this.game; g.audio.play('break'); g.particles.burst(this.rope.x, this.game.hero.pos.y + 0.8, this.rope.z, '#dff4ff', 16, 3);
+  }
+  meleeHit(o) {
+    const f = this.f, R = this.rope;
+    if (!this.isCur() || !R || !f.c6_sword || f.c6_rope || o.hitSet.has(R) || !o.inArc(R.x, R.z, 0.45)) return false;
+    o.hitSet.add(R);
+    if (!/^slash|^heavy/.test(o.move.anim)) { this.chain([['hero', 'c6_rope_fists']]); return true; }
+    f.c6_rope = true; this.cutRope();
+    this.chain([['hero', 'c6_rope_cut']], () => { this.game.updateObjective(); this.game.save(false); });
+    return true;
+  }
 
   npcDefs() {
     const S = this.M?.npcSpots || {};
@@ -77,6 +109,7 @@ export class Pass extends ChapterBase {
         }, 0.5);
         return true;
       case 'c6winch':
+        if (!f.c6_rope && f.c6_sword) { this.chain([['hero', 'c6_rope_frozen']]); return true; }
         if (!f.c6_trip1) { this.trip(FIRST, 'c6_trip1', () => { f.c6_trip1 = true; this.story.refreshCast(); this.chain([['hero', 'c6_mites']], () => { g.updateObjective(); g.save(false); }); }); return true; }
         if (this.mitesLeft() > 0) { this.chain([['hero', 'c6_trip_wait']]); return true; }
         this.trip(SECOND, 'c6_trip2', () => { f.c6_trip2 = true; this.story.refreshCast(); this.chain([['yorna', 'c6_yorna_top']], () => { g.updateObjective(); g.save(false); }); });
@@ -119,7 +152,12 @@ export class Pass extends ChapterBase {
       case 'hesk': return c([['hesk', 'c6_hesk_1']]);
       case 'yorna':
         if (!f.c6_yorna) return c([['yorna', 'c6_yorna_1'], ['hero', 'c6_tw_y1'], ['yorna', 'c6_yorna_2'], ['yorna', 'c6_yorna_3'], ['yorna', 'c6_yorna_4']], () => { f.c6_yorna = true; g.updateObjective(); g.save(false); });
-        if (f.c6_thawed && !f.c6_liftReady) return c([['yorna', 'c6_yorna_lift']], () => { f.c6_liftReady = true; g.updateObjective(); g.save(false); });
+        if (f.c6_thawed && !f.c6_liftReady) return c([['yorna', 'c6_yorna_lift'], ['yorna', 'c6_yorna_sword1'], ['hero', 'c6_tw_sword'], ['yorna', 'c6_yorna_sword2']], () => {
+          f.c6_liftReady = true; f.c6_sword = true;
+          const h = g.hero; h.hasSword = true; h.combat.equip('sword');
+          g.audio.play('chest'); g.hud.toast('c6_toast_sword');
+          g.updateObjective(); g.save(false);
+        });
         if (f.c6_up) return c([['yorna', 'c6_yorna_end']]);
         return c([['yorna', f.c6_liftReady ? 'c6_yorna_lift' : 'c6_yorna_3']]);
       case 'pim':
@@ -161,6 +199,9 @@ export class Pass extends ChapterBase {
   applyFlags() {
     const f = this.f, M = this.M;
     if (!this.reached() || !M) return;
+    // the sword is Twinsen's from here on (older saves past this chapter get it too)
+    if (f.c6_sword || this.story.index > this.pos) this.game.hero.hasSword = true;
+    if (f.c6_rope || this.story.index > this.pos) this.cutRope(true);
     if (f.c6_bridge) { M.gorge.tree.fell(true); for (const tg of M.ballTargets) if (tg.tree) tg.done = true; }
     if (f.c6_kite) { M.kite.setVisible(false); for (const tg of M.ballTargets) if (tg.kite) tg.done = true; }
     if (f.c6_heat) { M.heatPost.setOn(true); if (!f.c6_thawed) f.c6_thawed = true; }
@@ -173,7 +214,7 @@ export class Pass extends ChapterBase {
     if (f.c6_up) return this.goal('c6_obj_monastery');
     if (f.c6_trip2) return this.goal('c6_obj_up');
     if (f.c6_trip1) return this.mitesLeft() > 0 ? this.goal('c6_obj_mites') : this.goal('c6_obj_trip2');
-    if (f.c6_liftReady) return this.goal('c6_obj_trip1');
+    if (f.c6_liftReady) return f.c6_sword && !f.c6_rope ? this.goal('c6_obj_rope') : this.goal('c6_obj_trip1');
     if (f.c6_thawed) return this.goal('c6_obj_tell');
     if (f.c6_heat) return this.goal('c6_obj_thaw');
     if (f.c6_yorna) return this.goal('c6_obj_heat') + (f.c6_needFuse ? this.sub(!!f.c6_fuse, 'c6_sub_fuse') + (f.c6_kiteAsk ? this.sub(!!f.c6_kite, 'c6_sub_kite') : '') : '');

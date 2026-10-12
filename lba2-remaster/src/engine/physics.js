@@ -133,6 +133,15 @@ export class Physics {
     return false;
   }
 
+  // Is the point (x, y, z) inside a solid brick, within r? (projectiles: no step-up allowance)
+  solidAt(x, z, y, r = 0) {
+    for (const c of this.near(x, z)) {
+      if (!c.enabled || c.seeThrough && c.noBall) continue;
+      if (c.top > y - r && c.bottom < y + r && this._inside(c, x, z, r)) return true;
+    }
+    return false;
+  }
+
   // Move an actor (pos: Vector3, radius) by dx,dz with sliding + step/slope rules.
   move(actor, dx, dz) {
     const p = actor.pos;
@@ -190,10 +199,18 @@ export class Physics {
     return false;
   }
 
+  // Line of sight that stops `margin` metres short of b (for targets mounted on, or inside, a collider)
+  clearTo(ax, ay, az, bx, by, bz, margin = 0.7) {
+    const d = Math.hypot(bx - ax, by - ay, bz - az);
+    if (d <= margin) return true;
+    const k = (d - margin) / d;
+    return this.lineOfSight(ax, ay, az, ax + (bx - ax) * k, ay + (by - ay) * k, az + (bz - az) * k);
+  }
+
   // Ray-march line of sight between two points (used by guards' vision).
   lineOfSight(ax, ay, az, bx, by, bz) {
     const d = Math.hypot(bx - ax, bz - az);
-    const n = Math.ceil(d / 0.8);
+    const n = Math.ceil(d / 0.25); // fine enough not to step over a thin wall
     for (let i = 1; i < n; i++) {
       const t = i / n;
       const x = ax + (bx - ax) * t, z = az + (bz - az) * t, y = ay + (by - ay) * t;
