@@ -30,7 +30,7 @@ what the player knows / doesn't know · the turn · what the player does · the 
 | 4 | The Dig | Desert Island | 55 | ✅ (first version; tests/chapter4.mjs) |
 | 5 | Steam and Sand | Desert Island | 50 | ✅ (first version; tests/chapter5.mjs) |
 | 6 | The Pass | Hamalayi | 55 | ✅ (first version; tests/chapter6.mjs) |
-| 7 | The Observatory | Hamalayi | 50 | ⬜ |
+| 7 | The Observatory | Hamalayi | 50 | ✅ (first version; tests/chapter7.mjs) |
 | 8 | Evacuation | Citadel Island (changed) | 55 | ⬜ |
 | 9 | The Council | Zeelich upper districts | 50 | ⬜ |
 | 10 | Baldino's Network | all regions | 55 | ⬜ |
@@ -98,7 +98,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
   defends the column from ice mites.
 - **Result:** Lhar is safe in the old monastery; Yorna knows the way to the vent, past the Observatory.
 
-### 7 — The Observatory ⬜ (Hamalayi)
+### 7 — The Observatory ✅ (Hamalayi)
 - **Wants:** open the ice vent. **Revelation part 1:** the Observatory is an old Sendell shrine; Sendell speaks
   plainly for the first time — she has been holding the shell with her own light and is fading. "I cannot do
   this alone any more."

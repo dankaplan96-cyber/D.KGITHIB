@@ -397,7 +397,13 @@ export function buildHamalayi(scene, physics) {
   const steam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 3.5, 16, 14, 1, true), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false }));
   steam.position.set(VENT.x, H(VENT.x, VENT.z) + 8, VENT.z); group.add(steam);
   updaters.push((dt) => { steam.rotation.y += dt * 0.4; });
-  R.vent = { ...W(VENT.x, VENT.z), open: false, setOpen(b) { this.open = !!b; ventCap.visible = !b; steam.material.opacity = b ? 0.3 : 0; } };
+  const seal = mesh(group, cyl(1.6, 1.6, 0.3, 18, 0), tm('stone', { color: '#b8a898' }), VENT.x, H(VENT.x, VENT.z) + 0.15, VENT.z, 0);
+  R.vent = {
+    ...W(VENT.x, VENT.z), open: false, melted: false,
+    melt(instant = false) { this.melted = true; if (instant) { ventCap.visible = false; return; } let t = 0; updaters.push(function m(dt) { t += dt; ventCap.scale.y = Math.max(0.01, 1 - t / 4); ventCap.position.y = H(VENT.x, VENT.z) + 0.4 - t * 0.2; if (t > 4) { ventCap.visible = false; updaters.splice(updaters.indexOf(m), 1); } }); },
+    setOpen(b) { this.open = !!b; if (b) { ventCap.visible = false; seal.rotation.y = 1.2; seal.position.y -= 0.4; } steam.material.opacity = b ? 0.3 : 0; },
+  };
+  R.ventPatrol = [[VENT.x - 8, VENT.z - 4], [VENT.x + 6, VENT.z - 6], [VENT.x + 7, VENT.z + 6], [VENT.x - 6, VENT.z + 7]].map(([x, z]) => [ox + x, oz + z]);
   R.basin = W(BASIN.x, BASIN.z);
   col({ type: 'cyl', x: VENT.x, z: VENT.z, r: 3.4, top: H(VENT.x, VENT.z) + 1.2, noStand: true });
 
