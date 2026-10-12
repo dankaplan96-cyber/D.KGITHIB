@@ -76,8 +76,8 @@ export class Hero extends Actor {
   }
 
   visibility() {
-    // a sandstorm (Desert Island) hides him too
-    const st = this.game.room?.storm?.level ?? 0, k = 1 - st * 0.6;
+    // a sandstorm (Desert Island) hides him too, and so does a borrowed technician's coat (chapter 9)
+    const st = this.game.room?.storm?.level ?? 0, k = (1 - st * 0.6) * (this.disguised ? 0.45 : 1);
     if (this.hiding) return 0.12 * k;
     if (this.behaviour === 'discreet') return (this.speed > 0.2 ? 0.4 : 0.25) * k;
     if (this.behaviour === 'athletic' && this.speed > 4) return 1.25 * k;

@@ -102,6 +102,32 @@ export const LOOKS = {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#86c8a8', ridge: '#3e7a62', tunic: '#5a3a8a', tunicTrim: '#c8a0ff', belt: '#c8a0ff', pants: '#3a2a5a', shoes: '#2a2040',
     eyes: '#e8c040', height: 1.1,
   },
+  // ---- Zeelich's council (chapter 9)
+  councilChair: {
+    // Councillor Amaru, who chairs the council: a tall Esmer in a violet robe with a gold collar and a tall hat
+    race: 'esmer', outfit: 'robe', hem: 0.05, slim: true, skin: '#a0c8b0', ridge: '#4a7a6a', tunic: '#5a2a7a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#3a1a4a', shoes: '#2a1a2a',
+    eyes: '#f0c040', hat: '#f2c45a', collar: true, collarColor: '#f2c45a', height: 1.12,
+  },
+  councilB: {
+    // Councillor Sela: a brisk Quetch merchant-councillor in a rose dress with a gold sash
+    race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#c84a7a', tunicTrim: '#f2d070', belt: '#f2d070', pants: '#c84a7a', shoes: '#4a2a2a',
+    hair: '#2a1a2a', skin: '#e8b890', hairStyle: 'bun', nose: 'button', eyes: '#3a2a1a', glasses: true, height: 0.92, neck: 0.08,
+  },
+  councilC: {
+    // Councillor Brum: a heavy Grobo in a slate-blue robe, cautious, fond of the cold project heat
+    race: 'grobo', outfit: 'robe', hem: 0.1, belly: 0.14, skin: '#98a0b8', tunic: '#3a4a7a', tunicTrim: '#e8e0d0', belt: '#e8e0d0', pants: '#2a2a4a', shoes: '#2a2a2a',
+    eyes: '#2a2a2a', hat: '#5a2a7a', height: 1.04,
+  },
+  clerk: {
+    // the council's clerk: a slim Esmer in a pale robe, ink-stained sleeves, spectacles
+    race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, stoop: 0.05, skin: '#9cc4c0', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
+    eyes: '#d8b040', glasses: true, height: 1.0,
+  },
+  archivist: {
+    // the project's archivist: a wary Quetch in a long grey-teal coat with brass buttons
+    race: 'quetch', outfit: 'tunic', hem: 0.28, slim: true, tunic: '#4a6a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#c8a050', pants: '#2a3a3a', shoes: '#2a2026',
+    hair: '#6a5a4a', skin: '#e0b090', hairStyle: 'tuft', nose: 'long', eyes: '#3a2a1a', glasses: true, collar: true, buttons: true, height: 0.98, neck: 0.08,
+  },
   // ---- Citadel's hill farms (chapter 8)
   farmerA: {
     race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.08, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',

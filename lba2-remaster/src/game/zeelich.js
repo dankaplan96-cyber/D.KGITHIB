@@ -7,6 +7,7 @@
 //   R.dock {x,z,a}            where the ferry ties up; R.ferry {group, x, z, setVisible(b)}
 //   R.street {x,z}            Esmer street centre; R.npcSpots {esmer1, esmer2, esmer3, baldinoOut, doran, vesk, guard} {x,z,a}
 //   R.workshopDoor {x,z}      door into Baldino's workshop (interior room 'workshop')
+//   R.councilDoor {x,z}       the arcade house's door: the council house and its cloud lift (rooms 'upper', 'council', 'archive')
 //   R.mills [{id, x, z, brake:{x,y,z}, spinning, setSpinning(b)}]  three wind-mills, a ball target (brake) each
 //   R.millTop {x,y,z}         the cog on top of the old mill (reached by jumping up its stair-stones)
 //   R.depot {x, z, patrol:[[x,z],...], locker:{x,z}}  the project depot (drones patrol it), locker holds the code cylinder
@@ -522,6 +523,7 @@ export function buildZeelich(scene, physics) {
     dock: { ...W(-57.6, 1.3), a: 0 },
     street: W(-24, 0),
     workshopDoor: W(ws[0], ws[1]),
+    councilDoor: W(houses[1].door[0], houses[1].door[1]),
     npcSpots: {
       esmer1: { ...W(-34.5, -3.2), a: Math.PI / 2 },
       esmer2: { ...W(-24, 7.0), a: Math.PI },
