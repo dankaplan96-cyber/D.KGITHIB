@@ -440,18 +440,27 @@ export function buildWorld(parentScene) {
   }
   const leafMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88 }), 0.022);
   const tint = new THREE.Color();
+  // instanced vegetation, split into 36 m tiles so the camera and the sun's shadow camera can cull
+  // what they don't see (one InstancedMesh per kind covering the whole island is always drawn in full)
+  const TILE = 36;
   const mkInst = (geo, m, list, shadow = true, colorFn = null) => {
-    const im = new THREE.InstancedMesh(geo, m, Math.max(1, list.length));
-    im.castShadow = shadow; im.receiveShadow = true;
+    const tiles = new Map();
+    list.forEach((t, i) => { const k = Math.floor(t.x / TILE) + ',' + Math.floor(t.z / TILE); if (!tiles.has(k)) tiles.set(k, []); tiles.get(k).push([t, i]); });
     const o = new THREE.Object3D();
-    list.forEach((t, i) => {
-      o.position.set(t.x, t.h - 0.08, t.z); o.rotation.set(0, t.ry, 0); o.scale.setScalar(t.s); o.updateMatrix();
-      im.setMatrixAt(i, o.matrix);
-      if (colorFn) { colorFn(tint, t, i); im.setColorAt(i, tint); }
-    });
-    im.count = list.length;
-    scene.add(im);
-    return im;
+    const out = [];
+    for (const part of tiles.values()) {
+      const im = new THREE.InstancedMesh(geo, m, part.length);
+      im.castShadow = shadow; im.receiveShadow = true;
+      part.forEach(([t, i], j) => {
+        o.position.set(t.x, t.h - 0.08, t.z); o.rotation.set(0, t.ry, 0); o.scale.setScalar(t.s); o.updateMatrix();
+        im.setMatrixAt(j, o.matrix);
+        if (colorFn) { colorFn(tint, t, i); im.setColorAt(j, tint); }
+      });
+      im.computeBoundingSphere();
+      scene.add(im);
+      out.push(im);
+    }
+    return out;
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };

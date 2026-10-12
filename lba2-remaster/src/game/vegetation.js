@@ -100,7 +100,7 @@ export function treeGeometry(kind, seed = 1) {
       }
       if (m === 'bark' && p.y < 0.2) col.multiplyScalar(0.8);
     },
-    bounds: { min: [-half, -0.25, -half], max: [half, t.h + 0.3, half] }, cell: kind === 'bush' ? 0.05 : 0.085,
+    bounds: { min: [-half, -0.25, -half], max: [half, t.h + 0.3, half] }, cell: kind === 'bush' ? 0.075 : 0.12,
   });
   geos.set(key, geo);
   return geo;

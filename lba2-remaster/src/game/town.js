@@ -471,7 +471,6 @@ export function buildTown(scene, W) {
     }
   };
 
-  // laundry flutters in the wind
   // the Joint Project's heat posts: a teal pipe with brass collars and a crystal cap by every front door and at
   // Pippa's stall, fed from the station's heat line. Dark until the station runs (chapter 1, once the water is
   // back), then they glow and breathe a little warm air: the benefit the town sees before the evacuation plan.
@@ -484,6 +483,7 @@ export function buildTown(scene, W) {
   ]);
   // epilogue: bunting strung between the square's lamps (hidden until the town celebrates)
   W.bunting = bunting(scene, W, [[V.x + 4.6, V.z - 5.6], [-44.8, 4.8], [-44.6, -10.6], [-35.4, -0.2], [-55, -6.6]]);
+  // laundry flutters in the wind
   W.updaters.push((dt, t) => { W.laundry.forEach((c, i) => { c.rotation.x = Math.sin(t * 2.1 + i) * 0.12 * (0.4 + W.storm); }); });
   return { houseInfo, at };
 }
