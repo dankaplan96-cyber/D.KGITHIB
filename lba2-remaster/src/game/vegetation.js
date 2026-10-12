@@ -84,8 +84,9 @@ const VARIANTS = {
 const COLORS = { bark: '#6a4a30', leaf: '#4f9a38', leafDark: '#3a7a3a', needle: '#2f6b3a', fruit: '#e0402a', blossom: '#ff8ac0' };
 
 const geos = new Map();
-export function treeGeometry(kind, seed = 1) {
-  const key = kind + seed;
+// lod 1: the same tree sculpted on a 2.6× coarser grid (≈1/6 of the triangles), for distant tiles
+export function treeGeometry(kind, seed = 1, lod = 0) {
+  const key = kind + seed + (lod ? '-lo' : '');
   if (geos.has(key)) return geos.get(key);
   const t = VARIANTS[kind](seed);
   const half = t.w + 0.3;
@@ -100,7 +101,7 @@ export function treeGeometry(kind, seed = 1) {
       }
       if (m === 'bark' && p.y < 0.2) col.multiplyScalar(0.8);
     },
-    bounds: { min: [-half, -0.25, -half], max: [half, t.h + 0.3, half] }, cell: kind === 'bush' ? 0.075 : 0.12,
+    bounds: { min: [-half, -0.25, -half], max: [half, t.h + 0.3, half] }, cell: (kind === 'bush' ? 0.075 : 0.12) * (lod ? 2.6 : 1),
   });
   geos.set(key, geo);
   return geo;

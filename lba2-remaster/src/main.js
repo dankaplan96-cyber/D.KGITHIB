@@ -867,6 +867,7 @@ class Game {
     this.env.setStorm(this.storm);
     this.audio.setStorm(this.storm);
     this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : this.hero.pos);
+    if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : this.hero.pos);
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
     this.particles.update(dt);

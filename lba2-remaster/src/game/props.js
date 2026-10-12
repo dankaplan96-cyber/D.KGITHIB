@@ -261,7 +261,9 @@ export const TEX = {
       let y = -Math.floor(r() * 200);
       while (y < S) {
         const len = 140 + Math.floor(r() * 220);
-        const base = rgb(P[0]).map((v) => v * (0.82 + r() * 0.3));
+        // one brightness per plank (each channel used to get its own random factor, which shifted the hue:
+        // green, pink and orange planks side by side)
+        const kb = 0.84 + r() * 0.24, base = rgb(P[0]).map((v) => v * kb);
         x.fillStyle = css(base); x.fillRect(i * bw, y, bw, len);
         x.save(); x.beginPath(); x.rect(i * bw, y, bw, len); x.clip();
         grain(x, i * bw, y, bw, len, r, [css(base), P[1], P[2]], 9);
@@ -285,7 +287,7 @@ export const TEX = {
     const t = S / n, gap = 3;
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
       const base = (checker && (i + j) % 2) ? b : (checker ? a : (r() < 0.5 ? a : b));
-      const col = rgb(base).map((v) => v * (0.88 + r() * 0.22));
+      const kb = 0.88 + r() * 0.22, col = rgb(base).map((v) => v * kb); // (one factor: no hue drift)
       const x0 = i * t + gap, y0 = j * t + gap, s = t - gap * 2;
       const g = x.createLinearGradient(x0, y0, x0 + s, y0 + s);
       g.addColorStop(0, css(col.map((v) => v * 1.08))); g.addColorStop(1, css(col.map((v) => v * 0.9)));
@@ -372,7 +374,7 @@ export const TEX = {
       let xx = -Math.floor(r() * 60);
       while (xx < S) {
         const w = 80 + Math.floor(r() * 80);
-        const col = rgb(P[r() < 0.5 ? 0 : 1]).map((v) => v * (0.88 + r() * 0.24));
+        const kb = 0.88 + r() * 0.24, col = rgb(P[r() < 0.5 ? 0 : 1]).map((v) => v * kb);
         wrap9(S, 0, (ox) => {
           const g = x.createLinearGradient(0, y, 0, y + h);
           g.addColorStop(0, css(col.map((v) => v * 1.14))); g.addColorStop(0.25, css(col)); g.addColorStop(1, css(col.map((v) => v * 0.8)));
@@ -452,7 +454,7 @@ export const TEX = {
     x.fillStyle = P[2]; x.fillRect(0, 0, S, S);
     for (let i = 0; i < 70; i++) {
       const px = r() * S, py = r() * S, rw = 10 + r() * 22, rh = 7 + r() * 13;
-      const col = rgb(P[r() < 0.5 ? 0 : 1]).map((v) => v * (0.85 + r() * 0.3));
+      const kb = 0.85 + r() * 0.3, col = rgb(P[r() < 0.5 ? 0 : 1]).map((v) => v * kb);
       wrap9(S, S, (ox, oy) => {
         const g = x.createLinearGradient(0, py + oy - rh, 0, py + oy + rh);
         g.addColorStop(0, css(col.map((v) => v * 1.2))); g.addColorStop(1, css(col.map((v) => v * 0.7)));

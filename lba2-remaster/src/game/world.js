@@ -446,32 +446,55 @@ export function buildWorld(parentScene) {
   // instanced vegetation, split into 36 m tiles so the camera and the sun's shadow camera can cull
   // what they don't see (one InstancedMesh per kind covering the whole island is always drawn in full)
   const TILE = 36;
-  const mkInst = (geo, m, list, shadow = true, colorFn = null) => {
+  // Distance detail per tile (from Twinsen, updated every frame in W.update): a tree tile swaps to its coarse
+  // sculpt beyond LOD_NEAR (with a little hysteresis so it doesn't flicker at the boundary); grass and flower
+  // tiles are hidden beyond FAR_SMALL, where a 60-triangle tuft is a fraction of a pixel.
+  const LOD_NEAR = 40, FAR_SMALL = 58;
+  W.lodTiles = [];
+  const mkInst = (geo, m, list, shadow = true, colorFn = null, geoLo = null, small = false) => {
     const tiles = new Map();
     list.forEach((t, i) => { const k = Math.floor(t.x / TILE) + ',' + Math.floor(t.z / TILE); if (!tiles.has(k)) tiles.set(k, []); tiles.get(k).push([t, i]); });
     const o = new THREE.Object3D();
     const out = [];
     for (const part of tiles.values()) {
-      const im = new THREE.InstancedMesh(geo, m, part.length);
-      im.castShadow = shadow; im.receiveShadow = true;
-      part.forEach(([t, i], j) => {
-        o.position.set(t.x, t.h - 0.08, t.z); o.rotation.set(0, t.ry, 0); o.scale.setScalar(t.s); o.updateMatrix();
-        im.setMatrixAt(j, o.matrix);
-        if (colorFn) { colorFn(tint, t, i); im.setColorAt(j, tint); }
-      });
-      im.computeBoundingSphere();
-      scene.add(im);
-      out.push(im);
+      // (the colour function draws random numbers: call it once per instance, both levels share the result)
+      const cols = colorFn ? part.map(([t, i]) => colorFn(tint, t, i).clone?.() ?? tint.clone()) : null;
+      const make = (g) => {
+        const im = new THREE.InstancedMesh(g, m, part.length);
+        im.castShadow = shadow; im.receiveShadow = true;
+        part.forEach(([t], j) => {
+          o.position.set(t.x, t.h - 0.08, t.z); o.rotation.set(0, t.ry, 0); o.scale.setScalar(t.s); o.updateMatrix();
+          im.setMatrixAt(j, o.matrix);
+          if (cols) im.setColorAt(j, cols[j]);
+        });
+        im.computeBoundingSphere();
+        scene.add(im);
+        out.push(im);
+        return im;
+      };
+      const hi = make(geo);
+      let lo = null;
+      if (geoLo) { lo = make(geoLo); lo.visible = false; }
+      const cx = part.reduce((a, [t]) => a + t.x, 0) / part.length, cz = part.reduce((a, [t]) => a + t.z, 0) / part.length;
+      if (lo || small) W.lodTiles.push({ cx, cz, hi, lo, small, near: true });
     }
     return out;
+  };
+  W.updateLod = (focus) => {
+    for (const T of W.lodTiles) {
+      const d = Math.hypot(focus.x - T.cx, focus.z - T.cz);
+      if (T.small) { T.hi.visible = d < FAR_SMALL; continue; }
+      if (T.near && d > LOD_NEAR + 4) T.near = false; else if (!T.near && d < LOD_NEAR - 4) T.near = true;
+      T.hi.visible = T.near; T.lo.visible = !T.near;
+    }
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
     const list = trees.filter((t, i) => t.kind === kind && i % nv === v);
-    if (list.length) mkInst(treeGeometry(kind, v + 1), leafMat, list, true, shadeVar);
+    if (list.length) mkInst(treeGeometry(kind, v + 1), leafMat, list, true, shadeVar, treeGeometry(kind, v + 1, 1));
   }
-  for (let v = 0; v < 3; v++) mkInst(treeGeometry('bush', v + 1), leafMat, bushes.filter((b, i) => i % 3 === v), true, shadeVar);
+  for (let v = 0; v < 3; v++) mkInst(treeGeometry('bush', v + 1), leafMat, bushes.filter((b, i) => i % 3 === v), true, shadeVar, treeGeometry('bush', v + 1, 1));
   for (const t of trees) physics.add({ type: 'cyl', x: t.x, z: t.z, r: 0.42 * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false });
   for (const b of bushes) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
   W.trees = trees;
@@ -499,9 +522,9 @@ export function buildWorld(parentScene) {
   }
   const grassMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }), 0.16);
   const grassTint = (c) => c.setHSL(0.27 + (rand() - 0.5) * 0.05, 0.25 + rand() * 0.2, 0.85 + rand() * 0.15).lerp(new THREE.Color(1, 1, 1), 0.6);
-  for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint);
+  for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
-  ['#ffd84a', '#ff6fa3', '#ffffff', '#b28cff', '#ff8a3d'].forEach((col, k) => mkInst(flowerGeometry(col), flowerMat, flowers.filter((f, i) => i % 5 === k), false));
+  ['#ffd84a', '#ff6fa3', '#ffffff', '#b28cff', '#ff8a3d'].forEach((col, k) => mkInst(flowerGeometry(col), flowerMat, flowers.filter((f, i) => i % 5 === k), false, null, null, true));
 
   // tulip beds on the grass beside the paths and around town (dense, one colour per bed, as on LBA2's Citadel)
   const BED_COLS = ['#e8343a', '#ffd23a', '#3a6fe8', '#ff7ab0', '#f4f4f0'];

@@ -43,9 +43,23 @@ really stood on the shop roof).
 - Verified: no page errors in the captures. tests/combat.mjs 22/22, prologue and chapter 8 pass after the
   change.
 
+## Stage 2
+- Performance:
+  - Distance detail per vegetation tile: tree and bush tiles beyond 40 m from Twinsen swap to the same
+    sculpt on a 2.6× coarser grid (about 1/6 of the triangles), with 4 m hysteresis.
+  - Grass and flower tiles beyond 58 m are hidden.
+  - Measured at the Citadel street (software GL, same frame): 3.63 M → 1.98 M triangles, 1,177 → 1,053 draw
+    calls. No visible change at the game camera (captures R4/R5).
+  - The bake was regenerated, so load time is unchanged (world ≈1.36 s in the headless browser).
+- Textures:
+  - Planks, tiles, stone and rubble textures multiplied each colour channel by its own random factor, which
+    shifted the hue block by block (green, pink and orange planks on the house floor). Now one brightness
+    factor per plank or block (capture 06).
+- Verified: tests/chapter1.mjs and tests/combat.mjs pass.
+
 ## Remaining (ranked)
-1. Performance: draw calls and triangles outdoors (instancing, culling of distant vegetation).
+1. Draw calls (~1,050 outdoors, half from the shadow pass): merge small static props, trim shadow casters.
 2. Faces: heads are still faceted at close range (fine at game distance).
-3. Interior floor tints; interior lighting variety per room.
+3. Interior lighting variety per room.
 4. Cliff bases still slightly soft; shoreline and water edge.
 5. Animation polish (idle variations, talk gestures) — see the character guide's checklist.
