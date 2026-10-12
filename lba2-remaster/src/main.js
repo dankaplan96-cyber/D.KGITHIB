@@ -411,6 +411,7 @@ class Game {
   focusMenu() { this.menuButtons().forEach((b, i) => b.classList.toggle('sel', i === this.menuSel)); }
 
   wireUI() {
+    if (window.desktop) document.body.classList.add('desktop');
     document.addEventListener('click', (e) => {
       const b = e.target.closest('button');
       if (!b) return;
@@ -436,6 +437,7 @@ class Game {
       case 'controls': this.prevScreen = this.screen; this.showScreen('controls'); this.buildRebind(); break;
       case 'resetkeys': this.settings.keys = {}; this.applySettings(); this.buildRebind(); break;
       case 'back': this.showScreen(this.prevScreen || 'title'); break;
+      case 'exitapp': window.desktop?.quit(); break; // (the desktop app only: desktop/preload.js)
       case 'resume':
         this.hideScreens();
         if (this.cine) { this.setState('cinematic'); this.cine.resume(); } else this.setState('play');

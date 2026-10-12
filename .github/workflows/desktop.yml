@@ -1,0 +1,82 @@
+# Builds the LBA3 desktop app (lba2-remaster/desktop) for Windows, macOS and Linux on their own runners and
+# publishes the installers as a GitHub pre-release (and as run artifacts). See lba2-remaster/docs/DESKTOP.md.
+name: Desktop builds
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ccr-adf00ea7-37ebl3, main]
+    paths:
+      - 'lba2-remaster/**'
+      - '.github/workflows/desktop.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+          - os: macos-latest
+            target: mac
+          - os: ubuntu-latest
+            target: linux
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: lba2-remaster/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: lba2-remaster/desktop/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run dist:${{ matrix.target }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # (unsigned: there is no code-signing certificate)
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LBA3-${{ matrix.target }}
+          path: |
+            lba2-remaster/desktop/release/*.exe
+            lba2-remaster/desktop/release/*.zip
+            lba2-remaster/desktop/release/*.dmg
+            lba2-remaster/desktop/release/*.AppImage
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: ls -la dist
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-build-${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          name: LBA3 The Awakening — desktop build ${{ github.run_number }}
+          prerelease: true
+          body: |
+            Desktop build of LBA3: The Awakening from commit ${{ github.sha }}.
+
+            - **Windows:** `LBA3-The-Awakening-Setup-*.exe` (installer) or the `*-win.zip` (no install: extract and run `LBA3 The Awakening.exe`).
+            - **macOS:** the `.dmg`; the app is not signed, so the first time right-click the app and choose Open.
+            - **Linux:** the `.AppImage`; make it executable and run it.
+
+            The builds are not code-signed: Windows SmartScreen may warn ("More info" → "Run anyway").
+          files: dist/*

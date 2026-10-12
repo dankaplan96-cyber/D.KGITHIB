@@ -322,3 +322,7 @@ body.hud-lba #weapon.show { opacity: 1; }
 #cine-skip .bar { position: absolute; left: 0; bottom: 0; height: 3px; width: calc(var(--k) * 100%); background: #ffd890; }
 #objective.flash { animation: objFlash 2.4s ease-out; }
 @keyframes objFlash { 0% { box-shadow: 0 0 0 0 rgba(255, 216, 144, 0); transform: scale(1); } 15% { box-shadow: 0 0 0 3px rgba(255, 216, 144, 0.75); transform: scale(1.04); } 100% { box-shadow: 0 0 0 0 rgba(255, 216, 144, 0); transform: scale(1); } }
+
+/* the desktop app (desktop/): things only it has */
+.desktop-only { display: none !important; }
+body.desktop .desktop-only { display: block !important; }

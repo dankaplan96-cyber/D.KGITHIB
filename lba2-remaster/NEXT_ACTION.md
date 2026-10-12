@@ -15,5 +15,5 @@ opening scene is in (docs/CINEMATICS.md, tests/opening.mjs).
    file:// in headless Chromium: a new game starts and the music decodes. Rebuild it after each milestone.
    (Version 3 of the artifact was missing vendor/three/build/three.core.min.js, so it couldn't load three.js;
    version 4 adds it, verified on a local mirror of the published file set.)
-5. Next (agreed with the user): a local desktop build of the game (an installable app around the same code, saves on
-   disk, no browser), after the opening.
+5. Desktop app (desktop/, docs/DESKTOP.md): built and tested on Linux. GitHub Actions builds Windows/macOS/Linux
+   installers into a pre-release; confirm the Windows build on a real Windows machine (the user).

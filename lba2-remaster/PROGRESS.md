@@ -177,3 +177,14 @@ SwiftShader (CPU rendering); not measured on a real GPU.
     - the first objective playable.
   - Prologue and chapters 1 and 3 still pass (chapter tests start with `?nocine`).
 - Not verified: real GPU and display, sound by ear, touch and gamepad skipping on real devices.
+
+## Session: desktop app (docs/DESKTOP.md)
+- `desktop/`: an Electron app around the same game code.
+  - Its own window, fullscreen with F11 / Alt+Enter, saves on disk in the app-data folder.
+  - The game is served from the package on `app://`; the font is bundled; Quit Game appears on the title screen.
+  - `tools/game-files.mjs` lists exactly the files the game loads (it replaced `tools/publish-files.py`).
+- `.github/workflows/desktop.yml` builds Windows (installer and zip), macOS (dmg) and Linux (AppImage) on
+  GitHub's runners, and publishes them as a pre-release.
+- Verified: `desktop/test-desktop.mjs` against the packaged Linux build passes 6/6 checks (window and
+  `app://`, Quit button and bundled font, new game with the opening and save, the save surviving a restart,
+  Continue, Quit). The Windows zip was also built on Linux. Not verified: running the Windows and macOS builds.
