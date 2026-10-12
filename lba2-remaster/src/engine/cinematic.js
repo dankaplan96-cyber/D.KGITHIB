@@ -22,6 +22,14 @@ const PROMPT_SHOW = 3.5;          // the skip prompt fades after this long witho
 
 const $ = (s) => document.querySelector(s);
 const ease = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+// Shots are framed for 16:9. On a narrower screen (4:3, a phone held upright) keep at least the same width of
+// the scene in view by opening the vertical angle, so nobody who is in the 16:9 frame is cropped out.
+const WIDE = 16 / 9;
+function fitFov(fov, aspect) {
+  if (!(aspect < WIDE)) return fov;
+  const h = 2 * Math.atan(Math.tan((fov * Math.PI) / 360) * WIDE);
+  return Math.min(100, (2 * Math.atan(Math.tan(h / 2) / aspect) * 180) / Math.PI);
+}
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion();
 
 export class Cinematic {
@@ -103,7 +111,7 @@ export class Cinematic {
     _b.copy(A.look).lerp(B.look, k);
     cam.position.copy(_a);
     cam.lookAt(_b);
-    const fov = (A.fov ?? 40) + ((B.fov ?? A.fov ?? 40) - (A.fov ?? 40)) * k;
+    const fov = fitFov((A.fov ?? 40) + ((B.fov ?? A.fov ?? 40) - (A.fov ?? 40)) * k, cam.aspect);
     if (cam.fov !== fov) { cam.fov = fov; cam.updateProjectionMatrix(); }
     g.camRig.look.copy(_b);
   }

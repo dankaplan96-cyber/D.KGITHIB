@@ -35,6 +35,8 @@ Characters in a scene don't fidget (`rig.noFidget`) and the player's occlusion s
   menu during a scene doesn't save.
 - **Saves:** never during a scene; `finish` saves once control is back. Continue never replays a scene.
 - Shadows and distance detail follow `cine.focus` while the hero is elsewhere (the harbour shots).
+- Shots are framed for 16:9. On narrower screens (4:3, a phone held upright) the vertical angle opens so the same
+  width of the scene stays in view; wider screens simply see more at the sides. Subtitles wrap within safe margins.
 
 ## The opening (85 s)
 | Time | Shot | What happens |
@@ -59,6 +61,8 @@ cupboard." (the objective then adds the step).
 skip at 3 s, 50 s and 81 s (same end state, no leftover objects); a short press doesn't skip; pause and resume
 (clock stopped); losing focus pauses; Continue doesn't replay; a second new game duplicates nothing; the first
 objective is playable. Chapter tests start with `?nocine` (the opening's end state without the scene).
+Frames checked at 16:9, 4:3, 2.35:1 and 390×844 (phone portrait). A preview video (music only — the effects are
+synthesised live in the browser and not captured) and contact sheets are in `captures/opening/` and `dist/`.
 
 Not verified: the scene on a real GPU and display, the sound mix by ear (the effects are synthesised and the cue is
 a rendered draft like the rest of the soundtrack), touch-and-hold skipping on a real phone, gamepad skipping.

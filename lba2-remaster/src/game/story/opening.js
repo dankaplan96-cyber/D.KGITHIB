@@ -76,10 +76,10 @@ export function playOpening(story) {
   const shots = [
     // 1 — the harbour wakes: water and the bow line, then one move up and back to the pier and the lift
     shot(0, 5.6, P(V(-76.5, 1.0, 1.5), V(-78.0, 0.85, -1.7), 40), P(V(-76.62, 1.05, 1.38), V(-78.05, 0.88, -1.75), 40)),
-    shot(5.6, 13.0, P(V(-76.62, 1.05, 1.38), V(-78.05, 0.88, -1.75), 40), P(V(-71.6, 4.7, 5.2), V(-83.2, 2.0, -2.8), 44)),
+    shot(5.6, 13.0, P(V(-76.62, 1.05, 1.38), V(-78.05, 0.88, -1.75), 40), P(V(-74.2, 5.6, 5.9), V(-83.4, 2.0, -2.9), 44)),
     // 2 — the lift: the crate comes up off the barge; the worker at the controls; a passer-by goes to the ferry
-    shot(13.0, 21.0, P(V(-80.3, 3.1, -5.15), V(-85.1, 2.35, -2.0), 44), P(V(-80.55, 3.0, -5.25), V(-85.1, 2.5, -2.1), 44)),
-    shot(21.0, 29.0, P(V(-80.15, 2.6, -5.55), V(-83.8, 2.1, -3.4), 44), P(V(-80.35, 2.5, -5.5), V(-83.7, 2.0, -3.6), 42)),
+    shot(13.0, 21.0, P(V(-79.7, 3.3, -1.75), V(-85.1, 2.25, -3.05), 44), P(V(-79.9, 3.2, -1.85), V(-85.1, 2.4, -3.1), 44)),
+    shot(21.0, 29.0, P(V(-80.2, 2.75, -2.35), V(-83.6, 2.0, -3.95), 44), P(V(-80.35, 2.65, -2.45), V(-83.6, 1.95, -4.05), 42)),
     // 3 — home: the whole family at their own things, then Zoé at the counter
     shot(29.0, 35.0, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.75, -0.55), 44), P(hv(4.05, 2.6, 4.05), hv(0.1, 0.75, -0.6), 44)),
     shot(35.0, 41.0, P(hv(-0.15, 1.85, -1.95), hv(-2.0, 1.32, -2.95), 44), P(hv(-0.25, 1.82, -2.0), hv(-2.1, 1.3, -2.95), 44)),
@@ -88,10 +88,12 @@ export function playOpening(story) {
     shot(48.0, 50.8, P(hv(-1.85, 1.75, -2.2), hv(-0.45, 1.45, -0.25), 42)),
     shot(50.8, 53.4, () => overShoulder(), null),
     shot(53.4, 58.0, P(hv(0.75, 1.2, 0.8), hv(2.1, 0.55, 2.1), 42), P(hv(0.8, 1.18, 0.85), hv(2.1, 0.57, 2.1), 42)),
-    shot(58.0, 64.2, P(hv(-0.8, 1.72, -2.2), hv(-2.3, 1.22, -3.02), 40), P(hv(-0.88, 1.68, -2.25), hv(-2.3, 1.2, -3.02), 38)),
+    shot(58.0, 60.1, P(hv(-0.8, 1.72, -2.2), hv(-2.3, 1.22, -3.02), 40), P(hv(-0.84, 1.7, -2.22), hv(-2.3, 1.21, -3.02), 39)),
+    shot(60.1, 62.1, P(hv(-1.62, 1.28, -2.62), hv(-2.3, 0.98, -3.12), 34), P(hv(-1.66, 1.26, -2.64), hv(-2.3, 0.97, -3.12), 32)),
+    shot(62.1, 64.2, P(hv(-0.88, 1.68, -2.25), hv(-2.3, 1.2, -3.02), 38)),
     shot(64.2, 66.5, P(hv(-1.85, 1.8, -2.1), hv(-0.45, 1.55, -0.25), 38)),
     // 5 — the decision, wide enough for both of them
-    shot(66.5, 72.5, P(hv(1.45, 2.1, 2.25), hv(-0.95, 1.0, -1.25), 44), P(hv(1.35, 2.05, 2.1), hv(-0.9, 1.0, -1.3), 44)),
+    shot(66.5, 72.5, P(hv(1.75, 1.95, -2.45), hv(-1.05, 1.15, -1.35), 48), P(hv(1.65, 1.92, -2.42), hv(-1.05, 1.15, -1.4), 48)),
     // 6 — following Twinsen to the door; the title; then into the game's own camera
     shot(72.5, 80.0, () => follow(), null),
     shot(80.0, OPENING_LENGTH, null, 'game'),
@@ -151,7 +153,7 @@ export function playOpening(story) {
     let f = 0;
     if (tt > 42.95 && tt < 43.6) f = 1;
     else if (tt >= 43.6 && tt < 43.95) f = Math.sin((tt - 43.6) * 40) > 0 ? 0.6 : 0;
-    else if (tt > 59.2 && tt < 69.0) f = 0.32 + Math.sin(tt * 7) * 0.04;
+    else if (tt > 59.2 && tt < 69.0) f = 0.5 + Math.sin(tt * 7) * 0.06;
     flowWobble += (dt || 0) * 30;
     water(f);
     if (f > 0) stream.scale.x = stream.scale.z = f * (1 + Math.sin(flowWobble) * 0.08);
@@ -162,7 +164,7 @@ export function playOpening(story) {
       const ph = (steamT * 0.45 + i / 3) % 1;
       s.visible = steamOn > 0.01;
       s.position.set(K.basin.x - R.center.x + Math.sin(ph * 6 + i) * 0.03, K.basin.y + 0.08 + ph * 0.35, K.basin.z - R.center.z + 0.02);
-      s.material.opacity = steamOn * Math.sin(ph * Math.PI) * 0.22;
+      s.material.opacity = steamOn * Math.sin(ph * Math.PI) * 0.38;
       s.scale.setScalar(0.1 + ph * 0.14);
     });
   });
