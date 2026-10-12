@@ -335,13 +335,15 @@ export class Rig {
       // idle fidgets: look around, weight shift, scratch head
       if (a === 'idle') {
         this.fidgetT -= dt;
-        if (this.fidgetT <= 0) { this.fidget = 1 + Math.floor(Math.random() * 3); this.fidgetT = 5 + Math.random() * 7; this.fidgetStart = this.t; }
+        if (this.fidgetT <= 0) { this.fidget = 1 + Math.floor(Math.random() * 5); this.fidgetT = 5 + Math.random() * 7; this.fidgetStart = this.t; }
         const ft = this.t - (this.fidgetStart ?? -99);
         if (this.fidget && ft < 2.2) {
           const k = Math.sin((ft / 2.2) * Math.PI);
           if (this.fidget === 1) headY = Math.sin(ft * 2.5) * 0.6 * k;
           if (this.fidget === 2) { torsoZ = 0.06 * k; T.legL = 0.12 * k; T.kneeL = 0.2 * k; }
           if (this.fidget === 3) { T.armR = -2.4 * k; T.elR = -1.9 * k; headZ = 0.15 * k; }
+          if (this.fidget === 4) { T.armL = T.armR = -2.7 * k; T.elL = T.elR = -0.7 * k; torsoX = -0.1 * k; headX = -0.18 * k; hipsY = 0.95 + 0.01 * k; } // a stretch
+          if (this.fidget === 5) { headX = -0.42 * k; headY = Math.sin(ft * 1.4) * 0.25 * k; torsoX = -0.04 * k; } // a glance at the sky
         } else this.fidget = 0;
       }
       if (a === 'talk') {

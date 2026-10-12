@@ -2,7 +2,7 @@
 // projectiles, pickups and particles.
 import * as THREE from 'three';
 import { createHumanoid, createBlobShadow, placeBlobShadow } from '../engine/rig.js';
-import { createCharacter } from './characters.js';
+import { createCharacter, addSilhouette, writeBodyStencil } from './characters.js';
 import { TrackRunner } from '../engine/scripts.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 import { HeroCombat } from './combat.js';
@@ -27,6 +27,7 @@ function buildSword() {
   add(bg, steel, -0.1);
   g.rotation.x = -0.25; // a little forward of the forearm line
   g.position.y = -0.05;
+  writeBodyStencil(g); // (the hero's silhouette doesn't show through his own sword)
   return g;
 }
 
@@ -65,6 +66,7 @@ export class Actor {
 export class Hero extends Actor {
   constructor(game, x, z) {
     super(game, createCharacter('twinsen'), x, z, 0.4);
+    addSilhouette(this.rig);
     this.isHero = true;
     this.behaviour = 'normal';
     this.maxHp = 10; this.hp = 10;
@@ -88,7 +90,7 @@ export class Hero extends Actor {
   swapBody(look) {
     const g = this.game;
     this.bodies ??= { twinsen: this.rig };
-    this.bodies[look] ??= createCharacter(look);
+    if (!this.bodies[look]) { this.bodies[look] = createCharacter(look); addSilhouette(this.bodies[look]); }
     if (this.rig === this.bodies[look]) return;
     g.scene.remove(this.rig.root);
     this.rig = this.bodies[look];
@@ -659,6 +661,7 @@ export class MagicBall {
     this.vel = new THREE.Vector3();
     this.mat = new THREE.MeshStandardMaterial({ color: '#ffe68a', emissive: '#ffc400', emissiveIntensity: 3, roughness: 0.2 });
     this.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 12), this.mat);
+    writeBodyStencil(this.mesh);
     this.mesh.visible = false;
     game.scene.add(this.mesh);
     this.shadow = createBlobShadow(0.3);

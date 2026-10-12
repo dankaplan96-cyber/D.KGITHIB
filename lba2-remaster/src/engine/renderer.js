@@ -46,7 +46,7 @@ export class Renderer {
     this.camera = camera;
     // the scene renders into a multisampled half-float target: the canvas's own antialias doesn't reach
     // the post-processing chain, so without this the "2026" look had no anti-aliasing at all
-    const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4 });
+    const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4, stencilBuffer: true }); // (stencil: the hero's silhouette)
     const c = (this.composer = new EffectComposer(this.renderer, rt));
     c.addPass(new RenderPass(scene, camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.35, 0.92);

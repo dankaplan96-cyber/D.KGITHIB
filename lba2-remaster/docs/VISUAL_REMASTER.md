@@ -109,9 +109,27 @@ really stood on the shop roof).
   and are unchanged.
 - Verified: see the test list in PROGRESS.md for this stage.
 
+## Stage 5
+- Coast check: shoreline captures were taken at six compass points (found from the terrain, not guessed).
+  - The coves have sand and foam.
+  - The cliff coast drops below the camera's line of sight, so the waterline rarely shows. No change made.
+  - The captures showed a real readability problem instead: trees, lamp posts and terrace edges hid Twinsen
+    completely from the exterior camera.
+- Occlusion silhouette: where something hides the player's character, a faint flat blue silhouette shows
+  through. Houses still fade as before.
+  - How it works: the body (and the eyes, the sword and the ball) writes 1 into the stencil where it is seen.
+    The silhouette, a second skinned mesh on the same skeleton, draws only where the depth test fails and the
+    stencil isn't 1, so the body never ghosts through itself or through what Twinsen holds.
+  - The composer's target now has a stencil buffer.
+  - It applies to Zoé's and the worker's bodies during their segments too (capture 11).
+- Idle: two more fidgets (a stretch, a glance at the sky), so a long idle repeats less. The existing ones are
+  look-around, weight shift and scratch head. Talk keeps its five gestures.
+- Verified: combat (22/22), chapters 1 and 5 pass. Standard captures (R11) show no change apart from the
+  silhouette where Twinsen is hidden; no page errors.
+
 ## Remaining (ranked)
 1. Cliff bases still slightly soft; shoreline and water edge.
-2. Animation polish (idle variations, talk gestures) — see the character guide's checklist.
+2. Animation polish beyond idle: turn-in-place steps, landing variety, NPC-specific idles.
 3. Draw calls: vegetation tiles (≈140 instanced calls in view, ≈110 in the shadow pass) could use larger
    tiles; the remaining loose props in island.js (station, depot, pipeline) could be merged like the harbour.
 4. Head outlines are still 7–11-sided at close-up range (shading is smooth; the outline is geometry).

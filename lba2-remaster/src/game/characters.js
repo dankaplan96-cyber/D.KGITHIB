@@ -1010,6 +1010,36 @@ function polyCharacter(L, def, P) {
   });
   return finishRig(L, def, root, mesh, bones, eyes);
 }
+// The player's character stays readable behind trees, walls and hills: where something hides the body, a faint
+// flat silhouette shows through. The body writes 1 into the stencil where it is visible; the silhouette is drawn
+// only where the depth test fails (something is in front) and the stencil is not 1, so the body never ghosts
+// through itself. (Needs the stencil buffer on the composer's target, see renderer.js.)
+// everything that belongs to the hero's body (and what he holds) marks itself in the stencil where it is seen
+export function writeBodyStencil(obj) {
+  obj.traverse((o) => {
+    if (!o.isMesh || o.material === silMat) return;
+    for (const m of [o.material].flat()) { m.stencilWrite = true; m.stencilRef = 1; m.stencilFunc = THREE.AlwaysStencilFunc; m.stencilZPass = THREE.ReplaceStencilOp; }
+  });
+}
+let silMat = null;
+export function addSilhouette(rig, color = '#3a6ab0') {
+  const mesh = rig?.mesh;
+  if (!mesh?.isSkinnedMesh || rig.silhouette) return;
+  // the eyes share one material with every character: the hero's get their own copy before it writes the stencil
+  for (const e of rig.j?.eyes || []) e.traverse((o) => { if (o.isMesh) o.material = o.material.clone(); });
+  writeBodyStencil(rig.root);
+  silMat ??= new THREE.MeshBasicMaterial({
+    color, transparent: true, opacity: 0.38, depthWrite: false, depthFunc: THREE.GreaterDepth, fog: false,
+    stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc,
+    stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp,
+  });
+  const sil = new THREE.SkinnedMesh(mesh.geometry, silMat);
+  sil.frustumCulled = false; sil.castShadow = false; sil.receiveShadow = false;
+  sil.renderOrder = 10;
+  mesh.add(sil);
+  sil.bind(mesh.skeleton, mesh.bindMatrix);
+  rig.silhouette = sil;
+}
 export async function preloadCharacters() {
   let names = ['twinsen'];
   try { const r = await fetch('assets/poly/index.json'); if (r.ok) names = await r.json(); } catch { /* twinsen only */ }
