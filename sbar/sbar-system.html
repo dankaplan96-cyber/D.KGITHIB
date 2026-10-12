@@ -8,6 +8,9 @@
 :root{--doc-font:"David","David Libre","Times New Roman",serif}
 .fit-inner tr.blank-row td.name::after{content:"\00a0"}
 .print-page.fitted{overflow:hidden}
+.shower-mark{display:block;font-size:7.5pt;font-weight:700;text-align:right;line-height:1.1;white-space:nowrap}
+.shower-report{direction:rtl;font-family:var(--doc-font);color:#000}.sr-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;margin-bottom:4mm;font-size:10pt}.sr-head>div:last-child{text-align:left}.sr-title{font-size:18pt;font-weight:900}.sr-table{width:100%;border-collapse:collapse;font-size:10pt}.sr-table th{background:#242424!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:1.5mm;border:1px solid #333}.sr-table td{border:1px solid #666;padding:1.2mm 1.5mm;text-align:center}.sr-table td.name{text-align:right;font-weight:700}.sr-table thead{display:table-header-group}.sr-table tr{break-inside:avoid}.sr-foot{margin-top:3mm;font-size:9pt}
+@media print{#printArea .shower-report{display:block}}
 .weekend-leave-table th.return-sun{color:#000!important}.weekend-leave-table th.return-sun .weekend-leave-sub{color:#333!important}
 *{box-sizing:border-box}
 body{margin:0}
@@ -564,6 +567,46 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
 .sbar-save-bar .grow{flex:1}
 @keyframes barIn{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
 
+/* v65 showers page */
+.shower-datebar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px;padding:10px 12px;background:#fff;border-radius:16px;box-shadow:var(--shadow)}
+.shower-date{display:flex;align-items:center;gap:10px;flex:1;justify-content:center;font-size:20px}
+.shower-date input{min-height:40px;border:1px solid var(--line-strong);border-radius:10px;padding:2px 8px}
+.shower-summary{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.sum-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:#fff;box-shadow:var(--shadow);font-weight:700}
+.sum-chip b{font-size:20px}
+.sum-chip.done{color:#1f6b45}.sum-chip.family{color:#2a5d9a}.sum-chip.refused{color:#9b2c2c}.sum-chip.wait{color:#8a5f00}
+.shower-noday{display:flex;align-items:center;gap:14px;padding:18px 20px;background:#fff4f2;border:2px solid #f0b9b0;border-radius:18px;font-size:19px;margin-bottom:12px}
+.shower-noday[hidden]{display:none}
+.shower-noday .big-ico{font-size:36px}
+.shower-list{display:grid;gap:10px}
+.shower-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 16px;background:#fff;border-radius:16px;box-shadow:var(--shadow);border-inline-start:6px solid #d5dee3;transition:box-shadow .15s}
+.shower-row.dirty{border-inline-start-color:#e3b93c;background:#fffbea}
+.shower-row.signed.done{border-inline-start-color:#2f9a63}.shower-row.signed.family{border-inline-start-color:#3b7fd0}.shower-row.signed.refused{border-inline-start-color:#c94b4b}
+.shower-who{display:flex;align-items:center;gap:12px;min-width:240px}
+.shower-btns{display:flex;gap:8px;flex-wrap:wrap}
+.shower-btn{min-height:50px;padding:6px 16px;border-radius:14px;border:2px solid #d5e0e5;background:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:transform .12s,box-shadow .15s,background .15s}
+.shower-btn:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(16,52,66,.12)}
+.shower-btn.done.on{background:linear-gradient(#e9f8ef,#cdeedb);border-color:#2f9a63;color:#165c33}
+.shower-btn.family.on{background:linear-gradient(#edf4ff,#d3e4fb);border-color:#3b7fd0;color:#174f8a}
+.shower-btn.refused.on{background:linear-gradient(#fff1f1,#fbd5d5);border-color:#c94b4b;color:#8b2929}
+.shower-btn.on{box-shadow:inset 0 0 0 1px currentColor}
+.shower-signed{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.shower-signed .st{font-size:17px;font-weight:800;padding:6px 14px;border-radius:999px}
+.shower-signed.done .st{background:var(--good-soft);color:var(--good)}.shower-signed.family .st{background:#e8f0fd;color:#2a5d9a}.shower-signed.refused .st{background:#fdeceb;color:#9b2c2c}
+.shower-signed .by{color:var(--muted);font-size:14px}
+.shower-others{margin-top:16px}
+.shower-others summary{cursor:pointer;font-weight:700;color:var(--muted);padding:10px 4px}
+.shower-others[hidden]{display:none}
+.shower-others .shower-row{opacity:.92}
+.shower-archive{margin-top:18px}
+.shower-archive .row-actions .grow{flex:1}
+.shower-arch-table{min-width:760px}
+.st-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:13px;background:#eef2f4}
+.st-pill.done{background:var(--good-soft);color:var(--good)}.st-pill.family{background:#e8f0fd;color:#2a5d9a}.st-pill.refused{background:#fdeceb;color:#9b2c2c}
+.sign-list{display:grid;gap:4px;margin-top:8px;max-height:220px;overflow:auto;font-size:15px}
+.sign-check{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:700;font-size:16px;cursor:pointer}
+.sign-check input{width:22px;height:22px}
+
 @media(max-width:900px){
   .beds{grid-template-columns:1fr!important}
   .beds .bed{border-inline-start:0;border-top:1px solid var(--line)}
@@ -623,6 +666,7 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
     <button class="tab active" data-view="rooms"><span class="tab-icon" aria-hidden="true">🛏️</span><span>חדרים ומטופלים</span></button>
     <button class="tab" data-view="sbar"><span class="tab-icon" aria-hidden="true">📋</span><span>SBAR</span></button>
     <button class="tab" data-view="vitals"><span class="tab-icon" aria-hidden="true">🌡️</span><span>סימנים חיוניים</span></button>
+    <button class="tab" data-view="showers"><span class="tab-icon" aria-hidden="true">🚿</span><span>רחצות</span><span class="archive-badge" id="showerCountTop">0</span></button>
     <button class="tab" data-view="print"><span class="tab-icon" aria-hidden="true">🖨️</span><span>הדפסה</span></button>
     <button class="tab" data-view="archive"><span class="tab-icon" aria-hidden="true">📦</span><span>ארכיון</span><span class="archive-badge" id="archiveCountTop">0</span></button>
     <button class="tab tab-settings" data-view="settings"><span class="tab-icon" aria-hidden="true">⚙️</span><span>הגדרות</span></button>
@@ -687,6 +731,38 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
     <p class="hint">הדף מיועד לכתיבה ביד. תא כהה = אין צורך למדוד באותה שעה. מדידת חום רקטלית מסומנת "PR" בתא החום; בכל השאר המדידה פומית (PO).</p>
     <div class="assignment-summary" id="vitalsAssignments"></div>
     <div class="table-wrap"><table class="preview-table" id="vitalsPreview"></table></div>
+  </section>
+
+  <section class="view" id="view-showers">
+    <div class="page-head">
+      <div><h2>רחצות</h2><p class="hint">רחצה יום כן ויום לא. בשבת ובחג אין רחצות, והן עוברות ליום הבא. האחות מסמנת וחותמת – והמערכת יודעת מי צריך רחצה מחר.</p></div>
+      <div class="page-actions"><button class="btn primary big" data-print="showers-day">🖨️ הדפס רשימה</button><button class="btn" id="showerArchiveToggle">📁 דוח וארכיון</button></div>
+    </div>
+    <div class="shower-datebar">
+      <button class="btn" id="showerPrevDay" aria-label="יום קודם">› יום קודם</button>
+      <div class="shower-date"><strong id="showerDateTitle"></strong><input type="date" id="showerDate" aria-label="תאריך רחצות"></div>
+      <button class="btn" id="showerNextDay" aria-label="יום הבא">יום הבא ‹</button>
+      <button class="btn small" id="showerToday">היום</button>
+      <button class="btn small" id="showerYesterday">אתמול (משמרת לילה)</button>
+    </div>
+    <div class="shower-summary" id="showerSummary"></div>
+    <div id="showerNoDay" class="shower-noday" hidden></div>
+    <div class="shower-list" id="showerList"></div>
+    <details class="shower-others" id="showerOthersWrap"><summary id="showerOthersTitle">מטופלים שלא צריכים רחצה ביום הזה</summary><div class="shower-list" id="showerOthers"></div></details>
+    <div class="sbar-save-bar" id="showerSignBar" hidden role="region" aria-live="polite"><span class="save-dot" aria-hidden="true">✍️</span><strong id="showerSignCount"></strong><span class="hint">צריך לחתום כדי לשמור</span><div class="grow"></div><button type="button" class="btn" id="showerDiscard">בטל סימונים</button><button type="button" class="btn primary big" id="showerSign">✍️ חתום ושמור</button></div>
+
+    <div class="info-card shower-archive" id="showerArchive" hidden>
+      <h3>דוח וארכיון רחצות <span class="hint">(נשמר שנה אחורה)</span></h3>
+      <div class="inline-form">
+        <div class="form-field"><label for="shArchFrom">מתאריך</label><input type="date" id="shArchFrom"></div>
+        <div class="form-field"><label for="shArchTo">עד תאריך</label><input type="date" id="shArchTo"></div>
+        <div class="form-field"><label for="shArchName">מטופל</label><input id="shArchName" placeholder="כל המטופלים"></div>
+        <div class="form-field"><label for="shArchStatus">סטטוס</label><select id="shArchStatus"><option value="">הכל</option><option value="done">התקלח/ה</option><option value="family">קולח/ה ע״י משפחה</option><option value="refused">סירב/ה</option></select></div>
+      </div>
+      <div class="row-actions"><button class="btn small" data-arch-range="7">7 ימים</button><button class="btn small" data-arch-range="30">30 יום</button><button class="btn small" data-arch-range="90">3 חודשים</button><button class="btn small" data-arch-range="365">שנה</button><div class="grow"></div><button class="btn" id="shArchCsv">⬇️ ייצוא לאקסל</button><button class="btn primary" id="shArchPrint">🖨️ הדפס דוח</button></div>
+      <div class="shower-summary" id="shArchSummary"></div>
+      <div class="table-wrap"><table class="preview-table shower-arch-table" id="shArchTable"></table></div>
+    </div>
   </section>
 
   <section class="view" id="view-print">
@@ -797,6 +873,13 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
           <label class="btn" for="importBackup">⬆️ טען גיבוי</label>
           <input id="importBackup" type="file" accept="application/json" hidden />
         </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>6. ימים ללא רחצות</h3>
+        <p class="hint">שבת וחגים (ראש השנה, יום כיפור, סוכות, שמחת תורה, פסח, שבועות) מחושבים אוטומטית. כאן מוסיפים ימים נוספים, למשל ערב חג או יום מיוחד.</p>
+        <div class="inline-form"><div class="form-field"><label for="showerNoDayInput">תאריך</label><input type="date" id="showerNoDayInput"></div><button class="btn" id="showerNoDayAdd" type="button">הוסף</button></div>
+        <div class="structure-summary" id="showerNoDayList"></div>
       </div>
 
       <div class="settings-section danger-zone">
@@ -939,6 +1022,17 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
     <div class="modal-foot"><button class="btn" id="cancelRestorePatient">ביטול</button><button class="btn primary" id="confirmRestorePatient">החזר למחלקה</button></div>
   </div>
 </div>
+<div class="modal-backdrop" id="showerSignModal" aria-hidden="true">
+  <div class="modal move-patient-modal">
+    <div class="modal-head"><h2>✍️ חתימת אחות</h2><button class="btn" id="showerSignClose">✕ סגור</button></div>
+    <div class="modal-body">
+      <div class="move-current-card" id="showerSignSummary"></div>
+      <div class="form-field full"><label for="showerSignName">שם האחות החותמת</label><input id="showerSignName" autocomplete="off" placeholder="שם מלא"></div>
+      <label class="sign-check"><input type="checkbox" id="showerSignConfirm"> אני מאשר/ת שהסימונים נכונים</label>
+    </div>
+    <div class="modal-foot"><button class="btn" id="showerSignCancel">ביטול</button><button class="btn primary big" id="showerSignConfirmBtn">✍️ חתום ושמור</button></div>
+  </div>
+</div>
 <div id="printArea"></div><div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -982,7 +1076,7 @@ function buildPatientsForLayout(layout,sourcePatients=[]){
 }
 function defaultState(){
   const roomLayout=[];
-  return {version:60,sourceSnapshotDate:SOURCE_SNAPSHOT_DATE,updatedAt:new Date().toISOString(),wardName:'מחלקה חדשה',reportDate:todayISO(),activeShift:'morning',shiftNurseCounts:emptyGroups(),roomLayout,roomMeta:defaultRoomMeta(roomLayout),shiftRoomSides:defaultRoomSides(roomLayout),showerStaffByDate:{},showerNursesByDate:{},showerDailyPlans:{},mobilityDailyPlans:{},archive:[],patients:[]}
+  return {version:60,sourceSnapshotDate:SOURCE_SNAPSHOT_DATE,updatedAt:new Date().toISOString(),wardName:'מחלקה חדשה',reportDate:todayISO(),activeShift:'morning',shiftNurseCounts:emptyGroups(),roomLayout,roomMeta:defaultRoomMeta(roomLayout),shiftRoomSides:defaultRoomSides(roomLayout),showerStaffByDate:{},showerNursesByDate:{},showerDailyPlans:{},mobilityDailyPlans:{},showerLog:[],showerNoDays:[],archive:[],patients:[]}
 }
 function detectedWardName(src,fallback=''){
   if(!src||typeof src!=='object')return fallback;
@@ -1007,7 +1101,7 @@ function normalize(s){
   const seen=new Set();layout=layout.filter(x=>x.room>0&&!seen.has(x.room)&&(seen.add(x.room),true)).sort((a,b)=>a.room-b.room);
   base.roomLayout=layout;base.patients=buildPatientsForLayout(layout,Array.isArray(s.patients)?s.patients:[]);
   base.version=60;base.updatedAt=s.updatedAt||base.updatedAt;base.wardName=detectedWardName(s,base.wardName)||base.wardName;base.reportDate=s.reportDate||base.reportDate;base.activeShift=SHIFTS.includes(s.activeShift)?s.activeShift:'morning';
-  base.showerStaffByDate=(s.showerStaffByDate&&typeof s.showerStaffByDate==='object')?s.showerStaffByDate:{};base.showerNursesByDate=(s.showerNursesByDate&&typeof s.showerNursesByDate==='object')?s.showerNursesByDate:{};base.showerDailyPlans=(s.showerDailyPlans&&typeof s.showerDailyPlans==='object')?s.showerDailyPlans:{};base.mobilityDailyPlans=(s.mobilityDailyPlans&&typeof s.mobilityDailyPlans==='object')?s.mobilityDailyPlans:{};
+  base.showerStaffByDate=(s.showerStaffByDate&&typeof s.showerStaffByDate==='object')?s.showerStaffByDate:{};base.showerNursesByDate=(s.showerNursesByDate&&typeof s.showerNursesByDate==='object')?s.showerNursesByDate:{};base.showerDailyPlans=(s.showerDailyPlans&&typeof s.showerDailyPlans==='object')?s.showerDailyPlans:{};base.mobilityDailyPlans=(s.mobilityDailyPlans&&typeof s.mobilityDailyPlans==='object')?s.mobilityDailyPlans:{};base.showerLog=Array.isArray(s.showerLog)?s.showerLog.filter(e=>e&&typeof e==='object'&&e.id&&e.date&&e.key):[];base.showerNoDays=Array.isArray(s.showerNoDays)?[...new Set(s.showerNoDays.filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)))].sort():[];
   base.archive=Array.isArray(s.archive)?s.archive.filter(x=>x&&typeof x==='object').map(x=>({...x,sex:['male','female'].includes(x.sex)?x.sex:'',isolation:!!x.isolation,isolationTypes:Array.isArray(x.isolationTypes)?x.isolationTypes.filter(v=>['contact','droplet','airborne','protective','other'].includes(v)):[],isolationOther:typeof x.isolationOther==='string'?x.isolationOther:'',isolationOrganisms:Array.isArray(x.isolationOrganisms)?x.isolationOrganisms.filter(v=>['CRE','VRE','MRSA','ESBL','CDI','CRAB','CRPA','MDRO','OTHER'].includes(v)):[],isolationOrganismOther:typeof x.isolationOrganismOther==='string'?x.isolationOrganismOther:'',glucoseScheduleMode:['daily','weekdays','interval'].includes(x.glucoseScheduleMode)?x.glucoseScheduleMode:'daily',glucoseWeekdays:Array.isArray(x.glucoseWeekdays)?x.glucoseWeekdays.map(Number).filter(v=>v>=0&&v<=6):[],glucoseEveryDays:Math.max(2,Math.min(90,Number(x.glucoseEveryDays)||2)),glucoseStartDate:typeof x.glucoseStartDate==='string'?x.glucoseStartDate:'',archivedAt:x.archivedAt||new Date().toISOString(),archiveReason:x.archiveReason||'אחר',archiveNote:x.archiveNote||''})):[];
   base.shiftNurseCounts=Object.assign(emptyGroups(),s.shiftNurseCounts||{});if(!s.shiftNurseCounts&&s.nurseCount)base.shiftNurseCounts.morning=Math.max(0,Math.min(10,Number(s.nurseCount)||0));SHIFTS.forEach(k=>base.shiftNurseCounts[k]=Math.max(0,Math.min(10,Number(base.shiftNurseCounts[k])||0)));
   const oldMeta=s.roomMeta||{};base.roomMeta=defaultRoomMeta(layout);for(const r of roomNumbersFrom(layout)){const m=oldMeta[r]||oldMeta[String(r)]||{};base.roomMeta[r]={gender:['male','female'].includes(m.gender)?m.gender:''}}
@@ -1572,8 +1666,8 @@ function renderSbar(force=false){
   list.querySelectorAll('[data-row-cancel]').forEach(b=>b.onclick=()=>discardSbarDraft(b.dataset.rowCancel));
   updateSbarDraftUI();
 }
-function renderAll(){reconcileAllRoomGenders();ensureAssignments();syncHeader();updateStats();renderRooms();renderVitals();renderSbar();renderArchive();renderRoomStructure();renderRoomConfig()}
-function setView(v,force=false){if(!force&&v!=='sbar'&&sbarDraftCount()&&$('#view-sbar')?.classList.contains('active')){resolveSbarDraftBefore('עבור למסך אחר').then(ok=>{if(ok)setView(v,true)});return}$$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$$('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+v));window.scrollTo({top:0});if(v==='vitals')renderVitals();if(v==='sbar')renderSbar();if(v==='archive')renderArchive()}
+function renderAll(){reconcileAllRoomGenders();ensureAssignments();syncHeader();updateStats();renderRooms();renderVitals();renderShowers();renderShowerNoDays();renderSbar();renderArchive();renderRoomStructure();renderRoomConfig()}
+function setView(v,force=false){if(!force&&v!=='showers'&&$('#view-showers')?.classList.contains('active')&&!resolveShowerDraftBefore())return;if(!force&&v!=='sbar'&&sbarDraftCount()&&$('#view-sbar')?.classList.contains('active')){resolveSbarDraftBefore('עבור למסך אחר').then(ok=>{if(ok)setView(v,true)});return}$$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$$('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+v));window.scrollTo({top:0});if(v==='vitals')renderVitals();if(v==='showers'){showerDate=showerDate||defaultShowerDate();renderShowers()}if(v==='sbar')renderSbar();if(v==='archive')renderArchive()}
 
 /* PRINT */
 function sbarCell(v,cls=''){return `<td class="${cls}">${esc(v||'')}</td>`}
@@ -1604,7 +1698,7 @@ function vitalPage(patients,nurseLabel,groupAware=true){
   const morning=state.activeShift==='morning',slots=Math.max(12,patients.length);
   let rowH;if(slots<=12)rowH=10.2;else if(slots<=14)rowH=8.8;else if(slots<=18)rowH=6.8;else if(slots<=24)rowH=5.1;else rowH=4.15;
   const notesH=Math.max(24,Math.min(78,166-(slots*rowH)));
-  let last=0,rows='';for(let i=0;i<slots;i++){const p=patients[i]||null,g=p?groupOf(p):0,start=!!(p&&groupAware&&g&&g!==last);if(g)last=g;const vitalCells=morning?(blankVitalsCells(p,'08')+blankVitalsCells(p,'12')):blankVitalsCells(p,state.activeShift==='evening'?'18':'night');const sideTag=p&&start?`<span class="group-mini">${sideName(g)}</span>`:'';const iso=p?vitalIsolationShort(p):'';rows+=`<tr class="${start?'group-start':''} ${p?'':'blank-row'}"><td>${p?`${p.room}${sideTag}`:''}</td><td class="name">${p?`${esc(p.name||'')}${iso?`<span class="vital-iso-short">${esc(iso)}</span>`:''}`:''}</td>${vitalCells}<td class="notes"></td></tr>`}
+  let last=0,rows='';for(let i=0;i<slots;i++){const p=patients[i]||null,g=p?groupOf(p):0,start=!!(p&&groupAware&&g&&g!==last);if(g)last=g;const vitalCells=morning?(blankVitalsCells(p,'08')+blankVitalsCells(p,'12')):blankVitalsCells(p,state.activeShift==='evening'?'18':'night');const sideTag=p&&start?`<span class="group-mini">${sideName(g)}</span>`:'';const iso=p?vitalIsolationShort(p):'';rows+=`<tr class="${start?'group-start':''} ${p?'':'blank-row'}"><td>${p?`${p.room}${sideTag}`:''}</td><td class="name">${p?`${esc(p.name||'')}${iso?`<span class="vital-iso-short">${esc(iso)}</span>`:''}`:''}</td>${vitalCells}<td class="notes">${showerVitalsMark(p)}</td></tr>`}
   return `<section class="print-page vitals-page" style="--row-h:${rowH}mm;--notes-h:${notesH}mm"><table class="print-table vitals-table">${vitalColgroup(morning)}${vitalHeader(morning,nurseLabel)}<tbody>${rows}</tbody></table><div class="lined-notes"></div><div class="vitals-footer"><span>משמרת <strong>${SHIFT_LABEL[state.activeShift]}</strong> · ${esc(state.wardName)}${state.activeShift==='morning'?' · 08:00 + 12:00':state.activeShift==='evening'?' · 18:00':' · לילה'}</span><span><strong>סה״כ מטופלים: ${patients.length}</strong></span></div></section>`;
 }
 function makeVitalsPrint(perNurse=true){
@@ -2125,7 +2219,7 @@ async function saveNetworkReport(filename,content,date=state.reportDate){
   if(!await ensureWorkingFolder(false))return false;
   try{await prepareSharedFolders();const dateDir=await reportsDirHandle.getDirectoryHandle(date,{create:true});await writeTextToDir(dateDir,filename,content);return true}catch(e){console.warn('Report save failed',e);setNetworkStatus('הדוח לא נשמר בתיקיית הרשת','warn');return false}
 }
-function reportFilenameFor(type){const shift=SHIFT_LABEL[state.activeShift];if(type==='tasks')return `משימות_${shift}.html`;if(type==='showers')return 'רחצה_יומי.html';if(type==='sbar'||type==='sbar-nurses')return `SBAR_${shift}.html`;if(type==='vitals'||type==='vitals-nurses')return `סימנים_${shift}.html`;if(type==='weekend-leave')return 'רשימת_יציאות_לחופש.html';if(type==='patients-by-room')return `רשימת_מטופלים_לפי_חדרים_${shift}.html`;return `דוח_${shift}.html`}
+function reportFilenameFor(type){if(type==='showers-day')return `רחצות_${showerDate||state.reportDate}.html`;if(type==='shower-report')return 'דוח_רחצות.html';const shift=SHIFT_LABEL[state.activeShift];if(type==='tasks')return `משימות_${shift}.html`;if(type==='showers')return 'רחצה_יומי.html';if(type==='sbar'||type==='sbar-nurses')return `SBAR_${shift}.html`;if(type==='vitals'||type==='vitals-nurses')return `סימנים_${shift}.html`;if(type==='weekend-leave')return 'רשימת_יציאות_לחופש.html';if(type==='patients-by-room')return `רשימת_מטופלים_לפי_חדרים_${shift}.html`;return `דוח_${shift}.html`}
 async function savePrintedReportToNetwork(type,title,content){if(!workingDirHandle)return;const full=standaloneReport(`${state.wardName} · ${title} · ${SHIFT_LABEL[state.activeShift]} · ${fmtDate(state.reportDate)}`,content);const ok=await saveNetworkReport(reportFilenameFor(type),full);if(ok)setNetworkStatus(`מסונכרן · דוח ${SHIFT_LABEL[state.activeShift]} נשמר`,'connected')}
 async function saveAllShiftReportsToNetwork(){
   if(!await ensureWorkingFolder(true))return;await networkSaveNow(false);if(networkConflict){alert('קיימת התנגשות מידע. יש לרענן לפני שמירת דפי המשמרת.');return}
@@ -2197,7 +2291,7 @@ function fitPrintPages(root){
   const prevStyle=root.getAttribute('style');let overflow=0;
   root.style.cssText='display:block;position:fixed;inset:0 auto auto 0;visibility:hidden;pointer-events:none;z-index:-1';
   for(const page of root.querySelectorAll('.print-page')){
-    const portrait=page.matches('.weekend-leave-page,.patient-room-page');
+    const portrait=page.matches('.weekend-leave-page,.patient-room-page,.shower-day-page');
     const W=portrait?210:297,H=portrait?296:209,pad=page.matches('.patient-room-page')?8:portrait?7:4;
     const maxZ=portrait?1.4:page.matches('.vitals-page')?1.5:1.9,minZ=0.45;
     let inner=page.querySelector(':scope>.fit-inner');
@@ -2221,11 +2315,118 @@ function fitPrintPages(root){
 }
 function doPrint(type){
   if(sbarDraftCount()){resolveSbarDraftBefore('הדפיס').then(ok=>{if(ok)doPrint(type)});return}
-  let html='',title='';if(type==='sbar'){html=makeSbarPrint(false);title='SBAR'}else if(type==='sbar-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeSbarPrint(true);title='SBAR לפי צדדים'}else if(type==='vitals-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeVitalsPrint(true);title=`סימנים ${SHIFT_LABEL[state.activeShift]}`}else if(type==='weekend-leave'){html=makeWeekendLeavePrint();title='רשימת יציאות לחופש'}else if(type==='patients-by-room'){html=makePatientsByRoomPrint();title='רשימת מטופלים'}else{html=makeVitalsPrint(false);title=`סימנים ${SHIFT_LABEL[state.activeShift]} מחלקתי`}
+  let html='',title='';if(type==='sbar'){html=makeSbarPrint(false);title='SBAR'}else if(type==='sbar-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeSbarPrint(true);title='SBAR לפי צדדים'}else if(type==='vitals-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeVitalsPrint(true);title=`סימנים ${SHIFT_LABEL[state.activeShift]}`}else if(type==='weekend-leave'){html=makeWeekendLeavePrint();title='רשימת יציאות לחופש'}else if(type==='patients-by-room'){html=makePatientsByRoomPrint();title='רשימת מטופלים'}else if(type==='showers-day'){html=makeShowerDayPrint();title='רשימת רחצות'}else{html=makeVitalsPrint(false);title=`סימנים ${SHIFT_LABEL[state.activeShift]} מחלקתי`}
   const area=$('#printArea');area.innerHTML=html;const overflow=fitPrintPages(area);if(overflow)toast('יש יותר מדי מידע לדף אחד – הדף יודפס על יותר מעמוד אחד');const old=document.title;document.title=`${state.wardName}_${title}_${state.reportDate}`;savePrintedReportToNetwork(type,title,area.innerHTML);setTimeout(()=>{window.print();setTimeout(()=>document.title=old,500)},80);
 }
 function exportBackup(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`גיבוי_${state.wardName}_${state.reportDate}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),800)}
 function importBackup(file){const r=new FileReader();r.onload=()=>{try{state=normalize(JSON.parse(r.result));save();redivideConfigured();renderAll();toast('הגיבוי נטען')}catch(e){alert('לא ניתן לקרוא את קובץ הגיבוי.')}};r.readAsText(file)}
+
+
+/* v65 — SHOWERS: every other day, never on Saturday / holiday (moves to the next day).
+   The nurse marks and signs; the signed log decides who needs a shower next. Log kept one year. */
+const SHOWER_STATUS={done:{label:'התקלח/ה',short:'בוצע',icon:'🚿',cls:'done'},family:{label:'קולח/ה ע״י משפחה',short:'משפחה',icon:'👨‍👩‍👧',cls:'family'},refused:{label:'סירב/ה',short:'סירב',icon:'✋',cls:'refused'}};
+const HOLIDAY_NAMES={'Tishri-1':'ראש השנה','Tishri-2':'ראש השנה','Tishri-10':'יום כיפור','Tishri-15':'סוכות','Tishri-22':'שמחת תורה','Nisan-15':'פסח','Nisan-21':'שביעי של פסח','Sivan-6':'שבועות'};
+const HEB_DATE_FMT=(()=>{try{return new Intl.DateTimeFormat('en-u-ca-hebrew',{month:'long',day:'numeric',timeZone:'UTC'})}catch(e){return null}})();
+function holidayName(iso){if(!HEB_DATE_FMT)return '';try{const parts=HEB_DATE_FMT.formatToParts(new Date(iso+'T12:00:00Z'));const m=parts.find(x=>x.type==='month')?.value,d=Number(parts.find(x=>x.type==='day')?.value);return HOLIDAY_NAMES[`${m}-${d}`]||''}catch(e){return ''}}
+function noShowerReason(iso){if(new Date(iso+'T12:00:00Z').getUTCDay()===6)return 'שבת';const h=holidayName(iso);if(h)return h;if((state.showerNoDays||[]).includes(iso))return 'יום ללא רחצות';return ''}
+function nextShowerDay(iso){let d=iso;for(let i=0;i<12&&noShowerReason(d);i++)d=addDaysISO(d,1);return d}
+function showerKey(p){return normalizePatientName(p.name)}
+function showerEventOn(p,date){const k=showerKey(p);return (state.showerLog||[]).find(e=>e.key===k&&e.date===date)||null}
+/* When is the patient due, looking only at what was signed BEFORE `date`. '' = no history → due now.
+   Showered / washed by family → in 2 days. Refused → offered again the next shower day. */
+function showerDueAsOf(p,date){
+  const k=showerKey(p),prev=(state.showerLog||[]).filter(e=>e.key===k&&e.date<date).sort((a,b)=>a.date.localeCompare(b.date)||String(a.at).localeCompare(String(b.at)));
+  const last=prev[prev.length-1];
+  if(!last)return p.lastShowerDate&&p.lastShowerDate<date?nextShowerDay(addDaysISO(p.lastShowerDate,2)):'';
+  return nextShowerDay(addDaysISO(last.date,last.status==='refused'?1:2));
+}
+function showerNeededOn(p,date){if(noShowerReason(date)||p.onLeave)return false;const due=showerDueAsOf(p,date);return !due||due<=date}
+function showerNextAfter(p,date){const ev=showerEventOn(p,date);if(ev)return nextShowerDay(addDaysISO(date,ev.status==='refused'?1:2));const due=showerDueAsOf(p,date);return due&&due>date?due:nextShowerDay(date)}
+let showerDate='',showerDraft={},showerArchiveOpen=false;
+function defaultShowerDate(){return new Date().getHours()<7?addDaysISO(todayISO(),-1):todayISO()} // after midnight the night nurse signs for "yesterday"
+function showerDraftCount(){return Object.keys(showerDraft).length}
+function showerRowHTML(p,needed){
+  const ev=showerEventOn(p,showerDate),draft=showerDraft[p.id],due=showerDueAsOf(p,showerDate),late=needed&&due&&due<showerDate,g=groupOf(p);
+  const tags=[late?`<span class="badge alert">באיחור מ־${esc(fmtDate(due))}</span>`:'',!needed&&!ev?`<span class="badge">רחצה הבאה: ${esc(fmtDate(showerNextAfter(p,showerDate)))}</span>`:'',p.isolation?'<span class="badge iso">בידוד</span>':''].join('');
+  let action;
+  if(ev&&!draft){const st=SHOWER_STATUS[ev.status]||SHOWER_STATUS.done;const t=ev.at?new Date(ev.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'';
+    action=`<div class="shower-signed ${st.cls}"><span class="st">${st.icon} ${esc(st.label)}</span><span class="by">✍️ ${esc(ev.by||'')}${t?` · ${t}`:''}</span><button type="button" class="link-btn" data-shower-fix="${p.id}">תיקון</button></div>`}
+  else action=`<div class="shower-btns">${Object.entries(SHOWER_STATUS).map(([k,st])=>`<button type="button" class="shower-btn ${st.cls} ${draft?.status===k?'on':''}" data-shower-mark="${p.id}" data-status="${k}" aria-pressed="${draft?.status===k}">${st.icon} ${esc(st.label)}</button>`).join('')}</div>`;
+  return `<div class="shower-row ${draft?'dirty':''} ${ev&&!draft?'signed '+(SHOWER_STATUS[ev.status]?.cls||''):''}"><div class="shower-who"><span class="avatar ${p.sex||''}" aria-hidden="true">${esc((p.name||'?').trim().charAt(0))}</span><div><div class="bed-name">${esc(p.name)}</div><div class="bed-sub">חדר ${p.room} · מיטה ${esc(p.bed)}${g>0?` · ${esc(sideName(g))}`:''}</div>${tags?`<div class="bed-badges">${tags}</div>`:''}</div></div>${action}</div>`;
+}
+function renderShowers(){
+  const host=$('#showerList');if(!host)return;
+  if(!showerDate)showerDate=defaultShowerDate();
+  const reason=noShowerReason(showerDate),pts=activePatients().filter(p=>!p.onLeave);
+  $('#showerDate').value=showerDate;$('#showerDateTitle').textContent=`${hebDay(showerDate)} · ${fmtDate(showerDate)}${showerDate===todayISO()?' · היום':showerDate===addDaysISO(todayISO(),-1)?' · אתמול':''}`;
+  const listed=pts.filter(p=>showerNeededOn(p,showerDate)||showerEventOn(p,showerDate)||showerDraft[p.id]);
+  const others=pts.filter(p=>!listed.includes(p));
+  const signed=listed.map(p=>showerEventOn(p,showerDate)).filter(Boolean),count=k=>signed.filter(e=>e.status===k).length;
+  const waiting=listed.filter(p=>!showerEventOn(p,showerDate)).length;
+  $('#showerSummary').innerHTML=reason?'':`<span class="sum-chip"><b>${listed.length}</b> ברשימה</span><span class="sum-chip done"><b>${count('done')}</b> התקלחו</span><span class="sum-chip family"><b>${count('family')}</b> ע״י משפחה</span><span class="sum-chip refused"><b>${count('refused')}</b> סירבו</span><span class="sum-chip wait"><b>${waiting}</b> ממתינים לסימון</span>`;
+  const nd=$('#showerNoDay');nd.hidden=!reason;nd.innerHTML=reason?`<span class="big-ico" aria-hidden="true">🛑</span><div><strong>${esc(reason)} – אין רחצות ביום הזה.</strong><div class="hint">מי שהיה צריך רחצה היום יופיע ברשימה של יום הרחצה הבא: ${esc(hebDay(nextShowerDay(showerDate)))} ${esc(fmtDate(nextShowerDay(showerDate)))}.</div></div>`:'';
+  host.innerHTML=reason?'':(listed.map(p=>showerRowHTML(p,showerNeededOn(p,showerDate))).join('')||'<div class="archive-empty">אין מטופלים שצריכים רחצה ביום הזה 🎉</div>');
+  $('#showerOthersWrap').hidden=!!reason||!others.length;$('#showerOthersTitle').textContent=`מטופלים שלא צריכים רחצה ביום הזה (${others.length}) – אפשר לסמן גם אותם`;
+  $('#showerOthers').innerHTML=reason?'':others.map(p=>showerRowHTML(p,false)).join('');
+  const n=showerDraftCount();$('#showerSignBar').hidden=!n;$('#showerSignCount').textContent=n===1?'סימון אחד ממתין לחתימה':`${n} סימונים ממתינים לחתימה`;
+  const today=todayISO(),dueToday=noShowerReason(today)?0:activePatients().filter(p=>!p.onLeave&&showerNeededOn(p,today)&&!showerEventOn(p,today)).length;$('#showerCountTop').textContent=dueToday;
+  $$('#view-showers [data-shower-mark]').forEach(b=>b.onclick=()=>{const id=b.dataset.showerMark,st=b.dataset.status;if(showerDraft[id]?.status===st)delete showerDraft[id];else showerDraft[id]={status:st};renderShowers()});
+  $$('#view-showers [data-shower-fix]').forEach(b=>b.onclick=()=>{const p=state.patients.find(x=>x.id===b.dataset.showerFix);if(!p)return;const ev=showerEventOn(p,showerDate);if(!ev)return;
+    if(!confirm(`לבטל את הסימון "${SHOWER_STATUS[ev.status]?.label}" של ${p.name} מ־${fmtDate(showerDate)}?\nאחר כך אפשר לסמן מחדש ולחתום.`))return;
+    if(!requireNetworkReady('תיקון סימון רחצה'))return;state.showerLog=(state.showerLog||[]).filter(e=>e.id!==ev.id);save();renderShowers();toast('הסימון בוטל – אפשר לסמן מחדש')});
+  if(showerArchiveOpen)renderShowerArchive();
+}
+function openShowerSign(){
+  const items=Object.entries(showerDraft).map(([id,d])=>({p:state.patients.find(x=>x.id===id),st:SHOWER_STATUS[d.status]})).filter(x=>x.p);
+  if(!items.length)return;
+  $('#showerSignSummary').innerHTML=`<div class="move-name">${esc(hebDay(showerDate))} ${esc(fmtDate(showerDate))} · ${items.length} מטופלים</div><div class="sign-list">${items.map(x=>`<div>${x.st.icon} <strong>${esc(x.p.name)}</strong> – ${esc(x.st.label)}</div>`).join('')}</div>`;
+  $('#showerSignName').value=safeLocalGet('sbarShowerNurse')||'';$('#showerSignConfirm').checked=false;
+  $('#showerSignModal').classList.add('open');$('#showerSignModal').setAttribute('aria-hidden','false');setTimeout(()=>$('#showerSignName').focus(),30);
+}
+function closeShowerSign(){$('#showerSignModal').classList.remove('open');$('#showerSignModal').setAttribute('aria-hidden','true')}
+function signShowers(){
+  const name=$('#showerSignName').value.trim();
+  if(name.length<2){alert('יש להקליד את שם האחות החותמת.');$('#showerSignName').focus();return}
+  if(!$('#showerSignConfirm').checked){alert('יש לסמן “אני מאשר/ת שהסימונים נכונים”.');return}
+  if(!requireNetworkReady('חתימה על רחצות'))return;
+  const now=new Date().toISOString(),cutoff=addDaysISO(todayISO(),-366);let n=0;
+  state.showerLog=(state.showerLog||[]).filter(e=>e.date>=cutoff); // archive keeps one year
+  for(const [id,d] of Object.entries(showerDraft)){const p=state.patients.find(x=>x.id===id);if(!p||!hasPatient(p))continue;const key=showerKey(p);
+    state.showerLog=state.showerLog.filter(e=>!(e.key===key&&e.date===showerDate));
+    state.showerLog.push({id:`sh_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,date:showerDate,key,name:p.name,room:p.room,bed:p.bed,status:d.status,by:name,at:now});n++}
+  safeLocalSet('sbarShowerNurse',name);showerDraft={};closeShowerSign();if(!save())return;renderShowers();toast(`נחתם ונשמר: ${n} מטופלים`);
+}
+function resolveShowerDraftBefore(){const n=showerDraftCount();if(!n)return true;if(confirm(`יש ${n===1?'סימון רחצה אחד':n+' סימוני רחצה'} שלא נחתמו.\n\nאישור = לבטל את הסימונים ולהמשיך\nביטול = להישאר ולחתום`)){showerDraft={};return true}return false}
+/* archive & report */
+function showerArchiveRows(){
+  const from=$('#shArchFrom').value||'0000',to=$('#shArchTo').value||'9999',q=normalizePatientName($('#shArchName').value),st=$('#shArchStatus').value;
+  return (state.showerLog||[]).filter(e=>e.date>=from&&e.date<=to&&(!q||e.key.includes(q))&&(!st||e.status===st)).sort((a,b)=>b.date.localeCompare(a.date)||Number(a.room)-Number(b.room));
+}
+function showerTime(e){return e.at?new Date(e.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):''}
+function renderShowerArchive(){
+  if(!$('#shArchFrom').value){$('#shArchFrom').value=addDaysISO(todayISO(),-30);$('#shArchTo').value=todayISO()}
+  const rows=showerArchiveRows(),c=k=>rows.filter(e=>e.status===k).length;
+  $('#shArchSummary').innerHTML=`<span class="sum-chip"><b>${rows.length}</b> רשומות</span><span class="sum-chip done"><b>${c('done')}</b> התקלחו</span><span class="sum-chip family"><b>${c('family')}</b> ע״י משפחה</span><span class="sum-chip refused"><b>${c('refused')}</b> סירבו</span>`;
+  $('#shArchTable').innerHTML=`<thead><tr><th style="width:13%">תאריך</th><th style="width:9%">יום</th><th style="width:7%">חדר</th><th>מטופל</th><th style="width:20%">סטטוס</th><th style="width:18%">נחתם ע״י</th><th style="width:9%">שעה</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${esc(fmtDate(e.date))}</td><td>${esc(hebDay(e.date))}</td><td>${esc(e.room)}</td><td class="name">${esc(e.name)}</td><td><span class="st-pill ${SHOWER_STATUS[e.status]?.cls||''}">${SHOWER_STATUS[e.status]?.icon||''} ${esc(SHOWER_STATUS[e.status]?.label||e.status)}</span></td><td>${esc(e.by||'')}</td><td>${esc(showerTime(e))}</td></tr>`).join('')||'<tr><td colspan="7" style="height:60px">אין רשומות בטווח שנבחר</td></tr>'}</tbody>`;
+}
+function exportShowerCsv(){
+  const rows=showerArchiveRows(),cell=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const lines=[['תאריך','יום','חדר','מיטה','מטופל','סטטוס','נחתם ע״י','שעת חתימה'].map(cell).join(',')].concat(rows.map(e=>[fmtDate(e.date),hebDay(e.date),e.room,e.bed,e.name,SHOWER_STATUS[e.status]?.label||e.status,e.by,e.at?new Date(e.at).toLocaleString('he-IL'):''].map(cell).join(',')));
+  const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`רחצות_${state.wardName}_${$('#shArchFrom').value}_${$('#shArchTo').value}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),800);
+}
+function printShowerReport(){
+  const rows=showerArchiveRows();
+  const html=`<style>@page{size:A4 portrait;margin:10mm}</style><section class="shower-report"><div class="sr-head"><div><strong>${esc(state.wardName)}</strong></div><div class="sr-title">דוח רחצות</div><div>${esc(fmtDate($('#shArchFrom').value))} – ${esc(fmtDate($('#shArchTo').value))}</div></div><table class="sr-table"><thead><tr><th>תאריך</th><th>יום</th><th>חדר</th><th>מטופל</th><th>סטטוס</th><th>נחתם ע״י</th><th>שעה</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${esc(fmtDate(e.date))}</td><td>${esc(hebDay(e.date))}</td><td>${esc(e.room)}</td><td class="name">${esc(e.name)}</td><td>${esc(SHOWER_STATUS[e.status]?.label||e.status)}</td><td>${esc(e.by||'')}</td><td>${esc(showerTime(e))}</td></tr>`).join('')||'<tr><td colspan="7">אין רשומות</td></tr>'}</tbody></table><div class="sr-foot">סה״כ ${rows.length} רשומות · הופק ${esc(new Date().toLocaleString('he-IL'))}</div></section>`;
+  $('#printArea').innerHTML=html;savePrintedReportToNetwork('shower-report','דוח רחצות',html);setTimeout(()=>window.print(),80);
+}
+function makeShowerDayPrint(){
+  const date=showerDate||defaultShowerDate(),reason=noShowerReason(date);
+  const pts=reason?[]:activePatients().filter(p=>!p.onLeave&&(showerNeededOn(p,date)||showerEventOn(p,date)));
+  const rows=pts.map(p=>{const ev=showerEventOn(p,date);const box=k=>ev?.status===k?'☑':'☐';return `<tr><td>${esc(p.room)}</td><td>${esc(p.bed)}</td><td class="name">${esc(p.name)}</td><td class="check">${box('done')}</td><td class="check">${box('family')}</td><td class="check">${box('refused')}</td><td></td></tr>`}).join('')||`<tr><td colspan="7" class="weekend-leave-empty">${reason?esc(reason)+' – אין רחצות':'אין מטופלים לרחצה'}</td></tr>`;
+  return `<style>@page{size:A4 portrait;margin:0}@media print{html,body{width:210mm!important;height:auto!important}}</style><section class="print-page weekend-leave-page shower-day-page"><div class="weekend-leave-head"><div class="date">${esc(hebDay(date))} ${esc(fmtDate(date))}</div><div class="title">רשימת רחצות</div><div class="ward">${esc(state.wardName)}</div></div><table class="weekend-leave-table"><colgroup><col style="width:8%"><col style="width:7%"><col style="width:31%"><col style="width:11%"><col style="width:11%"><col style="width:11%"><col style="width:21%"></colgroup><thead><tr><th>חדר</th><th>מיטה</th><th>מטופל</th><th>התקלח/ה</th><th>ע״י משפחה</th><th>סירב/ה</th><th>הערות</th></tr></thead><tbody>${rows}</tbody></table><div class="weekend-leave-sign"><span>סה״כ: ${pts.length}</span><span>שם האחות: ____________________ חתימה: ______________</span></div></section>`;
+}
+function showerVitalsMark(p){if(!p)return '';const date=state.reportDate;if(noShowerReason(date)||!(showerNeededOn(p,date)||showerEventOn(p,date)))return '';const ev=showerEventOn(p,date);return `<span class="shower-mark">רחצה: ${ev?`<b>${esc(SHOWER_STATUS[ev.status]?.short||'')} ✓</b>`:'☐ בוצע ☐ משפחה ☐ סירב'}</span>`}
+function renderShowerNoDays(){const host=$('#showerNoDayList');if(!host)return;const list=state.showerNoDays||[];host.innerHTML=list.map(d=>`<span class="structure-pill">${esc(fmtDate(d))} <button type="button" class="danger-link" data-del-noday="${d}" aria-label="הסר">✕</button></span>`).join('')||'<span class="hint">לא הוגדרו ימים נוספים</span>';host.querySelectorAll('[data-del-noday]').forEach(b=>b.onclick=()=>{if(!requireNetworkReady('עדכון ימים ללא רחצות'))return;state.showerNoDays=(state.showerNoDays||[]).filter(x=>x!==b.dataset.delNoday);save();renderShowerNoDays();renderShowers()})}
 
 /* Font: one family for screen and print, chosen per workstation */
 const FONT_STACKS={david:'"David","David Libre","Times New Roman",serif',calibri:'Calibri,Carlito,"Segoe UI",Arial,sans-serif',arial:'Arial,"Segoe UI",sans-serif'};
@@ -2235,6 +2436,18 @@ $('#fontChoice').onchange=e=>{safeLocalSet('sbarFontChoice',applyFont(e.target.v
 
 $('#sbarList').addEventListener('focusout',()=>setTimeout(()=>{if(sbarRenderPending&&!$('#sbarList').contains(document.activeElement))renderSbar()},0));
 $('#sbarSaveAll').onclick=()=>commitSbarDraft();$('#sbarDiscardAll').onclick=()=>{if(confirm('לבטל את כל השינויים שלא אושרו?'))discardSbarDraft()};
+$('#showerPrevDay').onclick=()=>{if(!resolveShowerDraftBefore())return;showerDate=addDaysISO(showerDate||defaultShowerDate(),-1);renderShowers()};
+$('#showerNextDay').onclick=()=>{if(!resolveShowerDraftBefore())return;showerDate=addDaysISO(showerDate||defaultShowerDate(),1);renderShowers()};
+$('#showerToday').onclick=()=>{if(!resolveShowerDraftBefore())return;showerDate=todayISO();renderShowers()};
+$('#showerYesterday').onclick=()=>{if(!resolveShowerDraftBefore())return;showerDate=addDaysISO(todayISO(),-1);renderShowers()};
+$('#showerDate').onchange=e=>{if(!e.target.value)return;if(!resolveShowerDraftBefore()){e.target.value=showerDate;return}showerDate=e.target.value;renderShowers()};
+$('#showerSign').onclick=openShowerSign;$('#showerDiscard').onclick=()=>{if(confirm('לבטל את כל הסימונים שלא נחתמו?')){showerDraft={};renderShowers()}};
+$('#showerSignConfirmBtn').onclick=signShowers;$('#showerSignCancel').onclick=closeShowerSign;$('#showerSignClose').onclick=closeShowerSign;$('#showerSignName').onkeydown=e=>{if(e.key==='Enter')signShowers()};
+$('#showerArchiveToggle').onclick=()=>{showerArchiveOpen=!showerArchiveOpen;$('#showerArchive').hidden=!showerArchiveOpen;if(showerArchiveOpen){renderShowerArchive();$('#showerArchive').scrollIntoView({behavior:'smooth',block:'start'})}};
+['#shArchFrom','#shArchTo','#shArchStatus'].forEach(id=>$(id).onchange=renderShowerArchive);$('#shArchName').oninput=renderShowerArchive;
+$$('[data-arch-range]').forEach(b=>b.onclick=()=>{$('#shArchFrom').value=addDaysISO(todayISO(),-Number(b.dataset.archRange));$('#shArchTo').value=todayISO();renderShowerArchive()});
+$('#shArchCsv').onclick=exportShowerCsv;$('#shArchPrint').onclick=printShowerReport;
+$('#showerNoDayAdd').onclick=()=>{const d=$('#showerNoDayInput').value;if(!d)return;if(!requireNetworkReady('עדכון ימים ללא רחצות'))return;state.showerNoDays=[...new Set([...(state.showerNoDays||[]),d])].sort();save();$('#showerNoDayInput').value='';renderShowerNoDays();renderShowers();toast(`${fmtDate(d)} נוסף כיום ללא רחצות`)};
 /* UI events */
 $('#countButtons').innerHTML=Array.from({length:10},(_,i)=>`<button class="count-btn" data-count="${i+1}">${i+1}</button>`).join('');
 $$('.tab').forEach(b=>b.onclick=()=>setView(b.dataset.view));
@@ -2261,7 +2474,7 @@ $('#resetAll').onclick=()=>{if(confirm('איפוס מלא ימחק את מבנה
 
 /* Hidden render helper for layout verification: ?render=sbar|vitals-ward|vitals-nurses&demo=1&shift=morning */
 function demoData(){state=defaultState();syncStructureState(Array.from({length:15},(_,i)=>({room:i+1,beds:2})),false);state.showerStaffByDate[state.reportDate]='מרים, יוסי, נעמה';state.showerNursesByDate[state.reportDate]='דנה, רונית';state.activeShift=new URLSearchParams(location.search).get('shift')||'morning';for(let i=0;i<state.patients.length;i++){const p=state.patients[i];p.name=`מטופל ${i+1}`;p.age=30+(i%50);p.situation='שיקום לאחר פגיעה אורתופדית / נוירולוגית, המשך טיפול ומעקב במחלקת שיקום';p.background='יתר לחץ דם, סוכרת ומחלות רקע נוספות לפי הצורך';p.assessment='מתנייד בתמיכת אביזר עזר, מעברים בהשגחה או בעזרה קלה';p.education=i%4===0?'הדרכה למעברים':'';p.urine=i%6===0?'חלקית':'מלאה';p.bowel=i%7===0?'חלקית':'מלאה';p.notes=i%5===0?'הערה חשובה להמשך מעקב':'';p.glucoseRequired=i%3===0;p.glucoseChecks=p.glucoseRequired?(i%3)+1:0;p.glucosePattern=p.glucoseChecks===1?'08':p.glucoseChecks===2?'08,18':p.glucoseChecks===3?'08,12,18':'';p.isolation=false;p.outOfBedRequired=i%6!==0;p.outOfBedAssist=['independent','supervision','light','one','two','hoist'][i%6];p.showerAssist=['two','medium','light','supervision','independent'][i%5];const d=dateObj(state.reportDate);d.setDate(d.getDate()-(i%4+1));p.lastShowerDate=dateISO(d)}state.roomMeta[2]={gender:'male'};state.roomMeta[3]={gender:'female'};dividePatients(state.activeShift,4,false)}
-window.addEventListener('beforeunload',e=>{if(networkDirty||hasNetworkPending()||sbarDraftCount()){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if(networkDirty||hasNetworkPending()||sbarDraftCount()||showerDraftCount()){e.preventDefault();e.returnValue='';}});
 const qs=new URLSearchParams(location.search);if(qs.get('demo')==='1')demoData();renderAll();setView('rooms');networkInit();
 if(qs.get('render')){const r=qs.get('render');if(r==='sbar')$('#printArea').innerHTML=makeSbarPrint(false);if(r==='sbar-nurses')$('#printArea').innerHTML=makeSbarPrint(true);if(r==='vitals-ward')$('#printArea').innerHTML=makeVitalsPrint(false);if(r==='vitals-nurses')$('#printArea').innerHTML=makeVitalsPrint(true);if(r==='weekend-leave')$('#printArea').innerHTML=makeWeekendLeavePrint();if(r==='patients-by-room')$('#printArea').innerHTML=makePatientsByRoomPrint()}
 })();
