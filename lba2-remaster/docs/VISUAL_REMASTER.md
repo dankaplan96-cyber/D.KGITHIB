@@ -83,9 +83,35 @@ really stood on the shop roof).
 - Verified: chapters 6, 7, 9 and 10 and combat (22/22) pass after these changes; no page errors in the region
   captures.
 
+## Stage 4
+- Draw calls at the Citadel. These are counted per object in the main pass and the sun's shadow pass;
+  the shadow pass was the larger.
+  - The harbour (quay, shed, rack, lamps, beds, barrels, crates, bitts) is merged per material. Parts that
+    move or toggle are marked `userData.keep`, which `mergeStatic` now honours on ancestors: the fishing boat
+    and the ferry each bob as a whole and are merged within their own groups, and the story toggles the
+    Esmer cargo. The harbour went from ≈335 calls to ≈117.
+  - Picket fences were one mesh per picket and per tip (≈100 calls). Each run is now merged (2–3 calls).
+  - The town's street dressing is one merged group: lamps, benches, pots, barrels, signs, tools, the radio,
+    low walls and curbs. The laundry line stays separate.
+  - Small props (under 2 m across) stop casting into the shadow map beyond 24 m from Twinsen, with 2 m of
+    hysteresis. Positions are read live, so moving props are handled. Their shadows there are a few texels
+    wide.
+  - Measured (software GL, same frames as the baseline captures), no visible change (R6 vs R9):
+
+    | View | Before | After |
+    |---|---|---|
+    | Street | 1,053 | 767 |
+    | Square | 773 (after the shadow step only; no earlier measurement) | 618 |
+    | Harbour | 1,103 | 623 |
+- Faces at close range: the head shells' smoothing angle is raised (Twinsen 60° → 85°, the cast 50–55° → 80°).
+  The shading no longer breaks into flat planes across the cheeks and jaw. The silhouette is unchanged,
+  including LBA2's wedge-shaped head and short snout (captures 09, 10). The Grobos' heads use another path
+  and are unchanged.
+- Verified: see the test list in PROGRESS.md for this stage.
+
 ## Remaining (ranked)
-1. Draw calls (~1,050 outdoors at the Citadel, half from the shadow pass): merge small static props, trim
-   shadow casters.
-2. Faces: heads are still faceted at close range (fine at game distance).
-3. Cliff bases still slightly soft; shoreline and water edge.
-4. Animation polish (idle variations, talk gestures) — see the character guide's checklist.
+1. Cliff bases still slightly soft; shoreline and water edge.
+2. Animation polish (idle variations, talk gestures) — see the character guide's checklist.
+3. Draw calls: vegetation tiles (≈140 instanced calls in view, ≈110 in the shadow pass) could use larger
+   tiles; the remaining loose props in island.js (station, depot, pipeline) could be merged like the harbour.
+4. Head outlines are still 7–11-sided at close-up range (shading is smooth; the outline is geometry).

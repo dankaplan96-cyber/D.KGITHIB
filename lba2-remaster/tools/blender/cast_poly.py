@@ -269,7 +269,7 @@ def build(name):
             h = resample(half, K)
             pts = [(x * sx_, my(y), mz(z)) for x, z in h] + [(-x * sx_, my(y), mz(z)) for x, z in reversed(h[1:-1])]
             rr.append(pts)
-        hp = b.P('head', skin, head_w, 50)
+        hp = b.P('head', skin, head_w, 80)
         loft(hp, rr)
         n = len(rr[0])
         o = len(hp.v)
@@ -376,7 +376,7 @@ def build(name):
             sphere(hh_, (0, my(0.935), mz(0.06)), 0.085 * sx_, 10, 6, (1.0, 0.75, 1.05))
             disc(hh_, (0, my(0.925), mz(0.08)), 0.1 * sx_, 12, 'y', 0.01)
     elif bunny:
-        hp = b.P('head', skin, head_w, 55)
+        hp = b.P('head', skin, head_w, 80)
         c = (0, Hc[1] - 0.05, Hc[2])
         sphere(hp, c, hw * 0.95, 10, 8, (1.0, 1.05, 1.05))
         sphere(hp, (0, c[1] - hh * 0.32, c[2] + hd_ * 0.72), hw * 0.55, 8, 6, (1.0, 0.7, 0.85))
@@ -398,7 +398,7 @@ def build(name):
                     pts.append((cc[0] + math.cos(t) * hw * 0.3, cc[1] + math.sin(t) * hw * 0.26, cc[2]))
                 strip(gl, pts, 0.006, (0, 0, 0))
     elif grobo:
-        hp = b.P('head', skin, head_w, 55)
+        hp = b.P('head', skin, head_w, 80)
         c = (0, Hc[1], Hc[2] + 0.02)
         sphere(hp, c, hw * 1.05, 10, 8, (1.0, 1.0, 1.05))
         tr = b.P('trunk', skin, head_w, 55)
@@ -423,7 +423,7 @@ def build(name):
             sphere(hm, (0, c[1] + hh * 0.25, c[2] - 0.01), hw * 1.12, 10, 6, (1.0, 0.8, 1.05))
             box(b.P('visor', '#1a2830', head_w, 30), -hw * 0.75, hw * 0.75, c[1] + hh * 0.38, c[1] + hh * 0.55, c[2] + hd_ * 0.85, c[2] + hd_ * 1.02)
     else:  # esmer: a tall egg head, small pointed ears, a ridge over the crown
-        hp = b.P('head', skin, head_w, 55)
+        hp = b.P('head', skin, head_w, 80)
         c = (0, Hc[1] + hh * 0.15, Hc[2])
         sphere(hp, c, hw * 0.95, 10, 8, (1.0, 1.45, 1.0))
         sphere(hp, (0, c[1] - hh * 0.55, c[2] + hd_ * 0.45), hw * 0.62, 8, 6, (1.0, 0.7, 0.9))

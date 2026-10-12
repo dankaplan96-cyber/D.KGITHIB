@@ -9,7 +9,8 @@ export function mergeStatic(group, { minParts = 2 } = {}) {
   const inv = new THREE.Matrix4().copy(group.matrixWorld).invert();
   const buckets = new Map();
   group.traverse((o) => {
-    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material) || o.userData.keep) return;
+    if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || Array.isArray(o.material)) return;
+    for (let p = o; p && p !== group; p = p.parent) if (p.userData.keep) return; // a part (or subtree) that moves or toggles
     const g = o.geometry, names = Object.keys(g.attributes).sort();
     if (g.morphAttributes && Object.keys(g.morphAttributes).length) return;
     if (o.matrixWorld.determinant() * group.matrixWorld.determinant() < 0) return; // mirrored: winding would flip

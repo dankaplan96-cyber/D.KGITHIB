@@ -330,7 +330,7 @@ def head_ring(y, half):
     return pts
 
 
-head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=60, big=True)
+head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=85, big=True)  # (smooth shading across the cheek corners; the silhouette keeps its LBA2 wedge)
 # smoother than the original: 11 points per half section, and a blended section between each measured pair
 K = 11
 FINE = []

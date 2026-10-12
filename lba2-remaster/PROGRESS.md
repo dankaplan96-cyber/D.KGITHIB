@@ -128,3 +128,24 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   - The ball used the character step-up rule against walls, so the top 0.55 m of a wall let it through.
   - Switches weren't auto-aimed after the stricter collision (the chapter 5 hatch).
 - Not verified: feel with a real gamepad or touch screen, sound by ear, real-GPU frame rate.
+
+## Session: visual remaster (headless Chromium + SwiftShader; log and captures in docs/VISUAL_REMASTER.md)
+- Stages 1–4 cover:
+  - **Image quality:** MSAA in the post chain, shadow texel snapping, shadow quality per setting.
+  - **Characters:** Twinsen and the cast rebuilt (eyes, hands, cuffs, shoes, hair, folds); smooth face
+    shading at close range.
+  - **Materials:** warmer grass, softer cliff feet, single-hue plank and tile variation.
+  - **Distance detail:** trees, rocks and pines at the Citadel and in the regions.
+  - **Draw calls:** the harbour, fences and street dressing merged; small far props no longer cast shadows.
+  - **Places:** Lhar's village square, the council chamber and Desert Island's dune colouring.
+- Measured (software GL):
+  - Citadel street: 3.63 M → 2.2 M triangles, 1,177 → 767 draw calls.
+  - Harbour: 1,103 → 623 draw calls.
+  - Hamalayi: 2.64 M → 0.52 M triangles.
+  - Desert Island: 0.93 M → 0.30 M triangles.
+- Verified after stages 3–4:
+  - tests/prologue, chapter1, chapter3, chapter6, chapter7, chapter8, chapter9, chapter10 and combat (22/22)
+    pass.
+  - The baseline and region captures show no page errors.
+- Not verified: real-GPU frame rate, close-up faces in motion (only stills), feel of the new lighting on a
+  real display.

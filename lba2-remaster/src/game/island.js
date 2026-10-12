@@ -12,6 +12,7 @@ import { sculptRigid } from '../engine/sculpt.js';
 import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
 import { buildHouse } from './architecture.js';
+import { mergeStatic } from '../engine/merge.js';
 import { t } from './i18n.js';
 import './text/world.js';
 
@@ -550,8 +551,13 @@ function buildHarbour(W, root, r) {
     const cargoCols = [];
     const cargo = techCrates(W, g, [[-71.4, -7.6, 2, 0.9], [-72.4, -8.4, 1, 0.9], [-70.4, -8.3, 1, 0.8]], r, cargoCols);
     W.harbour = { cargo, setCargo(on) { cargo.visible = on; cargoCols.forEach((c) => (c.enabled = on)); } };
+    cargo.userData.keep = true;
   }
   B.build();
+  // everything else on the quay is static: one mesh per material (≈335 → ≈60 draw calls with shadows)
+  // (the boat and the ferry bob as a whole, so each is merged within its own group)
+  W.fishingBoat.userData.keep = true; W.ferry.group.userData.keep = true;
+  mergeStatic(g); mergeStatic(W.fishingBoat); mergeStatic(W.ferry.group);
 }
 
 // ------------------------------------------------------------------ hull

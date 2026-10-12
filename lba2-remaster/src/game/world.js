@@ -480,12 +480,35 @@ export function buildWorld(parentScene) {
     }
     return out;
   };
+  // shadow distance: small props (lamp posts, crates, fence pieces, under 2 m across) stop casting into the
+  // sun's shadow map beyond SHADOW_SMALL from Twinsen. Their shadow there is a few texels wide, and they were
+  // a quarter of the shadow pass's draw calls. The list is gathered on the first update, when every part of
+  // the island is built; positions are read live, so props that move (boats, cargo) are handled.
+  const SHADOW_SMALL = 24, SHADOW_R = 2, _sv = new THREE.Vector3();
+  let casters = null, shadowTick = 0;
+  const gatherCasters = () => {
+    casters = [];
+    W.root.traverse((o) => {
+      if (!o.isMesh || o.isInstancedMesh || !o.castShadow) return;
+      const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
+      const sc = o.matrixWorld.getMaxScaleOnAxis(), r = g.boundingSphere.radius * sc;
+      if (r < SHADOW_R) casters.push({ o, c: g.boundingSphere.center, on: true });
+    });
+  };
   W.updateLod = (focus) => {
     for (const T of W.lodTiles) {
       const d = Math.hypot(focus.x - T.cx, focus.z - T.cz);
       if (T.small) { T.hi.visible = d < FAR_SMALL; continue; }
       if (T.near && d > LOD_NEAR + 4) T.near = false; else if (!T.near && d < LOD_NEAR - 4) T.near = true;
       T.hi.visible = T.near; T.lo.visible = !T.near;
+    }
+    if (!casters) gatherCasters();
+    if ((shadowTick = (shadowTick + 1) % 8)) return;
+    for (const C of casters) {
+      _sv.copy(C.c).applyMatrix4(C.o.matrixWorld);
+      const d = Math.hypot(focus.x - _sv.x, focus.z - _sv.z);
+      if (C.on && d > SHADOW_SMALL + 2) C.on = false; else if (!C.on && d < SHADOW_SMALL - 2) C.on = true;
+      C.o.castShadow = C.on;
     }
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);

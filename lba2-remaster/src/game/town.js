@@ -194,7 +194,9 @@ function heatPosts(parent, W, spots) {
   });
   return { posts, get level() { return level; } };
 }
-function fence(parent, H, a, b, r) {
+function fence(root, H, a, b, r) {
+  // ~50 pickets and tips per run: built in a group of its own and merged (≈100 draw calls → 2)
+  const parent = new THREE.Group(); root.add(parent);
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const ang = Math.atan2(b[0] - a[0], b[1] - a[1]);
   const n = Math.max(2, Math.round(len / 0.32));
@@ -211,6 +213,7 @@ function fence(parent, H, a, b, r) {
     const rail = put(parent, new THREE.BoxGeometry(len, 0.06, 0.04), wood, (a[0] + b[0]) / 2, H((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) + hy, (a[1] + b[1]) / 2, ang + Math.PI / 2);
     rail.position.z += 0.0;
   }
+  mergeStatic(parent);
 }
 function stoneWall(parent, H, physics, a, b, h = 0.7) {
   const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -395,16 +398,18 @@ export function buildTown(scene, W) {
     W.stall = { x: sx + Math.sin(sry) * 1.6, z: sz + Math.cos(sry) * 1.6, a: sry };
   }
 
+  // static street dressing goes into one group that is merged per material at the end
+  const dress = new THREE.Group(); scene.add(dress);
   // lamps around the square and along the streets
   for (const [i, [x, z]] of [[V.x + 4.6, V.z - 5.6], [-44.8, 4.8], [-44.6, -10.6], [-35.4, -0.2], [-55, -6.6]].entries()) {
-    lamp(scene, x, H(x, z), z);
+    lamp(dress, x, H(x, z), z);
     if (i < 2) { const l = new THREE.PointLight('#9cc8ff', 6, 11, 2); l.position.set(x, H(x, z) + 3.1, z); scene.add(l); W.lights.push(l); }
     physics.add({ type: 'cyl', x, z, r: 0.2, top: H(x, z) + 3, seeThrough: true });
   }
   // benches facing the well
   for (const [x, z] of [[-49, -7.4], [-35.8, 2.6]]) {
     const ry = Math.atan2(V.x - x, V.z - z);
-    bench(scene, x, H(x, z), z, ry);
+    bench(dress, x, H(x, z), z, ry);
     physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: H(x, z) + 0.5, noStand: true, seeThrough: true });
   }
   // Twinsen's front garden: picket fence, a bench under the window, laundry, tools, a radio on the sill, pots
@@ -413,26 +418,28 @@ export function buildTown(scene, W) {
   fence(scene, H, at('twinsen', -7.0, -1.8), at('twinsen', -7.0, 5.6), r);
   fence(scene, H, at('twinsen', -7.0, 5.6), at('twinsen', 0.6, 5.6), r);
   const bp = at('twinsen', -2.3, 4.3);
-  bench(scene, bp[0], gy(bp), bp[1], tw.ry);
+  bench(dress, bp[0], gy(bp), bp[1], tw.ry);
   physics.add({ type: 'box', x: bp[0], z: bp[1], hw: 0.85, hd: 0.3, rot: tw.ry, top: gy(bp) + 0.5, noStand: true, seeThrough: true });
   W.laundry = laundry(scene, H, at('twinsen', -6.0, 4.6), at('twinsen', -6.0, -1.0), r);
   const tl = at('twinsen', -5.3, 0.3);
-  tools(scene, tl[0], gy(tl), tl[1], tw.ry + Math.PI / 2);
+  tools(dress, tl[0], gy(tl), tl[1], tw.ry + Math.PI / 2);
   const rd = at('twinsen', -0.2, 3.78);
-  radio(scene, rd[0], tw.g + 1.2, rd[1], tw.ry);
-  for (const [lx, lz, f] of [[1.6, 4.3, '#ff5a7a'], [3.65, 4.3, '#ffd84a'], [-4.2, 4.5, null], [-0.6, 5.0, '#d06aff']]) { const p = at('twinsen', lx, lz); pot(scene, p[0], gy(p), p[1], f, r); }
-  for (const [lx, lz] of [[5.3, 2.4], [5.4, 1.5]]) { const p = at('twinsen', lx, lz); barrel(scene, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
+  radio(dress, rd[0], tw.g + 1.2, rd[1], tw.ry);
+  for (const [lx, lz, f] of [[1.6, 4.3, '#ff5a7a'], [3.65, 4.3, '#ffd84a'], [-4.2, 4.5, null], [-0.6, 5.0, '#d06aff']]) { const p = at('twinsen', lx, lz); pot(dress, p[0], gy(p), p[1], f, r); }
+  for (const [lx, lz] of [[5.3, 2.4], [5.4, 1.5]]) { const p = at('twinsen', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
   const sg = at('twinsen', 4.6, 6.0);
-  sign(scene, sg[0], gy(sg), sg[1], tw.ry + 0.3, 'Bug St.');
+  sign(dress, sg[0], gy(sg), sg[1], tw.ry + 0.3, 'Bug St.');
   // shop: globe sign and barrels; low stone walls by the water office and the stone house
   const sh = at('shop', 3.9, 3.3);
-  globeSign(scene, sh[0], gy(sh), sh[1]);
+  globeSign(dress, sh[0], gy(sh), sh[1]);
   physics.add({ type: 'cyl', x: sh[0], z: sh[1], r: 0.15, top: gy(sh) + 3, seeThrough: true });
-  for (const [lx, lz] of [[-3.0, 3.4], [-3.4, 2.6]]) { const p = at('shop', lx, lz); barrel(scene, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
-  stoneWall(scene, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
-  stoneWall(scene, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));
-  for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); pot(scene, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }
-  curbs(scene, H);
+  for (const [lx, lz] of [[-3.0, 3.4], [-3.4, 2.6]]) { const p = at('shop', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
+  stoneWall(dress, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
+  stoneWall(dress, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));
+  for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); pot(dress, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }
+  curbs(dress, H);
+  // all of the above is static: one mesh per material (lights stay as they are)
+  mergeStatic(dress);
 
   // houses between the camera and Twinsen fade out (each house gets its own
   // copies of the shared materials so only that house turns see-through)
