@@ -1,22 +1,30 @@
-// Fully procedural audio: every sound effect and the adaptive score are
-// synthesised with WebAudio, so the remaster ships without any of the
-// original (copyrighted) sound or music files.
+// Audio: procedural sound effects and ambience (WebAudio synthesis, no original LBA sounds) plus the
+// rendered orchestral soundtrack (files in assets/music, played by ./music.js).
+//
+// Buses: master ─┬─ music (file playback, ducked under dialogue)
+//                ├─ sfx (+ a little room reverb)
+//                ├─ ambience (rain, surf, wind; follows the effects volume)
+//                └─ voice (reserved for future voice acting)
 
 import { Music } from './music.js';
-
-const NOTE = (n) => 440 * Math.pow(2, (n - 69) / 12);
 
 export class AudioEngine {
   constructor() {
     this.ctx = null;
     this.storm = 1;
-    this.mood = 'storm';
+    this.mood = 'title';
     this.combat = 0;
-    this.vol = { master: 0.8, music: 0.55, sfx: 0.8 };
+    this.vol = { master: 0.8, music: 0.55, sfx: 0.8, voice: 0.8 };
+    this.music = new Music(this);
+    // browsers only start audio after a user gesture: the first click / key / touch anywhere starts it
+    if (typeof addEventListener === 'function') {
+      const unlock = () => { this.init(); if (this.ctx?.state === 'running') for (const e of ['pointerdown', 'keydown', 'touchstart']) removeEventListener(e, unlock, true); };
+      for (const e of ['pointerdown', 'keydown', 'touchstart']) addEventListener(e, unlock, true);
+    }
   }
 
   init() {
-    if (this.ctx) { this.ctx.resume(); return; }
+    if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     const ctx = (this.ctx = new AC());
@@ -25,35 +33,28 @@ export class AudioEngine {
     this.musicBus = ctx.createGain();
     this.sfxBus = ctx.createGain();
     this.ambBus = ctx.createGain();
+    this.voiceBus = ctx.createGain();
     this.reverb = ctx.createConvolver();
     this.reverb.buffer = this._impulse(2.8);
     const revGain = ctx.createGain();
     revGain.gain.value = 0.35;
     this.reverb.connect(revGain).connect(this.master);
-    for (const b of [this.musicBus, this.sfxBus, this.ambBus]) b.connect(this.master);
-    this.musicBus.connect(this.reverb);
-    this.sfxBus.connect(this.reverb);
-    // ping-pong-ish delay for the arpeggio
-    this.delay = ctx.createDelay(1);
-    this.delay.delayTime.value = 0.36;
-    const fb = ctx.createGain();
-    fb.gain.value = 0.32;
-    this.delay.connect(fb).connect(this.delay);
-    this.delay.connect(this.musicBus);
+    for (const b of [this.musicBus, this.sfxBus, this.ambBus, this.voiceBus]) b.connect(this.master);
+    this.sfxBus.connect(this.reverb); // the music files carry their own room
     this.noiseBuf = this._noise(2);
     this.applyVolumes();
     this._ambient();
-    this.music = new Music(this);
-    this.music.setTheme(this.mood);
     this.music.start();
+    this.music.setMood(this.mood);
   }
 
   applyVolumes() {
     if (!this.ctx) return;
     this.master.gain.value = this.vol.master;
-    this.musicBus.gain.value = this.vol.music * 0.5;
+    this.musicBus.gain.value = this.vol.music;
     this.sfxBus.gain.value = this.vol.sfx;
     this.ambBus.gain.value = this.vol.sfx * 0.6;
+    this.voiceBus.gain.value = this.vol.voice ?? 0.8;
   }
 
   _noise(sec) {
@@ -115,98 +116,14 @@ export class AudioEngine {
     this.windGain.gain.setTargetAtTime(0.25 * f + 0.03, t, 0.5);
   }
 
-  setMood(m) { this.mood = m; this.music?.setTheme(m); }
-  setCombat(c) { this.combat = c; }
-
-  // ---- music: generative, mood-driven (storm = minor, clear = major) ----
-  _startMusic() {
-    this.step = 0;
-    this.nextTime = this.ctx.currentTime + 0.2;
-    setInterval(() => this._schedule(), 30);
-  }
-
-  _schedule() {
-    const ctx = this.ctx;
-    if (!ctx || ctx.state !== 'running') return;
-    const storm = this.mood === 'storm';
-    const bpm = storm ? 84 : 100;
-    const eighth = 60 / bpm / 2;
-    // A minor-ish (i - VI - III - VII) vs C major (I - V - vi - IV)
-    const prog = storm
-      ? [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]]
-      : [[48, 52, 55], [55, 59, 62], [57, 60, 64], [53, 57, 60]];
-    const scale = storm ? [57, 60, 62, 64, 67, 69, 72, 74, 76] : [60, 62, 64, 67, 69, 72, 74, 76, 79];
-    while (this.nextTime < ctx.currentTime + 0.15) {
-      const t = this.nextTime;
-      const bar = Math.floor(this.step / 8) % 4;
-      const chord = prog[bar];
-      const s = this.step % 8;
-      if (s === 0) {
-        for (const n of chord) this._pad(NOTE(n), t, eighth * 8);
-        this._bass(NOTE(chord[0] - 24), t, eighth * 3);
-      }
-      if (s === 4 && !storm) this._bass(NOTE(chord[0] - 24 + 7), t, eighth * 2);
-      // arpeggio with gentle variation
-      const pattern = [0, 2, 1, 2, 0, 2, 1, 3];
-      const idx = (pattern[s] + bar) % scale.length;
-      let note = s % 2 === 0 ? chord[pattern[s] % 3] + 12 : scale[(idx + 3) % scale.length];
-      if (Math.random() < 0.15) note += 12;
-      if (Math.random() > 0.12) this._pluck(NOTE(note), t, eighth * 1.6, storm ? 0.06 : 0.08);
-      if (this.combat > 0.01) {
-        if (s % 2 === 0) this._kick(t, this.combat);
-        if (s % 4 === 2) this._hat(t, this.combat);
-      }
-      this.nextTime += eighth;
-      this.step++;
-    }
-  }
-
-  _pad(freq, t, dur) {
-    const ctx = this.ctx;
-    const g = ctx.createGain();
-    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = this.mood === 'storm' ? 700 : 1400;
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.05, t + dur * 0.3);
-    g.gain.linearRampToValueAtTime(0, t + dur);
-    for (const det of [-7, 7]) {
-      const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = freq; o.detune.value = det;
-      o.connect(f); o.start(t); o.stop(t + dur + 0.05);
-    }
-    f.connect(g).connect(this.musicBus);
-  }
-
-  _pluck(freq, t, dur, vol) {
-    const ctx = this.ctx;
-    const o = ctx.createOscillator(); o.type = 'triangle'; o.frequency.value = freq;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(vol, t);
-    g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
-    o.connect(g); g.connect(this.musicBus); g.connect(this.delay);
-    o.start(t); o.stop(t + dur + 0.05);
-  }
-
-  _bass(freq, t, dur) {
-    const ctx = this.ctx;
-    const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    o.connect(g).connect(this.musicBus); o.start(t); o.stop(t + dur + 0.05);
-  }
-
-  _kick(t, v) {
-    const ctx = this.ctx;
-    const o = ctx.createOscillator(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.15);
-    const g = ctx.createGain(); g.gain.setValueAtTime(0.35 * v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-    o.connect(g).connect(this.musicBus); o.start(t); o.stop(t + 0.25);
-  }
-
-  _hat(t, v) {
-    const ctx = this.ctx;
-    const n = ctx.createBufferSource(); n.buffer = this.noiseBuf;
-    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7000;
-    const g = ctx.createGain(); g.gain.setValueAtTime(0.08 * v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-    n.connect(f).connect(g).connect(this.musicBus); n.start(t, Math.random()); n.stop(t + 0.06);
-  }
+  // ---- music (see music.js) ----
+  setMood(m) { this.mood = m; if (this.ctx) this.music.setMood(m); }
+  cue(name) { if (this.ctx) this.music.cue(name); }
+  endCue() { if (this.ctx) this.music.endCue(); }
+  setCombat(c) { this.combat = c; if (this.ctx) this.music.setCombat(c); }
+  duck(on) { this.music.duck(on); }
+  // outdoors on Citadel island the music follows the area (village / open island / project station)
+  setOutdoorArea(pos, POI) { this.setMood(this.music.outdoorMood(pos, POI)); }
 
   // ---- sound effects ----
   _tone({ type = 'sine', f0, f1 = f0, dur = 0.15, vol = 0.3, at = 0 }) {

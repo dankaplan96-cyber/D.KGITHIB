@@ -89,6 +89,7 @@ export class Chapter1 extends ChapterBase {
     g.exitRoom({ x: W.well.x + 1.8, z: W.well.z - 1.6, a: 0 }, true);
     g.hero.hasBall = true;
     W.ferry?.setVisible?.(false);
+    g.audio.endCue();
     g.audio.setMood('calm');
     this.chain([['hero', 'c1_tw_morning'], ['gilbert', 'c1_gil_morning'], ['hero', 'c1_tw_morning2']], () => { this.f.c1_started = true; g.updateObjective(); g.save(false); });
   }
@@ -347,8 +348,9 @@ export class Chapter1 extends ChapterBase {
   foundPlan() {
     const g = this.game, f = this.f;
     f.c1_plan = true;
+    g.audio.cue('revelation');
     g.audio.play('shard');
-    this.chain([['zoe', 'c1_zoe_plan1'], ['zoe', 'c1_zoe_plan2'], ['zoe', 'c1_zoe_plan3']], () => { g.hud.toast('c1_toast_plan'); g.updateObjective(); g.save(false); });
+    this.chain([['zoe', 'c1_zoe_plan1'], ['zoe', 'c1_zoe_plan2'], ['zoe', 'c1_zoe_plan3']], () => { g.audio.endCue(); g.hud.toast('c1_toast_plan'); g.updateObjective(); g.save(false); });
   }
   endZoe() {
     const g = this.game, f = this.f, h = g.hero;

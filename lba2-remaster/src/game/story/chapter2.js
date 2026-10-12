@@ -316,6 +316,7 @@ export class Chapter2 extends ChapterBase {
   veskDescends() {
     const g = this.game, f = this.f, Z = this.Z, vesk = this.npc('vesk'), pad = Z.platform.pad;
     g.setState('cutscene');
+    g.audio.cue('revelation');
     let tt = 0, lowering = false;
     g.cutscene = (dt) => {
       tt += dt;

@@ -89,7 +89,7 @@ export const STR = {
     quality: 'Graphics', q_high: 'High', q_medium: 'Medium', q_low: 'Low',
     camera: 'Camera', cam_lba: 'Fixed (LBA2)', cam_free: 'Free (mouse / stick)',
     hud: 'HUD', hud_lba: 'Minimal (LBA2)', hud_modern: 'Always on',
-    music: 'Music', sfx: 'Sound Effects',
+    music: 'Music', sfx: 'Sound Effects', voice_vol: 'Voice',
     rebind_title: 'Key Bindings', rebind_hint: 'Click an action, then press a key. Esc cancels.', rebind_press: 'Press a key…', rebind_reset: 'Reset to Defaults',
     kb_up: 'Forward', kb_down: 'Back', kb_left: 'Left', kb_right: 'Right', kb_action: 'Action', kb_interact: 'Talk / Use', kb_ball: 'Throw Ball', kb_view: 'Camera Distance', kb_recenter: 'Recenter Camera', kb_map: 'Holomap', kb_inventory: 'Inventory', kb_pause: 'Pause',
     text_speed: 'Text Speed', ts_slow: 'Slow', ts_normal: 'Normal', ts_fast: 'Fast', ts_instant: 'Instant',

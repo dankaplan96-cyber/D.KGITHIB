@@ -1,265 +1,315 @@
-// Composed, melodic score (original music written for this project) played by
-// small WebAudio instruments. Each theme has a melody, a chord per bar and an
-// accompaniment style; themes change on the next bar with a crossfade.
+// Music manager: plays the rendered soundtrack (assets/music/*.mp3, described by manifest.json) with WebAudio.
 //
-//   citadel  – G major, a warm folk tune (flute over harp and bass)
-//   home     – the same tune on a music box, slower
-//   station  – D minor, mechanical ostinato (marimba) under a horn line
-//   stealth  – C minor, pizzicato walking bass and a sly clarinet
-//   cave     – A minor/phrygian, sparse bells over a drone
-//   zeelich  – F lydian, celesta over airy pads
-//   underworld – deep drone, slow bell motif
-//   boss     – E minor, driving strings, brass and drums
-//   ending   – the Citadel tune in a broad, bright arrangement
+//   audio.setMood(name)   base music for the current place (room / outdoor area); same track → keeps playing
+//   audio.cue(name)       a story cue that overrides the base music; a one-shot cue hands back when it ends
+//   audio.endCue()        fade a cue out early and return to the base music
+//   audio.setCombat(x)    0..1 every frame while playing; enters/leaves combat music with hysteresis
+//   audio.duck(on)        lowers the music under dialogue / important events
+//
+// Tracks are decoded on demand (fetch + decodeAudioData) and the likely next one is prefetched; nothing
+// blocks the game while music loads. Loops use AudioBufferSourceNode.loopStart/loopEnd from the manifest
+// (the renders are built so the seam is sample-continuous). Changes crossfade with equal-power curves.
+// Leaving a track and coming back to it within a couple of minutes resumes where it was.
 
-const N = (n) => 440 * Math.pow(2, (n - 69) / 12);
-// chord qualities → intervals
-const Q = { M: [0, 4, 7], m: [0, 3, 7], M7: [0, 4, 7, 11], m7: [0, 3, 7, 10], d: [0, 3, 6], s4: [0, 5, 7], '7': [0, 4, 7, 10] };
-const ch = (root, q = 'M') => ({ root, q });
-
-// melodies: [midi | null(rest), beats]
-const CITADEL_MEL = [
-  [74, 1], [71, 0.5], [67, 0.5], [69, 1], [71, 1], [69, 1.5], [66, 0.5], [62, 2], [64, 1], [67, 1], [71, 1], [76, 1], [74, 1], [72, 0.5], [71, 0.5], [69, 2],
-  [71, 1], [74, 1], [79, 1.5], [78, 0.5], [76, 1], [72, 1], [67, 2], [69, 1], [71, 0.5], [72, 0.5], [74, 1], [78, 1], [76, 1], [74, 1], [69, 2],
-  [79, 1.5], [78, 0.5], [76, 1], [71, 1], [72, 1], [76, 1], [79, 2], [74, 1.5], [71, 0.5], [67, 1], [71, 1], [69, 3], [null, 1],
-  [76, 1], [74, 0.5], [72, 0.5], [71, 1], [69, 1], [66, 1], [69, 1], [74, 1], [72, 1], [71, 1], [69, 0.5], [67, 0.5], [69, 1], [71, 1], [67, 3], [null, 1],
-];
-const CITADEL_CH = [ch(55), ch(50), ch(52, 'm'), ch(48), ch(55), ch(48), ch(50), ch(50, '7'), ch(52, 'm'), ch(48), ch(55), ch(50), ch(48), ch(50, '7'), ch(55), ch(55)];
-
-const STATION_MEL = [
-  [62, 1.5], [65, 0.5], [69, 1], [67, 1], [65, 1], [64, 1], [62, 2], [62, 1], [65, 1], [70, 2], [69, 1], [67, 1], [64, 2],
-  [74, 1.5], [72, 0.5], [69, 1], [65, 1], [67, 1], [70, 1], [74, 2], [73, 1], [70, 1], [69, 1], [67, 1], [69, 3], [null, 1],
-];
-const STATION_CH = [ch(50, 'm'), ch(50, 'm'), ch(46), ch(48), ch(50, 'm'), ch(55, 'm'), ch(45, '7'), ch(45, '7')];
-
-const STEALTH_MEL = [
-  [null, 1], [67, 0.5], [68, 0.5], [67, 1], [63, 1], [60, 1], [null, 1], [63, 1], [65, 1], [68, 1.5], [67, 0.5], [65, 1], [72, 1], [71, 2], [67, 2],
-  [null, 1], [72, 0.5], [71, 0.5], [68, 1], [67, 1], [65, 1], [63, 1], [62, 1], [63, 1], [65, 1.5], [63, 0.5], [62, 1], [59, 1], [60, 3], [null, 1],
-];
-const STEALTH_CH = [ch(48, 'm'), ch(44), ch(41, 'm'), ch(43, '7'), ch(48, 'm'), ch(44), ch(43, '7'), ch(48, 'm')];
-
-const CAVE_MEL = [
-  [76, 2], [null, 1], [69, 1], [72, 3], [null, 1], [70, 2], [69, 1], [67, 1], [69, 4],
-  [null, 1], [76, 1], [77, 1], [76, 1], [72, 2], [69, 2], [70, 1], [72, 1], [74, 1], [70, 1], [69, 4],
-];
-const CAVE_CH = [ch(45, 'm'), ch(41), ch(46), ch(45, 'm'), ch(45, 'm'), ch(41), ch(46), ch(45, 'm')];
-
-const ZEELICH_MEL = [
-  [72, 1], [76, 1], [77, 1], [79, 1], [71, 2], [69, 1], [67, 1], [76, 1.5], [74, 0.5], [71, 2], [72, 1], [69, 1], [64, 2],
-  [77, 1], [76, 0.5], [72, 0.5], [69, 1], [72, 1], [74, 1], [71, 1], [67, 2], [69, 1], [72, 1], [76, 1], [81, 1], [79, 4],
-];
-const ZEELICH_CH = [ch(53, 'M7'), ch(55), ch(52, 'm7'), ch(57, 'm'), ch(53, 'M7'), ch(55), ch(57, 'm'), ch(48)];
-
-const UNDER_MEL = [
-  [69, 3], [72, 1], [71, 4], [68, 2], [69, 2], [64, 4],
-  [null, 2], [76, 1], [74, 1], [72, 3], [71, 1], [69, 2], [68, 2], [69, 4],
-];
-const UNDER_CH = [ch(45, 'm'), ch(44, 'M'), ch(45, 'm'), ch(40, '7'), ch(45, 'm'), ch(41), ch(40, '7'), ch(45, 'm')];
-
-const BOSS_MEL = [
-  [76, 0.5], [76, 0.5], [71, 0.5], [76, 0.5], [79, 1], [78, 1], [76, 1], [74, 0.5], [71, 0.5], [69, 1], [71, 1],
-  [72, 0.5], [72, 0.5], [76, 0.5], [79, 0.5], [81, 1], [79, 1], [78, 1], [74, 1], [69, 2],
-  [76, 0.5], [76, 0.5], [71, 0.5], [76, 0.5], [79, 1], [78, 1], [76, 1], [79, 1], [83, 2],
-  [81, 1], [79, 1], [76, 1], [72, 1], [75, 2], [71, 2],
-];
-const BOSS_CH = [ch(52, 'm'), ch(52, 'm'), ch(48), ch(50), ch(52, 'm'), ch(52, 'm'), ch(48), ch(47, '7')];
-
-export const THEMES = {
-  citadel: { bpm: 96, mel: CITADEL_MEL, chords: CITADEL_CH, lead: 'flute', acc: 'harp', bass: 'root5', vol: 1 },
-  home: { bpm: 76, mel: CITADEL_MEL, chords: CITADEL_CH, lead: 'musicbox', acc: 'pad', bass: 'soft', vol: 0.8, oct: 12 },
-  station: { bpm: 104, mel: STATION_MEL, chords: STATION_CH, lead: 'horn', acc: 'marimba', bass: 'pulse', vol: 0.9, perc: 'clank' },
-  stealth: { bpm: 92, mel: STEALTH_MEL, chords: STEALTH_CH, lead: 'clarinet', acc: 'none', bass: 'walk', vol: 0.9 },
-  cave: { bpm: 70, mel: CAVE_MEL, chords: CAVE_CH, lead: 'bell', acc: 'drone', bass: 'drone', vol: 0.9 },
-  zeelich: { bpm: 80, mel: ZEELICH_MEL, chords: ZEELICH_CH, lead: 'celesta', acc: 'airpad', bass: 'soft', vol: 0.9 },
-  underworld: { bpm: 60, mel: UNDER_MEL, chords: UNDER_CH, lead: 'bell', acc: 'drone', bass: 'drone', vol: 0.9, oct: -12 },
-  boss: { bpm: 132, mel: BOSS_MEL, chords: BOSS_CH, lead: 'brass', acc: 'strings', bass: 'pulse', vol: 1, perc: 'drums' },
-  ending: { bpm: 84, mel: CITADEL_MEL, chords: CITADEL_CH, lead: 'brass', acc: 'strings', bass: 'root5', vol: 1 },
+// mood name → track (or a spec with gain / low-pass for "heard from inside") ; null = silence
+export const MOODS = {
+  title: 'main_theme',
+  home: 'home', house: 'home',
+  citadel: 'village', calm: 'village', clear: 'village', village: 'village', harbour: 'village',
+  office: { track: 'village', gain: 0.6, lowpass: 1100 }, // town interiors: the square heard through the walls
+  island: 'island',
+  cave: 'well', storm: 'well', well: 'well', underworld: 'well', under: 'well',
+  workshop: 'workshop',
+  zeelich: 'zeelich',
+  station: 'facility', control: 'facility', facility: 'facility',
+  stealth: 'facility_stealth',
+  combat: 'combat',
+  revelation: 'revelation',
+  boss: 'finale', finale: 'finale',
+  ending: 'homecoming', credits: 'homecoming', homecoming: 'homecoming',
+  silence: null,
 };
-// old mood names used around the code
-const ALIAS = { calm: 'citadel', storm: 'cave', clear: 'citadel' };
+// what to prefetch once a track is playing
+const NEXT = {
+  main_theme: ['home'], home: ['village'], village: ['island', 'combat'], island: ['village', 'combat'],
+  well: ['revelation'], facility: ['facility_stealth', 'combat'], zeelich: ['workshop', 'combat'],
+  workshop: ['zeelich'], facility_stealth: ['facility'],
+};
+
+// moods that end a running story cue
+const STRONG = new Set(['title', 'ending', 'credits', 'homecoming', 'boss', 'finale']);
+const FADE = { area: 2.6, combatIn: 1.1, combatOut: 2.8, cue: 1.8, room: 1.6 };
+const COMBAT_ENTER = 1.2; // s of sustained threat before the combat music starts
+const COMBAT_EXIT = 3.5; //  s of calm before it hands back
+const RESUME_WINDOW = 150; // s: coming back to a track within this resumes it
+const CACHE = 3; // decoded buffers kept (a decoded 2.5 min stereo track is ~55 MB at 48 kHz)
+
+function spec(name) {
+  if (!(name in MOODS)) return name ? { track: name, gain: 1 } : null; // a track name used directly
+  const m = MOODS[name];
+  if (m === null) return null;
+  return typeof m === 'string' ? { track: m, gain: 1 } : { gain: 1, ...m };
+}
 
 export class Music {
   constructor(audio) {
     this.a = audio;
-    this.theme = null;
-    this.want = 'citadel';
+    this.base = null; // spec
+    this.baseName = null;
+    this.cueSpec = null;
+    this.combat = false;
+    this.threat = 0;
+    this.threatT = 0;
+    this.calmT = 0;
+    this.voices = []; // {name, src, gain, filter, start, offset, info, spec}
+    this.buffers = new Map(); // name → {buf, promise, used}
+    this.resume = new Map(); // name → {offset, at}
+    this.manifest = null;
+    this.url = (typeof window !== 'undefined' && window.LBA_MUSIC_URL) || 'assets/music/';
+    this.log = [];
   }
   get ctx() { return this.a.ctx; }
-  setTheme(name) { this.want = ALIAS[name] || name; }
+
+  // called once the AudioContext exists
   start() {
-    this.nextTime = this.ctx.currentTime + 0.3;
-    this.beat = 0; this.mi = 0; this.mBeat = 0;
-    this.bus = this.ctx.createGain(); this.bus.connect(this.a.musicBus);
-    setInterval(() => this.schedule(), 25);
-  }
-  // switch themes on a bar line with a short fade
-  schedule() {
     const ctx = this.ctx;
-    if (!ctx || ctx.state !== 'running') return;
-    while (this.nextTime < ctx.currentTime + 0.2) {
-      if (this.theme !== this.want && this.beat % 4 === 0) this.switchTo(this.want, this.nextTime);
-      const T = THEMES[this.theme];
-      const beatDur = 60 / T.bpm;
-      const t = this.nextTime;
-      const bar = Math.floor(this.beat / 4) % T.chords.length;
-      const c = T.chords[bar];
-      const b = this.beat % 4;
-      this.accomp(T, c, b, t, beatDur);
-      this.bassLine(T, c, b, t, beatDur, bar);
-      this.percussion(T, b, t, beatDur);
-      // melody notes starting inside this beat
-      while (this.mBeat < this.beat + 1 - 1e-6) {
-        const [n, d] = T.mel[this.mi];
-        const nt = t + (this.mBeat - this.beat) * beatDur;
-        if (n != null) this.lead(T.lead, n + (T.oct || 0), Math.max(ctx.currentTime, nt), d * beatDur);
-        this.mBeat += d;
-        this.mi = (this.mi + 1) % T.mel.length;
-        if (this.mi === 0) this.mBeat = Math.ceil(this.mBeat / (T.chords.length * 4)) * T.chords.length * 4;
-      }
-      this.beat++;
-      this.nextTime += beatDur;
-      // combat layer on top of whatever plays
-      if (this.a.combat > 0.02 && this.theme !== 'boss') { this.a._kick(t, this.a.combat); this.a._hat(t + beatDur / 2, this.a.combat); }
-    }
-  }
-  switchTo(name, t) {
-    const old = this.bus;
-    old.gain.setTargetAtTime(0, t, 0.25);
-    setTimeout(() => old.disconnect(), 3000);
-    this.bus = this.ctx.createGain();
-    this.bus.gain.setValueAtTime(0, t);
-    this.bus.gain.linearRampToValueAtTime(THEMES[name].vol, t + 0.6);
-    this.bus.connect(this.a.musicBus);
-    this.theme = name;
-    this.beat = 0; this.mi = 0; this.mBeat = 0;
+    this.out = ctx.createGain(); // ducking stage
+    this.out.connect(this.a.musicBus);
+    // combat watchdog: setCombat() is only called while the player has control; if it stops being called
+    // (dialogue, cutscene, game over) the threat is treated as gone
+    setInterval(() => {
+      if (this.combat && this.ctx && this.ctx.currentTime - (this._lastCombatCall || 0) > 2.5) { this.combat = false; this.threatT = 0; this._update('combatOut'); }
+    }, 1000);
+    this.ready = fetch(this.url + 'manifest.json').then((r) => r.json()).then((m) => { this.manifest = m; this._update(); })
+      .catch((e) => { console.warn('music manifest unavailable', e); this.manifest = { tracks: {} }; });
   }
 
-  // ---- parts
-  chordNotes(c, base = 60) { const r = c.root; return Q[c.q].map((i) => { let n = r + i; while (n < base - 6) n += 12; return n; }); }
-  accomp(T, c, b, t, bd) {
-    const notes = this.chordNotes(c);
-    switch (T.acc) {
-      case 'harp': { // broken chord in eighths
-        const seq = [0, 1, 2, 1];
-        for (let k = 0; k < 2; k++) this.harp(notes[seq[(b * 2 + k) % 4] % notes.length] + (k && b === 3 ? 12 : 0), t + k * bd / 2, bd * 1.2, 0.05);
-        break;
-      }
-      case 'pad': if (b === 0) for (const n of notes) this.pad(n, t, bd * 4, 0.025, 900); break;
-      case 'airpad': if (b === 0) for (const n of notes) this.pad(n + 12, t, bd * 4, 0.02, 2200); if (b % 2 === 1) this.harp(notes[(b + 1) % notes.length] + 12, t, bd * 2, 0.03); break;
-      case 'marimba': for (let k = 0; k < 2; k++) this.marimba(notes[(b * 2 + k) % notes.length] + (k ? 0 : -12), t + k * bd / 2, 0.07); break;
-      case 'drone': if (b === 0) { this.pad(notes[0] - 12, t, bd * 4.2, 0.035, 500); this.pad(notes[2] - 12, t, bd * 4.2, 0.02, 500); } break;
-      case 'strings': if (b === 0 || b === 2) for (const n of notes) this.strings(n, t, bd * 2, 0.022); break;
-    }
+  // ---------------------------------------------------------------- public API
+  setMood(name) {
+    const s = spec(name);
+    const endsCue = STRONG.has(name) && !!this.cueSpec; // title / ending / boss take over from a story cue
+    if (endsCue) this.cueSpec = null;
+    if (sameSpec(s, this.base) && !endsCue) { this.baseName = name; return; }
+    this.base = s;
+    this.baseName = name;
+    this._update();
   }
-  bassLine(T, c, b, t, bd, bar) {
-    const r = c.root - 12;
-    switch (T.bass) {
-      case 'root5': if (b === 0) this.bass(r, t, bd * 1.8); if (b === 2) this.bass(r + 7, t, bd * 1.6); break;
-      case 'soft': if (b === 0) this.bass(r, t, bd * 3.5, 0.12); break;
-      case 'pulse': this.bass(r, t, bd * 0.45, 0.14); this.bass(r, t + bd / 2, bd * 0.4, 0.1); break;
-      case 'walk': { const w = [0, 3, 5, 7][b] + (bar % 2 ? 0 : 0); this.pizz(r + w, t, bd * 0.6); break; }
-      case 'drone': if (b === 0) this.bass(r - 12 + 12, t, bd * 4, 0.12); break;
-    }
+  cue(name) {
+    const s = spec(name);
+    if (sameSpec(s, this.cueSpec)) return;
+    this.cueSpec = s;
+    this._update();
   }
-  percussion(T, b, t, bd) {
-    if (T.perc === 'drums') {
-      this.a._kick(t, 0.9); if (b === 2) this.a._kick(t + bd / 2, 0.6);
-      if (b === 1 || b === 3) this.snare(t, 0.5);
-      this.a._hat(t + bd / 2, 0.6); this.a._hat(t, 0.4);
-    } else if (T.perc === 'clank' && (b === 1 || b === 3)) this.clank(t);
+  endCue() {
+    if (!this.cueSpec) return;
+    this.cueSpec = null;
+    this._update();
+  }
+  setCombat(level) {
+    const now = this.ctx ? this.ctx.currentTime : performance.now() / 1000;
+    const dt = this._lastCombatCall ? Math.min(0.25, now - this._lastCombatCall) : 0;
+    this._lastCombatCall = now;
+    this.threat = level;
+    if (level > 0.55) { this.threatT += dt; this.calmT = 0; } else if (level < 0.25) { this.calmT += dt; this.threatT = 0; }
+    if (!this.combat && this.threatT >= COMBAT_ENTER) { this.combat = true; this._update('combatIn'); }
+    if (this.combat && this.calmT >= COMBAT_EXIT) { this.combat = false; this._update('combatOut'); }
+  }
+  duck(on) {
+    if (!this.ctx || !this.out) return;
+    const g = this.out.gain, t = this.ctx.currentTime;
+    clearTimeout(this._duckTimer);
+    if (on) {
+      g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.55, t + 0.25);
+    } else {
+      // short delay: consecutive dialogue lines do not pump the music up and down
+      this._duckTimer = setTimeout(() => {
+        const t2 = this.ctx.currentTime;
+        g.cancelScheduledValues(t2); g.setValueAtTime(g.value, t2); g.linearRampToValueAtTime(1, t2 + 0.9);
+      }, 450);
+    }
   }
 
-  // ---- instruments (all very small: a couple of oscillators and envelopes)
-  env(g, t, a, peak, dur, rel = 0.12) {
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(peak, t + a);
-    g.gain.setValueAtTime(peak, t + Math.max(a, dur - rel));
-    g.gain.linearRampToValueAtTime(0, t + dur + rel);
+  // what should be playing now
+  target() {
+    if (this.cueSpec) return this.cueSpec;
+    if (this.combat && this.has('combat') && this.base) return { track: 'combat', gain: 1 };
+    return this.base;
   }
-  osc(type, freq, t, dur, dest, detune = 0) {
-    const o = this.ctx.createOscillator(); o.type = type; o.frequency.value = freq; o.detune.value = detune;
-    o.connect(dest); o.start(t); o.stop(t + dur + 0.3);
-    return o;
+  has(track) { return !!this.manifest?.tracks?.[track]; }
+
+  state() {
+    const t = this.ctx?.currentTime ?? 0;
+    return {
+      base: this.baseName, cue: this.cueSpec?.track || null, combat: this.combat, target: this.target()?.track || null,
+      voices: this.voices.map((v) => ({ track: v.name, gain: +v.gain.gain.value.toFixed(3), pos: +this._pos(v, t).toFixed(2), stopping: !!v.stopping })),
+      loaded: [...this.buffers.entries()].filter(([, b]) => b.buf).map(([k]) => k),
+      log: this.log.slice(-20),
+    };
   }
-  lead(kind, n, t, dur) {
-    const ctx = this.ctx, f = N(n);
-    const g = ctx.createGain(); g.connect(this.bus); g.connect(this.a.delay);
-    switch (kind) {
-      case 'flute': {
-        this.env(g, t, 0.06, 0.09, dur * 0.95);
-        const o = this.osc('sine', f, t, dur, g);
-        const o2 = this.osc('triangle', f, t, dur, g); o2.detune.value = 3;
-        // gentle vibrato after the attack
-        const l = ctx.createOscillator(); l.frequency.value = 5.2; const lg = ctx.createGain();
-        lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(f * 0.006, t + Math.min(0.35, dur));
-        l.connect(lg); lg.connect(o.frequency); lg.connect(o2.frequency); l.start(t); l.stop(t + dur + 0.3);
-        break;
-      }
-      case 'musicbox': case 'celesta': case 'bell': {
-        const peak = kind === 'bell' ? 0.07 : 0.06;
-        g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0005, t + Math.max(0.6, dur * (kind === 'bell' ? 2.2 : 1.4)));
-        this.osc('sine', f, t, dur * 2.2, g);
-        const h = ctx.createGain(); h.gain.value = kind === 'musicbox' ? 0.5 : 0.3; h.connect(g);
-        this.osc('sine', f * (kind === 'bell' ? 2.76 : 4), t, dur, h);
-        break;
-      }
-      case 'horn': case 'clarinet': {
-        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = kind === 'horn' ? 1100 : 1800; lp.connect(g);
-        this.env(g, t, kind === 'horn' ? 0.08 : 0.03, 0.07, dur * 0.92);
-        this.osc(kind === 'horn' ? 'sawtooth' : 'square', f, t, dur, lp);
-        if (kind === 'horn') this.osc('sawtooth', f, t, dur, lp, 6);
-        break;
-      }
-      case 'brass': {
-        const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.Q.value = 2;
-        lp.frequency.setValueAtTime(500, t); lp.frequency.linearRampToValueAtTime(2400, t + 0.08); lp.frequency.linearRampToValueAtTime(1500, t + dur);
-        lp.connect(g);
-        this.env(g, t, 0.05, 0.075, dur * 0.9);
-        this.osc('sawtooth', f, t, dur, lp, -5); this.osc('sawtooth', f, t, dur, lp, 5);
-        break;
-      }
+
+  // ---------------------------------------------------------------- loading
+  load(name) {
+    let e = this.buffers.get(name);
+    if (e) { e.used = performance.now(); return e.promise; }
+    const info = this.manifest?.tracks?.[name];
+    if (!info || !this.ctx) return Promise.resolve(null);
+    e = { buf: null, used: performance.now() };
+    e.promise = fetch(this.url + info.file).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then((ab) => new Promise((res, rej) => this.ctx.decodeAudioData(ab, res, rej)))
+      .then((buf) => { e.buf = buf; this._evict(); this.log.push(`loaded ${name}`); return buf; })
+      .catch((err) => { console.warn('music load failed', name, err); this.buffers.delete(name); return null; });
+    this.buffers.set(name, e);
+    return e.promise;
+  }
+  _evict() {
+    const playing = new Set(this.voices.map((v) => v.name));
+    const want = this.target()?.track;
+    const loaded = [...this.buffers.entries()].filter(([k, b]) => b.buf && !playing.has(k) && k !== want);
+    const extra = this.buffers.size - CACHE;
+    if (extra <= 0) return;
+    loaded.sort((x, y) => x[1].used - y[1].used).slice(0, extra).forEach(([k]) => this.buffers.delete(k));
+  }
+  _prefetch(name) {
+    const next = (NEXT[name] || []).filter((n) => this.has(n) && !this.buffers.has(n));
+    if (!next.length) return;
+    clearTimeout(this._preT);
+    // after the current track has settled, one at a time
+    this._preT = setTimeout(() => this.load(next[0]).then(() => this._prefetch(name)), 4000);
+  }
+
+  // ---------------------------------------------------------------- playback
+  _pos(v, t) {
+    const el = Math.max(0, t - v.start) + v.offset;
+    const i = v.info;
+    if (!i.loop || el < i.loopEnd) return el;
+    const L = i.loopEnd - i.loopStart;
+    return i.loopStart + ((el - i.loopStart) % L);
+  }
+  _current() { return this.voices.find((v) => !v.stopping) || null; }
+
+  _update(kind) {
+    if (!this.ctx || !this.manifest) return;
+    const want = this.target();
+    const cur = this._current();
+    const fade = FADE[kind] || (this.cueSpec ? FADE.cue : FADE.area);
+    const token = (this._token = (this._token || 0) + 1); // any newer decision cancels a pending track load
+    if (!want || !this.has(want.track)) {
+      if (want && !this.has(want.track)) this.log.push(`no track for ${want.track}`);
+      if (cur) this._stop(cur, fade);
+      return;
     }
+    if (cur && cur.name === want.track) { this._shape(cur, want, Math.min(fade, FADE.room)); return; } // same track: keep playing
+    // the wanted track is still fading out (quick back-and-forth through a door): bring it back instead of restarting
+    const back = this.voices.find((v) => v.stopping && !v.fast && v.name === want.track);
+    if (back) {
+      clearTimeout(back.stopTimer);
+      back.stopping = false;
+      if (cur) this._stop(cur, fade);
+      this._shape(back, want, Math.min(fade, FADE.room));
+      this.log.push(`revive ${back.name}`);
+      return;
+    }
+    this.load(want.track).then((buf) => {
+      if (!buf || token !== this._token) return; // superseded while loading
+      const now = this._current();
+      if (now && now.name === want.track) { this._shape(now, want, fade); return; }
+      let offset = 0;
+      const info = this.manifest.tracks[want.track];
+      const r = this.resume.get(want.track);
+      if (now && info.group && now.info.group === info.group) offset = this._pos(now, this.ctx.currentTime); // stems of one piece: stay in sync
+      else if (r && this.ctx.currentTime - r.at < RESUME_WINDOW) offset = r.offset;
+      if (now) this._stop(now, fade);
+      this._play(want, buf, offset, fade);
+    });
   }
-  harp(n, t, dur, vol) {
-    const g = this.ctx.createGain(); g.connect(this.bus);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0006, t + dur);
-    this.osc('triangle', N(n), t, dur, g);
+
+  _play(s, buf, offset, fade) {
+    const ctx = this.ctx, t = ctx.currentTime + 0.03;
+    const info = this.manifest.tracks[s.track];
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    if (info.loop) { src.loop = true; src.loopStart = info.loopStart; src.loopEnd = info.loopEnd; }
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = s.lowpass || 20000;
+    filter.Q.value = 0.5;
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    src.connect(filter).connect(gain).connect(this.out);
+    const v = { name: s.track, src, gain, filter, start: t, offset, info, spec: s };
+    equalPower(gain.gain, t, fade, 0, s.gain ?? 1);
+    src.start(t, Math.min(offset, buf.duration - 0.05));
+    src.onended = () => {
+      this.voices = this.voices.filter((x) => x !== v);
+      try { gain.disconnect(); } catch { /* already */ }
+      if (!info.loop && !v.stopping && this.cueSpec?.track === s.track) { this.cueSpec = null; this._update('cue'); }
+    };
+    this.voices.push(v);
+    this.log.push(`play ${s.track} @${offset.toFixed(1)}s fade ${fade}s`);
+    this._prefetch(s.track);
   }
-  marimba(n, t, vol) {
-    const g = this.ctx.createGain(); g.connect(this.bus);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0006, t + 0.35);
-    this.osc('sine', N(n), t, 0.4, g);
-    const h = this.ctx.createGain(); h.gain.value = 0.25; h.connect(g); this.osc('sine', N(n) * 4, t, 0.1, h);
+
+  _stop(v, fade) {
+    if (v.stopping) return;
+    v.stopping = true;
+    const t = this.ctx.currentTime;
+    if (v.info.loop) this.resume.set(v.name, { offset: this._pos(v, t + fade * 0.5), at: t });
+    // anything older still fading out goes quickly: never more than two tracks audible at once
+    for (const o of this.voices) {
+      if (o !== v && o.stopping && !o.fast) { o.fast = true; clearTimeout(o.stopTimer); equalPower(o.gain.gain, t, 0.4, o.gain.gain.value, 0); try { o.src.stop(t + 0.5); } catch { /* */ } }
+    }
+    equalPower(v.gain.gain, t, fade, v.gain.gain.value, 0);
+    // stopped by a timer (not src.stop(when)) so a quick return can still revive it
+    clearTimeout(v.stopTimer);
+    v.stopTimer = setTimeout(() => { try { v.src.stop(); } catch { /* already stopped */ } }, (fade + 0.1) * 1000);
+    this.log.push(`stop ${v.name} fade ${fade}s`);
   }
-  pad(n, t, dur, vol, cut) {
-    const ctx = this.ctx;
-    const g = ctx.createGain(); const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = cut;
-    lp.connect(g); g.connect(this.bus);
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + dur * 0.35); g.gain.linearRampToValueAtTime(0, t + dur);
-    this.osc('sawtooth', N(n), t, dur, lp, -8); this.osc('sawtooth', N(n), t, dur, lp, 8);
+
+  _shape(v, s, fade) {
+    const t = this.ctx.currentTime;
+    v.spec = s;
+    ramp(v.gain.gain, t, fade, v.gain.gain.value, s.gain ?? 1);
+    const f = v.filter.frequency, f0 = f.value, f1 = s.lowpass || 20000;
+    f.cancelScheduledValues(t);
+    f.setValueAtTime(f0, t);
+    f.exponentialRampToValueAtTime(f1, t + fade);
   }
-  strings(n, t, dur, vol) { this.pad(n, t, dur, vol, 1800); }
-  bass(n, t, dur, vol = 0.16) {
-    const g = this.ctx.createGain(); g.connect(this.bus);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    this.osc('sine', N(n), t, dur, g);
-    const h = this.ctx.createGain(); h.gain.value = 0.25; h.connect(g); this.osc('triangle', N(n) * 2, t, dur, h);
+
+  // ---------------------------------------------------------------- outdoor areas on Citadel island
+  // village around the square and harbour, the open island elsewhere, the project station in the old fort;
+  // a few metres of hysteresis so walking along a border does not flip the music
+  outdoorMood(pos, POI) {
+    const F = POI.fort;
+    const inFort = Math.abs(pos.x - F.x) < F.half + 2 && Math.abs(pos.z - F.z) < F.half + 2;
+    if (inFort) return (this._area = 'station');
+    const dv = Math.hypot(pos.x - POI.village.x, pos.z - POI.village.z);
+    const dh = Math.hypot(pos.x - POI.harbour.x, pos.z - POI.harbour.z);
+    const d = Math.min(dv, dh + 6);
+    const was = this._area === 'citadel';
+    return (this._area = d < (was ? 50 : 40) ? 'citadel' : 'island');
   }
-  pizz(n, t, dur) {
-    const g = this.ctx.createGain(); g.connect(this.bus);
-    g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    this.osc('triangle', N(n), t, dur, g);
-  }
-  snare(t, v) {
-    const ctx = this.ctx, a = this.a;
-    const n = ctx.createBufferSource(); n.buffer = a.noiseBuf;
-    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 0.7;
-    const g = ctx.createGain(); g.gain.setValueAtTime(0.25 * v, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-    n.connect(f).connect(g).connect(this.bus); n.start(t, Math.random()); n.stop(t + 0.2);
-  }
-  clank(t) {
-    const g = this.ctx.createGain(); g.connect(this.bus);
-    g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.0005, t + 0.25);
-    this.osc('square', 1180, t, 0.25, g); this.osc('square', 1630, t, 0.25, g);
+}
+
+function sameSpec(a, b) {
+  if (!a || !b) return a === b;
+  return a.track === b.track && (a.gain ?? 1) === (b.gain ?? 1) && (a.lowpass || 0) === (b.lowpass || 0);
+}
+
+// Automation helpers. Fades are written as short linear segments (not setValueCurveAtTime) so a fade can be
+// interrupted at any time: read the current value, cancel, continue from there.
+function ramp(param, t, dur, v0, v1) {
+  param.cancelScheduledValues(t);
+  param.setValueAtTime(v0, t);
+  param.linearRampToValueAtTime(v1, t + Math.max(0.02, dur));
+}
+// equal-power fade (sin for fade-in, cos for fade-out): two crossfading tracks keep a constant power sum
+function equalPower(param, t, dur, v0, v1) {
+  param.cancelScheduledValues(t);
+  param.setValueAtTime(v0, t);
+  const n = 16;
+  for (let i = 1; i <= n; i++) {
+    const x = i / n;
+    const k = v1 >= v0 ? Math.sin(x * Math.PI / 2) : 1 - Math.cos(x * Math.PI / 2);
+    param.linearRampToValueAtTime(v0 + (v1 - v0) * k, t + Math.max(0.05, dur) * x);
   }
 }

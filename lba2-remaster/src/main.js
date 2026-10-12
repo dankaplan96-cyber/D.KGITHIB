@@ -37,8 +37,8 @@ export function migrateSave(raw) {
   s.v = v;
   return s;
 }
-// music per interior; outdoors it follows the area (see updatePlay)
-const ROOM_MUSIC = { house: 'home', well: 'cave', office: 'home', projoffice: 'stealth', control: 'station', workshop: 'home', lighttop: 'home' };
+// music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
+const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
 const $ = (s) => document.querySelector(s);
@@ -63,7 +63,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
@@ -88,7 +88,7 @@ class Game {
     this.env = new Environment(this.scene, this.terrain);
     this.renderer.setup(this.scene, this.camera);
     this.audio = new AudioEngine();
-    this.audio.setMood('calm');
+    this.audio.setMood('title');
     this.env.onThunder = () => this.audio.play('thunder');
     this.input = new Input(this.renderer.canvas);
     this.camRig = new CameraRig(this.camera, this.terrain, this.physics);
@@ -202,7 +202,7 @@ class Game {
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
       this.doorCool = 1;
-      this.audio.setMood('citadel');
+      this.audio.setOutdoorArea(to, POI);
       if (R) this.story.onExitRoom(R.id);
       if (this.state !== 'title') this.save(false);
     };
@@ -400,6 +400,7 @@ class Game {
     this.camRig.shakeScale = { on: 1, reduced: 0.35, off: 0 }[s.shake] ?? 1;
     this.audio.vol.music = s.music;
     this.audio.vol.sfx = s.sfx;
+    this.audio.vol.voice = s.voice;
     this.audio.applyVolumes();
     if (this.hero) this.updateObjective();
     store.set(SET_KEY, s);
@@ -465,7 +466,8 @@ class Game {
     this.speaker = speaker;
     color ??= speaker?.def?.color || (speaker === this.hero ? '#8fc2ff' : '#ffffff');
     this.bubbleSide = !this.bubbleSide;
-    this.hud.say(name, lines, () => { this.speaker = null; this.setState('play'); done?.(); }, color);
+    this.audio.duck(true);
+    this.hud.say(name, lines, () => { this.speaker = null; this.audio.duck(false); this.setState('play'); done?.(); }, color);
   }
 
   // LBA2's speech-bubble sprite above whoever is talking (DrawBulle in INCRUST.CPP)
@@ -792,12 +794,8 @@ class Game {
     this.safeT = (this.safeT || 0) - dt;
     if ((!this.room || this.room.outdoor) && this.safeT <= 0 && h.onGround && h.pos.y > 0.4) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
 
-    // outdoor music follows the area: the station inside the old fortress has its own theme
-    if (!this.room && this.audio.music) {
-      const F = POI.fort, inFort = Math.abs(h.pos.x - F.x) < F.half + 2 && Math.abs(h.pos.z - F.z) < F.half + 2;
-      const want = inFort ? 'station' : 'citadel';
-      if (this.audio.music.want !== want && ['station', 'citadel'].includes(this.audio.music.want)) this.audio.setMood(want);
-    }
+    // outdoor music follows the area: village and harbour, the open island, the project station in the old fortress
+    if (!this.room) this.audio.setOutdoorArea(h.pos, POI);
     // adaptive combat music
     const chasing = this.enemies.some((e) => e.alive && e.present && (e.state === 'chase' || e.state === 'windup'));
     this.combat = lerp(this.combat, chasing ? 1 : 0, 1 - Math.exp(-dt * 1.5));

@@ -334,6 +334,7 @@ export class Prologue extends ChapterBase {
     g.ball.mesh.visible = true;
     g.audio.play('rumble');
     this.veinTarget = new THREE.Vector3(R.vein.x - 0.6, R.vein.y, R.vein.z);
+    g.audio.cue('revelation');
   }
   updateSendell(dt) {
     const g = this.game, h = g.hero, R = g.rooms.well;
