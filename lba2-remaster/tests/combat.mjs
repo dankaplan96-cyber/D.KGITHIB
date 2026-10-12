@@ -228,6 +228,24 @@ for (const [k, o] of Object.entries(r)) {
   check(`ball (${k}): a held attack button does not hold the ball key's throw`, o.other && !o.other.charged && o.other.t < 0.25, o.other);
 }
 
+// 16. holding the ball: he stands still, the direction keys only turn the aim, the release throws that way
+r = await ev(() => {
+  const { G } = C, h = G.hero, B = G.ball, orig = B.launch.bind(B); let shot = null;
+  C.only([], [6190, 8], 0); h.combat.equip('fists', true); h.mp = 3; G.input.mouse.inside = false; C.step(0.3);
+  B.launch = (...a) => { shot = { aim: a[3]?.aim }; return orig(...a); };
+  const p0 = h.pos.clone(), a0 = h.angle;
+  G.input.keys.add('KeyF'); G.input.taps.add('KeyF'); C.step(0.4);
+  G.input.keys.add('KeyD'); C.step(0.8);
+  const moved = h.pos.distanceTo(p0), turned = Math.abs(h.angle - a0);
+  G.input.keys.delete('KeyF'); C.step(0.1); G.input.keys.delete('KeyD'); C.step(2);
+  B.launch = orig;
+  const yaw = G.camRig.yaw, right = { x: Math.cos(yaw), z: -Math.sin(yaw) };
+  const dot = shot ? (shot.aim.x * right.x + shot.aim.z * right.z) / Math.hypot(shot.aim.x, shot.aim.z) : -1;
+  return { moved: +moved.toFixed(3), turned: +turned.toFixed(2), thrown: !!shot, alongRight: +dot.toFixed(2) };
+});
+check('holding the ball: no walking, the direction turns the aim', r.moved < 0.05 && r.turned > 0.5, r);
+check('...and the release throws where he aims', r.thrown && r.alongRight > 0.8, r);
+
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
 await browser.close();

@@ -18,6 +18,10 @@ const TYPES = {
 
 // browsers wait for a click before sound; a game window may play at once
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+// a game: always the graphics card (Chromium falls back to software rendering on a blocklisted driver, and
+// laptops with two GPUs may otherwise hand it the slower integrated one)
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('force_high_performance_gpu');
 if (process.env.LBA3_SOFTWARE_GL) app.commandLine.appendSwitch('use-angle', 'swiftshader'), app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true } }]);

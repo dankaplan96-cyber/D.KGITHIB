@@ -24,7 +24,8 @@ export const COMBAT = {
   lockRange: 14, lockBreak: 17, lockLosGrace: 1.5,
   assistCone: { off: 0, low: 0.22, normal: 0.42, high: 0.7 },   // rad half-angle for soft targeting
   dodge: { dur: 0.36, dist: 3.1, iStart: 0.04, iEnd: 0.27, cooldown: 0.28, cancelFrom: 0.62 },
-  throw: { quickRelease: 0.16, quickDur: 0.36, windHold: 0.12, chargeAfter: 0.2, chargeFull: 0.75, moveK: 0.6, chargeMoveK: 0.45, releaseAfterCharge: 0.08 },
+  throw: { quickRelease: 0.16, quickDur: 0.36, windHold: 0.12, chargeAfter: 0.2, chargeFull: 0.75, moveK: 0.6, chargeMoveK: 0, // (holding the ball: he stands and the direction only aims)
+    releaseAfterCharge: 0.08 },
   hitStop: { light: 0.045, heavy: 0.085 },
   pulse: { range: 4.8, cone: 0.75, recharge: 5.0, stun: 2.6, shieldDown: 3.2 },
   tokens: { gentle: 1, normal: 2, hard: 3 },

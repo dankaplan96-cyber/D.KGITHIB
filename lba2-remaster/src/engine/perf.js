@@ -13,6 +13,11 @@ export class Perf {
     this.el = null;
     this.uiT = 0;
     if (renderer) renderer.info.autoReset = false; // the composer renders several passes per frame: count them all
+    // which GPU is drawing (a software renderer here explains a slow game)
+    try {
+      const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
+      this.gpu = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)).replace(/^ANGLE \((.*)\)$/, '$1');
+    } catch { this.gpu = '?'; }
   }
   beginFrame() { if (this.r) this.r.info.reset(); }
   record(f) {
@@ -53,6 +58,7 @@ export class Perf {
     if (!this.el || !s) return;
     this.el.textContent = `${s.fps} fps   frame p50 ${s.frameMs.p50} · p95 ${s.frameMs.p95} · max ${s.frameMs.max} ms\n`
       + `sim ${s.simMs.p50} ms · render (CPU) ${s.renderMs.p50} ms · steps ${s.steps.mean}/${s.steps.max}\n`
-      + `draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k${s.lostS ? ` · lost ${s.lostS}s` : ''}`;
+      + `draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k${s.lostS ? ` · lost ${s.lostS}s` : ''}\n`
+      + `${this.gpu}${this.load ? `\nstartup: build ${(this.load.total / 1000).toFixed(1)} s · shaders ${(this.load.shaders / 1000).toFixed(1)} s` : ''}`;
   }
 }

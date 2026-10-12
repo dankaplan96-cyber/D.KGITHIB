@@ -190,3 +190,25 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   Continue, Quit). The Windows zip was also built on Linux. Not verified: running the Windows and macOS builds.
 - First Actions run: all three builds and the release job green; pre-release `desktop-build-1` carries
   `LBA3-The-Awakening-Setup-0.10.0.exe`, `-0.10.0-win.zip`, `-0.10.0-mac.dmg` and `-0.10.0-linux.AppImage`.
+
+## Session: code review fixes (Astra's review) and the first Windows feedback
+- Ball: a held press threw an uncharged ball at 0.16 s, before charging could start (reproduced at 30/60/120
+  fps). Now the button that started the throw decides tap or hold; holding stops Twinsen, the direction keys
+  (or the mouse) only turn the aim with the arc preview, and the release throws there.
+- Prompts take their key label from one place (`Input.label`): A on a pad (it showed X, the attack button),
+  the rebound key on a keyboard. Pad A talks/searches in every behaviour when something is in reach.
+- NPC walk cycle follows the ground actually covered (a blocked walker stands).
+- Loop: slow frames are simulated in steps of ≤ 1/30 s (up to 4), so the game keeps real time down to
+  ~7.5 fps (before: slow motion below 20 fps). `engine/perf.js`: frame-time stats, F3 / `?perf` overlay with
+  the GPU name and startup times. Settings apply only what changed (the volume slider cut the camera).
+- Rendering: near trees and rocks cast shadows with their coarse models; island rocks got a far LOD.
+  Triangles per frame −30…−39% in the village, the camp and Hamalayi; shadows compared side by side.
+- Startup (user: "stuck on the spinner"): the first frame compiled all shaders (34 s on software GL) after
+  the spinner had been hidden but before it repainted. Shaders and textures are now prepared behind the
+  loading screen (`compileAsync`, parallel where the driver allows), with a status line. Room lamps go through
+  a fixed pool of 8 lights (`engine/lightpool.js`): the light count no longer changes per room, so programs
+  stay at 121 from the title through a new game, the house, outdoors and the regions (before: 227+ and a
+  recompile on every door). Desktop: `ignore-gpu-blocklist` and `force_high_performance_gpu`.
+- Zoé's hair is blonde (user: as in LBA2).
+- Tests: tests/combat.mjs (tap/hold at three frame rates, aiming while held), tests/controls.mjs, tests/timing.mjs.
+- Open (user feedback): character proportions do not match LBA2; animations do not feel like the original.

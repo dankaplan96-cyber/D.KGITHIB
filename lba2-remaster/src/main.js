@@ -8,6 +8,7 @@ import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { Perf } from './engine/perf.js';
+import { LightPool } from './engine/lightpool.js';
 import { Input, applyBindings, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
@@ -148,6 +149,7 @@ class Game {
     this.cutscene = null;
 
     timed('actors', () => this.spawnActors());
+    this.lightPool = new LightPool(this.scene); // (after every builder has placed its lamps)
     this.loadTimes.total = Math.round(performance.now() - tm);
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
@@ -156,13 +158,39 @@ class Game {
     this.last = performance.now();
     requestAnimationFrame((t2) => this.loop(t2));
 
+    if (matchMedia('(pointer: coarse)').matches) this.touch = true;
+    this.ready = this.prepare();
+  }
+
+  // Compile every shader the island, the rooms and the regions use before the title shows, while the loading
+  // screen is up (in parallel where the driver allows: KHR_parallel_shader_compile). Left to the first frame,
+  // this froze the spinner for seconds (tens of seconds on some Windows drivers) and stuttered on new rooms.
+  async prepare() {
+    this.preparing = true;
+    const t0 = performance.now();
+    loadingStep('Preparing graphics…');
+    await nextPaint();
+    const R = this.renderer.renderer;
+    try { await R.compileAsync(this.scene, this.camera); } catch (e) { console.warn('shader precompile', e); }
+    // upload every texture now too, and draw the title's first view (shadow and post-processing passes)
+    const tex = new Set();
+    this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap']) if (m[k]?.isTexture) tex.add(m[k]); });
+    for (const t of tex) R.initTexture(t);
+    loadingStep('Almost there…');
+    await nextPaint();
+    this.titleCamera(0);
+    this.lightPool.update(this.camera.position);
+    this.renderer.render();
+    this.loadTimes.shaders = Math.round(performance.now() - t0);
+    this.perf.load = this.loadTimes;
+    this.preparing = false;
+    this.last = performance.now();
     const boot = sessionStorage.getItem(BOOT_KEY);
     sessionStorage.removeItem(BOOT_KEY);
     $('#loading').classList.add('hidden');
     if (boot === 'new') this.startNew();
     else if (boot === 'continue' && store.get(SAVE_KEY)) this.startContinue();
     else this.showScreen('title');
-    if (matchMedia('(pointer: coarse)').matches) this.touch = true;
   }
 
   // ------------------------------------------------ spawning
@@ -826,7 +854,7 @@ class Game {
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
-    if (!this.testFreeze) this.advance(real);
+    if (!this.testFreeze && !this.preparing) this.advance(real);
     requestAnimationFrame((t2) => this.loop(t2));
   }
 
@@ -914,6 +942,7 @@ class Game {
     else if (this.room.outdoor) updateKitLod(this.hero.pos);
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
+    this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     this.particles.update(dt);
     if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0);
     if (this.state !== 'play') this.behMenu.show(false);
@@ -1019,8 +1048,11 @@ class Game {
 }
 
 const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
+const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e) e.textContent = text; };
+// resolves after the browser has painted (so a loading message shows before a long synchronous step)
+const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
-Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters()]).then(() => { window.game = new Game(); });
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters()]).then(async () => { loadingStep('Building the island…'); await nextPaint(); window.game = new Game(); });

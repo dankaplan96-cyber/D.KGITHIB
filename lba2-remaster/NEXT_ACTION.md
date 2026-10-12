@@ -1,5 +1,10 @@
 # NEXT ACTION
 
+User feedback after installing on Windows (top priority, in order): character proportions as in LBA2
+(Twinsen: bigger round head, bell-shaped robe; Zoé: blonde done, body too thin, head too small); animations
+closer to the original (walk, run, idle, throw — timing and weight); confirm the start-up and the frame rate
+on the user's PC with F3 (GPU name, startup build/shader times).
+
 Story: chapters 1–10 are playable with tests; combat overhaul done (docs/COMBAT.md, tests/combat.mjs); the new-game
 opening scene is in (docs/CINEMATICS.md, tests/opening.mjs).
 

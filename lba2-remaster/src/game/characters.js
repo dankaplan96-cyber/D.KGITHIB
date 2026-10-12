@@ -30,9 +30,9 @@ export const LOOKS = {
   },
   zoe: {
     // (design interpretation in LBA2's style: a long red dress with a white collar and a yellow sash tied in a
-    // bow, auburn hair in a long high ponytail)
+    // bow, blonde hair in a long high ponytail, as in LBA2)
     race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
-    hair: '#8a3a16', skin: '#f0c49b', hairStyle: 'longtail', collarFlat: '#f6efe0', bow: true, tie: '#f4d27a', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 1.0, neck: 0.11, height: 0.95,
+    hair: '#e2b45a', skin: '#f0c49b', hairStyle: 'longtail', collarFlat: '#f6efe0', bow: true, tie: '#f4d27a', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 1.0, neck: 0.11, height: 0.95,
   },
   arthur: {
     // a curious kid: knee tunic in his father's blue with an orange belt, scuffed knees, a spiky tuft
