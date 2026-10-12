@@ -604,6 +604,8 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
 .st-pill{display:inline-block;padding:3px 10px;border-radius:999px;font-weight:700;font-size:13px;background:#eef2f4}
 .st-pill.done{background:var(--good-soft);color:var(--good)}.st-pill.family{background:#e8f0fd;color:#2a5d9a}.st-pill.refused{background:#fdeceb;color:#9b2c2c}
 .sign-list{display:grid;gap:4px;margin-top:8px;max-height:220px;overflow:auto;font-size:15px}
+.washer-all{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;padding:10px;border-radius:12px;background:var(--brand-soft)}.washer-all label{font-weight:800}.washer-all input{flex:1;min-width:160px;min-height:42px;border:1px solid var(--line-strong);border-radius:10px;padding:4px 10px;font-size:16px}
+.sign-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid #eef2f4}.washer-input{width:170px;min-height:38px;border:1px solid var(--line-strong);border-radius:10px;padding:2px 10px;font-size:15px}.washer-fixed{color:var(--muted);font-size:14px}
 .sign-check{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:700;font-size:16px;cursor:pointer}
 .sign-check input{width:22px;height:22px}
 
@@ -1027,7 +1029,7 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
     <div class="modal-head"><h2>✍️ חתימת אחות</h2><button class="btn" id="showerSignClose">✕ סגור</button></div>
     <div class="modal-body">
       <div class="move-current-card" id="showerSignSummary"></div>
-      <div class="form-field full"><label for="showerSignName">שם האחות החותמת</label><input id="showerSignName" autocomplete="off" placeholder="שם מלא"></div>
+      <div class="form-field full"><label for="showerSignName">שם האחות החותמת</label><input id="showerSignName" autocomplete="off" placeholder="שם מלא"></div><datalist id="washerNames"></datalist>
       <label class="sign-check"><input type="checkbox" id="showerSignConfirm"> אני מאשר/ת שהסימונים נכונים</label>
     </div>
     <div class="modal-foot"><button class="btn" id="showerSignCancel">ביטול</button><button class="btn primary big" id="showerSignConfirmBtn">✍️ חתום ושמור</button></div>
@@ -2350,7 +2352,7 @@ function showerRowHTML(p,needed){
   const tags=[late?`<span class="badge alert">באיחור מ־${esc(fmtDate(due))}</span>`:'',!needed&&!ev?`<span class="badge">רחצה הבאה: ${esc(fmtDate(showerNextAfter(p,showerDate)))}</span>`:'',p.isolation?'<span class="badge iso">בידוד</span>':''].join('');
   let action;
   if(ev&&!draft){const st=SHOWER_STATUS[ev.status]||SHOWER_STATUS.done;const t=ev.at?new Date(ev.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'';
-    action=`<div class="shower-signed ${st.cls}"><span class="st">${st.icon} ${esc(st.label)}</span><span class="by">✍️ ${esc(ev.by||'')}${t?` · ${t}`:''}</span><button type="button" class="link-btn" data-shower-fix="${p.id}">תיקון</button></div>`}
+    action=`<div class="shower-signed ${st.cls}"><span class="st">${st.icon} ${esc(st.label)}</span>${ev.washer&&ev.status==='done'?`<span class="by">🧽 רוחץ: <b>${esc(ev.washer)}</b></span>`:''}<span class="by">✍️ אחות: ${esc(ev.by||'')}${t?` · ${t}`:''}</span><button type="button" class="link-btn" data-shower-fix="${p.id}">תיקון</button></div>`}
   else action=`<div class="shower-btns">${Object.entries(SHOWER_STATUS).map(([k,st])=>`<button type="button" class="shower-btn ${st.cls} ${draft?.status===k?'on':''}" data-shower-mark="${p.id}" data-status="${k}" aria-pressed="${draft?.status===k}">${st.icon} ${esc(st.label)}</button>`).join('')}</div>`;
   return `<div class="shower-row ${draft?'dirty':''} ${ev&&!draft?'signed '+(SHOWER_STATUS[ev.status]?.cls||''):''}"><div class="shower-who"><span class="avatar ${p.sex||''}" aria-hidden="true">${esc((p.name||'?').trim().charAt(0))}</span><div><div class="bed-name">${esc(p.name)}</div><div class="bed-sub">חדר ${p.room} · מיטה ${esc(p.bed)}${g>0?` · ${esc(sideName(g))}`:''}</div>${tags?`<div class="bed-badges">${tags}</div>`:''}</div></div>${action}</div>`;
 }
@@ -2377,9 +2379,13 @@ function renderShowers(){
   if(showerArchiveOpen)renderShowerArchive();
 }
 function openShowerSign(){
-  const items=Object.entries(showerDraft).map(([id,d])=>({p:state.patients.find(x=>x.id===id),st:SHOWER_STATUS[d.status]})).filter(x=>x.p);
+  const items=Object.entries(showerDraft).map(([id,d])=>({id,d,p:state.patients.find(x=>x.id===id),st:SHOWER_STATUS[d.status]})).filter(x=>x.p);
   if(!items.length)return;
-  $('#showerSignSummary').innerHTML=`<div class="move-name">${esc(hebDay(showerDate))} ${esc(fmtDate(showerDate))} · ${items.length} מטופלים</div><div class="sign-list">${items.map(x=>`<div>${x.st.icon} <strong>${esc(x.p.name)}</strong> – ${esc(x.st.label)}</div>`).join('')}</div>`;
+  const washers=JSON.parse(safeLocalGet('sbarShowerWashers')||'[]');$('#washerNames').innerHTML=washers.map(w=>`<option value="${esc(w)}"></option>`).join('');
+  const hasDone=items.some(x=>x.d.status==='done');
+  $('#showerSignSummary').innerHTML=`<div class="move-name">${esc(hebDay(showerDate))} ${esc(fmtDate(showerDate))} · ${items.length} מטופלים</div>${hasDone?`<div class="washer-all"><label for="showerWasherAll">שם הרוחץ</label><input id="showerWasherAll" list="washerNames" autocomplete="off" placeholder="מי רחץ?"><button type="button" class="btn small" id="showerWasherApply">החל על כולם</button></div>`:''}<div class="sign-list">${items.map(x=>`<div class="sign-item"><span>${x.st.icon} <strong>${esc(x.p.name)}</strong> – ${esc(x.st.label)}</span>${x.d.status==='done'?`<input class="washer-input" data-washer-for="${x.id}" list="washerNames" autocomplete="off" placeholder="שם הרוחץ" value="${esc(x.d.washer||'')}">`:x.d.status==='family'?'<span class="washer-fixed">רוחץ: משפחה</span>':''}</div>`).join('')}</div>`;
+  const all=$('#showerWasherAll');if(all){const apply=()=>{$$('#showerSignSummary .washer-input').forEach(i=>{if(!i.value.trim()||i.dataset.fromAll)i.value=all.value,i.dataset.fromAll='1'})};$('#showerWasherApply').onclick=()=>{apply()};all.oninput=apply}
+  $$('#showerSignSummary .washer-input').forEach(i=>i.oninput=()=>{delete i.dataset.fromAll;if(showerDraft[i.dataset.washerFor])showerDraft[i.dataset.washerFor].washer=i.value});
   $('#showerSignName').value=safeLocalGet('sbarShowerNurse')||'';$('#showerSignConfirm').checked=false;
   $('#showerSignModal').classList.add('open');$('#showerSignModal').setAttribute('aria-hidden','false');setTimeout(()=>$('#showerSignName').focus(),30);
 }
@@ -2388,13 +2394,16 @@ function signShowers(){
   const name=$('#showerSignName').value.trim();
   if(name.length<2){alert('יש להקליד את שם האחות החותמת.');$('#showerSignName').focus();return}
   if(!$('#showerSignConfirm').checked){alert('יש לסמן “אני מאשר/ת שהסימונים נכונים”.');return}
+  const washerOf={};$$('#showerSignSummary .washer-input').forEach(i=>washerOf[i.dataset.washerFor]=i.value.trim());
+  const missing=Object.entries(showerDraft).filter(([id,d])=>d.status==='done'&&(washerOf[id]||'').length<2).map(([id])=>state.patients.find(x=>x.id===id)?.name).filter(Boolean);
+  if(missing.length){alert(`יש להקליד את שם הרוחץ עבור:\n\n${missing.join('\n')}`);$$('#showerSignSummary .washer-input').find(i=>!i.value.trim())?.focus();return}
   if(!requireNetworkReady('חתימה על רחצות'))return;
   const now=new Date().toISOString(),cutoff=addDaysISO(todayISO(),-366);let n=0;
   state.showerLog=(state.showerLog||[]).filter(e=>e.date>=cutoff); // archive keeps one year
   for(const [id,d] of Object.entries(showerDraft)){const p=state.patients.find(x=>x.id===id);if(!p||!hasPatient(p))continue;const key=showerKey(p);
     state.showerLog=state.showerLog.filter(e=>!(e.key===key&&e.date===showerDate));
-    state.showerLog.push({id:`sh_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,date:showerDate,key,name:p.name,room:p.room,bed:p.bed,status:d.status,by:name,at:now});n++}
-  safeLocalSet('sbarShowerNurse',name);showerDraft={};closeShowerSign();if(!save())return;renderShowers();toast(`נחתם ונשמר: ${n} מטופלים`);
+    state.showerLog.push({id:`sh_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`,date:showerDate,key,name:p.name,room:p.room,bed:p.bed,status:d.status,by:name,washer:d.status==='done'?washerOf[id]:d.status==='family'?'משפחה':'',at:now});n++}
+  safeLocalSet('sbarShowerNurse',name);{const prev=JSON.parse(safeLocalGet('sbarShowerWashers')||'[]');safeLocalSet('sbarShowerWashers',JSON.stringify([...new Set([...Object.values(washerOf).filter(Boolean),...prev])].slice(0,20)))}showerDraft={};closeShowerSign();if(!save())return;renderShowers();toast(`נחתם ונשמר: ${n} מטופלים`);
 }
 function resolveShowerDraftBefore(){const n=showerDraftCount();if(!n)return true;if(confirm(`יש ${n===1?'סימון רחצה אחד':n+' סימוני רחצה'} שלא נחתמו.\n\nאישור = לבטל את הסימונים ולהמשיך\nביטול = להישאר ולחתום`)){showerDraft={};return true}return false}
 /* archive & report */
@@ -2407,23 +2416,23 @@ function renderShowerArchive(){
   if(!$('#shArchFrom').value){$('#shArchFrom').value=addDaysISO(todayISO(),-30);$('#shArchTo').value=todayISO()}
   const rows=showerArchiveRows(),c=k=>rows.filter(e=>e.status===k).length;
   $('#shArchSummary').innerHTML=`<span class="sum-chip"><b>${rows.length}</b> רשומות</span><span class="sum-chip done"><b>${c('done')}</b> התקלחו</span><span class="sum-chip family"><b>${c('family')}</b> ע״י משפחה</span><span class="sum-chip refused"><b>${c('refused')}</b> סירבו</span>`;
-  $('#shArchTable').innerHTML=`<thead><tr><th style="width:13%">תאריך</th><th style="width:9%">יום</th><th style="width:7%">חדר</th><th>מטופל</th><th style="width:20%">סטטוס</th><th style="width:18%">נחתם ע״י</th><th style="width:9%">שעה</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${esc(fmtDate(e.date))}</td><td>${esc(hebDay(e.date))}</td><td>${esc(e.room)}</td><td class="name">${esc(e.name)}</td><td><span class="st-pill ${SHOWER_STATUS[e.status]?.cls||''}">${SHOWER_STATUS[e.status]?.icon||''} ${esc(SHOWER_STATUS[e.status]?.label||e.status)}</span></td><td>${esc(e.by||'')}</td><td>${esc(showerTime(e))}</td></tr>`).join('')||'<tr><td colspan="7" style="height:60px">אין רשומות בטווח שנבחר</td></tr>'}</tbody>`;
+  $('#shArchTable').innerHTML=`<thead><tr><th style="width:13%">תאריך</th><th style="width:9%">יום</th><th style="width:7%">חדר</th><th>מטופל</th><th style="width:18%">סטטוס</th><th style="width:14%">רוחץ</th><th style="width:14%">אחות חותמת</th><th style="width:8%">שעה</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${esc(fmtDate(e.date))}</td><td>${esc(hebDay(e.date))}</td><td>${esc(e.room)}</td><td class="name">${esc(e.name)}</td><td><span class="st-pill ${SHOWER_STATUS[e.status]?.cls||''}">${SHOWER_STATUS[e.status]?.icon||''} ${esc(SHOWER_STATUS[e.status]?.label||e.status)}</span></td><td>${esc(e.washer||'')}</td><td>${esc(e.by||'')}</td><td>${esc(showerTime(e))}</td></tr>`).join('')||'<tr><td colspan="8" style="height:60px">אין רשומות בטווח שנבחר</td></tr>'}</tbody>`;
 }
 function exportShowerCsv(){
   const rows=showerArchiveRows(),cell=v=>`"${String(v??'').replace(/"/g,'""')}"`;
-  const lines=[['תאריך','יום','חדר','מיטה','מטופל','סטטוס','נחתם ע״י','שעת חתימה'].map(cell).join(',')].concat(rows.map(e=>[fmtDate(e.date),hebDay(e.date),e.room,e.bed,e.name,SHOWER_STATUS[e.status]?.label||e.status,e.by,e.at?new Date(e.at).toLocaleString('he-IL'):''].map(cell).join(',')));
+  const lines=[['תאריך','יום','חדר','מיטה','מטופל','סטטוס','רוחץ','אחות חותמת','שעת חתימה'].map(cell).join(',')].concat(rows.map(e=>[fmtDate(e.date),hebDay(e.date),e.room,e.bed,e.name,SHOWER_STATUS[e.status]?.label||e.status,e.washer||'',e.by,e.at?new Date(e.at).toLocaleString('he-IL'):''].map(cell).join(',')));
   const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`רחצות_${state.wardName}_${$('#shArchFrom').value}_${$('#shArchTo').value}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),800);
 }
 function printShowerReport(){
   const rows=showerArchiveRows();
-  const html=`<style>@page{size:A4 portrait;margin:10mm}</style><section class="shower-report"><div class="sr-head"><div><strong>${esc(state.wardName)}</strong></div><div class="sr-title">דוח רחצות</div><div>${esc(fmtDate($('#shArchFrom').value))} – ${esc(fmtDate($('#shArchTo').value))}</div></div><table class="sr-table"><thead><tr><th>תאריך</th><th>יום</th><th>חדר</th><th>מטופל</th><th>סטטוס</th><th>נחתם ע״י</th><th>שעה</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${esc(fmtDate(e.date))}</td><td>${esc(hebDay(e.date))}</td><td>${esc(e.room)}</td><td class="name">${esc(e.name)}</td><td>${esc(SHOWER_STATUS[e.status]?.label||e.status)}</td><td>${esc(e.by||'')}</td><td>${esc(showerTime(e))}</td></tr>`).join('')||'<tr><td colspan="7">אין רשומות</td></tr>'}</tbody></table><div class="sr-foot">סה״כ ${rows.length} רשומות · הופק ${esc(new Date().toLocaleString('he-IL'))}</div></section>`;
+  const html=`<style>@page{size:A4 portrait;margin:10mm}</style><section class="shower-report"><div class="sr-head"><div><strong>${esc(state.wardName)}</strong></div><div class="sr-title">דוח רחצות</div><div>${esc(fmtDate($('#shArchFrom').value))} – ${esc(fmtDate($('#shArchTo').value))}</div></div><table class="sr-table"><thead><tr><th>תאריך</th><th>יום</th><th>חדר</th><th>מטופל</th><th>סטטוס</th><th>רוחץ</th><th>אחות חותמת</th><th>שעה</th></tr></thead><tbody>${rows.map(e=>`<tr><td>${esc(fmtDate(e.date))}</td><td>${esc(hebDay(e.date))}</td><td>${esc(e.room)}</td><td class="name">${esc(e.name)}</td><td>${esc(SHOWER_STATUS[e.status]?.label||e.status)}</td><td>${esc(e.washer||'')}</td><td>${esc(e.by||'')}</td><td>${esc(showerTime(e))}</td></tr>`).join('')||'<tr><td colspan="8">אין רשומות</td></tr>'}</tbody></table><div class="sr-foot">סה״כ ${rows.length} רשומות · הופק ${esc(new Date().toLocaleString('he-IL'))}</div></section>`;
   $('#printArea').innerHTML=html;savePrintedReportToNetwork('shower-report','דוח רחצות',html);setTimeout(()=>window.print(),80);
 }
 function makeShowerDayPrint(){
   const date=showerDate||defaultShowerDate(),reason=noShowerReason(date);
   const pts=reason?[]:activePatients().filter(p=>!p.onLeave&&(showerNeededOn(p,date)||showerEventOn(p,date)));
-  const rows=pts.map(p=>{const ev=showerEventOn(p,date);const box=k=>ev?.status===k?'☑':'☐';return `<tr><td>${esc(p.room)}</td><td>${esc(p.bed)}</td><td class="name">${esc(p.name)}</td><td class="check">${box('done')}</td><td class="check">${box('family')}</td><td class="check">${box('refused')}</td><td></td></tr>`}).join('')||`<tr><td colspan="7" class="weekend-leave-empty">${reason?esc(reason)+' – אין רחצות':'אין מטופלים לרחצה'}</td></tr>`;
-  return `<style>@page{size:A4 portrait;margin:0}@media print{html,body{width:210mm!important;height:auto!important}}</style><section class="print-page weekend-leave-page shower-day-page"><div class="weekend-leave-head"><div class="date">${esc(hebDay(date))} ${esc(fmtDate(date))}</div><div class="title">רשימת רחצות</div><div class="ward">${esc(state.wardName)}</div></div><table class="weekend-leave-table"><colgroup><col style="width:8%"><col style="width:7%"><col style="width:31%"><col style="width:11%"><col style="width:11%"><col style="width:11%"><col style="width:21%"></colgroup><thead><tr><th>חדר</th><th>מיטה</th><th>מטופל</th><th>התקלח/ה</th><th>ע״י משפחה</th><th>סירב/ה</th><th>הערות</th></tr></thead><tbody>${rows}</tbody></table><div class="weekend-leave-sign"><span>סה״כ: ${pts.length}</span><span>שם האחות: ____________________ חתימה: ______________</span></div></section>`;
+  const rows=pts.map(p=>{const ev=showerEventOn(p,date);const box=k=>ev?.status===k?'☑':'☐';return `<tr><td>${esc(p.room)}</td><td>${esc(p.bed)}</td><td class="name">${esc(p.name)}</td><td class="check">${box('done')}</td><td class="check">${box('family')}</td><td class="check">${box('refused')}</td><td>${esc(ev?.washer||'')}</td><td></td></tr>`}).join('')||`<tr><td colspan="8" class="weekend-leave-empty">${reason?esc(reason)+' – אין רחצות':'אין מטופלים לרחצה'}</td></tr>`;
+  return `<style>@page{size:A4 portrait;margin:0}@media print{html,body{width:210mm!important;height:auto!important}}</style><section class="print-page weekend-leave-page shower-day-page"><div class="weekend-leave-head"><div class="date">${esc(hebDay(date))} ${esc(fmtDate(date))}</div><div class="title">רשימת רחצות</div><div class="ward">${esc(state.wardName)}</div></div><table class="weekend-leave-table"><colgroup><col style="width:7%"><col style="width:6%"><col style="width:25%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:17%"><col style="width:15%"></colgroup><thead><tr><th>חדר</th><th>מיטה</th><th>מטופל</th><th>התקלח/ה</th><th>ע״י משפחה</th><th>סירב/ה</th><th>שם הרוחץ</th><th>הערות</th></tr></thead><tbody>${rows}</tbody></table><div class="weekend-leave-sign"><span>סה״כ: ${pts.length}</span><span>שם האחות: ____________________ חתימה: ______________</span></div></section>`;
 }
 function showerVitalsMark(p){if(!p)return '';const date=state.reportDate;if(noShowerReason(date)||!(showerNeededOn(p,date)||showerEventOn(p,date)))return '';const ev=showerEventOn(p,date);return `<span class="shower-mark">רחצה: ${ev?`<b>${esc(SHOWER_STATUS[ev.status]?.short||'')} ✓</b>`:'☐ בוצע ☐ משפחה ☐ סירב'}</span>`}
 function renderShowerNoDays(){const host=$('#showerNoDayList');if(!host)return;const list=state.showerNoDays||[];host.innerHTML=list.map(d=>`<span class="structure-pill">${esc(fmtDate(d))} <button type="button" class="danger-link" data-del-noday="${d}" aria-label="הסר">✕</button></span>`).join('')||'<span class="hint">לא הוגדרו ימים נוספים</span>';host.querySelectorAll('[data-del-noday]').forEach(b=>b.onclick=()=>{if(!requireNetworkReady('עדכון ימים ללא רחצות'))return;state.showerNoDays=(state.showerNoDays||[]).filter(x=>x!==b.dataset.delNoday);save();renderShowerNoDays();renderShowers()})}
