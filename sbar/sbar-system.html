@@ -536,6 +536,34 @@ body{background:radial-gradient(circle at 100% 0,#e3f1f3 0,transparent 40%),var(
 .toast{background:var(--grad);border-radius:14px;box-shadow:0 10px 30px rgba(10,80,90,.35)}
 @media(max-width:900px){.shift-bar{border-radius:0}}
 
+/* v64 editable SBAR */
+.sbar-row{grid-template-columns:62px 1.15fr 50px 1.35fr 1.2fr .8fr 2.1fr .95fr .85fr .85fr 1.2fr;min-width:1320px}
+.sbar-row:not(.head){cursor:default}
+.sbar-row:not(.head):hover .sbar-cell{background:transparent}
+.sbar-row.head .assess-head{background:linear-gradient(135deg,#12919c,#0b6670)}
+.sbar-cell.edit{padding:5px}
+.sbar-cell.assess{background:#f2fafb}
+.sbar-input{width:100%;min-height:40px;border:1px solid transparent;border-radius:8px;background:transparent;padding:6px 8px;font-size:14px;line-height:1.35;resize:none;overflow:hidden;transition:border-color .12s,background .12s,box-shadow .12s}
+select.sbar-input{padding:6px 4px;cursor:pointer}
+.sbar-input:hover{border-color:#cfdbe1;background:#fff}
+.sbar-input:focus{outline:0;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(14,124,134,.15)}
+.sbar-cell.assess .sbar-input{font-size:15px;min-height:62px}
+.sbar-cell.dirty{background:#fff6cf!important}
+.sbar-cell.dirty .sbar-input{border-color:#e3b93c;background:#fffbea}
+.sbar-row.dirty .sbar-cell:first-child{box-shadow:inset -4px 0 0 #e3b93c}
+.sbar-cell.readonly{color:#43535c;background:#fafbfc;cursor:help}
+.allergy-yes{color:#8a4500!important;font-weight:700}
+.name-cell{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.link-btn{border:0;background:none;color:var(--brand);font-size:13px;font-weight:700;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.row-confirm{display:flex;gap:4px;margin-top:2px}
+.row-confirm[hidden]{display:none}
+.row-confirm .btn{min-height:32px;padding:2px 10px;font-size:13px}
+.sbar-save-bar{position:sticky;bottom:12px;z-index:20;margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:#fffbea;border:2px solid #e3b93c;border-radius:16px;box-shadow:0 12px 30px rgba(120,90,0,.22);animation:barIn .2s ease-out}
+.sbar-save-bar[hidden]{display:none}
+.sbar-save-bar .save-dot{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:#e3b93c;color:#fff;font-size:18px}
+.sbar-save-bar .grow{flex:1}
+@keyframes barIn{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+
 @media(max-width:900px){
   .beds{grid-template-columns:1fr!important}
   .beds .bed{border-inline-start:0;border-top:1px solid var(--line)}
@@ -643,11 +671,12 @@ body{background:radial-gradient(circle at 100% 0,#e3f1f3 0,transparent 40%),var(
 
   <section class="view" id="view-sbar">
     <div class="page-head">
-      <div><h2>SBAR – העברת משמרת</h2><p class="hint">לחיצה על שורה פותחת את כרטיס המטופל לעריכה.</p></div>
+      <div><h2>SBAR – העברת משמרת</h2><p class="hint">אפשר לכתוב ישירות בטבלה. שדה ששונה נצבע בצהוב, והשינוי נשמר רק אחרי לחיצה על <strong>“אשר ושמור”</strong>.</p></div>
       <div class="page-actions"><button class="btn primary big" data-print="sbar">🖨️ הדפס SBAR</button><button class="btn" data-print="sbar-nurses">דף לכל אחות</button></div>
     </div>
     <div class="assignment-summary" id="sbarAssignments"></div>
     <div class="sbar-list" id="sbarList"></div>
+    <div class="sbar-save-bar" id="sbarSaveBar" hidden role="region" aria-live="polite"><span class="save-dot" aria-hidden="true">✎</span><strong id="sbarSaveCount"></strong><span class="hint">השינויים עדיין לא נשמרו</span><div class="grow"></div><button type="button" class="btn" id="sbarDiscardAll">בטל שינויים</button><button type="button" class="btn primary big" id="sbarSaveAll">✓ אשר ושמור</button></div>
   </section>
 
   <section class="view" id="view-vitals">
@@ -1467,13 +1496,84 @@ function renderVitals(){
   if(!rows)rows=`<tr><td colspan="${morning?17:10}" style="height:70px">אין מטופלים פעילים</td></tr>`;
   $('#vitalsPreview').innerHTML=head+`<tbody>${rows}</tbody>`;
 }
-function renderSbar(){
-  const list=$('#sbarList'),head=['חדר','Introduction / הצגת המטופל','גיל','Situation / מצב','Background / רקע','רגישויות','Assessment / אומדן','הדרכות','שליטה שתן','שליטה פ״מ','הערות'];list.innerHTML=`<div class="sbar-row head">${head.map(x=>`<div class="sbar-cell">${x}</div>`).join('')}</div>`;
-  let last=0;reportingPatients().forEach(p=>{const g=groupOf(p),start=g&&g!==last;last=g||last;const row=document.createElement('div');row.className=`sbar-row ${start?'group-start':''}`;const allergy=p.allergy?(p.allergyText||'רגישות – ללא פירוט'):'ללא';const vals=[p.room,p.name||'—',p.age||'—',p.situation,p.background,allergy,p.assessment,p.education,p.urine,p.bowel,p.notes];row.innerHTML=vals.map((v,i)=>`<div class="sbar-cell editable ${i===10?'notes':''} ${v?'':'sbar-empty'}">${esc(v||'—')}${i===0?roomPrintMeta(p.room)+patientPrintMeta(p):''}${i===0&&start?`<span class="sbar-group-tag">${sideName(g)}</span>`:''}</div>`).join('');row.onclick=()=>openPatient(p.id);list.appendChild(row)});
-  if(!reportingPatients().length)list.innerHTML+=`<div class="panel hint">אין כרגע מטופלים במחלקה שמופיעים ב־SBAR.</div>`;
+/* v64 — SBAR screen is editable in place. Edits are staged (highlighted) and written only after
+   the nurse presses "אשר ושמור"; nothing is saved silently. */
+const SBAR_EDIT_FIELDS={situation:'Situation / מצב',assessment:'Assessment / אומדן',education:'הדרכות',urine:'שליטה שתן',bowel:'שליטה פ״מ',notes:'הערות'};
+const SBAR_SELECT_OPTIONS={urine:['','מלאה','חלקית','אי שליטה','קטטר','אחר'],bowel:['','מלאה','חלקית','אי שליטה','סטומה','אחר']};
+let sbarDraft={},sbarRenderPending=false;
+function sbarDraftCount(){return Object.values(sbarDraft).reduce((n,f)=>n+Object.keys(f).length,0)}
+function sbarDraftValue(p,field){const d=sbarDraft[p.id]?.[field];return d?d.value:(p[field]||'')}
+function sbarSetDraft(id,field,value){const p=state.patients.find(x=>x.id===id);if(!p)return;const cur=p[field]||'';sbarDraft[id]=sbarDraft[id]||{};
+  if(value===(sbarDraft[id][field]?.orig??cur)){delete sbarDraft[id][field];if(!Object.keys(sbarDraft[id]).length)delete sbarDraft[id]}
+  else sbarDraft[id][field]={value,orig:sbarDraft[id][field]?.orig??cur};
+  updateSbarDraftUI()}
+function updateSbarDraftUI(){
+  const n=sbarDraftCount(),bar=$('#sbarSaveBar');
+  if(bar){bar.hidden=!n;$('#sbarSaveCount').textContent=n===1?'שינוי אחד ממתין לאישור':`${n} שינויים ממתינים לאישור`}
+  $$('#sbarList [data-sbar-field]').forEach(el=>el.closest('.sbar-cell')?.classList.toggle('dirty',!!sbarDraft[el.dataset.sbarId]?.[el.dataset.sbarField]));
+  $$('#sbarList .sbar-row[data-row-id]').forEach(r=>{const d=!!sbarDraft[r.dataset.rowId];r.classList.toggle('dirty',d);const a=r.querySelector('.row-confirm');if(a)a.hidden=!d});
+}
+function sbarAutoGrow(el){if(el.tagName!=='TEXTAREA')return;el.style.height='auto';el.style.height=(el.scrollHeight+2)+'px'}
+let sbarCommitBusy=false;
+async function commitSbarDraft(onlyId=null){
+  const ids=Object.keys(sbarDraft).filter(id=>!onlyId||id===onlyId);if(!ids.length)return true;
+  if(sbarCommitBusy)return false;
+  if(!requireNetworkReady('שמירת שינויים ב־SBAR'))return false;
+  sbarCommitBusy=true;
+  try{ // read the newest network version first, so a same-field change from another computer is asked about, not a lock
+    if(!networkDirty&&!networkSaveBusy){await networkPull({force:false,silent:true});if(!networkReady)return false}
+    return applySbarDraft(ids);
+  }finally{sbarCommitBusy=false}
+}
+function applySbarDraft(ids){
+  const changedElsewhere=[];
+  for(const id of ids){const p=state.patients.find(x=>x.id===id);if(!p||!hasPatient(p)){delete sbarDraft[id];continue}
+    for(const [f,d] of Object.entries(sbarDraft[id]))if((p[f]||'')!==d.orig)changedElsewhere.push(`${p.name||'מטופל'} – ${SBAR_EDIT_FIELDS[f]}`)}
+  if(changedElsewhere.length&&!confirm(`השדות הבאים עודכנו בינתיים במחשב אחר:\n\n${changedElsewhere.join('\n')}\n\nלהחליף אותם בערך שהקלדת?`))return false;
+  let patients=0;
+  for(const id of ids){const p=state.patients.find(x=>x.id===id);if(!p)continue;for(const [f,d] of Object.entries(sbarDraft[id]))p[f]=typeof d.value==='string'?d.value.trim():d.value;delete sbarDraft[id];patients++}
+  if(!save())return false;
+  renderAll();renderSbar(true);toast(patients===1?'השינויים נשמרו':`השינויים נשמרו (${patients} מטופלים)`);return true;
+}
+function discardSbarDraft(onlyId=null){if(onlyId)delete sbarDraft[onlyId];else sbarDraft={};renderSbar(true)}
+/* Before leaving the SBAR screen or printing: never lose or silently drop typed changes. */
+async function resolveSbarDraftBefore(action){
+  const n=sbarDraftCount();if(!n)return true;
+  if(confirm(`יש ${n===1?'שינוי אחד':n+' שינויים'} ב־SBAR שעדיין לא אושרו.\n\nאישור = לשמור עכשיו ול${action}\nביטול = להישאר במסך ה־SBAR`))return await commitSbarDraft();
+  return false;
+}
+function renderSbar(force=false){
+  const list=$('#sbarList');if(!list)return;
+  if(!force&&list.contains(document.activeElement)){sbarRenderPending=true;return} // don't wipe what the nurse is typing
+  sbarRenderPending=false;
+  const head=['חדר','Introduction / הצגת המטופל','גיל','Situation / מצב','Background / רקע','רגישויות','Assessment / אומדן','הדרכות','שליטה שתן','שליטה פ״מ','הערות'];
+  list.innerHTML=`<div class="sbar-row head">${head.map((x,i)=>`<div class="sbar-cell ${i===6?'assess-head':''}">${x}</div>`).join('')}</div>`;
+  const input=(p,f)=>{const v=sbarDraftValue(p,f);if(SBAR_SELECT_OPTIONS[f]){const opts=SBAR_SELECT_OPTIONS[f].includes(v)?SBAR_SELECT_OPTIONS[f]:[...SBAR_SELECT_OPTIONS[f],v];return `<select class="sbar-input" data-sbar-id="${p.id}" data-sbar-field="${f}" aria-label="${esc(SBAR_EDIT_FIELDS[f])} – ${esc(p.name||'')}">${opts.map(o=>`<option value="${esc(o)}" ${o===v?'selected':''}>${o?esc(o):'—'}</option>`).join('')}</select>`}
+    return `<textarea class="sbar-input" rows="${f==='assessment'?3:2}" data-sbar-id="${p.id}" data-sbar-field="${f}" placeholder="${f==='assessment'?'הקלידו אומדן…':''}" aria-label="${esc(SBAR_EDIT_FIELDS[f])} – ${esc(p.name||'')}">${esc(v)}</textarea>`};
+  let last=0,html='';
+  reportingPatients().forEach(p=>{const g=groupOf(p),start=g&&g!==last;last=g||last;const allergy=p.allergy?(p.allergyText||'רגישות – ללא פירוט'):'ללא';
+    html+=`<div class="sbar-row ${start?'group-start':''}" data-row-id="${p.id}">
+      <div class="sbar-cell">${p.room}${roomPrintMeta(p.room)}${patientPrintMeta(p)}${start?`<span class="sbar-group-tag">${sideName(g)}</span>`:''}</div>
+      <div class="sbar-cell name-cell"><strong>${esc(p.name||'—')}</strong><button type="button" class="link-btn" data-open-card="${p.id}">כרטיס מלא ›</button><div class="row-confirm" hidden><button type="button" class="btn small primary" data-row-save="${p.id}">✓ אשר</button><button type="button" class="btn small" data-row-cancel="${p.id}">בטל</button></div></div>
+      <div class="sbar-cell">${esc(p.age||'—')}</div>
+      <div class="sbar-cell edit">${input(p,'situation')}</div>
+      <div class="sbar-cell readonly ${p.background?'':'sbar-empty'}" title="רקע רפואי נערך בכרטיס המלא">${esc(p.background||'—')}</div>
+      <div class="sbar-cell readonly ${p.allergy?'allergy-yes':''}" title="רגישות נערכת בכרטיס המלא">${esc(allergy)}</div>
+      <div class="sbar-cell edit assess">${input(p,'assessment')}</div>
+      <div class="sbar-cell edit">${input(p,'education')}</div>
+      <div class="sbar-cell edit">${input(p,'urine')}</div>
+      <div class="sbar-cell edit">${input(p,'bowel')}</div>
+      <div class="sbar-cell edit notes">${input(p,'notes')}</div></div>`});
+  list.insertAdjacentHTML('beforeend',html||`<div class="panel hint">אין כרגע מטופלים במחלקה שמופיעים ב־SBAR.</div>`);
+  list.querySelectorAll('[data-sbar-field]').forEach(el=>{sbarAutoGrow(el);el.oninput=el.onchange=()=>{sbarAutoGrow(el);sbarSetDraft(el.dataset.sbarId,el.dataset.sbarField,el.value)};
+    el.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();commitSbarDraft(el.dataset.sbarId)}}});
+  list.querySelectorAll('[data-open-card]').forEach(b=>b.onclick=()=>{if(sbarDraft[b.dataset.openCard]&&!confirm('יש שינויים שלא אושרו בשורה הזו. לשמור אותם לפני פתיחת הכרטיס?'))return;if(sbarDraft[b.dataset.openCard]){commitSbarDraft(b.dataset.openCard).then(ok=>{if(ok)openPatient(b.dataset.openCard)});return}openPatient(b.dataset.openCard)});
+  list.querySelectorAll('[data-row-save]').forEach(b=>b.onclick=()=>commitSbarDraft(b.dataset.rowSave));
+  list.querySelectorAll('[data-row-cancel]').forEach(b=>b.onclick=()=>discardSbarDraft(b.dataset.rowCancel));
+  updateSbarDraftUI();
 }
 function renderAll(){reconcileAllRoomGenders();ensureAssignments();syncHeader();updateStats();renderRooms();renderVitals();renderSbar();renderArchive();renderRoomStructure();renderRoomConfig()}
-function setView(v){$$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$$('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+v));window.scrollTo({top:0});if(v==='vitals')renderVitals();if(v==='sbar')renderSbar();if(v==='archive')renderArchive()}
+function setView(v,force=false){if(!force&&v!=='sbar'&&sbarDraftCount()&&$('#view-sbar')?.classList.contains('active')){resolveSbarDraftBefore('עבור למסך אחר').then(ok=>{if(ok)setView(v,true)});return}$$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$$('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+v));window.scrollTo({top:0});if(v==='vitals')renderVitals();if(v==='sbar')renderSbar();if(v==='archive')renderArchive()}
 
 /* PRINT */
 function sbarCell(v,cls=''){return `<td class="${cls}">${esc(v||'')}</td>`}
@@ -2120,6 +2220,7 @@ function fitPrintPages(root){
   return overflow;
 }
 function doPrint(type){
+  if(sbarDraftCount()){resolveSbarDraftBefore('הדפיס').then(ok=>{if(ok)doPrint(type)});return}
   let html='',title='';if(type==='sbar'){html=makeSbarPrint(false);title='SBAR'}else if(type==='sbar-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeSbarPrint(true);title='SBAR לפי צדדים'}else if(type==='vitals-nurses'){if(!shiftCount()){alert('בחר תחילה מספר אחים למשמרת.');return}html=makeVitalsPrint(true);title=`סימנים ${SHIFT_LABEL[state.activeShift]}`}else if(type==='weekend-leave'){html=makeWeekendLeavePrint();title='רשימת יציאות לחופש'}else if(type==='patients-by-room'){html=makePatientsByRoomPrint();title='רשימת מטופלים'}else{html=makeVitalsPrint(false);title=`סימנים ${SHIFT_LABEL[state.activeShift]} מחלקתי`}
   const area=$('#printArea');area.innerHTML=html;const overflow=fitPrintPages(area);if(overflow)toast('יש יותר מדי מידע לדף אחד – הדף יודפס על יותר מעמוד אחד');const old=document.title;document.title=`${state.wardName}_${title}_${state.reportDate}`;savePrintedReportToNetwork(type,title,area.innerHTML);setTimeout(()=>{window.print();setTimeout(()=>document.title=old,500)},80);
 }
@@ -2132,6 +2233,8 @@ function applyFont(key){if(!FONT_STACKS[key])key='david';document.documentElemen
 applyFont(safeLocalGet('sbarFontChoice')||'david');
 $('#fontChoice').onchange=e=>{safeLocalSet('sbarFontChoice',applyFont(e.target.value));toast('הגופן עודכן')};
 
+$('#sbarList').addEventListener('focusout',()=>setTimeout(()=>{if(sbarRenderPending&&!$('#sbarList').contains(document.activeElement))renderSbar()},0));
+$('#sbarSaveAll').onclick=()=>commitSbarDraft();$('#sbarDiscardAll').onclick=()=>{if(confirm('לבטל את כל השינויים שלא אושרו?'))discardSbarDraft()};
 /* UI events */
 $('#countButtons').innerHTML=Array.from({length:10},(_,i)=>`<button class="count-btn" data-count="${i+1}">${i+1}</button>`).join('');
 $$('.tab').forEach(b=>b.onclick=()=>setView(b.dataset.view));
@@ -2158,7 +2261,7 @@ $('#resetAll').onclick=()=>{if(confirm('איפוס מלא ימחק את מבנה
 
 /* Hidden render helper for layout verification: ?render=sbar|vitals-ward|vitals-nurses&demo=1&shift=morning */
 function demoData(){state=defaultState();syncStructureState(Array.from({length:15},(_,i)=>({room:i+1,beds:2})),false);state.showerStaffByDate[state.reportDate]='מרים, יוסי, נעמה';state.showerNursesByDate[state.reportDate]='דנה, רונית';state.activeShift=new URLSearchParams(location.search).get('shift')||'morning';for(let i=0;i<state.patients.length;i++){const p=state.patients[i];p.name=`מטופל ${i+1}`;p.age=30+(i%50);p.situation='שיקום לאחר פגיעה אורתופדית / נוירולוגית, המשך טיפול ומעקב במחלקת שיקום';p.background='יתר לחץ דם, סוכרת ומחלות רקע נוספות לפי הצורך';p.assessment='מתנייד בתמיכת אביזר עזר, מעברים בהשגחה או בעזרה קלה';p.education=i%4===0?'הדרכה למעברים':'';p.urine=i%6===0?'חלקית':'מלאה';p.bowel=i%7===0?'חלקית':'מלאה';p.notes=i%5===0?'הערה חשובה להמשך מעקב':'';p.glucoseRequired=i%3===0;p.glucoseChecks=p.glucoseRequired?(i%3)+1:0;p.glucosePattern=p.glucoseChecks===1?'08':p.glucoseChecks===2?'08,18':p.glucoseChecks===3?'08,12,18':'';p.isolation=false;p.outOfBedRequired=i%6!==0;p.outOfBedAssist=['independent','supervision','light','one','two','hoist'][i%6];p.showerAssist=['two','medium','light','supervision','independent'][i%5];const d=dateObj(state.reportDate);d.setDate(d.getDate()-(i%4+1));p.lastShowerDate=dateISO(d)}state.roomMeta[2]={gender:'male'};state.roomMeta[3]={gender:'female'};dividePatients(state.activeShift,4,false)}
-window.addEventListener('beforeunload',e=>{if(networkDirty||hasNetworkPending()){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if(networkDirty||hasNetworkPending()||sbarDraftCount()){e.preventDefault();e.returnValue='';}});
 const qs=new URLSearchParams(location.search);if(qs.get('demo')==='1')demoData();renderAll();setView('rooms');networkInit();
 if(qs.get('render')){const r=qs.get('render');if(r==='sbar')$('#printArea').innerHTML=makeSbarPrint(false);if(r==='sbar-nurses')$('#printArea').innerHTML=makeSbarPrint(true);if(r==='vitals-ward')$('#printArea').innerHTML=makeVitalsPrint(false);if(r==='vitals-nurses')$('#printArea').innerHTML=makeVitalsPrint(true);if(r==='weekend-leave')$('#printArea').innerHTML=makeWeekendLeavePrint();if(r==='patients-by-room')$('#printArea').innerHTML=makePatientsByRoomPrint()}
 })();
