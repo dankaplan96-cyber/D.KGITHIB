@@ -60,6 +60,7 @@ export class Renderer {
   }
 
   setQuality(q) {
+    if (q === this.quality && this._size) return;
     this.quality = q;
     this.resize();
   }
@@ -84,11 +85,15 @@ export class Renderer {
     const dpr = Math.min(devicePixelRatio, 2);
     let pr = this.quality === 'high' ? dpr : this.quality === 'medium' ? Math.min(dpr, 1.25) : 0.85;
     if (this.retro) pr = Math.min(1, 560 / w); // ~640x480-era internal resolution
+    // MSAA: 4× on high, 2× on medium, none on low / retro (the retro look wants hard pixels)
+    const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' ? 2 : 4;
+    // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
+    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${!!this.composer}`;
+    if (key === this._size) return;
+    this._size = key;
     this.renderer.setPixelRatio(pr);
     this.renderer.setSize(w, h);
     if (this.composer) {
-      // MSAA: 4× on high, 2× on medium, none on low / retro (the retro look wants hard pixels)
-      const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' ? 2 : 4;
       for (const t of [this.composer.renderTarget1, this.composer.renderTarget2]) if (t.samples !== ms) { t.samples = ms; t.dispose(); }
       this.composer.setPixelRatio(pr);
       this.composer.setSize(w, h);

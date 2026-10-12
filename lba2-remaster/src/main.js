@@ -7,6 +7,7 @@ import { loadBake } from './engine/sculpt.js';
 import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
+import { Perf } from './engine/perf.js';
 import { Input, applyBindings, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
@@ -91,33 +92,28 @@ class Game {
     this.renderer = new Renderer($('#game'));
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 2500);
+    // startup cost per region (ms), for profiling: game.loadTimes
     const tm = performance.now(); this.loadTimes = {};
-    this.world = buildWorld(this.scene);
-    this.loadTimes.world = performance.now() - tm;
+    const timed = (name, fn) => { const t0 = performance.now(), r = fn(); this.loadTimes[name] = Math.round(performance.now() - t0); return r; };
+    this.world = timed('world', () => buildWorld(this.scene));
     this.terrain = this.world.terrain;
     this.physics = this.world.physics;
-    let tr = performance.now();
-    this.rooms = buildInteriors(this.scene, this.physics);
-    this.loadTimes.rooms = performance.now() - tr;
+    const S = this.scene, P = this.physics;
+    this.rooms = timed('interiors', () => buildInteriors(S, P));
     // outdoor regions are rooms flagged `outdoor`: LBA camera, own sky, doors to their own interiors
-    tr = performance.now();
-    this.rooms.zeelich = buildZeelich(this.scene, this.physics);
-    Object.assign(this.rooms, buildUnderground(this.scene, this.physics));
-    tr = performance.now();
-    this.rooms.desert = buildDesert(this.scene, this.physics);
-    Object.assign(this.rooms, buildCondenser(this.scene, this.physics));
-    tr = performance.now();
-    this.rooms.hamalayi = buildHamalayi(this.scene, this.physics);
-    this.loadTimes.hamalayi = performance.now() - tr;
-    Object.assign(this.rooms, buildObsRoom(this.scene, this.physics));
-    Object.assign(this.rooms, buildUpper3(this.scene, this.physics));
-    this.rooms.valves = buildValveRoom(this.scene, this.physics);
-    this.rooms.arena = buildArena(this.scene, this.physics);
-    this.loadTimes.desert = performance.now() - tr;
-    this.loadTimes.zeelich = performance.now() - tr;
+    this.rooms.zeelich = timed('zeelich', () => buildZeelich(S, P));
+    timed('underground', () => Object.assign(this.rooms, buildUnderground(S, P)));
+    this.rooms.desert = timed('desert', () => buildDesert(S, P));
+    timed('condenser', () => Object.assign(this.rooms, buildCondenser(S, P)));
+    this.rooms.hamalayi = timed('hamalayi', () => buildHamalayi(S, P));
+    timed('obsroom', () => Object.assign(this.rooms, buildObsRoom(S, P)));
+    timed('upper', () => Object.assign(this.rooms, buildUpper3(S, P)));
+    this.rooms.valves = timed('valves', () => buildValveRoom(S, P));
+    this.rooms.arena = timed('arena', () => buildArena(S, P));
     this.room = null;
     this.env = new Environment(this.scene, this.terrain);
     this.renderer.setup(this.scene, this.camera);
+    this.perf = new Perf(this.renderer.renderer);
     this.audio = new AudioEngine();
     this.audio.setMood('title');
     this.env.onThunder = () => this.audio.play('thunder');
@@ -151,10 +147,8 @@ class Game {
     this.trans = null;
     this.cutscene = null;
 
-    tr = performance.now();
-    this.spawnActors();
-    this.loadTimes.actors = performance.now() - tr;
-    this.loadTimes.total = performance.now() - tm;
+    timed('actors', () => this.spawnActors());
+    this.loadTimes.total = Math.round(performance.now() - tm);
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
     this.applySettings();
@@ -423,7 +417,13 @@ class Game {
     document.querySelectorAll('[data-range]').forEach((r) => r.addEventListener('input', () => { this.settings[r.dataset.range] = +r.value; this.applySettings(); }));
     $('#pausebtn').addEventListener('click', () => this.pause());
     // a story scene stops when the window loses focus (its music would run on without the picture)
-    document.addEventListener('visibilitychange', () => { if (document.hidden && this.state === 'cinematic') this.pause(); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && this.state === 'cinematic') this.pause();
+      if (!document.hidden) this.last = performance.now(); // back from another tab: no catch-up for the time away
+    });
+    // F3 / ?perf: frame-time overlay
+    addEventListener('keydown', (e) => { if (e.code === 'F3') { e.preventDefault(); this.perf.overlay(); } });
+    if (new URLSearchParams(location.search).has('perf')) this.perf.overlay(true);
     addEventListener('blur', () => { if (this.state === 'cinematic') this.pause(); });
   }
   // the label of the key bound to an action ("E", "Space"...), for prompts
@@ -486,24 +486,31 @@ class Game {
     }
   }
 
+  // Applies the settings. Only what changed since the last call is redone: a volume slider sends an event per
+  // step, and must not rebuild text, render targets, the shadow map or reset the camera.
   applySettings() {
-    const s = this.settings;
-    applyBindings(s.keys || {});
-    setLang(s.lang);
-    document.documentElement.lang = s.lang;
-    document.documentElement.dir = s.lang === 'he' ? 'rtl' : 'ltr';
-    document.querySelectorAll('[data-i18n]').forEach((e) => { e.textContent = t(e.dataset.i18n); });
-    document.querySelectorAll('[data-i18n-html]').forEach((e) => { e.innerHTML = t(e.dataset.i18nHtml); });
-    this.hud.refreshText();
-    this.renderer.setQuality(s.quality);
-    this.env?.setShadowQuality(s.quality);
+    const s = this.settings, was = this._applied || {}, now = { ...s, keys: JSON.stringify(s.keys || {}) };
+    const changed = (k) => now[k] !== was[k];
+    if (changed('keys')) applyBindings(s.keys || {});
+    if (changed('lang') || changed('keys')) {
+      setLang(s.lang);
+      document.documentElement.lang = s.lang;
+      document.documentElement.dir = s.lang === 'he' ? 'rtl' : 'ltr';
+      document.querySelectorAll('[data-i18n]').forEach((e) => { e.textContent = t(e.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-html]').forEach((e) => { e.innerHTML = t(e.dataset.i18nHtml); });
+      this.hud.refreshText();
+      if (this.hero) this.updateObjective();
+    }
+    if (changed('quality')) { this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); }
     const retro = s.visual === '1997';
-    this.renderer.setRetro(retro);
-    this.camRig.setMode(s.camera);
-    this.camRig.cut = retro; // 1997: hard cuts between shots, remaster: glide
-    this.env.setFogRange(...(retro ? [18, 72] : [45, 190]));
-    this.env.waterU.uWaveAmp.value = retro ? 0.3 : 1;
-    this.hud.setStyle(s.hud === 'lba');
+    if (changed('visual')) {
+      this.renderer.setRetro(retro);
+      this.camRig.cut = retro; // 1997: hard cuts between shots, remaster: glide
+      this.env.setFogRange(...(retro ? [18, 72] : [45, 190]));
+      this.env.waterU.uWaveAmp.value = retro ? 0.3 : 1;
+    }
+    if (changed('camera')) this.camRig.setMode(s.camera);
+    if (changed('hud')) this.hud.setStyle(s.hud === 'lba');
     // comfort: dialogue speed (LBA2 types 50 chars/s), subtitle size, camera shake
     this.hud.textRate = { slow: 28, normal: 50, fast: 95, instant: 1e9 }[s.textSpeed] ?? 50;
     document.body.classList.toggle('big-text', s.textSize === 'large');
@@ -512,7 +519,7 @@ class Game {
     this.audio.vol.sfx = s.sfx;
     this.audio.vol.voice = s.voice;
     this.audio.applyVolumes();
-    if (this.hero) this.updateObjective();
+    this._applied = now;
     store.set(SET_KEY, s);
   }
 
@@ -817,10 +824,25 @@ class Game {
   // ------------------------------------------------ main loop
   loop(now) {
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
-    const dt = Math.max(0, Math.min(0.05, (now - this.last) / 1000));
+    const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
-    if (!this.testFreeze) this.frame(dt, true);
+    if (!this.testFreeze) this.advance(real);
     requestAnimationFrame((t2) => this.loop(t2));
+  }
+
+  // Real time → simulation. A slow frame is simulated in steps of at most MAX_STEP (so the game keeps real
+  // time down to MAX_STEP / MAX_SUB ≈ 7.5 fps instead of turning into slow motion below 20 fps); a longer gap
+  // (a stall, a GC, a dragged window) is dropped rather than caught up, so a hitch can't snowball. Input is
+  // read once per step: a press is an edge in the first step only, a held key stays held.
+  advance(real) {
+    const t0 = performance.now();
+    const dt = Math.min(real, MAX_STEP * MAX_SUB);
+    const n = Math.max(1, Math.ceil(dt / MAX_STEP - 1e-6)), sub = dt / n;
+    this.perf.beginFrame();
+    this._renderMs = 0;
+    for (let i = 0; i < n; i++) this.frame(sub, i === n - 1);
+    const ms = performance.now() - t0;
+    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs });
   }
 
   // Deterministic stepping for automated tests: game.step(seconds).
@@ -898,8 +920,10 @@ class Game {
     this.hud.updateFloats(dt, this.camera);
     if (this.state !== 'dialog') this.bubble.visible = false;
     if (render) {
+      const t0 = performance.now();
       this.renderer.render();
       this.behMenu.render(this.renderer.renderer, dt);
+      this._renderMs = performance.now() - t0;
     }
   }
 
@@ -993,6 +1017,8 @@ class Game {
     if (!this.room) this.world.fadeOccluders?.(this.camera, h.pos, dt);
   }
 }
+
+const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
 
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.

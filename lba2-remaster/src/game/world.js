@@ -11,6 +11,7 @@ import { buildTown, townHeight, streetDist } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry } from './vegetation.js';
 import { buildIsland, keepClear } from './island.js';
 import { buildCliffRocks } from './cliffs.js';
+import { setLod } from './kit.js';
 
 export const POI = {
   start: { x: -38, z: 4 },
@@ -474,9 +475,9 @@ export function buildWorld(parentScene) {
       };
       const hi = make(geo);
       let lo = null;
-      if (geoLo) { lo = make(geoLo); lo.visible = false; }
+      if (geoLo) lo = make(geoLo);
       const cx = part.reduce((a, [t]) => a + t.x, 0) / part.length, cz = part.reduce((a, [t]) => a + t.z, 0) / part.length;
-      if (lo || small) W.lodTiles.push({ cx, cz, hi, lo, small, near: true });
+      if (lo || small) { const T = { cx, cz, hi, lo, small, near: true }; if (lo) setLod(T, true); W.lodTiles.push(T); }
     }
     return out;
   };
@@ -500,7 +501,7 @@ export function buildWorld(parentScene) {
       const d = Math.hypot(focus.x - T.cx, focus.z - T.cz);
       if (T.small) { T.hi.visible = d < FAR_SMALL; continue; }
       if (T.near && d > LOD_NEAR + 4) T.near = false; else if (!T.near && d < LOD_NEAR - 4) T.near = true;
-      T.hi.visible = T.near; T.lo.visible = !T.near;
+      setLod(T, T.near);
     }
     if (!casters) gatherCasters();
     if ((shadowTick = (shadowTick + 1) % 8)) return;
@@ -603,7 +604,7 @@ export function buildWorld(parentScene) {
     rocks.push({ x, z, h: h - 0.1, s: 0.3 + rand() * 0.8, ry: rand() * 6 });
   }
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
-  for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15));
+  for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   for (const r of rocks) if (r.s > 0.6) physics.add({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.1, top: r.h + r.s * 0.95, seeThrough: true });
 
   // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------

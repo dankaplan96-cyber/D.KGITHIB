@@ -171,9 +171,9 @@ export function lodInstances(parent, geo, geoLo, mat, list, opts = {}, tile = 32
     const hi = instances(parent, geo, mat, part, opts);
     hi.computeBoundingSphere();
     const lo = geoLo ? instances(parent, geoLo, mat, part, opts) : null;
-    if (lo) { lo.computeBoundingSphere(); lo.visible = false; }
+    if (lo) lo.computeBoundingSphere();
     const cx = part.reduce((a, it) => a + it.x, 0) / part.length, cz = part.reduce((a, it) => a + it.z, 0) / part.length;
-    if (lo) KIT_LOD.tiles.push({ parent, cx, cz, hi, lo, near: true });
+    if (lo) { const T = { parent, cx, cz, hi, lo, near: true }; setLod(T, true); KIT_LOD.tiles.push(T); }
     out.push(hi);
   }
   return out;
@@ -183,8 +183,24 @@ export function updateKitLod(focus, near = 40) {
     if (!T.parent.visible) continue;
     const d = Math.hypot(focus.x - (T.parent.position.x + T.cx), focus.z - (T.parent.position.z + T.cz));
     if (T.near && d > near + 4) T.near = false; else if (!T.near && d < near - 4) T.near = true;
-    T.hi.visible = T.near; T.lo.visible = !T.near;
+    setLod(T, T.near);
   }
+}
+// A near tile shows its detailed instances but casts its shadow with the coarse ones, drawn in the main view
+// with a material that writes neither colour nor depth (three's shadow pass tests the main camera's layers
+// and material.visible, so a mesh can't be in the shadow map only). The shadow map is ~2 cm a texel, where
+// the stand-in's outline reads the same; near trees and rocks were ~6k triangles each in it.
+const SHADOW_ONLY = {};
+function shadowOnly(m) { return (SHADOW_ONLY[m.side] ??= new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: m.side })); }
+export function setLod(T, near) {
+  const { hi, lo } = T;
+  T.cast ??= hi.castShadow;
+  T.mat ??= lo?.material;
+  hi.visible = near;
+  if (!lo) return;
+  hi.castShadow = false; lo.castShadow = T.cast;
+  lo.visible = !near || T.cast;
+  lo.material = near ? shadowOnly(T.mat) : T.mat;
 }
 export function mesh(parent, geo, mat, x = 0, y = 0, z = 0, ry = 0, { cast = true, rx = 0, rz = 0 } = {}) {
   const m = new THREE.Mesh(geo, mat);
