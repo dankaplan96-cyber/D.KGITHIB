@@ -1173,12 +1173,237 @@ function buildGallery(scene, physics) {
   return room;
 }
 
+// ================================================================ 4. c3sendell — Sendell's chamber
+// Older than anything the project built: a round room of smooth pale stone, fluted pilasters, a frieze, three
+// worn reliefs of the two suns, a still pool in the middle with light rising from it. No machinery at all.
+const oldFloorTex = () => M('ugoldfloor', () => canvasTex(1024, 1024, (x, W) => {
+  const c = W / 2, r = rng(12);
+  x.fillStyle = '#8c8aa0'; x.fillRect(0, 0, W, W);
+  // concentric courses of slabs with radial joints
+  const rings = [[150, 230, 16], [230, 320, 24], [320, 420, 30], [420, 520, 38]];
+  for (const [r0, r1, n] of rings) for (let i = 0; i < n; i++) {
+    const a0 = (i / n) * Math.PI * 2 + r0 * 0.01, a1 = ((i + 1) / n) * Math.PI * 2 + r0 * 0.01, k = 0.86 + r() * 0.2;
+    x.fillStyle = `rgb(${Math.round(176 * k)},${Math.round(172 * k)},${Math.round(196 * k)})`;
+    x.beginPath(); x.arc(c, c, r1 - 3, a0 + 0.004, a1 - 0.004); x.arc(c, c, r0 + 3, a1 - 0.004, a0 + 0.004, true); x.closePath(); x.fill();
+    const g = x.createRadialGradient(c, c, r0, c, c, r1); g.addColorStop(0, 'rgba(255,255,255,0.08)'); g.addColorStop(1, 'rgba(0,0,30,0.12)'); x.fillStyle = g; x.fill();
+  }
+  // a mosaic band of small blue tesserae round the pool
+  for (let i = 0; i < 150; i++) { const a = (i / 150) * Math.PI * 2; for (const rr of [158, 170]) { x.fillStyle = (i + rr) % 3 ? '#5a7ac0' : '#a8c8f0'; x.save(); x.translate(c + Math.cos(a) * rr, c + Math.sin(a) * rr); x.rotate(a); x.fillRect(-4, -4, 8, 8); x.restore(); } }
+  // wear: a soft path worn round the pool, hairline cracks, specks
+  for (let i = 0; i < 40; i++) { const a = r() * Math.PI * 2, rr = 250 + r() * 200, px = c + Math.cos(a) * rr, py = c + Math.sin(a) * rr, g = x.createRadialGradient(px, py, 0, px, py, 50); g.addColorStop(0, 'rgba(255,255,255,0.08)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(px - 50, py - 50, 100, 100); }
+  x.strokeStyle = 'rgba(40,36,60,0.35)'; x.lineWidth = 1.2;
+  for (let i = 0; i < 18; i++) { let a = r() * Math.PI * 2, rr = 220 + r() * 280; x.beginPath(); x.moveTo(c + Math.cos(a) * rr, c + Math.sin(a) * rr); for (let j = 0; j < 6; j++) { a += (r() - 0.5) * 0.08; rr += (r() - 0.5) * 30; x.lineTo(c + Math.cos(a) * rr, c + Math.sin(a) * rr); } x.stroke(); }
+  for (let i = 0; i < 4000; i++) { x.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.1)' : 'rgba(20,20,40,0.12)'; x.fillRect(r() * W, r() * W, 2, 2); }
+}));
+// the worn relief: two suns, one large and one small, rays, the planet's curve under them
+const sunsTex = (seed) => M('ugsuns' + seed, () => canvasTex(384, 384, (x, W, H) => {
+  const r = rng(seed);
+  x.fillStyle = '#b8b4c8'; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 40; i++) { const px = r() * W, py = r() * H, rr = 20 + r() * 60, g = x.createRadialGradient(px, py, 0, px, py, rr); g.addColorStop(0, r() < 0.5 ? 'rgba(80,70,110,0.18)' : 'rgba(255,255,255,0.15)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(px - rr, py - rr, rr * 2, rr * 2); }
+  // carved: light from the upper left, so cuts get a dark lower-right lip and a light upper-left one
+  const carve = (draw, w) => { x.save(); x.lineCap = 'round'; x.lineWidth = w; x.strokeStyle = 'rgba(50,44,80,0.65)'; x.translate(2.5, 2.5); draw(); x.stroke(); x.restore(); x.save(); x.lineCap = 'round'; x.lineWidth = w; x.strokeStyle = 'rgba(255,255,255,0.55)'; x.translate(-1.5, -1.5); draw(); x.stroke(); x.restore(); };
+  const sun = (cx, cy, rr, rays) => {
+    carve(() => { x.beginPath(); x.arc(cx, cy, rr, 0, 7); }, 7);
+    carve(() => { x.beginPath(); x.arc(cx, cy, rr * 0.55, 0, 7); }, 4);
+    carve(() => { x.beginPath(); for (let i = 0; i < rays; i++) { const a = (i / rays) * Math.PI * 2; x.moveTo(cx + Math.cos(a) * rr * 1.25, cy + Math.sin(a) * rr * 1.25); x.lineTo(cx + Math.cos(a) * rr * 1.65, cy + Math.sin(a) * rr * 1.65); } }, 6);
+  };
+  sun(138, 150, 62, 12); sun(272, 112, 34, 8);
+  carve(() => { x.beginPath(); x.arc(W / 2, H + 420, 560, Math.PI * 1.36, Math.PI * 1.64); }, 8);
+  carve(() => { x.beginPath(); x.arc(W / 2, H + 440, 560, Math.PI * 1.38, Math.PI * 1.62); }, 4);
+  // little figures kneeling toward the suns (very worn)
+  for (const px of [96, 192, 288]) carve(() => { x.beginPath(); x.arc(px, 296, 9, 0, 7); x.moveTo(px, 305); x.lineTo(px - 4, 334); x.moveTo(px - 12, 318); x.lineTo(px + 12, 312); }, 4);
+  // erosion: chips and cracks across the carving
+  x.strokeStyle = 'rgba(60,50,80,0.45)'; x.lineWidth = 1.5;
+  for (let i = 0; i < 9; i++) { let px = r() * W, py = r() * H; x.beginPath(); x.moveTo(px, py); for (let j = 0; j < 5; j++) { px += (r() - 0.5) * 50; py += r() * 40; x.lineTo(px, py); } x.stroke(); }
+  for (let i = 0; i < 14; i++) { x.fillStyle = 'rgba(184,180,200,0.85)'; x.beginPath(); x.arc(r() * W, r() * H, 6 + r() * 16, 0, 7); x.fill(); }
+  x.strokeStyle = 'rgba(40,36,60,0.6)'; x.lineWidth = 10; x.strokeRect(5, 5, W - 10, H - 10);
+}));
+// frieze: a running wave-and-spiral band
+const friezeTex = () => M('ugfrieze', () => tiled(canvasTex(256, 64, (x, W, H) => {
+  x.fillStyle = '#c4c0d4'; x.fillRect(0, 0, W, H);
+  const line = (dx, col, w) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); for (let i = 0; i < 4; i++) { const cx = i * 64 + 32 + dx; x.moveTo(cx - 32, 44 + dx); x.quadraticCurveTo(cx - 20, 10 + dx, cx, 24 + dx); x.arc(cx + 8, 28 + dx, 9, Math.PI * 1.1, Math.PI * 3, false); } x.stroke(); };
+  line(2, 'rgba(60,54,90,0.6)', 5); line(-1, 'rgba(255,255,255,0.6)', 4);
+  x.fillStyle = 'rgba(60,54,90,0.5)'; x.fillRect(0, 0, W, 4); x.fillRect(0, H - 4, W, 4);
+}), 6, 1));
+const waterTex = () => M('ugwater', () => canvasTex(512, 512, (x, W) => {
+  const c = W / 2, g = x.createRadialGradient(c, c, 0, c, c, c); g.addColorStop(0, '#8ad8f8'); g.addColorStop(0.3, '#2a6ea8'); g.addColorStop(1, '#081c36');
+  x.fillStyle = g; x.fillRect(0, 0, W, W);
+  x.strokeStyle = 'rgba(220,250,255,0.18)'; x.lineWidth = 2; for (let rr = 30; rr < c; rr += 34) { x.beginPath(); x.arc(c, c, rr, 0, 7); x.stroke(); }
+}));
+
+// smooth old ashlar: big pale blocks, fine joints, weathering (1 tile = 3 m)
+const ashlarTex = () => M('ugashlar', () => tiled(canvasTex(512, 512, (x, W, H) => {
+  const r = rng(23), rowH = H / 6;
+  x.fillStyle = '#8e8ca6'; x.fillRect(0, 0, W, H);
+  for (let row = 0; row < 6; row++) {
+    let xx = -r() * 80;
+    while (xx < W) {
+      const w = 130 + r() * 110, k = 0.95 + r() * 0.1, y = row * rowH;
+      const g = x.createLinearGradient(0, y, 0, y + rowH); g.addColorStop(0, `rgb(${Math.round(196 * k)},${Math.round(194 * k)},${Math.round(212 * k)})`); g.addColorStop(1, `rgb(${Math.round(170 * k)},${Math.round(168 * k)},${Math.round(190 * k)})`);
+      for (const ox of [-W, 0, W]) { x.fillStyle = g; x.fillRect(xx + ox + 1.5, y + 1.5, w - 3, rowH - 3); }
+      xx += w;
+    }
+  }
+  for (let i = 0; i < 50; i++) { const px = r() * W, py = r() * H, rr = 20 + r() * 70, g = x.createRadialGradient(px, py, 0, px, py, rr); g.addColorStop(0, r() < 0.6 ? 'rgba(70,64,100,0.12)' : 'rgba(255,255,255,0.12)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(px - rr, py - rr, rr * 2, rr * 2); }
+  for (let i = 0; i < 2500; i++) { x.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.08)' : 'rgba(30,30,50,0.08)'; x.fillRect(r() * W, r() * H, 2, 2); }
+}), 1, 1));
+const ashlar = () => M('ugashlarM', () => stdM({ map: ashlarTex(), roughness: 0.75, side: THREE.DoubleSide }));
+// a curved face (lathe between two profile points) with UVs in metres / tile
+function arcFace(a, b, p0, pl, tile = 3, segs = 48) {
+  const g = new THREE.LatheGeometry([new THREE.Vector2(a[0], a[1]), new THREE.Vector2(b[0], b[1])], segs, p0, pl);
+  const uv = g.attributes.uv, pos = g.attributes.position;
+  for (let i = 0; i < uv.count; i++) { const rr = Math.hypot(pos.getX(i), pos.getZ(i)); uv.setXY(i, (uv.getX(i) * pl * rr) / tile, (pos.getY(i) + (Math.abs(a[1] - b[1]) < 1e-3 ? rr : 0)) / tile); }
+  g.userData.keepUV = true;
+  return g;
+}
+
+function buildSendell(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'c3sendell', 2100, 0);
+  const R = B.room, k = B.k;
+  const Rr = 7.4, t = 0.6, H = 4.6, rimH = 0.5, PR = 2.9;
+  R.view = 14.2; R.follow = 0.2; R.cave = true; R.music = 'cave';
+  const stone = ashlar(), pale = twoSided(MAT.plaster('#d6d2e2')), paleS = MAT.plaster('#d6d2e2');
+  const face = (a, b, p0, pl, m, cx = 0, cz = 0) => k.add(m === stone ? arcFace(a, b, p0, pl) : new THREE.LatheGeometry([new THREE.Vector2(a[0], a[1]), new THREE.Vector2(b[0], b[1])], 48, p0, pl), m, cx, 0, cz);
+  const F0 = (3 * Math.PI) / 4, F1 = (7 * Math.PI) / 4, N0 = -Math.PI / 4;
+  const ENT = Math.PI * 1.6, EXI = Math.PI * 1.07, AW = 0.17; // arch half-angles
+  // floor disc with the painted courses, a stone plinth under it
+  const fl = new THREE.Mesh(new THREE.CircleGeometry(Rr + 0.02, 64), M('ugoldfloorM', () => stdM({ map: oldFloorTex(), color: '#9c9cc0', roughness: 0.5 })));
+  fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; B.group.add(fl);
+  k.add(arcFace([Rr + t + 0.1, -1.0], [Rr + t, 0], 0, Math.PI * 2, 3, 64), stone, 0, 0, 0);
+  B.ccol(0, 0, Rr + 0.2, 0, { seeThrough: true, bottom: -1 });
+  // far half: smooth wall, broken by the two arches; fluted pilasters, frieze, a corbelled top
+  const spans = [[F0, EXI - AW], [EXI + AW, ENT - AW], [ENT + AW, F1]];
+  for (const [a, b] of spans) {
+    face([Rr, H], [Rr, 0], a, b - a, stone);
+    face([Rr + t, 0], [Rr + t, H], a, b - a, stone);
+    face([Rr, H], [Rr + t, H], a, b - a, pale);
+    face([Rr - 0.04, 0.42], [Rr - 0.04, 0.0], a, b - a, pale);
+    face([Rr - 0.05, H - 0.5], [Rr - 0.05, H - 0.9], a, b - a, M('ugfriezeM', () => stdM({ map: friezeTex(), roughness: 0.8, side: THREE.DoubleSide })));
+    face([Rr - 0.12, H - 0.42], [Rr - 0.12, H - 0.5], a, b - a, pale);
+    face([Rr - 0.12, H - 0.9], [Rr - 0.12, H - 0.98], a, b - a, pale);
+    face([Rr - 0.3, H + 0.18], [Rr - 0.3, H], a, b - a, pale);
+    face([Rr - 0.3, H + 0.18], [Rr + t + 0.05, H + 0.18], a, b - a, pale);
+  }
+  // pilasters: fluted stone columns with a cushion capital
+  for (let ph = F0 + 0.17; ph < F1 - 0.1; ph += 0.33) {
+    if (Math.abs(ph - ENT) < AW + 0.12 || Math.abs(ph - EXI) < AW + 0.12) continue;
+    const [x, z] = polar(ph, Rr - 0.12);
+    k.at(x, 0, z, ph + Math.PI, () => {
+      k.add(rbox(0.5, 0.36, 0.3, 0.05), paleS, 0, 0.18, 0);
+      for (let f = -1; f <= 1; f++) k.add(cyl(0.08, 0.08, H - 1.4, 8), paleS, f * 0.12, 0.36 + (H - 1.4) / 2, 0.02);
+      k.add(rbox(0.5, 0.2, 0.32, 0.08), paleS, 0, H - 0.98 - 0.1, 0);
+    });
+  }
+  // the arches (to the galleries, to the core)
+  const arch = (ph, glow, key) => {
+    const [x, z] = polar(ph, Rr + 0.05);
+    k.at(x, 0, z, ph + Math.PI, () => {
+      const aw = 2.0, ah = 2.9;
+      k.add(slab('ugarch2', (s) => { s.moveTo(-aw / 2 - 0.45, 0); s.lineTo(-aw / 2, 0); s.lineTo(-aw / 2, ah - aw / 2); s.absarc(0, ah - aw / 2, aw / 2, Math.PI, 0, true); s.lineTo(aw / 2, 0); s.lineTo(aw / 2 + 0.45, 0); s.lineTo(aw / 2 + 0.45, H); s.lineTo(-aw / 2 - 0.45, H); s.lineTo(-aw / 2 - 0.45, 0); }, t + 0.1, 0.05), stone, 0, 0, -t / 2);
+      k.add(torus(aw / 2 + 0.16, 0.08, 6, 24, Math.PI), paleS, 0, ah - aw / 2, 0.06);
+      for (const sx of [-1, 1]) k.add(rbox(0.26, ah - aw / 2, 0.16, 0.05), paleS, sx * (aw / 2 + 0.16), (ah - aw / 2) / 2, 0.06);
+      k.add(rbox(0.36, 0.42, 0.2, 0.06), paleS, 0, ah + 0.12, 0.08);
+      k.add(plane(aw, ah), M('ugpassArch' + key, () => { const tt = canvasTex(128, 192, (c, w, h) => { c.fillStyle = '#05060c'; c.fillRect(0, 0, w, h); const g = c.createRadialGradient(w / 2, h * 0.7, 2, w / 2, h * 0.7, 90); g.addColorStop(0, glow); g.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = g; c.fillRect(0, 0, w, h); }); const m = new THREE.MeshBasicMaterial({ map: tt }); m.userData.noShadow = true; return m; }), 0, ah / 2, -t - 0.02);
+      k.add(rbox(aw + 0.4, 0.08, t + 0.4, 0.03), paleS, 0, 0.0, -t / 2 + 0.1);
+    });
+  };
+  arch(ENT, 'rgba(120,220,255,0.6)', 'g'); arch(EXI, 'rgba(255,170,120,0.55)', 'c');
+  // near half: the low rim
+  face([Rr, rimH], [Rr, 0], N0, Math.PI, stone);
+  face([Rr + t, 0], [Rr + t, rimH], N0, Math.PI, stone);
+  face([Rr, rimH], [Rr + t, rimH], N0, Math.PI, pale);
+  for (const ph of [F0, F1]) { const [x, z] = polar(ph, Rr + t / 2); k.add(rbox(t + 0.2, H + 0.2, 0.3, 0.06), paleS, x, (H + 0.2) / 2, z, ph - Math.PI / 2); }
+  const NC = 32;
+  for (let i = 0; i < NC; i++) { const ph = ((i + 0.5) / NC) * Math.PI * 2, [x, z] = polar(ph, Rr + t / 2); B.col(x, z, (Rr + t / 2) * Math.tan(Math.PI / NC) + 0.05, t / 2 + 0.1, H, { rot: ph }); }
+
+  // three reliefs of the two suns, set in shallow niches
+  for (const ph of [Math.PI * 1.25, Math.PI * 1.42, Math.PI * 0.88].filter((p) => p > F0 && p < F1)) {
+    const [x, z] = polar(ph, Rr - 0.03);
+    k.at(x, 1.15, z, ph + Math.PI, () => {
+      k.add(rbox(1.95, 1.95, 0.08, 0.04), paleS, 0, 1.05, 0.0);
+      k.add(plane(1.75, 1.75), M('ugsunsM' + Math.round(ph * 10), () => stdM({ map: sunsTex(Math.round(ph * 10)), roughness: 0.85 })), 0, 1.0, 0.045);
+      k.add(rbox(1.9, 0.12, 0.22, 0.04), paleS, 0, 0.12, 0.06);
+    });
+  }
+  // old crystal lamps in the wall: small blue crystals in carved cups
+  for (const ph of [Math.PI * 1.17, Math.PI * 1.34, Math.PI * 1.5, Math.PI * 0.98]) {
+    const [x, z] = polar(ph, Rr - 0.2);
+    k.at(x, 2.55, z, ph + Math.PI, () => { k.add(lathe([[0.001, -0.12], [0.16, -0.08], [0.2, 0.06], [0.17, 0.08], [0.001, 0.0]], 12), paleS, 0, 0, 0.1); crystals(k, 3, 0.16, 700 + Math.round(ph * 10), [crystalMat('#cfe8ff', '#4a90ff', 1.4)], 0.3); });
+    const [lx, lz] = polar(ph, Rr - 0.9); B.light('#7ab0ff', 1.6, 3.5, lx, 2.6, lz);
+  }
+
+  // curved stone benches against the wall, offering bowls, and the shell's cracks reaching even here
+  for (const [ph, len] of [[Math.PI * 1.33, 0.36], [Math.PI * 0.92, 0.3]]) {
+    const r0 = Rr - 0.95;
+    k.add(arcFace([r0 + 0.5, 0.45], [r0, 0.45], ph - len / 2, len, 3, 16), paleS, 0, 0, 0);
+    k.add(arcFace([r0, 0.45], [r0, 0.0], ph - len / 2, len, 3, 16), paleS, 0, 0, 0);
+    for (const e of [-1, 1]) { const [x, z] = polar(ph + e * len * 0.42, r0 + 0.25); k.add(rbox(0.36, 0.4, 0.5, 0.05), paleS, x, 0.2, z, ph); }
+    const [bx, bz] = polar(ph, r0 + 0.25); B.col(bx, bz, Rr * len / 2, 0.3, 0.45, { rot: ph, noStand: true, seeThrough: true });
+  }
+  for (const ph of [Math.PI * 1.2, Math.PI * 1.46, Math.PI * 1.02]) { const [x, z] = polar(ph, Rr - 0.6); k.add(lathe([[0.001, 0], [0.12, 0], [0.2, 0.1], [0.22, 0.14], [0.18, 0.12], [0.001, 0.06]], 14), paleS, x, 0, z); k.add(sphere(0.06, 8, 6), MAT.glow('#cfe8ff', '#4a90ff', 1.4), x, 0.12, z); }
+  const crk = M('ugcrackB', () => stdM({ color: '#d8f0ff', emissive: '#5aa8ff', emissiveIntensity: 1.2, roughness: 0.3 }, 0, { noShadow: true }));
+  { const r = rng(44); for (const ph0 of [Math.PI * 1.08, Math.PI * 1.58]) { let ph = ph0, rr = Rr - 0.2; const pts = [[...polar(ph, rr)]]; for (let j = 0; j < 7; j++) { ph += (r() - 0.5) * 0.12; rr -= 0.4 + r() * 0.3; pts.push(polar(ph, rr)); } k.add(pipe(pts.map(([x, z]) => [x, 0.01, z]), 0.03, 0.15, 4), crk, 0, 0, 0); const [cx, cz] = pts[1]; k.at(cx, 0, cz, ph0, () => crystals(k, 3, 0.22, Math.round(ph0 * 100), [CYAN(), VIOLET()])); } }
+
+  // --- the pool: a carved basin, still water, light rising out of it
+  k.add(lathe([[PR - 0.05, -0.4], [PR + 0.05, 0.34], [PR + 0.32, 0.4], [PR + 0.55, 0.34], [PR + 0.62, 0.0]], 64), paleS, 0, 0, 0);
+  k.add(lathe([[0.001, -0.6], [PR, -0.6], [PR, -0.2]], 48), MAT.flat('#1a2a44', 0.6), 0, 0, 0);
+  for (let i = 0; i < 12; i++) { const [x, z] = polar((i / 12) * Math.PI * 2, PR + 0.3); k.add(sphere(0.07, 8, 6), MAT.flat('#9ab8f0', 0.4), x, 0.42, z); }
+  const wm = stdM({ color: '#163a5a', map: waterTex(), emissive: '#ffffff', emissiveMap: waterTex(), emissiveIntensity: 0.35, roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.92 }, 0, { noShadow: true });
+  const water = new THREE.Mesh(new THREE.CircleGeometry(PR + 0.02, 48), wm); water.rotation.x = -Math.PI / 2; water.position.y = -0.18; B.group.add(water);
+  B.ccol(0, 0, PR + 0.5, 0.9, { noStand: true, seeThrough: true });
+  const column = lightShaft(B, 0, 3.2, 0, 1.0, 2.0, 6.4, '#9fd8ff', 0.05);
+  const poolLight = B.light('#8ac8ff', 6, 9, 0, 0.8, 0);
+  motes(B, [[0, 0, 3.6]], { n: 50, color: '#cfeaff', size: 0.22, op: 0.5, hmax: 4.5, speed: 0.3, y0: -0.1 });
+
+  // --- the presence: a soft orb of light over the pool, a thin column under it
+  const SP = { x: 0, y: 1.9, z: 0 };
+  const pres = new THREE.Group(); pres.position.set(SP.x, SP.y, SP.z); B.group.add(pres);
+  const add = (geo, color, op) => { const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false })); pres.add(m); return m; };
+  const core = add(new THREE.SphereGeometry(0.3, 20, 14), '#f4fbff', 0.95);
+  const halo = add(new THREE.SphereGeometry(0.72, 20, 14), '#8fd0ff', 0.25);
+  const beamM = add(new THREE.CylinderGeometry(0.06, 0.32, 2.1, 16, 1, true), '#bfe6ff', 0.25); beamM.position.y = -1.05; beamM.material.side = THREE.DoubleSide;
+  const glow = glowSprite('#9fd4ff', 3.4, 0.7); pres.add(glow);
+  const ring = add(new THREE.TorusGeometry(0.75, 0.015, 6, 48), '#cfeaff', 0.5); ring.rotation.x = Math.PI / 2;
+  const presLight = new THREE.PointLight('#9fd0ff', 0, 10, 2); pres.add(presLight);
+  pres.visible = false;
+  let pI = 1;
+  R.presence = {
+    group: pres, visible: false, intensity: 1,
+    setVisible(b) { this.visible = !!b; pres.visible = !!b; },
+    setIntensity(v) { this.intensity = Math.max(0, Math.min(1, v)); pI = this.intensity; },
+  };
+  R.sendellSpot = { ...B.world(SP.x, SP.z), y: SP.y };
+
+  // exits and spawn
+  { const [x, z] = polar(ENT, Rr - 0.5); R.exits.push({ ...B.world(x, z), r: 0.8, to: 'c3-gallery' }); const [sx, sz] = polar(ENT, Rr - 2.0); R.spawn = { ...B.world(sx, sz), a: ang(sx, sz, 0, 0) }; }
+  { const [x, z] = polar(EXI, Rr - 0.5); R.exits.push({ ...B.world(x, z), r: 0.8, to: 'c3-core' }); }
+  B.light('#6a80e0', 2.2, 16, 0, 5, 0);
+  B.light('#8aa0ff', 1.6, 9, -3.5, 3.0, -3.5);
+
+  R.updaters.push((dt, tt) => {
+    const b = 0.9 + Math.sin(tt * 0.9) * 0.1;
+    column.material.opacity = 0.045 * b;
+    poolLight.intensity = poolLight.userData.base * b * (pres.visible ? 1 + pI * 0.4 : 1);
+    wm.map.rotation = tt * 0.02; wm.map.center.set(0.5, 0.5);
+    if (pres.visible) {
+      pres.position.y = SP.y + Math.sin(tt * 1.3) * 0.08;
+      const s = 0.85 + Math.sin(tt * 2.1) * 0.08;
+      core.material.opacity = 0.95 * pI; halo.material.opacity = 0.28 * pI * s; beamM.material.opacity = 0.22 * pI;
+      glow.material.opacity = 0.75 * pI * s; glow.scale.setScalar(3.0 + 2.0 * pI);
+      ring.material.opacity = 0.45 * pI; ring.rotation.z = tt * 0.5; ring.scale.setScalar(1 + Math.sin(tt * 1.7) * 0.06);
+      presLight.intensity = 9 * pI * s;
+    }
+  });
+  return B.finish();
+}
+
 // ================================================================ registration
 export function buildUnderground(scene, physics) {
   const rooms = {
     c3shaft: buildShaft(scene, physics),
     c3deep: buildDeep(scene, physics),
     c3gallery: buildGallery(scene, physics),
+    c3sendell: buildSendell(scene, physics),
   };
   return rooms;
 }
