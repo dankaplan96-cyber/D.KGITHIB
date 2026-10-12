@@ -95,3 +95,10 @@ deterministic stepping via `game.step()`. Real-GPU frame rates are **not yet mea
 Changes: instanced vegetation split into 36 m tiles (culling works), coarser tree/bush meshes (no visible
 difference at game distance), each house merged into one mesh per material. Load to menu ≈ 22–27 s in
 SwiftShader (CPU rendering); not measured on a real GPU.
+
+### End of session 5: the game is complete
+- Chapter 3 rooms merged (src/game/underground.js, built in parallel); core pylons get glowing throw plates
+  measured by real bank shots. Chapter 2 leads into chapter 3; End of Demo screen and DEMO badge removed.
+- All five headless suites pass: prologue, chapters 1, 2, 3 (to the end screen and free roam), save migration.
+- Playable link republished (same URL) with the soundtrack.
+- Not verified: real-GPU performance; music and ambience by ear; a human playthrough.
