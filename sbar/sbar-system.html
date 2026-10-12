@@ -387,7 +387,8 @@ main{max-width:1500px;margin:18px auto 60px;padding:0 20px}
 .background-builder{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--surface-2)}
 .background-tools{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:6px 0}
 .background-tools .form-field{flex:1;min-width:220px}
-.background-condition-list{display:flex;flex-wrap:wrap;gap:6px;max-height:210px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.bg-group{width:100%;padding:4px 0 8px;border-bottom:1px dashed var(--line)}.bg-group:last-child{border-bottom:0}.bg-group-title{font-size:13px;font-weight:800;color:var(--brand-dark);margin:2px 2px 6px}.bg-group-items{display:flex;flex-wrap:wrap;gap:6px}
+.background-condition-list{display:flex;flex-wrap:wrap;gap:6px;max-height:320px;overflow:auto;padding:8px;border:1px solid var(--line);border-radius:10px;background:#fff}
 .bg-condition{min-height:38px;border:1px solid var(--line-strong);background:#fff;border-radius:999px;padding:5px 12px;font-size:14px;font-weight:600}
 .bg-condition.active{background:var(--good-soft);border-color:#6ea988;color:#174c31;box-shadow:inset 0 0 0 1px #6ea988}
 .background-selected-summary{margin:8px 0;padding:8px 10px;border-radius:9px;background:#eef5ff;color:#274e75;font-size:14px;font-weight:600}
@@ -1142,42 +1143,100 @@ function duplicateNameLocationText(matches){return matches.map(x=>`חדר ${x.ro
 function fmtDate(iso){const d=new Date(iso+'T12:00:00');return new Intl.DateTimeFormat('he-IL').format(d)}
 function hebDay(iso){const d=new Date(iso+'T12:00:00');return new Intl.DateTimeFormat('he-IL',{weekday:'long'}).format(d)}
 function patientSexLabel(v){return v==='male'?'זכר':v==='female'?'נקבה':'לא הוגדר'}
+/* v66 — common background conditions in geriatrics / rehabilitation. Hebrew first, English in brackets.
+   Deliberately NOT offered: psychiatric diagnoses, obesity, addictions / smoking, sexually transmitted
+   or other stigmatising infections. Staff can still write anything clinically needed as free text. */
 const BACKGROUND_CONDITIONS=[
-  {id:'none',label:'ללא מחלות רקע',aliases:['ללא מחלות רקע','ללא רקע רפואי','בריא ללא מחלות רקע','בריא, ללא מחלות רקע']},
-  {id:'htn',label:'יתר לחץ דם',aliases:['יתר לחץ דם','יל״ד','יל"ד','ית״ד','ית"ד']},
-  {id:'dm',label:'סוכרת',aliases:['סוכרת','סכרת']},
-  {id:'lipids',label:'דיסליפידמיה',aliases:['דיסליפידמיה','היפרליפידמיה','היפרלפדמיה','יתר שומנים בדם']},
-  {id:'ihd',label:'מחלת לב איסכמית',aliases:['מחלת לב איסכמית','מחלת לב כלילית','IHD']},
-  {id:'chf',label:'אי ספיקת לב',aliases:['אי ספיקת לב','CHF']},
-  {id:'af',label:'פרפור פרוזדורים',aliases:['פרפור פרוזדורים','AFIB']},
-  {id:'pvd',label:'מחלת כלי דם היקפית',aliases:['מחלת כלי דם היקפית','PVD']},
-  {id:'cva',label:'אירוע מוחי בעבר',aliases:['אירוע מוחי בעבר','CVA בעבר','שבץ בעבר']},
-  {id:'ckd',label:'אי ספיקת כליות',aliases:['אי ספיקת כליות','מחלת כליות כרונית','CKD']},
-  {id:'dialysis',label:'דיאליזה',aliases:['דיאליזה','המודיאליזה']},
-  {id:'transplant',label:'השתלת כליה',aliases:['השתלת כליה']},
-  {id:'copd',label:'COPD / ברונכיטיס כרונית',aliases:['COPD','ברונכיטיס כרונית','ברונכיטיס']},
-  {id:'asthma',label:'אסתמה',aliases:['אסתמה','אסטמה']},
-  {id:'osteoporosis',label:'אוסטאופורוזיס',aliases:['אוסטאופורוזיס','אוסטיופרוזיס']},
-  {id:'oa',label:'אוסטאוארתריטיס',aliases:['אוסטאוארתריטיס','אוסטיוארטריטיס']},
-  {id:'thyroid',label:'תת פעילות בלוטת התריס',aliases:['תת פעילות בלוטת התריס','היפותירואידיזם']},
-  {id:'parkinson',label:'פרקינסון',aliases:['פרקינסון']},
-  {id:'dementia',label:'דמנציה',aliases:['דמנציה']},
-  {id:'epilepsy',label:'אפילפסיה',aliases:['אפילפסיה']},
-  {id:'cancer',label:'מחלה ממארת / סרטן',aliases:['מחלה ממארת','סרטן']},
-  {id:'anemia',label:'אנמיה',aliases:['אנמיה']},
-  {id:'obesity',label:'השמנה',aliases:['השמנה']},
-  {id:'fatty_liver',label:'כבד שומני',aliases:['כבד שומני']},
-  {id:'smoking',label:'עישון',aliases:['עישון','מעשן','מעשנת']},
-  {id:'neuropathy',label:'נוירופתיה סוכרתית',aliases:['נוירופתיה סוכרתית']},
-  {id:'venous',label:'אי ספיקה ורידית',aliases:['אי ספיקה ורידית']},
-  {id:'fibro',label:'פיברומיאלגיה',aliases:['פיברומיאלגיה']}
+  {id:'none',group:'',label:'ללא מחלות רקע',aliases:['ללא מחלות רקע','ללא רקע רפואי','בריא ללא מחלות רקע','בריא, ללא מחלות רקע']},
+  // לב וכלי דם
+  {id:'htn',group:'לב וכלי דם',label:'יתר לחץ דם (HTN)',aliases:['יתר לחץ דם','יל״ד','יל"ד','ית״ד','ית"ד','HTN']},
+  {id:'lipids',group:'לב וכלי דם',label:'יתר שומנים בדם (דיסליפידמיה)',aliases:['דיסליפידמיה','היפרליפידמיה','היפרלפדמיה','יתר שומנים בדם']},
+  {id:'ihd',group:'לב וכלי דם',label:'מחלת לב איסכמית (IHD)',aliases:['מחלת לב איסכמית','מחלת לב כלילית','IHD','CAD']},
+  {id:'mi',group:'לב וכלי דם',label:'אוטם שריר הלב בעבר (MI)',aliases:['אוטם שריר הלב','אוטם בשריר הלב','MI','STEMI','NSTEMI']},
+  {id:'cabg',group:'לב וכלי דם',label:'ניתוח מעקפים בעבר (CABG)',aliases:['ניתוח מעקפים','מעקפים','CABG']},
+  {id:'pci',group:'לב וכלי דם',label:'צנתור עם תומכן (PCI)',aliases:['צנתור','תומכן','סטנט','PCI']},
+  {id:'chf',group:'לב וכלי דם',label:'אי ספיקת לב (CHF)',aliases:['אי ספיקת לב','CHF','HF']},
+  {id:'af',group:'לב וכלי דם',label:'פרפור פרוזדורים (AF)',aliases:['פרפור פרוזדורים','AFIB','AF']},
+  {id:'pacemaker',group:'לב וכלי דם',label:'קוצב לב (PPM)',aliases:['קוצב לב','קוצב','PPM','pacemaker']},
+  {id:'valve',group:'לב וכלי דם',label:'מחלת מסתמים / מסתם מלאכותי',aliases:['מחלת מסתמים','מסתם מלאכותי','החלפת מסתם','TAVI']},
+  {id:'as',group:'לב וכלי דם',label:'היצרות המסתם האאורטלי (AS)',aliases:['היצרות מסתם אאורטלי','היצרות אאורטלית','AS']},
+  {id:'pvd',group:'לב וכלי דם',label:'מחלת כלי דם היקפית (PVD)',aliases:['מחלת כלי דם היקפית','PVD','PAD']},
+  {id:'aaa',group:'לב וכלי דם',label:'מפרצת אבי העורקים (AAA)',aliases:['מפרצת אבי העורקים','מפרצת','AAA']},
+  {id:'dvt',group:'לב וכלי דם',label:'פקקת ורידים עמוקים בעבר (DVT)',aliases:['פקקת ורידים','פקקת ורידים עמוקים','DVT']},
+  {id:'pe',group:'לב וכלי דם',label:'תסחיף ריאתי בעבר (PE)',aliases:['תסחיף ריאתי','PE']},
+  {id:'venous',group:'לב וכלי דם',label:'אי ספיקה ורידית',aliases:['אי ספיקה ורידית','דליות']},
+  // סוכרת ובלוטות
+  {id:'dm',group:'סוכרת ובלוטות',label:'סוכרת (DM)',aliases:['סוכרת','סכרת','DM']},
+  {id:'dm_insulin',group:'סוכרת ובלוטות',label:'סוכרת מטופלת באינסולין',aliases:['סוכרת מטופלת באינסולין','מטופל באינסולין','מטופלת באינסולין']},
+  {id:'neuropathy',group:'סוכרת ובלוטות',label:'נוירופתיה סוכרתית',aliases:['נוירופתיה סוכרתית']},
+  {id:'diabetic_foot',group:'סוכרת ובלוטות',label:'כף רגל סוכרתית',aliases:['כף רגל סוכרתית']},
+  {id:'thyroid',group:'סוכרת ובלוטות',label:'תת פעילות בלוטת התריס (היפותירואידיזם)',aliases:['תת פעילות בלוטת התריס','היפותירואידיזם','hypothyroidism']},
+  {id:'hyperthyroid',group:'סוכרת ובלוטות',label:'יתר פעילות בלוטת התריס (היפרתירואידיזם)',aliases:['יתר פעילות בלוטת התריס','היפרתירואידיזם']},
+  {id:'gout',group:'סוכרת ובלוטות',label:'שגדון (גאוט)',aliases:['שגדון','גאוט','gout']},
+  // מערכת העצבים
+  {id:'cva',group:'מערכת העצבים',label:'אירוע מוחי בעבר (CVA)',aliases:['אירוע מוחי בעבר','CVA','שבץ']},
+  {id:'tia',group:'מערכת העצבים',label:'אירוע מוחי חולף (TIA)',aliases:['אירוע מוחי חולף','TIA']},
+  {id:'dementia',group:'מערכת העצבים',label:'ירידה קוגניטיבית / דמנציה',aliases:['דמנציה','ירידה קוגניטיבית','אלצהיימר']},
+  {id:'parkinson',group:'מערכת העצבים',label:'פרקינסון',aliases:['פרקינסון','parkinson']},
+  {id:'epilepsy',group:'מערכת העצבים',label:'אפילפסיה / פרכוסים',aliases:['אפילפסיה','פרכוסים']},
+  {id:'periph_neuro',group:'מערכת העצבים',label:'נוירופתיה היקפית',aliases:['נוירופתיה היקפית']},
+  {id:'spinal_stenosis',group:'מערכת העצבים',label:'היצרות תעלת השדרה (Spinal stenosis)',aliases:['היצרות תעלת השדרה','spinal stenosis']},
+  {id:'vertigo',group:'מערכת העצבים',label:'סחרחורות / ורטיגו',aliases:['ורטיגו','סחרחורות']},
+  // ריאות
+  {id:'copd',group:'ריאות',label:'מחלת ריאות חסימתית כרונית (COPD)',aliases:['COPD','ברונכיטיס כרונית','מחלת ריאות חסימתית']},
+  {id:'asthma',group:'ריאות',label:'אסתמה',aliases:['אסתמה','אסטמה']},
+  {id:'osa',group:'ריאות',label:'דום נשימה בשינה (OSA)',aliases:['דום נשימה בשינה','OSA','CPAP']},
+  {id:'home_o2',group:'ריאות',label:'חמצן ביתי',aliases:['חמצן ביתי']},
+  {id:'pulm_htn',group:'ריאות',label:'יתר לחץ דם ריאתי (PHT)',aliases:['יתר לחץ דם ריאתי','PHT']},
+  // כליות ודרכי השתן
+  {id:'ckd',group:'כליות ודרכי השתן',label:'אי ספיקת כליות כרונית (CKD)',aliases:['אי ספיקת כליות','מחלת כליות כרונית','CKD']},
+  {id:'dialysis',group:'כליות ודרכי השתן',label:'דיאליזה',aliases:['דיאליזה','המודיאליזה']},
+  {id:'transplant',group:'כליות ודרכי השתן',label:'השתלת כליה',aliases:['השתלת כליה']},
+  {id:'bph',group:'כליות ודרכי השתן',label:'ערמונית מוגדלת (BPH)',aliases:['ערמונית מוגדלת','הגדלת ערמונית','BPH']},
+  {id:'uti_rec',group:'כליות ודרכי השתן',label:'דלקות חוזרות בדרכי השתן',aliases:['דלקות חוזרות בדרכי השתן','UTI']},
+  {id:'kidney_stones',group:'כליות ודרכי השתן',label:'אבנים בכליות',aliases:['אבנים בכליות']},
+  // עיכול וכבד
+  {id:'gerd',group:'עיכול וכבד',label:'ריפלוקס (GERD)',aliases:['ריפלוקס','GERD']},
+  {id:'ulcer',group:'עיכול וכבד',label:'כיב פפטי',aliases:['כיב פפטי','אולקוס']},
+  {id:'dysphagia',group:'עיכול וכבד',label:'הפרעת בליעה (דיספגיה)',aliases:['הפרעת בליעה','דיספגיה']},
+  {id:'constipation',group:'עיכול וכבד',label:'עצירות כרונית',aliases:['עצירות כרונית']},
+  {id:'diverticulosis',group:'עיכול וכבד',label:'דיברטיקולוזיס',aliases:['דיברטיקולוזיס','דיברטיקולים']},
+  {id:'fatty_liver',group:'עיכול וכבד',label:'כבד שומני',aliases:['כבד שומני']},
+  {id:'cirrhosis',group:'עיכול וכבד',label:'שחמת הכבד (צירוזיס)',aliases:['שחמת','צירוזיס']},
+  {id:'peg',group:'עיכול וכבד',label:'הזנה בזונדה / PEG',aliases:['זונדה','PEG']},
+  // שלד ושרירים
+  {id:'osteoporosis',group:'שלד ושרירים',label:'אוסטאופורוזיס (בריחת סידן)',aliases:['אוסטאופורוזיס','אוסטיופרוזיס','בריחת סידן']},
+  {id:'oa',group:'שלד ושרירים',label:'שחיקת מפרקים (אוסטאוארתריטיס)',aliases:['אוסטאוארתריטיס','אוסטיוארטריטיס','שחיקת מפרקים']},
+  {id:'ra',group:'שלד ושרירים',label:'דלקת מפרקים שגרונית (RA)',aliases:['דלקת מפרקים שגרונית','RA']},
+  {id:'hip_fx',group:'שלד ושרירים',label:'שבר צוואר ירך בעבר',aliases:['שבר צוואר ירך','שבר בירך']},
+  {id:'thr',group:'שלד ושרירים',label:'החלפת מפרק ירך (THR)',aliases:['החלפת מפרק ירך','THR']},
+  {id:'tkr',group:'שלד ושרירים',label:'החלפת מפרק ברך (TKR)',aliases:['החלפת מפרק ברך','TKR']},
+  {id:'back_pain',group:'שלד ושרירים',label:'כאבי גב כרוניים',aliases:['כאבי גב']},
+  {id:'fibro',group:'שלד ושרירים',label:'פיברומיאלגיה',aliases:['פיברומיאלגיה']},
+  // דם ואונקולוגיה
+  {id:'anemia',group:'דם ואונקולוגיה',label:'אנמיה',aliases:['אנמיה']},
+  {id:'anticoag',group:'דם ואונקולוגיה',label:'טיפול נוגד קרישה',aliases:['נוגד קרישה','נוגדי קרישה']},
+  {id:'cancer',group:'דם ואונקולוגיה',label:'מחלה ממארת פעילה',aliases:['מחלה ממארת','סרטן']},
+  {id:'cancer_hx',group:'דם ואונקולוגיה',label:'מחלה ממארת בעבר (בהפוגה)',aliases:['בהפוגה']},
+  // חושים ועור
+  {id:'hearing',group:'חושים ועור',label:'ירידה בשמיעה',aliases:['ירידה בשמיעה','מכשיר שמיעה']},
+  {id:'vision',group:'חושים ועור',label:'ירידה בראייה',aliases:['ירידה בראייה']},
+  {id:'cataract',group:'חושים ועור',label:'קטרקט (ירוד)',aliases:['קטרקט','ירוד']},
+  {id:'glaucoma',group:'חושים ועור',label:'גלאוקומה (ברקית)',aliases:['גלאוקומה','ברקית']},
+  {id:'amd',group:'חושים ועור',label:'ניוון מקולרי (AMD)',aliases:['ניוון מקולרי','AMD']},
+  {id:'pressure_ulcer',group:'חושים ועור',label:'פצע לחץ',aliases:['פצע לחץ','פצעי לחץ']},
+  {id:'psoriasis',group:'חושים ועור',label:'ספחת (פסוריאזיס)',aliases:['ספחת','פסוריאזיס']}
 ];
+/* Removed from the pick-list in v66. If an existing patient had one selected, it is kept as free text
+   (never silently deleted) so the nurse can decide whether to keep it. */
+const RETIRED_BACKGROUND_LABELS={obesity:'השמנה',smoking:'עישון'};
 let currentBackgroundConditions=new Set();
 function normalizeHebText(v){return String(v||'').toLowerCase().replace(/[\s.,;:()\-_/]+/g,' ').trim()}
-function inferBackgroundConditions(text){const n=normalizeHebText(text),set=new Set();if(!n)return set;for(const c of BACKGROUND_CONDITIONS){if(c.aliases.some(a=>n.includes(normalizeHebText(a))))set.add(c.id)}if(set.size>1)set.delete('none');return set}
+function aliasIn(norm,alias){const a=normalizeHebText(alias);if(!a)return false;if(/^[a-z0-9 ]{1,5}$/.test(a))return new RegExp(`(^|[^a-z0-9])${a}([^a-z0-9]|$)`).test(norm);return norm.includes(a)}
+function inferBackgroundConditions(text){const n=normalizeHebText(text),set=new Set();if(!n)return set;for(const c of BACKGROUND_CONDITIONS){if(c.aliases.some(a=>aliasIn(n,a)))set.add(c.id)}if(set.size>1)set.delete('none');return set}
 function backgroundConditionById(id){return BACKGROUND_CONDITIONS.find(x=>x.id===id)}
-function composeBackground(selected,other){const clean=String(other||'').trim(),norm=normalizeHebText(clean),parts=[];for(const id of selected){const c=backgroundConditionById(id);if(!c)continue;if(id==='none'){if(selected.size===1&&!clean)parts.push(c.label);continue}const already=c.aliases.some(a=>norm.includes(normalizeHebText(a)));if(!already)parts.push(c.label)}if(clean)parts.push(clean);return parts.join(', ')}
-function renderBackgroundConditions(){const host=$('#backgroundConditionList');if(!host)return;const q=normalizeHebText($('#backgroundSearch')?.value||'');const visible=BACKGROUND_CONDITIONS.filter(c=>!q||normalizeHebText(c.label+' '+c.aliases.join(' ')).includes(q));host.innerHTML=visible.map(c=>`<button type="button" class="bg-condition ${c.id==='none'?'no-background':''} ${currentBackgroundConditions.has(c.id)?'active':''}" data-bg-condition="${c.id}" aria-pressed="${currentBackgroundConditions.has(c.id)?'true':'false'}">${esc(c.label)}</button>`).join('')||'<div class="hint">לא נמצאה מחלה מתאימה. אפשר להוסיף בטקסט החופשי.</div>';host.querySelectorAll('[data-bg-condition]').forEach(b=>b.onclick=()=>{const id=b.dataset.bgCondition;if(id==='none'){currentBackgroundConditions=new Set(currentBackgroundConditions.has('none')?[]:['none'])}else{currentBackgroundConditions.delete('none');currentBackgroundConditions.has(id)?currentBackgroundConditions.delete(id):currentBackgroundConditions.add(id)}renderBackgroundConditions();renderBackgroundSummary()});renderBackgroundSummary()}
+function composeBackground(selected,other){const clean=String(other||'').trim(),norm=normalizeHebText(clean),parts=[];for(const id of selected){const c=backgroundConditionById(id);if(!c)continue;if(id==='none'){if(selected.size===1&&!clean)parts.push(c.label);continue}const already=aliasIn(norm,c.label)||c.aliases.some(a=>aliasIn(norm,a));if(!already)parts.push(c.label)}if(clean)parts.push(clean);return parts.join(', ')}
+function renderBackgroundConditions(){const host=$('#backgroundConditionList');if(!host)return;const q=normalizeHebText($('#backgroundSearch')?.value||'');const visible=BACKGROUND_CONDITIONS.filter(c=>!q||normalizeHebText(c.label+' '+c.aliases.join(' ')).includes(q));const btn=c=>`<button type="button" class="bg-condition ${c.id==='none'?'no-background':''} ${currentBackgroundConditions.has(c.id)?'active':''}" data-bg-condition="${c.id}" aria-pressed="${currentBackgroundConditions.has(c.id)?'true':'false'}">${esc(c.label)}</button>`;const groups=[...new Set(visible.map(c=>c.group))];host.innerHTML=groups.map(g=>g?`<div class="bg-group"><div class="bg-group-title">${esc(g)}</div><div class="bg-group-items">${visible.filter(c=>c.group===g).map(btn).join('')}</div></div>`:`<div class="bg-group-items">${visible.filter(c=>!c.group).map(btn).join('')}</div>`).join('')||'<div class="hint">לא נמצאה מחלה מתאימה. אפשר להוסיף בטקסט החופשי.</div>';host.querySelectorAll('[data-bg-condition]').forEach(b=>b.onclick=()=>{const id=b.dataset.bgCondition;if(id==='none'){currentBackgroundConditions=new Set(currentBackgroundConditions.has('none')?[]:['none'])}else{currentBackgroundConditions.delete('none');currentBackgroundConditions.has(id)?currentBackgroundConditions.delete(id):currentBackgroundConditions.add(id)}renderBackgroundConditions();renderBackgroundSummary()});renderBackgroundSummary()}
 function renderBackgroundSummary(){const el=$('#backgroundSelectedSummary');if(!el)return;const labels=[...currentBackgroundConditions].map(id=>backgroundConditionById(id)?.label).filter(Boolean);el.textContent=labels.length?`נבחרו: ${labels.join(' · ')}`:'לא נבחרו מחלות מהרשימה'}
 function dateObj(iso){return iso?new Date(iso+'T12:00:00'):null}
 function dateISO(d){const x=new Date(d);const tz=x.getTimezoneOffset()*60000;return new Date(x-tz).toISOString().slice(0,10)}
@@ -1501,7 +1560,7 @@ function openPatient(id){if(!requireNetworkReady('עריכת מטופל'))return
   $('#pName').value=p.name;$('#pAge').value=p.age;$('#pSex').value=p.sex||'';$('#pAllergy').value=p.allergy?'yes':'no';$('#pAllergyText').value=p.allergyText||'';refreshAllergyFields();$('#pSituation').value=p.situation;
   const stored=Array.isArray(p.backgroundConditions)?p.backgroundConditions.filter(id=>BACKGROUND_CONDITIONS.some(c=>c.id===id)):[];
   currentBackgroundConditions=new Set(stored.length?stored:[...inferBackgroundConditions(p.background)]);
-  $('#pBackground').value=(typeof p.backgroundOther==='string'?p.backgroundOther:(p.background||''));$('#backgroundSearch').value='';renderBackgroundConditions();
+  {let other=(typeof p.backgroundOther==='string'?p.backgroundOther:(p.background||''));const retired=(p.backgroundConditions||[]).map(id=>RETIRED_BACKGROUND_LABELS[id]).filter(l=>l&&!normalizeHebText(other).includes(normalizeHebText(l)));if(retired.length)other=[other,...retired].filter(Boolean).join(', ');$('#pBackground').value=other}$('#backgroundSearch').value='';renderBackgroundConditions();
   $('#pAssessment').value=p.assessment;$('#pEducation').value=p.education;$('#pUrine').value=p.urine;$('#pBowel').value=p.bowel;$('#pVitalsChecks').value=String(Math.max(1,Math.min(3,Number(p.vitalsChecks)||3)));$('#pTempRoute').value=p.tempRoute==='PR'?'PR':'PO';$('#pIsolation').value=p.isolation?'yes':'no';document.querySelectorAll('#isolationTypeList input').forEach(x=>x.checked=(p.isolationTypes||[]).includes(x.value));$('#pIsolationOther').value=p.isolationOther||'';document.querySelectorAll('#isolationOrganismList input').forEach(x=>x.checked=(p.isolationOrganisms||[]).includes(x.value));$('#pIsolationOrganismOther').value=p.isolationOrganismOther||'';refreshIsolationFields();
   $('#pGlucoseRequired').value=p.glucoseRequired?'yes':'no';$('#pGlucoseChecks').value=String(p.glucoseChecks||1);$('#pGlucoseScheduleMode').value=p.glucoseScheduleMode||'daily';setGlucoseWeekdays(p.glucoseWeekdays||[]);$('#pGlucoseEveryDays').value=String(p.glucoseEveryDays||2);$('#pGlucoseStartDate').value=p.glucoseStartDate||'';refreshGlucoseFields(p.glucosePattern||'');refreshGlucoseScheduleFields();
   $('#pNotes').value=p.notes;
