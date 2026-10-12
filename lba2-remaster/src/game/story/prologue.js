@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { POI } from '../world.js';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
+import { playOpening } from './opening.js';
 
 const V = POI.village;
 
@@ -31,7 +32,7 @@ export class Prologue extends ChapterBase {
       { id: 'mira', name: 'n_mira', char: 'mira', color: '#d8a8ff', x: well.x + 1.2, z: well.z + 2.9, angle: Math.atan2(1.2, -1.3), look: { tunic: '#3b5bb8', pants: '#3b5bb8', ears: '#f4e9dc', skin: '#f4e9dc', hair: '#f4e9dc', apron: '#dfe6f5' }, anim: 'talk' },
       { id: 'pippa', name: 'n_pippa', char: 'pippa', color: '#ffb070', x: W.stall.x, z: W.stall.z, angle: W.stall.a, look: { tunic: '#e58a3a', pants: '#6a4a8a', ears: '#f4e9dc', apron: '#ffffff', skin: '#f4e9dc', hair: '#f4e9dc' } },
       { id: 'doran', name: 'n_doran', char: 'doran', color: '#8fd3ff', x: W.pierStart.x, z: W.pierStart.z + 2.2, angle: Math.PI, look: { tunic: '#2f8a6a', pants: '#3a4a6a', hat: '#d8b94a', trunk: true, skin: '#8fa3b8', hair: '#8fa3b8', scale: 1.15 }, anim: 'hide' },
-      { id: 'xil', name: 'n_xil', char: 'xil', color: '#9fffc8', x: W.pierEnd.x + 1.5, z: W.pierEnd.z, angle: Math.PI / 2, look: { tunic: '#6a3a9a', robe: '#6a3a9a', skin: '#7fc8a8', hair: '#7fc8a8', scale: 1.12 } },
+      { id: 'xil', name: 'n_xil', char: 'xil', color: '#9fffc8', x: W.pierEnd.x + 3.1, z: W.pierEnd.z - 0.65, angle: Math.PI / 2 + 0.3, look: { tunic: '#6a3a9a', robe: '#6a3a9a', skin: '#7fc8a8', hair: '#7fc8a8', scale: 1.12 } },
       { id: 'tim', name: 'n_tim', char: 'tim', color: '#ffd27a', x: kids.x, z: kids.z, angle: Math.PI / 2, look: { tunic: '#e0c03a', pants: '#3a5a9a', scale: 0.7, hair: '#c06a2a' }, anim: 'talk' },
       { id: 'lulu', name: 'n_lulu', char: 'lulu', color: '#ff9ad0', x: kids.x + 1.3, z: kids.z, angle: -Math.PI / 2, look: { tunic: '#e05a9a', robe: '#e05a9a', scale: 0.66, hair: '#2a1a10' } },
     ];
@@ -47,7 +48,7 @@ export class Prologue extends ChapterBase {
     const e = W.pierEnd;
     const crate = new THREE.MeshStandardMaterial({ color: '#5a6a80', roughness: 0.5, metalness: 0.4 });
     const emblem = new THREE.MeshStandardMaterial({ color: '#7fe8ff', emissive: '#2ab0e0', emissiveIntensity: 1.5 });
-    for (const [dx, dz, s] of [[2.6, 0.8, 1], [2.6, -0.6, 0.8], [3.6, 0.2, 0.9]]) {
+    for (const [dx, dz, s] of [[0.9, 0.85, 1], [0.9, -0.55, 0.8], [1.9, 0.25, 0.9]]) { // (at the very end of the pier, clear of the project lift)
       const m = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), crate);
       m.position.set(e.x + dx, e.y + s / 2, e.z + dz); m.castShadow = true; scene.add(m);
       const em = new THREE.Mesh(new THREE.CircleGeometry(s * 0.25, 6), emblem);
@@ -65,14 +66,50 @@ export class Prologue extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- flow
+  // A new game opens with the in-engine opening (opening.js); it ends in the house with control and the
+  // first objective. `?nocine` (developers, tests) goes straight to that end state.
   start() {
     const g = this.game;
-    g.enterRoom('house', null, true);
-    g.hud.chapterCard(t('chapter_n', { n: 1 }), t('chapter_well'));
-    g.say('', [t('pr_intro_1'), t('pr_intro_2')], () => this.chain([
-      ['zoe', 'pr_zoe_1'], ['zoe', 'pr_zoe_2'], ['hero', 'pr_tw_1'], ['zoe', 'pr_zoe_3'],
-      ['arthur', 'pr_ar_1'], ['zoe', 'pr_zoe_4'], ['arthur', 'pr_ar_2'],
-    ], () => { this.f.intro = true; g.updateObjective(); g.save(false); }));
+    if (new URLSearchParams(location.search).has('nocine')) {
+      g.enterRoom('house', null, true, true);
+      const end = g.rooms.house.npcSpots.twinsen;
+      g.hero.pos.set(end.x + 2.0, 0, end.z - 1.5);
+      g.hero.angle = Math.atan2(-1, 0.25);
+      this.afterOpening();
+      return;
+    }
+    this.opening = playOpening(this.story);
+    this.opening.start();
+  }
+  // the end state of the opening (played or skipped): where everyone is, the flags, control, objective, save
+  afterOpening() {
+    const g = this.game, f = this.f;
+    f.intro = true; f.opening = true;
+    this.opening = null;
+    this.story.refreshCast();
+    g.hud.show(true);
+    document.querySelector('#touch')?.classList.toggle('hidden', !g.touch);
+    g.camRig.cine = false;
+    g.camRig.override = null;
+    g.setState('play');
+    g.updateObjective();
+    const ob = document.querySelector('#objective');
+    ob?.classList.remove('flash'); void ob?.offsetWidth; ob?.classList.add('flash');
+    g.audio.setMood('home');
+    g.save(false);
+  }
+  // while the prologue runs after the opening: Zoé went next door (the water office), Arthur is at his boat
+  // (for later chapters this is the family's default: at home; a chapter that wants them elsewhere says so)
+  place(id) {
+    const f = this.f, g = this.game;
+    if (id !== 'zoe' && id !== 'arthur') return undefined;
+    const home = g.rooms.house.npcSpots[id];
+    if (id === 'arthur') return { x: home.x, z: home.z, a: home.a, anim: 'kneelWork' };
+    if (f.opening && !f.prologueDone && this.isCur()) {
+      const hs = g.world.houses.find((h) => h.id === 'water');
+      return { x: hs.door.x + Math.sin(hs.ry) * 1.1, z: hs.door.z + Math.cos(hs.ry) * 1.1, a: hs.ry + Math.PI, anim: 'idle' };
+    }
+    return { x: home.x, z: home.z, a: home.a, anim: null };
   }
 
   items() {
@@ -96,7 +133,7 @@ export class Prologue extends ChapterBase {
     const f = this.f, h = this.game.hero;
     const s = (ok, key) => `<span class="s ${ok ? 'ok' : ''}">◆ ${t(key)}</span>`;
     if (f.prologueDone) return `<b>${t('pr_obj_done')}</b>`;
-    if (!h.hasBall) return `<b>${t('pr_obj_ball')}</b>`;
+    if (!h.hasBall) return `<b>${t('pr_obj_well')}</b>` + (f.ballHint ? s(false, 'pr_obj_ball') : '');
     if (f.inWell) return `<b>${t('pr_obj_cave')}</b>` + (f.nodes >= 3 ? '' : s(false, 'pr_obj_nodes'));
     if (!f.wellSeen) return `<b>${t('pr_obj_well')}</b>`;
     return `<b>${t('pr_obj_descend')}</b>` + s(f.key, 'pr_obj_key') + s(f.rope, 'pr_obj_rope') + s(f.timConfessed, 'pr_obj_tim');
@@ -132,7 +169,7 @@ export class Prologue extends ChapterBase {
   // can the player leave this room yet?
   canExit(room) {
     if (room.id === 'house' && !this.game.hero.hasBall) {
-      this.chain([['zoe', 'pr_zoe_ball']]);
+      this.chain([['hero', 'pr_tw_ballfirst']], () => { this.f.ballHint = true; this.game.updateObjective(); });
       return false;
     }
     return true;
@@ -219,6 +256,7 @@ export class Prologue extends ChapterBase {
     switch (id) {
       case 'zoe':
         if (f.prologueDone) return c([['zoe', 'pr_zoe_after']]);
+        if (f.opening && !f.zoeNext && !g.room) return c([['zoe', 'pr_zoe_next']], () => { f.zoeNext = true; });
         return c([['zoe', h.hasBall ? 'pr_zoe_go' : 'pr_zoe_ball']]);
       case 'arthur':
         return c([['arthur', f.prologueDone ? 'pr_ar_after' : 'pr_ar_hint']]);

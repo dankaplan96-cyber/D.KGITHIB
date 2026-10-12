@@ -260,7 +260,7 @@ export class Rig {
     }
   }
 
-  gesture(kind) { this.gestureKind = kind; this.gestureT = GESTURE_LEN[kind] || 0.8; }
+  doGesture(kind) { this.gestureKind = kind; this.gestureT = GESTURE_LEN[kind] || 0.8; }
 
   // Everyday actions. Each returns the body values and fills the joint targets T; timing comes from actionT
   // (time since the action started), so an action played again starts from its beginning.
@@ -401,7 +401,7 @@ export class Rig {
       T.elL = -0.18; T.elR = -0.18;
       T.legL = 0.02; T.legR = -0.02; T.kneeL = 0.03; T.kneeR = 0.03;
       // idle fidgets: look around, weight shift, scratch head
-      if (a === 'idle') {
+      if (a === 'idle' && !this.noFidget) { // (a story scene directs every movement itself)
         this.fidgetT -= dt;
         if (this.fidgetT <= 0) { this.fidget = 1 + Math.floor(Math.random() * 5); this.fidgetT = 5 + Math.random() * 7; this.fidgetStart = this.t; }
         const ft = this.t - (this.fidgetStart ?? -99);

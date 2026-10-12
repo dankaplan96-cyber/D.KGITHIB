@@ -462,7 +462,7 @@ function buildHouse(scene, physics) {
   B.light('#e8f4ff', 2.5, 4.5, LX + 1.0, 1.8, 0.1);
 
   R.updaters.push((dt, t) => { stoveLight.intensity = stoveLight.userData.base * (0.85 + Math.sin(t * 11) * 0.1 + Math.sin(t * 7) * 0.05); });
-  R.npcSpots = { zoe: { ...B.world(-2.32, -2.62), a: Math.PI }, arthur: { ...B.world(2.15, 2.15), a: -2.4 }, twinsen: { ...B.world(-0.45, -0.25), a: 0 } };
+  R.npcSpots = { zoe: { ...B.world(-2.32, -2.62), a: 0.6 }, arthur: { ...B.world(2.15, 2.15), a: -2.4 }, twinsen: { ...B.world(-0.45, -0.25), a: 0 } };
   return B.finish();
 }
 

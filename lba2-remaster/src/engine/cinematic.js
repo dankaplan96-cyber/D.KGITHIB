@@ -47,6 +47,9 @@ export class Cinematic {
     this.state = 'prep';
     g.cine = this;
     g.camRig.cine = true;
+    g.camRig.override = null;
+    if (g.hero.rig.silhouette) g.hero.rig.silhouette.visible = false; // (gameplay aid only)
+    g.setState('cinematicEnd'); // (a quiet state while preparing: no title camera, no gameplay)
     g.hud.show(false);
     document.body.classList.add('cine-on');
     $('#touch')?.classList.add('hidden');
@@ -58,7 +61,8 @@ export class Cinematic {
     g.setState('cinematic');
     this.apply(0);
     // one frame rendered under the black so nothing compiles or pops on the first visible frame
-    requestAnimationFrame(() => $('#fade').classList.remove('instant', 'on'));
+    const reveal = () => $('#fade').classList.remove('instant', 'on');
+    requestAnimationFrame(reveal); setTimeout(reveal, 250); // (the timer covers a frame callback that never comes)
   }
 
   update(dt) {
@@ -149,6 +153,7 @@ export class Cinematic {
   // the clock follows the music cue while it plays (a slow frame then can't drift the picture off the score)
   syncMusic() {
     const m = this.def.music, mu = this.game.audio.music;
+    if (this.game.testFreeze) return; // (deterministic test stepping runs faster than the audio clock)
     if (!m || !mu?.ctx || mu.ctx.state !== 'running' || this.t < m.at + 0.5) return;
     const v = mu.voices?.find((x) => x.name === m.name && !x.stopping);
     if (!v) return;
@@ -208,12 +213,13 @@ export class Cinematic {
       try { this.def.finish?.(skipped, this); } catch (e) { console.error('cinematic finish failed', e); }
       g.camRig.cine = false;
       g.cine = null;
+      if (g.hero.rig.silhouette) g.hero.rig.silhouette.visible = true;
       document.body.classList.remove('cine-on');
     };
     if (skipped && was === 'run') {
       // a short dip to black hides the jump to the end state
       $('#fade').classList.add('on');
-      setTimeout(() => { end(); requestAnimationFrame(() => $('#fade').classList.remove('on')); }, 420);
+      setTimeout(() => { end(); setTimeout(() => $('#fade').classList.remove('on'), 40); }, 420);
       g.setState('cinematicEnd');
     } else {
       $('#fade').classList.remove('instant', 'on');

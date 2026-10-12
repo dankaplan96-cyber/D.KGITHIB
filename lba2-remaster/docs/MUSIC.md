@@ -50,6 +50,7 @@ Durations are of the file; the loop region is `loopStart`–`loopEnd` in `assets
 | Revelation | story cue, one-shot (`audio.cue('revelation')`) | 1:17 | — | D, 4/4 | `revelation.*` |
 | Finale | chapter 3 finale / boss (`boss`, `finale`) | 1:49 | 1:36 | D minor → D, 4/4 | `finale.*` |
 | Homecoming | ending screens, credits (`ending`, `credits`, `homecoming`) | 2:49 | 2:31 | F, 3/4 | `homecoming.*` |
+| Opening | the new-game opening scene, one-shot (`audio.cue('opening')`), written to the scene's clock (each section starts on its shot; see the score header) | 1:29 | — | F, 3/4 | `opening.*` |
 
 Each score file starts with a section plan (bars, instruments, what happens to the themes).
 

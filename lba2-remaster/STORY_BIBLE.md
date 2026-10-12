@@ -43,7 +43,16 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 (10) → descent and resolution (11–12) → home.
 
 ### 1 — The Well ✅
-- **Wants:** fix the well and be home for dinner. **Knows:** the well is dry; nothing about the project.
+- **Opening (in-engine scene, ~85 s, skippable):** the harbour in the morning: water against the pier, Doran's
+  bow line pulling tight, the Joint Project's cargo lift unloading a crate from the project barge while a
+  resident walks on to the ferry; one faint vibration ripples a puddle and shakes the lift's lantern — the lift
+  keeps working. Home: Twinsen mends the reading lamp, Arthur fits the mast of his model boat, Zoé pots
+  seedlings. Zoé's tap coughs and stops ("I fixed that yesterday." / "It worked yesterday."); Arthur: "Try the
+  well. My boat needs water." The second try is a warm trickle. Twinsen: "I'll check the well." Zoé: "I'll ask
+  next door." — she goes to the water office herself. Title, then control in the house. No exposition card, no
+  Sendell, no Vesk; the warmth is the only hint.
+- **Wants:** fix the well and be home for dinner. **Knows:** the tap stopped and ran warm; nothing about the
+  project.
 - **Does:** magic ball from the cupboard; settles Gilbert and Mira's row for the lid key; Doran stamps Xil's
   permit for a rope ladder; (optional) overhears Tim and Lulu about the warm stone; wakes three crystals.
 - **Turn / result:** warm water, crystals, crystal mites, then Sendell: "Someone has reached her."

@@ -149,3 +149,31 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   - The baseline and region captures show no page errors.
 - Not verified: real-GPU frame rate, close-up faces in motion (only stills), feel of the new lighting on a
   real display.
+
+## Session: the opening scene (headless Chromium + SwiftShader; details in docs/CINEMATICS.md)
+- New game now opens with an in-engine scene (~85 s, skippable) instead of the exposition card and Zoé's
+  speech:
+  - the harbour and the Joint Project's new cargo lift (with its one faint vibration);
+  - home: the tap that coughs and runs warm;
+  - "I'll check the well." / "I'll ask next door.";
+  - the title, then control in the house with the objective "Check the well".
+- Built for reuse:
+  - `src/engine/cinematic.js`: a timeline of events, tracks, camera shots, a blend into the gameplay
+    camera, subtitles, hold-to-skip on the real binding, pause and focus-loss pause, a single `finish` for
+    skip and completion.
+  - A `cinematic` game state; quiet room changes; new everyday character actions and gestures in the rig.
+  - Synthesised sound loops and effects; an original music cue (`tools/music/tracks/opening.py`) written so
+    each section starts on its shot.
+- New props:
+  - In the house: a sink with a working tap (stream, sputter, steam), Zoé's seedlings, Twinsen's lamp
+    repair, Arthur's model boat.
+  - At the harbour: the project cargo lift, its barge, a puddle and Doran's bow line.
+- Verified:
+  - `tests/opening.mjs`, 15 checks, covering:
+    - playback and its end state;
+    - skip at 3, 50 and 81 s, plus a short press not skipping;
+    - pause and resume, and losing focus;
+    - Continue (no replay) and a second new game (nothing duplicated);
+    - the first objective playable.
+  - Prologue and chapters 1 and 3 still pass (chapter tests start with `?nocine`).
+- Not verified: real GPU and display, sound by ear, touch and gamepad skipping on real devices.

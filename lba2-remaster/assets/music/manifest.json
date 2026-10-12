@@ -156,6 +156,19 @@
    "loopLength": 92.16,
    "seamMaxDiff": 0.00015377092938785586
   },
+  "opening": {
+   "file": "opening.mp3",
+   "title": "Opening",
+   "role": "New-game opening scene (one-shot)",
+   "loop": false,
+   "samples": 4265202,
+   "sampleRate": 48000,
+   "duration": 88.858,
+   "lufs": -19.0,
+   "truePeak": -4.11,
+   "limiterGR": 0.0,
+   "bytes": 1244880
+  },
   "revelation": {
    "file": "revelation.mp3",
    "title": "Revelation",

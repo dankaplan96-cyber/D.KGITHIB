@@ -1,6 +1,7 @@
 # NEXT ACTION
 
-Story: chapters 1–10 are playable with tests; combat overhaul done (docs/COMBAT.md, tests/combat.mjs).
+Story: chapters 1–10 are playable with tests; combat overhaul done (docs/COMBAT.md, tests/combat.mjs); the new-game
+opening scene is in (docs/CINEMATICS.md, tests/opening.mjs).
 
 1. Visual remaster pass (stages 1–4 done; see docs/VISUAL_REMASTER.md "Remaining"): cliff bases and the
    shoreline, animation polish (idle variations, talk gestures), larger vegetation tiles, merging the
@@ -14,3 +15,5 @@ Story: chapters 1–10 are playable with tests; combat overhaul done (docs/COMBA
    file:// in headless Chromium: a new game starts and the music decodes. Rebuild it after each milestone.
    (Version 3 of the artifact was missing vendor/three/build/three.core.min.js, so it couldn't load three.js;
    version 4 adds it, verified on a local mirror of the published file set.)
+5. Next (agreed with the user): a local desktop build of the game (an installable app around the same code, saves on
+   disk, no browser), after the opening.

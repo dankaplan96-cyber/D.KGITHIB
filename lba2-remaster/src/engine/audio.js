@@ -195,9 +195,79 @@ export class AudioEngine {
     n.start(t, Math.random() * 1.5); n.stop(t + dur + 0.02);
   }
 
+  // A sound that runs until stopped (story scenes): returns { name, stop(fade) }. Synthesised like the rest.
+  loop(name, opts = {}) {
+    const ctx = this.ctx;
+    if (!ctx) return null;
+    const out = ctx.createGain(); out.gain.value = 0; out.connect(this.sfxBus);
+    const nodes = [], timers = [];
+    const noise = (type, f, q) => { const n = ctx.createBufferSource(); n.buffer = this.noiseBuf; n.loop = true; const fl = ctx.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; n.connect(fl); n.start(0, Math.random()); nodes.push(n); return fl; };
+    const lfo = (param, rate, depth) => { const o = ctx.createOscillator(); o.frequency.value = rate; const gg = ctx.createGain(); gg.gain.value = depth; o.connect(gg).connect(param); o.start(); nodes.push(o); };
+    const osc = (type, f) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; o.start(); nodes.push(o); return o; };
+    let level = 0.2;
+    switch (name) {
+      case 'lap': { // water lapping against piles and a hull
+        const f = noise('lowpass', 420, 0.7), g1 = ctx.createGain(); g1.gain.value = 0.55;
+        f.connect(g1).connect(out); lfo(g1.gain, 0.37, 0.45); lfo(f.frequency, 0.21, 170);
+        const f2 = noise('bandpass', 1400, 1.2), g2 = ctx.createGain(); g2.gain.value = 0.12;
+        f2.connect(g2).connect(out); lfo(g2.gain, 0.53, 0.12);
+        level = 0.32; break;
+      }
+      case 'motor': case 'winch': { // the lift's electric motor (the winch: the same, idling)
+        const o = osc('sawtooth', name === 'motor' ? 62 : 84), f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 420;
+        o.connect(f).connect(out); lfo(o.frequency, 5.5, 1.2);
+        const w = noise('bandpass', 1300, 4), gw = ctx.createGain(); gw.gain.value = 0.25; w.connect(gw).connect(out);
+        level = name === 'motor' ? 0.075 : 0.03; break;
+      }
+      case 'trickle': { // a thin stream into a stone basin
+        const f = noise('bandpass', 2600, 1.8), g1 = ctx.createGain(); g1.gain.value = 0.6;
+        f.connect(g1).connect(out); lfo(g1.gain, 7, 0.35); lfo(f.frequency, 3.1, 500);
+        level = 0.11; break;
+      }
+      case 'room': { // a quiet room: the stove ticking and crackling, a low hum of the house
+        const f = noise('lowpass', 180, 0.5), g1 = ctx.createGain(); g1.gain.value = 0.5; f.connect(g1).connect(out);
+        timers.push(setInterval(() => { if (Math.random() < 0.45 && ctx.state === 'running') this._burst({ dur: 0.025, vol: 0.025, f: 2600, f1: 1200, type: 'bandpass', q: 4 }); }, 230));
+        level = 0.05; break;
+      }
+      default: out.disconnect(); return null;
+    }
+    const t = ctx.currentTime, lv = opts.quiet ? level * 0.5 : level;
+    out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(lv, t + (opts.fade ?? 0.6));
+    const h = {
+      name,
+      stop: (fade = 0.6) => {
+        if (h.stopped) return;
+        h.stopped = true;
+        const t2 = ctx.currentTime;
+        out.gain.cancelScheduledValues(t2); out.gain.setValueAtTime(out.gain.value, t2); out.gain.linearRampToValueAtTime(0, t2 + fade);
+        timers.forEach(clearInterval);
+        setTimeout(() => { nodes.forEach((n) => { try { n.stop(); } catch { /* */ } }); out.disconnect(); }, (fade + 0.15) * 1000);
+      },
+    };
+    return h;
+  }
+
   play(name) {
     if (!this.ctx || this.ctx.state !== 'running') return;
     switch (name) {
+      // story scenes (the opening): rope, lift, tap, small household sounds
+      case 'ropeCreak': this._tone({ type: 'triangle', f0: 340, f1: 270, dur: 0.38, vol: 0.035 }); this._burst({ dur: 0.3, vol: 0.05, f: 900, f1: 700, type: 'bandpass', q: 7 }); break;
+      case 'clunk': this._tone({ f0: 150, f1: 90, dur: 0.12, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.12, f: 1800, f1: 400 }); break;
+      case 'thump': this._burst({ dur: 0.25, vol: 0.3, f: 320, f1: 60 }); this._tone({ f0: 85, f1: 45, dur: 0.22, vol: 0.14 }); break;
+      case 'hum': {
+        const ctx = this.ctx, t = ctx.currentTime, o = ctx.createOscillator(), gg = ctx.createGain();
+        o.frequency.setValueAtTime(44, t); o.frequency.linearRampToValueAtTime(41, t + 2.2);
+        gg.gain.setValueAtTime(0, t); gg.gain.linearRampToValueAtTime(0.09, t + 0.7); gg.gain.linearRampToValueAtTime(0, t + 2.4);
+        o.connect(gg).connect(this.sfxBus); o.start(t); o.stop(t + 2.5);
+        break;
+      }
+      case 'rattle': for (let i = 0; i < 8; i++) this._tone({ type: 'square', f0: 2200 + Math.random() * 600, dur: 0.02, vol: 0.012, at: i * 0.07 + Math.random() * 0.02 }); break;
+      case 'tapSqueak': this._tone({ type: 'triangle', f0: 880, f1: 1240, dur: 0.22, vol: 0.035 }); this._tone({ type: 'triangle', f0: 1180, f1: 820, dur: 0.18, vol: 0.03, at: 0.12 }); break;
+      case 'pipeKnock': this._tone({ f0: 115, f1: 70, dur: 0.14, vol: 0.18 }); this._burst({ dur: 0.1, vol: 0.14, f: 650, f1: 160 }); break;
+      case 'waterRun': this._burst({ dur: 0.7, vol: 0.16, f: 2300, f1: 1700, type: 'bandpass', q: 1.2 }); break;
+      case 'gurgle': [320, 410, 360, 520, 450].forEach((f, i) => this._tone({ f0: f, f1: f * 1.3, dur: 0.05, vol: 0.04, at: i * 0.06 })); this._burst({ dur: 0.3, vol: 0.06, f: 500, f1: 200 }); break;
+      case 'tick': this._tone({ type: 'triangle', f0: 1600, dur: 0.03, vol: 0.04 }); break;
+      case 'put': this._tone({ type: 'triangle', f0: 300, f1: 200, dur: 0.06, vol: 0.09 }); this._burst({ dur: 0.05, vol: 0.07, f: 1500, f1: 500 }); break;
       case 'step': this._burst({ dur: 0.06, vol: 0.08, f: 900, f1: 300 }); break;
       case 'step-stone': this._burst({ dur: 0.05, vol: 0.09, f: 2600, f1: 900, type: 'bandpass', q: 1.5 }); break;
       case 'step-grass': this._burst({ dur: 0.09, vol: 0.06, f: 3200, f1: 1600, type: 'highpass' }); break;

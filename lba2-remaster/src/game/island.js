@@ -617,7 +617,7 @@ function cargoLift(W, parent, r) {
   const second = mkCrate(barge); second.position.set(-0.6, 0.76, 0.1); second.rotation.y = 0.15;
   const crate = mkCrate(g);
   // a puddle on the deck by the column, with two ripple rings
-  const pud = new THREE.Group(); pud.position.set(-84.15, deck + 0.012, -3.95); g.add(pud);
+  const pud = new THREE.Group(); pud.position.set(-84.75, deck + 0.012, -4.2); g.add(pud);
   const pmat = new THREE.MeshStandardMaterial({ color: '#4a5a68', roughness: 0.04, metalness: 0.3, transparent: true, opacity: 0.78 });
   const pmesh = mesh(pud, new THREE.CircleGeometry(0.34, 20), pmat, 0, 0, 0, 0, { rx: -Math.PI / 2, cast: false }); pmesh.scale.set(1.5, 1, 1);
   const rings = [0, 1].map(() => { const m = mesh(pud, new THREE.RingGeometry(0.06, 0.075, 24), new THREE.MeshBasicMaterial({ color: '#dce8f0', transparent: true, opacity: 0, depthWrite: false }), 0, 0.003, 0, 0, { rx: -Math.PI / 2, cast: false }); return m; });
