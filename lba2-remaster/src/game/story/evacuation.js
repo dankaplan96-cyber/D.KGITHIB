@@ -231,7 +231,8 @@ export class Evacuation extends ChapterBase {
   }
   applyFlags() {
     const f = this.f, W = this.W;
-    const on = this.isCur();
+    // (the fences and the open shelters stay through chapter 10, while the town waits underground)
+    const on = this.isCur() || this.story.cur?.key === 'network';
     this.showProps(on);
     if (!on) return;
     W.station?.setActive?.(false);

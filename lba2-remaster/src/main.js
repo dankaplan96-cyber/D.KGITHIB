@@ -20,6 +20,7 @@ import { buildCondenser } from './game/condenser.js';
 import { buildHamalayi } from './game/hamalayi.js';
 import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
+import { buildValveRoom } from './game/valveroom.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
 import { createEnemy, Drone } from './game/enemies.js';
 import { BehaviourMenu } from './game/behmenu.js';
@@ -52,8 +53,8 @@ export function migrateSave(raw) {
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
 // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
-const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
-const ROOM_HUM = { condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
+const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
+const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
 const $ = (s) => document.querySelector(s);
@@ -107,6 +108,7 @@ class Game {
     this.loadTimes.hamalayi = performance.now() - tr;
     Object.assign(this.rooms, buildObsRoom(this.scene, this.physics));
     Object.assign(this.rooms, buildUpper3(this.scene, this.physics));
+    this.rooms.valves = buildValveRoom(this.scene, this.physics);
     this.loadTimes.desert = performance.now() - tr;
     this.loadTimes.zeelich = performance.now() - tr;
     this.room = null;
@@ -591,6 +593,12 @@ class Game {
       this.audio.play('heal');
       this.save(false);
     }, () => this.setState('play'));
+  }
+
+  // a choice list (the story's travel menus); onPick(item) runs back in play
+  openMenu(titleKey, items, onPick) {
+    this.setState('shop');
+    this.hud.openMenu(titleKey, items, (it) => { this.setState('play'); onPick(it); }, () => this.setState('play'));
   }
 
   // ------------------------------------------------ combat hooks

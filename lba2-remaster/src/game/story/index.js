@@ -12,13 +12,14 @@ import { Pass } from './pass.js';
 import { Observatory } from './observatory.js';
 import { Evacuation } from './evacuation.js';
 import { Council } from './council.js';
+import { Network } from './network.js';
 import { Epilogue } from './epilogue.js';
 import '../text/common.js';
 
 // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
 // position, so chapters can be inserted between existing ones without breaking saves. Chapter numbers shown
 // to the player come from STORY_BIBLE.md's 12-chapter plan (the epilogue has no number).
-export const ORDER = ['well', 'project', 'zeelich', 'dig', 'steam', 'pass', 'observatory', 'evacuation', 'council', 'shell', 'home'];
+export const ORDER = ['well', 'project', 'zeelich', 'dig', 'steam', 'pass', 'observatory', 'evacuation', 'council', 'network', 'shell', 'home'];
 export const NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, network: 10, shell: 11, core: 12 };
 // the order saves before format 3 used (flags.chapter was a position in this list)
 export const OLD_ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
@@ -26,7 +27,7 @@ export const OLD_ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
 export class Story {
   constructor(game) {
     this.game = game;
-    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, shell: Chapter3, home: Epilogue };
+    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, network: Network, shell: Chapter3, home: Epilogue };
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
   }
   // position of the chapter in progress for a set of flags (by key when the save has one)

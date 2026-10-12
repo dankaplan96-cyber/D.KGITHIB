@@ -30,7 +30,7 @@ Object.assign(STR.he, {
 });
 
 Object.assign(STR.en, {
-  chapter_n: 'Chapter {n}',
+  chapter_n: 'Chapter {n}', menu_cancel: 'Cancel',
   chapter_well: 'The Well', chapter_project: 'The Joint Project', chapter_zeelich: 'Zeelich', chapter_dig: 'The Dig',
   chapter_steam: 'Steam and Sand', chapter_pass: 'The Pass', chapter_observatory: 'The Observatory', chapter_evacuation: 'Evacuation',
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',

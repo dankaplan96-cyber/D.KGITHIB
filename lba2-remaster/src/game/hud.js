@@ -210,6 +210,26 @@ export class HUD {
     el.classList.remove('hidden');
     render();
   }
+  // a list of choices in the shop's panel (Hesk's glider): items [{key, note?, disabled?}]
+  openMenu(titleKey, items, onPick, onClose) {
+    const el = $('#shop');
+    el.dir = 'ltr';
+    const close = () => { el.classList.add('hidden'); this.shopOpen = false; onClose(); };
+    const render = () => {
+      el.innerHTML = `<h2>${t(titleKey)}</h2>` +
+        items.map((it, i) => `<button class="item" data-i="${i}" ${it.disabled ? 'disabled' : ''}><span>${t(it.key)}</span><b>${it.note ? t(it.note) : ''}</b></button>`).join('') +
+        `<button class="leave">${t('menu_cancel')}</button>`;
+      el.querySelectorAll('.item').forEach((b) => b.addEventListener('click', () => { const it = items[+b.dataset.i]; if (it.disabled) return; el.classList.add('hidden'); this.shopOpen = false; onPick(it); }));
+      el.querySelector('.leave').addEventListener('click', close);
+      this._shopFocus();
+    };
+    this.shopRender = render;
+    this.shopClose = close;
+    this.shopSel = 0;
+    this.shopOpen = true;
+    el.classList.remove('hidden');
+    render();
+  }
   _shopFocus() {
     const btns = [...document.querySelectorAll('#shop button')];
     btns.forEach((b, i) => b.classList.toggle('sel', i === this.shopSel));
