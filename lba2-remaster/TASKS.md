@@ -21,7 +21,7 @@
 - [x] S4 Chapter 1 polish: the project's heat posts light up at every front door and Pippa's stall once the station runs; Vesk, Zoé and the townsfolk talk about free heat before the evacuation plan turns up.
 
 ## 3. World and exploration
-- [ ] W1 Optional discoveries with consequences (a shortcut, a locked workshop, a repaired machine changing a route).
+- [~] W1 Optional discoveries with consequences (a shortcut, a locked workshop, a repaired machine changing a route). Done so far: six singing crystals off the paths (5 Citadel, 1 on the old mill on Zeelich), +1 max health each, Sendell remarks on all six in chapter 3.
 - [~] W2 Familiar places change after events (NPC lines, objects, routes) — tracked per chapter. Done so far: heat posts light up after the water returns (ch1); bunting over the square and new lines for everyone in the epilogue.
 
 ## 4. Animation and interaction
@@ -29,8 +29,8 @@
 - [ ] A2 Ball: release timing, trapped-ball recovery, distinct hit feedback.
 
 ## 5. Music and sound (parallel agent, then integration)
-- [~] M1 Pipeline + Main Theme, Village, Well; music manager (crossfades, combat hysteresis, ducking, volumes).
-- [ ] M2 Remaining tracks; integration review; docs/MUSIC.md.
+- [x] M1 Pipeline + Main Theme, Village, Well; music manager (crossfades, combat hysteresis, ducking, volumes).
+- [x] M2 Remaining tracks; integration review; docs/MUSIC.md (12 tracks + stealth mix, draft renders, not checked by ear).
 - [ ] M3 Ambient/environment SFX: water, wind, machinery, footsteps per surface.
 
 ## 6. Reliability

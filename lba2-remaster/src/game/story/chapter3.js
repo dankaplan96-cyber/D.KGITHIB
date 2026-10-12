@@ -226,7 +226,7 @@ export class Chapter3 extends ChapterBase {
       const S = this.R.c3sendell;
       S.presence?.setVisible?.(true); S.presence?.setIntensity?.(1);
       this.chain([['sendell', 'c3_sendell_1'], ['hero', 'c3_tw_sendell1'], ['sendell', 'c3_sendell_2'], ['hero', 'c3_tw_sendell2'], ['sendell', 'c3_sendell_3'],
-        ['hero', 'c3_tw_sendell3'], ['sendell', 'c3_sendell_4'], ['balradio', 'c3_bal_radio2'], ['balradio', 'c3_bal_radio3']], () => {
+        ['hero', 'c3_tw_sendell3'], ['sendell', 'c3_sendell_4'], ...(f.crystalsAll ? [['sendell', 'c3_sendell_crystals']] : []), ['balradio', 'c3_bal_radio2'], ['balradio', 'c3_bal_radio3']], () => {
         f.c3_sendell = true; S.presence?.setIntensity?.(0.45); g.updateObjective(); g.save(false);
       });
     }

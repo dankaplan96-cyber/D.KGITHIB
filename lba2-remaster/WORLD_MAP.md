@@ -21,17 +21,20 @@ Exterior map with the LBA camera; interiors use the iso camera.
 
 Connections: house ⇄ street ⇄ square ⇄ harbour ⇄ lighthouse path ⇄ cliffs; square ⇄ orchard ⇄ depot ⇄ station.
 Access: well (lid key + rope); station gate (water restored); ferry (ch1 end, via Doran).
+Town changes: project heat posts by every door light up once the water is back (ch1); bunting over the
+square in the epilogue. Discoveries: singing crystals behind the lighthouse, in the orchard, at the end of
+the pier, in the east meadow and on the northern hills (+1 on top of Zeelich's old mill).
 
-## Zeelich terminal island (above the clouds) ✅ (🔧 the setback, more street life)
+## Zeelich terminal island (above the clouds) ✅ (🔧 more street life)
 Pink sky, cloud sea, floating isles.
 
 | Place | Identity / landmark | Life | Story role | Changes |
 |---|---|---|---|---|
-| Ferry dock | the light-ferry | project guard | arrival; setback: plan confiscated (⬜) | — |
+| Ferry dock | the light-ferry | project guard | arrival; setback: plan confiscated | — |
 | Esmer street | domes and arches, stalls | Nara's cloud flowers, Oku | directions, opinions about the project | lines change once they see the plan |
 | Baldino's workshop (interior) | bent antenna, globe, bench | explosions | the shell explained; override key built | finale: Baldino at the radio |
 | Three windmills + the old mill | sails, brakes | Oku's memories | brake with the ball; climb for the cog | released in the finale |
-| Project depot | locker, drones | — | code cylinder (+ the confiscated plan, ⬜) | — |
+| Project depot | locker, drones | — | code cylinder + the confiscated plan | — |
 | Drill platform | shield, gate console, lift | Vesk | shield down, Vesk descends | shaft open |
 
 Access: from Citadel by the ferry (ch2 start). Platform gate: override key + three mills braked.

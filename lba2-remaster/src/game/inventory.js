@@ -68,6 +68,8 @@ export class Inventory {
     for (const it of g.story.items?.() ?? []) add(it.id, it.icon, it.n);
     add('kashes', 'coin', h.coins);
     add('clovers', 'clover', h.clovers);
+    const nc = g.crystalCount?.() || 0;
+    if (nc) add('crystals', 'crystal', nc);
     return out;
   }
   show(on) {

@@ -37,6 +37,7 @@ Object.assign(STR.en, {
   c3_sendell_3: 'Stopping it will not close the cracks. I have held them alone for weeks. I cannot hold them much longer.',
   c3_tw_sendell3: 'Baldino says the bore can be turned around. Into a shield.',
   c3_sendell_4: 'Then turn it. I will hold on as long as I can.',
+  c3_sendell_crystals: 'You carry six of her splinters. They sang to you, so she knows you. Go.',
   c3_bal_radio2: "Twinsen! The conversion plans. Three pylons around the core. Hit each one and it switches, but each needs power from up here.",
   c3_bal_radio3: "Zoé's at the lighthouse for the signal. Mira's opening the valves. Oku and Nara are releasing the mills. You take the pylons.",
 

@@ -828,6 +828,16 @@ const PICK = {
     }
     return g;
   },
+  // a singing crystal: three blue spikes from one root, like the well's crystals in miniature
+  crystal: () => {
+    const g = new THREE.Group();
+    const mt = new THREE.MeshStandardMaterial({ color: '#9fe8ff', emissive: '#2a9aff', emissiveIntensity: 1.8, roughness: 0.15, flatShading: true });
+    for (const [rx, rz, s] of [[0, 0, 1], [0.5, 0.2, 0.62], [-0.45, -0.3, 0.55]]) {
+      const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.2, 0), mt);
+      m.scale.set(0.8 * s, 2.2 * s, 0.8 * s); m.rotation.set(rx, 0, rz); m.position.set(rz * -0.35, 0.2 * s, rx * 0.35); g.add(m);
+    }
+    return g;
+  },
   shard: () => {
     const g = new THREE.Group();
     const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.45, 0), new THREE.MeshStandardMaterial({ color: '#fff0a0', emissive: '#ffb000', emissiveIntensity: 3.5, metalness: 0.3, roughness: 0.1 }));
@@ -867,13 +877,14 @@ export class Pickups {
       } else {
         p.pos.y = p.baseY + Math.sin(p.t * 2.5) * 0.12;
       }
-      p.mesh.rotation.y += dt * (p.type === 'shard' ? 1.2 : 2.5);
+      p.mesh.rotation.y += dt * (p.type === 'shard' || p.type === 'crystal' ? 1.2 : 2.5);
       if (p.delay > 0 || hero.dead) continue;
       const dx = hero.pos.x - p.pos.x, dz = hero.pos.z - p.pos.z;
       const d = Math.hypot(dx, dz);
       const dy = Math.abs(hero.pos.y + 0.8 - p.pos.y);
       if (p.type === 'coin' && d < 3.2 && dy < 2.5) { p.pos.x += (dx / d) * dt * 9; p.pos.z += (dz / d) * dt * 9; p.baseY += (hero.pos.y + 0.8 - p.baseY) * dt * 6; }
-      if (d < (p.type === 'shard' ? 1.4 : 1.0) && dy < (p.type === 'shard' ? 2.6 : 1.6)) {
+      const big = p.type === 'shard' || p.type === 'crystal';
+      if (d < (big ? 1.4 : 1.0) && dy < (big ? 2.6 : 1.6)) {
         g.collect(p);
         g.scene.remove(p.mesh);
         this.list.splice(i, 1);

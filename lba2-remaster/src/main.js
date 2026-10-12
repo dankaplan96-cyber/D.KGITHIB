@@ -148,7 +148,20 @@ class Game {
     const s = this.world.shard1Spot;
     this.pickups.spawn('clover', s.x, s.y, s.z, { id: 'cliff-clover' });
     for (let i = 0; i < 5; i++) this.pickups.spawn('coin', s.x + Math.cos(i * 1.26) * 2.2, s.y - 0.8, s.z + Math.sin(i * 1.26) * 2.2, { id: 'cliff-k' + i });
+    // six singing crystals, hidden off the paths (each one: +1 max health; all six: Sendell notices)
+    for (const c of this.crystalSpots()) this.pickups.spawn('crystal', c.x, c.y, c.z, { id: c.id });
   }
+  crystalSpots() {
+    const W = this.world, G = (x, z) => this.physics.groundAt(x, z) + 0.75, mt = this.rooms.zeelich?.millTop;
+    const out = [
+      { id: 'sc-lighthouse', x: 7, z: -77 }, { id: 'sc-orchard', x: -27, z: 38 }, { id: 'sc-pier', x: W.pierEnd.x - 0.6, z: W.pierEnd.z },
+      { id: 'sc-east', x: 70, z: 0 }, { id: 'sc-north', x: 30, z: -60 },
+    ].map((c) => ({ ...c, y: G(c.x, c.z) }));
+    if (mt) out.push({ id: 'sc-mill', x: mt.x - 0.9, y: mt.y + 0.75, z: mt.z });
+    return out;
+  }
+  crystalCount() { return this.collected.filter((id) => id.startsWith('sc-')).length; }
+  applyCrystals() { this.hero.maxHp = 10 + this.crystalCount(); this.hero.hp = Math.min(this.hero.hp, this.hero.maxHp); }
 
   // ------------------------------------------------ rooms (interiors)
   startTransition(mid) {
@@ -240,6 +253,7 @@ class Game {
     this.collected = s.collected || [];
     this.searched = s.searched || [];
     this.brokenCrates = s.crates || [];
+    this.applyCrystals();
     for (const e of this.enemies) if (this.killed.includes(e.id)) { e.state = 'dead'; e.deadT = 99; e.rig.root.visible = false; }
     for (const p of [...this.pickups.list]) if (p.id && this.collected.includes(p.id)) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
     this.brokenCrates.forEach((i) => { if (this.world.crates[i]) this.breakCrate(this.world.crates[i], true); });
@@ -613,13 +627,23 @@ class Game {
   collect(p) {
     const h = this.hero;
     if (p.id) this.collected.push(p.id);
-    const fl = { coin: ['+1', '#ffe35a'], heart: ['♥', '#ff5a6a'], flask: ['✦', '#7fc4ff'], clover: ['♣', '#7fef7a'] }[p.type];
+    const fl = { coin: ['+1', '#ffe35a'], heart: ['♥', '#ff5a6a'], flask: ['✦', '#7fc4ff'], clover: ['♣', '#7fef7a'], crystal: ['♦', '#9fe8ff'] }[p.type];
     if (fl) this.hud.float(fl[0], p.pos, fl[1]);
     switch (p.type) {
       case 'coin': h.coins++; this.audio.play('coin'); break;
       case 'heart': h.hp = Math.min(h.maxHp, h.hp + 3); this.audio.play('heal'); break;
       case 'flask': h.mp = h.mpMax; this.audio.play('heal'); break;
       case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('heal'); this.hud.toast('toast_clover_found'); break;
+      case 'crystal': {
+        const n = this.crystalCount();
+        this.applyCrystals(); h.hp = h.maxHp;
+        this.audio.play('shard');
+        this.hud.toast('toast_crystal', { n, max: this.crystalSpots().length });
+        if (n === 1) this.story.cur.chain([['hero', 'crystal_first']]);
+        if (n >= this.crystalSpots().length) { this.flags.crystalsAll = true; this.story.cur.chain([['hero', 'crystal_all']]); }
+        this.save(false);
+        break;
+      }
     }
     this.particles.burst(p.pos.x, p.pos.y, p.pos.z, p.type === 'coin' ? '#ffd23a' : '#ffffff', 10, 2.5);
   }
