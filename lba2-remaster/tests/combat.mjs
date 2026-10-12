@@ -192,6 +192,42 @@ r = await ev(() => {
 });
 check('dodge distance consistent at 30 and 60 fps', Math.abs(r.d30 - r.d60) < 0.35 && r.d60 > 2, r);
 
+// 15. the ball: tap or hold, decided by the button that started it, the same at 30, 60 and 120 fps
+r = await ev(() => {
+  const { G } = C, out = {};
+  const B = G.ball, orig = B.launch.bind(B);
+  let shot = null, t = 0;
+  B.launch = (...a) => { shot = { t: +t.toFixed(3), charged: !!a[3]?.charged }; return orig(...a); };
+  const frames = (s, dt) => { for (let i = 0, n = Math.round(s / dt); i < n; i++) { G.frame(dt, false); t += dt; } };
+  const fresh = () => { C.only([], [6190, 8], Math.PI / 2); G.hero.combat.equip('fists', true); G.hero.mp = 3; G.ball.reset?.(); C.step(0.5); shot = null; t = 0; };
+  const hold = (code, dt) => { G.input.keys.add(code); G.input.taps.add(code); frames(dt, dt); };
+  for (const [name, dt] of [['f30', 1 / 30], ['f60', 1 / 60], ['f120', 1 / 120]]) {
+    const o = out[name] = {};
+    // a full hold: nothing leaves the hand while held; charging starts; the release throws the charged ball
+    fresh(); hold('KeyF', dt); frames(1.0, dt);
+    o.holdEarly = shot; o.charging = !!G.hero.combat.throwing?.charging;
+    G.input.keys.delete('KeyF'); frames(0.3, dt); o.holdShot = shot; o.mp = G.hero.mp;
+    // a tap: the quick throw on the animation's release
+    fresh(); hold('KeyF', dt); G.input.keys.delete('KeyF'); frames(0.6, dt); o.tap = shot;
+    // a short hold (released before charging): a quick throw, soon after the release
+    fresh(); hold('KeyF', dt); frames(0.18 - dt, dt); G.input.keys.delete('KeyF'); const rel = t; frames(0.6, dt); o.short = shot; o.shortLag = shot && +(shot.t - rel).toFixed(3);
+    // release and press again: no charge from the second press
+    fresh(); hold('KeyF', dt); frames(0.05, dt); G.input.keys.delete('KeyF'); frames(dt, dt); G.input.keys.add('KeyF'); frames(0.6, dt); G.input.keys.delete('KeyF'); o.repress = shot;
+    // another button held (attack) does not hold a throw started with the ball key
+    fresh(); hold('KeyF', dt); G.input.keys.delete('KeyF'); G.input.keys.add('KeyK'); frames(0.6, dt); G.input.keys.delete('KeyK'); o.other = shot;
+    C.step(3);
+  }
+  B.launch = orig;
+  return out;
+});
+for (const [k, o] of Object.entries(r)) {
+  check(`ball (${k}): a held press never throws before charging; release throws charged`, !o.holdEarly && o.charging && o.holdShot?.charged && o.mp < 2.9, o); // (one point spent; magic regenerates meanwhile)
+  check(`ball (${k}): tap throws quick at the release frame`, o.tap && !o.tap.charged && o.tap.t >= 0.15 && o.tap.t <= 0.2, o.tap);
+  check(`ball (${k}): short hold throws quick right after the release`, o.short && !o.short.charged && o.shortLag <= 0.07, { short: o.short, lag: o.shortLag });
+  check(`ball (${k}): release + press again does not charge`, o.repress && !o.repress.charged && o.repress.t < 0.3, o.repress);
+  check(`ball (${k}): a held attack button does not hold the ball key's throw`, o.other && !o.other.charged && o.other.t < 0.25, o.other);
+}
+
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
 await browser.close();

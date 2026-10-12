@@ -186,9 +186,7 @@ export class Cinematic {
     if (this.hold >= HOLD) this.skip();
   }
   skipKey() {
-    const inp = this.game.input;
-    if (inp.lastDevice === 'pad') return 'A';
-    return this.game.keyName?.('interact') || 'E';
+    return this.game.input.label(this.game.input.lastDevice === 'pad' ? 'action' : 'interact');
   }
   skip() {
     if (this.state === 'done') return;

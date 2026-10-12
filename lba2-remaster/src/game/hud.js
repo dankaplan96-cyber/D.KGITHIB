@@ -149,9 +149,9 @@ export class HUD {
   }
 
   prompt(text) {
-    if (!text) { this.promptEl.classList.remove('show'); return; }
-    const key = this.game.input.lastDevice === 'pad' ? 'X' : this.game.input.lastDevice === 'touch' ? '✋' : 'E';
-    this.promptEl.innerHTML = `<kbd>${key}</kbd> ${text}`;
+    if (!text) { if (this._prompt) { this.promptEl.classList.remove('show'); this._prompt = ''; } return; }
+    const html = `<kbd>${this.game.input.label('interact')}</kbd> ${text}`;
+    if (html !== this._prompt) { this.promptEl.innerHTML = html; this._prompt = html; }
     this.promptEl.classList.add('show');
   }
 

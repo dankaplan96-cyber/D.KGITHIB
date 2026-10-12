@@ -24,7 +24,7 @@ export const COMBAT = {
   lockRange: 14, lockBreak: 17, lockLosGrace: 1.5,
   assistCone: { off: 0, low: 0.22, normal: 0.42, high: 0.7 },   // rad half-angle for soft targeting
   dodge: { dur: 0.36, dist: 3.1, iStart: 0.04, iEnd: 0.27, cooldown: 0.28, cancelFrom: 0.62 },
-  throw: { quickRelease: 0.16, quickDur: 0.36, chargeAfter: 0.2, chargeFull: 0.75, moveK: 0.6, chargeMoveK: 0.45, releaseAfterCharge: 0.08 },
+  throw: { quickRelease: 0.16, quickDur: 0.36, windHold: 0.12, chargeAfter: 0.2, chargeFull: 0.75, moveK: 0.6, chargeMoveK: 0.45, releaseAfterCharge: 0.08 },
   hitStop: { light: 0.045, heavy: 0.085 },
   pulse: { range: 4.8, cone: 0.75, recharge: 5.0, stun: 2.6, shieldDown: 3.2 },
   tokens: { gentle: 1, normal: 2, hard: 3 },
@@ -309,7 +309,8 @@ export class HeroCombat {
 
     // ---- ball throw in progress (released or charging)
     if (this.throwing) {
-      this.stepThrow(dt, out, attackDown || ballDown, aim);
+      // only the button that started the throw decides tap or hold
+      this.stepThrow(dt, out, this.throwing.button === 'ball' ? ballDown : attackDown, aim);
       return out;
     }
     if (this.pulseT > 0) { this.pulseT -= dt; out.speedK = 0.3; out.anim = 'pulse'; return out; }
@@ -478,20 +479,25 @@ export class HeroCombat {
   startThrow(aim, button) {
     const g = this.g, h = this.hero;
     if (!h.hasBall || g.ball.state !== 'idle') return;
-    this.throwing = { t: 0, released: false, charged: false, button, aim };
+    // t: since the press; at: the throw animation's clock (it waits at the wind-up while the press may become a hold);
+    // let: the starting button has been released (latched: pressing again does not turn it back into a hold)
+    this.throwing = { t: 0, at: 0, let: false, released: false, button, aim };
     g.ball.holdIn(h);
     h.rig.atk = { kind: 'throw' };
     h.rig.play('throwQuick'); h.rig.actionT = 0;
   }
+  // Tap: the quick throw, released at quickRelease on the animation's clock. Hold past chargeAfter: charge, and
+  // release with a short whip when the button comes up. While it is still undecided (held, before chargeAfter)
+  // the animation waits at the wind-up, so a hold never throws early.
   stepThrow(dt, out, held, aim) {
     const g = this.g, h = this.hero, T = this.throwing, C = COMBAT.throw;
     T.t += dt;
+    if (!held) T.let = true;
     // face the aim (gently) while preparing
     const want = Math.atan2(aim.x, aim.z);
     if (!T.released) { const d = angleDiff(h.angle, want), mx = 14 * dt; h.angle += clamp(d, -mx, mx); }
     if (!T.released) {
-      // still holding past the quick window: charging
-      if (held && T.t >= C.chargeAfter) {
+      if (!T.let && T.t >= C.chargeAfter) {
         if (!T.charging) { T.charging = true; T.chargeT = 0; h.rig.play('charge'); h.rig.actionT = 0; g.audio.play('charge'); }
         T.chargeT += dt;
         if (T.chargeT >= C.chargeFull && !T.full) { T.full = true; g.audio.play('chargeFull'); g.particles.burst(h.pos.x, h.pos.y + 2.0, h.pos.z, '#ffe27a', 8, 1.5); }
@@ -500,10 +506,11 @@ export class HeroCombat {
         g.ball.preview?.(h, aim, T.full);
         return;
       }
-      const releaseAt = T.charging ? T.relT ?? (T.relT = T.t + C.releaseAfterCharge) : C.quickRelease;
-      if (T.charging && !T.whip) { T.whip = true; h.rig.play('throwQuick'); h.rig.actionT = C.quickRelease - C.releaseAfterCharge; }
+      if (T.charging && !T.whip) { T.whip = true; h.rig.play('throwQuick'); T.at = C.quickRelease - C.releaseAfterCharge; }
+      else { T.at += dt; if (!T.let) T.at = Math.min(T.at, C.windHold); }
+      h.rig.actionT = T.at;
       out.speedK = C.moveK; out.anim = 'throwQuick'; out.face = want;
-      if (T.t >= releaseAt) {
+      if (T.at >= C.quickRelease) {
         T.released = true; T.relAt = T.t;
         const full = !!T.full && h.mp >= 1;
         if (T.full && !full) g.hud.toast('toast_nomp');
@@ -514,8 +521,9 @@ export class HeroCombat {
       }
       return;
     }
+    T.at += dt;
     out.speedK = C.moveK; out.anim = 'throwQuick';
-    if (T.t - T.relAt >= C.quickDur - C.quickRelease) { this.throwing = null; h.rig.atk = null; }
+    if (T.at >= C.quickDur) { this.throwing = null; h.rig.atk = null; }
   }
   notReady() { const g = this.g; g.audio.play('notReady'); g.hud.weaponFlash?.(); }
 

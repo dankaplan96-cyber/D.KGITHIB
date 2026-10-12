@@ -201,6 +201,13 @@ export class Input {
     if (this.mouse.clicked) { this.now.add('click'); this.mouse.clicked = false; }
   }
 
+  // what to show for an action on the device in use: the pad button, the touch button's glyph, or the (rebound) key.
+  // The one place prompts get their labels from.
+  label(a) {
+    if (this.lastDevice === 'pad') return PAD_LABELS[a] ?? '';
+    if (this.lastDevice === 'touch') { const b = document.querySelector(`[data-touch="${a}"]`); if (b) return b.textContent; }
+    return keyLabel(keyFor(a));
+  }
   down(a) { return this.now.has(a); }
   pressed(a) { return this.now.has(a) && !this.prev.has(a); }
 

@@ -152,9 +152,11 @@ export class Hero extends Actor {
     // combat: attacks, the dodge, the ball throw (camera-relative move direction for aiming and dodging)
     const mvDir = this.moveDir(mv, g);
     this.wantsMove = Math.hypot(mv.x, mv.y) > 0.3;
+    // the pad has no separate interact button: A talks / opens whenever something is in reach, in every behaviour
+    const padTalk = !wheel && input.padAction && input.pressed('action') && this.actT <= 0 && !this.combat.busy && !!g.findInteractable();
     const cs = this.combat.update(dt, input, mvDir, {
       blocked: wheel || this.hiding || this.hurtT > 0.15 || this.actT > 0 || g.trans || !this.hasBall && this.noBehaviours,
-      actionAttack: beh === 'aggressive' && !wheel && input.pressed('action'),
+      actionAttack: beh === 'aggressive' && !wheel && !padTalk && input.pressed('action'),
     });
     const locked = cs.lock || this.hiding || this.hurtT > 0.15 || this.actT > 0;
     const speedK = cs.speedK ?? 1;
@@ -235,10 +237,11 @@ export class Hero extends Actor {
 
     // behaviour action (Space / A): jump (Athletic), talk (Normal); Aggressive attacks through the combat
     // controller above (the same moves as the attack button), Discreet hides (held)
-    if (!wheel && input.pressed('action') && this.actT <= 0 && !this.combat.busy) {
+    if (padTalk) g.tryInteract();
+    else if (!wheel && input.pressed('action') && this.actT <= 0 && !this.combat.busy) {
       if (beh === 'athletic') {
         if ((this.onGround && !this.sliding) || this.coyote > 0) this.jump(); else this.jumpBuf = 0.15;
-      } else if (beh === 'normal' || (input.padAction && g.findInteractable())) {
+      } else if (beh === 'normal') {
         g.tryInteract();
       }
     }
@@ -383,6 +386,7 @@ export class NPC extends Actor {
     const hero = this.game.hero;
     const near = this.distTo(hero) < 3.2;
     let moving = false;
+    const x0 = this.pos.x, z0 = this.pos.z;
     if (this.listenTo && this.listenTo !== this) {
       this.angle = dampAngle(this.angle, this.angleTo(this.listenTo), 6, dt);
     } else if (this.talking || near) {
@@ -396,8 +400,12 @@ export class NPC extends Actor {
       } else if (this.targetAngle != null) this.angle = dampAngle(this.angle, this.targetAngle, 4, dt);
     }
     this.game.physics.fall(this, dt);
+    // the gait follows the ground actually covered (after collisions), smoothed; a blocked walker stands
+    const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
+    this.gait = (this.gait ?? 0) + (v - (this.gait ?? 0)) * Math.min(1, dt * 10);
+    if (moving && this.gait < 0.15) moving = false;
     this.rig.play(this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
-    this.rig.update(dt, moving ? 1.3 : 0);
+    this.rig.update(dt, moving ? this.gait : 0);
     this.sync();
   }
 }
