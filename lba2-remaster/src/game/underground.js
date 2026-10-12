@@ -453,7 +453,7 @@ function buildShaft(scene, physics) {
 
   // --- the landing's working clutter
   // flatbed cart with spare drill pipe, beside the tunnel
-  const cx = tunnelX - 2.8, cz = BZ + 1.55;
+  const cx = tunnelX - 3.6, cz = BZ + 1.45;
   k.at(cx, 0, cz, 0.12, () => {
     k.add(rbox(2.2, 0.12, 1.0, 0.03), tealP(), 0, 0.42, 0);
     k.add(rbox(2.2, 0.1, 1.0, 0.02), deck(), 0, 0.5, 0);
@@ -666,6 +666,7 @@ function buildDeep(scene, physics) {
     piv.position.set(ox, wy - 0.2, oz); piv.rotation.y = ry;
     const wk = new Kit(piv); P.valveWheel(wk, { r: 0.28, color: '#c8302a' }); wk.flush();
     wheels[id] = piv;
+    B.ccol(x, z, 0.3, wy + 0.1, { noStand: true, seeThrough: true });
     return { x: ox, z: oz };
   };
 
@@ -1112,13 +1113,13 @@ function buildGallery(scene, physics) {
   giant(-11.6, DY, -8.6, 7, 2.2, 501, [CYAN(), VIOLET(), CYAN()], 0.3, 0.12, 0.1);
   giant(-12.2, DY, -3.6, 5, 1.3, 502, [VIOLET(), CYAN()], 0, 0, -0.35);
   giant(-7.0, DY, -9.4, 6, 1.6, 503, [CYAN(), VIOLET()], 0, 0.3, 0);
-  giant(8.8, DY, -9.3, 4, 1.1, 504, [VIOLET(), CYAN()], 0, 0.35, 0);
+  giant(11.6, DY, -9.2, 4, 1.1, 504, [VIOLET(), CYAN()], 0, 0.35, 0);
   giant(12.0, DY, -6.0, 6, 1.9, 505, [CYAN(), VIOLET(), CYAN()], 0, 0, 0.3);
   giant(11.6, DY, 3.0, 5, 1.4, 506, [VIOLET(), CYAN()], 0, 0, 0.25);
   giant(-12.0, DY, 8.6, 4, 1.0, 507, [CYAN(), VIOLET()], 0, -0.2, -0.2);
   giant(-3.6, CY, -9.4, 5, 1.6, 508, [VIOLET(), CYAN()], 0, 0.25, 0);
   giant(6.6, DY, 8.8, 3, 0.8, 509, [CYAN(), DIM()], 0, -0.3, 0);
-  for (const [x, z, r] of [[-11.6, -8.6, 1.6], [-12.2, -3.6, 0.9], [-7.0, -9.4, 1.1], [8.8, -9.3, 0.8], [12.0, -6.0, 1.3], [11.6, 3.0, 1.0], [-12.0, 8.6, 0.7], [6.6, 8.8, 0.6]]) B.ccol(x, z, r, DY + 4, { noStand: true });
+  for (const [x, z, r] of [[-11.6, -8.6, 1.6], [-12.2, -3.6, 0.9], [-7.0, -9.4, 1.1], [11.6, -9.2, 0.8], [12.0, -6.0, 1.3], [11.6, 3.0, 1.0], [-12.0, 8.6, 0.7], [6.6, 8.8, 0.6]]) B.ccol(x, z, r, DY + 4, { noStand: true });
   // crystals breaking out of the walls high up
   for (const [x, y, z, ry, s, sd] of [[LX + 0.3, DY + 2.6, -6.0, Math.PI / 2, 0.8, 520], [LX + 0.3, DY + 3.2, 1.2, Math.PI / 2, 0.6, 521], [-3.0, DY + 2.8, BZ + 0.3, 0, 0.9, 522], [3.8, DY + 3.4, BZ + 0.3, 0, 0.7, 523], [10.5, DY + 2.4, BZ + 0.3, 0, 0.6, 524]]) tilt(kt, x, y, z, ry, Math.PI / 2 - 0.3, 0, () => crystals(kt, 6, s, sd, [CYAN(), VIOLET(), DIM()], 0.6));
   // rocks on the shelves
@@ -1459,12 +1460,12 @@ function buildCore(scene, physics) {
   const her2 = glowSprite('#c8a0ff', 14, 0.18); her2.position.set(-8, 1, -8); B.group.add(her2);
 
   // --- the bore head pressing in from above, cracks spreading from the contact
-  const BH = { x: -2.1, z: -2.1 }, bhR = Math.hypot(BH.x, BH.z), contactY = DYh * Math.sqrt(1 - (bhR / DX) ** 2);
+  const BH = { x: -1.3, z: -1.3 }, bhR = Math.hypot(BH.x, BH.z), contactY = DYh * Math.sqrt(1 - (bhR / DX) ** 2);
   const C = new THREE.Vector3(BH.x, contactY, BH.z);
   const drill = new THREE.Group(); drill.position.set(BH.x, 0, BH.z); B.group.add(drill);
   const dk = new Kit(drill);
   const bitMat = stdM({ color: '#c8ccd4', roughness: 0.35, metalness: 0.75, map: P.TEX.brushed(), emissive: '#ff6a20', emissiveIntensity: 0 });
-  const tipY = contactY - 3.8;
+  const tipY = contactY - 4.6;
   // the bit: a great fluted cone with cutter teeth, its gauge ring, the drill collar going up out of sight
   dk.add(lathe([[0.001, 0], [0.35, 0.25], [0.9, 0.9], [1.6, 1.8], [2.3, 2.7], [2.6, 3.2], [2.6, 3.6], [2.0, 4.1], [1.5, 4.6], [1.4, 5.4]], 24), bitMat, 0, tipY, 0);
   dk.add(torus(2.62, 0.14, 6, 32), brass(), 0, tipY + 3.4, 0, 0, { rx: Math.PI / 2 });
@@ -1610,7 +1611,8 @@ function buildCore(scene, physics) {
     const hp = head.position.clone(), bp = new THREE.Vector3(BH.x, tipY + 3.2, BH.z);
     const linkM = new THREE.MeshBasicMaterial({ color: '#7ae0ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
     const link = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.34, hp.distanceTo(bp), 10, 1, true), linkM); linkM.side = THREE.DoubleSide;
-    link.position.copy(hp).add(bp).multiplyScalar(0.5); link.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), bp.clone().sub(hp).normalize()); link.visible = false; B.group.add(link);
+    link.position.copy(hp).add(bp).multiplyScalar(0.5); link.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), bp.clone().sub(hp).normalize()); link.visible = false; link.renderOrder = 5; B.group.add(link);
+    link.add(new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, hp.distanceTo(bp), 6, 1, true), new THREE.MeshBasicMaterial({ color: '#f0ffff', transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })));
     // brass reflector on the perimeter beside the bay: the bank shot comes off it into the slot
     // the incoming line is one of the 8 directions a keyboard throw can take, so any spot along it works
     const [qx, qz] = polar(ph + d, 11.1), [ex, ez] = polar(ph + Math.sign(d) * side, 10.98);
@@ -1725,7 +1727,7 @@ function buildCore(scene, physics) {
     if (hot) crackMat.emissiveIntensity = (2.2 * (1 - fieldLevel) + 0.08) * (0.85 + Math.sin(tt * 5) * 0.15);
     for (const p of R.pylons) {
       if (p.state === 1) { const b = 0.6 + 0.4 * Math.sin(tt * 8); p.em.emissiveIntensity = 2.4 * b; p.hg.material.opacity = 0.6 * b; }
-      if (p.state === 2) p.linkM.opacity = 0.45 + Math.sin(tt * 6 + p.i) * 0.15;
+      if (p.state === 2) p.linkM.opacity = 0.6 + Math.sin(tt * 6 + p.i) * 0.2;
     }
     for (const f of R.reflectors) { f.flash = Math.max(0, f.flash - dt * 3); f.mesh.material.opacity = 0.6 * f.flash; }
     reflectBall(globalThis.game?.ball, dt);
