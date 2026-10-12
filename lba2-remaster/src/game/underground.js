@@ -277,7 +277,7 @@ function motes(B, sources, { n = 60, color = '#e8f4ff', size = 0.3, op = 0.3, hm
   const pts = new THREE.Points(g, new THREE.PointsMaterial({ color, size, transparent: true, opacity: op, depthWrite: false }));
   B.group.add(pts);
   B.room.updaters.push((dt) => {
-    for (let i = 0; i < n; i++) { const s = sd[i]; s.y += s.v * dt; if (s.y > hmax) s.y = 0; sp[i * 3] = s.x + Math.sin(s.y * 2 + i) * 0.15; sp[i * 3 + 1] = y0 + s.y; sp[i * 3 + 2] = s.z; }
+    for (let i = 0; i < n; i++) { const s = sd[i]; s.y += s.v * dt; if (s.y > hmax) s.y = 0; else if (s.y < 0) s.y = hmax; sp[i * 3] = s.x + Math.sin(s.y * 2 + i) * 0.15; sp[i * 3 + 1] = y0 + s.y; sp[i * 3 + 2] = s.z; }
     g.attributes.position.needsUpdate = true;
   });
   return pts;
@@ -1397,6 +1397,353 @@ function buildSendell(scene, physics) {
   return B.finish();
 }
 
+// ================================================================ 5. c3core — the core
+// A round arena under the shell: the far half of a cracked, translucent crystal dome rises over it (cut away
+// on the camera side like every LBA2 interior), the bore head pierces it from above and grinds at it.
+// Three conversion pylons stand in armoured bays; each bay's receiver is only reachable by banking the
+// ball off a brass reflector on the perimeter. Vesk's console sits on a raised platform.
+// Faceted half-dome (far half, x + z < 0), ellipsoid rx × ry, per-face tone in a colour attribute
+function domeGeo(rx, ry, detail = 4, rgba = false) {
+  const src = new THREE.IcosahedronGeometry(1, detail), p = src.attributes.position, pos = [], col = [];
+  for (let f = 0; f < p.count; f += 3) {
+    const cx = (p.getX(f) + p.getX(f + 1) + p.getX(f + 2)) / 3, cy = (p.getY(f) + p.getY(f + 1) + p.getY(f + 2)) / 3, cz = (p.getZ(f) + p.getZ(f + 1) + p.getZ(f + 2)) / 3;
+    if (cy < 0.01 || cx + cz > 0.1) continue;
+    const t = 0.82 + 0.3 * hash3(f, 7, 1);
+    for (let j = 0; j < 3; j++) { pos.push(p.getX(f + j) * rx, Math.max(0, p.getY(f + j)) * ry, p.getZ(f + j) * rx); if (rgba) col.push(0.35, 0.82, 1, 0); else col.push(t, t, t * 1.04); }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, rgba ? 4 : 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+const NO_ASSIST = Object.freeze({ lit: true });
+function buildCore(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'c3core', 2200, 0);
+  const R = B.room, k = B.k, kt = new Kit(B.group);
+  const Rr = 12.2, ringIn = 11.6, DX = 12.4, DYh = 9.6;
+  R.view = 22.5; R.follow = 0.25; R.cave = true; R.music = 'boss';
+  const rock = rockMat('#9c90a8'), rockD = rockMat('#6c6078');
+  const F0 = (3 * Math.PI) / 4, F1 = (7 * Math.PI) / 4, N0 = -Math.PI / 4;
+  const ENT = Math.PI * 0.78;
+
+  // --- floor: rock with a steel deck ring, the exposed shell glowing through cracks at the centre
+  const fl = new THREE.Mesh(new THREE.CircleGeometry(Rr + 0.3, 72), floorMat('#5e5468', 'rgba(30,20,50,0.45)', 'core'));
+  fl.rotation.x = -Math.PI / 2; fl.receiveShadow = true; B.group.add(fl);
+  k.add(arcFace([Rr + 0.9, -1.2], [Rr + 0.6, 0], 0, Math.PI * 2, 3, 72), rockD, 0, 0, 0);
+  B.ccol(0, 0, Rr + 0.3, 0, { seeThrough: true, bottom: -1 });
+  const ringDeck = new THREE.RingGeometry(6.8, 10.6, 72, 1); ringDeck.userData.keepUV = false;
+  k.add(ringDeck, deck(), 0, 0.012, 0, 0, { rx: -Math.PI / 2 });
+  k.add(new THREE.RingGeometry(6.55, 6.8, 72), hazard(), 0, 0.014, 0, 0, { rx: -Math.PI / 2 });
+  for (let i = 0; i < 24; i++) { const [x, z] = polar((i / 24) * Math.PI * 2, 6.95); k.add(cyl(0.05, 0.05, 0.03, 6), brass(), x, 0.02, z); }
+  const shellCrack = M('ugshellcrack', () => stdM({ color: '#f0d8ff', emissive: '#a050ff', emissiveIntensity: 1.6, roughness: 0.3 }, 0, { noShadow: true }));
+  { const r = rng(5); for (let c = 0; c < 9; c++) { let a = r() * Math.PI * 2, rr = 0.6 + r() * 0.6; const pts = []; for (let j = 0; j < 8; j++) { pts.push([Math.sin(a) * rr, 0.02, Math.cos(a) * rr]); a += (r() - 0.5) * 0.4; rr += 0.55 + r() * 0.35; if (rr > 6.4) break; } if (pts.length > 2) k.add(pipe(pts, 0.04, 0.2, 4), shellCrack, 0, 0, 0); } }
+  const pit = new THREE.Mesh(new THREE.CircleGeometry(1.2, 32), new THREE.MeshBasicMaterial({ color: '#b080ff', transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+  pit.rotation.x = -Math.PI / 2; pit.position.y = 0.02; B.group.add(pit);
+  k.at(0, 0, 0, 0.3, () => crystals(k, 6, 0.5, 901, [VIOLET(), CYAN()], 0.9));
+  B.ccol(0, 0, 0.9, 1.2, { noStand: true });
+  const herLight = B.light('#a070ff', 5, 9, 0, 0.8, 0);
+
+  // --- the membrane: the far half of the shell, faceted, translucent, cracked where the bore presses
+  const memMat = new THREE.MeshStandardMaterial({ color: '#a898e8', emissive: '#4a32c0', emissiveIntensity: 0.55, roughness: 0.15, metalness: 0.05, transparent: true, opacity: 0.4, depthWrite: false, side: THREE.DoubleSide, flatShading: true, vertexColors: true });
+  const mem = new THREE.Mesh(domeGeo(DX, DYh), memMat); mem.renderOrder = 2; B.group.add(mem);
+  const edgeMat = M('ugmemedge', () => stdM({ color: '#e8e0ff', emissive: '#9a7aff', emissiveIntensity: 0.9, roughness: 0.2 }, 0, { noShadow: true }));
+  { const pts = []; for (let i = 0; i <= 40; i++) { const a = (i / 40) * Math.PI; const u = Math.cos(a), y = Math.sin(a); pts.push([u * DX * Math.SQRT1_2 * 0.995, y * DYh * 0.995, -u * DX * Math.SQRT1_2 * 0.995]); } k.add(pipe(pts, 0.09, 0.3, 6), edgeMat, 0, 0, 0); }
+  // the field that will spread over it (vertex alpha, recomputed by setLevel)
+  const fgeo = domeGeo(DX * 0.985, DYh * 0.985, 4, true);
+  const fmat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending });
+  const fmesh = new THREE.Mesh(fgeo, fmat); fmesh.renderOrder = 3; B.group.add(fmesh);
+  // her: a slow violet breathing glow beyond the shell
+  const her = glowSprite('#9a60ff', 30, 0.22); her.position.set(-12, 3, -12); B.group.add(her);
+  const her2 = glowSprite('#c8a0ff', 14, 0.18); her2.position.set(-8, 1, -8); B.group.add(her2);
+
+  // --- the bore head pressing in from above, cracks spreading from the contact
+  const BH = { x: -2.1, z: -2.1 }, bhR = Math.hypot(BH.x, BH.z), contactY = DYh * Math.sqrt(1 - (bhR / DX) ** 2);
+  const C = new THREE.Vector3(BH.x, contactY, BH.z);
+  const drill = new THREE.Group(); drill.position.set(BH.x, 0, BH.z); B.group.add(drill);
+  const dk = new Kit(drill);
+  const bitMat = stdM({ color: '#c8ccd4', roughness: 0.35, metalness: 0.75, map: P.TEX.brushed(), emissive: '#ff6a20', emissiveIntensity: 0 });
+  const tipY = contactY - 3.8;
+  // the bit: a great fluted cone with cutter teeth, its gauge ring, the drill collar going up out of sight
+  dk.add(lathe([[0.001, 0], [0.35, 0.25], [0.9, 0.9], [1.6, 1.8], [2.3, 2.7], [2.6, 3.2], [2.6, 3.6], [2.0, 4.1], [1.5, 4.6], [1.4, 5.4]], 24), bitMat, 0, tipY, 0);
+  dk.add(torus(2.62, 0.14, 6, 32), brass(), 0, tipY + 3.4, 0, 0, { rx: Math.PI / 2 });
+  for (let i = 0; i < 4; i++) {
+    const a0 = (i * Math.PI) / 2, pts = [];
+    for (let j = 0; j <= 10; j++) { const u = j / 10, rr = 0.3 + u * 2.3, a = a0 + u * 1.6; pts.push([Math.sin(a) * rr, tipY + 0.2 + u * 3.0, Math.cos(a) * rr]); }
+    dk.add(pipe(pts, 0.16, 0.2, 6), MAT.paint('#3a3438', 0.5), 0, 0, 0);
+    for (let j = 2; j <= 9; j += 2) { const [x, y, z] = pts[j]; dk.add(rbox(0.32, 0.32, 0.32, 0.08), MAT.steel(), x * 1.06, y, z * 1.06, a0 + j * 0.16, { rx: 0.7 }); }
+  }
+  dk.add(cyl(1.25, 1.25, 22, 20), MAT.paint(TEAL, 0.45), 0, tipY + 5.4 + 11, 0);
+  for (let y = tipY + 6.0; y < tipY + 28; y += 2.6) dk.add(torus(1.3, 0.12, 6, 24), brass(), 0, y, 0, 0, { rx: Math.PI / 2 });
+  for (let i = 0; i < 6; i++) { const a = (i / 6) * Math.PI * 2; dk.add(rbox(0.16, 20, 0.22, 0.04), iron(), Math.sin(a) * 1.28, tipY + 16.4, Math.cos(a) * 1.28, a); }
+  dk.flush();
+  drill.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+  const tipGlow = glowSprite('#ff8a40', 5.5, 0.6); tipGlow.position.set(BH.x, tipY + 0.6, BH.z); B.group.add(tipGlow);
+  const tipLight = B.light('#ff7a30', 10, 12, BH.x, tipY - 0.2, BH.z);
+  const crackMat = new THREE.MeshStandardMaterial({ color: '#fff0e0', emissive: '#ffb070', emissiveIntensity: 2.2, roughness: 0.3 });
+  {
+    const r = rng(77), u0 = new THREE.Vector3(BH.x / DX, contactY / DYh, BH.z / DX).normalize();
+    const walk = (u, dir, n, w) => {
+      const pts = []; let cur = u.clone(), d = dir.clone();
+      for (let j = 0; j < n; j++) {
+        const p = new THREE.Vector3(cur.x * DX * 0.992, cur.y * DYh * 0.992, cur.z * DX * 0.992);
+        if (p.y < 0.2 || p.x + p.z > -0.3) break;
+        pts.push([p.x, p.y, p.z]);
+        d.add(new THREE.Vector3(r() - 0.5, r() - 0.5, r() - 0.5).multiplyScalar(0.5)); d.sub(cur.clone().multiplyScalar(d.dot(cur))).normalize();
+        cur.addScaledVector(d, 0.07 + r() * 0.04).normalize();
+        if (j > 3 && r() < 0.12 && w > 0.03) walk(cur, d.clone().applyAxisAngle(cur, (r() < 0.5 ? 1 : -1) * (0.5 + r() * 0.6)), Math.floor(n * 0.5), w * 0.6);
+      }
+      if (pts.length > 2) { const m = new THREE.Mesh(pipe(pts, w, 0.1, 4), crackMat); m.renderOrder = 4; B.group.add(m); }
+    };
+    for (let c = 0; c < 9; c++) { const a = (c / 9) * Math.PI * 2 + r() * 0.4; const t1 = new THREE.Vector3(0, 1, 0).cross(u0).normalize(), t2 = u0.clone().cross(t1); walk(u0, t1.multiplyScalar(Math.cos(a)).add(t2.multiplyScalar(Math.sin(a))).normalize(), 16, 0.07); }
+  }
+  // a bright scar ring where the bit meets the shell
+  const scar = new THREE.Mesh(new THREE.TorusGeometry(2.75, 0.14, 6, 32), crackMat); scar.position.copy(C); scar.lookAt(C.clone().multiply(new THREE.Vector3(2 / (DX * DX), 2 / (DYh * DYh), 2 / (DX * DX))).add(C)); B.group.add(scar);
+  const sparkPts = motes(B, [[BH.x, BH.z, 2.2]], { n: 40, color: '#ffc080', size: 0.18, op: 0.8, hmax: 2.5, speed: -1.6, y0: tipY + 2.6 });
+
+  let spin = 0.8, mode = 'drill', fieldLevel = 0;
+  R.drill = {
+    spin, mode,
+    setSpin(s) { spin = s; this.spin = s; },
+    setMode(m) {
+      mode = m; this.mode = m;
+      const sh = m === 'shield';
+      bitMat.emissive.set(sh ? '#40c8ff' : '#ff6a20'); tipGlow.material.color.set(sh ? '#7ae0ff' : '#ff8a40'); tipLight.color.set(sh ? '#6ad8ff' : '#ff7a30');
+      crackMat.emissive.set(sh ? '#6ad8ff' : '#ffb070'); sparkPts.visible = !sh;
+    },
+  };
+  // field level: blue spreading from the bore contact over the membrane, the cracks fading
+  const fcol = fgeo.attributes.color, fpos = fgeo.attributes.position, maxD = DX * 2.2;
+  R.field = {
+    level: 0,
+    setLevel(v) {
+      this.level = fieldLevel = Math.max(0, Math.min(1, v));
+      const reach = fieldLevel * maxD;
+      for (let i = 0; i < fpos.count; i++) {
+        const d = Math.hypot(fpos.getX(i) - C.x, fpos.getY(i) - C.y, fpos.getZ(i) - C.z);
+        fcol.setW(i, Math.max(0, Math.min(1, (reach - d) / 3.5)) * 0.55 * (0.8 + 0.2 * hash3(i, 3, 3)));
+      }
+      fcol.needsUpdate = true;
+      crackMat.emissiveIntensity = 2.2 * (1 - fieldLevel) + 0.08;
+      crackMat.opacity = 1;
+      memMat.emissive.setRGB(0.29 * (1 - fieldLevel) + 0.12 * fieldLevel, 0.2 * (1 - fieldLevel) + 0.45 * fieldLevel, 0.75);
+    },
+  };
+  R.field.setLevel(0);
+
+  // --- the perimeter: steel stanchions round the far half, a ring beam, low rock rim on the near half
+  for (let ph = F0 + 0.06; ph <= F1 - 0.05; ph += Math.PI / 14) {
+    if (Math.abs(ph - ENT) < 0.16) continue;
+    const [x, z] = polar(ph, ringIn + 0.2);
+    kt.at(x, 0, z, ph, () => column(kt, 4.0, 0.3));
+  }
+  { const pts = []; for (let i = 0; i <= 40; i++) { const ph = F0 + 0.06 + (i / 40) * (F1 - F0 - 0.12); pts.push([...polar(ph, ringIn + 0.2)]); } kt.add(pipe(pts.map(([x, z]) => [x, 4.0, z]), 0.14, 0.3, 8), tealP(), 0, 0, 0); kt.add(pipe(pts.map(([x, z]) => [x, 3.8, z]), 0.05, 0.3, 6), brass(), 0, 0, 0); }
+  k.add(arcFace([Rr, 0.6], [Rr, 0], N0, Math.PI, 3, 48), rock, 0, 0, 0);
+  k.add(arcFace([Rr + 0.6, 0], [Rr + 0.6, 0.6], N0, Math.PI, 3, 48), rock, 0, 0, 0);
+  k.add(new THREE.LatheGeometry([new THREE.Vector2(Rr, 0.6), new THREE.Vector2(Rr + 0.6, 0.6)], 48, N0, Math.PI), MAT.stone('slate', 1), 0, 0, 0);
+  { const r = rng(3); for (let ph = N0; ph < N0 + Math.PI; ph += 0.16 + r() * 0.08) { const [x, z] = polar(ph, Rr + 0.3); k.add(rockGeo(Math.floor(r() * 30)), rock, x, 0.3, z, r() * 6, { sx: 0.6 + r() * 0.3, sy: 0.4 + r() * 0.4, sz: 0.6 }); } }
+  // far half base: rock heaped against the foot of the membrane
+  { const r = rng(4); for (let ph = F0; ph < F1; ph += 0.13 + r() * 0.06) { if (Math.abs(ph - ENT) < 0.14) continue; const [x, z] = polar(ph, Rr + 0.2); k.add(rockGeo(Math.floor(r() * 30)), rock, x, 0, z, r() * 6, { sx: 0.9 + r() * 0.5, sy: 0.6 + r() * 0.9, sz: 0.8 }); } }
+  const NC = 48;
+  for (let i = 0; i < NC; i++) { const ph = ((i + 0.5) / NC) * Math.PI * 2, [x, z] = polar(ph, ringIn + 0.35); B.col(x, z, (ringIn + 0.35) * Math.tan(Math.PI / NC) + 0.06, 0.35, 6, { rot: ph }); }
+
+  // --- the entrance from Sendell's chamber: an old arch standing under the membrane's foot
+  { const [x, z] = polar(ENT, ringIn + 0.25);
+    k.at(x, 0, z, ENT + Math.PI, () => {
+      const aw = 2.0, ah = 2.9, oldM = ashlar(), pale = MAT.plaster('#d6d2e2');
+      k.add(slab('ugarch3', (s) => { s.moveTo(-aw / 2 - 0.5, 0); s.lineTo(-aw / 2, 0); s.lineTo(-aw / 2, ah - aw / 2); s.absarc(0, ah - aw / 2, aw / 2, Math.PI, 0, true); s.lineTo(aw / 2, 0); s.lineTo(aw / 2 + 0.5, 0); s.lineTo(aw / 2 + 0.5, ah + 0.6); s.lineTo(-aw / 2 - 0.5, ah + 0.6); s.lineTo(-aw / 2 - 0.5, 0); }, 0.7, 0.05), oldM, 0, 0, -0.2);
+      k.add(torus(aw / 2 + 0.16, 0.08, 6, 24, Math.PI), pale, 0, ah - aw / 2, 0.18);
+      k.add(plane(aw, ah), passageView('rgba(120,180,255,0.5)', 'core'), 0, ah / 2, -0.5);
+    });
+    R.exits.push({ ...B.world(...polar(ENT, ringIn - 0.55)), r: 0.85, to: 'c3-sendell' });
+    const [sx, sz] = polar(ENT, ringIn - 2.2); R.spawn = { ...B.world(sx, sz), a: ang(sx, sz, 0, 0) };
+    B.light('#8ab0ff', 3, 6, ...[polar(ENT, ringIn - 1.5)].map(([a, b]) => [a, 2.2, b])[0]);
+  }
+
+  // --- three conversion pylons in armoured bays, receivers reached by banking off brass reflectors
+  R.pylons = []; R.reflectors = [];
+  const PYL = [{ ph: Math.PI * 1.64, d: 0.42 }, { ph: Math.PI * 1.42, d: -0.42 }, { ph: Math.PI * 0.99, d: -0.42 }];
+  const pr = 9.3, side = 0.17;
+  const ST = [
+    { col: '#ff6a2a', em: '#ff4a10', k: 2.0 }, // drill mode
+    { col: '#ffe0a0', em: '#ffb040', k: 2.4 }, // primed
+    { col: '#bff4ff', em: '#40c8ff', k: 2.6 }, // converted
+  ];
+  PYL.forEach(({ ph, d }, i) => {
+    const [px, pz] = polar(ph, pr), [tx, tz] = polar(ph, 10.75), TY = 1.3;
+    // the bay: a curved blast shield in front, two tall side walls, a slot along the membrane's foot
+    const shieldM = MAT.plates('#5a6670', 1);
+    k.add(arcFace([8.0, 2.8], [8.0, 0], ph - side - 0.03, 2 * (side + 0.03), 2, 10), twoSided(shieldM), 0, 0, 0);
+    k.add(arcFace([7.75, 2.8], [7.75, 0], ph - side - 0.03, 2 * (side + 0.03), 2, 10), twoSided(shieldM), 0, 0, 0);
+    k.add(new THREE.LatheGeometry([new THREE.Vector2(7.75, 2.8), new THREE.Vector2(8.0, 2.8)], 10, ph - side - 0.03, 2 * (side + 0.03)), hazard(), 0, 0, 0);
+    k.add(new THREE.LatheGeometry([new THREE.Vector2(7.73, 0.5), new THREE.Vector2(7.73, 0.0)], 10, ph - side - 0.03, 2 * (side + 0.03)), hazard(), 0, 0, 0);
+    for (const s of [-1, 1]) {
+      const a = ph + s * side, [cx, cz] = polar(a, 9.1);
+      k.at(cx, 0, cz, a, () => { k.add(rbox(0.26, 2.8, 2.2, 0.04), shieldM, 0, 1.4, 0); k.add(rbox(0.3, 0.14, 2.24, 0.03), hazard(), 0, 2.85, 0); });
+      B.col(cx, cz, 0.15, 1.1, 2.8, { rot: a });
+      // the slot between the wall's end and the membrane's foot: a low cable duct keeps people out, not the ball
+      const [dx2, dz2] = polar(a, 10.9);
+      k.at(dx2, 0, dz2, a, () => { k.add(rbox(0.5, 0.55, 1.42, 0.06), MAT.paint('#2a3436', 0.5), 0, 0.275, 0); k.add(rbox(0.54, 0.08, 1.46, 0.02), hazard(), 0, 0.57, 0); });
+      B.col(dx2, dz2, 0.25, 0.72, 0.6, { rot: a, noStand: true });
+    }
+    { const [cx, cz] = polar(ph, 7.88); B.col(cx, cz, 8.0 * side + 0.25, 0.15, 2.8, { rot: ph }); }
+    // the pylon: octagonal plinth, lattice tower with brass coils, the emitter head turned to the bore
+    k.at(px, 0, pz, ph, () => {
+      k.add(lathe([[0.001, 0], [1.05, 0], [1.05, 0.35], [0.85, 0.5], [0.001, 0.5]], 8), teal(), 0, 0, 0);
+      for (let c = 0; c < 4; c++) { const a = (c / 4) * Math.PI * 2 + Math.PI / 4; k.at(Math.sin(a) * 0.45, 0.5, Math.cos(a) * 0.45, a, () => column(k, 4.4, 0.18)); }
+      for (let y = 1.3; y < 4.6; y += 0.32) k.add(torus(0.5, 0.06, 6, 20), MAT.copper(), 0, y, 0, 0, { rx: Math.PI / 2 });
+      k.add(cyl(0.18, 0.18, 4.4, 10), iron(), 0, 2.7, 0);
+      k.add(lathe([[0.001, 0], [0.7, 0], [0.75, 0.12], [0.5, 0.3], [0.001, 0.32]], 16), brass(), 0, 4.9, 0);
+      // receiver arm toward the back (the bank-shot target)
+      k.add(rbox(0.16, 0.16, 1.4, 0.03), iron(), 0, TY, -0.75);
+    });
+    B.ccol(px, pz, 1.0, 6.0);
+    const em = stdM({ color: ST[0].col, emissive: ST[0].em, emissiveIntensity: ST[0].k, roughness: 0.25 }, 0, { noShadow: true });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.42, 18, 12), em); head.position.set(px, 5.55, pz); B.group.add(head);
+    const rec = new THREE.Mesh(new THREE.OctahedronGeometry(0.34, 0), em); rec.position.set(tx, TY, tz); rec.scale.y = 1.5; B.group.add(rec);
+    k.at(tx, TY, tz, ph, () => { for (let c = 0; c < 4; c++) k.add(cyl(0.02, 0.02, 1.0, 5), brass(), Math.sin(c * 1.57) * 0.4, 0, Math.cos(c * 1.57) * 0.4); k.add(torus(0.42, 0.03, 5, 16), brass(), 0, 0.5, 0, 0, { rx: Math.PI / 2 }); k.add(torus(0.42, 0.03, 5, 16), brass(), 0, -0.5, 0, 0, { rx: Math.PI / 2 }); });
+    const hg = glowSprite(ST[0].col, 1.8, 0.6); hg.position.copy(head.position); B.group.add(hg);
+    const rg = glowSprite(ST[0].col, 2.0, 0.6); rg.position.copy(rec.position); B.group.add(rg);
+    const pl = B.light(ST[0].em, 4, 6, ...polar(ph, pr - 1.4).flatMap((v, j) => (j === 0 ? [v, 4.2] : [v])));
+    // field link to the bore (state 2)
+    const hp = head.position.clone(), bp = new THREE.Vector3(BH.x, tipY + 3.2, BH.z);
+    const linkM = new THREE.MeshBasicMaterial({ color: '#7ae0ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const link = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.34, hp.distanceTo(bp), 10, 1, true), linkM); linkM.side = THREE.DoubleSide;
+    link.position.copy(hp).add(bp).multiplyScalar(0.5); link.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), bp.clone().sub(hp).normalize()); link.visible = false; B.group.add(link);
+    // brass reflector on the perimeter beside the bay: the bank shot comes off it into the slot
+    // the incoming line is one of the 8 directions a keyboard throw can take, so any spot along it works
+    const [qx, qz] = polar(ph + d, 11.1), [ex, ez] = polar(ph + Math.sign(d) * side, 10.98);
+    const uo = new THREE.Vector2(ex - qx, ez - qz).normalize();
+    let best = null;
+    for (let a8 = 0; a8 < 8; a8++) {
+      const a = (a8 * Math.PI) / 4, ui = new THREE.Vector2(Math.sin(a), Math.cos(a));
+      const S = new THREE.Vector2(qx - ui.x * 6.5, qz - ui.y * 6.5), rs = S.length();
+      const inc = Math.acos(Math.max(-1, Math.min(1, -ui.dot(uo)))); // angle between the two rays at the panel
+      if (rs > 7.3 || rs < 2.0 || inc < 0.5 || inc > 2.3) continue;
+      const score = Math.abs(inc - 1.3);
+      if (!best || score < best.score) best = { ui, S, score };
+    }
+    const sx = best.S.x, sz = best.S.y, n = uo.clone().sub(best.ui).normalize();
+    const ry = Math.atan2(n.x, n.y);
+    k.at(qx, 0, qz, ry, () => {
+      k.add(rbox(0.2, 2.6, 0.2, 0.04), tealP(), 0, 1.3, -0.25);
+      tilt(k, 0, 1.35, 0, 0, -0.22, 0, () => {
+        k.add(rbox(1.7, 1.5, 0.08, 0.04), brass(), 0, 0, 0);
+        k.add(rbox(1.84, 0.1, 0.14, 0.03), iron(), 0, 0.8, 0); k.add(rbox(1.84, 0.1, 0.14, 0.03), iron(), 0, -0.8, 0);
+        for (let c = 0; c < 4; c++) k.add(sphere(0.04, 6, 4), iron(), (c % 2 ? 1 : -1) * 0.78, c < 2 ? 0.7 : -0.7, 0.05);
+      });
+      k.add(rbox(0.12, 0.12, 0.5, 0.02), iron(), 0, 1.35, -0.18);
+      k.add(rbox(0.6, 0.06, 0.6, 0.02), iron(), 0, 0.03, -0.25);
+    });
+    const flashM = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.4), new THREE.MeshBasicMaterial({ color: '#ffe8a0', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    flashM.position.set(qx + n.x * 0.06, 1.35, qz + n.y * 0.06); flashM.rotation.set(-0.22, ry, 0, 'YXZ'); B.group.add(flashM);
+    const rc = B.col(qx, qz, 0.85, 0.12, 2.3, { rot: ry, noStand: true });
+    R.reflectors.push({ ...B.world(qx, qz), y: 1.35, nx: n.x, nz: n.y, hw: 0.85, y0: 0.5, y1: 2.2, kick: 4.2, collider: rc, flash: 0, mesh: flashM });
+    const P2 = {
+      i, ...B.world(px, pz), y: 5.55, state: 0, target: { ...B.world(tx, tz), y: TY }, bankFrom: B.world(sx, sz), reflector: R.reflectors[i], t: 0,
+      setState(s) {
+        this.state = s; const c = ST[s] || ST[0];
+        em.color.set(c.col); em.emissive.set(c.em); em.emissiveIntensity = c.k; hg.material.color.set(c.col); rg.material.color.set(c.col); pl.color.set(c.em); this.beacon?.color.set(c.col);
+        link.visible = s === 2;
+      },
+    };
+    P2.em = em; P2.link = link; P2.linkM = linkM; P2.hg = hg; P2.rg = rg; P2.light = pl;
+    R.pylons.push(P2);
+    // node.lit: main.js's aim assist skips these (bending toward a receiver would steer the ball into its blast walls)
+    R.ballTargets.push({ ...B.world(tx, tz), y: TY, r: 1.1, pylon: i, node: NO_ASSIST });
+    // a beacon of light over the receiver, so it can be found behind its walls
+    const bm = new THREE.MeshBasicMaterial({ color: ST[0].col, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const beacon = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.4, 3.2, 12, 1, true), bm); beacon.position.set(tx, TY + 1.5, tz); B.group.add(beacon);
+    P2.beacon = bm;
+  });
+
+  // --- Vesk's console on its raised platform (near right), steps toward the arena
+  const CP = polar(Math.PI * 0.6, 8.0), cpA = ang(CP[0], CP[1], 0, 0);
+  k.at(CP[0], 0, CP[1], cpA, () => {
+    k.add(lathe([[0.001, 0], [2.0, 0], [2.0, 0.8], [1.9, 0.9], [0.001, 0.9]], 8), teal(), 0, 0, 0, Math.PI / 8);
+    k.add(cyl(1.92, 1.92, 0.04, 8), deck(), 0, 0.91, 0, Math.PI / 8);
+    k.add(torus(1.95, 0.05, 5, 8), hazard(), 0, 0.92, 0, Math.PI / 8, { rx: Math.PI / 2 });
+    for (let s = 0; s < 2; s++) k.add(rbox(1.6, 0.45 * (s + 1), 0.5, 0.04), MAT.plates('#5a6670', 1), 0, 0.225 * (s + 1), 2.45 - s * 0.5);
+    k.at(0, 0.92, -0.9, 0, () => P.console_(k, { w: 2.2, kinds: ['shaft', 'wave', 'radar'], levers: 3 }));
+    k.at(0, 0.92, 0, 0, () => P.railing(k, [[-1.8, -0.2], [-1.8, 1.4]], { h: 1.0 }));
+    k.at(0, 0.92, 0, 0, () => P.railing(k, [[1.8, -0.2], [1.8, 1.4]], { h: 1.0 }));
+  });
+  B.ccol(CP[0], CP[1], 2.0, 0.9, { seeThrough: true });
+  for (let s = 0; s < 2; s++) { const [x, z] = [CP[0] + Math.sin(cpA) * (2.45 - s * 0.5), CP[1] + Math.cos(cpA) * (2.45 - s * 0.5)]; B.col(x, z, 0.8, 0.27, 0.45 * (s + 1), { rot: cpA }); }
+  { const [x, z] = [CP[0] - Math.sin(cpA) * 0.9, CP[1] - Math.cos(cpA) * 0.9]; B.col(x, z, 1.12, 0.42, 2.6, { rot: cpA, noStand: true }); }
+  R.console = B.world(CP[0] - Math.sin(cpA) * 0.9, CP[1] - Math.cos(cpA) * 0.9);
+  R.npcSpots = { vesk: { ...B.world(CP[0] - Math.sin(cpA) * 0.05, CP[1] - Math.cos(cpA) * 0.05), a: cpA + Math.PI } };
+  B.light('#9ff4ff', 3, 5, CP[0] - Math.sin(cpA) * 0.2, 2.2, CP[1] - Math.cos(cpA) * 0.2);
+
+  // --- the arena for the guardian, the spot it rises from
+  R.arena = { x0: B.cx - 7.2, z0: B.cz - 7.2, x1: B.cx + 7.2, z1: B.cz + 7.2 };
+  R.bossSpot = { ...B.world(0.6, -1.4), y: 2.4 };
+
+  // --- ball bank shots: mirror the flying magic ball off the brass panels (horizontal reflection)
+  const reflectBall = (ball, dt) => {
+    if (!ball || ball.state !== 'fly') return false;
+    const v = ball.vel, p = ball.pos;
+    for (const f of R.reflectors) {
+      const vn = v.x * f.nx + v.z * f.nz;
+      if (vn >= -0.5) continue;
+      const dist = (p.x - f.x) * f.nx + (p.z - f.z) * f.nz;
+      // reflect on the last frame before the ball would reach the panel's collider (front face + ball radius)
+      if (dist < -0.05 || dist > -vn * dt + 0.34) continue;
+      const lat = (p.x - f.x) * -f.nz + (p.z - f.z) * f.nx;
+      if (Math.abs(lat) > f.hw + 0.2 || p.y < f.y0 - 0.3 || p.y > f.y1 + 0.4) continue;
+      // move the ball to where it meets the panel, then send it off mirrored
+      const s0 = Math.max(0, (dist - 0.3) / -vn);
+      p.x += v.x * s0; p.z += v.z * s0; p.y += v.y * s0;
+      v.x -= 2 * vn * f.nx; v.z -= 2 * vn * f.nz; v.x *= 0.95; v.z *= 0.95;
+      v.y = Math.max(v.y, f.kick); // the panels lean back a little: the ball comes off them rising
+      f.flash = 1;
+      const g = globalThis.game; g?.audio?.play?.('bounce'); g?.particles?.burst?.(p.x, p.y, p.z, '#ffe9a0', 8, 2.5);
+      return true;
+    }
+    return false;
+  };
+  R.reflectBall = reflectBall;
+
+  // --- light: the bore's hot tip, her violet, cold fill
+  B.light('#7a6ad8', 3, 30, 0, 9, 0);
+  B.light('#b08aff', 4, 12, -6, 3, -6);
+
+  flushNoShadow(kt);
+  R.updaters.push((dt, tt) => {
+    drill.rotation.y += spin * dt;
+    const breath = 0.5 + 0.5 * Math.sin(tt * 0.45);
+    her.material.opacity = 0.16 + 0.1 * breath; her2.material.opacity = 0.12 + 0.08 * breath;
+    pit.material.opacity = 0.35 + 0.25 * breath;
+    herLight.intensity = herLight.userData.base * (0.7 + 0.5 * breath);
+    memMat.opacity = 0.38 + 0.04 * breath;
+    const hot = mode === 'drill';
+    bitMat.emissiveIntensity = hot ? 0.35 + Math.sin(tt * 9) * 0.1 : 0.6;
+    tipGlow.material.opacity = hot ? 0.55 + Math.sin(tt * 13) * 0.15 : 0.6;
+    tipLight.intensity = tipLight.userData.base * (hot ? 0.8 + Math.sin(tt * 11) * 0.2 : 0.7);
+    fmat.opacity = 0.85 + Math.sin(tt * 2.3) * 0.15;
+    if (hot) crackMat.emissiveIntensity = (2.2 * (1 - fieldLevel) + 0.08) * (0.85 + Math.sin(tt * 5) * 0.15);
+    for (const p of R.pylons) {
+      if (p.state === 1) { const b = 0.6 + 0.4 * Math.sin(tt * 8); p.em.emissiveIntensity = 2.4 * b; p.hg.material.opacity = 0.6 * b; }
+      if (p.state === 2) p.linkM.opacity = 0.45 + Math.sin(tt * 6 + p.i) * 0.15;
+    }
+    for (const f of R.reflectors) { f.flash = Math.max(0, f.flash - dt * 3); f.mesh.material.opacity = 0.6 * f.flash; }
+    reflectBall(globalThis.game?.ball, dt);
+  });
+  // the whole arena stands 0.3 m up: the magic ball treats ground below 0.2 as the sea and comes back,
+  // so on a floor at 0 every bank shot would end at its first bounce
+  const LIFT = 0.3;
+  B.group.position.y = LIFT;
+  for (const c of R.colliders) { c.top += LIFT; if (c.bottom > -50) c.bottom += LIFT; }
+  for (const p of R.pylons) { p.y += LIFT; p.target.y += LIFT; }
+  for (const t of R.ballTargets) t.y += LIFT;
+  for (const f of R.reflectors) { f.y += LIFT; f.y0 += LIFT; f.y1 += LIFT; }
+  R.bossSpot.y += LIFT; R.floorY = LIFT;
+  const room = B.finish();
+  room.center.set(B.cx - 1.0, 0, B.cz - 1.0);
+  return room;
+}
+
 // ================================================================ registration
 export function buildUnderground(scene, physics) {
   const rooms = {
@@ -1404,6 +1751,7 @@ export function buildUnderground(scene, physics) {
     c3deep: buildDeep(scene, physics),
     c3gallery: buildGallery(scene, physics),
     c3sendell: buildSendell(scene, physics),
+    c3core: buildCore(scene, physics),
   };
   return rooms;
 }
