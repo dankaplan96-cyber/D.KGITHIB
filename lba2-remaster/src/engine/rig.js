@@ -14,6 +14,8 @@ import { textures } from './textures.js';
 // LBA2 draws a shaded quad under every actor (AfficheShadow / DrawShadow).
 let blobGeo = null, blobMat = null;
 const STRIKE = new Set(['slash1', 'slash2', 'slash3', 'heavy', 'throwQuick', 'dodge']);
+const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe', 'reachHigh']);
+const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 export function createBlobShadow(radius) {
   blobGeo ??= new THREE.CircleGeometry(1, 20);
@@ -256,6 +258,72 @@ export class Rig {
       this.actionT = 0;
       if (anim === 'talk') { let gsel; do gsel = Math.floor(Math.random() * 5); while (gsel === this.gesture); this.gesture = gsel; }
     }
+  }
+
+  gesture(kind) { this.gestureKind = kind; this.gestureT = GESTURE_LEN[kind] || 0.8; }
+
+  // Everyday actions. Each returns the body values and fills the joint targets T; timing comes from actionT
+  // (time since the action started), so an action played again starts from its beginning.
+  _craft(a, T) {
+    const t = this.actionT, p = { hipsY: 0.95, torsoX: 0, torsoY: 0, torsoZ: 0, headX: 0, headY: 0, headZ: 0, armOut: 0 };
+    const ease = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+    const b = Math.sin(this.t * 2.99) * 0.006; // the idle breath keeps working underneath
+    if (a === 'tinker') {
+      // standing at a table, working on something small with the right hand while the left steadies it
+      const w = Math.sin(this.t * 6.5), w2 = Math.sin(this.t * 3.1 + 1);
+      p.hipsY = 0.94 + b; p.torsoX = 0.28 + w2 * 0.015; p.headX = 0.3;
+      T.armL = -0.62; T.elL = -1.25; T.armR = -0.7 + w * 0.06; T.elR = -1.15 + w * 0.12;
+      T.legL = 0.02; T.legR = -0.04; T.kneeL = 0.06; T.kneeR = 0.04;
+    } else if (a === 'kneelWork' || a === 'kneelLook' || a === 'kneelShow') {
+      // a child kneeling on the floor over a project
+      p.hipsY = 0.52 + b; T.legL = -1.35; T.legR = -1.2; T.kneeL = 2.3; T.kneeR = 2.1; T.footL = 0.4; T.footR = 0.4;
+      if (a === 'kneelWork') {
+        const w = Math.sin(this.t * 5.5);
+        p.torsoX = 0.42; p.headX = 0.22; T.armL = -0.75; T.elL = -1.1; T.armR = -0.85 + w * 0.08; T.elR = -0.95 + w * 0.15;
+      } else if (a === 'kneelLook') {
+        const k = ease(t / 0.4);
+        p.torsoX = 0.42 - 0.3 * k; p.headX = 0.22 - 0.3 * k; T.armL = -0.75 + 0.2 * k; T.elL = -1.1; T.armR = -0.85 + 0.25 * k; T.elR = -1.0;
+      } else {
+        const k = ease(t / 0.45);
+        p.torsoX = 0.15; p.headX = -0.1 * k; T.armL = -0.6; T.elL = -1.2; T.armR = -0.85 - 1.0 * k; T.elR = -0.9 + 0.4 * k;
+      }
+    } else if (a === 'reach' || a === 'tapTurn') {
+      // reach out to a tap or a handle at chest height; tapTurn twists it (forearm rolls back and forth)
+      const k = ease(t / 0.35);
+      p.hipsY = 0.95 + b; p.torsoX = 0.1 * k; p.headX = 0.12 * k;
+      T.armR = -1.35 * k; T.elR = -0.55 * k; T.armL = 0.04; T.elL = -0.25;
+      T.legL = -0.12 * k; T.legR = 0.08 * k; T.kneeL = 0.08; T.kneeR = 0.05;
+      if (a === 'tapTurn') { const w = Math.sin(t * 9); T.elR += w * 0.12; p.torsoY = -0.06 * k + w * 0.02; }
+    } else if (a === 'touchWater') {
+      // fingers held under the spout, looking at the water
+      const k = ease(t / 0.5);
+      p.hipsY = 0.94 + b; p.torsoX = 0.22 * k; p.headX = 0.32 * k; p.torsoY = -0.05;
+      T.armR = -1.1 * k; T.elR = -0.85 * k; T.armL = -0.25 * k; T.elL = -0.9 * k;
+      T.legL = -0.1; T.legR = 0.06; T.kneeL = 0.08; T.kneeR = 0.06;
+    } else if (a === 'setDown') {
+      // bend a little and put something down on a table with the right hand, then straighten
+      const k = t < 0.45 ? ease(t / 0.45) : 1 - ease((t - 0.7) / 0.45);
+      p.hipsY = 0.94 - 0.03 * k; p.torsoX = 0.38 * k; p.headX = 0.25 * k;
+      T.armR = -0.95 * k; T.elR = -0.55 * k; T.armL = -0.1 * k; T.elL = -0.4;
+      T.kneeL = 0.12 * k; T.kneeR = 0.12 * k; T.legL = -0.08 * k; T.legR = -0.08 * k;
+    } else if (a === 'potting') {
+      // both hands in a seed tray at counter height, pressing soil around the seedlings
+      const w = Math.sin(this.t * 4.2);
+      p.hipsY = 0.94 + b; p.torsoX = 0.3; p.headX = 0.3 + Math.sin(this.t * 0.7) * 0.04;
+      T.armL = -0.95 - w * 0.06; T.armR = -0.95 + w * 0.06; T.elL = -0.85 + w * 0.12; T.elR = -0.85 - w * 0.12;
+      T.legL = 0.02; T.legR = -0.03; T.kneeL = 0.08; T.kneeR = 0.08;
+    } else if (a === 'wipe') {
+      // drying the hands on an apron
+      const w = Math.sin(this.t * 10);
+      p.hipsY = 0.95 + b; p.torsoX = 0.08; p.headX = 0.16;
+      T.armL = -0.42 + w * 0.05; T.armR = -0.42 - w * 0.05; T.elL = -1.25 - w * 0.1; T.elR = -1.25 + w * 0.1;
+    } else if (a === 'reachHigh') {
+      // reaching up to a hook (a coat stand, a shelf), then bringing the thing down
+      const k = t < 0.5 ? ease(t / 0.5) : 1 - ease((t - 0.75) / 0.5);
+      p.hipsY = 0.95 + 0.02 * k; p.headX = -0.25 * k; p.torsoX = -0.05 * k;
+      T.armR = -2.45 * k; T.elR = -0.35 * k; T.armL = -0.3 * k; T.elL = -0.8 * k;
+    }
+    return p;
   }
 
   hitFlash() { this.flash = 1; }
@@ -530,6 +598,20 @@ export class Rig {
       // rummaging in a cupboard or a chest
       const w = Math.sin(this.t * 9);
       torsoX = 0.35; T.armL = -1.2 + w * 0.2; T.armR = -1.2 - w * 0.2; T.elL = -0.6; T.elR = -0.6; headX = 0.2;
+    } else if (CRAFT.has(a)) {
+      // small everyday actions (the opening scene and later story scenes), see _craft below
+      const p = this._craft(a, T);
+      hipsY = p.hipsY; torsoX = p.torsoX; torsoY = p.torsoY; torsoZ = p.torsoZ;
+      headX = p.headX; headY = p.headY; headZ = p.headZ; armOut = p.armOut;
+    }
+    // additive gestures on top of any pose: a nod, a shrug, a breath out (story scenes)
+    if (this.gestureT > 0) {
+      const g = this.gestureKind, d = GESTURE_LEN[g] || 0.8, k = 1 - this.gestureT / d, s = Math.sin(k * Math.PI);
+      this.gestureT -= dt;
+      if (g === 'nod') headX += Math.sin(k * Math.PI * 2) * 0.16 * s + 0.05 * s;
+      if (g === 'shrug') { armOut += 0.25 * s; T.elL = (T.elL ?? 0) - 0.5 * s; T.elR = (T.elR ?? 0) - 0.5 * s; headZ += 0.1 * s; hipsY += 0.012 * s; }
+      if (g === 'sigh') { torsoX += 0.1 * s; headX += 0.12 * s; hipsY -= 0.012 * s; }
+      if (g === 'start') { torsoX -= 0.08 * s; headX -= 0.1 * s; } // a small surprised straightening
     }
 
     // landing squash

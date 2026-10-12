@@ -521,7 +521,9 @@ function buildHarbour(W, root, r) {
     boat.position.set(QX - 6.4, 0, pz + pw / 2 + 1.7);
     boat.rotation.y = 0.04;
     g.add(boat);
-    W.updaters.push((dt, tt) => { boat.position.y = Math.sin(tt * 1.3) * 0.06 * (0.6 + W.storm); boat.rotation.z = Math.sin(tt * 1.1) * 0.025 * (0.5 + W.storm * 2); });
+    const boatX = boat.position.x;
+    W.boatSurge = 0; // (the opening pulls the boat against its mooring line)
+    W.updaters.push((dt, tt) => { boat.position.x = boatX + W.boatSurge; boat.position.y = Math.sin(tt * 1.3) * 0.06 * (0.6 + W.storm); boat.rotation.z = Math.sin(tt * 1.1) * 0.025 * (0.5 + W.storm * 2); });
     physics.add({ type: 'box', x: boat.position.x, z: boat.position.z, hw: 2.8, hd: 1.05, rot: 0, top: 0.9, noStand: true });
     W.fishingBoat = boat;
 
@@ -554,10 +556,163 @@ function buildHarbour(W, root, r) {
     cargo.userData.keep = true;
   }
   B.build();
+  cargoLift(W, g, r);
+  mooringLine(W, g);
   // everything else on the quay is static: one mesh per material (≈335 → ≈60 draw calls with shadows)
   // (the boat and the ferry bob as a whole, so each is merged within its own group)
   W.fishingBoat.userData.keep = true; W.ferry.group.userData.keep = true;
   mergeStatic(g); mergeStatic(W.fishingBoat); mergeStatic(W.ferry.group);
+}
+
+// ------------------------------------------------------------------ the Joint Project's cargo lift
+// A slewing lift on the pier that unloads the project barge moored beside the fishing boat: a teal column with a
+// brass motor housing and the project emblem, an arm, a cable and a hook. pose(u) runs one unload cycle
+// (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
+// vibration the opening shows (the hook and the lantern tremble, the puddle on the deck ripples).
+function cargoLift(W, parent, r) {
+  const g = new THREE.Group(); g.name = 'cargoLift'; g.userData.keep = true; parent.add(g);
+  const deck = HARBOUR.deck, mx = -85.0, mz = -2.75, ARM = 2.0;
+  const teal = pm('#2f7a86', 0.45, { metalness: 0.5 }), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2a3038', 0.55, { metalness: 0.5 });
+  // column on a bolted base
+  mesh(g, cyl(0.46, 0.52, 0.12, 16), dark, mx, deck + 0.06, mz);
+  for (let i = 0; i < 6; i++) mesh(g, cyl(0.03, 0.03, 0.05, 6), brassM, mx + Math.cos(i * 1.047) * 0.4, deck + 0.14, mz + Math.sin(i * 1.047) * 0.4);
+  mesh(g, cyl(0.15, 0.2, 3.1, 12), teal, mx, deck + 1.66, mz);
+  for (const y of [0.6, 1.6, 2.6]) mesh(g, cyl(0.17, 0.17, 0.05, 12), brassM, mx, deck + y, mz);
+  // a lantern on a bracket (it trembles with the vibration)
+  mesh(g, bbox(0.5, 0.05, 0.05, 0.01), dark, mx - 0.25, deck + 2.3, mz, 0);
+  const lantern = new THREE.Group(); lantern.position.set(mx - 0.46, deck + 2.27, mz); g.add(lantern);
+  mesh(lantern, cyl(0.006, 0.006, 0.16, 4), dark, 0, -0.08, 0, 0, { cast: false });
+  mesh(lantern, cyl(0.07, 0.09, 0.2, 6), brassM, 0, -0.26, 0);
+  mesh(lantern, cyl(0.06, 0.06, 0.13, 6), pm('#fff1c8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), 0, -0.26, 0, 0, { cast: false });
+  // the slewing turret: motor housing with the emblem, the arm, the pulley
+  const turret = new THREE.Group(); turret.position.set(mx, deck + 3.2, mz); g.add(turret);
+  mesh(turret, bbox(0.62, 0.48, 0.7, 0.06, 1), teal, 0, 0.12, -0.15);
+  mesh(turret, bbox(0.66, 0.08, 0.74, 0.03, 1), brassM, 0, 0.4, -0.15);
+  for (const s2 of [-1, 1]) {
+    const em = mesh(turret, new THREE.PlaneGeometry(0.34, 0.34), emblemMaterial(), s2 * 0.315, 0.12, -0.15, s2 * Math.PI / 2, { cast: false });
+    em.renderOrder = 1;
+  }
+  mesh(turret, bbox(0.16, 0.14, ARM + 0.2, 0.03, 1), teal, 0, 0.32, ARM / 2 - 0.05);
+  for (let i = 0; i < 4; i++) mesh(turret, bbox(0.02, 0.1, 0.02, 0.005, 1), brassM, 0.085, 0.32, 0.2 + i * 0.5);
+  mesh(turret, cyl(0.09, 0.09, 0.06, 12).rotateZ(Math.PI / 2), brassM, 0, 0.26, ARM);
+  // cable (scaled to length), hook block, hook
+  const cable = mesh(turret, cyl(0.012, 0.012, 1, 4).translate(0, -0.5, 0), dark, 0, 0.2, ARM, 0, { cast: false });
+  const hook = new THREE.Group(); turret.add(hook);
+  mesh(hook, bbox(0.14, 0.18, 0.1, 0.03, 1), brassM, 0, -0.09, 0);
+  mesh(hook, new THREE.TorusGeometry(0.06, 0.014, 6, 12, Math.PI * 1.4), dark, 0, -0.24, 0, 0, { rz: Math.PI * 0.8 });
+  // the barge: a flat project lighter with fenders, one crate staying aboard, the emblem on its side
+  const barge = new THREE.Group(); barge.position.set(-85.3, 0, -0.6); g.add(barge);
+  mesh(barge, bbox(2.4, 0.45, 1.7, 0.08, 1), pm('#2f6a78', 0.6, { metalness: 0.3 }), 0, 0.12, 0);
+  mesh(barge, bbox(2.46, 0.06, 1.76, 0.02, 1), brassM, 0, 0.36, 0);
+  for (const [x, z] of [[-1.0, -0.88], [0.0, -0.88], [1.0, -0.88]]) mesh(barge, cyl(0.09, 0.09, 0.32, 8), dark, x, 0.2, z);
+  const bem = mesh(barge, new THREE.PlaneGeometry(0.4, 0.4), emblemMaterial(), 0.6, 0.15, 0.861, 0, { cast: false }); bem.renderOrder = 1;
+  const crateGeo = bbox(0.8, 0.8, 0.8, 0.04, 1), crateMat = tm('planks', { color: '#c89a68' });
+  const mkCrate = (p2) => {
+    const c = new THREE.Group(); p2.add(c);
+    mesh(c, crateGeo, crateMat, 0, 0, 0);
+    for (const s2 of [-1, 1]) for (const t2 of [-1, 1]) mesh(c, bbox(0.06, 0.82, 0.06, 0.01, 1), dark, s2 * 0.39, 0, t2 * 0.39);
+    for (const s2 of [-1, 1]) { const e2 = mesh(c, new THREE.PlaneGeometry(0.3, 0.3), emblemMaterial(), 0, 0.05, s2 * 0.405, s2 > 0 ? 0 : Math.PI, { cast: false }); e2.renderOrder = 1; }
+    return c;
+  };
+  const second = mkCrate(barge); second.position.set(-0.6, 0.76, 0.1); second.rotation.y = 0.15;
+  const crate = mkCrate(g);
+  // a puddle on the deck by the column, with two ripple rings
+  const pud = new THREE.Group(); pud.position.set(-84.15, deck + 0.012, -3.95); g.add(pud);
+  const pmat = new THREE.MeshStandardMaterial({ color: '#4a5a68', roughness: 0.04, metalness: 0.3, transparent: true, opacity: 0.78 });
+  const pmesh = mesh(pud, new THREE.CircleGeometry(0.34, 20), pmat, 0, 0, 0, 0, { rx: -Math.PI / 2, cast: false }); pmesh.scale.set(1.5, 1, 1);
+  const rings = [0, 1].map(() => { const m = mesh(pud, new THREE.RingGeometry(0.06, 0.075, 24), new THREE.MeshBasicMaterial({ color: '#dce8f0', transparent: true, opacity: 0, depthWrite: false }), 0, 0.003, 0, 0, { rx: -Math.PI / 2, cast: false }); return m; });
+  W.physics.add({ type: 'cyl', x: mx, z: mz, r: 0.5, top: deck + 3.6, seeThrough: true });
+  W.physics.add({ type: 'box', x: -85.3, z: -0.6, hw: 1.2, hd: 0.85, rot: 0, top: 0.4, noStand: true });
+
+  // ---- one unload cycle
+  const yaw1 = Math.atan2(1.81, -0.85);           // over the pier, clear of the cargo at the pier end
+  const BARGE_C = 0.76 + 0.36, PIER_C = deck + 0.41; // crate centre heights aboard / on the deck
+  const tipY = 3.2 + 0.2;                          // pulley height above the turret base (turret-local 0.2)
+  const sm = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+  const seg = (u, a, b) => sm((u - a) / (b - a));
+  const cratePier = new THREE.Vector3(mx + Math.sin(yaw1) * ARM, PIER_C, mz + Math.cos(yaw1) * ARM);
+  const L = {
+    group: g, crate, barge, turret, hook, lantern, puddle: pud, mast: { x: mx, z: mz }, cratePier, yaw1,
+    shakeK: 0, u: 1,
+    pose(u) {
+      this.u = u;
+      // hook drop below the pulley (m): down to the crate, up with it, over, down to the deck, then up again
+      const dCrate = (deck + tipY) - (BARGE_C + 0.4 + 0.27);
+      const dHigh = 1.5, dPier = (deck + tipY) - (PIER_C + 0.4 + 0.27), dRest = 1.1;
+      let drop, yaw = 0, carry = false;
+      if (u < 0.16) drop = dRest + (dCrate - dRest) * seg(u, 0, 0.16);
+      else if (u < 0.22) drop = dCrate;
+      else if (u < 0.45) { drop = dCrate + (dHigh - dCrate) * seg(u, 0.22, 0.45); carry = true; }
+      else if (u < 0.7) { drop = dHigh; yaw = yaw1 * seg(u, 0.45, 0.7); carry = true; }
+      else if (u < 0.88) { drop = dHigh + (dPier - dHigh) * seg(u, 0.7, 0.88); yaw = yaw1; carry = true; }
+      else { drop = dPier + (dRest - dPier) * seg(u, 0.92, 1.0); yaw = yaw1; }
+      turret.rotation.y = yaw;
+      cable.scale.y = drop;
+      hook.position.set(0, 0.2 - drop, ARM);
+      if (carry) {
+        // hangs under the hook (a little swing from the turn)
+        const p3 = hook.getWorldPosition(new THREE.Vector3());
+        crate.position.set(p3.x, p3.y - 0.27 - 0.4, p3.z);
+        crate.rotation.y = yaw + 0.1;
+      } else if (u < 0.22) {
+        barge.updateMatrixWorld(); const p3 = new THREE.Vector3(0.3, 0.76, -0.15).applyMatrix4(barge.matrixWorld);
+        crate.position.copy(p3); crate.rotation.y = 0;
+      } else { crate.position.copy(cratePier); crate.rotation.y = yaw1 + 0.1; }
+    },
+    shake(k) { this.shakeK = k; },
+  };
+  void r;
+  L.pose(1);
+  let ripT = 0;
+  W.updaters.push((dt, tt) => {
+    barge.position.y = Math.sin(tt * 1.1 + 0.7) * 0.03 * (0.6 + W.storm);
+    const k = L.shakeK;
+    lantern.rotation.z = Math.sin(tt * 1.3) * 0.02 + Math.sin(tt * 37) * 0.05 * k;
+    lantern.rotation.x = Math.sin(tt * 29) * 0.03 * k;
+    hook.rotation.z = Math.sin(tt * 41) * 0.04 * k;
+    // ripples: two rings expanding from the middle while it trembles
+    ripT += dt * (0.6 + k * 1.4);
+    rings.forEach((m, i) => {
+      const ph = (ripT * 0.8 + i * 0.5) % 1;
+      m.scale.setScalar(1 + ph * 3.2);
+      m.material.opacity = k * (1 - ph) * 0.55;
+    });
+    pmat.roughness = 0.04 + k * 0.12;
+  });
+  W.cargoLift = L;
+}
+
+// Doran's boat is moored to the pier by a bow line that sags and pulls tight as the boat moves
+function mooringLine(W, parent) {
+  const boat = W.fishingBoat, deck = HARBOUR.deck;
+  const bitt = new THREE.Vector3(-77.7, deck + 0.28, -2.5);
+  mesh(parent, cyl(0.07, 0.09, 0.3, 8), pm('#2e3238', 0.45, { metalness: 0.6 }), bitt.x, deck + 0.15, bitt.z);
+  const ropeMat = pm('#d8c8a0', 0.9);
+  let rope = null;
+  const bowLocal = new THREE.Vector3(2.45, 0.86, -0.2), bow = new THREE.Vector3();
+  boat.updateMatrixWorld(true);
+  const L0 = bow.copy(bowLocal).applyMatrix4(boat.matrixWorld).distanceTo(bitt) + 0.35;
+  const line = { taut: 0 };
+  const pts = Array.from({ length: 14 }, () => new THREE.Vector3());
+  let acc = 0;
+  W.updaters.push((dt) => {
+    acc += dt;
+    if (acc < 1 / 30 && rope) return;
+    acc = 0;
+    boat.updateMatrixWorld(true);
+    bow.copy(bowLocal).applyMatrix4(boat.matrixWorld);
+    const d = bow.distanceTo(bitt);
+    const sag = Math.sqrt(Math.max(0, L0 * L0 - d * d)) * 0.42;
+    line.taut = Math.max(0, 1 - sag / 0.3);
+    for (let i = 0; i < pts.length; i++) {
+      const u = i / (pts.length - 1);
+      pts[i].copy(bow).lerp(bitt, u);
+      pts[i].y -= Math.sin(u * Math.PI) * sag;
+    }
+    const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 20, 0.022, 5, false);
+    if (rope) { rope.geometry.dispose(); rope.geometry = geo; } else { rope = mesh(parent, geo, ropeMat, 0, 0, 0); rope.userData.keep = true; }
+  });
+  W.mooring = line;
 }
 
 // ------------------------------------------------------------------ hull

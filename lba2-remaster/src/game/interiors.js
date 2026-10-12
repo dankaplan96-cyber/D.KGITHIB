@@ -316,8 +316,65 @@ function buildHouse(scene, physics) {
   const stoveLight = B.light('#ff8a3a', 3.2, 4.5, stX, 0.6, BZ + 1.0);
 
   // --- dresser with plates
-  const drX = -1.55;
-  B.put(drX, BZ + 0.28, 0, P.dresser, {});
+  const drX = -0.82;
+  B.put(drX, BZ + 0.28, 0, P.dresser, { w: 1.1 });
+
+  // --- the sink: a stone basin on a cupboard, a brass tap from the wall (the opening: it coughs and runs warm),
+  // Zoé's tray of seedlings and her watering can
+  const skX = -2.06, skW = 1.18, skZ = BZ + 0.29, top = 0.88, bX = skX - 0.24;
+  k.add(rbox(skW, 0.82, 0.52, 0.02), MAT.wood('honey'), skX, 0.41, skZ);
+  for (const dx of [-0.29, 0.29]) k.add(rbox(0.5, 0.62, 0.02, 0.01), MAT.wood('dark'), skX + dx, 0.43, skZ + 0.26);
+  for (const dx of [-0.08, 0.08]) k.add(sphere(0.018, 8, 6), MAT.brass(), skX + dx, 0.6, skZ + 0.28);
+  const worktop = MAT.stone('sand', 1.4);
+  k.add(rbox(skW + 0.04, 0.05, 0.56, 0.012), worktop, skX + 0.29, top - 0.025, skZ, 0, { sx: 0.5 });
+  // the basin: four stone walls and a floor, set into the worktop
+  const bw = 0.56, bd = 0.42, bh = 0.17, wt = 0.045;
+  k.add(rbox(bw, 0.04, bd, 0.01), worktop, bX, top - 0.12, skZ);
+  for (const s2 of [-1, 1]) {
+    k.add(rbox(bw, bh, wt, 0.012), worktop, bX, top - 0.12 + bh / 2, skZ + s2 * (bd / 2 - wt / 2));
+    k.add(rbox(wt, bh, bd, 0.012), worktop, bX + s2 * (bw / 2 - wt / 2), top - 0.12 + bh / 2, skZ);
+  }
+  k.add(rbox(0.08, 0.05, 0.56, 0.012), worktop, skX - 0.555, top - 0.025, skZ);
+  for (const s2 of [-1, 1]) k.add(rbox(0.56, 0.05, 0.075, 0.012), worktop, bX, top - 0.025, skZ + s2 * 0.245);
+  B.col(skX, skZ, skW / 2, 0.29, 0.9, { noStand: true });
+  k.add(P.disc(0.03, 10), MAT.iron(), bX, top - 0.099, skZ, 0, { rx: -Math.PI / 2 }); // drain
+  // the tap: a pipe out of the wall, a curved spout, a cross handle on a stem (animated)
+  const brass = MAT.brass(), tapY = 1.3, spX = bX, spZ = skZ - 0.02;
+  k.add(pipe([[spX, tapY, BZ + 0.01], [spX, tapY, BZ + 0.2], [spX, tapY - 0.1, BZ + 0.27]], 0.018, 0.04, 10), brass, 0, 0, 0);
+  k.add(torus(0.03, 0.012, 6, 14), brass, spX, tapY, BZ + 0.03, 0, { rx: 0 });
+  k.add(cyl(0.012, 0.012, 0.09, 8), brass, spX, tapY + 0.05, BZ + 0.15);
+  const handle = k.pivot(spX, tapY + 0.1, BZ + 0.15, 0);
+  for (const r of [0, Math.PI / 2]) { const bar = new THREE.Mesh(cyl(0.008, 0.008, 0.13, 6), brass); bar.rotation.set(0, r, Math.PI / 2); handle.add(bar); }
+  for (let i = 0; i < 4; i++) { const knob = new THREE.Mesh(sphere(0.014, 8, 6), MAT.paint('#f2ecdc', 0.4)); knob.position.set(Math.cos(i * Math.PI / 2) * 0.065, 0, Math.sin(i * Math.PI / 2) * 0.065); handle.add(knob); }
+  // water: a thin stream under the spout (scaled while it runs) and a little steam (shown when it runs warm)
+  const spout = { x: spX, y: tapY - 0.13, z: BZ + 0.27 };
+  const streamMat = new THREE.MeshStandardMaterial({ color: '#cfe8ff', roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.75, emissive: '#5a8ab0', emissiveIntensity: 0.2 });
+  const streamH = spout.y - (top - 0.1);
+  const stream = new THREE.Mesh(cyl(0.012, 0.016, streamH, 8, true), streamMat);
+  stream.geometry = stream.geometry.clone().translate(0, -streamH / 2, 0);
+  stream.position.set(spout.x, spout.y, spout.z);
+  stream.visible = false; stream.castShadow = false;
+  B.group.add(stream);
+  // the watering can stands in the basin under the spout
+  k.at(bX + 0.06, top - 0.1, skZ + 0.05, -0.5, () => {
+    const can = MAT.paint('#3f8a6a', 0.45);
+    k.add(lathe([[0.001, 0], [0.08, 0], [0.085, 0.02], [0.085, 0.15], [0.07, 0.17], [0.001, 0.17]], 14), can, 0, 0, 0);
+    k.add(pipe([[0.07, 0.04, 0], [0.16, 0.13, 0], [0.2, 0.19, 0]], 0.012, 0.03, 6), can, 0, 0, 0);
+    k.add(torus(0.07, 0.01, 5, 12, Math.PI), can, -0.01, 0.17, 0, 0, { rx: 0 });
+  });
+  // seedlings in a wooden tray: eight small pots, two still empty, a trowel
+  k.at(skX + 0.3, top, skZ + 0.02, 0.05, () => {
+    k.add(rbox(0.44, 0.05, 0.3, 0.01), MAT.wood('pale'), 0, 0.025, 0);
+    for (let i = 0; i < 8; i++) {
+      const x = -0.15 + (i % 4) * 0.1, z = -0.07 + Math.floor(i / 4) * 0.14;
+      k.add(lathe([[0.001, 0], [0.03, 0], [0.04, 0.06], [0.001, 0.06]], 8), MAT.flat('#b8623a', 0.8), x, 0.05, z);
+      k.add(P.disc(0.034, 8), MAT.flat('#4a3220', 1), x, 0.105, z, 0, { rx: -Math.PI / 2 });
+      if (i < 6) for (let j = 0; j < 2; j++) k.add(sphere(0.016, 6, 4), MAT.flat('#6aa83a', 0.7), x + (j - 0.5) * 0.02, 0.125 + j * 0.01, z, 0, { sy: 0.5 });
+    }
+    k.add(rbox(0.12, 0.012, 0.035, 0.004), MAT.steel(), 0.3, 0.007, 0.08, 0.6);
+    k.add(cyl(0.012, 0.012, 0.08, 6), MAT.wood('dark'), 0.25, 0.012, 0.13, 0.6, { rz: Math.PI / 2 });
+  });
+  R.kitchen = { handle, stream, spout: { ...B.world(spout.x, spout.z), y: spout.y }, basin: { ...B.world(bX, skZ), y: top - 0.1 }, tray: { ...B.world(skX + 0.3, skZ), y: top + 0.1 }, tapY };
   // --- the cupboard (the magic ball is in here, like LBA2's opening)
   const cupZ = -1.6;
   B.put(LX + 0.34, cupZ, Math.PI / 2, P.wardrobe, { w: 1.4, d: 0.62, h: 2.15 });
@@ -341,11 +398,22 @@ function buildHouse(scene, physics) {
   B.put(tX - 1.05, tZ, Math.PI / 2, P.chair, { cushion: '#c8452f' }, { noStand: true, seeThrough: true });
   B.put(tX + 1.05, tZ + 0.05, -Math.PI / 2 + 0.15, P.chair, { cushion: '#c8452f' }, { noStand: true, seeThrough: true });
   B.put(tX + 0.2, tZ + 0.82, Math.PI - 0.1, P.chair, { cushion: '#3b6fc4' }, { noStand: true, seeThrough: true });
-  B.put(tX - 0.1, tZ - 0.68, 0, P.bench, { w: 1.2 }, { noStand: true, seeThrough: true });
-  // table dressing: bread, bowl, jug, mugs
-  k.add(lathe([[0.001, 0], [0.14, 0], [0.16, 0.06], [0.17, 0.08], [0.001, 0.06]], 16), MAT.flat('#f2ead6', 0.3), tX - 0.3, 0.78, tZ - 0.1);
-  for (let i = 0; i < 4; i++) k.add(sphere(0.045, 8, 6), MAT.flat(['#e03a3a', '#e8c040', '#e03a3a', '#7ab040'][i], 0.4), tX - 0.3 + Math.cos(i * 1.6) * 0.06, 0.86, tZ - 0.1 + Math.sin(i * 1.6) * 0.06);
-  P.jar(k, tX + 0.15, 0.78, tZ + 0.1, 'vase', '#3a6fb0', 0.9);
+  // table dressing: bread, bowl, jug, mugs — pushed to the front half: Twinsen is mending the reading lamp
+  k.add(lathe([[0.001, 0], [0.14, 0], [0.16, 0.06], [0.17, 0.08], [0.001, 0.06]], 16), MAT.flat('#f2ead6', 0.3), tX - 0.5, 0.78, tZ + 0.2);
+  for (let i = 0; i < 4; i++) k.add(sphere(0.045, 8, 6), MAT.flat(['#e03a3a', '#e8c040', '#e03a3a', '#7ab040'][i], 0.4), tX - 0.5 + Math.cos(i * 1.6) * 0.06, 0.86, tZ + 0.2 + Math.sin(i * 1.6) * 0.06);
+  P.jar(k, tX + 0.15, 0.78, tZ + 0.28, 'vase', '#3a6fb0', 0.9);
+  // the lamp under repair: its base, the shade set aside, a cloth with screws, a spare bulb
+  k.at(tX - 0.05, 0.78, tZ - 0.16, 0.4, () => P.deskLamp(k, { shade: '#2f8a4a' }));
+  k.add(rbox(0.3, 0.004, 0.22, 0.002), MAT.cloth('#e8dcc0', '#c8b890'), tX + 0.32, 0.782, tZ - 0.18, 0.2);
+  for (let i = 0; i < 4; i++) k.add(cyl(0.006, 0.006, 0.025, 5), MAT.steel(), tX + 0.26 + i * 0.035, 0.79, tZ - 0.2 + (i % 2) * 0.03, 0, { rz: Math.PI / 2 });
+  k.add(sphere(0.035, 10, 8), MAT.glass('#fff6d8', 0.6), tX + 0.42, 0.815, tZ - 0.1);
+  // the screwdriver he works with (picked up / put down in the opening)
+  const screwdriver = new THREE.Group();
+  { const sk = new Kit(screwdriver); P.screwdriver(sk, 0, 0, 0, 0, '#c8452f'); sk.flush(); }
+  const sdRest = { x: tX + 0.18, y: 0.775, z: tZ - 0.3, ry: 0.3 };
+  screwdriver.position.set(sdRest.x, sdRest.y, sdRest.z); screwdriver.rotation.y = sdRest.ry;
+  B.group.add(screwdriver);
+  R.table = { screwdriver, sdRest, ...B.world(tX, tZ), top: 0.78 };
   k.add(soft({ key: 'bread', prims: [{ type: 'ell', c: [0, 0.05, 0], r: [0.16, 0.07, 0.09], group: 'b', mat: 'b', wobble: (x, y, z) => (y > 0.08 ? Math.abs(Math.sin(x * 40)) * -0.008 : 0) }], groups: { b: 0.02 }, colors: { b: '#c88a40' }, paint: (p, m, c) => { if (p.y < 0.03) c.multiplyScalar(0.8); }, bounds: { min: [-0.2, -0.02, -0.12], max: [0.2, 0.14, 0.12] }, cell: 0.015 }), softMat, tX + 0.45, 0.78, tZ - 0.15, 0.4);
   for (const [mx, mz] of [[0.0, 0.25], [0.55, 0.2]]) k.add(lathe([[0.001, 0], [0.04, 0], [0.045, 0.09], [0.04, 0.09], [0.035, 0.01], [0.001, 0.01]], 10), MAT.flat('#e8d8b0', 0.4), tX + mx, 0.78, tZ + mz);
   k.at(tX, 0, tZ, 0, () => P.hangingLamp(k, 2.15, H + 0.2, { shade: '#3f7a5a' }));
@@ -362,6 +430,25 @@ function buildHouse(scene, physics) {
   B.put(3.85, 2.85, -Math.PI / 2, P.chest, { w: 0.85, d: 0.5, h: 0.46, pal: 'red', band: MAT.paint('#e9c46a', 0.5) });
   k.at(1.95, 0.0, 2.75, 0.3, () => P.toyBlocks(k));
   k.at(3.05, 0.0, 1.75, 0.6, () => P.toyBoat(k));
+  // Arthur's model boat in progress: a carved hull, the mast and sail not fitted yet, a pot of paint, shavings
+  const abX = 1.8, abZ = 1.82;
+  k.at(abX, 0.0, abZ, 0.75, () => {
+    const hull = MAT.paint('#3b78d8', 0.55), wood = MAT.wood('pale');
+    k.add(slab('mhull', (s2) => { s2.moveTo(-0.2, 0.07); s2.quadraticCurveTo(-0.19, 0, -0.08, 0); s2.lineTo(0.12, 0); s2.quadraticCurveTo(0.21, 0.02, 0.24, 0.08); s2.lineTo(-0.2, 0.08); }, 0.11, 0.01), hull, 0, 0, 0);
+    k.add(rbox(0.33, 0.015, 0.09, 0.005), wood, 0, 0.082, 0);
+    k.add(lathe([[0.001, 0], [0.035, 0], [0.035, 0.05], [0.001, 0.05]], 10), MAT.paint('#f2ecdc', 0.5), 0.12, 0, 0.2);
+    k.add(P.disc(0.03, 10), MAT.paint('#e0503a', 0.3), 0.12, 0.052, 0.2, 0, { rx: -Math.PI / 2 });
+    for (let i = 0; i < 6; i++) k.add(rbox(0.03, 0.004, 0.012, 0.002), wood, -0.12 + i * 0.05, 0.002, -0.17 + (i % 3) * 0.03, i);
+  });
+  // the mast with its paper sail (in Arthur's hand during the opening, then fitted)
+  const mast = new THREE.Group();
+  { const m1 = new THREE.Mesh(cyl(0.006, 0.007, 0.3, 6), MAT.wood('pale')); m1.position.y = 0.15; mast.add(m1);
+    const sail = new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0.005, 0.27, 0), new THREE.Vector3(0.005, 0.06, 0), new THREE.Vector3(0.15, 0.08, 0)]), MAT.flat('#f8f2e2', 0.8, { side: THREE.DoubleSide }));
+    sail.geometry.computeVertexNormals(); mast.add(sail); }
+  const mastRest = { ...{ x: abX + Math.sin(0.75) * 0.02, z: abZ + Math.cos(0.75) * 0.02 }, y: 0.08, ry: 0.75 };
+  mast.position.set(mastRest.x, mastRest.y, mastRest.z); mast.rotation.y = mastRest.ry;
+  B.group.add(mast);
+  R.boat = { mast, mastRest, ...B.world(abX, abZ) };
   k.at(3.45, 0.47, 2.85, -0.9, () => P.plushDino(k));
   P.spinningTop(k, 2.6, 2.95);
   k.add(sphere(0.1, 12, 8), MAT.paint('#e03a3a', 0.4), 1.75, 0.1, 1.75);
@@ -375,7 +462,7 @@ function buildHouse(scene, physics) {
   B.light('#e8f4ff', 2.5, 4.5, LX + 1.0, 1.8, 0.1);
 
   R.updaters.push((dt, t) => { stoveLight.intensity = stoveLight.userData.base * (0.85 + Math.sin(t * 11) * 0.1 + Math.sin(t * 7) * 0.05); });
-  R.npcSpots = { zoe: { ...B.world(-1.6, -2.1), a: 0.6 }, arthur: { ...B.world(2.15, 2.15), a: -2.4 } };
+  R.npcSpots = { zoe: { ...B.world(-2.32, -2.62), a: Math.PI }, arthur: { ...B.world(2.15, 2.15), a: -2.4 }, twinsen: { ...B.world(-0.45, -0.25), a: 0 } };
   return B.finish();
 }
 

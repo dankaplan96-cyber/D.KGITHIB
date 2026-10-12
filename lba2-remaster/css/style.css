@@ -129,6 +129,7 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 @keyframes spin { to { transform: rotate(360deg); } }
 #fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.6s; z-index: 20; }
 #fade.on { opacity: 1; }
+#fade.instant { transition: none; }
 
 /* ---------- touch ---------- */
 #touch { position: fixed; inset: 0; pointer-events: none; z-index: 4; }
@@ -299,3 +300,22 @@ body.hud-lba #weapon.show { opacity: 1; }
 #wsel .slot[data-dir=up] { left: 73px; top: 0; } #wsel .slot[data-dir=down] { left: 73px; bottom: 0; }
 #wsel .slot[data-dir=left] { left: 0; top: 73px; } #wsel .slot[data-dir=right] { right: 0; top: 73px; }
 #wsel .mid { position: absolute; left: 90px; top: 90px; width: 40px; height: 40px; border-radius: 50%; border: 2px dashed var(--line); }
+
+/* ---- story scenes (cinematic.js) ---- */
+#cine { position: fixed; inset: 0; pointer-events: none; z-index: 18; }
+#cine-sub { position: absolute; left: 50%; bottom: max(7vh, 48px); transform: translateX(-50%); max-width: min(46em, calc(100vw - 32px));
+  text-align: center; font-size: clamp(1rem, 2.1vw, 1.3rem); line-height: 1.45; color: #fff; padding: 0.35em 0.9em; border-radius: 6px;
+  background: rgba(8, 14, 22, 0.55); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9); opacity: 0; transition: opacity 0.25s; }
+#cine-sub.show { opacity: 1; }
+#cine-sub b { font-weight: 700; margin-right: 0.35em; }
+#cine-title { position: absolute; left: 0; right: 0; top: 30%; text-align: center; color: #fff6e4; opacity: 0;
+  transition: opacity 1.4s ease; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45); }
+#cine-title.show { opacity: 1; }
+#cine-title h1 { margin: 0; font-size: clamp(2.6rem, 8vw, 5.2rem); font-weight: 900; letter-spacing: 0.08em; }
+#cine-title p { margin: 0.1em 0 0; font-size: clamp(1.1rem, 2.8vw, 1.8rem); font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; }
+#cine-skip { position: absolute; right: max(16px, 2.5vw); bottom: max(16px, 3vh); pointer-events: auto; cursor: pointer; user-select: none;
+  font-size: 0.85rem; color: rgba(255, 255, 255, 0.82); padding: 0.4em 0.7em; border-radius: 6px; background: rgba(8, 14, 22, 0.4);
+  opacity: 0; transition: opacity 0.4s; overflow: hidden; --k: 0; touch-action: none; }
+#cine-skip.show { opacity: 1; }
+#cine-skip kbd { font: inherit; font-weight: 700; border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 4px; padding: 0 0.35em; margin-right: 0.3em; }
+#cine-skip .bar { position: absolute; left: 0; bottom: 0; height: 3px; width: calc(var(--k) * 100%); background: #ffd890; }

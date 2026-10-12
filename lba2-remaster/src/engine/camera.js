@@ -70,6 +70,7 @@ export class CameraRig {
 
   update(dt, focus, heroAngle, moving, input) {
     const cam = this.cam;
+    if (this.cine) return; // a cinematic places the camera itself (src/engine/cinematic.js)
     if (this.override) {
       cam.position.lerp(this.override.pos, 1 - Math.exp(-dt * 2));
       this.look.lerp(this.override.look, 1 - Math.exp(-dt * 3));

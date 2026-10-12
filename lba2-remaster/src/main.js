@@ -236,7 +236,7 @@ class Game {
     if (T.t >= 0.7) { this.trans = null; $('#fade').style.opacity = ''; }
   }
 
-  enterRoom(id, spawn = null, instant = false) {
+  enterRoom(id, spawn = null, instant = false, quiet = false) {
     const go = () => {
       if (this.room) this.room.group.visible = false;
       const R = (this.room = this.rooms[id]);
@@ -253,15 +253,16 @@ class Game {
       this.lastSafe = { x: sp.x, z: sp.z };
       this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
-      this.audio.setMood(R.music || ROOM_MUSIC[id] || 'citadel');
       this.audio.setPlace?.(R.outdoor ? (id === 'zeelich' || id === 'hamalayi' ? 'sky' : 'island') : id.startsWith('c3') || id === 'well' ? 'under' : 'interior');
+      if (quiet) return; // (a cinematic changing scenes: its music, its own story, no save mid-scene)
+      this.audio.setMood(R.music || ROOM_MUSIC[id] || 'citadel');
       this.story.onEnterRoom(id);
       if (this.state !== 'title') this.save(false);
     };
     if (instant) go(); else this.startTransition(go);
   }
 
-  exitRoom(to, instant = false) {
+  exitRoom(to, instant = false, quiet = false) {
     const go = () => {
       const R = this.room;
       if (R) { R.group.visible = false; R.lights.forEach((l) => { l.intensity = 0; }); }
@@ -277,8 +278,9 @@ class Game {
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
       this.doorCool = 1;
-      this.audio.setOutdoorArea(to, POI);
       this.audio.setPlace?.('island');
+      if (quiet) return;
+      this.audio.setOutdoorArea(to, POI);
       if (R) this.story.onExitRoom(R.id);
       if (this.state !== 'title') this.save(false);
     };
@@ -419,7 +421,12 @@ class Game {
     });
     document.querySelectorAll('[data-range]').forEach((r) => r.addEventListener('input', () => { this.settings[r.dataset.range] = +r.value; this.applySettings(); }));
     $('#pausebtn').addEventListener('click', () => this.pause());
+    // a story scene stops when the window loses focus (its music would run on without the picture)
+    document.addEventListener('visibilitychange', () => { if (document.hidden && this.state === 'cinematic') this.pause(); });
+    addEventListener('blur', () => { if (this.state === 'cinematic') this.pause(); });
   }
+  // the label of the key bound to an action ("E", "Space"...), for prompts
+  keyName(action) { return keyLabel(keyFor(action)); }
 
   act(a) {
     switch (a) {
@@ -429,8 +436,11 @@ class Game {
       case 'controls': this.prevScreen = this.screen; this.showScreen('controls'); this.buildRebind(); break;
       case 'resetkeys': this.settings.keys = {}; this.applySettings(); this.buildRebind(); break;
       case 'back': this.showScreen(this.prevScreen || 'title'); break;
-      case 'resume': this.hideScreens(); this.setState('play'); break;
-      case 'quit': this.save(false); this.reloadInto('title'); break;
+      case 'resume':
+        this.hideScreens();
+        if (this.cine) { this.setState('cinematic'); this.cine.resume(); } else this.setState('play');
+        break;
+      case 'quit': if (!this.cine) this.save(false); this.reloadInto('title'); break; // (never save half a cinematic)
       case 'retry': this.reloadInto(store.get(SAVE_KEY) ? 'continue' : 'new'); break;
       case 'explore':
         this.hideScreens(); this.hud.show(true); this.camRig.override = null; this.setState('play');
@@ -441,6 +451,7 @@ class Game {
   }
 
   pause() {
+    if (this.state === 'cinematic' && this.cine) { this.cine.pause(); this.setState('pause'); this.showScreen('pause'); return; }
     if (this.state !== 'play') return;
     this.setState('pause');
     this.showScreen('pause');
@@ -857,6 +868,12 @@ class Game {
         this.menuNav();
         if (this.state === 'pause' && input.pressed('pause')) this.act('resume');
         break;
+      case 'cinematic':
+        if (input.pressed('pause')) { this.pause(); break; }
+        this.cine?.update(dt);
+        for (const n of this.npcs) n.update(dt);
+        break;
+      case 'cinematicEnd': break; // (a skip's short dip to black)
       case 'cutscene':
         this.cutscene?.(dt);
         this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null);
@@ -867,8 +884,9 @@ class Game {
     this.world.storm = this.storm;
     this.env.setStorm(this.storm);
     this.audio.setStorm(this.storm);
-    this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : this.hero.pos);
-    if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : this.hero.pos);
+    const focus = this.cine?.focus || this.hero.pos;
+    this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : focus);
+    if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     else if (this.room.outdoor) updateKitLod(this.hero.pos);
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
