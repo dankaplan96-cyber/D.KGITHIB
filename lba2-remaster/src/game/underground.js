@@ -1056,7 +1056,7 @@ function buildGallery(scene, physics) {
 
   // --- three crystal pillars in the chasm, each with a heart the ball can wake
   R.pillars = [];
-  const PIL = [{ x: -2.4, z: -3.9, h: 8.5, s: 0.95 }, { x: 2.5, z: -4.7, h: 9.5, s: 1.0 }, { x: 0.1, z: -8.3, h: 10.5, s: 1.1 }];
+  const PIL = [{ x: -2.4, z: -3.9, h: 8.5, s: 0.95 }, { x: 0.9, z: -6.0, h: 9.5, s: 0.95 }, { x: 0.1, z: -8.3, h: 10.5, s: 1.1 }];
   PIL.forEach((p, i) => {
     const g = new THREE.Group(); B.group.add(g);
     const pk = new Kit(g);
