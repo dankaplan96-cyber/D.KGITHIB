@@ -5,6 +5,7 @@
 // potted plants, fenced gardens and lamps.
 import * as THREE from 'three';
 import { buildHouse } from './architecture.js';
+import { mergeStatic } from '../engine/merge.js';
 import { textures } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, distToSegment, smoothstep } from '../engine/math.js';
@@ -444,6 +445,8 @@ export function buildTown(scene, W) {
     });
     return { h, top: h.g + hd.h + built[i].gableH + 0.6, mats: [...mats.values()], f: 1 };
   });
+  // each house is static: one mesh per material (after the fade materials are assigned)
+  for (const b of built) mergeStatic(b.group);
   const sample = new THREE.Vector3();
   const CORRIDOR = [[0, 0.4], [0, 1.0], [0, 1.8], [-3, 1.0], [3, 1.0], [-1.5, 2.6], [1.5, 2.6]];
   const right = new THREE.Vector3();
