@@ -70,3 +70,28 @@ deterministic stepping via `game.step()`. Real-GPU frame rates are **not yet mea
 - prologue, chapter 1, chapter 2 automated playthroughs (headless Chromium + SwiftShader) pass after each change.
 ### Not yet verified
 - Chapter 3 / epilogue in game (rooms pending). Real-GPU performance. Music by ear.
+
+## Session 5 (merging, reliability, performance, exploration)
+- Saves: format version 2, `migrateSave()`, backup of older saves, safe recovery (missing room → outdoors,
+  unreadable save kept aside + new game + notice). tests/save-migration.mjs.
+- Chapter 1: the project's heat posts light up by every door and Pippa's stall once the water is back; Vesk,
+  Zoé and the townsfolk talk about the free heat before the evacuation plan (S4).
+- Epilogue: bunting over the square. Exploration: six singing crystals off the paths (+1 max health each;
+  Sendell remarks on all six). The ball snaps back if Twinsen changes room while it is out.
+- Soundtrack merged (squashed): 12 tracks + stealth mix, music manager; FLAC masters git-ignored (they rebuild
+  bit for bit). Draft quality, not checked by ear. docs/MUSIC.md.
+- Ambience: footsteps per surface, well water / station machinery by distance, surf only by the sea.
+- README and asset manifest rewritten in English; the LBA2 screenshot half removed from
+  docs/docs-reference-compare.png.
+
+### Performance (headless Chromium + SwiftShader, 1280×720, so frame times are not meaningful; counts are)
+| Spot | Draw calls before → after | Triangles per frame before → after |
+|---|---|---|
+| Village square | 1680 → 1049 | 9.99M → 2.52M |
+| Harbour | 1493 → 920 | 9.92M → 2.10M |
+| Station road | 1148 → 957 | 10.18M → 3.37M |
+| House interior | 171 | 0.26M |
+| Zeelich street | 396 | 0.55M |
+Changes: instanced vegetation split into 36 m tiles (culling works), coarser tree/bush meshes (no visible
+difference at game distance), each house merged into one mesh per material. Load to menu ≈ 22–27 s in
+SwiftShader (CPU rendering); not measured on a real GPU.
