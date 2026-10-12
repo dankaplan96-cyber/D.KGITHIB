@@ -2,3 +2,6 @@ __pycache__/
 *.blend1
 art/music/masters/
 tests/*.png
+# story tests write their step screenshots to the working directory
+/C[0-9]*-*.png
+/P[0-9]*-*.png
