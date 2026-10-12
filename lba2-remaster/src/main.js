@@ -10,7 +10,8 @@ import { AudioEngine } from './engine/audio.js';
 import { Input, applyBindings, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
-import { buildWorld, POI } from './game/world.js';
+import { buildWorld, POI, QUAY } from './game/world.js';
+import { streetDist } from './game/town.js';
 import { buildInteriors } from './game/interiors.js';
 import { buildZeelich } from './game/zeelich.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
@@ -39,6 +40,9 @@ export function migrateSave(raw) {
 }
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
+// footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
+const ROOM_SURFACE = { house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
+const ROOM_HUM = { control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
 const $ = (s) => document.querySelector(s);
@@ -160,6 +164,31 @@ class Game {
     if (mt) out.push({ id: 'sc-mill', x: mt.x - 0.9, y: mt.y + 0.75, z: mt.z });
     return out;
   }
+  // what Twinsen walks on, for the footsteps
+  surfaceAt(p) {
+    const R = this.room;
+    if (R) return R.surface || ROOM_SURFACE[R.id] || 'stone';
+    const W = this.world, gy = this.terrain.heightAt(p.x, p.z);
+    if (p.y > gy + 0.25) return p.x < QUAY.x0 + 0.5 ? 'wood' : 'stone';  // the pier deck, steps, walls
+    if (p.x > QUAY.x0 && p.x < QUAY.x1 && p.z > QUAY.z0 && p.z < QUAY.z1) return 'stone';
+    if (streetDist(p.x, p.z) < 0.2 || Math.hypot(p.x - POI.village.x, p.z - POI.village.z) < 11) return 'stone';
+    if (W.pathDist(p.x, p.z) < 1.7) return 'dirt';
+    return 'grass';
+  }
+  // positional ambience: the well once the water is back, the station machinery when it runs, rooms with a hum
+  soundSources() {
+    const R = this.room, out = [];
+    if (!R) {
+      const W = this.world;
+      if (this.flags.c1_water) out.push({ kind: 'water', x: W.well.x, z: W.well.z, r: 12 });
+      if (W.station?.active) out.push({ kind: 'machine', x: W.station.bore.x, z: W.station.bore.z, r: 32 });
+    } else {
+      if (R.sounds) out.push(...R.sounds);
+      const hum = ROOM_HUM[R.id];
+      if (hum) out.push({ kind: hum, x: this.hero.pos.x, z: this.hero.pos.z, r: 1, vol: 0.6 });
+    }
+    return out;
+  }
   crystalCount() { return this.collected.filter((id) => id.startsWith('sc-')).length; }
   applyCrystals() { this.hero.maxHp = 10 + this.crystalCount(); this.hero.hp = Math.min(this.hero.hp, this.hero.maxHp); }
 
@@ -194,6 +223,7 @@ class Game {
       this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
       this.audio.setMood(R.music || ROOM_MUSIC[id] || 'citadel');
+      this.audio.setPlace?.(R.outdoor ? (id === 'zeelich' ? 'sky' : 'island') : id.startsWith('c3') || id === 'well' ? 'under' : 'interior');
       this.story.onEnterRoom(id);
       if (this.state !== 'title') this.save(false);
     };
@@ -216,6 +246,7 @@ class Game {
       this.camRig.setIso(null);
       this.doorCool = 1;
       this.audio.setOutdoorArea(to, POI);
+      this.audio.setPlace?.('island');
       if (R) this.story.onExitRoom(R.id);
       if (this.state !== 'title') this.save(false);
     };
@@ -820,6 +851,7 @@ class Game {
 
     // outdoor music follows the area: village and harbour, the open island, the project station in the old fortress
     if (!this.room) this.audio.setOutdoorArea(h.pos, POI);
+    this.audio.updateSources(this.soundSources(), h.pos);
     // adaptive combat music
     const chasing = this.enemies.some((e) => e.alive && e.present && (e.state === 'chase' || e.state === 'windup'));
     this.combat = lerp(this.combat, chasing ? 1 : 0, 1 - Math.exp(-dt * 1.5));

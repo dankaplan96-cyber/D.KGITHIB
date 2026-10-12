@@ -93,7 +93,8 @@ export class AudioEngine {
     const lfoG = ctx.createGain(); lfoG.gain.value = 0.1;
     lfo.connect(lfoG).connect(this.surfGain.gain);
     lfo.start();
-    surf.connect(lp).connect(this.surfGain).connect(this.ambBus);
+    this.surfPlace = ctx.createGain(); // 1 by the sea, 0 indoors / above the clouds
+    surf.connect(lp).connect(this.surfGain).connect(this.surfPlace).connect(this.ambBus);
     surf.start();
     // wind
     const wind = ctx.createBufferSource();
@@ -106,6 +107,50 @@ export class AudioEngine {
     wind.connect(bp).connect(this.windGain).connect(this.ambBus);
     wind.start();
     this.setStorm(this.storm);
+    // positional loops: running water and machinery, faded by distance (see setSources / updateSources)
+    this.loops = {};
+    {
+      const n = ctx.createBufferSource(); n.buffer = this.noiseBuf; n.loop = true; n.playbackRate.value = 1.3;
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1500; f.Q.value = 1.4;
+      const wob = ctx.createOscillator(); wob.frequency.value = 5.5; const wobG = ctx.createGain(); wobG.gain.value = 500;
+      wob.connect(wobG).connect(f.frequency); wob.start();
+      const g = ctx.createGain(); g.gain.value = 0;
+      n.connect(f).connect(g).connect(this.ambBus); n.start();
+      this.loops.water = g;
+    }
+    {
+      const g = ctx.createGain(); g.gain.value = 0;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 260;
+      for (const [fq, v] of [[55, 0.5], [110.6, 0.3], [165, 0.12]]) { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = fq; const og = ctx.createGain(); og.gain.value = v; o.connect(og).connect(lp); o.start(); }
+      const n = ctx.createBufferSource(); n.buffer = this.noiseBuf; n.loop = true; n.playbackRate.value = 0.5;
+      const ng = ctx.createGain(); ng.gain.value = 0.35; n.connect(ng).connect(lp); n.start();
+      const thr = ctx.createOscillator(); thr.frequency.value = 1.6; const thrG = ctx.createGain(); thrG.gain.value = 0.25;
+      const amp = ctx.createGain(); amp.gain.value = 0.75; thr.connect(thrG).connect(amp.gain); thr.start();
+      lp.connect(amp).connect(g).connect(this.ambBus);
+      this.loops.machine = g;
+    }
+    this.setPlace(this.place || 'island');
+  }
+
+  // where the listener is: 'island' (sea surf), 'sky' (Zeelich: wind, no surf), 'interior', 'under'
+  setPlace(kind) {
+    this.place = kind;
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.surfPlace.gain.setTargetAtTime(kind === 'island' ? 1 : 0, t, 0.6);
+    this.placeWind = kind === 'sky' ? 0.12 : 0;
+    this.windGain.gain.setTargetAtTime(0.25 * this.storm + 0.03 + this.placeWind, t, 0.6);
+  }
+  // sources: [{kind: 'water'|'machine', x, z, r, vol}] near the listener; louder as it gets closer
+  updateSources(sources, pos) {
+    if (!this.ctx || !this.loops) return;
+    const t = this.ctx.currentTime, lvl = { water: 0, machine: 0 };
+    for (const s of sources) {
+      const d = Math.hypot(pos.x - s.x, pos.z - s.z);
+      if (d < s.r) lvl[s.kind] = Math.max(lvl[s.kind], (1 - d / s.r) ** 2 * (s.vol ?? 1));
+    }
+    this.loops.water.gain.setTargetAtTime(lvl.water * 0.16, t, 0.3);
+    this.loops.machine.gain.setTargetAtTime(lvl.machine * 0.22, t, 0.3);
   }
 
   setStorm(f) {
@@ -113,7 +158,7 @@ export class AudioEngine {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.rainGain.gain.setTargetAtTime(0.22 * f, t, 0.5);
-    this.windGain.gain.setTargetAtTime(0.25 * f + 0.03, t, 0.5);
+    this.windGain.gain.setTargetAtTime(0.25 * f + 0.03 + (this.placeWind || 0), t, 0.5);
   }
 
   // ---- music (see music.js) ----
@@ -154,6 +199,11 @@ export class AudioEngine {
     if (!this.ctx || this.ctx.state !== 'running') return;
     switch (name) {
       case 'step': this._burst({ dur: 0.06, vol: 0.08, f: 900, f1: 300 }); break;
+      case 'step-stone': this._burst({ dur: 0.05, vol: 0.09, f: 2600, f1: 900, type: 'bandpass', q: 1.5 }); break;
+      case 'step-grass': this._burst({ dur: 0.09, vol: 0.06, f: 3200, f1: 1600, type: 'highpass' }); break;
+      case 'step-dirt': this._burst({ dur: 0.07, vol: 0.08, f: 700, f1: 250 }); break;
+      case 'step-wood': this._tone({ type: 'triangle', f0: 190, f1: 120, dur: 0.07, vol: 0.09 }); this._burst({ dur: 0.04, vol: 0.05, f: 1200, f1: 500 }); break;
+      case 'step-metal': this._tone({ type: 'square', f0: 420, f1: 380, dur: 0.05, vol: 0.03 }); this._tone({ type: 'triangle', f0: 1250, f1: 1180, dur: 0.12, vol: 0.03 }); this._burst({ dur: 0.04, vol: 0.06, f: 3000, f1: 1500, type: 'bandpass', q: 3 }); break;
       case 'jump': this._tone({ type: 'square', f0: 220, f1: 520, dur: 0.14, vol: 0.06 }); break;
       case 'land': this._burst({ dur: 0.12, vol: 0.2, f: 600, f1: 120 }); break;
       case 'punch': this._burst({ dur: 0.09, vol: 0.25, f: 2000, f1: 300, type: 'bandpass', q: 2 }); break;

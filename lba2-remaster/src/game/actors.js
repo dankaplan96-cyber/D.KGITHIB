@@ -192,7 +192,7 @@ export class Hero extends Actor {
     if (this.onGround && this.speed > 0.5) {
       this.stepAcc += this.speed * dt;
       const stride = beh === 'athletic' ? 1.4 : 0.9;
-      if (this.stepAcc > stride) { this.stepAcc = 0; if (beh !== 'discreet') g.audio.play('step'); }
+      if (this.stepAcc > stride) { this.stepAcc = 0; if (beh !== 'discreet') g.audio.play('step-' + (g.surfaceAt?.(this.pos) || 'stone')); }
     }
 
     // behaviour action (Space / A)

@@ -31,7 +31,7 @@
 ## 5. Music and sound (parallel agent, then integration)
 - [x] M1 Pipeline + Main Theme, Village, Well; music manager (crossfades, combat hysteresis, ducking, volumes).
 - [x] M2 Remaining tracks; integration review; docs/MUSIC.md (12 tracks + stealth mix, draft renders, not checked by ear).
-- [ ] M3 Ambient/environment SFX: water, wind, machinery, footsteps per surface.
+- [~] M3 Ambient/environment SFX: water, wind, machinery, footsteps per surface. Done: footsteps on stone/grass/dirt/wood/metal; well water and station machinery by distance; surf only by the sea, wind above the clouds; room hums. Not checked by ear.
 
 ## 6. Reliability
 - [~] R1 Save format version + migration; save/load tests at each chapter boundary and mid-quest.
