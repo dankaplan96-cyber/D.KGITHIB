@@ -206,7 +206,7 @@ export class Environment {
     if (this.region) {
       // the region's fixed palette (no storm there)
       const R = this.region, P = this._rp;
-      this.fog.color.copy(P.fog);
+      this.fog.color.copy(R.fogColor || P.fog); // (a region may drive its fog colour live, e.g. a sandstorm)
       this.fog.near = (R.fogRange || this.fogRange)[0]; this.fog.far = (R.fogRange || this.fogRange)[1];
       this.sun.color.copy(P.sun); this.sun.intensity = R.sunI ?? 2.4;
       this.hemi.color.copy(P.hemiSky); this.hemi.groundColor.copy(P.hemiGround); this.hemi.intensity = R.hemiI ?? 1.2;

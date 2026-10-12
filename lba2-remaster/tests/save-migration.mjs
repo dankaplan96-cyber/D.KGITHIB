@@ -14,7 +14,7 @@ async function run(name, save) {
   const r = await page.evaluate(() => {
     const ls = Object.keys(localStorage).filter((k) => k.startsWith('lba3_save')).sort();
     const cur = JSON.parse(localStorage.getItem('lba3_save_v1') || 'null');
-    return { state: game.state, room: game.room?.id || null, chapter: game.flags.chapter, keys: ls, savedV: cur?.v ?? null, toast: document.querySelector('#toast')?.textContent?.slice(0, 80) };
+    return { state: game.state, room: game.room?.id || null, chapter: game.flags.chapter, chapterKey: game.flags.chapterKey, cur: game.story.cur.key, keys: ls, savedV: cur?.v ?? null, toast: document.querySelector('#toast')?.textContent?.slice(0, 80) };
   });
   results.push([name, r, errs.length ? errs : 'no errors']);
   await ctx.close();

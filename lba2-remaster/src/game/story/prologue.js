@@ -68,6 +68,7 @@ export class Prologue extends ChapterBase {
   start() {
     const g = this.game;
     g.enterRoom('house', null, true);
+    g.hud.chapterCard(t('chapter_n', { n: 1 }), t('chapter_well'));
     g.say('', [t('pr_intro_1'), t('pr_intro_2')], () => this.chain([
       ['zoe', 'pr_zoe_1'], ['zoe', 'pr_zoe_2'], ['hero', 'pr_tw_1'], ['zoe', 'pr_zoe_3'],
       ['arthur', 'pr_ar_1'], ['zoe', 'pr_zoe_4'], ['arthur', 'pr_ar_2'],
@@ -207,7 +208,7 @@ export class Prologue extends ChapterBase {
   baseTalk(npc) {
     const id = npc.def.id;
     if (id === 'pippa') return this.chain([['pippa', 'pr_pippa']], () => this.game.openShop());
-    const key = 'idle_' + id + '_' + (this.f.chapter || 0);
+    const key = 'idle_' + id + '_' + this.story.cur.key;
     this.chain([[id, t(key) !== key ? key : 'idle_generic']]);
   }
 

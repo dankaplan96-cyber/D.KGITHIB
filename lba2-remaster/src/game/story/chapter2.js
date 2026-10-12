@@ -34,7 +34,7 @@ export class Chapter2 extends ChapterBase {
   enemyDefs() {
     const D = this.Z?.depot;
     if (!D) return [];
-    const when = (f) => (f.chapter || 0) >= 2 && !f.c2_shield;
+    const when = (f) => this.reached(f) && !f.c2_shield;
     const n = D.patrol.length, h = Math.floor(n / 2);
     return [
       { id: 'zdrone1', kind: 'drone', group: 'zdepot', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
@@ -45,7 +45,7 @@ export class Chapter2 extends ChapterBase {
   // where everyone is during chapter 2 (null: not here, undefined: another chapter decides)
   place(id) {
     const f = this.f, Z = this.Z, R = this.game.rooms;
-    if ((f.chapter || 0) < 2) return ['baldino', 'nara', 'oku'].includes(id) ? null : undefined;
+    if (!this.reached()) return ['baldino', 'nara', 'oku'].includes(id) ? null : undefined;
     const S = Z.npcSpots;
     const plat = Z.platform;
     switch (id) {
@@ -93,7 +93,7 @@ export class Chapter2 extends ChapterBase {
 
   doors() {
     const Z = this.Z, out = [];
-    if ((this.f.chapter || 0) >= 2 && this.game.rooms.workshop) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
+    if (this.reached() && this.game.rooms.workshop) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
     return out;
   }
   exitTo(to) {
@@ -114,7 +114,7 @@ export class Chapter2 extends ChapterBase {
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
     const g = this.game, f = this.f, Z = this.Z, h = g.hero;
-    if ((f.chapter || 0) < 2) return;
+    if (!this.reached()) return;
     if (this.inZ()) {
       const mt = Z.millTop;
       if (f.c2_plan && !f.c2_cog && Math.abs(h.pos.y - mt.y) < 1.3) consider(dist(mt.x, mt.z), 1.6, { kind: 'c2cog', label: 'p_climb' });
@@ -183,7 +183,7 @@ export class Chapter2 extends ChapterBase {
 
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id;
-    if ((f.chapter || 0) < 2) return false;
+    if (!this.reached()) return false;
     const c = (lines, done) => { this.chain(lines, done); return true; };
     switch (id) {
       case 'doran': return c([['doran', 'c2_doran_idle']]);
@@ -354,7 +354,7 @@ export class Chapter2 extends ChapterBase {
   // ---------------------------------------------------------------- per frame / rooms / saves
   update() {
     const g = this.game, f = this.f;
-    if ((f.chapter || 0) < 2) return;
+    if (!this.reached()) return;
     // a save made during Zoe's segment resumes before it (in the workshop, as Twinsen)
     if (g.room?.id === 'lighttop' && !f.c2_zoeStart && g.state === 'play' && !g.trans) g.enterRoom(g.rooms.workshop ? 'workshop' : 'zeelich', null, true);
   }
@@ -364,7 +364,7 @@ export class Chapter2 extends ChapterBase {
   }
   applyFlags() {
     const f = this.f, Z = this.Z;
-    if ((f.chapter || 0) < 2) return;
+    if (!this.reached()) return;
     for (const m of Z.mills) if (f['c2_mill_' + m.id]) this.brakeMill(m, true);
     if (f.c2_shield) { f.c2_shield = false; this.shieldDown(true); }
     if (f.c2_zoeStart && !f.c2_broadcast) f.c2_zoeStart = false;

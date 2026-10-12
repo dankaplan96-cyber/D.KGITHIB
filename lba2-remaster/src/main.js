@@ -20,13 +20,13 @@ import { createEnemy, Drone } from './game/enemies.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
 import { Inventory } from './game/inventory.js';
-import { Story } from './game/story/index.js';
+import { Story, OLD_ORDER } from './game/story/index.js';
 import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 // Bring an older save up to the current format. Returns null when the data can't be a save.
-// v1 → v2: lists that early saves could lack are filled in; the version is stamped.
+// v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
 export function migrateSave(raw) {
   if (!raw || typeof raw !== 'object' || !raw.hero || typeof raw.hero !== 'object') return null;
   const s = JSON.parse(JSON.stringify(raw));
@@ -35,6 +35,11 @@ export function migrateSave(raw) {
     s.flags = s.flags && typeof s.flags === 'object' ? s.flags : {};
     for (const k of ['killed', 'collected', 'searched', 'crates']) if (!Array.isArray(s[k])) s[k] = [];
     v = 2;
+  }
+  if (v < 3) {
+    // v2 → v3: the chapter is stored by key, so chapters can be inserted later without moving saves
+    if (!s.flags.chapterKey) s.flags.chapterKey = OLD_ORDER[Math.min(s.flags.chapter || 0, OLD_ORDER.length - 1)];
+    v = 3;
   }
   s.v = v;
   return s;

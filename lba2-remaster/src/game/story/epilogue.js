@@ -11,7 +11,7 @@ const LINES = {
 };
 
 export class Epilogue extends ChapterBase {
-  on() { return (this.f.chapter || 0) >= 4; }
+  on() { return this.reached(); }
 
   place(id) {
     if (!this.on()) return undefined;

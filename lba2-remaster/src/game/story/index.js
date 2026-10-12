@@ -9,18 +9,31 @@ import { Chapter3 } from './chapter3.js';
 import { Epilogue } from './epilogue.js';
 import '../text/common.js';
 
-export const CHAPTERS = ['prologue', 'ch1', 'ch2', 'ch3', 'epilogue'];
+// The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
+// position, so chapters can be inserted between existing ones without breaking saves. Chapter numbers shown
+// to the player come from STORY_BIBLE.md's 12-chapter plan (the epilogue has no number).
+export const ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
+export const NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, network: 10, shell: 11, core: 12 };
+// the order saves before format 3 used (flags.chapter was a position in this list)
+export const OLD_ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
 
 export class Story {
   constructor(game) {
     this.game = game;
-    this.chapters = [new Prologue(this), new Chapter1(this), new Chapter2(this), new Chapter3(this), new Epilogue(this)];
+    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, shell: Chapter3, home: Epilogue };
+    this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
   }
+  // position of the chapter in progress for a set of flags (by key when the save has one)
+  indexOf(f = this.f) {
+    if (f.chapterKey) { const i = ORDER.indexOf(f.chapterKey); if (i >= 0) return i; }
+    return Math.min(f.chapter || 0, this.chapters.length - 1);
+  }
+  keyOf(i) { return ORDER[i]; }
   // later chapters are registered by their modules (keeps imports one-way)
   register(ch) { this.chapters.push(ch); }
 
   get f() { return this.game.flags; }
-  get index() { return Math.min(this.f.chapter || 0, this.chapters.length - 1); }
+  get index() { return this.indexOf(this.f); }
   get cur() { return this.chapters[this.index]; }
 
   // ---- construction
@@ -34,18 +47,20 @@ export class Story {
 
   // ---- flow
   start() {
-    this.f.chapter = 0;
+    this.f.chapter = 0; this.f.chapterKey = ORDER[0];
     this.refreshCast();
     this.chapters[0].start();
   }
   // move on to the next chapter: title card, the chapter sets up the world
   nextChapter() {
     const g = this.game;
-    this.f.chapter = (this.f.chapter || 0) + 1;
+    const i = Math.min(this.index + 1, this.chapters.length - 1);
+    this.f.chapter = i; this.f.chapterKey = ORDER[i];
     const c = this.cur;
     this.refreshCast();
     // (the epilogue's card shows only its title)
-    g.hud.chapterCard(this.index >= 4 ? '' : t('chapter_n', { n: this.index }), t('chapter_' + this.index));
+    const n = NUMBER[c.key];
+    g.hud.chapterCard(n ? t('chapter_n', { n }) : '', t('chapter_' + c.key));
     c.begin();
     this.refreshCast();
     g.updateObjective();
@@ -70,7 +85,7 @@ export class Story {
   // ---- routed hooks
   objective() { return this.cur.objective(); }
   markers() { return this.cur.markers(); }
-  journal() { return this.chapters.slice(0, this.index + 1).map((c, i) => ({ title: t('chapter_' + i), lines: c.journal() })); }
+  journal() { return this.chapters.slice(0, this.index + 1).map((c) => ({ title: (NUMBER[c.key] ? NUMBER[c.key] + '. ' : '') + t('chapter_' + c.key), lines: c.journal() })); }
   items() { return this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()); }
   doors() { return this.cur.doors(); }
   exitTo(to) { return this.cur.exitTo(to) ?? this.chapters[0].exitTo(to); }

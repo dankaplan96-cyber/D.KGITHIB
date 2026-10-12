@@ -15,75 +15,134 @@ player already knows.
 Tension curve: familiar routine → strange fault → contradiction in the official explanation → personal
 discovery → wider danger → confrontation → coordinated rescue → home.
 
-## Chapters
+## Chapters (12, about 10 hours)
 
-Each chapter: what Twinsen wants · what the player knows / doesn't know · the event that changes the goal ·
-what the player does · the result that leads on. Status: ✅ playable · 🔧 partial · ⬜ to build.
+Target: about 10 hours for a first-time player who talks to people and does some optional things (about
+50 minutes per chapter; the epilogue is a short coda after chapter 12). Each chapter: what Twinsen wants ·
+what the player knows / doesn't know · the turn · what the player does · the result. Status: ✅ playable ·
+🔧 partial · ⬜ to build. Budget = target minutes for a first-time player.
 
-### Prologue — The Well ✅
-- **Wants:** fix the well and be home for dinner.
-- **Knows:** the well is dry. **Doesn't know:** why; nothing about the project.
-- **Does:** takes the magic ball from the cupboard; settles Gilbert and Mira's water-bill row to get the lid key;
-  gets Doran to stamp Xil's permit and receives a rope ladder; (optional) sneaks up on Tim and Lulu and learns
-  about the warm glowing stone; climbs down; wakes three crystals with the ball.
-- **Turn:** warm water, crystals that weren't there, crystal mites — then Sendell: "Someone has reached her."
-- **Result:** Twinsen knows something under the island is wrong.
+| # | Chapter | Region | Budget | Status |
+|---|---|---|---|---|
+| 1 | The Well | Citadel Island | 35 | ✅ (was the prologue) |
+| 2 | The Joint Project | Citadel Island | 55 | ✅ |
+| 3 | Zeelich | Zeelich | 55 | ✅ (new ending: the shaft is sealed) |
+| 4 | The Dig | Desert Island | 55 | ⬜ |
+| 5 | Steam and Sand | Desert Island | 50 | ⬜ |
+| 6 | The Pass | Hamalayi | 55 | ⬜ |
+| 7 | The Observatory | Hamalayi | 50 | ⬜ |
+| 8 | Evacuation | Citadel Island (changed) | 55 | ⬜ |
+| 9 | The Council | Zeelich upper districts | 50 | ⬜ |
+| 10 | Baldino's Network | all regions | 55 | ⬜ |
+| 11 | The Shell | the shaft, deep installation, galleries | 45 | 🔧 (rooms built) |
+| 12 | The Core | Sendell's chamber, the core | 40 | 🔧 (core built) |
+| — | Epilogue: Home | Citadel Island | 10 | ✅ |
 
-### Chapter 1 — The Joint Project ✅ (polish: show the project's benefits first)
-- **Wants:** get the town's water back.
-- **Knows:** Sendell's warning. **Doesn't know:** what the project is doing, or who "her" is.
-- **Vesk is useful first:** he arrives on the light-ferry, apologises for diverting the groundwater and gives a
-  practical fix: open FunFrock's three bypass valves (orchard: ball through bars; depot: sneak past drones;
-  cliffs: hit the old target to raise the stones). The water returns — hot. The town is grateful to the project.
-- **Contradiction:** at the station the same crystals grow in the pipes; the sensors show pressure on a "shell";
-  Vesk calls it calibration noise and hurries Twinsen out.
-- **Personal discovery (Zoé, playable):** an evacuation-drill leaflet in the mailbox; Zoé sneaks into the
-  project office and finds the plan: pick-up points only in the town centre and Zeelich's upper districts,
-  ferry capacity 30%.
-- **Confrontation → obstruction:** Vesk admits the risk, refuses to stop, leaves for Zeelich through the beam
-  and cuts the link.
-- **Result:** Arthur fixes Grandpa's radio and picks up Baldino on Zeelich. Doran sails the project ferry.
+Tension curve: familiar routine (1–2) → contradiction and a new world (3) → the danger is everywhere (4–7) →
+the plan becomes real at home (8) → the other world's choice (9) → building the answer from everything learned
+(10) → descent and resolution (11–12) → home.
 
-### Chapter 2 — Zeelich ✅ (to add: the setback, and Zeelich's reasons to support the project)
-- **Wants:** reach Baldino and stop Vesk.
-- **Knows:** the plan leaves people behind. **Doesn't know:** what the shell is or why stopping is dangerous.
-- **The other side:** Zeelich's Esmer street lives on the project (lit stalls, jobs, the mills feeding the
-  platform shield). Nara likes it; Oku remembers the wind grinding flour. Twinsen is a stranger here and earns
-  help instead of being welcomed as a hero.
-- **Setback (⬜):** a project guard at the dock confiscates the evacuation plan Zoé found (it is the proof
-  Twinsen wanted to show Zeelich). It ends up in the depot locker, next to the code cylinder — recovering it is
-  part of the depot infiltration, and showing it to Oku/Nara changes their lines and opens the old mill.
-- **Revelation (Baldino):** the planet sits in a shell; under it sleeps the being Sendell watches over. Vesk is
-  drilling through it; stopping halfway cracks it anyway — the drill must be reversed.
-- **Does:** gets the old mill's cog (climb), the code cylinder (depot, drones), brakes three mills with the
-  ball; Baldino builds the override key (his invention, with a limitation: it only works when the shield is
-  weakened). Zoé (playable, on Citadel's lighthouse) tunes the three dials — sun, wave, star — and warns the
-  island. The shield drops; Vesk refuses Baldino's idea and descends the shaft.
-- **Result:** the drill shaft is open. Twinsen follows.
+### 1 — The Well ✅
+- **Wants:** fix the well and be home for dinner. **Knows:** the well is dry; nothing about the project.
+- **Does:** magic ball from the cupboard; settles Gilbert and Mira's row for the lid key; Doran stamps Xil's
+  permit for a rope ladder; (optional) overhears Tim and Lulu about the warm stone; wakes three crystals.
+- **Turn / result:** warm water, crystals, crystal mites, then Sendell: "Someone has reached her."
 
-### Chapter 3 — The Shell ⬜
-- **Wants:** catch Vesk before the bore breaks through.
-- **Knows:** the drill must be reversed, not stopped. **Doesn't know:** what "she" is, what reversing needs.
-- **Places:** the shaft lift; the project's deep installation (bore machinery, cooling pipes, maintenance
-  drones); crystal galleries; Sendell's chamber; the core, where the bore head meets the shell.
-- **Revelation (Sendell, short and plain):** "She" is young and not ready. Turning the project off cannot undo
-  the cracks. Sendell cannot hold the shell alone any more; she needs the machines to push the other way.
-- **Baldino's network (from familiar parts):** reverse the bore into a field emitter. It needs three inputs the
-  player already knows — **water** (the three bypass valves on Citadel cool the emitter: Mira at the water
-  office), **wind power** (the Zeelich mills, now released instead of braked: Oku and Nara), and the
-  **lighthouse signal** (Zoé repeats sun–wave–star to tune the field). Arthur relays by radio.
-- **Does:** descends through the installation (ball switches, a water-flow puzzle with the cooling pipes, a
-  stealth section past the bore's maintenance drones), reaches the core and sets three conversion pylons with
-  bank-shot ball throws while the bore's automatic guardian attacks (boss: telegraphed sweeps, uses the drones
-  and valves the player learned).
-- **Vesk's turn:** he sees the readings change as the field forms — the being calms. He makes the final switch
-  himself and stays behind to keep it running until relieved.
-- **Result:** the shell holds. The drill is now a shield generator.
+### 2 — The Joint Project ✅
+- **Wants:** the town's water back. **Vesk is useful first:** the three bypass valves bring the water back
+  (hot); the project's heat posts light every door. **Contradiction:** crystals in the station's pipes, "shell"
+  readings called noise. **Zoé (playable):** finds the evacuation plan (30%). **Result:** Vesk leaves through
+  the beam; Arthur's radio reaches Baldino; Doran sails the ferry to Zeelich.
 
-### Epilogue — Home ⬜
-- Back on Citadel. The well runs cool. People come down from the hills (they listened to Zoé). The project
-  continues as a shield, run by both worlds; Vesk answers to a joint council. Dinner at home (the prologue's
-  "be back for dinner"). Sendell, once, warmly. Credits over the home theme. Free roam after the credits.
+### 3 — Zeelich ✅ (ending changes)
+- **Wants:** reach Baldino, stop Vesk. **The other side:** Zeelich lives on the project. **Setback:** the plan
+  is confiscated at the dock, recovered in the depot. **Revelation (Baldino):** the shell; stopping halfway
+  cracks it. **Does:** mill cog, code cylinder, three mill brakes; Zoé tunes the lighthouse.
+- **New ending:** the shield drops, Vesk descends and **seals the shaft** behind him (blast doors, a code only
+  the bore's own network can open). Baldino: "We can't follow him, and we don't know enough to reverse a bore
+  through a shell nobody has seen. The first crystals were dug up on Desert Island. Start there."
+
+### 4 — The Dig ⬜ (Desert Island)
+- **Wants:** learn what the shell is. **Knows:** crystals came from a dig. **Doesn't know:** that the heat
+  is leaking out of the whole planet, not only under Citadel.
+- **Place:** a dry island of mesas and wind; a village around a dying oasis; the project's research post at an
+  old excavation; FunFrock-era ruins half buried in sand.
+- **People:** Professor Ilka (Rabbibunny geologist, found the first crystals, sacked by the project for asking
+  questions); Hesk (Grobo caravan driver, sand-yacht); Mother Tarra (village elder); project foreman Dallan (the
+  guard who confiscated the plan on Zeelich, now running the post: follows rules, hard but not cruel).
+- **Does:** gets the oasis pump running again with Hesk (ball switches on the wind-pump, a sand-yacht ride);
+  sneaks into the fenced dig at the time of the sandstorm (cover moves with the wind); in the dig's lowest
+  trench finds carvings older than FunFrock: a map of the shell with **vents**, places where the planet
+  breathes out heat.
+- **Turn:** Ilka reads the carvings: the vents are closing because the project draws the heat to one point.
+- **Result:** the shell needs its vents open. One is under this island, blocked by the project's test bore.
+
+### 5 — Steam and Sand ⬜ (Desert Island)
+- **Wants:** open the desert vent. **Setback:** the test bore is pressurised; opening it badly would boil the
+  oasis. Dallan seizes the ferry and orders everyone onto the project's evacuation list — the village is not on
+  it.
+- **Does:** reroutes steam through the old FunFrock condensers (a valve-and-pressure puzzle that grows from
+  chapter 2's valves); a fight with project drones in the steam halls; the vent opens in a set piece (geysers,
+  sand-yacht escape). Zoé (radio) reads the shell map Ilka sent to Citadel and finds the second vent: in the
+  Hamalayi ice.
+- **Result:** the oasis is saved and the village owes Twinsen; Dallan, stranded with them, starts to doubt.
+  Hesk flies Twinsen north in an old FunFrock cargo glider (Baldino's spare parts; it can glide, not climb).
+
+### 6 — The Pass ⬜ (Hamalayi)
+- **Wants:** reach the ice vent. **The world changes:** the ice is melting from below; villages are cut off
+  by slides; meltwater floods the lower paths.
+- **People:** Yorna (old Grobo mountain guide), Pim (her grandson, Arthur's age, wants to be useful); the
+  village of Lhar.
+- **Does:** the evacuation the plan ignores, made playable: guides villagers across the pass (escort, ice
+  bridges raised with the ball, a rope-and-pulley lift); thaws a frozen winch with the project's own heat post;
+  defends the column from ice mites.
+- **Result:** Lhar is safe in the old monastery; Yorna knows the way to the vent, past the Observatory.
+
+### 7 — The Observatory ⬜ (Hamalayi)
+- **Wants:** open the ice vent. **Revelation part 1:** the Observatory is an old Sendell shrine; Sendell speaks
+  plainly for the first time — she has been holding the shell with her own light and is fading. "I cannot do
+  this alone any more."
+- **Does:** restores the Observatory's mirror array (light puzzle with the ball and rotating mirrors, sun
+  positions — two suns); opens the ice vent in a race against the melt; a duel with a project heavy drone.
+- **Result:** two vents open; the quakes ease for a while. Arthur's radio: Citadel is evacuating — the
+  project's way.
+
+### 8 — Evacuation ⬜ (Citadel Island, changed)
+- **Wants:** get everyone out, not 30%. **The familiar island changed:** queues at the harbour, the heat posts
+  dark, the square fenced, the well steaming, people packing.
+- **Does:** Zoé (playable) and Twinsen split up: Zoé gets the hill families to the lighthouse cliffs with Doran's
+  fishing boats; Twinsen opens the old FunFrock tunnels as shelters (the fortress, the depot), deals with the
+  project's crowd-control drones, and convinces Gilbert, Mira and Pippa to help (each one's local problem pays
+  off). Vesk's message from below: he will finish the bore in three days.
+- **Result:** the island is safe without the project's list. Mira finds the old valve-control room; Zoé finds
+  that the lighthouse signal reaches Zeelich's council chamber.
+
+### 9 — The Council ⬜ (Zeelich upper districts)
+- **Wants:** Zeelich's council to order the bore reversed. **The other world's choice:** the council fears
+  the cold if the project stops; Nara and Oku speak for Twinsen; Dallan arrives with Ilka's proof.
+- **Does:** reaches the upper districts (cloud lifts, Esmer bureaucracy as comedy and puzzle); gets into the
+  project HQ archive for the bore's master plans (stealth, disguise as a technician); presents the proof.
+- **Turn:** the council agrees, but only Vesk's console in the core can switch the bore; and the shaft code
+  must come from all the project's stations at once — Baldino's network.
+- **Result:** permission and the plans; Baldino starts building.
+
+### 10 — Baldino's Network ⬜ (all regions)
+- **Wants:** build the network from parts and people the player knows. **Does:** a chapter of five tasks in
+  any order, each in a region already visited and each using a mechanic learned there: Citadel (Mira's valves,
+  water to cool the emitter), Zeelich (Oku's mills released), the lighthouse (Zoé's sun–wave–star signal),
+  Desert Island (Ilka and Dallan hold the vent open), Hamalayi (Yorna and Pim keep the mirror array aimed).
+  Baldino's inventions have limits: the relay radio needs line of sight, the coupler overheats.
+- **Result:** all stations online; the shaft code opens the blast doors.
+
+### 11 — The Shell 🔧 (rooms built)
+- **Wants:** reach the core. **Does:** the shaft, the deep installation (cooling valves, ladder, drone), the
+  crystal galleries (pillars, stones). **Result:** Sendell's chamber.
+
+### 12 — The Core 🔧
+- **Revelation part 2 (Sendell):** "She" is young and not ready; turning off is not enough; push the other way.
+- **Does:** the core: five pylons (one per station) by bank shots while the guardian fights; the allies answer by
+  radio in turn. **Vesk's turn:** he sees the field work, makes the final switch himself and stays to run it.
+- **Result:** the shell holds. → Epilogue: dinner at home, free roam.
 
 ## Cast (for writing; not shown to the player)
 
@@ -120,4 +179,4 @@ goal. Important scenes are played, not narrated.
 
 ## Open questions
 - The being's name (Sendell only says "her"). Keep it unnamed unless a scene needs a name.
-- Whether Desert Island or the Hamalayi get a chapter beat (see WORLD_MAP.md: planned, not committed).
+- Desert Island and the Hamalayi carry chapters 4–7 (decided for the 12-chapter version).

@@ -32,7 +32,7 @@ const boot = async (mode) => {
 await boot('new');
 await boot('new');
 // jump to chapter 2 (prologue and chapter 1 have their own tests)
-await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 1, c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true });
+await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 1, chapterKey: 'project', c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true });
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); });
 log('ch2 start', await ev(() => [game.flags.chapter, game.flags.c2_started, game.room?.id, game.state, T.obj()]));
 await shot('C2-00-arrive.png');

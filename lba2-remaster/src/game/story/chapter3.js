@@ -23,7 +23,7 @@ const PLATE = [{ dx: 0, dz: 0, k: 7 }, { dx: -0.5, dz: 0, k: 5 }, { dx: -1, dz: 
 
 export class Chapter3 extends ChapterBase {
   get R() { return this.game.rooms; }
-  on() { return (this.f.chapter || 0) === 3; }
+  on() { return this.isCur(); }
   pylons() { return [0, 1, 2].filter((i) => this.f['c3_pylon' + i]).length; }
 
   // ---------------------------------------------------------------- cast
@@ -31,15 +31,15 @@ export class Chapter3 extends ChapterBase {
     const D = this.R.c3deep, G = this.R.c3gallery, C = this.R.c3core, out = [];
     if (D?.patrol?.length) {
       const n = D.patrol.length;
-      out.push({ id: 'c3drone', kind: 'drone', group: 'c3deep', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1 % n, when: (f) => (f.chapter || 0) === 3 });
+      out.push({ id: 'c3drone', kind: 'drone', group: 'c3deep', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1 % n, when: (f) => this.isCur(f) });
     }
-    (G?.mites || []).forEach((p, i) => out.push({ id: 'c3mite' + i, kind: 'mite', x: p.x, z: p.z, when: (f) => (f.chapter || 0) === 3 }));
-    if (C?.bossSpot) out.push({ id: 'guardian', kind: 'guardian', group: 'core', x: C.bossSpot.x, z: C.bossSpot.z, arena: C.arena, when: (f) => (f.chapter || 0) === 3 && !!f.c3_fight && !f.c3_turned });
+    (G?.mites || []).forEach((p, i) => out.push({ id: 'c3mite' + i, kind: 'mite', x: p.x, z: p.z, when: (f) => this.isCur(f) }));
+    if (C?.bossSpot) out.push({ id: 'guardian', kind: 'guardian', group: 'core', x: C.bossSpot.x, z: C.bossSpot.z, arena: C.arena, when: (f) => this.isCur(f) && !!f.c3_fight && !f.c3_turned });
     return out;
   }
   place(id) {
     const f = this.f;
-    if ((f.chapter || 0) < 3) return undefined;
+    if (!this.reached()) return undefined;
     if (id === 'vesk') return f.c3_done ? null : (this.R.c3core?.npcSpots?.vesk ?? null);
     return undefined;
   }
@@ -287,7 +287,7 @@ export class Chapter3 extends ChapterBase {
   }
   applyFlags(past) {
     const f = this.f, R = this.R;
-    if ((f.chapter || 0) < 3) return;
+    if (!this.reached()) return;
     const D = R.c3deep, G = R.c3gallery, C = R.c3core;
     if (D) {
       for (const v of D.valves || []) { const o = !!f.c3_valves?.[v.id]; v.setOpen?.(o); v.open = o; }

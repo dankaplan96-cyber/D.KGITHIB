@@ -50,7 +50,7 @@ const boot = async (mode) => {
 };
 
 await boot('new');
-await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 1, c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true });
+await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 1, chapterKey: 'project', c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true });
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); });
 // finish chapter 2 by its own ending call (chapter 2 has its own test)
 await ev(() => { const G = game; Object.assign(G.flags, { c2_plan: true, c2_planBack: true, c2_okuOK: true, c2_cog: true, c2_cyl: true, c2_mills: true, c2_signal: true });

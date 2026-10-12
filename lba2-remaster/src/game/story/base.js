@@ -13,6 +13,10 @@ export class ChapterBase {
     this.game = story.game;
   }
   get f() { return this.game.flags; }
+  // where this chapter sits in the story (set by the director): reached = this chapter or a later one
+  get pos() { return this.story.chapters.indexOf(this); }
+  reached(f = this.f) { return this.story.indexOf(f) >= this.pos; }
+  isCur(f = this.f) { return this.story.indexOf(f) === this.pos; }
 
   // ---- defaults (override in chapters)
   npcDefs() { return []; }

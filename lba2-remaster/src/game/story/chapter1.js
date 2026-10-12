@@ -40,7 +40,7 @@ export class Chapter1 extends ChapterBase {
   enemyDefs() {
     const W = this.game.world;
     const D = W.depot || { x: POI.camp.x, z: POI.camp.z, patrol: [[POI.camp.x - 5, POI.camp.z - 4], [POI.camp.x + 5, POI.camp.z - 4], [POI.camp.x + 5, POI.camp.z + 5], [POI.camp.x - 5, POI.camp.z + 5]] };
-    const when = (f) => (f.chapter || 0) >= 1 && !f.c1_valve_depot;
+    const when = (f) => this.reached(f) && !f.c1_valve_depot;
     const n = D.patrol.length;
     return [
       { id: 'drone1', kind: 'drone', group: 'depot', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
@@ -51,7 +51,7 @@ export class Chapter1 extends ChapterBase {
   // where everyone is during chapter 1
   place(id) {
     const g = this.game, f = this.f, W = g.world, R = g.rooms;
-    if ((f.chapter || 0) < 1) return id === 'vesk' || id === 'worker' || id === 'guard' ? null : undefined;
+    if (!this.reached()) return id === 'vesk' || id === 'worker' || id === 'guard' ? null : undefined;
     const pe = W.pierEnd, ps = W.pierStart, st = W.station;
     const gateIn = { x: W.gate.x + 3.2, z: W.gate.z };
     switch (id) {

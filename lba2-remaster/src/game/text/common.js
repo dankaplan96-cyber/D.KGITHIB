@@ -31,11 +31,9 @@ Object.assign(STR.he, {
 
 Object.assign(STR.en, {
   chapter_n: 'Chapter {n}',
-  chapter_0: 'Prologue: The Well',
-  chapter_1: 'The Joint Project',
-  chapter_2: 'Zeelich',
-  chapter_3: 'The Shell',
-  chapter_4: 'Home',
+  chapter_well: 'The Well', chapter_project: 'The Joint Project', chapter_zeelich: 'Zeelich', chapter_dig: 'The Dig',
+  chapter_steam: 'Steam and Sand', chapter_pass: 'The Pass', chapter_observatory: 'The Observatory', chapter_evacuation: 'Evacuation',
+  chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   idle_generic: 'Hello, Twinsen.',
   ending_title: 'End of Chapter 1',
   ending_text: 'The project ferry leaves the harbour for the skies of Zeelich. Baldino is waiting there. So is Vesk.',

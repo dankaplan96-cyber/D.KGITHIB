@@ -28,7 +28,15 @@ export class Terrain {
     return this.heights[j * n + i];
   }
 
+  // Outdoor regions far from Citadel (Desert Island, …) bring their own heightfield as a patch: inside its
+  // square the patch answers every height query (gameplay and physics), outside it this terrain does.
+  addPatch(t, cx, cz) { (this.patches ||= []).push({ t, cx, cz }); }
+
   heightAt(x, z) {
+    if (this.patches) for (const p of this.patches) {
+      const lx = x - p.cx, lz = z - p.cz;
+      if (lx > -p.t.half && lx < p.t.half && lz > -p.t.half && lz < p.t.half) return p.t.heightAt(lx, lz);
+    }
     const gx = (x + this.half) / this.step;
     const gz = (z + this.half) / this.step;
     const i = Math.floor(gx), j = Math.floor(gz);
