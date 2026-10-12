@@ -14,6 +14,7 @@ import { buildWorld, POI, QUAY } from './game/world.js';
 import { streetDist } from './game/town.js';
 import { buildInteriors } from './game/interiors.js';
 import { buildZeelich } from './game/zeelich.js';
+import { buildUnderground } from './game/underground.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
 import { createEnemy, Drone } from './game/enemies.js';
 import { BehaviourMenu } from './game/behmenu.js';
@@ -87,6 +88,7 @@ class Game {
     // outdoor regions are rooms flagged `outdoor`: LBA camera, own sky, doors to their own interiors
     tr = performance.now();
     this.rooms.zeelich = buildZeelich(this.scene, this.physics);
+    Object.assign(this.rooms, buildUnderground(this.scene, this.physics));
     this.loadTimes.zeelich = performance.now() - tr;
     this.room = null;
     this.env = new Environment(this.scene, this.terrain);
