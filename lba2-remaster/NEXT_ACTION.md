@@ -16,4 +16,5 @@ opening scene is in (docs/CINEMATICS.md, tests/opening.mjs).
    (Version 3 of the artifact was missing vendor/three/build/three.core.min.js, so it couldn't load three.js;
    version 4 adds it, verified on a local mirror of the published file set.)
 5. Desktop app (desktop/, docs/DESKTOP.md): built and tested on Linux. GitHub Actions builds Windows/macOS/Linux
-   installers into a pre-release; confirm the Windows build on a real Windows machine (the user).
+   installers into a pre-release (first run green on all three: release `desktop-build-1`, installer 141 MB,
+   win zip 175 MB, dmg 254 MB, AppImage 159 MB). Confirm the Windows build on a real Windows machine (the user).

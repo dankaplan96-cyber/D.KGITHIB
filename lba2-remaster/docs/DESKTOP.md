@@ -30,7 +30,8 @@ swaps the page's Google Fonts link for the bundled font.
 ## Releases (GitHub Actions)
 `.github/workflows/desktop.yml` builds all three on their own runners for every push to the working branch (or by
 hand: Actions → Desktop builds → Run workflow). It publishes a **pre-release** on the repository's Releases page
-with the installers, and keeps them as run artifacts for 30 days.
+with the installers, and keeps them as run artifacts for 30 days. The newest build is the top entry on
+https://github.com/dankaplan96-cyber/geriatrics-course/releases (the first was `desktop-build-1`).
 
 The builds are **not code-signed** (that needs paid certificates):
 - Windows SmartScreen may say "Windows protected your PC": More info → Run anyway.

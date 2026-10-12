@@ -188,3 +188,5 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - Verified: `desktop/test-desktop.mjs` against the packaged Linux build passes 6/6 checks (window and
   `app://`, Quit button and bundled font, new game with the opening and save, the save surviving a restart,
   Continue, Quit). The Windows zip was also built on Linux. Not verified: running the Windows and macOS builds.
+- First Actions run: all three builds and the release job green; pre-release `desktop-build-1` carries
+  `LBA3-The-Awakening-Setup-0.10.0.exe`, `-0.10.0-win.zip`, `-0.10.0-mac.dmg` and `-0.10.0-linux.AppImage`.
