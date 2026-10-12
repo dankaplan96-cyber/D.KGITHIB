@@ -22,7 +22,7 @@ import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry } from './vegetation.js';
 import {
-  tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, emblemMaterial, emq,
+  tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
 } from './kit.js';
 
 export const DESERT = { x: 3400, z: 0 };
@@ -128,11 +128,19 @@ function heightFn(x, z) {
 }
 
 const C = (h) => new THREE.Color(h);
-const COL = { sand: C('#fff2dc'), sandDark: C('#ead0a8'), rock: C('#e0a080'), rockTop: C('#ecc0a0'), dirt: C('#d8b090'), pad: C('#d8d0c4'), grass: C('#c8d890'), wet: C('#a88a60') };
+const COL = { sand: C('#fff2dc'), sandDark: C('#ead0a8'), rock: C('#e0a080'), rockTop: C('#ecc0a0'), dirt: C('#d8b090'), pad: C('#d8d0c4'), grass: C('#c8d890'), wet: C('#a88a60'), sandCrest: C('#fff8ec'), sandLee: C('#e2b888'), sandRed: C('#e8b48c') };
 function colorFn(x, z, h, slope, c) {
   c.copy(COL.sand);
   const n = Math.sin(x * 0.7 + z * 0.4) * Math.sin(z * 0.6 - x * 0.2);
   c.lerp(COL.sandDark, 0.25 + n * 0.15 + smoothstep(BASE + 1.5, BASE - 1, h) * 0.2);
+  // wind-sorted sand: pale crests, a warmer lee side behind each crest, and broad patches of
+  // redder sand so the open ground reads at a distance (same crest phase as heightFn)
+  const ph = x * 0.085 + z * 0.045 + Math.sin(z * 0.035) * 1.2;
+  const crest = Math.max(0, Math.sin(ph)), lee = Math.max(0, -Math.cos(ph)) * smoothstep(0, 0.4, Math.sin(ph + 0.6));
+  c.lerp(COL.sandCrest, crest * crest * 0.35);
+  c.lerp(COL.sandLee, lee * 0.22);
+  const big = Math.sin(x * 0.021 + 1.3) * Math.sin(z * 0.017 - 0.4) + Math.sin((x + z) * 0.011) * 0.5;
+  c.lerp(COL.sandRed, smoothstep(0.35, 1.1, big) * 0.3);
   if (slope > 0.8) c.lerp(COL.rock, smoothstep(0.8, 1.6, slope));
   if (h > BASE + 6) c.lerp(COL.rockTop, 0.6);
   if (inPost(x, z)) c.copy(COL.pad);
@@ -461,7 +469,7 @@ export function buildDesert(scene, physics) {
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     for (let v = 0; v < 3; v++) {
       const list = rocks.filter((_, i) => i % 3 === v).map((r) => ({ ...r, color: '#e8a888' }));
-      instances(group, rockGeometry(v + 1), rm, list);
+      lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, list);
     }
     for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.0, top: r.y + r.s * 0.9, seeThrough: true });
   }

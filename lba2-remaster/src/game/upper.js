@@ -13,7 +13,7 @@
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import * as P from './props.js';
-import { MAT, rbox, plane, cyl, canvasTex } from './props.js';
+import { MAT, rbox, plane, cyl, torus, canvasTex } from './props.js';
 
 const esmer = () => ({
   floor: MAT.tiles('#e8dcc8', '#2f8a9a', '#a89880', false, 4), slab: MAT.stone('lav'), body: MAT.plaster('#f0e4f0'), low: MAT.tiles('#2f8a9a', '#e8b84a', '#5a4a5a', true, 6),
@@ -72,12 +72,50 @@ function buildCouncil(scene, physics) {
   B.col(0, dz + 3.0, 0.35, 0.25, 1.1);
   // banners
   for (const x of [-6.5, 6.5]) k.add(plane(1.2, 3.2), MAT.cloth('#7a3a8a', '#e8c060'), x, 3.4, -D / 2 + 0.05);
+  // the seats' cushions and the dais's brass edge
+  for (const x of [-2.6, 0, 2.6]) k.add(rbox(1.0, 0.12, 0.8, 0.05), MAT.cloth('#7a3a8a', '#5a2a6a'), x, 1.06, dz - 0.35);
+  k.add(rbox(9.04, 0.07, 0.07, 0.02), MAT.brass(), 0, 0.5, dz + 1.6);
+  // the Esmer emblem above the window: the planet in its shell, two suns
+  const ey = 5.65, ez = -D / 2 + 0.06, br = MAT.brass();
+  k.add(P.disc(0.62, 28), MAT.flat('#d8c8ec', 0.6), 0, ey, ez);
+  k.add(torus(0.66, 0.06, 6, 32), br, 0, ey, ez + 0.03);
+  k.add(torus(0.36, 0.035, 6, 24), br, 0, ey, ez + 0.03);
+  k.add(P.disc(0.2, 18), MAT.flat('#2f8a9a', 0.5), 0, ey, ez + 0.02);
+  for (const sx of [-1, 1]) { k.add(P.disc(0.16, 16), MAT.glow('#ffe8a0', '#e8b84a', 0.6), sx * 1.05, ey + 0.25, ez + 0.02); k.add(torus(0.17, 0.025, 5, 18), br, sx * 1.05, ey + 0.25, ez + 0.04); }
+  // round Esmer columns along the side wall and flanking the window (brass rings, a lilac capital); none on
+  // the near (+x) side, where they would stand between the camera and the hearing
+  for (const [x, z] of [[-W / 2 + 0.75, -4.6], [-W / 2 + 0.75, -0.6], [-W / 2 + 0.75, 2.8], [-4.95, -D / 2 + 0.5], [4.95, -D / 2 + 0.5]]) {
+    k.add(cyl(0.34, 0.4, 0.3, 20), MAT.stone('lav'), x, 0.15, z);
+    k.add(cyl(0.28, 0.28, 4.9, 20), MAT.plaster('#efe0ee'), x, 2.75, z);
+    for (const y of [0.42, 1.25, 4.6]) k.add(torus(0.29, 0.03, 5, 20), br, x, y, z, 0, { rx: Math.PI / 2 });
+    k.add(cyl(0.48, 0.3, 0.45, 20), MAT.stone('lav'), x, 5.42, z);
+    B.ccol(x, z, 0.36, 5.6);
+  }
+  // wall sconces between the columns, two lamps flanking the dais, plants under the banners
+  for (const z of [-2.6, 1.1]) B.put(-W / 2 + 0.24, z, Math.PI / 2, (kk) => P.wallSconce(kk), { y: 2.6, noCol: true });
+  for (const sx of [-1, 1]) {
+    B.put(sx * 5.3, dz + 0.6, 0, (kk) => P.floorLamp(kk, { shade: '#e8c8f0' }));
+    B.light('#ffd8a8', 4.5, 7, sx * 5.3, 1.6, dz + 0.9);
+    B.put(sx * 6.5, -D / 2 + 0.6, 0, (kk) => P.pottedPlant(kk, { s: 1.5, potColor: '#2f8a9a' }));
+  }
+  // the clerk of the hearing's table by the door: ledger and papers
+  B.put(-5.6, 6.0, 0, (kk) => P.desk(kk, { w: 1.6, leather: '#5a2a6a' }));
+  P.ledger(k, -5.9, 0.79, 6.0, 0.2); P.papers(k, -5.2, 0.79, 6.05, 3, 4);
+  // daylight from the cloud window: a soft shaft falling across the dais
+  const shaft = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 5.4), new THREE.MeshBasicMaterial({
+    map: canvasTex(16, 128, (x, Wd, Hd) => { const g = x.createLinearGradient(0, 0, 0, Hd); g.addColorStop(0, 'rgba(255,255,255,0.9)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, Wd, Hd); }),
+    color: '#ffd8ec', transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
+  shaft.position.set(B.cx, 2.5, B.cz - D / 2 + 2.2);
+  shaft.rotation.x = -0.72;
+  shaft.renderOrder = 2;
+  B.group.add(shaft);
+  B.light('#ffd4ec', 7, 11, 0, 3.6, -D / 2 + 1.4);
   R.dais = { x: B.cx, z: B.cz + dz + 3.8 };
   R.npcSpots = {
     chair: { x: B.cx, z: B.cz + dz - 0.2, a: 0 }, c2: { x: B.cx - 2.6, z: B.cz + dz - 0.2, a: 0 }, c3: { x: B.cx + 2.6, z: B.cz + dz - 0.2, a: 0 },
     dallan: { x: B.cx - 1.6, z: B.cz + dz + 4.6, a: Math.PI * 0.85 }, baldino: { x: B.cx + 1.8, z: B.cz + dz + 4.4, a: -Math.PI * 0.85 },
   };
-  B.light('#ffe8f0', 8, 16, 0, 5.5, 0);
+  B.light('#fff0e4', 4.5, 16, 0, 5.5, 2.0);
   return B.finish();
 }
 

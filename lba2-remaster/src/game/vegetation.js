@@ -108,8 +108,8 @@ export function treeGeometry(kind, seed = 1, lod = 0) {
 }
 
 // Boulders: a few overlapping lumps with chipped facets, mossy on top
-export function rockGeometry(seed = 1) {
-  const key = 'rock' + seed;
+export function rockGeometry(seed = 1, lod = 0) {
+  const key = 'rock' + seed + (lod ? '-lo' : '');
   if (geos.has(key)) return geos.get(key);
   const r = rng(seed * 31 + 7), P = [];
   const facet = (x, y, z) => (Math.abs(Math.sin(x * 5.1 + y * 2.3)) + Math.abs(Math.sin(z * 4.7 - x * 1.9)) + Math.abs(Math.sin(y * 6.3 + z * 2.9))) * 0.035 - 0.05;
@@ -119,14 +119,14 @@ export function rockGeometry(seed = 1) {
     P.push({ type: 'ell', c: [Math.cos(a) * 0.55, 0.15 + r() * 0.3, Math.sin(a) * 0.5], r: [0.5 + r() * 0.25, 0.4 + r() * 0.2, 0.5 + r() * 0.2], mat: 'rock', group: 'r', bone: 'x', wobble: facet });
   }
   const geo = sculptRigid({
-    key: 'rock-' + seed, prims: P, groups: { r: 0.18 }, joinK: 0.1,
+    key: 'rock-' + seed + (lod ? '-lo' : ''), prims: P, groups: { r: 0.18 }, joinK: 0.1,
     colors: { rock: '#9a9182' },
     paint: (p, m, col) => {
       const n = Math.sin(p.x * 7 + p.z * 5) * Math.sin(p.y * 9 - p.x * 4);
       col.offsetHSL(0, 0, n * 0.04);
       if (p.y > 0.55) col.lerp(new THREE.Color('#6f8f45'), Math.min(0.55, (p.y - 0.55) * 1.6)); // moss
     },
-    bounds: { min: [-1.7, -0.5, -1.6], max: [1.7, 1.2, 1.6] }, cell: 0.07,
+    bounds: { min: [-1.7, -0.5, -1.6], max: [1.7, 1.2, 1.6] }, cell: 0.07 * (lod ? 2.6 : 1),
   });
   geos.set(key, geo);
   return geo;

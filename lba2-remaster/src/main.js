@@ -22,6 +22,7 @@ import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
 import { buildValveRoom } from './game/valveroom.js';
 import { buildArena, enterArena } from './game/arena.js';
+import { updateKitLod } from './game/kit.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
 import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
 import { createEnemy, Drone } from './game/enemies.js';
@@ -868,6 +869,7 @@ class Game {
     this.audio.setStorm(this.storm);
     this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : this.hero.pos);
     if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : this.hero.pos);
+    else if (this.room.outdoor) updateKitLod(this.hero.pos);
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
     this.particles.update(dt);

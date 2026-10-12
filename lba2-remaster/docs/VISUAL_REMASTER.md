@@ -57,9 +57,35 @@ really stood on the shop roof).
     factor per plank or block (capture 06).
 - Verified: tests/chapter1.mjs and tests/combat.mjs pass.
 
+## Stage 3
+- Region performance: the regions place their rocks and pines through `lodInstances` (kit.js), using
+  per-tile near and far geometry like the Citadel's vegetation. The 2.6× coarser `-lo` sculpts of rocks and
+  trees are in the bake. Measured at the game camera (software GL):
+  - Hamalayi (Lhar): 2.64 M → 0.52 M triangles.
+  - Desert Island (plaza): 0.93 M → 0.30 M triangles.
+- Lhar village square (Hamalayi): the bare paved circle now holds:
+  - a stepped stone shrine with a flag pole and four prayer-flag lines;
+  - a ring of boundary stones with gaps for the paths;
+  - two lanterns, a woodpile and a sledge.
+  Colliders keep the NPC paths clear (capture 07).
+- Council chamber (Zeelich, chapter 9). The room was a flat, evenly lit box. It now has:
+  - Esmer columns along the side wall and flanking the window (none on the near side, where they would hide
+    the hearing);
+  - the planet-in-its-shell emblem above the window, and cushions on the seats;
+  - a brass edge on the dais, two lamps beside it and wall sconces;
+  - a clerk's table by the door, and plants under the banners;
+  - a soft shaft of pink light from the cloud window over the dais. The even overhead light is dimmed, so the
+    room has warm lamp light against the cool window light (capture 08).
+- Desert Island ground: the colour now follows the dune crests:
+  - pale crests and a warmer lee side;
+  - broad patches of redder sand, so open ground no longer reads as one flat orange plane. The levelled plaza
+    barely changes.
+- Verified: chapters 6, 7, 9 and 10 and combat (22/22) pass after these changes; no page errors in the region
+  captures.
+
 ## Remaining (ranked)
-1. Draw calls (~1,050 outdoors, half from the shadow pass): merge small static props, trim shadow casters.
+1. Draw calls (~1,050 outdoors at the Citadel, half from the shadow pass): merge small static props, trim
+   shadow casters.
 2. Faces: heads are still faceted at close range (fine at game distance).
-3. Interior lighting variety per room.
-4. Cliff bases still slightly soft; shoreline and water edge.
-5. Animation polish (idle variations, talk gestures) — see the character guide's checklist.
+3. Cliff bases still slightly soft; shoreline and water edge.
+4. Animation polish (idle variations, talk gestures) — see the character guide's checklist.

@@ -23,7 +23,7 @@ import { Terrain } from '../engine/terrain.js';
 import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
-import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances } from './kit.js';
+import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances } from './kit.js';
 
 export const HAMALAYI = { x: 4300, z: 0 };
 const SIZE = 230, SEGS = 230;
@@ -263,6 +263,54 @@ export function buildHamalayi(scene, physics) {
       }
     }
   }
+  // the village square: a stepped stone shrine with a flag pole at the centre (where everyone meets), a low
+  // ring of stones edging the paving, lanterns, a woodpile and a sledge by the houses (life, not clutter:
+  // the walk from house to house stays open)
+  {
+    const cx = LHAR.x, cz = LHAR.z + 1, gy = H(cx, cz);
+    for (const [r, h, y] of [[1.25, 0.35, 0], [0.95, 0.3, 0.35], [0.65, 0.28, 0.65]]) B.add(cyl(r, r * 1.04, h, 12, 0), stone('#b4aca0'), cx, gy + y + h / 2, cz);
+    B.add(new THREE.SphereGeometry(0.42, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), stone('#d8d0c0'), cx, gy + 0.93, cz);
+    B.add(cyl(0.05, 0.06, 4.2, 6, 0), wood, cx, gy + 2.9, cz);
+    B.add(new THREE.SphereGeometry(0.11, 8, 6), pm('#e8b84a', 0.4, { metalness: 0.5 }), cx, gy + 5.05, cz);
+    col({ type: 'cyl', x: cx, z: cz, r: 1.35, top: gy + 1.1, noStand: true });
+    // flag lines from the pole's top down to four stakes
+    const fm = new THREE.MeshStandardMaterial({ map: flagTex(), side: THREE.DoubleSide, roughness: 0.9 });
+    for (let k = 0; k < 4; k++) {
+      const a = k * Math.PI / 2 + 0.4, sx = cx + Math.cos(a) * 6.5, sz = cz + Math.sin(a) * 6.5, sy = H(sx, sz);
+      B.add(cyl(0.04, 0.05, 1.2, 5, 0), wood, sx, sy + 0.6, sz);
+      const n = 8;
+      for (let i = 1; i < n; i++) {
+        const t = i / n, x = cx + (sx - cx) * t, z = cz + (sz - cz) * t, y = gy + 5.0 + (sy + 1.2 - gy - 5.0) * t - Math.sin(t * Math.PI) * 0.35;
+        const f = new THREE.Mesh(cached('flagq', () => new THREE.PlaneGeometry(0.34, 0.42).translate(0, -0.21, 0)), fm);
+        f.position.set(x, y, z); f.rotation.y = -a; group.add(f);
+      }
+      B.add(tube([[cx, gy + 5.0, cz], [(cx + sx) / 2, (gy + 5 + sy + 1.2) / 2 - 0.35, (cz + sz) / 2], [sx, sy + 1.2, sz]], 0.012, 4, 1), rope, 0, 0, 0);
+    }
+    // the paving's edge: a low ring of rounded stones, open where the paths come in
+    for (let i = 0; i < 36; i++) {
+      const a = (i / 36) * Math.PI * 2;
+      if (Math.abs(Math.sin(a - 0.3)) < 0.16 || Math.abs(Math.cos(a + 0.2)) < 0.12) continue;
+      const x = LHAR.x + Math.cos(a) * 9.3, z = LHAR.z + Math.sin(a) * 9.3;
+      B.add(new THREE.DodecahedronGeometry(0.28 + r0() * 0.1, 0), stone('#a8a296'), x, H(x, z) + 0.12, z);
+    }
+    // two lanterns on posts
+    for (const [x, z] of [[LHAR.x - 4.5, LHAR.z - 6.5], [LHAR.x + 5.5, LHAR.z + 5.5]]) {
+      const y = H(x, z);
+      B.add(cyl(0.06, 0.08, 2.4, 6, 0), wood, x, y + 1.2, z);
+      B.add(bbox(0.26, 0.32, 0.26, 0.03, 1), pm('#ffd890', 0.4, { emissive: '#ffb050', emissiveIntensity: 1.2 }), x, y + 2.55, z);
+      B.add(new THREE.ConeGeometry(0.24, 0.18, 4).rotateY(Math.PI / 4), stone('#6a6460'), x, y + 2.8, z);
+      col({ type: 'cyl', x, z, r: 0.15, top: y + 2.6, noStand: true });
+    }
+    // a woodpile against the first house and a sledge by the second
+    {
+      const [hx, hz, hry] = HOUSES[1], x = hx + 3.6, z = hz + 1.2, y = H(x, z);
+      for (let i = 0; i < 12; i++) B.add(cyl(0.09, 0.09, 1.1, 6, 0), wood, x + (i % 4) * 0.19 - 0.3, y + 0.1 + Math.floor(i / 4) * 0.17, z, 0, 0, Math.PI / 2);
+      col({ type: 'box', x, z, hw: 0.6, hd: 0.5, rot: hry, top: y + 0.55, noStand: true });
+      const sx = HOUSES[0][0] + 3.4, sz = HOUSES[0][1] + 3.0, sy = H(sx, sz);
+      for (const o of [-0.25, 0.25]) B.add(bbox(0.06, 0.08, 1.5, 0.02, 1), wood, sx + o, sy + 0.06, sz);
+      B.add(bbox(0.62, 0.05, 1.1, 0.02, 1), wood, sx, sy + 0.24, sz + 0.05);
+    }
+  }
   // the frozen waterfall behind the village and the meltwater pond under it
   {
     const fx = -10, fz = -14, gy = H(fx, fz);
@@ -418,7 +466,7 @@ export function buildHamalayi(scene, physics) {
       if (Math.hypot(x - LANDING.x, z - LANDING.z) < 9) continue;
       list.push({ x, y: h - 0.1, z, ry: r0() * 6, s: 0.8 + r0() * 0.5, color: '#d8e4dc' });
     }
-    instances(group, pine, pm2, list);
+    lodInstances(group, pine, treeGeometry('pine', 1, 1), pm2, list);
     for (const t of list) col({ type: 'cyl', x: t.x, z: t.z, r: 0.4 * t.s, top: t.y + 6, seeThrough: true });
     const rocks = [];
     for (let i = 0; i < 120; i++) {
@@ -427,7 +475,7 @@ export function buildHamalayi(scene, physics) {
       rocks.push({ x, y: H(x, z) - 0.1, z, ry: r0() * 6, s: 0.3 + r0() * 0.9, color: '#c8c8d0' });
     }
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
-    for (let v = 0; v < 3; v++) instances(group, rockGeometry(v + 1), rm, rocks.filter((_, i) => i % 3 === v));
+    for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((_, i) => i % 3 === v));
     for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });
   }
 

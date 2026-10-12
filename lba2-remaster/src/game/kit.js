@@ -160,6 +160,32 @@ export function instances(parent, geo, mat, list, { cast = true, receive = true 
   parent.add(im);
   return im;
 }
+// Instances in ~32 m tiles with a coarse stand-in for distant tiles (the regions' trees and rocks). The tiles
+// switch in updateKitLod(focus) — called every frame for the active region — with 4 m of hysteresis.
+export const KIT_LOD = { tiles: [] };
+export function lodInstances(parent, geo, geoLo, mat, list, opts = {}, tile = 32) {
+  const tiles = new Map();
+  for (const it of list) { const k = Math.floor(it.x / tile) + ',' + Math.floor(it.z / tile); if (!tiles.has(k)) tiles.set(k, []); tiles.get(k).push(it); }
+  const out = [];
+  for (const part of tiles.values()) {
+    const hi = instances(parent, geo, mat, part, opts);
+    hi.computeBoundingSphere();
+    const lo = geoLo ? instances(parent, geoLo, mat, part, opts) : null;
+    if (lo) { lo.computeBoundingSphere(); lo.visible = false; }
+    const cx = part.reduce((a, it) => a + it.x, 0) / part.length, cz = part.reduce((a, it) => a + it.z, 0) / part.length;
+    if (lo) KIT_LOD.tiles.push({ parent, cx, cz, hi, lo, near: true });
+    out.push(hi);
+  }
+  return out;
+}
+export function updateKitLod(focus, near = 40) {
+  for (const T of KIT_LOD.tiles) {
+    if (!T.parent.visible) continue;
+    const d = Math.hypot(focus.x - (T.parent.position.x + T.cx), focus.z - (T.parent.position.z + T.cz));
+    if (T.near && d > near + 4) T.near = false; else if (!T.near && d < near - 4) T.near = true;
+    T.hi.visible = T.near; T.lo.visible = !T.near;
+  }
+}
 export function mesh(parent, geo, mat, x = 0, y = 0, z = 0, ry = 0, { cast = true, rx = 0, rz = 0 } = {}) {
   const m = new THREE.Mesh(geo, mat);
   m.position.set(x, y, z); m.rotation.set(rx, ry, rz, 'YXZ');
