@@ -348,10 +348,12 @@ class Game {
   // ------------------------------------------------ UI
   showScreen(id) {
     this.hideScreens();
+    document.querySelector('#chapter')?.classList.remove('show'); // (a chapter title never sits on top of a screen)
     $('#' + id).classList.remove('hidden');
     if (id === 'title') $('#btn-continue').disabled = !store.get(SAVE_KEY);
     if (id === 'settings') this.syncSettingsUI();
     this.screen = id;
+    this.screenT = 0;
     this.menuSel = 0;
     this.focusMenu();
   }
@@ -769,6 +771,8 @@ class Game {
         if (input.pressed('map') || input.pressed('pause')) { $('#holomap').classList.add('hidden'); this.setState('play'); }
         break;
       case 'pause': case 'gameover': case 'ending':
+        // a grace period, so a key still held from the last line of dialogue doesn't press a button
+        if (this.state !== 'pause' && this.screenT < 1.2) { this.screenT += dt; break; }
         this.menuNav();
         if (this.state === 'pause' && input.pressed('pause')) this.act('resume');
         break;

@@ -22,7 +22,7 @@ const boot = async (mode) => {
     const G = window.game; G.testFreeze = true;
     window.T = {
       tap(c) { G.input.taps.add(c); G.step(1 / 60); },
-      talkAll(max = 80) { for (let i = 0; i < max && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.3); },
+      talkAll(max = 80) { for (let i = 0; i < max && G.state !== 'play' && G.state !== 'ending'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.3); },
       tp(x, z, a = 0, y = null) { const h = G.hero; h.pos.set(x, y == null ? G.physics.groundAt(x, z) : G.physics.groundAt(x, z, y + 1), z); h.angle = a; h.onGround = true; h.vy = 0; h.vel?.set(0, 0); if (G.camRig.lba) G.camRig.lba.init = false; G.step(0.1); },
       npc(id) { return G.npcs.find((n) => n.def.id === id); },
       talk(id) { const n = T.npc(id); const h = G.hero; h.pos.set(n.pos.x + Math.sin(n.angle) * 1.4, n.pos.y, n.pos.z + Math.cos(n.angle) * 1.4); h.onGround = true; h.angle = Math.atan2(n.pos.x - h.pos.x, n.pos.z - h.pos.z); G.step(0.8); T.tap('KeyE'); G.step(0.05); T.talkAll(); },
@@ -93,11 +93,19 @@ log('to core', await ev(() => { const r = T.exit('c3-core'); T.talkAll(); return
 log('guardian', await ev(() => { const g = game.story.cur.guardian; return g ? [g.present, g.state, g.alive] : 'none'; }));
 log('leave blocked', await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); return game.room?.id; }));
 await shot('C3-06-core.png');
-log('pylons', await ev(() => game.room.ballTargets.filter((x) => x.pylon != null).map((tg) => T.hit(tg))));
+// bank shots: walk onto each pylon's glowing plate (it lines Twinsen up), throw in normal behaviour
+log('pylons', await ev(() => game.story.cur.plates().map((p) => {
+  const G = game, h = G.hero, tg = G.room.ballTargets.find((x) => x.pylon === p.i);
+  for (let k = 0; k < 3 && !tg.done; k++) {
+    T.tp(p.x + 0.3, p.z - 0.2, 0); h.hp = h.maxHp; G.step(0.6); // stand still: the plate centres and turns him
+    G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.6); T.talkAll();
+  }
+  return tg.done ? 'bank shot' : T.hit(tg);
+})));
 log('turned', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state]; }));
 
 // epilogue: dinner → end screen
-log('epilogue', await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.5); T.talkAll(); } return [G.flags.chapter, G.flags.ep_dinner, G.state, document.querySelector('#ending h1')?.textContent]; }));
+log('epilogue', await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); } return [G.flags.chapter, G.flags.ep_dinner, G.state, document.querySelector('#ending h1')?.textContent]; }));
 await shot('C3-07-end.png');
 const buttons = await ev(() => [...document.querySelectorAll('#ending button')].filter((b) => b.offsetParent).map((b) => b.textContent.trim()));
 log('end buttons', buttons);

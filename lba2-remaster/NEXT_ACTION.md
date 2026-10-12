@@ -1,12 +1,11 @@
 # NEXT ACTION
 
-1. Merge the two parallel branches when they report: the underground rooms (src/game/underground.js +
-   RoomBuilder export + one registration line in main.js) and the soundtrack (assets/music, src/engine/music.js,
-   audio.js). Review their screenshots/report first.
-2. Write a chapter-3 playthrough test (like scratchpad ch2.mjs): shaft → deep (diagram, ball switch, valves A+C)
-   → gallery (3 pillars, stones) → Sendell → core (3 pylons with the guardian) → epilogue → end screen. Fix
-   whatever breaks; check save/load mid-chapter (valves, ladder, pillars, pylons).
-3. Remove the chapter-2 "End of Demo" fallback once chapter 3 runs; update the title badge (no "DEMO").
-4. Visual pass on the underground rooms from the game camera; then the rest of Citadel (flower beds, kerbs,
-   fences along paths) and Zeelich.
-5. Republish the playable link (tools/artifact-page.py; see PROGRESS.md session notes).
+The story is complete from a new game to the end screen (prologue → chapters 1–3 → epilogue → free roam).
+
+1. Republish the playable link (tools/artifact-page.py; bake.bin served as assets/bake.wasm; music files in
+   assets/music must be included in the files map).
+2. Visual pass at game distance on the underground rooms' lighting (interiors still receive the global sun;
+   `R.cave` is unused) and on Zeelich street life.
+3. W1/W2: one more optional discovery with a consequence on Zeelich; Citadel lines for chapter 2 (Twinsen away).
+4. Animation A1/A2: talking gestures, use/pick-up reach timing, ball hit feedback.
+5. Music and ambience: check balance by ear (not possible in this environment) — list in docs/MUSIC.md.

@@ -142,7 +142,6 @@ export function t(key, vars) {
 Object.assign(STR.he, {
   logo_sub: 'ההתעוררות',
   title_sub: 'פרולוג, פרק 1 ופרק 2 · המשך מעריצים לא רשמי ל־Little Big Adventure 2',
-  demo_badge: 'גרסת דמו',
   to_title: 'לתפריט הראשי',
   disclaimer: 'פרויקט מעריצים לא מסחרי. אינו קשור ל־Adeline Software או ל־[2.21]. הדמויות והעולם שייכים לבעליהם; הסיפור, המודלים, הצלילים והמוזיקה נוצרו מחדש.',
   map_title: 'הולומפה · האי המצודה',
@@ -243,8 +242,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.en, {
   logo_sub: 'THE AWAKENING',
-  title_sub: 'Prologue and Chapters 1–2 · An unofficial fan sequel to Little Big Adventure 2',
-  demo_badge: 'DEMO',
+  title_sub: 'An unofficial fan sequel to Little Big Adventure 2',
   to_title: 'Main Menu',
   disclaimer: 'Non-commercial fan project, not affiliated with Adeline Software or [2.21]. The characters and world belong to their owners. Story, models, sound and music are original.',
   map_title: 'Holomap · Citadel Island',

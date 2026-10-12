@@ -15,9 +15,9 @@
 ## 2. Story to the end
 - [x] S1 Chapter 2 setback: the evacuation plan confiscated at the Zeelich dock, recovered in the depot;
       Nara/Oku react to it.
-- [ ] S2 Chapter 3 — The Shell: shaft, deep installation, galleries, Sendell, the core; puzzles from known
+- [x] S2 Chapter 3 — The Shell: shaft, deep installation, galleries, Sendell, the core; puzzles from known
       mechanics; guardian boss; allies by radio; Vesk's turn. Done when: playable from ch2 end to the epilogue.
-- [ ] S3 Epilogue + credits + free roam; remove the End of Demo screen.
+- [x] S3 Epilogue + end screen + free roam; End of Demo screen and DEMO badge removed (tests/chapter3.mjs plays chapter 3 → epilogue → end → free roam).
 - [x] S4 Chapter 1 polish: the project's heat posts light up at every front door and Pippa's stall once the station runs; Vesk, Zoé and the townsfolk talk about free heat before the evacuation plan turns up.
 
 ## 3. World and exploration

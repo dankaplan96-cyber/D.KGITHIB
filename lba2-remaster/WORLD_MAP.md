@@ -39,7 +39,7 @@ Pink sky, cloud sea, floating isles.
 
 Access: from Citadel by the ferry (ch2 start). Platform gate: override key + three mills braked.
 
-## Underground: the shell (chapter 3) ⬜
+## Underground: the shell (chapter 3) ✅ (src/game/underground.js; captures/underground/)
 Reached by the drill shaft lift from the Zeelich platform.
 
 | Place | Identity | Gameplay | Story |
@@ -48,7 +48,7 @@ Reached by the drill shaft lift from the Zeelich platform.
 | Deep installation | project machinery, cooling pipes, maintenance drones | ball switches; water-flow puzzle; stealth past drones | how the drill works (the finale uses it) |
 | Crystal galleries | the crystals from the well, much larger | mites; light puzzles | the cracks |
 | Sendell's chamber | quiet, blue | conversation | the plain truth |
-| The core | bore head against the shell; three conversion pylons | bank-shot pylons; guardian boss; allies' tasks by radio | Vesk's turn, the shell holds |
+| The core | bore head against the shell; three conversion pylons | bank-shot pylons from glowing throw plates; guardian boss; allies' tasks by radio | Vesk's turn, the shell holds |
 
 ## Epilogue
 Back to Citadel: the well, the square with returning neighbours, the house. Free roam after the credits.

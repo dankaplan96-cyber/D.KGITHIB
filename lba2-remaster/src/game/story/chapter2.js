@@ -9,7 +9,6 @@
 // at the Citadel lighthouse (playable): she tunes the old transmitter (sun, wave, star) and warns the
 // whole island. Back on Zeelich the key opens the shield; Vesk refuses to listen and goes down the drill
 // shaft. Twinsen follows him — chapter 3.
-import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import '../text/ch2.js';
 
@@ -344,20 +343,13 @@ export class Chapter2 extends ChapterBase {
       if (lowering) { vesk.rig.play('idle'); vesk.rig.update(dt, 0); }
     };
   }
+  // down the shaft: chapter 3 (a save from the old end-of-demo screen gets here again from the lift)
   toShell() {
-    const g = this.game, f = this.f;
-    g.startTransition(() => {
-      if (this.story.chapters.length > 3 && g.rooms.c3shaft) { this.story.nextChapter(); return; } // (chapter 3's rooms built)
-      f.c2_done = true;
-      g.save(false);
-      g.setState('ending');
-      g.hud.show(false);
-      document.querySelector('#ending h1').textContent = t('ending2_title');
-      document.querySelector('#ending p').innerHTML = t('ending2_text');
-      g.showScreen('ending');
-      g.audio.setMood('ending');
-    });
+    const g = this.game;
+    this.f.c2_done = true;
+    g.startTransition(() => this.story.nextChapter());
   }
+
 
   // ---------------------------------------------------------------- per frame / rooms / saves
   update() {

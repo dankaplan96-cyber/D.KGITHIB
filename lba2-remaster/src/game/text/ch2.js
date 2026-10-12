@@ -101,8 +101,6 @@ Object.assign(STR.he, {
   it_cog: 'גלגל שיניים', itd_cog: 'מראש הטחנה הישנה של זיליך. חלק ממפתח העקיפה.',
   it_cyl: 'גליל קוד', itd_cyl: 'מארון מחסן המיזם. "גישה לרציף. לא להוציא".',
   it_okey: 'מפתח עקיפה', itd_okey: 'המצאה של בלדינו. פותח את מגן הרציף, אם הטחנות בלומות.',
-  ending2_title: 'סוף פרק 2 · זיליך',
-  ending2_text: 'המעלית שוקעת בפיר, והאור הוורוד של זיליך נעלם מעל.<br>למטה, מתחת לקליפה, משהו נושם.<br><br><b>סוף הדמו · תודה ששיחקתם!</b><br>פרק 3 · הקליפה, יגיע בגרסה הבאה.',
 });
 
 Object.assign(STR.en, {
@@ -212,6 +210,4 @@ Object.assign(STR.en, {
   it_cog: 'Cog', itd_cog: "From the top of Zeelich's old mill. Part of the override key.",
   it_cyl: 'Code Cylinder', itd_cyl: 'From the project depot\'s locker. "Platform access. Do not remove."',
   it_okey: 'Override Key', itd_okey: "Baldino's invention. Opens the platform shield once the mills are braked.",
-  ending2_title: 'End of Demo',
-  ending2_text: "The lift sinks into the shaft, and Zeelich's pink light fades overhead. Below the shell, something is breathing.<br><br>Thanks for playing! Chapter 3, The Shell, is coming in the next build.",
 });

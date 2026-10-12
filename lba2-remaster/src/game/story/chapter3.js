@@ -9,6 +9,7 @@
 // sets the bore's guardian on him; Twinsen converts the three pylons with bank shots while his allies,
 // by radio, feed each one (Zoé's signal, Mira's valves, Oku's mills). The readings change, and Vesk makes
 // the final switch himself. → epilogue.
+import * as THREE from 'three';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import '../text/ch3.js';
@@ -16,6 +17,9 @@ import '../text/ch3.js';
 const ROOMS = { 'c3-shaft': 'c3shaft', 'c3-deep': 'c3deep', 'c3-gallery': 'c3gallery', 'c3-sendell': 'c3sendell', 'c3-core': 'c3core' };
 const CIRCUIT = { A: true, B: false, C: true }; // the diagram: A and C to the exchanger, B to the drain
 const ALLIES = [['zoeradio', 'c3_pylon_1'], ['miraradio', 'c3_pylon_2'], ['okuradio', 'c3_pylon_3']];
+// a brass throw plate in front of each pylon: the spot (from the room's suggested bank-shot spot) and the
+// 8-way direction a bank shot off the panels was measured to reach the receiver from (tests/chapter3.mjs)
+const PLATE = [{ dx: 0, dz: 0, k: 7 }, { dx: -0.5, dz: 0, k: 5 }, { dx: -1, dz: 0, k: 3 }];
 
 export class Chapter3 extends ChapterBase {
   get R() { return this.game.rooms; }
@@ -235,9 +239,46 @@ export class Chapter3 extends ChapterBase {
     }
     if (id === 'c3core' && f.c3_fight && !f.c3_turned) g.audio.setMood?.('boss');
   }
-  update() {
+  plates() {
+    const C = this.R.c3core;
+    return (C?.pylons || []).map((P, i) => (P.bankFrom ? { i, x: P.bankFrom.x + PLATE[i].dx, z: P.bankFrom.z + PLATE[i].dz, a: PLATE[i].k * Math.PI / 4 } : null)).filter(Boolean);
+  }
+  // the plates are drawn once, into the core room's group
+  ensurePlates() {
+    const C = this.R.c3core;
+    if (!C || this.plateMeshes) return;
+    const brass = new THREE.MeshStandardMaterial({ color: '#c8a050', metalness: 0.6, roughness: 0.35, emissive: '#ffb040', emissiveIntensity: 0 });
+    const ring = new THREE.RingGeometry(0.34, 0.46, 24).rotateX(-Math.PI / 2);
+    const disc = new THREE.CircleGeometry(0.34, 24).rotateX(-Math.PI / 2);
+    const arrow = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0.42), new THREE.Vector3(-0.16, 0, 0.1), new THREE.Vector3(0.16, 0, 0.1)]);
+    arrow.computeVertexNormals();
+    const dark = new THREE.MeshStandardMaterial({ color: '#4a3a24', roughness: 0.6 });
+    const y = (C.floorY ?? 0) + 0.02, gp = C.group.position;
+    this.plateMeshes = this.plates().map((p) => {
+      const k = new THREE.Group(); k.position.set(p.x - gp.x, y, p.z - gp.z); k.rotation.y = p.a;
+      k.add(new THREE.Mesh(disc, dark), new THREE.Mesh(ring, brass));
+      const ar = new THREE.Mesh(arrow, brass); ar.position.y = 0.005; k.add(ar);
+      C.group.add(k);
+      return k;
+    });
+    this.plateMat = brass;
+  }
+  update(dt) {
     const g = this.game, f = this.f;
     if (!this.on()) return;
+    // during the fight, standing still on a plate lines Twinsen up for the bank shot
+    if (g.room?.id === 'c3core') {
+      this.ensurePlates();
+      if (this.plateMat) this.plateMat.emissiveIntensity = f.c3_fight && !f.c3_turned ? 0.35 + Math.sin(g.time * 3) * 0.2 : 0;
+      const h = g.hero;
+      if (f.c3_fight && !f.c3_turned && h.onGround && (h.speed ?? 0) < 0.4) {
+        for (const p of this.plates()) {
+          if (f['c3_pylon' + p.i]) continue;
+          const d = Math.hypot(h.pos.x - p.x, h.pos.z - p.z);
+          if (d < 0.55) { const k = Math.min(1, (dt || 0.016) * 8); h.pos.x += (p.x - h.pos.x) * k; h.pos.z += (p.z - h.pos.z) * k; h.angle = p.a; }
+        }
+      }
+    }
     // a defeat during the fight respawns at the core's entrance with the fight still on (pylons kept)
     if (f.c3_fight && !f.c3_turned && g.room?.id === 'c3core') {
       const gd = this.guardian;

@@ -46,7 +46,7 @@ Object.assign(STR.en, {
   c3_core_tw1: "Sendell says that wakes her too early. Baldino's network turns the bore into a shield. Help us.",
   c3_core_vesk2: 'Baldino\'s network is a sketch. I have a schedule, and thirty percent of two worlds to save.',
   c3_core_vesk3: 'Guardian. Keep him away from the pylons.',
-  c3_toast_fight: 'Hit the three pylons. Bounce the ball off the brass panels.',
+  c3_toast_fight: 'Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels.',
   c3_pylon_1: 'Signal is out. Sun, wave, star. Just like last time!',
   c3_pylon_2: 'All three valves open. If anyone asks, the water office did this.',
   c3_pylon_3: 'The mills are free. Listen to that wind!',
