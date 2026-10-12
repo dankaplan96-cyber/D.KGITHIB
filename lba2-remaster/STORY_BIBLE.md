@@ -28,7 +28,7 @@ what the player knows / doesn't know · the turn · what the player does · the 
 | 2 | The Joint Project | Citadel Island | 55 | ✅ |
 | 3 | Zeelich | Zeelich | 55 | ✅ (new ending: the shaft is sealed) |
 | 4 | The Dig | Desert Island | 55 | ✅ (first version; tests/chapter4.mjs) |
-| 5 | Steam and Sand | Desert Island | 50 | ⬜ |
+| 5 | Steam and Sand | Desert Island | 50 | ✅ (first version; tests/chapter5.mjs) |
 | 6 | The Pass | Hamalayi | 55 | ⬜ |
 | 7 | The Observatory | Hamalayi | 50 | ⬜ |
 | 8 | Evacuation | Citadel Island (changed) | 55 | ⬜ |
@@ -77,7 +77,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 - **Turn:** Ilka reads the carvings: the vents are closing because the project draws the heat to one point.
 - **Result:** the shell needs its vents open. One is under this island, blocked by the project's test bore.
 
-### 5 — Steam and Sand ⬜ (Desert Island)
+### 5 — Steam and Sand ✅ (Desert Island)
 - **Wants:** open the desert vent. **Setback:** the test bore is pressurised; opening it badly would boil the
   oasis. Dallan seizes the ferry and orders everyone onto the project's evacuation list — the village is not on
   it.

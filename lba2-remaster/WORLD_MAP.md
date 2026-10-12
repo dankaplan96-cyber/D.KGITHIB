@@ -50,7 +50,7 @@ Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real
 | Ilka's camp | ridge tent, telescope, sample crates under the north mesa | Professor Ilka | the crystals' discoverer | — |
 | The research post | fenced concrete pad, teal cabins, a test-bore derrick | Dallan (foreman), a gate guard, two drones | the notebook (stealth in sandstorms) | the gate opens in storms |
 | The dig | three shored terraces down to a carved wall and three stone seals | crystal mites | the shell carving: five vents | carving uncovered |
-| FunFrock's condenser hall | a concrete arch half buried in a dune | — | chapter 5 | — |
+| FunFrock's condenser hall (interiors condA, condB) | a concrete arch half buried in a dune; inside a valve hall and a hangar with three condensers and a cargo glider | FunFrock's old drones | route the steam (valves 1, 3, 4), open the roof hatch, the glider north | plumes rise from the dunes once the vent is open |
 
 ## Underground: the shell (chapter 3) ✅ (src/game/underground.js; captures/underground/)
 Reached by the drill shaft lift from the Zeelich platform.

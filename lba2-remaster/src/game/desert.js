@@ -584,7 +584,10 @@ export function buildDesert(scene, physics) {
     col({ type: 'box', x: bx, z: bz, hw: b, hd: b, top: postY + h, noStand: true, seeThrough: true });
     col({ type: 'box', x: bx + 5, z: bz + 2, hw: 1.7, hd: 1.0, top: postY + 2.6, noStand: true });
     cover.push({ x: ox + bx + 5, z: oz + bz + 2, r: 1.7 });
-    R.bore = W(bx, bz);
+    R.bore = { ...W(bx, bz), valve: W(bx - 1.9, bz + 0.2), y: postY };
+    // the relief valve on the well-head: a big red wheel
+    PB.add(new THREE.TorusGeometry(0.42, 0.06, 6, 20), pm('#c84a3a', 0.5, { metalness: 0.3 }), bx - 1.0, postY + 1.15, bz + 0.2, 0, Math.PI / 2, 0);
+    PB.add(cyl(0.08, 0.08, 1.0, 8, 0), iron, bx - 0.6, postY + 1.15, bz + 0.2, 0, 0, Math.PI / 2);
     // crates, a generator, a floodlight mast
     const crateM = tm('planks', { color: '#c8a070' });
     for (const [x, z, s] of [[30, -16, 1], [31.2, -16, 0.8], [30.5, -14.8, 0.9], [54, -26, 1], [54, -24.8, 1], [36, -10, 0.8]]) {
@@ -709,7 +712,16 @@ export function buildDesert(scene, physics) {
     UB.build();
     col({ type: 'box', x: RUINS.x, z: RUINS.z - 1.0, hw: 3.5, hd: 2.0, top: gy + 3 });
   }
-  R.ruins = { ...W(RUINS.x, RUINS.z), door: W(RUINS.x, RUINS.z + 1.6) };
+  // sand drifted against the door (chapter 5 digs it out), and the plume once the steam runs through
+  const drift = mesh(group, new THREE.SphereGeometry(1.8, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.2, 0.75, 0.7), tm('sand', { color: '#f6deb0' }), RUINS.x, H(RUINS.x, RUINS.z + 1.6) - 0.1, RUINS.z + 1.6);
+  const plumes = [];
+  for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 1.4, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); p.position.set(RUINS.x + s * 4.2, H(RUINS.x, RUINS.z) + 6.5, RUINS.z - 2.2); group.add(p); plumes.push(p); }
+  updaters.push((dt, t) => { for (const p of plumes) { p.rotation.y += dt * 0.3; p.scale.x = p.scale.z = 1 + Math.sin(t * 1.3) * 0.06; } });
+  R.ruins = {
+    ...W(RUINS.x, RUINS.z), door: W(RUINS.x, RUINS.z + 1.6), stand: W(RUINS.x, RUINS.z + 3.6),
+    setDrift(b) { drift.visible = !!b; },
+    setPlume(v) { for (const p of plumes) p.material.opacity = v * 0.35; },
+  };
 
   // ================================================================ Hesk's sand-yacht
   const yacht = new THREE.Group();
@@ -816,6 +828,8 @@ export function buildDesert(scene, physics) {
     weaver: at(-58, 2, 1.2),
   };
   R.spawn = { ...R.dock };
+  R.plaza = W(VILLAGE.x, VILLAGE.z);
+  R.oasisEdge = W(OASIS.x + OASIS.r + 1.6, OASIS.z + 2.0);
   R.digTerraceY = [BASE, BASE - 1.6, BASE - 3.2, BASE - 4.8];
   return R;
 }
