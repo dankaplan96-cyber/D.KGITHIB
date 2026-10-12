@@ -102,6 +102,19 @@ export const LOOKS = {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#86c8a8', ridge: '#3e7a62', tunic: '#5a3a8a', tunicTrim: '#c8a0ff', belt: '#c8a0ff', pants: '#3a2a5a', shoes: '#2a2040',
     eyes: '#e8c040', height: 1.1,
   },
+  // ---- Citadel's hill farms (chapter 8)
+  farmerA: {
+    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.08, tunic: '#6a8a3a', tunicTrim: '#3a5a1a', belt: '#5a3a1a', pants: '#8a6a4a', shoes: '#3a2a1a',
+    hair: '#8a5a2a', skin: '#e0a878', hairStyle: 'tuft', nose: 'ball', eyes: '#3a2a1a', hat: '#e8d090', height: 0.97, neck: 0.08,
+  },
+  farmerB: {
+    race: 'bunny', outfit: 'tunic', hem: 0.5, fur: '#e8d0b8', furDark: '#b89878', tunic: '#d8a03a', tunicTrim: '#8a5a1a', belt: '#5a3a1a', pants: '#5a6a3a', shoes: '#e8d0b8',
+    eyes: '#3a2a1a', apron: '#f4ecd8', height: 0.88,
+  },
+  farmerC: {
+    race: 'grobo', outfit: 'tunic', hem: 0.62, belly: 0.12, skin: '#98a6b4', tunic: '#a84a3a', tunicTrim: '#e8c060', belt: '#3a2a1a', pants: '#4a4a5a', shoes: '#3a2a1a',
+    eyes: '#2a2a2a', hat: '#6a5a3a', height: 1.04,
+  },
   // ---- the Hamalayi (chapters 6–7)
   yorna: {
     // Yorna: an old Grobo mountain guide; a thick felt coat in red and ochre, a fur hat

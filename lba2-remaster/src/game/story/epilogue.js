@@ -56,7 +56,8 @@ export class Epilogue extends ChapterBase {
     this.chain([[npc.def.id, key]]);
     return true;
   }
-  applyFlags() { this.game.world.bunting?.setVisible(this.on()); }
+  applyFlags() { this.game.world.bunting?.setVisible(this.on()); if (this.on()) this.game.world.station?.setActive?.(true); } // (the bore runs as a shield: the heat posts glow again)
+  doors() { return this.story.townDoors(); }
   objective() { return this.goal(this.f.ep_dinner ? 'ep_obj_free' : 'ep_obj_home'); }
   journal() { return [{ key: 'ep_j_home', done: !!this.f.ep_dinner }]; }
 }

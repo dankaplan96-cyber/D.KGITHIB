@@ -31,7 +31,7 @@ what the player knows / doesn't know · the turn · what the player does · the 
 | 5 | Steam and Sand | Desert Island | 50 | ✅ (first version; tests/chapter5.mjs) |
 | 6 | The Pass | Hamalayi | 55 | ✅ (first version; tests/chapter6.mjs) |
 | 7 | The Observatory | Hamalayi | 50 | ✅ (first version; tests/chapter7.mjs) |
-| 8 | Evacuation | Citadel Island (changed) | 55 | ⬜ |
+| 8 | Evacuation | Citadel Island (changed) | 55 | ✅ (first version; tests/chapter8.mjs) |
 | 9 | The Council | Zeelich upper districts | 50 | ⬜ |
 | 10 | Baldino's Network | all regions | 55 | ⬜ |
 | 11 | The Shell | the shaft, deep installation, galleries | 45 | 🔧 (rooms built) |
@@ -107,7 +107,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 - **Result:** two vents open; the quakes ease for a while. Arthur's radio: Citadel is evacuating — the
   project's way.
 
-### 8 — Evacuation ⬜ (Citadel Island, changed)
+### 8 — Evacuation ✅ (Citadel Island, changed)
 - **Wants:** get everyone out, not 30%. **The familiar island changed:** queues at the harbour, the heat posts
   dark, the square fenced, the well steaming, people packing.
 - **Does:** Zoé (playable) and Twinsen split up: Zoé gets the hill families to the lighthouse cliffs with Doran's
