@@ -54,7 +54,9 @@ await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueD
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); });
 // finish chapter 2 by its own ending call (chapter 2 has its own test)
 await ev(() => { const G = game; Object.assign(G.flags, { c2_plan: true, c2_planBack: true, c2_okuOK: true, c2_cog: true, c2_cyl: true, c2_mills: true, c2_signal: true });
-  G.story.cur.toShell?.(); G.step(1.5); T.talkAll(); G.step(0.5); T.talkAll(); });
+  G.story.cur.toShell?.(); G.step(1.5); T.talkAll(); G.step(0.5); T.talkAll();
+  // chapters between Zeelich and the shell (Desert Island, …) have their own tests: skip to the shell
+  for (let i = 0; i < 12 && G.story.cur.key !== 'shell'; i++) { G.story.nextChapter(); G.step(0.5); T.talkAll(); } });
 log('ch3 start', await ev(() => [game.flags.chapter, game.flags.c3_started, game.room?.id, game.state, T.obj()]));
 await shot('C3-00-shaft.png');
 

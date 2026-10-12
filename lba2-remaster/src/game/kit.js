@@ -297,3 +297,7 @@ export function shapeOf(P) { const s = new THREE.Shape(); P.forEach(([x, z], i) 
 export function slabGeo(P, depth, tile, holes = []) {
   const s = shapeOf(P);
   for (const h of holes) s.holes.push(h);
+  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: false, curveSegments: 24 });
+  g.rotateX(-Math.PI / 2);
+  return boxUV(g, tile);
+}

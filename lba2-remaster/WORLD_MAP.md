@@ -39,6 +39,19 @@ Pink sky, cloud sea, floating isles.
 
 Access: from Citadel by the ferry (ch2 start). Platform gate: override key + three mills braked.
 
+## Desert Island (chapters 4–5) ✅ first version (src/game/desert.js)
+Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real ground (a terrain patch).
+
+| Place | Identity / landmark | Life | Story role | Changes |
+|---|---|---|---|---|
+| Kesh (village) | adobe houses with vigas and roof stairs, striped awnings, a market stall | Mother Tarra, Brosk (trader), Lumi (weaver), Sani (kid) | distrust of the project; trust earned by the pump | the oasis fills once the pump runs |
+| The oasis and the wind-pump | palms, a pond, a lattice tower with a sail wheel and a water tank | — | three seized gears (ball) | dry → full |
+| Hesk's sand-yacht | striped sail, three wheels | Hesk | rides between Kesh, Ilka's camp and the dig | parked where it last went |
+| Ilka's camp | ridge tent, telescope, sample crates under the north mesa | Professor Ilka | the crystals' discoverer | — |
+| The research post | fenced concrete pad, teal cabins, a test-bore derrick | Dallan (foreman), a gate guard, two drones | the notebook (stealth in sandstorms) | the gate opens in storms |
+| The dig | three shored terraces down to a carved wall and three stone seals | crystal mites | the shell carving: five vents | carving uncovered |
+| FunFrock's condenser hall | a concrete arch half buried in a dune | — | chapter 5 | — |
+
 ## Underground: the shell (chapter 3) ✅ (src/game/underground.js; captures/underground/)
 Reached by the drill shaft lift from the Zeelich platform.
 

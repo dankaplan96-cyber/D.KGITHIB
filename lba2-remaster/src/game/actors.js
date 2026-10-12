@@ -76,10 +76,12 @@ export class Hero extends Actor {
   }
 
   visibility() {
-    if (this.hiding) return 0.12;
-    if (this.behaviour === 'discreet') return this.speed > 0.2 ? 0.4 : 0.25;
-    if (this.behaviour === 'athletic' && this.speed > 4) return 1.25;
-    return 1;
+    // a sandstorm (Desert Island) hides him too
+    const st = this.game.room?.storm?.level ?? 0, k = 1 - st * 0.6;
+    if (this.hiding) return 0.12 * k;
+    if (this.behaviour === 'discreet') return (this.speed > 0.2 ? 0.4 : 0.25) * k;
+    if (this.behaviour === 'athletic' && this.speed > 4) return 1.25 * k;
+    return k;
   }
 
   setBehaviour(b) {

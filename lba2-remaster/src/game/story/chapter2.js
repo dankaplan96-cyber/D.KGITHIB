@@ -343,11 +343,21 @@ export class Chapter2 extends ChapterBase {
       if (lowering) { vesk.rig.play('idle'); vesk.rig.update(dt, 0); }
     };
   }
-  // down the shaft: chapter 3 (a save from the old end-of-demo screen gets here again from the lift)
+  // the shaft: Vesk has sealed it from below. Baldino sends Twinsen south to learn what the shell is
+  // (chapter 4, Desert Island). A save from the old end-of-demo screen gets here again from the lift.
   toShell() {
-    const g = this.game;
-    this.f.c2_done = true;
-    g.startTransition(() => this.story.nextChapter());
+    const g = this.game, f = this.f;
+    if (f.c2_done) { g.startTransition(() => this.story.nextChapter()); return; }
+    g.audio.play('door'); g.camRig.shake(0.35);
+    const lines = [['narrator', 'c2_sealed_1'], ['hero', 'c2_tw_sealed0']];
+    if (this.npc('baldino')?.present) lines.push(['baldino', 'c2_bal_sealed1'], ['hero', 'c2_tw_sealed'], ['baldino', 'c2_bal_sealed2']);
+    else lines.push(['radio', 'c2_bal_sealed1'], ['hero', 'c2_tw_sealed'], ['radio', 'c2_bal_sealed2']);
+    lines.push(['doran', 'c2_doran_sealed']);
+    this.chain(lines, () => {
+      f.c2_done = true;
+      g.save(false);
+      g.startTransition(() => this.story.nextChapter());
+    });
   }
 
 

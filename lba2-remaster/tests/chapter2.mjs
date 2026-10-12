@@ -93,7 +93,7 @@ await shot('C2-03-shield.png');
 await ev(() => { T.talk('vesk'); if (game.state === 'play' && !game.flags.c2_veskDown) { game.input.taps.add('KeyE'); game.step(1 / 60); } for (let i = 0; i < 900 && !game.flags.c2_veskDown; i++) { if (game.state === 'dialog') { game.input.taps.add('KeyE'); } game.step(1 / 30); } T.talkAll(); });
 log('vesk', await ev(() => [game.flags.c2_veskDown, T.npc('vesk').present, T.obj(), game.state, T.npc('vesk').pos.toArray().map((v) => +v.toFixed(1)), game.hero.pos.toArray().map((v) => +v.toFixed(1)), game.findInteractable()?.npc?.def?.id]));
 await ev(() => { const G = game, p = G.rooms.zeelich.platform.pad; T.tp(p.x + 1, p.z); T.tap('KeyE'); G.step(1.5); });
-log('to chapter 3', await ev(() => { T.talkAll(); return [game.state, game.flags.c2_done, game.flags.chapter, game.room?.id, T.obj()]; }));
+log('next chapter', await ev(() => { T.talkAll(); game.step(1.5); T.talkAll(); return [game.state, game.flags.c2_done, game.flags.chapterKey, game.room?.id, T.obj()]; }));
 await shot('C2-04-end.png');
 console.log(errs.slice(0, 20).join('\n') || 'no errors');
 await browser.close();

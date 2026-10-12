@@ -1,0 +1,103 @@
+// Chapter 4 — "The Dig" (Desert Island). English only.
+import { STR } from '../i18n.js';
+
+Object.assign(STR.en, {
+  n_hesk: 'Hesk', n_tarra: 'Mother Tarra', n_ilka: 'Professor Ilka', n_dallan: 'Dallan', n_dkid: 'Sani', n_dtrader: 'Brosk', n_weaver: 'Lumi',
+  p_rope: 'Pick Up', p_desk: 'Search', p_code: 'Enter Code', p_carving: 'Inspect', p_ride: 'Ride',
+
+  // arrival
+  c4_arrive: 'Two days south of Zeelich, the light-ferry slides into the shallows of Desert Island.',
+  c4_doran_1: "Kesh, the only village on the island. I'll wait at the pier. Don't let the sun cook your brain.",
+  c4_tw_arrive: "A professor the project sacked. Someone in the village must know her.",
+
+  // the village
+  c4_kid_1: "You came on the project's ferry. Mum says project people take the water and leave the bill.",
+  c4_kid_2: 'The pump is working! I can hear it from my roof!',
+  c4_trader_1: "Water costs more than anything I sell. The pump seized when the project's test bore started shaking the ground.",
+  c4_trader_2: 'Water in the oasis, customers in the square. Funny how that works.',
+  c4_weaver_1: "Mother Tarra won't talk to anyone who comes off that ferry. Can't blame her.",
+  c4_weaver_2: "You fixed the pump? Then you're welcome at my loom any time. Mind the threads.",
+  c4_tarra_1: 'Another one from the project. We have nothing left for you to drill.',
+  c4_tw_tarra1: "I'm not with the project. I'm looking for a professor who found crystals here.",
+  c4_tarra_2: 'Everyone says they are not with the project. Show me. The wind-pump has been stuck for a month and the oasis is drying. Start it, and we will talk.',
+  c4_tarra_wait: 'The pump, stranger. Three gears up the tower, all seized with sand.',
+  c4_tarra_3: 'Water. Real water, in the oasis. All right. You are not with the project.',
+  c4_tarra_4: 'The one you want is Ilka. She dug up the glowing stones, told the project they were dangerous, and they threw her out. She lives in a tent under the north mesa.',
+  c4_tarra_5: 'Hesk can take you on his sand-yacht. He owes me a favour. Several.',
+  c4_tarra_idle: 'The children are swimming in the oasis. I had forgotten that sound.',
+
+  c4_pump_hint: '(The gears are seized. A good hit with the ball should knock the sand out of them.)',
+  c4_toast_gear: 'Gear freed ({n}/3)',
+  c4_pump_runs: 'The wheel turns, the rod thumps, and water spills into the oasis.',
+
+  // Hesk and the sand-yacht
+  c4_hesk_1: "You want a ride? My yacht's mast stay snapped in the last storm. No rope, no sail, no ride.",
+  c4_hesk_rope: "There's a coil of good rope on the pier. Bring it and we'll fly.",
+  c4_hesk_wait: 'Rope first. The pier, stranger.',
+  c4_rope_got: 'A coil of rope. Hesk will be pleased.',
+  c4_toast_rope: 'Rope',
+  c4_hesk_2: "Now that's rope. Hold on to something, and not to me.",
+  c4_hesk_camp: 'Ilka? Under the north mesa. Hop on.',
+  c4_hesk_village: 'Back to Kesh? Hop on.',
+  c4_hesk_dig: "The dig? They fenced it, but the yacht doesn't care about fences. Hop on.",
+  c4_hesk_idle: 'The yacht runs on wind. The project runs on everything else.',
+
+  // Ilka
+  c4_ilka_1: "Hm? Oh. If you're from the project, the answer is still no.",
+  c4_tw_ilka1: "I'm Twinsen. Baldino sent me. The crystals you found are growing under Citadel Island now.",
+  c4_ilka_2: 'Under Citadel too? Then it is everywhere. The crystals grow where heat leaks from deep down. I told the project. They told me to pack.',
+  c4_ilka_3: 'At the bottom of the dig there is a wall I never finished clearing. Old carvings, older than FunFrock. I think they show what is under the ground.',
+  c4_ilka_4: 'The project fenced the dig. The gate code and my survey are in my notebook, which is on Dallan\'s desk at the research post.',
+  c4_tw_ilka2: 'Then I need the notebook.',
+  c4_ilka_5: 'The post has drones. But this season a sandstorm blows through every few minutes. Their cameras are blind in it. So is the gate guard, who hides in his cabin.',
+  c4_ilka_wait: 'The research post, east of the village. Wait for the storm.',
+  c4_ilka_dig: "You have it! The code is on the last page. I'll follow you to the dig. I want to see that wall.",
+  c4_toast_storm: 'A sandstorm is coming',
+
+  // the post
+  c4_guard_1: 'Restricted area. Research staff only. Move along.',
+  c4_guard_storm: '(The guard has gone inside.)',
+  c4_desk_1: "Ilka's notebook, under a pile of forms. Survey drawings, sample lists, and on the last page: DIG GATE 4-1-7.",
+  c4_toast_notebook: "Ilka's notebook",
+  c4_dallan_note: '(A memo on the desk: "Test bore pressure rising. Keep drilling. Signed: Dallan, Foreman.")',
+
+  // the dig
+  c4_gate_locked: 'A keypad on the barrier. I need the code.',
+  c4_gate_open: 'Four, one, seven. The barrier lifts.',
+  c4_dig_in: 'Three terraces down. And something is crawling around on them.',
+  c4_seals_hint: '(Three stone discs around the wall, like the seals on the cliffs back home. The ball, then.)',
+  c4_toast_seal: 'Seal opened ({n}/3)',
+  c4_seals_all: 'The stone grinds, and the sand slides off the wall.',
+  c4_carving_1: 'A carving: two suns above a round world. Around it, a shell. Inside, something curled up, asleep. And the shell has holes in it, five of them, breathing out.',
+  c4_ilka_c1: 'Vents. The shell has vents, so the heat can get out. That is why the planet never boiled.',
+  c4_ilka_c2: 'And look: the vents are closing. The project draws all the heat to one point. Under Citadel. The rest of the shell is sealing up.',
+  c4_tw_c1: "So the pressure builds everywhere. That's what's cracking it.",
+  c4_ilka_c3: 'If we open the vents, the shell can breathe while you deal with the bore. This one, here, marks a vent under this island.',
+  c4_dallan_1: "That's enough. This site is closed by order of the Joint Project.",
+  c4_ilka_d1: 'Dallan. Look at this wall before you throw us out again.',
+  c4_dallan_2: 'I looked at your reports, Professor. I follow the plan. The test bore stays capped and the pressure stays where it is.',
+  c4_tw_d1: "You took Zoé's plan on Zeelich. You know what it says.",
+  c4_dallan_3: '...Thirty percent. I know. Leave the dig. Both of you. Now.',
+  c4_ilka_end: 'The vent under this island is the test bore, Twinsen. He has capped it. We have to open it, without boiling Kesh.',
+
+  // objectives and journal
+  c4_obj_find: 'Find the professor who found the crystals',
+  c4_obj_pump: 'Restart the wind-pump ({n}/3)',
+  c4_obj_tarra: 'Talk to Mother Tarra',
+  c4_obj_ilka: "Find Ilka's camp under the north mesa",
+  c4_sub_hesk: 'Hesk can take you on his sand-yacht',
+  c4_sub_rope: 'Bring Hesk the rope from the pier',
+  c4_obj_notebook: "Get Ilka's notebook from the research post",
+  c4_sub_storm: 'Go in during a sandstorm',
+  c4_obj_dig: 'Open the dig and reach the bottom',
+  c4_obj_seals: 'Open the three seals ({n}/3)',
+  c4_obj_carving: 'Look at the carving',
+  c4_j_arrive: 'Baldino sent me to Desert Island to learn what the shell is.',
+  c4_j_pump: "I restarted Kesh's wind-pump. Mother Tarra told me about Ilka.",
+  c4_j_ilka: 'Ilka thinks the old carvings at the dig show what lies under the ground.',
+  c4_j_notebook: "I took Ilka's notebook from the research post in a sandstorm.",
+  c4_j_carving: 'The carving shows the shell with five vents. The project is closing them; one is under this island, capped by the test bore.',
+  c4_j_dallan: 'Dallan, the foreman, knows about the 30%. He threw us out anyway.',
+  it_rope: 'Rope', itd_rope: 'A coil of good rope from the pier, for Hesk.',
+  it_notebook: "Ilka's notebook", itd_notebook: 'Survey drawings of the dig. The gate code: 4-1-7.',
+});

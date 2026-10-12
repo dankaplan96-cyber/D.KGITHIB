@@ -21,6 +21,7 @@ export const MOODS = {
   cave: 'well', storm: 'well', well: 'well', underworld: 'well', under: 'well',
   workshop: 'workshop',
   zeelich: 'zeelich',
+  desert: 'island', // (until the desert track is written)
   station: 'facility', control: 'facility', facility: 'facility',
   stealth: 'facility_stealth',
   combat: 'combat',

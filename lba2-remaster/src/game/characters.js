@@ -102,6 +102,39 @@ export const LOOKS = {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#86c8a8', ridge: '#3e7a62', tunic: '#5a3a8a', tunicTrim: '#c8a0ff', belt: '#c8a0ff', pants: '#3a2a5a', shoes: '#2a2040',
     eyes: '#e8c040', height: 1.1,
   },
+  // ---- Desert Island (chapters 4–5)
+  ilka: {
+    // Professor Ilka: the Rabbibunny geologist who dug up the first crystals; dusty khaki field clothes, glasses
+    race: 'bunny', outfit: 'tunic', hem: 0.5, slim: true, fur: '#efe4d4', furDark: '#c8b49a', tunic: '#c8a86a', tunicTrim: '#7a5a2a', belt: '#5a3a1a', buckle: '#d8b04a', pants: '#8a6a3a', shoes: '#5a3a1a',
+    eyes: '#2a3a5a', glasses: true, collar: true, collarColor: '#e8dcc0', height: 0.9,
+  },
+  hesk: {
+    // Hesk: Grobo caravan driver and sand-yacht pilot; orange driving coat, goggles up on his head
+    race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.08, skin: '#b0a08a', tunic: '#d0703a', tunicTrim: '#7a3a1a', belt: '#3a2a1a', buckle: '#c8a050', pants: '#5a4a3a', shoes: '#3a2a1a',
+    eyes: '#2a2a2a', goggles: true, height: 1.06,
+  },
+  tarra: {
+    // Mother Tarra: the village elder of Kesh; long plum robe, gold trim, white hair in a bun, a little stooped
+    race: 'quetch', outfit: 'dress', hem: 0.1, stoop: 0.12, slim: true, tunic: '#7a3a5a', tunicTrim: '#e8c060', belt: '#e8c060', pants: '#7a3a5a', shoes: '#4a2a1a',
+    hair: '#ece8e0', skin: '#d8a880', hairStyle: 'bun', nose: 'long', eyes: '#3a2a1a', height: 0.9, neck: 0.08,
+  },
+  dallan: {
+    // Dallan: the project foreman (the guard from the Zeelich dock); teal uniform, brass buttons, a hard hat
+    race: 'quetch', outfit: 'tunic', hem: 0.58, tunic: '#245a6a', tunicTrim: '#c8a050', belt: '#2a2a2a', buckle: '#d8b04a', pants: '#203a48', shoes: '#2a2a2a',
+    hair: '#3a2a1a', skin: '#e0b088', hairStyle: 'tuft', nose: 'long', eyes: '#2a2a1a', moustache: true, buttons: true, hardhat: '#e8e8e0', height: 1.0, neck: 0.08,
+  },
+  desertkid: {
+    race: 'quetch', kid: true, outfit: 'tunic', hem: 0.62, tunic: '#e8d8b0', tunicTrim: '#c86a3a', belt: '#c86a3a', pants: '#8a6a4a', shoes: '#6a4a2a',
+    hair: '#2a1a10', skin: '#d8a070', hairStyle: 'tuft', nose: 'button', eyes: '#2a1a10', height: 0.62, neck: 0.08,
+  },
+  desertTrader: {
+    race: 'grobo', outfit: 'tunic', hem: 0.6, belly: 0.12, skin: '#9aa898', tunic: '#2f7a9a', tunicTrim: '#e8c060', belt: '#5a3a1a', pants: '#3a4a5a', shoes: '#3a2a1a',
+    eyes: '#2a2a2a', hat: '#e8d8b0', height: 1.02,
+  },
+  weaver: {
+    race: 'bunny', outfit: 'tunic', hem: 0.48, belly: 0.06, fur: '#f2e2cc', furDark: '#d0b090', tunic: '#c84a6a', tunicTrim: '#f2d8a0', belt: '#7a2a3a', pants: '#5a3a5a', shoes: '#f2e2cc',
+    eyes: '#4a2a1a', apron: '#e8d8b0', height: 0.86,
+  },
 };
 
 LOOKS.twinsenSculpt = { ...LOOKS.twinsen, poly: null };

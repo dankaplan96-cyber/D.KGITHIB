@@ -27,7 +27,7 @@ what the player knows / doesn't know · the turn · what the player does · the 
 | 1 | The Well | Citadel Island | 35 | ✅ (was the prologue) |
 | 2 | The Joint Project | Citadel Island | 55 | ✅ |
 | 3 | Zeelich | Zeelich | 55 | ✅ (new ending: the shaft is sealed) |
-| 4 | The Dig | Desert Island | 55 | ⬜ |
+| 4 | The Dig | Desert Island | 55 | ✅ (first version; tests/chapter4.mjs) |
 | 5 | Steam and Sand | Desert Island | 50 | ⬜ |
 | 6 | The Pass | Hamalayi | 55 | ⬜ |
 | 7 | The Observatory | Hamalayi | 50 | ⬜ |
@@ -62,7 +62,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
   the bore's own network can open). Baldino: "We can't follow him, and we don't know enough to reverse a bore
   through a shell nobody has seen. The first crystals were dug up on Desert Island. Start there."
 
-### 4 — The Dig ⬜ (Desert Island)
+### 4 — The Dig ✅ (Desert Island)
 - **Wants:** learn what the shell is. **Knows:** crystals came from a dig. **Doesn't know:** that the heat
   is leaking out of the whole planet, not only under Citadel.
 - **Place:** a dry island of mesas and wind; a village around a dying oasis; the project's research post at an
