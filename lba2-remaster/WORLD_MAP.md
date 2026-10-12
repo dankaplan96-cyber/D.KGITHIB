@@ -52,6 +52,18 @@ Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real
 | The dig | three shored terraces down to a carved wall and three stone seals | crystal mites | the shell carving: five vents | carving uncovered |
 | FunFrock's condenser hall (interiors condA, condB) | a concrete arch half buried in a dune; inside a valve hall and a hangar with three condensers and a cargo glider | FunFrock's old drones | route the steam (valves 1, 3, 4), open the roof hatch, the glider north | plumes rise from the dunes once the vent is open |
 
+## The Hamalayi (chapters 6–7) ✅ first version (src/game/hamalayi.js)
+Snow terraces between rock cliffs, impassable peaks all round, falling snow, chimney smoke.
+
+| Place | Identity / landmark | Life | Story role |
+|---|---|---|---|
+| The foothills | the glider's landing, a shepherd's hut, pines | Hesk | arrival |
+| The meltwater gorge | ice floes; a dead tree on the far bank | — | the tree knocked across it is the bridge (ball) |
+| Lhar | stone houses with slate roofs and snow, prayer flags, the frozen icefall | Yorna, Pim, Tashi, Dawa, Old Norbu | the village moves to the monastery |
+| The lift | a rope-and-pulley platform up the cliff; the project's heating station | — | thaw the winch (Pim's fuse for his kite); two trips with ice mites |
+| The monastery | stone hall with a golden roof, prayer wheels, courtyard walls | the villagers | refuge; the ridge path starts here |
+| The observatory and the glacier basin | a drum with a verdigris dome on the peak; ice spikes, the vent's ice cap | the keeper | chapter 7 |
+
 ## Underground: the shell (chapter 3) ✅ (src/game/underground.js; captures/underground/)
 Reached by the drill shaft lift from the Zeelich platform.
 

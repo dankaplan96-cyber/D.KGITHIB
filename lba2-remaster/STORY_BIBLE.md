@@ -29,7 +29,7 @@ what the player knows / doesn't know · the turn · what the player does · the 
 | 3 | Zeelich | Zeelich | 55 | ✅ (new ending: the shaft is sealed) |
 | 4 | The Dig | Desert Island | 55 | ✅ (first version; tests/chapter4.mjs) |
 | 5 | Steam and Sand | Desert Island | 50 | ✅ (first version; tests/chapter5.mjs) |
-| 6 | The Pass | Hamalayi | 55 | ⬜ |
+| 6 | The Pass | Hamalayi | 55 | ✅ (first version; tests/chapter6.mjs) |
 | 7 | The Observatory | Hamalayi | 50 | ⬜ |
 | 8 | Evacuation | Citadel Island (changed) | 55 | ⬜ |
 | 9 | The Council | Zeelich upper districts | 50 | ⬜ |
@@ -88,7 +88,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 - **Result:** the oasis is saved and the village owes Twinsen; Dallan, stranded with them, starts to doubt.
   Hesk flies Twinsen north in an old FunFrock cargo glider (Baldino's spare parts; it can glide, not climb).
 
-### 6 — The Pass ⬜ (Hamalayi)
+### 6 — The Pass ✅ (Hamalayi)
 - **Wants:** reach the ice vent. **The world changes:** the ice is melting from below; villages are cut off
   by slides; meltwater floods the lower paths.
 - **People:** Yorna (old Grobo mountain guide), Pim (her grandson, Arthur's age, wants to be useful); the

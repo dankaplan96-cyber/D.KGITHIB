@@ -102,6 +102,33 @@ export const LOOKS = {
     race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#86c8a8', ridge: '#3e7a62', tunic: '#5a3a8a', tunicTrim: '#c8a0ff', belt: '#c8a0ff', pants: '#3a2a5a', shoes: '#2a2040',
     eyes: '#e8c040', height: 1.1,
   },
+  // ---- the Hamalayi (chapters 6–7)
+  yorna: {
+    // Yorna: an old Grobo mountain guide; a thick felt coat in red and ochre, a fur hat
+    race: 'grobo', outfit: 'robe', hem: 0.12, stoop: 0.1, belly: 0.08, skin: '#a8a0b0', tunic: '#a83a2a', tunicTrim: '#e8b84a', belt: '#5a3a1a', pants: '#5a3a2a', shoes: '#3a2a1a',
+    eyes: '#2a2a2a', hat: '#8a6a4a', height: 1.0,
+  },
+  pim: {
+    race: 'grobo', kid: true, outfit: 'tunic', hem: 0.6, skin: '#b0a8bc', tunic: '#2f7ad8', tunicTrim: '#e8c040', belt: '#5a3a1a', pants: '#8a3a2a', shoes: '#3a2a1a',
+    eyes: '#2a2a2a', hat: '#d8302a', height: 0.62,
+  },
+  lharMan: {
+    race: 'quetch', outfit: 'tunic', hem: 0.6, belly: 0.06, tunic: '#7a4a2a', tunicTrim: '#e8c060', belt: '#3a2a1a', pants: '#4a3a3a', shoes: '#2a1a10',
+    hair: '#2a1a10', skin: '#d8a880', hairStyle: 'tuft', nose: 'long', eyes: '#2a1a10', moustache: true, height: 0.98, neck: 0.08,
+  },
+  lharWoman: {
+    race: 'quetch', outfit: 'dress', hem: 0.12, slim: true, tunic: '#2f6a5a', tunicTrim: '#f2d8a0', belt: '#d8302a', pants: '#2f6a5a', shoes: '#3a2a1a',
+    hair: '#1a1210', skin: '#e0b090', hairStyle: 'longtail', nose: 'button', eyes: '#2a1a10', lashes: true, height: 0.9, neck: 0.08,
+  },
+  lharElder: {
+    race: 'bunny', outfit: 'robe', hem: 0.1, stoop: 0.14, fur: '#f0ece8', furDark: '#c8c0b8', tunic: '#5a3a7a', tunicTrim: '#e8c060', belt: '#e8c060', pants: '#3a2a4a', shoes: '#f0ece8',
+    eyes: '#2a2a3a', glasses: true, height: 0.82,
+  },
+  keeper: {
+    // Sefa, keeper of the observatory: a tall Esmer in a star-blue robe
+    race: 'esmer', outfit: 'robe', hem: 0.06, slim: true, skin: '#8ac0d8', ridge: '#3a6a8a', tunic: '#2a3a7a', tunicTrim: '#e8e0b0', belt: '#e8e0b0', pants: '#1a2a4a', shoes: '#2a2040',
+    eyes: '#f0d060', height: 1.08,
+  },
   // ---- Desert Island (chapters 4–5)
   ilka: {
     // Professor Ilka: the Rabbibunny geologist who dug up the first crystals; dusty khaki field clothes, glasses

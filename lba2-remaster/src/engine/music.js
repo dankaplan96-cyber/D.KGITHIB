@@ -22,6 +22,7 @@ export const MOODS = {
   workshop: 'workshop',
   zeelich: 'zeelich',
   desert: 'island', // (until the desert track is written)
+  hamalayi: 'well',  // (until the mountain track is written)
   station: 'facility', control: 'facility', facility: 'facility',
   stealth: 'facility_stealth',
   combat: 'combat',
