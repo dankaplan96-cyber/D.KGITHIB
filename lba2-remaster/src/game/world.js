@@ -235,7 +235,8 @@ function islandColor(x, z, h, slope, c) {
   if (tintGrid) {
     // concave spots (cliff feet) darker, convex rims lighter
     const cv = tintGrid(x, z) - h;
-    c.multiplyScalar(Math.max(0.62, Math.min(1.12, 1 + cv * -0.22)));
+    // (kept subtle: a strong darkening read as a dirty halo around every cliff foot)
+    c.multiplyScalar(Math.max(0.86, Math.min(1.06, 1 + cv * -0.1)));
   }
   if (slope > 0.9) c.multiplyScalar(0.92 + Math.min(0.1, (h % LEVEL_STEP) * 0.03));
 }
@@ -246,7 +247,9 @@ function islandSplat(x, z, h, slope, w) {
   w[0] = smoothstep(0.7, 1.4, h + n * 0.3);
   w[1] = 1 - w[0];
   const beach = beachMask(x, z) * smoothstep(0.8, 0.86, coastT(x, z));
-  w[2] = smoothstep(0.75, 1.15, slope + n * 0.12) * (1.6 - beach * 1.6);
+  // rock only where the ground is really steep: the cliff meshes carry the rock look, and a wider band of
+  // rock-tinted terrain around them read as a blurred purple smear on the ~1 m grid
+  w[2] = smoothstep(1.05, 1.4, slope + n * 0.08) * (1.6 - beach * 1.6);
   w[3] = 0; w[4] = 0;
   if (h > 0.8) {
     const pd = pathDist(x, z);

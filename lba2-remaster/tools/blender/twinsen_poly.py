@@ -24,8 +24,11 @@ S = 2.1  # the game's height for H (top of the hair)
 
 COL = {
     'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#e98c6c', 'skin': '#e2bc90', 'hair': '#634327',
-    'white': '#dcd8ec', 'iris': '#2a6a9a', 'medal': '#c89e53', 'medalFace': '#ddb468', 'cord': '#f7bb57',
+    'white': '#ecebf2', 'iris': '#2f78b0', 'pupil': '#141820', 'lid': '#5a3a28', 'medal': '#c89e53', 'medalFace': '#e2bc6e',
+    'cord': '#c8502a', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414',
 }
+HEAD_K = 1.12                     # the head, larger than the original's measured sections (references: ≈0.19 H)
+CHIN = (0.0, 0.80, 0.09)          # …scaled about the chin, so the neck joint stays where it was
 
 
 def smooth(a, b, x):
@@ -45,13 +48,16 @@ def tilt(p):
 
 
 class Part:
-    def __init__(self, name, mat, weights, angle=40, rigid=None, tilted=False):
-        self.name, self.mat, self.weights, self.angle, self.rigid, self.tilted = name, mat, weights, angle, rigid, tilted
+    def __init__(self, name, mat, weights, angle=40, rigid=None, tilted=False, big=False):
+        self.name, self.mat, self.weights, self.angle, self.rigid, self.tilted, self.big = name, mat, weights, angle, rigid, tilted, big
         self.v, self.f = [], []
 
     def add(self, verts, faces):
         o = len(self.v)
-        self.v += [tilt(p) if self.tilted else tuple(p) for p in verts]
+        pts = [tilt(p) if self.tilted else tuple(p) for p in verts]
+        if self.big:
+            pts = [scale_about(p, CHIN, HEAD_K) for p in pts]
+        self.v += pts
         self.f += [[i + o for i in f] for f in faces]
 
 
@@ -127,6 +133,56 @@ def box_wedge(part, x0, x1, z0, z1, yb, yt, yfront):
     part.add(v, f)
 
 
+def scale_about(p, c, k):
+    return tuple(c[i] + (p[i] - c[i]) * k for i in range(3))
+
+
+def tube(part, a, b, r1, r2, n=10, cap0=False, cap1=True, squash=1.0):
+    # a tapered tube from a to b (round, or squashed across), closed at the ends asked for
+    a, b = Vector(a), Vector(b)
+    d = (b - a).normalized()
+    u = d.cross(Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))).normalized()
+    w = d.cross(u).normalized()
+    verts, faces = [], []
+    for c, r in ((a, r1), (b, r2)):
+        for i in range(n):
+            t = 2 * math.pi * i / n
+            q = c + u * (math.cos(t) * r) + w * (math.sin(t) * r * squash)
+            verts.append(tuple(q))
+    for i in range(n):
+        faces.append([i, (i + 1) % n, n + (i + 1) % n, n + i])
+    if cap0:
+        verts.append(tuple(a)); faces += [[(i + 1) % n, i, 2 * n] for i in range(n)]
+    if cap1:
+        verts.append(tuple(b)); ci = len(verts) - 1; faces += [[n + i, n + (i + 1) % n, ci] for i in range(n)]
+    part.add(verts, faces)
+
+
+def loft_along(part, rings, cap0=True, cap1=True):
+    # rings: lists of points (equal counts); quads between them, fans at the ends
+    n = len(rings[0])
+    verts = [p for r in rings for p in r]
+    faces = []
+    for j in range(len(rings) - 1):
+        for i in range(n):
+            a, b = j * n + i, j * n + (i + 1) % n
+            faces.append([a, b, b + n, a + n])
+    if cap0:
+        c = tuple(sum(p[k] for p in rings[0]) / n for k in range(3)); verts.append(c); ci = len(verts) - 1
+        faces += [[(i + 1) % n, i, ci] for i in range(n)]
+    if cap1:
+        c = tuple(sum(p[k] for p in rings[-1]) / n for k in range(3)); verts.append(c); ci = len(verts) - 1
+        o = (len(rings) - 1) * n
+        faces += [[o + i, o + (i + 1) % n, ci] for i in range(n)]
+    part.add(verts, faces)
+
+
+def ell_ring(c, ax1, ax2, r1, r2, n=10):
+    # an elliptical ring around centre c spanned by unit axes ax1, ax2
+    c, ax1, ax2 = Vector(c), Vector(ax1), Vector(ax2)
+    return [tuple(c + ax1 * (math.cos(2 * math.pi * i / n) * r1) + ax2 * (math.sin(2 * math.pi * i / n) * r2)) for i in range(n)]
+
+
 # ------------------------------------------------------------------ the model (fractions of H)
 def side(x):
     return 'L' if x > 0 else 'R'
@@ -142,7 +198,11 @@ def w_cape(p):
 
 cape = Part('cape', 'tunic', w_cape, angle=55)
 hem = lambda t: 0.448 - 0.04 * abs(math.sin(t)) ** 1.6   # the hem rises over the belt in front and behind
-N = 16
+N = 24
+# the cloth has thickness: an inner lip turns up under the cape's edge (darker, in its own shadow)
+lip = Part('capeLip', 'inner', w_cape, angle=70)
+loft(lip, [ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62)])
+PARTS.append(lip)
 loft(cape, [
     ring(hem, 0.212, 0.128, -0.077, N, 0.62),
     ring(0.54, 0.214, 0.132, -0.077, N, 0.62),
@@ -172,27 +232,66 @@ def w_robe(p):
 
 
 robe = Part('robe', 'tunic', w_robe, angle=55)
+
+
+def folds(pts, amp):
+    # soft folds: push the section in and out around its circumference (deeper toward the hem)
+    out = []
+    for k, (x, y, z) in enumerate(pts):
+        t = 2 * math.pi * k / len(pts)
+        f = 1 + amp * math.sin(6 * t + 0.4)
+        out.append((x * f, y, z * f))
+    return out
+
+
 loft(robe, [
-    ring(0.04, 0.156, 0.131, -0.129, N, 0.7),
-    ring(0.12, 0.161, 0.139, -0.12, N, 0.7),
-    ring(0.24, 0.164, 0.144, -0.108, N, 0.7),
-    ring(0.35, 0.152, 0.143, -0.092, N, 0.72),
+    folds(ring(0.04, 0.158, 0.133, -0.13, N, 0.7), 0.035),
+    folds(ring(0.12, 0.161, 0.139, -0.12, N, 0.7), 0.028),
+    folds(ring(0.24, 0.164, 0.144, -0.108, N, 0.7), 0.018),
+    folds(ring(0.35, 0.152, 0.143, -0.092, N, 0.72), 0.008),
     ring(0.415, 0.104, 0.125, -0.076, N, 0.75),
 ])
 PARTS.append(robe)
+rlip = Part('robeLip', 'inner', w_robe, angle=70)
+loft(rlip, [folds(ring(0.07, 0.146, 0.12, -0.118, N, 0.7), 0.035), folds(ring(0.04, 0.156, 0.131, -0.128, N, 0.7), 0.035)])
+PARTS.append(rlip)
+# the belt's knot at the front left, two ends hanging
+knot = Part('knot', 'belt', lambda p: {'torso': 1.0}, angle=50)
+sphere(knot, (0.045, 0.438, 0.128), 0.016, 8, 6)
+tube(knot, (0.04, 0.43, 0.126), (0.03, 0.37, 0.14), 0.008, 0.007, 6, squash=0.5)
+tube(knot, (0.052, 0.43, 0.126), (0.068, 0.375, 0.136), 0.008, 0.007, 6, squash=0.5)
+PARTS.append(knot)
 
 for sx in (1, -1):
     s = side(sx)
-    shoe = Part('shoe' + s, 'shoe', (lambda b: (lambda p: {b: 1.0}))('foot' + s), angle=30)
-    xs = sorted([sx * 0.052, sx * 0.103])
-    box_wedge(shoe, xs[0], xs[1], -0.052, 0.103, 0.0, 0.036, 0.014)
+    fb = (lambda b: (lambda p: {b: 1.0}))('foot' + s)
+    # slipper: sections from the heel to a slightly pointed, lifted toe, on a darker sole
+    cx = sx * 0.0775
+    secs = [(-0.05, 0.022, 0.03, 0.0), (-0.02, 0.026, 0.036, 0.0), (0.03, 0.027, 0.032, 0.0), (0.07, 0.022, 0.022, 0.002), (0.095, 0.012, 0.012, 0.008)]
+    shoe = Part('shoe' + s, 'shoe', fb, angle=45)
+    loft_along(shoe, [[(cx + hw * math.cos(2 * math.pi * i / 10), 0.004 + yo + (h * (0.5 + 0.5 * math.sin(2 * math.pi * i / 10))), z) for i in range(10)] for z, hw, h, yo in secs])
     PARTS.append(shoe)
-    hand = Part('hand' + s, 'skin', (lambda b: (lambda p: {b: 1.0}))('hand' + s), angle=180)
-    sphere(hand, (sx * 0.178, 0.36, 0.012), 0.035, 10, 7)
+    sole = Part('sole' + s, 'sole', fb, angle=30)
+    box_wedge(sole, cx - 0.026, cx + 0.026, -0.052, 0.088, 0.0, 0.006, 0.006)
+    PARTS.append(sole)
+    hb = (lambda b: (lambda p: {b: 1.0}))('hand' + s)
+    # the sleeve's cuff: a flared opening under the cape's side, dark inside, the wrist coming out of it
+    cuff = Part('cuff' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=50)
+    tube(cuff, (sx * 0.182, 0.455, 0.012), (sx * 0.179, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
+    PARTS.append(cuff)
+    cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
+    cin.add(ell_ring((sx * 0.179, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
+    PARTS.append(cin)
+    # the hand: a mitten (palm and closed fingers) with a thumb, palm turned to the body
+    hand = Part('hand' + s, 'skin', hb, angle=60)
+    hx, hz = sx * 0.178, 0.014
+    loft_along(hand, [ell_ring((hx, y, hz + dz), (1, 0, 0), (0, 0, 1), rx, rz, 10) for y, rx, rz, dz in
+                      [(0.40, 0.014, 0.018, 0.0), (0.383, 0.017, 0.026, 0.002), (0.362, 0.016, 0.028, 0.004), (0.343, 0.013, 0.024, 0.006), (0.333, 0.008, 0.015, 0.007)]])
+    tube(hand, (hx - sx * 0.004, 0.385, hz + 0.02), (hx - sx * 0.012, 0.36, hz + 0.036), 0.0075, 0.006, 7)
     PARTS.append(hand)
 
 neck = Part('neck', 'skin', lambda p: {'neck': 1 - smooth(0.79, 0.83, p[1]), 'head': smooth(0.79, 0.83, p[1])}, angle=60)
-loft(neck, [ring(0.735, 0.027, 0.078, 0.022, 8, 1.0), ring(0.83, 0.027, 0.078, 0.022, 8, 1.0)])
+loft(neck, [ring(0.735, 0.031, 0.08, 0.02, 12, 0.9), ring(0.785, 0.027, 0.078, 0.022, 12, 0.9), ring(0.83, 0.028, 0.082, 0.02, 12, 0.9)])
 PARTS.append(neck)
 
 # the head: horizontal sections of the original (half outlines from the front centre round the side to the back
@@ -231,8 +330,16 @@ def head_ring(y, half):
     return pts
 
 
-head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=50)
-rings = [head_ring(y, hh) for y, hh in HEAD]
+head = Part('head', 'skin', lambda p: {'head': 1.0}, angle=60, big=True)
+# smoother than the original: 11 points per half section, and a blended section between each measured pair
+K = 11
+FINE = []
+for (y0, h0), (y1, h1) in zip(HEAD, HEAD[1:]):
+    a, b = resample(h0, 25), resample(h1, 25)
+    FINE.append((y0, h0))
+    FINE.append(((y0 + y1) / 2, [((pa[0] + pb[0]) / 2, (pa[1] + pb[1]) / 2) for pa, pb in zip(a, b)]))
+FINE.append(HEAD[-1])
+rings = [head_ring(y, hh) for y, hh in FINE]
 loft(head, rings)
 # chin and crown: close the ends on a point
 n = len(rings[0])
@@ -261,31 +368,74 @@ def head_front(x, y):
     return 0.1
 
 
-hair = Part('hair', 'hair', lambda p: {'head': 1.0}, angle=180)
-sphere(hair, (-0.004, 0.95, -0.05), 0.05, 10, 7)
+hair = Part('hair', 'hair', lambda p: {'head': 1.0}, angle=70, big=True)
+
+
+def back_arc(y, half, zcut, m, grow):
+    # the part of a head section behind z = zcut (left side → back → right side), pushed out by `grow`
+    full = [(x, z) for x, z in resample(half, 25)]
+    pts = [(x, z) for x, z in full if z <= zcut]
+    arc = [(px, pz) for px, pz in reversed(pts)] + [(-px, pz) for px, pz in pts[1:]]
+    # resample the arc to m points
+    seg = [math.dist(arc[i], arc[i + 1]) for i in range(len(arc) - 1)]
+    tot = sum(seg) or 1
+    outp = []
+    for j in range(m):
+        d, i = tot * j / (m - 1), 0
+        while i < len(seg) - 1 and d > seg[i]:
+            d -= seg[i]; i += 1
+        t = min(1, d / seg[i]) if seg[i] else 0
+        x = arc[i][0] + (arc[i + 1][0] - arc[i][0]) * t; z = arc[i][1] + (arc[i + 1][1] - arc[i][1]) * t
+        cz = 0.06
+        r = math.hypot(x, z - cz) or 1
+        outp.append((x + x / r * grow, y, z + (z - cz) / r * grow))
+    return outp
+
+
+# the hairline climbs from behind the ears to the crown; the cap is a shell 6 mm off the skull
+cap_rows = [(y, back_arc(y, hh, zc, 13, 0.006)) for (y, hh), zc in zip(HEAD[2:], [0.0, 0.03, 0.05, 0.07, 0.08])]
+M = 13
+hv, hf = [], []
+for j, (y, row) in enumerate(cap_rows):
+    hv += row
+for j in range(len(cap_rows) - 1):
+    for i in range(M - 1):
+        a, b = j * M + i, j * M + i + 1
+        hf.append([a + M, b + M, b, a])
+hv.append((0.0, 0.962, 0.03)); top = len(hv) - 1
+o = (len(cap_rows) - 1) * M
+hf += [[o + i + 1, o + i, top] for i in range(M - 1)]
+hair.add(hv, hf)
 PARTS.append(hair)
-bun1 = Part('bun1', 'hair', lambda p: {'tail0': 1.0}, angle=180)
-sphere(bun1, (0.0, 0.924, -0.104), 0.035, 9, 6)
+# the topknot: a bun with a dark tie, then the short tail of the knot
+bun1 = Part('bun1', 'hair', lambda p: {'tail0': 1.0}, angle=60, big=True)
+sphere(bun1, (0.0, 0.93, -0.098), 0.034, 10, 7, sy=0.85)
 PARTS.append(bun1)
-bun2 = Part('bun2', 'hair', lambda p: {'tail1': 1.0}, angle=180)
-sphere(bun2, (0.0, 0.887, -0.121), 0.025, 8, 5)
+tie = Part('tie', 'tie', lambda p: {'tail0': 1.0}, angle=60, big=True)
+tube(tie, (0.0, 0.94, -0.066), (0.0, 0.937, -0.075), 0.02, 0.021, 10, cap0=False, cap1=False)
+PARTS.append(tie)
+bun2 = Part('bun2', 'hair', lambda p: {'tail1': 1.0}, angle=60, big=True)
+tube(bun2, (0.0, 0.905, -0.118), (0.0, 0.872, -0.124), 0.022, 0.01, 9, cap0=True)
 PARTS.append(bun2)
 
 # medallion: an octagonal gold plate on the chest, a lighter face, the cord running up to the collar
-med = Part('medal', 'medal', lambda p: {'torso': 1.0}, angle=30)
-mc, mr, mz = (0.0, 0.625), 0.043, 0.141
-oct_ = [(mc[0] - mr * math.sin(2 * math.pi * (k + 0.5) / 8), mc[1] + mr * math.cos(2 * math.pi * (k + 0.5) / 8)) for k in range(8)]
-v = [(x, y, mz - 0.006) for x, y in oct_] + [(x, y, mz + 0.004) for x, y in oct_]
-f = [[i, (i + 1) % 8, 8 + (i + 1) % 8, 8 + i] for i in range(8)]
+med = Part('medal', 'medal', lambda p: {'torso': 1.0}, angle=40)
+mc, mr, mz = (0.0, 0.625), 0.045, 0.141
+NM = 16
+circ = lambda r: [(mc[0] - r * math.sin(2 * math.pi * k / NM), mc[1] + r * math.cos(2 * math.pi * k / NM)) for k in range(NM)]
+rim, inn = circ(mr), circ(mr * 0.78)
+v = [(x, y, mz - 0.006) for x, y in rim] + [(x, y, mz + 0.005) for x, y in rim] + [(x, y, mz + 0.006) for x, y in inn]
+f = [[i, (i + 1) % NM, NM + (i + 1) % NM, NM + i] for i in range(NM)] + [[NM + i, NM + (i + 1) % NM, 2 * NM + (i + 1) % NM, 2 * NM + i] for i in range(NM)]
 med.add(v, f)
 PARTS.append(med)
-medf = Part('medalFace', 'medalFace', lambda p: {'torso': 1.0}, angle=30)
-medf.add([(x, y, mz + 0.0045) for x, y in oct_], [list(range(8))])
+medf = Part('medalFace', 'medalFace', lambda p: {'torso': 1.0}, angle=40)
+fc = circ(mr * 0.78)
+medf.add([(x, y, mz + 0.0045) for x, y in fc] + [(mc[0], mc[1], mz + 0.009)], [[i, (i + 1) % NM, NM] for i in range(NM)][::1])
 PARTS.append(medf)
 cord = Part('cord', 'cord', lambda p: {'torso': 1.0}, angle=180)
 for sx in (1, -1):
     pts = [(sx * 0.032, 0.768, 0.072), (sx * 0.024, 0.72, 0.112), (sx * 0.012, 0.675, 0.136), (sx * 0.004, 0.664, 0.142)]
-    w = 0.0028
+    w = 0.0036
     vv = []
     for x, y, z in pts:
         vv += [(x - w, y, z + 0.002), (x + w, y, z + 0.002)]
@@ -299,10 +449,17 @@ for sx in (1, -1):
     cx, cy = sx * 0.037, 0.896
     cz = head_front(cx, cy) + 0.003
     def on_face(dx, dy, lift=0.0):
-        return (cx + dx, cy + dy, head_front(cx + dx, cy + dy) + 0.003 + lift)
-    white = [on_face(-0.025, -0.002), on_face(0, -0.014), on_face(0.025, 0.002), on_face(0, 0.015)]
-    iris = [on_face(sx * 0.004 - 0.01, -0.001, 0.0015), on_face(sx * 0.004, -0.011, 0.0015), on_face(sx * 0.004 + 0.01, -0.001, 0.0015), on_face(sx * 0.004, 0.009, 0.0015)]
-    EYES.append({'pivot': (cx, cy, cz), 'tris': [(white, 'white'), (iris, 'iris')]})
+        p = (cx + dx, cy + dy, head_front(cx + dx, cy + dy) + 0.003 + lift)
+        return scale_about(tilt(p) if False else p, CHIN, HEAD_K)
+    # almond: wider than tall, the outer corner a touch higher
+    white = [on_face(0.023 * math.cos(t) , 0.012 * math.sin(t) + sx * 0.002 * math.cos(t)) for t in [2 * math.pi * k / 10 for k in range(10)]]
+    ic = (sx * 0.003, 0.0)
+    iris = [on_face(ic[0] + 0.0095 * math.cos(t), ic[1] + 0.0095 * math.sin(t), 0.0012) for t in [2 * math.pi * k / 10 for k in range(10)]]
+    pupil = [on_face(ic[0] + 0.0045 * math.cos(t), ic[1] + 0.0045 * math.sin(t), 0.0022) for t in [2 * math.pi * k / 8 for k in range(8)]]
+    lid = [on_face(-0.025, 0.002, 0.0026), on_face(-0.012, 0.0135, 0.0026), on_face(0.0, 0.0155, 0.0026), on_face(0.013, 0.0145, 0.0026), on_face(0.026, 0.006, 0.0026),
+           on_face(0.024, 0.0095, 0.0026), on_face(0.013, 0.0185, 0.0026), on_face(0.0, 0.0195, 0.0026), on_face(-0.012, 0.0175, 0.0026), on_face(-0.024, 0.0055, 0.0026)]
+    piv = scale_about((cx, cy, cz), CHIN, HEAD_K)
+    EYES.append({'pivot': piv, 'tris': [(white, 'white'), (iris, 'iris'), (pupil, 'pupil'), (lid, 'lid')]})
 
 
 # ------------------------------------------------------------------ arms: model in the display pose, store the rest pose
@@ -449,12 +606,22 @@ for e in EYES:
     piv = e['pivot']
     ed = {'bone': 'head', 'pivot': [round(c * S, 5) for c in piv], 'pos': [], 'col': []}
     for quad, mat in e['tris']:
-        for t in ((0, 1, 2), (0, 2, 3)):
+        nq = len(quad)
+        if mat == 'lid':   # a strip: the lower edge forward, the upper edge back
+            h = nq // 2
+            tl = []
+            for i in range(h - 1):
+                a, b, c, d = i, i + 1, nq - 2 - i, nq - 1 - i
+                tl += [(a, b, c), (a, c, d)]
+        else:
+            tl = [(0, k, k + 1) for k in range(1, nq - 1)]
+        for t in tl:
             for i in t:
                 ed['pos'] += [round((quad[i][k] - piv[k]) * S, 5) for k in range(3)]
                 ed['col'] += hexrgb(COL[mat])
+        out['tris'] += len(tl)
         me = bpy.data.meshes.new('eye_' + mat)
-        me.from_pydata([gb(p) for p in quad], [], [[0, 1, 2, 3]])
+        me.from_pydata([gb(p) for p in quad], [], [list(range(nq))])
         me.materials.append(mats[mat])
         ob = bpy.data.objects.new('eye_' + mat, me)
         bpy.context.scene.collection.objects.link(ob)
@@ -463,7 +630,6 @@ for e in EYES:
         ob.parent_bone = 'head'
         ob.matrix_world = Matrix.Identity(4)
     out['eyes'].append(ed)
-    out['tris'] += 4
 
 json.dump(out, open(OUT, 'w'), separators=(',', ':'))
 print('tris', out['tris'], 'verts', len(out['pos']) // 3, 'bones', out['bones'])

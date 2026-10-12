@@ -1,5 +1,5 @@
 // Renderer + post-processing. Two looks:
-//   "2026": full resolution, soft shadows, ACES tonemapping, bloom.
+//   "2026": full resolution, 4× MSAA, soft shadows, neutral tone mapping, restrained bloom.
 //   "1997": low internal resolution, nearest upscaling, flat shading,
 //           posterised + dithered colour - a nod to the original.
 import * as THREE from 'three';
@@ -44,7 +44,10 @@ export class Renderer {
   setup(scene, camera) {
     this.scene = scene;
     this.camera = camera;
-    const c = (this.composer = new EffectComposer(this.renderer));
+    // the scene renders into a multisampled half-float target: the canvas's own antialias doesn't reach
+    // the post-processing chain, so without this the "2026" look had no anti-aliasing at all
+    const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4 });
+    const c = (this.composer = new EffectComposer(this.renderer, rt));
     c.addPass(new RenderPass(scene, camera));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.35, 0.92);
     c.addPass(this.bloom);
@@ -84,6 +87,9 @@ export class Renderer {
     this.renderer.setPixelRatio(pr);
     this.renderer.setSize(w, h);
     if (this.composer) {
+      // MSAA: 4× on high, 2× on medium, none on low / retro (the retro look wants hard pixels)
+      const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' ? 2 : 4;
+      for (const t of [this.composer.renderTarget1, this.composer.renderTarget2]) if (t.samples !== ms) { t.samples = ms; t.dispose(); }
       this.composer.setPixelRatio(pr);
       this.composer.setSize(w, h);
       this.bloom.enabled = !this.retro && this.quality !== 'low';

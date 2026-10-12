@@ -135,7 +135,7 @@ export function rockGeometry(seed = 1) {
 export function grassClumpGeometry(seed = 1, blades = 9) {
   const r = rng(seed);
   const pos = [], col = [], idx = [];
-  const root = new THREE.Color('#3d7a2a'), tip = new THREE.Color('#a6d35e');
+  const root = new THREE.Color('#4a742c'), tip = new THREE.Color('#b0cc62'); // (warm, toward the lawns' olive)
   const c = new THREE.Color();
   for (let b = 0; b < blades; b++) {
     const a = r() * Math.PI * 2, lean = 0.15 + r() * 0.35, h = 0.28 + r() * 0.32, w = 0.03 + r() * 0.02;

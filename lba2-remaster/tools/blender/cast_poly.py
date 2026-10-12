@@ -124,6 +124,14 @@ def build(name):
         ym = (hipsY - 0.08 + hemY) / 2
         rings.append(ring(ym, (hipR + hemR) / 2, (0.125 * wide + hemR * 0.85) / 2, -(0.11 * wide + hemR * 0.8) / 2, N, 0.7))
     rings.append(ring(hemY, hemR, hemR * 0.85, -hemR * 0.8, N, 0.7))
+    if outfit in ('dress', 'robe') or hemY < hipsY - 0.4:
+        # soft folds below the hips, deeper toward the hem (cloth, not a tube)
+        def fold(r, amp):
+            return [(x * (1 + amp * math.sin(6 * 2 * math.pi * k / len(r) + 0.4)), y, z * (1 + amp * math.sin(6 * 2 * math.pi * k / len(r) + 0.4))) for k, (x, y, z) in enumerate(r)]
+        n_ = len(rings)
+        rings = [fold(r, 0.03 * max(0, (i - 1)) / max(1, n_ - 2)) if i >= 2 else r for i, r in enumerate(rings)]
+        lip = b.P('hemLip', '#00000000' if False else trim, w_skirt, 70)
+        loft(lip, [ring(hemY + 0.03, hemR * 0.93, hemR * 0.79, -hemR * 0.74, N, 0.7), ring(hemY, hemR * 0.995, hemR * 0.845, -hemR * 0.795, N, 0.7)])
     loft(skirt, rings)
     hem = b.P('hem', trim, w_skirt, 50)
     loft(hem, [ring(hemY - 0.002, hemR * 1.01, hemR * 0.86, -hemR * 0.81, N, 0.7), ring(hemY + 0.035, hemR * 0.99, hemR * 0.85, -hemR * 0.8, N, 0.7)])
@@ -166,7 +174,19 @@ def build(name):
         if grobo:
             sphere(shoe, (ft[0], 0.05, ft[2] + 0.03), 0.09, 8, 5, (1, 0.6, 1.25))
         else:
-            box(shoe, ft[0] - fx, ft[0] + fx, 0.0, fh, ft[2] - 0.05, ft[2] + fl, top_front=fh * 0.45)
+            # a shaped shoe: sections from the heel to a rounded toe, the top sloping down to it
+            secs = [(-0.05, 0.8, 1.0), (-0.02, 0.95, 1.05), (fl * 0.45, 1.0, 0.85), (fl * 0.8, 0.85, 0.55), (fl, 0.45, 0.32)]
+            rings_ = []
+            for dz, wk, hk in secs:
+                rings_.append([(ft[0] + fx * wk * math.cos(2 * math.pi * k / 10), 0.004 + fh * hk * 0.66 * (1 + math.sin(2 * math.pi * k / 10)), ft[2] + dz) for k in range(10)])
+            from lbapoly import loft as _lf  # (rings along z: same quad pattern)
+            vv = [p for r in rings_ for p in r]
+            ff = [[j * 10 + i, j * 10 + (i + 1) % 10, (j + 1) * 10 + (i + 1) % 10, (j + 1) * 10 + i] for j in range(len(rings_) - 1) for i in range(10)]
+            c0 = tuple(sum(p[k] for p in rings_[0]) / 10 for k in range(3)); c1 = tuple(sum(p[k] for p in rings_[-1]) / 10 for k in range(3))
+            vv += [c0, c1]
+            ff += [[(i + 1) % 10, i, len(vv) - 2] for i in range(10)] + [[40 + i, 40 + (i + 1) % 10, len(vv) - 1] for i in range(10)]
+            shoe.add(vv, ff)
+            box(b.P('sole' + s, '#3a2a20', 'foot' + s, 30), ft[0] - fx * 0.95, ft[0] + fx * 0.95, 0.0, 0.008, ft[2] - 0.05, ft[2] + fl * 0.95)
 
     # ---------------------------------------------------------------- arms and hands
     for s, sx in (('L', 1), ('R', -1)):
@@ -178,7 +198,25 @@ def build(name):
         tube(b.P('fore' + s, tunic, 'el' + s, 50), el, wrist, ra, ra * 1.08, 8)  # (sleeves widen a little toward the cuff)
         tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, 0.72), lerp(el, hd, 0.86), ra * 1.12, ra * 1.12, 8)
         hr = (0.062 if grobo else 0.046) * (0.9 if kid else 1)
-        sphere(b.P('hand' + s, skin, 'hand' + s, 180), (hd[0], hd[1] - 0.035, hd[2] + 0.01), hr, 8, 6)
+        # the hand: a mitten (palm and closed fingers) continuing the forearm, with a thumb toward the front
+        hp_ = b.P('hand' + s, skin, 'hand' + s, 60)
+        ax = [hd[i] - wrist[i] for i in range(3)]
+        al = math.sqrt(sum(c * c for c in ax)) or 1
+        ax = [c / al for c in ax]
+        # (it starts inside the cuff, so wrist and sleeve always overlap)
+        base = tuple(lerp(el, hd, 0.8)[i] + (0, -0.004, 0.004)[i] for i in range(3))
+        prof = [(0.0, 0.62, 0.66), (0.55, 0.8, 1.0), (1.15, 0.8, 1.08), (1.75, 0.62, 0.9), (2.05, 0.28, 0.45)]
+        side_ = (1.0, 0.0, 0.0)
+        fwd = (0.0, 0.0, 1.0)
+        rings_ = []
+        for d, rx, rz in prof:
+            cc = [base[i] + ax[i] * d * hr for i in range(3)]
+            rings_.append([(cc[0] + side_[0] * math.cos(2 * math.pi * k / 9) * rx * hr * 0.62, cc[1] + ax[1] * 0, cc[2] + fwd[2] * math.sin(2 * math.pi * k / 9) * rz * hr) for k in range(9)])
+        loft(hp_, rings_, cap_bottom=True, cap_top=True)
+        th0 = (base[0] - sx * 0.2 * hr, base[1] - 0.7 * hr, base[2] + 0.6 * hr)
+        tube(hp_, th0, (th0[0] - sx * 0.12 * hr, th0[1] - 0.7 * hr, th0[2] + 0.5 * hr), 0.27 * hr, 0.2 * hr, 7)
+        # a rounded shoulder cap so the sleeve grows out of the body instead of a pipe meeting a box
+        sphere(b.P('shoulder' + s, tunic, 'sh' + s, 50), (sh[0] - sx * 0.01, sh[1] + 0.005, sh[2]), ra * 1.25, 9, 6, (1.0, 0.85, 1.0))
         if L.get('brace') and s == 'R':
             tube(b.P('brace', '#c89a48', 'el' + s, 30), lerp(el, hd, 0.35), lerp(el, hd, 0.6), ra * 1.18, ra * 1.12, 8)
 
@@ -197,13 +235,20 @@ def build(name):
 
     def eyes_on(front, ey, ex, size, color, white='#e4e0f0'):
         # flat diamonds on a face whose surface depth is front(x, y)
+        lidc = L.get('lidColor') or (L.get('hair') if race == 'quetch' else '#2a2420') or '#3a2a20'
         for sx in (1, -1):
             cx = sx * ex
             on = lambda dx, dy, lift=0.0: (cx + dx, ey + dy, front(cx + dx, ey + dy) + 0.004 + lift)
-            w, h = size, size * 0.6
-            wq = [on(-w, -h * 0.15), on(0, -h), on(w, h * 0.15), on(0, h)]
-            iq = [on(sx * w * 0.1 - w * 0.45, 0, 0.002), on(sx * w * 0.1, -h * 0.75, 0.002), on(sx * w * 0.1 + w * 0.45, 0, 0.002), on(sx * w * 0.1, h * 0.75, 0.002)]
-            b.eye(on(0, 0), [(wq, white), (iq, color)])
+            w, h = size * 0.92, size * 0.52
+            ts = [2 * math.pi * k / 10 for k in range(10)]
+            # almond white (outer corner a touch higher), a round iris looking slightly inward, the pupil, the upper lid
+            wq = [on(w * math.cos(t), h * math.sin(t) + sx * h * 0.12 * math.cos(t)) for t in ts]
+            ic, ir = sx * -w * 0.08, h * 0.78
+            iq = [on(ic + ir * math.cos(t), ir * math.sin(t), 0.0012) for t in ts]
+            pq = [on(ic + ir * 0.45 * math.cos(t), ir * 0.45 * math.sin(t), 0.0022) for t in ts[::1][:10]]
+            lid = [on(-w * 1.05, h * 0.15, 0.0028), on(-w * 0.5, h * 1.02, 0.0028), on(0, h * 1.18, 0.0028), on(w * 0.5, h * 1.08, 0.0028), on(w * 1.08, h * 0.45, 0.0028),
+                   on(w * 1.0, h * 0.75, 0.0028), on(w * 0.5, h * 1.4, 0.0028), on(0, h * 1.5, 0.0028), on(-w * 0.5, h * 1.34, 0.0028), on(-w * 1.0, h * 0.42, 0.0028)]
+            b.eye(on(0, 0), [(wq, white), (iq, color), (pq, '#141820'), (lid, lidc, 'strip')])
 
     eyec = L.get('eyes', '#2a2a2a')
     if race == 'quetch':
@@ -213,9 +258,14 @@ def build(name):
         z0, z1 = Hc[2] - hd_ * 0.95, Hc[2] + hd_ * 1.12
         my = lambda y: y0 + (y - TW_Y0) / (TW_Y1 - TW_Y0) * (y1 - y0)
         mz = lambda z: z0 + (z - TW_Z0) / (TW_Z1 - TW_Z0) * (z1 - z0)
-        K = 7
+        K = 11
         rr = []
-        for y, half in TW_HEAD:
+        FINE = []
+        for (ya, ha), (yb, hb) in zip(TW_HEAD, TW_HEAD[1:]):
+            ra_, rb_ = resample(ha, 25), resample(hb, 25)
+            FINE += [(ya, ha), ((ya + yb) / 2, [((p[0] + q[0]) / 2, (p[1] + q[1]) / 2) for p, q in zip(ra_, rb_)])]
+        FINE.append(TW_HEAD[-1])
+        for y, half in FINE:
             h = resample(half, K)
             pts = [(x * sx_, my(y), mz(z)) for x, z in h] + [(-x * sx_, my(y), mz(z)) for x, z in reversed(h[1:-1])]
             rr.append(pts)
@@ -247,7 +297,34 @@ def build(name):
         top_y, back_z = my(0.95), mz(-0.05)
         style = L.get('hairStyle', 'cap')
         if style != 'bald':
-            sphere(b.P('hair', hair, head_w, 180), (0, my(0.95), mz(-0.03)), 0.06 * sx_ * 1.0, 10, 7, (1.0, 0.9, 1.0))
+            # the hair as a shell 6 mm off the skull, covering the back and the crown, its line rising from behind
+            # the ears to the top (long hair covers more of the sides)
+            cap = b.P('hair', hair, head_w, 70)
+            M_ = 13
+            zcuts = [0.0, 0.03, 0.05, 0.07, 0.085] if style not in ('longtail', 'bun') else [0.02, 0.05, 0.07, 0.09, 0.1]
+            rows = []
+            for (y, half), zc_ in zip(TW_HEAD[2:], zcuts):
+                full = resample(half, 25)
+                pts = [(x, z) for x, z in full if z <= zc_]
+                arc = list(reversed(pts)) + [(-x, z) for x, z in pts[1:]]
+                seg = [math.dist(arc[i], arc[i + 1]) for i in range(len(arc) - 1)]
+                tot = sum(seg) or 1
+                row = []
+                for j in range(M_):
+                    d, i = tot * j / (M_ - 1), 0
+                    while i < len(seg) - 1 and d > seg[i]:
+                        d -= seg[i]; i += 1
+                    t = min(1, d / seg[i]) if seg[i] else 0
+                    x = arc[i][0] + (arc[i + 1][0] - arc[i][0]) * t; z = arc[i][1] + (arc[i + 1][1] - arc[i][1]) * t
+                    r = math.hypot(x, z - 0.06) or 1
+                    row.append((x * sx_ + x / r * 0.007, my(y), mz(z) + (z - 0.06) / r * 0.007))
+                rows.append(row)
+            vv = [p for r in rows for p in r]
+            ff = [[(j + 1) * M_ + i, (j + 1) * M_ + i + 1, j * M_ + i + 1, j * M_ + i] for j in range(len(rows) - 1) for i in range(M_ - 1)]
+            vv.append((0, my(0.962), mz(0.03)))
+            o_ = (len(rows) - 1) * M_
+            ff += [[o_ + i + 1, o_ + i, len(vv) - 1] for i in range(M_ - 1)]
+            cap.add(vv, ff)
         tails = [k for k in ('tail0', 'tail1', 'tail2') if k in B]
         if style == 'bun':
             for i, (dy, dz, r) in enumerate(((0.012, -0.075, 0.042), (-0.02, -0.105, 0.03))):
@@ -258,14 +335,14 @@ def build(name):
             # (below the head the points follow the body: the nape, then between the shoulder blades)
             backZ = -0.1 * wide + zc(shY)
             if long:
-                pts = [(0, my(0.95), Hc[2] - hd_ * 0.82), (0, my(0.89), Hc[2] - hd_ * 1.02), (0, headY - 0.01, Hc[2] - hd_ * 0.98),
-                       (0, shY - 0.06, backZ - 0.05), (0, shY - 0.3, backZ - 0.035)]
+                pts = [(0, my(0.935), Hc[2] - hd_ * 0.72), (0, my(0.905), Hc[2] - hd_ * 1.08), (0, headY + 0.0, Hc[2] - hd_ * 1.1),
+                       (0, shY - 0.05, backZ - 0.06), (0, shY - 0.28, backZ - 0.04)]
             else:
                 pts = [(0, my(0.95), Hc[2] - hd_ * 0.82), (0, my(0.9), Hc[2] - hd_ * 1.05), (0, headY + 0.04, Hc[2] - hd_ * 1.08), (0, headY - 0.05, Hc[2] - hd_ * 1.0)]
-            rad = [0.034, 0.03, 0.026, 0.018, 0.01] if long else [0.03, 0.026, 0.02, 0.012]
+            rad = [0.04, 0.036, 0.03, 0.02, 0.008] if long else [0.034, 0.03, 0.022, 0.01]
             for i in range(len(pts) - 1):
                 bone = tails[min(i, len(tails) - 1)] if tails else 'head'
-                tube(b.P('tail%d' % i, hair, bone, 60), pts[i], pts[i + 1], rad[i] * sx_, rad[i + 1] * sx_, 7)
+                tube(b.P('tail%d' % i, hair, bone, 75), pts[i], pts[i + 1], rad[i] * sx_, rad[i + 1] * sx_, 10, squash=0.75)
             sphere(b.P('tie', L.get('tie') or L.get('belt') or hair, tails[0] if tails else 'head', 180), pts[0], 0.022 * sx_, 7, 5)
         elif style == 'tuft':
             # a spiky tuft over the forehead (Arthur)

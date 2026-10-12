@@ -61,12 +61,13 @@ export function makeTextures() {
   // grass: bright LBA green with painted tufts
   {
     const [c, x] = canvas(S); const r = rng(11);
-    x.fillStyle = '#4f8c36'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#437c2d', '#5f9a40', '#4a8531', '#6aa448'], 20, 60, 0.6);
+    // (a warmer, slightly olive green like Citadel's lawns: the cool pure green read as neon under the sun)
+    x.fillStyle = '#5a8a38'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#4c7a30', '#6a9642', '#537f33', '#76a24a'], 20, 60, 0.6);
     x.lineCap = 'round';
     for (let i = 0; i < 700; i++) {
       const px = r() * S, py = r() * S, l = 3 + r() * 5, a = -Math.PI / 2 + (r() - 0.5) * 0.9;
-      x.strokeStyle = ['#35702a', '#7cba4e', '#40812b', '#8fc65c'][Math.floor(r() * 4)];
+      x.strokeStyle = ['#3f6e2a', '#86b450', '#4a7e2e', '#98c060'][Math.floor(r() * 4)];
       x.lineWidth = 1 + r();
       wrap(S, (ox, oy) => { x.beginPath(); x.moveTo(px + ox, py + oy); x.lineTo(px + ox + Math.cos(a) * l, py + oy + Math.sin(a) * l); x.stroke(); });
     }

@@ -146,6 +146,20 @@ export class Environment {
   }
 
   setStorm(s) { this.storm = s; }
+  // High: a 4096 map over ±48 m (2.3 cm texels); Medium/Low: 2048 over ±40 m
+  setShadowQuality(q) {
+    const sh = this.sun.shadow, big = q === 'high', size = big ? 4096 : 2048, half = big ? 48 : 40;
+    if (sh.mapSize.x !== size) { sh.mapSize.set(size, size); sh.map?.dispose(); sh.map = null; }
+    const c = sh.camera; c.left = -half; c.right = half; c.top = half; c.bottom = -half; c.updateProjectionMatrix();
+  }
+  snapShadow(focus) {
+    const d = this.sunDir, sh = this.sun.shadow;
+    this._sx ??= new THREE.Vector3(); this._sy ??= new THREE.Vector3(); this._sf ??= new THREE.Vector3();
+    const right = this._sx.set(0, 1, 0).cross(d).normalize(), up = this._sy.copy(d).cross(right).normalize();
+    const texel = (sh.camera.right - sh.camera.left) / sh.mapSize.x;
+    const u = Math.round(focus.dot(right) / texel) * texel, v = Math.round(focus.dot(up) / texel) * texel, w = focus.dot(d);
+    return this._sf.copy(right).multiplyScalar(u).addScaledVector(up, v).addScaledVector(d, w);
+  }
   // indoors: no sky, sea, rain or fog; black around the room like LBA2's interiors
   setInterior(on) {
     this.interior = on;
@@ -200,8 +214,10 @@ export class Environment {
     this.hemi.color.copy(mix('hemiSky'));
     this.hemi.groundColor.copy(mix('hemiGround'));
 
-    this.sun.position.copy(focus).addScaledVector(this.sunDir, 80);
-    this.sun.target.position.copy(focus);
+    // the shadow camera follows the focus in whole shadow-map texels, so shadow edges don't crawl as he walks
+    const sf = this.snapShadow(focus);
+    this.sun.position.copy(sf).addScaledVector(this.sunDir, 80);
+    this.sun.target.position.copy(sf);
 
     if (this.region) {
       // the region's fixed palette (no storm there)

@@ -482,6 +482,7 @@ class Game {
     document.querySelectorAll('[data-i18n-html]').forEach((e) => { e.innerHTML = t(e.dataset.i18nHtml); });
     this.hud.refreshText();
     this.renderer.setQuality(s.quality);
+    this.env?.setShadowQuality(s.quality);
     const retro = s.visual === '1997';
     this.renderer.setRetro(retro);
     this.camRig.setMode(s.camera);

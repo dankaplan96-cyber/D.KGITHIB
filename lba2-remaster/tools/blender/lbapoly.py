@@ -289,18 +289,27 @@ class Builder:
         for e in self.eyes:
             piv = e['pivot']
             ed = {'bone': e['bone'], 'pivot': [round(c, 5) for c in piv], 'pos': [], 'col': []}
-            for quad, color in e['quads']:
-                for t in ((0, 1, 2), (0, 2, 3)):
+            ntri = 0
+            for entry in e['quads']:
+                quad, color = entry[0], entry[1]
+                n = len(quad)
+                if len(entry) > 2 and entry[2] == 'strip':   # an eyelid line: lower edge then the upper edge back
+                    h = n // 2
+                    tl = [t for i in range(h - 1) for t in ((i, i + 1, n - 2 - i), (i, n - 2 - i, n - 1 - i))]
+                else:                                        # a convex polygon: a fan
+                    tl = [(0, k, k + 1) for k in range(1, n - 1)]
+                for t in tl:
                     for i in t:
                         ed['pos'] += [round(quad[i][k] - piv[k], 5) for k in range(3)]
                         ed['col'] += hexrgb(color)
+                ntri += len(tl)
                 me = bpy.data.meshes.new(self.name + '_eye')
-                me.from_pydata([gb(p) for p in quad], [], [[0, 1, 2, 3]])
+                me.from_pydata([gb(p) for p in quad], [], [list(range(n))])
                 me.materials.append(self._mat(color))
                 ob = bpy.data.objects.new(self.name + '_eye', me)
                 self.coll.objects.link(ob)
                 ob.parent = self.arm
             out['eyes'].append(ed)
-            out['tris'] += 2 * len(e['quads'])
+            out['tris'] += ntri
         json.dump(out, open(path, 'w'), separators=(',', ':'))
         return out['tris']
