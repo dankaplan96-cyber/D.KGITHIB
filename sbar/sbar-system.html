@@ -8,6 +8,7 @@
 :root{--doc-font:"David","David Libre","Times New Roman",serif}
 .fit-inner tr.blank-row td.name::after{content:"\00a0"}
 .print-page.fitted{overflow:hidden}
+.shower-day-page td.assign{text-align:right;font-weight:700}.shower-day-page td.assign small{font-weight:400;font-size:.8em}.iso-mini{font-size:.75em;font-weight:900;color:#8a2626}.shower-assign-summary{margin-top:2mm;padding:1.5mm 2mm;border:1px solid #555;font-size:8.5pt;line-height:1.35;columns:2;column-gap:6mm}
 .shower-mark{display:block;font-size:7.5pt;font-weight:700;text-align:right;line-height:1.1;white-space:nowrap}
 .shower-report{direction:rtl;font-family:var(--doc-font);color:#000}.sr-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;margin-bottom:4mm;font-size:10pt}.sr-head>div:last-child{text-align:left}.sr-title{font-size:18pt;font-weight:900}.sr-table{width:100%;border-collapse:collapse;font-size:10pt}.sr-table th{background:#242424!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:1.5mm;border:1px solid #333}.sr-table td{border:1px solid #666;padding:1.2mm 1.5mm;text-align:center}.sr-table td.name{text-align:right;font-weight:700}.sr-table thead{display:table-header-group}.sr-table tr{break-inside:avoid}.sr-foot{margin-top:3mm;font-size:9pt}
 @media print{#printArea .shower-report{display:block}}
@@ -610,6 +611,40 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
 .sign-check{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:700;font-size:16px;cursor:pointer}
 .sign-check input{width:22px;height:22px}
 
+/* v67 showers table */
+.shower-staff{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end;padding:14px 16px;background:#fff;border-radius:16px;box-shadow:var(--shadow);margin-bottom:10px}
+.shower-staff .staff-loads{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.load-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 6px 5px 12px;border-radius:999px;background:#eef6f7;border:1px solid #c5e0e3;font-size:15px}
+.load-chip.nurse{background:#f2effb;border-color:#d6cdf0}
+.load-chip small{color:var(--muted)}
+.load-n{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;font-weight:800;font-size:14px}
+.shower-table-wrap{max-height:none;border:0;box-shadow:var(--shadow);border-radius:16px}
+.shower-table-wrap[hidden]{display:none}
+.shower-table{width:100%;border-collapse:separate;border-spacing:0;direction:rtl;min-width:900px}
+.shower-table th{position:sticky;top:0;z-index:1;background:var(--ink);color:#fff;padding:10px 8px;font-size:14px;text-align:right}
+.shower-table td{padding:8px;border-bottom:1px solid #edf1f3;vertical-align:middle;background:#fff}
+.shower-table tr:last-child td{border-bottom:0}
+.shower-table td.sh-room{font-size:20px;font-weight:800;text-align:center}
+.shower-table td.sh-room small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.shower-table .who-cell{display:flex;align-items:center;gap:10px}
+.shower-table .who-cell .avatar{width:38px;height:38px;flex-basis:38px;font-size:17px}
+.shower-table .who-cell strong{display:block;font-size:17px}
+.shower-table .who-cell small{color:var(--muted);font-size:13px;margin-inline-end:6px}
+.shower-table tr.dirty td{background:#fffbea}
+.shower-table tr.signed.done td:first-child{box-shadow:inset -5px 0 0 #2f9a63}
+.shower-table tr.signed.family td:first-child{box-shadow:inset -5px 0 0 #3b7fd0}
+.shower-table tr.signed.refused td:first-child{box-shadow:inset -5px 0 0 #c94b4b}
+.shower-table tr.late td:first-child{box-shadow:inset -5px 0 0 #e3b93c}
+.shower-table .empty-row{text-align:center;padding:30px;color:var(--muted);font-size:17px}
+.badge.due{background:var(--brand-soft);color:var(--brand-dark)}
+.assign-select{width:100%;min-height:42px;border:2px dashed #cfdbe1;border-radius:10px;background:#fff;padding:2px 8px;font-size:15px;font-weight:600;cursor:pointer}
+.assign-select.set{border-style:solid;border-color:#9fd0d4;background:#f2fafb;color:var(--brand-dark)}
+.shower-table .shower-btns{gap:6px;flex-wrap:nowrap}
+.shower-table .shower-btn{min-height:42px;padding:4px 10px;font-size:14px;border-radius:10px;white-space:nowrap}
+.shower-signed-cell{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted)}
+.shower-others .shower-table-wrap{margin-top:6px}
+@media(max-width:900px){.shower-staff{grid-template-columns:1fr}}
+
 @media(max-width:900px){
   .beds{grid-template-columns:1fr!important}
   .beds .bed{border-inline-start:0;border-top:1px solid var(--line)}
@@ -738,7 +773,7 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
 
   <section class="view" id="view-showers">
     <div class="page-head">
-      <div><h2>רחצות</h2><p class="hint">רחצה יום כן ויום לא. בשבת ובחג אין רחצות, והן עוברות ליום הבא. האחות מסמנת וחותמת – והמערכת יודעת מי צריך רחצה מחר.</p></div>
+      <div><h2>רחצות</h2><p class="hint">רחצה יום כן ויום לא · בשבת ובחג אין רחצות. ① רושמים את הצוות ② משבצים לכל מטופל ③ מדפיסים ④ בסוף מסמנים וחותמים.</p></div>
       <div class="page-actions"><button class="btn primary big" data-print="showers-day">🖨️ הדפס רשימה</button><button class="btn" id="showerArchiveToggle">📁 דוח וארכיון</button></div>
     </div>
     <div class="shower-datebar">
@@ -748,10 +783,15 @@ select.sbar-input{padding:6px 4px;cursor:pointer}
       <button class="btn small" id="showerToday">היום</button>
       <button class="btn small" id="showerYesterday">אתמול (משמרת לילה)</button>
     </div>
+    <div class="shower-staff">
+      <div class="form-field"><label for="showerAides">🧑‍🔧 כוחות עזר היום</label><input id="showerAides" placeholder="לדוגמה: מרים, יוסי, נעמה" autocomplete="off"></div>
+      <div class="form-field"><label for="showerNurses">👩‍⚕️ אחים / אחיות לרחצה</label><input id="showerNurses" placeholder="לדוגמה: דנה, רונית" autocomplete="off"></div>
+      <div class="staff-loads" id="showerLoads"></div>
+    </div>
     <div class="shower-summary" id="showerSummary"></div>
     <div id="showerNoDay" class="shower-noday" hidden></div>
-    <div class="shower-list" id="showerList"></div>
-    <details class="shower-others" id="showerOthersWrap"><summary id="showerOthersTitle">מטופלים שלא צריכים רחצה ביום הזה</summary><div class="shower-list" id="showerOthers"></div></details>
+    <div class="table-wrap shower-table-wrap" id="showerTableWrap"><table class="shower-table" id="showerList"></table></div>
+    <details class="shower-others" id="showerOthersWrap"><summary id="showerOthersTitle">מטופלים שלא צריכים רחצה ביום הזה</summary><div class="table-wrap shower-table-wrap"><table class="shower-table" id="showerOthers"></table></div></details>
     <div class="sbar-save-bar" id="showerSignBar" hidden role="region" aria-live="polite"><span class="save-dot" aria-hidden="true">✍️</span><strong id="showerSignCount"></strong><span class="hint">צריך לחתום כדי לשמור</span><div class="grow"></div><button type="button" class="btn" id="showerDiscard">בטל סימונים</button><button type="button" class="btn primary big" id="showerSign">✍️ חתום ושמור</button></div>
 
     <div class="info-card shower-archive" id="showerArchive" hidden>
@@ -1050,6 +1090,12 @@ const SHIFT_LABEL={morning:'בוקר',evening:'ערב',night:'לילה'};
 const SOURCE_SNAPSHOT_DATE='2026-10-07';
 let editingId=null;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+/* A redraw that lands between mouse-down and mouse-up would swallow the click (the button is replaced).
+   Redraws triggered by background events wait until the current click has finished. */
+let pointerIsDown=false;const afterPointerQueue=[];
+document.addEventListener('pointerdown',()=>{pointerIsDown=true},true);
+document.addEventListener('pointerup',()=>{setTimeout(()=>{pointerIsDown=false;afterPointerQueue.splice(0).forEach(f=>f())},0)},true);
+function renderWhenIdle(fn){if(pointerIsDown){if(!afterPointerQueue.includes(fn))afterPointerQueue.push(fn)}else fn()}
 const todayISO=()=>{const d=new Date();const tz=d.getTimezoneOffset()*60000;return new Date(d-tz).toISOString().slice(0,10)};
 function emptyGroups(){return {morning:0,evening:0,night:0}}
 const HEB_BEDS=['א','ב','ג','ד','ה','ו','ז','ח','ט','י'];
@@ -1079,7 +1125,7 @@ function buildPatientsForLayout(layout,sourcePatients=[]){
 }
 function defaultState(){
   const roomLayout=[];
-  return {version:60,sourceSnapshotDate:SOURCE_SNAPSHOT_DATE,updatedAt:new Date().toISOString(),wardName:'מחלקה חדשה',reportDate:todayISO(),activeShift:'morning',shiftNurseCounts:emptyGroups(),roomLayout,roomMeta:defaultRoomMeta(roomLayout),shiftRoomSides:defaultRoomSides(roomLayout),showerStaffByDate:{},showerNursesByDate:{},showerDailyPlans:{},mobilityDailyPlans:{},showerLog:[],showerNoDays:[],archive:[],patients:[]}
+  return {version:60,sourceSnapshotDate:SOURCE_SNAPSHOT_DATE,updatedAt:new Date().toISOString(),wardName:'מחלקה חדשה',reportDate:todayISO(),activeShift:'morning',shiftNurseCounts:emptyGroups(),roomLayout,roomMeta:defaultRoomMeta(roomLayout),shiftRoomSides:defaultRoomSides(roomLayout),showerStaffByDate:{},showerNursesByDate:{},showerDailyPlans:{},mobilityDailyPlans:{},showerLog:[],showerNoDays:[],showerAssignByDate:{},archive:[],patients:[]}
 }
 function detectedWardName(src,fallback=''){
   if(!src||typeof src!=='object')return fallback;
@@ -1104,7 +1150,7 @@ function normalize(s){
   const seen=new Set();layout=layout.filter(x=>x.room>0&&!seen.has(x.room)&&(seen.add(x.room),true)).sort((a,b)=>a.room-b.room);
   base.roomLayout=layout;base.patients=buildPatientsForLayout(layout,Array.isArray(s.patients)?s.patients:[]);
   base.version=60;base.updatedAt=s.updatedAt||base.updatedAt;base.wardName=detectedWardName(s,base.wardName)||base.wardName;base.reportDate=s.reportDate||base.reportDate;base.activeShift=SHIFTS.includes(s.activeShift)?s.activeShift:'morning';
-  base.showerStaffByDate=(s.showerStaffByDate&&typeof s.showerStaffByDate==='object')?s.showerStaffByDate:{};base.showerNursesByDate=(s.showerNursesByDate&&typeof s.showerNursesByDate==='object')?s.showerNursesByDate:{};base.showerDailyPlans=(s.showerDailyPlans&&typeof s.showerDailyPlans==='object')?s.showerDailyPlans:{};base.mobilityDailyPlans=(s.mobilityDailyPlans&&typeof s.mobilityDailyPlans==='object')?s.mobilityDailyPlans:{};base.showerLog=Array.isArray(s.showerLog)?s.showerLog.filter(e=>e&&typeof e==='object'&&e.id&&e.date&&e.key):[];base.showerNoDays=Array.isArray(s.showerNoDays)?[...new Set(s.showerNoDays.filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)))].sort():[];
+  base.showerStaffByDate=(s.showerStaffByDate&&typeof s.showerStaffByDate==='object')?s.showerStaffByDate:{};base.showerNursesByDate=(s.showerNursesByDate&&typeof s.showerNursesByDate==='object')?s.showerNursesByDate:{};base.showerDailyPlans=(s.showerDailyPlans&&typeof s.showerDailyPlans==='object')?s.showerDailyPlans:{};base.mobilityDailyPlans=(s.mobilityDailyPlans&&typeof s.mobilityDailyPlans==='object')?s.mobilityDailyPlans:{};base.showerLog=Array.isArray(s.showerLog)?s.showerLog.filter(e=>e&&typeof e==='object'&&e.id&&e.date&&e.key):[];base.showerAssignByDate=(s.showerAssignByDate&&typeof s.showerAssignByDate==='object'&&!Array.isArray(s.showerAssignByDate))?s.showerAssignByDate:{};base.showerNoDays=Array.isArray(s.showerNoDays)?[...new Set(s.showerNoDays.filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)))].sort():[];
   base.archive=Array.isArray(s.archive)?s.archive.filter(x=>x&&typeof x==='object').map(x=>({...x,sex:['male','female'].includes(x.sex)?x.sex:'',isolation:!!x.isolation,isolationTypes:Array.isArray(x.isolationTypes)?x.isolationTypes.filter(v=>['contact','droplet','airborne','protective','other'].includes(v)):[],isolationOther:typeof x.isolationOther==='string'?x.isolationOther:'',isolationOrganisms:Array.isArray(x.isolationOrganisms)?x.isolationOrganisms.filter(v=>['CRE','VRE','MRSA','ESBL','CDI','CRAB','CRPA','MDRO','OTHER'].includes(v)):[],isolationOrganismOther:typeof x.isolationOrganismOther==='string'?x.isolationOrganismOther:'',glucoseScheduleMode:['daily','weekdays','interval'].includes(x.glucoseScheduleMode)?x.glucoseScheduleMode:'daily',glucoseWeekdays:Array.isArray(x.glucoseWeekdays)?x.glucoseWeekdays.map(Number).filter(v=>v>=0&&v<=6):[],glucoseEveryDays:Math.max(2,Math.min(90,Number(x.glucoseEveryDays)||2)),glucoseStartDate:typeof x.glucoseStartDate==='string'?x.glucoseStartDate:'',archivedAt:x.archivedAt||new Date().toISOString(),archiveReason:x.archiveReason||'אחר',archiveNote:x.archiveNote||''})):[];
   base.shiftNurseCounts=Object.assign(emptyGroups(),s.shiftNurseCounts||{});if(!s.shiftNurseCounts&&s.nurseCount)base.shiftNurseCounts.morning=Math.max(0,Math.min(10,Number(s.nurseCount)||0));SHIFTS.forEach(k=>base.shiftNurseCounts[k]=Math.max(0,Math.min(10,Number(base.shiftNurseCounts[k])||0)));
   const oldMeta=s.roomMeta||{};base.roomMeta=defaultRoomMeta(layout);for(const r of roomNumbersFrom(layout)){const m=oldMeta[r]||oldMeta[String(r)]||{};base.roomMeta[r]={gender:['male','female'].includes(m.gender)?m.gender:''}}
@@ -2210,7 +2256,7 @@ async function networkSaveNow(force=false,allowCreate=false,recovery=false){
     setNetworkStatus(`${networkMergeCount?'מוזג ומסונכרן':'מסונכרן'} · ${workingDirHandle.name} · ${networkTimeLabel(networkLastOk)}`,'connected');networkMergeCount=0;
     markNetworkHealthy(`מסונכרן לתיקייה ${workingDirHandle.name}`);
     if(networkSaveNoticePending){networkSaveNoticePending=false;toast('הנתונים נשמרו בהצלחה');}
-    if(!netEq(snapshot,candidate))renderAll();
+    if(!netEq(normalize(netClone(snapshot)),candidate))renderAll(); // only redraw when another computer's change was merged in
     return true;
   }catch(e){
     console.warn('Direct folder save failed',e);networkDirty=true;persistNetworkPendingRecord();setNetworkStatus('השמירה לרשת נכשלה · השינוי נשמר וממתין לסנכרון','warn');
@@ -2221,7 +2267,7 @@ async function networkSaveNow(force=false,allowCreate=false,recovery=false){
 function applyRemotePayload(data){
   if(!data||!data.state)return false;
   state=normalize(data.state);networkRevision=Number(data.revision)||0;networkBaseState=netClone(data.state);networkDirty=false;networkConflict=false;networkPendingRemote=null;networkLastOk=data.updatedAt||state.updatedAt||new Date().toISOString();networkLastSuccessfulRead=Date.now();
-  safeLocalSet(STORAGE_KEY,JSON.stringify(state));networkLastGoodState=netClone(state);renderAll();setNetworkStatus(`מסונכרן · ${workingDirHandle?.name||''} · ${networkTimeLabel(networkLastOk)}`,'connected');markNetworkHealthy(`מסונכרן לתיקייה ${workingDirHandle?.name||''}`);return true;
+  safeLocalSet(STORAGE_KEY,JSON.stringify(state));networkLastGoodState=netClone(state);renderWhenIdle(renderAll);setNetworkStatus(`מסונכרן · ${workingDirHandle?.name||''} · ${networkTimeLabel(networkLastOk)}`,'connected');markNetworkHealthy(`מסונכרן לתיקייה ${workingDirHandle?.name||''}`);return true;
 }
 async function networkPull({force=false,silent=false}={}){
   networkPendingRecord=networkPendingRecord||loadNetworkPendingRecord();
@@ -2404,34 +2450,49 @@ function showerDueAsOf(p,date){
 function showerNeededOn(p,date){if(noShowerReason(date)||p.onLeave)return false;const due=showerDueAsOf(p,date);return !due||due<=date}
 function showerNextAfter(p,date){const ev=showerEventOn(p,date);if(ev)return nextShowerDay(addDaysISO(date,ev.status==='refused'?1:2));const due=showerDueAsOf(p,date);return due&&due>date?due:nextShowerDay(date)}
 let showerDate='',showerDraft={},showerArchiveOpen=false;
+function splitNames(v){return [...new Set(String(v||'').split(/[,،;\n]+/).map(x=>x.trim()).filter(Boolean))]}
+function showerAides(date=showerDate){return splitNames((state.showerStaffByDate||{})[date])}
+function showerNurses(date=showerDate){return splitNames((state.showerNursesByDate||{})[date])}
+function showerAssigned(p,date=showerDate){return ((state.showerAssignByDate||{})[date]||{})[showerKey(p)]||''}
+function showerRole(name,date=showerDate){return showerNurses(date).includes(name)?'אח/ות':showerAides(date).includes(name)?'כ״ע':''}
+function setShowerAssign(p,name){if(!requireNetworkReady('שיבוץ רחצה'))return false;state.showerAssignByDate=state.showerAssignByDate||{};const d=state.showerAssignByDate[showerDate]=state.showerAssignByDate[showerDate]||{};if(name)d[showerKey(p)]=name;else delete d[showerKey(p)];
+  const cutoff=addDaysISO(todayISO(),-366);for(const k of Object.keys(state.showerAssignByDate))if(k<cutoff)delete state.showerAssignByDate[k];return save()}
+
 function defaultShowerDate(){return new Date().getHours()<7?addDaysISO(todayISO(),-1):todayISO()} // after midnight the night nurse signs for "yesterday"
 function showerDraftCount(){return Object.keys(showerDraft).length}
 function showerRowHTML(p,needed){
-  const ev=showerEventOn(p,showerDate),draft=showerDraft[p.id],due=showerDueAsOf(p,showerDate),late=needed&&due&&due<showerDate,g=groupOf(p);
-  const tags=[late?`<span class="badge alert">באיחור מ־${esc(fmtDate(due))}</span>`:'',!needed&&!ev?`<span class="badge">רחצה הבאה: ${esc(fmtDate(showerNextAfter(p,showerDate)))}</span>`:'',p.isolation?'<span class="badge iso">בידוד</span>':''].join('');
-  let action;
-  if(ev&&!draft){const st=SHOWER_STATUS[ev.status]||SHOWER_STATUS.done;const t=ev.at?new Date(ev.at).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):'';
-    action=`<div class="shower-signed ${st.cls}"><span class="st">${st.icon} ${esc(st.label)}</span>${ev.washer&&ev.status==='done'?`<span class="by">🧽 רוחץ: <b>${esc(ev.washer)}</b></span>`:''}<span class="by">✍️ אחות: ${esc(ev.by||'')}${t?` · ${t}`:''}</span><button type="button" class="link-btn" data-shower-fix="${p.id}">תיקון</button></div>`}
-  else action=`<div class="shower-btns">${Object.entries(SHOWER_STATUS).map(([k,st])=>`<button type="button" class="shower-btn ${st.cls} ${draft?.status===k?'on':''}" data-shower-mark="${p.id}" data-status="${k}" aria-pressed="${draft?.status===k}">${st.icon} ${esc(st.label)}</button>`).join('')}</div>`;
-  return `<div class="shower-row ${draft?'dirty':''} ${ev&&!draft?'signed '+(SHOWER_STATUS[ev.status]?.cls||''):''}"><div class="shower-who"><span class="avatar ${p.sex||''}" aria-hidden="true">${esc((p.name||'?').trim().charAt(0))}</span><div><div class="bed-name">${esc(p.name)}</div><div class="bed-sub">חדר ${p.room} · מיטה ${esc(p.bed)}${g>0?` · ${esc(sideName(g))}`:''}</div>${tags?`<div class="bed-badges">${tags}</div>`:''}</div></div>${action}</div>`;
+  const ev=showerEventOn(p,showerDate),draft=showerDraft[p.id],due=showerDueAsOf(p,showerDate),late=needed&&due&&due<showerDate,g=groupOf(p),who=showerAssigned(p);
+  const aides=showerAides(),nurses=showerNurses(),known=[...aides,...nurses];
+  const opt=n=>`<option value="${esc(n)}" ${n===who?'selected':''}>${esc(n)}</option>`;
+  const select=`<select class="assign-select ${who?'set':''}" data-shower-assign="${p.id}" aria-label="שיבוץ ${esc(p.name)}"><option value="">— לא שובץ —</option>${aides.length?`<optgroup label="כוחות עזר">${aides.map(opt).join('')}</optgroup>`:''}${nurses.length?`<optgroup label="אחים / אחיות">${nurses.map(opt).join('')}</optgroup>`:''}${who&&!known.includes(who)?opt(who):''}</select>`;
+  const state1=ev&&!draft?`<span class="st-pill ${SHOWER_STATUS[ev.status]?.cls||''}">${SHOWER_STATUS[ev.status]?.icon||''} ${esc(SHOWER_STATUS[ev.status]?.label||'')}</span>`:late?`<span class="badge alert">באיחור מ־${esc(fmtDate(due))}</span>`:needed?'<span class="badge due">היום</span>':`<span class="badge">הבאה: ${esc(fmtDate(showerNextAfter(p,showerDate)))}</span>`;
+  const action=ev&&!draft?`<div class="shower-signed-cell"><span>${ev.washer&&ev.status==='done'?`🧽 ${esc(ev.washer)} · `:''}✍️ ${esc(ev.by||'')} · ${esc(showerTime(ev))}</span><button type="button" class="link-btn" data-shower-fix="${p.id}">תיקון</button></div>`
+    :`<div class="shower-btns">${Object.entries(SHOWER_STATUS).map(([k,st])=>`<button type="button" class="shower-btn ${st.cls} ${draft?.status===k?'on':''}" data-shower-mark="${p.id}" data-status="${k}" aria-pressed="${draft?.status===k}" title="${esc(st.label)}">${st.icon} ${esc(st.short==='בוצע'?'התקלח':st.short)}</button>`).join('')}</div>`;
+  return `<tr class="${draft?'dirty':''} ${ev&&!draft?'signed '+(SHOWER_STATUS[ev.status]?.cls||''):''} ${late?'late':''}"><td class="sh-room">${p.room}<small>${esc(p.bed)}</small></td><td class="name"><div class="who-cell"><span class="avatar ${p.sex||''}" aria-hidden="true">${esc((p.name||'?').trim().charAt(0))}</span><div><strong>${esc(p.name)}</strong>${g>0?`<small>${esc(sideName(g))}</small>`:''}${p.isolation?'<span class="badge iso">בידוד</span>':''}</div></div></td><td>${state1}</td><td>${select}</td><td>${action}</td></tr>`;
 }
 function renderShowers(){
   const host=$('#showerList');if(!host)return;
   if(!showerDate)showerDate=defaultShowerDate();
   const reason=noShowerReason(showerDate),pts=activePatients().filter(p=>!p.onLeave);
   $('#showerDate').value=showerDate;$('#showerDateTitle').textContent=`${hebDay(showerDate)} · ${fmtDate(showerDate)}${showerDate===todayISO()?' · היום':showerDate===addDaysISO(todayISO(),-1)?' · אתמול':''}`;
+  for(const [id,src] of [['#showerAides',state.showerStaffByDate],['#showerNurses',state.showerNursesByDate]]){const el=$(id);if(el&&document.activeElement!==el)el.value=(src||{})[showerDate]||''}
   const listed=pts.filter(p=>showerNeededOn(p,showerDate)||showerEventOn(p,showerDate)||showerDraft[p.id]);
   const others=pts.filter(p=>!listed.includes(p));
   const signed=listed.map(p=>showerEventOn(p,showerDate)).filter(Boolean),count=k=>signed.filter(e=>e.status===k).length;
-  const waiting=listed.filter(p=>!showerEventOn(p,showerDate)).length;
-  $('#showerSummary').innerHTML=reason?'':`<span class="sum-chip"><b>${listed.length}</b> ברשימה</span><span class="sum-chip done"><b>${count('done')}</b> התקלחו</span><span class="sum-chip family"><b>${count('family')}</b> ע״י משפחה</span><span class="sum-chip refused"><b>${count('refused')}</b> סירבו</span><span class="sum-chip wait"><b>${waiting}</b> ממתינים לסימון</span>`;
+  const waiting=listed.filter(p=>!showerEventOn(p,showerDate)).length,unassigned=listed.filter(p=>!showerAssigned(p)&&!showerEventOn(p,showerDate)).length;
+  $('#showerSummary').innerHTML=reason?'':`<span class="sum-chip"><b>${listed.length}</b> לרחצה</span><span class="sum-chip ${unassigned?'wait':'done'}"><b>${unassigned}</b> לא שובצו</span><span class="sum-chip done"><b>${count('done')}</b> התקלחו</span><span class="sum-chip family"><b>${count('family')}</b> ע״י משפחה</span><span class="sum-chip refused"><b>${count('refused')}</b> סירבו</span><span class="sum-chip wait"><b>${waiting}</b> ממתינים לסימון</span>`;
+  const staff=[...showerAides().map(n=>[n,'כ״ע']),...showerNurses().map(n=>[n,'אח/ות'])];
+  $('#showerLoads').innerHTML=staff.length?staff.map(([n,r])=>{const c=listed.filter(p=>showerAssigned(p)===n).length;return `<span class="load-chip ${r==='אח/ות'?'nurse':''}"><b>${esc(n)}</b> <small>${r}</small> <span class="load-n">${c}</span></span>`}).join(''):'<span class="hint">רשמו שמות (מופרדים בפסיק) כדי לשבץ מטופלים.</span>';
   const nd=$('#showerNoDay');nd.hidden=!reason;nd.innerHTML=reason?`<span class="big-ico" aria-hidden="true">🛑</span><div><strong>${esc(reason)} – אין רחצות ביום הזה.</strong><div class="hint">מי שהיה צריך רחצה היום יופיע ברשימה של יום הרחצה הבא: ${esc(hebDay(nextShowerDay(showerDate)))} ${esc(fmtDate(nextShowerDay(showerDate)))}.</div></div>`:'';
-  host.innerHTML=reason?'':(listed.map(p=>showerRowHTML(p,showerNeededOn(p,showerDate))).join('')||'<div class="archive-empty">אין מטופלים שצריכים רחצה ביום הזה 🎉</div>');
-  $('#showerOthersWrap').hidden=!!reason||!others.length;$('#showerOthersTitle').textContent=`מטופלים שלא צריכים רחצה ביום הזה (${others.length}) – אפשר לסמן גם אותם`;
-  $('#showerOthers').innerHTML=reason?'':others.map(p=>showerRowHTML(p,false)).join('');
+  const head='<thead><tr><th style="width:70px">חדר</th><th>מטופל</th><th style="width:150px">מצב</th><th style="width:190px">משובץ ל־</th><th style="width:330px">ביצוע וחתימה</th></tr></thead>';
+  $('#showerTableWrap').hidden=!!reason;
+  host.innerHTML=reason?'':head+`<tbody>${listed.map(p=>showerRowHTML(p,showerNeededOn(p,showerDate))).join('')||'<tr><td colspan="5" class="empty-row">אין מטופלים שצריכים רחצה ביום הזה 🎉</td></tr>'}</tbody>`;
+  $('#showerOthersWrap').hidden=!!reason||!others.length;$('#showerOthersTitle').textContent=`מטופלים שלא צריכים רחצה ביום הזה (${others.length}) – אפשר להוסיף ולסמן גם אותם`;
+  $('#showerOthers').innerHTML=reason?'':head+`<tbody>${others.map(p=>showerRowHTML(p,false)).join('')}</tbody>`;
   const n=showerDraftCount();$('#showerSignBar').hidden=!n;$('#showerSignCount').textContent=n===1?'סימון אחד ממתין לחתימה':`${n} סימונים ממתינים לחתימה`;
   const today=todayISO(),dueToday=noShowerReason(today)?0:activePatients().filter(p=>!p.onLeave&&showerNeededOn(p,today)&&!showerEventOn(p,today)).length;$('#showerCountTop').textContent=dueToday;
   $$('#view-showers [data-shower-mark]').forEach(b=>b.onclick=()=>{const id=b.dataset.showerMark,st=b.dataset.status;if(showerDraft[id]?.status===st)delete showerDraft[id];else showerDraft[id]={status:st};renderShowers()});
+  $$('#view-showers [data-shower-assign]').forEach(sel=>sel.onchange=()=>{const p=state.patients.find(x=>x.id===sel.dataset.showerAssign);if(!p)return;if(setShowerAssign(p,sel.value))renderShowers()});
   $$('#view-showers [data-shower-fix]').forEach(b=>b.onclick=()=>{const p=state.patients.find(x=>x.id===b.dataset.showerFix);if(!p)return;const ev=showerEventOn(p,showerDate);if(!ev)return;
     if(!confirm(`לבטל את הסימון "${SHOWER_STATUS[ev.status]?.label}" של ${p.name} מ־${fmtDate(showerDate)}?\nאחר כך אפשר לסמן מחדש ולחתום.`))return;
     if(!requireNetworkReady('תיקון סימון רחצה'))return;state.showerLog=(state.showerLog||[]).filter(e=>e.id!==ev.id);save();renderShowers();toast('הסימון בוטל – אפשר לסמן מחדש')});
@@ -2442,7 +2503,7 @@ function openShowerSign(){
   if(!items.length)return;
   const washers=JSON.parse(safeLocalGet('sbarShowerWashers')||'[]');$('#washerNames').innerHTML=washers.map(w=>`<option value="${esc(w)}"></option>`).join('');
   const hasDone=items.some(x=>x.d.status==='done');
-  $('#showerSignSummary').innerHTML=`<div class="move-name">${esc(hebDay(showerDate))} ${esc(fmtDate(showerDate))} · ${items.length} מטופלים</div>${hasDone?`<div class="washer-all"><label for="showerWasherAll">שם הרוחץ</label><input id="showerWasherAll" list="washerNames" autocomplete="off" placeholder="מי רחץ?"><button type="button" class="btn small" id="showerWasherApply">החל על כולם</button></div>`:''}<div class="sign-list">${items.map(x=>`<div class="sign-item"><span>${x.st.icon} <strong>${esc(x.p.name)}</strong> – ${esc(x.st.label)}</span>${x.d.status==='done'?`<input class="washer-input" data-washer-for="${x.id}" list="washerNames" autocomplete="off" placeholder="שם הרוחץ" value="${esc(x.d.washer||'')}">`:x.d.status==='family'?'<span class="washer-fixed">רוחץ: משפחה</span>':''}</div>`).join('')}</div>`;
+  $('#showerSignSummary').innerHTML=`<div class="move-name">${esc(hebDay(showerDate))} ${esc(fmtDate(showerDate))} · ${items.length} מטופלים</div>${hasDone?`<div class="washer-all"><label for="showerWasherAll">שם הרוחץ</label><input id="showerWasherAll" list="washerNames" autocomplete="off" placeholder="מי רחץ?"><button type="button" class="btn small" id="showerWasherApply">החל על כולם</button></div>`:''}<div class="sign-list">${items.map(x=>`<div class="sign-item"><span>${x.st.icon} <strong>${esc(x.p.name)}</strong> – ${esc(x.st.label)}</span>${x.d.status==='done'?`<input class="washer-input" data-washer-for="${x.id}" list="washerNames" autocomplete="off" placeholder="שם הרוחץ" value="${esc(x.d.washer||showerAssigned(x.p)||'')}">`:x.d.status==='family'?'<span class="washer-fixed">רוחץ: משפחה</span>':''}</div>`).join('')}</div>`;
   const all=$('#showerWasherAll');if(all){const apply=()=>{$$('#showerSignSummary .washer-input').forEach(i=>{if(!i.value.trim()||i.dataset.fromAll)i.value=all.value,i.dataset.fromAll='1'})};$('#showerWasherApply').onclick=()=>{apply()};all.oninput=apply}
   $$('#showerSignSummary .washer-input').forEach(i=>i.oninput=()=>{delete i.dataset.fromAll;if(showerDraft[i.dataset.washerFor])showerDraft[i.dataset.washerFor].washer=i.value});
   $('#showerSignName').value=safeLocalGet('sbarShowerNurse')||'';$('#showerSignConfirm').checked=false;
@@ -2490,10 +2551,12 @@ function printShowerReport(){
 function makeShowerDayPrint(){
   const date=showerDate||defaultShowerDate(),reason=noShowerReason(date);
   const pts=reason?[]:activePatients().filter(p=>!p.onLeave&&(showerNeededOn(p,date)||showerEventOn(p,date)));
-  const rows=pts.map(p=>{const ev=showerEventOn(p,date);const box=k=>ev?.status===k?'☑':'☐';return `<tr><td>${esc(p.room)}</td><td>${esc(p.bed)}</td><td class="name">${esc(p.name)}</td><td class="check">${box('done')}</td><td class="check">${box('family')}</td><td class="check">${box('refused')}</td><td>${esc(ev?.washer||'')}</td><td></td></tr>`}).join('')||`<tr><td colspan="8" class="weekend-leave-empty">${reason?esc(reason)+' – אין רחצות':'אין מטופלים לרחצה'}</td></tr>`;
-  return `<style>@page{size:A4 portrait;margin:0}@media print{html,body{width:210mm!important;height:auto!important}}</style><section class="print-page weekend-leave-page shower-day-page"><div class="weekend-leave-head"><div class="date">${esc(hebDay(date))} ${esc(fmtDate(date))}</div><div class="title">רשימת רחצות</div><div class="ward">${esc(state.wardName)}</div></div><table class="weekend-leave-table"><colgroup><col style="width:7%"><col style="width:6%"><col style="width:25%"><col style="width:10%"><col style="width:10%"><col style="width:10%"><col style="width:17%"><col style="width:15%"></colgroup><thead><tr><th>חדר</th><th>מיטה</th><th>מטופל</th><th>התקלח/ה</th><th>ע״י משפחה</th><th>סירב/ה</th><th>שם הרוחץ</th><th>הערות</th></tr></thead><tbody>${rows}</tbody></table><div class="weekend-leave-sign"><span>סה״כ: ${pts.length}</span><span>שם האחות: ____________________ חתימה: ______________</span></div></section>`;
+  const rows=pts.map(p=>{const ev=showerEventOn(p,date),who=showerAssigned(p,date);const box=k=>ev?.status===k?'☑':'☐';return `<tr><td>${esc(p.room)}</td><td>${esc(p.bed)}</td><td class="name">${esc(p.name)}${p.isolation?' <span class="iso-mini">בידוד</span>':''}</td><td class="assign">${esc(who)}${who&&showerRole(who,date)?` <small>${showerRole(who,date)}</small>`:''}</td><td class="check">${box('done')}</td><td class="check">${box('family')}</td><td class="check">${box('refused')}</td><td>${esc(ev?.washer||'')}</td><td></td></tr>`}).join('')||`<tr><td colspan="9" class="weekend-leave-empty">${reason?esc(reason)+' – אין רחצות':'אין מטופלים לרחצה'}</td></tr>`;
+  const staff=[...showerAides(date),...showerNurses(date)];
+  const summary=staff.length?`<div class="shower-assign-summary">${staff.map(n=>{const mine=pts.filter(p=>showerAssigned(p,date)===n);return `<div><b>${esc(n)}</b> <small>(${showerRole(n,date)})</small> – ${mine.length}: ${mine.map(p=>`${esc(p.room)}${esc(p.bed)}`).join(', ')||'—'}</div>`}).join('')}</div>`:'';
+  return `<style>@page{size:A4 portrait;margin:0}@media print{html,body{width:210mm!important;height:auto!important}}</style><section class="print-page weekend-leave-page shower-day-page"><div class="weekend-leave-head"><div class="date">${esc(hebDay(date))} ${esc(fmtDate(date))}</div><div class="title">רשימת רחצות ושיבוץ</div><div class="ward">${esc(state.wardName)}</div></div><table class="weekend-leave-table"><colgroup><col style="width:6%"><col style="width:5%"><col style="width:23%"><col style="width:16%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:14%"><col style="width:12%"></colgroup><thead><tr><th>חדר</th><th>מיטה</th><th>מטופל</th><th>משובץ ל־</th><th>התקלח</th><th>משפחה</th><th>סירב</th><th>שם הרוחץ</th><th>הערות</th></tr></thead><tbody>${rows}</tbody></table>${summary}<div class="weekend-leave-sign"><span>סה״כ: ${pts.length}</span><span>שם האחות: ____________________ חתימה: ______________</span></div></section>`;
 }
-function showerVitalsMark(p){if(!p)return '';const date=state.reportDate;if(noShowerReason(date)||!(showerNeededOn(p,date)||showerEventOn(p,date)))return '';const ev=showerEventOn(p,date);return `<span class="shower-mark">רחצה: ${ev?`<b>${esc(SHOWER_STATUS[ev.status]?.short||'')} ✓</b>`:'☐ בוצע ☐ משפחה ☐ סירב'}</span>`}
+function showerVitalsMark(p){if(!p||state.activeShift!=='morning')return '';const date=state.reportDate;if(noShowerReason(date)||!(showerNeededOn(p,date)||showerEventOn(p,date)))return '';const ev=showerEventOn(p,date);return `<span class="shower-mark">רחצה: ${ev?`<b>${esc(SHOWER_STATUS[ev.status]?.short||'')} ✓</b>`:'☐ בוצע ☐ משפחה ☐ סירב'}</span>`}
 function renderShowerNoDays(){const host=$('#showerNoDayList');if(!host)return;const list=state.showerNoDays||[];host.innerHTML=list.map(d=>`<span class="structure-pill">${esc(fmtDate(d))} <button type="button" class="danger-link" data-del-noday="${d}" aria-label="הסר">✕</button></span>`).join('')||'<span class="hint">לא הוגדרו ימים נוספים</span>';host.querySelectorAll('[data-del-noday]').forEach(b=>b.onclick=()=>{if(!requireNetworkReady('עדכון ימים ללא רחצות'))return;state.showerNoDays=(state.showerNoDays||[]).filter(x=>x!==b.dataset.delNoday);save();renderShowerNoDays();renderShowers()})}
 
 /* Font: one family for screen and print, chosen per workstation */
@@ -2504,6 +2567,7 @@ $('#fontChoice').onchange=e=>{safeLocalSet('sbarFontChoice',applyFont(e.target.v
 
 $('#sbarList').addEventListener('focusout',()=>setTimeout(()=>{if(sbarRenderPending&&!$('#sbarList').contains(document.activeElement))renderSbar()},0));
 $('#sbarSaveAll').onclick=()=>commitSbarDraft();$('#sbarDiscardAll').onclick=()=>{if(confirm('לבטל את כל השינויים שלא אושרו?'))discardSbarDraft()};
+for(const [id,field,label] of [['#showerAides','showerStaffByDate','כוחות העזר'],['#showerNurses','showerNursesByDate','האחים/אחיות']]){$(id).onchange=e=>{if(!requireNetworkReady('עדכון צוות רחצה')){renderShowers();return}state[field]=state[field]||{};const v=splitNames(e.target.value).join(', ');if(v)state[field][showerDate]=v;else delete state[field][showerDate];e.target.value=v;save();renderWhenIdle(renderShowers);toast(`רשימת ${label} נשמרה`)}}
 $('#showerPrevDay').onclick=()=>{if(!resolveShowerDraftBefore())return;showerDate=addDaysISO(showerDate||defaultShowerDate(),-1);renderShowers()};
 $('#showerNextDay').onclick=()=>{if(!resolveShowerDraftBefore())return;showerDate=addDaysISO(showerDate||defaultShowerDate(),1);renderShowers()};
 $('#showerToday').onclick=()=>{if(!resolveShowerDraftBefore())return;showerDate=todayISO();renderShowers()};
