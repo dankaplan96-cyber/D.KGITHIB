@@ -252,3 +252,19 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   magic home at the first; the arc restarts on each bounce; ~10 m/s return; colour by magic level (yellow, green,
   red, fire); it brings back a bonus it touches. Fix: indoors a floor at height 0 counted as sea.
 - Open: the old citadel ruins and the Woodbridge cliffs (east) are not placed yet.
+
+## Session: review fixes, aiming, animation continuity, performance (0.11.0)
+- Review fixes (tests/audit.mjs): a bonus carried by the ball is credited once on a scene change and let go on a
+  load; shadows and bloom follow quality and visual mode together (also on a start with saved Low); the
+  frame-time overlay moved to F9 (F3 picks a behaviour) and ignores key repeat.
+- Twinsen's house: real stairs down into a stairwell; the cellar stairs climb the west wall to the exit; the
+  front door is an opening in the near wall; Zoé's "next door" is the neighbours' house by Twinsen's.
+- Aiming (tests/combat.mjs §18): a still cursor stays the aim; walking never redirects a mouse-aimed throw; a
+  right drag never toggles the lock; Aim Assist Off corrects nothing; the chevron shows the throw's target.
+- Animation: an upper-body layer on the rig (throws and charges over walking legs, strafing and backward steps
+  while aiming); the follow-through blends out to ~0.62 s; charging allows a slow walk; the ball's return
+  speeds up (10 m/s + 22 m/s²).
+- Performance: in-game benchmark (pause menu), automatic resolution, canvas MSAA off, 2× MSAA at pixel ratio
+  1.5+, Medium on a first start with an integrated GPU, terrain in culled tiles, lighter tulips (hidden far
+  off), coarser curtains and quilts. Measured headless (software GL, so counts only, not frame rates): visible
+  triangles street 1037k → 825k, Twinsen's house 285k → 201k. Frame rates on real GPUs are not measured here.

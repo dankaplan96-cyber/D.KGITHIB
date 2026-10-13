@@ -55,6 +55,18 @@ fight; Aggressive mode's Space still attacks with the same moves.
   Normal / High) and needs line of sight. Lock-on lets go at once of a dead or absent target, at 17 m, or
   after 1.5 s out of sight. A small chevron marks the target. A slim health bar shows only for the locked or
   recently hit enemy.
+  - The mouse stays the aim while the cursor is over the game and mouse + keyboard is the device in use: a
+    still cursor never times out. Only a stick or touch, leaving the canvas, or a menu changes that. While the
+    mouse aims, walking never redirects a throw (a cursor on Twinsen himself keeps the last mouse aim).
+  - Right mouse: a short tap (under 180 ms, no drag) or a still hold focuses; a drag turns the camera and
+    never toggles the lock.
+  - Aim Assist Off: no soft target, no throw or melee correction; only a deliberate lock aims for you.
+  - The chevron shows the target a throw would use right now (an enemy, a switch, the target); the dotted
+    preview and the launch use the same target.
+- **Throw animation:** standing, the planted full-body throw; on the move, an upper-body layer over the walk
+  (the legs step sideways or backwards while aiming). The controls are free again at 0.36 s; the follow-through
+  runs on to ~0.62 s on the layer and blends into the walk or idle. The ball leaves the hand at 0.16 s on the
+  same clock as the pose. Charging allows a slow aimed walk (×0.42).
 - **Attack director:** at most 2 enemies may be winding up or attacking at once (Gentle 1, Hard 3). Enemies
   can't start an attack for 1.2 s after a scene change (0.6 s after dialogue).
 - **Difficulty** changes damage taken (×0.5 / 1 / 1.5), wind-up length (×1.3 / 1 / 0.85) and cooldowns,

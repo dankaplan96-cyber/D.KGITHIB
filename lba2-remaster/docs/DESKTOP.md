@@ -49,3 +49,15 @@ All pass on the Linux build. The Windows zip was also built on Linux (without th
 configuration.
 
 Not verified: running the Windows and macOS builds (no such machines here); real-GPU performance.
+
+## Measuring performance on your machine
+
+Pause → **Benchmark** runs four fixed routes (a populated street with the camera turning, Twinsen's house, a
+fight with throws, a door in and out) at Medium and High and shows a report you can copy: GPU as the browser
+reports it, window size, devicePixelRatio, render pixel ratio, MSAA, shadows and bloom, and per route the
+average fps, frame time p50/p95/p99/max, stalls over 50 ms, simulation CPU time, render-submission CPU time
+(CPU only; the GPU's work shows in the frame time), draw calls and triangles. It runs ~1 minute, turns the
+automatic resolution off while it measures, and never touches the save. F9 shows a live frame-time overlay.
+
+Settings → Resolution **Auto** (default) lowers the internal resolution (down to 0.6×) while frames run long
+and raises it again once they keep up; **Full** keeps it fixed.

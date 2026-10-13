@@ -1,6 +1,10 @@
 # NEXT ACTION
 
-User feedback after installing on Windows (top priority, in order): character proportions as in LBA2
+User (0.10.0 on Windows): combat animations not good, frame rate poor. 0.11.0 adds an in-game benchmark
+(pause → Benchmark): ask the user for its report from their PC before further graphics work, then tune what it
+shows (fill rate vs. geometry vs. CPU). Still open from the review: melee contact timing, starts/stops/landings,
+character lighting (modern path), a cinematic skip/pause test; the Dino-Fly at Twinsen's home (asked for).
+Earlier feedback (in order): character proportions as in LBA2
 (Twinsen: bigger round head, bell-shaped robe; Zoé: blonde done, body too thin, head too small); animations
 closer to the original (walk, run, idle, throw — timing and weight); confirm the start-up and the frame rate
 on the user's PC with F9 (GPU name, startup build/shader times).
