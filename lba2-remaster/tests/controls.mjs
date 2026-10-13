@@ -33,7 +33,7 @@ await ev(() => { game.settings.keys = { interact: 'KeyG' }; game.applySettings()
 const rebound = await label();
 await ev(() => { game.settings.keys = {}; game.applySettings(); navigator.getGamepads = () => [PAD]; PAD.axes = [0.5, 0, 0, 0]; game.step(0.05); PAD.axes = [0, 0, 0, 0]; atCupboard(); });
 const pad = await label();
-check('prompt shows E on the keyboard', kbd.show && kbd.key === 'E', kbd);
+check('prompt shows W on the keyboard (Classic: LBA2 talks and searches with W)', kbd.show && kbd.key === 'W', kbd);
 check('prompt shows the rebound key', rebound.show && rebound.key === 'G', rebound);
 check('prompt shows A on a pad', pad.show && pad.key === 'A', pad);
 
