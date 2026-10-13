@@ -12,7 +12,8 @@
 //   R.camp {x,z}                                     Ilka's camp under the north mesa
 //   R.post {x0,z0,x1,z1, gate:{x,z,open(),isOpen}, office:{x,z}, desk:{x,z}, patrol:[[x,z]...], cover:[{x,z,r}]}
 //   R.storm {level, setLevel(0..1)}                 sandstorm: fog closes in, dust blows; drones see less
-//   R.dig {x,z, gate:{x,z,open(),isOpen}, seals:[{x,y,z,on,setOn(b)}], carvings:{x,z}, bottomY}
+//   R.dig {x,z, gate:{x,z,open(),isOpen}, seals:[{x,y,z,on,setOn(b)}], carvings:{x,z}, door:{x,z}, bottomY, reveal()}
+//        the bottom of the excavation is the Temple of Bù's gate; reveal() slides its stone door away
 //   R.ruins {x,z, door:{x,z}}                        FunFrock's buried condenser hall (chapter 5)
 //   R.bore {x,z}                                     the project's test bore inside the post (chapter 5)
 // Heights: island ground BASE = 5.0; the dig steps down 1.6 m per terrace to bottomY = 0.4.
@@ -675,13 +676,18 @@ export function buildDesert(scene, physics) {
     const wallA = DIG_RAMPS[2] + Math.PI;
     const cxw = DIG.x + Math.cos(wallA) * 3.2, czw = DIG.z + Math.sin(wallA) * 3.2;
     const face = new THREE.Group(); face.position.set(cxw, bottomY, czw); face.rotation.y = -wallA - Math.PI / 2; group.add(face);
+    // the Temple of Bù's gate (Temple-Park, under Bald Mountain): a slate portal with a lintel of carved arches;
+    // the three seals hold its stone door shut (src/game/temple.js is the temple inside)
     const FB = new Batch(face);
-    FB.add(bbox(5.2, 3.2, 0.6, 0.12, 2), tm('fortStone', { color: '#c89a78' }), 0, 1.6, -0.2);
+    FB.add(bbox(5.6, 3.6, 0.7, 0.12, 2), tm('fortStone', { color: '#6c6f74' }), 0, 1.8, -0.25);
+    FB.add(bbox(3.0, 0.7, 0.9, 0.08, 1), tm('fortStone', { color: '#8a5a62' }), 0, 3.15, 0.0);
+    for (const s of [-1, 1]) FB.add(bbox(0.6, 3.0, 0.8, 0.08, 1), tm('fortStone', { color: '#55575d' }), s * 1.45, 1.5, 0.05);
+    FB.add(bbox(2.3, 2.8, 0.2, 0.02, 1), pm('#141214', 1), 0, 1.4, 0.0);
     FB.build();
-    const carv = new THREE.Mesh(new THREE.PlaneGeometry(4.4, 2.2), new THREE.MeshStandardMaterial({ map: carvingTex(), roughness: 0.95 }));
-    carv.position.set(0, 1.7, 0.12); face.add(carv);
-    const cover2 = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.4), pm('#a87a58', 1));
-    cover2.position.set(0, 1.7, 0.14); face.add(cover2);   // sand over the carving until the seals open
+    const carv = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.55), new THREE.MeshStandardMaterial({ map: carvingTex(), roughness: 0.95 }));
+    carv.position.set(0, 3.15, 0.47); face.add(carv);
+    const cover2 = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.8, 0.3), tm('fortStone', { color: '#7a7268' }));
+    cover2.position.set(0, 1.4, 0.15); cover2.castShadow = true; face.add(cover2);   // the stone door, until the seals open
     col({ type: 'box', x: cxw, z: czw, hw: 2.6, hd: 0.4, rot: wallA + Math.PI / 2, top: bottomY + 3.2, noStand: true });
     const sealM = tm('fortStone', { color: '#d8b090' });
     for (let k = 0; k < 3; k++) {
@@ -704,6 +710,7 @@ export function buildDesert(scene, physics) {
       ...W(DIG.x, DIG.z), bottomY, seals,
       gate: { ...R.digGateSpot, isOpen: false, open() { this.isOpen = true; digGate[0].rotation.x = -1.4; digGate[0].position.y += 1.2; digGate[1].enabled = false; } },
       carvings: W(DIG.x + Math.cos(wallA) * 2.0, DIG.z + Math.sin(wallA) * 2.0),
+      door: W(DIG.x + Math.cos(wallA) * 2.7, DIG.z + Math.sin(wallA) * 2.7),   // the temple's gate (enter here)
       reveal() { cover2.visible = false; },
     };
   }

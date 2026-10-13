@@ -20,6 +20,7 @@ import { buildZeelich } from './game/zeelich.js';
 import { buildUnderground } from './game/underground.js';
 import { buildDesert } from './game/desert.js';
 import { buildCondenser } from './game/condenser.js';
+import { buildTemple } from './game/temple.js';
 import { buildHamalayi } from './game/hamalayi.js';
 import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
@@ -60,7 +61,7 @@ export function migrateSave(raw) {
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
 // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
-const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
+const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
 const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
@@ -107,6 +108,7 @@ class Game {
     timed('underground', () => Object.assign(this.rooms, buildUnderground(S, P)));
     this.rooms.desert = timed('desert', () => buildDesert(S, P));
     timed('condenser', () => Object.assign(this.rooms, buildCondenser(S, P)));
+    timed('temple', () => Object.assign(this.rooms, buildTemple(S, P)));
     this.rooms.hamalayi = timed('hamalayi', () => buildHamalayi(S, P));
     timed('obsroom', () => Object.assign(this.rooms, buildObsRoom(S, P)));
     timed('upper', () => Object.assign(this.rooms, buildUpper3(S, P)));

@@ -5,8 +5,9 @@
 // trust and the name of Professor Ilka, who found the first crystals and was sacked for it. Hesk's sand-yacht
 // needs rope from the pier before it can fly. Ilka's notebook — the dig's gate code — sits on the foreman's
 // desk at the research post: go in during one of the sandstorms that blind the drones and send the gate
-// guard indoors. At the bottom of the dig (three terraces, crystal mites) three stone seals uncover an old
-// carving: the shell has vents, and the project is closing them. Dallan throws them out — but he knows.
+// guard indoors. The project dug Temple-Park down to the Temple of Bù's gate (three terraces, crystal mites);
+// three stone seals open the gate, and inside the temple (src/game/temple.js) a great carving shows the shell
+// and its vents, which the project is closing. Dallan throws them out — but he knows.
 // → chapter 5 (Steam and Sand): open the vent under this island without boiling Kesh.
 import { ChapterBase } from './base.js';
 import '../text/ch4.js';
@@ -15,6 +16,7 @@ const STORM_PERIOD = 75, STORM_LEN = 30; // seconds (game time) between storms, 
 
 export class Dig extends ChapterBase {
   get D() { return this.game.rooms.desert; }
+  get T() { return this.game.rooms.butemple; }
   inD() { return this.game.room?.id === 'desert'; }
   gears() { return [0, 1, 2].filter((i) => this.f['c4_gear' + i]).length; }
   seals() { return [0, 1, 2].filter((i) => this.f['c4_seal' + i]).length; }
@@ -42,6 +44,8 @@ export class Dig extends ChapterBase {
     // crystal mites on the lower terraces
     const dg = D.dig;
     [[10, 1.3], [10, 3.6], [6, 5.2]].forEach(([r, a], i) => out.push({ id: 'dmite' + i, kind: 'mite', x: dg.x + Math.cos(a) * r, z: dg.z + Math.sin(a) * r, when: (f) => this.isCur(f) && !!f.c4_digOpen }));
+    // and two more got into the temple through the project's cut
+    (this.T?.mites || []).forEach((p, i) => out.push({ id: 'tmite' + i, kind: 'mite', group: 'butemple', x: p.x, z: p.z, when: (f) => this.isCur(f) && !!f.c4_seals3 && !f.c4_carving }));
     return out;
   }
   place(id) {
@@ -57,10 +61,10 @@ export class Dig extends ChapterBase {
       }
       case 'tarra': return S.tarra;
       case 'ilka':
-        if (f.c4_seals3) { const c = D.dig.carvings; return { x: c.x + 1.2, z: c.z + 1.0, a: Math.atan2(D.dig.x - c.x, D.dig.z - c.z) }; }
+        if (f.c4_seals3 && this.T) return this.T.npcSpots.ilka;   // (she follows him into the temple)
         return S.ilka;
       case 'dallan':
-        if (f.c4_carving) { const g = D.dig.gate; return { x: g.x + 1.0, z: g.z + 2.0, a: Math.PI / 2 }; }
+        if (f.c4_carving && this.T) return this.T.npcSpots.dallan;
         return S.dallan;
       case 'guard': return this.stormy ? null : S.guard;
       case 'dkid': return S.kid;
@@ -88,11 +92,22 @@ export class Dig extends ChapterBase {
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
     const g = this.game, f = this.f, D = this.D, h = g.hero;
+    if (this.isCur() && g.room?.id === 'butemple' && f.c4_seals3 && !f.c4_carving && this.T) consider(dist(this.T.carving.x, this.T.carving.z), 2.2, { kind: 'c4carve', label: 'p_carving' });
     if (!this.isCur() || !this.inD()) return;
     if (f.c4_heskAsk && !f.c4_rope) consider(dist(D.rope.x, D.rope.z), 1.4, { kind: 'c4rope', label: 'p_rope' });
     if (f.c4_ilka && !f.c4_notebook) consider(dist(D.post.desk.x, D.post.desk.z), 1.5, { kind: 'c4desk', label: 'p_desk' });
     if (!f.c4_digOpen) consider(dist(D.dig.gate.x, D.dig.gate.z), 1.8, { kind: 'c4gate', label: 'p_code' });
-    if (f.c4_seals3 && !f.c4_carving && Math.abs(h.pos.y - D.dig.bottomY) < 1.2) consider(dist(D.dig.carvings.x, D.dig.carvings.z), 2.0, { kind: 'c4carve', label: 'p_carving' });
+  }
+  // the temple: its gate at the bottom of the dig, once the seals are open
+  doors() {
+    const D = this.D;
+    if (this.f.c4_seals3 && D?.dig?.door && this.T) return [{ region: 'desert', x: D.dig.door.x, z: D.dig.door.z, r: 1.3, room: 'butemple' }];
+    return [];
+  }
+  exitTo(to) {
+    const D = this.D;
+    if (to === 'bu-out' && D) { const c = D.dig.carvings; return { room: 'desert', x: D.dig.x, z: D.dig.z, a: Math.atan2(D.dig.x - c.x, D.dig.z - c.z) }; }   // (out at the middle of the dig floor, clear of the gate)
+    return null;
   }
   interact(it) {
     const g = this.game, f = this.f, D = this.D;
@@ -222,6 +237,10 @@ export class Dig extends ChapterBase {
     });
   }
 
+  onEnterRoom(id) {
+    if (id === 'butemple' && this.isCur() && !this.f.c4_templeSeen) { this.f.c4_templeSeen = true; this.chain([['hero', 'c4_temple_in']], () => this.game.updateObjective()); }
+  }
+
   // ---------------------------------------------------------------- per frame
   update(dt) {
     const g = this.game, f = this.f, D = this.D;
@@ -272,7 +291,7 @@ export class Dig extends ChapterBase {
   objective() {
     const f = this.f;
     if (!f.c4_started) return '';
-    if (f.c4_seals3) return this.goal('c4_obj_carving');
+    if (f.c4_seals3) return this.goal(this.game.room?.id === 'butemple' || f.c4_templeSeen ? 'c4_obj_carving' : 'c4_obj_temple');
     if (f.c4_digOpen) return this.goal('c4_obj_seals', { n: this.seals() });
     if (f.c4_notebook) return this.goal('c4_obj_dig');
     if (f.c4_ilka) return this.goal('c4_obj_notebook') + this.sub(false, 'c4_sub_storm');

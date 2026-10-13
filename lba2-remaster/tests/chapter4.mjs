@@ -80,7 +80,10 @@ log('gate', await ev(() => { const g = game.rooms.desert.dig.gate; T.useAt(g.x, 
 log('down', await ev(() => { const G = game, D = G.rooms.desert.dig; T.tp(D.x + 1.5, D.z - 1.0); G.step(0.5); T.talkAll(); return [G.hero.pos.y.toFixed(2), D.bottomY, G.flags.c4_digSeen]; }));
 await shot('C4-04-dig.png');
 log('seals', await ev(() => game.room.ballTargets.filter((t) => t.seal != null).map((tg) => T.hit(tg))));
-log('carving', await ev(() => { const G = game, c = G.rooms.desert.dig.carvings; G.step(0.5); T.talkAll(); T.useAt(c.x, c.z, G.rooms.desert.dig.bottomY); G.step(2); T.talkAll(); return [G.flags.c4_carving, G.flags.c4_done]; }));
+// the seals open the Temple of Bù's gate: walk in, read the great carving inside
+log('temple', await ev(() => { const G = game, d = G.rooms.desert.dig.door; G.step(0.5); T.talkAll(); T.tp(d.x, d.z, 0, G.rooms.desert.dig.bottomY); G.step(1.6); T.talkAll(); return [G.room?.id, G.flags.c4_templeSeen, T.obj()]; }));
+await shot('C4-05-temple.png');
+log('carving', await ev(() => { const G = game, c = G.rooms.butemple.carving; T.useAt(c.x, c.z); G.step(2); T.talkAll(); return [G.flags.c4_carving, G.flags.c4_done]; }));
 await shot('C4-05-carving.png');
 log('next', await ev(() => { const G = game; G.step(1.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, T.obj()]; }));
 console.log(errs.length ? errs.join('\n') : 'no errors');
