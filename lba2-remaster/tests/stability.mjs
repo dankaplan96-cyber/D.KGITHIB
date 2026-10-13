@@ -48,6 +48,22 @@ const d3 = await ev(() => {
 });
 check('D3: held at the waterline by a slide, he is put back on safe ground within 1.5 s', d3.t < 1.5 && Math.hypot(d3.pos[0] + 60, d3.pos[1] - 40) < 1, d3);
 
+// D6: the brink of the east cliff by the fort is never kept as a safe spot; after the fall to the shore
+// below (a slide trap) he is put back somewhere stable, not on the brink again (ISO: placed there)
+const d6 = await ev(() => {
+  const G = game, h = G.hero; P.settle();
+  G.lastSafe = { x: -40, z: -5 };
+  h.pos.set(-12.6, G.physics.groundAt(-12.6, -81.9, 30), -81.9); h.onGround = true; h.vel.set(0, 0); G.safeT = 0;
+  for (let i = 0; i < 45; i++) G.step(1 / 30);
+  const kept = { ...G.lastSafe };
+  h.pos.set(-12.4, 0.3, -83.1); h.onGround = true; h.vel.set(0, 0);
+  let t = 0; for (; t < 6 && Math.hypot(h.pos.x + 12.4, h.pos.z + 83.1) < 2; t += 1 / 30) G.step(1 / 30);
+  for (let i = 0; i < 30; i++) G.step(1 / 30);
+  return { kept, back: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(1)), stable: G.stableSpot(h.pos), sliding: h.sliding, t: +t.toFixed(2) };
+});
+check('D6: the cliff brink is not kept as a safe spot', Math.hypot(d6.kept.x + 12.6, d6.kept.z + 81.9) > 3, d6);
+check('D6: out of the slide trap below, he stands somewhere stable (no fall loop)', d6.t < 6 && d6.stable && !d6.sliding, d6);
+
 // D4: death → the game-over screen after the fall, in game time; a pause holds it
 const d4 = await ev(() => {
   const G = game, h = G.hero; P.settle();

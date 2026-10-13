@@ -348,6 +348,17 @@ class Game {
     if (instant) go(); else this.startTransition(go);
   }
 
+  // somewhere to put the hero back after a fall: level ground for a metre all round, nothing steep next to it
+  // (a spot on the brink of a slope sent him straight back down it, again and again)
+  stableSpot(p) {
+    const P = this.physics;
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4, x = p.x + Math.sin(a), z = p.z + Math.cos(a), g = P.groundAt(x, z, p.y + 0.6);
+      if (Math.abs(g - p.y) > 0.6 || P.steepAt(x, z, g)) return false;
+    }
+    return true;
+  }
+
   // a scene change: the ball comes home, shots in the air vanish, nobody may attack straight away
   resetCombat(carry = 'credit') {
     this.ball?.reset(carry); this.bolts?.clear(); this.hero?.combat?.reset(); this.targeting?.release(); this.combatDir?.reset(); this.hitStop = 0;
@@ -1131,7 +1142,7 @@ class Game {
 
     // remember a safe spot to return to after a fall
     this.safeT = (this.safeT || 0) - dt;
-    if ((!this.room || this.room.outdoor) && this.safeT <= 0 && h.onGround && !h.sliding && h.pos.y > 0.4) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
+    if ((!this.room || this.room.outdoor) && this.safeT <= 0 && h.onGround && !h.sliding && h.pos.y > 0.4 && this.stableSpot(h.pos)) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
 
     // outdoor music follows the area: village and harbour, the open island, the project station in the old fortress
     if (!this.room) this.audio.setOutdoorArea(h.pos, POI);

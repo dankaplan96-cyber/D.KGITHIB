@@ -35,7 +35,97 @@ runs a page-side script; `LOAD=`/`KEEP=` continue from / keep a real save made t
 | D3 | High | Coasts with steep banks (Citadel west shore, −77.7, 52.8) | Walking along the shore he slides down a steep bank to the waterline and stays there forever: sea below (refused), too steep above, no jumping while sliding | the slide is refused at the water's edge; nothing else moves him | sliding without moving for 1 s counts as a fall (back to the last safe spot, −1 life); a slide is never recorded as a safe spot (src/game/actors.js, src/main.js) | ISO + INPUT (route no longer traps) |
 | D4 | Medium | Death | Die, then pause within 2.2 s: the game-over screen pops over the pause menu; the timing was wall-clock | `setTimeout(gameOver, 2200)` | the death timer runs in game time (`deathT` in the hero's update) | tests/stability.mjs |
 | D5 | Blocker (save) | Chapter 2 (The Joint Project), Zoé in the project office | Zoé finds the plan (autosave) → close the game → Continue: Twinsen is in the office with no guard, the flags are back to "Meet Zoé", the lockers count as searched. He can take the plan himself (Zoé's part skipped); with the plan's locker marked searched it can never be found again and the office won't let him out | the reset of the segment on load cleared the flags but not the room or the searched lockers | resume outside at the station gate as Twinsen; the segment's lockers become searchable again (src/game/story/chapter1.js) — as chapter 3's lighthouse segment already did | INPUT (stealth) + reload: outside, plan found again, segment completes |
+| D6 | High | Cliff edges (the plateau's east cliff by the fort, −12.5, −82) | Walk along the brink: every second the brink is kept as the "safe spot"; he slides off, falls 11 m (−2), the shore below holds him in a slide, D3's recovery puts him back on the brink, he slides off again … until dead | the safe spot was any ground he stood on for a moment, however close to a slope he'd slide down | a spot is kept only with level, non-steep ground for a metre all round (`Game.stableSpot`) | ISO (tests/stability.mjs) + INPUT (the route that died now walks on) |
+| D7 | Medium | Menus on a short window (a phone held sideways, 640×360) | Pause: the menu runs 24 px off the bottom; its top half can't be scrolled to (`justify-content: center` on an overflowing column) | layout | `safe center` + tighter spacing under 440 px of height (css/style.css) | tests/display.mjs at 5 sizes |
+| D8 | Low | Long sessions | The music manager kept a line per track change forever (a few KB an hour) | unbounded debug log | keep the last 100–200 lines | code + tests/longsession.mjs |
 
-## Feature checklist
+## Feature checklist (build 0.22.0 + this pass's fixes)
 
-(Filled in as the pass proceeds; see the sections below.)
+Columns: where the player meets it · expected · test · evidence · result. "LOGIC" chapter scripts teleport between
+steps; the player-input playthrough (tests/playthrough/NN-*.mjs through tests/lib/seg.mjs) walks, talks, throws
+and fights its way through with keys only.
+
+### Startup, menus, settings
+| Feature | Where | Expected | Test | Evidence | Result |
+|---|---|---|---|---|---|
+| First launch, loading | title | title menu only; Continue disabled without a save; defaults (Classic, LBA camera) | menus.mjs | UI | PASS |
+| New Game | title | play starts in the house (?nocine) / the opening cinematic otherwise | menus.mjs, opening.mjs | UI | PASS |
+| Opening cinematic: play, skip (3 points), pause, focus loss, Continue no replay, second New Game no duplicates | new game | same end state skipped or watched | opening.mjs | UI/LOGIC | PASS (after the D2 order fix) |
+| Continue | title | resumes the saved scene and state | every playthrough segment (Save & quit → Continue) | INPUT+UI | PASS |
+| Save & quit (pause menu) | pause | saves, back to the title | seg runner KEEP | UI | PASS |
+| Pause / resume (Esc, button), 20 presses | play | world stops; held keys don't leak; no stray overlay | menus.mjs | UI | PASS |
+| Settings: open/close ×5, values apply at once, kept after relaunch, shown when reopened | title/pause | — | menus.mjs | UI | PASS |
+| Controls screen, rebinding, reset | title/pause | key stored, prompt label follows, reset restores | menus.mjs, controls.mjs | UI | PASS |
+| Title keyboard navigation | title | arrows move the selection | menus.mjs | UI | PASS |
+| Quality changed ×10 then play | pause → settings | renders, moves, no errors | crosssystem.mjs | UI | PASS |
+| Exit (Quit Game) | desktop title | closes the app | desktop/test-desktop.mjs | packaged app | see Packaging |
+
+### Input and movement
+| Feature | Expected | Test | Evidence | Result |
+|---|---|---|---|---|
+| Classic (default) arrows: turn 90°/s, walk, back | LBA2 keyboard | combat.mjs §classic, all playthrough segments | INPUT | PASS |
+| Modern scheme, mouse aim, pad, touch labels | — | combat.mjs, controls.mjs | LOGIC/INPUT | PASS |
+| Behaviours F1–F4, Ctrl menu | — | menus.mjs, playthrough (Discreet overhearing, Athletic jumps) | INPUT | PASS |
+| Athletic jump onto raised stones | 12 stepping stones to the Whispering Cliffs | 04-project-valves | INPUT | PASS |
+| Focus lost while holding a key / charging | keys released, nothing stuck | menus.mjs, crosssystem.mjs | UI | PASS |
+| Dialogue: held movement doesn't move the hero; E advances | — | menus.mjs | UI | PASS |
+| Low frame rates (10–30 fps) | same distances and timings | timing.mjs | LOGIC | PASS |
+
+### Camera and collision
+| Feature | Expected | Test | Evidence | Result |
+|---|---|---|---|---|
+| Floor seams in rooms over the sea | walkable | stability.mjs D1 | INPUT | FAIL → FIXED (D1) |
+| Steep banks at the waterline | no trap | stability.mjs D3 | ISO | FAIL → FIXED (D3) |
+| Safe spot after a fall | stable ground | stability.mjs D6 | ISO+INPUT | FAIL → FIXED (D6) |
+| Room camera height and framing in big rooms | follows the floor, hero inside the frame | 0.22.0 (lba1rooms.mjs, chapter3.mjs) | LOGIC | PASS |
+| Pathing across Citadel, Zeelich, Desert, Hamalayi, the shell by the game's own collision | every route the story needs is walkable | playthrough segments | INPUT | see Story |
+
+### Combat
+| Feature | Test | Evidence | Result |
+|---|---|---|---|
+| Sword combo, heavy, active frames, one hit per swing, walls, dodge i-frames | combat.mjs (60 checks) | LOGIC/INPUT | PASS |
+| Ball: tap/charge, magic bounces, recall, no tunnelling, fetch bonus, back in hand | combat.mjs | LOGIC/INPUT | PASS |
+| Targeting, lock-on, aim assist off | combat.mjs | INPUT | PASS |
+| Enemies: mites, drones, sentries, crawlers, Vesk's guards (armour), guard dogs, troopers | combat.mjs, playthrough fights (depots) | LOGIC/INPUT | PASS |
+| Pause while charging; weapon swap while the ball flies; door with the ball in the air; death with the ball out → Retry | crosssystem.mjs | INPUT/UI | PASS |
+| Death → game over (game time) → Retry | stability.mjs D4, crosssystem.mjs | ISO/UI | FAIL → FIXED (D4) |
+
+### Interactions and items
+| Feature | Test | Evidence | Result |
+|---|---|---|---|
+| Talk / search / use / read prompts and their target | playthrough (harness checks the prompt is the intended thing) | INPUT | PASS |
+| Givers: one bonus per giver, mashing E/Space | givers.mjs, crosssystem.mjs | INPUT | PASS |
+| Inventory (I), holomap (H), shop menus | menus.mjs, 11-evacuation (Pippa) | UI | PASS |
+| Refused exits (no ball / no plan) | stability.mjs D2 | INPUT | FAIL → FIXED (D2) |
+
+### Saves
+| Feature | Test | Evidence | Result |
+|---|---|---|---|
+| Autosave + Save & quit + Continue across every segment | playthrough | INPUT+UI | PASS so far (see Story) |
+| Save made during Zoé's office segment | zoe-resume.mjs | INPUT+UI | FAIL → FIXED (D5) |
+| Old saves (v1), a save in a missing room, a corrupt save kept aside | save-migration.mjs | LOGIC | PASS |
+| Weapons saved and restored | combat.mjs | LOGIC | PASS |
+
+### Audio (state only: nothing here was listened to)
+| Feature | Test | Result |
+|---|---|---|
+| Volumes from the sliders reach the buses, kept after relaunch | audio.mjs | PASS |
+| Music per place; one voice playing, ≤2 alive (fading) after each door | audio.mjs, longsession.mjs | PASS |
+| Voices (gibberish babble) timed to text | voices.mjs | PASS |
+| Cinematic pause suspends the audio context | opening.mjs | PASS |
+
+### Interface and display
+| Feature | Test | Result |
+|---|---|---|
+| HUD, prompt, dialogue, pause menu inside the window at 1920×1080, 1280×720, 1024×768, 800×600, 640×360; canvas follows a resize | display.mjs | FAIL (640×360 pause menu) → FIXED (D7) |
+| Fullscreen | — | NOT TESTED (headless; the desktop app is windowed) |
+
+### Performance and long sessions (software rendering: counts only)
+| Measure | Result |
+|---|---|
+| 30 cycles of door in/out + 3 throws + a conversation | objects 8238 → 8238, geometries 938, textures 393, programs 116, music voices 1, intervals/listeners flat, heap +0.8 MB after GC (longsession.mjs) — no leak found; music debug log bounded (D8) |
+| Simulation CPU per frame (headless, no render) | house 1.0 ms, Citadel square 1.3 ms, depot with enemies 1.4 ms |
+| In-game benchmark (draw calls / triangles) | street High 847 / 1.23 M, Medium 441 / 846 k; house ~211–223 / ~410 k (was 201 k at 0.11.0, before the house rebuild); combat ~220 / 253 k |
+| Frame rate on a GPU | BLOCKED: no GPU here (SwiftShader). The user's own benchmark (pause → Benchmark) is the way |
+| First visit to a room/region | shaders compile behind the black transition (0.22.0, transitions.mjs) |
+

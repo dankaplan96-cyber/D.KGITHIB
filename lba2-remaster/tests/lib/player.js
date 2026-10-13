@@ -37,11 +37,18 @@
   // ---- navigation
   const probe = { pos: new (G.hero.pos.constructor)(), radius: 0.45, onGround: true, vy: 0 };
   // can the hero step from (x, y, z) to (nx, nz)? → the new height, or null
+  // (in sub-steps of ~0.1 m, as the hero moves frame by frame: a bump steeper than walkable inside a longer step
+  // would otherwise pass here and stop him there)
   const stepTo = (x, y, z, nx, nz) => {
     probe.radius = hero().radius; probe.pos.set(x, y, z); probe.onGround = true;
-    PH.move(probe, nx - x, nz - z);
-    if (Math.hypot(probe.pos.x - nx, probe.pos.z - nz) > 0.04) return null;
-    const ny = PH.groundAt(nx, nz, y);
+    const n = Math.max(1, Math.ceil(Math.hypot(nx - x, nz - z) / 0.1));
+    for (let i = 1; i <= n; i++) {
+      const px = x + (nx - x) * i / n, pz = z + (nz - z) * i / n;
+      PH.move(probe, px - probe.pos.x, pz - probe.pos.z);
+      if (Math.hypot(probe.pos.x - px, probe.pos.z - pz) > 0.04) return null;
+      probe.pos.y = PH.groundAt(px, pz, probe.pos.y);
+    }
+    const ny = PH.groundAt(nx, nz, probe.pos.y);
     if (ny < y - 2.2) return null;                 // a drop that would hurt
     if (PH.steepAt(nx, nz, ny)) return null;       // he'd slide
     return ny;
@@ -67,8 +74,16 @@
     }
     return Math.abs(y - b.y) < 0.7;
   };
+  // door and exit triggers on the way (not the one we're going to) are walked around, not through
+  const triggers = (tx, tz) => {
+    const out = [];
+    if (G.room) for (const e of G.room.exits) out.push(e);
+    if (!G.room || G.room.outdoor) for (const d of G.story.doors()) if ((d.region || undefined) === G.room?.id) out.push(d);
+    return out.filter((d) => Math.hypot(d.x - tx, d.z - tz) > 1.2).map((d) => ({ x: d.x, z: d.z, r: d.r + 0.35 }));
+  };
   P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5 } = {}) => {
     const h = hero(), sx = h.pos.x, sz = h.pos.z;
+    const avoid = triggers(tx, tz).filter((d) => Math.hypot(d.x - sx, d.z - sz) > d.r);
     const key = (ix, iz, y) => ix + ',' + iz + ',' + Math.round(y * 2);
     // binary heap of [f, key]
     const heap = [];
@@ -92,6 +107,7 @@
         const nx = sx + (c.ix + dx) * cell, nz = sz + (c.iz + dz) * cell;
         const ny = stepTo(c.x, c.y, c.z, nx, nz);
         if (ny == null) continue;
+        if (avoid.some((d) => Math.hypot(nx - d.x, nz - d.z) < d.r)) continue;
         const nk = key(c.ix + dx, c.iz + dz, ny);
         if (closed.has(nk)) continue;
         let e = edge.get(nk); if (e === undefined) { e = edgy(nx, ny, nz); edge.set(nk, e); }
@@ -118,9 +134,12 @@
 
   // steer along a path with the Classic controls; returns why it stopped
   const CALM = new Set(['patrol', 'idle', 'guard', 'home', 'return', 'dead', 'search']);
-  P.threats = (r = 7) => G.enemies.filter((e) => e.alive && e.present && !CALM.has(e.state) && e.pos.distanceTo(hero().pos) < r && Math.abs(e.pos.y - hero().pos.y) < 4);
+  // enemies the ball can't reach from here (behind a fence it sees through) are left alone for a while, as a
+  // player would after a few wasted throws
+  P.ignore = new Map();
+  P.threats = (r = 7) => G.enemies.filter((e) => e.alive && e.present && !CALM.has(e.state) && e.pos.distanceTo(hero().pos) < r && Math.abs(e.pos.y - hero().pos.y) < 4 && !((P.ignore.get(e) ?? -1) > G.time));
   P.go = (tx, tz, { tol = 0.6, maxT = 240, run = false, stopOnTrans = true, planTol, fight = true } = {}) => {
-    let lastFight = -1;
+    let lastFight = -1, fights = 0;
     const h = hero();
     if (run && h.behaviour !== 'athletic') P.tap('F2'); else if (!run && h.behaviour === 'athletic') P.tap('F1');
     let plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }), wi = 1, t = 0, replans = 0;
@@ -130,11 +149,11 @@
     while (t < maxT) {
       if (Math.hypot(h.pos.x - tx, h.pos.z - tz) <= tol) { P.release(); return { r: 'arrived', t }; }
       if (G.state !== 'play') { P.release(); return { r: 'state:' + G.state, t }; }
-      if (stopOnTrans && (G.trans || (G.room?.id ?? 'citadel') !== startRoom)) { P.release(); return { r: 'transition', t }; }
+      if (stopOnTrans && (G.trans || (G.room?.id ?? 'citadel') !== startRoom)) { P.release(); P.note(`go: transition (${startRoom} → ${G.room?.id ?? 'citadel'}, trans ${!!G.trans}) at (${h.pos.x.toFixed(2)}, ${h.pos.z.toFixed(2)})`); return { r: 'transition', t }; }
       // someone is coming at him: deal with them first (as a player would), then plan again from here
       if (fight && t - lastFight > 0.5) {
         lastFight = t;
-        if (P.threats().length) { P.release(); P.note('threat: fight'); const fr = P.fight({ maxT: 40, threatsOnly: true }); P.note('fight → ' + JSON.stringify(fr)); if (h.dead || G.state !== 'play') { P.release(); return { r: h.dead ? 'dead' : 'state:' + G.state, t }; } plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }); wi = 1; lastP = { x: h.pos.x, z: h.pos.z, t }; continue; }
+        if (P.threats().length && fights < 8) { fights++; P.release(); P.note('threat: fight'); const fr = P.fight({ maxT: 40, threatsOnly: true }); t += fr.t || 1; P.note('fight → ' + JSON.stringify(fr)); if (h.dead || G.state !== 'play') { P.release(); return { r: h.dead ? 'dead' : 'state:' + G.state, t }; } plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }); wi = 1; lastP = { x: h.pos.x, z: h.pos.z, t }; continue; }
       }
       while (wi < plan.pts.length - 1 && Math.hypot(plan.pts[wi].x - h.pos.x, plan.pts[wi].z - h.pos.z) < 0.45) wi++;
       const w = plan.pts[Math.min(wi, plan.pts.length - 1)] || { x: tx, z: tz };
@@ -142,7 +161,8 @@
       keys.delete('ArrowLeft'); keys.delete('ArrowRight'); keys.delete('ArrowUp');
       if (diff > 0.1) keys.add('ArrowLeft'); else if (diff < -0.1) keys.add('ArrowRight');
       if (Math.abs(diff) < (h.speed > 3.5 ? 0.22 : 0.32)) keys.add('ArrowUp');
-      G.step(DT); t += DT;
+      const hp0 = h.hp; G.step(DT); t += DT;
+      if (h.hp < hp0) P.note(`hurt ${hp0}→${h.hp} at (${h.pos.x.toFixed(1)}, ${h.pos.y.toFixed(1)}, ${h.pos.z.toFixed(1)}) near: ${G.enemies.filter((e) => e.alive && e.present && e.pos.distanceTo(h.pos) < 10).map((e) => e.id + ':' + e.state).join(',') || 'nobody'} ${h.sliding ? 'sliding' : ''}`);
       if (t - lastP.t > 2.5) {
         if (Math.hypot(h.pos.x - lastP.x, h.pos.z - lastP.z) < 0.4) {
           if (++replans > 6) { P.release(); return { r: 'stuck', t, at: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) }; }
@@ -175,6 +195,8 @@
   // what E would use now (the prompt the player sees): its position, or the NPC's
   P.target = () => { const it = G.findInteractable(); if (!it) return null; const o = it.npc?.pos || it.sign || it.pet || it.it || it; return { kind: it.kind, id: it.id || it.npc?.def.id || it.label, x: o.x, z: o.z, label: it.label }; };
   P.use = (x, z, { near = 1.1, run = false, match = 1.6 } = {}) => {
+    const where = P.sceneOf(x, z);
+    if (where !== P.here()) P.enter(where, { run });
     let r = P.go(x, z, { tol: near, run });
     if (r.r !== 'arrived' && r.r !== 'state:dialog') return { r: 'go:' + r.r, at: [hero().pos.x, hero().pos.z] };
     let tg = null;
@@ -189,14 +211,44 @@
     return { r: 'used', target: tg, state: s.state, lines: s.lines };
   };
   P.npc = (id) => G.npcs.find((n) => n.def.id === id);
+  // which scene a point belongs to: a room (rooms are built far apart, each around its centre) or outdoors
+  P.sceneOf = (x, z) => {
+    let best = null, bd = 60;
+    for (const [id, R] of Object.entries(G.rooms)) { if (R.outdoor) continue; const d = Math.hypot(x - R.center.x, z - R.center.z); if (d < bd) { bd = d; best = id; } }
+    if (best) return best;
+    for (const [id, R] of Object.entries(G.rooms)) if (R.outdoor && R.center && Math.hypot(x - R.center.x, z - R.center.z) < 400) return id;
+    return 'citadel';
+  };
+  P.here = () => G.room?.id ?? 'citadel';
+  // walk to a room through its door (from outdoors, or out of another room first)
+  P.enter = (id, opts = {}) => {
+    if (P.here() === id) return { r: 'here' };
+    if (G.room && !G.room.outdoor) {
+      const e = G.room.exits.find((x) => x.room === id) || G.room.exits.find((x) => !x.room);
+      if (!e) return { r: 'no exit' };
+      P.through(e.x, e.z, opts); if (P.here() === id) return { r: 'entered' };
+    }
+    const d = G.story.doors().find((x) => x.room === id && (x.region || 'citadel') === P.here());
+    if (!d) return { r: 'no door to ' + id + ' from ' + P.here() };
+    const r = P.through(d.x, d.z, opts);
+    return { r: P.here() === id ? 'entered' : 'failed:' + r.r };
+  };
   P.talk = (id, opts = {}) => {
     const n = P.npc(id);
     if (!n || !n.present) return { r: 'absent:' + id };
+    const where = P.sceneOf(n.pos.x, n.pos.z);
+    if (where !== P.here()) { const e = P.enter(where, opts); if (P.here() !== where) return { r: 'cannot reach ' + where + ': ' + e.r }; }
     const r = P.go(n.pos.x, n.pos.z, { tol: 1.6, ...opts });
-    if (G.state === 'play') { P.face(n.pos.x, n.pos.z); P.tap('KeyE', 0.1); }
+    let tg = null;
+    if (G.state === 'play') {
+      P.face(n.pos.x, n.pos.z); tg = P.target();
+      // the prompt must be for this person (not a bench or a sign beside them): step closer
+      for (let k = 0; k < 3 && !(tg?.kind === 'npc' && tg.id === id); k++) { P.go(n.pos.x, n.pos.z, { tol: 1.0 - k * 0.2 }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
+      P.tap('KeyE', 0.1);
+    }
     const talked = G.state === 'dialog' || G.state === 'shop' || G.state === 'cutscene';
     const s = P.settle();
-    return { r: talked ? 'talked' : 'no-dialog:' + r.r, state: s.state, lines: s.lines };
+    return { r: talked ? 'talked' : 'no-dialog:' + r.r, to: tg?.id, state: s.state, lines: s.lines };
   };
   // walk into a door / exit trigger and wait for the new scene
   P.through = (x, z, opts = {}) => {
@@ -213,16 +265,19 @@
   // fight the enemies of a group (or every present one in reach) with the ball until none is left
   P.fight = ({ group = null, maxT = 120, range = 7, melee = false, threatsOnly = false } = {}) => {
     const h = hero(); let t = 0;
-    const alive = () => threatsOnly ? P.threats(12) : G.enemies.filter((e) => e.alive && e.present && (group ? e.group === group : e.pos.distanceTo(h.pos) < 30));
+    const alive = () => threatsOnly ? P.threats(12) : G.enemies.filter((e) => e.alive && e.present && !((P.ignore.get(e) ?? -1) > G.time) && (group ? e.group === group : e.pos.distanceTo(h.pos) < 30));
     while (t < maxT && alive().length && !h.dead) {
       const e = alive().sort((a, b) => a.pos.distanceTo(h.pos) - b.pos.distanceTo(h.pos))[0];
       const d = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z);
       if (d > range) { const r = P.go(e.pos.x, e.pos.z, { tol: range - 1, maxT: 8, fight: false }); t += r.t || 0.5; if (G.state !== 'play') P.settle(); continue; }
       P.face(e.pos.x, e.pos.z, 1.5);
+      const hp0 = e.hp, tg = G.targeting?.throwTarget?.({ x: Math.sin(h.angle), z: Math.cos(h.angle) });
       // armoured (Grobo guards, troopers): a charged throw (hold F); otherwise the quick throw (tap F)
       if (melee) { P.tap('KeyK', 0.35); t += 0.4; }
       else if ((e.armour || 0) >= 2) { keys.add('KeyF'); I.taps.add('KeyF'); G.step(0.85); keys.delete('KeyF'); G.step(1.0); t += 1.9; }
       else { P.tap('KeyF', 0.05); G.step(1.1); t += 1.2; }
+      if (e.hp === hp0) { e._miss = (e._miss || 0) + 1; if (e._miss >= 4) { e._miss = 0; P.ignore.set(e, G.time + 25); P.note(`fight: ${e.id} unreachable from here, leaving it`); } } else e._miss = 0;
+      P.note(`fight ${e.id || e.def?.kind} d=${d.toFixed(1)} st=${e.state} aim=${tg ? (tg === e ? 'it' : 'other:' + (tg.id || tg.def?.id || tg.kind || 'pt') + '@' + (tg.pos || tg).x?.toFixed(1) + ',' + (tg.pos || tg).z?.toFixed(1) + ' d' + Math.hypot((tg.pos || tg).x - h.pos.x, (tg.pos || tg).z - h.pos.z).toFixed(1)) : 'none'} e@${e.pos.x.toFixed(1)},${e.pos.y.toFixed(1)},${e.pos.z.toFixed(1)} me@${h.pos.x.toFixed(1)},${h.pos.y.toFixed(1)},${h.pos.z.toFixed(1)} ball=${G.ball.state} hp ${hp0}→${e.hp} me ${h.hp}`);
       if (G.state !== 'play') P.settle();
     }
     return { left: alive().length, dead: h.dead, hp: h.hp, t: +t.toFixed(1) };
@@ -270,5 +325,7 @@
     }
     P.release(); return { r: 'timeout', t };
   };
+  // a menu (shop, Hesk's flights): click its item as a player does
+  P.menuPick = (i) => { const el = document.querySelector(`#shop .item[data-i="${i}"]`); if (!el) return { r: 'no item ' + i, state: G.state }; el.click(); G.step(0.2); P.settle(); return { r: 'picked', state: G.state }; };
   P.state = () => ({ state: G.state, room: G.room?.id ?? 'citadel', pos: [hero().pos.x, hero().pos.y, hero().pos.z].map((v) => +v.toFixed(2)), hp: hero().hp, chapter: G.flags.chapterKey, obj: document.querySelector('#objective')?.textContent || '' });
 })();
