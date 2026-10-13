@@ -221,6 +221,8 @@
     let best = null, bd = 60;
     for (const [id, R] of Object.entries(G.rooms)) { if (R.outdoor) continue; const d = Math.hypot(x - R.center.x, z - R.center.z); if (d < bd) { bd = d; best = id; } }
     if (best) return best;
+    // the outdoor region he is in (Zeelich, Desert Island, the Hamalayi have no centre): anything close by is in it
+    if (G.room?.outdoor && Math.hypot(x - hero().pos.x, z - hero().pos.z) < 350) return G.room.id;
     for (const [id, R] of Object.entries(G.rooms)) if (R.outdoor && R.center && Math.hypot(x - R.center.x, z - R.center.z) < 400) return id;
     return 'citadel';
   };
@@ -295,7 +297,12 @@
       const hp0 = e.hp, tg = G.targeting?.throwTarget?.({ x: Math.sin(h.angle), z: Math.cos(h.angle) });
       const aimed = tg && tg.alive !== undefined ? tg : e;   // the throw goes where the game aims it
       if (melee) { P.tap('KeyK', 0.35); t += 0.4; }
-      else if ((aimed.armour || 0) >= 2 && h.mp >= 1) { keys.add('KeyF'); I.taps.add('KeyF'); P.gstep(1.3); keys.delete('KeyF'); P.gstep(1.0); t += 2.3; }   // full charge: chargeAfter 0.2 + chargeFull 0.75 s, with a margin
+      else if ((aimed.armour || 0) >= 2 && h.mp >= 1) {
+        // a charge can't be dodged out of: start it in the guard's opening, just after its shot (rifle lowered)
+        const opening = () => (aimed.state === 'recover' || aimed.state === 'hurt' || aimed.coolT > 0.6) && !(G.bolts?.list?.length) && h.hurtT <= 0 && h.actT <= 0 && h.onGround;
+        for (let w = 0; w < 6 / DT && aimed.alive && !opening(); w++) { P.gstep(DT); t += DT; }
+        P.face(aimed.pos.x, aimed.pos.z, 1.5);
+        keys.add('KeyF'); I.taps.add('KeyF'); P.gstep(1.3); keys.delete('KeyF'); P.gstep(1.0); t += 2.3; }   // full charge: chargeAfter 0.2 + chargeFull 0.75 s, with a margin
       else { P.tap('KeyF', 0.05); P.gstep(1.1); t += 1.2; }
       if (e.hp === hp0 && aimed === e) { e._miss = (e._miss || 0) + 1; if (e._miss >= 4) { e._miss = 0; P.ignore.set(e, G.time + 25); P.note(`fight: ${e.id} unreachable from here, leaving it`); } } else e._miss = 0;
       P.note(`fight ${e.id || e.def?.kind} d=${d.toFixed(1)} st=${e.state} aim=${tg ? (tg === e ? 'it' : 'other:' + (tg.id || tg.def?.id || tg.kind || 'pt') + '@' + (tg.pos || tg).x?.toFixed(1) + ',' + (tg.pos || tg).z?.toFixed(1) + ' d' + Math.hypot((tg.pos || tg).x - h.pos.x, (tg.pos || tg).z - h.pos.z).toFixed(1)) : 'none'} e@${e.pos.x.toFixed(1)},${e.pos.y.toFixed(1)},${e.pos.z.toFixed(1)} me@${h.pos.x.toFixed(1)},${h.pos.y.toFixed(1)},${h.pos.z.toFixed(1)} ball=${G.ball.state} hp ${hp0}→${e.hp} me ${h.hp} mp ${h.mp}`);
@@ -314,18 +321,19 @@
   };
   // athletic jump onto a raised spot (a stepping stone): line up 1.6 m short of its centre, run at it, jump (Space)
   // and wait for the landing. Returns the height reached.
-  P.hopTo = (x, z, top, { from = 1.7 } = {}) => {
+  P.hopTo = (x, z, top, { from = 1.7, walk = true, brake = 0.5 } = {}) => {
     const h = hero();
     if (h.behaviour !== 'athletic') P.tap('F2');
     const a = Math.atan2(x - h.pos.x, z - h.pos.z);
     const sx = x - Math.sin(a) * from, sz = z - Math.cos(a) * from;
-    if (Math.hypot(h.pos.x - sx, h.pos.z - sz) > 0.6 && Math.abs(h.pos.y - top) > 0.3) P.go(sx, sz, { tol: 0.4, maxT: 20, run: true });
+    if (walk && Math.hypot(h.pos.x - sx, h.pos.z - sz) > 0.6 && Math.abs(h.pos.y - top) > 0.3) P.go(sx, sz, { tol: 0.4, maxT: 20, run: true });
     P.face(x, z);
     keys.add('ArrowUp'); G.step(0.12); P.tap('Space', 0); keys.add('ArrowUp');
     let t = 0, air = false;
     while (t < 2.5) { G.step(DT); t += DT; if (!h.onGround) air = true; if (air && h.onGround) break;
       // over the target: stop pushing forward so he doesn't run off its far side
-      if (Math.hypot(h.pos.x - x, h.pos.z - z) < 0.5) keys.delete('ArrowUp'); }
+      // (letting go of Up in the air brakes: about 1 m more at a run, so a short hop lets go early: brake ≈ 1)
+      if (Math.hypot(h.pos.x - x, h.pos.z - z) < brake) keys.delete('ArrowUp'); }
     P.release(); G.step(0.2);
     return +h.pos.y.toFixed(2);
   };
