@@ -141,7 +141,7 @@
   // player would after a few wasted throws
   P.ignore = new Map();
   P.threats = (r = 7) => G.enemies.filter((e) => e.alive && e.present && !CALM.has(e.state) && e.pos.distanceTo(hero().pos) < r && Math.abs(e.pos.y - hero().pos.y) < 4 && !((P.ignore.get(e) ?? -1) > G.time));
-  P.go = (tx, tz, { tol = 0.6, maxT = 240, run = false, stopOnTrans = true, planTol, fight = true } = {}) => {
+  P.go = (tx, tz, { tol = 0.6, maxT = 240, run = false, stopOnTrans = true, planTol, fight = true, stopWhen = null } = {}) => {
     let lastFight = -1, fights = 0;
     const h = hero();
     // a transition already under way (a Continue, a door just used): let it finish first
@@ -153,6 +153,7 @@
     P.note(`go → (${tx.toFixed(1)}, ${tz.toFixed(1)}) plan ok=${plan.ok} pts=${plan.pts.length} left=${plan.left}`);
     while (t < maxT) {
       if (Math.hypot(h.pos.x - tx, h.pos.z - tz) <= tol) { P.release(); return { r: 'arrived', t }; }
+      if (stopWhen && stopWhen()) { P.release(); return { r: 'arrived', t, early: true }; }
       if (G.state !== 'play') { P.release(); return { r: 'state:' + G.state, t }; }
       if (stopOnTrans && (G.trans || (G.room?.id ?? 'citadel') !== startRoom)) { P.release(); P.note(`go: transition (${startRoom} → ${G.room?.id ?? 'citadel'}, trans ${!!G.trans}) at (${h.pos.x.toFixed(2)}, ${h.pos.z.toFixed(2)})`); return { r: 'transition', t }; }
       // someone is coming at him: deal with them first (as a player would), then plan again from here
@@ -202,7 +203,9 @@
   P.use = (x, z, { near = 1.1, run = false, match = 1.6 } = {}) => {
     const where = P.sceneOf(x, z);
     if (where !== P.here()) P.enter(where, { run });
-    let r = P.go(x, z, { tol: near, run });
+    // (a player presses E as soon as the prompt is for this thing, close enough: no need to reach the exact spot)
+    const ready = () => { const tg = P.target(); return !!tg && tg.x != null && Math.hypot(tg.x - x, tg.z - z) <= match && Math.hypot(hero().pos.x - x, hero().pos.z - z) < 2.2; };
+    let r = P.go(x, z, { tol: near, run, stopWhen: ready });
     if (r.r !== 'arrived' && r.r !== 'state:dialog') return { r: 'go:' + r.r, at: [hero().pos.x, hero().pos.z] };
     let tg = null;
     if (G.state === 'play') {

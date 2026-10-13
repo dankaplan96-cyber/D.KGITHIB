@@ -64,6 +64,20 @@ const d6 = await ev(() => {
 check('D6: the cliff brink is not kept as a safe spot', Math.hypot(d6.kept.x + 12.6, d6.kept.z + 81.9) > 3, d6);
 check('D6: out of the slide trap below, he stands somewhere stable (no fall loop)', d6.t < 6 && d6.stable && !d6.sliding, d6);
 
+// D10: Desert Island's pier: off its landward end onto the sand by input (ISO: the story jumped to the end of
+// chapter 3, whose shaft sends him to the pier; the walk is input)
+const d10 = await ev(() => {
+  const G = game; P.settle();
+  Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 1, chapterKey: 'project', c1_started: true, c1_done: true, c1_radio: true, c1_veskGone: true, c1_plan: true });
+  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); P.settle();
+  Object.assign(G.flags, { c2_plan: true, c2_planBack: true, c2_okuOK: true, c2_cog: true, c2_cyl: true, c2_key: true, c2_broadcast: true, c2_shield: true, c2_veskDown: true });
+  G.story.cur.toShell(); P.settle(); G.step(1.5); P.settle();
+  const start = [G.hero.pos.x, G.hero.pos.y].map((v) => +v.toFixed(1)), T = P.npc('tarra');
+  const r = P.go(T.pos.x, T.pos.z, { tol: 2.2, maxT: 60 });
+  return { room: G.room?.id, start, r: r.r, at: [G.hero.pos.x, G.hero.pos.y, G.hero.pos.z].map((v) => +v.toFixed(1)) };
+});
+check('D10: off the Desert Island pier onto the sand and to Mother Tarra by input', d10.room === 'desert' && d10.r === 'arrived', d10);
+
 // D4: death → the game-over screen after the fall, in game time; a pause holds it
 const d4 = await ev(() => {
   const G = game, h = G.hero; P.settle();
