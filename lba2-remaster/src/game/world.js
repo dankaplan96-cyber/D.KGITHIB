@@ -10,6 +10,7 @@ import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, STUMP, SHIFT } from './island.js';
+import { buildDinoFly } from './dinofly.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod } from './kit.js';
 import { COAST, LEVELS, PROPS } from './citadel-layout.js';
@@ -797,6 +798,8 @@ export function buildWorld(parentScene) {
   // givers outdoors (most are indoors, as in the original): the sage's barrels and the old stump
   W.givers.push({ id: 'barrels', x: W.barrels.x, z: W.barrels.z, r: 2.0, top: 1.1, kinds: ['magic'] });
   W.givers.push({ id: 'stump', ...STUMP, r: 2.0, top: 0.8, kinds: ['clover'] });
+  // the Dino-Fly naps in the garden north of Twinsen's house
+  buildDinoFly(scene, W, -50.5, 68.5, 1.9);
   W.storm = 1;
   W.update = (dt, t) => {
     swayU.uTime.value = t;

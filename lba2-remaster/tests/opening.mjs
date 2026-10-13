@@ -38,7 +38,7 @@ const holdSkip = async () => {
 // the state the opening must leave, however it ended
 const endState = () => ev(() => {
   const G = game, f = G.flags, zoe = G.npcs.find((n) => n.def.id === 'zoe'), ar = G.npcs.find((n) => n.def.id === 'arthur');
-  const water = G.world.houses.find((h) => h.id === 'water');
+  const water = G.world.houses.find((h) => h.id === 'nbr'); // (Zoé's "next door": the neighbours by Twinsen's house)
   const save = JSON.parse(localStorage.getItem('lba3_save_v1') || 'null');
   return {
     state: G.state, room: G.room?.id, cine: !!G.cine, camCine: !!G.camRig.cine, hud: !document.querySelector('#hud').classList.contains('hidden'),

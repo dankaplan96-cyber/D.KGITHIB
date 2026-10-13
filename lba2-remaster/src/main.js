@@ -589,6 +589,7 @@ class Game {
     for (const n of this.npcs) if (n.present && !n.def.noTalk) consider(dist(n.pos.x, n.pos.z), 2.6, { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk' });
     if (!this.room) {
       for (const s of W.signs) consider(dist(s.x, s.z), 2.0, { kind: 'sign', sign: s, label: 'p_read' });
+      for (const p of W.pets || []) consider(dist(p.x, p.z), p.r, { kind: 'pet', pet: p, label: 'p_talk' });
     }
     // the chapter's own interactions first: on a tie (same spot) they win over the generic ones
     this.story.interactables(consider, dist);
@@ -602,6 +603,7 @@ class Game {
     if (!it) return false;
     if (it.kind === 'npc') this.story.talk(it.npc);
     else if (it.kind === 'sign') this.say('', [t(it.sign.key)]);
+    else if (it.kind === 'pet') it.pet.talk(this);
     else this.story.interact(it);
     return true;
   }
@@ -992,6 +994,7 @@ class Game {
     this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : focus);
     if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     else if (this.room.outdoor) updateKitLod(this.hero.pos);
+    this.world._hero = this.hero;
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
     this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);

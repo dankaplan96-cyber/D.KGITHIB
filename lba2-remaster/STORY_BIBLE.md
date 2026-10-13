@@ -189,3 +189,8 @@ goal. Important scenes are played, not narrated.
 ## Open questions
 - The being's name (Sendell only says "her"). Keep it unnamed unless a scene needs a name.
 - Desert Island and the Hamalayi carry chapters 4–7 (decided for the 12-chapter version).
+
+### The Dino-Fly
+Twinsen's friend from LBA2, twelve years older. Too old now to carry the family over the sea (so they take the
+ferry), he naps in the garden north of Twinsen's house, follows Twinsen with his eyes, stretches his wings now
+and then, and rumbles when Twinsen talks to him. No flying in this game.

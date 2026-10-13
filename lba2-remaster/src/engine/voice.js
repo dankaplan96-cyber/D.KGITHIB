@@ -29,6 +29,7 @@ export const VOICES = {
   farmer1: { f0: 128, k: 0.96 }, farmer2: { f0: 214, k: 1.1 }, farmer3: { f0: 110, k: 0.93, wobble: 0.03 },
   sendell: { f0: 410, k: 1.35, rate: 0.6, wave: 'sine', soft: true }, // not quite of this world
   drones: { f0: 300, k: 1.0, rate: 1.3, wave: 'square', robot: true },
+  dinofly: { f0: 86, k: 0.74, rate: 0.55, wobble: 0.1, wave: 'triangle' }, // a big, sleepy creature's rumble
 };
 // names that are not people (signs, notes, places): no voice
 const SILENT = new Set(['note', 'search_nothing', 'taken', 'sealed', 'idle', 'back', 'after', 'snore', 'village', 'town', 'harbour', 'quay',
