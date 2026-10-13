@@ -14,6 +14,8 @@ import { rockGeometry, treeGeometry } from './vegetation.js';
 import { buildHouse } from './architecture.js';
 import { mergeStatic } from '../engine/merge.js';
 import { t } from './i18n.js';
+import { PROPS } from './citadel-layout.js';
+import { streetDist } from './town.js';
 import './text/world.js';
 
 // ================================================================== layout
@@ -289,6 +291,16 @@ function lamp(W, parent, x, z, light = false) {
   W.physics.add({ type: 'cyl', x, z, r: 0.2, top: y + 3, seeThrough: true });
 }
 
+// square white bollard (quay edge, the original's bollard runs)
+function bollardGeo() {
+  return cached('bollard', () => compose([
+    [bbox(0.56, 0.16, 0.56, 0.03, 1), 0, 0.08, 0],
+    [bbox(0.4, 0.66, 0.4, 0.03, 1), 0, 0.48, 0],
+    [bbox(0.52, 0.12, 0.52, 0.03, 1), 0, 0.86, 0],
+    [cyl(0.02, 0.36, 0.2, 4).rotateY(Math.PI / 4), 0, 1.02, 0],
+  ]));
+}
+
 // lathe barrel with a bulge and iron hoops, as one vertex-coloured geometry
 function barrelGeo() {
   return cached('barrel', () => {
@@ -447,12 +459,7 @@ function buildHarbour(W, root, r) {
 
   // --- square white bollards with teal rails along the quay edge (#47)
   {
-    const bollard = cached('bollard', () => compose([
-      [bbox(0.56, 0.16, 0.56, 0.03, 1), 0, 0.08, 0],
-      [bbox(0.4, 0.66, 0.4, 0.03, 1), 0, 0.48, 0],
-      [bbox(0.52, 0.12, 0.52, 0.03, 1), 0, 0.86, 0],
-      [cyl(0.02, 0.36, 0.2, 4).rotateY(Math.PI / 4), 0, 1.02, 0],
-    ]));
+    const bollard = bollardGeo();
     const posts = [];
     const gapA = pz - pw / 2 - 0.5, gapB = pz + pw / 2 + 0.5;
     const zs = [];
@@ -2353,6 +2360,119 @@ function buildDressing(W, root, r) {
   }
 }
 
+// ================================================================== the original's street furniture
+// Lamps, lanterns, benches, bollards, railings, picket fences and tulip rows where the original island has them
+// (citadel-layout.js). Our island is not the original to the metre, so each piece is fitted: it stands only where
+// our ground is at least the original's level there (not down in the quay basin under the original's upper
+// promenade), is not steep or wet, keeps off the paths, streets, doors and the project's sites, and is clear of
+// everything already built; a piece that is blocked may shift up to a metre, else it is left out.
+function buildOriginalProps(W, root, r) {
+  const grp = new THREE.Group(); grp.name = 'original-props'; root.add(grp);
+  const { physics: P, terrain: T } = W;
+  const doors = (W.houses || []).map((h) => h.door).filter(Boolean);
+  const placed = [];
+  // clearance from every enabled collider (that stands above the ground here)
+  const clear = (x, z, rad) => {
+    const h = W.H(x, z);
+    for (const c of P.near(x, z)) {
+      if (!c.enabled || c.top < h + 0.05) continue;
+      if (P._inside(c, x, z, rad)) return false;
+    }
+    return true;
+  };
+  const okAt = (x, z, rad, y0, open) => {
+    const h = W.H(x, z);
+    if (h < 1.2 || h < y0 - 0.3 || T.slopeAt(x, z) > 0.5) return false;
+    if (keepClear(x, z, rad)) return false;
+    if (W.pathDist && W.pathDist(x, z) < (open ? 0.9 : 1.3) + rad) return false;
+    if (streetDist(x, z) < (open ? -0.6 : 0.2) + rad) return false;
+    if (doors.some((d) => Math.hypot(x - d.x, z - d.z) < 2.2 + rad)) return false;
+    if (placed.some((p) => Math.hypot(x - p.x, z - p.z) < p.r + rad)) return false;
+    return clear(x, z, rad);
+  };
+  // a piece of length len along its facing (sampled every metre), shifted up to 1 m if it must be
+  const fit = (x, z, ry, len, rad, y0, open = false) => {
+    const ax = Math.cos(ry), az = -Math.sin(ry); // its length runs across its facing
+    const n = Math.max(1, Math.ceil(len)), pts = (cx, cz) => Array.from({ length: n + 1 }, (_, i) => [cx + ax * (i / n - 0.5) * len, cz + az * (i / n - 0.5) * len]);
+    const tries = [[0, 0]];
+    for (const d of [0.5, 1.0]) for (let k = 0; k < 8; k++) tries.push([Math.cos(k * Math.PI / 4) * d, Math.sin(k * Math.PI / 4) * d]);
+    for (const [ox, oz] of tries) {
+      const cx = x + ox, cz = z + oz;
+      if (pts(cx, cz).every(([px, pz]) => okAt(px, pz, rad, y0, open))) {
+        for (const [px, pz] of pts(cx, cz)) placed.push({ x: px, z: pz, r: rad });
+        return [cx, cz];
+      }
+    }
+    W.propsSkipped = (W.propsSkipped || 0) + 1;
+    return null;
+  };
+  const Q = Math.PI / 2;
+  let n = 0;
+  // street lamps (the square's four are the town's)
+  for (const [x, z] of PROPS.lamps.slice(4)) { const at = fit(x, z, 0, 0, 0.45, -9, true); if (at) { lamp(W, grp, at[0], at[1], n === 0); n++; } }
+  // low lanterns: a stone foot and a glass lamp in a dark iron cage
+  {
+    const L = cached('lantern', () => ({
+      stone: compose([[bbox(0.5, 0.4, 0.5, 0.04, TILE.stone), 0, 0.2, 0], [bbox(0.4, 0.08, 0.4, 0.02, TILE.stone), 0, 0.44, 0]]),
+      iron: compose([[cyl(0.03, 0.03, 0.42, 4), 0.13, 0.69, 0.13], [cyl(0.03, 0.03, 0.42, 4), -0.13, 0.69, 0.13], [cyl(0.03, 0.03, 0.42, 4), 0.13, 0.69, -0.13], [cyl(0.03, 0.03, 0.42, 4), -0.13, 0.69, -0.13],
+        [cyl(0.03, 0.24, 0.12, 4).rotateY(Math.PI / 4), 0, 0.96, 0], [cyl(0.03, 0.03, 0.08, 6), 0, 1.04, 0]]),
+      glass: cyl(0.12, 0.12, 0.38, 8).translate(0, 0.69, 0),
+    }));
+    const list = [];
+    for (const [x, z, y0] of PROPS.lanterns) { const at = fit(x, z, 0, 0, 0.35, y0, true); if (at) list.push({ x: at[0], y: W.H(at[0], at[1]) - 0.02, z: at[1], ry: 0 }); }
+    instances(grp, L.stone, tm('stone', { color: '#e6e0d4' }), list);
+    instances(grp, L.iron, pm('#2e3238', 0.45, { metalness: 0.6 }), list);
+    instances(grp, L.glass, pm('#fff1c8', 0.3, { emissive: '#ffd890', emissiveIntensity: 0.9 }), list, { cast: false });
+    for (const p of list) P.add({ type: 'cyl', x: p.x, z: p.z, r: 0.3, top: p.y + 1.05, seeThrough: true, noStand: true });
+    n += list.length;
+  }
+  // benches (facing: the way a sitter looks)
+  for (const [x, z, f] of PROPS.benches) { const ry = f * Q, at = fit(x, z, ry, 1.7, 0.4, -9); if (at) { bench(W, grp, at[0], at[1], ry); n++; } }
+  // bollard runs: two posts and a teal rail
+  {
+    const posts = [], teal = pm('#2a9a8a', 0.4, { metalness: 0.5 });
+    for (const [x, z, f, y0] of PROPS.bollards) {
+      const ry = f * Q, at = fit(x, z, ry, 4.4, 0.35, y0); if (!at) continue;
+      const ax = Math.cos(ry) * 2.2, az = -Math.sin(ry) * 2.2;
+      for (const s of [-1, 1]) { const px = at[0] + ax * s, pz = at[1] + az * s; posts.push({ x: px, y: W.H(px, pz) - 0.02, z: pz, ry: ry + (r() - 0.5) * 0.06 }); }
+      const y = (W.H(at[0] - ax, at[1] - az) + W.H(at[0] + ax, at[1] + az)) / 2;
+      mesh(grp, cyl(0.045, 0.045, 4.4, 8), teal, at[0], y + 0.55, at[1], ry, { rz: Math.PI / 2 });
+      P.add({ type: 'box', x: at[0], z: at[1], hw: 2.4, hd: 0.25, rot: ry, top: y + 1.0, seeThrough: true, noStand: true });
+      n++;
+    }
+    instances(grp, bollardGeo(), tm('concrete', { color: '#f4f2ee', rough: 0.75 }), posts);
+  }
+  // railings (6 m): teal posts and two rails, and picket fences (1.7 m), white
+  {
+    const rail = cached('rail6', () => compose([
+      ...[-3, -1.5, 0, 1.5, 3].map((px) => [cyl(0.035, 0.04, 1.0, 6), px, 0.5, 0]),
+      [cyl(0.03, 0.03, 6, 6).rotateZ(Math.PI / 2), 0, 0.96, 0], [cyl(0.025, 0.025, 6, 6).rotateZ(Math.PI / 2), 0, 0.5, 0],
+    ]));
+    const picket = cached('picket17', () => compose([
+      ...[-0.72, -0.43, -0.14, 0.14, 0.43, 0.72].flatMap((px) => [[bbox(0.09, 0.85, 0.035, 0.01, 1), px, 0.42, 0], [cyl(0.0, 0.065, 0.12, 4).rotateY(Math.PI / 4), px, 0.9, 0]]),
+      [bbox(1.7, 0.06, 0.04, 0.01, 1), 0, 0.3, -0.03], [bbox(1.7, 0.06, 0.04, 0.01, 1), 0, 0.68, -0.03],
+    ]));
+    const rails = [], pickets = [];
+    const put = (list, x, z, ry, len) => {
+      const ax = Math.cos(ry) * len / 2, az = -Math.sin(ry) * len / 2;
+      const y = Math.min(W.H(x - ax, z - az), W.H(x + ax, z + az), W.H(x, z));
+      list.push({ x, y: y - 0.03, z, ry });
+      P.add({ type: 'box', x, z, hw: len / 2, hd: 0.12, rot: ry, top: y + 1.0, seeThrough: true, noStand: true });
+      n++;
+    };
+    for (const [x, z, f, y0] of PROPS.rails) { const ry = f * Q, at = fit(x, z, ry, 6, 0.2, y0); if (at) put(rails, at[0], at[1], ry, 6); }
+    for (const [x, z, f] of PROPS.pickets) { const ry = f * Q, at = fit(x, z, ry, 1.7, 0.15, -9); if (at) put(pickets, at[0], at[1], ry, 1.7); }
+    instances(grp, rail, pm('#2a9a8a', 0.4, { metalness: 0.5 }), rails);
+    instances(grp, picket, pm('#f2eadc', 0.8), pickets);
+  }
+  // tulip rows: a bed under each row
+  for (const [x0, x1, z] of PROPS.tulips) {
+    const w = x1 - x0 + 0.7, x = (x0 + x1) / 2, at = fit(x, z, 0, w, 0.55, -9);
+    if (at) { tulipBed(W, grp, at[0], at[1], w, 1.1, 0, r); n++; }
+  }
+  W.propsPlaced = n;
+}
+
 // ================================================================== entry
 export function buildIsland(scene, W) {
   const r = rng(4242);
@@ -2365,6 +2485,7 @@ export function buildIsland(scene, W) {
   buildDepot(W, scene, r);
   buildPipeline(W, scene, r);
   buildDressing(W, scene, r);
+  buildOriginalProps(W, scene, r);
   console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms, depot+pipe ${(performance.now() - T2) | 0} ms`);
   W.island = { keepClear };
 }

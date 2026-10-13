@@ -9,6 +9,7 @@ import { mergeStatic } from '../engine/merge.js';
 import { textures } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, distToSegment, smoothstep } from '../engine/math.js';
+import { PROPS } from './citadel-layout.js';
 
 export const V = { x: -42, z: -4 }; // the town square (well)
 
@@ -420,8 +421,9 @@ export function buildTown(scene, W) {
 
   // static street dressing goes into one group that is merged per material at the end
   const dress = new THREE.Group(); scene.add(dress);
-  // lamps around the square and along the streets
-  for (const [i, [x, z]] of [[V.x + 4.6, V.z - 5.6], [-44.8, 4.8], [-44.6, -10.6], [-35.4, -0.2], [-55, -6.6]].entries()) {
+  // lamps around the square, at the original's four corners (the other street lamps: island.js)
+  const SQUARE_LAMPS = PROPS.lamps.slice(0, 4);
+  for (const [i, [x, z]] of SQUARE_LAMPS.entries()) {
     lamp(dress, x, H(x, z), z);
     if (i < 2) { const l = new THREE.PointLight('#9cc8ff', 6, 11, 2); l.position.set(x, H(x, z) + 3.1, z); scene.add(l); W.lights.push(l); }
     physics.add({ type: 'cyl', x, z, r: 0.2, top: H(x, z) + 3, seeThrough: true });
@@ -514,7 +516,7 @@ export function buildTown(scene, W) {
     [W.stall.x + Math.cos(W.stall.a) * 2.3, W.stall.z - Math.sin(W.stall.a) * 2.3],
   ]);
   // epilogue: bunting strung between the square's lamps (hidden until the town celebrates)
-  W.bunting = bunting(scene, W, [[V.x + 4.6, V.z - 5.6], [-44.8, 4.8], [-44.6, -10.6], [-35.4, -0.2], [-55, -6.6]]);
+  W.bunting = bunting(scene, W, SQUARE_LAMPS);
   // laundry flutters in the wind
   W.updaters.push((dt, t) => { W.laundry.forEach((c, i) => { c.rotation.x = Math.sin(t * 2.1 + i) * 0.12 * (0.4 + W.storm); }); });
   return { houseInfo, at };
