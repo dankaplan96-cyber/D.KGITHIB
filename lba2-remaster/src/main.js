@@ -305,7 +305,8 @@ class Game {
       R.lights.forEach((l) => { l.intensity = l.userData.base; });
       this.world.root.visible = false;
       if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true); }
-      const sp = spawn || R.spawn;
+      // (a story exit may name only the room, { room }: then the room's own spawn — never a position without x/z)
+      const sp = spawn && Number.isFinite(spawn.x) && Number.isFinite(spawn.z) ? spawn : R.spawn;
       const h = this.hero;
       this.resetCombat();
       h.pos.set(sp.x, this.physics.groundAt(sp.x, sp.z), sp.z);

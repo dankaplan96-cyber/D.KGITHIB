@@ -78,6 +78,20 @@ const d10 = await ev(() => {
 });
 check('D10: off the Desert Island pier onto the sand and to Mother Tarra by input', d10.room === 'desert' && d10.r === 'arrived', d10);
 
+// D11: a story exit that names only the room ({ room: 'condB' }, chapter 5's door into the hangar) puts him at the
+// room's spawn, not at NaN; and no chapter's exit hands back a position without coordinates unnoticed
+const d11 = await ev(() => {
+  const G = game, h = G.hero;
+  G.enterRoom('condB', { room: 'condB' }, true); G.step(0.2);
+  const pos = [h.pos.x, h.pos.y, h.pos.z], sp = G.rooms.condB.spawn;
+  const bare = [];
+  for (const c of G.story.chapters) for (const R of Object.values(G.rooms)) for (const e of R.exits || []) { if (!e.to) continue; let t = null; try { t = c.exitTo(e.to); } catch { /* chapter state */ } if (t && t.room && !(Number.isFinite(t.x) && Number.isFinite(t.z))) bare.push(c.key + ':' + e.to); }
+  G.exitRoom({ x: -40, z: -5 }, true); G.step(0.2);
+  return { pos, finite: pos.every(Number.isFinite), atSpawn: Math.hypot(pos[0] - sp.x, pos[2] - sp.z) < 0.5, bare: [...new Set(bare)] };
+});
+check('D11: a story exit naming only the room puts him at its spawn (no NaN position)', d11.finite && d11.atSpawn, d11);
+console.log('  (story exits naming only the room, now sent to its spawn:', JSON.stringify(d11.bare) + ')');
+
 // D4: death → the game-over screen after the fall, in game time; a pause holds it
 const d4 = await ev(() => {
   const G = game, h = G.hero; P.settle();
