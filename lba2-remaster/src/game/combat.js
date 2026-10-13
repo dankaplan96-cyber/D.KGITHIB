@@ -515,7 +515,6 @@ export class HeroCombat {
         T.released = true; T.relAt = T.t;
         const full = !!T.full && h.mp >= 1;
         if (T.full && !full) g.hud.toast('toast_nomp');
-        if (full) h.mp -= 1;
         g.ball.preview?.(null);
         g.ball.launch(h, h.behaviour, h.magicLevel, { charged: full, aim: this.lastAim || aim, target: g.targeting?.throwTarget(this.lastAim || aim) });
         g.audio.play(full ? 'throwHeavy' : 'throw');

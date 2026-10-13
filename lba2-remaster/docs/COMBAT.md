@@ -37,14 +37,18 @@ fight; Aggressive mode's Space still attacks with the same moves.
   active frames.
 - **Ball:** states are idle → in hand → fly → impact → return. Movement is substepped (≤ 12 cm per step), so the
   ball never tunnels at low frame rates.
-  - Walls and the ground reflect it; wall bounces lose 15% speed. Water returns it.
-  - Bounces: 1, +1 from magic level 3, +1 when charged.
-  - Damage: the magic level, +1 when charged.
+  - As in LBA2: every throw costs 1 magic. With magic it bounces 4 times and returns on the 5th contact;
+    without magic it returns at its first contact. A ground bounce restarts the arc from the throw's lift;
+    walls reflect it. Water returns it. It returns at about 10 m/s, speeding up a little.
+  - Its colour shows the magic level: yellow, green, red, and at level 4 the fire ball.
+  - It brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals).
+  - Damage: the magic level (at least 1), +1 when charged (LBA2: 10/20/30/40 by level).
   - Each target is hit once per throw. A quick throw returns after its first hit. A charged throw ricochets on
     to the next visible enemy within 8 m.
   - The return never damages. Recall works after 0.2 s.
-  - It can't be lost: a 2.6 s flight limit, a 2.5 s return limit, and a reset on every scene change.
-  - Quick throws are free. A full charge costs 1 magic and shows a short dotted arc while held.
+  - It can't be lost: a 4 s flight limit, a 3.5 s return limit, and a reset on every scene change.
+  - A full charge needs magic (the throw's 1 point) and shows a short dotted arc while held. Magic
+    regenerates slowly (ours; the original refills only from flasks and givers).
 - **Aim and targeting:** aiming follows the lock, then the mouse cursor (projected onto the plane at Twinsen's
   chest height), then the stick, then the facing. Soft targeting uses a cone set in Settings (Off / Low /
   Normal / High) and needs line of sight. Lock-on lets go at once of a dead or absent target, at 17 m, or

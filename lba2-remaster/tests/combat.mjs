@@ -2,7 +2,7 @@
 // the measured values. Covers: input buffer and combo, active-frame timing and single hits, walls blocking
 // melee and targeting, the dodge's invulnerability, the ball at low frame rates (no tunnelling), recall,
 // scene changes, presses during dialogue, lock-on, the sentry's shield and guard break, the crawler's slam,
-// the ball switch, weapon save/load, and dodge distance at 30 vs 60 fps.
+// the ball switch, weapon save/load, dodge distance at 30 vs 60 fps, and the ball's LBA2 rules (magic, bounces, fetch).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
@@ -245,6 +245,30 @@ r = await ev(() => {
 });
 check('holding the ball: no walking, the direction turns the aim', r.moved < 0.05 && r.turned > 0.5, r);
 check('...and the release throws where he aims', r.thrown && r.alongRight > 0.8, r);
+
+// 17. the ball as in LBA2: a throw costs 1 magic; with magic 4 bounces and home on the 5th contact, without
+//     magic home at the first; a bonus it touches rides back with it
+r = await ev(() => {
+  const { G } = C, h = G.hero, B = G.ball;
+  const run = (mp) => {
+    C.only([], [6190, 8], Math.PI / 2); G.hero.combat.equip('ball', true); B.reset(); C.step(0.2);
+    h.mp = mp; let contacts = 0; const ob = B.bounce.bind(B); B.bounce = (k) => { contacts++; ob(k); };
+    B.launch(h, 'normal', h.magicLevel, { aim: { x: 1, z: 0 } }); const mpAfter = h.mp;
+    let returned = 0; for (let i = 0; i < 600 && B.state !== 'idle'; i++) { if (B.state === 'return' && !returned) returned = contacts; C.step(1 / 60); }
+    B.bounce = ob;
+    return { mp: +mpAfter.toFixed(2), contacts: returned, end: B.state };
+  };
+  const dry = run(0), wet = run(5);
+  // fetch: a coin placed on the ball's path comes back with it
+  C.only([], [6190, 8], Math.PI / 2); B.reset(); C.step(0.2); h.mp = 0;
+  B.launch(h, 'normal', h.magicLevel, { aim: { x: 1, z: 0 } }); C.step(0.15);
+  const coins0 = h.coins, p = G.pickups.spawn('coin', B.pos.x + B.vel.x * 0.05, B.pos.y + B.vel.y * 0.05, B.pos.z, { value: 1 });
+  let carried = false; for (let i = 0; i < 400 && B.state !== 'idle'; i++) { C.step(1 / 60); carried ||= !!p.carried; }
+  return { dry, wet, carried, coins: h.coins - coins0, left: G.pickups.list.includes(p), color: '#' + B.mat.color.getHexString() };
+});
+check('ball without magic: home at the first contact, nothing spent', r.dry.contacts === 1 && r.dry.mp === 0 && r.dry.end === 'idle', r.dry);
+check('ball with magic: 1 point spent, 4 bounces, home on the 5th contact', r.wet.contacts === 5 && r.wet.mp === 4 && r.wet.end === 'idle', r.wet);
+check('ball fetches a bonus it touches', r.carried && r.coins === 1 && !r.left, r);
 
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');

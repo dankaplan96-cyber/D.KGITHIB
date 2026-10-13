@@ -649,24 +649,29 @@ export class Sentinel extends Actor {
 }
 
 // ------------------------------------------------------------------ magic ball
-// The magic ball's throw styles per behaviour (speed f, lift up, bounce damping on the ground)
+// The magic ball's throw styles per behaviour (speed f, lift up)
 const BALL_THROW = {
-  normal: { f: 13, up: 5, bounce: 0.7 },
-  athletic: { f: 15, up: 8, bounce: 0.8 },
-  aggressive: { f: 19, up: 2.5, bounce: 0.6 },
-  discreet: { f: 9, up: 3, bounce: 0.5 },
+  normal: { f: 13, up: 5 },
+  athletic: { f: 15, up: 8 },
+  aggressive: { f: 19, up: 2.5 },
+  discreet: { f: 9, up: 3 },
 };
 // Flight rules (kept deliberately simple, so puzzles never depend on luck):
 //  - states: idle (ready, in the pocket) → inhand (wind-up / charge) → fly → impact (a beat at the hit) →
 //    return (homing back to the hand, passes through scenery, never damages) → idle.
 //  - movement is substepped (≤ BALL_STEP per step), so it can't tunnel through thin walls or small targets.
-//  - walls and the ground reflect it (wall bounces lose 15% speed); water swallows it (it returns).
-//  - bounces allowed: 1, +1 from magic level 3, +1 for a charged throw. Damage: the magic level, +1 charged.
+//  - as in LBA2: a throw costs 1 magic point; with magic it bounces 4 times and returns on the 5th contact,
+//    without magic it returns at its first contact. Each ground bounce restarts the arc from the throw's own
+//    lift; walls reflect it; water swallows it (it returns). It returns at about 10 m/s, speeding up a little.
+//  - damage: the magic level (+1 charged). Its colour shows the level: yellow, green, red, fire.
+//  - it brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals).
 //  - each target is hit at most once per throw. A quick throw returns after its first hit; a charged throw
-//    with bounces left ricochets on to the nearest other visible enemy within 8 m.
-//  - limits: 2.6 s of flight, then it returns; a return that takes over 2.5 s (or a scene change) puts it
+//    with bounces left ricochets on to the nearest other visible enemy within 8 m (ours, not the original's).
+//  - limits: 4 s of flight, then it returns; a return that takes over 3.5 s (or a scene change) puts it
 //    straight back in the hand. The ball can't be lost.
 const BALL_STEP = 0.12, BALL_R = 0.14;
+// the ball's colour by magic level (1 yellow, 2 green, 3 red, 4 the fire ball)
+const BALL_LEVEL = [null, ['#ffe68a', '#ffc400'], ['#9dff8a', '#30d020'], ['#ff8a7a', '#ff2a10'], ['#ffc070', '#ff6a00']];
 
 export class MagicBall {
   constructor(game) {
@@ -722,6 +727,9 @@ export class MagicBall {
   recall() { if (this.state === 'fly' || this.state === 'impact') { this.state = 'return'; this.retT = 0; this.game.audio.play('recall'); } }
   // back in the pocket, now (scene change, load, a stuck return)
   toHand(silent = false) {
+    // a bonus it brought back is Twinsen's now
+    const c = this.carry; this.carry = null;
+    if (c) { const P = this.game.pickups, i = P.list.indexOf(c); if (i >= 0) { P.list.splice(i, 1); this.game.scene.remove(c.mesh); if (!silent) this.game.collect(c); } }
     this.state = 'idle'; this.mesh.visible = false; this.shadow.visible = false; this.mesh.scale.setScalar(1);
     this.trail.forEach((m) => (m.visible = false)); this.preview(null);
     if (!silent) this.game.audio.play('catch');
@@ -744,18 +752,25 @@ export class MagicBall {
   }
 
   launch(hero, beh, level, opts = {}) {
-    const t = BALL_THROW[beh] || BALL_THROW.normal;
     const charged = !!opts.charged;
     this.level = level;
     this.charged = charged;
-    this.damage = level + (charged ? 1 : 0);
-    this.bounces = 1 + (level >= 3 ? 1 : 0) + (charged ? 1 : 0);
-    this.bounceK = t.bounce;
+    this.damage = Math.max(1, level) + (charged ? 1 : 0);
+    // LBA2: with magic (the point is spent here) 4 bounces, the 5th contact brings it back; without, the first
+    this.magic = opts.magic ?? (hero.mp >= 1);
+    if (opts.magic === undefined && this.magic) hero.mp -= 1;
+    this.bounces = this.magic ? 4 : 0;
+    this.carry = null;
+    const col = BALL_LEVEL[Math.max(1, Math.min(4, level))];
+    this.mat.color.set(col[0]); this.mat.emissive.set(col[1]);
+    this.trail.forEach((m) => m.material.color.set(col[1]));
+    this.fire = level >= 4;
     // released from the hand, at the hand's position (the release frame of the throw)
     if (this.state === 'inhand') { this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, hero.pos.y + 1.2); }
     else this.pos.set(hero.pos.x + Math.sin(hero.angle) * 0.5, hero.pos.y + 1.6, hero.pos.z + Math.cos(hero.angle) * 0.5);
     const aim = opts.aim || { x: Math.sin(hero.angle), z: Math.cos(hero.angle) };
     this.vel.copy(this.launchVelocity(hero, beh, aim, opts.target, charged));
+    this.lift = Math.max(2.5, this.vel.y);
     this.state = 'fly';
     this.life = 0; this.retT = 0;
     this.hits = new Set();
@@ -800,7 +815,8 @@ export class MagicBall {
       const n = Math.max(1, Math.ceil((sp * dt) / BALL_STEP));
       const h = dt / n;
       for (let i = 0; i < n && this.state === 'fly'; i++) this.substep(h, i === 0 ? dt : 0);
-      if (this.state === 'fly' && this.life > 2.6) { this.state = 'return'; this.retT = 0; }
+      if (this.state === 'fly' && this.life > 4) { this.state = 'return'; this.retT = 0; }
+      if (this.fire && Math.random() < dt * 30) g.particles.burst(this.pos.x, this.pos.y, this.pos.z, Math.random() < 0.5 ? '#ffb040' : '#ff5a10', 1, 0.6);
     } else if (this.state === 'return') {
       this.retT += dt;
       const hero = g.hero;
@@ -808,8 +824,8 @@ export class MagicBall {
       const d = new THREE.Vector3(tx - this.pos.x, ty - this.pos.y, tz - this.pos.z);
       const len = d.length();
       if (len < 0.7) { this.toHand(); return; }
-      if (len > 60 || this.retT > 2.5) { this.toHand(); return; } // never lost
-      this.pos.addScaledVector(d.normalize(), Math.min(len, (22 + this.retT * 14) * dt));
+      if (len > 60 || this.retT > 3.5) { this.toHand(); return; } // never lost
+      this.pos.addScaledVector(d.normalize(), Math.min(len, (10 + this.retT * 8) * dt));
     }
     this.mesh.position.copy(this.pos);
     placeBlobShadow(this.shadow, P, this.pos.x, this.pos.y, this.pos.z);
@@ -829,6 +845,11 @@ export class MagicBall {
     // targets first, so things mounted on posts register before the post deflects the ball
     const hit = g.ballHitTest(this.pos, this);
     if (hit) { this.onHit(hit); return; }
+    // a bonus within reach rides back with it
+    if (!this.carry) for (const p of g.pickups?.list || []) {
+      if (p.fly || p.carried || p.type === 'shard' || p.delay > 0) continue;
+      if (Math.hypot(p.pos.x - this.pos.x, p.pos.y - this.pos.y, p.pos.z - this.pos.z) < 0.7) { p.carried = true; this.carry = p; g.audio.play('catch'); this.state = 'return'; this.retT = 0; return; }
+    }
     const nx = this.pos.x + this.vel.x * h, nz = this.pos.z + this.vel.z * h;
     const y = this.pos.y;
     if (P.solidAt(nx, nz, y, BALL_R)) {
@@ -836,15 +857,15 @@ export class MagicBall {
       const bx = P.solidAt(nx, this.pos.z, y, BALL_R), bz = P.solidAt(this.pos.x, nz, y, BALL_R);
       if (bx || !bz) this.vel.x *= -1;
       if (bz || !bx) this.vel.z *= -1;
-      this.vel.x *= 0.85; this.vel.z *= 0.85;
       this.bounce('wall');
     } else { this.pos.x = nx; this.pos.z = nz; }
     this.pos.y += this.vel.y * h;
-    const gy = P.groundAt(this.pos.x, this.pos.z, this.pos.y + 0.3) + 0.17;
+    const gi = P.groundInfo(this.pos.x, this.pos.z, this.pos.y + 0.3), gy = gi.h + 0.17;
     if (this.pos.y < gy) {
-      if (gy < 0.2) { this.state = 'return'; this.retT = 0; return; } // into the sea
+      // into the sea (open terrain at sea level; a room's floor at height 0 is a floor)
+      if (gy < 0.2 && !gi.brick && !this.game.room) { this.state = 'return'; this.retT = 0; return; }
       this.pos.y = gy;
-      this.vel.y = Math.max(4, Math.abs(this.vel.y) * this.bounceK);
+      this.vel.y = this.lift; // (the arc starts again from the throw's own lift)
       this.bounce('ground');
     }
   }
@@ -1034,6 +1055,7 @@ export class Pickups {
       p.delay -= dt;
       // a bonus that nobody takes goes after 20 s, blinking for the last 3 (LBA2: 8 ticks on, 8 off)
       p.life -= dt;
+      if (p.carried) { p.pos.copy(g.ball.pos); p.mesh.visible = true; p.mesh.rotation.y += dt * 6; continue; } // riding back on the ball
       if (p.life <= 0) { g.scene.remove(p.mesh); this.list.splice(i, 1); continue; }
       p.mesh.visible = p.life > 3 || Math.floor(p.life / 0.16) % 2 === 0;
       if (p.fly) {
