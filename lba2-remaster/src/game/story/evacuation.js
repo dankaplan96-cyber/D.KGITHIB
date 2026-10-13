@@ -88,7 +88,7 @@ export class Evacuation extends ChapterBase {
       return f['c8_' + id] ? { x: GATHER.x + k * 1.6 - 1.6, z: GATHER.z + 1, a: Math.PI } : { x: farm.x, z: farm.z, a: farm.a };
     }
     if (!this.reached()) return undefined;
-    const V = W.well, S = W.stall;
+    const V = W.well, S = W.stall, Q = W.pierStart; // (the quay, where the pier starts)
     switch (id) {
       case 'zoe':
         if (f.c8_zoeStart && !f.c8_zoeDone) return null;
@@ -96,12 +96,12 @@ export class Evacuation extends ChapterBase {
         return undefined;     // (at home, as usual)
       case 'gilbert': return f.c8_gilbert ? { x: FORT.door.x - 2, z: FORT.door.z + 1.5, a: -Math.PI / 2 } : { x: V.x + 3.5, z: V.z + 8.0, a: Math.PI };
       case 'pippa': return S ? { x: S.x, z: S.z, a: S.a } : undefined;
-      case 'tim': return f.c8_pippa ? { x: DEPOT.door.x - 2.4, z: DEPOT.door.z + 1.6, a: 0 } : { x: -70, z: -2, a: Math.PI / 2 };
-      case 'lulu': return f.c8_pippa ? { x: DEPOT.door.x - 2.4, z: DEPOT.door.z + 2.6, a: 0 } : { x: -70, z: -0.8, a: Math.PI / 2 };
-      case 'xil': return { x: -68, z: -4.5, a: -Math.PI / 2 };
-      case 'worker': return { x: -66, z: -3.8, a: -Math.PI / 2 };
+      case 'tim': return f.c8_pippa ? { x: DEPOT.door.x - 2.4, z: DEPOT.door.z + 1.6, a: 0 } : { x: Q.x + 2.5, z: Q.z + 2, a: Math.PI / 2 };
+      case 'lulu': return f.c8_pippa ? { x: DEPOT.door.x - 2.4, z: DEPOT.door.z + 2.6, a: 0 } : { x: Q.x + 2.5, z: Q.z + 3.2, a: Math.PI / 2 };
+      case 'xil': return { x: Q.x + 4.5, z: Q.z - 0.5, a: -Math.PI / 2 };
+      case 'worker': return { x: Q.x + 6.5, z: Q.z + 0.2, a: -Math.PI / 2 };
       case 'doran': case 'vesk': case 'hesk': return null;
-      case 'guard': return { x: -73, z: -4, a: -Math.PI / 2 };
+      case 'guard': return { x: Q.x - 0.5, z: Q.z, a: -Math.PI / 2 };
     }
     return undefined;
   }

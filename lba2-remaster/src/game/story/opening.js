@@ -11,11 +11,16 @@ import { createCharacter } from '../characters.js';
 import { glowSprite } from '../interiors.js';
 import { t } from '../i18n.js';
 import '../text/opening.js';
+import { SHIFT } from '../island.js';
 
 export const OPENING_LENGTH = 84.5;
 export const MUSIC_AT = 2.5;          // the cue starts after a moment of harbour sound
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
+// the harbour's shots and walks are written in its design frame (island.js buildHarbour); HV/HP put them where it stands
+const HS = SHIFT.harbour;
+const HV = (x, y, z) => V(x + HS.x, y, z + HS.z);
+const HP = (x, z) => ({ x: x + HS.x, z: z + HS.z });
 const sm = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
 const span = (k, a, b) => sm((k - a) / (b - a));
 
@@ -25,7 +30,7 @@ export function playOpening(story) {
   const L = W.cargoLift, K = R.kitchen, TB = R.table, BT = R.boat;
   const hx = (x, z) => ({ x: R.center.x + x, z: R.center.z + z });   // house-local → world
   const hv = (x, y, z) => V(R.center.x + x, y, R.center.z + z);
-  const harbourFocus = V(-82, 1.8, -3);
+  const harbourFocus = HV(-82, 1.8, -3);
 
   // ---------------------------------------------------------------- cast
   const cast = [];
@@ -75,11 +80,11 @@ export function playOpening(story) {
   const twSpot = hx(-0.45, -0.25), zoTray = hx(-1.78, -2.6), zoSink = hx(-2.3, -2.6);
   const shots = [
     // 1 — the harbour wakes: water and the bow line, then one move up and back to the pier and the lift
-    shot(0, 5.6, P(V(-76.5, 1.0, 1.5), V(-78.0, 0.85, -1.7), 40), P(V(-76.62, 1.05, 1.38), V(-78.05, 0.88, -1.75), 40)),
-    shot(5.6, 13.0, P(V(-76.62, 1.05, 1.38), V(-78.05, 0.88, -1.75), 40), P(V(-74.2, 5.6, 5.9), V(-83.4, 2.0, -2.9), 44)),
+    shot(0, 5.6, P(HV(-76.5, 1.0, 1.5), HV(-78.0, 0.85, -1.7), 40), P(HV(-76.62, 1.05, 1.38), HV(-78.05, 0.88, -1.75), 40)),
+    shot(5.6, 13.0, P(HV(-76.62, 1.05, 1.38), HV(-78.05, 0.88, -1.75), 40), P(HV(-74.2, 5.6, 5.9), HV(-83.4, 2.0, -2.9), 44)),
     // 2 — the lift: the crate comes up off the barge; the worker at the controls; a passer-by goes to the ferry
-    shot(13.0, 21.0, P(V(-79.7, 3.3, -1.75), V(-85.1, 2.25, -3.05), 44), P(V(-79.9, 3.2, -1.85), V(-85.1, 2.4, -3.1), 44)),
-    shot(21.0, 29.0, P(V(-80.2, 2.75, -2.35), V(-83.6, 2.0, -3.95), 44), P(V(-80.35, 2.65, -2.45), V(-83.6, 1.95, -4.05), 42)),
+    shot(13.0, 21.0, P(HV(-79.7, 3.3, -1.75), HV(-85.1, 2.25, -3.05), 44), P(HV(-79.9, 3.2, -1.85), HV(-85.1, 2.4, -3.1), 44)),
+    shot(21.0, 29.0, P(HV(-80.2, 2.75, -2.35), HV(-83.6, 2.0, -3.95), 44), P(HV(-80.35, 2.65, -2.45), HV(-83.6, 1.95, -4.05), 42)),
     // 3 — home: the whole family at their own things, then Zoé at the counter
     shot(29.0, 35.0, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.75, -0.55), 44), P(hv(4.05, 2.6, 4.05), hv(0.1, 0.75, -0.6), 44)),
     shot(35.0, 41.0, P(hv(-0.15, 1.85, -1.95), hv(-2.0, 1.32, -2.95), 44), P(hv(-0.25, 1.82, -2.0), hv(-2.1, 1.3, -2.95), 44)),
@@ -176,8 +181,8 @@ export function playOpening(story) {
   track(68.7, 69.2, (k) => { handle.rotation.y = -2.2 * (1 - sm(k)); });
 
   // walks
-  walk(passer, [{ x: -73.8, z: -4.7 }, { x: -83.6, z: -5.0 }, { x: -84.4, z: -5.65 }], 15.0, 1.25, 'idle', Math.PI);
-  walk(worker, [{ x: -84.15, z: -3.2 }, { x: -84.0, z: -4.5 }, { x: -83.55, z: -4.65 }], 22.4, 1.0, 'idle', angleTo({ pos: { x: -83.55, z: -4.65 } }, L.cratePier));
+  walk(passer, [HP(-73.8, -4.7), HP(-83.6, -5.0), HP(-84.4, -5.65)], 15.0, 1.25, 'idle', Math.PI);
+  walk(worker, [HP(-84.15, -3.2), HP(-84.0, -4.5), HP(-83.55, -4.65)], 22.4, 1.0, 'idle', angleTo({ pos: HP(-83.55, -4.65) }, L.cratePierW));
   walk(zo, [zoTray, zoSink], 40.3, 0.9, 'idle', Math.PI);
   const zoOut = [zoSink, hx(1.25, -1.0), hx(1.25, 1.6), hx(0.9, 4.4)]; // (out through the hall)
   walk(zo, zoOut, 72.0, 1.5);
@@ -213,10 +218,10 @@ export function playOpening(story) {
   at(14.2, () => { loop('motor'); play(worker, 'use'); });
   at(19.2, () => { sfx('hum'); });
   at(19.8, () => sfx('rattle'));
-  at(20.2, () => look(worker, V(L.puddle.position.x, L.puddle.position.y, L.puddle.position.z)));
+  at(20.2, () => look(worker, L.puddle.getWorldPosition(new THREE.Vector3())));
   at(21.3, () => { look(worker, null); });
   at(22.3, () => play(worker, 'idle'));
-  at(24.2, () => { play(worker, 'reach'); look(worker, L.crate.position); });
+  at(24.2, () => { play(worker, 'reach'); look(worker, L.crate.getWorldPosition(new THREE.Vector3())); });
   at(27.0, () => { sfx('thump'); });
   at(27.4, () => { play(worker, 'setDown'); });
   at(28.6, () => { stopLoop('motor'); stopLoop('winch'); look(worker, null); });
@@ -316,7 +321,7 @@ export function playOpening(story) {
     music: { name: 'opening', at: MUSIC_AT },
     async prepare(c) {
       g.audio.setMood(null);                   // the title music fades out under the black
-      g.exitRoom({ x: -80, z: -4, a: 0 }, true, true);
+      g.exitRoom({ ...HP(-80, -4), a: 0 }, true, true);
       c.focus = harbourFocus;
       for (const a of [zoe, arthur]) a.controlled = true;
       // the hero is at home (out of sight while the camera is at the harbour)
@@ -326,8 +331,8 @@ export function playOpening(story) {
       put(ar, R.npcSpots.arthur.x, R.npcSpots.arthur.z, R.npcSpots.arthur.a, 'kneelWork');
       hold(BT.mast, ar, [0, -0.03, 0.01], [Math.PI, 0, 0]);
       zoe.setPresent(true);
-      put(worker, -84.15, -3.2, -0.34, 'idle');
-      put(passer, -73.8, -4.7, -Math.PI / 2, 'idle');
+      put(worker, -84.15 + HS.x, -3.2 + HS.z, -0.34, 'idle');
+      put(passer, -73.8 + HS.x, -4.7 + HS.z, -Math.PI / 2, 'idle');
       L.pose(0); L.shake(0); W.boatSurge = 0;
       handle.rotation.y = 0; water(0);
       // compile every material the scene will show while the screen is still black

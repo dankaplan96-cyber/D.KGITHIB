@@ -9,11 +9,10 @@ Story: chapters 1–10 are playable with tests; combat overhaul done (docs/COMBA
 opening scene is in (docs/CINEMATICS.md, tests/opening.mjs).
 
 0. Citadel on the original map: terrain, sites, Twinsen's house (outside and in), the lighthouse on the headland,
-   the village houses and the street furniture are at the original's places (WORLD_MAP.md). Next: the
-   original's trees and palms, the Weather Wizard's tent on Wizard's lane (S21), the old citadel ruins and the
-   Woodbridge cliffs (east); maybe the harbour to the original's west pier (moves the ferry, the opening and
-   chapters). Then Zeelich on the original islands (Otringal, Knartas, Mosquibee, Celebration, Under-gas, the
-   platform). The magic ball after the original: 4 bounces with magic points, straight without, key fetch.
+   the village houses, the street furniture, the trees and palms and the harbour (west end of the original's
+   pier) are at the original's places (WORLD_MAP.md); the magic ball follows the original. Next: the Weather
+   Wizard's tent on Wizard's lane (S21), the old citadel ruins and the Woodbridge cliffs (east). Then Zeelich on
+   the original islands (Otringal, Knartas, Mosquibee, Celebration, Under-gas, the platform).
 1. Visual remaster pass (stages 1–4 done; see docs/VISUAL_REMASTER.md "Remaining"): cliff bases and the
    shoreline, animation polish (idle variations, talk gestures), larger vegetation tiles, merging the
    station/depot/pipeline props.

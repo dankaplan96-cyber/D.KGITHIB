@@ -243,5 +243,12 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   our ground is lower (the quay basin) or something of ours stands.
 - Gibberish voices (engine/voice.js): each speaker babbles while a line types out, the vowels taken from the
   text; Twinsen and Zoé pitched after the original's English voices. tests/voices.mjs.
-- Open: our harbour stays on the west shore by the square (the original's is the west pier); the old citadel
-  ruins and the Woodbridge cliffs (east) are not placed yet; the original's trees and palms are not placed.
+- The original's trees and palms where they fit (a palm model: sculpted trunk, folded frond strips).
+- The harbour moved to the west end of the original's pier (island.js SHIFT.harbour: built in its first frame and
+  shifted whole). The opening's harbour shots, chapter 1's ferry, chapter 8's quay crowd and the prologue's
+  Doran and Xil came with it; a path leads there from the fields past the baggage-claim building. The old quay
+  is the original's promenade again (lanterns, railings), reached by a ramp from the square's west street.
+- The magic ball after LBA2: a throw costs 1 magic; with magic 4 bounces and home on the 5th contact, without
+  magic home at the first; the arc restarts on each bounce; ~10 m/s return; colour by magic level (yellow, green,
+  red, fire); it brings back a bonus it touches. Fix: indoors a floor at height 0 counted as sea.
+- Open: the old citadel ruins and the Woodbridge cliffs (east) are not placed yet.

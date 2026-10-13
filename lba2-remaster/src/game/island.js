@@ -21,11 +21,14 @@ import './text/world.js';
 // ================================================================== layout
 // Everything that the vegetation scatter must keep clear of (world.js asks
 // keepClear() before placing a tree, bush, rock or grass clump).
-export const HARBOUR = { quayX: -74.5, z: -4, pierLen: 16.5, pierW: 3.2, deck: 1.75 };
+// the harbour's design frame (buildHarbour) and where it stands (SHIFT.harbour, below)
+const HARBOUR0 = { quayX: -74.5, z: -4, pierLen: 16.5, pierW: 3.2, deck: 1.75 };
 // The project's sites stand on the original map's northern plateau (12 years on, the island has changed: the
 // station in Funfrock's old fort, the depot, the orchard, the water main). The station and the depot were first
 // built further south-east; their builders keep those first (design) coordinates and are shifted as a whole.
-export const SHIFT = { station: { x: -76, z: -101 }, depot: { x: -84, z: -122 }, orchard: { x: -58, z: -87.5 } };
+// The harbour stands at the west end of the original's pier (its first place was the west shore by the square).
+export const SHIFT = { station: { x: -76, z: -101 }, depot: { x: -84, z: -122 }, orchard: { x: -58, z: -87.5 }, harbour: { x: -45.5, z: 47 } };
+export const HARBOUR = { ...HARBOUR0, quayX: HARBOUR0.quayX + SHIFT.harbour.x, z: HARBOUR0.z + SHIFT.harbour.z };
 const sh = (k, x, z) => ({ x: x + SHIFT[k].x, z: z + SHIFT[k].z });
 export const LIGHTHOUSE = { x: -107.5, z: 90.5, half: 2.35, cottage: { x: -98, z: 99, ry: -Math.PI / 2 - 0.2 } };
 const STATION0 = { x: 48, z: 36, half: 13, wall: 2.0 };
@@ -53,7 +56,7 @@ const POI_PLATEAU = { h: 16.8 };
 export const STUMP = { x: -30, z: -33 };
 
 export function keepClear(x, z, pad = 0) {
-  if (x > HARBOUR.quayX - 20 && x < -60 + pad && z > -14 - pad && z < 8 + pad) return true;
+  if (x > HARBOUR.quayX - 20 && x < HARBOUR.quayX + 14.5 + pad && z > HARBOUR.z - 10 - pad && z < HARBOUR.z + 12 + pad) return true;
   if (Math.hypot(x - LIGHTHOUSE.x, z - LIGHTHOUSE.z) < 7 + pad) return true;
   if (Math.hypot(x - LIGHTHOUSE.cottage.x, z - LIGHTHOUSE.cottage.z) < 6 + pad) return true;
   if (Math.max(Math.abs(x - STATION.x), Math.abs(z - STATION.z)) < STATION.half + 3.5 + pad) return true;
@@ -430,12 +433,16 @@ const PICT = {
 };
 
 // ================================================================== harbour
-function buildHarbour(W, root, r) {
+function buildHarbour(W0, root, r) {
+  // built in its design frame (the west shore by the square, where it first stood) and shifted as a whole to
+  // the west end of the original's pier: see siteW. What the story reads (pier ends, shed, ferry, lift) is
+  // moved to world coordinates at the end.
+  const d = SHIFT.harbour, W = siteW(W0, d);
   const { physics, H } = W;
-  const g = new THREE.Group(); g.name = 'harbour'; root.add(g);
+  const g = new THREE.Group(); g.name = 'harbour'; g.position.set(d.x, 0, d.z); root.add(g);
   const B = new Batch(g);
-  const QX = HARBOUR.quayX, QH = 1.8, Z0 = -13, Z1 = 7;
-  const pz = HARBOUR.z, pw = HARBOUR.pierW, deck = HARBOUR.deck, plen = HARBOUR.pierLen;
+  const QX = HARBOUR0.quayX, QH = 1.8, Z0 = -13, Z1 = 7;
+  const pz = HARBOUR0.z, pw = HARBOUR0.pierW, deck = HARBOUR0.deck, plen = HARBOUR0.pierLen;
 
   // --- rubble embankment along the quay face, battered, with a dressed coping course
   {
@@ -557,7 +564,7 @@ function buildHarbour(W, root, r) {
   tulipBed(W, g, -63.6, 1.2, 1.4, 3.4, 0, r);
   bench(W, g, -65.0, -7.0, Math.PI, r);
   barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-69.8, 6.2, true]], r);
-  W.givers.push({ id: 'quay-barrels', x: -72.6, z: 5.4, r: 1.8, top: 1.1, kinds: ['money', 'life'], n: 2 });
+  W.givers.push({ id: 'quay-barrels', x: -72.6 + d.x, z: 5.4 + d.z, r: 1.8, top: 1.1, kinds: ['money', 'life'], n: 2 });
   crateStack(W, g, [[-71.6, -11.6, 2], [-70.5, -12.0, 1], [-72.6, -10.6, 1, 0.8]], r);
   netHeap(W, g, -73.0, 2.2, r);
   // iron mooring bitts at the quay edge
@@ -581,6 +588,9 @@ function buildHarbour(W, root, r) {
   // (the boat and the ferry bob as a whole, so each is merged within its own group)
   W.fishingBoat.userData.keep = true; W.ferry.group.userData.keep = true;
   mergeStatic(g); mergeStatic(W.fishingBoat); mergeStatic(W.ferry.group);
+  // to world coordinates: what the story and the tests read (the ferry's group stays in the harbour's frame)
+  movePt(d, W.pierEnd, W.pierStart, W.harbourShed, W.harbourShed.door, W.ferry, W.ferry.gangway);
+  const L = W.cargoLift; L.cratePierW = L.cratePier.clone().add(new THREE.Vector3(d.x, 0, d.z));
 }
 
 // ------------------------------------------------------------------ the Joint Project's cargo lift
@@ -590,7 +600,7 @@ function buildHarbour(W, root, r) {
 // vibration the opening shows (the hook and the lantern tremble, the puddle on the deck ripples).
 function cargoLift(W, parent, r) {
   const g = new THREE.Group(); g.name = 'cargoLift'; g.userData.keep = true; parent.add(g);
-  const deck = HARBOUR.deck, mx = -85.0, mz = -2.75, ARM = 2.0;
+  const deck = HARBOUR0.deck, mx = -85.0, mz = -2.75, ARM = 2.0;
   const teal = pm('#2f7a86', 0.45, { metalness: 0.5 }), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2a3038', 0.55, { metalness: 0.5 });
   // column on a bolted base
   mesh(g, cyl(0.46, 0.52, 0.12, 16), dark, mx, deck + 0.06, mz);
@@ -670,11 +680,11 @@ function cargoLift(W, parent, r) {
       hook.position.set(0, 0.2 - drop, ARM);
       if (carry) {
         // hangs under the hook (a little swing from the turn)
-        const p3 = hook.getWorldPosition(new THREE.Vector3());
+        const p3 = crate.parent.worldToLocal(hook.getWorldPosition(new THREE.Vector3()));
         crate.position.set(p3.x, p3.y - 0.27 - 0.4, p3.z);
         crate.rotation.y = yaw + 0.1;
       } else if (u < 0.22) {
-        barge.updateMatrixWorld(); const p3 = new THREE.Vector3(0.3, 0.76, -0.15).applyMatrix4(barge.matrixWorld);
+        barge.updateMatrixWorld(); const p3 = crate.parent.worldToLocal(new THREE.Vector3(0.3, 0.76, -0.15).applyMatrix4(barge.matrixWorld));
         crate.position.copy(p3); crate.rotation.y = 0;
       } else { crate.position.copy(cratePier); crate.rotation.y = yaw1 + 0.1; }
     },
@@ -703,14 +713,15 @@ function cargoLift(W, parent, r) {
 
 // Doran's boat is moored to the pier by a bow line that sags and pulls tight as the boat moves
 function mooringLine(W, parent) {
-  const boat = W.fishingBoat, deck = HARBOUR.deck;
+  const boat = W.fishingBoat, deck = HARBOUR0.deck;
   const bitt = new THREE.Vector3(-77.7, deck + 0.28, -2.5);
   mesh(parent, cyl(0.07, 0.09, 0.3, 8), pm('#2e3238', 0.45, { metalness: 0.6 }), bitt.x, deck + 0.15, bitt.z);
   const ropeMat = pm('#d8c8a0', 0.9);
   let rope = null;
   const bowLocal = new THREE.Vector3(2.45, 0.86, -0.2), bow = new THREE.Vector3();
   boat.updateMatrixWorld(true);
-  const L0 = bow.copy(bowLocal).applyMatrix4(boat.matrixWorld).distanceTo(bitt) + 0.35;
+  parent.updateMatrixWorld(true);
+  const L0 = parent.worldToLocal(bow.copy(bowLocal).applyMatrix4(boat.matrixWorld)).distanceTo(bitt) + 0.35;
   const line = { taut: 0 };
   const pts = Array.from({ length: 14 }, () => new THREE.Vector3());
   let acc = 0;
@@ -719,7 +730,7 @@ function mooringLine(W, parent) {
     if (acc < 1 / 30 && rope) return;
     acc = 0;
     boat.updateMatrixWorld(true);
-    bow.copy(bowLocal).applyMatrix4(boat.matrixWorld);
+    parent.worldToLocal(bow.copy(bowLocal).applyMatrix4(boat.matrixWorld));
     const d = bow.distanceTo(bitt);
     const sag = Math.sqrt(Math.max(0, L0 * L0 - d * d)) * 0.42;
     line.taut = Math.max(0, 1 - sag / 0.3);
@@ -2343,7 +2354,7 @@ function buildDressing(W, root, r) {
   signpost(W, grp, -47.4, -60.4, -0.6, 'w_sign_station', (c) => { A.gear(c, 90, 64, 26); A.arrow(c, 180, 64, 1, 1.0); });
   signpost(W, grp, -73.5, -58.5, Math.PI / 2 + 0.25, 'w_sign_orchard', (c) => { A.drop(c, 96, 64); A.cross(c, 166, 64); });
   signpost(W, grp, -53.4, -54.2, -0.5, 'w_sign_pipe', (c) => { A.drop(c, 80, 64); c.fillRect(110, 52, 110, 24); c.fillStyle = '#d2ae74'; for (let i = 0; i < 4; i++) c.fillRect(124 + i * 26, 50, 5, 28); c.fillStyle = '#3a2410'; });
-  signpost(W, grp, -59.2, -7.4, -Math.PI / 2 - 0.3, 'w_sign_harbour', (c) => { A.anchor(c, 150, 70); A.arrow(c, 70, 64, -1, 1.1); });
+  signpost(W, grp, -50.5, 30.0, -Math.PI / 2 - 0.3, 'w_sign_harbour', (c) => { A.anchor(c, 150, 70); A.arrow(c, 70, 64, -1, 1.1); });
   // the stump where a clover hides: sculpted roots and bark, a cut top with rings
   {
     const x = STUMP.x, z = STUMP.z, g = W.H(x, z);

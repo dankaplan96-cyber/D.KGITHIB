@@ -12,13 +12,13 @@ the original doesn't have is ours:
 
 | Area (our metres) | In the original | Now |
 |---|---|---|
-| Town (−56…−29, −17…14), harbour quay (−74.5…−61.5) | the low town; a quay wall along its west shore | Twinsen's corner of town, the square and well, the harbour, the ferry |
+| Town (−56…−29, −17…14) and the west shore by it | the low town; a promenade above the shore with lanterns and railings | the square and well; the street west climbs onto the promenade (the harbour stood here at first) |
 | Northern plateau (x −120…0, z −100…−45, ~14 m) | high ground with trees, two doors | the depot (−85…−65, −78…−62) and the orchard (−80, −55); the project station in Funfrock's old fort (−28, −65) at the east end |
 | The plateau's southern rim (−56, −44) | the escarpment up from the town | the Whispering Cliffs: a rock stack (16.8 m) reached only by the stepping stones from (−68, −22) |
 | West shore below the plateau | quay wall, bollards | the water main comes down here to the meter (−72, −17) |
 | South fields (x −76…−22, z 15…80) | more of the town, gardens, Twinsen's house (door −45.6, 80) | Twinsen's house at its original place; the village houses by the original's doors (S3, S9, S14, S15, S17); the plaza with lamps, benches and tulips; fields and farmers (chapter 8) |
 | South-west headland (−107.5, 90.5) | the lighthouse "at the end of the island" | the lighthouse and the sage's cottage |
-| West wing (−121…−76, 21…54) | the original's pier and baggage-claim building | the baggage-claim building and its wing (S7/S8), bollard runs and lanterns; our harbour stays on the west shore by the square |
+| West wing (−121…−76, 21…54) | the original's pier and baggage-claim building | the baggage-claim building and its wing (S7/S8); the harbour at the pier's west end (quay −120…−107, z 34…54; pier west to −136.5 at z 43): Doran's boat, the project ferry and the lift; a path from the fields past the baggage claim |
 | The south-west islet, the bay beach, the southern hill | houses, sand | landscape (not used by the story yet) |
 | Dome islet (−176…−136, −34…16), the north-east islet | across the water | seen from the shore |
 
@@ -29,7 +29,7 @@ the original doesn't have is ours:
 | Town square | the well with a red roof, blue-globe lamps | the dry well, the water-bill row | prologue goal | well steams (ch1); runs cool (epilogue) |
 | Water office (interior) | pipe map on the wall | Mira's bureaucracy | valve map (ch1) | finale: Mira opens the valves |
 | Pippa's stall | yellow awning | trade | shop | stock changes with events (clovers before the evacuation) |
-| Harbour | pier, Doran's boat, project ferry | Xil's stuck cargo | permit, ferry to Zeelich | ferry docks (ch1); leaves (ch2) |
+| Harbour (west end of the original's pier) | pier, Doran's boat, project ferry | Xil's stuck cargo | permit, ferry to Zeelich | ferry docks (ch1); leaves (ch2) |
 | Lighthouse (+ top room) | tall tower on the south-west headland, "at the end of the island" as in the original | — | Zoé's broadcast (ch2); finale signal | lit beacon after the broadcast |
 | Whispering Cliffs | stepping stones, old target | — | cliff valve (ch1) | stones stay raised |
 | Orchard | barred valve | — | orchard valve (ch1) | — |

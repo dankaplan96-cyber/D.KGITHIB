@@ -9,7 +9,7 @@ import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
-import { buildIsland, keepClear, STUMP } from './island.js';
+import { buildIsland, keepClear, STUMP, SHIFT } from './island.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod } from './kit.js';
 import { COAST, LEVELS, PROPS } from './citadel-layout.js';
@@ -22,7 +22,7 @@ export const ISLAND = { cx: -76, cz: 16 };
 export const POI = {
   start: { x: -38, z: 4 },
   village: { x: -42, z: -4 },
-  harbour: { x: -68, z: -3 },
+  harbour: { x: -113.5, z: 44 },        // at the west end of the original's pier (island.js SHIFT.harbour)
   // on the northern plateau (the original's level 4, ~14 m): the project station by the old citadel's ruins at its
   // east end, the depot and the orchard toward the Wizard's lane in the west
   lighthouse: { x: -107.5, z: 90.5 },   // "at the end of the island": the south-west headland, as in the original
@@ -43,7 +43,9 @@ export const level = (k) => LEVEL0 + LEVEL_STEP * k;
 // the town core keeps exactly the heights it was built on
 const FLATS = [{ ...POI.village, r: 20, h: 2.2 }];
 // harbour quay (paved, rubble embankment on the sea side) and the basin in front of it
-export const QUAY = { x0: -74.5, x1: -61.5, z0: -13, z1: 7, h: 1.8 };
+// (at the west end of the original's pier; see island.js SHIFT.harbour)
+const HS = SHIFT.harbour;
+export const QUAY = { x0: -74.5 + HS.x, x1: -61.5 + HS.x, z0: -13 + HS.z, z1: 7 + HS.z, h: 1.8 };
 const BAY = { x1: QUAY.x0 - 0.1, z0: QUAY.z0 + 0.6, z1: QUAY.z1 - 0.6 };
 
 export const PATHS = [
@@ -51,7 +53,9 @@ export const PATHS = [
   [[-48, -56], [-50, -62], [-45, -65]],                                                 // to the station gate
   [[-48, -56], [-58, -66], [-64, -75], [-86, -76], [-94, -70]],                         // through the depot to the Wizard's lane
   [[-58, -66], [-70, -60], [-75, -57]],                                                 // to the orchard
-  [[-58, -6], [-66, -18]],                                                              // harbour street to the stepping stones
+  [[-58, -6], [-66, -18]],                                                              // the west street to the stepping stones
+  [[-60, -4.5], [-73, -4.5]],                                                           // up onto the original's promenade above the shore
+  [[-46, 31], [-60, 33], [-74, 35.5], [-90, 38], [-107.5, 39]],                        // west past the baggage-claim building to the harbour
   [[-44, 10], [-46, 40], [-45, 74], [-44.5, 79.5]],                                     // south through the fields to Twinsen's door
   [[-45, 74], [-58, 73], [-70, 88], [-86, 93], [-100, 97], [-107.5, 96.5]],             // over the bay's sand to the lighthouse
 ];
