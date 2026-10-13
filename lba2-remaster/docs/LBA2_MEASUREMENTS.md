@@ -28,6 +28,30 @@ only the numbers below, used to shape our own models and animations.
 | hair | three balls behind the crown (r 0.05 / 0.037 / 0.026) | the same three balls, blonde, higher |
 | clothes | cape to 0.41 H, ±0.21 wide; the robe below the belt is carried by the legs (thigh panel to the knee, shin panel to the hem ±0.17) | red, fitted, deep V neckline, bare arms; the outfit's legs are separate to the green shoes |
 
+## Shading
+The polygons of both models are almost all Gouraud (Twinsen: 253 of 281, Zoé: 145 Gouraud + 128 dithered
+Gouraud), not flat: the faceted look of a flat-shaded study render is not the original's. Our ramp shading with
+smooth normals is kept.
+
+## Zoé's sections (body 26, arms left out; y / half-width / front / back, fractions of H)
+0.404 / 0.132 / 0.118 / −0.107 (the hips, where the legs meet) · 0.452 / 0.127 / 0.127 / −0.107 · 0.500 / 0.111 /
+0.135 / −0.107 · 0.548 / 0.095 / 0.143 / −0.096 (the full front) · 0.596 / 0.075 / 0.121 / −0.087 · 0.644 / 0.071 /
+0.065 / −0.086 (the waist) · 0.692 / 0.103 / 0.078 / −0.089 (the bust) · 0.716–0.740 / 0.107 (the shoulders) ·
+0.788 / 0.094 / 0.008 / −0.081 · neck 0.836, half-width 0.021. Each trouser leg: centre ±0.065, radius 0.066 at
+0.40 H → 0.052 at the knee (0.21) → 0.039 at the ankle. Shoes from −0.054 to +0.107 long, ±0.038 wide. Head
+0.849–0.994 H, half-width 0.053, front +0.064, back −0.106. Bun balls r 0.052 / 0.037 / 0.026 at (1.0, −0.135),
+(0.973, −0.188), (0.936, −0.204).
+
+## The other races (for the cast's design language)
+- Quetch townsfolk (bodies 101, 229, 430): head half-width 0.074–0.08 H; square shoulders, no puffed sleeves;
+  plain cloth in a few flat colours; hands are balls (r ≈ 0.026 H) or small cones; buns of balls.
+- Grobo (body 99, H = 0.94 of Twinsen's): the feet stubs 0–0.11 H at ±0.17; the body from 0.17 H, ±0.275 at the
+  pelvis and ±0.23 at the chest (depth −0.22 … +0.29), up to 0.74 H; the head 0.6–0.92 H, ±0.19, sunk into the
+  body with no neck; the trunk hangs in front of the belly down to 0.29 H; the ears flat, ±0.18 … ±0.52 H out,
+  0.66–1.0 H high; short arms from 0.43 H with the hands at 0.2 H, ±0.4 out.
+- Rabbibunny (body 117, H = 1.23 of Twinsen's): slim (torso ±0.09 H), long thin legs; a small head (±0.075 H)
+  drawn out into a snout 0.1 H in front; ears up to H, 0.18 H long, in a V.
+
 ## Animations of the hero (24-group set; Twinsen's robe body uses the first 19 groups)
 - 0 idle: 8 keys × 300 ms (2.4 s): the whole body rocks forward and back (root ±50 units, pelvis ±6°), the arms
   follow it a little.
@@ -76,9 +100,12 @@ only the numbers below, used to shape our own models and animations.
 
 ## Used in the game
 - `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle).
-- `tools/blender/twinsen_poly.py`: the robe below the belt follows the legs; hands r ≈ 0.032 H at ±0.19;
-  a lower, larger head (HEAD_K 1.24, no neck lift); the look's armSpread 0.3.
-- `tools/blender/cast_poly.py` outfit `gown` + `bun` with three balls: Zoé as above.
+- `tools/blender/twinsen_poly.py`: the robe below the belt follows the legs; ball hands r 0.036 H at ±0.19,
+  0.378 H; the head at the measured size (HEAD_K 1.0; it was 1.24 before pass 8), no hair on the skull, the bun's
+  three balls at the measured places; the look's armSpread 0.3.
+- `tools/blender/cast_poly.py` `build_zoe`: Zoé from the sections above (her H = 1.95 m to fit the game
+  skeleton; the full front softened to 0.12 H). The rest of the cast: Grobo bodies and heads, Rabbibunny snouts,
+  ball hands and plain cloth after the races above.
 - `src/engine/rig.js` RUN_KEYS: the athletic run (Twinsen's robe opens 75 % as far: one robe over both legs
   stretches flat past ~65°; Zoé's separate legs take the full stride). throwQuick / charge: posed after the
   throw's coil and release (our timing stays quick: a tap releases at 0.16 s; holding keeps the coiled pose).

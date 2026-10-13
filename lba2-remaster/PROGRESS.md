@@ -284,3 +284,16 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   faces), X dodge, Ctrl + F1–F4 behaviours, Shift inventory, H holomap, Enter camera, Esc menu. Classic never aims
   with the mouse (the resting cursor had been aiming every throw). Modern keeps WASD, mouse aim and the slow
   aimed walk. tests/combat.mjs §19.
+
+## Session: the characters after the original, one design language (0.13.0)
+- The user: the characters still don't look like the original, and the rest of the cast should share their
+  design language. Blender now runs here as a Python module (`pip install bpy`), so the model scripts were
+  changed and every model rebuilt (docs/character-review.md §12, docs/LBA2_MEASUREMENTS.md).
+- Twinsen: the head at the original's size (it was drawn 1.24×), no hair on the skull (only the bun's three
+  balls), ball hands, small pale eyes, a pale medallion without the cord.
+- Zoé: rebuilt from the original's sections. Narrow shoulders, slim waist, wide hips, a V neckline with bare
+  shoulders, tapering trousers, long pointed green shoes, a narrow head with red lips, the three-ball bun.
+- The cast: ball hands, flush shoulders, small plain eyes, no gold hem bands. Grobos get the original's great
+  round body, a wide head with a trunk and huge flat ears; Rabbibunnies a snout.
+- Checked: the original's polygons are Gouraud, so no flat shading (an earlier impression came from a flat study
+  render). Skeletons unchanged: every animation drives the new models (captures/characters/cast-pass8-*.png).

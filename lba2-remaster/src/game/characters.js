@@ -17,10 +17,10 @@ const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 
 // ------------------------------------------------------------------ cast
 export const LOOKS = {
   twinsen: {
-    // LBA2's in-game Twinsen, measured on the original model (docs/character-review.md §11): cape-like robe
+    // LBA2's in-game Twinsen, measured on the original model (docs/character-review.md §11–12): cape-like robe
     // with flat shoulders and broad sleeves, thin orange belt, a nearly straight robe to the ankles, small
-    // orange shoes, ball hands; a tall narrow egg head on a long thin neck, small eyes, a cap of hair on the
-    // back of the crown and a bun of three balls; a big gold medallion on a gold cord. Colours from its palette.
+    // orange shoes, ball hands; a narrow egg head at the original's size on a long thin neck, small pale eyes,
+    // no hair on the skull but a bun of three balls; a pale gold medallion. Colours from its palette.
     poly: 'twinsen', // the low-poly model (tools/blender/twinsen_poly.py); the sculpt below is the fallback
     race: 'quetch', outfit: 'lba', hem: 0.1, hemW: 0.92, skirtDepth: 0.8, neckR: 0.05, shoulders: 0.95, armLen: 1.12, armSpread: 0.3, // (LBA2: the hands hang clear of the robe, ±0.18 H)
     tunic: '#2a86ad', tunicTrim: '#2a86ad', belt: '#d36b4b', pants: '#2a86ad', shoes: '#d36b4b', slippers: true, cord: '#f7bb57', handBall: 0.075,
@@ -29,8 +29,10 @@ export const LOOKS = {
     mouth: 'line', medallion: true, medalR: 0.085, medalY: 0.24, medalSides: 8, headS: 1.4, neck: 0.17,
   },
   zoe: {
-    // LBA2's Zoé (measured on the original model): as tall as Twinsen, slim, a fitted red outfit with a deep V
-    // neckline and bare arms, its legs separate down to green shoes; blonde hair in a bun of three balls
+    // LBA2's Zoé (built from the original model's sections, tools/blender/cast_poly.py build_zoe): as tall as
+    // Twinsen, narrow shoulders and a slim waist over wide hips, a red outfit with a deep V neckline and bare
+    // shoulders and arms, trousers tapering to long pointed green shoes; a narrow head, red lips, and blonde
+    // hair in a bun of three balls
     race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#c62c2c', tunicTrim: '#9a1e20', belt: '#c62c2c', pants: '#c62c2c', shoes: '#4c9a46',
     hair: '#ecd79a', skin: '#efc39a', hairStyle: 'bun', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
     armSpread: 0.3, armLen: 1.1,

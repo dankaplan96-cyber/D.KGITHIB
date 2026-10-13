@@ -306,3 +306,45 @@ Remaining differences:
 - **Robe deformation:** the original's robe halves follow the thighs, so they scissor. Ours swings on four
   skirt bones.
 - **Face:** small differences in the facets.
+
+
+## 12. Pass 8 — closer to the original, and one design language for the cast
+
+The user: the characters still don't look like the original, even with the original game at hand, and the rest
+of the cast should share their design language. `bpy` (Blender as a Python module, `pip install bpy`) now runs
+here, so the Blender scripts were changed and every model rebuilt from them.
+
+Compared on the same renderer at the same scale with the original models (study only, not in the repository):
+- **Twinsen:** the head was drawn 1.24× the original's; it is now at the measured size. There is no hair on
+  the skull: the original shows only the bun, three balls at the measured places. The mitten hands are now the
+  original's balls (r 0.036 H). The eyes are smaller and pale, with no lid line, and the medallion is pale gold
+  with no cord.
+- **Zoé:** rebuilt from the original's horizontal sections (`build_zoe`):
+  - Narrow shoulders and a slim waist over wide hips.
+  - A red outfit with a deep V neckline and bare shoulders. The V is a skin panel ray-cast onto the dress, so
+    its edges are straight; the straps are at the sides.
+  - Trousers tapering to long pointed green shoes, and thin bare arms with small hands.
+  - A narrow head (0.69× Twinsen's width) with red lips, and the three-ball bun.
+  - Her full front is softened from 0.143 to 0.12 H. At the original value it reads as a belly in our lighting.
+- **Everyone else (the cast's language):**
+  - Ball hands, and shoulders flush with the sleeve (no puffed caps).
+  - Small plain eyes (white, iris, pupil; no lid line).
+  - No gold band at the hem; a buckle only where a look asks for one.
+  - Buns without a cap of hair.
+  - **Grobos:** after the original. One great round body from the knees to the shoulders, coat above and
+    trousers below. A wide head sunk into it with no neck, a long trunk hanging in front of the belly, and great
+    flat ears. Short shins and round feet.
+  - **Rabbibunnies:** a small head drawn out into a snout, with long ears in a V.
+  - **Esmers:** they keep their shape, in the same language.
+
+Not done, and why:
+- **Flat shading.** The original's polygons are Gouraud (LBA2_MEASUREMENTS.md, Shading); the faceted look came
+  from a flat study render.
+- **The skeletons are unchanged**, so every animation drives the new models as before. A Grobo's legs are
+  therefore not as short as the original's: its body hangs over the thighs instead.
+
+Captures:
+- `captures/characters/cast-pass8-before-after.png`: Twinsen, Zoé, Arthur, the archivist, Doran and Mira, four
+  views each, 0.12.0 against now.
+- `captures/characters/cast-pass8-walk.png`: mid-stride.
+- `captures/characters/cast-pass8-ingame-square.png`: the town square at the game camera.

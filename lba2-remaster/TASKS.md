@@ -7,8 +7,9 @@
       square, the house interior, vegetation/terrain, the harbour water. Done when: before/after captures from the
       same game camera show no exposed primitives on characters, no boxy buildings, no flat empty ground, and
       characters read clearly against the background at normal game size.
-- [ ] V2 Character pass: Zoé redesigned (own proportions, hair, dress, gestures); hands with a thumb; shoes with
-      toe/heel/sole; distinct silhouettes for townsfolk; races checked (Grobo, Rabbibunny, Esmer).
+- [ ] V2 Character pass: Zoé rebuilt from the original's sections, Twinsen at the original's head size, the cast in
+      LBA2's language (ball hands, plain cloth, Grobo bodies, Rabbibunny snouts) — pass 8, 0.13.0. Still open:
+      Zoé's gestures; the Esmers after the original; the user's verdict in their game.
 - [ ] V3 Apply the standard to the rest of Citadel, the interiors and Zeelich.
 - [ ] V4 Lighting: contact shadows, character/background separation, no plastic look (LBA ramp everywhere).
 

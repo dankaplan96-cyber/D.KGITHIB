@@ -24,10 +24,10 @@ S = 2.1  # the game's height for H (top of the hair)
 
 COL = {
     'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#e98c6c', 'skin': '#e2bc90', 'hair': '#634327',
-    'white': '#ecebf2', 'iris': '#2f78b0', 'pupil': '#141820', 'lid': '#5a3a28', 'medal': '#c89e53', 'medalFace': '#e2bc6e',
+    'white': '#f2f2f6', 'iris': '#7fb8e0', 'pupil': '#1c3a5a', 'lid': '#5a3a28', 'medal': '#d8bc68', 'medalFace': '#f2e2a0',
     'cord': '#c8502a', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414',
 }
-HEAD_K = 1.24                     # the head, larger than the original's measured sections (references: ≈0.19 H)
+HEAD_K = 1.0                      # the head at the original's measured size (≈0.156 H wide; it was drawn ×1.24 before)
 CHIN = (0.0, 0.80, 0.09)          # …scaled about the chin, so the neck joint stays where it was
 
 
@@ -287,14 +287,9 @@ for sx in (1, -1):
     cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
     cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
     PARTS.append(cin)
-    # the hand: a mitten (palm and closed fingers) with a thumb, palm turned to the body
+    # the hand: LBA2's ball (the original's: r 0.036 H, centred 0.376 H, just under the cuff)
     hand = Part('hand' + s, 'skin', hb, angle=60)
-    hx, hz = sx * 0.192, 0.014
-    # (LBA2's hands are big balls, r ≈ 0.035 H: the mitten is drawn at that size, hanging from the cuff)
-    HK = 1.8
-    loft_along(hand, [ell_ring((hx, 0.40 - (0.40 - y) * HK, hz + dz * HK), (1, 0, 0), (0, 0, 1), rx * HK, rz * HK, 10) for y, rx, rz, dz in
-                      [(0.40, 0.014, 0.018, 0.0), (0.383, 0.017, 0.026, 0.002), (0.362, 0.016, 0.028, 0.004), (0.343, 0.013, 0.024, 0.006), (0.333, 0.008, 0.015, 0.007)]])
-    tube(hand, (hx - sx * 0.007, 0.40 - 0.015 * HK, hz + 0.02 * HK), (hx - sx * 0.02, 0.40 - 0.04 * HK, hz + 0.036 * HK), 0.0075 * HK, 0.006 * HK, 7)
+    sphere(hand, (sx * 0.19, 0.378, 0.02), 0.036, 10, 7)
     PARTS.append(hand)
 
 neck = Part('neck', 'skin', lambda p: {'neck': 1 - smooth(0.79, 0.83, p[1]), 'head': smooth(0.79, 0.83, p[1])}, angle=60)
@@ -413,17 +408,12 @@ hv.append((0.0, 0.962, 0.03)); top = len(hv) - 1
 o = (len(cap_rows) - 1) * M
 hf += [[o + i + 1, o + i, top] for i in range(M - 1)]
 hair.add(hv, hf)
-PARTS.append(hair)
-# the topknot: a bun with a dark tie, then the short tail of the knot
-bun1 = Part('bun1', 'hair', lambda p: {'tail0': 1.0}, angle=60, big=True)
-sphere(bun1, (0.0, 0.93, -0.098), 0.034, 10, 7, sy=0.85)
-PARTS.append(bun1)
-tie = Part('tie', 'tie', lambda p: {'tail0': 1.0}, angle=60, big=True)
-tube(tie, (0.0, 0.94, -0.066), (0.0, 0.937, -0.075), 0.02, 0.021, 10, cap0=False, cap1=False)
-PARTS.append(tie)
-bun2 = Part('bun2', 'hair', lambda p: {'tail1': 1.0}, angle=60, big=True)
-tube(bun2, (0.0, 0.905, -0.118), (0.0, 0.872, -0.124), 0.022, 0.01, 9, cap0=True)
-PARTS.append(bun2)
+# (the original has no hair on the skull, only the bun: the cap above is kept in the source but not exported)
+# the bun: the original's three balls, from the crown back and down (centre y, z and radius in H)
+for i, (y, z, r) in enumerate(((0.995, -0.054, 0.052), (0.968, -0.107, 0.037), (0.931, -0.124, 0.026))):
+    bun = Part('bun%d' % i, 'hair', (lambda b: (lambda p: {b: 1.0}))('tail%d' % i), angle=60, big=True)
+    sphere(bun, (0.0, y, z), r, 10, 7)
+    PARTS.append(bun)
 
 # medallion: an octagonal gold plate on the chest, a lighter face, the cord running up to the collar
 med = Part('medal', 'medal', lambda p: {'torso': 1.0}, angle=40)
@@ -448,7 +438,7 @@ for sx in (1, -1):
         vv += [(x - w, y, z + 0.002), (x + w, y, z + 0.002)]
     ff = [[2 * i + 1, 2 * i, 2 * i + 2, 2 * i + 3] for i in range(len(pts) - 1)]
     cord.add(vv, ff)
-PARTS.append(cord)
+# (the original shows no cord: not exported)
 
 # eyes (separate, so they can blink): a flat diamond on the face, the iris a smaller one on top of it
 EYES = []
@@ -459,14 +449,12 @@ for sx in (1, -1):
         p = (cx + dx, cy + dy, head_front(cx + dx, cy + dy) + 0.003 + lift)
         return scale_about(tilt(p) if False else p, CHIN, HEAD_K)
     # almond: wider than tall, the outer corner a touch higher
-    white = [on_face(0.023 * math.cos(t) , 0.012 * math.sin(t) + sx * 0.002 * math.cos(t)) for t in [2 * math.pi * k / 10 for k in range(10)]]
-    ic = (sx * 0.003, 0.0)
-    iris = [on_face(ic[0] + 0.0095 * math.cos(t), ic[1] + 0.0095 * math.sin(t), 0.0012) for t in [2 * math.pi * k / 10 for k in range(10)]]
-    pupil = [on_face(ic[0] + 0.0045 * math.cos(t), ic[1] + 0.0045 * math.sin(t), 0.0022) for t in [2 * math.pi * k / 8 for k in range(8)]]
-    lid = [on_face(-0.025, 0.002, 0.0026), on_face(-0.012, 0.0135, 0.0026), on_face(0.0, 0.0155, 0.0026), on_face(0.013, 0.0145, 0.0026), on_face(0.026, 0.006, 0.0026),
-           on_face(0.024, 0.0095, 0.0026), on_face(0.013, 0.0185, 0.0026), on_face(0.0, 0.0195, 0.0026), on_face(-0.012, 0.0175, 0.0026), on_face(-0.024, 0.0055, 0.0026)]
+    white = [on_face(0.016 * math.cos(t), 0.0085 * math.sin(t)) for t in [2 * math.pi * k / 10 for k in range(10)]]
+    ic = (sx * -0.002, 0.0)
+    iris = [on_face(ic[0] + 0.0068 * math.cos(t), ic[1] + 0.0068 * math.sin(t), 0.0012) for t in [2 * math.pi * k / 10 for k in range(10)]]
+    pupil = [on_face(ic[0] + 0.003 * math.cos(t), ic[1] + 0.003 * math.sin(t), 0.0022) for t in [2 * math.pi * k / 8 for k in range(8)]]
     piv = scale_about((cx, cy, cz), CHIN, HEAD_K)
-    EYES.append({'pivot': piv, 'tris': [(white, 'white'), (iris, 'iris'), (pupil, 'pupil'), (lid, 'lid')]})
+    EYES.append({'pivot': piv, 'tris': [(white, 'white'), (iris, 'iris'), (pupil, 'pupil')]})
 
 
 # ------------------------------------------------------------------ arms: model in the display pose, store the rest pose
