@@ -399,6 +399,23 @@ export class Rig {
         hipsY = 0.95 + key(W.bob, p * 2 % 1);
         torsoY = key(W.twist, p); headY = -torsoY;
         torsoX = 0.02 + key(W.lean, p * 2 % 1);
+      } else if (a === 'run' && (!this.j.skirt || this.legCloth)) {
+        // LBA2's athletic run, from its six key poses (1.94 body heights per cycle): the body leans well into
+        // it, the knee drives high in front, the heel kicks up behind on the pass, the arms pump bent
+        const H = this.hipsRest * this.root.scale.y / 0.46;
+        this.phase += (speed * dt / (1.94 * H)) * Math.PI * 2 - dph;
+        const p = ((this.phase / (Math.PI * 2)) % 1 + 1) % 1, q = (p + 0.5) % 1;
+        const R = RUN_KEYS;
+        T.legL = key(R.thigh, p); T.kneeL = key(R.knee, p); T.footL = key(R.foot, p);
+        T.legR = key(R.thigh, q); T.kneeR = key(R.knee, q); T.footR = key(R.foot, q);
+        T.armL = key(R.arm, p); T.elL = key(R.elbow, p); T.armR = key(R.arm, q); T.elR = key(R.elbow, q);
+        hipsY = 0.95 + key(R.bob, p * 2 % 1);
+        torsoY = key(R.twist, p); headY = -torsoY * 0.8;
+        torsoX = R.lean * Math.min(1, speed / 4); headX = -torsoX * 0.55; // (the head stays up, looking ahead)
+        if (this.robeLegs) {
+          // one robe over both legs stretches flat past ~65° between them: a slightly shorter stride, a lower heel
+          T.legL *= 0.75; T.legR *= 0.75; T.kneeL = Math.min(T.kneeL, 1.2); T.kneeR = Math.min(T.kneeR, 1.2);
+        }
       }
       if (a === 'sneak') {
         hipsY = 0.74; torsoX = 0.45; headX = -0.38;
@@ -518,17 +535,32 @@ export class Rig {
       T.legL = -0.5 * hop - fwd * 0.3 * hop; T.legR = -0.3 * hop + fwd * 0.2 * hop; T.kneeL = 1.0 * hop; T.kneeR = 0.8 * hop;
       T.armL = -0.7 * hop; T.armR = -0.5 * hop; T.elL = -0.6; T.elR = -0.6; armOut = 0.6 * hop;
     } else if (a === 'throwQuick') {
-      // the quick throw: a short wind-up, the whip and release at 0.16 s, follow-through
+      // the quick throw, posed after LBA2's (measured): coil (torso turned away, the throwing arm cocked high
+      // behind, the front knee lifting) → at 0.16 s the release, lunging forward and down → the follow-through
+      // low over the front leg, settling back up
       const t = this.actionT;
-      if (t < 0.16) { const e = t / 0.16; T.armR = -2.7 * e; T.elR = -1.5 * e; T.armL = -0.7 * e; torsoY = 0.45 * e; torsoX = -0.08 * e; T.legL = -0.15; T.legR = 0.2; T.kneeL = 0.2; T.kneeR = 0.25; hipsY = 0.94; }
-      else if (t < 0.26) { T.armR = -1.25; T.elR = -0.05; T.armL = 0.4; T.elL = -0.7; torsoY = -0.45; torsoX = 0.2; headY = 0.2; T.legL = -0.45; T.legR = 0.35; T.kneeL = 0.3; T.kneeR = 0.15; hipsY = 0.9; }
-      else { T.armR = -0.5; T.elR = -0.25; T.armL = 0.15; T.elL = -0.4; torsoY = -0.15; torsoX = 0.08; T.legL = -0.2; T.legR = 0.15; T.kneeL = 0.15; T.kneeR = 0.1; hipsY = 0.93; }
+      if (t < 0.16) {
+        const e = t / 0.16;
+        T.armR = -2.8 * e; T.elR = -1.6 * e; T.armL = -0.9 * e; T.elL = -0.3 * e;
+        torsoY = 0.75 * e; torsoX = -0.1 * e; headY = -0.55 * e;
+        T.legL = -0.75 * e; T.kneeL = 0.9 * e; T.legR = 0.1; T.kneeR = 0.2; hipsY = 0.95 - 0.02 * e;
+      } else if (t < 0.26) {
+        T.armR = -1.0; T.elR = -0.1; T.armL = 0.35; T.elL = -0.6;
+        torsoY = -0.35; torsoX = 0.95; headX = -0.75; headY = 0.25; // (the original bows deep into the release)
+        T.legL = -0.85; T.kneeL = 0.55; T.legR = 0.35; T.kneeR = 0.3; T.footL = 0.35; hipsY = 0.86;
+      } else {
+        const k = Math.min(1, (t - 0.26) / 0.35);
+        T.armR = -0.75 + k * 0.6; T.elR = -0.35; T.armL = 0.2; T.elL = -0.45;
+        torsoY = -0.3 * (1 - k); torsoX = 0.85 * (1 - k) + 0.05; headX = -0.65 * (1 - k);
+        T.legL = -0.7 * (1 - k) - 0.05; T.kneeL = 0.6 * (1 - k) + 0.05; T.legR = 0.3 * (1 - k); T.kneeR = 0.3 * (1 - k) + 0.05; hipsY = 0.87 + 0.08 * k;
+      }
     } else if (a === 'charge') {
-      // charging the ball: arm high behind the head, the body coiled, the off hand pointing the aim
+      // holding the ball to aim: LBA2's coiled pose before the release, held — the torso turned away, the arm
+      // cocked high behind the head, the front knee up a little, the eyes on the target
       const e = Math.min(1, this.actionT / 0.25), w = Math.sin(this.t * 30) * 0.02;
-      T.armR = -3.0 * e + w; T.elR = -1.7 * e; T.armL = -1.3 * e; T.elL = -0.1;
-      torsoY = 0.6 * e; torsoX = -0.15 * e; headY = -0.45 * e;
-      T.legL = -0.3; T.legR = 0.35; T.kneeL = 0.35; T.kneeR = 0.3; hipsY = 0.9;
+      T.armR = -3.0 * e + w; T.elR = -1.7 * e; T.armL = -1.2 * e; T.elL = -0.15;
+      torsoY = 0.8 * e; torsoX = -0.12 * e; headY = -0.7 * e;
+      T.legL = -0.45 * e; T.kneeL = 0.55 * e; T.legR = 0.2; T.kneeR = 0.25; hipsY = 0.92;
     } else if (a === 'pulse') {
       // Baldino's pulse tool: both hands forward, a recoil
       const k = Math.min(1, this.actionT / 0.08), back = Math.max(0, 1 - (this.actionT - 0.08) / 0.24);
@@ -732,6 +764,18 @@ const WALK_KEYS = {
   twist: [-14 * D, 0, 14 * D, 0],
   bob: [-0.02, 0.027],          // contact low, passing high (× pelvis height / 0.95)
   lean: [0.1, 0.0],             // the torso dips forward a little at each contact
+};
+// The athletic run, six keys per cycle starting at this leg's knee drive (thighs absolute: LBA2 tilts the pelvis
+// 11-36° forward and the legs with it); arms relative to the torso; the lean is the pelvis plus the torso.
+const RUN_KEYS = {
+  thigh: [-62 * D, -33 * D, 23 * D, 33 * D, -12 * D, -58 * D],
+  knee: [8 * D, 2 * D, 4 * D, 47 * D, 102 * D, 90 * D],
+  foot: [40 * D, -13 * D, 1 * D, -4 * D, 40 * D, 35 * D],
+  arm: [69 * D, 20 * D, -32 * D, -54 * D, -20 * D, 27 * D],
+  elbow: [-110 * D, -34 * D, -28 * D, -68 * D, -122 * D, -91 * D],
+  twist: [17 * D, 0, 0, -20 * D, -8 * D, 0],
+  bob: [0.03, -0.035, 0.0],     // up off the push, down on landing (× pelvis height / 0.95; LBA2 drops further, its feet sink)
+  lean: 0.4,                    // ≈ 23° into the run
 };
 // periodic Catmull-Rom through evenly spaced keys (smooth, passes through every measured pose)
 function key(k, t) {

@@ -36,13 +36,25 @@ only the numbers below, used to shape our own models and animations.
   −8; passing −20 / 52 / −7. Arms swing opposite (+10 back, −25 forward with the elbow at −22). Torso
   counter-twist ±14°, the head turns back the other way (keeps looking ahead). Bob ≈ 2 % of H: low at
   contact, high when passing. Torso leans +6° at each contact.
-- 3 / 4 turn in place (880 ms), 8 / 9 walk backwards (≈0.8 H/s), 12 crouched sneak (pelvis 45°, knees up to
-  158°), 23 overhead two-arm swing (900 ms), 21 looking around (1.2 s), 26 forward jump (4 keys, 720 ms).
-- Fast loops (candidates for the athletic run, to confirm with FILE3D.HQR): 67 (10 keys, cycle 0.84 s, 2.4 H/s,
-  strong forward lean, arms pumping) and 1826/1827 (0.42 s, 2.31 H/s).
+- Which animation plays for which action comes from the hero's File3D tables (RESS.HQR entry 44, one per
+  behaviour; records: F_ANIM u16 generic anim, u8 size, s16 ANIM.HQR index, u8 has-actions, actions):
+  normal walk 1, athletic run 67, aggressive walk 83, discreet walk 94; throw (LANCE) 6 in every behaviour;
+  jump 71; punches 87–89; dodges 52–55 (78/79 athletic, 100/101 discreet); idle 0 / 66 / 82 / 93.
+  Walk footsteps: F_RIGHT_STEP on key 2, F_LEFT_STEP on key 4.
+- 67 athletic run: 4 start keys, then 6 keys × 140 ms (cycle 0.84 s, 1.94 H per cycle, 2.3 H/s). The pelvis
+  tilts 11–36° forward and the legs with it: absolute thigh (+ = back) −62, −33, +23, +33, −12, −58; knee 8, 2,
+  4, 47, 102, 90; arms relative to the torso +69 … −54 with the elbow bent 34–122°; torso twist ±20°; the body
+  drops 56 units on landing.
+- 6 throw (LANCE): 11 keys, 1.22 s, the ball leaves on key 6 at 0.56 s (F_THROW_MAGIC). Coil: torso turned away up
+  to 57°, the throwing arm cocked high behind, the front knee lifted (thigh −94°, knee 104°); release: a lunge,
+  pelvis 38–44° forward, the head up; a long crouched follow-through.
+- 12 crouched sneak (pelvis 45°, knees up to 158°), 21 looking around, 26 a forward jump (720 ms).
 
 ## Used in the game
 - `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle).
 - `tools/blender/twinsen_poly.py`: the robe below the belt follows the legs; hands r ≈ 0.032 H at ±0.19;
   a lower, larger head (HEAD_K 1.24, no neck lift); the look's armSpread 0.3.
 - `tools/blender/cast_poly.py` outfit `gown` + `bun` with three balls: Zoé as above.
+- `src/engine/rig.js` RUN_KEYS: the athletic run (Twinsen's robe opens 75 % as far: one robe over both legs
+  stretches flat past ~65°; Zoé's separate legs take the full stride). throwQuick / charge: posed after the
+  throw's coil and release (our timing stays quick: a tap releases at 0.16 s; holding keeps the coiled pose).

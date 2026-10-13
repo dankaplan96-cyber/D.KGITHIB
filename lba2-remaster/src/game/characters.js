@@ -932,6 +932,9 @@ function finishRig(L, def, root, mesh, bones, eyes) {
   rig.mesh = mesh;
   rig.height = def.bones.head.tip[1];
   if (L.armSpread != null) rig.armSpread = L.armSpread;
+  // the robe below the belt (Twinsen) or the outfit's legs (Zoé) are carried by the legs: strides need no limit
+  if (L.outfit === 'lba' || L.outfit === 'gown') rig.legCloth = true;
+  if (L.outfit === 'lba') rig.robeLegs = true; // (one robe over both legs: it can't open as far as separate legs)
   rig.bell = L.outfit === 'bell';
   root.scale.setScalar(L.height ? (L.kid ? L.height / 0.78 : L.height) : 1);
   return rig;
