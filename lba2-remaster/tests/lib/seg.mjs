@@ -25,8 +25,11 @@ for (const [label, fn, arg] of seg.steps) {
   const s0 = Date.now();
   try {
     let r = await page.evaluate(fn, arg);
+    // a death at the end of a step: let the fall play out (game time) so the game-over screen comes up
+    await page.evaluate(() => { for (let i = 0; i < 120 && game.hero.dead && game.state !== 'gameover'; i++) game.step(1 / 30); });
     for (let k = 0; k < 2 && (await page.evaluate(() => game.state)) === 'gameover'; k++) {
       deaths++; console.log(`  (died during "${label}": Retry from the last save)`); await retry(); r = await page.evaluate(fn, arg);
+      await page.evaluate(() => { for (let i = 0; i < 120 && game.hero.dead && game.state !== 'gameover'; i++) game.step(1 / 30); });
     }
     const st = await page.evaluate(() => P.state());
     console.log(`[${((Date.now() - t0) / 1000).toFixed(0)}s +${((Date.now() - s0) / 1000).toFixed(0)}s] ${label}: ${JSON.stringify(r)?.slice(0, 400)} | ${st.room} ${JSON.stringify(st.pos)} hp ${st.hp} | ${st.obj.slice(0, 120)}`);

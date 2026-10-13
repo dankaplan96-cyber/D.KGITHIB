@@ -271,13 +271,17 @@
       const d = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z);
       if (d > range) { const r = P.go(e.pos.x, e.pos.z, { tol: range - 1, maxT: 8, fight: false }); t += r.t || 0.5; if (G.state !== 'play') P.settle(); continue; }
       P.face(e.pos.x, e.pos.z, 1.5);
+      // a telegraphed attack close by (a drone's wind-up, a guard's aim line): back-step out of it (X), as a player would
+      const tell = G.enemies.find((x) => x.alive && x.present && (x.state === 'windup' || x.state === 'aim') && x.pos.distanceTo(h.pos) < 9);
+      if (tell && G.hero.combat?.canDodge?.()) { P.tap('KeyX', 0.45); t += 0.5; P.face(e.pos.x, e.pos.z, 1.5); }
       const hp0 = e.hp, tg = G.targeting?.throwTarget?.({ x: Math.sin(h.angle), z: Math.cos(h.angle) });
+      const aimed = tg && tg.alive !== undefined ? tg : e;   // the throw goes where the game aims it
       // armoured (Grobo guards, troopers): a charged throw (hold F); otherwise the quick throw (tap F)
       if (melee) { P.tap('KeyK', 0.35); t += 0.4; }
-      else if ((e.armour || 0) >= 2) { keys.add('KeyF'); I.taps.add('KeyF'); G.step(0.85); keys.delete('KeyF'); G.step(1.0); t += 1.9; }
+      else if ((aimed.armour || 0) >= 2 && h.mp >= 1) { keys.add('KeyF'); I.taps.add('KeyF'); G.step(1.1); keys.delete('KeyF'); G.step(1.0); t += 2.1; }   // full charge: chargeAfter 0.2 + chargeFull 0.75 s
       else { P.tap('KeyF', 0.05); G.step(1.1); t += 1.2; }
-      if (e.hp === hp0) { e._miss = (e._miss || 0) + 1; if (e._miss >= 4) { e._miss = 0; P.ignore.set(e, G.time + 25); P.note(`fight: ${e.id} unreachable from here, leaving it`); } } else e._miss = 0;
-      P.note(`fight ${e.id || e.def?.kind} d=${d.toFixed(1)} st=${e.state} aim=${tg ? (tg === e ? 'it' : 'other:' + (tg.id || tg.def?.id || tg.kind || 'pt') + '@' + (tg.pos || tg).x?.toFixed(1) + ',' + (tg.pos || tg).z?.toFixed(1) + ' d' + Math.hypot((tg.pos || tg).x - h.pos.x, (tg.pos || tg).z - h.pos.z).toFixed(1)) : 'none'} e@${e.pos.x.toFixed(1)},${e.pos.y.toFixed(1)},${e.pos.z.toFixed(1)} me@${h.pos.x.toFixed(1)},${h.pos.y.toFixed(1)},${h.pos.z.toFixed(1)} ball=${G.ball.state} hp ${hp0}→${e.hp} me ${h.hp}`);
+      if (e.hp === hp0 && aimed === e) { e._miss = (e._miss || 0) + 1; if (e._miss >= 4) { e._miss = 0; P.ignore.set(e, G.time + 25); P.note(`fight: ${e.id} unreachable from here, leaving it`); } } else e._miss = 0;
+      P.note(`fight ${e.id || e.def?.kind} d=${d.toFixed(1)} st=${e.state} aim=${tg ? (tg === e ? 'it' : 'other:' + (tg.id || tg.def?.id || tg.kind || 'pt') + '@' + (tg.pos || tg).x?.toFixed(1) + ',' + (tg.pos || tg).z?.toFixed(1) + ' d' + Math.hypot((tg.pos || tg).x - h.pos.x, (tg.pos || tg).z - h.pos.z).toFixed(1)) : 'none'} e@${e.pos.x.toFixed(1)},${e.pos.y.toFixed(1)},${e.pos.z.toFixed(1)} me@${h.pos.x.toFixed(1)},${h.pos.y.toFixed(1)},${h.pos.z.toFixed(1)} ball=${G.ball.state} hp ${hp0}→${e.hp} me ${h.hp} mp ${h.mp}`);
       if (G.state !== 'play') P.settle();
     }
     return { left: alive().length, dead: h.dead, hp: h.hp, t: +t.toFixed(1) };
