@@ -1,7 +1,6 @@
 // Chapter 5 (Steam and Sand, Desert Island): Brosk's jar, water from the oasis, the shovel, digging out FunFrock's
 // condenser hall, the diagram, the old trooper, the valves (1, 3, 4), the hangar's glider and hatch (ball),
 // Dallan at the post, the relief valve, out before the vent blows, Tarra, Hesk, the glider north.
-const exitTo = (to) => { const e = game.room.exits.find((x) => x.to === to); if (!e) return { fail: 'no exit ' + to }; return P.through(e.x, e.z); };
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['Brosk: the jar', () => ({ ...P.talk('dtrader', { run: true }), jar: game.flags.c5_jar, fail: game.flags.c5_jar ? null : 'jar' })],
@@ -12,15 +11,15 @@ export const steps = [
   ['the diagram', () => { const A = game.rooms.condA; const r = P.use(A.diagram.x, A.diagram.z); return { ...r, diagram: game.flags.c5_diagram, fail: game.flags.c5_diagram ? null : 'diagram' }; }],
   ['the old trooper', () => { const r = P.fight({ group: null, maxT: 120 }); return { ...r, trooper: game.enemies.find((e) => e.id === 'ffclone1')?.alive }; }],
   ['the valves 1, 3, 4', () => { const A = game.rooms.condA; for (const id of [1, 3, 4]) { const v = A.valves.find((x) => x.id === id); P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle(); } return { valves: game.flags.c5_valves, routed: game.flags.c5_routed, fail: game.flags.c5_routed ? null : 'valves' }; }],
-  ['the hangar', () => exitTo('cond-b')],
+  ['the hangar', () => P.exitTo('cond-b')],
   ['the glider', () => { const g = game.rooms.condB.glider; return { ...P.use(g.x, g.z), seen: game.flags.c5_gliderSeen }; }],
   ['the hatch (ball)', () => { const tg = game.room.ballTargets.find((t) => t.hatch); for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * 3.5, tg.z - Math.cos(a) * 3.5, { tol: 0.8, maxT: 40 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return { hatch: game.flags.c5_hatch, fail: game.flags.c5_hatch ? null : 'hatch' }; }],
-  ['back out', () => { exitTo('cond-a'); return exitTo('cond-out'); }],
+  ['back out', () => { P.exitTo('cond-a'); return P.exitTo('cond-out'); }],
   ['Dallan', () => ({ ...P.talk('dallan', { run: true }), ok: game.flags.c5_dallanOK, fail: game.flags.c5_dallanOK ? null : 'dallan' })],
   ['the relief valve', () => { const v = game.rooms.desert.bore.valve; const r = P.use(v.x, v.z, { run: true }); P.settle(); return { ...r, relief: game.flags.c5_relief, fail: game.flags.c5_relief ? null : 'relief' }; }],
   ['out before the vent', () => { const G = game, Post = G.rooms.desert.post; P.go(Post.x0 - 8, (Post.z0 + Post.z1) / 2, { tol: 1.5, run: true, maxT: 60 }); let t = 0; while (!G.flags.c5_vent && t < 30) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } P.settle(); return { vent: G.flags.c5_vent, hp: G.hero.hp, fail: G.flags.c5_vent ? null : 'vent' }; }],
   ['Tarra', () => ({ ...P.talk('tarra', { run: true }), radio: game.flags.c5_radio })],
   ['Hesk: the glider', () => ({ ...P.talk('hesk', { run: true }), glider: game.flags.c5_glider, fail: game.flags.c5_glider ? null : 'hesk' })],
-  ['to the hangar', () => { const d = game.rooms.desert.ruins.door; P.through(d.x, d.z, { run: true }); return exitTo('cond-b'); }],
+  ['to the hangar', () => { const d = game.rooms.desert.ruins.door; P.through(d.x, d.z, { run: true }); return P.exitTo('cond-b'); }],
   ['board → chapter 6', () => { const g = game.rooms.condB.glider; const r = P.use(g.x, g.z); P.settle(60); P.settle(30); return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'pass' ? null : 'no chapter 6' }; }],
 ];

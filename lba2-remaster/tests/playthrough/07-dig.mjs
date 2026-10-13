@@ -26,7 +26,7 @@ export const steps = [
     return { waited: t, stormy: G.story.cur.stormy, ...r, notebook: G.flags.c4_notebook, fail: G.flags.c4_notebook ? null : 'notebook' };
   }],
   ['the dig\'s gate', () => { const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { run: true }); P.wait(1); P.settle(); return { ...r, open: game.flags.c4_digOpen, fail: game.flags.c4_digOpen ? null : 'gate' }; }],
-  ['down to the bottom', () => { const D = game.rooms.desert.dig; const r = P.go(D.x + 1.5, D.z - 1.0, { tol: 1.0, maxT: 120 }); P.settle(); return { r: r.r, y: +game.hero.pos.y.toFixed(2), bottom: D.bottomY, fail: Math.abs(game.hero.pos.y - D.bottomY) < 0.8 ? null : 'not at the bottom' }; }],
+  ['down to the bottom', () => { const D = game.rooms.desert.dig; let r; for (let k = 0; k < 4 && Math.abs(game.hero.pos.y - D.bottomY) >= 0.8; k++) { r = P.go(D.x + 1.5, D.z - 1.0, { tol: 1.0, maxT: 120 }); P.settle(); }   /* (a line on the way down: settle it, walk on) */ return { r: r.r, y: +game.hero.pos.y.toFixed(2), bottom: D.bottomY, fail: Math.abs(game.hero.pos.y - D.bottomY) < 0.8 ? null : 'not at the bottom' }; }],
   ['the three seals (ball)', () => {
     const G = game, out = [];
     for (const tg of G.room.ballTargets.filter((t) => t.seal != null)) {

@@ -1,7 +1,6 @@
 // Chapter 9 (The Council, Zeelich): the street folk, Baldino's petition, Nara's stamp, Oku's stamp (free the three
 // mills: ball), the council house, the clerk, the hearing, the archive in a borrowed coat (the BORE cabinet),
 // back to the council → chapter 10.
-const exitTo = (to) => { const e = game.room?.exits?.find((x) => x.to === to); if (!e) return { r: 'no exit ' + to }; return P.through(e.x, e.z); };
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['street folk', () => ['zbee1', 'zmole1', 'ztri1'].map((id) => P.talk(id, { run: true }).r)],
@@ -12,8 +11,8 @@ export const steps = [
   ['Oku: the stamp', () => ({ ...P.talk('oku', { run: true }), oku: game.flags.c9_oku, fail: game.flags.c9_oku ? null : 'oku' })],
   ['the council house', () => { const d = game.rooms.zeelich.councilDoor; return P.through(d.x, d.z, { run: true }); }],
   ['the clerk', () => ({ ...P.talk('clerk'), clerk: game.flags.c9_clerk, fail: game.flags.c9_clerk ? null : 'clerk' })],
-  ['the hearing', () => { exitTo('up-council'); P.wait(0.5); P.settle(); return { heard: game.flags.c9_heard, fail: game.flags.c9_heard ? null : 'hearing' }; }],
-  ['the archive: the coat', () => { exitTo('council-out'); exitTo('up-archive'); P.settle(); const L = game.rooms.archive.locker; const r = P.use(L.x, L.z); return { ...r, coat: game.flags.c9_coat, disguised: game.hero.disguised, fail: game.flags.c9_coat ? null : 'coat' }; }],
+  ['the hearing', () => { P.exitTo('up-council'); P.wait(0.5); P.settle(); return { heard: game.flags.c9_heard, fail: game.flags.c9_heard ? null : 'hearing' }; }],
+  ['the archive: the coat', () => { P.exitTo('council-out'); P.exitTo('up-archive'); P.settle(); const L = game.rooms.archive.locker; const r = P.use(L.x, L.z); return { ...r, coat: game.flags.c9_coat, disguised: game.hero.disguised, fail: game.flags.c9_coat ? null : 'coat' }; }],
   ['the BORE cabinet', () => { const G = game, c = G.rooms.archive.cabinets.find((x) => x.label === 'BORE'); const w = G.story.cur.watcher; if (w?.active) P.sneakTo(c.x, c.z, w, { tol: 1.0 }); const r = P.use(c.x, c.z); return { ...r, plans: G.flags.c9_plans, fail: G.flags.c9_plans ? null : 'plans' }; }],
-  ['back to the council → chapter 10', () => { exitTo('archive-out'); exitTo('up-council'); P.settle(60); P.settle(30); return { vote: game.flags.c9_vote, chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'network' ? null : 'no chapter 10' }; }],
+  ['back to the council → chapter 10', () => { P.exitTo('archive-out'); P.exitTo('up-council'); P.settle(60); P.settle(30); return { vote: game.flags.c9_vote, chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'network' ? null : 'no chapter 10' }; }],
 ];

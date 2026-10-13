@@ -322,6 +322,13 @@
     G.step(1); P.note(`ISO assist: ${left.length} enemies beaten (${left.map((e) => e.id).join(',')})`);
     return left.length;
   };
+  // segment helpers (segment page functions can't see module-scope helpers of their own file)
+  // walk out through the current room's exit to `to`
+  P.exitTo = (to) => { const e = G.room?.exits?.find((x) => x.to === to); if (!e) return { r: 'no exit ' + to, fail: 'no exit ' + to }; return P.through(e.x, e.z); };
+  // Hesk's flights: talk to him, pick destination i in his menu
+  P.flyTo = (i) => { P.talk('hesk', { run: true }); if (G.state !== 'shop') { P.tap('KeyE', 0.1); P.settle(); } const r = P.menuPick(i); P.settle(30); return { ...r, room: G.room?.id ?? 'citadel' }; };
+  // a ball target: throw from up to six spots around it (r metres off) until it is done
+  P.hitTarget = (tg, r = 4, { run = true, maxT = 60 } = {}) => { for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * r, tg.z - Math.cos(a) * r, { tol: 0.8, run, maxT }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return tg.done; };
   // athletic jump onto a raised spot (a stepping stone): line up 1.6 m short of its centre, run at it, jump (Space)
   // and wait for the landing. Returns the height reached.
   P.hopTo = (x, z, top, { from = 1.7, walk = true, brake = 0.5 } = {}) => {

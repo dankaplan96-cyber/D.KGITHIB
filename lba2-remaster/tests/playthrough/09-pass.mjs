@@ -1,7 +1,6 @@
 // Chapter 6 (The Pass, Hamalayi): the frozen tree felled over the gorge (ball) and walked across, Lhar,
 // Yorna, the heating station needs a fuse, Pim's kite (ball) → the fuse, the heat on, the lift: the frozen
 // mooring rope (the sword), two winch trips (the ice mites between), ride up, on to the monastery.
-const hitTarget = (tg, r = 4) => { for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * r, tg.z - Math.cos(a) * r, { tol: 0.8, run: true, maxT: 60 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return tg.done; };
 export const steps = [
   ['continue (Hamalayi)', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['fell the tree over the gorge (ball)', () => {
