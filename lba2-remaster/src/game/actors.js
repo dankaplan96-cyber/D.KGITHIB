@@ -725,16 +725,23 @@ export class MagicBall {
   }
   canRecall() { return this.state === 'fly' && this.life > 0.2; }
   recall() { if (this.state === 'fly' || this.state === 'impact') { this.state = 'return'; this.retT = 0; this.game.audio.play('recall'); } }
-  // back in the pocket, now (scene change, load, a stuck return)
-  toHand(silent = false) {
-    // a bonus it brought back is Twinsen's now
+  // back in the pocket, now. `silent` only mutes the catch; what it carries is settled by `carry`:
+  //  'credit' (a catch, a scene change): the bonus is Twinsen's, exactly once;
+  //  'drop' (a load, a reset of the world): the bonus is let go where the ball is, nobody gets it.
+  toHand(silent = false, carry = 'credit') {
     const c = this.carry; this.carry = null;
-    if (c) { const P = this.game.pickups, i = P.list.indexOf(c); if (i >= 0) { P.list.splice(i, 1); this.game.scene.remove(c.mesh); if (!silent) this.game.collect(c); } }
+    if (c) {
+      const P = this.game.pickups, i = P.list.indexOf(c);
+      c.carried = false;
+      if (i >= 0 && carry === 'credit') { P.list.splice(i, 1); this.game.scene.remove(c.mesh); this.game.collect(c); }
+      else if (i >= 0) { c.baseY = this.game.physics.groundAt(c.pos.x, c.pos.z, c.pos.y + 0.5) + 0.45; c.pos.y = c.baseY; }
+    }
     this.state = 'idle'; this.mesh.visible = false; this.shadow.visible = false; this.mesh.scale.setScalar(1);
     this.trail.forEach((m) => (m.visible = false)); this.preview(null);
     if (!silent) this.game.audio.play('catch');
   }
-  reset() { this.toHand(true); }
+  // a scene change credits a carried bonus; a load or a world reset lets it go ('drop')
+  reset(carry = 'credit') { this.toHand(true, carry); }
 
   // velocity for a throw along aim (or at a target), with the behaviour's style
   launchVelocity(hero, beh, aim, target, charged) {

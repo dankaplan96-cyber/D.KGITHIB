@@ -60,16 +60,23 @@ export class Renderer {
   }
 
   setQuality(q) {
-    if (q === this.quality && this._size) return;
     this.quality = q;
-    this.resize();
+    this.applyDerived();
+    this.resize(); // (cached: nothing is rebuilt when the size, pixel ratio and samples stay the same)
+  }
+
+  // what follows from quality + visual mode together, applied whenever either changes:
+  // dynamic shadows and bloom only off Low and outside the 1997 look
+  applyDerived() {
+    const on = !this.retro && this.quality !== 'low';
+    this.renderer.shadowMap.enabled = on;
+    if (this.bloom) this.bloom.enabled = on;
   }
 
   setRetro(on) {
     this.retro = on;
     this.retroPass.enabled = on;
-    this.bloom.enabled = !on && this.quality !== 'low';
-    this.renderer.shadowMap.enabled = !on && this.quality !== 'low';
+    this.applyDerived();
     this.canvas.classList.toggle('pixelated', on);
     this.scene.traverse((o) => {
       if (o.isMesh && o.material && 'flatShading' in o.material && !o.material.isShaderMaterial) {
@@ -97,7 +104,6 @@ export class Renderer {
       for (const t of [this.composer.renderTarget1, this.composer.renderTarget2]) if (t.samples !== ms) { t.samples = ms; t.dispose(); }
       this.composer.setPixelRatio(pr);
       this.composer.setSize(w, h);
-      this.bloom.enabled = !this.retro && this.quality !== 'low';
       this.retroPass.uniforms.resolution.value.set(w * pr, h * pr);
     }
     if (this.camera) {

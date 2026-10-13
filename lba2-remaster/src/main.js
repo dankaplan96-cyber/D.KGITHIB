@@ -305,8 +305,8 @@ class Game {
   }
 
   // a scene change: the ball comes home, shots in the air vanish, nobody may attack straight away
-  resetCombat() {
-    this.ball?.reset(); this.bolts?.clear(); this.hero?.combat?.reset(); this.targeting?.release(); this.combatDir?.reset(); this.hitStop = 0;
+  resetCombat(carry = 'credit') {
+    this.ball?.reset(carry); this.bolts?.clear(); this.hero?.combat?.reset(); this.targeting?.release(); this.combatDir?.reset(); this.hitStop = 0;
   }
 
   // where the hero is on the island map (inside a room: where that room is)
@@ -353,6 +353,7 @@ class Game {
     if (this.flags.target) this.hitTarget(true);
     this.story.applyFlags();
     const at = { x: s.hero.x, z: s.hero.z, a: 0 };
+    this.resetCombat('drop'); // (a bonus on the ball from before the load is nobody's)
     if (s.room && this.rooms[s.room]) this.enterRoom(s.room, at, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
@@ -444,8 +445,8 @@ class Game {
       if (document.hidden && this.state === 'cinematic') this.pause();
       if (!document.hidden) this.last = performance.now(); // back from another tab: no catch-up for the time away
     });
-    // F3 / ?perf: frame-time overlay
-    addEventListener('keydown', (e) => { if (e.code === 'F3') { e.preventDefault(); this.perf.overlay(); } });
+    // F9 / ?perf: frame-time overlay (its own key: F1–F4 pick behaviours; a held key toggles once)
+    addEventListener('keydown', (e) => { if (e.code === 'F9') { e.preventDefault(); if (!e.repeat) this.perf.overlay(); } });
     if (new URLSearchParams(location.search).has('perf')) this.perf.overlay(true);
     addEventListener('blur', () => { if (this.state === 'cinematic') this.pause(); });
   }

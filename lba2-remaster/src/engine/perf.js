@@ -2,7 +2,7 @@
 // simulation steps it took, the time left out (beyond the catch-up limit), CPU time in the simulation and in
 // render() (CPU side only: GPU time is not measured), and the draw calls / triangles of the frame.
 //   game.perf.stats()  → percentiles over the last N frames
-//   ?perf or F3        → a small overlay
+//   ?perf or F9        → a small overlay
 const N = 600;
 
 export class Perf {
