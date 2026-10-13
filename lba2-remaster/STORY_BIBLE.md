@@ -214,7 +214,10 @@ project's sites with the drones, carry stun rifles and batons, and are knocked o
   Desert Island, behind its great stone face: Rector Hougo (once on the honour roll with Twinsen, Aril van Koow and
   Carnogeel) and Ker'aooc the healing wizard, who "treats everybody for everything", the project's diggers lately
   too, and heals Twinsen. Their doors are open in every chapter.
-- Still to come: LBA1's places and people once the
+- **The Spheros** (LBA1's round people, bodies 68–70): most went south after FunFrock fell; a few are back on
+  Citadel. Pom came back for the fish; Madam Rondo walks her poodle Fifi by the square (her grandmother kept her
+  striped asylum uniform from FunFrock's day).
+- Still to come: more of LBA1's places and people now that the
   user's LBA1 data is here.
 
 ## Writing rules

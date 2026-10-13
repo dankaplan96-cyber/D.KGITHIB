@@ -55,3 +55,8 @@ are read in the scratchpad only and never committed. The body layout follows the
 14 banks per language, English readable: 0 menus and behaviours, 2 credits, 4 inventory and holomap texts,
 6–26 the islands' dialogue (Citadel, Principal, Proxima, White Leaf Desert, Rebellion, the Hamalayi Mountains,
 Tippett, Brundle, Fortress, Polar Island; which bank is which island is not mapped yet), 26 the ending.
+
+## Brought back so far
+- The Spheros (68–70): looks sphero1 (green) and sphero2 (brown), Pom and Madam Rondo on Citadel (0.19.0).
+  Measured: 828 units tall (0.67 of Twinsen); the star's points at (0, 828), (±399, 640), (±232, 352); the face
+  ±171 wide, 457–742 high, out to z 257; hands r 57 at (±399, 313); knees r 42 at (±171, 229).

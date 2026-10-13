@@ -349,5 +349,12 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   blackboard, long tables). Looks after the original bodies (numbers only): Bersimon 111, Rector Hougo 123,
   Ker'aooc after 188 (a guess; asked). Bersimon tops up magic, Ker'aooc heals. Doors open in every chapter
   (story/index.js). tests/wizards.mjs.
+
+## Session: LBA1's files (0.19.0)
+- The user uploaded LBA1's data (and its TEXT). Read in the scratchpad only. The body layout from the engine source;
+  all 133 bodies parse; docs/LBA1_CATALOGUE.md lists what each one is (numbers and descriptions only).
+- The user chose the Spheros first: build_sphero (tools/blender/cast_poly.py) after bodies 69/70 (828 of 1240
+  units; a star body, the face in its middle, an orange crest, arms from the shoulder points, ball hands, ball
+  knees); race 'sphero' proportions in characters.js. Pom and Madam Rondo (with the poodle) on Citadel's square.
 - Open: Ker'aooc is slimmer than body 188's star-shaped body; LBA1's characters and places once the user's files
   arrive.

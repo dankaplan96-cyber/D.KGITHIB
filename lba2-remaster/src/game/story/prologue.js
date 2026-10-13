@@ -37,6 +37,9 @@ export class Prologue extends ChapterBase {
       { id: 'lulu', name: 'n_lulu', char: 'lulu', color: '#ff9ad0', x: kids.x + 1.3, z: kids.z, angle: -Math.PI / 2, look: { tunic: '#e05a9a', robe: '#e05a9a', scale: 0.66, hair: '#2a1a10' } },
       // Joe the Elf, Twinsen's old friend from LBA2, by the square (he only chats: baseTalk's idle_joe lines)
       { id: 'joe', name: 'n_joe', char: 'joe', color: '#9fe89a', x: V.x + 6.5, z: V.z - 7.5, angle: -2.4 },
+      // LBA1's Spheros, back on Citadel (looks sphero1/sphero2): Pom by the square, Madam Rondo with her poodle
+      { id: 'sphero1', name: 'n_sphero1', char: 'sphero1', color: '#9fe0a0', x: V.x + 2, z: V.z + 10, angle: Math.PI },
+      { id: 'sphero2', name: 'n_sphero2', char: 'sphero2', color: '#e8c890', x: V.x + 8, z: V.z - 3.5, angle: -Math.PI / 2 },
       // Twinsun's wizards (src/game/wizards.js): Bersimon in his tent; the rector and Ker'aooc at the School of Magic
       { id: 'bersimon', name: 'n_bersimon', char: 'bersimon', color: '#7fe0e8', ...R.wtent.npcSpots.bersimon, angle: R.wtent.npcSpots.bersimon.a },
       { id: 'magus', name: 'n_magus', char: 'magus', color: '#9fc8ff', ...R.school.npcSpots.magus, angle: R.school.npcSpots.magus.a },

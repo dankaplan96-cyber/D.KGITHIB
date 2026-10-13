@@ -1105,6 +1105,67 @@ def build_elf(name):
     return name
 
 
+def build_sphero(name):
+    # LBA1's Sphero (bodies 68-70; 828 of Twinsen's 1240 units tall, measured in the scratchpad): a star-shaped body
+    # 0.8 m across the shoulder points, its face (a skin oval with blue eyes, red brows, a nose) in the middle of the
+    # front, an orange crest at the top point, arms hanging straight from the shoulder points with big ball hands,
+    # short legs with ball knees and flat feet turned out
+    S = ALL[name]
+    L, B = S['look'], S['bones']
+    bp = lambda n: tuple(B[n]['p'])
+    u = 2.1 / 1240
+    coat, coatD, skin = L.get('tunic', '#5b9f63'), L.get('tunicTrim', '#4f8f57'), L.get('skin', '#d3af87')
+    b = Builder(name, B)
+    # the star: 5 outer points and 5 inner ones (front view), a front and a back face, thicker inside than at the tips
+    cy = 600
+    outer = [(0, 828), (399, 640), (232, 352), (-232, 352), (-399, 640)]
+    inner = [(190, 742), (238, 472), (0, 380), (-238, 472), (-190, 742)]
+    ring_ = []
+    for k in range(5):
+        ring_ += [(outer[k], 55), (inner[k], 170)]
+    V, F = [], []
+    for (x, y), t in ring_:
+        V.append((x * u, y * u, t * u)); V.append((x * u, y * u, -t * u))
+    n = len(ring_)
+    V.append((0, cy * u, 228 * u)); V.append((0, cy * u, -228 * u))
+    cf, cb = len(V) - 2, len(V) - 1
+    for k in range(n):
+        a, c = 2 * k, 2 * ((k + 1) % n)
+        F.append([cf, a, c]); F.append([cb, c + 1, a + 1]); F.append([a, a + 1, c + 1, c])
+    def w_star(p):
+        k = smooth(cy * u - 0.1, cy * u + 0.05, p[1])
+        return {'torso': 0.4 + 0.6 * k, 'hips': 0.6 - 0.6 * k}
+    b.P('star', coat, w_star, 25).add(V, F)
+    # the crest at the top point, the face
+    tube(b.P('crest', L.get('hair', '#ef7b53'), 'torso', 30), (0, 790 * u, 0), (0, 870 * u, -20 * u), 70 * u, 4 * u, 6)
+    fc = (0, 600 * u, 150 * u)
+    sphere(b.P('face', skin, 'torso', 70), fc, 1.0, 12, 8, (171 * u, 145 * u, 95 * u))
+    for sx in (1, -1):
+        sphere(b.P('eye', L.get('eyes', '#2787a7'), 'torso', 60), (sx * 68 * u, 612 * u, 236 * u), 1.0, 8, 6, (58 * u, 40 * u, 14 * u))
+        sphere(b.P('pupil', '#101820', 'torso', 60), (sx * 55 * u, 612 * u, 250 * u), 13 * u, 6, 4)
+        tube(b.P('brow', L.get('brows', '#732717'), 'torso', 40), (sx * 20 * u, 652 * u, 236 * u), (sx * 112 * u, 682 * u, 222 * u), 14 * u, 10 * u, 5)
+    tube(b.P('nose', '#af7b5b', 'torso', 50), (0, 580 * u, 240 * u), (0, 470 * u, 290 * u), 52 * u, 8 * u, 5)
+    # arms from the shoulder points: a small ball at the tip, a thin arm straight down, a big ball hand
+    for s, sx in (('L', 1), ('R', -1)):
+        sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
+        sphere(b.P('shBall' + s, coatD, 'sh' + s, 50), sh, 21 * u, 7, 5)
+        tube(b.P('upper' + s, coat, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), sh, el, 14 * u, 13 * u, 6)
+        tube(b.P('fore' + s, coat, 'el' + s, 50), el, hd, 13 * u, 12 * u, 6)
+        sphere(b.P('hand' + s, '#c3936f', 'hand' + s, 60), hd, 57 * u, 9, 6)
+    # legs: thigh, a ball knee, shin, a flat foot turned out
+    for s, sx in (('L', 1), ('R', -1)):
+        hp, kn, ft = bp('hip' + s), bp('knee' + s), bp('foot' + s)
+        tube(b.P('thigh' + s, coat, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.05, k - 0.03, p[1]), 'knee' + s: smooth(k + 0.05, k - 0.03, p[1])}, 50), hp, kn, 30 * u, 26 * u, 7)
+        sphere(b.P('knee' + s, coatD, 'knee' + s, 50), kn, 42 * u, 8, 6)
+        tube(b.P('shin' + s, L.get('hair', '#ef7b53'), 'knee' + s, 50), kn, (ft[0], 60 * u, ft[2]), 24 * u, 20 * u, 6)
+        f = b.P('foot' + s, L.get('shoes', '#1f4a27'), 'foot' + s, 30)
+        tube(f, (ft[0] - sx * 40 * u, 18 * u, ft[2] - 20 * u), (ft[0] + sx * 90 * u, 14 * u, ft[2] + 60 * u), 34 * u, 12 * u, 6, squash=0.5)
+    os.makedirs(OUTDIR, exist_ok=True)
+    tris = b.export(os.path.join(OUTDIR, name + '.json'))
+    print(name, 'tris', tris)
+    return name
+
+
 def build_any(n):
     L = ALL[n]['look']
     if n == 'zoe':
@@ -1112,6 +1173,8 @@ def build_any(n):
     if n == 'vesk':
         return build_vesk(n)
     race = L.get('race')
+    if race == 'sphero':
+        return build_sphero(n)
     if race == 'esmer':
         return build_esmer(n)
     if race == 'bee':

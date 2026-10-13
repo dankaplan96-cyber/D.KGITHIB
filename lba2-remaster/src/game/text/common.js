@@ -36,6 +36,10 @@ Object.assign(STR.en, {
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   idle_generic: 'Hello, Twinsen.',
   // Joe the Elf (LBA2), still in town
+  n_sphero1: 'Pom',
+  idle_sphero1: ['Twinsen! You remember us Spheros? Most of us went south after FunFrock fell. I came back for the fish.', 'In FunFrock\'s day they cloned us in his factories. My cousin met his own clone once. They didn\'t get along.', 'The ground hums at night. Spheros feel it in the knees. We have very sensitive knees.', 'Round is the best shape. Nothing to bump into.'],
+  n_sphero2: 'Madam Rondo',
+  idle_sphero2: ['Fifi! Don\'t yap at the nice man. That\'s Twinsen, Fifi. He saved the world. Twice.', 'My grandmother kept her striped uniform from FunFrock\'s asylum. A souvenir of better days, she says. Better days!', 'Spheros are round so the wind can\'t knock us over. Most days.', 'Fifi only eats fish from Doran\'s boat. She has standards.'],
   n_bersimon: 'Bersimon the Weather Wizard',
   idle_bersimon: ['Twinsen! Come in, come in. A wizard\'s tent is always bigger on the inside. It\'s in the contract.', 'The winds are wrong this year. Warm air rising where it shouldn\'t, as if the island were breathing out.', 'Sit by the cauldron a moment. There. Weather wizards never run dry; it\'s all the rain.', 'I dipped a pearl of incandescence in this cauldron once. Lightning everywhere. My eyebrows still haven\'t forgiven me.', 'If you see Joe, tell him I want my umbrella back.'],
   n_magus: 'Rector Hougo',
