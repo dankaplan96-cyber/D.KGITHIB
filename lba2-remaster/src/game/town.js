@@ -14,7 +14,7 @@ export const V = { x: -42, z: -4 }; // the town square (well)
 
 // cobbled streets: polyline + width (metres)
 export const STREETS = [
-  { pts: [[-42, -4], [-45.3, -8], [-47.6, -11.2]], w: [3.6, 2.6, 3.2] },                 // Bug Street (the lane carries on south to Twinsen's house)
+  { pts: [[-42, -4], [-47.5, -9.0], [-53.2, -12.6]], w: [3.6, 2.6, 3.2] },                 // Bug Street (the lane carries on south to Twinsen's house)
   { pts: [[-42, -4], [-50, -5.2], [-57, -4.4], [-64, -4]], w: [3.8, 3.0, 2.6, 2.4] },     // down to the harbour
   { pts: [[-42, -4], [-36, -2.4], [-33.2, -1.2]], w: [4.2, 3.4, 2.8] },                  // to Pippa's shop
   { pts: [[-42, -4], [-41.5, 4], [-44.3, 9.8]], w: [3.8, 2.8, 2.6] },                    // south lane
@@ -45,19 +45,32 @@ const HOUSES = [
   // (LBA2 scene 0's door), its front to the east; a neighbour's house has its old place in Bug Street
   { id: 'twinsen', x: -50.6, z: 79.8, ry: Math.PI / 2, pad: 9, w: 9.4, d: 7.4, h: 3.3, door: { x: 2.6 }, wall: 'plaster', tint: '#fff8ea', roof: 'roof', shutters: '#3b78d8', beams: true, chimneyX: -0.3, lit: true,
     windows: [{ side: 'front', x: -2.3 }, { side: 'front', x: -0.2, w: 0.7 }, { side: 'left', x: -1.2 }, { side: 'right', x: 1.2 }, { side: 'back', x: 0 }] },
-  { id: 'bug', x: -51, z: -15, ry: 0.25, w: 7.6, d: 6.2, h: 3.1, door: { x: 1.9 }, wall: 'stone', tint: '#f0e8dc', roof: 'roofBlue', shutters: '#d8a13b', chimneyX: 0.25,
+  // the others stand by the original's doors (LBA2's scenes 5, 37, 15, 3, 17, 9, 7, 8, 14), in our own styles
+  { id: 'bug', x: -57, z: -16.8, ry: 0.25, w: 7.6, d: 6.2, h: 3.1, door: { x: 1.9 }, wall: 'stone', tint: '#f0e8dc', roof: 'roofBlue', shutters: '#d8a13b', chimneyX: 0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 0.4 }] },
-  { id: 'stone', x: -31.5, z: -16.5, ry: -0.3, w: 6.2, d: 5.2, h: 3.0, door: { x: -0.9 }, wall: 'stone', roof: 'roofBlue', shutters: '#3f9a6a', chimneyX: 0.3,
+  { id: 'stone', x: -31.7, z: -24.6, ry: 0.05, w: 8.0, d: 5.4, h: 3.1, door: { x: 1.7 }, wall: 'stone', roof: 'roofBlue', shutters: '#3f9a6a', chimneyX: 0.3,
     windows: [{ side: 'front', x: 1.4 }, { side: 'left', x: 0 }, { side: 'right', x: -0.6, y: 1.4, w: 0.6, h: 0.7 }] },
   { id: 'shop', x: -30, z: 0.5, ry: -Math.PI / 2, w: 7, d: 5.6, h: 3.4, door: { x: -1.6, arch: false }, wall: 'stone', tint: '#f4f0ea', roof: 'roof', shutters: '#c8452f', awning: '#c8452f', awningW: 3.4, awningX: 0.6, beams: true,
     windows: [{ side: 'front', x: 0.9, y: 0.9, w: 1.6, h: 1.2, noShutters: true }, { side: 'right', x: 0.4 }, { side: 'left', x: 0.8 }] },
-  { id: 'water', x: -56, z: 3, ry: Math.PI / 2 + 0.25, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.6 }, wall: 'plaster', tint: '#dfe8f2', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: -0.25,
+  { id: 'water', x: -68.7, z: 11.0, ry: Math.PI / 2, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#dfe8f2', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'right', x: 0 }] },
-  { id: 'pink', x: -29.5, z: 6.5, ry: Math.PI + 0.45, w: 5.6, d: 5, h: 3.0, door: { x: 0.9 }, wall: 'plaster', tint: '#f8dcd2', roof: 'roof', shutters: '#8f4fc1', beams: true,
+  { id: 'pink', x: -28.5, z: 24.6, ry: 0, w: 6.0, d: 5, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#f8dcd2', roof: 'roof', shutters: '#8f4fc1', beams: true,
     windows: [{ side: 'front', x: -1.2 }, { side: 'left', x: 0.3 }] },
-  { id: 'south', x: -45, z: 13.5, ry: Math.PI - 0.15, w: 6.6, d: 5.2, h: 3.1, door: { x: -1.4 }, wall: 'stone', roof: 'roof', shutters: '#d8a13b', chimneyX: 0.3,
+  { id: 'south', x: -48.2, z: 23.3, ry: 0, w: 9.0, d: 6.2, h: 3.2, door: { x: 2.1 }, wall: 'stone', roof: 'roof', shutters: '#d8a13b', chimneyX: 0.3,
     windows: [{ side: 'front', x: 1.2 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },
+  { id: 'nbr', x: -33.6, z: 75.3, ry: Math.PI / 2, w: 5.6, d: 5.0, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#e8f0d8', roof: 'roof', shutters: '#3f9a6a', chimneyX: 0.2,
+    windows: [{ side: 'front', x: -1.5 }, { side: 'left', x: 0 }] },
+  // the harbour wing: the baggage claim building and its neighbour (LBA2's holomap), and the big house by the field
+  { id: 'baggage', x: -84.2, z: 25.4, ry: 0, w: 15, d: 8.8, h: 3.6, door: { x: -4.6 }, wall: 'stone', tint: '#ece4d4', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: 0.35,
+    windows: [{ side: 'front', x: 1.0 }, { side: 'front', x: 4.6 }, { side: 'front', x: -1.8, w: 0.7 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },
+  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'plaster', tint: '#f4ead8', roof: 'roof', shutters: '#c8452f', chimneyX: -0.25,
+    windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
+  { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'plaster', tint: '#f0e0f0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
+    windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.4 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },
 ];
+// the houses beyond the square stand on level pads; those round it keep the town's own ground (world.js)
+for (const h of HOUSES) if (!h.pad && Math.hypot(h.x - V.x, h.z - V.z) > 18) h.pad = Math.max(h.w, h.d) * 0.75 + 2;
+export const HOUSE_KEEP = HOUSES.filter((h) => !h.pad).map((h) => [h.x, h.z, Math.max(h.w, h.d) * 0.72]);
 
 // houses that stand outside the town core get a level pad (world.js)
 export const HOUSE_PADS = HOUSES.filter((h) => h.pad).map((h) => ({ x: h.x, z: h.z, r: h.pad }));

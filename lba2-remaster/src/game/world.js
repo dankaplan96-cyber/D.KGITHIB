@@ -7,7 +7,7 @@ import { ZoneSystem } from '../engine/scripts.js';
 import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/math.js';
 import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
-import { buildTown, townHeight, streetDist, HOUSE_PADS } from './town.js';
+import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry } from './vegetation.js';
 import { buildIsland, keepClear, STUMP } from './island.js';
 import { buildCliffRocks } from './cliffs.js';
@@ -84,7 +84,6 @@ function townCoreHeight(x, z) {
   return townHeight(x, z, h);
 }
 // how strongly a point belongs to the town core (houses and streets stay put)
-const HOUSE_KEEP = [[-51, -15, 7], [-31.5, -16.5, 5.2], [-30, 0.5, 5.4], [-56, 3, 4.6], [-29.5, 6.5, 5], [-45, 13.5, 5.6]];
 function townKeep(x, z) {
   const vd = Math.hypot(x - POI.village.x, z - POI.village.z);
   let k = 1 - smoothstep(15, 21, vd);
@@ -473,9 +472,9 @@ export function buildWorld(parentScene) {
   }
   // a few hand-placed trees and bushes around town
   for (const [x, z, kind, s] of [[-56, -21, 'round', 1.1], [-45, -21, 'fruit', 1.0], [-38, -12, 'round', 0.9], [-26, -11, 'tall', 1.0], [-51, 9.5, 'fruit', 0.95],
-    [-37, 11, 'round', 1.05], [-24, 3, 'tall', 1.1], [-60, -12, 'pine', 1.0], [-59.5, 8.5, 'round', 0.9], [-34.5, -23, 'pine', 1.1]]) trees.push({ x, z, h: H(x, z), s: s * 0.8, kind, ry: x * 1.7 });
+    [-37, 11, 'round', 1.05], [-24, 3, 'tall', 1.1], [-60, -12, 'pine', 1.0], [-59.5, 8.5, 'round', 0.9], [-34.5, -23, 'pine', 1.1]]) if (!inHouse(x, z, 1.2)) trees.push({ x, z, h: H(x, z), s: s * 0.8, kind, ry: x * 1.7 });
   const bushes = [];
-  for (const [x, z] of [[-54.6, -10.6], [-47.0, -18.9], [-41.8, -19.2], [-36.5, -6.5], [-33.0, 4.2], [-53.2, 6.8], [-48.6, 11.6], [-40.6, 13.8], [-27.6, -13.7], [-58.4, -1.8], [-26.5, 9.6]]) bushes.push({ x, z, h: H(x, z), s: 0.9 + ((x * 7) % 1 + 1) % 1 * 0.4, ry: z });
+  for (const [x, z] of [[-54.6, -10.6], [-47.0, -18.9], [-41.8, -19.2], [-36.5, -6.5], [-33.0, 4.2], [-53.2, 6.8], [-48.6, 11.6], [-40.6, 13.8], [-27.6, -13.7], [-58.4, -1.8], [-26.5, 9.6]]) if (!inHouse(x, z, 0.8)) bushes.push({ x, z, h: H(x, z), s: 0.9 + ((x * 7) % 1 + 1) % 1 * 0.4, ry: z });
   for (let i = 0; i < 600 && bushes.length < 120; i++) {
     const x = ISLAND.cx + (rand() - 0.5) * 190, z = ISLAND.cz + (rand() - 0.5) * 210;
     if (!okSpot(x, z, 2)) continue;
