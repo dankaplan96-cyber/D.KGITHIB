@@ -271,6 +271,8 @@ export class HeroCombat {
   aimDir(mvDir) {
     const h = this.hero, T = this.g.targeting;
     if (T?.lock) { const a = h.angleTo(T.lock); return { x: Math.sin(a), z: Math.cos(a), src: 'lock' }; }
+    // Classic (LBA2): Twinsen throws and strikes the way he faces; the arrows turn him (no mouse aim)
+    if (this.g.settings?.controls === 'classic') return { x: Math.sin(h.angle), z: Math.cos(h.angle), src: 'facing' };
     const m = this.g.mouseAim?.();
     if (m) { const dx = m.x - h.pos.x, dz = m.z - h.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) return { x: dx / d, z: dz / d, src: 'mouse' }; }
     // the cursor is still the aim device (on Twinsen himself, or the ray missed): keep the mouse aim it gave last,

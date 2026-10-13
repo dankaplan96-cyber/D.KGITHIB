@@ -268,3 +268,19 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   1.5+, Medium on a first start with an integrated GPU, terrain in culled tiles, lighter tulips (hidden far
   off), coarser curtains and quilts. Measured headless (software GL, so counts only, not frame rates): visible
   triangles street 1037k → 825k, Twinsen's house 285k → 201k. Frame rates on real GPUs are not measured here.
+
+## Session: the user's benchmark, original controls (0.12.0)
+- The user's benchmark (0.11.0, Intel UHD Graphics, 1042×634 at devicePixelRatio 1.475): Medium 20–25 fps,
+  High 16–24 fps; simulation 2–4 ms and render submission 4–13 ms per frame against 33–66 ms frames, so the GPU
+  is the limit (pixels and lighting, not geometry). Changes for it: the room-lamp light pool by quality (8 / 4 / 2
+  point lights: every lit pixel paid for 8), bloom on High only, a 1024 shadow map with plain PCF on Medium, no
+  MSAA on Medium at pixel ratio above 1.05, Low at 0.75. The benchmark adds a breakdown at Medium (street and
+  house: as is, no shadows, no lamps, resolution ×0.6) so the next report shows what each costs there.
+- Stairs (tests/house.mjs): the hall stairwell's floor collider is cut and the treads are steps to walk down; the
+  cellar stairs climb; stairs never push Twinsen back (the tread under his feet decides the height); a floor
+  below sea level indoors is not sea.
+- Controls: Classic is LBA2's own keyboard and the default (also for saved settings, once): arrows walk and turn
+  at 90°/s, Space action, W talk/search, Alt the ball (hold: feet planted, ←/→ aim, release throws the way he
+  faces), X dodge, Ctrl + F1–F4 behaviours, Shift inventory, H holomap, Enter camera, Esc menu. Classic never aims
+  with the mouse (the resting cursor had been aiming every throw). Modern keeps WASD, mouse aim and the slow
+  aimed walk. tests/combat.mjs §19.

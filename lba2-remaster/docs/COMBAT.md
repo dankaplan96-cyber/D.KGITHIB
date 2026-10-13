@@ -50,7 +50,9 @@ fight; Aggressive mode's Space still attacks with the same moves.
   - It can't be lost: a 3.2 s flight limit, a 2.5 s return limit, and a reset on every scene change.
   - A full charge needs magic (the throw's 1 point) and shows a short dotted arc while held. Magic
     regenerates slowly (ours; the original refills only from flasks and givers).
-- **Aim and targeting:** aiming follows the lock, then the mouse cursor (projected onto the plane at Twinsen's
+- **Classic controls (LBA2's keys, default):** Twinsen aims the way he faces; holding the ball key (Alt)
+  plants his feet and ←/→ turn him; the release throws. No mouse aim in Classic.
+- **Aim and targeting (Modern):** aiming follows the lock, then the mouse cursor (projected onto the plane at Twinsen's
   chest height), then the stick, then the facing. Soft targeting uses a cone set in Settings (Off / Low /
   Normal / High) and needs line of sight. Lock-on lets go at once of a dead or absent target, at 17 m, or
   after 1.5 s out of sight. A small chevron marks the target. A slim health bar shows only for the locked or

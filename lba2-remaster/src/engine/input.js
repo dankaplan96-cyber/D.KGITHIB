@@ -28,7 +28,18 @@ const KEYMAP = {
 };
 
 // Rebinding: an action's first key can be replaced (the arrows / F-keys alternatives stay)
-const DEFAULT_KEYS = JSON.parse(JSON.stringify(KEYMAP));
+const MODERN_KEYS = JSON.parse(JSON.stringify(KEYMAP));
+// Classic: LBA2's own keyboard (the PC original) — the arrows walk and turn, Space is the behaviour's action, W
+// talks and searches, Alt throws the magic ball, X dodges, Ctrl holds the behaviour menu, F1–F4 pick one, Shift
+// opens the inventory, H the holomap, Enter recentres the camera, Esc the menu. (Our extras keep a key each.)
+const CLASSIC_KEYS = { ...JSON.parse(JSON.stringify(KEYMAP)),
+  up: ['ArrowUp'], down: ['ArrowDown'], left: ['ArrowLeft'], right: ['ArrowRight'],
+  action: ['Space'], interact: ['KeyW', 'KeyE'], ball: ['AltLeft', 'AltRight', 'KeyF'], dodge: ['KeyX'],
+  inventory: ['ShiftLeft', 'ShiftRight', 'KeyI'], map: ['KeyH', 'KeyM'], weapons: ['KeyG'],
+  camL: ['KeyA'], camR: ['KeyD'], b1: ['F1', 'Digit1'], b2: ['F2', 'Digit2'], b3: ['F3', 'Digit3'], b4: ['F4', 'Digit4'],
+};
+let DEFAULT_KEYS = MODERN_KEYS;
+export function setKeyScheme(scheme) { DEFAULT_KEYS = scheme === 'classic' ? CLASSIC_KEYS : MODERN_KEYS; }
 // a right-button hold must stay still this long (ms) before it counts as focus (a drag before it turns the camera)
 const FOCUS_HOLD = 180;
 export const REBINDABLE = ['up', 'down', 'left', 'right', 'action', 'interact', 'attack', 'ball', 'dodge', 'focus', 'tswitch', 'swap', 'weapons', 'view', 'recenter', 'map', 'inventory', 'pause'];
@@ -72,9 +83,9 @@ export class Input {
       this.keys.add(e.code);
       if (!e.repeat) this.taps.add(e.code);
       this.lastDevice = 'kbd';
-      if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1', 'F2', 'F3', 'F4'].includes(e.code)) e.preventDefault();
+      if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'F1', 'F2', 'F3', 'F4', 'AltLeft', 'AltRight'].includes(e.code)) e.preventDefault();
     });
-    addEventListener('keyup', (e) => this.keys.delete(e.code));
+    addEventListener('keyup', (e) => { this.keys.delete(e.code); if (e.code === 'AltLeft' || e.code === 'AltRight') e.preventDefault(); }); // (a lone Alt must not reach the window menu)
     addEventListener('blur', () => this.keys.clear());
 
     // mouse: left = attack (and a click advances dialogue), right = focus (a right or middle drag turns the

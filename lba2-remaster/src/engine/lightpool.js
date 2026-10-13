@@ -8,21 +8,27 @@
 // Builders keep animating their own lamps' intensity as before.
 import * as THREE from 'three';
 
-const SIZE = 8;
+// lights in the pool by graphics quality: every lit pixel pays for each one, so integrated GPUs get fewer
+export const POOL_SIZE = { high: 8, medium: 4, low: 2 };
 const _p = new THREE.Vector3();
 
 export class LightPool {
-  constructor(scene) {
+  constructor(scene, size = 8) {
     this.scene = scene;
     this.lights = [];
-    for (let i = 0; i < SIZE; i++) {
-      const l = new THREE.PointLight('#ffffff', 0, 1, 2);
-      l.userData.pool = true;
-      scene.add(l);
-      this.lights.push(l);
-    }
+    this.setSize(size);
     this.sources = [];
     this.collect();
+  }
+  // (changing the count recompiles the lit materials once: only on a quality change)
+  setSize(n) {
+    while (this.lights.length > n) this.scene.remove(this.lights.pop());
+    while (this.lights.length < n) {
+      const l = new THREE.PointLight('#ffffff', 0, 1, 2);
+      l.userData.pool = true;
+      this.scene.add(l);
+      this.lights.push(l);
+    }
   }
   // take in every point light the builders placed (call again if lamps are added later)
   collect() {
@@ -47,7 +53,7 @@ export class LightPool {
       cand.push({ s, edge, x: _p.x, y: _p.y, z: _p.z });
     }
     cand.sort((a, b) => a.edge - b.edge);
-    for (let i = 0; i < SIZE; i++) {
+    for (let i = 0; i < this.lights.length; i++) {
       const L = this.lights[i], c = cand[i];
       if (!c) { L.intensity = 0; continue; }
       L.position.set(c.x, c.y, c.z);

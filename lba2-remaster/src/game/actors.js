@@ -163,12 +163,16 @@ export class Hero extends Actor {
 
     if (!locked) {
       if (g.settings.controls === 'classic') {
-        // LBA tank controls: left/right rotate, up/down walk
-        this.angle -= mv.x * 1.9 * dt; // LBA2 turns in place at ~100°/s
-        turning = -mv.x;
-        const f = (mv.y > 0 ? mv.y : mv.y * 0.55) * speedK;
+        // LBA2's tank controls: left/right turn the body (90°/s, OBJECT.CPP), up walks forward, down walks backward
+        // slowly; no strafing. Holding the ball to aim plants the feet: left/right turn the aim, release throws.
+        const kx = Math.abs(mv.x) > 0.3 ? Math.sign(mv.x) : 0, ky = Math.abs(mv.y) > 0.3 ? Math.sign(mv.y) : 0;
+        this.angle -= kx * (Math.PI / 2) * dt;
+        turning = -kx;
+        const planted = cs.anim === 'charge';
+        const f = planted ? 0 : (ky > 0 ? ky : ky * 0.5) * speedK;
         wx = Math.sin(this.angle) * f * maxSpeed;
         wz = Math.cos(this.angle) * f * maxSpeed;
+        this.backward = ky < 0 && !planted;
       } else {
         const m = Math.hypot(mv.x, mv.y);
         if (m > 0.08) {
@@ -198,7 +202,9 @@ export class Hero extends Actor {
     if (cs.drive) { wx = cs.drive.x; wz = cs.drive.z; }
     // weight: accelerate and brake instead of snapping to speed (less grip in the air)
     const prevFwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
-    const accel = cs.drive ? 40 : !this.onGround ? 3 : (wx || wz) ? (beh === 'athletic' ? 9 : 12) : 14;
+    // (classic: LBA2 starts and stops almost at once — its motion comes from the animation, not a push)
+    const classic = g.settings.controls === 'classic';
+    const accel = cs.drive ? 40 : !this.onGround ? 3 : classic ? 26 : (wx || wz) ? (beh === 'athletic' ? 9 : 12) : 14;
     const k = 1 - Math.exp(-accel * dt);
     this.vel.x += (wx - this.vel.x) * k; this.vel.y += (wz - this.vel.y) * k;
     const fwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
@@ -254,7 +260,7 @@ export class Hero extends Actor {
     // standing, the planted full-body throw
     const moving = this.onGround && this.speed > 0.3;
     if (cs.upper) this.rig.overlay(cs.upper.kind, cs.upper.t);
-    this.rig.moveRel = cs.face != null && moving ? angleDiff(this.angle, Math.atan2(this.vel.x, this.vel.y)) : 0;
+    this.rig.moveRel = moving && (cs.face != null || (classic && this.backward)) ? angleDiff(this.angle, Math.atan2(this.vel.x, this.vel.y)) : 0;
     if (this.actT > 0) anim = this.actAnim;
     else if (this.hurtT > 0) anim = 'hurt';
     else if (cs.upper && moving) anim = this.speed > 3.6 ? 'run' : 'walk';

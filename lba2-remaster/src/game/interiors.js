@@ -101,7 +101,8 @@ export class RoomBuilder {
     for (const [x0, z0, x1, z1] of slabs(-W / 2 - t, -D / 2 - t, W / 2 + t, D / 2 + t)) k.add(new THREE.BoxGeometry(x1 - x0, sh, z1 - z0), o.slab, (x0 + x1) / 2, -0.1 - sh / 2, (z0 + z1) / 2);
     k.add(rbox(W + 2 * t + 0.04, 0.08, 0.1, 0.03), o.cap, 0, -0.08, D / 2 + t + 0.0);
     k.add(rbox(0.1, 0.08, D + 2 * t + 0.04, 0.03), o.cap, W / 2 + t, -0.08, 0);
-    this.col(cx0, cz0, W / 2, D / 2, 0, { seeThrough: true, bottom: -1 });
+    // the floor to stand on (around a stairwell, whose steps the room adds)
+    for (const [x0, z0, x1, z1] of slabs(-W / 2, -D / 2, W / 2, D / 2)) this.col(cx0 + (x0 + x1) / 2, cz0 + (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, 0, { seeThrough: true, bottom: -1 });
     // far walls
     k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t));
     k.at(-W / 2, 0, D / 2 + t, Math.PI / 2, () => this.wallRun(D + t, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - p.at })), t, 0));
@@ -598,6 +599,7 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   for (let i = 0; i < 6; i++) {
     const top = -0.13 * (i + 1), z = sz0 + 0.235 + i * 0.45;
     k.add(rbox(sx1 - sx0 - 0.04, top + 0.82, 0.47, 0.012), MAT.wood('honey'), (sx0 + sx1) / 2, (top - 0.82) / 2, z);
+    B.col((sx0 + sx1) / 2, z, (sx1 - sx0) / 2, 0.35, top, { stair: true, bottom: -3 }); // (overlapping: no gap between treads)
   }
   P.railing(k, [[sx1 + 0.06, sz0 - 0.06], [sx1 + 0.06, sz1], [sx0, sz1]], { h: 0.95, mat: MAT.wood('dark'), step: 0.7 });
   B.col(sx1 + 0.06, (sz0 + sz1) / 2, 0.06, (sz1 - sz0) / 2 + 0.06, 1.0, { seeThrough: true, noStand: true });
@@ -627,7 +629,7 @@ function buildCellar(scene, physics) {
   for (let i = 0; i < N; i++) {
     const hgt = 0.2 * (i + 1), x = LX + 0.4 + (N - 1 - i) * run + run / 2;
     k.add(rbox(run + 0.02, hgt, sw, 0.015), MAT.wood('honey'), x, hgt / 2, sz);
-    B.col(x, sz, run / 2, sw / 2, hgt);
+    B.col(x, sz, run / 2 + 0.06, sw / 2, hgt, { stair: true });
   }
   R.exits.push({ ...B.world(LX + 0.65, sz), r: 0.6, room: 'house', back: true });
   R.spawn = { ...B.world(LX + 0.4 + N * run + 0.9, sz), a: Math.PI / 2 };

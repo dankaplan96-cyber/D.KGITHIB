@@ -9,8 +9,8 @@ import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { Perf } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
-import { LightPool } from './engine/lightpool.js';
-import { Input, applyBindings, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
+import { LightPool, POOL_SIZE } from './engine/lightpool.js';
+import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
 import { buildWorld, POI, QUAY } from './game/world.js';
@@ -37,7 +37,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 3;
-export const VERSION = '0.11.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.12.0'; // (the desktop build's version: desktop/package.json)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
 export function migrateSave(raw) {
@@ -83,8 +83,10 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
+    // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
+    if (!(this.settings.v >= 2)) { this.settings.controls = 'classic'; this.settings.keys = {}; this.settings.v = 2; }
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
     setLang(this.settings.lang);
@@ -152,7 +154,7 @@ class Game {
     this.cutscene = null;
 
     timed('actors', () => this.spawnActors());
-    this.lightPool = new LightPool(this.scene); // (after every builder has placed its lamps)
+    this.lightPool = new LightPool(this.scene, POOL_SIZE[this.settings.quality] ?? 8); // (after every builder has placed its lamps)
     this.loadTimes.total = Math.round(performance.now() - tm);
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
@@ -527,7 +529,7 @@ class Game {
   applySettings() {
     const s = this.settings, was = this._applied || {}, now = { ...s, keys: JSON.stringify(s.keys || {}) };
     const changed = (k) => now[k] !== was[k];
-    if (changed('keys')) applyBindings(s.keys || {});
+    if (changed('keys') || changed('controls')) { setKeyScheme(s.controls); applyBindings(s.keys || {}); }
     if (changed('lang') || changed('keys')) {
       setLang(s.lang);
       document.documentElement.lang = s.lang;
@@ -537,7 +539,7 @@ class Game {
       this.hud.refreshText();
       if (this.hero) this.updateObjective();
     }
-    if (changed('quality')) { this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); }
+    if (changed('quality')) { this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.lightPool?.setSize(POOL_SIZE[s.quality] ?? 8); }
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     const retro = s.visual === '1997';
     if (changed('visual')) {

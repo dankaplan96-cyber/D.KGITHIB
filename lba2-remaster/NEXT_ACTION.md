@@ -1,5 +1,6 @@
 # NEXT ACTION
 
+Ask the user to run the 0.12.0 benchmark again (it now has a per-feature breakdown at Medium) and tune from it.
 User (0.10.0 on Windows): combat animations not good, frame rate poor. 0.11.0 adds an in-game benchmark
 (pause → Benchmark): ask the user for its report from their PC before further graphics work, then tune what it
 shows (fill rate vs. geometry vs. CPU). Still open from the review: melee contact timing, starts/stops/landings,

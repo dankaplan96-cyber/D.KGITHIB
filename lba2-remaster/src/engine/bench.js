@@ -71,15 +71,26 @@ export class Bench {
     G.hideScreens?.(); G.setState('play');
     const plan = [];
     for (const q of qualities) for (const r of this.routes()) plan.push({ q, r });
+    // breakdown: the street and the house at Medium, each with one cost taken away, to see what the GPU pays for
+    const R = G.renderer, LP = G.lightPool, n0 = LP?.lights.length ?? 0;
+    const variants = [
+      { id: 'as is', apply() {}, undo() {} },
+      { id: 'no shadows', apply() { R.renderer.shadowMap.enabled = false; }, undo() { R.applyDerived(); } },
+      { id: 'no lamps', apply() { LP?.setSize(0); }, undo() { LP?.setSize(n0); } },
+      { id: 'res x0.6', apply() { R.autoRes = true; R.dyn = 0.6; R.resize(); }, undo() { R.autoRes = false; R.dyn = 1; R.resize(); } },
+    ];
+    const brk = this.routes().filter((r) => r.id === 'street' || r.id === 'interior');
+    for (const r of brk) for (const v of variants) plan.push({ q: 'medium', r, v, short: true });
     const results = [];
     return new Promise((resolve) => {
       let i = -1, t = 0, cur = null, warm = 0, maxWarm = 0;
       const next = () => {
         i++;
         if (i >= plan.length) return finish();
+        cur?.v?.undo();
         cur = plan[i];
         if (G.settings.quality !== cur.q) { G.settings.quality = cur.q; G.applySettings(); }
-        G.state = 'play'; cur.r.setup(); t = 0; warm = 0; maxWarm = 0;
+        G.state = 'play'; cur.r.setup(); cur.v?.apply(); t = 0; warm = 0; maxWarm = 0;
         G.hud?.toast?.('bench_route', { n: i + 1, of: plan.length });
       };
       G.benchTick = (real) => {
@@ -88,16 +99,17 @@ export class Bench {
         G.state = 'play';
         cur.r.drive(t, real);
         if (warm < WARM) { warm += real; maxWarm = Math.max(maxWarm, real * 1000); if (warm >= WARM) G.perf.reset(); return; }
-        if (t >= WARM + MEASURE) {
+        if (t >= WARM + (cur.short ? 4 : MEASURE)) {
           const s = G.perf.stats();
           const stalls = G.perf.buf.filter((f) => f.ms > 50).length;
           const R = G.renderer;
-          const cfg = { pr: +R.renderer.getPixelRatio().toFixed(2), msaa: R.composer?.renderTarget1?.samples ?? 0, shadows: R.renderer.shadowMap.enabled, bloom: !!R.bloom?.enabled };
-          results.push({ q: cur.q, id: cur.r.id, label: cur.r.label, s, stalls, warmMaxMs: +maxWarm.toFixed(0), cfg });
+          const cfg = { pr: +R.renderer.getPixelRatio().toFixed(2), msaa: R.composer?.renderTarget1?.samples ?? 0, shadows: R.renderer.shadowMap.enabled, bloom: !!R.bloom?.enabled, lamps: G.lightPool?.lights.length ?? 0 };
+          results.push({ q: cur.q, id: cur.r.id, label: cur.r.label, s, stalls, warmMaxMs: +maxWarm.toFixed(0), cfg, v: cur.v?.id });
           next();
         }
       };
       const finish = () => {
+        cur?.v?.undo();
         G.benchTick = null; cur = null;
         if (G.settings.quality !== quality0) { G.settings.quality = quality0; G.applySettings(); }
         G.resetCombat('drop');
@@ -122,17 +134,22 @@ export class Bench {
     lines.push(`window ${innerWidth}×${innerHeight} · devicePixelRatio ${devicePixelRatio} · user agent ${navigator.userAgent.match(/(Electron|Chrome)\/[\d.]+/g)?.join(' ') || navigator.userAgent}`);
     if (G.perf.load) lines.push(`startup: build ${(G.perf.load.total / 1000).toFixed(1)} s · shader preparation ${(G.perf.load.shaders / 1000).toFixed(1)} s`);
     let q = null;
-    for (const x of results) {
+    const brk = results.filter((x) => x.v);
+    for (const x of results.filter((r) => !r.v)) {
       if (x.q !== q) {
         q = x.q; const c = x.cfg;
-        lines.push('', `quality ${q}: render pixel ratio ${c.pr} · MSAA ${c.msaa}× · shadows ${c.shadows ? 'on' : 'off'} · bloom ${c.bloom ? 'on' : 'off'}`);
+        lines.push('', `quality ${q}: render pixel ratio ${c.pr} · MSAA ${c.msaa}× · shadows ${c.shadows ? 'on' : 'off'} · bloom ${c.bloom ? 'on' : 'off'} · lamp lights ${c.lamps}`);
       }
       const s = x.s;
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
       lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · stalls>50ms ${x.stalls}`
         + ` · sim CPU p50 ${s.simMs.p50} ms · render submit CPU p50 ${s.renderMs.p50} ms · draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`);
     }
-    lines.push('', 'Frame time includes the GPU (the browser waits for it); "render submit" is CPU time only.');
+    if (brk.length) {
+      lines.push('', 'breakdown at Medium (one cost taken away at a time):');
+      for (const x of brk) { const s = x.s; lines.push(`  ${(x.id + ' · ' + x.v).padEnd(24)} ${s ? `${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} ms · render pixel ratio ${x.cfg.pr}` : 'no frames'}`); }
+    }
+    lines.push('', `Frame time includes the GPU (the browser waits for it); "render submit" is CPU time only.`);
     return lines.join('\n');
   }
 }

@@ -47,7 +47,7 @@ Object.assign(STR.en, {
   gen_search_nothing: 'Nothing here.',
   inv_title: 'Inventory', journal_title: 'Journal', inv_hint: 'I / J to close · Arrow keys to select', it_level: 'Level {n}',
   it_medallion: 'Medallion', itd_medallion: "Sendell's medallion. It has felt warm ever since the well.",
-  it_ball: 'Magic Ball', itd_ball: 'Throw it with F. Each throw costs a magic point: with magic it bounces four times, without it comes straight back. It brings back bonuses it touches and activates mechanisms. Your behaviour changes how it flies.',
+  it_ball: 'Magic Ball', itd_ball: 'Throw it with the ball key (Alt in Classic, F in Modern); hold to aim, release to throw. Each throw costs a magic point: with magic it bounces four times, without it comes straight back. It brings back bonuses it touches and activates mechanisms. Your behaviour changes how it flies.',
   it_holomap: 'Holomap', itd_holomap: 'A 3D map of the island (M). Stars mark important places.',
   it_kashes: 'Kashes', itd_kashes: "Twinsun's currency. Pippa sells potions, clover leaves and magic crystals.",
   it_clovers: 'Clover Leaves', itd_clovers: 'When your health runs out, a clover leaf puts you back on your feet.',

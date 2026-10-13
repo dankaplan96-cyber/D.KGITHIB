@@ -148,7 +148,7 @@ export class Environment {
   setStorm(s) { this.storm = s; }
   // High: a 4096 map over ±48 m (2.3 cm texels); Medium/Low: 2048 over ±40 m
   setShadowQuality(q) {
-    const sh = this.sun.shadow, big = q === 'high', size = big ? 4096 : 2048, half = big ? 48 : 40;
+    const sh = this.sun.shadow, big = q === 'high', size = big ? 4096 : 1024, half = big ? 48 : 36; // (Medium: a quarter of the texels to fill and filter)
     if (sh.mapSize.x !== size) { sh.mapSize.set(size, size); sh.map?.dispose(); sh.map = null; }
     const c = sh.camera; c.left = -half; c.right = half; c.top = half; c.bottom = -half; c.updateProjectionMatrix();
   }

@@ -58,11 +58,11 @@ let ok = true; const bad = [];
     const [kv, sh, bl] = row; const [k, val] = kv.split('=');
     if (k === 'quality') q = val; else v = val;
     const exp = v !== '1997' && q !== 'low';
-    if (sh !== exp || bl !== exp) { ok = false; bad.push(row); }
+    if (sh !== exp || bl !== (exp && q === 'high')) { ok = false; bad.push(row); } // (bloom: High only)
   }
 }
 void want;
-check('graphics: shadows and bloom match quality and visual mode after every change', ok, { bad, steps: r.length });
+check('graphics: shadows (not Low) and bloom (High) match quality and visual mode after every change', ok, { bad, steps: r.length });
 await page.close();
 
 // 3. a start with saved Low settings: no shadows, no bloom

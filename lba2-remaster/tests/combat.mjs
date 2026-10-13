@@ -16,6 +16,7 @@ await page.goto('http://localhost:8123/', { waitUntil: 'load', timeout: 180000 }
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await ev(() => {
   const G = window.game; G.testFreeze = true;
+  G.settings.controls = 'modern'; G.applySettings(); // (these checks are of the modern scheme; Classic: §19)
   G.devArena();
   const E = (id) => G.enemies.find((e) => e.id === id);
   window.C = {
@@ -317,6 +318,30 @@ check('the ball leaves the hand at the release frame', r.shot && Math.abs(r.shot
 check('the follow-through blends into the walk (no arm snap)', r.layered && r.maxJump < 0.3, { maxJump: r.maxJump, layered: r.layered });
 check('Aim Assist Off: no soft target, no correction', !r.off.soft && !r.off.target && r.off.drift < 0.05, r.off);
 check('a camera drag never toggles the lock; a right tap does', !r.dragLock && r.tapLock, { drag: r.dragLock, tap: r.tapLock });
+
+// 19. Classic (LBA2's keys and tank controls): the arrows turn at 90°/s and walk; holding Alt plants the feet,
+//     the arrows turn the aim, the release throws the way he faces; X dodges; the mouse doesn't aim
+r = await ev(() => {
+  const { G } = C, h = G.hero, B = G.ball, I = G.input;
+  G.settings.controls = 'classic'; G.applySettings();
+  C.only([], [6190, 8], 0); h.combat.equip('fists', true); h.mp = 5; B.reset(); C.step(0.3);
+  I.mouse.inside = true; I.mouse.lastMove = performance.now(); I.lastDevice = 'kbd'; // (a cursor resting on the screen)
+  const a0 = h.angle; I.keys.add('ArrowLeft'); C.step(1.0); I.keys.delete('ArrowLeft'); const turn = +(h.angle - a0).toFixed(2);
+  const p0 = h.pos.clone(); I.keys.add('ArrowUp'); C.step(0.5); I.keys.delete('ArrowUp'); C.step(0.3); const walked = +h.pos.distanceTo(p0).toFixed(2);
+  let shot = null; const orig = B.launch.bind(B); B.launch = (...a) => { shot = { aim: { ...a[3].aim } }; return orig(...a); };
+  const p1 = h.pos.clone(), a1 = h.angle;
+  I.keys.add('AltLeft'); I.taps.add('AltLeft'); C.step(0.5); I.keys.add('ArrowRight'); C.step(0.6); I.keys.delete('ArrowRight');
+  const planted = +h.pos.distanceTo(p1).toFixed(2), aimTurn = +(a1 - h.angle).toFixed(2), facing = { x: Math.sin(h.angle), z: Math.cos(h.angle) };
+  I.keys.delete('AltLeft'); C.step(0.3); B.launch = orig; C.step(3);
+  const along = shot ? +(shot.aim.x * facing.x + shot.aim.z * facing.z).toFixed(2) : -1;
+  const p2 = h.pos.clone(); I.taps.add('KeyX'); I.keys.add('KeyX'); C.step(0.05); I.keys.delete('KeyX'); C.step(0.5); const dodged = +h.pos.distanceTo(p2).toFixed(2);
+  G.settings.controls = 'modern'; G.applySettings();
+  return { turn, walked, planted, aimTurn, along, dodged, thrown: !!shot };
+});
+check('classic: the arrows turn at ~90°/s and walk', Math.abs(r.turn - Math.PI / 2) < 0.12 && r.walked > 0.6, r);
+check('classic: holding Alt plants the feet and the arrows turn the aim', r.planted < 0.05 && r.aimTurn > 0.5, r);
+check('classic: the release throws the way he faces (the resting cursor does not aim)', r.thrown && r.along > 0.98, r);
+check('classic: X dodges', r.dodged > 1.5, r);
 
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');

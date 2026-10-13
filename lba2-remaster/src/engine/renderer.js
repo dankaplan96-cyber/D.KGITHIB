@@ -69,11 +69,14 @@ export class Renderer {
   }
 
   // what follows from quality + visual mode together, applied whenever either changes:
-  // dynamic shadows and bloom only off Low and outside the 1997 look
+  // dynamic shadows off Low and outside the 1997 look; bloom (several full-screen blur passes) on High only
   applyDerived() {
     const on = !this.retro && this.quality !== 'low';
     this.renderer.shadowMap.enabled = on;
-    if (this.bloom) this.bloom.enabled = on;
+    // soft (PCFSoft) shadow edges on High; plain PCF elsewhere (fewer samples per pixel)
+    const type = this.quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    if (this.renderer.shadowMap.type !== type) { this.renderer.shadowMap.type = type; this.renderer.shadowMap.needsUpdate = true; }
+    if (this.bloom) this.bloom.enabled = on && this.quality === 'high' && this.bloomOn !== false;
   }
 
   setRetro(on) {
@@ -93,12 +96,13 @@ export class Renderer {
   resize() {
     const w = innerWidth, h = innerHeight;
     const dpr = Math.min(devicePixelRatio, 2);
-    let pr = this.quality === 'high' ? dpr : this.quality === 'medium' ? Math.min(dpr, 1.25) : 0.85;
+    let pr = this.quality === 'high' ? dpr : this.quality === 'medium' ? Math.min(dpr, 1.25) : 0.75;
     if (this.retro) pr = Math.min(1, 560 / w); // ~640x480-era internal resolution
     else pr = Math.max(0.5, +(pr * (this.autoRes ? this.dyn : 1)).toFixed(3));
     // MSAA: 4× on high (2× once the pixel ratio is high enough to smooth edges by itself), 2× on medium, none on
     // low / retro (the retro look wants hard pixels)
-    const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' || pr >= 1.5 ? 2 : 4;
+    // (Medium on a high-density screen: none, the pixel ratio smooths the edges and the GPU is spared the resolve)
+    const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 ? 2 : 4;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
     const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${!!this.composer}`;
     if (key === this._size) return;

@@ -84,7 +84,7 @@ export const STR = {
   en: {
     continue: 'Continue', new_game: 'New Game', settings: 'Settings', controls: 'Controls', back: 'Back',
     resume: 'Resume', save_quit: 'Save & Quit', paused: 'Paused',
-    language: 'Language', control_scheme: 'Movement', ctrl_modern: 'Modern (camera-relative)', ctrl_classic: 'Classic (tank, as in 1997)',
+    language: 'Language', control_scheme: 'Movement', ctrl_modern: 'Modern (camera-relative)', ctrl_classic: 'Classic (LBA2 keys, tank)',
     visual: 'Look', vis_2026: 'Remaster', vis_1997: 'Retro 1997',
     quality: 'Graphics', q_high: 'High', q_medium: 'Medium', q_low: 'Low',
     camera: 'Camera', cam_lba: 'Fixed (LBA2)', cam_free: 'Free (mouse / stick)',
@@ -96,23 +96,25 @@ export const STR = {
     text_size: 'Subtitle Size', tsz_normal: 'Normal', tsz_large: 'Large',
     shake_set: 'Camera Shake', sh_on: 'Full', sh_reduced: 'Reduced', sh_off: 'Off',
     controls_html: `
-      <tr><td>WASD / Arrow keys</td><td>Move</td></tr>
-      <tr><td>Hold Ctrl + ← / → · 1 2 3 4 · Tab</td><td>Change behaviour: Normal, Athletic, Aggressive, Discreet</td></tr>
-      <tr><td>Space</td><td>Behaviour action: jump (Athletic), attack (Aggressive), hide (Discreet), talk (Normal)</td></tr>
-      <tr><td>E</td><td>Talk, open, inspect (in any behaviour)</td></tr>
+      <tr><td colspan="2"><b>Classic (LBA2's keys, the default)</b></td></tr>
+      <tr><td>↑ / ↓</td><td>Walk forward / back</td></tr>
+      <tr><td>← / →</td><td>Turn</td></tr>
+      <tr><td>Space</td><td>Behaviour action: jump (Athletic), attack (Aggressive), hide (Discreet), hop (Normal)</td></tr>
+      <tr><td>W</td><td>Talk, open, search</td></tr>
+      <tr><td>Alt</td><td>Magic ball: tap to throw · hold, turn with ← / →, release to throw · again while it flies: call it back</td></tr>
+      <tr><td>X</td><td>Dodge</td></tr>
+      <tr><td>Ctrl + ← / → · F1–F4</td><td>Behaviour: Normal, Athletic, Aggressive, Discreet</td></tr>
+      <tr><td>Shift</td><td>Inventory (all your items) and journal</td></tr>
+      <tr><td>H</td><td>Holomap</td></tr>
+      <tr><td>Enter</td><td>Recenter the camera</td></tr>
+      <tr><td>Esc</td><td>Menu</td></tr>
+      <tr><td colspan="2"><b>Modern</b></td></tr>
+      <tr><td>WASD / arrows</td><td>Move (camera-relative) · Mouse: aim · E talk · F ball · Shift dodge · I inventory · M holomap</td></tr>
+      <tr><td colspan="2"><b>Both</b></td></tr>
       <tr><td>Left click / K</td><td>Attack with the weapon in hand (hold: charge the ball, or a heavy sword strike)</td></tr>
-      <tr><td>F</td><td>Throw the magic ball (hold to charge) · again while it flies: call it back</td></tr>
-      <tr><td>Shift</td><td>Dodge</td></tr>
       <tr><td>Right click / L</td><td>Focus on a target · wheel / T: next target</td></tr>
-      <tr><td>R · hold X</td><td>Swap to the last weapon · weapon wheel</td></tr>
-      <tr><td>Mouse</td><td>Aim (the cursor)</td></tr>
-      <tr><td>Enter</td><td>Recenter the camera behind Twinsen</td></tr>
-      <tr><td>Q</td><td>Camera distance</td></tr>
-      <tr><td>Right or middle drag · Z / C</td><td>Rotate the camera (free camera)</td></tr>
-      <tr><td>M</td><td>Holomap</td></tr>
-      <tr><td>I / J</td><td>Inventory and journal</td></tr>
-      <tr><td>V</td><td>Switch between Remaster and Retro 1997</td></tr>
-      <tr><td>Esc / P</td><td>Pause</td></tr>
+      <tr><td>R · hold G (Classic) / X (Modern)</td><td>Swap to the last weapon · weapon wheel</td></tr>
+      <tr><td>Q · V</td><td>Camera distance · Remaster / Retro 1997</td></tr>
       <tr><td>Gamepad</td><td>A action / talk · X attack · Y ball · B dodge · RB focus · R3 next target · LB swap · RT weapon wheel · LT behaviour · View holomap · Menu pause</td></tr>`,
     wp_fists: 'Fists', wp_ball: 'Magic Ball', wp_sword: 'Sword', wp_pulse: 'Pulse Tool',
     difficulty: 'Difficulty', df_gentle: 'Gentle', df_normal: 'Normal', df_hard: 'Hard',

@@ -57,7 +57,7 @@ log('rope', await ev(() => game.flags.rope));
 // kids
 await ev(() => T.talk('tim'));
 log('kids asked', await ev(() => [game.flags.kidsAsked, game.flags.overheard]));
-await ev(() => { const t = T.npc('tim'); T.tp(t.pos.x - 6, t.pos.z, Math.PI / 2); T.tap('Digit4'); game.input.keys.add('KeyW'); for (let i = 0; i < 300 && game.state === 'play'; i++) game.step(1 / 60); game.input.keys.delete('KeyW'); });
+await ev(() => { const t = T.npc('tim'); T.tp(t.pos.x - 6, t.pos.z, Math.PI / 2); T.tap('Digit4'); game.input.keys.add('ArrowUp'); for (let i = 0; i < 300 && game.state === 'play'; i++) game.step(1 / 60); game.input.keys.delete('ArrowUp'); });
 log('overheard', await ev(() => [game.state, game.flags.overheard]));
 await shot('P6-overhear.png');
 await ev(() => { T.talkAll(); T.tap('Digit1'); T.talk('tim'); game.step(1.5); const c = game.pickups.list.find((p) => p.type === 'clover' && !p.id); if (c) { game.hero.pos.set(c.pos.x, game.hero.pos.y, c.pos.z); game.step(0.3); } });

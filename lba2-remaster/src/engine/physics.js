@@ -149,7 +149,7 @@ export class Physics {
     const tryMove = (nx, nz) => {
       const gi = this.groundInfo(nx, nz, p.y);
       const g = gi.h;
-      if (g < WATER_FLOOR && !actor.canSwim) return false;
+      if (g < WATER_FLOOR && !gi.brick && !actor.canSwim) return false; // (a floor or stairs below sea level are not sea)
       const rise = g - p.y;
       if (actor.onGround) {
         if (rise > STEP_UP) return false;
@@ -167,7 +167,7 @@ export class Physics {
     // push out of blocking bricks
     for (let it = 0; it < 2; it++) {
       for (const c of this.near(nx, nz)) {
-        if (!c.enabled) continue;
+        if (!c.enabled || c.stair) continue; // (stairs: the height under the feet decides, step by step)
         if (c.top <= p.y + STEP_UP || c.bottom > p.y + 1.7) continue;
         const push = this._push(c, nx, nz, r);
         if (push) { nx += push.x; nz += push.z; }

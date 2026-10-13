@@ -19,7 +19,7 @@ const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${
 await page.goto('http://localhost:8123/?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await ev(() => {
-  const G = window.game; G.testFreeze = true;
+  const G = window.game; G.testFreeze = true; G.settings.controls = 'modern'; G.applySettings(); // (WASD walks)
   G.devArena();
   window.X = {
     // run `seconds` of real time at `fps`, through the loop's own real-time → simulation path (no render here:
@@ -105,7 +105,7 @@ const set = await ev(() => {
 });
 check('a volume slider event costs little and rebuilds nothing', set.median < 1 && set.sameSize && Math.abs(set.music - 0.7) < 1e-9, set);
 check('a volume slider event does not cut the camera', set.cuts === 0, set);
-check('a quality change still resizes and sets the shadow map', set.resizedOnQuality && set.shadowMedium === 2048, set);
+check('a quality change still resizes and sets the shadow map', set.resizedOnQuality && set.shadowMedium === 1024, set);
 
 // ---------------------------------------------------------------- 5. instrumentation
 const inst = await ev(() => {
