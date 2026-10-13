@@ -14,8 +14,8 @@ import '../text/ch10.js';
 
 const STATIONS = ['mill', 'valves', 'light', 'bore', 'dome'];
 const LIGHT_CODE = [2, 0, 1];                 // star, sun, wave (the lighthouse dials: 0 sun · 1 wave · 2 star)
-const CITADEL_LANDING = { x: 16, z: -60 };
-const LIGHTHOUSE_DOOR = { x: 2, z: -76.3 };
+const CITADEL_LANDING = { x: -58, z: -60 };
+const LIGHTHOUSE_DOOR = { x: -101, z: -63.3 };
 const REGION_OF = { zeelich: 'zeelich', workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', desert: 'desert', condA: 'desert', condB: 'desert', hamalayi: 'hamalayi', obsv: 'hamalayi' };
 
 export class Network extends ChapterBase {

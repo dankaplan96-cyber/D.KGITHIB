@@ -12,10 +12,11 @@ import { ChapterBase } from './base.js';
 import { tm, pm, bbox, cyl, mesh } from '../kit.js';
 import '../text/ch8.js';
 
-const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -26, z: 44, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: 66, z: 6, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: 24, z: -44, a: 2.6 }];
-const LANDING = { x: 16, z: -60 }, GATHER = { x: 6, z: -66 };
-const FORT = { door: { x: 26, z: 30 }, lever: { x: 40, z: 28 } };
-const DEPOT = { door: { x: -6, z: 50 } };
+// (the farmers work the fields south of town; the landing and the fort on the northern plateau)
+const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -50, z: 30, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: -30, z: 45, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: -60, z: 55, a: 2.6 }];
+const LANDING = { x: -58, z: -60 }, GATHER = { x: -66, z: -55 };
+const FORT = { door: { x: -50, z: -71 }, lever: { x: -36, z: -73 } };
+const DEPOT = { door: { x: -90, z: -72 } };
 
 export class Evacuation extends ChapterBase {
   get W() { return this.game.world; }
@@ -27,7 +28,7 @@ export class Evacuation extends ChapterBase {
     return FARMS.map((p) => ({ id: p.id, name: 'n_' + p.id, char: p.char, color: '#e8d0a0', x: p.x, z: p.z, angle: p.a }));
   }
   enemyDefs() {
-    const P = [[38, 26], [46, 26], [46, 32], [38, 32]];
+    const P = [[-38, -75], [-30, -75], [-30, -69], [-38, -69]];
     return [
       { id: 'cc1', kind: 'drone', group: 'ccyard', x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !f.c8_fort },
       { id: 'cc2', kind: 'drone', group: 'ccyard', x: P[2][0], z: P[2][1], patrol: P, wp: 3, when: (f) => this.isCur(f) && !f.c8_fort },

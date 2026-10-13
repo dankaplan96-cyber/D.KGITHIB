@@ -8,6 +8,11 @@ on the user's PC with F3 (GPU name, startup build/shader times).
 Story: chapters 1–10 are playable with tests; combat overhaul done (docs/COMBAT.md, tests/combat.mjs); the new-game
 opening scene is in (docs/CINEMATICS.md, tests/opening.mjs).
 
+0. Citadel on the original map: done for the terrain and the sites (WORLD_MAP.md). Next: houses and props at
+   the original's positions in the south fields (doors S3, S14, S17; lamps, benches, tulips), Twinsen's house
+   at its original spot (−46, 80) if the user wants it (the opening scene would move with it), then Zeelich on
+   the original islands (Otringal, Knartas, Mosquibee, Celebration, Under-gas, the platform).
+   The magic ball after the original: 4 bounces with magic points, straight without, key fetch.
 1. Visual remaster pass (stages 1–4 done; see docs/VISUAL_REMASTER.md "Remaining"): cliff bases and the
    shoreline, animation polish (idle variations, talk gestures), larger vegetation tiles, merging the
    station/depot/pipeline props.

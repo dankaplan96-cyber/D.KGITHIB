@@ -205,8 +205,8 @@ class Game {
   crystalSpots() {
     const W = this.world, G = (x, z) => this.physics.groundAt(x, z) + 0.75, mt = this.rooms.zeelich?.millTop;
     const out = [
-      { id: 'sc-lighthouse', x: 7, z: -77 }, { id: 'sc-orchard', x: -27, z: 38 }, { id: 'sc-pier', x: W.pierEnd.x - 0.6, z: W.pierEnd.z },
-      { id: 'sc-east', x: 70, z: 0 }, { id: 'sc-north', x: 30, z: -60 },
+      { id: 'sc-lighthouse', x: -96, z: -64 }, { id: 'sc-orchard', x: -85, z: -49.5 }, { id: 'sc-pier', x: W.pierEnd.x - 0.6, z: W.pierEnd.z },
+      { id: 'sc-east', x: -28, z: 40 }, { id: 'sc-north', x: -45, z: -84 },
     ].map((c) => ({ ...c, y: G(c.x, c.z) }));
     if (mt) out.push({ id: 'sc-mill', x: mt.x - 0.9, y: mt.y + 0.75, z: mt.z });
     return out;

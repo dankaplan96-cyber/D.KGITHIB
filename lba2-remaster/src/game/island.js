@@ -20,24 +20,35 @@ import './text/world.js';
 // Everything that the vegetation scatter must keep clear of (world.js asks
 // keepClear() before placing a tree, bush, rock or grass clump).
 export const HARBOUR = { quayX: -74.5, z: -4, pierLen: 16.5, pierW: 3.2, deck: 1.75 };
-export const LIGHTHOUSE = { x: 2, z: -80, half: 2.35, cottage: { x: 11.5, z: -71.5, ry: -Math.PI / 2 - 0.2 } };
-export const STATION = { x: 48, z: 36, half: 13, wall: 2.0 };
-export const DEPOT = { x0: -1, x1: 19, z0: 44, z1: 60, gateW: [44.0, 48.2], gateE: [45.4, 49.0] };
-const DEPOT_VALVE = { x: 16.0, z: 50.6 };
-const DEPOT_LOOP_X = [4.0, 13.0]; // where the drones' loop crosses under the main
+// The project's sites stand on the original map's northern plateau (12 years on, the island has changed: the
+// station in Funfrock's old fort, the depot, the orchard, the water main). The station and the depot were first
+// built further south-east; their builders keep those first (design) coordinates and are shifted as a whole.
+export const SHIFT = { station: { x: -76, z: -101 }, depot: { x: -84, z: -122 }, orchard: { x: -58, z: -87.5 } };
+const sh = (k, x, z) => ({ x: x + SHIFT[k].x, z: z + SHIFT[k].z });
+export const LIGHTHOUSE = { x: -101, z: -67, half: 2.35, cottage: { x: -91.5, z: -58.5, ry: -Math.PI / 2 - 0.2 } };
+const STATION0 = { x: 48, z: 36, half: 13, wall: 2.0 };
+export const STATION = { ...STATION0, ...sh('station', STATION0.x, STATION0.z) };
+const DEPOT0 = { x0: -1, x1: 19, z0: 44, z1: 60, gateW: [44.0, 48.2], gateE: [45.4, 49.0] };
+export const DEPOT = { x0: DEPOT0.x0 + SHIFT.depot.x, x1: DEPOT0.x1 + SHIFT.depot.x, z0: DEPOT0.z0 + SHIFT.depot.z, z1: DEPOT0.z1 + SHIFT.depot.z,
+  gateW: DEPOT0.gateW.map((z) => z + SHIFT.depot.z), gateE: DEPOT0.gateE.map((z) => z + SHIFT.depot.z) };
+const DEPOT_VALVE = sh('depot', 16.0, 50.6);
+const DEPOT_LOOP_X = [4.0, 13.0].map((x) => x + SHIFT.depot.x); // where the drones' loop crosses under the main
 // the orchard valve: iron cage centre (x,z, half size) and the drop point of the bypass (dx,dz)
-export const ORCHARD = { x: -21.9, z: 32.55, half: 2.0, dx: -22.4, dz: 32.6 };
-export const ORCHARD_SHOT = { x: -15.2, z: 32.0 }; // where to stand for the magic-ball shot
-// the water main from the station to the edge of town (where it dives into the meter portal)
+export const ORCHARD = { ...sh('orchard', -21.9, 32.55), half: 2.0, dx: -22.4 + SHIFT.orchard.x, dz: 32.6 + SHIFT.orchard.z };
+export const ORCHARD_SHOT = sh('orchard', -15.2, 32.0); // where to stand for the magic-ball shot
+// the water main: from the station along the plateau, through the depot, past the orchard, then down the
+// cliffs by the west shore to the meter at the edge of town (where it dives into the meter portal)
 export const PIPE = [
-  [33.4, 43.7], [30.2, 45.2], [26.4, 47.6], [21.6, 50.6], [19.5, 50.6], [-1.0, 50.6], [-5.5, 48.4], [-10.0, 44.6],
-  [-17.6, 37.8], [-22.4, 33.6], [-27.6, 31.0], [-31.4, 27.4], [-33.4, 21.6], [-34.6, 17.4],
+  [-42.6, -57.3], [-47.5, -61.5], [-55.0, -68.5], [-60.0, -71.4], [-62.4, -71.4], [-64.5, -71.4], [-85.0, -71.4], [-89.5, -73.6],
+  [-91.5, -66.0], [-86.0, -58.5], [-80.4, -53.9], [-76.5, -48.0], [-74.2, -38.0], [-73.4, -28.0], [-72.6, -21.0], [-72.4, -18.6],
 ];
-const METER = { x: -35.0, z: 16.0, ry: Math.PI / 2 };
-export const BRANCH = [[53.5, 25.4], [53.5, 21.0], [55.6, 14.0], [57.6, 4.0], [57.0, -6.0], [55.8, -12.9]]; // to the Whispering Cliffs reservoir
-const CLIFF_VALVE = { z: -17.6 };
-const POI_PLATEAU = { h: 14 };
-const POI_CHEST = { x: 9, z: 57 };
+const METER = { x: -72.0, z: -17.0, ry: Math.PI / 2 };
+// to the reservoir under the Whispering Cliffs (the rock stack on the plateau's rim)
+export const BRANCH = [[-33.0, -50.0], [-35.5, -44.5], [-43.5, -37.0], [-51.0, -32.5], [-55.2, -31.9]];
+const CLIFF_VALVE = { z: -36.6 };
+const POI_PLATEAU = { h: 16.8 };
+// the old stump where a clover hides (a giver, see world.js)
+export const STUMP = { x: -30, z: -33 };
 
 export function keepClear(x, z, pad = 0) {
   if (x > HARBOUR.quayX - 20 && x < -60 + pad && z > -14 - pad && z < 8 + pad) return true;
@@ -1099,7 +1110,20 @@ function steamSystem(parent, n = 40) {
 // Houses between the camera and Twinsen fade out (town.js); the same for
 // the fortress walls, towers and project buildings: each fader owns clones
 // of its materials so only that piece turns see-through.
+// A builder written in a site's design coordinates runs in a frame: its meshes go into a group moved by d, and
+// this stand-in for W looks heights up and places colliders at the moved spot (everything else is W itself).
+function siteW(W, d) {
+  const P = new Proxy(W.physics, { get: (t, k) => (k === 'add' ? (c) => { c.x += d.x; c.z += d.z; return t.add(c); } : typeof t[k] === 'function' ? t[k].bind(t) : t[k]) });
+  return new Proxy(W, {
+    get: (t, k) => (k === 'H' ? (x, z) => t.H(x + d.x, z + d.z) : k === 'physics' ? P : k === '_shift' ? d : t[k]),
+    set: (t, k, v) => { t[k] = v; return true; },
+  });
+}
+const movePt = (d, ...pts) => { for (const p of pts) if (p) { p.x += d.x; p.z += d.z; } };
+
 function addFader(W, group, x0, z0, x1, z1, top) {
+  const d = W._shift;
+  if (d) { x0 += d.x; x1 += d.x; z0 += d.z; z1 += d.z; }
   const mats = new Map();
   group.traverse((o) => {
     if (!o.isMesh) return;
@@ -1146,7 +1170,7 @@ function addFader(W, group, x0, z0, x1, z1, top) {
 // riveted tanks, flanged pipes, deck plates, an office, a control building
 // and the transit beam pad (Otringal's horned ring arch).
 const FW = { H: 4.2, T: 2.0 };          // walk-top height, wall thickness
-const GATE = { z: 36, w: 3.6, h: 4.0, x0: 32.9, x1: 37.3, half: 4.3, top: 6.9 };
+const GATE = { z: STATION.z, w: 3.6, h: 4.0, x0: STATION.x - 15.1, x1: STATION.x - 10.7, half: 4.3, top: 6.9 };
 
 function fortWallGeo(L) {
   return cached('fwall' + L, () => {
@@ -1301,9 +1325,9 @@ function buildFortress(W, root, g) {
     }
     for (let j = 0; j < 6; j++) parts.push([bbox(0.08, 0.09, gw, 0.02, 1), 0.02, 0.45 + j * 0.72, 0]);
     mesh(pc, compose(parts), ironM, 0, 0, 0);
-    pc.position.set(34.05, g, GATE.z);
+    pc.position.set(GATE.x0 + 1.15, g, GATE.z);
   }
-  const pcCol = P.add({ type: 'box', x: 34.05, z: GATE.z, hw: 0.25, hd: GATE.w / 2 + 0.1, rot: 0, top: g + GATE.h + 0.2 });
+  const pcCol = P.add({ type: 'box', x: GATE.x0 + 1.15, z: GATE.z, hw: 0.25, hd: GATE.w / 2 + 0.1, rot: 0, top: g + GATE.h + 0.2 });
   addFader(W, gh, GATE.x0 - 0.6, GATE.z - GATE.half - 0.3, GATE.x1 + 0.3, GATE.z + GATE.half + 0.3, g + GATE.top + 0.8);
   const gate = { mesh: pc, c: pcCol, open: false, t: 0, x: GATE.x0 - 1.9, z: GATE.z, y0: g };
   W.gate = gate;
@@ -1549,11 +1573,13 @@ function archGeo() {
   });
 }
 
-function buildStation(W, root, r) {
-  const F = STATION, g = W.H(F.x, F.z);
-  buildFortress(W, root, g);
+function buildStation(W0, root, r) {
+  const g = W0.H(STATION.x, STATION.z);
+  buildFortress(W0, root, g);
+  // (design coordinates from here on: see siteW)
+  const d = SHIFT.station, W = siteW(W0, d), F = STATION0;
   const P = W.physics;
-  const grp = new THREE.Group(); grp.name = 'station'; root.add(grp);
+  const grp = new THREE.Group(); grp.name = 'station'; grp.position.set(d.x, 0, d.z); root.add(grp);
   const B = new Batch(grp);
   const vents = [];
   const anim = { drill: null, block: null, needles: [], pistons: [], fans: [] };
@@ -1748,6 +1774,7 @@ function buildStation(W, root, r) {
     setActive(on) { active = !!on; st.active = active; },
     setBeam(on) { anim.beam.on = !!on; st.beam = !!on; if (on) { anim.beam.col1.visible = anim.beam.col2.visible = true; } },
   };
+  movePt(d, st, st.office.door, st.control.door, st.beamPad, st.bore);
   W.station = st;
   W.updaters.push((dt, t) => {
     steam.update(dt);
@@ -1921,9 +1948,10 @@ function chestGeo() {
   });
 }
 
-function buildDepot(W, root, r) {
-  const D = DEPOT, P = W.physics;
-  const grp = new THREE.Group(); grp.name = 'depot'; root.add(grp);
+function buildDepot(W0, root, r) {
+  // (design coordinates: see siteW)
+  const d = SHIFT.depot, W = siteW(W0, d), D = DEPOT0, P = W.physics;
+  const grp = new THREE.Group(); grp.name = 'depot'; grp.position.set(d.x, 0, d.z); root.add(grp);
   const B = new Batch(grp);
   // fence with two wide open gates where the path runs through
   meshFence(W, grp, B, [D.x0, D.z0], [D.x1, D.z0]);
@@ -1946,7 +1974,7 @@ function buildDepot(W, root, r) {
   floodMast(W, B, 18.4, 44.6, 9, 52);
   // Funfrock's chest, half-buried among the project crates
   {
-    const K = POI_CHEST, kg = W.H(K.x, K.z);
+    const K = { x: 9, z: 57 }, kg = W.H(K.x, K.z);
     const chest = new THREE.Group(); chest.position.set(K.x, kg, K.z); chest.rotation.y = Math.PI; grp.add(chest);
     const C = chestGeo();
     const darkWood = tm('planks', { color: '#9a7a62' }), iron = pm('#30333a', 0.45, { metalness: 0.6 });
@@ -1957,11 +1985,11 @@ function buildDepot(W, root, r) {
     const em = mesh(chest, cached('ffq', () => new THREE.CircleGeometry(0.07, 12)), pm('#a02020', 0.5, { emissive: '#400000' }), 0, 0.58, 0.43, 0, { cast: false });
     void em;
     P.add({ type: 'box', x: K.x, z: K.z, hw: 0.7, hd: 0.45, rot: 0, top: kg + 1.0, noStand: true, seeThrough: true });
-    W.chest = { x: K.x, z: K.z, lidPivot, open: false, openT: 0 };
+    W.chest = { ...sh('depot', K.x, K.z), lidPivot, open: false, openT: 0 };
     W.updaters.push((dt) => { if (W.chest.open) { W.chest.openT = Math.min(1, W.chest.openT + dt * 2); lidPivot.rotation.x = -W.chest.openT * 1.9; } });
   }
   // the drones' patrol loop (walkable, clear of every prop by > 1 m)
-  W.depot = { x: (D.x0 + D.x1) / 2, z: (D.z0 + D.z1) / 2, patrol: [[4.0, 48.6], [8.6, 48.0], [13.0, 48.6], [13.0, 55.2], [8.6, 55.6], [4.0, 55.2]], valve: { ...DEPOT_VALVE } };
+  W.depot = { ...sh('depot', (D.x0 + D.x1) / 2, (D.z0 + D.z1) / 2), patrol: [[4.0, 48.6], [8.6, 48.0], [13.0, 48.6], [13.0, 55.2], [8.6, 55.6], [4.0, 55.2]].map(([x, z]) => [x + d.x, z + d.z]), valve: { ...DEPOT_VALVE } };
   B.build();
 }
 
@@ -2200,7 +2228,9 @@ function buildPipeline(W, root, r) {
     return pathDist(x, z) < 1.7;
   };
   // --- the main
-  const prof = pipeProfile(W, PIPE, { y0: gSt + 2.9, fix: [{ x: DEPOT_VALVE.x, z: DEPOT_VALVE.z, y: W.H(DEPOT_VALVE.x, DEPOT_VALVE.z) + 3.0, span: 7 }] });
+  // (over the orchard the main runs high: the ball's lob to the caged valve must pass under it)
+  const prof = pipeProfile(W, PIPE, { y0: gSt + 2.9, fix: [{ x: DEPOT_VALVE.x, z: DEPOT_VALVE.z, y: W.H(DEPOT_VALVE.x, DEPOT_VALVE.z) + 3.0, span: 7 },
+    { x: ORCHARD.dx, z: ORCHARD.dz + 1, y: W.H(ORCHARD.x, ORCHARD.z) + 5.6, span: 9 }] });
   drawPipe(W, B, prof, { avoid });
   const valves = [];
   // depot: a bypass loop hanging under the main, valve in the middle
@@ -2223,7 +2253,7 @@ function buildPipeline(W, root, r) {
   // orchard: a stub from the main drops into an iron cage; the wheel faces the path
   {
     const O = ORCHARD, g = W.H(O.x, O.z), i = nearestSample(prof, O.dx, O.dz + 1.0), ym = prof.y[i];
-    const vy = g + 2.65;
+    const vy = g + 2.95; // (well above the cage's top bar, so a lob over the bars reaches it)
     pipeRun(B, [[prof.xs[i], ym, prof.zs[i]], [O.dx, ym, O.dz], [O.dx, vy + 0.5, O.dz]], 0.2);
     B.add(cached('tee', () => new THREE.SphereGeometry(0.36, 14, 10)), tm('pipe', { rough: 0.5, metal: 0.35 }), prof.xs[i], ym, prof.zs[i]);
     pipeRun(B, [[O.dx, vy - 0.5, O.dz], [O.dx, g - 0.2, O.dz]], 0.2);
@@ -2288,7 +2318,7 @@ function buildPipeline(W, root, r) {
 
 // ================================================================== dressing: crates, signposts, the stump
 // Breakable crates keep their order in W.crates (saves store broken ones by index).
-const CRATES = [[-30, 0], [-31, 1.3], [-52, -2], [3, 46], [14, 46], [16.0, 46.4], [-2, 58], [38, 30], [25, -9], [-16, -54]];
+const CRATES = [[-30, 0], [-31, 1.3], [-52, -2], [-81, -76], [-70, -76], [-68, -75.6], [-86, -64], [-38, -71], [-27, -27], [-46, -26]];
 function buildDressing(W, root, r) {
   const grp = new THREE.Group(); grp.name = 'dressing'; root.add(grp);
   for (const [x, z] of CRATES) {
@@ -2300,16 +2330,16 @@ function buildDressing(W, root, r) {
   // signposts (language-free pictograms; the text shows when read)
   const A = PICT;
   signpost(W, grp, -27.0, -8.2, -Math.PI / 2 + 0.2, 'w_sign_town', (c) => { A.well(c, 150, 66); A.arrow(c, 70, 64, -1, 1.1); });
-  signpost(W, grp, -25.0, -30.0, 0.6, 'w_sign_lighthouse', (c) => { A.tower(c, 90, 66); A.arrow(c, 175, 64, 1, 1.1); });
-  signpost(W, grp, 14.0, -10.2, 0.0, 'w_sign_cliffs', (c) => { A.cliff(c, 100, 66); A.arrow(c, 190, 64, 1, 0.9); });
-  signpost(W, grp, -3.6, 42.6, -0.9, 'w_sign_depot', (c) => { A.gear(c, 128, 64, 30); });
-  signpost(W, grp, 28.6, 40.6, -0.6, 'w_sign_station', (c) => { A.gear(c, 90, 64, 26); A.arrow(c, 180, 64, 1, 1.0); });
-  signpost(W, grp, -18.9, 35.0, Math.PI / 2 + 0.25, 'w_sign_orchard', (c) => { A.drop(c, 96, 64); A.cross(c, 166, 64); });
-  signpost(W, grp, 22.6, 46.8, -0.5, 'w_sign_pipe', (c) => { A.drop(c, 80, 64); c.fillRect(110, 52, 110, 24); c.fillStyle = '#d2ae74'; for (let i = 0; i < 4; i++) c.fillRect(124 + i * 26, 50, 5, 28); c.fillStyle = '#3a2410'; });
+  signpost(W, grp, -51.5, -53.0, 0.6, 'w_sign_lighthouse', (c) => { A.tower(c, 90, 66); A.arrow(c, 175, 64, 1, 1.1); });
+  signpost(W, grp, -63.5, -15.5, 0.0, 'w_sign_cliffs', (c) => { A.cliff(c, 100, 66); A.arrow(c, 190, 64, 1, 0.9); });
+  signpost(W, grp, -62.0, -79.0, -0.9, 'w_sign_depot', (c) => { A.gear(c, 128, 64, 30); });
+  signpost(W, grp, -47.4, -60.4, -0.6, 'w_sign_station', (c) => { A.gear(c, 90, 64, 26); A.arrow(c, 180, 64, 1, 1.0); });
+  signpost(W, grp, -73.5, -58.5, Math.PI / 2 + 0.25, 'w_sign_orchard', (c) => { A.drop(c, 96, 64); A.cross(c, 166, 64); });
+  signpost(W, grp, -53.4, -54.2, -0.5, 'w_sign_pipe', (c) => { A.drop(c, 80, 64); c.fillRect(110, 52, 110, 24); c.fillStyle = '#d2ae74'; for (let i = 0; i < 4; i++) c.fillRect(124 + i * 26, 50, 5, 28); c.fillStyle = '#3a2410'; });
   signpost(W, grp, -59.2, -7.4, -Math.PI / 2 - 0.3, 'w_sign_harbour', (c) => { A.anchor(c, 150, 70); A.arrow(c, 70, 64, -1, 1.1); });
   // the stump where a clover hides: sculpted roots and bark, a cut top with rings
   {
-    const x = 46, z = -2, g = W.H(x, z);
+    const x = STUMP.x, z = STUMP.z, g = W.H(x, z);
     const geo = cached('stump', () => sculptRigid({ key: 'stump', prims: [
       { type: 'ccone', c: [0, 0.32, 0], h: 0.36, rb: 0.62, rt: 0.5, round: 0.05, mat: 'b', group: 'a', wobble: (px, py, pz) => Math.sin(Math.atan2(pz, px) * 9) * 0.025 + Math.sin(py * 13 + px * 5) * 0.01 },
       ...[0, 1.3, 2.4, 3.6, 4.9].map((a, i) => ({ type: 'cone', a: [Math.cos(a) * 0.35, 0.22, Math.sin(a) * 0.35], b: [Math.cos(a) * (0.95 + (i % 2) * 0.2), -0.08, Math.sin(a) * (0.95 + (i % 2) * 0.2)], r1: 0.2, r2: 0.06, mat: 'b', group: 'a' })),

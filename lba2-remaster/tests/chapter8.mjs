@@ -57,7 +57,7 @@ log('home', await ev(() => { const r = T.door(game.world.houses[0].door); T.talk
 log('out', await ev(() => T.out()));
 await shot('C8-01-square.png');
 log('gilbert', await ev(() => { T.talk('gilbert'); return [game.flags.c8_gilbert, T.obj()]; }));
-log('lever', await ev(() => { T.useAt(40, 28); game.step(1); T.talkAll(); return [game.flags.c8_fort]; }));
+log('lever', await ev(() => { T.useAt(-36, -73); game.step(1); T.talkAll(); return [game.flags.c8_fort]; }));
 log('hatch', await ev(() => { const G = game, h = G.hero, w = G.story.cur.wheelSpot; for (let i = 0; i < 8 && !G.flags.c8_depot; i++) { const a = i * 0.8; T.tp(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4); h.angle = Math.atan2(w.x - h.pos.x, w.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); T.talkAll(); } const thrown = !!G.flags.c8_depot; if (!thrown) { G.story.ballHit({ x: w.x, y: w.y, z: w.z }); T.talkAll(); } return [thrown ? 'thrown' : 'forced', G.flags.c8_depot]; }));
 await shot('C8-02-bunker.png');
 log('mira', await ev(() => { const o = game.world.houses.find((h) => h.id === 'water').door; const r = T.door(o); T.talk('mira'); const back = T.out(); return [r, game.flags.c8_mira, back]; }));
@@ -65,7 +65,7 @@ log('pippa', await ev(() => { T.talk('pippa'); return [game.flags.c8_pippa, T.ob
 log('zoe', await ev(() => { T.door(game.world.houses[0].door); T.talk('zoe'); game.step(1); T.talkAll(); return [game.flags.c8_zoeStart, game.hero.body, game.room?.id ?? 'out', T.obj()]; }));
 log('farms', await ev(() => { for (const id of ['farmer1', 'farmer2', 'farmer3']) { T.talk(id); game.step(1); T.talkAll(); } return [game.story.cur.farmsDone(), T.obj()]; }));
 await shot('C8-03-farms.png');
-log('lighthouse', await ev(() => { const G = game; T.tp(6, -64); for (let i = 0; i < 60 && !G.flags.c8_relay; i++) { G.step(0.1); T.talkAll(); } G.step(1); return [G.flags.c8_relay, G.hero.body, T.obj()]; }));
+log('lighthouse', await ev(() => { const G = game; T.tp(-66, -53); for (let i = 0; i < 60 && !G.flags.c8_relay; i++) { G.step(0.1); T.talkAll(); } G.step(1); return [G.flags.c8_relay, G.hero.body, T.obj()]; }));
 log('control', await ev(() => { const r = T.door(game.world.station.control.door); game.step(0.5); T.talkAll(); return [r, game.flags.c8_vesk, T.obj()]; }));
 log('ship', await ev(() => { T.out(); const F = game.world.pierStart; T.useAt(F.x - 6, F.z); game.step(1.5); T.talkAll(); return [game.flags.c8_done, game.flags.chapterKey, game.room?.id ?? 'out']; }));
 console.log(errs.length ? errs.join('\n') : 'no errors');
