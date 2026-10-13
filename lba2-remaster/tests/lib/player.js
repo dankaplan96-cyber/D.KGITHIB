@@ -62,14 +62,17 @@
     return false;
   };
   // straight walk possible? (for smoothing the A* path)
-  const lineOK = (a, b) => {
+  const lineOK = (a, b, avoid = []) => {
     const d = Math.hypot(b.x - a.x, b.z - a.z), n = Math.max(1, Math.ceil(d / 0.3));
+    const inside = (x, z) => avoid.find((t) => Math.hypot(x - t.x, z - t.z) < t.r);
+    const startIn = inside(a.x, a.z);
     let x = a.x, y = a.y, z = a.z;
     for (let i = 1; i <= n; i++) {
       const nx = a.x + (b.x - a.x) * i / n, nz = a.z + (b.z - a.z) * i / n;
       const ny = stepTo(x, y, z, nx, nz);
       if (ny == null || Math.abs(ny - y) > 0.6) return false;
       if (edgy(nx, ny, nz, 0.3) && !edgy(a.x, a.y, a.z, 0.3)) return false;
+      const tin = avoid.length && inside(nx, nz); if (tin && tin !== startIn) return false;   // the smoothed line keeps out of door triggers too
       x = nx; y = ny; z = nz;
     }
     return Math.abs(y - b.y) < 0.7;
@@ -83,7 +86,7 @@
   };
   P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5 } = {}) => {
     const h = hero(), sx = h.pos.x, sz = h.pos.z;
-    const avoid = triggers(tx, tz).filter((d) => Math.hypot(d.x - sx, d.z - sz) > d.r);
+    const avoid = triggers(tx, tz);   // door/exit triggers: kept out of, except to walk out of one he stands in
     const key = (ix, iz, y) => ix + ',' + iz + ',' + Math.round(y * 2);
     // binary heap of [f, key]
     const heap = [];
@@ -107,7 +110,7 @@
         const nx = sx + (c.ix + dx) * cell, nz = sz + (c.iz + dz) * cell;
         const ny = stepTo(c.x, c.y, c.z, nx, nz);
         if (ny == null) continue;
-        if (avoid.some((d) => Math.hypot(nx - d.x, nz - d.z) < d.r)) continue;
+        if (avoid.some((d) => { const dn = Math.hypot(nx - d.x, nz - d.z); if (dn >= d.r) return false; const dc = Math.hypot(c.x - d.x, c.z - d.z); return !(dc < d.r && dn > dc); })) continue;
         const nk = key(c.ix + dx, c.iz + dz, ny);
         if (closed.has(nk)) continue;
         let e = edge.get(nk); if (e === undefined) { e = edgy(nx, ny, nz); edge.set(nk, e); }
@@ -126,7 +129,7 @@
     let i = 0;
     while (i < pts.length - 1) {
       let j = Math.min(pts.length - 1, i + 40);
-      while (j > i + 1 && !lineOK(pts[i], pts[j])) j--;
+      while (j > i + 1 && !lineOK(pts[i], pts[j], avoid)) j--;
       out.push(pts[j]); i = j;
     }
     return { ok: !!goal, nodes: n, left: +cd.toFixed(2), pts: out };

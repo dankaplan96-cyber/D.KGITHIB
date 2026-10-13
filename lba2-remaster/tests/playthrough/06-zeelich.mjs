@@ -13,8 +13,8 @@ export const steps = [
   // the depot's drones, Grobo guard and dog: the bot fights by input at the gate; if it gets down to 2 HP it stops and
   // the rest is an ISO assist (QA.md: this fight is a human-playtest item, not input evidence)
   ['depot fight (input; ISO assist below 3 HP)', () => {
-    const G = game, D = G.rooms.zeelich.depot, d = G.rooms.zeelich.workshopDoor;
-    if (G.room) { const e = G.room.exits.find((x) => !x.room); P.through(e.x, e.z); }
+    const G = game, D = G.rooms.zeelich.depot;
+    if (G.room?.id === 'workshop') { const e = G.room.exits.find((x) => !x.room); P.through(e.x, e.z); }
     P.go(D.x - 4, D.z - 11, { tol: 1.5, run: true, fight: false });
     const f = P.fight({ maxT: 120, minHp: 2 });
     const assisted = G.enemies.some((e) => e.alive && e.present && e.pos.distanceTo(G.hero.pos) < 30) ? P.assistFight({}) : 0;
