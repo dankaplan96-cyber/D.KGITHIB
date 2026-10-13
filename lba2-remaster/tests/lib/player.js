@@ -141,6 +141,8 @@
   P.go = (tx, tz, { tol = 0.6, maxT = 240, run = false, stopOnTrans = true, planTol, fight = true } = {}) => {
     let lastFight = -1, fights = 0;
     const h = hero();
+    // a transition already under way (a Continue, a door just used): let it finish first
+    for (let i = 0; i < 300 && G.trans; i++) G.step(DT);
     if (run && h.behaviour !== 'athletic') P.tap('F2'); else if (!run && h.behaviour === 'athletic') P.tap('F1');
     let plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }), wi = 1, t = 0, replans = 0;
     let lastP = { x: h.pos.x, z: h.pos.z, t: 0 };
@@ -263,23 +265,35 @@
   // throw the magic ball at a point (F; a tap is the quick throw at the aim-assisted target ahead)
   P.throwAt = (x, z) => { P.face(x, z); P.tap('KeyF', 0.05); G.step(1.6); };
   // fight the enemies of a group (or every present one in reach) with the ball until none is left
-  P.fight = ({ group = null, maxT = 120, range = 7, melee = false, threatsOnly = false } = {}) => {
+  // step the game for t seconds the way a player waits in a fight: a bolt coming in close → dodge (X), timed so
+  // the dodge's invulnerable frames meet it
+  P.gstep = (t) => {
+    const h = hero();
+    for (let s = 0; s < t; s += DT) {
+      const inbound = G.bolts?.list?.find((b) => { if (b.dodged) return false; const p = b.m.position, dx = h.pos.x - p.x, dz = h.pos.z - p.z, d = Math.hypot(dx, dz); return d < 2.4 && (b.v.x * dx + b.v.z * dz) > 0; });
+      if (inbound && h.combat?.canDodge?.()) { inbound.dodged = true; keys.add('KeyX'); I.taps.add('KeyX'); G.step(DT); keys.delete('KeyX'); P.note('dodge a bolt'); continue; }
+      G.step(DT);
+    }
+  };
+  P.fight = ({ group = null, maxT = 120, range = 7, melee = false, threatsOnly = false, minHp = 0 } = {}) => {
     const h = hero(); let t = 0;
     const alive = () => threatsOnly ? P.threats(12) : G.enemies.filter((e) => e.alive && e.present && !((P.ignore.get(e) ?? -1) > G.time) && (group ? e.group === group : e.pos.distanceTo(h.pos) < 30));
-    while (t < maxT && alive().length && !h.dead) {
+    while (t < maxT && alive().length && !h.dead && !(minHp && h.hp <= minHp)) {
       const e = alive().sort((a, b) => a.pos.distanceTo(h.pos) - b.pos.distanceTo(h.pos))[0];
       const d = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z);
       if (d > range) { const r = P.go(e.pos.x, e.pos.z, { tol: range - 1, maxT: 8, fight: false }); t += r.t || 0.5; if (G.state !== 'play') P.settle(); continue; }
       P.face(e.pos.x, e.pos.z, 1.5);
-      // a telegraphed attack close by (a drone's wind-up, a guard's aim line): back-step out of it (X), as a player would
-      const tell = G.enemies.find((x) => x.alive && x.present && (x.state === 'windup' || x.state === 'aim') && x.pos.distanceTo(h.pos) < 9);
-      if (tell && G.hero.combat?.canDodge?.()) { P.tap('KeyX', 0.45); t += 0.5; P.face(e.pos.x, e.pos.z, 1.5); }
+      // armoured (Grobo guards, troopers): a charged throw (hold F); otherwise the quick throw (tap F)
+      // the ball must be back in his hand before the next throw
+      for (let w = 0; w < 4 / DT && G.ball.state !== 'idle'; w++) { P.gstep(DT); t += DT; }
+      // out of reach again after a dodge or while waiting: close in first
+      if (!e.alive || Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) > range + 0.5) continue;
+      P.face(e.pos.x, e.pos.z, 1.5);
       const hp0 = e.hp, tg = G.targeting?.throwTarget?.({ x: Math.sin(h.angle), z: Math.cos(h.angle) });
       const aimed = tg && tg.alive !== undefined ? tg : e;   // the throw goes where the game aims it
-      // armoured (Grobo guards, troopers): a charged throw (hold F); otherwise the quick throw (tap F)
       if (melee) { P.tap('KeyK', 0.35); t += 0.4; }
-      else if ((aimed.armour || 0) >= 2 && h.mp >= 1) { keys.add('KeyF'); I.taps.add('KeyF'); G.step(1.1); keys.delete('KeyF'); G.step(1.0); t += 2.1; }   // full charge: chargeAfter 0.2 + chargeFull 0.75 s
-      else { P.tap('KeyF', 0.05); G.step(1.1); t += 1.2; }
+      else if ((aimed.armour || 0) >= 2 && h.mp >= 1) { keys.add('KeyF'); I.taps.add('KeyF'); P.gstep(1.3); keys.delete('KeyF'); P.gstep(1.0); t += 2.3; }   // full charge: chargeAfter 0.2 + chargeFull 0.75 s, with a margin
+      else { P.tap('KeyF', 0.05); P.gstep(1.1); t += 1.2; }
       if (e.hp === hp0 && aimed === e) { e._miss = (e._miss || 0) + 1; if (e._miss >= 4) { e._miss = 0; P.ignore.set(e, G.time + 25); P.note(`fight: ${e.id} unreachable from here, leaving it`); } } else e._miss = 0;
       P.note(`fight ${e.id || e.def?.kind} d=${d.toFixed(1)} st=${e.state} aim=${tg ? (tg === e ? 'it' : 'other:' + (tg.id || tg.def?.id || tg.kind || 'pt') + '@' + (tg.pos || tg).x?.toFixed(1) + ',' + (tg.pos || tg).z?.toFixed(1) + ' d' + Math.hypot((tg.pos || tg).x - h.pos.x, (tg.pos || tg).z - h.pos.z).toFixed(1)) : 'none'} e@${e.pos.x.toFixed(1)},${e.pos.y.toFixed(1)},${e.pos.z.toFixed(1)} me@${h.pos.x.toFixed(1)},${h.pos.y.toFixed(1)},${h.pos.z.toFixed(1)} ball=${G.ball.state} hp ${hp0}→${e.hp} me ${h.hp} mp ${h.mp}`);
       if (G.state !== 'play') P.settle();
@@ -287,6 +301,14 @@
     return { left: alive().length, dead: h.dead, hp: h.hp, t: +t.toFixed(1) };
   };
 
+  // ISO assist for a fight the bot can't win (its combat is weaker than a player's): the remaining enemies of the
+  // group/area are beaten through their own damage rule. Logged; a step that uses it is ISO evidence, not INPUT.
+  P.assistFight = ({ group = null, r = 30 } = {}) => {
+    const h = hero(), left = G.enemies.filter((e) => e.alive && e.present && (group ? e.group === group : e.pos.distanceTo(h.pos) < r));
+    for (const e of left) e.damage?.(99, null);
+    G.step(1); P.note(`ISO assist: ${left.length} enemies beaten (${left.map((e) => e.id).join(',')})`);
+    return left.length;
+  };
   // athletic jump onto a raised spot (a stepping stone): line up 1.6 m short of its centre, run at it, jump (Space)
   // and wait for the landing. Returns the height reached.
   P.hopTo = (x, z, top, { from = 1.7 } = {}) => {

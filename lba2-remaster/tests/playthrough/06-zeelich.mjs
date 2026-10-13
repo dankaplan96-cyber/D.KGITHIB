@@ -10,6 +10,16 @@ export const steps = [
     const e = game.room.exits.find((x) => !x.room); P.through(e.x, e.z);
     return { r: r.to, t: t.r, plan: game.flags.c2_plan, fail: game.flags.c2_plan ? null : 'baldino' };
   }],
+  // the depot's drones, Grobo guard and dog: the bot fights by input at the gate; if it gets down to 2 HP it stops and
+  // the rest is an ISO assist (QA.md: this fight is a human-playtest item, not input evidence)
+  ['depot fight (input; ISO assist below 3 HP)', () => {
+    const G = game, D = G.rooms.zeelich.depot, d = G.rooms.zeelich.workshopDoor;
+    if (G.room) { const e = G.room.exits.find((x) => !x.room); P.through(e.x, e.z); }
+    P.go(D.x - 4, D.z - 11, { tol: 1.5, run: true, fight: false });
+    const f = P.fight({ maxT: 120, minHp: 2 });
+    const assisted = G.enemies.some((e) => e.alive && e.present && e.pos.distanceTo(G.hero.pos) < 30) ? P.assistFight({}) : 0;
+    return { ...f, assisted, hp: G.hero.hp };
+  }],
   ['depot locker (drones, a guard, a dog)', () => {
     const L = game.rooms.zeelich.depot.locker; const r = P.use(L.x, L.z, { near: 1.2, run: true }); P.wait(1.2); P.settle();
     return { ...r, cyl: game.flags.c2_cyl, back: game.flags.c2_planBack, hp: game.hero.hp, fail: game.flags.c2_cyl ? null : 'locker' };

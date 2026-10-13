@@ -27,7 +27,7 @@ for (const [label, fn, arg] of seg.steps) {
     let r = await page.evaluate(fn, arg);
     // a death at the end of a step: let the fall play out (game time) so the game-over screen comes up
     await page.evaluate(() => { for (let i = 0; i < 120 && game.hero.dead && game.state !== 'gameover'; i++) game.step(1 / 30); });
-    for (let k = 0; k < 2 && (await page.evaluate(() => game.state)) === 'gameover'; k++) {
+    for (let k = 0; k < (process.env.NORETRY ? 0 : 2) && (await page.evaluate(() => game.state)) === 'gameover'; k++) {
       deaths++; console.log(`  (died during "${label}": Retry from the last save)`); await retry(); r = await page.evaluate(fn, arg);
       await page.evaluate(() => { for (let i = 0; i < 120 && game.hero.dead && game.state !== 'gameover'; i++) game.step(1 / 30); });
     }
