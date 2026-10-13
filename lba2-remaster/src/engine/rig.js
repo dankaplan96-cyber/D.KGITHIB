@@ -385,19 +385,37 @@ export class Rig {
       torsoY = s * (a === 'run' ? 0.12 : 0.07);
       headY = -torsoY * 0.8;
       torsoX = a === 'run' ? 0.12 + Math.min(speed, 8) * 0.018 : 0.03 + speed * 0.01;
+      if (a === 'walk') {
+        // LBA2's walk, from its key poses (measured on the original: contact, mid-stance, push-off, passing;
+        // 0.78 body heights per cycle). The leg reaches far forward and little back, the passing knee folds,
+        // the arms swing opposite and the torso counter-twists while the head keeps looking ahead.
+        const H = this.hipsRest * this.root.scale.y / 0.46; // (LBA2: pelvis at 46% of the height)
+        this.phase += (speed * dt / (0.78 * H)) * Math.PI * 2 - dph;
+        const p = ((this.phase / (Math.PI * 2)) % 1 + 1) % 1, q = (p + 0.5) % 1;
+        const W = WALK_KEYS;
+        T.legL = key(W.thigh, p); T.kneeL = key(W.knee, p); T.footL = key(W.foot, p);
+        T.legR = key(W.thigh, q); T.kneeR = key(W.knee, q); T.footR = key(W.foot, q);
+        T.armL = key(W.arm, p); T.elL = key(W.elbow, p); T.armR = key(W.arm, q); T.elR = key(W.elbow, q);
+        hipsY = 0.95 + key(W.bob, p * 2 % 1);
+        torsoY = key(W.twist, p); headY = -torsoY;
+        torsoX = 0.02 + key(W.lean, p * 2 % 1);
+      }
       if (a === 'sneak') {
         hipsY = 0.74; torsoX = 0.45; headX = -0.38;
         T.armL = 0.6 + s * 0.15; T.armR = 0.6 - s * 0.15; T.elL = -1.3; T.elR = -1.3;
         T.kneeL += 0.65; T.kneeR += 0.65; T.legL -= 0.35; T.legR -= 0.35;
       }
     } else if (a === 'idle' || a === 'talk' || a === 'listen') {
-      const b = Math.sin(this.t * 2.99); // LBA2's idle loop: 2.1 s
+      // LBA2's idle (measured): a slow rock forward and back on the ankles, 2.4 s, the pelvis tipping with it
+      // and the arms trailing a little behind the body's swing
+      const b = Math.sin(this.t * (Math.PI * 2 / 2.4));
       hipsY = 0.95 + b * 0.006;
-      torsoX = -0.02 + b * 0.012;
+      torsoX = -0.02 + b * 0.03;
+      bodyRotX = b * 0.025;
       // slow weight shift from one leg to the other (every ~7 s)
       const ws = Math.sin(this.t * 0.9) * Math.max(0, Math.sin(this.t * 0.31)) ;
       torsoZ = ws * 0.03; this.hipShift = ws;
-      T.armL = 0.04 + b * 0.025; T.armR = 0.04 - b * 0.025;
+      T.armL = 0.06 + b * 0.06; T.armR = 0.06 + b * 0.05;
       T.elL = -0.18; T.elR = -0.18;
       T.legL = 0.02; T.legR = -0.02; T.kneeL = 0.03; T.kneeR = 0.03;
       // idle fidgets: look around, weight shift, scratch head
@@ -701,3 +719,23 @@ export class Rig {
   }
 }
 const _white = new THREE.Color(1, 1, 1);
+// Key poses of the walk, four per cycle (phase 0: this leg's heel strike in front; 0.25: mid-stance;
+// 0.5: push-off behind; 0.75: passing), in radians, measured on LBA2's walk (both legs averaged).
+// Arms are keyed on their own side's leg (forward while that leg is behind); bob and lean repeat every step.
+const D = Math.PI / 180;
+const WALK_KEYS = {
+  thigh: [-46 * D, -8 * D, 25 * D, -20 * D],
+  knee: [18 * D, 10 * D, 7 * D, 52 * D],
+  foot: [12 * D, 8 * D, -8 * D, -7 * D],
+  arm: [10 * D, 0, -25 * D, 0],
+  elbow: [-0.12, -0.15, -22 * D - 0.12, -0.15],
+  twist: [-14 * D, 0, 14 * D, 0],
+  bob: [-0.02, 0.027],          // contact low, passing high (× pelvis height / 0.95)
+  lean: [0.1, 0.0],             // the torso dips forward a little at each contact
+};
+// periodic Catmull-Rom through evenly spaced keys (smooth, passes through every measured pose)
+function key(k, t) {
+  const n = k.length, x = t * n, i = Math.floor(x) % n, u = x - Math.floor(x);
+  const p0 = k[(i + n - 1) % n], p1 = k[i], p2 = k[(i + 1) % n], p3 = k[(i + 2) % n];
+  return 0.5 * ((2 * p1) + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1 - 3 * p2 + p3) * u * u * u);
+}

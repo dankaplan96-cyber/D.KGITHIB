@@ -22,17 +22,18 @@ export const LOOKS = {
     // orange shoes, ball hands; a tall narrow egg head on a long thin neck, small eyes, a cap of hair on the
     // back of the crown and a bun of three balls; a big gold medallion on a gold cord. Colours from its palette.
     poly: 'twinsen', // the low-poly model (tools/blender/twinsen_poly.py); the sculpt below is the fallback
-    race: 'quetch', outfit: 'lba', hem: 0.1, hemW: 0.92, skirtDepth: 0.8, neckR: 0.05, shoulders: 0.95, armLen: 1.12, armSpread: 0.2,
+    race: 'quetch', outfit: 'lba', hem: 0.1, hemW: 0.92, skirtDepth: 0.8, neckR: 0.05, shoulders: 0.95, armLen: 1.12, armSpread: 0.3, // (LBA2: the hands hang clear of the robe, ±0.18 H)
     tunic: '#2a86ad', tunicTrim: '#2a86ad', belt: '#d36b4b', pants: '#2a86ad', shoes: '#d36b4b', slippers: true, cord: '#f7bb57', handBall: 0.075,
     hair: '#634327', skin: '#e2bc90', hairStyle: 'bun', hairFront: 0.62, hairBack: 0.3, noEars: true, skull: 'egg', skullY: 0.96, skullW: 1.04, jaw: 0.9, chin: 0.9, cheeks: 0.3,
     eyeScale: 0.82, eyeOval: 0.5, eyeGap: 1.12, eyeUp: 0.03, eyes: '#1b4b67', eyeWhite: '#c8c0d4', noLid: true, noBrow: true, nose: 'ball', noseS: 0.72,
     mouth: 'line', medallion: true, medalR: 0.085, medalY: 0.24, medalSides: 8, headS: 1.4, neck: 0.17,
   },
   zoe: {
-    // (design interpretation in LBA2's style: a long red dress with a white collar and a yellow sash tied in a
-    // bow, blonde hair in a long high ponytail, as in LBA2)
-    race: 'quetch', outfit: 'dress', hem: 0.1, slim: true, tunic: '#d84a3a', tunicTrim: '#a8302a', belt: '#f4d27a', pants: '#d84a3a', shoes: '#6a2a20',
-    hair: '#e2b45a', skin: '#f0c49b', hairStyle: 'longtail', collarFlat: '#f6efe0', bow: true, tie: '#f4d27a', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 1.0, neck: 0.11, height: 0.95,
+    // LBA2's Zoé (measured on the original model): as tall as Twinsen, slim, a fitted red outfit with a deep V
+    // neckline and bare arms, its legs separate down to green shoes; blonde hair in a bun of three balls
+    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#c62c2c', tunicTrim: '#9a1e20', belt: '#c62c2c', pants: '#c62c2c', shoes: '#4c9a46',
+    hair: '#ecd79a', skin: '#efc39a', hairStyle: 'bun', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
+    armSpread: 0.3, armLen: 1.1,
   },
   arthur: {
     // a curious kid: knee tunic in his father's blue with an orange belt, scuffed knees, a spiky tuft

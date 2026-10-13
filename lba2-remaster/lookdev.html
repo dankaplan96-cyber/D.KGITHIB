@@ -12,7 +12,7 @@
 //   &cam=front|side|back|34|game|free   camera preset (sets the yaw of every character; game = LBA2 exterior camera)
 //   &views=0,1.57     several fixed yaws per character, side by side (overrides cam yaw)
 //   &yaw=0            fixed yaw for all (no spinning)
-//   &anim=walk&t=0.4  clip + freeze time in seconds (deterministic: random timers are reset)
+//   &anim=walk&t=0.4  clip + freeze time in seconds (deterministic: random timers are reset); &speed= ground speed
 //   &light=neutral|outdoor|indoor   &mat=color|grey|sil   &props=0 hides door/step/chair  &grid=0
 //   &dist, &cy, &ly, &fov, &gap, &labels=0, &bg=#hex
 //   &baked=1          load baked geometry (assets/characters) via preloadCharacters first
@@ -114,7 +114,7 @@ if (q.get('labels') !== '0') {
   });
 }
 const yaw = q.get('yaw') != null ? +q.get('yaw') : null;
-const speed = anim === 'walk' ? 1.4 : anim === 'run' ? 6.5 : anim === 'sneak' ? 1.0 : 0;
+const speed = q.get('speed') != null ? +q.get('speed') : anim === 'walk' ? 1.4 : anim === 'run' ? 6.5 : anim === 'sneak' ? 1.0 : 0;
 const step = (dt) => rigs.forEach((g) => {
   g.play(anim); g.update(dt, speed);
   g.root.rotation.y = g.fixedYaw != null ? g.fixedYaw : yaw != null ? yaw : g.root.rotation.y;

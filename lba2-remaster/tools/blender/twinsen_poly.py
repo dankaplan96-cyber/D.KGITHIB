@@ -5,7 +5,7 @@
 # Built from the measurements of LBA2's in-game model (docs/character-review.md §11): every ring below is a
 # horizontal section of the original (height, half-width, front and back extent, fractions of the height H).
 # Skinned like LBA2 skins its models: each part follows one bone, with blends only where cloth spans two
-# (the cape's sides follow the arms, the robe follows the four skirt bones by direction, the bun swings).
+# (the cape's sides follow the arms, each half of the robe follows its leg as in the original, the bun swings).
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
 import json, math, sys
 
@@ -19,7 +19,7 @@ if sys.argv[-1].endswith('.blend'):
     SKEL, OUT, BLEND = sys.argv[-3], sys.argv[-2], sys.argv[-1]
 skel = json.load(open(SKEL))
 B = skel['bones']
-SPREAD = skel['armSpread']
+SPREAD = 0.2  # the arm angle the geometry below is drawn at (the game spreads them by the look's armSpread)
 S = 2.1  # the game's height for H (top of the hair)
 
 COL = {
@@ -27,7 +27,7 @@ COL = {
     'white': '#ecebf2', 'iris': '#2f78b0', 'pupil': '#141820', 'lid': '#5a3a28', 'medal': '#c89e53', 'medalFace': '#e2bc6e',
     'cord': '#c8502a', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414',
 }
-HEAD_K = 1.12                     # the head, larger than the original's measured sections (references: ≈0.19 H)
+HEAD_K = 1.24                     # the head, larger than the original's measured sections (references: ≈0.19 H)
 CHIN = (0.0, 0.80, 0.09)          # …scaled about the chin, so the neck joint stays where it was
 
 
@@ -38,7 +38,7 @@ def smooth(a, b, x):
 
 # ------------------------------------------------------------------ geometry helpers (game axes: +y up, +z front)
 TILT, TILT_PIVOT = math.radians(10), (0.824, 0.03)   # the original carries its head raised a little
-LIFT = 0.018   # …on a long neck: the chin clears the collar
+LIFT = 0.0     # (the original's head sits low on a short neck, its chin just over the collar)
 
 
 def tilt(p):
@@ -220,14 +220,19 @@ PARTS.append(belt)
 
 
 def w_robe(p):
+    # as in LBA2's model: below the belt each half of the robe is carried by its leg (the thigh down to the
+    # knee, the shin below), so a stride opens the robe like the original's; the halves blend at the seam
     x, y, z = p
-    k = smooth(0.43, 0.2, y)
-    a = math.atan2(x, z - 0.01)
-    c, s = math.cos(a), math.sin(a)
+    k = smooth(0.43, 0.31, y)
+    knee = 1 - smooth(0.17, 0.27, y)
+    l = smooth(-0.04, 0.04, x)
     w = {'hips': 1 - k}
-    for b, v in (('skirtF', max(0, c) ** 2), ('skirtB', max(0, -c) ** 2), ('skirtL', max(0, s) ** 2), ('skirtR', max(0, -s) ** 2)):
-        if v > 0:
-            w[b] = k * v
+    for s, ws in (('L', l), ('R', 1 - l)):
+        if ws > 0:
+            if (1 - knee) > 0:
+                w['hip' + s] = k * ws * (1 - knee)
+            if knee > 0:
+                w['knee' + s] = k * ws * knee
     return w
 
 
@@ -247,8 +252,8 @@ def folds(pts, amp):
 loft(robe, [
     folds(ring(0.04, 0.158, 0.133, -0.13, N, 0.7), 0.035),
     folds(ring(0.12, 0.161, 0.139, -0.12, N, 0.7), 0.028),
-    folds(ring(0.24, 0.164, 0.144, -0.108, N, 0.7), 0.018),
-    folds(ring(0.35, 0.152, 0.143, -0.092, N, 0.72), 0.008),
+    folds(ring(0.24, 0.15, 0.14, -0.106, N, 0.7), 0.018),
+    folds(ring(0.35, 0.124, 0.136, -0.088, N, 0.72), 0.008),
     ring(0.415, 0.104, 0.125, -0.076, N, 0.75),
 ])
 PARTS.append(robe)
@@ -277,17 +282,19 @@ for sx in (1, -1):
     hb = (lambda b: (lambda p: {b: 1.0}))('hand' + s)
     # the sleeve's cuff: a flared opening under the cape's side, dark inside, the wrist coming out of it
     cuff = Part('cuff' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=50)
-    tube(cuff, (sx * 0.182, 0.455, 0.012), (sx * 0.179, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
+    tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
     PARTS.append(cuff)
     cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
-    cin.add(ell_ring((sx * 0.179, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
+    cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
     PARTS.append(cin)
     # the hand: a mitten (palm and closed fingers) with a thumb, palm turned to the body
     hand = Part('hand' + s, 'skin', hb, angle=60)
-    hx, hz = sx * 0.178, 0.014
-    loft_along(hand, [ell_ring((hx, y, hz + dz), (1, 0, 0), (0, 0, 1), rx, rz, 10) for y, rx, rz, dz in
+    hx, hz = sx * 0.192, 0.014
+    # (LBA2's hands are big balls, r ≈ 0.035 H: the mitten is drawn at that size, hanging from the cuff)
+    HK = 1.8
+    loft_along(hand, [ell_ring((hx, 0.40 - (0.40 - y) * HK, hz + dz * HK), (1, 0, 0), (0, 0, 1), rx * HK, rz * HK, 10) for y, rx, rz, dz in
                       [(0.40, 0.014, 0.018, 0.0), (0.383, 0.017, 0.026, 0.002), (0.362, 0.016, 0.028, 0.004), (0.343, 0.013, 0.024, 0.006), (0.333, 0.008, 0.015, 0.007)]])
-    tube(hand, (hx - sx * 0.004, 0.385, hz + 0.02), (hx - sx * 0.012, 0.36, hz + 0.036), 0.0075, 0.006, 7)
+    tube(hand, (hx - sx * 0.007, 0.40 - 0.015 * HK, hz + 0.02 * HK), (hx - sx * 0.02, 0.40 - 0.04 * HK, hz + 0.036 * HK), 0.0075 * HK, 0.006 * HK, 7)
     PARTS.append(hand)
 
 neck = Part('neck', 'skin', lambda p: {'neck': 1 - smooth(0.79, 0.83, p[1]), 'head': smooth(0.79, 0.83, p[1])}, angle=60)

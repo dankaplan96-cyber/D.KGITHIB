@@ -81,7 +81,8 @@ def build(name):
         s = 'L' if x > 0 else 'R'
         return {'torso': 1 - arm * 0.6, 'sh' + s: arm * 0.6}
 
-    torso = b.P('torso', tunic, w_torso, 50)
+    gown = outfit == 'gown'  # (LBA2's Zoé: a fitted red outfit, deep V neckline, bare arms, the legs separate)
+    torso = b.P('torso', skin if gown else tunic, w_torso, 50)
     tw = 0.168 * wide
     loft(torso, [
         ring(waistY - 0.01, tw, 0.115 * wide + belly * 0.7, -0.095 * wide, N, 0.75, cz=zc(waistY)),
@@ -90,6 +91,22 @@ def build(name):
         ring(shY + 0.015, shX + 0.035 * wide, 0.095 * wide, -0.09 * wide, N, 0.6, cz=zc(shY)),
         ring(neckY - 0.005, 0.075 * wide, 0.06 * wide, -0.055 * wide, N, 0.9, cz=neckZ),
     ], cap_top=True)
+    if gown:
+        # the bodice over the skin: the same sections a little larger, the front cut down in a V to the bust
+        bod = b.P('bodice', tunic, w_torso, 50)
+        vy = chestY - 0.07
+        def vcut(r, y):
+            out = []
+            for (x, yy, z) in r:
+                k = max(0.0, 1 - abs(x) / (0.11 * wide)) if z > 0 else 0.0
+                out.append((x, yy - (yy - vy) * k * smooth(vy, chestY, yy), z))
+            return out
+        loft(bod, [
+            ring(waistY - 0.012, tw * 1.03, 0.118 * wide + belly * 0.7, -0.098 * wide, N, 0.75, cz=zc(waistY)),
+            ring((waistY + chestY) / 2, tw * 1.11 + belly * 0.3, 0.129 * wide + belly, -0.103 * wide, N, 0.72, cz=zc((waistY + chestY) / 2)),
+            vcut(ring(chestY, 0.206 * wide, 0.139 * wide + belly * 0.5, -0.113 * wide, N, 0.7, cz=zc(chestY)), chestY),
+            vcut(ring(shY + 0.012, shX + 0.02 * wide, 0.098 * wide, -0.093 * wide, N, 0.6, cz=zc(shY)), shY),
+        ])
     if L.get('collar'):
         tube(b.P('collar', L.get('collarColor') or trim, 'neck', 40), (0, neckY - 0.03, neckZ), (0, neckY + 0.07, neckZ + 0.005), 0.07, 0.065, 10, cap=False)
     if L.get('collarFlat'):  # a round flat collar lying on the shoulders
@@ -116,6 +133,12 @@ def build(name):
                 w[bn] = k * v
         return w
 
+    if gown:
+        hips_ = b.P('skirt', tunic, w_skirt, 50)
+        hipR = max(tw * 1.15, legX + 0.11 * wide)
+        loft(hips_, [ring(waistY - 0.01, tw * 1.02, 0.117 * wide, -0.097 * wide, N, 0.75, cz=zc(waistY)),
+                     ring(hipsY - 0.02, hipR, 0.13 * wide, -0.12 * wide, N, 0.72),
+                     ring(hipsY - 0.13, hipR * 0.92, 0.115 * wide, -0.11 * wide, N, 0.72)])
     skirt = b.P('skirt', tunic, w_skirt, 50)
     rings = [ring(waistY - 0.01, tw, 0.115 * wide + belly * 0.7, -0.095 * wide, N, 0.75, cz=zc(waistY))]
     hipR = max(tw * 1.12, legX + 0.1 * wide)
@@ -124,7 +147,7 @@ def build(name):
         ym = (hipsY - 0.08 + hemY) / 2
         rings.append(ring(ym, (hipR + hemR) / 2, (0.125 * wide + hemR * 0.85) / 2, -(0.11 * wide + hemR * 0.8) / 2, N, 0.7))
     rings.append(ring(hemY, hemR, hemR * 0.85, -hemR * 0.8, N, 0.7))
-    if outfit in ('dress', 'robe') or hemY < hipsY - 0.4:
+    if (outfit in ('dress', 'robe') or hemY < hipsY - 0.4) and not gown:
         # soft folds below the hips, deeper toward the hem (cloth, not a tube)
         def fold(r, amp):
             return [(x * (1 + amp * math.sin(6 * 2 * math.pi * k / len(r) + 0.4)), y, z * (1 + amp * math.sin(6 * 2 * math.pi * k / len(r) + 0.4))) for k, (x, y, z) in enumerate(r)]
@@ -132,12 +155,13 @@ def build(name):
         rings = [fold(r, 0.03 * max(0, (i - 1)) / max(1, n_ - 2)) if i >= 2 else r for i, r in enumerate(rings)]
         lip = b.P('hemLip', '#00000000' if False else trim, w_skirt, 70)
         loft(lip, [ring(hemY + 0.03, hemR * 0.93, hemR * 0.79, -hemR * 0.74, N, 0.7), ring(hemY, hemR * 0.995, hemR * 0.845, -hemR * 0.795, N, 0.7)])
-    loft(skirt, rings)
-    hem = b.P('hem', trim, w_skirt, 50)
-    loft(hem, [ring(hemY - 0.002, hemR * 1.01, hemR * 0.86, -hemR * 0.81, N, 0.7), ring(hemY + 0.035, hemR * 0.99, hemR * 0.85, -hemR * 0.8, N, 0.7)])
+    if not gown:
+        loft(skirt, rings)
+        hem = b.P('hem', trim, w_skirt, 50)
+        loft(hem, [ring(hemY - 0.002, hemR * 1.01, hemR * 0.86, -hemR * 0.81, N, 0.7), ring(hemY + 0.035, hemR * 0.99, hemR * 0.85, -hemR * 0.8, N, 0.7)])
 
-    belt = b.P('belt', L.get('belt', '#5a3a1a'), 'torso', 50)
-    loft(belt, [ring(waistY - 0.02, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY)),
+    belt = b.P('belt', L.get('belt', '#5a3a1a'), 'torso', 50) if not gown else None
+    if belt: loft(belt, [ring(waistY - 0.02, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY)),
                 ring(waistY + 0.035, tw * 1.03, 0.118 * wide + belly * 0.72, -0.098 * wide, N, 0.75, cz=zc(waistY))])
     if L.get('bow'):  # a sash bow at the back of the waist
         bw = b.P('bow', L.get('belt', '#f4d27a'), 'torso', 40)
@@ -146,7 +170,7 @@ def build(name):
             sphere(bw, (sxx * 0.05, waistY + 0.01, bz - 0.02), 0.045, 7, 5, (1.2, 0.7, 0.45))
             tube(bw, (sxx * 0.015, waistY - 0.01, bz - 0.02), (sxx * 0.05, waistY - 0.2, bz - 0.03), 0.02, 0.012, 5, squash=0.4)
         sphere(bw, (0, waistY + 0.01, bz - 0.025), 0.022, 6, 4)
-    if (L.get('buckle') or outfit != 'robe') and not L.get('bow'):
+    if (L.get('buckle') or outfit != 'robe') and not L.get('bow') and not gown:
         fz = 0.118 * wide + belly * 0.72 + zc(waistY)
         box(b.P('buckle', L.get('buckle') or '#d8b04a', 'torso', 20), -0.03, 0.03, waistY - 0.025, waistY + 0.04, fz - 0.01, fz + 0.012)
     if L.get('apron'):
@@ -164,10 +188,15 @@ def build(name):
     for s, sx in (('L', 1), ('R', -1)):
         hp, kn, ft = bp('hip' + s), bp('knee' + s), bp('foot' + s)
         r1, r2 = (0.085 if grobo else 0.06) * slim, (0.075 if grobo else 0.05) * slim
-        if hemY > kn[1] - 0.12:
+        if gown:
+            # (each leg of the outfit: from the hips, tapering to the ankle, like the original's leg panels)
+            thigh = b.P('thigh' + s, tunic, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.08, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.08, k - 0.04, p[1])}, 50)
+            tube(thigh, (hp[0], hp[1] - 0.04, hp[2]), kn, 0.122, 0.1, 10)
+            tube(b.P('shin' + s, tunic, 'knee' + s, 50), kn, (ft[0], ft[1] + 0.02, ft[2]), 0.1, 0.075, 10)
+        elif hemY > kn[1] - 0.12:
             thigh = b.P('thigh' + s, pants, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.08, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.08, k - 0.04, p[1])}, 50)
             tube(thigh, (hp[0], min(hemY + 0.06, hp[1]), hp[2]), kn, r1, r2 * 1.05, 8)
-        if hemY > ft[1] + 0.08:  # (a mid-length coat still shows the shins)
+        if hemY > ft[1] + 0.08 and not gown:  # (a mid-length coat still shows the shins)
             tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], min(kn[1], hemY + 0.06), kn[2]), (ft[0], ft[1] + 0.03, ft[2]), r2 * 1.05, r2 * 0.9, 8)
         fx, fl, fh = (0.07 if grobo else 0.05) * slim, (0.2 if bunny else 0.15 if grobo else 0.13), (0.09 if grobo else 0.07)
         shoe = b.P('shoe' + s, shoes, 'foot' + s, 35)
@@ -192,11 +221,13 @@ def build(name):
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
         ra = (0.08 if grobo else 0.066) * slim * (0.92 if kid else 1)
-        up = b.P('upper' + s, tunic, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s: smooth(e + 0.06, e - 0.04, p[1])}, 50)
+        sleeve = skin if gown else tunic
+        up = b.P('upper' + s, sleeve, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s: smooth(e + 0.06, e - 0.04, p[1])}, 50)
         tube(up, (sh[0] - sx * 0.02, sh[1] + 0.03, sh[2]), el, ra * 1.05, ra, 8)
         wrist = lerp(el, hd, 0.82)
-        tube(b.P('fore' + s, tunic, 'el' + s, 50), el, wrist, ra, ra * 1.08, 8)  # (sleeves widen a little toward the cuff)
-        tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, 0.72), lerp(el, hd, 0.86), ra * 1.12, ra * 1.12, 8)
+        tube(b.P('fore' + s, sleeve, 'el' + s, 50), el, wrist, ra * (0.85 if gown else 1), ra * (0.8 if gown else 1.08), 8)  # (sleeves widen a little toward the cuff)
+        if not gown:
+            tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, 0.72), lerp(el, hd, 0.86), ra * 1.12, ra * 1.12, 8)
         hr = (0.062 if grobo else 0.046) * (0.9 if kid else 1)
         # the hand: a mitten (palm and closed fingers) continuing the forearm, with a thumb toward the front
         hp_ = b.P('hand' + s, skin, 'hand' + s, 60)
@@ -216,7 +247,7 @@ def build(name):
         th0 = (base[0] - sx * 0.2 * hr, base[1] - 0.7 * hr, base[2] + 0.6 * hr)
         tube(hp_, th0, (th0[0] - sx * 0.12 * hr, th0[1] - 0.7 * hr, th0[2] + 0.5 * hr), 0.27 * hr, 0.2 * hr, 7)
         # a rounded shoulder cap so the sleeve grows out of the body instead of a pipe meeting a box
-        sphere(b.P('shoulder' + s, tunic, 'sh' + s, 50), (sh[0] - sx * 0.01, sh[1] + 0.005, sh[2]), ra * 1.25, 9, 6, (1.0, 0.85, 1.0))
+        sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.01, sh[1] + 0.005, sh[2]), ra * 1.25, 9, 6, (1.0, 0.85, 1.0))
         if L.get('brace') and s == 'R':
             tube(b.P('brace', '#c89a48', 'el' + s, 30), lerp(el, hd, 0.35), lerp(el, hd, 0.6), ra * 1.18, ra * 1.12, 8)
 
@@ -326,7 +357,10 @@ def build(name):
             ff += [[o_ + i + 1, o_ + i, len(vv) - 1] for i in range(M_ - 1)]
             cap.add(vv, ff)
         tails = [k for k in ('tail0', 'tail1', 'tail2') if k in B]
-        if style == 'bun':
+        if style == 'bun' and len(tails) >= 3:
+            for i, r in enumerate((0.044 * 2.1, 0.034 * 2.1, 0.025 * 2.1)):
+                sphere(b.P('bun%d' % i, hair, tails[i], 180), tuple(B[tails[i]]['p']), r, 9, 6)
+        elif style == 'bun':
             for i, (dy, dz, r) in enumerate(((0.012, -0.075, 0.042), (-0.02, -0.105, 0.03))):
                 sphere(b.P('bun%d' % i, hair, tails[i] if i < len(tails) else 'head', 180), (0, my(0.95 + dy), mz(-0.03 + dz)), r * sx_, 9, 6)
         elif style in ('tail', 'longtail'):
