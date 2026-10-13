@@ -46,7 +46,8 @@ export const steps = [
     return { heights: out, y: +h.pos.y.toFixed(2), fail: h.pos.y > mt.y - 0.3 ? null : 'climb' };
   }],
   ['the cog, top of the old mill', () => {
-    const mt = game.rooms.zeelich.millTop; const r = P.use(mt.x, mt.z, { near: 1.2 }); P.wait(1); P.settle();
+    // (a singing crystal up here interrupts the first walk with its own line: then the cog again)
+    const mt = game.rooms.zeelich.millTop; let r; for (let k = 0; k < 3 && !game.flags.c2_cog; k++) { r = P.use(mt.x, mt.z, { near: 1.2 }); P.wait(1); P.settle(); }
     return { ...r, y: +game.hero.pos.y.toFixed(1), top: mt.y, cog: game.flags.c2_cog, fail: game.flags.c2_cog ? null : 'cog' };
   }],
   ['brake the three mills (ball)', () => {

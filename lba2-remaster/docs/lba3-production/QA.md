@@ -18,8 +18,9 @@ representative of a GPU.
 cd lba2-remaster && python3 -m http.server 8123 &      # the game at http://localhost:8123
 node tests/menus.mjs            # menus, pause, settings, focus, dialogue input, inventory, holomap, rebinding
 node tests/stability.mjs        # the defects fixed in the stabilization pass (regression)
+node tests/shipfiles.mjs        # every file the game requests is in the shipped list (desktop/publish)
 node tests/transitions.mjs      # door walk-through, black hold while shaders compile
-node tests/playthrough.mjs      # player-input playthrough (segments; see below)
+node tests/lib/seg.mjs tests/playthrough/NN-*.mjs   # player-input playthrough, one segment (LOAD=/KEEP= saves; see below)
 node tests/chapterN.mjs en-US   # LOGIC chapter scripts (print their values: read them, exit 0 alone is no pass)
 ```
 `tests/lib/player.js` is the input harness (A* over the game's own collision, Classic tank steering, E to use,
@@ -38,6 +39,7 @@ runs a page-side script; `LOAD=`/`KEEP=` continue from / keep a real save made t
 | D6 | High | Cliff edges (the plateau's east cliff by the fort, −12.5, −82) | Walk along the brink: every second the brink is kept as the "safe spot"; he slides off, falls 11 m (−2), the shore below holds him in a slide, D3's recovery puts him back on the brink, he slides off again … until dead | the safe spot was any ground he stood on for a moment, however close to a slope he'd slide down | a spot is kept only with level, non-steep ground for a metre all round (`Game.stableSpot`) | ISO (tests/stability.mjs) + INPUT (the route that died now walks on) |
 | D7 | Medium | Menus on a short window (a phone held sideways, 640×360) | Pause: the menu runs 24 px off the bottom; its top half can't be scrolled to (`justify-content: center` on an overflowing column) | layout | `safe center` + tighter spacing under 440 px of height (css/style.css) | tests/display.mjs at 5 sizes |
 | D8 | Low | Long sessions | The music manager kept a line per track change forever (a few KB an hour) | unbounded debug log | keep the last 100–200 lines | code + tests/longsession.mjs |
+| D9 | High (desktop) | The packaged desktop app (Windows/Mac/Linux installers) | Build the app (`npm run dist:linux` in desktop/) and start it: 404 for assets/lba1/asylum.json, bumaze.json, buhalls.json; the rooms rebuilt from LBA1 (the asylum under the fort, the Temple of Bù's maze and halls) are left out of the desktop game (and of a page published from the same list) | tools/game-files.mjs lists the files the build ships; it follows imports and lists the run-time fetches by hand, and LBA1's layouts (fetched since 0.19.0) were never added | list assets/lba1/*.json (tools/game-files.mjs) | tests/shipfiles.mjs (fails before, passes after); rebuilt app: no 404, desktop/test-desktop.mjs ALL PASSED |
 
 ## Feature checklist (build 0.22.0 + this pass's fixes)
 
