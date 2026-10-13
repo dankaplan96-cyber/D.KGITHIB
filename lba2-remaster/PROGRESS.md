@@ -230,3 +230,18 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - Fix: the orchard valve's wheel sat only ~0.2 m above the cage, so the lob over the bars hit it by luck; it
   stands 0.3 m higher now.
 
+- Twinsen's house stands at its original place in the south fields (door S0, −45.6, 80), the lighthouse on the
+  south-west headland "at the end of the island" (−107.5, 90.5) as the original's signpost says. The opening,
+  prologue and chapter scenes at the house moved with it.
+- The house inside follows the original's plan in our style: the family room, Arthur's room (blue star
+  wallpaper), a reading room, the hall with armchairs and the stairs down to the cellar (a training room with the
+  target, a dummy, bookcases and the radio). Givers by the furniture.
+- Village houses by the original's doors: S37, S5, S3, S17, S15, S9, the baggage-claim building and its wing
+  (S7/S8), S14 (the museum).
+- Street furniture after the original (citadel-layout.js PROPS): the square's four corner lamps, the plaza's lamps
+  and benches, lanterns, bollard runs, railings, picket fences, tulip rows; 48 pieces fit, 23 are left out where
+  our ground is lower (the quay basin) or something of ours stands.
+- Gibberish voices (engine/voice.js): each speaker babbles while a line types out, the vowels taken from the
+  text; Twinsen and Zoé pitched after the original's English voices. tests/voices.mjs.
+- Open: our harbour stays on the west shore by the square (the original's is the west pier); the old citadel
+  ruins and the Woodbridge cliffs (east) are not placed yet; the original's trees and palms are not placed.

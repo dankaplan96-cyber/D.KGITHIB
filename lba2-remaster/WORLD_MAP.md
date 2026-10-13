@@ -13,11 +13,13 @@ the original doesn't have is ours:
 | Area (our metres) | In the original | Now |
 |---|---|---|
 | Town (−56…−29, −17…14), harbour quay (−74.5…−61.5) | the low town; a quay wall along its west shore | Twinsen's corner of town, the square and well, the harbour, the ferry |
-| Northern plateau (x −120…0, z −100…−45, ~14 m) | high ground with trees, two doors | the lighthouse (−101, −67) at the west end; the depot (−85…−65, −78…−62) and the orchard (−80, −55); the project station in Funfrock's old fort (−28, −65) at the east end |
+| Northern plateau (x −120…0, z −100…−45, ~14 m) | high ground with trees, two doors | the depot (−85…−65, −78…−62) and the orchard (−80, −55); the project station in Funfrock's old fort (−28, −65) at the east end |
 | The plateau's southern rim (−56, −44) | the escarpment up from the town | the Whispering Cliffs: a rock stack (16.8 m) reached only by the stepping stones from (−68, −22) |
 | West shore below the plateau | quay wall, bollards | the water main comes down here to the meter (−72, −17) |
-| South fields (x −76…−22, z 15…80) | more of the town, gardens, Twinsen's original house (−46, 80) | fields and farmers (chapter 8); room for houses |
-| West wing (−121…−76, 21…54), the south-west islet, the bay beach, the southern hill | a pier, houses, sand | landscape (not used by the story yet) |
+| South fields (x −76…−22, z 15…80) | more of the town, gardens, Twinsen's house (door −45.6, 80) | Twinsen's house at its original place; the village houses by the original's doors (S3, S9, S14, S15, S17); the plaza with lamps, benches and tulips; fields and farmers (chapter 8) |
+| South-west headland (−107.5, 90.5) | the lighthouse "at the end of the island" | the lighthouse and the sage's cottage |
+| West wing (−121…−76, 21…54) | the original's pier and baggage-claim building | the baggage-claim building and its wing (S7/S8), bollard runs and lanterns; our harbour stays on the west shore by the square |
+| The south-west islet, the bay beach, the southern hill | houses, sand | landscape (not used by the story yet) |
 | Dome islet (−176…−136, −34…16), the north-east islet | across the water | seen from the shore |
 
 
@@ -37,6 +39,9 @@ the original doesn't have is ours:
 
 Connections: house ⇄ street ⇄ square ⇄ harbour ⇄ lighthouse path ⇄ cliffs; square ⇄ orchard ⇄ depot ⇄ station.
 Access: well (lid key + rope); station gate (water restored); ferry (ch1 end, via Doran).
+Street furniture after the original (`PROPS` in citadel-layout.js): the four lamps at the square's corners,
+the plaza's lamps and benches, lanterns along the promenade, bollard runs, railings, picket fences and tulip rows;
+each piece is fitted to our ground and left out where something of ours stands (island.js buildOriginalProps).
 Town changes: project heat posts by every door light up once the water is back (ch1); bunting over the
 square in the epilogue. Discoveries: singing crystals behind the lighthouse, in the orchard, at the end of
 the pier, in the east meadow and on the northern hills (+1 on top of Zeelich's old mill).
