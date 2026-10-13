@@ -41,7 +41,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 3;
-export const VERSION = '0.21.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.22.0'; // (the desktop build's version: desktop/package.json)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
 export function migrateSave(raw) {
@@ -255,17 +255,46 @@ class Game {
   applyCrystals() { this.hero.maxHp = 10 + this.crystalCount(); this.hero.hp = Math.min(this.hero.hp, this.hero.maxHp); }
 
   // ------------------------------------------------ rooms (interiors)
+  // A scene change: the screen fades to black (0.35 s), the scene swaps, then it fades back in (0.35 s). Through a
+  // door the hero walks on into it as the screen darkens and walks in on the other side as it clears, as in LBA2.
+  // While black, the new scene's shaders compile (in parallel where the driver allows) and nothing is drawn until
+  // they're ready, so the first frames of a room never stutter; the fade advances at most 0.1 s per real frame,
+  // so even a slow first frame (buffer uploads) can't skip the fade-in.
   startTransition(mid) {
-    this.trans = { t: 0, mid, called: false };
+    this.trans = { t: 0, mid, called: false, walk: !!this.walkNext, hold: false };
+    this.walkNext = false;
   }
   updateTransition(dt) {
     const T = this.trans;
     if (!T) return;
+    if (T.hold) { $('#fade').style.opacity = 1; if (performance.now() - T.holdT > 4000) T.hold = false; return; }
+    if (this._transBudget != null) { dt = Math.min(dt, this._transBudget); this._transBudget -= dt; }
     T.t += dt;
-    if (T.t >= 0.35 && !T.called) { T.called = true; T.mid(); }
+    if (T.t >= 0.35 && !T.called) { T.called = true; T.mid(); this.warmScene(T); }
     const op = T.t < 0.35 ? T.t / 0.35 : Math.max(0, 1 - (T.t - 0.35) / 0.35);
     $('#fade').style.opacity = op;
     if (T.t >= 0.7) { this.trans = null; $('#fade').style.opacity = ''; }
+  }
+  // compile the new scene's shaders behind the black screen (not under the automated tests' fixed stepping)
+  warmScene(T) {
+    const R = this.renderer.renderer;
+    if (this.testFreeze || !R.compileAsync || this.state !== 'play') return;
+    this.lightPool.update(this.hero.pos);
+    T.hold = true; T.holdT = performance.now();
+    R.compileAsync(this.scene, this.camera).catch(() => {}).finally(() => { T.hold = false; });
+  }
+  // the hero walks on through the door (fading out), and in from the doorway (fading in)
+  transWalk(dt) {
+    const h = this.hero, T = this.trans;
+    if (!T.walk || T.hold || h.dead) return;
+    const sp = 2.2 * (T.called ? Math.min(1, 1.6 - (T.t - 0.35) / 0.35) : 1);   // (slows to a stop as the screen clears)
+    const dx = Math.sin(h.angle) * sp * dt, dz = Math.cos(h.angle) * sp * dt;
+    // never off a ledge
+    const y0 = h.pos.y, ahead = this.physics.groundAt(h.pos.x + dx * 8, h.pos.z + dz * 8, y0 + 0.6);
+    if (ahead > y0 - 0.6) { this.physics.move(h, dx, dz); this.physics.fall(h, dt); }
+    h.vel.set(dx / dt, dz / dt);
+    h.speed = sp;
+    h.rig.play('walk'); h.rig.update(dt, sp); h.sync();
   }
 
   enterRoom(id, spawn = null, instant = false, quiet = false) {
@@ -887,12 +916,14 @@ class Game {
       for (const e of this.room.exits) {
         if (Math.hypot(h.pos.x - e.x, h.pos.z - e.z) < e.r) {
           // a door between two rooms of one building (Twinsen's house and its cellar)
-          if (e.room) { this.audio.play('door'); const R2 = this.rooms[e.room]; this.enterRoom(e.room, R2.entries?.[this.room.id] || R2.spawn); this.doorCool = 1.5; return; }
+          if (e.room) { this.audio.play('door'); this.walkNext = true; const R2 = this.rooms[e.room]; this.enterRoom(e.room, R2.entries?.[this.room.id] || R2.spawn); this.walkNext = false; this.doorCool = 1.5; return; }
           if (this.story.canExit(this.room, e.to)) {
             this.audio.play('door');
             // an exit leads outdoors on Citadel, or into another room/region ({ room, x, z, a })
             const to = this.story.exitTo(e.to);
+            this.walkNext = true;
             if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(to);
+            this.walkNext = false;   // (a story exit may have started its own scene instead)
           }
           this.doorCool = 1.5;
           return;
@@ -904,7 +935,7 @@ class Game {
       const region = this.room?.id;
       for (const d of this.story.doors()) {
         if ((d.region || undefined) !== region) continue;
-        if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('door'); this.enterRoom(d.room); return; }
+        if (Math.hypot(h.pos.x - d.x, h.pos.z - d.z) < d.r) { this.audio.play('door'); this.walkNext = true; this.enterRoom(d.room); this.walkNext = false; return; }
       }
     }
   }
@@ -929,6 +960,7 @@ class Game {
     this.perf.beginFrame();
     this._renderMs = 0;
     this.benchTick?.(real);
+    this._transBudget = Math.min(real, 0.1);
     for (let i = 0; i < n; i++) this.frame(sub, i === n - 1);
     const ms = performance.now() - t0;
     this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs });
@@ -938,6 +970,7 @@ class Game {
 
   // Deterministic stepping for automated tests: game.step(seconds).
   step(seconds, dt = 1 / 60) {
+    this._transBudget = null;
     for (let t = 0; t < seconds; t += dt) this.frame(dt, false);
   }
 
@@ -950,7 +983,8 @@ class Game {
     this.updateTransition(dt);
 
     if (this.trans && this.state === 'play') {
-      // frozen while the screen fades
+      // frozen while the screen fades (through a door, the hero walks on)
+      this.transWalk(dt);
       this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null);
     } else switch (this.state) {
       case 'title': case 'loading': this.titleCamera(dt); this.menuNav(); break;
@@ -1012,7 +1046,7 @@ class Game {
     if (this.state !== 'play') this.behMenu.show(false);
     this.hud.updateFloats(dt, this.camera);
     if (this.state !== 'dialog') this.bubble.visible = false;
-    if (render) {
+    if (render && !this.trans?.hold) {
       const t0 = performance.now();
       this.renderer.render();
       this.behMenu.render(this.renderer.renderer, dt);

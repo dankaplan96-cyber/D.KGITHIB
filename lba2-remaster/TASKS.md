@@ -37,6 +37,10 @@
 ## 4. Animation and interaction
 - [ ] A1 Talking gestures, pick-up/use reaches, NPCs face speakers, contextual idle chores.
 - [x] A2 Ball: release timing, trapped-ball recovery, distinct hit feedback (combat pass, docs/COMBAT.md).
+- [~] A3 Engine pass (0.22.0): doors walk through (out as the screen darkens, in as it clears); the screen holds
+      black while a new scene's shaders compile; the room camera follows the floor's height; actions and stops
+      settle back (no one-frame snap); jabs draw back, snap out and return to a guard; sword strikes ease back to
+      a guard through their recovery. Next: the rooms (see NEXT_ACTION), landings and turns, NPC gaits.
 
 ## 4b. Combat (docs/COMBAT.md)
 - [x] C1 Input: attack/dodge/focus/swap/selector actions, mouse aim, gamepad layout, buffer, rebinding.

@@ -256,6 +256,11 @@ export class Rig {
 
   play(anim) {
     if (this.anim !== anim) {
+      // leaving a quick action (a strike, a throw, a hop) or stopping from a walk/run: the body settles back
+      // over a moment instead of snapping into the new pose in a frame
+      const prev = this.anim;
+      if (FAST.has(prev) && !FAST.has(anim)) this.blendT = 0.3;
+      else if ((prev === 'walk' || prev === 'run' || prev === 'sneak') && (anim === 'idle' || anim === 'talk' || anim === 'listen')) this.blendT = 0.22;
       this.anim = anim;
       this.actionT = 0;
       if (anim === 'talk') { let gsel; do gsel = Math.floor(Math.random() * 5); while (gsel === this.gesture); this.gesture = gsel; }
@@ -518,13 +523,16 @@ export class Rig {
         T.armL = up ? -1.3 : -0.9; T.armR = up ? -1.1 : -1.0; T.elL = -0.5; T.elR = -0.5; armOut = 0.7;
       }
     } else if (a === 'punch' || a === 'punch2') {
-      const r = a === 'punch';
-      const k = Math.min(1, this.actionT / 0.08);
-      torsoY = (r ? -0.55 : 0.55) * k;
-      T.armR = r ? -1.55 * k : 0.3; T.elR = r ? -0.1 : -1.8;
-      T.armL = r ? 0.3 : -1.55 * k; T.elL = r ? -1.8 : -0.1;
+      // a jab: the fist draws back a little (startup), snaps out straight with the shoulder turned into it
+      // (active), then comes back to a guard (recovery); timing from the move, as the sword's
+      const r = a === 'punch', A = this.atk || { s: 0.07, a: 0.08, r: 0.17 }, t = this.actionT;
+      const ease = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+      const out = t < A.s ? -0.25 * ease(t / A.s) : t < A.s + A.a ? -0.25 + 1.25 * ease((t - A.s) / (A.a * 0.6)) : 1 - 0.65 * ease((t - A.s - A.a) / Math.max(0.05, A.r));
+      const sh = -0.35 - 1.2 * Math.max(0, out) + 0.3 * Math.min(0, out), el = -1.7 + 1.6 * Math.max(0, out);
+      torsoY = (r ? -0.5 : 0.5) * Math.max(0, out); torsoX = 0.08 + 0.06 * Math.max(0, out);
+      if (r) { T.armR = sh; T.elR = el; T.armL = -0.55; T.elL = -1.75; } else { T.armL = sh; T.elL = el; T.armR = -0.55; T.elR = -1.75; }
       T.legL = -0.35; T.legR = 0.35; T.kneeL = 0.35; T.kneeR = 0.25;
-      hipsY = 0.88;
+      hipsY = 0.9 - 0.03 * Math.max(0, out);
     } else if (a === 'kick') {
       const k = Math.min(1, this.actionT / 0.12);
       T.legR = -1.6 * k; T.kneeR = 0.15; T.legL = 0.2; T.kneeL = 0.35;
@@ -542,20 +550,22 @@ export class Rig {
       if (a === 'slash1' || a === 'slash2') {
         // horizontal sweeps: the chest carries the arm across; the hips and the back foot drive it
         const sg = a === 'slash1' ? 1 : -1;
-        const tY = ph === 0 ? sg * 0.95 * e : ph === 1 ? sg * (0.95 - 2.0 * e) : sg * (-1.05 + 0.75 * e);
+        const tY = ph === 0 ? sg * 0.95 * e : ph === 1 ? sg * (0.95 - 2.0 * e) : sg * (-1.05 + 0.85 * e);
         torsoY = tY; headY = -tY * 0.45;
-        T.armR = ph === 0 ? -1.0 - 0.3 * e : -1.35; T.elR = ph === 0 ? -0.9 * e : -0.15;
-        T.armL = -0.4; T.elL = -0.9; armOut = 0.25;
-        T.legL = -0.45; T.legR = 0.35; T.kneeL = 0.4; T.kneeR = 0.2; hipsY = 0.88;
-        torsoX = 0.12 + (ph === 1 ? 0.1 : 0);
+        const rec = ph === 2 ? e : 0;
+        T.armR = ph === 0 ? -1.0 - 0.3 * e : -1.35 + 0.8 * rec; T.elR = ph === 0 ? -0.9 * e : -0.15 - 0.35 * rec;
+        T.armL = -0.4; T.elL = -0.9; armOut = 0.25 * (1 - rec);
+        T.legL = -0.45 + 0.2 * rec; T.legR = 0.35 - 0.15 * rec; T.kneeL = 0.4 - 0.15 * rec; T.kneeR = 0.2; hipsY = 0.88 + 0.04 * rec;
+        torsoX = 0.12 + (ph === 1 ? 0.1 : 0) - 0.06 * rec;
       } else {
         // overhead (slash3) / heavy: blade high behind the head, then down through the target
         const big = a === 'heavy' ? 1.15 : 1;
         if (ph === 0) { T.armR = -2.9 * e * big; T.elR = -0.6 * e; torsoX = -0.18 * e; torsoY = 0.25 * e; hipsY = 0.93; }
         else if (ph === 1) { T.armR = -2.9 * big + 2.1 * e; T.elR = -0.6 + 0.5 * e; torsoX = -0.18 + 0.6 * e; torsoY = 0.25 - 0.3 * e; hipsY = 0.93 - 0.1 * e; }
-        else { T.armR = -0.75 - 0.25 * e; T.elR = -0.15; torsoX = 0.42 - 0.3 * e; torsoY = -0.05; hipsY = 0.83 + 0.08 * e; }
-        T.armL = ph === 0 ? -2.3 * e : -0.6; T.elL = -0.6;
-        T.legL = -0.6; T.legR = 0.4; T.kneeL = 0.6; T.kneeR = 0.25;
+        else { T.armR = -0.8 + 0.4 * e; T.elR = -0.15 - 0.3 * e; torsoX = 0.42 - 0.32 * e; torsoY = -0.05; hipsY = 0.83 + 0.1 * e; }
+        const rec = ph === 2 ? e : 0;
+        T.armL = ph === 0 ? -2.3 * e : -0.6 + 0.3 * rec; T.elL = -0.6;
+        T.legL = -0.6 + 0.3 * rec; T.legR = 0.4 - 0.2 * rec; T.kneeL = 0.6 - 0.35 * rec; T.kneeR = 0.25 - 0.1 * rec;
       }
     } else if (a === 'heavyCharge') {
       // holding a heavy strike: blade raised, weight back, a slight tremble when ready
@@ -750,7 +760,8 @@ export class Rig {
     }
 
     // strikes track their poses tightly (lag ≈ 18 ms) so the blade crosses the target in the active frames
-    const R = STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : 16;
+    this.blendT = Math.max(0, (this.blendT || 0) - dt);
+    const R = STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : this.blendT > 0 ? 8 : 16;
     const set = (obj, v, axis = 'x', r = R) => { obj.rotation[axis] = damp(obj.rotation[axis], v ?? 0, r, dt); };
     set(j.legL.hip, T.legL); set(j.legR.hip, T.legR);
     set(j.legL.knee, T.kneeL); set(j.legR.knee, T.kneeR);

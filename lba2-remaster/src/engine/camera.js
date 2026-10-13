@@ -46,7 +46,7 @@ export class CameraRig {
 
   setMode(m) { this.mode = m === 'free' ? 'free' : 'lba'; this.lba.init = false; }
   // Interiors: fixed isometric view rotated 45°, like LBA2's indoor scenes.
-  setIso(room) { this.iso = room; this.lba.init = false; if (room) this.isoFocus = null; }
+  setIso(room) { this.iso = room; this.lba.init = false; if (room) { this.isoFocus = null; this.isoY = null; } }
   toggleView() { this.view = 1 - this.view; }
   recenter() { this.lba.behind = true; }
   shake(s = 0.35) { this.shakeT = Math.max(this.shakeT, s * (this.shakeScale ?? 1)); }
@@ -143,11 +143,24 @@ export class CameraRig {
     cam.fov = (2 * Math.atan((R.view / 2) / dist) * 180) / Math.PI;
     cam.updateProjectionMatrix();
     const goal = R.center.clone().lerp(hero, R.follow ?? 0.3);
-    goal.y = 0.8;
-    if (!this.isoFocus || this.cut) this.isoFocus = goal.clone();
-    else this.isoFocus.lerp(goal, 1 - Math.exp(-dt * 3));
+    // the view rises and falls with the floor under the hero (rooms on several levels: a gallery, a stair), not
+    // with his jumps
+    const gy = this.physics ? this.physics.groundAt(hero.x, hero.z, hero.y + 0.3) : R.center.y;
+    this.isoY = this.isoY == null || !this.isoFocus || this.cut ? gy : damp(this.isoY, gy, 2.5, dt);
+    goal.y = 0.8 + (this.isoY - R.center.y);
     this.yaw = Math.PI / 4;
     const pitch = 0.58;
+    // in a big room (LBA1's halls, the asylum) the partial follow would leave the hero at the edge of the frame:
+    // keep him inside the middle of the picture (±42% of the half-width, ±36% of the half-height)
+    {
+      const fx = -Math.sin(this.yaw), fz = -Math.cos(this.yaw), rx = Math.cos(this.yaw), rz = -Math.sin(this.yaw);
+      const dx = hero.x - goal.x, dz = hero.z - goal.z, dr = dx * rx + dz * rz, df = dx * fx + dz * fz;
+      const half = R.view / 2, maxR = half * (cam.aspect || 1.78) * 0.42, maxF = (half * 0.36) / Math.sin(pitch);
+      const er = dr - clamp(dr, -maxR, maxR), ef = df - clamp(df, -maxF, maxF);
+      goal.x += er * rx + ef * fx; goal.z += er * rz + ef * fz;
+    }
+    if (!this.isoFocus || this.cut) this.isoFocus = goal.clone();
+    else this.isoFocus.lerp(goal, 1 - Math.exp(-dt * 3));
     const f = this.isoFocus;
     cam.position.set(f.x + Math.sin(this.yaw) * Math.cos(pitch) * dist, f.y + Math.sin(pitch) * dist, f.z + Math.cos(this.yaw) * Math.cos(pitch) * dist);
     this.look.copy(f);

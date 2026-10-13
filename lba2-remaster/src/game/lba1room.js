@@ -150,7 +150,7 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
   R.spawn = { x: hs.x, z: hs.z, a: opts.spawnA ?? Math.PI };
   R.spots = (L.actors || []).map((a) => ({ body: a.body, ...R.cell(a.at[0], a.at[1], a.at[2]) }));
   R.zoneBoxes = (L.zones || []).filter((z) => z.type === 0).map((z) => { const a = R.cell(z.box[0], z.box[1], z.box[2]), b = R.cell(z.box[3], z.box[4], z.box[5]); return { to: z.to, x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, y: a.y, hw: Math.abs(b.x - a.x) / 2 + 0.4, hd: Math.abs(b.z - a.z) / 2 + 0.4 }; });
-  R.view = opts.view ?? 22; R.follow = opts.follow ?? 0.35;
+  R.view = opts.view ?? 22; R.follow = opts.follow ?? 0.7;   // (big rooms: the view travels with the hero)
   // light: a few lamps spread over the room
   for (let i = 0; i < 9; i++) { const p = R.cell(SX * (1 + (i % 3) * 2) / 6, 0, SZ * (1 + Math.floor(i / 3) * 2) / 6); B.light(opts.lamp || '#ffe8c8', opts.lampI ?? 14, Math.max(SX, SZ) * CELL * 0.45, p.x - cx, 7.5, p.z - cz); }
   return B.finish();

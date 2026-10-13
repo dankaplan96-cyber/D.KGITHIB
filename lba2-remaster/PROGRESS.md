@@ -375,3 +375,22 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   The Temple of Bù's maze (room 57) down a stair from our temple (ch. 4's interior, open in every chapter), and
   the dark halls (room 40) past it with crystal mites where the original's creatures stood (body 59), back up at
   the far end. tests/lba1rooms.mjs.
+
+## Session: the engine, transitions and animation (0.22.0)
+- The user: enough LBA1 for now; on with the engine, the animations, the transitions, the rooms.
+- Transitions (src/main.js startTransition): through a door the hero walks on into it while the screen fades
+  out and walks in on the other side while it fades back in (a story cut doesn't walk; never off a ledge). The
+  first frame of a new room used to compile its shaders in the middle of the fade (measured here in software
+  GL: up to 1–11 s on the first visit to some rooms and regions, mostly shader programs and buffer uploads); the
+  new scene's shaders now compile (in parallel where the driver allows) behind the black screen, nothing is drawn
+  until they're ready, and the fade advances at most 0.1 s per real frame so a slow first frame can't skip it.
+  tests/transitions.mjs.
+- The room camera's focus follows the floor under the hero (rooms on several levels: the asylum, the Temple of
+  Bù's halls, the shell's gallery), not his jumps; and it keeps him inside the middle of the picture in the big
+  rooms (the partial follow left him at the frame's edge in the asylum and the halls; LBA1's rooms now follow
+  at 0.7).
+- Animation (src/engine/rig.js), from frame strips of Twinsen (side and game views, scratch tool): leaving an
+  action (a strike, a throw, a hop) or stopping from a walk or run now settles over ~0.2–0.3 s instead of snapping
+  into the idle in one frame; the jab draws the fist back, snaps it out straight with the shoulder turned in, and
+  returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
+  instead of holding the end pose. Contact frames unchanged (combat §§ pass).

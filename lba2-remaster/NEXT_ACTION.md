@@ -1,5 +1,12 @@
 # NEXT ACTION
 
+Engine pass (the user, after 0.21.0: "enough LBA1; on with the engine, the animations, the transitions, the
+rooms"). 0.22.0 did the door transitions (walk through, compile behind the black screen), the room camera's height
+and the action/stop blends. Next: (1) rooms: hide what stands between the iso camera and the hero in the rooms
+that aren't cut away (props, upper floors), the big rooms' camera framing; (2) animation: landings, turning on the
+spot, NPC starts and stops, the kick in a robe; (3) the hitch on a region's first visit (Desert Island, the
+Hamalayi): upload its geometry while the title is up.
+
 LBA1 (the user's files, scratch only; docs/LBA1_CATALOGUE.md): the Spheros, the fat troopers and three rooms
 (the asylum, the Temple of Bù's maze and halls) are in (0.19.0–0.21.0). Ask the user which LBA1 room or people come
 next (Twinsen's LBA1 house, the Maritime Museum, the clone factories, the painted clones, Rabbibunny soldiers, the
