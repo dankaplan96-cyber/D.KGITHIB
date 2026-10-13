@@ -214,6 +214,10 @@ project's sites with the drones, carry stun rifles and batons, and are knocked o
   Desert Island, behind its great stone face: Rector Hougo (once on the honour roll with Twinsen, Aril van Koow and
   Carnogeel) and Ker'aooc the healing wizard, who "treats everybody for everything", the project's diggers lately
   too, and heals Twinsen. Their doors are open in every chapter.
+- **FunFrock's old troopers** (LBA1's fat clone soldiers in greatcoats, helmets and packs): the project found a
+  store of them in FunFrock's buried condenser hall on Desert Island and put them back to work under Vesk's
+  orders. They guard the hall (ch. 5), the crowd-control yard (ch. 8) and the bore (ch. 10). FunFrock stays dead;
+  his clones just never got the message.
 - **The Spheros** (LBA1's round people, bodies 68–70): most went south after FunFrock fell; a few are back on
   Citadel. Pom came back for the fish; Madam Rondo walks her poodle Fifi by the square (her grandmother kept her
   striped asylum uniform from FunFrock's day).

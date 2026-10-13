@@ -28,6 +28,8 @@ export class Steam extends ChapterBase {
       { id: 'ffdrone1', kind: 'drone', group: 'condA', x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !f.c5_routed },
       { id: 'ffdrone2', kind: 'drone', group: 'condA', x: P[2][0], z: P[2][1], patrol: P, wp: 3 % n, when: (f) => this.isCur(f) && !f.c5_routed },
       { id: 'ffguard1', kind: 'guard', group: 'condA', x: P[1][0], z: P[1][1], patrol: [...P].reverse(), wp: 0, when: (f) => this.isCur(f) && !f.c5_routed },
+      // one of FunFrock's old troopers (LBA1), found in his buried hall and put back to work by the project
+      { id: 'ffclone1', kind: 'fclone', group: 'condA', x: P[3 % n][0], z: P[3 % n][1], patrol: [P[3 % n]], when: (f) => this.isCur(f) && !f.c5_routed },
     ];
   }
   place(id) {

@@ -71,6 +71,7 @@ export class Network extends ChapterBase {
       out.push({ id: 'ndrone' + i, kind: 'drone', group: 'nbore', x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore });
     }
     // a Grobo guard of Vesk's stands at the bore itself
+    if (D?.bore) out.push({ id: 'nclone', kind: 'fclone', group: 'nbore', x: D.bore.x - 4, z: D.bore.z + 4, angle: Math.PI * 0.75, when: (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore });
     if (D?.bore) out.push({ id: 'nguard', kind: 'guardG', group: 'nbore', x: D.bore.x + 4, z: D.bore.z + 4, angle: Math.PI * 1.25, when: (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore });
     if (D?.bore && D.post) {
       // a lone sentry automaton at the post's gate: met on its own before the drones at the bore

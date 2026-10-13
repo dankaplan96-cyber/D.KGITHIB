@@ -34,6 +34,7 @@ export class Evacuation extends ChapterBase {
       { id: 'cc2', kind: 'drone', group: 'ccyard', x: P[2][0], z: P[2][1], patrol: P, wp: 3, when: (f) => this.isCur(f) && !f.c8_fort },
       // Vesk's crowd-control squad: a Quetch guard and a Grobo guard
       { id: 'ccg1', kind: 'guard', group: 'ccyard', x: P[1][0], z: P[1][1], patrol: [...P].reverse(), wp: 0, when: (f) => this.isCur(f) && !f.c8_fort },
+      { id: 'ccclone', kind: 'fclone', group: 'ccyard', x: P[0][0], z: P[0][1], patrol: [...P], wp: 1, when: (f) => this.isCur(f) && !f.c8_fort },
       { id: 'ccdog', kind: 'gdog', coat: 'grey', group: 'ccyard', x: P[2][0], z: P[2][1], patrol: [...P].reverse(), wp: 1, when: (f) => this.isCur(f) && !f.c8_fort },
       { id: 'ccg2', kind: 'guardG', group: 'ccyard', x: P[3 % P.length][0], z: P[3 % P.length][1], patrol: [P[3 % P.length]], when: (f) => this.isCur(f) && !f.c8_fort },
     ];

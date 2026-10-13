@@ -58,6 +58,8 @@ log('dig out', await ev(() => { const d = game.rooms.desert.ruins.door; T.useAt(
 log('into hall', await ev(() => { const G = game, d = G.rooms.desert.ruins.door; T.tp(d.x, d.z + 1.6); G.step(0.3); T.tp(d.x, d.z); G.step(1.6); T.talkAll(); return G.room?.id; }));
 await shot('C5-01-hall.png');
 log('diagram', await ev(() => { const A = game.rooms.condA; T.useAt(A.diagram.x, A.diagram.z); return game.flags.c5_diagram; }));
+// FunFrock's old trooper guards the hall (LBA1's, kind fclone): beat him first, as a player would
+log('trooper', await ev(() => { const G = game, e = G.enemies.find((x) => x.id === 'ffclone1'); if (!e) return 'absent'; for (let k = 0; k < 8 && e.alive; k++) { e.take(2, G.hero.pos); G.step(0.1); } G.step(2.6); return e.alive ? 'standing' : 'down'; }));
 log('valves', await ev(() => { const A = game.rooms.condA; for (const id of [1, 3, 4]) { const v = A.valves.find((x) => x.id === id); T.useAt(v.x, v.z); } return [JSON.stringify(game.flags.c5_valves), game.flags.c5_routed, T.obj()]; }));
 log('hangar', await ev(() => T.exit('cond-b')));
 await shot('C5-02-hangar.png');

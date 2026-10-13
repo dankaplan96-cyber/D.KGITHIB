@@ -137,6 +137,11 @@ export const LOOKS = {
     skin: '#e8b890', hat: '#2f7a3a', pompom: '#f2d860', beard: '#f2f0ea', eyes: '#7a2a2a', height: 0.74,
   },
   // ---- Vesk's guards (enemies: src/game/guards.js), the project's uniform: near-black, brass, the violet emblem
+  // ---- LBA1's FunFrock troopers, reactivated by Vesk's project (cast_poly.py build_fclone, after bodies 18–20)
+  fclone: {
+    race: 'fclone', tunic: '#576743', tunicTrim: '#4a5a3a', belt: '#872f1f', skin: '#f3af53', helmet: '#576743', pack: '#872f1f', roll: '#4f9bbf',
+    shoes: '#872f1f', hands: '#e3a34f', armLen: 1.7, neck: 0.08,
+  },
   // ---- LBA1's Spheros, back on Citadel (tools/blender/cast_poly.py build_sphero, after bodies 69 and 70)
   sphero1: {
     race: 'sphero', tunic: '#5b9f63', tunicTrim: '#4f8f57', skin: '#d3af87', hair: '#ef7b53', eyes: '#2787a7', brows: '#732717', shoes: '#1f4a27', armLen: 0.92,
@@ -283,8 +288,10 @@ function design(L) {
   const grobo = L.race === 'grobo', bunny = L.race === 'bunny', esmer = L.race === 'esmer', quetch = L.race === 'quetch';
   // (LBA1's Spheros, bodies 68–70: short legs, the shoulders at the tips of a star-shaped body, 0.67 of Twinsen's height)
   const sphero = L.race === 'sphero';
-  const legLen = sphero ? 0.62 : kid ? 0.74 : grobo ? 0.8 : esmer ? 1.08 : 1;
-  const torsoLen = kid ? 0.82 : grobo ? 1.05 : 1;
+  // (LBA1's FunFrock troopers, bodies 18–20: a fat greatcoat to the ankles, the shoulders high, long arms)
+  const fclone = L.race === 'fclone';
+  const legLen = fclone ? 0.5 : sphero ? 0.62 : kid ? 0.74 : grobo ? 0.8 : esmer ? 1.08 : 1;
+  const torsoLen = fclone ? 1.95 : kid ? 0.82 : grobo ? 1.05 : 1;
   const hs = (L.headS || 1) * (kid ? 1.3 : 1) * (grobo ? 1.1 : 1);
   const wide = (grobo ? 1.5 : 1) * slim * (kid ? 0.92 : 1);
   const belly = L.belly || 0;
@@ -302,9 +309,9 @@ function design(L) {
   const headP = bone('head', [0, neckP[1] + neckLen, neckP[2] + (L.stoop || 0) * 0.4], 'neck');
   const Hc = add(headP, [0, 0.13 * hs, 0]);
   B.head.tip = add(Hc, [0, 0.18 * hs, 0]);
-  const shX = (sphero ? 0.676 : grobo ? 0.33 : 0.2) * slim * (kid ? 0.95 : 1) * (L.shoulders || 1), shY = ty + 0.47 * torsoLen;
+  const shX = (fclone ? 0.49 : sphero ? 0.676 : grobo ? 0.33 : 0.2) * slim * (kid ? 0.95 : 1) * (L.shoulders || 1), shY = ty + 0.47 * torsoLen;
   const armLen = (esmer ? 1.15 : kid ? 0.78 : 1) * (L.armLen || 1);
-  const legX = (sphero ? 0.29 : grobo ? 0.15 : 0.1) * slim;
+  const legX = (fclone ? 0.16 : sphero ? 0.29 : grobo ? 0.15 : 0.1) * slim;
   for (const [s, sx] of [['L', 1], ['R', -1]]) {
     const sh = bone('sh' + s, [sx * shX, shY, 0], 'torso');
     const el = bone('el' + s, add(sh, [sx * 0.05, -0.29 * armLen, 0.0]), 'sh' + s);

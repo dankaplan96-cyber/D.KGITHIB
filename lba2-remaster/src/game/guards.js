@@ -31,8 +31,10 @@ function rifleProp() {
 
 export class Guard extends Actor {
   constructor(game, def) {
-    const grobo = def.kind === 'guardG';
-    super(game, createCharacter(grobo ? 'vguardG' : 'vguard'), def.x, def.z, grobo ? 0.7 : 0.45);
+    // (kind 'fclone': one of LBA1's fat FunFrock troopers, bodies 18–20, reactivated by the project — the Grobo
+    // guard's rules: armour 2, 5 HP)
+    const fat = def.kind === 'fclone', grobo = def.kind === 'guardG' || fat;
+    super(game, createCharacter(fat ? 'fclone' : grobo ? 'vguardG' : 'vguard'), def.x, def.z, grobo ? 0.7 : 0.45);
     this.def = def; this.id = def.id; this.group = def.group || 'guards';
     this.grobo = grobo;
     this.armour = def.armour ?? (grobo ? 2 : 1);

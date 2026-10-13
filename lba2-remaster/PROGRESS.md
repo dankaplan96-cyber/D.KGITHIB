@@ -356,5 +356,9 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - The user chose the Spheros first: build_sphero (tools/blender/cast_poly.py) after bodies 69/70 (828 of 1240
   units; a star body, the face in its middle, an orange crest, arms from the shoulder points, ball hands, ball
   knees); race 'sphero' proportions in characters.js. Pom and Madam Rondo (with the poodle) on Citadel's square.
+- The user: "I want the fat soldiers from there, as enemies too". LBA1's FunFrock trooper (bodies 18–20): build_fclone
+  (a bell of a greatcoat to the ankles, straps, belt, a red pack and blue bedroll, a small pointed face under a
+  round helmet, long arms, red boots); the Guard class's kind 'fclone' (armour 2, 5 HP, the rifle with the aim
+  line). In ch. 5 (FunFrock's hall), ch. 8, ch. 10 and the arena. combat §22. (0.20.0)
 - Open: Ker'aooc is slimmer than body 188's star-shaped body; LBA1's characters and places once the user's files
   arrive.

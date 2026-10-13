@@ -385,6 +385,19 @@ r = await ev(() => {
 check('guard dog: notices, barks, runs, crouches with the jaw wide (the tell), bites', ['warn', 'chase', 'windup', 'lunge'].every((s) => r.states.includes(s)) && r.jaw > 0.4 && r.hp[1] < r.hp[0], r);
 check('guard dog: three hits knock it out and leave a bonus', r.down && r.bonus >= 1, r);
 
+// 22. LBA1's fat FunFrock trooper (kind 'fclone', src/game/guards.js): spots Twinsen, aims, fires; armour 2
+r = await ev(() => {
+  const { G } = C, h = G.hero;
+  C.only(['a_fclone'], [6200, 9], Math.PI); const fc = C.put('a_fclone', 6200, 3, 0);
+  fc.state = 'patrol'; fc.patrol = [[6200, 3]]; fc.hp = fc.maxHp; fc.coolT = 0;
+  const seen = new Set(); const hp0 = h.hp;
+  for (let i = 0; i < 150; i++) { C.step(1 / 30); seen.add(fc.state); }
+  const out = { states: [...seen], hp: [hp0, h.hp], soft: fc.take(1, h.pos), look: fc.rig.root.name || '', armour: fc.armour };
+  fc.setPresent(false);
+  return out;
+});
+check("FunFrock's trooper: spots, aims, fires; a weak hit is taken on its armour", r.states.includes('aim') && r.hp[1] < r.hp[0] && r.soft === 'blocked' && r.armour === 2, r);
+
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
 await browser.close();

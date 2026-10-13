@@ -60,3 +60,6 @@ Tippett, Brundle, Fortress, Polar Island; which bank is which island is not mapp
 - The Spheros (68–70): looks sphero1 (green) and sphero2 (brown), Pom and Madam Rondo on Citadel (0.19.0).
   Measured: 828 units tall (0.67 of Twinsen); the star's points at (0, 828), (±399, 640), (±232, 352); the face
   ±171 wide, 457–742 high, out to z 257; hands r 57 at (±399, 313); knees r 42 at (±171, 229).
+- FunFrock's fat trooper (18–20): look fclone, an enemy (0.20.0). Measured: 1196 units to the helmet top; the
+  coat ±280 at the hips from the hem (75) to the shoulders (~860); hands r 33 at (±332, 298); the pack x −204…168,
+  z −317…−144; the helmet dome 1066–1196.

@@ -1105,6 +1105,65 @@ def build_elf(name):
     return name
 
 
+def build_fclone(name):
+    # LBA1's FunFrock trooper (bodies 18-20, 62-64; 1196 of Twinsen's 1240 units to the helmet top): a fat body in a
+    # greatcoat to the ankles (+-280 units at the hips), red straps crossing the chest to a red belt with a black
+    # buckle, a big red pack on the back with a blue bedroll under it, a small head under a round helmet, long arms
+    # to below the hips with small ball hands, red boots
+    S = ALL[name]
+    L, B = S['look'], S['bones']
+    bp = lambda n: tuple(B[n]['p'])
+    u = 2.1 / 1240
+    coat, red = L.get('tunic', '#576743'), L.get('belt', '#872f1f')
+    b = Builder(name, B)
+    hipsY = bp('hips')[1]
+    def w_coat(p):
+        x, y, z = p
+        k = smooth(hipsY - 0.05, hipsY + 0.2, y)
+        if y < hipsY:
+            l = smooth(-0.08, 0.08, x)
+            leg = smooth(hipsY, 0.15, y) * 0.45
+            return {kk: v for kk, v in (('hips', 1 - leg), ('hipL', leg * l), ('hipR', leg * (1 - l))) if v > 1e-4}
+        return {kk: v for kk, v in (('hips', 1 - k), ('torso', k)) if v > 0}
+    secs = [(75, 262, 240), (190, 285, 262), (330, 290, 268), (480, 278, 258), (620, 250, 232), (760, 205, 190), (860, 158, 145), (930, 105, 98), (958, 70, 70)]
+    loft(b.P('coat', coat, w_coat, 40), [ell(y * u, rx * u, rz * u, 16, cz=10 * u) for y, rx, rz in secs], cap_top=True, cap_bottom=True)
+    # the belt and buckle, two straps crossing the chest
+    loft(b.P('belt', red, 'torso', 40), [ell(530 * u, 281 * u, 261 * u, 16, cz=10 * u), ell(585 * u, 280 * u, 260 * u, 16, cz=10 * u)])
+    box(b.P('buckle', '#070b17', 'torso', 40), -56 * u, 56 * u, 520 * u, 595 * u, 268 * u, 285 * u)
+    for sx in (1, -1):
+        tube(b.P('strap', red, 'torso', 40), (sx * 110 * u, 900 * u, 125 * u), (sx * 165 * u, 590 * u, 250 * u), 18 * u, 18 * u, 5, squash=0.4)
+        tube(b.P('strap', red, 'torso', 40), (sx * 110 * u, 900 * u, -120 * u), (sx * 150 * u, 600 * u, -150 * u), 18 * u, 18 * u, 5, squash=0.4)
+    # the pack and its bedroll
+    box(b.P('pack', L.get('pack', '#872f1f'), 'torso', 40), -190 * u, 165 * u, 600 * u, 1000 * u, -330 * u, -150 * u)
+    tube(b.P('roll', L.get('roll', '#4f9bbf'), 'torso', 50), (-200 * u, 545 * u, -235 * u), (175 * u, 545 * u, -235 * u), 60 * u, 60 * u, 10)
+    # head: a small face under the helmet, a chin strap
+    hd = bp('head')
+    sk = L.get('skin', '#f3af53')
+    sphere(b.P('face', sk, 'head', 60), (0, 1015 * u, 15 * u), 1.0, 10, 7, (90 * u, 70 * u, 85 * u))
+    tube(b.P('chin', sk, 'head', 60), (0, 990 * u, 20 * u), (0, 925 * u, 45 * u), 70 * u, 12 * u, 7)   # (the face narrows to a point)
+    tube(b.P('nose', sk, 'head', 50), (0, 1020 * u, 90 * u), (0, 995 * u, 130 * u), 24 * u, 9 * u, 6)
+    for sx in (1, -1):
+        sphere(b.P('eye', '#101418', 'head', 60), (sx * 32 * u, 1035 * u, 88 * u), 11 * u, 6, 4)
+    hm = b.P('helmet', L.get('helmet', '#576743'), 'head', 40)
+    sphere(hm, (0, 1105 * u, 0), 1.0, 12, 7, (128 * u, 90 * u, 128 * u))
+    disc(hm, (0, 1066 * u, 0), 142 * u, 14, 'y', 0.012)
+    # long arms from the high shoulders, small ball hands
+    for s, sx in (('L', 1), ('R', -1)):
+        sh, el, hd_ = bp('sh' + s), bp('el' + s), bp('hand' + s)
+        tube(b.P('upper' + s, coat, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), sh, el, 62 * u, 52 * u, 8)
+        tube(b.P('fore' + s, coat, 'el' + s, 50), el, hd_, 52 * u, 40 * u, 8)
+        sphere(b.P('hand' + s, L.get('hands', '#e3a34f'), 'hand' + s, 60), hd_, 38 * u, 8, 6)
+    # red boots under the hem
+    for s, sx in (('L', 1), ('R', -1)):
+        ft = bp('foot' + s)
+        bt = b.P('boot' + s, L.get('shoes', '#872f1f'), 'foot' + s, 30)
+        tube(bt, (ft[0], 45 * u, ft[2] - 180 * u), (ft[0], 40 * u, ft[2] + 230 * u), 60 * u, 40 * u, 8, squash=0.6)
+    os.makedirs(OUTDIR, exist_ok=True)
+    tris = b.export(os.path.join(OUTDIR, name + '.json'))
+    print(name, 'tris', tris)
+    return name
+
+
 def build_sphero(name):
     # LBA1's Sphero (bodies 68-70; 828 of Twinsen's 1240 units tall, measured in the scratchpad): a star-shaped body
     # 0.8 m across the shoulder points, its face (a skin oval with blue eyes, red brows, a nose) in the middle of the
@@ -1175,6 +1234,8 @@ def build_any(n):
     race = L.get('race')
     if race == 'sphero':
         return build_sphero(n)
+    if race == 'fclone':
+        return build_fclone(n)
     if race == 'esmer':
         return build_esmer(n)
     if race == 'bee':
