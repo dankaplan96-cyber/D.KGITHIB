@@ -74,16 +74,20 @@ export class RoomBuilder {
     this.box(w + 0.3, 0.35, 0.3, skirtMat, 0, 0.175, d / 2 + 0.15);
     this.wallCols(w, d, h, 0.3);
   }
-  wallCols(w, d, h, t) {
-    this.col(-w / 2 - t / 2, 0, t / 2, d / 2 + t, h);
-    this.col(w / 2 + t / 2, 0, t / 2, d / 2 + t, h);
-    this.col(0, -d / 2 - t / 2, w / 2 + t, t / 2, h);
-    this.col(0, d / 2 + t / 2, w / 2 + t, t / 2, h);
+  wallCols(w, d, h, t, ox = 0, oz = 0) {
+    this.col(ox - w / 2 - t / 2, oz, t / 2, d / 2 + t, h);
+    this.col(ox + w / 2 + t / 2, oz, t / 2, d / 2 + t, h);
+    this.col(ox, oz - d / 2 - t / 2, w / 2 + t, t / 2, h);
+    this.col(ox, oz + d / 2 + t / 2, w / 2 + t, t / 2, h);
   }
   // LBA2-style cut-away room: a floor slab with a visible section, two tall far
   // walls (-x, -z) with real thickness and a rounded cap, and low near rims.
   // o: {W, D, H, t, floor, slab, body, low, dado, rail, cap, rimH, rimMat, beam, posts, back:[openings], left:[openings], outside}
+  // o.ox, o.oz: the room's centre in the builder's frame (a house laid out around an existing room)
   shell(o) {
+    const ox = o.ox ?? 0, oz = o.oz ?? 0;
+    if (ox || oz) { this.k.at(ox, 0, oz, 0, () => this.shell({ ...o, ox: 0, oz: 0, _off: [ox, oz] })); return; }
+    const [cx0, cz0] = o._off || [0, 0];
     const k = this.k, { W, D, H } = o, t = o.t ?? 0.4;
     this.W = W; this.D = D; this.H = H; this.t = t;
     k.add(new THREE.BoxGeometry(W, 0.1, D), o.floor, 0, -0.05, 0);
@@ -91,7 +95,7 @@ export class RoomBuilder {
     k.add(new THREE.BoxGeometry(W + 2 * t, sh, D + 2 * t), o.slab, 0, -0.1 - sh / 2, 0);
     k.add(rbox(W + 2 * t + 0.04, 0.08, 0.1, 0.03), o.cap, 0, -0.08, D / 2 + t + 0.0);
     k.add(rbox(0.1, 0.08, D + 2 * t + 0.04, 0.03), o.cap, W / 2 + t, -0.08, 0);
-    this.col(0, 0, W / 2, D / 2, 0, { seeThrough: true, bottom: -1 });
+    this.col(cx0, cz0, W / 2, D / 2, 0, { seeThrough: true, bottom: -1 });
     // far walls
     k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t));
     k.at(-W / 2, 0, D / 2 + t, Math.PI / 2, () => this.wallRun(D + t, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - p.at })), t, 0));
@@ -103,7 +107,29 @@ export class RoomBuilder {
       k.add(rbox(W + 2 * t + 0.06, 0.12, t + 0.1, 0.055), o.cap, 0, rh + 0.04, D / 2 + t / 2);
       k.add(rbox(t + 0.1, 0.12, D + t + 0.04, 0.055), o.cap, W / 2 + t / 2, rh + 0.04, -t / 2 + 0.02);
     }
-    this.wallCols(W, D, H, t);
+    this.wallCols(W, D, H, t, cx0, cz0);
+  }
+  // an inside partition from (x0, z0) to (x1, z1) (axis-aligned), h high (LBA2's interiors: low dividers with a
+  // wooden cap and rounded ends, or full walls), with doorways [{ at, w }] measured from (x0, z0)
+  partition(x0, z0, x1, z1, { h = 1.15, t = 0.22, body, cap, rail, low, dado = 1.0, doors = [] } = {}) {
+    const k = this.k, L = Math.hypot(x1 - x0, z1 - z0), alongX = Math.abs(x1 - x0) > Math.abs(z1 - z0);
+    const ux = (x1 - x0) / L, uz = (z1 - z0) / L;
+    const ds = doors.slice().sort((a, b) => a.at - b.at);
+    let a = 0;
+    const piece = (s0, s1) => {
+      const l = s1 - s0; if (l < 0.05) return;
+      const cx = x0 + ux * (s0 + s1) / 2, cz = z0 + uz * (s0 + s1) / 2;
+      const sx = alongX ? l : t, sz = alongX ? t : l;
+      k.add(new THREE.BoxGeometry(sx, h, sz), body, cx, h / 2, cz);
+      if (low && h > dado + 0.2) for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(alongX ? l : 0.02, dado, alongX ? 0.02 : l), low, cx + (alongX ? 0 : s * (t / 2 + 0.01)), dado / 2, cz + (alongX ? s * (t / 2 + 0.01) : 0));
+      if (rail) for (const s of [-1, 1]) k.add(rbox(alongX ? l : 0.05, 0.14, alongX ? 0.05 : l, 0.015), rail, cx + (alongX ? 0 : s * (t / 2 + 0.02)), 0.07, cz + (alongX ? s * (t / 2 + 0.02) : 0));
+      k.add(rbox(sx + 0.1, 0.1, sz + 0.1, 0.045), cap, cx, h + 0.04, cz);
+      // rounded ends where the wall stops (a doorway or a free end)
+      for (const e of [s0, s1]) k.add(cyl(t / 2 + 0.05, t / 2 + 0.05, h + 0.09, 14), cap, x0 + ux * e, (h + 0.09) / 2, z0 + uz * e);
+      this.col(cx, cz, sx / 2, sz / 2, h + 0.1);
+    };
+    for (const d of ds) { piece(a, d.at - d.w / 2); a = d.at + d.w / 2; }
+    piece(a, L);
   }
   // one far wall in its own frame: x along the run 0..L, inner face at z=0 facing +z
   wallRun(L, o, openings, cutStart, cutEnd) {
@@ -270,26 +296,43 @@ function outsideView(kind) {
 function buildHouse(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'house', 1000, 0);
   const R = B.room, k = B.k;
+  // The plan follows the original's (LBA2 scene 0, measured): the family room in the north-east (this room,
+  // 9 × 7 m, its own frame), Arthur's room (the original's nursery) and the reading room to the west, a hall with
+  // the front door and the stairs down to the cellar to the south; low dividers with rounded wooden caps.
   const W = 9, D = 7, H = 3.0;
+  const HX0 = -13.5, HX1 = 4.5, HZ0 = -3.5, HZ1 = 11.5; // the whole house
   R.view = 10.8;
-  R.follow = 0.22;
-  const doorX = 2.6;
-  const rail = MAT.wood('dark');
+  R.follow = 0.8; // (a big house: the camera keeps Twinsen in the middle)
+  const doorX = 1.2; // the front door, in the hall's south wall
+  const rail = MAT.wood('dark'), capM = MAT.wood('dark'), bodyM = MAT.plaster('#f0e4c8');
+  const hcx = (HX0 + HX1) / 2, hcz = (HZ0 + HZ1) / 2;
   B.shell({
-    W, D, H, t: 0.4,
+    W: HX1 - HX0, D: HZ1 - HZ0, H, t: 0.4, ox: hcx, oz: hcz,
     floor: MAT.planks('honey'), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
-    body: MAT.plaster('#f0e4c8'), low: MAT.wainscot('honey'), dado: 1.05, rail, cap: MAT.wood('dark'), beam: MAT.wood('dark'),
-    posts: MAT.wood('dark'), postsAt: (L) => [0.48, L - 0.48],
+    body: bodyM, low: MAT.wainscot('honey'), dado: 1.05, rail, cap: capM, beam: MAT.wood('dark'),
+    posts: MAT.wood('dark'), postsAt: (L) => [0.48, L - 0.48, L / 2],
     back: [
-      { kind: 'door', at: doorX, w: 1.15, h: 2.2, y0: 0, leaf: MAT.wood('honey'), leafAngle: 1.95, view: outsideView('citadel') },
-      { kind: 'window', at: 0.3, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sky') },
+      { kind: 'window', at: 0.3 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sky') },
+      { kind: 'window', at: 2.6 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('citadel') },
+      { kind: 'window', at: -9.5 - hcx, w: 1.1, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('sky') },
     ],
-    left: [{ kind: 'window', at: 0.1, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sea') }],
+    left: [
+      { kind: 'window', at: 0.6 - hcz, w: 1.0, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('sea') },
+      { kind: 'window', at: 9.3 - hcz, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sea') },
+    ],
   });
   const BZ = -D / 2, LX = -W / 2;
-  R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'outdoor' });
-  R.spawn = { ...B.world(doorX, BZ + 1.9), a: 0 };
-  k.at(doorX, 0, BZ + 0.8, 0, () => P.rug(k, 1.3, 0.8, ['#8a3a2a', '#5a2418', '#d8a040', '#e8d0a0', '#2a140c'], 4));
+  // inside walls: low dividers (the camera sees over them, as in LBA2's interiors)
+  const divider = (x0, z0, x1, z1, doors = []) => B.partition(x0, z0, x1, z1, { h: 1.15, body: bodyM, cap: capM, rail, low: MAT.wainscot('honey'), dado: 0.9, doors });
+  divider(LX, BZ, LX, HZ1, [{ at: 8.5, w: 1.3 }, { at: 13.1, w: 1.3 }]);   // family room and hall | Arthur's room, reading room
+  divider(HX0, 7.0, LX, 7.0, [{ at: 4.4, w: 1.2 }]);                        // Arthur's room | reading room
+  divider(LX, -BZ, 0.2, -BZ);                                               // family room | hall
+  // the front door: a gap in the hall's low south wall, posts and a lintel, a mat
+  for (const sx of [-1, 1]) k.add(rbox(0.16, 2.25, 0.18, 0.03), capM, doorX + sx * 0.7, 1.12, HZ1 + 0.2);
+  k.add(rbox(1.6, 0.18, 0.22, 0.04), capM, doorX, 2.3, HZ1 + 0.2);
+  R.exits.push({ ...B.world(doorX, HZ1 - 0.15), r: 0.75, to: 'outdoor' });
+  R.spawn = { ...B.world(doorX, HZ1 - 1.6), a: Math.PI };
+  k.at(doorX, 0, HZ1 - 0.75, 0, () => P.rug(k, 1.3, 0.8, ['#8a3a2a', '#5a2418', '#d8a040', '#e8d0a0', '#2a140c'], 4));
 
   // --- kitchen corner: range with tiled splashback and stovepipe
   const stX = -3.35;
@@ -390,7 +433,7 @@ function buildHouse(scene, physics) {
   // --- bed, nightstand, Dino-Fly painting
   const bedZ = 2.2;
   B.put(LX + 1.1, bedZ, -Math.PI / 2, P.bed, { w: 1.45, l: 2.15 });
-  k.at(LX + 0.02, 1.85, bedZ, Math.PI / 2, () => P.frame(k, 1.0, 0.75, P.painting('dinofly')));
+  k.at(-3.0, 1.85, BZ + 0.02, 0, () => P.frame(k, 1.0, 0.75, P.painting('dinofly')));
   B.put(LX + 0.3, 0.95 + 0.0, Math.PI / 2, P.nightstand, {});
   B.giver('nightstand', LX + 0.3, 0.95, ['life', 'magic'], 1, { r: 1.0, top: 0.7 });
   P.candle(k, LX + 0.3, 0.62, 0.9);
@@ -471,8 +514,122 @@ function buildHouse(scene, physics) {
   B.light('#e8f4ff', 3, 5, doorX, 1.6, BZ + 1.0);
   B.light('#e8f4ff', 2.5, 4.5, LX + 1.0, 1.8, 0.1);
 
+  buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX });
+
   R.updaters.push((dt, t) => { stoveLight.intensity = stoveLight.userData.base * (0.85 + Math.sin(t * 11) * 0.1 + Math.sin(t * 7) * 0.05); });
   R.npcSpots = { zoe: { ...B.world(-2.32, -2.62), a: 0.6 }, arthur: { ...B.world(2.15, 2.15), a: -2.4 }, twinsen: { ...B.world(-0.45, -0.25), a: 0 } };
+  return B.finish();
+}
+
+// The rest of the house after the original's plan: Arthur's room (the nursery in LBA2, with its blue wallpaper of
+// gold stars), the reading room with its bookcases and armchair, the hall with armchairs, the family portrait and
+// the stairs down to the cellar. The original's six givers: Arthur's toy chest (15 kashes), the reading room's
+// bookcase (magic) and armchair, the hall's armchair, the family room's dresser, the bed.
+function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
+  const k = B.k, H = 3.0;
+  // Arthur's room: x HX0..LX, z HZ0..7
+  const paper = MAT.paper('#2e6f88', '#e8c86a', 'star');
+  k.add(plane(LX - HX0 - 0.05, H - 1.12), paper, (HX0 + LX) / 2, 1.12 + (H - 1.12) / 2, HZ0 + 0.012);
+  k.at(HX0 + 0.012, 0, (HZ0 + 7) / 2, Math.PI / 2, () => k.add(plane(7 - HZ0 - 0.05, H - 1.12), paper, 0, 1.12 + (H - 1.12) / 2, 0));
+  B.put(HX0 + 1.0, 4.9, -Math.PI / 2, P.bed, { w: 1.05, l: 1.95, quilt: ['#3b78d8', '#e9c46a', '#e0503a', '#f2ead6', '#3a8a5a'], key: 'arthur' });
+  B.put(HX0 + 0.3, 3.55, Math.PI / 2, P.nightstand, {});
+  P.candle(k, HX0 + 0.3, 0.62, 3.5);
+  B.put(-8.4, HZ0 + 0.42, 0, P.desk, { w: 1.4, d: 0.65, pal: 'honey', leather: '#3b6fc4' });
+  B.put(-8.4, HZ0 + 1.2, Math.PI, P.chair, { cushion: '#3b78d8' }, { noStand: true, seeThrough: true });
+  k.at(-8.9, 0.78, HZ0 + 0.35, 0.3, () => P.deskLamp(k, { shade: '#e0503a' }));
+  k.at(-7.9, 0.78, HZ0 + 0.4, -0.4, () => P.toyBoat(k));
+  k.at(-11.2, 1.75, HZ0 + 0.15, 0, () => P.wallShelf(k, { w: 1.4, d: 0.24 }));
+  for (const [x, c] of [[-11.7, '#e0503a'], [-11.25, '#3b78d8'], [-10.75, '#e9c46a']]) k.at(x, 1.77, HZ0 + 0.17, 0.2, () => P.spinningTop(k, 0, 0, c));
+  B.put(HX0 + 0.42, -1.6, Math.PI / 2, P.chest, { w: 0.85, d: 0.5, h: 0.46, pal: 'red', band: MAT.paint('#e9c46a', 0.5) });
+  B.giver('arthurchest', HX0 + 0.42, -1.6, ['money'], 15, { r: 1.2, top: 0.6 });
+  k.at(-10.0, 0, 1.0, 0.1, () => P.rug(k, 2.6, 1.9, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));
+  k.at(-9.6, 0, 1.3, 0.4, () => P.toyBlocks(k));
+  k.at(-6.0, 0, -2.6, 0, () => P.pottedPlant(k, { s: 0.9 }));
+  B.giver('arthurbed', HX0 + 1.0, 4.9, ['life'], 1, { r: 1.4, top: 0.6 });
+  B.light('#ffe0b0', 6, 9, -9.0, 2.3, 1.0);
+  // the reading room: x HX0..LX, z 7..HZ1
+  for (const [z, sd] of [[8.1, 2], [9.3, 5], [10.5, 7]]) B.put(HX0 + 0.22, z, Math.PI / 2, P.bookcase, { w: 1.1, h: 2.1, pal: 'dark', seed: sd });
+  B.giver('bookcase', HX0 + 0.22, 9.3, ['magic'], 10, { r: 1.3, top: 1.8 });
+  B.put(-10.6, 9.6, -Math.PI / 2 - 0.4, P.armchair, {});
+  B.put(-10.7, 8.0, 0, P.floorLamp, {});
+  B.light('#ffcf90', 3, 5, -10.7, 1.5, 8.0);
+  B.put(-11.5, 10.8, 0, P.sideTable, {});
+  P.bookStack(k, -11.5, 0.62, 10.8, 1, 4);
+  B.giver('readchair', -10.6, 9.6, ['money', 'life', 'magic'], 5, { r: 1.2, top: 0.7 });
+  k.at(-9.4, 0, 9.4, 0, () => P.rug(k, 2.4, 2.0, ['#a8382a', '#2a4a7a', '#e0b050', '#f0e0b8', '#3a1a12'], 3));
+  B.light('#ffe0b0', 4, 7, -9.0, 2.3, 9.3);
+  // the hall: x LX..HX1, z -BZ..HZ1 — armchairs round a rug, the family portrait, the stairs down
+  k.at(-0.8, 0, 6.3, 0, () => P.rug(k, 3.2, 2.4, ['#2a4a7a', '#a8382a', '#e9c46a', '#f2ead6', '#1a2a3a'], 5));
+  B.put(-1.9, 5.6, Math.PI / 2 + 0.35, P.armchair, {});
+  B.put(0.4, 5.6, -Math.PI / 2 - 0.35, P.armchair, {});
+  B.put(-0.75, 5.1, 0, P.sideTable, {});
+  P.candle(k, -0.75, 0.62, 5.1);
+  B.giver('hallchair', -1.9, 5.6, ['life', 'magic'], 7, { r: 1.2, top: 0.7 });
+  B.put(HX1 - 0.32, 6.5, -Math.PI / 2, P.dresser, { w: 1.1 });
+  k.at(HX1 - 0.02, 1.8, 6.5, -Math.PI / 2, () => P.frame(k, 0.75, 0.9, P.painting('portrait'), { mat: MAT.wood('dark') }));
+  k.at(3.4, 0, HZ1 - 0.5, 0, () => P.pottedPlant(k, { kind: 'spiky', s: 1.1, potColor: '#3a6fb0' }));
+  // the stairs down: a stairwell in the floor against the west divider, a railing, the top steps
+  const sx0 = LX + 0.35, sx1 = LX + 1.75, sz0 = 7.6, sz1 = 10.4;
+  k.add(new THREE.BoxGeometry(sx1 - sx0, 0.02, sz1 - sz0), MAT.flat('#1c140e', 1), (sx0 + sx1) / 2, 0.012, (sz0 + sz1) / 2);
+  for (let i = 0; i < 4; i++) k.add(rbox(sx1 - sx0 - 0.1, 0.06, 0.32, 0.012), MAT.wood('honey'), (sx0 + sx1) / 2, 0.035 - i * 0.004, sz0 + 0.2 + i * 0.34);
+  P.railing(k, [[sx1 + 0.06, sz0 - 0.06], [sx1 + 0.06, sz1], [sx0, sz1]], { h: 0.95, mat: MAT.wood('dark'), step: 0.7 });
+  B.col(sx1 + 0.06, (sz0 + sz1) / 2, 0.06, (sz1 - sz0) / 2 + 0.06, 1.0, { seeThrough: true, noStand: true });
+  B.col((sx0 + sx1) / 2, sz1 + 0.04, (sx1 - sx0) / 2 + 0.06, 0.06, 1.0, { seeThrough: true, noStand: true });
+  R.exits.push({ ...B.world((sx0 + sx1) / 2, sz0 + 1.3), r: 0.7, room: 'cellar' });
+  R.entries = { cellar: { ...B.world((sx0 + sx1) / 2 + 1.4, sz0 + 1.2), a: Math.PI / 2 } }; // coming up the stairs
+  B.light('#ffe0b0', 5, 8, 0.5, 2.3, 7.5);
+  B.light('#e8f4ff', 3, 5, doorX, 1.6, HZ1 - 1.0);
+}
+
+// The cellar under Twinsen's house (LBA2 scene 1): Twinsen's training room — a target on the wall, a straw
+// dummy, bookshelves, the radio set on a sideboard, a barrel and crates, the Dino-Fly poster, a bench.
+function buildCellar(scene, physics) {
+  const B = new RoomBuilder(scene, physics, 'cellar', 1700, 0);
+  const R = B.room, k = B.k;
+  const W = 11, D = 9, H = 2.8;
+  R.view = 9.6; R.follow = 0.22;
+  B.shell({
+    W, D, H, t: 0.4,
+    floor: MAT.tiles('#b8784a', '#a86a40', '#5a3a28', true, 6), slab: MAT.rubble('grey'), rimMat: MAT.stone('grey', 1.4),
+    body: MAT.rubble('grey'), low: null, rail: MAT.wood('dark'), cap: MAT.wood('honey'),
+  });
+  const BZ = -D / 2, LX = -W / 2;
+  // the stairs up (south-east corner)
+  const sx = W / 2 - 1.1, sz = D / 2 - 0.9;
+  for (let i = 0; i < 5; i++) { k.add(rbox(1.3, 0.2 + i * 0.2, 0.35, 0.015), MAT.wood('honey'), sx, (0.2 + i * 0.2) / 2, sz - i * 0.35); B.col(sx, sz - i * 0.35, 0.65, 0.18, 0.2 + i * 0.2, { noStand: true }); }
+  R.exits.push({ ...B.world(sx, sz - 1.9), r: 0.7, room: 'house', back: true });
+  R.spawn = { ...B.world(sx - 1.2, sz - 1.0), a: Math.PI };
+  // the target on the north wall, the dummy before it
+  k.at(-1.5, 1.55, BZ + 0.05, 0, () => {
+    for (const [r, c] of [[0.5, '#f2ead6'], [0.4, '#2a2420'], [0.3, '#f2ead6'], [0.2, '#2a2420'], [0.1, '#e03a3a']]) k.add(P.disc(r, 28), MAT.paint(c, 0.7), 0, 0, 0.01 + (0.5 - r) * 0.01);
+    k.add(torus(0.51, 0.04, 6, 28), MAT.wood('dark'), 0, 0, 0.02);
+  });
+  k.at(-1.5, 0, BZ + 2.4, 0, () => {
+    const straw = MAT.flat('#d8b860', 0.95), sack = MAT.cloth('#c8b890', '#8a7a58');
+    k.add(cyl(0.04, 0.05, 1.0, 8), MAT.wood('dark'), 0, 0.5, 0);
+    k.add(rbox(0.6, 0.14, 0.6, 0.04), MAT.wood('dark'), 0, 0.07, 0);
+    k.add(lathe([[0.001, 0], [0.22, 0.02], [0.26, 0.3], [0.24, 0.55], [0.12, 0.62], [0.001, 0.64]], 12), sack, 0, 0.75, 0);
+    k.add(sphere(0.17, 12, 10), sack, 0, 1.55, 0);
+    for (const s of [-1, 1]) k.add(cyl(0.06, 0.06, 0.5, 8), straw, s * 0.32, 1.15, 0, 0, { rz: s * 1.2 });
+    k.add(P.disc(0.06, 12), MAT.paint('#e03a3a', 0.6), 0, 1.58, 0.17);
+  });
+  B.ccol(-1.5, BZ + 2.4, 0.32, 1.7);
+  // bookshelves and a chair on the west wall, the radio set on a sideboard on the north wall
+  for (const [z, sd] of [[-2.2, 4], [-1.0, 8]]) B.put(LX + 0.22, z, Math.PI / 2, P.bookcase, { w: 1.1, h: 1.9, pal: 'honey', seed: sd });
+  B.put(LX + 0.9, 0.6, Math.PI / 2, P.chair, { cushion: '#2f6f78' }, { noStand: true, seeThrough: true });
+  B.put(2.2, BZ + 0.36, 0, P.dresser, { w: 1.6 });
+  k.at(2.2, 1.0, BZ + 0.3, 0, () => P.radio(k, { s: 1.1 }));
+  B.put(4.6, BZ + 0.5, 0, P.barrel, { r: 0.34, h: 0.9, pal: 'honey' });
+  B.giver('barrel', 4.6, BZ + 0.5, ['money', 'life', 'magic'], 3, { r: 1.1, top: 1.0 });
+  for (const [x, z, s] of [[3.8, BZ + 0.45, 0.6], [4.0, BZ + 1.2, 0.5]]) B.put(x, z, 0.2, P.crate, s);
+  B.giver('crates', 3.9, BZ + 0.8, ['life', 'magic'], 2, { r: 1.2, top: 0.7 });
+  k.at(W / 2 - 0.02, 1.6, -1.0, -Math.PI / 2, () => P.frame(k, 0.8, 1.0, P.painting('dinofly')));
+  B.put(W / 2 - 0.6, 0.6, -Math.PI / 2, P.bench, { w: 1.4 });
+  B.put(-2.6, 2.4, 0.5, P.armchair, {});
+  B.put(-0.6, 2.9, -0.3, P.armchair, {});
+  B.put(-1.6, 3.2, 0, P.floorLamp, {});
+  B.light('#ffd8a0', 6, 10, 0, 2.2, -0.5);
+  B.light('#ffcf90', 3, 5, -1.6, 1.5, 3.2);
   return B.finish();
 }
 
@@ -1422,6 +1579,7 @@ export function buildInteriors(scene, physics) {
     house: buildHouse(scene, physics), well: buildWell(scene, physics),
     office: buildOffice(scene, physics), projoffice: buildProjOffice(scene, physics), control: buildControl(scene, physics),
     workshop: buildWorkshop(scene, physics), lighttop: buildLightTop(scene, physics),
+    cellar: buildCellar(scene, physics),
   };
   // rooms' colliders are always active but far from the island, so they never interfere
   return rooms;

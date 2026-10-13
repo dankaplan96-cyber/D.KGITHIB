@@ -312,7 +312,7 @@ class Game {
   // where the hero is on the island map (inside a room: where that room is)
   mapHero() {
     if (!this.room || this.room.outdoor) return this.hero;
-    const pos = this.room.id === 'house' ? this.world.houses[0] : this.world.well;
+    const pos = this.room.id === 'house' || this.room.id === 'cellar' ? this.world.houses[0] : this.world.well;
     return { pos: { x: pos.x, z: pos.z }, angle: this.hero.angle };
   }
 
@@ -861,6 +861,8 @@ class Game {
     if (this.room) {
       for (const e of this.room.exits) {
         if (Math.hypot(h.pos.x - e.x, h.pos.z - e.z) < e.r) {
+          // a door between two rooms of one building (Twinsen's house and its cellar)
+          if (e.room) { this.audio.play('door'); const R2 = this.rooms[e.room]; this.enterRoom(e.room, R2.entries?.[this.room.id] || R2.spawn); this.doorCool = 1.5; return; }
           if (this.story.canExit(this.room, e.to)) {
             this.audio.play('door');
             // an exit leads outdoors on Citadel, or into another room/region ({ room, x, z, a })

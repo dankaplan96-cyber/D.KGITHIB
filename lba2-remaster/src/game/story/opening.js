@@ -179,9 +179,9 @@ export function playOpening(story) {
   walk(passer, [{ x: -73.8, z: -4.7 }, { x: -83.6, z: -5.0 }, { x: -84.4, z: -5.65 }], 15.0, 1.25, 'idle', Math.PI);
   walk(worker, [{ x: -84.15, z: -3.2 }, { x: -84.0, z: -4.5 }, { x: -83.55, z: -4.65 }], 22.4, 1.0, 'idle', angleTo({ pos: { x: -83.55, z: -4.65 } }, L.cratePier));
   walk(zo, [zoTray, zoSink], 40.3, 0.9, 'idle', Math.PI);
-  const zoOut = [zoSink, hx(1.9, -2.45), hx(2.6, -3.1), hx(2.6, -3.75)];
+  const zoOut = [zoSink, hx(1.25, -1.0), hx(1.25, 1.6), hx(0.9, 4.4)]; // (out through the hall)
   walk(zo, zoOut, 72.0, 1.5);
-  walk(tw, [twSpot, hx(0.6, -1.2), hx(1.55, -1.75)], 72.4, 1.25, 'idle');
+  walk(tw, [twSpot, hx(0.9, 1.4), hx(1.3, 3.6)], 72.4, 1.25, 'idle'); // (toward the hall and the front door)
 
   // turns
   turn(tw, angleTo({ pos: twSpot }, zoSink), 46.5, 0.55);

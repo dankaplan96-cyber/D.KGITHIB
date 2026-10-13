@@ -23,12 +23,12 @@ the original doesn't have is ours:
 
 | Place | Identity / landmark | Local problem / life | Story role | Changes after events |
 |---|---|---|---|---|
-| Twinsen's house, Bug Street | blue-roofed house, Arthur's toys, the cupboard | family | start; hub between chapters | Arthur's radio (ch1); dinner (epilogue) |
+| Twinsen's house (south of the village, where the original's stands; Bug Street leads there) | after the original's plan: family room (kitchen, table, Arthur's corner, the cupboard), Arthur's room (the old nursery, blue star wallpaper), reading room, hall with the stairs down; the cellar (training room: target, dummy, radio) | family | start; hub between chapters | Arthur's radio (ch1); dinner (epilogue) |
 | Town square | the well with a red roof, blue-globe lamps | the dry well, the water-bill row | prologue goal | well steams (ch1); runs cool (epilogue) |
 | Water office (interior) | pipe map on the wall | Mira's bureaucracy | valve map (ch1) | finale: Mira opens the valves |
 | Pippa's stall | yellow awning | trade | shop | stock changes with events (clovers before the evacuation) |
 | Harbour | pier, Doran's boat, project ferry | Xil's stuck cargo | permit, ferry to Zeelich | ferry docks (ch1); leaves (ch2) |
-| Lighthouse (+ top room) | tall tower | — | Zoé's broadcast (ch2); finale signal | lit beacon after the broadcast |
+| Lighthouse (+ top room) | tall tower on the south-west headland, "at the end of the island" as in the original | — | Zoé's broadcast (ch2); finale signal | lit beacon after the broadcast |
 | Whispering Cliffs | stepping stones, old target | — | cliff valve (ch1) | stones stay raised |
 | Orchard | barred valve | — | orchard valve (ch1) | — |
 | Old camp / project depot | FunFrock's crates, drones | security drones | depot valve (ch1) | — |

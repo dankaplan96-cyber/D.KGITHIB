@@ -1,5 +1,5 @@
 // Lupin-Burg (Citadel Island): Twinsen's corner of town.
-// A small square with the well, Bug Street curving up to Twinsen's house,
+// A small square with the well, Bug Street leaving it (on south, past the fields, to Twinsen's house),
 // a shop with a striped awning and a globe sign, and the things people
 // leave around: benches, laundry, barrels, tools, a radio on a sill,
 // potted plants, fenced gardens and lamps.
@@ -14,7 +14,7 @@ export const V = { x: -42, z: -4 }; // the town square (well)
 
 // cobbled streets: polyline + width (metres)
 export const STREETS = [
-  { pts: [[-42, -4], [-45.3, -8], [-47.6, -11.2]], w: [3.6, 2.6, 3.2] },                 // Bug Street, up to Twinsen's door
+  { pts: [[-42, -4], [-45.3, -8], [-47.6, -11.2]], w: [3.6, 2.6, 3.2] },                 // Bug Street (the lane carries on south to Twinsen's house)
   { pts: [[-42, -4], [-50, -5.2], [-57, -4.4], [-64, -4]], w: [3.8, 3.0, 2.6, 2.4] },     // down to the harbour
   { pts: [[-42, -4], [-36, -2.4], [-33.2, -1.2]], w: [4.2, 3.4, 2.8] },                  // to Pippa's shop
   { pts: [[-42, -4], [-41.5, 4], [-44.3, 9.8]], w: [3.8, 2.8, 2.6] },                    // south lane

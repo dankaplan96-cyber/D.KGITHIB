@@ -668,6 +668,20 @@ export function chair(k, { pal = 'honey', cushion = '#c8452f' } = {}) {
   return { hw: 0.25, hd: 0.25, top: 0.5 };
 }
 
+// LBA2's armchair (Twinsen's house): deep teal upholstery, rolled arms capped with curved wood, a wooden base
+export function armchair(k, { fabric = '#2f6f78', pal = 'honey' } = {}) {
+  const m = MAT.wood(pal), md = MAT.wood(darker(pal)), f = MAT.cloth(fabric, new THREE.Color(fabric).multiplyScalar(0.7).getStyle());
+  k.add(rbox(0.86, 0.12, 0.78, 0.03), md, 0, 0.1, 0);                                   // base
+  k.add(rbox(0.62, 0.16, 0.62, 0.05), f, 0, 0.3, 0.04);                                  // seat cushion
+  k.add(rbox(0.66, 0.62, 0.18, 0.07), f, 0, 0.62, -0.3, 0, { rx: -0.12 });               // back
+  for (const sx of [-1, 1]) {
+    k.add(rbox(0.13, 0.36, 0.7, 0.05), f, sx * 0.37, 0.36, 0.0);                         // arm
+    k.add(slab('armcap', (s) => { s.moveTo(-0.35, 0); s.lineTo(0.3, 0); s.quadraticCurveTo(0.42, 0.02, 0.38, 0.14); s.lineTo(-0.35, 0.1); s.lineTo(-0.35, 0); }, 0.15, 0.02), m, sx * 0.37 - 0.075, 0.54, 0.02, -Math.PI / 2, { ry: 0 });
+  }
+  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) k.add(cyl(0.035, 0.025, 0.05, 8), md, sx * 0.36, 0.025, sz * 0.32);
+  return { hw: 0.46, hd: 0.42, top: 0.62 };
+}
+
 export function bench(k, { w = 1.2, pal = 'honey' } = {}) {
   const m = MAT.wood(pal), md = MAT.wood(darker(pal));
   k.add(rbox(w, 0.06, 0.34, 0.02), m, 0, 0.44, 0);
