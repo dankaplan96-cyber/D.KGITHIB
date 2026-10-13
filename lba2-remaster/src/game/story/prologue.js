@@ -35,6 +35,8 @@ export class Prologue extends ChapterBase {
       { id: 'xil', name: 'n_xil', char: 'xil', color: '#9fffc8', x: W.pierEnd.x + 3.1, z: W.pierEnd.z - 0.65, angle: Math.PI / 2 + 0.3, look: { tunic: '#6a3a9a', robe: '#6a3a9a', skin: '#7fc8a8', hair: '#7fc8a8', scale: 1.12 } },
       { id: 'tim', name: 'n_tim', char: 'tim', color: '#ffd27a', x: kids.x, z: kids.z, angle: Math.PI / 2, look: { tunic: '#e0c03a', pants: '#3a5a9a', scale: 0.7, hair: '#c06a2a' }, anim: 'talk' },
       { id: 'lulu', name: 'n_lulu', char: 'lulu', color: '#ff9ad0', x: kids.x + 1.3, z: kids.z, angle: -Math.PI / 2, look: { tunic: '#e05a9a', robe: '#e05a9a', scale: 0.66, hair: '#2a1a10' } },
+      // Joe the Elf, Twinsen's old friend from LBA2, by the square (he only chats: baseTalk's idle_joe lines)
+      { id: 'joe', name: 'n_joe', char: 'joe', color: '#9fe89a', x: V.x + 6.5, z: V.z - 7.5, angle: -2.4 },
     ];
   }
 

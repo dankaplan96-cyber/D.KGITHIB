@@ -1,6 +1,8 @@
 // The island of Solmere: terrain, props, colliders, interactables.
 // Everything is generated from code (no ripped assets).
 import * as THREE from 'three';
+import { shuttleTraffic } from './shuttle.js';
+import { Dog, addDogs } from './dogs.js';
 import { Terrain } from '../engine/terrain.js';
 import { Physics } from '../engine/physics.js';
 import { ZoneSystem } from '../engine/scripts.js';
@@ -806,5 +808,9 @@ export function buildWorld(parentScene) {
     swayU.uWind.value = 0.4 + W.storm * 1.2;
     for (const u of W.updaters) u(dt, t);
   };
+  // the Esmers' shuttles: Zeelich's traffic, crossing high over the island (src/game/shuttle.js)
+  shuttleTraffic(W.root, W.updaters, { cx: -40, cz: 10, y: 46, r: 120, n: 2, speed: 0.03 });
+  // a poodle (LBA2's, src/game/dogs.js) noses about the square by the well
+  W.dogs = addDogs([new Dog({ parent: W.root, physics, coat: 'poodle', x: POI.village.x + 4, z: POI.village.z - 3, area: { x0: POI.village.x + 1.5, z0: POI.village.z - 6.5, x1: POI.village.x + 7, z1: POI.village.z - 1 } })], W.updaters);
   return W;
 }

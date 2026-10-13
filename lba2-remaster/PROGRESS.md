@@ -322,3 +322,18 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   the drones in chapters 1, 2, 4, 5, 8 and 10 and in the arena; tests/combat.mjs §20.
 - LBA1's repository holds the engine's source only, no game data: its characters, maps and buildings need the
   user's LBA1 data files (the user will add them).
+
+## Session: the Temple of Bù, Joe the Elf, the Esmers' shuttles (0.17.0)
+- The user: "where are the wizards, the Temple of Bù; where is Joe the Elf, the Esmers' shuttles (very
+  important), the dogs — the game is a love song to the first two games". Chosen: the temple at the heart of
+  chapter 4. The dig reaches the Temple of Bù's gate; inside (src/game/temple.js) the great relief replaces the
+  open-air carving. Joe the Elf (build_elf, after body 110) stands by the square with his own lines. The Esmers'
+  shuttles (src/game/shuttle.js, after bodies 70–78): one landed on a pad by Zeelich's dock, others circling over
+  Citadel, Zeelich and Bald Mountain.
+- The dogs (the user: "the dog's model is 51, 52 and 53"): Zeelich's big-mouthed dogs (src/game/dogs.js, after
+  bodies 51–53 in their three coats) and LBA2's poodle (body 371). A dog-training yard on Zeelich after the
+  original's (behind the north houses: a palisade, a bed of fallen leaves, a pale track round a block tower on a
+  red crate, a blue tunnel, two hurdles, a hay bale, an A-frame) where two dogs run the course and a third noses
+  about; another trots along the Esmer street; the poodle wanders Citadel's square. They come up to Twinsen, pant,
+  and bark (the jaw drops open; a synthesized bark).
+- Open: the wizards (Bersimon's tent at the original's S21 ≈ our (−100, −71), the School of Magic, Ker'aooc).

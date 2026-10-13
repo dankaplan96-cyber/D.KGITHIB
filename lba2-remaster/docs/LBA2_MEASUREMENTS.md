@@ -67,6 +67,17 @@ smooth normals is kept.
   the head 0.70–1.0 H, an inverted triangle (a pointed chin, ±0.108 at the cheekbones with the ears' points, a
   flat top ±0.079), the face forward to +0.14 H; thin arms with pointed hands; thin legs.
 
+## Dogs (src/game/dogs.js)
+- Zeelich's dog (bodies 51–53, one shape in three coats: grey with a pale green collar; grey with a brown jaw and
+  legs and a dark green collar; brown with a darker jaw and legs): 0.45 H tall, 0.6 H long, 0.42 H wide (H = 1238
+  units). A blob from the rump (z −345) to the mouth (z +235), widest (±240 units) at the collar (z −20…60, up to
+  560 units high); the upper lip overhangs to z +340 with five fangs, the lower jaw two; the eyes white balls of
+  r ≈ 50 at (±228, 420, 180) with the pupil outside; front legs straight at z ≈ 0, back legs bent at z ≈ −235…−320;
+  a stub tail at z −400.
+- The poodle (body 371): 0.65 H to the top of the bow, 0.64 H long; cream puffs on the chest and the hips, cream
+  pompoms on the four feet (r ≈ 38, front z 164, back z −80) and on the tail (y 571), a pink bow (y 760).
+- (Bodies 407–410 are a six-legged ball-nosed creature in four coats, not used.)
+
 ## Animations of the hero (24-group set; Twinsen's robe body uses the first 19 groups)
 - 0 idle: 8 keys × 300 ms (2.4 s): the whole body rocks forward and back (root ±50 units, pelvis ±6°), the arms
   follow it a little.

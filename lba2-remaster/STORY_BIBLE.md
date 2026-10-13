@@ -197,6 +197,20 @@ His troopers in the project's uniform (near-black coat, brass belt, the violet e
 clones: Quetch guards with a round helmet and a violet visor, and big armoured Grobo guards. They patrol the
 project's sites with the drones, carry stun rifles and batons, and are knocked out, not killed.
 
+## Old friends and the Esmers' shuttles (the game is a love song to LBA1 and LBA2)
+- **Joe the Elf** (LBA2): still in town by the square, still having trouble with his magic; he once hid in an
+  Esmer shuttle and ended up on the wrong planet.
+- **The Esmers' shuttles** (LBA2's round craft: red base, gold hull, blue canopy, landing legs): Zeelich's
+  ordinary traffic twelve years on. One stands on its pad by Zeelich's dock; others cross the skies of Citadel,
+  Zeelich and Desert Island, coming and going through Bald Mountain as they always did.
+- **The Temple of Bù** (LBA2, Temple-Park by Bald Mountain): the project dug down to it; its great relief shows
+  Sendell, her well and the shell's vents.
+- **The dogs** (LBA2): Zeelich's big-mouthed dogs (a round blob of head and body, a huge fanged mouth, bulging
+  eyes, a collar) train in a yard behind the north houses and trot along the street; a pampered poodle with a
+  pink bow wanders Citadel's square. They greet Twinsen and bark.
+- Still to come: the wizards (Bersimon's tent, the School of Magic, Ker'aooc), LBA1's places and people once the
+  user's LBA1 data is here.
+
 ## Writing rules
 Natural English, one or two sentences per turn, longer only for big moments. Concrete details, requests and
 reactions; humour from character, bureaucracy and everyday trouble. No "your destiny awaits", "an ancient

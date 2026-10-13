@@ -450,6 +450,11 @@ def build(name):
                     t = 2 * math.pi * k / 8
                     pts.append((cc[0] + math.cos(t) * hw * 0.3, cc[1] + math.sin(t) * hw * 0.26, cc[2]))
                 strip(gl, pts, 0.006, (0, 0, 0))
+        # LBA2's wizards (bodies 111, 123): a long beard hanging from under the snout, a tall pointed hat between the ears
+        if L.get('beard'):
+            tube(b.P('beard', L['beard'], head_w, 60), (0, c[1] - hh * 0.3, c[2] + hd_ * 0.7), (0, c[1] - hh * 2.5, c[2] + hd_ * 1.05), hw * 0.55, 0.01, 8, squash=0.55)
+        if L.get('wizHat'):
+            tube(b.P('wizHat', L['wizHat'], head_w, 40), (0, c[1] + hh * 0.45, c[2] - 0.01), (0, c[1] + hh * 3.4, c[2] - 0.05), hw * 0.62, 0.004, 9)
     elif grobo:
         # LBA2's Grobo head: as wide as the body and sunk into it (no neck), a long trunk hanging in front of the
         # belly, and great flat ears standing out to either side (the original's reach ±0.5 of its height)
@@ -1025,6 +1030,78 @@ def build_vesk(name):
     return name
 
 
+def build_elf(name):
+    # Joe the Elf, after LBA2's (body 110; 0.86 of Twinsen's height): a small body in a green A-line tunic with a
+    # belt, short teal legs and pointed green shoes; a big head with great pointed ears standing out, a long nose,
+    # a short white beard; a tall green pointed hat bending back, a yellow pompom at its tip; thin arms, ball hands
+    S = ALL[name]
+    L, B = S['look'], S['bones']
+    bp = lambda n: tuple(B[n]['p'])
+    skin, green, dark, legs, shoes = L.get('skin', '#e8b890'), L.get('tunic', '#3a8a3a'), L.get('tunicTrim', '#2a5a2a'), L.get('pants', '#2a6a6a'), L.get('shoes', '#4a9a4a')
+    b = Builder(name, B)
+    hipsY, shY, neckY, headY = bp('hips')[1], bp('shL')[1], bp('neck')[1], bp('head')[1]
+    kn = bp('kneeL')[1]
+    def w_t(p):
+        x, y, z = p
+        k = smooth(hipsY - 0.05, hipsY + 0.15, y)
+        if y < hipsY - 0.05:   # the skirt of the tunic follows the legs a little
+            l = smooth(-0.05, 0.05, x)
+            leg = smooth(hipsY - 0.05, kn, y) * 0.5
+            return {kk: v for kk, v in (('hips', 1 - leg), ('hipL', leg * l), ('hipR', leg * (1 - l))) if v > 1e-4}
+        return {kk: v for kk, v in (('hips', 1 - k), ('torso', k)) if v > 0}
+    secs = [(kn + 0.06, 0.25, 0.2, -0.19), (hipsY - 0.1, 0.2, 0.16, -0.15), (hipsY + 0.05, 0.15, 0.13, -0.12), (shY - 0.08, 0.15, 0.12, -0.11), (shY + 0.02, 0.13, 0.09, -0.09), (neckY + 0.02, 0.06, 0.05, -0.05)]
+    loft(b.P('tunic', green, w_t, 50), [ring(y, hw, zf, zb, 14, 0.75) for y, hw, zf, zb in secs], cap_top=True)
+    loft(b.P('belt', L.get('belt', '#3a2a1a'), 'torso', 50), [ring(hipsY + 0.02, 0.155, 0.135, -0.125, 14, 0.75), ring(hipsY + 0.07, 0.155, 0.135, -0.125, 14, 0.75)])
+    loft(b.P('hem', dark, w_t, 50), [ring(kn + 0.05, 0.253, 0.203, -0.193, 14, 0.75), ring(kn + 0.1, 0.24, 0.19, -0.18, 14, 0.75)])
+    for s_, sx in (('L', 1), ('R', -1)):
+        hp, k_, ft = bp('hip' + s_), bp('knee' + s_), bp('foot' + s_)
+        tube(b.P('thigh' + s_, legs, lambda p, s_=s_, k=k_[1]: {'hip' + s_: 1 - smooth(k + 0.06, k - 0.04, p[1]), 'knee' + s_: smooth(k + 0.06, k - 0.04, p[1])}, 50), hp, k_, 0.055, 0.05, 8)
+        tube(b.P('shin' + s_, legs, 'knee' + s_, 50), k_, (ft[0], ft[1] + 0.03, ft[2]), 0.05, 0.045, 8)
+        sh = b.P('shoe' + s_, shoes, 'foot' + s_, 40)   # pointed, the toe curling up
+        tube(sh, (ft[0], 0.05, ft[2] - 0.05), (ft[0], 0.05, ft[2] + 0.12), 0.06, 0.04, 8, squash=0.7)
+        tube(sh, (ft[0], 0.05, ft[2] + 0.12), (ft[0], 0.11, ft[2] + 0.2), 0.04, 0.005, 6)
+    for s_, sx in (('L', 1), ('R', -1)):
+        shp, el, hd = bp('sh' + s_), bp('el' + s_), bp('hand' + s_)
+        tube(b.P('upper' + s_, green, lambda p, s_=s_, e=el[1]: {'sh' + s_: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s_: smooth(e + 0.05, e - 0.03, p[1])}, 50), (shp[0], shp[1] + 0.02, shp[2]), el, 0.042, 0.035, 8)
+        tube(b.P('fore' + s_, skin, 'el' + s_, 50), el, hd, 0.03, 0.028, 7)
+        sphere(b.P('hand' + s_, skin, 'hand' + s_, 60), hd, 0.055, 8, 6)
+    # the head: big and round, ears, nose, beard; the hat
+    tube(b.P('neck', skin, lambda p: {'neck': 1 - smooth(headY - 0.02, headY + 0.05, p[1]), 'head': smooth(headY - 0.02, headY + 0.05, p[1])}, 60), (0, neckY - 0.04, 0), (0, headY + 0.08, 0.01), 0.05, 0.05, 8)
+    c = (0, headY + 0.17, 0.02)
+    sphere(b.P('head', skin, 'head', 60), c, 0.17, 12, 9, (1.0, 0.95, 0.95))
+    # (Ker'aooc, after body 188, has no great ears, a long pointed beard, star-pointed shoulders and bells on his shoes)
+    if not L.get('noEars'):
+        for sxx in (1, -1):
+            tube(b.P('ear', skin, 'head', 40), (sxx * 0.14, c[1] + 0.02, c[2] - 0.02), (sxx * 0.36, c[1] + 0.14, c[2] - 0.06), 0.06, 0.004, 7, squash=0.35)
+    tube(b.P('nose', L.get('noseC', '#e89a80'), 'head', 50), (0, c[1] - 0.01, c[2] + 0.14), (0, c[1] - 0.06, c[2] + 0.27), 0.04, 0.012, 7)
+    if L.get('beardLong'):
+        tube(b.P('beard', L.get('beard', '#f2f0ea'), lambda p: {'head': 1 - smooth(neckY, shY - 0.15, p[1]), 'torso': smooth(neckY, shY - 0.15, p[1])}, 60), (0, c[1] - 0.06, c[2] + 0.1), (0.03, hipsY - 0.02, c[2] + 0.24), 0.13, 0.01, 9, squash=0.55)
+    else:
+        sphere(b.P('beard', L.get('beard', '#f2f0ea'), 'head', 60), (0, c[1] - 0.11, c[2] + 0.08), 0.12, 9, 6, (1.0, 0.7, 0.75))
+    if L.get('pads'):
+        for s_, sx in (('L', 1), ('R', -1)):
+            tube(b.P('pad' + s_, green, 'torso', 50), (sx * 0.08, shY - 0.02, 0), (sx * 0.34, shY + 0.03, -0.01), 0.1, 0.012, 8, squash=0.7)
+    if L.get('bells'):
+        for s_, sx in (('L', 1), ('R', -1)):
+            ft = bp('foot' + s_)
+            sphere(b.P('bell' + s_, L['bells'], 'foot' + s_, 30), (ft[0], 0.125, ft[2] + 0.2), 0.03, 7, 5)
+    front = lambda x, y: c[2] + 0.17 * 0.95 * math.sqrt(max(0.05, 1 - (x / 0.17) ** 2 - ((y - c[1]) / 0.16) ** 2))
+    face_dots(b, front, c[1] + 0.04, 0.06, 0.022, 0.014, '#f4f0e8', L.get('eyes', '#7a2a2a'))
+    hat = b.P('hat', L.get('hat', '#2f7a3a'), lambda p: {'head': 1.0}, 40)
+    loft(hat, [ring(c[1] + 0.08, 0.19, 0.18, -0.18, 12, 1.0, cz=c[2]), ring(c[1] + 0.12, 0.17, 0.16, -0.16, 12, 1.0, cz=c[2])], cap_bottom=True)
+    pts = [(0, c[1] + 0.12, c[2]), (0, c[1] + 0.34, c[2] - 0.03), (0, c[1] + 0.52, c[2] - 0.1), (0, c[1] + 0.62, c[2] - 0.22)]
+    if L.get('hatStraight'):
+        pts = [(0, c[1] + 0.12, c[2]), (0, c[1] + 0.36, c[2]), (0, c[1] + 0.58, c[2] - 0.01), (0, c[1] + 0.74, c[2] - 0.02)]
+    rad = [0.165, 0.11, 0.06, 0.012]
+    for i in range(3):
+        tube(hat, pts[i], pts[i + 1], rad[i], rad[i + 1], 10)
+    sphere(b.P('pompom', L.get('pompom', '#f2d860'), 'head', 60), pts[-1], 0.05, 7, 5)
+    os.makedirs(OUTDIR, exist_ok=True)
+    tris = b.export(os.path.join(OUTDIR, name + '.json'))
+    print(name, 'tris', tris)
+    return name
+
+
 def build_any(n):
     L = ALL[n]['look']
     if n == 'zoe':
@@ -1040,6 +1117,8 @@ def build_any(n):
         return build_mole(n)
     if race == 'tri':
         return build_tri(n)
+    if race == 'elf':
+        return build_elf(n)
     return build(n)
 
 

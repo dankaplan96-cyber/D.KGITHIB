@@ -130,7 +130,32 @@ export const LOOKS = {
     // a smaller mole in a white smock with a red apron (the original's homemaker)
     race: 'mole', outfit: 'robe', tunic: '#ecebe6', apron: '#c85a3a', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,
   },
+  joe: {
+    // Joe the Elf, Twinsen's old friend from LBA2 (tools/blender/cast_poly.py build_elf): a green pointed hat with a
+    // yellow pompom, great pointed ears, a long nose, a white beard, a green tunic, pointed shoes
+    race: 'elf', kid: true, outfit: 'tunic', tunic: '#3a8a3a', tunicTrim: '#2a5a2a', belt: '#5a3a1a', pants: '#2a6a6a', shoes: '#4a9a4a',
+    skin: '#e8b890', hat: '#2f7a3a', pompom: '#f2d860', beard: '#f2f0ea', eyes: '#7a2a2a', height: 0.74,
+  },
   // ---- Vesk's guards (enemies: src/game/guards.js), the project's uniform: near-black, brass, the violet emblem
+  bersimon: {
+    // Bersimon the Weather Wizard (LBA2 body 111): a tall Rabbibunny in a knee-length teal robe with a tan belt,
+    // a grey beard, a tall pointed teal hat between the ears
+    race: 'bunny', outfit: 'robe', hem: 0.3, fur: '#e2825c', furDark: '#b85a3a', tunic: '#2f939b', tunicTrim: '#1f6a72', belt: '#9b773f',
+    pants: '#e2825c', shoes: '#0d5a66', eyes: '#2a1a10', beard: '#8a8a82', wizHat: '#2f939b', height: 1.24,
+  },
+  keraooc: {
+    // Ker'aooc the healing wizard (after LBA2 body 188, tools/blender/cast_poly.py build_elf): a small brown-faced
+    // gnome of a wizard in blue, star-pointed shoulders, a long pointed white beard, a tall straight blue hat with a
+    // white pompom, curled shoes with brass bells
+    race: 'elf', kid: true, outfit: 'tunic', tunic: '#236787', tunicTrim: '#1f5777', belt: '#634327', pants: '#1f5777', shoes: '#1f5777',
+    skin: '#936b4f', noseC: '#7a5640', hat: '#236787', pompom: '#f0eef8', beard: '#ebdfd7', eyes: '#2a1a10', height: 0.92,
+    noEars: true, beardLong: true, pads: true, bells: '#d8b048', hatStraight: true,
+  },
+  magus: {
+    // a master of the School of Magic (LBA2 body 123): a Rabbibunny in a long blue robe, a white beard, a blue pointed hat
+    race: 'bunny', outfit: 'robe', hem: 0.12, fur: '#b85a40', furDark: '#8a3a28', tunic: '#1f5777', tunicTrim: '#f2f2f2', belt: '#f2f2f2',
+    pants: '#b85a40', shoes: '#6b472b', eyes: '#2a1a10', beard: '#f4f2ee', wizHat: '#1f5777', height: 1.24,
+  },
   vguard: {
     // a Quetch guard: a round helmet with a violet visor, a knee-length uniform coat, a stun rifle (a prop)
     race: 'quetch', outfit: 'tunic', hem: 0.42, tunic: '#1a2a33', tunicTrim: '#1a2a33', belt: '#c8a050', buckle: '#e8c870', pants: '#16141a', shoes: '#16141a',
@@ -1010,7 +1035,7 @@ function polyGeometry(def, P) {
 // (a MeshStandardMaterial subclass so clones keep the shader and the hurt flash still works through emissive)
 export const LBA_LIGHT = { value: new THREE.Vector3(-0.45, 1, 0.6).normalize() };
 export const LBA_LEVEL = { value: 1 };
-class LbaMaterial extends THREE.MeshStandardMaterial {
+export class LbaMaterial extends THREE.MeshStandardMaterial {
   constructor(params) {
     super({ vertexColors: true, roughness: 1, metalness: 0, ...params });
     this.onBeforeCompile = (sh) => {

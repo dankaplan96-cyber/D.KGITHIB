@@ -35,6 +35,9 @@ Object.assign(STR.en, {
   chapter_steam: 'Steam and Sand', chapter_pass: 'The Pass', chapter_observatory: 'The Observatory', chapter_evacuation: 'Evacuation',
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   idle_generic: 'Hello, Twinsen.',
+  // Joe the Elf (LBA2), still in town
+  n_joe: 'Joe the Elf',
+  idle_joe: ["Twinsen! It's me, Joe! Still having trouble with my magic. Yesterday I tried to light a candle and I turned my hat inside out.", 'Remember when I hid in an Esmer shuttle and ended up on the wrong planet? I still get the hiccups when one flies over.', "The ground's been grumbling lately. Elves hear these things. My ears are very large, you'll notice.", 'If you see the Weather Wizard, tell him his umbrella is still in my kitchen.', 'Say hello to the Dino-Fly for me. He sneezed on me once. Best day of my life.'],
   // Zeelich's street folk
   n_zbee1: 'Bzizz', n_zbee2: 'Madam Zuzzara', n_zmole1: 'Old Grumm', n_zmole2: 'Mother Snuff', n_ztri1: 'Mr Pelleck', n_ztri2: 'Tavo',
   idle_zbee1: ['Bzz! Mind the wings, Quetch. I have forty crates of nectar to fly before the second sun.', 'The project\'s heat makes the flowers bloom twice. Good for honey. Bad for the head.', 'You walk everywhere? Bzz. How patient.'],

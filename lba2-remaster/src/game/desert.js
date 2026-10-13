@@ -22,6 +22,7 @@ import { Terrain } from '../engine/terrain.js';
 import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry } from './vegetation.js';
+import { shuttleTraffic } from './shuttle.js';
 import {
   tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
 } from './kit.js';
@@ -714,6 +715,9 @@ export function buildDesert(scene, physics) {
       reveal() { cover2.visible = false; },
     };
   }
+
+  // the Esmers' shuttles come and go through Bald Mountain (LBA2): two circling over Temple-Park
+  shuttleTraffic(group, updaters, { cx: DIG.x, cz: DIG.z, y: 30, r: 60, n: 2, speed: 0.05 });
 
   // ================================================================ FunFrock's buried condenser hall
   {

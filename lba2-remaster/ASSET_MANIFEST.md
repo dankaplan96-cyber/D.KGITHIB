@@ -10,6 +10,7 @@ Original game data used for visual comparison during development stays outside t
 | three.js r180 (`vendor/three`) | three.js project | MIT | final |
 | Rubik font (Google Fonts, loaded at runtime) | Google Fonts | OFL | final |
 | Character meshes: Twinsen, Zoé, Arthur, Baldino, Vesk, townsfolk, Zeelich residents (`assets/poly/*.json`) | Built in Blender from Python (`tools/blender/twinsen_poly.py`, `cast_poly.py`, `lbapoly.py`; run with `pip install bpy`), shaped after measurements of the original models (numbers only, docs/LBA2_MEASUREMENTS.md); editable sources `art/characters/twinsen/twinsen_poly.blend`, `art/characters/cast_poly.blend` | project | in use; rebuilt from the scripts |
+| Dogs, the Esmers' shuttles (`src/game/dogs.js`, `src/game/shuttle.js`) | Generated in code, shaped after measurements of the original models (numbers only, docs/LBA2_MEASUREMENTS.md) | project code | in use |
 | Skeletons (`art/characters/skeletons.json`) | Dumped from the game's rig definitions (`tools/dump-skeletons.mjs`) | project code | in use |
 | Character animation | Procedural pose animation (`src/engine/rig.js`) | project code | in progress |
 | Buildings, props, street furniture, cliffs, heat posts | Generated in code (`architecture.js`, `town.js`, `island.js`, `props.js`, `cliffs.js`, `zeelich.js`) | project code | Citadel and Zeelich in use; underground in progress |

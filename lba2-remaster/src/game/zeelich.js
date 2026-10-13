@@ -25,6 +25,9 @@
 // Heights the story may need: walking level Y0 = 6.0, platform deck DECK = 6.42 (both world y), cloud sea
 // R.cloudY = -3. Mill brakes are 3.0 m above the ground; the old mill's balcony (R.millTop.y) is 8.75 m up.
 import * as THREE from 'three';
+import { esmerShuttle, shuttleTraffic } from './shuttle.js';
+import { Dog, addDogs } from './dogs.js';
+const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
 import { textures } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
 import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
@@ -512,6 +515,98 @@ export function buildZeelich(scene, physics) {
   const depot = buildDepot();
   const platform = buildPlatform();
   buildClouds();
+  // ---------------------------------------------------------------- the Esmers' shuttles (src/game/shuttle.js)
+  // (placed before the scatter, so no tree grows through the pad)
+  // one landed on a pad by the dock (the first clear spot on the island), two more circling over the clouds
+  {
+    let pad = null;
+    for (let k = 0; k < 40 && !pad; k++) {
+      const a = k * 0.7, rr = 10 + k * 0.6, x = -48 + Math.cos(a) * rr, z = -6 + Math.sin(a) * rr;
+      if (onIsland(x, z, 6.5) && isClear(x, z, 5)) pad = [x, z];
+    }
+    if (pad) {
+      const [px, pz] = pad, gy = physics.groundAt(px + ox, pz + oz);
+      const deckM = MAT_PAD();
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.8, 0.25, 24), deckM); disc.position.set(px, gy + 0.12, pz); disc.receiveShadow = true; group.add(disc);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(4.1, 0.08, 6, 32), new THREE.MeshStandardMaterial({ color: '#e8c040', roughness: 0.5 })); ring.rotation.x = Math.PI / 2; ring.position.set(px, gy + 0.26, pz); group.add(ring);
+      const sh = esmerShuttle({ landed: true }); sh.position.set(px, gy + 0.25, pz); sh.rotation.y = 0.6; group.add(sh);
+      col({ type: 'cyl', x: px, z: pz, r: 3.5, top: gy + 4.4, noStand: true });
+      keepClear(px - 5, pz - 5, px + 5, pz + 5);
+      R.shuttlePad = W(px, pz);
+    }
+    shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 40, r: 110, n: 3, speed: 0.04 });
+  }
+
+  // ---------------------------------------------------------------- the dog-training yard (src/game/dogs.js)
+  // After LBA2's yard: a palisade of planks round a bed of fallen leaves, a pale track looping round a stacked-block
+  // tower on a red crate, a blue tunnel and two hurdles on the track, a hay bale and an A-frame. Two of Zeelich's
+  // big-mouthed dogs run the course, a third noses about inside; a fourth trots up and down the Esmer street.
+  const dogs = [];
+  {
+    // behind the north houses, toward the old mill (the shuttle pad has the south side)
+    const yard = onIsland(-28, -21, 3) ? [-28, -21] : null;
+    if (yard) {
+      const [yx, yz] = yard, gy = physics.groundAt(yx + ox, yz + oz);
+      const HW = 5.5, HD = 3.4;   // the palisade's half-size
+      const flat = (w, d, hex, y, x = yx, z = yz, ry = 0) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, d), new THREE.MeshStandardMaterial({ color: hex, roughness: 0.95 })); m.position.set(x, y, z); m.rotation.y = ry; m.receiveShadow = true; group.add(m); return m; };
+      flat(HW * 2, HD * 2, '#a8582a', gy + 0.02);
+      // the track: a rounded loop of pale planks-and-sand, 1.1 m wide
+      const path = [];
+      const TW = HW - 1.6, TD = HD - 1.4;
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
+        const k = 0.35;   // squareness
+        path.push([yx + Math.sign(c) * Math.pow(Math.abs(c), k) * TW, yz + Math.sign(sn) * Math.pow(Math.abs(sn), k) * TD]);
+      }
+      for (let i = 0; i < path.length; i++) {
+        const [ax, az] = path[i], [bx, bz] = path[(i + 1) % path.length];
+        flat(1.15, Math.hypot(bx - ax, bz - az) + 0.25, '#d4cec6', gy + 0.05, (ax + bx) / 2, (az + bz) / 2, Math.atan2(bx - ax, bz - az));
+      }
+      const wood = new THREE.MeshStandardMaterial({ color: '#7a5434', roughness: 0.9 }), woodD = new THREE.MeshStandardMaterial({ color: '#5a3c24', roughness: 0.9 });
+      const box = (w, h, d, m, x, y, z, ry = 0) => { const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); o.position.set(x, y, z); o.rotation.y = ry; o.castShadow = o.receiveShadow = true; group.add(o); return o; };
+      // hurdles on the two long straights (the dogs hop them), flagged on the path
+      for (const i of [6, 18]) {
+        const [hx, hz] = path[i], [nx, nz] = path[(i + 1) % path.length], ry = Math.atan2(nx - hx, nz - hz);
+        for (const s of [-1, 1]) box(0.08, 0.55, 0.08, woodD, hx + Math.cos(ry) * s * 0.6, gy + 0.28, hz - Math.sin(ry) * s * 0.6);
+        box(1.25, 0.07, 0.07, new THREE.MeshStandardMaterial({ color: '#e8e0d0', roughness: 0.6 }), hx, gy + 0.42, hz, ry);
+        path[i] = [hx, hz, 1];
+      }
+      // the blue tunnel across the track at the west end
+      {
+        const [tx, tz] = path[12], [nx, nz] = path[13];
+        const tun = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 1.7, 14, 1, true, 0, Math.PI * 1.3), new THREE.MeshStandardMaterial({ color: '#3a78c8', roughness: 0.5, side: THREE.DoubleSide }));
+        tun.rotation.z = Math.PI / 2; tun.rotation.order = 'YXZ'; tun.rotation.y = Math.atan2(nx - tx, nz - tz) + Math.PI / 2; tun.rotation.x = -Math.PI * 0.15;
+        tun.position.set(tx, gy + 0.36, tz); tun.castShadow = true; group.add(tun);
+      }
+      // the stacked-block tower on its red crate, the hay bale, an A-frame
+      box(1.2, 0.8, 1.2, new THREE.MeshStandardMaterial({ color: '#8a3424', roughness: 0.8 }), yx + 0.6, gy + 0.4, yz);
+      for (let i = 0; i < 6; i++) box(0.95, 0.36, 0.7, new THREE.MeshStandardMaterial({ color: i % 2 ? '#3a3c40' : '#2c2e32', roughness: 0.7 }), yx + 0.6, gy + 0.98 + i * 0.37, yz, i * 0.06);
+      col({ type: 'box', x: yx + 0.6, z: yz, hw: 0.6, hd: 0.6, rot: 0, top: gy + 3.1 });
+      box(1.4, 0.6, 0.8, new THREE.MeshStandardMaterial({ color: '#c8a050', roughness: 1 }), yx - 2.2, gy + 0.3, yz + 0.6, 0.3);
+      col({ type: 'box', x: yx - 2.2, z: yz + 0.6, hw: 0.7, hd: 0.4, rot: 0.3, top: gy + 0.6 });
+      for (const s of [-1, 1]) box(1.0, 0.06, 1.1, wood, yx - 2.4 + s * 0.42, gy + 0.36, yz - 1.2).rotation.z = -s * 0.75;
+      // the palisade: planks of uneven height on all four sides, a gap for a gate on the near (south) side
+      const plank = (x, z, ry, h) => { const o = box(0.34, h, 0.08, (Math.round(x * 7 + z * 3) % 2) ? wood : woodD, x, gy + h / 2, z, ry); o.rotation.z = ((x * 13 + z * 7) % 1) * 0.08 - 0.04; };
+      for (let x = -HW; x <= HW + 0.01; x += 0.36) { plank(yx + x, yz - HD, 0, 1.15 + Math.abs(Math.sin(x * 3.1)) * 0.25); if (Math.abs(x) > 0.9) plank(yx + x, yz + HD, 0, 1.1 + Math.abs(Math.sin(x * 2.3)) * 0.25); }
+      for (let z = -HD + 0.36; z < HD; z += 0.36) for (const s of [-1, 1]) plank(yx + s * HW, yz + z, Math.PI / 2, 1.15 + Math.abs(Math.sin(z * 2.7 + s)) * 0.25);
+      col({ type: 'box', x: yx, z: yz - HD, hw: HW, hd: 0.1, rot: 0, top: gy + 1.2 });
+      for (const s of [-1, 1]) {
+        col({ type: 'box', x: yx + s * HW, z: yz, hw: 0.1, hd: HD, rot: 0, top: gy + 1.2 });
+        col({ type: 'box', x: yx + s * (HW + 0.9) / 2, z: yz + HD, hw: (HW - 0.9) / 2, hd: 0.1, rot: 0, top: gy + 1.2 });
+      }
+      keepClear(yx - HW - 1, yz - HD - 1, yx + HW + 1, yz + HD + 1);
+      const P = path.map(([x, z, hop]) => [x + ox, z + oz, hop]);
+      dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'grey', x: P[0][0], z: P[0][1], path: P }));
+      dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'brown', x: P[12][0], z: P[12][1], path: P }));
+      dogs[1].s = dogs[1].len / 2;
+      dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'greybrown', x: yx + ox - 2, z: yz + oz - 1.5, area: { x0: yx + ox - 3.5, z0: yz + oz - 1.6, x1: yx + ox + 3.5, z1: yz + oz + 1.6 } }));
+      R.dogYard = { ...W(yx, yz), gate: W(yx, yz + HD) };
+    }
+    dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'grey', x: ox - 30, z: oz + 0.5, area: { x0: ox - 46, z0: oz - 2.2, x1: ox - 8, z1: oz + 2.2 } }));
+    addDogs(dogs, updaters);
+    R.dogs = dogs;
+  }
+
   buildIslets();
   scatter();
   B.build();

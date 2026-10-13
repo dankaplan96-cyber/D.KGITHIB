@@ -53,7 +53,7 @@ Pink sky, cloud sea, floating isles.
 | Place | Identity / landmark | Life | Story role | Changes |
 |---|---|---|---|---|
 | Ferry dock | the light-ferry | project guard | arrival; setback: plan confiscated | — |
-| Esmer street | domes and arches, stalls | Nara's cloud flowers, Oku; street folk after LBA2's Zeelich: Mosquibees (Bzizz, Madam Zuzzara), moles (Old Grumm, Mother Snuff) and triangle-headed townsfolk (Mr Pelleck, Tavo) | directions, opinions about the project | lines change once they see the plan |
+| Esmer street | domes and arches, stalls; behind the north houses the dog-training yard (palisade, track, block tower, tunnel, hurdles) | Nara's cloud flowers, Oku; street folk after LBA2's Zeelich: Mosquibees (Bzizz, Madam Zuzzara), moles (Old Grumm, Mother Snuff) and triangle-headed townsfolk (Mr Pelleck, Tavo); Zeelich's big-mouthed dogs (two running the course, one in the yard, one in the street) | directions, opinions about the project | lines change once they see the plan |
 | Baldino's workshop (interior) | bent antenna, globe, bench | explosions | the shell explained; override key built | finale: Baldino at the radio |
 | Three windmills + the old mill | sails, brakes | Oku's memories | brake with the ball; climb for the cog | released in the finale |
 | Project depot | locker, drones | — | code cylinder + the confiscated plan | — |
@@ -71,7 +71,7 @@ Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real
 | Hesk's sand-yacht | striped sail, three wheels | Hesk | rides between Kesh, Ilka's camp and the dig | parked where it last went |
 | Ilka's camp | ridge tent, telescope, sample crates under the north mesa | Professor Ilka | the crystals' discoverer | — |
 | The research post | fenced concrete pad, teal cabins, a test-bore derrick | Dallan (foreman), a gate guard, two drones | the notebook (stealth in sandstorms) | the gate opens in storms |
-| The dig | three shored terraces down to a carved wall and three stone seals | crystal mites | the shell carving: five vents | carving uncovered |
+| The dig: Temple-Park and the Temple of Bù (interior butemple) | three shored terraces down to the temple's slate gate and three stone seals; inside: dark slate halls, old mine rails and an ore cart, a great iron wheel, pale urns, pink-arch friezes, the great relief | crystal mites; the Esmers' shuttles circle over Bald Mountain | the relief: Twinsun in section, the shell's five vents | the gate opens |
 | FunFrock's condenser hall (interiors condA, condB) | a concrete arch half buried in a dune; inside a valve hall and a hangar with three condensers and a cargo glider | FunFrock's old drones | route the steam (valves 1, 3, 4), open the roof hatch, the glider north | plumes rise from the dunes once the vent is open |
 
 ## The Hamalayi (chapters 6–7) ✅ first version (src/game/hamalayi.js)
