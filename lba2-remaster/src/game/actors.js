@@ -250,8 +250,14 @@ export class Hero extends Actor {
     if (this.hasSword || this.swordMesh) this.showSword(this.combat.weapon === 'sword');
     // animation state
     let anim = 'idle';
+    // a throw or a charge on the move: the legs keep walking and the arms throw on the rig's upper-body layer;
+    // standing, the planted full-body throw
+    const moving = this.onGround && this.speed > 0.3;
+    if (cs.upper) this.rig.overlay(cs.upper.kind, cs.upper.t);
+    this.rig.moveRel = cs.face != null && moving ? angleDiff(this.angle, Math.atan2(this.vel.x, this.vel.y)) : 0;
     if (this.actT > 0) anim = this.actAnim;
     else if (this.hurtT > 0) anim = 'hurt';
+    else if (cs.upper && moving) anim = this.speed > 3.6 ? 'run' : 'walk';
     else if (cs.anim) anim = cs.anim;
     else if (!this.onGround || this.sliding) anim = this.vy > 0.5 ? 'jump' : 'fall';
     else if (this.hiding) anim = 'hide';
@@ -662,12 +668,12 @@ const BALL_THROW = {
 //  - movement is substepped (≤ BALL_STEP per step), so it can't tunnel through thin walls or small targets.
 //  - as in LBA2: a throw costs 1 magic point; with magic it bounces 4 times and returns on the 5th contact,
 //    without magic it returns at its first contact. Each ground bounce restarts the arc from the throw's own
-//    lift; walls reflect it; water swallows it (it returns). It returns at about 10 m/s, speeding up a little.
+//    lift; walls reflect it; water swallows it (it returns). It returns at about 10 m/s, speeding up (+22 m/s²).
 //  - damage: the magic level (+1 charged). Its colour shows the level: yellow, green, red, fire.
 //  - it brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals).
 //  - each target is hit at most once per throw. A quick throw returns after its first hit; a charged throw
 //    with bounces left ricochets on to the nearest other visible enemy within 8 m (ours, not the original's).
-//  - limits: 4 s of flight, then it returns; a return that takes over 3.5 s (or a scene change) puts it
+//  - limits: 3.2 s of flight, then it returns; a return that takes over 2.5 s (or a scene change) puts it
 //    straight back in the hand. The ball can't be lost.
 const BALL_STEP = 0.12, BALL_R = 0.14;
 // the ball's colour by magic level (1 yellow, 2 green, 3 red, 4 the fire ball)
@@ -822,7 +828,7 @@ export class MagicBall {
       const n = Math.max(1, Math.ceil((sp * dt) / BALL_STEP));
       const h = dt / n;
       for (let i = 0; i < n && this.state === 'fly'; i++) this.substep(h, i === 0 ? dt : 0);
-      if (this.state === 'fly' && this.life > 4) { this.state = 'return'; this.retT = 0; }
+      if (this.state === 'fly' && this.life > 3.2) { this.state = 'return'; this.retT = 0; }
       if (this.fire && Math.random() < dt * 30) g.particles.burst(this.pos.x, this.pos.y, this.pos.z, Math.random() < 0.5 ? '#ffb040' : '#ff5a10', 1, 0.6);
     } else if (this.state === 'return') {
       this.retT += dt;
@@ -831,8 +837,9 @@ export class MagicBall {
       const d = new THREE.Vector3(tx - this.pos.x, ty - this.pos.y, tz - this.pos.z);
       const len = d.length();
       if (len < 0.7) { this.toHand(); return; }
-      if (len > 60 || this.retT > 3.5) { this.toHand(); return; } // never lost
-      this.pos.addScaledVector(d.normalize(), Math.min(len, (10 + this.retT * 8) * dt));
+      if (len > 60 || this.retT > 2.5) { this.toHand(); return; } // never lost
+      // home at ~10 m/s like the original's, speeding up so a far miss doesn't keep Twinsen waiting
+      this.pos.addScaledVector(d.normalize(), Math.min(len, (10 + this.retT * 22) * dt));
     }
     this.mesh.position.copy(this.pos);
     placeBlobShadow(this.shadow, P, this.pos.x, this.pos.y, this.pos.z);

@@ -250,6 +250,8 @@ export class Rig {
     this.hipsRest = j.hips.position.y;
     this.armSpread = j.skirt ? 0.03 : 0.1;
     this.skirtLag = 0;
+    this.over = null;         // upper-body layer (overlay)
+    this.moveRel = 0;         // direction of travel relative to facing, while aiming
   }
 
   play(anim) {
@@ -261,6 +263,34 @@ export class Rig {
   }
 
   doGesture(kind) { this.gestureKind = kind; this.gestureT = GESTURE_LEN[kind] || 0.8; }
+
+  // Upper-body layer: a throw or an aimed charge over whatever the legs are doing (walking, strafing, idle).
+  // The combat controller feeds its clock every frame while the move runs (t: the same clock that releases the
+  // ball); when it stops feeding, the layer runs on by itself through the follow-through and fades out, so the
+  // recovery blends into the walk or the idle instead of cutting. A planted (standing) throw plays the full-body
+  // animation of the same name and the layer only keeps the clock.
+  overlay(kind, t) {
+    if (this.over?.kind !== kind) this.over = { kind, t, w: kind === 'throw' ? 1 : 0, fed: true };
+    this.over.t = t; this.over.fed = true;
+  }
+  _upper(kind, t) {
+    const U = { armL: 0, elL: 0, armR: 0, elR: 0, torsoX: 0, torsoY: 0, headX: 0, headY: 0 };
+    if (kind === 'throw') {
+      // the quick throw's arms, chest and head (the same poses as the planted throwQuick below)
+      if (t < 0.16) {
+        const e = t / 0.16;
+        Object.assign(U, { armR: -2.8 * e, elR: -1.6 * e, armL: -0.9 * e, elL: -0.3 * e, torsoY: 0.75 * e, torsoX: -0.1 * e, headY: -0.55 * e });
+      } else if (t < 0.26) Object.assign(U, { armR: -1.0, elR: -0.1, armL: 0.35, elL: -0.6, torsoY: -0.35, torsoX: 0.95, headX: -0.75, headY: 0.25 });
+      else {
+        const k = Math.min(1, (t - 0.26) / 0.35);
+        Object.assign(U, { armR: -0.75 + k * 0.6, elR: -0.35, armL: 0.2, elL: -0.45, torsoY: -0.3 * (1 - k), torsoX: 0.85 * (1 - k) + 0.05, headX: -0.65 * (1 - k) });
+      }
+    } else if (kind === 'charge') {
+      const e = Math.min(1, t / 0.25), w = Math.sin(this.t * 30) * 0.02;
+      Object.assign(U, { armR: -3.0 * e + w, elR: -1.7 * e, armL: -1.2 * e, elL: -0.15, torsoY: 0.8 * e, torsoX: -0.12 * e, headY: -0.7 * e });
+    }
+    return U;
+  }
 
   // Everyday actions. Each returns the body values and fills the joint targets T; timing comes from actionT
   // (time since the action started), so an action played again starts from its beginning.
@@ -416,6 +446,13 @@ export class Rig {
           // one robe over both legs stretches flat past ~65° between them: a slightly shorter stride, a lower heel
           T.legL *= 0.75; T.legR *= 0.75; T.kneeL = Math.min(T.kneeL, 1.2); T.kneeR = Math.min(T.kneeR, 1.2);
         }
+      }
+      // aiming while moving: the body faces the aim and the legs step the way it travels (sideways: the swing
+      // turns out to the side; backwards: the cycle runs in reverse), so the feet don't skate
+      if (this.moveRel) {
+        const fx = Math.cos(this.moveRel), sx = Math.sin(this.moveRel);
+        for (const sd of ['L', 'R']) { const l = T['leg' + sd]; T['leg' + sd] = l * fx; T['side' + sd] = -l * sx * 0.75; T['foot' + sd] *= Math.abs(fx); }
+        torsoX *= Math.max(0, fx);
       }
       if (a === 'sneak') {
         hipsY = 0.74; torsoX = 0.45; headX = -0.38;
@@ -678,6 +715,22 @@ export class Rig {
       const k = Math.max(0, this.landT / 0.22);
       hipsY -= 0.16 * k; T.kneeL = (T.kneeL || 0) + 0.7 * k; T.kneeR = (T.kneeR || 0) + 0.7 * k; T.legL = (T.legL || 0) - 0.35 * k; T.legR = (T.legR || 0) - 0.35 * k; torsoX += 0.2 * k;
     }
+    // the upper-body layer (see overlay)
+    const O = this.over;
+    if (O) {
+      if (!O.fed) O.t += dt;
+      const full = (O.kind === 'throw' && a === 'throwQuick') || (O.kind === 'charge' && a === 'charge');
+      let w;
+      if (O.kind === 'throw') { const k = clamp((O.t - 0.3) / 0.32, 0, 1); w = 1 - k * k * (3 - 2 * k); if (O.t > 0.62) this.over = null; }
+      else { O.w = damp(O.w, O.fed ? 1 : 0, 14, dt); w = O.w; if (!O.fed && w < 0.02) this.over = null; }
+      O.fed = false;
+      if (!full && w > 0) {
+        const U = this._upper(O.kind, O.t), mix = (v, u) => (v ?? 0) + (u - (v ?? 0)) * w;
+        const bow = walkLike ? 0.45 : 1; // (no deep bow while the legs keep walking)
+        T.armL = mix(T.armL, U.armL); T.elL = mix(T.elL, U.elL); T.armR = mix(T.armR, U.armR); T.elR = mix(T.elR, U.elR);
+        torsoX = mix(torsoX, U.torsoX * bow); torsoY = mix(torsoY, U.torsoY); headX = mix(headX, U.headX * bow); headY = mix(headY, U.headY);
+      }
+    }
     // momentum leans
     torsoX += this.lean;
     torsoZ += this.roll;
@@ -702,6 +755,7 @@ export class Rig {
     set(j.legL.hip, T.legL); set(j.legR.hip, T.legR);
     set(j.legL.knee, T.kneeL); set(j.legR.knee, T.kneeR);
     set(j.legL.foot, T.footL); set(j.legR.foot, T.footR);
+    set(j.legL.hip, T.sideL, 'z'); set(j.legR.hip, T.sideR, 'z');
     set(j.armL.sh, T.armL); set(j.armR.sh, T.armR);
     set(j.armL.el, T.elL); set(j.armR.el, T.elR);
     j.hips.position.y = damp(j.hips.position.y, this.hipsRest + (hipsY - 0.95) * (this.hipsRest / 0.95), R, dt);

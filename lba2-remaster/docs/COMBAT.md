@@ -39,14 +39,15 @@ fight; Aggressive mode's Space still attacks with the same moves.
   ball never tunnels at low frame rates.
   - As in LBA2: every throw costs 1 magic. With magic it bounces 4 times and returns on the 5th contact;
     without magic it returns at its first contact. A ground bounce restarts the arc from the throw's lift;
-    walls reflect it. Water returns it. It returns at about 10 m/s, speeding up a little.
+    walls reflect it. Water returns it. It returns at about 10 m/s, speeding up (+22 m/s²) so a far miss comes
+    back quickly.
   - Its colour shows the magic level: yellow, green, red, and at level 4 the fire ball.
   - It brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals).
   - Damage: the magic level (at least 1), +1 when charged (LBA2: 10/20/30/40 by level).
   - Each target is hit once per throw. A quick throw returns after its first hit. A charged throw ricochets on
     to the next visible enemy within 8 m.
   - The return never damages. Recall works after 0.2 s.
-  - It can't be lost: a 4 s flight limit, a 3.5 s return limit, and a reset on every scene change.
+  - It can't be lost: a 3.2 s flight limit, a 2.5 s return limit, and a reset on every scene change.
   - A full charge needs magic (the throw's 1 point) and shows a short dotted arc while held. Magic
     regenerates slowly (ours; the original refills only from flasks and givers).
 - **Aim and targeting:** aiming follows the lock, then the mouse cursor (projected onto the plane at Twinsen's

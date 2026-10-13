@@ -228,7 +228,7 @@ for (const [k, o] of Object.entries(r)) {
   check(`ball (${k}): a held attack button does not hold the ball key's throw`, o.other && !o.other.charged && o.other.t < 0.25, o.other);
 }
 
-// 16. holding the ball: he stands still, the direction keys only turn the aim, the release throws that way
+// 16. holding the ball: a slow aimed walk; without a mouse the direction is also the aim; the release throws that way
 r = await ev(() => {
   const { G } = C, h = G.hero, B = G.ball, orig = B.launch.bind(B); let shot = null;
   C.only([], [6190, 8], 0); h.combat.equip('fists', true); h.mp = 3; G.input.mouse.inside = false; C.step(0.3);
@@ -243,7 +243,7 @@ r = await ev(() => {
   const dot = shot ? (shot.aim.x * right.x + shot.aim.z * right.z) / Math.hypot(shot.aim.x, shot.aim.z) : -1;
   return { moved: +moved.toFixed(3), turned: +turned.toFixed(2), thrown: !!shot, alongRight: +dot.toFixed(2) };
 });
-check('holding the ball: no walking, the direction turns the aim', r.moved < 0.05 && r.turned > 0.5, r);
+check('charging: a slow controlled walk (not frozen, not full speed), the direction turns the aim', r.moved > 0.2 && r.moved < 1.2 && r.turned > 0.5, r);
 check('...and the release throws where he aims', r.thrown && r.alongRight > 0.8, r);
 
 // 17. the ball as in LBA2: a throw costs 1 magic; with magic 4 bounces and home on the 5th contact, without
@@ -269,6 +269,54 @@ r = await ev(() => {
 check('ball without magic: home at the first contact, nothing spent', r.dry.contacts === 1 && r.dry.mp === 0 && r.dry.end === 'idle', r.dry);
 check('ball with magic: 1 point spent, 4 bounces, home on the 5th contact', r.wet.contacts === 5 && r.wet.mp === 4 && r.wet.end === 'idle', r.wet);
 check('ball fetches a bonus it touches', r.carried && r.coins === 1 && !r.left, r);
+
+// 18. aiming with the mouse: a still cursor stays the aim; walking sideways never redirects the throw; a camera
+//     drag never toggles the lock (a right tap does); Aim Assist Off picks nothing; the ball leaves the hand at
+//     the release frame; the follow-through blends into the walk
+r = await ev(() => {
+  const { G, E } = C, h = G.hero, B = G.ball, I = G.input, M = I.mouse, cv = G.renderer.canvas;
+  C.only(['a_dummy'], [6190, 8], 0); h.combat.equip('ball', true); h.mp = 5; B.reset(); C.step(0.3);
+  const d = C.put('a_dummy', 6186, 14); // (well off to the left of the aim below)
+  // the cursor on a point 6 m north of Twinsen, then left alone for 6 s
+  const aimAt = (wx, wz) => { const v = h.pos.clone().set(wx, h.pos.y + 1.0, wz).project(G.camera), r2 = cv.getBoundingClientRect(); M.x = r2.left + (v.x + 1) / 2 * r2.width; M.y = r2.top + (1 - v.y) / 2 * r2.height; M.inside = true; I.lastDevice = 'kbd'; };
+  aimAt(h.pos.x, h.pos.z + 6); M.lastMove = performance.now() - 6000;
+  C.step(0.1);
+  const still = { aiming: I.mouseAiming(), src: h.combat.lastAim.src, z: +h.combat.lastAim.z.toFixed(2) };
+  // charge and walk right (D) while the cursor stays: the throw still goes to the cursor
+  let shot = null; const orig = B.launch.bind(B); B.launch = (...a) => { shot = { aim: { ...a[3].aim }, actionT: +h.rig.actionT.toFixed(3) }; orig(...a); const hp = h.pos.clone(); h.rig.j.armR.hand.getWorldPosition(hp); shot.hand = +B.pos.distanceTo(hp).toFixed(3); };
+  G.input.keys.add('KeyF'); G.input.taps.add('KeyF'); C.step(0.5);
+  G.input.keys.add('KeyD'); const p0 = h.pos.clone(); C.step(0.6);
+  const strafe = +h.pos.distanceTo(p0).toFixed(2), legs = h.rig.anim;
+  G.input.keys.delete('KeyF'); C.step(0.1);
+  // the recovery: the arm doesn't snap when the controller lets go
+  let maxJump = 0, prev = h.rig.j.armR.sh.rotation.x, layered = false;
+  for (let i = 0; i < 40; i++) { C.step(1 / 60); const v = h.rig.j.armR.sh.rotation.x; maxJump = Math.max(maxJump, Math.abs(v - prev)); prev = v; layered ||= !!h.rig.over && h.rig.anim === 'walk'; }
+  G.input.keys.delete('KeyD'); B.launch = orig; C.step(2);
+  // Aim Assist Off: aiming 25° to the right of the dummy picks nothing and the ball flies straight
+  G.settings.aimAssist = 'off'; C.only(['a_dummy'], [6190, 8], 0); C.put('a_dummy', 6190 + Math.sin(0.44) * 6, 8 + Math.cos(0.44) * 6); B.reset(); C.step(0.2);
+  aimAt(h.pos.x, h.pos.z + 6); C.step(0.1);
+  const off = { soft: !!G.targeting.soft, target: !!G.targeting.throwTarget({ x: 0, z: 1 }) };
+  B.launch(h, 'normal', 1, { aim: { x: 0, z: 1 }, target: G.targeting.throwTarget({ x: 0, z: 1 }) }); C.step(0.3);
+  off.drift = +Math.abs(B.pos.x - h.pos.x).toFixed(2); B.reset();
+  G.settings.aimAssist = 'normal';
+  // the right button: a drag turns the camera and never locks; a short tap locks
+  C.only(['a_dummy'], [6190, 8], 0); C.put('a_dummy', 6190, 11); G.targeting.release(); C.step(0.1);
+  const pe = (type, o) => cv.dispatchEvent(new PointerEvent(type, { pointerId: 1, pointerType: 'mouse', bubbles: true, ...o }));
+  pe('pointerdown', { button: 2 }); C.step(1 / 60);
+  for (let i = 0; i < 10; i++) { pe('pointermove', { movementX: 6, movementY: 1, clientX: M.x + i * 6, clientY: M.y }); C.step(1 / 60); }
+  pe('pointerup', { button: 2 }); C.step(0.1);
+  const dragLock = !!G.targeting.lock;
+  pe('pointerdown', { button: 2 }); C.step(1 / 60); pe('pointerup', { button: 2 }); C.step(0.1);
+  const tapLock = !!G.targeting.lock; G.targeting.release();
+  return { still, shot, strafe, legs, maxJump: +maxJump.toFixed(3), layered, off, dragLock, tapLock };
+});
+check('mouse aim: a cursor left still for 6 s is still the aim', r.still.aiming && r.still.src === 'mouse' && r.still.z > 0.9, r.still);
+check('mouse aim: walking sideways while charging does not redirect the throw', r.shot && r.shot.aim.z > 0.9 && r.strafe > 0.2, { shot: r.shot, strafe: r.strafe });
+check('charging on the move: the legs walk (no frozen pose)', r.legs === 'walk', { legs: r.legs });
+check('the ball leaves the hand at the release frame', r.shot && Math.abs(r.shot.actionT - 0.16) < 0.03 && r.shot.hand < 0.35, r.shot);
+check('the follow-through blends into the walk (no arm snap)', r.layered && r.maxJump < 0.3, { maxJump: r.maxJump, layered: r.layered });
+check('Aim Assist Off: no soft target, no correction', !r.off.soft && !r.off.target && r.off.drift < 0.05, r.off);
+check('a camera drag never toggles the lock; a right tap does', !r.dragLock && r.tapLock, { drag: r.dragLock, tap: r.tapLock });
 
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');

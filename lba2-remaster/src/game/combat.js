@@ -24,7 +24,9 @@ export const COMBAT = {
   lockRange: 14, lockBreak: 17, lockLosGrace: 1.5,
   assistCone: { off: 0, low: 0.22, normal: 0.42, high: 0.7 },   // rad half-angle for soft targeting
   dodge: { dur: 0.36, dist: 3.1, iStart: 0.04, iEnd: 0.27, cooldown: 0.28, cancelFrom: 0.62 },
-  throw: { quickRelease: 0.16, quickDur: 0.36, windHold: 0.12, chargeAfter: 0.2, chargeFull: 0.75, moveK: 0.6, chargeMoveK: 0, // (holding the ball: he stands and the direction only aims)
+  // quickDur: the throw holds the controls only this long (the follow-through then blends out over walking or
+  // idle on the rig's upper-body layer until ~0.62 s, without holding anything up)
+  throw: { quickRelease: 0.16, quickDur: 0.36, windHold: 0.12, chargeAfter: 0.2, chargeFull: 0.75, moveK: 0.6, chargeMoveK: 0.42, // (charging: a slow aimed walk)
     releaseAfterCharge: 0.08 },
   hitStop: { light: 0.045, heavy: 0.085 },
   pulse: { range: 4.8, cone: 0.75, recharge: 5.0, stun: 2.6, shieldDown: 3.2 },
@@ -142,11 +144,13 @@ export class Targeting {
   }
   get current() { return this.lock || this.soft; }
   // what a throw along `aim` means: the lock, an enemy in the cone, or a switch / target in the cone
+  // (Aim Assist Off: only a deliberate lock; nothing is picked for you)
   throwTarget(aim) {
     if (this.lock) return this.lock;
     const cone = this.cone();
+    if (cone <= 0) return null;
     const e = this.pick(aim, COMBAT.softRange, cone);
-    if (e || cone <= 0) return e;
+    if (e) return e;
     const g = this.game, h = g.hero, P = g.physics, da = Math.atan2(aim.x, aim.z);
     let best = null, bs = 1e9;
     for (const t of g.ballAimTargets()) {
@@ -196,13 +200,17 @@ export class Targeting {
       else if (!this.visible(L, COMBAT.lockBreak)) { this.losT += dt; if (this.losT > COMBAT.lockLosGrace) this.release(); }
       else this.losT = 0;
     }
-    this.soft = this.lock ? null : this.pick(aimDir, COMBAT.softRange, this.cone());
+    // the soft target is what an attack along the aim would mean right now: for the ball the very target the
+    // throw will use (an enemy, a switch, the target), so the marker, the preview and the launch agree
+    const ballOut = g.hero.combat?.weapon === 'ball';
+    this.soft = this.lock || this.cone() <= 0 ? null : ballOut ? this.throwTarget(aimDir) : this.pick(aimDir, COMBAT.softRange, this.cone());
     const t = this.lock || (showSoft ? this.soft : null);
     this.marker.visible = !!t;
     this.bar.visible = false;
     if (t) {
-      const top = t.pos.y + (t.markY ?? 1.4) + Math.sin(g.time * 5) * 0.05;
-      this.marker.position.set(t.pos.x, top + 0.35, t.pos.z);
+      const P = t.pos || t; // (an enemy, or a switch / target point)
+      const top = (t.pos ? P.y + (t.markY ?? 1.4) : P.y + 0.45) + Math.sin(g.time * 5) * 0.05;
+      this.marker.position.set(P.x, top + 0.35, P.z);
       this.marker.material.color.set(this.lock ? '#ffd23a' : '#fff4c8');
       this.marker.material.opacity = this.lock ? 1 : 0.55;
       if (t.maxHp && t.maxHp < 1e6 && (this.lock || t.recentHitT > 0)) {
@@ -265,6 +273,9 @@ export class HeroCombat {
     if (T?.lock) { const a = h.angleTo(T.lock); return { x: Math.sin(a), z: Math.cos(a), src: 'lock' }; }
     const m = this.g.mouseAim?.();
     if (m) { const dx = m.x - h.pos.x, dz = m.z - h.pos.z, d = Math.hypot(dx, dz); if (d > 0.3) return { x: dx / d, z: dz / d, src: 'mouse' }; }
+    // the cursor is still the aim device (on Twinsen himself, or the ray missed): keep the mouse aim it gave last,
+    // never the walking direction (moving sideways must not redirect a throw)
+    if (this.g.input?.mouseAiming?.() && this.lastAim?.src === 'mouse') return this.lastAim;
     if (mvDir && Math.hypot(mvDir.x, mvDir.z) > 0.2) { const d = Math.hypot(mvDir.x, mvDir.z); return { x: mvDir.x / d, z: mvDir.z / d, src: 'stick' }; }
     return { x: Math.sin(h.angle), z: Math.cos(h.angle), src: 'facing' };
   }
@@ -391,7 +402,7 @@ export class HeroCombat {
     if (!def) return;
     // the target this strike means: the lock, or whoever is close along the aim
     const T = g.targeting;
-    let tgt = T?.lock && h.distTo(T.lock) < COMBAT.meleeAssist + 1 ? T.lock : T?.pick(aim, COMBAT.meleeAssist, 0.9);
+    let tgt = T?.lock && h.distTo(T.lock) < COMBAT.meleeAssist + 1 ? T.lock : T && T.cone() > 0 ? T.pick(aim, COMBAT.meleeAssist, 0.9) : null;
     const want = tgt ? h.angleTo(tgt) : Math.atan2(aim.x, aim.z);
     if (tgt && Math.abs(angleDiff(h.angle, want)) > COMBAT.turnLimit && aim.src !== 'lock' && aim.src !== 'mouse') tgt = null;
     this.move = { key, def, t: 0, hit: new Set(), want: tgt || aim.src !== 'facing' ? want : h.angle, tgt, stepLeft: def.step, prevArc: null };
@@ -503,14 +514,14 @@ export class HeroCombat {
         T.chargeT += dt;
         if (T.chargeT >= C.chargeFull && !T.full) { T.full = true; g.audio.play('chargeFull'); g.particles.burst(h.pos.x, h.pos.y + 2.0, h.pos.z, '#ffe27a', 8, 1.5); }
         g.ball.setCharge?.(Math.min(1, T.chargeT / C.chargeFull));
-        out.speedK = C.chargeMoveK; out.anim = 'charge'; out.face = want;
+        out.speedK = C.chargeMoveK; out.anim = 'charge'; out.upper = { kind: 'charge', t: T.chargeT }; out.face = want;
         g.ball.preview?.(h, aim, T.full);
         return;
       }
       if (T.charging && !T.whip) { T.whip = true; h.rig.play('throwQuick'); T.at = C.quickRelease - C.releaseAfterCharge; }
       else { T.at += dt; if (!T.let) T.at = Math.min(T.at, C.windHold); }
       h.rig.actionT = T.at;
-      out.speedK = C.moveK; out.anim = 'throwQuick'; out.face = want;
+      out.speedK = C.moveK; out.anim = 'throwQuick'; out.upper = { kind: 'throw', t: T.at }; out.face = want;
       if (T.at >= C.quickRelease) {
         T.released = true; T.relAt = T.t;
         const full = !!T.full && h.mp >= 1;
@@ -522,7 +533,8 @@ export class HeroCombat {
       return;
     }
     T.at += dt;
-    out.speedK = C.moveK; out.anim = 'throwQuick';
+    h.rig.actionT = T.at;
+    out.speedK = C.moveK; out.anim = 'throwQuick'; out.upper = { kind: 'throw', t: T.at };
     if (T.at >= C.quickDur) { this.throwing = null; h.rig.atk = null; }
   }
   notReady() { const g = this.g; g.audio.play('notReady'); g.hud.weaponFlash?.(); }

@@ -29,6 +29,8 @@ const KEYMAP = {
 
 // Rebinding: an action's first key can be replaced (the arrows / F-keys alternatives stay)
 const DEFAULT_KEYS = JSON.parse(JSON.stringify(KEYMAP));
+// a right-button hold must stay still this long (ms) before it counts as focus (a drag before it turns the camera)
+const FOCUS_HOLD = 180;
 export const REBINDABLE = ['up', 'down', 'left', 'right', 'action', 'interact', 'attack', 'ball', 'dodge', 'focus', 'tswitch', 'swap', 'weapons', 'view', 'recenter', 'map', 'inventory', 'pause'];
 export function keyFor(action) { return KEYMAP[action]?.[0]; }
 export function applyBindings(over = {}) {
@@ -60,7 +62,7 @@ export class Input {
     this.now = new Set();
     this.prev = new Set();
     this.touch = { x: 0, y: 0, active: false, buttons: new Set() };
-    this.mouse = { dx: 0, dy: 0, down: false, clicked: false, moved: 0, x: 0, y: 0, lastMove: -1e9, left: false, leftTap: false, right: false, rightDrag: false, rightTap: false, wheel: 0, inside: false };
+    this.mouse = { dx: 0, dy: 0, down: false, clicked: false, moved: 0, x: 0, y: 0, lastMove: -1e9, left: false, leftTap: false, right: false, rightDrag: false, rightTap: false, rightAt: 0, wheel: 0, inside: false };
     this.pad = null;
     this.padAxes = [0, 0, 0, 0];
     this.lastDevice = 'kbd';
@@ -82,13 +84,15 @@ export class Input {
       if (e.pointerType === 'touch') return;
       this.lastDevice = 'kbd';
       if (e.button === 0) { M.left = true; M.leftTap = true; M.moved = 0; M.down = true; }
-      if (e.button === 2) { M.right = true; M.rightDrag = false; M.moved = 0; }
+      if (e.button === 2) { M.right = true; M.rightDrag = false; M.moved = 0; M.rightAt = performance.now(); }
       if (e.button === 1) { M.mid = true; e.preventDefault(); }
       canvas.setPointerCapture(e.pointerId);
     });
     canvas.addEventListener('pointermove', (e) => {
       if (e.pointerType === 'touch') return;
       M.x = e.clientX; M.y = e.clientY; M.lastMove = performance.now(); M.inside = true;
+      // moving the mouse is a deliberate switch back to mouse + keyboard (a stick or a touch switches away)
+      if (Math.abs(e.movementX) + Math.abs(e.movementY) > 2) this.lastDevice = 'kbd';
       if (M.right || M.mid) {
         M.moved += Math.abs(e.movementX) + Math.abs(e.movementY);
         if (M.mid || M.moved > 8) { M.rightDrag = M.right; M.dx += e.movementX; M.dy += e.movementY; }
@@ -98,7 +102,8 @@ export class Input {
     canvas.addEventListener('pointerup', (e) => {
       if (e.pointerType === 'touch') return;
       if (e.button === 0) { if (M.left && M.moved < 6) M.clicked = true; M.left = false; M.down = false; }
-      if (e.button === 2) { if (M.right && !M.rightDrag) M.rightTap = true; M.right = false; M.rightDrag = false; }
+      // a short right click without a drag is a focus tap; a drag turns the camera and never focuses
+      if (e.button === 2) { if (M.right && !M.rightDrag && performance.now() - M.rightAt < FOCUS_HOLD) M.rightTap = true; M.right = false; M.rightDrag = false; }
       if (e.button === 1) M.mid = false;
     });
     canvas.addEventListener('wheel', (e) => { M.wheel += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
@@ -173,7 +178,8 @@ export class Input {
     // a tap shorter than one frame still counts (leftTap/rightTap remember it)
     if (M.left || M.leftTap) this.now.add('attack');
     M.leftTap = false;
-    if ((M.right && !M.rightDrag) || M.rightTap) this.now.add('focus');
+    // focus from the right button: a tap, or a hold that stays still for FOCUS_HOLD (never a camera drag)
+    if (M.rightTap || (M.right && !M.rightDrag && performance.now() - M.rightAt >= FOCUS_HOLD)) this.now.add('focus');
     M.rightTap = false;
     this.wheelSteps = M.wheel; M.wheel = 0;
     if (this.wheelSteps) this.now.add('tswitch');
@@ -239,6 +245,7 @@ export class Input {
   }
 
   clearEdges() { this.prev = new Set(this.now); }
-  // the mouse cursor is a live aim if it moved over the canvas recently
-  mouseAiming() { const M = this.mouse; return M.inside && this.lastDevice === 'kbd' && performance.now() - M.lastMove < 2500; }
+  // the mouse cursor is the aim while it is over the canvas and mouse + keyboard is the device in use; a still
+  // cursor stays a valid aim (only another device, leaving the canvas, or the game state changes that)
+  mouseAiming() { const M = this.mouse; return M.inside && this.lastDevice === 'kbd' && M.lastMove > 0; }
 }
