@@ -4,9 +4,10 @@
 // Buses: master ─┬─ music (file playback, ducked under dialogue)
 //                ├─ sfx (+ a little room reverb)
 //                ├─ ambience (rain, surf, wind; follows the effects volume)
-//                └─ voice (reserved for future voice acting)
+//                └─ voice (the characters' gibberish voices, voice.js)
 
 import { Music } from './music.js';
+import { Babble } from './voice.js';
 
 export class AudioEngine {
   constructor() {
@@ -15,6 +16,7 @@ export class AudioEngine {
     this.mood = 'title';
     this.combat = 0;
     this.vol = { master: 0.8, music: 0.55, sfx: 0.8, voice: 0.8 };
+    this.babble = new Babble(this); // the characters' gibberish voices (voice.js)
     this.music = new Music(this);
     // browsers only start audio after a user gesture: the first click / key / touch anywhere starts it
     if (typeof addEventListener === 'function') {

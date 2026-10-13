@@ -200,6 +200,7 @@ export class HUD {
     D.el.style.setProperty('--spk-lo', '#' + c.clone().multiplyScalar(0.6).getHexString());
     D.el.classList.remove('hidden');
     D.el.dir = getLang() === 'he' ? 'rtl' : 'ltr';
+    this.game.audio.babble?.start(nameKey);
     this._line();
   }
   _line() {
@@ -217,6 +218,7 @@ export class HUD {
     this.game.audio.play('select');
     if (D.i >= D.lines.length) {
       D.el.classList.add('hidden');
+      this.game.audio.babble?.stop();
       const cb = D.done; D.done = null;
       cb?.();
     } else this._line();
@@ -229,7 +231,8 @@ export class HUD {
     const now = Math.floor(D.shown);
     if (now !== before) {
       D.text.textContent = D.full.slice(0, now);
-      if (now % 3 === 0) this.game.audio.play('blip');
+      // the speaker babbles along (voice.js); narration, signs and notes keep the typing blip
+      if (!this.game.audio.babble?.chars(D.full, before, now) && now % 3 === 0) this.game.audio.play('blip');
     }
   }
 
