@@ -8,11 +8,11 @@ import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/mat
 import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP } from './town.js';
-import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry } from './vegetation.js';
+import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, STUMP } from './island.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod } from './kit.js';
-import { COAST, LEVELS } from './citadel-layout.js';
+import { COAST, LEVELS, PROPS } from './citadel-layout.js';
 
 // Citadel Island follows the original LBA2 map (citadel-layout.js: the coast and four terrace levels). LAYOUT
 // places that map in our frame so its town falls on ours: the town and the harbour were built first, here, and
@@ -457,6 +457,14 @@ export function buildWorld(parentScene) {
     return true;
   };
   const trees = [];
+  // the original's trees and palms first, where they fit our island (off the paths, streets, houses and sites)
+  for (const [x, z, k] of PROPS.trees) {
+    const h = H(x, z);
+    if (h < 1.0 || terrain.slopeAt(x, z) > 0.6 || inHouse(x, z, 1.6) || pathDist(x, z) < 1.8 || streetDist(x, z) < 0.9 || keepClear(x, z, 1.2)) continue;
+    if (physics.near(x, z).some((c) => c.enabled && c.top > h + 0.1 && physics._inside(c, x, z, 0.9))) continue;
+    if (trees.some((t) => Math.hypot(t.x - x, t.z - z) < 2.2)) continue;
+    trees.push({ x, z, h, s: k === 4 ? 0.75 : k === 1 ? 0.75 : 0.8, kind: k === 4 ? 'palm' : k === 1 ? 'tall' : 'round', ry: x * 1.3 + z, orig: true });
+  }
   for (let i = 0; i < 1600 && trees.length < 300; i++) {
     const x = ISLAND.cx + (rand() - 0.5) * 200, z = ISLAND.cz + (rand() - 0.5) * 220;
     // the original's trees stand mostly on the northern plateau; a few in the fields and on the southern hill
@@ -472,7 +480,7 @@ export function buildWorld(parentScene) {
   }
   // a few hand-placed trees and bushes around town
   for (const [x, z, kind, s] of [[-56, -21, 'round', 1.1], [-45, -21, 'fruit', 1.0], [-38, -12, 'round', 0.9], [-26, -11, 'tall', 1.0], [-51, 9.5, 'fruit', 0.95],
-    [-37, 11, 'round', 1.05], [-24, 3, 'tall', 1.1], [-60, -12, 'pine', 1.0], [-59.5, 8.5, 'round', 0.9], [-34.5, -23, 'pine', 1.1]]) if (!inHouse(x, z, 1.2)) trees.push({ x, z, h: H(x, z), s: s * 0.8, kind, ry: x * 1.7 });
+    [-37, 11, 'round', 1.05], [-24, 3, 'tall', 1.1], [-60, -12, 'pine', 1.0], [-59.5, 8.5, 'round', 0.9], [-34.5, -23, 'pine', 1.1]]) if (!inHouse(x, z, 1.2) && !trees.some((t) => Math.hypot(t.x - x, t.z - z) < 2.5)) trees.push({ x, z, h: H(x, z), s: s * 0.8, kind, ry: x * 1.7 });
   const bushes = [];
   for (const [x, z] of [[-54.6, -10.6], [-47.0, -18.9], [-41.8, -19.2], [-36.5, -6.5], [-33.0, 4.2], [-53.2, 6.8], [-48.6, 11.6], [-40.6, 13.8], [-27.6, -13.7], [-58.4, -1.8], [-26.5, 9.6]]) if (!inHouse(x, z, 0.8)) bushes.push({ x, z, h: H(x, z), s: 0.9 + ((x * 7) % 1 + 1) % 1 * 0.4, ry: z });
   for (let i = 0; i < 600 && bushes.length < 120; i++) {
@@ -556,8 +564,10 @@ export function buildWorld(parentScene) {
     const list = trees.filter((t, i) => t.kind === kind && i % nv === v);
     if (list.length) mkInst(treeGeometry(kind, v + 1), leafMat, list, true, shadeVar, treeGeometry(kind, v + 1, 1));
   }
+  const palmList = trees.filter((t) => t.kind === 'palm');
+  for (let v = 0; v < 2; v++) { const list = palmList.filter((t, i) => i % 2 === v); if (list.length) mkInst(palmGeometry(v + 1), leafMat, list, true, shadeVar, palmGeometry(v + 1, 1)); }
   for (let v = 0; v < 3; v++) mkInst(treeGeometry('bush', v + 1), leafMat, bushes.filter((b, i) => i % 3 === v), true, shadeVar, treeGeometry('bush', v + 1, 1));
-  for (const t of trees) physics.add({ type: 'cyl', x: t.x, z: t.z, r: 0.42 * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false });
+  for (const t of trees) physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false });
   for (const b of bushes) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
   W.trees = trees;
 
