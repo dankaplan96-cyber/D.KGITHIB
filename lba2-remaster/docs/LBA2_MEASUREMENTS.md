@@ -50,6 +50,15 @@ only the numbers below, used to shape our own models and animations.
   pelvis 38–44° forward, the head up; a long crouched follow-through.
 - 12 crouched sneak (pelvis 45°, knees up to 158°), 21 looking around, 26 a forward jump (720 ms).
 
+## Citadel Island's layout
+- An island (.ILE) is 16×16 sections of 32768 units (≈ 54.8 m); Citadel uses 4×4 (≈ 219 m across). Each section:
+  a 65×65 height grid; heights reach 11750 units (≈ 19.6 m). The town lies low (≈ 0.4 m), a staircase of shelves
+  (≈ 4, 8, 12 m) rises to the northern plateau (≈ 14 m), with a southern hill, a south-west islet joined by a sand
+  bay, a dome islet to the west (≈ 12 m) and a small islet to the north-east.
+- `src/game/citadel-layout.js`: the coast (h > 0.05 m) and our four terraces (original h > 2.5 / 6 / 9.5 / 12.5 m)
+  as polygons simplified at 1.5 m. The original's town square sits at our (−42, −4); 270 decor objects (trees,
+  palms, tulip beds, lamps, lanterns, benches, fences, bollards) are listed by kind for the props pass.
+
 ## Givers and bonuses (zone giver, the action hop)
 - In Normal mode the action key plays the generic anim 11 (ACTION) = ANIM.HQR 17 in all four behaviours: 5 keys
   of 160/160/120/80/60 ms (0.58 s). Body height: 0, −134, +369, 0, −148 units (a crouch, a hop of 0.30 H, a

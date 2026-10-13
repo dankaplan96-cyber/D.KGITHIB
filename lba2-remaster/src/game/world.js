@@ -9,45 +9,50 @@ import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry } from './vegetation.js';
-import { buildIsland, keepClear } from './island.js';
+import { buildIsland, keepClear, STUMP } from './island.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod } from './kit.js';
+import { COAST, LEVELS } from './citadel-layout.js';
 
+// Citadel Island follows the original LBA2 map (citadel-layout.js: the coast and four terrace levels). LAYOUT
+// places that map in our frame so its town falls on ours: the town and the harbour were built first, here, and
+// the original's quay wall along the west of its town lands on our quay. The terrain grid is centred on it.
+export const LAYOUT = { dx: -76, dz: 16 };
+export const ISLAND = { cx: -76, cz: 16 };
 export const POI = {
   start: { x: -38, z: 4 },
   village: { x: -42, z: -4 },
   harbour: { x: -68, z: -3 },
-  lighthouse: { x: 2, z: -80 },
-  sage: { x: 4, z: -73 },
-  plateau: { x: 55, z: -25, r: 11, h: 14 },
-  stonesStart: { x: 34, z: -6 },
-  target: { x: 31, z: -12 },
-  camp: { x: 8, z: 52 },
-  chest: { x: 9, z: 57 },
-  fort: { x: 48, z: 36, half: 13 },
+  // on the northern plateau (the original's level 4, ~14 m): the lighthouse at its west end, the project
+  // station at its east end, the depot and the orchard between
+  lighthouse: { x: -101, z: -67 },
+  sage: { x: -99, z: -60 },
+  // the Whispering Cliffs: a rock stack on the plateau's southern rim, reached only by the stepping stones
+  plateau: { x: -56, z: -44, r: 11, h: 16.8 },
+  stonesStart: { x: -68, z: -22 },
+  target: { x: -69, z: -29 },
+  camp: { x: -76, z: -70 },
+  chest: { x: -75, z: -65 },
+  fort: { x: -28, z: -65, half: 13 },
 };
 
 // LBA2-style terraces: levels separated by steep rock cliffs
 export const LEVEL0 = 2.3, LEVEL_STEP = 2.9;
 export const level = (k) => LEVEL0 + LEVEL_STEP * k;
 
-// the old (pre-terrace) flats; the town core keeps exactly these heights
-const FLATS = [
-  { ...POI.village, r: 20, h: 2.2 },
-  { x: 8, z: 52, r: 15, h: 2.6 },
-  { x: 48, z: 36, r: 16, h: 3.0 },
-  { x: 2, z: -77, r: 8, h: 9.5 },
-];
+// the town core keeps exactly the heights it was built on
+const FLATS = [{ ...POI.village, r: 20, h: 2.2 }];
 // harbour quay (paved, rubble embankment on the sea side) and the basin in front of it
 export const QUAY = { x0: -74.5, x1: -61.5, z0: -13, z1: 7, h: 1.8 };
 const BAY = { x1: QUAY.x0 - 0.1, z0: QUAY.z0 + 0.6, z1: QUAY.z1 - 0.6 };
 
 export const PATHS = [
-  [[-42, -4], [-30, -30], [-14, -55], [2, -72]],
-  [[-42, -4], [-28, 18], [-6, 42], [8, 52]],
-  [[8, 52], [26, 44], [32.5, 36]],
-  [[-42, -4], [-12, -8], [14, -7], [33, -7]],
-  [[31.5, 34], [30.5, 21], [37, 14], [34, -2]],
+  [[-42, -4], [-37, -20], [-34, -36], [-42, -50], [-48, -56]],                          // from the square up to the plateau
+  [[-48, -56], [-50, -62], [-45, -65]],                                                 // to the station gate
+  [[-48, -56], [-58, -66], [-64, -75], [-86, -76], [-94, -70], [-99, -62]],              // through the depot to the lighthouse
+  [[-58, -66], [-70, -60], [-75, -57]],                                                 // to the orchard
+  [[-58, -6], [-66, -18]],                                                              // harbour street to the stepping stones
+  [[-44, 10], [-46, 40], [-46, 74]],                                                    // south through the fields
 ];
 
 export function pathDist(x, z) {
@@ -89,34 +94,66 @@ function townKeep(x, z) {
   return k;
 }
 
-function coastT(x, z) {
-  const a = Math.atan2(z, x);
-  const coast = 95 + noise2(Math.cos(a) * 1.6 + 5, Math.sin(a) * 1.6 + 5) * 8 + fbm(x * 0.03, z * 0.03, 2) * 4;
-  return Math.hypot(x, z) / coast;
+// ---------- the original layout as distance fields ----------
+// Signed distance (metres, + inside) to each layer of citadel-layout.js (0 the coast, 1–4 the terrace levels),
+// sampled once on a 2 m grid over the island and read back bilinearly.
+const SD_STEP = 2, SD_N = 131, SD_X0 = ISLAND.cx - 130, SD_Z0 = ISLAND.cz - 130, SD_CAP = 24;
+let SD = null;
+function sdLayer(polys) {
+  const P = polys.map((p) => {
+    const xs = [], zs = [];
+    for (let i = 0; i < p.length; i += 2) { xs.push(p[i] + LAYOUT.dx); zs.push(p[i + 1] + LAYOUT.dz); }
+    return { xs, zs, x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
+  });
+  const f = new Float32Array(SD_N * SD_N);
+  for (let j = 0; j < SD_N; j++) for (let i = 0; i < SD_N; i++) {
+    const x = SD_X0 + i * SD_STEP, z = SD_Z0 + j * SD_STEP;
+    let inside = false, d = SD_CAP;
+    for (const q of P) {
+      if (x < q.x0 - d || x > q.x1 + d || z < q.z0 - d || z > q.z1 + d) continue;
+      const n = q.xs.length;
+      let c = false;
+      for (let a = 0, b = n - 1; a < n; b = a++) {
+        const xa = q.xs[a], za = q.zs[a], xb = q.xs[b], zb = q.zs[b];
+        if ((za > z) !== (zb > z) && x < ((xb - xa) * (z - za)) / (zb - za) + xa) c = !c;
+        if (Math.max(Math.min(xa, xb) - x, x - Math.max(xa, xb), Math.min(za, zb) - z, z - Math.max(za, zb)) < d) d = Math.min(d, distToSegment(x, z, xa, za, xb, zb));
+      }
+      if (c) inside = true;
+    }
+    f[j * SD_N + i] = inside ? d : -d;
+  }
+  return f;
 }
-// sandy coves (angle sectors) instead of rock cliffs
+function sd(k, x, z) {
+  SD ??= [COAST, ...LEVELS].map(sdLayer);
+  const F = SD[k];
+  const gx = (x - SD_X0) / SD_STEP, gz = (z - SD_Z0) / SD_STEP;
+  if (gx < 0 || gz < 0 || gx >= SD_N - 1 || gz >= SD_N - 1) return -SD_CAP;
+  const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, o = j * SD_N + i;
+  return (F[o] * (1 - fx) + F[o + 1] * fx) * (1 - fz) + (F[o + SD_N] * (1 - fx) + F[o + SD_N + 1] * fx) * fz;
+}
+// a wobble on every outline so the traced polygons read as rock and shore, not as straight edges
+const jag = (x, z, s) => fbm(x * 0.07 + s, z * 0.07 - s, 3) * 2.4;
+// distance inland from the shore (negative at sea)
+export function coastDist(x, z) { return sd(0, x, z) + jag(x, z, 0); }
+// sand where the original has it: the bay between the south-west islet and the southern hill
+const BEACHES = [{ x: -2 + LAYOUT.dx, z: 80 + LAYOUT.dz, r: 18 }];
 function beachMask(x, z) {
-  const a = Math.atan2(z, x);
-  const sec = (c, w) => 1 - smoothstep(w * 0.6, w, Math.abs(Math.atan2(Math.sin(a - c), Math.cos(a - c))));
-  return Math.max(sec(1.25, 0.32), sec(-1.15, 0.2), sec(0.35, 0.22));
+  let b = 0;
+  for (const B of BEACHES) b = Math.max(b, 1 - smoothstep(B.r * 0.6, B.r, Math.hypot(x - B.x, z - B.z)));
+  return b;
 }
 
-// natural relief before terracing: higher toward the north (lighthouse) and
-// the north-east (Whispering Cliffs), low toward the southern coast
-function natural(x, z) {
-  let n = 3.6 - z * 0.03 + x * 0.008 + fbm(x * 0.012 + 3.7, z * 0.012 - 1.2, 3) * 5.2;
-  const dl = Math.hypot(x - 2, z + 79);
-  n += Math.exp(-(dl * dl) / (2 * 11 * 11)) * 4;
-  const t = coastT(x, z);
-  n = Math.min(n, 3.3 + (0.965 - t) * 70); // the coastal band stays on the lowest terrace
-  return Math.max(n, LEVEL0 - 0.9);          // nothing below the lowest terrace inland (coves are cut separately)
-}
-function terrace(n, x, z) {
-  const u = (n - LEVEL0) / LEVEL_STEP + 0.5 + fbm(x * 0.11, z * 0.11, 2) * 0.16;
-  const k = Math.floor(u), f = u - k;
-  const s = smoothstep(0.93, 1.0, f);
-  const cliff = s * (1 - s) * 4;
-  let h = LEVEL0 + LEVEL_STEP * (k + s);
+// the layout's terraces: each level polygon adds one LBA2 step (2.9 m) with a craggy rock face at its edge
+function terraces(x, z) {
+  let h = LEVEL0, cliff = 0;
+  for (let k = 1; k <= 4; k++) {
+    const d = sd(k, x, z) + jag(x, z, k * 3.1);
+    if (d < -1.2) continue;
+    const s = smoothstep(-1.1, 1.1, d);
+    h += LEVEL_STEP * s;
+    cliff = Math.max(cliff, s * (1 - s) * 4);
+  }
   h += cliff * fbm(x * 0.5, z * 0.5, 2) * 0.7;                        // craggy faces
   h += (1 - cliff) * fbm(x * 0.06 + 9, z * 0.06, 2) * 0.25;           // gentle undulation on the levels
   return h;
@@ -124,28 +161,27 @@ function terrace(n, x, z) {
 
 // everything except the path ramps
 function baseHeight(x, z) {
-  let h = terrace(natural(x, z), x, z);
-  // coast: rock cliffs into the sea, sandy coves in a few places
-  const t = coastT(x, z);
-  const b = beachMask(x, z);
-  const cliffCoast = lerp(h, -2.6, smoothstep(0.962, 0.99, t));
-  h = lerp(cliffCoast, Math.min(h, lerp(1.1, -1.8, smoothstep(0.85, 1.0, t))), b * smoothstep(0.8, 0.86, t));
-  if (t > 0.99) h = Math.max(-6, Math.min(h, -1.8 - (t - 0.99) * 30));
+  let h = terraces(x, z);
+  // coast: rock cliffs into the sea, sand in the bay
+  const dc = coastDist(x, z), b = beachMask(x, z);
+  const cliffCoast = lerp(h, -2.6, smoothstep(0.8, -1.6, dc));
+  h = lerp(cliffCoast, Math.min(h, lerp(1.1, -1.8, smoothstep(6, -3, dc))), b * smoothstep(12, 7, dc));
+  if (dc < -1.6) h = Math.max(-6, Math.min(h, -1.8 + (dc + 1.6) * 0.9));
   // lighthouse outcrop
   {
     const d = Math.hypot(x - POI.lighthouse.x, z - POI.lighthouse.z);
-    h = lerp(h, level(3) + fbm(x * 0.3, z * 0.3, 2) * 0.15, 1 - smoothstep(6.5, 8.6, d));
+    h = lerp(h, level(4) + fbm(x * 0.3, z * 0.3, 2) * 0.15, 1 - smoothstep(6.5, 8.6, d));
   }
   // project depot yard (the old camp)
   {
     const d = boxDist(x, z, POI.camp.x - 12, POI.camp.z - 9, POI.camp.x + 12, POI.camp.z + 9);
-    h = lerp(h, level(0) + 0.1, 1 - smoothstep(0, 4, d));
+    h = lerp(h, level(4) + 0.1, 1 - smoothstep(0, 4, d));
   }
   // Funfrock's fortress on its rock
   {
     const F = POI.fort, s = F.half + 3;
     const d = boxDist(x, z, F.x - s - 3, F.z - s, F.x + s, F.z + s); // a forecourt before the west gate
-    h = lerp(h, level(1), 1 - smoothstep(0, 2.2, d));
+    h = lerp(h, level(4), 1 - smoothstep(0, 2.2, d));
   }
   // harbour: the basin and the quay
   {
@@ -156,7 +192,7 @@ function baseHeight(x, z) {
     // the quay drops straight into the basin (the embankment wall hides the step)
     if (x < QUAY.x0 + 0.3 && db < 0.8) h = Math.min(h, lerp(-3.2, QUAY.h, smoothstep(QUAY.x0 - 0.6, QUAY.x0 + 0.3, x)));
   }
-  // plateau ("Whispering Cliffs")
+  // the Whispering Cliffs: a rock stack on the plateau's rim
   {
     const P = POI.plateau;
     const dp = Math.hypot(x - P.x, (z - P.z) * 1.15);
@@ -247,7 +283,7 @@ function islandSplat(x, z, h, slope, w) {
   const n = fbm(x * 0.2, z * 0.2, 2);
   w[0] = smoothstep(0.7, 1.4, h + n * 0.3);
   w[1] = 1 - w[0];
-  const beach = beachMask(x, z) * smoothstep(0.8, 0.86, coastT(x, z));
+  const beach = beachMask(x, z) * smoothstep(12, 7, coastDist(x, z));
   // rock only where the ground is really steep: the cliff meshes carry the rock look, and a wider band of
   // rock-tinted terrain around them read as a blurred purple smear on the ~1 m grid
   w[2] = smoothstep(1.05, 1.4, slope + n * 0.08) * (1.6 - beach * 1.6);
@@ -287,10 +323,10 @@ function townSoil(x, z, n = 0) {
 // ---------- the terrain grid, checked for soft-locks ----------
 const TERRAIN_SIZE = 260, TERRAIN_SEGS = 280;
 export function buildHeightGrid(size, segs) {
-  const n = segs + 1, half = size / 2, step = size / segs;
+  const n = segs + 1, half = size / 2, step = size / segs, X0 = ISLAND.cx - half, Z0 = ISLAND.cz - half;
   const h = new Float32Array(n * n);
-  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) h[j * n + i] = islandHeight(-half + i * step, -half + j * step);
-  const trapped = fixTraps(h, n, half, step);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) h[j * n + i] = islandHeight(X0 + i * step, Z0 + j * step);
+  const trapped = fixTraps(h, n, X0, Z0, step);
   // blurred copy for the concavity tint
   const blur = new Float32Array(n * n);
   const R = 2;
@@ -299,7 +335,7 @@ export function buildHeightGrid(size, segs) {
     for (let b = -R; b <= R; b++) for (let a = -R; a <= R; a++) { const ii = Math.min(n - 1, Math.max(0, i + a)), jj = Math.min(n - 1, Math.max(0, j + b)); sum += h[jj * n + ii]; c++; }
     blur[j * n + i] = sum / c;
   }
-  const idx = (x, z) => Math.min(n - 1, Math.max(0, Math.round((z + half) / step))) * n + Math.min(n - 1, Math.max(0, Math.round((x + half) / step)));
+  const idx = (x, z) => Math.min(n - 1, Math.max(0, Math.round((z - Z0) / step))) * n + Math.min(n - 1, Math.max(0, Math.round((x - X0) / step)));
   tintGrid = (x, z) => blur[idx(x, z)];
   return { heights: h, trapped, at: (x, z) => h[idx(x, z)] };
 }
@@ -307,9 +343,9 @@ export function buildHeightGrid(size, segs) {
 // Every walkable cell must be able to walk back to the town (cliffs can be
 // dropped down, never climbed). Cells that cannot are pits: fill them with
 // a climbable ramp from their rim until none are left.
-function fixTraps(h, n, half, step) {
+function fixTraps(h, n, X0, Z0, step) {
   const climb = step * 0.95, SEA = -0.35;
-  const si = Math.round((POI.start.x + half) / step), sj = Math.round((POI.start.z + half) / step);
+  const si = Math.round((POI.start.x - X0) / step), sj = Math.round((POI.start.z - Z0) / step);
   let fixed = 0;
   for (let iter = 0; iter < 60; iter++) {
     const seen = new Uint8Array(n * n);
@@ -361,7 +397,7 @@ export function buildWorld(parentScene) {
   parentScene.add(scene);
   const TX = textures();
   const grid = buildHeightGrid(TERRAIN_SIZE, TERRAIN_SEGS);
-  const terrain = new Terrain({ size: TERRAIN_SIZE, segs: TERRAIN_SEGS, heightFn: grid.at, colorFn: islandColor, splatFn: islandSplat, textures: { ...TX, rock: TX.cliff } });
+  const terrain = new Terrain({ size: TERRAIN_SIZE, segs: TERRAIN_SEGS, cx: ISLAND.cx, cz: ISLAND.cz, heightFn: grid.at, colorFn: islandColor, splatFn: islandSplat, textures: { ...TX, rock: TX.cliff } });
   tintGrid = null;
   scene.add(terrain.mesh);
   const physics = new Physics(terrain);
@@ -404,7 +440,7 @@ export function buildWorld(parentScene) {
   // ---------- trees / grass / rocks (sculpted, instanced; see vegetation.js) ----------
   const exclusions = [
     { ...POI.village, r: 22 }, { ...POI.camp, r: 17 }, { x: POI.fort.x, z: POI.fort.z, r: 18 },
-    { x: 2, z: -77, r: 10 }, { ...POI.target, r: 5 }, { x: 40, z: -14, r: 9 },
+    { ...POI.lighthouse, r: 10 }, { ...POI.target, r: 5 }, { ...STUMP, r: 4 },
   ];
   const inHouse = (x, z, pad) => W.houses.some((h) => {
     const dx = x - h.x, dz = z - h.z, lx = dx * Math.cos(h.ry) - dz * Math.sin(h.ry), lz = dx * Math.sin(h.ry) + dz * Math.cos(h.ry);
@@ -421,10 +457,11 @@ export function buildWorld(parentScene) {
   };
   const trees = [];
   for (let i = 0; i < 1600 && trees.length < 300; i++) {
-    const x = (rand() - 0.5) * 200, z = (rand() - 0.5) * 200;
-    const forest = x > 12 && z < 22 && z > -60;
-    const north = z < -30 && x < 0;
-    const p = forest ? 0.75 : north ? 0.4 : 0.15;
+    const x = ISLAND.cx + (rand() - 0.5) * 200, z = ISLAND.cz + (rand() - 0.5) * 220;
+    // the original's trees stand mostly on the northern plateau; a few in the fields and on the southern hill
+    const forest = z < -50;
+    const north = z > 80;
+    const p = forest ? 0.6 : north ? 0.35 : 0.12;
     if (rand() > p) continue;
     if (!okSpot(x, z)) continue;
     if (trees.some((t) => Math.hypot(t.x - x, t.z - z) < 3.0)) continue;
@@ -438,7 +475,7 @@ export function buildWorld(parentScene) {
   const bushes = [];
   for (const [x, z] of [[-54.6, -10.6], [-47.0, -18.9], [-41.8, -19.2], [-36.5, -6.5], [-33.0, 4.2], [-53.2, 6.8], [-48.6, 11.6], [-40.6, 13.8], [-27.6, -13.7], [-58.4, -1.8], [-26.5, 9.6]]) bushes.push({ x, z, h: H(x, z), s: 0.9 + ((x * 7) % 1 + 1) % 1 * 0.4, ry: z });
   for (let i = 0; i < 600 && bushes.length < 120; i++) {
-    const x = (rand() - 0.5) * 190, z = (rand() - 0.5) * 190;
+    const x = ISLAND.cx + (rand() - 0.5) * 190, z = ISLAND.cz + (rand() - 0.5) * 210;
     if (!okSpot(x, z, 2)) continue;
     bushes.push({ x, z, h: H(x, z), s: 0.7 + rand() * 0.6, ry: rand() * 6 });
   }
@@ -526,7 +563,7 @@ export function buildWorld(parentScene) {
   // grass clumps + wild flowers (none on streets, the square or inside houses)
   const grass = [], flowers = [];
   for (let i = 0; i < 16000 && grass.length < 5200; i++) {
-    const x = (rand() - 0.5) * 210, z = (rand() - 0.5) * 210;
+    const x = ISLAND.cx + (rand() - 0.5) * 210, z = ISLAND.cz + (rand() - 0.5) * 220;
     const h = H(x, z);
     if (h < 1.2 || terrain.slopeAt(x, z) > 0.6) continue;
     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.5) continue;
@@ -597,9 +634,9 @@ export function buildWorld(parentScene) {
 
   const rocks = [];
   for (let i = 0; i < 600 && rocks.length < 140; i++) {
-    const x = (rand() - 0.5) * 220, z = (rand() - 0.5) * 220;
+    const x = ISLAND.cx + (rand() - 0.5) * 220, z = ISLAND.cz + (rand() - 0.5) * 230;
     const h = H(x, z);
-    if (h < -1 || h > 13) continue;
+    if (h < -1 || h > 18) continue;
     if (!okSpot(x, z, 2.5) && h > 1.3) continue;
     rocks.push({ x, z, h: h - 0.1, s: 0.3 + rand() * 0.8, ry: rand() * 6 });
   }
@@ -743,7 +780,7 @@ export function buildWorld(parentScene) {
   // hidden-object search spots
   // givers outdoors (most are indoors, as in the original): the sage's barrels and the old stump
   W.givers.push({ id: 'barrels', x: W.barrels.x, z: W.barrels.z, r: 2.0, top: 1.1, kinds: ['magic'] });
-  W.givers.push({ id: 'stump', x: 46, z: -2, r: 2.0, top: 0.8, kinds: ['clover'] });
+  W.givers.push({ id: 'stump', ...STUMP, r: 2.0, top: 0.8, kinds: ['clover'] });
   W.storm = 1;
   W.update = (dt, t) => {
     swayU.uTime.value = t;

@@ -5,6 +5,22 @@ Connected regions with local freedom; the story opens routes. Status: ✅ built 
 ## Citadel Island (home region) ✅
 Exterior map with the LBA camera; interiors use the iso camera.
 
+**Layout after the original LBA2 map** (`src/game/citadel-layout.js`: coarse outlines of the coast and the four
+terrace levels, traced from the original at ~1.5 m; our own terrain, cliffs and textures on top). The original
+map sits at (−76, +16) in our frame, so its town falls on ours. 12 years after LBA2 the island has changed; what
+the original doesn't have is ours:
+
+| Area (our metres) | In the original | Now |
+|---|---|---|
+| Town (−56…−29, −17…14), harbour quay (−74.5…−61.5) | the low town; a quay wall along its west shore | Twinsen's corner of town, the square and well, the harbour, the ferry |
+| Northern plateau (x −120…0, z −100…−45, ~14 m) | high ground with trees, two doors | the lighthouse (−101, −67) at the west end; the depot (−85…−65, −78…−62) and the orchard (−80, −55); the project station in Funfrock's old fort (−28, −65) at the east end |
+| The plateau's southern rim (−56, −44) | the escarpment up from the town | the Whispering Cliffs: a rock stack (16.8 m) reached only by the stepping stones from (−68, −22) |
+| West shore below the plateau | quay wall, bollards | the water main comes down here to the meter (−72, −17) |
+| South fields (x −76…−22, z 15…80) | more of the town, gardens, Twinsen's original house (−46, 80) | fields and farmers (chapter 8); room for houses |
+| West wing (−121…−76, 21…54), the south-west islet, the bay beach, the southern hill | a pier, houses, sand | landscape (not used by the story yet) |
+| Dome islet (−176…−136, −34…16), the north-east islet | across the water | seen from the shore |
+
+
 | Place | Identity / landmark | Local problem / life | Story role | Changes after events |
 |---|---|---|---|---|
 | Twinsen's house, Bug Street | blue-roofed house, Arthur's toys, the cupboard | family | start; hub between chapters | Arthur's radio (ch1); dinner (epilogue) |

@@ -212,3 +212,21 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - Zoé's hair is blonde (user: as in LBA2).
 - Tests: tests/combat.mjs (tap/hold at three frame rates, aiming while held), tests/controls.mjs, tests/timing.mjs.
 - Open (user feedback): character proportions do not match LBA2; animations do not feel like the original.
+
+## Session: givers and Citadel on the original map
+- Givers after LBA2 (zone giver): in Normal mode the action key with nothing in reach plays the original's hop
+  (anim 17, 0.58 s); next to a giver it pops one bonus toward Twinsen (WhichBonus: what he needs most of the
+  allowed kinds; a coin worth n for money), once per giver, gone after 20 s with a blink in the last 3. Givers
+  sit by furniture indoors (5 in Twinsen's house, the offices, the control room, Baldino's workshop, the
+  lighthouse top) and at a few barrels and the old stump outdoors; no kashes lie around outdoors. tests/givers.mjs.
+- Citadel follows the original map: coast and four terrace levels from `citadel-layout.js` (coarse outlines
+  traced from the original), our own terrain on top; the town and harbour kept their coordinates (the original
+  sits at −76, +16 in our frame). The terrain grid is centred on the island (Terrain cx/cz).
+- 12 years on: the lighthouse, the depot, the orchard and the station (Funfrock's fort) stand on the northern
+  plateau; the Whispering Cliffs are a rock stack on its rim reached by the stepping stones; the water main runs
+  along the plateau and down the west shore to the meter. The station and depot builders keep their first
+  coordinates and run in a shifted frame (island.js siteW / SHIFT). Paths, signposts, crates, crystals, the
+  chapter 8 landing, fort door, depot bunker and farmers moved with them (WORLD_MAP.md).
+- Fix: the orchard valve's wheel sat only ~0.2 m above the cage, so the lob over the bars hit it by luck; it
+  stands 0.3 m higher now.
+
