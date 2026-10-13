@@ -616,7 +616,7 @@ function quiltGeo(w, l, drop, pal, key) {
       const fx = ((p.x + 5) / 0.24) % 1, fz = ((p.z + 5) / 0.24) % 1;
       if (fx < 0.07 || fx > 0.93 || fz < 0.07 || fz > 0.93) c.multiplyScalar(0.78);
     },
-    bounds: { min: [-w / 2 - 0.06, -drop - 0.06, -l / 2 - 0.08], max: [w / 2 + 0.06, 0.1, l / 2 + 0.06] }, cell: 0.03,
+    bounds: { min: [-w / 2 - 0.06, -drop - 0.06, -l / 2 - 0.08], max: [w / 2 + 0.06, 0.1, l / 2 + 0.06] }, cell: 0.042,
   });
 }
 
@@ -874,7 +874,7 @@ export function pottedPlant(k, { kind = 'leafy', s = 1, potColor = '#b8623a' } =
   } else {
     const prims = [];
     for (let i = 0; i < 11; i++) { const a = i * 2.39996, h = 0.75 + (i % 3) * 0.2, lean = 0.18 + (i % 4) * 0.08; prims.push({ type: 'cone', a: [Math.cos(a) * 0.04, 0.33, Math.sin(a) * 0.04], b: [Math.cos(a) * lean, 0.33 + h, Math.sin(a) * lean], r1: 0.045, r2: 0.008, group: 'f', mat: 'l' }); }
-    geo = soft({ key: 'plant-spiky', prims, groups: { f: 0.015 }, colors: { l: '#3f8a4a' }, paint: (p, m, c) => { const t = (p.y - 0.33) / 0.9; c.setRGB(0.22 + t * 0.25, 0.48 + t * 0.2, 0.26 + Math.sin(p.y * 40) * 0.04); }, bounds: { min: [-0.5, 0.3, -0.5], max: [0.5, 1.4, 0.5] }, cell: 0.02 });
+    geo = soft({ key: 'plant-spiky', prims, groups: { f: 0.015 }, colors: { l: '#3f8a4a' }, paint: (p, m, c) => { const t = (p.y - 0.33) / 0.9; c.setRGB(0.22 + t * 0.25, 0.48 + t * 0.2, 0.26 + Math.sin(p.y * 40) * 0.04); }, bounds: { min: [-0.5, 0.3, -0.5], max: [0.5, 1.4, 0.5] }, cell: 0.028 });
   }
   k.add(geo, softMat, 0, 0, 0, 0, { sx: s, sy: s, sz: s });
   return { r: 0.24 * s, top: 0.4 * s };

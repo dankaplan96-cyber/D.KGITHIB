@@ -644,7 +644,8 @@ export function buildWorld(parentScene) {
       if (bedOk(cx, cz)) addBed(cx, cz, bedN++ % BED_COLS.length, 24 + Math.floor(rand() * 10), 1.1, 0.45, a + Math.PI / 2);
     }
   }
-  beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false); });
+  // (hidden beyond FAR_SMALL like the grass: a bed far off is a few pixels of colour, and thousands of tulips)
+  beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
   W.flowerBeds = { beds: bedN, tulips: beds.reduce((a, l) => a + l.length, 0) };
 
   const rocks = [];

@@ -97,6 +97,7 @@
       <button data-act="resume" data-i18n="resume"></button>
       <button data-act="settings" data-i18n="settings"></button>
       <button data-act="controls" data-i18n="controls"></button>
+      <button data-act="bench" data-i18n="bench"></button>
       <button data-act="quit" data-i18n="save_quit"></button>
     </div>
   </div>
@@ -114,6 +115,8 @@
       <div class="seg" data-setting="hud"><button data-v="lba" data-i18n="hud_lba"></button><button data-v="modern" data-i18n="hud_modern"></button></div>
       <label data-i18n="quality"></label>
       <div class="seg" data-setting="quality"><button data-v="high" data-i18n="q_high"></button><button data-v="medium" data-i18n="q_medium"></button><button data-v="low" data-i18n="q_low"></button></div>
+      <label data-i18n="res_label"></label>
+      <div class="seg" data-setting="res"><button data-v="auto" data-i18n="res_auto"></button><button data-v="full" data-i18n="res_full"></button></div>
       <label data-i18n="text_speed"></label>
       <div class="seg" data-setting="textSpeed"><button data-v="slow" data-i18n="ts_slow"></button><button data-v="normal" data-i18n="ts_normal"></button><button data-v="fast" data-i18n="ts_fast"></button><button data-v="instant" data-i18n="ts_instant"></button></div>
       <label data-i18n="text_size"></label>
@@ -143,6 +146,12 @@
     <p class="hint" data-i18n="rebind_hint"></p>
     <div id="rebind" class="settings"></div>
     <div class="menu"><button data-act="resetkeys" data-i18n="rebind_reset"></button><button data-act="back" data-i18n="back"></button></div>
+  </div>
+
+  <div id="benchres" class="screen hidden">
+    <h1 data-i18n="bench_title"></h1>
+    <textarea id="bench-out" readonly spellcheck="false" style="width:min(92vw,1100px);height:52vh;font:12px/1.4 monospace;background:rgba(0,0,0,.55);color:#e8f0ff;border:1px solid #6a8;padding:8px;white-space:pre;overflow:auto"></textarea>
+    <div class="menu"><button data-act="benchcopy" data-i18n="bench_copy"></button><button data-act="resume" data-i18n="resume"></button></div>
   </div>
 
   <div id="gameover" class="screen hidden">

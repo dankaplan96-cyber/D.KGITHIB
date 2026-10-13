@@ -101,10 +101,35 @@ export class Terrain {
       geo.setAttribute('splat2', new THREE.BufferAttribute(spl2, 1));
       this._splatMaterial(mat);
     }
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.receiveShadow = true;
-    mesh.name = 'terrain';
-    return mesh;
+    // drawn in tiles of TILE × TILE cells sharing the vertex data, each with its own bounds, so the camera
+    // culls what it doesn't see; tiles wholly deep under the sea (the water there is opaque) aren't drawn
+    const group = new THREE.Group(); group.name = 'terrain';
+    const TILE = 40;
+    for (let tj = 0; tj < this.segs; tj += TILE) {
+      for (let ti = 0; ti < this.segs; ti += TILE) {
+        const j1 = Math.min(this.segs, tj + TILE), i1 = Math.min(this.segs, ti + TILE);
+        let hi = -1e9, lo = 1e9;
+        for (let j = tj; j <= j1; j++) for (let i = ti; i <= i1; i++) { const h = this.heights[j * n + i]; if (h > hi) hi = h; if (h < lo) lo = h; }
+        if (hi < -4) continue;
+        const ix = new Uint32Array((j1 - tj) * (i1 - ti) * 6);
+        let q = 0;
+        for (let j = tj; j < j1; j++) for (let i = ti; i < i1; i++) {
+          const a = j * n + i, b = a + 1, d = a + n, e = d + 1;
+          ix[q++] = a; ix[q++] = d; ix[q++] = b; ix[q++] = e; ix[q++] = b; ix[q++] = d;
+        }
+        const g = new THREE.BufferGeometry();
+        for (const [k, at] of Object.entries(geo.attributes)) g.setAttribute(k, at);
+        g.setIndex(new THREE.BufferAttribute(ix, 1));
+        const bx0 = this.x0 + ti * this.step, bx1 = this.x0 + i1 * this.step, bz0 = this.z0 + tj * this.step, bz1 = this.z0 + j1 * this.step;
+        g.boundingBox = new THREE.Box3(new THREE.Vector3(bx0, lo, bz0), new THREE.Vector3(bx1, hi, bz1));
+        g.boundingSphere = g.boundingBox.getBoundingSphere(new THREE.Sphere());
+        const m = new THREE.Mesh(g, mat);
+        m.receiveShadow = true; m.name = 'terrain';
+        group.add(m);
+      }
+    }
+    group.userData.full = geo; // (the whole grid, for anything that wants it in one piece)
+    return group;
   }
 
   // Texture splatting: five painted tiles blended per vertex

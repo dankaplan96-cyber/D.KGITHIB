@@ -39,6 +39,8 @@ Object.assign(STR.en, {
   ending_text: 'The project ferry leaves the harbour for the skies of Zeelich. Baldino is waiting there. So is Vesk.',
   keep_exploring: 'Keep Exploring',
   toast_crystal: 'Singing crystal ({n}/{max}). Max health up',
+  res_label: 'Resolution', res_auto: 'Auto (keeps the frame rate)', res_full: 'Full',
+  bench: 'Benchmark', bench_title: 'Benchmark results', bench_copy: 'Copy', bench_copied: 'Copied', bench_route: 'Benchmark {n}/{of}',
   crystal_first: '(It hums, like the crystals in the well. A splinter of something much bigger.)',
   crystal_all: '(All six. Together they hum one note, the same one I heard when Sendell spoke.)',
   it_crystals: 'Singing Crystals', itd_crystals: 'Splinters that hum like the crystals in the well. Each one makes me a little tougher.',

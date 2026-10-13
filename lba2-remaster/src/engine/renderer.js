@@ -29,7 +29,7 @@ const RetroShader = {
 export class Renderer {
   constructor(container) {
     this.container = container;
-    const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }));
+    const r = (this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' }));
     r.setSize(innerWidth, innerHeight);
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -38,6 +38,9 @@ export class Renderer {
     container.appendChild(r.domElement);
     this.canvas = r.domElement;
     this.retro = false;
+    // automatic resolution: the render pixel ratio is scaled down (to 0.6) while frames run long, and back up
+    // once they keep the pace (see adapt). The canvas keeps its size; only the internal resolution changes.
+    this.autoRes = true; this.dyn = 1; this._fb = [];
     this.quality = 'high';
   }
 
@@ -92,8 +95,10 @@ export class Renderer {
     const dpr = Math.min(devicePixelRatio, 2);
     let pr = this.quality === 'high' ? dpr : this.quality === 'medium' ? Math.min(dpr, 1.25) : 0.85;
     if (this.retro) pr = Math.min(1, 560 / w); // ~640x480-era internal resolution
-    // MSAA: 4× on high, 2× on medium, none on low / retro (the retro look wants hard pixels)
-    const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' ? 2 : 4;
+    else pr = Math.max(0.5, +(pr * (this.autoRes ? this.dyn : 1)).toFixed(3));
+    // MSAA: 4× on high (2× once the pixel ratio is high enough to smooth edges by itself), 2× on medium, none on
+    // low / retro (the retro look wants hard pixels)
+    const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' || pr >= 1.5 ? 2 : 4;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
     const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${!!this.composer}`;
     if (key === this._size) return;
@@ -113,4 +118,18 @@ export class Renderer {
   }
 
   render() { this.composer.render(); }
+
+  // automatic resolution, fed the displayed frame time (ms): every ~90 frames, a 90th percentile over ~21 ms
+  // (under ~48 fps) lowers the internal resolution a step; one under ~17.8 ms (holding 56+ fps) for a while
+  // raises it again, but not within 8 s of a drop (so it settles instead of see-sawing)
+  adapt(ms) {
+    if (!this.autoRes || this.retro) return;
+    const b = this._fb; b.push(ms);
+    if (b.length < 90) return;
+    const p90 = b.slice().sort((x, y) => x - y)[Math.floor(b.length * 0.9)]; b.length = 0;
+    const now = performance.now();
+    if (p90 > 21 && this.dyn > 0.6) { this.dyn = Math.max(0.6, +(this.dyn - 0.1).toFixed(2)); this._downAt = now; this.resize(); }
+    else if (p90 < 17.8 && this.dyn < 1 && now - (this._downAt || 0) > 8000) { this.dyn = Math.min(1, +(this.dyn + 0.05).toFixed(2)); this.resize(); }
+  }
+  setAutoRes(on) { this.autoRes = on; if (!on) this.dyn = 1; this._fb.length = 0; this.resize(); }
 }

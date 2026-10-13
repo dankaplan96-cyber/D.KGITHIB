@@ -261,7 +261,7 @@ function curtainGeo(w, h, col) {
     prims: [{ type: 'box', c: [0, h / 2, 0], h: [w / 2, h / 2, 0.035], round: 0.03, group: 'c', mat: 'c', wobble: (x, y, z) => Math.sin(x * 48 + Math.sin(y * 3) * 0.6) * 0.022 * (0.6 + 0.4 * Math.abs(Math.sin(y * 1.4))) }],
     groups: { c: 0.02 }, colors: { c: col },
     paint: (p, m, c) => { c.multiplyScalar(0.82 + 0.22 * Math.sin(p.x * 48)); if (p.y > h - 0.12) c.multiplyScalar(0.85); },
-    bounds: { min: [-w / 2 - 0.05, -0.05, -0.08], max: [w / 2 + 0.05, h + 0.05, 0.08] }, cell: 0.022,
+    bounds: { min: [-w / 2 - 0.05, -0.05, -0.08], max: [w / 2 + 0.05, h + 0.05, 0.08] }, cell: 0.036, // (a dozen of them in the house: keep them light)
   });
 }
 

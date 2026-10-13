@@ -181,7 +181,7 @@ export function tulipGeometry(petal = '#e8343a') {
   }
   for (let i = 0; i < 3; i++) {
     const a = (i / 3) * Math.PI * 2;
-    const pet = new THREE.SphereGeometry(0.05, 6, 5, 0, Math.PI * 2, 0, Math.PI * 0.75); pet.scale(0.75, 1.25, 0.55);
+    const pet = new THREE.SphereGeometry(0.05, 5, 3, 0, Math.PI * 2, 0, Math.PI * 0.75); pet.scale(0.75, 1.25, 0.55); // (thousands of them: few triangles)
     pet.rotateY(a); pet.translate(Math.cos(a) * 0.022, 0.48, Math.sin(a) * 0.022);
     parts.push([pet, petal]);
   }

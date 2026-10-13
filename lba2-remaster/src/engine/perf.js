@@ -59,6 +59,7 @@ export class Perf {
     this.el.textContent = `${s.fps} fps   frame p50 ${s.frameMs.p50} · p95 ${s.frameMs.p95} · max ${s.frameMs.max} ms\n`
       + `sim ${s.simMs.p50} ms · render (CPU) ${s.renderMs.p50} ms · steps ${s.steps.mean}/${s.steps.max}\n`
       + `draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k${s.lostS ? ` · lost ${s.lostS}s` : ''}\n`
+      + `pixel ratio ${this.r?.getPixelRatio?.().toFixed(2)}${this.game?.renderer?.autoRes ? ` (auto ×${this.game.renderer.dyn})` : ''}\n`
       + `${this.gpu}${this.load ? `\nstartup: build ${(this.load.total / 1000).toFixed(1)} s · shaders ${(this.load.shaders / 1000).toFixed(1)} s` : ''}`;
   }
 }

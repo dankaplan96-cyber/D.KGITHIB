@@ -8,6 +8,7 @@ import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { Perf } from './engine/perf.js';
+import { Bench } from './engine/bench.js';
 import { LightPool } from './engine/lightpool.js';
 import { Input, applyBindings, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
@@ -36,6 +37,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 3;
+export const VERSION = '0.11.0'; // (the desktop build's version: desktop/package.json)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
 export function migrateSave(raw) {
@@ -81,7 +83,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'modern', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
@@ -111,7 +113,11 @@ class Game {
     this.room = null;
     this.env = new Environment(this.scene, this.terrain);
     this.renderer.setup(this.scene, this.camera);
-    this.perf = new Perf(this.renderer.renderer);
+    this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
+    // a first start on an integrated GPU begins on Medium (a choice in Settings overrides it)
+    if (!store.get(SET_KEY)?.quality && /Intel|UHD|Iris|Radeon\(TM\) Graphics|Radeon Vega|Vega \d|Mali|Adreno|PowerVR/i.test(this.perf.gpu || '')) this.settings.quality = 'medium';
+    this.version = VERSION;
+    this.bench = new Bench(this);
     this.audio = new AudioEngine();
     this.audio.setMood('title');
     this.env.onThunder = () => this.audio.play('thunder');
@@ -329,7 +335,7 @@ class Game {
   // the developer combat yard (?arena): never saved, never part of the story
   devArena() { return enterArena(this); }
   save(toast = true) {
-    if (this.hero.dead || this.state === 'title' || this.room?.id === 'arena') return;
+    if (this.benching || this.hero.dead || this.state === 'title' || this.room?.id === 'arena') return;
     store.set(SAVE_KEY, this.snapshot());
     if (toast) this.hud.toast('toast_saved');
   }
@@ -467,6 +473,12 @@ class Game {
         if (this.cine) { this.setState('cinematic'); this.cine.resume(); } else this.setState('play');
         break;
       case 'quit': if (!this.cine) this.save(false); this.reloadInto('title'); break; // (never save half a cinematic)
+      case 'bench':
+        if (this.cine) break;
+        this.hideScreens();
+        this.bench.run().then((text) => { if (!text) return; $('#bench-out').value = text; this.showScreen('benchres'); this.setState('pause'); });
+        break;
+      case 'benchcopy': navigator.clipboard?.writeText($('#bench-out').value).then(() => this.hud.toast('bench_copied'), () => {}); break;
       case 'retry': this.reloadInto(store.get(SAVE_KEY) ? 'continue' : 'new'); break;
       case 'explore':
         this.hideScreens(); this.hud.show(true); this.camRig.override = null; this.setState('play');
@@ -526,6 +538,7 @@ class Game {
       if (this.hero) this.updateObjective();
     }
     if (changed('quality')) { this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); }
+    if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);
@@ -904,9 +917,12 @@ class Game {
     const n = Math.max(1, Math.ceil(dt / MAX_STEP - 1e-6)), sub = dt / n;
     this.perf.beginFrame();
     this._renderMs = 0;
+    this.benchTick?.(real);
     for (let i = 0; i < n; i++) this.frame(sub, i === n - 1);
     const ms = performance.now() - t0;
     this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs });
+    // automatic resolution follows the frame time in play (not through fades, menus or a benchmark)
+    if (this.state === 'play' && !this.trans && !this.benching) this.renderer.adapt(real * 1000);
   }
 
   // Deterministic stepping for automated tests: game.step(seconds).

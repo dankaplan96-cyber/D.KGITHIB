@@ -243,6 +243,8 @@ export function assemble(def, geo) {
 // Rigid (unskinned) sculpt for small parts that need finer detail than the
 // body: hands with separate fingers, shoes, props. Attached to a bone.
 const rigidCache = new Map();
+// triangles per sculpted rigid model (diagnostics: which props are heavy)
+export function sculptStats() { return [...rigidCache.entries()].map(([k, g]) => [k, (g.index ? g.index.count : g.attributes.position.count) / 3]).sort((a, b) => b[1] - a[1]); }
 export function sculptRigid(def) {
   if (def.key && rigidCache.has(def.key)) return rigidCache.get(def.key);
   const d = { ...def, rigid: true };
