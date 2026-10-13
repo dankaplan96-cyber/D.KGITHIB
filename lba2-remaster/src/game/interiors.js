@@ -90,9 +90,15 @@ export class RoomBuilder {
     const [cx0, cz0] = o._off || [0, 0];
     const k = this.k, { W, D, H } = o, t = o.t ?? 0.4;
     this.W = W; this.D = D; this.H = H; this.t = t;
-    k.add(new THREE.BoxGeometry(W, 0.1, D), o.floor, 0, -0.05, 0);
     const sh = o.slabH ?? 0.7;
-    k.add(new THREE.BoxGeometry(W + 2 * t, sh, D + 2 * t), o.slab, 0, -0.1 - sh / 2, 0);
+    // floor and slab, around a stairwell (o.hole: [x0, z0, x1, z1] in the builder's frame) if there is one
+    const slabs = (x0, z0, x1, z1) => {
+      if (!o.hole) return [[x0, z0, x1, z1]];
+      const [a, b, c, d] = [o.hole[0] - cx0, o.hole[1] - cz0, o.hole[2] - cx0, o.hole[3] - cz0];
+      return [[x0, z0, x1, b], [x0, d, x1, z1], [x0, b, a, d], [c, b, x1, d]].filter(([p, q, r, u]) => r - p > 1e-3 && u - q > 1e-3);
+    };
+    for (const [x0, z0, x1, z1] of slabs(-W / 2, -D / 2, W / 2, D / 2)) k.add(new THREE.BoxGeometry(x1 - x0, 0.1, z1 - z0), o.floor, (x0 + x1) / 2, -0.05, (z0 + z1) / 2);
+    for (const [x0, z0, x1, z1] of slabs(-W / 2 - t, -D / 2 - t, W / 2 + t, D / 2 + t)) k.add(new THREE.BoxGeometry(x1 - x0, sh, z1 - z0), o.slab, (x0 + x1) / 2, -0.1 - sh / 2, (z0 + z1) / 2);
     k.add(rbox(W + 2 * t + 0.04, 0.08, 0.1, 0.03), o.cap, 0, -0.08, D / 2 + t + 0.0);
     k.add(rbox(0.1, 0.08, D + 2 * t + 0.04, 0.03), o.cap, W / 2 + t, -0.08, 0);
     this.col(cx0, cz0, W / 2, D / 2, 0, { seeThrough: true, bottom: -1 });
@@ -102,9 +108,17 @@ export class RoomBuilder {
     // near rims
     const rh = o.rimH ?? 0.45, rm = o.rimMat || o.slab;
     if (rh > 0) {
-      k.add(new THREE.BoxGeometry(W + 2 * t, rh, t), rm, 0, rh / 2, D / 2 + t / 2);
+      // the south rim, open where a door goes through it (o.rimGaps: [{ x, w }], x in the builder's frame)
+      const gaps = (o.rimGaps || []).map((g) => [g.x - cx0 - g.w / 2, g.x - cx0 + g.w / 2]).sort((p, q) => p[0] - q[0]);
+      let x0 = -W / 2 - t;
+      for (const [g0, g1] of [...gaps, [W / 2 + t, W / 2 + t]]) {
+        if (g0 - x0 > 0.02) {
+          k.add(new THREE.BoxGeometry(g0 - x0, rh, t), rm, (x0 + g0) / 2, rh / 2, D / 2 + t / 2);
+          k.add(rbox(g0 - x0 + (gaps.length ? 0 : 0.06), 0.12, t + 0.1, 0.055), o.cap, (x0 + g0) / 2, rh + 0.04, D / 2 + t / 2);
+        }
+        x0 = g1;
+      }
       k.add(new THREE.BoxGeometry(t, rh, D + t), rm, W / 2 + t / 2, rh / 2, -t / 2);
-      k.add(rbox(W + 2 * t + 0.06, 0.12, t + 0.1, 0.055), o.cap, 0, rh + 0.04, D / 2 + t / 2);
       k.add(rbox(t + 0.1, 0.12, D + t + 0.04, 0.055), o.cap, W / 2 + t / 2, rh + 0.04, -t / 2 + 0.02);
     }
     this.wallCols(W, D, H, t, cx0, cz0);
@@ -293,6 +307,8 @@ function outsideView(kind) {
 }
 
 // ------------------------------------------------------------------ Twinsen's house
+// the stairwell down to the cellar, in the hall against the west divider (house frame)
+const HOUSE_STAIRS = { sx0: -4.15, sx1: -2.75, sz0: 7.6, sz1: 10.4 };
 function buildHouse(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'house', 1000, 0);
   const R = B.room, k = B.k;
@@ -308,6 +324,8 @@ function buildHouse(scene, physics) {
   const hcx = (HX0 + HX1) / 2, hcz = (HZ0 + HZ1) / 2;
   B.shell({
     W: HX1 - HX0, D: HZ1 - HZ0, H, t: 0.4, ox: hcx, oz: hcz,
+    hole: [HOUSE_STAIRS.sx0, HOUSE_STAIRS.sz0, HOUSE_STAIRS.sx1, HOUSE_STAIRS.sz1],
+    rimGaps: [{ x: 1.2, w: 1.3 }], // (the front door: doorX below)
     floor: MAT.planks('honey'), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
     body: bodyM, low: MAT.wainscot('honey'), dado: 1.05, rail, cap: capM, beam: MAT.wood('dark'),
     posts: MAT.wood('dark'), postsAt: (L) => [0.48, L - 0.48, L / 2],
@@ -327,9 +345,15 @@ function buildHouse(scene, physics) {
   divider(LX, BZ, LX, HZ1, [{ at: 8.5, w: 1.3 }, { at: 13.1, w: 1.3 }]);   // family room and hall | Arthur's room, reading room
   divider(HX0, 7.0, LX, 7.0, [{ at: 4.4, w: 1.2 }]);                        // Arthur's room | reading room
   divider(LX, -BZ, 0.2, -BZ);                                               // family room | hall
-  // the front door: a gap in the hall's low south wall, posts and a lintel, a mat
-  for (const sx of [-1, 1]) k.add(rbox(0.16, 2.25, 0.18, 0.03), capM, doorX + sx * 0.7, 1.12, HZ1 + 0.2);
-  k.add(rbox(1.6, 0.18, 0.22, 0.04), capM, doorX, 2.3, HZ1 + 0.2);
+  // the front door, cut away like the rest of the near wall (as LBA2 draws a door in a near wall): the low wall
+  // opens, a jamb with a rounded cap on each side, a stone threshold and a step outside, daylight on the floor
+  for (const sx of [-1, 1]) {
+    k.add(rbox(0.2, 0.62, 0.48, 0.04), capM, doorX + sx * 0.75, 0.31, HZ1 + 0.2);
+    k.add(rbox(0.26, 0.1, 0.54, 0.045), capM, doorX + sx * 0.75, 0.66, HZ1 + 0.2);
+  }
+  k.add(rbox(1.3, 0.06, 0.46, 0.02), MAT.stone('sand', 1.0), doorX, 0.02, HZ1 + 0.2);
+  k.add(rbox(1.5, 0.1, 0.5, 0.03), MAT.stone('sand', 1.0), doorX, -0.06, HZ1 + 0.68);
+  k.add(new THREE.PlaneGeometry(1.2, 1.6), new THREE.MeshBasicMaterial({ color: '#fff4d8', transparent: true, opacity: 0.18, depthWrite: false }), doorX, 0.015, HZ1 - 0.75, 0, { rx: -Math.PI / 2 });
   R.exits.push({ ...B.world(doorX, HZ1 - 0.15), r: 0.75, to: 'outdoor' });
   R.spawn = { ...B.world(doorX, HZ1 - 1.6), a: Math.PI };
   k.at(doorX, 0, HZ1 - 0.75, 0, () => P.rug(k, 1.3, 0.8, ['#8a3a2a', '#5a2418', '#d8a040', '#e8d0a0', '#2a140c'], 4));
@@ -568,10 +592,13 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   B.put(HX1 - 0.32, 6.5, -Math.PI / 2, P.dresser, { w: 1.1 });
   k.at(HX1 - 0.02, 1.8, 6.5, -Math.PI / 2, () => P.frame(k, 0.75, 0.9, P.painting('portrait'), { mat: MAT.wood('dark') }));
   k.at(3.4, 0, HZ1 - 0.5, 0, () => P.pottedPlant(k, { kind: 'spiky', s: 1.1, potColor: '#3a6fb0' }));
-  // the stairs down: a stairwell in the floor against the west divider, a railing, the top steps
-  const sx0 = LX + 0.35, sx1 = LX + 1.75, sz0 = 7.6, sz1 = 10.4;
-  k.add(new THREE.BoxGeometry(sx1 - sx0, 0.02, sz1 - sz0), MAT.flat('#1c140e', 1), (sx0 + sx1) / 2, 0.012, (sz0 + sz1) / 2);
-  for (let i = 0; i < 4; i++) k.add(rbox(sx1 - sx0 - 0.1, 0.06, 0.32, 0.012), MAT.wood('honey'), (sx0 + sx1) / 2, 0.035 - i * 0.004, sz0 + 0.2 + i * 0.34);
+  // the stairs down: a stairwell cut in the floor against the west divider (shell hole), a railing, and the
+  // steps going down from its north edge into the dark
+  const { sx0, sx1, sz0, sz1 } = HOUSE_STAIRS;
+  for (let i = 0; i < 6; i++) {
+    const top = -0.13 * (i + 1), z = sz0 + 0.235 + i * 0.45;
+    k.add(rbox(sx1 - sx0 - 0.04, top + 0.82, 0.47, 0.012), MAT.wood('honey'), (sx0 + sx1) / 2, (top - 0.82) / 2, z);
+  }
   P.railing(k, [[sx1 + 0.06, sz0 - 0.06], [sx1 + 0.06, sz1], [sx0, sz1]], { h: 0.95, mat: MAT.wood('dark'), step: 0.7 });
   B.col(sx1 + 0.06, (sz0 + sz1) / 2, 0.06, (sz1 - sz0) / 2 + 0.06, 1.0, { seeThrough: true, noStand: true });
   B.col((sx0 + sx1) / 2, sz1 + 0.04, (sx1 - sx0) / 2 + 0.06, 0.06, 1.0, { seeThrough: true, noStand: true });
@@ -594,11 +621,16 @@ function buildCellar(scene, physics) {
     body: MAT.rubble('grey'), low: null, rail: MAT.wood('dark'), cap: MAT.wood('honey'),
   });
   const BZ = -D / 2, LX = -W / 2;
-  // the stairs up (south-east corner)
-  const sx = W / 2 - 1.1, sz = D / 2 - 0.9;
-  for (let i = 0; i < 5; i++) { k.add(rbox(1.3, 0.2 + i * 0.2, 0.35, 0.015), MAT.wood('honey'), sx, (0.2 + i * 0.2) / 2, sz - i * 0.35); B.col(sx, sz - i * 0.35, 0.65, 0.18, 0.2 + i * 0.2, { noStand: true }); }
-  R.exits.push({ ...B.world(sx, sz - 1.9), r: 0.7, room: 'house', back: true });
-  R.spawn = { ...B.world(sx - 1.2, sz - 1.0), a: Math.PI };
+  // the stairs up: along the south end of the west wall, climbing west to the wall (where the hall's stairwell is
+  // above); you walk up them and leave at the top
+  const sz = D / 2 - 0.95, sw = 1.25, N = 6, run = 0.4;
+  for (let i = 0; i < N; i++) {
+    const hgt = 0.2 * (i + 1), x = LX + 0.4 + (N - 1 - i) * run + run / 2;
+    k.add(rbox(run + 0.02, hgt, sw, 0.015), MAT.wood('honey'), x, hgt / 2, sz);
+    B.col(x, sz, run / 2, sw / 2, hgt);
+  }
+  R.exits.push({ ...B.world(LX + 0.65, sz), r: 0.6, room: 'house', back: true });
+  R.spawn = { ...B.world(LX + 0.4 + N * run + 0.9, sz), a: Math.PI / 2 };
   // the target on the north wall, the dummy before it
   k.at(-1.5, 1.55, BZ + 0.05, 0, () => {
     for (const [r, c] of [[0.5, '#f2ead6'], [0.4, '#2a2420'], [0.3, '#f2ead6'], [0.2, '#2a2420'], [0.1, '#e03a3a']]) k.add(P.disc(r, 28), MAT.paint(c, 0.7), 0, 0, 0.01 + (0.5 - r) * 0.01);
@@ -625,11 +657,11 @@ function buildCellar(scene, physics) {
   B.giver('crates', 3.9, BZ + 0.8, ['life', 'magic'], 2, { r: 1.2, top: 0.7 });
   k.at(W / 2 - 0.02, 1.6, -1.0, -Math.PI / 2, () => P.frame(k, 0.8, 1.0, P.painting('dinofly')));
   B.put(W / 2 - 0.6, 0.6, -Math.PI / 2, P.bench, { w: 1.4 });
-  B.put(-2.6, 2.4, 0.5, P.armchair, {});
-  B.put(-0.6, 2.9, -0.3, P.armchair, {});
-  B.put(-1.6, 3.2, 0, P.floorLamp, {});
+  B.put(-1.4, 1.3, 0.5, P.armchair, {});
+  B.put(0.6, 1.8, -0.3, P.armchair, {});
+  B.put(-0.4, 0.6, 0, P.floorLamp, {});
   B.light('#ffd8a0', 6, 10, 0, 2.2, -0.5);
-  B.light('#ffcf90', 3, 5, -1.6, 1.5, 3.2);
+  B.light('#ffcf90', 3, 5, -0.4, 1.5, 0.6);
   return B.finish();
 }
 

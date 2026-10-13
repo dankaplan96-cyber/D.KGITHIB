@@ -98,7 +98,7 @@ export class Prologue extends ChapterBase {
     g.audio.setMood('home');
     g.save(false);
   }
-  // while the prologue runs after the opening: Zoé went next door (the water office), Arthur is at his boat
+  // while the prologue runs after the opening: Zoé went next door (the neighbours' house), Arthur is at his boat
   // (for later chapters this is the family's default: at home; a chapter that wants them elsewhere says so)
   place(id) {
     const f = this.f, g = this.game;
@@ -106,7 +106,7 @@ export class Prologue extends ChapterBase {
     const home = g.rooms.house.npcSpots[id];
     if (id === 'arthur') return { x: home.x, z: home.z, a: home.a, anim: 'kneelWork' };
     if (f.opening && !f.prologueDone && this.isCur()) {
-      const hs = g.world.houses.find((h) => h.id === 'water');
+      const hs = g.world.houses.find((h) => h.id === 'nbr') || g.world.houses.find((h) => h.id === 'water');
       return { x: hs.door.x + Math.sin(hs.ry) * 1.1, z: hs.door.z + Math.cos(hs.ry) * 1.1, a: hs.ry + Math.PI, anim: 'idle' };
     }
     return { x: home.x, z: home.z, a: home.a, anim: null };
