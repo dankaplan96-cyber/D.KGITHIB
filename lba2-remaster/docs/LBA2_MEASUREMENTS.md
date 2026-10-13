@@ -59,9 +59,13 @@ smooth normals is kept.
 - Mosquibee (bodies 192, 196; H = Twinsen's): the abdomen an upright oval 0.29–0.71 H, ±0.11; the head forward
   of it at 0.72–0.86 H (to +0.21), great eyes at ±0.01–0.09, 0.81–0.90 H; a proboscis to +0.57 H; antennae to the
   top; two wings behind (0.54–0.76 H, back to −0.61 H); thin legs from 0.26 H.
-- Burrower (body 136; H = 0.73 of Twinsen's): the body ±0.22 H from 0.17 to 0.58 H; the head 0.56–0.92 H, ±0.17,
-  sunk into it; a snout drooping to 0.47 H, 0.46 H in front; flat round ears ±0.17 … ±0.36 H at 0.72–0.92 H; feet
-  0–0.11 H; short arms from 0.42 H.
+- Mole (bodies 194, 323, 336, 342, 386; 327 a smaller one in a smock and apron; H = 0.94 of Twinsen's, 327:
+  0.68): a robed pear of a body from 0.24 H, ±0.19, ±0.16 deep, rounded to the top at 0.92 H, no neck; the head
+  is a long pale snout from the robe's top forward to +0.5 H (0.81–1.0 H high); pale arms hanging out to
+  ±0.31–0.37 H, the hands at 0.39 H; pale legs, big feet forward to +0.23 H.
+- Triangle-headed townsfolk (bodies 84, 430, 47, 393; H = 1.13 of Twinsen's): thin, shoulders ±0.13 H, waist ±0.06;
+  the head 0.70–1.0 H, an inverted triangle (a pointed chin, ±0.108 at the cheekbones with the ears' points, a
+  flat top ±0.079), the face forward to +0.14 H; thin arms with pointed hands; thin legs.
 
 ## Animations of the hero (24-group set; Twinsen's robe body uses the first 19 groups)
 - 0 idle: 8 keys × 300 ms (2.4 s): the whole body rocks forward and back (root ±50 units, pelvis ±6°), the arms
@@ -116,7 +120,7 @@ smooth normals is kept.
   three balls at the measured places; the look's armSpread 0.3.
 - `tools/blender/cast_poly.py` `build_zoe`: Zoé from the sections above (her H = 1.95 m to fit the game
   skeleton; the full front softened to 0.12 H). The rest of the cast: Grobo bodies and heads, Rabbibunny snouts,
-  ball hands and plain cloth after the races above. `build_esmer` / `build_bee` / `build_mole`: Zeelich's peoples as
+  ball hands and plain cloth after the races above. `build_esmer` / `build_bee` / `build_mole` / `build_tri`: Zeelich's peoples as
   measured above (skeletons unchanged: the capsule and bodies hang over the thighs; the Esmers walk with the
   shorter robe stride).
 - `src/engine/rig.js` RUN_KEYS: the athletic run (Twinsen's robe opens 75 % as far: one robe over both legs

@@ -114,13 +114,21 @@ export const LOOKS = {
     // a Mosquibee matron: a red abdomen, plain, a little gold crown
     race: 'bee', outfit: 'tunic', tunic: '#c83a2a', tunicTrim: '#c83a2a', stripes: false, skin: '#3a5a7a', eyes: '#c83030', wing: '#e08a6a', crown: '#f2c45a', belly: 0.06, height: 1.0,
   },
+  ztri1: {
+    // a triangle-headed Zeelichian clerk: a green suit, a red tie, a flat blond top
+    race: 'tri', outfit: 'tunic', slim: true, skin: '#c8906a', tunic: '#2f6a3a', pants: '#9a7a3a', shoes: '#4a8a5a', hair: '#e8d098', tie: '#c83a2a', eyes: '#3a2a1a', height: 1.1,
+  },
+  ztri2: {
+    // a triangle-headed Zeelichian in shirtsleeves: a cream shirt, blue trousers, a dark flat top
+    race: 'tri', outfit: 'tunic', slim: true, skin: '#b8805e', tunic: '#ece0b8', pants: '#2a7aa8', shoes: '#2a7aa8', hair: '#5a3a2a', eyes: '#3a2a1a', height: 1.08,
+  },
   zmole1: {
-    // a burrower: brown fur, a red vest, blue shorts
-    race: 'mole', kid: true, outfit: 'tunic', fur: '#7a5030', tunic: '#b02828', belt: '#2a6a9a', pants: '#b02828', height: 0.7, // (a kid's rig ×0.9: 0.73 of Twinsen's height, as the original)
+    // one of Zeelich's moles: a dark grey-violet robe, the long pale snout, pale arms and big feet
+    race: 'mole', outfit: 'robe', tunic: '#5a5068', skin: '#e8e0d8', lip: '#f0c060', eyes: '#2a1a1a', height: 0.95,
   },
   zmole2: {
-    // an older burrower: grey-brown fur, a green vest, a hat
-    race: 'mole', kid: true, outfit: 'tunic', fur: '#6a5a4a', tunic: '#3a7a3a', belt: '#5a3a1a', pants: '#3a3a4a', hat: '#c8a050', height: 0.68,
+    // a smaller mole in a white smock with a red apron (the original's homemaker)
+    race: 'mole', outfit: 'robe', tunic: '#ecebe6', apron: '#c85a3a', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,
   },
   // ---- Zeelich's council (chapter 9)
   councilChair: {

@@ -53,7 +53,7 @@ Pink sky, cloud sea, floating isles.
 | Place | Identity / landmark | Life | Story role | Changes |
 |---|---|---|---|---|
 | Ferry dock | the light-ferry | project guard | arrival; setback: plan confiscated | — |
-| Esmer street | domes and arches, stalls | Nara's cloud flowers, Oku; street folk after LBA2's Zeelich: Mosquibees (Bzizz, Madam Zuzzara) and burrowers (Dobble, Old Grumm) | directions, opinions about the project | lines change once they see the plan |
+| Esmer street | domes and arches, stalls | Nara's cloud flowers, Oku; street folk after LBA2's Zeelich: Mosquibees (Bzizz, Madam Zuzzara), moles (Old Grumm, Mother Snuff) and triangle-headed townsfolk (Mr Pelleck, Tavo) | directions, opinions about the project | lines change once they see the plan |
 | Baldino's workshop (interior) | bent antenna, globe, bench | explosions | the shell explained; override key built | finale: Baldino at the radio |
 | Three windmills + the old mill | sails, brakes | Oku's memories | brake with the ball; climb for the cog | released in the finale |
 | Project depot | locker, drones | — | code cylinder + the confiscated plan | — |

@@ -299,6 +299,7 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   render). Skeletons unchanged: every animation drives the new models (captures/characters/cast-pass8-*.png).
 - Zeelich's peoples after the original (the user: "where are the Zeelich characters — the bees, the aliens
   that look like capsules, the moles"): the Esmers are now LBA2's capsules (salmon, the face high on the capsule,
-  thin arms with cone hands); new Mosquibees and burrowers built from the original's measurements stand on the
-  Esmer street with lines of their own (Bzizz, Madam Zuzzara, Dobble, Old Grumm; buzzing and low voices).
+  thin arms with cone hands); new Mosquibees, moles (from the user's screenshot of a mole home: robed, a long pale snout) and
+  triangle-headed townsfolk stand on the Esmer street with lines and voices of their own (Bzizz, Madam Zuzzara,
+  Old Grumm, Mother Snuff, Mr Pelleck, Tavo).
   tests/chapter9.mjs checks they stand on the street and talk.

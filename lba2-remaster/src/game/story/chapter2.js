@@ -14,7 +14,7 @@ import '../text/ch2.js';
 
 const DIAL = ['sun', 'wave', 'star'];
 // Zeelich's street folk and where they stand
-const ZFOLK = [['zbee1', 'bee1'], ['zbee2', 'bee2'], ['zmole1', 'mole1'], ['zmole2', 'mole2']];
+const ZFOLK = [['zbee1', 'bee1'], ['zbee2', 'bee2'], ['zmole1', 'mole1'], ['zmole2', 'mole2'], ['ztri1', 'tri1'], ['ztri2', 'tri2']];
 const SOLUTION = [0, 1, 2];
 
 export class Chapter2 extends ChapterBase {
@@ -30,7 +30,7 @@ export class Chapter2 extends ChapterBase {
       { id: 'baldino', name: 'n_baldino', char: 'baldino', color: '#ffd890', x: at('baldinoOut').x, z: at('baldinoOut').z, angle: at('baldinoOut').a },
       { id: 'nara', name: 'n_nara', char: 'nara', color: '#ffc0a0', x: at('esmer1').x, z: at('esmer1').z, angle: at('esmer1').a },
       { id: 'oku', name: 'n_oku', char: 'oku', color: '#bfe8d8', x: at('esmer2').x, z: at('esmer2').z, angle: at('esmer2').a },
-      // street life: Mosquibees and burrowers (they only chat: baseTalk's idle_<id> lines)
+      // street life: Mosquibees, moles and the triangle-headed townsfolk (they only chat: baseTalk's idle_<id> lines)
       ...ZFOLK.map(([id, spot]) => ({ id, name: 'n_' + id, char: id, color: '#e8e0c0', x: at(spot).x, z: at(spot).z, angle: at(spot).a })),
     ];
   }

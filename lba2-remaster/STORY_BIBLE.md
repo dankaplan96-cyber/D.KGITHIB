@@ -177,8 +177,10 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
   Nara, Oku, Xil, the clerk, the observatory keeper and Councillor Amaru are Esmers.
 - **Mosquibees:** upright insects with a big banded abdomen, great eyes, a long proboscis and wings. They fly
   cargo and keep hives, and they know when the ground is wrong.
-- **Burrowers:** small, round, big-eared, with a long drooping snout. They dug Zeelich's streets before they were
-  paved, and they feel the bore's heat in the old tunnels.
+- **Moles:** a robed, pear-shaped people with a long pale snout and pale arms and feet. They live in burrows
+  below the streets (cosy homes with green stone furniture) and feel the bore's heat in the old tunnels.
+- **Triangle-headed townsfolk:** tall and thin, in suits and shirtsleeves, with a big inverted-triangle head,
+  pointed ears and a flat top. Clerks, shopkeepers, passers-by.
 - **Grobos** live on both worlds (Councillor Brum, the guard).
 
 ## Writing rules

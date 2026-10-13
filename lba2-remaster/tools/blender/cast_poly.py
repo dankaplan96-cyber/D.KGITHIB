@@ -809,48 +809,102 @@ def build_bee(name):
 
 
 def build_mole(name):
-    # the small burrowers (the original's: 0.73 of Twinsen's height): a round body (±0.22 H), a big head sunk into
-    # it with round flat ears and a long drooping snout, short stubby arms and legs, a vest over shorts
+    # Zeelich's moles (bodies 194, 323, 327, 336: 0.94 of Twinsen's height): a robed pear of a body (±0.19 H, deep
+    # ±0.16, from 0.24 H to the rounded top at 0.92 H), no neck: the head is a long pale snout reaching forward
+    # from the top of the robe to +0.5 H, small dark eyes on it, a yellow lip under it; long pale arms hanging well
+    # out from the sides (±0.31–0.37 H), pale legs and big pale feet pointing forward
     S = ALL[name]
     L, B = S['look'], S['bones']
     bp = lambda n: tuple(B[n]['p'])
-    H = S['height'] * 0.98   # (in the skeleton's own units; the game scales the whole rig by the look's height)
-    fur, vest, shorts, pants = L.get('fur', '#7a5030'), L.get('tunic', '#b02828'), L.get('belt', '#2a6a9a'), L.get('pants', '#b02828')
+    H = S['height'] * 0.98
+    robe, pale, lip, apron = L.get('tunic', '#5a5068'), L.get('skin', '#e8e0d8'), L.get('lip', '#f0c060'), L.get('apron')
     b = Builder(name, B)
-    hipsY, headY = bp('hips')[1], bp('head')[1]
-    def w_body(p):
-        k = smooth(hipsY - 0.1, hipsY + 0.2, p[1])
-        return {'hips': 1 - k, 'torso': k}
-    secs = [(0.17, 0.12, 0.1), (0.2, 0.2, 0.17), (0.28, 0.22, 0.19), (0.4, 0.22, 0.2), (0.52, 0.2, 0.18), (0.6, 0.15, 0.14), (0.64, 0.08, 0.08)]
-    rings = [ring(y * H, hw * H, zf * H, -zf * H * 0.85, 14, 0.85) for y, hw, zf in secs]
-    banded(b, 'body', rings, [(0.24 * H, pants), (0.31 * H, shorts), (9e9, vest)], w_body)
-    # bare furry arms and shoulders show around the vest: the arms are fur
+    hipsY, headY, neckY = bp('hips')[1], bp('head')[1], bp('neck')[1]
+    def w_b(p):
+        y = p[1]
+        hd = smooth(neckY, headY + 0.1, y)
+        k = smooth(hipsY - 0.1, hipsY + 0.25, y)
+        return {kk: v for kk, v in (('hips', 1 - k), ('torso', k * (1 - hd)), ('head', k * hd)) if v > 0}
+    secs = [(0.24, 0.17, 0.14), (0.26, 0.19, 0.16), (0.4, 0.19, 0.16), (0.56, 0.185, 0.155), (0.65, 0.172, 0.15), (0.74, 0.15, 0.14), (0.82, 0.12, 0.12), (0.88, 0.08, 0.09), (0.92, 0.03, 0.04)]
+    rings = [ring(y * H, hw * H, zf * H, -zf * H, 14, 0.8) for y, hw, zf in secs]
+    bands = [(0.4 * H, apron), (9e9, robe)] if apron else [(9e9, robe)]
+    banded(b, 'robe', rings, bands, w_b, cap0=True, cap1=True)
+    # the snout: from the front of the robe's top, forward and a little down, pale; the lip under it
+    sp = [(0, 0.86 * H, 0.08 * H), (0, 0.875 * H, 0.22 * H), (0, 0.87 * H, 0.38 * H), (0, 0.855 * H, 0.5 * H)]
+    sr = [0.085 * H, 0.06 * H, 0.04 * H, 0.012 * H]
+    sn = b.P('snout', pale, 'head', 50)
+    for i in range(3):
+        tube(sn, sp[i], sp[i + 1], sr[i], sr[i + 1], 9, squash=0.8)
+    tube(b.P('lip', lip, 'head', 50), (0, 0.83 * H, 0.12 * H), (0, 0.835 * H, 0.42 * H), 0.04 * H, 0.008 * H, 7, squash=0.5)
+    for sxx in (1, -1):
+        sphere(b.P('eyeBall', L.get('eyes', '#2a1a1a'), 'head', 70), (sxx * 0.05 * H, 0.905 * H, 0.2 * H), 0.016 * H, 6, 4)
+    # arms: long and pale, hanging well out from the sides
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
-        # (short arms, as the original's: they leave the body at the elbow; the rig's shoulder sits by the head)
-        sphere(b.P('upper' + s, fur, 'el' + s, 50), (sx * 0.2 * H, el[1] + 0.03, el[2]), 0.075, 8, 6)
-        tube(b.P('fore' + s, fur, 'el' + s, 50), (sx * 0.2 * H, el[1] + 0.03, el[2]), hd, 0.06, 0.05, 8)
-        sphere(b.P('hand' + s, fur, 'hand' + s, 50), tuple(hd[i] + (0, -0.03, 0)[i] for i in range(3)), 0.055, 7, 5)
-    limb_legs(b, bp, pants, fur, 0.07, 0.065, 0.12, 0.06, ZH=H)
-    # the head: big, low on the body, no neck
-    c = (0, 0.74 * H, 0.04 * H)
-    hp_ = b.P('head', fur, 'head', 60)
-    sphere(hp_, c, 0.17 * H, 12, 8, (1.0, 1.05, 1.1))
-    sn = b.P('snout', fur, 'head', 50)
-    pts = [(0, 0.72 * H, 0.18 * H), (0, 0.68 * H, 0.33 * H), (0, 0.58 * H, 0.42 * H), (0, 0.5 * H, 0.45 * H)]
-    rad = [0.075 * H, 0.05 * H, 0.035 * H, 0.03 * H]
-    for i in range(3):
-        tube(sn, pts[i], pts[i + 1], rad[i], rad[i + 1], 8)
-    sphere(b.P('nose', L.get('noseC', '#2a1a1a'), 'head', 60), pts[-1], 0.034 * H, 6, 5)
-    for sxx in (1, -1):
-        disc(b.P('ear', fur, 'head', 40), (sxx * 0.25 * H, 0.84 * H, c[2] - 0.02 * H), 0.1 * H, 10, 'z', 0.03)
-        disc(b.P('earIn', L.get('earIn', '#c88a70'), 'head', 40), (sxx * 0.25 * H, 0.84 * H, c[2] - 0.02 * H + 0.017), 0.072 * H, 10, 'z', 0.0)
-    front = lambda x, y: c[2] + 0.17 * H * 1.1 * math.sqrt(max(0.05, 1 - (x / (0.17 * H)) ** 2 - ((y - c[1]) / (0.17 * H * 1.05)) ** 2))
-    face_dots(b, front, 0.8 * H, 0.07 * H, 0.022 * H, 0.022 * H, '#1a1210', None)
-    if L.get('hat'):
-        ht = b.P('hat', L['hat'], 'head', 40)
-        tube(ht, (0, 0.88 * H, c[2]), (0, 0.97 * H, c[2]), 0.1 * H, 0.09 * H, 10)
-        disc(ht, (0, 0.885 * H, c[2]), 0.15 * H, 12, 'y', 0.012)
+        out = lambda p, k: (p[0] + sx * k * H, p[1], p[2] + 0.06 * H)
+        a0, e2, h2 = (sx * 0.16 * H, 0.74 * H, 0.06 * H), out(el, 0.12), out(hd, 0.14)
+        tube(b.P('upper' + s, robe, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), a0, e2, 0.055, 0.045, 8)
+        tube(b.P('fore' + s, pale, 'el' + s, 50), e2, h2, 0.045, 0.04, 8)
+        sphere(b.P('hand' + s, pale, 'hand' + s, 50), (h2[0], h2[1] - 0.03, h2[2]), 0.045, 7, 5, (0.8, 1.2, 1.0))
+    limb_legs(b, bp, pale, pale, 0.075, 0.065, 0.22 * H, 0.085, ZH=H)
+    os.makedirs(OUTDIR, exist_ok=True)
+    tris = b.export(os.path.join(OUTDIR, name + '.json'))
+    print(name, 'tris', tris)
+    return name
+
+
+def build_tri(name):
+    # LBA2's triangle-headed Zeelichians (bodies 84, 430; 1.13 of Twinsen's height): a thin body in a suit (shoulders
+    # ±0.13 H, the waist ±0.06), thin arms with pointed hands, thin legs; the head a big inverted triangle from a
+    # pointed chin (0.70 H) to the cheekbones (±0.108 H with the ears' points), a flat top (±0.079), the face forward
+    S = ALL[name]
+    L, B = S['look'], S['bones']
+    bp = lambda n: tuple(B[n]['p'])
+    H = S['height'] * 0.98
+    skin, suit, shirt, pants, shoes, hair = L.get('skin', '#c08a68'), L.get('tunic', '#2f6a3a'), L.get('shirt', '#e8e0c8'), L.get('pants', '#9a7a3a'), L.get('shoes', '#4a8a5a'), L.get('hair', '#e0c890')
+    b = Builder(name, B)
+    hipsY, neckY, headY = bp('hips')[1], bp('neck')[1], bp('head')[1]
+    def w_t(p):
+        k = smooth(hipsY - 0.05, hipsY + 0.15, p[1])
+        return {'hips': 1 - k, 'torso': k}
+    secs = [(0.40, 0.065, 0.04, -0.04), (0.47, 0.062, 0.045, -0.04), (0.52, 0.065, 0.05, -0.042), (0.58, 0.1, 0.06, -0.05), (0.65, 0.128, 0.064, -0.05), (0.71, 0.13, 0.06, -0.045), (0.735, 0.08, 0.04, -0.03)]
+    rings = [ring(y * H, hw * H, zf * H, zb * H, 12, 0.7) for y, hw, zf, zb in secs]
+    banded(b, 'suit', rings, [(0.45 * H, pants), (9e9, suit)], w_t)
+    if L.get('tie'):   # shirt front and a tie
+        sf = b.P('shirt', shirt, 'torso', 30)
+        z = lambda y: 0.062 * H + 0.002
+        sf.add([(-0.035 * H, 0.735 * H, z(0)), (0.035 * H, 0.735 * H, z(0)), (0.0, 0.6 * H, z(0))], [[0, 2, 1][::-1]])
+        tie = b.P('tie', L['tie'], 'torso', 30)
+        tie.add([(-0.01 * H, 0.725 * H, z(0) + 0.003), (0.01 * H, 0.725 * H, z(0) + 0.003), (0.014 * H, 0.62 * H, z(0) + 0.003), (0.0, 0.6 * H, z(0) + 0.003), (-0.014 * H, 0.62 * H, z(0) + 0.003)], [[0, 4, 3, 2, 1]])
+    tube(b.P('neck', skin, lambda p: {'neck': 1 - smooth(neckY, headY + 0.05, p[1]), 'head': smooth(neckY, headY + 0.05, p[1])}, 50), (0, 0.72 * H, 0), (0, 0.79 * H, 0.01 * H), 0.03 * H, 0.028 * H, 8)
+    # the head: sections from the chin up (y, half-width, front, back), the ears' points at the widest
+    hs = [(0.70, 0.004, 0.13, 0.11), (0.74, 0.04, 0.135, 0.0), (0.79, 0.07, 0.135, -0.02), (0.84, 0.092, 0.14, -0.035), (0.885, 0.1, 0.125, -0.05), (0.93, 0.08, 0.105, -0.058), (0.975, 0.078, 0.09, -0.05)]
+    hr = [ring(y * H, hw * H, zf * H, zb * H, 12, 0.55) for y, hw, zf, zb in hs]
+    hp_ = b.P('head', skin, 'head', 40)
+    loft(hp_, hr, cap_bottom=True)
+    loft(b.P('hair', hair, 'head', 40), [ring(0.972 * H, 0.08 * H, 0.092 * H, -0.052 * H, 12, 0.55), ring(1.0 * H, 0.078 * H, 0.088 * H, -0.05 * H, 12, 0.55)], cap_top=True)
+    for sxx in (1, -1):   # the ears: flat points out of the cheekbones
+        ear = b.P('ear', skin, 'head', 30)
+        ear.add([(sxx * 0.09 * H, 0.86 * H, 0.03 * H), (sxx * 0.09 * H, 0.91 * H, 0.0), (sxx * 0.15 * H, 0.93 * H, -0.01 * H)], [[0, 1, 2] if sxx > 0 else [2, 1, 0]])
+        ear.add([(sxx * 0.09 * H, 0.86 * H, 0.03 * H), (sxx * 0.15 * H, 0.93 * H, -0.01 * H), (sxx * 0.09 * H, 0.91 * H, 0.0)], [[0, 1, 2] if sxx > 0 else [2, 1, 0]])
+    def front(x, y):
+        yy = y / H
+        for (ya, wa, fa, _), (yb, wb, fb, _) in zip(hs, hs[1:]):
+            if ya <= yy <= yb:
+                t = (yy - ya) / (yb - ya); w = (wa + (wb - wa) * t) * H; f = (fa + (fb - fa) * t) * H
+                return f * max(0.2, 1 - (abs(x) / max(w, 1e-3)) ** 1.8) ** 0.55
+        return 0.1 * H
+    face_dots(b, front, 0.87 * H, 0.035 * H, 0.016 * H, 0.008 * H, '#f0ece0', L.get('eyes', '#2a2a2a'))
+    nose = b.P('nose', skin, 'head', 30)
+    nz = front(0, 0.82 * H)
+    nose.add([(-0.012 * H, 0.835 * H, nz), (0.012 * H, 0.835 * H, nz), (0.0, 0.8 * H, nz + 0.03 * H)], [[0, 2, 1][::-1]])
+    for s, sx in (('L', 1), ('R', -1)):
+        sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
+        tube(b.P('upper' + s, suit, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), (sx * 0.135 * H, 0.71 * H, 0), el, 0.03, 0.026, 7)
+        tube(b.P('fore' + s, suit, 'el' + s, 50), el, hd, 0.026, 0.022, 7)
+        ax = [hd[i] - el[i] for i in range(3)]; al = math.sqrt(sum(c * c for c in ax)) or 1
+        tube(b.P('hand' + s, skin, 'hand' + s, 40), hd, tuple(hd[i] + ax[i] / al * 0.13 for i in range(3)), 0.03, 0.004, 6)
+    limb_legs(b, bp, pants, shoes, 0.04, 0.034, 0.1 * H * 0.8, 0.032, ZH=H)
     os.makedirs(OUTDIR, exist_ok=True)
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
     print(name, 'tris', tris)
@@ -868,6 +922,8 @@ def build_any(n):
         return build_bee(n)
     if race == 'mole':
         return build_mole(n)
+    if race == 'tri':
+        return build_tri(n)
     return build(n)
 
 

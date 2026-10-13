@@ -358,9 +358,11 @@ and built in `cast_poly.py`:
   below, thin arms with cone hands, thin legs and long boots. The skin changed from green to the original's salmon.
 - **Mosquibees (`build_bee`):** a banded upright abdomen, a head forward with great eyes, a long proboscis,
   curled antennae, two wings, thin legs and forelegs.
-- **Burrowers (`build_mole`):** a round body in a vest and shorts, a big head sunk into it, a long drooping
-  snout, flat round ears, and short arms from the elbow down. The rig's shoulder sits by the head.
-
+- **Moles (`build_mole`):** after the user's screenshot of a mole home, bodies 323/327: a robed pear of a body,
+  the long pale snout as the head, a yellow lip, pale arms hanging out and big pale feet. A first try used body
+  136, a small big-eared creature, which was not Zeelich's moles.
+- **Triangle-headed townsfolk (`build_tri`):** bodies 84/430. A thin suit or shirtsleeves, a big inverted-triangle
+  head with pointed ears and a flat top, and thin arms with pointed hands.
 The legs start at the hip joint, inside the body, so a stride never shows a gap. The Esmers take the robe's
 shorter stride. Captures: `captures/characters/zeelich-folk.png` (four views, and walking),
 `captures/characters/zeelich-street.png` (the street in chapter 9).
