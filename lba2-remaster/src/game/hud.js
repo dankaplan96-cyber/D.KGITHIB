@@ -293,9 +293,9 @@ export class HUD {
     c.width = c.height = N;
     const x = c.getContext('2d');
     const img = x.createImageData(N, N);
-    const half = terrain.half;
+    const X0 = terrain.x0, Z0 = terrain.z0;
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-      const wx = -half + (i / N) * terrain.size, wz = -half + (j / N) * terrain.size;
+      const wx = X0 + (i / N) * terrain.size, wz = Z0 + (j / N) * terrain.size;
       const h = terrain.heightAt(wx, wz);
       const k = (j * N + i) * 4;
       let r, g, b;
@@ -309,10 +309,10 @@ export class HUD {
     x.putImageData(img, 0, 0);
     // paths
     x.strokeStyle = 'rgba(120,90,50,0.8)'; x.lineWidth = 1.5;
-    const toPx = (v) => ((v + half) / terrain.size) * N;
-    for (const p of PATHS) { x.beginPath(); p.forEach(([px, pz], i) => (i ? x.lineTo(toPx(px), toPx(pz)) : x.moveTo(toPx(px), toPx(pz)))); x.stroke(); }
+    const toPx = (v, o) => ((v - o) / terrain.size) * N;
+    for (const p of PATHS) { x.beginPath(); p.forEach(([px, pz], i) => (i ? x.lineTo(toPx(px, X0), toPx(pz, Z0)) : x.moveTo(toPx(px, X0), toPx(pz, Z0)))); x.stroke(); }
     this.mapImg = c;
-    this.mapHalf = half;
+    this.mapX0 = X0; this.mapZ0 = Z0;
     this.mapSize = terrain.size;
   }
 
@@ -322,12 +322,12 @@ export class HUD {
     const ctx = this.miniCtx, W = this.mini.width;
     const hero = this.game.mapHero();
     const view = 70;
-    const s = this.mapSize, half = this.mapHalf;
+    const s = this.mapSize, X0 = this.mapX0, Z0 = this.mapZ0;
     const k = 256 / s;
     ctx.save();
     ctx.clearRect(0, 0, W, W);
     ctx.beginPath(); ctx.arc(W / 2, W / 2, W / 2 - 2, 0, Math.PI * 2); ctx.clip();
-    const sx = (hero.pos.x - view / 2 + half) * k, sz = (hero.pos.z - view / 2 + half) * k;
+    const sx = (hero.pos.x - view / 2 - X0) * k, sz = (hero.pos.z - view / 2 - Z0) * k;
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(this.mapImg, sx, sz, view * k, view * k, 0, 0, W, W);
     const toMini = (x, z) => [((x - hero.pos.x) / view + 0.5) * W, ((z - hero.pos.z) / view + 0.5) * W];
@@ -365,7 +365,7 @@ export class HUD {
 
   drawHolomap(time) {
     const ctx = this.holoCtx, W = this.holo.width;
-    const s = this.mapSize, half = this.mapHalf;
+    const s = this.mapSize, X0 = this.mapX0, Z0 = this.mapZ0;
     ctx.fillStyle = '#04121c';
     ctx.fillRect(0, 0, W, W);
     ctx.globalAlpha = 0.95;
@@ -374,7 +374,7 @@ export class HUD {
     // holo scanlines + tint
     ctx.fillStyle = 'rgba(40,200,255,0.10)'; ctx.fillRect(0, 0, W, W);
     for (let y = (time * 40) % 4; y < W; y += 4) { ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0, y, W, 1); }
-    const toPx = (x, z) => [((x + half) / s) * W, ((z + half) / s) * W];
+    const toPx = (x, z) => [((x - X0) / s) * W, ((z - Z0) / s) * W];
     ctx.font = '600 15px Rubik, system-ui, sans-serif';
     ctx.textAlign = 'center';
     for (const m of this._markers()) {

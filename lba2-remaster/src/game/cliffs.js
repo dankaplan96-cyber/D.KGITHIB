@@ -20,8 +20,8 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
     }
   };
   let blocks = 0;
-  for (let z = -half; z < half; z += step) {
-    for (let x = -half; x < half; x += step) {
+  for (let z = terrain.cz - half; z < terrain.cz + half; z += step) {
+    for (let x = terrain.cx - half; x < terrain.cx + half; x += step) {
       const px = x + (r() - 0.5) * step * 0.7, pz = z + (r() - 0.5) * step * 0.7;
       if (terrain.slopeAt(px, pz) < 1.05 || skip(px, pz)) continue;
       // uphill direction

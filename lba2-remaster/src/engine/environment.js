@@ -30,14 +30,14 @@ void main(){
   #include <fog_vertex>
 }`;
 const WATER_FS = `
-uniform float uTime, uStorm, uFlash, uSize, uSegs; uniform vec3 uSunDir, uDeep, uShallow, uSky; uniform sampler2D uHeight, uSea;
+uniform float uTime, uStorm, uFlash, uSize, uSegs; uniform vec2 uOrigin; uniform vec3 uSunDir, uDeep, uShallow, uSky; uniform sampler2D uHeight, uSea;
 varying vec3 vWorld; varying vec3 vNormal;
 #include <fog_pars_fragment>
 float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
 float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
   return mix(mix(h(i),h(i+vec2(1,0)),f.x), mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x), f.y); }
 void main(){
-  vec2 uv = (vWorld.xz + uSize*0.5) / uSize;
+  vec2 uv = (vWorld.xz - uOrigin) / uSize;
   vec2 tuv = (uv * uSegs + 0.5) / (uSegs + 1.0);
   float ground = texture2D(uHeight, tuv).r * 30.0 - 10.0;
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) ground = -10.0;
@@ -114,7 +114,7 @@ export class Environment {
       uTime: { value: 0 }, uStorm: { value: 1 }, uFlash: { value: 0 }, uWaveAmp: { value: 1 },
       uSunDir: { value: this.sunDir },
       uDeep: { value: PAL.storm.deep.clone() }, uShallow: { value: PAL.storm.shallow.clone() }, uSky: { value: PAL.storm.sky.clone() },
-      uHeight: { value: terrain.heightTexture }, uSize: { value: terrain.size }, uSegs: { value: terrain.segs },
+      uHeight: { value: terrain.heightTexture }, uSize: { value: terrain.size }, uSegs: { value: terrain.segs }, uOrigin: { value: new THREE.Vector2(terrain.x0, terrain.z0) },
       uSea: { value: null },
     }]);
     this.waterU.uSea.value = TX.sea;

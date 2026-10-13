@@ -3,18 +3,20 @@
 import * as THREE from 'three';
 
 export class Terrain {
-  constructor({ size, segs, heightFn, colorFn, splatFn, textures }) {
+  constructor({ size, segs, heightFn, colorFn, splatFn, textures, cx = 0, cz = 0 }) {
     this.splatFn = splatFn;
     this.tex = textures;
     this.size = size;
     this.segs = segs;
     this.half = size / 2;
+    // the grid is centred on cx, cz (its corner at x0, z0)
+    this.cx = cx; this.cz = cz; this.x0 = cx - size / 2; this.z0 = cz - size / 2;
     this.step = size / segs;
     const n = segs + 1;
     this.heights = new Float32Array(n * n);
     for (let j = 0; j < n; j++) {
       for (let i = 0; i < n; i++) {
-        this.heights[j * n + i] = heightFn(-this.half + i * this.step, -this.half + j * this.step);
+        this.heights[j * n + i] = heightFn(this.x0 + i * this.step, this.z0 + j * this.step);
       }
     }
     this.mesh = this._build(colorFn);
@@ -37,8 +39,8 @@ export class Terrain {
       const lx = x - p.cx, lz = z - p.cz;
       if (lx > -p.t.half && lx < p.t.half && lz > -p.t.half && lz < p.t.half) return p.t.heightAt(lx, lz);
     }
-    const gx = (x + this.half) / this.step;
-    const gz = (z + this.half) / this.step;
+    const gx = (x - this.x0) / this.step;
+    const gz = (z - this.z0) / this.step;
     const i = Math.floor(gx), j = Math.floor(gz);
     const fx = gx - i, fz = gz - j;
     const h00 = this._h(i, j), h10 = this._h(i + 1, j), h01 = this._h(i, j + 1), h11 = this._h(i + 1, j + 1);
@@ -65,7 +67,7 @@ export class Terrain {
     for (let j = 0; j < n; j++) {
       for (let i = 0; i < n; i++) {
         const k = j * n + i;
-        const x = -this.half + i * this.step, z = -this.half + j * this.step;
+        const x = this.x0 + i * this.step, z = this.z0 + j * this.step;
         const h = this.heights[k];
         pos[k * 3] = x; pos[k * 3 + 1] = h; pos[k * 3 + 2] = z;
         const slope = Math.hypot(this._h(i + 1, j) - this._h(i - 1, j), this._h(i, j + 1) - this._h(i, j - 1)) / (2 * this.step);
