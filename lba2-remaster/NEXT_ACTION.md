@@ -1,6 +1,6 @@
 # NEXT ACTION
 
-Ask the user how the 0.13.0 characters read in their game (Twinsen, Zoé, the Grobos and Rabbibunnies were rebuilt
+Ask the user how the 0.14.0 characters read (also Zeelich's Esmers, Mosquibees and burrowers) in their game (Twinsen, Zoé, the Grobos and Rabbibunnies were rebuilt
 after the original, docs/character-review.md §12), and to run the benchmark again (pause → Benchmark; it has a
 per-feature breakdown at Medium) so the graphics can be tuned from it.
 User (0.10.0 on Windows): combat animations not good, frame rate poor. 0.11.0 adds an in-game benchmark

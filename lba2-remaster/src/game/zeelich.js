@@ -5,7 +5,7 @@
 //
 // CONTRACT used by src/game/story/chapter2.js (keep these names and meanings when rebuilding the art):
 //   R.dock {x,z,a}            where the ferry ties up; R.ferry {group, x, z, setVisible(b)}
-//   R.street {x,z}            Esmer street centre; R.npcSpots {esmer1, esmer2, esmer3, baldinoOut, doran, vesk, guard} {x,z,a}
+//   R.street {x,z}            Esmer street centre; R.npcSpots {esmer1, esmer2, esmer3, bee1, bee2, mole1, mole2, baldinoOut, doran, vesk, guard} {x,z,a}
 //   R.workshopDoor {x,z}      door into Baldino's workshop (interior room 'workshop')
 //   R.councilDoor {x,z}       the arcade house's door: the council house and its cloud lift (rooms 'upper', 'council', 'archive')
 //   R.mills [{id, x, z, brake:{x,y,z}, spinning, setSpinning(b)}]  three wind-mills, a ball target (brake) each
@@ -528,6 +528,11 @@ export function buildZeelich(scene, physics) {
       esmer1: { ...W(-34.5, -3.2), a: Math.PI / 2 },
       esmer2: { ...W(-24, 7.0), a: Math.PI },
       esmer3: { ...W(-15.5, -2.6), a: -2.2 },
+      // the street's other folk: Mosquibees and burrowers, as on LBA2's Zeelich
+      bee1: { ...W(-15.5, -2.6), a: -2.2 },
+      bee2: { ...W(-29.0, 5.6), a: Math.PI },
+      mole1: { ...W(-38.5, 3.6), a: 2.4 },
+      mole2: { ...W(-20.5, -4.6), a: 0.3 },
       baldinoOut: { ...W(ws[0] + 1.4, ws[1] - 0.4), a: Math.PI },
       doran: { ...W(-60.5, 0.9), a: Math.PI / 2 },
       vesk: { ...W(46.5, -4.5), a: -Math.PI / 2 },

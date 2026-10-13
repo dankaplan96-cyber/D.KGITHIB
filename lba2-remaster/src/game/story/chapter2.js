@@ -13,6 +13,8 @@ import { ChapterBase } from './base.js';
 import '../text/ch2.js';
 
 const DIAL = ['sun', 'wave', 'star'];
+// Zeelich's street folk and where they stand
+const ZFOLK = [['zbee1', 'bee1'], ['zbee2', 'bee2'], ['zmole1', 'mole1'], ['zmole2', 'mole2']];
 const SOLUTION = [0, 1, 2];
 
 export class Chapter2 extends ChapterBase {
@@ -28,6 +30,8 @@ export class Chapter2 extends ChapterBase {
       { id: 'baldino', name: 'n_baldino', char: 'baldino', color: '#ffd890', x: at('baldinoOut').x, z: at('baldinoOut').z, angle: at('baldinoOut').a },
       { id: 'nara', name: 'n_nara', char: 'nara', color: '#ffc0a0', x: at('esmer1').x, z: at('esmer1').z, angle: at('esmer1').a },
       { id: 'oku', name: 'n_oku', char: 'oku', color: '#bfe8d8', x: at('esmer2').x, z: at('esmer2').z, angle: at('esmer2').a },
+      // street life: Mosquibees and burrowers (they only chat: baseTalk's idle_<id> lines)
+      ...ZFOLK.map(([id, spot]) => ({ id, name: 'n_' + id, char: id, color: '#e8e0c0', x: at(spot).x, z: at(spot).z, angle: at(spot).a })),
     ];
   }
 
@@ -45,7 +49,9 @@ export class Chapter2 extends ChapterBase {
   // where everyone is during chapter 2 (null: not here, undefined: another chapter decides)
   place(id) {
     const f = this.f, Z = this.Z, R = this.game.rooms;
-    if (!this.reached()) return ['baldino', 'nara', 'oku'].includes(id) ? null : undefined;
+    const folk = ZFOLK.find((z) => z[0] === id);
+    if (!this.reached()) return ['baldino', 'nara', 'oku'].includes(id) || folk ? null : undefined;
+    if (folk) return this.Z.npcSpots[folk[1]];
     const S = Z.npcSpots;
     const plat = Z.platform;
     switch (id) {

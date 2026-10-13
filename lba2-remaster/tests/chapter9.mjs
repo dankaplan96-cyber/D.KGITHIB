@@ -53,6 +53,7 @@ await boot('new');
 log('start', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 7, chapterKey: 'evacuation', c1_water: true, c1_done: true, c2_shield: true, c2_mill_north: true, c8_started: true, c8_vesk: true, c8_done: true });
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.state, T.obj()]; }));
 await shot('C9-00-dock.png');
+log('street folk (Mosquibees, burrowers)', await ev(() => ['zbee1', 'zbee2', 'zmole1', 'zmole2'].map((id) => { const n = T.npc(id); if (!n) return id + ' missing'; const g = game.physics.groundAt(n.pos.x, n.pos.z, n.pos.y + 1); T.talk(id); return id + (Math.abs(g - n.pos.y) < 0.3 ? ' on the street' : ' OFF THE GROUND') + (game.state === 'play' ? ', talked' : ' STUCK ' + game.state); })));
 log('baldino', await ev(() => { const Z = game.rooms.zeelich; const r = T.door(Z.workshopDoor); T.talk('baldino'); const back = T.out(); return [r, game.flags.c9_form, back, T.obj()]; }));
 log('nara', await ev(() => { T.talk('nara'); return [game.flags.c9_nara]; }));
 log('oku', await ev(() => { T.talk('oku'); return [game.flags.c9_okuAsk, game.rooms.zeelich.mills.map((m) => m.spinning)]; }));

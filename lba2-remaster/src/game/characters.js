@@ -93,22 +93,39 @@ export const LOOKS = {
   },
   nara: {
     // Esmer stall-keeper on the Zeelich street: tall and slim, a coral robe with a gold trim
-    race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#9ad0b8', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
+    race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#f2a582', ridge: '#4a8a72', tunic: '#e0704a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#7a3a2a', shoes: '#3a2a20',
     eyes: '#e8a040', height: 1.06,
   },
   oku: {
     // an old Esmer who remembers the Zeelich of before: stooped, a deep-teal robe, a white sash
-    race: 'esmer', outfit: 'robe', hem: 0.06, stoop: 0.14, belly: 0.05, skin: '#7fb4a0', ridge: '#3a6a5a', tunic: '#2a6a72', tunicTrim: '#e8e0d0', belt: '#e8e0d0', pants: '#1a3a40', shoes: '#2a2020',
+    race: 'esmer', outfit: 'robe', hem: 0.06, stoop: 0.14, belly: 0.05, skin: '#e0957a', ridge: '#3a6a5a', tunic: '#2a6a72', tunicTrim: '#e8e0d0', belt: '#e8e0d0', pants: '#1a3a40', shoes: '#2a2020',
     eyes: '#d8c060', hat: '#e8d8b0', height: 0.94,
   },
   xil: {
-    race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#86c8a8', ridge: '#3e7a62', tunic: '#5a3a8a', tunicTrim: '#c8a0ff', belt: '#c8a0ff', pants: '#3a2a5a', shoes: '#2a2040',
+    race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, skin: '#f0b08a', ridge: '#3e7a62', tunic: '#5a3a8a', tunicTrim: '#c8a0ff', belt: '#c8a0ff', pants: '#3a2a5a', shoes: '#2a2040',
     eyes: '#e8c040', height: 1.1,
+  },
+  // ---- Zeelich's street life, after LBA2's races there (tools/blender/cast_poly.py build_bee / build_mole)
+  zbee1: {
+    // a Mosquibee porter: a gold abdomen with brown bands, green eyes
+    race: 'bee', outfit: 'tunic', tunic: '#e0a83a', tunicTrim: '#5a3a1a', skin: '#5a4a4a', eyes: '#3a9a4a', wing: '#8ac8b0', height: 1.0,
+  },
+  zbee2: {
+    // a Mosquibee matron: a red abdomen, plain, a little gold crown
+    race: 'bee', outfit: 'tunic', tunic: '#c83a2a', tunicTrim: '#c83a2a', stripes: false, skin: '#3a5a7a', eyes: '#c83030', wing: '#e08a6a', crown: '#f2c45a', belly: 0.06, height: 1.0,
+  },
+  zmole1: {
+    // a burrower: brown fur, a red vest, blue shorts
+    race: 'mole', kid: true, outfit: 'tunic', fur: '#7a5030', tunic: '#b02828', belt: '#2a6a9a', pants: '#b02828', height: 0.7, // (a kid's rig ×0.9: 0.73 of Twinsen's height, as the original)
+  },
+  zmole2: {
+    // an older burrower: grey-brown fur, a green vest, a hat
+    race: 'mole', kid: true, outfit: 'tunic', fur: '#6a5a4a', tunic: '#3a7a3a', belt: '#5a3a1a', pants: '#3a3a4a', hat: '#c8a050', height: 0.68,
   },
   // ---- Zeelich's council (chapter 9)
   councilChair: {
     // Councillor Amaru, who chairs the council: a tall Esmer in a violet robe with a gold collar and a tall hat
-    race: 'esmer', outfit: 'robe', hem: 0.05, slim: true, skin: '#a0c8b0', ridge: '#4a7a6a', tunic: '#5a2a7a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#3a1a4a', shoes: '#2a1a2a',
+    race: 'esmer', outfit: 'robe', hem: 0.05, slim: true, skin: '#f4a07e', ridge: '#4a7a6a', tunic: '#5a2a7a', tunicTrim: '#f2c45a', belt: '#f2c45a', pants: '#3a1a4a', shoes: '#2a1a2a',
     eyes: '#f0c040', hat: '#f2c45a', collar: true, collarColor: '#f2c45a', height: 1.12,
   },
   councilB: {
@@ -123,7 +140,7 @@ export const LOOKS = {
   },
   clerk: {
     // the council's clerk: a slim Esmer in a pale robe, ink-stained sleeves, spectacles
-    race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, stoop: 0.05, skin: '#9cc4c0', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
+    race: 'esmer', outfit: 'robe', hem: 0.08, slim: true, stoop: 0.05, skin: '#eeab8c', ridge: '#4a7a7a', tunic: '#d8d0e8', tunicTrim: '#5a4a8a', belt: '#5a4a8a', pants: '#4a4a6a', shoes: '#2a2a3a',
     eyes: '#d8b040', glasses: true, height: 1.0,
   },
   archivist: {
@@ -168,7 +185,7 @@ export const LOOKS = {
   },
   keeper: {
     // Sefa, keeper of the observatory: a tall Esmer in a star-blue robe
-    race: 'esmer', outfit: 'robe', hem: 0.06, slim: true, skin: '#8ac0d8', ridge: '#3a6a8a', tunic: '#2a3a7a', tunicTrim: '#e8e0b0', belt: '#e8e0b0', pants: '#1a2a4a', shoes: '#2a2040',
+    race: 'esmer', outfit: 'robe', hem: 0.06, slim: true, skin: '#f2a888', ridge: '#3a6a8a', tunic: '#2a3a7a', tunicTrim: '#e8e0b0', belt: '#e8e0b0', pants: '#1a2a4a', shoes: '#2a2040',
     eyes: '#f0d060', height: 1.08,
   },
   // ---- Desert Island (chapters 4–5)
@@ -936,7 +953,7 @@ function finishRig(L, def, root, mesh, bones, eyes) {
   if (L.armSpread != null) rig.armSpread = L.armSpread;
   // the robe below the belt (Twinsen) or the outfit's legs (Zoé) are carried by the legs: strides need no limit
   if (L.outfit === 'lba' || L.outfit === 'gown') rig.legCloth = true;
-  if (L.outfit === 'lba') rig.robeLegs = true; // (one robe over both legs: it can't open as far as separate legs)
+  if (L.outfit === 'lba' || L.race === 'esmer') rig.robeLegs = true; // (one robe, or an Esmer's capsule, over both legs: a shorter stride)
   rig.bell = L.outfit === 'bell';
   root.scale.setScalar(L.height ? (L.kid ? L.height / 0.78 : L.height) : 1);
   return rig;

@@ -285,7 +285,7 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   with the mouse (the resting cursor had been aiming every throw). Modern keeps WASD, mouse aim and the slow
   aimed walk. tests/combat.mjs §19.
 
-## Session: the characters after the original, one design language (0.13.0)
+## Session: the characters after the original, one design language (0.13.0); Zeelich's peoples (0.14.0)
 - The user: the characters still don't look like the original, and the rest of the cast should share their
   design language. Blender now runs here as a Python module (`pip install bpy`), so the model scripts were
   changed and every model rebuilt (docs/character-review.md §12, docs/LBA2_MEASUREMENTS.md).
@@ -297,3 +297,8 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   round body, a wide head with a trunk and huge flat ears; Rabbibunnies a snout.
 - Checked: the original's polygons are Gouraud, so no flat shading (an earlier impression came from a flat study
   render). Skeletons unchanged: every animation drives the new models (captures/characters/cast-pass8-*.png).
+- Zeelich's peoples after the original (the user: "where are the Zeelich characters — the bees, the aliens
+  that look like capsules, the moles"): the Esmers are now LBA2's capsules (salmon, the face high on the capsule,
+  thin arms with cone hands); new Mosquibees and burrowers built from the original's measurements stand on the
+  Esmer street with lines of their own (Bzizz, Madam Zuzzara, Dobble, Old Grumm; buzzing and low voices).
+  tests/chapter9.mjs checks they stand on the street and talk.

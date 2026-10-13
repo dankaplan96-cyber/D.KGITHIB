@@ -35,6 +35,12 @@ Object.assign(STR.en, {
   chapter_steam: 'Steam and Sand', chapter_pass: 'The Pass', chapter_observatory: 'The Observatory', chapter_evacuation: 'Evacuation',
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   idle_generic: 'Hello, Twinsen.',
+  // Zeelich's street folk
+  n_zbee1: 'Bzizz', n_zbee2: 'Madam Zuzzara', n_zmole1: 'Dobble', n_zmole2: 'Old Grumm',
+  idle_zbee1: ['Bzz! Mind the wings, Quetch. I have forty crates of nectar to fly before the second sun.', 'The project\'s heat makes the flowers bloom twice. Good for honey. Bad for the head.', 'You walk everywhere? Bzz. How patient.'],
+  idle_zbee2: ['A Twinsen, on Zeelich? The hive will talk about nothing else for a week.', 'My daughters say the ground hums at night. Bees know when the ground is wrong.', 'Buy honey, little Quetch. Sweetness is good for worry.'],
+  idle_zmole1: ['We dug these streets before the Esmers paved them. Nobody remembers that.', 'Down below it\'s warm. Too warm. The old tunnels sweat now.', 'Mind the loose stones. I put them there. On purpose. Probably.'],
+  idle_zmole2: ['Hmph. Sixty years of digging, and now a machine digs deeper than all of us together.', 'When the soil sings, a burrower listens. It\'s singing out of tune, young man.', 'Tea? No? Your loss. Root tea. Very earthy.'],
   ending_title: 'End of Chapter 1',
   ending_text: 'The project ferry leaves the harbour for the skies of Zeelich. Baldino is waiting there. So is Vesk.',
   keep_exploring: 'Keep Exploring',

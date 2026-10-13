@@ -172,6 +172,15 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 | **Nara** | business is good | the project leaving | street gossip | directions; changes her mind when she sees the plan | — |
 | **Oku** | the old wind back | forgetting | mills and old Zeelich | mill brakes; releases them in the finale | — |
 
+## Peoples of Zeelich (after LBA2's models)
+- **Esmers:** a single capsule for body and head, the face high on it; thin arms with cone hands; salmon skin.
+  Nara, Oku, Xil, the clerk, the observatory keeper and Councillor Amaru are Esmers.
+- **Mosquibees:** upright insects with a big banded abdomen, great eyes, a long proboscis and wings. They fly
+  cargo and keep hives, and they know when the ground is wrong.
+- **Burrowers:** small, round, big-eared, with a long drooping snout. They dug Zeelich's streets before they were
+  paved, and they feel the bore's heat in the old tunnels.
+- **Grobos** live on both worlds (Councillor Brum, the guard).
+
 ## Writing rules
 Natural English, one or two sentences per turn, longer only for big moments. Concrete details, requests and
 reactions; humour from character, bureaucracy and everyday trouble. No "your destiny awaits", "an ancient

@@ -29,6 +29,8 @@ export const VOICES = {
   farmer1: { f0: 128, k: 0.96 }, farmer2: { f0: 214, k: 1.1 }, farmer3: { f0: 110, k: 0.93, wobble: 0.03 },
   sendell: { f0: 410, k: 1.35, rate: 0.6, wave: 'sine', soft: true }, // not quite of this world
   drones: { f0: 300, k: 1.0, rate: 1.3, wave: 'square', robot: true },
+  zbee1: { f0: 340, k: 1.3, rate: 1.4, wobble: 0.12, wave: 'square' }, zbee2: { f0: 290, k: 1.25, rate: 1.3, wobble: 0.1, wave: 'square' }, // a Mosquibee's buzz
+  zmole1: { f0: 150, k: 1.15, rate: 1.2 }, zmole2: { f0: 118, k: 1.1, rate: 1.0, wobble: 0.05 },
   dinofly: { f0: 86, k: 0.74, rate: 0.55, wobble: 0.1, wave: 'triangle' }, // a big, sleepy creature's rumble
 };
 // names that are not people (signs, notes, places): no voice

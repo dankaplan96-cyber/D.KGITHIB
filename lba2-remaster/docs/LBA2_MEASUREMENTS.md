@@ -52,6 +52,17 @@ smooth normals is kept.
 - Rabbibunny (body 117, H = 1.23 of Twinsen's): slim (torso ±0.09 H), long thin legs; a small head (±0.075 H)
   drawn out into a snout 0.1 H in front; ears up to H, 0.18 H long, in a V.
 
+## Zeelich's peoples (for the races of our Zeelich)
+- Esmer (bodies 80, 186; H = 1.01–1.02 of Twinsen's): one capsule from 0.19 H to the top, ±0.1 H round (the
+  head is its top; the face about 0.82 H); trousers on its lower part; arms from ±0.13 at 0.75 H sloping out to
+  ±0.26–0.3, the hands cones at 0.3–0.4 H; thin legs from 0.25 H, long boots (−0.07 … +0.13 H).
+- Mosquibee (bodies 192, 196; H = Twinsen's): the abdomen an upright oval 0.29–0.71 H, ±0.11; the head forward
+  of it at 0.72–0.86 H (to +0.21), great eyes at ±0.01–0.09, 0.81–0.90 H; a proboscis to +0.57 H; antennae to the
+  top; two wings behind (0.54–0.76 H, back to −0.61 H); thin legs from 0.26 H.
+- Burrower (body 136; H = 0.73 of Twinsen's): the body ±0.22 H from 0.17 to 0.58 H; the head 0.56–0.92 H, ±0.17,
+  sunk into it; a snout drooping to 0.47 H, 0.46 H in front; flat round ears ±0.17 … ±0.36 H at 0.72–0.92 H; feet
+  0–0.11 H; short arms from 0.42 H.
+
 ## Animations of the hero (24-group set; Twinsen's robe body uses the first 19 groups)
 - 0 idle: 8 keys × 300 ms (2.4 s): the whole body rocks forward and back (root ±50 units, pelvis ±6°), the arms
   follow it a little.
@@ -105,7 +116,9 @@ smooth normals is kept.
   three balls at the measured places; the look's armSpread 0.3.
 - `tools/blender/cast_poly.py` `build_zoe`: Zoé from the sections above (her H = 1.95 m to fit the game
   skeleton; the full front softened to 0.12 H). The rest of the cast: Grobo bodies and heads, Rabbibunny snouts,
-  ball hands and plain cloth after the races above.
+  ball hands and plain cloth after the races above. `build_esmer` / `build_bee` / `build_mole`: Zeelich's peoples as
+  measured above (skeletons unchanged: the capsule and bodies hang over the thighs; the Esmers walk with the
+  shorter robe stride).
 - `src/engine/rig.js` RUN_KEYS: the athletic run (Twinsen's robe opens 75 % as far: one robe over both legs
   stretches flat past ~65°; Zoé's separate legs take the full stride). throwQuick / charge: posed after the
   throw's coil and release (our timing stays quick: a tap releases at 0.16 s; holding keeps the coiled pose).

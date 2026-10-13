@@ -245,7 +245,8 @@ export class Prologue extends ChapterBase {
   baseTalk(npc) {
     const id = npc.def.id;
     if (id === 'pippa') return this.chain([['pippa', 'pr_pippa']], () => this.game.openShop());
-    const key = 'idle_' + id + '_' + this.story.cur.key;
+    const key = 'idle_' + id + '_' + this.story.cur.key, own = 'idle_' + id;
+    if (t(key) === key && Array.isArray(t(own))) { const all = t(own); return this.game.say('n_' + id, [all[Math.floor(Math.random() * all.length)]]); }
     this.chain([[id, t(key) !== key ? key : 'idle_generic']]);
   }
 

@@ -348,3 +348,19 @@ Captures:
   views each, 0.12.0 against now.
 - `captures/characters/cast-pass8-walk.png`: mid-stride.
 - `captures/characters/cast-pass8-ingame-square.png`: the town square at the game camera.
+
+### Pass 8b — Zeelich's peoples
+
+The user asked where the Zeelich characters were: the bees, the capsule-like aliens and the moles, all of
+them in the original files. Measured on the original models (docs/LBA2_MEASUREMENTS.md, "Zeelich's peoples")
+and built in `cast_poly.py`:
+- **Esmers (`build_esmer`):** a capsule for body and head, with the face high on it, trim bands and trousers
+  below, thin arms with cone hands, thin legs and long boots. The skin changed from green to the original's salmon.
+- **Mosquibees (`build_bee`):** a banded upright abdomen, a head forward with great eyes, a long proboscis,
+  curled antennae, two wings, thin legs and forelegs.
+- **Burrowers (`build_mole`):** a round body in a vest and shorts, a big head sunk into it, a long drooping
+  snout, flat round ears, and short arms from the elbow down. The rig's shoulder sits by the head.
+
+The legs start at the hip joint, inside the body, so a stride never shows a gap. The Esmers take the robe's
+shorter stride. Captures: `captures/characters/zeelich-folk.png` (four views, and walking),
+`captures/characters/zeelich-street.png` (the street in chapter 9).
