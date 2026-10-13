@@ -13,6 +13,10 @@
 - [x] V2b LBA2's friends and creatures: Zeelich's peoples, Joe the Elf, the Esmers' shuttles, the Temple of Bù, the
       guard dogs (bodies 51–53, enemies) + the poodle and the dog-training yard, the wizards (Bersimon's tent, the School
       of Magic, Rector Hougo, Ker'aooc) (0.17.0–0.18.0).
+- [x] V2c LBA1 brought back: the Spheros, FunFrock's fat troopers (enemies), and the first rooms rebuilt from LBA1's
+      layouts: FunFrock's asylum under Citadel's fort, the Temple of Bù's maze and halls (0.19.0–0.21.0).
+      Next candidates: the painted clones, Rabbibunny soldiers, the tanks, Twinsen's LBA1 house, the Maritime
+      Museum, the band, the elves.
 - [ ] V3 Apply the standard to the rest of Citadel, the interiors and Zeelich.
 - [ ] V4 Lighting: contact shadows, character/background separation, no plastic look (LBA ramp everywhere).
 

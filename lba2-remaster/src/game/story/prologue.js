@@ -11,6 +11,7 @@ import { POI } from '../world.js';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import { playOpening } from './opening.js';
+import { lba1EnemyDefs } from '../lba1places.js';
 
 const V = POI.village;
 
@@ -48,7 +49,8 @@ export class Prologue extends ChapterBase {
   }
 
   enemyDefs() {
-    return this.game.rooms.well.mites.map((p, i) => ({ id: 'mite' + i, kind: 'mite', ...p }));
+    // (and LBA1's places, open in every chapter: src/game/lba1places.js)
+    return this.game.rooms.well.mites.map((p, i) => ({ id: 'mite' + i, kind: 'mite', ...p })).concat(lba1EnemyDefs(this.game.rooms));
   }
 
   // Esmer cargo on the pier, stamped with the energy project's emblem
@@ -207,6 +209,11 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     switch (it.kind) {
       case 'roomsearch':
+        if (it.spot.id === 'asylum_register') {   // FunFrock's asylum (LBA1): the old register in the office
+          g.searched.push(it.spot.id); g.audio.play('chest');
+          this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
+          return true;
+        }
         if (it.spot.id !== 'cupboard') return false;
         g.searched.push(it.spot.id);
         g.audio.play('chest');

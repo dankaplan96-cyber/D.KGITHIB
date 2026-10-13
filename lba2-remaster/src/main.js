@@ -22,6 +22,8 @@ import { buildDesert } from './game/desert.js';
 import { buildCondenser } from './game/condenser.js';
 import { buildTemple } from './game/temple.js';
 import { buildWizards } from './game/wizards.js';
+import { buildLba1Places } from './game/lba1places.js';
+import { preloadLba1Rooms } from './game/lba1room.js';
 import { buildHamalayi } from './game/hamalayi.js';
 import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
@@ -39,7 +41,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 3;
-export const VERSION = '0.20.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.21.0'; // (the desktop build's version: desktop/package.json)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
 export function migrateSave(raw) {
@@ -62,7 +64,7 @@ export function migrateSave(raw) {
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
 const ROOM_MUSIC = { house: 'home', well: 'well', office: 'office', projoffice: 'stealth', control: 'station', workshop: 'workshop', lighttop: 'home' };
 // footsteps and background hum per interior (rooms can also set .surface / .sounds themselves)
-const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
+const ROOM_SURFACE = { obsv: 'stone', upper: 'stone', council: 'stone', archive: 'metal', valves: 'metal', hamalayi: 'grass', desert: 'dirt', condA: 'metal', condB: 'stone', butemple: 'stone', wtent: 'stone', school: 'stone', asylum: 'stone', bumaze: 'stone', buhalls: 'stone', house: 'wood', office: 'wood', projoffice: 'wood', workshop: 'wood', lighttop: 'wood', control: 'metal', well: 'stone', zeelich: 'stone', c3shaft: 'metal', c3deep: 'metal', c3core: 'metal', c3gallery: 'stone', c3sendell: 'stone' };
 const ROOM_HUM = { valves: 'water', condA: 'machine', condB: 'machine', control: 'machine', c3shaft: 'machine', c3deep: 'machine', c3core: 'machine', well: 'water' };
 const SET_KEY = 'sunshard_settings_v1';
 const BOOT_KEY = 'lba3_boot';
@@ -111,6 +113,7 @@ class Game {
     timed('condenser', () => Object.assign(this.rooms, buildCondenser(S, P)));
     timed('temple', () => Object.assign(this.rooms, buildTemple(S, P)));
     timed('wizards', () => Object.assign(this.rooms, buildWizards(S, P, this.rooms.desert, this.world)));
+    timed('lba1', () => Object.assign(this.rooms, buildLba1Places(S, P)));
     this.rooms.hamalayi = timed('hamalayi', () => buildHamalayi(S, P));
     timed('obsroom', () => Object.assign(this.rooms, buildObsRoom(S, P)));
     timed('upper', () => Object.assign(this.rooms, buildUpper3(S, P)));
@@ -1116,4 +1119,4 @@ const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeou
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
-Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters()]).then(async () => { loadingStep('Building the island…'); await nextPaint(); window.game = new Game(); });
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms()]).then(async () => { loadingStep('Building the island…'); await nextPaint(); window.game = new Game(); });

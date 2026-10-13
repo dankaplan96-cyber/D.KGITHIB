@@ -221,8 +221,14 @@ project's sites with the drones, carry stun rifles and batons, and are knocked o
 - **The Spheros** (LBA1's round people, bodies 68–70): most went south after FunFrock fell; a few are back on
   Citadel. Pom came back for the fish; Madam Rondo walks her poodle Fifi by the square (her grandmother kept her
   striped asylum uniform from FunFrock's day).
-- Still to come: more of LBA1's places and people now that the
-  user's LBA1 data is here.
+- **FunFrock's asylum** (LBA1, where it all began): its halls under Citadel's old fort, rebuilt from LBA1's layout.
+  The Council closed it after FunFrock fell; Vesk's project reopened its cellars as a store and posts guards, a
+  fat trooper and dogs where FunFrock's nurses stood. The old register still lies in the office (its last page:
+  Twinsen, cell 2). The block-house door sits outside the fort's east wall.
+- **The Temple of Bù's lower levels** (LBA1): under the LBA2 temple the project dug into, a stair goes down to the
+  old spiked maze and the dark halls past it, as Twinsen found them the first time; the crystal mites have moved
+  in. The halls' far end comes back up into the temple.
+- Still to come: more of LBA1's places and people.
 
 ## Writing rules
 Natural English, one or two sentences per turn, longer only for big moments. Concrete details, requests and

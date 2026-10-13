@@ -105,6 +105,9 @@ All enemies give up and go home beyond a pursuit limit.
   one in the training arena.
 - Guard dogs, trotting the guards' loops: ch. 1 depot, ch. 2 Zeelich depot, ch. 4 post, ch. 8 crowd-control yard;
   one in the training arena. The yard on Zeelich trains them (those bark from behind the palisade).
+- LBA1's rooms (open in every chapter): FunFrock's asylum on Citadel, after the prologue: Quetch and Grobo guards
+  at the original nurses' spots, a fat trooper at the clone's, two guard dogs; the Temple of Bù's dark halls: six
+  crystal mites.
 - Ch. 4 dig: mites in the trench.
 - Ch. 5 valve hall: drones among cover.
 - Ch. 6 lift: the rope, then three cautious mites.

@@ -141,6 +141,17 @@ function buildTempleRoom(scene, physics) {
   // crystal mites came in through the project's cut
   R.mites = [[-3.0, 3.0], [4.4, 0.6]].map(([x, z]) => ({ x: B.cx + x, z: B.cz + z }));
   B.giver('bu_urns', -1.4, BZ + 1.8, ['money', 'life', 'magic'], 1, { r: 1.0 });
+  // a stair down to the temple's older levels (LBA1's maze and halls: src/game/lba1places.js)
+  {
+    const sx = -6.5, sz = 5.4;
+    k.add(rbox(1.9, 0.12, 1.9, 0.03), MAT.flat('#0a0a10'), sx, 0.02, sz);
+    for (let i = 0; i < 4; i++) k.add(rbox(1.5, 0.08, 0.32, 0.02), MAT.stone('slate', 1), sx, 0.05 - i * 0.02, sz - 0.6 + i * 0.36);
+    for (const s of [-1, 1]) k.add(rbox(0.25, 0.5, 2.1, 0.04), rough, sx + s * 1.05, 0.25, sz);
+    k.add(rbox(2.3, 0.3, 0.25, 0.04), rough, sx, 0.15, sz - 1.05);
+    R.exits.push({ x: B.cx + sx, z: B.cz + sz + 0.4, r: 0.7, room: 'bumaze' });
+    const back = { x: B.cx + sx + 1.6, z: B.cz + sz - 1.6, a: 0 };
+    R.entries = { bumaze: back, buhalls: back };
+  }
   return B.finish();
 }
 

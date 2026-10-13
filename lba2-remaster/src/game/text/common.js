@@ -36,6 +36,8 @@ Object.assign(STR.en, {
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   idle_generic: 'Hello, Twinsen.',
   // Joe the Elf (LBA2), still in town
+  asy_register1: '(The asylum\'s old register. The last page: "Patient: Twinsen. Diagnosis: dreams of a goddess. Cell 2." Someone has drawn a moustache on FunFrock\'s signature.)',
+  asy_register2: 'Cell 2. I remember the bed was terrible. There\'s a clover pressed between the pages... for luck, I suppose.',
   n_sphero1: 'Pom',
   idle_sphero1: ['Twinsen! You remember us Spheros? Most of us went south after FunFrock fell. I came back for the fish.', 'In FunFrock\'s day they cloned us in his factories. My cousin met his own clone once. They didn\'t get along.', 'The ground hums at night. Spheros feel it in the knees. We have very sensitive knees.', 'Round is the best shape. Nothing to bump into.'],
   n_sphero2: 'Madam Rondo',

@@ -63,6 +63,13 @@ Tippett, Brundle, Fortress, Polar Island; which bank is which island is not mapp
 - FunFrock's fat trooper (18–20): look fclone, an enemy (0.20.0). Measured: 1196 units to the helmet top; the
   coat ±280 at the hips from the hem (75) to the shoulders (~860); hands r 33 at (±332, 298); the pack x −204…168,
   z −317…−144; the helmet dome 1066–1196.
+- Rooms (0.21.0), rebuilt from their layouts (assets/lba1/*.json; src/game/lba1room.js, lba1places.js):
+  - room 0, FunFrock's asylum: its door a block-house outside Citadel's old fort; guards where bodies 9/11 (nurses)
+    and 13 (the clone) stood; the register in the office (cell 46.5, 14, 23.5); out by the low stair-well (10.5, 1, 42.6).
+  - room 57, the Temple of Bù's spiked maze (21×20 columns): down a stair from our temple; the
+    way on at cell (14, 1, 11).
+  - room 40, the temple's dark halls: in at (3, 17, 3.2), the far exit (61, 17, 1.4) back up to our temple;
+    crystal mites at the spots of body 59.
 
 ## Rooms and maps (LBA_GRI / LBA_BLL / LBA_BRK, SCENE)
 Format (from SOURCES/GRILLE.C, GRILLE_A.ASM, DISKFUNC.C, OBJECT.C): a grid is 64×64 columns, 25 cells high; a

@@ -2,6 +2,7 @@
 // calls to the chapter in progress (flags.chapter). World props and NPCs for
 // all chapters are created once at start; chapters decide who is where.
 import { wizardDoors, wizardExit } from '../wizards.js';
+import { lba1Doors, lba1Exit } from '../lba1places.js';
 import { t } from '../i18n.js';
 import { Prologue } from './prologue.js';
 import { Chapter1 } from './chapter1.js';
@@ -96,9 +97,9 @@ export class Story {
   journal() { return this.chapters.slice(0, this.index + 1).map((c) => ({ title: (NUMBER[c.key] ? NUMBER[c.key] + '. ' : '') + t('chapter_' + c.key), lines: c.journal() })); }
   items() { return this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()); }
   // (the wizards' doors are open in every chapter: src/game/wizards.js)
-  doors() { return [...this.cur.doors(), ...wizardDoors()]; }
+  doors() { return [...this.cur.doors(), ...wizardDoors(), ...lba1Doors()]; }
   // where an exit leads: the current chapter first, then the earlier ones (their rooms are still there)
-  exitTo(to) { const w = wizardExit(to); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
+  exitTo(to) { const w = wizardExit(to) || lba1Exit(to); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
   // the town's doors on Citadel (house, water office, control room) for chapters set there after chapter 2
   townDoors() { return (this.chapters.find((c) => c.key === 'project')?.doors() || []).filter((d) => d.room !== 'projoffice'); }
   canExit(room, to) { return this.cur.canExit(room, to); }

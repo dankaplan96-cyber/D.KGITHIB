@@ -360,5 +360,18 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   (a bell of a greatcoat to the ankles, straps, belt, a red pack and blue bedroll, a small pointed face under a
   round helmet, long arms, red boots); the Guard class's kind 'fclone' (armour 2, 5 HP, the rifle with the aim
   line). In ch. 5 (FunFrock's hall), ch. 8, ch. 10 and the arena. combat §22. (0.20.0)
-- Open: Ker'aooc is slimmer than body 188's star-shaped body; LBA1's characters and places once the user's files
-  arrive.
+- Open: Ker'aooc is slimmer than body 188's star-shaped body.
+
+## Session: LBA1's rooms (0.21.0)
+- The user: "rooms and maps from LBA1", chose FunFrock's asylum and the Temple of Bù maze. The grid format from the
+  LBA1 engine source (docs/LBA1_CATALOGUE.md); a scratch converter reduces a room to numbers: for each column the
+  runs of cells (height, collision shape, a colour index into the room's averaged brick colours), the hero start,
+  the actors' spots (with their body) and the zones (assets/lba1/*.json). No brick graphics.
+- src/game/lba1room.js builds a room from that in our style: stone sides and plaster tops tinted by the cell
+  colour, slopes as ramps, colliders merged from the column runs, the near walls cut low so the iso camera sees in,
+  lamps. src/game/lba1places.js places three rooms: the asylum (room 0) behind a block-house door outside the old
+  fort's east wall on Citadel; the guards where the original's nurses (bodies 9, 11) and clone (13) stood, two
+  guard dogs (after the prologue); the old register (a search) and a giver in the office; out by the stair-well.
+  The Temple of Bù's maze (room 57) down a stair from our temple (ch. 4's interior, open in every chapter), and
+  the dark halls (room 40) past it with crystal mites where the original's creatures stood (body 59), back up at
+  the far end. tests/lba1rooms.mjs.

@@ -1,7 +1,10 @@
 # NEXT ACTION
 
-When the user uploads LBA1's files: read its body format (it differs from LBA2's), measure its characters
-(numbers only) and bring the ones the user wants back in our design language.
+LBA1 (the user's files, scratch only; docs/LBA1_CATALOGUE.md): the Spheros, the fat troopers and three rooms
+(the asylum, the Temple of Bù's maze and halls) are in (0.19.0–0.21.0). Ask the user which LBA1 room or people come
+next (Twinsen's LBA1 house, the Maritime Museum, the clone factories, the painted clones, Rabbibunny soldiers, the
+tanks, the band, the elves), and how the rebuilt rooms read in their game. The converter is
+$SCRATCH/lba1tools/extract.py (scratch, not committed); rerun it for a new room and add it to LBA1_AT.
 
 Ask the user how the 0.14.0 characters read (also Zeelich's Esmers, Mosquibees and burrowers) in their game (Twinsen, Zoé, the Grobos and Rabbibunnies were rebuilt
 after the original, docs/character-review.md §12), and to run the benchmark again (pause → Benchmark; it has a
