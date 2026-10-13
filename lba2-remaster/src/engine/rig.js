@@ -16,7 +16,7 @@ let blobGeo = null, blobMat = null;
 const STRIKE = new Set(['slash1', 'slash2', 'slash3', 'heavy', 'throwQuick', 'dodge']);
 const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe', 'reachHigh']);
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
-const FAST = new Set(['throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
+const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 export function createBlobShadow(radius) {
   blobGeo ??= new THREE.CircleGeometry(1, 20);
   blobMat ??= new THREE.MeshBasicMaterial({ map: textures().blob, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, fog: true });
@@ -644,6 +644,14 @@ export class Rig {
       const b = Math.abs(Math.sin(this.t * 6));
       hipsY = 0.95 + b * 0.15;
       T.armL = -2.9; T.armR = -2.9; T.elL = -0.2; T.elR = -0.2;
+    } else if (a === 'action') {
+      // LBA2's action (anim 17, Normal mode): a crouch, a little hop with the arms up, a landing with the arms
+      // out and a squat, 0.58 s (keys from the original, see ACTION_KEYS)
+      const t = this.actionT, K = ACTION_KEYS, at = (v) => keyLin(K.t, v, t);
+      hipsY = at(K.hipsY); torsoX = at(K.torso); headX = at(K.head); armOut = at(K.armOut);
+      T.armL = at(K.armL); T.armR = at(K.armR); T.elL = at(K.elL); T.elR = at(K.elR);
+      T.legL = at(K.legL); T.legR = at(K.legR); T.kneeL = at(K.kneeL); T.kneeR = at(K.kneeR); T.footL = at(K.footL); T.footR = at(K.footR);
+      if (this.robeLegs) { T.kneeL = Math.min(T.kneeL, 1.6); T.kneeR = Math.min(T.kneeR, 1.6); }
     } else if (a === 'search') {
       // rummaging in a cupboard or a chest
       const w = Math.sin(this.t * 9);
@@ -755,6 +763,24 @@ const _white = new THREE.Color(1, 1, 1);
 // 0.5: push-off behind; 0.75: passing), in radians, measured on LBA2's walk (both legs averaged).
 // Arms are keyed on their own side's leg (forward while that leg is behind); bob and lean repeat every step.
 const D = Math.PI / 180;
+// LBA2's action hop (ANIM.HQR 17, the hero's generic anim 11 in every behaviour): key times 0/160/320/440/520 ms,
+// over at 580 ms. Body height +369/-134/-148 units of 1238 (hipsY: 0.484 H per unit); angles in radians.
+const ACTION_KEYS = {
+  t: [0, 0.16, 0.32, 0.44, 0.52, 0.58],
+  hipsY: [0.95, 0.73, 1.57, 0.95, 0.7, 0.95],
+  torso: [0, 0.61, 0.23, -0.1, 0.77, 0], head: [0, 0.6, 0.3, 0, -0.28, 0],
+  armL: [0, 0, -1.62, 0, -0.23, 0], armR: [-0.05, -0.23, -1.64, 0, -0.23, 0], armOut: [0, 0.68, 0.42, 1.5, 0, 0],
+  elL: [-0.1, -0.1, -0.1, -0.6, 0, -0.1], elR: [-0.1, -0.1, -0.1, -0.8, 0, -0.1],
+  legL: [0, -1.33, -0.77, -0.89, -1.1, 0], legR: [0, -0.86, -1.33, 0, -0.72, 0],
+  kneeL: [0, 1.59, 1.19, 1.27, 1.47, 0], kneeR: [0, 1.19, 2.46, 0, 1.41, 0],
+  footL: [0, -0.42, 0.38, 0, -0.38, 0], footR: [0, -0.54, 0, 0, -0.63, 0],
+};
+// linear between keys (as LBA2 interpolates), held at the ends
+function keyLin(ts, vs, t) {
+  if (t <= ts[0]) return vs[0];
+  for (let i = 1; i < ts.length; i++) if (t < ts[i]) return vs[i - 1] + (vs[i] - vs[i - 1]) * (t - ts[i - 1]) / (ts[i] - ts[i - 1]);
+  return vs[vs.length - 1];
+}
 const WALK_KEYS = {
   thigh: [-46 * D, -8 * D, 25 * D, -20 * D],
   knee: [18 * D, 10 * D, 7 * D, 52 * D],

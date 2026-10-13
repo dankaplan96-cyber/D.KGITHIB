@@ -539,6 +539,7 @@ function buildHarbour(W, root, r) {
   tulipBed(W, g, -63.6, 1.2, 1.4, 3.4, 0, r);
   bench(W, g, -65.0, -7.0, Math.PI, r);
   barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-69.8, 6.2, true]], r);
+  W.givers.push({ id: 'quay-barrels', x: -72.6, z: 5.4, r: 1.8, top: 1.1, kinds: ['money', 'life'], n: 2 });
   crateStack(W, g, [[-71.6, -11.6, 2], [-70.5, -12.0, 1], [-72.6, -10.6, 1, 0.8]], r);
   netHeap(W, g, -73.0, 2.2, r);
   // iron mooring bitts at the quay edge

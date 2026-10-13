@@ -25,7 +25,7 @@ import { buildUpper3 } from './game/upper.js';
 import { buildValveRoom } from './game/valveroom.js';
 import { buildArena, enterArena } from './game/arena.js';
 import { updateKitLod } from './game/kit.js';
-import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK } from './game/actors.js';
+import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK, PICK_TYPES } from './game/actors.js';
 import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
 import { createEnemy, Drone } from './game/enemies.js';
 import { BehaviourMenu } from './game/behmenu.js';
@@ -69,11 +69,8 @@ const store = {
   del(k) { try { localStorage.removeItem(k); } catch { /* ignore */ } },
 };
 
-// kashes lying around the island
-const COINS = [
-  [-36, -8], [-46, 3], [-30, -24], [-20, -45], [-8, -62], [-26, 22], [-14, 34], [6, -8], [18, -8], [26, -14],
-  [40, 18], [30, 42], [-58, -20], [-60, 12], [10, -40], [-30, -60], [64, 6], [20, 70], [-40, 40], [44, -36],
-];
+// what counts as having enough kashes when a giver chooses (LBA2: NecessaryChapterMoney)
+const MONEY_NEED = 20;
 
 const SHOP = [
   { id: 'magic', key: 'shop_magic' },
@@ -199,11 +196,9 @@ class Game {
     this.npcs = this.story.npcDefs().map((d) => new NPC(this, d));
     this.enemies = this.story.enemyDefs().map((d) => createEnemy(this, d));
     this.story.decorate();
-    COINS.forEach(([x, z], i) => this.pickups.spawn('coin', x, this.physics.groundAt(x, z) + 0.5, z, { id: 'c' + i }));
-    // reward on top of the Whispering Cliffs (optional ball + jumping puzzle)
+    // reward on top of the Whispering Cliffs (optional ball + jumping puzzle); kashes come from the givers
     const s = this.world.shard1Spot;
     this.pickups.spawn('clover', s.x, s.y, s.z, { id: 'cliff-clover' });
-    for (let i = 0; i < 5; i++) this.pickups.spawn('coin', s.x + Math.cos(i * 1.26) * 2.2, s.y - 0.8, s.z + Math.sin(i * 1.26) * 2.2, { id: 'cliff-k' + i });
     // six singing crystals, hidden off the paths (each one: +1 max health; all six: Sendell notices)
     for (const c of this.crystalSpots()) this.pickups.spawn('crystal', c.x, c.y, c.z, { id: c.id });
   }
@@ -580,7 +575,6 @@ class Game {
     for (const n of this.npcs) if (n.present && !n.def.noTalk) consider(dist(n.pos.x, n.pos.z), 2.6, { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk' });
     if (!this.room) {
       for (const s of W.signs) consider(dist(s.x, s.z), 2.0, { kind: 'sign', sign: s, label: 'p_read' });
-      for (const s of W.searchSpots) if (!this.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'search', spot: s, label: 'p_search' });
     }
     // the chapter's own interactions first: on a tie (same spot) they win over the generic ones
     this.story.interactables(consider, dist);
@@ -588,20 +582,62 @@ class Game {
     return best;
   }
 
+  // false when there is nothing in reach (in Normal mode Twinsen then hops: see Hero.hop)
   tryInteract() {
     const it = this.findInteractable();
-    if (!it) return;
-    if (it.kind === 'npc') { this.story.talk(it.npc); return; }
-    if (it.kind === 'sign') { this.say('', [t(it.sign.key)]); return; }
-    if (it.kind === 'search') {
-      this.searched.push(it.spot.id);
-      const s = it.spot, y = this.physics.groundAt(s.x, s.z) + 1.2;
-      if (s.reward === 'flask') { this.pickups.spawn('flask', s.x, y, s.z, { pop: true }); this.hud.toast('toast_flask'); }
-      if (s.reward === 'clover') { this.pickups.spawn('clover', s.x, y, s.z, { pop: true }); this.hud.toast('toast_clover_found'); }
-      this.audio.play('chest');
-      return;
+    if (!it) return false;
+    if (it.kind === 'npc') this.story.talk(it.npc);
+    else if (it.kind === 'sign') this.say('', [t(it.sign.key)]);
+    else this.story.interact(it);
+    return true;
+  }
+
+  // ------------------------------------------------ givers (LBA2's "zone giver")
+  // A giver is a spot by a bin, a cupboard, a barrel: Twinsen's hop there shakes out one bonus, once (the
+  // ids go into `searched`, so saves keep them). Most are indoors, as in the original. The bonus is the kind
+  // (of those the spot may give) Twinsen needs most, as LBA2's WhichBonus decides; a bonus of n kashes is one
+  // coin worth n.
+  givers() { return (this.room ? this.room.givers : this.world.givers) || []; }
+  giverHop() {
+    const h = this.hero;
+    for (const gv of this.givers()) {
+      const key = 'giver:' + (this.room?.id || 'out') + ':' + gv.id;
+      // (saves from before the givers kept the outdoor two as plain searches: same ids)
+      if (this.searched.includes(key) || !this.room && this.searched.includes(gv.id) || Math.hypot(h.pos.x - gv.x, h.pos.z - gv.z) > gv.r) continue;
+      if (Math.abs(h.pos.y - (gv.y ?? h.pos.y)) > 1.5) continue;
+      this.searched.push(key);
+      const y = (gv.y ?? this.physics.groundAt(gv.x, gv.z)) + (gv.top ?? 1);
+      this.giveBonus(gv.kinds, gv.n || 1, gv.x, y, gv.z, h.pos);
+      return true;
     }
-    this.story.interact(it);
+    return false;
+  }
+  whichBonus(kinds) {
+    const h = this.hero;
+    const can = kinds.filter((k) => k !== 'magic' || h.magicLevel > 0);
+    if (!can.length) return kinds.includes('magic') ? 'life' : null; // (magic without the ball: a heart instead)
+    // how much each is needed: what you have against what you should have (> 1: short of it)
+    const need = (k) => k === 'money' ? MONEY_NEED / Math.max(1, h.coins)
+      : k === 'life' ? (h.hp > h.maxHp * 0.2 ? h.maxHp / h.hp : h.maxHp)
+      : k === 'magic' ? (h.mp > 0 ? h.mpMax / h.mp : h.mpMax) : 0;
+    let best = null, bv = 1;
+    for (const k of can) if (need(k) > bv) { bv = need(k); best = k; }
+    return best || can[Math.floor(Math.random() * can.length)];
+  }
+  // pop a bonus out of (x, y, z): toward `to` like a giver (70° up, ±13°), or straight up when there is no `to`
+  // (a broken crate, a defeated enemy). LBA2: 40 units/tick at weight 15 → 3.15 m/s up, 1.13 m/s out, 7.8 m/s².
+  giveBonus(kinds, n, x, y, z, to = null) {
+    const k = this.whichBonus(kinds);
+    if (!k) return null;
+    const type = { money: 'coin', life: 'heart', magic: 'flask', clover: 'clover', key: 'key' }[k];
+    if (!PICK_TYPES.has(type)) return null;
+    let vx = 0, vz = 0;
+    if (to) {
+      const a = Math.atan2(to.x - x, to.z - z) + (Math.random() - 0.5) * 0.46;
+      vx = Math.sin(a) * 1.13; vz = Math.cos(a) * 1.13;
+    }
+    this.audio.play('bonus');
+    return this.pickups.spawn(type, x, y, z, { fly: { vx, vy: to ? 3.15 : 3.35, vz }, value: type === 'coin' ? n : 1, life: type === 'clover' || type === 'key' ? Infinity : 20 });
   }
 
   say(name, lines, done, speaker = null, color = null) {
@@ -772,9 +808,7 @@ class Game {
     if (silent) return;
     this.audio.play('break');
     this.particles.burst(c.x, c.y, c.z, '#c8904a', 24, 4);
-    const r = Math.random();
-    const type = r < 0.45 ? 'coin' : r < 0.7 ? 'heart' : r < 0.85 ? 'flask' : null;
-    if (type) for (let k = 0; k < (type === 'coin' ? 2 : 1); k++) this.pickups.spawn(type, c.x, c.y + 0.4, c.z, { pop: true });
+    this.giveBonus(['money', 'life', 'magic'], 2, c.x, c.y + 0.4, c.z);
   }
 
   alertGroup(group, pos, chance = 1) {
@@ -783,18 +817,17 @@ class Game {
 
   onEnemyKilled(e) {
     this.killed.push(e.id);
-    this.pickups.spawn('coin', e.pos.x, e.pos.y + 0.8, e.pos.z, { pop: true });
-    if (Math.random() < 0.4) this.pickups.spawn('heart', e.pos.x, e.pos.y + 0.8, e.pos.z, { pop: true });
+    this.giveBonus(['money', 'life', 'magic'], 1, e.pos.x, e.pos.y + 0.8, e.pos.z);
     this.save(false);
   }
 
   collect(p) {
     const h = this.hero;
     if (p.id) this.collected.push(p.id);
-    const fl = { coin: ['+1', '#ffe35a'], heart: ['♥', '#ff5a6a'], flask: ['✦', '#7fc4ff'], clover: ['♣', '#7fef7a'], crystal: ['♦', '#9fe8ff'] }[p.type];
+    const fl = { coin: ['+' + (p.value || 1), '#ffe35a'], heart: ['♥', '#ff5a6a'], flask: ['✦', '#7fc4ff'], clover: ['♣', '#7fef7a'], crystal: ['♦', '#9fe8ff'] }[p.type];
     if (fl) this.hud.float(fl[0], p.pos, fl[1]);
     switch (p.type) {
-      case 'coin': h.coins++; this.audio.play('coin'); break;
+      case 'coin': h.coins += p.value || 1; this.audio.play('coin'); break;
       case 'heart': h.hp = Math.min(h.maxHp, h.hp + 3); this.audio.play('heal'); break;
       case 'flask': h.mp = h.mpMax; this.audio.play('heal'); break;
       case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('heal'); this.hud.toast('toast_clover_found'); break;

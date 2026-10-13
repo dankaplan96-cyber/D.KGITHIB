@@ -372,7 +372,7 @@ export function buildWorld(parentScene) {
     skip: (x, z) => pathDist(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
   });
   const W = {
-    terrain, physics, zones, H, POI, trapFixes: grid.trapped,
+    terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
     interactables: [], ballTargets: [], crates: [], updaters: [], lights: [], swayMats: [], TX, root: scene,
   };
   const rand = rng(42);
@@ -741,10 +741,9 @@ export function buildWorld(parentScene) {
   zones.add({ type: 'hint', id: 'hint_target', x: POI.target.x - 4, z: POI.target.z + 3, r: 6, once: true });
 
   // hidden-object search spots
-  W.searchSpots = [
-    { id: 'barrels', x: W.barrels.x, z: W.barrels.z, r: 2.0, reward: 'flask' },
-    { id: 'stump', x: 46, z: -2, r: 2.0, reward: 'clover' },
-  ];
+  // givers outdoors (most are indoors, as in the original): the sage's barrels and the old stump
+  W.givers.push({ id: 'barrels', x: W.barrels.x, z: W.barrels.z, r: 2.0, top: 1.1, kinds: ['magic'] });
+  W.givers.push({ id: 'stump', x: 46, z: -2, r: 2.0, top: 0.8, kinds: ['clover'] });
   W.storm = 1;
   W.update = (dt, t) => {
     swayU.uTime.value = t;

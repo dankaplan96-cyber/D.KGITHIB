@@ -50,6 +50,21 @@ only the numbers below, used to shape our own models and animations.
   pelvis 38–44° forward, the head up; a long crouched follow-through.
 - 12 crouched sneak (pelvis 45°, knees up to 158°), 21 looking around, 26 a forward jump (720 ms).
 
+## Givers and bonuses (zone giver, the action hop)
+- In Normal mode the action key plays the generic anim 11 (ACTION) = ANIM.HQR 17 in all four behaviours: 5 keys
+  of 160/160/120/80/60 ms (0.58 s). Body height: 0, −134, +369, 0, −148 units (a crouch, a hop of 0.30 H, a
+  squat on landing). Crouch: thighs −76/−49°, knees 91/68°, torso +35°; in the air: arms −93° (up and forward),
+  one knee tucked to 141°; touchdown: arms out sideways 83–92°; squat: torso +44°, knees 84/81°.
+- A giver is a scene zone of type 4 (Info0: the bonus kinds as flags 16 money, 32 life, 64 magic, 128 key,
+  256 clover; Info1: how many; Info2: taken). Hopping inside it gives one bonus, once. The original has 483:
+  almost all indoors (Twinsen's house has 6), about 9 on Citadel's exterior. Most allow money + life + magic.
+- Which bonus: of the allowed kinds, the one most needed (WhichBonus): money = what the chapter needs ÷ kashes
+  held, life = max ÷ life (max when life ≤ 20 %), magic = (level × 20) ÷ points; if nothing is short, a random
+  one. A money bonus of n is a single coin worth n.
+- The bonus leaves the zone's top at 70° elevation toward Twinsen ±13°, speed 40 units/tick at weight 15
+  (≈ 3.15 m/s up, 1.13 m/s out, gravity ≈ 7.8 m/s²), stops where it lands, cannot be taken in flight, and goes
+  after 20 s, blinking (8 ticks on, 8 off) for the last 3 s. A destroyed object pops its bonus straight up.
+
 ## Used in the game
 - `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle).
 - `tools/blender/twinsen_poly.py`: the robe below the belt follows the legs; hands r ≈ 0.032 H at ±0.19;
@@ -58,3 +73,6 @@ only the numbers below, used to shape our own models and animations.
 - `src/engine/rig.js` RUN_KEYS: the athletic run (Twinsen's robe opens 75 % as far: one robe over both legs
   stretches flat past ~65°; Zoé's separate legs take the full stride). throwQuick / charge: posed after the
   throw's coil and release (our timing stays quick: a tap releases at 0.16 s; holding keeps the coiled pose).
+- `src/engine/rig.js` ACTION_KEYS: the hop. `src/main.js` giverHop / whichBonus / giveBonus and
+  `src/game/actors.js` Pickups (the arc, the timeout, the blink); givers sit by furniture in the interiors
+  (RoomBuilder.giver) and at a few barrels and the stump outdoors. No kashes lie around outdoors any more.

@@ -242,10 +242,10 @@ export class Hero extends Actor {
       if (beh === 'athletic') {
         if ((this.onGround && !this.sliding) || this.coyote > 0) this.jump(); else this.jumpBuf = 0.15;
       } else if (beh === 'normal') {
-        g.tryInteract();
+        if (!g.tryInteract() && this.onGround) this.hop();
       }
     }
-    if (!wheel && input.pressed('interact') && this.actT <= 0 && !this.combat.busy) g.tryInteract();
+    if (!wheel && input.pressed('interact') && this.actT <= 0 && !this.combat.busy && !g.tryInteract() && beh === 'normal' && this.onGround) this.hop();
 
     if (this.hasSword || this.swordMesh) this.showSword(this.combat.weapon === 'sword');
     // animation state
@@ -262,6 +262,13 @@ export class Hero extends Actor {
     // blink while invulnerable
     this.rig.root.visible = this.invuln <= 0.5 || Math.floor(this.invuln * 20) % 2 === 0;
     this.sync();
+  }
+
+  // LBA2's action in Normal mode: a little hop on the spot (0.58 s). Next to a giver (a bin, a cupboard, a barrel)
+  // it shakes a bonus out, once (Game.giverHop).
+  hop() {
+    this.act('action', 0.58);
+    this.game.giverHop();
   }
 
   // anticipation: a quick crouch, then the take-off (in the air already? jump now)
@@ -1002,6 +1009,8 @@ const PICK = {
   },
 };
 
+export const PICK_TYPES = new Set(Object.keys(PICK));
+
 export class Pickups {
   constructor(game) { this.game = game; this.list = []; }
   spawn(type, x, y, z, opts = {}) {
@@ -1009,8 +1018,9 @@ export class Pickups {
     mesh.traverse((o) => { if (o.isMesh) o.castShadow = true; });
     mesh.position.set(x, y, z);
     this.game.scene.add(mesh);
-    const p = { type, mesh, pos: mesh.position, vel: new THREE.Vector3(), t: Math.random() * 6, delay: 0, ...opts };
+    const p = { type, mesh, pos: mesh.position, vel: new THREE.Vector3(), t: Math.random() * 6, delay: 0, life: Infinity, ...opts };
     if (opts.pop) { p.vel.set((Math.random() - 0.5) * 4, 6 + Math.random() * 2, (Math.random() - 0.5) * 4); p.delay = 0.4; }
+    if (opts.fly) p.vel.set(opts.fly.vx, opts.fly.vy, opts.fly.vz);
     p.baseY = y;
     this.list.push(p);
     return p;
@@ -1022,6 +1032,20 @@ export class Pickups {
       const p = this.list[i];
       p.t += dt;
       p.delay -= dt;
+      // a bonus that nobody takes goes after 20 s, blinking for the last 3 (LBA2: 8 ticks on, 8 off)
+      p.life -= dt;
+      if (p.life <= 0) { g.scene.remove(p.mesh); this.list.splice(i, 1); continue; }
+      p.mesh.visible = p.life > 3 || Math.floor(p.life / 0.16) % 2 === 0;
+      if (p.fly) {
+        // a giver's bonus: one arc (LBA2's gravity, 7.8 m/s²), it stops where it lands; not takeable in flight
+        p.vel.y -= 7.84 * dt;
+        p.pos.addScaledVector(p.vel, dt);
+        const gy = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y + 0.3) + 0.3;
+        if (p.vel.y < 0 && p.pos.y <= gy) { p.pos.y = gy; p.vel.set(0, 0, 0); p.fly = null; }
+        p.baseY = p.pos.y;
+        p.mesh.rotation.y += dt * 2.5;
+        continue;
+      }
       if (p.vel.lengthSq() > 0.01) {
         p.vel.y -= 20 * dt;
         p.pos.addScaledVector(p.vel, dt);

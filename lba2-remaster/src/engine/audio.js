@@ -281,6 +281,8 @@ export class AudioEngine {
       case 'throw': this._burst({ dur: 0.25, vol: 0.15, f: 600, f1: 2500, type: 'bandpass', q: 3 }); break;
       case 'bounce': this._tone({ f0: 780, f1: 1200, dur: 0.08, vol: 0.15 }); break;
       case 'catch': this._tone({ f0: 900, f1: 1800, dur: 0.1, vol: 0.12 }); break;
+      // a bonus pops out of a giver: a short rising 'boing'
+      case 'bonus': this._tone({ type: 'triangle', f0: 420, f1: 880, dur: 0.16, vol: 0.07 }); this._tone({ type: 'sine', f0: 1180, f1: 1240, dur: 0.12, vol: 0.04, at: 0.1 }); break;
       case 'coin': this._tone({ type: 'square', f0: 988, dur: 0.07, vol: 0.06 }); this._tone({ type: 'square', f0: 1319, dur: 0.18, vol: 0.06, at: 0.07 }); break;
       case 'heal': [523, 659, 784].forEach((f, i) => this._tone({ type: 'triangle', f0: f, dur: 0.18, vol: 0.12, at: i * 0.07 })); break;
       case 'hurt': this._tone({ type: 'sawtooth', f0: 400, f1: 120, dur: 0.25, vol: 0.12 }); break;

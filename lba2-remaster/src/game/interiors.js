@@ -22,7 +22,7 @@ export class RoomBuilder {
     this.group.visible = false;
     scene.add(this.group);
     this.k = new Kit(this.group);
-    this.room = { id, center: new THREE.Vector3(cx, 0, cz), group: this.group, exits: [], zones: [], searches: [], ballTargets: [], lights: [], updaters: [], colliders: [] };
+    this.room = { id, center: new THREE.Vector3(cx, 0, cz), group: this.group, exits: [], zones: [], searches: [], givers: [], ballTargets: [], lights: [], updaters: [], colliders: [] };
   }
   box(w, h, d, material, x, y, z, ry = 0, shadow = true) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
@@ -56,6 +56,11 @@ export class RoomBuilder {
       else if (fp.hw) this.col(x, z, fp.hw, fp.hd, fp.top, { rot: ry, ...colExtra });
     }
     return fp;
+  }
+  // a giver (LBA2's zone giver): hop next to it in Normal mode and a bonus pops out, once (Game.giverHop).
+  // kinds: of 'money', 'life', 'magic', 'clover'; n kashes for money; top: where the bonus leaves from
+  giver(id, x, z, kinds, n = 1, { r = 1.1, top = 1 } = {}) {
+    this.room.givers.push({ id, ...this.world(x, z), y: 0, r, top, kinds, n });
   }
   floor(w, d, material) {
     this.box(w, 0.2, d, material, 0, -0.1, 0, 0, false);
@@ -313,11 +318,13 @@ function buildHouse(scene, physics) {
     for (let i = 0; i < 6; i++) k.add(cyl(0.05, 0.05, 0.55, 7), MAT.wood(i % 2 ? 'honey' : 'grey'), Math.cos(i * 1.2) * 0.1, 0.42 + (i % 2) * 0.05, Math.sin(i * 1.2) * 0.1, i, { rz: Math.PI / 2 - 0.2 });
   });
   B.ccol(-4.05, BZ + 0.55, 0.3, 0.6, { noStand: true });
+  B.giver('firewood', -4.05, BZ + 0.55, ['life', 'magic'], 1, { r: 1.0, top: 0.6 });
   const stoveLight = B.light('#ff8a3a', 3.2, 4.5, stX, 0.6, BZ + 1.0);
 
   // --- dresser with plates
   const drX = -0.82;
   B.put(drX, BZ + 0.28, 0, P.dresser, { w: 1.1 });
+  B.giver('dresser', drX, BZ + 0.28, ['money'], 5, { r: 1.3, top: 1.2 });
 
   // --- the sink: a stone basin on a cupboard, a brass tap from the wall (the opening: it coughs and runs warm),
   // Zoé's tray of seedlings and her watering can
@@ -385,10 +392,12 @@ function buildHouse(scene, physics) {
   B.put(LX + 1.1, bedZ, -Math.PI / 2, P.bed, { w: 1.45, l: 2.15 });
   k.at(LX + 0.02, 1.85, bedZ, Math.PI / 2, () => P.frame(k, 1.0, 0.75, P.painting('dinofly')));
   B.put(LX + 0.3, 0.95 + 0.0, Math.PI / 2, P.nightstand, {});
+  B.giver('nightstand', LX + 0.3, 0.95, ['life', 'magic'], 1, { r: 1.0, top: 0.7 });
   P.candle(k, LX + 0.3, 0.62, 0.9);
   P.bookStack(k, LX + 0.28, 0.62, 1.12, 2, 5);
   // under the side window: a low chest with a plant
   B.put(LX + 0.32, 0.1, Math.PI / 2, P.chest, { w: 0.8, d: 0.46, h: 0.44, pal: 'honey' });
+  B.giver('chest', LX + 0.32, 0.1, ['money', 'life', 'magic'], 3, { r: 1.1, top: 0.6 });
   k.at(LX + 0.32, 0.6, -0.05, 0, () => P.pottedPlant(k, { s: 0.6 }));
 
   // --- table, chairs, rug, lamp
@@ -428,6 +437,7 @@ function buildHouse(scene, physics) {
   // --- Arthur's toy corner: rug, toy chest, blocks, boat, plush Dino-Fly, and the radio
   k.at(2.55, 0, 2.25, 0.08, () => P.rug(k, 2.4, 1.7, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 7));
   B.put(3.85, 2.85, -Math.PI / 2, P.chest, { w: 0.85, d: 0.5, h: 0.46, pal: 'red', band: MAT.paint('#e9c46a', 0.5) });
+  B.giver('toychest', 3.85, 2.85, ['money'], 3, { r: 1.1, top: 0.6 });
   k.at(1.95, 0.0, 2.75, 0.3, () => P.toyBlocks(k));
   k.at(3.05, 0.0, 1.75, 0.6, () => P.toyBoat(k));
   // Arthur's model boat in progress: a carved hull, the mast and sail not fitted yet, a pot of paint, shavings
@@ -705,6 +715,7 @@ function buildOffice(scene, physics) {
   B.put(3.6, BZ + 0.42, 0, P.pottedPlant, { s: 1.05 });
   B.put(3.5, 3.0, 0, P.pottedPlant, { kind: 'spiky', s: 1.15, potColor: '#3a6fb0' });
   B.put(1.55, BZ + 0.3, 0, P.waterCooler, { empty: true });
+  B.giver('cooler', 1.55, BZ + 0.3, ['life'], 1, { r: 1.0, top: 1.2 });
   k.at(1.0, 1.72, BZ, 0, () => P.noticeBoard(k, 0.72, 0.52, 3));
   k.at(1.05, 2.42, BZ, 0, () => P.wallClock(k, 0.17));
   // umbrella stand by the door
@@ -775,6 +786,7 @@ function buildOffice(scene, physics) {
   k.at(dX + 0.12, 0.78, 2.1, 0.4, () => { k.add(rbox(0.06, 0.03, 0.04, 0.008), MAT.wood('red'), 0, 0.015, 0); k.add(lathe([[0.001, 0], [0.012, 0], [0.01, 0.06], [0.02, 0.08], [0.001, 0.09]], 8), MAT.wood('dark'), 0, 0.03, 0); });
   B.put(-1.4, 2.05, -Math.PI / 2 + 0.5, P.officeChair, { color: '#7a2a22' }, { noStand: true, seeThrough: true });
   B.put(LX + 0.2, 2.75, Math.PI / 2, P.bookcase, { w: 1.0, h: 2.0, pal: 'dark', seed: 3 });
+  B.giver('bookcase', LX + 0.2, 2.75, ['money', 'life', 'magic'], 3, { r: 1.2, top: 1.6 });
   k.at(-1.55, 0, 2.95, 0, () => {
     k.add(lathe([[0.001, 0], [0.13, 0], [0.17, 0.34], [0.18, 0.35], [0.16, 0.35], [0.12, 0.02], [0.001, 0.02]], 14), MAT.wood('pale'), 0, 0, 0);
     for (let i = 0; i < 3; i++) k.add(soft({ key: 'crumple' + i, prims: [{ type: 'ell', c: [0, 0, 0], r: [0.06, 0.05, 0.055], group: 'p', mat: 'p', wobble: (x, y, z) => Math.sin(x * 90 + i) * Math.sin(y * 80) * 0.012 }], groups: { p: 0.01 }, colors: { p: '#f2ead6' }, bounds: { min: [-0.09, -0.08, -0.08], max: [0.09, 0.08, 0.08] }, cell: 0.012 }), softMat, Math.cos(i * 2) * 0.06, 0.32 + i * 0.03, Math.sin(i * 2) * 0.06);
@@ -868,6 +880,7 @@ function buildProjOffice(scene, physics) {
   k.at(c2x + 0.05, 0.85, c2z, -0.1, () => P.cargoCrate(k, { w: 0.75, h: 0.7, d: 0.75, color: '#5f8068' }));
   B.col(c2x, c2z, 0.48, 0.44, 1.55, { noStand: true });
   B.put(c2x + 0.35, c2z + 0.85, 0, P.barrel, { r: 0.28, h: 0.8, pal: 'grey' });
+  B.giver('barrel', c2x + 0.35, c2z + 0.85, ['life', 'magic'], 1, { r: 1.0, top: 0.9 });
   cover(c2x, c2z, 0.7);
   B.put(6.0, BZ + 0.45, 0, P.pottedPlant, { kind: 'spiky', s: 1.2, potColor: '#4a5a6a' });
 
@@ -884,6 +897,7 @@ function buildProjOffice(scene, physics) {
   deskAt(LX + 0.42, 1.75, Math.PI / 2, ['map'], 5, [LX + 1.25, 1.65, -Math.PI / 2 + 0.3]);
   B.put(LX + 0.45, 3.35, 0, P.pottedPlant, { s: 1.2, potColor: '#4a5a6a' });
   B.put(LX + 0.55, 4.4, 0.2, P.cargoCrate, { w: 0.8, h: 0.7, d: 0.8 });
+  B.giver('crate', LX + 0.55, 4.4, ['money', 'life', 'magic'], 4, { r: 1.1, top: 0.8 });
 
   // --- centre: the blueprint table with the hologram of the planet's shell
   const tX = -1.0, tZ = 0.2;
@@ -919,6 +933,7 @@ function buildProjOffice(scene, physics) {
   B.put(-2.2, 4.35, 0.1, P.cargoCrate, { w: 0.9, h: 0.75, d: 0.8 });
   B.put(0.7, 4.45, 0, P.pottedPlant, { s: 1.1, potColor: '#4a5a6a' });
   B.put(5.9, 4.4, 0, P.barrel, { r: 0.3, h: 0.85, pal: 'grey' });
+  B.giver('barrel2', 5.9, 4.4, ['money'], 3, { r: 1.0, top: 0.95 });
   cover(-2.2, 4.35, 0.6);
 
   k.at(tX, 0, tZ, 0, () => P.rug(k, 4.4, 3.0, ['#2e5e5a', '#d9a94a', '#5fb8b0', '#e8f0e0', '#14302e'], 21));
@@ -1049,6 +1064,7 @@ function buildControl(scene, physics) {
   B.put(3.4, 3.5, 0, P.pressureTank, { l: 1.6, r: 0.42 });
   for (const [x, z, s] of [[5.45, 2.6, 0.85], [5.5, 3.65, 0.7]]) B.put(x, z, 0.2 + x, P.cargoCrate, { w: s, h: s * 0.9, d: s });
   B.put(4.85, 4.25, 0, P.barrel, { r: 0.3, h: 0.85, pal: 'grey' });
+  B.giver('barrel', 4.85, 4.25, ['money', 'life', 'magic'], 2, { r: 1.0, top: 0.95 });
   k.at(winX, 0, cz + 0.4, 0, () => P.hangingLamp(k, 2.6, H + 0.2, { shade: '#3f8a86' }));
   // cable spool lying on its side, toolbox
   k.at(-4.6, 0, 3.6, 0.6, () => {
@@ -1213,6 +1229,8 @@ function buildWorkshop(scene, physics) {
   const spark = glowSprite('#c8a0ff', 0.7, 0.6); spark.position.set(coilX, 1.26, coilZ); B.group.add(spark);
   B.put(3.55, 2.95, 0, P.barrel, { r: 0.28, h: 0.78, pal: 'red' });
   B.put(3.5, 2.0, 0.2, P.crate, 0.6);
+  B.giver('barrel', 3.55, 2.95, ['money'], 4, { r: 1.0, top: 0.9 });
+  B.giver('crate', 3.5, 2.0, ['life', 'magic'], 1, { r: 1.0, top: 0.7 });
   k.at(3.5, 0.6, 2.0, -0.3, () => { k.add(P.gearGeo(0.16, 18, 0.03), brass, 0, 0.02, 0, 0, { rx: -Math.PI / 2 }); k.add(P.gearGeo(0.09, 12, 0.025), MAT.copper(), 0.12, 0.05, 0.12, 0, { rx: -Math.PI / 2 }); });
 
   // --- festoon cables along the walls and the hanging lamps
@@ -1383,7 +1401,7 @@ function buildLightTop(scene, physics) {
   for (const [deg, r] of [[318, 2.55], [329, 2.6]]) { const [x, z] = pol((deg * Math.PI) / 180, r); B.put(x, z, deg, P.barrel, { r: 0.21, h: 0.6, pal: 'grey' }); k.add(cyl(0.03, 0.03, 0.04, 8), brass, x + 0.06, 0.6, z); }
   { const [x, z] = pol((15 * Math.PI) / 180, 2.55); k.at(x, 0, z, 0.3, () => { k.add(lathe([[0.001, 0], [0.13, 0], [0.16, 0.3], [0.001, 0.3]], 14), MAT.paint('#c8302a', 0.45), 0, 0, 0); k.add(torus(0.15, 0.01, 4, 10, Math.PI), MAT.iron(), 0, 0.3, 0, 0); k.add(cyl(0.14, 0.14, 0.01, 12), MAT.flat('#d8c890', 0.9), 0, 0.27, 0); }); B.ccol(x, z, 0.18, 0.32, { noStand: true }); }
   { const [x, z] = pol((50 * Math.PI) / 180, 2.55); k.at(x, 0, z, 0, () => { for (let i = 0; i < 4; i++) k.add(torus(0.22 - i * 0.03, 0.035, 5, 16), MAT.cloth('#c9a66b', '#7a5a30'), 0, 0.035 + i * 0.06, 0, 0, { rx: Math.PI / 2 }); }); B.ccol(x, z, 0.26, 0.3, { noStand: true, seeThrough: true }); }
-  { const [x, z] = pol((-20 * Math.PI) / 180, 2.5); B.put(x, z, 0.4, P.crate, 0.5); }
+  { const [x, z] = pol((-20 * Math.PI) / 180, 2.5); B.put(x, z, 0.4, P.crate, 0.5); B.giver('crate', x, z, ['money', 'life', 'magic'], 3, { r: 1.0, top: 0.6 }); }
 
   // --- light: cool daylight from the glazing, the lamp's warm glow
   B.light('#dceeff', 5, 8, -1.6, 2.3, -1.6);

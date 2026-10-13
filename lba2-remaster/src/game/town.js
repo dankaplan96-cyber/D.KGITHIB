@@ -427,6 +427,7 @@ export function buildTown(scene, W) {
   radio(dress, rd[0], tw.g + 1.2, rd[1], tw.ry);
   for (const [lx, lz, f] of [[1.6, 4.3, '#ff5a7a'], [3.65, 4.3, '#ffd84a'], [-4.2, 4.5, null], [-0.6, 5.0, '#d06aff']]) { const p = at('twinsen', lx, lz); pot(dress, p[0], gy(p), p[1], f, r); }
   for (const [lx, lz] of [[5.3, 2.4], [5.4, 1.5]]) { const p = at('twinsen', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
+  { const p = at('twinsen', 5.35, 1.95); W.givers.push({ id: 'home-barrels', x: p[0], z: p[1], r: 1.6, top: 1.1, kinds: ['money', 'life', 'magic'], n: 2 }); }
   const sg = at('twinsen', 4.6, 6.0);
   sign(dress, sg[0], gy(sg), sg[1], tw.ry + 0.3, 'Bug St.');
   // shop: globe sign and barrels; low stone walls by the water office and the stone house
@@ -434,6 +435,7 @@ export function buildTown(scene, W) {
   globeSign(dress, sh[0], gy(sh), sh[1]);
   physics.add({ type: 'cyl', x: sh[0], z: sh[1], r: 0.15, top: gy(sh) + 3, seeThrough: true });
   for (const [lx, lz] of [[-3.0, 3.4], [-3.4, 2.6]]) { const p = at('shop', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
+  { const p = at('shop', -3.2, 3.0); W.givers.push({ id: 'shop-barrels', x: p[0], z: p[1], r: 1.6, top: 1.1, kinds: ['money'], n: 3 }); }
   stoneWall(dress, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
   stoneWall(dress, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));
   for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); pot(dress, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }
