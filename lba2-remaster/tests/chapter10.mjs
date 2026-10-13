@@ -68,7 +68,7 @@ log('mira', await ev(() => { const o = game.world.houses.find((h) => h.id === 'w
 log('valves', await ev(() => { const V = game.rooms.valves; for (const i of [0, 1, 2]) { const v = V.valves[i]; T.useAt(v.x, v.z); } return [game.story.cur.gaugeLevels(), game.flags.c10_valves]; }));
 await shot('C10-03-valves.png');
 log('out', await ev(() => { const a = T.exit('valves-out'); const b = T.out(); return [a, b]; }));
-log('lighthouse', await ev(() => { const r = T.door({ x: -101, z: -63.3 }); const z = T.npc('zoe'); const before = [z.present, +z.pos.x.toFixed(1), +z.pos.z.toFixed(1), game.state]; T.talk('zoe'); return [r, before, game.state, game.flags.c10_zoeAsk, +game.hero.pos.x.toFixed(1), +game.hero.pos.z.toFixed(1)]; }));
+log('lighthouse', await ev(() => { const r = T.door({ x: -107.5, z: 94.2 }); const z = T.npc('zoe'); const before = [z.present, +z.pos.x.toFixed(1), +z.pos.z.toFixed(1), game.state]; T.talk('zoe'); return [r, before, game.state, game.flags.c10_zoeAsk, +game.hero.pos.x.toFixed(1), +game.hero.pos.z.toFixed(1)]; }));
 log('dials', await ev(() => { const L = game.rooms.lighttop; for (const i of [1, 2, 3]) { const s = L.searches.find((x) => x.id === 'dial' + i); for (let k = 0; k < 2; k++) T.useOn(s.x, s.z); } return [game.flags.c10_dials, game.flags.c10_light, T.obj()]; }));
 await shot('C10-04-lighthouse.png');
 log('to desert', await ev(() => { T.exit('outdoor-lighthouse'); const L = game.story.cur.landing('citadel'); T.tp(L.x, L.z); return T.fly(2); }));

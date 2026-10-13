@@ -41,8 +41,12 @@ export function townHeight(x, z, h) {
 
 const HOUSES = [
   // Twinsen's house: matches the interior (9 × 7 m room), door to the right, blue shutters
-  { id: 'twinsen', x: -51, z: -15, ry: 0.25, w: 9.4, d: 7.4, h: 3.3, door: { x: 2.6 }, wall: 'plaster', tint: '#fff8ea', roof: 'roof', shutters: '#3b78d8', beams: true, chimneyX: -0.3, lit: true,
+  // Twinsen's house stands where the original's does, south of the village by the path to the lighthouse
+  // (LBA2 scene 0's door), its front to the east; a neighbour's house has its old place in Bug Street
+  { id: 'twinsen', x: -50.6, z: 79.8, ry: Math.PI / 2, pad: 9, w: 9.4, d: 7.4, h: 3.3, door: { x: 2.6 }, wall: 'plaster', tint: '#fff8ea', roof: 'roof', shutters: '#3b78d8', beams: true, chimneyX: -0.3, lit: true,
     windows: [{ side: 'front', x: -2.3 }, { side: 'front', x: -0.2, w: 0.7 }, { side: 'left', x: -1.2 }, { side: 'right', x: 1.2 }, { side: 'back', x: 0 }] },
+  { id: 'bug', x: -51, z: -15, ry: 0.25, w: 7.6, d: 6.2, h: 3.1, door: { x: 1.9 }, wall: 'stone', tint: '#f0e8dc', roof: 'roofBlue', shutters: '#d8a13b', chimneyX: 0.25,
+    windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 0.4 }] },
   { id: 'stone', x: -31.5, z: -16.5, ry: -0.3, w: 6.2, d: 5.2, h: 3.0, door: { x: -0.9 }, wall: 'stone', roof: 'roofBlue', shutters: '#3f9a6a', chimneyX: 0.3,
     windows: [{ side: 'front', x: 1.4 }, { side: 'left', x: 0 }, { side: 'right', x: -0.6, y: 1.4, w: 0.6, h: 0.7 }] },
   { id: 'shop', x: -30, z: 0.5, ry: -Math.PI / 2, w: 7, d: 5.6, h: 3.4, door: { x: -1.6, arch: false }, wall: 'stone', tint: '#f4f0ea', roof: 'roof', shutters: '#c8452f', awning: '#c8452f', awningW: 3.4, awningX: 0.6, beams: true,
@@ -54,6 +58,9 @@ const HOUSES = [
   { id: 'south', x: -45, z: 13.5, ry: Math.PI - 0.15, w: 6.6, d: 5.2, h: 3.1, door: { x: -1.4 }, wall: 'stone', roof: 'roof', shutters: '#d8a13b', chimneyX: 0.3,
     windows: [{ side: 'front', x: 1.2 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },
 ];
+
+// houses that stand outside the town core get a level pad (world.js)
+export const HOUSE_PADS = HOUSES.filter((h) => h.pad).map((h) => ({ x: h.x, z: h.z, r: h.pad }));
 
 // ------------------------------------------------------------------ helpers
 const M = new Map();

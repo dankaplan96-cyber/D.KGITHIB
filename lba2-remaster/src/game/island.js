@@ -25,7 +25,7 @@ export const HARBOUR = { quayX: -74.5, z: -4, pierLen: 16.5, pierW: 3.2, deck: 1
 // built further south-east; their builders keep those first (design) coordinates and are shifted as a whole.
 export const SHIFT = { station: { x: -76, z: -101 }, depot: { x: -84, z: -122 }, orchard: { x: -58, z: -87.5 } };
 const sh = (k, x, z) => ({ x: x + SHIFT[k].x, z: z + SHIFT[k].z });
-export const LIGHTHOUSE = { x: -101, z: -67, half: 2.35, cottage: { x: -91.5, z: -58.5, ry: -Math.PI / 2 - 0.2 } };
+export const LIGHTHOUSE = { x: -107.5, z: 90.5, half: 2.35, cottage: { x: -98, z: 99, ry: -Math.PI / 2 - 0.2 } };
 const STATION0 = { x: 48, z: 36, half: 13, wall: 2.0 };
 export const STATION = { ...STATION0, ...sh('station', STATION0.x, STATION0.z) };
 const DEPOT0 = { x0: -1, x1: 19, z0: 44, z1: 60, gateW: [44.0, 48.2], gateE: [45.4, 49.0] };
@@ -2330,7 +2330,7 @@ function buildDressing(W, root, r) {
   // signposts (language-free pictograms; the text shows when read)
   const A = PICT;
   signpost(W, grp, -27.0, -8.2, -Math.PI / 2 + 0.2, 'w_sign_town', (c) => { A.well(c, 150, 66); A.arrow(c, 70, 64, -1, 1.1); });
-  signpost(W, grp, -51.5, -53.0, 0.6, 'w_sign_lighthouse', (c) => { A.tower(c, 90, 66); A.arrow(c, 175, 64, 1, 1.1); });
+  signpost(W, grp, -58.5, 71.0, 0.6, 'w_sign_lighthouse', (c) => { A.tower(c, 90, 66); A.arrow(c, 175, 64, 1, 1.1); });
   signpost(W, grp, -63.5, -15.5, 0.0, 'w_sign_cliffs', (c) => { A.cliff(c, 100, 66); A.arrow(c, 190, 64, 1, 0.9); });
   signpost(W, grp, -62.0, -79.0, -0.9, 'w_sign_depot', (c) => { A.gear(c, 128, 64, 30); });
   signpost(W, grp, -47.4, -60.4, -0.6, 'w_sign_station', (c) => { A.gear(c, 90, 64, 26); A.arrow(c, 180, 64, 1, 1.0); });

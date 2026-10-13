@@ -7,7 +7,7 @@ import { ZoneSystem } from '../engine/scripts.js';
 import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/math.js';
 import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
-import { buildTown, townHeight, streetDist } from './town.js';
+import { buildTown, townHeight, streetDist, HOUSE_PADS } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry } from './vegetation.js';
 import { buildIsland, keepClear, STUMP } from './island.js';
 import { buildCliffRocks } from './cliffs.js';
@@ -23,10 +23,10 @@ export const POI = {
   start: { x: -38, z: 4 },
   village: { x: -42, z: -4 },
   harbour: { x: -68, z: -3 },
-  // on the northern plateau (the original's level 4, ~14 m): the lighthouse at its west end, the project
-  // station at its east end, the depot and the orchard between
-  lighthouse: { x: -101, z: -67 },
-  sage: { x: -99, z: -60 },
+  // on the northern plateau (the original's level 4, ~14 m): the project station by the old citadel's ruins at its
+  // east end, the depot and the orchard toward the Wizard's lane in the west
+  lighthouse: { x: -107.5, z: 90.5 },   // "at the end of the island": the south-west headland, as in the original
+  sage: { x: -105.5, z: 97.5 },
   // the Whispering Cliffs: a rock stack on the plateau's southern rim, reached only by the stepping stones
   plateau: { x: -56, z: -44, r: 11, h: 16.8 },
   stonesStart: { x: -68, z: -22 },
@@ -49,10 +49,11 @@ const BAY = { x1: QUAY.x0 - 0.1, z0: QUAY.z0 + 0.6, z1: QUAY.z1 - 0.6 };
 export const PATHS = [
   [[-42, -4], [-37, -20], [-34, -36], [-42, -50], [-48, -56]],                          // from the square up to the plateau
   [[-48, -56], [-50, -62], [-45, -65]],                                                 // to the station gate
-  [[-48, -56], [-58, -66], [-64, -75], [-86, -76], [-94, -70], [-99, -62]],              // through the depot to the lighthouse
+  [[-48, -56], [-58, -66], [-64, -75], [-86, -76], [-94, -70]],                         // through the depot to the Wizard's lane
   [[-58, -66], [-70, -60], [-75, -57]],                                                 // to the orchard
   [[-58, -6], [-66, -18]],                                                              // harbour street to the stepping stones
-  [[-44, 10], [-46, 40], [-46, 74]],                                                    // south through the fields
+  [[-44, 10], [-46, 40], [-45, 74], [-44.5, 79.5]],                                     // south through the fields to Twinsen's door
+  [[-45, 74], [-58, 73], [-70, 88], [-86, 93], [-100, 97], [-107.5, 96.5]],             // over the bay's sand to the lighthouse
 ];
 
 export function pathDist(x, z) {
@@ -167,10 +168,11 @@ function baseHeight(x, z) {
   const cliffCoast = lerp(h, -2.6, smoothstep(0.8, -1.6, dc));
   h = lerp(cliffCoast, Math.min(h, lerp(1.1, -1.8, smoothstep(6, -3, dc))), b * smoothstep(12, 7, dc));
   if (dc < -1.6) h = Math.max(-6, Math.min(h, -1.8 + (dc + 1.6) * 0.9));
-  // lighthouse outcrop
+  // the lighthouse's headland, and level pads under the houses outside town (Twinsen's)
   {
     const d = Math.hypot(x - POI.lighthouse.x, z - POI.lighthouse.z);
-    h = lerp(h, level(4) + fbm(x * 0.3, z * 0.3, 2) * 0.15, 1 - smoothstep(6.5, 8.6, d));
+    h = lerp(h, level(1) + fbm(x * 0.3, z * 0.3, 2) * 0.15, 1 - smoothstep(6.5, 8.6, d));
+    for (const p of HOUSE_PADS) h = lerp(h, LEVEL0 + 0.05, 1 - smoothstep(p.r * 0.7, p.r, Math.hypot(x - p.x, z - p.z)));
   }
   // project depot yard (the old camp)
   {
