@@ -192,6 +192,11 @@ his head (violet inside), angular brass pauldrons, a broad brass belt, the proje
 a narrow grey-violet egg of a head with a swept crest, a violet monocle, a sharp chin; a brass gauntlet with
 claws on his right forearm (tools/blender/cast_poly.py build_vesk).
 
+## Vesk's guards
+His troopers in the project's uniform (near-black coat, brass belt, the violet emblem), as FunFrock had his
+clones: Quetch guards with a round helmet and a violet visor, and big armoured Grobo guards. They patrol the
+project's sites with the drones, carry stun rifles and batons, and are knocked out, not killed.
+
 ## Writing rules
 Natural English, one or two sentences per turn, longer only for big moments. Concrete details, requests and
 reactions; humour from character, bureaucracy and everyday trouble. No "your destiny awaits", "an ancient

@@ -6,6 +6,7 @@
 //    charges its prongs and fires a slow zap; staggers when hit.
 import * as THREE from 'three';
 import { Actor } from './actors.js';
+import { Guard } from './guards.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 
@@ -754,6 +755,7 @@ export class Crawler extends Mite {
 }
 
 export function createEnemy(game, def) {
+  if (def.kind === 'guard' || def.kind === 'guardG') return new Guard(game, def);
   if (def.kind === 'guardian') return new Guardian(game, def);
   if (def.kind === 'sentry') return new Sentry(game, def);
   if (def.kind === 'crawler') return new Crawler(game, def);

@@ -343,6 +343,29 @@ check('classic: holding Alt plants the feet and the arrows turn the aim', r.plan
 check('classic: the release throws the way he faces (the resting cursor does not aim)', r.thrown && r.along > 0.98, r);
 check('classic: X dodges', r.dodged > 1.5, r);
 
+// 20. Vesk's guards (src/game/guards.js, rules from LBA1's engine): a guard spots Twinsen, raises its rifle with
+//     the violet aim line (the tell) and fires; a Grobo guard's armour takes a force-1 hit without harm but not a
+//     force-2 one; a beaten guard falls and leaves a bonus
+r = await ev(() => {
+  const { G, E } = C, h = G.hero;
+  C.only(['a_guard'], [6200, 9], Math.PI); const gd = C.put('a_guard', 6200, 3, 0);
+  gd.state = 'patrol'; gd.patrol = [[6200, 3]]; gd.hp = gd.maxHp; gd.coolT = 0;
+  const seen = new Set(); let line = 0; const hp0 = h.hp;
+  for (let i = 0; i < 150; i++) { C.step(1 / 30); seen.add(gd.state); if (gd.aimLine.visible) line = Math.max(line, gd.aimLine.material.opacity); }
+  const shotHp = h.hp;
+  const gg = E('a_guardG'); gg.setPresent(true); gg.hp = gg.maxHp; gg.state = 'patrol';
+  const soft = gg.take(1, h.pos), hpSoft = gg.hp, hard = gg.take(2, h.pos), hpHard = gg.hp;
+  const pk0 = G.pickups.list.length;
+  for (let k = 0; k < 5 && gd.alive; k++) gd.take(1, h.pos);
+  C.step(0.6);
+  const out = { states: [...seen], line: +line.toFixed(2), hp: [hp0, shotHp], soft, hpSoft, hard, hpHard, down: !gd.alive, bonus: G.pickups.list.length - pk0 };
+  gg.setPresent(false); gd.setPresent(false);
+  return out;
+});
+check('guard: spots, aims with a brightening line (the tell), fires', r.states.includes('alerted') && r.states.includes('aim') && r.line > 0.5 && r.hp[1] < r.hp[0], r);
+check("guard: a Grobo guard's armour takes a weak hit without harm, not a strong one", r.soft === 'blocked' && r.hard === 'hit' && r.hpHard < r.hpSoft, r);
+check('guard: a beaten guard falls and leaves a bonus', r.down && r.bonus >= 1, r);
+
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
 await browser.close();

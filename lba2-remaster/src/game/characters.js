@@ -130,6 +130,17 @@ export const LOOKS = {
     // a smaller mole in a white smock with a red apron (the original's homemaker)
     race: 'mole', outfit: 'robe', tunic: '#ecebe6', apron: '#c85a3a', skin: '#e8e2da', lip: '#f0c060', eyes: '#2a6a4a', height: 0.74,
   },
+  // ---- Vesk's guards (enemies: src/game/guards.js), the project's uniform: near-black, brass, the violet emblem
+  vguard: {
+    // a Quetch guard: a round helmet with a violet visor, a knee-length uniform coat, a stun rifle (a prop)
+    race: 'quetch', outfit: 'tunic', hem: 0.42, tunic: '#1a2a33', tunicTrim: '#1a2a33', belt: '#c8a050', buckle: '#e8c870', pants: '#16141a', shoes: '#16141a',
+    skin: '#e0b48c', hairStyle: 'bald', helmetQ: '#2a3a44', visor: '#c070ff', emblem: '#e090ff', eyes: '#2a2a2a', height: 1.02,
+  },
+  vguardG: {
+    // a Grobo guard: the great body in the uniform, a helmet with a dark visor; armoured (light hits only shake it)
+    race: 'grobo', outfit: 'tunic', hem: 0.6, skin: '#8a94a8', tunic: '#1a2a33', tunicTrim: '#1a2a33', belt: '#c8a050', pants: '#16141a', shoes: '#16141a',
+    helmet: '#2a3a44', emblem: '#e090ff', eyes: '#2a2a2a', height: 1.04,
+  },
   // ---- Zeelich's council (chapter 9)
   councilChair: {
     // Councillor Amaru, who chairs the council: a tall Esmer in a violet robe with a gold collar and a tall hat

@@ -313,3 +313,12 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - Vesk's model (build_vesk): greatcoat to the floor carried by the legs, a tall collar, brass pauldrons, the
   violet emblem, a crest and a monocle, a brass gauntlet. captures/characters/vesk-villain.png.
 - The user will upload LBA1's files: its characters are to be measured the same way (numbers only).
+
+## Session: Vesk's guards (0.16.0)
+- The user asked who Twinsen fights and asked for Vesk's guards now. New enemy (src/game/guards.js, looks vguard /
+  vguardG): Quetch and Grobo guards in Vesk's uniform with stun rifles and batons. Rules taken from LBA1's engine
+  source (github.com/2point21/lba1-classic: OBJECT.C HitObj, PERSO.C, EXTRA.C GiveExtraBonus): armour (a hit
+  weaker than it is braced against), two random hit reactions, a bonus left where a guard falls. Placed beside
+  the drones in chapters 1, 2, 4, 5, 8 and 10 and in the arena; tests/combat.mjs §20.
+- LBA1's repository holds the engine's source only, no game data: its characters, maps and buildings need the
+  user's LBA1 data files (the user will add them).

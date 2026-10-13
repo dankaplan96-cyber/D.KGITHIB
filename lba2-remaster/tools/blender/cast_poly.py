@@ -199,6 +199,11 @@ def build(name):
             f = [[r * 4 + c, r * 4 + c + 1, (r + 1) * 4 + c + 1, (r + 1) * 4 + c][::-1] for r in range(3) for c in range(3)]
             ap.add(v, f)
 
+    if L.get('emblem'):
+        ez = (0.48 + belly + 0.005) if grobo else (0.135 * wide + belly * 0.5 + zc(chestY) + 0.012)
+        ey = (shY - 0.12) if grobo else chestY
+        disc(b.P('emblemRim', '#c8a050', 'torso', 30), (0, ey, ez), 0.055 if grobo else 0.042, 8, 'z', 0.01)
+        disc(b.P('emblem', L['emblem'], 'torso', 30), (0, ey, ez + 0.007), 0.038 if grobo else 0.029, 8, 'z', 0.0)
     # ---------------------------------------------------------------- legs and feet
     pants, shoes = L.get('pants', '#555555'), L.get('shoes', '#3a2a1a')
     for s, sx in (('L', 1), ('R', -1)):
@@ -397,6 +402,12 @@ def build(name):
         elif style == 'bald' and L.get('hair') and not L.get('crest'):
             for sxx in (1, -1):  # tufts over the ears
                 sphere(b.P('tuft', hair, head_w, 180), (sxx * 0.07 * sx_, my(0.875), mz(0.0)), 0.028 * sx_, 7, 5, (0.8, 1.0, 1.2))
+        if L.get('helmetQ'):   # Vesk's guards: a round helmet, a violet visor across the eyes
+            hq = b.P('helmetQ', L['helmetQ'], head_w, 40)
+            sphere(hq, (0, my(0.925), mz(0.055)), 0.088 * sx_, 12, 7, (1.05, 0.85, 1.12))
+            disc(hq, (0, my(0.9), mz(0.06)), 0.1 * sx_, 12, 'y', 0.012)
+            vz = front(0, my(0.896))
+            box(b.P('visor', L.get('visor', '#c070ff'), head_w, 30), -0.07 * sx_, 0.07 * sx_, my(0.882), my(0.91), vz - 0.012, vz + 0.012)
         if L.get('moustache'):
             sphere(b.P('moustache', hair, head_w, 180), (0, my(0.842), mz(0.15)), 0.03 * sx_, 8, 5, (1.6, 0.55, 0.8))
         if L.get('crest'):
