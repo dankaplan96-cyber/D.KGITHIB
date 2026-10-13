@@ -434,6 +434,8 @@ export class Chapter1 extends ChapterBase {
       this.steamT -= dt;
       if (this.steamT <= 0) { this.steamT = 0.25; g.particles.burst(W.well.x + (Math.random() - 0.5), g.physics.groundAt(W.well.x, W.well.z) + 1.0, W.well.z + (Math.random() - 0.5), '#e8f4ff', 2, 1.2); }
     }
+    // resumed from a save made in Zoe's segment: Twinsen was put back in the project office; out to the gate
+    if (g.room?.id === 'projoffice' && !f.c1_zoeStart && g.state === 'play' && !g.trans) { g.exitRoom(this.exitTo('outdoor-projoffice'), true); g.updateObjective(); }
     if (this.watcher?.active) this.watcher.update(dt);
     // Zoe slips out with the plan
     if (g.room?.id === 'projoffice' && f.c1_zoeStart && !this.watcher?.active && !f.c1_plan && g.state === 'play') this.watcher?.start();
@@ -459,8 +461,9 @@ export class Chapter1 extends ChapterBase {
     // a save from between the third valve and the water scene must not leave the chapter stuck
     if (!f.c1_water && (W.valves || []).length && W.valves.every((v) => v.open)) f.c1_water = true;
     if (f.c1_water) { W.gate.open = true; W.station?.setActive?.(true); }
-    // a save made during Zoe's segment resumes at its start
-    if (f.c1_zoeStart && !f.c1_zoeDone) { f.c1_zoeStart = false; f.c1_plan = false; }
+    // a save made during Zoe's segment resumes at its start (as Twinsen at the station gate: see update), with
+    // the lockers to search again — a plan found and saved but not carried out must be findable again
+    if (f.c1_zoeStart && !f.c1_zoeDone) { f.c1_zoeStart = false; f.c1_plan = false; g.searched = g.searched.filter((id) => !/^locker\d$/.test(id)); }
   }
 
   // ---------------------------------------------------------------- HUD

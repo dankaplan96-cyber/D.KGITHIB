@@ -86,6 +86,9 @@ export class Music {
       .catch((e) => { console.warn('music manifest unavailable', e); this.manifest = { tracks: {} }; });
   }
 
+  // a short history for the debug overlay (bounded: a long session changes music thousands of times)
+  _log(line) { this.log.push(line); if (this.log.length > 200) this.log.splice(0, 100); }
+
   // ---------------------------------------------------------------- public API
   setMood(name) {
     const s = spec(name);
@@ -158,7 +161,7 @@ export class Music {
     e = { buf: null, used: performance.now() };
     e.promise = fetch(this.url + info.file).then((r) => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
       .then((ab) => new Promise((res, rej) => this.ctx.decodeAudioData(ab, res, rej)))
-      .then((buf) => { e.buf = buf; this._evict(); this.log.push(`loaded ${name}`); return buf; })
+      .then((buf) => { e.buf = buf; this._evict(); this._log(`loaded ${name}`); return buf; })
       .catch((err) => { console.warn('music load failed', name, err); this.buffers.delete(name); return null; });
     this.buffers.set(name, e);
     return e.promise;
@@ -196,7 +199,7 @@ export class Music {
     const fade = FADE[kind] || (this.cueSpec ? FADE.cue : FADE.area);
     const token = (this._token = (this._token || 0) + 1); // any newer decision cancels a pending track load
     if (!want || !this.has(want.track)) {
-      if (want && !this.has(want.track)) this.log.push(`no track for ${want.track}`);
+      if (want && !this.has(want.track)) this._log(`no track for ${want.track}`);
       if (cur) this._stop(cur, fade);
       return;
     }
@@ -208,7 +211,7 @@ export class Music {
       back.stopping = false;
       if (cur) this._stop(cur, fade);
       this._shape(back, want, Math.min(fade, FADE.room));
-      this.log.push(`revive ${back.name}`);
+      this._log(`revive ${back.name}`);
       return;
     }
     this.load(want.track).then((buf) => {
@@ -247,7 +250,7 @@ export class Music {
       if (!info.loop && !v.stopping && this.cueSpec?.track === s.track) { this.cueSpec = null; this._update('cue'); }
     };
     this.voices.push(v);
-    this.log.push(`play ${s.track} @${offset.toFixed(1)}s fade ${fade}s`);
+    this._log(`play ${s.track} @${offset.toFixed(1)}s fade ${fade}s`);
     this._prefetch(s.track);
   }
 
@@ -264,7 +267,7 @@ export class Music {
     // stopped by a timer (not src.stop(when)) so a quick return can still revive it
     clearTimeout(v.stopTimer);
     v.stopTimer = setTimeout(() => { try { v.src.stop(); } catch { /* already stopped */ } }, (fade + 0.1) * 1000);
-    this.log.push(`stop ${v.name} fade ${fade}s`);
+    this._log(`stop ${v.name} fade ${fade}s`);
   }
 
   _shape(v, s, fade) {

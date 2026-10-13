@@ -910,10 +910,15 @@ class Game {
 
   // doors outside, exits inside
   checkDoors() {
-    if (this.doorCool > 0 || this.trans) return;
     const h = this.hero;
+    // an exit the story refused (a line of dialogue: "not without the ball") fires again only after the hero has
+    // stepped out of it; standing in it used to replay the refusal every 1.5 s, faster than he could turn away
+    const ref = this.exitRefused;
+    if (ref && (ref.room !== this.room || Math.hypot(h.pos.x - ref.e.x, h.pos.z - ref.e.z) > ref.e.r + 0.3)) this.exitRefused = null;
+    if (this.doorCool > 0 || this.trans) return;
     if (this.room) {
       for (const e of this.room.exits) {
+        if (this.exitRefused?.e === e) continue;
         if (Math.hypot(h.pos.x - e.x, h.pos.z - e.z) < e.r) {
           // a door between two rooms of one building (Twinsen's house and its cellar)
           if (e.room) { this.audio.play('door'); this.walkNext = true; const R2 = this.rooms[e.room]; this.enterRoom(e.room, R2.entries?.[this.room.id] || R2.spawn); this.walkNext = false; this.doorCool = 1.5; return; }
@@ -924,7 +929,7 @@ class Game {
             this.walkNext = true;
             if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(to);
             this.walkNext = false;   // (a story exit may have started its own scene instead)
-          }
+          } else this.exitRefused = { e, room: this.room };
           this.doorCool = 1.5;
           return;
         }
@@ -1126,7 +1131,7 @@ class Game {
 
     // remember a safe spot to return to after a fall
     this.safeT = (this.safeT || 0) - dt;
-    if ((!this.room || this.room.outdoor) && this.safeT <= 0 && h.onGround && h.pos.y > 0.4) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
+    if ((!this.room || this.room.outdoor) && this.safeT <= 0 && h.onGround && !h.sliding && h.pos.y > 0.4) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
 
     // outdoor music follows the area: village and harbour, the open island, the project station in the old fortress
     if (!this.room) this.audio.setOutdoorArea(h.pos, POI);

@@ -124,7 +124,12 @@ export class Hero extends Actor {
     this.coyote = this.onGround && !this.sliding ? 0.12 : Math.max(0, (this.coyote || 0) - dt);
     this.jumpBuf = Math.max(0, (this.jumpBuf || 0) - dt);
 
-    if (this.dead) { this.rig.play('dead'); this.rig.update(dt, 0); P.fall(this, dt); this.sync(); return; }
+    if (this.dead) {
+      this.rig.play('dead'); this.rig.update(dt, 0); P.fall(this, dt); this.sync();
+      // the game-over screen after the fall (game time: a pause holds it)
+      if (this.deathT > 0 && (this.deathT -= dt) <= 0) g.gameOver();
+      return;
+    }
 
     // behaviour switching (1-4, Tab, gamepad bumpers, LBA-style Ctrl + left/right)
     const wheel = input.down('wheel');
@@ -223,7 +228,11 @@ export class Hero extends Actor {
     if (steep) {
       P.move(this, steep.dx * 5 * dt, steep.dz * 5 * dt);
       this.vel.set(steep.dx * 2.5, steep.dz * 2.5);
-    }
+      // slid down to the water's edge (or against a wall) and held there: too steep to climb, sea below, no
+      // jumping while sliding — a trap. Not moving at all for a second while sliding counts as a fall.
+      this.slideStuck = Math.hypot(this.pos.x - this.prevPos.x, this.pos.z - this.prevPos.z) < 1e-3 ? (this.slideStuck || 0) + dt : 0;
+      if (this.slideStuck > 1) { this.slideStuck = 0; this.respawnFromFall(); }
+    } else this.slideStuck = 0;
     if (landed) {
       const v = -landed;
       if (v > 13) { this.damage(2, null); this.act('knockdown', 0.45, null, 0, ['getup', 0.8]); }
@@ -367,7 +376,6 @@ export class Hero extends Actor {
         this.dead = true;
         g.audio.play('die');
         this.deathT = 2.2;
-        setTimeout(() => g.gameOver(), 2200);
       }
     }
   }
