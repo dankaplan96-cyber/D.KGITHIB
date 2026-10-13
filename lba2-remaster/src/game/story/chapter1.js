@@ -47,6 +47,8 @@ export class Chapter1 extends ChapterBase {
       { id: 'drone2', kind: 'drone', group: 'depot', x: D.patrol[Math.floor(n / 2)][0], z: D.patrol[Math.floor(n / 2)][1], patrol: D.patrol, wp: (Math.floor(n / 2) + 1) % n, when },
       // one of Vesk's guards walks the loop the other way (src/game/guards.js)
       { id: 'guard1', kind: 'guard', group: 'depot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when },
+      // and his guard dog (LBA2's Zeelich guard dog, src/game/guarddog.js) trots the loop ahead of him
+      { id: 'gdog1', kind: 'gdog', coat: 'grey', group: 'depot', x: D.patrol[Math.floor(n / 2)][0], z: D.patrol[Math.floor(n / 2)][1], patrol: [...D.patrol].reverse(), wp: (n - Math.floor(n / 2)) % n, when },
     ];
   }
 

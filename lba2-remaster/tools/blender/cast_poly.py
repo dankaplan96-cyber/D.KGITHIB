@@ -1050,9 +1050,12 @@ def build_elf(name):
             return {kk: v for kk, v in (('hips', 1 - leg), ('hipL', leg * l), ('hipR', leg * (1 - l))) if v > 1e-4}
         return {kk: v for kk, v in (('hips', 1 - k), ('torso', k)) if v > 0}
     secs = [(kn + 0.06, 0.25, 0.2, -0.19), (hipsY - 0.1, 0.2, 0.16, -0.15), (hipsY + 0.05, 0.15, 0.13, -0.12), (shY - 0.08, 0.15, 0.12, -0.11), (shY + 0.02, 0.13, 0.09, -0.09), (neckY + 0.02, 0.06, 0.05, -0.05)]
+    st = L.get('stout', 1.0)   # (Ker'aooc, after body 188: a broad round body)
+    if st != 1.0:
+        secs = [(y, hw * (st if i < len(secs) - 1 else 1), zf * (st if i < len(secs) - 1 else 1), zb * (st if i < len(secs) - 1 else 1)) for i, (y, hw, zf, zb) in enumerate(secs)]
     loft(b.P('tunic', green, w_t, 50), [ring(y, hw, zf, zb, 14, 0.75) for y, hw, zf, zb in secs], cap_top=True)
-    loft(b.P('belt', L.get('belt', '#3a2a1a'), 'torso', 50), [ring(hipsY + 0.02, 0.155, 0.135, -0.125, 14, 0.75), ring(hipsY + 0.07, 0.155, 0.135, -0.125, 14, 0.75)])
-    loft(b.P('hem', dark, w_t, 50), [ring(kn + 0.05, 0.253, 0.203, -0.193, 14, 0.75), ring(kn + 0.1, 0.24, 0.19, -0.18, 14, 0.75)])
+    loft(b.P('belt', L.get('belt', '#3a2a1a'), 'torso', 50), [ring(hipsY + 0.02, 0.155 * st, 0.135 * st, -0.125 * st, 14, 0.75), ring(hipsY + 0.07, 0.155 * st, 0.135 * st, -0.125 * st, 14, 0.75)])
+    loft(b.P('hem', dark, w_t, 50), [ring(kn + 0.05, 0.253 * st, 0.203 * st, -0.193 * st, 14, 0.75), ring(kn + 0.1, 0.24 * st, 0.19 * st, -0.18 * st, 14, 0.75)])
     for s_, sx in (('L', 1), ('R', -1)):
         hp, k_, ft = bp('hip' + s_), bp('knee' + s_), bp('foot' + s_)
         tube(b.P('thigh' + s_, legs, lambda p, s_=s_, k=k_[1]: {'hip' + s_: 1 - smooth(k + 0.06, k - 0.04, p[1]), 'knee' + s_: smooth(k + 0.06, k - 0.04, p[1])}, 50), hp, k_, 0.055, 0.05, 8)
@@ -1080,7 +1083,7 @@ def build_elf(name):
         sphere(b.P('beard', L.get('beard', '#f2f0ea'), 'head', 60), (0, c[1] - 0.11, c[2] + 0.08), 0.12, 9, 6, (1.0, 0.7, 0.75))
     if L.get('pads'):
         for s_, sx in (('L', 1), ('R', -1)):
-            tube(b.P('pad' + s_, green, 'torso', 50), (sx * 0.08, shY - 0.02, 0), (sx * 0.34, shY + 0.03, -0.01), 0.1, 0.012, 8, squash=0.7)
+            tube(b.P('pad' + s_, green, 'torso', 50), (sx * 0.08, shY - 0.02, 0), (sx * 0.46, shY + 0.04, -0.01), 0.13, 0.012, 8, squash=0.7)
     if L.get('bells'):
         for s_, sx in (('L', 1), ('R', -1)):
             ft = bp('foot' + s_)

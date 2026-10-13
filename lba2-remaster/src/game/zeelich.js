@@ -539,8 +539,9 @@ export function buildZeelich(scene, physics) {
 
   // ---------------------------------------------------------------- the dog-training yard (src/game/dogs.js)
   // After LBA2's yard: a palisade of planks round a bed of fallen leaves, a pale track looping round a stacked-block
-  // tower on a red crate, a blue tunnel and two hurdles on the track, a hay bale and an A-frame. Two of Zeelich's
-  // big-mouthed dogs run the course, a third noses about inside; a fourth trots up and down the Esmer street.
+  // tower on a red crate, a blue tunnel and two hurdles on the track, a hay bale and an A-frame. The project trains
+  // its guard dogs here (LBA2's, bodies 51–53): two run the course, a third noses about; all three stop and bark
+  // at Twinsen from behind the palisade. (The working ones guard the depots: src/game/guarddog.js.)
   const dogs = [];
   {
     // behind the north houses, toward the old mill (the shuttle pad has the south side)
@@ -602,7 +603,6 @@ export function buildZeelich(scene, physics) {
       dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'greybrown', x: yx + ox - 2, z: yz + oz - 1.5, area: { x0: yx + ox - 3.5, z0: yz + oz - 1.6, x1: yx + ox + 3.5, z1: yz + oz + 1.6 } }));
       R.dogYard = { ...W(yx, yz), gate: W(yx, yz + HD) };
     }
-    dogs.push(new Dog({ parent: group, ox, oz, physics, coat: 'grey', x: ox - 30, z: oz + 0.5, area: { x0: ox - 46, z0: oz - 2.2, x1: ox - 8, z1: oz + 2.2 } }));
     addDogs(dogs, updaters);
     R.dogs = dogs;
   }

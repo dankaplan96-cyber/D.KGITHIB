@@ -40,6 +40,7 @@ export class Dig extends ChapterBase {
       { id: 'pdrone1', kind: 'drone', group: 'dpost', x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !f.c4_done },
       { id: 'pdrone2', kind: 'drone', group: 'dpost', x: P[h][0], z: P[h][1], patrol: P, wp: (h + 1) % n, when: (f) => this.isCur(f) && !f.c4_done },
       { id: 'pguard1', kind: 'guard', group: 'dpost', x: P[n - 1][0], z: P[n - 1][1], patrol: [...P].reverse(), wp: 1, when: (f) => this.isCur(f) && !f.c4_done },
+      { id: 'pgdog1', kind: 'gdog', coat: 'greybrown', group: 'dpost', x: P[h][0], z: P[h][1], patrol: [...P].reverse(), wp: (n - h) % n, when: (f) => this.isCur(f) && !f.c4_done },
     ];
     // crystal mites on the lower terraces
     const dg = D.dig;

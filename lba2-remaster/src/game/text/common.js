@@ -36,6 +36,14 @@ Object.assign(STR.en, {
   chapter_council: 'The Council', chapter_network: "Baldino's Network", chapter_shell: 'The Shell', chapter_core: 'The Core', chapter_home: 'Home',
   idle_generic: 'Hello, Twinsen.',
   // Joe the Elf (LBA2), still in town
+  n_bersimon: 'Bersimon the Weather Wizard',
+  idle_bersimon: ['Twinsen! Come in, come in. A wizard\'s tent is always bigger on the inside. It\'s in the contract.', 'The winds are wrong this year. Warm air rising where it shouldn\'t, as if the island were breathing out.', 'Sit by the cauldron a moment. There. Weather wizards never run dry; it\'s all the rain.', 'I dipped a pearl of incandescence in this cauldron once. Lightning everywhere. My eyebrows still haven\'t forgiven me.', 'If you see Joe, tell him I want my umbrella back.'],
+  n_magus: 'Rector Hougo',
+  idle_magus: ['Welcome back to the School of Magic. Your name is still on the honour roll, Twinsen, right after Carnogeel.', 'The students say the floor hums at night. I told them it\'s the pentagrams. I\'m not sure it is.', 'Sendell\'s signs are on our walls for a reason. If she speaks to you again, the school would very much like to hear.', 'Ker\'aooc treats anyone who comes. Even Vesk\'s diggers. Especially Vesk\'s diggers, lately.'],
+  n_keraooc: 'Ker\'aooc the healing wizard',
+  idle_keraooc: ['Ker\'aooc, healer of everybody for everything. Hold still... there. Good as new.', 'How\'s the Dino-Fly? Still sneezing? Tell him no more sea urchins.', 'The bowls players come to me for their backs, the project\'s diggers for their lungs. That dust isn\'t ordinary dust.', 'Twelve years, and you still come in covered in bruises. Some things a wizard can\'t cure.'],
+  wz_toast_magic: 'Bersimon tops up your magic.',
+  wz_toast_heal: 'Ker\'aooc heals you.',
   n_joe: 'Joe the Elf',
   idle_joe: ["Twinsen! It's me, Joe! Still having trouble with my magic. Yesterday I tried to light a candle and I turned my hat inside out.", 'Remember when I hid in an Esmer shuttle and ended up on the wrong planet? I still get the hiccups when one flies over.', "The ground's been grumbling lately. Elves hear these things. My ears are very large, you'll notice.", 'If you see the Weather Wizard, tell him his umbrella is still in my kitchen.', 'Say hello to the Dino-Fly for me. He sneezed on me once. Best day of my life.'],
   // Zeelich's street folk

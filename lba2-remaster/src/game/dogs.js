@@ -171,13 +171,61 @@ function poodle() {
   return { body, head, tail, legs, phase, neckY: 630 };
 }
 
+// A dog's "rig": the model on a root group with the same small interface the enemies' rigs have
+// (root, play(anim), update(dt, speed), hitFlash()), so a guard dog is an ordinary Actor (src/game/guarddog.js).
+// anims: idle, walk, run, sniff, warn (barking), windup (crouched, jaw wide), lunge, hurt, dead (knocked out)
+export function dogRig(coat = 'grey') {
+  const M = coat === 'poodle' ? poodle() : zeelichDog(COATS[coat] || COATS.grey);
+  const root = new THREE.Group(); root.name = 'dog-' + coat;
+  M.body.scale.setScalar(U);
+  root.add(M.body);
+  const own = new LbaMaterial();   // (its own material: the hit flash is this dog's alone)
+  M.body.traverse((o) => { if (o.isMesh && o.material === mat) o.material = own; });
+  const S = { anim: 'idle', gait: 0, lookP: 0, jawT: 0, flash: 0, t: Math.random() * 9, ko: 0, wag: 0.3 };
+  const rig = {
+    root, M, poodle: coat === 'poodle',
+    play(a) { S.anim = a; },
+    bark() { S.jawT = 0.35; },
+    hitFlash() { S.flash = 0.25; },
+    set wag(v) { S.wag = v; },
+    update(dt, speed = 0, hop = 0) {
+      S.t += dt;
+      const a = S.anim, t = S.t;
+      S.gait += speed * dt / 0.55 * Math.PI;
+      const amp = Math.min(0.6, speed * 0.2);
+      M.legs.forEach((l, i) => { l.rotation.x = a === 'dead' ? 0.9 : Math.sin(S.gait + M.phase[i]) * amp; });
+      const bob = Math.abs(Math.sin(S.gait)) * amp * 0.05;
+      // the body: crouched for the spring, pitched into the lunge, rolled onto its side when knocked out
+      const pitch = a === 'windup' ? 0.12 : a === 'lunge' ? -0.18 : a === 'hurt' ? 0.1 : 0;
+      M.body.rotation.x += (pitch - M.body.rotation.x) * Math.min(1, dt * 12);
+      S.ko = a === 'dead' ? Math.min(1, S.ko + dt * 3) : 0;
+      M.body.rotation.z = S.ko * Math.PI / 2;
+      M.body.position.y = hop + bob - (a === 'windup' ? 0.08 : 0) + S.ko * 0.25;
+      // the head (the poodle's) looks down to sniff; the jaw (the guard dog's) drops on a bark, gapes to bite
+      if (S.jawT > 0) S.jawT -= dt;
+      const look = a === 'sniff' ? -0.5 : a === 'warn' ? 0.2 : Math.sin(t * 0.7) * 0.12;
+      S.lookP += (look + (S.jawT > 0 ? 0.25 : 0) - S.lookP) * Math.min(1, dt * 6);
+      M.head.rotation.x = -S.lookP;
+      if (M.jaw) {
+        const open = a === 'windup' || a === 'lunge' ? 0.55 : a === 'hurt' || a === 'dead' ? 0.35 : S.jawT > 0 ? 0.45 : 0.06 + Math.abs(Math.sin(t * 2.2)) * 0.05 * (speed > 0.5 ? 2 : 1);
+        M.jaw.rotation.x += (open - M.jaw.rotation.x) * Math.min(1, dt * 18);
+      }
+      const wag = a === 'warn' || a === 'windup' ? 0.05 : S.wag;
+      M.tail.rotation.y = a === 'dead' ? 0 : Math.sin(t * (6 + wag * 10)) * (0.1 + wag * 0.45);
+      if (S.flash > 0) S.flash -= dt;
+      own.emissive.setRGB(S.flash > 0 ? 0.8 : 0, S.flash > 0 ? 0.8 : 0, S.flash > 0 ? 0.8 : 0);
+    },
+  };
+  return rig;
+}
+
+// a dog that just lives somewhere (no fighting): wanders an area or runs a closed path. A Zeelich guard dog behind
+// a fence turns to Twinsen and barks at him; the poodle comes up wagging.
 export class Dog {
-  constructor({ parent, ox = 0, oz = 0, physics, coat = 'grey', x, z, area = null, path = null, scale = 1 }) {
-    this.kind = coat === 'poodle' ? 'poodle' : 'dog';
-    this.M = coat === 'poodle' ? poodle() : zeelichDog(COATS[coat] || COATS.grey);
-    this.root = new THREE.Group(); this.root.name = 'dog-' + coat;
-    this.M.body.scale.setScalar(U * scale);
-    this.root.add(this.M.body);
+  constructor({ parent, ox = 0, oz = 0, physics, coat = 'grey', x, z, area = null, path = null }) {
+    this.rig = dogRig(coat);
+    this.root = this.rig.root;
+    this.friendly = coat === 'poodle';
     parent.add(this.root);
     this.ox = ox; this.oz = oz; this.physics = physics;
     this.area = area; this.path = path;
@@ -185,55 +233,52 @@ export class Dog {
     this.radius = 0.35; this.onGround = true;
     this.a = Math.random() * Math.PI * 2;
     this.state = 'idle'; this.timer = 1 + Math.random() * 2; this.target = null;
-    this.speed = 0; this.gait = 0; this.wag = 0; this.barkCool = 3 + Math.random() * 5;
-    this.look = 0; this.lookP = 0;
-    if (path) { this.s = 0; this.segs = []; let L = 0; for (let i = 0; i < path.length; i++) { const a = path[i], b = path[(i + 1) % path.length], d = Math.hypot(b[0] - a[0], b[1] - a[1]); this.segs.push({ a, b, d, L }); L += d; } this.len = L; this.s = Math.random() * L; }
-    this.place(0);
+    this.speed = 0; this.barkCool = 3 + Math.random() * 5;
+    if (path) { this.segs = []; let L = 0; for (let i = 0; i < path.length; i++) { const a = path[i], b = path[(i + 1) % path.length], d = Math.hypot(b[0] - a[0], b[1] - a[1]); this.segs.push({ a, b, d, L }); L += d; } this.len = L; this.s = Math.random() * L; }
+    this.place(0, 0);
   }
 
   hero() { const G = globalThis.game; return G?.hero && G.state !== 'title' ? G.hero : null; }
 
-  update(dt, t) {
+  update(dt) {
     const h = this.hero();
     const dh = h ? Math.hypot(h.pos.x - this.pos.x, h.pos.z - this.pos.z) : 99;
-    let want = 0, hop = 0;
+    let want = 0, hop = 0, anim = 'idle';
     if (this.path) {
-      // run the training course, hopping the hurdles; slow to a trot past Twinsen
-      const v = dh < 2.2 ? 1.6 : 3.4;
-      this.s = (this.s + v * dt) % this.len;
-      const sg = this.segs.find((g) => this.s >= g.L && this.s < g.L + g.d) || this.segs[0];
-      const u = (this.s - sg.L) / sg.d;
-      const nx = sg.a[0] + (sg.b[0] - sg.a[0]) * u, nz = sg.a[1] + (sg.b[1] - sg.a[1]) * u;
-      if (sg.b[2]) { const k = (u - 0.75) / 0.25; if (k > 0) hop = Math.sin(k * Math.PI) * 0.45; }
-      if (sg.a[2]) { const k = u / 0.25; if (k < 1) hop = Math.sin((1 + k) * Math.PI / 2) * 0.45 * (1 - k); }
-      this.a = damp(this.a, this.a + angleDiff(this.a, Math.atan2(sg.b[0] - sg.a[0], sg.b[1] - sg.a[1])), 10, dt);
-      this.pos.x = nx; this.pos.z = nz;
-      want = v;
-      this.wag = 0.6;
+      // run the training course, hopping the hurdles; stop and bark at Twinsen when he comes to the fence
+      if (dh < 3.5 && this.barkCool < 4) { this.a = damp(this.a, this.a + angleDiff(this.a, Math.atan2(h.pos.x - this.pos.x, h.pos.z - this.pos.z)), 6, dt); anim = 'warn'; if (this.barkCool <= 0) this.bark(dh); }
+      else {
+        const v = 3.4;
+        this.s = (this.s + v * dt) % this.len;
+        const sg = this.segs.find((g) => this.s >= g.L && this.s < g.L + g.d) || this.segs[0];
+        const u = (this.s - sg.L) / sg.d;
+        if (sg.b[2]) { const k = (u - 0.75) / 0.25; if (k > 0) hop = Math.sin(k * Math.PI) * 0.45; }
+        if (sg.a[2]) { const k = u / 0.25; if (k < 1) hop = Math.sin((1 + k) * Math.PI / 2) * 0.45 * (1 - k); }
+        this.a = damp(this.a, this.a + angleDiff(this.a, Math.atan2(sg.b[0] - sg.a[0], sg.b[1] - sg.a[1])), 10, dt);
+        this.pos.x = sg.a[0] + (sg.b[0] - sg.a[0]) * u; this.pos.z = sg.a[1] + (sg.b[1] - sg.a[1]) * u;
+        want = v; anim = 'run';
+      }
     } else {
       this.timer -= dt;
       if (h && dh < 4 && this.state !== 'greet' && this.barkCool < 6) { this.state = 'greet'; this.timer = 3 + Math.random() * 2; }
       if (this.state === 'greet') {
-        // come up to Twinsen (not inside the area's fence), stand, wag hard, bark now and then
+        // the poodle comes up wagging; a guard dog holds its ground and barks
         const ta = Math.atan2(h.pos.x - this.pos.x, h.pos.z - this.pos.z);
         this.a = damp(this.a, this.a + angleDiff(this.a, ta), 6, dt);
-        if (dh > 1.7 && this.inArea(h.pos.x, h.pos.z, 1)) want = this.step(Math.sin(this.a), Math.cos(this.a), 2.2, dt);
-        this.wag = 1;
-        this.look = 0.25;
-        if (this.barkCool <= 0) { this.bark(dh); this.barkCool = 6 + Math.random() * 6; }
+        if (this.friendly && dh > 1.7 && this.inArea(h.pos.x, h.pos.z, 1)) want = this.step(Math.sin(this.a), Math.cos(this.a), 2.2, dt);
+        anim = this.friendly ? (want > 0.3 ? 'walk' : 'idle') : 'warn';
+        this.rig.wag = this.friendly ? 1 : 0.05;
+        if (this.barkCool <= 0) this.bark(dh);
         if (this.timer <= 0 || dh > 6) { this.state = 'idle'; this.timer = 2 + Math.random() * 3; }
       } else if (this.state === 'go') {
         const dx = this.target[0] - this.pos.x, dz = this.target[1] - this.pos.z, d = Math.hypot(dx, dz);
-        const ta = Math.atan2(dx, dz);
-        this.a = damp(this.a, this.a + angleDiff(this.a, ta), 5, dt);
-        const moved = d > 0.3 ? this.step(Math.sin(this.a), Math.cos(this.a), this.trot, dt) : 0;
-        want = moved;
-        this.look = 0; this.wag = 0.35;
-        if (d < 0.4 || this.timer <= 0 || (moved < this.trot * 0.3 && d > 0.3)) { this.state = Math.random() < 0.4 ? 'sniff' : 'idle'; this.timer = 1.5 + Math.random() * 3; }
+        this.a = damp(this.a, this.a + angleDiff(this.a, Math.atan2(dx, dz)), 5, dt);
+        want = d > 0.3 ? this.step(Math.sin(this.a), Math.cos(this.a), this.trot, dt) : 0;
+        anim = 'walk'; this.rig.wag = 0.35;
+        if (d < 0.4 || this.timer <= 0 || (want < this.trot * 0.3 && d > 0.3)) { this.state = Math.random() < 0.4 ? 'sniff' : 'idle'; this.timer = 1.5 + Math.random() * 3; }
       } else {
-        // idle or sniffing the ground, then off somewhere else in the area
-        this.look = this.state === 'sniff' ? -0.5 : Math.sin(t * 0.7 + this.pos.x) * 0.15;
-        this.wag = this.state === 'sniff' ? 0.5 : 0.25;
+        anim = this.state === 'sniff' ? 'sniff' : 'idle';
+        this.rig.wag = 0.3;
         if (this.timer <= 0 && this.area) {
           const A = this.area;
           this.target = [A.x0 + Math.random() * (A.x1 - A.x0), A.z0 + Math.random() * (A.z1 - A.z0)];
@@ -244,12 +289,13 @@ export class Dog {
     }
     this.barkCool -= dt;
     this.speed = damp(this.speed, want, 8, dt);
-    this.place(hop, dt, t);
+    this.rig.play(anim);
+    this.place(hop, dt);
   }
 
   inArea(x, z, m = 0) { const A = this.area; return !A || (x > A.x0 - m && x < A.x1 + m && z > A.z0 - m && z < A.z1 + m); }
 
-  // move through the physics (walls stop it), keep to the ground; returns the speed actually made
+  // move through the physics (walls stop it), keep inside the area; returns the speed actually made
   step(sx, sz, v, dt) {
     const x0 = this.pos.x, z0 = this.pos.z;
     this.physics.move(this, sx * v * dt, sz * v * dt);
@@ -259,32 +305,21 @@ export class Dog {
 
   bark(dh) {
     const G = globalThis.game;
-    if (dh < 9 && G?.audio) G.audio.play(this.kind === 'poodle' ? 'yap' : 'bark');
-    this.barkT = 0.35;
+    if (dh < 9 && G?.audio) G.audio.play(this.friendly ? 'yap' : 'bark');
+    this.rig.bark();
+    this.barkCool = this.friendly ? 6 + Math.random() * 6 : 1.4 + Math.random();
   }
 
-  place(hop = 0, dt = 0, t = 0) {
-    const M = this.M;
-    const g = this.physics.groundAt(this.pos.x, this.pos.z, this.pos.y + 0.4);
-    this.pos.y = g;
-    // gait: the legs swing with the distance covered (a stride of ~0.55 m)
-    this.gait += this.speed * dt / 0.55 * Math.PI;
-    const amp = Math.min(0.55, this.speed * 0.22);
-    M.legs.forEach((l, i) => { l.rotation.x = Math.sin(this.gait + M.phase[i]) * amp; });
-    const bob = Math.abs(Math.sin(this.gait)) * amp * 0.05;
-    this.root.position.set(this.pos.x - this.ox, g + hop + bob, this.pos.z - this.oz);
+  place(hop, dt) {
+    this.pos.y = this.physics.groundAt(this.pos.x, this.pos.z, this.pos.y + 0.4);
+    this.root.position.set(this.pos.x - this.ox, this.pos.y, this.pos.z - this.oz);
     this.root.rotation.y = this.a;
-    // head: look up/down, a jerk up on a bark; tail: wag
-    if (this.barkT > 0) this.barkT -= dt;
-    this.lookP = damp(this.lookP, this.look + (this.barkT > 0 ? 0.25 : 0), 6, dt);
-    M.head.rotation.x = -this.lookP;
-    if (M.jaw) M.jaw.rotation.x = (this.barkT > 0 ? 0.45 : 0.06 + Math.abs(Math.sin(t * 2.2)) * 0.06 * this.wag);   // (panting)
-    M.tail.rotation.y = Math.sin(t * (6 + this.wag * 10)) * (0.15 + this.wag * 0.45);
+    this.rig.update(dt, this.speed, hop);
   }
 }
 
 // a few dogs in a region: updaters gets one function that steps them all
 export function addDogs(list, updaters) {
-  updaters.push((dt, t) => { for (const d of list) d.update(dt, t); });
+  updaters.push((dt) => { for (const d of list) d.update(dt); });
   return list;
 }

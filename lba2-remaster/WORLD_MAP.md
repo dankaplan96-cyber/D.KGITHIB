@@ -13,7 +13,7 @@ the original doesn't have is ours:
 | Area (our metres) | In the original | Now |
 |---|---|---|
 | Town (−56…−29, −17…14) and the west shore by it | the low town; a promenade above the shore with lanterns and railings | the square and well; the street west climbs onto the promenade (the harbour stood here at first) |
-| Northern plateau (x −120…0, z −100…−45, ~14 m) | high ground with trees, two doors | the depot (−85…−65, −78…−62) and the orchard (−80, −55); the project station in Funfrock's old fort (−28, −65) at the east end |
+| Northern plateau (x −120…0, z −100…−45, ~14 m) | high ground with trees, two doors | the depot (−85…−65, −78…−62) and the orchard (−80, −55); the project station in Funfrock's old fort (−28, −65) at the east end; Bersimon the Weather Wizard's tent (−100, −71, the original's S21; interior wtent: a stone room with the cauldron), open in every chapter |
 | The plateau's southern rim (−56, −44) | the escarpment up from the town | the Whispering Cliffs: a rock stack (16.8 m) reached only by the stepping stones from (−68, −22) |
 | West shore below the plateau | quay wall, bollards | the water main comes down here to the meter (−72, −17) |
 | South fields (x −76…−22, z 15…80) | more of the town, gardens, Twinsen's house (door −45.6, 80) | Twinsen's house at its original place; the village houses by the original's doors (S3, S9, S14, S15, S17); the plaza with lamps, benches and tulips; fields and farmers (chapter 8) |
@@ -53,7 +53,7 @@ Pink sky, cloud sea, floating isles.
 | Place | Identity / landmark | Life | Story role | Changes |
 |---|---|---|---|---|
 | Ferry dock | the light-ferry | project guard | arrival; setback: plan confiscated | — |
-| Esmer street | domes and arches, stalls; behind the north houses the dog-training yard (palisade, track, block tower, tunnel, hurdles) | Nara's cloud flowers, Oku; street folk after LBA2's Zeelich: Mosquibees (Bzizz, Madam Zuzzara), moles (Old Grumm, Mother Snuff) and triangle-headed townsfolk (Mr Pelleck, Tavo); Zeelich's big-mouthed dogs (two running the course, one in the yard, one in the street) | directions, opinions about the project | lines change once they see the plan |
+| Esmer street | domes and arches, stalls; behind the north houses the dog-training yard (palisade, track, block tower, tunnel, hurdles) | Nara's cloud flowers, Oku; street folk after LBA2's Zeelich: Mosquibees (Bzizz, Madam Zuzzara), moles (Old Grumm, Mother Snuff) and triangle-headed townsfolk (Mr Pelleck, Tavo); the project's guard dogs in training (two running the course, one in the yard; they bark at Twinsen) | directions, opinions about the project | lines change once they see the plan |
 | Baldino's workshop (interior) | bent antenna, globe, bench | explosions | the shell explained; override key built | finale: Baldino at the radio |
 | Three windmills + the old mill | sails, brakes | Oku's memories | brake with the ball; climb for the cog | released in the finale |
 | Project depot | locker, drones | — | code cylinder + the confiscated plan | — |
@@ -67,6 +67,7 @@ Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real
 | Place | Identity / landmark | Life | Story role | Changes |
 |---|---|---|---|---|
 | Kesh (village) | adobe houses with vigas and roof stairs, striped awnings, a market stall | Mother Tarra, Brosk (trader), Lumi (weaver), Sani (kid) | distrust of the project; trust earned by the pump | the oasis fills once the pump runs |
+| The School of Magic (the north-west mesa's south side) | the original's great stone face: red eyes, the door in its chin, two horned chimneys; inside (school): pentagram slabs, star windows, a blackboard dais, long tables | Rector Hougo; Ker'aooc the healing wizard (heals Twinsen) | open in every chapter | — |
 | The oasis and the wind-pump | palms, a pond, a lattice tower with a sail wheel and a water tank | — | three seized gears (ball) | dry → full |
 | Hesk's sand-yacht | striped sail, three wheels | Hesk | rides between Kesh, Ilka's camp and the dig | parked where it last went |
 | Ilka's camp | ridge tent, telescope, sample crates under the north mesa | Professor Ilka | the crystals' discoverer | — |

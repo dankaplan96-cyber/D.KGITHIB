@@ -336,4 +336,18 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   red crate, a blue tunnel, two hurdles, a hay bale, an A-frame) where two dogs run the course and a third noses
   about; another trots along the Esmer street; the poodle wanders Citadel's square. They come up to Twinsen, pant,
   and bark (the jaw drops open; a synthesized bark).
-- Open: the wizards (Bersimon's tent at the original's S21 ≈ our (−100, −71), the School of Magic, Ker'aooc).
+- The user: "the dog is from the second game; it is a guard dog — 51 52 53". So they are enemies now
+  (src/game/guarddog.js): beside Vesk's guards at the ch. 1, 2, 4 and 8 sites and in the arena; they notice
+  Twinsen, bark (alerting the group), run at him, crouch with the jaw wide (the tell), spring and bite; three hits
+  knock one out (a bonus). The yard's dogs bark from behind the palisade; the street dog is gone. combat §21.
+
+## Session: guard dogs and Twinsun's wizards (0.18.0)
+- Guard dogs (above) as enemies.
+- The wizards (src/game/wizards.js): Bersimon's tent at the original's S21 on Citadel's plateau, inside a stone
+  room after the user's reference #63 (cauldron, table, candle stands, star plaques); the School of Magic on Desert
+  Island behind the original's stone face (reference #09), inside after #26/#57 (pentagram slabs, star windows,
+  blackboard, long tables). Looks after the original bodies (numbers only): Bersimon 111, Rector Hougo 123,
+  Ker'aooc after 188 (a guess; asked). Bersimon tops up magic, Ker'aooc heals. Doors open in every chapter
+  (story/index.js). tests/wizards.mjs.
+- Open: Ker'aooc is slimmer than body 188's star-shaped body; LBA1's characters and places once the user's files
+  arrive.

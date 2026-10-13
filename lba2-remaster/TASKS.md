@@ -11,8 +11,8 @@
       LBA2's language (ball hands, plain cloth, Grobo bodies, Rabbibunny snouts) — pass 8, 0.13.0. Still open:
       Zoé's gestures; the Esmers after the original; the user's verdict in their game.
 - [x] V2b LBA2's friends and creatures: Zeelich's peoples, Joe the Elf, the Esmers' shuttles, the Temple of Bù, the
-      dogs (bodies 51–53 + the poodle) and the dog-training yard (0.17.0). Still open: the wizards (Bersimon's tent,
-      the School of Magic, Ker'aooc).
+      guard dogs (bodies 51–53, enemies) + the poodle and the dog-training yard, the wizards (Bersimon's tent, the School
+      of Magic, Rector Hougo, Ker'aooc) (0.17.0–0.18.0).
 - [ ] V3 Apply the standard to the rest of Citadel, the interiors and Zeelich.
 - [ ] V4 Lighting: contact shadows, character/background separation, no plastic look (LBA ramp everywhere).
 

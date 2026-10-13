@@ -44,6 +44,7 @@ export class Chapter2 extends ChapterBase {
       { id: 'zdrone1', kind: 'drone', group: 'zdepot', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1, when },
       { id: 'zdrone2', kind: 'drone', group: 'zdepot', x: D.patrol[h][0], z: D.patrol[h][1], patrol: D.patrol, wp: (h + 1) % n, when },
       { id: 'zguard1', kind: 'guardG', group: 'zdepot', x: D.patrol[n - 1][0], z: D.patrol[n - 1][1], patrol: [...D.patrol].reverse(), wp: 1, when },
+      { id: 'zgdog1', kind: 'gdog', coat: 'brown', group: 'zdepot', x: D.patrol[h][0], z: D.patrol[h][1], patrol: [...D.patrol].reverse(), wp: (n - h) % n, when },
     ];
   }
 

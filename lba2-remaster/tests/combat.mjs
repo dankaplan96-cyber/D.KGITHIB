@@ -366,6 +366,25 @@ check('guard: spots, aims with a brightening line (the tell), fires', r.states.i
 check("guard: a Grobo guard's armour takes a weak hit without harm, not a strong one", r.soft === 'blocked' && r.hard === 'hit' && r.hpHard < r.hpSoft, r);
 check('guard: a beaten guard falls and leaves a bonus', r.down && r.bonus >= 1, r);
 
+// 21. the guard dog (src/game/guarddog.js, LBA2's bodies 51–53): it notices Twinsen, barks (the jaw drops), runs at
+//     him, crouches with the jaw wide (the tell), springs and bites; three hits knock it out and leave a bonus
+r = await ev(() => {
+  const { G } = C, h = G.hero;
+  C.only(['a_gdog'], [6200, 9], Math.PI); const dg = C.put('a_gdog', 6200, 3, 0);
+  dg.state = 'guard'; dg.patrol = [[6200, 3]]; dg.hp = dg.maxHp; dg.coolT = 0;
+  const seen = new Set(); const hp0 = h.hp; let jaw = 0;
+  for (let i = 0; i < 240; i++) { C.step(1 / 30); seen.add(dg.state); jaw = Math.max(jaw, dg.rig.M.jaw.rotation.x); }
+  const bitHp = h.hp;
+  const pk0 = G.pickups.list.length;
+  dg.state = 'chase'; for (let k = 0; k < 3; k++) { dg.damage(1, h.pos); C.step(0.1); }
+  C.step(0.6);
+  const out = { states: [...seen], jaw: +jaw.toFixed(2), hp: [hp0, bitHp], down: !dg.alive, bonus: G.pickups.list.length - pk0 };
+  dg.setPresent(false);
+  return out;
+});
+check('guard dog: notices, barks, runs, crouches with the jaw wide (the tell), bites', ['warn', 'chase', 'windup', 'lunge'].every((s) => r.states.includes(s)) && r.jaw > 0.4 && r.hp[1] < r.hp[0], r);
+check('guard dog: three hits knock it out and leave a bonus', r.down && r.bonus >= 1, r);
+
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
 await browser.close();

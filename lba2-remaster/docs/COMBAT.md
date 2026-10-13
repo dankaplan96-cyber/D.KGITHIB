@@ -83,6 +83,7 @@ fight; Aggressive mode's Space still attacks with the same moves.
 | Warden drone | ranged, mechanical | prongs crackle, a red aim line brightens (0.75 s); needs a clear shot | cooldown after firing | staggers, but steadies after two staggers in 2 s; the pulse stuns it |
 | Sentry automaton | protected | pulls its shield back, red eye (0.7 s) | shield down for 1.1 s after its bash | blocks frontal ball and sword (clang); heavy strike, charged ball or pulse breaks the guard |
 | Crystal crawler | heavy, controls space | rears, a ring spreads on the ground (1 s) | 1.3 s after the slam | only heavy hits stagger it; dodge or leave the ring (being airborne also avoids it) |
+| Guard dog (LBA2's Zeelich guard dog, bodies 51–53) | fast melee, works with the guards | stops and barks (the jaw drops; its group is alerted), then close in: crouches with the jaw wide open and growls (0.5 s) | stands panting for 0.9 s after the bite | 3 HP, no armour; notices a running Twinsen close by even out of sight; a hit makes it yelp and skid back; knocked out: rolls over, leaves one bonus; the pulse stuns it; gives up beyond its leash |
 | Vesk's guard (Quetch / Grobo) | ranged + close, people in his uniform | the stun rifle comes up and a violet aim line brightens (0.8 s); close in, the baton goes up (0.55 s) | rifle lowered for 0.9 s after a shot or a swing | LBA1's rules: armour (Quetch 1, Grobo 2) — a hit weaker than the armour is braced against, no harm; two hit reactions at random (stagger, half-turn); beaten: falls, leaves one bonus. The pulse jams the rifle, not the guard |
 | Heavy drone (ch. 7), Guardian (ch. 12) | mechanical bosses | existing | existing | existing |
 
@@ -99,6 +100,8 @@ All enemies give up and go home beyond a pursuit limit.
 - Vesk's guards, beside the drones: ch. 1 depot (Quetch), ch. 2 Zeelich depot (Grobo), ch. 4 post (Quetch),
   ch. 5 condenser hall (Quetch), ch. 8 crowd-control yard (Quetch + Grobo), ch. 10 at the bore (Grobo); two in the
   training arena.
+- Guard dogs, trotting the guards' loops: ch. 1 depot, ch. 2 Zeelich depot, ch. 4 post, ch. 8 crowd-control yard;
+  one in the training arena. The yard on Zeelich trains them (those bark from behind the palisade).
 - Ch. 4 dig: mites in the trench.
 - Ch. 5 valve hall: drones among cover.
 - Ch. 6 lift: the rope, then three cautious mites.

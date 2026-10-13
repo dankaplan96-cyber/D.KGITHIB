@@ -32,6 +32,7 @@ export const VOICES = {
   zbee1: { f0: 340, k: 1.3, rate: 1.4, wobble: 0.12, wave: 'square' }, zbee2: { f0: 290, k: 1.25, rate: 1.3, wobble: 0.1, wave: 'square' }, // a Mosquibee's buzz
   zmole1: { f0: 132, k: 1.08, rate: 0.95, wobble: 0.04 }, zmole2: { f0: 228, k: 1.16, rate: 1.1 }, // the moles: a snuffly hum
   joe: { f0: 300, k: 1.3, rate: 1.25, wobble: 0.04 }, // Joe the Elf: high and quick
+  bersimon: { f0: 150, k: 1.05, rate: 0.95, wobble: 0.06 }, magus: { f0: 125, k: 0.98, rate: 0.85 }, keraooc: { f0: 175, k: 1.1, rate: 1.05, wobble: 0.05 }, // the wizards
   ztri1: { f0: 142, k: 0.96, rate: 1.15 }, ztri2: { f0: 168, k: 1.0, rate: 1.05 },
   dinofly: { f0: 86, k: 0.74, rate: 0.55, wobble: 0.1, wave: 'triangle' }, // a big, sleepy creature's rumble
 };

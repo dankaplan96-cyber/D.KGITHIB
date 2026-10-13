@@ -256,6 +256,8 @@ export class AudioEngine {
       case 'ropeCreak': this._tone({ type: 'triangle', f0: 340, f1: 270, dur: 0.38, vol: 0.035 }); this._burst({ dur: 0.3, vol: 0.05, f: 900, f1: 700, type: 'bandpass', q: 7 }); break;
       case 'bark': [0, 0.17].forEach((at) => { this._tone({ type: 'sawtooth', f0: 430, f1: 230, dur: 0.1, vol: 0.06, at }); this._burst({ dur: 0.08, vol: 0.1, f: 1100, f1: 450, type: 'bandpass', q: 2.5, at }); }); break;
       case 'yap': [0, 0.12, 0.24].forEach((at) => { this._tone({ type: 'square', f0: 980, f1: 640, dur: 0.06, vol: 0.035, at }); this._burst({ dur: 0.05, vol: 0.06, f: 2200, f1: 1200, type: 'bandpass', q: 3, at }); }); break;
+      case 'yelp': this._tone({ type: 'triangle', f0: 1300, f1: 700, dur: 0.16, vol: 0.06 }); this._burst({ dur: 0.1, vol: 0.06, f: 2400, f1: 1200, type: 'bandpass', q: 3 }); break;
+      case 'growl': this._tone({ type: 'sawtooth', f0: 95, f1: 110, dur: 0.5, vol: 0.07 }); this._burst({ dur: 0.5, vol: 0.06, f: 420, f1: 300, type: 'bandpass', q: 4 }); break;
       case 'clunk': this._tone({ f0: 150, f1: 90, dur: 0.12, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.12, f: 1800, f1: 400 }); break;
       case 'thump': this._burst({ dur: 0.25, vol: 0.3, f: 320, f1: 60 }); this._tone({ f0: 85, f1: 45, dur: 0.22, vol: 0.14 }); break;
       case 'hum': {

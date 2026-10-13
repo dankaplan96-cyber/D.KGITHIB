@@ -37,6 +37,10 @@ export class Prologue extends ChapterBase {
       { id: 'lulu', name: 'n_lulu', char: 'lulu', color: '#ff9ad0', x: kids.x + 1.3, z: kids.z, angle: -Math.PI / 2, look: { tunic: '#e05a9a', robe: '#e05a9a', scale: 0.66, hair: '#2a1a10' } },
       // Joe the Elf, Twinsen's old friend from LBA2, by the square (he only chats: baseTalk's idle_joe lines)
       { id: 'joe', name: 'n_joe', char: 'joe', color: '#9fe89a', x: V.x + 6.5, z: V.z - 7.5, angle: -2.4 },
+      // Twinsun's wizards (src/game/wizards.js): Bersimon in his tent; the rector and Ker'aooc at the School of Magic
+      { id: 'bersimon', name: 'n_bersimon', char: 'bersimon', color: '#7fe0e8', ...R.wtent.npcSpots.bersimon, angle: R.wtent.npcSpots.bersimon.a },
+      { id: 'magus', name: 'n_magus', char: 'magus', color: '#9fc8ff', ...R.school.npcSpots.magus, angle: R.school.npcSpots.magus.a },
+      { id: 'keraooc', name: 'n_keraooc', char: 'keraooc', color: '#b0e0ff', ...R.school.npcSpots.keraooc, angle: R.school.npcSpots.keraooc.a },
     ];
   }
 
@@ -247,6 +251,10 @@ export class Prologue extends ChapterBase {
   baseTalk(npc) {
     const id = npc.def.id;
     if (id === 'pippa') return this.chain([['pippa', 'pr_pippa']], () => this.game.openShop());
+    // the Weather Wizard tops up Twinsen's magic, the healing wizard his life (LBA2's Ker'aooc "treats everybody")
+    const h = this.game.hero;
+    if (id === 'bersimon' && h.mp < h.mpMax) { h.mp = h.mpMax; this.game.audio.play('heal'); this.game.hud.toast('wz_toast_magic'); }
+    if (id === 'keraooc' && h.hp < h.maxHp) { h.hp = h.maxHp; this.game.audio.play('heal'); this.game.hud.toast('wz_toast_heal'); }
     const key = 'idle_' + id + '_' + this.story.cur.key, own = 'idle_' + id;
     if (t(key) === key && Array.isArray(t(own))) { const all = t(own); return this.game.say('n_' + id, [all[Math.floor(Math.random() * all.length)]]); }
     this.chain([[id, t(key) !== key ? key : 'idle_generic']]);

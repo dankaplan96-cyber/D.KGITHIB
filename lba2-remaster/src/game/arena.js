@@ -64,6 +64,7 @@ export function enterArena(game) {
     { id: 'a_crawler', kind: 'crawler', x: cx + 4, z: -9, group: 'arena4' },
     { id: 'a_guard', kind: 'guard', x: cx, z: 3, patrol: [[cx - 2, 3], [cx + 2, 3]], group: 'arena5' },
     { id: 'a_guardG', kind: 'guardG', x: cx + 9, z: 3, angle: -Math.PI / 2, group: 'arena6' },
+    { id: 'a_gdog', kind: 'gdog', coat: 'brown', x: cx - 9, z: 3, group: 'arena7' },
   ];
   if (!g._arenaEnemies) {
     g._arenaEnemies = defs.map((d) => (d.kind === 'dummy' ? new Dummy(g, d) : createEnemy(g, d)));

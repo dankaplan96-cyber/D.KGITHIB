@@ -205,10 +205,16 @@ project's sites with the drones, carry stun rifles and batons, and are knocked o
   Zeelich and Desert Island, coming and going through Bald Mountain as they always did.
 - **The Temple of Bù** (LBA2, Temple-Park by Bald Mountain): the project dug down to it; its great relief shows
   Sendell, her well and the shell's vents.
-- **The dogs** (LBA2): Zeelich's big-mouthed dogs (a round blob of head and body, a huge fanged mouth, bulging
-  eyes, a collar) train in a yard behind the north houses and trot along the street; a pampered poodle with a
-  pink bow wanders Citadel's square. They greet Twinsen and bark.
-- Still to come: the wizards (Bersimon's tent, the School of Magic, Ker'aooc), LBA1's places and people once the
+- **The guard dogs** (LBA2's, bodies 51–53): Zeelich's big-mouthed guard dogs (a round blob of head and body, a
+  huge fanged mouth, bulging eyes, a collar). Vesk's project keeps them at its depots beside his guards, and trains
+  them in a yard behind Zeelich's north houses, where they bark at Twinsen from behind the palisade. A pampered
+  poodle with a pink bow (LBA2's too) wanders Citadel's square, friendly.
+- **The wizards** (LBA2): Bersimon the Weather Wizard still keeps his tent on Citadel's plateau (bigger inside, a
+  stone room with his cauldron); he senses the warm air rising and tops up Twinsen's magic. The School of Magic on
+  Desert Island, behind its great stone face: Rector Hougo (once on the honour roll with Twinsen, Aril van Koow and
+  Carnogeel) and Ker'aooc the healing wizard, who "treats everybody for everything", the project's diggers lately
+  too, and heals Twinsen. Their doors are open in every chapter.
+- Still to come: LBA1's places and people once the
   user's LBA1 data is here.
 
 ## Writing rules

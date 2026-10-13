@@ -149,7 +149,7 @@ export const LOOKS = {
     // white pompom, curled shoes with brass bells
     race: 'elf', kid: true, outfit: 'tunic', tunic: '#236787', tunicTrim: '#1f5777', belt: '#634327', pants: '#1f5777', shoes: '#1f5777',
     skin: '#936b4f', noseC: '#7a5640', hat: '#236787', pompom: '#f0eef8', beard: '#ebdfd7', eyes: '#2a1a10', height: 0.92,
-    noEars: true, beardLong: true, pads: true, bells: '#d8b048', hatStraight: true,
+    noEars: true, beardLong: true, pads: true, bells: '#d8b048', hatStraight: true, stout: 1.45,
   },
   magus: {
     // a master of the School of Magic (LBA2 body 123): a Rabbibunny in a long blue robe, a white beard, a blue pointed hat

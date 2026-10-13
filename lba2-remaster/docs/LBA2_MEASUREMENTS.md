@@ -78,6 +78,15 @@ smooth normals is kept.
   pompoms on the four feet (r ≈ 38, front z 164, back z −80) and on the tail (y 571), a pink bow (y 760).
 - (Bodies 407–410 are a six-legged ball-nosed creature in four coats, not used.)
 
+## Wizards
+- Bersimon (body 111): a Rabbibunny 1.24 of Twinsen's height; a teal robe to the knee with a tan belt, a grey beard
+  from under the snout, a tall pointed teal hat between the ears.
+- A School of Magic master (body 123): the same height; a long blue robe with white cuffs and hem, a white beard,
+  a blue pointed hat.
+- Body 188 (used for Ker'aooc, a guess): 0.92 of Twinsen's height, 0.67 wide; a star-pointed blue body, a brown face,
+  a long pointed white beard, a tall straight blue hat with a white pompom, thin arms with ball hands, curled shoes
+  with brass bells.
+
 ## Animations of the hero (24-group set; Twinsen's robe body uses the first 19 groups)
 - 0 idle: 8 keys × 300 ms (2.4 s): the whole body rocks forward and back (root ±50 units, pelvis ±6°), the arms
   follow it a little.
