@@ -1,5 +1,8 @@
 # NEXT ACTION
 
+When the user uploads LBA1's files: read its body format (it differs from LBA2's), measure its characters
+(numbers only) and bring the ones the user wants back in our design language.
+
 Ask the user how the 0.14.0 characters read (also Zeelich's Esmers, Mosquibees and burrowers) in their game (Twinsen, Zoé, the Grobos and Rabbibunnies were rebuilt
 after the original, docs/character-review.md §12), and to run the benchmark again (pause → Benchmark; it has a
 per-feature breakdown at Medium) so the graphics can be tuned from it.

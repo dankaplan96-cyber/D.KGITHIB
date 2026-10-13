@@ -67,12 +67,12 @@ export const LOOKS = {
     eyes: '#2a2a2a', hat: '#d8b94a', height: 1.05,
   },
   vesk: {
-    // Zeelich engineer: tall, slender, slightly stooped; long narrow head with a swept crest,
-    // grey-violet skin, a long dark-teal coat with a high collar and brass buttons, goggles
-    // pushed up on the forehead, a brass brace on the right forearm
+    // the villain (tools/blender/cast_poly.py build_vesk): the project's chief engineer, tall and stooped, in a
+    // near-black greatcoat to the floor with a tall stiff collar behind his head, brass pauldrons, the project's
+    // violet emblem on his chest; a narrow grey-violet egg of a head, a swept crest, a violet monocle, a brass gauntlet
     race: 'quetch', outfit: 'tunic', hem: 0.24, slim: true, stoop: 0.06, skull: 'egg', skullY: 1.22, crest: '#5a4a8a', skin: '#a99cc6',
     tunic: '#1f5a62', tunicTrim: '#2f7a84', belt: '#3a2a20', buckle: '#d8b04a', pants: '#2a2a34', shoes: '#2a2026', collar: true, buttons: true, brace: true, goggles: true,
-    hairStyle: 'bald', hair: '#5a4a8a', nose: 'long', eyes: '#e0a020', eyeScale: 0.75, mouth: 'smile', brow: 1.1, headS: 0.95, neck: 0.12, height: 1.12,
+    hairStyle: 'bald', hair: '#5a4a8a', nose: 'long', eyes: '#e0a020', eyeScale: 0.75, mouth: 'smile', brow: 1.1, headS: 0.95, neck: 0.12, height: 1.12, longCoat: true,
   },
   worker: {
     // project worker: stocky, teal overalls with a tool belt, yellow hard hat
@@ -961,7 +961,7 @@ function finishRig(L, def, root, mesh, bones, eyes) {
   if (L.armSpread != null) rig.armSpread = L.armSpread;
   // the robe below the belt (Twinsen) or the outfit's legs (Zoé) are carried by the legs: strides need no limit
   if (L.outfit === 'lba' || L.outfit === 'gown') rig.legCloth = true;
-  if (L.outfit === 'lba' || L.race === 'esmer') rig.robeLegs = true; // (one robe, or an Esmer's capsule, over both legs: a shorter stride)
+  if (L.outfit === 'lba' || L.race === 'esmer' || L.longCoat) rig.robeLegs = true; // (one robe, or an Esmer's capsule, over both legs: a shorter stride)
   rig.bell = L.outfit === 'bell';
   root.scale.setScalar(L.height ? (L.kid ? L.height / 0.78 : L.height) : 1);
   return rig;

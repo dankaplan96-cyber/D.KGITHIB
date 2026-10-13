@@ -104,6 +104,9 @@ log('pylons', await ev(() => game.story.cur.plates().map((p) => {
   }
   return tg.done ? 'bank shot' : T.hit(tg);
 })));
+log('overload', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); const tg = game.room.ballTargets.find((x) => x.coil); return [game.flags.c3_overload, !!tg, T.obj()]; }));
+// Vesk's coil: three hits (real throws first, T.hit forces a hit only if the throws miss)
+log('coil', await ev(() => { const tg = game.room.ballTargets.find((x) => x.coil); const r = []; for (let k = 0; tg && k < 3 && !tg.done; k++) r.push(T.hit(tg)); T.talkAll(); return [tg ? r : 'no coil', game.flags.c3_coil, tg?.done]; }));
 log('turned', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state]; }));
 
 // epilogue: dinner → end screen

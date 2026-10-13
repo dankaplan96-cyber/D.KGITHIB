@@ -911,10 +911,115 @@ def build_tri(name):
     return name
 
 
+def build_vesk(name):
+    # Vesk, the villain: a silhouette of his own, as FunFrock had. A long near-black coat flaring to the floor
+    # (each half carried by its leg, like Twinsen's robe), a tall stiff collar standing up behind the head, angular
+    # brass pauldrons, a broad brass belt, the project's violet emblem on the chest; a narrow grey-violet egg of a
+    # head with a swept crest, a violet monocle, a sharp chin; a heavy brass gauntlet on the right forearm
+    S = ALL[name]
+    L, B = S['look'], S['bones']
+    bp = lambda n: tuple(B[n]['p'])
+    coat, lining, brass, skin, glow, boots = '#1a2a33', '#4a2a6a', '#c8a050', L.get('skin', '#a99cc6'), '#e090ff', '#16141a'
+    b = Builder(name, B)
+    hipsY, neckY, headY = bp('hips')[1], bp('neck')[1], bp('head')[1]
+    shY, shX = bp('shL')[1], bp('shL')[0]
+    def w_coat(p):
+        x, y, z = p
+        if y >= hipsY:
+            arm = smooth(shX - 0.04, shX + 0.04, abs(x)) * smooth(shY - 0.15, shY - 0.02, y)
+            s_ = 'L' if x > 0 else 'R'
+            return {k: v for k, v in (('torso', 1 - arm), ('sh' + s_, arm)) if v > 0}
+        k = smooth(hipsY, hipsY - 0.2, y)
+        knee = 1 - smooth(0.42, 0.62, y)
+        l = smooth(-0.05, 0.05, x)
+        w = {'hips': 1 - k}
+        for s_, ws in (('L', l), ('R', 1 - l)):
+            if ws > 0:
+                if 1 - knee > 0: w['hip' + s_] = k * ws * (1 - knee)
+                if knee > 0: w['knee' + s_] = k * ws * knee
+        return {kk: v for kk, v in w.items() if v > 1e-4}
+    st = 0.04
+    secs = [(0.03, 0.34, 0.27, -0.29), (0.25, 0.3, 0.24, -0.26), (0.5, 0.25, 0.2, -0.22), (0.75, 0.2, 0.16, -0.18), (hipsY, 0.165, 0.135, -0.14),
+            (hipsY + 0.25, 0.18, 0.15, -0.14), (shY - 0.12, 0.21, 0.15, -0.14), (shY, 0.2, 0.12, -0.12), (neckY - 0.02, 0.075, 0.07, -0.06)]
+    rings = [ring(y, hw, zf + st * smooth(hipsY, neckY, y), zb, 20, 0.7) for y, hw, zf, zb in secs]
+    loft(b.P('coat', coat, w_coat, 50), rings, cap_top=True)
+    # the lining shows at the hem: a violet band just inside it
+    loft(b.P('lining', lining, w_coat, 60), [ring(0.035, 0.335, 0.265, -0.285, 20, 0.7), ring(0.1, 0.32, 0.255, -0.275, 20, 0.7)])
+    # the belt and its buckle; the emblem on the chest
+    loft(b.P('belt', brass, 'torso', 50), [ring(hipsY - 0.03, 0.168, 0.138, -0.143, 20, 0.7), ring(hipsY + 0.05, 0.17, 0.142, -0.142, 20, 0.7)])
+    box(b.P('buckle', '#e8c870', 'torso', 30), -0.05, 0.05, hipsY - 0.035, hipsY + 0.055, 0.135, 0.16)
+    ey_, ez_ = shY - 0.2, 0.17 + st * smooth(hipsY, neckY, shY - 0.2)
+    disc(b.P('emblemRim', brass, 'torso', 30), (0, ey_, ez_), 0.07, 8, 'z', 0.012)
+    disc(b.P('emblem', glow, 'torso', 30), (0, ey_, ez_ + 0.008), 0.048, 8, 'z', 0.0)
+    # the tall collar: a curved shell standing up behind the head, wider at the top, violet inside
+    cv, cf = [], []
+    M = 9
+    for j, (y, r) in enumerate(((shY + 0.02, 0.14), (neckY + 0.12, 0.17), (headY + 0.22, 0.23))):
+        for i in range(M):
+            a = math.pi * (0.15 + 0.7 * i / (M - 1))          # the back half, open in front
+            cv.append((r * math.cos(a), y, -r * math.sin(a) * 0.9 - 0.01))
+    for j in range(2):
+        for i in range(M - 1):
+            cf.append([j * M + i, j * M + i + 1, (j + 1) * M + i + 1, (j + 1) * M + i])
+    b.P('collar', coat, 'torso', 40).add(cv, cf)
+    b.P('collarIn', lining, 'torso', 40).add([(x * 0.97, y, z * 0.97 + 0.004) for x, y, z in cv], [f[::-1] for f in cf])
+    # pauldrons: angular brass plates on the shoulders
+    for s_, sx in (('L', 1), ('R', -1)):
+        sh = bp('sh' + s_)
+        sphere(b.P('pauldron' + s_, brass, 'sh' + s_, 25), (sh[0] + sx * 0.02, sh[1] + 0.03, sh[2]), 0.11, 6, 4, (1.15, 0.55, 1.05))
+    # arms: coat sleeves; the left hand a grey-violet ball, the right forearm a brass gauntlet with claws
+    for s_, sx in (('L', 1), ('R', -1)):
+        sh, el, hd = bp('sh' + s_), bp('el' + s_), bp('hand' + s_)
+        tube(b.P('upper' + s_, coat, lambda p, s_=s_, e=el[1]: {'sh' + s_: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s_: smooth(e + 0.06, e - 0.04, p[1])}, 50), (sh[0], sh[1] + 0.02, sh[2]), el, 0.065, 0.058, 8)
+        if s_ == 'R':
+            tube(b.P('gauntlet', brass, 'el' + s_, 30), el, lerp(el, hd, 0.95), 0.085, 0.075, 7)
+            for k in (-1, 0, 1):
+                tube(b.P('claw', '#8a6a3a', 'hand' + s_, 30), (hd[0] + k * 0.03, hd[1], hd[2] + 0.02), (hd[0] + k * 0.035, hd[1] - 0.13, hd[2] + 0.07), 0.018, 0.004, 5)
+            sphere(b.P('gauntletLight', glow, 'el' + s_, 60), lerp(el, hd, 0.5)[:2] + (lerp(el, hd, 0.5)[2] + 0.08,), 0.022, 6, 4)
+        else:
+            tube(b.P('fore' + s_, coat, 'el' + s_, 50), el, lerp(el, hd, 0.85), 0.058, 0.064, 8)
+            sphere(b.P('hand' + s_, skin, 'hand' + s_, 60), lerp(el, hd, 1.05), 0.048, 8, 6)
+    # boots under the coat
+    for s_, sx in (('L', 1), ('R', -1)):
+        ft = bp('foot' + s_)
+        tube(b.P('shin' + s_, boots, 'knee' + s_, 40), (ft[0], 0.45, ft[2]), (ft[0], 0.06, ft[2]), 0.06, 0.055, 7)
+        box(b.P('boot' + s_, boots, 'foot' + s_, 30), ft[0] - 0.055, ft[0] + 0.055, 0.0, 0.07, ft[2] - 0.06, ft[2] + 0.17, 0.035)
+    # the neck and head: a narrow egg, the chin sharp, a crest swept back, the monocle on the right eye
+    tube(b.P('neck', skin, lambda p: {'neck': 1 - smooth(headY - 0.02, headY + 0.05, p[1]), 'head': smooth(headY - 0.02, headY + 0.05, p[1])}, 60), (0, neckY - 0.05, 0.03), (0, headY + 0.06, 0.06), 0.045, 0.042, 8)
+    c = (0, headY + 0.16, 0.07)
+    hp_ = b.P('head', skin, 'head', 70)
+    sphere(hp_, c, 0.1, 10, 8, (0.85, 1.45, 1.0))
+    tube(hp_, (0, c[1] - 0.06, c[2] + 0.04), (0, c[1] - 0.2, c[2] + 0.07), 0.07, 0.008, 8)   # the long sharp chin
+    tube(b.P('nose', skin, 'head', 40), (0, c[1] + 0.0, c[2] + 0.085), (0, c[1] - 0.05, c[2] + 0.15), 0.022, 0.006, 6)
+    cr = b.P('crest', L.get('crest', '#5a4a8a'), 'head', 30)
+    pts = [(0, c[1] + 0.1, c[2] + 0.05), (0, c[1] + 0.17, c[2] - 0.02), (0, c[1] + 0.17, c[2] - 0.12), (0, c[1] + 0.08, c[2] - 0.2)]
+    cr.add([(x - 0.012, y, z) for x, y, z in pts] + [(x, y + 0.05, z - 0.02) for x, y, z in pts] + [(x + 0.012, y, z) for x, y, z in pts],
+           [[i, i + 1, 5 + i, 4 + i] for i in range(3)] + [[4 + i, 5 + i, 9 + i, 8 + i] for i in range(3)])
+    front = lambda x, y: c[2] + 0.1 * math.sqrt(max(0.05, 1 - (x / 0.085) ** 2 - ((y - c[1]) / 0.145) ** 2))
+    ey = c[1] + 0.035
+    for sxx in (1, -1):
+        on = lambda dx, dy, lift=0.0, cx=sxx * 0.038: (cx + dx, ey + dy, front(cx + dx, ey + dy) + 0.004 + lift)
+        ts = [2 * math.pi * k / 10 for k in range(10)]
+        if sxx < 0:   # the monocle: a brass ring, violet glass
+            b.eye(on(0, 0), [([on(0.026 * math.cos(t), 0.026 * math.sin(t), 0.004) for t in ts], brass), ([on(0.019 * math.cos(t), 0.019 * math.sin(t), 0.006) for t in ts], glow)])
+        else:
+            b.eye(on(0, 0), [([on(0.02 * math.cos(t), 0.008 * math.sin(t) - 0.002 * math.cos(t)) for t in ts], '#f0e8d0'), ([on(0.007 * math.cos(t), 0.007 * math.sin(t), 0.0012) for t in ts], L.get('eyes', '#e0a020'))])
+    brow = b.P('brow', '#3a2a4a', 'head', 30)
+    brow.add([(0.012, ey + 0.012, front(0.012, ey + 0.012) + 0.006), (0.062, ey + 0.03, front(0.062, ey + 0.03) + 0.006), (0.062, ey + 0.042, front(0.062, ey + 0.042) + 0.006), (0.012, ey + 0.02, front(0.012, ey + 0.02) + 0.006)], [[0, 1, 2, 3]])
+    my = c[1] - 0.075
+    b.P('mouth', '#3a1a2a', 'head', 30).add([(-0.03, my, front(-0.03, my) + 0.004), (0.03, my - 0.008, front(0.03, my) + 0.004), (0.03, my - 0.002, front(0.03, my) + 0.004), (-0.03, my + 0.006, front(-0.03, my) + 0.004)], [[0, 1, 2, 3]])
+    os.makedirs(OUTDIR, exist_ok=True)
+    tris = b.export(os.path.join(OUTDIR, name + '.json'))
+    print(name, 'tris', tris)
+    return name
+
+
 def build_any(n):
     L = ALL[n]['look']
     if n == 'zoe':
         return build_zoe(n)
+    if n == 'vesk':
+        return build_vesk(n)
     race = L.get('race')
     if race == 'esmer':
         return build_esmer(n)

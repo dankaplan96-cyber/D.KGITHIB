@@ -7,8 +7,9 @@ no Earth-style night.
 
 **The core conflict.** The Joint Project drills into Twinsun for heat. It really helps people (warm water,
 light, a ferry that runs on light, jobs on Zeelich). It is also cracking the shell around a being Sendell
-protects ("her"), which is waking too early. Vesk, the project's chief engineer, learns the danger, hides it,
-and plans a selective evacuation instead of stopping. Stopping the drill now would crack the shell anyway.
+protects ("her"), which is waking too early. Vesk, the project's chief engineer and the story's villain, learns
+what lies under the shell and wants its power for the project: he hides the danger and plans a selective
+evacuation (the thirty percent he chose) instead of stopping. Stopping the drill now would crack the shell anyway.
 The solution: turn the project's own installations into a stabilising shield, using parts and people the
 player already knows.
 
@@ -150,7 +151,9 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 ### 12 — The Core 🔧
 - **Revelation part 2 (Sendell):** "She" is young and not ready; turning off is not enough; push the other way.
 - **Does:** the core: five pylons (one per station) by bank shots while the guardian fights; the allies answer by
-  radio in turn. **Vesk's turn:** he sees the field work, makes the final switch himself and stays to run it.
+  radio in turn. **Vesk will not let go:** he overloads the guardian and raises a coil over his console;
+  Twinsen breaks it with the ball (three hits), the console bursts, Twinsen switches the bore to shield mode
+  himself, and the council's guards come down for Vesk.
 - **Result:** the shell holds. → Epilogue: dinner at home, free roam.
 
 ## Cast (for writing; not shown to the player)
@@ -161,7 +164,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 | **Zoé** | the truth; family safe | being told to stay home | town gossip, how to sneak | finds the plan, broadcasts the warning, playable twice | from worried to the one who moves the island |
 | **Arthur** | to be included | being treated as a baby | radios, kids' secrets | fixes the radio, relays in the finale | gets his real job, not a chosen-one moment |
 | **Baldino** | to build the thing that works | being ignored | the shell, machines | inventions with limits (override key; the network) | proves the reversal works |
-| **Vesk** | to save both worlds his way | chaos, being wrong | the readings | useful (valves, water, ferry), then obstructs (link cut, guards, evacuation) | sees the field work, makes the final switch, accepts consequences |
+| **Vesk** (villain) | the power under the shell, for the project and Zeelich's upper districts | losing control, being made small | the readings, and what they mean | charming and useful at first (valves, water, ferry), then obstructs (link cut, guards, the evacuation he chose) | does not turn: overloads the guardian in the core, is beaten and handed to the joint council |
 | **Sendell** | to protect "her" | waking her too soon | everything below | warnings, then the plain truth | asks for help instead of saving everyone |
 | **Doran** | to sleep, to sail | fuss | the sea, the ferry | stamp, the ferry to Zeelich | sails into the unknown |
 | **Mira** | rules followed, credit for the office | blame | every pipe on the island | lid key, valve map, opens the valves in the finale | from bureaucrat to hero of the report |
@@ -182,6 +185,12 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 - **Triangle-headed townsfolk:** tall and thin, in suits and shirtsleeves, with a big inverted-triangle head,
   pointed ears and a flat top. Clerks, shopkeepers, passers-by.
 - **Grobos** live on both worlds (Councillor Brum, the guard).
+
+## Vesk's look (the villain's silhouette)
+A figure of his own, as FunFrock had: a near-black greatcoat to the floor, a tall stiff collar standing up behind
+his head (violet inside), angular brass pauldrons, a broad brass belt, the project's violet emblem on his chest;
+a narrow grey-violet egg of a head with a swept crest, a violet monocle, a sharp chin; a brass gauntlet with
+claws on his right forearm (tools/blender/cast_poly.py build_vesk).
 
 ## Writing rules
 Natural English, one or two sentences per turn, longer only for big moments. Concrete details, requests and

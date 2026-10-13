@@ -37,7 +37,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 3;
-export const VERSION = '0.14.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.15.0'; // (the desktop build's version: desktop/package.json)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
 export function migrateSave(raw) {

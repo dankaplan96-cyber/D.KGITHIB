@@ -7,8 +7,9 @@
 // pillars with the ball raises stepping stones across the chasm (the cliffs' mechanic, bigger). Sendell
 // tells him plainly what lies under the shell and why stopping the drill is not enough. In the core Vesk
 // sets the bore's guardian on him; Twinsen converts the three pylons with bank shots while his allies,
-// by radio, feed each one (Zoé's signal, Mira's valves, Oku's mills). The readings change, and Vesk makes
-// the final switch himself. → epilogue.
+// by radio, feed each one (Zoé's signal, Mira's valves, Oku's mills). Vesk will not let go: he wants her
+// power for the project, overloads the guardian and raises a coil over his console; three hits with the ball
+// break it, the console bursts, and Twinsen switches the bore to shield mode himself. → epilogue.
 import * as THREE from 'three';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
@@ -140,6 +141,7 @@ export class Chapter3 extends ChapterBase {
       if (Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) > (tg.r || 1) + 0.15) continue;
       if (room === 'c3deep' && tg.ballSwitch) { tg.done = true; this.lowerLadder(); return true; }
       if (room === 'c3gallery' && tg.pillar != null) { tg.done = true; this.lightPillar(tg.pillar); return true; }
+      if (room === 'c3core' && tg.coil) { this.hitCoil(tg); return true; }
       if (room === 'c3core' && tg.pylon != null) {
         if (!f.c3_fight) return false;
         tg.done = true; this.convertPylon(tg.pylon); return true;
@@ -181,6 +183,7 @@ export class Chapter3 extends ChapterBase {
     g.hud.toast('c3_toast_fight');
     g.audio.setMood?.('boss');
     g.updateObjective();
+    if (this.pylons() >= 3) this.overload(); // (a reload after the third pylon: straight to Vesk's overload)
   }
   convertPylon(i, silent = false) {
     const g = this.game, f = this.f, C = this.R.c3core;
@@ -195,20 +198,60 @@ export class Chapter3 extends ChapterBase {
     g.hud.toast('c3_toast_pylon', { n });
     this.guardian?.setLevel?.(n);
     const [who, key] = ALLIES[n - 1];
-    this.chain([[who, key]], () => { g.save(false); if (n >= 3) this.veskTurns(); else g.updateObjective(); });
+    this.chain([[who, key]], () => { g.save(false); if (n >= 3) this.overload(); else g.updateObjective(); });
   }
-  veskTurns() {
+  // ---- the second phase: Vesk overloads the guardian; his coil must be broken (three hits)
+  overload() {
+    const g = this.game, f = this.f;
+    f.c3_overload = true; f.c3_coil = 0;
+    this.chain([['vesk', 'c3_vesk_over1'], ['hero', 'c3_tw_over'], ['vesk', 'c3_vesk_over2'], ['vesk', 'c3_vesk_over3']], () => {
+      this.ensureCoil();
+      const gd = this.guardian;
+      if (gd) { gd.setLevel?.(4); gd.state = 'chase'; gd.stateT = 0; gd.coolT = 1.5; }
+      g.audio.play('rumble'); g.camRig.shake(0.3);
+      g.hud.toast('c3_toast_coil');
+      g.updateObjective(); g.save(false);
+    });
+  }
+  // the coil: a crackling ball of light over Vesk's console, a ball target while the overload lasts
+  ensureCoil() {
+    const C = this.R.c3core, f = this.f;
+    if (!C?.console || this.coil || !f.c3_overload || f.c3_turned) return;
+    const y = (C.floorY ?? 0) + 2.15, gp = C.group.position;
+    const mat = new THREE.MeshBasicMaterial({ color: '#d8a0ff', transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42, 1), mat);
+    const halo = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 1), new THREE.MeshBasicMaterial({ color: '#8a40ff', transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false, wireframe: true }));
+    const grp = new THREE.Group(); grp.position.set(C.console.x - gp.x, y, C.console.z - gp.z); grp.add(core, halo); C.group.add(grp);
+    const tg = { x: C.console.x, y, z: C.console.z, r: 1.0, coil: true };
+    C.ballTargets.push(tg);
+    this.coil = { grp, core, halo, mat, tg };
+  }
+  hitCoil(tg) {
+    const g = this.game, f = this.f, c = this.coil;
+    f.c3_coil = (f.c3_coil || 0) + 1;
+    g.audio.play('shard'); g.camRig.shake(0.25);
+    g.particles.burst(tg.x, tg.y, tg.z, '#d8a0ff', 30, 5);
+    if (c) c.core.scale.setScalar(1 - f.c3_coil * 0.22);
+    g.hud.toast('c3_toast_coil_hit', { n: f.c3_coil });
+    if (f.c3_coil >= 3) { tg.done = true; this.veskFalls(); return; }
+    this.chain([['vesk', f.c3_coil === 1 ? 'c3_vesk_hit1' : 'c3_vesk_hit2']], () => { g.updateObjective(); g.save(false); });
+  }
+  veskFalls() {
     const g = this.game, f = this.f, C = this.R.c3core;
     f.c3_turned = true;
+    if (this.coil) { this.coil.grp.parent?.remove(this.coil.grp); this.coil = null; }
     this.guardian?.powerDown?.();
     this.story.refreshCast();
     const vesk = this.npc('vesk');
-    this.chain([['vesk', 'c3_vesk_turn1'], ['hero', 'c3_tw_turn'], ['vesk', 'c3_vesk_turn2'], ['vesk', 'c3_vesk_turn3']], () => {
-      vesk?.rig?.play?.('use');
+    g.particles.burst(C.console.x, (C.floorY ?? 0) + 1.6, C.console.z, '#ffd080', 40, 6);
+    g.audio.play('break'); g.camRig.shake(0.45);
+    vesk?.rig?.play?.('hurt');
+    this.chain([['narrator', 'c3_vesk_fall'], ['vesk', 'c3_vesk_down'], ['hero', 'c3_tw_down'], ['hero', 'c3_tw_switch']], () => {
+      g.hero?.act?.('use', 0.8);
       C.drill?.setMode?.('shield');
       C.field?.setLevel?.(1);
       g.audio.play('horn'); g.camRig.shake(0.3);
-      this.chain([['sendell', 'c3_sendell_end']], () => this.finish());
+      this.chain([['sendell', 'c3_sendell_end'], ['balradio', 'c3_bal_end']], () => this.finish());
     });
   }
   finish() {
@@ -279,6 +322,10 @@ export class Chapter3 extends ChapterBase {
         }
       }
     }
+    if (g.room?.id === 'c3core' && f.c3_overload && !f.c3_turned) {
+      this.ensureCoil();
+      if (this.coil) { const t = g.time; this.coil.grp.rotation.y = t * 1.3; this.coil.halo.rotation.x = t * 0.7; this.coil.mat.opacity = 0.6 + Math.sin(t * 9) * 0.25; }
+    }
     // a defeat during the fight respawns at the core's entrance with the fight still on (pylons kept)
     if (f.c3_fight && !f.c3_turned && g.room?.id === 'c3core') {
       const gd = this.guardian;
@@ -303,12 +350,14 @@ export class Chapter3 extends ChapterBase {
     // a fight interrupted by a reload restarts when the core is entered again
     if (f.c3_fight && !f.c3_turned) f.c3_fight = false;
     if (f.c3_turned && !f.c3_done) f.c3_turned = false;
+    if (f.c3_overload && !f.c3_done) { f.c3_overload = false; f.c3_coil = 0; }
   }
 
   // ---------------------------------------------------------------- HUD
   objective() {
     const f = this.f, room = this.game.room?.id;
     if (!f.c3_started) return '';
+    if (f.c3_overload && !f.c3_turned) return this.goal('c3_obj_coil', { n: f.c3_coil || 0 });
     if (f.c3_fight) return this.goal('c3_obj_pylons', { n: this.pylons() });
     if (f.c3_sendell) return this.goal('c3_obj_core');
     if (f.c3_cooled) return this.goal(room === 'c3gallery' ? 'c3_obj_gallery' : 'c3_obj_deeper');

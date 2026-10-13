@@ -303,3 +303,13 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   triangle-headed townsfolk stand on the Esmer street with lines and voices of their own (Bzizz, Madam Zuzzara,
   Old Grumm, Mother Snuff, Mr Pelleck, Tavo).
   tests/chapter9.mjs checks they stand on the street and talk.
+
+## Session: Vesk the villain (0.15.0)
+- The user asked who the heroes and the main enemy are, wanted the enemy built as a figure of his own (like
+  FunFrock), and chose: Vesk becomes the villain (no redemption). Story: he wants the waking entity's power for
+  the project; in the core, after the three pylons, he overloads the guardian and raises a coil over his console;
+  three ball hits break it, the console bursts, Twinsen switches the bore to shield mode, the council's guards
+  come for Vesk; the epilogue and journal follow. tests/chapter3.mjs drives the coil (three real throws).
+- Vesk's model (build_vesk): greatcoat to the floor carried by the legs, a tall collar, brass pauldrons, the
+  violet emblem, a crest and a monocle, a brass gauntlet. captures/characters/vesk-villain.png.
+- The user will upload LBA1's files: its characters are to be measured the same way (numbers only).
