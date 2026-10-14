@@ -1,0 +1,3 @@
+ISO  the hero is placed at fixed spots (same on both builds) and the frame drawn from the normal camera; counts, not time
+render counts (new1): {"pier_track_east":{"calls":425,"tris":316932,"geos":1104,"tex":441},"cool_door":{"calls":353,"tris":193920,"geos":1113,"tex":441},"plaza":{"calls":399,"tris":248301,"geos":1130,"tex":441},"lumi_loom":{"calls":510,"tris":266522,"geos":1157,"tex":441},"drift":{"calls":505,"tris":371746,"geos":1227,"tex":441},"board":{"calls":382,"tris":289027,"geos":1228,"tex":441}}
+no errors

@@ -1,0 +1,20 @@
+[0s +0s] continue (Desert Island): {"room":"desert","chapter":"dig"} | desert [3342.39,5,-1.68] hp 4 | Find the professor who found the crystals
+[1s +1s] Mother Tarra: {"r":"talked","to":"tarra","state":"play","lines":8,"task":true,"fail":null} | desert [3350.68,5,10.18] hp 4 | Restart the wind-pump (0/3)
+[9s +8s] the pump's three gears (ball): {"gears":[true,true,true],"pump":true,"fail":null} | desert [3366.9,5,-4.15] hp 4 | Talk to Mother Tarra
+[10s +1s] Tarra trusts him: {"r":"talked","to":"tarra","state":"play","lines":6,"trust":true,"fail":null} | desert [3352.15,5,10.82] hp 4 | Find Ilka's camp under the north mesa◆ Hesk can take you on his sand-yacht
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[0.4] go → (3351.0, 11.5) plan ok=true pts=3 left=0.81
+[5.0] go → (3369.7, -9.4) plan ok=true pts=6 left=0.23
+[15.0] go → (3366.2, -7.4) plan ok=true pts=3 left=0.45
+[19.3] go → (3366.2, -3.3) plan ok=true pts=3 left=0.24
+[24.0] go → (3370.0, -9.5) plan ok=true pts=3 left=0.32
+[29.1] go → (3366.5, -7.5) plan ok=true pts=3 left=0.17
+[33.6] go → (3366.5, -3.5) plan ok=true pts=3 left=0.26
+[38.4] go → (3370.0, -1.5) plan ok=true pts=2 left=0.44
+[43.0] go → (3370.3, -9.7) plan ok=true pts=4 left=0.06
+[48.7] go → (3366.8, -7.7) plan ok=true pts=3 left=0.15
+[53.4] go → (3366.8, -3.7) plan ok=true pts=2 left=0.4
+[59.7] go → (3351.0, 11.5) plan ok=true pts=2 left=0.83
+kept docs/lba3-production/reviews/REV-TY-4/save-k2.json
+no errors

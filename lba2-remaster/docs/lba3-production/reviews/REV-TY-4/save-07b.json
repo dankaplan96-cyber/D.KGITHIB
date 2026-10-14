@@ -1,0 +1,18 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:8148",
+      "localStorage": [
+        {
+          "name": "sunshard_settings_v1",
+          "value": "{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"lba\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"textSpeed\":\"normal\",\"textSize\":\"normal\",\"shake\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"keys\":{},\"v\":2}"
+        },
+        {
+          "name": "lba3_save_v1",
+          "value": "{\"v\":3,\"room\":\"desert\",\"hero\":{\"x\":3351.5,\"z\":1.5,\"hp\":9,\"mp\":7.586666666666673,\"magicLevel\":1,\"clovers\":0,\"coins\":11,\"hasBall\":true,\"behaviour\":\"normal\",\"hasSword\":false,\"hasPulse\":false,\"weapon\":\"ball\",\"prevWeapon\":\"fists\"},\"flags\":{\"chapter\":4,\"chapterKey\":\"steam\",\"intro\":true,\"opening\":true,\"tremorSeen\":true,\"wellSeen\":true,\"key\":true,\"metXil\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"inWell\":true,\"nodes\":3,\"sendellHeard\":true,\"prologueDone\":true,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true,\"c1_control\":true,\"c1_tour\":true,\"c1_needZoe\":true,\"c1_zoeStart\":true,\"c1_zoeIntro\":true,\"c1_plan\":true,\"c1_zoeDone\":true,\"c1_veskGone\":true,\"c1_radio\":true,\"c2_started\":true,\"c2_planTaken\":true,\"c2_plan\":true,\"c2_cyl\":true,\"c2_planBack\":true,\"c2_okuOK\":true,\"c2_cog\":true,\"c2_mill_north\":true,\"c2_mill_east\":true,\"c2_mill_south\":true,\"c2_key\":true,\"c2_zoeStart\":true,\"c2_broadcast\":true,\"c2_shield\":true,\"c2_veskDown\":true,\"c2_done\":true,\"c4_started\":true,\"c4_pumpTask\":true,\"c4_gear0\":true,\"c4_gear1\":true,\"c4_gear2\":true,\"c4_pump\":true,\"c4_trust\":true,\"c4_heskAsk\":true,\"c4_rope\":true,\"c4_yacht\":\"camp\",\"c4_rode\":true,\"c4_ilka\":true,\"c4_notebook\":true,\"c4_digOpen\":true,\"c4_digSeen\":true,\"c4_seal0\":true,\"c4_seal1\":true,\"c4_seal2\":true,\"c4_seals3\":true,\"c4_templeSeen\":true,\"c4_carving\":true,\"c4_done\":true,\"c5_planned\":true,\"c5_ferryTaken\":true},\"killed\":[\"mite2\",\"mite0\",\"mite3\",\"mite1\",\"gdog1\",\"drone1\",\"drone2\",\"guard1\",\"zdrone1\",\"zdrone2\",\"zguard1\",\"zgdog1\",\"pguard1\",\"dmite1\",\"dmite2\",\"tmite1\"],\"collected\":[\"sc-mill\"],\"searched\":[\"cupboard\",\"locker2\"],\"crates\":[4,5]}"
+        }
+      ]
+    }
+  ]
+}

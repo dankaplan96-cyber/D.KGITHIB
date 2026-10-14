@@ -1,0 +1,10 @@
+start: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":0,"k_turns":6,"k_sand":true,"k_screen":true,"k_fit":true,"k_done":true,"k_paid":true,"k_n_k_brosk_done":0,"k_n_k_lumi_done":1,"k_n_k_sani_done":1},"cowl":0,"jars":5,"ferry":true,"items":["evacplan","notebook"],"journal":[{"key":"k_j_cool","done":true},{"key":"k_j_screen","done":true},{"key":"k_j_paid","done":true}],"coins":13,"hp":"8/11","pos":[3414.87,5.02,16.23],"lying":[],"state":"play"}
+ISO  a sampler wraps game.step to record the ride (read-only)
+ride 1: {"r":"talked","at":"village","n":56,"maxDy":1.5987211554602254e-14,"minPole":1.0017802544966259,"drift":[[12.1,14,5.28],[7.2,12.4,5.21]]}
+ride 1 lines: ["n_hesk: Back to Kesh? Hop on."]
+ride 2: {"r":"talked","at":"dig","n":55,"maxDy":2.398081733190338e-14,"minPole":2.6026162051119037,"drift":[[6.7,13.2,5.21],[11.6,14.7,5.35]]}
+ride 2 lines: ["n_hesk: The dig? They fenced it, but the yacht doesn't care about fences. Hop on."]
+drift ground profile across the track (local x 4..15, z on the toDig line): [[3,5.01],[4,5.02],[5,5.06],[6,5.13],[7,5.26],[8,5.4],[9,5.51],[10,5.52],[11,5.43],[12,5.29],[13,5.16],[14,5.07],[15,5.02],[16,5.01]]
+end: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":0,"k_turns":6,"k_sand":true,"k_screen":true,"k_fit":true,"k_done":true,"k_paid":true,"k_n_k_brosk_done":0,"k_n_k_lumi_done":1,"k_n_k_sani_done":1},"cowl":0,"jars":5,"ferry":true,"items":["evacplan","notebook"],"journal":[{"key":"k_j_cool","done":true},{"key":"k_j_screen","done":true},{"key":"k_j_paid","done":true}],"coins":13,"hp":"8/11","pos":[3444.53,5,23.34],"lying":[],"state":"play"}
+kept save-k6b.json
+no errors

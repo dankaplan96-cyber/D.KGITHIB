@@ -1,0 +1,5 @@
+ISO  clovers set to 0
+ISO  hero hp set to 1 (to provoke a fall death on purpose)
+death by jumping off the roof: {"dead":true,"hp":0,"state":"gameover"}
+after retry: {"room":"desert","ch":"dig","k":{"k_dir":0,"k_turns":2,"k_sand":true,"k_ask":true,"k_doorSeen":true},"cowl":0,"jars":2,"ferry":true,"items":["evacplan"],"journal":[{"key":"k_j_cool","done":false}],"coins":7,"hp":"9/11","pos":[3330.71,8.01,-6.32],"lying":[],"state":"play"}
+no errors
