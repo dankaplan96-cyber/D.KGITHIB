@@ -277,7 +277,7 @@ export class Chapter3 extends ChapterBase {
         f.c3_sendell = true; S.presence?.setIntensity?.(0.45); g.updateObjective(); g.save(false);
       });
     }
-    if (id === 'c3core' && !f.c3_fight) {
+    if (id === 'c3core' && !f.c3_fight && !this.resumeFight) {
       this.chain([['vesk', 'c3_core_vesk1'], ['hero', 'c3_core_tw1'], ['vesk', 'c3_core_vesk2'], ['vesk', 'c3_core_vesk3']], () => this.startFight());
     }
     if (id === 'c3core' && f.c3_fight && !f.c3_turned) g.audio.setMood?.('boss');
@@ -309,6 +309,7 @@ export class Chapter3 extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f;
     if (!this.on()) return;
+    if (this.resumeFight && g.room?.id === 'c3core' && g.state === 'play' && !g.trans) { this.resumeFight = false; this.startFight(); }
     // during the fight, standing still on a plate lines Twinsen up for the bank shot
     if (g.room?.id === 'c3core') {
       this.ensurePlates();
@@ -347,8 +348,9 @@ export class Chapter3 extends ChapterBase {
       if (f.c3_done) { C.drill?.setMode?.('shield'); C.field?.setLevel?.(1); }
     }
     if (f.c3_sendell) { R.c3sendell?.presence?.setVisible?.(true); R.c3sendell?.presence?.setIntensity?.(0.45); }
-    // a fight interrupted by a reload restarts when the core is entered again
-    if (f.c3_fight && !f.c3_turned) f.c3_fight = false;
+    // a fight interrupted by a reload restarts once play is under way in the core (no intro again: the load enters the
+    // room while the title is still up, and a dialogue started then is cut by the switch to play)
+    if (f.c3_fight && !f.c3_turned) { f.c3_fight = false; this.resumeFight = true; }
     if (f.c3_turned && !f.c3_done) f.c3_turned = false;
     if (f.c3_overload && !f.c3_done) { f.c3_overload = false; f.c3_coil = 0; }
   }

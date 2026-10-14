@@ -23,14 +23,18 @@ const retry = async () => {
   await page.evaluate((a) => { game.testFreeze = true; P.assist = !!a; P.settle(); }, !!process.env.ASSIST);
 };
 let deaths = 0;
-for (const [label, fn, arg] of seg.steps) {
+const labels = seg.steps.map((x) => x[0]);
+for (const [label, fn, arg, opt] of seg.steps) {
   const s0 = Date.now();
   try {
     let r = await page.evaluate(fn, arg);
     // a death at the end of a step: let the fall play out (game time) so the game-over screen comes up
     await page.evaluate(() => { for (let i = 0; i < 120 && game.hero.dead && game.state !== 'gameover'; i++) game.step(1 / 30); });
     for (let k = 0; k < (process.env.NORETRY ? 0 : 2) && (await page.evaluate(() => game.state)) === 'gameover'; k++) {
-      deaths++; console.log(`  (died during "${label}": Retry from the last save)`); await retry(); r = await page.evaluate(fn, arg);
+      deaths++; console.log(`  (died during "${label}": Retry from the last save)`); await retry();
+      // the last save may be from before earlier steps of this stretch (a room's entry): play them again first
+      if (opt?.retryFrom) for (const [l2, f2, a2] of seg.steps.slice(labels.indexOf(opt.retryFrom), labels.indexOf(label))) { const r2 = await page.evaluate(f2, a2); console.log(`  (again: ${l2}: ${JSON.stringify(r2)?.slice(0, 160)})`); }
+      r = await page.evaluate(fn, arg);
       await page.evaluate(() => { for (let i = 0; i < 120 && game.hero.dead && game.state !== 'gameover'; i++) game.step(1 / 30); });
     }
     // every ISO assist in this step, printed (they are ISO evidence, never INPUT)

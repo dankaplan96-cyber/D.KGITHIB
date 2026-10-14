@@ -324,7 +324,7 @@
   // ISO assist for a fight the bot can't win (its combat is weaker than a player's): the remaining enemies of the
   // group/area are beaten through their own damage rule. Logged; a step that uses it is ISO evidence, not INPUT.
   P.assistFight = ({ group = null, r = 30 } = {}) => {
-    const h = hero(), left = G.enemies.filter((e) => e.alive && e.present && (group ? e.group === group : e.pos.distanceTo(h.pos) < r));
+    const h = hero(), left = G.enemies.filter((e) => e.alive && e.present && !e.boss && (group ? e.group === group : e.pos.distanceTo(h.pos) < r));   // (never a boss: its fight is the story)
     for (const e of left) e.damage?.(99, null);
     G.step(1); P.note(`ISO assist: ${left.length} enemies beaten (${left.map((e) => e.id).join(',')})`);
     return left.length;
@@ -335,7 +335,7 @@
   // Hesk's flights: talk to him, pick destination i in his menu
   P.flyTo = (i) => { P.talk('hesk', { run: true }); if (G.state !== 'shop') { P.tap('KeyE', 0.1); P.settle(); } const r = P.menuPick(i); P.settle(30); return { ...r, room: G.room?.id ?? 'citadel' }; };
   // a ball target: throw from up to six spots around it (r metres off) until it is done
-  P.hitTarget = (tg, r = 4, { run = true, maxT = 60 } = {}) => { for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * r, tg.z - Math.cos(a) * r, { tol: 0.8, run, maxT }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return tg.done; };
+  P.hitTarget = (tg, r = 4, { run = true, maxT = 60, fight = true, tries = 6 } = {}) => { for (let k = 0; k < tries && !tg.done && !hero().dead; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * r, tg.z - Math.cos(a) * r, { tol: 0.8, run, maxT, fight }); P.settle(); if (hero().dead) break; P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return tg.done; };
   // Zeelich's old mill: its stair-stones spiral up 1.25 m apart — jumps (Athletic), stepping to the middle of each
   // stone first and letting go of Up in the air so he doesn't overshoot; then the hop onto the gallery
   P.climbOldMill = () => {

@@ -439,7 +439,9 @@ class Game {
       return;
     }
     this.beginPlay();
-    this.setState('play');
+    // a room's dialogue that began as the save put him back in it (Sendell, the control-room scene) goes on, rather
+    // than being cut by the switch to play with its ending never run
+    if (this.state !== 'dialog' && this.state !== 'cutscene') this.setState('play');
   }
   beginPlay() {
     this.audio.init();
