@@ -201,11 +201,11 @@
   // walk up to something and use it (E), then let the dialogue/cut-scene play out
   // what E would use now (the prompt the player sees): its position, or the NPC's
   P.target = () => { const it = G.findInteractable(); if (!it) return null; const o = it.npc?.pos || it.sign || it.pet || it.it || it; return { kind: it.kind, id: it.id || it.npc?.def.id || it.label, x: o.x, z: o.z, label: it.label }; };
-  P.use = (x, z, { near = 1.1, run = false, match = 1.6 } = {}) => {
+  P.use = (x, z, { near = 1.1, run = false, match = 1.6, kind = null } = {}) => {
     const where = P.sceneOf(x, z);
     if (where !== P.here()) P.enter(where, { run });
     // (a player presses E as soon as the prompt is for this thing, close enough: no need to reach the exact spot)
-    const ready = () => { const tg = P.target(); if (!tg || Math.hypot(hero().pos.x - x, hero().pos.z - z) >= 2.2) return false; return tg.x == null ? tg.kind !== 'npc' : Math.hypot(tg.x - x, tg.z - z) <= match; };   // (a story thing's prompt carries no position: any non-person prompt here)
+    const ready = () => { const tg = P.target(); if (!tg || Math.hypot(hero().pos.x - x, hero().pos.z - z) >= 2.2) return false; if (kind) return tg.kind === kind; return tg.x == null ? tg.kind !== 'npc' : Math.hypot(tg.x - x, tg.z - z) <= match; };   // (a story thing's prompt carries no position: any non-person prompt here)
     let r = P.go(x, z, { tol: near, run, stopWhen: ready });
     if (r.r !== 'arrived' && r.r !== 'state:dialog') { P.face(x, z); if (!ready()) return { r: 'go:' + r.r, at: [hero().pos.x, hero().pos.z] }; }   // (blocked short of it, but its prompt is up: fine)
     let tg = null;
@@ -214,6 +214,8 @@
       // the prompt must be for this thing: if something else is picked (a person standing by), step closer
       tg = P.target();
       for (let k = 0; k < 3 && (!tg || tg.x == null || Math.hypot(tg.x - x, tg.z - z) > match); k++) { P.go(x, z, { tol: Math.max(0.35, near * 0.5) }); P.face(x, z); tg = P.target(); }
+      // (a particular thing asked for and someone walking by has the prompt: wait for them to pass, as a player would)
+      for (let k = 0; kind && k < 20 && P.target()?.kind !== kind; k++) { G.step(0.25); if (k % 4 === 3) { P.go(x, z, { tol: Math.max(0.35, near * 0.5), maxT: 4 }); P.face(x, z); } }
       P.tap('KeyE', 0.1);
       for (let k = 0; k < 3 / DT && hero().actT > 0 && G.state === 'play'; k++) G.step(DT);   // (his action plays out: a valve turned, a lever pulled)
     }

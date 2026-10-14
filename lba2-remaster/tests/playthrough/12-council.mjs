@@ -13,6 +13,6 @@ export const steps = [
   ['the clerk', () => ({ ...P.talk('clerk'), clerk: game.flags.c9_clerk, fail: game.flags.c9_clerk ? null : 'clerk' })],
   ['the hearing', () => { P.exitTo('up-council'); P.wait(0.5); P.settle(); return { heard: game.flags.c9_heard, fail: game.flags.c9_heard ? null : 'hearing' }; }],
   ['the archive: the coat', () => { P.exitTo('council-out'); P.exitTo('up-archive'); P.settle(); const L = game.rooms.archive.locker; const r = P.use(L.x, L.z); return { ...r, coat: game.flags.c9_coat, disguised: game.hero.disguised, fail: game.flags.c9_coat ? null : 'coat' }; }],
-  ['the BORE cabinet', () => { const G = game, c = G.rooms.archive.cabinets.find((x) => x.label === 'BORE'); const w = G.story.cur.watcher; if (w?.active) P.sneakTo(c.x, c.z, w, { tol: 1.0 }); const r = P.use(c.x, c.z); return { ...r, plans: G.flags.c9_plans, fail: G.flags.c9_plans ? null : 'plans' }; }],
+  ['the BORE cabinet', () => { const G = game, c = G.rooms.archive.cabinets.find((x) => x.label === 'BORE'); const w = G.story.cur.watcher; if (w?.active) P.sneakTo(c.x, c.z, w, { tol: 1.0 }); const r = P.use(c.x, c.z, { kind: 'c9cab' }); return { ...r, plans: G.flags.c9_plans, fail: G.flags.c9_plans ? null : 'plans' }; }],
   ['back to the council → chapter 10', () => { P.exitTo('archive-out'); P.exitTo('up-council'); P.settle(60); P.settle(30); return { vote: game.flags.c9_vote, chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'network' ? null : 'no chapter 10' }; }],
 ];
