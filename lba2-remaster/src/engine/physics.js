@@ -113,8 +113,9 @@ export class Physics {
     }
     // Two floor bricks laid edge to edge leave a 0.1 m seam under the shrink above. Over water (every room is
     // built out over the sea, and the piers) that seam read as sea and stopped the hero dead at it (Twinsen
-    // couldn't walk out of his own house): there, a brick within 6 cm still holds him.
-    if (!brick && g < WATER_FLOOR) {
+    // couldn't walk out of his own house): there, a brick within 6 cm still holds him. The same over a drop (the
+    // Hamalayi lift's platform docked beside its ramp at the top of the cliff: the seam read as the cliff foot).
+    if (!brick && (g < WATER_FLOOR || (Number.isFinite(y) && g < y - 1))) {
       for (const c of this.near(x, z)) {
         if (!c.enabled || c.noStand) continue;
         if (c.top <= y + STEP_UP && c.top > g && this._inside(c, x, z, 0.06)) { g = c.top; brick = true; }

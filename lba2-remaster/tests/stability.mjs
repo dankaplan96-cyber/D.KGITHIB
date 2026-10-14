@@ -92,6 +92,21 @@ const d11 = await ev(() => {
 check('D11: a story exit naming only the room puts him at its spawn (no NaN position)', d11.finite && d11.atSpawn, d11);
 console.log('  (story exits naming only the room, now sent to its spawn:', JSON.stringify(d11.bare) + ')');
 
+// D12: the Hamalayi lift at the top of the cliff: off the platform onto the plank ramp and up to the monastery
+// terrace by input (ISO: placed on the platform, raised to the top)
+const d12 = await ev(() => {
+  const G = game, h = G.hero, L = G.rooms.hamalayi.lift;
+  G.enterRoom('hamalayi', { x: L.pad.x, z: L.pad.z, a: Math.PI }, true); G.step(0.2);
+  h.pos.set(L.pad.x, L.y0 + 0.1, L.pad.z); h.angle = Math.PI; h.onGround = true;
+  L.ride(true, [h], null); for (let i = 0; i < 600 && Math.abs(h.pos.y - L.y1) > 0.2; i++) G.step(1 / 30);
+  const top = +h.pos.y.toFixed(2), seam = +G.physics.groundAt(L.pad.x, L.top.z + 5.95, h.pos.y + 0.3).toFixed(2);
+  const r = P.go(L.top.x, L.top.z - 3, { tol: 0.8, maxT: 30 });
+  const out = { top, y1: L.y1, seam, r: r.r, at: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) };
+  G.exitRoom({ x: -40, z: -5 }, true); G.step(0.2);
+  return out;
+});
+check('D12: off the Hamalayi lift at the top onto the ramp and the terrace by input', d12.r === 'arrived' && d12.at[1] > d12.y1 - 1, d12);
+
 // D4: death → the game-over screen after the fall, in game time; a pause holds it
 const d4 = await ev(() => {
   const G = game, h = G.hero; P.settle();
