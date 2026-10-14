@@ -7,6 +7,7 @@ import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, soft, softMat, canvasTex } from './props.js';
 import * as P from './props.js';
+import { dressHomeLife } from './homelife.js';
 
 export const texMat = (tex, rx, ry, extra = {}) => {
   const t = tex.clone(); t.needsUpdate = true; t.repeat.set(rx, ry);
@@ -540,6 +541,7 @@ function buildHouse(scene, physics) {
   B.light('#e8f4ff', 2.5, 4.5, LX + 1.0, 1.8, 0.1);
 
   buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX });
+  dressHomeLife(B, R);   // (twelve years of family life: src/game/homelife.js)
 
   R.updaters.push((dt, t) => { stoveLight.intensity = stoveLight.userData.base * (0.85 + Math.sin(t * 11) * 0.1 + Math.sin(t * 7) * 0.05); });
   R.npcSpots = { zoe: { ...B.world(-2.32, -2.62), a: 0.6 }, arthur: { ...B.world(2.15, 2.15), a: -2.4 }, twinsen: { ...B.world(-0.45, -0.25), a: 0 } };

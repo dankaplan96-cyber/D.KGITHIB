@@ -37,6 +37,9 @@ the original doesn't have is ours:
 | Orchard | barred valve | — | orchard valve (ch1) | — |
 | Old camp / project depot | FunFrock's crates, drones | security drones | depot valve (ch1) | — |
 | Old fortress = project station | crenellated walls, gate, tanks, pipes, beam pad | the station hum | tour, Zoé's infiltration, Vesk leaves | gate opens (ch1); beam pad dead after Vesk leaves |
+| The lane north of the house (−42, 65) | the old hand pump on its plinth, the project's new copper pipe beside it | Bram keeps it; Mira's figures say it's pointless | The Old Pump (side story, from ch. 2) | runs again; the lane's water in the evacuation |
+| The garden west of the house (−60, 83) | Zoé's raised beds, a pond, Arthur's boat box | Arthur tries his boats there | Twinsen's pliers are in the box | — |
+| Harbour quay: customs, cargo, Nell's repairs (−110…−103, 31…40) | a customs booth with a barrier; Esmer crates and Mosquibee honey beside Twinsun barrels; a lean-to repair shop with an Esmer engine | Odile's forms; Nell's spare parts take three weeks | The Mislabelled Shipment (from ch. 2) | crate cleared, the engine runs |
 | Well cave (interior) | warm water, crystals | crystal mites | prologue climax | crystal wall broken |
 
 Connections: house ⇄ street ⇄ square ⇄ harbour ⇄ lighthouse path ⇄ cliffs; square ⇄ orchard ⇄ depot ⇄ station.

@@ -395,6 +395,21 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
   instead of holding the end pose. Contact frames unchanged (combat §§ pass).
 
+## Session: twelve years on, first set (0.24.0)
+- The user's brief: make the world feel twelve years older than LBA2, separating the originals' history from the
+  sequel's inventions (docs/TWELVE_YEARS.md), starting with the home, the neighbourhood and the harbour.
+- The house (src/game/homelife.js): Zoé's work corner (she keeps the Water Office's connection register; her
+  board of green and red pins), Arthur's workbench (a paddle boat to beat Lulu's), the old travel trunk, the mend
+  box, the heat meter with Zoé's note, a mended chair, an Esmer lamp. Short looks that change with the story.
+- Outdoors (src/game/townlife.js) and their people (src/game/story/life.js, a layer the director asks after the
+  chapter): The Old Pump (Bram, new; Arthur borrowed the pliers) and the harbour's trade with The Mislabelled
+  Shipment (Officer Odile and Nell, new; Xil's "soup pot" is a heat coupler: it overheats and needs water, the
+  limit Baldino's network has later). Three new characters built in Blender (cast_poly.py).
+- tests/townlife.mjs (ALL PASSED): both stories by input in both orders, a trip and restart, save & Continue
+  mid-story (heating coupler comes back cold), lines before/after story events (prologue, chapter 2, after the
+  plan, the evacuation), walking to every new place. Regression: see QA.md.
+- Not verified: the look on a GPU and the feel by hand.
+
 ## Session: Zeelich's islands and Citadel Spaceport (0.23.0)
 - The user: rebuild Zeelich's maps — in addition to the current Zeelich (at most rename). Seven islands after the
   original's (Otringal, Knartas, Mosquibee, Celebration, Under Celebration, the CX islet, the Platform) are new

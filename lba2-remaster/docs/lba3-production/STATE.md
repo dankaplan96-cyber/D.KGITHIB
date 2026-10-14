@@ -3,7 +3,7 @@
 Update before a handoff or a session limit. Do not mark a task done twice after resuming: check BACKLOG.md first.
 
 ## Build
-- Game version 0.23.0 (desktop/package.json) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
+- Game version 0.24.0 (desktop/package.json) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
   D1–D18, see QA.md), then Zeelich's islands and Citadel Spaceport.
 - Milestone (PRODUCTION.md): 1 — Stabilize.
 
@@ -52,8 +52,7 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   (src/game/story/islands.js). tests/zislands.mjs and tests/spaceport.mjs pass; regression set rerun (QA.md).
 
 ## Next exact task
-Hand 0.23.0 to the user for a look at the islands and the spaceport; then people on the islands, Mosquibee's
-ledges, and (the user's call) chapter 2's crossing from the spaceport.
+Twelve years on (docs/TWELVE_YEARS.md): Baldino's workshop next, then Desert Island, the Hamalayi and Zeelich.
 
 ## Resume
 Saves made through the game's own Save & quit live in the session scratchpad (not in the repo; regenerate by

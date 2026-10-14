@@ -171,9 +171,22 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 | **Gilbert** | his water and his refund | being cheated | old FunFrock days | grumbles, local history | gets his water (and refund) |
 | **Xil** | his cargo moved | missing business | the project's cargo | rope ladder, gossip about Vesk | — |
 | **Pippa** | to sell | running out of stock | what people are buying | shop; stock changes with events (clovers before the evacuation) | — |
+| **Bram** (new) | his pump kept working | being made obsolete | fifty years of the lane's water | The Old Pump; the lane's water in the evacuation | — |
+| **Officer Odile** (new) | forms filled in properly | the wrong category | what crosses the quay | holds Xil's "soup pot"; clears it | — |
+| **Nell** (new) | her engine running; spare parts | waiting three weeks for a shuttle | imported machines; the posts that trip | the heat coupler (couplers overheat: cool them in water) | — |
 | **Tim / Lulu** | adventure without trouble | Tim's mum | the glowing stones on the beach | the crystal clue | — |
 | **Nara** | business is good | the project leaving | street gossip | directions; changes her mind when she sees the plan | — |
 | **Oku** | the old wind back | forgetting | mills and old Zeelich | mill brakes; releases them in the finale | — |
+
+## Twelve years on (docs/TWELVE_YEARS.md)
+What separates the originals' history from this sequel's inventions is recorded there. Approved in that pass:
+- **Zoé's work**: she keeps the Water Office's connection register (which houses get the project's heat next).
+  Her board at home shows Bug Street connected and the harbour row waiting — the same houses Vesk's plan leaves
+  out, which is how she knows what she is looking at in chapter 2.
+- **Arthur**: boats are his own interest (the model boat, a paddle boat to beat Lulu's); he borrows Twinsen's
+  pliers and leaves them in his boat box.
+- **Citadel's harbour** trades with Zeelich: a customs booth, Esmer cargo, Nell's repair shop for imported machines.
+- **Side stories** (src/game/story/life.js): The Old Pump (Bram) and The Mislabelled Shipment (Odile, Nell, Xil).
 
 ## Peoples of Zeelich (after LBA2's models)
 - **Esmers:** a single capsule for body and head, the face high on it; thin arms with cone hands; salmon skin.

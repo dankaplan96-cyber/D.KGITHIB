@@ -1,5 +1,10 @@
 # NEXT ACTION
 
+0.24.0: twelve years on, first set (docs/TWELVE_YEARS.md): the family's house, The Old Pump, the harbour's trade and
+The Mislabelled Shipment (tests/townlife.mjs). Next in the brief's order: Baldino's workshop (years of inventions,
+the Zeelich engineers, an early practical task with the network's technology and its limits), then Desert Island,
+the Hamalayi and Zeelich. Ask the user how the house and the harbour read in their game.
+
 0.23.0: Zeelich's seven islands (src/game/zislands.js) and Citadel Spaceport (src/game/spaceport.js), flights from
 chapter 4 (src/game/story/islands.js; tests/zislands.mjs, tests/spaceport.mjs). Next: ask the user how the islands
 and the spaceport read in their game; then (their choice) people on the islands (Esmers, Mosquibees), ramps or

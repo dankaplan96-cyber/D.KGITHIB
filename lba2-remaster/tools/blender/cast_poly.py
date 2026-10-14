@@ -1252,7 +1252,8 @@ def build_any(n):
 bpy.ops.wm.read_factory_settings(use_empty=True)
 names = [n for n in ALL if n != 'twinsen' and (not ONLY or n in ONLY)]
 built = [build_any(n) for n in names]
-blend = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'art', 'characters', 'cast_poly.blend')
+# (a build of only some characters goes to its own file, so it never replaces the whole cast's)
+blend = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'art', 'characters', 'cast_poly.blend' if not ONLY else 'cast_poly_' + '_'.join(ONLY) + '.blend')
 bpy.ops.wm.save_as_mainfile(filepath=os.path.abspath(blend))
 idx = os.path.join(OUTDIR, 'index.json')
 have = sorted(set(json.load(open(idx)) if os.path.exists(idx) else []) | set(built) | {'twinsen'})

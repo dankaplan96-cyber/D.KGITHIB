@@ -17,6 +17,7 @@ import { Council } from './council.js';
 import { Network } from './network.js';
 import { Epilogue } from './epilogue.js';
 import { IslandShuttle } from './islands.js';
+import { TownLife } from './life.js';
 import '../text/common.js';
 
 // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
@@ -33,6 +34,7 @@ export class Story {
     const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, network: Network, shell: Chapter3, home: Epilogue };
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
     this.isles = new IslandShuttle(this);
+    this.life = new TownLife(this);   // Citadel twelve years on: its people and small stories (life.js)
   }
   // position of the chapter in progress for a set of flags (by key when the save has one)
   indexOf(f = this.f) {
@@ -50,7 +52,7 @@ export class Story {
   // ---- construction
   npcDefs() {
     const seen = new Map();
-    for (const c of this.chapters) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
+    for (const c of [...this.chapters, this.life]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
     return [...seen.values()];
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
@@ -86,6 +88,7 @@ export class Story {
       // every chapter is asked: a later chapter hides its own cast before it begins
       // (returns null), and the latest chapter that has an opinion wins
       for (let i = 0; i < this.chapters.length; i++) { const r = this.chapters[i].place(n.def.id); if (r !== undefined && (i <= this.index || r === null)) p = r; }
+      if (p === undefined) p = this.life.place(n.def.id);
       if (p === undefined) continue;
       n.setPresent(!!p);
       if (p) n.placeAt(p);
@@ -96,8 +99,13 @@ export class Story {
   // ---- routed hooks
   objective() { return this.cur.objective(); }
   markers() { return this.cur.markers(); }
-  journal() { return this.chapters.slice(0, this.index + 1).map((c) => ({ title: (NUMBER[c.key] ? NUMBER[c.key] + '. ' : '') + t('chapter_' + c.key), lines: c.journal() })); }
-  items() { return this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()); }
+  journal() {
+    const out = this.chapters.slice(0, this.index + 1).map((c) => ({ title: (NUMBER[c.key] ? NUMBER[c.key] + '. ' : '') + t('chapter_' + c.key), lines: c.journal() }));
+    const life = this.life.journal();
+    if (life.length) out.push({ title: t('life_title'), lines: life });
+    return out;
+  }
+  items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items()]; }
   // (the wizards' doors are open in every chapter: src/game/wizards.js)
   doors() { return [...this.cur.doors(), ...wizardDoors(), ...lba1Doors()]; }
   // where an exit leads: the current chapter first, then the earlier ones (their rooms are still there)
@@ -111,18 +119,19 @@ export class Story {
     return out;
   }
   canExit(room, to) { return this.cur.canExit(room, to); }
-  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); }
-  interact(it) { return this.cur.interact(it) || this.isles.interact(it) || this.chapters[0].baseInteract(it); }
-  talk(npc) { if (!this.cur.talk(npc)) this.chapters[0].baseTalk(npc); }
+  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); }
+  interact(it) { return this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.chapters[0].baseInteract(it); }
+  talk(npc) { if (this.life.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || false; }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
   ballTargets() { return this.cur.ballTargets(); }
-  update(dt) { this.cur.update(dt); }
+  update(dt) { this.cur.update(dt); this.life.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); }
   onExitRoom(id) { this.cur.onExitRoom(id); }
   applyFlags() {
     for (let i = 0; i < this.chapters.length; i++) this.chapters[i].applyFlags(i < this.index, i === this.index);
+    this.life.applyFlags();
     this.refreshCast();
   }
   afterEnding() { this.cur.afterEnding?.(); }

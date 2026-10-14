@@ -26,6 +26,7 @@ import { buildLba1Places } from './game/lba1places.js';
 import { preloadLba1Rooms } from './game/lba1room.js';
 import { preloadIslands, buildIslands } from './game/zislands.js';
 import { buildSpaceport } from './game/spaceport.js';
+import { buildTownLife } from './game/townlife.js';
 import { buildHamalayi } from './game/hamalayi.js';
 import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
@@ -43,7 +44,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 3;
-export const VERSION = '0.23.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.24.0'; // (the desktop build's version: desktop/package.json)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
 export function migrateSave(raw) {
@@ -108,6 +109,7 @@ class Game {
     this.physics = this.world.physics;
     const S = this.scene, P = this.physics;
     timed('spaceport', () => buildSpaceport(this.world.root, P, this.world));
+    timed('townlife', () => buildTownLife(this.world.root, P, this.world));
     this.rooms = timed('interiors', () => buildInteriors(S, P));
     // outdoor regions are rooms flagged `outdoor`: LBA camera, own sky, doors to their own interiors
     this.rooms.zeelich = timed('zeelich', () => buildZeelich(S, P));

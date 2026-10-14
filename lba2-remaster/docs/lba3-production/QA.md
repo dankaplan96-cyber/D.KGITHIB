@@ -197,6 +197,22 @@ givers and carries low HP through the late chapters; a player normally would.
 | Defects found while building it (fixed before commit): coast cliff face held him at the waterline → respawn loop to death; objects on steep slopes made slide traps; paths over slopes too steep to climb; Mosquibee's shuttle on a bare plateau | — | FIXED |
 | Look on a GPU, feel by hand | — | NOT TESTED (software-rendered screenshots only) |
 
+### Twelve years on, first set (0.24.0; docs/TWELVE_YEARS.md)
+| Check | Evidence | Result |
+|---|---|---|
+| Bram, Officer Odile and Nell stand at their places on Citadel | LOGIC (tests/townlife.mjs) | PASS |
+| The house: Zoé's board, the trunk, the mend box, the heat meter and Arthur's bench each give a short look; the board and meter read differently before the heat, after it, and after Zoé finds the plan | INPUT | PASS |
+| Prologue: the pump is dry, no side story yet | INPUT | PASS |
+| The Old Pump, order A (Bram → pump → Arthur → boat box → pin → strokes) and order B (boat box → pump → Bram); water in the trough, a drink heals, Bram's clover, the journal | INPUT (ISO: chapter flags) | PASS |
+| The Mislabelled Shipment: Odile → crate → Nell → bench → (left too long: trips, restart) → glow → barrel → bench → engine runs → Odile clears → Nell pays | INPUT | PASS |
+| Save & quit → Continue after both stories, and with the coupler heating (comes back cold on the bench) | UI + INPUT | PASS |
+| Evacuation: Bram's lines follow the dark posts | INPUT | PASS |
+| Walk from the square to the pump, the garden, customs and the shop and back | INPUT | PASS |
+| Regression after the change: townlife, stability, prologue, chapters 1, 2, 8, 10, opening, house, transitions, crosssystem, menus, shipfiles, resume, zoe-resume, spaceport, zislands, longsession, display, givers | LOGIC/INPUT | PASS (all 20, rc 0) |
+| Player-input playthrough 01–06 (new game → chapter 2 → Zeelich), chained through real saves | INPUT | PASS. Segment 04 stopped once at the cliff stones (10 of 12; he arrived with 5 HP after a depot fight that needed an assist that time); rerun from the same save it passed (12 of 12). ISO assists as before: the depot guards in 04, the Zeelich depot in 06 |
+| Render cost at the new places (software renderer, counts): harbour +56 draw calls (547 vs 491, +11%), +2% triangles; the lane +23 calls (+2%) | LOGIC | measured |
+| Defects found while building it (fixed before commit): a crate prop called with the wrong arguments (NaN geometry in the house); the garden first placed on a slope; Bram standing where E picked him instead of the pump; the pump's reach shorter than its plinth | — | FIXED |
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.

@@ -277,6 +277,22 @@ export const LOOKS = {
     race: 'bunny', outfit: 'tunic', hem: 0.48, belly: 0.06, fur: '#f2e2cc', furDark: '#d0b090', tunic: '#c84a6a', tunicTrim: '#f2d8a0', belt: '#7a2a3a', pants: '#5a3a5a', shoes: '#f2e2cc',
     eyes: '#4a2a1a', apron: '#e8d8b0', height: 0.86,
   },
+  // ---- Citadel twelve years on (src/game/story/life.js)
+  bram: {
+    // Bram: an old Grobo who has kept the lane's hand pump going for fifty years; a moss-green cardigan, a flat cap
+    race: 'grobo', outfit: 'tunic', hem: 0.6, stoop: 0.14, belly: 0.1, skin: '#a4a8b4', tunic: '#5a7a4a', tunicTrim: '#3a5a2a', belt: '#4a3a2a', pants: '#5a4a3a', shoes: '#3a2a1a',
+    eyes: '#2a2a2a', hat: '#6a5a4a', buttons: true, height: 0.98,
+  },
+  odile: {
+    // Officer Odile: the harbour's customs officer, a Rabbibunny in a navy uniform with brass buttons and a cap
+    race: 'bunny', outfit: 'tunic', hem: 0.5, slim: true, fur: '#e8dcd0', furDark: '#b8a090', tunic: '#2a3a6a', tunicTrim: '#d8b04a', belt: '#1a2240', buckle: '#d8b04a', pants: '#2a3a6a', shoes: '#1a1a24',
+    eyes: '#2a2a3a', buttons: true, collar: true, collarColor: '#e8e0d0', hat: '#2a3a6a', height: 0.9,
+  },
+  nell: {
+    // Nell: the young Quetch who runs the harbour's repair shop; rust-orange work coat, a leather apron, goggles up
+    race: 'quetch', outfit: 'tunic', hem: 0.58, slim: true, tunic: '#c8602a', tunicTrim: '#7a3a1a', belt: '#4a3a2a', buckle: '#b8b8c0', pants: '#3a4a5a', shoes: '#2a2a2a',
+    hair: '#2a1a3a', skin: '#e8b890', hairStyle: 'tail', nose: 'button', eyes: '#3a2a1a', apron: '#8a5a3a', goggles: true, height: 0.92, neck: 0.08,
+  },
 };
 
 LOOKS.twinsenSculpt = { ...LOOKS.twinsen, poly: null };
