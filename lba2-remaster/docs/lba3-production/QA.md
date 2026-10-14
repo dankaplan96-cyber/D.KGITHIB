@@ -298,6 +298,32 @@ tests/chapter4.mjs/chapter5.mjs), the pump's gears and the vent by flags, a fres
 | Defects found while building it (fixed before commit): the cool room's floor first taken from the dune bank (the first step 0.8 m: no way up); a 0.1 m seam between treads dropped him through to the sand; the stair flagged as stairs could be walked under from the south (now overlapping solid treads, deeper than his reach); the yacht board's back faced the village approach (moved, enlarged) | — | FIXED |
 | Not checked here: the look on a GPU; whether players read the wind from the pump's wheel and the flags without Sani's line; the stair and the crank by hand | — | HUMAN |
 
+### REV-TY-4 fixes (0.26.2; TY-3b-FIX)
+The independent review of TY-3 (docs/lba3-production/reviews/REV-TY-4). Evidence: tests/desert-life.mjs (30 checks,
+was 25); captures/desert-ty/ `fix-crank-west.jpg`, `fix-crank-south-door.jpg`, `fix-wind-door.jpg`, `fix-board.jpg`
+(before = 0.26.0 at 34fd9c9 served from an export of that commit, after = 0.26.2; the same isolated REV-TY-4 saves
+(save-06 chapter-4 start, save-k3 screen carried, save-07 chapter 5, save-k6b at the dig), the same input route, the
+normal "lba" camera following Twinsen). The crank camera's direction depends on the route: walking up from the pier
+it looks south; pressing Enter (the game's own "re-centre behind Twinsen") while he faces the crank gives the
+reviewer's west-looking view. Both were captured. Software renderer (SwiftShader), 1280×720: layout and readability
+only, no GPU timing.
+
+| Defect | Fix | Evidence | Result |
+|---|---|---|---|
+| D1 (Medium): with sand in, the door always said the mouth was turned the wrong way, and Brosk said "do the opposite", even with the mouth into the wind | story/kesh.js `hint()`: into the wind (sand, no screen) → "The mouth takes the wind now. With no screen on it, it takes the sand too."; screen on but turned wrong → "Lumi's screen is on up there, but the mouth still faces the wrong way."; otherwise the old line. Brosk: "Sand! In my dates!" then, by state, Lumi's screens / turn it into the wind with a screen / the screen's on, turn it | desert-life (door and Brosk by input with the mouth into the wind; all five cowl states through hint(); door and Lumi after Continue with the screen fitted); probe runs: save-06 → two turns → door/Brosk; save-k3 → fit → door/Brosk | FIXED |
+| D2: Hesk's pole at (−18.1, 8.1) 0.99 m from the return line; (8.2, 11.0) 1.70 m | The four route lines live in keshlife.js (`YACHT_ROUTES`, desert.js rides them). Dig-route poles moved to the north side of the way out (away from the way back); any pole closer than 2.4 m to any line is dropped (none are now) | desert-life: every pole ≥ 2.4 m from all four lines (sampled every 0.2 m); rides by input from the dig save: return ride min. yacht-to-pole 1.00 m before → 2.58 m after, out ride 2.60 m | FIXED |
+| D3: the chalked NO FERRY covered CAMP · DIG · KESH; "ask Hesk" illegible | The chalk only strikes the ferry line; NO FERRY / ask Hesk in big chalk on a slate hung under the board | fix-board.jpg (beside Hesk, ch5): CAMP · DIG · KESH clear, the slate readable at 1280×720 | FIXED |
+| D4: success and sand read only on the cowl's far side; the door's sand hidden from the roof | Lumi's screen shows as a striped hem over the lid and two striped tails down the cowl's back (they lift while it draws); sand streams in over the lid into a bare mouth facing the wind and blows out of the door past the awning (a second, flat tongue of sand beyond the awning); pale motes drift out of the door while it draws. One draw call (a small point system), only while active. No camera change | fix-crank-west.jpg (west-looking crank camera: hem and tails visible after; sand cloud above the cowl after); fix-crank-south-door.jpg (south-looking: sand at the mouth, sand plume and tongue at the door) | FIXED (readability judged from the captures; GPU look not checked) |
+| D5: the wind not readable at the cool room without Sani | A striped windsock on the roof's north-west corner (wide mouth into the wind, tail downwind, restless) and a rag on the porch's east pole | fix-wind-door.jpg (pier approach, camera looking east: the sock's mouth faces the camera); fix-crank-south-door.jpg (side-on); fix-crank-west.jpg (end-on, cone pointing at the camera) | FIXED (end-on from the west-looking camera it reads only as a cone; human check advised) |
+| N1: docs/TWELVE_YEARS.md said no line says why FunFrock built them | Corrected: nothing establishes when or why; Brosk's "to keep us out" is labelled a character's opinion | docs/TWELVE_YEARS.md | FIXED |
+| N2: "Inside" lines vs jars/dates under the porch | Lines changed (the jars "on the shelf"; "inside" only for the unseen wool and air); Brosk: "Now it keeps the dates cool" | desert-life (door line "Two jars of water on the shelf") | FIXED |
+| N4: nothing pointed to Lumi as the screen's maker before the pump | Brosk's first chapter-4 line: "...turned its wind-catcher round and tore Lumi's screen off it." | desert-life (chapter 4 Brosk check) | FIXED |
+| Untested save state: Continue with the screen fitted, not yet turned | desert-life: fit with the mouth east → Save & quit → Continue: screen on, cowl east, nothing carried, journal ticks the screen; door hint and Lumi's line agree; two turns finish it | desert-life | PASS |
+| N3 (unlimited door heal), N5 (payment held until after the shovel) | By design; unchanged | — | NOT CHANGED |
+| Regression (GAME_URL on its own port) | desert-life 30/30; chapter4 and chapter5 logs identical to REV-TY-4's 0.26.0 runs; stability 16/16; resume 2/2 | LOGIC/INPUT | all rc 0, no page errors |
+| Render counts (software renderer, counts not time; REV-TY-4's six fixed spots from the normal camera, 1280×720, the done state), 0.26.0 → 0.26.2 | pier track 435 → 438 calls, cool-room door 365 → 374 (+2.5%), plaza 402 → 405, Lumi's loom 512 → 515, the drift 503 → 504, the board 386 → 389; triangles +0.2–0.7% | LOGIC | measured; GPU time BLOCKED |
+| Not checked here: the look on a GPU; whether players read the windsock and the lashings by themselves; gamepad/touch | — | — | HUMAN |
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.

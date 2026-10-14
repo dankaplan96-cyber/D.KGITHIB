@@ -122,33 +122,42 @@ player can do · what stays different afterwards.
 History vs ours: Desert Island and the School of Magic are LBA2's; Kesh, its people (Mother Tarra, Brosk, Lumi, Sani,
 Hesk), the research post, the dig and FunFrock's buried condenser hall are this sequel's (STORY_BIBLE.md, chapters 4–5).
 Everything below is a proposed development of this pass. That FunFrock built blockhouses on the island follows from
-the sequel's own condenser hall, not from LBA2; no line says when or why he built them.
+the sequel's own condenser hall, not from LBA2. Nothing establishes when or why he built them; Brosk's "FunFrock
+built that blockhouse to keep us out" is a character's opinion (a villager's grudge), not established history.
 
 - **Reused building — the cool room.** One of FunFrock's concrete blockhouses at the village's west edge, by the shore,
   half under a dune (stencil "F-17", a rusted shutter over a slit window). Kesh dug its door out of the sand (spoil
   heaps, a shovel, planks still there), plastered a parapet on it, hung a curtain in the door and built a
   **wind-catcher** on the roof: an adobe tower with a timber cowl on a turning ring, a crank at its foot, the breeze
   sent down through the thick walls. Why: concrete half under sand is the coolest room on the island. Owner and use:
-  the village's — water jars on the shelf by the door (Mother Tarra's rule), Brosk's dates, Lumi's dyed wool; an
-  outside stair up the east wall to the roof. Who gains: everyone in a heat that never sets (no Earth-style night).
+  the village's — water jars on the shelf by the door, under the porch awning, in the door's draught (Mother Tarra's
+  rule); Lumi's dyed wool inside; Brosk's date baskets join the jars under the shelf once it draws. The lines say
+  "on the shelf" for the jars and "inside" only for what is not shown. An outside stair up the east wall to the roof. Who gains: everyone in a heat that never sets (no Earth-style night).
 - **Practical adaptations.** Reed **sand screens** on the village's windward (west) side with the sand banked on
   them; Lumi's **loom under a striped shade sail** (she works there; she wove the sails, the screens, the curtain);
   lidded jars in the shade. The wind is readable everywhere: the dunes' crests, the wind-pump's wheel facing it,
-  the rags on Hesk's poles streaming away from it.
-- **Altered transport.** Hesk's **flag poles** along the sand-yacht's routes to Ilka's camp and the dig (every storm
-  buries the track: a drift lies across the dig route and the poles carry on over it) and his **yacht stop** by the
-  berth (YACHT STOP · CAMP · DIG · KESH · FERRY: AT THE PIER). Once the project takes the ferry (chapter 5) someone has
-  chalked NO FERRY over it, "ask Hesk" underneath. The Esmers' shuttles still circle Bald Mountain (as before).
+  the rags on Hesk's poles streaming away from it, and at the cool room itself a striped windsock on the roof's
+  north-west corner (wide mouth into the wind) and a rag on the porch's east pole.
+- **Altered transport.** Hesk's **flag poles** along the sand-yacht's routes to Ilka's camp (west of the track) and
+  the dig (north of it), clear of every line the yacht rides out and back (every storm buries the track: a drift lies
+  across the dig route and the poles carry on over it), and his **yacht stop** by the berth (YACHT STOP · CAMP · DIG ·
+  KESH · FERRY: AT THE PIER). Once the project takes the ferry (chapter 5) the ferry line is chalked out and a slate
+  hangs under the board: NO FERRY, ask Hesk. The Esmers' shuttles still circle Bald Mountain (as before).
 - **Excavation.** The project's dig (chapter 4) beside Kesh's own: the village dug its cool room out of the dune.
 
 **The Wind-Catcher** (optional; from chapter 4 on, whenever Twinsen is on the island; nothing on the main path needs
 it). The last storm turned the cowl away from the wind and tore its screen: the room is stuffy and the water warm.
-- Learned from Brosk (minding the stall), a look at the door, or Lumi. Sani says how to read the wind.
+- Learned from Brosk (minding the stall; he says the storm tore Lumi's screen off it), a look at the door, or Lumi.
+  Sani says how to read the wind; the windsock on the roof shows it too. The door's hint and Brosk follow how the
+  cowl stands: the wrong way, into the wind with no screen (the screen is missing), or the screen on but the wrong way.
 - Lumi wove a new screen. Before the pump runs (chapter 4) she won't hand her work to someone off the project's ferry
   (Kesh's distrust, as in chapter 4); after it she does — the relationship changes with the main story.
 - On the roof the crank turns the cowl a quarter at a time (it starts facing east). Mouth into the wind (west) with
   the screen: the room draws. Into the wind without it: sand pours down into the room (Brosk: "In my dates!") —
   fitting the screen then finishes it. Screen first or turn first both work.
+- Readable from the roof whichever way the camera looks: Lumi's screen shows as a striped hem over the lid and two
+  tails down the cowl's back; with sand, sand streams into the mouth over the lid and blows out of the door past the
+  awning (a heap and a tongue of sand by the door); once it draws, pale motes drift out of the door.
 - After: the curtain lifts, the streamer at the mouth streams in, Brosk's dates move under the shelf, Sani plays in
   the doorway, a drink from the jars restores life, Brosk pays five kashes (one coin, owed until picked up). The
   cowl is tied off; the journal keeps it.

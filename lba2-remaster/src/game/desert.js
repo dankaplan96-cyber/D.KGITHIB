@@ -24,7 +24,7 @@ import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry } from './vegetation.js';
 import { shuttleTraffic } from './shuttle.js';
-import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H } from './keshlife.js';
+import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROUTES } from './keshlife.js';
 import {
   tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
 } from './kit.js';
@@ -771,12 +771,7 @@ export function buildDesert(scene, physics) {
   const YACHT = { x: -24, z: 11, a: 0 };
   yacht.position.set(YACHT.x, H(YACHT.x, YACHT.z), YACHT.z); group.add(yacht);
   const yachtCol = col({ type: 'box', x: YACHT.x, z: YACHT.z, hw: 1.8, hd: 0.7, top: H(YACHT.x, YACHT.z) + 0.8, noStand: true });
-  const YPATHS = {
-    toCamp: [[-24, 11], [-20, -6], [-17, -24], [-13, -36], [-8, -40]],
-    toDig: [[-24, 11], [-4, 10], [16, 16], [36, 22], [44, 25]],
-    toVillage: [[44, 25], [24, 18], [0, 10], [-20, 9], [-24, 11]],
-    campToVillage: [[-8, -40], [-14, -30], [-19, -12], [-22, 4], [-24, 11]],
-  };
+  const YPATHS = YACHT_ROUTES;   // (keshlife.js: Hesk's poles keep clear of them)
   const ENDS = { village: [YACHT.x, YACHT.z, YPATHS.toVillage], camp: [-8, -40, YPATHS.toCamp], dig: [44, 25, YPATHS.toDig] };
   R.yacht = {
     ...W(YACHT.x, YACHT.z), a: YACHT.a, riding: null,

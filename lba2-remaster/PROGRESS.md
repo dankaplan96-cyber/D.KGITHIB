@@ -395,6 +395,20 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
   instead of holding the end pose. Contact frames unchanged (combat §§ pass).
 
+## Session: REV-TY-4 fixes — Desert Island (0.26.2; TY-3b-FIX)
+- The door's hint and Brosk now follow how the cowl stands (D1): into the wind with sand in, they point to the
+  missing screen; with the screen on but turned wrong, to the turning. Brosk first mentions Lumi's torn screen (N4).
+- Hesk's poles keep clear of all four yacht lines, out and back (D2): the routes are shared (keshlife.js
+  YACHT_ROUTES); dig-route poles now on the north side; the return ride passes 2.58 m from the nearest pole (was 1.00 m).
+- The yacht stop's chalk strikes only the ferry; NO FERRY / ask Hesk on a slate under the board (D3).
+- Readable from the roof whichever way the camera looks (D4): Lumi's screen shows on the lid and down the cowl's back;
+  sand streams into a bare mouth facing the wind and out of the door past the awning; motes drift out once it draws.
+- The wind at the cool room (D5): a windsock on the roof's north-west corner, a rag on the porch.
+- Lines: jars "on the shelf" (N2); docs/TWELVE_YEARS.md labels Brosk's "to keep us out" as his opinion (N1).
+- tests/desert-life.mjs 30 checks (was 25), incl. Save & Continue with the screen fitted but not turned.
+  Regression: desert-life, chapter4, chapter5, stability, resume all rc 0, no page errors. Evidence: captures/desert-ty/fix-*.jpg, QA.md.
+- Not verified: the look on a GPU; whether players read the windsock and lashings unaided.
+
 ## Session: twelve years on, third set — Desert Island, Kesh (0.26.0; TY-3)
 - The user's brief, step 5: reused buildings, altered transport routes, excavation work, practical adaptations to
   local conditions (docs/TWELVE_YEARS.md, third set; all proposed developments of this sequel).
