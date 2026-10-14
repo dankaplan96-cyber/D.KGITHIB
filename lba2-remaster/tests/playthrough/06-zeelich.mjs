@@ -27,24 +27,7 @@ export const steps = [
   ['Oku sees the plan', () => ({ ...P.talk('oku', { run: true }), ok: game.flags.c2_okuOK, fail: game.flags.c2_okuOK ? null : 'oku' })],
   // the old mill's stair-stones spiral up 1.25 m apart: jumps (Athletic), stepping to the middle of each stone first
   // and letting go of Up in the air so he doesn't overshoot; then the last hop onto the gallery
-  ['climb the old mill (jumps)', () => {
-    const G = game, h = G.hero, mt = G.rooms.zeelich.millTop, cx = mt.x, cz = mt.z - 3.3, Y0 = mt.y - 8.75, out = [];
-    const st = (k, r = 3.475) => { const phi = 0.9 + k * Math.PI / 6; return { x: cx + Math.sin(phi) * r, z: cz + Math.cos(phi) * r, top: Y0 + 1.25 * (k + 1) }; };
-    for (let attempt = 0; attempt < 3 && h.pos.y < mt.y - 0.3; attempt++) {
-      P.go(cx + Math.sin(0.3) * 6, cz + Math.cos(0.3) * 6, { tol: 0.6, run: true });
-      for (let k = 0; k < 6; k++) {
-        const s = st(k, k ? 3.3 : 3.475); let y = 0;
-        for (let tries = 0; tries < 3; tries++) {
-          if (k > 0 && Math.abs(h.pos.y - (s.top - 1.25)) < 0.2) { const c = st(k - 1); P.go(c.x, c.z, { tol: 0.2, maxT: 4, fight: false }); }
-          y = P.hopTo(s.x, s.z, s.top, { walk: k === 0 || h.pos.y < Y0 + 0.5, brake: k ? 1.2 : 0.5 });
-          if (Math.abs(y - s.top) < 0.3 || h.pos.y < s.top - 1.3) break;
-        }
-        out.push(y); if (Math.abs(y - s.top) > 0.3) break;
-      }
-      if (Math.abs(h.pos.y - st(5).top) < 0.3) { const c = st(5); P.go(c.x, c.z, { tol: 0.2, maxT: 4, fight: false }); const ga = 0.9 + 5 * Math.PI / 6 + 0.55; out.push(P.hopTo(cx + Math.sin(ga) * 3.4, cz + Math.cos(ga) * 3.4, mt.y, { walk: false, brake: 1.2 })); }
-    }
-    return { heights: out, y: +h.pos.y.toFixed(2), fail: h.pos.y > mt.y - 0.3 ? null : 'climb' };
-  }],
+  ['climb the old mill (jumps)', () => { const r = P.climbOldMill(); return { ...r, fail: r.top ? null : 'climb' }; }],
   ['the cog, top of the old mill', () => {
     // (a singing crystal up here interrupts the first walk with its own line: then the cog again)
     const mt = game.rooms.zeelich.millTop; let r; for (let k = 0; k < 3 && !game.flags.c2_cog; k++) { r = P.use(mt.x, mt.z, { near: 1.2 }); P.wait(1); P.settle(); }
