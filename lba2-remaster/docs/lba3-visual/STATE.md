@@ -21,9 +21,10 @@ Production state stays in docs/lba3-production/STATE.md and BACKLOG.md; this fil
 | VP-4 | polish specialist | chapter card shown under Twinsen's first line | IN_PROGRESS | shots/prologue-end-2-1280.jpg |
 | VP-5 | polish specialist | prompt stays under dialogue/inventory/pause; weapon pill under the dialogue box | IN_PROGRESS | shots/ui-*-960.jpg |
 | VP-6 | polish specialist | holomap labels overlap ("ToThe wellre") | IN_PROGRESS | shots/ui-holomap-1280.jpg |
-| VP-7 | graphics artist | customs booth's window/sign face away from the camera | TODO (after TY-3-FIX, same file) | shots/harbour-doran-1280.jpg |
+| VP-7 | graphics artist | customs booth's window/sign face away from the camera | IN_PROGRESS (dispatched after TY-3-FIX was merged) | shots/harbour-doran-1280.jpg |
 | VP-8 | graphics artist | well's daylight shaft reads as a solid beige tube, hides a crystal | IN_PROGRESS | shots/well-cave-1280.jpg |
 
 ## Next exact action
-Dispatch from VP-0's backlog: highest-impact item first, to its owner (animator / graphics artist / character
-artist / polish specialist), then lba3-visual-reviewer, then integrate.
+All of VP-1..VP-8 are dispatched. As each returns: re-run its tests in the main checkout, merge, push, then
+lba3-visual-reviewer on it (report under evidence/VP-n/REVIEW.md). VP-2..6 and TY-3-FIX both touch
+src/game/actors.js (Hero.walkTo): resolve at merge. Then a second audit pass (VP-0 style) for the next backlog.
