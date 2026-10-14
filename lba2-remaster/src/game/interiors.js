@@ -872,8 +872,53 @@ function buildWell(scene, physics) {
   const ropeX = -8, ropeZ = 4.5;
   k.add(cyl(0.045, 0.045, 6, 6), MAT.cloth('#c9a66b', '#7a5a30'), ropeX, 3, ropeZ);
   for (let i = 0; i < 3; i++) k.add(torus(0.18 - i * 0.03, 0.04, 5, 14), MAT.cloth('#c9a66b', '#7a5a30'), ropeX + 0.1, 0.05 + i * 0.07, ropeZ + 0.05, 0, { rx: Math.PI / 2 });
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.6, 8, 20, 1, true), new THREE.MeshBasicMaterial({ color: '#fff4d0', transparent: true, opacity: 0.07, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-  shaft.position.set(ropeX, 3.5, ropeZ); B.group.add(shaft);
+  // The daylight from the well mouth: an open cone drawn additively from its outside faces only, so there is no
+  // inner wall to read as a cap. Its strength falls off toward the silhouette (view angle), into the floor and
+  // above the walls, and slow streaks drift down it; dust motes sink through it and it lands as a soft pool on the
+  // floor. Three small draw calls (the old double-sided tube took two), no extra pass.
+  const SH = 7.2;
+  const shaftMat = new THREE.ShaderMaterial({
+    uniforms: { color: { value: new THREE.Color('#ffe7b0') }, power: { value: 0.3 }, t: { value: 0 } },
+    vertexShader: `varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+      void main() {
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vN = mat3(modelMatrix) * normal;                                  // (world space; the cone is not scaled)
+        vV = cameraPosition - wp.xyz;
+        vUv = uv;
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }`,
+    fragmentShader: `uniform vec3 color; uniform float power; uniform float t;
+      varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+      void main() {
+        // across the beam, seen from any height: 1 at its middle, 0 at its silhouette (soft edges)
+        float face = max(dot(normalize(vN.xz), normalize(vV.xz)), 0.0);
+        float body = face * face;
+        float y = vUv.y;                                                  // 0 at the floor, 1 at the top
+        float fall = smoothstep(0.0, 0.07, y) * (1.0 - smoothstep(0.42, 0.8, y)) * mix(0.7, 1.0, y);
+        float streak = 0.8 + 0.2 * sin(vUv.x * 43.98 + y * 3.0 + t * 0.35) * sin(vUv.x * 18.85 - t * 0.2);
+        gl_FragColor = vec4(color * (power * body * fall * streak), 1.0);
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.45, SH, 24, 1, true), shaftMat);
+  shaft.position.set(ropeX, SH / 2, ropeZ); shaft.renderOrder = 2; B.group.add(shaft);
+  // where it lands: a soft warm pool (unlit, so it stays when Low/Medium quality's smaller light pool drops the lamp)
+  const pool = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 3.6), new THREE.MeshBasicMaterial({ map: glowTex(), color: '#ffd89a', transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false }));
+  pool.rotation.x = -Math.PI / 2; pool.position.set(ropeX, 0.035, ropeZ); pool.renderOrder = 1; B.group.add(pool);
+  const NM = 36, mp = new Float32Array(NM * 3), md = [];
+  for (let i = 0; i < NM; i++) { const h = (n) => { const s = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453; return s - Math.floor(s); }; md.push({ a: h(1) * 6.283, r: Math.sqrt(h(2)), y: h(3) * 4.2, v: 0.08 + h(4) * 0.12 }); }
+  const mg = new THREE.BufferGeometry(); mg.setAttribute('position', new THREE.BufferAttribute(mp, 3));
+  const motes = new THREE.Points(mg, new THREE.PointsMaterial({ map: glowTex(), color: '#ffe2a8', size: 0.3, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
+  motes.position.set(ropeX, 0, ropeZ); motes.frustumCulled = false; B.group.add(motes);
+  R.updaters.push((dt, t) => {
+    shaftMat.uniforms.t.value = t;
+    for (let i = 0; i < NM; i++) {
+      const m = md[i]; m.y -= m.v * dt; if (m.y < 0.2) m.y += 4.0;
+      const rr = m.r * (1.4 - m.y * 0.12), a = m.a + t * 0.05;               // inside the cone at that height
+      mp[i * 3] = Math.cos(a) * rr + Math.sin(t * 0.4 + i) * 0.05; mp[i * 3 + 1] = m.y; mp[i * 3 + 2] = Math.sin(a) * rr;
+    }
+    mg.attributes.position.needsUpdate = true;
+  });
   B.light('#fff1d0', 8, 8, ropeX, 3.5, ropeZ);
   B.light('#9a6aff', 4, 10, 0, 2.5, 0);
   R.exits.push({ ...B.world(ropeX, ropeZ), r: 0.7, to: 'outdoor-well' });
