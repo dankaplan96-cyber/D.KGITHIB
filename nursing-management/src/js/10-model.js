@@ -379,7 +379,7 @@ function migrateLegacyState(old) {
       id, username: String(u.username).toLowerCase(), displayName: u.fullName || u.displayName || u.username, role,
       perms: role === 'admin' ? ['*'] : role === 'custom' ? [...new Set(perms.flatMap((p) => permMap[p] || []))] : ROLE_TEMPLATES[role].perms.slice(),
       depts: [], cred: u.hash && u.salt ? { hash: u.hash, salt: u.salt, algo: u.hashAlgo || 'pbkdf2' } : (u.cred || null),
-      active: u.active !== false, mustChange: !(u.hash && u.salt) && !u.cred, createdAt: u.createdAt || U.nowISO(), lastLogin: u.lastLogin || '',
+      active: u.active !== false, mustChange: !!u.mustChangePassword || (!(u.hash && u.salt) && !u.cred), createdAt: u.createdAt || U.nowISO(), lastLogin: u.lastLogin || '',
     };
   });
   db.legacy = { importedAt: U.nowISO(), tasks: old.tasks || [], meetings: old.meetings || [], alertRules: old.alertRules || [] };

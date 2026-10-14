@@ -30,6 +30,8 @@ function renderAuth(soft = false) {
         <button class="btn pri lg" type="submit" style="justify-content:center">כניסה</button>
       </form>
       ${Store.status === 'local' ? `<div class="foot"><a href="#" data-act="auth-connect">חיבור לתיקייה משותפת</a></div>` : ''}
+      ${db().legacy ? '<div class="foot">המשתמשים הועברו מהגרסה הקודמת של המערכת — נכנסים עם שם המשתמש והסיסמה הקודמים.</div>' : ''}
+      <div class="foot"><a href="#" data-act="auth-reset">${Store.folderName ? `מחובר לתיקייה "${esc(Store.folderName)}" · ` : ''}בחירת תיקייה אחרת / התחלה מחדש במחשב זה</a></div>
       <div class="foot">אין סיסמה? יש לפנות להנהלת הסיעוד (מנהל/ת המערכת).</div></div>`;
   }
   document.body.innerHTML = `<div class="auth">${body}</div><div id="toasts"></div>`;
@@ -65,6 +67,13 @@ function setupHTML(folderLine) {
 }
 
 Object.assign(ACT, {
+  'auth-reset': async () => {
+    if (!(await confirmBox('בחירת תיקייה אחרת', 'החיבור לתיקייה הנוכחית והעותק המקומי במחשב זה יימחקו, ותוכלו לבחור תיקייה אחרת או להקים מערכת חדשה.<br><br><b>הנתונים שבתיקייה עצמה לא נמחקים.</b>', { ok: 'המשך' }))) return;
+    await Store.disconnect();
+    await IDB.del('nm3.local'); await IDB.del('nm3.base');
+    Store.db = normalizeDB(emptyDB()); Store.base = null; Store.baseRev = 0; Store.dirty = false;
+    renderAuth();
+  },
   'auth-connect': async () => { try { await Store.pickFolder(); toast('התיקייה חוברה', 'ok'); } catch (e) { if (e.name !== 'AbortError') toast(e.message, 'err'); } renderAuth(); },
   'auth-grant': async () => { try { await Store.grantPermission(); toast('הגישה אושרה', 'ok'); } catch (e) { if (e.name !== 'AbortError') toast(e.message, 'err'); } renderAuth(); },
 });
