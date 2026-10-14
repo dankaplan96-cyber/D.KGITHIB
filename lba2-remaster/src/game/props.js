@@ -2308,3 +2308,358 @@ export function microphone(k) {
     for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; k.add(cyl(0.003, 0.003, 0.03, 3), st, Math.cos(a) * 0.057, Math.sin(a) * 0.057, 0, 0, { rz: a + Math.PI / 2 }); }
   });
 }
+
+// ================================================================ street furniture (outdoors, SD-1)
+// Chunky, bright, rounded Twinsun street furniture for the towns and the spaceport: litter bins, planters and
+// flower tubs, sign posts with arrow boards, notice boards and timetables, bollards, luggage trolleys, waiting
+// benches, a kiosk, flag poles, an information stand, a drinking fountain, a hand cart and the blue-globe lamp.
+// Same contract as the furniture above: each builder draws at the kit's current transform (origin on the ground
+// at the centre of the footprint, front toward +z) into the caller's Kit, so a whole street merges into a few
+// meshes, and returns its footprint for the caller's collider ({r} or {hw, hd}, and its top).
+// Painted parts share ONE vertex-coloured material (colours baked into cached tinted copies of the geometry), and
+// every arrow board's lettering comes from one label atlas: a dressed street costs a handful of draw calls.
+import { tulipGeometry, flowerGeometry } from './vegetation.js';
+const SF = new Map();
+const sfc = (key, make) => { let g = SF.get(key); if (!g) { g = make(); SF.set(key, g); } return g; };
+// painted metal/wood in any colour: one material for all of them
+export const paintVC = () => M('sf-paint', () => std({ vertexColors: true, map: TEX.brushed(), roughness: 0.55, metalness: 0.12 }, 0.5));
+// a cached copy of geo carrying a flat vertex colour (for paintVC / softMat)
+export function tinted(geo, color) {
+  return sfc('tn' + geo.uuid + color, () => {
+    const g = geo.clone(), c = new THREE.Color(color), n = g.attributes.position.count, a = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(a, 3));
+    g.userData = { ...geo.userData };
+    return g;
+  });
+}
+const pv = (k, geo, color, x, y, z, ry = 0, o = {}) => k.add(tinted(geo, color), paintVC(), x, y, z, ry, o);
+const SOIL = '#4a3420';
+// flowers and leaves: vertex-coloured like softMat, but casting no shadow (a few texels each at the play camera)
+const sfSoft = () => M('sf-soft', () => std({ vertexColors: true, roughness: 0.9 }, 0, { noShadow: true }));
+const SFC = { blue: '#2f6a9a', teal: '#2a8a7a', yellow: '#e8c040', red: '#c8452f', cream: '#f4efe2', dark: '#2a2c30', terracotta: '#b8623a', purple: '#7a52b0', green: '#3f8a4a' };
+export const STREET_COLORS = SFC;
+
+// ---- lettering: one atlas of the words the street signs use (cream board, Citadel-blue capitals)
+const LABELS = ['SQUARE', 'HARBOUR', 'SPACEPORT', 'LIGHTHOUSE', 'TOWN', 'PIER', 'TICKETS', 'INFO', 'SNACKS', 'TICKETS · INFO', 'CUSTOMS', 'FERRY', 'SHUTTLE', 'BRIDGE', 'FIELDS'];
+const LCELL = { w: 512, h: 112 };
+const drawLabel = (x, s, y0, W) => {
+  x.fillStyle = '#f4efe2'; x.fillRect(0, y0, W, LCELL.h);
+  x.strokeStyle = '#2f6a9a'; x.lineWidth = 8; x.strokeRect(8, y0 + 8, W - 16, LCELL.h - 16);
+  let px = 66; do { x.font = `bold ${px}px Rubik, sans-serif`; px -= 2; } while (px > 20 && x.measureText(s).width > W - 56);
+  x.fillStyle = '#244f78'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(s, W / 2, y0 + LCELL.h / 2 + 3);
+};
+const labelAtlas = () => M('sf-labels', () => {
+  const t = canvasTex(LCELL.w, LCELL.h * LABELS.length, (x, W) => LABELS.forEach((s, i) => drawLabel(x, s, i * LCELL.h, W)));
+  t.anisotropy = 8;
+  return std({ map: t, roughness: 0.8 }, 0, { noShadow: true });
+});
+// a w × h plane showing one atlas word
+function labelPlane(text, w, h) {
+  const i = LABELS.indexOf(text);
+  if (i < 0) return null;
+  return sfc(`lp${text}${r3(w)},${r3(h)}`, () => {
+    const g = new THREE.PlaneGeometry(w, h), uv = g.attributes.uv, n = LABELS.length;
+    for (let j = 0; j < uv.count; j++) uv.setY(j, (n - 1 - i + uv.getY(j)) / n);
+    g.userData.keepUV = true;
+    return g;
+  });
+}
+// (a word not in the atlas gets its own little canvas: one more material)
+function labelOn(k, text, w, h, x, y, z, ry = 0, o = {}) {
+  const g = labelPlane(text, w, h);
+  if (g) return k.add(g, labelAtlas(), x, y, z, ry, o);
+  const m = M('sf-lbl' + text, () => std({ map: canvasTex(LCELL.w, LCELL.h, (c, W) => drawLabel(c, text, 0, W)), roughness: 0.8 }, 0, { noShadow: true }));
+  return k.add(plane(w, h), m, x, y, z, ry, o);
+}
+
+// ---- litter bin: Twinsun painted metal drum with a domed lid and a front flap, a yellow band, on a foot ring
+export function litterBin(k, { color = SFC.teal, lid = null, band = SFC.yellow } = {}) {
+  const lidC = lid || color;
+  pv(k, lathe([[0.17, 0], [0.22, 0], [0.22, 0.05], [0.19, 0.07]], 16), SFC.dark, 0, 0, 0);
+  pv(k, lathe([[0.001, 0.06], [0.2, 0.06], [0.23, 0.1], [0.255, 0.66], [0.275, 0.68], [0.275, 0.73], [0.25, 0.74], [0.001, 0.74]], 18), color, 0, 0, 0);
+  pv(k, torus(0.252, 0.024, 6, 22), band, 0, 0.42, 0, 0, { rx: Math.PI / 2 });
+  pv(k, lathe([[0.001, 0], [0.285, 0], [0.285, 0.04], [0.25, 0.1], [0.16, 0.17], [0.06, 0.2], [0.001, 0.205]], 18), lidC, 0, 0.73, 0);
+  pv(k, sphere(0.05, 10, 6), band, 0, 0.94, 0);
+  // the flap: a dark mouth under a little hood on the lid's front
+  pv(k, rbox(0.26, 0.09, 0.08, 0.025), '#141618', 0, 0.84, 0.2, 0, { rx: -0.55 });
+  pv(k, rbox(0.3, 0.035, 0.12, 0.015), lidC, 0, 0.9, 0.23, 0, { rx: -0.55 });
+  return { r: 0.29, top: 0.98 };
+}
+
+// ---- foliage for planters: a lumpy leaf mound (≈1.1 × 0.3 × 0.5 m; scale it) and cached tulips/flowers
+const leafMound = () => soft({
+  key: 'sf-leafmound',
+  prims: Array.from({ length: 7 }, (_, i) => ({ type: 'ell', c: [-0.4 + i * 0.133, 0.08 + (i % 2) * 0.05, (i % 3 - 1) * 0.06], r: [0.16, 0.14, 0.17], group: 'l', mat: 'l', wobble: (x, y, z) => Math.sin(x * 38) * Math.sin(z * 33 + y * 20) * 0.014 })),
+  groups: { l: 0.07 }, colors: { l: '#4f9a3c' },
+  paint: (p, m, c) => c.offsetHSL(0, 0, (p.y - 0.12) * 0.5 + Math.sin(p.x * 26 + p.z * 19) * 0.03),
+  bounds: { min: [-0.62, -0.08, -0.3], max: [0.62, 0.34, 0.3] }, cell: 0.055,
+});
+const tulip = (c) => sfc('tu' + c, () => tulipGeometry(c));
+const flower = (c) => sfc('fw' + c, () => flowerGeometry(c));
+function flowersIn(k, pts, colors, seed, kind = 'tulip') {
+  const r = rng(seed);
+  pts.forEach(([x, y, z], i) => {
+    const c = colors[i % colors.length];
+    k.add(kind === 'tulip' ? tulip(c) : flower(c), sfSoft(), x, y, z, r() * 6.28, { sx: 1.15, sy: 0.85 + r() * 0.35, sz: 1.15 });
+  });
+}
+
+// ---- planter box: a trough on corner posts (wood, or painted), a leaf mound and a row of tulips
+export function planterBox(k, { w = 1.4, d = 0.55, h = 0.45, pal = 'honey', flowers = [SFC.red, SFC.yellow, '#ffffff'], seed = 1, color = null } = {}) {
+  const m = MAT.wood(pal), md = MAT.wood(darker(pal));
+  const side = (geo, x, y, z) => (color ? pv(k, geo, color, x, y, z) : k.add(geo, m, x, y, z));
+  const hy = 0.06 + (h - 0.06) / 2;
+  side(rbox(w, h - 0.06, 0.06, 0.02), 0, hy, d / 2 - 0.03);
+  side(rbox(w, h - 0.06, 0.06, 0.02), 0, hy, -d / 2 + 0.03);
+  side(rbox(0.06, h - 0.06, d - 0.1, 0.02), w / 2 - 0.03, hy, 0);
+  side(rbox(0.06, h - 0.06, d - 0.1, 0.02), -w / 2 + 0.03, hy, 0);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(rbox(0.1, h + 0.02, 0.1, 0.02), md, sx * (w / 2 - 0.03), (h + 0.02) / 2, sz * (d / 2 - 0.03));
+  k.add(rbox(w + 0.06, 0.05, 0.1, 0.02), md, 0, h, d / 2 - 0.02); k.add(rbox(w + 0.06, 0.05, 0.1, 0.02), md, 0, h, -d / 2 + 0.02);
+  pv(k, rbox(w - 0.1, 0.04, d - 0.1, 0.01), SOIL, 0, h - 0.06, 0);
+  k.add(leafMound(), sfSoft(), 0, h - 0.06, -0.03, 0, { sx: (w - 0.1) / 1.15, sy: 0.9, sz: (d - 0.1) / 0.5 });
+  const n = Math.max(3, Math.round(w / 0.2)), pts = [];
+  for (let i = 0; i < n; i++) pts.push([-w / 2 + 0.12 + (i / (n - 1)) * (w - 0.24), h - 0.08, (i % 2 ? 0.08 : -0.05) * (d / 0.55)]);
+  flowersIn(k, pts, flowers, seed);
+  return { hw: w / 2 + 0.03, hd: d / 2 + 0.03, top: h + 0.05 };
+}
+
+// ---- flower tub: a terracotta (or painted) tub with a rolled rim and a cream band, a leaf mound and flowers
+export function flowerTub(k, { r = 0.34, h = 0.42, color = SFC.terracotta, flowers = ['#e8343a', '#f2c94c', '#ffffff', '#8f4fc1'], seed = 2, kind = 'tulip' } = {}) {
+  const prof = [[0.001, 0], [r * 0.72, 0], [r * 0.78, 0.04], [r * 0.95, h - 0.06], [r * 1.06, h - 0.05], [r * 1.08, h], [r * 1.02, h + 0.03], [r * 0.92, h], [r * 0.9, h - 0.08], [0.001, h - 0.08]];
+  pv(k, lathe(prof, 18), color, 0, 0, 0);
+  pv(k, torus(r * 0.88, 0.018, 5, 22), SFC.cream, 0, h * 0.45, 0, 0, { rx: Math.PI / 2 });
+  pv(k, cyl(r * 0.9, r * 0.9, 0.02, 14), SOIL, 0, h - 0.06, 0);
+  k.add(leafMound(), sfSoft(), 0, h - 0.07, 0, 0.6, { sx: r * 1.7, sy: 0.9, sz: r * 3.2 });
+  const pts = [], n = 6;
+  for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + 0.3; pts.push([Math.cos(a) * r * 0.55, h - 0.08, Math.sin(a) * r * 0.55]); }
+  pts.push([0, h - 0.04, 0]);
+  flowersIn(k, pts, flowers, seed, kind);
+  return { r: r * 1.08, top: h + 0.05 };
+}
+
+// ---- sign post: a painted post on a stone foot with arrow boards, each pointing along its heading `a`
+// (a heading like the hero's angle: the board points toward (sin a, cos a)); boards [{ text, a, color? }], top first
+export function signPost(k, boards, { h = 2.5, post = '#7a5232', board = SFC.blue } = {}) {
+  pv(k, rbox(0.36, 0.22, 0.36, 0.05), '#9a968c', 0, 0.11, 0);
+  pv(k, cyl(0.065, 0.075, h - 0.2, 8), post, 0, 0.2 + (h - 0.2) / 2, 0);
+  pv(k, lathe([[0.001, 0], [0.09, 0], [0.1, 0.04], [0.06, 0.1], [0.07, 0.14], [0.001, 0.2]], 10), SFC.yellow, 0, h, 0);
+  const L = 1.05, H = 0.26, T = 0.05;
+  const arrow = slab('sf-arrow', (s) => { s.moveTo(0, -H / 2); s.lineTo(L - 0.16, -H / 2); s.lineTo(L, 0); s.lineTo(L - 0.16, H / 2); s.lineTo(0, H / 2); s.lineTo(0, -H / 2); }, T, 0.012);
+  boards.forEach((b, i) => {
+    const y = h - 0.22 - i * 0.33, ry = b.a - Math.PI / 2;
+    k.at(0, y, 0, ry, () => {
+      pv(k, arrow, b.color || board, 0.07, 0, 0);
+      labelOn(k, b.text, 0.8, 0.19, 0.07 + 0.43, 0, T / 2 + 0.004);
+      labelOn(k, b.text, 0.8, 0.19, 0.07 + 0.47, 0, -T / 2 - 0.004, Math.PI);
+    });
+  });
+  return { r: 0.2, top: h + 0.2 };
+}
+
+// ---- notice board / timetable / departures on two posts under a little clay roof; faces +z
+const BOARD_FACES = {
+  notices: () => canvasTex(512, 352, (x, W, H) => {
+    const r = rng(11);
+    x.fillStyle = '#b8885a'; x.fillRect(0, 0, W, H);
+    for (let i = 0; i < 900; i++) { x.fillStyle = r() < 0.5 ? 'rgba(90,60,30,0.25)' : 'rgba(255,230,190,0.18)'; x.fillRect(r() * W, r() * H, 2, 2); }
+    const sheet = (px, py, w, h, bg, title, tc, rot) => {
+      x.save(); x.translate(px + w / 2, py + h / 2); x.rotate(rot);
+      x.fillStyle = 'rgba(0,0,0,0.25)'; x.fillRect(-w / 2 + 4, -h / 2 + 5, w, h);
+      x.fillStyle = bg; x.fillRect(-w / 2, -h / 2, w, h);
+      x.fillStyle = tc; x.font = 'bold 26px Rubik, sans-serif'; x.textAlign = 'center'; x.fillText(title, 0, -h / 2 + 36);
+      x.fillStyle = 'rgba(40,40,40,0.55)';
+      for (let j = 0; j < 5; j++) x.fillRect(-w / 2 + 14, -h / 2 + 54 + j * 16, (w - 28) * (0.6 + r() * 0.4), 6);
+      x.fillStyle = ['#c8452f', '#2f6a9a', '#e8c040'][Math.floor(r() * 3)]; x.beginPath(); x.arc(0, -h / 2 + 9, 7, 0, 7); x.fill();
+      x.restore();
+    };
+    sheet(22, 22, 150, 150, '#f4efe2', 'LOST', '#c8452f', -0.05);
+    sheet(186, 18, 150, 140, '#ffe9a8', 'CONCERT', '#2f6a9a', 0.04);
+    sheet(350, 26, 140, 150, '#dff0ff', 'FERRY', '#244f78', -0.03);
+    sheet(40, 186, 180, 140, '#e6f4d8', 'HONEY', '#3f7a2a', 0.03);
+    sheet(244, 180, 120, 150, '#f8dcd2', 'LESSONS', '#8f4fc1', -0.06);
+    sheet(380, 196, 112, 130, '#f4efe2', 'FOR SALE', '#2a2c30', 0.05);
+  }),
+  ferry: () => canvasTex(512, 352, (x, W, H) => {
+    x.fillStyle = '#1e3550'; x.fillRect(0, 0, W, H); x.strokeStyle = '#e8c040'; x.lineWidth = 8; x.strokeRect(6, 6, W - 12, H - 12);
+    x.fillStyle = '#e8c040'; x.font = 'bold 40px Rubik, sans-serif'; x.textAlign = 'center'; x.fillText('HARBOUR · FERRY', W / 2, 62);
+    x.fillStyle = 'rgba(232,192,64,0.5)'; x.fillRect(30, 80, W - 60, 3);
+    x.font = 'bold 30px monospace'; x.textAlign = 'left';
+    [['ZEELICH', '08:30'], ['ZEELICH', '13:00'], ['ZEELICH', '17:30'], ['DESERT ISLAND', '10:15']].forEach(([a, b], i) => { x.fillStyle = '#f4efe2'; x.fillText(a, 34, 128 + i * 54); x.fillStyle = '#9fe0ff'; x.fillText(b, 370, 128 + i * 54); });
+  }),
+  departures: () => canvasTex(1024, 512, (x, W, H) => {
+    x.fillStyle = '#18202c'; x.fillRect(0, 0, W, H); x.strokeStyle = '#e8c040'; x.lineWidth = 10; x.strokeRect(8, 8, W - 16, H - 16);
+    x.fillStyle = '#e8c040'; x.font = 'bold 54px Rubik, sans-serif'; x.textAlign = 'center'; x.fillText('DEPARTURES · ESMER SHUTTLE', W / 2, 78);
+    x.fillStyle = 'rgba(232,192,64,0.5)'; x.fillRect(40, 100, W - 80, 4);
+    x.font = 'bold 40px monospace'; x.textAlign = 'left';
+    ['ZEELICH', 'OTRINGAL', 'KNARTAS', 'MOSQUIBEE', 'CELEBRATION', 'UNDER CELEBRATION', 'CX ISLET', 'THE PLATFORM'].forEach((a, i) => {
+      const y = 150 + i * 45; x.fillStyle = i % 2 ? '#bfe9ff' : '#9fe0ff'; x.fillText(a, 50, y); x.fillStyle = '#ffd860'; x.fillText('PAD 1', 760, y);
+    });
+  }),
+  map: () => canvasTex(384, 288, (x, W, H) => {
+    x.fillStyle = '#3f7fb8'; x.fillRect(0, 0, W, H);
+    x.strokeStyle = 'rgba(255,255,255,0.18)'; x.lineWidth = 1; for (let i = 0; i < W; i += 24) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, H); x.stroke(); }
+    x.fillStyle = '#e8d8a0'; x.beginPath(); x.ellipse(W * 0.48, H * 0.54, 142, 104, -0.2, 0, 7); x.fill();
+    x.fillStyle = '#6fae4a'; x.beginPath(); x.ellipse(W * 0.48, H * 0.52, 128, 90, -0.2, 0, 7); x.fill();
+    x.fillStyle = '#4f8f3a'; x.beginPath(); x.ellipse(W * 0.44, H * 0.32, 60, 30, 0.1, 0, 7); x.fill();
+    x.strokeStyle = '#b06a2a'; x.lineWidth = 4; x.beginPath(); x.moveTo(W * 0.62, H * 0.34); x.lineTo(W * 0.6, H * 0.52); x.lineTo(W * 0.4, H * 0.58); x.lineTo(W * 0.2, H * 0.6); x.moveTo(W * 0.6, H * 0.52); x.lineTo(W * 0.6, H * 0.82); x.moveTo(W * 0.6, H * 0.6); x.lineTo(W * 0.86, H * 0.6); x.stroke();
+    x.fillStyle = '#c8452f'; x.beginPath(); x.arc(W * 0.86, H * 0.6, 9, 0, 7); x.fill();
+    x.fillStyle = '#f4efe2'; x.font = 'bold 22px Rubik, sans-serif'; x.textAlign = 'center'; x.fillText('CITADEL ISLAND', W / 2, 30);
+    x.fillStyle = '#1e3550'; x.font = 'bold 15px Rubik, sans-serif'; x.fillText('YOU ARE HERE', W * 0.8, H * 0.6 + 26);
+  }),
+};
+const faceMat = (kind) => M('sf-face-' + kind, () => { const t = BOARD_FACES[kind](); return std({ map: t, emissiveMap: t, emissive: '#ffffff', emissiveIntensity: kind === 'departures' ? 0.35 : 0.06, roughness: 0.75 }, 0, { noShadow: true }); });
+export function streetNoticeBoard(k, { kind = 'notices', w = 1.3, h = 0.9, y = 0.95, frame = SFC.blue } = {}) {
+  const top = y + h + 0.12;
+  for (const sx of [-1, 1]) pv(k, rbox(0.1, top + 0.1, 0.1, 0.025), frame, sx * (w / 2 + 0.06), (top + 0.1) / 2, 0);
+  pv(k, rbox(w + 0.1, h + 0.1, 0.06, 0.02), '#5a3a22', 0, y + h / 2, 0);
+  k.add(plane(w, h), faceMat(kind), 0, y + h / 2, 0.035);
+  // the roof: two clay slabs on a ridge, overhanging front and sides
+  for (const s of [-1, 1]) pv(k, rbox(w + 0.5, 0.05, 0.36, 0.02), SFC.terracotta, 0, top + 0.13, s * 0.13, 0, { rx: s * 0.42 });
+  pv(k, cyl(0.035, 0.035, w + 0.52, 8), '#8f3a22', 0, top + 0.21, 0, 0, { rz: Math.PI / 2 });
+  return { hw: w / 2 + 0.12, hd: 0.2, top: top + 0.25 };
+}
+// (the face alone, for a board built some other way: a big departures board on its own frame)
+export const boardFace = faceMat;
+
+// ---- bollard: a chunky cast post with a mushroom cap and a coloured band
+export function bollard(k, { color = SFC.dark, band = SFC.yellow, h = 0.82 } = {}) {
+  pv(k, lathe([[0.001, 0], [0.17, 0], [0.17, 0.05], [0.13, 0.09], [0.12, h - 0.16], [0.14, h - 0.12], [0.15, h - 0.06], [0.11, h - 0.01], [0.001, h]], 14), color, 0, 0, 0);
+  pv(k, cyl(0.126, 0.126, 0.09, 14), band, 0, h - 0.3, 0);
+  return { r: 0.17, top: h };
+}
+
+// ---- luggage trolley: a low steel deck on four castors, a push bar (at −x), and cases strapped on
+const CASES = ['#c8452f', '#2f6a9a', '#e8c040', '#3f8a4a', '#7a52b0', '#b8623a', '#f4efe2'];
+export function luggageTrolley(k, { seed = 1, load = 3 } = {}) {
+  const r = rng(seed * 7 + 3), st = MAT.steel();
+  k.add(rbox(1.0, 0.05, 0.6, 0.02), MAT.tread('#8d8a9c'), 0, 0.24, 0);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    pv(k, cyl(0.09, 0.09, 0.06, 12), SFC.dark, sx * 0.4, 0.09, sz * 0.24, 0, { rx: Math.PI / 2 });
+    k.add(rbox(0.04, 0.12, 0.04, 0.01), st, sx * 0.4, 0.18, sz * 0.24);
+  }
+  k.add(pipe([[-0.48, 0.24, -0.28], [-0.52, 0.95, -0.28], [-0.52, 0.95, 0.28], [-0.48, 0.24, 0.28]], 0.025, 0.08, 8), st, 0, 0, 0);
+  pv(k, cyl(0.035, 0.035, 0.5, 8), SFC.red, -0.52, 0.95, 0, 0, { rx: Math.PI / 2 });
+  let y = 0.265;
+  for (let i = 0; i < load; i++) {
+    const w = 0.7 - i * 0.12 + r() * 0.05, h = 0.2 + r() * 0.08, d = 0.46 - i * 0.06, c = CASES[Math.floor(r() * CASES.length)], ry = (r() - 0.5) * 0.25;
+    k.at(0.04 + (r() - 0.5) * 0.06, y, 0, ry, () => {
+      pv(k, rbox(w, h, d, 0.045), c, 0, h / 2, 0);
+      for (const sx of [-1, 1]) k.add(rbox(0.05, h + 0.012, d + 0.012, 0.01), MAT.flat('#5a3a22', 0.8), sx * w * 0.25, h / 2, 0);
+      k.add(torus(0.05, 0.012, 4, 10, Math.PI), MAT.brass(), 0, h, 0);
+    });
+    y += h;
+  }
+  return { hw: 0.56, hd: 0.33, top: Math.max(0.98, y) };
+}
+
+// ---- waiting bench: painted cast ends with armrests, three seat slats, two back slats; the sitter faces +z
+export function waitingBench(k, { w = 1.8, color = SFC.blue, pal = 'honey' } = {}) {
+  const wood = MAT.wood(pal);
+  const end = slab('sf-benchend', (s) => { s.moveTo(-0.26, 0); s.lineTo(-0.18, 0); s.quadraticCurveTo(-0.05, 0.16, 0.12, 0); s.lineTo(0.22, 0); s.lineTo(0.2, 0.42); s.lineTo(0.26, 0.62); s.lineTo(0.18, 0.64); s.lineTo(0.1, 0.44); s.lineTo(-0.2, 0.44); s.lineTo(-0.3, 0.92); s.lineTo(-0.36, 0.9); s.lineTo(-0.26, 0.42); s.lineTo(-0.26, 0); }, 0.07, 0.015);
+  for (const sx of [-1, 1]) pv(k, end, color, sx * (w / 2 - 0.12), 0, 0, -Math.PI / 2);
+  for (let i = 0; i < 3; i++) k.add(rbox(w, 0.05, 0.13, 0.02), wood, 0, 0.465, 0.17 - i * 0.15);
+  for (let i = 0; i < 2; i++) k.add(rbox(w, 0.12, 0.04, 0.02), wood, 0, 0.62 + i * 0.17, -0.26 - i * 0.035, 0, { rx: -0.2 });
+  for (const sx of [-1, 1]) pv(k, rbox(0.08, 0.05, 0.42, 0.02), color, sx * (w / 2 - 0.12), 0.64, 0.05);
+  return { hw: w / 2, hd: 0.34, top: 0.95 };
+}
+
+// ---- kiosk: a little plastered booth with a counter, a striped awning and a lettered header; serves to +z
+export function kiosk(k, { w = 2.0, d = 1.4, h = 2.5, label = 'TICKETS · INFO', color = SFC.blue, stripes = [SFC.red, SFC.cream], wall = '#f4efe2', goods = 'tickets' } = {}) {
+  const plaster = MAT.plaster(wall);
+  k.add(rbox(w + 0.12, 0.14, d + 0.12, 0.03), MAT.stone('grey', 1), 0, 0.07, 0);
+  // back and sides, the counter front below the hatch, posts each side of the hatch
+  k.add(rbox(w, h, 0.12, 0.03), plaster, 0, h / 2 + 0.14, -d / 2 + 0.06);
+  for (const sx of [-1, 1]) k.add(rbox(0.12, h, d - 0.12, 0.03), plaster, sx * (w / 2 - 0.06), h / 2 + 0.14, 0.06);
+  k.add(rbox(w, 0.95, 0.12, 0.03), plaster, 0, 0.14 + 0.475, d / 2 - 0.06);
+  pv(k, rbox(w + 0.06, 0.07, 0.32, 0.02), color, 0, 1.12, d / 2);
+  for (const sx of [-1, 1]) pv(k, rbox(0.14, h - 0.95, 0.14, 0.03), color, sx * (w / 2 - 0.05), 0.14 + 0.95 + (h - 0.95) / 2, d / 2 - 0.06);
+  pv(k, rbox(w - 0.2, 0.3, 0.1, 0.03), color, 0, h - 0.02, d / 2 - 0.06);
+  labelOn(k, label, w - 0.36, 0.22, 0, h - 0.02, d / 2 - 0.005);
+  // flat roof with a lip, and the striped awning over the hatch with a scalloped edge
+  pv(k, rbox(w + 0.4, 0.12, d + 0.4, 0.04), color, 0, h + 0.2, 0.05);
+  const n = Math.max(4, Math.round(w / 0.3)), sw = (w + 0.3) / n;
+  const scallop = slab('sf-scallop', (s) => { s.moveTo(-0.5, 0); s.lineTo(0.5, 0); s.lineTo(0.5, -0.4); s.quadraticCurveTo(0, -1.1, -0.5, -0.4); s.lineTo(-0.5, 0); }, 0.02, 0.004);
+  for (let i = 0; i < n; i++) {
+    const x = -(w + 0.3) / 2 + sw * (i + 0.5), c = stripes[i % stripes.length];
+    pv(k, rbox(sw, 0.03, 0.62, 0.01), c, x, h - 0.24, d / 2 + 0.3, 0, { rx: 0.42 });
+    pv(k, scallop, c, x, h - 0.37, d / 2 + 0.58, 0, { sx: sw, sy: 0.18 });
+  }
+  // inside: a back shelf with goods, a bell on the counter
+  k.add(rbox(w - 0.3, 0.04, 0.3, 0.01), MAT.wood('honey'), 0, 1.55, -d / 2 + 0.28);
+  const r = rng(w * 10 | 0);
+  for (let i = 0; i < 6; i++) pv(k, goods === 'snacks' ? cyl(0.06, 0.06, 0.16, 8) : rbox(0.14, 0.2, 0.04, 0.01), CASES[i % CASES.length], -w / 2 + 0.35 + i * (w - 0.7) / 5, 1.57 + (goods === 'snacks' ? 0.08 : 0.1), -d / 2 + 0.28, (r() - 0.5) * 0.4);
+  k.add(lathe([[0.001, 0], [0.06, 0], [0.055, 0.03], [0.02, 0.06], [0.001, 0.07]], 10), MAT.brass(), w * 0.28, 1.155, d / 2 + 0.04);
+  return { hw: w / 2 + 0.06, hd: d / 2 + 0.06, top: h + 0.26 };
+}
+
+// ---- flag pole: stone foot, white pole with a brass ball, a two-colour swallow-tail pennant flying toward +x
+export function flagPole(k, { h = 5.2, color = SFC.blue, color2 = SFC.yellow, len = 1.3 } = {}) {
+  k.add(rbox(0.42, 0.26, 0.42, 0.05), MAT.stone('grey', 1), 0, 0.13, 0);
+  pv(k, cyl(0.045, 0.065, h - 0.26, 8), '#e6e8ec', 0, 0.26 + (h - 0.26) / 2, 0);
+  k.add(sphere(0.08, 10, 8), MAT.brass(), 0, h + 0.05, 0);
+  // two halves of a swallow-tail pennant, notched at 78 % of its length
+  k.at(0, h - 0.75, 0, 0, () => {
+    pv(k, slab('sf-flagU' + len, (s) => { s.moveTo(0, 0.3); s.lineTo(0, 0.6); s.quadraticCurveTo(len * 0.5, 0.6, len, 0.66); s.lineTo(len * 0.78, 0.3); s.lineTo(0, 0.3); }, 0.02, 0.005), color, 0.05, 0, 0, 0, { rz: -0.06 });
+    pv(k, slab('sf-flagL' + len, (s) => { s.moveTo(0, 0); s.lineTo(0, 0.3); s.lineTo(len * 0.78, 0.3); s.lineTo(len, -0.06); s.quadraticCurveTo(len * 0.5, 0.0, 0, 0); }, 0.02, 0.005), color2, 0.05, 0, 0, 0, { rz: -0.06 });
+  });
+  return { r: 0.22, top: h };
+}
+
+// ---- information stand: a slanted island map (YOU ARE HERE) on a painted pedestal; read from +z
+export function infoStand(k, { color = SFC.blue } = {}) {
+  pv(k, rbox(0.3, 0.9, 0.22, 0.05), color, 0, 0.45, -0.05);
+  pv(k, rbox(0.44, 0.06, 0.34, 0.02), SFC.dark, 0, 0.03, -0.05);
+  k.at(0, 1.02, 0, 0, () => {
+    pv(k, rbox(0.9, 0.68, 0.06, 0.025), color, 0, 0, 0, 0, { rx: -0.85 });
+    k.add(plane(0.8, 0.58), faceMat('map'), 0, 0.034 * Math.sin(0.85), 0.034 * Math.cos(0.85), 0, { rx: -0.85 });
+  });
+  return { hw: 0.45, hd: 0.34, top: 1.3 };
+}
+
+// ---- drinking fountain: a stone column with a brass spout over a bowl, a drain grate at its foot
+export function drinkingFountain(k, { stone = 'sand' } = {}) {
+  const s = MAT.stone(stone, 1);
+  k.add(rbox(0.6, 0.1, 0.6, 0.03), s, 0, 0.05, 0);
+  k.add(lathe([[0.001, 0], [0.2, 0], [0.2, 0.1], [0.16, 0.16], [0.15, 0.72], [0.18, 0.76], [0.001, 0.76]], 12), s, 0, 0.1, 0);
+  k.add(lathe([[0.001, 0], [0.08, 0], [0.24, 0.1], [0.28, 0.16], [0.26, 0.17], [0.2, 0.12], [0.001, 0.12]], 18), MAT.stone('grey', 1), 0, 0.86, 0.08);
+  k.add(pipe([[0, 0.86, -0.12], [0, 1.12, -0.12], [0, 1.12, 0.06], [0, 1.06, 0.1]], 0.025, 0.06, 8), MAT.brass(), 0, 0, 0);
+  k.add(sphere(0.04, 8, 6), MAT.brass(), 0.07, 0.98, -0.12);
+  k.add(cyl(0.16, 0.16, 0.012, 12), MAT.iron(), 0, 0.11, 0.38);
+  return { r: 0.34, top: 1.15 };
+}
+
+// ---- hand cart: a two-wheeled wooden barrow resting on its legs, handles toward −x, sacks or crates on board
+export function handCart(k, { load = 'sacks', pal = 'honey', seed = 3 } = {}) {
+  const m = MAT.wood(pal), md = MAT.wood(darker(pal)), r = rng(seed);
+  k.push(0.35, 0, 0, 0);   // (centred on its footprint: handles to −1.1, wheels to +1.1)
+  k.add(rbox(1.3, 0.06, 0.8, 0.02), m, 0.05, 0.55, 0, 0, { rz: -0.04 });
+  for (const sz of [-1, 1]) k.add(rbox(1.3, 0.24, 0.05, 0.02), m, 0.05, 0.68, sz * 0.4, 0, { rz: -0.04 });
+  k.add(rbox(0.05, 0.24, 0.8, 0.02), m, 0.69, 0.66, 0); k.add(rbox(0.05, 0.24, 0.8, 0.02), m, -0.59, 0.71, 0);
+  for (const sz of [-1, 1]) {
+    k.add(rbox(1.0, 0.06, 0.06, 0.02), md, -0.95, 0.66, sz * 0.32, 0, { rz: 0.1 });
+    k.add(rbox(0.06, 0.55, 0.06, 0.02), md, -0.5, 0.27, sz * 0.32);
+    k.add(torus(0.36, 0.035, 6, 20), md, 0.35, 0.36, sz * 0.47);
+    for (let i = 0; i < 4; i++) k.add(rbox(0.66, 0.04, 0.03, 0.01), md, 0.35, 0.36, sz * 0.47, 0, { rz: i * Math.PI / 4 });
+    pv(k, cyl(0.06, 0.06, 0.08, 10), SFC.dark, 0.35, 0.36, sz * 0.47, 0, { rx: Math.PI / 2 });
+  }
+  pv(k, cyl(0.025, 0.025, 1.0, 6), SFC.dark, 0.35, 0.36, 0, 0, { rx: Math.PI / 2 });
+  if (load === 'sacks') for (let i = 0; i < 3; i++) k.add(sphere(0.22, 10, 8), MAT.cloth('#d8c8a0', '#b8a070'), -0.3 + i * 0.36, 0.78, (r() - 0.5) * 0.3, r() * 3, { sx: 1.1, sy: 0.75, sz: 1.3 });
+  else { k.at(-0.2, 0.58, 0, 0.1, () => crate(k, 0.45)); k.at(0.3, 0.58, 0.05, -0.15, () => crate(k, 0.4)); }
+  k.pop();
+  return { hw: 1.1, hd: 0.55, top: 1.0 };
+}
+
+// ---- Citadel street lamp (town.js's blue-globe lamp) for a Kit: stepped foot, post, lyre arms, globe
+const lampGlobe = () => M('sf-globe', () => std({ color: '#2f7fd8', roughness: 0.22, metalness: 0.1, emissive: '#3a8cff', emissiveIntensity: 0.35 }, 0, { noShadow: true }));
+export function globeLamp(k, { h = 3.3 } = {}) {
+  const c = '#7d8088';
+  pv(k, cyl(0.2, 0.36, 0.3, 4), c, 0, 0.15, 0, Math.PI / 4);
+  pv(k, cyl(0.12, 0.2, 0.25, 4), c, 0, 0.42, 0, Math.PI / 4);
+  pv(k, cyl(0.055, 0.085, h - 1.1, 6), c, 0, 0.55 + (h - 1.1) / 2, 0);
+  pv(k, cyl(0.1, 0.07, 0.16, 8), c, 0, h - 0.48, 0);
+  for (const sx of [-1, 1]) pv(k, pipe([[0.04, h - 0.95, 0], [0.22, h - 0.78, 0], [0.34, h - 0.52, 0], [0.33, h - 0.28, 0], [0.22, h - 0.2, 0], [0.16, h - 0.3, 0]].map(([a, b, z]) => [a * sx, b, z]), 0.032, 0.08, 6), c, 0, 0, 0);
+  k.add(sphere(0.34, 18, 12), lampGlobe(), 0, h - 0.08, 0);
+  pv(k, cyl(0.04, 0.06, 0.1, 8), c, 0, h + 0.3, 0);
+  return { r: 0.3, top: h + 0.35 };
+}
