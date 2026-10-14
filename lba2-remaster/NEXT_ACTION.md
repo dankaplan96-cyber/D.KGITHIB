@@ -1,5 +1,11 @@
 # NEXT ACTION
 
+Stabilization pass done (0.22.1; docs/lba3-production/QA.md, STATE.md). The whole main story plays by input from a
+new game to Keep Exploring; 17 defects fixed (10 of them progression or save blockers the LOGIC tests missed).
+Next: (1) ask the user to play 0.22.1 (the desktop build from the workflow) and to run pause → Benchmark on their PC;
+(2) a human feel for the fights the bot needed help with (QA.md "Human-playtest items"); (3) then back to the engine
+pass below (rooms, animation), and the contract's milestone 2 (one route at the quality standard).
+
 Engine pass (the user, after 0.21.0: "enough LBA1; on with the engine, the animations, the transitions, the
 rooms"). 0.22.0 did the door transitions (walk through, compile behind the black screen), the room camera's height
 and the action/stop blends. Next: (1) rooms: hide what stands between the iso camera and the hero in the rooms

@@ -139,3 +139,42 @@ and fights its way through with keys only.
 | Frame rate on a GPU | BLOCKED: no GPU here (SwiftShader). The user's own benchmark (pause → Benchmark) is the way |
 | First visit to a room/region | shaders compile behind the black transition (0.22.0, transitions.mjs) |
 
+
+### Story and progression (player-input playthrough, tests/playthrough/01–14)
+Each segment continues from the previous one's real save (Esc → Save & quit → Continue). INPUT = keys only (arrows,
+E, F hold/tap, Space, X, K, R, F1/F2, menu clicks). ISO assist = a fight or move the bot can't do, finished through the
+game's own damage/hit rule and logged (`ISO assist:` in the segment log) — never counted as input. Deaths are
+played as a player does: the game-over screen's Retry (continue from the last save).
+
+| Chapter | Segment(s) | Result by input | ISO assists (logged) | Defects found and fixed on the way |
+|---|---|---|---|---|
+| 1 The Well (prologue) | 01, 02 | PASS: ball, well, key, rope, stealth, Tim, cave, crystals, Sendell | — | D1, D2 |
+| 2 The Joint Project | 03, 04, 05 | PASS: Zoé, Vesk, pipe map, three valves (depot fight, caged orchard valve, cliff stones), tour, Zoé's stealth segment, confrontation, radio, ferry | — | D5 |
+| 3 Zeelich | 06 | PASS: Baldino, Oku, the old mill climbed by jumps (6 stones + gallery), cog, three mills, key, Zoé's dials, shield, Vesk, shaft | the depot fight (2 drones, an armour-2 Grobo guard, a dog; entered with 6/10 HP) | — |
+| 4 The Dig | 07 | PASS: Tarra, pump gears, Hesk, rope, sand-yacht, Ilka, notebook, gate, seals, temple, carving | — | D10 |
+| 5 Steam and Sand | 08 | PASS: jar, oasis, shovel, hall, diagram, valves, hangar, hatch, Dallan, relief valve, vent, Hesk, glider | — | D11 |
+| 6 The Pass | 09 | PASS: tree bridge, the switchback trail, Lhar, Yorna, kite, fuse, heat, rope (sword), winch, ice mites, lift, monastery | — | D12 |
+| 7 The Observatory | 10 | PASS: keeper, mirrors, telescope, heavy drone, vent | — | — |
+| 8 Evacuation | 11 | PASS: Zoé, Gilbert, lever, depot wheel, Mira, Pippa, Zoé's farm run, lighthouse, control room, ship | — | D13, D14, D15 |
+| 9 The Council | 12 | PASS: street folk, petition, Nara, Oku (mills), clerk, hearing, the archive in a coat, BORE plans, vote | — | — |
+| 10 Baldino's Network | 13 | PASS: five relays (the old mill climbed again, valve room, lighthouse dials, bore, dome), console | a sentry, the bore's five drones, the ridge crawler, two mites (the bot at 1–4 HP) | — |
+| 11–12 Shell + Core | 14 | PASS: machinery (diagram, valves A/C, ladder switch, catwalk), pillars, the stepping stones (crossed by input in two of five runs), Sendell, the core, three pylons | the stepping stones in the other runs (placed on the far shelf); the overload coil's three hits (the overloaded guardian kills the bot) | D16, D17 |
+| Epilogue, end screen, Keep Exploring | 14 | PASS: dinner, The End, free roam with the save kept; Continue resumes in free roam | — | — |
+
+Human-playtest items (not judgeable by the bot; balance unchanged): the Zeelich depot fight at low HP, chapter 10's
+fights when HP is low, the stepping-stone hops, the overload-coil phase of the final fight. The bot never heals at
+givers and carries low HP through the late chapters; a player normally would.
+
+### Packaged app
+| Check | Result |
+|---|---|
+| Linux unpacked build (`node copy-game.mjs && npx electron-builder --linux dir`), `xvfb-run -a node desktop/test-desktop.mjs release/linux-unpacked/lba3-the-awakening`: window + app://, bundled font, Quit Game, new game + opening + save, relaunch → Continue resumes, Quit | PASS (after D9; before it, 3 × 404 for the LBA1 layouts) |
+| Windows / Mac installers | NOT TESTED here (built by the GitHub Actions workflow on push) |
+
+### Not tested / blocked
+- Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
+- Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.
+- Fullscreen: NOT TESTED (headless).
+- Optional content beyond what the main path walks past (all wizard rooms' extras, every giver, crystals beyond those
+  picked up on the way, the LBA1 rooms' full routes): covered by their LOGIC tests (wizards, lba1rooms, givers), not by
+  an input playthrough.

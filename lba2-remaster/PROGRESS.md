@@ -394,3 +394,24 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   into the idle in one frame; the jab draws the fist back, snaps it out straight with the shoulder turned in, and
   returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
   instead of holding the end pose. Contact frames unchanged (combat §§ pass).
+
+## Session: stabilization and regression pass (0.22.1)
+- The user asked for a complete stabilization pass on the current build: every system checked, defects reproduced,
+  root-caused, fixed with a regression test, and the whole main story played through with player inputs (no
+  teleports or flags as proof). Records: docs/lba3-production/QA.md (defects D1–D17 with reproduction, cause, fix,
+  retest; the feature checklist; the story table), STATE.md, BACKLOG.md, STORY_MAP.md.
+- A player-input harness (tests/lib/player.js: A* over the game's own collision, Classic tank steering, E/F/Space/
+  X/K, fighting, stealth, jumps with air braking, the old mill's climb) and a segment runner (tests/lib/seg.mjs:
+  one step per evaluate, the game-over Retry as a player does it, saves through Esc → Save & quit). Segments
+  tests/playthrough/01–14 play new game → The End → Keep Exploring.
+- Blockers found by playing and fixed (the LOGIC chapter tests teleport or set flags and missed them all): the
+  house's floor seam (D1), Zoé's save resume (D5), the Desert Island pier's end (D10), the hangar door's NaN position
+  (D11), the Hamalayi lift's top (D12), chapter 8's lever inside a tank (D13), Zoé's run starting inside the barrier
+  ring (D14), the control room's missing door (D15), Continue cutting a scene the load began (D16, D17). Also: the
+  refused-exit loop (D2), the waterline slide trap (D3), the death timer in game time (D4), the cliff-brink fall
+  loop (D6), menus at 640×360 (D7), the music log (D8), LBA1's room layouts missing from the desktop build (D9).
+- New regression tests: tests/stability.mjs (D1–D4, D6, D10–D15), tests/zoe-resume.mjs, tests/resume.mjs (D16–D17),
+  tests/shipfiles.mjs (D9), tests/menus.mjs, crosssystem.mjs, display.mjs, audio.mjs, longsession.mjs.
+- The packaged Linux app passes desktop/test-desktop.mjs (window, app://, new game, save, relaunch → Continue, Quit).
+- Not verified here: GPU frame rate, sound by ear, gamepad/touch, Windows/Mac installers (CI). Fights the bot
+  couldn't win were finished by logged ISO assists (QA.md: human-playtest items).

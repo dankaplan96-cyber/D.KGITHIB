@@ -59,4 +59,6 @@
 
 ## 6. Reliability
 - [~] R1 Save format version + migration; save/load tests at each chapter boundary and mid-quest.
-- [ ] R2 Full automated playthrough new game → credits; performance note with test conditions.
+- [x] R2 Full automated playthrough new game → credits: tests/playthrough/01–14 by player input (0.22.1; logged ISO
+      assists for fights the bot can't win, QA.md). Performance on a GPU: still needs the user's benchmark.
+- [x] R3 Stabilization pass (0.22.1): D1–D17 fixed with regression tests (docs/lba3-production/QA.md).
