@@ -116,12 +116,12 @@ const b1 = await ev(() => { const f = game.flags; const r = P.talk('weaver'); re
 const b1l = await said();
 check('with water in the oasis the cool room holds five jars; Lumi hands over her new screen (INPUT)', b1.r === 'talked' && b1.screen && b1.items.includes('kscreen') && b1.jars === 5 && b1l.some((l) => /That's what happens without a screen/.test(l)) && b1l.some((l) => /knees/.test(l)), { b1, b1l });
 const hp0 = await ev(() => { const h = game.hero; h.hp = Math.max(1, h.maxHp - 4); return h.hp; });
-const b2 = await ev(() => { const C = game.rooms.desert.kesh.cool, f = game.flags; const r = P.use(C.crank.x, C.crank.z, { kind: 'kcrank', near: 0.9 }); P.wait(1); return { r: r.r, label: r.target?.label, fit: !!f.k_fit, done: !!f.k_done, sand: !!f.k_sand, at: [game.hero.pos.x, game.hero.pos.y, game.hero.pos.z].map((v) => +v.toFixed(2)), trace: P.trace.slice(-8) }; });
+const b2 = await ev(() => { const C = game.rooms.desert.kesh.cool, f = game.flags; const r = P.use(C.crank.x, C.crank.z, { kind: 'kcrank', near: 0.9 }); P.wait(1); return { t: [...game.hud.toastEl.children].map((c) => c.textContent), r: r.r, label: r.target?.label, fit: !!f.k_fit, done: !!f.k_done, sand: !!f.k_sand, at: [game.hero.pos.x, game.hero.pos.y, game.hero.pos.z].map((v) => +v.toFixed(2)), trace: P.trace.slice(-8) }; });
 const b2l = await said();
 check('on the roof the screen goes over the mouth; already into the wind, the room draws at once (INPUT)', b2.label === 'p_fit' && b2.fit && b2.done && b2l.some((l) => /curtain in the door lifts/.test(l)), { b2, b2l });
 const b3 = await ev(() => { const G = game, K = G.rooms.desert.kesh, sani = P.npc('dkid'), f = G.flags;
   return { sani: { d: +Math.hypot(sani.pos.x - K.cool.sani.x, sani.pos.z - K.cool.sani.z).toFixed(2), anim: sani.forceAnim }, items: G.story.items().map((i) => i.id), t: [...G.hud.toastEl.children].map((c) => c.textContent) }; });
-check('after: Sani plays in the cool room\'s doorway; the screen is no longer carried; a toast says the room draws', b3.sani.d < 0.3 && b3.sani.anim === 'kneelWork' && !b3.items.includes('kscreen') && b3.t.some((s) => /draws again/.test(s)), b3);
+check('after: Sani plays in the cool room\'s doorway; the screen is no longer carried; a toast says the room draws', b3.sani.d < 0.3 && b3.sani.anim === 'kneelWork' && !b3.items.includes('kscreen') && b2.t.some((s) => /draws again/.test(s)), { b3, t: b2.t });   // (the toast read in the same step: it fades after 2.8 s of real time)
 await shot('04-after-coolroom', { x: -69.2, z: 0.2, a: Math.PI + 0.3 });
 await shot('05-after-roof', { roof: true });
 const b4 = await ev(() => { const C = game.rooms.desert.kesh.cool, h = game.hero; const hp = h.hp; const r = P.use(C.door.x, C.door.z, { kind: 'kdoor', near: 0.9 }); return { r: r.r, label: r.target?.label, healed: h.hp > hp }; });
