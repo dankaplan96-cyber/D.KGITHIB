@@ -1,0 +1,10 @@
+deck {"pos":[-1.7,2.35,39.5],"calls":806,"callsMin":806,"tris":1321757,"ms50":15.3,"ms90":11924.7,"geos":1053,"texs":456,"progs":121}
+deck-wait {"pos":[-6.5,2.35,36.5],"calls":404,"callsMin":404,"tris":784605,"ms50":8.7,"ms90":10.4,"geos":1080,"texs":456,"progs":121}
+bridge {"pos":[-30.5,2.35,40],"calls":486,"callsMin":486,"tris":1087912,"ms50":16.7,"ms90":34.7,"geos":1083,"texs":456,"progs":121}
+square {"pos":[-42,2.2,-2],"calls":929,"callsMin":929,"tris":1364735,"ms50":19.3,"ms90":21.9,"geos":1099,"texs":456,"progs":121}
+quay {"pos":[-107,1.85,37],"calls":553,"callsMin":553,"tris":794763,"ms50":8.9,"ms90":18.9,"geos":1240,"texs":456,"progs":124}
+pier {"pos":[-116,1.8,46],"calls":479,"callsMin":479,"tris":614460,"ms50":16.9,"ms90":98.2,"geos":1240,"texs":456,"progs":124}
+lane {"pos":[-45.5,2.39,52],"calls":921,"callsMin":921,"tris":1523812,"ms50":22.2,"ms90":9276.5,"geos":1239,"texs":456,"progs":124}
+harbour-lane {"pos":[-80,2.23,37],"calls":744,"callsMin":744,"tris":1260868,"ms50":13.8,"ms90":39.2,"geos":1249,"texs":456,"progs":124}
+loadTimes {"world":3610,"spaceport":253,"townlife":72,"citydress":76,"interiors":1398,"zeelich":1831,"underground":832,"desert":837,"condenser":29,"temple":44,"wizards":76,"lba1":527,"hamalayi":239,"obsroom":14,"upper":394,"valves":52,"arena":22,"islands":703,"actors":238,"total":11549,"shaders":67922}
+no errors
