@@ -12,6 +12,7 @@ are never presented as the originals' canon.
 | **Approved for this sequel** (STORY_BIBLE.md, before this pass) | Arthur, their son; the Joint Project, its heat posts, its ferry and Vesk; Mira and Gilbert's water office; Doran, Xil, Pippa, Tim, Lulu; Baldino's network; the 30% evacuation plan; Zoé finds the plan; Citadel Spaceport and Zeelich's islands | STORY_BIBLE.md |
 | **New in this pass** (proposed developments for the twelve-year gap) | Zoé keeps the Water Office's connection register; Bram and the lane's old pump; Officer Odile and the harbour's customs booth; Nell's repair shop for imported machines; Xil's mislabelled crate; the family's corners in the house | this file, src/game/story/life.js |
 | **New in the second set** (Baldino's workshop) | Ilo, an Esmer engineer at the shuttle yard (named, not seen); Baldino's test pair of bench relays; his old hoist; the stove fan with three odd blades; the tea-by-coupler experiment; the thunder box (the pulse tool of chapter 10 before it was ready) | this file, src/game/workshoplife.js, src/game/story/workshop.js |
+| **New in the third set** (Desert Island: Kesh) | Kesh's cool room in one of FunFrock's concrete blockhouses, with a wind-catcher Kesh built on it; Lumi's loom, her shade sail, the cool room's curtain and sand screen (her work); the reed sand screens on the village's windward side; Hesk's flag poles along the sand-yacht routes and his yacht stop; the drift over the track to the dig | this file, src/game/keshlife.js, src/game/story/kesh.js |
 
 Nothing new claims anything about the originals' characters beyond what the originals show. Baldino himself is
 LBA2's (an old Grobo inventor with a workshop; docs/LBA2_VISUAL_NOTES.md). That his workshop is now on Zeelich is
@@ -117,8 +118,47 @@ player can do · what stays different afterwards.
 - **Limits, honestly:** chapter 10's stations don't yet make line of sight playable (they need power from where
   they stand and a friend standing by); the rule is taught and remembered, not yet tested there.
 
+### Desert Island: Kesh (third set; src/game/keshlife.js, story/kesh.js)
+History vs ours: Desert Island and the School of Magic are LBA2's; Kesh, its people (Mother Tarra, Brosk, Lumi, Sani,
+Hesk), the research post, the dig and FunFrock's buried condenser hall are this sequel's (STORY_BIBLE.md, chapters 4–5).
+Everything below is a proposed development of this pass. That FunFrock built blockhouses on the island follows from
+the sequel's own condenser hall, not from LBA2; no line says when or why he built them.
+
+- **Reused building — the cool room.** One of FunFrock's concrete blockhouses at the village's west edge, by the shore,
+  half under a dune (stencil "F-17", a rusted shutter over a slit window). Kesh dug its door out of the sand (spoil
+  heaps, a shovel, planks still there), plastered a parapet on it, hung a curtain in the door and built a
+  **wind-catcher** on the roof: an adobe tower with a timber cowl on a turning ring, a crank at its foot, the breeze
+  sent down through the thick walls. Why: concrete half under sand is the coolest room on the island. Owner and use:
+  the village's — water jars on the shelf by the door (Mother Tarra's rule), Brosk's dates, Lumi's dyed wool; an
+  outside stair up the east wall to the roof. Who gains: everyone in a heat that never sets (no Earth-style night).
+- **Practical adaptations.** Reed **sand screens** on the village's windward (west) side with the sand banked on
+  them; Lumi's **loom under a striped shade sail** (she works there; she wove the sails, the screens, the curtain);
+  lidded jars in the shade. The wind is readable everywhere: the dunes' crests, the wind-pump's wheel facing it,
+  the rags on Hesk's poles streaming away from it.
+- **Altered transport.** Hesk's **flag poles** along the sand-yacht's routes to Ilka's camp and the dig (every storm
+  buries the track: a drift lies across the dig route and the poles carry on over it) and his **yacht stop** by the
+  berth (YACHT STOP · CAMP · DIG · KESH · FERRY: AT THE PIER). Once the project takes the ferry (chapter 5) someone has
+  chalked NO FERRY over it, "ask Hesk" underneath. The Esmers' shuttles still circle Bald Mountain (as before).
+- **Excavation.** The project's dig (chapter 4) beside Kesh's own: the village dug its cool room out of the dune.
+
+**The Wind-Catcher** (optional; from chapter 4 on, whenever Twinsen is on the island; nothing on the main path needs
+it). The last storm turned the cowl away from the wind and tore its screen: the room is stuffy and the water warm.
+- Learned from Brosk (minding the stall), a look at the door, or Lumi. Sani says how to read the wind.
+- Lumi wove a new screen. Before the pump runs (chapter 4) she won't hand her work to someone off the project's ferry
+  (Kesh's distrust, as in chapter 4); after it she does — the relationship changes with the main story.
+- On the roof the crank turns the cowl a quarter at a time (it starts facing east). Mouth into the wind (west) with
+  the screen: the room draws. Into the wind without it: sand pours down into the room (Brosk: "In my dates!") —
+  fitting the screen then finishes it. Screen first or turn first both work.
+- After: the curtain lifts, the streamer at the mouth streams in, Brosk's dates move under the shelf, Sani plays in
+  the doorway, a drink from the jars restores life, Brosk pays five kashes (one coin, owed until picked up). The
+  cowl is tied off; the journal keeps it.
+- Lines follow the main story: two jars left before the pump, five after; in chapter 5 the steam could boil the
+  oasis (the jars would be all Kesh has); after the vent the ground is quiet and Dallan buys a cold drink.
+- Chapter 5's errand with Brosk (the jar and the shovel) always comes first; Mother Tarra and Hesk keep their chapter
+  lines. Save/Continue in any state (cowl direction, sand, screen carried or fitted, the coin owed).
+
 ## Not yet done (next, in the brief's order)
-1. Desert Island, the Hamalayi and Zeelich's own twelve-year changes (see WORLD_MAP.md: what exists there now).
+1. The Hamalayi and Zeelich's own twelve-year changes (see WORLD_MAP.md: what exists there now).
 2. More Citadel: the Workshop Successor or the Familiar Shortcut, only where they fit.
 
 ## Rules kept

@@ -270,6 +270,34 @@ at 926b21e, after = 0.25.1, the same input route and the normal game camera: `to
 | Regression after the change (GAME_URL on a separate port): townlife, workshop, chapter2, chapter8, chapter10 ×3, stability, resume, house, opening | LOGIC/INPUT | all rc 0, no page errors | PASS |
 | Not checked here: the look on a GPU; whether the pump stroke and the step to the grip feel right by hand | — | — | HUMAN |
 
+### Desert Island twelve years on: Kesh (0.26.0; TY-3; docs/TWELVE_YEARS.md)
+Evidence: tests/desert-life.mjs (24 checks; `SHOTS=1` writes its screenshots to captures/desert-ty/); captures/desert-ty/
+(`desert-before-after.jpg`: six views, before = 0.25.1 at 41363db, after = 0.26.0, the same spot and the normal game
+camera; `windcatcher-roof.jpg`: the story's own before/after on the roof — sand with the torn screen, then Lumi's screen
+fitted). Software renderer (SwiftShader), 960×540: layout and
+readability only, no GPU timing. ISO setup, logged by the test: chapters 4 and 5 reached by their flags (as
+tests/chapter4.mjs/chapter5.mjs), the pump's gears and the vent by flags, a fresh k_ flag set for each order.
+
+| Check | Evidence | Result |
+|---|---|---|
+| The cool room (FunFrock's blockhouse, Kesh's wind-catcher), its stair seen from the side, Lumi's loom and Hesk's flag poles are solid; Lumi works at her loom under the sail | LOGIC (physics) | PASS |
+| Chapter 4 before the pump: Brosk (after his chapter line) tells of the warm jars and the turned wind-catcher; Lumi won't give her work to someone off the ferry; the door: the blockhouse dug out of the dune, two jars inside | INPUT | PASS |
+| Order A: up the stair on the east wall to the roof by walking (the planner's A* over the game's collision), two quarter turns at the crank; into the wind with no screen → sand pours into the room (Brosk: "In my dates!") | INPUT | PASS |
+| The roof's parapet holds him (walking at the north, west and south edges) | INPUT | PASS |
+| Save & quit → Continue with sand in the room and the cowl into the wind: both kept, the journal line open | UI + INPUT | PASS |
+| After the pump (ISO): five jars; Lumi hands over the screen; fitted on the roof with the mouth already into the wind → the room draws; Sani in the doorway; the screen no longer carried; toast | INPUT | PASS |
+| A drink at the door restores life; Brosk pays five kashes (one coin, owed until picked up by walking to it); the journal closes; Brosk, Lumi and Sani each have an after-line | INPUT | PASS |
+| Mother Tarra's lines stay chapter 4's | INPUT | PASS |
+| Order B: the screen first, fitted while the mouth faces away, two turns (east → south → west) → draws, no sand | INPUT | PASS |
+| Saved before Brosk's coin was picked up → Continue: five kashes given with a toast, nothing owed, the room still draws, Sani still there | UI + INPUT | PASS |
+| Chapter 5: Brosk's jar (the chapter's shovel errand) comes first; then the cool room in chapter 5's words (the steam could boil the oasis); Lumi gives the screen at once | INPUT (ISO: c5_water, c5_shovel by flags) | PASS |
+| After the vent (ISO): done the same way; Brosk speaks of Dallan's cold drink, Lumi of the quiet ground | INPUT | PASS |
+| The yacht stop: NO FERRY chalked once the project took the ferry | LOGIC | PASS |
+| Regression on 0.26.0 (GAME_URL on a separate port): chapter4, chapter5 (both logs identical to the 0.25.1 runs on the same machine), townlife (30), workshop (31), stability (16), resume (2), shipfiles (2), desert-life (24) | LOGIC/INPUT | all rc 0, no page errors |
+| Render counts (software renderer, counts not time; one frame from the normal camera, 960×540, all passes incl. shadows), 0.25.1 → 0.26.0: the pier track looking east 423 → 493 calls (+17%), at the cool room's door 292 → 354 (+21%), the plaza 359 → 404 (+13%), Lumi's loom 460 → 511 (+11%), the dig route at the drift 470 → 489 (+4%); triangles +2–5%. The jars, the screens' panels, the rags (one animated mesh) and the spoil heaps were merged to get there (first build: up to +31%) | LOGIC | measured |
+| Defects found while building it (fixed before commit): the cool room's floor first taken from the dune bank (the first step 0.8 m: no way up); a 0.1 m seam between treads dropped him through to the sand; the stair flagged as stairs could be walked under from the south (now overlapping solid treads, deeper than his reach); the yacht board's back faced the village approach (moved, enlarged) | — | FIXED |
+| Not checked here: the look on a GPU; whether players read the wind from the pump's wheel and the flags without Sani's line; the stair and the crank by hand | — | HUMAN |
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.

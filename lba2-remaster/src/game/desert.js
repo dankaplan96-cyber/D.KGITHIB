@@ -16,6 +16,7 @@
 //        the bottom of the excavation is the Temple of Bù's gate; reveal() slides its stone door away
 //   R.ruins {x,z, door:{x,z}}                        FunFrock's buried condenser hall (chapter 5)
 //   R.bore {x,z}                                     the project's test bore inside the post (chapter 5)
+//   R.kesh                                           Kesh twelve years on (keshlife.js): the cool room, Lumi's loom, poles
 // Heights: island ground BASE = 5.0; the dig steps down 1.6 m per terrace to bottomY = 0.4.
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
@@ -23,6 +24,7 @@ import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry } from './vegetation.js';
 import { shuttleTraffic } from './shuttle.js';
+import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H } from './keshlife.js';
 import {
   tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
 } from './kit.js';
@@ -104,7 +106,10 @@ function heightFn(x, z) {
   flat = Math.max(flat, smoothstep(DIG.r + 8, DIG.r + 2, Math.hypot(x - DIG.x, z - DIG.z)));
   flat = Math.max(flat, smoothstep(12, 6, Math.hypot(x - CAMP.x, z - CAMP.z)));
   flat = Math.max(flat, smoothstep(10, 5, Math.hypot(x - RUINS.x, z - RUINS.z)));
+  flat = Math.max(flat, keshFlat(x, z));
   let h = BASE + dunes * (1 - flat);
+  // Kesh's sand (keshlife.js): the dune against the cool room, sand banked on the screens, a drift over the yacht's track
+  h += keshBank(x, z) + DRIFT_H * keshDrift(x, z);
   // the post sits on a levelled concrete pad
   if (inPost(x, z)) h = POST.y;
   // the oasis basin
@@ -158,7 +163,7 @@ function splatFn(x, z, h, slope, w) {
   const rk = smoothstep(0.75, 1.3, slope) + (h > BASE + 6 ? 0.45 : 0);
   w[2] = rk; w[1] = Math.max(0, 1 - rk);
   const td = trackDist(x, z);
-  if (td < 2.4) { w[3] = smoothstep(2.4, 1.2, td) * 1.6; w[1] *= 0.5; }
+  if (td < 2.4) { const dr = 1 - keshDrift(x, z); w[3] = smoothstep(2.4, 1.2, td) * 1.6 * dr; w[1] *= 0.5 + 0.5 * (1 - dr); }   // (the drift covers the track)
   if (Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r - 4) { w[3] += 0.8; }
   const od = Math.hypot(x - OASIS.x, z - OASIS.z);
   if (od > OASIS.r - 1 && od < OASIS.r + 4) w[0] = 0.7 * smoothstep(OASIS.r + 4, OASIS.r + 1, od);
@@ -474,6 +479,8 @@ export function buildDesert(scene, physics) {
       rocks.push({ x, y: H(x, z) - 0.1, z, ry: rr() * 6, s: 0.25 + rr() * 0.5 });
     }
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
+    // (Kesh's places stay clear: filtered after the draw, so the island's other rocks keep their places)
+    for (let i = rocks.length - 1; i >= 0; i--) if (keshClear(rocks[i].x, rocks[i].z, rocks[i].s)) rocks.splice(i, 1);
     for (let v = 0; v < 3; v++) {
       const list = rocks.filter((_, i) => i % 3 === v).map((r) => ({ ...r, color: '#e8a888' }));
       lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, list);
@@ -488,7 +495,8 @@ export function buildDesert(scene, physics) {
       const x = (rr() - 0.5) * 170, z = (rr() - 0.5) * 170;
       if (Math.hypot(x, z) > 82 || trackDist(x, z) < 2.5 || inPost(x, z, 2) || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 1) continue;
       const h = H(x, z); if (h > BASE + 4) continue;
-      list.push({ x, y: h + 0.1, z, ry: rr() * 6, s: 0.5 + rr() * 0.8, color: rr() < 0.5 ? '#9a8a4a' : '#7a7a3a' });
+      const it = { x, y: h + 0.1, z, ry: rr() * 6, s: 0.5 + rr() * 0.8, color: rr() < 0.5 ? '#9a8a4a' : '#7a7a3a' };
+      if (!keshClear(x, z)) list.push(it);
     }
     instances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list, { cast: true });
     const cactM = pm('#5a8a4a', 0.75);
@@ -496,15 +504,16 @@ export function buildDesert(scene, physics) {
     for (let i = 0; i < 26; i++) {
       const x = (rr() - 0.5) * 160, z = (rr() - 0.5) * 160;
       if (Math.hypot(x, z) > 78 || trackDist(x, z) < 3 || inPost(x, z, 3) || Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 2) continue;
-      const y = H(x, z), h = 1.6 + rr() * 1.6;
-      CB.add(cyl(0.2, 0.24, h, 8, 0), cactM, x, y + h / 2, z);
-      CB.add(new THREE.SphereGeometry(0.2, 8, 6), cactM, x, y + h, z);
+      const y = H(x, z), h = 1.6 + rr() * 1.6, keep = !keshClear(x, z);   // (the draws happen either way: the rest keep their places)
+      if (keep) CB.add(cyl(0.2, 0.24, h, 8, 0), cactM, x, y + h / 2, z);
+      if (keep) CB.add(new THREE.SphereGeometry(0.2, 8, 6), cactM, x, y + h, z);
       for (const s of [-1, 1]) if (rr() < 0.7) {
         const ay = y + h * (0.4 + rr() * 0.25);
+        if (!keep) continue;
         CB.add(cyl(0.13, 0.13, 0.5, 7, 0), cactM, x + s * 0.4, ay, z, 0, 0, Math.PI / 2);
         CB.add(cyl(0.13, 0.13, 0.7, 7, 0), cactM, x + s * 0.62, ay + 0.35, z);
       }
-      col({ type: 'cyl', x, z, r: 0.35, top: y + h, seeThrough: true });
+      if (keep) col({ type: 'cyl', x, z, r: 0.35, top: y + h, seeThrough: true });
     }
     CB.build();
   }
@@ -837,6 +846,9 @@ export function buildDesert(scene, physics) {
     });
   }
 
+  // Kesh twelve years on: the cool room, Lumi's loom and sail, the sand screens, Hesk's poles and yacht stop
+  R.kesh = buildKesh({ group, col, H, W, updaters, ox, oz });
+
   B.build();
 
   // ================================================================ people
@@ -849,7 +861,7 @@ export function buildDesert(scene, physics) {
     guard: at(24.5, -18.5, -Math.PI / 2),
     kid: at(-44, -4, 0.6),
     trader: at(VILLAGE.x + 2, VILLAGE.z - 5.4, 0),
-    weaver: at(-58, 2, 1.2),
+    weaver: R.kesh.lumi,   // (at her loom, in the sail's shade: keshlife.js)
   };
   R.spawn = { ...R.dock };
   R.plaza = W(VILLAGE.x, VILLAGE.z);

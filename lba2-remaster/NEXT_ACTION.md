@@ -1,5 +1,10 @@
 # NEXT ACTION
 
+0.26.0: twelve years on, third set: Desert Island (docs/TWELVE_YEARS.md; tests/desert-life.mjs). Kesh's cool room in
+FunFrock's old blockhouse with its wind-catcher and The Wind-Catcher side story, Lumi's loom and sail, the sand
+screens, Hesk's flag poles and yacht stop. Next: an independent review of TY-3, then the Hamalayi's and Zeelich's own
+twelve-year changes (the brief's order). Ask the user how Kesh reads in their game.
+
 0.25.1: the independent reviews' defects in both twelve-years-on sets fixed (REV-TY-1, REV-TY-2; QA.md "REV-TY-1/
 REV-TY-2 fixes"): Nell's shop moved off the harbour path and open toward it, the garden's beds off the lane, Arthur's
 bench in view, solid pipe/posts/trough, the pump's handle where his hands are, the board and meter follow the story,
