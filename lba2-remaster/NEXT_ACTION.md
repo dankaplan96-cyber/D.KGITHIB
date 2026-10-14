@@ -1,5 +1,12 @@
 # NEXT ACTION
 
+0.25.0: twelve years on, second set: Baldino's workshop (docs/TWELVE_YEARS.md; tests/workshop.mjs). The room shows
+his years (the relay table, the old hoist, the mended fan, the tea experiment, the thunder box, Ilo's perch) and The
+Test Pair teaches the network's limits in chapter 3 (relays by sight, couplers overheat). Next in the brief's order:
+Desert Island, the Hamalayi and Zeelich's own twelve-year changes. Worth doing soon: make one chapter-10 station use
+a rule the pair taught (e.g. the mill relay needs a clear line to the platform, or the bore relay's coupler needs
+the vent's water). Ask the user how the workshop reads in their game.
+
 0.24.0: twelve years on, first set (docs/TWELVE_YEARS.md): the family's house, The Old Pump, the harbour's trade and
 The Mislabelled Shipment (tests/townlife.mjs). Next in the brief's order: Baldino's workshop (years of inventions,
 the Zeelich engineers, an early practical task with the network's technology and its limits), then Desert Island,

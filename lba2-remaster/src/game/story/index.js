@@ -18,6 +18,7 @@ import { Network } from './network.js';
 import { Epilogue } from './epilogue.js';
 import { IslandShuttle } from './islands.js';
 import { TownLife } from './life.js';
+import { WorkshopLife } from './workshop.js';
 import '../text/common.js';
 
 // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
@@ -35,6 +36,7 @@ export class Story {
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
     this.isles = new IslandShuttle(this);
     this.life = new TownLife(this);   // Citadel twelve years on: its people and small stories (life.js)
+    this.workshop = new WorkshopLife(this);   // Baldino's workshop years on: the test pair and the looks (workshop.js)
   }
   // position of the chapter in progress for a set of flags (by key when the save has one)
   indexOf(f = this.f) {
@@ -103,6 +105,8 @@ export class Story {
     const out = this.chapters.slice(0, this.index + 1).map((c) => ({ title: (NUMBER[c.key] ? NUMBER[c.key] + '. ' : '') + t('chapter_' + c.key), lines: c.journal() }));
     const life = this.life.journal();
     if (life.length) out.push({ title: t('life_title'), lines: life });
+    const ws = this.workshop.journal();
+    if (ws.length) out.push({ title: t('w_title'), lines: ws });
     return out;
   }
   items() { return [...this.chapters.slice(0, this.index + 1).flatMap((c) => c.items()), ...this.life.items()]; }
@@ -119,19 +123,20 @@ export class Story {
     return out;
   }
   canExit(room, to) { return this.cur.canExit(room, to); }
-  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); }
-  interact(it) { return this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.chapters[0].baseInteract(it); }
-  talk(npc) { if (this.life.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
+  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); }
+  interact(it) { return this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.chapters[0].baseInteract(it); }
+  talk(npc) { if (this.life.talkFirst(npc) || this.workshop.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || false; }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
   ballTargets() { return this.cur.ballTargets(); }
-  update(dt) { this.cur.update(dt); this.life.update(dt); }
+  update(dt) { this.cur.update(dt); this.life.update(dt); this.workshop.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); }
   onExitRoom(id) { this.cur.onExitRoom(id); }
   applyFlags() {
     for (let i = 0; i < this.chapters.length; i++) this.chapters[i].applyFlags(i < this.index, i === this.index);
     this.life.applyFlags();
+    this.workshop.applyFlags();
     this.refreshCast();
   }
   afterEnding() { this.cur.afterEnding?.(); }

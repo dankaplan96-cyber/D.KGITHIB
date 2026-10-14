@@ -11,12 +11,16 @@ are never presented as the originals' canon.
 | **Established by LBA1/LBA2** (checked against the originals and the reference notes) | Twinsen; Zoé; Citadel Island with its town, harbour and lighthouse; Desert Island; the Hamalayi; Zeelich and the Esmers; Grobos, Rabbibunnies, Quetches, Spheros; the Dino-Fly; Joe the Elf; the Weather Wizard; the School of Magic; the Temple of Bù; the magic ball; Sendell; FunFrock (dead) and his fortress; the Esmers' round shuttles | docs/LBA2_SOURCE_NOTES.md, docs/LBA1_CATALOGUE.md, WORLD_MAP.md (the "In the original" column) |
 | **Approved for this sequel** (STORY_BIBLE.md, before this pass) | Arthur, their son; the Joint Project, its heat posts, its ferry and Vesk; Mira and Gilbert's water office; Doran, Xil, Pippa, Tim, Lulu; Baldino's network; the 30% evacuation plan; Zoé finds the plan; Citadel Spaceport and Zeelich's islands | STORY_BIBLE.md |
 | **New in this pass** (proposed developments for the twelve-year gap) | Zoé keeps the Water Office's connection register; Bram and the lane's old pump; Officer Odile and the harbour's customs booth; Nell's repair shop for imported machines; Xil's mislabelled crate; the family's corners in the house | this file, src/game/story/life.js |
+| **New in the second set** (Baldino's workshop) | Ilo, an Esmer engineer at the shuttle yard (named, not seen); Baldino's test pair of bench relays; his old hoist; the stove fan with three odd blades; the tea-by-coupler experiment; the thunder box (the pulse tool of chapter 10 before it was ready) | this file, src/game/workshoplife.js, src/game/story/workshop.js |
 
-Nothing new claims anything about the originals' characters beyond what the originals show. The house's old
+Nothing new claims anything about the originals' characters beyond what the originals show. Baldino himself is
+LBA2's (an old Grobo inventor with a workshop; docs/LBA2_VISUAL_NOTES.md). That his workshop is now on Zeelich is
+this sequel's (STORY_BIBLE.md); no line says when he moved or which LBA2 machines he built, and every invention in
+the room is ours. The house's old
 travel trunk only says it has stickers from Desert Island and Zeelich (places Twinsen visited in LBA2). No
 statement about Twinsen's parents, Zoé's past, or LBA2's ending is made.
 
-## What changed, and what the player can do (first set: home → neighbourhood → harbour)
+## What changed, and what the player can do (first set: home → neighbourhood → harbour; second set: Baldino's workshop)
 
 Each entry: what changed over the twelve years · why · who gains or loses · what the player sees · what the
 player can do · what stays different afterwards.
@@ -66,11 +70,43 @@ player can do · what stays different afterwards.
 - The project, before its dangers: Nell says the harbour row's heat posts trip when the ground hums and the
   project blames the salt air; Bram says Mira trusts the figures.
 
+### Baldino's workshop (second set; src/game/workshoplife.js, story/workshop.js)
+- **What changed:** the room shows years of work, not one project. His **relay table** (the active project, laid
+  out in order): two bench relays of the kind he builds for the network in chapter 10, one heat coupler under a
+  drip can, a lever, a SYNC strip of five lamps, trays of masts, coils and lamps, a drawing of the relay housing in
+  two hands. His **old hoist** (an A-frame by the flying machine's nose; "older than Arthur", it still lifts every
+  engine). The **stove fan**, mended so often its three blades are brass, wood and tin. The **failed experiment**: a
+  kettle wired to a coupler boiled dry; the lid is stuck in the vault, tea is up the wall, a note says "TEA: BY
+  HAND". The **thunder box** on top of the curio shelf, stopping a toy mill for three seconds, then needing ten to
+  recover. **Ilo's perch** (an Esmer seat) at the drafting board and a crate of parts stencilled "SHUTTLE YARD,
+  return to Ilo".
+- **Why:** Zeelich's trade (the harbour's story) means Esmer engineers and spare parts; Baldino builds with them.
+  The network in chapter 10 should be technology the player has met, with limits learned early, not a gadget that
+  appears when needed: the relays and couplers are on his table in chapter 3, the pulse tool is on his shelf.
+- **Who gains or loses:** Baldino gets help and parts (and owes Ilo's patience); Ilo gets his opinions; his tea
+  lost. Twinsen gets half the shuttle yard's test fee.
+- **What the player sees:** the things above, each where it is used; Baldino's lines when he has nothing pressing,
+  one at a time and different each time (the hoist, Ilo, the fan's blades, the radio's seven repairs, Esmers who
+  knock and wait, "never trust a quiet coupler"). Short looks at the fan, the thunder box, the tea experiment and
+  the crate, with a word from Baldino when he's there.
+- **What the player can do — The Test Pair (optional, chapter 3 "Zeelich"):** Baldino mentions it the first time
+  Twinsen talks to him with nothing to collect (or Twinsen reads the lever's tag). The lever starts the pair; the
+  second relay hangs low from the hoist behind the flying machine's nose, can't see the first, and blinks (relays
+  talk by sight). Cranking the hoist raises it clear. With the drip tap shut the coupler glows and trips after a
+  few seconds (couplers overheat; switch on again to retry). With the tap open it runs cool, the pair holds for ten
+  seconds, the five lamps fill, and Baldino tosses Twinsen a coin worth five kashes (half the yard's fee; from his
+  fee tin when he isn't there). Any order works; nothing on the main path needs it; a save made with the pair
+  running comes back with it off (hoist and tap as they were).
+- **What stays different afterwards:** the pair keeps talking (both lamps, a beam between them over the flying
+  machine, the SYNC lamps lit, the relay up, the drip running); the journal keeps the two rules. In chapter 10
+  Baldino says the network has the same rules ("a clear line, and keep the couplers cool"). Once Twinsen carries the
+  pulse tool, the thunder box's place on the shelf is empty.
+- **Limits, honestly:** chapter 10's stations don't yet make line of sight or overheating playable (they need
+  power from where they stand and a friend standing by); the rules are taught and remembered, not yet tested there.
+
 ## Not yet done (next, in the brief's order)
-1. Baldino's workshop (Zeelich): years of inventions, a collaboration with Zeelich's engineers, a practical
-   early task with the network's technology (a coupler on a limited supply, two devices to synchronise).
-2. Desert Island, the Hamalayi and Zeelich's own twelve-year changes (see WORLD_MAP.md: what exists there now).
-3. More Citadel: the Workshop Successor or the Familiar Shortcut, only where they fit.
+1. Desert Island, the Hamalayi and Zeelich's own twelve-year changes (see WORLD_MAP.md: what exists there now).
+2. More Citadel: the Workshop Successor or the Familiar Shortcut, only where they fit.
 
 ## Rules kept
 English only, short lines. No Earth-style night (routines follow shifts and story events). FunFrock stays

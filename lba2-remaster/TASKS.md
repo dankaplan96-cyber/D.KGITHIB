@@ -34,7 +34,7 @@
 - [~] W1 Optional discoveries with consequences (a shortcut, a locked workshop, a repaired machine changing a route). Done so far: six singing crystals off the paths (5 Citadel, 1 on the old mill on Zeelich), +1 max health each, Sendell remarks on all six in chapter 3.
 - [~] W2 Familiar places change after events (NPC lines, objects, routes) — tracked per chapter. Done so far: heat posts light up after the water returns (ch1); bunting over the square and new lines for everyone in the epilogue.
 - [x] W3 Zeelich's seven islands as extra regions (the original's layouts as numbers, our art) and Citadel Spaceport with Esmer shuttle flights from chapter 4 (0.23.0; tests/zislands.mjs, tests/spaceport.mjs). Next: people on the islands; Mosquibee's ledges.
-- [~] W4 Twelve years on (docs/TWELVE_YEARS.md): first set done (0.24.0) — the family's house, The Old Pump, the harbour's trade and The Mislabelled Shipment (tests/townlife.mjs). Next: Baldino's workshop, then Desert Island, the Hamalayi and Zeelich.
+- [~] W4 Twelve years on (docs/TWELVE_YEARS.md): first set done (0.24.0) — the family's house, The Old Pump, the harbour's trade and The Mislabelled Shipment (tests/townlife.mjs); second set (0.25.0) — Baldino's workshop and The Test Pair (tests/workshop.mjs). Next: Desert Island, the Hamalayi and Zeelich.
 
 ## 4. Animation and interaction
 - [ ] A1 Talking gestures, pick-up/use reaches, NPCs face speakers, contextual idle chores.

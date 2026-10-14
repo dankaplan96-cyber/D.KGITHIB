@@ -213,6 +213,33 @@ givers and carries low HP through the late chapters; a player normally would.
 | Render cost at the new places (software renderer, counts): harbour +56 draw calls (547 vs 491, +11%), +2% triangles; the lane +23 calls (+2%) | LOGIC | measured |
 | Defects found while building it (fixed before commit): a crate prop called with the wrong arguments (NaN geometry in the house); the garden first placed on a slope; Bram standing where E picked him instead of the pump; the pump's reach shorter than its plinth | — | FIXED |
 
+### Baldino's workshop, years on (0.25.0; TY-2; docs/TWELVE_YEARS.md)
+Evidence: tests/workshop.mjs (26 checks; its screenshots W-00…W-04 in the working directory); captures/workshop/
+(before/after at the same view, the test pair's three states, details with the camera zoomed for the capture only).
+Software renderer (SwiftShader): layout and readability only, no GPU timing.
+
+| Check | Evidence | Result |
+|---|---|---|
+| Twinsen walks from the Zeelich dock into the workshop | INPUT (ISO: chapter 2 done by flags, chapter 3 started by story.nextChapter, as tests/chapter2.mjs) | PASS |
+| The room has the relay table, the hoist, the fan, the thunder box, the tea experiment, Ilo's perch and crate | LOGIC + captures/workshop/workshop-details.png | PASS |
+| Collision: from the door to every new thing, under the hoist to the barrel and crate givers, to Baldino and back | INPUT | PASS |
+| Looks: fan, thunder box (its limit), tea experiment (lid, note, boiled dry), crate (Ilo); Baldino adds a line when there | INPUT | PASS |
+| Baldino: first talk is chapter 3's explanation as before; next talk brings up the test pair; then the key reminder plus one line of his years, a different one each time | INPUT | PASS |
+| Failure 1: lever with the hoist down → the hanging relay can't see, blinks, no sync, Twinsen and Baldino say why | INPUT | PASS |
+| Failure 2: drip shut → glow warning, trip, switched off (restartable) | INPUT | PASS |
+| Crank raises the relay clear of the flying machine | INPUT | PASS |
+| In sight but drip shut: the SYNC lamps start, then it trips before ten seconds | INPUT | PASS |
+| Save & quit → Continue: hoist up/drip shut kept; a save with the pair running comes back off and cold; after success it still talks | UI + INPUT | PASS |
+| Drip open → stays cool; ten seconds together → the pair talks; Baldino pays (a coin worth 5, picked up); labels become looks; the journal keeps the two rules | INPUT | PASS |
+| Chapter 3's main path unchanged: with the parts, Baldino builds the key and the story cuts to Zoé | INPUT (ISO: c2_cog, c2_cyl by flags) | PASS |
+| Chapter 10 opens in the workshop, Baldino recalls the pair's rules; the thunder box is gone once Twinsen has the pulse tool | INPUT (ISO: chapter 9 done by flags, as tests/chapter10.mjs) | PASS |
+| Regression after the change: workshop, townlife, stability, resume, shipfiles, zoe-resume ALL PASSED; chapter2 end to end, its log identical to the 0.24.0 run | LOGIC/INPUT | PASS |
+| chapter10 | LOGIC | PASS once on this change (log identical to the 0.24.0 run), then 3 runs where one bore drone survived the test's 40 teleport-and-throw tries (chapter ends at 4/5). The unchanged 0.24.0 build failed the same way at the same time. Enemy AI uses unseeded Math.random: a flaky test step, not caused by this change; open (see below) |
+| Open: tests/chapter10.mjs's bore-drone step is nondeterministic (drones wander with Math.random; the step teleports 3.5 m west of each drone and throws up to 40 times) | — | OPEN (pre-existing) |
+| Render counts in the workshop (software renderer; counts, not time): draw calls at the door 2887 → 2992 (+3.6%), mid-room 3124 → 3333 (+6.7%); room triangles 92.6k → 106.9k | LOGIC | measured |
+| Defects found while building it (fixed before commit): the relay table first closed the rim walk south of the flying machine (the bot boxed itself in by the barrel; table shortened and moved left); the SYNC lamps first faced away from the camera; the fan first pinched the walk past the globe; the reward first popped five coins that could land on furniture (now one coin worth 5, tossed toward Twinsen) | — | FIXED |
+| Not checked here: the look on a GPU; the feel by hand; whether a player notices the lid in the vault (it's small: the tea up the wall and the lines carry it) | — | HUMAN |
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.

@@ -16,6 +16,8 @@ Original game data used for visual comparison during development stays outside t
 | Citadel Spaceport (`src/game/spaceport.js`) | Generated in code | project code | in use |
 | Bram, Officer Odile, Nell (`assets/poly/{bram,odile,nell}.json`) | Built in Blender from Python (`tools/blender/cast_poly.py`) from their looks in `src/game/characters.js` | project code | in use |
 | Citadel twelve years on: the house's family corners, the pump, the garden, customs, cargo, Nell's shop (`src/game/homelife.js`, `src/game/townlife.js`) | Generated in code | project code | in use |
+| Baldino's workshop years on: the relay table, the hoist, the fan, the tea experiment, the thunder box, Ilo's perch (`src/game/workshoplife.js`) | Generated in code (the relays reuse `buildRelay` from `src/game/valveroom.js`) | project code | in use |
+| Workshop evidence images (`captures/workshop/*.png`) | Screenshots of the game (software renderer), composed with PIL | project captures | evidence |
 | Skeletons (`art/characters/skeletons.json`) | Dumped from the game's rig definitions (`tools/dump-skeletons.mjs`) | project code | in use |
 | Character animation | Procedural pose animation (`src/engine/rig.js`) | project code | in progress |
 | Buildings, props, street furniture, cliffs, heat posts | Generated in code (`architecture.js`, `town.js`, `island.js`, `props.js`, `cliffs.js`, `zeelich.js`) | project code | Citadel and Zeelich in use; underground in progress |

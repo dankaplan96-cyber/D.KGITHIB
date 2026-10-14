@@ -395,6 +395,26 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
   instead of holding the end pose. Contact frames unchanged (combat §§ pass).
 
+## Session: twelve years on, second set — Baldino's workshop (0.25.0)
+- The user's brief, step 4: show years of invention, maintenance and unfinished experiments in Baldino's workshop;
+  introduce the network's technology early with its limits; no unexplained gadgets (docs/TWELVE_YEARS.md).
+- The room (src/game/workshoplife.js): the relay table (two bench relays of the chapter-10 model, a coupler under a
+  drip can, a lever, a SYNC strip, trays in rows, a drawing in two hands), the old hoist by the flying machine's
+  nose, the stove fan with brass, wood and tin blades, the tea experiment (lid in the vault, tea up the wall, "TEA:
+  BY HAND"), the thunder box stopping a toy mill (the chapter-10 pulse tool before it was ready), Ilo's perch and a
+  shuttle-yard crate. Ilo (an Esmer engineer) is mentioned, not seen.
+- The Test Pair (src/game/story/workshop.js, a layer the director asks after the chapter, like life.js): optional
+  in chapter 3; relays talk by sight (crank the hoist), couplers overheat (open the drip); ten seconds together →
+  the pair keeps talking, Baldino pays a coin worth 5. Baldino's idle lines show his years, one at a time. Chapter
+  10 recalls the rules (one conditional line in network.js); the thunder box leaves the shelf once Twinsen has the
+  pulse tool.
+- tests/workshop.mjs (ALL PASSED, 26 checks): by input, both failures, recovery, saves in each state, the main
+  path unchanged, chapter 10. Regression: chapter2 (log identical to 0.24.0's), townlife, stability, resume,
+  shipfiles, zoe-resume pass; chapter10 passed once, then its bore-drone step failed 3 times, as it did on the
+  unchanged 0.24.0 build at the same time (unseeded enemy randomness; QA.md). Evidence: captures/workshop/, QA.md.
+- Not verified: the look on a GPU and the feel by hand. Chapter 10's stations still don't make line of sight or
+  overheating playable (taught and remembered only).
+
 ## Session: twelve years on, first set (0.24.0)
 - The user's brief: make the world feel twelve years older than LBA2, separating the originals' history from the
   sequel's inventions (docs/TWELVE_YEARS.md), starting with the home, the neighbourhood and the harbour.

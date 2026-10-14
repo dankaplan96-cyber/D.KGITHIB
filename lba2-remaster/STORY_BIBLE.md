@@ -187,6 +187,10 @@ What separates the originals' history from this sequel's inventions is recorded 
   pliers and leaves them in his boat box.
 - **Citadel's harbour** trades with Zeelich: a customs booth, Esmer cargo, Nell's repair shop for imported machines.
 - **Side stories** (src/game/story/life.js): The Old Pump (Bram) and The Mislabelled Shipment (Odile, Nell, Xil).
+- **Baldino's workshop** (second set; src/game/workshoplife.js, story/workshop.js): years of his work in the room;
+  he works with Ilo, an Esmer engineer at the shuttle yard (mentioned, not seen). The Test Pair (optional, ch. 3):
+  two bench relays and a coupler teach the network's limits early (relays talk by sight; couplers overheat); his
+  thunder box on the shelf is the pulse tool of chapter 10 before it was ready.
 
 ## Peoples of Zeelich (after LBA2's models)
 - **Esmers:** a single capsule for body and head, the face high on it; thin arms with cone hands; salmon skin.

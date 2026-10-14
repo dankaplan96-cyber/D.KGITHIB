@@ -8,6 +8,7 @@ import { textures } from '../engine/textures.js';
 import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, soft, softMat, canvasTex } from './props.js';
 import * as P from './props.js';
 import { dressHomeLife } from './homelife.js';
+import { dressWorkshop } from './workshoplife.js';
 
 export const texMat = (tex, rx, ry, extra = {}) => {
   const t = tex.clone(); t.needsUpdate = true; t.repeat.set(rx, ry);
@@ -1299,7 +1300,8 @@ export function glowSprite(color, size, opacity = 0.8) {
 
 // ------------------------------------------------------------------ Baldino's workshop (Zeelich)
 // Esmer house: lilac plaster under a vaulted ceiling springing from the walls, round windows, brass and
-// wood; crammed with the old inventor's projects. The override key is assembled at the workbench.
+// wood; crammed with the old inventor's projects. The override key is assembled at the workbench. Years of
+// his work (the relay table, the old hoist, the mended fan, the tea experiment, Ilo's perch): workshoplife.js.
 function buildWorkshop(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'workshop', 1500, 0);
   const R = B.room, k = B.k;
@@ -1385,7 +1387,6 @@ function buildWorkshop(scene, physics) {
   k.add(pipe([[rX + 0.2, 1.2, BZ + 0.05], [rX + 0.2, 2.75, BZ + 0.05], [rX + 0.4, H + 0.4, BZ + 0.45]], 0.012, 0.15, 5), MAT.flat('#1a1a1a', 0.6), 0, 0, 0);
   for (const y of [1.6, 2.2]) k.add(torus(0.02, 0.006, 4, 8), MAT.flat('#efe6d6', 0.4), rX + 0.2, y, BZ + 0.04, Math.PI / 2);
   k.at(rX, 1.9, BZ, 0, () => P.pinnedSheet(k, 0.48, 0.64, P.CANV.plan('radio'), 0.04));
-  k.at(0.62, 1.72, BZ, 0, () => P.pinnedSheet(k, 0.5, 0.66, P.CANV.plan('flyer'), -0.05));
   // a spare propeller hung by the door
   k.at(3.68, 1.95, BZ + 0.08, -Math.PI / 2, () => P.propeller(k, 0.55));
 
@@ -1394,14 +1395,12 @@ function buildWorkshop(scene, physics) {
   k.at(LX, 1.66, 0.62, Math.PI / 2, () => P.chalkboard(k, 1.7, 1.0));
   k.at(LX, 2.62, 0.62, Math.PI / 2, () => P.pinnedSheet(k, 0.42, 0.52, P.CANV.plan('mill'), 0.06));
   B.put(LX + 0.55, 2.45, Math.PI / 2, P.draftingTable, P.CANV.plan('flyer'));
-  k.at(LX + 1.3, 0, 2.35, 0, () => { k.add(lathe([[0.001, 0.62], [0.17, 0.62], [0.18, 0.66], [0.001, 0.68]], 16), MAT.wood('honey'), 0, 0, 0); k.add(cyl(0.03, 0.04, 0.62, 8), MAT.iron(), 0, 0.31, 0); k.add(lathe([[0.001, 0], [0.2, 0], [0.18, 0.04], [0.001, 0.05]], 14), MAT.iron(), 0, 0, 0); });
-  B.ccol(LX + 1.3, 2.35, 0.2, 0.68, { noStand: true, seeThrough: true });
 
   // --- the floor: the half-built flying machine, the planet model, a coil, crates
   const fX = 1.0, fZ = 1.0;
   const fm = B.put(fX, fZ, 0, P.flyingMachine, {});
   const pk = new Kit(fm.prop); P.propeller(pk, 0.62); pk.flush();
-  P.oilCan(k, fX + 1.55, 0, fZ - 0.95, 1.2);
+  P.oilCan(k, 2.78, 0, 1.0, 1.2);   // (by the hoist's foot)
   k.at(2.75, 0, 2.95, 0.3, () => { k.add(rbox(0.55, 0.24, 0.26, 0.02), MAT.paint('#3f6a8a', 0.45), 0, 0.12, 0); k.add(pipe([[-0.17, 0.24, 0], [-0.14, 0.33, 0], [0.14, 0.33, 0], [0.17, 0.24, 0]], 0.012, 0.03, 5), MAT.iron(), 0, 0, 0); });
   B.col(2.75, 2.95, 0.3, 0.16, 0.34, { noStand: true, seeThrough: true, rot: 0.3 });
   const gX = -2.35, gZ = 1.05;
@@ -1448,6 +1447,7 @@ function buildWorkshop(scene, physics) {
   R.npcSpots = { baldino: { ...B.world(bal[0], bal[1]), a: 0.3 }, zoe: face(0.15, -1.25, bal[0], bal[1]), twinsen: face(-1.1, -0.45, bal[0], bal[1]) };
   R.searches.push({ id: 'bench', ...B.world(benchX + 0.55, BZ + 1.15), r: 1.0 });
   R.searches.push({ id: 'globe', ...B.world(gX + 0.7, gZ + 0.45), r: 1.1 });
+  dressWorkshop(B, R, { glowSprite, H });
   return B.finish();
 }
 
