@@ -41,7 +41,10 @@ export const steps = [
     P.settle(); return { pylons: out, fail: out.every(Boolean) ? null : 'pylons' };
   }],
   // the coil: three ball hits while the overloaded guardian fights (input; the bot aims at the coil, not the guardian)
-  ['Vesk\'s overload coil', () => { const G = game; P.settle(); const tg = G.room.ballTargets.find((x) => x.coil); for (let k = 0; tg && k < 4 && !tg.done && !G.hero.dead; k++) P.hitTarget(tg, 3.5, { run: false, maxT: 40, fight: false }); P.settle(60); return { coil: G.flags.c3_coil, turned: G.flags.c3_turned, fail: G.flags.c3_turned ? null : 'coil' }; }, null, { retryFrom: 'the core' }],
+  ['Vesk\'s overload coil', () => { const G = game; P.settle(); const tg = G.room.ballTargets.find((x) => x.coil); for (let k = 0; tg && k < 4 && !tg.done && !G.hero.dead && !(P.assist && G.hero.hp <= 3); k++) P.hitTarget(tg, 3.5, { run: false, maxT: 40, fight: false, tries: P.assist ? 2 : 6 });
+    // (under ASSIST, after the bot's own tries: the remaining coil hits through the story's own hit — logged ISO)
+    if (P.assist && tg && !tg.done && !G.hero.dead) { for (let n = 0; n < 3 && !tg.done; n++) { G.story.cur.hitCoil(tg); P.settle(); } P.note('ISO assist: the overload coil broken'); }
+    P.settle(60); return { coil: G.flags.c3_coil, turned: G.flags.c3_turned, fail: G.flags.c3_turned ? null : 'coil' }; }, null, { retryFrom: 'the core' }],
   ['the epilogue', () => { const G = game; let t = 0; while (G.state !== 'ending' && t < 120) { G.step(0.25); t += 0.25; if (G.state === 'dialog' || G.state === 'cutscene') P.settle(); } return { state: G.state, title: document.querySelector('#ending h1')?.textContent, fail: G.state === 'ending' ? null : 'no ending' }; }],
   ['Keep Exploring', () => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); P.settle(); return { state: game.state, free: game.flags.ep_free, obj: P.state().obj }; }],
 ];

@@ -324,7 +324,7 @@
   // ISO assist for a fight the bot can't win (its combat is weaker than a player's): the remaining enemies of the
   // group/area are beaten through their own damage rule. Logged; a step that uses it is ISO evidence, not INPUT.
   P.assistFight = ({ group = null, r = 30 } = {}) => {
-    const h = hero(), left = G.enemies.filter((e) => e.alive && e.present && !e.boss && (group ? e.group === group : e.pos.distanceTo(h.pos) < r));   // (never a boss: its fight is the story)
+    const h = hero(), left = G.enemies.filter((e) => e.alive && e.present && !e.boss && e.id !== 'guardian' && e.kind !== 'guardian' && e.def?.kind !== 'guardian' && (group ? e.group === group : e.pos.distanceTo(h.pos) < r));   // (never a boss: its fight is the story)
     for (const e of left) e.damage?.(99, null);
     G.step(1); P.note(`ISO assist: ${left.length} enemies beaten (${left.map((e) => e.id).join(',')})`);
     return left.length;
