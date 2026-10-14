@@ -53,7 +53,7 @@ export class Chapter2 extends ChapterBase {
     const f = this.f, Z = this.Z, R = this.game.rooms;
     const folk = ZFOLK.find((z) => z[0] === id);
     if (!this.reached()) return ['baldino', 'nara', 'oku'].includes(id) || folk ? null : undefined;
-    if (folk) return this.Z.npcSpots[folk[1]];
+    if (folk) return this.story.zlife?.spot(id) || this.Z.npcSpots[folk[1]];   // (Tavo at Snuff's counter once her oven is hot: zeelife.js)
     const S = Z.npcSpots;
     const plat = Z.platform;
     switch (id) {

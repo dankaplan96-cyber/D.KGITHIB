@@ -196,6 +196,12 @@ the twelve-year gap (this sequel's inventions, not the originals' canon; impleme
   and Lumi's wool in one of FunFrock's old blockhouses, dug out of a dune, with a wind-catcher Kesh built on its roof.
   The Wind-Catcher (optional, from ch. 4): turn its cowl into the wind with Lumi's new screen. Lumi weaves the sails,
   screens and curtains; Hesk marks the yacht routes with flag poles; NO FERRY is chalked on his yacht stop in ch. 5.
+- **Zeelich's street** (fourth set; src/game/zeelife.js, story/zeelife.js): Mother Snuff bakes the street's bread in
+  the old watch house (older than the council, its crest chiselled off), on the project's heat; Bzizz lands his nectar
+  crates on its roof. The project's heat posts are lit at the bakery, the council house and the depot, and dark (next
+  quarter) at the west end and over the moles' burrow; Mr Pelleck re-tiles his dome with his wages from the depot's
+  books. The Second Bake (optional, from ch. 3): a crate on the flue trips the oven's heat box; shove it off on the roof
+  or knock it off with the ball. The street argues about the project in every chapter it is visited.
 
 ## Peoples of Zeelich (after LBA2's models)
 - **Esmers:** a single capsule for body and head, the face high on it; thin arms with cone hands; salmon skin.

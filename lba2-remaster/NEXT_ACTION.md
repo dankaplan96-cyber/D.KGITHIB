@@ -1,5 +1,11 @@
 # NEXT ACTION
 
+0.27.0: twelve years on, fourth set: Zeelich's street (docs/TWELVE_YEARS.md; tests/zeelich-life.mjs). The old watch
+house as Mother Snuff's bakery on the project's heat and The Second Bake side story, heat posts lit and promised,
+the moles' burrow hatch, Mr Pelleck's re-tiled dome, Nara's held flowers. Next: an independent review of TY-4, then
+the Hamalayi's twelve-year changes. A small chapter-10 hook (a line recalling the bakery's heat box) is left to the
+owner of network.js/ch10.js. Ask the user how the street reads in their game.
+
 0.26.0: twelve years on, third set: Desert Island (docs/TWELVE_YEARS.md; tests/desert-life.mjs). Kesh's cool room in
 FunFrock's old blockhouse with its wind-catcher and The Wind-Catcher side story, Lumi's loom and sail, the sand
 screens, Hesk's flag poles and yacht stop. Next: an independent review of TY-3, then the Hamalayi's and Zeelich's own

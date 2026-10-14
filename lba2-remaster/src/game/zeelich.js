@@ -13,6 +13,7 @@
 //   R.depot {x, z, patrol:[[x,z],...], locker:{x,z}}  the project depot (drones patrol it), locker holds the code cylinder
 //   R.platform {x, z, gate:{x,z}, console:{x,z}, shield:{on, setOn(b)}, pad:{x,z}, lift:{lower(cb)}}
 //   R.cloudY                  height of the cloud sea
+//   R.life                    the street twelve years on (zeelife.js: the watch house bakery, heat posts, burrow, scaffold)
 //
 // Art pass: a floating island of Esmer architecture above a pink sea of clouds. West → east: the sky-ferry
 // pier and a horseshoe gateway, the Esmer street (whitewashed and lilac houses with onion domes, an arcade,
@@ -32,6 +33,7 @@ import { textures } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
 import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
 import { rugTex } from './props.js';
+import { buildZeelichLife, zlClear } from './zeelife.js';
 
 export const ZEELICH = { x: 2400, z: 0 };
 const Y0 = 6.0;              // walking level of the island
@@ -607,6 +609,9 @@ export function buildZeelich(scene, physics) {
     R.dogs = dogs;
   }
 
+  // ---------------------------------------------------------------- the street twelve years on (src/game/zeelife.js)
+  const life = buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: houses[0].dome });
+
   buildIslets();
   scatter();
   B.build();
@@ -624,11 +629,13 @@ export function buildZeelich(scene, physics) {
       esmer2: { ...W(-24, 7.0), a: Math.PI },
       esmer3: { ...W(-15.5, -2.6), a: -2.2 },
       // the street's other folk: Mosquibees and burrowers, as on LBA2's Zeelich
-      bee1: { ...W(-15.5, -2.6), a: -2.2 },
+      // (twelve years on, zeelife.js: Bzizz by the watch house he lands on, Mother Snuff at her bread hatch, Old Grumm
+      // by the burrow hatch, Mr Pelleck under his scaffold)
+      bee1: life.watch.bzizz,
       bee2: { ...W(-29.0, 5.6), a: Math.PI },
-      mole1: { ...W(-38.5, 3.6), a: 2.4 },
-      mole2: { ...W(-20.5, -4.6), a: 0.3 },
-      tri1: { ...W(-31.5, -4.4), a: 0.2 },
+      mole1: life.grumm,
+      mole2: life.watch.snuff,
+      tri1: life.pelleck || { ...W(-31.5, -4.4), a: 0.2 },
       tri2: { ...W(-12.0, 3.0), a: -2.6 },
       baldinoOut: { ...W(ws[0] + 1.4, ws[1] - 0.4), a: Math.PI },
       doran: { ...W(-60.5, 0.9), a: Math.PI / 2 },
@@ -640,10 +647,12 @@ export function buildZeelich(scene, physics) {
     depot,
     platform,
     ferry,
+    life,
   });
 
   // houses and big buildings between the camera and Twinsen fade out (the camera doesn't dodge them)
   const faders = houses.map((h) => h.fader).concat(mills.map((m) => m.fader)).filter(Boolean);
+  { const b = life.fadeBox; faders.push(makeFader(life.group, b.x0, b.z0, b.x1, b.z1, b.top)); }
   const sample = new THREE.Vector3(), hp = new THREE.Vector3(), cp = new THREE.Vector3();
   updaters.push((dt) => {
     const G = globalThis.game;
@@ -1122,7 +1131,9 @@ export function buildZeelich(scene, physics) {
     const fader = makeFader(G, o.x - ext, o.z - ext, o.x + ext, o.z + ext, Y0 + Math.max(domeTop, h + (o.minaret ? 6 : 1)) + 0.5);
     keepClear(o.x - ext - 0.6, o.z - ext - 0.6, o.x + ext + 0.6, o.z + ext + 0.6);
     const doorW = f(doorX, d / 2 + arcadeDepth + 0.75);
-    return { group: G, door: doorW, fader, ...out };
+    // (where the dome sits, for the scaffold of the one being re-tiled: zeelife.js; houses facing south only)
+    const dome = o.workshop || o.ry ? null : { x: o.x + dx, z: o.z + dz, y: Y0 + h + 1.12, R0, roof: Y0 + h, front: o.z + d / 2 };
+    return { group: G, door: doorW, fader, dome, ...out };
   }
   function wpos(f, lx, lz) { const [x, z] = f(lx, lz); return { x, z }; }
   function makeFader(G, x0, z0, x1, z1, top) {
@@ -1841,8 +1852,9 @@ export function buildZeelich(scene, physics) {
     for (const [x, z] of trees) {
       if (!onIsland(x, z, 2) || !isClear(x, z, 1)) continue;
       const v = items[0].length <= items[1].length ? 0 : 1;
-      const s = 0.9 + r() * 0.35;
-      items[v].push({ x, y: Y0 - 0.05, z, ry: r() * 6, s });
+      const s = 0.9 + r() * 0.35, it = { x, y: Y0 - 0.05, z, ry: r() * 6, s };
+      if (zlClear(x, z, 1)) continue;   // (after the draws: the island's other trees keep their places)
+      items[v].push(it);
       col({ type: 'cyl', x, z, r: 0.3, top: Y0 + 2.6 * s, seeThrough: true });
     }
     items.forEach((list, v) => instances(group, puffTreeGeo(v), VC(), list));
@@ -1852,8 +1864,9 @@ export function buildZeelich(scene, physics) {
     for (let i = 0; i < 14; i++) {
       const x = -48 + r() * 84, z = -28 + r() * 56;
       if (!onIsland(x, z, 1.2) || !isClear(x, z, 1.5)) continue;
-      const s = 0.25 + r() * 0.5;
-      rocks[i % 3].push({ x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#fff0ff').multiplyScalar(0.95 + r() * 0.15) });
+      const s = 0.25 + r() * 0.5, it = { x, y: Y0 - 0.1, z, ry: r() * 6, s, color: new THREE.Color('#fff0ff').multiplyScalar(0.95 + r() * 0.15) };
+      if (zlClear(x, z, 1)) continue;
+      rocks[i % 3].push(it);
       if (s > 0.45) col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true });
     }
     const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#3a2030', emissiveIntensity: 0.4 });
@@ -1865,8 +1878,11 @@ export function buildZeelich(scene, physics) {
       if (!onIsland(x, z, 0.3) || !isClear(x, z, 0.2)) continue;
       const patch = Math.sin(x * 0.21) + Math.sin(z * 0.27 + x * 0.05);
       if (patch < -0.6) continue;
-      grass.push({ x, y: Y0 - 0.02, z, ry: r() * 6, s: 0.8 + r() * 0.7, color: new THREE.Color().setHSL(0.16 + r() * 0.06, 0.45, 0.55 + r() * 0.15) });
-      if (r() < 0.35) flowers[Math.floor(r() * 4)].push({ x: x + (r() - 0.5) * 0.6, y: Y0, z: z + (r() - 0.5) * 0.6, ry: r() * 6, s: 0.9 + r() * 0.6 });
+      const gr = { x, y: Y0 - 0.02, z, ry: r() * 6, s: 0.8 + r() * 0.7, color: new THREE.Color().setHSL(0.16 + r() * 0.06, 0.45, 0.55 + r() * 0.15) };
+      const fl = r() < 0.35 ? [Math.floor(r() * 4), { x: x + (r() - 0.5) * 0.6, y: Y0, z: z + (r() - 0.5) * 0.6, ry: r() * 6, s: 0.9 + r() * 0.6 }] : null;
+      if (zlClear(x, z, 0.1)) continue;   // (the draws are made either way)
+      grass.push(gr);
+      if (fl) flowers[fl[0]].push(fl[1]);
     }
     instances(group, grassClumpGeometry(5, 9), pm('#ffffff', 0.9, { vertexColors: true, side: THREE.DoubleSide }), grass, { cast: false });
     ['#ff8ac0', '#ffffff', '#c89cff', '#ffd84a'].forEach((c, k) => instances(group, flowerGeometry(c), pm('#ffffff', 0.7, { vertexColors: true }), flowers[k], { cast: false }));
