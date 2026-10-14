@@ -1,7 +1,8 @@
 # Automated checks
 
 Headless Chromium (Playwright) playthroughs that drive the real game with deterministic stepping
-(`game.testFreeze = true`, `game.step(dt)`). They need the game served on port 8123:
+(`game.testFreeze = true`, `game.step(dt)`). They need the game served on port 8123, or wherever `GAME_URL` points
+(e.g. `GAME_URL=http://localhost:8141/ node tests/townlife.mjs`):
 
 ```bash
 cd lba2-remaster && python3 -m http.server 8123 &

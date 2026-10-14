@@ -34,6 +34,12 @@ const walk = await ev(() => { const R = game.rooms.workshop, L = R.life, out = [
   for (const [n, p, tol] of [['lever', L.spots.lever, 0.6], ['tap', L.spots.tap, 0.6], ['crank', L.spots.crank, 0.6], ['under the hoist', { x: L.hoist.x, z: L.hoist.z - 0.6 }, 0.5], ['barrel (within its giver reach)', { x: barrel.x, z: barrel.z }, barrel.r - 0.05], ['crate', { x: crate.x - 0.9, z: crate.z }, 0.6], ['fan', L.spots.fan, 0.6], ['pulse', L.spots.pulse, 0.6], ['kettle', L.spots.kettle, 0.6], ['Baldino', { x: bal.x + 0.9, z: bal.z + 0.6 }, 0.7], ['door', R.spawn, 0.6]]) { const r = P.go(p.x, p.z, { tol, maxT: 60 }); out.push([n, r.r]); }
   return out; });
 check('collision: from the door he walks to every new thing, under the hoist to the crates, to Baldino and back (INPUT)', walk.every(([, r]) => r === 'arrived'), walk);
+const cr = await ev(() => { const R = game.rooms.workshop, L = R.life; const r = P.go(L.hoist.x, L.hoist.z, { tol: 0.15, maxT: 8 }); const d = Math.hypot(game.hero.pos.x - L.hoist.x, game.hero.pos.z - L.hoist.z); P.go(R.spawn.x, R.spawn.z, { tol: 0.6 }); return { r: r.r, d: +d.toFixed(2), lift: L.lift }; });
+check('the lowered relay\'s cradle and the hoist\'s low bars are solid: he can\'t stand inside the cradle (REV-TY-2 D5)', cr.lift === 0 && cr.d > 0.6, cr);
+// ---- before Baldino's hello the pair is his: only looked at
+const pre = await use('lever', 'wlook'); const prel = await said();
+const preOn = await ev(() => game.story.workshop.on);
+check('before Baldino\'s "At last!" the pair can\'t be started: the lever only gets a look (REV-TY-2 D7)', pre.tgt === 'wlook' && prel.some((l) => /ask before I touch/.test(l)) && !preOn, { pre, prel, preOn });
 
 // ---- the looks (INPUT): each a short line; Baldino adds one when he's here
 const looks = {};
@@ -42,6 +48,10 @@ check('the fan, the thunder box, the tea experiment and Ilo\'s crate each have a
 check('the failed experiment reads as one: lid in the ceiling, "TEA: BY HAND", boiled dry', looks.kettle.said.some((l) => /lid/.test(l)) && looks.kettle.said.some((l) => /BY HAND/.test(l)) && looks.kettle.said.some((l) => /boiled dry/.test(l)), looks.kettle.said);
 check('the thunder box shows its limit (three seconds, then ten to recover)', looks.pulse.said.join(' ').match(/three seconds/) && looks.pulse.said.join(' ').match(/ten/), looks.pulse.said);
 check('collaboration: Ilo of the shuttle yard (crate, Baldino)', looks.crate.said.some((l) => /Ilo/.test(l)), looks.crate.said);
+// Ilo's crate is a giver too: from the side its look is read from, E now hops and shakes the bonus out
+const gv = await ev(() => { const R = game.rooms.workshop, s = R.life.spots.crate, cg = R.givers.find((g) => g.id === 'crate'); P.go(s.x, s.z, { tol: 0.3 }); P.face(cg.x, cg.z); const tg = P.target()?.kind ?? null; P.tap('KeyE', 0.1); P.wait(1.5); P.settle(); const got = game.searched.includes('giver:workshop:crate'); P.go(s.x, s.z, { tol: 0.3 }); P.face(cg.x, cg.z); return { tg, got, after: P.target()?.kind ?? null }; });
+await said();
+check('Ilo\'s crate: once read, E beside it (the side it is read from) hops and gives its bonus; then it can be read again (REV-TY-2 D6)', gv.tg !== 'wlook' && gv.got && gv.after === 'wlook', gv);
 
 // ---- Baldino: the main intro first (unchanged), then the test pair, then his years
 const t1 = await ev(() => { const r = P.talk('baldino'); return { r: r.r, plan: !!game.flags.c2_plan, ask: !!game.flags.w_ask }; });
@@ -87,7 +97,7 @@ const s4a = await state();
 await shot('W-02-linked-hot.png');
 await ev(() => { P.wait(5); P.settle(); });
 const s4 = await state(), l4s = await said();
-check('raised and switched on: the pair links (the SYNC lamps start), but the coupler still trips before they hold (INPUT)', s4a.on && s4a.sync > 0.2 && s4a.heat > 0.45 && !s4.on && !s4.pair && s4.trips === 2 && l4s.some((l) => /The tap/.test(l)), { s4a, s4, l4s });
+check('raised and switched on with the drip shut: the relays see each other, but running hot they can\'t hold together (the SYNC lamps stay dark) and the coupler trips (INPUT; REV-TY-2 D2)', s4a.on && s4a.lift === 1 && s4a.sync === 0 && s4a.heat > 0.45 && !s4.on && !s4.pair && s4.trips === 2 && l4s.some((l) => /The tap/.test(l)), { s4a, s4, l4s });
 
 // ---- save & Continue while it's running: it comes back switched off and cold
 await use('lever', 'wlever');
@@ -98,19 +108,36 @@ await open(page, '?nocine'); await menu(page, 'continue'); await said();
 const r2 = await ev(() => { P.settle(); game.step(0.2); return null; }).then(state);
 check('a save made with the pair running comes back with it off and cold (hoist kept)', s5a.on && !r2.on && r2.heat === 0 && r2.sync === 0 && r2.up && !r2.pair, { s5a, r2 });
 
-// ---- success: the drip open, switched on, ten seconds together
+// ---- the drip open, switched on: they sync while it runs cool; shut again mid-sync, they lose step and it trips
 const tp = await use('tap', 'wtap');
 const tps = await said();
+await use('lever', 'wlever');
+await ev(() => { P.wait(5); });
+const s6a = await state();
+await use('tap', 'wtap');   // (shut it again, late)
+const s6b = await state();
+await ev(() => { P.wait(7); P.settle(); });
+const s6c = await state(); await said();
+check('the drip tap opens (Baldino\'s sandwich note) and keeps the coupler cool while they sync (INPUT)', tp.tgt === 'wtap' && s6a.tap && s6a.heat < 0.45 && s6a.sync > 0.3 && tps.some((l) => /sandwich/.test(l)), { tp, s6a, tps });
+check('the drip shut again mid-sync: the sync starts over, the coupler heats and trips; no success with the tap shut (REV-TY-2 D2)', !s6b.tap && s6b.sync === 0 && !s6c.pair && !s6c.on && s6c.trips === 3, { s6b, s6c });
+
+// ---- success: the drip open again, switched on, ten seconds together; he presses the crank in the last moment
+await use('tap', 'wtap'); await said();
 const coins0 = await ev(() => game.hero.coins);
 await use('lever', 'wlever');
-await ev(() => { P.wait(6); });
-const s6a = await state();
-await ev(() => { P.wait(5); P.settle(); P.wait(1.5); });
+const race = await ev(() => { const L = game.rooms.workshop.life, W = game.story.workshop, s = L.spots.crank; P.go(s.x, s.z, { tol: 0.5 }); P.face(L.hoist.x, L.hoist.z);
+  for (let i = 0; i < 600 && W.sync < 0.985 && !game.flags.w_pair; i++) game.step(1 / 30);
+  const at = +W.sync.toFixed(3), tg = P.target()?.kind; P.tap('KeyE', 0); P.wait(1.5); P.settle(); P.wait(1.5);
+  return { at, tg, owe: game.flags.w_owe || 0, lying: game.pickups.list.filter((p) => p.type === 'coin' && p.owe === 'w_owe').length }; });
 const s6 = await state(), l6s = await said();
-check('the drip tap opens (Baldino\'s sandwich note) and keeps the coupler cool (INPUT)', tp.tgt === 'wtap' && s6a.tap && s6a.heat < 0.45 && tps.some((l) => /sandwich/.test(l)), { tp, s6a, tps });
 check('held together for ten seconds: the pair talks; Baldino is delighted and pays half the shuttle yard\'s fee', s6.pair && l6s.some((l) => /Ilo owes me/.test(l)) && l6s.some((l) => /Half is yours/.test(l)) && l6s.includes('[toast] w_toast_pair'), { s6, l6s });
-const pay = await ev(() => { for (const p of [...game.pickups.list]) if (p.type === 'coin') P.go(p.pos.x, p.pos.z, { tol: 0.4, maxT: 10 }); P.settle(); return game.hero.coins; });
-check('the reward: a coin worth five kashes, tossed his way and picked up (INPUT)', pay - coins0 === 5, { coins0, pay });
+check('the crank pressed in the pair\'s last moment does nothing after success: the hoist stays up (REV-TY-2 D1)', race.tg === 'wcrank' && race.at >= 0.98 && s6.up && s6.lift === 1, { race, s6 });
+check('the reward: a coin worth five kashes tossed his way, owed until he picks it up', race.owe === 1 && race.lying === 1, race);
+// save & Continue with the coin still on the floor: it is given on loading (REV-TY-2 D4)
+await quitAndKeep(page, context, file);
+await open(page, '?nocine'); await menu(page, 'continue'); await said();
+const pay = await ev(() => { const toasts = [...game.hud.toastEl.children].map((c) => c.textContent); P.settle(); game.step(0.2); return { coins: game.hero.coins, owe: game.flags.w_owe || 0, paid: !!game.flags.w_paid, toasts }; });
+check('saved before he picked the coin up: on Continue the five kashes are his (a toast says so) and nothing is owed (REV-TY-2 D4)', pay.coins - coins0 === 5 && pay.owe === 0 && pay.paid && pay.toasts.some((t) => /Baldino's coin: 5 kashes/.test(t)), { coins0, pay });
 await shot('W-03-talking.png');
 const vis = await ev(() => { const L = game.rooms.workshop.life; return { st: { ...L.state }, labels: ['lever', 'tap', 'crank'].map((w) => { const s = L.spots[w]; P.go(s.x, s.z, { tol: 0.4 }); return P.target()?.label; }) }; });
 check('afterwards the workshop shows it: both relays lit, the SYNC panel full, the hoist up, the drip running; the parts are only looked at now', vis.st.done && vis.st.sync === 1 && vis.st.up && vis.st.tap && vis.labels.every((l) => l === 'p_look'), vis);

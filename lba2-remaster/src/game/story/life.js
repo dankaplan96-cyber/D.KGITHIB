@@ -8,13 +8,15 @@
 //
 // The Old Pump (from chapter 2): the project's heat pipe went in past Bram's pump and the pump seized. Its valve pin
 // needs pliers — Arthur borrowed Twinsen's for his boat's rudder (they're in his boat box by the garden pond); then
-// three strokes of the handle. The pump runs (water in the trough; Bram's thanks: a clover); a drink there restores
-// life; in the evacuation, with the project's posts dark, it is the street's water.
-// The Mislabelled Shipment (from chapter 2): customs holds Xil's crate, filed as "SOUP POT (1)". Odile asks what it
-// really is. Opened: a heat coupler, which Nell's engine has waited a month for. On the bench it runs, heats and
-// glows; it must be taken off and dipped in the water barrel before it trips, then set back: it settles and the
-// engine runs. Odile files it as machinery and clears it; Nell pays the finder's fee. (Couplers overheat: the same
-// limit Baldino's network has in chapter 10.)
+// three strokes of the handle (he steps up to the handle's grip for them). The pump runs (water in the trough; Bram's
+// thanks: a clover); a drink there restores life; in the evacuation, with the project's posts dark, it is the
+// street's water. Before chapter 2 the box is only looked at (the story isn't open, the pliers stay in it).
+// The Mislabelled Shipment (from chapter 2): customs holds the crate Xil shipped from Zeelich, filed as "SOUP POT (1)".
+// Odile asks what it really is. Opened: a heat coupler — the one Xil ordered for Nell, whose engine has waited a month
+// for it. On the bench it runs, heats and glows; it must be taken off and dipped in the water barrel before it trips,
+// then set back: it settles and the engine runs. Odile files it as machinery and clears its papers; then Nell, the
+// coupler properly hers, pays Twinsen part of what she owes Xil for it. (Couplers overheat: the same limit Baldino's
+// network has in chapter 10.) Rewards are owed until picked up (ChapterBase.reward): a save in between keeps them.
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import '../text/life.js';
@@ -45,7 +47,7 @@ export class TownLife extends ChapterBase {
     const S = this.L.spots;
     if (id === 'bram') return { ...S.bram, anim: null };
     if (id === 'odile') return { ...S.odile, anim: null };
-    if (id === 'nell') return { ...S.nell, anim: this.f.l_coupler ? null : 'kneelWork' };
+    if (id === 'nell') return this.f.l_coupler ? { ...S.nell, a: S.nell.aDone, anim: null } : { ...S.nell, anim: 'kneelWork' };
     return undefined;
   }
 
@@ -56,7 +58,11 @@ export class TownLife extends ChapterBase {
   set cs(v) { this.f.l_cs = v; }
   applyFlags() {
     const f = this.f, L = this.L;
-    L.pump.setRunning(!!f.l_pump);
+    L.pump.setRunning(!!f.l_pump); L.pump.setFree(!!f.l_pin);
+    this.homeStage();
+    // a reward saved before it was picked up: given now
+    this.settleOwed('l_oweClover', 'clover', 1, 'l_toast_owed_clover');
+    this.settleOwed('l_oweFee', 'coin', 1, 'l_toast_owed_fee');
     L.crate.setState(f.l_cleared ? 'cleared' : f.l_crateOpen ? 'open' : 'held');
     // (a save made with the coupler heating or hot in hand comes back with it cold on the bench)
     if (this.cs === 'bench' || this.cs === 'hot') this.cs = 'tripped';
@@ -96,8 +102,10 @@ export class TownLife extends ChapterBase {
     }
     if (R) return;
     const L = this.L;
-    consider(dist(L.pump.x, L.pump.z), 2.3, { kind: 'lpump', label: f.l_pump ? 'p_drink' : 'p_look' });
-    consider(dist(L.boatBox.x, L.boatBox.z), 1.2, { kind: 'lbox', label: 'p_open' });
+    // the handle is worked from its grip's side (south); everything else from anywhere round the pump
+    if (this.open && f.l_pin && !f.l_pump) consider(dist(L.pump.use.x, L.pump.use.z), 1.2, { kind: 'lpump', label: 'p_pump' });
+    else consider(dist(L.pump.x, L.pump.z), 2.3, { kind: 'lpump', label: f.l_pump ? 'p_drink' : 'p_look' });
+    consider(dist(L.boatBox.x, L.boatBox.z), 1.2, { kind: 'lbox', label: this.open ? 'p_open' : 'p_look' });
     if (!this.open) return;
     consider(dist(L.crate.x, L.crate.z), 1.4, { kind: 'lcrate', label: f.l_crateOpen ? 'p_look' : 'p_open' });
     const cs = this.cs;
@@ -114,20 +122,26 @@ export class TownLife extends ChapterBase {
         if (!this.open) return say(['l_pump_dry']);
         if (!f.l_pin) {
           if (!f.l_pliers) { f.l_needPliers = true; g.updateObjective(); return say(['l_pump_pin']); }
-          h.act('use', 0.9, () => { f.l_pin = true; g.audio.play('select'); say(['l_pump_pinout'], () => g.save(false)); }, 0.5);
+          h.actAt(L.pump.x, L.pump.z, 'use', 0.9, () => { f.l_pin = true; L.pump.setFree(true); g.audio.play('select'); say(['l_pump_pinout'], () => g.save(false)); }, 0.5);
           return true;
         }
-        h.act('use', 0.6, () => {
-          f.l_strokes = (f.l_strokes || 0) + 1; L.pump.stroke(); g.audio.play('ropeCreak');
+        // a stroke: he steps up to the grip (both hands on the crossbar) and pushes it down
+        const U = L.pump.use, stroke = () => { L.pump.stroke(); h.act('pump', 0.6, counted, 0.3); };
+        const counted = () => {
+          f.l_strokes = (f.l_strokes || 0) + 1; g.audio.play('ropeCreak');
           if (f.l_strokes >= 3) {
             f.l_pump = true; L.pump.setRunning(true); g.audio.play('chest');
             g.particles.burst(L.trough.x, g.physics.groundAt(L.trough.x, L.trough.z) + 0.5, L.trough.z, '#bfe6ff', 16, 2);
             say(['l_pump_runs'], () => { g.hud.toast('l_toast_pump'); g.save(false); });
           }
-        }, 0.3);
+        };
+        // (from where the prompt showed, a metre at most: a quick step to the grip, then the stroke)
+        const d = Math.hypot(h.pos.x - U.x, h.pos.z - U.z);
+        if (d > 0.08) { const t = Math.max(0.12, d / 4.5); h.act('walk', t); this.glideTo(U, t, stroke); } else { h.angle = U.a; stroke(); }
         return true;
       case 'lbox':
         if (f.l_pliers) return say(['l_box_after']);
+        if (!this.open) return say(['l_box_pro']);   // (the prologue: nothing is missing yet)
         h.act('use', 0.6, () => { f.l_pliers = true; g.audio.play('chest'); say([f.l_needPliers || f.l_benchSeen ? 'l_box_pliers' : 'l_box_pliers0'], () => { g.hud.toast('l_toast_pliers'); g.save(false); }); }, 0.3);
         return true;
       case 'lcrate':
@@ -139,7 +153,7 @@ export class TownLife extends ChapterBase {
       case 'lbarrel':
         h.act('use', 0.6, () => {
           this.cs = 'cooled'; this.holdT = 0; g.audio.play('door');
-          g.particles.burst(L.shop.barrel.x + 0.75, g.physics.groundAt(L.shop.barrel.x, L.shop.barrel.z) + 1.0, L.shop.barrel.z, '#f4f4f4', 18, 1.6);
+          g.particles.burst(L.shop.barrel.wx, g.physics.groundAt(L.shop.barrel.wx, L.shop.barrel.wz) + 1.0, L.shop.barrel.wz, '#f4f4f4', 18, 1.6);
           say(['l_coupler_cooled']);
         }, 0.3);
         return true;
@@ -169,8 +183,13 @@ export class TownLife extends ChapterBase {
     }
     return false;
   }
+  // the house's board and meter follow the story: 0 before the project's heat, 1 with it on, 2 once Zoé has seen the plan
+  stage() { const f = this.f; return f.c1_plan ? 2 : (f.c1_water || this.story.index >= 2) ? 1 : 0; }
+  homeStage() { this.game.rooms?.house?.life?.setStage?.(this.stage()); }
+  // step him up to a spot over a moment (the pump's handle): from where the prompt showed, a metre at most
+  glideTo(p, t, then = null) { this.glide = { x: p.x, z: p.z, a: p.a, t, then }; }
   home(what) {
-    const f = this.f, heat = !!f.c1_water || this.story.index >= 2;
+    const f = this.f, heat = this.stage() >= 1;
     const lines = {
       desk: f.c1_plan ? ['l_desk_1', 'l_desk_plan'] : heat ? ['l_desk_1', 'l_desk_2'] : ['l_desk_0'],
       trunk: ['l_trunk'],
@@ -203,7 +222,7 @@ export class TownLife extends ChapterBase {
         if (!this.open) return c([['bram', 'l_bram_dry']]);
         if (f.l_pump && !f.l_bramThanks) {
           return c([['bram', 'l_bram_done1'], ['bram', 'l_bram_done2']], () => {
-            f.l_bramThanks = true; g.pickups.spawn('clover', npc.pos.x, npc.pos.y + 1, npc.pos.z, { pop: true }); g.save(false);
+            f.l_bramThanks = true; this.reward('l_oweClover', 'clover', 1, npc.pos.x, npc.pos.y + 1, npc.pos.z, { pop: true }); g.save(false);
           });
         }
         if (f.l_pump) return one('bram', this.evac ? 'l_bram_evac' : 'l_bram_after');
@@ -224,7 +243,7 @@ export class TownLife extends ChapterBase {
         if (f.l_coupler && f.l_cleared && !f.l_nellPaid) {
           return c([['nell', 'l_nell_pay']], () => {
             f.l_nellPaid = true;
-            for (let i = 0; i < 3; i++) g.pickups.spawn('coin', npc.pos.x, npc.pos.y + 1.2, npc.pos.z, { pop: true });
+            this.reward('l_oweFee', 'coin', 3, npc.pos.x, npc.pos.y + 1.2, npc.pos.z, { pop: true });
             g.save(false);
           });
         }
@@ -241,6 +260,12 @@ export class TownLife extends ChapterBase {
   // ---------------------------------------------------------------- the coupler heating
   update(dt) {
     const g = this.game, h = g.hero, L = this.L;
+    if (g.room?.id === 'house') this.homeStage();
+    if (this.glide) {
+      const G = this.glide, k = Math.min(1, dt / Math.max(dt, G.t));
+      h.pos.x += (G.x - h.pos.x) * k; h.pos.z += (G.z - h.pos.z) * k; h.angle = G.a;
+      G.t -= dt; if (G.t <= 0 || g.room) { this.glide = null; if (!g.room) G.then?.(); }
+    }
     if (g.state !== 'play') return;
     if (this.cs === 'bench') {
       this.heat += dt * HEAT_RATE;
@@ -248,7 +273,7 @@ export class TownLife extends ChapterBase {
       if (this.heat >= HEAT_GLOW && !this.warned) { this.warned = true; g.hud.toast('l_toast_hot'); g.audio.play('alert'); }
       if (this.heat >= HEAT_TRIP) {
         this.cs = 'tripped'; this.heat = 0; L.shop.coupler.setHeat(0); L.shop.engine.setRunning(false);
-        g.particles.burst(L.shop.bench.x + 0.75, g.physics.groundAt(L.shop.bench.x, L.shop.bench.z) + 1.1, L.shop.bench.z, '#5a5a5a', 14, 1.5);
+        g.particles.burst(L.shop.coupler.x, L.shop.coupler.y + 0.3, L.shop.coupler.z, '#5a5a5a', 14, 1.5);
         g.audio.play('deny'); g.hud.toast('l_toast_tripped');
       }
     } else if (this.cs === 'hot') {

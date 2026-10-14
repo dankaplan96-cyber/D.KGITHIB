@@ -49,6 +49,24 @@ export class ChapterBase {
   }
   npc(id) { return this.game.npcs.find((n) => n.def.id === id); }
 
+  // A reward tossed out as pickups (a clover, a few coins): owed under `flag` (saved with the game) until picked up,
+  // so a save made before he collects it doesn't lose it (Game.collect counts it down).
+  reward(flag, type, n, x, y, z, opts = {}) {
+    this.f[flag] = (this.f[flag] || 0) + n;
+    for (let i = 0; i < n; i++) this.game.pickups.spawn(type, x, y, z, { ...opts, owe: flag });
+  }
+  // After a load: what is still owed and isn't lying in the world any more is given straight away, with a toast.
+  settleOwed(flag, type, value = 1, toastKey = null) {
+    const g = this.game, n = this.f[flag] || 0;
+    if (n <= 0 || g.pickups.list.some((p) => p.owe === flag)) return false;
+    delete this.f[flag];
+    const h = g.hero;
+    if (type === 'coin') h.coins += n * value;
+    else if (type === 'clover') h.clovers = Math.min(9, h.clovers + n);
+    if (toastKey) g.hud.toast(toastKey, { n: n * value });
+    return true;
+  }
+
   // Run a conversation between several speakers: [[speakerId, textKey], ...]
   chain(lines, done) {
     const g = this.game;

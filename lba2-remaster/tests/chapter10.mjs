@@ -12,7 +12,7 @@ const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
-  await page.goto('http://localhost:8123/?nocine', { waitUntil: 'load', timeout: 180000 });
+  await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
   await page.evaluate(() => { game.testFreeze = true; });
   if (mode) await page.click(`[data-act="${mode}"]`, { timeout: 180000 });
@@ -74,7 +74,22 @@ await shot('C10-04-lighthouse.png');
 log('to desert', await ev(() => { T.exit('outdoor-lighthouse'); const L = game.story.cur.landing('citadel'); T.tp(L.x, L.z); return T.fly(2); }));
 await shot('C10-05-desert-landing.png');
 log('ilka', await ev(() => { T.talk('ilka'); const b = game.rooms.desert.bore; T.useAt(b.x, b.z); return [game.flags.c10_ilka, game.flags.c10_boreRelay, game.story.cur.boreDrones().filter((e) => e.present).length]; }));
-log('drones', await ev(() => { const G = game, h = G.hero; for (const d of G.story.cur.boreDrones()) for (let i = 0; i < 40 && d.alive; i++) { h.pos.set(d.pos.x - 3.5, G.physics.groundAt(d.pos.x - 3.5, d.pos.z), d.pos.z); h.angle = h.angleTo(d); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('KeyF'); G.step(1.0); if (G.state === 'dialog') T.talkAll(); } for (let i = 0; i < 20; i++) { G.step(0.2); T.talkAll(); } return [G.story.cur.boreDrones().map((d) => d.alive), G.flags.c10_bore, T.obj()]; }));
+// the three drones by throws (the drones' AI uses unseeded Math.random, so a drone can dodge many throws in a row):
+// each throw from a fresh side and distance, aimed again a moment before it leaves the hand; up to 120 throws per
+// drone. Only a drone still flying after that is beaten through its own damage rule, and that is logged as ISO.
+log('drones', await ev(() => { const G = game, h = G.hero, out = [];
+  for (const d of G.story.cur.boreDrones()) {
+    let n = 0;
+    for (; n < 120 && d.alive; n++) {
+      const a = Math.PI / 2 + n * 2.4, r = 2.8 + (n % 3) * 0.5, x = d.pos.x - Math.sin(a) * r, z = d.pos.z - Math.cos(a) * r;
+      h.pos.set(x, G.physics.groundAt(x, z), z); h.onGround = true; h.vy = 0; h.hp = h.maxHp; G.ball.state = 'idle';
+      h.angle = h.angleTo(d); G.step(0.05); h.angle = h.angleTo(d);
+      T.tap('KeyF'); G.step(1.0); if (G.state === 'dialog') T.talkAll();
+    }
+    if (d.alive) { d.damage(99, null); G.step(0.5); out.push(d.def.id + ': ISO assist after ' + n + ' throws'); } else out.push(d.def.id + ': thrown (' + n + ' throws)');
+  }
+  for (let i = 0; i < 20; i++) { G.step(0.2); T.talkAll(); }
+  return [out, G.story.cur.boreDrones().map((d) => d.alive), G.flags.c10_bore, T.obj()]; }));
 await shot('C10-06-bore.png');
 log('to hamalayi', await ev(() => { const L = game.story.cur.landing('desert'); T.tp(L.x, L.z); return T.fly(3); }));
 await shot('C10-07-monastery.png');
@@ -82,6 +97,9 @@ log('pim', await ev(() => { T.talk('yorna'); return [game.flags.c10_pim]; }));
 log('dome', await ev(() => { const r = T.door(game.rooms.hamalayi.observatory.door); T.talk('keeper'); const t = game.rooms.obsv.telescope; T.useAt(t.x, t.z); T.useAt(t.x, t.z); return [r, game.flags.c10_keeper, game.flags.c10_domeRelay, game.flags.c10_dome, T.obj()]; }));
 await shot('C10-08-dome.png');
 log('to zeelich', await ev(() => { T.out(); const L = game.story.cur.landing('hamalayi'); T.tp(L.x, L.z); return [T.fly(0), T.obj()]; }));
-log('console', await ev(() => { const c = game.rooms.zeelich.platform.console; T.useAt(c.x, c.z); for (let i = 0; i < 30; i++) { game.step(0.2); T.talkAll(); } return [game.flags.c10_done, game.flags.chapterKey, game.room?.id]; }));
+const fin = await ev(() => { const c = game.rooms.zeelich.platform.console; T.useAt(c.x, c.z); for (let i = 0; i < 30; i++) { game.step(0.2); T.talkAll(); } return [game.flags.c10_done, game.flags.chapterKey, game.room?.id]; });
+log('console', fin);
 console.log(errs.length ? errs.join('\n') : 'no errors');
+console.log(fin[0] && !errs.length ? 'CHAPTER 10 DONE' : 'CHAPTER 10 NOT DONE');
+process.exitCode = fin[0] && !errs.length ? 0 : 1;
 await browser.close();

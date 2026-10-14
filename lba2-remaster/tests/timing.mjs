@@ -16,7 +16,7 @@ const ev = (f, a) => page.evaluate(f, a);
 let fails = 0;
 const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info !== '' ? ' ' + JSON.stringify(info) : ''}`); if (!ok) fails++; };
 
-await page.goto('http://localhost:8123/?nocine', { waitUntil: 'load', timeout: 180000 });
+await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await ev(() => {
   const G = window.game; G.testFreeze = true; G.settings.controls = 'modern'; G.applySettings(); // (WASD walks)

@@ -12,7 +12,7 @@ const open = async (query = '', pre = null) => {
   page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
   if (pre) await page.addInitScript(pre);
-  await page.goto('http://localhost:8123/' + query, { waitUntil: 'load', timeout: 180000 });
+  await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + query, { waitUntil: 'load', timeout: 180000 });
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
   return page;
 };

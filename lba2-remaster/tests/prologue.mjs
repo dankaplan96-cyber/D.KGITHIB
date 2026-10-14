@@ -4,7 +4,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, loc
 const errs = [];
 page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + e.stack));
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.type() + ': ' + m.text()); });
-await page.goto('http://localhost:8123/?nocine', { waitUntil: 'load', timeout: 180000 });
+await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForTimeout(2500);
 await page.screenshot({ path: 'P0-title.png', timeout: 180000 });
 await page.click('[data-act="new"]');

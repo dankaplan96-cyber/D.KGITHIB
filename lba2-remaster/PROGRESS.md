@@ -395,6 +395,29 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
   instead of holding the end pose. Contact frames unchanged (combat §§ pass).
 
+## Session: the reviews' fixes for both twelve-years-on sets (0.25.1; TY-1-FIX)
+- REV-TY-1 (0.24.0) and REV-TY-2 (0.25.0) found readability, collision, save and story-logic defects; all fixed and
+  checked by input where the harness can (QA.md "REV-TY-1/REV-TY-2 fixes"; captures/townlife/).
+- Places: Nell's shop moved off the harbour path, open toward it (the bench, Nell and the coupler's glow in view from
+  the path and the quay); the garden's beds off the lane; Arthur's bench to the west wall of his room (in the house
+  camera's view). The island's scatter keeps out of these places (townlife.js lifeClear) without changing the rest
+  of the island.
+- The pump: the handle points to the lane with a crossbar grip, the pipe dives under the pump's footpath, and a new
+  two-handed 'pump' pose (rig.js) meets the grip (hands within 0.15 m through the stroke); the pipe, posts, valve box
+  are solid, the trough and the beds not standable.
+- Story state shows: Zoé's board (all waiting → Bug Street green, harbour red → her chalk ring after the plan) and the
+  meter's needle and note; the boat box waits for chapter 2; the coupler is Nell's (ordered through Xil) and Odile
+  clears its papers.
+- Rewards tossed as pickups are owed until picked up (ChapterBase.reward/settleOwed; Game.collect): Bram's clover,
+  Nell's payment, Baldino's coin survive a save made before pickup.
+- The Test Pair: no state change after success from a late press; it syncs only with the drip open; it waits for
+  Baldino's hello; the cradle and the hoist's bars are solid; Ilo's crate gives its bonus after its look; chapter 10's
+  Baldino lines agree with what the pair taught (text only).
+- Tests: townlife 30 checks (was 18; the clover check is real now), workshop 31 (was 25; QA said 26), chapter10's
+  drone step made robust (3/3 runs done, no assist), tests honour GAME_URL. Regression: townlife, workshop, chapter2,
+  chapter8, chapter10 ×3, stability, resume, house, opening all rc 0.
+- Not verified: GPU look; the feel of the step to the pump's grip by hand.
+
 ## Session: twelve years on, second set — Baldino's workshop (0.25.0)
 - The user's brief, step 4: show years of invention, maintenance and unfinished experiments in Baldino's workshop;
   introduce the network's technology early with its limits; no unexplained gadgets (docs/TWELVE_YEARS.md).

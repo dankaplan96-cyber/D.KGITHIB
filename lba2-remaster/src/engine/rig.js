@@ -647,6 +647,13 @@ export class Rig {
       hipsY = 0.95 - 0.36 * k; torsoX = 0.75 * k; headX = 0.2 * k;
       T.legL = -1.0 * k; T.legR = -0.6 * k; T.kneeL = 1.7 * k; T.kneeR = 1.2 * k; T.footL = -0.6 * k; T.footR = -0.5 * k;
       T.armR = -1.1 * k; T.elR = -0.2; T.armL = -0.4 * k; T.elL = -0.6;
+    } else if (a === 'pump') {
+      // both hands together on a pump handle's grip: one stroke down and back up in 0.6 s
+      const k = Math.sin(Math.min(1, this.actionT / 0.6) * Math.PI);
+      T.armL = -1.3 + k * 0.7; T.armR = -1.3 + k * 0.7; T.elL = -0.8 + k * 0.25; T.elR = -0.8 + k * 0.25;
+      armOut = -0.45;
+      torsoX = 0.14 + k * 0.22; hipsY = 0.93 - k * 0.05;
+      T.legL = -0.35; T.legR = 0.3; T.kneeL = 0.3 + k * 0.2; T.kneeR = 0.2 + k * 0.15;
     } else if (a === 'use') {
       // both hands on a wheel/lever, cranking
       const w = Math.sin(this.actionT * 7);

@@ -2,33 +2,51 @@
 //
 //   - The lane north of Twinsen's house (Bug Street's south end): the neighbourhood's old hand pump on its stone
 //     plinth with a trough, and right past it the project's new copper heat pipe on low stands. Bram keeps the
-//     pump; it is seized since the pipe went in (The Old Pump).
+//     pump; it is seized since the pipe went in (The Old Pump). The pipe dives under the ground where the pump's
+//     own footpath crosses it (fresh earth there: that is where they dug).
 //   - Twinsen and Zoé's garden, west of the house: Zoé's raised beds, a small pond where Arthur tries his boats, and
 //     his boat box (Twinsen's pliers are in it: Arthur borrowed them).
 //   - The harbour quay: a customs booth (Officer Odile) with a barrier, the held Esmer crate roped off beside it,
 //     cargo from both worlds (Esmer crates, Mosquibee honey jars, Twinsun barrels), and Nell's repair shop for
-//     imported machines (a lean-to with a bench, an Esmer engine on a stand and a water barrel) — The Mislabelled
-//     Shipment.
+//     imported machines (a lean-to on the grass where the harbour path reaches the quay, open toward the path: a
+//     bench, an Esmer engine on a stand and a water barrel) — The Mislabelled Shipment.
 //
 // CONTRACT (world coordinates): buildTownLife(root, physics, W) → W.life = {
-//   pump {x, z, setRunning(b), running}, trough {x,z}, pipe, beds, pond {x,z}, boatBox {x,z},
-//   customs {x, z, barrier}, crate {x, z, setState('held'|'open'|'cleared')}, cargo,
-//   shop {bench {x,z}, engine {x,z, setRunning(b)}, barrel {x,z}, coupler {setHeat(0..1), setVisible(b)}},
+//   pump {x, z, use {x,z,a}, pipe {x,z0,z1,gap}, sign, valve, setRunning(b), setFree(b), running, stroke(), grip()},
+//   trough {x,z}, pond {x,z}, beds [{x,z}], boatBox {x,z},
+//   customs {x, z, barrier}, crate {x, z, setState('held'|'open'|'cleared')},
+//   shop {bench {x,z}, engine {x,z, setRunning(b)}, barrel {x,z, wx,wz}, coupler {x,z, setHeat(0..1), setVisible(b)}},
 //   spots {bram, odile, nell} {x,z,a} }
+// lifeClear(x, z): inside one of these places (the island's scattered bushes, tulip beds and grass keep out).
 import * as THREE from 'three';
 import { MAT, rbox, plane, cyl, sphere, lathe, torus, canvasTex, Kit } from './props.js';
 import * as P from './props.js';
 
 const PUMP = { x: -42.0, z: 65.0 };
 const GARDEN = { x: -60.0, z: 83.5 };   // (west of the house, where the ground is flat)
+const BEDS = [[1.6, -4.2], [2.4, -2.2]];   // Zoé's raised beds (from the pond; off the lane to the lighthouse)
 const BOOTH = { x: -110.5, z: 35.0 };
 const CRATE = { x: -108.2, z: 33.9 };
-const SHOP = { x: -104.4, z: 36.9 };
+const SHOP = { x: -102.8, z: 33.9 };    // (north of the harbour path, between the quay and the house beside it)
+// the pump's handle: a lever from the top of the column toward the lane (west), with a crossbar grip for both
+// hands; Twinsen works it standing USE_D west of the pump, side-on to anyone coming along the lane (his hands meet
+// the grip: fitted to the hero's 'pump' pose, src/engine/rig.js)
+const HANDLE_Y = 1.1, HANDLE_L = 0.8, USE_D = 1.4;
+
+// places the island's scatter keeps clear of (world rectangles)
+const CLEAR = [
+  { x0: PUMP.x - 2.1, x1: PUMP.x + 2.0, z0: PUMP.z - 1.6, z1: PUMP.z + 1.9 },            // the pump, the trough, the handle side
+  { x0: SHOP.x - 3.4, x1: SHOP.x + 1.8, z0: SHOP.z - 1.6, z1: SHOP.z + 1.7 },            // Nell's shop, engine and barrel
+  ...BEDS.map(([bx, bz]) => ({ x0: GARDEN.x + bx - 1.1, x1: GARDEN.x + bx + 1.1, z0: GARDEN.z + bz - 0.65, z1: GARDEN.z + bz + 0.65 })),
+];
+export const lifeClear = (x, z) => CLEAR.some((r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1);
 
 const signTex = (lines, bg = '#2f4a7a', fg = '#f2e6c8') => canvasTex(256, 96, (x, W, H) => {
   x.fillStyle = bg; x.fillRect(0, 0, W, H); x.strokeStyle = fg; x.lineWidth = 5; x.strokeRect(5, 5, W - 10, H - 10);
-  x.fillStyle = fg; x.textAlign = 'center'; x.font = 'bold 34px sans-serif'; x.fillText(lines[0], W / 2, lines[1] ? 44 : 60);
-  if (lines[1]) { x.font = '20px sans-serif'; x.fillText(lines[1], W / 2, 76); }
+  // (the type shrinks to fit a long name: NELL'S REPAIRS)
+  const fit = (str, px, bold) => { let s = px; do { x.font = `${bold ? 'bold ' : ''}${s}px sans-serif`; s -= 1; } while (s > 10 && x.measureText(str).width > W - 24); };
+  x.fillStyle = fg; x.textAlign = 'center'; fit(lines[0], 34, true); x.fillText(lines[0], W / 2, lines[1] ? 44 : 60);
+  if (lines[1]) { fit(lines[1], 20, false); x.fillText(lines[1], W / 2, 76); }
 });
 const tagTex = (text, bg) => canvasTex(96, 48, (x, W, H) => { x.fillStyle = bg; x.fillRect(0, 0, W, H); x.fillStyle = '#ffffff'; x.font = 'bold 22px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2, H / 2 + 1); });
 
@@ -45,41 +63,71 @@ export function buildTownLife(root, physics, W) {
     const k = area();
     const { x, z } = PUMP, y = gy(x, z);
     k.add(rbox(1.0, 0.35, 1.0, 0.06), MAT.stone('grey', 1), x, y + 0.17, z);                 // plinth
-    k.add(cyl(0.11, 0.13, 1.15, 10), MAT.iron(), x, y + 0.35 + 0.57, z);                    // barrel of the pump
-    k.add(cyl(0.16, 0.16, 0.12, 12), MAT.iron(), x, y + 1.5, z);
-    k.add(sphere(0.09, 10, 8), MAT.iron(), x, y + 1.62, z);
-    k.add(cyl(0.035, 0.04, 0.35, 8), MAT.iron(), x + 0.2, y + 1.2, z, 0, { rz: -1.1 });      // spout
-    const handle = new THREE.Group(); handle.position.set(x - 0.12, y + 1.5, z); g.add(handle);
-    { const bar = new THREE.Mesh(cyl(0.025, 0.025, 0.9, 6), MAT.iron()); bar.rotation.z = Math.PI / 2; bar.position.x = -0.42; handle.add(bar); bar.castShadow = true;
-      const knob = new THREE.Mesh(sphere(0.05, 8, 6), MAT.wood('dark')); knob.position.x = -0.86; handle.add(knob); }
-    handle.rotation.z = 0.35;   // (seized: handle stuck up)
-    // the trough: a stone basin, water inside when it runs
+    k.add(cyl(0.11, 0.13, 0.8, 10), MAT.iron(), x, y + 0.35 + 0.4, z);                      // the pump's column
+    k.add(cyl(0.16, 0.16, 0.12, 12), MAT.iron(), x, y + 1.17, z);
+    k.add(sphere(0.09, 10, 8), MAT.iron(), x, y + 1.29, z);
+    k.add(rbox(0.2, 0.16, 0.06, 0.02), MAT.iron(), x - 0.12, y + HANDLE_Y, z);               // the handle's bracket
+    k.add(cyl(0.035, 0.04, 0.35, 8), MAT.iron(), x + 0.2, y + 0.85, z, 0, { rz: -1.1 });      // spout, over the trough
+    // the handle: a lever toward the lane ending in a wooden crossbar (two hands on it); it pivots at the bracket
+    const handle = new THREE.Group(); handle.position.set(x - 0.12, y + HANDLE_Y, z); g.add(handle);
+    { const bar = new THREE.Mesh(cyl(0.025, 0.025, HANDLE_L, 6), MAT.iron()); bar.rotation.z = Math.PI / 2; bar.position.x = -HANDLE_L / 2; handle.add(bar); bar.castShadow = true;
+      const grip = new THREE.Mesh(cyl(0.035, 0.035, 0.52, 8), MAT.wood('dark')); grip.rotation.x = Math.PI / 2; grip.position.x = -HANDLE_L; handle.add(grip); grip.castShadow = true; }
+    const SEIZED = -0.35;   // (seized: the handle stuck up)
+    handle.rotation.z = SEIZED;
+    // the trough: a stone basin east of the pump, water inside when it runs
     const tx = x + 1.3, tz = z;
     k.add(rbox(1.2, 0.45, 0.6, 0.05), MAT.stone('grey', 1), tx, y + 0.22, tz);
     const water = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.42), new THREE.MeshStandardMaterial({ color: '#7ab8e0', roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.85 }));
     water.rotation.x = -Math.PI / 2; water.position.set(tx, y + 0.3, tz); g.add(water);
-    const stream = new THREE.Mesh(cyl(0.02, 0.025, 0.7, 6, true), new THREE.MeshStandardMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.7, roughness: 0.05 }));
-    stream.position.set(x + 0.36, y + 0.85, z); stream.visible = false; g.add(stream);
+    const stream = new THREE.Mesh(cyl(0.02, 0.025, 0.45, 6, true), new THREE.MeshStandardMaterial({ color: '#cfe8ff', transparent: true, opacity: 0.7, roughness: 0.05 }));
+    stream.position.set(x + 0.36, y + 0.55, z); stream.visible = false; g.add(stream);
     box(x, z, 0.5, 0.5, y + 1.7, { noStand: true });
-    box(tx, tz, 0.6, 0.3, y + 0.45);
-    // a hand-painted sign: "PUMP. STILL WORKS." (it doesn't yet)
-    k.add(cyl(0.03, 0.03, 1.1, 5), MAT.wood('dark'), x - 0.75, y + 0.55, z + 0.45);
-    k.add(plane(0.55, 0.3), MAT.map(signTex(['PUMP', 'still works'], '#f2ead6', '#3a2a1a'), 0.8), x - 0.75, y + 1.15, z + 0.47);
-    // the project's new heat pipe along the lane, on low stands, with a valve box beside the pump
-    const px = x - 1.5;
-    k.add(cyl(0.11, 0.11, 14, 10), MAT.copper(), px, gy(px, z) + 0.28, z, 0, { rx: Math.PI / 2 });
-    for (let dz = -6; dz <= 6; dz += 3) k.add(rbox(0.08, 0.2, 0.3, 0.02), MAT.iron(), px, gy(px, z + dz) + 0.1, z + dz);
-    k.add(rbox(0.4, 0.5, 0.4, 0.04), MAT.paint('#3a5a8a', 0.5), px, gy(px, z - 1.2) + 0.25, z - 1.2);
-    k.add(sphere(0.05, 8, 6), MAT.glow('#9ff4ff', '#35d8ff', 1.8), px + 0.21, gy(px, z - 1.2) + 0.38, z - 1.2);
-    box(px, z - 1.2, 0.22, 0.22, gy(px, z - 1.2) + 0.5, { noStand: true });
-    let pumpT = 0;
+    box(tx, tz, 0.6, 0.3, y + 0.62, { noStand: true });                                        // (a trough is not a step)
+    // the project's new heat pipe along the lane, on low stands, with a valve box north of the pump. It goes under
+    // the ground for the pump's footpath (an elbow down at each side, fresh earth between: where they dug) and at
+    // both ends. Twinsen works the handle standing on that fresh earth.
+    const px = x - 1.5, gz0 = z - 1.1, gz1 = z + 1.1;
+    const pipeH = (zz) => gy(px, zz) + 0.28;
+    for (const [za, zb] of [[z - 7, gz0], [gz1, z + 7]]) {
+      const len = zb - za, mid = (za + zb) / 2;
+      k.add(cyl(0.11, 0.11, len, 10), MAT.copper(), px, pipeH(mid), mid, 0, { rx: Math.PI / 2 });
+      for (const ze of [za, zb]) {   // elbow: a joint and a short drop into the ground, a collar where it goes in
+        k.add(sphere(0.115, 10, 8), MAT.copper(), px, pipeH(mid), ze);
+        k.add(cyl(0.11, 0.11, 0.42, 10), MAT.copper(), px, gy(px, ze) + 0.07, ze);
+        k.add(torus(0.13, 0.03, 6, 14), MAT.iron(), px, gy(px, ze) + 0.03, ze, 0, { rx: Math.PI / 2 });
+      }
+      for (let i = 1, n = Math.max(1, Math.round(len / 3)); i <= n; i++) { const sz2 = za + (len * i) / (n + 1); k.add(rbox(0.08, 0.2, 0.3, 0.02), MAT.iron(), px, gy(px, sz2) + 0.1, sz2); }
+      // stopped by it, not stood on it (a 0.4 m pipe); jumped over, he lands clear
+      box(px, mid, 0.16, len / 2 + 0.12, pipeH(mid) + 0.34, { noStand: true });
+    }
+    k.add(rbox(0.7, 0.04, gz1 - gz0 - 0.2, 0.02), MAT.flat('#6a4a2a', 1), px, gy(px, (gz0 + gz1) / 2) + 0.01, (gz0 + gz1) / 2);   // fresh earth over it
+    const vz = z - 2.4;
+    k.add(rbox(0.4, 0.5, 0.4, 0.04), MAT.paint('#3a5a8a', 0.5), px, gy(px, vz) + 0.25, vz);
+    k.add(sphere(0.05, 8, 6), MAT.glow('#9ff4ff', '#35d8ff', 1.8), px + 0.21, gy(px, vz) + 0.38, vz);
+    box(px, vz, 0.22, 0.22, gy(px, vz) + 0.62, { noStand: true });
+    // a hand-painted sign at the footpath's south side, across the lane so both ways read it: "PUMP. STILL WORKS."
+    // (it doesn't yet)
+    const sx = x - 1.0, sz = z + 1.5, sTex = MAT.map(signTex(['PUMP', 'still works'], '#f2ead6', '#3a2a1a'), 0.8);
+    k.add(cyl(0.03, 0.03, 1.1, 5), MAT.wood('dark'), sx, gy(sx, sz) + 0.55, sz);
+    for (const r of [0, Math.PI]) k.add(plane(0.55, 0.3), sTex, sx, gy(sx, sz) + 1.15, sz + Math.cos(r) * 0.035, r);
+    physics.add({ type: 'cyl', x: sx, z: sz, r: 0.08, top: gy(sx, sz) + 1.3, noStand: true });
+    // the handle's stroke: down and back up in 0.6 s, with his hands
+    let pumpT = 0, rest = SEIZED;
+    const DOWN = 0.28;
     L.pump = {
-      x, z, running: false,
-      setRunning(b) { this.running = b; stream.visible = b; water.material.opacity = b ? 0.9 : 0.25; water.position.y = y + (b ? 0.4 : 0.26); handle.rotation.z = b ? 0 : 0.35; },
+      x, z, running: false, use: { x: x - USE_D, z, a: Math.PI / 2 },
+      pipe: { x: px, z0: z - 7, z1: z + 7, gap: [gz0, gz1] }, sign: { x: sx, z: sz }, valve: { x: px, z: vz },
+      setRunning(b) { this.running = b; stream.visible = b; water.material.opacity = b ? 0.9 : 0.25; water.position.y = y + (b ? 0.4 : 0.26); if (b) rest = 0; handle.rotation.z = rest; },
+      setFree(b) { rest = b || this.running ? 0 : SEIZED; if (pumpT <= 0) handle.rotation.z = rest; },   // (the valve pin out: the handle drops level)
       stroke() { pumpT = 0.6; },
+      // where the crossbar grip is now (world), for checks
+      grip() { const v = new THREE.Vector3(-HANDLE_L, 0, 0); handle.updateWorldMatrix(true, false); return v.applyMatrix4(handle.matrixWorld); },
     };
     L.pump.setRunning(false);
-    W.updaters.push((dt, t) => { if (pumpT > 0) { pumpT -= dt; handle.rotation.z = Math.sin((0.6 - pumpT) / 0.6 * Math.PI) * 0.5; } else if (L.pump.running) handle.rotation.z = Math.sin(t * 0.7) * 0.03; });
+    W.updaters.push((dt, t) => {
+      if (pumpT > 0) { pumpT -= dt; const ph = Math.min(1, Math.max(0, (0.6 - pumpT) / 0.6)); handle.rotation.z = Math.sin(ph * Math.PI) * DOWN; }
+      else handle.rotation.z = rest + (L.pump.running ? Math.sin(t * 0.7) * 0.03 : 0);
+    });
     L.trough = { x: tx, z: tz };
     L.spots.bram = { x: x - 0.3, z: z - 2.1, a: 0.1 };   // (on the far side, so E at the pump means the pump)
     k.flush();
@@ -89,11 +137,12 @@ export function buildTownLife(root, physics, W) {
   {
     const k = area();
     const { x, z } = GARDEN, y = gy(x, z);
-    for (const [bx, bz] of [[-1.0, -4.6], [-1.0, -6.7]]) {
-      k.add(rbox(1.8, 0.35, 0.9, 0.03), MAT.planks('honey'), x + bx, y + 0.17, z + bz);
-      k.add(rbox(1.7, 0.04, 0.8, 0.01), MAT.flat('#4a3220', 1), x + bx, y + 0.34, z + bz);
-      for (let i = 0; i < 6; i++) k.add(sphere(0.08, 6, 5), MAT.flat(i % 2 ? '#6aa83a' : '#8ac84a', 0.8), x + bx - 0.65 + i * 0.26, y + 0.42, z + bz + (i % 2 ? 0.15 : -0.15), 0, { sy: 0.6 });
-      box(x + bx, z + bz, 0.9, 0.45, y + 0.36);
+    for (const [bx, bz] of BEDS) {
+      const yb = gy(x + bx, z + bz);
+      k.add(rbox(1.8, 0.35, 0.9, 0.03), MAT.planks('honey'), x + bx, yb + 0.17, z + bz);
+      k.add(rbox(1.7, 0.04, 0.8, 0.01), MAT.flat('#4a3220', 1), x + bx, yb + 0.34, z + bz);
+      for (let i = 0; i < 6; i++) k.add(sphere(0.08, 6, 5), MAT.flat(i % 2 ? '#6aa83a' : '#8ac84a', 0.8), x + bx - 0.65 + i * 0.26, yb + 0.42, z + bz + (i % 2 ? 0.15 : -0.15), 0, { sy: 0.6 });
+      box(x + bx, z + bz, 0.9, 0.45, yb + 0.62, { noStand: true });   // (not to be walked on: Zoé's seedlings)
     }
     // the pond: a stone rim round a disc of water, a toy sail on it
     const r = 1.5;
@@ -102,7 +151,7 @@ export function buildTownLife(root, physics, W) {
     pond.rotation.x = -Math.PI / 2; pond.position.set(x, y + 0.14, z); g.add(pond);
     k.at(x + 0.4, y + 0.14, z - 0.2, 0.6, () => P.toyBoat(k));
     physics.add({ type: 'cyl', x, z, r: r + 0.2, top: y + 0.6, noStand: true });
-    L.pond = { x, z };
+    L.pond = { x, z }; L.beds = BEDS.map(([bx, bz]) => ({ x: x + bx, z: z + bz }));
     // the boat box: Arthur's, by the pond (paint, string, a spare sail — and Twinsen's pliers)
     const bx = x + 2.5, bz = z + 0.4;
     k.at(bx, y, bz, -0.4, () => P.chest(k, { w: 0.7, d: 0.42, h: 0.38, pal: 'pale', band: MAT.paint('#3b78d8', 0.5) }));
@@ -126,6 +175,7 @@ export function buildTownLife(root, physics, W) {
     box(x, z, 1.0, 0.8, y + 2.4, { noStand: true });
     const barrier = new THREE.Group(); barrier.position.set(x + 1.3, y + 0.95, z + 0.3); g.add(barrier);
     k.add(cyl(0.08, 0.1, 0.95, 8), MAT.paint('#2a3a6a', 0.5), x + 1.3, y + 0.47, z + 0.3);
+    physics.add({ type: 'cyl', x: x + 1.3, z: z + 0.3, r: 0.13, top: y + 1.0, noStand: true });   // the barrier's post
     { const bk = new Kit(barrier); for (let i = 0; i < 6; i++) bk.add(rbox(0.5, 0.08, 0.08, 0.01), MAT.paint(i % 2 ? '#f2ead6' : '#d03a2a', 0.5), 0.25 + i * 0.5, 0, 0); bk.flush(); }
     barrier.rotation.y = -0.15; barrier.rotation.z = 1.2;   // (up: the quay is open; only the crate is held)
     L.customs = { x, z: z + 1.6, barrier };
@@ -167,49 +217,60 @@ export function buildTownLife(root, physics, W) {
       const hx = -105.8, hz = 32.3, hy = gy(hx, hz);
       k.add(rbox(1.2, 0.12, 0.8, 0.02), MAT.wood('pale'), hx, hy + 0.06, hz);
       for (let i = 0; i < 6; i++) { const jx = hx - 0.4 + (i % 3) * 0.4, jz = hz - 0.18 + Math.floor(i / 3) * 0.36; k.add(lathe([[0.001, 0], [0.13, 0], [0.15, 0.12], [0.11, 0.26], [0.07, 0.3], [0.001, 0.3]], 12), MAT.glass('#e8b030', 0.75), jx, hy + 0.12, jz); k.add(cyl(0.075, 0.075, 0.04, 10), MAT.paint('#3a2a1a', 0.6), jx, hy + 0.44, jz); }
-      box(hx, hz, 0.6, 0.4, hy + 0.46);
+      box(hx, hz, 0.6, 0.4, hy + 0.62, { noStand: true });   // (nobody stands on the honey)
     }
 
-    // --- Nell's repair shop: a lean-to against the quay's end, open to the west
-    const s = SHOP, sy = gy(s.x, s.z);
-    k.add(rbox(0.15, 2.4, 3.2, 0.02), MAT.planks('grey'), s.x + 1.3, sy + 1.2, s.z);                    // back wall (east)
-    k.add(rbox(2.9, 0.1, 3.4, 0.02), MAT.paint('#c8602a', 0.6), s.x + 0.1, sy + 2.45, s.z, 0, { rz: 0.12 }); // roof, sloping to the west
-    for (const pz of [-1.55, 1.55]) k.add(cyl(0.06, 0.07, 2.2, 6), MAT.wood('dark'), s.x - 1.2, sy + 1.1, s.z + pz);
-    box(s.x + 1.3, s.z, 0.12, 1.6, sy + 2.4, { noStand: true });
-    for (const pz of [-1.55, 1.55]) physics.add({ type: 'cyl', x: s.x - 1.2, z: s.z + pz, r: 0.1, top: sy + 2.3, noStand: true });
-    k.add(plane(1.6, 0.42), MAT.map(signTex(['NELL\'S REPAIRS', 'engines - pumps - shuttles'], '#c8602a', '#f8f0dc'), 0.7), s.x - 1.15, sy + 2.25, s.z, -Math.PI / 2);
-    k.at(s.x + 0.85, sy, s.z, -Math.PI / 2, () => P.workbench(k, { w: 2.2, d: 0.7, h: 0.88 }));
-    box(s.x + 0.85, s.z, 0.35, 1.1, sy + 0.9, { noStand: true });
-    // spare parts on the bench: gears, a shuttle landing leg, a crate of springs
-    for (let i = 0; i < 3; i++) k.add(torus(0.08 + i * 0.03, 0.02, 4, 10), MAT.steel(), s.x + 0.8, sy + 0.92 + i * 0.02, s.z - 0.7 + i * 0.12, 0, { rx: Math.PI / 2 });
-    k.add(cyl(0.05, 0.08, 0.7, 8), MAT.paint('#b82a24', 0.45), s.x + 0.85, sy + 0.95, s.z + 0.5, 0, { rz: Math.PI / 2 - 0.2 });
-    const benchLamp = new THREE.PointLight('#ffd890', 0, 5); benchLamp.position.set(s.x + 0.6, sy + 2.0, s.z); g.add(benchLamp);
-    // the coupler, once it is on the bench: a brass drum with fins, glowing as it heats
-    const coupler = new THREE.Group(); coupler.position.set(s.x + 0.85, sy + 0.9, s.z - 0.15); g.add(coupler); coupler.visible = false;
+    // --- Nell's repair shop: a lean-to on the grass north of the harbour path, its back wall to the north and open
+    //     to the path, the quay and the lane from town (so the bench, Nell and the coupler's glow are in view from
+    //     the way people come). Built in its own frame: local -x is the open front (world south), +x the back wall.
+    const s = SHOP, sy = gy(s.x, s.z), SRY = Math.PI / 2;
+    const toW = (lx, lz) => ({ x: s.x + lz, z: s.z - lx });   // (the frame turned by SRY)
+    let coupler, benchLamp;
+    k.at(s.x, sy, s.z, SRY, () => {
+      k.add(rbox(0.15, 2.4, 3.2, 0.02), MAT.planks('grey'), 1.3, 1.2, 0);                           // back wall
+      k.add(rbox(2.9, 0.1, 3.4, 0.02), MAT.paint('#c8602a', 0.6), 0.05, 2.62, 0, 0, { rz: -0.15 });   // roof, rising toward the open front (the bench stays in view)
+      for (const pz of [-1.55, 1.55]) k.add(cyl(0.06, 0.07, 2.78, 6), MAT.wood('dark'), -1.2, 1.39, pz);
+      k.add(plane(1.6, 0.42), MAT.map(signTex(['NELL\'S REPAIRS', 'engines - pumps - shuttles'], '#c8602a', '#f8f0dc'), 0.7), -1.44, 3.06, 0, -Math.PI / 2); k.add(rbox(0.05, 0.46, 1.66, 0.01), MAT.wood('dark'), -1.4, 3.06, 0);   // (its board stands on the roof's front edge)
+      k.at(0.85, 0, 0, -Math.PI / 2, () => P.workbench(k, { w: 2.2, d: 0.7, h: 0.88 }));
+      // spare parts on the bench: gears, a shuttle landing leg, a crate of springs; tools on the back wall
+      for (let i = 0; i < 3; i++) k.add(torus(0.08 + i * 0.03, 0.02, 4, 10), MAT.steel(), 0.8, 0.92 + i * 0.02, -0.7 + i * 0.12, 0, { rx: Math.PI / 2 });
+      k.add(cyl(0.05, 0.08, 0.7, 8), MAT.paint('#b82a24', 0.45), 0.85, 0.95, -0.1, 0, { rz: Math.PI / 2 - 0.2 });
+      for (let i = 0; i < 4; i++) k.add(rbox(0.03, 0.3 + (i % 2) * 0.1, 0.05, 0.01), MAT.steel(), 1.21, 1.5, -0.9 + i * 0.25);
+      benchLamp = new THREE.PointLight('#ffd890', 0, 5); k._local(0.4, 2.0, 0, 0, {}).decompose(benchLamp.position, benchLamp.quaternion, benchLamp.scale); g.add(benchLamp);
+      // the coupler, once it is on the bench: a brass drum with fins, glowing as it heats (at the bench's east end,
+      // where Twinsen standing at the bench doesn't hide it)
+      coupler = k.pivot(0.7, 0.9, 0.7, 0);
+    });
+    coupler.visible = false;
     const cm = new THREE.MeshStandardMaterial({ color: '#c89a4a', roughness: 0.35, metalness: 0.75, emissive: '#ff5a1a', emissiveIntensity: 0 });
     { const ck2 = new Kit(coupler); ck2.add(cyl(0.14, 0.14, 0.26, 14), cm, 0, 0.13, 0);
       for (let i = 0; i < 6; i++) ck2.add(rbox(0.02, 0.22, 0.12, 0.004), cm, Math.cos(i) * 0.16, 0.13, Math.sin(i) * 0.16, -i);
       ck2.flush(); }
-    // the Esmer engine on its stand: a drum, a fan that spins when it runs
-    const ex = s.x - 0.6, ez = s.z + 1.75, ey = gy(ex, ez);
-    k.add(rbox(0.7, 0.5, 0.5, 0.03), MAT.iron(), ex, ey + 0.25, ez);
-    k.add(cyl(0.25, 0.25, 0.6, 14), MAT.paint('#9a7ac8', 0.5), ex, ey + 0.75, ez, 0, { rz: Math.PI / 2 });
-    const fan = new THREE.Group(); fan.position.set(ex - 0.34, ey + 0.75, ez); g.add(fan);
-    { const fk = new Kit(fan); for (let i = 0; i < 4; i++) fk.add(rbox(0.03, 0.42, 0.1, 0.01), MAT.brass(), 0, 0, 0, 0, { rx: i * Math.PI / 4 }); fk.flush(); }
-    box(ex, ez, 0.4, 0.3, ey + 1.0, { noStand: true });
-    let fanOn = false; W.updaters.push((dt) => { if (fanOn) fan.rotation.x += dt * 14; });
-    // the water barrel (open, full)
-    const wx = s.x - 2.3, wz = s.z + 2.45, wy = gy(wx, wz);
+    { const bw = toW(1.3, 0); box(bw.x, bw.z, 1.6, 0.12, sy + 2.4, { noStand: true }); }
+    for (const pz of [-1.55, 1.55]) { const p = toW(-1.2, pz); physics.add({ type: 'cyl', x: p.x, z: p.z, r: 0.1, top: sy + 2.8, noStand: true }); }
+    { const b = toW(0.85, 0); box(b.x, b.z, 1.1, 0.35, sy + 0.9, { noStand: true }); }
+    // the Esmer engine on its stand at the open west side: a drum, a fan toward the path that spins when it runs
+    const ex = s.x - 1.75, ez = s.z + 0.55, ey = gy(ex, ez);
+    k.add(rbox(0.5, 0.5, 0.7, 0.03), MAT.iron(), ex, ey + 0.25, ez);
+    k.add(cyl(0.25, 0.25, 0.6, 14), MAT.paint('#9a7ac8', 0.5), ex, ey + 0.75, ez, 0, { rx: Math.PI / 2 });
+    const fan = new THREE.Group(); fan.position.set(ex, ey + 0.75, ez + 0.34); g.add(fan);
+    { const fk = new Kit(fan); for (let i = 0; i < 4; i++) fk.add(rbox(0.1, 0.42, 0.03, 0.01), MAT.brass(), 0, 0, 0, 0, { rz: i * Math.PI / 4 }); fk.flush(); }
+    box(ex, ez, 0.3, 0.4, ey + 1.0, { noStand: true });
+    let fanOn = false; W.updaters.push((dt) => { if (fanOn) fan.rotation.z += dt * 14; });
+    // the water barrel (open, full), beside the engine
+    const wx = s.x - 2.95, wz = s.z + 0.45, wy = gy(wx, wz);
     k.at(wx, wy, wz, 0, () => P.barrel(k, { r: 0.36, h: 0.8, pal: 'honey' }));
     const bw = new THREE.Mesh(new THREE.CircleGeometry(0.3, 16), new THREE.MeshStandardMaterial({ color: '#5a90b8', roughness: 0.1 })); bw.rotation.x = -Math.PI / 2; bw.position.set(wx, wy + 0.74, wz); g.add(bw);
     physics.add({ type: 'cyl', x: wx, z: wz, r: 0.38, top: wy + 0.82, noStand: true });
+    const cw = toW(0.7, 0.7);
     L.shop = {
-      bench: { x: s.x + 0.1, z: s.z - 0.15 },
-      engine: { x: ex - 0.9, z: ez, setRunning(b) { fanOn = b; benchLamp.intensity = b ? 3 : 0; } },
-      barrel: { x: wx - 0.75, z: wz },
-      coupler: { setHeat(h) { cm.emissiveIntensity = h * 2.2; }, setVisible(b) { coupler.visible = b; }, get visible() { return coupler.visible; } },
+      bench: toW(0.05, 0.25),
+      engine: { x: ex + 0.2, z: ez + 0.9, setRunning(b) { fanOn = b; benchLamp.intensity = b ? 3 : 0; } },
+      barrel: { x: wx + 0.1, z: wz + 0.85, wx, wz },
+      coupler: { x: cw.x, z: cw.z, y: sy + 0.9, setHeat(h) { cm.emissiveIntensity = h * 3.5; }, setVisible(b) { coupler.visible = b; }, get visible() { return coupler.visible; } },
     };
-    L.spots.nell = { x: s.x - 0.35, z: s.z - 0.9, a: -Math.PI / 2 };
+    // Nell kneels at her dead engine (inside the open west side); once it runs she stands up facing the path
+    L.spots.nell = { x: ex + 0.75, z: ez, a: -Math.PI / 2, aDone: Math.PI * 0.25 };
     k.flush();
   }
   return L;

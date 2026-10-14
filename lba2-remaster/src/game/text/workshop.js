@@ -38,6 +38,7 @@ Object.assign(STR.en, {
   w_toast_hot: 'The coupler is glowing: it needs cooling',
   w_toast_trip: 'The coupler tripped. Start it again.',
   w_toast_pair: "Baldino's test pair is talking",
+  w_toast_owed: "Baldino's coin: {n} kashes",
 
   // ---- looks
   w_fan: 'A fan with three blades: brass, wood and a bit of tin. One from each repair.',
@@ -48,6 +49,7 @@ Object.assign(STR.en, {
   w_kettle1: 'A kettle wired to a coupler, black with soot. The lid is stuck in the ceiling.',
   w_kettle2: 'A note on the wall: "TEA: BY HAND."',
   w_bal_kettle: 'It boiled dry. Couplers hate dry. The lid went up at the third bell. The tea went everywhere else.',
+  w_pair_pre: "Two relays, a lever, a coupler under a drip can. Baldino's. I'll ask before I touch.",
   w_crate: 'Esmer shuttle parts, stencilled "SHUTTLE YARD, return to Ilo". Some have been here a while.',
   w_bal_crate: "Ilo lends me parts. I lend her opinions. She calls it a fair trade. She's being polite.",
 
@@ -56,5 +58,5 @@ Object.assign(STR.en, {
   w_j_rules: 'Relays talk by sight. A coupler runs hot unless something cools it.',
 
   // ---- chapter 10 remembers it
-  c10_bal_pair: "You've met my test pair. Same rules out there: give them a clear line, and keep the couplers cool.",
+  c10_bal_pair: "You've met my test pair. Same first rule: a clear line. And no couplers out there: with nobody to keep them cool, they'd trip.",
 });

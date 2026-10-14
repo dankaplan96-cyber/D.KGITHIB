@@ -202,7 +202,7 @@ givers and carries low HP through the late chapters; a player normally would.
 |---|---|---|
 | Bram, Officer Odile and Nell stand at their places on Citadel | LOGIC (tests/townlife.mjs) | PASS |
 | The house: Zoé's board, the trunk, the mend box, the heat meter and Arthur's bench each give a short look; the board and meter read differently before the heat, after it, and after Zoé finds the plan | INPUT | PASS |
-| Prologue: the pump is dry, no side story yet | INPUT | PASS |
+| Prologue: the pump is dry and Bram only remarks on it. (0.24.0 was not "no side story yet": the boat box gave the pliers in the prologue, REV-TY-1 D6; fixed in 0.25.1, see below) | INPUT | PASS (pump, Bram); boat box FIXED in 0.25.1 |
 | The Old Pump, order A (Bram → pump → Arthur → boat box → pin → strokes) and order B (boat box → pump → Bram); water in the trough, a drink heals, Bram's clover, the journal | INPUT (ISO: chapter flags) | PASS |
 | The Mislabelled Shipment: Odile → crate → Nell → bench → (left too long: trips, restart) → glow → barrel → bench → engine runs → Odile clears → Nell pays | INPUT | PASS |
 | Save & quit → Continue after both stories, and with the coupler heating (comes back cold on the bench) | UI + INPUT | PASS |
@@ -214,7 +214,7 @@ givers and carries low HP through the late chapters; a player normally would.
 | Defects found while building it (fixed before commit): a crate prop called with the wrong arguments (NaN geometry in the house); the garden first placed on a slope; Bram standing where E picked him instead of the pump; the pump's reach shorter than its plinth | — | FIXED |
 
 ### Baldino's workshop, years on (0.25.0; TY-2; docs/TWELVE_YEARS.md)
-Evidence: tests/workshop.mjs (26 checks; its screenshots W-00…W-04 in the working directory); captures/workshop/
+Evidence: tests/workshop.mjs (25 checks in 0.25.0 — this file and the commit said 26 by mistake; 31 since 0.25.1; its screenshots W-00…W-04 in the working directory); captures/workshop/
 (before/after at the same view, the test pair's three states, details with the camera zoomed for the capture only).
 Software renderer (SwiftShader): layout and readability only, no GPU timing.
 
@@ -235,10 +235,40 @@ Software renderer (SwiftShader): layout and readability only, no GPU timing.
 | Chapter 10 opens in the workshop, Baldino recalls the pair's rules; the thunder box is gone once Twinsen has the pulse tool | INPUT (ISO: chapter 9 done by flags, as tests/chapter10.mjs) | PASS |
 | Regression after the change: workshop, townlife, stability, resume, shipfiles, zoe-resume ALL PASSED; chapter2 end to end, its log identical to the 0.24.0 run | LOGIC/INPUT | PASS |
 | chapter10 | LOGIC | PASS once on this change (log identical to the 0.24.0 run), then 3 runs where one bore drone survived the test's 40 teleport-and-throw tries (chapter ends at 4/5). The unchanged 0.24.0 build failed the same way at the same time. Enemy AI uses unseeded Math.random: a flaky test step, not caused by this change; open (see below) |
-| Open: tests/chapter10.mjs's bore-drone step is nondeterministic (drones wander with Math.random; the step teleports 3.5 m west of each drone and throws up to 40 times) | — | OPEN (pre-existing) |
+| Open: tests/chapter10.mjs's bore-drone step is nondeterministic (drones wander with Math.random; the step teleports 3.5 m west of each drone and throws up to 40 times) | — | FIXED in the test in 0.25.1 (see below) |
 | Render counts in the workshop (software renderer; counts, not time): draw calls at the door 2887 → 2992 (+3.6%), mid-room 3124 → 3333 (+6.7%); room triangles 92.6k → 106.9k | LOGIC | measured |
 | Defects found while building it (fixed before commit): the relay table first closed the rim walk south of the flying machine (the bot boxed itself in by the barrel; table shortened and moved left); the SYNC lamps first faced away from the camera; the fan first pinched the walk past the globe; the reward first popped five coins that could land on furniture (now one coin worth 5, tossed toward Twinsen) | — | FIXED |
 | Not checked here: the look on a GPU; the feel by hand; whether a player notices the lid in the vault (it's small: the tea up the wall and the lines carry it) | — | HUMAN |
+
+### REV-TY-1/REV-TY-2 fixes (0.25.1; TY-1-FIX)
+The independent reviews of the two twelve-years-on sets (docs/lba3-production/reviews/REV-TY-1, REV-TY-2). Evidence:
+tests/townlife.mjs (30 checks, was 18), tests/workshop.mjs (31 checks, was 25), captures/townlife/ (before = 0.25.0
+at 926b21e, after = 0.25.1, the same input route and the normal game camera: `townlife-before-after.png`,
+`townlife-house.png`). Software renderer (SwiftShader), 1280×720: layout and readability only, no GPU timing.
+
+| Defect | Fix | Evidence | Result |
+|---|---|---|---|
+| TY-1 D1: Nell's shop hid Nell, the bench and the coupler's glow from the normal camera, and stood across the harbour path with its barrel on it; the garden's raised beds on the lane | The shop moved onto the grass north of the path where it meets the quay (clear of the next house's door), turned open toward the path (back wall north), its roof rising toward the open front, the sign on the roof's edge (and its name fitted to the board); the coupler sits at the bench's end, where Twinsen at the bench doesn't hide it; the engine (fan toward the path) and the barrel at its open west side. The beds moved east of the lane to the lighthouse. The island's scatter keeps out of these places without changing the rest of the island (lifeClear: shrunk to nothing, no collider) | townlife: "Nell's shop… and the raised beds are off the dirt paths (> 2.3 m)"; walks to the shop, barrel, garden; captures (shop from the path, at the bench with the coupler glowing, from the quay; the garden) | FIXED |
+| TY-1 D2: Arthur's bench hidden behind the family room's wardrobe | On the west wall of his room, between the toy chest and the bed, plans pinned up beside the window | townlife: nothing tall between the bench and the house camera; townlife-house.png | FIXED |
+| TY-1 D3: no colliders on the lane's pipe, the pump sign's post, the customs barrier's post; the trough standable | The pipe stops him (0.62 m, not standable: no traps, he can jump it) and dives under the ground for the pump's footpath (elbows, fresh earth), so the pump is reached across it; sign post, barrier post, valve box solid; the trough, Zoé's beds and the honey pallet can't be stood on | townlife: walking into the pipe (stopped, not lifted), across the footpath (crosses); posts/trough/valve box by physics; walk to the pump's handle | FIXED |
+| TY-1 D4: Zoé's board always 8 green pins; board and meter never changed | Three boards: all red before the heat; Bug Street green and the harbour row red with it; after the plan, her chalk ring and "?" round the harbour row. The meter's needle at rest and no note before the heat; the needle up and Zoé's note after | townlife: stage 0 in the prologue, 1 in chapter 2, 2 in the evacuation | FIXED |
+| TY-1 D5 / TY-2 D4: Nell's fee, Bram's clover and Baldino's coin lost if saved before pickup | A tossed reward is owed (a saved l_/w_ flag counted down as it is picked up); on loading, what is still owed and not lying there is given with a toast ("Nell's payment: 3 kashes", "Bram's clover…", "Baldino's coin: 5 kashes"). Tim's clover unchanged | townlife: clover and coins picked up by input (owed → 0); save before pickup → Continue → given; workshop: the same for the coin | FIXED |
+| TY-1 D6: the boat box gave the pliers in the prologue | Before chapter 2 the box is only looked at ("His things"); the pliers stay; no journal line | townlife: prologue box check | FIXED |
+| TY-1 D7: working the pump, hands ~0.5 m from the handle, standing in the tulip bed, the sign edge-on | The handle points to the lane with a crossbar grip; he steps up to it (a short step from where the prompt shows) and plays a two-handed pump stroke (new 'pump' pose, src/engine/rig.js) timed with the handle; standing on the footpath, clear of the plinth; no tulip bed there; the sign faces both ways along the lane | townlife: hands-to-grip distance logged through the stroke, < 0.15 m (townlife log: 0.009–0.082 m from 0.2 to 0.47 s into the stroke; a probe saw up to ~0.2 m in its last 0.1 s, as the hands lift off); captures from the north and the south | FIXED |
+| TY-1 D8: the coupler's ownership unclear; STORY_BIBLE "Approved in that pass" | Xil ordered it for Nell (a deal): Nell knows it ("Xil was getting me one from Zeelich"), Odile clears its papers for Nell's Repairs, and Nell pays Twinsen part of what she owes Xil. STORY_BIBLE now calls these proposed developments (this sequel's inventions), as TWELVE_YEARS.md does | townlife: Nell's and Odile's lines | FIXED |
+| TY-1 test weakness: the clover assertion always true | Now counts his clovers and the owed flag | townlife | FIXED |
+| QA row "prologue: no side story yet" was inaccurate | Corrected above | — | FIXED |
+| TY-2 D1: a press at the crank/tap/lever in the pair's last moment applied after success | Each act callback re-checks that the pair isn't done; a 0.25.0 save left contradictory is repaired on load (a finished pair is up and dripping) | workshop: crank pressed at sync ≥ 0.98 → after success the hoist is still up | FIXED |
+| TY-2 D2: success with the drip shut late | They only sync while the drip is open: shut mid-sync, the sync starts over and the coupler heats and trips | workshop: tap shut at sync ~0.5 → sync 0, trip, no success | FIXED |
+| TY-2 D3: chapter 10's lines contradicted the pair | c10_bal_2: the relays are the test pair grown up and put on masts; c10_bal_3: a clear line (so they stand high), local power, a friend standing by; c10_bal_pair: same first rule, no couplers out there (with nobody to keep them cool they'd trip). Text only; chapter 10's mechanics unchanged | workshop: chapter 10 recall; chapter10 ×3 | FIXED |
+| TY-2 D5: he could stand inside the lowered relay's cradle | The cradle (following the hoist) and the hoist's low cross bars are solid | workshop: walking into the hoist's middle stops > 0.6 m from it | FIXED |
+| TY-2 D6: from the north side E at Ilo's crate gave its look, never the bonus | Its look is offered until read, then again once its giver is spent: after reading it, E beside it hops and gives the bonus | workshop | FIXED |
+| TY-2 D7: the pair could be started before Baldino's "At last!" | Before it the lever only gets a look ("I'll ask before I touch") | workshop | FIXED |
+| TY-2: check count (QA.md and the commit said 26; the test had 25) | Corrected above | — | FIXED |
+| tests/chapter10.mjs bore-drone step flaky (unseeded Math.random drone AI) | Each throw from a fresh side and distance, aimed again just before release, up to 120 per drone; a drone still flying after that is beaten through its own damage rule and logged as ISO; the test now prints CHAPTER 10 DONE/NOT DONE and sets its exit code | 3 runs: 3/3 done, all drones thrown (5/4/5, 5/4/5, 5/13/8 throws), no ISO assist | FIXED (test only; no game balance change) |
+| Tests that hard-coded port 8123 honour GAME_URL (test-only) | — | — | DONE |
+| Regression after the change (GAME_URL on a separate port): townlife, workshop, chapter2, chapter8, chapter10 ×3, stability, resume, house, opening | LOGIC/INPUT | all rc 0, no page errors | PASS |
+| Not checked here: the look on a GPU; whether the pump stroke and the step to the grip feel right by hand | — | — | HUMAN |
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.

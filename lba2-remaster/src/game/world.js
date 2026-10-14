@@ -16,6 +16,11 @@ import { buildDinoFly } from './dinofly.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod } from './kit.js';
 import { COAST, LEVELS, PROPS } from './citadel-layout.js';
+import { lifeClear } from './townlife.js';
+
+// the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
+// nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
+const clearLife = (list) => { for (const t of list) if (lifeClear(t.x, t.z)) { t.s = 1e-4; t.gone = true; } };
 
 // Citadel Island follows the original LBA2 map (citadel-layout.js: the coast and four terrace levels). LAYOUT
 // places that map in our frame so its town falls on ours: the town and the harbour were built first, here, and
@@ -577,6 +582,7 @@ export function buildWorld(parentScene) {
     }
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
+  clearLife(trees); clearLife(bushes);
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
     const list = trees.filter((t, i) => t.kind === kind && i % nv === v);
@@ -585,8 +591,8 @@ export function buildWorld(parentScene) {
   const palmList = trees.filter((t) => t.kind === 'palm');
   for (let v = 0; v < 2; v++) { const list = palmList.filter((t, i) => i % 2 === v); if (list.length) mkInst(palmGeometry(v + 1), leafMat, list, true, shadeVar, palmGeometry(v + 1, 1)); }
   for (let v = 0; v < 3; v++) mkInst(treeGeometry('bush', v + 1), leafMat, bushes.filter((b, i) => i % 3 === v), true, shadeVar, treeGeometry('bush', v + 1, 1));
-  for (const t of trees) physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false });
-  for (const b of bushes) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
+  for (const t of trees) if (!t.gone) physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false });
+  for (const b of bushes) if (!b.gone) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
   W.trees = trees;
 
   // grass clumps + wild flowers (none on streets, the square or inside houses)
@@ -612,6 +618,7 @@ export function buildWorld(parentScene) {
   }
   const grassMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }), 0.16);
   const grassTint = (c) => c.setHSL(0.27 + (rand() - 0.5) * 0.05, 0.25 + rand() * 0.2, 0.85 + rand() * 0.15).lerp(new THREE.Color(1, 1, 1), 0.6);
+  clearLife(grass); clearLife(flowers);
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
   ['#ffd84a', '#ff6fa3', '#ffffff', '#b28cff', '#ff8a3d'].forEach((col, k) => mkInst(flowerGeometry(col), flowerMat, flowers.filter((f, i) => i % 5 === k), false, null, null, true));
@@ -634,7 +641,7 @@ export function buildWorld(parentScene) {
       if (u * u + v * v > 1) { i--; continue; }
       const x = cx + Math.cos(rot) * u * rx - Math.sin(rot) * v * rz, z = cz + Math.sin(rot) * u * rx + Math.cos(rot) * v * rz;
       if (!bedOk(x, z)) continue;
-      beds[k].push({ x, z, h: H(x, z), s: 1.05 + rand() * 0.35, ry: rand() * 6.28 });
+      beds[k].push({ x, z, h: H(x, z), s: 1.05 + rand() * 0.35, ry: rand() * 6.28, bed: bedN });
     }
   };
   let bedN = 0;
@@ -659,6 +666,9 @@ export function buildWorld(parentScene) {
     }
   }
   // (hidden beyond FAR_SMALL like the grass: a bed far off is a few pixels of colour, and thousands of tulips)
+  // (a bed reaching into one of the town's places — the pump's footpath, Nell's shop — is left out whole)
+  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z)) lifeBeds.add(t.bed);
+  for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
   W.flowerBeds = { beds: bedN, tulips: beds.reduce((a, l) => a + l.length, 0) };
 

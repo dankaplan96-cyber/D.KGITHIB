@@ -12,7 +12,7 @@ page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.
 const ev = (f, a) => page.evaluate(f, a);
 let fails = 0;
 const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, JSON.stringify(info)); };
-await page.goto('http://localhost:8123/', { waitUntil: 'load', timeout: 180000 });
+await page.goto((process.env.GAME_URL || 'http://localhost:8123/'), { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await ev(() => {
   const G = window.game; G.testFreeze = true;

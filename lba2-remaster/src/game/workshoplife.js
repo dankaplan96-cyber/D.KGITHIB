@@ -146,6 +146,7 @@ export function dressWorkshop(B, R, { glowSprite, H }) {
     for (const s of [-1, 1]) k.add(rbox(0.09, 2.66, 0.09, 0.015), wood, x, beamY / 2, hz + s * 0.22, 0, { rx: -s * 0.17 });
     k.add(rbox(0.07, 0.07, 0.8, 0.012), wood, x, 0.55, hz);
     for (const s of [-1, 1]) B.ccol(x, hz + s * 0.44, 0.09, 2.6, { noStand: true });
+    B.col(x, hz, 0.06, 0.44, 0.62, { noStand: true });   // (the low cross bar: walked into, not through)
   }
   k.add(rbox(hx1 - hx0 + 0.24, 0.12, 0.12, 0.02), MAT.paint('#3a4a5a', 0.5), (hx0 + hx1) / 2, beamY, hz);
   k.add(rbox(0.2, 0.1, 0.16, 0.02), iron, hX, beamY - 0.1, hz);
@@ -164,6 +165,8 @@ export function dressWorkshop(B, R, { glowSprite, H }) {
     ck.flush();
   }
   const relayB = buildRelay(); relayB.scale.setScalar(RS); relayB.position.set(0, 0.02, 0); cradle.add(relayB);
+  // the cradle and its relay are solid, wherever the hoist has them (low: he can't stand in it; up: head height)
+  const cradleCol = B.col(hX, hz, 0.26, 0.24, 0.32 + 0.62, { noStand: true, bottom: 0.27 });
   const glowB = glow('#ffc060', 0.42, 0, 0, 0);
   const lampBOff = new THREE.Vector3(-0.2 * RS, 0.02 + 1.0 * RS, 0);
   const LOW = 0.32, HIGH = 1.32;
@@ -268,6 +271,7 @@ export function dressWorkshop(B, R, { glowSprite, H }) {
     L.lift = lift;
     const e = lift * lift * (3 - 2 * lift), yC = LOW + (HIGH - LOW) * e;
     cradle.position.y = yC;
+    cradleCol.bottom = yC - 0.05; cradleCol.top = yC + 0.62;   // (room floor at y 0)
     const hookY = yC + 1.14, len = Math.max(0.05, beamY - 0.12 - hookY);
     chain.scale.y = len; chain.position.y = hookY + len / 2;
     cradle.rotation.y = Math.sin(tt * 0.9) * 0.04;

@@ -1,5 +1,12 @@
 # NEXT ACTION
 
+0.25.1: the independent reviews' defects in both twelve-years-on sets fixed (REV-TY-1, REV-TY-2; QA.md "REV-TY-1/
+REV-TY-2 fixes"): Nell's shop moved off the harbour path and open toward it, the garden's beds off the lane, Arthur's
+bench in view, solid pipe/posts/trough, the pump's handle where his hands are, the board and meter follow the story,
+rewards kept across a save, the boat box waits for chapter 2, the coupler's owner made plain; the Test Pair's races and
+rules fixed and chapter 10's lines agree with it. Next: an independent re-review of these fixes, then Desert Island,
+the Hamalayi and Zeelich's own twelve-year changes.
+
 0.25.0: twelve years on, second set: Baldino's workshop (docs/TWELVE_YEARS.md; tests/workshop.mjs). The room shows
 his years (the relay table, the old hoist, the mended fan, the tea experiment, the thunder box, Ilo's perch) and The
 Test Pair teaches the network's limits in chapter 3 (relays by sight, couplers overheat). Next in the brief's order:

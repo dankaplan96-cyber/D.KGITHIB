@@ -172,14 +172,15 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 | **Xil** | his cargo moved | missing business | the project's cargo | rope ladder, gossip about Vesk | — |
 | **Pippa** | to sell | running out of stock | what people are buying | shop; stock changes with events (clovers before the evacuation) | — |
 | **Bram** (new) | his pump kept working | being made obsolete | fifty years of the lane's water | The Old Pump; the lane's water in the evacuation | — |
-| **Officer Odile** (new) | forms filled in properly | the wrong category | what crosses the quay | holds Xil's "soup pot"; clears it | — |
-| **Nell** (new) | her engine running; spare parts | waiting three weeks for a shuttle | imported machines; the posts that trip | the heat coupler (couplers overheat: cool them in water) | — |
+| **Officer Odile** (new) | forms filled in properly | the wrong category | what crosses the quay | holds the "soup pot" Xil shipped; clears its papers once it is shown to be machinery | — |
+| **Nell** (new) | her engine running; spare parts | waiting three weeks for a shuttle | imported machines; the posts that trip | the heat coupler Xil ordered for her (couplers overheat: cool them in water); pays Twinsen part of Xil's fee | — |
 | **Tim / Lulu** | adventure without trouble | Tim's mum | the glowing stones on the beach | the crystal clue | — |
 | **Nara** | business is good | the project leaving | street gossip | directions; changes her mind when she sees the plan | — |
 | **Oku** | the old wind back | forgetting | mills and old Zeelich | mill brakes; releases them in the finale | — |
 
 ## Twelve years on (docs/TWELVE_YEARS.md)
-What separates the originals' history from this sequel's inventions is recorded there. Approved in that pass:
+What separates the originals' history from this sequel's inventions is recorded there. Proposed developments for
+the twelve-year gap (this sequel's inventions, not the originals' canon; implemented in that pass):
 - **Zoé's work**: she keeps the Water Office's connection register (which houses get the project's heat next).
   Her board at home shows Bug Street connected and the harbour row waiting — the same houses Vesk's plan leaves
   out, which is how she knows what she is looking at in chapter 2.

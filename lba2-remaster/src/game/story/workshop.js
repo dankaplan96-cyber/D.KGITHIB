@@ -27,6 +27,8 @@ export class WorkshopLife extends ChapterBase {
   }
   get L() { return this.game.rooms.workshop?.life; }
   get open() { const i = this.story.chapters.findIndex((c) => c.key === 'zeelich'); return i >= 0 && this.story.index >= i; }
+  // the pair's parts are his to show: from his "At last!" in chapter 3 (c2_plan), or any later chapter
+  get ready() { const i = this.story.chapters.findIndex((c) => c.key === 'zeelich'); return this.open && (this.story.index > i || !!this.f.c2_plan); }
   here() { return this.game.room?.id === 'workshop' && !!this.L; }
   // Baldino in his workshop (not at the platform, not away)
   balHere() {
@@ -38,8 +40,12 @@ export class WorkshopLife extends ChapterBase {
   applyFlags() {
     // (a save made with the pair running comes back switched off and cold)
     this.on = false; this.heat = 0; this.sync = 0; this.tOn = 0;
+    // (0.25.0 saves could finish the pair and then lower the hoist or shut the tap (REV-TY-2 D1, D2): a finished
+    // pair is up and dripping)
+    if (this.f.w_pair) { this.f.w_up = true; this.f.w_tap = true; }
     this.push();
     this.L?.snap();
+    this.settleOwed('w_owe', 'coin', 5, 'w_toast_owed');
   }
   push() {
     const f = this.f, L = this.L;
@@ -79,7 +85,8 @@ export class WorkshopLife extends ChapterBase {
     const a = Math.atan2(to.x - p.x, to.z - p.z);
     f.w_paid = true;
     g.audio.play('bonus');
-    g.pickups.spawn('coin', p.x, p.y, p.z, { fly: { vx: Math.sin(a) * 1.13, vy: 3.15, vz: Math.cos(a) * 1.13 }, value: 5 });
+    // (owed until he picks it up: a save made while it lies on the floor gives it on loading)
+    this.reward('w_owe', 'coin', 1, p.x, p.y, p.z, { fly: { vx: Math.sin(a) * 1.13, vy: 3.15, vz: Math.cos(a) * 1.13 }, value: 5 });
     g.save(false);
   }
 
@@ -87,10 +94,15 @@ export class WorkshopLife extends ChapterBase {
   interactables(consider, dist) {
     if (!this.open || !this.here()) return;
     const f = this.f, S = this.L.spots, done = !!f.w_pair;
-    consider(dist(S.lever.x, S.lever.z), S.lever.r, { kind: 'wlever', label: done ? 'p_look' : this.on ? 'p_switch_off' : 'p_switch_on' });
-    consider(dist(S.tap.x, S.tap.z), S.tap.r, { kind: 'wtap', label: done ? 'p_look' : f.w_tap ? 'p_tap_close' : 'p_tap_open' });
-    consider(dist(S.crank.x, S.crank.z), S.crank.r, { kind: 'wcrank', label: done ? 'p_look' : 'p_crank' });
-    for (const w of ['fan', 'pulse', 'kettle', 'crate']) consider(dist(S[w].x, S[w].z), S[w].r, { kind: 'wlook', what: w, label: 'p_look' });
+    if (!this.ready) consider(dist(S.lever.x, S.lever.z), S.lever.r, { kind: 'wlook', what: 'pre', label: 'p_look' });   // (before Baldino's hello: hands off)
+    else {
+      consider(dist(S.lever.x, S.lever.z), S.lever.r, { kind: 'wlever', label: done ? 'p_look' : this.on ? 'p_switch_off' : 'p_switch_on' });
+      consider(dist(S.tap.x, S.tap.z), S.tap.r, { kind: 'wtap', label: done ? 'p_look' : f.w_tap ? 'p_tap_close' : 'p_tap_open' });
+      consider(dist(S.crank.x, S.crank.z), S.crank.r, { kind: 'wcrank', label: done ? 'p_look' : 'p_crank' });
+    }
+    // (Ilo's crate is also a giver, shaken by a hop: its look is offered until read, then again once the giver is spent)
+    const crateLook = !f.w_crateSeen || this.game.searched.includes('giver:workshop:crate');
+    for (const w of ['fan', 'pulse', 'kettle', 'crate']) if (w !== 'crate' || crateLook) consider(dist(S[w].x, S[w].z), S[w].r, { kind: 'wlook', what: w, label: 'p_look' });
   }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero;
@@ -100,6 +112,7 @@ export class WorkshopLife extends ChapterBase {
       case 'wlever':
         if (f.w_pair) return say(['w_pair_after']);
         h.act('use', 0.6, () => {
+          if (f.w_pair) return;   // (pressed in the pair's last moment: it finished first)
           this.on = !this.on; this.sync = 0; this.tOn = 0; this.warned = false; this.sightSaid = false;
           g.audio.play(this.on ? 'select' : 'door');
           if (this.on && !f.w_ask) { f.w_ask = true; say(['w_tw_tag']); }
@@ -109,6 +122,7 @@ export class WorkshopLife extends ChapterBase {
       case 'wtap':
         if (f.w_pair) return say(['w_tap_done']);
         h.act('use', 0.5, () => {
+          if (f.w_pair) return;
           f.w_tap = !f.w_tap; g.audio.play('select');
           const key = !f.w_tap ? 'w_tap_close' : f.w_tapSeen ? 'w_tap_open' : 'w_tap_open0';
           f.w_tapSeen = true; this.push();
@@ -118,14 +132,17 @@ export class WorkshopLife extends ChapterBase {
       case 'wcrank':
         if (f.w_pair) return say(['w_crank_done']);
         h.act('use', 1.0, () => {
+          if (f.w_pair) return;
           f.w_up = !f.w_up; g.audio.play('ropeCreak'); this.push();
           if (!f.w_crankSeen) { f.w_crankSeen = true; say(['w_crank0'], () => g.save(false)); } else g.save(false);
         }, 0.3);
         return true;
       case 'wlook': {
         const w = it.what;
+        if (w === 'crate') f.w_crateSeen = true;
         if (w === 'pulse' && !this.L.state.pulse) return say(['w_pulse_gone']);
         const lines = {
+          pre: ['w_pair_pre'],
           fan: ['w_fan', ...(bal ? [['baldino', 'w_bal_fan']] : [])],
           pulse: ['w_pulse', ...(bal ? [['baldino', 'w_bal_pulse']] : [])],
           kettle: ['w_kettle1', 'w_kettle2', ...(bal ? [['baldino', 'w_bal_kettle']] : [])],
@@ -149,7 +166,8 @@ export class WorkshopLife extends ChapterBase {
         else this.heat += dt * HEAT_RATE;
         if (this.heat >= HEAT_GLOW && !f.w_tap && !this.warned) { this.warned = true; g.hud.toast('w_toast_hot'); g.audio.play('alert'); }
         if (this.heat >= HEAT_TRIP) this.trip();
-        else if (f.w_up && L.lift >= 0.98) {
+        else if (f.w_up && L.lift >= 0.98 && f.w_tap) {
+          // (they hold together only while the coupler runs cool: the tap shut, the sync starts again)
           this.sync += dt / SYNC_TIME;
           if (this.sync >= 1) this.success();
         } else {

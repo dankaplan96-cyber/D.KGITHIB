@@ -39,17 +39,22 @@ player can do · what stays different afterwards.
 - **The old travel trunk** (hall): stickers from Desert Island and Zeelich; it holds seed packets now.
 - **The mend box** by the door: a neighbour's kettle and the baker's scales, mended, waiting to go back.
   Twinsen still fixes ordinary things for the street.
-- **The heat meter** where the project's line comes in: before the connection it waits on Zoé's list; after it,
-  Zoé's note says the needle jumps when the ground hums (she noticed first).
+- **The heat meter** where the project's line comes in: before the connection it waits on Zoé's list (needle at
+  rest, no note); after it, the needle is up and Zoé's note says it jumps when the ground hums (she noticed first).
+  Zoé's board changes with it: every pin red before the heat; Bug Street green and the harbour row red after; once
+  she has seen Vesk's plan, the harbour row ringed in her chalk with a question mark.
 - A chair mended with a paler new leg; an Esmer brass lamp from the trade on the hall table.
 
 ### The neighbourhood: The Old Pump (src/game/townlife.js, story/life.js)
 - Changed: the project's new copper heat pipe runs along the lane past the old hand pump, and the pump seized
   when they dug. Why: the pipe is the future; the pump looks like the past. Bram (an old Grobo, new) wants it
   kept; Mira's figures say it is pointless.
-- Sees: the pump on a stone plinth with a dry trough, the new pipe on low stands right beside it, Bram's sign.
-- Does: talks to Bram; the valve pin needs pliers (Arthur has them); takes them from Arthur's boat box; frees the
-  pin; works the handle (three strokes). Either order works (pliers first, Bram later).
+- Sees: the pump on a stone plinth with a dry trough, the new pipe on low stands right beside it (it dives under the
+  ground where the pump's footpath crosses it: fresh earth there), Bram's sign across the footpath. The handle points
+  to the lane: Twinsen works it side-on to anyone coming along the lane, both hands on its crossbar.
+- Does: talks to Bram; the valve pin needs pliers (Arthur has them); takes them from Arthur's boat box (from chapter
+  2: in the prologue the box is only looked at); frees the pin; works the handle (three strokes). Either order works
+  (pliers first, Bram later).
 - After: water runs into the trough; a drink there restores life; Bram gives a clover. In the evacuation, with
   the project's posts dark, the pump is the lane's water and Bram's lines say so.
 
@@ -58,12 +63,15 @@ player can do · what stays different afterwards.
   (Officer Odile, a Rabbibunny, new), cargo from both worlds (Esmer crates, Mosquibee honey jars beside the
   project's crates and Twinsun barrels), and Nell's repair shop for imported machines (Nell, a young Quetch,
   new): Esmer engines are wonderful, spare parts take three weeks by shuttle.
-- The situation: Xil's crate is held because Zeelich's form calls it "SOUP POT (1)", and soup pots don't hum.
-- Does: Odile asks what it really is; Twinsen opens it (a heat coupler); Nell's engine has waited a month for one;
-  on the bench it runs and heats; when it glows it has to be taken off and cooled in the water barrel before
-  it trips; set back, it settles. Odile files it as machinery and clears it.
-- After: Nell's engine runs (fan turning, lamp lit), the crate's tag reads CLEARED and its rope comes down, Nell
-  pays Xil's finder's fee. The mechanic it teaches — couplers overheat and need water — is the limit Baldino's
+- The situation: Xil shipped a crate from Zeelich for Nell (she had asked him to find her a coupler; it's a deal
+  between them). Customs holds it because Zeelich's form calls it "SOUP POT (1)", and soup pots don't hum.
+- Does: Odile asks what it really is; Twinsen opens it (a heat coupler); Nell knows it at once (Xil was getting her
+  one; her engine has waited a month); on the bench it runs and heats; when it glows it has to be taken off and
+  cooled in the water barrel before it trips; set back, it settles. Odile files it as machinery for Nell's Repairs
+  and clears its papers.
+- After: Nell's engine runs (fan turning, lamp lit), the crate's tag reads CLEARED and its rope comes down; with the
+  papers cleared the coupler is properly hers, and Nell gives Twinsen part of what she owes Xil for it ("he'd want
+  you to have it"). Her shop stands on the grass where the harbour path reaches the quay, open toward the path. The mechanic it teaches — couplers overheat and need water — is the limit Baldino's
   network has in chapter 10.
 - Fame, varied: Odile pictured him taller, with a cape; Nell knows him as "Arthur's dad" (who owes her a
   sprocket); Bram is fond of him and asks for help at an inconvenient moment.
@@ -99,10 +107,15 @@ player can do · what stays different afterwards.
   running comes back with it off (hoist and tap as they were).
 - **What stays different afterwards:** the pair keeps talking (both lamps, a beam between them over the flying
   machine, the SYNC lamps lit, the relay up, the drip running); the journal keeps the two rules. In chapter 10
-  Baldino says the network has the same rules ("a clear line, and keep the couplers cool"). Once Twinsen carries the
-  pulse tool, the thunder box's place on the shelf is empty.
-- **Limits, honestly:** chapter 10's stations don't yet make line of sight or overheating playable (they need
-  power from where they stand and a friend standing by); the rules are taught and remembered, not yet tested there.
+  Baldino calls the network's relays the test pair grown up and put on masts: they need a clear line (so they stand
+  high: a mill top, the lighthouse, a dome), they run on local power with a friend standing by, and there are no
+  couplers out there (with nobody to keep them cool they'd trip). Once Twinsen carries the pulse tool, the thunder
+  box's place on the shelf is empty.
+- **Rules of the pair (0.25.1):** it can only be started after Baldino's "At last!"; it only syncs with the drip
+  open (shut mid-sync, the sync starts over and the coupler trips); a press at the lever, tap or crank in its last
+  moment does nothing once it has succeeded.
+- **Limits, honestly:** chapter 10's stations don't yet make line of sight playable (they need power from where
+  they stand and a friend standing by); the rule is taught and remembered, not yet tested there.
 
 ## Not yet done (next, in the brief's order)
 1. Desert Island, the Hamalayi and Zeelich's own twelve-year changes (see WORLD_MAP.md: what exists there now).
