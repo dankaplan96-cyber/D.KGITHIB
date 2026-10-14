@@ -3,8 +3,8 @@
 Update before a handoff or a session limit. Do not mark a task done twice after resuming: check BACKLOG.md first.
 
 ## Build
-- Game version 0.22.0 (desktop/package.json) + the stabilization pass's fixes on branch `ccr-adf00ea7-37ebl3`
-  (D1–D9, see QA.md). No version bump yet: the pass changes no content.
+- Game version 0.23.0 (desktop/package.json) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
+  D1–D18, see QA.md), then Zeelich's islands and Citadel Spaceport.
 - Milestone (PRODUCTION.md): 1 — Stabilize.
 
 ## Completed and tested (this pass)
@@ -46,10 +46,14 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   restarting her segment. Not reproduced or diagnosed yet (the user moved the work to the Zeelich islands). The same
   resume through Esc → Save & quit → Continue passes (tests/zoe-resume.mjs).
 
+## Done after the pass (0.23.0)
+- Zeelich's seven islands as new regions (src/game/zislands.js; assets/lba2/islands, numbers only) and Citadel
+  Spaceport (src/game/spaceport.js, the user's request); Esmer shuttle flights from chapter 4
+  (src/game/story/islands.js). tests/zislands.mjs and tests/spaceport.mjs pass; regression set rerun (QA.md).
+
 ## Next exact task
-Add the original Zeelich islands as new regions (the user: in addition to the current Zeelich; at most rename what
-exists): Otringal, Knartas, Mosquibee, Celebration, Under-gas, the Platform, the CX islet — terrain from the
-originals' heights (numbers only), our art, reachable by flights.
+Hand 0.23.0 to the user for a look at the islands and the spaceport; then people on the islands, Mosquibee's
+ledges, and (the user's call) chapter 2's crossing from the spaceport.
 
 ## Resume
 Saves made through the game's own Save & quit live in the session scratchpad (not in the repo; regenerate by

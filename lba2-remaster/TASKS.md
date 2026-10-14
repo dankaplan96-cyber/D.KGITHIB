@@ -33,6 +33,7 @@
 ## 3. World and exploration
 - [~] W1 Optional discoveries with consequences (a shortcut, a locked workshop, a repaired machine changing a route). Done so far: six singing crystals off the paths (5 Citadel, 1 on the old mill on Zeelich), +1 max health each, Sendell remarks on all six in chapter 3.
 - [~] W2 Familiar places change after events (NPC lines, objects, routes) — tracked per chapter. Done so far: heat posts light up after the water returns (ch1); bunting over the square and new lines for everyone in the epilogue.
+- [x] W3 Zeelich's seven islands as extra regions (the original's layouts as numbers, our art) and Citadel Spaceport with Esmer shuttle flights from chapter 4 (0.23.0; tests/zislands.mjs, tests/spaceport.mjs). Next: people on the islands; Mosquibee's ledges.
 
 ## 4. Animation and interaction
 - [ ] A1 Talking gestures, pick-up/use reaches, NPCs face speakers, contextual idle chores.

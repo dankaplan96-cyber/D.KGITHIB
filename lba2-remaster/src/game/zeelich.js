@@ -120,7 +120,7 @@ const tileTex = (a = '#2f8a9a', b = '#e8b84a', c = '#d8608a') => ctex('tiles' + 
   }
 });
 // fish-scale dome tiles with gilded ribs
-const domeTex = (base, hi) => ctex('dome' + base + hi, 256, 256, (x, S) => {
+export const domeTex = (base, hi) => ctex('dome' + base + hi, 256, 256, (x, S) => {
   const r = rng(base.length * 7 + 3);
   x.fillStyle = base; x.fillRect(0, 0, S, S);
   const cw = 32, ch = 22;
@@ -154,7 +154,7 @@ const sailTex = (a = '#f6eadc', b = '#e88aa4') => ctex('sail' + a + b, 128, 256,
   x.fillStyle = 'rgba(70,40,30,0.45)'; for (let j = 0; j < 4; j++) x.fillRect(0, (j * H) / 4, W, 2);
 });
 // soft cloud puffs, tileable, transparent (alpha) or on a solid ground
-const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
+export const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
   const r = rng(solid ? 77 : 78);
   if (solid) { x.fillStyle = '#d0a0cc'; x.fillRect(0, 0, S, S); } else x.clearRect(0, 0, S, S);
   // billows: a lavender shadow under each puff, then the sunlit puff with a soft rim
@@ -171,7 +171,7 @@ const cloudTex = (solid) => ctex('cloud' + solid, 512, 512, (x, S) => {
     });
   }
 });
-const puffTex = () => ctex('puff', 128, 128, (x, S) => {
+export const puffTex = () => ctex('puff', 128, 128, (x, S) => {
   x.clearRect(0, 0, S, S);
   const r = rng(3);
   for (let k = 0; k < 9; k++) {

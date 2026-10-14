@@ -62,6 +62,30 @@ Pink sky, cloud sea, floating isles.
 
 Access: from Citadel by the ferry (ch2 start). Platform gate: override key + three mills braked.
 
+## Citadel Spaceport (Citadel Island, east of the town) ✅ (src/game/spaceport.js)
+Twelve years after LBA2 the Esmers' shuttles are ordinary traffic, so Citadel has a port for them: a landing
+platform on stilts over the bay east of the town (deck x −14…14, z 26…54, level with the shore at 2.35 m), a
+footbridge from the east shore at z 40, a terminal (Twinsun stone, an Esmer dome), a control tower with a beacon,
+the departures board (read it), benches, lamps, railings all round (no walking off into the bay), and an Esmer
+shuttle on the pad. From chapter 4 on its shuttle flies to Zeelich and Zeelich's islands; before that a note on the
+hatch says the flights are grounded by the Joint Project (its ferry at the harbour is the only crossing — the
+story's ferry stays as it was).
+
+## Zeelich's other islands (no story; from chapter 4) ✅ first version (src/game/zislands.js)
+Seven islands after the original's Zeelich islands: **Otringal**, **Knartas Island**, **Mosquibee Island**,
+**Celebration Island**, **Under Celebration**, **the CX Islet**, **the Platform**. The current Zeelich (the
+terminal island of the story) stays as it is; these are extra regions, each reached by Esmer shuttle (the pad by
+Zeelich's dock, the spaceport, or another island's pad: every shuttle's menu lists them all).
+- Ground: the original's height grids, every second point (≈ 1.71 m apart), as numbers
+  (`assets/lba2/islands/*.json`); the original's level 0 is the sea of clouds. Painted with Zeelich's palette.
+- Objects: each of the original's objects becomes one of our pieces of its size at its place (Esmer house with a
+  dome, tower, deck, wall, fence, spire, lamp, tree, rock, crate, jar, bush, plant). No original graphics.
+- Edges: a low shore runs into the clouds and stops at the waterline; a high edge is closed at the brink (no
+  sliding to the waterline and being held there). Small things on steep slopes have no block (no slide traps).
+- The shuttle lands on the clearest flat spot of the island's main walkable area (the one with the most places).
+- Walkable main areas (m², the rest are cliffs and separate ledges the original reached by its own means):
+  Otringal and Under Celebration the largest; Mosquibee Island's is small (its town is on ledges between cliffs).
+
 ## Desert Island (chapters 4–5) ✅ first version (src/game/desert.js)
 Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real ground (a terrain patch).
 

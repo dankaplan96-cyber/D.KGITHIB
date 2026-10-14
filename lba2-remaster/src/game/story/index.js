@@ -16,6 +16,7 @@ import { Evacuation } from './evacuation.js';
 import { Council } from './council.js';
 import { Network } from './network.js';
 import { Epilogue } from './epilogue.js';
+import { IslandShuttle } from './islands.js';
 import '../text/common.js';
 
 // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
@@ -31,6 +32,7 @@ export class Story {
     this.game = game;
     const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, network: Network, shell: Chapter3, home: Epilogue };
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
+    this.isles = new IslandShuttle(this);
   }
   // position of the chapter in progress for a set of flags (by key when the save has one)
   indexOf(f = this.f) {
@@ -109,8 +111,8 @@ export class Story {
     return out;
   }
   canExit(room, to) { return this.cur.canExit(room, to); }
-  interactables(consider, dist) { this.cur.interactables(consider, dist); }
-  interact(it) { return this.cur.interact(it) || this.chapters[0].baseInteract(it); }
+  interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); }
+  interact(it) { return this.cur.interact(it) || this.isles.interact(it) || this.chapters[0].baseInteract(it); }
   talk(npc) { if (!this.cur.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || false; }

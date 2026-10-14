@@ -24,6 +24,8 @@ import { buildTemple } from './game/temple.js';
 import { buildWizards } from './game/wizards.js';
 import { buildLba1Places } from './game/lba1places.js';
 import { preloadLba1Rooms } from './game/lba1room.js';
+import { preloadIslands, buildIslands } from './game/zislands.js';
+import { buildSpaceport } from './game/spaceport.js';
 import { buildHamalayi } from './game/hamalayi.js';
 import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
@@ -41,7 +43,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 3;
-export const VERSION = '0.22.1'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.23.0'; // (the desktop build's version: desktop/package.json)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
 export function migrateSave(raw) {
@@ -105,6 +107,7 @@ class Game {
     this.terrain = this.world.terrain;
     this.physics = this.world.physics;
     const S = this.scene, P = this.physics;
+    timed('spaceport', () => buildSpaceport(this.world.root, P, this.world));
     this.rooms = timed('interiors', () => buildInteriors(S, P));
     // outdoor regions are rooms flagged `outdoor`: LBA camera, own sky, doors to their own interiors
     this.rooms.zeelich = timed('zeelich', () => buildZeelich(S, P));
@@ -119,6 +122,7 @@ class Game {
     timed('upper', () => Object.assign(this.rooms, buildUpper3(S, P)));
     this.rooms.valves = timed('valves', () => buildValveRoom(S, P));
     this.rooms.arena = timed('arena', () => buildArena(S, P));
+    timed('islands', () => Object.assign(this.rooms, buildIslands(S, P)));
     this.room = null;
     this.env = new Environment(this.scene, this.terrain);
     this.renderer.setup(this.scene, this.camera);
@@ -315,7 +319,7 @@ class Game {
       this.lastSafe = { x: sp.x, z: sp.z };
       this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
-      this.audio.setPlace?.(R.outdoor ? (id === 'zeelich' || id === 'hamalayi' ? 'sky' : 'island') : id.startsWith('c3') || id === 'well' ? 'under' : 'interior');
+      this.audio.setPlace?.(R.outdoor ? (id === 'zeelich' || id === 'hamalayi' || R.sky ? 'sky' : 'island') : id.startsWith('c3') || id === 'well' ? 'under' : 'interior');
       if (quiet) return; // (a cinematic changing scenes: its music, its own story, no save mid-scene)
       this.audio.setMood(R.music || ROOM_MUSIC[id] || 'citadel');
       this.story.onEnterRoom(id);
@@ -1172,4 +1176,4 @@ const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeou
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
-Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms()]).then(async () => { loadingStep('Building the island…'); await nextPaint(); window.game = new Game(); });
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(async () => { loadingStep('Building the island…'); await nextPaint(); window.game = new Game(); });

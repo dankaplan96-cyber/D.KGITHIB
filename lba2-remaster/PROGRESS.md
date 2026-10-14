@@ -395,6 +395,26 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
   instead of holding the end pose. Contact frames unchanged (combat §§ pass).
 
+## Session: Zeelich's islands and Citadel Spaceport (0.23.0)
+- The user: rebuild Zeelich's maps — in addition to the current Zeelich (at most rename). Seven islands after the
+  original's (Otringal, Knartas, Mosquibee, Celebration, Under Celebration, the CX islet, the Platform) are new
+  outdoor regions (src/game/zislands.js) built from numbers measured from the user's files (assets/lba2/islands,
+  ASSET_MANIFEST.md): the ground heights and where each object stood with its size; our pieces drawn there.
+- The user (mid-session): a spaceport on Twinsun for flights to Zeelich, twelve years after LBA2. Citadel Spaceport
+  (src/game/spaceport.js): a platform on stilts in the bay east of the town, a footbridge, terminal, tower, board,
+  shuttle. Flights (src/game/story/islands.js) from chapter 4: any shuttle (spaceport, Zeelich's pad, each island)
+  to any of the others; grounded before (a note; the story's ferry is unchanged).
+- Found by the tests and fixed before commit: the islands' coast was a cliff face down to the waterline (he slid
+  there, was held, respawned with damage until dead) → a low shore ring at −0.5 and blocks at high brinks; objects
+  on steep slopes held him in a slide → no blocks there; the bot's paths through slopes too steep to climb → the
+  walkable-area analysis skips steep ground; Mosquibee's shuttle landed on a bare plateau → the main area counts the
+  objects near it.
+- Tests: tests/zislands.mjs (all built; shuttle by input from Zeelich in chapter 4, none before; walking Otringal; 8
+  directions at the sea from every spawn; a trap audit from every sample point of each island; island → island →
+  Zeelich; save & quit → Continue on an island; holomap), tests/spaceport.mjs (town → bridge → shuttle by input;
+  grounded before chapter 4; the board; the railings; spaceport → Zeelich → spaceport → Otringal).
+- Not verified: how it looks on a GPU and plays by hand; only software-rendered screenshots were checked.
+
 ## Session: stabilization and regression pass (0.22.1)
 - The user asked for a complete stabilization pass on the current build: every system checked, defects reproduced,
   root-caused, fixed with a regression test, and the whole main story played through with player inputs (no

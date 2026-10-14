@@ -30,7 +30,7 @@ export function gameFiles() {
     files[p] = p;
     for (const m of readFileSync(join(ROOT, p), 'utf-8').matchAll(SPEC)) { const r = resolve(m[1], p); if (r) todo.push(r); }
   }
-  for (const p of [...list('css', /\.css$/), ...list('assets/poly', /\.json$/), ...list('assets/lba1', /\.json$/), ...list('assets/music', /\.mp3$/), 'assets/music/manifest.json']) files[p] = p;
+  for (const p of [...list('css', /\.css$/), ...list('assets/poly', /\.json$/), ...list('assets/lba1', /\.json$/), ...list('assets/lba2/islands', /\.json$/), ...list('assets/music', /\.mp3$/), 'assets/music/manifest.json']) files[p] = p;
   files['assets/bake.wasm'] = 'assets/bake.bin';
   return Object.fromEntries(Object.entries(files).sort());
 }

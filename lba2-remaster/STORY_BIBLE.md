@@ -203,6 +203,11 @@ project's sites with the drones, carry stun rifles and batons, and are knocked o
 - **The Esmers' shuttles** (LBA2's round craft: red base, gold hull, blue canopy, landing legs): Zeelich's
   ordinary traffic twelve years on. One stands on its pad by Zeelich's dock; others cross the skies of Citadel,
   Zeelich and Desert Island, coming and going through Bald Mountain as they always did.
+- **Citadel Spaceport**: twelve years on, Citadel has a port for the shuttles, a platform on stilts in the bay
+  east of the town. While the Joint Project runs things (chapters 1–3) a note on the shuttle says the flights are
+  grounded by its order and the project's ferry is the only crossing; from chapter 4 the shuttles fly again —
+  to Zeelich and to Zeelich's other islands (Otringal, Knartas, Mosquibee Island, Celebration Island, Under
+  Celebration, the CX Islet, the Platform), places to explore with no story of their own.
 - **The Temple of Bù** (LBA2, Temple-Park by Bald Mountain): the project dug down to it; its great relief shows
   Sendell, her well and the shell's vents.
 - **The guard dogs** (LBA2's, bodies 51–53): Zeelich's big-mouthed guard dogs (a round blob of head and body, a

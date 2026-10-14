@@ -1,5 +1,10 @@
 # NEXT ACTION
 
+0.23.0: Zeelich's seven islands (src/game/zislands.js) and Citadel Spaceport (src/game/spaceport.js), flights from
+chapter 4 (src/game/story/islands.js; tests/zislands.mjs, tests/spaceport.mjs). Next: ask the user how the islands
+and the spaceport read in their game; then (their choice) people on the islands (Esmers, Mosquibees), ramps or
+lifts between Mosquibee's ledges, and whether the story's chapter-2 crossing should leave from the spaceport.
+
 Stabilization pass done (0.22.1; docs/lba3-production/QA.md, STATE.md). The whole main story plays by input from a
 new game to Keep Exploring; 17 defects fixed (10 of them progression or save blockers the LOGIC tests missed).
 Next: (1) ask the user to play 0.22.1 (the desktop build from the workflow) and to run pause → Benchmark on their PC;

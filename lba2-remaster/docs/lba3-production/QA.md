@@ -181,6 +181,22 @@ givers and carries low HP through the late chapters; a player normally would.
 | Linux unpacked build (`node copy-game.mjs && npx electron-builder --linux dir`), `xvfb-run -a node desktop/test-desktop.mjs release/linux-unpacked/lba3-the-awakening`: window + app://, bundled font, Quit Game, new game + opening + save, relaunch → Continue resumes, Quit | PASS (after D9; before it, 3 × 404 for the LBA1 layouts) |
 | Windows / Mac installers | NOT TESTED here (built by the GitHub Actions workflow on push) |
 
+### Zeelich's islands and Citadel Spaceport (0.23.0)
+| Check | Evidence | Result |
+|---|---|---|
+| All 7 islands build; each has a main walkable area (≥ 100 m²) with the shuttle's spawn on land | LOGIC (tests/zislands.mjs) | PASS |
+| Chapter 4: E at Zeelich's shuttle → menu (spaceport, Zeelich, 7 islands) → Otringal; island → island → Zeelich | INPUT (ISO: chapter flags, start by the dock) | PASS |
+| Before chapter 4: no shuttle prompt on Zeelich; the spaceport's shuttle shows the grounded note, no menu | INPUT | PASS |
+| Otringal: walks to 5 far points of its main area (≥ 4 must arrive) | INPUT (A* over the game's movement) | PASS |
+| Every island: running at the sea from the spawn in 8 directions stops at the waterline (≥ −0.35), no fall | INPUT | PASS |
+| No traps: from every sample point (5 m grid) of each island's main area he walks away | ISO place + INPUT walk | PASS |
+| Save & quit on Celebration Island → Continue: back there, in play; holomap opens/closes | UI + INPUT | PASS |
+| Town square → footbridge → spaceport deck → shuttle; departures board reads; deck railings hold in 8 directions | INPUT (ISO: start outdoors in the town) | PASS |
+| Spaceport → Zeelich → spaceport (beside the pad, on the deck) → Otringal | INPUT | PASS |
+| Regression after the change: stability, transitions, crosssystem, menus, shipfiles, opening, house, prologue, chapters 1, 2, 8, 10 | LOGIC/INPUT | PASS (rc 0) |
+| Defects found while building it (fixed before commit): coast cliff face held him at the waterline → respawn loop to death; objects on steep slopes made slide traps; paths over slopes too steep to climb; Mosquibee's shuttle on a bare plateau | — | FIXED |
+| Look on a GPU, feel by hand | — | NOT TESTED (software-rendered screenshots only) |
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.
