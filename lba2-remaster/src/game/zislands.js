@@ -24,6 +24,7 @@ import { rockGeometry, treeGeometry } from './vegetation.js';
 import { tm, pm, cached, bbox, cyl, lathe, Batch, instances, brassM } from './kit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
+import * as EP from './props-esmer.js';
 
 export const ISLES = ['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'cxislet', 'platform'];
 // far from every other region and from each other (the biggest patch is ≈ 210 m across)
@@ -43,6 +44,7 @@ export const hasIsland = (n) => !!LAYOUTS[n];
 
 export function buildIslands(scene, physics) {
   const out = {};
+  EP.setSignWords(ESMER_WORDS);
   ISLES.forEach((n, i) => { if (LAYOUTS[n]) out['isle_' + n] = buildIsland(scene, physics, n, LAYOUTS[n], ISLE_AT(i)); });
   return out;
 }
@@ -50,7 +52,7 @@ export function buildIslands(scene, physics) {
 // ================================================================== layout analysis (on the data grid)
 // heights in metres (sea = null); the objects with a footprint the hero can't walk through; the landing pad:
 // the clearest flat spot of the biggest walkable area, nearest its middle
-function analyse(L) {
+function analyse(L, S = {}) {
   const { nx, nz, cell } = L, w = (nx - 1) * cell, d = (nz - 1) * cell;
   const H = new Array(nx * nz);
   for (let k = 0; k < nx * nz; k++) H[k] = L.heights[k] > 0 ? L.heights[k] / 100 : null;
@@ -104,7 +106,17 @@ function analyse(L) {
     for (let b = j - 3; b <= j + 3; b++) for (let a = i - 3; a <= i + 3; a++) if (a >= 0 && b >= 0 && a < nx && b < nz && comp[b * nx + a] >= 0) near.add(comp[b * nx + a]);
     for (const c of near) objs[c]++;
   }
-  const score = sizes.map((n, k) => n + objs[k] * 6), main = score.indexOf(Math.max(...score));
+  const score = sizes.map((n, k) => n + objs[k] * 6);
+  let main = score.indexOf(Math.max(...score));
+  // (an island's style may name the area it lands on: Mosquibee's broad upper meadow, not the small hilltop)
+  if (S.mainNear) {
+    let bd = 1e9;
+    for (let k = 0; k < nx * nz; k++) {
+      const c = comp[k]; if (c < 0 || sizes[c] < 60) continue;
+      const dd = Math.hypot(cx(k % nx) - S.mainNear.x, cz(Math.floor(k / nx)) - S.mainNear.z);
+      if (dd < bd) { bd = dd; main = c; }
+    }
+  }
   // clearance: steps (cells) to the nearest cell outside the main area or under an object
   const clear = new Float32Array(nx * nz).fill(1e9);
   const q = [];
@@ -150,22 +162,591 @@ function shapeOf(o) {
     else if (small < 1.3) s = 'wall';
     else if (o.sy > 2.2 * big) s = 'tower';
     else s = 'house';
-  } else if (o.kind === 'tall') s = o.sy > 5.5 ? 'spire' : h < 0.5 ? 'tree' : 'lamp';
+  } else if (o.kind === 'tall') s = big < 0.5 ? 'pole' : o.sy > 5.5 ? 'spire' : h < 0.5 ? 'tree' : 'lamp';
   else if (o.kind === 'small') s = 'plant';
   else if (small < 0.45 && big > 0.9) s = 'fence';
+  else if (big < 0.45 && o.sy > 0.9) s = 'post';   // (a thin upright: a brass bollard, not a jar)
   else s = o.sy < 0.45 ? 'slab' : o.sy < 0.75 * big ? (h < 0.4 ? 'crate' : 'rock') : h < 0.5 ? 'bush' : 'jar';
-  o.solid = s !== 'plant' && s !== 'slab' && !(s === 'deck') && (big >= 0.5 || s === 'tree' || s === 'spire' || s === 'lamp');
+  o.solid = s !== 'plant' && s !== 'slab' && !(s === 'deck') && (big >= 0.5 || s === 'tree' || s === 'spire' || s === 'lamp' || s === 'pole' || s === 'post');
   return s;
+}
+
+// ================================================================== each island's identity and dressing (numbers only)
+// Every island keeps the original's ground and objects; on top, our own dressing gives it its character (what the
+// original's island was, in our style) and street life: a landmark and its approach, Esmer street furniture
+// (lamps, bins, planters with Zeelich plants, sign posts whose arrow boards name places, benches), and the clutter of
+// the island's trade. The plan below is pure numbers — where the shuttle lands, where he stands, and where each
+// piece goes — checked on a fine grid against the island's own walkable area: a piece stands only on flat ground
+// clear of the original's objects, away from slopes (no slide traps), off the routes and door fronts, and never
+// where it would cut a part of the walkable area off from the landing.
+//   STYLE[name]: ground / walls / domes palettes, env, paving, the target (the landmark's approach, which the
+//   arrival faces), landmark(api) and dress(api) placing pieces through the planner's api.
+const ESMER_WORDS = ['SHUTTLE', 'GRAND HALL', 'MARKET', 'FOUNTAIN', 'HARBOUR', 'VILLAGE', 'LIGHTHOUSE', 'HIVES',
+  'MEADOW', 'HONEY', 'FESTIVAL', 'STAGE', 'GAS WORKS', 'PUMP HOUSE', 'OUTPOST', 'RADIO MAST', 'DEPOT', 'CRANE',
+  'LOADING DECK', 'KEEP CLEAR', 'NO NAKED FLAMES', 'MIND THE EDGE', 'CRANE AREA', 'LOOKOUT', 'BRIDGE', 'HIGH TOWN'];
+const STYLE = {
+  otringal: {   // the Esmers' capital: a paved plaza with a fountain, market stalls, banners, the Grand Hall
+    trees: '#ffe4ec', ground: ['#f2e6b4', '#e6dcaa', '#e8d4c0'], pave: 'cobble', paveAt: (x, z) => x > -29 && x < 16 && z > -21 && z < 28,
+    walls: ['#fbf0ea', '#f8e8d8', '#f6dce6', '#fff4e0', '#f1e2f6'], domes: [['#d89a30', '#ffe6a8'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#8a5ac0', '#e8c8ff']],
+    grand: { x: 5.6, z: -23.9 }, portico: { x0: 1.5, x1: 9.7, z0: -20.5, z1: -16.8, zc: -18.5 }, target: { x: 5.6, z: -16.2, word: 'GRAND HALL' }, near: 16, far: 34,
+    crates: 'wood', lines: ['#7a3a8a', '#f0c040', '#f4eee0', '#2f8a9a'],
+    landmark(api) {
+      const f = api.near('fountain', -5, 6.6, 0, {}, 2.5);
+      const pois = [{ ...api.S.target }];
+      if (f) pois.push({ x: f.x, z: f.z + 3.4, word: 'FOUNTAIN', at: f });
+      // banners either side of the Grand Hall's steps
+      for (const s of [-1, 1]) api.near('banner', 5.6 + s * 4.9, -18.9, 0, { colors: ['#7a3a8a', '#f0c040', '#f4eee0'] }, 1.5);
+      return pois;
+    },
+    dress(api) {
+      const f = api.pois.find((p) => p.word === 'FOUNTAIN')?.at;
+      if (f) {   // benches round the fountain, planters between them
+        for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2; api.near('bench', f.x + Math.sin(a) * 4.6, f.z + Math.cos(a) * 4.6, a + Math.PI, {}, 0.8); }
+        for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; api.near('planter', f.x + Math.sin(a) * 4.4, f.z + Math.cos(a) * 4.4, 0, { kind: k % 3, big: true }, 0.8); }
+      }
+      // the market: stalls in the open plaza, facing the fountain, crates and jars behind them
+      api.open('stall', 4, { lo: 3.0, space: 7, around: { x: -12, z: 8, r: 18 }, face: f || api.S.target, opts: (i) => ({ goods: ['fruit', 'cloth', 'jars', 'fruit'][i % 4], a: ['#e8608a', '#3fa8b8', '#f0c040', '#9a5ac8'][i % 4], b: '#f8eee4', seed: i + 1 }) });
+      api.street({ benches: 4, clutter: 10, kinds: ['jars', 'crates', 'planter', 'bin', 'barrels'], lamps: 11, doors: 0.8, banners: 9, lines: true, fillSpacing: 8 });
+      api.signs([{ word: 'MARKET', x: -14, z: 8 }]);
+    },
+  },
+  knartas: {   // houses and a harbour: the F-shaped quay in the clouds with boats, nets, bollards and a light
+    trees: '#d8f0f8', ground: ['#e8f0b0', '#dce8a4', '#e8dcc0'], pave: 'concrete', paveAt: (x, z) => x < -7.5 && z < -6,
+    walls: ['#f8f0e4', '#e6f0f4', '#f4e4d4', '#eef4e4'], domes: [['#2f8a9a', '#a8e8ee'], ['#3a6ac0', '#c8dcff'], ['#d89a30', '#ffe6a8']],
+    target: { x: -13.5, z: -22.0, word: 'HARBOUR' }, near: 10, far: 34, padClear: 3.3, padSlope: 1.4, padR: 3.3, D: [9, 8, 7, 6.5], ahead: 3, padIn: (x, z) => x < -8, gate: { x0: -5.0, x1: 5.6, z0: -23.6, z1: -20.9 },
+    crates: 'wood', lines: ['#f4eee0', '#3a7ac8', '#e8608a', '#f0c040'],
+    landmark(api) {
+      const pois = [{ ...api.S.target }];
+      const L = api.near('beacon', -33.5, -17.6, 0, {}, 2.5);   // the harbour light at the middle arm's end
+      if (L) pois.push({ x: L.x + 3.0, z: L.z, word: 'LIGHTHOUSE', at: L });
+      return pois;
+    },
+    dress(api) {
+      // the quay's edges: bollards, boats moored alongside in the clouds, nets, crates
+      for (const [x0, x1, z, side] of [[-34, -10, -45.4, -1], [-34, -10, -35.0, 1], [-34, -10, -21.3, -1], [-34, -10, -14.6, 1]]) {
+        for (let x = x0; x <= x1; x += 6) api.near('bollard', x, z - side * 0.2, 0, {}, 0.6);
+      }
+      for (const [x, z, ry] of [[-24, -48.6, Math.PI / 2], [-16, -31.6, -Math.PI / 2], [-27, -11.4, -Math.PI / 2], [-12.5, -48.8, Math.PI / 2 + 0.2]]) api.add('skiff', x, z, ry, { color: ['#c84a3a', '#2f7f86', '#d89a30', '#7a3a8a'][Math.abs(Math.round(x)) % 4] });
+      api.open('netRack', 3, { lo: 1.6, space: 6, around: { x: -22, z: -40, r: 14 }, face: { x: -22, z: -30 } });
+      api.open('crates', 5, { lo: 1.4, space: 4, around: { x: -15, z: -30, r: 16 }, opts: (i) => ({ n: 2 + (i % 3), seed: i + 3 }) });
+      api.open('barrels', 3, { lo: 1.3, space: 5, around: { x: -18, z: -18, r: 12 } });
+      api.open('laundry', 3, { lo: 1.8, space: 9, around: { x: 22, z: 20, r: 22 } });
+      api.street({ benches: 4, clutter: 8, kinds: ['barrels', 'crates', 'jars', 'bin', 'planter'], lamps: 12, doors: 0.85, banners: 0, lines: true, fillSpacing: 8 });
+      api.signs([{ word: 'VILLAGE', x: 22, z: 22 }]);
+    },
+  },
+  mosquibee: {   // the Mosquibees' honey island: a hive meadow on the broad top, flower beds and hives on the ledges
+    mainNear: { x: 28, z: -20 },
+    trees: '#fff0b8', ground: ['#eef2a0', '#f4e890', '#e8d8b0'], pave: 'concrete', paveAt: () => false,
+    walls: ['#fff4d8', '#f8e8c0', '#f4f0e0'], domes: [['#d89a30', '#ffe6a8'], ['#c8a020', '#fff0a0']],
+    target: { x: 27, z: -6, word: 'HIVES' }, near: 12, far: 30,
+    crates: 'nectar', lines: ['#f0c030', '#f4eee0', '#e8608a', '#9ad0b0'], flowerTrees: true,
+    landmark(api) {
+      const g = api.near('greatHive', 27, -11, 0, {}, 3);
+      return [g ? { x: g.x, z: g.z + 4.0, word: 'HIVES', at: g } : { ...api.S.target }];
+    },
+    dress(api) {
+      // rows of hives on the meadow, flower beds between them, a honey stall, nectar crates
+      api.open('hive', 10, { lo: 2.0, space: 3.2, around: { x: 26, z: -22, r: 20 }, face: api.S.target });
+      api.open('flowerBed', 6, { lo: 2.2, space: 5, around: { x: 26, z: -24, r: 20 }, opts: (i) => ({ w: 2.6, d: 1.2, colors: [['#f0c030', '#e8608a', '#f4eee0'], ['#c050d0', '#f0c030'], ['#e8343a', '#f4eee0', '#f0c030']][i % 3] }) });
+      api.open('stall', 1, { lo: 3.0, space: 8, around: { x: 22, z: -14, r: 10 }, face: api.spawn, opts: () => ({ goods: 'honey', a: '#f0c030', b: '#fff4e0', seed: 5 }) });
+      api.open('crates', 5, { lo: 1.6, space: 4, around: { x: 28, z: -18, r: 20 }, opts: (i) => ({ kind: 'nectar', n: 2 + (i % 3), seed: i + 1 }) });
+      api.open('honey', 4, { lo: 1.4, space: 4, around: { x: 28, z: -18, r: 20 } });
+      // the ledges below: hives and beds where the ground is flat (seen from the meadow's edge)
+      api.ledges(['hive', 'flowerBed', 'hive', 'honey', 'crates'], 16, { space: 3.5, opts: { kind: 'nectar', colors: ['#f0c030', '#e8608a', '#f4eee0'] } });
+      api.street({ benches: 3, clutter: 4, kinds: ['honey', 'crates', 'planter'], lamps: 10, doors: 0.8, banners: 0, lines: false, fillSpacing: 8 });
+      api.signs([{ word: 'MEADOW', x: 30, z: -30 }]);
+    },
+  },
+  celebration: {   // the festival grounds: a statue on a plinth, pennant lines from four masts, a stage, garlands
+    trees: '#ffd8ec', ground: ['#e4f4b0', '#d8eca8', '#ecdcc0'], pave: 'cobble', paveAt: (x, z) => Math.hypot(x - 2, z - 1) < 8.5,
+    walls: ['#fff0f4', '#f6dce6', '#fbf0e0'], domes: [['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']],
+    target: { x: 1.5, z: 0.5, word: 'FESTIVAL' }, near: 7, far: 16, D: [9, 8, 7, 6.5, 6], ahead: 2.5, padClear: 3.4, padSlope: 1.8,
+    crates: 'wood', lines: ['#e8608a', '#f0c040', '#3fa8b8', '#f4eee0', '#9a5ac8'],
+    landmark(api) {
+      const t = api.S.target;
+      const pl = api.near('plinth', t.x, t.z, 0, {}, 4);
+      const pois = [{ x: (pl || t).x, z: (pl || t).z + 3.2, word: 'FESTIVAL', at: pl }];
+      if (pl) {   // four masts round it, pennant lines from each to the next and up to the statue
+        const masts = [];
+        for (let k = 0; k < 4; k++) { const a = Math.PI / 4 + k * Math.PI / 2; const m = api.near('pole', pl.x + Math.sin(a) * 6.2, pl.z + Math.cos(a) * 6.2, 0, { h: 5.2, flag: ['#e8608a', '#f0c040', '#3fa8b8', '#9a5ac8'][k] }, 2.2); if (m) masts.push(m); }
+        masts.forEach((m, i) => { const n = masts[(i + 1) % masts.length]; if (masts.length > 2) api.line(m, 5.0, n, 5.0, { kind: 'pennants', sag: 0.6 }); api.line(m, 4.8, pl, 4.6, { kind: i % 2 ? 'garland' : 'pennants', sag: 0.5 }); });
+      }
+      return pois;
+    },
+    dress(api) {
+      const pl = api.pois[0].at;
+      api.open('stage', 1, { lo: 2.6, space: 8, around: { x: 2, z: 1, r: 14 }, face: pl || api.S.target, opts: () => ({ w: 4.4, d: 2.4 }) });
+      api.open('stall', 2, { lo: 2.6, space: 7, around: { x: 2, z: 2, r: 14 }, face: pl || api.S.target, opts: (i) => ({ goods: ['fruit', 'cloth'][i], a: ['#e8608a', '#f0c040'][i], b: '#f8eee4', seed: i + 7 }) });
+      api.open('boxPlanter', 4, { lo: 1.8, space: 5, around: { x: 2, z: 1, r: 14 }, opts: () => ({ len: 2.2 }) });
+      api.street({ benches: 3, clutter: 4, kinds: ['planter', 'bin', 'jars'], lamps: 9, doors: 1, banners: 4, lines: true, lanterns: true, fillSpacing: 6 });
+      api.signs([]);
+    },
+  },
+  undergas: {   // Under Celebration: the gas works — a gas holder and a pump engine, pipes, caged lamps, a dimmer sky
+    trees: '#d8d0e8', ground: ['#c8c8a8', '#b8bca0', '#c8b8a8'], pave: 'concrete', paveAt: (x, z) => Math.hypot(x + 17, z + 28) < 15,
+    walls: ['#d8d0d8', '#c8c8d0', '#d8c8c0'], domes: [['#4a5a6a', '#a8b8c8'], ['#2f8a9a', '#a8e8ee']],
+    env: { fog: '#cdb8cc', sun: '#ffe2c8', hemiSky: '#d8cce8', hemiGround: '#5a4c62', sunI: 2.0, hemiI: 1.05, fogRange: [75, 260] },
+    target: { x: -15, z: -25, word: 'GAS WORKS' }, near: 16, far: 30,
+    crates: 'cargo', lines: null,
+    landmark(api) {
+      const pois = [{ ...api.S.target }];
+      const g = api.near('gasHolder', -12.5, -33, 0, { r: 2.6, h: 5.2 }, 3);
+      const p = api.near('pump', -13, -17.5, Math.PI / 2, {}, 2.5);
+      if (g && p) api.pipe([{ x: g.x - 3.0, z: g.z + 1.5, h: 1.2 }, { x: g.x - 3.0, z: (g.z + p.z) / 2, h: 2.6 }, { x: p.x - 2.4, z: (g.z + p.z) / 2, h: 2.6 }, { x: p.x - 2.4, z: p.z - 1.4, h: 1.0 }]);
+      if (g) pois.push({ x: g.x - 4.4, z: g.z, word: 'PUMP HOUSE', at: g });
+      const g2 = api.near('gasHolder', -24, -41, 0, { r: 2.0, h: 4.2 }, 4);
+      if (g && g2) api.pipe([{ x: g2.x + 2.4, z: g2.z, h: 1.0 }, { x: g2.x + 3.2, z: g2.z, h: 2.7 }, { x: g.x - 3.4, z: g2.z, h: 2.7 }, { x: g.x - 3.4, z: g.z - 1.6, h: 1.2 }]);
+      return pois;
+    },
+    dress(api) {
+      api.open('bottles', 4, { lo: 1.2, space: 5, around: { x: -18, z: -26, r: 16 }, opts: (i) => ({ n: 3 + (i % 3) }) });
+      api.open('cageLamp', 8, { lo: 1.5, space: 7, around: { x: -22, z: -28, r: 22 } });
+      api.open('pump', 1, { lo: 2.5, space: 8, around: { x: -30, z: -40, r: 10 } });
+      api.open('crates', 4, { lo: 1.4, space: 5, around: { x: -20, z: -30, r: 18 }, opts: (i) => ({ kind: 'cargo', n: 2 + (i % 2), seed: i + 9 }) });
+      api.open('barrels', 4, { lo: 1.3, space: 5, around: { x: -22, z: -26, r: 18 } });
+      api.open('warn', 3, { lo: 1.2, space: 8, around: { x: -14, z: -26, r: 10 }, face: api.spawn, opts: (i) => ({ text: ['NO NAKED FLAMES', 'KEEP CLEAR', 'MIND THE EDGE'][i % 3] }) });
+      api.street({ benches: 2, clutter: 8, kinds: ['barrels', 'crates', 'bottles', 'bin'], lamps: 0, cage: 10, doors: 0.8, banners: 0, lines: false });
+      api.signs([{ word: 'LOOKOUT', x: 20, z: -10 }]);
+    },
+  },
+  cxislet: {   // a small outpost: a radio mast, a flag, a water tank, the depot's crates under the old tower
+    trees: '#eef0d8', ground: ['#ece4b8', '#e0d8ac', '#e8d0b0'], pave: 'concrete', paveAt: () => false,
+    walls: ['#e8e0d0', '#f0e8d8'], domes: [['#3a6a5a', '#b8e0c8'], ['#2f8a9a', '#a8e8ee']],
+    target: { x: -6, z: -9.5, word: 'OUTPOST' }, near: 10, far: 24, D: [8.0, 7.0, 6.5],
+    crates: 'cargo', lines: ['#3a8a9a', '#f0c040', '#f4eee0'],
+    landmark(api) {
+      const pois = [{ ...api.S.target }];
+      const m = api.near('mast', -8.5, -8.5, 0, { h: 8 }, 3);
+      if (m) { api.near('flagPole', m.x + 3.0, m.z + 1.0, 0, { h: 6 }, 1.5); api.near('waterTank', m.x - 0.5, m.z + 3.4, 0, {}, 2); }
+      return pois;
+    },
+    dress(api) {
+      api.open('crates', 6, { lo: 1.2, space: 3.5, around: { x: 0, z: 0, r: 18 }, opts: (i) => ({ kind: i % 2 ? 'cargo' : 'wood', n: 2 + (i % 3), seed: i + 2 }) });
+      api.open('barrels', 3, { lo: 1.2, space: 4, around: { x: 0, z: 0, r: 18 } });
+      api.street({ benches: 2, clutter: 6, kinds: ['crates', 'barrels', 'jars', 'bin'], lamps: 8, doors: 1, banners: 0, lines: false, fillSpacing: 6 });
+      api.signs([]);
+    },
+  },
+  platform: {   // the High Platform: an industrial deck — cranes, cargo crates, barriers and warning signs
+    trees: '#e0e8e4', ground: ['#d8dcc0', '#ccd0b4', '#d8ccb8'], pave: 'concrete', paveAt: (x, z) => x > 14 && x < 41 && z < -18.5,
+    walls: ['#d8dce0', '#e0e4e8', '#e8e0d8'], domes: [['#4a6a8a', '#b8d0e8'], ['#2f8a9a', '#a8e8ee']],
+    target: { x: 36.4, z: -29, word: 'LOADING DECK' }, near: 13, far: 30, padClear: 3.0, padSlope: 1.0, padR: 3.2, padIn: (x, z) => z < -19,
+    crates: 'cargo', lines: ['#f0c040', '#2a2a2a'],
+    landmark(api) {
+      const pois = [{ ...api.S.target }];
+      const c = api.near('crane', 36.5, -23, 0, { h: 9, jib: 7 }, 2.5);
+      if (c) pois.push({ x: c.x - 3, z: c.z, word: 'CRANE', at: c });
+      return pois;
+    },
+    dress(api) {
+      api.open('crates', 14, { lo: 1.0, space: 2.6, around: { x: 28, z: -30, r: 18 }, opts: (i) => ({ kind: i % 3 ? 'cargo' : 'wood', n: 2 + (i % 3), seed: i + 4 }) });
+      api.open('barrier', 4, { lo: 1.0, space: 6, around: { x: 28, z: -32, r: 16 }, opts: () => ({ len: 2.4 }) });
+      api.open('warn', 4, { lo: 1.0, space: 7, around: { x: 28, z: -32, r: 16 }, face: api.spawn, opts: (i) => ({ text: ['CRANE AREA', 'KEEP CLEAR', 'MIND THE EDGE', 'LOADING DECK'][i % 4] }) });
+      api.open('barrels', 4, { lo: 1.2, space: 5, around: { x: 28, z: -32, r: 16 } });
+      api.street({ benches: 2, clutter: 8, kinds: ['crates', 'barrels', 'bottles', 'bin'], lamps: 10, doors: 0.8, banners: 0, lines: false, cage: 4, fillSpacing: 6 });
+      api.signs([{ word: 'BRIDGE', x: 42, z: 0 }]);
+    },
+  },
+};
+
+// the room each piece needs on the ground: a radius or a box (half sizes, turned with the piece)
+const FOOT = {
+  bin: () => ({ r: 0.42 }), planter: (o) => ({ r: o.big ? 0.9 : 0.72 }), boxPlanter: (o) => ({ hw: (o.len ?? 2.2) / 2 + 0.05, hd: 0.4 }),
+  bench: () => ({ hw: 0.97, hd: 0.4 }), lamp: () => ({ r: 0.32 }), signpost: () => ({ r: 0.35 }), banner: () => ({ r: 0.3 }), pole: () => ({ r: 0.3 }),
+  crates: (o) => ({ r: o.kind === 'cargo' ? 1.15 : 0.95 }), barrels: () => ({ r: 0.85 }), jars: () => ({ r: 0.72 }), honey: () => ({ r: 0.62 }),
+  stall: () => ({ hw: 1.85, hd: 1.1 }), hive: () => ({ r: 0.72 }), greatHive: () => ({ r: 2.6 }), flowerBed: (o) => ({ hw: (o.w ?? 2.4) / 2 + 0.12, hd: (o.d ?? 1.2) / 2 + 0.12 }),
+  plinth: () => ({ r: 2.4 }), stage: (o) => ({ hw: (o.w ?? 4.4) / 2 + 0.1, hd: (o.d ?? 2.4) / 2 + 0.75 }), fountain: () => ({ r: 2.5 }),
+  gasHolder: (o) => ({ r: (o.r ?? 2.6) + 1.0 }), pump: () => ({ hw: 1.85, hd: 1.15 }), cageLamp: () => ({ r: 0.32 }), bottles: (o) => ({ hw: (o.n ?? 4) * 0.16 + 0.2, hd: 0.32 }),
+  crane: () => ({ r: 1.65 }), warn: () => ({ r: 0.4 }), barrier: (o) => ({ hw: (o.len ?? 2.4) / 2 + 0.2, hd: 0.2 }),
+  mast: () => ({ r: 0.95 }), flagPole: () => ({ r: 0.3 }), waterTank: () => ({ r: 1.05 }), bollard: () => ({ r: 0.3 }), beacon: () => ({ r: 1.3 }),
+  netRack: (o) => ({ hw: (o.w ?? 2.6) / 2 + 0.12, hd: 0.25 }), laundry: (o) => ({ hw: (o.w ?? 3.2) / 2 + 0.12, hd: 0.25 }),
+};
+const FS = 0.5;   // the plan's grid (m)
+let DEBUG_PLAN = null;
+
+function planIsland(name, L, A, debug = false) {
+  if (debug) DEBUG_PLAN = [];
+  const S = STYLE[name] || {}, rr = rng(name.length * 977 + L.nx * 13);
+  const { nx, nz } = L, { H, comp, main, steep } = A;
+  const fx = Math.floor(A.w / FS) + 1, fz = Math.floor(A.d / FS) + 1, X0 = -A.w / 2, Z0 = -A.d / 2, N = fx * fz;
+  const wx = (i) => X0 + i * FS, wz = (j) => Z0 + j * FS, ci = (x) => Math.round((x - X0) / FS), cj = (z) => Math.round((z - Z0) / FS);
+  const inF = (i, j) => i >= 0 && j >= 0 && i < fx && j < fz;
+  const K = (x, z) => { const i = ci(x), j = cj(z); return inF(i, j) ? j * fx + i : -1; };
+  const hAt = (x, z) => {
+    const gxf = A.gx(x), gzf = A.gz(z), i = Math.floor(gxf), j = Math.floor(gzf), u = gxf - i, v = gzf - j; let s = 0, w = 0;
+    for (const [a, b, ww] of [[i, j, (1 - u) * (1 - v)], [i + 1, j, u * (1 - v)], [i, j + 1, (1 - u) * v], [i + 1, j + 1, u * v]]) {
+      if (a < 0 || b < 0 || a >= nx || b >= nz || H[b * nx + a] == null) continue; s += H[b * nx + a] * ww; w += ww;
+    }
+    return w ? s / w : null;
+  };
+  // the fine grid: area (the data point's walkable area, -1 steep, -2 sea), slope, objects (occupied / solid)
+  const area = new Int32Array(N).fill(-2), stp = new Uint8Array(N), occ = new Uint8Array(N), sol = new Uint8Array(N), keep = new Uint8Array(N);
+  for (let j = 0; j < fz; j++) for (let i = 0; i < fx; i++) {
+    const x = wx(i), z = wz(j), k = j * fx + i, gi = Math.round(A.gx(x)), gj = Math.round(A.gz(z));
+    if (gi < 0 || gj < 0 || gi >= nx || gj >= nz || H[gj * nx + gi] == null) continue;
+    area[k] = comp[gj * nx + gi];
+    const fi = Math.floor(A.gx(x)), fj = Math.floor(A.gz(z));
+    for (const [a, b] of [[fi, fj], [fi + 1, fj], [fi, fj + 1], [fi + 1, fj + 1]]) {
+      if (a < 0 || b < 0 || a >= nx || b >= nz || H[b * nx + a] == null || steep[b * nx + a]) stp[k] = 1;
+    }
+  }
+  const rect = (x, z, hw, hd, fn) => { for (let j = cj(z - hd); j <= cj(z + hd); j++) for (let i = ci(x - hw); i <= ci(x + hw); i++) if (inF(i, j)) fn(j * fx + i); };
+  for (const o of A.decor) {
+    rect(o.x, o.z, Math.max(0.1, o.sx / 2) + 0.25, Math.max(0.1, o.sz / 2) + 0.25, (k) => { occ[k] = 1; });
+    if (o.solid) rect(o.x, o.z, Math.max(0.1, o.sx / 2) + 0.38, Math.max(0.1, o.sz / 2) + 0.38, (k) => { sol[k] = 1; });
+  }
+  // the Grand Hall's portico (columns, steps) before its front
+  if (S.portico) { const q = S.portico; rect((q.x0 + q.x1) / 2, (q.z0 + q.z1) / 2, (q.x1 - q.x0) / 2, (q.z1 - q.z0) / 2, (k) => { occ[k] = 1; }); rect((q.x0 + q.x1) / 2, q.zc, (q.x1 - q.x0) / 2, 0.75, (k) => { sol[k] = 1; }); }
+  // a gatehouse's passage (Knartas: the two houses across the causeway to the harbour) is open
+  if (S.gate) rect((S.gate.x0 + S.gate.x1) / 2, (S.gate.z0 + S.gate.z1) / 2, (S.gate.x1 - S.gate.x0) / 2 + 0.5, (S.gate.z1 - S.gate.z0) / 2 - 0.4, (k) => { sol[k] = 0; occ[k] = 1; });
+  const walk = new Uint8Array(N);
+  for (let k = 0; k < N; k++) walk[k] = area[k] === main && !stp[k] && !sol[k] ? 1 : 0;
+  const chamfer = (src) => {
+    const d = new Float32Array(N), a = FS, b = FS * 1.4142;
+    for (let k = 0; k < N; k++) d[k] = src(k) ? 0 : 1e9;
+    for (let j = 0; j < fz; j++) for (let i = 0; i < fx; i++) { const k = j * fx + i; let v = d[k]; if (i > 0) v = Math.min(v, d[k - 1] + a); if (j > 0) { v = Math.min(v, d[k - fx] + a); if (i > 0) v = Math.min(v, d[k - fx - 1] + b); if (i < fx - 1) v = Math.min(v, d[k - fx + 1] + b); } d[k] = v; }
+    for (let j = fz - 1; j >= 0; j--) for (let i = fx - 1; i >= 0; i--) { const k = j * fx + i; let v = d[k]; if (i < fx - 1) v = Math.min(v, d[k + 1] + a); if (j < fz - 1) { v = Math.min(v, d[k + fx] + a); if (i < fx - 1) v = Math.min(v, d[k + fx + 1] + b); if (i > 0) v = Math.min(v, d[k + fx - 1] + b); } d[k] = v; }
+    return d;
+  };
+  const dSol = chamfer((k) => sol[k] || area[k] === -2), dStp = chamfer((k) => stp[k] === 1), dOcc = chamfer((k) => occ[k] || area[k] === -2);
+  const disc = (x, z, r, pred) => { for (let j = cj(z - r); j <= cj(z + r); j++) for (let i = ci(x - r); i <= ci(x + r); i++) { const dx = wx(i) - x, dz = wz(j) - z; if (dx * dx + dz * dz > r * r) continue; if (!inF(i, j) || !pred(j * fx + i)) return false; } return true; };
+  const line = (ax, az, bx, bz, pred) => { const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.25); for (let t = 0; t <= n; t++) { const k = K(ax + ((bx - ax) * t) / n, az + ((bz - az) * t) / n); if (k < 0 || !pred(k)) return false; } return true; };
+  const range = (x, z, r) => { let lo = 1e9, hi = -1e9; for (let a = -r; a <= r + 1e-6; a += 1) for (let b = -r; b <= r + 1e-6; b += 1) { if (a * a + b * b > r * r + 0.01) continue; const h = hAt(x + a, z + b); if (h == null) return 1e9; lo = Math.min(lo, h); hi = Math.max(hi, h); } return hi - lo; };
+
+  // ---- the landing: the shuttle at one side of the main area, Twinsen a few metres toward the landmark, facing it
+  // (the play camera sits behind him, so the shuttle stays behind the camera and the first view is the island)
+  const T = S.target || { x: A.mid.x, z: A.mid.z, word: '' };
+  // how much of the shuttle the play camera shows at the arrival (src/engine/camera.js, the LBA view: 15.7 m from a
+  // point 3.3 m ahead of him, 26.4 degrees down, 43.6 degrees high, 16:9): of 18 points on its hull, those in frame
+  const shuttleSeen = (hx, hy, hz, fx2, fz2, px, py, pz) => {
+    const pitch = (300 / 4096) * Math.PI * 2, dist = 11800 / 750, ah = 2500 / 750, cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const cx0 = hx + fx2 * ah - fx2 * cp * dist, cz0 = hz + fz2 * ah - fz2 * cp * dist, cy0 = hy + 1 + sp * dist;
+    const ty = Math.tan((43.6 / 2) * Math.PI / 180), tx = ty * 16 / 9;
+    let n = 0;
+    for (const yy of [1.0, 2.2, 3.4]) for (let q = 0; q < 6; q++) {
+      const a = (q / 6) * Math.PI * 2, r = yy > 3 ? 1.4 : 3.3, X = px + Math.sin(a) * r - cx0, Z = pz + Math.cos(a) * r - cz0, Y = py + yy - cy0;
+      const zf = X * fx2 + Z * fz2, xr = X * fz2 - Z * fx2, depth = zf * cp - Y * sp, vy = zf * sp + Y * cp;
+      if (depth > 0.3 && Math.abs(xr / (depth * tx)) < 1 && Math.abs(vy / (depth * ty)) < 1) n++;
+    }
+    return n;
+  };
+  // (only landings from which the target can be walked to)
+  const tReach = new Uint8Array(N);
+  {
+    // (from the nearest walkable cell that isn't a pocket between objects)
+    const cand = [];
+    for (let j = cj(T.z - 8); j <= cj(T.z + 8); j++) for (let i = ci(T.x - 8); i <= ci(T.x + 8); i++) if (inF(i, j) && walk[j * fx + i]) cand.push([Math.hypot(wx(i) - T.x, wz(j) - T.z), j * fx + i]);
+    cand.sort((a, b) => a[0] - b[0]);
+    let ok = false;
+    for (const [, tk] of cand) {
+      if (tReach[tk]) continue;
+      tReach.fill(0);
+      const q = [tk]; tReach[tk] = 1;
+      for (let h = 0; h < q.length; h++) { const k = q[h], i = k % fx; for (const m of [i > 0 ? k - 1 : -1, i < fx - 1 ? k + 1 : -1, k - fx, k + fx]) if (m >= 0 && m < N && walk[m] && !tReach[m]) { tReach[m] = 1; q.push(m); } }
+      if (q.length > 400) { ok = true; break; }
+    }
+    if (!ok) tReach.fill(1);
+  }
+  let best = null; const why = [0, 0, 0, 0, 0, 0, 0, 0];
+  for (let z = Z0 + 5; z < -Z0 - 5; z += 1) for (let x = X0 + 5; x < -X0 - 5; x += 1) {
+    const k = K(x, z); if (k < 0 || !walk[k] || (S.padIn && !S.padIn(x, z))) continue;
+    if (dSol[k] < (S.padClear ?? 3.9) || dStp[k] < (S.padSlope ?? 2.6)) { why[0]++; continue; }
+    if (DEBUG_PLAN) DEBUG_PLAN.push([x, z]);
+    const dT = Math.hypot(T.x - x, T.z - z); if (dT < (S.near ?? 12)) { why[1]++; continue; }
+    if (!disc(x, z, S.padR ?? 3.7, (q) => area[q] === main && !sol[q])) { why[2]++; continue; }
+    const fl = range(x, z, 3); if (fl > 1.0) { why[3]++; continue; }
+    const hp = hAt(x, z);
+    for (const D of S.D || [8.5, 9.5, 7.5, 6.5]) for (const beta of [0, 0.4, -0.4, 0.65, -0.65, 0.9, -0.9, 1.2, -1.2]) {
+      // he stands D from the shuttle, off its line to the landmark by beta, facing the landmark
+      const ba = Math.atan2(T.x - x, T.z - z) + beta, sx = x + Math.sin(ba) * D, sz = z + Math.cos(ba) * D;
+      const dS = Math.hypot(T.x - sx, T.z - sz); if (dS < (S.ahead ?? 4.5)) { why[7]++; continue; }
+      const ux = (T.x - sx) / dS, uz = (T.z - sz) / dS;
+      const sk = K(sx, sz); if (sk < 0 || !disc(sx, sz, 1.2, (q) => walk[q] === 1) || !tReach[sk]) { why[4]++; continue; }
+      const hs = hAt(sx, sz); if (Math.abs(hs - hp) > 1.6) { why[5]++; continue; }
+      if (!line(x + Math.sin(ba) * 4.0, z + Math.cos(ba) * 4.0, sx, sz, (q) => walk[q] === 1)) { why[6]++; continue; }
+      const ak = K(sx + ux * 4, sz + uz * 4), ahead = ak >= 0 && area[ak] === main ? 4 : 0;
+      const seen = shuttleSeen(sx, hs, sz, ux, uz, x, hp, z);
+      const score = Math.min(dT, S.far ?? 34) + ahead - fl * 3 - Math.abs(hs - hp) * 0.6 + Math.min(dSol[k], 7) * 0.3 - seen * 4 - Math.abs(beta) * 2;
+      if (!best || score > best.score) best = { score, x, z, sx, sz, a: Math.atan2(ux, uz), seen };
+    }
+  }
+  const pad = best ? { x: best.x, z: best.z, toward: best.a } : { x: A.pad.x, z: A.pad.z, toward: A.pad.toward };
+  { let s = 0, n = 0; for (let a = -1.7; a <= 1.7; a += 1.7) for (let b = -1.7; b <= 1.7; b += 1.7) { const h = hAt(pad.x + a, pad.z + b); if (h != null) { s += h; n++; } } pad.y = n ? s / n : A.pad.y; }
+  const spawn = best ? { x: best.sx, z: best.sz, a: best.a } : null;   // (none: beside the pad, as before)
+  // the shuttle and the walk from it are kept clear; the shuttle blocks
+  const stamp = (x, z, r, arr, v = 1) => disc(x, z, r, (k) => { arr[k] = v; return true; });
+  stamp(pad.x, pad.z, 5.0, keep); stamp(pad.x, pad.z, 3.6, walk, 0);
+  if (spawn) { stamp(spawn.x, spawn.z, 2.0, keep); line(pad.x, pad.z, spawn.x, spawn.z, (k) => { keep[k] = 1; return true; }); }
+  const start = spawn ? K(spawn.x, spawn.z) : K(pad.x + Math.sin(pad.toward) * 4.8, pad.z + Math.cos(pad.toward) * 4.8);
+
+  // ---- reach: what he can walk to from the landing (the plan never cuts any of it off)
+  const reach = new Uint8Array(N), par = new Int32Array(N);
+  const bfs = () => {
+    reach.fill(0); if (start < 0 || !walk[start]) return 0;
+    const q = [start]; reach[start] = 1; par[start] = -1;
+    for (let h = 0; h < q.length; h++) {
+      const k = q[h], i = k % fx;
+      for (const m of [i > 0 ? k - 1 : -1, i < fx - 1 ? k + 1 : -1, k - fx, k + fx]) if (m >= 0 && m < N && walk[m] && !reach[m]) { reach[m] = 1; par[m] = k; q.push(m); }
+    }
+    return q.length;
+  };
+  let reachN = bfs();
+  // the walkable cells in a band round a piece: one connected strip (or none) means nothing is cut off by it
+  const bandSplit = (x, z, R0) => {
+    const r0 = R0 + 0.45, r1 = R0 + 1.3, cells = new Set();
+    for (let j = cj(z - r1); j <= cj(z + r1); j++) for (let i = ci(x - r1); i <= ci(x + r1); i++) {
+      if (!inF(i, j)) continue; const d = Math.hypot(wx(i) - x, wz(j) - z), k = j * fx + i;
+      if (d > r0 && d <= r1 && walk[k]) cells.add(k);
+    }
+    if (!cells.size) return false;
+    const seen = new Set(), q = [cells.values().next().value]; seen.add(q[0]);
+    for (let h = 0; h < q.length; h++) { const k = q[h]; for (const m of [k - 1, k + 1, k - fx, k + fx]) if (cells.has(m) && !seen.has(m)) { seen.add(m); q.push(m); } }
+    return seen.size < cells.size;
+  };
+  const items = [], pois = [], rej = [0, 0, 0, 0, 0, 0, 0, 0];
+  const fit = (kind, x, z, ry, o) => {
+    const f = FOOT[kind](o), c = Math.cos(ry), s = Math.sin(ry), R0 = f.r ?? Math.hypot(f.hw, f.hd);
+    const inside = [], ring = [];
+    for (let j = cj(z - R0 - 0.5); j <= cj(z + R0 + 0.5); j++) for (let i = ci(x - R0 - 0.5); i <= ci(x + R0 + 0.5); i++) {
+      if (!inF(i, j)) return null;
+      const dx = wx(i) - x, dz = wz(j) - z, k = j * fx + i;
+      let a, b;
+      if (f.r != null) { const d = Math.hypot(dx, dz); a = d <= f.r; b = d <= f.r + 0.45; }
+      else { const lx = c * dx - s * dz, lz = s * dx + c * dz; a = Math.abs(lx) <= f.hw && Math.abs(lz) <= f.hd; b = Math.abs(lx) <= f.hw + 0.45 && Math.abs(lz) <= f.hd + 0.45; }
+      if (a) inside.push(k); if (b) ring.push(k);
+    }
+    return { inside, ring, R0 };
+  };
+  // put a piece: on free, flat ground of the main area (o.any: any walkable area, for the ledges), off the routes
+  const put = (kind, x, z, ry = 0, o = {}) => {
+    const F = fit(kind, x, z, ry, o); if (!F || !F.inside.length) { rej[0]++; return null; }
+    let lo = 1e9, hi = -1e9;
+    for (const k of F.inside) {
+      if (occ[k]) { rej[1]++; return null; }
+      if (keep[k]) { rej[2]++; return null; }
+      if (stp[k] || sol[k]) { rej[3]++; return null; }
+      if (o.any ? area[k] < 0 : area[k] !== main) { rej[4]++; return null; }
+      if (dStp[k] < (o.slopeGap ?? 0.9)) { rej[5]++; return null; }
+      const h = hAt(wx(k % fx), wz(Math.floor(k / fx))); if (h == null) return null; lo = Math.min(lo, h); hi = Math.max(hi, h);
+    }
+    if (hi - lo > (o.flat ?? (F.R0 > 1.5 ? 0.5 : 0.35))) { rej[6]++; return null; }
+    if (!o.any) {
+      const was = F.ring.map((k) => walk[k]), lost = F.ring.reduce((n, k) => n + (reach[k] ? 1 : 0), 0);
+      for (const k of F.ring) walk[k] = 0;
+      if (bandSplit(x, z, F.R0)) {   // (only when the ground round it is broken up can it cut anything off)
+        const n2 = bfs();
+        if (n2 < reachN - lost - 2) { F.ring.forEach((k, i) => { walk[k] = was[i]; }); bfs(); rej[7]++; return null; }
+        reachN = n2;
+      } else { for (const k of F.ring) reach[k] = 0; reachN -= lost; }
+    }
+    const gap = o.gap ?? 0.45;
+    for (const k of F.ring) occ[k] = 1;
+    if (gap > 0.45) disc(x, z, F.R0 + gap, (k) => { occ[k] = 1; return true; });
+    const it = { kind, x: +x.toFixed(2), z: +z.toFixed(2), ry: +ry.toFixed(3), o };
+    items.push(it);
+    return it;
+  };
+  // try round a point (a spiral of offsets) until a piece fits; ry may follow `face`
+  const near = (kind, x, z, ry, o = {}, rad = 2) => {
+    for (let d = 0; d <= rad + 1e-6; d += 0.5) {
+      const n = d ? Math.max(6, Math.round(d * 6)) : 1;
+      for (let q = 0; q < n; q++) { const a = (q / n) * Math.PI * 2 + d; const px = x + Math.sin(a) * d, pz = z + Math.cos(a) * d; const it = put(kind, px, pz, o.face ? Math.atan2(o.face.x - px, o.face.z - pz) : ry, o); if (it) return it; }
+    }
+    return null;
+  };
+  const add = (kind, x, z, ry = 0, o = {}) => { const it = { kind, x, z, ry, o }; items.push(it); return it; };
+  const lines = [];
+  const lineItem = (a, ha, b, hb, o = {}) => lines.push({ kind: 'line', a: { x: a.x, z: a.z, h: ha }, b: { x: b.x, z: b.z, h: hb }, o });
+  const pipe = (pts) => { const m = pts[Math.floor(pts.length / 2)]; items.push({ kind: 'pipe', pts, x: m.x, z: m.z, ry: 0, o: {} }); };
+
+  // ---- the landmark, then the routes to it (kept clear, painted as paths where the ground isn't paved)
+  const api = { S, A, pad, spawn: spawn || { x: pad.x, z: pad.z }, put, near, add, line: lineItem, pipe, pois: [], r: rr };
+  const P0 = (S.landmark ? S.landmark(api) : [T]) || [T];
+  api.pois.push(...P0); pois.push(...P0);
+  reachN = bfs();
+  const routes = [];
+  for (const p of pois) {
+    // the reachable cell nearest the point, then back along the walk to the landing
+    let bk = -1, bd = 1e9;
+    for (let j = cj(p.z - 5); j <= cj(p.z + 5); j++) for (let i = ci(p.x - 5); i <= ci(p.x + 5); i++) { if (!inF(i, j)) continue; const k = j * fx + i; if (!reach[k]) continue; const d = Math.hypot(wx(i) - p.x, wz(j) - p.z); if (d < bd) { bd = d; bk = k; } }
+    if (bk < 0) continue;
+    p.reach = { x: wx(bk % fx), z: wz(Math.floor(bk / fx)) };
+    const path = []; for (let k = bk, n = 0; k >= 0 && n < 4000; k = par[k], n++) path.push([wx(k % fx), wz(Math.floor(k / fx))]);
+    path.reverse(); routes.push(path);
+    for (const [x, z] of path) disc(x, z, 1.0, (k) => { keep[k] = 1; return true; });
+  }
+  api.routes = routes;
+  // wall slots: reachable cells at lo..hi from the nearest object or edge, facing away from it (open space ahead)
+  const depth = (kind, o = {}) => { const f = FOOT[kind](o); return f.r ?? f.hd; };
+  const slots = ({ lo = 0.5, hi = 1.0, open = 0, around = null, any = false, wall = false, all = false }) => {
+    const out = [];
+    for (let j = 1; j < fz - 1; j++) for (let i = 1; i < fx - 1; i++) {
+      const k = j * fx + i;
+      if (any ? (area[k] < 0 || area[k] === main) : !(all ? walk[k] : reach[k])) continue;
+      const dd = wall ? dOcc : dSol;
+      if (keep[k] || occ[k] || dd[k] < lo || dd[k] > hi) continue;
+      const x = wx(i), z = wz(j);
+      if (around && Math.hypot(x - around.x, z - around.z) > around.r) continue;
+      const gxv = dd[k + 1] - dd[k - 1], gzv = dd[k + fx] - dd[k - fx];
+      const ry = Math.atan2(gxv, gzv);
+      if (open) { const ok = K(x + Math.sin(ry) * 2.5, z + Math.cos(ry) * 2.5); if (ok < 0 || dSol[ok] < open) continue; }
+      out.push({ x, z, ry, k });
+    }
+    for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(rr() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
+    return out;
+  };
+  const spaced = (list, space) => (p) => list.every((q) => Math.hypot(q.x - p.x, q.z - p.z) >= space);
+  // open: pieces in open ground (lo m clear of objects round them), spread `space` apart, facing `face` or away from walls
+  api.open = (kind, n, { lo = 2, hi = 99, space = 4, around = null, face = null, opts = () => ({}) } = {}) => {
+    const got = [];
+    for (const s of slots({ lo, hi, around })) {
+      if (got.length >= n) break;
+      if (!spaced(got, space)(s)) continue;
+      const ry = face ? Math.atan2(face.x - s.x, face.z - s.z) : s.ry;
+      const it = put(kind, s.x, s.z, ry, opts(got.length)); if (it) got.push(it);
+    }
+    return got;
+  };
+  // the ledges (Mosquibee): pieces on the other walkable areas, flat ground only, seen from the main one
+  api.ledges = (kinds, n, { space = 3.5, opts = {} } = {}) => {
+    const got = [];
+    for (const s of slots({ lo: 1.2, hi: 99, any: true })) {
+      if (got.length >= n) break;
+      if (!spaced(got, space)(s) || dStp[s.k] < 1.6) continue;
+      const it = put(kinds[got.length % kinds.length], s.x, s.z, s.ry, { ...opts, any: true, slopeGap: 1.6 }); if (it) got.push(it);
+    }
+    return got;
+  };
+  // street furniture: door props, benches against walls, clutter, lamps (or caged lamps) and banners along the routes
+  api.street = ({ benches = 3, clutter = 6, kinds = ['crates'], lamps = 12, cage = 0, doors = 0.8, banners = 0, lines: withLines = false, lanterns = false, fillSpacing = 10 } = {}) => {
+    const kopt = (kind, i) => kind === 'crates' ? { kind: S.crates || 'wood', n: 2 + (i % 3), seed: i + 11 } : kind === 'planter' ? { kind: i % 3 } : kind === 'bottles' ? { n: 3 } : {};
+    // doors: a planter one side, something of the household's the other
+    const houses = A.decor.filter((o) => o.shape === 'house');
+    let di = 0;
+    for (const o of houses) {
+      if (rr() > doors) continue;
+      const ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
+      const t = Math.abs(A.mid.x - o.x) > Math.abs(A.mid.z - o.z) ? [Math.sign(A.mid.x - o.x), 0] : [0, Math.sign(A.mid.z - o.z)];
+      const dx = o.x + t[0] * (ex / 2), dz = o.z + t[1] * (ez / 2), fk = K(dx + t[0] * 1.0, dz + t[1] * 1.0);
+      if (fk < 0 || !reach[fk]) continue;
+      rect(dx + t[0] * 1.0, dz + t[1] * 1.0, t[0] ? 1.0 : 0.8, t[1] ? 1.0 : 0.8, (k) => { keep[k] = 1; });
+      const lat = [t[1], t[0]], ry = Math.atan2(t[0], t[1]);
+      put('planter', dx + t[0] * 0.95 + lat[0] * 1.6, dz + t[1] * 0.95 + lat[1] * 1.6, ry, { kind: di % 3 });
+      const k2 = kinds[di % kinds.length];
+      put(k2, dx + t[0] * 1.0 - lat[0] * 1.7, dz + t[1] * 1.0 - lat[1] * 1.7, ry, kopt(k2, di));
+      di++;
+    }
+    // benches against walls with open ground in front, a bin beside some
+    const bs = [];
+    for (const s of slots({ lo: 0.45, hi: 0.75, open: 2.5, wall: true })) {
+      if (bs.length >= benches) break;
+      if (!spaced(bs, 9)(s)) continue;
+      const it = put('bench', s.x, s.z, s.ry); if (!it) continue;
+      bs.push(it);
+      if (bs.length % 2) put('bin', s.x + Math.cos(s.ry) * 1.55, s.z - Math.sin(s.ry) * 1.55, s.ry);
+    }
+    // clutter by walls
+    const cs = [];
+    for (let tries = 0; tries < kinds.length && cs.length < clutter; tries++) {
+      const kind = kinds[(cs.length + 1) % kinds.length], dp = depth(kind, kopt(kind, 0));
+      for (const s of slots({ lo: dp + 0.05, hi: dp + 0.5, wall: true })) {
+        if (cs.length >= clutter) break;
+        const kd = kinds[(cs.length + 1) % kinds.length]; if (kd !== kind) break;
+        if (!spaced(cs, 5)(s)) continue;
+        const it = put(kind, s.x, s.z, s.ry, kopt(kind, cs.length)); if (it) cs.push(it);
+      }
+    }
+    // lamps (or caged work lamps) and banners along the routes, alternating sides
+    const along = (step, kind, o, lat = 1.9) => {
+      const got = [];
+      for (const path of routes) {
+        let acc = step * 0.5;
+        for (let i = 1; i < path.length; i++) {
+          acc += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
+          if (acc < step) continue;
+          const [x, z] = path[i], [px, pz] = path[Math.max(0, i - 3)], dl = Math.hypot(x - px, z - pz) || 1, nxv = -(z - pz) / dl, nzv = (x - px) / dl;
+          const side = got.length % 2 ? 1 : -1;
+          for (const sd of [side, -side]) {
+            const qx = x + nxv * lat * sd, qz = z + nzv * lat * sd;
+            if (!spaced(got, step * 0.6)({ x: qx, z: qz })) continue;
+            const it = put(kind, qx, qz, Math.atan2(-nxv * sd, -nzv * sd), o); if (it) { got.push(it); acc = 0; break; }
+          }
+        }
+      }
+      return got;
+    };
+    const ls = lamps ? along(lamps, 'lamp', {}) : [];
+    if (cage) along(cage, 'cageLamp', {}, 1.8);
+    const bn = banners ? along(banners, 'banner', { colors: S.lines ? [S.lines[0], S.lines[1], S.lines[2] || '#f4eee0'] : undefined }, 2.3) : [];
+    // no empty stretches: wherever the main area is still bare, a little group by a wall
+    const fill = (spacing) => {
+      let i = 0;
+      for (const s of slots({ lo: 1.0, hi: 1.6, wall: true, all: true })) {
+        if (!items.every((q) => Math.hypot(q.x - s.x, q.z - s.z) >= spacing)) continue;
+        const kind = kinds[i % kinds.length], it = put(kind, s.x, s.z, s.ry, kopt(kind, i + 40)) || put('planter', s.x, s.z, s.ry, kopt('planter', i)); if (!it) continue;
+        i++;
+        const lx = Math.cos(s.ry), lz = -Math.sin(s.ry), k2 = i % 2 ? 'planter' : 'bin';
+        put(k2, s.x + lx * 1.7, s.z + lz * 1.7, s.ry, kopt(k2, i));
+      }
+      // (and bare open ground: a planter, a bench or a lamp where nothing stands for a while)
+      for (const s of slots({ lo: 2.0, hi: 99, all: true })) {
+        if (!items.every((q) => Math.hypot(q.x - s.x, q.z - s.z) >= spacing * 1.2)) continue;
+        const kind = ['planter', 'lamp', 'bench', kinds[i % kinds.length]][i % 4];
+        if (put(kind, s.x, s.z, s.ry, kopt(kind, i + 60))) i++;
+      }
+    };
+    fill(fillSpacing);
+    // pennant lines (or lantern strings) between neighbouring lamps and banners along a route
+    if (withLines && S.lines) {
+      const posts = [...ls.map((p) => ({ ...p, h: 3.3 })), ...bn.map((p) => ({ ...p, h: 4.8 }))];
+      const used = new Set();
+      for (const a of posts) for (const b of posts) {
+        if (a === b || used.has(a) || used.has(b)) continue;
+        const d = Math.hypot(a.x - b.x, a.z - b.z); if (d < 4 || d > 11) continue;
+        lineItem(a, a.h, b, b.h, { kind: lanterns && lines.length % 2 ? 'lanterns' : 'pennants', sag: 0.35 + d * 0.03 }); used.add(a); used.add(b);
+      }
+    }
+  };
+  // sign posts: by the landing (to the landmarks and the shuttle), by the first landmark (back to the shuttle)
+  api.signs = (extra = []) => {
+    const words = [...pois, ...extra].filter((p) => p.word);
+    const boards = (from) => {
+      const b = [{ text: 'SHUTTLE', tx: pad.x, tz: pad.z }];
+      for (const p of words) if (Math.hypot(p.x - from.x, p.z - from.z) > 5 && b.length < 3) b.push({ text: p.word, tx: p.x, tz: p.z });
+      return b.reverse();
+    };
+    if (spawn) {
+      const lx = Math.cos(spawn.a), lz = -Math.sin(spawn.a);   // (to his right)
+      for (const sd of [1, -1]) { const it = near('signpost', spawn.x + lx * 2.6 * sd + Math.sin(spawn.a) * 1.0, spawn.z + lz * 2.6 * sd + Math.cos(spawn.a) * 1.0, 0, { boards: null }, 1.0); if (it) { it.o = { boards: boards(it) }; break; } }
+    }
+    const p = pois[0]?.reach;
+    if (p) { const it = near('signpost', p.x + 2.2, p.z + 1.0, 0, { boards: null }, 1.6); if (it) it.o = { boards: boards(it) }; }
+  };
+  if (S.dress) S.dress(api);
+  const dbg = DEBUG_PLAN && { cands: DEBUG_PLAN, fx, fz, X0, Z0, dSol: Array.from(dSol, (v) => +v.toFixed(1)), dStp: Array.from(dStp, (v) => +v.toFixed(1)), walk: Array.from(walk), occ: Array.from(occ), area: Array.from(area), stp: Array.from(stp), sol: Array.from(sol), reach: Array.from(reach), tReach: Array.from(tReach) }; DEBUG_PLAN = null;
+  return { pad, spawn, items, lines, pois, routes, reachN, why, rej, dbg, seen: best?.seen ?? -1 };
 }
 
 // ================================================================== ground colours (Zeelich's palette)
 const C = (c) => new THREE.Color(c);
-const COL = { turf: C('#f4ecb8'), turf2: C('#e4e8a8'), rock: C('#d8b4c4'), rockHi: C('#ecd0d4'), dust: C('#e8d4c0'), rim: C('#c8a0b8') };
+const COL0 = { turf: C('#f4ecb8'), turf2: C('#e4e8a8'), rock: C('#d8b4c4'), rockHi: C('#ecd0d4'), dust: C('#e8d4c0'), rim: C('#c8a0b8'), path: C('#f0d8c0'), pave: C('#fff0e8') };
 
 // ================================================================== one island
 function buildIsland(scene, physics, name, L, at) {
   const ox = at.x, oz = at.z;
-  const A = analyse(L), { w, d, H, cx, cz, gx, gz, pad } = A;
+  const S = STYLE[name] || {};
+  const A = analyse(L, S), { w, d, H, cx, cz, gx, gz } = A;
+  const plan = planIsland(name, L, A), pad = plan.pad;
+  const COL = { ...COL0, ...(S.ground ? { turf: C(S.ground[0]), turf2: C(S.ground[1]), dust: C(S.ground[2]) } : {}) };
+  // the routes (to the landmarks) and the paving, at the terrain's points: worn paths, paved squares
+  const route = new Float32Array(L.nx * L.nz).fill(9);
+  for (const path of plan.routes) for (let q = 0; q < path.length; q += 2) {
+    const [px, pz] = path[q], i0 = Math.round(gx(px)), j0 = Math.round(gz(pz));
+    for (let j = j0 - 2; j <= j0 + 2; j++) for (let i = i0 - 2; i <= i0 + 2; i++) { if (i < 0 || j < 0 || i >= L.nx || j >= L.nz) continue; const dd = Math.hypot(cx(i) - px, cz(j) - pz); if (dd < route[j * L.nx + i]) route[j * L.nx + i] = dd; }
+  }
+  const atData = (x, z) => { const i = Math.round(gx(x)), j = Math.round(gz(z)); return i < 0 || j < 0 || i >= L.nx || j >= L.nz ? -1 : j * L.nx + i; };
+  const paved = (x, z) => { const k = atData(x, z); return k >= 0 && A.comp[k] === A.main && !!S.paveAt?.(x, z); };
   const group = new THREE.Group(); group.name = 'isle_' + name; group.visible = false; group.position.set(ox, 0, oz); scene.add(group);
   const col = (c) => physics.add({ ...c, x: c.x + ox, z: c.z + oz });
   const updaters = [];
@@ -199,6 +780,9 @@ function buildIsland(scene, physics, name, L, at) {
     if (slope > 0.7) c.lerp(COL.rock, smoothstep(0.7, 1.4, slope));
     if (h > 12) c.lerp(COL.rockHi, smoothstep(12, 26, h) * 0.5);
     if (h < 0.8) c.lerp(COL.dust, smoothstep(0.8, 0.1, h) * 0.6);
+    const k = atData(x, z);
+    if (k >= 0 && route[k] < 2.2 && !paved(x, z)) c.lerp(COL.path, smoothstep(2.2, 0.8, route[k]) * 0.5);
+    if (slope < 0.7 && paved(x, z)) c.copy(COL.pave).lerp(COL.turf, 0.15);
   };
   const splatFn = (x, z, h, slope, wt) => {
     wt[0] = 1; wt[1] = 0; wt[2] = 0; wt[3] = 0; wt[4] = 0;
@@ -207,8 +791,10 @@ function buildIsland(scene, physics, name, L, at) {
     if (h >= -0.5 && h < 0.8) { wt[1] = smoothstep(0.8, 0.2, h) * 0.8; }
     const pd = Math.hypot(x - pad.x, z - pad.z);
     if (pd < 5.5) { wt[4] = smoothstep(5.5, 4.2, pd) * 2; }
+    if (rk < 0.5 && paved(x, z)) { wt[4] = 1.6; wt[0] *= 0.2; }
+    else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
   };
-  const terrain = new Terrain({ size, segs, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: TX.concrete } });
+  const terrain = new Terrain({ size, segs, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   const gy = (x, z) => terrain.heightAt(x, z);
@@ -229,7 +815,7 @@ function buildIsland(scene, physics, name, L, at) {
   const R = {
     id: 'isle_' + name, isle: name, outdoor: true, sky: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
     music: 'zeelich', cloudY: CLOUD_Y,
-    env: { fog: '#efcade', sun: '#fff0dc', hemiSky: '#f8e2ff', hemiGround: '#a07c9c', sunI: 2.5, hemiI: 1.3, fogRange: [85, 300] },
+    env: { fog: '#efcade', sun: '#fff0dc', hemiSky: '#f8e2ff', hemiGround: '#a07c9c', sunI: 2.5, hemiI: 1.3, fogRange: [85, 300], ...(S.env || {}) },
     terrain, H: (x, z) => terrain.heightAt(x - ox, z - oz),
     land: (x, z) => land(x - ox, z - oz),
     size: [w, d], objects: A.decor.length, edges,
@@ -242,8 +828,9 @@ function buildIsland(scene, physics, name, L, at) {
 
   // --- the objects, as our pieces
   const B = new Batch(group);
-  const walls = ['#fbf0f0', '#f1e2f6', '#f8e8d8', '#e6f0f4', '#f6dce6'].map((c) => tm('plasterWall', { color: c, rough: 0.95 }));
-  const domes = [['#8a5ac0', '#e8c8ff'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']].map(([a, b]) => tm(domeTex(a, b), { rough: 0.4 }));
+  const walls = (S.walls || ['#fbf0f0', '#f1e2f6', '#f8e8d8', '#e6f0f4', '#f6dce6']).map((c) => tm('plasterWall', { color: c, rough: 0.95 }));
+  // (each dome colour its own material: kit.tm keys a texture by name, which made all four the first one)
+  const domes = (S.domes || [['#8a5ac0', '#e8c8ff'], ['#2f8a9a', '#a8e8ee'], ['#c84a7a', '#ffc8dc'], ['#d89a30', '#ffe6a8']]).map(([a, b]) => EP.cm(domeTex(a, b), { rough: 0.4 }));
   const deckM = tm('deck', { color: '#e0d8e8', rough: 0.65, metal: 0.25 });
   const plankM = tm('planks', { color: '#d8b080' });
   const stoneM = tm('stone', { color: '#ecdce4' });
@@ -254,15 +841,64 @@ function buildIsland(scene, physics, name, L, at) {
   const spireGeo = cached('isle-spire', () => lathe([[0.5, 0], [0.42, 0.1], [0.3, 0.5], [0.22, 0.85], [0.16, 0.97], [0.0, 1.0]], 10));
   const trees = [[], []], rocks = [[], [], []], bushes = [], plants = [];
   const pick = (o, list) => list[o.body % list.length];
+  // the Grand Hall (Otringal): a portico of four columns before its door, a tiled frieze, broad steps
+  const grandHall = (o, wallH) => {
+    const ex = o.sx, ez = o.sz, t = Math.abs(A.mid.x - o.x) > Math.abs(A.mid.z - o.z) ? [Math.sign(A.mid.x - o.x), 0] : [0, Math.sign(A.mid.z - o.z)];
+    const ry = Math.atan2(t[0], t[1]), fw = t[0] ? ez : ex, front = (t[0] ? ex : ez) / 2;
+    const P = new EP.Place(B, o.x + t[0] * front, o.y, o.z + t[1] * front, ry);
+    const ch = wallH * 0.82, colG = cached('isle-column', () => lathe([[0.36, 0], [0.36, 0.12], [0.26, 0.2], [0.24, 0.5], [0.21, 0.92], [0.27, 0.96], [0.32, 1.0], [0, 1.0]], 12));
+    for (let q = 0; q < 4; q++) { const lx = (q - 1.5) * (fw * 0.27); P.add(colG, stoneM, lx, 0.3, 1.9, 0, 0, 0, 1, ch - 0.3, 1); P.cyl(lx, 1.9, 0.32, ch, { seeThrough: false }); }
+    P.add(bbox(fw * 0.95, 0.5, 2.5, 0.05, 1.8), stoneM, 0, ch + 0.25, 1.0);
+    P.add(bbox(fw * 0.96, 0.26, 0.06, 0.01, 0.5), EP.EM.tiles(), 0, ch + 0.25, 2.27);
+    P.add(bbox(fw * 0.98, 0.14, 2.7, 0.04, 1.6), stoneM, 0, ch + 0.57, 1.0);
+    P.add(bbox(fw * 0.9, 0.15, 3.0, 0.03, 1.8), stoneM, 0, 0.075, 1.4);
+    P.add(bbox(fw * 0.8, 0.15, 2.4, 0.03, 1.8), stoneM, 0, 0.225, 1.1);
+    P.add(cached('isle-hallorb', () => new THREE.SphereGeometry(0.42, 16, 10)), pm('#ffe8a8', 0.3, { emissive: '#ffb040', emissiveIntensity: 0.8, metalness: 0.3 }), 0, ch + 1.1, 2.0);
+    for (const c of P.cols) col(c);
+    const [sx, sz] = P.pt(0, 1.4); col({ type: 'box', x: sx, z: sz, hw: t[0] ? 1.5 : fw * 0.45, hd: t[0] ? fw * 0.45 : 1.5, top: o.y + 0.15 });
+  };
+  const G = S.gate;
+  const landFrac = (o) => { let n = 0, t = 0; for (const a of [-0.4, 0, 0.4]) for (const b of [-0.4, 0, 0.4]) { t++; if (raw(o.x + a * o.sx, o.z + b * o.sz) != null) n++; } return n / t; };
   for (const o of A.decor) {
     const y0 = o.y, top = o.y + o.sy, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
+    if (!o.solid && Math.hypot(o.x - pad.x, o.z - pad.z) < 4.2 + Math.max(o.sx, o.sz) / 2) continue;   // (under the shuttle's pad)
     // (a small thing standing on a steep slope gets no block: he would slide into it and be held there)
     const gi = Math.round(gx(o.x)), gj = Math.round(gz(o.z));
     let onSteep = false; for (let b = -1; b <= 1; b++) for (let a = -1; a <= 1; a++) { const ii = gi + a, jj = gj + b; if (ii >= 0 && jj >= 0 && ii < L.nx && jj < L.nz && A.steep[jj * L.nx + ii]) onSteep = true; }
     const small = (c) => { if (!onSteep) col(c); };
-    switch (o.shape) {
+    const shape = o.shape === 'house' && o.sy > 3 && landFrac(o) < 0.35 ? 'hulk'
+      : o.shape === 'house' && G && o.x - ex / 2 < G.x1 && o.x + ex / 2 > G.x0 && o.z - ez / 2 < G.z0 && o.z + ez / 2 > G.z1 ? 'gate' : o.shape;
+    switch (shape) {
+      case 'hulk': {   // a big object standing in the clouds by a quay: a moored barge
+        const along = ez >= ex, P = new EP.Place(B, o.x, CLOUD_Y + 0.4, o.z, along ? 0 : Math.PI / 2);
+        EP.barge(P, { len: (along ? ez : ex) * 0.95, beam: (along ? ex : ez) * 0.8, h: Math.min(4, o.sy * 0.5) });
+        for (const c of P.cols) col(c);
+        break;
+      }
+      case 'gate': {   // a gatehouse: its two halves either side of the causeway, a lintel and a roof over the passage
+        const wallH = o.sy > 4.5 ? o.sy * 0.62 : o.sy, m = pick(o, walls);
+        for (const [z0, z1] of [[o.z - ez / 2, G.z0], [G.z1, o.z + ez / 2]]) {
+          const dz = z1 - z0; if (dz < 0.4) continue;
+          B.add(bbox(ex - 0.15, wallH, dz, 0.06, 2.2), m, o.x, y0 + wallH / 2, (z0 + z1) / 2);
+          col({ type: 'box', x: o.x, z: (z0 + z1) / 2, hw: ex / 2 - 0.05, hd: dz / 2 - 0.02, top, noStand: true });
+        }
+        const lh = Math.max(0.5, wallH - 2.5);
+        B.add(bbox(ex - 0.15, lh, G.z0 - G.z1 + 0.1, 0.05, 2.2), m, o.x, y0 + wallH - lh / 2, (G.z0 + G.z1) / 2);
+        B.add(bbox(ex + 0.1, 0.22, ez + 0.1, 0.05, 1.6), stoneM, o.x, y0 + wallH + 0.11, o.z);
+        for (const sx of [-1, 1]) B.add(bbox(0.16, 0.3, G.z0 - G.z1 + 0.5, 0.03, 1), stoneM, o.x + sx * (ex / 2 - 0.02), y0 + wallH - lh - 0.15, (G.z0 + G.z1) / 2);
+        if (o.sy > 4.5) { const rr = Math.min(ex, ez) * 0.42, dh = (o.sy - wallH - 0.22) / 1.42; B.add(domeGeo, pick(o, domes), o.x, y0 + wallH + 0.22, o.z, 0, 0, 0, rr, Math.max(0.3, dh), rr); }
+        break;
+      }
+      case 'pole': {
+        if (S.flowerTrees) { const P = new EP.Place(B, o.x, y0, o.z, (o.beta / 4096) * Math.PI * 2); EP.giantFlower(P, { h: o.sy, color: ['#f0c030', '#e8608a', '#f4eee0', '#c050d0'][o.body % 4], seed: o.body + 1 }); }
+        else { const P = new EP.Place(B, o.x, y0, o.z, 0); EP.pole(P, { h: o.sy, flag: (S.lines || ['#e8608a'])[o.body % (S.lines || [1]).length] }); }
+        small({ type: 'cyl', x: o.x, z: o.z, r: 0.18, top, noStand: true });
+        break;
+      }
+      case 'post': { const P = new EP.Place(B, o.x, y0, o.z, 0); EP.post(P, { h: Math.min(1.6, o.sy) }); small({ type: 'cyl', x: o.x, z: o.z, r: 0.14, top: y0 + Math.min(1.6, o.sy), noStand: true }); break; }
       case 'house': {
         const wallH = o.sy > 4.5 ? o.sy * 0.62 : o.sy;
+        if (S.grand && Math.hypot(o.x - S.grand.x, o.z - S.grand.z) < 1) grandHall(o, wallH);
         B.add(bbox(ex - 0.15, wallH, ez - 0.15, 0.06, 2.2), pick(o, walls), o.x, y0 + wallH / 2, o.z);
         B.add(bbox(ex + 0.1, 0.22, ez + 0.1, 0.05, 1.6), stoneM, o.x, y0 + wallH + 0.11, o.z);
         if (o.sy > 4.5) {
@@ -290,6 +926,13 @@ function buildIsland(scene, physics, name, L, at) {
         const rr = Math.min(ex, ez) * 0.48;
         B.add(cyl(rr * 0.85, rr, o.sy * 0.78, 12, 2), pick(o, walls), o.x, y0 + o.sy * 0.39, o.z);
         B.add(domeGeo, pick(o, domes), o.x, y0 + o.sy * 0.78, o.z, 0, 0, 0, rr * 0.95, (o.sy * 0.22) / 1.42, rr * 0.95);
+        // brass bands, slit windows, a door toward the landing (a watchtower, not a plain drum)
+        const H0 = o.sy * 0.78;
+        for (const f of [0.08, 0.5, 0.97]) { const rf = rr - (rr * 0.15) * f; B.add(cached('isle-tband' + rf.toFixed(2), () => new THREE.TorusGeometry(rf + 0.03, 0.07, 4, 24).rotateX(Math.PI / 2)), brass, o.x, y0 + H0 * f, o.z); }
+        const sp = plan.spawn || pad, da = Math.atan2(sp.x - o.x, sp.z - o.z);
+        for (let q = 0; q < 6; q++) { const a = da + Math.PI / 6 + (q / 6) * Math.PI * 2, y = y0 + H0 * 0.72, rf = rr - rr * 0.15 * 0.72; B.add(bbox(0.36, 1.1, 0.14, 0.03), winM, o.x + Math.sin(a) * (rf - 0.02), y, o.z + Math.cos(a) * (rf - 0.02), 0, a); }
+        B.add(bbox(1.2, 2.1, 0.16, 0.03), plankM, o.x + Math.sin(da) * (rr - 0.04), y0 + 1.05, o.z + Math.cos(da) * (rr - 0.04), 0, da);
+        B.add(bbox(1.5, 0.22, 0.3, 0.03, 1), stoneM, o.x + Math.sin(da) * rr, y0 + 2.2, o.z + Math.cos(da) * rr, 0, da);
         col({ type: 'cyl', x: o.x, z: o.z, r: rr, top, noStand: true });
         break;
       }
@@ -348,12 +991,42 @@ function buildIsland(scene, physics, name, L, at) {
       default: plants.push(o);
     }
   }
+  // --- the dressing: the plan's pieces, merged into the island's batch (one draw per material)
+  const honey = (P) => { EP.crate(P, { s: 0.62, kind: 'nectar' }); EP.honeyJars(P, { n: 5, ly: 0.62, collide: false }); EP.honeyJars(P, { n: 2, lx: 0.62, lz: 0.2, seed: 7, collide: false }); P.box(0, 0, 0.36, 0.36, 0.95); P.r = 0.6; return P; };
+  const barrels = (P) => { EP.barrel(P, { lx: -0.36 }); EP.barrel(P, { lx: 0.36, color: '#9a6a48' }); EP.barrel(P, { lz: 0.58, color: '#b88a58' }); return P; };
+  const BUILD = {
+    bin: (P) => EP.bin(P, { color: S.binColor || '#2f7f86' }), planter: EP.planter, boxPlanter: EP.boxPlanter, bench: EP.bench, lamp: EP.lamp,
+    signpost: (P, o) => EP.signpost(P, (o.boards || []).map((b) => ({ text: b.text, ang: Math.atan2(b.tx - P.x, b.tz - P.z) }))),
+    crates: EP.crateStack, barrels, jars: EP.jars, honey, stall: EP.stall, banner: EP.bannerPole, pole: EP.pole, hive: EP.hive, greatHive: EP.greatHive,
+    flowerBed: EP.flowerBed, plinth: EP.statuePlinth, stage: EP.stage, fountain: EP.fountain, gasHolder: EP.gasHolder, pump: EP.pumpEngine,
+    cageLamp: EP.cageLamp, bottles: EP.gasBottles, crane: EP.crane, warn: EP.warnSign, barrier: EP.barrier, mast: EP.radioMast, flagPole: EP.flagPole,
+    waterTank: EP.waterTank, bollard: EP.bollard, beacon: EP.beacon, netRack: EP.netRack, laundry: EP.laundry,
+  };
+  const groundUnder = (x, z, rr) => { let y = gy(x, z); for (let q = 0; q < 6; q++) { const a = (q / 6) * Math.PI * 2; y = Math.min(y, gy(x + Math.sin(a) * rr, z + Math.cos(a) * rr)); } return y; };
+  let pieces = 0;
+  for (const it of plan.items) {
+    if (it.kind === 'pipe') {
+      const pc = []; EP.pipeRun(B, it.pts.map((p) => [p.x, gy(p.x, p.z) + p.h, p.z]), { cols: pc, gy }); for (const c of pc) col(c); pieces++; continue;
+    }
+    if (it.kind === 'skiff') {
+      const g = EP.skiff(group, it.x, CLOUD_Y + 0.15, it.z, it.ry, it.o.color), ph = it.x * 0.7;
+      updaters.push((dt, t) => { g.position.y = CLOUD_Y + 0.15 + Math.sin(t * 0.9 + ph) * 0.12; g.rotation.z = Math.sin(t * 0.7 + ph) * 0.04; }); pieces++; continue;
+    }
+    const f = BUILD[it.kind]; if (!f) continue;
+    const fr = FOOT[it.kind]?.(it.o) || { r: 0.5 };
+    const P = new EP.Place(B, it.x, groundUnder(it.x, it.z, Math.min(1.2, (fr.r ?? Math.max(fr.hw, fr.hd)) * 0.6)), it.z, it.ry);
+    f(P, it.o || {});
+    for (const c of P.cols) col(c);
+    for (const e of P.extra) { group.add(e.obj); updaters.push(e.update); }
+    pieces++;
+  }
+  for (const ln of plan.lines) EP.hangingLine(B, [ln.a.x, gy(ln.a.x, ln.a.z) + ln.a.h, ln.a.z], [ln.b.x, gy(ln.b.x, ln.b.z) + ln.b.h, ln.b.z], { kind: ln.o.kind, sag: ln.o.sag, colors: S.lines || undefined, seed: pieces + 1 });
   B.build();
   // instanced pieces, each scaled to its object's box (by the geometry's own size)
   const fit = (geo, list, mat, ys = 1) => {
     if (!list.length) return;
     geo.computeBoundingBox(); const b = geo.boundingBox, gw = b.max.x - b.min.x, gh = b.max.y - b.min.y, gd = b.max.z - b.min.z;
-    instances(group, geo, mat, list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color('#fff0ff').multiplyScalar(0.9 + r() * 0.15) })));
+    instances(group, geo, mat, list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })));
   };
   const vc = pm('#ffffff', 0.85, { vertexColors: true });
   fit(treeGeometry('round', 3), trees[0], vc); fit(treeGeometry('tall', 2), trees[1], vc); fit(treeGeometry('bush', 1), bushes, vc);
@@ -364,14 +1037,15 @@ function buildIsland(scene, physics, name, L, at) {
   // --- the shuttle pad and the shuttle (the way back: src/game/story/islands.js)
   {
     const py = gy(pad.x, pad.z);
-    const disc = new THREE.Mesh(cached('isle-pad', () => new THREE.CylinderGeometry(3.6, 3.8, 0.25, 24)), pm('#8a8f9a', 0.7, { metalness: 0.2 }));
+    const disc = new THREE.Mesh(cached('isle-pad', () => new THREE.CylinderGeometry(3.35, 3.5, 0.25, 24)), pm('#8a8f9a', 0.7, { metalness: 0.2 }));
     disc.position.set(pad.x, py + 0.1, pad.z); disc.receiveShadow = true; group.add(disc);
-    const ring = new THREE.Mesh(cached('isle-ring', () => new THREE.TorusGeometry(3.2, 0.07, 6, 32)), pm('#e8c040', 0.5)); ring.rotation.x = Math.PI / 2; ring.position.set(pad.x, py + 0.24, pad.z); group.add(ring);
+    const ring = new THREE.Mesh(cached('isle-ring', () => new THREE.TorusGeometry(3.0, 0.07, 6, 32)), pm('#e8c040', 0.5)); ring.rotation.x = Math.PI / 2; ring.position.set(pad.x, py + 0.24, pad.z); group.add(ring);
     const sh = esmerShuttle({ landed: true }); sh.position.set(pad.x, py + 0.23, pad.z); sh.rotation.y = pad.toward + Math.PI / 2; group.add(sh);
     col({ type: 'cyl', x: pad.x, z: pad.z, r: 3.2, top: py + 4.4, noStand: true });
     R.pad = { x: ox + pad.x, z: oz + pad.z, y: py };
-    // he stands beside it (to one side, so the camera behind him isn't in the hull), facing the island's middle
-    let sp = null;
+    // he stands a few metres before it, facing the landmark: the play camera behind him keeps the shuttle out of
+    // the first view (the plan's spawn); without one, beside it, facing the island's middle
+    let sp = plan.spawn;
     const tries = []; for (const d of [0, 0.35, -0.35, 0.7, -0.7, 1.05, -1.05, 1.4]) for (const side of [1, -1]) tries.push(pad.toward + side * (Math.PI / 2 + d));
     for (const a of tries) {
       if (sp) break;
@@ -381,6 +1055,17 @@ function buildIsland(scene, physics, name, L, at) {
     sp ||= { x: pad.x + Math.sin(pad.toward) * 4.8, z: pad.z + Math.cos(pad.toward) * 4.8, a: pad.toward };
     R.spawn = { x: ox + sp.x, z: oz + sp.z, a: sp.a };
   }
+  // the landmark (its approach, where the routes end) and the plan's tally; sample points clear of the new pieces
+  const p0 = plan.pois[0]?.reach || plan.pois[0];
+  const lk = plan.pois[0]?.at || (S.grand && plan.pois[0]?.word === S.target?.word ? S.grand : null) || plan.pois[0];
+  R.landmark = p0 ? { x: ox + p0.x, z: oz + p0.z, word: plan.pois[0].word, look: { x: ox + lk.x, z: oz + lk.z } } : null;
+  R.pois = plan.pois.filter((p) => p.reach).map((p) => ({ x: ox + p.reach.x, z: oz + p.reach.z, word: p.word }));
+  R.dressing = pieces;
+  R.route = (plan.routes[0] || []).filter((_, i) => i % 4 === 0).map(([x, z]) => ({ x: ox + x, z: oz + z }));
+  R.sample = R.sample.filter((p) => Math.hypot(p.x - R.pad.x, p.z - R.pad.z) > 4.4 && plan.items.every((it) => {
+    const fr = FOOT[it.kind]?.(it.o || {}); const rr = fr ? (fr.r ?? Math.hypot(fr.hw, fr.hd)) : 0.5;
+    return it.kind === 'skiff' || Math.hypot(p.x - ox - it.x, p.z - oz - it.z) > rr + 0.8;
+  }));
 
   // --- the sea of clouds round it, puffs along the shore, other shuttles in the sky
   {
