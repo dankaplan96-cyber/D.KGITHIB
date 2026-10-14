@@ -39,7 +39,10 @@ export function checker() {
 // Esc → pause menu → "Quit to title" (it saves), then keep the browser storage (the save) in a file
 export async function quitAndKeep(page, context, file) {
   await page.evaluate(() => { P.release(); P.settle(); P.tap('Escape', 0.1); });
+  // the game saves, then reloads the page 500 ms later (src/main.js): wait for that reload, or a later open() races it
+  const reloaded = page.waitForEvent('load', { timeout: 300000 });
   await page.click('#pause [data-act="quit"]', { timeout: 60000 });
+  await reloaded;
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
   await context.storageState({ path: file });
 }
