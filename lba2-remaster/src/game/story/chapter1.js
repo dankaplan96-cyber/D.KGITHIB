@@ -463,7 +463,7 @@ export class Chapter1 extends ChapterBase {
     if (f.c1_water) { W.gate.open = true; W.station?.setActive?.(true); }
     // a save made during Zoe's segment resumes at its start (as Twinsen at the station gate: see update), with
     // the lockers to search again — a plan found and saved but not carried out must be findable again
-    if (f.c1_zoeStart && !f.c1_zoeDone) { f.c1_zoeStart = false; f.c1_plan = false; g.searched = g.searched.filter((id) => !/^locker\d$/.test(id)); }
+    if (f.c1_zoeStart && !f.c1_zoeDone) { f.c1_zoeStart = false; f.c1_plan = false; g.searched = g.searched.filter((id) => !/^locker\d$/.test(id)); g.hero.hasBall = true; g.hero.behaviour = 'normal'; }   // (and his own ball: the save was taken after Zoé's swap)
   }
 
   // ---------------------------------------------------------------- HUD

@@ -47,13 +47,13 @@
       PH.move(probe, px - probe.pos.x, pz - probe.pos.z);
       if (Math.hypot(probe.pos.x - px, probe.pos.z - pz) > 0.04) return null;
       probe.pos.y = PH.groundAt(px, pz, probe.pos.y);
-      if (PH.steepAt(px, pz, probe.pos.y)) return null;   // (a steep patch on the way: he'd slide back, not climb it)
     }
     const ny = PH.groundAt(nx, nz, probe.pos.y);
-    if (ny < y - 2.2) return null;                 // a drop that would hurt
+    if (ny < y - (P.dropOK ? 7 : 2.2)) return null;   // a drop that would hurt (allowed, up to a few metres, when nothing else leads out)
     if (PH.steepAt(nx, nz, ny)) return null;       // he'd slide
     return ny;
   };
+  P._stepTo = (...a) => stepTo(...a);   // (debugging the planner)
   // is a spot next to a slope he'd slide on, or a wall? (paths keep a margin from both)
   const edgy = (x, y, z, m = 0.4) => {
     for (const [ox, oz] of [[m, 0], [-m, 0], [0, m], [0, -m]]) {
@@ -149,6 +149,8 @@
     for (let i = 0; i < 300 && G.trans; i++) G.step(DT);
     if (run && h.behaviour !== 'athletic') P.tap('F2'); else if (!run && h.behaviour === 'athletic') P.tap('F1');
     let plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }), wi = 1, t = 0, replans = 0;
+    // nothing leads there without a drop (he slid into a hollow): jump down, as a player would
+    if (!plan.ok && plan.left > 3) { P.dropOK = true; const p2 = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }); P.dropOK = false; if (p2.ok) { plan = p2; P.note('go: no way round, taking a drop'); } }
     let lastP = { x: h.pos.x, z: h.pos.z, t: 0 };
     const startRoom = G.room?.id ?? 'citadel';
     P.note(`go → (${tx.toFixed(1)}, ${tz.toFixed(1)}) plan ok=${plan.ok} pts=${plan.pts.length} left=${plan.left}`);

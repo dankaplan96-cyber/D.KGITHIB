@@ -1145,7 +1145,7 @@ class Game {
 
     // remember a safe spot to return to after a fall
     this.safeT = (this.safeT || 0) - dt;
-    if ((!this.room || this.room.outdoor) && this.safeT <= 0 && h.onGround && !h.sliding && h.pos.y > 0.4 && this.stableSpot(h.pos)) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; }
+    if ((!this.room || this.room.outdoor) && this.safeT <= 0 && h.onGround && !h.sliding && h.pos.y > 0.4) { if (this.stableSpot(h.pos)) { this.safeT = 1; this.lastSafe = { x: h.pos.x, z: h.pos.z }; } else this.safeT = 0.25; }
 
     // outdoor music follows the area: village and harbour, the open island, the project station in the old fortress
     if (!this.room) this.audio.setOutdoorArea(h.pos, POI);

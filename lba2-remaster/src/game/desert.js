@@ -129,7 +129,7 @@ function heightFn(x, z) {
   const out = -3.2 + (h + 3.2) * land;
   // the pier's landward end steps onto sand at the deck's height: after the shore blend, which would otherwise
   // pull the ground there down to the sea floor (below the water line: a gap nobody can walk across)
-  const ex = x - (DOCK.x + 17), w = (1 - smoothstep(2.2, 4.5, Math.abs(z - DOCK.z))) * smoothstep(-2.5, -1.0, ex) * (1 - smoothstep(4, 8, ex));
+  const ex = x - (DOCK.x + 17), w = (1 - smoothstep(3, 10, Math.abs(z - DOCK.z))) * smoothstep(-2.5, -1.0, ex) * (1 - smoothstep(4, 8, ex));
   const floor = DOCK.deck - 0.1;
   return out < floor ? out + (floor - out) * w : out;
 }

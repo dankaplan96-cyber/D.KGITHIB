@@ -25,7 +25,7 @@ await page.goto('about:blank');
 await open(page, '?nocine'); await menu(page, 'continue');
 const b = await page.evaluate(() => {
   const G = game, f = G.flags; P.settle();
-  const out = { room: G.room?.id ?? 'citadel', body: G.hero.body, f: { zoeStart: f.c1_zoeStart, plan: f.c1_plan, zoeDone: f.c1_zoeDone }, searched: [...G.searched], obj: P.state().obj };
+  const out = { room: G.room?.id ?? 'citadel', body: G.hero.body, ball: G.hero.hasBall, beh: G.hero.behaviour, f: { zoeStart: f.c1_zoeStart, plan: f.c1_plan, zoeDone: f.c1_zoeDone }, searched: [...G.searched], obj: P.state().obj };
   // carry on as a player would: talk to Zoé again, look for the plan
   out.outside = !G.room;
   if (!G.room) out.talk = P.talk('zoe', { run: true }); P.wait(1); P.settle();
@@ -42,6 +42,7 @@ const b = await page.evaluate(() => {
   return out;
 });
 check('Continue: Twinsen outside at the gate, the objective back to "meet Zoé"', b.outside && /Zo/.test(b.obj), b);
+check('Continue: back as Twinsen with his own ball (the save was taken after Zoé\'s swap)', b.body !== 'zoe' && b.ball === true && b.beh !== 'discreet', b);
 check('Continue: the lockers can be searched again', b.lockersOffered?.includes('locker2'), b);
 check('Continue: Zoé finds the plan again and gets out; the chapter goes on', b.plan2 && b.zoeDone && b.bodyEnd === 'twinsen' && b.final.room === 'citadel', b);
 const fails = done(errs);

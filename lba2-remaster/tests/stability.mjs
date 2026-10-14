@@ -77,6 +77,11 @@ const d10 = await ev(() => {
   return { room: G.room?.id, start, r: r.r, at: [G.hero.pos.x, G.hero.pos.y, G.hero.pos.z].map((v) => +v.toFixed(1)) };
 });
 check('D10: off the Desert Island pier onto the sand and to Mother Tarra by input', d10.room === 'desert' && d10.r === 'arrived', d10);
+// (review: the raised sand at the pier's end must not have banks steep enough to slide on down to the water)
+const d10b = await ev(() => { const G = game, PH = G.physics, T = G.terrain, x1 = G.rooms.desert.dock.x + 19, z0 = G.rooms.desert.dock.z; let n = 0, steep = 0;
+  for (let ex = 0; ex <= 6; ex += 0.25) for (let dz = -7; dz <= 7; dz += 0.25) { const g = T.heightAt(x1 + ex, z0 + dz); if (g < -0.35) continue; n++; if (PH.steepAt(x1 + ex, z0 + dz, g)) steep++; }
+  return { n, steep }; });
+check('D10: no slide-steep banks around the pier\'s land end', d10b.n > 500 && d10b.steep === 0, d10b);
 
 // D11: a story exit that names only the room ({ room: 'condB' }, chapter 5's door into the hangar) puts him at the
 // room's spawn, not at NaN; and no chapter's exit hands back a position without coordinates unnoticed
