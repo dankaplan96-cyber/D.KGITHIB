@@ -3,7 +3,7 @@
 Update before a handoff or a session limit. Do not mark a task done twice after resuming: check BACKLOG.md first.
 
 ## Build
-- Game version 0.26.1 (desktop/package.json; 0.26.1 = TY-3-FIX, REV-TY-3's open items; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
+- Game version 0.27.0 (desktop/package.json; 0.26.1 = TY-3-FIX, 0.27.0 = TY-4 Zeelich twelve years on; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
   D1–D18, see QA.md), then Zeelich's islands and Citadel Spaceport.
 - Milestone (PRODUCTION.md): 1 — Stabilize.
 
@@ -51,13 +51,14 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   Spaceport (src/game/spaceport.js, the user's request); Esmer shuttle flights from chapter 4
   (src/game/story/islands.js). tests/zislands.mjs and tests/spaceport.mjs pass; regression set rerun (QA.md).
 
-## Done after the pass (0.24.0–0.26.0)
+## Done after the pass (0.24.0–0.27.0)
 - Twelve years on (docs/TWELVE_YEARS.md): the first set (house, The Old Pump, the harbour; 0.24.0), Baldino's workshop
   (0.25.0), the reviews' fixes (0.25.1), Desert Island's Kesh and The Wind-Catcher (0.26.0, TY-3: tests/desert-life.mjs,
-  captures/desert-ty/; status REVIEW).
+  captures/desert-ty/; status REVIEW), Zeelich's street and The Second Bake (0.27.0, TY-4: tests/zeelich-life.mjs,
+  captures/zeelich-ty/; status REVIEW).
 
 ## Next exact task
-An independent review of TY-3 (Desert Island); then twelve years on for the Hamalayi and Zeelich.
+Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
 ## Resume
 Saves made through the game's own Save & quit live in the session scratchpad (not in the repo; regenerate by

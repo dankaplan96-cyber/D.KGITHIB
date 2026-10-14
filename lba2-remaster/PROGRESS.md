@@ -410,6 +410,27 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   townlife has 35 checks (was 30), workshop 32 (was 31). Evidence: QA.md "REV-TY-3 fixes", captures/townlife/.
 - Not verified: GPU look; the feel by hand. Open: near the pump the camera's occlusion check swings it behind him,
   so the stroke is often seen from behind-left.
+## Session: twelve years on, fourth set — Zeelich's street (0.27.0; TY-4)
+- The user's brief for Zeelich: civilian life after its former rulers, communities rebuilding, independent
+  businesses, disagreements over investment, real reasons to support Vesk's project; not one city, one opinion or one
+  industrial landscape (docs/TWELVE_YEARS.md, fourth set; all proposed developments of this sequel; no claim about
+  LBA2's rulers, whom the reference notes don't name).
+- Places (src/game/zeelife.js, built by zeelich.js on the existing island; no new region, no new character model):
+  the old watch house (older than the council, crest chiselled off) as Mother Snuff's bakery, with the guards' stair
+  to its roof (Bzizz's landing stage), its oven on the project's heat (a copper feed from the depot under fresh
+  cobbles, a heat box with a lamp); heat posts lit at the bakery, the council house and the depot gate, dark with
+  CONNECTION NEXT QUARTER at the west end and over the moles' new burrow hatch; Mr Pelleck's dome half re-tiled under
+  scaffold; Nara's flowers crated for Citadel by the shuttle pad (chapter 3 only). Snuff, Bzizz, Old Grumm and
+  Mr Pelleck stand by their places now. The island's scatter keeps out of them without moving anything else.
+- The Second Bake (src/game/story/zeelife.js, a layer like kesh.js): Bzizz's crate on the flue trips Snuff's heat
+  box; shove it off on the roof, or knock it off with the ball from the street (it breaks: nectar on the grass);
+  Snuff pays five kashes (owed until picked up); a roll heals; Tavo carries rolls to the depot. Lines change with the
+  shield (ch. 3), chapters 4–8, the council (ch. 9) and the network (ch. 10); Nara and Oku get lines only where no
+  chapter needs them (chapters 4–8 and later).
+- tests/zeelich-life.mjs (see QA.md for the run): both ways by input, Save & quit → Continue twice. Regression:
+  chapter2 (chapter 3), chapter9, workshop, zislands, spaceport, stability, resume (QA.md). Render counts measured,
+  meshes merged onto shared vertex-coloured materials.
+- Not verified: the look on a GPU and the feel by hand.
 
 ## Session: twelve years on, third set — Desert Island, Kesh (0.26.0; TY-3)
 - The user's brief, step 5: reused buildings, altered transport routes, excavation work, practical adaptations to

@@ -13,6 +13,7 @@ are never presented as the originals' canon.
 | **New in this pass** (proposed developments for the twelve-year gap) | Zoé keeps the Water Office's connection register; Bram and the lane's old pump; Officer Odile and the harbour's customs booth; Nell's repair shop for imported machines; Xil's mislabelled crate; the family's corners in the house | this file, src/game/story/life.js |
 | **New in the second set** (Baldino's workshop) | Ilo, an Esmer engineer at the shuttle yard (named, not seen); Baldino's test pair of bench relays; his old hoist; the stove fan with three odd blades; the tea-by-coupler experiment; the thunder box (the pulse tool of chapter 10 before it was ready) | this file, src/game/workshoplife.js, src/game/story/workshop.js |
 | **New in the third set** (Desert Island: Kesh) | Kesh's cool room in one of FunFrock's concrete blockhouses, with a wind-catcher Kesh built on it; Lumi's loom, her shade sail, the cool room's curtain and sand screen (her work); the reed sand screens on the village's windward side; Hesk's flag poles along the sand-yacht routes and his yacht stop; the drift over the track to the dig | this file, src/game/keshlife.js, src/game/story/kesh.js |
+| **New in the fourth set** (Zeelich's street) | the old watch house (older than the council, its crest chiselled off) as Mother Snuff's bakery; her oven on the project's heat, its heat box and safety cut-out; the heat posts lit at the bakery, the council house and the depot, dark with CONNECTION NEXT QUARTER at the west end; the moles' burrow hatch and its warm vent; Mr Pelleck's dome re-tiled with his wages from the depot's books; Bzizz landing his nectar crates on the watch house roof; Nara's flowers crated for Citadel; Tavo carrying rolls to the depot | this file, src/game/zeelife.js, src/game/story/zeelife.js |
 
 Nothing new claims anything about the originals' characters beyond what the originals show. Baldino himself is
 LBA2's (an old Grobo inventor with a workshop; docs/LBA2_VISUAL_NOTES.md). That his workshop is now on Zeelich is
@@ -159,8 +160,58 @@ it). The last storm turned the cowl away from the wind and tore its screen: the 
 - Chapter 5's errand with Brosk (the jar and the shovel) always comes first; Mother Tarra and Hesk keep their chapter
   lines. Save/Continue in any state (cowl direction, sand, screen carried or fitted, the coin owed).
 
+### Zeelich's street (fourth set; src/game/zeelife.js, story/zeelife.js)
+History vs ours: Zeelich, its Esmers, Mosquibees, moles and triangle-headed townsfolk are LBA2's (docs/LBA2_MEASUREMENTS.md,
+STORY_BIBLE.md "Peoples of Zeelich"); the street's people by name (Nara, Oku, Bzizz, Madam Zuzzara, Old Grumm, Mother
+Snuff, Mr Pelleck, Tavo), the council and the Joint Project are this sequel's. The reference notes show that LBA2's
+Zeelich had a palace (docs/LBA2_VISUAL_NOTES.md, #19) but name no rulers and give no history of them, so nothing here
+names a ruler, a date or what happened to them: the watch house is only "older than the council", and somebody
+chiselled its crest off. Everything below is a proposed development of this pass.
+
+- **Reused building — the old watch house** (north side of the street's east end): a squat tower of dark lilac
+  ashlar, battered plinth, corbels and merlons, slit windows, a heavy door, the crest above it chiselled to a blank
+  shield. Owner and use: **Mother Snuff** (a mole) bakes the street's bread in it. The guards' window is her bread
+  hatch (a counter, a teal-striped awning, SNUFF'S BREAD painted above, a slate: OVEN COLD / FRESH BREAD). Its flat
+  roof, the old lookout, is **Bzizz's** landing stage for nectar crates; the guards' stair still climbs the west wall.
+- **The project's real benefits, unequally shared.** Snuff's oven runs on the project's heat (a copper feed from the
+  depot, under the street through fresh cobbles, to a teal heat box with a lamp): she sold her charcoal cart and her
+  bread is a third cheaper. Heat posts after Citadel's: lit at the bakery, the council house (the upper district's door)
+  and the depot gate; dark at the west end — Mr Pelleck's house, the south-west house and the moles' burrow — each with
+  a tag, CONNECTION NEXT QUARTER. Jobs: Mr Pelleck keeps the depot's books, Tavo carries rolls to the depot, his cousin
+  works on the platform. Traffic: the project's heat makes the flowers bloom twice (Bzizz flies twice as much); in
+  chapter 3 Nara's cloud flowers wait by the shuttle pad, crated for Citadel and HELD (the project grounds the shuttles
+  and its ferry takes project cargo first); from chapter 4 they are gone, and Xil sells them on at Citadel's harbour.
+- **Rebuilding.** Mr Pelleck's dome is being re-tiled from the bottom up: scaffold, a pulley and a bucket, a ladder,
+  tile stacks, the lower half in new blue tiles ("they don't make the old violet any more"), a band of bare mortar,
+  the old violet above.
+- **The moles' burrow hatch** by the market: a round plank lid in a stone collar and a vent pot breathing warm air.
+  Old Grumm stands by it. Up top they wait for heat; down below they open the vents (the bore's heat, chapter 3's
+  danger, seen as a neighbour's complaint).
+- **Opinions, not one:** Snuff (for it: cheaper bread, but "if the council stops the bore, I'll want my cart back"),
+  Bzizz (for it: twice the flowers), Mr Pelleck (for it: wages, tiles, forms filed twice), Tavo (a job), Nara (for it:
+  customers), Old Grumm (against: the burrows sweat), Oku (against: new sails on his mills, but they turn for a drill),
+  Madam Zuzzara (the ground is wrong; her old lines).
+
+**The Second Bake** (optional; from chapter 3 on, whenever Twinsen is on Zeelich; nothing on the main path needs it).
+Snuff's oven is cold: the heat box has shut itself off because the flue can't breathe — Bzizz left a crate on it (the
+depot hasn't signed for it, and unsigned crates stay on the stage).
+- Learned from Snuff, the heat box's red lamp (SAFETY CUT-OUT. RESETS WHEN THE FLUE DRAWS) or the hatch; Bzizz says the
+  crate stays put.
+- Two ways: up the guards' stair, a **shove** moves the crate off the flue onto the stage (Bzizz: "That was a flue?");
+  or the **magic ball** from the street knocks it off the roof — it breaks on the grass, nectar everywhere ("The depot
+  can sign for a puddle"). Any order: talking first or not at all.
+- After: the heat box clicks green, the hatch glows, loaves on the counter, the slate says FRESH BREAD, the flue
+  breathes, Tavo comes for the rolls. Snuff pays five kashes (one coin, owed until picked up); a roll at the hatch
+  restores life.
+- Lines follow the main story: chapter 3 before and after the shield drops, chapters 4–8, the council (who buys the
+  bread, who pays the tilers if the bore stops; the moles say stop), the network (do shields bake bread?). Chapters 3,
+  9 and 10 keep their own lines for Nara and Oku; theirs here are for chapters 4–8 and after.
+- Save/Continue in any state (crate on the flue, on the stage, broken; the coin owed).
+- **Chapter 10, not done here** (another developer owns network.js/ch10.js): Oku's or Baldino's network lines could
+  recall the bakery's heat box (a safety cut-out that resets when the air flows) — suggested, not implemented.
+
 ## Not yet done (next, in the brief's order)
-1. The Hamalayi and Zeelich's own twelve-year changes (see WORLD_MAP.md: what exists there now).
+1. The Hamalayi's own twelve-year changes (see WORLD_MAP.md: what exists there now).
 2. More Citadel: the Workshop Successor or the Familiar Shortcut, only where they fit.
 
 ## Rules kept

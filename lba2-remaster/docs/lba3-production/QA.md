@@ -317,6 +317,33 @@ view; "far" is the second LBA view (Q).
 | Test harness: P.use waited only for the hero's one-shot action | It also waits for the steps the game asks for (walkTo), up to 5 s (tests/lib/player.js) | townlife | DONE |
 | Regression on 0.26.1 (own server, :8149; logs in captures/townlife/ty3fix/regression/): townlife (35 checks, was 30), workshop (32, was 31), chapter2, stability (16), desert-life (24), chapter10 ×3 (CHAPTER 10 DONE each, the brake and all drones thrown: 4/4/3, 5/10/10, 5/4/5 throws); chapter10 with C10_MAX_THROWS=0: three ISO lines, CHAPTER 10 ASSISTED, exit 2 | LOGIC/INPUT | rc 0 (the forced run rc 2 as intended), no page errors | PASS |
 | Not covered: the camera near the pump swings behind Twinsen as he walks up (its occlusion check, unchanged), so the last stroke is often seen from behind-left; GPU look; the feel by hand; gamepad; the pump from beyond the pipe's west side | — | — | HUMAN / open |
+### Zeelich twelve years on: the street and The Second Bake (0.27.0; TY-4; docs/TWELVE_YEARS.md)
+Evidence: tests/zeelich-life.mjs (31 checks; `SHOTS=1` writes its screenshots to captures/zeelich-ty/);
+captures/zeelich-ty/ (`zeelich-before-after.jpg`: six views, before = 0.26.0 at 0e278f0, after = 0.27.0, the same spot
+and the normal game camera; `second-bake-states.jpg`: the watch house cold with the crate on the flue, after the
+shove, after the ball). Software renderer (SwiftShader), 960×540: layout and readability only, no GPU timing. ISO
+setup, logged by the test: chapters 3, 4, 9 and 10 reached by their flags (as tests/chapter2/4/9/10.mjs), the shield
+by its flag, a fresh zl_ flag set for the second way, Twinsen put on Zeelich in chapter 4 by the shuttle's room switch.
+
+| Check | Evidence | Result |
+|---|---|---|
+| The watch house, its stair (solid from the side and underneath), the six heat posts and Nara's crates are solid; the burrow lid can be stood on; three posts lit, three dark with tags | LOGIC (physics) | PASS |
+| Snuff at her counter, Bzizz by the stair, Old Grumm by the burrow, Mr Pelleck under his scaffold | LOGIC | PASS |
+| Collision and access: walked from the street to both mills' tracks, the depot gate, the counter, the burrow, Pelleck's door and the platform gate | INPUT | PASS |
+| Chapter 3: Snuff (charcoal cart sold, something on her flue), Bzizz (his stage, the depot's signature), the heat box (SAFETY CUT-OUT), the hatch (the crest chiselled off), Pelleck and Grumm, Nara's crates HELD | INPUT | PASS |
+| Way A: up the guards' stair by walking (the planner's A* over the game's collision), a shove moves the crate off the flue; the heat box resets, Snuff calls out; the parapet holds him on the roof on all sides | INPUT | PASS |
+| Save & quit → Continue: the crate on the stage, the oven hot, Tavo at the counter, the journal line done | UI + INPUT | PASS |
+| Snuff pays five kashes (one coin, owed until picked up by walking to it); the journal closes; a roll at the hatch heals; Snuff, Tavo and Bzizz have after-lines | INPUT | PASS |
+| Nara and Oku keep chapter 3's lines | INPUT | PASS |
+| After the shield drops (ISO): Snuff's problem in that phase's words; way B: the magic ball from the street knocks the crate off (in the aim targets until then, not after); it breaks, "My nectar!", the heat box resets; Bzizz and Snuff's lines for the broken crate | INPUT | PASS |
+| Saved before Snuff's coin was picked up → Continue: five kashes given with a toast, the crate still broken, the oven hot | UI + INPUT | PASS |
+| Chapter 4 (ISO) on Zeelich: Nara's crates gone; Nara (Xil sells her flowers at Citadel), Oku (new sails), Pelleck, Grumm, Bzizz in that phase's words | INPUT | PASS |
+| Chapter 9 (ISO): Baldino's petition and Nara's stamp as before; Pelleck, Snuff and Grumm argue about the council | INPUT | PASS |
+| Chapter 10 (ISO): Oku's station errand as before; Snuff, Bzizz and Pelleck on the bore turned into a shield | INPUT | PASS |
+| Regression on 0.27.0 (GAME_URL on a separate port): chapter2 (chapter 3 to chapter 4: the same outcomes as 0.26.0's), chapter9 (to chapter 10; street folk on the ground and talkable), workshop (31/31), zislands (11/11), spaceport (7/7), stability (16/16; a first run was cut off by the runner's 40-minute limit at D15 under a host load average of ~37, the rerun passed), resume (2/2), zeelich-life (31/31). chapter10 (being changed by another developer) runs to its end (the shaft, chapter 11), not modified here | LOGIC/INPUT | PASS (all rc 0, no page errors) |
+| Render counts (software renderer, counts not time; one frame from the normal camera, 960×540, all passes incl. shadows), 0.26.0 → 0.27.0: the street looking east 740 → 775 calls (+4.7%), at the watch house 638 → 673 (+5.5%), the crossing 652 → 687 (+5.4%), the plaza's north side 840 → 855 (+1.8%), Pelleck's house 826 → 847 (+2.5%), the burrow 660 → 683 (+3.5%), the pad 688 → 711 (+3.3%); triangles +2–6%; with the oven hot +5 calls (the loaves). Merged onto shared vertex-coloured materials (one for metal, one for matte), flat things cast no shadow (first build: +37…+62 calls) | LOGIC | measured |
+| Defects found while building it (fixed before commit): the stair's top tread ran into the north parapet (no way onto the roof); a 0.1 m seam between the treads and the roof made the planner refuse the stair; the ball bounced off the parapet's collider and the crate's own collider before reaching it (both now let the ball through to its target test) | — | FIXED |
+| Not checked here: the look on a GPU; whether players think of the ball for a crate on a roof; the stair by hand | — | HUMAN |
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
