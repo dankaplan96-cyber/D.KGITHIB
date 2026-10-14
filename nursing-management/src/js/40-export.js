@@ -203,8 +203,19 @@ const BUILDERS = {
   },
 
   // ── חת"ש ────────────────────────────────────────────────────
-  training(T, { dept, nurses }) {
+  training(T, { db, dept, nurses }) {
+    const defs = trainingDefs(db);
     for (const r of [1, 2, 3]) T.copyRow(r, r);
+    // extra courses/permissions added in the system → extra columns after AE
+    const extra = defs.slice(TRAINING.length);
+    extra.forEach((t, i) => {
+      const c = 32 + i;
+      T.ws.getColumn(c).width = 13;
+      T.put(1, c, i === 0 ? 'נוספים' : null, T.st(1, i === 0 ? 24 : 25));
+      T.put(2, c, t.label, T.st(2, 26));
+      T.put(3, c, null, T.st(3, 30));
+    });
+    if (extra.length > 1) T.merge(1, 32, 1, 31 + extra.length);
     T.ws.getCell(3, 1).value = ` ${dept.name}`;
     T.merge(1, 2, 1, 14); T.merge(1, 15, 1, 23); T.merge(1, 24, 1, 31); T.merge(3, 1, 3, 6);
     const textStyle = T.st(5, 5), checkStyle = T.st(5, 7);
@@ -212,7 +223,7 @@ const BUILDERS = {
     for (const e of nurses) {
       const name = reportName(e);
       [name, empStatusLabel(e), e.startDate, e.idNum, e.advCourse].forEach((v, i) => T.put(r, i + 1, v, T.st(5, i + 1)));
-      TRAINING.forEach((t, i) => {
+      defs.forEach((t, i) => {
         const c = 6 + i;
         const v = (e.trn || {})[t.key];
         if (t.key === 'cpr') T.put(r, c, v, T.st(5, 6));

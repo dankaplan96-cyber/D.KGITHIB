@@ -31,6 +31,7 @@ function renderAuth(soft = false) {
         <button class="btn pri lg" type="submit" style="justify-content:center">כניסה</button>
       </form>
       ${Store.status === 'local' ? `<div class="foot"><a href="#" data-act="auth-connect">חיבור לתיקייה משותפת</a></div>` : ''}
+      ${window.__NM_TRIAL_USERS__ ? `<div class="banner info" style="margin-top:14px"><div class="grow small"><b>קובץ ניסיון — משתמשים לבדיקה:</b><br>${window.__NM_TRIAL_USERS__.map((x) => `<a href="#" data-act="trialfill" data-u="${esc(x.username)}" data-p="${esc(x.password)}"><bdi dir="ltr">${esc(x.username)} / ${esc(x.password)}</bdi></a> — ${esc(x.displayName)}`).join('<br>')}<br><span class="faint">לחיצה על משתמש ממלאת את הפרטים</span></div></div>` : ''}
       ${db().legacy ? '<div class="foot">המשתמשים הועברו מהגרסה הקודמת של המערכת — נכנסים עם שם המשתמש והסיסמה הקודמים.</div>' : ''}
       <div class="foot"><a href="#" data-act="auth-reset">${Store.folderName ? `מחובר לתיקייה "${esc(Store.folderName)}" · ` : ''}בחירת תיקייה אחרת / התחלה מחדש במחשב זה</a></div>
       <div class="foot">אין סיסמה? יש לפנות להנהלת הסיעוד (מנהל/ת המערכת).</div></div>`;
@@ -68,6 +69,7 @@ function setupHTML(folderLine) {
 }
 
 Object.assign(ACT, {
+  trialfill: (el) => { $('#li-user').value = el.dataset.u; $('#li-pass').value = el.dataset.p; $('#login-form button[type=submit]').focus(); },
   'auth-reset': async () => {
     if (!(await confirmBox('בחירת תיקייה אחרת', 'החיבור לתיקייה הנוכחית והעותק המקומי במחשב זה יימחקו, ותוכלו לבחור תיקייה אחרת או להקים מערכת חדשה.<br><br><b>הנתונים שבתיקייה עצמה לא נמחקים.</b>', { ok: 'המשך' }))) return;
     await Store.disconnect();

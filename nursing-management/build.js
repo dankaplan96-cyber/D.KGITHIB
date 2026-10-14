@@ -19,6 +19,32 @@ for (const [k, v] of Object.entries(parts)) {
   html = html.split(k).join(k === '/*__CSS__*/' ? v : safe(v));
 }
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
+// --trial: TRIAL file — sample data + known users (listed on the login screen) + a users/passwords sheet
+const TRIAL_USERS = [
+  { username: 'admin', password: 'Nihul2026!', displayName: 'הנהלת הסיעוד', role: 'admin', what: 'מנהל/ת מערכת — הכל, כולל משתמשים והגדרות' },
+  { username: 'admin2', password: 'Siud2026!', displayName: 'מנהל/ת נוסף/ת', role: 'admin', what: 'מנהל/ת מערכת נוסף/ת (גיבוי)' },
+  { username: 'editor', password: 'Orech2026!', displayName: 'עריכה שוטפת', role: 'editor', what: 'עובדים, גיליונות, נכנסים/עוזבים, דוחות — בלי משתמשים והגדרות' },
+  { username: 'viewer', password: 'Tzofe2026!', displayName: 'צפייה בלבד', role: 'viewer', what: 'צפייה והפקת דוחות, ללא עריכה' },
+  { username: 'ward5', password: 'Machlaka2026!', displayName: "אחראית שיקום ה'", role: 'editor', dept: "שיקום ה'", what: "עריכה שוטפת — רק מחלקת שיקום ה'" },
+];
+if (process.argv.includes('--trial')) {
+  const trialOut = path.join(root, 'dist', 'מערכת_ניהול_סיעוד_ניסיון.html');
+  const users = TRIAL_USERS.map(({ what, ...u }) => u);
+  fs.writeFileSync(trialOut, html.replace('<body>', `<body>\n<script>window.__NM_TRIAL_USERS__=${JSON.stringify(users)};</script>`).replace('<title>מערכת ניהול סיעוד</title>', '<title>מערכת ניהול סיעוד — ניסיון</title>'));
+  console.log(`built TRIAL file ${path.relative(root, trialOut)}`);
+  const ExcelJS = require('exceljs');
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('משתמשים וסיסמאות', { views: [{ rightToLeft: true }] });
+  ws.columns = [{ header: 'שם משתמש', width: 14 }, { header: 'סיסמה', width: 18 }, { header: 'שם לתצוגה', width: 22 }, { header: 'מה מותר', width: 60 }];
+  TRIAL_USERS.forEach((u) => ws.addRow([u.username, u.password, u.displayName, u.what]));
+  ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E79' } };
+  ws.eachRow((r) => { r.height = 22; r.alignment = { vertical: 'middle', readingOrder: 'rtl' }; });
+  ws.addRow([]);
+  ws.addRow(['שימו לב: משתמשים אלה קיימים רק בקובץ הניסיון. בכל פתיחה של קובץ הניסיון הסיסמאות חוזרות לרשימה זו והנעילות מתאפסות.']);
+  wb.xlsx.writeFile(path.join(root, 'dist', 'משתמשים_וסיסמאות_ניסיון.xlsx')).then(() => { console.log('built users/passwords sheet'); process.exit(0); });
+  return;
+}
 // --demo: separate DEMO file (no login screen, sample data, separate storage)
 if (process.argv.includes('--demo')) {
   const demoOut = path.join(root, 'dist', 'מערכת_ניהול_סיעוד_הדגמה.html');

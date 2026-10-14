@@ -198,7 +198,7 @@ const EMP_TAB_RENDER = {
   safety(e, ed) {
     const years = db().settings.years.safety.slice().sort((a, b) => b - a);
     return `<div class="muted small" style="margin-bottom:12px">בדיקת בטיחות הטיפול השנתית — מי בודק, תאריך וציון. השנים המוצגות מוגדרות בהגדרות.</div><div class="yeargrid">${years.map((y) => `<div class="yearrow"><div class="y">${y}</div>
-      ${fieldHTML('מי בודק', inputF(e, `safety.${y}.checker`, 'text', ed))}${fieldHTML('תאריך', inputF(e, `safety.${y}.date`, 'date', ed))}${fieldHTML('ציון', inputF(e, `safety.${y}.score`, 'num', ed))}</div>`).join('')}</div>`;
+      ${fieldHTML('מי בודק', inputF(e, `safety.${y}.checker`, 'text', ed))}${fieldHTML('תאריך', inputF(e, `safety.${y}.date`, 'date', ed))}${fieldHTML('ציון', inputF(e, `safety.${y}.score`, 'num', ed))}</div>`).join('')}</div>${ed ? `<div class="row" style="margin-top:12px"><button class="btn sm" data-act="yearadd" data-k="safety">${icon('plus', 14)} הוספת שנה</button></div>` : ''}`;
   },
   shift(e, ed) {
     const s = e.shift || {};
@@ -216,14 +216,16 @@ const EMP_TAB_RENDER = {
   conv(e, ed) {
     const years = db().settings.years.conversations.slice().sort((a, b) => b - a);
     return `<div class="muted small" style="margin-bottom:12px">שיחות משוב חצי-שנתיות. ניתן להזין תאריך (לדוגמה 12.5.24) או טקסט חופשי (לדוגמה "אוגוסט").</div><div class="yeargrid">${years.map((y) => `<div class="yearrow" style="grid-template-columns:80px repeat(2,minmax(0,1fr))"><div class="y">${y}</div>
-      ${fieldHTML("מחצית א'", inputF(e, `conv.${y}.h1`, 'datetext', ed))}${fieldHTML("מחצית ב'", inputF(e, `conv.${y}.h2`, 'datetext', ed))}</div>`).join('')}</div>`;
+      ${fieldHTML("מחצית א'", inputF(e, `conv.${y}.h1`, 'datetext', ed))}${fieldHTML("מחצית ב'", inputF(e, `conv.${y}.h2`, 'datetext', ed))}</div>`).join('')}</div>${ed ? `<div class="row" style="margin-top:12px"><button class="btn sm" data-act="yearadd" data-k="conversations">${icon('plus', 14)} הוספת שנה</button></div>` : ''}`;
   },
   evals(e, ed) {
     const years = db().settings.years.evaluations.slice().sort((a, b) => b - a);
-    return `<div class="muted small" style="margin-bottom:12px">הערכת עובד שנתית — ציון, תאריך או הערה.</div><div class="grid g6">${years.map((y) => fieldHTML(String(y), inputF(e, `evals.${y}`, 'datetext', ed))).join('')}</div>`;
+    return `<div class="muted small" style="margin-bottom:12px">הערכת עובד שנתית — ציון, תאריך או הערה.</div><div class="grid g6">${years.map((y) => fieldHTML(String(y), inputF(e, `evals.${y}`, 'datetext', ed))).join('')}</div>${ed ? `<div class="row" style="margin-top:12px"><button class="btn sm" data-act="yearadd" data-k="evaluations">${icon('plus', 14)} הוספת שנה</button></div>` : ''}`;
   },
   training(e, ed) {
-    const groups = [...new Set(TRAINING.map((t) => t.group))];
+    const defs = trainingDefs(db());
+    const groups = TRAINING_GROUPS.filter((g) => defs.some((t) => t.group === g));
+    const addBtn = ed ? `<div class="row" style="margin-top:14px"><button class="btn sm" data-act="trnadd">${icon('plus', 14)} הוספת קורס / הרשאה</button></div>` : '';
     const item = (t) => {
       const v = (e.trn || {})[t.key] || '';
       const isChk = v === CHECK;
@@ -234,8 +236,8 @@ const EMP_TAB_RENDER = {
         <div class="l">${esc(t.label)}${st === 'crit' ? ' <span class="bdg crit">פג</span>' : st === 'warn' ? ' <span class="bdg warn">יפוג בקרוב</span>' : ''}</div>
         <input class="inp" ${bindAttrs(e, `trn.${t.key}`, t.kind === 'text' ? 'text' : 'check')} value="${esc(isChk ? '' : displayCellValue(v, 'check'))}" placeholder="${t.kind === 'date' ? 'תוקף' : t.kind === 'text' ? '' : 'תאריך / הערה'}" ${ed ? '' : 'disabled'}></div>`;
     };
-    if (!ROLES[e.role].nurse) return '<div class="banner info">גיליון חת"ש מנוהל לאחים/אחיות (מוסמכים ומעשיים). ניתן עדיין לתעד כאן עבור עובד/ת זה/ו.</div>' + groups.map((g) => `<div class="section-title" style="margin-top:12px">${g}</div><div class="trn-grid">${TRAINING.filter((t) => t.group === g).map(item).join('')}</div>`).join('');
-    return groups.map((g) => `<div class="section-title" style="margin-top:${g === groups[0] ? 0 : 14}px">${g}</div><div class="trn-grid">${TRAINING.filter((t) => t.group === g).map(item).join('')}</div>`).join('');
+    if (!ROLES[e.role].nurse) return '<div class="banner info">גיליון חת"ש מנוהל לאחים/אחיות (מוסמכים ומעשיים). ניתן עדיין לתעד כאן עבור עובד/ת זה/ו.</div>' + groups.map((g) => `<div class="section-title" style="margin-top:12px">${g}</div><div class="trn-grid">${defs.filter((t) => t.group === g).map(item).join('')}</div>`).join('') + addBtn;
+    return groups.map((g) => `<div class="section-title" style="margin-top:${g === groups[0] ? 0 : 14}px">${g}</div><div class="trn-grid">${defs.filter((t) => t.group === g).map(item).join('')}</div>`).join('') + addBtn;
   },
   docs(e) {
     const ed = can('documents_edit');

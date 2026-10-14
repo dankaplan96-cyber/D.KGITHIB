@@ -137,6 +137,24 @@ function sampleDB() {
     assert(!plan.items.some((i) => i.changes.some((c) => c.path === 'notes')));
   });
 
+  await t('extra courses: exported as extra columns, imported back without duplicates', async () => {
+    const db4 = JSON.parse(JSON.stringify(db));
+    db4.settings.customTraining = [{ key: 'x_test1', label: 'חתימה על נהלים 2027', group: 'קליטת עובד', kind: 'check' }];
+    const e = Object.values(db4.employees).find((x) => x.name === 'לוי רחל'); e.trn.x_test1 = A.CHECK;
+    const wb = A.buildReportWorkbook(ExcelJS, T, A.normalizeDB(db4), deptId, { sheets: ['training'] });
+    const ws = wb.getWorksheet('חת"ש');
+    assert.equal(ws.getCell('AF2').value, 'חתימה על נהלים 2027'); assert.equal(ws.getCell('AF4').value, 'ü');
+    const wb2 = new ExcelJS.Workbook(); await wb2.xlsx.load(await wb.xlsx.writeBuffer());
+    const parsed = A.parseWorkbook(wb2);
+    const plan = A.planImport(A.normalizeDB(db4), parsed, deptId);
+    assert.equal(plan.customTraining.length, 0);
+    assert.equal(plan.items.filter((i) => i.changes.some((c) => c.path.startsWith('trn.'))).length, 0);
+    const empty = A.emptyDB(); const d = A.newDept('x'); empty.depts[d.id] = d;
+    A.applyImport(empty, A.planImport(empty, A.parseWorkbook(wb2), d.id), null);
+    assert.equal(empty.settings.customTraining.length, 1);
+    const k = empty.settings.customTraining[0].key;
+    assert.equal(Object.values(empty.employees).find((x) => x.name === 'לוי רחל').trn[k], A.CHECK);
+  });
   await t('three-way merge: different records and fields merge cleanly', () => {
     const base = JSON.parse(JSON.stringify(db));
     const ids = Object.keys(base.employees);

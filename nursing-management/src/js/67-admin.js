@@ -9,7 +9,7 @@ App.views.users = {
     const D = db();
     const users = U.sortBy(Object.values(D.users), (u) => (u.active ? 0 : 1), (u) => u.displayName);
     const deptsLabel = (u) => (!u.depts || !u.depts.length || (u.perms || []).includes('*') ? 'כל המחלקות' : u.depts.map((id) => deptName(D, id)).filter(Boolean).join(', '));
-    return `<div class="card"><div class="hd"><h3>משתמשים (${users.length})</h3><span class="muted small">משתמשים, סיסמאות והרשאות נשמרים במאגר המשותף ומתעדכנים בכל המחשבים</span><div style="flex:1"></div><button class="btn pri" data-act="useredit">${icon('plus', 16)} משתמש חדש</button></div>
+    return `<div class="card"><div class="hd"><h3>משתמשים (${users.length})</h3><span class="muted small">משתמשים, סיסמאות והרשאות נשמרים במאגר המשותף ומתעדכנים בכל המחשבים</span><div style="flex:1"></div><button class="btn" data-act="usersexport">${icon('download', 16)} ייצוא רשימת משתמשים</button><button class="btn pri" data-act="useredit">${icon('plus', 16)} משתמש חדש</button></div>
       <div class="bd flush tbl-wrap"><table class="tbl"><thead><tr><th>שם</th><th>שם משתמש</th><th>תבנית הרשאות</th><th>מחלקות</th><th>כניסה אחרונה</th><th>מצב</th><th></th></tr></thead><tbody>
       ${users.map((u) => `<tr class="${u.active ? '' : 'dim'}"><td class="b">${esc(u.displayName)}${u.id === App.user.id ? ' <span class="bdg blue">את/ה</span>' : ''}</td><td class="ltr">${esc(u.username)}</td>
         <td>${esc((ROLE_TEMPLATES[u.role] || {}).label || 'מותאם')}${u.role === 'custom' ? ` <span class="faint small">(${(u.perms || []).length})</span>` : ''}</td><td class="small">${esc(deptsLabel(u))}</td>
@@ -105,7 +105,26 @@ ACT.useredit = (el) => {
     }, [isNew ? 'משתמש חדש' : 'עדכון משתמש', `${username} · ${ROLE_TEMPLATES[r].label}${active ? '' : ' (מושבת)'}`]);
     closeModal(); render();
     toast(isNew ? 'המשתמש נוצר' : 'המשתמש עודכן', 'ok');
+    if (isNew) showCredentials(name, username, m.querySelector('#ue-pass').value, true);
   });
+};
+ACT.usersexport = async () => {
+  const D = db();
+  const wb = new window.ExcelJS.Workbook();
+  const ws = wb.addWorksheet('משתמשים', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }] });
+  ws.columns = [{ header: 'שם', width: 26 }, { header: 'שם משתמש', width: 16 }, { header: 'תבנית הרשאות', width: 26 }, { header: 'הרשאות', width: 60 }, { header: 'מחלקות', width: 30 }, { header: 'מצב', width: 14 }, { header: 'כניסה אחרונה', width: 18 }, { header: 'סיסמה', width: 30 }];
+  const permLabel = (p) => { if (p === '*') return 'הכל'; const [k, l] = p.split('_'); const m = PERMISSIONS.find((x) => x.key === k); return m ? `${m.label} (${LEVEL_LABEL[l] || l})` : p; };
+  for (const u of U.sortBy(Object.values(D.users), (x) => x.displayName)) {
+    ws.addRow([u.displayName, u.username, (ROLE_TEMPLATES[u.role] || {}).label || '', (u.perms || []).map(permLabel).join('; '),
+      !u.depts || !u.depts.length || (u.perms || []).includes('*') ? 'כל המחלקות' : u.depts.map((id) => deptName(D, id)).join(', '),
+      u.active ? (u.mustChange ? 'פעיל — סיסמה זמנית' : 'פעיל') : 'מושבת', U.fmtDateTime(u.lastLogin), 'מוצפנת — ניתן לאפס במערכת']);
+  }
+  ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F4E79' } };
+  ws.eachRow((r) => { r.alignment = { vertical: 'middle', wrapText: true, readingOrder: 'rtl' }; });
+  const buf = await wb.xlsx.writeBuffer();
+  downloadBlob(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), `משתמשים_${U.todayISO()}.xlsx`);
+  Store.update(() => {}, ['ייצוא נתונים', 'רשימת משתמשים']);
 };
 ACT.userreset = async (el) => {
   const u = db().users[el.dataset.id];
@@ -113,9 +132,28 @@ ACT.userreset = async (el) => {
   const pw = tempPassword();
   const cred = await hashPassword(pw);
   Store.update((d) => { Object.assign(d.users[u.id], { cred, mustChange: true, failed: 0, lockedUntil: null }); }, ['איפוס סיסמה', u.username]);
-  openModal({ title: 'סיסמה זמנית', size: 'sm', body: `<div class="stack"><div>הסיסמה הזמנית עבור <b>${esc(u.displayName)}</b>:</div><div style="font-size:22px;font-weight:700;letter-spacing:2px;direction:ltr;text-align:center;padding:10px;background:#f3f6f9;border-radius:8px;user-select:all">${esc(pw)}</div><div class="muted small">יש למסור למשתמש. הסיסמה לא תוצג שוב.</div></div>`, footer: '<button class="btn pri" data-act="closemodal">סגירה</button>' });
   render();
+  showCredentials(u.displayName, u.username, pw, true);
 };
+
+// Shows a new / reset password once, with copy and print
+function showCredentials(name, username, pw, temp) {
+  const box = (lbl, v) => `<div class="field"><label>${lbl}</label><div style="font-size:20px;font-weight:700;letter-spacing:1px;direction:ltr;text-align:center;padding:10px;background:#f3f6f9;border-radius:8px;user-select:all">${esc(v)}</div></div>`;
+  const m = openModal({
+    title: `פרטי כניסה — ${name}`, size: 'sm',
+    body: `<div class="stack">${box('שם משתמש', username)}${box(temp ? 'סיסמה זמנית' : 'סיסמה', pw)}<div class="muted small">יש למסור למשתמש. מטעמי אבטחה הסיסמה נשמרת מוצפנת ולא תוצג שוב${temp ? ', והמשתמש יתבקש לבחור סיסמה אישית בכניסה הראשונה' : ''}.</div></div>`,
+    footer: '<button class="btn pri" data-act="closemodal">סגירה</button><button class="btn" id="cr-copy">העתקה</button><button class="btn" id="cr-print">הדפסה</button>',
+  });
+  m.querySelector('#cr-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(`שם משתמש: ${username}\nסיסמה: ${pw}`); toast('הועתק', 'ok'); } catch (e) { toast('ההעתקה נחסמה — יש לסמן ולהעתיק ידנית', 'warn'); }
+  });
+  m.querySelector('#cr-print').addEventListener('click', () => {
+    const w = window.open('', '_blank');
+    if (!w) return toast('יש לאפשר חלונות קופצים', 'err');
+    w.document.write(`<!doctype html><html dir="rtl" lang="he"><meta charset="utf-8"><title>פרטי כניסה</title><body style="font-family:Arial;padding:30px"><h2>מערכת ניהול סיעוד — פרטי כניסה</h2><p><b>${esc(name)}</b></p><p>שם משתמש: <b dir="ltr">${esc(username)}</b></p><p>${temp ? 'סיסמה זמנית' : 'סיסמה'}: <b dir="ltr">${esc(pw)}</b></p><p style="color:#666;font-size:13px">${temp ? 'בכניסה הראשונה תתבקש/י לבחור סיסמה אישית.' : ''} אין להעביר את הפרטים לאחרים.</p><script>window.onload=()=>window.print()<\/script></body></html>`);
+    w.document.close();
+  });
+}
 
 // ── Settings ────────────────────────────────────────────────────
 App.views.settings = {
@@ -146,6 +184,9 @@ App.views.settings = {
         <div class="card"><div class="hd"><h3>שנים בגיליונות ובדוחות</h3><span class="muted small">קובע את עמודות השנים בגיליון ובדוח</span></div><div class="bd stack">
           ${yearsField('safety', 'בטיחות הטיפול')}${yearsField('conversations', 'שיחות משוב')}${yearsField('evaluations', 'הערכות עובדים')}
         </div></div>
+        <div class="card"><div class="hd"><h3>קורסים והרשאות נוספים (חת"ש)</h3><div style="flex:1"></div><button class="btn sm pri" data-act="trnadd">${icon('plus', 14)} הוספה</button></div><div class="bd flush"><table class="tbl"><tbody>
+          ${S.customTraining.map((t, i) => `<tr><td class="b">${esc(t.label)}</td><td class="muted small">${esc(t.group)} · ${({ check: 'סימון ✓', date: 'תאריך תוקף', text: 'טקסט' })[t.kind] || ''}</td><td class="nowrap" style="text-align:left"><button class="iconbtn" data-act="trnrename" data-i="${i}" title="שינוי שם">${icon('edit', 15)}</button><button class="iconbtn" data-act="trndel" data-i="${i}" title="הסרה">${icon('trash', 15)}</button></td></tr>`).join('') || '<tr><td class="faint">אין — הקורסים וההרשאות הקבועים של הקובץ קיימים תמיד. כאן מוסיפים חדשים (מופיעים בגיליון, בכרטיס העובד ובדוח).</td></tr>'}
+        </tbody></table></div></div>
         <div class="card"><div class="hd"><h3>מקדמי תקינה (תקן מקוצר)</h3></div><div class="bd grid g2">
           ${num('staffing.nurseFactor', 'מקדם תקינה לאחות')}${num('staffing.auxFactor', 'מקדם תקינה לכוח עזר')}
           ${num('staffing.auxBedFactor', 'דרישת כ"ע לפי מיטה', 'משמש לחישוב אוטומטי של דרישות משה"ב לכוחות עזר')}
@@ -213,6 +254,37 @@ Object.assign(ACT, {
     const n = U.num(el.value);
     if (n == null) { toast('יש להזין מספר', 'err'); return; }
     Store.update((d) => { setPath(d.settings, el.dataset.path, n); }, ['הגדרות', `${el.dataset.path} = ${n}`]);
+  },
+  trnadd: () => {
+    const m = openModal({
+      title: 'הוספת קורס / הרשאה', size: 'sm',
+      body: `<div class="stack">${fieldHTML('שם', '<input class="inp" id="ta-l" placeholder="לדוגמה: חתימה על נהלים 2027" autofocus>')}
+        ${fieldHTML('קבוצה', selectHTML('id="ta-g"', TRAINING_GROUPS.map((g) => [g, g]), 'קורסים'))}
+        ${fieldHTML('סוג', selectHTML('id="ta-k"', [['check', 'סימון ✓ (או תאריך ביצוע)'], ['date', 'תאריך תוקף (עם התראה לפני פקיעה)'], ['text', 'טקסט חופשי']], 'check'))}
+        <div id="ta-e" class="small" style="color:var(--crit)"></div></div>`,
+      footer: '<button class="btn pri" id="ta-ok">הוספה</button><button class="btn" data-act="closemodal">ביטול</button>',
+    });
+    m.querySelector('#ta-ok').addEventListener('click', () => {
+      const label = m.querySelector('#ta-l').value.trim();
+      if (!label) { m.querySelector('#ta-e').textContent = 'יש להזין שם'; return; }
+      if (trainingDefs(db()).some((t) => t.label.replace(/\s/g, '') === label.replace(/\s/g, ''))) { m.querySelector('#ta-e').textContent = 'כבר קיים פריט בשם זה'; return; }
+      const t = { key: customKey(label + Date.now()), label, group: m.querySelector('#ta-g').value, kind: m.querySelector('#ta-k').value };
+      Store.update((d) => { d.settings.customTraining.push(t); }, ['הגדרות', `נוסף לחת"ש: ${label}`]);
+      closeModal(); render(); toast('נוסף — מופיע בגיליון חת"ש, בכרטיס העובד ובדוח', 'ok');
+    });
+  },
+  trnrename: async (el) => {
+    const t = db().settings.customTraining[+el.dataset.i];
+    const name = await promptBox('שינוי שם', 'שם', t.label);
+    if (!name || name === t.label) return;
+    Store.update((d) => { d.settings.customTraining[+el.dataset.i].label = name; }, ['הגדרות', `שינוי שם בחת"ש: ${t.label} ← ${name}`]);
+    render();
+  },
+  trndel: async (el) => {
+    const t = db().settings.customTraining[+el.dataset.i];
+    if (!(await confirmBox('הסרה', `להסיר את "${esc(t.label)}" מהגיליון ומהדוח?<br><span class="muted small">הנתונים שהוזנו נשמרים, ויחזרו אם יוסף שוב פריט עם אותו מזהה.</span>`, { ok: 'הסרה' }))) return;
+    Store.update((d) => { d.settings.customTraining.splice(+el.dataset.i, 1); }, ['הגדרות', `הוסר מחת"ש: ${t.label}`]);
+    render();
   },
   divadd: async () => {
     const name = await promptBox('אגף חדש', 'שם האגף', '', { placeholder: 'לדוגמה: אגף שיקום', ok: 'הוספה' });

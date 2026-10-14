@@ -64,7 +64,7 @@ function sheetDefs() {
       sections: (list) => [['', nurses(list)]],
       cols: [{ h: 'מעמד מקצועי', type: 'ro', get: (e) => empStatusLabel(e), w: 70 }, start, idCol,
         { g: 'קליטת עובד', h: 'קורס על בסיסי', path: 'advCourse', type: 'text', w: 100 },
-        ...TRAINING.map((t) => ({
+        ...trainingDefs(db()).map((t) => ({
           g: t.group, h: t.label.replace(' - מתן הרשאה', '').replace(' - תוקף מתן הרשאה', ' (תוקף)'), path: `trn.${t.key}`,
           type: t.kind === 'check' ? 'check' : t.kind === 'date' ? 'date' : 'text', w: t.kind === 'text' ? 92 : 78,
           cls: t.expiry ? (e, v) => dateStatus(v, A.bloodWarnDays) : (e, v) => (hasValue(v) ? 'ok' : ''),
@@ -87,6 +87,7 @@ function sheetDefs() {
     },
   };
 }
+const SHEET_YEAR_KEY = { safety: 'safety', conv: 'conversations', evals: 'evaluations' };
 const SHEET_ORDER = ['safety', 'shift', 'conv', 'evals', 'training', 'takan'];
 const SheetUI = { tab: 'safety', q: '' };
 
@@ -104,6 +105,8 @@ App.views.sheets = {
     const addable = def.addable && ed ? def.addable(list) : [];
     return `<div class="row between" style="margin-bottom:10px"><div class="muted small">${esc(def.hint)} · ${esc(deptName(db(), deptId))}</div>
         <div class="row"><div class="search" style="width:200px">${icon('search', 15)}<input class="inp" placeholder="סינון לפי שם" value="${esc(SheetUI.q)}" data-input="sheetq" id="sheet-q"></div>
+        ${ed && SHEET_YEAR_KEY[SheetUI.tab] ? `<button class="btn" data-act="yearadd" data-k="${SHEET_YEAR_KEY[SheetUI.tab]}">${icon('plus', 15)} הוספת שנה</button>` : ''}
+        ${ed && SheetUI.tab === 'training' ? `<button class="btn" data-act="trnadd">${icon('plus', 15)} הוספת קורס / הרשאה</button>` : ''}
         ${addable.length ? `<select class="inp auto" data-act="shiftadd"><option value="">+ הוספת אחראי/ת משמרת…</option>${addable.map((e) => `<option value="${e.id}">${esc(e.name)}</option>`).join('')}</select>` : ''}
         ${can('reports_export') ? `<button class="btn" data-act="quickexport" data-k="${SheetUI.tab}">${icon('download', 16)} ייצוא הגיליון ל-Excel</button>` : ''}</div></div>
       <div class="sheet-tabs">${tabs}</div>

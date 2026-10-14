@@ -1,3 +1,5 @@
 node_modules/
 *.local.*
 dist-test/
+dist/מערכת_ניהול_סיעוד_ניסיון.html
+dist/משתמשים_וסיסמאות_ניסיון.xlsx

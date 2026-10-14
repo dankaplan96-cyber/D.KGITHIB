@@ -132,7 +132,7 @@ const setF = (p, path, value) => {
 };
 
 function parseWorkbook(wb) {
-  const res = { deptTitle: '', people: [], movements: [], staffing: null, deptInfo: {}, sheets: [], warnings: [] };
+  const res = { customTraining: [], deptTitle: '', people: [], movements: [], staffing: null, deptInfo: {}, sheets: [], warnings: [] };
   const P = new PeopleCollector();
   const applyName = (p, parsed) => {
     if (parsed.title) setF(p, 'title', parsed.title);
@@ -289,11 +289,16 @@ function parseWorkbook(wb) {
       const t0 = XL.rowTexts(ch, hr, 40);
       const cols = { status: colOf(t0, 'מעמד'), start: colOf(t0, 'תחילת'), id: colOf(t0, 'ת.ז'), adv: colOf(t0, 'קורס על') };
       const tcols = [];
-      for (let c = 1; c <= 40; c++) {
-        const h = (t0[c] || '').replace(/\s+/g, ' ');
-        if (!h) continue;
-        const def = TRAINING.find((d) => (d.match || [d.label]).some((m) => h.includes(m)) || h.replace(/\s/g, '').includes(d.label.replace(/\s/g, '')));
-        if (def && !tcols.some((x) => x.def === def)) tcols.push({ c, def });
+      const groupRow = hr > 1 ? XL.rowTexts(ch, hr - 1, 60) : [];
+      let curGroup = 'קורסים';
+      for (let c = 1; c <= 60; c++) {
+        if (groupRow[c]) curGroup = TRAINING_GROUPS.find((g) => groupRow[c].includes(g)) || curGroup;
+        const h = (t0[c] || '').replace(/\s+/g, ' ').trim();
+        if (!h || c <= Math.max(cols.status, cols.start, cols.id, cols.adv, 1)) continue;
+        let def = TRAINING.find((d) => (d.match || [d.label]).some((m) => h.includes(m)) || h.replace(/\s/g, '').includes(d.label.replace(/\s/g, '')));
+        // a column that is not one of the standard ones → added as an extra course/permission
+        if (!def) { def = { key: customKey(h), label: h, group: curGroup, kind: /תוקף/.test(h) ? 'date' : 'check' }; res.customTraining.push(def); }
+        if (!tcols.some((x) => x.def.key === def.key)) tcols.push({ c, def });
       }
       for (let r = hr + 1; r <= ch.rowCount; r++) {
         const t = XL.rowTexts(ch, r, 40);
@@ -437,6 +442,20 @@ function setPath(o, path, v) {
 const normCmp = (v) => (v == null ? '' : typeof v === 'number' ? String(U.round(v, 4)) : String(v).trim());
 
 function planImport(db, parsed, deptId) {
+  // extra course columns already known in the system (matched by name) keep their existing key
+  const norm = (x) => String(x).replace(/\s/g, '');
+  const keyMap = {};
+  for (const t of parsed.customTraining || []) {
+    const ex = (db.settings.customTraining || []).find((x) => norm(x.label) === norm(t.label));
+    if (ex && ex.key !== t.key) keyMap[t.key] = ex.key;
+  }
+  if (Object.keys(keyMap).length) {
+    for (const p of parsed.people) {
+      const trn = p.fields.trn || {};
+      for (const [from, to] of Object.entries(keyMap)) if (from in trn) { trn[to] = trn[from]; delete trn[from]; }
+    }
+    parsed.customTraining = parsed.customTraining.filter((t) => !keyMap[t.key]);
+  }
   const items = [];
   const deptEmps = Object.values(db.employees).filter((e) => e.deptId === deptId);
   const usedIds = new Set();
@@ -472,14 +491,19 @@ function planImport(db, parsed, deptId) {
       changes, notes, selected: true, uncertain: how === 'fuzzy' || p.matchNotes.length > 0,
     });
   }
+  const labels = Object.fromEntries([...trainingDefs(db), ...(parsed.customTraining || [])].map((t) => [`trn.${t.key}`, t.label]));
+  items.forEach((it) => it.changes.forEach((c) => { if (labels[c.path]) c.label = labels[c.path]; }));
   const missing = deptEmps.filter((e) => e.status !== 'left' && !usedIds.has(e.id));
   // movements: skip those already in the database
   const known = new Set(Object.values(db.movements).map((m) => `${m.kind}|${m.date}|${U.normName(m.name)}`));
   const movements = parsed.movements.map((m) => ({ ...m, exists: known.has(`${m.kind}|${m.date}|${U.normName(m.name)}`) }));
-  return { items, missing, movements, deptId, staffing: parsed.staffing, deptInfo: parsed.deptInfo };
+  return { items, missing, movements, deptId, staffing: parsed.staffing, deptInfo: parsed.deptInfo, customTraining: parsed.customTraining || [] };
 }
 
 function applyImport(db, plan, user, { importMovements = true, importStaffing = true, markMissingLeft = [] } = {}) {
+  for (const t of plan.customTraining || []) {
+    if (!db.settings.customTraining.some((x) => x.key === t.key) && !TRAINING_BY_KEY[t.key]) db.settings.customTraining.push({ key: t.key, label: t.label, group: t.group, kind: t.kind });
+  }
   let created = 0, updated = 0;
   const stamp = { updatedAt: U.nowISO(), updatedBy: user ? user.username : '' };
   let order = Math.max(0, ...Object.values(db.employees).filter((e) => e.deptId === plan.deptId).map((e) => e.order || 0)) + 1;

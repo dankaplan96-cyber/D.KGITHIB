@@ -13,6 +13,7 @@
     return;
   }
   if (window.__NM_SEED_ADMIN__) await seedTestAdmin(window.__NM_SEED_ADMIN__);
+  if (window.__NM_TRIAL_USERS__) await seedTrial(window.__NM_TRIAL_USERS__);
   if (window.__NM_DEMO__) { App.booting = false; return startDemo(); }
   let sess = null;
   try { sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { sess = null; }
@@ -63,3 +64,20 @@ function enhancePasswords(root = document) {
   });
 }
 new MutationObserver(() => enhancePasswords()).observe(document.documentElement, { childList: true, subtree: true });
+
+// Trial build (node build.js --trial): sample data + known users, separate storage.
+// Every time the file opens, the trial users get their listed password back and
+// lockouts are cleared, so the trial can always be entered.
+async function seedTrial(list) {
+  if (!Object.keys(db().employees).length && !Object.keys(db().users).length) { Store.db = demoData(); }
+  const creds = await Promise.all(list.map((x) => hashPassword(x.password)));
+  Store.update((d) => {
+    list.forEach((x, i) => {
+      const ex = Object.values(d.users).find((u) => u.username === x.username);
+      const dep = x.dept ? Object.values(d.depts).find((z) => z.name === x.dept) : null;
+      const id = ex ? ex.id : `usr_trial_${x.username}`;
+      d.users[id] = { ...(ex || { id, createdAt: U.nowISO(), lastLogin: '' }), username: x.username, displayName: x.displayName, role: x.role, perms: ROLE_TEMPLATES[x.role].perms.slice(), depts: dep ? [dep.id] : [], cred: creds[i], active: true, mustChange: false };
+    });
+    Object.values(d.users).forEach((u) => { u.failed = 0; u.lockedUntil = null; });
+  }, ['קובץ ניסיון', 'משתמשי הניסיון הוקמו/אופסו']);
+}

@@ -60,6 +60,10 @@ const TRAINING = [
   { key: 'pBlood', label: 'מתן דם - תוקף מתן הרשאה', group: 'הרשאות', kind: 'date', match: ['מתן דם'], expiry: true },
 ];
 const TRAINING_BY_KEY = Object.fromEntries(TRAINING.map((t) => [t.key, t]));
+const TRAINING_GROUPS = ['קליטת עובד', 'קורסים', 'הרשאות'];
+// built-in columns of the file + courses/permissions added by the users
+const trainingDefs = (db) => [...TRAINING, ...(((db && db.settings && db.settings.customTraining) || []).map((t) => ({ ...t, custom: true, expiry: t.kind === 'date' })))];
+const customKey = (label) => { let h = 0; for (const ch of String(label)) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0; return `x_${(h >>> 0).toString(36)}`; };
 const CHECK = '✓';
 
 const DEFAULT_SETTINGS = () => ({
@@ -68,6 +72,7 @@ const DEFAULT_SETTINGS = () => ({
   years: { safety: [2024, 2025], conversations: [2024, 2025, 2026], evaluations: [2021, 2022, 2024, 2025, 2026, 2027] },
   staffing: { nurseFactor: 0.375, auxFactor: 0.305, auxBedFactor: 0.25, nurseGross: 4.5, otherGross: 5 },
   alerts: { shiftWarnDays: 60, bloodWarnDays: 60 },
+  customTraining: [],
 });
 
 function emptyDB() {
@@ -125,6 +130,7 @@ function normalizeDB(db) {
   db.settings.staffing = { ...ds.staffing, ...(db.settings.staffing || {}) };
   db.settings.alerts = { ...ds.alerts, ...(db.settings.alerts || {}) };
   if (!Array.isArray(db.settings.divisions) || !db.settings.divisions.length) db.settings.divisions = ds.divisions;
+  if (!Array.isArray(db.settings.customTraining)) db.settings.customTraining = [];
   Object.values(db.employees).forEach(normalizeEmployee);
   db.schema = SCHEMA_VERSION;
   return db;
@@ -184,12 +190,14 @@ function employeeIssues(db, e, today = new Date()) {
     if (d != null && d < 0) add('crit', 'אחראיות משמרת', `מינוי אחראי/ת משמרת פג תוקף (${U.fmtDate(e.shift.validUntil)})`, e.shift.validUntil, 'shift');
     else if (d != null && d <= A.shiftWarnDays) add('warn', 'אחראיות משמרת', `מינוי אחראי/ת משמרת יפוג בעוד ${d} ימים`, e.shift.validUntil, 'shift');
   }
-  const blood = e.trn && e.trn.pBlood;
-  if (ROLES[e.role].nurse && blood) {
-    const iso = U.parseDate(blood);
+  for (const t of trainingDefs(db).filter((x) => x.expiry)) {
+    const val = e.trn && e.trn[t.key];
+    if (!ROLES[e.role].nurse || !val) continue;
+    const iso = U.parseDate(val);
     const d = iso ? U.daysUntil(iso) : null;
-    if (d != null && d < 0) add('crit', 'הרשאות', `הרשאת מתן דם פגה (${U.fmtDate(iso)})`, iso, 'training');
-    else if (d != null && d <= A.bloodWarnDays) add('warn', 'הרשאות', `הרשאת מתן דם תפוג בעוד ${d} ימים`, iso, 'training');
+    const nm = t.key === 'pBlood' ? 'הרשאת מתן דם' : t.label;
+    if (d != null && d < 0) add('crit', 'הרשאות', `${nm} — פג תוקף (${U.fmtDate(iso)})`, iso, 'training');
+    else if (d != null && d <= A.bloodWarnDays) add('warn', 'הרשאות', `${nm} — יפוג בעוד ${d} ימים`, iso, 'training');
   }
   if (working) {
     const sy = db.settings.years.safety;
