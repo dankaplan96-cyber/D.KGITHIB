@@ -57,7 +57,7 @@ log('home', await ev(() => { const r = T.door(game.world.houses[0].door); T.talk
 log('out', await ev(() => T.out()));
 await shot('C8-01-square.png');
 log('gilbert', await ev(() => { T.talk('gilbert'); return [game.flags.c8_gilbert, T.obj()]; }));
-log('lever', await ev(() => { T.useAt(-36, -73); game.step(1); T.talkAll(); return [game.flags.c8_fort]; }));
+log('lever', await ev(() => { T.useAt(-33, -70); game.step(1); T.talkAll(); return [game.flags.c8_fort]; }));
 log('hatch', await ev(() => { const G = game, h = G.hero, w = G.story.cur.wheelSpot; for (let i = 0; i < 8 && !G.flags.c8_depot; i++) { const a = i * 0.8; T.tp(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4); h.angle = Math.atan2(w.x - h.pos.x, w.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); T.talkAll(); } const thrown = !!G.flags.c8_depot; if (!thrown) { G.story.ballHit({ x: w.x, y: w.y, z: w.z }); T.talkAll(); } return [thrown ? 'thrown' : 'forced', G.flags.c8_depot]; }));
 await shot('C8-02-bunker.png');
 log('mira', await ev(() => { const o = game.world.houses.find((h) => h.id === 'water').door; const r = T.door(o); T.talk('mira'); const back = T.out(); return [r, game.flags.c8_mira, back]; }));

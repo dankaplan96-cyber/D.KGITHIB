@@ -107,6 +107,18 @@ const d12 = await ev(() => {
 });
 check('D12: off the Hamalayi lift at the top onto the ramp and the terrace by input', d12.r === 'arrived' && d12.at[1] > d12.y1 - 1, d12);
 
+// D13: chapter 8's cistern lever stands on the station yard's floor, not inside a tank: walked up to by input from
+// the yard (ISO: placed in the yard)
+const d13 = await ev(() => {
+  const G = game, h = G.hero, PH = G.physics; P.settle();
+  h.pos.set(-37.85, PH.groundAt(-37.85, -71.14, 30), -71.14); h.onGround = true; h.vel.set(0, 0); G.step(0.2);
+  const lv = G.story.chapters.find((c) => c.key === 'evacuation').lever.position;   // where the game put the lever
+  const yard = +h.pos.y.toFixed(2), at = +PH.groundAt(lv.x, lv.z, 40).toFixed(2);
+  const r = P.go(lv.x, lv.z, { tol: 1.2, maxT: 30 });
+  return { lever: [lv.x, lv.z], yard, leverGround: at, r: r.r, pos: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) };
+});
+check('D13: the fortress lever is on the yard floor and reached by input', Math.abs(d13.leverGround - d13.pos[1]) < 0.3 && d13.leverGround < 15 && d13.r === 'arrived', d13);
+
 // D4: death → the game-over screen after the fall, in game time; a pause holds it
 const d4 = await ev(() => {
   const G = game, h = G.hero; P.settle();

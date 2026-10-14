@@ -15,7 +15,8 @@ import '../text/ch8.js';
 // (the farmers work the fields south of town; the landing and the fort on the northern plateau)
 const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -50, z: 30, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: -30, z: 45, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: -60, z: 55, a: 2.6 }];
 const LANDING = { x: -58, z: -60 }, GATHER = { x: -66, z: -55 };
-const FORT = { door: { x: -50, z: -71 }, lever: { x: -36, z: -73 } };
+// (the lever and its cistern stand on the yard's floor, clear of the station's tanks as rebuilt to the original layout)
+const FORT = { door: { x: -50, z: -71 }, lever: { x: -33, z: -70 } };
 const DEPOT = { door: { x: -90, z: -72 } };
 
 export class Evacuation extends ChapterBase {
