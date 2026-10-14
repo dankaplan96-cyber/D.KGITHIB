@@ -80,10 +80,42 @@ export class Story {
     // (the epilogue's card shows only its title)
     const n = NUMBER[c.key];
     g.hud.chapterCard(n ? t('chapter_n', { n }) : '', t('chapter_' + c.key));
-    c.begin();
+    // the chapter sets up its scene now (under the fade); its first line waits for the card (below)
+    // (say is put back exactly as it was: a wrapper someone set on the game, e.g. a test recording lines, stays)
+    const held = [], own = Object.prototype.hasOwnProperty.call(g, 'say') ? g.say : null;
+    g.say = (...a) => { held.push(a); };
+    try { c.begin(); } finally { if (own) g.say = own; else delete g.say; }
     this.refreshCast();
     g.updateObjective();
     g.save(false);
+    if (held.length) this.holdForCard(held);
+  }
+  // The title card is read on its own: the opening line (and its speech bubble) starts once the card has faded,
+  // instead of over it. Twinsen stands while the card shows (no control, as through the fade before it); E / Space
+  // / a click after the first second cuts the card short. Game time, so a pause or a slow frame can't overlap them.
+  holdForCard(held) {
+    const g = this.game, h = g.hero;
+    const CARD = 3.2, FADE = 0.9, SKIP_AFTER = 1.0, SKIP_FADE = 0.4;   // s (the card's CSS fade-out is 0.9 s)
+    // (the lines, in the order the chapter said them — as before, a later say replaces an earlier one)
+    const lines = () => { for (const a of held) g.say(...a); };
+    if (g.cutscene || g.state === 'dialog') { g.hud.chapterCardHide(); lines(); return; }   // (a scene of its own: as before)
+    let t = 0, end = null;
+    g.hud.chapterCardHold();
+    g.setState('cutscene');
+    g.cutscene = (dt) => {
+      t += dt;
+      h.rig.play('idle'); h.rig.update(dt, 0); h.sync();
+      const I = g.input;
+      if (end == null && (t >= CARD || (t >= SKIP_AFTER && (I.pressed('interact') || I.pressed('action') || I.pressed('click'))))) {
+        end = t + (t >= CARD ? FADE : SKIP_FADE);
+        g.hud.chapterCardHide();
+      }
+      if (end != null && t >= end) {
+        g.cutscene = null;
+        g.setState('play');   // (forgets the key that cut the card short, so it can't also skip the first line)
+        lines();
+      }
+    };
   }
 
   // place/hide NPCs for the current chapter

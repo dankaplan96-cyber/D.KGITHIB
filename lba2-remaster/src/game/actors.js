@@ -225,6 +225,7 @@ export class Hero extends Actor {
     this.prevPos.copy(this.pos);
     P.move(this, this.vel.x * dt, this.vel.y * dt);
     this.applyKnockback(dt);
+    this.keepApart(dt);
     const wasAir = !this.onGround;
     const landed = P.fall(this, dt);
     // too steep to stand on: slide down (and no jumping from here)
@@ -288,6 +289,61 @@ export class Hero extends Actor {
     // blink while invulnerable
     this.rig.root.visible = this.invuln <= 0.5 || Math.floor(this.invuln * 20) % 2 === 0;
     this.sync();
+  }
+
+  // People are solid (VP-2): Twinsen no longer walks through the townsfolk. NPCs have no physics collider (they
+  // are not bricks: the ball, the camera, sight lines and the NPCs' own paths ignore them as before); instead, each
+  // frame of his own movement in play, the hero is kept out of the circle of every present NPC (his radius + theirs,
+  // 0.85 m) — a soft contact, never a wall:
+  //  - the push-out runs through physics.move, so it never puts him into a brick, the sea or up a cliff, and it is
+  //    refused at a ledge (no drop of more than 0.6 m), and it is rate-limited (a spawn on top of someone eases out
+  //    in a fraction of a second rather than jumping);
+  //  - head on, he side-steps round the person instead of stopping dead (the way past is always open in the open);
+  //  - where he can't get round (a doorway, a narrow path, a spot right where they stand: 0.8 s pressing on with
+  //    less than 0.35 m gained) he squeezes past that person as before, until clear of them — an NPC can never
+  //    trap him or block a door;
+  //  - only his own movement in play: cut-scenes, dialogue placement, door walks and scripted NPCs (`controlled`:
+  //    watchers, escorts) are untouched.
+  keepApart(dt) {
+    const g = this.game, P = g.physics, p = this.pos;
+    if (!g.npcs || !this.onGround || this.sliding || dt <= 0) return;
+    const pass = this.passing;
+    if (pass && (!pass.present || Math.hypot(p.x - pass.pos.x, p.z - pass.pos.z) > this.radius + pass.radius + 0.1)) this.passing = null;
+    const vx = this.vel.x, vz = this.vel.y, v = Math.hypot(vx, vz);
+    let pressing = null;
+    for (const n of g.npcs) {
+      if (!n.present || n.controlled || n === this.passing || !n.rig.root.visible) continue;
+      const R = this.radius + n.radius, dx = p.x - n.pos.x, dz = p.z - n.pos.z;
+      if (Math.abs(dx) >= R || Math.abs(dz) >= R || Math.abs(n.pos.y - p.y) > 1.2) continue;
+      const d = Math.hypot(dx, dz);
+      if (d >= R) continue;
+      // out along the line between the centres (straight back from his facing when exactly on top)
+      const nx = d > 1e-3 ? dx / d : -Math.sin(this.angle), nz = d > 1e-3 ? dz / d : -Math.cos(this.angle);
+      const push = Math.min(R - d, (v + 3) * dt);
+      let sx = nx * push, sz = nz * push;
+      const into = v > 0.3 ? -(vx * nx + vz * nz) / v : 0;   // 1 = walking straight at them
+      if (into > 0) pressing = n;
+      if (into > 0.94 && this.wantsMove) {
+        // head on: step round them, on the side he is already leaning to (or the side that is free)
+        let side = Math.sign(vx * nz - vz * nx);
+        if (!side) side = P.blockedAt(n.pos.x + nz * R, n.pos.z - nx * R, p.y) ? -1 : 1;
+        const k = v * 0.6 * dt;
+        sx += nz * side * k; sz += -nx * side * k;
+      }
+      // never off a ledge
+      if (P.groundAt(p.x + sx * 2, p.z + sz * 2, p.y + 0.6) < p.y - 0.6) continue;
+      P.move(this, sx, sz);
+    }
+    // can't get round (a gap too narrow, or the place he wants is right where they stand): pressing on against the
+    // same person for 0.8 s while getting less than 0.35 m anywhere, he squeezes past them
+    if (pressing && this.wantsMove) {
+      if (!this.pressT || this.pressNpc !== pressing) { this.pressT = 0; this.pressNpc = pressing; this.pressFrom = { x: p.x, z: p.z }; }
+      this.pressT += dt;
+      if (this.pressT >= 0.8) {
+        if (Math.hypot(p.x - this.pressFrom.x, p.z - this.pressFrom.z) < 0.35) this.passing = pressing;
+        this.pressT = 0;
+      }
+    } else this.pressT = 0;
   }
 
   // LBA2's action in Normal mode: a little hop on the spot (0.58 s). Next to a giver (a bin, a cupboard, a barrel)

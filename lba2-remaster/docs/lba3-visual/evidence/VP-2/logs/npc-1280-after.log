@@ -1,0 +1,10 @@
+approach {"a":1.5707963267948966,"dd":21.484180226389835}
+walk-into-zoe {"d":3.86,"npcR":0.45,"heroR":0.4}
+walk-into-zoe min centre distance 0.85 per frame [[3.65,"walk",2.28],[3.38,"walk",2.39],[3.1,"walk",2.4],[2.82,"walk",2.4],[2.54,"walk",2.4],[2.26,"walk",2.4],[1.99,"walk",2.4],[1.71,"walk",2.4],[1.43,"walk",2.4],[1.16,"walk",2.4],[0.89,"walk",2.4],[0.85,"walk",1.07],[0.85,"walk",1.43],[0.85,"walk",1.82],[0.85,"walk",2.18],[0.85,"walk",2.39],[0.85,"idle",0.12],[0.85,"idle",0.01],[0.85,"idle",0],[0.85,"idle",0]]
+run-into-zoe {"d":3.76,"npcR":0.45,"heroR":0.4}
+run-into-zoe min centre distance 0.85 per frame [[3.29,"run",5.14],[2.67,"run",5.39],[2.05,"run",5.4],[1.42,"run",5.4],[0.85,"run",5.37],[0.85,"run",3.61],[0.85,"run",5.3],[0.97,"run",5.4],[1.38,"run",5.4],[1.69,"idle",0.28],[1.7,"idle",0.28],[1.72,"idle",0.28],[1.74,"idle",0.28],[1.76,"idle",0.28],[1.78,"idle",0.28],[1.8,"idle",0.28],[1.81,"idle",0.01],[1.81,"idle",0],[1.81,"idle",0],[1.81,"idle",0]]
+walk-off-centre {"d":3.8,"npcR":0.45,"heroR":0.4}
+walk-off-centre min centre distance 0.85 per frame [[3.59,"walk",2.28],[3.32,"walk",2.39],[3.04,"walk",2.4],[2.77,"walk",2.4],[2.49,"walk",2.4],[2.22,"walk",2.4],[1.95,"walk",2.4],[1.68,"walk",2.4],[1.42,"walk",2.4],[1.16,"walk",2.4],[0.92,"walk",2.4],[0.85,"walk",1.75],[0.85,"walk",2.12],[0.85,"walk",2.37],[0.86,"walk",2.4],[0.95,"walk",2.4],[0.98,"idle",0.12],[0.98,"idle",0.01],[0.98,"idle",0],[0.98,"idle",0]]
+prompt at 1.6 {"d":1.5,"target":"npc","prompt":"W Talk"}
+prompt at 1.2 {"d":1.1,"target":"npc","prompt":"W Talk"}
+no page errors
