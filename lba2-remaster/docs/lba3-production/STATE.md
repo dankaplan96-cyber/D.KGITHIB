@@ -40,9 +40,16 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - tests/lib/player.js (input harness), tests/lib/seg.mjs (segment runner; LOAD/KEEP/NORETRY/SHOT env),
   tests/lib/try.mjs (scratch page scripts).
 
+## Open from the stabilization pass
+- Final end-to-end rerun on the last code reached chapter 2's last segment (05) and stopped: Zoé died after finding the
+  plan (cause not identified) and, after the game-over Retry, talking to Zoé at the gate gave a 2-line reply instead of
+  restarting her segment. Not reproduced or diagnosed yet (the user moved the work to the Zeelich islands). The same
+  resume through Esc → Save & quit → Continue passes (tests/zoe-resume.mjs).
+
 ## Next exact task
-Finish the playthrough chain from the chapter-4 save (07-dig … 14-shell); fix any defect found (reproduce,
-root-cause, fix, regression test); then the full suite, docs, commit, report.
+Add the original Zeelich islands as new regions (the user: in addition to the current Zeelich; at most rename what
+exists): Otringal, Knartas, Mosquibee, Celebration, Under-gas, the Platform, the CX islet — terrain from the
+originals' heights (numbers only), our art, reachable by flights.
 
 ## Resume
 Saves made through the game's own Save & quit live in the session scratchpad (not in the repo; regenerate by
