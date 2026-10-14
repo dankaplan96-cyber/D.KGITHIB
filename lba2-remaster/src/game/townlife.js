@@ -191,14 +191,63 @@ export function buildTownLife(root, physics, W) {
   // ================================================================ the harbour: customs, cargo from two worlds, Nell's shop
   {
     const k = area();
-    // --- customs: a booth with a window and a striped barrier arm
+    // --- customs: a booth with a window and a striped barrier arm. A timber-framed plaster hut on a grey plank
+    //     skirt under a deep two-step blue roof, its CUSTOMS board standing on the roof (east and west, the ways the
+    //     camera looks along the quay), the service window and counter toward the quay (+z, Odile's side), a window
+    //     on the seaward side (-z), the door and a narrow window on the west and the posted notices with their stamps
+    //     by the barrier (east). Only materials this area's batch already uses: one draw per material, so the count
+    //     stays flat. The collider is unchanged (the trim stands at most a few cm proud of it, the step 0.2 m).
     const { x, z } = BOOTH, y = gy(x, z);
-    k.add(rbox(2.0, 2.3, 1.6, 0.05), MAT.plaster('#f2ead6'), x, y + 1.15, z);
-    k.add(rbox(2.3, 0.15, 1.9, 0.04), MAT.paint('#2a3a6a', 0.5), x, y + 2.37, z);
-    k.add(rbox(1.2, 0.6, 0.04, 0.01), MAT.glass('#bfe6ff', 0.45), x, y + 1.45, z + 0.81);
-    k.add(rbox(1.3, 0.06, 0.25, 0.01), MAT.wood('honey'), x, y + 1.1, z + 0.9);   // the counter
-    k.add(plane(1.3, 0.45), MAT.map(signTex(['CUSTOMS', 'Twinsun - Zeelich']), 0.7), x, y + 2.0, z + 0.82);
+    const plaster = MAT.plaster('#f2ead6'), navy = MAT.paint('#2a3a6a', 0.5), dark = MAT.wood('dark'), honey = MAT.wood('honey');
+    const glassM = MAT.glass('#bfe6ff', 0.45), customsM = MAT.map(signTex(['CUSTOMS', 'Twinsun - Zeelich']), 0.7);
+    k.add(rbox(2.0, 2.3, 1.6, 0.05), plaster, x, y + 1.15, z);
+    k.add(rbox(2.08, 0.8, 1.68, 0.02), MAT.planks('grey'), x, y + 0.4, z);                        // plank skirt
+    k.add(rbox(2.14, 0.06, 1.74, 0.015), dark, x, y + 0.82, z);                                     // its cap rail
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) k.add(rbox(0.12, 2.3, 0.12, 0.02), dark, x + sx * 1.0, y + 1.15, z + sz * 0.8);   // corner posts
+    k.add(rbox(2.12, 0.14, 1.72, 0.02), dark, x, y + 2.23, z);                                      // wall plate
+    // the roof: a honey fascia under a deep eave slab and a raised cap (thick, overhanging, its edge catching light)
+    k.add(rbox(2.56, 0.07, 2.16, 0.015), honey, x, y + 2.31, z);
+    k.add(rbox(2.5, 0.13, 2.1, 0.03), navy, x, y + 2.4, z);
+    k.add(rbox(2.0, 0.14, 1.6, 0.04), navy, x, y + 2.52, z);
+    // the CUSTOMS board on the roof, on two posts, painted on both faces: east (the harbour path from town) and west
+    // (the quay's end), the ways the camera looks along the quay
+    for (const sz of [-0.55, 0.55]) k.add(cyl(0.035, 0.035, 0.42, 6), MAT.iron(), x, y + 2.72, z + sz);
+    k.add(rbox(0.05, 0.5, 1.42, 0.015), dark, x, y + 2.98, z);
+    for (const s of [-1, 1]) k.add(plane(1.3, 0.45), customsM, x + s * 0.03, y + 2.98, z, s * Math.PI / 2);
+    // a framed window: dark inside behind the glass, a frame proud of the wall, a honey sill (in the face's frame:
+    // +z out of the wall, origin on the wall's surface)
+    const windowAt = (cx, cy, cz, ry, w, h, bars = 1, sill = true) => k.at(cx, cy, cz, ry, () => {
+      k.add(rbox(w, h, 0.02, 0.005), navy, 0, 0, 0.005);
+      k.add(rbox(w, h, 0.03, 0.005), glassM, 0, 0, 0.03);
+      for (const s of [-1, 1]) { k.add(rbox(w + 0.14, 0.07, 0.07, 0.015), dark, 0, s * (h / 2 + 0.035), 0.035); k.add(rbox(0.07, h, 0.07, 0.015), dark, s * (w / 2 + 0.035), 0, 0.035); }
+      for (let i = 1; i <= bars; i++) k.add(rbox(0.035, h, 0.05, 0.008), dark, -w / 2 + (w * i) / (bars + 1), 0, 0.035);
+      if (sill) k.add(rbox(w + 0.22, 0.05, 0.14, 0.012), honey, 0, -h / 2 - 0.09, 0.07);
+    });
+    // the quay side (+z): the service window over the counter (its sill), the bell, the CUSTOMS sign above
+    windowAt(x, y + 1.45, z + 0.8, 0, 1.2, 0.5, 2, false);
+    k.add(rbox(1.3, 0.06, 0.25, 0.01), honey, x, y + 1.1, z + 0.9);   // the counter
+    for (const sx of [-0.5, 0.5]) k.add(rbox(0.05, 0.16, 0.18, 0.01), dark, x + sx, y + 1.0, z + 0.88);   // its brackets
+    k.add(plane(1.1, 0.38), customsM, x, y + 1.97, z + 0.82);
     P.deskBell(k, x + 0.4, y + 1.13, z + 0.9);
+    // the seaward side (-z): a window
+    windowAt(x - 0.15, y + 1.5, z - 0.8, Math.PI, 0.9, 0.55, 1);
+    // the west side (-x): the door, plank on a dark frame, a brass knob, a step; a narrow window beside it
+    windowAt(x - 1.0, y + 1.5, z - 0.48, -Math.PI / 2, 0.3, 0.5, 0);
+    k.at(x - 1.0, y, z + 0.2, -Math.PI / 2, () => {
+      k.add(rbox(0.82, 1.9, 0.06, 0.015), dark, 0, 0.95, 0.03);
+      k.add(rbox(0.7, 1.82, 0.05, 0.015), honey, 0, 0.93, 0.06);
+      for (const hy of [0.45, 1.45]) k.add(rbox(0.66, 0.08, 0.03, 0.01), dark, 0, hy, 0.09);   // ledges
+      k.add(sphere(0.035, 8, 6), MAT.brass(), 0.24, 0.95, 0.11);
+      k.add(rbox(0.9, 0.08, 0.18, 0.015), dark, 0, 0.04, 0.12);   // the step (8 cm: not something to climb)
+    });
+    // the barrier side (+x): a notice board with posted forms, each with its red stamp
+    k.at(x + 1.0, y, z - 0.2, Math.PI / 2, () => {
+      k.add(rbox(0.86, 0.66, 0.04, 0.012), honey, 0, 1.45, 0.03);
+      for (const [px, py, pw, ph] of [[-0.22, 1.55, 0.3, 0.36], [0.17, 1.6, 0.28, 0.26], [0.2, 1.3, 0.3, 0.22], [-0.2, 1.27, 0.26, 0.18]]) {
+        k.add(rbox(pw, ph, 0.012, 0.003), plaster, px, py, 0.056);
+        k.add(rbox(0.07, 0.07, 0.008, 0.002), MAT.paint('#b82a24', 0.45), px + pw / 2 - 0.07, py - ph / 2 + 0.07, 0.064);
+      }
+    });
     box(x, z, 1.0, 0.8, y + 2.4, { noStand: true });
     const barrier = new THREE.Group(); barrier.position.set(x + 1.3, y + 0.95, z + 0.3); g.add(barrier);
     k.add(cyl(0.08, 0.1, 0.95, 8), MAT.paint('#2a3a6a', 0.5), x + 1.3, y + 0.47, z + 0.3);
