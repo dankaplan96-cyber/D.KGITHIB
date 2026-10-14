@@ -12,6 +12,7 @@ export async function launch({ width = 960, height = 540, storageState } = {}) {
   const errs = [];
   page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + ' ' + (e.stack || '').split('\n')[1]));
   page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+  if (process.env.LIVE_ERRS) { page.on('pageerror', (e) => console.log('LIVE pageerror', e.message)); page.on('console', (m) => { if (m.type() === 'error') console.log('LIVE console', m.text()); }); }
   return { browser, context, page, errs };
 }
 
@@ -47,6 +48,9 @@ export async function quitAndKeep(page, context, file) {
   const reloaded = page.waitForEvent('load', { timeout: 300000 });
   await page.click('#pause [data-act="quit"]', { timeout: 60000 });
   await reloaded;
-  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 })
+    .catch(async (e) => {   // say where the boot stopped, not just that it timed out
+      const st = await page.evaluate(() => ({ url: location.href, game: !!window.game, preparing: window.game?.preparing, loading: document.querySelector('#loading')?.textContent?.slice(0, 120) })).catch((x) => String(x));
+      console.log('quitAndKeep: the reload did not finish booting', JSON.stringify(st)); throw e; });
   await context.storageState({ path: file });
 }
