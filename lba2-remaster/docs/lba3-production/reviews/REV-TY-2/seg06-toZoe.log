@@ -1,0 +1,26 @@
+[0s +0s] continue (arrival): {"started":true,"taken":true} | zeelich [2342.4,6,1.3] hp 4 | Find Baldino's workshop on the Esmer street
+[2s +2s] Baldino's workshop: {"r":"workshop","t":"talked","plan":true,"fail":null} | zeelich [2387.41,6,7.06] hp 4 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+  [35.7] ISO assist: 4 enemies beaten (zdrone1,zdrone2,zguard1,zgdog1)
+[5s +3s] depot fight (input; ISO assist below 3 HP): {"left":4,"dead":false,"hp":1,"t":8.3,"assisted":4} | zeelich [2400.73,6,-3.16] hp 1 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[6s +1s] depot locker (drones, a guard, a dog): {"r":"used","target":{"kind":"c2locker","id":"p_search","label":"p_search"},"state":"play","lines":4,"cyl":true,"back":true,"hp":7,"fail":null} | zeelich [2415.14,6,23.34] hp 7 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[8s +2s] Oku sees the plan: {"r":"talked","to":"oku","state":"play","lines":4,"ok":true,"fail":null} | zeelich [2377.33,6,6.79] hp 10 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[10s +2s] climb the old mill (jumps): {"heights":[7.25,8.5,9.75,11,12.25,13.5,14.75],"y":14.75,"top":true,"fail":null} | zeelich [2395.08,14.75,-22.06] hp 10 | Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ B
+[11s +1s] the cog, top of the old mill: {"r":"used","target":{"kind":"c2cog","id":"p_climb","label":"p_climb"},"state":"play","lines":2,"y":14.8,"top":14.75,"cog":true,"fail":null} | zeelich [2397.54,14.75,-16.75] hp 11 | Bring both parts to Baldino◆ Brake the three mills with the ball (0/3)
+[15s +4s] brake the three mills (ball): {"mills":[["north",true],["east",true],["south",true]],"fail":null} | zeelich [2402.01,6,22.01] hp 9 | Bring both parts to Baldino◆ Brake the three mills with the ball (3/3)
+[16s +1s] Baldino builds the key → Zoé: {"r":"talked","to":"baldino","state":"play","lines":8,"key":true,"room":"lighttop","body":"zoe","fail":null} | lighttop [1601.41,0,-0.16] hp 9 | Zoé: broadcast the warning from the lighthouse
+deaths (Retry): 0
+ISO assists: 1 (this page; see the trace)
+[82.7] go → (2398.0, -16.7) plan ok=true pts=2 left=0.08
+[82.7] go → (2398.0, -16.7) plan ok=true pts=2 left=0.08
+[84.7] go: no way round, taking a drop
+[84.7] go → (2398.0, -10.9) plan ok=true pts=11 left=0.28
+[88.6] hurt 11→9 at (2403.5, 6.0, -17.6) near: nobody 
+[95.3] go → (2422.7, -8.8) plan ok=true pts=3 left=0.43
+[104.1] go → (2397.5, 24.7) plan ok=true pts=5 left=0.43
+[117.4] go → (2402.7, 21.7) plan ok=true pts=2 left=0.25
+[122.3] go → (2389.5, 8.3) plan ok=true pts=3 left=0.13
+[126.4] go: transition (zeelich → zeelich, trans true) at (2390.33, 8.23)
+[127.2] go → (1498.6, -2.3) plan ok=true pts=2 left=0.63
+[129.4] go → (1498.6, -2.3) plan ok=true pts=2 left=0.3
+kept docs/lba3-production/reviews/REV-TY-2/save-zoe.json
+no errors
