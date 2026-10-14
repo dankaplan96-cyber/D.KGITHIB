@@ -8,7 +8,8 @@ export const steps = [
     for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * 4, tg.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 60 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
     P.wait(2); P.settle(); return { bridge: game.flags.c6_bridge, fail: game.flags.c6_bridge ? null : 'tree' };
   }],
-  ['across to Lhar', () => { const L = game.rooms.hamalayi.lhar; const r = P.go(L.x, L.z + 8, { tol: 2, maxT: 180 }); P.settle(); return { r: r.r, lhar: game.flags.c6_lhar, fail: game.flags.c6_lhar ? null : 'lhar' }; }],
+  // up the switchback trail a player follows (its cairns and rope rail: hamalayi.js TRAIL, region at x+4300), then Lhar
+  ['across to Lhar', () => { const L = game.rooms.hamalayi.lhar; for (const [x, z] of [[16, 34], [30, 25], [24, 15], [12, 9]]) P.go(4300 + x, z, { tol: 1.5, maxT: 60 }); const r = P.go(L.x, L.z + 8, { tol: 2, maxT: 180 }); P.settle(); return { r: r.r, lhar: game.flags.c6_lhar, fail: game.flags.c6_lhar ? null : 'lhar' }; }],
   ['Yorna', () => ({ ...P.talk('yorna', { run: true }), yorna: game.flags.c6_yorna, fail: game.flags.c6_yorna ? null : 'yorna' })],
   ['the heating station', () => { const p = game.rooms.hamalayi.heatPost; const r = P.use(p.x, p.z, { run: true }); return { ...r, needFuse: game.flags.c6_needFuse, fail: game.flags.c6_needFuse ? null : 'station' }; }],
   ['Pim', () => ({ ...P.talk('pim', { run: true }), kiteAsk: game.flags.c6_kiteAsk })],

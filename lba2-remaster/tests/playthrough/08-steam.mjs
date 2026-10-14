@@ -21,5 +21,8 @@ export const steps = [
   ['Tarra', () => ({ ...P.talk('tarra', { run: true }), radio: game.flags.c5_radio })],
   ['Hesk: the glider', () => ({ ...P.talk('hesk', { run: true }), glider: game.flags.c5_glider, fail: game.flags.c5_glider ? null : 'hesk' })],
   ['to the hangar', () => { const d = game.rooms.desert.ruins.door; P.through(d.x, d.z, { run: true }); return P.exitTo('cond-b'); }],
-  ['board → chapter 6', () => { const g = game.rooms.condB.glider; const r = P.use(g.x, g.z); P.settle(60); P.settle(30); return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'pass' ? null : 'no chapter 6' }; }],
+  // (from the west side Hesk, standing by it, gets the E prompt: walk round to where it says Board, as a player does)
+  ['board → chapter 6', () => { const g = game.rooms.condB.glider; let r = null;
+    for (let k = 0; k < 12 && !r; k++) { const a = k * Math.PI / 6, x = g.x + Math.sin(a) * 1.4, z = g.z + Math.cos(a) * 1.4; P.go(x, z, { tol: 0.35, maxT: 15 }); P.face(g.x, g.z); if (P.target()?.kind === 'c5board') { P.tap('KeyE', 0.1); r = { r: 'boarded from ' + k, target: P.target() }; } }
+    P.settle(60); P.settle(30); return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'pass' ? null : 'no chapter 6' }; }],
 ];

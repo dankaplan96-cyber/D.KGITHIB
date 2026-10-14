@@ -47,6 +47,7 @@
       PH.move(probe, px - probe.pos.x, pz - probe.pos.z);
       if (Math.hypot(probe.pos.x - px, probe.pos.z - pz) > 0.04) return null;
       probe.pos.y = PH.groundAt(px, pz, probe.pos.y);
+      if (PH.steepAt(px, pz, probe.pos.y)) return null;   // (a steep patch on the way: he'd slide back, not climb it)
     }
     const ny = PH.groundAt(nx, nz, probe.pos.y);
     if (ny < y - 2.2) return null;                 // a drop that would hurt
@@ -214,6 +215,7 @@
       tg = P.target();
       for (let k = 0; k < 3 && (!tg || tg.x == null || Math.hypot(tg.x - x, tg.z - z) > match); k++) { P.go(x, z, { tol: Math.max(0.35, near * 0.5) }); P.face(x, z); tg = P.target(); }
       P.tap('KeyE', 0.1);
+      for (let k = 0; k < 3 / DT && hero().actT > 0 && G.state === 'play'; k++) G.step(DT);   // (his action plays out: a valve turned, a lever pulled)
     }
     const s = P.settle();
     return { r: 'used', target: tg, state: s.state, lines: s.lines };
