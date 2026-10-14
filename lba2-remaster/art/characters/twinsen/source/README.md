@@ -1,4 +1,11 @@
-Twinsen's editable source is code: `LOOKS.twinsen` and `design()` in src/game/characters.js (outfit `tw`: body, tunic, bell sleeves,
-head, hair, belt), the `bell` primitive in src/engine/sculpt.js, `handDef`/`shoeDef` (hands, rounded shoes), `addFace`/`addMedallion` (face parts, medallion).
-Animation: src/engine/rig.js (poses per clip) + src/game/actors.js (Hero state machine).
-There is no Blender in this environment; the mesh is generated at load (see export/README.md).
+Twinsen's in-game model is the low-poly mesh built by tools/blender/twinsen_poly.py (Blender as a Python module,
+`pip install bpy`), exported to assets/poly/twinsen.json; the editable Blender file (armature, vertex groups) is
+../twinsen_poly.blend. Rebuild both:
+
+    python tools/blender/twinsen_poly.py art/characters/skeletons.json assets/poly art/characters/twinsen/twinsen_poly.blend
+
+The skeleton is the game's own (art/characters/skeletons.json, dumped by tools/dump-skeletons.mjs), so every
+animation in src/engine/rig.js drives the mesh unchanged.
+
+The older sculpted version (`LOOKS.twinsenSculpt` in src/game/characters.js, the `bell` primitive in
+src/engine/sculpt.js) remains as a fallback and for comparisons.

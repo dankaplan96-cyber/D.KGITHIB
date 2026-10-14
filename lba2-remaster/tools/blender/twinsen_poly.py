@@ -1,13 +1,15 @@
 # Twinsen as a low-poly model (Blender, run headless):
 #   python -c "import bpy" must work (pip install bpy), then
-#   python tools/blender/twinsen_poly.py <skeleton.json> <out.json> [out.blend]
+#   python tools/blender/twinsen_poly.py art/characters/skeletons.json assets/poly [art/characters/twinsen/twinsen_poly.blend]
+#   (the skeleton file may hold every character or Twinsen alone; the output may be a .json file or a folder;
+#   the .blend is written only when named, and it is Twinsen's own file, not the cast's cast_poly.blend)
 #
 # Built from the measurements of LBA2's in-game model (docs/character-review.md §11): every ring below is a
 # horizontal section of the original (height, half-width, front and back extent, fractions of the height H).
 # Skinned like LBA2 skins its models: each part follows one bone, with blends only where cloth spans two
 # (the cape's sides follow the arms, each half of the robe follows its leg as in the original, the bun swings).
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
-import json, math, sys
+import json, math, os, sys
 
 import bpy
 import bmesh
@@ -17,7 +19,10 @@ SKEL, OUT = sys.argv[-2], sys.argv[-1]
 BLEND = None
 if sys.argv[-1].endswith('.blend'):
     SKEL, OUT, BLEND = sys.argv[-3], sys.argv[-2], sys.argv[-1]
+if os.path.isdir(OUT):   # (README form: <skeletons.json> assets/poly → assets/poly/twinsen.json)
+    OUT = os.path.join(OUT, 'twinsen.json')
 skel = json.load(open(SKEL))
+skel = skel.get('twinsen', skel)   # (all the game's skeletons, as tools/dump-skeletons.mjs writes them, or Twinsen's alone)
 B = skel['bones']
 SPREAD = 0.2  # the arm angle the geometry below is drawn at (the game spreads them by the look's armSpread)
 S = 2.1  # the game's height for H (top of the hair)
@@ -370,47 +375,115 @@ def head_front(x, y):
     return 0.1
 
 
-hair = Part('hair', 'hair', lambda p: {'head': 1.0}, angle=70, big=True)
+# ---- the hair: LBA2's high topknot, gathered up from a cap on the back of the head (VP-1)
+# The head is a forward wedge whose crown sits ahead of the neck, and the knot's three balls (measured on the
+# original) sit behind and above it: alone on a bare skull they read as a ball floating over the head from the
+# front and from the game's high camera. The gameplay screenshots (docs/character-review.md §2, #23) show the hair
+# as a cap on the back of the crown with a bare high forehead and the knot rising from it. So: a cap following the
+# skull's own sections behind a hairline (forehead and temples stay bare), flush with the skin at its edges (no
+# lip) and standing off it inside, swelling into a mound where the hair is gathered; the knot sits down into it.
+BUN = ((0.982, -0.044, 0.052), (0.957, -0.098, 0.037), (0.922, -0.117, 0.026))   # centre y, z, radius (H)
+BUN_BASE, MOUND_H, MOUND_R = (0.0, 0.952, -0.016), 0.018, 0.042                  # where the hair gathers
 
 
-def back_arc(y, half, zcut, m, grow):
-    # the part of a head section behind z = zcut (left side → back → right side), pushed out by `grow`
-    full = [(x, z) for x, z in resample(half, 25)]
-    pts = [(x, z) for x, z in full if z <= zcut]
-    arc = [(px, pz) for px, pz in reversed(pts)] + [(-px, pz) for px, pz in pts[1:]]
-    # resample the arc to m points
-    seg = [math.dist(arc[i], arc[i + 1]) for i in range(len(arc) - 1)]
-    tot = sum(seg) or 1
-    outp = []
+def hairline(y):
+    # the cap covers each head section behind z = hairline(y): a narrow strip low on the back of the head,
+    # climbing to just behind the top of the forehead
+    pts = ((0.870, -0.008), (0.890, 0.008), (0.908, 0.022), (0.935, 0.034), (0.950, 0.045))
+    for (y0, z0), (y1, z1) in zip(pts, pts[1:]):
+        if y <= y1:
+            return z0 + (z1 - z0) * max(0.0, (y - y0) / (y1 - y0))
+    return pts[-1][1]
+
+
+def behind(half, zcut):
+    # the part of a half section (front centre → side → back centre, z falling) behind z = zcut, from the cut
+    for i in range(len(half) - 1):
+        (xa, za), (xb, zb) = half[i], half[i + 1]
+        if za >= zcut >= zb:
+            t = (za - zcut) / (za - zb) if za != zb else 0.0
+            return [(xa + (xb - xa) * t, zcut)] + list(half[i + 1:])
+    return [half[-1]]
+
+
+def arc_points(pts, m):
+    # resample a polyline to m points by length, each with its distance (along the line) from the nearer end
+    seg = [math.dist(pts[i], pts[i + 1]) for i in range(len(pts) - 1)]
+    tot = sum(seg) or 1.0
+    out = []
     for j in range(m):
         d, i = tot * j / (m - 1), 0
         while i < len(seg) - 1 and d > seg[i]:
             d -= seg[i]; i += 1
-        t = min(1, d / seg[i]) if seg[i] else 0
-        x = arc[i][0] + (arc[i + 1][0] - arc[i][0]) * t; z = arc[i][1] + (arc[i + 1][1] - arc[i][1]) * t
-        cz = 0.06
-        r = math.hypot(x, z - cz) or 1
-        outp.append((x + x / r * grow, y, z + (z - cz) / r * grow))
-    return outp
+        t = min(1.0, d / seg[i]) if seg[i] else 0.0
+        p = (pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t)
+        out.append((p, min(tot * j / (m - 1), tot * (1 - j / (m - 1)))))
+    return out
 
 
-# the hairline climbs from behind the ears to the crown; the cap is a shell 6 mm off the skull
-cap_rows = [(y, back_arc(y, hh, zc, 13, 0.006)) for (y, hh), zc in zip(HEAD[2:], [0.0, 0.03, 0.05, 0.07, 0.08])]
+def mound(p):
+    return math.exp(-(math.dist(p, BUN_BASE) / MOUND_R) ** 2)
+
+
+def cap_lift(p, edge):
+    # how far the cap stands off the skull (H): flush at its edges (a hair proud of the facets, so no skin pokes
+    # through the hairline), 0.006 H inside, plus the mound
+    inner = smooth(0.0, 0.022, edge) * smooth(0.870, 0.892, p[1])
+    return 0.0008 + 0.0052 * inner + MOUND_H * mound(p) * inner, inner
+
+
+hair = Part('hair', 'hair', lambda p: {'head': 1.0}, angle=70, big=True)
 M = 13
-hv, hf = [], []
-for j, (y, row) in enumerate(cap_rows):
-    hv += row
-for j in range(len(cap_rows) - 1):
+cap = []
+for y, half in FINE:
+    if y < 0.869:
+        continue
+    zc = hairline(y)
+    h = behind(resample(half, 25), zc)
+    arc = list(h) + [(-x, z) for x, z in reversed(h[:-1])]           # left hairline → back centre → right hairline
+    zmid = (half[0][1] + half[-1][1]) / 2
+    pts = arc_points(arc, M)
+    row = []
+    for k, ((x, z), edge) in enumerate(pts):
+        # the section's outward normal here (from the neighbours, pointing away from the section's middle)
+        (xa, za), (xb, zb) = pts[max(0, k - 1)][0], pts[min(M - 1, k + 1)][0]
+        nx, nz = (zb - za), -(xb - xa)
+        ln = math.hypot(nx, nz) or 1.0
+        nx, nz = nx / ln, nz / ln
+        if nx * x + nz * (z - zmid) < 0:
+            nx, nz = -nx, -nz
+        g, inner = cap_lift((x, y, z), edge)
+        up = MOUND_H * 0.6 * mound((x, y, z)) * inner                 # the gathered hair also rises into the knot
+        row.append((x + nx * g, y + up, z + nz * g))
+    cap.append(row)
+hv, hf = [p for r in cap for p in r], []
+for j in range(len(cap) - 1):
     for i in range(M - 1):
         a, b = j * M + i, j * M + i + 1
-        hf.append([a + M, b + M, b, a])
-hv.append((0.0, 0.962, 0.03)); top = len(hv) - 1
-o = (len(cap_rows) - 1) * M
-hf += [[o + i + 1, o + i, top] for i in range(M - 1)]
+        hf.append([a, b, b + M, a + M])
+# over the top: the hairline crosses the crown just behind the forehead, on the skull; a fan from a point above the
+# crown closes the cap between the top row (behind) and that front edge
+top_y, top_half = FINE[-1]
+zc = hairline(top_y)
+xe = behind(resample(top_half, 25), zc)[0][0]
+crown = (0.0, 0.956, 0.035)
+front = []
+for k in range(1, 6):
+    x = -xe + 2 * xe * k / 6                                             # right → left (continuing the top row)
+    r = abs(x) / xe                                                      # 1 at the ring, 0 over the crown point
+    front.append((x, crown[1] + (top_y - crown[1]) * r - 0.0012, zc - 0.006 * (1 - r)))
+o = len(hv)
+hv += front
+lid = (0.0, 0.963, 0.012)
+hv.append((lid[0], lid[1] + MOUND_H * 0.5 * mound(lid), lid[2]))
+c = len(hv) - 1
+t0 = (len(cap) - 1) * M
+loop = [t0 + i for i in range(M)] + [o + k for k in range(len(front))]
+hf += [[loop[i], loop[(i + 1) % len(loop)], c] for i in range(len(loop))]
 hair.add(hv, hf)
-# (the original has no hair on the skull, only the bun: the cap above is kept in the source but not exported)
-# the bun: the original's three balls, from the crown back and down (centre y, z and radius in H)
-for i, (y, z, r) in enumerate(((0.995, -0.054, 0.052), (0.968, -0.107, 0.037), (0.931, -0.124, 0.026))):
+PARTS.append(hair)
+# the knot: the original's three balls from the crown back and down, lowered a little into the cap's mound
+for i, (y, z, r) in enumerate(BUN):
     bun = Part('bun%d' % i, 'hair', (lambda b: (lambda p: {b: 1.0}))('tail%d' % i), angle=60, big=True)
     sphere(bun, (0.0, y, z), r, 10, 7)
     PARTS.append(bun)
