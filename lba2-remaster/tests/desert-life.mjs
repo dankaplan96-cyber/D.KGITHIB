@@ -2,7 +2,9 @@
 // blockhouse and The Wind-Catcher, played by input (walking, the stair, E, talking) in both valid orders, with
 // Save & quit → Continue in the middle; its lines before and after the chapter events (the pump in chapter 4, the
 // steam and the vent in chapter 5); the main story's people unchanged (Tarra's pump, Brosk's jar and shovel come
-// first); the new places solid; the reward owed until picked up.
+// first); the new places solid; the reward owed until picked up. REV-TY-4 fixes: the door's hint and Brosk follow how
+// the cowl stands (wrong way / into the wind with no screen / screen on, wrong way); Save & Continue with the screen
+// fitted but not yet turned; Hesk's poles clear of all four yacht lines.
 // ISO (logged): chapters 4 and 5 are reached by setting their flags (as tests/chapter4.mjs and chapter5.mjs do);
 // the pump's three gears (chapter 4) and the vent (chapter 5) are set by flags; a fresh flag set for the second
 // order. Screenshots: SHOTS=1 writes them to captures/desert-ty/.
@@ -49,17 +51,28 @@ const K0 = await ev(() => { const K = game.rooms.desert.kesh, C = K.cool, PH = g
     lumi: { anim: lumi.forceAnim, d: +Math.hypot(lumi.pos.x - K.lumi.x, lumi.pos.z - K.lumi.z).toFixed(2), present: lumi.present } }; });
 check('the cool room (and its stair, from the side), Lumi\'s loom and Hesk\'s flag poles are solid; Lumi works at her loom', K0.body && K0.stair && K0.loom && K0.pole && K0.poles >= 6 && K0.lumi.present && K0.lumi.anim === 'tinker' && K0.lumi.d < 0.3, K0);
 await shot('01-arrival-coolroom', { x: -80, z: 4, a: Math.PI / 2 + 0.35 });
+// the yacht's four lines (out to the camp and the dig, and back from each) keep clear of every pole
+const P0 = await ev(async () => { const m = await import('/src/game/keshlife.js'); const D = game.rooms.desert, K = D.kesh, ox = D.plaza.x + 50, oz = D.plaza.z - 2;
+  let min = Infinity, at = null, n = 0;
+  for (const [key, P] of Object.entries(m.YACHT_ROUTES)) for (let i = 0; i < P.length - 1; i++) {
+    const L = Math.hypot(P[i + 1][0] - P[i][0], P[i + 1][1] - P[i][1]);
+    for (let d = 0; d <= L; d += 0.2) { const x = P[i][0] + (P[i + 1][0] - P[i][0]) * d / L, z = P[i][1] + (P[i + 1][1] - P[i][1]) * d / L; n++;
+      for (const p of K.poles) { const r = Math.hypot(p.x - ox - x, p.z - oz - z); if (r < min) { min = r; at = { key, pole: [+(p.x - ox).toFixed(1), +(p.z - oz).toFixed(1)] }; } } }
+  }
+  const dig = D.yacht.spot('dig'), camp = D.yacht.spot('camp');
+  return { min: +min.toFixed(2), at, n, clear: m.POLE_CLEAR, poles: K.poles.length, ridesShared: dig.x - ox === m.YACHT_ROUTES.toDig.at(-1)[0] && camp.z - oz === m.YACHT_ROUTES.toCamp.at(-1)[1] }; });
+check('Hesk\'s poles stand clear of all four yacht lines, out and back (more than the yacht\'s 1.6 m half-width)', P0.min >= P0.clear && P0.clear > 1.6 + 0.3 && P0.poles >= 6 && P0.ridesShared, P0);
 
 // chapter 4, before the pump: Kesh doesn't trust the ferry's people yet
 const d1 = await ev(() => { const f = game.flags; const r = P.talk('dtrader'); return { r: r.r, ask: !!f.k_ask, jars: game.rooms.desert.kesh.cool && game.story.kesh._jars }; });
 const d1l = await said();
-check('chapter 4 (pump seized): Brosk tells of the cool room — the last two jars going warm, the wind-catcher turned (INPUT)', d1.r === 'talked' && d1.ask && d1.jars === 2 && d1l.some((l) => /last two jars/.test(l)) && d1l.some((l) => /pump seized/.test(l)), { d1, d1l });
+check('chapter 4 (pump seized): Brosk tells of the cool room — the last two jars going warm, the wind-catcher turned, Lumi\'s screen torn off (INPUT)', d1.r === 'talked' && d1.ask && d1.jars === 2 && d1l.some((l) => /last two jars/.test(l)) && d1l.some((l) => /pump seized/.test(l)) && d1l.some((l) => /Lumi's screen/.test(l)), { d1, d1l });
 const d2 = await ev(() => { const r = P.talk('weaver'); return { r: r.r, screen: !!game.flags.k_screen }; });
 const d2l = await said();
 check('…and Lumi keeps her work from someone off the project\'s ferry (no screen yet)', d2.r === 'talked' && !d2.screen && d2l.some((l) => /won't talk to anyone/.test(l)), { d2, d2l });
 const d3 = await ev(() => { const C = game.rooms.desert.kesh.cool; const r = P.use(C.door.x, C.door.z, { kind: 'kdoor', near: 0.9 }); return { r: r.r, label: r.target?.label }; });
 const d3l = await said();
-check('the door: FunFrock\'s old blockhouse, dug out of the dune; two jars inside; the wind-catcher turned (INPUT)', d3.r === 'used' && d3l.some((l) => /FunFrock's blockhouses/.test(l)) && d3l.some((l) => /two jars/.test(l)), { d3, d3l });
+check('the door: FunFrock\'s old blockhouse, dug out of the dune; two jars on the shelf; the mouth turned the wrong way (INPUT)', d3.r === 'used' && d3l.some((l) => /FunFrock's blockhouses/.test(l)) && d3l.some((l) => /two jars of water on the shelf/i.test(l)) && d3l.some((l) => /turned the wrong way/.test(l)), { d3, d3l });
 
 // ---- order A: up the stair, the cowl into the wind without a screen → sand
 const a1 = await ev(() => { const C = game.rooms.desert.kesh.cool, h = game.hero, f = game.flags;
@@ -79,7 +92,15 @@ check('the roof\'s parapet keeps him on the roof (north, west and south edges, I
 await shot('03-roof-sand', { roof: true });
 const a3 = await ev(() => { const f = game.flags; const r = P.talk('dtrader'); return { r: r.r, pile: game.rooms.desert.kesh.cool && f.k_sand }; });
 const a3l = await said();
-check('Brosk notices the sand in his dates', a3.r === 'talked' && a3l.some((l) => /In my dates/.test(l)), { a3, a3l });
+check('Brosk notices the sand in his dates and, the mouth now into the wind, points to Lumi\'s screens (not "the opposite")', a3.r === 'talked' && a3l.some((l) => /In my dates/.test(l)) && a3l.some((l) => /Lumi's screens/.test(l)) && !a3l.some((l) => /opposite|wrong way/.test(l)), { a3, a3l });
+const a3d = await ev(() => { const C = game.rooms.desert.kesh.cool; const r = P.use(C.door.x, C.door.z, { kind: 'kdoor', near: 0.9 }); return { r: r.r, dir: game.flags.k_dir }; });
+const a3dl = await said();
+check('the door with sand in and the mouth into the wind: the hint is the missing screen, not "the wrong way" (INPUT)', a3d.r === 'used' && a3d.dir === 0 && a3dl.some((l) => /Sand on the floor/.test(l)) && a3dl.some((l) => /no screen on it/.test(l)) && !a3dl.some((l) => /wrong way/.test(l)), { a3d, a3dl });
+iso('the door hint in the other cowl states: k_dir / k_fit set for a moment and story/kesh.js asked (then put back)');
+const a3h = await ev(() => { const f = game.flags, K = game.story.kesh, save = { d: f.k_dir, fit: f.k_fit }; const out = {};
+  for (const [d, fit] of [[0, false], [1, false], [2, false], [3, true], [2, true]]) { f.k_dir = d; f.k_fit = fit; out[d + (fit ? 'fit' : '')] = K.hint(); }
+  f.k_dir = save.d; if (save.fit) f.k_fit = save.fit; else delete f.k_fit; return out; });
+check('the hint follows the cowl: into the wind means the screen; any other way, the wrong way (screen on or not)', a3h['0'] === 'k_door_hint_screen' && a3h['1'] === 'k_door_hint' && a3h['2'] === 'k_door_hint' && a3h['3fit'] === 'k_door_hint_fit' && a3h['2fit'] === 'k_door_hint_fit', a3h);
 
 // save & Continue with sand in the room and the cowl into the wind
 let file = path.join(os.tmpdir(), 'desertlife-' + process.pid + '.json');
@@ -112,7 +133,7 @@ const b5l = await said();
 check('Brosk pays five kashes (one coin, owed until picked up, then his; INPUT); the journal closes', b5.paid && b5.owed === 1 && b5.coins === 5 && b5.oweAfter === 0 && b5.journal?.every((l) => l.done) && b5l.some((l) => /five kashes/.test(l)), { b5, b5l });
 const b6 = await ev(() => { const out = []; for (const id of ['dtrader', 'weaver', 'dkid']) { P.talk(id); } return out; });
 const b6l = await said();
-check('afterwards Brosk, Lumi and Sani each have a line about the cool room', b6l.some((l) => /queue for cold water|keeps the dates in/.test(l)) && b6l.some((l) => /dyes set better|Mind the threads/.test(l)) && b6l.some((l) => /guarding it|Now it's ours/.test(l)), b6l);
+check('afterwards Brosk, Lumi and Sani each have a line about the cool room', b6l.some((l) => /queue for cold water|keeps the dates cool/.test(l)) && b6l.some((l) => /dyes set better|Mind the threads/.test(l)) && b6l.some((l) => /guarding it|Now it's ours/.test(l)), b6l);
 const tarra = await ev(() => { const r = P.talk('tarra'); return { r: r.r, task: !!game.flags.c4_pumpTask }; });
 const tarral = await said();
 check('Mother Tarra\'s lines stay chapter 4\'s own (the main story first)', tarra.r === 'talked' && tarral.some((l) => /forgotten that sound|swimming/.test(l)), { tarra, tarral });
@@ -124,12 +145,26 @@ const c1 = await ev(() => { const C = game.rooms.desert.kesh.cool, f = game.flag
   const sani = P.npc('dkid'), K = game.rooms.desert;
   const back = { dir: C.dir, sani: +Math.hypot(sani.pos.x - K.npcSpots.kid.x, sani.pos.z - K.npcSpots.kid.z).toFixed(2) };
   P.talk('weaver'); const screen = !!f.k_screen;
-  P.use(C.crank.x, C.crank.z, { kind: 'kcrank', near: 0.9 }); const fit = !!f.k_fit, d0 = f.k_dir ?? 2;
+  P.use(C.crank.x, C.crank.z, { kind: 'kcrank', near: 0.9 }); P.wait(1); const fit = !!f.k_fit, d0 = f.k_dir ?? 2;
+  return { back, screen, fit, d0 }; });
+const c1f = await said();
+check('other order: Lumi\'s screen first, fitted on the roof while the mouth still faces away (INPUT)', c1.back.dir === 2 && c1.back.sani < 0.3 && c1.screen && c1.fit && c1.d0 === 2 && c1f.some((l) => /Now the mouth goes into the wind/.test(l)), { c1, c1f });
+// Save & quit → Continue with the screen fitted but the mouth still facing away
+file = path.join(os.tmpdir(), 'desertlife-fit-' + process.pid + '.json');
+await quitAndKeep(page, context, file);
+await open(page, '?nocine'); await menu(page, 'continue'); await said();
+const c1s = await ev(() => { P.settle(); const f = game.flags, C = game.rooms.desert.kesh.cool, K = game.rooms.desert.kesh;
+  return { room: game.room?.id, fit: !!f.k_fit, dir: f.k_dir ?? 2, cowl: C.dir, screen: !!f.k_screen, done: !!f.k_done, items: game.story.items().map((i) => i.id), journal: game.story.journal().find((j) => j.title === 'Kesh')?.lines }; });
+check('Save & quit → Continue with the screen fitted, not yet turned: the screen stays on, the cowl still faces east, nothing to carry; the journal ticks the screen', c1s.room === 'desert' && c1s.fit && c1s.screen && !c1s.done && c1s.dir === 2 && c1s.cowl === 2 && !c1s.items.includes('kscreen') && c1s.journal?.some((l) => l.key === 'k_j_screen' && l.done) && c1s.journal?.some((l) => l.key === 'k_j_cool' && !l.done), c1s);
+const c1d = await ev(() => { const C = game.rooms.desert.kesh.cool; const r = P.use(C.door.x, C.door.z, { kind: 'kdoor', near: 0.9 }); P.settle(); const lumi = P.talk('weaver'); return { r: r.r, lumi: lumi.r }; });
+const c1dl = await said();
+check('…after Continue the door says the screen is on but the mouth still faces the wrong way; Lumi says turn it into the wind (INPUT)', c1d.r === 'used' && c1dl.some((l) => /screen is on up there, but the mouth still faces the wrong way/.test(l)) && c1dl.some((l) => /Now turn it into the wind/.test(l)), { c1d, c1dl });
+const c1t = await ev(() => { const C = game.rooms.desert.kesh.cool, f = game.flags;
   const labels = [];
   for (let i = 0; i < 5 && !f.k_done; i++) { P.wait(0.8); const r = P.use(C.crank.x, C.crank.z, { kind: 'kcrank', near: 0.9 }); labels.push(r.target?.label); }
-  return { back, screen, fit, d0, labels, turns: f.k_turns, done: !!f.k_done, sand: !!f.k_sand }; });
+  return { labels, turns: f.k_turns, done: !!f.k_done, sand: !!f.k_sand }; });
 const c1l = await said();
-check('other order: Lumi\'s screen first, fitted while the mouth faces away, then two turns: the room draws, no sand (INPUT)', c1.back.dir === 2 && c1.back.sani < 0.3 && c1.screen && c1.fit && c1.d0 === 2 && c1.turns === 2 && c1.done && !c1.sand && c1l.some((l) => /Now the mouth goes into the wind/.test(l)) && c1l.some((l) => /Side-on/.test(l)), { c1, c1l });
+check('…then two turns (after Continue): the room draws, no sand (INPUT)', c1t.turns === 2 && c1t.done && !c1t.sand && c1l.some((l) => /Side-on/.test(l)) && c1l.some((l) => /curtain in the door lifts/.test(l)), { c1t, c1l });
 const c2 = await ev(() => { const f = game.flags, h = game.hero; const c0 = h.coins; P.talk('dtrader'); return { c0, owed: f.k_owe || 0, lying: game.pickups.list.filter((p) => p.owe === 'k_owe').length }; });
 await said();
 file = path.join(os.tmpdir(), 'desertlife2-' + process.pid + '.json');

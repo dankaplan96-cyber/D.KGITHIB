@@ -12,10 +12,12 @@ Object.assign(STR.en, {
 
   // ---- the cool room's door
   k_door_1: "Kesh's cool room. It was one of FunFrock's blockhouses. Kesh dug the door out of the dune and built a wind-catcher on the roof.",
-  k_door_dry: 'Inside: two jars of water, and air like soup.',
-  k_door_wet: "Inside: water jars, Brosk's dates, Lumi's wool. And air like soup.",
+  k_door_dry: 'Two jars of water on the shelf, going warm. Inside, air like soup.',
+  k_door_wet: "Water jars on the shelf, warm as tea. Inside, Lumi's wool and air like soup.",
   k_door_sand: "Sand on the floor, sand on the jars. Brosk is not going to like this.",
   k_door_hint: "(Up on the roof, the wind-catcher's mouth is turned the wrong way.)",
+  k_door_hint_fit: "(Lumi's screen is on up there, but the mouth still faces the wrong way.)",
+  k_door_hint_screen: "(The mouth takes the wind now. With no screen on it, it takes the sand too.)",
   k_drink: 'Cold water, in the middle of the desert.',
 
   // ---- the wind-catcher
@@ -29,17 +31,20 @@ Object.assign(STR.en, {
   k_cowl_done: "Tied off. It'll hold till the next storm.",
 
   // ---- Brosk
-  k_brosk_i_dry: "The last two jars of water in Kesh are going warm in the cool room. The storm turned its wind-catcher round.",
+  k_brosk_i_dry: "The last two jars of water in Kesh are going warm at the cool room. The storm turned its wind-catcher round and tore Lumi's screen off it.",
   k_brosk_i_wet: 'Now the water needs keeping cold. And the storm turned the cool room\'s wind-catcher round.',
   k_brosk_i_steam: "If that steam boils the oasis, the cool room's jars are all Kesh has. And they're warm. The storm turned the wind-catcher round.",
   k_brosk_i_after: "The ground's gone quiet since the vent. The cool room hasn't cooled down, though. The wind-catcher still faces the wrong way.",
   k_brosk_2: "The stair's up the side. I'd go, but somebody has to mind the stall.",
   k_brosk_wait: "The wind-catcher. On the cool room's roof. Into the wind.",
-  k_brosk_sand: 'Sand! In my dates! Whatever you did up there, do the opposite.',
+  k_brosk_sand: 'Sand! In my dates!',
+  k_brosk_sand_screen: "You've got the air coming in, I'll give you that. Half the desert with it. That's what Lumi's screens are for.",
+  k_brosk_sand_turn: "And still no air in there. Into the wind, and a screen over it. Lumi makes those.",
+  k_brosk_sand_fit: "There's a screen on it now? Then turn it into the wind.",
   k_brosk_pay: "Cold dates! Cold water! Here, five kashes. Don't tell Tarra I paid. She'll want her share.",
   k_brosk_done: [
     'People queue for cold water now. I sell them dates while they wait.',
-    'FunFrock built that blockhouse to keep us out. Now it keeps the dates in.',
+    'FunFrock built that blockhouse to keep us out. Now it keeps the dates cool.',
   ],
   k_brosk_steamdone: [
     "Steam or no steam, the jars stay cold. That's something.",
@@ -47,7 +52,7 @@ Object.assign(STR.en, {
   ],
   k_brosk_after: [
     'Dallan came in for a cold drink. Paid for it, too. Strange times.',
-    'FunFrock built that blockhouse to keep us out. Now it keeps the dates in.',
+    'FunFrock built that blockhouse to keep us out. Now it keeps the dates cool.',
   ],
 
   // ---- Lumi

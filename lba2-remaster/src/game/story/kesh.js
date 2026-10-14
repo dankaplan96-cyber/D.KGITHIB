@@ -5,14 +5,16 @@
 // The Wind-Catcher (from chapter 4 on, whenever Twinsen is on Desert Island): Kesh keeps its water jars, Brosk's
 // dates and Lumi's dyed wool in one of FunFrock's old blockhouses, dug out of a dune, with a wind-catcher Kesh built on
 // its roof. The last storm turned the cowl away from the wind and tore its sand screen: the cool room is stuffy.
-//   - Brosk (the trader) or a look at the door tells Twinsen; Sani says how to find the wind (the pump's wheel faces
-//     it, Hesk's flags stream away from it).
+//   - Brosk (the trader) or a look at the door tells Twinsen (Brosk: the storm tore Lumi's screen off it); Sani says
+//     how to find the wind (the pump's wheel faces it, Hesk's flags stream away from it; the roof has a windsock).
+//     The door's hint and Brosk's advice follow how the cowl stands now (hint()): the wrong way, into the wind with no
+//     screen (then the screen is what's missing), or the screen on but the wrong way.
 //   - Lumi wove a new screen. Before the pump runs (chapter 4) she won't hand it to someone off the project's ferry;
 //     after it, she does.
 //   - On the roof (the stair up the east wall) the crank turns the cowl a quarter at a time. Its mouth into the wind
 //     (west) with the screen on: the room draws. Into the wind without the screen: sand pours down the tower into the
 //     room (a setback: the screen fixes it). Any order works (screen first or turn first).
-//   - After: the curtain lifts, the jars stay cold (a drink there restores life), Brosk's dates move in, Sani sits in
+//   - After: the curtain lifts, the jars stay cold (a drink there restores life), Brosk's dates join the jars, Sani sits in
 //     the doorway, and Brosk pays five kashes (owed until picked up: ChapterBase.reward).
 // Lines change with the main story: before and after the pump (chapter 4), with the steam threatening the oasis
 // (chapter 5) and after the vent opened. Nothing on the main path depends on it; chapter 5's errand with Brosk (the
@@ -83,7 +85,7 @@ export class KeshLife extends ChapterBase {
         if (f.k_done) { if (h.hp < h.maxHp) { h.hp = Math.min(h.maxHp, h.hp + 3); g.audio.play('heal'); } return say(['k_drink']); }
         const inside = f.k_sand ? 'k_door_sand' : this.phase() === 'dry' ? 'k_door_dry' : 'k_door_wet';
         const first = !f.k_doorSeen; f.k_doorSeen = true; f.k_ask = true;
-        return say([...(first ? ['k_door_1'] : []), inside, 'k_door_hint'], () => g.save(false));
+        return say([...(first ? ['k_door_1'] : []), inside, this.hint()], () => g.save(false));
       }
       case 'kcrank':
         if (f.k_done) return say(['k_cowl_done']);
@@ -102,16 +104,20 @@ export class KeshLife extends ChapterBase {
           if (f.k_dir !== 0) { say([f.k_dir === 2 ? 'k_turn_away' : 'k_turn_side'], () => g.save(false)); return; }
           if (f.k_fit) { this.finish(); return; }
           // into the wind with no screen: the room takes in half a dune
-          f.k_sand = true; f.k_ask = true; C.setSand(true); this.puffT = 0;
+          f.k_sand = true; f.k_ask = true; C.setSand(true); C.gust();
           g.audio.play('deny');
-          this.burst();
           say(['k_turn_sand', 'k_turn_sand2'], () => g.save(false));
         }, 0.45);
         return true;
     }
     return false;
   }
-  burst() { const C = this.K.cool, g = this.game; g.particles.burst(C.door.x, g.physics.groundAt(C.door.x, C.door.z) + 0.8, C.door.z, '#e8c890', 14, 2.2); }
+  // what is wrong up there now: the mouth's way, or (into the wind) the missing screen
+  hint() {
+    const f = this.f;
+    if (this.dir === 0) return 'k_door_hint_screen';   // (into the wind without a screen: done otherwise)
+    return f.k_fit ? 'k_door_hint_fit' : 'k_door_hint';
+  }
   finish(first = null) {
     const g = this.game, f = this.f, C = this.K.cool;
     f.k_done = true; f.k_ask = true;
@@ -142,7 +148,8 @@ export class KeshLife extends ChapterBase {
           });
         }
         if (f.k_done) return one('dtrader', ph === 'after' ? 'k_brosk_after' : ph === 'steam' ? 'k_brosk_steamdone' : 'k_brosk_done');
-        if (f.k_sand) return c([['dtrader', 'k_brosk_sand']], () => { f.k_ask = true; });
+        // sand in his dates: what to do next depends on how it stands up there
+        if (f.k_sand) return c([['dtrader', 'k_brosk_sand'], ['dtrader', this.dir === 0 ? 'k_brosk_sand_screen' : f.k_fit ? 'k_brosk_sand_fit' : 'k_brosk_sand_turn']], () => { f.k_ask = true; });
         if (!f.k_ask) return c([dig ? ['dtrader', f.c4_pump ? 'c4_trader_2' : 'c4_trader_1'] : null, ['dtrader', 'k_brosk_i_' + ph], ['dtrader', 'k_brosk_2']], () => { f.k_ask = true; g.save(false); });
         return c([['dtrader', 'k_brosk_wait']]);
       }
@@ -164,14 +171,9 @@ export class KeshLife extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- per frame
-  update(dt) {
+  // (the sand and dust the cool room blows about are keshlife.js's: they follow setSand/setDrawing and the cowl)
+  update() {
     if (!this.K) return;
     this.push();
-    const g = this.game, f = this.f;
-    // sand blowing out of the door while the cowl takes the wind with no screen
-    if (f.k_sand && !f.k_done && this.dir === 0 && this.here() && g.state === 'play') {
-      this.puffT = (this.puffT || 0) - dt;
-      if (this.puffT <= 0) { this.puffT = 1.6; this.burst(); }
-    }
   }
 }
