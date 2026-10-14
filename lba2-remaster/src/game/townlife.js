@@ -12,10 +12,12 @@
 //     bench, an Esmer engine on a stand and a water barrel) — The Mislabelled Shipment.
 //
 // CONTRACT (world coordinates): buildTownLife(root, physics, W) → W.life = {
-//   pump {x, z, use {x,z,a}, pipe {x,z0,z1,gap}, sign, valve, setRunning(b), setFree(b), running, stroke(), grip()},
+//   pump {x, z, use {x,z,a}, pipe {x,z0,z1,gap}, sign, valve, setRunning(b), setFree(b), running,
+//         stroke(handsAt?, dur), grip(), handleAngle(), route(hx, hz) → waypoints to the grip},
 //   trough {x,z}, pond {x,z}, beds [{x,z}], boatBox {x,z},
 //   customs {x, z, barrier}, crate {x, z, setState('held'|'open'|'cleared')},
-//   shop {bench {x,z}, engine {x,z, setRunning(b)}, barrel {x,z, wx,wz}, coupler {x,z, setHeat(0..1), setVisible(b)}},
+//   shop {bench {x,z}, work {x,z,a}, route(hx, hz), engine {x,z, setRunning(b)}, barrel {x,z, wx,wz},
+//         coupler {x,z,y, setHeat(u, stage 0..3 | 'settled'), stage, setVisible(b)}},
 //   spots {bram, odile, nell} {x,z,a} }
 // lifeClear(x, z): inside one of these places (the island's scattered bushes, tulip beds and grass keep out).
 import * as THREE from 'three';
@@ -48,6 +50,9 @@ const signTex = (lines, bg = '#2f4a7a', fg = '#f2e6c8') => canvasTex(256, 96, (x
   x.fillStyle = fg; x.textAlign = 'center'; fit(lines[0], 34, true); x.fillText(lines[0], W / 2, lines[1] ? 44 : 60);
   if (lines[1]) { fit(lines[1], 20, false); x.fillText(lines[1], W / 2, 76); }
 });
+// a soft round glow (the coupler's halo, its steam)
+let _halo = null;
+const haloTex = () => _halo || (_halo = canvasTex(64, 64, (x, W) => { const gr = x.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.35, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, W, W); }));
 const tagTex = (text, bg) => canvasTex(96, 48, (x, W, H) => { x.fillStyle = bg; x.fillRect(0, 0, W, H); x.fillStyle = '#ffffff'; x.font = 'bold 22px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2, H / 2 + 1); });
 
 export function buildTownLife(root, physics, W) {
@@ -111,22 +116,44 @@ export function buildTownLife(root, physics, W) {
     k.add(cyl(0.03, 0.03, 1.1, 5), MAT.wood('dark'), sx, gy(sx, sz) + 0.55, sz);
     for (const r of [0, Math.PI]) k.add(plane(0.55, 0.3), sTex, sx, gy(sx, sz) + 1.15, sz + Math.cos(r) * 0.035, r);
     physics.add({ type: 'cyl', x: sx, z: sz, r: 0.08, top: gy(sx, sz) + 1.3, noStand: true });
-    // the handle's stroke: down and back up in 0.6 s, with his hands
-    let pumpT = 0, rest = SEIZED;
-    const DOWN = 0.28;
+    // the handle's stroke: worked by Twinsen it is lifted, pushed down past level and let back up (0.75 s, the
+    // 'pump' pose in src/engine/rig.js), going where his hands take it (its angle is read from his hands each frame,
+    // so the grip stays in them); on its own (a drink) it swings down and back in 0.6 s
+    let pumpT = 0, rest = SEIZED, hands = null;
+    const DOWN = 0.28, piv = handle.position;
     L.pump = {
       x, z, running: false, use: { x: x - USE_D, z, a: Math.PI / 2 },
       pipe: { x: px, z0: z - 7, z1: z + 7, gap: [gz0, gz1] }, sign: { x: sx, z: sz }, valve: { x: px, z: vz },
       setRunning(b) { this.running = b; stream.visible = b; water.material.opacity = b ? 0.9 : 0.25; water.position.y = y + (b ? 0.4 : 0.26); if (b) rest = 0; handle.rotation.z = rest; },
       setFree(b) { rest = b || this.running ? 0 : SEIZED; if (pumpT <= 0) handle.rotation.z = rest; },   // (the valve pin out: the handle drops level)
-      stroke() { pumpT = 0.6; },
-      // where the crossbar grip is now (world), for checks
+      // handsAt(): where the hands are now (world), or none for a stroke on its own
+      stroke(handsAt = null, dur = 0.6) { pumpT = dur; hands = handsAt; },
+      // where the crossbar grip is now (world), and the handle's angle (down > 0), for checks
       grip() { const v = new THREE.Vector3(-HANDLE_L, 0, 0); handle.updateWorldMatrix(true, false); return v.applyMatrix4(handle.matrixWorld); },
+      handleAngle() { return handle.rotation.z; },
+      // the route to the grip from where he stands (round the plinth and the trough on his side; through the
+      // pipe's gap from the far side of the lane)
+      route(hx, hz) {
+        const rx = hx - x, rz = hz - z, s = rz >= 0 ? 1 : -1, pts = [];
+        if (rx > -0.8) {
+          if (rx > 0.55 && Math.abs(rz) < 0.75) pts.push({ x: hx, z: z + s * 0.95 });   // (beside the trough: out from it first)
+          pts.push({ x: x - 0.75, z: z + s * 0.95 });
+        } else if (rx < -1.75 && Math.abs(rz) > 0.35) pts.push({ x: x - 2.3, z });       // (west of the pipe: to the gap)
+        pts.push({ x: x - USE_D, z });
+        return pts;
+      },
     };
     L.pump.setRunning(false);
+    const _h = new THREE.Vector3();
     W.updaters.push((dt, t) => {
-      if (pumpT > 0) { pumpT -= dt; const ph = Math.min(1, Math.max(0, (0.6 - pumpT) / 0.6)); handle.rotation.z = Math.sin(ph * Math.PI) * DOWN; }
-      else handle.rotation.z = rest + (L.pump.running ? Math.sin(t * 0.7) * 0.03 : 0);
+      if (pumpT > 0) {
+        pumpT -= dt;
+        const m = hands?.(_h);
+        if (m) handle.rotation.z = Math.min(DOWN + 0.12, Math.max(-0.6, Math.atan2(piv.y - m.y, piv.x - m.x)));
+        else if (hands) handle.rotation.z += (rest - handle.rotation.z) * Math.min(1, dt * 8);   // (let go: it swings back up)
+        else { const ph = Math.min(1, Math.max(0, (0.6 - pumpT) / 0.6)); handle.rotation.z = Math.sin(ph * Math.PI) * DOWN; }
+        if (pumpT <= 0) { hands = null; handle.rotation.z = rest; }
+      } else handle.rotation.z = rest + (L.pump.running ? Math.sin(t * 0.7) * 0.03 : 0);
     });
     L.trough = { x: tx, z: tz };
     L.spots.bram = { x: x - 0.3, z: z - 2.1, a: 0.1 };   // (on the far side, so E at the pump means the pump)
@@ -228,26 +255,54 @@ export function buildTownLife(root, physics, W) {
     let coupler, benchLamp;
     k.at(s.x, sy, s.z, SRY, () => {
       k.add(rbox(0.15, 2.4, 3.2, 0.02), MAT.planks('grey'), 1.3, 1.2, 0);                           // back wall
-      k.add(rbox(2.9, 0.1, 3.4, 0.02), MAT.paint('#c8602a', 0.6), 0.05, 2.62, 0, 0, { rz: -0.15 });   // roof, rising toward the open front (the bench stays in view)
-      for (const pz of [-1.55, 1.55]) k.add(cyl(0.06, 0.07, 2.78, 6), MAT.wood('dark'), -1.2, 1.39, pz);
-      k.add(plane(1.6, 0.42), MAT.map(signTex(['NELL\'S REPAIRS', 'engines - pumps - shuttles'], '#c8602a', '#f8f0dc'), 0.7), -1.44, 3.06, 0, -Math.PI / 2); k.add(rbox(0.05, 0.46, 1.66, 0.01), MAT.wood('dark'), -1.4, 3.06, 0);   // (its board stands on the roof's front edge)
+      // (the roof, resting on the back wall and rising steeply toward the open front, is built below: its own mesh,
+      // so it can fade)
+      for (const pz of [-1.55, 1.55]) k.add(cyl(0.06, 0.07, 3.16, 6), MAT.wood('dark'), -1.2, 1.58, pz);
       k.at(0.85, 0, 0, -Math.PI / 2, () => P.workbench(k, { w: 2.2, d: 0.7, h: 0.88 }));
       // spare parts on the bench: gears, a shuttle landing leg, a crate of springs; tools on the back wall
       for (let i = 0; i < 3; i++) k.add(torus(0.08 + i * 0.03, 0.02, 4, 10), MAT.steel(), 0.8, 0.92 + i * 0.02, -0.7 + i * 0.12, 0, { rx: Math.PI / 2 });
       k.add(cyl(0.05, 0.08, 0.7, 8), MAT.paint('#b82a24', 0.45), 0.85, 0.95, -0.1, 0, { rz: Math.PI / 2 - 0.2 });
       for (let i = 0; i < 4; i++) k.add(rbox(0.03, 0.3 + (i % 2) * 0.1, 0.05, 0.01), MAT.steel(), 1.21, 1.5, -0.9 + i * 0.25);
       benchLamp = new THREE.PointLight('#ffd890', 0, 5); k._local(0.4, 2.0, 0, 0, {}).decompose(benchLamp.position, benchLamp.quaternion, benchLamp.scale); g.add(benchLamp);
-      // the coupler, once it is on the bench: a brass drum with fins, glowing as it heats (at the bench's east end,
-      // where Twinsen standing at the bench doesn't hide it)
+      // the coupler, once it is on the bench: a brass drum with fins, glowing as it heats (at the front of the bench's
+      // east end; Twinsen works from its west end, so he stands beside it, not in front of it)
       coupler = k.pivot(0.7, 0.9, 0.7, 0);
     });
     coupler.visible = false;
+    // the roof: tall at the front so the bench and the coupler stay in view from the paths at the normal camera's
+    // 26°; from the far view (46°) it fades while the coupler is on the bench and the roof is in the way of it, or
+    // while Twinsen stands under it and it hides him (as the town's houses fade)
+    const roofM = MAT.paint('#c8602a', 0.6).clone(), signM = MAT.map(signTex(['NELL\'S REPAIRS', 'engines - pumps - shuttles'], '#c8602a', '#f8f0dc'), 0.7).clone(), boardM = MAT.wood('dark').clone();
+    const fadeM = [roofM, signM, boardM];
+    {
+      const rg = new THREE.Group(); rg.position.set(s.x, sy, s.z); rg.rotation.y = SRY; g.add(rg);
+      const put = (geo, m, x, y, z, ry = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(0, ry, rz); o.castShadow = o.receiveShadow = true; rg.add(o); };
+      put(rbox(2.9, 0.1, 3.4, 0.02), roofM, 0.05, 2.82, 0, 0, -0.3);
+      put(plane(1.6, 0.42), signM, -1.36, 3.5, 0, -Math.PI / 2);   // (its board stands on the roof's front edge)
+      put(rbox(0.05, 0.46, 1.66, 0.01), boardM, -1.32, 3.5, 0);
+    }
+    {
+      const R = { x0: s.x - 1.75, x1: s.x + 1.75, z0: s.z - 1.5, z1: s.z + 1.45, y0: sy + 2.3, y1: sy + 3.8 }, sample = new THREE.Vector3(), from = new THREE.Vector3();
+      let f = 1; const prev = W.fadeOccluders;
+      W.fadeOccluders = (cam, hero, dt) => {
+        prev?.(cam, hero, dt);
+        let hit = false;
+        const under = hero.x > R.x0 && hero.x < R.x1 && hero.z > R.z0 && hero.z < R.z1;
+        for (const [on, x, y, z] of [[coupler.visible, cw.x, sy + 1.05, cw.z], [under, hero.x, hero.y + 1.4, hero.z]]) {
+          if (!on) continue; from.set(x, y, z);
+          for (let i = 1; i < 20 && !hit; i++) { sample.copy(from).lerp(cam.position, i / 20); if (sample.x > R.x0 && sample.x < R.x1 && sample.z > R.z0 && sample.z < R.z1 && sample.y > R.y0 && sample.y < R.y1) hit = true; }
+        }
+        f += ((hit ? 0.25 : 1) - f) * (1 - Math.exp(-dt * 8));
+        const see = f < 0.98;
+        for (const m of fadeM) { if (m.transparent !== see) { m.transparent = see; m.depthWrite = !see; m.needsUpdate = true; } m.opacity = see ? f : 1; }
+      };
+    }
     const cm = new THREE.MeshStandardMaterial({ color: '#c89a4a', roughness: 0.35, metalness: 0.75, emissive: '#ff5a1a', emissiveIntensity: 0 });
     { const ck2 = new Kit(coupler); ck2.add(cyl(0.14, 0.14, 0.26, 14), cm, 0, 0.13, 0);
       for (let i = 0; i < 6; i++) ck2.add(rbox(0.02, 0.22, 0.12, 0.004), cm, Math.cos(i) * 0.16, 0.13, Math.sin(i) * 0.16, -i);
       ck2.flush(); }
     { const bw = toW(1.3, 0); box(bw.x, bw.z, 1.6, 0.12, sy + 2.4, { noStand: true }); }
-    for (const pz of [-1.55, 1.55]) { const p = toW(-1.2, pz); physics.add({ type: 'cyl', x: p.x, z: p.z, r: 0.1, top: sy + 2.8, noStand: true }); }
+    for (const pz of [-1.55, 1.55]) { const p = toW(-1.2, pz); physics.add({ type: 'cyl', x: p.x, z: p.z, r: 0.1, top: sy + 3.2, noStand: true }); }
     { const b = toW(0.85, 0); box(b.x, b.z, 1.1, 0.35, sy + 0.9, { noStand: true }); }
     // the Esmer engine on its stand at the open west side: a drum, a fan toward the path that spins when it runs
     const ex = s.x - 1.75, ez = s.z + 0.55, ey = gy(ex, ez);
@@ -263,11 +318,57 @@ export function buildTownLife(root, physics, W) {
     const bw = new THREE.Mesh(new THREE.CircleGeometry(0.3, 16), new THREE.MeshStandardMaterial({ color: '#5a90b8', roughness: 0.1 })); bw.rotation.x = -Math.PI / 2; bw.position.set(wx, wy + 0.74, wz); g.add(bw);
     physics.add({ type: 'cyl', x: wx, z: wz, r: 0.38, top: wy + 0.82, noStand: true });
     const cw = toW(0.7, 0.7);
+    // the coupler's heat, readable at room scale: the brass goes dull red (warming), then bright orange with a halo
+    // and a light on the bench and the back wall (glowing: take it off now), then yellow-white and flickering with a
+    // column of steam (about to trip; life.js adds the sparks and the ticking). Steam puffs rise from it throughout.
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(), color: '#ff7a30', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    halo.position.set(0, 0.14, 0); halo.userData.fx = true; coupler.add(halo);
+    const cLight = new THREE.PointLight('#ff7a30', 0, 3.6); cLight.position.set(cw.x, sy + 1.35, cw.z); g.add(cLight);
+    const puffs = [];
+    for (let i = 0; i < 10; i++) { const p = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex(), color: '#eef2f4', transparent: true, opacity: 0, depthWrite: false })); p.visible = false; p.userData.fx = true; g.add(p); puffs.push({ p, life: 0, op: 0 }); }
+    const HEAT_LOOK = [   // per stage: emissive colour, intensity, halo opacity/size, light, steam puffs per second and their opacity
+      { c: '#000000', e: 0, h: 0, hs: 0.3, l: 0, puff: 0, po: 0 },
+      { c: '#b0280a', e: 0.9, h: 0.22, hs: 0.45, l: 0.6, puff: 0.8, po: 0.28 },
+      { c: '#ff6414', e: 2.4, h: 0.6, hs: 0.8, l: 2.6, puff: 2.6, po: 0.45 },
+      { c: '#ffd890', e: 3.4, h: 0.9, hs: 1.05, l: 4.2, puff: 8, po: 0.6 },
+    ];
+    let heatU = 0, heatStage = 0, settled = false, puffAcc = 0;
+    const _c = new THREE.Color(), _settledC = new THREE.Color('#ff9040');
+    W.updaters.push((dt, t) => {
+      const on = coupler.visible, H = HEAT_LOOK[on && !settled ? heatStage : 0];
+      const flick = heatStage === 3 && !settled ? 0.75 + 0.25 * Math.sin(t * 23) + 0.1 * Math.sin(t * 61) : 1;
+      if (settled) { cm.emissive.copy(_settledC); cm.emissiveIntensity = 0.35; }
+      else { cm.emissive.copy(_c.set(H.c)); cm.emissiveIntensity = H.e * (heatStage === 1 ? 0.5 + heatU * 2 : 1) * flick; }
+      halo.visible = on && H.h > 0; halo.material.color.copy(cm.emissive); halo.material.opacity = H.h * flick; halo.scale.setScalar(H.hs * (heatStage === 3 ? 0.92 + 0.12 * Math.sin(t * 9) : 1));
+      cLight.color.copy(cm.emissive); cLight.intensity = on ? H.l * flick : 0;
+      // steam: puffs from the top of the drum that rise, swell and thin out
+      puffAcc += on ? H.puff * dt : 0;
+      while (puffAcc >= 1) {
+        puffAcc -= 1;
+        const P = puffs.find((q) => q.life <= 0); if (!P) break;
+        P.life = 1.3; P.op = H.po; P.p.visible = true; P.p.position.set(cw.x + (Math.random() - 0.5) * 0.12, sy + 1.12, cw.z + (Math.random() - 0.5) * 0.12);
+        P.vx = (Math.random() - 0.5) * 0.15; P.vz = (Math.random() - 0.5) * 0.15;
+      }
+      for (const P of puffs) {
+        if (P.life <= 0) continue;
+        P.life -= dt; const k = 1 - Math.max(0, P.life) / 1.3;
+        P.p.position.x += P.vx * dt; P.p.position.z += P.vz * dt; P.p.position.y += (0.75 - k * 0.3) * dt;
+        P.p.scale.setScalar(0.18 + k * 0.55); P.p.material.opacity = P.op * Math.min(1, k * 5) * (1 - k);
+        if (P.life <= 0) P.p.visible = false;
+      }
+    });
     L.shop = {
       bench: toW(0.05, 0.25),
+      // his place at the bench (its west end, the coupler to his right), and the way there from beside the bench
+      work: { x: s.x - 0.25, z: s.z + 0.02, a: Math.PI },
+      route(hx, hz) { const pts = []; if (hx < s.x - 0.7 && hz < s.z + 1.0) pts.push({ x: s.x - 0.6, z: s.z + 1.1 }); pts.push({ x: s.x - 0.25, z: s.z + 0.02 }); return pts; },
       engine: { x: ex + 0.2, z: ez + 0.9, setRunning(b) { fanOn = b; benchLamp.intensity = b ? 3 : 0; } },
       barrel: { x: wx + 0.1, z: wz + 0.85, wx, wz },
-      coupler: { x: cw.x, z: cw.z, y: sy + 0.9, setHeat(h) { cm.emissiveIntensity = h * 3.5; }, setVisible(b) { coupler.visible = b; }, get visible() { return coupler.visible; } },
+      // setHeat(u 0..1 of the way to the trip, stage 0 cool | 1 warming | 2 glowing | 3 about to trip | 'settled')
+      coupler: { x: cw.x, z: cw.z, y: sy + 0.9, setHeat(u, st = 0) { heatU = u; settled = st === 'settled'; heatStage = settled ? 0 : st; }, get stage() { return settled ? 'settled' : heatStage; },
+        // what it looks like now (for checks): glow colour and strength, its light, halo, steam puffs in the air
+        look() { return { c: '#' + cm.emissive.getHexString(), e: +cm.emissiveIntensity.toFixed(2), light: +cLight.intensity.toFixed(2), halo: halo.visible ? +halo.material.opacity.toFixed(2) : 0, puffs: puffs.filter((q) => q.life > 0).length }; },
+        setVisible(b) { coupler.visible = b; }, get visible() { return coupler.visible; } },
     };
     // Nell kneels at her dead engine (inside the open west side); once it runs she stands up facing the path
     L.spots.nell = { x: ex + 0.75, z: ez, a: -Math.PI / 2, aDone: Math.PI * 0.25 };

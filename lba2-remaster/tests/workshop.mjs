@@ -163,6 +163,9 @@ await ev(() => { P.settle(); Object.assign(game.flags, { chapter: 8, chapterKey:
 const c10 = await said();
 const c10s = await ev(() => ({ room: game.room?.id, key: game.flags.chapterKey, started: !!game.flags.c10_started, done: game.rooms.workshop.life.state.done, pulse: game.rooms.workshop.life.state.pulse }));
 check('chapter 10 opens in the workshop; Baldino recalls the test pair\'s rules; the pair is still talking', c10s.key === 'network' && c10s.room === 'workshop' && c10s.started && c10s.done && c10.some((l) => /test pair/.test(l)), { c10s, c10: c10.filter((l) => !l.startsWith('[')) });
+// (REV-TY-3 N1) the opening agrees with the stations as built (the Citadel relay on the manifold underground, the
+// dome's indoors by the telescope) and with "a friend standing by": no masts, no "up high", no "nobody to keep them cool"
+check('chapter 10\'s opening lines agree with the stations as built and with a friend at each station (REV-TY-3 N1)', c10.some((l) => /friend standing by/.test(l)) && c10.some((l) => /old machines carry the signal/.test(l)) && !c10.some((l) => /masts|up high|clear line|nobody to keep/i.test(l)), c10.filter((l) => !l.startsWith('[')));
 const pg = await use('pulse', 'wlook'); const pgl = await said();
 check('chapter 10: the thunder box is gone from the shelf (it\'s the pulse tool now)', !c10s.pulse && pgl.some((l) => /pocket/.test(l)), { pg, pgl });
 await shot('W-04-chapter10.png');

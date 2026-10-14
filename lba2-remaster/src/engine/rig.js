@@ -14,6 +14,24 @@ import { textures } from './textures.js';
 // LBA2 draws a shaded quad under every actor (AfficheShadow / DrawShadow).
 let blobGeo = null, blobMat = null;
 const STRIKE = new Set(['slash1', 'slash2', 'slash3', 'heavy', 'throwQuick', 'dodge']);
+// both hands on a handle that moves with them: the joints follow the pose closely (the handle follows the hands)
+const PUMP = new Set(['pump', 'pumpGrip']);
+// The pump stroke (Bram's pump, src/game/townlife.js): the handle's angle over the stroke (0 level, < 0 lifted,
+// > 0 pushed down) and the pose at three of its angles (shoulders, elbows, lean). Lift 0.22 s, push 0.3 s, back 0.23 s.
+export const PUMP_POSE = {
+  lift: 0.22, push: 0.3, back: 0.23, out: -0.45,
+  up: { th: -0.45, arm: -1.1, el: -1.1, torso: 0.06 },
+  level: { th: 0, arm: -0.5, el: -1.05, torso: 0.14 },
+  down: { th: 0.28, arm: -0.6, el: -0.7, torso: 0.36 },
+};
+export const PUMP_STROKE = PUMP_POSE.lift + PUMP_POSE.push + PUMP_POSE.back;
+const smooth = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
+export function pumpAngle(t) {
+  const Q = PUMP_POSE, up = Q.up.th, dn = Q.down.th;
+  if (t < Q.lift) return up * smooth(t / Q.lift);
+  if (t < Q.lift + Q.push) return up + (dn - up) * smooth((t - Q.lift) / Q.push);
+  return dn * (1 - smooth((t - Q.lift - Q.push) / Q.back));
+}
 const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe', 'reachHigh']);
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
@@ -647,13 +665,16 @@ export class Rig {
       hipsY = 0.95 - 0.36 * k; torsoX = 0.75 * k; headX = 0.2 * k;
       T.legL = -1.0 * k; T.legR = -0.6 * k; T.kneeL = 1.7 * k; T.kneeR = 1.2 * k; T.footL = -0.6 * k; T.footR = -0.5 * k;
       T.armR = -1.1 * k; T.elR = -0.2; T.armL = -0.4 * k; T.elL = -0.6;
-    } else if (a === 'pump') {
-      // both hands together on a pump handle's grip: one stroke down and back up in 0.6 s
-      const k = Math.sin(Math.min(1, this.actionT / 0.6) * Math.PI);
-      T.armL = -1.3 + k * 0.7; T.armR = -1.3 + k * 0.7; T.elL = -0.8 + k * 0.25; T.elR = -0.8 + k * 0.25;
-      armOut = -0.45;
-      torsoX = 0.14 + k * 0.22; hipsY = 0.93 - k * 0.05;
-      T.legL = -0.35; T.legR = 0.3; T.kneeL = 0.3 + k * 0.2; T.kneeR = 0.2 + k * 0.15;
+    } else if (a === 'pump' || a === 'pumpGrip') {
+      // both hands together on a pump handle's grip ('pumpGrip': taking hold of it, level): one stroke, the handle
+      // lifted, pushed down past level, let back up. The pose is keyed by the handle's angle (fitted so his hands'
+      // middle stays on the grip's circle: captures/townlife/ty3fix/fit-pump.mjs); the handle follows his hands.
+      const Q = PUMP_POSE, th = a === 'pumpGrip' ? 0 : pumpAngle(this.actionT);
+      const K = th < 0 ? Q.up : Q.down, w = th / K.th, L0 = Q.level, mix = (p) => L0[p] + (K[p] - L0[p]) * w;
+      T.armL = T.armR = mix('arm'); T.elL = T.elR = mix('el');
+      armOut = Q.out;
+      torsoX = mix('torso'); hipsY = 0.93 - 0.05 * Math.max(0, th / Q.down.th);
+      T.legL = -0.35; T.legR = 0.3; T.kneeL = 0.3 + Math.max(0, th) * 0.7; T.kneeR = 0.2 + Math.max(0, th) * 0.5;
     } else if (a === 'use') {
       // both hands on a wheel/lever, cranking
       const w = Math.sin(this.actionT * 7);
@@ -768,7 +789,7 @@ export class Rig {
 
     // strikes track their poses tightly (lag ≈ 18 ms) so the blade crosses the target in the active frames
     this.blendT = Math.max(0, (this.blendT || 0) - dt);
-    const R = STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : this.blendT > 0 ? 8 : 16;
+    const R = STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : PUMP.has(a) ? 26 : this.blendT > 0 ? 8 : 16;
     const set = (obj, v, axis = 'x', r = R) => { obj.rotation[axis] = damp(obj.rotation[axis], v ?? 0, r, dt); };
     set(j.legL.hip, T.legL); set(j.legR.hip, T.legR);
     set(j.legL.knee, T.kneeL); set(j.legR.knee, T.kneeR);
@@ -780,7 +801,7 @@ export class Rig {
     set(j.torso, torsoX); set(j.torso, torsoY, 'y'); set(j.torso, torsoZ, 'z', 8);
     set(j.head, headX, 'x', 10); set(j.head, headY, 'y', 8); set(j.head, headZ, 'z', 8);
     set(j.body, bodyRotX, 'x', 8);
-    this._armOut = damp(this._armOut || 0, armOut, 8, dt);
+    this._armOut = damp(this._armOut || 0, armOut, PUMP.has(a) ? 26 : 8, dt);
     j.armL.sh.rotation.z = this.armSpread + this._armOut; j.armR.sh.rotation.z = -this.armSpread - this._armOut;
     // pelvis counter-rotates against the shoulders while walking
     if (walkLike) j.hips.rotation.y = damp(j.hips.rotation.y, -torsoY * 0.8, R, dt); else j.hips.rotation.y = damp(j.hips.rotation.y, 0, 8, dt);

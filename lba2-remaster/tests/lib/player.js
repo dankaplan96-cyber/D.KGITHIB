@@ -219,7 +219,7 @@
       // (a particular thing asked for and someone walking by has the prompt: wait for them to pass, as a player would)
       for (let k = 0; kind && k < 20 && P.target()?.kind !== kind; k++) { G.step(0.25); if (k % 4 === 3) { P.go(x, z, { tol: Math.max(0.35, near * 0.5), maxT: 4 }); P.face(x, z); } }
       P.tap('KeyE', 0.1);
-      for (let k = 0; k < 3 / DT && hero().actT > 0 && G.state === 'play'; k++) G.step(DT);   // (his action plays out: a valve turned, a lever pulled)
+      for (let k = 0; k < 5 / DT && (hero().actT > 0 || hero().steer) && G.state === 'play'; k++) G.step(DT);   // (his action plays out: a valve turned, a lever pulled; the few steps it takes him there first)
     }
     const s = P.settle();
     return { r: 'used', target: tg, state: s.state, lines: s.lines };

@@ -10,8 +10,8 @@ Object.assign(STR.en, {
 
   c10_narr: "Baldino's workshop, late into the night. Every bench is covered in wire.",
   c10_bal_1: "Five stations. Five places where the project's old machines can still be made to talk: the mains under Citadel, the lighthouse transmitter, my mill on Zeelich, the bore on Desert Island, and Sefa's dome on the Hamalayi.",
-  c10_bal_2: "My relays: the test pair from my table, grown up and put on masts. When all five hear each other at once, the shaft's blast doors will hear them too.",
-  c10_bal_3: "Now the limits. Each relay needs a clear line to the others, so they go up high. Each runs on power from where it stands: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by.",
+  c10_bal_2: "My relays: the test pair from my table, grown up. Each one hooks into a station's old machine and talks through it. When all five hear each other at once, the shaft's blast doors will hear them too.",
+  c10_bal_3: "Now the limits. Each relay runs on power from where it stands: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by.",
   c10_tw_b1: "Then we need friends at five stations, and a way to reach them all.",
   c10_bal_pulse1: "Oh, and before I forget. Take this. My pulse tool: a little thunder in a box. It jams anything with gears or wires for a few seconds. Drones, automatons, mills, doors.",
   c10_bal_pulse2: "It does nothing at all to anything alive, and it needs a few seconds to recharge. Don't wave it at mites and expect miracles.",

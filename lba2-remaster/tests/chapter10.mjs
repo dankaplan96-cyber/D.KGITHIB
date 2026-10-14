@@ -2,6 +2,8 @@
 // (ball on the brake, climb, the relay) → Hesk's glider to Citadel → Mira's valve room (three valves) → the
 // lighthouse (Zoé, Arthur, the dials) → Desert Island (Ilka, the relay on the bore, three drones) → the
 // Hamalayi (Pim, Sefa's dome: the relay, the telescope) → back to Zeelich → the platform console → chapter 11.
+// Verdict: CHAPTER 10 DONE only when every ball target (the mill's brake, the three drones) fell to throws; if any
+// had to be beaten through its own rule (an ISO assist, logged), the run ends CHAPTER 10 ASSISTED with exit code 2.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
@@ -10,6 +12,8 @@ page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stac
 page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
+const assists = [];   // ball targets that did not fall to throws (REV-TY-3 N4)
+const MAX_THROWS = +(process.env.C10_MAX_THROWS ?? 120);   // throws per drone before the assist (0 forces it: checks the verdict)
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
@@ -59,7 +63,8 @@ log('start', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags
   G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.flags.c10_started, T.obj()]; }));
 await shot('C10-00-workshop.png');
 log('oku', await ev(() => { T.out(); T.talk('oku'); return [game.room?.id, game.flags.c10_okuAsk]; }));
-log('brake', await ev(() => { const G = game, f = G.flags, m = G.rooms.zeelich.mills[0]; return [T.hit({ ...m.brake, get done() { return !!f.c10_millBraked; } }), m.spinning]; }));
+{ const b = await ev(() => { const G = game, f = G.flags, m = G.rooms.zeelich.mills[0]; return [T.hit({ ...m.brake, get done() { return !!f.c10_millBraked; } }), m.spinning]; });
+  log('brake', b); if (b[0] !== 'thrown') { assists.push('mill brake: ' + b[0]); log('ISO  the mill brake was not hit by a throw: ' + b[0]); } }
 log('mill relay', await ev(() => { const mt = game.rooms.zeelich.millTop; T.useAt(mt.x, mt.z, mt.y); return [game.flags.c10_mill, game.rooms.zeelich.mills[0].spinning, T.obj()]; }));
 await shot('C10-01-mill.png');
 log('to citadel', await ev(() => { const L = game.story.cur.landing('zeelich'); T.tp(L.x, L.z); return T.fly(1); }));
@@ -77,19 +82,21 @@ log('ilka', await ev(() => { T.talk('ilka'); const b = game.rooms.desert.bore; T
 // the three drones by throws (the drones' AI uses unseeded Math.random, so a drone can dodge many throws in a row):
 // each throw from a fresh side and distance, aimed again a moment before it leaves the hand; up to 120 throws per
 // drone. Only a drone still flying after that is beaten through its own damage rule, and that is logged as ISO.
-log('drones', await ev(() => { const G = game, h = G.hero, out = [];
+const drones = await ev((MAXT) => { const G = game, h = G.hero, out = [], iso = [];
   for (const d of G.story.cur.boreDrones()) {
     let n = 0;
-    for (; n < 120 && d.alive; n++) {
+    for (; n < MAXT && d.alive; n++) {
       const a = Math.PI / 2 + n * 2.4, r = 2.8 + (n % 3) * 0.5, x = d.pos.x - Math.sin(a) * r, z = d.pos.z - Math.cos(a) * r;
       h.pos.set(x, G.physics.groundAt(x, z), z); h.onGround = true; h.vy = 0; h.hp = h.maxHp; G.ball.state = 'idle';
       h.angle = h.angleTo(d); G.step(0.05); h.angle = h.angleTo(d);
       T.tap('KeyF'); G.step(1.0); if (G.state === 'dialog') T.talkAll();
     }
-    if (d.alive) { d.damage(99, null); G.step(0.5); out.push(d.def.id + ': ISO assist after ' + n + ' throws'); } else out.push(d.def.id + ': thrown (' + n + ' throws)');
+    if (d.alive) { d.damage(99, null); G.step(0.5); out.push(d.def.id + ': ISO assist after ' + n + ' throws'); iso.push(d.def.id + ' killed by its damage rule after ' + n + ' throws'); } else out.push(d.def.id + ': thrown (' + n + ' throws)');
   }
   for (let i = 0; i < 20; i++) { G.step(0.2); T.talkAll(); }
-  return [out, G.story.cur.boreDrones().map((d) => d.alive), G.flags.c10_bore, T.obj()]; }));
+  return [out, G.story.cur.boreDrones().map((d) => d.alive), G.flags.c10_bore, T.obj(), iso]; }, MAX_THROWS);
+log('drones', drones.slice(0, 4));
+for (const a of drones[4]) { assists.push('drone ' + a); log('ISO  drone ' + a); }
 await shot('C10-06-bore.png');
 log('to hamalayi', await ev(() => { const L = game.story.cur.landing('desert'); T.tp(L.x, L.z); return T.fly(3); }));
 await shot('C10-07-monastery.png');
@@ -100,6 +107,8 @@ log('to zeelich', await ev(() => { T.out(); const L = game.story.cur.landing('ha
 const fin = await ev(() => { const c = game.rooms.zeelich.platform.console; T.useAt(c.x, c.z); for (let i = 0; i < 30; i++) { game.step(0.2); T.talkAll(); } return [game.flags.c10_done, game.flags.chapterKey, game.room?.id]; });
 log('console', fin);
 console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fin[0] && !errs.length ? 'CHAPTER 10 DONE' : 'CHAPTER 10 NOT DONE');
-process.exitCode = fin[0] && !errs.length ? 0 : 1;
+const ok = fin[0] && !errs.length;
+if (ok && assists.length) console.log('assisted: ' + assists.join('; '));
+console.log(!ok ? 'CHAPTER 10 NOT DONE' : assists.length ? 'CHAPTER 10 ASSISTED (not a pass: ' + assists.length + ' ball target(s) not hit by throws)' : 'CHAPTER 10 DONE');
+process.exitCode = !ok ? 1 : assists.length ? 2 : 0;
 await browser.close();
