@@ -133,6 +133,21 @@ const d14 = await ev(() => {
 });
 check('D14: Zoé starts her chapter-8 run outside the barrier ring and walks to the first farm', d14.body === 'zoe' && d14.fromWell > 6.2 && d14.r === 'arrived', d14);
 
+// D15: the station's control-room door in the later chapters (8, 10, epilogue) after a real chapter 2 (Zoé's
+// office segment played: c1_zoeStart set): walked through by input (ISO: flags as after chapter 7)
+const d15 = await ev(() => {
+  const G = game, h = G.hero; P.settle();
+  if (G.room) G.exitRoom({ x: -40, z: -5 }, true);
+  Object.assign(G.flags, { c1_water: true, c1_zoeStart: true, c1_zoeDone: true, chapterKey: 'evacuation' }); G.flags.chapter = G.story.chapters.findIndex((c) => c.key === 'evacuation'); G.story.refreshCast();
+  const doors = G.story.doors().map((d) => d.room), d = G.story.doors().find((x) => x.room === 'control');
+  if (!d) return { doors };
+  h.pos.set(d.x, G.physics.groundAt(d.x, d.z + 4, 40), d.z + 4); h.onGround = true; G.step(0.3);
+  const r = P.through(d.x, d.z); P.settle();
+  const room = G.room?.id; if (G.room) G.exitRoom({ x: -40, z: -5 }, true);
+  return { doors, r: r.r, room };
+});
+check('D15: the control-room door is there in chapter 8 after a real chapter 2, and he walks in', d15.room === 'control', d15);
+
 // D4: death → the game-over screen after the fall, in game time; a pause holds it
 const d4 = await ev(() => {
   const G = game, h = G.hero; P.settle();

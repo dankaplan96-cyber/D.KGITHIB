@@ -101,7 +101,13 @@ export class Story {
   // where an exit leads: the current chapter first, then the earlier ones (their rooms are still there)
   exitTo(to) { const w = wizardExit(to) || lba1Exit(to); if (w) return w; for (let i = this.index; i >= 0; i--) { const r = this.chapters[i].exitTo(to); if (r) return r; } return null; }
   // the town's doors on Citadel (house, water office, control room) for chapters set there after chapter 2
-  townDoors() { return (this.chapters.find((c) => c.key === 'project')?.doors() || []).filter((d) => d.room !== 'projoffice'); }
+  // (chapter 2 offers the control room only until Zoé's office segment; later chapters need it again — ch. 8's relay)
+  townDoors() {
+    const out = (this.chapters.find((c) => c.key === 'project')?.doors() || []).filter((d) => d.room !== 'projoffice');
+    const st = this.game.world.station;
+    if (st && this.game.rooms.control && !out.some((d) => d.room === 'control')) out.push({ x: st.control.door.x, z: st.control.door.z, r: 0.9, room: 'control' });
+    return out;
+  }
   canExit(room, to) { return this.cur.canExit(room, to); }
   interactables(consider, dist) { this.cur.interactables(consider, dist); }
   interact(it) { return this.cur.interact(it) || this.chapters[0].baseInteract(it); }
