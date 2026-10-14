@@ -148,6 +148,16 @@ export class HUD {
     }
   }
 
+  // out of play (dialogue, shop, inventory, holomap, pause, cut-scenes): the play-only overlays step aside — the
+  // interaction prompt and the weapon pill would otherwise stay frozen under the dialogue box and the menus. Back in
+  // play, updatePlay sets the prompt again on its first frame.
+  busy(on) {
+    this.el.classList.toggle('busy', on);
+    if (!on) return;
+    this.prompt(null);
+    if (this.wselOpen) { this.wselOpen = false; $('#wsel')?.classList.add('hidden'); }
+  }
+
   prompt(text) {
     if (!text) { if (this._prompt) { this.promptEl.classList.remove('show'); this._prompt = ''; } return; }
     const html = `<kbd>${this.game.input.label('interact')}</kbd> ${text}`;
@@ -163,6 +173,12 @@ export class HUD {
     el.classList.add('show');
     clearTimeout(this._chT);
     this._chT = setTimeout(() => el.classList.remove('show'), 3800);
+  }
+  // (the story times the card in game time when a first line waits for it: Story.holdForCard)
+  chapterCardHold() { clearTimeout(this._chT); }
+  chapterCardHide() {
+    clearTimeout(this._chT);
+    document.querySelector('#chapter').classList.remove('show');
   }
 
   toast(key, vars) {
@@ -378,22 +394,56 @@ export class HUD {
     ctx.fillStyle = 'rgba(40,200,255,0.10)'; ctx.fillRect(0, 0, W, W);
     for (let y = (time * 40) % 4; y < W; y += 4) { ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0, y, W, 1); }
     const toPx = (x, z) => [((x - X0) / s) * W, ((z - Z0) / s) * W];
-    ctx.font = '600 15px Rubik, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    for (const m of this._markers()) {
-      if (m.minimapOnly) continue;
-      const [x, y] = toPx(m.x, m.z);
-      this._marker(ctx, x, y, m, 1.8);
-      if (m.label) {
-        ctx.fillStyle = '#e8fbff'; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 4;
-        ctx.strokeText(m.label, x, y - 14); ctx.fillText(m.label, x, y - 14);
-      }
-    }
+    const pts = this._markers().filter((m) => !m.minimapOnly).map((m) => { const [x, y] = toPx(m.x, m.z); return { m, x, y, r: (m.r || 4) * 1.8 }; });
+    for (const o of pts) this._marker(ctx, o.x, o.y, o.m, 1.8);
     const hero = this.game.mapHero();
     const [hx, hy] = toPx(hero.pos.x, hero.pos.z);
     const pulse = 8 + Math.sin(time * 5) * 3;
     ctx.strokeStyle = '#7ff'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(hx, hy, pulse, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy, 4, 0, Math.PI * 2); ctx.fill();
+    // (Twinsen's ring is kept clear of labels too)
+    this.holoLabels = this._placeLabels(ctx, [...pts, { m: {}, x: hx, y: hy, r: 11 }], W);
+  }
+
+  // Holomap labels, drawn after every marker and placed so that none overprints another label or a marker (two
+  // places close together read "ToThe wellre" when both were centred above their points). The objective's star
+  // chooses first; each label tries above its marker, then below, right, left, then further out, kept inside the
+  // map; a place label that finds no free spot is left out rather than drawn over another (a star's always shows).
+  // The font is scaled so a label reads at about 13 px however small the map is shown (960×540: the canvas is
+  // drawn at 0.6×).
+  _placeLabels(ctx, pts, W) {
+    const shown = this.holo.clientWidth || W;
+    const fs = Math.round(Math.max(15, (13 * W) / shown));
+    ctx.font = `600 ${fs}px Rubik, system-ui, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const hit = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    const blocks = pts.map((o) => ({ x: o.x - o.r - 1, y: o.y - o.r - 1, w: 2 * o.r + 2, h: 2 * o.r + 2 }));
+    const placed = [], seen = new Set();
+    const order = pts.filter((o) => o.m.label).sort((a, b) => (b.m.kind === 'star') - (a.m.kind === 'star'));
+    for (const o of order) {
+      const text = o.m.label;
+      if (seen.has(text)) continue;
+      seen.add(text);
+      const w = ctx.measureText(text).width + 8, h = fs + 4, gx = o.r + 4 + w / 2, gy = o.r + 3 + h / 2;
+      const tries = [[0, -gy], [0, gy], [gx, 0], [-gx, 0], [gx, -h], [-gx, -h], [gx, h], [-gx, h], [0, -gy - h], [0, gy + h]];
+      let at = null;
+      for (const [dx, dy] of tries) {
+        const cx = Math.min(W - w / 2 - 2, Math.max(w / 2 + 2, o.x + dx)), cy = Math.min(W - h / 2 - 2, Math.max(h / 2 + 2, o.y + dy));
+        const b = { x: cx - w / 2, y: cy - h / 2, w, h, cx, cy };
+        if (!placed.some((p) => hit(p, b)) && !blocks.some((p) => hit(p, b))) { at = b; break; }
+      }
+      if (!at) {
+        if (o.m.kind !== 'star') continue;
+        const cx = Math.min(W - w / 2 - 2, Math.max(w / 2 + 2, o.x)), cy = Math.max(h / 2 + 2, o.y - gy);
+        at = { x: cx - w / 2, y: cy - h / 2, w, h, cx, cy };
+      }
+      placed.push(at);
+      ctx.fillStyle = '#e8fbff'; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 4;
+      ctx.strokeText(text, at.cx, at.cy); ctx.fillText(text, at.cx, at.cy);
+      at.text = text; at.font = fs;
+    }
+    ctx.textBaseline = 'alphabetic';
+    return placed;
   }
 }

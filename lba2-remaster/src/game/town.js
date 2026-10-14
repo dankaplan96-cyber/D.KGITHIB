@@ -494,13 +494,18 @@ export function buildTown(scene, W) {
         const lx = dx * Math.cos(h.ry) - dz * Math.sin(h.ry), lz = dx * Math.sin(h.ry) + dz * Math.cos(h.ry);
         if (Math.abs(lx) < h.w / 2 + 0.6 && Math.abs(lz) < h.d / 2 + 0.6 && sample.y < F.top) hit = true;
       }
-      const goal = hit ? 0.1 : 1;
+      // A house in the way fades right out (it used to stop at 10%: its roof, walls and porch then stacked into a
+      // tinted veil over half the screen, e.g. at Twinsen's own door with the camera behind the house). Once faded
+      // it draws nothing (colorWrite off; it still casts its shadow). The caller passes a large dt to snap the
+      // state on a scene change (Game.occluders), so a new scene never opens on a wall of roof tiles.
+      const goal = hit ? 0 : 1;
       F.f += (goal - F.f) * (1 - Math.exp(-dt * 8));
-      const see = F.f < 0.98;
+      const see = F.f < 0.98, gone = F.f < 0.03;
       for (const m of F.mats) {
         if (m.transparent !== see) { m.transparent = see; m.needsUpdate = true; }
         m.opacity = see ? F.f : 1;
         m.depthWrite = !see;
+        m.colorWrite = !gone;
       }
     }
   };
