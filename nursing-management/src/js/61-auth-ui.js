@@ -138,6 +138,7 @@ function startSession(u) {
 }
 
 function logout() {
+  if (window.__NM_DEMO__) { toast('במצב הדגמה אין יציאה מהמערכת'); return; }
   if (App.user) Store.update(() => {}, ['יציאה מהמערכת', App.user.displayName]);
   Store.saveNow();
   sessionStorage.removeItem(SESSION_KEY);
@@ -172,6 +173,7 @@ function changePasswordDialog(forced) {
 }
 
 function lockScreen() {
+  if (window.__NM_DEMO__) return;
   if (!App.user || $('#lock-ov')) return;
   const m = openModal({
     title: 'המסך נעול', size: 'sm', id: 'lock-ov',

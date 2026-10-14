@@ -19,6 +19,13 @@ for (const [k, v] of Object.entries(parts)) {
   html = html.split(k).join(k === '/*__CSS__*/' ? v : safe(v));
 }
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
+// --demo: separate DEMO file (no login screen, sample data, separate storage)
+if (process.argv.includes('--demo')) {
+  const demoOut = path.join(root, 'dist', 'מערכת_ניהול_סיעוד_הדגמה.html');
+  fs.writeFileSync(demoOut, html.replace('<body>', '<body>\n<script>window.__NM_DEMO__=true;</script>').replace('<title>מערכת ניהול סיעוד</title>', '<title>מערכת ניהול סיעוד — הדגמה</title>'));
+  console.log(`built DEMO file ${path.relative(root, demoOut)}`);
+  process.exit(0);
+}
 // --test-admin <username> <password>: separate TEST file that creates a known admin account
 const ti = process.argv.indexOf('--test-admin');
 if (ti > 0) {

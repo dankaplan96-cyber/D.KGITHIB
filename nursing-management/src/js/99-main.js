@@ -13,6 +13,7 @@
     return;
   }
   if (window.__NM_SEED_ADMIN__) await seedTestAdmin(window.__NM_SEED_ADMIN__);
+  if (window.__NM_DEMO__) { App.booting = false; return startDemo(); }
   let sess = null;
   try { sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { sess = null; }
   const u = sess && db().users[sess.id];

@@ -15,7 +15,7 @@
 // keeps working if the network drops, and syncs when it comes back.
 // ════════════════════════════════════════════════════════════════
 
-const IDB_NAME = 'NursingManagementSharedFolder'; // same as the previous version → folder permission is kept
+const IDB_NAME = (typeof window !== 'undefined' && window.__NM_DEMO__) ? 'NursingManagementDemo' : 'NursingManagementSharedFolder'; // same as the previous version → folder permission is kept
 const IDB_STORE = 'kv';
 const HANDLE_KEY = 'sharedNetworkFolder';
 const DB_FILE = 'nursing-db.json';

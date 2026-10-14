@@ -151,6 +151,7 @@ function onlineHTML() {
 }
 function bannersHTML() {
   let h = '';
+  if (window.__NM_DEMO__) return `<div class="banner info">${icon('eye')}<div class="grow"><b>מצב הדגמה</b> — כניסה ללא סיסמה, עם נתונים לדוגמה (שמות בדויים). אפשר לערוך, להפיק דוחות ולייבא קובץ אקסל אמיתי.</div><button class="btn sm" data-act="demoreset">איפוס נתוני ההדגמה</button></div>`;
   if (Store.status === 'local' && can('settings_edit')) h += `<div class="banner warn">${icon('warn')}<div class="grow"><b>המערכת אינה מחוברת לתיקייה משותפת.</b> הנתונים נשמרים רק במחשב זה ולא יגיעו למשתמשים אחרים.</div><button class="btn sm" data-act="connect">חיבור לתיקייה המשותפת</button></div>`;
   if (Store.status === 'needs-permission') h += `<div class="banner crit">${icon('lock')}<div class="grow"><b>נדרש אישור גישה לתיקייה המשותפת.</b> עד לאישור השינויים נשמרים במחשב זה בלבד.</div><button class="btn sm" data-act="grant">אישור גישה</button></div>`;
   if (Store.status === 'error') h += `<div class="banner crit">${icon('warn')}<div class="grow">${esc(Store.statusText)}</div><button class="btn sm" data-act="retrysync">נסה שוב</button></div>`;
