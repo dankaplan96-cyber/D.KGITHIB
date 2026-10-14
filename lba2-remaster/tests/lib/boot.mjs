@@ -17,7 +17,11 @@ export async function launch({ width = 960, height = 540, storageState } = {}) {
 
 // load the page and wait for the title screen; `query` e.g. '?nocine' skips the opening cinematic
 export async function open(page, query = '', { freeze = true } = {}) {
-  await page.goto(URL0 + query, { waitUntil: 'load', timeout: 180000 });
+  // a navigation the game started itself (Quit's delayed reload) can abort ours under heavy load: let it land, retry
+  for (let i = 0; ; i++) {
+    try { await page.goto(URL0 + query, { waitUntil: 'load', timeout: 180000 }); break; }
+    catch (e) { if (i >= 2 || !/ERR_ABORTED|frame was detached/.test(e.message)) throw e; await page.waitForLoadState('load').catch(() => {}); await page.waitForTimeout(1500); }
+  }
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
   if (freeze) await page.evaluate(() => { game.testFreeze = true; });
   await page.addScriptTag({ path: HARNESS });
