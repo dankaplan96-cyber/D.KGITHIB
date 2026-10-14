@@ -119,6 +119,20 @@ const d13 = await ev(() => {
 });
 check('D13: the fortress lever is on the yard floor and reached by input', Math.abs(d13.leverGround - d13.pos[1]) < 0.3 && d13.leverGround < 15 && d13.r === 'arrived', d13);
 
+// D14: Zoé's run in chapter 8 starts outside the square's barrier ring (out of the front door): she can walk to the
+// first hill farm (ISO: chapter 8 state set, at home with Zoé; the walk is input)
+const d14 = await ev(() => {
+  const G = game, h = G.hero, ch = G.story.chapters.find((c) => c.key === 'evacuation'); P.settle();
+  G.flags.chapterKey = 'evacuation'; G.flags.chapter = G.story.chapters.indexOf(ch); G.story.refreshCast();
+  ch.showProps(true);   // (the square's barrier ring, as the chapter has it)
+  G.enterRoom('house', null, true); G.step(0.2);
+  ch.startZoe(); for (let i = 0; i < 40; i++) G.step(1 / 30); P.settle();
+  const V = G.world.well, start = [h.pos.x, h.pos.z], ring = Math.hypot(h.pos.x - V.x, h.pos.z - V.z);
+  const farm = P.npc('farmer1'); const r = farm ? P.go(farm.pos.x, farm.pos.z, { tol: 2.5, maxT: 120 }) : { r: 'no farmer' };
+  return { body: h.body, start: start.map((v) => +v.toFixed(1)), fromWell: +ring.toFixed(1), r: r.r };
+});
+check('D14: Zoé starts her chapter-8 run outside the barrier ring and walks to the first farm', d14.body === 'zoe' && d14.fromWell > 6.2 && d14.r === 'arrived', d14);
+
 // D4: death → the game-over screen after the fall, in game time; a pause holds it
 const d4 = await ev(() => {
   const G = game, h = G.hero; P.settle();

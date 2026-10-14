@@ -203,7 +203,8 @@ export class Evacuation extends ChapterBase {
     f.c8_zoeStart = true;
     this.saved = { behaviour: h.behaviour };
     g.startTransition(() => {
-      if (g.room) g.exitRoom({ x: -45, z: -6, a: 0 }, true);
+      // out of the front door (a fixed point here ended up inside the square's barrier ring after the Citadel rebuild)
+      if (g.room) g.exitRoom(this.story.exitTo('outdoor') || { x: -45, z: -6, a: 0 }, true);
       h.swapBody('zoe'); h.hasBall = false; h.noBehaviours = true; h.behaviour = 'normal'; g.hud.behaviour('normal');
       this.story.refreshCast();
       g.hud.toast('c8_toast_zoe');
