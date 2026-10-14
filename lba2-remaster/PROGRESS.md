@@ -395,6 +395,22 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
   instead of holding the end pose. Contact frames unchanged (combat §§ pass).
 
+## Session: REV-TY-3's open items (0.26.1; TY-3-FIX)
+- Nell's coupler reads from the normal camera: Twinsen sets it down from the bench's west end (he walks there, the
+  camera comes round behind him), the lean-to's roof rises to a tall front, and from the far view the roof and its
+  sign fade while they hide the coupler or him. Four heat looks: brass, dull red, bright orange with a halo and a
+  light on the bench, yellow-white flickering with steam and sparks.
+- The pump: asked from any side once the pin is out, he walks round to the handle at walking pace (Hero.walkTo:
+  the game's own physics, the stick takes over), takes hold and strokes it: lifted, pushed down, let back up. The
+  'pump' pose is keyed by the handle's angle (fitted at runtime) and the handle follows his hands: hands within
+  5 cm of the grip in every frame (was 0.41 m on the first frame and 0.20 m at the end).
+- Chapter 10: Baldino's briefing now matches the stations (relays talk through each station's old machine; no
+  masts; a friend at each station keeps the power steady). Text only.
+- tests/chapter10.mjs ends "CHAPTER 10 ASSISTED" with exit code 2 when a ball target was not hit by a throw;
+  townlife has 35 checks (was 30), workshop 32 (was 31). Evidence: QA.md "REV-TY-3 fixes", captures/townlife/.
+- Not verified: GPU look; the feel by hand. Open: near the pump the camera's occlusion check swings it behind him,
+  so the stroke is often seen from behind-left.
+
 ## Session: twelve years on, third set — Desert Island, Kesh (0.26.0; TY-3)
 - The user's brief, step 5: reused buildings, altered transport routes, excavation work, practical adaptations to
   local conditions (docs/TWELVE_YEARS.md, third set; all proposed developments of this sequel).

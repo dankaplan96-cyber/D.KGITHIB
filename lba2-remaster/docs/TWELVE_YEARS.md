@@ -52,7 +52,8 @@ player can do · what stays different afterwards.
   kept; Mira's figures say it is pointless.
 - Sees: the pump on a stone plinth with a dry trough, the new pipe on low stands right beside it (it dives under the
   ground where the pump's footpath crosses it: fresh earth there), Bram's sign across the footpath. The handle points
-  to the lane: Twinsen works it side-on to anyone coming along the lane, both hands on its crossbar.
+  to the lane: Twinsen works it side-on to anyone coming along the lane, both hands on its crossbar. Asked from any
+  side of the pump, he walks round to the handle (0.26.1).
 - Does: talks to Bram; the valve pin needs pliers (Arthur has them); takes them from Arthur's boat box (from chapter
   2: in the prologue the box is only looked at); frees the pin; works the handle (three strokes). Either order works
   (pliers first, Bram later).
@@ -72,8 +73,8 @@ player can do · what stays different afterwards.
   and clears its papers.
 - After: Nell's engine runs (fan turning, lamp lit), the crate's tag reads CLEARED and its rope comes down; with the
   papers cleared the coupler is properly hers, and Nell gives Twinsen part of what she owes Xil for it ("he'd want
-  you to have it"). Her shop stands on the grass where the harbour path reaches the quay, open toward the path. The mechanic it teaches — couplers overheat and need water — is the limit Baldino's
-  network has in chapter 10.
+  you to have it"). Her shop stands on the grass where the harbour path reaches the quay, open toward the path. The mechanic it teaches — couplers overheat and need water — is why Baldino's
+  network in chapter 10 runs without them.
 - Fame, varied: Odile pictured him taller, with a cape; Nell knows him as "Arthur's dad" (who owes her a
   sprocket); Bram is fond of him and asks for help at an inconvenient moment.
 - The project, before its dangers: Nell says the harbour row's heat posts trip when the ground hums and the
@@ -108,9 +109,10 @@ player can do · what stays different afterwards.
   running comes back with it off (hoist and tap as they were).
 - **What stays different afterwards:** the pair keeps talking (both lamps, a beam between them over the flying
   machine, the SYNC lamps lit, the relay up, the drip running); the journal keeps the two rules. In chapter 10
-  Baldino calls the network's relays the test pair grown up and put on masts: they need a clear line (so they stand
-  high: a mill top, the lighthouse, a dome), they run on local power with a friend standing by, and there are no
-  couplers out there (with nobody to keep them cool they'd trip). Once Twinsen carries the pulse tool, the thunder
+  Baldino calls the network's relays the test pair grown up: each hooks into a station's old machine and talks
+  through it (so no sight lines: the Citadel relay sits on the manifold in the valve room underground, the dome's
+  beside the telescope), each runs on local power with a friend standing by, and there are no couplers to trip: the
+  friend at each station keeps the power steady instead (0.26.1, REV-TY-3 N1). Once Twinsen carries the pulse tool, the thunder
   box's place on the shelf is empty.
 - **Rules of the pair (0.25.1):** it can only be started after Baldino's "At last!"; it only syncs with the drip
   open (shut mid-sync, the sync starts over and the coupler trips); a press at the lever, tap or crank in its last

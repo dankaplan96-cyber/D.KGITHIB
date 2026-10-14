@@ -58,5 +58,5 @@ Object.assign(STR.en, {
   w_j_rules: 'Relays talk by sight. A coupler runs hot unless something cools it.',
 
   // ---- chapter 10 remembers it
-  c10_bal_pair: "You've met my test pair. Same first rule: a clear line. And no couplers out there: with nobody to keep them cool, they'd trip.",
+  c10_bal_pair: "You've met my test pair. Out there the old machines carry the signal, so no sight lines to fuss over. And no couplers to trip: a friend at each station keeps the power steady instead.",
 });

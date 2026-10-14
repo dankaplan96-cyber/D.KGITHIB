@@ -3,7 +3,7 @@
 Update before a handoff or a session limit. Do not mark a task done twice after resuming: check BACKLOG.md first.
 
 ## Build
-- Game version 0.26.0 (desktop/package.json; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
+- Game version 0.26.1 (desktop/package.json; 0.26.1 = TY-3-FIX, REV-TY-3's open items; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
   D1–D18, see QA.md), then Zeelich's islands and Citadel Spaceport.
 - Milestone (PRODUCTION.md): 1 — Stabilize.
 

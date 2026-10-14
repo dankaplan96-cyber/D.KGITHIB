@@ -14,6 +14,20 @@ const ev = (f, a) => page.evaluate(f, a);
 const iso = (s) => console.log('ISO  ' + s);
 await open(page, '?nocine'); await menu(page, 'new');
 
+// readability from the normal camera: is each world point on screen and the first thing a ray from the camera meets?
+const seen = (pts) => ev(async (pts) => {
+  const THREE = await import('three'); game.renderer.render?.();
+  const cam = game.camera, cp = new THREE.Vector3(); cam.getWorldPosition(cp); const rc = new THREE.Raycaster(); rc.camera = cam;
+  const shown = (o) => { for (let x = o; x; x = x.parent) if (!x.visible) return false; return true; };
+  const owner = (o) => { for (let x = o; x; x = x.parent) { if (x === game.hero.rig?.root) return 'Twinsen'; for (const n of game.npcs) if (x === n.rig?.root) return n.def.id; } return o.name || o.geometry?.type || 'mesh'; };
+  const meshes = []; game.scene.traverse((o) => { if ((o.isMesh || o.isInstancedMesh) && shown(o)) meshes.push(o); });
+  const out = {};
+  for (const [n, p] of Object.entries(pts)) { const v = new THREE.Vector3(...p), ndc = v.clone().project(cam); if (Math.abs(ndc.x) > 1 || Math.abs(ndc.y) > 1 || ndc.z > 1) { out[n] = 'off-screen'; continue; }
+    const dir = v.clone().sub(cp), d = dir.length(); rc.set(cp, dir.normalize()); rc.far = d + 0.3;
+    const hit = rc.intersectObjects(meshes, false).find((h) => !(h.object.material?.transparent && (h.object.material.opacity < 0.6 || h.object.material.depthWrite === false)));
+    out[n] = hit && hit.distance < d - 0.2 ? 'hidden by ' + owner(hit.object) + ' @' + [hit.point.x, hit.point.y, hit.point.z].map((q) => q.toFixed(1)) : 'seen'; }
+  return out; }, pts);
+const couplerPts = () => ev(() => { const c = game.world.life.shop.coupler; return { top: [c.x, c.y + 0.27, c.z], front: [c.x, c.y + 0.13, c.z + 0.16], west: [c.x - 0.16, c.y + 0.13, c.z], east: [c.x + 0.16, c.y + 0.13, c.z] }; });
 const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
 const setChapter = (key, extra = {}) => ev(([key, extra]) => { const G = game, f = G.flags; P.settle(); Object.assign(f, { prologueDone: true, intro: true, chapterKey: key }, extra); f.chapter = G.story.chapters.findIndex((c) => c.key === key); G.hero.hasBall = true; G.story.applyFlags(); }, [key, extra]);
 const toasts = () => ev(() => [...game.hud.toastEl.children].map((c) => c.textContent));
@@ -55,27 +69,49 @@ check('chapter 2: Bram asks about his pump; the valve pin needs pliers Twinsen d
 const a2 = await ev(() => { const f = game.flags; P.talk('arthur'); return { asked: !!f.l_arPliers, room: game.room?.id }; });
 const a2l = await said();
 check('Arthur admits he borrowed the pliers (his boat box, by the pond)', a2.asked && a2l.some((l) => /boat box/.test(l)), { a2, a2l });
-const a3 = await ev(() => { const L = game.world.life, f = game.flags, h = game.hero, U = L.pump.use;
+const a3 = await ev(() => { const L = game.world.life, f = game.flags, h = game.hero, U = L.pump.use, PH = game.physics;
   P.use(L.boatBox.x, L.boatBox.z, { near: 0.8, kind: 'lbox' }); const pliers = !!f.l_pliers;
-  P.use(L.pump.x, L.pump.z + 1.4, { near: 1.0, kind: 'lpump' }); const pin = !!f.l_pin;
-  // the first stroke by hand, measured: his hands on the handle's grip through the stroke
+  // the pin, pulled from the trough side (east of the pump); the pump still answers there (REV-TY-3 N3)
+  P.use(L.pump.x + 1.0, L.pump.z + 1.1, { near: 0.3, kind: 'lpump' }); const pin = !!f.l_pin; P.face(L.pump.x, L.pump.z);
+  const afterPin = P.target()?.label;
+  const round = {}; for (const [n, dx, dz] of [['north', 0.1, -1.15], ['north-east', 1.0, -0.95], ['south', 0.2, 1.2], ['south-west', -1.0, 0.9], ['trough side', 1.0, 1.1]]) { P.go(L.pump.x + dx, L.pump.z + dz, { tol: 0.25, maxT: 20 }); P.face(L.pump.x, L.pump.z); round[n] = P.target()?.label || null; }
+  // three strokes by hand (E), from the trough side, the lane to the south and the north, measured frame by frame:
+  // he walks round to the grip at walking pace through nothing solid, and his hands are on the grip in every frame
+  // of every stroke, the first and the last included (REV-TY-1 D7, REV-TY-3 N2)
   const bones = []; h.rig.root.traverse((o) => { if (/^hand[LR]$/.test(o.name)) bones.push(o); });
-  P.go(U.x, U.z, { tol: 0.9, stopWhen: () => P.target()?.kind === 'lpump' }); const label = P.target()?.label, from = +Math.hypot(h.pos.x - U.x, h.pos.z - U.z).toFixed(2);
-  P.tap('KeyE', 0); const gap = [];
-  for (let i = 0; i < 40; i++) { game.step(1 / 30); const T = h.rig.actionT; if (h.rig.anim === 'pump' && T >= 0.2 && T <= 0.47) { const a = bones[0].getWorldPosition(bones[0].position.clone()), b = bones[1].getWorldPosition(bones[1].position.clone()); gap.push(+a.add(b).multiplyScalar(0.5).distanceTo(L.pump.grip()).toFixed(3)); } }
-  const at = { from, d: +Math.hypot(h.pos.x - U.x, h.pos.z - U.z).toFixed(2), fromPump: +Math.hypot(h.pos.x - L.pump.x, h.pos.z - L.pump.z).toFixed(2) };
-  P.settle(); let strokes = 1;
-  for (let i = 0; i < 6 && !f.l_pump; i++) { P.wait(0.5); P.use(U.x, U.z, { near: 1.0, kind: 'lpump' }); strokes++; }   // (as a player does: press again until it runs)
+  const mid = () => bones[0].getWorldPosition(bones[0].position.clone()).add(bones[1].getWorldPosition(bones[1].position.clone())).multiplyScalar(0.5);
+  const runs = [];
+  for (const [n, dx, dz] of [['trough side', 1.0, 1.1], ['lane south', 0.6, 3.5], ['north', 0.3, -3.0]]) {
+    if (f.l_pump) break;
+    P.go(L.pump.x + dx, L.pump.z + dz, { tol: 0.3, maxT: 20 }); P.go(L.pump.x, L.pump.z, { tol: 0.3, stopWhen: () => P.target()?.label === 'p_pump' });
+    const label = P.target()?.label, from = +Math.hypot(h.pos.x - U.x, h.pos.z - U.z).toFixed(2), s0 = f.l_strokes || 0;
+    P.tap('KeyE', 0);
+    let maxV = 0, solid = 0, prev = [h.pos.x, h.pos.z], at = null; const gap = [], ang = [];
+    for (let i = 0; i < 360; i++) {
+      game.step(1 / 60);
+      maxV = Math.max(maxV, Math.hypot(h.pos.x - prev[0], h.pos.z - prev[1]) * 60); prev = [h.pos.x, h.pos.z];
+      if (PH.blockedAt(h.pos.x, h.pos.z, h.pos.y, h.radius - 0.12)) solid++;
+      if (h.rig.anim === 'pump') { if (!at) at = { d: +Math.hypot(h.pos.x - U.x, h.pos.z - U.z).toFixed(3), fromPump: +Math.hypot(h.pos.x - L.pump.x, h.pos.z - L.pump.z).toFixed(2) }; gap.push(+mid().distanceTo(L.pump.grip()).toFixed(3)); ang.push(L.pump.handleAngle()); }
+      if ((f.l_strokes || 0) > s0 && h.rig.anim !== 'pump' && !h.steer && h.actT <= 0) break;
+    }
+    runs.push({ n, label, from, counted: (f.l_strokes || 0) - s0, maxV: +maxV.toFixed(2), solid, at, frames: gap.length, maxGap: Math.max(...gap), first: gap[0], last: gap[gap.length - 1], swing: +Math.max(...ang).toFixed(2), lift: +Math.min(...ang).toFixed(2), gap });
+    P.settle();
+  }
+  const pumpOK = !!f.l_pump;
+  for (let i = 0; i < 6 && !f.l_pump; i++) { P.wait(0.5); P.use(U.x, U.z, { near: 1.0, kind: 'lpump' }); }   // (in case: press again until it runs)
+  P.settle();
   const water = L.pump.running; const hp0 = h.hp = Math.max(1, h.maxHp - 4); P.wait(0.5); P.use(L.pump.x, L.pump.z + 1.4, { near: 1.0, kind: 'lpump' });
   const clov0 = h.clovers; P.talk('bram'); const owed = f.l_oweClover || 0; P.wait(1.5);
   // the clover pops out by Bram: he picks it up (INPUT)
   for (let k = 0; k < 3; k++) for (const p of [...game.pickups.list]) if (p.type === 'clover' && p.owe === 'l_oweClover') P.go(p.pos.x, p.pos.z, { tol: 0.4, maxT: 10 });
   P.settle();
-  return { strokes, pliers, pin, label, gap, at, pump: !!f.l_pump, water, healed: h.hp > hp0, thanks: !!f.l_bramThanks, owed, clovers: h.clovers - clov0, oweAfter: f.l_oweClover || 0, journal: game.story.journal().find((j) => j.title === 'Around town')?.lines };
+  return { pliers, pin, afterPin, round, runs, pumpOK, pump: !!f.l_pump, water, healed: h.hp > hp0, thanks: !!f.l_bramThanks, owed, clovers: h.clovers - clov0, oweAfter: f.l_oweClover || 0, journal: game.story.journal().find((j) => j.title === 'Around town')?.lines };
 });
-check('the boat box has the pliers; the pin comes out; three strokes and the pump runs (INPUT)', a3.pliers && a3.pin && a3.pump && a3.water && a3.label === 'p_pump', a3);
-console.log('  hands to grip during the stroke (m): ' + JSON.stringify(a3.gap) + ' from ' + a3.at.from + ' m');
-check('working the handle he stands at its grip, clear of the plinth, and his hands stay on the grip through the stroke (< 0.15 m) (REV-TY-1 D7)', a3.at.d < 0.05 && a3.at.fromPump > 1.2 && a3.gap.length >= 6 && Math.max(...a3.gap) < 0.15, { at: a3.at, gap: a3.gap });
+check('the boat box has the pliers; the pin comes out; three strokes and the pump runs (INPUT)', a3.pliers && a3.pin && a3.pump && a3.water && a3.pumpOK, { ...a3, runs: a3.runs.map((r) => ({ ...r, gap: undefined })) });
+check('with the pin out the pump answers from the trough side where the pin came out, and from round it (REV-TY-3 N3)', a3.afterPin === 'p_pump' && Object.values(a3.round).every((l) => l === 'p_pump'), { afterPin: a3.afterPin, round: a3.round });
+for (const r of a3.runs) console.log(`  stroke from ${r.n}: prompt ${r.from} m from the grip, walk ≤ ${r.maxV} m/s, ${r.frames} stroke frames, hands to grip first ${r.first} last ${r.last} max ${r.maxGap} m, handle lifted ${r.lift} and pushed down ${r.swing} rad`);
+check('asked from the trough side, the lane or the north, he walks round to the grip at walking pace (≤ 2.5 m/s) through nothing solid, and works it standing at the grip, clear of the plinth (REV-TY-3 N2)', a3.runs.length === 3 && a3.runs.every((r) => r.label === 'p_pump' && r.counted === 1 && r.maxV <= 2.5 && r.solid === 0 && r.at && r.at.d < 0.05 && r.at.fromPump > 1.2), a3.runs.map((r) => ({ ...r, gap: undefined })));
+check('his hands stay on the handle\'s grip through the whole stroke, first and last frames included (< 0.15 m); the handle is lifted and pushed down (REV-TY-1 D7)', a3.runs.every((r) => r.frames >= 40 && r.maxGap < 0.15 && r.swing > 0.2 && r.lift < -0.3), a3.runs.map((r) => ({ n: r.n, frames: r.frames, maxGap: r.maxGap, swing: r.swing, gap: r.gap.filter((g, i) => i < 4 || i > r.gap.length - 5) })));
 check('the pump\'s water restores life; Bram thanks him with a clover (owed until picked up, then in his pocket); the journal tracks it', a3.healed && a3.thanks && a3.owed === 1 && a3.clovers === 1 && a3.oweAfter === 0 && a3.journal?.some((l) => l.key === 'l_j_pump0' && l.done), a3);
 
 // ---- the lane's pipe and the new posts are solid (INPUT: walking into them)
@@ -102,13 +138,26 @@ const s1 = await ev(() => { const L = game.world.life, f = game.flags;
   return { ask, open: !!f.l_crateOpen, cs: f.l_cs, carry: game.story.items().some((i) => i.id === 'coupler') }; });
 check('Officer Odile holds the "soup pot"; opening it: a heat coupler, carried', s1.ask && s1.open && s1.carry, s1);
 // first a trip: set it down and wait too long
-const s2 = await ev(() => { const L = game.world.life, f = game.flags;
+const s2 = await ev(() => { const L = game.world.life, f = game.flags, h = game.hero, W = L.shop.work;
   P.talk('nell'); const knows = !!f.l_nellKnows;
   P.use(L.shop.bench.x, L.shop.bench.z, { near: 0.8, kind: 'lbench' }); const placed = f.l_cs;
-  P.wait(11); P.settle();
-  return { knows, placed, after: f.l_cs }; });
+  return { knows, placed, work: +Math.hypot(h.pos.x - W.x, h.pos.z - W.z).toFixed(3), facing: +Math.abs(Math.atan2(Math.sin(h.angle - W.a), Math.cos(h.angle - W.a))).toFixed(2) }; });
+// the coupler heating, read from the normal camera (the camera has come round behind him at the bench): its look
+// at each stage, and whether it is in view (not hidden by the roof or by Twinsen) (REV-TY-3, TY-1 D1)
+const stages = [];
+for (const [name, u] of [['cool', 0.05], ['warming', 0.25], ['glowing', 0.6], ['about to trip', 0.92]]) {
+  const st = await ev((u) => { let t = 0; while (game.story.life.heat / 1.25 < u && t < 14 && game.flags.l_cs === 'bench') { game.step(1 / 30); t += 1 / 30; } const C = game.world.life.shop.coupler; return { cs: game.flags.l_cs, stage: C.stage, look: C.look() }; }, u);
+  stages.push({ name, ...st, v: await seen(await couplerPts()) });
+}
+const s2b = await ev(() => { P.wait(4); P.settle(); return game.flags.l_cs; });
+s2.after = s2b;
 const s2l = await said();
 check('on the bench it runs and heats; left too long it trips and goes cold (a limited setback)', s2.knows && s2.placed === 'bench' && s2.after === 'tripped', s2);
+console.log('  coupler by stage: ' + stages.map((s) => `${s.name}: ${JSON.stringify(s.look)} ${JSON.stringify(s.v)}`).join(' | '));
+check('he sets it down from his place at the bench\'s west end, facing the bench (REV-TY-3, TY-1 D1)', s2.work < 0.05 && s2.facing < 0.1, s2);
+check('the coupler is in view from the normal camera while it heats: not hidden by the shop\'s roof or by Twinsen at the bench (REV-TY-3, TY-1 D1)', stages.every((s) => s.cs === 'bench' && ['top', 'front'].every((k) => s.v[k] === 'seen') && Object.values(s.v).filter((v) => v === 'seen').length >= 3), stages.map((s) => [s.name, s.v]));
+const L4 = stages.map((s) => s.look);
+check('its four heat stages look different: brass and still (cool), dull red with wisps (warming), bright orange with a halo and a light on the bench (glowing), yellow-white with a column of steam (about to trip)', stages.map((s) => s.stage).join() === '0,1,2,3' && L4[0].e === 0 && L4[0].light === 0 && L4[1].e > 0.3 && L4[1].c !== L4[2].c && L4[2].c !== L4[3].c && L4[2].light > L4[1].light * 2 && L4[2].halo > L4[1].halo && L4[3].puffs > L4[1].puffs, L4);
 check('Nell knows the coupler: Xil was getting her one from Zeelich (REV-TY-1 D8)', s2l.some((l) => /Xil was getting me one/.test(l)), s2l);
 const s3 = await ev(() => { const L = game.world.life, f = game.flags, h = game.hero;
   P.use(L.shop.bench.x, L.shop.bench.z, { near: 0.8, kind: 'lbench' });

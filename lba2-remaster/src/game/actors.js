@@ -165,8 +165,13 @@ export class Hero extends Actor {
     });
     const locked = cs.lock || this.hiding || this.hurtT > 0.15 || this.actT > 0;
     const speedK = cs.speedK ?? 1;
+    // a few steps the game asked for (walkTo): the player's own stick takes over at once; a hit cancels them
+    if (this.steer && (Math.hypot(mv.x, mv.y) > 0.3 || this.hurtT > 0.15 || wheel)) this.steer = null;
 
-    if (!locked) {
+    if (!locked && this.steer) {
+      const s = this.steerStep(dt);
+      wx = s.wx; wz = s.wz; turning = s.turning;
+    } else if (!locked) {
       if (g.settings.controls === 'classic') {
         // LBA2's tank controls: left/right turn the body (90°/s, OBJECT.CPP), up walks forward, down walks backward
         // slowly; no strafing. Holding the ball to aim plants the feet: left/right turn the aim, release throws.
@@ -316,6 +321,41 @@ export class Hero extends Actor {
   actAt(x, z, anim, dur, cb, at = 0) {
     this.angle = Math.atan2(x - this.pos.x, z - this.pos.z);
     this.act(anim, dur, cb, at);
+  }
+  // A few steps the game asks for (up to a pump's handle, to his place at a bench): he walks there at walking pace
+  // through the same physics as the player's own walk (so the feet keep pace and nothing is walked through),
+  // along the given waypoints, then turns to face `a` and then() runs. Any stick input takes over at once (no
+  // then()); if he can't get there (blocked for a moment, or too long) fail() runs instead.
+  walkTo(pts, { a = null, speed = 1.9, then = null, fail = null } = {}) {
+    this.steer = { pts: pts.map((p) => ({ x: p.x, z: p.z })), a, speed, then, fail, t: 0, stuck: 0 };
+  }
+  steerStep(dt) {
+    const S = this.steer, out = { wx: 0, wz: 0, turning: 0 };
+    S.t += dt;
+    const end = () => { this.steer = null; };
+    if (S.t > 3 + S.pts.length * 2) { end(); S.fail?.(); return out; }
+    let p = S.pts[0], dx = p.x - this.pos.x, dz = p.z - this.pos.z, d = Math.hypot(dx, dz);
+    while (S.pts.length > 1 && d < 0.2) { S.pts.shift(); p = S.pts[0]; dx = p.x - this.pos.x; dz = p.z - this.pos.z; d = Math.hypot(dx, dz); }
+    const last = S.pts.length === 1;
+    if (last && d < 0.04) {
+      // there: settle on the spot (a few centimetres at most), stop, turn to face the work
+      this.pos.x = p.x; this.pos.z = p.z; this.vel.set(0, 0);
+      const diff = S.a == null ? 0 : angleDiff(this.angle, S.a);
+      if (Math.abs(diff) < 0.04) { if (S.a != null) this.angle = S.a; end(); S.then?.(); return out; }
+      this.angle += Math.sign(diff) * Math.min(Math.abs(diff), 6 * dt);   // (a turn on the spot at a steady pace)
+      out.turning = clamp(diff * 3, -1, 1);
+      return out;
+    }
+    const want = Math.atan2(dx, dz), diff = angleDiff(this.angle, want);
+    this.angle = dampAngle(this.angle, want, 10, dt);
+    out.turning = clamp(diff * 3, -1, 1);
+    // a turn on the spot first if the way is behind him; slowing into the last spot
+    const sp = Math.min(S.speed, last ? Math.max(0.4, d * 4) : S.speed) * (Math.abs(diff) > 1.2 ? 0.1 : Math.max(0.3, Math.cos(diff)));
+    out.wx = (dx / d) * sp; out.wz = (dz / d) * sp;
+    // blocked (pressing on and not getting anywhere) for a moment: give up
+    S.stuck = this.speed < sp * 0.25 && Math.abs(diff) < 1.2 && S.t > 0.3 ? S.stuck + dt : 0;
+    if (S.stuck > 0.6) { end(); S.fail?.(); }
+    return out;
   }
 
   respawnFromFall() {
