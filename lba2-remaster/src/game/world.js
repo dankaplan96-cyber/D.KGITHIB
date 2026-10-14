@@ -334,6 +334,13 @@ export function buildHeightGrid(size, segs) {
   const n = segs + 1, half = size / 2, step = size / segs, X0 = ISLAND.cx - half, Z0 = ISLAND.cz - half;
   const h = new Float32Array(n * n);
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) h[j * n + i] = islandHeight(X0 + i * step, Z0 + j * step);
+  // pits found by playing that the filler below misses (its 4-neighbour grid model is kinder than the real walk):
+  // filled up to their rim, soft-edged (QA.md D18)
+  for (const f of PIT_FILLS) for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const x = X0 + i * step, z = Z0 + j * step, dx = Math.max(f.x0 - x, 0, x - f.x1), dz = Math.max(f.z0 - z, 0, z - f.z1);
+    const w = 1 - smoothstep(0, 1.5, Math.hypot(dx, dz)), a = j * n + i;
+    if (w > 0 && h[a] < f.h) h[a] += (f.h - h[a]) * w;
+  }
   const trapped = fixTraps(h, n, X0, Z0, step);
   // blurred copy for the concavity tint
   const blur = new Float32Array(n * n);
@@ -347,6 +354,10 @@ export function buildHeightGrid(size, segs) {
   tintGrid = (x, z) => blur[idx(x, z)];
   return { heights: h, trapped, at: (x, z) => h[idx(x, z)] };
 }
+
+// the gully at the plateau's edge below the orchard: a dead end 8 m deep whose banks can't be climbed (a dodge at the
+// orchard's edge dropped Twinsen into it for good)
+const PIT_FILLS = [{ x0: -70.5, x1: -65.5, z0: -55.5, z1: -46.5, h: 13.9 }];
 
 // Every walkable cell must be able to walk back to the town (cliffs can be
 // dropped down, never climbed). Cells that cannot are pits: fill them with

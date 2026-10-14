@@ -153,6 +153,16 @@ const d15 = await ev(() => {
 });
 check('D15: the control-room door is there in chapter 8 after a real chapter 2, and he walks in', d15.room === 'control', d15);
 
+// D18: the gully below the orchard (a dodge at the plateau's edge dropped him in for good) is filled: from where its
+// floor was, he walks back up to the orchard by input (ISO: placed there)
+const d18 = await ev(() => {
+  const G = game, h = G.hero, PH = G.physics; P.settle(); if (G.room) G.exitRoom({ x: -40, z: -5 }, true);
+  h.pos.set(-68.71, PH.groundAt(-68.71, -48.04, 30), -48.04); h.onGround = true; h.vel.set(0, 0); G.step(0.3);
+  const y = +h.pos.y.toFixed(2), r = P.go(-71.7, -56.8, { tol: 1.5, maxT: 40 });
+  return { y, r: r.r, at: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(1)) };
+});
+check('D18: no pit below the orchard; he walks up to the orchard plateau by input', d18.y > 12 && d18.r === 'arrived', d18);
+
 // D4: death → the game-over screen after the fall, in game time; a pause holds it
 const d4 = await ev(() => {
   const G = game, h = G.hero; P.settle();

@@ -295,6 +295,8 @@
     while (t < maxT && alive().length && !h.dead && !(minHp && h.hp <= minHp)) {
       const e = alive().sort((a, b) => a.pos.distanceTo(h.pos) - b.pos.distanceTo(h.pos))[0];
       const d = Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z);
+      // (no path to it — behind a fence, below a cliff: leave it, as a player would, rather than chase it off an edge)
+      if (d > range && !P.plan(e.pos.x, e.pos.z, { tol: range - 1, maxNodes: 20000 }).ok) { P.ignore.set(e, G.time + 25); P.note(`fight: no way to ${e.id}, leaving it`); continue; }
       if (d > range) { const r = P.go(e.pos.x, e.pos.z, { tol: range - 1, maxT: 8, fight: false }); t += r.t || 0.5; if (G.state !== 'play') P.settle(); continue; }
       P.face(e.pos.x, e.pos.z, 1.5);
       // armoured (Grobo guards, troopers): a charged throw (hold F); otherwise the quick throw (tap F)
