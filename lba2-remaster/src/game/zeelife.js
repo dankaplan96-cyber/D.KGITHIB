@@ -349,7 +349,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
   const watch = {
       hatch: W(HATCH.x, Z1 + 1.15), door: W(DOOR.x, Z1 + 0.9), roofY, stairFoot: W(STAIR.x, STAIR.z0 + 0.5), stairMid: W(STAIR.x, STAIR.z0 - STAIR.deep * STAIR.n * 0.5),
       flue: { ...W(FLUE.x, FLUE.z), y: flueTop.y }, use: W(FLUE.x - 1.0, FLUE.z - 0.35), heatbox: W(HEATBOX.x + 0.6, HEATBOX.z),
-      snuff: { ...W(HATCH.x - 1.35, Z1 + 0.62), a: 0.35 }, bzizz: { ...W(STAIR.x - 1.1, Z1 + 1.25), a: 0.6 }, tavo: { ...W(HATCH.x + 0.35, Z1 + 1.35), a: Math.PI },
+      snuff: { ...W(HATCH.x - 1.35, Z1 + 0.62), a: 0.35 }, bzizz: { ...W(STAIR.x - 1.1, Z1 + 1.25), a: 0.6 }, tavo: { ...W(HATCH.x + 1.25, Z1 + 1.4), a: Math.PI * 1.2 },   // (beside the counter: the hatch's front stays free to walk up to, VP-2 keeps people apart)
       broken: W(BROKEN.x, BROKEN.z),
       get crate() { return crateState; },
       crateAt() { const p = crate.position; return { ...W(p.x, p.z), y: p.y }; },

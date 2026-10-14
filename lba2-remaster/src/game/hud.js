@@ -187,6 +187,7 @@ export class HUD {
     d.className = 'toast';
     d.textContent = msg;
     this.toastEl.appendChild(d);
+    (this.toastLog ||= []).push(msg); if (this.toastLog.length > 12) this.toastLog.shift();   // (recent toasts, for tests: they fade after 2.8 s of real time)
     while (this.toastEl.children.length > 3) this.toastEl.firstChild.remove();
     setTimeout(() => d.classList.add('out'), 2300);
     setTimeout(() => d.remove(), 2800);

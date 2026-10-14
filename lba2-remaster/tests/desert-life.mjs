@@ -27,7 +27,7 @@ const shot = async (name, spec) => {
   await page.screenshot({ path: path.join(SHOTS, name + '.png'), timeout: 180000 });
 };
 const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
-const toasts = () => ev(() => [...game.hud.toastEl.children].map((c) => c.textContent));
+const toasts = () => ev(() => (game.hud.toastLog || []).slice());
 
 await open(page, '?nocine'); await menu(page, 'new');
 iso('chapter 3 finished by flags (as tests/chapter4.mjs): the sealed shaft sends Twinsen to Desert Island (chapter 4)');
@@ -116,7 +116,7 @@ const b1 = await ev(() => { const f = game.flags; const r = P.talk('weaver'); re
 const b1l = await said();
 check('with water in the oasis the cool room holds five jars; Lumi hands over her new screen (INPUT)', b1.r === 'talked' && b1.screen && b1.items.includes('kscreen') && b1.jars === 5 && b1l.some((l) => /That's what happens without a screen/.test(l)) && b1l.some((l) => /knees/.test(l)), { b1, b1l });
 const hp0 = await ev(() => { const h = game.hero; h.hp = Math.max(1, h.maxHp - 4); return h.hp; });
-const b2 = await ev(() => { const C = game.rooms.desert.kesh.cool, f = game.flags; const r = P.use(C.crank.x, C.crank.z, { kind: 'kcrank', near: 0.9 }); P.wait(1); return { t: [...game.hud.toastEl.children].map((c) => c.textContent), r: r.r, label: r.target?.label, fit: !!f.k_fit, done: !!f.k_done, sand: !!f.k_sand, at: [game.hero.pos.x, game.hero.pos.y, game.hero.pos.z].map((v) => +v.toFixed(2)), trace: P.trace.slice(-8) }; });
+const b2 = await ev(() => { const C = game.rooms.desert.kesh.cool, f = game.flags; const r = P.use(C.crank.x, C.crank.z, { kind: 'kcrank', near: 0.9 }); P.wait(1); return { t: (game.hud.toastLog || []).slice(), r: r.r, label: r.target?.label, fit: !!f.k_fit, done: !!f.k_done, sand: !!f.k_sand, at: [game.hero.pos.x, game.hero.pos.y, game.hero.pos.z].map((v) => +v.toFixed(2)), trace: P.trace.slice(-8) }; });
 const b2l = await said();
 check('on the roof the screen goes over the mouth; already into the wind, the room draws at once (INPUT)', b2.label === 'p_fit' && b2.fit && b2.done && b2l.some((l) => /curtain in the door lifts/.test(l)), { b2, b2l });
 const b3 = await ev(() => { const G = game, K = G.rooms.desert.kesh, sani = P.npc('dkid'), f = G.flags;
@@ -170,7 +170,7 @@ await said();
 file = path.join(os.tmpdir(), 'desertlife2-' + process.pid + '.json');
 await quitAndKeep(page, context, file);
 await open(page, '?nocine'); await menu(page, 'continue');
-const c3 = await ev(() => { const t = [...game.hud.toastEl.children].map((c) => c.textContent); P.settle(); const C = game.rooms.desert.kesh.cool, f = game.flags; return { coins: game.hero.coins, owed: f.k_owe || 0, t, dir: C.dir, done: !!f.k_done, sani: P.npc('dkid').forceAnim }; });
+const c3 = await ev(() => { const t = (game.hud.toastLog || []).slice(); P.settle(); const C = game.rooms.desert.kesh.cool, f = game.flags; return { coins: game.hero.coins, owed: f.k_owe || 0, t, dir: C.dir, done: !!f.k_done, sani: P.npc('dkid').forceAnim }; });
 await said();
 check('saved before he picked Brosk\'s coin up: on Continue the five kashes are his (a toast says so); the room still draws', c2.owed === 1 && c2.lying === 1 && c3.coins === c2.c0 + 5 && c3.owed === 0 && c3.t.some((s) => /Brosk's payment/.test(s)) && c3.dir === 0 && c3.done && c3.sani === 'kneelWork', { c2, c3 });
 
