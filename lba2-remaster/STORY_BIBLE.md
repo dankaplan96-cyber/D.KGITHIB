@@ -192,6 +192,10 @@ the twelve-year gap (this sequel's inventions, not the originals' canon; impleme
   he works with Ilo, an Esmer engineer at the shuttle yard (mentioned, not seen). The Test Pair (optional, ch. 3):
   two bench relays and a coupler teach the network's limits early (relays talk by sight; couplers overheat); his
   thunder box on the shelf is the pulse tool of chapter 10 before it was ready.
+- **Kesh, Desert Island** (third set; src/game/keshlife.js, story/kesh.js): the village keeps its water, Brosk's dates
+  and Lumi's wool in one of FunFrock's old blockhouses, dug out of a dune, with a wind-catcher Kesh built on its roof.
+  The Wind-Catcher (optional, from ch. 4): turn its cowl into the wind with Lumi's new screen. Lumi weaves the sails,
+  screens and curtains; Hesk marks the yacht routes with flag poles; NO FERRY is chalked on his yacht stop in ch. 5.
 
 ## Peoples of Zeelich (after LBA2's models)
 - **Esmers:** a single capsule for body and head, the face high on it; thin arms with cone hands; salmon skin.

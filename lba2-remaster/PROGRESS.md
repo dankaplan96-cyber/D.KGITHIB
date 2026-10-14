@@ -395,6 +395,24 @@ SwiftShader (CPU rendering); not measured on a real GPU.
   returns to a guard; the sword's sweeps and overhead strike ease back toward a low guard through their recovery
   instead of holding the end pose. Contact frames unchanged (combat §§ pass).
 
+## Session: twelve years on, third set — Desert Island, Kesh (0.26.0; TY-3)
+- The user's brief, step 5: reused buildings, altered transport routes, excavation work, practical adaptations to
+  local conditions (docs/TWELVE_YEARS.md, third set; all proposed developments of this sequel).
+- Places (src/game/keshlife.js, built by desert.js): Kesh's cool room in one of FunFrock's concrete blockhouses by the
+  shore, half under a dune, its door dug out (spoil heaps, a shovel), a wind-catcher on the roof (turning cowl,
+  crank), a stair up the east wall, jars under an awning; Lumi's loom under a striped sail (her spot moved there);
+  reed sand screens on the windward side with sand banked on them; Hesk's flag poles along the yacht routes, a drift
+  across the dig route, his yacht stop (NO FERRY chalked on it once the ferry is taken). The ground is shaped there
+  (flat round the cool room, the dune bank, the drift); the island's scatter keeps out without moving anything else.
+- The Wind-Catcher (src/game/story/kesh.js, a layer the director asks after the chapter, like life.js): turn the
+  cowl into the wind with Lumi's screen; without it sand pours in; Lumi trusts him with her work only after the pump;
+  Brosk pays five kashes (owed until picked up); a drink at the door heals; Sani moves into the doorway. Lines follow
+  the pump, the steam and the vent; chapter 5's jar-and-shovel errand with Brosk comes first.
+- tests/desert-life.mjs (24 checks, ALL PASSED): both orders by input (the stair walked by the planner), Save & quit →
+  Continue twice, chapter 4/5 lines, the main path's people unchanged. Regression: chapter4, chapter5, townlife,
+  workshop, stability, resume, shipfiles rc 0. Evidence: captures/desert-ty/, QA.md.
+- Not verified: the look on a GPU and the feel by hand.
+
 ## Session: the reviews' fixes for both twelve-years-on sets (0.25.1; TY-1-FIX)
 - REV-TY-1 (0.24.0) and REV-TY-2 (0.25.0) found readability, collision, save and story-logic defects; all fixed and
   checked by input where the harness can (QA.md "REV-TY-1/REV-TY-2 fixes"; captures/townlife/).

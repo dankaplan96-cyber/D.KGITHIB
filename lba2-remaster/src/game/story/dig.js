@@ -68,7 +68,7 @@ export class Dig extends ChapterBase {
         if (f.c4_carving && this.T) return this.T.npcSpots.dallan;
         return S.dallan;
       case 'guard': return this.stormy ? null : S.guard;
-      case 'dkid': return S.kid;
+      case 'dkid': return this.story.kesh?.saniSpot() || S.kid;   // (in the cool room's doorway once it draws: kesh.js)
       case 'dtrader': return S.trader;
       case 'weaver': return S.weaver;
       case 'doran': return { x: D.dock.x + 1.2, z: D.dock.z + 1.4, a: Math.PI / 2 };
