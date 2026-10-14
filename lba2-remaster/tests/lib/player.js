@@ -205,9 +205,9 @@
     const where = P.sceneOf(x, z);
     if (where !== P.here()) P.enter(where, { run });
     // (a player presses E as soon as the prompt is for this thing, close enough: no need to reach the exact spot)
-    const ready = () => { const tg = P.target(); return !!tg && tg.x != null && Math.hypot(tg.x - x, tg.z - z) <= match && Math.hypot(hero().pos.x - x, hero().pos.z - z) < 2.2; };
+    const ready = () => { const tg = P.target(); if (!tg || Math.hypot(hero().pos.x - x, hero().pos.z - z) >= 2.2) return false; return tg.x == null ? tg.kind !== 'npc' : Math.hypot(tg.x - x, tg.z - z) <= match; };   // (a story thing's prompt carries no position: any non-person prompt here)
     let r = P.go(x, z, { tol: near, run, stopWhen: ready });
-    if (r.r !== 'arrived' && r.r !== 'state:dialog') return { r: 'go:' + r.r, at: [hero().pos.x, hero().pos.z] };
+    if (r.r !== 'arrived' && r.r !== 'state:dialog') { P.face(x, z); if (!ready()) return { r: 'go:' + r.r, at: [hero().pos.x, hero().pos.z] }; }   // (blocked short of it, but its prompt is up: fine)
     let tg = null;
     if (G.state === 'play') {
       P.face(x, z);
@@ -301,7 +301,10 @@
       P.face(e.pos.x, e.pos.z, 1.5);
       const hp0 = e.hp, tg = G.targeting?.throwTarget?.({ x: Math.sin(h.angle), z: Math.cos(h.angle) });
       const aimed = tg && tg.alive !== undefined ? tg : e;   // the throw goes where the game aims it
-      if (melee) { P.tap('KeyK', 0.35); t += 0.4; }
+      // the ball can't get at it (behind something) but the sword is in hand: walk up and strike, as a player would
+      const close = melee || (h.hasSword && (e._miss || 0) >= 2);
+      if (close && !melee) { P.go(e.pos.x, e.pos.z, { tol: 1.1, maxT: 8, fight: false }); P.face(e.pos.x, e.pos.z, 1.5); if (h.combat?.weapon !== 'sword') P.tap('KeyR', 0.1); }
+      if (close) { P.tap('KeyK', 0.35); P.gstep(0.3); P.tap('KeyK', 0.35); t += 1.0; }
       else if ((aimed.armour || 0) >= 2 && h.mp >= 1) {
         // a charge can't be dodged out of: start it in the guard's opening, just after its shot (rifle lowered)
         const opening = () => (aimed.state === 'recover' || aimed.state === 'hurt' || aimed.coolT > 0.6) && !(G.bolts?.list?.length) && h.hurtT <= 0 && h.actT <= 0 && h.onGround;
@@ -309,7 +312,7 @@
         P.face(aimed.pos.x, aimed.pos.z, 1.5);
         keys.add('KeyF'); I.taps.add('KeyF'); P.gstep(1.3); keys.delete('KeyF'); P.gstep(1.0); t += 2.3; }   // full charge: chargeAfter 0.2 + chargeFull 0.75 s, with a margin
       else { P.tap('KeyF', 0.05); P.gstep(1.1); t += 1.2; }
-      if (e.hp === hp0 && aimed === e) { e._miss = (e._miss || 0) + 1; if (e._miss >= 4) { e._miss = 0; P.ignore.set(e, G.time + 25); P.note(`fight: ${e.id} unreachable from here, leaving it`); } } else e._miss = 0;
+      if (e.hp === hp0 && (aimed === e || close)) { e._miss = (e._miss || 0) + 1; if (e._miss >= 6) { e._miss = 0; P.ignore.set(e, G.time + 25); P.note(`fight: ${e.id} unreachable from here, leaving it`); } } else e._miss = 0;
       P.note(`fight ${e.id || e.def?.kind} d=${d.toFixed(1)} st=${e.state} aim=${tg ? (tg === e ? 'it' : 'other:' + (tg.id || tg.def?.id || tg.kind || 'pt') + '@' + (tg.pos || tg).x?.toFixed(1) + ',' + (tg.pos || tg).z?.toFixed(1) + ' d' + Math.hypot((tg.pos || tg).x - h.pos.x, (tg.pos || tg).z - h.pos.z).toFixed(1)) : 'none'} e@${e.pos.x.toFixed(1)},${e.pos.y.toFixed(1)},${e.pos.z.toFixed(1)} me@${h.pos.x.toFixed(1)},${h.pos.y.toFixed(1)},${h.pos.z.toFixed(1)} ball=${G.ball.state} hp ${hp0}→${e.hp} me ${h.hp} mp ${h.mp}`);
       if (G.state !== 'play') P.settle();
     }
