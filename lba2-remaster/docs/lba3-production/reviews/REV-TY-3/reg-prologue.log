@@ -1,0 +1,28 @@
+after intro [ 'play', 'house', true, false ]
+leave w/o ball [ 'dialog', 'house' ]
+ball [ true, 'play' ]
+outside [ 'play', 'outdoor', [ -44, 2.3, 77.2 ] ]
+well seen [ true, undefined ]
+key [ true, true ]
+met xil [ true, undefined ]
+stamp true
+rope true
+kids asked [ true, undefined ]
+overheard [ 'dialog', true ]
+tim confessed [ true, 3 ]
+objective Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+in well [ 'play', 'well', true ]
+mites killed [5,66]
+nodes [[true,true,true],3,false]
+cutscene cutscene
+ending [ 'dialog', true ]
+chapter [ 1, true ]
+after [
+  'play',
+  'outdoor',
+  [ -40.2, 2.2, -5.6 ],
+  'Tell Zoé what happened in the well (home, Bug Street)'
+]
+save {"room":null,"flags":18,"ball":true}
+warning: THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+rc=0

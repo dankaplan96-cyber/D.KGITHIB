@@ -1,0 +1,94 @@
+{
+ "toasts": [],
+ "loaded": {
+  "st": {
+   "on": false,
+   "heat": 0,
+   "sync": 0,
+   "lift": 1,
+   "up": true,
+   "tap": true,
+   "pair": true,
+   "paid": true,
+   "owe": 0,
+   "trips": 2,
+   "room": "workshop",
+   "coins": 12,
+   "lying": 0,
+   "state": "play",
+   "chapter": "zeelich"
+  },
+  "L": {
+   "on": false,
+   "up": true,
+   "tap": true,
+   "heat": 0.18,
+   "sync": 1,
+   "done": true,
+   "pulse": true
+  },
+  "flags": {
+   "w_ask": true,
+   "w_n": 0,
+   "w_trips": 2,
+   "w_up": true,
+   "w_crankSeen": true,
+   "w_tap": true,
+   "w_tapSeen": true,
+   "w_pair": true,
+   "w_paid": true
+  }
+ },
+ "crank": {
+  "r": "used",
+  "tgt": "wcrank",
+  "label": "p_look"
+ },
+ "crank lines": [
+  "n_hero: Leave it up there. They're talking."
+ ],
+ "tap": {
+  "r": "used",
+  "tgt": "wtap",
+  "label": "p_look"
+ },
+ "tap lines": [
+  "n_hero: It's dripping nicely. I'll leave it."
+ ],
+ "lever": {
+  "r": "used",
+  "tgt": "wlever",
+  "label": "p_look"
+ },
+ "lever lines": [
+  "n_hero: The pair still talks. Baldino checks on it every time he passes."
+ ],
+ "after": {
+  "st": {
+   "on": false,
+   "heat": 0,
+   "sync": 0,
+   "lift": 1,
+   "up": true,
+   "tap": true,
+   "pair": true,
+   "paid": true,
+   "owe": 0,
+   "trips": 2,
+   "room": "workshop",
+   "coins": 12,
+   "lying": 0,
+   "state": "play",
+   "chapter": "zeelich"
+  },
+  "L": {
+   "on": false,
+   "up": true,
+   "tap": true,
+   "heat": 0.18,
+   "sync": 1,
+   "done": true,
+   "pulse": true
+  }
+ }
+}

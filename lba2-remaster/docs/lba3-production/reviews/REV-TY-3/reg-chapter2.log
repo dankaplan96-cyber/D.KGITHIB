@@ -1,0 +1,56 @@
+ch2 start [
+  2,
+  true,
+  'zeelich',
+  'play',
+  "Find Baldino's workshop on the Esmer street"
+]
+plan [
+  'workshop',
+  true,
+  'Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ Brake the three mills with the ball (0/3)'
+]
+outside [ 'zeelich', '2387.4', '7.1' ]
+setback [ true, '' ]
+cog before Oku (blocked) undefined
+cyl [
+  true,
+  'Collect the parts for the override key◆ A cog (top of the old mill; ask Oku)◆ A code cylinder (project depot, drones)◆ Brake the three mills with the ball (0/3)'
+]
+plan back [ true, 'evacplan,cyl' ]
+oku dbg [ true, '2376.0', '7.0', 'npc', 'oku', 'p_talk' ]
+oku talk [ 'dialog', 'TwinsenTh▼', 'play', true, true, 2 ]
+oku ok [ true, true ]
+cog true
+mills [
+  [ 'north', true, false ],
+  [ 'east', true, false ],
+  [ 'south', true, false ]
+]
+key/zoe [ true, true, 'lighttop', 'zoe' ]
+broadcast [
+  true,
+  'workshop',
+  'twinsen',
+  'Open the platform shield at the console by the gate'
+]
+save/load true [ 'zeelich', 'false,false,false' ]
+shield [ true, false, 'Stop Vesk on the platform' ]
+vesk [
+  true,
+  false,
+  'Go down the drill shaft',
+  'play',
+  [ 2450, -1.6, 0 ],
+  [ 2445.1, 6.4, -4.5 ],
+  undefined
+]
+next chapter [
+  'play',
+  true,
+  'dig',
+  'desert',
+  'Find the professor who found the crystals'
+]
+no errors
+rc=0

@@ -1,0 +1,5 @@
+PASS walking down the hall stairs reaches the cellar, going down step by step {"room":"cellar","minY":-0.39,"ys":[0,0,-0.26,-0.39]}
+PASS walking up the cellar stairs climbs them and reaches the hall {"room":"house","maxY":1.2,"ys":[0,0,0,0.4,0.8,1],"from":{"x":1698.9593041523385,"z":3.55},"cellar":"cellar"}
+no errors
+ALL PASSED
+rc=0
