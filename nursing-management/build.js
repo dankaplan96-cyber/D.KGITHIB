@@ -19,6 +19,18 @@ for (const [k, v] of Object.entries(parts)) {
   html = html.split(k).join(k === '/*__CSS__*/' ? v : safe(v));
 }
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
+// --test-admin <username> <password>: separate TEST file that creates a known admin account
+const ti = process.argv.indexOf('--test-admin');
+if (ti > 0) {
+  const [username, password] = process.argv.slice(ti + 1, ti + 3);
+  if (!username || !password) throw new Error('usage: node build.js --test-admin <username> <password>');
+  const seed = `<script>window.__NM_SEED_ADMIN__=${JSON.stringify({ username, password, displayName: 'מנהל ניסיון' })};</script>`;
+  const testOut = path.join(root, 'dist-test', 'מערכת_ניהול_סיעוד_ניסיון.html');
+  fs.mkdirSync(path.dirname(testOut), { recursive: true });
+  fs.writeFileSync(testOut, html.replace('<body>', `<body>\n${seed}`));
+  console.log(`built TEST file ${path.relative(root, testOut)} with admin "${username}"`);
+  process.exit(0);
+}
 const out = path.join(root, 'dist', 'מערכת_ניהול_סיעוד.html');
 fs.writeFileSync(out, html);
 console.log(`built ${path.relative(root, out)} — ${(html.length / 1024).toFixed(0)} KB, ${jsFiles.length} modules`);

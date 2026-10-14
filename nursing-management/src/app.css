@@ -242,3 +242,9 @@ table.xgrid{border-collapse:separate;border-spacing:0;font-size:13px}
 .chip{display:inline-flex;align-items:center;gap:4px;background:var(--pri-soft);color:var(--pri);border-radius:20px;padding:3px 6px 3px 12px;font-weight:600;font-size:13px}
 .chip-x{border:0;background:none;color:var(--pri);cursor:pointer;font-size:15px;line-height:1;padding:0 4px;border-radius:50%}
 .chip-x:hover{background:#d3e2f2}
+
+.pwwrap{position:relative}
+.pwwrap input{padding-inline-end:38px}
+.pweye{position:absolute;inset-inline-end:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--faint);cursor:pointer;padding:4px;border-radius:5px;display:grid;place-items:center}
+.pweye:hover{color:var(--text);background:#eef1f5}
+.pweye.on{color:var(--pri2)}

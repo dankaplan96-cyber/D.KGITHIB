@@ -8,6 +8,7 @@ const IDLE_LOCK_MIN = 30;
 
 function renderAuth(soft = false) {
   if (soft) {
+    if (App.booting) return;
     if (!$('.auth')) return;
     const a = document.activeElement;
     if (a && a.matches('input') && a.value) return;
