@@ -561,3 +561,26 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - The packaged Linux app passes desktop/test-desktop.mjs (window, app://, new game, save, relaunch → Continue, Quit).
 - Not verified here: GPU frame rate, sound by ear, gamepad/touch, Windows/Mac installers (CI). Fights the bot
   couldn't win were finished by logged ISO assists (QA.md: human-playtest items).
+
+## Session: all of Zeelich and the travel network (ZL-ALL + CONNECT; after SD-1/SD-2)
+- The original's remaining island files identified from their numbers (tools/lba2-islands.py, numbers only):
+  SCENE.HQR's scenes name an island and a start point, and each start fits one file's ground or decks. ASCENCE is a
+  Zeelich place of its own (scene 121, numbered among the Platform's): a cargo lift dock on stilts → **the Lift Dock**,
+  a new region built on its decks (our landing deck, stairs, rails, the lift's working cage). CELEBRA2 is Celebration
+  later (a pit and a 21 m figure) → Celebration keeps CELEBRAT's ground and gains the figure (ours: a robed stone
+  figure), the festival round its feet. CITABAU = Citadel again; EMERAUDE/MOON = the Emerald Moon (not wanted).
+- Three places of our own (src/game/zplaces.js; generated layouts in the same numbers form): Tralu Rock (an Esmer
+  trading post: weigh-beam market on the crown, crane over the quay shelf, skiffs, a ramp round the south face), the
+  Nectar Orchard (blossom trees in contour rows, hives, press house, the cloud-catcher on the crown), the Old Watch
+  (a crescent ridge: the broken watchtower and its fallen dome, columns, a telescope). Each: a landmark the arrival
+  faces, dressing by the planner, a giver.
+- Travel (src/game/travel.js, story/islands.js): Zeelich is a separate planet — Citadel Spaceport ⇄ Zeelich Spaceport
+  (ours: a deck off the terminal island's south shore) by spaceship only; Esmer shuttles between Zeelich's 12 places
+  only; on Twinsun the ferry (harbour ⇄ Desert Island's pier) and gliders (fields on Citadel's plateau, Desert
+  Island's beach, the Hamalayi foothills). Routes open with their chapters; all after the story. Boards at every
+  point name its destinations (Citadel's departures board: ZEELICH SPACEPORT only).
+- The Holomap per planet (VP-9): the region's own map with his dot and the travel points; an inset of the planet with
+  its places and the open links.
+- Tests: tests/travel.mjs (new: gates, the travel matrix by input, menus, holomap), tests/zislands.mjs (11 places,
+  landmarks walked, givers), tests/spaceport.mjs (menus). Evidence: docs/lba3-visual/evidence/ZL-ALL/.
+- Not verified: the look on a GPU, the feel by hand; draw counts are SwiftShader CPU-side counts.

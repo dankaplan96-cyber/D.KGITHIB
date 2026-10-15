@@ -1,6 +1,6 @@
 // Citadel Spaceport (src/game/spaceport.js) and its flights (src/game/story/islands.js): from the town he walks
 // over the footbridge onto the platform (INPUT); before chapter 4 the shuttle is grounded (a note, no menu); from
-// chapter 4 it flies to Zeelich, Zeelich's shuttle flies back to the spaceport, and the islands are on its menu; the
+// chapter 4 it flies to Zeelich Spaceport only (CONNECT: Zeelich is another planet) and back from there; the
 // platform's edges hold (no walking off into the bay); the departures board reads. ISO (logged): the chapter is set
 // by its flags; he starts outdoors in the town.
 import { launch, open, menu, checker } from './lib/boot.mjs';
@@ -34,24 +34,26 @@ check('the platform\'s railings hold: running at every edge he stays on the deck
 
 // chapter 4: fly to Zeelich, then back (INPUT)
 await setChapter('dig');
-const fly = (pick) => ev((pick) => {
-  const G = game, h = G.hero, p = G.story.isles.pad();
+const fly = (pick, which = 'main') => ev(([pick, which]) => {
+  const G = game, h = G.hero, p = which === 'zport' ? G.rooms.zeelich.spaceport.pad : G.story.isles.pad();
   const ready = () => P.target()?.kind === 'isleShuttle';
-  const r = P.go(p.x, p.z, { tol: 3.8, stopWhen: ready, maxT: 120 }); P.face(p.x, p.z);
+  const r = P.go(p.x, p.z, { tol: which === 'zport' ? 5.2 : 3.8, stopWhen: ready, maxT: 120 }); P.face(p.x, p.z);
   if (!ready()) return { fail: 'no prompt', r };
   P.tap('KeyE', 0.1);
-  const items = [...document.querySelectorAll('#shop .item')].map((b) => b.textContent + (b.disabled ? '*' : ''));
-  const i = items.findIndex((t) => t.startsWith(pick)); P.menuPick(i);
+  const items = [...document.querySelectorAll('#shop .item')].map((b) => b.querySelector('span').textContent + (b.disabled ? '*' : ''));
+  const i = items.findIndex((t) => t.startsWith(pick));
+  if (i < 0) { document.querySelector('#shop .leave')?.click(); P.settle(); return { items, room: G.room?.id ?? 'citadel', state: G.state, picked: false }; }
+  P.menuPick(i);
   return { items, room: G.room?.id ?? 'citadel', state: G.state, pos: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) };
-}, pick);
+}, [pick, which]);
 await ev(() => { const S = game.world.spaceport; game.hero.pos.set(S.landing.x, S.deck.y, S.landing.z); P.settle(); });
 const f1 = await fly('Zeelich');
-check('chapter 4: the spaceport\'s shuttle menu lists Citadel (here), Zeelich and the 7 islands; Zeelich lands him on Zeelich', f1.items?.length === 9 && f1.items[0].endsWith('*') && f1.room === 'zeelich' && f1.state === 'play', f1);
-const f2 = await fly('Twinsun');
+check('chapter 4: the spaceport\'s menu lists only Zeelich Spaceport (Zeelich is another planet: no islands); it lands him on Zeelich\'s spaceport deck', JSON.stringify(f1.items) === JSON.stringify(['Zeelich Spaceport']) && f1.room === 'zeelich' && f1.state === 'play', f1);
+const f2 = await fly('Twinsun', 'zport');
 const at = await ev(() => { const S = game.world.spaceport, h = game.hero; return { d: +Math.hypot(h.pos.x - S.pad.x, h.pos.z - S.pad.z).toFixed(2), y: +h.pos.y.toFixed(2), deck: S.deck.y, room: game.room?.id ?? 'citadel' }; });
-check('Zeelich\'s shuttle flies back to Citadel Spaceport: beside the pad, on the deck, in play', f2.room === 'citadel' && f2.state === 'play' && at.d < 8 && Math.abs(at.y - at.deck) < 0.2, { f2, at });
+check('Zeelich Spaceport\'s spaceship (its menu: Citadel only) flies back to Citadel Spaceport: beside the pad, on the deck, in play', JSON.stringify(f2.items) === JSON.stringify(['Twinsun: Citadel Spaceport']) && f2.room === 'citadel' && f2.state === 'play' && at.d < 8 && Math.abs(at.y - at.deck) < 0.2, { f2, at });
 const f3 = await fly('Otringal');
-check('from the spaceport straight to Otringal', f3.room === 'isle_otringal' && f3.state === 'play', f3);
+check('no Zeelich island from Citadel: Otringal is not on the spaceport\'s menu', f3.picked === false && f3.room === 'citadel', f3);
 
 const fails = done(errs);
 await browser.close();

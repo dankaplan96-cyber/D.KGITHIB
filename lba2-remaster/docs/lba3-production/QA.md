@@ -197,6 +197,25 @@ givers and carries low HP through the late chapters; a player normally would.
 | Defects found while building it (fixed before commit): coast cliff face held him at the waterline → respawn loop to death; objects on steep slopes made slide traps; paths over slopes too steep to climb; Mosquibee's shuttle on a bare plateau | — | FIXED |
 | Look on a GPU, feel by hand | — | NOT TESTED (software-rendered screenshots only) |
 
+### All of Zeelich and the travel network (ZL-ALL + CONNECT; VP-9)
+Served on 127.0.0.1:8177 from the worktree; headless Chromium + SwiftShader; tests from a scratch directory.
+| Check | Evidence | Result |
+|---|---|---|
+| The original's files identified from numbers: ASCENCE (Zeelich, scene 121 → the Lift Dock), CELEBRA2 (Celebration later: pit + 21 m figure), CITABAU (Citadel again), EMERAUDE/MOON (the Emerald Moon) | tools/lba2-islands.py header; scratch analysis | DONE (numbers) |
+| All 11 Zeelich places build (7 + the Lift Dock + our 3); main walkable area ≥ 100 m², spawn on land | LOGIC (tests/zislands.mjs) | PASS |
+| Every island incl. the Lift Dock's decks: running at the edge in 8 directions never below the waterline / off a deck; no trap from any sample point | INPUT | PASS |
+| The Lift Dock, Tralu Rock, the Nectar Orchard, the Old Watch, Celebration: every landmark walked to from the arrival; each new place's giver gives once (Space in Normal) | INPUT (ISO: enter the region) | PASS |
+| Save & quit on Celebration → Continue; holomap on an island | UI + INPUT | PASS |
+| Gates: ch. 2 nothing open (spaceport grounded note); ch. 4 ferry only (Citadel → Desert); ch. 5 ferry gone; ch. 6 glider Desert ⇄ Hamalayi, Citadel's field closed | INPUT (ISO: chapter flags, start ~8 m from each point) | PASS (tests/travel.mjs) |
+| After the story, by input: ferry Citadel ⇄ Desert; glider Citadel ⇄ Hamalayi, Hamalayi ⇄ Desert, Desert ⇄ Citadel (8 legs, every Twinsun region from every other) | INPUT | PASS |
+| Citadel Spaceport's menu = [Zeelich Spaceport]; lands on Zeelich's spaceport deck; walk over the footbridge to the shuttle pad; its menu = spaceport island (here) + 11 islands, no Twinsun stop | INPUT | PASS |
+| Every Zeelich place by shuttle, pad to pad (11 legs) and back; no Twinsun stop on any menu; Zeelich Spaceport's menu = [Twinsun: Citadel Spaceport] → Citadel's deck | INPUT | PASS |
+| Holomap per planet: Citadel, Desert, Hamalayi (Twinsun), Zeelich, Tralu Rock, the Lift Dock (Zeelich): opens, his dot on the map, the planet inset | INPUT + screenshots (evidence/ZL-ALL/holomap-*.jpg) | PASS |
+| Spaceport test (menus updated): grounded before ch. 4; Zeelich only; back from Zeelich Spaceport; Otringal not offered on Citadel | INPUT | PASS |
+| Draw calls per place, arrival/landmark (one composed frame, 1280×720, SwiftShader, CPU-side counts; evidence/ZL-ALL/draws-final.json): Lift Dock 205/208, Tralu Rock 211/212, Nectar Orchard 147/144, Old Watch 132/130, Celebration 199/204 (before: 179/174); budget ≈ 775 | renderer.info | under budget |
+| Regression: stability (16), chapter2, chapter4, chapter5 (rc 0, no errors), zeelich-life (31) | evidence/ZL-ALL/logs/ | PASS |
+| Look on a GPU, feel by hand, frame rate | — | NOT TESTED |
+
 ### Twelve years on, first set (0.24.0; docs/TWELVE_YEARS.md)
 | Check | Evidence | Result |
 |---|---|---|

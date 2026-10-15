@@ -6,8 +6,19 @@ import { PATHS } from './world.js';
 import { Color, Vector3 } from 'three';
 import { WEAPON_INFO } from './combat.js';
 import { keyFor, keyLabel } from '../engine/input.js';
+import { regionOf, planetOf, PLANETS, lastOutdoorPos } from './travel.js';
 
 const $ = (s) => document.querySelector(s);
+
+// the Holomap's regions and planets (CONNECT, VP-9)
+const MODE_COLOR = { ferry: '#5ab0ff', glider: '#ffd860', shuttle: '#ff9ad0', ship: '#ffffff' };
+const REGION_SIZE = { zeelich: 150, desert: 250, hamalayi: 230 };
+const REGION_SHIFT = { zeelich: [0, 10] };
+// where each place sits on the planet's little globe (unit radius; Zeelich's islands round its spaceport island)
+const PLANET_POS = { citadel: [-0.38, 0.22], desert: [0.42, 0.42], hamalayi: [0.08, -0.56], zeelich: [0, 0] };
+PLANETS.zeelich.slice(1).forEach((id, i, a) => { const ang = (i / a.length) * Math.PI * 2 - Math.PI / 2; PLANET_POS[id] = [Math.cos(ang) * 0.66, Math.sin(ang) * 0.66]; });
+const REGION_NAME = (r) => ({ citadel: 'map_citadel', desert: 'map_desert', hamalayi: 'map_hamalayi', zeelich: 'isle_zeelich' }[r] || r);
+const SHORT_NAME = (r) => ({ citadel: 'map_citadel_s', desert: 'map_desert_s', hamalayi: 'map_hamalayi_s', zeelich: 'map_zeelich_s' }[r] || r);
 
 export class HUD {
   constructor(game) {
@@ -41,7 +52,7 @@ export class HUD {
   refreshText() {
     document.querySelectorAll('#behaviour .beh').forEach((d) => { d.querySelector('.lbl').textContent = t('beh_' + d.dataset.b); });
     $('#bossbar span').textContent = t('boss_name');
-    $('#holomap .title').textContent = t('map_title');
+    $('#holomap .title').textContent = t('map_title'); this._holoTitle = null;
     $('#holomap .close').textContent = t('map_close');
   }
 
@@ -383,28 +394,112 @@ export class HUD {
     ctx.restore();
   }
 
+  // The Holomap shows the planet he is on (VP-9, CONNECT): the region he is in (Citadel's map, or the region's own
+  // ground sampled from the game's physics), his dot on it whenever he is outdoors there (indoors: where he went
+  // in), the markers that fall on it, and an inset of the planet — Twinsun or Zeelich — with its places and the
+  // travel links open now (ferry, glider, Esmer shuttle; the spaceship leaves the planet).
   drawHolomap(time) {
-    const ctx = this.holoCtx, W = this.holo.width;
-    const s = this.mapSize, X0 = this.mapX0, Z0 = this.mapZ0;
+    const ctx = this.holoCtx, W = this.holo.width, g = this.game;
+    const region = regionOf(g), planet = planetOf(region);
+    const B = region === 'citadel' ? { img: this.mapImg, X0: this.mapX0, Z0: this.mapZ0, s: this.mapSize } : this._regionMap(region);
+    if (this._holoTitle !== region) { this._holoTitle = region; $('#holomap .title').textContent = t('map_holo') + ' · ' + t('map_' + planet) + ' · ' + t(REGION_NAME(region)); }
+    const s = B.s, X0 = B.X0, Z0 = B.Z0;
     ctx.fillStyle = '#04121c';
     ctx.fillRect(0, 0, W, W);
     ctx.globalAlpha = 0.95;
-    ctx.drawImage(this.mapImg, 0, 0, W, W);
+    ctx.drawImage(B.img, 0, 0, W, W);
     ctx.globalAlpha = 1;
     // holo scanlines + tint
-    ctx.fillStyle = 'rgba(40,200,255,0.10)'; ctx.fillRect(0, 0, W, W);
+    ctx.fillStyle = planet === 'zeelich' ? 'rgba(255,120,220,0.08)' : 'rgba(40,200,255,0.10)'; ctx.fillRect(0, 0, W, W);
     for (let y = (time * 40) % 4; y < W; y += 4) { ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0, y, W, 1); }
     const toPx = (x, z) => [((x - X0) / s) * W, ((z - Z0) / s) * W];
-    const pts = this._markers().filter((m) => !m.minimapOnly).map((m) => { const [x, y] = toPx(m.x, m.z); return { m, x, y, r: (m.r || 4) * 1.8 }; });
+    const inMap = (x, y) => x >= 0 && y >= 0 && x <= W && y <= W;
+    const pts = this._markers().filter((m) => !m.minimapOnly).map((m) => { const [x, y] = toPx(m.x, m.z); return { m, x, y, r: (m.r || 4) * 1.8 }; }).filter((o) => inMap(o.x, o.y) && (region === 'citadel' ? true : !o.m.label || o.m.kind === 'star'));
     for (const o of pts) this._marker(ctx, o.x, o.y, o.m, 1.8);
-    const hero = this.game.mapHero();
+    // the travel points of this region (a small diamond each)
+    for (const p of Object.values(g.travel?.points || {})) {
+      if (p.region !== region) continue;
+      const [x, y] = toPx(p.x, p.z); ctx.save(); ctx.translate(x, y); ctx.rotate(Math.PI / 4); ctx.fillStyle = MODE_COLOR[p.mode]; ctx.strokeStyle = '#111'; ctx.lineWidth = 1.5; ctx.fillRect(-5, -5, 10, 10); ctx.strokeRect(-5, -5, 10, 10); ctx.restore();
+    }
+    const hero = region === 'citadel' ? g.mapHero() : (g.room?.outdoor ? g.hero : { pos: lastOutdoorPos() || { x: X0 + s / 2, z: Z0 + s / 2 } });
     const [hx, hy] = toPx(hero.pos.x, hero.pos.z);
     const pulse = 8 + Math.sin(time * 5) * 3;
     ctx.strokeStyle = '#7ff'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(hx, hy, pulse, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(hx, hy, 4, 0, Math.PI * 2); ctx.fill();
-    // (Twinsen's ring is kept clear of labels too)
-    this.holoLabels = this._placeLabels(ctx, [...pts, { m: {}, x: hx, y: hy, r: 11 }], W);
+    this.holoHero = { x: hx, y: hy, region, planet };
+    // (Twinsen's ring is kept clear of labels too; and the planet's inset in the top-left corner)
+    const IN = Math.round(W * 0.34);
+    this.holoLabels = this._placeLabels(ctx, [...pts, { m: {}, x: hx, y: hy, r: 11 }, { m: {}, x: IN / 2, y: IN / 2, r: IN / 2 + 4 }], W);
+    this._planetInset(ctx, IN, planet, region, time);
+  }
+
+  // the region's own map: its ground sampled from the physics (terrain and walkable bricks), cached
+  _regionMap(region) {
+    this._rmaps ||= {};
+    if (this._rmaps[region]) return this._rmaps[region];
+    const g = this.game, R = g.rooms[region], P = g.physics;
+    const c0 = R.group.position, size = REGION_SIZE[region] || Math.max(...(R.size || [120, 120])) + 24;
+    const cx = c0.x + (REGION_SHIFT[region]?.[0] || 0), cz = c0.z + (REGION_SHIFT[region]?.[1] || 0);
+    const N = 160, X0 = cx - size / 2, Z0 = cz - size / 2, zee = planetOf(region) === 'zeelich';
+    const c = document.createElement('canvas'); c.width = c.height = N;
+    const x = c.getContext('2d'), img = x.createImageData(N, N), H = new Float32Array(N * N);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) H[j * N + i] = P.groundAt(X0 + ((i + 0.5) / N) * size, Z0 + ((j + 0.5) / N) * size, 80);
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const h = H[j * N + i], k = (j * N + i) * 4; let r, gg, b;
+      if (h < -0.3) { if (zee) { r = 70; gg = 50; b = 90; } else { const d = Math.min(1, -h / 6); r = 20; gg = 90 - d * 50; b = 150 - d * 60; } }
+      else if (h < 1) { r = 190; gg = 175; b = 120; }
+      else { const v = Math.min(1, h / 20); if (zee) { r = 150 + v * 80; gg = 130 + v * 70; b = 110 + v * 90; } else { r = 60 + v * 110; gg = 130 + v * 70; b = 60 + v * 90; } }
+      const e = i > 0 && j > 0 ? Math.max(Math.abs(h - H[j * N + i - 1]), Math.abs(h - H[(j - 1) * N + i])) : 0;
+      if (h > -0.3 && e > 1.2) { r *= 0.7; gg *= 0.7; b *= 0.7; }
+      if (h > 0 && Math.abs((h % 2) - 1) < 0.08) { r *= 0.85; gg *= 0.85; b *= 0.85; }
+      img.data[k] = r; img.data[k + 1] = gg; img.data[k + 2] = b; img.data[k + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+    return (this._rmaps[region] = { img: c, X0, Z0, s: size });
+  }
+
+  // the planet: its places at their places on a schematic globe, the open travel links between them
+  _planetInset(ctx, S, planet, region, time) {
+    const g = this.game, T = g.travel;
+    ctx.save();
+    ctx.fillStyle = 'rgba(2,10,20,0.82)'; ctx.fillRect(0, 0, S, S);
+    ctx.strokeStyle = 'rgba(160,240,255,0.7)'; ctx.lineWidth = 2; ctx.strokeRect(1, 1, S - 2, S - 2);
+    const cx = S / 2, cy = S / 2 + 8, R0 = S * 0.36;
+    const grd = ctx.createRadialGradient(cx - R0 * 0.3, cy - R0 * 0.3, R0 * 0.1, cx, cy, R0);
+    if (planet === 'zeelich') { grd.addColorStop(0, '#f8d8ec'); grd.addColorStop(1, '#8a5a8a'); } else { grd.addColorStop(0, '#7ad0ff'); grd.addColorStop(1, '#1a4a7a'); }
+    ctx.fillStyle = grd; ctx.beginPath(); ctx.arc(cx, cy, R0, 0, Math.PI * 2); ctx.fill();
+    const at = (id) => { const p = PLANET_POS[id]; return p ? [cx + p[0] * R0, cy + p[1] * R0] : null; };
+    // the open links
+    const fs = Math.max(10, Math.round(S / 20));
+    ctx.font = `600 ${fs}px Rubik, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const r of T?.routes || []) {
+      if (!r.gate(g.story)) continue;
+      const A = T.points[r.a], Bp = T.points[r.b];
+      if (r.mode === 'ship') {   // off the planet
+        const here = planetOf(A.region) === planet ? A : Bp, p = at(here.region); if (!p) continue;
+        ctx.strokeStyle = MODE_COLOR.ship; ctx.setLineDash([4, 4]); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(S - 14, 16); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = '#fff'; ctx.textAlign = 'right'; ctx.fillText(t(planet === 'zeelich' ? 'map_to_twinsun' : 'map_to_zeelich'), S - 8, 30); ctx.textAlign = 'center';
+        continue;
+      }
+      if (planetOf(A.region) !== planet) continue;
+      if (r.mode === 'shuttle' && A.id !== 'zeelich_shuttle' && Bp.id !== 'zeelich_shuttle') continue;   // (drawn as a star from the spaceport island)
+      const a = at(A.region), b = at(Bp.region); if (!a || !b) continue;
+      ctx.strokeStyle = MODE_COLOR[r.mode]; ctx.lineWidth = 2; ctx.setLineDash(r.mode === 'glider' ? [5, 3] : []);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2 + (b[1] - a[1]) * 0.2, (a[1] + b[1]) / 2 - (b[0] - a[0]) * 0.2, b[0], b[1]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // the places
+    for (const id of PLANETS[planet]) {
+      const p = at(id); if (!p || !g.rooms[id] && id !== 'citadel') continue;
+      ctx.fillStyle = id === region ? '#fff' : '#cfeeff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(p[0], p[1], id === region ? 4.5 : 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      if (id === region) { ctx.strokeStyle = '#7ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p[0], p[1], 7 + Math.sin(time * 5) * 2, 0, Math.PI * 2); ctx.stroke(); }
+      if (planet === 'twinsun' || id === region || id === 'zeelich') { ctx.fillStyle = '#e8fbff'; ctx.strokeStyle = 'rgba(0,0,0,0.8)'; ctx.lineWidth = 3; const ly = p[1] + (PLANET_POS[id][1] < 0 ? -10 : 11); const tx = t(SHORT_NAME(id)); ctx.strokeText(tx, p[0], ly); ctx.fillText(tx, p[0], ly); }
+    }
+    ctx.fillStyle = '#f0c040'; ctx.font = `700 ${fs + 2}px Rubik, system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.fillText(t('map_' + planet).toUpperCase(), 8, 12);
+    ctx.textBaseline = 'alphabetic';
+    ctx.restore();
   }
 
   // Holomap labels, drawn after every marker and placed so that none overprints another label or a marker (two

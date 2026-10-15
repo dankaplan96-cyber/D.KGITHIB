@@ -13,6 +13,7 @@ are never presented as the originals' canon.
 | **New in this pass** (proposed developments for the twelve-year gap) | Zoé keeps the Water Office's connection register; Bram and the lane's old pump; Officer Odile and the harbour's customs booth; Nell's repair shop for imported machines; Xil's mislabelled crate; the family's corners in the house | this file, src/game/story/life.js |
 | **New in the second set** (Baldino's workshop) | Ilo, an Esmer engineer at the shuttle yard (named, not seen); Baldino's test pair of bench relays; his old hoist; the stove fan with three odd blades; the tea-by-coupler experiment; the thunder box (the pulse tool of chapter 10 before it was ready) | this file, src/game/workshoplife.js, src/game/story/workshop.js |
 | **New in the third set** (Desert Island: Kesh) | Kesh's cool room in one of FunFrock's concrete blockhouses, with a wind-catcher Kesh built on it; Lumi's loom, her shade sail, the cool room's curtain and sand screen (her work); the reed sand screens on the village's windward side; Hesk's flag poles along the sand-yacht routes and his yacht stop; the drift over the track to the dig | this file, src/game/keshlife.js, src/game/story/kesh.js |
+| **ZL-ALL / CONNECT** (all of Zeelich, the travel network) | From the user's LBA2 files, numbers only: the Lift Dock (ASCENCE, a cargo lift dock at Zeelich's cloud line) and Celebration's later state (CELEBRA2: the great figure risen from its pit). **New invention** (ours, not LBA2): Tralu Rock, an Esmer trading post; the Nectar Orchard and its cloud-catcher; the Old Watch, a ruined watchtower with a telescope; Zeelich Spaceport (the terminal island's deck for the spaceship to Citadel); the glider fields on Citadel's plateau and Desert Island's beach; the ferry stops' boards | this file ("Zeelich, all of it"), WORLD_MAP.md, src/game/zplaces.js, src/game/travel.js |
 | **New in the fourth set** (Zeelich's street) | the old watch house (older than the council, its crest chiselled off) as Mother Snuff's bakery; her oven on the project's heat, its heat box and safety cut-out; the heat posts lit at the bakery, the council house and the depot, dark with CONNECTION NEXT QUARTER at the west end; the moles' burrow hatch and its warm vent; Mr Pelleck's dome re-tiled with his wages from the depot's books; Bzizz landing his nectar crates on the watch house roof; Nara's flowers crated for Citadel; Tavo carrying rolls to the depot | this file, src/game/zeelife.js, src/game/story/zeelife.js |
 
 Nothing new claims anything about the originals' characters beyond what the originals show. Baldino himself is
@@ -218,6 +219,35 @@ depot hasn't signed for it, and unsigned crates stay on the stage).
 - Save/Continue in any state (crate on the flue, on the stage, broken; the coin owed).
 - **Chapter 10, not done here** (another developer owns network.js/ch10.js): Oku's or Baldino's network lines could
   recall the bakery's heat box (a safety cut-out that resets when the air flows) — suggested, not implemented.
+
+### Zeelich, all of it, and the way between the worlds (ZL-ALL, CONNECT; src/game/zislands.js, zplaces.js, travel.js)
+- **From the original (numbers only, tools/lba2-islands.py).** The original's island files were identified from their
+  numbers (SCENE.HQR's scenes name an island and a start point; each start fits one file's ground or decks): CITABAU
+  is Citadel again (same ground, more objects; Twinsun, not used), EMERAUDE and MOON are the Emerald Moon twice (not
+  wanted), CELEBRA2 is Celebration Island later, ASCENCE is a Zeelich place of its own.
+  - **The Lift Dock** (ASCENCE): decks on stilts at the cloud line, an 11 m lift tower, a crane over the east deck,
+    crates stacked, a big hull moored alongside. Ours on it: the shuttle's landing deck, two stairs up to the upper
+    deck, rails along every open edge, the tower's working cage going up and down with cargo, cloud skiffs.
+  - **Celebration Island** keeps the original's ground (the later state's pit leaves only a rim to walk on) and gains
+    the later state's great figure: twelve years on it still stands, the pit round its feet filled and paved; the
+    island holds its festival there, masts round it, garlands and lanterns hung up to it. The figure itself is ours
+    (a robed, hooded stone figure with a glowing face), standing where the original's numbers put it.
+- **New invention (ours, not LBA2)** — each with a landmark, a reason to visit and a find (a giver):
+  - **Tralu Rock**, an Esmer trading post: a market round a great brass weigh-beam on the rock's crown, a crane over
+    the cliff lowering goods to the quay shelf below, cloud skiffs tied up there, a ramp curving round the south face
+    between them. The traders' crates hide a few kashes.
+  - **The Nectar Orchard**: a broad round hill of blossom trees in rows along its contours, hives among them, a press
+    house and its nectar press at the foot, and on the crown a cloud-catcher — nets on poles combing water out of the
+    passing cloud into a cistern for the trees. The press gives a heart.
+  - **The Old Watch**: a crescent ridge over the clouds with the broken watchtower of the old guard (older than the
+    council; its dome lies fallen beside it), toppled columns and wall blocks along the crest, and an old telescope on
+    the south horn looking out. A bit of magic lies by the telescope.
+- **Zeelich is another planet.** Twelve years on the Esmers' shuttles are local traffic between Zeelich's islands;
+  the crossing to Twinsun is a spaceship between Citadel Spaceport and **Zeelich Spaceport** (ours: a deck off the
+  terminal island's south shore, a footbridge, the larger craft on its pad, a board). On Twinsun the ferry runs from
+  Citadel's harbour to Desert Island's pier (not while the project holds the ferry in chapter 5), and gliders fly
+  between the fields on Citadel's plateau, Desert Island's beach and the Hamalayi foothills (ours: the fields, their
+  windsocks, rings and boards). Each route opens with the chapter that first goes there.
 
 ## Not yet done (next, in the brief's order)
 1. The Hamalayi's own twelve-year changes (see WORLD_MAP.md: what exists there now).

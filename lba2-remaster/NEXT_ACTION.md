@@ -1,5 +1,16 @@
 # NEXT ACTION
 
+ZL-ALL + CONNECT (after SD-1/SD-2): all of Zeelich and the travel network. The original's remaining Zeelich island
+files identified from numbers (tools/lba2-islands.py): ASCENCE → the Lift Dock (new region), CELEBRA2 → Celebration's
+later state (its risen figure added to Celebration), CITABAU = Citadel again, EMERAUDE/MOON = the Emerald Moon (not
+wanted). Three places of our own (src/game/zplaces.js): Tralu Rock, the Nectar Orchard, the Old Watch. Zeelich is a
+separate planet: Citadel Spaceport ⇄ Zeelich Spaceport by spaceship only; Esmer shuttles between Zeelich's places only;
+on Twinsun the ferry (harbour ⇄ Desert Island's pier) and gliders (Citadel's plateau, Desert Island's beach, the
+Hamalayi foothills), each open with its chapter (src/game/travel.js). The Holomap shows the planet he is on (VP-9).
+Next: an independent review of ZL-ALL/CONNECT; follow-ups for the owners of other files: the harbour's ferry
+timetable board (props.js/citydress.js) still lists ZEELICH sailings; chapter 10's glider menu (network.js) still
+flies Hesk to Zeelich — both story-era crossings, the user may want them to read as spaceship/project-only.
+
 0.27.0: twelve years on, fourth set: Zeelich's street (docs/TWELVE_YEARS.md; tests/zeelich-life.mjs). The old watch
 house as Mother Snuff's bakery on the project's heat and The Second Bake side story, heat posts lit and promised,
 the moles' burrow hatch, Mr Pelleck's re-tiled dome, Nara's held flowers. Next: an independent review of TY-4, then

@@ -57,6 +57,15 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   captures/desert-ty/; status REVIEW), Zeelich's street and The Second Bake (0.27.0, TY-4: tests/zeelich-life.mjs,
   captures/zeelich-ty/; status REVIEW).
 
+## Done after (ZL-ALL + CONNECT; status REVIEW)
+- All of Zeelich: the original's remaining island files identified from numbers (tools/lba2-islands.py: ASCENCE → the
+  Lift Dock, a new deck region; CELEBRA2 → Celebration's risen figure; CITABAU = Citadel again; EMERAUDE/MOON = the
+  Emerald Moon, not wanted); three places of our own (src/game/zplaces.js: Tralu Rock, the Nectar Orchard, the Old
+  Watch), each with a landmark, dressing and a giver.
+- Travel (src/game/travel.js): Zeelich separate — Citadel Spaceport ⇄ Zeelich Spaceport (ours) by spaceship only;
+  Esmer shuttles between Zeelich's 12 places only; on Twinsun the ferry and three glider fields; gates by chapter.
+  The Holomap per planet with his dot (VP-9). tests/travel.mjs, tests/zislands.mjs, tests/spaceport.mjs.
+
 ## Next exact task
 Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

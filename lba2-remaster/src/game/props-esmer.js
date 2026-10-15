@@ -59,10 +59,10 @@ export const stripeTex = (a, b) => ctex('estripe' + a + b, 64, 64, (x, S) => {
 });
 
 // the sign boards' words: one atlas for every island (a row per word), cream letters on plum
-const SIGN_ROWS = 32;
+const SIGN_ROWS = 48;
 let SIGN_WORDS = [];
 export function setSignWords(words) { SIGN_WORDS = [...new Set(words)].slice(0, SIGN_ROWS); }
-const signTex = () => ctex('esigns' + SIGN_WORDS.join('|'), 256, 2048, (x, W, H) => {
+const signTex = () => ctex('esigns' + SIGN_WORDS.join('|'), 256, 3072, (x, W, H) => {
   const rh = H / SIGN_ROWS;
   SIGN_WORDS.forEach((w, i) => {
     const y = i * rh;
@@ -706,5 +706,195 @@ export function barge(P, { len = 12, beam = 7, h = 3 } = {}) {
 export function post(P, { h = 1.2 } = {}) {
   P.add(cached('epost' + h.toFixed(1), () => lathe([[0, 0], [0.13, 0], [0.13, 0.08], [0.08, 0.16], [0.07, h - 0.2], [0.1, h - 0.14], [0.1, h - 0.06], [0.04, h], [0, h + 0.02]], 8)), EM.brass());
   P.cyl(0, 0, 0.14, h);
+  return P;
+}
+
+// ================================================================== ZL-ALL: the new places' landmarks and travel boards
+// Celebration Island later (the original's CELEBRA2): the great figure risen from its pit, here our own robed,
+// hooded figure of stone with a glowing face, tiled hems and a crest; garlands are hung on it for the festival.
+export function colossus(P, { h = 28, r = 5 } = {}) {
+  const robe = cached('ecolrobe' + h + r, () => lathe([[r * 1.12, 0], [r * 1.12, 0.012 * h], [r, 0.03 * h], [r * 0.93, 0.12 * h], [r * 0.8, 0.32 * h], [r * 0.66, 0.52 * h], [r * 0.7, 0.63 * h], [r * 0.66, 0.69 * h], [r * 0.46, 0.74 * h], [r * 0.3, 0.76 * h], [0, 0.77 * h]], 20, 2.2));
+  P.add(robe, EM.stone());
+  P.add(cached('ecolhem' + h + r, () => cyl(r * 0.96, r * 1.01, 0.05 * h, 20, 1.0, true)), EM.tiles(), 0, 0.06 * h, 0);
+  P.add(cached('ecolbelt' + h + r, () => cyl(r * 0.69, r * 0.72, 0.035 * h, 20, 1.0, true)), EM.tiles(), 0, 0.5 * h, 0);
+  // folded arms: a roll of sleeve across the front, hands meeting
+  P.add(cached('ecolarms' + h + r, () => compose([[cyl(r * 0.2, r * 0.2, r * 1.3, 12).rotateZ(Math.PI / 2), 0, 0.57 * h, r * 0.62], [new THREE.SphereGeometry(r * 0.17, 10, 8), 0, 0.57 * h, r * 0.82]])), EM.stone());
+  // the hood and the head inside it, the face a soft blue light; a crest above
+  P.add(cached('ecolhood' + h + r, () => lathe([[r * 0.5, 0], [r * 0.52, 0.06 * h], [r * 0.46, 0.12 * h], [r * 0.3, 0.17 * h], [0, 0.19 * h]], 16)), EM.stone(), 0, 0.75 * h, 0);
+  P.add(cached('ecolface', () => new THREE.SphereGeometry(1, 14, 10).scale(1, 1.2, 0.5)), pm('#bff0ff', 0.25, { emissive: '#3ab8ff', emissiveIntensity: 1.1 }), 0, 0.83 * h, r * 0.38, 0, 0, 0, r * 0.24);
+  P.add(cached('ecolcrest' + h + r, () => lathe([[r * 0.2, 0], [r * 0.16, 0.03 * h], [r * 0.08, 0.06 * h], [0, 0.08 * h]], 10)), EM.brass(), 0, 0.93 * h, 0);
+  P.cyl(0, 0, r * 1.05, 0.8 * h, { seeThrough: false }); P.r = r * 1.2;
+  return P;
+}
+// Tralu Rock: the weigh-beam, a great brass balance under which the traders weigh their goods (it rocks gently)
+export function weighBeam(P, { L = 6.4, H = 4.6 } = {}) {
+  P.add(bbox(2.8, 0.4, 2.8, 0.05, 1.8), EM.stone(), 0, 0.2, 0);
+  P.add(bbox(2.2, 0.16, 2.2, 0.02, 0.5), EM.tiles(), 0, 0.46, 0);
+  P.add(cached('eweighcol' + H, () => lathe([[0.42, 0], [0.32, 0.25], [0.22, 0.5], [0.2, H - 0.9], [0.3, H - 0.75], [0.12, H - 0.5], [0.1, H], [0, H]], 12)), EM.brass(), 0, 0.5, 0);
+  const g = new THREE.Group(); g.position.set(P.x, P.y + 0.5 + H, P.z); g.rotation.y = P.ry;
+  const br = brassM(), mk = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; return m; };
+  const beam = new THREE.Group(); g.add(beam);
+  beam.add(mk(cached('eweighbeam' + L, () => compose([[cyl(0.09, 0.09, L, 8).rotateZ(Math.PI / 2)], [new THREE.SphereGeometry(0.2, 10, 8), -L / 2, 0, 0], [new THREE.SphereGeometry(0.2, 10, 8), L / 2, 0, 0], [lathe([[0.32, 0], [0.12, 0.5], [0, 0.6]], 8), 0, 0.05, 0]])), br, 0, 0, 0));
+  const pans = [];
+  for (const s of [-1, 1]) {
+    const pan = new THREE.Group(); g.add(pan);
+    pan.add(mk(cached('eweighchain', () => compose([0, 1, 2].map((k) => { const a = (k / 3) * Math.PI * 2; return [cyl(0.015, 0.015, 2.3, 4).rotateX(Math.sin(a) * 0.27).rotateZ(Math.cos(a) * 0.27), Math.cos(a) * 0.3, -1.15, Math.sin(a) * 0.3]; }))), EM.dark(), 0, 0, 0));
+    pan.add(mk(cached('eweighpan', () => lathe([[0, 0], [0.7, 0.04], [0.9, 0.22], [0.86, 0.24], [0.66, 0.08], [0, 0.06]], 16)), br, 0, -2.4, 0));
+    if (s < 0) pan.add(mk(cached('eweighgoods', () => tint(compose([[bbox(0.5, 0.45, 0.5, 0.04), -0.15, 0.25, 0.05], [bbox(0.38, 0.35, 0.38, 0.04), 0.28, 0.2, -0.1, 0, 0.5]]), '#b88850')), VC(), 0, -2.36, 0));
+    else pan.add(mk(cached('eweighweights', () => compose([[cyl(0.2, 0.24, 0.3, 10), -0.15, 0.17, 0], [cyl(0.15, 0.18, 0.22, 10), 0.22, 0.13, 0.1], [cyl(0.1, 0.12, 0.16, 8), 0.1, 0.4, -0.05]])), EM.dark(), 0, -2.36, 0));
+    pans.push([pan, s]);
+  }
+  P.extra.push({ obj: g, update: (dt, t) => {
+    const a = Math.sin(t * 0.45) * 0.07 + Math.sin(t * 1.3) * 0.01; beam.rotation.z = a;
+    for (const [pan, s] of pans) pan.position.set(Math.cos(a) * s * L / 2, Math.sin(a) * s * L / 2, 0);
+  } });
+  P.cyl(0, 0, 1.45, H + 0.6, { seeThrough: false }); P.r = 3.6;
+  return P;
+}
+// the Nectar Orchard: the cloud-catcher on the crown: a ring of poles holding fine nets that comb water out of
+// the passing cloud, gutters running down to a round cistern in the middle
+export function cloudCatcher(P, { r = 4.4, h = 6.8 } = {}) {
+  const n = 6, wood = EM.wood();
+  for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2; P.add(cached('eccpole' + h, () => compose([[cyl(0.1, 0.14, h, 8), 0, h / 2, 0], [new THREE.SphereGeometry(0.16, 8, 6), 0, h + 0.05, 0]])), wood, Math.sin(a) * r, 0, Math.cos(a) * r); P.cyl(Math.sin(a) * r, Math.cos(a) * r, 0.2, h); }
+  // (a fine net: a mesh of threads with beads of water, see-through between them)
+  const netM = cm(ctex('eccnettex', 128, 128, (x, S) => {
+    x.clearRect(0, 0, S, S); x.strokeStyle = 'rgba(244,240,250,0.95)'; x.lineWidth = 2;
+    for (let k = 0; k <= S; k += 16) { x.beginPath(); x.moveTo(k, 0); x.lineTo(k, S); x.stroke(); x.beginPath(); x.moveTo(0, k); x.lineTo(S, k); x.stroke(); }
+    x.fillStyle = 'rgba(190,235,255,0.95)'; for (let i = 0; i < S; i += 16) for (let j = 0; j < S; j += 16) if ((i * 7 + j * 3) % 48 === 0) { x.beginPath(); x.arc(i, j, 3, 0, 7); x.fill(); }
+  }), { rough: 0.6, side: THREE.DoubleSide });
+  netM.alphaTest = 0.35; netM.transparent = false; netM.map.repeat?.set(3, 3);
+  for (let k = 0; k < n; k += 2) {
+    const a0 = (k / n) * Math.PI * 2, a1 = ((k + 1) / n) * Math.PI * 2, w = 2 * r * Math.sin(Math.PI / n), am = (a0 + a1) / 2, rm = r * Math.cos(Math.PI / n);
+    P.add(cached('eccnet' + w.toFixed(2) + h, () => { const g = new THREE.PlaneGeometry(w - 0.25, h * 0.62, 12, 8), p = g.attributes.position; for (let i = 0; i < p.count; i++) p.setZ(i, Math.sin((p.getX(i) / w + 0.5) * Math.PI) * 0.35 + Math.sin(p.getY(i) * 3 + p.getX(i)) * 0.04); g.computeVertexNormals(); return tint(g, '#eef2fa'); }), netM, Math.sin(am) * rm, h * 0.6, Math.cos(am) * rm, 0, am);
+    // a gutter under the net and a pipe down to the cistern
+    const [gx, gz] = [Math.sin(am) * rm * 0.96, Math.cos(am) * rm * 0.96];
+    P.add(cached('eccgutter' + w.toFixed(2), () => cyl(0.09, 0.09, w - 0.2, 8, 0, true).rotateZ(Math.PI / 2)), EM.brass(), gx, h * 0.27, gz, 0, am);
+    P.add(cached('eccpipe' + r, () => tube([[0, 0, 0], [0, -0.4, -r * 0.35], [0, -1.2, -r * 0.62]], 0.06, 6, 1)), EM.brass(), gx, h * 0.27, gz, 0, am);
+  }
+  P.add(cached('ecctank', () => lathe([[1.7, 0], [1.75, 0.08], [1.75, 1.0], [1.85, 1.08], [1.85, 1.18], [1.55, 1.18], [1.55, 0.3], [0, 0.3]], 16, 1.5)), EM.stone());
+  P.add(cached('ecctankband', () => cyl(1.77, 1.77, 0.26, 16, 0.6, true)), EM.tiles(), 0, 0.62, 0);
+  P.add(cached('eccwater', () => new THREE.CircleGeometry(1.56, 18).rotateX(-Math.PI / 2)), pm('#bfeef6', 0.12, { metalness: 0.1, emissive: '#3a8aa8', emissiveIntensity: 0.35 }), 0, 1.0, 0);
+  P.cyl(0, 0, 1.9, 1.2, { seeThrough: false }); P.r = r + 0.6;
+  return P;
+}
+// a nectar press by the press house: a timber frame, a brass screw and its bar, a tub of amber nectar
+export function nectarPress(P) {
+  for (const s of [-1, 1]) P.add(cached('epresspost', () => bbox(0.22, 2.3, 0.22, 0.03, 1)), EM.wood(), s * 0.9, 1.15, 0);
+  P.add(cached('epressbeam', () => bbox(2.2, 0.3, 0.3, 0.03, 1)), EM.wood(), 0, 2.2, 0);
+  P.add(cached('epressscrew', () => cyl(0.08, 0.08, 1.1, 8)), EM.brass(), 0, 1.55, 0);
+  P.add(cached('epressbar', () => cyl(0.04, 0.04, 1.6, 6).rotateZ(Math.PI / 2)), EM.brass(), 0, 1.75, 0, 0, 0.6);
+  P.add(cached('epresstub', () => lathe([[0.75, 0], [0.8, 0.6], [0.72, 0.62], [0.68, 0.1], [0, 0.1]], 14)), EM.wood(), 0, 0, 0);
+  P.add(cached('epressnectar', () => new THREE.CircleGeometry(0.7, 14).rotateX(-Math.PI / 2)), EM.honey(), 0, 0.5, 0);
+  P.box(0, 0, 1.05, 0.8, 1.0); P.cyl(-0.9, 0, 0.16, 2.3); P.cyl(0.9, 0, 0.16, 2.3); P.r = 1.3;
+  return P;
+}
+// the Old Watch: the ruined watchtower — a broken stone drum with a jagged top, a dark doorway, its fallen dome
+// lying beside it, blocks scattered
+export function ruinedTower(P, { r = 2.4, h = 7.5 } = {}) {
+  P.add(cached('eruin' + r + h, () => {
+    const g = lathe([[r, 0], [r * 0.97, h * 0.5], [r * 0.93, h], [r * 0.93 - 0.4, h], [r * 0.97 - 0.4, h * 0.5], [r - 0.4, 0]], 20, 1.8), p = g.attributes.position;
+    for (let i = 0; i < p.count; i++) {
+      const y = p.getY(i); if (y < h * 0.45) continue;
+      const a = Math.atan2(p.getZ(i), p.getX(i)), jag = 0.5 + 0.3 * Math.sin(a * 3 + 0.7) + 0.2 * Math.sin(a * 7 + 2.1);
+      p.setY(i, Math.min(y, h - jag * h * 0.42));
+    }
+    g.computeVertexNormals(); return g;
+  }), EM.stone());
+  P.add(cached('eruinband' + r, () => cyl(r * 0.99, r * 1.0, 0.3, 20, 0.6, true)), EM.tiles(), 0, h * 0.3, 0);
+  P.add(cached('eruindoor', () => bbox(1.0, 1.9, 0.5, 0.05)), EM.dark(), 0, 0.95, r - 0.15);
+  P.add(cached('eruinlintel', () => bbox(1.5, 0.3, 0.6, 0.04, 1.8)), EM.stone(), 0, 2.05, r - 0.1);
+  P.cyl(0, 0, r + 0.05, h * 0.6, { seeThrough: false });
+  P.r = r + 0.3;
+  return P;
+}
+// the watchtower's dome, fallen and lying on its side, half sunk in the turf, a few blocks of the drum by it
+export function fallenDome(P) {
+  P.add(cached('eruindome', () => lathe([[1.8, 0], [1.7, 0.6], [1.25, 1.2], [0.6, 1.6], [0, 1.75], [0, 1.6], [0.55, 1.45], [1.1, 1.05], [1.5, 0.5], [1.6, 0]], 16)), cm(tileTex('#5a8a8a', '#c8a860', '#a8708a'), { rough: 0.6 }), 0, 0.35, 0, 1.75, 0.6, 0.15);
+  P.add(cached('eruinblocks', () => compose([[bbox(0.9, 0.55, 0.7, 0.06, 1.8), 0, 0.27, 0, 0, 0.4], [bbox(0.7, 0.45, 0.6, 0.06, 1.8), 0.9, 0.22, 0.6, 0, 1.2], [bbox(0.6, 0.5, 0.8, 0.06, 1.8), -0.7, 0.25, 0.9, 0.1, 2.2]])), EM.stone(), -1.4, 0, 1.6);
+  P.cyl(0, 0, 1.6, 1.6); P.cyl(-1.4, 1.6, 1.1, 0.6);
+  P.r = 2.6;
+  return P;
+}
+// a nectar tree (the Nectar Orchard): a crooked trunk, a crown of soft blossom puffs in pink, rose and cream,
+// one of four shapes (merged into the island's batch)
+export function blossomTree(P, { h = 3.2, seed = 0 } = {}) {
+  const v = seed % 4;
+  P.add(cached('eblossom' + v, () => {
+    const r = rng(101 + v * 17), parts = [];
+    parts.push([tint(tube([[0, 0, 0], [0.12 * (r() - 0.5), 0.45, 0.1], [0.2 * (r() - 0.5), 0.8, -0.1 * r()], [0, 1.0, 0]], 0.11, 6, 1), '#7a4a32')]);
+    const cols = ['#ffb8d8', '#ff9ac4', '#fff0f4', '#ffc8e0', '#f4a0d0'];
+    for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2 + r(), rr = 0.32 + r() * 0.12, s = 0.36 + r() * 0.14; parts.push([tint(new THREE.SphereGeometry(1, 9, 7), cols[(k + v) % cols.length]), Math.sin(a) * rr, 1.05 + r() * 0.25, Math.cos(a) * rr, 0, 0, 0, s, s * 0.85, s]); }
+    parts.push([tint(new THREE.SphereGeometry(1, 9, 7), cols[v]), 0, 1.3, 0, 0, 0, 0, 0.44, 0.36, 0.44]);
+    return compose(parts, true);
+  }), EM.vc(), 0, 0, 0, 0, seed * 1.3, 0, h / 1.6);
+  P.cyl(0, 0, 0.25, h * 0.6); P.r = 0.9;
+  return P;
+}
+// a broken column: a turned stone shaft snapped off at a slant (its height varies)
+export function brokenCol(P, { h = 2.2 } = {}) {
+  P.add(cached('ebrokecol', () => { const g = lathe([[0.42, 0], [0.42, 0.18], [0.3, 0.26], [0.28, 1.0], [0.27, 1.0]], 10, 1.2), p = g.attributes.position; for (let i = 0; i < p.count; i++) if (p.getY(i) > 0.5) p.setY(i, p.getY(i) - p.getX(i) * 0.35); g.computeVertexNormals(); return g; }), EM.stone(), 0, 0, 0, 0, 0, 0, 1, h, 1);
+  P.cyl(0, 0, 0.36, h); P.r = 0.5;
+  return P;
+}
+// an old brass telescope on a round stone step, pointing out over the clouds (local +z)
+export function telescope(P) {
+  P.add(cached('etelstep', () => lathe([[1.7, 0], [1.75, 0.05], [1.7, 0.32], [1.6, 0.36], [0, 0.36]], 18, 1.5)), EM.stone());
+  P.add(cached('etelpillar', () => lathe([[0.36, 0], [0.24, 0.2], [0.18, 1.0], [0.26, 1.1], [0, 1.12]], 10)), EM.stone(), 0, 0.36, 0);
+  P.add(cached('eteltube', () => compose([[cyl(0.13, 0.2, 2.5, 12).rotateX(Math.PI / 2)], [cyl(0.23, 0.23, 0.2, 12).rotateX(Math.PI / 2), 0, 0, 1.25], [cyl(0.07, 0.07, 0.3, 8).rotateX(Math.PI / 2), 0, 0, -1.4], [new THREE.TorusGeometry(0.2, 0.03, 4, 12), 0, 0, 0.3]])), EM.brass(), 0, 1.62, 0.1, -0.32);
+  // (the step is a floor he can stand on; the pillar blocks)
+  const [x, z] = P.pt(0, 0); P.cols.push({ type: 'cyl', x, z, r: 1.7, top: P.y + 0.36 });
+  P.cyl(0, 0, 0.32, 2.4, { seeThrough: false }); P.r = 1.9;
+  return P;
+}
+// the lift tower on the Lift Dock (the original's ASCENCE): a timber-and-brass frame, a winch house on top, the
+// cage running up and down it (it carries cargo, not people)
+export function liftTower(P, { h = 11, w = 2.8 } = {}) {
+  const fr = cached('elifttower' + h + w, () => {
+    const parts = [];
+    for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) parts.push([bbox(0.2, h, 0.2, 0.02, 1), a * w / 2, h / 2, b * w / 2]);
+    for (let y = 1.5; y < h - 0.5; y += 2.2) for (const [a, b, ry] of [[0, -1, 0], [0, 1, 0], [-1, 0, Math.PI / 2], [1, 0, Math.PI / 2]]) parts.push([bbox(w, 0.14, 0.12, 0.02, 1), a * w / 2, y, b * w / 2, 0, ry]);
+    return compose(parts);
+  });
+  P.add(fr, EM.wood());
+  P.add(bbox(w + 0.8, 1.8, w + 0.8, 0.06, 2.2), tm('plasterWall', { color: '#f4e4d4', rough: 0.95 }), 0, h + 0.9, 0);
+  P.add(cached('eliftroof' + w, () => lathe([[(w + 0.8) * 0.72, 0], [(w + 0.8) * 0.6, 0.5], [(w + 0.8) * 0.3, 1.0], [0, 1.2]], 8)), cm(tileTex('#2f8a9a', '#e8b84a', '#2f8a9a'), { rough: 0.45 }), 0, h + 1.8, 0, 0, Math.PI / 8);
+  P.add(cached('eliftwheel', () => new THREE.TorusGeometry(0.55, 0.08, 6, 16)), EM.brass(), 0, h + 0.9, (w + 0.8) / 2 + 0.06);
+  const cage = new THREE.Group(); cage.position.set(P.x, P.y, P.z); cage.rotation.y = P.ry;
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; cage.add(m); return m; };
+  const cw = w - 0.5;
+  add(cached('eliftcagefloor' + cw, () => bbox(cw, 0.14, cw, 0.02, 1)), EM.wood(), 0, 0.07, 0);
+  add(cached('eliftcagebars' + cw, () => compose([[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => [cyl(0.04, 0.04, 2.0, 6), a * cw / 2, 1.0, b * cw / 2]))), brassM(), 0, 0, 0);
+  add(cached('eliftcageroof' + cw, () => bbox(cw + 0.1, 0.1, cw + 0.1, 0.02, 1)), brassM(), 0, 2.05, 0);
+  add(cached('eliftcrates', () => tint(compose([[bbox(0.8, 0.7, 0.8, 0.04), -0.35, 0.5, 0.2], [bbox(0.6, 0.55, 0.6, 0.04), 0.4, 0.42, -0.3, 0, 0.4]]), '#b88850')), VC(), 0, 0, 0);
+  const cable = add(cached('eliftcable', () => cyl(0.02, 0.02, 1, 4)), EM.dark(), 0, 0, 0);
+  P.extra.push({ obj: cage, update: (dt, t) => {
+    const u = 0.5 - 0.5 * Math.cos(t * 0.26), y = 0.2 + u * (h - 2.6);
+    cage.position.y = P.y + y; cable.scale.y = Math.max(0.1, h - y - 2.1); cable.position.y = 2.1 + (h - y - 2.1) / 2;
+  } });
+  P.box(0, 0, w / 2 + 0.1, w / 2 + 0.1, h + 3, { seeThrough: false }); P.r = w;
+  return P;
+}
+// a deck rail between two island-local points at height y: posts and two brass rails
+export function railRun(B, ax, az, bx, bz, y, { h = 1.0 } = {}) {
+  const len = Math.hypot(bx - ax, bz - az); if (len < 0.3) return;
+  const ry = Math.atan2(-(bz - az), bx - ax), n = Math.max(1, Math.round(len / 1.5));
+  for (let i = 0; i <= n; i++) { const t = i / n; B.add(cached('erailpost' + h, () => cyl(0.045, 0.05, h, 6)), EM.brass(), ax + (bx - ax) * t, y + h / 2, az + (bz - az) * t); }
+  for (const yy of [h * 0.5, h]) B.add(cached('erail' + len.toFixed(2), () => cyl(0.03, 0.03, len, 6).rotateZ(Math.PI / 2)), EM.brass(), (ax + bx) / 2, y + yy, (az + bz) / 2, 0, ry);
+}
+// a departures board on two posts under a little tiled roof, its text painted (one texture per list), faces +z
+export function shuttleBoard(P, { title = 'ESMER SHUTTLE', lines = [] } = {}) {
+  const key = title + '|' + lines.join('|');
+  const tex = ctex('eboard' + key, 512, 384, (x, W, H) => {
+    x.fillStyle = '#2a1e34'; x.fillRect(0, 0, W, H); x.strokeStyle = '#e8c070'; x.lineWidth = 8; x.strokeRect(6, 6, W - 12, H - 12);
+    x.fillStyle = '#f0c040'; x.font = 'bold 34px sans-serif'; x.textAlign = 'center'; x.fillText(title, W / 2, 50);
+    x.fillStyle = 'rgba(232,192,112,0.5)'; x.fillRect(24, 66, W - 48, 3);
+    const n = lines.length, fs = n > 10 ? 20 : n > 7 ? 24 : 30; x.font = `bold ${fs}px monospace`; x.textAlign = 'left';
+    lines.forEach((l, i) => { x.fillStyle = i % 2 ? '#bfe9ff' : '#9fe0ff'; x.fillText(l, 30, 100 + i * Math.min(40, (H - 116) / Math.max(n, 1))); });
+  }, false);
+  for (const s of [-1, 1]) P.add(cached('eboardpost', () => cyl(0.06, 0.07, 2.7, 6)), EM.brass(), s * 0.85, 1.35, -0.04);
+  P.add(cached('eboardframe', () => bbox(1.85, 1.4, 0.08, 0.02, 1)), EM.wood(), 0, 1.75, -0.04);
+  P.add(cached('eboardface', () => new THREE.PlaneGeometry(1.72, 1.28)), cm(tex, { rough: 0.7 }), 0, 1.75, 0.005);
+  P.add(cached('eboardroof', () => bbox(2.1, 0.08, 0.5, 0.02, 1)), EM.tiles(), 0, 2.55, 0.0, 0.25);
+  P.box(0, -0.04, 0.95, 0.12, 2.6); P.r = 1.1;
   return P;
 }

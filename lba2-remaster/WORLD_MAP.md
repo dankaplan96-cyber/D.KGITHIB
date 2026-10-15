@@ -72,15 +72,45 @@ Twelve years after LBA2 the Esmers' shuttles are ordinary traffic, so Citadel ha
 platform on stilts over the bay east of the town (deck x −14…14, z 26…54, level with the shore at 2.35 m), a
 footbridge from the east shore at z 40, a terminal (Twinsun stone, an Esmer dome), a control tower with a beacon,
 the departures board (read it), benches, lamps, railings all round (no walking off into the bay), and an Esmer
-shuttle on the pad. From chapter 4 on its shuttle flies to Zeelich and Zeelich's islands; before that a note on the
-hatch says the flights are grounded by the Joint Project (its ferry at the harbour is the only crossing — the
-story's ferry stays as it was).
+shuttle on the pad. From chapter 4 on its spaceship flies to **Zeelich Spaceport only** (Zeelich is another planet;
+its islands are reached from there by Esmer shuttle); before that a note on the hatch says the flights are grounded
+by the Joint Project (its ferry at the harbour is the only crossing — the story's ferry stays as it was). The
+departures board names only ZEELICH SPACEPORT.
 
-## Zeelich's other islands (no story; from chapter 4) ✅ first version (src/game/zislands.js)
+## Travel: two planets (CONNECT, src/game/travel.js) ✅
+Every travel point is a place with a board naming where it goes; E there opens the menu of what is open now.
+
+| Planet | Point (where) | Goes to | Open from |
+|---|---|---|---|
+| Twinsun | Citadel harbour ferry stop (quay at the pier's foot, −115, 43) | Desert Island's pier | ch. 4 (not in ch. 5: the project took the ferry) |
+| Twinsun | Desert Island ferry stop (the pier's foot) | Citadel's harbour | ch. 4 (not in ch. 5) |
+| Twinsun | Citadel glider field (*ours*: the plateau west of Bersimon's tent, −107, −64; glider, windsock, stone ring) | Desert Island, the Hamalayi | ch. 8 |
+| Twinsun | Desert Island glider field (*ours*: the beach south of the pier) | the Hamalayi (ch. 6), Citadel (ch. 8) | ch. 6 |
+| Twinsun | the Hamalayi foothills (the glider's landing) | Desert Island (ch. 6), Citadel (ch. 8) | ch. 6 |
+| between | Citadel Spaceport ⇄ **Zeelich Spaceport** (*ours*: a deck off the terminal island's south shore, a footbridge, the larger craft) | each other only | ch. 4 |
+| Zeelich | the shuttle pad by Zeelich's dock, and every island's pad | the spaceport island and all 11 islands | ch. 4 |
+
+No Twinsun stop on Zeelich, no Zeelich island on Twinsun. After the main story everything is open. The story's own
+crossings (the project's ferry in chapters 1–3, Hesk's flights in chapter 10) are unchanged. The Holomap shows the
+planet he is on: the region's own map with his dot and the travel points, and an inset of the planet with its places
+and the open links (ferry, glider, shuttle; the spaceship leaving the planet).
+
+## Zeelich's other islands (no story; from chapter 4) ✅ (src/game/zislands.js; ZL-ALL)
 Seven islands after the original's Zeelich islands: **Otringal**, **Knartas Island**, **Mosquibee Island**,
-**Celebration Island**, **Under Celebration**, **the CX Islet**, **the Platform**. The current Zeelich (the
-terminal island of the story) stays as it is; these are extra regions, each reached by Esmer shuttle (the pad by
-Zeelich's dock, the spaceport, or another island's pad: every shuttle's menu lists them all).
+**Celebration Island**, **Under Celebration**, **the CX Islet**, **the Platform**; and **the Lift Dock** (the
+original's ASCENCE, added in ZL-ALL). The current Zeelich (the terminal island of the story) stays as it is; these
+are extra regions, each reached by Esmer shuttle from the pad by Zeelich's dock or another island's pad.
+
+| Place | From | Identity / landmark | Reason to visit |
+|---|---|---|---|
+| The Lift Dock | LBA2 (ASCENCE, numbers) + ours (landing deck, stairs, rails, the tower's working cage) | decks on stilts at the cloud line, the lift tower, the crane over the east deck, a barge alongside | the view down the stilts into the clouds; crates by the stairs hide a find |
+| Celebration Island | LBA2 (CELEBRAT's ground + CELEBRA2's risen figure, numbers) + ours (the figure's look, the festival) | the great figure, its pit filled and paved; masts with pennants and garlands up to it | the festival at the figure's feet; a find by the stage |
+| **Tralu Rock** | *new invention (ours)* | an Esmer trading post on a tall rock: the weigh-beam market on the crown, a crane over the quay shelf, skiffs tied up, a ramp curving round the south face | the market; kashes in the traders' crates |
+| **The Nectar Orchard** | *new invention (ours)* | a round hill of blossom trees in contour rows, hives, the press house, the cloud-catcher on the crown | the orchard and the nets; a heart at the press |
+| **The Old Watch** | *new invention (ours)* | a crescent ridge: the broken watchtower and its fallen dome on the north horn, toppled columns, a telescope on the south horn | the view out over the clouds; magic by the telescope |
+
+Identified and not used: CITABAU (Citadel again: same ground, more objects), EMERAUDE and MOON (the Emerald Moon
+twice; not wanted). Tool: tools/lba2-islands.py (reads the user's own files; writes numbers only).
 - Ground: the original's height grids, every second point (≈ 1.71 m apart), as numbers
   (`assets/lba2/islands/*.json`); the original's level 0 is the sea of clouds. Painted with Zeelich's palette.
 - Objects: each of the original's objects becomes one of our pieces of its size at its place (Esmer house with a
