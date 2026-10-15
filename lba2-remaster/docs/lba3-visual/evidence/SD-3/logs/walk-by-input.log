@@ -1,0 +1,20 @@
+ok   chapter 6 start (1 s): {"room":"hamalayi","pos":[4,86]}
+ok   tree down (0 s): {"ok":true}
+ok   landing → bridge south end (3 s): {"out":[[-6,50,"arrived",0.9]],"fail":null}
+ok   over the tree bridge (1 s): {"out":[[-6,35.5,"arrived",0.9]],"fail":null}
+ok   bridge → trail start (1 s): {"out":[[16,34,"arrived",0.9]],"fail":null}
+ok   up the switchbacks (2 s): {"out":[[30,25,"arrived",0.9],[24,15,"arrived",0.9],[12,9,"arrived",0.9]],"fail":null}
+ok   into the square (1 s): {"out":[[-8,18,"arrived (after a story line)",0.9]],"fail":null}
+ok   to the villagers and doors (6 s): {"out":[[-6,6,"arrived",0.9],[-3,7.5,"arrived",0.9],[0,2,"arrived",0.9],[-14,1,"arrived",0.9],[-18,8,"arrived",0.9],[-21.13165418380686,6.976319126622446,"arrived",0.9],[-12.11999999999989,-0.8000000000000003,"arrived",0.9],[1.403992007614761,-0.0598002664762749,"arrived",0.9],[-22.5921142868101,22.
+ok   square → the lift (3 s): {"out":[[12,-5,"arrived",0.9],[19,-14,"arrived",0.9],[24,-19.5,"arrived",0.9]],"fail":null}
+ok   heat post, winch (1 s): {"out":[[21.7,-19.5,"arrived",0.9],[26.4,-19.4,"arrived",0.9]],"fail":null}
+ok   ride (story action, not walked) (1 s): {"y":21.9}
+ok   lift top → gate (0 s): {"out":[[29,-32.6,"arrived",0.9,"hamalayi"],[34,-32.5,"arrived",0.9,"hamalayi"]],"fail":null}
+ok   gate → yard (1 s): {"out":[[34,-40,"arrived (after a story line)",0.9,"hamalayi"],[31,-40,"arrived",0.9,"hamalayi"],[37,-40,"arrived",0.9,"hamalayi"],[34,-43.2,"arrived",0.9,"hamalayi"]],"fail":null}
+ok   yard → out of the gate (1 s): {"out":[[34,-32,"arrived",0.9,"hamalayi"]],"fail":null}
+ok   round the wall → the ridge (3 s): {"out":[[25,-32.4,"arrived",0.9,"hamalayi"],[18,-40,"arrived",0.9,"hamalayi"],[6,-56,"arrived",0.9,"hamalayi"],[-6,-66,"arrived",0.9,"hamalayi"]],"fail":null}
+ok   to the observatory door (0 s): {"out":[[-14,-66.2,"arrived",318.1,"obsv"]],"fail":null}
+ok   re-entry, quality, resize (8 s): {"first":[305,516506,1063,485],"after3Entries":[306,516508,1063,485],"low":[179,334061,1063,473],"back":[306,516508,1063,484],"quality":["high","high"],"fail":null}
+ok   after resize (0 s): {"w":1280,"h":720}
+no errors
+ALL PASSED
