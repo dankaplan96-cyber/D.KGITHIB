@@ -4,7 +4,8 @@
 // talking) in both ways (shove the crate off the flue on the roof, or knock it off from the street), with Save & quit
 // → Continue in the middle; lines before and after the shield drops (chapter 3), in chapters 4–8, at the council
 // (chapter 9) and in the network (chapter 10); the main story's people unchanged; the new places solid and the
-// street's routes open.
+// street's routes open. REV-TY-5 (0.28.1): Snuff not offered from her roof (D2); each way keeps its own lines, also
+// after a Continue from a save made while the crate falls (D1); asked again, Snuff and Bzizz follow the phase (D3).
 // ISO (logged): chapters are reached by setting their flags (as tests/chapter2.mjs, chapter9.mjs and chapter10.mjs
 // do); the shield by its flag; a fresh zl_ flag set for the second way; in chapter 4 Twinsen is put on Zeelich by
 // the room switch the shuttle uses (the shuttle flight itself: tests/zislands.mjs). Screenshots: SHOTS=1 writes them
@@ -133,9 +134,25 @@ await said();
 // ---- way B (a fresh set of zl_ flags): Bzizz's crate knocked off from the street with the magic ball
 iso('way B: the zl_ flags cleared (a fresh story), the crate back on the flue');
 await ev(() => { const f = game.flags; for (const k of Object.keys(f)) if (k.startsWith('zl_')) delete f[k]; game.story.applyFlags(); P.settle(); });
+// REV-TY-5 D2: from the roof, right above her counter (in talk range on the map, 4 m up), Snuff is not offered: no
+// Talk prompt, and E plays none of her lines (her first talk, which sends him to the stair, waits for the street)
+const r0 = await ev(() => { const w = game.rooms.zeelich.life.watch, h = game.hero, n = P.npc('zmole2');
+  const g1 = P.go(w.use.x, w.use.z, { tol: 0.5, maxT: 60 });
+  const g2 = P.go(n.pos.x, w.flue.z - 0.1, { tol: 0.3, maxT: 10 });
+  P.face(n.pos.x, n.pos.z);
+  const tg = P.target(), onRoof = h.pos.y > w.roofY - 0.3, dh = Math.hypot(h.pos.x - n.pos.x, h.pos.z - n.pos.z), dy = h.pos.y - n.pos.y;
+  if (tg?.kind !== 'zlshove') P.tap('KeyE', 0.1);
+  P.settle();
+  return { g1: g1.r, g2: g2.r, onRoof, dh: +dh.toFixed(2), dy: +dy.toFixed(2), tg, ask: !!game.flags.zl_ask, crate: w.crate }; });
+const r0l = await said();
+check('from the roof above her counter Snuff is not offered: no Talk prompt, E plays none of her lines (INPUT)', r0.onRoof && r0.dh < 2.6 && r0.tg?.kind !== 'npc' && !r0.ask && r0.crate === 'flue' && !r0l.some((l) => /stair is round the side|Oven's cold/.test(l)), { r0, r0l });
 const c0 = await ev(() => { const r = P.talk('zmole2'); return { ask: !!game.flags.zl_ask, crate: game.rooms.zeelich.life.watch.crate }; });
 const c0l = await said();
 check('after the shield drops, Snuff\'s problem in its own words (the heat still comes up the pipe)', c0.ask && c0.crate === 'flue' && c0l.some((l) => /heat still comes/.test(l)), { c0, c0l });
+// REV-TY-5 D3: asked again, Snuff and Bzizz talk about the street's news of the moment, then the crate
+await ev(() => { P.talk('zmole2'); P.talk('zbee1'); P.talk('zbee1'); return 1; });
+const d3a = await said();
+check('asked again (chapter 3, shield down): Snuff on the heat in the pipe, then the stair; Bzizz once met, then on everything waiting on his stage', d3a.some((l) => /heat still comes/.test(l)) && d3a.some((l) => /Up the guards' stair/.test(l)) && d3a.some((l) => /flattest landing/.test(l)) && d3a.some((l) => /waits on my stage/.test(l)) && d3a.some((l) => /hasn't signed/.test(l)), d3a);
 const c1 = await ev(() => { const w = game.rooms.zeelich.life.watch, f = game.flags, h = game.hero;
   const tg = game.rooms.zeelich.ballTargets.find((t) => t.zl);
   const inAim = game.ballAimTargets().includes(tg);
@@ -147,6 +164,7 @@ const c1 = await ev(() => { const w = game.rooms.zeelich.life.watch, f = game.fl
 const c1l = await said();
 check('from the street the magic ball knocks the crate off the flue: it falls and breaks on the grass (INPUT)', c1.inAim && c1.crate === 'broken' && c1.flag === 'broken' && c1.done && !c1.aimAfter, c1);
 check('…Bzizz: "My nectar!"; the heat box resets; Snuff calls out', c1l.some((l) => /My nectar/.test(l)) && c1l.some((l) => /lamp turns green/.test(l)), c1l);
+check('…from the street, Twinsen sees the heat box on the wall click (not the roof\'s "Somewhere below", REV-TY-5 D1)', c1.y < 7.5 && c1l.some((l) => /heat box on the wall clicks/.test(l)) && !c1l.some((l) => /Somewhere below/.test(l)), { y: c1.y, c1l });
 await shot('04-nectar', { x: 16.6, z: -7.5, a: -Math.PI / 2 - 0.5 });
 const c2 = await ev(() => { const h = game.hero, f = game.flags; const c = h.coins; P.talk('zbee1'); P.talk('zmole2'); return { c, owed: f.zl_owe || 0, lying: game.pickups.list.filter((p) => p.owe === 'zl_owe').length }; });
 const c2l = await said();
@@ -158,6 +176,35 @@ const c3 = await ev(() => { const t = (game.hud.toastLog || []).slice(); P.settl
 await said();
 check('saved before he picked Snuff\'s coin up: on Continue the five kashes are his (a toast says so); the crate still broken, the oven hot', c3.coins === c2.c + 5 && c3.owed === 0 && c3.t.some((s) => /Snuff's payment/.test(s)) && c3.crate === 'broken' && c3.done, { c2, c3 });
 
+// ---- the ball way again, Snuff never asked, saved while the crate falls (REV-TY-5 D1)
+iso('the zl_ flags cleared again (a fresh story): Snuff never asked; Save & quit while the crate falls');
+const e1 = await ev(() => { const f = game.flags, w = game.rooms.zeelich.life.watch; for (const k of Object.keys(f)) if (k.startsWith('zl_')) delete f[k]; game.story.applyFlags(); P.settle();
+  P.go(w.hatch.x + 0.45, w.hatch.z + 3.4, { tol: 0.5 });
+  let tries = 0, st = w.crate;
+  for (; tries < 6 && w.crate === 'flue'; tries++) { P.tap('F1'); P.face(w.flue.x, w.flue.z); P.tap('KeyF', 0.05); for (let k = 0; k < 120 && w.crate === 'flue'; k++) game.step(1 / 60); if (w.crate === 'flue') P.wait(0.6); }
+  st = w.crate; return { tries, st, flag: f.zl_crate, ask: !!f.zl_ask }; });
+check('the ball knocks the crate off (Snuff never asked); it is still falling when he quits', e1.st === 'falling' && e1.flag === 'broken' && !e1.ask, e1);
+file = path.join(os.tmpdir(), 'zeelife3-' + process.pid + '.json');
+await quitAndKeep(page, context, file);
+await open(page, '?nocine'); await menu(page, 'continue'); await said();
+const e2 = await ev(() => { P.settle(); const w = game.rooms.zeelich.life.watch, f = game.flags; const r = P.talk('zmole2'); return { crate: w.crate, done: !!f.zl_done, paid: !!f.zl_paid, owed: f.zl_owe || 0, r: r.r }; });
+const e2l = await said();
+check('Continue from the mid-fall save: the crate broken on the grass, the oven hot; Snuff asks about his ball, not her roof, and pays', e2.crate === 'broken' && e2.done && e2.paid && e2l.some((l) => /Was that your ball/.test(l)) && !e2l.some((l) => /on my roof/.test(l)), { e2, e2l });
+await ev(() => { P.settle(); for (let k = 0; k < 3; k++) for (const p of [...game.pickups.list]) if (p.type === 'coin' && p.owe === 'zl_owe') P.go(p.pos.x, p.pos.z, { tol: 0.4, maxT: 10 }); P.talk('zbee1'); P.settle(); return 1; });
+await said();
+
+// REV-TY-5 D3: Snuff and Bzizz asked, the crate still on the flue, in a later phase (ISO: the zl_ flags of "asked,
+// not done" for one talk each, then the street's own flags back)
+const askedAgain = () => ev(() => { const f = game.flags, keep = {};
+  for (const k of Object.keys(f)) if (k.startsWith('zl_')) keep[k] = f[k];
+  for (const k of ['zl_crate', 'zl_done', 'zl_paid', 'zl_bzThanks', 'zl_owe']) delete f[k];
+  Object.assign(f, { zl_ask: true, zl_bz: true }); game.story.applyFlags(); P.settle();
+  const crate = game.rooms.zeelich.life.watch.crate;
+  P.talk('zmole2'); P.talk('zbee1');
+  for (const k of Object.keys(f)) if (k.startsWith('zl_')) delete f[k];
+  Object.assign(f, keep); game.story.applyFlags(); P.settle();
+  return { crate, after: game.rooms.zeelich.life.watch.crate }; });
+
 // ---- chapter 4–8: the shuttles fly again
 iso('chapter 3 finished by flags (toShell → chapter 4 on Desert Island, as tests/chapter4.mjs); Twinsen put on Zeelich by the shuttle\'s room switch (tests/zislands.mjs flies it)');
 await ev(() => { const f = game.flags; Object.assign(f, { c2_veskDown: true }); game.story.cur.toShell(); P.settle(); game.step(1.5); P.settle();
@@ -167,6 +214,10 @@ const m1 = await ev(() => { const f = game.flags, L = game.rooms.zeelich.life; P
 const m1l = await said();
 check('chapter 4 on Zeelich: Nara\'s crates are gone (the shuttles fly again); Nara on Xil selling her flowers at Citadel, Oku on his mills\' new sails', m1.ch === 'dig' && m1.room === 'zeelich' && !m1.flowers && m1l.some((l) => /Xil sells them|People buy flowers/.test(l)) && m1l.some((l) => /new sails|complained less/.test(l)), { m1, m1l });
 check('…Pelleck, Grumm and Bzizz in chapter 4–8\'s words', m1l.some((l) => /tilers|last quarter/.test(l)) && m1l.some((l) => /warmer every week|open the vents/.test(l)) && m1l.some((l) => /shuttles fly again|stage now/.test(l)), m1l);
+iso('chapter 4: the bake set back to "asked, not done" for one talk each');
+const m2 = await askedAgain();
+const m2l = await said();
+check('asked, not done, chapter 4–8: Snuff on Bzizz flying twice as much; Bzizz on forty crates a day; then the flue and the signature', m2.crate === 'flue' && m2.after === 'broken' && m2l.some((l) => /twice as much/.test(l)) && m2l.some((l) => /Up the guards' stair/.test(l)) && m2l.some((l) => /Forty crates a day/.test(l)) && m2l.some((l) => /hasn't signed/.test(l)), { m2, m2l });
 
 // ---- chapter 9: the council
 iso('chapters 4–8 skipped by flags; story.nextChapter() into chapter 9 (as tests/chapter9.mjs)');
@@ -176,6 +227,10 @@ const k1 = await ev(() => { const f = game.flags; P.talk('baldino'); const form 
 const k1l = await said();
 check('chapter 9: Baldino\'s petition and Nara\'s stamp work as before (the chapter first)', k1.ch === 'council' && k1.form && k1.stamp && k1l.some((l) => /coral flower/.test(l)), { k1, k1l: k1l.slice(0, 6) });
 check('…and the street argues about the council: Pelleck (who pays the tilers?), Snuff (who buys the bread?), Grumm (the moles say stop)', k1l.some((l) => /tilers|I file/.test(l)) && k1l.some((l) => /who buys it|charcoal cart/.test(l)) && k1l.some((l) => /moles say stop|warmer every week/.test(l)), k1l);
+iso('chapter 9: the bake set back to "asked, not done" for one talk each');
+const k2 = await askedAgain();
+const k2l = await said();
+check('asked, not done, at the council: Snuff wants her charcoal cart back if the bore stops; Bzizz waits on the council', k2.crate === 'flue' && k2l.some((l) => /charcoal cart back/.test(l)) && k2l.some((l) => /waits for the council/.test(l)), { k2, k2l });
 
 // ---- chapter 10: the network
 iso('chapter 9 done by flags (c9_vote); story.nextChapter() into chapter 10 (as tests/chapter10.mjs)');
