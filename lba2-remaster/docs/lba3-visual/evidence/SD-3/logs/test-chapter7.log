@@ -1,0 +1,15 @@
+start [
+  'observatory',
+  'hamalayi',
+  'play',
+  'Climb the ridge to the observatory'
+]
+to observatory [ 'obsv', 'Climb the ridge to the observatory' ]
+keeper [ true, 'Carry the light to the crystal' ]
+mirrors [ true, true, true, 'Turn the telescope' ]
+scope [ true, 'Destroy the heavy drone at the vent' ]
+out hamalayi
+drone [ false, true, 'Open the vent in the glacier' ]
+vent [ true, 'Meet Hesk at the monastery' ]
+home [ true, 'evacuation', undefined ]
+no errors
