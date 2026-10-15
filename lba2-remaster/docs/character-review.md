@@ -442,3 +442,60 @@ Evidence:
 - `dinofly-before-after-ingame.jpg`: the garden from the normal play camera, far, near, stretch and talk.
 - Both are made by `dinofly-lookdev.html`, `lookdev-shot.mjs` and `ingame-shots.mjs` in that folder. No image of
   the original is in the repository.
+
+## 14. Twinsen's hair as in LBA2 (VP-1b)
+
+The user's decision: the hair "like the original game". After VP-1 Twinsen read as a bald egg head with a ball-cluster
+topknot (REV-V-1).
+
+Measured on the original (BODY.HQR body 1; study files outside the repository):
+- **No hair polygons.** Every polygon of the head is skin. The hair is three spheres, which LBA2 draws as flat,
+  unlit discs in one dark brown (palette 17 `#2b1b07` on the crown, 18–19 `#331f0b`–`#3b270f` on the tuft).
+- **Where they are.** In the frame of our head sections (fractions of H, the top of the skull at 0.955):
+  - The crown ball: centre y 0.951, z −0.052, r 0.049, on the head. It sits on the back of the skull's top and
+    rises 0.045 above the crown.
+  - The tuft: r 0.036 at (0.925, −0.103) on the first tail group, which turns about the crown ball's centre;
+    then r 0.025 at (0.890, −0.118) on the second.
+- **How it reads in play (#47, #38, #23).**
+  - From the front: a dark dome over the crown.
+  - From behind: a strip down the middle of the back of the head to 0.865 H, with skin at the sides and below.
+  - From the side: a tuft that rises from the crown and arches back and down.
+  - The forehead, the temples and the nape are skin.
+
+What was wrong:
+- The bun's numbers were in units of 1238 (the skull's top) but were placed on a head measured in units of 1296
+  (the crown ball's top). The balls stood 0.044 H (9 cm) too high, so they read as a topknot on top of the head.
+- They were also shaded like balls, with pale highlights.
+- VP-1 lowered them by 0.011 H and added a cap of hair on the back of the skull, which the original doesn't have.
+
+What changed (`tools/blender/twinsen_poly.py` → `assets/poly/twinsen.json`, `art/characters/twinsen/twinsen_poly.blend`):
+- **One hair mass replaces the cap and the three balls.** Rings run from the front of the crown ball through the
+  three measured centres to a round tip. Each ring is as wide as the balls are there, and 70 % of each waist between
+  balls is filled. It stays within 0.006 H of the balls' union, so it reads as one tuft and not as a cluster.
+- **Skinning.** The crown is on `head`. Along the tuft the weights pass to `tail0`, `tail1`, `tail2`. It is one
+  connected surface, so the follow-through in rig.js bends it and cannot open a gap.
+- **Flat colour, like the discs.** Every hair normal points down, so `LbaMaterial` gives one constant shade from
+  every side. Two colours (`#553916` crown, `#6a4722` tuft) render as `#291700`–`#341e00` in play, against the
+  original's `#2b1b07`–`#331f0b`.
+- **The skull is skin again where the original shows skin.**
+- **Unchanged:** the skeleton, the bone order, the bind positions, and every non-hair triangle (1,920 of them,
+  compared one by one and in the same order). The eyes are unchanged too.
+
+Counts:
+- **Triangles:** 2,534 → 2,372. The hair went from 570 to 408.
+- **Materials and colours:** one material. The vertex colours went from 9 to 10.
+
+Evidence: `docs/lba3-visual/evidence/VP-1b/`, made by `hair-lookdev.html`, `lookdev-shot.mjs` and
+`ingame-shots.mjs` in that folder.
+- `vp1b-views-before-after.jpg`: front, ¾, side, back, top and the game camera, in idle, listen, walk, run and turn.
+- `vp1b-sway-before-after.jpg`: the follow-through's extremes, and twice them.
+- `vp1b-body-before-after.jpg`: the whole figure.
+- `vp1b-ingame-heads.jpg` and `vp1b-ingame-frames.jpg`: the normal play camera. These show the house dialogue with
+  Arthur, walking toward the camera in the house and outdoors, idle, running, and walking away.
+
+Remaining:
+- In a non-LBA material (lookdev `mat=grey`) the hair renders black, because of its down-facing normals.
+- At the rig's extreme sway the tuft stretches as well as swinging: tail0..2 pivot 0.06–0.09 H above it.
+- Zoé's bun (`cast_poly.py`, ZOE_BUN) uses one unit for her head and her balls, so it does not have this mix-up.
+  Its shading (pale highlights) is unchanged.
+- The `LOOKS.twinsen` comment in `characters.js` still says "no hair on the skull but a bun of three balls".
