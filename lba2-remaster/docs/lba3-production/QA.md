@@ -392,19 +392,27 @@ room switch their shuttles/glider use, and enemies placed in the developer arena
 | The wheel's down-left slot: the glove in hand; the glove breaks the boards (a clover, 12 kashes) | G + arrows, K | PASS |
 | Save & quit → Continue: owned items, counts and a_ flags identical; save format 4 | pause menu | PASS |
 | Blowgun: 3 darts → 3 hits on the dummy 6 m off, 3 darts spent; a Grobo guard's armour stops a dart (1), the Blowtron's (2) goes through | wheel, K | PASS |
-| Laser: a drone 9 m off loses 3 (machines); a cell shot uses one charge; with none it costs 2 magic | wheel, K | see results |
+| Laser: a drone 9 m off loses 3 (machines); a cell shot uses one charge; with none it costs 2 magic | wheel, K | PASS |
 | Lightning: the mite, then the guard and the dog close by (chain of 3); 3 magic; arcs drawn | wheel, K | PASS |
 | Glove: a guard thrown back > 1.5× the fists' distance; an enemy bolt knocked back strikes the drone | K | PASS |
-| Meca-penguin: set down, walks, the mite is lured to it (not Twinsen), it pops and hurts the mite; Twinsen untouched | inventory E | see results |
+| Meca-penguin: set down, walks, the mite is lured to it (not Twinsen), it pops and hurts the mite; Twinsen untouched | inventory E | PASS |
 | Protection: 3 magic, a 2-point blow takes 1, 2 again after 15 s | inventory E | PASS |
 | Conch: a guard dog close by cowers (stunned) | inventory E | PASS |
 | No darts: the blowgun doesn't fire and says so | K | PASS |
 | A format-3 save (no arsenal) continues: empty arsenal, rewritten as format 4, the old one kept as backup_v3 | reload | PASS |
 
 Draw calls where the new models stand (SwiftShader, `renderer.info` reset per frame, the same view with and without
-the model; counts, not time): the Wannie mine 119 → 127 (6 meshes), Nara's case 1154 → 1172 (11 meshes; shadows
-included). Captures: captures/arsenal/normal-camera.jpg (the normal camera), captures/arsenal/close-ups.jpg (a close
+the model; counts, not time; after the merge with the branch head): the Wannie mine 178 → 186 (6 meshes), Nara's case
+1137 → 1155 (11 meshes; shadows included). Captures: captures/arsenal/normal-camera.jpg (the normal camera), captures/arsenal/close-ups.jpg (a close
 camera on the held weapons, the laser shot, the lightning arc, the penguin, the shell, the lantern, the mine, the case).
+After merging the branch head (SD-2 dressed Under Celebration as a gas works and moved its pad), the mine's spot is
+found at load (a level, clear ring 8–18 m round the pad, facing it): captures/arsenal/wannie-mine-after-merge.jpg.
+
+Results (2026-10-15, after merging the branch head 1f2dc97, GAME_URL on port 8175, one browser at a time): arsenal
+34/34; regression: combat 59/59, stability 16/16, house 2/2, wizards 6/6, menus 25/25, zeelich-life 31/31, townlife
+35/35, save-migration (v1/v2 saves continue and are rewritten as format 4 with their backups; a corrupt save set
+aside), chapter1 and chapter2 LOGIC runs to their ends, no page errors anywhere. The same set also passed before the
+merge.
 
 Not checked here: how the shots feel with a pad or mouse by hand; the sounds by ear; balance for a first-time
 player (prices against the kashes a player has by each chapter); the look on a GPU.

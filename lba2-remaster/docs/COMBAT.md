@@ -112,7 +112,7 @@ are saved with the hero (`hero.arms`, save format 4; older saves migrate to an e
 | Darts | Pippa, Nara (2/3); the cellar's gap in the foundations (6) | 3 for 4 | max 30 | blowgun ammunition |
 | Blowtron | Nara's case, Zeelich (6) | 35 | 2 dmg, 30 m/s, 20 m, 0.27 s | the blowgun upgraded (Mosquibee work) |
 | Esmer laser pistol | Nara's case, Zeelich (3) | 30 (with a cell) | 2 dmg, 3 to machines, 52 m/s, 26 m, 0.5 s; a cell = 5 shots (max 20), else 2 magic a shot | drones and sentries' bodies at range |
-| Wannie glove | the old mine on Under-gas, with the lantern lit (4, shuttle) | — | two punches: 2 dmg, poise 3/4, knock-back 11/14 m/s, the second breaks guards | throws enemies back, sends their bolts back (2 dmg to whoever they meet), breaks the boards over the cellar's coal chute (a clover, 12 kashes) |
+| Wannie glove | the old Wannie mine on Under Celebration, beside the gas works, with the lantern lit (4, shuttle) | — | two punches: 2 dmg, poise 3/4, knock-back 11/14 m/s, the second breaks guards | throws enemies back, sends their bolts back (2 dmg to whoever they meet), breaks the boards over the cellar's coal chute (a clover, 12 kashes) |
 | Lightning | Bersimon, with Rector Hougo's pearl of incandescence (4) | 3 magic | 2 dmg to the target, then 1 to up to two more within 5.5 m; counts as a charged hit | crowds; breaks a sentry's guard |
 | Protection | Ker'aooc, School of Magic (4) | 20 kashes; 3 magic a cast | 15 s, damage taken ×0.5 | before a hard fight |
 | Meca-penguin | Pippa, Nara (2/3) | 4 each, max 5 | walks 7 s at 1.3 m/s; lures enemies within 11 m that can see it; 2 hits wreck it; pops for 2 within 2.2 m | a decoy, then a small bang |

@@ -128,7 +128,9 @@ export class Arsenal extends ChapterBase {
     // ---- Under Celebration (isle_undergas): the old Wannie mine (a timber-framed adit in the rock, dark inside)
     const U = R.isle_undergas;
     if (U?.pad) {
-      const x = U.pad.x + SPOT.adit.dx, z = U.pad.z + SPOT.adit.dz, y = g.physics.groundAt(x, z, U.pad.y + 6);
+      const spot = this.aditSpot(U);
+      SPOT.adit.a = spot.a;
+      const { x, z, y } = spot;
       const grp = holder(U, x, y, z, SPOT.adit.a), k = new Kit(grp);
       const timber = MAT.wood('dark');
       // a mound of weathered rocks round the mouth (the island's own rock shapes), dark inside
@@ -152,6 +154,30 @@ export class Arsenal extends ChapterBase {
       this.nooks.push({ id: 'ug', room: 'isle_undergas', show: glove, x: x + Math.sin(SPOT.adit.a) * 0.6, y, z: z + Math.cos(SPOT.adit.a) * 0.6, give: () => this.gain('glove', 'it_glove') });
       this.adit = { x, z, y, sign: L(1.45, 0.9) };
     }
+  }
+  // Under Celebration's mine: the island's layout is the original's numbers plus our dressing, so the spot is found, not
+  // fixed: a ring round the shuttle pad (8–18 m), the first that is level ground for 3.5 m all round, on the main
+  // walkable area, near the pad's height, with nothing solid within 3.6 m; its mouth faces the pad. (Deterministic.)
+  aditSpot(U) {
+    const P = this.game.physics, p = U.pad, land = (x, z) => (U.land ? U.land(x, z) : true);
+    const ok = (x, z) => {
+      if (!land(x, z)) return null;
+      const g0 = P.groundAt(x, z, p.y + 6);
+      if (Math.abs(g0 - p.y) > 2.5) return null;
+      for (const r of [1.2, 2.4, 3.5]) for (let i = 0; i < 12; i++) {
+        const xx = x + Math.sin(i * 0.5236) * r, zz = z + Math.cos(i * 0.5236) * r;
+        if (!land(xx, zz) || Math.abs(P.groundAt(xx, zz, p.y + 6) - g0) > 0.45 || P.blockedAt(xx, zz, g0, 0.4)) return null;
+      }
+      return g0;
+    };
+    const pref = Math.atan2(SPOT.adit.dx, SPOT.adit.dz);
+    for (const d of [14, 12, 16, 10, 18, 8]) for (let i = 0; i < 24; i++) {
+      const a = pref + (i % 2 ? 1 : -1) * Math.ceil(i / 2) * (Math.PI / 12);
+      const x = p.x + Math.sin(a) * d, z = p.z + Math.cos(a) * d, y = ok(x, z);
+      if (y != null) return { x, z, y, a: Math.atan2(p.x - x, p.z - z) };
+    }
+    const x = p.x + SPOT.adit.dx, z = p.z + SPOT.adit.dz;
+    return { x, z, y: P.groundAt(x, z, p.y + 6), a: Math.atan2(p.x - x, p.z - z) };
   }
   // the galleries' niche: on the floor near the room's entrance, toward the wall
   galSpot(GL) { return { x: SPOT.galNook.x, y: GL.deckY ?? 3, z: SPOT.galNook.z, a: SPOT.galNook.a }; }
