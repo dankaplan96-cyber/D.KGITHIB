@@ -1,7 +1,8 @@
 // Citadel Spaceport. Twelve years after LBA2, the Esmers' shuttles are ordinary traffic, so Citadel has a port for
 // them: a landing platform on stilts over the bay east of the town, a footbridge from the shore, a small terminal
 // (Twinsun stone below, an Esmer dome above), a control tower, the departures board, and a shuttle on the pad.
-// From chapter 4 on it flies to Zeelich and its islands (src/game/story/islands.js); before that the flights are
+// From chapter 4 on it flies to Zeelich Spaceport only — Zeelich is another planet; its islands are reached from
+// there by Esmer shuttle (src/game/travel.js, CONNECT); before that the flights are
 // grounded and only the Joint Project's ferry crosses (the board and the gate say so).
 //
 // A small working port (SD-1): passengers wait on benches in front of the terminal between planters and bins,
@@ -27,6 +28,15 @@ const RAIL_H = 1.1;
 const nameTex = () => canvasTex(512, 96, (x, W, H) => {
   x.fillStyle = '#f4efe2'; x.fillRect(0, 0, W, H); x.fillStyle = '#2f6a9a'; x.font = 'bold 46px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('SPACEPORT', W / 2, H / 2 + 2);
 });
+// the departures board's face (CONNECT): the spaceship to Zeelich only
+let DEP = null;
+const departuresTex = () => (DEP ||= canvasTex(1024, 512, (x, W, H) => {
+  x.fillStyle = '#18202c'; x.fillRect(0, 0, W, H); x.strokeStyle = '#e8c040'; x.lineWidth = 10; x.strokeRect(8, 8, W - 16, H - 16);
+  x.fillStyle = '#e8c040'; x.font = 'bold 54px Rubik, sans-serif'; x.textAlign = 'center'; x.fillText('DEPARTURES · SPACESHIP', W / 2, 82);
+  x.fillStyle = 'rgba(232,192,64,0.5)'; x.fillRect(40, 108, W - 80, 4);
+  x.font = 'bold 50px monospace'; x.textAlign = 'left'; x.fillStyle = '#9fe0ff'; x.fillText('ZEELICH SPACEPORT', 60, 210); x.fillStyle = '#ffd860'; x.fillText('PAD 1', 780, 210);
+  x.font = '32px Rubik, sans-serif'; x.fillStyle = '#bfe9ff'; x.fillText('Zeelich\'s islands: change at Zeelich', 60, 320); x.fillText('to an Esmer shuttle.', 60, 368);
+}));
 // heading (as the hero's angle) from a point toward another
 const heading = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
 
@@ -121,6 +131,10 @@ export function buildSpaceport(root, physics, W) {
   // --- the departures board, on its own roofed frame by the bridge's end, read from the deck (faces +x)
   const B = { x: -11.2, z: 36.2 };
   f.at(B.x, Y, B.z, Math.PI / 2, () => P.streetNoticeBoard(f, { kind: 'departures', w: 2.8, h: 1.4, y: 1.05 }));
+  // (CONNECT: Zeelich is another planet — the board names only the spaceship to Zeelich Spaceport; the islands are
+  // reached from there by Esmer shuttle. Our face over the generic departures face.)
+  { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 1.4), new THREE.MeshStandardMaterial({ map: departuresTex(), emissive: '#ffffff', emissiveMap: departuresTex(), emissiveIntensity: 0.35, roughness: 0.75 }));
+    m.position.set(B.x + 0.045, Y + 1.75, B.z); m.rotation.y = Math.PI / 2; g.add(m); }
   wall(B.x - 0.2, B.x + 0.2, B.z - 1.6, B.z + 1.6, Y + 2.7);
   W.signs.push({ x: B.x + 0.6, z: B.z, key: 'port_board' });
 

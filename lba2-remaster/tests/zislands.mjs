@@ -13,7 +13,7 @@ await open(page, '?nocine'); await menu(page, 'new');
 
 // every island is built
 const isles = await ev(() => Object.values(game.rooms).filter((R) => R.isle).map((R) => ({ id: R.id, objects: R.objects, sample: R.sample.length, walk: Math.round(R.walk), spawnLand: R.land(R.spawn.x, R.spawn.z) })));
-check('all seven islands are built, each with a walkable area (≥ 100 m²) and its spawn on land', isles.length === 7 && isles.every((i) => i.sample >= 1 && i.walk >= 100 && i.spawnLand), isles);
+check('all eleven Zeelich places are built (the original\'s 7 + the Lift Dock + our 3), each with a walkable area (≥ 100 m²) and its spawn on land', isles.length === 11 && isles.every((i) => i.sample >= 1 && i.walk >= 100 && i.spawnLand), isles);
 
 // before chapter 4 the shuttle offers nothing (ISO: put on Zeelich in the prologue)
 const before = await ev(() => { const G = game, R = G.rooms.zeelich; P.settle(); G.enterRoom('zeelich', R.dock, true); P.settle();
@@ -36,7 +36,7 @@ const take = async (pick) => ev((pick) => {
 }, pick);
 await ev(() => { const G = game, f = G.flags; Object.assign(f, { prologueDone: true, intro: true, chapterKey: 'dig' }); f.chapter = G.story.chapters.findIndex((c) => c.key === 'dig'); G.hero.hasBall = true; G.story.refreshCast(); G.enterRoom('zeelich', G.rooms.zeelich.dock, true); P.settle(); });
 const t1 = await take('Otringal');
-check('chapter 4: E at Zeelich\'s shuttle opens the shuttle menu (Citadel Spaceport, Zeelich marked here, the 7 islands)', t1.menuState === 'shop' && t1.items?.length === 9 && t1.items[1].endsWith('*'), t1);
+check('chapter 4: E at Zeelich\'s shuttle opens the shuttle menu (the spaceport island marked here, the 11 islands; no Twinsun stop)', t1.menuState === 'shop' && t1.items?.length === 12 && t1.items[0].endsWith('*') && t1.items.every((x) => !/Twinsun|Citadel/.test(x)), t1);
 check('picking Otringal lands him there, in play, beside its shuttle', t1.room === 'isle_otringal' && t1.state === 'play', t1);
 
 // walk the island: to five far points of the main area (INPUT, the harness's A* over the game's own movement)
@@ -105,6 +105,24 @@ check('Otringal → Knartas by its shuttle', t2.room === 'isle_knartas' && t2.st
 const t3 = await take('Zeelich');
 const zp = await ev(() => { const p = game.rooms.zeelich.shuttlePad, h = game.hero; return { d: +Math.hypot(h.pos.x - p.x, h.pos.z - p.z).toFixed(2), y: +h.pos.y.toFixed(2) }; });
 check('Knartas → back to Zeelich, beside its pad, in play', t3.room === 'zeelich' && t3.state === 'play' && zp.d < 7 && zp.y > 5, { t3, zp });
+
+// ZL-ALL: the new places — the Lift Dock (LBA2's ASCENCE) and our three — and Celebration with its figure: from the
+// arrival he walks to every landmark (INPUT), and finds the place's giver (Space there in Normal: a hop gives a bonus, once)
+const places = await ev(() => {
+  const G = game, out = [];
+  for (const id of ['isle_liftdock', 'isle_tralu', 'isle_orchard', 'isle_oldwatch', 'isle_celebration']) {
+    const R = G.rooms[id]; G.enterRoom(id, null, true); P.settle();
+    const h = G.hero, walks = [];
+    for (const p of R.pois) { G.enterRoom(id, null, true); P.settle(); const r = P.go(p.x, p.z, { tol: 1.4, run: true, maxT: 90 }); walks.push([p.word, r.r, +Math.hypot(h.pos.x - p.x, h.pos.z - p.z).toFixed(1)]); }
+    let given = null;
+    if (R.givers[0]) { const gv = R.givers[0]; P.go(gv.x, gv.z, { tol: 0.5, maxT: 60 }); h.setBehaviour('normal'); const n0 = G.searched.length; P.tap('Space', 0.05); G.step(1.0); given = G.searched.length > n0; P.tap('Space', 0.05); G.step(1.0); given = given && G.searched.length === n0 + 1; }
+    out.push({ id, landmark: R.landmark?.word, walks, givers: R.givers.length, given, dressing: R.dressing });
+  }
+  G.enterRoom('zeelich', G.story.isles.landing('zeelich'), true); P.settle();   // (back where the next step starts)
+  return out;
+});
+check('the Lift Dock, Tralu Rock, the Nectar Orchard, the Old Watch and Celebration: every landmark walked to from the arrival (INPUT)', places.every((p) => p.walks.length >= 1 && p.walks.every((w) => w[1] === 'arrived' || w[2] < 2.0)), places);
+check('each new place has a giver that gives once', places.filter((p) => p.id !== 'isle_celebration').every((p) => p.givers >= 1 && p.given), places.map((p) => [p.id, p.givers, p.given]));
 
 // save & Continue on an island (INPUT: Esc → Quit to title saves; Continue)
 await take('Celebration');

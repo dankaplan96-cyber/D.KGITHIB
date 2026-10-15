@@ -1,0 +1,6 @@
+stability rc=0 16 pass 0 fail 0 crash
+chapter2 rc=0 0 pass 0 fail 0 crash
+chapter4 rc=0 0 pass 0 fail 0 crash
+chapter5 rc=0 0 pass 0 fail 0 crash
+zeelich-life rc=0 31 pass 0 fail 0 crash
+DONE
