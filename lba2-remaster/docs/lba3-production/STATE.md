@@ -3,7 +3,7 @@
 Update before a handoff or a session limit. Do not mark a task done twice after resuming: check BACKLOG.md first.
 
 ## Build
-- Game version 0.28.0 (desktop/package.json; 0.26.1 = TY-3-FIX, 0.27.0 = TY-4 Zeelich twelve years on, 0.28.0 = WPN-1 weapons and gadgets; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
+- Game version 0.28.1 (desktop/package.json; 0.26.1 = TY-3-FIX, 0.27.0 = TY-4 Zeelich twelve years on, 0.28.0 = WPN-1 weapons and gadgets, 0.28.1 = TY-5-FIX; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
   D1–D18, see QA.md), then Zeelich's islands and Citadel Spaceport.
 - Milestone (PRODUCTION.md): 1 — Stabilize.
 
@@ -63,6 +63,13 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   case on Zeelich, from Arthur, the School of Magic and Bersimon, in the old Wannie mine on Under Celebration and in
   the house cellar (src/game/weapons.js, gadgets.js, story/arsenal.js). Save format 4 (hero.arms; format 3 migrates).
   tests/arsenal.mjs; QA.md "Weapons and gadgets (WPN-1)"; status REVIEW. No jetpack (no flight in the story bible).
+
+## Done after the pass (0.28.1)
+- TY-5-FIX (REV-TY-5's items): the ball way keeps street lines (also after a Continue from a mid-fall save); Snuff is
+  not offered from her roof (a generic talk limit: nobody more than 1.8 m below Twinsen, src/main.js TALK_ABOVE);
+  asked again, Snuff and Bzizz follow the phase; a room search under his feet no longer takes the prompt from
+  a person he faces (the lighthouse dial vs Zoé), and chapter10.mjs no longer depends on Zoé's facing (DONE ×3, forced
+  ASSISTED exit 2). N2 (the pump's camera) left open: no camera zones exist. QA.md "REV-TY-5 fixes"; status REVIEW.
 
 ## Next exact task
 Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

@@ -577,3 +577,17 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - Save format 4: hero.arms; a format-3 save continues with an empty arsenal (its backup kept).
 - No jetpack: the story bible keeps flight out of this game; a confined jetpack would be a tool no chapter uses.
 - Tests: tests/arsenal.mjs; regression set rerun (QA.md). Not verified: feel by hand, sounds by ear, GPU.
+
+## Session: REV-TY-5 fixes (0.28.1, TY-5-FIX)
+- The Second Bake: the ball way plays street lines (Twinsen sees the heat box's lamp turn green; Snuff, never asked,
+  asks about his ball, not her roof, also after a Continue from a save made while the crate fell); asked again
+  before the bake is done, Snuff and Bzizz give the phase's news first (new short lines for Bzizz by phase).
+- The talk prompt (src/main.js findInteractable): no Talk for a person more than 1.8 m below Twinsen (Snuff from her
+  roof); a room search under his feet or less squarely in front of him gives way to a person he faces within
+  2.2 m (Zoé at the lighthouse dials).
+- tests/chapter10.mjs: talks from the first free spot round a person whose prompt is theirs, and checks the dial vs
+  Zoé case; tests/zeelich-life.mjs: 7 new checks (all fail on 31deb6c).
+- N2 (the pump's camera from the south) not changed: the camera has no per-place zones.
+- Tests: zeelich-life 38/38, chapter10 DONE ×3 + forced ASSISTED (exit 2), townlife, workshop, stability, chapter2,
+  chapter9, prologue, chapter1, chapter3, chapter4, desert-life (QA.md). Not verified: chapters 5–8 and 11+ after
+  the talk change, feel by hand, GPU.

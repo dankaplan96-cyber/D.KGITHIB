@@ -214,7 +214,13 @@ depot hasn't signed for it, and unsigned crates stay on the stage).
   restores life.
 - Lines follow the main story: chapter 3 before and after the shield drops, chapters 4–8, the council (who buys the
   bread, who pays the tilers if the bore stops; the moles say stop), the network (do shields bake bread?). Chapters 3,
-  9 and 10 keep their own lines for Nara and Oku; theirs here are for chapters 4–8 and after.
+  9 and 10 keep their own lines for Nara and Oku; theirs here are for chapters 4–8 and after. Asked again before the
+  bake is done, Snuff and Bzizz give that phase's news first, then the crate (0.28.1, REV-TY-5 D3).
+- Each way keeps its own words (0.28.1, REV-TY-5 D1): on the roof the heat box clicks "somewhere below"; from the
+  street Twinsen sees its lamp turn green, and Snuff, never asked, asks about his ball, not her roof (also after a
+  Continue from a save made while the crate fell). Snuff is talked to from the street only: nobody offers Talk to a
+  person well below Twinsen (a roof, a ledge; src/main.js TALK_ABOVE), so her first talk, which points to the
+  stair, never plays on her roof (D2).
 - Save/Continue in any state (crate on the flue, on the stage, broken; the coin owed).
 - **Chapter 10, not done here** (another developer owns network.js/ch10.js): Oku's or Baldino's network lines could
   recall the bakery's heat box (a safety cut-out that resets when the air flows) — suggested, not implemented.

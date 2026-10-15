@@ -417,6 +417,25 @@ merge.
 Not checked here: how the shots feel with a pad or mouse by hand; the sounds by ear; balance for a first-time
 player (prices against the kashes a player has by each chapter); the look on a GPU.
 
+### REV-TY-5 fixes (0.28.1; TY-5-FIX)
+The independent review of TY-3-FIX and TY-4 (docs/lba3-production/reviews/REV-TY-5). Evidence: tests/zeelich-life.mjs
+(38 checks, was 31) and tests/chapter10.mjs, served from the worktree on port 8179, SwiftShader, one browser at a time;
+before = 31deb6c served from a `git archive` export of that commit, run with the new zeelich-life.mjs.
+
+| Check | Evidence | Before (31deb6c) | After (0.28.1) |
+|---|---|---|---|
+| D2: on the roof above Snuff's counter (1.55 m from her, 4 m up) no Talk prompt; E plays none of her lines; her first talk (which sends him to the stair) waits for the street. Generic: nobody offers Talk to a person more than 1.8 m below Twinsen (src/main.js TALK_ABOVE) | INPUT | FAIL (prompt "Talk", her whole first talk played) | PASS |
+| D1: the ball way from the street: "The heat box on the wall clicks. Its lamp turns green." (not "Somewhere below…"); the shove keeps the roof's line | INPUT | FAIL | PASS |
+| D1: ball thrown with Snuff never asked, Save & quit while the crate falls → Continue: crate broken, oven hot; Snuff "Was that your ball?…" (not "on my roof"), pays | UI + INPUT | FAIL | PASS |
+| D3: asked again before the bake is done, Snuff and Bzizz give the phase's news, then the crate: chapter 3 (shield down), chapters 4–8, the council (ISO for the later phases: the zl_ flags of "asked, not done" for one talk each, then restored) | INPUT | FAIL (one line in every phase) | PASS |
+| T1 (players): standing at the lighthouse's middle dial (a plain search until Zoé asks) and facing Zoé, E is hers. Generic: a room search under his feet (< 0.5 m) or less squarely in front of him gives way to a person he faces within 2.2 m (45°); a cupboard he looks straight at keeps its prompt | LOGIC (the picker) | the review's spot gave "Nothing here." | PASS ("zoe") |
+| T1 (test): chapter10.mjs's talk tries the spot in front of the person, then round them, on the first free spot whose prompt is theirs (no longer hangs on Zoé's facing) | — | NOT DONE (c10_zoeAsk unset) | CHAPTER 10 DONE ×3 in a row; C10_MAX_THROWS=0: ASSISTED, exit 2 |
+| Regression on the final code: townlife 35/35, workshop 32/32, stability 16/16, zeelich-life 38/38, desert-life 30/30; chapter2, chapter9, prologue (the ball from the cupboard), chapter1, chapter3 and chapter4 to their ends; no page errors | LOGIC/INPUT | — | PASS |
+| N2 (the pump's camera from the south after a Continue): not changed. The LBA camera has no per-place zones or hints (src/engine/camera.js: two fixed views); adding them is a camera-system change | — | — | OPEN |
+
+Not checked here: chapters 5–8 and 11+ tests after the talk-prompt change (it touches every conversation: a person
+more than 1.8 m below Twinsen can no longer be talked to; none of the run tests needed that); the feel by hand; GPU.
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.
