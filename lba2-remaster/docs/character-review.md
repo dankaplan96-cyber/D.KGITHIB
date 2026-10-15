@@ -366,3 +366,79 @@ and built in `cast_poly.py`:
 The legs start at the hip joint, inside the body, so a stride never shows a gap. The Esmers take the robe's
 shorter stride. Captures: `captures/characters/zeelich-folk.png` (four views, and walking),
 `captures/characters/zeelich-street.png` (the street in chapter 9).
+
+## 13. The Dino-Fly (CH-DF) — after LBA2's original
+
+The user: "the Dino-Fly doesn't look at all like the original from the second game". Ours was an invented green
+lizard (signed-distance spheres and cones, a yellow beak and belly, leaf-green wings). Found in the user's own game
+files (BODY.HQR, ANIM.HQR, read in the session's scratch space; nothing of them is in the repository): **body 167**
+(166 and 168 are the same creature with Twinsen in the saddle, in his blue tunic and in white), 323 polygons in
+30 groups; its clips are ANIM.HQR 829–848 (829 the idle, 831/836 lying down, 840–847 flight).
+
+What the original looks like (numbers in its units, Twinsen = 1238; ×1.70 mm for our metres):
+- **A bipedal flying dinosaur**, not a lizard: it stands on two thin hind legs, with no forelegs. It is 3,820 long
+  (tail tip −2,080 to muzzle +1,740), 1,840 tall to its ear tips and spans 3,360 across the wings: in Twinsen
+  heights 3.1 H long, 1.5 H tall, 2.7 H wide.
+- **Body:** a deep chest, widest (±419) under the saddle. The back is at 1,370–1,400 and the belly at 504–555 above
+  the ground. The tail is a long wedge drawn out to a point, level at 780 high. Its underside is the belly's colour.
+- **Neck:** long and thin (half-width 116 → 85). It rises steeply from the chest (about 55°) and flattens toward the
+  head (about 25°). It meets the head at about 1,680 high.
+- **Head:** horse-like, about 800 long, carried 38° nose-down. It is widest (±200) at the cheeks. On the upper
+  sides are big almond eyes in bright yellow (about 160 × 120). Two small spikes for ears rise to 1,840. The muzzle
+  is blunt, with no beak and no teeth. A brown bridle: headpiece, cheek straps and noseband, and two reins (lines)
+  running back to the saddle.
+- **Legs:** the hip is at ±380, 700 high. The hock bends backward (±300, 380 high) and the ankle is at 100 high.
+  A long, splayed foot (80…400 wide, −580…−80 long) ends in three toes.
+- **Wings:** from the shoulders (±360, 1,100 high), lying flat in the rest pose. The leading edge peaks at the
+  elbow (±860, +270) and the wrist (±1,340, +185). The tip at ±1,680 is swept back to −470. The trailing edge is
+  scalloped (−380…−545). Teal bones, a tan membrane.
+- **Saddle:** brown, from −300 to +200 along the back. The seat is at 1,400, the pommel at 1,480, the cantle at 1,475.
+- **Colours (three ramps and one accent):** teal-green hide (lit about `#378773`). Tan membranes and underside of
+  the neck, belly and tail (about `#b38b47`–`#cb9b4b`). Brown saddle and bridle (about `#634327`). Yellow eyes
+  (`#f7bb57`). Polygons Gouraud-shaded.
+- **Poses:**
+  - Idle (829): the wings fold up over the back like two tan tents. The shoulder is raised 67°, the forearm turns
+    back down (−148°) and the tip folds in (−50°).
+  - Lying (831/836): the body is lowered 520 onto the belly, the legs fold under, and the neck curls round to its left.
+
+What ours matches (`tools/blender/dinofly_poly.py` → `assets/poly/dinofly.json`, `art/characters/dinofly/`):
+- **Proportions:** every station of the body, neck, head, legs, wings and saddle above is rebuilt from the measured
+  sections, at the cast's scale (U = 2.1 m / 1,238). In the rest pose it is 6.54 m long, 3.09 m tall and 5.78 m
+  across: 1.01 / 0.99 / 1.01 of the original (6.48 / 3.12 / 5.70 m).
+- **Look:** the same colour layout in the LBA ramp material (`LbaMaterial`, like the cast and the dogs), the bridle
+  as straps on the head, and the saddle with a pommel and cantle.
+- **Skeleton:** its own small skeleton after the original's groups (body, three tail bones, three neck bones, head,
+  thigh/shin/foot, three bones per wing). Weights are rigid per piece and blended across the neck, tail and
+  membrane joints.
+- **The nap (`src/game/dinofly.js`):** the lying pose of 831 (body lowered 0.86 m, legs folded, neck and tail curled
+  round to his left). The wings fold as in the idle (the measured angles).
+- **Behaviour kept, on bones:**
+  - Breathing.
+  - The gaze: within 9 m he lifts his neck, the curl unwinds, the head turns and pitches to Twinsen and the eyes open.
+  - The wing stretch: the wings open upward, same timing as before.
+  - The talk lines, the nuzzle, the voice, its spot (−50.5, 68.5) and its colliders, resized to the new body.
+- **Twelve years on (small touches):** a greyed muzzle and heavy eyelids while he dozes. No rider and no reins.
+- **Turned to the play camera:** he lies 1.3 rad turned from the spot's heading, so the play camera (looking west
+  over the garden) sees his flank, the curled neck and the tented wings instead of a head-on lump.
+
+Counts:
+- **Triangles:** the Dino-Fly went from 45,940 to 1,164.
+- **Meshes:** from 4 to 3 (one skinned mesh and two eye meshes), with one material and 7 vertex colours.
+- **At the garden** (5 m from him, `game.perf`, 30 frames, SwiftShader): 674 → 670 draw calls and 1.15 M → 1.06 M
+  triangles per frame.
+
+Differences that remain:
+- **Smoothness:** the surfaces are smoother and rounder than the original's 323 facets.
+- **Head:** a little boxier.
+- **Pupils:** the eyes have a small dark pupil (the original's are plain yellow) so the gaze reads.
+- **Reins:** not modelled.
+- **Membrane:** one sheet between rigid bone segments, so the folded wing creases rather than bunching.
+- **Motion:** the poses are authored numbers (the fold angles and the lying drop are the measured ones); no
+  original animation curves are used.
+
+Evidence:
+- `docs/lba3-visual/evidence/CH-DF/dinofly-before-after-views.jpg`: front, ¾, side, top and the game camera for
+  dozing, looking, stretching, the bind pose and grey.
+- `dinofly-before-after-ingame.jpg`: the garden from the normal play camera, far, near, stretch and talk.
+- Both are made by `dinofly-lookdev.html`, `lookdev-shot.mjs` and `ingame-shots.mjs` in that folder. No image of
+  the original is in the repository.

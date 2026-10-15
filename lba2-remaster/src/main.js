@@ -27,6 +27,7 @@ import { preloadLba1Rooms } from './game/lba1room.js';
 import { preloadIslands, buildIslands } from './game/zislands.js';
 import { buildSpaceport } from './game/spaceport.js';
 import { buildTownLife } from './game/townlife.js';
+import { buildCityDressing } from './game/citydress.js';
 import { buildHamalayi } from './game/hamalayi.js';
 import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
@@ -117,6 +118,7 @@ class Game {
     const S = this.scene, P = this.physics;
     timed('spaceport', () => buildSpaceport(this.world.root, P, this.world));
     timed('townlife', () => buildTownLife(this.world.root, P, this.world));
+    timed('citydress', () => buildCityDressing(this.world.root, P, this.world));
     this.rooms = timed('interiors', () => buildInteriors(S, P));
     // outdoor regions are rooms flagged `outdoor`: LBA camera, own sky, doors to their own interiors
     this.rooms.zeelich = timed('zeelich', () => buildZeelich(S, P));
@@ -279,6 +281,7 @@ class Game {
   startTransition(mid) {
     this.trans = { t: 0, mid, called: false, walk: !!this.walkNext, hold: false };
     this.walkNext = false;
+    this.hud.prompt(null); // (the last room's prompt would otherwise come back with the new scene's first frames)
   }
   updateTransition(dt) {
     const T = this.trans;
@@ -355,6 +358,7 @@ class Game {
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
+      this.occSnap = true;   // (the houses take their faded state at once on the first frame: Game.occluders)
       this.doorCool = 1;
       this.audio.setPlace?.('island');
       if (quiet) return;
@@ -480,6 +484,7 @@ class Game {
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
     if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene') this.combatDir?.calm(0.6); }
     if (s !== 'play') this.targeting?.hide();
+    this.hud?.busy(s !== 'play');
   }
   gameOver() {
     this.setState('gameover');
@@ -1026,6 +1031,7 @@ class Game {
       // frozen while the screen fades (through a door, the hero walks on)
       this.transWalk(dt);
       this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null);
+      this.occluders(dt);
     } else switch (this.state) {
       case 'title': case 'loading': this.titleCamera(dt); this.menuNav(); break;
       case 'play': this.updatePlay(dt); break;
@@ -1041,8 +1047,9 @@ class Game {
         }
         for (const n of this.npcs) n.update(dt);
         this.camRig.update(dt, this.hero.pos, this.hero.angle, false, input);
+        this.occluders(dt);
         break;
-      case 'shop': this.hud.shopNav(input); this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null); break;
+      case 'shop': this.hud.shopNav(input); this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null); this.occluders(dt); break;
       case 'inventory':
         this.inventory.nav(input);
         // E on a gadget uses it (LBA2: select it in the inventory); otherwise E closes, as before
@@ -1068,6 +1075,7 @@ class Game {
       case 'cutscene':
         this.cutscene?.(dt);
         this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null);
+        this.occluders(dt);
         for (const n of this.npcs) n.update(dt);
         break;
     }
@@ -1185,7 +1193,19 @@ class Game {
     this.hud.stats(h);
     if (!this.room) this.hud.drawMinimap();
     this.camRig.update(dt, h.pos, h.angle, h.speed > 0.5, input);
-    if (!this.room) this.world.fadeOccluders?.(this.camera, h.pos, dt);
+    this.occluders(dt);
+  }
+
+  // Houses between the camera and Twinsen fade out (town.js / island.js fadeOccluders). It runs wherever the game
+  // camera follows him outdoors on Citadel — play, dialogue, the shop, cut-scenes and through a door's fade — and on
+  // the first frame of a scene (occSnap, set by exitRoom) it takes the final state at once: leaving home used to open
+  // on his own roof filling the screen through the whole fade-in, fading only once control was back.
+  occluders(dt) {
+    if (this.room) return;
+    const snap = this.occSnap;
+    this.occSnap = false;
+    if (snap) this.camera.updateMatrixWorld();
+    this.world.fadeOccluders?.(this.camera, this.hero.pos, snap ? 10 : dt);
   }
 }
 

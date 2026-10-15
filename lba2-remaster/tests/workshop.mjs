@@ -136,7 +136,7 @@ check('the reward: a coin worth five kashes tossed his way, owed until he picks 
 // save & Continue with the coin still on the floor: it is given on loading (REV-TY-2 D4)
 await quitAndKeep(page, context, file);
 await open(page, '?nocine'); await menu(page, 'continue'); await said();
-const pay = await ev(() => { const toasts = [...game.hud.toastEl.children].map((c) => c.textContent); P.settle(); game.step(0.2); return { coins: game.hero.coins, owe: game.flags.w_owe || 0, paid: !!game.flags.w_paid, toasts }; });
+const pay = await ev(() => { const toasts = (game.hud.toastLog || []).slice(); P.settle(); game.step(0.2); return { coins: game.hero.coins, owe: game.flags.w_owe || 0, paid: !!game.flags.w_paid, toasts }; });
 check('saved before he picked the coin up: on Continue the five kashes are his (a toast says so) and nothing is owed (REV-TY-2 D4)', pay.coins - coins0 === 5 && pay.owe === 0 && pay.paid && pay.toasts.some((t) => /Baldino's coin: 5 kashes/.test(t)), { coins0, pay });
 await shot('W-03-talking.png');
 const vis = await ev(() => { const L = game.rooms.workshop.life; return { st: { ...L.state }, labels: ['lever', 'tap', 'crank'].map((w) => { const s = L.spots[w]; P.go(s.x, s.z, { tol: 0.4 }); return P.target()?.label; }) }; });

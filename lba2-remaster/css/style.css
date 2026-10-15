@@ -296,6 +296,8 @@ body.big-text #toast, body.big-text .toast { font-size: 18px !important; }
 #weapon.flash { transform: scale(1.08); border-color: #ff6a4a; }
 body.hud-lba #weapon { opacity: 0; }
 body.hud-lba #weapon.show { opacity: 1; }
+/* out of play (dialogue, menus, cut-scenes): no interaction prompt or weapon pill under the box or the menus */
+#hud.busy #prompt, #hud.busy #weapon { opacity: 0; transition: none; }
 #wsel { position: fixed; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; pointer-events: none; z-index: 30; }
 #wsel .slot { position: absolute; width: 74px; height: 74px; border-radius: 50%; background: var(--panel); border: 2px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 26px; transition: transform 0.1s, border-color 0.1s; }
 #wsel .slot small { font-size: 11px; margin-top: 2px; }

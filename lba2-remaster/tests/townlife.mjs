@@ -30,7 +30,7 @@ const seen = (pts) => ev(async (pts) => {
 const couplerPts = () => ev(() => { const c = game.world.life.shop.coupler; return { top: [c.x, c.y + 0.27, c.z], front: [c.x, c.y + 0.13, c.z + 0.16], west: [c.x - 0.16, c.y + 0.13, c.z], east: [c.x + 0.16, c.y + 0.13, c.z] }; });
 const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
 const setChapter = (key, extra = {}) => ev(([key, extra]) => { const G = game, f = G.flags; P.settle(); Object.assign(f, { prologueDone: true, intro: true, chapterKey: key }, extra); f.chapter = G.story.chapters.findIndex((c) => c.key === key); G.hero.hasBall = true; G.story.applyFlags(); }, [key, extra]);
-const toasts = () => ev(() => [...game.hud.toastEl.children].map((c) => c.textContent));
+const toasts = () => ev(() => (game.hud.toastLog || []).slice());
 await said();
 
 // ---- the cast is there
@@ -194,7 +194,7 @@ check('other order: pliers first, the pump fixed before Bram asked; Bram still t
 // a save straight away, the clover still on the ground: it is given on Continue
 await quitAndKeep(page, context, file);
 await open(page, '?nocine'); await menu(page, 'continue');
-const b1c = await ev(() => { const t = [...game.hud.toastEl.children].map((c) => c.textContent); P.settle(); return { clovers: game.hero.clovers, owed: game.flags.l_oweClover || 0, t }; });
+const b1c = await ev(() => { const t = (game.hud.toastLog || []).slice(); P.settle(); return { clovers: game.hero.clovers, owed: game.flags.l_oweClover || 0, t }; });
 await said();
 check('saved before he picked Bram\'s clover up: on Continue it is in his pocket (a toast says so), nothing owed (REV-TY-1 D5)', b1.owed === 1 && b1.lying === 1 && b1c.clovers === Math.min(9, b1.c0 + 1) && b1c.owed === 0 && b1c.t.some((s) => /Bram's clover/.test(s)), { b1, b1c });
 const b2 = await ev(() => { const L = game.world.life, f = game.flags; P.talk('odile'); P.use(L.crate.x, L.crate.z, { near: 0.8, kind: 'lcrate' }); P.use(L.shop.bench.x, L.shop.bench.z, { near: 0.8, kind: 'lbench' }); P.wait(1); return f.l_cs; });
@@ -209,7 +209,7 @@ const b4 = await ev(() => { const L = game.world.life, f = game.flags;
   P.talk('odile'); const c0 = game.hero.coins; P.talk('nell'); return { done: f.l_cs, paid: !!f.l_nellPaid, owed: f.l_oweFee || 0, c0 }; });
 await quitAndKeep(page, context, file);
 await open(page, '?nocine'); await menu(page, 'continue');
-const b4c = await ev(() => { const t = [...game.hud.toastEl.children].map((c) => c.textContent); P.settle(); return { coins: game.hero.coins, owed: game.flags.l_oweFee || 0, t }; });
+const b4c = await ev(() => { const t = (game.hud.toastLog || []).slice(); P.settle(); return { coins: game.hero.coins, owed: game.flags.l_oweFee || 0, t }; });
 await said();
 check('saved before he picked Nell\'s coins up: on Continue the three kashes are his, nothing owed (REV-TY-1 D5)', b4.done === 'done' && b4.paid && b4.owed === 3 && b4c.coins - b4.c0 === 3 && b4c.owed === 0 && b4c.t.some((s) => /Nell's payment: 3 kashes/.test(s)), { b4, b4c });
 

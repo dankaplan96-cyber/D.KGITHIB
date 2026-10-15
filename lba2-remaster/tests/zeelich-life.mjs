@@ -154,7 +154,7 @@ check('Bzizz: the depot can sign for a puddle; Snuff pays (sticky grass, one sad
 file = path.join(os.tmpdir(), 'zeelife2-' + process.pid + '.json');
 await quitAndKeep(page, context, file);
 await open(page, '?nocine'); await menu(page, 'continue');
-const c3 = await ev(() => { const t = [...game.hud.toastEl.children].map((c) => c.textContent); P.settle(); const w = game.rooms.zeelich.life.watch, f = game.flags; return { coins: game.hero.coins, owed: f.zl_owe || 0, t, crate: w.crate, done: !!f.zl_done }; });
+const c3 = await ev(() => { const t = (game.hud.toastLog || []).slice(); P.settle(); const w = game.rooms.zeelich.life.watch, f = game.flags; return { coins: game.hero.coins, owed: f.zl_owe || 0, t, crate: w.crate, done: !!f.zl_done }; });
 await said();
 check('saved before he picked Snuff\'s coin up: on Continue the five kashes are his (a toast says so); the crate still broken, the oven hot', c3.coins === c2.c + 5 && c3.owed === 0 && c3.t.some((s) => /Snuff's payment/.test(s)) && c3.crate === 'broken' && c3.done, { c2, c3 });
 
