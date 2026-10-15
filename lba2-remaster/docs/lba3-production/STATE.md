@@ -3,7 +3,7 @@
 Update before a handoff or a session limit. Do not mark a task done twice after resuming: check BACKLOG.md first.
 
 ## Build
-- Game version 0.27.0 (desktop/package.json; 0.26.1 = TY-3-FIX, 0.27.0 = TY-4 Zeelich twelve years on; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
+- Game version 0.28.0 (desktop/package.json; 0.26.1 = TY-3-FIX, 0.27.0 = TY-4 Zeelich twelve years on, 0.28.0 = WPN-1 weapons and gadgets; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
   D1–D18, see QA.md), then Zeelich's islands and Citadel Spaceport.
 - Milestone (PRODUCTION.md): 1 — Stabilize.
 
@@ -56,6 +56,13 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   (0.25.0), the reviews' fixes (0.25.1), Desert Island's Kesh and The Wind-Catcher (0.26.0, TY-3: tests/desert-life.mjs,
   captures/desert-ty/; status REVIEW), Zeelich's street and The Second Bake (0.27.0, TY-4: tests/zeelich-life.mjs,
   captures/zeelich-ty/; status REVIEW).
+
+## Done after the pass (0.28.0)
+- WPN-1 weapons and gadgets (the user's request): blowgun → Blowtron, the Esmer laser pistol, the Wannie glove, the
+  lightning spell; the meca-penguin, the protection ward, Arthur's conch, the lantern; earned at Pippa's stall, Nara's
+  case on Zeelich, from Arthur, the School of Magic and Bersimon, in the old Wannie mine on Under Celebration and in
+  the house cellar (src/game/weapons.js, gadgets.js, story/arsenal.js). Save format 4 (hero.arms; format 3 migrates).
+  tests/arsenal.mjs; QA.md "Weapons and gadgets (WPN-1)"; status REVIEW. No jetpack (no flight in the story bible).
 
 ## Next exact task
 Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

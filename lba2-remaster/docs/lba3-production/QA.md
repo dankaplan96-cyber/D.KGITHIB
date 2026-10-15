@@ -370,6 +370,45 @@ only, no GPU timing.
 | Render counts (software renderer, counts not time; REV-TY-4's six fixed spots from the normal camera, 1280×720, the done state), 0.26.0 → 0.26.2 | pier track 435 → 438 calls, cool-room door 365 → 374 (+2.5%), plaza 402 → 405, Lumi's loom 512 → 515, the drift 503 → 504, the board 386 → 389; triangles +0.2–0.7% | LOGIC | measured; GPU time BLOCKED |
 | Not checked here: the look on a GPU; whether players read the windsock and the lashings by themselves; gamepad/touch | — | — | HUMAN |
 
+### Weapons and gadgets (0.28.0; WPN-1; docs/COMBAT.md "The arsenal")
+`tests/arsenal.mjs` (GAME_URL on its own port; SwiftShader, 960×540). Evidence: INPUT for getting and using (walk,
+talk, real clicks on the stalls' items, E, the inventory with I / arrows / E, the weapon wheel with G + arrows, K to
+attack); ISO (logged) for reaching chapters by flags, kashes given for purchases, journeys between islands by the
+room switch their shuttles/glider use, and enemies placed in the developer arena for the effect measurements.
+
+| Check | How | Result |
+|---|---|---|
+| Pippa's stall (ch. 2): her stock, then blowgun (15, 6 darts), darts (3 for 4), meca-penguin (4), lantern (10) | talk, click | PASS (37 kashes spent, 9 darts, 2 penguins, lantern) |
+| Arthur's conch at home | walk, E | PASS (Arthur's lines or his note) |
+| The conch outdoors: the Dino-Fly lifts his head (> 0.2 m) and rumbles; people within 16 m turn to look | inventory E | PASS |
+| The cellar's gap in the foundations: too dark without a light (journal line); the lantern lights it (a light-pool light at the lantern); the tin: 6 darts, 8 kashes | walk, E, inventory E | PASS |
+| The boarded coal chute: the line; fists only thud | E, K | PASS |
+| Bersimon asks for the pearl (still tops up the magic) | talk | PASS |
+| Nara's case (ch. 3): the laser pistol (30, 5 shots), a crystal cell (+5), darts; no Blowtron before ch. 6 | walk, E, click | PASS |
+| Rector Hougo gives the pearl; Ker'aooc teaches the ward (20 kashes, a menu) | talk, click | PASS |
+| The old Wannie mine on Under Celebration, the lantern lit: the Wannie glove | walk, E | PASS |
+| Bersimon with the pearl: the lightning spell; the pearl used | talk | PASS |
+| Nara's case (ch. 6): the Blowtron (35) | E, click | PASS |
+| The wheel's down-left slot: the glove in hand; the glove breaks the boards (a clover, 12 kashes) | G + arrows, K | PASS |
+| Save & quit → Continue: owned items, counts and a_ flags identical; save format 4 | pause menu | PASS |
+| Blowgun: 3 darts → 3 hits on the dummy 6 m off, 3 darts spent; a Grobo guard's armour stops a dart (1), the Blowtron's (2) goes through | wheel, K | PASS |
+| Laser: a drone 9 m off loses 3 (machines); a cell shot uses one charge; with none it costs 2 magic | wheel, K | see results |
+| Lightning: the mite, then the guard and the dog close by (chain of 3); 3 magic; arcs drawn | wheel, K | PASS |
+| Glove: a guard thrown back > 1.5× the fists' distance; an enemy bolt knocked back strikes the drone | K | PASS |
+| Meca-penguin: set down, walks, the mite is lured to it (not Twinsen), it pops and hurts the mite; Twinsen untouched | inventory E | see results |
+| Protection: 3 magic, a 2-point blow takes 1, 2 again after 15 s | inventory E | PASS |
+| Conch: a guard dog close by cowers (stunned) | inventory E | PASS |
+| No darts: the blowgun doesn't fire and says so | K | PASS |
+| A format-3 save (no arsenal) continues: empty arsenal, rewritten as format 4, the old one kept as backup_v3 | reload | PASS |
+
+Draw calls where the new models stand (SwiftShader, `renderer.info` reset per frame, the same view with and without
+the model; counts, not time): the Wannie mine 119 → 127 (6 meshes), Nara's case 1154 → 1172 (11 meshes; shadows
+included). Captures: captures/arsenal/normal-camera.jpg (the normal camera), captures/arsenal/close-ups.jpg (a close
+camera on the held weapons, the laser shot, the lightning arc, the penguin, the shell, the lantern, the mine, the case).
+
+Not checked here: how the shots feel with a pad or mouse by hand; the sounds by ear; balance for a first-time
+player (prices against the kashes a player has by each chapter); the look on a GPU.
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.

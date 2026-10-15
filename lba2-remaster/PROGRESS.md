@@ -561,3 +561,19 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - The packaged Linux app passes desktop/test-desktop.mjs (window, app://, new game, save, relaunch → Continue, Quit).
 - Not verified here: GPU frame rate, sound by ear, gamepad/touch, Windows/Mac installers (CI). Fights the bot
   couldn't win were finished by logged ISO assists (QA.md: human-playtest items).
+
+## Session: weapons and gadgets (0.28.0, WPN-1)
+- The user asked for weapons and items/gadgets. LBA2's, in our style (models in code, synthesised sounds, LBA2's
+  numbers and descriptions where it had them): the blowgun and its Blowtron upgrade, the Esmer laser pistol, the
+  Wannie glove and the lightning spell on the weapon wheel's diagonals; the Nitro-Meca-Penguin, the protection ward,
+  Arthur's conch and a brass lantern used from the inventory (E). src/game/weapons.js, gadgets.js, story/arsenal.js,
+  text/arsenal.js; small hooks in combat.js, hud.js, inventory.js, main.js, story/index.js and one line in
+  actors.js (Hero.damage: the ward). docs/COMBAT.md "The arsenal" has every number and where each is earned.
+- Earned in the world: Pippa's stall (ch. 2), Nara's case on Zeelich's street (ch. 3, the Blowtron from ch. 6),
+  Arthur lends his conch, Rector Hougo's pearl of incandescence → Bersimon's lightning (ch. 4), Ker'aooc's ward
+  (20 kashes), the old Wannie mine on Under Celebration (the glove; the lantern shows it), a gap in the house
+  cellar's foundations (the lantern) and its boarded coal chute (the glove), a hollow boulder in the crystal
+  galleries (ch. 11).
+- Save format 4: hero.arms; a format-3 save continues with an empty arsenal (its backup kept).
+- No jetpack: the story bible keeps flight out of this game; a confined jetpack would be a tool no chapter uses.
+- Tests: tests/arsenal.mjs; regression set rerun (QA.md). Not verified: feel by hand, sounds by ear, GPU.

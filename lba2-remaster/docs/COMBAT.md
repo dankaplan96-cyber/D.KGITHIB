@@ -97,6 +97,36 @@ All enemies give up and go home beyond a pursuit limit.
   sentries lose their shield for 3.2 s. It also stalls the north mill (an alternative to the ball on the
   brake). It does nothing to living creatures and takes 5 s to recharge (shown on the weapon badge).
 
+## The arsenal (WPN-1; src/game/weapons.js, gadgets.js, story/arsenal.js)
+LBA2's other weapons and gadgets, in our style: the models are built in code, the sounds synthesised, the numbers
+and descriptions LBA2's where it had them (three darts and a meca-penguin cost 4 kashes; the penguin is set down
+"in a level and unencumbered area" and goes off "a few seconds later"; the pistol needed a crystal; the glove threw
+fireballs back; the tunic's shielding spell cost magic and was used from the inventory). Weapons go on the wheel's
+diagonals (hold X / G / RT; up-right blowgun, down-right laser, down-left glove, up-left lightning) and fire with
+the attack key; gadgets are used from the inventory (select, E). Owned items, darts, laser charge and penguins
+are saved with the hero (`hero.arms`, save format 4; older saves migrate to an empty arsenal).
+
+| Weapon / gadget | Where (chapter) | Cost | Numbers | Use |
+|---|---|---|---|---|
+| Blowgun | Pippa's stall, Citadel (2) | 15 (with 6 darts) | 1 dmg, 24 m/s, 17 m, 0.55 s between darts | cheap ranged chip damage; a Grobo's armour (2) stops it |
+| Darts | Pippa, Nara (2/3); the cellar's gap in the foundations (6) | 3 for 4 | max 30 | blowgun ammunition |
+| Blowtron | Nara's case, Zeelich (6) | 35 | 2 dmg, 30 m/s, 20 m, 0.27 s | the blowgun upgraded (Mosquibee work) |
+| Esmer laser pistol | Nara's case, Zeelich (3) | 30 (with a cell) | 2 dmg, 3 to machines, 52 m/s, 26 m, 0.5 s; a cell = 5 shots (max 20), else 2 magic a shot | drones and sentries' bodies at range |
+| Wannie glove | the old mine on Under-gas, with the lantern lit (4, shuttle) | — | two punches: 2 dmg, poise 3/4, knock-back 11/14 m/s, the second breaks guards | throws enemies back, sends their bolts back (2 dmg to whoever they meet), breaks the boards over the cellar's coal chute (a clover, 12 kashes) |
+| Lightning | Bersimon, with Rector Hougo's pearl of incandescence (4) | 3 magic | 2 dmg to the target, then 1 to up to two more within 5.5 m; counts as a charged hit | crowds; breaks a sentry's guard |
+| Protection | Ker'aooc, School of Magic (4) | 20 kashes; 3 magic a cast | 15 s, damage taken ×0.5 | before a hard fight |
+| Meca-penguin | Pippa, Nara (2/3) | 4 each, max 5 | walks 7 s at 1.3 m/s; lures enemies within 11 m that can see it; 2 hits wreck it; pops for 2 within 2.2 m | a decoy, then a small bang |
+| Arthur's conch | Arthur lends it, at home (2) | — | 4 s between calls; dogs within 14 m cower 3 s; people within 16 m look; the Dino-Fly (Citadel, 70 m) answers | calls off guard dogs; the Dino-Fly answers (he can't fly any more: no flight) |
+| Lantern | Pippa (2) | 10 | a warm light (8 m) from the light pool | shows the dark places: the gap in the cellar's foundations, the Wannie mine, the galleries' hollow boulder (11: a clover) |
+
+No jetpack: the story bible keeps flight out of this game (the Dino-Fly is too old to fly; the islands' edges, the
+cliffs' puzzle and the chapters' routes are built on walking and jumping), and a jetpack confined to marked zones
+would add a tool no chapter uses.
+
+Balance: nothing on the main path needs the arsenal. The blowgun (chapter 2) hits for 1 and is stopped by a Grobo's
+armour; the harder hitters arrive later and cost kashes or magic (the laser at chapter 3 for 30 kashes, the glove and
+the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights are unchanged.
+
 ## Encounters using the systems
 - Vesk's guards, beside the drones: ch. 1 depot (Quetch), ch. 2 Zeelich depot (Grobo), ch. 4 post (Quetch),
   ch. 5 condenser hall (Quetch), ch. 8 crowd-control yard (Quetch + Grobo), ch. 10 at the bore (Grobo); two in the
@@ -130,5 +160,8 @@ All enemies give up and go home beyond a pursuit limit.
 - the crawler's slam and a dodge through it;
 - the ball switch;
 - weapon save/load.
+
+`tests/arsenal.mjs` covers the arsenal: each weapon and gadget obtained and used by input, its effect measured,
+ammunition and costs, Save & quit → Continue, and a format-3 save's migration.
 
 Not verified: feel with a real gamepad and touch screen, audio balance by ear, real-GPU frame rate.

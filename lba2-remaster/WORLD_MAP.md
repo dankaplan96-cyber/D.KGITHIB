@@ -41,6 +41,8 @@ the original doesn't have is ours:
 | The garden west of the house (−60, 83) | Zoé's raised beds, a pond, Arthur's boat box | Arthur tries his boats there | Twinsen's pliers are in the box | — |
 | Harbour quay: customs, cargo, Nell's repairs (−110…−103, 31…40) | a customs booth with a barrier; Esmer crates and Mosquibee honey beside Twinsun barrels; a lean-to repair shop with an Esmer engine | Odile's forms; Nell's spare parts take three weeks | The Mislabelled Shipment (from ch. 2) | crate cleared, the engine runs |
 | Well cave (interior) | warm water, crystals | crystal mites | prologue climax | crystal wall broken |
+| The house cellar: a gap in the old foundations, the boarded coal chute (WPN-1, src/game/story/arsenal.js) | a dark gap between loose FunFrock-era stones in the west wall; boards nailed over the old coal chute in the north wall | — | the lantern shows an old tin (6 darts, 8 kashes; ch. 2–3, and whenever the town's doors are open); only the Wannie glove breaks the boards (a clover, 12 kashes) | tin taken, boards gone |
+| Pippa's stall and Arthur's conch (WPN-1) | her stall sells the blowgun, darts, meca-penguins and a lantern from ch. 2; the conch on the table by Arthur's radio | Arthur lends it (or his note does) | gear for the side paths | — |
 
 Connections: house ⇄ street ⇄ square ⇄ harbour ⇄ lighthouse path ⇄ cliffs; square ⇄ orchard ⇄ depot ⇄ station.
 Access: well (lid key + rope); station gate (water restored); ferry (ch1 end, via Doran).
@@ -64,6 +66,7 @@ Pink sky, cloud sea, floating isles.
 | Three windmills + the old mill | sails, brakes | Oku's memories | brake with the ball; climb for the cog | released in the finale |
 | Project depot | locker, drones | — | code cylinder + the confiscated plan | — |
 | Drill platform | shield, gate console, lift | Vesk | shield down, Vesk descends | shaft open |
+| Nara's case (beside Nara's place on the street; WPN-1) | a glass-topped trade case on brass legs, a jar for the honest | Nara, or a note: BACK SOON. PAY IN THE JAR | the Esmer laser pistol and crystal cells (ch. 3), darts, penguins, the Blowtron (ch. 6) | — |
 
 Access: from Citadel by the ferry (ch2 start). Platform gate: override key + three mills braked.
 
@@ -90,6 +93,8 @@ Zeelich's dock, the spaceport, or another island's pad: every shuttle's menu lis
 - The shuttle lands on the clearest flat spot of the island's main walkable area (the one with the most places).
 - Walkable main areas (m², the rest are cliffs and separate ledges the original reached by its own means):
   Otringal and Under Celebration the largest; Mosquibee Island's is small (its town is on ledges between cliffs).
+- Under Celebration (WPN-1): the old Wannie mine near the shuttle pad, a timber-framed adit in a rock face, dark inside
+  (WANNIE WORKS. CLOSED. DARK. BRING A LAMP.); with the lantern lit, the Wannie glove on a crate (src/game/story/arsenal.js).
 
 ## Desert Island (chapters 4–5) ✅ first version (src/game/desert.js)
 Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real ground (a terrain patch).
