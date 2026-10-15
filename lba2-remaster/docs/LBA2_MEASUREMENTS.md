@@ -25,7 +25,7 @@ only the numbers below, used to shape our own models and animations.
 | neck | 0.82 | 0.82 |
 | head | 0.18 of H, half-width 0.08 | 0.15 of H, half-width 0.05 |
 | hands | big balls r 0.036 at 0.38 H, ±0.19 out | at 0.41 H, ±0.19 out |
-| hair | three balls behind the crown (r 0.05 / 0.037 / 0.026) | the same three balls, blonde, higher |
+| hair | no hair polygons: three spheres drawn as flat unlit discs, dark brown (palette 17 / 18 / 19). In units of 1238: centres (y, z) (0.995, −0.054) r 0.052 on the head, (0.968, −0.107) r 0.037 and (0.931, −0.124) r 0.026 on the two tail groups; in the frame of our head sections (H = 1296 to the top of the crown ball) (0.951, −0.052) r 0.049, (0.925, −0.103) r 0.036, (0.890, −0.118) r 0.025. The crown ball sits on the back of the skull's top (skull top 0.955) and rises 0.045 above it | the same three balls, blonde, higher |
 | clothes | cape to 0.41 H, ±0.21 wide; the robe below the belt is carried by the legs (thigh panel to the knee, shin panel to the hem ±0.17) | red, fitted, deep V neckline, bare arms; the outfit's legs are separate to the green shoes |
 
 ## Shading
@@ -136,8 +136,8 @@ smooth normals is kept.
 ## Used in the game
 - `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle).
 - `tools/blender/twinsen_poly.py`: the robe below the belt follows the legs; ball hands r 0.036 H at ±0.19,
-  0.378 H; the head at the measured size (HEAD_K 1.0; it was 1.24 before pass 8), no hair on the skull, the bun's
-  three balls at the measured places; the look's armSpread 0.3.
+  0.378 H; the head at the measured size (HEAD_K 1.0; it was 1.24 before pass 8), the hair (VP-1b) one dark,
+  flat-shaded mass over the three balls at the measured places (H = 1296 frame), the crown on the head, the tuft on tail0..2; the look's armSpread 0.3.
 - `tools/blender/cast_poly.py` `build_zoe`: Zoé from the sections above (her H = 1.95 m to fit the game
   skeleton; the full front softened to 0.12 H). The rest of the cast: Grobo bodies and heads, Rabbibunny snouts,
   ball hands and plain cloth after the races above. `build_esmer` / `build_bee` / `build_mole` / `build_tri`: Zeelich's peoples as
