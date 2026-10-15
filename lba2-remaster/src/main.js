@@ -36,6 +36,8 @@ import { buildArena, enterArena } from './game/arena.js';
 import { updateKitLod } from './game/kit.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK, PICK_TYPES } from './game/actors.js';
 import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
+import { Weapons, freshArms } from './game/weapons.js';
+import { Gadgets } from './game/gadgets.js';
 import { createEnemy, Drone } from './game/enemies.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
@@ -44,10 +46,11 @@ import { Story, OLD_ORDER } from './game/story/index.js';
 import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
-const SAVE_VERSION = 3;
-export const VERSION = '0.27.0'; // (the desktop build's version: desktop/package.json)
+const SAVE_VERSION = 4;
+export const VERSION = '0.28.0'; // (the desktop build's version: desktop/package.json)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
-// v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored.
+// v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
+// carries his weapons and gadgets (hero.arms, weapons.js; an older save carries none).
 export function migrateSave(raw) {
   if (!raw || typeof raw !== 'object' || !raw.hero || typeof raw.hero !== 'object') return null;
   const s = JSON.parse(JSON.stringify(raw));
@@ -61,6 +64,10 @@ export function migrateSave(raw) {
     // v2 → v3: the chapter is stored by key, so chapters can be inserted later without moving saves
     if (!s.flags.chapterKey) s.flags.chapterKey = OLD_ORDER[Math.min(s.flags.chapter || 0, OLD_ORDER.length - 1)];
     v = 3;
+  }
+  if (v < 4) {
+    s.hero.arms = freshArms(s.hero.arms);
+    v = 4;
   }
   s.v = v;
   return s;
@@ -145,6 +152,8 @@ class Game {
     this.pickups = new Pickups(this);
     this.bolts = new Bolts(this);
     this.ball = new MagicBall(this);
+    this.weapons = new Weapons(this);   // the blowgun, the laser pistol, the glove, the lightning (weapons.js)
+    this.gadgets = new Gadgets(this);   // the penguin, protection, the conch, the lantern (its light joins the pool below)
     this.targeting = new Targeting(this);
     this.combatDir = new CombatDirector(this);
     this.hitStop = 0;
@@ -216,6 +225,7 @@ class Game {
   // ------------------------------------------------ spawning
   spawnActors() {
     this.hero = new Hero(this, POI.start.x, POI.start.z);
+    this.hero.arms = freshArms();
     this.npcs = this.story.npcDefs().map((d) => new NPC(this, d));
     this.enemies = this.story.enemyDefs().map((d) => createEnemy(this, d));
     this.story.decorate();
@@ -372,7 +382,7 @@ class Game {
 
   // a scene change: the ball comes home, shots in the air vanish, nobody may attack straight away
   resetCombat(carry = 'credit') {
-    this.ball?.reset(carry); this.bolts?.clear(); this.hero?.combat?.reset(); this.targeting?.release(); this.combatDir?.reset(); this.hitStop = 0;
+    this.ball?.reset(carry); this.bolts?.clear(); this.weapons?.reset(); this.gadgets?.reset(); this.hero?.combat?.reset(); this.targeting?.release(); this.combatDir?.reset(); this.hitStop = 0;
   }
 
   // where the hero is on the island map (inside a room: where that room is)
@@ -388,7 +398,7 @@ class Game {
     return {
       v: SAVE_VERSION,
       room: this.room?.id || null,
-      hero: { x: this.room ? h.pos.x : this.lastSafe.x, z: this.room ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon },
+      hero: { x: this.room ? h.pos.x : this.lastSafe.x, z: this.room ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon, arms: freshArms(h.arms) },
       flags: this.flags, killed: this.killed, collected: this.collected, searched: this.searched, crates: this.brokenCrates,
     };
   }
@@ -405,6 +415,7 @@ class Game {
     h.behaviour = s.hero.behaviour || 'normal';
     // weapons: what was owned, what was in hand (never more than one of each; unknown names fall back)
     h.hasSword = !!s.hero.hasSword; h.hasPulse = !!s.hero.hasPulse;
+    h.arms = freshArms(s.hero.arms);
     h.weapon = WEAPONS.includes(s.hero.weapon) ? s.hero.weapon : 'ball';
     h.prevWeapon = WEAPONS.includes(s.hero.prevWeapon) ? s.hero.prevWeapon : 'fists';
     this.flags = s.flags || {};
@@ -763,26 +774,29 @@ class Game {
     this.bubble.scale.set(side * 0.9 * k, 0.68 * k, 1);
   }
 
-  openShop() {
+  // where: 'citadel' (Pippa's stall: her stock, then the arsenal's) or another stall the arsenal keeps (story/arsenal.js)
+  openShop(where = 'citadel') {
     const h = this.hero;
     this.setState('shop');
-    const items = () => SHOP.map((s) => {
+    const own = where === 'citadel' ? SHOP : [];
+    const items = () => [...own.map((s) => {
       const it = { ...s };
       if (s.id === 'magic') { it.price = [0, 15, 30, 50][h.magicLevel] ?? 0; it.disabled = h.magicLevel >= 4; }
       if (s.id === 'clover') it.disabled = h.clovers >= 9;
       return it;
-    });
+    }), ...(this.story.arsenal?.shopItems(where) || [])];
     this.hud.openShop(items, (it) => {
       if (it.disabled) { this.hud.toast('shop_max'); this.audio.play('deny'); return; }
       if (h.coins < it.price) { this.hud.toast('shop_poor'); this.audio.play('deny'); return; }
       h.coins -= it.price;
+      if (it.arsenal) { this.story.arsenal.buy(it); this.save(false); return; }
       if (it.id === 'magic') { h.magicLevel++; h.mp = h.mpMax; this.hud.toast('toast_magic', { n: h.magicLevel }); }
       if (it.id === 'potion') h.hp = h.maxHp;
       if (it.id === 'flask') h.mp = h.mpMax;
       if (it.id === 'clover') h.clovers++;
       this.audio.play('heal');
       this.save(false);
-    }, () => this.setState('play'));
+    }, () => this.setState('play'), where === 'citadel' ? 'shop_title' : 'a_shop_' + where);
   }
 
   // a choice list (the story's travel menus); onPick(item) runs back in play
@@ -1038,7 +1052,9 @@ class Game {
       case 'shop': this.hud.shopNav(input); this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null); this.occluders(dt); break;
       case 'inventory':
         this.inventory.nav(input);
-        if (input.pressed('inventory') || input.pressed('pause') || input.pressed('interact')) { this.inventory.show(false); this.setState('play'); }
+        // E on a gadget uses it (LBA2: select it in the inventory); otherwise E closes, as before
+        if (input.pressed('interact') && this.inventory.usable()) { const id = this.inventory.usable(); this.inventory.show(false); this.setState('play'); this.gadgets.use(id); this.hud.stats(this.hero); this.save(false); }
+        else if (input.pressed('inventory') || input.pressed('pause') || input.pressed('interact')) { this.inventory.show(false); this.setState('play'); }
         break;
       case 'map':
         this.hud.drawHolomap(this.time);
@@ -1147,8 +1163,10 @@ class Game {
     h.update(dt, input);
     if (this.state !== 'play') return;
     for (const n of this.npcs) n.update(dt);
-    for (const e of this.enemies) e.update(dt);
+    this.gadgets.updateEnemies(dt);   // (each enemy's update; a meca-penguin may stand in for Twinsen)
     this.ball.update(dt);
+    this.weapons.update(dt);
+    this.gadgets.update(dt);
     const c = h.combat;
     T.update(dt, c.lastAim || aim, !!(c.throwing || c.holding || c.move));
     this.hud.weapon(h);

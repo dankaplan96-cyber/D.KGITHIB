@@ -49,14 +49,21 @@ export const MOVES = {
   slash2: { anim: 'slash2', s: 0.1, a: 0.1, r: 0.24, reach: 2.05, arc: [-1.2, 1.2], dmg: 2, poise: 1, step: 0.4, sound: 'swing' },
   slash3: { anim: 'slash3', s: 0.19, a: 0.09, r: 0.4, reach: 2.25, arc: [0.3, -0.3], dmg: 3, poise: 3, step: 0.6, sound: 'swingHeavy', heavy: true },
   heavy: { anim: 'heavy', s: 0.1, a: 0.1, r: 0.5, reach: 2.35, arc: [0.35, -0.35], dmg: 4, poise: 4, step: 0.7, sound: 'swingHeavy', heavy: true, guardBreak: true },
+  // the Wannie glove (weapons.js): two slower, heavy punches; knock: how hard an enemy is thrown back (m/s);
+  // deflect: an enemy bolt in front goes back the way it came; glove: it breaks weak boards (story/arsenal.js)
+  glove1: { anim: 'punch', s: 0.13, a: 0.1, r: 0.28, reach: 1.6, arc: [0.5, -0.5], dmg: 2, poise: 3, step: 0.4, sound: 'punch', mat: 'flesh', knock: 11, deflect: true, glove: true },
+  glove2: { anim: 'punch2', s: 0.16, a: 0.1, r: 0.42, reach: 1.7, arc: [-0.5, 0.5], dmg: 2, poise: 4, step: 0.5, sound: 'swingHeavy', mat: 'flesh', knock: 14, deflect: true, glove: true, heavy: true, guardBreak: true },
 };
-export const COMBOS = { fists: ['jab', 'jab2', 'kick'], sword: ['slash1', 'slash2', 'slash3'] };
+export const COMBOS = { fists: ['jab', 'jab2', 'kick'], sword: ['slash1', 'slash2', 'slash3'], glove: ['glove1', 'glove2'] };
 export const HEAVY_HOLD = 0.72; // s from the press, holding attack with the sword through the first strike → a heavy strike on release
 
-export const WEAPONS = ['ball', 'sword', 'pulse', 'fists'];
+export const WEAPONS = ['ball', 'sword', 'pulse', 'fists', 'blowgun', 'laser', 'glove', 'lightning'];
 export const WEAPON_INFO = {
   fists: { icon: '✊' }, ball: { icon: '✦' }, sword: { icon: '⚔' }, pulse: { icon: '⌁' },
+  blowgun: { icon: '➶' }, laser: { icon: '✺' }, glove: { icon: '✋' }, lightning: { icon: '☇' },
 };
+const MELEE = new Set(['fists', 'sword', 'glove']);
+const SHOOT = new Set(['blowgun', 'laser', 'lightning']);   // fired by weapons.js
 
 // ------------------------------------------------------------------ input buffer
 export class InputBuffer {
@@ -240,7 +247,7 @@ export class HeroCombat {
     this.dodgeT = 0; this.dodgeCool = 0; this.dodgeDir = { x: 0, z: 1 };
     this.throwT = 0; this.throwing = null; // {charged, released, t}
     this.holdT = 0; this.holding = null;    // what the held attack button is preparing ('ball' | 'heavy')
-    this.pulseCool = 0; this.pulseT = 0;
+    this.pulseCool = 0; this.pulseT = 0; this.shotCool = 0;
     this.now = 0;
   }
   get g() { return this.game; }
@@ -255,7 +262,7 @@ export class HeroCombat {
 
   // the equipped weapon (fists when nothing better is allowed)
   get weapon() { const h = this.hero, w = h.weapon; return this.has(w) ? w : (h.hasBall ? 'ball' : 'fists'); }
-  has(w) { const h = this.hero; return w === 'fists' || (w === 'ball' && h.hasBall) || (w === 'sword' && h.hasSword) || (w === 'pulse' && h.hasPulse); }
+  has(w) { const h = this.hero; return w === 'fists' || (w === 'ball' && h.hasBall) || (w === 'sword' && h.hasSword) || (w === 'pulse' && h.hasPulse) || (SHOOT.has(w) || w === 'glove') && !!this.g.weapons?.owns(w); }
   owned() { return WEAPONS.filter((w) => this.has(w)); }
   equip(w, silent = false) {
     const h = this.hero;
@@ -288,6 +295,7 @@ export class HeroCombat {
     this.now += dt;
     this.dodgeCool = Math.max(0, this.dodgeCool - dt);
     this.pulseCool = Math.max(0, this.pulseCool - dt);
+    this.shotCool = Math.max(0, this.shotCool - dt);
     this.comboT = Math.max(0, this.comboT - dt);
     const out = { lock: false, speedK: 1, drive: null, anim: null };
     const blocked = opts.blocked; // acting, hurt, hiding, behaviour wheel: presses are dropped, not stored
@@ -358,6 +366,12 @@ export class HeroCombat {
       } else if (w === 'pulse') {
         this.buf.take('attack', this.now);
         if (this.pulseCool > 0) this.notReady(); else this.firePulse(aim);
+      } else if (SHOOT.has(w)) {
+        // the blowgun, the laser pistol, the lightning spell (weapons.js): a short planted shot
+        this.buf.take('attack', this.now);
+        if (this.shotCool > 0) { if (input.pressed('attack')) this.notReady(); }
+        else if (g.weapons?.fire(w, aim)) { const D = g.weapons.def(w); this.shotCool = D.cool; this.pulseT = D.lock; }
+        else this.notReady();
       } else {
         this.buf.take('attack', this.now);
         this.pressT = this.now;
@@ -442,7 +456,7 @@ export class HeroCombat {
     }
     // recovery: the next press continues the combo once recovery is half done
     const end = D.s + D.a + D.r;
-    if (m.t >= D.s + D.a + D.r * 0.45 && this.buf.peek('attack', this.now) && this.weapon !== 'ball' && this.weapon !== 'pulse' && !D.heavy) {
+    if (m.t >= D.s + D.a + D.r * 0.45 && this.buf.peek('attack', this.now) && MELEE.has(this.weapon) && !D.heavy) {
       const w = this.weapon;
       this.buf.take('attack', this.now);
       this.comboT = COMBAT.comboWindow;
@@ -482,10 +496,14 @@ export class HeroCombat {
       const res = e.melee ? e.melee(D, h) : (e.damage(D.dmg, h.pos), 'hit');
       any = true; if (D.heavy) heavyHit = true;
       g.impact(e.pos.x, ey + 0.6, e.pos.z, res === 'blocked' ? 'armor' : (e.material || 'flesh'), res);
+      // the glove throws them back (after their own reaction, which set a softer knock-back)
+      if (D.knock && res !== 'blocked' && e.kb) { const ka = h.angleTo(e); e.kb.set(Math.sin(ka) * D.knock, Math.cos(ka) * D.knock); }
       if (res === 'blocked') { h.kb.set(-Math.sin(h.angle) * 4, -Math.cos(h.angle) * 4); this.move.t = Math.max(this.move.t, D.s + D.a); }
     }
     // crates, ropes, and anything else a chapter wants cut
     if (g.meleeWorld?.(h, D, a0, a1, m.hit)) any = true;
+    // the glove's punch sends an enemy bolt in front of it back (once per move)
+    if (D.deflect && !m.deflected && g.weapons?.deflect(D.reach + 0.8)) { m.deflected = true; any = true; }
     if (any) g.hitStop = Math.max(g.hitStop || 0, heavyHit ? COMBAT.hitStop.heavy : COMBAT.hitStop.light);
   }
 

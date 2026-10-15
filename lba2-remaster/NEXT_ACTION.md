@@ -1,5 +1,14 @@
 # NEXT ACTION
 
+0.28.0: weapons and gadgets (WPN-1; the user: "I want weapons and items/gadgets"). The blowgun and its Blowtron
+upgrade, the Esmer laser pistol, the Wannie glove, the lightning spell; the meca-penguin, the protection ward, Arthur's
+conch and a lantern, each earned in the world (Pippa's stall, Nara's case on Zeelich, Arthur, the School of Magic and
+Bersimon, the old Wannie mine on Under Celebration, the dark gap and the boarded coal chute in the house cellar) and
+used by input (the weapon wheel's diagonals, the attack key, E in the inventory). docs/COMBAT.md "The arsenal";
+tests/arsenal.mjs. No jetpack (the story bible keeps flight out). Next: an independent review of WPN-1 (feel of the
+shots by a human, the stalls' prices against what a first-time player has by then); ask the user how the new gear
+plays.
+
 0.27.0: twelve years on, fourth set: Zeelich's street (docs/TWELVE_YEARS.md; tests/zeelich-life.mjs). The old watch
 house as Mother Snuff's bakery on the project's heat and The Second Bake side story, heat posts lit and promised,
 the moles' burrow hatch, Mr Pelleck's re-tiled dome, Nara's held flowers. Next: an independent review of TY-4, then

@@ -442,6 +442,7 @@ export class Hero extends Actor {
     // the dodge's window: a clean miss, shown and heard
     if (this.combat.iframes()) { if (!this.dodgedT || g.time - this.dodgedT > 0.3) { this.dodgedT = g.time; g.audio.play('dodged'); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#bfe8ff', 6, 2); } return; }
     n *= g.combatDir?.diff.dmg ?? 1;
+    n *= g.gadgets?.damageK() ?? 1;   // (the protection spell: gadgets.js)
     this.combat.reset();
     this.hp -= n;
     this.invuln = 1.1;

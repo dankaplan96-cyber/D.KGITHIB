@@ -80,34 +80,54 @@ export class HUD {
   weapon(h) {
     const el = $('#weapon'); if (!el) return;
     const c = h.combat, w = c.weapon, g = this.game;
-    if (this._w !== w) { this._w = w; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = t('wp_' + w); this.weaponShowT = 2.5; }
+    const wn = this.wpName(h, w);
+    if (this._w !== w || this._wn !== wn) { this._w = w; this._wn = wn; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = wn; this.weaponShowT = 2.5; }
+    // ammunition: darts, the pistol's crystal charge (or its magic cost), the spell's magic cost
+    const a = h.arms || {};
+    const ammo = w === 'blowgun' ? `${a.darts}` : w === 'laser' ? (a.charge > 0 ? `◆${a.charge}` : '✦2') : w === 'lightning' ? '✦3' : '';
+    let ae = el.querySelector('.ammo');
+    if (!ae) { ae = document.createElement('span'); ae.className = 'ammo'; ae.style.cssText = 'font-weight:800;color:#ffe35a;font-size:13px;min-width:1ch'; el.querySelector('.name').after(ae); }
+    if (this._ammo !== ammo) { this._ammo = ammo; ae.textContent = ammo; ae.style.display = ammo ? '' : 'none'; }
     const alt = h.prevWeapon && c.has(h.prevWeapon) && h.prevWeapon !== w ? h.prevWeapon : null;
     const altTxt = alt ? `${keyLabel(keyFor('swap'))}: ${t('wp_' + alt)}` : '';
     if (this._alt !== altTxt) { this._alt = altTxt; el.querySelector('.alt').textContent = altTxt; }
     const r = el.querySelector('.ready');
     const ballOut = h.hasBall && !g.ball.ready;
     r.classList.toggle('out', w === 'ball' && ballOut);
-    r.classList.toggle('cool', w === 'pulse' && c.pulseCool > 0);
+    const shoot = w === 'blowgun' || w === 'laser' || w === 'lightning';
+    r.classList.toggle('cool', w === 'pulse' && c.pulseCool > 0 || shoot && (c.shotCool > 0 || !!g.weapons?.short(w)));
     if (w === 'pulse') r.style.setProperty('--k', `${100 * (1 - c.pulseCool / 5)}%`);
-    r.style.display = w === 'ball' || w === 'pulse' ? '' : 'none';
+    else if (shoot) r.style.setProperty('--k', g.weapons?.short(w) ? '0%' : `${100 * (1 - c.shotCool / (g.weapons?.def(w)?.cool || 1))}%`);
+    r.style.display = w === 'ball' || w === 'pulse' || shoot ? '' : 'none';
     this.weaponShowT = Math.max(0, (this.weaponShowT || 0) - 1 / 60);
     const engaged = c.busy || g.targeting?.lock || g.combat > 0.3;
     el.classList.toggle('show', this.weaponShowT > 0 || !!engaged);
     if (this.flashT > 0) { this.flashT -= 1 / 60; if (this.flashT <= 0) el.classList.remove('flash'); }
   }
+  wpName(h, w) { return t(w === 'blowgun' && h.arms?.blowtron ? 'wp_blowtron' : 'wp_' + w); }
   weaponFlash() { const el = $('#weapon'); el?.classList.add('flash'); this.flashT = 0.25; this.weaponShowT = 1.5; }
   // the selector ring: open while held; returns the chosen weapon when it closes
   weaponSelect(open, h, input) {
     const el = $('#wsel'); if (!el) return null;
-    const DIRS = { up: 'ball', right: 'sword', down: 'pulse', left: 'fists' };
+    // eight slots: the four first weapons on the axes, the arsenal's four (weapons.js) on the diagonals
+    const DIRS = { up: 'ball', right: 'sword', down: 'pulse', left: 'fists', ur: 'blowgun', dr: 'laser', dl: 'glove', ul: 'lightning' };
+    const ANG = { up: 0, ur: 1, right: 2, dr: 3, down: 4, dl: 5, left: 6, ul: 7 };   // (eighths of a turn, clockwise from up)
     if (open) {
       if (!this.wselOpen) {
         this.wselOpen = true; this.wselPick = h.combat.weapon; el.classList.remove('hidden');
-        for (const s of el.querySelectorAll('.slot')) { const w = DIRS[s.dataset.dir], has = h.combat.has(w); s.classList.toggle('empty', !has); s.innerHTML = has ? `${WEAPON_INFO[w].icon}<small>${t('wp_' + w)}</small>` : ''; }
+        if (!el.querySelector('.slot[data-dir="ur"]')) {
+          // a wider ring of eight (the four axis slots are re-placed on it too)
+          for (const d of ['ur', 'dr', 'dl', 'ul']) { const s = document.createElement('div'); s.className = 'slot'; s.dataset.dir = d; el.insertBefore(s, el.querySelector('.mid')); }
+          Object.assign(el.style, { width: '300px', height: '300px', margin: '-150px 0 0 -150px' });
+          for (const s of el.querySelectorAll('.slot')) { const k = ANG[s.dataset.dir] * Math.PI / 4; Object.assign(s.style, { width: '66px', height: '66px', right: 'auto', bottom: 'auto', left: `${117 + Math.sin(k) * 108}px`, top: `${117 - Math.cos(k) * 108}px`, fontSize: '22px' }); }
+          Object.assign(el.querySelector('.mid').style, { left: '130px', top: '130px' });
+        }
+        for (const s of el.querySelectorAll('.slot')) { const w = DIRS[s.dataset.dir], has = h.combat.has(w); s.classList.toggle('empty', !has); s.innerHTML = has ? `${WEAPON_INFO[w].icon}<small>${this.wpName(h, w)}</small>` : ''; }
       }
       const mv = input.move();
       if (Math.hypot(mv.x, mv.y) > 0.5) {
-        const dir = Math.abs(mv.x) > Math.abs(mv.y) ? (mv.x > 0 ? 'right' : 'left') : (mv.y > 0 ? 'up' : 'down');
+        const e8 = (Math.round(Math.atan2(mv.x, mv.y) / (Math.PI / 4)) + 8) % 8;
+        const dir = Object.keys(ANG).find((k) => ANG[k] === e8);
         if (h.combat.has(DIRS[dir]) && this.wselPick !== DIRS[dir]) { this.wselPick = DIRS[dir]; this.game.audio.play('blip'); }
       }
       if (input.wheelSteps) { const own = h.combat.owned(); const i = own.indexOf(this.wselPick); this.wselPick = own[(i + (input.wheelSteps > 0 ? 1 : own.length - 1)) % own.length]; }
@@ -254,11 +274,11 @@ export class HUD {
   }
 
   // ---------------- shop ----------------
-  openShop(items, onBuy, onClose) {
+  openShop(items, onBuy, onClose, titleKey = 'shop_title') {
     const el = $('#shop');
     el.dir = getLang() === 'he' ? 'rtl' : 'ltr';
     const render = () => {
-      el.innerHTML = `<h2>${t('shop_title')}</h2><div class="coins">◆ ${this.game.hero.coins}</div>` +
+      el.innerHTML = `<h2>${t(titleKey)}</h2><div class="coins">◆ ${this.game.hero.coins}</div>` +
         items().map((it, i) => `<button class="item" data-i="${i}" ${it.disabled ? 'disabled' : ''}><span>${t(it.key)}</span><b>◆ ${it.price}</b></button>`).join('') +
         `<button class="leave">${t('shop_leave')}</button>`;
       el.querySelectorAll('.item').forEach((b) => b.addEventListener('click', () => { onBuy(items()[+b.dataset.i]); render(); }));
