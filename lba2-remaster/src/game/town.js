@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { buildHouse } from './architecture.js';
 import { mergeStatic } from '../engine/merge.js';
+import { occOf } from '../engine/occlude.js';
 import { textures } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, distToSegment, smoothstep } from '../engine/math.js';
@@ -382,7 +383,7 @@ export function buildTown(scene, W) {
     built[i].group.position.set(hd.x, g - 0.05, hd.z);
     built[i].group.rotation.y = hd.ry;
     scene.add(built[i].group);
-    for (const c of built[i].colliders) physics.add({ type: 'box', x: hd.x, z: hd.z, hw: c.hw, hd: c.hd, rot: hd.ry, top: g + c.top, fades: true });
+    for (const c of built[i].colliders) physics.add({ type: 'box', x: hd.x, z: hd.z, hw: c.hw, hd: c.hd, rot: hd.ry, top: g + c.top, camSkip: true });   // (the camera reads the house's shape below)
     const dz = built[i].door.z, dx = built[i].door.x;
     const door = { x: hd.x + Math.sin(hd.ry) * dz + Math.cos(hd.ry) * dx, z: hd.z + Math.cos(hd.ry) * dz - Math.sin(hd.ry) * dx };
     const info = { x: hd.x, z: hd.z, ry: hd.ry, w: hd.w, d: hd.d, g, door, id: hd.id };
@@ -465,50 +466,23 @@ export function buildTown(scene, W) {
   // all of the above is static: one mesh per material (lights stay as they are)
   mergeStatic(dress);
 
-  // houses between the camera and Twinsen fade out (each house gets its own
-  // copies of the shared materials so only that house turns see-through)
-  const fades = HOUSES.map((hd, i) => {
-    const h = W.houses[i], mats = new Map();
-    built[i].group.traverse((o) => {
-      if (!o.isMesh) return;
-      if (!mats.has(o.material)) mats.set(o.material, o.material.clone());
-      o.material = mats.get(o.material);
-    });
-    return { h, top: h.g + hd.h + built[i].gableH + 0.6, mats: [...mats.values()], f: 1 };
-  });
-  // each house is static: one mesh per material (after the fade materials are assigned)
-  for (const b of built) mergeStatic(b.group);
-  const sample = new THREE.Vector3();
-  const CORRIDOR = [[0, 0.4], [0, 1.0], [0, 1.8], [-3, 1.0], [3, 1.0], [-1.5, 2.6], [1.5, 2.6]];
-  const right = new THREE.Vector3();
-  W.fadeOccluders = (cam, hero, dt) => {
-    right.setFromMatrixColumn(cam.matrixWorld, 0).setY(0).normalize();
-    for (const F of fades) {
-      const { h } = F;
-      let hit = false;
-      // a corridor of sight lines: to Twinsen and to points 3 m either side of him, so a
-      // house that would fill the foreground of the shot fades too, not only one that hides him
-      for (const [ox, hy] of CORRIDOR) for (let k = 1; k < 16 && !hit; k++) {
-        sample.set(hero.x + right.x * ox, hero.y + hy, hero.z + right.z * ox).lerp(cam.position, k / 16);
-        const dx = sample.x - h.x, dz = sample.z - h.z;
-        const lx = dx * Math.cos(h.ry) - dz * Math.sin(h.ry), lz = dx * Math.sin(h.ry) + dz * Math.cos(h.ry);
-        if (Math.abs(lx) < h.w / 2 + 0.6 && Math.abs(lz) < h.d / 2 + 0.6 && sample.y < F.top) hit = true;
-      }
-      // A house in the way fades right out (it used to stop at 10%: its roof, walls and porch then stacked into a
-      // tinted veil over half the screen, e.g. at Twinsen's own door with the camera behind the house). Once faded
-      // it draws nothing (colorWrite off; it still casts its shadow). The caller passes a large dt to snap the
-      // state on a scene change (Game.occluders), so a new scene never opens on a wall of roof tiles.
-      const goal = hit ? 0 : 1;
-      F.f += (goal - F.f) * (1 - Math.exp(-dt * 8));
-      const see = F.f < 0.98, gone = F.f < 0.03;
-      for (const m of F.mats) {
-        if (m.transparent !== see) { m.transparent = see; m.needsUpdate = true; }
-        m.opacity = see ? F.f : 1;
-        m.depthWrite = !see;
-        m.colorWrite = !gone;
-      }
+  // Houses stay solid, as in LBA2: when one stands between the camera and Twinsen the next shot rises over it
+  // (src/engine/occlude.js, src/engine/camera.js). Each house gives the camera its shape: the walls up to the
+  // eaves, the roof as a slab sloping from the ridge to the eaves (overhang included, from under the gutters up),
+  // and the chimney stack. (architecture.js buildHouse: ridge along local z, slopes across x.)
+  const occ = occOf(W);
+  for (const [i, hd] of HOUSES.entries()) {
+    const b = built[i], y = W.houses[i].g - 0.05, pitch = hd.pitch ?? 0.62, oh = hd.overhang ?? 0.38;
+    const half = hd.w / 2 + oh, ridge = y + hd.h + b.gableH, rot = hd.ry;
+    occ.add({ kind: 'box', x: hd.x, z: hd.z, rot, hw: hd.w / 2 + 0.05, hd: hd.d / 2 + 0.05, y0: y - 1, y1: y + hd.h, name: hd.id });
+    occ.add({ kind: 'box', x: hd.x, z: hd.z, rot, hw: half, hd: hd.d / 2 + oh + 0.1, y0: ridge - half * pitch - 0.35, y1: ridge + 0.15, slope: pitch, name: hd.id + ' roof' });
+    if (hd.chimney !== false) {
+      const cx = (hd.chimneyX ?? 0.28) * hd.w, cz = -hd.d * 0.18, ch = 1.4 + b.gableH * 0.5;
+      const yb = y + hd.h + b.gableH * (1 - Math.abs(cx) / (hd.w / 2)) - 0.3;
+      occ.add({ kind: 'box', x: hd.x + Math.cos(rot) * cx + Math.sin(rot) * cz, z: hd.z - Math.sin(rot) * cx + Math.cos(rot) * cz, rot, hw: 0.4, hd: 0.4, y0: yb, y1: yb + ch + 0.35, name: hd.id + ' chimney' });
     }
-  };
+    mergeStatic(b.group);   // each house is static: one mesh per material
+  }
 
   // the Joint Project's heat posts: a teal pipe with brass collars and a crystal cap by every front door and at
   // Pippa's stall, fed from the station's heat line. Dark until the station runs (chapter 1, once the water is

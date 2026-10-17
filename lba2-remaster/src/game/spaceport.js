@@ -18,6 +18,7 @@ import * as THREE from 'three';
 import * as P from './props.js';
 import { Kit, rbox, cyl, lathe, plane, torus, sphere, canvasTex, MAT, paintVC, tinted } from './props.js';
 import { esmerShuttle } from './shuttle.js';
+import { occOf } from '../engine/occlude.js';
 
 // the platform: east of the town over the bay (the shore is at x ≈ −26 at ground level 2.3 m)
 const DECK = { x0: -14, x1: 14, z0: 26, z1: 54 };
@@ -117,7 +118,11 @@ export function buildSpaceport(root, physics, W) {
   pv(k, rbox(1.75, 0.12, 0.16, 0.03), '#2f6a9a', tcx + 3, Y + 2.26, T.z1 + 0.06);
   for (const s of [-1, 1]) pv(k, rbox(0.12, 2.26, 0.16, 0.03), '#2f6a9a', tcx + 3 + s * 0.82, Y + 1.13, T.z1 + 0.06);
   pv(k, rbox(2.3, 0.1, 1.1, 0.03), '#2f6a9a', tcx + 3, Y + 2.62, T.z1 + 0.55, 0, { rx: 0.08 });
-  wall(T.x0, T.x1, T.z0, T.z1, Y + th + 0.3);
+  wall(T.x0, T.x1, T.z0, T.z1, Y + th + 0.3, { camSkip: true });
+  // the play camera rises over the terminal and its dome rather than look through them, as LBA2's camera does over
+  // scenery (VP-10, src/engine/occlude.js): the block to its roof slab, the dome by its lathe profile (no spire)
+  occOf(W).add({ kind: 'box', x: tcx, z: tcz, hw: (T.x1 - T.x0) / 2 + 0.25, hd: (T.z1 - T.z0) / 2 + 0.25, y0: Y - 1, y1: Y + th + 0.25, name: 'spaceport terminal' });
+  occOf(W).add({ kind: 'rev', x: tcx, z: tcz, y0: Y + th, base: Y + th + 0.25, profile: [[0, 2.1], [0.03, 2.1], [0.4, 1.8], [1.0, 1.45], [1.6, 0.9], [1.75, 0.35]], name: 'spaceport dome' });
 
   // --- the waiting area in front of the terminal: benches facing the pad between a tub, a planter and bins
   for (const bx of [-10.9, -7.7]) put((kk) => P.waitingBench(kk, { w: 1.9 }), bx, T.z1 + 1.45);
