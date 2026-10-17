@@ -1041,7 +1041,6 @@ class Game {
     const input = this.input;
     input.update();
 
-    if (input.pressed('retro')) { this.settings.visual = this.settings.visual === '1997' ? '2026' : '1997'; this.applySettings(); }
     this.updateTransition(dt);
 
     if (this.trans && this.state === 'play') {
