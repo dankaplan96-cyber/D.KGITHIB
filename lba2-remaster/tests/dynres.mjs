@@ -19,6 +19,8 @@ await open(page, '?nocine'); await menu(page, 'new');
 
 await ev(() => {
   const G = game, R = G.renderer, gl = R.renderer.getContext();
+  // (run against the renderer before PERF-IGPU, which had no setDyn: the same step as its adapt() took)
+  if (!R.setDyn) R.setDyn = (k) => { R.dyn = k; R.resize(); };
   G.exitRoom({ x: -42, z: 2, a: 0 }, true, true); G.state = 'play'; G.step(0.5);
   // pixels of the canvas's drawing buffer (what the browser would show for this frame)
   window.D = {
