@@ -216,6 +216,19 @@ Served on 127.0.0.1:8177 from the worktree; headless Chromium + SwiftShader; tes
 | Regression: stability (16), chapter2, chapter4, chapter5 (rc 0, no errors), zeelich-life (31) | evidence/ZL-ALL/logs/ | PASS |
 | Look on a GPU, feel by hand, frame rate | — | NOT TESTED |
 
+### The story's crossings to Zeelich by spaceship (PLANET-1, 0.29.1)
+Served on 127.0.0.1:8181 from the worktree; headless Chromium + SwiftShader; tests from a scratch directory, one
+browser at a time. Logs: docs/lba3-visual/evidence/PLANET-1/logs/.
+| Check | Evidence | Result |
+|---|---|---|
+| Every travel route touching Zeelich is the spaceship (one route, Citadel ⇄ Zeelich Spaceport) or a Zeelich shuttle; ferry and glider routes are Twinsun ⇄ Twinsun | LOGIC (tests/travel.mjs, route data) | PASS |
+| Chapter 2: Doran at the harbour agrees, moves to the spaceport, objective "Meet Doran at the spaceport"; no crossing from the harbour. E at the pad's project ship → chapter 3 on Zeelich Spaceport's deck, plan confiscated there, the dock's sky-ferry hidden | INPUT (ISO: chapter flags) tests/travel.mjs; tests/chapter1.mjs (LOGIC) | PASS |
+| Chapter 8: no ship at the harbour quay; E at the project ship on Citadel Spaceport's pad → chapter 9 on Zeelich Spaceport's deck | INPUT (ISO: chapter flags) tests/travel.mjs; tests/chapter8.mjs | PASS |
+| Chapter 10: no Hesk on Zeelich; spaceship to Citadel; Hesk's glider menu = Citadel, Desert Island, the Hamalayi (no Zeelich); the loop back to Zeelich by glider + spaceship | INPUT tests/travel.mjs; tests/chapter10.mjs travel steps | PASS (chapter10.mjs still ends NOT DONE at the lighthouse talk: TY-5-FIX's known T1, not a travel step) |
+| Regression: chapter1, chapter2 (to chapter 4 via Zeelich), spaceport, zeelich-life (32), opening, stability, chapter8, chapter9 | logs/ | PASS (rc 0, no errors) |
+| Code search: no ferry/boat/glider/beam route or line to Zeelich in src/ (English and Hebrew tables) | grep (report) | PASS |
+| Feel by hand, the spaceport walk in a real browser on a GPU | — | NOT TESTED |
+
 ### Twelve years on, first set (0.24.0; docs/TWELVE_YEARS.md)
 | Check | Evidence | Result |
 |---|---|---|

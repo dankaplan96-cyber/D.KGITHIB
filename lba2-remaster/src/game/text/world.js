@@ -3,7 +3,7 @@ import { STR } from '../i18n.js';
 
 Object.assign(STR.he, {
   w_sign_town: 'כיכר העיר · האי המצודה',
-  w_sign_harbour: '← הנמל · מעבורת המיזם לזיליך',
+  w_sign_harbour: '← הנמל · מעבורת לאי המדברי',
   w_sign_quay: 'נמל האי המצודה · דוראן, דייג. לא לגעת ברשתות!',
   w_sign_lighthouse: '↑ המגדלור',
   w_sign_cliffs: '→ צוקי הלחישה · זהירות: נפילה!',
@@ -15,7 +15,7 @@ Object.assign(STR.he, {
 
 Object.assign(STR.en, {
   w_sign_town: 'Town Square · Citadel Island',
-  w_sign_harbour: '← Harbour · Ferry to Zeelich',
+  w_sign_harbour: '← Harbour · Ferry to Desert Island',
   w_sign_quay: 'Citadel Harbour · Hands off the nets!',
   w_sign_lighthouse: '↑ Lighthouse',
   w_sign_cliffs: '→ Whispering Cliffs · Mind the drop!',

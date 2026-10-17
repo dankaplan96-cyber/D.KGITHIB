@@ -18,6 +18,12 @@ Hamalayi foothills), each open with its chapter (src/game/travel.js). The Holoma
 Next: an independent review of ZL-ALL/CONNECT; follow-ups for the owners of other files: the harbour's ferry
 timetable board (props.js/citydress.js) still lists ZEELICH sailings; chapter 10's glider menu (network.js) still
 flies Hesk to Zeelich — both story-era crossings, the user may want them to read as spaceship/project-only.
+0.29.1 (PLANET-1, the user: "Twinsun and Zeelich are two separate planets, so the crossing between them is a
+spaceship"): both follow-ups done and every other crossing found — chapter 2's trip is the project's ship from
+Citadel Spaceport (Doran, Baldino's start code; arrival on Zeelich Spaceport), chapter 3 → 4 home by ship then the
+ferry, chapter 8's project ships board at the spaceport, chapter 10's glider is Twinsun's only (the spaceship between
+the planets), Vesk's beam lifts him to his ship; the harbour's timetable lists Twinsun sailings only. Next: an
+independent review of PLANET-1 (play chapter 2's end and chapter 10's loop by hand).
 
 0.27.0: twelve years on, fourth set: Zeelich's street (docs/TWELVE_YEARS.md; tests/zeelich-life.mjs). The old watch
 house as Mother Snuff's bakery on the project's heat and The Second Bake side story, heat posts lit and promised,

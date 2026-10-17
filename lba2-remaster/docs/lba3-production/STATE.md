@@ -71,6 +71,12 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Travel (src/game/travel.js): Zeelich separate — Citadel Spaceport ⇄ Zeelich Spaceport (ours) by spaceship only;
   Esmer shuttles between Zeelich's 12 places only; on Twinsun the ferry and three glider fields; gates by chapter.
   The Holomap per planet with his dot (VP-9). tests/travel.mjs, tests/zislands.mjs, tests/spaceport.mjs.
+## Done after (PLANET-1, 0.29.1; status REVIEW)
+- The story's crossings to Zeelich are spaceship flights (the user's decision): chapter 2 → 3 the project's ship from
+  Citadel Spaceport (Doran, Baldino's start code; arrival on Zeelich Spaceport's deck), chapter 3 → 4 home by ship
+  then the ferry south, chapter 8 → 9 the project ships board at the spaceport, chapter 10 the spaceship between the
+  planets and Hesk's glider on Twinsun only. The harbour's timetable and sign: Twinsun sailings only. Vesk's beam lifts
+  him to his ship. tests/travel.mjs PLANET-1 checks; evidence docs/lba3-visual/evidence/PLANET-1/.
 
 ## Next exact task
 Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

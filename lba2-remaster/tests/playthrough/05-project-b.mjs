@@ -1,5 +1,6 @@
 // Chapter 2, second part: Vesk's tour of the station, Zoé's office segment (stealth past the guard, the
-// evacuation plan), the confrontation at the beam pad, Arthur's radio at home, Doran's ferry to Zeelich.
+// evacuation plan), the confrontation at the beam pad, Arthur's radio at home, Doran at the harbour, the project's
+// ship from Citadel Spaceport to Zeelich (PLANET-1: the planets are joined by spaceship only).
 export const steps = [
   ['continue', () => P.settle()],
   ['Vesk: the tour', () => ({ ...P.talk('vesk', { run: true }), fail: game.flags.c1_tour ? null : 'tour' })],
@@ -16,5 +17,7 @@ export const steps = [
   ['Zoé: out', () => { const G = game, e = G.room.exits[0]; for (let k = 0; k < 4 && G.room?.id === 'projoffice'; k++) { P.sneakTo(e.x, e.z, G.story.cur.watcher, { tol: 0.6 }); P.through(e.x, e.z); P.settle(); } return { zoeDone: G.flags.c1_zoeDone, body: G.hero.body, fail: G.flags.c1_zoeDone ? null : 'zoe' }; }, null, { retryFrom: 'Zoé at the gate' }],
   ['Vesk: the confrontation', () => { const r = P.talk('vesk'); P.settle(60); return { ...r, gone: game.flags.c1_veskGone, fail: game.flags.c1_veskGone ? null : 'vesk' }; }],
   ['home: Arthur\'s radio', () => { const d = game.world.houses[0].door; P.through(d.x, d.z, { run: true }); const r = P.talk('arthur'); const e = game.room.exits.find((x) => !x.room); P.through(e.x, e.z); return { ...r, radio: game.flags.c1_radio, fail: game.flags.c1_radio ? null : 'radio' }; }],
-  ['Doran: the ferry to Zeelich', () => { const r = P.talk('doran', { run: true }); P.settle(60); return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'zeelich' ? null : 'no chapter 3' }; }],
+  ['Doran at the harbour', () => { const r = P.talk('doran', { run: true }); return { ...r, ship: game.flags.c1_ship, fail: game.flags.c1_ship ? null : 'doran' }; }],
+  // (on the way he may walk over a singing crystal and stop for its remark: he walks on, as a player would)
+  ['the project\'s ship at the spaceport → Zeelich', () => { const p = game.world.spaceport.pad; let r; for (let k = 0; k < 3 && game.flags.chapterKey === 'project'; k++) { r = P.use(p.x - 4.2, p.z, { run: true, kind: 'c1ship' }); P.settle(60); } return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'zeelich' ? null : 'no chapter 3' }; }],
 ];

@@ -1,0 +1,30 @@
+start [ 'council', 'zeelich', 'play', 'Find Baldino in his workshop' ]
+street folk (Mosquibees, moles, triangle heads) [
+  'zbee1 on the street, talked',
+  'zbee2 on the street, talked',
+  'zmole1 on the street, talked',
+  'zmole2 on the street, talked',
+  'ztri1 on the street, talked',
+  'ztri2 on the street, talked'
+]
+baldino [
+  'workshop',
+  true,
+  'zeelich',
+  "Get two stamps on the petition◆ Nara's stamp◆ Oku's stamp"
+]
+nara [ true ]
+oku [ true, [ false, false, false ] ]
+mills [ 'thrown', 'thrown', 'thrown', 3 ]
+oku stamp [ true, 'Hand the petition to the clerk in the council house' ]
+council house [ 'upper', 'Hand the petition to the clerk in the council house' ]
+refused archive [ 'upper' ]
+clerk [ true, 'Speak to the council' ]
+hearing [ 'council', true, 'Find the master plans in the project archive' ]
+archive [ 'archive', true ]
+coat [ true, 'worker', true ]
+wrong cabinet [ undefined ]
+plans [ true, 'Bring the plans to the council' ]
+spot test [ false ]
+back [ 'upper', 'twinsen', 'council', true, 'network' ]
+no errors
