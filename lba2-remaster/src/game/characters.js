@@ -20,7 +20,7 @@ export const LOOKS = {
     // LBA2's in-game Twinsen, measured on the original model (docs/character-review.md §11–12): cape-like robe
     // with flat shoulders and broad sleeves, thin orange belt, a nearly straight robe to the ankles, small
     // orange shoes, ball hands; a narrow egg head at the original's size on a long thin neck, small pale eyes,
-    // no hair on the skull but a bun of three balls; a pale gold medallion. Colours from its palette.
+    // no hair on the skull: a dark crown knot and a tuft arching back (LBA2 draws them as three flat unlit spheres; ours is one constant-shade mass, VP-1b); a pale gold medallion. Colours from its palette.
     poly: 'twinsen', // the low-poly model (tools/blender/twinsen_poly.py); the sculpt below is the fallback
     race: 'quetch', outfit: 'lba', hem: 0.1, hemW: 0.92, skirtDepth: 0.8, neckR: 0.05, shoulders: 0.95, armLen: 1.12, armSpread: 0.3, // (LBA2: the hands hang clear of the robe, ±0.18 H)
     tunic: '#2a86ad', tunicTrim: '#2a86ad', belt: '#d36b4b', pants: '#2a86ad', shoes: '#d36b4b', slippers: true, cord: '#f7bb57', handBall: 0.075,

@@ -28,7 +28,6 @@ export const STR = {
       <tr><td>גרירת עכבר · Z / C</td><td>סיבוב מצלמה (במצלמה חופשית)</td></tr>
       <tr><td>M</td><td>הולומפה</td></tr>
       <tr><td>I / J</td><td>חפצים ויומן</td></tr>
-      <tr><td>V</td><td>מעבר מיידי בין מראה 1997 ל־2026</td></tr>
       <tr><td>Esc / P</td><td>הפסקה</td></tr>
       <tr><td>גיימפד</td><td>A פעולה · B כדור · X דיבור · Y מפה · LB/RB התנהגות · LT תפריט · R3 מרכוז · Start הפסקה</td></tr>`,
     beh_normal: 'רגיל', beh_athletic: 'אתלטי', beh_aggressive: 'אגרסיבי', beh_discreet: 'דיסקרטי',
@@ -114,7 +113,7 @@ export const STR = {
       <tr><td>Left click / K</td><td>Attack with the weapon in hand (hold: charge the ball, or a heavy sword strike)</td></tr>
       <tr><td>Right click / L</td><td>Focus on a target · wheel / T: next target</td></tr>
       <tr><td>R · hold G (Classic) / X (Modern)</td><td>Swap to the last weapon · weapon wheel</td></tr>
-      <tr><td>Q · V</td><td>Camera distance · Remaster / Retro 1997</td></tr>
+      <tr><td>Q</td><td>Camera distance</td></tr>
       <tr><td>Gamepad</td><td>A action / talk · X attack · Y ball · B dodge · RB focus · R3 next target · LB swap · RT weapon wheel · LT behaviour · View holomap · Menu pause</td></tr>`,
     wp_fists: 'Fists', wp_ball: 'Magic Ball', wp_sword: 'Sword', wp_pulse: 'Pulse Tool',
     difficulty: 'Difficulty', df_gentle: 'Gentle', df_normal: 'Normal', df_hard: 'Hard',

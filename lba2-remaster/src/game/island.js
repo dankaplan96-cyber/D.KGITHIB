@@ -544,13 +544,16 @@ function buildHarbour(W0, root, r) {
   // --- Doran's fishing boat and the project ferry
   {
     const boat = fishingBoat();
-    boat.position.set(QX - 6.4, 0, pz + pw / 2 + 1.7);
+    boat.position.set(QX - 6.4, 0.28, pz + pw / 2 + 1.7);
     boat.rotation.y = 0.04;
     g.add(boat);
     const boatX = boat.position.x;
     W.boatSurge = 0; // (the opening pulls the boat against its mooring line)
-    W.updaters.push((dt, tt) => { boat.position.x = boatX + W.boatSurge; boat.position.y = Math.sin(tt * 1.3) * 0.06 * (0.6 + W.storm); boat.rotation.z = Math.sin(tt * 1.1) * 0.025 * (0.5 + W.storm * 2); });
-    physics.add({ type: 'box', x: boat.position.x, z: boat.position.z, hw: 2.8, hd: 1.05, rot: 0, top: 0.9, noStand: true });
+    // (it rides 0.28 m higher than its hull's waterline: the sea's calm swell reaches ~0.2 m, and with the floor
+    // boards at the waterline the water showed inside the boat as if it had sunk)
+    const RIDE = 0.28;
+    W.updaters.push((dt, tt) => { boat.position.x = boatX + W.boatSurge; boat.position.y = RIDE + Math.sin(tt * 1.3) * 0.06 * (0.6 + W.storm); boat.rotation.z = Math.sin(tt * 1.1) * 0.025 * (0.5 + W.storm * 2); });
+    physics.add({ type: 'box', x: boat.position.x, z: boat.position.z, hw: 2.8, hd: 1.05, rot: 0, top: 1.2, noStand: true });
     W.fishingBoat = boat;
 
     const ferry = buildFerry(W, g, QX - plen + 4.6, pz - pw / 2 - 2.6);

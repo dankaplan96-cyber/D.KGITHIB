@@ -7,7 +7,7 @@
 # Built from the measurements of LBA2's in-game model (docs/character-review.md §11): every ring below is a
 # horizontal section of the original (height, half-width, front and back extent, fractions of the height H).
 # Skinned like LBA2 skins its models: each part follows one bone, with blends only where cloth spans two
-# (the cape's sides follow the arms, each half of the robe follows its leg as in the original, the bun swings).
+# (the cape's sides follow the arms, each half of the robe follows its leg as in the original, the hair's tuft swings).
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
 import json, math, os, sys
 
@@ -28,7 +28,7 @@ SPREAD = 0.2  # the arm angle the geometry below is drawn at (the game spreads t
 S = 2.1  # the game's height for H (top of the hair)
 
 COL = {
-    'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#e98c6c', 'skin': '#e2bc90', 'hair': '#634327',
+    'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#e98c6c', 'skin': '#e2bc90', 'hair': '#553916', 'hairTuft': '#6a4722',
     'white': '#f2f2f6', 'iris': '#7fb8e0', 'pupil': '#1c3a5a', 'lid': '#5a3a28', 'medal': '#d8bc68', 'medalFace': '#f2e2a0',
     'cord': '#c8502a', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414',
 }
@@ -53,8 +53,9 @@ def tilt(p):
 
 
 class Part:
-    def __init__(self, name, mat, weights, angle=40, rigid=None, tilted=False, big=False):
+    def __init__(self, name, mat, weights, angle=40, rigid=None, tilted=False, big=False, normal=None, color=None):
         self.name, self.mat, self.weights, self.angle, self.rigid, self.tilted, self.big = name, mat, weights, angle, rigid, tilted, big
+        self.normal, self.color = normal, color   # (one normal for every corner; a colour name per vertex)
         self.v, self.f = [], []
 
     def add(self, verts, faces):
@@ -375,118 +376,105 @@ def head_front(x, y):
     return 0.1
 
 
-# ---- the hair: LBA2's high topknot, gathered up from a cap on the back of the head (VP-1)
-# The head is a forward wedge whose crown sits ahead of the neck, and the knot's three balls (measured on the
-# original) sit behind and above it: alone on a bare skull they read as a ball floating over the head from the
-# front and from the game's high camera. The gameplay screenshots (docs/character-review.md §2, #23) show the hair
-# as a cap on the back of the crown with a bare high forehead and the knot rising from it. So: a cap following the
-# skull's own sections behind a hairline (forehead and temples stay bare), flush with the skin at its edges (no
-# lip) and standing off it inside, swelling into a mound where the hair is gathered; the knot sits down into it.
-BUN = ((0.982, -0.044, 0.052), (0.957, -0.098, 0.037), (0.922, -0.117, 0.026))   # centre y, z, radius (H)
-BUN_BASE, MOUND_H, MOUND_R = (0.0, 0.952, -0.016), 0.018, 0.042                  # where the hair gathers
+# ---- the hair: as LBA2 draws it (VP-1b)
+# The original (BODY.HQR body 1) has no hair polygons. Its hair is three spheres, which the game draws as flat discs in
+# one dark brown, unlit (palette ramp 1, shades 1–3). Measured in the frame of the head sections above (rest pose,
+# fractions of H; the skull's top is at 0.955, the back of the skull at z −0.011 (0.94) and −0.026 (0.90)):
+#   crown   centre y 0.951, z −0.052, r 0.049, on the head bone: it sits on the back of the skull's top and rises 0.045
+#           above the crown, so from the front it is a dark dome over the crown and from behind the top of the strip
+#   tuft 1  centre y 0.925, z −0.103, r 0.0355, on the first tail bone (which turns about the crown ball's centre)
+#   tuft 2  centre y 0.890, z −0.118, r 0.0247, on the second
+# In the game they read as dark hair on the crown, a strip down the back of the head (to 0.865 H) and a tuft that rises
+# from the crown and arches back and down; the forehead, temples, the sides and the nape stay skin.
+# Built as one smooth mass: rings swept from the front of the crown ball through the three centres to a round tip,
+# each as wide as the balls are there (the shallow waists between them mostly filled), so it reads as one tuft of hair
+# rather than a cluster of balls. It is one connected surface whose weights pass from the head to tail0..2 along it,
+# so the follow-through in rig.js bends it and never opens a gap. Flat colour like the original's discs: every normal
+# points down, so LbaMaterial's ramp gives one constant dark shade from any side (the original's colours on screen:
+# palette 17 #2b1b07 on the crown, 18–19 #331f0b–#3b270f on the tuft).
+HAIR = ((0.951, -0.052, 0.0494), (0.925, -0.103, 0.0355), (0.890, -0.118, 0.0247))   # centre y, z, radius (H)
+HAIR_FILL = 0.7          # how much of the waist between two balls is filled (0: the balls' union, 1: their hull)
+HAIR_M = 12              # points per ring
+HAIR_DOWN = (0.0, -1.0, 0.0)
 
 
-def hairline(y):
-    # the cap covers each head section behind z = hairline(y): a narrow strip low on the back of the head,
-    # climbing to just behind the top of the forehead
-    pts = ((0.870, -0.008), (0.890, 0.008), (0.908, 0.022), (0.935, 0.034), (0.950, 0.045))
-    for (y0, z0), (y1, z1) in zip(pts, pts[1:]):
-        if y <= y1:
-            return z0 + (z1 - z0) * max(0.0, (y - y0) / (y1 - y0))
-    return pts[-1][1]
+def hair_sweep():
+    # stations (centre (y, z), tangent (y, z), radius, u) from the front pole of the crown ball to the tip;
+    # u is 0 at the crown ball's centre, 1 at tuft 1, 2 at tuft 2
+    C = [(y, z) for y, z, _ in HAIR]
+    R = [r for _, _, r in HAIR]
+    sub = lambda a, b: (a[0] - b[0], a[1] - b[1])
+    add = lambda a, b, k=1.0: (a[0] + b[0] * k, a[1] + b[1] * k)
+    unit = lambda a: (a[0] / math.hypot(*a), a[1] / math.hypot(*a))
+    d0 = unit(sub(C[1], C[0]))
+    st = []
+    # the front of the crown ball: a hemisphere about the sweep's first direction
+    for k in range(1, 5):
+        ph = math.pi / 2 * k / 4
+        st.append((add(C[0], d0, -R[0] * math.cos(ph)), d0, R[0] * math.sin(ph), -math.cos(ph)))
+    # through the centres: a Catmull-Rom curve, the radius the balls' own section there, waists filled
+    P = [add(C[0], sub(C[0], C[1]))] + C + [add(C[2], sub(C[2], C[1]))]
+    def cr(i, t):
+        p0, p1, p2, p3 = P[i], P[i + 1], P[i + 2], P[i + 3]
+        f = lambda a, b, c, d: 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t ** 3)
+        g = lambda a, b, c, d: 0.5 * ((-a + c) + 2 * (2 * a - 5 * b + 4 * c - d) * t + 3 * (-a + 3 * b - 3 * c + d) * t * t)
+        return (f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])), unit((g(p0[0], p1[0], p2[0], p3[0]), g(p0[1], p1[1], p2[1], p3[1])))
+    mid = [(C[0], R[0], 0.0)]
+    for seg in range(2):
+        for k in range(1, 6):
+            t = k / 5
+            c = cr(seg, t)[0]
+            union = max(math.sqrt(max(0.0, r * r - math.dist(c, ci) ** 2)) for ci, r in zip(C, R))
+            hull = R[seg] + (R[seg + 1] - R[seg]) * t
+            mid.append((c, max(union, union + (hull - union) * HAIR_FILL), seg + t))
+    # the rings across the sweep turn gradually (the curve bends sharply at tuft 1, tighter than the tuft is thick:
+    # rings square to it there would cross on the inside of the bend)
+    tg = [d0] + [unit(sub(mid[min(j + 1, len(mid) - 1)][0], mid[j - 1][0])) for j in range(1, len(mid))]
+    for _ in range(3):
+        tg = [tg[0]] + [unit(add(add(tg[j - 1], tg[j], 2.0), tg[min(j + 1, len(tg) - 1)])) for j in range(1, len(tg))]
+    st += [(c, d, r, u) for (c, r, u), d in zip(mid[1:], tg[1:])]
+    # the round tip: a hemisphere on tuft 2
+    c, d = C[2], tg[-1]
+    for k in range(1, 4):
+        ph = math.pi / 2 * k / 4
+        st.append((add(c, d, R[2] * math.sin(ph)), d, R[2] * math.cos(ph), 2 + 0.6 * math.sin(ph)))
+    return st, add(C[0], d0, -R[0]), add(c, d, R[2])
 
 
-def behind(half, zcut):
-    # the part of a half section (front centre → side → back centre, z falling) behind z = zcut, from the cut
-    for i in range(len(half) - 1):
-        (xa, za), (xb, zb) = half[i], half[i + 1]
-        if za >= zcut >= zb:
-            t = (za - zcut) / (za - zb) if za != zb else 0.0
-            return [(xa + (xb - xa) * t, zcut)] + list(half[i + 1:])
-    return [half[-1]]
+def w_hair(u):
+    # the head carries the crown ball; the tuft passes to tail0, tail1, tail2 toward the tip
+    a, b, c = smooth(0.2, 0.8, u), smooth(0.8, 1.4, u), smooth(1.4, 2.0, u)
+    return {k: v for k, v in (('head', 1 - a), ('tail0', a - b), ('tail1', b - c), ('tail2', c)) if v > 1e-4}
 
 
-def arc_points(pts, m):
-    # resample a polyline to m points by length, each with its distance (along the line) from the nearer end
-    seg = [math.dist(pts[i], pts[i + 1]) for i in range(len(pts) - 1)]
-    tot = sum(seg) or 1.0
-    out = []
-    for j in range(m):
-        d, i = tot * j / (m - 1), 0
-        while i < len(seg) - 1 and d > seg[i]:
-            d -= seg[i]; i += 1
-        t = min(1.0, d / seg[i]) if seg[i] else 0.0
-        p = (pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t)
-        out.append((p, min(tot * j / (m - 1), tot * (1 - j / (m - 1)))))
-    return out
-
-
-def mound(p):
-    return math.exp(-(math.dist(p, BUN_BASE) / MOUND_R) ** 2)
-
-
-def cap_lift(p, edge):
-    # how far the cap stands off the skull (H): flush at its edges (a hair proud of the facets, so no skin pokes
-    # through the hairline), 0.006 H inside, plus the mound
-    inner = smooth(0.0, 0.022, edge) * smooth(0.870, 0.892, p[1])
-    return 0.0008 + 0.0052 * inner + MOUND_H * mound(p) * inner, inner
-
-
-hair = Part('hair', 'hair', lambda p: {'head': 1.0}, angle=70, big=True)
-M = 13
-cap = []
-for y, half in FINE:
-    if y < 0.869:
-        continue
-    zc = hairline(y)
-    h = behind(resample(half, 25), zc)
-    arc = list(h) + [(-x, z) for x, z in reversed(h[:-1])]           # left hairline → back centre → right hairline
-    zmid = (half[0][1] + half[-1][1]) / 2
-    pts = arc_points(arc, M)
-    row = []
-    for k, ((x, z), edge) in enumerate(pts):
-        # the section's outward normal here (from the neighbours, pointing away from the section's middle)
-        (xa, za), (xb, zb) = pts[max(0, k - 1)][0], pts[min(M - 1, k + 1)][0]
-        nx, nz = (zb - za), -(xb - xa)
-        ln = math.hypot(nx, nz) or 1.0
-        nx, nz = nx / ln, nz / ln
-        if nx * x + nz * (z - zmid) < 0:
-            nx, nz = -nx, -nz
-        g, inner = cap_lift((x, y, z), edge)
-        up = MOUND_H * 0.6 * mound((x, y, z)) * inner                 # the gathered hair also rises into the knot
-        row.append((x + nx * g, y + up, z + nz * g))
-    cap.append(row)
-hv, hf = [p for r in cap for p in r], []
-for j in range(len(cap) - 1):
-    for i in range(M - 1):
-        a, b = j * M + i, j * M + i + 1
-        hf.append([a, b, b + M, a + M])
-# over the top: the hairline crosses the crown just behind the forehead, on the skull; a fan from a point above the
-# crown closes the cap between the top row (behind) and that front edge
-top_y, top_half = FINE[-1]
-zc = hairline(top_y)
-xe = behind(resample(top_half, 25), zc)[0][0]
-crown = (0.0, 0.956, 0.035)
-front = []
-for k in range(1, 6):
-    x = -xe + 2 * xe * k / 6                                             # right → left (continuing the top row)
-    r = abs(x) / xe                                                      # 1 at the ring, 0 over the crown point
-    front.append((x, crown[1] + (top_y - crown[1]) * r - 0.0012, zc - 0.006 * (1 - r)))
-o = len(hv)
-hv += front
-lid = (0.0, 0.963, 0.012)
-hv.append((lid[0], lid[1] + MOUND_H * 0.5 * mound(lid), lid[2]))
-c = len(hv) - 1
-t0 = (len(cap) - 1) * M
-loop = [t0 + i for i in range(M)] + [o + k for k in range(len(front))]
-hf += [[loop[i], loop[(i + 1) % len(loop)], c] for i in range(len(loop))]
+HAIR_U = {}
+hair = Part('hair', 'hair', lambda p: w_hair(HAIR_U[tuple(round(c, 6) for c in p)]), big=True,
+            normal=HAIR_DOWN, color=lambda p: 'hair' if HAIR_U[tuple(round(c, 6) for c in p)] < 0.55 else 'hairTuft')
+stations, front, tip = hair_sweep()
+hv, hf, us = [], [], []
+for (cy, cz), (ty, tz), r, u in stations:
+    # ring in the plane across the sweep: x across, n = the sweep's normal in the mid-plane
+    ny, nz = -tz, ty
+    for i in range(HAIR_M):
+        a = 2 * math.pi * i / HAIR_M
+        hv.append((r * math.sin(a), cy + ny * r * math.cos(a), cz + nz * r * math.cos(a)))
+        us.append(u)
+n_r = len(stations)
+for j in range(n_r - 1):
+    for i in range(HAIR_M):
+        a, b = j * HAIR_M + i, j * HAIR_M + (i + 1) % HAIR_M
+        hf.append([a, b, b + HAIR_M, a + HAIR_M])
+hv.append((0.0, front[0], front[1])); us.append(stations[0][3] - 0.0001)
+hv.append((0.0, tip[0], tip[1])); us.append(2.6)
+f0, f1 = len(hv) - 2, len(hv) - 1
+hf += [[f0, (i + 1) % HAIR_M, i] for i in range(HAIR_M)]
+o = (n_r - 1) * HAIR_M
+hf += [[f1, o + i, o + (i + 1) % HAIR_M] for i in range(HAIR_M)]
+start = len(hair.v)
 hair.add(hv, hf)
+for p, u in zip(hair.v[start:], us):
+    HAIR_U[tuple(round(c, 6) for c in p)] = u
 PARTS.append(hair)
-# the knot: the original's three balls from the crown back and down, lowered a little into the cap's mound
-for i, (y, z, r) in enumerate(BUN):
-    bun = Part('bun%d' % i, 'hair', (lambda b: (lambda p: {b: 1.0}))('tail%d' % i), angle=60, big=True)
-    sphere(bun, (0.0, y, z), r, 10, 7)
-    PARTS.append(bun)
 
 # medallion: an octagonal gold plate on the chest, a lighter face, the cord running up to the collar
 med = Part('medal', 'medal', lambda p: {'torso': 1.0}, angle=40)
@@ -642,6 +630,8 @@ for part in PARTS:
     me = bpy.data.meshes.new(part.name)
     me.from_pydata([gb(p) for p in rest], [], part.f)
     me.materials.append(mats[part.mat])
+    if part.normal is not None:   # (the hair's flat shade: the exported normals, kept in the source file too)
+        me.normals_split_custom_set_from_vertices([tuple(gb(part.normal) / S)] * len(rest))
     ob = bpy.data.objects.new(part.name, me)
     bpy.context.scene.collection.objects.link(ob)
     ob.parent = arm_obj
@@ -656,13 +646,13 @@ for part in PARTS:
                 groups[b] = ob.vertex_groups.new(name=b)
             groups[b].add([vi], wt, 'REPLACE')
     # export (game axes, game units, unindexed triangles)
-    cn = corner_normals(rest, tris, part.angle)
+    cn = corner_normals(rest, tris, part.angle) if part.normal is None else [[part.normal] * 3 for _ in tris]
     rgb = hexrgb(COL[part.mat])
     for t, ns in zip(tris, cn):
         for i, n in zip(t, ns):
             out['pos'] += [round(c * S, 5) for c in rest[i]]
             out['nrm'] += [round(c, 4) for c in n]
-            out['col'] += rgb
+            out['col'] += hexrgb(COL[part.color(part.v[i])]) if part.color else rgb
             ws = sorted(((b, wt) for b, wt in W[i].items() if wt > 1e-4), key=lambda q: -q[1])[:4]
             tot = sum(wt for _, wt in ws)
             ws += [(None, 0)] * (4 - len(ws))

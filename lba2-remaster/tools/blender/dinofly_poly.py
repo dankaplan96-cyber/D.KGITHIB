@@ -111,7 +111,7 @@ def ring_pt(t, hw, up, down, wide, p=0.8):
     return x, v
 
 
-def loft(stations, n, color_of, weights_of, name, cap_front=True, cap_back=True, p=0.8):
+def loft(stations, n, color_of, weights_of, name, cap_front=True, cap_back=True, p=0.8, dome=0.0, angle=50):
     """stations: dicts {c: (y, z) centre, th: angle of the spine above horizontal (rad, + = rising toward +z),
     hw, up, down, wide}; rings perpendicular to the spine. color_of(i_station, t_mid) → colour key for each face;
     weights_of(i_station) → bone weights for that ring."""
@@ -139,8 +139,12 @@ def loft(stations, n, color_of, weights_of, name, cap_front=True, cap_back=True,
         if not ok:
             continue
         r = rings[end]
-        cen = tuple(sum(verts[j][q] for j in r) / n for q in range(3))
-        verts.append(cen)
+        cen = [sum(verts[j][q] for j in r) / n for q in range(3)]
+        if end and dome:   # (CH-DF-FIX) the front cap pushed forward along the spine: a rounded end, not a flat disc
+            th = stations[end]['th']
+            cen[1] += math.sin(th) * dome
+            cen[2] += math.cos(th) * dome
+        verts.append(tuple(cen))
         W.append(weights_of(end))
         ci = len(verts) - 1
         for k in range(n):
@@ -148,7 +152,7 @@ def loft(stations, n, color_of, weights_of, name, cap_front=True, cap_back=True,
             f = [a, b, ci] if end == 0 else [b, a, ci]
             faces.setdefault(color_of(end, 2 * math.pi * (k + 0.5) / n), []).append(f)
     for col, fl in faces.items():
-        part(name + '_' + col, col).add(verts, W, fl)
+        part(name + '_' + col, col, angle).add(verts, W, fl)
     return verts
 
 
@@ -184,7 +188,8 @@ loft(TRUNK, 12, lambda i, t: 'tan' if belly(t) and TRUNK[i]['c'][1] < 380 else '
 
 # the neck: rising from the chest, steep at the base and flattening toward the head (sections perpendicular to it)
 NECK = [  # (z, centre y, spine angle°, half depth, half-width)
-    (330, 1080, 50, 300, 230), (460, 1170, 55, 190, 150), (560, 1300, 52, 150, 118), (660, 1415, 44, 128, 108),
+    (300, 1060, 48, 330, 262), (390, 1118, 52, 250, 196),   # (CH-DF-FIX: was one section (330, 1080, 50, 300, 230))
+    (460, 1170, 55, 190, 150), (560, 1300, 52, 150, 118), (660, 1415, 44, 128, 108),
     (770, 1500, 35, 114, 100), (880, 1572, 30, 108, 93), (990, 1630, 26, 108, 87), (1090, 1676, 20, 112, 88),
 ]
 NECK_ST = [{'c': (y, z), 'th': math.radians(a), 'hw': hw, 'up': d, 'down': d, 'wide': 0} for z, y, a, d, hw in NECK]
@@ -195,7 +200,9 @@ def neck_w(i):
     return chain(NECK[i][0], NECK_J, 70)
 
 
-loft(NECK_ST, 10, lambda i, t: 'tan' if belly(t, 2.3, 3.98) and i < len(NECK) - 1 else 'teal', neck_w, 'neck')
+# (CH-DF-FIX: the root flared wider and lower into the chest, a section between it and the neck proper, and normals
+# smoothed up to 75°: no facet crease at the neck root)
+loft(NECK_ST, 10, lambda i, t: 'tan' if belly(t, 2.3, 3.98) and i < len(NECK) - 1 else 'teal', neck_w, 'neck', angle=75)
 
 # the head: a long horse-like wedge carried nose-down (its axis 38° below horizontal), sections along the axis
 HA = (1640, 1100)                       # (y, z) of the axis start, behind the eyes
@@ -203,8 +210,8 @@ HD = math.radians(38)
 HDIR = (-math.sin(HD), math.cos(HD))    # (dy, dz) along the axis
 HEAD = [  # (s along the axis, up, down, half-width): the brow over the eyes, a slight dip, a blunt square muzzle
     (-60, 62, 62, 62), (0, 128, 116, 108), (130, 156, 148, 142), (260, 170, 150, 170), (400, 146, 140, 178),
-    (560, 140, 120, 162), (700, 124, 92, 132), (780, 96, 66, 104), (812, 50, 36, 60),
-]
+    (560, 140, 120, 162), (700, 124, 92, 132), (765, 106, 76, 114), (800, 82, 58, 90), (824, 50, 36, 58),
+]   # (CH-DF-FIX: the muzzle closes over three sections and a domed tip instead of a flat cap at 812)
 
 
 def head_c(s):
@@ -222,7 +229,7 @@ def head_col(i, t):
 
 
 HP = 0.62   # the head's sections are boxier than the body's: flat cheeks, a flat brow, a square muzzle
-head_verts = loft(HEAD_ST, 12, head_col, lambda i: {'head': 1.0}, 'head', p=HP)
+head_verts = loft(HEAD_ST, 12, head_col, lambda i: {'head': 1.0}, 'head', p=HP, dome=22, angle=62)
 
 
 def head_surface(s, t, out=0.0):
@@ -352,9 +359,10 @@ for s, sx in (('L', 1), ('R', -1)):
         ff = [[k, (k + 1) % n, n + (k + 1) % n, n + k] for k in range(n)]
         if (Vector(vv[1]) - A).cross(Vector(vv[0]) - A).dot(d) > 0:
             ff = [list(reversed(f)) for f in ff]
-        vv.append(tuple(A))
+        # (CH-DF-FIX) the ends domed out along the tube (half a radius), not flat discs: no cylinder-end feet
+        vv.append(tuple(A - d * (ra * 0.55)))
         ww.append({bone: 1.0})
-        vv.append(tuple(Bv))
+        vv.append(tuple(Bv + d * (rb * 0.55)))
         ww.append({bone_b or bone: 1.0})
         ff += [[(k + 1) % n, k, 2 * n] for k in range(n)]
         ff += [[n + k, n + (k + 1) % n, 2 * n + 1] for k in range(n)]
@@ -362,7 +370,7 @@ for s, sx in (('L', 1), ('R', -1)):
             ff[-2 * n:] = [list(reversed(f)) for f in ff[-2 * n:]]
         pr.add(vv, ww, ff)
 
-    lg = part('leg' + s, 'teal', 60)
+    lg = part('leg' + s, 'teal', 78)
     # the thigh: a tapered drumstick out of the flank (the original's leg leaves the belly at 600–700 high)
     tube(lg, (sx * 300, 780, -400), (sx * 320, 560, -500), 150, 118, 'thigh' + s, n=8)
     tube(lg, (sx * 320, 560, -500), (sx * 300, 380, -620), 118, 58, 'thigh' + s, n=8)
@@ -388,17 +396,58 @@ for s, sx in (('L', 1), ('R', -1)):
     LW = [{'body': 1.0}, {j0: 0.5, j1: 0.5}, {j1: 1.0}, {j1: 0.5, j2: 0.5}, {j2: 1.0}]
     TW = [{'body': 1.0}, {j0: 1.0}, {j1: 1.0}, {j1: 1.0}, {j2: 1.0}]
     mem = part('membrane' + s, 'tan', 25)
-    vv = [(X(x), Y, z) for x, z in LE] + [(X(x), Y - 4, z) for x, z in TE]
-    ww = LW + TW
+    # (CH-DF-FIX) the membrane in two bands with a fold line between them, so it can pleat when the wing folds:
+    # the front band (leading edge to the fold line at 45% of the chord) follows the wing bones; the back band
+    # (fold line to the trailing edge) follows three membrane bones mem0..2, hinged on the fold line, which
+    # src/game/dinofly.js turns in the doze so the membrane bunches along the flank. In the rest pose and the
+    # stretch the hinges are straight and the membrane is one flat sheet as before.
+    m0, m1, m2 = 'mem0' + s, 'mem1' + s, 'mem2' + s
+    MAPW = {j0: m0, j1: m1, j2: m2, 'body': 'body'}
+    def mixw(a, b, f):
+        out = {}
+        for k_, v_ in a.items():
+            out[k_] = out.get(k_, 0) + v_ * (1 - f)
+        for k_, v_ in b.items():
+            out[k_] = out.get(k_, 0) + v_ * f
+        return out
+    FOLD = 0.45
+    MID = [(lx + (tx - lx) * FOLD, lz + (tz - lz) * FOLD) for (lx, lz), (tx, tz) in zip(LE, TE)]
+    MW = [mixw(LW[k], TW[k], 0.5) for k in range(5)]
+    tw = lambda w: {MAPW[k_]: v_ for k_, v_ in w.items()}
+    # the hinges (pivot on the fold line, the fold line's direction), printed for dinofly.js's pose tables
+    piv = {m0: MID[1], m1: ((MID[2][0] + MID[3][0]) / 2, (MID[2][1] + MID[3][1]) / 2), m2: MID[4]}
+    par = {m0: j0, m1: j1, m2: j2}
+    for mb, (px, pz) in piv.items():
+        BONES[mb] = (par[mb], (X(px), Y, pz))
+    if sx > 0:
+        for mb, (ia, ib) in ((m0, (0, 1)), (m1, (2, 3)), (m2, (3, 4))):
+            print('hinge', mb, 'axis', (MID[ib][0] - MID[ia][0], 0, MID[ib][1] - MID[ia][1]))
+    vv = [(X(x), Y, z) for x, z in LE] + [(X(x), Y - 2, z) for x, z in MID]
+    ww = list(LW) + MW
+    # the scallops: between each pair of trailing-edge points the edge sags forward in an arc (two points at a
+    # third and two thirds, pulled toward the leading edge), so the scalloped edge reads in the fold
+    te_ix = []
+    for k in range(5):
+        te_ix.append([])
+        if k:
+            (xa, za), (xb, zb) = TE[k - 1], TE[k]
+            for f in (1 / 3, 2 / 3):
+                sag = 70 * math.sin(math.pi * f) / math.sin(math.pi / 3)
+                te_ix[k].append(len(vv))
+                vv.append((X(xa + (xb - xa) * f), Y - 4, za + (zb - za) * f + sag))
+                ww.append(tw(mixw(TW[k - 1], TW[k], f)))
+        te_ix[k].append(len(vv))
+        vv.append((X(TE[k][0]), Y - 4, TE[k][1]))
+        ww.append(tw(TW[k]))
     ff = []
     for k in range(4):
-        q = [k, k + 1, 5 + k + 1, 5 + k]
-        ff.append(q if sx > 0 else list(reversed(q)))
+        for q in ([k, k + 1, 5 + k + 1, 5 + k], [5 + k, 5 + k + 1] + list(reversed(te_ix[k + 1])) + [te_ix[k][-1]]):
+            ff.append(q if sx > 0 else list(reversed(q)))
     mem.add(vv, ww, ff)
     # the leading edge: a teal bone, thick at the shoulder, in three segments (each follows its bone)
     edge = part('edge' + s, 'teal', 50)
     pts = [(X(330), Y, 110), (X(860), Y, 270), (X(1340), Y, 185), (X(1700), Y - 10, -500)]
-    rad = [52, 34, 24, 6]
+    rad = [62, 44, 32, 8]   # (CH-DF-FIX: a little thicker, so the folded arm reads as a ridge along the flank)
     bones = [j0, j1, j2]
     for k in range(3):
         a, b = Vector(pts[k]), Vector(pts[k + 1])
@@ -447,7 +496,7 @@ for n, (par, p) in BONES.items():
 for n, (par, p) in BONES.items():
     eb = arm_data.edit_bones.new(n)
     eb.head = gb(M(p))
-    k = kids.get(n)
+    k = [c for c in kids.get(n, []) if not c.startswith('mem')]
     tail = gb(M(BONES[k[0]][1])) if k else gb(M(p)) + Vector((0, -0.15, 0))
     if (tail - eb.head).length < 1e-3:
         tail = eb.head + Vector((0, 0, 0.1))

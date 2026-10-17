@@ -17,7 +17,7 @@ const KEYMAP = {
   inventory: ['KeyI', 'KeyJ'],
   pause: ['Escape', 'KeyP'],
   camL: ['KeyZ'], camR: ['KeyC'],
-  retro: ['KeyV'],
+  // (no in-game key for the Retro 1997 look: V sat beside C and X and flipped it mid-dialogue; Settings only)
   // combat (the mouse adds: left button attack, right button focus, wheel switches target)
   attack: ['KeyK'],
   dodge: ['ShiftLeft', 'ShiftRight'],

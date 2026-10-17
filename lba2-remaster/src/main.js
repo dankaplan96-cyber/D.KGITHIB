@@ -47,7 +47,8 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 4;
-export const VERSION = '0.29.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.29.1'; // (the desktop build's version: desktop/package.json)
+const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
 // carries his weapons and gadgets (hero.arms, weapons.js; an older save carries none).
@@ -661,7 +662,18 @@ class Game {
       const facing = d > 1e-3 ? (dx * fx + dz * fz) / d : 1;
       return d + (1 - facing) * 0.45;
     };
-    for (const n of this.npcs) if (n.present && !n.def.noTalk) consider(dist(n.pos.x, n.pos.z), 2.6, { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk' });
+    // how squarely Twinsen faces a point (1 straight ahead, 0 to his side); a point under his feet is not looked at
+    const aim = (x, z) => { const dx = x - h.pos.x, dz = z - h.pos.z, d = Math.hypot(dx, dz); return d < 0.5 ? 0 : (dx * fx + dz * fz) / d; };
+    // people: not from well above them (a roof, a ledge, the top of a stair: TALK_ABOVE); the one Twinsen faces in
+    // reach is remembered, so a room search at his feet or to his side does not take the prompt from them
+    let faced = null, fd = 1e9, fa = 0;
+    for (const n of this.npcs) {
+      if (!n.present || n.def.noTalk || h.pos.y - n.pos.y > TALK_ABOVE) continue;
+      const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk' };
+      consider(dist(n.pos.x, n.pos.z), 2.6, o);
+      const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z), a = aim(n.pos.x, n.pos.z);
+      if (d < 2.2 && d < fd && a > 0.7) { fd = d; fa = a; faced = o; }
+    }
     if (!this.room) {
       for (const s of W.signs) consider(dist(s.x, s.z), 2.0, { kind: 'sign', sign: s, label: 'p_read' });
       for (const p of W.pets || []) consider(dist(p.x, p.z), p.r, { kind: 'pet', pet: p, label: 'p_talk' });
@@ -669,6 +681,7 @@ class Game {
     // the chapter's own interactions first: on a tie (same spot) they win over the generic ones
     this.story.interactables(consider, dist);
     this.story.chapters[0].baseInteractables(consider, dist, this.story.cur);
+    if (faced && best?.kind === 'roomsearch' && fa > aim(best.spot.x, best.spot.z)) return faced;
     return best;
   }
 
@@ -1025,7 +1038,6 @@ class Game {
     const input = this.input;
     input.update();
 
-    if (input.pressed('retro')) { this.settings.visual = this.settings.visual === '1997' ? '2026' : '1997'; this.applySettings(); }
     this.updateTransition(dt);
 
     if (this.trans && this.state === 'play') {
