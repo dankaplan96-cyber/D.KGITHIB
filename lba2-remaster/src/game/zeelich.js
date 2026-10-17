@@ -28,6 +28,7 @@
 import * as THREE from 'three';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
+import { domeParts, finialGeo, esmerBuilding, Place } from './props-esmer.js';
 const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
 import { textures } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
@@ -1069,10 +1070,13 @@ export function buildZeelich(scene, physics) {
       HB.add(cyl(0.12, 0.17, 1.9, 12, 1), brassM(), dx, h + 1.12 + R0 * 1.0, dz + R0 * 0.9, 0.95, 0, 0);
       domeTop = h + 1.12 + R0;
     } else {
-      const [ca, cb] = o.dome;
-      HB.add(lathe([[R0, 0], [R0 * 1.12, R0 * 0.25], [R0 * 1.16, R0 * 0.5], [R0 * 1.06, R0 * 0.82], [R0 * 0.78, R0 * 1.14], [R0 * 0.42, R0 * 1.42], [R0 * 0.16, R0 * 1.68], [0.04, R0 * 1.95]], 28, 1.1), tm(domeTex(ca, cb), { rough: 0.38, metal: 0.1 }), dx, h + 1.12, dz);
+      // the onion on its drum, gilded ribs and the crescent finial: the Esmer dome every Zeelich building shares
+      // (props-esmer.js domeParts / finialGeo; same outline as before)
+      const [ca, cb] = o.dome, DP = domeParts(R0, R0 * 1.95, { ribs: 8, seg: 28 });
+      HB.add(DP.shell, tm(domeTex(ca, cb), { rough: 0.38, metal: 0.1 }), dx, h + 1.12, dz);
+      HB.add(DP.rib, brassM(), dx, h + 1.12, dz);
       domeTop = h + 1.12 + R0 * 1.95;
-      HB.add(cached('finial', () => compose([[lathe([[0, 0], [0.07, 0], [0.07, 0.12], [0.16, 0.22], [0.16, 0.3], [0.06, 0.38], [0.04, 0.55], [0.11, 0.62], [0.11, 0.7], [0.03, 0.78], [0.015, 1.05], [0, 1.08]], 10)], [new THREE.TorusGeometry(0.16, 0.035, 6, 14, Math.PI * 1.4), 0, 1.12, 0, 0, 0, -Math.PI * 0.2]])), brassM(), dx, domeTop - 0.06, dz);
+      HB.add(finialGeo(), brassM(), dx, domeTop - 0.06, dz);
     }
     // minaret: slender tower with a balcony and a small onion cap
     if (o.minaret) {
@@ -1084,7 +1088,9 @@ export function buildZeelich(scene, physics) {
       HB.add(cached('balr', () => new THREE.TorusGeometry(0.92, 0.04, 6, 24).rotateX(Math.PI / 2)), brassM(), mx, mh - 1.2, mz);
       for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; HB.add(fillGeo({ x: 0, y: 0, w: 0.26, h: 0.62, horse: true }, 0, 0, 0.5), lattice, mx + Math.sin(a) * 0.505, mh - 0.95, mz + Math.cos(a) * 0.505, 0, a, 0); }
       const [ca, cb] = o.dome;
-      HB.add(lathe([[0.55, 0], [0.66, 0.2], [0.62, 0.45], [0.42, 0.75], [0.18, 1.0], [0.03, 1.3]], 16, 0.9), tm(domeTex(ca, cb), { rough: 0.38 }), mx, mh, mz);
+      const MP = domeParts(0.56, 1.3, { ribs: 6, seg: 16 });
+      HB.add(MP.shell, tm(domeTex(ca, cb), { rough: 0.38 }), mx, mh, mz);
+      HB.add(MP.rib, brassM(), mx, mh, mz);
       HB.add(cached('mfin', () => lathe([[0, 0], [0.05, 0], [0.09, 0.12], [0.04, 0.22], [0.015, 0.6], [0, 0.62]], 8)), brassM(), mx, mh + 1.25, mz);
       col({ ...wpos(f, mx, mz), type: 'cyl', r: 0.78, top: Y0 + mh, fades: true });
     }
@@ -1807,8 +1813,8 @@ export function buildZeelich(scene, physics) {
       IB.add(g, VC(), x, y, z, 0, rr() * 6, 0, s, s * 1.2, s);
       // a tiny Esmer house with a dome on the bigger ones, a puff tree on others
       if (s > 10) {
-        IB.add(bbox(3, 2.4, 3, 0.1, 2), tm('plasterWall', { color: '#fbf0f0' }), x, y + 0.1 * s * 1.2 + 1.2, z);
-        IB.add(lathe([[1.0, 0], [1.15, 0.3], [1.1, 0.7], [0.7, 1.15], [0.3, 1.5], [0.03, 1.9]], 14, 1), tm(domeTex('#8a5ac0', '#e8c8ff'), { rough: 0.4 }), x, y + 0.1 * s * 1.2 + 2.4, z);
+        // (the shared Esmer building, props-esmer.js, its door toward the island)
+        esmerBuilding(new Place(IB, x, y + 0.1 * s * 1.2, z, Math.atan2(-x, -z)), { w: 3.4, d: 3.4, h: 5.2, wallH: 2.95, wall: tm('plasterWall', { color: '#fbf0f0' }), domeM: tm(domeTex('#8a5ac0', '#e8c8ff'), { rough: 0.4 }), trim: '#3a86b8', seed });
       } else {
         IB.add(puffTreeGeo(seed % 2), VC(), x + 1, y + 0.1 * s * 1.2, z, 0, 0, 0, 1.4);
       }
