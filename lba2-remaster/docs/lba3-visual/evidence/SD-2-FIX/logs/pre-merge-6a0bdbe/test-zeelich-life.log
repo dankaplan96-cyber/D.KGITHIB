@@ -1,0 +1,39 @@
+ISO  chapter 2 finished by flags (as tests/chapter2.mjs): story.nextChapter() starts chapter 3 on Zeelich's dock
+PASS chapter 3 starts on Zeelich (the plan confiscated at the dock, as before) 
+PASS the watch house, its stair (solid from the side and underneath), the heat posts and Nara's crates are solid; the burrow lid can be stood on 
+PASS three lit heat posts and three dark ones with tags (Pelleck's house, the south-west house, the burrow) 
+PASS Snuff at her counter, Bzizz by the stair, Old Grumm by the burrow, Mr Pelleck under his scaffold; the crate on the flue 
+PASS collision and access: Twinsen walks from the street to the mills, the depot gate, the new places and the platform gate (INPUT) 
+PASS Snuff (INPUT): her oven is cold, she sold her charcoal cart for the project's heat; something sits on her flue 
+PASS Bzizz (INPUT): the roof is his landing stage; his crate waits for the depot's signature 
+PASS the heat box on the east wall (INPUT): red lamp, SAFETY CUT-OUT 
+PASS the hatch (INPUT): an old watch house, its crest chiselled off; the oven cold 
+PASS Mr Pelleck (his dome, his wages, his filed form) and Old Grumm (the dark post over a burrow that sweats already) 
+PASS Nara's cloud flowers by the pad, crated for Citadel and HELD while the shuttles are grounded (INPUT) 
+PASS up the guards' stair to the roof by walking; a shove moves the crate off the flue (INPUT) 
+PASS …the heat box resets (green) and Snuff calls out: the oven is warm 
+PASS the parapet keeps him on the roof (south, east, north and the west side south of the stair, INPUT) 
+PASS Bzizz: that was a flue? (the crate stays on his stage) 
+PASS Save & quit → Continue: the crate still on the stage, the oven hot, Tavo at the counter; the journal has it 
+PASS Snuff pays five kashes (one coin, owed until picked up by walking to it); the journal closes 
+PASS a warm roll at the hatch restores life (INPUT) 
+PASS afterwards: Snuff on who buys her bread, Tavo carries the rolls to the depot, Bzizz on twice the flowers 
+PASS Nara and Oku keep chapter 3's lines (the main story first) 
+ISO  chapter 3: the shield brought down by its flag (c2_plan, c2_key, c2_broadcast, the three mills, c2_shield)
+ISO  way B: the zl_ flags cleared (a fresh story), the crate back on the flue
+PASS after the shield drops, Snuff's problem in its own words (the heat still comes up the pipe) 
+PASS from the street the magic ball knocks the crate off the flue: it falls and breaks on the grass (INPUT) 
+PASS …Bzizz: "My nectar!"; the heat box resets; Snuff calls out 
+PASS Bzizz: the depot can sign for a puddle; Snuff pays (sticky grass, one sad Mosquibee) 
+PASS saved before he picked Snuff's coin up: on Continue the five kashes are his (a toast says so); the crate still broken, the oven hot 
+ISO  chapter 3 finished by flags (toShell → chapter 4 on Desert Island, as tests/chapter4.mjs); Twinsen put on Zeelich by the shuttle's room switch (tests/zislands.mjs flies it)
+PASS chapter 4 on Zeelich: Nara's crates are gone (the shuttles fly again); Nara on Xil selling her flowers at Citadel, Oku on his mills' new sails 
+PASS …Pelleck, Grumm and Bzizz in chapter 4–8's words 
+ISO  chapters 4–8 skipped by flags; story.nextChapter() into chapter 9 (as tests/chapter9.mjs)
+PASS chapter 9: Baldino's petition and Nara's stamp work as before (the chapter first) 
+PASS …and the street argues about the council: Pelleck (who pays the tilers?), Snuff (who buys the bread?), Grumm (the moles say stop) 
+ISO  chapter 9 done by flags (c9_vote); story.nextChapter() into chapter 10 (as tests/chapter10.mjs)
+PASS chapter 10: Oku's station errand as before (the chapter first) 
+PASS …and the street on the bore turned into a shield (Snuff's heat box, Bzizz's heat, Pelleck's missing form) 
+no errors
+ALL PASSED
