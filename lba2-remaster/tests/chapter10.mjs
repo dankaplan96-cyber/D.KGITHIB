@@ -27,7 +27,19 @@ const boot = async (mode) => {
       talkAll(max = 80) { for (let i = 0; i < max && G.state !== 'play' && G.state !== 'ending'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.3); },
       tp(x, z, a = 0, y = null) { const h = G.hero; h.pos.set(x, y == null ? G.physics.groundAt(x, z) : G.physics.groundAt(x, z, y + 1), z); h.angle = a; h.onGround = true; h.vy = 0; h.vel?.set(0, 0); if (G.camRig.lba) G.camRig.lba.init = false; G.step(0.1); },
       npc(id) { return G.npcs.find((n) => n.def.id === id); },
-      talk(id) { const n = T.npc(id); const h = G.hero; h.pos.set(n.pos.x + Math.sin(n.angle) * 1.4, n.pos.y, n.pos.z + Math.cos(n.angle) * 1.4); h.onGround = true; h.angle = Math.atan2(n.pos.x - h.pos.x, n.pos.z - h.pos.z); G.step(0.8); T.tap('KeyE'); G.step(0.05); T.talkAll(); },
+      // stand 1.4 m from the NPC facing them and press E: in front of them first, then round them, on the first free
+      // spot where the prompt is theirs (so the test does not hang on which way they happen to face; REV-TY-5 T1)
+      talk(id) { const n = T.npc(id); const h = G.hero, P = G.physics;
+        let spot = null;
+        for (let k = 0; k < 12 && !spot; k++) {
+          const a = n.angle + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * Math.PI / 6, x = n.pos.x + Math.sin(a) * 1.4, z = n.pos.z + Math.cos(a) * 1.4;
+          if (P.blockedAt(x, z, n.pos.y, 0.3)) continue;
+          h.pos.set(x, n.pos.y, z); h.onGround = true; h.vy = 0; h.angle = Math.atan2(n.pos.x - x, n.pos.z - z);
+          if (G.findInteractable()?.npc === n) spot = [x, z];
+        }
+        if (!spot) T.miss.push(id);
+        G.step(0.8); h.angle = Math.atan2(n.pos.x - h.pos.x, n.pos.z - h.pos.z); T.tap('KeyE'); G.step(0.05); T.talkAll(); },
+      miss: [],
       useAt(x, z, y = null) { T.tp(x + 0.9, z + 0.3, 0, y); G.hero.angle = Math.atan2(x - G.hero.pos.x, z - G.hero.pos.z); G.step(0.3); T.tap('KeyE'); G.step(1.6); T.talkAll(); },
       // walk onto an exit and let the room change happen
       exit(to) { const e = G.room.exits.find((x) => x.to === to); if (!e) return 'no exit ' + to; T.tp(e.x, e.z, 0, e.y ?? Math.max(G.hero.pos.y, G.room.deckY ?? -1e9) + 0.5); G.step(1.6); T.talkAll(); return G.room?.id ?? 'out'; },
@@ -73,7 +85,12 @@ log('mira', await ev(() => { const o = game.world.houses.find((h) => h.id === 'w
 log('valves', await ev(() => { const V = game.rooms.valves; for (const i of [0, 1, 2]) { const v = V.valves[i]; T.useAt(v.x, v.z); } return [game.story.cur.gaugeLevels(), game.flags.c10_valves]; }));
 await shot('C10-03-valves.png');
 log('out', await ev(() => { const a = T.exit('valves-out'); const b = T.out(); return [a, b]; }));
-log('lighthouse', await ev(() => { const r = T.door({ x: -107.5, z: 94.2 }); const z = T.npc('zoe'); const before = [z.present, +z.pos.x.toFixed(1), +z.pos.z.toFixed(1), game.state]; T.talk('zoe'); return [r, before, game.state, game.flags.c10_zoeAsk, +game.hero.pos.x.toFixed(1), +game.hero.pos.z.toFixed(1)]; }));
+// REV-TY-5 T1 (for players): standing at the middle dial (a plain search until Zoé has asked) and facing Zoé, E is hers
+const facedZoe = await ev(() => { const G = game, h = G.hero; T.door({ x: -107.5, z: 94.2 }); const z = T.npc('zoe'), s = G.rooms.lighttop.searches.find((x) => x.id === 'dial2');
+  T.tp(s.x, s.z); h.angle = Math.atan2(z.pos.x - h.pos.x, z.pos.z - h.pos.z); const it = G.findInteractable();
+  return it?.npc?.def.id || it?.spot?.id || it?.kind || null; });
+log('at the dial facing Zoé, E is for', facedZoe);
+log('lighthouse', await ev(() => { const r = game.room?.id ?? 'out'; const z = T.npc('zoe'); const before = [z.present, +z.pos.x.toFixed(1), +z.pos.z.toFixed(1), game.state]; T.talk('zoe'); return [r, before, game.state, game.flags.c10_zoeAsk, +game.hero.pos.x.toFixed(1), +game.hero.pos.z.toFixed(1)]; }));
 log('dials', await ev(() => { const L = game.rooms.lighttop; for (const i of [1, 2, 3]) { const s = L.searches.find((x) => x.id === 'dial' + i); for (let k = 0; k < 2; k++) T.useOn(s.x, s.z); } return [game.flags.c10_dials, game.flags.c10_light, T.obj()]; }));
 await shot('C10-04-lighthouse.png');
 log('to desert', await ev(() => { T.exit('outdoor-lighthouse'); const L = game.story.cur.landing('citadel'); T.tp(L.x, L.z); return T.fly(2); }));
@@ -106,8 +123,9 @@ await shot('C10-08-dome.png');
 log('to zeelich', await ev(() => { T.out(); const L = game.story.cur.landing('hamalayi'); T.tp(L.x, L.z); return [T.fly(0), T.obj()]; }));
 const fin = await ev(() => { const c = game.rooms.zeelich.platform.console; T.useAt(c.x, c.z); for (let i = 0; i < 30; i++) { game.step(0.2); T.talkAll(); } return [game.flags.c10_done, game.flags.chapterKey, game.room?.id]; });
 log('console', fin);
+{ const miss = await ev(() => T.miss); if (miss.length) log('talk prompt not theirs from any side:', miss); }
 console.log(errs.length ? errs.join('\n') : 'no errors');
-const ok = fin[0] && !errs.length;
+const ok = fin[0] && facedZoe === 'zoe' && !errs.length;
 if (ok && assists.length) console.log('assisted: ' + assists.join('; '));
 console.log(!ok ? 'CHAPTER 10 NOT DONE' : assists.length ? 'CHAPTER 10 ASSISTED (not a pass: ' + assists.length + ' ball target(s) not hit by throws)' : 'CHAPTER 10 DONE');
 process.exitCode = !ok ? 1 : assists.length ? 2 : 0;

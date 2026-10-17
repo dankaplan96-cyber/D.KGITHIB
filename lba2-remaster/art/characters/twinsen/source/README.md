@@ -9,3 +9,7 @@ animation in src/engine/rig.js drives the mesh unchanged.
 
 The older sculpted version (`LOOKS.twinsenSculpt` in src/game/characters.js, the `bell` primitive in
 src/engine/sculpt.js) remains as a fallback and for comparisons.
+
+The hair (VP-1b) follows the original: no hair on the skull's polygons. It is one dark mass over the original's
+three hair balls (crown on `head`, the tuft on `tail0..2`), flat-shaded through down-facing normals so the game's
+ramp material gives the original's single unlit shade. Measurements and evidence: docs/character-review.md §14.
