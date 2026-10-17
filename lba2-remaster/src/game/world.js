@@ -14,7 +14,7 @@ import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGe
 import { buildIsland, keepClear, STUMP, SHIFT } from './island.js';
 import { buildDinoFly } from './dinofly.js';
 import { buildCliffRocks } from './cliffs.js';
-import { setLod } from './kit.js';
+import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { COAST, LEVELS, PROPS } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 
@@ -447,6 +447,8 @@ export function buildWorld(parentScene) {
       sh.vertexShader = 'uniform float uTime; uniform float uWind;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
         #ifdef USE_INSTANCING
           vec3 ip = vec3(instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2]);
+        #elif defined( USE_BATCHING )
+          vec3 ip = batchingMatrix[3].xyz;
         #else
           vec3 ip = vec3(0.0);
         #endif
@@ -521,12 +523,34 @@ export function buildWorld(parentScene) {
   // tiles are hidden beyond FAR_SMALL, where a 60-triangle tuft is a fraction of a pixel.
   const LOD_NEAR = 40, FAR_SMALL = 58;
   W.lodTiles = [];
+  // trees, palms, bushes and rocks go into one BatchedMesh per material where the browser can draw it in one call
+  // (kit.js LodBatch); the tiles below remain for grass and flowers, and for everything without WEBGL_multi_draw
+  W.batches = [];
+  const batchFor = (m) => { let b = W.batches.find((x) => x.mat === m); if (!b) { b = new LodBatch(scene, m); W.batches.push(b); } return b; };
+  const _bm = new THREE.Matrix4(), _bq = new THREE.Quaternion(), _be = new THREE.Euler(), _bp = new THREE.Vector3(), _bs = new THREE.Vector3();
   const mkInst = (geo, m, list, shadow = true, colorFn = null, geoLo = null, small = false) => {
     const tiles = new Map();
+    if (BATCH.on && geoLo && shadow && !small) {
+      // (same tile order as below for the colour function's random draws, so the rest of the island is unchanged)
+      list.forEach((t) => { const k = Math.floor(t.x / TILE) + ',' + Math.floor(t.z / TILE); if (!tiles.has(k)) tiles.set(k, []); tiles.get(k).push(t); });
+      const B = batchFor(m);
+      for (const part of tiles.values()) {
+        const cols = colorFn ? part.map((t, i) => colorFn(tint, t, i).clone?.() ?? tint.clone()) : null;
+        part.forEach((t, j) => {
+          if (t.gone) return;
+          _bm.compose(_bp.set(t.x, t.h - 0.08, t.z), _bq.setFromEuler(_be.set(0, t.ry, 0)), _bs.setScalar(t.s));
+          B.add(geo, geoLo, _bm, cols ? cols[j] : null);
+        });
+      }
+      return [];
+    }
     list.forEach((t, i) => { const k = Math.floor(t.x / TILE) + ',' + Math.floor(t.z / TILE); if (!tiles.has(k)) tiles.set(k, []); tiles.get(k).push([t, i]); });
     const o = new THREE.Object3D();
     const out = [];
     for (const part of tiles.values()) {
+      // grass and flowers in a random order within the tile (tulips come bed by bed), so that drawing only the
+      // first part of them on Low thins them evenly (its own random stream: the island's draws are unchanged)
+      if (small) { const r = rng(part.length * 7 + 1); for (let i = part.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [part[i], part[j]] = [part[j], part[i]]; } }
       // (the colour function draws random numbers: call it once per instance, both levels share the result)
       const cols = colorFn ? part.map(([t, i]) => colorFn(tint, t, i).clone?.() ?? tint.clone()) : null;
       const make = (g) => {
@@ -546,7 +570,7 @@ export function buildWorld(parentScene) {
       let lo = null;
       if (geoLo) lo = make(geoLo);
       const cx = part.reduce((a, [t]) => a + t.x, 0) / part.length, cz = part.reduce((a, [t]) => a + t.z, 0) / part.length;
-      if (lo || small) { const T = { cx, cz, hi, lo, small, near: true }; if (lo) setLod(T, true); W.lodTiles.push(T); }
+      if (lo || small) { const T = { cx, cz, hi, lo, small, near: true, n: part.length }; if (lo) setLod(T, true); W.lodTiles.push(T); }
     }
     return out;
   };
@@ -559,18 +583,31 @@ export function buildWorld(parentScene) {
   const gatherCasters = () => {
     casters = [];
     W.root.traverse((o) => {
-      if (!o.isMesh || o.isInstancedMesh || !o.castShadow) return;
+      if (!o.isMesh || o.isInstancedMesh || o.isBatchedMesh || !o.castShadow) return;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       const sc = o.matrixWorld.getMaxScaleOnAxis(), r = g.boundingSphere.radius * sc;
       if (r < SHADOW_R) casters.push({ o, c: g.boundingSphere.center, on: true });
     });
   };
+  // the distances follow the graphics preset (kit.js LOD_PRESETS: High 40 / 58 m as before, Medium 34 / 46 m,
+  // Low 26 / 36 m and 60 % of the grass and flowers); W.setDetail(quality) applies one
+  W.detail = { treeNear: LOD_NEAR, smallFar: FAR_SMALL };
+  W.setDetail = (q) => {
+    setLodDetail(q);
+    W.detail = { treeNear: LOD_DETAIL.near, smallFar: LOD_DETAIL.smallFar, small: LOD_DETAIL.small };
+    // fewer grass tufts and flowers: the instances are in random order, so the first part is an even thinning
+    for (const T of W.lodTiles) if (T.small) T.hi.count = Math.max(1, Math.round(T.n * LOD_DETAIL.small));
+    for (const T of W.lodTiles) if (!T.small) setLod(T, T.near);
+  };
   W.updateLod = (focus) => {
+    const near = LOD_DETAIL.near, far = LOD_DETAIL.smallFar;
+    for (const B of W.batches) B.update(focus, near);
     for (const T of W.lodTiles) {
       const d = Math.hypot(focus.x - T.cx, focus.z - T.cz);
-      if (T.small) { T.hi.visible = d < FAR_SMALL; continue; }
-      if (T.near && d > LOD_NEAR + 4) T.near = false; else if (!T.near && d < LOD_NEAR - 4) T.near = true;
-      setLod(T, T.near);
+      if (T.small) { T.hi.visible = d < far; continue; }
+      const was = T.near;
+      if (T.near && d > near + 4) T.near = false; else if (!T.near && d < near - 4) T.near = true;
+      if (T.near !== was) setLod(T, T.near);
     }
     if (!casters) gatherCasters();
     if ((shadowTick = (shadowTick + 1) % 8)) return;
@@ -591,6 +628,7 @@ export function buildWorld(parentScene) {
   const palmList = trees.filter((t) => t.kind === 'palm');
   for (let v = 0; v < 2; v++) { const list = palmList.filter((t, i) => i % 2 === v); if (list.length) mkInst(palmGeometry(v + 1), leafMat, list, true, shadeVar, palmGeometry(v + 1, 1)); }
   for (let v = 0; v < 3; v++) mkInst(treeGeometry('bush', v + 1), leafMat, bushes.filter((b, i) => i % 3 === v), true, shadeVar, treeGeometry('bush', v + 1, 1));
+  if (BATCH.on) batchFor(leafMat).build();
   for (const t of trees) if (!t.gone) physics.add({ type: 'cyl', x: t.x, z: t.z, r: (t.kind === 'palm' ? 0.3 : 0.42) * t.s, camR: 1.5 * t.s, top: t.h + 6 * t.s, seeThrough: false });
   for (const b of bushes) if (!b.gone) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
   W.trees = trees;
@@ -682,6 +720,7 @@ export function buildWorld(parentScene) {
   }
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
+  if (BATCH.on) batchFor(rockMat).build();
   for (const r of rocks) if (r.s > 0.6) physics.add({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.1, top: r.h + r.s * 0.95, seeThrough: true });
 
   // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------
