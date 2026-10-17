@@ -26,6 +26,7 @@ Object.assign(STR.en, {
   zl_shoved: 'Off the flue it goes. It can sit on the stage like the others.',
   zl_knocked: 'Oops.',
   zl_draws: 'Somewhere below, the heat box clicks. The lamp turns green.',
+  zl_draws_st: 'The heat box on the wall clicks. Its lamp turns green.',
 
   // ---- Mother Snuff
   zl_snuff_1: 'Oven\'s cold. Again. And the street is waiting for its bread.',
@@ -41,6 +42,7 @@ Object.assign(STR.en, {
   zl_snuff_pay: 'Hot, and the dough didn\'t even sulk. Five kashes. And mind the stair.',
   zl_snuff_pay_b: 'Hot oven, sticky grass, one sad Mosquibee. Five kashes. I\'ll make it up to him in rolls.',
   zl_snuff_paynoask: 'Was that you on my roof? The oven\'s warm! Here, five kashes.',
+  zl_snuff_paynoask_b: 'Was that your ball? Nectar on my grass, and the oven\'s warm! Here, five kashes.',
   zl_snuff_after_pre: [
     'Tavo carries the rolls to the depot. The crews pay on time. Say what you like about the project.',
     'This house was built for watching people. Now it feeds them.',
@@ -62,6 +64,12 @@ Object.assign(STR.en, {
   zl_bz_1: 'Bzz! That roof is the flattest landing on the island. The old guards built well.',
   zl_bz_2: 'My crate up there is for the depot. It stays on the stage till they sign for it. Rules.',
   zl_bz_wait: 'The depot hasn\'t signed. My crate stays put. Bzz.',
+  // (asked again: the street's news first, by phase; 'post' shares 'pre')
+  zl_bz_i_pre: 'No shuttles, so everything waits on my stage. Crates, nectar, me.',
+  zl_bz_i_mid: 'The shuttles fly again. Forty crates a day, and the depot signs for ten.',
+  zl_bz_i_council: 'The council talks. The depot waits for the council. My crate waits for the depot.',
+  zl_bz_i_network: 'Everyone\'s busy with Baldino\'s relays. Nobody\'s busy signing for nectar.',
+  zl_bz_i_late: 'The ground\'s quiet now. The depot isn\'t. Still no signature.',
   zl_bz_nectar: 'My nectar!',
   zl_bz_shoved: 'You moved my crate off Snuff\'s flue? That was a flue? Bzz. It\'s the right height for a table.',
   zl_bz_broken: 'Forty crates to fly. Thirty-nine to deliver. The depot can sign for a puddle.',

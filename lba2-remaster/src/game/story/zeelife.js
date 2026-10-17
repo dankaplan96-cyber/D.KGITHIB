@@ -36,6 +36,8 @@ export class ZeelichLife extends ChapterBase {
     return i > this.idx('network') ? 'late' : 'mid';
   }
   get off() { return !!this.f.zl_crate; }   // the crate is off the flue: the oven is hot
+  // Twinsen up on the watch house (the roof, or the guards' stair above the first steps)
+  up() { const h = this.game.hero.pos, w = this.L?.watch; return !!w && h.y > w.roofY - 3.1 && Math.hypot(h.x - w.flue.x, h.z - w.flue.z) < 6.5; }
 
   // ---------------------------------------------------------------- state → world
   applyFlags() {
@@ -141,7 +143,8 @@ export class ZeelichLife extends ChapterBase {
     const lines = [];
     if (fell) lines.push(['zbee1', 'zl_bz_nectar'], ['hero', 'zl_knocked']);
     if (first) lines.push(['hero', first]);
-    lines.push(['hero', 'zl_draws'], ['zmole2', 'zl_snuff_warm']);
+    // on the roof the heat box is somewhere below; from the street (the ball way) he sees its lamp
+    lines.push(['hero', this.up() ? 'zl_draws' : 'zl_draws_st'], ['zmole2', 'zl_snuff_warm']);
     this.chain(lines, () => { g.hud.toast('zl_toast_oven'); g.save(false); });
   }
 
@@ -157,20 +160,24 @@ export class ZeelichLife extends ChapterBase {
     switch (id) {
       case 'zmole2':   // Mother Snuff
         if (f.zl_done && !f.zl_paid) {
-          return c([['zmole2', !f.zl_ask ? 'zl_snuff_paynoask' : f.zl_crate === 'broken' ? 'zl_snuff_pay_b' : 'zl_snuff_pay']], () => {
+          const b = f.zl_crate === 'broken';   // (the ball way: the crate fell on her grass, nobody was on her roof)
+          return c([['zmole2', !f.zl_ask ? (b ? 'zl_snuff_paynoask_b' : 'zl_snuff_paynoask') : b ? 'zl_snuff_pay_b' : 'zl_snuff_pay']], () => {
             f.zl_paid = true;
             this.reward('zl_owe', 'coin', 1, npc.pos.x, npc.pos.y + 1.2, npc.pos.z, { pop: true, value: 5 });
             g.save(false);
           });
         }
         if (f.zl_done) return one('zmole2', pk('zl_snuff_after'));
+        // (she points him to the stair: she is talked to from the street only, never from her roof or the stair,
+        // which are too high above her or out of reach: Game.findInteractable, TALK_ABOVE)
         if (!f.zl_ask) return c([['zmole2', 'zl_snuff_1'], ['zmole2', 'zl_snuff_i_' + ph], ['zmole2', 'zl_snuff_2']], () => { f.zl_ask = true; g.save(false); });
-        return c([['zmole2', 'zl_snuff_wait']]);
+        // asked already: what the street talks about now, then the flue
+        return c([['zmole2', 'zl_snuff_i_' + ph], ['zmole2', 'zl_snuff_wait']]);
       case 'zbee1':    // Bzizz
         if (f.zl_done && !f.zl_bzThanks) return c([['zbee1', f.zl_crate === 'broken' ? 'zl_bz_broken' : 'zl_bz_shoved']], () => { f.zl_bzThanks = true; g.save(false); });
         if (f.zl_done) return one('zbee1', pk('zl_bz_after'));
         if (!f.zl_bz) return c([['zbee1', 'zl_bz_1'], ['zbee1', 'zl_bz_2']], () => { f.zl_bz = true; g.save(false); });
-        return c([['zbee1', 'zl_bz_wait']]);
+        return c([['zbee1', 'zl_bz_i_' + (ph === 'post' ? 'pre' : ph)], ['zbee1', 'zl_bz_wait']]);
       case 'ztri1': return one('ztri1', pk('zl_pel'));     // Mr Pelleck
       case 'zmole1': return one('zmole1', pk('zl_grumm')); // Old Grumm
       case 'ztri2': return f.zl_done ? one('ztri2', 'zl_tavo_done') : false;   // Tavo (his idle lines until then)

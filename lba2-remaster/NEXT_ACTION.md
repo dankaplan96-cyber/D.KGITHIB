@@ -18,7 +18,7 @@ Hamalayi foothills), each open with its chapter (src/game/travel.js). The Holoma
 Next: an independent review of ZL-ALL/CONNECT; follow-ups for the owners of other files: the harbour's ferry
 timetable board (props.js/citydress.js) still lists ZEELICH sailings; chapter 10's glider menu (network.js) still
 flies Hesk to Zeelich — both story-era crossings, the user may want them to read as spaceship/project-only.
-0.29.1 (PLANET-1, the user: "Twinsun and Zeelich are two separate planets, so the crossing between them is a
+0.29.2 (PLANET-1, the user: "Twinsun and Zeelich are two separate planets, so the crossing between them is a
 spaceship"): both follow-ups done and every other crossing found — chapter 2's trip is the project's ship from
 Citadel Spaceport (Doran, Baldino's start code; arrival on Zeelich Spaceport), chapter 3 → 4 home by ship then the
 ferry, chapter 8's project ships board at the spaceport, chapter 10's glider is Twinsun's only (the spaceship between
