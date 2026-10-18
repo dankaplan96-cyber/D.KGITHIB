@@ -72,13 +72,13 @@ Walking (8-neighbour shortest path on the height grid, slopes ≤ 1.1, our solid
 
 | | Original (DESERT.ILE, 4 × 5 sections) | Ours before | Ours now |
 |---|---|---|---|
-| Land | 34,394 m², 217 × 264 m | 24,399 m², 187 × 176 m, a round blob (radius ≈ 90 m) | 33,146 m², 263 × 214 m (the original's long axis runs east–west in our frame) |
-| Outline | inlets from the north, a lagoon, a round hill ringed by water, a south-east arm and islet, a south-west plateau | — | the original's, turned 275° and shifted (−4, −40) (`DESERT_FIT`): IoU **0.927** in that frame (before: 0.519; original-only 1,905 m² where our places pushed the coast out or the beach runs under the waterline, ours-only 641 m²) |
+| Land | 34,394 m², 217 × 264 m | 24,399 m², 187 × 176 m, a round blob (radius ≈ 90 m) | 33,057 m², 263 × 214 m (the original's long axis runs east–west in our frame) |
+| Outline | inlets from the north, a lagoon, a round hill ringed by water, a south-east arm and islet, a south-west plateau | — | the original's, turned 275° and shifted (−4, −40) (`DESERT_FIT`): IoU **0.927** in that frame (before: 0.519; original-only 1,953 m² where our places pushed the coast out or the beach runs under the waterline, ours-only 600 m²) |
 | Heights | shelves 0.5 / 1.5 / 3 / 4.5 / 5.5 / 7 m, top 11.4 m | plain 5 m, invented mesas to 20 m | plain 5 m (our places), the original's high ground rising from 8 m beyond our places (its height above 4 m × 1.25), its low ground rolling ± 1 m; two mesas kept (the camp's, the School of Magic's), rounded |
-| Cliff share | 12.4 % | 7.3 % | 10.9 % |
+| Cliff share | 12.4 % | 7.3 % | 11.6 % |
 | Axis-aligned cliff edge | 28 % | 36 % | 33 % |
 | Walking reach (95th percentile from the middle) | 146 m | 108 m | 135 m |
-| Soft-lock cells (can drop in, can't walk out) | — | 8 m² | 0 (a flood fill lifts every pit into a ramp, as on Citadel) |
+| Soft-lock cells (can drop in, can't walk out; slope 1.1 on the terrain grid) | — | 8 m² | 2 single 1 m points at the waterline (a flood fill lifts every pit into a ramp, as on Citadel: 865 points lifted) |
 
 Where the original's places fall in our frame: its village door cluster (scenes 35, 36, 38, 39) lands at
 (−64…−43, −21…−4), 10–20 m from our Kesh (−50, 2); its door 40 at (−39, −38) by our glider field; its northern
@@ -125,7 +125,7 @@ The 6–12 % extra is the shore ring the half-resolution grid adds. No change ne
 - `src/game/desert.js`: the coast and the high ground from the original (`desert-layout.js`, `DESERT_FIT`); a
   coast distance field (2 m grid) replaces the radius test everywhere (ground, rocks, shrubs, cacti); a long low
   beach (1 in 2.2) that steepens only by our places and where the ground behind is high (sea cliffs); the patch
-  300 m / 280 segments (was 250 / 250) to hold the whole island; mesas rounded (superellipse 2.6, two wobbles) and
+  300 m / 300 segments (was 250 / 250; the points stay on whole metres, so the dig's walls and ADV-1's discs sample exactly as before — with 280 segments tests/chapter4.mjs's disc throws hit the cold discs) to hold the whole island; mesas rounded (superellipse 2.6, two wobbles) and
   the two that stood in the original's sea retired; the ground grid flood-filled for soft-locks.
 - `src/game/desert-layout.js` (new, generated): the original DESERT ground as numbers (every 2nd height, 0.05 m
   steps, base64; 28 KB). `tools/lba2-islands.py --desert` writes it from the user's files.
@@ -150,9 +150,9 @@ Same spots and camera before (a9c1ec8, served from a copy) and after (this branc
 | Hamalayi, monastery gate | 187 → 182 | 436,587 → 428,299 |
 
 (The Citadel's +1,572 triangles come with the merged 2d767be; this pass does not touch Citadel.) The Desert's terrain grid
-grew from 251² to 281² points (+16,000 triangles where the whole island is in view); the scatter on the new land
+grew from 251² to 301² points (+28,000 triangles where the whole island is in view; measured above with the earlier 281²); the scatter on the new land
 joins the existing instanced/batched meshes (no new draw calls). Region build time, this container under load
-(other agents running): Desert 857 ms before, 1,411 ms after (the coast grid, the flood fill); the Hamalayi
+(other agents running): Desert 857 ms before, 540–1,411 ms after across runs (the coast grid, the flood fill; noisy); the Hamalayi
 unchanged within noise.
 
 ## Citadel terraces: tried in block 3, reverted
@@ -187,6 +187,19 @@ eight 55 m scenes. Its chapters need the lift and the ridge; shrinking it is a s
 
 **Holomap**: MAP-1's map (src/game/mapdraw.js) frames each region by its terrain patch, so it shows Desert Island's
 new outline (300 m patch) and the raised terraces by itself (tests/holomap.mjs below).
+
+## Tests (sequential, SwiftShader, this container under load from other agents)
+
+- r2 (Desert and Hamalayi changes, before 0.31.0): desert-life, chapters 1–10, wizards, travel, transitions, townlife,
+  zislands, spaceport, opening, shipfiles: all passed.
+- r3/r4 (with the Citadel terrace plan, on 0.31.0): prologue, chapters 1–10, wizards, arsenal, holomap, drawcalls,
+  opening, desert-life, spaceport, zislands, shipfiles passed; stability passed once its D13 was made relative and
+  the Desert pier's beach kept gentle; travel (chapter 10) and occluders (b) failed both runs → plan reverted;
+  townlife's pump (REV-TY-3 N3), perfbudget's shader compiles and transitions' real-time fade failed in r3 (not
+  terrain; townlife passed in r5 on a1ff730 with FIX-PUMP-N).
+- r5–r7 (terraces reverted, merged a1ff730): stability, travel, occluders, townlife, desert-life passed; chapter4
+  failed with the 280-segment Desert grid (ADV-1's disc throws; the same test passes on a1ff730 itself) and passed
+  with 300 segments (r6); r7 on the final code: stability, chapter5, desert-life, travel all passed.
 
 ## Evidence (session scratchpad, not committed)
 

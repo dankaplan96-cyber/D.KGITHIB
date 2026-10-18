@@ -33,7 +33,7 @@ import {
 } from './kit.js';
 
 export const DESERT = { x: 3400, z: 0 };
-const SIZE = 300, SEGS = 280;   // (the original's island reaches 141 m from our centre)
+const SIZE = 300, SEGS = 300;   // (the original's island reaches 141 m from our centre; 1 m points, as before, on whole metres: the dig's walls and discs sample as they did)
 const BASE = 5.0;
 const SEA_Y = -0.2;
 
