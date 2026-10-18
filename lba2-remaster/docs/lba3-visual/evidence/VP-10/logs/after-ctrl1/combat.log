@@ -1,0 +1,61 @@
+PASS sword: no damage before the active frames {"startupHits":[0,0,0,0,0,0],"afterFirst":1,"combo0":0,"combo1":1,"total":2,"anim":"slash2"}
+PASS sword: one hit per swing {"startupHits":[0,0,0,0,0,0],"afterFirst":1,"combo0":0,"combo1":1,"total":2,"anim":"slash2"}
+PASS sword: buffered press continues the combo {"startupHits":[0,0,0,0,0,0],"afterFirst":1,"combo0":0,"combo1":1,"total":2,"anim":"slash2"}
+PASS mashing does not chain more than the combo allows {"hits":2,"busy":false}
+PASS sword blocked by the wall {"hp":50,"picked":null}
+PASS targeting skips enemies behind walls {"hp":50,"picked":null}
+PASS dodge: hit during the hop misses {"hpIn":10,"hpOut":9,"moved":2.49,"max":10}
+PASS dodge: hit after it lands {"hpIn":10,"hpOut":9,"moved":2.49,"max":10}
+PASS ball: no tunnelling through a thin wall at 15 fps {"minZ":2.58,"crossed":false,"state":"idle"}
+PASS ball: back in hand afterwards {"minZ":2.58,"crossed":false,"state":"idle"}
+PASS ball: a second press before 0.2 s does not recall or duplicate {"st1":"inhand","st2":"return","end":"idle"}
+PASS ball: recall {"st1":"inhand","st2":"return","end":"idle"}
+PASS scene change returns the ball and clears combat {"flying":"fly","after":"idle","busy":false}
+PASS no attack fires after dialogue closes {"state":"play","hits":0,"busy":false}
+PASS lock-on picks the target and releases it on defeat {"locked":"a_mite","after":null}
+PASS sentry blocks a frontal slash {"hpBlock":30,"st1":"chase","st2":"stagger","hpHeavy":28,"d":2.27,"anim":"heavy","holding":null}
+PASS heavy strike breaks the guard {"hpBlock":30,"st1":"chase","st2":"stagger","hpHeavy":28,"d":2.27,"anim":"heavy","holding":null}
+PASS crawler slam hurts inside the ring {"hit":true,"dodgedHp":10,"max":10}
+PASS crawler slam dodged {"hit":true,"dodgedHp":10,"max":10}
+PASS ball switch opens the gate {"open":true}
+PASS weapons saved and restored {"hasSword":true,"hasPulse":false,"weapon":"sword","prev":"ball","owned":["ball","sword","fists"]}
+PASS dodge distance consistent at 30 and 60 fps {"d30":2.45,"d60":2.33}
+PASS ball (f30): a held press never throws before charging; release throws charged {"holdEarly":null,"charging":true,"holdShot":{"t":1.133,"charged":true},"mp":2.6416666666666693,"tap":{"t":0.167,"charged":false},"short":{"t":0.2,"charged":false},"shortLag":0.033,"repress":{"t":0.167,"charged":false},"other":{"t":0.167,"charged":false}}
+PASS ball (f30): tap throws quick at the release frame {"t":0.167,"charged":false}
+PASS ball (f30): short hold throws quick right after the release {"short":{"t":0.2,"charged":false},"lag":0.033}
+PASS ball (f30): release + press again does not charge {"t":0.167,"charged":false}
+PASS ball (f30): a held attack button does not hold the ball key's throw {"t":0.167,"charged":false}
+PASS ball (f60): a held press never throws before charging; release throws charged {"holdEarly":null,"charging":true,"holdShot":{"t":1.1,"charged":true},"mp":2.635833333333336,"tap":{"t":0.167,"charged":false},"short":{"t":0.217,"charged":false},"shortLag":0.034,"repress":{"t":0.167,"charged":false},"other":{"t":0.167,"charged":false}}
+PASS ball (f60): tap throws quick at the release frame {"t":0.167,"charged":false}
+PASS ball (f60): short hold throws quick right after the release {"short":{"t":0.217,"charged":false},"lag":0.034}
+PASS ball (f60): release + press again does not charge {"t":0.167,"charged":false}
+PASS ball (f60): a held attack button does not hold the ball key's throw {"t":0.167,"charged":false}
+PASS ball (f120): a held press never throws before charging; release throws charged {"holdEarly":null,"charging":true,"holdShot":{"t":1.092,"charged":true},"mp":2.6329166666666692,"tap":{"t":0.167,"charged":false},"short":{"t":0.217,"charged":false},"shortLag":0.034,"repress":{"t":0.167,"charged":false},"other":{"t":0.167,"charged":false}}
+PASS ball (f120): tap throws quick at the release frame {"t":0.167,"charged":false}
+PASS ball (f120): short hold throws quick right after the release {"short":{"t":0.217,"charged":false},"lag":0.034}
+PASS ball (f120): release + press again does not charge {"t":0.167,"charged":false}
+PASS ball (f120): a held attack button does not hold the ball key's throw {"t":0.167,"charged":false}
+PASS charging: a slow controlled walk (not frozen, not full speed), the direction turns the aim {"moved":0.609,"turned":2.36,"thrown":true,"alongRight":1}
+PASS ...and the release throws where he aims {"moved":0.609,"turned":2.36,"thrown":true,"alongRight":1}
+PASS ball without magic: home at the first contact, nothing spent {"mp":0,"contacts":1,"end":"idle"}
+PASS ball with magic: 1 point spent, 4 bounces, home on the 5th contact {"mp":4,"contacts":5,"end":"idle"}
+PASS ball fetches a bonus it touches {"dry":{"mp":0,"contacts":1,"end":"idle"},"wet":{"mp":4,"contacts":5,"end":"idle"},"carried":true,"coins":1,"left":false,"color":"#ffe68a"}
+PASS mouse aim: a cursor left still for 6 s is still the aim {"aiming":true,"src":"mouse","z":1}
+PASS mouse aim: walking sideways while charging does not redirect the throw {"shot":{"aim":{"x":-0.04141674852501902,"z":0.9991419583530736,"src":"mouse"},"actionT":0.163,"hand":0.08},"strafe":0.44}
+PASS charging on the move: the legs walk (no frozen pose) {"legs":"walk"}
+PASS the ball leaves the hand at the release frame {"aim":{"x":-0.04141674852501902,"z":0.9991419583530736,"src":"mouse"},"actionT":0.163,"hand":0.08}
+PASS the follow-through blends into the walk (no arm snap) {"maxJump":0.168,"layered":true}
+PASS Aim Assist Off: no soft target, no correction {"soft":false,"target":false,"drift":0}
+PASS a camera drag never toggles the lock; a right tap does {"drag":false,"tap":true}
+PASS classic: the arrows turn on the spot at LBA2's ~100°/s (Normal) and walk {"turn":1.75,"walked":0.95,"planted":0,"aimTurn":0.94,"along":1,"dodged":3.24,"thrown":true}
+PASS classic: holding Alt plants the feet and the arrows turn the aim {"turn":1.75,"walked":0.95,"planted":0,"aimTurn":0.94,"along":1,"dodged":3.24,"thrown":true}
+PASS classic: the release throws the way he faces (the resting cursor does not aim) {"turn":1.75,"walked":0.95,"planted":0,"aimTurn":0.94,"along":1,"dodged":3.24,"thrown":true}
+PASS classic: X dodges {"turn":1.75,"walked":0.95,"planted":0,"aimTurn":0.94,"along":1,"dodged":3.24,"thrown":true}
+PASS guard: spots, aims with a brightening line (the tell), fires {"states":["alerted","chase","aim","recover"],"line":0.75,"hp":[10,8],"soft":"blocked","hpSoft":5,"hard":"hit","hpHard":3,"down":true,"bonus":1}
+PASS guard: a Grobo guard's armour takes a weak hit without harm, not a strong one {"states":["alerted","chase","aim","recover"],"line":0.75,"hp":[10,8],"soft":"blocked","hpSoft":5,"hard":"hit","hpHard":3,"down":true,"bonus":1}
+PASS guard: a beaten guard falls and leaves a bonus {"states":["alerted","chase","aim","recover"],"line":0.75,"hp":[10,8],"soft":"blocked","hpSoft":5,"hard":"hit","hpHard":3,"down":true,"bonus":1}
+PASS guard dog: notices, barks, runs, crouches with the jaw wide (the tell), bites {"states":["warn","chase","windup","lunge","recover"],"jaw":0.55,"hp":[10,7],"down":true,"bonus":1}
+PASS guard dog: three hits knock it out and leave a bonus {"states":["warn","chase","windup","lunge","recover"],"jaw":0.55,"hp":[10,7],"down":true,"bonus":1}
+PASS FunFrock's trooper: spots, aims, fires; a weak hit is taken on its armour {"states":["alerted","chase","aim","recover"],"hp":[10,8],"soft":"blocked","look":"","armour":2}
+no errors
+ALL PASSED

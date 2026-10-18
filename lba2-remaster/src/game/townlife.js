@@ -23,6 +23,7 @@
 import * as THREE from 'three';
 import { MAT, rbox, plane, cyl, sphere, lathe, torus, canvasTex, Kit } from './props.js';
 import * as P from './props.js';
+import { occOf } from '../engine/occlude.js';
 
 const PUMP = { x: -42.0, z: 65.0 };
 const GARDEN = { x: -60.0, z: 83.5 };   // (west of the house, where the ground is flat)
@@ -330,6 +331,10 @@ export function buildTownLife(root, physics, W) {
       put(plane(1.6, 0.42), signM, -1.36, 3.5, 0, -Math.PI / 2);   // (its board stands on the roof's front edge)
       put(rbox(0.05, 0.46, 1.66, 0.01), boardM, -1.32, 3.5, 0);
     }
+    // the play camera rises over the roof (with its board) and the back wall rather than look through them, as LBA2's
+    // camera does over scenery (VP-10, src/engine/occlude.js); standing under the roof, the fade below still applies
+    occOf(W).add({ kind: 'box', x: s.x, z: s.z - 0.025, hw: 1.75, hd: 1.475, y0: sy + 2.3, y1: sy + 3.8, name: "Nell's roof" });
+    occOf(W).add({ kind: 'box', x: s.x, z: s.z - 1.3, hw: 1.62, hd: 0.1, y0: sy - 0.5, y1: sy + 2.45, name: "Nell's back wall" });
     {
       const R = { x0: s.x - 1.75, x1: s.x + 1.75, z0: s.z - 1.5, z1: s.z + 1.45, y0: sy + 2.3, y1: sy + 3.8 }, sample = new THREE.Vector3(), from = new THREE.Vector3();
       let f = 1; const prev = W.fadeOccluders;

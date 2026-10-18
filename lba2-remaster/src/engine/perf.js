@@ -5,6 +5,18 @@
 //   ?perf or F9        → a small overlay
 const N = 600;
 
+// The graphics preset a first start picks from the GPU the browser reports (ANGLE's renderer string):
+//   Low    older integrated GPUs and phones: Vega 3–11 (Ryzen 2000–4000 APUs), Intel HD / UHD, Mali, Adreno, PowerVR
+//   Medium newer integrated GPUs: Intel Iris (Xe), "AMD Radeon(TM) Graphics" (Ryzen 5000+ APUs, incl. 680M/780M)
+//   High   everything else (discrete GPUs, Apple silicon, software renderers: the automated tests keep High)
+export function gpuQuality(gpu = '') {
+  if (/Vega \d|Radeon Vega|Radeon\(TM\) Vega|Intel\(R\) HD|\bHD Graphics|UHD Graphics|Mali|Adreno|PowerVR|GMA/i.test(gpu)) return 'low';
+  if (/Iris|Radeon\(TM\) Graphics|Radeon Graphics|Intel/i.test(gpu)) return 'medium';
+  return 'high';
+}
+// the old rule (before 0.30): any integrated GPU started on Medium
+export const oldGpuQuality = (gpu = '') => (/Intel|UHD|Iris|Radeon\(TM\) Graphics|Radeon Vega|Vega \d|Mali|Adreno|PowerVR/i.test(gpu) ? 'medium' : 'high');
+
 export class Perf {
   constructor(renderer) {
     this.r = renderer;
@@ -59,7 +71,7 @@ export class Perf {
     this.el.textContent = `${s.fps} fps   frame p50 ${s.frameMs.p50} · p95 ${s.frameMs.p95} · max ${s.frameMs.max} ms\n`
       + `sim ${s.simMs.p50} ms · render (CPU) ${s.renderMs.p50} ms · steps ${s.steps.mean}/${s.steps.max}\n`
       + `draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k${s.lostS ? ` · lost ${s.lostS}s` : ''}\n`
-      + `pixel ratio ${this.r?.getPixelRatio?.().toFixed(2)}${this.game?.renderer?.autoRes ? ` (auto ×${this.game.renderer.dyn})` : ''}\n`
+      + `pixel ratio ${(this.game?.renderer?.pixelRatio?.() ?? this.r?.getPixelRatio?.())?.toFixed(2)}${this.game?.renderer?.autoRes ? ` (auto ×${this.game.renderer.effScale()})` : ''} · ${this.game?.settings?.quality ?? ''}\n`
       + `${this.gpu}${this.load ? `\nstartup: build ${(this.load.total / 1000).toFixed(1)} s · shaders ${(this.load.shaders / 1000).toFixed(1)} s` : ''}`;
   }
 }

@@ -148,6 +148,11 @@ and fights its way through with keys only.
 | In-game benchmark (draw calls / triangles) | street High 847 / 1.23 M, Medium 441 / 846 k; house ~211–223 / ~410 k (was 201 k at 0.11.0, before the house rebuild); combat ~220 / 253 k |
 | Frame rate on a GPU | BLOCKED: no GPU here (SwiftShader). The user's own benchmark (pause → Benchmark) is the way |
 | First visit to a room/region | shaders compile behind the black transition (0.22.0, transitions.mjs) |
+| PERF-IGPU (2026-10-18, branch of d3a7343 + a9c1ec8): black frames from the automatic resolution | FAIL → FIXED. tests/dynres.mjs on the old renderer: every resolution step after a drawn frame left the drawing buffer black (8/8 probes), targets disposed 26×; now 8/8 PASS (15 forced steps, no blank frame, sizes and targets constant, hysteresis, preset change, window resize) |
+| PERF-IGPU draw calls (tests/perfbudget.mjs, 1366×768, preset saved before loading) | street Low/Medium/High 344/630/713 → 277/325/365; interior 151/255/268 → 117/121/135; transition 224/412/483 → 161/206/230; combat 144/217/230 → 145/214/227. Budgets met: High street ≤ 450, interiors ≤ 150. Not met: Medium street ≤ 300 (needs the town.js/island.js merges, VISUAL_REMASTER "Remaining" 3) |
+| PERF-IGPU shader programs | at load Low/Medium/High 107/115/123 → 69/79/87 (no second compile for the canvas); 0 new programs on any route after loading, at every preset (shadow depth programs warmed too) |
+| PERF-IGPU first door after a new game (coordinator's merge check) | FAIL → FIXED. transitions.mjs "real time … fade-in runs in full" failed: the shadow warm-up at load drew the whole scene once more (a 4096 shadow map and a full frame), which queued ~10 s of software-GPU work that the first door then waited on. The warm-up now draws only its small copies (the scene's lights kept, everything else hidden). First rAF after unfreezing 11.4–13 s → 1.0–2.1 s (rt.mjs); transitions.mjs ALL PASSED ×3, dynres, stability pass; 0 new programs on the street route |
+| PERF-IGPU regression (same build) | dynres 8/8, merge 3/3, stability 16/16, display 15/15, transitions 5/5, house 2/2, townlife 35/35, spaceport 7/7, opening, shipfiles, timing: see the PERF-IGPU report; no page errors |
 
 
 ### Story and progression (player-input playthrough, tests/playthrough/01–14)
@@ -215,6 +220,22 @@ Served on 127.0.0.1:8177 from the worktree; headless Chromium + SwiftShader; tes
 | Draw calls per place, arrival/landmark (one composed frame, 1280×720, SwiftShader, CPU-side counts; evidence/ZL-ALL/draws-final.json): Lift Dock 205/208, Tralu Rock 211/212, Nectar Orchard 147/144, Old Watch 132/130, Celebration 199/204 (before: 179/174); budget ≈ 775 | renderer.info | under budget |
 | Regression: stability (16), chapter2, chapter4, chapter5 (rc 0, no errors), zeelich-life (31) | evidence/ZL-ALL/logs/ | PASS |
 | Look on a GPU, feel by hand, frame rate | — | NOT TESTED |
+
+### The story's crossings to Zeelich by spaceship (PLANET-1, 0.29.2)
+Served on 127.0.0.1:8181 from the worktree; headless Chromium + SwiftShader; tests from a scratch directory, one
+browser at a time. Final run on the merged tree (0f68e20: PLANET-1 + ccr-adf00ea7-37ebl3 at 2d767be). Logs:
+docs/lba3-visual/evidence/PLANET-1/logs/ (summary-final-0f68e20.txt; earlier runs' summaries kept; two travel runs on
+an overloaded machine hit the runner's time limit before finishing and are not counted).
+| Check | Evidence | Result |
+|---|---|---|
+| Every travel route touching Zeelich is the spaceship (one route, Citadel ⇄ Zeelich Spaceport) or a Zeelich shuttle; ferry and glider routes are Twinsun ⇄ Twinsun | LOGIC (tests/travel.mjs, route data) | PASS |
+| Chapter 2: Doran at the harbour agrees, moves to the spaceport, objective "Meet Doran at the spaceport"; no crossing from the harbour. E at the pad's project ship → chapter 3 on Zeelich Spaceport's deck, plan confiscated there, the dock's sky-ferry hidden | INPUT (ISO: chapter flags) tests/travel.mjs; tests/chapter1.mjs (LOGIC) | PASS |
+| Chapter 8: no ship at the harbour quay; E at the project ship on Citadel Spaceport's pad → chapter 9 on Zeelich Spaceport's deck | INPUT (ISO: chapter flags) tests/travel.mjs; tests/chapter8.mjs | PASS |
+| Chapter 10: no Hesk on Zeelich; spaceship to Citadel; Hesk's glider menu = Citadel, Desert Island, the Hamalayi (no Zeelich); the loop back to Zeelich by glider + spaceship | INPUT tests/travel.mjs; tests/chapter10.mjs travel steps | PASS (chapter10.mjs: CHAPTER 10 DONE on the merged tree) |
+| Playthrough segments 05 (Doran at the harbour → the project's ship at the spaceport → Zeelich Spaceport) and 06 (from the spaceport deck to the workshop … the shaft → chapter 4), from a save made by segments 01–04 | INPUT (06: 1 ISO assist in the depot fight, as before) logs/playthrough-05.log, playthrough-06.log | PASS |
+| Regression: chapter1, chapter2 (to chapter 4 via Zeelich), spaceport, zeelich-life, opening, stability, chapter8, chapter9 | logs/ | PASS (rc 0, no errors) |
+| Code search: no ferry/boat/glider/beam route or line to Zeelich in src/ (English and Hebrew tables) | grep (report) | PASS |
+| Feel by hand, the spaceport walk in a real browser on a GPU | — | NOT TESTED |
 
 ### Twelve years on, first set (0.24.0; docs/TWELVE_YEARS.md)
 | Check | Evidence | Result |
@@ -454,6 +475,35 @@ before = 31deb6c served from a `git archive` export of that commit, run with the
 
 Not checked here: chapters 5–8 and 11+ tests after the talk-prompt change (it touches every conversation: a person
 more than 1.8 m below Twinsen can no longer be talked to; none of the run tests needed that); the feel by hand; GPU.
+
+### Baldino's hop-pack (0.30.0; EQ-1; src/game/jetpack.js; STORY_BIBLE.md "Baldino's hop-pack")
+`tests/jetpack.mjs` (port 8188; SwiftShader, 960×540; ~35 min): 48/48 PASS, no page errors (2026-10-18). Regressions on the same build: arsenal 34/34, combat 59/59, stability 16/16, travel 12/12, chapter2 to its end (chapter 4 reached), no errors. Captures: captures/jetpack/. INPUT: F2 (Athletic), Space held, the
+arrows, E, the inventory (I / arrows / E), Esc and the pause menu's buttons, the title's Continue, game-over Retry.
+ISO (logged): chapter 10 reached by its flags (as chapter10.mjs); the Hamalayi, Desert Island, Citadel's pier and the
+galleries reached by the room switch the glider/shuttle use; a hit, a death and a line of dialogue injected mid-flight;
+a 9 m drop placed by hand; a test slab for the ceiling (the engine has no outdoor overhang with room under it: the test
+counts them — 0); invalid/old saves written by hand.
+
+| Check | Result |
+|---|---|
+| Not offered before chapter 10; after Baldino's ch. 10 briefing he points it out (once); E on the peg: his lines on its limits, worn at once, saved at once, toast | PASS |
+| Inventory: "Hop-Pack — worn", description with the limits; E takes it off / puts it on; no second pack | PASS |
+| Indoors (workshop) and underground (c3gallery): never lights; "needs open sky" toast | PASS |
+| Test step (2.35 m): a running jump can't reach it; with the pack he lands on the deck; the tin: a clover + 10 kashes, once; journal lines done | PASS |
+| Lift ≤ 2.4 m over the take-off (2.42 measured); 2.2 s of thrust (133 frames at 60); refill < 2 s on firm ground; never in Normal mode | PASS |
+| Zeelich's edge (never over the cloud sea), a house wall 3.8 m (no roof), the depot fence 2.4 m (never inside), a ceiling (head ≤ underside), the workshop door (no entry in the air; in on landing) | PASS |
+| Oku's mill (ch. 10): stones two at a time — 4 hops to the gallery instead of 7; unbraked, no relay prompt on top (the gate holds) | PASS |
+| 9 m drop: without the pack hurts; Space held: no damage, one cushion | PASS |
+| Mid-flight: dialogue (flame opacity 0 on the rendered frame, no thrust; a held key does not relight), pause (still; resume needs a fresh press), scene change (arrives standing, pack out), a hit (cut), Zoé (no pack, no flight) | PASS |
+| Save & quit → Continue pressed in the air: on the ground at his last safe spot, pack worn and full, tin/peg stay empty, kashes kept | PASS |
+| Death mid-flight: pack out at once, falls, game over; Retry: standing, pack worn and full | PASS |
+| Citadel's pier end (never over the sea, back on the deck); the Hamalayi lift's cliff (≤ one storey, the lift stays the way up); 8 cliffs at the Hamalayi's edges found by scan (gain 2.36–2.59 m, all back down; the Desert scan found none within its range) | PASS |
+| A save placing him over the cloud sea → the region's spawn, standing; a save without the pack fields → no pack, back on its peg | PASS |
+| 30 vs 60 steps a second: the same height, both on the deck; the fence holds at both | PASS |
+| Cost (renderer.info, SwiftShader, Zeelich's green, 960×540): the pack is 11 meshes / 1,100 triangles (static parts merged per material); worn +12 draw calls (848 vs 836, shadows included), lit +5 (flames, puffs); its own code 0.15 ms per lit frame; whole-frame simulation standing 2.22 / flying 1.63 ms (medians of 3×120 frames: noise larger than the pack). No GPU claim | PASS |
+
+Not verified: feel with a gamepad and on a touch screen, the sounds by ear, real-GPU cost; Desert Island's mesa edges
+(the scan from its spawn met no 6 m rise in reach — its edges are the sea, checked by the same rule as the pier).
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.

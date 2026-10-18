@@ -55,11 +55,21 @@ const DRAW = {
   penguin(x) { x.fillStyle = '#22262e'; x.beginPath(); x.ellipse(36, 42, 17, 22, 0, 0, 7); x.fill(); x.beginPath(); x.arc(36, 18, 12, 0, 7); x.fill(); x.fillStyle = '#f2f0e8'; x.beginPath(); x.ellipse(36, 46, 11, 16, 0, 0, 7); x.fill(); x.fillStyle = '#f0902a'; x.beginPath(); x.moveTo(36, 18); x.lineTo(48, 21); x.lineTo(36, 24); x.fill(); x.fillRect(26, 62, 8, 4); x.fillRect(38, 62, 8, 4); x.strokeStyle = '#e0b25a'; x.lineWidth = 3; x.beginPath(); x.arc(14, 40, 5, 0, 7); x.moveTo(19, 40); x.lineTo(22, 40); x.stroke(); },
   conch(x) { x.fillStyle = radial(x, 32, 34, 26, '#fff0e0', '#e0907a'); x.beginPath(); x.moveTo(8, 50); x.quadraticCurveTo(14, 12, 46, 14); x.quadraticCurveTo(66, 22, 60, 40); x.quadraticCurveTo(44, 60, 8, 50); x.fill(); x.strokeStyle = '#b8604a'; x.lineWidth = 2; for (let i = 0; i < 4; i++) { x.beginPath(); x.arc(46 - i * 6, 30 + i * 2, 10 - i * 2, 0.5, 3.5); x.stroke(); } },
   lantern(x) { x.fillStyle = radial(x, 36, 42, 22, 'rgba(255,220,140,0.9)', 'rgba(255,180,60,0)'); x.fillRect(0, 0, 72, 72); x.strokeStyle = '#b8820a'; x.lineWidth = 3; x.beginPath(); x.arc(36, 10, 6, 0, 7); x.stroke(); x.fillStyle = '#e0b25a'; x.beginPath(); x.moveTo(24, 22); x.lineTo(48, 22); x.lineTo(36, 14); x.fill(); x.fillRect(24, 58, 24, 6); x.fillStyle = '#fff2c8'; x.fillRect(26, 24, 20, 32); x.strokeStyle = '#b8820a'; for (const px of [26, 36, 46]) { x.beginPath(); x.moveTo(px, 24); x.lineTo(px, 56); x.stroke(); } },
+  jetpack(x) {
+    // Baldino's hop-pack: a copper tank between brass cylinders, a lilac cap, the bent antenna, two flames
+    x.fillStyle = 'rgba(255,200,120,0.55)'; for (const cx of [22, 50]) { x.beginPath(); x.moveTo(cx - 6, 56); x.lineTo(cx, 70); x.lineTo(cx + 6, 56); x.fill(); }
+    x.fillStyle = radial(x, 22, 34, 12, '#fff0a0', '#b8820a'); x.fillRect(14, 18, 16, 38); x.fillStyle = radial(x, 50, 34, 12, '#fff0a0', '#b8820a'); x.fillRect(42, 18, 16, 38);
+    x.fillStyle = radial(x, 36, 34, 16, '#f0a070', '#9a4a1a'); x.beginPath(); x.ellipse(36, 36, 13, 20, 0, 0, 7); x.fill();
+    x.fillStyle = '#9a7ab8'; x.beginPath(); x.ellipse(36, 17, 12, 6, 0, Math.PI, 0); x.fill();
+    x.fillStyle = '#3a3632'; x.fillRect(16, 54, 12, 5); x.fillRect(44, 54, 12, 5);
+    x.strokeStyle = '#3a3632'; x.lineWidth = 2; x.beginPath(); x.moveTo(40, 13); x.lineTo(48, 3); x.stroke(); x.fillStyle = '#e8403a'; x.beginPath(); x.arc(48, 3, 3, 0, 7); x.fill();
+    x.fillStyle = '#4ab8ff'; x.beginPath(); x.arc(36, 12, 3, 0, 7); x.fill();
+  },
   pearl(x) { x.fillStyle = radial(x, 36, 36, 20, '#ffffff', '#ff9a3a'); x.beginPath(); x.arc(36, 36, 17, 0, 7); x.fill(); x.fillStyle = 'rgba(255,200,80,0.35)'; x.beginPath(); x.arc(36, 36, 26, 0, 7); x.fill(); },
   radio(x) { x.fillStyle = '#8a3a2a'; x.fillRect(10, 24, 52, 34); x.fillStyle = '#e8d8b0'; x.beginPath(); x.arc(28, 41, 11, 0, 7); x.fill(); x.fillStyle = '#d8a020'; x.beginPath(); x.arc(50, 34, 4, 0, 7); x.fill(); x.beginPath(); x.arc(50, 48, 4, 0, 7); x.fill(); x.strokeStyle = '#ccc'; x.lineWidth = 2; x.beginPath(); x.moveTo(52, 24); x.lineTo(60, 6); x.stroke(); },
 };
 const cache = {};
-const USE = new Set(['penguin', 'protect', 'conch', 'lantern']);
+const USE = new Set(['penguin', 'protect', 'conch', 'lantern', 'jetpack']);
 export function itemIcon(kind) {
   if (cache[kind]) return cache[kind];
   const [c, x] = ctx();
@@ -91,6 +101,7 @@ export class Inventory {
     if (a.penguins > 0) add('penguin', 'penguin', a.penguins);
     if (a.conch) add('conch', 'conch');
     if (a.lantern) add('lantern', 'lantern', a.lanternOn ? t('it_on') : null);
+    if (a.jetpack) add('jetpack', 'jetpack', a.jetpackOn ? t('it_worn') : null);
     add('kashes', 'coin', h.coins);
     add('clovers', 'clover', h.clovers);
     const nc = g.crystalCount?.() || 0;

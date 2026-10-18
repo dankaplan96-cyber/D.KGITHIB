@@ -4,7 +4,7 @@
 // their shots in the air, the lightning's arcs, the glove's bolt return, and the models in Twinsen's hands.
 //
 // What Twinsen owns is game.hero.arms (saved with the hero: freshArms() reads any save, old or new):
-//   blowgun, blowtron, laser, glove, lightning, protect, conch, lantern (owned: true/false)
+//   blowgun, blowtron, laser, glove, lightning, protect, conch, lantern, jetpack (owned: true/false), jetpackOn (worn)
 //   darts (blowgun ammo, max 30), charge (laser shots from crystal cells, max 20), penguins (max 5), lanternOn
 // Where each comes from: src/game/story/arsenal.js. The gadgets (penguin, protection, conch, lantern): gadgets.js.
 //
@@ -31,13 +31,14 @@ export const ARMS = {
 };
 export const RANGED = new Set(['blowgun', 'laser', 'lightning']);
 
-const KEYS = ['blowgun', 'blowtron', 'laser', 'glove', 'lightning', 'protect', 'conch', 'lantern', 'lanternOn'];
+const KEYS = ['blowgun', 'blowtron', 'laser', 'glove', 'lightning', 'protect', 'conch', 'lantern', 'lanternOn', 'jetpack', 'jetpackOn'];
 // what a save holds (anything missing or odd becomes the empty default; counts are clamped)
 export function freshArms(a = {}) {
   const o = {};
   for (const k of KEYS) o[k] = !!a?.[k];
   for (const k of ['darts', 'charge', 'penguins']) o[k] = Math.max(0, Math.min(ARMS.max[k], Math.floor(+a?.[k] || 0)));
   if (!o.lantern) o.lanternOn = false;
+  if (!o.jetpack) o.jetpackOn = false;   // (Baldino's hop-pack, jetpack.js: owned, and worn)
   if (!o.blowgun) o.blowtron = false;
   return o;
 }
