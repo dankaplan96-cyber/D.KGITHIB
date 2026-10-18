@@ -171,6 +171,7 @@ class Game {
     this.env.onThunder = () => this.audio.play('thunder');
     this.input = new Input(this.renderer.canvas);
     this.camRig = new CameraRig(this.camera, this.terrain, this.physics);
+    this.camRig.occ = () => (this.room ? null : this.world.occ);   // Citadel's scenery volumes for the play camera (Game.occluders)
     this.particles = new Particles(this.scene);
     this.world.particles = this.particles;
     this.pickups = new Pickups(this);
@@ -448,7 +449,7 @@ class Game {
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
-      this.occSnap = true;   // (the houses take their faded state at once on the first frame: Game.occluders)
+      this.occSnap = true;   // (Nell's roof takes its faded state at once on the first frame: Game.occluders)
       this.doorCool = 1;
       this.audio.setPlace?.('island');
       if (quiet) return;
@@ -1306,10 +1307,13 @@ class Game {
     this.occluders(dt);
   }
 
-  // Houses between the camera and Twinsen fade out (town.js / island.js fadeOccluders). It runs wherever the game
-  // camera follows him outdoors on Citadel — play, dialogue, the shop, cut-scenes and through a door's fade — and on
-  // the first frame of a scene (occSnap, set by exitRoom) it takes the final state at once: leaving home used to open
-  // on his own roof filling the screen through the whole fade-in, fading only once control was back.
+  // Scenery between the camera and Twinsen (VP-10). As in LBA2 nothing on Citadel fades or turns see-through: the
+  // houses, the fortress, the project buildings, the spaceport terminal and Nell's lean-to give the camera their
+  // shapes (W.occ, src/engine/occlude.js) and each new shot rises over whatever would hide him (camRig.occ, set
+  // above; src/engine/camera.js). What is left here is townlife.js's own fade of Nell's roof while he stands under it
+  // or the coupler is on the bench (fadeOccluders). It runs wherever the game camera follows him outdoors on Citadel —
+  // play, dialogue, the shop, cut-scenes and through a door's fade — and on the first frame of a scene (occSnap, set
+  // by exitRoom) it takes its final state at once.
   occluders(dt) {
     if (this.room) return;
     const snap = this.occSnap;

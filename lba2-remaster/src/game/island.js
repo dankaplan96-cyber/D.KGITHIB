@@ -13,6 +13,7 @@ import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/mat
 import { rockGeometry, treeGeometry } from './vegetation.js';
 import { buildHouse } from './architecture.js';
 import { mergeStatic } from '../engine/merge.js';
+import { occOf } from '../engine/occlude.js';
 import { t } from './i18n.js';
 import { PROPS } from './citadel-layout.js';
 import { streetDist } from './town.js';
@@ -1128,9 +1129,9 @@ function steamSystem(parent, n = 40) {
     },
   };
 }
-// Houses between the camera and Twinsen fade out (town.js); the same for
-// the fortress walls, towers and project buildings: each fader owns clones
-// of its materials so only that piece turns see-through.
+// The fortress walls, towers and gatehouse and the project buildings stay solid, as in LBA2 (the town's houses
+// too, town.js): each gives the camera its shape (addOccluder below; src/engine/occlude.js), and a shot that would
+// look through one rises over it instead.
 // A builder written in a site's design coordinates runs in a frame: its meshes go into a group moved by d, and
 // this stand-in for W looks heights up and places colliders at the moved spot (everything else is W itself).
 function siteW(W, d) {
@@ -1142,46 +1143,13 @@ function siteW(W, d) {
 }
 const movePt = (d, ...pts) => { for (const p of pts) if (p) { p.x += d.x; p.z += d.z; } };
 
-function addFader(W, group, x0, z0, x1, z1, top) {
+// a scenery volume for the play camera (src/engine/occlude.js), in this site's design coordinates (siteW's shift);
+// the colliders given are marked camSkip: the camera reads this shape instead of their taller boxes
+function addOccluder(W, v, ...cols) {
   const d = W._shift;
-  if (d) { x0 += d.x; x1 += d.x; z0 += d.z; z1 += d.z; }
-  const mats = new Map();
-  group.traverse((o) => {
-    if (!o.isMesh) return;
-    const list = Array.isArray(o.material) ? o.material : [o.material];
-    const out = list.map((m) => { if (!mats.has(m)) mats.set(m, m.clone()); return mats.get(m); });
-    o.material = Array.isArray(o.material) ? out : out[0];
-  });
-  const F = { x0, z0, x1, z1, top, mats: [...mats.values()], f: 1 };
-  if (!W._faders) {
-    W._faders = [];
-    const prev = W.fadeOccluders;
-    const sample = new THREE.Vector3();
-    W.fadeOccluders = (cam, hero, dt) => {
-      prev?.(cam, hero, dt);
-      for (const E of W._faders) {
-        let hit = false;
-        // only when Twinsen is near; the samples run from his feet/head to the camera
-        if (hero.x > E.x0 - 18 && hero.x < E.x1 + 18 && hero.z > E.z0 - 18 && hero.z < E.z1 + 18) {
-          for (const hy of [0.3, 1.0, 1.8]) for (let k = 1; k < 18 && !hit; k++) {
-            sample.set(hero.x, hero.y + hy, hero.z).lerp(cam.position, k / 18);
-            if (sample.x > E.x0 && sample.x < E.x1 && sample.z > E.z0 && sample.z < E.z1 && sample.y < E.top) hit = true;
-          }
-        }
-        const goal = hit ? 0.12 : 1;
-        E.f += (goal - E.f) * (1 - Math.exp(-dt * 8));
-        const see = E.f < 0.98;
-        for (const m of E.mats) {
-          if (m.transparent !== see && !m.userData.alwaysTransparent) { m.transparent = see; m.needsUpdate = true; }
-          m.opacity = see ? E.f * (m.userData.baseOpacity ?? 1) : (m.userData.baseOpacity ?? 1);
-          if (!m.userData.alwaysTransparent) m.depthWrite = !see;
-        }
-      }
-    };
-  }
-  for (const m of F.mats) { if (m.transparent) { m.userData.alwaysTransparent = true; m.userData.baseOpacity = m.opacity; } }
-  W._faders.push(F);
-  return F;
+  if (d) { v.x += d.x; v.z += d.z; }
+  for (const c of cols) if (c) c.camSkip = true;
+  return occOf(W).add(v);
 }
 
 // ================================================================== the Joint Project station
@@ -1274,8 +1242,8 @@ function buildFortress(W, root, g) {
     }
     B.build();
     const [x0, z0, x1, z1] = sd.box;
-    P.add({ type: 'box', x: (x0 + x1) / 2, z: (z0 + z1) / 2, hw: (x1 - x0) / 2, hd: (z1 - z0) / 2, rot: 0, top: g + H + 1.4 });
-    addFader(W, grp, x0 - 0.3, z0 - 0.3, x1 + 0.3, z1 + 0.3, g + H + 1.4);
+    const wc = P.add({ type: 'box', x: (x0 + x1) / 2, z: (z0 + z1) / 2, hw: (x1 - x0) / 2, hd: (z1 - z0) / 2, rot: 0, top: g + H + 1.4 });
+    addOccluder(W, { kind: 'box', x: (x0 + x1) / 2, z: (z0 + z1) / 2, hw: (x1 - x0) / 2, hd: (z1 - z0) / 2, y0: g - 3, y1: g + H + 1.4, name: 'fort wall ' + sd.id }, wc);   // (to the merlons' tops)
   }
   // --- corner towers
   const T = towerGeo();
@@ -1291,8 +1259,10 @@ function buildFortress(W, root, g) {
       B.add(bbox(0.16, 0.9, 0.2, 0.02, 1), slitM, x + Math.sin(a) * 3.0, g + 2.6 + (k % 2) * 1.6, z + Math.cos(a) * 3.0, 0, a, 0);
     }
     B.build();
-    P.add({ type: 'cyl', x, z, r: 3.25, top: g + H + 7 });
-    addFader(W, grp, x - 3.4, z - 3.4, x + 3.4, z + 3.4, g + H + 7);
+    const tc = P.add({ type: 'cyl', x, z, r: 3.25, top: g + H + 7 });
+    // the body and the slate cone (towerGeo's profiles; the iron finial is too thin to hide anyone)
+    const rt = H + 2.45;
+    addOccluder(W, { kind: 'rev', x, z, y0: g - 3, base: g, profile: [[0, rt + 4.6], [0.28, rt + 4.4], [0.85, rt + 3.5], [1.7, rt + 2.35], [2.6, rt + 1.2], [3.36, rt + 0.34], [3.62, rt + 0.16]], name: 'fort tower' }, tc);
   }
   // --- gatehouse with an arched passage
   const gh = new THREE.Group(); root.add(gh);
@@ -1333,8 +1303,8 @@ function buildFortress(W, root, g) {
     }
     B.build();
   }
-  P.add({ type: 'box', x: (GATE.x0 + GATE.x1) / 2, z: GATE.z - GATE.w / 2 - (GATE.half - GATE.w / 2) / 2, hw: (GATE.x1 - GATE.x0) / 2, hd: (GATE.half - GATE.w / 2) / 2, rot: 0, top: g + GATE.top + 0.8 });
-  P.add({ type: 'box', x: (GATE.x0 + GATE.x1) / 2, z: GATE.z + GATE.w / 2 + (GATE.half - GATE.w / 2) / 2, hw: (GATE.x1 - GATE.x0) / 2, hd: (GATE.half - GATE.w / 2) / 2, rot: 0, top: g + GATE.top + 0.8 });
+  P.add({ type: 'box', x: (GATE.x0 + GATE.x1) / 2, z: GATE.z - GATE.w / 2 - (GATE.half - GATE.w / 2) / 2, hw: (GATE.x1 - GATE.x0) / 2, hd: (GATE.half - GATE.w / 2) / 2, rot: 0, top: g + GATE.top + 0.8, camSkip: true });
+  P.add({ type: 'box', x: (GATE.x0 + GATE.x1) / 2, z: GATE.z + GATE.w / 2 + (GATE.half - GATE.w / 2) / 2, hw: (GATE.x1 - GATE.x0) / 2, hd: (GATE.half - GATE.w / 2) / 2, rot: 0, top: g + GATE.top + 0.8, camSkip: true });
   // portcullis: an iron grid in a slot, spiked at the bottom; rises into the gatehouse
   const pc = new THREE.Group(); root.add(pc);
   {
@@ -1349,7 +1319,13 @@ function buildFortress(W, root, g) {
     pc.position.set(GATE.x0 + 1.15, g, GATE.z);
   }
   const pcCol = P.add({ type: 'box', x: GATE.x0 + 1.15, z: GATE.z, hw: 0.25, hd: GATE.w / 2 + 0.1, rot: 0, top: g + GATE.h + 0.2 });
-  addFader(W, gh, GATE.x0 - 0.6, GATE.z - GATE.half - 0.3, GATE.x1 + 0.3, GATE.z + GATE.half + 0.3, g + GATE.top + 0.8);
+  // its two solid sides and the masonry over the arched passage (with the parapet's merlons); under that, in the
+  // passage, no camera height can show Twinsen (occlude.js leaves out a volume he stands under)
+  {
+    const gx = (GATE.x0 + GATE.x1) / 2 - 0.12, ghw = (GATE.x1 - GATE.x0) / 2 + 0.37, side = (GATE.half + 0.25 - GATE.w / 2) / 2, top = g + GATE.top + 0.82;
+    for (const sz of [-1, 1]) addOccluder(W, { kind: 'box', x: gx, z: GATE.z + sz * (GATE.w / 2 + side), hw: ghw, hd: side, y0: g - 3, y1: top, name: 'fort gatehouse' });
+    addOccluder(W, { kind: 'box', x: gx, z: GATE.z, hw: ghw, hd: GATE.w / 2, y0: g + GATE.h - GATE.w / 2, y1: top, name: 'fort gate arch' });
+  }
   const gate = { mesh: pc, c: pcCol, open: false, t: 0, x: GATE.x0 - 1.9, z: GATE.z, y0: g };
   W.gate = gate;
   W.updaters.push((dt) => {
@@ -1531,10 +1507,11 @@ function techBuilding(W, root, x, z, ry, { w, d, h, wins = [], picto = null, roo
     B.add(cached('beacon', () => new THREE.SphereGeometry(0.22, 14, 10)), glowCyan(), -w * 0.25, ry0 + 0.32, 0);
   }
   B.build();
-  W.physics.add({ type: 'box', x, z, hw: w / 2 + 0.2, hd: d / 2 + 0.2, rot: ry, top: g + base + h + 1.0 });
+  const bc = W.physics.add({ type: 'box', x, z, hw: w / 2 + 0.2, hd: d / 2 + 0.2, rot: ry, top: g + base + h + 1.0 });
   const f = frame(x, z, ry);
   const [dx, dz] = f(0, d / 2 + 1.0);
-  addFader(W, grp, Math.min(x - w / 2, x - d / 2) - 0.4, Math.min(z - d / 2, z - w / 2) - 0.4, Math.max(x + w / 2, x + d / 2) + 0.4, Math.max(z + d / 2, z + w / 2) + 0.4, g + base + h + 1.2);
+  // walls and the barrel roof (its crown along local z, falling to the eaves across x; the roof kit is too slight)
+  addOccluder(W, { kind: 'box', x, z, rot: ry, hw: a, hd: d / 2 + 0.35, y0: g - 1, y1: g + base + h + 0.12 + rise + 0.06, slope: rise / a, name: 'project building ' + key }, bc);
   void key;
   return { grp, door: { x: dx, z: dz } };
 }
@@ -2335,6 +2312,8 @@ function buildPipeline(W, root, r) {
     }
   });
   B.build();
+  for (const v of valves) v.pivot.userData.keep = true;   // (the wheels turn)
+  mergeStatic(grp, { cell: 24 });   // (PERF-IGPU; the valve lamps keep their own materials, whose colour changes)
 }
 
 // ================================================================== dressing: crates, signposts, the stump
@@ -2372,6 +2351,8 @@ function buildDressing(W, root, r) {
     mesh(grp, geo, VC(), x, g - 0.05, z, 0.7);
     W.physics.add({ type: 'cyl', x, z, r: 0.65, top: g + 0.68, seeThrough: true });
   }
+  for (const c of W.crates) c.mesh.userData.keep = true;   // (they break: hidden one by one)
+  mergeStatic(grp, { cell: 24 });   // (the signposts and the stump. PERF-IGPU)
 }
 
 // ================================================================== the original's street furniture
@@ -2485,6 +2466,7 @@ function buildOriginalProps(W, root, r) {
     if (at) { tulipBed(W, grp, at[0], at[1], w, 1.1, 0, r); n++; }
   }
   W.propsPlaced = n;
+  mergeStatic(grp, { recolor: true, cell: 24 });   // (all static; instanced lamps/posts are left as they are. PERF-IGPU)
 }
 
 // ================================================================== entry

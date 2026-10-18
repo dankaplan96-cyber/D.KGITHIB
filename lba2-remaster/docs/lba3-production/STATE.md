@@ -111,6 +111,14 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Hooks for others: chapters 2–12 give no objective markers (story/*.js markers()), so the map can mark an objective only in the prologue
   and chapter 1; invisible blockers are not flagged on colliders, so a long invisible wall reads as a wall/floor on the map.
 
+## Done after (VP-10; status REVIEW, branch worktree-agent-a9f2b2a9c69e4dcf2)
+- Scenery between the camera and Twinsen as in LBA2 (the user: "like the original game"): nothing fades; the houses, the
+  fortress, the project buildings, the spaceport terminal/dome and Nell's lean-to give the camera their shapes
+  (src/engine/occlude.js) and LBA2's SearchCameraPos lifts the view over them (1997 look: on each cut; remaster: on top
+  of CTRL-1's follow, eased). The silhouette now reads over every roof (sky cyan at 0.5). tests/occluders.mjs: a house
+  he stands at never vanishes; behind one he is always in view or drawn by the silhouette. PERF-IGPU's open item done:
+  town.js/island.js merges, Medium street 324 → 274. Evidence docs/lba3-visual/evidence/VP-10/.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

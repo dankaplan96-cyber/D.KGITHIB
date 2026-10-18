@@ -1115,7 +1115,9 @@ function polyCharacter(L, def, P) {
 // The player's character stays readable behind trees, walls and hills: where something hides the body, a faint
 // flat silhouette shows through. The body writes 1 into the stencil where it is visible; the silhouette is drawn
 // only where the depth test fails (something is in front) and the stencil is not 1, so the body never ghosts
-// through itself. (Needs the stencil buffer on the composer's target, see renderer.js.)
+// through itself. (Needs the stencil buffer on the composer's target, see renderer.js.) VP-10: a bright sky cyan at
+// half strength (was a mid blue at 0.38, which all but vanished over the blue-slate roofs and dark stone): it now
+// reads over blue and orange roofs, white plaster, grey stone and grass alike.
 // everything that belongs to the hero's body (and what he holds) marks itself in the stencil where it is seen
 export function writeBodyStencil(obj) {
   obj.traverse((o) => {
@@ -1124,14 +1126,14 @@ export function writeBodyStencil(obj) {
   });
 }
 let silMat = null;
-export function addSilhouette(rig, color = '#3a6ab0') {
+export function addSilhouette(rig, color = '#40c8ff') {
   const mesh = rig?.mesh;
   if (!mesh?.isSkinnedMesh || rig.silhouette) return;
   // the eyes share one material with every character: the hero's get their own copy before it writes the stencil
   for (const e of rig.j?.eyes || []) e.traverse((o) => { if (o.isMesh) o.material = o.material.clone(); });
   writeBodyStencil(rig.root);
   silMat ??= new THREE.MeshBasicMaterial({
-    color, transparent: true, opacity: 0.38, depthWrite: false, depthFunc: THREE.GreaterDepth, fog: false,
+    color, transparent: true, opacity: 0.5, depthWrite: false, depthFunc: THREE.GreaterDepth, fog: false,
     stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc,
     stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp,
   });

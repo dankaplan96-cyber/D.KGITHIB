@@ -1,0 +1,11 @@
+B bug from [-54.75,2.64,-7.98] to [-58.31124098404897,-21.93523583506642]
+B-bug-round: frames 20, seen min 83% mean 97%, frames <20% seen 0, veil max 34, gone max 15, pitch 19–36.6
+B stone from [-31.27,2.89,-15.91] to [-31.944897929426322,-29.493876275935335]
+B-stone-round: frames 20, seen min 93% mean 98%, frames <20% seen 0, veil max 35, gone max 15, pitch 18.6–35.9
+B south from [-48.2,2.2,32.4] to [-48.2,18]
+SCENARIO ERROR page.evaluate: Target page, context or browser has been closed
+    at seqFast (/home/user/geriatrics-course/.claude/worktrees/agent-a9f2b2a9c69e4dcf2/lba2-remaster/docs/lba3-visual/evidence/VP-10/scripts/run.mjs:77:26)
+    at async walk (/home/user/geriatrics-course/.claude/worktrees/agent-a9f2b2a9c69e4dcf2/lba2-remaster/docs/lba3-visual/evidence/VP-10/scripts/vp10.mjs:28:15)
+    at async Module.default (/home/user/geriatrics-course/.claude/worktrees/agent-a9f2b2a9c69e4dcf2/lba2-remaster/docs/lba3-visual/evidence/VP-10/scripts/vp10.mjs:63:7)
+    at async file:///home/user/geriatrics-course/.claude/worktrees/agent-a9f2b2a9c69e4dcf2/lba2-remaster/docs/lba3-visual/evidence/VP-10/scripts/run.mjs:90:7
+no page errors
