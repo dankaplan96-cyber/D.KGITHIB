@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { Actor } from './actors.js';
 import { createCharacter } from './characters.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
+import { KnockOut, koActive } from './death.js';
 
 function rifleProp() {
   const g = new THREE.Group();
@@ -59,7 +60,8 @@ export class Guard extends Actor {
   get alive() { return this.state !== 'dead'; }
   get aimY() { return this.grobo ? 1.3 : 1.15; }
   get markY() { return this.grobo ? 2.6 : 2.25; }
-  setPresent(on) { this.present = on; this.rig.root.visible = on && (this.alive || this.deadT < 2.5); this.shadow.visible = on && this.alive; if (!on) this.aimLine.visible = false; }
+  // (a guard going down finishes its fall whatever the story does with the cast meanwhile: death.js)
+  setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
 
   // ---- hits (LBA1's HitObj: armour, two reactions)
@@ -90,7 +92,9 @@ export class Guard extends Actor {
     g.particles.burst(this.pos.x, this.pos.y + 1.6, this.pos.z, '#fff2b0', 8, 3);   // the star of the hit
     if (this.hp <= 0) {
       this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this);
-      this.rig.play('knockdown'); g.audio.play('hit'); g.camRig.shake(0.15);
+      this.rifle.userData.glow.emissiveIntensity = 0.2;
+      g.audio.play('hit'); g.camRig.shake(0.15);
+      new KnockOut(this, 'human', from);   // the fall (death.js); its bonus comes out when it hits the ground
       g.onEnemyKilled(this);   // (LBA1's GiveExtraBonus: one bonus where it fell)
       return;
     }
@@ -106,17 +110,13 @@ export class Guard extends Actor {
   }
 
   update(dt) {
-    if (!this.present) return;
+    if (koActive(this)) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (beaten: death.js; then gone)
+    if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
     this.recentHitT = Math.max(0, this.recentHitT - dt);
     if (this.jamT > 0) { this.jamT -= dt; if (this.jamT <= 0) this.rifle.userData.glow.emissiveIntensity = 1.6; }
     if (this.state !== 'aim') this.aimLine.visible = false;
-    if (!this.alive) {
-      this.deadT += dt; this.rig.play('knockdown'); this.rig.update(dt, 0);
-      if (this.deadT > 2.5) this.rig.root.visible = false;   // (LBA1: the beaten trooper is gone)
-      this.sync(); return;
-    }
     const d = this.distTo(hero);
     const sees = this.sees(hero);
     let sp = 0, face = null, anim = 'idle';

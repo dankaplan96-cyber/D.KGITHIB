@@ -180,6 +180,44 @@ LBA2 the behaviour is the distance.
 
 All enemies give up and go home beyond a pursuit limit.
 
+## Knock-outs (ANIM-DEATH) — src/game/death.js
+The user: "when a character dies the animation doesn't work well." Before: each enemy had its own ad-hoc end (a guard
+tipped over in 0.3 s and lay with its arms and rifle sticking up, a mite flipped through the floor, a drone or the
+guardian sank half into the ground, a sentry dropped 20 cm in one frame, a dog's legs snapped straight), none fell
+if killed in the air, every body vanished in one frame, and the bonus popped out at the feet before the fall.
+Now one controller runs every knock-out on game time (the same at 30 and 60 fps):
+
+| Kind | Hit reaction → fall | Impact | Rests | Blink → gone |
+|---|---|---|---|---|
+| Vesk's guards (Quetch, Grobo), FunFrock's fat troopers | 0.14 s recoil (chest thrown back, a stagger step, the rifle flies out of the hand), then a pole's fall on the heels (accelerating) onto the back, away from the blow — onto the front if hit from behind; a round body's arms drop to the sides | 0.62 s, thud, small bounce | 1.1 s | 1.55 → 2.15 s |
+| Guard dog | yelp, head up, legs braced in the skid; legs give, it rolls onto its side away from the blow | 0.46 s | 0.8 s | 1.45 → 2.05 s |
+| Crystal mite, crawler | the crystals shatter; a hop and a flip onto its back, legs curled up, twitching after it lands, glow out | when it lands (~0.4 s) | 0.75 / 1.1 s | 1.15 → 1.65 / 1.6 → 2.2 s |
+| Warden drone, heavy drone, the guardian (powered down) | the rotor runs down, the hull tumbles and falls with gravity, one bounce, rocks to a stop, eye out | when it lands | +0.45 / 0.6 s | 1.9 → 2.5 / 3.0 → 3.6 s |
+| Sentry | a wobble, then it tips over stiffly like a barrel, clang, small rock, shield arm out, eye out | 0.78 s | 1.15 s | 1.75 → 2.35 s |
+
+- The humanoid fall's keys are in src/engine/rig.js (`KO_HUMAN`: back / front / slump, round-body arms), after
+  LBA2's own knock-down (Twinsen's "beaten", ANIM.HQR: ~1.1 s to the ground, root pushed back ~0.3 H; ours is
+  0.62 s so play is not held up). Numbers only; nothing taken from the originals' files.
+- No pop: every joint of a knock-out is rate-limited (≤ 13 rad/s for a humanoid, 10–12 for the others) from whatever
+  pose the blow interrupted. No clipping, no floating: every frame the body's own surface (about 140 sampled vertices)
+  is measured against the ground under each point; the body is lifted out of the ground and, once down, rests on its
+  lowest point; on a slope or stairs it leans onto the ground's plane as it goes down. Killed in the air it falls
+  with gravity and the fall plays out where it lands. The blow's push is a short stagger (≤ ~0.3 m, through
+  collision); after the impact the body never moves. A humanoid with a wall or a drop behind it falls the other way,
+  and slumps where it stands if neither way has room.
+- The enemy leaves every target list on the frame of the blow (alive is false: the lock lets go, the soft target and
+  the ball's automatic aim move on to a living enemy, hits pass through the body). CTRL-1's auto-aim is unchanged.
+- The bonus (LBA's GiveExtraBonus) comes out of the body when it hits the ground, in an arc toward Twinsen, and lands
+  on the ground (a wall in its way stops its drift). The guardian still gives none.
+- The end is LBA's blink (faster and faster), a puff of stars, and the body, its shadow, its tells and its dropped
+  rifle are taken out of the scene. Nothing waits for it: the player is never locked. The pause freezes it; a
+  dialogue lets it land (only knock-outs move during a dialogue); leaving the place, or the story changing the cast,
+  lets it finish on its own clock; a reload brings a saved kill back as gone.
+- Cost: a dying enemy's update takes 0.1–0.2 ms a frame (median, headless CPU), up to 1.4 ms on its first frame (its
+  vertices sampled once); only while it dies, nothing afterwards (it is out of the scene).
+- `tests/deaths.mjs` measures all of this per type (MEASURE lines); frame strips before/after per type:
+  docs/lba3-visual/evidence/ANIM-DEATH/.
+
 ## Tools
 - **Sword** (Chapter 6, from Yorna when the lift is ready). First use: cutting the platform's frozen mooring
   rope (fists can't). Then the ice mites.

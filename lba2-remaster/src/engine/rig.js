@@ -730,6 +730,21 @@ export class Rig {
     } else if (a === 'dead') {
       bodyRotX = -Math.PI / 2; hipsY = 0.3;
       T.armL = -2.8; T.armR = -2.6;
+    } else if (a === 'ko') {
+      // an enemy knocked out (src/game/death.js drives the clock, ko.t, and picks the fall): the hit's recoil,
+      // the fall with weight onto the back or the front (or a slump where there is no room), the impact's bounce,
+      // then still. Keys: KO_HUMAN below; the side (ko.side) mirrors which arm ends overhead and where the head rolls.
+      const K = this.ko || { t: this.actionT, dir: 1, mode: 'fall', side: 1 }, t = K.t;
+      let set0 = K.mode === 'slump' ? KO_HUMAN.slump : K.dir > 0 ? KO_HUMAN.back : KO_HUMAN.front;
+      if (K.round && K.mode !== 'slump') set0 = { ...set0, ...(K.dir > 0 ? KO_HUMAN.roundBack : KO_HUMAN.roundFront) };
+      const m = K.side < 0, at = (v) => koKey(v, t), L = (k) => at(set0[m ? k.replace('L', '#').replace('R', 'L').replace('#', 'R') : k]);
+      hipsY = at(set0.hipsY); torsoX = at(set0.torso); headX = at(set0.head);
+      headY = at(set0.headY) * (m ? -1 : 1); headZ = at(set0.headZ) * (m ? -1 : 1);
+      T.legL = L('legL'); T.legR = L('legR'); T.kneeL = L('kneeL'); T.kneeR = L('kneeR'); T.footL = L('footL'); T.footR = L('footR');
+      T.armL = L('armL'); T.armR = L('armR'); T.elL = L('elL'); T.elR = L('elR');
+      this._koOut = [L('outL'), L('outR')];
+      bodyRotX = K.mode === 'slump' ? 0 : -K.dir * koFall(t) * (Math.PI / 2);
+      if (this.robeLegs) { T.kneeL = Math.min(T.kneeL, 1.2); T.kneeR = Math.min(T.kneeR, 1.2); }
     } else if (a === 'cheer') {
       const b = Math.abs(Math.sin(this.t * 6));
       hipsY = 0.95 + b * 0.15;
@@ -791,7 +806,7 @@ export class Rig {
     if (this.turn) { headY += this.turn * 0.35; torsoY += this.turn * 0.12; }
 
     // head looks toward a point of interest (in body space)
-    if (this.lookAt && a !== 'dead') {
+    if (this.lookAt && a !== 'dead' && a !== 'ko') {
       const p = this.root.position, ry = this.root.rotation.y;
       const want = Math.atan2(this.lookAt.x - p.x, this.lookAt.z - p.z);
       const rel = clamp(angleDiff(ry, want), -1.1, 1.1);
@@ -804,8 +819,12 @@ export class Rig {
 
     // strikes track their poses tightly (lag ≈ 18 ms) so the blade crosses the target in the active frames
     this.blendT = Math.max(0, (this.blendT || 0) - dt);
-    const R = STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : PUMP.has(a) ? 26 : this.blendT > 0 ? 8 : 16;
-    const set = (obj, v, axis = 'x', r = R) => { obj.rotation[axis] = damp(obj.rotation[axis], v ?? 0, r, dt); };
+    const ko = a === 'ko';
+    const R = ko ? 24 : STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : PUMP.has(a) ? 26 : this.blendT > 0 ? 8 : 16;
+    // (a knock-out follows its keys closely, but no joint ever turns faster than KO_HUMAN.maxRate: no pop from
+    // whatever pose the blow interrupted)
+    const lim = ko ? KO_HUMAN.maxRate * dt : Infinity;
+    const set = (obj, v, axis = 'x', r = R) => { const o = obj.rotation[axis]; obj.rotation[axis] = o + clamp(damp(o, v ?? 0, ko ? Math.max(r, 24) : r, dt) - o, -lim, lim); };
     set(j.legL.hip, T.legL); set(j.legR.hip, T.legR);
     set(j.legL.knee, T.kneeL); set(j.legR.knee, T.kneeR);
     set(j.legL.foot, T.footL); set(j.legR.foot, T.footR);
@@ -815,9 +834,10 @@ export class Rig {
     j.hips.position.y = damp(j.hips.position.y, this.hipsRest + (hipsY - 0.95) * (this.hipsRest / 0.95), R, dt);
     set(j.torso, torsoX); set(j.torso, torsoY, 'y'); set(j.torso, torsoZ, 'z', 8);
     set(j.head, headX, 'x', 10); set(j.head, headY, 'y', 8); set(j.head, headZ, 'z', 8);
-    set(j.body, bodyRotX, 'x', 8);
+    set(j.body, bodyRotX, 'x', ko ? 40 : 8);
     this._armOut = damp(this._armOut || 0, armOut, PUMP.has(a) ? 26 : 8, dt);
-    j.armL.sh.rotation.z = this.armSpread + this._armOut; j.armR.sh.rotation.z = -this.armSpread - this._armOut;
+    if (ko) { set(j.armL.sh, this.armSpread + this._koOut[0], 'z'); set(j.armR.sh, -this.armSpread - this._koOut[1], 'z'); this._armOut = j.armL.sh.rotation.z - this.armSpread; }
+    else { j.armL.sh.rotation.z = this.armSpread + this._armOut; j.armR.sh.rotation.z = -this.armSpread - this._armOut; }
     // pelvis counter-rotates against the shoulders while walking
     if (walkLike) j.hips.rotation.y = damp(j.hips.rotation.y, -torsoY * 0.8, R, dt); else j.hips.rotation.y = damp(j.hips.rotation.y, 0, 8, dt);
     // idle weight shift tilts the pelvis toward the standing leg
@@ -836,6 +856,13 @@ export class Rig {
       set(j.skirt.R, lR * 0.55 + this.skirtLag * 0.5, 'x', sp2);
       set(j.skirt.L, -this.roll * 0.5 + 0.02, 'z', 6);
       set(j.skirt.R, -this.roll * 0.5 - 0.02, 'z', 6);
+      // knocked out, lying: the coat's hem under the body is pressed against the legs instead of standing out
+      // (a stiff bell of cloth under a lying guard would hold his legs up off the ground)
+      if (ko && this.ko?.mode !== 'slump') {
+        const f = koFall(this.ko.t), under = this.ko.dir > 0 ? j.skirt.B : j.skirt.F;
+        set(under, (this.ko.dir > 0 ? -0.45 : 0.45) * f, 'x', 14);
+        set(j.skirt.L, 0.2 * f, 'z', 10); set(j.skirt.R, -0.2 * f, 'z', 10);
+      }
     }
 
     // blinking
@@ -913,6 +940,79 @@ const BALDINO_TALK = {
   torso: [0.03, 0.05, 0.03, 0.0, -0.08, -0.06, 0.06, 0.08, 0.04, 0.03],
   head: [0, 0, 0, 0, -0.05, -0.05, 0.21, -0.25, 0, 0],
 };
+// An enemy knocked out (src/game/death.js): key times in seconds from the blow. 0 → 0.14 the hit's recoil (the
+// chest thrown back, the arms flung, a stagger step), 0.14 → 0.62 the fall (the body pivots on its heels and
+// accelerates like a falling pole: koFall), 0.62 the impact, a small bounce to 0.84, then still by 1.1. LBA2's own
+// knock-down (Twinsen's "beaten", ANIM.HQR) takes ~1.1 s to the ground; this one is shorter so play is not held up.
+// back: onto the back (the blow in front); front: onto the front (the blow from behind); slump: no room to lie
+// down (a wall or a drop behind), the knees give and it sits down slumped. Arm keys for ko.side = +1 (right arm
+// thrown overhead, head rolled right); side -1 swaps left and right. Lying, an arm's rotation brings the hand
+// down onto the ground (back: overhead -3.25 / along the side +0.2; front: -3.02 / -0.12), never up in the air.
+export const KO_HUMAN = {
+  t: [0, 0.14, 0.3, 0.46, 0.62, 0.71, 0.84, 1.1],
+  recoil: 0.14, impact: 0.62, settle: 1.1, maxRate: 13,
+  back: {
+    hipsY: [0.95, 0.91, 0.84, 0.82, 0.9, 0.88, 0.9, 0.9],
+    legL: [0, 0.28, 0.05, -0.3, 0.05, 0.0, 0.15, 0.2], legR: [0, -0.1, -0.35, -0.5, -0.2, -0.26, -0.25, -0.25],
+    kneeL: [0.05, 0.32, 0.7, 0.6, 0.3, 0.42, 0.25, 0.2], kneeR: [0.05, 0.15, 0.5, 0.55, 0.3, 0.45, 0.7, 0.75],
+    footL: [0, 0.1, 0.2, 0.3, 0.35, 0.3, 0.35, 0.35], footR: [0, 0.05, 0.15, 0.25, 0.3, 0.32, 0.3, 0.3],
+    torso: [0, -0.32, 0.12, 0.32, 0.04, -0.06, 0.02, 0], head: [0, 0.28, 0.34, 0.4, -0.12, 0.1, 0.06, 0.08],
+    headY: [0, 0, 0.05, 0.1, 0.15, 0.3, 0.45, 0.5], headZ: [0, 0, 0, 0, 0.05, 0.1, 0.14, 0.15],
+    armL: [0, -0.6, -1.1, -1.2, -0.6, -0.05, 0.15, 0.2], armR: [0, -0.7, -1.3, -1.8, -2.6, -3.0, -3.2, -3.25],
+    elL: [-0.1, -0.9, -0.7, -0.6, -0.45, -0.3, -0.25, -0.25], elR: [-0.1, -0.7, -0.6, -0.4, -0.3, -0.22, -0.2, -0.2],
+    outL: [0.1, 0.45, 0.6, 0.7, 0.75, 0.68, 0.62, 0.6], outR: [0.1, 0.5, 0.7, 0.8, 0.55, 0.4, 0.32, 0.3],
+  },
+  front: {
+    hipsY: [0.95, 0.91, 0.86, 0.84, 0.9, 0.89, 0.9, 0.9],
+    legL: [0, -0.25, -0.15, 0.05, -0.05, -0.1, -0.12, -0.15], legR: [0, 0.15, 0.2, 0.18, 0.0, -0.02, -0.04, -0.05],
+    kneeL: [0.05, 0.3, 0.4, 0.3, 0.2, 0.35, 0.3, 0.3], kneeR: [0.05, 0.2, 0.35, 0.3, 0.45, 0.6, 0.55, 0.5],
+    footL: [0, 0.05, 0.1, 0.15, 0.2, 0.2, 0.2, 0.2], footR: [0, 0.05, 0.1, 0.15, 0.2, 0.2, 0.2, 0.2],
+    torso: [0, -0.2, -0.15, -0.25, -0.1, 0.05, -0.05, -0.05], head: [0, -0.3, -0.25, -0.35, -0.3, -0.15, -0.25, -0.3],
+    headY: [0, 0, 0, 0.2, 0.5, 0.7, 0.85, 0.9], headZ: [0, 0, 0, 0, 0, 0, 0, 0],
+    armL: [0, -0.4, -0.9, -1.1, -0.5, -0.2, -0.12, -0.12], armR: [0, -0.5, -1.2, -1.7, -2.5, -2.85, -3.0, -3.02],
+    elL: [-0.1, -0.7, -1.0, -1.1, -0.6, -0.4, -0.35, -0.35], elR: [-0.1, -0.6, -0.9, -1.0, -0.5, -0.3, -0.25, -0.25],
+    outL: [0.1, 0.4, 0.6, 0.7, 0.8, 0.7, 0.65, 0.65], outR: [0.1, 0.4, 0.6, 0.7, 0.5, 0.4, 0.35, 0.35],
+  },
+  // a round body (a Grobo, a fat trooper): the shoulders lie high, so the arms drop out to the sides onto the ground
+  // instead of overhead (overhead they would stick up in the air)
+  roundBack: {
+    armL: [0, -0.6, -1.1, -1.2, -0.6, 0.15, 0.4, 0.45], armR: [0, -0.7, -1.3, -1.6, -0.9, 0.2, 0.45, 0.5],
+    outL: [0.1, 0.45, 0.6, 0.7, 0.85, 0.95, 1.0, 1.0], outR: [0.1, 0.5, 0.7, 0.8, 0.9, 1.0, 1.05, 1.05],
+  },
+  roundFront: {
+    armL: [0, -0.4, -0.9, -1.1, -0.7, -0.45, -0.4, -0.4], armR: [0, -0.5, -1.2, -1.4, -0.8, -0.5, -0.45, -0.45],
+    outL: [0.1, 0.4, 0.6, 0.7, 0.85, 0.95, 1.0, 1.0], outR: [0.1, 0.4, 0.6, 0.7, 0.85, 0.95, 1.0, 1.0],
+  },
+  slump: {
+    hipsY: [0.95, 0.9, 0.62, 0.3, 0.17, 0.2, 0.18, 0.18],
+    legL: [0, -0.2, -0.75, -1.25, -1.45, -1.4, -1.38, -1.38], legR: [0, -0.1, -0.6, -1.15, -1.35, -1.3, -1.28, -1.25],
+    kneeL: [0.05, 0.4, 1.3, 1.5, 1.05, 1.0, 0.95, 0.95], kneeR: [0.05, 0.3, 1.1, 1.4, 0.8, 0.75, 0.7, 0.7],
+    footL: [0, 0, 0, 0, 0, 0, 0, 0], footR: [0, 0, 0, 0, 0, 0, 0, 0],
+    torso: [0, -0.3, 0.1, 0.3, 0.55, 0.7, 0.78, 0.8], head: [0, 0.2, 0.3, 0.3, 0.45, 0.55, 0.6, 0.6],
+    headY: [0, 0, 0, 0.1, 0.2, 0.3, 0.35, 0.35], headZ: [0, 0, 0, 0, 0.05, 0.1, 0.12, 0.12],
+    armL: [0, -0.5, -0.4, -0.3, -0.25, -0.2, -0.2, -0.2], armR: [0, -0.5, -0.4, -0.3, -0.25, -0.2, -0.2, -0.2],
+    elL: [-0.1, -0.6, -0.5, -0.4, -0.3, -0.3, -0.3, -0.3], elR: [-0.1, -0.6, -0.5, -0.4, -0.3, -0.3, -0.3, -0.3],
+    outL: [0.1, 0.4, 0.35, 0.3, 0.25, 0.25, 0.25, 0.25], outR: [0.1, 0.4, 0.35, 0.3, 0.25, 0.25, 0.25, 0.25],
+  },
+};
+// the fall's progress (0 standing, 1 flat): a little give in the recoil, then a pole's fall (accelerating, θ ∝ u²)
+// onto the ground at the impact, a small bounce, still
+export function koFall(t) {
+  const K = KO_HUMAN, r = K.recoil, i = K.impact;
+  if (t < r) { const u = t / r; return 0.06 * u * u * (3 - 2 * u); }
+  if (t < i) { const u = (t - r) / (i - r); return 0.06 + 0.94 * u * u; }
+  if (t < i + 0.22) return 1 - 0.07 * Math.sin(Math.PI * (t - i) / 0.22);
+  return 1;
+}
+// smooth through the knock-out's keys (Catmull-Rom on the key index, held at the ends)
+function koKey(v, t) {
+  const ts = KO_HUMAN.t, n = ts.length;
+  if (t <= ts[0]) return v[0];
+  if (t >= ts[n - 1]) return v[n - 1];
+  let i = 0; while (t >= ts[i + 1]) i++;
+  const u = (t - ts[i]) / (ts[i + 1] - ts[i]), p0 = v[Math.max(0, i - 1)], p1 = v[i], p2 = v[i + 1], p3 = v[Math.min(n - 1, i + 2)];
+  return 0.5 * ((2 * p1) + (-p0 + p2) * u + (2 * p0 - 5 * p1 + 4 * p2 - p3) * u * u + (-p0 + 3 * p1 - 3 * p2 + p3) * u * u * u);
+}
 // linear between keys (as LBA2 interpolates), held at the ends
 function keyLin(ts, vs, t) {
   if (t <= ts[0]) return vs[0];

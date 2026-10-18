@@ -10,6 +10,7 @@ import * as THREE from 'three';
 import { Actor } from './actors.js';
 import { dogRig } from './dogs.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
+import { KnockOut, koActive } from './death.js';
 
 export class GuardDog extends Actor {
   constructor(game, def) {
@@ -28,7 +29,7 @@ export class GuardDog extends Actor {
     this.sync();
   }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; this.rig.root.visible = on && (this.alive || this.deadT < 2.5); this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.alive && (this.state === 'guard' || this.state === 'home')) { this.state = 'warn'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
 
   melee(D, h) { this.damage(D.dmg + (D.heavy ? 1 : 0), h.pos); return 'hit'; }
@@ -45,6 +46,7 @@ export class GuardDog extends Actor {
     if (this.hp <= 0) {
       this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this);
       g.audio.play('hit'); g.camRig.shake(0.1);
+      new KnockOut(this, 'dog', from);   // the roll-over (death.js); its bonus comes out when it hits the ground
       g.onEnemyKilled(this);
       return;
     }
@@ -63,15 +65,11 @@ export class GuardDog extends Actor {
   bark() { this.rig.bark(); this.game.audio.play('bark'); }
 
   update(dt) {
-    if (!this.present) return;
+    if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
     this.recentHitT = Math.max(0, this.recentHitT - dt);
-    if (!this.alive) {
-      this.deadT += dt; this.rig.play('dead'); this.rig.update(dt, 0);
-      if (this.deadT > 2.5) this.rig.root.visible = false;
-      this.sync(); return;
-    }
     const d = this.distTo(hero), sees = this.notices(hero);
     let sp = 0, face = null, anim = 'idle';
     switch (this.state) {

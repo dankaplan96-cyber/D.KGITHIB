@@ -1315,10 +1315,24 @@ export class Pickups {
     return p;
   }
   clear() { for (const p of this.list) this.game.scene.remove(p.mesh); this.list = []; }
-  update(dt) {
+  // a giver's (or a beaten enemy's) bonus: one arc (LBA2's gravity, 7.8 m/s²), it stops where it lands; not takeable
+  // in flight. (A wall in the way stops its drift: it drops at the wall's foot instead of landing inside it.)
+  flyStep(p, dt) {
+    const g = this.game;
+    p.vel.y -= 7.84 * dt;
+    if ((p.vel.x || p.vel.z) && g.physics.solidAt(p.pos.x + p.vel.x * dt, p.pos.z + p.vel.z * dt, p.pos.y, 0.12)) { p.vel.x = 0; p.vel.z = 0; }
+    p.pos.addScaledVector(p.vel, dt);
+    const gy = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y + 0.3) + 0.3;
+    if (p.vel.y < 0 && p.pos.y <= gy) { p.pos.y = gy; p.vel.set(0, 0, 0); p.fly = null; }
+    p.baseY = p.pos.y;
+    p.mesh.rotation.y += dt * 2.5;
+  }
+  // flyDt: a beaten enemy's bonus still in the air keeps flying while the rest of the world waits (a dialogue)
+  update(dt, flyDt = 0) {
     const g = this.game, hero = g.hero;
     for (let i = this.list.length - 1; i >= 0; i--) {
       const p = this.list[i];
+      if (!dt && flyDt && p.fly && p.koDrop) { this.flyStep(p, flyDt); continue; }
       p.t += dt;
       p.delay -= dt;
       // a bonus that nobody takes goes after 20 s, blinking for the last 3 (LBA2: 8 ticks on, 8 off)
@@ -1326,16 +1340,7 @@ export class Pickups {
       if (p.carried) { p.pos.copy(g.ball.pos); p.mesh.visible = true; p.mesh.rotation.y += dt * 6; continue; } // riding back on the ball
       if (p.life <= 0) { g.scene.remove(p.mesh); this.list.splice(i, 1); continue; }
       p.mesh.visible = p.life > 3 || Math.floor(p.life / 0.16) % 2 === 0;
-      if (p.fly) {
-        // a giver's bonus: one arc (LBA2's gravity, 7.8 m/s²), it stops where it lands; not takeable in flight
-        p.vel.y -= 7.84 * dt;
-        p.pos.addScaledVector(p.vel, dt);
-        const gy = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y + 0.3) + 0.3;
-        if (p.vel.y < 0 && p.pos.y <= gy) { p.pos.y = gy; p.vel.set(0, 0, 0); p.fly = null; }
-        p.baseY = p.pos.y;
-        p.mesh.rotation.y += dt * 2.5;
-        continue;
-      }
+      if (p.fly) { this.flyStep(p, dt); continue; }
       if (p.vel.lengthSq() > 0.01) {
         p.vel.y -= 20 * dt;
         p.pos.addScaledVector(p.vel, dt);

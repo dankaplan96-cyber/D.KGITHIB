@@ -181,7 +181,7 @@ export function dogRig(coat = 'grey') {
   root.add(M.body);
   const own = new LbaMaterial();   // (its own material: the hit flash is this dog's alone)
   M.body.traverse((o) => { if (o.isMesh && o.material === mat) o.material = own; });
-  const S = { anim: 'idle', gait: 0, lookP: 0, jawT: 0, flash: 0, t: Math.random() * 9, ko: 0, wag: 0.3 };
+  const S = { anim: 'idle', gait: 0, lookP: 0, jawT: 0, flash: 0, t: Math.random() * 9, wag: 0.3 };
   const rig = {
     root, M, poodle: coat === 'poodle',
     play(a) { S.anim = a; },
@@ -191,16 +191,16 @@ export function dogRig(coat = 'grey') {
     update(dt, speed = 0, hop = 0) {
       S.t += dt;
       const a = S.anim, t = S.t;
+      if (a === 'dead' && this.ko) { koDog(M, S, this.ko, dt, own); return; }
       S.gait += speed * dt / 0.55 * Math.PI;
       const amp = Math.min(0.6, speed * 0.2);
-      M.legs.forEach((l, i) => { l.rotation.x = a === 'dead' ? 0.9 : Math.sin(S.gait + M.phase[i]) * amp; });
+      M.legs.forEach((l, i) => { l.rotation.x = Math.sin(S.gait + M.phase[i]) * amp; });
       const bob = Math.abs(Math.sin(S.gait)) * amp * 0.05;
       // the body: crouched for the spring, pitched into the lunge, rolled onto its side when knocked out
       const pitch = a === 'windup' ? 0.12 : a === 'lunge' ? -0.18 : a === 'hurt' ? 0.1 : 0;
       M.body.rotation.x += (pitch - M.body.rotation.x) * Math.min(1, dt * 12);
-      S.ko = a === 'dead' ? Math.min(1, S.ko + dt * 3) : 0;
-      M.body.rotation.z = S.ko * Math.PI / 2;
-      M.body.position.y = hop + bob - (a === 'windup' ? 0.08 : 0) + S.ko * 0.25;
+      M.body.rotation.z = 0;
+      M.body.position.y = hop + bob - (a === 'windup' ? 0.08 : 0);
       // the head (the poodle's) looks down to sniff; the jaw (the guard dog's) drops on a bark, gapes to bite
       if (S.jawT > 0) S.jawT -= dt;
       const look = a === 'sniff' ? -0.5 : a === 'warn' ? 0.2 : Math.sin(t * 0.7) * 0.12;
@@ -217,6 +217,31 @@ export function dogRig(coat = 'grey') {
     },
   };
   return rig;
+}
+
+// A guard dog knocked out (src/game/death.js drives ko.t): a yelp with the head thrown up and the legs braced in the
+// skid, then the legs give and it rolls over onto its side away from the blow (accelerating), a small bounce, the
+// legs go limp, the jaw slack, the tail still. Every joint is rate-limited from whatever it was doing (no pop).
+function koDog(M, S, K, dt, own) {
+  const t = K.t, imp = K.T.impact, lim = 12 * dt;
+  const to = (o, ax, v, r = 16) => { const c = o.rotation[ax]; o.rotation[ax] = c + Math.max(-lim, Math.min(lim, (v - c) * (1 - Math.exp(-r * dt)))); };
+  const rec = t < 0.12 ? t / 0.12 : Math.max(0, 1 - (t - 0.12) / 0.25);
+  const u = Math.max(0, Math.min(1, (t - 0.1) / (imp - 0.1)));
+  let r = u * u; if (t > imp && t < imp + 0.25) r = 1 - 0.08 * Math.sin(Math.PI * (t - imp) / 0.25);
+  to(M.body, 'z', K.side * (Math.PI / 2) * r, 60);
+  to(M.body, 'x', -0.22 * rec, 20);
+  M.body.position.y += (0 - M.body.position.y) * (1 - Math.exp(-14 * dt));
+  // legs: braced in the skid, folding as it goes over, then out and limp on the ground
+  M.legs.forEach((l, i) => {
+    const front = i < 2, brace = front ? 0.35 : -0.3, fold = front ? 0.95 : -0.75, limp = front ? 0.45 : -0.4;
+    to(l, 'x', t < imp ? brace * rec + fold * Math.sin(Math.PI * u) : limp, 18);
+  });
+  S.lookP += (-0.15 - S.lookP) * Math.min(1, dt * 6);
+  M.head.rotation.x = -S.lookP;
+  if (M.jaw) to(M.jaw, 'x', t < 0.3 ? 0.45 : 0.28, 14);
+  to(M.tail, 'y', 0, 10);
+  if (S.flash > 0) S.flash -= dt;
+  own.emissive.setRGB(S.flash > 0 ? 0.8 : 0, S.flash > 0 ? 0.8 : 0, S.flash > 0 ? 0.8 : 0);
 }
 
 // a dog that just lives somewhere (no fighting): wanders an area or runs a closed path. A Zeelich guard dog behind
