@@ -415,6 +415,8 @@ function add(scene, geo, material, x, y, z, { rx = 0, ry = 0, rz = 0, cast = tru
 }
 
 let W_cliffs = null;
+// (diagnostics: which builder made a top-level object, for tests/drawcalls.mjs)
+export function tagSrc(root, from, name) { for (let i = from; i < root.children.length; i++) root.children[i].userData.src ??= name; }
 export function buildWorld(parentScene) {
   // everything outdoors lives in one group so interiors can hide it
   const scene = new THREE.Group();
@@ -460,7 +462,7 @@ export function buildWorld(parentScene) {
   };
 
   // ---------- Lupin-Burg: houses, square, streets, props (see town.js) ----------
-  buildTown(scene, W);
+  { const n0 = scene.children.length; buildTown(scene, W); tagSrc(scene, n0, 'town'); }
   const V = POI.village;
 
   // ---------- trees / grass / rocks (sculpted, instanced; see vegetation.js) ----------
@@ -574,21 +576,7 @@ export function buildWorld(parentScene) {
     }
     return out;
   };
-  // shadow distance: small props (lamp posts, crates, fence pieces, under 2 m across) stop casting into the
-  // sun's shadow map beyond SHADOW_SMALL from Twinsen. Their shadow there is a few texels wide, and they were
-  // a quarter of the shadow pass's draw calls. The list is gathered on the first update, when every part of
-  // the island is built; positions are read live, so props that move (boats, cargo) are handled.
-  const SHADOW_SMALL = 24, SHADOW_R = 2, _sv = new THREE.Vector3();
-  let casters = null, shadowTick = 0;
-  const gatherCasters = () => {
-    casters = [];
-    W.root.traverse((o) => {
-      if (!o.isMesh || o.isInstancedMesh || o.isBatchedMesh || !o.castShadow) return;
-      const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
-      const sc = o.matrixWorld.getMaxScaleOnAxis(), r = g.boundingSphere.radius * sc;
-      if (r < SHADOW_R) casters.push({ o, c: g.boundingSphere.center, on: true });
-    });
-  };
+  // (shadow distance of small props and the view-frustum test for every caster: engine/shadowcull.js)
   // the distances follow the graphics preset (kit.js LOD_PRESETS: High 40 / 58 m as before, Medium 34 / 46 m,
   // Low 26 / 36 m and 60 % of the grass and flowers); W.setDetail(quality) applies one
   W.detail = { treeNear: LOD_NEAR, smallFar: FAR_SMALL };
@@ -609,14 +597,7 @@ export function buildWorld(parentScene) {
       if (T.near && d > near + 4) T.near = false; else if (!T.near && d < near - 4) T.near = true;
       if (T.near !== was) setLod(T, T.near);
     }
-    if (!casters) gatherCasters();
-    if ((shadowTick = (shadowTick + 1) % 8)) return;
-    for (const C of casters) {
-      _sv.copy(C.c).applyMatrix4(C.o.matrixWorld);
-      const d = Math.hypot(focus.x - _sv.x, focus.z - _sv.z);
-      if (C.on && d > SHADOW_SMALL + 2) C.on = false; else if (!C.on && d < SHADOW_SMALL - 2) C.on = true;
-      C.o.castShadow = C.on;
-    }
+    // (the small props' shadow distance now lives in engine/shadowcull.js, with the view-frustum test)
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
   clearLife(trees); clearLife(bushes);
@@ -726,7 +707,7 @@ export function buildWorld(parentScene) {
   // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------
   W.signs = [];
   W.pathDist = pathDist;
-  buildIsland(scene, W);
+  { const n0 = scene.children.length; buildIsland(scene, W); tagSrc(scene, n0, 'island'); }
 
   // ---------- lighthouse ----------
   {

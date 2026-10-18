@@ -15,6 +15,7 @@ const rows = await page.evaluate(async ({ route, quality }) => {
   for (let i = 0, t = 0; i < 30; i++) { t += 1 / 30; r.drive(t, 1 / 30); G.frame(1 / 30, false); }
   // label: the chain of named ancestors (or the builder's top group index under its root)
   const label = (o) => {
+    for (let p = o; p; p = p.parent) if (p.userData?.src) return p.userData.src + (p.name ? '/' + p.name : '') + (o.name && o !== p ? ':' + o.name : '');
     const names = [];
     for (let p = o; p && !p.isScene; p = p.parent) { if (p.name) names.push(p.name); if (p.parent?.isScene) { names.push('#' + p.parent.children.indexOf(p) + (p === G.world.root ? ':world' : '')); break; } }
     if (o.parent === G.world.root) names.push('(world child)');

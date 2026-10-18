@@ -10,6 +10,7 @@ import { AudioEngine } from './engine/audio.js';
 import { Perf, gpuQuality, oldGpuQuality } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
 import { LightPool, POOL_SIZE } from './engine/lightpool.js';
+import { ShadowCull } from './engine/shadowcull.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
@@ -112,7 +113,13 @@ class Game {
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 2500);
     // startup cost per region (ms), for profiling: game.loadTimes
     const tm = performance.now(); this.loadTimes = {};
-    const timed = (name, fn) => { const t0 = performance.now(), r = fn(); this.loadTimes[name] = Math.round(performance.now() - t0); return r; };
+    const timed = (name, fn) => {
+      const t0 = performance.now(), n0 = this.scene.children.length, w0 = this.world?.root.children.length ?? 0, r = fn();
+      this.loadTimes[name] = Math.round(performance.now() - t0);
+      // (diagnostics: tag what each builder added, for tests/drawcalls.mjs)
+      for (const [root, from] of [[this.scene, n0], [this.world?.root, w0]]) if (root) for (let i = from; i < root.children.length; i++) root.children[i].userData.src ??= name;
+      return r;
+    };
     enableBatching(this.renderer.renderer); // (vegetation in one draw call where WEBGL_multi_draw is there: kit.js)
     this.world = timed('world', () => buildWorld(this.scene));
     this.terrain = this.world.terrain;
@@ -122,6 +129,7 @@ class Game {
     timed('townlife', () => buildTownLife(this.world.root, P, this.world));
     timed('citydress', () => buildCityDressing(this.world.root, P, this.world));
     this.env = new Environment(this.scene, this.terrain);
+    this.shadowCull = new ShadowCull(this.env.sunDir); // (casters whose shadow can't reach the view skip the shadow map)
     this.renderer.setup(this.scene, this.camera);
     this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
     // the graphics preset follows the GPU on a first start (integrated GPUs: Low or Medium, see perf.js); settings
@@ -647,6 +655,7 @@ class Game {
     if (changed('quality')) {
       this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.lightPool?.setSize(POOL_SIZE[s.quality] ?? 8);
       this.world?.setDetail?.(s.quality);
+      if (this.shadowCull) this.shadowCull.quality = s.quality;
       if (was.quality) this.warmGraphics();
     }
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
@@ -1139,6 +1148,7 @@ class Game {
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
     this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
+    if (render && this.renderer.renderer.shadowMap.enabled) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
     if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0);
     if (this.state !== 'play') this.behMenu.show(false);
