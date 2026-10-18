@@ -15,13 +15,18 @@
 //     from chapter 2), the old Wannie mine on Under Celebration (the Wannie glove; the shuttle from chapter 4), a hollow
 //     boulder in the crystal galleries (a clover; chapter 11). (The well cave closes after chapter 1: hot water.)
 //   The cellar's old coal chute, boarded up: only the glove breaks the boards (a clover, 12 kashes).
+//   Baldino's hop-pack (EQ-1, src/game/jetpack.js), chapter 10 and after: on its peg by his workshop door. After his
+//     chapter 10 briefing he points it out; with him there he explains it, otherwise a label on the strap does. Its
+//     first task is his test step on Zeelich's street (a timber platform one storey high, out of a jump's reach, a tin
+//     on top: a clover and 10 kashes, once); later it shortens the old mill's climb (chapter 10) and the island hops.
 // Harder hitters come later: the laser at chapter 3 costs 30 kashes and magic or cells; the glove and the lightning
 // from chapter 4; the Blowtron from chapter 6. Nothing on the main path needs any of them.
 import * as THREE from 'three';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
-import { Kit, MAT, rbox, cyl, sphere, torus, crate } from '../props.js';
+import { Kit, MAT, rbox, cyl, sphere, torus, crate, canvasTex } from '../props.js';
 import { ARMS } from '../weapons.js';
+import { jetpackModel } from '../jetpack.js';
 import { rockGeometry } from '../vegetation.js';
 import '../text/arsenal.js';
 
@@ -34,6 +39,8 @@ const SPOT = {
   boards: { x: -3.55, z: -4.42, a: 0 },             // cellar-local: the old coal chute in the north wall, boarded
   galNook: { x: -9.0, z: -7.4, a: 0.3 },            // gallery-local: a boulder by the back wall of the start-side shelf
   adit: { dx: -13, dz: -6, a: 1.14 },               // Under Celebration (isle_undergas): from the shuttle pad, its mouth toward the pad
+  jetPeg: { x: 3.35, z: -1.3, a: -Math.PI / 2 },     // workshop-local: a peg post by the door, against the open side
+  testStep: { h: 2.35, lx: -23, lz: 24 },           // Zeelich-local: the green behind the workshop; deck height (a jump: ~2.0)
 };
 
 const LIT_R = 5;   // how near the lantern must be to show a dark place's contents
@@ -125,6 +132,48 @@ export class Arsenal extends ChapterBase {
       GL.colliders?.push?.(g.physics.add({ type: 'cyl', x: GL.center.x + at.x, z: GL.center.z + at.z - 0.3, r: 0.95, top: at.y + 1.3, noStand: true }));
       this.nooks.push({ id: 'gal', room: 'c3gallery', show: clover, ...pick(world(GL, grp)), give: () => { const h = g.hero; h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); } });
     }
+    // ---- Baldino's hop-pack on its peg post by the workshop door (EQ-1)
+    const WS = R.workshop;
+    if (WS) {
+      const pg = SPOT.jetPeg, grp = holder(WS, pg.x, 0, pg.z, pg.a, true), k = new Kit(grp);
+      const wood = MAT.wood('dark'), brass = MAT.brass();
+      k.add(cyl(0.035, 0.045, 1.85, 8), wood, 0, 0.93, 0);
+      for (let i = 0; i < 3; i++) { const a = i * 2.094; k.add(rbox(0.06, 0.05, 0.42, 0.015), wood, Math.sin(a) * 0.17, 0.03, Math.cos(a) * 0.17, a); }
+      k.add(sphere(0.055, 10, 8), brass, 0, 1.88, 0);
+      for (const s of [-1, 1]) k.add(cyl(0.012, 0.012, 0.16, 5), brass, s * 0.06, 1.62, 0.07, 0, { rx: -0.9 });
+      k.flush();
+      const pack = jetpackModel(); pack.position.set(0, 1.42, 0.13); pack.rotation.set(-0.08, 0, 0); grp.add(pack);
+      const v = world(WS, grp);
+      g.physics.add({ type: 'cyl', x: v.x, z: v.z, r: 0.24, top: 1.95, noStand: true, seeThrough: true });
+      this.jetPeg = { grp, pack, room: 'workshop', ...pick(v) };
+    }
+    // ---- Baldino's test step on Zeelich's street: a timber deck one storey up, a sign at its foot, a tin on top
+    if (Z?.workshopDoor) {
+      const sp = this.stepSpot(Z);
+      if (sp) {
+        const H = SPOT.testStep.h, grp = holder(Z, sp.x, sp.y, sp.z, sp.a), k = new Kit(grp);
+        const wood = MAT.wood('honey'), dark = MAT.wood('dark'), brass = MAT.brass();
+        for (const sx of [-0.72, 0.72]) for (const sz of [-0.72, 0.72]) k.add(rbox(0.16, H - 0.1, 0.16, 0.03), dark, sx, (H - 0.1) / 2, sz);
+        for (const sz of [-0.72, 0.72]) k.add(rbox(1.9, 0.08, 0.06, 0.02), dark, 0, H * 0.45, sz, 0, { rz: sz > 0 ? 0.75 : -0.75 });
+        for (const sx of [-0.72, 0.72]) k.add(rbox(0.06, 0.08, 1.9, 0.02), dark, sx, H * 0.45, 0, 0, { rx: sx > 0 ? 0.75 : -0.75 });
+        k.add(rbox(1.7, 0.14, 1.7, 0.03), MAT.planks('honey'), 0, H - 0.07, 0);
+        k.add(rbox(1.76, 0.05, 1.76, 0.02), wood, 0, H - 0.16, 0);
+        k.add(cyl(0.02, 0.02, 1.2, 6), dark, 0.74, H + 0.6, -0.74);   // the pennant
+        k.add(rbox(0.36, 0.22, 0.012, 0.004), MAT.cloth('#9a7ab8', '#e0b25a'), 0.93, H + 1.05, -0.74);
+        // the sign at its foot, toward the door
+        const signTex = canvasTex(256, 128, (x, W, Hh) => { x.fillStyle = '#e8d8b0'; x.fillRect(0, 0, W, Hh); x.strokeStyle = '#6a4a2a'; x.lineWidth = 6; x.strokeRect(3, 3, W - 6, Hh - 6); x.fillStyle = '#3a2a1a'; x.textAlign = 'center'; x.font = 'bold 34px sans-serif'; x.fillText('TEST STEP', W / 2, 52); x.font = 'bold 22px sans-serif'; x.fillText('NO LADDER. THAT IS', W / 2, 86); x.fillText('THE TEST.   - B.', W / 2, 112); });
+        k.add(cyl(0.03, 0.03, 1.3, 6), dark, -0.55, 0.65, 1.15);
+        k.add(rbox(0.7, 0.36, 0.03, 0.01), MAT.map(signTex, 0.9), -0.55, 1.2, 1.17);
+        k.flush();
+        const tin = new THREE.Group(); tin.position.set(-0.2, H, 0.15); grp.add(tin);
+        const tb = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.14, 0.2), MAT.flat('#8a9a9a', 0.45, { metalness: 0.5 })); tb.position.y = 0.07; tin.add(tb);
+        const tl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.03, 0.22), brass); tl.position.y = 0.15; tin.add(tl);
+        const lc = Math.cos(sp.a), ls = Math.sin(sp.a), L = (lx, lz) => ({ x: sp.x + lx * lc + lz * ls, z: sp.z - lx * ls + lz * lc });
+        g.physics.add({ type: 'box', x: sp.x, z: sp.z, hw: 0.86, hd: 0.86, rot: sp.a, top: sp.y + H });
+        g.physics.add({ type: 'cyl', ...L(-0.55, 1.15), r: 0.1, top: sp.y + 1.4, noStand: true, seeThrough: true });
+        this.step = { grp, tin, x: sp.x, z: sp.z, y: sp.y, top: sp.y + H, a: sp.a, sign: L(-0.55, 1.6) };
+      }
+    }
     // ---- Under Celebration (isle_undergas): the old Wannie mine (a timber-framed adit in the rock, dark inside)
     const U = R.isle_undergas;
     if (U?.pad) {
@@ -154,6 +203,35 @@ export class Arsenal extends ChapterBase {
       this.nooks.push({ id: 'ug', room: 'isle_undergas', show: glove, x: x + Math.sin(SPOT.adit.a) * 0.6, y, z: z + Math.cos(SPOT.adit.a) * 0.6, give: () => this.gain('glove', 'it_glove') });
       this.adit = { x, z, y, sign: L(1.45, 0.9) };
     }
+  }
+  // Baldino's test step on the green behind his workshop (Zeelich): found, not fixed (the street is dressed by others):
+  // round a point on the green behind it, toward the south-west shore, the first spot that is level ground for 3 m
+  // all round, off the street, the plaza and the mill track, with nothing in the way within 2.4 m and nothing standable within 6 m — so the step is
+  // a step to nowhere else (from its deck neither a jump nor the pack reaches anything new).
+  stepSpot(Z) {
+    const P = this.game.physics, o = Z.group.position, c = { x: o.x + SPOT.testStep.lx, z: o.z + SPOT.testStep.lz };
+    const y0 = P.groundAt(Z.workshopDoor.x, Z.workshopDoor.z, 30);
+    const paved = (x, z) => { const lx = x - o.x, lz = z - o.z; return (Math.abs(lz) < 4.8 && lx > -52 && lx < 38) || Math.hypot(lx + 24, lz) < 10 || (lx > -9.5 && lx < -1 && lz > 2 && lz < 19.5); };
+    const ok = (x, z) => {
+      if (paved(x, z)) return null;
+      const gi = P.groundInfo(x, z, y0 + 3), g0 = gi.h;
+      if (!gi.brick && g0 < -0.35) return null;
+      if (Math.abs(g0 - y0) > 0.5) return null;
+      for (const r of [0.8, 1.6, 2.4]) for (let i = 0; i < 12; i++) {
+        const xx = x + Math.sin(i * 0.5236) * r, zz = z + Math.cos(i * 0.5236) * r, gg = P.groundInfo(xx, zz, g0 + 3);
+        if ((!gg.brick && gg.h < -0.35) || Math.abs(gg.h - g0) > 0.3 || P.blockedAt(xx, zz, g0, 0.4)) return null;
+      }
+      for (const r of [3.2, 4.0, 5.0, 6.0]) for (let i = 0; i < 16; i++) {
+        const xx = x + Math.sin(i * 0.3927) * r, zz = z + Math.cos(i * 0.3927) * r;
+        if (P.groundAt(xx, zz, g0 + 8) > g0 + 0.6) return null;   // (nothing to stand on that the deck would bring in reach)
+      }
+      return g0;
+    };
+    for (const d of [0, 1.5, 3, 4.5, 6, 7.5]) for (let i = 0; i < (d ? 16 : 1); i++) {
+      const a = i * (Math.PI / 8), x = c.x + Math.sin(a) * d, z = c.z + Math.cos(a) * d, y = ok(x, z);
+      if (y != null) { const dw = Z.workshopDoor; return { x, z, y, a: Math.atan2(dw.x - x, dw.z - z) }; }
+    }
+    return null;
   }
   // Under Celebration's mine: the island's layout is the original's numbers plus our dressing, so the spot is found, not
   // fixed: a ring round the shuttle pad (8–18 m), the first that is level ground for 3.5 m all round, on the main
@@ -186,6 +264,8 @@ export class Arsenal extends ChapterBase {
   applyFlags() {
     const f = this.f, A = this.A;
     if (this.conch) this.conch.grp.visible = !A.conch;
+    if (this.jetPeg) this.jetPeg.pack.visible = !A.jetpack;
+    if (this.step) this.step.tin.visible = !f.a_jetTin;
     if (this.boards) this.boards.boards.visible = !f.a_boards;
     this.push();
   }
@@ -207,6 +287,8 @@ export class Arsenal extends ChapterBase {
       { key: 'a_j_pearl_give', done: !!A.lightning, show: f.a_pearl },
       { key: 'a_j_dark', done: false, show: darkLeft },
       { key: 'a_j_boards', done: !!f.a_boards, show: f.a_boardsSeen },
+      { key: 'a_j_jet', done: !!A.jetpack, show: this.jetReady() },
+      { key: 'a_j_jetstep', done: !!f.a_jetTin, show: !!A.jetpack && !!this.step },
     ].filter((l) => l.show).map(({ key, done }) => ({ key, done }));
   }
 
@@ -269,7 +351,16 @@ export class Arsenal extends ChapterBase {
     }
     if (here === 'cellar' && this.boards && !f.a_boards) consider(dist(this.boards.x, this.boards.z), 1.6, { kind: 'a_boards', label: 'p_look2' });
     if (here === 'isle_undergas' && this.adit) consider(dist(this.adit.sign.x, this.adit.sign.z), 1.3, { kind: 'a_sign', label: 'p_read' });
+    // Baldino's hop-pack: the peg (chapter 10 on), the test step's sign and, on its deck, the tin
+    if (here === 'workshop' && this.jetPeg && !A.jetpack && this.jetReady()) consider(dist(this.jetPeg.x, this.jetPeg.z), 1.7, { kind: 'a_jetpeg', label: 'p_take' });
+    const S = this.step;
+    if (here === 'zeelich' && S) {
+      if (h.pos.y < S.y + 1) consider(dist(S.sign.x, S.sign.z), 1.3, { kind: 'a_jetsign', label: 'p_read' });
+      if (!f.a_jetTin && Math.abs(h.pos.y - S.top) < 0.6) consider(dist(S.x, S.z), 1.4, { kind: 'a_jettin', label: 'p_take' });
+    }
   }
+  // the pack is Baldino's to give from his chapter 10 briefing on (and in every later chapter)
+  jetReady() { const i = this.idx('network'); return i >= 0 && (this.story.index > i || (this.story.index === i && !!this.f.c10_started)); }
   interact(it) {
     const g = this.game, f = this.f, A = this.A;
     const hero = (keys, done) => { this.chain(keys.map((k) => ['hero', k]), done); return true; };
@@ -298,6 +389,32 @@ export class Arsenal extends ChapterBase {
           f['a_nook_' + n.id] = true; n.show.visible = false;
           n.give();
           hero(['a_nook_' + n.id], () => g.save(false));
+        }, 0.3);
+        return true;
+      }
+      case 'a_jetpeg': {
+        const bal = this.speaker('baldino'), there = bal?.present && g.room?.id === 'workshop' && g.hero.distTo(bal) < 9;
+        const take = () => {
+          if (A.jetpack) return;
+          A.jetpackOn = true; f.a_jetHint = true;
+          this.gain('jetpack', 'it_jetpack');
+          this.jetPeg.pack.visible = false;
+          setTimeout(() => g.hud.toast('a_toast_jethow', { k: g.input.label('action') }), 1800);
+          g.save(false);
+        };
+        if (there) { this.chain([['hero', 'a_jet_look'], ['baldino', 'a_jet_b1'], ['baldino', 'a_jet_b2'], ['hero', 'a_jet_tw'], ['baldino', 'a_jet_b3']], take); return true; }
+        return hero(['a_jet_look', 'a_jet_note'], take);
+      }
+      case 'a_jetsign': return hero(['a_jet_sign']);
+      case 'a_jettin': {
+        if (f.a_jetTin) return true;
+        const S = this.step;
+        g.hero.actAt(S.x, S.z, 'use', 0.6, () => {
+          if (f.a_jetTin) return;
+          f.a_jetTin = true; S.tin.visible = false;
+          const h = g.hero; h.clovers = Math.min(9, h.clovers + 1); h.coins += 10;
+          g.audio.play('chest');
+          hero(['a_jet_tin'], () => { g.hud.toast('a_toast_kashes', { n: 10 }); g.save(false); });
         }, 0.3);
         return true;
       }
@@ -350,6 +467,14 @@ export class Arsenal extends ChapterBase {
     return false;
   }
 
-  update() { if (this.nooks) this.push(); }
+  update() {
+    if (this.nooks) this.push();
+    // after his chapter 10 briefing, Baldino points out the pack on its peg (once)
+    const g = this.game, f = this.f;
+    if (this.jetPeg && !this.A.jetpack && !f.a_jetHint && g.state === 'play' && !g.trans && this.roomId() === 'workshop' && this.jetReady()) {
+      const bal = this.speaker('baldino');
+      if (bal?.present && g.hero.distTo(bal) < 9 && g.hero.body !== 'zoe') { f.a_jetHint = true; this.chain([['baldino', 'a_jet_hint']]); }
+    }
+  }
 }
 const pick = (v) => ({ x: v.x, y: v.y, z: v.z });

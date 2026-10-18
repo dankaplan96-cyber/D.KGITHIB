@@ -7,9 +7,10 @@ import { loadBake } from './engine/sculpt.js';
 import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
-import { Perf } from './engine/perf.js';
+import { Perf, gpuQuality, oldGpuQuality } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
 import { LightPool, POOL_SIZE } from './engine/lightpool.js';
+import { ShadowCull } from './engine/shadowcull.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
@@ -33,7 +34,7 @@ import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
 import { buildValveRoom } from './game/valveroom.js';
 import { buildArena, enterArena } from './game/arena.js';
-import { updateKitLod } from './game/kit.js';
+import { updateKitLod, enableBatching } from './game/kit.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK, PICK_TYPES } from './game/actors.js';
 import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
 import { Weapons, freshArms } from './game/weapons.js';
@@ -47,7 +48,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 4;
-export const VERSION = '0.29.1'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.31.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
@@ -99,7 +100,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     if (!(this.settings.v >= 2)) { this.settings.controls = 'classic'; this.settings.keys = {}; this.settings.v = 2; }
@@ -112,7 +113,14 @@ class Game {
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 2500);
     // startup cost per region (ms), for profiling: game.loadTimes
     const tm = performance.now(); this.loadTimes = {};
-    const timed = (name, fn) => { const t0 = performance.now(), r = fn(); this.loadTimes[name] = Math.round(performance.now() - t0); return r; };
+    const timed = (name, fn) => {
+      const t0 = performance.now(), n0 = this.scene.children.length, w0 = this.world?.root.children.length ?? 0, r = fn();
+      this.loadTimes[name] = Math.round(performance.now() - t0);
+      // (diagnostics: tag what each builder added, for tests/drawcalls.mjs)
+      for (const [root, from] of [[this.scene, n0], [this.world?.root, w0]]) if (root) for (let i = from; i < root.children.length; i++) root.children[i].userData.src ??= name;
+      return r;
+    };
+    enableBatching(this.renderer.renderer); // (vegetation in one draw call where WEBGL_multi_draw is there: kit.js)
     this.world = timed('world', () => buildWorld(this.scene));
     this.terrain = this.world.terrain;
     this.physics = this.world.physics;
@@ -120,6 +128,26 @@ class Game {
     timed('spaceport', () => buildSpaceport(this.world.root, P, this.world));
     timed('townlife', () => buildTownLife(this.world.root, P, this.world));
     timed('citydress', () => buildCityDressing(this.world.root, P, this.world));
+    this.env = new Environment(this.scene, this.terrain);
+    this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
+    this.renderer.setup(this.scene, this.camera);
+    this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
+    // the graphics preset follows the GPU on a first start (integrated GPUs: Low or Medium, see perf.js); settings
+    // saved before the presets were reworked (qv < 1) are re-picked too, unless they hold something other than the
+    // old automatic choice (then the player chose it). A choice in Settings sticks (qPicked).
+    {
+      const saved = store.get(SET_KEY), gpu = this.perf.gpu || '';
+      if (!saved?.quality || (!(saved.qv >= 1) && !saved.qPicked && saved.quality === oldGpuQuality(gpu))) this.settings.quality = gpuQuality(gpu);
+      this.settings.qv = 1;
+    }
+    // Startup overlap: the Citadel's shaders are sent to the driver now, with the final lights, shadows and preset,
+    // so the GPU process compiles them while the interiors and regions are built below (prepare() then waits for
+    // whatever is left). The light pool's size is fixed per preset; lamps placed later join it (collect, below).
+    this.lightPool = new LightPool(this.scene, POOL_SIZE[this.settings.quality] ?? 8);
+    if (this.settings.visual !== '1997' && !/[?&]noearly/.test(location.search)) { // (?noearly: for A/B timing)
+      this.renderer.setQuality(this.settings.quality); this.env.setShadowQuality(this.settings.quality);
+      this.earlyCompile = this.renderer.precompile().catch(() => {});
+    }
     this.rooms = timed('interiors', () => buildInteriors(S, P));
     // outdoor regions are rooms flagged `outdoor`: LBA camera, own sky, doors to their own interiors
     this.rooms.zeelich = timed('zeelich', () => buildZeelich(S, P));
@@ -136,11 +164,6 @@ class Game {
     this.rooms.arena = timed('arena', () => buildArena(S, P));
     timed('islands', () => Object.assign(this.rooms, buildIslands(S, P)));
     this.room = null;
-    this.env = new Environment(this.scene, this.terrain);
-    this.renderer.setup(this.scene, this.camera);
-    this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
-    // a first start on an integrated GPU begins on Medium (a choice in Settings overrides it)
-    if (!store.get(SET_KEY)?.quality && /Intel|UHD|Iris|Radeon\(TM\) Graphics|Radeon Vega|Vega \d|Mali|Adreno|PowerVR/i.test(this.perf.gpu || '')) this.settings.quality = 'medium';
     this.version = VERSION;
     this.bench = new Bench(this);
     this.audio = new AudioEngine();
@@ -148,6 +171,7 @@ class Game {
     this.env.onThunder = () => this.audio.play('thunder');
     this.input = new Input(this.renderer.canvas);
     this.camRig = new CameraRig(this.camera, this.terrain, this.physics);
+    this.camRig.occ = () => (this.room ? null : this.world.occ);   // Citadel's scenery volumes for the play camera (Game.occluders)
     this.particles = new Particles(this.scene);
     this.world.particles = this.particles;
     this.pickups = new Pickups(this);
@@ -179,7 +203,7 @@ class Game {
     this.cutscene = null;
 
     timed('actors', () => this.spawnActors());
-    this.lightPool = new LightPool(this.scene, POOL_SIZE[this.settings.quality] ?? 8); // (after every builder has placed its lamps)
+    this.lightPool.collect(); // (after every builder has placed its lamps)
     this.loadTimes.total = Math.round(performance.now() - tm);
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
@@ -201,7 +225,9 @@ class Game {
     loadingStep('Preparing graphics…');
     await nextPaint();
     const R = this.renderer.renderer;
-    try { await R.compileAsync(this.scene, this.camera); } catch (e) { console.warn('shader precompile', e); }
+    this.titleCamera(0);
+    this.lightPool.update(this.camera.position);
+    try { await this.renderer.precompile(); } catch (e) { console.warn('shader precompile', e); }
     // upload every texture now too, and draw the title's first view (shadow and post-processing passes)
     const tex = new Set();
     this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap']) if (m[k]?.isTexture) tex.add(m[k]); });
@@ -210,6 +236,8 @@ class Game {
     await nextPaint();
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
+    this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
+    if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
     this.renderer.render();
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.perf.load = this.loadTimes;
@@ -301,7 +329,69 @@ class Game {
     if (this.testFreeze || !R.compileAsync || this.state !== 'play') return;
     this.lightPool.update(this.hero.pos);
     T.hold = true; T.holdT = performance.now();
-    R.compileAsync(this.scene, this.camera).catch(() => {}).finally(() => { T.hold = false; });
+    this.renderer.precompile().catch(() => {}).finally(() => { T.hold = false; });
+  }
+  // The shadow pass's depth programs (one per kind of caster: side, texture/alpha test, instanced, batched, skinned)
+  // are not compiled by precompile(); left alone they compile on the first frame that casts with each kind. Here a
+  // tiny copy of every kind found in the scene (with its own material) is cast into a throwaway shadow map once.
+  warmShadows() {
+    const R = this.renderer.renderer, C = this.renderer.composer;
+    if (!R.shadowMap.enabled || !C) return 0;
+    const g = new THREE.Group(), made = [], kinds = new Map();
+    // a one-triangle geometry with the same attributes as src (the programs depend on which attributes exist)
+    const like = (src) => {
+      const t = new THREE.BufferGeometry();
+      for (const [n, a] of Object.entries(src.attributes)) t.setAttribute(n, new THREE.BufferAttribute(new (a.array.constructor)(3 * a.itemSize), a.itemSize, a.normalized));
+      t.attributes.position.array.set([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]);
+      t.setIndex([0, 1, 2]); made.push(t); return t;
+    };
+    const attrs = (geo) => Object.keys(geo.attributes).sort().join(',');
+    const kindOf = (o) => (o.isSkinnedMesh ? 's' : o.isBatchedMesh ? 'b' : o.isInstancedMesh ? 'i' : 'm');
+    this.scene.traverse((o) => {
+      if (!o.isMesh || !o.castShadow || !o.material || Array.isArray(o.material) || o.customDepthMaterial) return;
+      const m = o.material, k = [kindOf(o), attrs(o.geometry), m.side, m.shadowSide, !!m.map, !!m.alphaMap, m.alphaTest > 0, !!m.displacementMap, m.wireframe, !!m.alphaToCoverage].join('|');
+      if (!kinds.has(k)) kinds.set(k, o);
+    });
+    for (const o of kinds.values()) {
+      let c;
+      if (o.isSkinnedMesh) { c = new THREE.SkinnedMesh(o.geometry, o.material); c.bind(o.skeleton, o.bindMatrix); }
+      else if (o.isBatchedMesh) { const t = like(o.geometry); t.deleteAttribute('batchId'); c = new THREE.BatchedMesh(1, 3, 3, o.material); c.addInstance(c.addGeometry(t)); }
+      else if (o.isInstancedMesh) { c = new THREE.InstancedMesh(like(o.geometry), o.material, 1); c.setMatrixAt(0, new THREE.Matrix4()); }
+      else c = new THREE.Mesh(like(o.geometry), o.material);
+      c.castShadow = true; c.frustumCulled = false; g.add(c);
+    }
+    // (the shadow batches: engine/shadowcull.js)
+    const posOnly = new THREE.BufferGeometry(); posOnly.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]), 3)); posOnly.setIndex([0, 1, 2]); made.push(posOnly);
+    for (const side of [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide]) { const c = new THREE.Mesh(posOnly, new THREE.MeshBasicMaterial({ side })); c.castShadow = true; c.frustumCulled = false; g.add(c); }
+    // one frame of the real scene's lights (the programs depend on them) with only the copies in it, at the sun's
+    // focus so the shadow pass draws them, into a scratch target: nothing reaches the screen, and the GPU draws a few
+    // triangles (drawing the whole scene here queued seconds of work on a software renderer, felt at the first door)
+    g.position.copy(this.env.sun.target.position);
+    const hidden = [];
+    for (const c of this.scene.children) if (!c.isLight && c.visible) { c.visible = false; hidden.push(c); }
+    this.scene.add(g);
+    const prev = R.getRenderTarget();
+    try { R.setRenderTarget(C.renderTarget2); R.render(this.scene, this.camera); } catch (e) { console.warn('shadow warm-up', e); }
+    R.setRenderTarget(prev);
+    this.scene.remove(g); for (const c of hidden) c.visible = true; for (const t of made) t.dispose();
+    return kinds.size;
+  }
+
+  // what the current preset does, for the benchmark's report
+  graphicsConfig() {
+    const R = this.renderer, W = this.world;
+    return { pr: R.pixelRatio(), msaa: R.composer?.renderTarget1?.samples ?? 0, fxaa: !!R.fxaa?.enabled, shadows: R.renderer.shadowMap.enabled, shadowMap: this.env?.sun?.shadow?.mapSize?.x ?? 0,
+      bloom: !!R.bloom?.enabled, lamps: this.lightPool?.lights.length ?? 0, smallFar: W?.detail?.smallFar ?? '?', treeNear: W?.detail?.treeNear ?? '?' };
+  }
+  // after a graphics change (preset: lamp count, shadows): the new shader variants compile before the next frame
+  // is drawn (the last frame stays on screen meanwhile, at most 4 s), instead of stalling the first frame
+  warmGraphics() {
+    const R = this.renderer.renderer;
+    if (this.testFreeze || this.preparing || !R.compileAsync || !this.lightPool) return;
+    const hold = (this.gfxHold = { t: performance.now() });
+    this.warmShadows();
+    this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : this.hero.pos);
+    this.renderer.precompile().catch(() => {}).finally(() => { if (this.gfxHold === hold) this.gfxHold = null; });
   }
   // the hero walks on through the door (fading out), and in from the doorway (fading in)
   transWalk(dt) {
@@ -359,7 +449,7 @@ class Game {
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
-      this.occSnap = true;   // (the houses take their faded state at once on the first frame: Game.occluders)
+      this.occSnap = true;   // (Nell's roof takes its faded state at once on the first frame: Game.occluders)
       this.doorCool = 1;
       this.audio.setPlace?.('island');
       if (quiet) return;
@@ -396,10 +486,13 @@ class Game {
   // ------------------------------------------------ saves
   snapshot() {
     const h = this.hero;
+    // never a position in the air (a jump, Baldino's hop-pack): outdoors, on Citadel or in an outdoor region, the
+    // last safe spot on the ground instead (indoors he can't fly)
+    const air = !h.onGround && (!this.room || this.room.outdoor) && this.lastSafe;
     return {
       v: SAVE_VERSION,
       room: this.room?.id || null,
-      hero: { x: this.room ? h.pos.x : this.lastSafe.x, z: this.room ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon, arms: freshArms(h.arms) },
+      hero: { x: this.room && !air ? h.pos.x : this.lastSafe.x, z: this.room && !air ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon, arms: freshArms(h.arms) },
       flags: this.flags, killed: this.killed, collected: this.collected, searched: this.searched, crates: this.brokenCrates,
     };
   }
@@ -435,6 +528,7 @@ class Game {
     if (s.room && this.rooms[s.room]) this.enterRoom(s.room, at, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
+    this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)
   }
 
   // ------------------------------------------------ flow
@@ -517,7 +611,7 @@ class Game {
       this.audio.init();
       if (b.dataset.act) { this.audio.play('select'); this.act(b.dataset.act); }
       const seg = b.closest('.seg');
-      if (seg && b.dataset.v) { this.settings[seg.dataset.setting] = b.dataset.v; this.applySettings(); this.syncSettingsUI(); }
+      if (seg && b.dataset.v) { this.settings[seg.dataset.setting] = b.dataset.v; if (seg.dataset.setting === 'quality') this.settings.qPicked = true; this.applySettings(); this.syncSettingsUI(); }
     });
     document.querySelectorAll('[data-range]').forEach((r) => r.addEventListener('input', () => { this.settings[r.dataset.range] = +r.value; this.applySettings(); }));
     $('#pausebtn').addEventListener('click', () => this.pause());
@@ -612,7 +706,12 @@ class Game {
       this.hud.refreshText();
       if (this.hero) this.updateObjective();
     }
-    if (changed('quality')) { this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.lightPool?.setSize(POOL_SIZE[s.quality] ?? 8); }
+    if (changed('quality')) {
+      this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.lightPool?.setSize(POOL_SIZE[s.quality] ?? 8);
+      this.world?.setDetail?.(s.quality);
+      if (this.shadowCull) this.shadowCull.quality = s.quality;
+      if (was.quality) this.warmGraphics();
+    }
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     const retro = s.visual === '1997';
     if (changed('visual')) {
@@ -1069,8 +1168,7 @@ class Game {
         else if (input.pressed('inventory') || input.pressed('pause') || input.pressed('interact')) { this.inventory.show(false); this.setState('play'); }
         break;
       case 'map':
-        this.hud.drawHolomap(this.time);
-        if (input.pressed('map') || input.pressed('pause')) { $('#holomap').classList.add('hidden'); this.setState('play'); }
+        if (this.hud.holomapUpdate(input, dt)) { this.hud.closeHolomap(); this.setState('play'); }
         break;
       case 'pause': case 'gameover': case 'ending':
         // a grace period, so a key still held from the last line of dialogue doesn't press a button
@@ -1103,12 +1201,13 @@ class Game {
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
     this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
+    if (render) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
     if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0);
     if (this.state !== 'play') this.behMenu.show(false);
     this.hud.updateFloats(dt, this.camera);
     if (this.state !== 'dialog') this.bubble.visible = false;
-    if (render && !this.trans?.hold) {
+    if (render && !this.trans?.hold && !(this.gfxHold && performance.now() - this.gfxHold.t < 4000)) {
       const t0 = performance.now();
       this.renderer.render();
       this.behMenu.render(this.renderer.renderer, dt);
@@ -1137,7 +1236,7 @@ class Game {
     const input = this.input, h = this.hero;
     this.dirty = true;
     if (input.pressed('pause')) { this.pause(); return; }
-    if (input.pressed('map') && h.hasBall) { this.setState('map'); $('#holomap').classList.remove('hidden'); return; }
+    if (input.pressed('map') && h.hasBall) { this.setState('map'); this.hud.openHolomap(); return; }
     if (input.pressed('inventory')) { this.setState('inventory'); this.inventory.show(true); this.audio.play('select'); return; }
     if (input.down('wheel')) {
       // hold Ctrl: behaviour menu, world frozen
@@ -1203,15 +1302,18 @@ class Game {
     const it = this.findInteractable();
     this.hud.prompt(it ? t(it.label) : null);
     this.hud.stats(h);
-    if (!this.room) this.hud.drawMinimap();
+    this.hud.mapTick();   // (where he is and the doors he used, for the maps; the minimap when shown)
     this.camRig.update(dt, h.pos, h.angle, h.speed > 0.5, input);
     this.occluders(dt);
   }
 
-  // Houses between the camera and Twinsen fade out (town.js / island.js fadeOccluders). It runs wherever the game
-  // camera follows him outdoors on Citadel — play, dialogue, the shop, cut-scenes and through a door's fade — and on
-  // the first frame of a scene (occSnap, set by exitRoom) it takes the final state at once: leaving home used to open
-  // on his own roof filling the screen through the whole fade-in, fading only once control was back.
+  // Scenery between the camera and Twinsen (VP-10). As in LBA2 nothing on Citadel fades or turns see-through: the
+  // houses, the fortress, the project buildings, the spaceport terminal and Nell's lean-to give the camera their
+  // shapes (W.occ, src/engine/occlude.js) and each new shot rises over whatever would hide him (camRig.occ, set
+  // above; src/engine/camera.js). What is left here is townlife.js's own fade of Nell's roof while he stands under it
+  // or the coupler is on the bench (fadeOccluders). It runs wherever the game camera follows him outdoors on Citadel —
+  // play, dialogue, the shop, cut-scenes and through a door's fade — and on the first frame of a scene (occSnap, set
+  // by exitRoom) it takes its final state at once.
   occluders(dt) {
     if (this.room) return;
     const snap = this.occSnap;

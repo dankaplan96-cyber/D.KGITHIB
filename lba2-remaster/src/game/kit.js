@@ -164,6 +164,17 @@ export function instances(parent, geo, mat, list, { cast = true, receive = true 
 // switch in updateKitLod(focus) — called every frame for the active region — with 4 m of hysteresis.
 export const KIT_LOD = { tiles: [] };
 export function lodInstances(parent, geo, geoLo, mat, list, opts = {}, tile = 32) {
+  if (BATCH.on && geoLo && list.length) {
+    // one BatchedMesh for the whole list (see LodBatch below): 1 call per pass instead of 2–3 per tile
+    const B = new LodBatch(parent, mat, opts), m = new THREE.Matrix4(), o = new THREE.Object3D(), c = new THREE.Color();
+    for (const it of list) {
+      o.position.set(it.x, it.y, it.z); o.rotation.set(it.rx || 0, it.ry || 0, it.rz || 0, 'YXZ');
+      if (it.s != null) o.scale.setScalar(it.s); else o.scale.set(it.sx ?? 1, it.sy ?? 1, it.sz ?? 1);
+      o.updateMatrix();
+      B.add(geo, geoLo, o.matrix, it.color ? c.set(it.color) : null);
+    }
+    return [B.build()];
+  }
   const tiles = new Map();
   for (const it of list) { const k = Math.floor(it.x / tile) + ',' + Math.floor(it.z / tile); if (!tiles.has(k)) tiles.set(k, []); tiles.get(k).push(it); }
   const out = [];
@@ -178,7 +189,8 @@ export function lodInstances(parent, geo, geoLo, mat, list, opts = {}, tile = 32
   }
   return out;
 }
-export function updateKitLod(focus, near = 40) {
+export function updateKitLod(focus, near = LOD_DETAIL.near) {
+  for (const B of LOD_BATCHES) B.update(focus, near);
   for (const T of KIT_LOD.tiles) {
     if (!T.parent.visible) continue;
     const d = Math.hypot(focus.x - (T.parent.position.x + T.cx), focus.z - (T.parent.position.z + T.cz));
@@ -192,16 +204,29 @@ export function updateKitLod(focus, near = 40) {
 // the stand-in's outline reads the same; near trees and rocks were ~6k triangles each in it.
 const SHADOW_ONLY = {};
 function shadowOnly(m) { return (SHADOW_ONLY[m.side] ??= new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: m.side })); }
-export function setLod(T, near) {
+// proxy = false (Low/Medium, see LOD_DETAIL): a near tile casts with its detailed instances instead, one draw call
+// fewer per tile (the stand-in drawn invisibly in the main view); the shadow pass draws more triangles, which the
+// integrated GPUs measured cope with better than more calls (shadows off cost ~0 fps on a Vega 8)
+export function setLod(T, near, proxy = LOD_DETAIL.proxy) {
   const { hi, lo } = T;
   T.cast ??= hi.castShadow;
   T.mat ??= lo?.material;
   hi.visible = near;
   if (!lo) return;
+  if (near && !proxy) { hi.castShadow = T.cast; lo.visible = false; lo.castShadow = false; lo.material = T.mat; return; }
   hi.castShadow = false; lo.castShadow = T.cast;
   lo.visible = !near || T.cast;
   lo.material = near ? shadowOnly(T.mat) : T.mat;
 }
+// distance detail per graphics preset (set by the game from the quality setting; read by the regions' and the
+// Citadel's vegetation tiles): near = detailed-sculpt radius, smallFar = grass/flower radius, proxy = shadow stand-ins
+export const LOD_PRESETS = {
+  high: { near: 40, smallFar: 58, proxy: true, small: 1 },
+  medium: { near: 34, smallFar: 46, proxy: false, small: 1 },
+  low: { near: 26, smallFar: 36, proxy: false, small: 0.6 },
+};
+export const LOD_DETAIL = { ...LOD_PRESETS.high };
+export function setLodDetail(q) { Object.assign(LOD_DETAIL, LOD_PRESETS[q] || LOD_PRESETS.high); for (const T of KIT_LOD.tiles) setLod(T, T.near); }
 export function mesh(parent, geo, mat, x = 0, y = 0, z = 0, ry = 0, { cast = true, rx = 0, rz = 0 } = {}) {
   const m = new THREE.Mesh(geo, mat);
   m.position.set(x, y, z); m.rotation.set(rx, ry, rz, 'YXZ');
@@ -342,4 +367,62 @@ export function slabGeo(P, depth, tile, holes = []) {
   const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: false, curveSegments: 24 });
   g.rotateX(-Math.PI / 2);
   return boxUV(g, tile);
+}
+
+// ================================================================== batched vegetation (PERF-IGPU)
+// Trees, bushes and rocks of several shapes, each with a detailed and a coarse sculpt, drawn as ONE BatchedMesh
+// per material: one draw call in the main view and one in the shadow pass for all of them (WEBGL_multi_draw;
+// three culls and sorts the instances itself), where per-tile InstancedMeshes cost a call per shape per tile per
+// pass. Distance detail per instance: the detailed sculpt within LOD_DETAIL.near (4 m hysteresis), the coarse
+// one beyond; the shadow map always gets the coarse one (as the tiles' shadow stand-ins did), at no extra call.
+// Without WEBGL_multi_draw (or with ?nobatch) the callers keep their tiled InstancedMeshes.
+export const LOD_BATCHES = [];
+export const BATCH = { on: false };
+export function enableBatching(renderer) {
+  try { BATCH.on = !!renderer?.extensions?.has?.('WEBGL_multi_draw') && !/[?&]nobatch/.test(location.search); } catch { BATCH.on = false; }
+  return BATCH.on;
+}
+export class LodBatch {
+  constructor(parent, mat, { cast = true, receive = true } = {}) { this.parent = parent; this.mat = mat; this.cast = cast; this.receive = receive; this.items = []; }
+  // geoLo may be null (no coarse version); m: a Matrix4 (copied); color: a Color or null
+  add(geo, geoLo, m, color = null) { this.items.push({ geo, lo: geoLo, m: m.clone(), c: color ? color.clone() : null }); return this; }
+  build() {
+    const geos = [...new Set(this.items.flatMap((i) => [i.geo, i.lo].filter(Boolean)))];
+    let nv = 0, ni = 0;
+    for (const g of geos) { nv += g.attributes.position.count; ni += g.index ? g.index.count : g.attributes.position.count; }
+    const bm = (this.mesh = new THREE.BatchedMesh(Math.max(1, this.items.length), nv, ni, this.mat));
+    bm.castShadow = this.cast; bm.receiveShadow = this.receive; bm.name = 'lodBatch';
+    const id = new Map(geos.map((g) => [g, bm.addGeometry(g)]));
+    const _p = new THREE.Vector3();
+    this.inst = this.items.map((it) => {
+      const k = bm.addInstance(id.get(it.geo));
+      bm.setMatrixAt(k, it.m);
+      if (it.c) bm.setColorAt(k, it.c);
+      _p.setFromMatrixPosition(it.m);
+      return { k, x: _p.x, z: _p.z, hi: id.get(it.geo), lo: it.lo ? id.get(it.lo) : -1, near: true };
+    });
+    this.items = null;
+    this.parent.add(bm);
+    // the shadow pass: every instance with a coarse sculpt casts with it (three culls/sorts in onBeforeShadow)
+    const base = bm.onBeforeShadow.bind(bm);
+    bm.onBeforeShadow = (...a) => {
+      for (const I of this.inst) if (I.lo >= 0 && I.near) bm.setGeometryIdAt(I.k, I.lo);
+      base(...a);
+      for (const I of this.inst) if (I.lo >= 0 && I.near) bm.setGeometryIdAt(I.k, I.hi);
+    };
+    LOD_BATCHES.push(this);
+    return bm;
+  }
+  // focus in world coordinates (the parent is a group placed without rotation or scale)
+  update(focus, near = LOD_DETAIL.near) {
+    const bm = this.mesh; if (!bm || !bm.visible || !this.parent.visible) return;
+    const ox = this.parent.position.x, oz = this.parent.position.z;
+    for (const I of this.inst) {
+      if (I.lo < 0) continue;
+      const d = Math.hypot(focus.x - ox - I.x, focus.z - oz - I.z);
+      const was = I.near;
+      if (I.near && d > near + 4) I.near = false; else if (!I.near && d < near - 4) I.near = true;
+      if (I.near !== was) bm.setGeometryIdAt(I.k, I.near ? I.hi : I.lo);
+    }
+  }
 }

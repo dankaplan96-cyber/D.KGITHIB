@@ -2,8 +2,9 @@
 // them: a landing platform on stilts over the bay east of the town, a footbridge from the shore, a small terminal
 // (Twinsun stone below, an Esmer dome above), a control tower, the departures board, and a shuttle on the pad.
 // From chapter 4 on it flies to Zeelich Spaceport only — Zeelich is another planet; its islands are reached from
-// there by Esmer shuttle (src/game/travel.js, CONNECT); before that the flights are
-// grounded and only the Joint Project's ferry crosses (the board and the gate say so).
+// there by Esmer shuttle (src/game/travel.js, CONNECT); before that passenger flights are
+// grounded by the Joint Project (the note on the hatch says so) and only a project ship flies: in chapter 2 Doran
+// takes Twinsen across in one (PLANET-1, story/chapter1.js).
 //
 // A small working port (SD-1): passengers wait on benches in front of the terminal between planters and bins,
 // read the departures board by the bridge's end and buy tickets at a kiosk across the way; luggage trolleys, cargo
@@ -18,6 +19,8 @@ import * as THREE from 'three';
 import * as P from './props.js';
 import { Kit, rbox, cyl, lathe, plane, torus, sphere, canvasTex, MAT, paintVC, tinted } from './props.js';
 import { esmerShuttle } from './shuttle.js';
+import { occOf } from '../engine/occlude.js';
+import { mergeStatic } from '../engine/merge.js';
 
 // the platform: east of the town over the bay (the shore is at x ≈ −26 at ground level 2.3 m)
 const DECK = { x0: -14, x1: 14, z0: 26, z1: 54 };
@@ -117,7 +120,11 @@ export function buildSpaceport(root, physics, W) {
   pv(k, rbox(1.75, 0.12, 0.16, 0.03), '#2f6a9a', tcx + 3, Y + 2.26, T.z1 + 0.06);
   for (const s of [-1, 1]) pv(k, rbox(0.12, 2.26, 0.16, 0.03), '#2f6a9a', tcx + 3 + s * 0.82, Y + 1.13, T.z1 + 0.06);
   pv(k, rbox(2.3, 0.1, 1.1, 0.03), '#2f6a9a', tcx + 3, Y + 2.62, T.z1 + 0.55, 0, { rx: 0.08 });
-  wall(T.x0, T.x1, T.z0, T.z1, Y + th + 0.3);
+  wall(T.x0, T.x1, T.z0, T.z1, Y + th + 0.3, { camSkip: true });
+  // the play camera rises over the terminal and its dome rather than look through them, as LBA2's camera does over
+  // scenery (VP-10, src/engine/occlude.js): the block to its roof slab, the dome by its lathe profile (no spire)
+  occOf(W).add({ kind: 'box', x: tcx, z: tcz, hw: (T.x1 - T.x0) / 2 + 0.25, hd: (T.z1 - T.z0) / 2 + 0.25, y0: Y - 1, y1: Y + th + 0.25, name: 'spaceport terminal' });
+  occOf(W).add({ kind: 'rev', x: tcx, z: tcz, y0: Y + th, base: Y + th + 0.25, profile: [[0, 2.1], [0.03, 2.1], [0.4, 1.8], [1.0, 1.45], [1.6, 0.9], [1.75, 0.35]], name: 'spaceport dome' });
 
   // --- the waiting area in front of the terminal: benches facing the pad between a tub, a planter and bins
   for (const bx of [-10.9, -7.7]) put((kk) => P.waitingBench(kk, { w: 1.9 }), bx, T.z1 + 1.45);
@@ -185,6 +192,9 @@ export function buildSpaceport(root, physics, W) {
     add(sphere(0.17, 10, 8), MAT.glow('#fff4d8', '#ffd890', 1.2), x, Y + 2.45, BRIDGE.z + s * (BRIDGE.hw - 0.15));
   }
   k.flush(); f.flush();
+  // (PERF-IGPU) the two kits share most materials, and the landed shuttle never moves: one mesh per material for
+  // the whole port (the departures board and the blinking beacon stay their own meshes)
+  mergeStatic(g);
   // the tower's beacon blinks (its own mesh)
   const beacon = new THREE.Mesh(sphere(0.16, 10, 8), MAT.glow('#ff6050', '#ff3020', 2.2)); beacon.position.set(CT.x, Y + 11.85, CT.z); g.add(beacon);
   W.updaters.push((dt, t) => { beacon.visible = (t % 1.6) < 0.8; });

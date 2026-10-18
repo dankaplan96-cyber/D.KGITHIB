@@ -1,0 +1,7 @@
+startup {"load":{"world":1789,"spaceport":311,"townlife":92,"citydress":53,"interiors":1091,"zeelich":1252,"underground":427,"desert":391,"condenser":30,"temple":22,"wizards":28,"lba1":284,"hamalayi":357,"obsroom":11,"upper":320,"valves":13,"arena":5,"islands":2622,"actors":349,"total":9711,"shaders":37819},"programs":81,"gpu":"Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver"} page boot 48.606 s
+medium street     calls  261 (max 275) · tris 833k (max 844k) · submit 12.7 ms · first frame 16 ms · new programs 0 · pr 1 · lamps 4
+medium interior   calls  121 (max 127) · tris 451k (max 452k) · submit 11.2 ms · first frame 24 ms · new programs 0 · pr 1 · lamps 4
+medium combat     calls  217 (max 218) · tris 260k (max 260k) · submit 11.8 ms · first frame 45 ms · new programs 0 · pr 1 · lamps 4
+medium transition calls  203 (max 208) · tris 714k (max 714k) · submit 14.1 ms · first frame 17 ms · new programs 0 · pr 1 · lamps 4
+no errors
+ALL PASSED
