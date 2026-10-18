@@ -96,6 +96,7 @@ export class Prologue extends ChapterBase {
   afterOpening() {
     const g = this.game, f = this.f;
     f.intro = true; f.opening = true;
+    if (!this.game.hero.hasBall) f.ballHint = true; // (Zoé said "Take your magic ball": the objective shows that step)
     this.opening = null;
     this.story.refreshCast();
     g.hud.show(true);
@@ -106,6 +107,8 @@ export class Prologue extends ChapterBase {
     g.updateObjective();
     const ob = document.querySelector('#objective');
     ob?.classList.remove('flash'); void ob?.offsetWidth; ob?.classList.add('flash');
+    // (the LBA HUD hides the objective panel: the first goal is said once, on screen, as control comes back)
+    if (g.hud.lba && !g.hero.hasBall) g.hud.toast('pr_toast_goal');
     g.audio.setMood('home');
     g.save(false);
   }

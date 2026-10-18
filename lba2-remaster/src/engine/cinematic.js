@@ -8,7 +8,9 @@
 //                          when the clock passes t1 (so a frame skip never leaves a move half done)
 //   shots   [{t0, t1, from, to, ease}]  camera: from/to = {pos, look, fov}; to = 'game' blends into the
 //                          gameplay camera (the handoff); a shot may also be a function (t) => {pos, look, fov}
-//   subs    [{t, d, who, text, color}]  subtitles
+//   subs    [{t, d, who, text, color, voice}]  subtitles; `voice` (a speaker's name key, 'n_zoe') babbles the line in
+//                          that character's gibberish voice (voice.js), paced over the line like dialogue typing out
+//   caps    [{t, d, text, sub}]  captions (place and time), lower left, no speaker
 //   finish(skipped)        puts the world in its end state — the same state whether the scene played out or
 //                          was skipped (so every flag, position and objective is set exactly once, here)
 //   music  {name, at}      optional: a music cue started at `at`; the clock follows the cue while it plays
@@ -43,6 +45,8 @@ export class Cinematic {
     this.events = [...(def.events || [])].sort((a, b) => a.t - b.t);
     this.tracks = (def.tracks || []).map((tr) => ({ ...tr, done: false }));
     this.subI = -1;
+    this.capI = -1;
+    this.voiced = [];        // syllables babbled per subtitle (index → count): every spoken line has a voice
     this.hold = 0;
     this.promptT = PROMPT_SHOW;
     this.focus = null;      // where shadows / distance detail centre while the hero is elsewhere
@@ -98,6 +102,7 @@ export class Cinematic {
     }
     this.camera(dt);
     this.subtitles();
+    this.captions();
   }
 
   camera(dt) {
@@ -149,13 +154,47 @@ export class Cinematic {
     const subs = this.def.subs || [];
     let i = -1;
     for (let j = 0; j < subs.length; j++) if (this.t >= subs[j].t && this.t < subs[j].t + subs[j].d) i = j;
-    if (i === this.subI) return;
-    this.subI = i;
-    const el = $('#cine-sub');
-    if (i < 0) { el.classList.remove('show'); return; }
-    const s = subs[i];
-    el.innerHTML = (s.who ? `<b style="color:${s.color || '#fff'}">${s.who}</b> ` : '') + `<span>${s.text}</span>`;
-    el.classList.add('show');
+    const B = this.game.audio.babble;
+    if (i !== this.subI) {
+      this.subI = i;
+      const el = $('#cine-sub');
+      B?.stop();
+      if (i < 0) { el.classList.remove('show'); return; }
+      const s = subs[i];
+      el.innerHTML = (s.who ? `<b style="color:${s.color || '#fff'}">${s.who}</b> ` : '') + `<span>${s.text}</span>`;
+      el.classList.add('show');
+      // the speaker babbles the line (voice.js), paced like dialogue typing out: about 8 syllables a second,
+      // finishing a little before the subtitle goes
+      this._say = { s, i, typed: 0, cps: Math.min(50, Math.max(28, s.text.length / (s.d * 0.8))), c0: B?.count ?? 0 };
+      if (s.voice) B?.start(s.voice);
+    }
+    const S = this._say;
+    if (i < 0 || !S || !S.s.voice || !B) return;
+    const now = Math.min(S.s.text.length, Math.floor((this.t - S.s.t) * S.cps));
+    if (now > S.typed) { B.chars(S.s.text, S.typed, now); S.typed = now; }
+    this.voiced[S.i] = B.count - S.c0;
+  }
+
+  captions() {
+    const caps = this.def.caps;
+    if (!caps) return;
+    let i = -1;
+    for (let j = 0; j < caps.length; j++) if (this.t >= caps[j].t && this.t < caps[j].t + caps[j].d) i = j;
+    if (i === this.capI) return;
+    this.capI = i;
+    let el = $('#cine-cap');
+    if (!el) {
+      // (made here, so a scene without captions needs nothing in the page)
+      el = document.createElement('div'); el.id = 'cine-cap';
+      el.style.cssText = 'position:absolute;left:max(16px,4vw);bottom:max(16vh,96px);max-width:calc(100vw - 32px);color:#fff6e4;'
+        + 'text-shadow:0 1px 3px rgba(0,0,0,0.85),0 0 14px rgba(0,0,0,0.45);opacity:0;transition:opacity 0.8s ease;pointer-events:none;';
+      $('#cine').appendChild(el);
+    }
+    if (i < 0) { el.style.opacity = '0'; return; }
+    const c = caps[i];
+    el.innerHTML = `<div style="font-size:clamp(1.25rem,3vw,2rem);font-weight:800;letter-spacing:0.04em">${c.text}</div>`
+      + (c.sub ? `<div style="font-size:clamp(0.95rem,1.9vw,1.2rem);font-weight:500;margin-top:0.2em;opacity:0.92">${c.sub}</div>` : '');
+    el.style.opacity = '1';
   }
 
   // the clock follows the music cue while it plays (a slow frame then can't drift the picture off the score)
@@ -213,6 +252,7 @@ export class Cinematic {
     if (this.state === 'done') return;
     const g = this.game, was = this.state;
     this.state = 'done';
+    this.game.audio.babble?.stop();
     if (this._suspended) { g.audio.ctx?.resume(); this._suspended = false; }
     this.ui(false);
     const end = () => {
@@ -235,6 +275,7 @@ export class Cinematic {
 
   ui(on) {
     $('#cine-sub').classList.remove('show');
+    const cap = $('#cine-cap'); if (cap) cap.style.opacity = '0';
     $('#cine-title')?.classList.remove('show');
     $('#cine-skip').classList.toggle('show', false);
     $('#cine').classList.toggle('hidden', !on);
