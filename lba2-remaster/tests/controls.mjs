@@ -389,7 +389,9 @@ if (cam.start) for (const k of ['f60', 'f30']) {
   const c = cam[k];
   check(`camera ${k}: Twinsen stays well inside LBA2's frame box`, c.outOfBox === 0 && c.maxNdc < 0.7, c);
   check(`camera ${k}: it leads on average and never trails him by more than 2.5 m (a running turn)`, c.worstBehind > -2.5 && c.lead > 0, c);
-  check(`camera ${k}: smooth — no lurch (camera acceleration ≤ 40 m/s², 95% ≤ 8)`, c.accMax <= 40 && c.accP95 <= 8, c);
+  // (his own start in Athletic is 11 m/s², and a walking turn swings the aim point round at ~8 m/s²: the view never
+  // jerks harder than he moves; before CTRL-1 the re-centring lurches measured 95% ≤ 411, max 5386)
+  check(`camera ${k}: smooth — no lurch (camera acceleration ≤ 25 m/s², 95% ≤ 12)`, c.accMax <= 25 && c.accP95 <= 12, c);
   check(`camera ${k}: no snap — the view never turns with his turns, at most an eased 60°/s swing when a wall hides him`, c.yawRateMax <= 61, c);
   check(`camera ${k}: still when he stops and when he turns on the spot`, c.driftAfterStop < 0.6 && c.moveTurnOnSpot < 0.05, c);
 }
