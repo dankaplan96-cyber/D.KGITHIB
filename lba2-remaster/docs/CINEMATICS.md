@@ -65,7 +65,7 @@ What a player who never played LBA should know by the end, shown rather than tol
 | 66.5–75.2 | the decision | Twinsen puts the screwdriver down: "I'll check the well." Zoé turns the tap off: "I'll ask next door." and, going: "Take your magic ball. Just in case." She walks out of the shot toward the hall | the first goal (the well) and the first step (the ball); Zoé acts on her own |
 | 75.2–81.6 | outside | the game's door transition (a dip, the door): Zoé steps out by the house's new heat post (dark: the heat hasn't come yet) and walks to the neighbours'; the title, 76.4–81 | — |
 | 81.6–83.6 | inside | Twinsen turns to the cupboard where the ball is | where the ball is |
-| 83.6–88 | handoff | the camera eases into the game's isometric view; control, the objective "Check the well ◆ Take the magic ball from the cupboard", the save | what to do now |
+| 83.6–88 | handoff | the camera eases into the game's isometric view; control, the objective "Check the well ◆ Take the magic ball from the cupboard" (the default LBA HUD hides the objective panel, so a toast says it once), the save | what to do now |
 
 The sections of the music cue (tools/music/tracks/opening.py) are unchanged: harbour 2.5–13, the lift 13–29,
 home 29–41, the tap 41–59, "That's warm." 59–66.5, the decision 66.5–76, the title 76–83.
