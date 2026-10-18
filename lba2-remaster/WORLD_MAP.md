@@ -142,7 +142,13 @@ twice; not wanted). Tool: tools/lba2-islands.py (reads the user's own files; wri
   (WANNIE WORKS. CLOSED. DARK. BRING A LAMP.); with the lantern lit, the Wannie glove on a crate (src/game/story/arsenal.js).
 
 ## Desert Island (chapters 4–5) ✅ first version (src/game/desert.js)
-Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real ground (a terrain patch).
+Dunes and red mesas, long low beaches; the light-ferry ties up at a long pier. Real ground (a terrain patch).
+**Layout after the original LBA2 island** (WORLD-SHAPE, `src/game/desert-layout.js`: the original's height grid as
+numbers): its coast — the inlets from the north, the lagoon by Ilka's camp, the round hill, the long arm and the
+islet in the north-east — and its high ground, turned 275° so its long axis runs east–west (`DESERT_FIT` in
+desert.js), 263 × 214 m, 33,100 m² of land. The original's village falls 10–20 m from Kesh. Our places, tracks and
+the dig stand where they were; the original's high ground rises only beyond 8 m from them; the camp's and the
+School of Magic's mesas are ours. Audit: docs/lba3-production/reviews/WORLD-SHAPE/AUDIT.md.
 
 | Place | Identity / landmark | Life | Story role | Changes |
 |---|---|---|---|---|
@@ -158,7 +164,9 @@ Dunes and red mesas, a short beach; the light-ferry ties up at a long pier. Real
 | FunFrock's condenser hall (interiors condA, condB) | a concrete arch half buried in a dune; inside a valve hall and a hangar with three condensers and a cargo glider | FunFrock's old drones | route the steam (valves 1, 3, 4), open the roof hatch, the glider north | plumes rise from the dunes once the vent is open |
 
 ## The Hamalayi (chapters 6–7) ✅ first version (src/game/hamalayi.js)
-Snow terraces between rock cliffs, impassable peaks all round, falling snow, chimney smoke.
+Snow terraces between rock cliffs, impassable peaks all round, falling snow, chimney smoke. (LBA2 has no Hamalayi:
+LBA1's are eight 55 m scenes of ledges. Ours keeps its own levels; since WORLD-SHAPE the ring of peaks is rounded
+with bays and spurs, the terrace edges and the gorge wander, straight only at the lift and the tree bridge.)
 
 | Place | Identity / landmark | Life | Story role |
 |---|---|---|---|

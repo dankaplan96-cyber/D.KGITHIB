@@ -128,6 +128,19 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   (WAV A/B and measurements), evidence docs/lba3-production/reviews/VOICE-1/, QA.md "Character voices (VOICE-1)".
 - Open: the voices by ear (pleasantness, recognisability) — nobody can listen here. With OPEN-2 merged, the opening's subtitle voices use
   the same Babble API (start/chars/stop), unchanged. Baldino's voice already has a Grobo colour (PRODUCTION.md block 4: Baldino as a Grobo).
+## Done after (WORLD-SHAPE; status REVIEW)
+- The user: "the map still doesn't look like the original game (LBA2) in structure and size". A measured audit of
+  every region against the original islands (docs/lba3-production/reviews/WORLD-SHAPE/AUDIT.md): Citadel's coast and
+  houses are the original's (land IoU 0.92) but its terraces stand 1–2 m low; Zeelich's islands are faithful
+  (0.89–0.95); Desert Island was an invented round island (IoU 0.52, 71 % of the original's land) and the Hamalayi a
+  square box (93 % of its cliff edge axis-aligned).
+- Fixed: Desert Island's coast and high ground now follow the original (src/game/desert-layout.js, numbers only;
+  IoU 0.93, 33,057 of 34,394 m²; places and tracks unmoved; soft-lock flood fill); the Hamalayi's ring of peaks,
+  terraces and gorge made organic (38 % of the cliff edge axis-aligned, was 93 %), its levels and story spots unchanged.
+- Open (AUDIT.md): Citadel's terraces to the original's shelves — built and measured in block 3 (plateau-top IoU
+  0.21 → 0.71) but reverted: tests/travel.mjs (chapter 10, the walk to Hesk) and tests/occluders.mjs (b) failed with
+  it; the exact change is in AUDIT.md. The harbour basin's straight cut. Walking speed is LBA2's since CTRL-1; MAP-1's
+  map follows the new Desert outline by itself.
 
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

@@ -86,18 +86,26 @@ function along(P, x, z) {
   return tAt;
 }
 
+// WORLD-SHAPE: the terraces' edges wander (no straight cliff lines, no square wall of peaks), as LBA's rock does;
+// they hold still where the story needs a cliff exactly (the lift at x 24, the tree bridge at x −6)
+const wander = (t, a) => Math.sin(t * 0.071 + a) * 0.6 + Math.sin(t * 0.153 + a * 2.3) * 0.3 + Math.sin(t * 0.31 + a * 0.7) * 0.1;
+const still = (v, at, r0, r1) => smoothstep(r0, r1, Math.abs(v - at));
+// the gorge's line: a bend either side of the tree bridge
+const GM = (x) => 3 * Math.sin(x * 0.045 + 0.8) * still(x, GORGE.bridgeX, 7, 22);
 // terrace map: which level a point belongs to (before trails are cut in)
 function level(x, z) {
-  // the outer wall of peaks
-  const edge = Math.max(Math.abs(x) / 100, Math.abs(z - 5) / 102);
-  if (edge > 0.93) return 34 + (edge - 0.93) * 300;
-  if (z > 31) return L0;
+  // the outer wall of peaks: a rounded ring with bays and spurs
+  const a = Math.atan2(z - 5, x);
+  const edge = Math.pow(Math.pow(Math.abs(x) / 100, 4) + Math.pow(Math.abs(z - 5) / 102, 4), 0.25) + Math.sin(a * 5 + 1) * 0.022 + Math.sin(a * 9 + 2) * 0.012 + Math.sin(a * 3) * 0.015;
+  if (edge > 0.93) return 34 + (Math.min(edge, 1.17) - 0.93) * 300;   // (the corners no higher than the old square wall's)
+  if (z > 31 + 2.6 * (0.5 + 0.5 * wander(x, 1)) * still(x, GORGE.bridgeX, 6, 16)) return L0;
   // the glacier basin west, the peak north-west, the monastery terrace north-east
   if (Math.hypot(x - BASIN.x, z - BASIN.z) < BASIN.r + 6 + Math.sin(Math.atan2(z - BASIN.z, x - BASIN.x) * 3) * 3) return LB;
-  if (Math.hypot((x - OBS.x) / 1.2, z - OBS.z) < 14) return L4;
-  if (z < -26 && x > 0) return L3;
-  if (z < -26) return 26;                       // high rock between the terraces
-  if (x > 46) return 24;                        // the east wall above the pass
+  if (Math.hypot((x - OBS.x) / 1.2, z - OBS.z) < 14 + Math.sin(Math.atan2(z - OBS.z, x - OBS.x) * 4 + 1) * 1.2) return L4;
+  const north = -26 + 3 * wander(x, 4) * still(x, LIFT.x, 6, 16);
+  if (z < north && x > 3 * wander(z, 7)) return L3;
+  if (z < north) return 26;                     // high rock between the terraces
+  if (x > 46 + 3.5 * wander(z, 2) * still(z, -10, 11, 20)) return 24;   // the east wall above the pass (straight along the ledge)
   return L1;
 }
 function heightFn(x, z) {
@@ -105,9 +113,10 @@ function heightFn(x, z) {
   const e = 1.6;
   let h = (level(x, z) * 4 + level(x + e, z) + level(x - e, z) + level(x, z + e) + level(x, z - e)) / 8;
   // the meltwater gorge across the foothills
-  if (z > GORGE.z0 && z < GORGE.z1) h = Math.min(h, 0.4 + 2.6 * Math.pow(Math.abs(z - (GORGE.z0 + GORGE.z1) / 2) / ((GORGE.z1 - GORGE.z0) / 2), 6));
+  const gz = z - GM(x);
+  if (gz > GORGE.z0 && gz < GORGE.z1) h = Math.min(h, 0.4 + 2.6 * Math.pow(Math.abs(gz - (GORGE.z0 + GORGE.z1) / 2) / ((GORGE.z1 - GORGE.z0) / 2), 6));
   // a way back up out of the gorge at its east end
-  if (x > 36 && z > GORGE.z0 - 2 && z < GORGE.z1 + 2) h = Math.max(h, L0 - 0.1 - Math.max(0, 46 - x) * 0.3);
+  if (x > 36 && gz > GORGE.z0 - 2 && gz < GORGE.z1 + 2) h = Math.max(h, L0 - 0.1 - Math.max(0, 46 - x) * 0.3);
   // trails: ramps that cut through the cliffs between levels
   const ramp = (P, y0, y1, w) => { const d = seg(P, x, z); if (d < w + 2) { const y = y0 + (y1 - y0) * along(P, x, z); const k = smoothstep(w + 2, w, d); h = h + (y - h) * k; } };
   ramp(TRAIL, L0, L1, 2.6);
@@ -296,11 +305,11 @@ export function buildHamalayi(scene, physics) {
 
   // ---- the gorge: meltwater below, a dead tree on the north bank
   {
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(220, GORGE.z1 - GORGE.z0 - 3), new THREE.MeshStandardMaterial({ color: '#7ac0e0', roughness: 0.15, transparent: true, opacity: 0.9 }));
+    const water = new THREE.Mesh(new THREE.PlaneGeometry(220, GORGE.z1 - GORGE.z0 + 3), new THREE.MeshStandardMaterial({ color: '#7ac0e0', roughness: 0.15, transparent: true, opacity: 0.9 }));
     water.rotation.x = -Math.PI / 2; water.position.set(0, 0.7, (GORGE.z0 + GORGE.z1) / 2); group.add(water);
     const flow = water.material; let ft = 0; updaters.push((dt) => { ft += dt; flow.color.setHSL(0.55, 0.55, 0.66 + Math.sin(ft * 2) * 0.02); });
     // ice chunks drifting
-    for (let i = 0; i < 14; i++) B.add(bbox(0.8 + r0(), 0.3, 0.6 + r0(), 0.1, 1), ice, -60 + r0() * 120, 0.75, GORGE.z0 + 2 + r0() * (GORGE.z1 - GORGE.z0 - 4), 0, r0() * 3, 0);
+    for (let i = 0; i < 14; i++) { const g = bbox(0.8 + r0(), 0.3, 0.6 + r0(), 0.1, 1), fx = -60 + r0() * 120, fz = GORGE.z0 + 2 + r0() * (GORGE.z1 - GORGE.z0 - 4); B.add(g, ice, fx, 0.75, fz + GM(fx), 0, r0() * 3, 0); }
   }
   const tree = new THREE.Group();
   const TREE = { x: GORGE.bridgeX, z: GORGE.z0 - 1.5 };
@@ -610,7 +619,7 @@ export function buildHamalayi(scene, physics) {
     for (let i = 0; i < 260 && list.length < 70; i++) {
       const x = (r0() - 0.5) * 190, z = (r0() - 0.5) * 190;
       const h = H(x, z);
-      if (h > L1 + 2 || terrain.slopeAt(x, z) > 0.5 || seg(TRAIL, x, z) < 4 || Math.hypot(x - LHAR.x, z - LHAR.z) < LHAR.r || (z > GORGE.z0 - 3 && z < GORGE.z1 + 3)) continue;
+      if (h > L1 + 2 || terrain.slopeAt(x, z) > 0.5 || seg(TRAIL, x, z) < 4 || Math.hypot(x - LHAR.x, z - LHAR.z) < LHAR.r || (z - GM(x) > GORGE.z0 - 3 && z - GM(x) < GORGE.z1 + 3)) continue;
       if (Math.hypot(x - LANDING.x, z - LANDING.z) < 9) continue;
       list.push({ x, y: h - 0.1, z, ry: r0() * 6, s: 0.8 + r0() * 0.5, color: '#d8e4dc' });
     }
