@@ -131,7 +131,7 @@ and fights its way through with keys only.
 |---|---|---|
 | Volumes from the sliders reach the buses, kept after relaunch | audio.mjs | PASS |
 | Music per place; one voice playing, ≤2 alive (fading) after each door | audio.mjs, longsession.mjs | PASS |
-| Voices (gibberish babble) timed to text | voices.mjs | PASS |
+| Voices (gibberish babble) timed to text; distinct, under a level ceiling, no clicks, silent after skip/close/pause (VOICE-1) | voices.mjs | PASS |
 | Cinematic pause suspends the audio context | opening.mjs | PASS |
 
 ### Interface and display
@@ -509,6 +509,22 @@ Not verified: feel with a gamepad and on a touch screen, the sounds by ear, real
 | Item | Reproduction (before) | Root cause | Fix | Evidence | Result |
 |---|---|---|---|---|---|
 | Facing the pump at arm's length gave "Talk" (Bram) | Chapter 2 with the pin out (ISO: chapter by flags, as tests/townlife.mjs): walk to the pump's north side, stop between Bram and the pump at (pump +0.25, −1.35), turn to face the pump (error 0.04 rad). The prompt is "Talk": Bram, 0.93 m straight behind him, scores 0.93 + 1.69×0.45 − 0.35 = 1.34 against the pump's 1.37. townlife's N3 check failed (round.north = p_talk) from cb07e22 (CTRL-1) on. CTRL-1 did not break the facing, and keep-apart did not move him (0.93 m > R 0.85). His new gait made P.go stop 0.25 m further north (the edge of its tolerance), which showed a ranking flaw that already existed | Game.findInteractable (src/main.js) gave people a −0.35 preference even when they stood at his back | The people preference counts only for someone in front of him or right on top of him (< 0.5 m). Someone behind can still be talked to when nothing else is in reach | Probe at the same spot, same facing: p_talk before, p_pump after. New townlife check: at that spot, facing the pump gives "Pump" and turning round to Bram gives "Talk". Regression on :8195, run one after another: townlife 36/36, controls 69/69, combat 59/59, stability 16/16, house 2/2, chapter1 (log run: every milestone true, ends in play on Zeelich), no page errors | FAIL → FIXED |
+
+### Character voices (VOICE-1; src/engine/voice.js; evidence docs/lba3-production/reviews/VOICE-1/)
+The user: "the characters' voices are too similar, and the gibberish isn't pleasant to listen to". Measured, not listened
+to: nobody here can hear the result.
+| Item | Before | After | Evidence |
+|---|---|---|---|
+| What made a voice | f0 + formant scale only; sawtooth (square for bees/drones) through 2 band-passes; random pitch per syllable | Race colour (Quetch, Grobo, Rabbibunny, Sphero, Esmer, Mosquibee, mole, elf, Zeelich tri-head, robot, Sendell, dinofly) + each named speaker's own pitch, range, formants, source roll-off, breath, nasality, rate, legato, swing, stress foot, intonation contour, vibrato and a fixed seed (56 named voices, unique seeds and settings) | voices.mjs |
+| Distinct voices (features: median pitch, pitch range, spectral centroid, syllable onsets/s, voiced share; 1 unit ≈ 3 st / 3 st / 3 st / 1.5 per s / 15 %) | closest pairs Vesk–Doran 0.4–1.5 (0–2 axes), Twinsen–Zoé 1.2–2.0 (0–1 axis) over runs | all 19 rendered voices ≥ 1.93 apart; Twinsen, Zoé, Arthur, Baldino, Vesk ≥ 2 from every other voice on ≥ 2 axes | measurements.json, voices.mjs |
+| Pleasant source | buzzing saw / square, instant consonant noise onsets | soft harmonic source (1/n^1.5–2.6), 3 vowel formants + breath, soft attack/release (exponential), vibrato blooming on held syllables, Esmers/Sendell on a five-note scale, bees a soft flutter instead of a square | spectrograms-before-after.jpg |
+| Clicks (click crest: a sample's 2nd difference over its ±5 ms surroundings; a clicky control scores 18.3) | 8.5–19.0 on the main five in the A/B render (the consonant noise started instantly) | 0–5.0 on all 19; max sample-to-sample jump 0.046 | measurements.csv |
+| Level at voice volume 1 (pre-master) | active RMS −34.8…−26.5 dBFS (bees loudest), peak to −11.1 | active RMS −34.8…−29.1, peak ≤ −15.6 dBFS; volume 0.25 → −12.0 dB; music home.mp3 in dialogue (0.55 × ducked 0.55) ≈ −31.9 dB RMS, the voice at the default 0.8 ≈ −33…−36: under it, as before | voices.mjs, measurements.json "mix" |
+| Timing | a syllable per ~4 typed letters, all scheduled at once when frames bunch | same trigger (16 syllables on the test line vs 15), kept on a voice clock: never in the past, never queued > 0.22 s behind the text | voices.mjs |
+| Stops cleanly | grains ran out by themselves | skip (E mid-line), close, new speaker, cinematic pause: silent within 0.25 s, sources ended; nothing resumes after a pause | voices.mjs (in game, analyser on the voice bus) |
+| Cost | ~7 nodes per syllable (108 per test line) | 2 pooled filter chains built once; 4 nodes per line after the first (6 for a bee); nothing per frame | voices.mjs, measurements.json "nodesPerLine" |
+Regressions (port 8196, one browser at a time): voices 24/24, opening 16/16, townlife 36/36, stability 16/16, audio 5/5,
+no page errors. Not verified: how the voices sound to a listener (pleasantness, recognisability by ear).
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.

@@ -197,6 +197,7 @@ export class Cinematic {
   pause() {
     if (this.paused) return;
     this.paused = true;
+    this.game.audio.babble?.hush?.(); // (a line's voice doesn't hang on under the pause menu)
     const ctx = this.game.audio.ctx;
     if (ctx && ctx.state === 'running') { ctx.suspend(); this._suspended = true; }
   }
