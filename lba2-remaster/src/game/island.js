@@ -2083,6 +2083,16 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
   }
   return { curve, pts };
 }
+// BUG-WALL: a run of pipe as the camera's own volumes (src/engine/occlude.js camOnly: the play camera keeps out of
+// the tube, but the view does not rise over it as it does over a house); pts: [x, y, z] along it, r: its radius
+function pipeVolumes(W, pts, r) {
+  const occ = occOf(W), R = r * 1.42;   // (the flanges)
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [ax, ay, az] = pts[i], [bx, by, bz] = pts[i + 1], dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz);
+    occ.add({ kind: 'box', camOnly: true, x: (ax + bx) / 2, z: (az + bz) / 2, hw: L / 2 + R, hd: R, rot: L > 1e-4 ? Math.atan2(-dz, dx) : 0,
+      y0: Math.min(ay, by) - R, y1: Math.max(ay, by) + R });
+  }
+}
 // index of the profile sample nearest to (x,z)
 function nearestSample(prof, x, z) { let bi = 0, bd = 1e9; for (let i = 0; i < prof.n; i++) { const d = Math.hypot(prof.xs[i] - x, prof.zs[i] - z); if (d < bd) { bd = d; bi = i; } } return bi; }
 
@@ -2229,7 +2239,7 @@ function buildPipeline(W, root, r) {
   // (over the orchard the main runs high: the ball's lob to the caged valve must pass under it)
   const prof = pipeProfile(W, PIPE, { y0: gSt + 2.9, fix: [{ x: DEPOT_VALVE.x, z: DEPOT_VALVE.z, y: W.H(DEPOT_VALVE.x, DEPOT_VALVE.z) + 3.0, span: 7 },
     { x: ORCHARD.dx, z: ORCHARD.dz + 1, y: W.H(ORCHARD.x, ORCHARD.z) + 5.6, span: 9 }] });
-  drawPipe(W, B, prof, { avoid });
+  pipeVolumes(W, drawPipe(W, B, prof, { avoid }).pts, 0.3);
   const valves = [];
   // depot: a bypass loop hanging under the main, valve in the middle
   {
@@ -2275,10 +2285,11 @@ function buildPipeline(W, root, r) {
     const yb = gSt + 3.4;
     pipeRun(B, [[BRANCH[0][0], gSt + 0.3, BRANCH[0][1]], [BRANCH[0][0], yb, BRANCH[0][1]]], 0.24);
     const bp = pipeProfile(W, BRANCH, { y0: yb, clear: 2.6 });
-    drawPipe(W, B, bp, { r: 0.24, avoid });
+    pipeVolumes(W, drawPipe(W, B, bp, { r: 0.24, avoid }).pts, 0.24);
     const last = bp.n - 1, rx = bp.xs[last], rz = bp.zs[last], ry0 = bp.y[last];
     const top = POI_PLATEAU.h + 0.85, vz = CLIFF_VALVE.z;
     pipeRun(B, [[rx, ry0, rz], [rx, top, rz], [rx, top, vz + 0.55]], 0.24);
+    pipeVolumes(W, [[rx, ry0, rz], [rx, top, rz], [rx, top, vz + 0.55]], 0.24);   // (the riser up the Whispering Cliffs)
     // riser clamps into the rock
     for (let yy = ry0 + 1.8; yy < top - 0.8; yy += 2.2) member(B, [rx, yy, rz], [rx, yy, rz - 0.9], 0.1, darkSteel(), 1, 0.02);
     const v = makeValve(W, grp, B, 'cliff', 'use', [rx, top, vz], [0, 0, 1], [0, 1, 0], 0.4);

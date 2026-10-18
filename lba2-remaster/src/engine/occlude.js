@@ -21,6 +21,8 @@
 // CONTRACT: occOf(W) → the world's registry (made on first use). reg.add(volume) with
 //   { kind: 'box', x, z, hw, hd, rot = 0, y0, y1, slope = 0 }  top at local (lx, lz) = y1 - slope·|lx|
 //   { kind: 'rev', x, z, y0, base, profile: [[r, h], …] }     r ascending; top at radius r = base + h(r) (linear)
+// A volume marked camOnly (the pipeline's tube) is one the camera only keeps its own spot out of (camera.js
+// _clearance, BUG-WALL): the search and the hidden test pass through it, so the view never rises over a pipe.
 // reg.search(hero, yaw, pitch, dist, opts) → the pitch LBA2 would use; reg.blocked(a, b) → is the segment a→b
 // through scenery or terrain (volumes Twinsen stands under are left out: no camera height can show him there).
 export const EYE = 0.65;        // LBA2: 512 units above the feet (Twinsen ≈ 1400 units tall)
@@ -69,7 +71,7 @@ export class Occluders {
   hit(x, y, z, skip = this.under) {
     let best = -Infinity;
     for (const v of this.near(x, z)) {
-      if (y < v.y0 || y > v.top || skip.has(v)) continue;
+      if (y < v.y0 || y > v.top || v.camOnly || skip.has(v)) continue;
       const t = this.topAt(v, x, z);
       if (y <= t && t > best) best = t;
     }
