@@ -48,7 +48,7 @@ import { t, setLang } from './game/i18n.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 4;
-export const VERSION = '0.29.2'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.30.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
@@ -482,10 +482,13 @@ class Game {
   // ------------------------------------------------ saves
   snapshot() {
     const h = this.hero;
+    // never a position in the air (a jump, Baldino's hop-pack): outdoors, on Citadel or in an outdoor region, the
+    // last safe spot on the ground instead (indoors he can't fly)
+    const air = !h.onGround && (!this.room || this.room.outdoor) && this.lastSafe;
     return {
       v: SAVE_VERSION,
       room: this.room?.id || null,
-      hero: { x: this.room ? h.pos.x : this.lastSafe.x, z: this.room ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon, arms: freshArms(h.arms) },
+      hero: { x: this.room && !air ? h.pos.x : this.lastSafe.x, z: this.room && !air ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon, arms: freshArms(h.arms) },
       flags: this.flags, killed: this.killed, collected: this.collected, searched: this.searched, crates: this.brokenCrates,
     };
   }
@@ -521,6 +524,7 @@ class Game {
     if (s.room && this.rooms[s.room]) this.enterRoom(s.room, at, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
+    this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)
   }
 
   // ------------------------------------------------ flow
