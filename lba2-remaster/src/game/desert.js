@@ -213,7 +213,8 @@ function heightFn(x, z) {
   // the shore: a long low beach as the original's (rising 1 in 2.2), steeper only where one of our places stands
   // close to the sea; then the sea floor
   // (and where the ground behind is high rock, the original's or a mesa: a sea cliff)
-  const cd = coastDist(x, z), sl = 0.45 + 0.6 * smoothstep(6, 0, keepNear(x, z)) + 0.2 * Math.max(0, origH(x, z) - 2) + 3 * rock;
+  // (the sea cliffs keep off our places: by the pier's foot the beach stays a beach, whatever the original had there)
+  const kn = keepNear(x, z), cd = coastDist(x, z), sl = 0.45 + 0.6 * smoothstep(6, 0, kn) + smoothstep(0, 8, kn) * (0.2 * Math.max(0, origH(x, z) - 2) + 3 * rock);
   // near the pier the beach slopes gently down to the deck
   const dd = Math.hypot(x - (DOCK.x + 8), (z - DOCK.z) * 0.8);
   if (dd < 22) h = h + (DOCK.deck + 0.2 + (h - DOCK.deck - 0.2) * smoothstep(4, 22, dd) - h) * (1 - smoothstep(16, 22, dd));
