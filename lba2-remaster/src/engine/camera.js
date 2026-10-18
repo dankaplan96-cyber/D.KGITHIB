@@ -58,10 +58,14 @@ function spring(o, k, target, w, dt) {
 // so walking the view up to something lifts it smoothly instead of popping). A collider more than LIFT_MAX above the
 // camera (the lighthouse, a fortress wall) is not risen over: the camera is drawn in along its line to the look-at
 // point until it stands CLEAR_IN clear of it, as the free camera does.
-const CLEAR_R = 1.6, CLEAR_IN = 0.45, CLEAR_TOP = 0.5, LIFT_MAX = 4;
+// The remaster follow eases the comfortable margins in (rates LIFT_UP_W / LIFT_DOWN_W 1/s, at most LIFT_V m/s and
+// LIFT_A m/s², looking LIFT_AHEAD s down its own way) over a floor of HARD × them (the terrain within HARD_R only):
+// the least it may ever come to a surface, held at once.
+const CLEAR_R = 1.6, CLEAR_IN = 0.45, CLEAR_TOP = 0.5, LIFT_MAX = 4, HARD = 0.25, HARD_R = 0.8, LIFT_UP_W = 8, LIFT_DOWN_W = 2.5, LIFT_V = 5, LIFT_A = 7, LIFT_AHEAD = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25];
 const RING = [0.4, 0.8, 1.2, 1.6].flatMap((r) => Array.from({ length: 12 }, (_, i) => [r, Math.sin((i * Math.PI) / 6) * r, Math.cos((i * Math.PI) / 6) * r]));
 const CORNERS = [[-CLEAR_R, -CLEAR_R], [CLEAR_R, -CLEAR_R], [-CLEAR_R, CLEAR_R], [CLEAR_R, CLEAR_R]];
 const clearW = (s) => (s <= CLEAR_IN ? 1 : s >= CLEAR_R ? 0 : smoothstep(CLEAR_R, CLEAR_IN, s));
+const hardW = (s) => (s <= 0.2 ? 1 : s >= HARD_R ? 0 : smoothstep(HARD_R, 0.2, s));   // (the least margins: only what is close)
 // how far (x, z) lies outside a collider's footprint (0 inside)
 function outside(c, x, z) {
   const dx = x - c.x, dz = z - c.z;
@@ -191,7 +195,7 @@ export class CameraRig {
       L.goalYaw = L.yaw = heroAngle + Math.PI;
       L.lead = { x: Math.sin(heroAngle) * AHEAD, z: Math.cos(heroAngle) * AHEAD };
       L.f = { x: hero.x + L.lead.x, z: hero.z + L.lead.z, y: groundY(), vx: 0, vz: 0, vy: 0 };
-      L.last = { x: hero.x, z: hero.z }; L.vel = { x: 0, z: 0 }; L.lift = 0; L.pull = 0; L.yawV = 0;
+      L.last = { x: hero.x, z: hero.z }; L.vel = { x: 0, z: 0 }; L.lift = 0; L.vlift = 0; L.pv = null; L.fresh = true; L.pull = 0; L.yawV = 0;
       L.init = true; L.behind = false; this.hiddenT = 0;
       // (a new scene starts already risen over the scenery, as LBA2's CameraCenter does: no rise seen through a fade)
       const [p] = this._scenePitch(hero, L.f, L.yaw, v.pitch, v.dist, L.f.y + 1);
@@ -249,11 +253,24 @@ export class CameraRig {
       return [x, y, z];
     };
     let [x, y, z] = place();
-    // clear of the ground and of everything solid round the camera (BUG-WALL: _clearance; risen at once, let down
-    // gently: no bob over bumps)
-    const need = this._clearance(x, y, z);
-    L.lift = need > L.lift ? L.lift + (need - L.lift) * (1 - Math.exp(-12 * dt)) : damp(L.lift, need, 2, dt);
-    const pose = () => { cam.position.set(x, y, z); this.look.set(F.x, F.y + 1, F.z); this._keepOut(cam.position, this.look, L.lift); cam.lookAt(this.look); cam.updateMatrixWorld(); };
+    // clear of the ground and of everything solid round the camera (BUG-WALL: _clearance). The comfortable margins are
+    // eased in with a bounded speed and acceleration (quick up, gentle down: the need's kinks over ridges, rock rims and
+    // roofs would otherwise jolt the view); the least margins (HARD) hold at once, every frame: never inside anything
+    // (and looking down the camera's own way, LIFT_AHEAD s on: a swing round into a roof starts rising before it)
+    let need = this._clearance(x, y, z);
+    if (L.pv) {
+      const vx = (x - L.pv.x) / dt, vy = (y - L.pv.y) / dt, vz = (z - L.pv.z) / dt;
+      if (Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 60) for (const T of LIFT_AHEAD) { const n = this._clearance(x + vx * T, y + vy * T, z + vz * T); if (n > 0) need = Math.max(need, n + vy * T); }
+    }
+    (L.pv ??= {}).x = x; L.pv.y = y; L.pv.z = z;
+    {
+      // (the speed it may have at this distance from the target and still stop on it within LIFT_A: no overshoot)
+      const e = need - L.lift, want = Math.sign(e) * Math.min(LIFT_V, Math.sqrt(1.6 * LIFT_A * Math.abs(e)), Math.abs(e) * (e > 0 ? LIFT_UP_W : LIFT_DOWN_W)), a = LIFT_A * dt;
+      L.vlift += clamp(want - L.vlift, -a, a);
+      L.lift = Math.max(0, L.lift + L.vlift * dt);
+      if (L.fresh) { L.lift = need; L.vlift = 0; L.fresh = false; }   // (a new shot starts clear, as it starts risen)
+    }
+    const pose = () => { cam.position.set(x, y, z); this.look.set(F.x, F.y + 1, F.z); this._keepOut(cam.position, this.look, L.lift, 1.5 * HARD, HARD); cam.lookAt(this.look); cam.updateMatrixWorld(); };
     pose();
     // never out of LBA2's frame box: if he is (a sprint, a fall, a fast lift), the view slides just enough
     for (let i = 0; i < 3; i++) {
@@ -351,10 +368,11 @@ export class CameraRig {
 
   // BUG-WALL: how far a camera at (x, y, z) must rise (m, ≥ 0) to stand clear of the terrain, the colliders and the
   // scenery volumes round it (see CLEAR_R); colliders too tall to rise over that it stands in or against go to `tall`
-  _clearance(x, y, z, tall = null, base = 1.5) {
-    const T = this.terrain, P = this.physics, occ = this.occ?.();
+  // (k scales every margin: 1 the view's comfortable distance, HARD the least it may ever come to a surface)
+  _clearance(x, y, z, tall = null, base = 1.5, k = 1) {
+    const T = this.terrain, P = this.physics, occ = this.occ?.(), top = CLEAR_TOP * k, W = k < 1 ? hardW : clearW;
     let need = Math.max(T.heightAt(x, z) + base, base) - y;   // (the ground straight under it, as before)
-    for (const [r, dx, dz] of RING) { const n = T.heightAt(x + dx, z + dz) + lerp(base, 0.3, r / CLEAR_R) - y; if (n > need) need = n; }
+    for (const [r, dx, dz] of RING) { if (k < 1 && r > HARD_R) break; const n = T.heightAt(x + dx, z + dz) + lerp(base, 0.3 * k, r / CLEAR_R) - y; if (n > need) need = n; }
     if (P) {
       _seen.clear();
       for (const [dx, dz] of CORNERS) for (const c of P.near(x + dx, z + dz)) {
@@ -362,12 +380,12 @@ export class CameraRig {
         _seen.add(c);
         // (camSkip: a house or a dome, whose scenery volume below stands for its taller box; bottom: overhead)
         if (!c.enabled || (c.camSkip && occ) || c.bottom > y + 1) continue;
-        const up = c.top + CLEAR_TOP - y;
+        const up = c.top + top - y;
         if (up <= 0) continue;
         const s = outside(c, x, z);
         if (s >= CLEAR_R) continue;
         if (up > LIFT_MAX) { if (s < CLEAR_IN) tall?.push(c); continue; }
-        need = Math.max(need, up * clearW(s));
+        need = Math.max(need, up * W(s));
       }
     }
     if (occ) {
@@ -375,9 +393,9 @@ export class CameraRig {
       for (const [dx, dz] of CORNERS) for (const v of occ.near(x + dx, z + dz)) {
         if (_seen.has(v)) continue;
         _seen.add(v);
-        if (v.y0 > y + 1 || v.top + CLEAR_TOP <= y) continue;
-        let t = occ.topAt(v, x, z), n = t > -Infinity ? t + CLEAR_TOP - y : 0;
-        for (const [r, dx2, dz2] of RING) { t = occ.topAt(v, x + dx2, z + dz2); if (t > -Infinity) n = Math.max(n, (t + CLEAR_TOP - y) * clearW(r)); }
+        if (v.y0 > y + 1 || v.top + top <= y) continue;
+        let t = occ.topAt(v, x, z), n = t > -Infinity ? t + top - y : 0;
+        for (const [r, dx2, dz2] of RING) { if (k < 1 && r > HARD_R) break; t = occ.topAt(v, x + dx2, z + dz2); if (t > -Infinity) n = Math.max(n, (t + top - y) * W(r)); }
         need = Math.max(need, n);
       }
     }
@@ -386,11 +404,11 @@ export class CameraRig {
 
   // BUG-WALL: the camera at p (looking at `look`) moved clear of solids: drawn in toward the look-at point out of a
   // wall too tall to rise over, then risen by what is needed there (at least `lift`, the follow's eased let-down);
-  // `base`: the height kept over the ground straight under it
-  _keepOut(p, look, lift = 0, base = 1.5) {
+  // `base`: the height kept over the ground straight under it; `k`: the margins' scale (see _clearance)
+  _keepOut(p, look, lift = 0, base = 1.5, k = 1) {
     if (!this.terrain) return 0;
     const tall = [];
-    this._clearance(p.x, p.y, p.z, tall, base);
+    this._clearance(p.x, p.y, p.z, tall, base, k);
     if (tall.length) {
       _c.subVectors(look, p);
       const L = _c.length();
@@ -400,7 +418,7 @@ export class CameraRig {
         if (tall.every((c) => outside(c, x, z) >= CLEAR_IN)) { p.addScaledVector(_c, d); break; }
       }
     }
-    const need = this._clearance(p.x, p.y, p.z, null, base);
+    const need = this._clearance(p.x, p.y, p.z, null, base, k);
     p.y += Math.max(lift, need);
     return need;
   }

@@ -1,0 +1,92 @@
+---- ch1 the well: a crystal node
+  setup (ISO): {"key":"well","room":"well","state":"play"}
+  node: {"how":"input","throws":2,"log":[],"fired":true,"frames":838,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[-0.24,0.08]},"room":"well","state":"play"}
+PASS ch1 the well: a crystal node — node: the event fires 
+PASS ch1 the well: a crystal node — node: camera never inside a collider, a scenery volume or the terrain (838 frames) 
+PASS ch1 the well: a crystal node — node: Twinsen on screen and seen afterwards 
+---- ch2 Citadel: the Whispering Cliffs target
+  setup (ISO): {"key":"project","room":"citadel","state":"play"}
+  the old target (the stones rise): {"how":"input","throws":2,"log":[],"fired":true,"frames":662,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.54]},"room":"citadel","state":"play"}
+PASS ch2 Citadel: the Whispering Cliffs target — the old target (the stones rise): the event fires 
+PASS ch2 Citadel: the Whispering Cliffs target — the old target (the stones rise): camera never inside a collider, a scenery volume or the terrain (662 frames) 
+PASS ch2 Citadel: the Whispering Cliffs target — the old target (the stones rise): Twinsen on screen and seen afterwards 
+  the orchard valve (caged): {"how":"input","throws":1,"log":[],"fired":true,"frames":494,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.31]},"room":"citadel","state":"play"}
+PASS ch2 Citadel: the Whispering Cliffs target — the orchard valve (caged): the event fires 
+PASS ch2 Citadel: the Whispering Cliffs target — the orchard valve (caged): camera never inside a collider, a scenery volume or the terrain (494 frames) 
+PASS ch2 Citadel: the Whispering Cliffs target — the orchard valve (caged): Twinsen on screen and seen afterwards 
+---- ch3 Zeelich: a mill brake
+  setup (ISO): {"key":"zeelich","room":"zeelich","state":"play"}
+  mill brake: {"how":"input","throws":3,"log":["spot 0 unusable"],"fired":true,"frames":661,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.31]},"room":"zeelich","state":"play"}
+PASS ch3 Zeelich: a mill brake — mill brake: the event fires 
+PASS ch3 Zeelich: a mill brake — mill brake: camera never inside a collider, a scenery volume or the terrain (661 frames) 
+PASS ch3 Zeelich: a mill brake — mill brake: Twinsen on screen and seen afterwards 
+---- ch4 the dig: a pump gear
+  setup (ISO): {"key":"dig","room":"desert","state":"play"}
+  gear: {"how":"input","throws":4,"log":[],"fired":true,"frames":998,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.31]},"room":"desert","state":"play"}
+PASS ch4 the dig: a pump gear — gear: the event fires 
+PASS ch4 the dig: a pump gear — gear: camera never inside a collider, a scenery volume or the terrain (998 frames) 
+PASS ch4 the dig: a pump gear — gear: Twinsen on screen and seen afterwards 
+---- ch5 the condensers: the hatch switch
+  setup (ISO): {"key":"steam","room":"condB","state":"play"}
+  hatch switch: {"how":"input","throws":1,"log":[],"fired":true,"frames":493,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":false,"sil":true,"ok":true,"ndc":[0.35,-0.15]},"room":"condB","state":"play"}
+PASS ch5 the condensers: the hatch switch — hatch switch: the event fires 
+PASS ch5 the condensers: the hatch switch — hatch switch: camera never inside a collider, a scenery volume or the terrain (493 frames) 
+PASS ch5 the condensers: the hatch switch — hatch switch: Twinsen on screen and seen afterwards 
+---- ch6 the Hamalayi: the dead tree, the kite
+  setup (ISO): {"key":"pass","room":"hamalayi","state":"play"}
+  the dead tree (falls across the gorge): {"how":"ISO hit (no throw landed)","throws":10,"log":["spot 0 unusable","spot 1 unusable","spot 2 unusable","spot 3 unusable"],"fired":true,"frames":393,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":false,"sil":true,"ok":true,"ndc":[0,-0.34]},"room":"hamalayi","state":"play"}
+PASS ch6 the Hamalayi: the dead tree, the kite — the dead tree (falls across the gorge): the event fires 
+PASS ch6 the Hamalayi: the dead tree, the kite — the dead tree (falls across the gorge): camera never inside a collider, a scenery volume or the terrain (393 frames) 
+PASS ch6 the Hamalayi: the dead tree, the kite — the dead tree (falls across the gorge): Twinsen on screen and seen afterwards 
+  the kite: {"how":"input","throws":1,"log":[],"fired":true,"frames":493,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.34]},"room":"hamalayi","state":"play"}
+PASS ch6 the Hamalayi: the dead tree, the kite — the kite: the event fires 
+PASS ch6 the Hamalayi: the dead tree, the kite — the kite: camera never inside a collider, a scenery volume or the terrain (493 frames) 
+PASS ch6 the Hamalayi: the dead tree, the kite — the kite: Twinsen on screen and seen afterwards 
+---- ch7 the observatory: no ball target in this chapter (story ballTargets() is empty)
+---- ch8 Citadel evacuated: the bunker hatch wheel
+  setup (ISO): {"key":"evacuation","room":"citadel","state":"play"}
+  hatch wheel: {"how":"input","throws":1,"log":[],"fired":true,"frames":493,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.31]},"room":"citadel","state":"play"}
+PASS ch8 Citadel evacuated: the bunker hatch wheel — hatch wheel: the event fires 
+PASS ch8 Citadel evacuated: the bunker hatch wheel — hatch wheel: camera never inside a collider, a scenery volume or the terrain (493 frames) 
+PASS ch8 Citadel evacuated: the bunker hatch wheel — hatch wheel: Twinsen on screen and seen afterwards 
+---- ch9 Zeelich, the council: a mill freed
+  setup (ISO): {"key":"council","room":"zeelich","state":"play"}
+  mill brake: {"how":"input","throws":3,"log":["spot 0 unusable"],"fired":true,"frames":661,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.31]},"room":"zeelich","state":"play"}
+PASS ch9 Zeelich, the council: a mill freed — mill brake: the event fires 
+PASS ch9 Zeelich, the council: a mill freed — mill brake: camera never inside a collider, a scenery volume or the terrain (661 frames) 
+PASS ch9 Zeelich, the council: a mill freed — mill brake: Twinsen on screen and seen afterwards 
+---- ch10 the network: the north mill braked
+  setup (ISO): {"key":"network","room":"zeelich","state":"play"}
+  north mill brake: {"how":"input","throws":3,"log":["spot 0 unusable"],"fired":true,"frames":661,"nBad":0,"bad":null,"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.31]},"room":"zeelich","state":"play"}
+PASS ch10 the network: the north mill braked — north mill brake: the event fires 
+PASS ch10 the network: the north mill braked — north mill brake: camera never inside a collider, a scenery volume or the terrain (661 frames) 
+PASS ch10 the network: the north mill braked — north mill brake: Twinsen on screen and seen afterwards 
+---- the Whispering Cliffs route (generic probe)
+  the target by input: {"tris":96759,"how":"input","throws":2,"log":[],"hit":true,"frames":662,"nBad":0,"bad":null,"near":{"d":99},"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[0,-0.54]}}
+PASS cliffs: the target hit by input, the stones risen 
+PASS cliffs: the stones rising, camera never inside anything (662 frames) 
+PASS cliffs: the stones rising, no surface within 0.15 m of the camera 
+  placements: 552 inside: 1 near a surface: 1 not seen: 0
+    {"x":-54,"z":-26,"a":0.79,"why":"cyl@-61.1,-33.6 top 14.7 (stone)","t":538.83,"state":"play","cam":[-61.61,13.09,-33.61],"hero":[-54,5.1,-26],"override":false}
+    {"x":-70,"z":-34,"a":4.71,"d":0.024,"who":"cliffRocks","cam":[-59.55,16.56,-34],"hero":[-70,7.97,-34]}
+FAIL cliffs: 552 placements (grid ×8 headings, every stone both ways), camera never inside anything [{"x":-54,"z":-26,"a":0.79,"why":"cyl@-61.1,-33.6 top 14.7 (stone)","t":538.83,"state":"play","cam":[-61.61,13.09,-33.61],"hero":[-54,5.1,-26],"override":false}]
+FAIL cliffs: placements, no surface within 0.15 m of the camera [{"x":-70,"z":-34,"a":4.71,"d":0.024,"who":"cliffRocks","cam":[-59.55,16.56,-34],"hero":[-70,7.97,-34]}]
+PASS cliffs: placements, Twinsen on screen and seen 
+  the plateau by input: {"got":[[-59.77,16.84,-39.97],[-52.75,16.7,-41.96],[-53.05,16.88,-47.26],[-59.29,16.76,-47.36],[-61.33,16.79,-41.67]],"end":[-56.66,16.7,-36.9],"frames":1254,"nBad":0,"bad":null,"near":{"d":99},"seen":{"onScreen":true,"inView":true,"sil":true,"ok":true,"ndc":[-0.07,-0.01]}}
+PASS cliffs: walking the plateau by input, camera never inside anything (1254 frames) 
+PASS cliffs: walking the plateau, no surface within 0.15 m of the camera 
+PASS cliffs: walking the plateau, Twinsen seen at the end 
+---- scene changes: out of every Citadel door
+    {"door":"house","mode":"remaster","toHero":2.9,"toLater":0.02,"maxStep":0.06,"black":true,"ok":true}
+    {"door":"house","mode":"1997 cuts","toHero":5.7,"toLater":0,"maxStep":0,"black":true,"ok":true}
+    {"door":"house","mode":"free orbit","toHero":887.7,"toLater":885.15,"maxStep":136.12,"black":true,"ok":false}
+    {"door":"office","mode":"remaster","toHero":1.7,"toLater":0.08,"maxStep":0.07,"black":true,"ok":true}
+    {"door":"office","mode":"1997 cuts","toHero":4.7,"toLater":0,"maxStep":0,"black":true,"ok":true}
+    {"door":"office","mode":"free orbit","toHero":1073.2,"toLater":1070.65,"maxStep":164.6,"black":true,"ok":false}
+    {"door":"wtent","mode":"remaster","toHero":10.8,"toLater":0.56,"maxStep":0.24,"black":true,"ok":true}
+    {"door":"asylum","mode":"remaster","toHero":7.9,"toLater":0,"maxStep":0.03,"black":true,"ok":true}
+    {"door":"control","mode":"remaster","skip":"not entered (citadel): its door is shut in this chapter"}
+PASS scene changes: 4 Citadel doors left by input (remaster follow), the camera starts at its shot 
+FAIL scene changes: the 1997 cuts and the free orbit too (two doors each) [{"door":"house","mode":"free orbit","toHero":887.7,"toLater":885.15,"maxStep":136.12,"black":true,"ok":false},{"door":"office","mode":"free orbit","toHero":1073.2,"toLater":1070.65,"maxStep":164.6,"black":true,"ok":false}]
+no errors
+3 FAILED
