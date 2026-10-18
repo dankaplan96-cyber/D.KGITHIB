@@ -942,8 +942,10 @@ export class MagicBall {
   plan(hero, beh, aim, target, charged, from = this.pos) {
     const st = BALL_THROW[beh] || BALL_THROW.normal, g = this.game;
     const out = { grav: st.g, lift: st.vy, vel: new THREE.Vector3(), point: null };
-    // the behaviour's own throw on flat ground from this height: where it first lands
-    const h0 = Math.max(0.2, from.y - hero.pos.y), d0 = st.vx * (st.vy + Math.sqrt(st.vy * st.vy + 2 * st.g * h0)) / st.g;
+    // the behaviour's own throw on flat ground: where it first lands from LBA2's release height (1200 units up), and
+    // from this hand's height (lower: the forward speed is scaled so the landing on the flat is still LBA2's)
+    const land = (hh) => st.vx * (st.vy + Math.sqrt(st.vy * st.vy + 2 * st.g * hh)) / st.g;
+    const d0 = land(1200 * LBA_UNIT), dHand = land(Math.max(0.2, from.y - hero.pos.y));
     let to = null;
     if (target) {
       const tp = target.pos || target, f = (BALL_TARGET_PACE[beh] || BALL_TARGET_PACE.normal) * (charged ? BALL_CHARGE_K : 1);
@@ -962,7 +964,8 @@ export class MagicBall {
       out.vel.set((dx / d) * vx, (to.y - from.y + 0.5 * st.g * tt * tt) / tt, (dz / d) * vx);
     } else {
       const k = charged ? BALL_CHARGE_K : 1, a = aim || { x: Math.sin(hero.angle), z: Math.cos(hero.angle) }, al = Math.hypot(a.x, a.z) || 1;
-      out.vel.set((a.x / al) * st.vx * k, st.vy * k, (a.z / al) * st.vx * k);
+      const vx = st.vx * (d0 / dHand) * k;
+      out.vel.set((a.x / al) * vx, st.vy * k, (a.z / al) * vx);
       out.lift = st.vy * k;
     }
     return out;
