@@ -66,9 +66,13 @@ Pink sky, cloud sea, floating isles.
 | Three windmills + the old mill | sails, brakes | Oku's memories | brake with the ball; climb for the cog | released in the finale |
 | Project depot | locker, drones | — | code cylinder + the confiscated plan | — |
 | Drill platform | shield, gate console, lift | Vesk | shield down, Vesk descends | shaft open |
+| Baldino's test step (the green behind his workshop, south-west toward the shore; EQ-1, story/arsenal.js) | a timber deck on four posts, 2.35 m up (out of a jump's reach), a lilac pennant, a sign at its foot: TEST STEP. NO LADDER. THAT IS THE TEST. - B. | — | the hop-pack's first task (ch. 10 on): a tin on the deck, a clover and 10 kashes, once | tin taken |
+| Baldino's hop-pack on its peg (in the workshop, by the door; EQ-1) | a peg post with the copper-and-brass pack hanging on it | Baldino points it out after his ch. 10 briefing | the hop-pack (src/game/jetpack.js) | the peg empty |
 | Nara's case (beside Nara's place on the street; WPN-1) | a glass-topped trade case on brass legs, a jar for the honest | Nara, or a note: BACK SOON. PAY IN THE JAR | the Esmer laser pistol and crystal cells (ch. 3), darts, penguins, the Blowtron (ch. 6) | — |
 
 Access: from Citadel by the ferry (ch2 start). Platform gate: override key + three mills braked.
+The hop-pack (ch. 10 on) works on Zeelich's open ground: one storey up, never over the cloud sea; the old mill's
+stair-stones can be taken two at a time (its relay still needs the brake).
 
 ## Citadel Spaceport (Citadel Island, east of the town) ✅ (src/game/spaceport.js)
 Twelve years after LBA2 the Esmers' shuttles are ordinary traffic, so Citadel has a port for them: a landing

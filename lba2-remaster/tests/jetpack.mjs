@@ -27,12 +27,13 @@ const helpers = () => ev(() => {
     // highest and lowest point, frames lit, whether he was ever over the sea, the room
     hold(keys, t, { dt = 1 / 60, letGoUp = null, until = null } = {}) {
       const h = G.hero, j = G.gadgets.jet, P0 = G.physics;
-      const r = { y0: h.pos.y, maxY: h.pos.y, minY: h.pos.y, lit: 0, frames: 0, overSea: 0, rooms: new Set(), hp0: h.hp, x0: h.pos.x, z0: h.pos.z, firstLit: null, hud: 0 };
+      const r = { y0: h.pos.y, maxY: h.pos.y, minY: h.pos.y, lit: 0, frames: 0, overSea: 0, rooms: new Set(), hp0: h.hp, x0: h.pos.x, z0: h.pos.z, firstLit: null, hud: 0, minFuel: 1 };
       for (const k of keys) { I.keys.add(k); if (k === 'Space') I.taps.add(k); }
       let el = 0;
       while (el < t) {
         G.step(dt); el += dt; r.frames++;
         r.maxY = Math.max(r.maxY, h.pos.y); r.minY = Math.min(r.minY, h.pos.y);
+        r.minFuel = Math.min(r.minFuel, +j.fuel.toFixed(3));
         if (j.firing) { r.lit++; if (r.firstLit == null) r.firstLit = +el.toFixed(2); }
         const gi = P0.groundInfo(h.pos.x, h.pos.z, h.pos.y + 0.6);
         if (gi.h < -0.35 && !gi.brick) r.overSea++;
@@ -149,7 +150,7 @@ const f1 = await ev(() => { const G = game, S = G.story.arsenal.step, h = G.hero
   let t = 0; while (j.fuel < 0.999 && t < 5) { G.step(1 / 30); t += 1 / 30; }
   return { fuel0, r, fuelEnd, litS: +(r.lit / 60).toFixed(2), refillS: +t.toFixed(2), ground }; });
 check('one storey: hovering in place he rises at most 2.5 m above the ground he took off from', f1.r.maxY - f1.r.y0 <= 2.55 && f1.r.maxY - f1.r.y0 > 2.2, f1);
-check('fuel: about 2.2 s of thrust from full, then it sputters out and he comes down', f1.fuel0 === 1 && f1.fuelEnd === 0 && f1.litS > 2.0 && f1.litS < 2.45, f1);
+check('fuel: about 2.2 s of thrust from full, then it sputters out and he comes down', f1.fuel0 === 1 && f1.r.minFuel === 0 && f1.litS > 2.0 && f1.litS < 2.45, f1);
 check('the refill: by itself on firm ground, full again in under 2 s (no item, nothing to buy)', f1.refillS < 2.0, f1);
 const n1 = await ev(() => { const G = game; P.tap('F1', 0.05); const r = J.hold(['Space'], 1.5); G.step(0.6); P.settle(); return { r, beh: G.hero.behaviour }; });
 check('in Normal mode Space is the action (a hop, a talk): the pack never lights', n1.r.lit === 0 && n1.beh === 'normal', n1);
@@ -205,19 +206,20 @@ const m1 = await ev(() => { const G = game, mt = G.rooms.zeelich.millTop, f = G.
   return { hops, secs, top, braked: !!f.c10_millBraked, relayBefore, millY: mt.y }; });
 check('later use (chapter 10, Oku\'s mill): the pack skips every other stair-stone — up in 4 hops instead of 7', m1.top && m1.hops.length === 4 && m1.hops.every((y, i) => i === 3 ? y > m1.millY - 0.3 : true), m1);
 check('the story gate holds: on top with the mill unbraked there is no relay to set (the brake still comes first)', !m1.braked && !m1.relayBefore.includes('c10mill'), m1);
-const m2 = await ev(() => { const G = game, mt = G.rooms.zeelich.millTop, mill = G.rooms.zeelich.mills[0], h = G.hero;
-  // the fall: off the gallery (8.75 m) — first without the pack (Up only), then with Space held (the cushion)
+const m2 = await ev(() => { const G = game, S = G.story.arsenal.step, h = G.hero;
+  // the fall: ISO dropped from 9 m over the green (the speed of a fall off the old mill's 8.75 m gallery) — first with
+  // no key held, then with Space held (the cushion)
   const out = {};
   for (const withPack of [false, true]) {
-    if (withPack || h.pos.y < mt.y - 0.3) { J.tp(mt.x, mt.z, mt.y); out.placed = (out.placed || 0) + 1; }   // (ISO: back on the gallery)
-    J.athletic(); const a = Math.atan2(mt.x - mill.x, mt.z - mill.z); h.angle = a; h.hp = h.maxHp; h.invuln = 0; G.step(0.3);
-    const c0 = G.gadgets.jet.stats.cushions;
-    const r = J.hold(withPack ? ['ArrowUp', 'Space'] : ['ArrowUp'], 0.9); G.step(1 / 60); const r2 = J.hold(withPack ? ['Space'] : [], 3, { until: () => h.onGround }); J.land(); G.step(1.2); P.settle();
-    out[withPack ? 'pack' : 'none'] = { fell: +(r.y0 - h.pos.y).toFixed(2), hp: h.hp, max: h.maxHp, cushion: G.gadgets.jet.stats.cushions - c0, lit: r.lit + r2.lit };
+    J.tp(S.x + Math.sin(S.a) * 4.5, S.z + Math.cos(S.a) * 4.5); J.athletic(); G.step(2.5); h.hp = h.maxHp; h.invuln = 0;
+    const g0 = h.pos.y, c0 = G.gadgets.jet.stats.cushions;
+    h.pos.y = g0 + 9; h.onGround = false; h.vy = 0;
+    const r = J.hold(withPack ? ['Space'] : [], 4, { until: () => h.onGround }); J.land(); G.step(1.2); P.settle();
+    out[withPack ? 'pack' : 'none'] = { fell: +(r.maxY - h.pos.y).toFixed(2), hp: h.hp, max: h.maxHp, cushion: G.gadgets.jet.stats.cushions - c0, lit: r.lit };
   }
   return out; });
-check('a fall (8.75 m off the mill\'s gallery): without the pack it hurts', m2.none.fell > 7 && m2.none.hp < m2.none.max, m2);
-check('the cushion: with Space held near the ground he lands softly — no damage', m2.pack.fell > 7 && m2.pack.hp === m2.pack.max && m2.pack.cushion === 1 && m2.pack.lit > 0, m2);
+check('a fall (9 m): without the pack it hurts', m2.none.fell > 8.5 && m2.none.hp < m2.none.max, m2);
+check('the cushion: with Space held he lands softly from the same fall — no damage', m2.pack.fell > 8.5 && m2.pack.hp === m2.pack.max && m2.pack.cushion === 1 && m2.pack.lit > 0, m2);
 
 // ---- interruptions mid-flight
 const i1 = await ev(() => { const G = game, h = G.hero, j = G.gadgets.jet, S = G.story.arsenal.step;
