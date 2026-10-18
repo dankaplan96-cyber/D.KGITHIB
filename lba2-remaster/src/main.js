@@ -40,6 +40,7 @@ import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
 import { Weapons, freshArms } from './game/weapons.js';
 import { Gadgets } from './game/gadgets.js';
 import { createEnemy, Drone } from './game/enemies.js';
+import { koGone } from './game/death.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
 import { Inventory } from './game/inventory.js';
@@ -518,7 +519,7 @@ class Game {
     this.searched = s.searched || [];
     this.brokenCrates = s.crates || [];
     this.applyCrystals();
-    for (const e of this.enemies) if (this.killed.includes(e.id)) { e.state = 'dead'; e.deadT = 99; e.rig.root.visible = false; }
+    for (const e of this.enemies) if (this.killed.includes(e.id)) koGone(e);
     for (const p of [...this.pickups.list]) if (p.id && this.collected.includes(p.id)) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
     this.brokenCrates.forEach((i) => { if (this.world.crates[i]) this.breakCrate(this.world.crates[i], true); });
     if (this.flags.target) this.hitTarget(true);
@@ -1025,9 +1026,12 @@ class Game {
 
   onEnemyKilled(e) {
     this.killed.push(e.id);
-    this.giveBonus(['money', 'life', 'magic'], 1, e.pos.x, e.pos.y + 0.8, e.pos.z);
+    // (an enemy with a knock-out, src/game/death.js, lets its bonus out of the body when it hits the ground)
+    if (!e.ko) this.giveBonus(['money', 'life', 'magic'], 1, e.pos.x, e.pos.y + 0.8, e.pos.z);
     this.save(false);
   }
+  // LBA's GiveExtraBonus for a beaten enemy: one bonus out of its body, in an arc toward Twinsen, onto the ground
+  enemyBonus(e, x, y, z) { return this.giveBonus(['money', 'life', 'magic'], 1, x, y, z, this.hero.pos); }
 
   collect(p) {
     const h = this.hero;
@@ -1160,6 +1164,7 @@ class Game {
           h.rig.play(sp === h ? 'talk' : sp ? 'listen' : 'idle'); h.rig.update(dt, 0); h.sync();
         }
         for (const n of this.npcs) n.update(dt);
+        for (const e of this.enemies) if (e.ko && !e.ko.done) e.ko.update(dt);   // (a fall in progress lands; nothing else moves)
         this.camRig.update(dt, this.hero.pos, this.hero.angle, false, input);
         this.occluders(dt);
         break;
@@ -1206,7 +1211,7 @@ class Game {
     this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     if (render) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
-    if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0);
+    if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0, this.state === 'dialog' ? dt : 0);
     if (this.state !== 'play') this.behMenu.show(false);
     this.hud.updateFloats(dt, this.camera);
     if (this.state !== 'dialog') this.bubble.visible = false;

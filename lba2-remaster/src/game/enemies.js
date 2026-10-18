@@ -9,7 +9,8 @@ import { Actor } from './actors.js';
 import { GuardDog } from './guarddog.js';
 import { Guard } from './guards.js';
 import { sculptRigid } from '../engine/sculpt.js';
-import { angleDiff, dampAngle, clamp } from '../engine/math.js';
+import { angleDiff, dampAngle, clamp, damp } from '../engine/math.js';
+import { KnockOut } from './death.js';
 
 const vmat = (rough = 0.6, metal = 0) => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: rough, metalness: metal });
 
@@ -74,20 +75,40 @@ function createMiteRig() {
     update(dt, speed = 0) {
       this.t += dt * (2 + speed * 4);
       this.actionT += dt;
+      if (this.anim === 'dead' && this.ko) { koMite(this, this.ko, dt); return; }
       legs.forEach((g, i) => { g.rotation.z = Math.sin(this.t * 3 + i * 1.7) * 0.35 * Math.min(1, speed + 0.1); });
       // rearing = the bite wind-up: front lifts, crystals flare
       const want = this.anim === 'windup' ? 1 : this.anim === 'lunge' ? 0.4 : 0;
       this.rear += (want - this.rear) * (1 - Math.exp(-dt * 12));
       body.rotation.x = -this.rear * 0.55;
       body.position.y = Math.abs(Math.sin(this.t * 3)) * 0.03 + this.rear * 0.12;
-      if (this.anim === 'dead') body.rotation.z = Math.min(Math.PI, body.rotation.z + dt * 8);
       this.flash = Math.max(0, this.flash - dt * 4);
       crystal.emissiveIntensity = 1.1 + this.rear * 2.5 + this.flash * 3 + (this.anim === 'windup' ? Math.sin(this.actionT * 40) * 0.8 : 0);
       shellMat.emissive.setRGB(this.flash, this.flash, this.flash);
     },
   };
+  rig.parts = { body, legs, crystal, shellMat, crystals: c };
   rig.j = {};
   return rig;
+}
+// a mite knocked out (death.js): its crystals shatter (the kill's burst), the blow flips it over onto its back in a
+// little hop, the legs curl up and
+// twitch a few times after it lands, the glow goes out. (Rate-limited from whatever it was doing.)
+function koMite(rig, K, dt) {
+  const { body, legs, crystal, shellMat } = rig.parts, t = K.t, T = K.T, lim = 12 * dt;
+  const to = (o, ax, v, r = 18) => { const c = o.rotation[ax]; o.rotation[ax] = c + clamp(damp(c, v, r, dt) - c, -lim, lim); };
+  const u = clamp(t / T.roll, 0, 1), roll = u * u * (3 - 2 * u);
+  to(body, 'z', K.side * Math.PI * roll, 60); to(body, 'x', 0, 14);
+  body.position.y = damp(body.position.y, 0, 14, dt);
+  rig.rear = damp(rig.rear, 0, 14, dt);
+  const curl = -0.85 * clamp(t / 0.25, 0, 1);   // (tips in under the belly: up in the air once it is on its back)
+  legs.forEach((g, i) => {
+    const tw = K.impactT != null ? Math.sin(t * 26 + i * 1.7) * 0.4 * Math.exp(-(t - K.impactT) * 2.6) : Math.sin(t * 30 + i * 2.1) * 0.3;
+    to(g, 'z', curl + tw, 30);
+  });
+  rig.flash = Math.max(0, rig.flash - dt * 4);
+  crystal.emissiveIntensity = (1.1 + rig.flash * 3) * Math.max(0.08, 1 - t / 0.9);
+  shellMat.emissive.setRGB(rig.flash, rig.flash, rig.flash);
 }
 
 // A cautious close-range attacker: it circles at a safe distance until the director lets it attack, rears
@@ -108,7 +129,7 @@ export class Mite extends Actor {
     this.material = 'crystal'; this.aimY = 0.4; this.markY = 0.9; this.hitH = 1.0; this.recentHitT = 0;
   }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; this.rig.root.visible = on && (this.alive || this.deadT < 1.2); this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if (this.ko || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert() { if (this.alive && this.state === 'idle') this.state = 'chase'; }
   melee(D) { this.damage(D.dmg, this.game.hero.pos); return 'hit'; }
   ballHit(ball, p) { this.damage(ball.damage, p); return 'hit'; }
@@ -121,19 +142,15 @@ export class Mite extends Actor {
     // a hit interrupts the bite (small: always staggers)
     if (this.state === 'windup' || this.state === 'lunge') g.combatDir?.done(this);
     this.state = 'chase'; this.coolT = 0.7;
-    if (this.hp <= 0) { this.state = 'dead'; g.combatDir?.done(this); g.audio.play('break'); g.particles.burst(this.pos.x, this.pos.y + 0.4, this.pos.z, '#bff8ff', 30, 5); g.onEnemyKilled(this); }
+    if (this.hp <= 0) { this.state = 'dead'; g.combatDir?.done(this); g.audio.play('break'); g.particles.burst(this.pos.x, this.pos.y + 0.4, this.pos.z, '#bff8ff', 30, 5); this.rig.parts.crystals.visible = false; new KnockOut(this, 'mite', from); g.onEnemyKilled(this); }
   }
   update(dt) {
-    if (!this.present) return;
+    if (this.ko) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, D = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.coolT = Math.max(0, this.coolT - dt);
     this.recentHitT = Math.max(0, this.recentHitT - dt);
-    if (!this.alive) {
-      this.deadT += dt; this.rig.play('dead'); this.rig.update(dt, 0);
-      if (this.deadT > 1.2) this.rig.root.visible = false;
-      this.sync(); return;
-    }
     const d = this.distTo(hero);
     let sp = 0, side = 0;
     this.stateT += dt;
@@ -239,14 +256,26 @@ function createDroneRig() {
     play(a) { if (a !== this.anim) { this.anim = a; this.actionT = 0; } }, hitFlash() { this.flash = 1; },
     update(dt) {
       this.t += dt; this.actionT += dt;
+      if (this.anim === 'dead' && this.ko) {
+        // knocked out (death.js): the rotor runs down, the hull tumbles as it falls, the arms hang, the eye goes out
+        const K = this.ko;
+        rotor.rotation.y += dt * 30 * K.rotor;
+        body.rotation.x = K.rx; body.rotation.z = K.rz;
+        body.position.y = damp(body.position.y, 0, 10, dt);
+        arms.forEach((a) => { a.rotation.x = damp(a.rotation.x, 0.65, 6, dt); });
+        spark.material.opacity = 0;
+        this.flash = Math.max(0, this.flash - dt * 4);
+        eyeMat.emissiveIntensity = 2.2 * (1 - K.dim) + 0.05 + this.flash * 3;
+        m.emissive.setRGB(this.flash * 0.8, this.flash * 0.8, this.flash * 0.8);
+        return;
+      }
       rotor.rotation.y += dt * 30;
       body.position.y = Math.sin(this.t * 2.2) * 0.06;
       const charging = this.anim === 'windup';
       arms.forEach((a, i) => { a.rotation.x = charging ? -0.9 : this.anim === 'fire' ? -1.2 : Math.sin(this.t * 1.5 + i) * 0.1; });
       spark.material.opacity = charging ? 0.5 + Math.sin(this.actionT * 50) * 0.4 : 0;
       spark.scale.setScalar(charging ? 0.6 + this.actionT * 1.2 : 1);
-      if (this.anim === 'dead') { body.rotation.z = Math.min(1.8, body.rotation.z + dt * 3); }
-      else body.rotation.z = Math.sin(this.t * 1.3) * 0.05 + (this.anim === 'hurt' ? Math.sin(this.actionT * 30) * 0.3 : 0);
+      body.rotation.z = Math.sin(this.t * 1.3) * 0.05 + (this.anim === 'hurt' ? Math.sin(this.actionT * 30) * 0.3 : 0);
       this.flash = Math.max(0, this.flash - dt * 4);
       const c = this.mood === 'alert' ? [1.0, 0.25, 0.15] : this.mood === 'search' ? [1.0, 0.75, 0.2] : [0.25, 0.85, 1.0];
       eyeMat.color.setRGB(...c); eyeMat.emissive.setRGB(c[0] * 0.8, c[1] * 0.8, c[2] * 0.8);
@@ -285,7 +314,7 @@ export class Drone extends Actor {
   // Baldino's pulse: the rotor stutters, it sags and can't fire for a while
   pulse(C) { if (!this.alive) return; this.state = 'stunned'; this.stateT = 0; this.stunT = C.stun; this.rig.hitFlash(); this.game.combatDir?.done(this); this.aimLine.visible = false; this.game.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 14, 3); }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if (this.ko || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
   damage(n, from, poise = 1) {
     if (!this.alive) return;
@@ -310,6 +339,7 @@ export class Drone extends Actor {
       this.state = 'dead'; this.deadT = 0;
       g.audio.play('break'); g.camRig.shake(0.2);
       g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ff9a3a', 30, 6);
+      new KnockOut(this, 'drone', from);
       g.onEnemyKilled(this);
     }
   }
@@ -325,7 +355,8 @@ export class Drone extends Actor {
     return P.lineOfSight(this.pos.x, this.pos.y + this.hover, this.pos.z, hero.pos.x, hero.pos.y + 1.2, hero.pos.z);
   }
   update(dt) {
-    if (!this.present) return;
+    if (this.ko) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.hurtT = Math.max(0, this.hurtT - dt);
     this.coolT = Math.max(0, this.coolT - dt);
@@ -343,15 +374,6 @@ export class Drone extends Actor {
     }
     // back up to its working height after a stun (whatever height the story gave it)
     if (this.alive && !(this instanceof Guardian)) { if (!this.sagged) this.baseHover = this.hover; else { this.hover = Math.min(this.baseHover, this.hover + dt * 1.5); if (this.hover >= this.baseHover) this.sagged = false; } }
-    if (!this.alive) {
-      // drops out of the air, smokes, then the wreck disappears
-      this.deadT += dt;
-      this.hover = Math.max(0.15, this.hover - dt * 3);
-      this.rig.play('dead'); this.rig.update(dt);
-      if (this.deadT < 1.5 && Math.random() < dt * 8) g.particles.burst(this.pos.x, this.pos.y + this.hover + 0.3, this.pos.z, '#5a5a5a', 2, 1);
-      if (this.deadT > 3) { this.rig.root.visible = false; this.shadow.visible = false; }
-      this.syncHover(); return;
-    }
     const sees = this.sees(hero);
     const d = this.distTo(hero);
     let sp = 0, face = null;
@@ -460,11 +482,13 @@ export class Guardian extends Drone {
     this.state = 'dead'; this.deadT = 0;
     g.audio.play('break'); g.camRig.shake(0.35);
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 40, 6);
+    new KnockOut(this, 'guardian', null);
+    this.ko.noBonus = true;   // (the boss was never "killed": no bonus, as before)
   }
   // keep circling the hero at a firing distance, inside the arena
   update(dt) {
-    if (!this.present) return;
-    if (!this.alive) { super.update(dt); return; }
+    if (this.ko) { super.update(dt); return; }
+    if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics;
     this.stateT += dt;
     let face = this.angleTo(hero), sp = 0;
@@ -553,6 +577,25 @@ function createSentryRig() {
     play(a) { if (a !== this.anim) { this.anim = a; this.actionT = 0; } }, hitFlash() { this.flash = 1; },
     update(dt, speed = 0) {
       this.t += dt; this.actionT += dt;
+      if (this.anim === 'dead' && this.ko) {
+        // knocked out (death.js): a wobble, then it tips over stiffly like a barrel (accelerating), lands with a
+        // clang and a small rock; the shield arm swings out, the eye goes out
+        const K = this.ko, t = K.t, imp = K.T.impact, lim = 10 * dt;
+        const to = (o, ax, v, r = 14) => { const c = o.rotation[ax]; o.rotation[ax] = c + clamp(damp(c, v, r, dt) - c, -lim, lim); };
+        const u = clamp((t - 0.14) / (imp - 0.14), 0, 1);
+        let th = u * u; if (t > imp && t < imp + 0.24) th = 1 - 0.06 * Math.sin(Math.PI * (t - imp) / 0.24);
+        to(body, 'x', K.fdir * 1.52 * th, 60);
+        to(body, 'z', Math.sin(t * 18) * 0.07 * Math.max(0, 1 - t / 0.3), 30);
+        body.position.y = damp(body.position.y, 0, 12, dt);
+        legs.forEach((l) => to(l, 'x', 0.15 * th));
+        to(shieldArm, 'x', 0.9 * th - 0.3 * (1 - th)); to(shieldArm, 'y', 0);
+        to(clubArm, 'x', -0.6 * th);
+        this.flash = Math.max(0, this.flash - dt * 4);
+        eyeMat.color.set('#7a8a90'); eyeMat.emissive.copy(eyeMat.color).multiplyScalar(0.8);
+        eyeMat.emissiveIntensity = Math.max(0.05, 2 * (1 - t / 0.8)) + this.flash * 2;
+        brass.emissive.setRGB(this.flash * 0.6, this.flash * 0.6, this.flash * 0.6);
+        return;
+      }
       const a = this.anim, w = Math.sin(this.t * 9) * Math.min(1, speed);
       legs[0].rotation.x = w * 0.5; legs[1].rotation.x = -w * 0.5;
       body.position.y = Math.abs(w) * 0.04 + (a === 'stagger' ? -0.1 : 0);
@@ -563,7 +606,6 @@ function createSentryRig() {
       shield.position.x += ((a === 'open' || a === 'stagger' || a === 'stunned' ? 0.25 : -0.05) - shield.position.x) * Math.min(1, dt * 10);
       clubArm.rotation.x += ((a === 'windup' ? -1.6 : a === 'bash' ? -0.4 : 0) - clubArm.rotation.x) * Math.min(1, dt * 12);
       body.rotation.z = a === 'stagger' || a === 'stunned' ? Math.sin(this.actionT * 18) * 0.08 : 0;
-      if (a === 'dead') { body.rotation.x = Math.min(1.5, body.rotation.x + dt * 3); body.position.y = -0.2; }
       this.flash = Math.max(0, this.flash - dt * 4);
       eyeMat.color.set(a === 'windup' || a === 'bash' ? '#ff5a3a' : a === 'stunned' ? '#7a8a90' : '#9ff4ff');
       eyeMat.emissive.copy(eyeMat.color).multiplyScalar(0.8);
@@ -587,7 +629,7 @@ export class Sentry extends Actor {
     this.material = 'armor'; this.aimY = 1.0; this.markY = 1.75; this.hitR = 0.85; this.hitH = 1.9; this.recentHitT = 0;
   }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; this.rig.root.visible = on && (this.alive || this.deadT < 2); this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if (this.ko || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert() { if (this.alive && this.state === 'idle') { this.state = 'chase'; this.stateT = 0; } }
   guarding() { return this.state === 'idle' || this.state === 'chase' || this.state === 'windup'; }
   // is the hit coming at the shield? (a cone in front)
@@ -619,13 +661,13 @@ export class Sentry extends Actor {
     this.hp -= n; this.rig.hitFlash(); this.recentHitT = 2.5; this.hurtT = 0.2;
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 3, Math.cos(a) * 3); } // heavy: barely moves
     if (this.state === 'idle') { this.state = 'chase'; this.stateT = 0; }
-    if (this.hp <= 0) { this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.25); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#ffd27a', 30, 5); g.onEnemyKilled(this); }
+    if (this.hp <= 0) { this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.25); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#ffd27a', 30, 5); new KnockOut(this, 'sentry', from); g.onEnemyKilled(this); }
   }
   update(dt) {
-    if (!this.present) return;
+    if (this.ko) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.recentHitT = Math.max(0, this.recentHitT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
-    if (!this.alive) { this.deadT += dt; this.rig.play('dead'); this.rig.update(dt, 0); if (this.deadT > 2) this.rig.root.visible = false; this.sync(); return; }
     const d = this.distTo(hero);
     let sp = 0, face = null;
     const sees = !hero.dead && d < 9 && hero.visibility() > 0.2 && P.lineOfSight(this.pos.x, this.pos.y + 1.4, this.pos.z, hero.pos.x, hero.pos.y + 1.1, hero.pos.z);
@@ -709,13 +751,13 @@ export class Crawler extends Mite {
     g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#bff8ff', 8, 4);
     // heavy: only big hits stagger it, and never during a slam already falling
     if (poise >= 3 && this.state !== 'slam') { this.hurtT = 0.5; if (this.state === 'windup') { this.state = 'chase'; this.ring.visible = false; g.combatDir?.done(this); } this.coolT = Math.max(this.coolT, 0.8); }
-    if (this.hp <= 0) { this.state = 'dead'; this.ring.visible = false; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.35); g.particles.burst(this.pos.x, this.pos.y + 0.8, this.pos.z, '#bff8ff', 50, 6); g.onEnemyKilled(this); }
+    if (this.hp <= 0) { this.state = 'dead'; this.ring.visible = false; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.35); g.particles.burst(this.pos.x, this.pos.y + 0.8, this.pos.z, '#bff8ff', 50, 6); this.rig.parts.crystals.visible = false; new KnockOut(this, 'crawler', from); g.onEnemyKilled(this); }
   }
   update(dt) {
-    if (!this.present) return;
+    if (this.ko) { this.ring.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.hurtT = Math.max(0, this.hurtT - dt); this.coolT = Math.max(0, this.coolT - dt); this.recentHitT = Math.max(0, this.recentHitT - dt);
-    if (!this.alive) { this.ring.visible = false; super.update(dt); return; }
     const d = this.distTo(hero);
     this.stateT += dt;
     let sp = 0;
