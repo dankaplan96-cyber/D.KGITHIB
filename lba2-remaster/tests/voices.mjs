@@ -139,7 +139,9 @@ const r = await ev(async () => {
   out.cineSpeaking = speak;
   cine.pause();
   await wait(200); out.suspended = ctx.state;
-  cine.resume(); await wait(50); out.resumed = ctx.state;
+  cine.resume();
+  for (let i = 0; i < 100 && ctx.state !== 'running'; i++) await wait(20); // (resume() is asynchronous; slow on a loaded machine)
+  out.resumed = ctx.state;
   await wait(250);
   tail = 0; for (let i = 0; i < 10; i++) { tail = Math.max(tail, level()); await wait(20); }
   out.afterPause = tail;
