@@ -296,6 +296,66 @@ shot behind him and 3 warm-up renders, then measured over 9 renders with `render
   builds. It is ignored.
 
 
+### Static merges (the coordinator's PERF-IGPU follow-up, applied after merging 8819e38)
+
+These use `mergeStatic`'s `{ recolor, cell }` options from PERF-IGPU's merge.js:
+
+- **town.js:**
+  - Pippa's stall: `mergeStatic(st, { recolor: true })`.
+  - The heat posts now sit in one group with `{ cell: 24 }`. The crystal's shared material is kept, so its glow
+    still animates.
+  - The well: `{ recolor: true }`.
+- **island.js:**
+  - `buildOriginalProps`: `{ recolor: true, cell: 24 }`.
+  - `buildDressing`: the crates are marked `userData.keep` (they break one by one), then `{ cell: 24 }`.
+  - `buildPipeline`: the valve wheels' pivots are marked `keep` (they turn), then `{ cell: 24 }`. Each valve lamp
+    keeps its own material, whose colour changes.
+
+The houses stay merged one house at a time, as separate objects. Nothing fades any more, so no house needs its own
+material.
+
+`tests/perfbudget.mjs` at Medium, SwiftShader, with `PERF_BUDGET=0` (same build except these lines):
+
+| Route | Before | After |
+|---|---|---|
+| **street** | **324 calls (max 333)** | **274 calls (max 283)** |
+| interior | 121 | 121 |
+| combat | 214 | 214 |
+| transition | 206 | 203 |
+
+- Triangles are unchanged (889k on the street).
+- No new shader programs.
+
+Logs: `logs/perfbudget-medium-*-merges.log`. Frames after the merges: `merges/after-*.jpg` (the square with the
+stall, the well and the heat posts; the pump; the harbour customs).
+
+With one preset per run, saved before loading as PERF-IGPU measures (`logs/perfbudget-final-*.log`), the street
+draw calls are:
+
+| Preset | PERF-IGPU's figure | Now | Budget |
+|---|---|---|---|
+| Low | 277 | 228 | ≤ 260 |
+| Medium | 325 | 274 | ≤ 300 |
+| High | 365 | 316 | ≤ 450 |
+
+- Interiors are 117/121/135, against a budget of ≤ 150.
+- **0 new shader programs** on any route at any preset.
+- A single run that switches presets mid-session compiles new programs on the first route of each preset. The
+  same happens without these merges; it is the method, not a regression.
+
+## Tests (final, on the merged branch: 7ba4227, a9c1ec8 and PERF-IGPU 8819e38 included)
+
+All runs were on SwiftShader, port 8185, one browser at a time.
+
+- **`tests/occluders.mjs`: ALL PASSED (31 checks)**
+  - The door check covers 11 houses × 2 facings.
+  - The fresh-shot check covers 6 houses.
+  - The walk round behind 3 houses: Bug St. 56 points in view / 19 by silhouette; stone 62/10; south 63/21.
+  - The first run on the merged build flagged PERF-IGPU's shadow-caster proxies (`userData.shadowProxy`,
+    colorWrite off by design) as "hidden" house meshes. The test now skips them.
+- **transitions, house, townlife, stability, spaceport: ALL PASSED.**
+- **`tests/perfbudget.mjs`, one preset per run: ALL PASSED;** the numbers are above.
+
 ## 5. Not verified / remaining
 
 - **Not watched on the original.** The rule is read from LBA2's source, but how often the original's Citadel

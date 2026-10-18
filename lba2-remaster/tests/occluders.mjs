@@ -31,7 +31,8 @@ await ev(async () => {
       if (Math.abs(lx) < h.w / 2 + 0.6 && Math.abs(lz) < h.d / 2 + 0.6 && c.y > h.g + 0.5 && o.geometry.boundingSphere.radius < Math.max(h.w, h.d)) out.push(o); });
     return out; };
   window.__houseState = (h) => { const ms = window.__houseMeshes(h); let hidden = 0, faded = 0;
-    for (const o of ms) { const mats = [o.material].flat(); if (!o.visible || mats.every((m) => m.colorWrite === false || m.visible === false)) hidden++; else if (mats.some((m) => m.transparent && m.opacity < 0.98 && !m.userData.alwaysTransparent)) faded++; }
+    for (const o of ms) { if (o.userData.shadowProxy) continue; const mats = [o.material].flat();   // (shadowcull.js's shadow casters stand in for shown meshes)
+      if (!o.visible || mats.every((m) => m.colorWrite === false || m.visible === false)) hidden++; else if (mats.some((m) => m.transparent && m.opacity < 0.98 && !m.userData.alwaysTransparent)) faded++; }
     return { meshes: ms.length, hidden, faded }; };
   // head, chest, feet: in view, or drawn by the silhouette pass
   const ray = new THREE.Raycaster(); ray.camera = G.camera;

@@ -190,10 +190,10 @@ function heatPosts(parent, W, spots) {
     cup: new THREE.CylinderGeometry(0.17, 0.09, 0.14, 8, 1, true),
     gem: new THREE.OctahedronGeometry(0.15, 0).scale(1, 1.5, 1),
   };
-  const posts = [];
+  const posts = [], hp = new THREE.Group(); parent.add(hp);
   for (const [x, z] of spots) {
     const y = H(x, z) - 0.04;
-    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = posts.length * 1.7; g.scale.setScalar(1.3); parent.add(g);
+    const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = posts.length * 1.7; g.scale.setScalar(1.3); hp.add(g);
     put(g, geo.base, teal, 0, 0.08, 0);
     put(g, geo.pipe, teal, 0, 0.66, 0);
     for (const cy of [0.2, 0.62, 1.12]) put(g, geo.collar, brass, 0, cy, 0);
@@ -202,6 +202,7 @@ function heatPosts(parent, W, spots) {
     physics.add({ type: 'cyl', x, z, r: 0.2, top: y + 1.95, noStand: true, seeThrough: true });
     posts.push({ x, y: y + 1.82, z });
   }
+  mergeStatic(hp, { cell: 24 });   // (PERF-IGPU: ~11 posts × 5 parts → a few draws per cell; the crystal's material is kept, its glow animates)
   let level = 0, puffT = 0;
   W.updaters.push((dt, t) => {
     const on = W.station?.active ? 1 : 0;
@@ -334,6 +335,7 @@ function well(parent, H, physics, x, z) {
   }
   put(roofG, new THREE.CylinderGeometry(0.07, 0.07, 2.7, 8), mat('#a8442c', 0.8), 0, 0.56, 0).rotation.x = Math.PI / 2;
   physics.add({ type: 'cyl', x, z, r: 1.25, top: H(x, z) + 0.95, noStand: true, seeThrough: true });
+  mergeStatic(g, { recolor: true });   // (static: PERF-IGPU)
 }
 function curbs(parent, H) {
   // granite curb stones along both edges of each street, instanced
@@ -418,6 +420,7 @@ export function buildTown(scene, W) {
     }
     physics.add({ type: 'box', x: sx, z: sz, hw: 1.55, hd: 0.6, rot: sry, top: g + 1.0, noStand: true, seeThrough: true });
     W.stall = { x: sx + Math.sin(sry) * 1.6, z: sz + Math.cos(sry) * 1.6, a: sry };
+    mergeStatic(st, { recolor: true });   // (PERF-IGPU: ~35 meshes, the four fruit colours in one draw → ~4)
   }
 
   // static street dressing goes into one group that is merged per material at the end

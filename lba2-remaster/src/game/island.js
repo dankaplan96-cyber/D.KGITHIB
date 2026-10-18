@@ -2312,6 +2312,8 @@ function buildPipeline(W, root, r) {
     }
   });
   B.build();
+  for (const v of valves) v.pivot.userData.keep = true;   // (the wheels turn)
+  mergeStatic(grp, { cell: 24 });   // (PERF-IGPU; the valve lamps keep their own materials, whose colour changes)
 }
 
 // ================================================================== dressing: crates, signposts, the stump
@@ -2349,6 +2351,8 @@ function buildDressing(W, root, r) {
     mesh(grp, geo, VC(), x, g - 0.05, z, 0.7);
     W.physics.add({ type: 'cyl', x, z, r: 0.65, top: g + 0.68, seeThrough: true });
   }
+  for (const c of W.crates) c.mesh.userData.keep = true;   // (they break: hidden one by one)
+  mergeStatic(grp, { cell: 24 });   // (the signposts and the stump. PERF-IGPU)
 }
 
 // ================================================================== the original's street furniture
@@ -2462,6 +2466,7 @@ function buildOriginalProps(W, root, r) {
     if (at) { tulipBed(W, grp, at[0], at[1], w, 1.1, 0, r); n++; }
   }
   W.propsPlaced = n;
+  mergeStatic(grp, { recolor: true, cell: 24 });   // (all static; instanced lamps/posts are left as they are. PERF-IGPU)
 }
 
 // ================================================================== entry
