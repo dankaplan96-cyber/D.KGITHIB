@@ -87,7 +87,7 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   square box (93 % of its cliff edge axis-aligned).
 - Fixed: Desert Island's coast and high ground now follow the original (src/game/desert-layout.js, numbers only;
   IoU 0.93, 33,146 of 34,394 m²; places and tracks unmoved; soft-lock flood fill); the Hamalayi's ring of peaks,
-  terraces and gorge made organic (35 % axis-aligned), its levels and story spots unchanged.
+  terraces and gorge made organic (38 % of the cliff edge axis-aligned, was 93 %), its levels and story spots unchanged.
 - Follow-ups for the files other tasks own (AUDIT.md): Citadel's terraces (world.js + island.js POI_PLATEAU), the
   harbour basin, walking speed (CTRL-1), the holomap's Desert frame (hud.js).
 

@@ -98,7 +98,7 @@ platforms; heights in 0.43 m layers with shelves at 0.9–1.7, 3.5–5.2, 6.9–
 | Extent | 8 scenes ≈ 55 m each, chained | one 230 m patch, a 200 m square of peaks | the same patch, a rounded ring of peaks with bays and spurs |
 | Walkable ground | ≈ 12,200 m² | 41,800 m² | 39,300 m² |
 | Levels | 0.9–10.4 m within a scene | 3 / 12 / 16 / 22 / 30 m | unchanged (the lift, the ledge, the ridge and the descent depend on them) |
-| Axis-aligned cliff edge | — | 93 % | 35 % |
+| Axis-aligned cliff edge | — | 93 % | 38 % |
 | Terrace edges | — | straight lines z = 31, z = −26, x = 0, x = 46; a straight gorge | wandering (± 1.3–3.5 m), held straight only at the lift (x 24 ± 6) and the tree bridge (x −6 ± 6), and along the ledge's wall; the gorge bends ± 3 m away from the bridge |
 
 Our Hamalayi is 3× the LBA1 ground and its levels three times as tall; its story (the lift two levels up, the ridge
@@ -130,6 +130,29 @@ The 6–12 % extra is the shore ring the half-resolution grid adds. No change ne
   steps, base64; 28 KB). `tools/lba2-islands.py --desert` writes it from the user's files.
 - `src/game/hamalayi.js`: the outer wall a rounded ring with bays; the terrace edges and the gorge wander; held
   still at the lift, the bridge and the ledge; the corners no taller than before.
+
+## Budget (renderer.info, Medium, 1366 × 768, SwiftShader in this container: counts, not a GPU benchmark)
+
+Same spots and camera before (a9c1ec8, served from a copy) and after (this branch with 2d767be merged):
+
+| Spot | Draw calls before → after | Triangles before → after |
+|---|---|---|
+| Citadel street (−42, 2) | 874 → 874 | 1,324,150 → 1,325,722 |
+| Citadel harbour | 467 → 467 | 680,992 → 682,564 |
+| Citadel plateau | 383 → 383 | 806,098 → 807,670 |
+| Desert pier road | 388 → 382 | 281,827 → 285,135 |
+| Desert, Kesh | 339 → 328 | 198,823 → 179,999 |
+| Desert, Ilka's camp | 138 → 125 | 202,399 → 114,935 |
+| Desert, the dig | 103 → 102 | 159,965 → 167,429 |
+| Hamalayi landing | 207 → 202 | 602,233 → 605,713 |
+| Hamalayi, Lhar | 220 → 216 | 414,711 → 411,985 |
+| Hamalayi, monastery gate | 187 → 182 | 436,587 → 428,299 |
+
+(The Citadel's +1,572 triangles come with the merged 2d767be; this pass does not touch Citadel.) The Desert's terrain grid
+grew from 251² to 281² points (+16,000 triangles where the whole island is in view); the scatter on the new land
+joins the existing instanced/batched meshes (no new draw calls). Region build time, this container under load
+(other agents running): Desert 857 ms before, 1,411 ms after (the coast grid, the flood fill); the Hamalayi
+unchanged within noise.
 
 ## Follow-up plans (files other tasks own now)
 

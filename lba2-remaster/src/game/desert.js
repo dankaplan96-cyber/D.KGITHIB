@@ -99,12 +99,14 @@ function keepDist(x, z) {   // metres outside the nearest keep (negative inside)
 }
 // signed distance to the coast (m, + inland) on a 2 m grid over the patch, from the original's land plus our keeps
 const CD_STEP = 2, CD_N = SIZE / CD_STEP + 1;
-let CD = null;
+let CD = null, KD = null;
 function buildCoast() {
   const n = CD_N, h0 = SIZE / 2, land = new Uint8Array(n * n);
+  KD = new Float32Array(n * n);
   for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
-    const x = -h0 + i * CD_STEP, z = -h0 + j * CD_STEP;
-    land[j * n + i] = origH(x, z) > 0.05 || keepDist(x, z) < 0 ? 1 : 0;
+    const x = -h0 + i * CD_STEP, z = -h0 + j * CD_STEP, k = j * n + i;
+    KD[k] = keepDist(x, z);
+    land[k] = origH(x, z) > 0.05 || KD[k] < 0 ? 1 : 0;
   }
   // two chamfer passes (distance to the other kind), for the land and for the sea
   const dist = (want) => {
@@ -130,15 +132,20 @@ function buildCoast() {
   CD = new Float32Array(n * n);
   for (let k = 0; k < n * n; k++) CD[k] = land[k] ? din[k] - CD_STEP / 2 : -(dout[k] - CD_STEP / 2);
 }
+function gridAt(kd, x, z, out) {
+  if (!CD) buildCoast();
+  const F = kd ? KD : CD;
+  const gx = (x + SIZE / 2) / CD_STEP, gz = (z + SIZE / 2) / CD_STEP;
+  if (gx < 0 || gz < 0 || gx >= CD_N - 1 || gz >= CD_N - 1) return out;
+  const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, o = j * CD_N + i;
+  return (F[o] * (1 - fx) + F[o + 1] * fx) * (1 - fz) + (F[o + CD_N] * (1 - fx) + F[o + CD_N + 1] * fx) * fz;
+}
 // distance inland from the shore (negative at sea), with a wobble so the coast reads as sand and rock
 export function coastDist(x, z) {
-  if (!CD) buildCoast();
-  const gx = (x + SIZE / 2) / CD_STEP, gz = (z + SIZE / 2) / CD_STEP;
-  if (gx < 0 || gz < 0 || gx >= CD_N - 1 || gz >= CD_N - 1) return -40;
-  const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, o = j * CD_N + i;
-  const d = (CD[o] * (1 - fx) + CD[o + 1] * fx) * (1 - fz) + (CD[o + CD_N] * (1 - fx) + CD[o + CD_N + 1] * fx) * fz;
-  return d + Math.sin(x * 0.21 + z * 0.13) * Math.sin(z * 0.17 - x * 0.09) * 1.1;
+  return gridAt(false, x, z, -40) + Math.sin(x * 0.21 + z * 0.13) * Math.sin(z * 0.17 - x * 0.09) * 1.1;
 }
+// keepDist read from the same 2 m grid (the ground asks it twice per point)
+const keepNear = (x, z) => gridAt(true, x, z, 99);
 function trackDist(x, z) {
   let d = 1e9;
   for (const p of TRACKS) for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]));
@@ -181,7 +188,7 @@ function heightFn(x, z) {
   flat = Math.max(flat, keshFlat(x, z));
   let h = BASE + dunes * (1 - flat);
   // the original's ground away from our places: its high ground rises as rock, its low ground rolls (WORLD-SHAPE)
-  const wr = smoothstep(0, RELIEF_GAP, keepDist(x, z));
+  const wr = smoothstep(0, RELIEF_GAP, keepNear(x, z));
   if (wr > 0) { const O = origH(x, z); h += wr * (Math.max(0, O - 4) * 1.25 + (Math.min(O, 4) - 2) * 0.5); }
   // Kesh's sand (keshlife.js): the dune against the cool room, sand banked on the screens, a drift over the yacht's track
   h += keshBank(x, z) + DRIFT_H * keshDrift(x, z);
@@ -206,7 +213,7 @@ function heightFn(x, z) {
   // the shore: a long low beach as the original's (rising 1 in 2.2), steeper only where one of our places stands
   // close to the sea; then the sea floor
   // (and where the ground behind is high rock, the original's or a mesa: a sea cliff)
-  const cd = coastDist(x, z), sl = 0.45 + 0.6 * smoothstep(6, 0, keepDist(x, z)) + 0.2 * Math.max(0, origH(x, z) - 2) + 3 * rock;
+  const cd = coastDist(x, z), sl = 0.45 + 0.6 * smoothstep(6, 0, keepNear(x, z)) + 0.2 * Math.max(0, origH(x, z) - 2) + 3 * rock;
   // near the pier the beach slopes gently down to the deck
   const dd = Math.hypot(x - (DOCK.x + 8), (z - DOCK.z) * 0.8);
   if (dd < 22) h = h + (DOCK.deck + 0.2 + (h - DOCK.deck - 0.2) * smoothstep(4, 22, dd) - h) * (1 - smoothstep(16, 22, dd));
@@ -606,6 +613,13 @@ export function buildDesert(scene, physics) {
       if (coastDist(x, z) < 6 || trackDist(x, z) < 5 || inPost(x, z, 4) || Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r + 3 || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 3) continue;
       rocks.push({ x, y: H(x, z) - 0.1, z, ry: rr() * 6, s: 0.25 + rr() * 0.5 });
     }
+    // the original's land beyond the old island's (WORLD-SHAPE): its own draws, so the stream above is untouched
+    const r2 = rng(4243), wide = () => (r2() - 0.5) * 280;
+    for (let i = 0; i < 170; i++) {
+      const x = wide(), z = wide(), ry = r2() * 6, sz = r2();
+      if (Math.hypot(x, z) < 80 || coastDist(x, z) < 6 || trackDist(x, z) < 5 || keepNear(x, z) < 2) continue;
+      rocks.push({ x, y: H(x, z) - 0.1, z, ry, s: sz < 0.15 ? 0.7 + sz * 4 : 0.25 + sz * 0.5 });
+    }
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     // (Kesh's places stay clear: filtered after the draw, so the island's other rocks keep their places)
     for (let i = rocks.length - 1; i >= 0; i--) if (keshClear(rocks[i].x, rocks[i].z, rocks[i].s)) rocks.splice(i, 1);
@@ -626,6 +640,13 @@ export function buildDesert(scene, physics) {
       const it = { x, y: h + 0.1, z, ry: rr() * 6, s: 0.5 + rr() * 0.8, color: rr() < 0.5 ? '#9a8a4a' : '#7a7a3a' };
       if (!keshClear(x, z)) list.push(it);
     }
+    const r3 = rng(4244), wide = () => (r3() - 0.5) * 280;
+    for (let i = 0; i < 520; i++) {
+      const x = wide(), z = wide(), ry = r3() * 6, sz = r3(), c = r3();
+      if (Math.hypot(x, z) < 82 || coastDist(x, z) < 5 || trackDist(x, z) < 2.5 || keepNear(x, z) < 0) continue;
+      const h = H(x, z); if (h > BASE + 4) continue;
+      list.push({ x, y: h + 0.1, z, ry, s: 0.5 + sz * 0.8, color: c < 0.5 ? '#9a8a4a' : '#7a7a3a' });
+    }
     instances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list, { cast: true });
     const cactM = pm('#5a8a4a', 0.75);
     const CB = new Batch(group);
@@ -642,6 +663,17 @@ export function buildDesert(scene, physics) {
         CB.add(cyl(0.13, 0.13, 0.7, 7, 0), cactM, x + s * 0.62, ay + 0.35, z);
       }
       if (keep) col({ type: 'cyl', x, z, r: 0.35, top: y + h, seeThrough: true });
+    }
+    // and a few on the original's land beyond the old island's
+    const r4 = rng(4245);
+    for (let i = 0; i < 60; i++) {
+      const x = (r4() - 0.5) * 280, z = (r4() - 0.5) * 280, h = 1.6 + r4() * 1.6, arms = [r4(), r4(), r4(), r4()];
+      if (Math.hypot(x, z) < 78 || coastDist(x, z) < 8 || trackDist(x, z) < 3 || keepNear(x, z) < 0) continue;
+      const y = H(x, z); if (y > BASE + 4 || terrain.slopeAt(x, z) > 0.5) continue;
+      CB.add(cyl(0.2, 0.24, h, 8, 0), cactM, x, y + h / 2, z);
+      CB.add(new THREE.SphereGeometry(0.2, 8, 6), cactM, x, y + h, z);
+      [-1, 1].forEach((sd, k) => { if (arms[k * 2] < 0.7) { const ay = y + h * (0.4 + arms[k * 2 + 1] * 0.25); CB.add(cyl(0.13, 0.13, 0.5, 7, 0), cactM, x + sd * 0.4, ay, z, 0, 0, Math.PI / 2); CB.add(cyl(0.13, 0.13, 0.7, 7, 0), cactM, x + sd * 0.62, ay + 0.35, z); } });
+      col({ type: 'cyl', x, z, r: 0.35, top: y + h, seeThrough: true });
     }
     CB.build();
   }
