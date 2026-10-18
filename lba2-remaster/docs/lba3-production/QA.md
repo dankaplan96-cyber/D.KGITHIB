@@ -218,14 +218,17 @@ Served on 127.0.0.1:8177 from the worktree; headless Chromium + SwiftShader; tes
 
 ### The story's crossings to Zeelich by spaceship (PLANET-1, 0.29.2)
 Served on 127.0.0.1:8181 from the worktree; headless Chromium + SwiftShader; tests from a scratch directory, one
-browser at a time. Logs: docs/lba3-visual/evidence/PLANET-1/logs/.
+browser at a time. Final run on the merged tree (0f68e20: PLANET-1 + ccr-adf00ea7-37ebl3 at 2d767be). Logs:
+docs/lba3-visual/evidence/PLANET-1/logs/ (summary-final-0f68e20.txt; earlier runs' summaries kept; two travel runs on
+an overloaded machine hit the runner's time limit before finishing and are not counted).
 | Check | Evidence | Result |
 |---|---|---|
 | Every travel route touching Zeelich is the spaceship (one route, Citadel ⇄ Zeelich Spaceport) or a Zeelich shuttle; ferry and glider routes are Twinsun ⇄ Twinsun | LOGIC (tests/travel.mjs, route data) | PASS |
 | Chapter 2: Doran at the harbour agrees, moves to the spaceport, objective "Meet Doran at the spaceport"; no crossing from the harbour. E at the pad's project ship → chapter 3 on Zeelich Spaceport's deck, plan confiscated there, the dock's sky-ferry hidden | INPUT (ISO: chapter flags) tests/travel.mjs; tests/chapter1.mjs (LOGIC) | PASS |
 | Chapter 8: no ship at the harbour quay; E at the project ship on Citadel Spaceport's pad → chapter 9 on Zeelich Spaceport's deck | INPUT (ISO: chapter flags) tests/travel.mjs; tests/chapter8.mjs | PASS |
-| Chapter 10: no Hesk on Zeelich; spaceship to Citadel; Hesk's glider menu = Citadel, Desert Island, the Hamalayi (no Zeelich); the loop back to Zeelich by glider + spaceship | INPUT tests/travel.mjs; tests/chapter10.mjs travel steps | PASS (chapter10.mjs still ends NOT DONE at the lighthouse talk: TY-5-FIX's known T1, not a travel step) |
-| Regression: chapter1, chapter2 (to chapter 4 via Zeelich), spaceport, zeelich-life (32), opening, stability, chapter8, chapter9 | logs/ | PASS (rc 0, no errors) |
+| Chapter 10: no Hesk on Zeelich; spaceship to Citadel; Hesk's glider menu = Citadel, Desert Island, the Hamalayi (no Zeelich); the loop back to Zeelich by glider + spaceship | INPUT tests/travel.mjs; tests/chapter10.mjs travel steps | PASS (chapter10.mjs: CHAPTER 10 DONE on the merged tree) |
+| Playthrough segments 05 (Doran at the harbour → the project's ship at the spaceport → Zeelich Spaceport) and 06 (from the spaceport deck to the workshop … the shaft → chapter 4), from a save made by segments 01–04 | INPUT (06: 1 ISO assist in the depot fight, as before) logs/playthrough-05.log, playthrough-06.log | PASS |
+| Regression: chapter1, chapter2 (to chapter 4 via Zeelich), spaceport, zeelich-life, opening, stability, chapter8, chapter9 | logs/ | PASS (rc 0, no errors) |
 | Code search: no ferry/boat/glider/beam route or line to Zeelich in src/ (English and Hebrew tables) | grep (report) | PASS |
 | Feel by hand, the spaceport walk in a real browser on a GPU | — | NOT TESTED |
 

@@ -21,17 +21,27 @@ PASS afterwards: Snuff on who buys her bread, Tavo carries the rolls to the depo
 PASS Nara and Oku keep chapter 3's lines (the main story first) 
 ISO  chapter 3: the shield brought down by its flag (c2_plan, c2_key, c2_broadcast, the three mills, c2_shield)
 ISO  way B: the zl_ flags cleared (a fresh story), the crate back on the flue
+PASS from the roof above her counter Snuff is not offered: no Talk prompt, E plays none of her lines (INPUT) 
 PASS after the shield drops, Snuff's problem in its own words (the heat still comes up the pipe) 
+PASS asked again (chapter 3, shield down): Snuff on the heat in the pipe, then the stair; Bzizz once met, then on everything waiting on his stage 
 PASS from the street the magic ball knocks the crate off the flue: it falls and breaks on the grass (INPUT) 
 PASS …Bzizz: "My nectar!"; the heat box resets; Snuff calls out 
+PASS …from the street, Twinsen sees the heat box on the wall click (not the roof's "Somewhere below", REV-TY-5 D1) 
 PASS Bzizz: the depot can sign for a puddle; Snuff pays (sticky grass, one sad Mosquibee) 
 PASS saved before he picked Snuff's coin up: on Continue the five kashes are his (a toast says so); the crate still broken, the oven hot 
+ISO  the zl_ flags cleared again (a fresh story): Snuff never asked; Save & quit while the crate falls
+PASS the ball knocks the crate off (Snuff never asked); it is still falling when he quits 
+PASS Continue from the mid-fall save: the crate broken on the grass, the oven hot; Snuff asks about his ball, not her roof, and pays 
 ISO  chapter 3 finished by flags (toShell → chapter 4 on Desert Island, as tests/chapter4.mjs); Twinsen put on Zeelich by the shuttle's room switch (tests/zislands.mjs flies it)
 PASS chapter 4 on Zeelich: Nara's crates are gone (the shuttles fly again); Nara on Xil selling her flowers at Citadel, Oku on his mills' new sails 
 PASS …Pelleck, Grumm and Bzizz in chapter 4–8's words 
+ISO  chapter 4: the bake set back to "asked, not done" for one talk each
+PASS asked, not done, chapter 4–8: Snuff on Bzizz flying twice as much; Bzizz on forty crates a day; then the flue and the signature 
 ISO  chapters 4–8 skipped by flags; story.nextChapter() into chapter 9 (as tests/chapter9.mjs)
 PASS chapter 9: Baldino's petition and Nara's stamp work as before (the chapter first) 
 PASS …and the street argues about the council: Pelleck (who pays the tilers?), Snuff (who buys the bread?), Grumm (the moles say stop) 
+ISO  chapter 9: the bake set back to "asked, not done" for one talk each
+PASS asked, not done, at the council: Snuff wants her charcoal cart back if the bore stops; Bzizz waits on the council 
 ISO  chapter 9 done by flags (c9_vote); story.nextChapter() into chapter 10 (as tests/chapter10.mjs)
 PASS chapter 10: Oku's station errand as before (the chapter first) 
 PASS …and the street on the bore turned into a shield (Snuff's heat box, Bzizz's heat, Pelleck's missing form) 

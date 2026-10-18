@@ -16,18 +16,19 @@ to citadel (spaceship) [ 'out', [ 'Twinsun: Citadel Spaceport' ] ]
 mira [ 'office', true, 'valves' ]
 valves [ [ 2, 2, 2 ], true ]
 out [ 'office', 'out' ]
+at the dial facing Zoé, E is for zoe
 lighthouse [
   'lighttop',
   [ true, 1598.5, -0.6, 'play' ],
   'play',
-  undefined,
-  1599.6,
-  -1.1
+  true,
+  1598.9,
+  0.8
 ]
 dials [
-  [ 0, 0, 1 ],
-  undefined,
-  "Set Baldino's relays at the five stations (2/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
+  [ 2, 0, 1 ],
+  true,
+  "Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
 ]
 to desert desert
 ilka [ true, true, 3 ]
@@ -39,22 +40,16 @@ drones [
   ],
   [ false, false, false ],
   true,
-  "Set Baldino's relays at the five stations (3/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
+  "Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
 ]
 to hamalayi hamalayi
 pim [ true ]
-dome [
-  'hamalayi',
-  true,
-  true,
-  true,
-  "Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
-]
+dome [ 'hamalayi', true, true, true, 'Go to the drill platform on Zeelich' ]
 to zeelich [
   'out',
   [ 'zeelich', [ 'Zeelich Spaceport' ] ],
-  "Set Baldino's relays at the five stations (4/5)◆ Zeelich: the old mill (Oku)◆ Citadel: the valve room (Mira)◆ Citadel: the lighthouse (Zoé and Arthur)◆ Desert Island: the bore (Ilka and Dallan)◆ The Hamalayi: the dome (Yorna, Pim and Sefa)"
+  'Go to the drill platform on Zeelich'
 ]
-console [ undefined, 'network', 'zeelich' ]
+console [ true, 'shell', 'c3shaft' ]
 no errors
-CHAPTER 10 NOT DONE
+CHAPTER 10 DONE

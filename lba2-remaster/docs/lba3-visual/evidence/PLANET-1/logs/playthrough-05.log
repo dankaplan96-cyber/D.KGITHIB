@@ -1,25 +1,25 @@
 [0s +0s] continue: {"state":"play","lines":0} | citadel [-54.42,16.83,-36.77] hp 5 | Visit Vesk at the station in the old fortress
-[4s +4s] Vesk: the tour: {"r":"talked","to":"vesk","state":"play","lines":14,"fail":null} | control [1399.6,0,-1.13] hp 5 | Meet Zoé at the station gate
-[6s +1s] Zoé at the gate: {"r":"talked","to":"zoe","state":"play","lines":10,"room":"projoffice","body":"zoe","fail":null} | projoffice [1304.8,0,-3.7] hp 5 | Zoé: find the evacuation plan without getting caught
-[7s +2s] Zoé: the lockers (stealth): {"plan":true,"tries":["arrived"],"fail":null} | projoffice [1299.12,0,-3.71] hp 5 | Zoé: get out with the plan
-[79s +72s] Zoé: out: {"zoeDone":true,"body":"twinsen","fail":null} | citadel [13.48,2.35,26.54] hp 5 | Confront Vesk at the beam pad
-[88s +9s] Vesk: the confrontation: {"r":"talked","to":"vesk","state":"play","lines":20,"gone":true,"fail":null} | citadel [-19.43,14.38,-61.04] hp 5 | Go home. Arthur is calling you
-[92s +4s] home: Arthur's radio: {"r":"talked","to":"arthur","state":"play","lines":12,"radio":true,"fail":null} | citadel [-43.99,2.34,77.2] hp 5 | Talk to Doran at the harbour
-[94s +2s] Doran at the harbour: {"r":"talked","to":"doran","state":"play","lines":6,"ship":true,"fail":null} | citadel [-116.85,1.8,44.61] hp 5 | Meet Doran at the spaceport and fly to Zeelich
-[97s +3s] the project's ship at the spaceport → Zeelich: {"r":"used","target":{"kind":"c1ship","id":"p_board","label":"p_board"},"state":"play","lines":16,"chapter":"zeelich","room":"zeelich","fail":null} | zeelich [2396,6,36.8] hp 11 | Find Baldino's workshop on the Esmer street
+[3s +3s] Vesk: the tour: {"r":"talked","to":"vesk","state":"play","lines":14,"fail":null} | control [1399.6,0,-1.13] hp 5 | Meet Zoé at the station gate
+[4s +1s] Zoé at the gate: {"r":"talked","to":"zoe","state":"play","lines":10,"room":"projoffice","body":"zoe","fail":null} | projoffice [1304.8,0,-3.7] hp 5 | Zoé: find the evacuation plan without getting caught
+[5s +1s] Zoé: the lockers (stealth): {"plan":true,"tries":["arrived"],"fail":null} | projoffice [1299.12,0,-3.71] hp 5 | Zoé: get out with the plan
+[58s +53s] Zoé: out: {"zoeDone":true,"body":"twinsen","fail":null} | citadel [13.48,2.35,26.54] hp 5 | Confront Vesk at the beam pad
+[65s +7s] Vesk: the confrontation: {"r":"talked","to":"vesk","state":"play","lines":20,"gone":true,"fail":null} | citadel [-19.43,14.38,-61.04] hp 5 | Go home. Arthur is calling you
+[68s +3s] home: Arthur's radio: {"r":"talked","to":"arthur","state":"play","lines":12,"radio":true,"fail":null} | citadel [-43.99,2.34,77.2] hp 5 | Talk to Doran at the harbour
+[70s +1s] Doran at the harbour: {"r":"talked","to":"doran","state":"play","lines":6,"ship":true,"fail":null} | citadel [-116.85,1.8,44.61] hp 5 | Meet Doran at the spaceport and fly to Zeelich
+[72s +2s] the project's ship at the spaceport → Zeelich: {"r":"used","target":{"kind":"c1ship","id":"p_board","label":"p_board"},"state":"play","lines":16,"chapter":"zeelich","room":"zeelich","fail":null} | zeelich [2396,6,36.8] hp 11 | Find Baldino's workshop on the Esmer street
 deaths (Retry): 0
 ISO assists: 0 (this page; see the trace)
-[156.3] go → (-18.0, -60.6) plan ok=true pts=23 left=0.52
-[239.8] go → (-46.1, 77.2) plan ok=true pts=23 left=0.25
-[275.2] go: transition (citadel → citadel, trans true) at (-45.87, 76.41)
-[276.1] go → (1002.1, 2.1) plan ok=true pts=2 left=0.61
-[280.5] go → (1001.2, 11.3) plan ok=false pts=2 left=0.6
-[285.1] go: transition (house → house, trans true) at (1001.41, 10.67)
-[286.0] go → (-118.0, 45.2) plan ok=true pts=10 left=0.9
-[305.7] go → (0.3, 41.0) plan ok=true pts=11 left=0.35
-[325.9] go → (0.3, 41.0) plan ok=true pts=3 left=0.43
-[331.5] go → (0.3, 41.0) plan ok=true pts=2 left=0.11
-[331.7] go → (0.3, 41.0) plan ok=true pts=2 left=0.13
-[331.7] go → (0.3, 41.0) plan ok=true pts=2 left=0.13
-kept /tmp/claude-0/-home-user-geriatrics-course/a5ce8310-2ebe-5d1c-8bbd-0df4d308f0fe/scratchpad/planet1/s05.json
+[156.5] go → (-18.0, -60.6) plan ok=true pts=23 left=0.52
+[240.0] go → (-46.1, 77.2) plan ok=true pts=23 left=0.25
+[275.4] go: transition (citadel → citadel, trans true) at (-45.87, 76.41)
+[276.3] go → (1002.1, 2.1) plan ok=true pts=2 left=0.61
+[280.7] go → (1001.2, 11.3) plan ok=false pts=2 left=0.6
+[285.4] go: transition (house → house, trans true) at (1001.41, 10.67)
+[286.2] go → (-118.0, 45.2) plan ok=true pts=10 left=0.9
+[305.9] go → (0.3, 41.0) plan ok=true pts=11 left=0.35
+[326.2] go → (0.3, 41.0) plan ok=true pts=3 left=0.43
+[331.7] go → (0.3, 41.0) plan ok=true pts=2 left=0.11
+[332.0] go → (0.3, 41.0) plan ok=true pts=2 left=0.13
+[332.0] go → (0.3, 41.0) plan ok=true pts=2 left=0.13
+kept /tmp/claude-0/-home-user-geriatrics-course/a5ce8310-2ebe-5d1c-8bbd-0df4d308f0fe/scratchpad/planet1/g05.json
 no errors
