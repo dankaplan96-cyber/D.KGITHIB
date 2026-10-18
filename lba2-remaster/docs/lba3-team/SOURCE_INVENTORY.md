@@ -95,7 +95,7 @@ for LM_MESSAGE / LM_MESSAGE_ZOE. The output JSON is `$S/src1/inventory.json`. It
 | Zoé (LBA1) | body 48 | In scene 5, Twinsen and Zoé's house, and in the end scenes (111–117). Render: a blonde woman in a pink gown. The LBA1 catalogue listed her only as "a blonde Quetch woman". | probable (no text check) |
 | Twinsen (LBA2) | bodies 0–21: 0 plain, 1 tunic, 2–3 and 12 variants (wizard robe…), 17 with Zoé | Hero File3D 0–3 (one per behaviour), generic bodies 0–12 (GEN_BODY_*). Collision box ±250 × 1240. | certain |
 | Twinsen (LBA1) | bodies 0–8 | catalogue | certain |
-| **Baldino** | **body 139** (File3D 93) | Talk colour 13 in all three scenes (38 Desert Island, 48 Citadel, 138 Celebration). He asks Twinsen for gazogem "to repair our vessel", which is Baldino's role. Render: **a Grobo** (trunk, great ears) with goggles on his brow, a green smock and brown trousers. docs/TWELVE_YEARS.md also calls him "an old Grobo inventor". | probable (strong) |
+| **Baldino** | **body 139** (File3D 93, its only body) | Scenes 38 (Desert Island), 48 (Citadel), 138 (Celebration), talk colour 13. Its scene objects hand Twinsen the car part Zoé asked Baldino for (TEXT bank 10 id 204; bank 6 id 32 names him), the portable radio (ids 735/208; bank 4 id 226) and the Proto-Pack news (bank 4 id 212 says Jerome Baldino designed it), and in scene 138 ask for gazogem for "our vessel" and the Proto-Pack's upgrade (bank 14 ids 190–195; bank 4 id 248). Render: **a Grobo** (trunk, great ears), goggles over the eyes, a white collar, an olive smock and brown trousers. (SRC-2; talk colour 13 alone is shared by 24 bodies) | **certain** (SRC-2) |
 | Bersimon, the weather wizard | body 111 (File3D 67) | Scene 21: the storm line about the lighthouse being closed, talk colour 10. Render: a Rabbibunny in a teal robe. | probable |
 | School of Magic master | body 123 (File3D 76) | Scene 27: "You are now a member of our school"; scene 44: the reward for the test | probable |
 | Joe the Elf | body 110 (File3D 66)? | An elf (droopy green hat with a pompom, great ears) in Otringal scenes 84/86. The text hint failed: its ids fall in a menu bank. | **not verified** |
@@ -113,7 +113,7 @@ renderer, cameras, scale and light. The sheets are in `$S/src1/cmp/` and are not
 |---|---|---|---|
 | twinsen | LBA2 1 | measured rebuild (character-review §11–12, hair VP-1b §14) | small: medallion, hand size, the robe's halves |
 | **zoe** | LBA2 26 | before: the body's sections with **Twinsen's head narrowed**; pale cream hair and skin, no lips or necklace, and a deep heart-shaped neckline front and back. In the opening she read as an old woman (white bun, chalky face). **Now: her own measured head and outfit (SRC-1, §15).** | before: **large** (head, hair colour, outfit layout); now: small (see §15) |
-| **baldino** | LBA2 139 (probable) | a Quetch old man (bald, moustache, apron) | **very large: a different race**. This is the next candidate. |
+| **baldino** | LBA2 139 (certain, SRC-2) | before: a Quetch old man (bald, moustache, apron). **Now: a Grobo rebuilt from the measured body on his own skeleton (SRC-2, character-review §16, `tools/blender/baldino_poly.py`)** | before: **very large** (a different race); now: small (smoother head, opaque lenses, one-piece ears) |
 | bersimon | LBA2 111 | built after the body | moderate: hat and ears shape, robe colour |
 | magus | LBA2 123 | built after the body | moderate |
 | joe | 110? (unverified) | built from a description | unknown until identified; if 110 is Joe, large (hat, face, proportions) |
@@ -149,9 +149,24 @@ are in docs/character-review.md §15.
 | Pivots / skeleton | the game's Zoé skeleton, unchanged | differences listed in §15 for the animator |
 | Materials | palette ramp shade ≈ 9 as the vertex colour (skin #d9a679, a little warmer than Twinsen's #e2bc90 — documented artistic change; red #b32b27, shoes #3f7b47, lids #8f634b, eyes #2f474b, jewellery #1b4b67); hair palette 106 → base #cc8f00 with straight-up normals, shown as #e3af6b | LbaMaterial, one material |
 | Animations | none imported. Her clips (ANIM 207 idle, 208 walk, 209 hit, 212 fall, 213 land, 210/211/214–219 scripted gestures) are measured in §15 for the animator | rig.js drives her as before |
-| Twelve-years-later changes | none | STORY_BIBLE names none for her look |
+| Twelve-years-later changes | SRC-2 (the user): no longer pregnant. LBA2's body 26 is expecting (Arthur, twelve years on, is their son); the belly is taken out and she has a natural waist (`ZOE_BODY`; the measured figure kept as `ZOE_BODY_LBA2`, built with `ZOE_LBA2=1`) | character-review §16 |
 | Artistic changes (not faithful) | warmer skin; short round mittens for the original's pointed hands; flatter lids that stop at the eye; no brown under the nose; the full front kept softened (0.110–0.131 against 0.144); lips with one even normal and face normals bent up | each for our renderer's ramp or close-ups (character-review §15) |
 | Rollback | `git checkout c0264c8 -- lba2-remaster/assets/poly/zoe.json`, or `cast_poly.py <skel> <out> zoe` (the earlier build_zoe, kept) | |
+
+## 5b. Manifest: Baldino (SRC-2)
+
+| Source (user's files) | Output | Notes |
+|---|---|---|
+| LBA2 BODY.HQR 139 (sections of groups 2/3/4, the trunk's groups 14–16, the ears 17–20, colour bytes 16/60/112/144/160/192/208, spheres (eyes, hands), the tail line) | `assets/poly/baldino.json` (4,805 triangles, 7 vertex colours; was 1,982), `art/characters/baldino/baldino_poly.blend`, `art/characters/baldino/manifest.json` | our mesh, built from the numbers in `tools/blender/baldino_poly.py` |
+| Scale | 1 H (1238 units) = 2.006 m, the cast's (Twinsen's) unit: he is 0.888 H = 1.78 m | the same height as our earlier Baldino (1.76 m) |
+| Coordinates | the game's: +y up, +z front, +x his left | no flip |
+| Pivots / skeleton | his own, from the original's joints (LOOKS.baldino: `legLen`, `legX`, `torsoLen`, `shZ`, `armLen`, `neck`, `stoop`, `headS`, `height` 1) plus `earL`/`earR` and `trunk0..2` at the original's ear and trunk pivots | regenerated into `art/characters/skeletons.json` for him alone |
+| Materials | palette ramp shade ≈ 9–10 as the vertex colour: skin #7f7787 (ramp 13), smock #67734b (7), trousers #6b472b (1), strap #1b7b83 (10), lenses #236787 (12, opaque), mouth #2f7f6d (9), eyes #abffff; the collar flat (#9d9d9a with up normals → #bbbbb7, the solid byte 60) | LbaMaterial, one material |
+| Animations | none imported. ANIM 715 idle (1.6 s), 717 walk (0.8 s, 1.30 m per cycle), 718 talk (3.2 s) are measured (character-review §16); rig.js uses his walk cycle length, idle period and a keyed talk loop at 718's times and angles, and swings the ear and trunk bones | rig.js |
+| Collision | his soft-contact radius 0.6 m (the original's box ±250 units = ±0.41 m; his pear ±0.5 m, the trunk 0.9–1.0 m forward) | actors.js reads LOOKS.baldino.radius |
+| Twelve-years-later changes | none | STORY_BIBLE names none |
+| Artistic changes | opaque lenses with the eyes drawn on the glass; grey hands; a smoother head; a round trunk; ears with a little thickness, one bone each | character-review §16 |
+| Rollback | `git checkout 292a775 -- lba2-remaster/src/game/characters.js lba2-remaster/art/characters/skeletons.json lba2-remaster/assets/poly/baldino.json lba2-remaster/src/engine/rig.js lba2-remaster/src/game/actors.js` (together: the old model needs the old look and skeleton) | |
 
 ## 6. Commands
 
@@ -163,4 +178,12 @@ python3 -I tools/lba-source/contours.py --lba2 $S/lba2data --body 26 --groups 12
 python3 -I tools/lba-source/studyrender.py --lba2 $S/lba2data --body 26 --poly assets/poly/zoe.json --polyH 1.95 \
     --views front,34,side,back,game --out $S/src1/cmp/zoe.png          # study image: keep it in scratch
 python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly art/characters/zoe/zoe_poly.blend   # (bpy 5.2.2)
+# SRC-2, Baldino (body 139, File3D 93: clips 715 idle, 717 walk, 718 talk)
+python3 -I tools/lba-source/measure.py --lba2 $S/lba2data --body 139 --sections 0.03 --clips 715,716,717,718,719,720,721,722,723,724,725,726,727,728
+python3 -I tools/lba-source/contours.py --lba2 $S/lba2data --body 139 --groups 2,3,4 --y 0.23:0.53:0.025
+python3 -I tools/lba-source/contours.py --lba2 $S/lba2data --body 139 --groups 3,4 --y 0.54:0.87:0.025
+python3 -I tools/lba-source/studyrender.py --lba2 $S/lba2data --body 139 --H 1238 --poly assets/poly/baldino.json --polyH 2.006 \
+    --views front,34,side,back,game --out $S/src2/cmp/baldino.png                                     # study image: scratch only
+GAME_URL=http://127.0.0.1:8199/ node tools/dump-skeletons.mjs baldino art/characters/skeletons.json   # his skeleton only (a server running)
+python tools/blender/baldino_poly.py art/characters/skeletons.json assets/poly art/characters/baldino/baldino_poly.blend
 ```

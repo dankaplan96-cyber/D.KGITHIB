@@ -443,7 +443,9 @@ export class Rig {
         // 0.78 body heights per cycle). The leg reaches far forward and little back, the passing knee folds,
         // the arms swing opposite and the torso counter-twists while the head keeps looking ahead.
         const H = this.hipsRest * this.root.scale.y / 0.46; // (LBA2: pelvis at 46% of the height)
-        this.phase += (speed * dt / (0.78 * H)) * Math.PI * 2 - dph;
+        // (a look's own cycle length in metres where its original walk gives one: Baldino's short legs step
+        // 800 units per 0.8 s cycle, 1.3 m — his pelvis is far below 46% of his height)
+        this.phase += (speed * dt / (this.walkCycle ? this.walkCycle * this.root.scale.y : 0.78 * H)) * Math.PI * 2 - dph;
         const p = ((this.phase / (Math.PI * 2)) % 1 + 1) % 1, q = (p + 0.5) % 1;
         const W = WALK_KEYS;
         T.legL = key(W.thigh, p); T.kneeL = key(W.knee, p); T.footL = key(W.foot, p);
@@ -485,7 +487,7 @@ export class Rig {
     } else if (a === 'idle' || a === 'talk' || a === 'listen') {
       // LBA2's idle (measured): a slow rock forward and back on the ankles, 2.4 s, the pelvis tipping with it
       // and the arms trailing a little behind the body's swing
-      const b = Math.sin(this.t * (Math.PI * 2 / 2.4));
+      const b = Math.sin(this.t * (Math.PI * 2 / (this.idlePeriod || 2.4)));   // (Baldino's idle, ANIM 715: 1.6 s)
       hipsY = 0.95 + b * 0.006;
       torsoX = -0.02 + b * 0.03;
       bodyRotX = b * 0.025;
@@ -509,7 +511,13 @@ export class Rig {
           if (this.fidget === 5) { headX = -0.42 * k; headY = Math.sin(ft * 1.4) * 0.25 * k; torsoX = -0.04 * k; } // a glance at the sky
         } else this.fidget = 0;
       }
-      if (a === 'talk') {
+      if (a === 'talk' && this.talkStyle === 'baldino') {
+        // Baldino's own talk (ANIM.HQR 718, keys every 0.4 s, a 3.2 s loop): fists on his hips for four keys while
+        // the ears flap twice, a beat with the arms down, both arms flung wide, then both forward with a nod
+        const K = BALDINO_TALK, u = this.actionT % K.t[K.t.length - 1], at = (v) => keyLin(K.t, v, u);
+        T.armL = T.armR = at(K.arm); T.elL = T.elR = at(K.el); armOut = at(K.out);
+        torsoX = at(K.torso); headX = at(K.head);
+      } else if (a === 'talk') {
         // a few different gestures while speaking
         const g = this.gesture, w = Math.sin(this.t * 5);
         headX = Math.sin(this.t * 7) * 0.05;
@@ -836,6 +844,24 @@ export class Rig {
     if (this.blinkT < 0) this.blinkT = 2 + Math.random() * 4;
     for (const e of j.eyes) e.scale.y = blink ? 0.12 : 1;
 
+    // a Grobo's ears and trunk (Baldino; his clips 715/717/718 swing both): the ears turn on their roots — a slow
+    // waft at rest (1.6 s), two flaps in each talk loop, a swing with every step — and the trunk sways from side to
+    // side with the walk, lagging down its length
+    if (j.ears) {
+      let e;
+      if (walkLike) e = Math.sin(this.phase * 2) * 0.22;
+      else if (a === 'talk' && this.talkStyle === 'baldino') { const u = this.actionT % 3.2; e = u < 1.6 ? -0.45 * Math.abs(Math.sin(u * Math.PI / 0.4)) * (Math.floor(u / 0.4) % 2) : 0; }
+      else e = -0.1 - 0.1 * Math.sin(this.t * (Math.PI * 2 / (this.idlePeriod || 2.4)));
+      set(j.ears.L, e, 'y', 10); set(j.ears.R, -e, 'y', 10);
+    }
+    if (j.trunk) {
+      const sw = walkLike ? Math.sin(this.phase) * 0.35 : Math.sin(this.t * 0.9) * 0.05;
+      j.trunk.forEach((s, i) => {
+        set(s, sw * (0.4 + 0.3 * i) - this.roll * 0.4, 'z', 9 - 2 * i);
+        set(s, (walkLike ? -Math.min(speed, 4) * 0.03 : 0) - (this.lean || 0) * 0.3 * (i + 1), 'x', 8 - 2 * i);
+      });
+    }
+
     // ponytail follows motion with lag
     if (j.tail) {
       // (+x lifts a backward-pointing tail) at rest its weight lets it hang a touch; moving, the air streams
@@ -874,6 +900,18 @@ const ACTION_KEYS = {
   legL: [0, -1.33, -0.77, -0.89, -1.1, 0], legR: [0, -0.86, -1.33, 0, -0.72, 0],
   kneeL: [0, 1.59, 1.19, 1.27, 1.47, 0], kneeR: [0, 1.19, 2.46, 0, 1.41, 0],
   footL: [0, -0.42, 0.38, 0, -0.38, 0], footR: [0, -0.54, 0, 0, -0.63, 0],
+};
+// Baldino's talk (ANIM.HQR 718, File3D 93's PARLE), its eight keys of 0.4 s read on our joints (radians; arm < 0
+// raises forward, out spreads both arms sideways, el < 0 bends): keys 0-3 fists on the hips (the upper arm back
+// 29° and out 41°, the forearm folded 91°), key 4 down, key 5 both arms wide (out 69°, forward 53°), keys 6-7 forward
+// (47°) with the head nodding 12° then -18°; the loop closes back to the hips
+const BALDINO_TALK = {
+  t: [0, 0.3, 1.6, 1.85, 2.0, 2.15, 2.45, 2.75, 3.05, 3.2],
+  arm: [0.45, 0.5, 0.5, 0.05, -0.92, -0.92, -0.82, -0.82, 0.3, 0.45],
+  el: [-1.55, -1.58, -1.58, -0.2, -0.15, -0.15, -0.35, -0.35, -1.2, -1.55],
+  out: [0.55, 0.6, 0.6, 0.0, 0.9, 0.9, 0.2, 0.2, 0.45, 0.55],
+  torso: [0.03, 0.05, 0.03, 0.0, -0.08, -0.06, 0.06, 0.08, 0.04, 0.03],
+  head: [0, 0, 0, 0, -0.05, -0.05, 0.21, -0.25, 0, 0],
 };
 // linear between keys (as LBA2 interpolates), held at the ends
 function keyLin(ts, vs, t) {

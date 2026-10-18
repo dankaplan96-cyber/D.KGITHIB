@@ -54,7 +54,7 @@ use = {}
 for idx, col, typ in B['polys']:
     k = (col & 0xFF, L.POLY_KIND.get(typ & 0xFF, typ & 0xFF))
     use[k] = use.get(k, 0) + 1
-for (c, kind), n in sorted(use.items()):
+for (c, kind), n in sorted(use.items(), key=lambda t: (t[0][0], str(t[0][1]))):
     r0 = c & 0xF0
     print('byte %3d (ramp %2d, shade %2d) %-14s x%3d  entry %s  ramp 0/4/8/12/15 %s' % (
         c, c >> 4, c & 15, kind, n, rgb(c), ' '.join(rgb(r0 + s) for s in (0, 4, 8, 12, 15))))

@@ -35,7 +35,9 @@ export const LOOKS = {
     // trousers, long pointed green shoes, bare arms ending in pointed hands; her own narrow head carried forward with
     // a pointed nose, wide red lips, small dark slanted eyes, blue earrings and necklace; golden hair in a bun of three
     // balls, drawn flat as LBA2 draws its spheres. Colours: the original's palette ramps (skin 32, red 64, shoes 128,
-    // hair 106). Twelve years on: no change of look (STORY_BIBLE names none). The sculpt below is the fallback.
+    // hair 106). Twelve years on: she is no longer expecting (LBA2's Zoé is pregnant; Arthur is their son): SRC-2 took the
+    // belly out and gave her a natural waist (tools/blender/zoe_poly.py ZOE_BODY; the measured figure is ZOE_BODY_LBA2).
+    // The sculpt below is the fallback.
     race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#b32b27', pants: '#b32b27', shoes: '#3f7b47',
     hair: '#e3af53', skin: '#d9a679', hairStyle: 'bun', nose: 'button', eyes: '#2f474b', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
     armSpread: 0.3, armLen: 1.1,
@@ -88,11 +90,20 @@ export const LOOKS = {
     eyes: '#2a2a2a', helmet: '#2f7a84', buttons: true, height: 1.05,
   },
   baldino: {
-    // the old inventor (an ally since LBA1): short and round-shouldered, a bald dome with white tufts over
-    // the ears, a big white moustache, round brass goggles pushed up, a leather apron over a green work smock
-    race: 'quetch', outfit: 'tunic', hem: 0.5, belly: 0.09, stoop: 0.09, tunic: '#4f7a3a', tunicTrim: '#33522a', belt: '#5a3a1a', buckle: '#d8b04a',
-    pants: '#5a4a3a', shoes: '#4a2e1a', apron: '#8a5a32', skin: '#f0c098', hairStyle: 'bald', hair: '#f4f4f0', moustache: true, goggles: true,
-    nose: 'ball', noseS: 1.25, eyes: '#4a6a8a', eyeScale: 0.9, mouth: 'smile', brow: 1.6, headS: 1.08, neck: 0.06, height: 0.9,
+    // LBA2's Baldino, an old Grobo inventor (BODY.HQR body 139, File3D 93; identified and measured in the user's own
+    // files: SRC-2, tools/blender/baldino_poly.py, docs/character-review.md §16): short and broad, 1.78 m to the top of
+    // a big grey-violet head carried low on the shoulders, a trunk that curls out and down to the belt, great flat
+    // triangular ears that swing as he talks and walks, goggles with blue lenses worn over the eyes, a white stand-up
+    // collar, a pear-shaped olive-green smock open at the chest, brown trousers on short square legs set wide apart,
+    // thin arms (green sleeves, grey forearms) ending in round grey hands, a small tail. Colours: the original's ramps
+    // (grey 13, green 7, brown 1, goggles 10/12). Twelve years on: no change of look (STORY_BIBLE names none). The
+    // skeleton is his own (the original's joints: legs ±0.32 m, knee 0.22, shoulder 0.97, head pivot 1.40 m), with an
+    // ear bone each side and three trunk bones that rig.js swings; the sculpt below is the fallback.
+    race: 'grobo', outfit: 'tunic', hem: 0.56, skin: '#7f7787', tunic: '#67734b', tunicTrim: '#67734b', belt: '#6b472b', pants: '#6b472b', shoes: '#6b472b',
+    eyes: '#abffff', goggles: true, collar: true, collarColor: '#bbbbb7', height: 1,
+    legLen: 0.485, legX: 0.32, torsoLen: 0.98, shoulders: 0.985, shZ: 0.1, armLen: 1.115, armSpread: 0.3, neck: 0.345, stoop: 0.118, headS: 1.105,
+    earBones: [0.357, 1.619, 0.106], trunkBones: [[0, 1.404, 0.646], [0, 0.973, 0.971], [0, 0.756, 0.971]],
+    radius: 0.6, walkCycle: 1.3, idlePeriod: 1.6, talkStyle: 'baldino',   // (radius: his soft contact, the shared 0.45 m → 0.6 m)
   },
   nara: {
     // Esmer stall-keeper on the Zeelich street: tall and slim, a coral robe with a gold trim
@@ -309,8 +320,8 @@ function design(L) {
   const sphero = L.race === 'sphero';
   // (LBA1's FunFrock troopers, bodies 18–20: a fat greatcoat to the ankles, the shoulders high, long arms)
   const fclone = L.race === 'fclone';
-  const legLen = fclone ? 0.5 : sphero ? 0.62 : kid ? 0.74 : grobo ? 0.8 : esmer ? 1.08 : 1;
-  const torsoLen = fclone ? 1.95 : kid ? 0.82 : grobo ? 1.05 : 1;
+  const legLen = L.legLen ?? (fclone ? 0.5 : sphero ? 0.62 : kid ? 0.74 : grobo ? 0.8 : esmer ? 1.08 : 1);
+  const torsoLen = L.torsoLen ?? (fclone ? 1.95 : kid ? 0.82 : grobo ? 1.05 : 1);
   const hs = (L.headS || 1) * (kid ? 1.3 : 1) * (grobo ? 1.1 : 1);
   const wide = (grobo ? 1.5 : 1) * slim * (kid ? 0.92 : 1);
   const belly = L.belly || 0;
@@ -330,15 +341,18 @@ function design(L) {
   B.head.tip = add(Hc, [0, 0.18 * hs, 0]);
   const shX = (fclone ? 0.49 : sphero ? 0.676 : grobo ? 0.33 : 0.2) * slim * (kid ? 0.95 : 1) * (L.shoulders || 1), shY = ty + 0.47 * torsoLen;
   const armLen = (esmer ? 1.15 : kid ? 0.78 : 1) * (L.armLen || 1);
-  const legX = (fclone ? 0.16 : sphero ? 0.29 : grobo ? 0.15 : 0.1) * slim;
+  const legX = L.legX ?? (fclone ? 0.16 : sphero ? 0.29 : grobo ? 0.15 : 0.1) * slim;
   for (const [s, sx] of [['L', 1], ['R', -1]]) {
-    const sh = bone('sh' + s, [sx * shX, shY, 0], 'torso');
+    const sh = bone('sh' + s, [sx * shX, shY, L.shZ || 0], 'torso');
     const el = bone('el' + s, add(sh, [sx * 0.05, -0.29 * armLen, 0.0]), 'sh' + s);
     bone('hand' + s, add(el, [sx * 0.02, -0.27 * armLen, 0.03]), 'el' + s, { tip: add(el, [sx * 0.025, -0.4 * armLen, 0.04]) });
     const hp = bone('hip' + s, [sx * legX, hipsY - 0.03, 0], 'hips');
     const kn = bone('knee' + s, add(hp, [0, -0.43 * legLen, 0.01]), 'hip' + s);
     bone('foot' + s, [sx * legX, 0.1, 0], 'knee' + s, { tip: [sx * legX, 0.03, 0.15] });
   }
+  // a Grobo's own bones (Baldino, SRC-2): an ear each side on the head, and a trunk of three segments hanging from it
+  if (L.earBones) for (const [s, sx] of [['L', 1], ['R', -1]]) bone('ear' + s, [sx * L.earBones[0], L.earBones[1], L.earBones[2]], 'head', { noSeg: true });
+  if (L.trunkBones) L.trunkBones.forEach((p, i) => bone('trunk' + i, p, i ? 'trunk' + (i - 1) : 'head', { noSeg: true }));
   const hemY = Math.max(0.06, L.hem ?? 0.5);
   const hemR = (L.hemW ?? 1) * (L.outfit === 'robe2' || L.outfit === 'tw' || L.outfit === 'lba' ? 0.36 : L.outfit === 'bell' ? 0.43 : L.outfit === 'dress' ? 0.34 : L.outfit === 'robe' ? 0.32 : 0.27) * wide * (kid ? 0.92 : 1) + belly * 0.4;
   for (const [nm, dx, dz] of [['skirtF', 0, 1], ['skirtB', 0, -1], ['skirtL', 1, 0], ['skirtR', -1, 0]]) {
@@ -1025,11 +1039,17 @@ function finishRig(L, def, root, mesh, bones, eyes) {
     armL: { sh: bones.shL, el: bones.elL, hand: bones.handL }, armR: { sh: bones.shR, el: bones.elR, hand: bones.handR },
     legL: { hip: bones.hipL, knee: bones.kneeL, foot: bones.footL }, legR: { hip: bones.hipR, knee: bones.kneeR, foot: bones.footR },
     skirt: { F: bones.skirtF, B: bones.skirtB, L: bones.skirtL, R: bones.skirtR },
+    ears: bones.earL ? { L: bones.earL, R: bones.earR } : null,                                    // (a Grobo's: Baldino)
+    trunk: bones.trunk0 ? Object.keys(bones).filter((k) => /^trunk\d/.test(k)).sort().map((k) => bones[k]) : null,
   };
   const rig = new Rig(root, j);
   rig.mesh = mesh;
   rig.height = def.bones.head.tip[1];
   if (L.armSpread != null) rig.armSpread = L.armSpread;
+  // his own timing where the original's clips give it (Baldino, ANIM.HQR 715/717/718: SRC-2)
+  if (L.walkCycle) rig.walkCycle = L.walkCycle;
+  if (L.idlePeriod) rig.idlePeriod = L.idlePeriod;
+  if (L.talkStyle) rig.talkStyle = L.talkStyle;
   // the robe below the belt (Twinsen) or the outfit's legs (Zoé) are carried by the legs: strides need no limit
   if (L.outfit === 'lba' || L.outfit === 'gown') rig.legCloth = true;
   if (L.outfit === 'lba' || L.race === 'esmer' || L.longCoat) rig.robeLegs = true; // (one robe, or an Esmer's capsule, over both legs: a shorter stride)

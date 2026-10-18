@@ -56,18 +56,36 @@ COL = {
 HAIR_UP = (0.0, 1.0, 0.0)
 
 # ---- the body (groups 2 and 3: hips and torso), horizontal sections (y, half-width, front, back) in H, arms excluded.
-# Waist 0.644, bust 0.692, shoulders ±0.107 at 0.716–0.740; the A-line flare to ±0.134 at 0.428 (its full front softened
-# from 0.143 to 0.12–0.13 as before: at the original value it reads as a belly in our lighting).
-ZOE_BODY = [
+# SRC-2 (the user: "Zoé needs to be made thinner. She isn't pregnant any more; the LBA2 character was pregnant"): in LBA2
+# Zoé is expecting (Arthur, twelve years on, is their son). Body 26 carries it: a belly out to +0.144 at 0.555, the waist
+# at ±0.072, the bust ±0.103 / +0.078, the top flaring to ±0.134 at its hem (0.428). Twelve years later she is not: the
+# belly is gone (the front runs straight from the bust to the hem, 0.064-0.09), a natural waist (±0.068 at 0.620, the
+# back a little in), hips ±0.103 at 0.50, the bust a touch smaller; the top keeps a slight flare at its hem (±0.122) and
+# its layout (outfit_field), and the shoulders, neck and everything above 0.716 are the measured ones, unchanged.
+# The pregnant sections (SRC-1's) are kept below as ZOE_BODY_LBA2 for the record and the rollback.
+ZOE_BODY_LBA2 = [
     (0.404, 0.132, 0.118, -0.107), (0.428, 0.134, 0.122, -0.107), (0.452, 0.127, 0.127, -0.107), (0.476, 0.119, 0.131, -0.107),
     (0.500, 0.111, 0.118, -0.107), (0.524, 0.103, 0.115, -0.103), (0.548, 0.095, 0.11, -0.096), (0.572, 0.087, 0.104, -0.090),
     (0.596, 0.078, 0.096, -0.087), (0.620, 0.072, 0.086, -0.086), (0.644, 0.074, 0.070, -0.086), (0.668, 0.089, 0.073, -0.088),
     (0.692, 0.103, 0.078, -0.089), (0.716, 0.107, 0.069, -0.091), (0.740, 0.107, 0.050, -0.090), (0.764, 0.103, 0.030, -0.088),
     (0.788, 0.094, 0.012, -0.081), (0.806, 0.078, 0.0, -0.068), (0.818, 0.05, -0.008, -0.058), (0.826, 0.026, -0.012, -0.05),
 ]
-# each trouser leg: (y, centre x, radius across, front, back) — wide at the hip, ±0.054 at the knee, ±0.038 at the ankle
-ZOE_LEG = [(0.44, 0.06, 0.066, 0.11, -0.1), (0.404, 0.066, 0.066, 0.112, -0.1), (0.308, 0.065, 0.059, 0.095, -0.09), (0.212, 0.064, 0.052, 0.078, -0.077),
+ZOE_BODY = [
+    (0.404, 0.122, 0.090, -0.098), (0.428, 0.121, 0.088, -0.098), (0.452, 0.116, 0.086, -0.097), (0.476, 0.110, 0.084, -0.095),
+    (0.500, 0.103, 0.081, -0.093), (0.524, 0.096, 0.078, -0.090), (0.548, 0.088, 0.075, -0.086), (0.572, 0.080, 0.071, -0.082),
+    (0.596, 0.073, 0.067, -0.079), (0.620, 0.068, 0.064, -0.078), (0.644, 0.071, 0.064, -0.080), (0.668, 0.086, 0.069, -0.084),
+    (0.692, 0.099, 0.074, -0.087), (0.716, 0.105, 0.067, -0.090), (0.740, 0.107, 0.050, -0.090), (0.764, 0.103, 0.030, -0.088),
+    (0.788, 0.094, 0.012, -0.081), (0.806, 0.078, 0.0, -0.068), (0.818, 0.05, -0.008, -0.058), (0.826, 0.026, -0.012, -0.05),
+]
+if os.environ.get('ZOE_LBA2'):   # (ZOE_LBA2=1: the measured, pregnant figure, as SRC-1 built it)
+    ZOE_BODY = ZOE_BODY_LBA2
+# each trouser leg: (y, centre x, radius across, front, back) — ±0.054 at the knee, ±0.038 at the ankle; the thighs
+# slimmed with the body (SRC-2: front 0.112 → 0.09 at the hem, so the legs stay inside the narrower top)
+ZOE_LEG = [(0.44, 0.06, 0.062, 0.088, -0.085), (0.404, 0.064, 0.062, 0.09, -0.086), (0.308, 0.065, 0.056, 0.084, -0.082), (0.212, 0.064, 0.052, 0.078, -0.077),
            (0.116, 0.065, 0.045, 0.05, -0.065), (0.05, 0.065, 0.039, 0.044, -0.056)]
+if os.environ.get('ZOE_LBA2'):
+    ZOE_LEG = [(0.44, 0.06, 0.066, 0.11, -0.1), (0.404, 0.066, 0.066, 0.112, -0.1), (0.308, 0.065, 0.059, 0.095, -0.09), (0.212, 0.064, 0.052, 0.078, -0.077),
+               (0.116, 0.065, 0.045, 0.05, -0.065), (0.05, 0.065, 0.039, 0.044, -0.056)]
 # the shoes: long and pointed, z −0.054 … +0.107, ±0.038 wide; sections (z, half-width, height)
 ZOE_SHOE = [(-0.054, 0.03, 0.05), (-0.02, 0.036, 0.06), (0.03, 0.036, 0.05), (0.07, 0.026, 0.032), (0.107, 0.006, 0.01)]
 
