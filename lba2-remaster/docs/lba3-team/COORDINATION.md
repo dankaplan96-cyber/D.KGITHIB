@@ -43,3 +43,7 @@ Visual work needs runtime views; motion needs playback; performance needs declar
 Store concise evidence in the project's QA location and update persistent state with revision, finished work, blockers, and next exact step. At context/usage limits checkpoint; the kit cannot run after the session closes. Continue authorized unblocked tasks without asking the user to repeatedly say continue, but do not loop endlessly or silently waive blocked acceptance criteria.
 
 Final handoff: changes, checks, build, remaining issues, and next task. Full-game readiness and playtime require actual end-to-end evidence, not the number of agents or files.
+
+## Final release audit
+`lba3-final-release-auditor` runs last, on a frozen and identified candidate, before the game is called ready
+(rules: docs/lba3-production/PRODUCTION.md "Mandatory final audit").

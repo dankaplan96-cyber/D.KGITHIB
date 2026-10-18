@@ -79,3 +79,26 @@ No claim of zero bugs, guaranteed commercial quality, or automatic artistic succ
 ## Reporting
 
 During work give concise meaningful updates. At handoff report what changed, what was verified, remaining limitations, the current build, and the exact resume point. Detailed logs belong in the project; avoid repeatedly presenting the roadmap instead of implementing it.
+
+## Mandatory final audit (the user's Final Release Auditor pack)
+When all implementation agents have completed their assigned work, or before the main session calls the game
+ready / finished / release-ready, freeze and identify the final candidate (commit, version, build artifact) and
+explicitly invoke `lba3-final-release-auditor` (.claude/agents/). Worker completion or a green build is not game
+readiness, and the agent definition alone schedules nothing: the main session dispatches it.
+
+- The auditor inspects the current game feature by feature and plays the normal main path from New Game to the
+  ending by input, with separate coverage of optional content, branches, visuals, animation, audio, UI, controls,
+  combat, equipment, progression, saves, performance and packaging; every row PASS / FAIL / BLOCKED / NOT TESTED
+  with evidence; report at docs/release-audit/REPORT.md.
+- The coordinator does not change shared production files while the frozen candidate is under audit. Defects go
+  to the existing specialists as focused fixes; a new candidate is produced and the auditor re-runs the affected
+  regressions plus the end-to-end route where progression, saves or shared control changed.
+- Mandatory runtime tests that cannot run make the verdict VERIFICATION INCOMPLETE. No fabricated target-platform
+  (the user's Vega 8 laptop) or fresh-human-playtest evidence; the auditor never declares the game bug-free or
+  waives a failed criterion. No automatic publishing or distribution of the build.
+- Stay within tools and session limits: checkpoint when blocked rather than claim success or retry endlessly. A
+  later session resumes from the saved project state and applies the same rule.
+
+Status (2026-10-18): recorded. Remaining before the audit: block 3 (WORLD-SHAPE finishing; OPEN-2 and FIX-PUMP-N
+merging) and block 4 (VOICE-1 character voices, ANIM-DEATH, BUG-WALL camera inside a wall after the target,
+Baldino as a Grobo, ADV-2). The auditor is invoked when those are done.
