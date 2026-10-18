@@ -46,6 +46,8 @@ for (const q of QS) {
         const dt = 1 / 30; t += dt;
         route.drive(t, dt);
         const draw = i % 9 === 0;
+        // (drain the software GPU's queue first, so the timed render() is CPU submission, not waiting on it)
+        if (draw) { const gl = R.getContext(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4)); }
         G.perf.beginFrame(); G._renderMs = 0;
         G.frame(dt, draw);
         if (!draw) continue;

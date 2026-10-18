@@ -129,7 +129,7 @@ class Game {
     timed('townlife', () => buildTownLife(this.world.root, P, this.world));
     timed('citydress', () => buildCityDressing(this.world.root, P, this.world));
     this.env = new Environment(this.scene, this.terrain);
-    this.shadowCull = new ShadowCull(this.env.sunDir); // (casters whose shadow can't reach the view skip the shadow map)
+    this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
     this.renderer.setup(this.scene, this.camera);
     this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
     // the graphics preset follows the GPU on a first start (integrated GPUs: Low or Medium, see perf.js); settings
@@ -235,6 +235,7 @@ class Game {
     await nextPaint();
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
+    this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
     this.renderer.render();
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.perf.load = this.loadTimes;
@@ -1148,7 +1149,7 @@ class Game {
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
     this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
-    if (render && this.renderer.renderer.shadowMap.enabled) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
+    if (render) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
     if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0);
     if (this.state !== 'play') this.behMenu.show(false);
