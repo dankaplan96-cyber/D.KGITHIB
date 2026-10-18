@@ -288,7 +288,7 @@ export class HUD {
   advance() {
     const D = this.dialog;
     if (!this.talking) return;
-    if (D.shown < D.full.length) { D.shown = D.full.length; D.text.textContent = D.full; return; }
+    if (D.shown < D.full.length) { D.shown = D.full.length; D.text.textContent = D.full; this.game.audio.babble?.hush?.(); return; } // (the voice stops with the skipped text)
     D.i++;
     this.game.audio.play('select');
     if (D.i >= D.lines.length) {

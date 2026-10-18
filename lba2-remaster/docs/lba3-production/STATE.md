@@ -119,6 +119,15 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   he stands at never vanishes; behind one he is always in view or drawn by the silhouette. PERF-IGPU's open item done:
   town.js/island.js merges, Medium street 324 → 274. Evidence docs/lba3-visual/evidence/VP-10/.
 
+## Done after (VOICE-1; status REVIEW)
+- Character voices (the user: "the voices are too similar, and the gibberish isn't pleasant"): src/engine/voice.js rewritten. Each race has
+  its own colour and each of the 56 named speakers a fixed seed and own pitch, range, formants, roll-off, breath, nasality, rate, legato,
+  swing, contour and vibrato; a soft harmonic source through three vowel formants with soft attacks and releases, no saw/square; the same
+  line always gets the same melody. Two filter chains pooled per audio context (4 nodes a line after the first, was 108); the text skip
+  (hud.js) and a cinematic pause (cinematic.js) hush the voice. tests/voices.mjs (offline renders + in-game analyser), tools/voice-render.mjs
+  (WAV A/B and measurements), evidence docs/lba3-production/reviews/VOICE-1/, QA.md "Character voices (VOICE-1)".
+- Open: the voices by ear (pleasantness, recognisability) — nobody can listen here. With OPEN-2 merged, the opening's subtitle voices use
+  the same Babble API (start/chars/stop), unchanged. Baldino's voice already has a Grobo colour (PRODUCTION.md block 4: Baldino as a Grobo).
 ## Done after (SRC-2; status REVIEW)
 - **Baldino as in LBA2 (the user).** He is identified in the user's files with certainty: body 139, File3D 93.
   - Its scene objects give Twinsen the car part, the portable radio and the Proto-Pack news, and ask for gazogem for
