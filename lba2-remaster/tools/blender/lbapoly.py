@@ -27,6 +27,7 @@ def lerp(a, b, t):
 class Part:
     def __init__(self, name, color, weights, angle=45):
         self.name, self.color, self.weights, self.angle = name, color, weights, angle
+        self.normal = None   # (optional: one normal for every corner, e.g. a flat-shaded hair mass)
         self.v, self.f = [], []
 
     def add(self, verts, faces):
@@ -273,7 +274,7 @@ class Builder:
                     if b not in groups:
                         groups[b] = ob.vertex_groups.new(name=b)
                     groups[b].add([vi], x, 'REPLACE')
-            cn = corner_normals(rest, tris, part.angle)
+            cn = [[Vector(part.normal).normalized()] * 3 for _ in tris] if part.normal else corner_normals(rest, tris, part.angle)
             rgb = hexrgb(part.color)
             for t, ns in zip(tris, cn):
                 for i, n in zip(t, ns):

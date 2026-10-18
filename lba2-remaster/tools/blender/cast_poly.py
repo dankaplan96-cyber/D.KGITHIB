@@ -1250,7 +1250,9 @@ def build_any(n):
 
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
-names = [n for n in ALL if n != 'twinsen' and (not ONLY or n in ONLY)]
+# (Twinsen and Zoé have their own scripts: twinsen_poly.py, zoe_poly.py (SRC-1). build_zoe below is the earlier Zoé,
+# kept as the rollback: it is built only when named, `cast_poly.py <skel> <out> zoe`)
+names = [n for n in ALL if n != 'twinsen' and (n in ONLY if ONLY else n != 'zoe')]
 built = [build_any(n) for n in names]
 # (a build of only some characters goes to its own file, so it never replaces the whole cast's)
 blend = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'art', 'characters', 'cast_poly.blend' if not ONLY else 'cast_poly_' + '_'.join(ONLY) + '.blend')

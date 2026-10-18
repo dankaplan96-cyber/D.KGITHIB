@@ -499,3 +499,147 @@ Remaining:
 - Zoé's bun (`cast_poly.py`, ZOE_BUN) uses one unit for her head and her balls, so it does not have this mix-up.
   Its shading (pale highlights) is unchanged.
 - The `LOOKS.twinsen` comment in `characters.js` still says "no hair on the skull but a bun of three balls".
+
+## 15. Zoé from LBA2's own model (SRC-1)
+
+The user: the opening shows an "old" Zoé. The opening builds her with `createCharacter('zoe')`, our poly model from
+`cast_poly.py build_zoe`. Next to the original, that model read as an old woman for three reasons:
+- **Hair:** a pale cream bun (`#ecd79a`) with pale highlights read as white hair.
+- **Face:** her head was Twinsen's head sections narrowed. It was featureless: tiny lips, small white-and-green eyes,
+  no nose of her own. In the kitchen light it showed a chalky face.
+- **Outfit:** a deep heart-shaped neckline, front and back, which LBA2's Zoé does not have.
+
+The full inventory and the identification are in docs/lba3-team/SOURCE_INVENTORY.md. In short: BODY.HQR body 26 is
+the object in scene 0 (Twinsen's house) whose script talks through `LM_MESSAGE_ZOE` in the engine's Zoé colour
+(`COUL_ZOE` 4). That object speaks the game's first line.
+
+### Measured on body 26
+
+All values are fractions of H = 1238 units, the top of the skull. She is as tall as Twinsen (1239). Tool:
+`tools/lba-source/measure.py` / `contours.py`.
+
+- **Structure:** 23 groups, 177 points, 279 polygons (145 Gouraud, 128 dithered Gouraud, 4 flat, 2 solid), 3 spheres
+  and 12 lines. No textures. The body's collision box is ±0.134 × 0.996 × ±0.134.
+- **Head** (0.850–0.995, ±0.053):
+  - It is carried forward. The nose tip is at (0, 0.898, +0.069) and the back of the head at −0.108.
+  - The lips are a red crescent, corners up at (±0.037, 0.888), centre down to 0.860.
+  - The eyes are small dark slants (byte 181) at ±0.016–0.037, 0.925–0.936, under brown lids (byte 30).
+  - Brown also shades the nose's underside.
+  - The earrings are blue line triangles at ±0.053, 0.882–0.909.
+- **Neck:** ±0.021 at 0.807–0.85, with a blue line necklace to (0, 0.758, +0.037).
+- **Outfit** (red, byte 64 dithered), front:
+  - A shallow V: the point at (0, 0.726), its sides out to (±0.053, 0.753).
+  - Straps up their inner edge to the shoulder top at (±0.086, 0.812). The strap covers the outer shoulder.
+- **Outfit, back** (open, a halter):
+  - A strap rises up the spine from ±0.043 at 0.618 to a point at 0.726.
+  - There it forks into a band to each shoulder: lower edge (0, 0.726)–(±0.053, 0.779), upper edge (0, 0.779)–(±0.086, 0.812).
+  - Skin shows either side of the spine strap, between the band and the dress line at 0.618.
+- **Body:**
+  - Shoulders ±0.107 at 0.716–0.740.
+  - Bust ±0.103 at 0.692, front +0.078.
+  - Waist ±0.072 at 0.620.
+  - An A-line flare to ±0.134 at 0.428. Its front reaches +0.144 at 0.555; ours keeps the earlier softening, 0.110–0.131.
+  - Red trousers with legs at ±0.065 (radius 0.066 → 0.039), the knee at 0.216.
+  - Pointed green shoes (byte 128), z −0.054 … +0.107.
+- **Arms:** bare (skin byte 32, the same as Twinsen's). The shoulder joint is at (±0.107, 0.779), the elbow at
+  (±0.134, 0.602), the wrist at (±0.161, 0.484). The forearm narrows to a **pointed hand**, its tip at ±0.187,
+  0.403–0.431. There is no ball.
+- **Hair:** three spheres, which LBA2 draws as flat unlit discs, in **golden palette 106 `#e3af53`**. They are
+  r 0.052 / 0.037 / 0.026 at (1.001, −0.135), (0.974, −0.188), (0.937, −0.204), each on its own bun group.
+
+### What changed
+
+The new script is `tools/blender/zoe_poly.py`, which writes `assets/poly/zoe.json` and
+`art/characters/zoe/zoe_poly.blend`. The body is built on the same Zoé skeleton, unchanged, so every rig.js clip
+drives it.
+
+- **Her own head:** a loft of 14 measured half-contours (0.862–0.990), with the chin and crown capped.
+  - Lips, lids and eyes are laid onto the face. The lids are flatter than the original's steep slant and stop at the eye
+    instead of running to the bridge: in our light the slanted pair read as a frown (artistic change). Each is a small grid ray-cast onto the head, so it follows the curve
+    and does not cut into it.
+  - The lips have one even normal so the lower lip does not go near-black.
+  - The face's lower half has its normals bent up a little, because our ramp runs to 12 % where the original's skin
+    ramp stops at a mid brown.
+  - Earrings are thin triangle frames.
+- **Outfit:** one loft of the body's sections (32 × 31 rings). Each quad is cut along a skin/red boundary built from
+  the landmarks above (`outfit_field`), giving a shallow V in front, straps carried over the shoulders' tops, and the open
+  back with the spine strap and the forked band.
+- **Necklace:** a thin tube laid on the skin.
+- **Arms:** bare and thin, ending in a short flattened mitten with a round end, where the original's forearm narrows to a
+  long point (about 0.14 m past the wrist). In the opening's close-ups a point read as a spike (artistic change).
+- **Hair:** one golden mass through the three measured spheres, built like Twinsen's VP-1b tuft and skinned head →
+  tail0..2. Its normals point straight up, so LbaMaterial gives one constant shade from every side, as the original's
+  discs: `#e3af6b` on screen against the original's `#e3af53`.
+- **Colours:** the original's ramps at shade ≈ 9, as for Twinsen: red `#b32b27`, shoes `#3f7b47`, lids `#8f634b`,
+  eyes `#2f474b`, jewellery `#1b4b67`. The LOOKS entry's colours were updated to match, for the sculpt fallback.
+- **Skin (an artistic change):** `#d9a679`, a little warmer than Twinsen's `#e2bc90`, although both originals use skin
+  byte 32. In the opening's kitchen close-up our ramp's pale end turned her face and shoulders to chalk. That was one of
+  the "old" cues.
+- **Counts:** 2,908 → 4,436 triangles (4,432 skinned and 4 in the two eye meshes), and 5 → 6 vertex colours, still in one material.
+- **Unchanged:**
+  - the skeleton, the bone order and the look's proportions;
+  - the trousers, the shoes' shape and the A-line sections (the measured values the earlier build used).
+- **Not built:** the original's brown polygon under the nose. Our ramp already shades the nose's underside, and the
+  extra brown read as a moustache.
+- **Twelve years on:** no change. STORY_BIBLE names none for her look, so this is a faithful import with no costume or
+  age adaptation.
+
+Rollback: `git checkout c0264c8 -- lba2-remaster/assets/poly/zoe.json`. Alternatively,
+`python tools/blender/cast_poly.py art/characters/skeletons.json assets/poly zoe` runs the earlier `build_zoe`. A
+whole-cast `cast_poly.py` run now skips Zoé unless she is named, so it cannot overwrite this model.
+
+### For the animator: her own clips (ANIM.HQR, File3D 15)
+
+No clip is imported. rig.js drives her with the shared procedural set, as before. The notes below are for retargeting.
+Angles are in degrees (alpha + = back, as in LBA2_MEASUREMENTS.md).
+
+- **Walk (208).** Four keys of 300 ms make a **1.2 s cycle**. The root steps 189/133/189/133 units, so **0.52 H per
+  cycle, 0.43 H/s**: a stroll at less than half Twinsen's 0.97 H/s.
+  - Thighs swing ±21° (Twinsen −46/+25). The knee bends to 51° on the swing.
+  - The pelvis sways through the torso: torso twist ±19°, with the head turned against it ±13–20°.
+  - The head stays pitched down 14° throughout.
+  - Her arms barely swing (−8/+14°), and the right forearm is held bent −23°.
+  - Bob: +6/−20 units.
+  - Retarget: give her walk its own keys (smaller stride, more twist), or at least scale WALK_KEYS' thigh amplitude
+    to ~0.5 and raise twist. Playable Zoé moves at the hero's speed, so either the stride grows (foot sliding) or her
+    walk speed should be lower. That decision belongs to the locomotion specialist.
+- **Idle (207).** Six keys of 600 ms (3 s; loop from key 2).
+  - The **left hand rests on her hip**: upper arm −20 / −37 / +4, forearm −54 with roll −27.
+  - The right arm is bent loosely.
+  - The legs are turned out ±20° (beta).
+  - The torso and head nod (−3.5° and 13°) once per loop.
+  - Ours idles with both arms down.
+- **Talk.** There is no generic talk anim. Her scripted gestures are:
+  - 211: talking with an arm raised and opened, 1.6 s;
+  - 216: an arm out to the side, the head shaking, 4.2 s;
+  - 214: pointing, held;
+  - 210: walks in, then stands with both hands on her hips and shakes her head (1.6 s loop);
+  - 218: both hands on hips, swaying, 7.2 s;
+  - 219: arms up, 3 s;
+  - 215: bent over, working with both hands, 4.7 s;
+  - 209: hit, 0.5 s; 212/213: fall and land.
+  - 217 is the walk with the left arm held, for the body that carries something (27).
+- **Skeleton against the original:**
+  - Our hips are at ±0.051 H (original ±0.081).
+  - Our knee is at 0.251 (0.216).
+  - Our shoulder is at 0.754 (0.779), our elbow at 0.590 (0.602).
+  - Our hand bone is at 0.438, where the original's wrist is at 0.484, so our arm is ~0.03 H longer to the wrist.
+  - Our head pivot is at 0.836 (0.823).
+  - The bun bones tail0..2 sit 0.04–0.07 H above and behind the original's bun groups. The follow-through therefore
+    swings the bun from a higher pivot.
+  - None of this needs a rig.js change for the model to work. Her own clips would need these offsets.
+- **Collision:** her NPC collider is the shared 0.45 m. The original's body box is ±0.134 H, about ±0.26 m.
+
+### Evidence (docs/lba3-visual/evidence/SRC-1/)
+
+The sheets show only our renders. The study images with the original beside ours are in the scratch space
+(`$S/src1/cmp/`) and are not committed.
+
+- `zoe-body-before-after.jpg`: front, ¾, side, back and the game camera, for the bind pose, idle, walk, run and talk.
+- `zoe-head-before-after.jpg`: the head and face in idle and talk.
+- `zoe-grey-before-after.jpg`: the shape only.
+- `zoe-ingame-opening-{46,52,63,71}s.jpg`: the opening at four of her lines, the same frames before and after.
+- `zoe-ingame-crops-before-after.jpg`: playable Zoé from the play camera (the body swap her playable parts use),
+  walking in the house, then outdoors idle, walking, running and walking away.
+- `zoe-ingame-play-walk.jpg`: the full play frame.
+- Made by `char-lookdev.html`, `lookdev-shot.mjs`, `ingame-shots.mjs` and `make-sheets.py` in that folder.
