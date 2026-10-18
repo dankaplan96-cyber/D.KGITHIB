@@ -2,7 +2,7 @@
 // projectiles, pickups and particles.
 import * as THREE from 'three';
 import { createHumanoid, createBlobShadow, placeBlobShadow } from '../engine/rig.js';
-import { createCharacter, addSilhouette, writeBodyStencil } from './characters.js';
+import { createCharacter, addSilhouette, writeBodyStencil, LOOKS } from './characters.js';
 import { TrackRunner } from '../engine/scripts.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 import { HeroCombat } from './combat.js';
@@ -535,7 +535,8 @@ export class Hero extends Actor {
 // ------------------------------------------------------------------ NPC
 export class NPC extends Actor {
   constructor(game, def) {
-    super(game, def.char ? createCharacter(def.char) : createHumanoid(def.look), def.x, def.z, 0.45);
+    // (the shared 0.45 m, or a look's own: Baldino's broad Grobo body, 0.6: SRC-2)
+    super(game, def.char ? createCharacter(def.char) : createHumanoid(def.look), def.x, def.z, (def.char && LOOKS[def.char]?.radius) || 0.45);
     this.def = def;
     this.name = def.name;
     this.track = def.track ? new TrackRunner(def.track) : null;

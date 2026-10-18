@@ -41,7 +41,7 @@ COL = {
     'tan': '#bd914b',    # membranes, the underside of neck, belly and tail
     'brown': '#6a4529',  # saddle and bridle
     'eye': '#f2b850', 'pupil': '#2a1a0c',
-    'muzzle': '#86ab9c', # twelve years on: a greyed muzzle (our touch)
+    'muzzle': '#5f9a88', # twelve years on: a greyed muzzle (our touch; SRC-2: subtler, so the tip no longer reads as a pale flat cap)
     'claw': '#1f5e50',
 }
 
@@ -229,7 +229,7 @@ def head_col(i, t):
 
 
 HP = 0.62   # the head's sections are boxier than the body's: flat cheeks, a flat brow, a square muzzle
-head_verts = loft(HEAD_ST, 12, head_col, lambda i: {'head': 1.0}, 'head', p=HP, dome=22, angle=62)
+head_verts = loft(HEAD_ST, 12, head_col, lambda i: {'head': 1.0}, 'head', p=HP, dome=40, angle=62)   # (SRC-2: a rounder tip, dome 22 → 40)
 
 
 def head_surface(s, t, out=0.0):

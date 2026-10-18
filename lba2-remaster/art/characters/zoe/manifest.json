@@ -96,13 +96,14 @@
   "short round mittens instead of the original's long pointed hands (~0.14 m)",
   "flatter lids that stop at the eye (the original's slant read as a frown)",
   "no brown under the nose",
-  "full front softened 0.110-0.131 H vs 0.144",
-  "lips: one even normal; face normals bent up"
+  "lips: one even normal; face normals bent up",
+  "twelve years on: not pregnant (see twelve_years_later)"
  ],
- "twelve_years_later": "none (STORY_BIBLE names no change to her look)",
+ "twelve_years_later": "SRC-2 (the user: 'she isn't pregnant any more'): the measured body 26 is pregnant (belly +0.144 at 0.555, waist ±0.072, bust ±0.103/+0.078, top flaring to ±0.134); the build now has no belly (front 0.064-0.09 from the bust to the hem), a natural waist ±0.068 at 0.620, hips ±0.103, the bust a touch smaller, the top's hem flare ±0.122, thighs slimmed to stay inside it; outfit layout, colours, head, hair, limbs, height and skeleton unchanged. The measured sections stay in zoe_poly.py as ZOE_BODY_LBA2 (ZOE_LBA2=1 builds them).",
  "rollback": [
   "restore assets/poly/zoe.json from commit c0264c8",
-  "or: python tools/blender/cast_poly.py art/characters/skeletons.json assets/poly zoe (the earlier build_zoe)"
+  "or: python tools/blender/cast_poly.py art/characters/skeletons.json assets/poly zoe (the earlier build_zoe)",
+  "SRC-2's slimming: ZOE_LBA2=1 python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly (SRC-1's figure), or git checkout 292a775 -- lba2-remaster/assets/poly/zoe.json"
  ],
  "limitations": [
   "the skeleton's pivots differ from the original's (docs/character-review.md §15)",

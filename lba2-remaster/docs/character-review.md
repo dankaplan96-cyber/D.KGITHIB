@@ -643,3 +643,219 @@ The sheets show only our renders. The study images with the original beside ours
   walking in the house, then outdoors idle, walking, running and walking away.
 - `zoe-ingame-play-walk.jpg`: the full play frame.
 - Made by `char-lookdev.html`, `lookdev-shot.mjs`, `ingame-shots.mjs` and `make-sheets.py` in that folder.
+
+## 16. Baldino from LBA2's own model (SRC-2)
+
+Ours was a Quetch old man (bald, white moustache, leather apron over a green smock: `cast_poly.py build`). LBA2's
+Baldino is a Grobo, and docs/TWELVE_YEARS.md already called him "an old Grobo inventor". The race was wrong.
+
+### Identity (the user's LBA2 files; numbers and ids only in the repository)
+
+- **Body 139** is the only body of **File3D 93** (generic body 0). Scenes place it three times: 38 (Desert Island),
+  48 (Citadel) and 138 (Celebration).
+- Its scene objects speak his story. In scene 38 they hand Twinsen the part Zoé asked Baldino to make for the car
+  (TEXT bank 10 id 204; Zoé's own line, bank 6 id 32, names Baldino), then the portable radio (ids 735, 208; the
+  radio's inventory text, bank 4 id 226, says it reaches Baldino and Zoé), and mention the Proto-Pack (id 208; bank 4
+  id 212 says Jerome Baldino designed it). In scene 138 they ask for gazogem to repair "our vessel" and upgrade the
+  Proto-Pack (bank 14 ids 190–195; bank 4 id 248 credits the upgrade to Jerome Baldino).
+- **Verdict: certain.** SRC-1 had "probable (strong)" from the talk colour, 13, but that colour alone is shared by 24
+  bodies.
+- Tool: `tools/lba-source/inventory.py` (scene and File3D use), plus a text look-up kept in the scratch space (it prints
+  the user's dialogue, so it is not committed).
+
+### Measured on body 139
+
+Fractions of H = 1238 units, the cast's common unit (Twinsen's skull top = 2.006 m). The tools were
+`tools/lba-source/measure.py --body 139 --clips 715,...,728` and `contours.py --groups 2,3,4`.
+
+- **Structure:** 21 groups, 164 points, 225 polygons (122 Gouraud, 83 dithered, 12 solid, 8 transparent), 4 spheres,
+  1 line, no textures.
+  - **Height:** 1,099 units, 0.888 H = **1.78 m**. Ours before was 1.76 m, so the height stays the same.
+  - **Collision:** File3D 93's box is ±250 × 1,160 units.
+- **Proportions:** short and broad. The head takes up the top 40% of his height.
+  - **Legs:** the hips' joints sit at (±0.162, 0.215), the knee at 0.107. The legs are square stumps 0.107 wide down
+    to the ground, the same brown as the trousers.
+  - **Trousers:** a wide seat, ring at y 0.215: ±0.258, front 0.253, back −0.204. The crotch is at 0.162 and the belt
+    line at 0.269.
+  - **Smock (olive, byte 112):** a pear, from ±0.247 at the hem (0.27) to ±0.12 under the head (0.53). The front runs
+    0.266 → 0.158.
+  - **Neckline:** low and square. It is level at y 0.431 (±0.107) and opens to ±0.134 at the shoulders (0.538). The
+    grey chest shows through it.
+- **Arms:** thin, hanging in a 22° A away from the pear.
+  - Joints: shoulder (±0.162, 0.484, 0.053), elbow (±0.269, 0.322), wrist (±0.296, 0.161).
+  - Green sleeves, radius 0.067 → 0.054. Grey forearms of three triangles.
+  - Small round hands (spheres, r 0.027, the skin's ramp).
+- **Head (group 4, pivot (0, 0.700, 0.053)):** spans y 0.538–0.861.
+  - Width: ±0.188 at the jowls, ±0.162 at the cheeks.
+  - The face is flat and upright (z 0.199, y 0.70–0.79) and slopes back to the crown at (0, 0.861, −0.016). The back of
+    the head is at −0.15.
+  - **Eyes:** small cyan spheres (r 0.013, byte 175) at (±0.118, 0.732, 0.150), set back behind the goggles.
+- **Goggles:** worn over the eyes, not pushed up as ours were.
+  - Hexagonal transparent lenses (byte 192) at x 0.086–0.162, y 0.700–0.780, on the face's plane.
+  - A strap (byte 160) across the brow at 0.780–0.796, round to the head's sides.
+- **Trunk (groups 14–16, pivots (0, 0.700, 0.322), (0, 0.485, 0.484), (0, 0.377, 0.484)):** ±0.053 wide. It curls out
+  to z 0.48 and down to the belt line (tip y 0.27).
+- **Mouth:** a teal triangle (byte 144) under the trunk's root, (±0.081, 0.592)–(0, 0.558).
+- **Ears (groups 17–20):** great flat kites.
+  - The root edge runs (±0.175, 0.645–0.807). The top tip is at (±0.242, 0.888), the long lower tip at (±0.296, 0.538).
+  - They face forward in the rest pose. His clips hold them 15–46° back.
+- **Collar (byte 60, solid white #bbbbb7):** stands up round the back of the head as a chevron.
+  - Upper edge: (±0.156, 0.641) → (0, 0.753).
+  - Lower edge: from the shoulders (±0.134, 0.538) → (0, 0.673).
+  - There is grey neck below it.
+- **Tail:** a line, (0, 0.221, −0.215) → (0, 0.188, −0.285).
+- **Colours (ramps):** grey-violet 13 (skin), olive 7, brown 1, white 3, teal 10 (strap), blue 12 (lenses), teal 9 (mouth).
+
+### His clips (ANIM.HQR, File3D 93)
+
+- **Walk (717):** a 260 ms start key, then four keys of 200 ms, so a **0.8 s cycle**.
+  - The root steps 200 units a key: 800 units = 0.65 H = **1.30 m per cycle, 1.62 m/s**.
+  - Thighs +9/−59°, knee to 81°, torso twist ±11° with the head against it ±15–18°.
+  - Arms swing −62/+50°, the trunk sways ±22–27°, the lower ears flap ±20–35°. Bob −33/+20 units.
+- **Idle (715):** 400/600/600 ms keys, a **1.6 s** loop.
+  - The torso breathes +5.6/−7°.
+  - The ears swing from 46°/−38° to 32°/−16°.
+  - The trunk is held curled (−9°, +11°).
+- **Talk (718, PARLE):** eight keys of 400 ms, a **3.2 s** loop.
+  - Keys 0–3: fists on the hips (upper arms back 29° and out 41°, forearms folded 91°), the lower ears flapping 51°/32°
+    on keys 1 and 3.
+  - Key 4: arms down.
+  - Key 5: both arms flung out 69° and forward 53°.
+  - Keys 6–7: both forward 47°, the head nodding 12° then −18°.
+- **Others:** 719 hit (1 key), 720 shock, 721 strike, and the scripted 716 (6.7 s: he looks up and away with the left
+  arm raised and the trunk curled up 82–109°; scene 38 has him at his telescope), 722–727 (short gestures; 726 a hop),
+  728 (a walk with one arm raised).
+
+### What changed
+
+- **His look (`src/game/characters.js` LOOKS.baldino):** a Grobo on his own skeleton, set from the original's joints.
+  - New look keys (`legLen`, `legX`, `torsoLen`, `shZ` and the existing knobs): hip joints at ±0.32 m and 0.43 m, knee
+    at 0.22, shoulders ±0.325 at 0.97, head pivot 1.40 m (0.106 forward), 1.78 m to the top. `height` is 1, so the
+    skeleton is in metres.
+  - **Extra bones:** `earL`/`earR` on the head (at the ear's root) and a three-bone trunk (`trunk0..2`, at the original's
+    trunk pivots). Only his look has them, so no other character's skeleton or model changes. The skeleton file
+    (`art/characters/skeletons.json`) was regenerated for him alone.
+  - The look's colours were updated to match, for the sculpt fallback.
+- **His model (`tools/blender/baldino_poly.py` → `assets/poly/baldino.json`, `art/characters/baldino/baldino_poly.blend`):**
+  our mesh, built from the numbers above.
+  - **Body:** one loft from the trousers' seat to under the head, its quads cut into brown trousers, grey chest and
+    green smock along the measured belt line and neckline (Zoé's split loft).
+  - **Legs and arms:** square leg stumps. The thin arms (green sleeve, grey forearm, a round grey hand) follow his arm
+    bones; the rig's arm spread (0.3 rad) gives the original's A.
+  - **Head:** a loft of eleven measured rings, the trunk as a tapering tube along its measured centre line (weighted
+    head → trunk0 → trunk1 → trunk2), and the mouth laid on the face.
+  - **Ears:** flat kites turned back 32° on their roots (the clips' rest), weighted to the ear bones.
+  - **Goggles:** hexagonal lenses standing a little proud of the face, the strap across the brow, and the eyes as small
+    bright dots just in front of the glass (so they blink and read).
+  - **Collar and tail:** the white chevron collar drawn flat with up normals, as the original's solid polygon, and the
+    little tail.
+  - **Normals:** the downward faces of the trunk and lower face have their normals bent up a little (as Zoé's lower
+    face), since our ramp runs to near-black where the original's grey ramp stops at a dark mauve.
+  - **Counts:** 1,982 → 4,805 triangles, 7 vertex colours, one material (plus the two eye meshes).
+- **His motion (`src/engine/rig.js`):**
+  - **Walk:** the cycle length is his own, 1.3 m (`walkCycle`). The shared walk's 0.78 body heights assume a pelvis at
+    46% of the height; his legs are a quarter of it.
+  - **Idle:** rocks on his 1.6 s.
+  - **Talk:** his talk is ANIM 718's loop read onto our joints (`BALDINO_TALK`): fists on the hips, arms wide, arms
+    forward with a nod, 3.2 s. The other characters keep the random talk gestures.
+  - **Ears:** they waft at rest, flap twice in each talk loop and swing with every step.
+  - **Trunk:** it sways side to side with the walk, lagging down its length, and leans with the body.
+  - The original's curves are not imported: these are our keys at his measured times and angles. Locomotion (his
+    walking speed) is not changed: he walks nowhere today.
+- **Collision (`src/game/actors.js`):** his soft-contact radius is 0.6 m (LOOKS.baldino.radius; the shared 0.45 m
+  stays for everyone else, and his blob shadow grows with it).
+  - With Twinsen's 0.4 m, the centres stay ≥ 1.0 m apart. His pear is ±0.5 m wide, and the trunk reaches 0.9–1.0 m
+    forward at hip height, so it can still brush Twinsen's front when he presses straight into him.
+  - The contact is the soft one (VP-2): it never blocks a door or a passage.
+  - His places (the workshop, the council chamber, Zeelich's street spot) are fixed, and he walks nowhere.
+- **Not a model change:** `tools/blender/cast_poly.py` now skips Baldino (like Zoé) unless named, so a whole-cast build
+  can't replace him with a generic Grobo.
+
+### Twelve years on, and what is not faithful
+
+- **Twelve years on:** no change of look. STORY_BIBLE names none for him, and the original is already an old inventor.
+- **Artistic changes:**
+  - The lenses are opaque blue (the original's are transparent), with the eyes drawn on the glass.
+  - The hands are the skin's grey (the study renderer draws the original's hand spheres dark; LBA2 shades them on the
+    skin ramp).
+  - The head is smoother and rounder than the original's facets.
+  - The trunk is a round tube.
+  - The ears have a little thickness.
+- **Not built:** his held object (group 13 has no polygons) and the lower ears' own joints (groups 19/20). Our ear is one
+  piece swinging on one bone.
+- **Rollback:** `git checkout 292a775 -- lba2-remaster/src/game/characters.js lba2-remaster/art/characters/skeletons.json
+  lba2-remaster/assets/poly/baldino.json lba2-remaster/src/engine/rig.js lba2-remaster/src/game/actors.js`. The old
+  model needs the old look and skeleton, so restore them together.
+
+### Where he appears, checked in the game
+
+- Chapter 3: the workshop (TY-2's room, The Test Pair).
+- Chapter 9: at the council (after the hearing, by the dais).
+- Chapter 10: the workshop, the network briefing and EQ-1's hop-pack peg by the door.
+- Chapter 2: lines only, when he is present.
+- Chapter 1: a radio voice only, so no model.
+- The opening: absent.
+
+### Evidence (docs/lba3-visual/evidence/SRC-2/; our renders only)
+
+- `baldino-{body,head,grey}-before-after.jpg`: front, ¾, side, back and the game camera for bind, idle, walk and talk;
+  the head; the shape only.
+- `baldino-talk-turn.jpg`: his talk loop's three gestures, idle, turn and listen.
+- `baldino-ingame-*.jpg`: the same frames before and after.
+  - Chapter 3 workshop: entering, in front of him with the Talk prompt, the first line.
+  - Chapter 9 council, near him with the prompt.
+  - Chapter 10: the peg with the Take prompt, and the peg's lines.
+  - `baldino-ingame-crops-before-after.jpg`: the crops round him.
+- Made by `char-lookdev.html`, `lookdev-shot.mjs`, `ingame-shots.mjs` and `make-sheets.py` (the before frames from the
+  base commit's tree, served separately). The study images with the original beside ours stay in the scratch space.
+
+### The Dino-Fly's doze, again (REV-V-1 D1/D2, after CH-DF-FIX)
+
+- **D1, the folded wings.** CH-DF-FIX laid them along the flank, but in pleats that still stood off it as tan boards.
+  - Now each wing folds as a resting flier's: the arm back along the flank, the forearm forward over it, the hand back
+    again.
+  - The forearm's segment is turned over, so its membrane hangs down like the others instead of standing up.
+  - Every membrane panel lies in the flank's slope, its back band bent in under the belly on its fold line. The folded
+    wing hugs the body: a teal ridge of bones along the flank, the tan membrane and its scallops below.
+  - The angles are solved from target directions: `evidence/SRC-2/dinofly-fold.py` prints the DOZE rows, and the
+    command is in `src/game/dinofly.js`.
+  - LBA2's lying clips (831/836) fold them low on the back. Ours lie along the flank, where the play camera sees them.
+  - The stretch still unfolds cleanly from the new fold (slerped per bone).
+- **D2, the look.** Seen from the play camera behind Twinsen, the head pointed straight at him and the neck
+  foreshortened into a tube ending in the muzzle's round cap.
+  - He now regards Twinsen with one eye: the head turns 0.55 rad short of him, on the side Twinsen is on, with
+    hysteresis. It is also bowed 0.12 rad more, so the head's length and top show.
+  - The greyed muzzle is subtler (#86ab9c → #5f9a88) and its tip rounder (dome 22 → 40 units), so it no longer reads as
+    a pale flat cap.
+  - The feet were already domed in CH-DF-FIX.
+- **Evidence:**
+  - `dinofly-ingame-before-after.jpg`: doze and look from the play camera, S/N/E/W at 5 m.
+  - `dinofly-close-{doze,look,grey}-before-after.jpg`: the lookdev views.
+  - Made by `dinofly-ingame.mjs` (CH-DF-FIX's, copied) and CH-DF-FIX's `dinofly-lookdev.html`.
+
+### Zoé twelve years on: no longer expecting (SRC-2, the user)
+
+The user: "Zoé needs to be made thinner. She isn't pregnant any more; the LBA2 character was pregnant." In LBA2 Zoé is
+expecting, and twelve years later Arthur is their son. SRC-1 rebuilt her from body 26's measurements, so the
+pregnancy came with them:
+
+| | before (SRC-1) | now (SRC-2) |
+|---|---|---|
+| Belly | the front out to 0.11–0.131 between 0.45 and 0.6 (the original's own reach is 0.144 at 0.555) | gone: the front runs straight down from the bust, 0.064–0.09 |
+| Waist (0.620) | ±0.072 | ±0.068, the back a little in |
+| Hips (0.50) | ±0.111 | ±0.103 |
+| Bust (0.692) | ±0.103 / +0.078 | ±0.099 / +0.074 |
+| Top's hem flare (0.404–0.428) | ±0.132–0.134 | ±0.121–0.122 |
+| Thighs | front 0.112 at the hem | 0.09, so they stay inside the narrower top |
+
+- **Unchanged:** the outfit's layout (`outfit_field`: the V, the straps, the open back), the colours, the head, the
+  hair, the arms, the shoulders and everything above 0.716, the legs from the knee down, her height and the skeleton.
+- **Script:** `tools/blender/zoe_poly.py`. `ZOE_BODY` holds the new figure. The measured, pregnant sections stay in
+  the script as `ZOE_BODY_LBA2`, and `ZOE_LBA2=1 python tools/blender/zoe_poly.py …` builds SRC-1's figure again.
+- **Counts:** 4,434 triangles.
+- This is a twelve-years-later change, not a faithful import: SOURCE_INVENTORY §5 and `art/characters/zoe/manifest.json`
+  record it.
+- **Checked:** in the opening (the same four frames as SRC-1), at home, and as the player (the body swap her playable
+  parts use).
+- **Evidence:** `zoe-slim-{body,grey}-before-after.jpg`, `zoe-slim-ingame-opening-*.jpg` and
+  `zoe-slim-ingame-crops-before-after.jpg` in docs/lba3-visual/evidence/SRC-2/.

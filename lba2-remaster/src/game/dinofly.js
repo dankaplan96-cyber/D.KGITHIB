@@ -33,14 +33,16 @@ const DOZE = {   // lying on the belly, the tail and the neck curled round to hi
   tail0: [-14, -16, 0], tail1: [-4, -24, 0], tail2: [2, -30, 0],
   neck0: [24, 22, 0], neck1: [22, 22, 0], neck2: [8, 22, 0], head: [-40, 10, 8],
   thighL: [40, 0, 8], shinL: [-92, 0, 0], footL: [52, 0, -6],
-  // the wings folded as a resting flier folds them, laid along the flank: the upper arm back along the top of the
-  // flank, the forearm forward over it (the wrist by the shoulder), the hand back again toward the tail; the
-  // membrane hangs in overlapping pleats below the bones with the scalloped edge low on the flank. (Solved from
-  // target directions in the body's frame: the three bones lie as one ridge just under the back line; the
-  // membrane hangs 37° out from the flank; its fold lines turn 80°/65°/45° so the back half of each
-  // panel tucks in under the front half, the scalloped edge against the lower flank, clear of the ground.)
-  wing0L: [-163.7, -67.4, 52], wing1L: [177.7, -179.5, -13.3], wing2L: [177.6, 108.2, 2.9],
-  mem0L: [79.9, 6.3, 7.5], mem1L: [-64.4, 7.3, -11.6], mem2L: [29.8, -9.7, -35.4],
+  // the wings folded along the flanks as a resting flier folds them (SRC-2, REV-V-1 D1; before: the CH-DF-FIX pleats,
+  // which still stood off the flank as boards): the arm back along the flank, the forearm forward over it (turned
+  // over, so its membrane hangs down too), the hand back again; each membrane panel lies in the flank's slope, its
+  // trailing band bent in on the fold line under the belly, so the folded wing hugs the body like a cloak: a teal
+  // ridge of bones along the flank with the tan membrane and its scallops below. (Solved from target directions in
+  // the body's frame: docs/lba3-visual/evidence/SRC-2/dinofly-fold.py --back 0.1,-0.12,-1 --fwd 0.06,0.06,1
+  // --hand 0.1,-0.1,-1 --slope 0.97,0.25,0 --droop 65 --tuck --spread 3.) LBA2's own lying clips (ANIM 831/836)
+  // fold the wing low on the back; ours lies a little lower, along the flank, where the play camera sees it.
+  wing0L: [-165.8, -33.9, 74.6], wing1L: [172.9, -149.1, -4.4], wing2L: [-177.9, 109.0, 7.4],
+  mem0L: [64.8, 4.3, 6.8], mem1L: [-64.4, 7.3, -11.6], mem2L: [50.9, -23.9, -47.9],
 };
 // the neck raised in an S (the gaze adds its turn on top): the base steep, the middle upright with a slight lean to
 // his left, the top arched forward and back to his right, the head bowed a little like a horse looking down at
@@ -120,7 +122,7 @@ function quat(q, a, mirror) { return q.setFromEuler(_e.set(a[0] * D, (mirror ? -
 // per wing bone { wing0, wing1, wing2, body } so the shoulder leads and the hand follows), plus the gaze. The
 // blends are quaternion slerps: the folded wing turns through large angles on three axes, which an Euler mix
 // would swing through the body.
-function pose(M, alert, open, yaw, pitch, br) {
+function pose(M, alert, open, yaw, pitch, br, eye = 0) {
   const B = M.bones;
   const ok = (n) => (typeof open === 'number' ? open : (open[n.replace(/[LR]$/, '')] ?? open.body ?? 0));
   const names = new Set([...Object.keys(DOZE), ...Object.keys(ALERT), ...Object.keys(OPEN)]);
@@ -139,6 +141,10 @@ function pose(M, alert, open, yaw, pitch, br) {
   for (const [n, k] of Object.entries(GAZE)) if (B[n]) B[n].quaternion.multiply(_qg.setFromAxisAngle(_ay, yaw * k));
   // his eyes are on the sides of the head: he regards Twinsen with one eye, the head tilted toward him
   B.head.quaternion.multiply(_qg.setFromAxisAngle(_az, -yaw * GAZE.tilt));
+  // (SRC-2, REV-V-1 D2) and he turns the head a little past or short of him so one eye — and the head's length — is
+  // toward him: looked at straight on (from the play camera behind Twinsen) the neck and head foreshortened into a
+  // teal tube ending in the muzzle's round cap
+  if (eye) B.head.quaternion.premultiply(_qg.setFromAxisAngle(_ay, eye));
   B.head.quaternion.premultiply(_qg.setFromAxisAngle(_ax, pitch));
   B.neck2.quaternion.premultiply(_qg.setFromAxisAngle(_ax, pitch * 0.4));
   // lying on the belly; the breath lifts the back a little
@@ -186,7 +192,7 @@ export function buildDinoFly(scene, W, x, z, ry0, opts = {}) {
   W.physics.add({ type: 'cyl', x: tc.x, z: tc.z, r: 0.5, top: y + 0.6, noStand: true });
 
   // state: breathing, looking at Twinsen when he's near, a wing stretch now and then, a nuzzle when talked to
-  const S = { t: 0, stretchT: 0, nextStretch: 9, nuzzleT: 0, yaw: 0, pitch: 0, alert: 0, lid: 0.3, blinkT: 3, talks: 0 };
+  const S = { t: 0, stretchT: 0, nextStretch: 9, nuzzleT: 0, yaw: 0, pitch: 0, alert: 0, lid: 0.3, blinkT: 3, talks: 0, eye: 0, side: 1 };
   root.userData.state = S;
   W.updaters.push((dt, tt, hero) => {
     S.t += dt;
@@ -201,12 +207,15 @@ export function buildDinoFly(scene, W, x, z, ry0, opts = {}) {
       if (d < 9) {
         wantAlert = 1;
         wantYaw = clamp(angleDiff(ry, Math.atan2(h.pos.x - wx.x, h.pos.z - wx.z)), -1.4, 1.4);
-        wantPitch = clamp(-Math.atan2(h.pos.y + 1.3 - (wx.y + 0.6), d) * 0.6, -0.35, 0.35);
+        wantPitch = clamp(-Math.atan2(h.pos.y + 1.3 - (wx.y + 0.6), d) * 0.6, -0.35, 0.35) + 0.12;   // (a little bowed: the head's top shows)
+        // the eye he regards Twinsen with: the side Twinsen is on (kept until he is well over to the other side)
+        if (wantYaw > 0.25) S.side = 1; else if (wantYaw < -0.25) S.side = -1;
       }
     }
     if (S.nuzzleT > 0) { S.nuzzleT -= dt; wantPitch = 0.3 + Math.sin(S.nuzzleT * 9) * 0.12; }
     S.alert = damp(S.alert, wantAlert, 2, dt);
     S.yaw = damp(S.yaw, wantYaw, 3, dt); S.pitch = damp(S.pitch, wantPitch, 3, dt);
+    S.eye = damp(S.eye, wantAlert ? -S.side * 0.55 : 0, 3, dt);
     // a slow wing stretch: up and open, a beat, folded again
     S.nextStretch -= dt;
     if (S.nextStretch <= 0 && S.stretchT <= 0) { S.stretchT = 2.6; S.nextStretch = 14 + Math.random() * 10; }
@@ -215,8 +224,8 @@ export function buildDinoFly(scene, W, x, z, ry0, opts = {}) {
     // the doze's curl to the left (along the neck) unwinds as he looks up; the gaze turn comes on top
     // (evidence scripts may hold a state: root.userData.hold = { alert, open }; the game never sets it)
     const H = root.userData.hold;
-    if (H) { if (H.alert != null) { S.alert = H.alert; if (!H.alert) { S.yaw = 0; S.pitch = 0; } } if (H.open != null) open = H.open; }
-    pose(M, S.alert, open, S.yaw, S.pitch, br);
+    if (H) { if (H.alert != null) { S.alert = H.alert; if (!H.alert) { S.yaw = 0; S.pitch = 0; S.eye = 0; } } if (H.open != null) open = H.open; }
+    pose(M, S.alert, open, S.yaw, S.pitch, br, S.eye * S.alert);
     // eyelids: heavy while dozing, open when he looks at Twinsen, a blink now and then; shut for the nuzzle
     S.blinkT -= dt; if (S.blinkT < -0.14) S.blinkT = 2.5 + Math.random() * 3;
     let lid = 0.22 + 0.78 * S.alert;
