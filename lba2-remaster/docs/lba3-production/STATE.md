@@ -79,6 +79,15 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   a person he faces (the lighthouse dial vs Zoé), and chapter10.mjs no longer depends on Zoé's facing (DONE ×3, forced
   ASSISTED exit 2). N2 (the pump's camera) left open: no camera zones exist. QA.md "REV-TY-5 fixes"; status REVIEW.
 
+## Done after (MAP-1; status REVIEW)
+- The Holomap and the minimap drawn from the built world (src/game/mapdraw.js; the user: "the map isn't detailed enough and it's
+  hard to find your way with it"): terrain look and heights, coast, cliffs, paths and streets from the splats, every brick as floor or
+  building, trees, place names from each region's own fields, Twinsen's facing, objective stars, doors used (flags.mapDoors), travel
+  points, compass and scale; zoom/pan by mouse, keys, pad and touch; indoors the room's name and plan; a minimap setting (north-up /
+  turns with camera). tests/holomap.mjs; evidence docs/lba3-production/reviews/MAP-1/. The map follows WORLD-SHAPE's changes by itself.
+- Hooks for others: chapters 2–12 give no objective markers (story/*.js markers()), so the map can mark an objective only in the prologue
+  and chapter 1; invisible blockers are not flagged on colliders, so a long invisible wall reads as a wall/floor on the map.
+
 ## Next exact task
 Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

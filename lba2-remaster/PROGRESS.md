@@ -613,3 +613,11 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - Tests: zeelich-life 38/38, chapter10 DONE ×3 + forced ASSISTED (exit 2), townlife, workshop, stability, chapter2,
   chapter9, prologue, chapter1, chapter3, chapter4, desert-life (QA.md). Not verified: chapters 5–8 and 11+ after
   the talk change, feel by hand, GPU.
+
+## MAP-1: the Holomap and the minimap from the world (status REVIEW)
+- src/game/mapdraw.js draws each region's base map once from the game's own data (terrain heights, colours and splats; physics bricks
+  as floors, buildings, walls and trees; place names from the regions' fields); hud.js draws it with zoom/pan, labels placed without
+  overlaps, Twinsen's arrow, objectives, doors used, travel points, compass, scale, the planet inset, the room's plan indoors.
+- Minimap: north-up or turning with the camera (Settings → Minimap), in every region and indoors.
+- tests/holomap.mjs (Citadel, Desert Island, the Hamalayi, Zeelich, Tralu Rock, Otringal; input by mouse, keys, pad, touch).
+  Not verified: a real gamepad and touch screen by hand, GPU canvas cost on the user's Vega 8.

@@ -53,7 +53,8 @@ button { font-family: inherit; }
 .beh-aggressive .ico { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='10' width='18' height='14' rx='5' fill='%23f0c49b' stroke='%23933' stroke-width='2'/%3E%3Cpath d='M10 10 v6 M14 10 v6 M18 10 v6' stroke='%23933' stroke-width='1.5'/%3E%3Cpath d='M26 8 l3 -3 M27 14 h4 M26 20 l3 3' stroke='%23ffcf4a' stroke-width='2'/%3E%3C/svg%3E"); }
 .beh-discreet .ico { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='12' cy='12' r='4.5' fill='%23f0c49b'/%3E%3Cpath d='M10 17 L18 19 L22 27 M18 19 L12 28 M14 18 L22 15' stroke='%232d6fdc' stroke-width='3.5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M24 5 q3 3 0 6 M27 3 q5 5 0 10' stroke='%23b9c3cc' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); }
 
-#minimap { position: absolute; bottom: 16px; inset-inline-end: 16px; width: 170px; height: 170px; border-radius: 50%; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
+/* (above the weapon pill, which sits in the bottom-right corner of the "Always on" HUD) */
+#minimap { position: absolute; bottom: 64px; inset-inline-end: 16px; width: 170px; height: 170px; border-radius: 50%; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
 #prompt { position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%) translateY(10px); background: var(--panel); border: 1px solid var(--line); padding: 8px 16px; border-radius: 999px; font-weight: 500; opacity: 0; transition: all 0.15s; white-space: nowrap; }
 #prompt.show { opacity: 1; transform: translateX(-50%); }
 kbd { display: inline-block; min-width: 24px; padding: 1px 7px; border-radius: 6px; background: var(--ink); color: #111; font-family: inherit; font-weight: 700; text-align: center; margin-inline-end: 6px; }
@@ -87,12 +88,35 @@ kbd { display: inline-block; min-width: 24px; padding: 1px 7px; border-radius: 6
 #shop button:disabled { opacity: 0.4; }
 #shop .leave { justify-content: center; margin-top: 12px; }
 
-/* ---------- holomap ---------- */
-#holomap { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0, 8, 14, 0.75); z-index: 6; }
-#holomap .frame { position: relative; padding: 14px; border: 2px solid rgba(110, 230, 255, 0.6); border-radius: 18px; background: rgba(0, 30, 45, 0.6); box-shadow: 0 0 40px rgba(60, 200, 255, 0.35), inset 0 0 30px rgba(60, 200, 255, 0.2); }
-#holomap canvas { display: block; width: min(80vmin, 720px); height: min(80vmin, 720px); border-radius: 10px; }
-#holomap .title { text-align: center; font-weight: 700; color: #aef; letter-spacing: 0.06em; margin-bottom: 8px; }
-#holomap .close { text-align: center; color: var(--ink-dim); margin-top: 8px; font-size: 13px; }
+/* ---------- holomap (MAP-1: the map fills the window; zoom and pan inside it) ---------- */
+#holomap { position: fixed; inset: 0; box-sizing: border-box; display: flex; align-items: center; justify-content: center; background: rgba(0, 8, 14, 0.78); z-index: 6;
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+#holomap .frame { position: relative; display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; width: min(1240px, 100%); height: min(900px, 100%);
+  padding: 8px 12px 8px; border: 2px solid rgba(110, 230, 255, 0.6); border-radius: 14px; background: rgba(0, 30, 45, 0.7); box-shadow: 0 0 40px rgba(60, 200, 255, 0.35), inset 0 0 30px rgba(60, 200, 255, 0.2); }
+#holomap canvas { display: block; flex: 1 1 0; min-height: 0; height: 0; width: 100%; border-radius: 8px; touch-action: none; cursor: grab; }
+#holomap canvas:active { cursor: grabbing; }
+#holomap .title, #holomap .objective, #holomap .foot { flex: none; }
+#holomap .title { text-align: center; font-weight: 700; color: #aef; letter-spacing: 0.04em; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#holomap .foot { display: flex; align-items: center; gap: 14px; font-size: 13px; color: #cfe6f0; min-height: 28px; }
+#holomap .legend { white-space: nowrap; }
+#holomap .legend .lk { margin: 0 3px 0 8px; font-weight: 800; }
+#holomap .legend .lk:first-child { margin-inline-start: 0; }
+#holomap .legend .star { color: #ffcf4a; }
+#holomap .legend .dia { color: #5ab0ff; }
+#holomap .legend .door { color: #ffb347; }
+#holomap .hint { flex: 1; text-align: center; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#holomap .close { flex: none; padding: 5px 16px; border-radius: 8px; border: 1px solid rgba(110, 230, 255, 0.7); background: rgba(0, 40, 60, 0.8); color: #e8fbff; font: inherit; font-weight: 700; cursor: pointer; }
+#holomap .close:hover, #holomap .close:focus-visible { background: rgba(60, 170, 220, 0.45); border-color: #fff; outline: none; }
+#holomap .close:active { transform: translateY(1px); }
+body.big-text #holomap .title { font-size: 18px; }
+body.big-text #holomap .foot, body.big-text #holomap .objective { font-size: 16px; }
+@media (max-width: 700px), (max-height: 420px) {
+  #holomap .frame { padding: 4px 8px; gap: 3px; }
+  #holomap .title { font-size: 13px; }
+  #holomap .legend { display: none; }
+  #holomap .foot { font-size: 12px; min-height: 24px; }
+  #holomap .objective { margin-top: 0 !important; font-size: 12px !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
 
 /* ---------- screens ---------- */
 .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; justify-content: safe center; gap: 18px; padding: 24px 16px; z-index: 10; background: radial-gradient(ellipse at center, rgba(5, 12, 20, 0.35), rgba(5, 12, 20, 0.85)); text-align: center; overflow-y: auto; }
@@ -238,7 +262,7 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.6); border: 
 #pause-objective b { color: #ffe35a; display: block; }
 #pause-objective .s { display: block; color: var(--ink-dim); }
 #pause-objective .s.ok { color: #8ef08e; text-decoration: line-through; }
-#holomap .objective { color: #cfefff; text-align: center; margin-top: 8px; font-size: 14px; }
+#holomap .objective { color: #cfefff; text-align: center; font-size: 14px; }
 #holomap .objective b { color: #ffe35a; }
 #holomap .objective .s { margin: 0 8px; }
 #holomap .objective .s.ok { text-decoration: line-through; opacity: 0.6; }
