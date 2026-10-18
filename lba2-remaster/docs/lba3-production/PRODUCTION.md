@@ -79,3 +79,38 @@ No claim of zero bugs, guaranteed commercial quality, or automatic artistic succ
 ## Reporting
 
 During work give concise meaningful updates. At handoff report what changed, what was verified, remaining limitations, the current build, and the exact resume point. Detailed logs belong in the project; avoid repeatedly presenting the roadmap instead of implementing it.
+
+## Mandatory final audit (the user's Final Release Auditor pack)
+When all implementation agents have completed their assigned work, or before the main session calls the game
+ready / finished / release-ready, freeze and identify the final candidate (commit, version, build artifact) and
+explicitly invoke `lba3-final-release-auditor` (.claude/agents/). Worker completion or a green build is not game
+readiness, and the agent definition alone schedules nothing: the main session dispatches it.
+
+- The auditor inspects the current game feature by feature and plays the normal main path from New Game to the
+  ending by input, with separate coverage of optional content, branches, visuals, animation, audio, UI, controls,
+  combat, equipment, progression, saves, performance and packaging; every row PASS / FAIL / BLOCKED / NOT TESTED
+  with evidence; report at docs/release-audit/REPORT.md.
+- The coordinator does not change shared production files while the frozen candidate is under audit. Defects go
+  to the existing specialists as focused fixes; a new candidate is produced and the auditor re-runs the affected
+  regressions plus the end-to-end route where progression, saves or shared control changed.
+- Mandatory runtime tests that cannot run make the verdict VERIFICATION INCOMPLETE. No fabricated target-platform
+  (the user's Vega 8 laptop) or fresh-human-playtest evidence; the auditor never declares the game bug-free or
+  waives a failed criterion. No automatic publishing or distribution of the build.
+- Stay within tools and session limits: checkpoint when blocked rather than claim success or retry endlessly. A
+  later session resumes from the saved project state and applies the same rule.
+
+Status (2026-10-18): recorded. Remaining before the audit: block 3 (WORLD-SHAPE finishing; OPEN-2 and FIX-PUMP-N
+merging) and block 4 (VOICE-1 character voices, ANIM-DEATH, BUG-WALL camera inside a wall after the target,
+Baldino as a Grobo, ADV-2). The auditor is invoked when those are done.
+
+## Block schedule (the user: run agents in non-conflicting groups, not all at once)
+Installed 2026-10-18: lba3-runtime-performance-engineer, lba3-frame-pacing-hardware-engineer,
+lba3-opening-cinematic-animator (docs/lba3-performance/WORKFLOW.md). One writer per shared file at a time;
+benchmarks only on a quiet machine.
+
+| Block | Agents | Owned paths (no overlap inside a block) |
+|---|---|---|
+| 4 (running) | VOICE-1 (voices), ANIM-DEATH (enemy deaths), BUG-WALL (camera in a wall), SRC-2 (Baldino as a Grobo, Dino-Fly pose); WORLD-SHAPE finishing | voice.js · enemies/guards/guarddog/combat death code · camera.js/occlude.js · characters/assets/poly/dinofly · terrain/region layouts |
+| 5 | runtime-performance-engineer (PERF-2: the laptop's street at 542 calls / 26 ms submit, doors not fully drawn) + opening-cinematic-animator (OPEN-3: Zoé through the fence, character graphics in the opening, leftovers) | renderer/bench/shadowcull/merge/kit + town/island merges · story/opening.js, text/opening.js, cinematic.js |
+| 6 | frame-pacing-hardware-engineer (frame delivery, presets, stalls on the candidate from block 5) + ADV-2 (chapter 4's first half) | main loop/presets/settings · story/dig.js, desert.js, text/ch4.js |
+| 7 | lba3-final-release-auditor on a frozen candidate | read-only + reports |

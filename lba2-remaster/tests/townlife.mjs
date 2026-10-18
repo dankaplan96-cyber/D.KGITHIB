@@ -75,6 +75,10 @@ const a3 = await ev(() => { const L = game.world.life, f = game.flags, h = game.
   P.use(L.pump.x + 1.0, L.pump.z + 1.1, { near: 0.3, kind: 'lpump' }); const pin = !!f.l_pin; P.face(L.pump.x, L.pump.z);
   const afterPin = P.target()?.label;
   const round = {}; for (const [n, dx, dz] of [['north', 0.1, -1.15], ['north-east', 1.0, -0.95], ['south', 0.2, 1.2], ['south-west', -1.0, 0.9], ['trough side', 1.0, 1.1]]) { P.go(L.pump.x + dx, L.pump.z + dz, { tol: 0.25, maxT: 20 }); P.face(L.pump.x, L.pump.z); round[n] = P.target()?.label || null; }
+  // between Bram and the pump: facing the pump it is the pump (Bram at his back), turned round it is Bram (FIX-PUMP-N)
+  const bramN = game.npcs.find((n) => n.def.id === 'bram'); P.go(L.pump.x + 0.25, L.pump.z - 1.35, { tol: 0.1, maxT: 20 });
+  P.face(L.pump.x, L.pump.z); const between = { pump: P.target()?.label, dBram: +Math.hypot(bramN.pos.x - h.pos.x, bramN.pos.z - h.pos.z).toFixed(2) };
+  P.face(bramN.pos.x, bramN.pos.z); between.bram = P.target()?.label;
   // three strokes by hand (E), from the trough side, the lane to the south and the north, measured frame by frame:
   // he walks round to the grip at walking pace through nothing solid, and his hands are on the grip in every frame
   // of every stroke, the first and the last included (REV-TY-1 D7, REV-TY-3 N2)
@@ -105,10 +109,11 @@ const a3 = await ev(() => { const L = game.world.life, f = game.flags, h = game.
   // the clover pops out by Bram: he picks it up (INPUT)
   for (let k = 0; k < 3; k++) for (const p of [...game.pickups.list]) if (p.type === 'clover' && p.owe === 'l_oweClover') P.go(p.pos.x, p.pos.z, { tol: 0.4, maxT: 10 });
   P.settle();
-  return { pliers, pin, afterPin, round, runs, pumpOK, pump: !!f.l_pump, water, healed: h.hp > hp0, thanks: !!f.l_bramThanks, owed, clovers: h.clovers - clov0, oweAfter: f.l_oweClover || 0, journal: game.story.journal().find((j) => j.title === 'Around town')?.lines };
+  return { pliers, pin, afterPin, round, between, runs, pumpOK, pump: !!f.l_pump, water, healed: h.hp > hp0, thanks: !!f.l_bramThanks, owed, clovers: h.clovers - clov0, oweAfter: f.l_oweClover || 0, journal: game.story.journal().find((j) => j.title === 'Around town')?.lines };
 });
 check('the boat box has the pliers; the pin comes out; three strokes and the pump runs (INPUT)', a3.pliers && a3.pin && a3.pump && a3.water && a3.pumpOK, { ...a3, runs: a3.runs.map((r) => ({ ...r, gap: undefined })) });
 check('with the pin out the pump answers from the trough side where the pin came out, and from round it (REV-TY-3 N3)', a3.afterPin === 'p_pump' && Object.values(a3.round).every((l) => l === 'p_pump'), { afterPin: a3.afterPin, round: a3.round });
+check('between Bram and the pump, facing the pump at arm\'s length gives the pump with Bram just behind him; turned round, Bram (FIX-PUMP-N)', a3.between.pump === 'p_pump' && a3.between.bram === 'p_talk' && a3.between.dBram < 1.2, a3.between);
 for (const r of a3.runs) console.log(`  stroke from ${r.n}: prompt ${r.from} m from the grip, walk ≤ ${r.maxV} m/s, ${r.frames} stroke frames, hands to grip first ${r.first} last ${r.last} max ${r.maxGap} m, handle lifted ${r.lift} and pushed down ${r.swing} rad`);
 check('asked from the trough side, the lane or the north, he walks round to the grip at walking pace (≤ 2.5 m/s) through nothing solid, and works it standing at the grip, clear of the plinth (REV-TY-3 N2)', a3.runs.length === 3 && a3.runs.every((r) => r.label === 'p_pump' && r.counted === 1 && r.maxV <= 2.5 && r.solid === 0 && r.at && r.at.d < 0.05 && r.at.fromPump > 1.2), a3.runs.map((r) => ({ ...r, gap: undefined })));
 check('his hands stay on the handle\'s grip through the whole stroke, first and last frames included (< 0.15 m); the handle is lifted and pushed down (REV-TY-1 D7)', a3.runs.every((r) => r.frames >= 40 && r.maxGap < 0.15 && r.swing > 0.2 && r.lift < -0.3), a3.runs.map((r) => ({ n: r.n, frames: r.frames, maxGap: r.maxGap, swing: r.swing, gap: r.gap.filter((g, i) => i < 4 || i > r.gap.length - 5) })));

@@ -1,9 +1,19 @@
-// The opening (new game): Citadel Island is awake → the project's cargo lift at work → home → the tap that
-// coughs and runs warm → "I'll check the well." / "I'll ask next door." → title → control, in the house.
+// The opening (new game), about 88 s. What a player who never played LBA should take from it:
+//   where   Citadel Island on the planet Twinsun, twelve years after Twinsen's last adventure (a caption)
+//   what changed   the Joint Project (Twinsun + Zeelich) is unloading at the harbour and promises its heat to
+//           every home ("Vesk promised"); its drill turns in FunFrock's old fortress and the ground hums
+//   who     Twinsen (mending the lamp), his son Arthur ("Dad!"), his wife Zoé (the tap)
+//   hook    the tap stops, then runs warm; the camera goes down the well: something under the island glows
+//           in time with the hum
+//   first   "I'll check the well." / Zoé: "Take your magic ball." → she goes next door (the game's door
+//           transition: a dip to black, then outside), the title, control in the house, the objective
+//           "Check the well" with the step "Take the magic ball from the cupboard"
 //
-// Built on src/engine/cinematic.js. Every action is an event or a track on one clock; finish() puts the world
-// in its end state (the same whether the scene played out or was skipped) and hands control over.
-// Times are in seconds; the music cue `opening` (tools/music/tracks/opening.py) is written to these times.
+// Built on src/engine/cinematic.js. Every action is an event or a track on one clock; finish() puts the world in
+// its end state (the same whether the scene played out or was skipped) and hands control over.
+// Times are in seconds. The music cue `opening` (tools/music/tracks/opening.py) is written to these sections:
+// harbour 2.5–13, the lift 13–29, home 29–41, the tap 41–59, "That's warm." 59–66.5, the decision 66.5–76,
+// the title 76–83.
 import * as THREE from 'three';
 import { Cinematic } from '../../engine/cinematic.js';
 import { dampAngle } from '../../engine/math.js';
@@ -13,8 +23,8 @@ import { t } from '../i18n.js';
 import '../text/opening.js';
 import { SHIFT } from '../island.js';
 
-export const OPENING_LENGTH = 84.5;
-export const MUSIC_AT = 2.5;          // the cue starts after a moment of harbour sound
+export const OPENING_LENGTH = 88.0;
+export const MUSIC_AT = 2.5;          // the cue starts after a moment of sea sound
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 // the harbour's shots and walks are written in its design frame (island.js buildHarbour); HV/HP put them where it stands
@@ -22,23 +32,28 @@ const HS = SHIFT.harbour;
 const HV = (x, y, z) => V(x + HS.x, y, z + HS.z);
 const HP = (x, z) => ({ x: x + HS.x, z: z + HS.z });
 const sm = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x); };
-const span = (k, a, b) => sm((k - a) / (b - a));
 
 export function playOpening(story) {
-  const g = story.game, W = g.world, R = g.rooms.house, H = g.hero;
+  const g = story.game, W = g.world, R = g.rooms.house, H = g.hero, WR = g.rooms.well;
   const zoe = story.cur.npc('zoe'), arthur = story.cur.npc('arthur');
   const L = W.cargoLift, K = R.kitchen, TB = R.table, BT = R.boat;
   const hx = (x, z) => ({ x: R.center.x + x, z: R.center.z + z });   // house-local → world
   const hv = (x, y, z) => V(R.center.x + x, y, R.center.z + z);
+  const wv = (x, y, z) => V(WR.center.x + x, y, WR.center.z + z);   // well-cave-local → world
   const harbourFocus = HV(-82, 1.8, -3);
+  const bore = W.station.bore, boreY = g.physics.groundAt(bore.x, bore.z);
+  const home = W.houses[0], nbr = W.houses.find((h) => h.id === 'nbr');
+  const out = (hs, d) => ({ x: hs.door.x + Math.sin(hs.ry) * d, z: hs.door.z + Math.cos(hs.ry) * d });
+  const homeOut = out(home, 1.4), nbrSpot = out(nbr, 1.1);   // (where the game's door puts you; where Zoé waits)
 
   // ---------------------------------------------------------------- cast
   const cast = [];
   const temps = [];                                   // scene-only objects, removed by finish()
   const loops = [];                                   // running sound loops, stopped by finish()
+  const unseen = [];                                  // things hidden for a shot: [object, was visible, its shadow]
   const actor = (a) => { cast.push(a); a._speed = 0; a.rig.noFidget = true; return a; };
   const extra = (name) => {
-    const rig = createCharacter(name);
+    const rig = createCharacter(name);               // (the poly cast: assets/poly/<name>.json)
     g.scene.add(rig.root); temps.push(rig.root);
     return actor({ pos: V(0, 0, 0), angle: 0, rig, sync() { rig.root.position.copy(this.pos); rig.root.rotation.y = this.angle; } });
   };
@@ -53,9 +68,11 @@ export function playOpening(story) {
   const head = (a, h = 1.5) => V(a.pos.x, a.pos.y + h * (a.rig.root.scale.y || 1), a.pos.z);
   const loop = (name, opts) => { const h = g.audio.loop?.(name, opts); if (h) loops.push(h); return h; };
   const sfx = (name) => g.audio.play(name);
+  const fade = (on, quick = true) => { const f = document.querySelector('#fade'); f.classList.toggle('quick', quick); f.classList.toggle('on', on); };
 
   const tw = actor(H), zo = actor(zoe), ar = actor(arthur);
-  const worker = extra('worker'), passer = extra('farmerB');
+  const worker = extra('worker'), resident = extra('farmerB');
+  const wkSpot = HP(-84.35, -3.05), resSpot = HP(-83.3, -4.3), column = HP(-85.0, -2.75);
 
   // ---------------------------------------------------------------- props held in hands
   const hold = (obj, a, pos, rot, side = 'R') => { const hand = a.rig.j['arm' + side].hand; hand.add(obj); obj.position.set(...pos); obj.rotation.set(...rot); };
@@ -65,11 +82,10 @@ export function playOpening(story) {
 
   // ---------------------------------------------------------------- the tap
   const stream = K.stream;
-  let flow = 0, flowWobble = 0;                         // 0 = off, 1 = a full stream, ~0.35 = a trickle
+  let flowWobble = 0;
   const steam = [0, 1, 2].map(() => { const s = glowSprite('#ffffff', 0.16, 0.0); s.visible = false; R.group.add(s); temps.push(s); return s; });
   let steamOn = 0, steamT = 0;
   const water = (k) => {
-    flow = k;
     stream.visible = k > 0.01;
     if (stream.visible) stream.scale.set(k, 1, k);
   };
@@ -78,39 +94,56 @@ export function playOpening(story) {
   const shot = (t0, t1, from, to, extra2 = {}) => ({ t0, t1, from, to, ...extra2 });
   const P = (pos, lk, fov = 40) => ({ pos, look: lk, fov });
   const twSpot = hx(-0.45, -0.25), zoTray = hx(-1.78, -2.6), zoSink = hx(-2.3, -2.6);
+  const cupboard = hv(-4.1, 1.25, -1.6);
+  const twEnd = hx(1.55, -1.75), twEndA = Math.atan2(-1, 0.25);
+  // (indoors the house is an open set like LBA2's: the south and east walls are cut away for the game's camera,
+  // so every shot in it looks north or west, and is pitched so the frame stays under the wall tops)
   const shots = [
-    // 1 — the harbour wakes: water and the bow line, then one move up and back to the pier and the lift
-    shot(0, 5.6, P(HV(-76.5, 1.0, 1.5), HV(-78.0, 0.85, -1.7), 40), P(HV(-76.62, 1.05, 1.38), HV(-78.05, 0.88, -1.75), 40)),
-    shot(5.6, 13.0, P(HV(-76.62, 1.05, 1.38), HV(-78.05, 0.88, -1.75), 40), P(HV(-74.2, 5.6, 5.9), HV(-83.4, 2.0, -2.9), 44)),
-    // 2 — the lift: the crate comes up off the barge; the worker at the controls; a passer-by goes to the ferry
-    shot(13.0, 21.0, P(HV(-79.7, 3.3, -1.75), HV(-85.1, 2.25, -3.05), 44), P(HV(-79.9, 3.2, -1.85), HV(-85.1, 2.4, -3.1), 44)),
-    shot(21.0, 29.0, P(HV(-80.2, 2.75, -2.35), HV(-83.6, 2.0, -3.95), 44), P(HV(-80.35, 2.65, -2.45), HV(-83.6, 1.95, -4.05), 42)),
-    // 3 — home: the whole family at their own things, then Zoé at the counter
-    shot(29.0, 35.0, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.75, -0.55), 44), P(hv(4.05, 2.6, 4.05), hv(0.1, 0.75, -0.6), 44)),
-    shot(35.0, 41.0, P(hv(-0.15, 1.85, -1.95), hv(-2.0, 1.32, -2.95), 44), P(hv(-0.25, 1.82, -2.0), hv(-2.1, 1.3, -2.95), 44)),
-    // 4 — the tap; the exchange
-    shot(41.0, 48.0, P(hv(-0.55, 1.8, -2.05), hv(-2.3, 1.3, -3.0), 42), P(hv(-0.65, 1.78, -2.1), hv(-2.3, 1.3, -3.0), 41)),
-    shot(48.0, 50.8, P(hv(-1.85, 1.75, -2.2), hv(-0.45, 1.45, -0.25), 42)),
+    // 1 — Citadel Island from the air, then down over the water to the harbour (the caption: where, when)
+    shot(0, 9.0, P(HV(-34, 26, 58), HV(-2, 6, -38), 50), P(HV(-50, 17, 38), HV(-30, 4, -42), 50)),
+    shot(9.0, 13.0, P(HV(-50, 17, 38), HV(-30, 4, -42), 50), P(HV(-74.2, 5.6, 5.9), HV(-83.4, 2.0, -2.9), 44)),
+    // 2 — the project's lift: the crate comes up off the barge; a resident asks the worker about the heat
+    shot(13.0, 19.6, P(HV(-79.7, 3.3, -1.75), HV(-85.1, 2.25, -3.05), 44), P(HV(-79.9, 3.2, -1.85), HV(-85.1, 2.4, -3.1), 44)),
+    // 3 — the hum: the drill turning in FunFrock's old fortress, up on the plateau, the town beyond
+    shot(19.6, 23.8, P(V(bore.x + 22, boreY + 9, bore.z + 12), V(bore.x, boreY + 5, bore.z), 46), P(V(bore.x + 18, boreY + 7.6, bore.z + 10), V(bore.x, boreY + 5.6, bore.z), 46)),
+    // 4 — back at the pier, from above: the lantern settles; "Just the drill."; the crate is set down
+    shot(23.8, 29.0, P(HV(-79.0, 4.2, -6.8), HV(-84.0, 1.3, -3.6), 44), P(HV(-79.3, 4.0, -6.6), HV(-84.0, 1.25, -3.7), 44)),
+    // 5 — home: the whole family at their own things; over Arthur's shoulder: "Dad! The mast fits!"
+    shot(29.0, 31.2, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.6, -0.55), 44), P(hv(4.2, 2.68, 4.2), hv(0.15, 0.6, -0.58), 44)),
+    shot(31.2, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
+    // 6 — Zoé at the counter, then the tap
+    shot(35.0, 41.0, P(hv(0.15, 1.8, -2.85), hv(-2.2, 1.55, -2.75), 46), P(hv(0.05, 1.8, -2.87), hv(-2.25, 1.55, -2.77), 46)),
+    shot(41.0, 48.0, P(hv(-0.05, 1.8, -2.9), hv(-2.3, 1.5, -2.95), 44), P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43)),
+    // 7 — the exchange: Twinsen answers from the table; over his shoulder for hers
+    shot(48.0, 50.8, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.85, 2.03, 2.5), hv(-0.7, 1.05, -1.4), 46)),
     shot(50.8, 53.4, () => overShoulder(), null),
-    shot(53.4, 58.0, P(hv(0.75, 1.2, 0.8), hv(2.1, 0.55, 2.1), 42), P(hv(0.8, 1.18, 0.85), hv(2.1, 0.57, 2.1), 42)),
-    shot(58.0, 60.1, P(hv(-0.8, 1.72, -2.2), hv(-2.3, 1.22, -3.02), 40), P(hv(-0.84, 1.7, -2.22), hv(-2.3, 1.21, -3.02), 39)),
-    shot(60.1, 62.1, P(hv(-1.62, 1.28, -2.62), hv(-2.3, 0.98, -3.12), 34), P(hv(-1.66, 1.26, -2.64), hv(-2.3, 0.97, -3.12), 32)),
-    shot(62.1, 64.2, P(hv(-0.88, 1.68, -2.25), hv(-2.3, 1.2, -3.02), 38)),
-    shot(64.2, 66.5, P(hv(-1.85, 1.8, -2.1), hv(-0.45, 1.55, -0.25), 38)),
-    // 5 — the decision, wide enough for both of them
-    shot(66.5, 72.5, P(hv(1.75, 1.95, -2.45), hv(-1.05, 1.15, -1.35), 48), P(hv(1.65, 1.92, -2.42), hv(-1.05, 1.15, -1.4), 48)),
-    // 6 — following Twinsen to the door; the title; then into the game's own camera
-    shot(72.5, 80.0, () => follow(), null),
-    shot(80.0, OPENING_LENGTH, null, 'game'),
+    // 8 — the house hums too: dust from the beams, all three look up; Arthur knows what it is
+    shot(53.4, 58.0, P(hv(4.2, 2.7, 4.2), hv(0.0, 0.6, -0.7), 46), P(hv(4.05, 2.62, 4.05), hv(-0.1, 0.6, -0.75), 46)),
+    // 9 — the second try: a warm trickle, steam
+    shot(58.0, 60.1, P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43), P(hv(-0.3, 1.8, -2.93), hv(-2.3, 1.48, -2.95), 42)),
+    shot(60.1, 62.4, P(hv(-1.35, 1.45, -3.0), hv(-2.3, 0.98, -3.18), 38), P(hv(-1.4, 1.43, -3.0), hv(-2.3, 0.98, -3.18), 35)),
+    // 10 — where the warmth comes from: under the well, something in the rock glows with the hum
+    shot(62.4, 66.5, P(wv(2.0, 8.0, 5.0), wv(6.5, 0.8, -4.5), 46), P(wv(3.5, 6.5, 2.5), wv(7.0, 0.9, -4.8), 44)),
+    // 11 — the decision; Zoé goes out of the room toward the hall
+    shot(66.5, 75.2, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.75, 2.05, 2.75), hv(-0.3, 1.0, -1.0), 48)),
+    // 12 — outside (the game's door transition): Zoé goes next door, past the house's new heat post; the title
+    shot(75.2, 81.6, () => street(), null),
+    // 13 — inside again: Twinsen turns to the cupboard (the ball); then into the game's own camera
+    shot(81.6, 83.6, P(hv(3.3, 2.3, 0.3), V(twEnd.x - 1.6, 1.1, twEnd.z + 0.1), 46), P(hv(3.5, 2.6, 0.6), V(twEnd.x - 2.0, 1.05, twEnd.z + 0.1), 46)),
+    shot(83.6, OPENING_LENGTH, null, 'game'),
   ];
-  function overShoulder() {
-    const a = tw.angle, f = { x: Math.sin(a), z: Math.cos(a) }, r = { x: -Math.cos(a), z: Math.sin(a) };
+  function overShoulder() {     // (behind Twinsen's shoulder, toward Zoé)
+    const a = angleTo(tw, zo.pos), f = { x: Math.sin(a), z: Math.cos(a) }, r = { x: -Math.cos(a), z: Math.sin(a) };
     return P(V(tw.pos.x - f.x * 1.45 + r.x * 0.7, 1.95, tw.pos.z - f.z * 1.45 + r.z * 0.7), head(zo, 1.35), 40);
   }
-  function follow() {
-    const k = sm((cine.t - 72.5) / 7.5);
-    const pos = hv(2.55, 2.05, 1.6).lerp(hv(3.15, 2.45, 1.05), k);
-    return P(pos, V(tw.pos.x - 0.35, 1.05, tw.pos.z - 0.55), 44);
+  // in front of the house: she comes out by the door and walks toward the camera, which turns to watch her go on
+  // to the neighbours' (their green shutters beyond), rising a little for the title
+  function street() {
+    const k = sm((cine.t - 75.2) / 6.4);
+    const pos = V(-39.0 + 1.2 * k, 3.3 + 1.2 * k, 81.0 + 1.4 * k);
+    const her = V(zo.pos.x, zo.pos.y + 1.2, zo.pos.z), door = V(home.door.x, zo.pos.y + 1.1, home.door.z), next = V(nbr.door.x, zo.pos.y + 1.4, nbr.door.z);
+    const lk = door.lerp(next, sm((cine.t - 75.6) / 5.4)).lerp(her, 0.55);
+    return P(pos, lk, 46);
   }
 
   // ---------------------------------------------------------------- tracks
@@ -148,9 +181,8 @@ export function playOpening(story) {
     let u = 0;
     for (let i = 1; i < liftU.length; i++) if (tt <= liftU[i][0]) { const [a0, u0] = liftU[i - 1], [a1, u1] = liftU[i]; u = u0 + (u1 - u0) * Math.min(1, Math.max(0, (tt - a0) / (a1 - a0))); break; } else u = liftU[i][1];
     L.pose(u);
-    // the faint vibration (19.2–22.0)
-    L.shake(Math.max(0, Math.sin(Math.min(1, Math.max(0, (tt - 19.2) / 2.8)) * Math.PI)) * 0.85);
-    // the bow line pulls tight once as the boat surges on a swell (1.0–5.0)
+    // the hum (18.6–25.0): the lantern and the hook tremble, the puddle ripples
+    L.shake(Math.max(0, Math.sin(Math.min(1, Math.max(0, (tt - 18.6) / 6.4)) * Math.PI)) * 0.85);
     W.boatSurge = Math.sin(Math.min(1, Math.max(0, (tt - 1.0) / 4.0)) * Math.PI) * 0.32;
   });
   // the tap: stream thickness by time, with a sputter
@@ -158,12 +190,11 @@ export function playOpening(story) {
     let f = 0;
     if (tt > 42.95 && tt < 43.6) f = 1;
     else if (tt >= 43.6 && tt < 43.95) f = Math.sin((tt - 43.6) * 40) > 0 ? 0.6 : 0;
-    else if (tt > 59.2 && tt < 69.0) f = 0.5 + Math.sin(tt * 7) * 0.06;
+    else if (tt > 59.2 && tt < 69.6) f = 0.5 + Math.sin(tt * 7) * 0.06;
     flowWobble += (dt || 0) * 30;
     water(f);
     if (f > 0) stream.scale.x = stream.scale.z = f * (1 + Math.sin(flowWobble) * 0.08);
-    // steam over the basin while it runs warm
-    steamOn = tt > 59.6 && tt < 69.4 ? Math.min(1, (tt - 59.6) / 1.2) : Math.max(0, steamOn - (dt || 0));
+    steamOn = tt > 59.6 && tt < 69.9 ? Math.min(1, (tt - 59.6) / 1.2) : Math.max(0, steamOn - (dt || 0));
     steamT += dt || 0;
     steam.forEach((s, i) => {
       const ph = (steamT * 0.45 + i / 3) % 1;
@@ -173,29 +204,30 @@ export function playOpening(story) {
       s.scale.setScalar(0.1 + ph * 0.14);
     });
   });
-  // the tap handle turns open, closed
   const handle = K.handle;
   track(41.4, 42.2, (k) => { handle.rotation.y = -1.4 * sm(k); });
   track(44.0, 44.6, (k) => { handle.rotation.y = -1.4 * (1 - sm(k)); });
   track(58.5, 59.1, (k) => { handle.rotation.y = -2.2 * sm(k); });
-  track(68.7, 69.2, (k) => { handle.rotation.y = -2.2 * (1 - sm(k)); });
+  track(69.2, 69.7, (k) => { handle.rotation.y = -2.2 * (1 - sm(k)); });
+  // under the island: the vein brightens and fades with the hum
+  track(62.4, 66.5, (k) => { WR.vein.power = Math.sin(k * Math.PI) * 0.9 + Math.max(0, Math.sin(k * Math.PI * 5)) * 0.25 * Math.sin(k * Math.PI); });
 
   // walks
-  walk(passer, [HP(-73.8, -4.7), HP(-83.6, -5.0), HP(-84.4, -5.65)], 15.0, 1.25, 'idle', Math.PI);
-  walk(worker, [HP(-84.15, -3.2), HP(-84.0, -4.5), HP(-83.55, -4.65)], 22.4, 1.0, 'idle', angleTo({ pos: HP(-83.55, -4.65) }, L.cratePierW));
+  // the resident waits by the lift for his word with the worker, then goes on to the ferry
+  walk(resident, [resSpot, HP(-82.7, -5.35), HP(-84.4, -5.75)], 26.4, 1.2, 'idle', Math.PI);
+  walk(worker, [wkSpot, HP(-84.0, -4.5), HP(-83.55, -4.65)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-83.55, -4.65) }, L.cratePierW));
   walk(zo, [zoTray, zoSink], 40.3, 0.9, 'idle', Math.PI);
-  const zoOut = [zoSink, hx(1.25, -1.0), hx(1.25, 1.6), hx(0.9, 4.4)]; // (out through the hall)
-  walk(zo, zoOut, 72.0, 1.5);
-  walk(tw, [twSpot, hx(0.9, 1.4), hx(1.3, 3.6)], 72.4, 1.25, 'idle'); // (toward the hall and the front door)
+  // Zoé out of the family room and down the hall to the front door (seen as far as the hall; the door is the cut)
+  walk(zo, [zoSink, hx(0.7, -1.4), hx(1.2, 2.6), hx(1.2, 6.5)], 71.0, 1.45);
+  // outside: from where the game's door puts you, along the lane to the neighbours'
+  walk(zo, [homeOut, nbrSpot], 75.2, 1.35, 'idle');
 
   // turns
-  turn(tw, angleTo({ pos: twSpot }, zoSink), 46.5, 0.55);
   turn(zo, angleTo({ pos: zoSink }, twSpot), 50.6, 0.5);
   turn(zo, Math.PI, 57.6, 0.4);
-  turn(tw, 0, 66.2, 0.45);
-  turn(tw, angleTo({ pos: twSpot }, zoSink), 67.35, 0.45);
-  turn(zo, angleTo({ pos: zoSink }, twSpot), 69.35, 0.45);
-  turn(tw, Math.atan2(-1, 0.25), 78.2, 0.6);   // a look back into the room, toward the cupboard
+  turn(tw, -0.9, 67.4, 0.5);    // (half toward her: "I'll check the well.")
+  turn(zo, angleTo({ pos: zoSink }, twSpot), 69.85, 0.45);
+  turn(tw, twEndA, 81.7, 0.7);   // to the cupboard, where the ball is
 
   // everyone's rig, every frame (after the moves above)
   track(0, OPENING_LENGTH, (k, tt, dt) => {
@@ -215,33 +247,41 @@ export function playOpening(story) {
   at(MUSIC_AT, () => g.audio.cue('opening'));
   at(6.2, () => loop('winch', { quiet: true }));
   at(13.6, () => sfx('clunk'));
-  at(14.2, () => { loop('motor'); play(worker, 'use'); });
-  at(19.2, () => { sfx('hum'); });
-  at(19.8, () => sfx('rattle'));
-  at(20.2, () => look(worker, L.puddle.getWorldPosition(new THREE.Vector3())));
-  at(21.3, () => { look(worker, null); });
-  at(22.3, () => play(worker, 'idle'));
-  at(24.2, () => { play(worker, 'reach'); look(worker, L.crate.getWorldPosition(new THREE.Vector3())); });
+  at(14.2, () => { loop('motor'); play(worker, 'reach'); look(resident, head(worker)); });   // (a hand on the lift's control)
+  at(16.85, () => { play(worker, 'idle'); look(worker, head(resident)); });
+  turn(worker, Math.atan2(resSpot.x - wkSpot.x, resSpot.z - wkSpot.z) - 0.35, 16.85, 0.5);
+  turn(worker, angleTo({ pos: wkSpot }, column), 19.7, 0.3);
+  at(20.0, () => play(worker, 'reach'));
+  turn(worker, Math.atan2(resSpot.x - wkSpot.x, resSpot.z - wkSpot.z) - 0.35, 23.3, 0.3);
+  at(23.3, () => play(worker, 'idle'));
+  // the hum: at the pier, then the drill, then the pier again
+  at(18.6, () => { sfx('hum'); look(worker, L.puddle.getWorldPosition(new THREE.Vector3())); });
+  at(19.2, () => sfx('rattle'));
+  at(19.55, () => { cine.focus = V(bore.x, boreY, bore.z); W.station.setActive(true); });
+  at(20.8, () => sfx('hum'));
+  at(23.75, () => { W.station.setActive(stationWas); cine.focus = harbourFocus; });
+  at(22.6, () => { look(worker, null); });
+  at(23.9, () => { look(resident, head(worker)); look(worker, head(resident)); });
+  at(26.65, () => { play(worker, 'reach'); look(worker, L.crate.getWorldPosition(new THREE.Vector3())); look(resident, null); });
   at(27.0, () => { sfx('thump'); });
   at(27.4, () => { play(worker, 'setDown'); });
   at(28.6, () => { stopLoop('motor'); stopLoop('winch'); look(worker, null); });
   // to the house: a short dip to black
-  at(28.62, () => document.querySelector('#fade').classList.add('on', 'quick'));
+  at(28.62, () => fade(true));
   at(29.0, () => {
     stopLoop('lap');
-    g.enterRoom('house', hx(-0.45, -0.25), true, true);
+    g.enterRoom('house', twSpot, true, true);
     cine.focus = null;
     put(tw, twSpot.x, twSpot.z, 0, 'tinker');
     loop('room');
-    setTimeout(() => document.querySelector('#fade').classList.remove('on'), 40);
+    setTimeout(() => fade(false), 40);
   });
-  at(29.3, () => document.querySelector('#fade').classList.remove('quick'));
-  // body language before anyone speaks
-  at(31.5, () => { play(ar, 'kneelShow'); look(ar, head(tw)); });
-  at(32.4, () => { play(tw, 'idle'); look(tw, head(ar, 0.9)); });
-  at(32.8, () => tw.rig.doGesture('nod'));
-  at(34.0, () => { play(tw, 'tinker'); look(tw, null); });
-  at(34.2, () => { play(ar, 'kneelWork'); look(ar, null); });
+  // "Dad! The mast fits!" / "Told you. Now the sail."
+  at(31.15, () => { play(ar, 'kneelShow'); look(ar, head(tw)); });
+  at(31.6, () => { play(tw, 'idle'); look(tw, head(ar, 0.9)); });
+  at(33.1, () => tw.rig.doGesture('nod'));
+  at(35.2, () => { play(tw, 'tinker'); look(tw, null); });
+  at(35.0, () => { play(ar, 'kneelWork'); look(ar, null); });
   at(36.2, () => { rest(BT.mast, R.group, mastFitted); sfx('tick'); });
   at(39.5, () => play(zo, 'wipe'));
   // the tap
@@ -255,74 +295,120 @@ export function playOpening(story) {
   at(44.0, () => play(zo, 'reach'));
   at(44.6, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y, K.spout.z)); });
   at(45.2, () => look(zo, head(tw)));
-  at(45.4, () => play(zo, 'talk'));
   at(46.2, () => { play(tw, 'idle'); look(tw, head(zo)); });
-  at(47.9, () => play(zo, 'idle'));
-  at(48.5, () => play(tw, 'talk'));
-  at(50.6, () => play(tw, 'idle'));
-  at(51.1, () => play(zo, 'talk'));
-  at(52.9, () => { play(zo, 'idle'); });
   at(53.0, () => tw.rig.doGesture('shrug'));
-  at(54.0, () => { play(ar, 'kneelLook'); look(ar, hv(-1.4, 1.3, -1.4)); look(zo, head(ar, 0.9)); look(tw, head(ar, 0.9)); });
-  at(55.0, () => ar.rig.doGesture('nod'));
-  at(57.6, () => { play(ar, 'kneelLook'); look(zo, null); });
-  at(58.0, () => { play(zo, 'reach'); look(tw, head(zo)); });
+  // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
+  at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
+  at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
+  at(55.0, () => { look(ar, head(tw)); look(tw, head(ar, 0.9)); look(zo, head(ar, 0.9)); });
+  at(57.6, () => { look(zo, null); });
+  at(58.0, () => { play(zo, 'reach'); look(tw, head(zo)); play(ar, 'kneelWork'); look(ar, null); });
   at(58.5, () => play(zo, 'tapTurn'));
   at(58.6, () => sfx('tapSqueak'));
   at(59.0, () => sfx('gurgle'));
   at(59.2, () => loop('trickle'));
   at(59.4, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y - 0.1, K.spout.z)); });
   at(60.0, () => play(zo, 'touchWater'));
-  at(63.2, () => look(zo, head(tw)));
-  at(64.4, () => tw.rig.doGesture('start'));
-  at(64.6, () => { play(ar, 'kneelWork'); look(ar, null); });
+  // down the well (a dip, the cave, a dip back)
+  at(62.05, () => fade(true));
+  at(62.4, () => {
+    g.enterRoom('well', null, true, true);
+    g.hero.pos.set(twSpot.x, 0, twSpot.z);     // (the hero stays at home; the room change moved him)
+    // the cave's crystal mites stand still while nothing runs them: out of the picture until the prologue
+    for (const e of g.enemies || []) if (e.rig?.root && Math.abs(e.pos.x - WR.center.x) < 40) { unseen.push([e, e.rig.root.visible, e.shadow?.visible]); e.rig.root.visible = false; if (e.shadow) e.shadow.visible = false; }
+    sfx('hum'); setTimeout(() => fade(false), 40);
+  });
+  at(63.9, () => sfx('hum'));
+  at(66.1, () => fade(true));
+  at(66.5, () => {
+    reveal();
+    WR.vein.power = 0;
+    g.enterRoom('house', twSpot, true, true);
+    put(tw, twSpot.x, twSpot.z, 0, 'idle');    // (turned to the table, to put the screwdriver down)
+    play(zo, 'idle'); look(zo, head(tw));
+    setTimeout(() => fade(false), 40);
+  });
   // the decision
   at(66.65, () => play(tw, 'setDown'));
   at(67.1, () => { rest(TB.screwdriver, R.group, { x: sdRest.x, y: sdRest.y, z: sdRest.z, ry: sdRest.ry }); sfx('put'); });
-  at(67.9, () => play(tw, 'talk'));
-  at(68.6, () => { play(zo, 'reach'); look(zo, null); });
-  at(68.9, () => play(zo, 'tapTurn'));
-  at(69.0, () => { stopLoop('trickle'); sfx('tapSqueak'); });
-  at(69.5, () => play(tw, 'idle'));
-  at(69.8, () => { play(zo, 'talk'); look(zo, head(tw)); });
-  at(70.6, () => play(zo, 'wipe'));
-  at(71.8, () => { play(zo, 'idle'); look(zo, null); look(tw, null); });
-  at(74.3, () => look(tw, head(zo)));
-  at(75.3, () => sfx('door'));
-  at(75.9, () => { zoe.setPresent(false); });
-  at(76.0, () => document.querySelector('#cine-title').classList.add('show'));
-  at(78.0, () => look(tw, hv(-4.0, 1.2, -1.6)));
-  at(80.6, () => document.querySelector('#cine-title').classList.remove('show'));
-  at(81.5, () => look(tw, null));
+  at(69.0, () => { play(zo, 'reach'); look(zo, null); });
+  at(69.3, () => play(zo, 'tapTurn'));
+  at(69.5, () => { stopLoop('trickle'); sfx('tapSqueak'); });
+  at(70.3, () => { play(zo, 'wipe'); look(zo, head(tw)); });
+  at(71.3, () => { play(zo, 'idle'); });
+  at(72.4, () => look(zo, head(tw)));     // (over her shoulder, walking: "Take your magic ball.")
+  at(74.3, () => { look(zo, null); look(tw, head(zo)); });
+  // the front door: the game's door transition (a dip to black, the door, and she is outside)
+  at(74.85, () => fade(true));
+  at(75.2, () => {
+    sfx('door');
+    stopLoop('room');
+    g.exitRoom({ ...homeOut, a: home.ry }, true, true);
+    cine.focus = V(homeOut.x, 0, homeOut.z);
+    // (the hero waits inside, out of sight; the exit moved him to the door)
+    put(tw, twEnd.x, twEnd.z, twEndA + 0.6, 'idle'); look(tw, null);
+    loop('lap', { quiet: true });
+    setTimeout(() => fade(false), 60);
+  });
+  at(76.4, () => document.querySelector('#cine-title').classList.add('show'));
+  at(81.0, () => document.querySelector('#cine-title').classList.remove('show'));
+  at(81.25, () => fade(true));
+  at(81.6, () => {
+    stopLoop('lap');
+    g.enterRoom('house', twEnd, true, true);
+    zoe.setPresent(false);            // (she is at the neighbours' door; finish() places her there)
+    cine.focus = null;
+    put(tw, twEnd.x, twEnd.z, twEndA + 0.6, 'idle');
+    loop('room');
+    setTimeout(() => fade(false), 40);
+  });
+  at(82.0, () => look(tw, cupboard));
 
-  // footsteps on the boards while walking (house)
-  let stepAcc = 0;
-  track(72.0, 76.0, (k, tt, dt) => { stepAcc += (dt || 0) * 2.6; if (stepAcc > 1) { stepAcc = 0; sfx('step-wood'); } });
+  // footsteps while walking: on the boards (house), on the lane (outside)
+  const steps = (t0, t1, kind, rate = 2.6) => { let acc = 0; track(t0, t1, (k, tt, dt) => { acc += (dt || 0) * rate; if (acc > 1) { acc = 0; sfx(kind); } }); };
+  steps(71.5, 75.0, 'step-wood');
+  steps(75.4, 81.2, 'step-stone', 2.4);
 
+  function reveal() { for (const [e, v, sv] of unseen.splice(0)) { e.rig.root.visible = v; if (e.shadow && sv != null) e.shadow.visible = sv; } }
   function stopLoop(name) { for (const h of loops) if (h.name === name) h.stop(); }
 
-  // ---------------------------------------------------------------- subtitles
-  const who = (id) => t('n_' + id);
-  const C = { zoe: '#ffb0d0', hero: '#8fc2ff', arthur: '#ffe070' };
-  const subs = [
-    { t: 45.4, d: 2.6, who: who('zoe'), color: C.zoe, text: t('op_zoe_1') },
-    { t: 48.5, d: 2.1, who: who('hero'), color: C.hero, text: t('op_tw_1') },
-    { t: 51.1, d: 1.9, who: who('zoe'), color: C.zoe, text: t('op_zoe_2') },
-    { t: 55.0, d: 2.7, who: who('arthur'), color: C.arthur, text: t('op_ar_1') },
-    { t: 62.2, d: 1.9, who: who('zoe'), color: C.zoe, text: t('op_zoe_3') },
-    { t: 67.9, d: 1.9, who: who('hero'), color: C.hero, text: t('op_tw_2') },
-    { t: 69.8, d: 2.0, who: who('zoe'), color: C.zoe, text: t('op_zoe_4') },
-  ];
+  // ---------------------------------------------------------------- lines (each speaker babbles in their own voice)
+  const C = { zoe: '#ffb0d0', hero: '#8fc2ff', arthur: '#ffe070', worker: '#9fe0d8', resident: '#e8d8a0' };
+  const subs = [];
+  // say(at, speaker, text key, seconds, the actor who talks; talk: play the talk gestures)
+  const say = (tt, id, key, d, a = null, talk = true) => {
+    subs.push({ t: tt, d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
+    if (a && talk) { at(tt, () => play(a, 'talk')); at(tt + d - 0.15, () => { if (a.rig.anim === 'talk') play(a, 'idle'); }); }
+  };
+  say(14.6, 'resident', 'op_res_1', 2.3, resident);
+  say(17.1, 'worker', 'op_wk_1', 2.9, worker, false);
+  say(24.0, 'resident', 'op_res_2', 1.7, resident);
+  say(25.8, 'worker', 'op_wk_2', 2.4, worker, false);
+  say(31.3, 'arthur', 'op_ar_1', 1.8, ar, false);
+  say(33.2, 'hero', 'op_tw_0', 1.9, tw);
+  say(45.4, 'zoe', 'op_zoe_1', 2.5, zo);
+  say(48.3, 'hero', 'op_tw_1', 2.0, tw);
+  say(51.0, 'zoe', 'op_zoe_2', 1.8, zo);
+  say(55.0, 'arthur', 'op_ar_2', 2.9, ar, false);
+  say(60.6, 'zoe', 'op_zoe_3', 1.8, zo, false);
+  say(67.9, 'hero', 'op_tw_2', 1.7, tw);
+  say(69.6, 'zoe', 'op_zoe_4', 1.7, zo, false);
+  say(72.4, 'zoe', 'op_zoe_5', 2.4, zo, false);
+
+  // where and when: two captions over the island
+  const caps = [{ t: 1.6, d: 7.0, text: t('op_cap_place'), sub: t('op_cap_time') }];
 
   // ---------------------------------------------------------------- prepare / finish
+  let stationWas = false;
   const cine = new Cinematic(g, {
     length: OPENING_LENGTH,
-    events: ev, tracks, shots, subs,
+    events: ev, tracks, shots, subs, caps,
     music: { name: 'opening', at: MUSIC_AT },
     async prepare(c) {
       g.audio.setMood(null);                   // the title music fades out under the black
       g.exitRoom({ ...HP(-80, -4), a: 0 }, true, true);
       c.focus = harbourFocus;
+      stationWas = !!W.station.active;
       for (const a of [zoe, arthur]) a.controlled = true;
       // the hero is at home (out of sight while the camera is at the harbour)
       put(tw, twSpot.x, twSpot.z, 0, 'tinker');
@@ -331,15 +417,15 @@ export function playOpening(story) {
       put(ar, R.npcSpots.arthur.x, R.npcSpots.arthur.z, R.npcSpots.arthur.a, 'kneelWork');
       hold(BT.mast, ar, [0, -0.03, 0.01], [Math.PI, 0, 0]);
       zoe.setPresent(true);
-      put(worker, -84.15 + HS.x, -3.2 + HS.z, -0.34, 'idle');
-      put(passer, -73.8 + HS.x, -4.7 + HS.z, -Math.PI / 2, 'idle');
-      L.pose(0); L.shake(0); W.boatSurge = 0;
+      put(worker, wkSpot.x, wkSpot.z, angleTo({ pos: wkSpot }, column), 'idle');
+      put(resident, resSpot.x, resSpot.z, Math.atan2(wkSpot.x - resSpot.x, wkSpot.z - resSpot.z), 'idle');
+      L.pose(0); L.shake(0); W.boatSurge = 0; WR.vein.power = 0;
       handle.rotation.y = 0; water(0);
       // compile every material the scene will show while the screen is still black
       const r = g.renderer.renderer;
-      R.group.visible = true;
+      R.group.visible = true; WR.group.visible = true;
       try { await (r.compileAsync ? r.compileAsync(g.scene, g.camera) : r.compile(g.scene, g.camera)); } catch { /* the first frames compile instead */ }
-      R.group.visible = false;
+      R.group.visible = false; WR.group.visible = false;
       // the cue decoded before the picture starts, so it can enter on time
       if (g.audio.ctx) await Promise.race([Promise.resolve(g.audio.music.ready).then(() => g.audio.music.load('opening')), new Promise((res) => setTimeout(res, 5000))]);
     },
@@ -349,18 +435,19 @@ export function playOpening(story) {
       for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; }
       if (skipped) { g.audio.endCue(); }
       document.querySelector('#fade').classList.remove('quick');
+      document.querySelector('#cine-title').classList.remove('show');
       // the house as the player finds it
-      if (g.room !== R) g.enterRoom('house', hx(1.55, -1.75), true, true);
+      if (g.room !== R) g.enterRoom('house', twEnd, true, true);
       cine.focus = null;
       rest(TB.screwdriver, R.group, sdRest);
       rest(BT.mast, R.group, mastFitted);
       handle.rotation.y = 0; water(0); steam.forEach((s) => (s.visible = false));
-      L.pose(1); L.shake(0); W.boatSurge = 0;
+      L.pose(1); L.shake(0); W.boatSurge = 0; WR.vein.power = 0;
+      W.station.setActive(stationWas);
+      reveal();
       for (const a of [zoe, arthur]) a.controlled = false;
-      const end = hx(1.55, -1.75);
-      put(tw, end.x, end.z, Math.atan2(-1, 0.25), 'idle');
-      g.audio.setMood('home');
-      story.cur.afterOpening();   // flags, the family's places, control, objective, save
+      put(tw, twEnd.x, twEnd.z, twEndA, 'idle');
+      story.cur.afterOpening();   // flags, the family's places, control, objective (with the ball step), save
     },
   });
   return cine;

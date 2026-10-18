@@ -13,6 +13,8 @@
 //   R.post {x0,z0,x1,z1, gate:{x,z,open(),isOpen}, office:{x,z}, desk:{x,z}, patrol:[[x,z]...], cover:[{x,z,r}]}
 //   R.storm {level, setLevel(0..1)}                 sandstorm: fog closes in, dust blows; drones see less
 //   R.dig {x,z, gate:{x,z,open(),isOpen}, seals:[{x,y,z,on,setOn(b)}], carvings:{x,z}, door:{x,z}, bottomY, reveal()}
+//        seals = the three warm discs (ball targets `seal`); cold:[{x,y,z}] the two cold ones (targets `cold`);
+//        crack {x,z,y} the crystal-crusted crack beside the last ramp
 //        the bottom of the excavation is the Temple of Bù's gate; reveal() slides its stone door away
 //   R.ruins {x,z, door:{x,z}}                        FunFrock's buried condenser hall (chapter 5)
 //   R.bore {x,z}                                     the project's test bore inside the post (chapter 5)
@@ -865,25 +867,65 @@ export function buildDesert(scene, physics) {
     const cover2 = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.8, 0.3), tm('fortStone', { color: '#7a7268' }));
     cover2.position.set(0, 1.4, 0.15); cover2.castShadow = true; face.add(cover2);   // the stone door, until the seals open
     col({ type: 'box', x: cxw, z: czw, hw: 2.6, hd: 0.4, rot: wallA + Math.PI / 2, top: bottomY + 3.2, noStand: true });
+    // Five discs on pillars, like the five vents carved over the door. Bù's builders tied the door to the planet's
+    // breath: only a disc with live heat behind it slides. Three are warm (pale crystals crust them and dust rises
+    // off them: crystals grow where heat leaks, as Ilka says); two are cold and bare, their vents already closing.
+    // Warm ones are ball targets with `seal` 0–2 (old saves' c4_seal0–2), cold ones carry `cold` 0–1 (story/dig.js).
     const sealM = tm('fortStone', { color: '#d8b090' });
-    for (let k = 0; k < 3; k++) {
-      const a = wallA + (k - 1) * 0.95 + Math.PI;
+    const cryM = pm('#cfefff', 0.15, { emissive: '#3aa8d8', emissiveIntensity: 0.9, flatShading: true });
+    const cryG = cached('digCry', () => new THREE.OctahedronGeometry(1, 0).scale(0.45, 1, 0.45));
+    // a crust of crystals around (x,y,z) (one batch for all) and dust motes drifting up out of it (one point cloud)
+    const CB = new Batch(group, { cast: false }), motes = [];
+    const breath = (x, y, z, n, s, seed, big = 1) => {
+      const r = rng(seed);
+      for (let i = 0; i < n; i++) { const k = (0.09 + r() * 0.12) * big; CB.add(cryG, cryM, x + (r() - 0.5) * s, y + (r() - 0.3) * s * 0.4, z + (r() - 0.5) * s, (r() - 0.5) * 0.9, r() * 3, (r() - 0.5) * 0.9, k, k, k); }
+      for (let i = 0; i < 6; i++) motes.push({ x, y, z, ph: i / 6 + r() * 0.1, dx: (r() - 0.5) * s, dz: (r() - 0.5) * s });
+    };
+    const SLOTS = [['seal', 0], ['cold', 0], ['seal', 1], ['cold', 1], ['seal', 2]];   // left to right, as the carving's vents
+    const cold = [];
+    SLOTS.forEach(([kind, idx], k) => {
+      const a = wallA + Math.PI + (k - 2) * 0.62;
       const sx = DIG.x + Math.cos(a) * 3.6, sz = DIG.z + Math.sin(a) * 3.6;
-      const disc = mesh(group, cached('seal', () => cyl(0.55, 0.55, 0.2, 18, 0)), sealM, sx, bottomY + 1.6, sz, 0, { rx: Math.PI / 2 });
-      disc.rotation.set(Math.PI / 2, 0, -a + Math.PI / 2, 'YXZ');
-      disc.lookAt(DIG.x + ox, bottomY + 1.6, DIG.z + oz); // (the group sits at the origin offset: face the centre)
-      disc.position.set(sx, bottomY + 1.6, sz); disc.lookAt(DIG.x, bottomY + 1.6, DIG.z); disc.rotateX(Math.PI / 2);
-      const glow = mesh(group, cached('sealGlow', () => new THREE.CircleGeometry(0.32, 16)), pm('#ffd890', 0.4, { emissive: '#ffb040', emissiveIntensity: 0 }), sx, bottomY + 1.6, sz, 0, { cast: false });
+      const disc = mesh(group, cached('seal', () => cyl(0.55, 0.55, 0.2, 18, 0)), sealM, sx, bottomY + 1.6, sz, 0);
+      disc.lookAt(DIG.x, bottomY + 1.6, DIG.z); disc.rotateX(Math.PI / 2);
+      const glow = mesh(group, cached('sealGlow', () => new THREE.CircleGeometry(0.32, 16)), pm('#ffd890', 0.4, { emissive: '#ffb040', emissiveIntensity: 0 }).clone(), sx, bottomY + 1.6, sz, 0, { cast: false });
       glow.lookAt(DIG.x, bottomY + 1.6, DIG.z); glow.translateZ(0.12);
-      DB.add(bbox(0.9, 3.0, 0.9, 0.08, 1.5), tm('fortStone', { color: '#b88a68' }), sx + Math.cos(a) * 0.55, bottomY + 1.1, sz + Math.sin(a) * 0.55);
-      const S = { x: ox + sx, y: bottomY + 1.6, z: oz + sz, on: false, setOn(b) { this.on = !!b; glow.material.emissiveIntensity = b ? 2.2 : 0; } };
-      seals.push(S);
-      R.ballTargets.push({ x: S.x, y: S.y, z: S.z, r: 0.8, seal: k });
-      col({ type: 'cyl', x: sx + Math.cos(a) * 0.55, z: sz + Math.sin(a) * 0.55, r: 0.6, top: bottomY + 2.6, noStand: true });
+      const px = sx + Math.cos(a) * 0.55, pz = sz + Math.sin(a) * 0.55;
+      DB.add(bbox(0.9, 3.0, 0.9, 0.08, 1.5), tm('fortStone', { color: kind === 'seal' ? '#b88a68' : '#9a8676' }), px, bottomY + 1.1, pz);
+      col({ type: 'cyl', x: px, z: pz, r: 0.6, top: bottomY + 2.6, noStand: true });
+      const S = { x: ox + sx, y: bottomY + 1.6, z: oz + sz, slot: k, on: false, setOn(b) { this.on = !!b; glow.material.emissiveIntensity = b ? 2.2 : 0; } };
+      if (kind === 'seal') {
+        breath(px, bottomY + 2.62, pz, 7, 0.7, 300 + k);                                                        // on the pillar's top
+        breath(sx - Math.cos(a) * 0.12, bottomY + 2.1, sz - Math.sin(a) * 0.12, 4, 0.5, 320 + k);                // round the disc's rim
+        seals[idx] = S;
+        R.ballTargets.push({ x: S.x, y: S.y, z: S.z, r: 0.8, seal: idx });
+      } else {
+        cold[idx] = S;
+        R.ballTargets.push({ x: S.x, y: S.y, z: S.z, r: 0.7, cold: idx });
+      }
+    });
+    // a crack beside the last ramp, crusted with the same crystals and breathing warm air: the rule shown safely
+    // before the discs ask for it (story/dig.js: Twinsen remarks on it on his way down)
+    // (on the side of the ramp he comes down from: the way round from the gate reaches it from lower angles)
+    const crA = DIG_RAMPS[2] - 0.5, crR = DIG.r - 8 - 0.6;
+    const crx = DIG.x + Math.cos(crA) * crR, crz = DIG.z + Math.sin(crA) * crR;
+    DB.add(bbox(0.22, 1.6, 0.7, 0.02, 1), pm('#2a1c14', 1), DIG.x + Math.cos(crA) * (crR + 0.12), bottomY + 0.8, DIG.z + Math.sin(crA) * (crR + 0.12), 0, -crA, 0);
+    breath(crx, bottomY + 0.2, crz, 10, 0.9, 340, 2.0);
+    breath(crx, bottomY + 0.95, crz, 6, 0.55, 341, 1.4);
+    CB.build();
+    {
+      const mp = new Float32Array(motes.length * 3), mg = new THREE.BufferGeometry();
+      mg.setAttribute('position', new THREE.BufferAttribute(mp, 3));
+      const pts = new THREE.Points(mg, new THREE.PointsMaterial({ color: '#fff0d0', size: 0.07, transparent: true, opacity: 0.8, depthWrite: false }));
+      pts.frustumCulled = false; group.add(pts);
+      updaters.push((dt, t) => {
+        motes.forEach((p, i) => { const u = (t * 0.35 + p.ph) % 1; mp[i * 3] = p.x + p.dx * (1 + u); mp[i * 3 + 1] = p.y + 0.1 + u * 1.6; mp[i * 3 + 2] = p.z + p.dz * (1 + u); });
+        mg.attributes.position.needsUpdate = true;
+      });
     }
     DB.build();
     R.dig = {
-      ...W(DIG.x, DIG.z), bottomY, seals,
+      ...W(DIG.x, DIG.z), bottomY, seals, cold, crack: { ...W(crx, crz), y: bottomY },
       gate: { ...R.digGateSpot, isOpen: false, open() { this.isOpen = true; digGate[0].rotation.x = -1.4; digGate[0].position.y += 1.2; digGate[1].enabled = false; } },
       carvings: W(DIG.x + Math.cos(wallA) * 2.0, DIG.z + Math.sin(wallA) * 2.0),
       door: W(DIG.x + Math.cos(wallA) * 2.7, DIG.z + Math.sin(wallA) * 2.7),   // the temple's gate (enter here)
