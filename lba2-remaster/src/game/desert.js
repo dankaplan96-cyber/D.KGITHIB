@@ -24,13 +24,14 @@ import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry } from './vegetation.js';
 import { shuttleTraffic } from './shuttle.js';
-import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROUTES } from './keshlife.js';
+import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROUTES, routeDist } from './keshlife.js';
+import { CELL as OC, NX as ONX, NZ as ONZ, W as OW, D as OD, UNIT as OU, HEIGHTS as OHEIGHTS } from './desert-layout.js';
 import {
   tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
 } from './kit.js';
 
 export const DESERT = { x: 3400, z: 0 };
-const SIZE = 250, SEGS = 250;
+const SIZE = 300, SEGS = 280;   // (the original's island reaches 141 m from our centre)
 const BASE = 5.0;
 const SEA_Y = -0.2;
 
@@ -45,10 +46,10 @@ const CAMP = { x: -10, z: -46 };
 const RUINS = { x: 12, z: 50 };
 const MESAS = [
   { x: -6, z: -70, rx: 24, rz: 13, h: 15 },
-  { x: 38, z: 72, rx: 17, rz: 11, h: 13 },
+  { x: 38, z: 72, rx: 17, rz: 11, h: 13, gone: true },   // (gone: the original's coast and high ground stand there now)
   { x: 86, z: -26, rx: 9, rz: 15, h: 12 },
   { x: -70, z: 52, rx: 13, rz: 9, h: 11 },
-  { x: 92, z: 46, rx: 7, rz: 7, h: 9 },
+  { x: 92, z: 46, rx: 7, rz: 7, h: 9, gone: true },
 ];
 const TRACKS = [
   [[-86, 4], [-70, 4], [-58, 3], [-40, 5], [-22, 7], [0, 9], [22, 6], [26, -21]],
@@ -66,14 +67,86 @@ const HOUSES = [
 
 const rr = rng(4141);
 const angDiff = (a, b) => Math.abs(((a - b + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
-const islandR = (a) => 90 + 7 * Math.sin(3 * a + 0.6) + 5 * Math.sin(5 * a + 2.1) + 2.5 * Math.sin(9 * a + 0.4) + 10 * Math.exp(-(angDiff(a, Math.PI - 0.05) ** 2) / 0.012);
+
+// ================================================================== the original's island (WORLD-SHAPE)
+// The coast and the high ground follow the original LBA2 Desert Island (desert-layout.js: its height grid as numbers,
+// 219 × 274 m), turned into our frame so every place of ours stands inland: ours = R(deg) · original + t. The turn and
+// shift were searched over (every 5°, 2 m) for the largest margin between our places and the original's coast. Its
+// inlets, the north lagoon, the round hill and the long south-east arm are the original's; our dunes, flats, tracks,
+// the dig and the mesas by the camp and the School of Magic are ours, on top.
+export const DESERT_FIT = { deg: 275, tx: -4, tz: -40 };
+const FIT_C = Math.cos(DESERT_FIT.deg * Math.PI / 180), FIT_S = Math.sin(DESERT_FIT.deg * Math.PI / 180);
+let OG = null;
+// the original's height (m) under our (x, z); 0 is its sea
+function origH(x, z) {
+  OG ??= Uint8Array.from(atob(OHEIGHTS), (c) => c.charCodeAt(0));
+  const qx = x - DESERT_FIT.tx, qz = z - DESERT_FIT.tz;
+  const gx = (FIT_C * qx + FIT_S * qz + OW / 2) / OC, gz = (-FIT_S * qx + FIT_C * qz + OD / 2) / OC;
+  if (gx < 0 || gz < 0 || gx >= ONX - 1 || gz >= ONZ - 1) return 0;
+  const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, o = j * ONX + i;
+  return ((OG[o] * (1 - fx) + OG[o + 1] * fx) * (1 - fz) + (OG[o + ONX] * (1 - fx) + OG[o + ONX + 1] * fx) * fz) * OU;
+}
+// our places: [x, z, r] — land at least r round each (the coast gives way a little where the original's is closer),
+// and the original's high ground kept off them (it rises from RELIEF_GAP m beyond r)
+const KEEP = [[-50, 2, 26], [-70, -6, 11], [-40, -15, 14], [-30, -7, 8], [64, 28, 24], [-10, -46, 12], [12, 50, 12], [-70, 41.5, 10],
+  [-60, -36, 11], [-21.6, 15.2, 5], [-84, 4, 6]];
+const RELIEF_GAP = 8;
+function keepDist(x, z) {   // metres outside the nearest keep (negative inside)
+  let d = Math.max(POST.x0 - 8 - x, x - POST.x1 - 8, POST.z0 - 8 - z, z - POST.z1 - 8);
+  for (const [kx, kz, r] of KEEP) d = Math.min(d, Math.hypot(x - kx, z - kz) - r);
+  d = Math.min(d, trackDist(x, z) - 5, routeDist(x, z) - 4);
+  return d;
+}
+// signed distance to the coast (m, + inland) on a 2 m grid over the patch, from the original's land plus our keeps
+const CD_STEP = 2, CD_N = SIZE / CD_STEP + 1;
+let CD = null;
+function buildCoast() {
+  const n = CD_N, h0 = SIZE / 2, land = new Uint8Array(n * n);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const x = -h0 + i * CD_STEP, z = -h0 + j * CD_STEP;
+    land[j * n + i] = origH(x, z) > 0.05 || keepDist(x, z) < 0 ? 1 : 0;
+  }
+  // two chamfer passes (distance to the other kind), for the land and for the sea
+  const dist = (want) => {
+    const d = new Float32Array(n * n), BIG = 1e6, a = CD_STEP, b = CD_STEP * Math.SQRT2;
+    for (let k = 0; k < n * n; k++) d[k] = land[k] === want ? BIG : 0;
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const k = j * n + i; if (!d[k]) continue;
+      let v = d[k];
+      if (i > 0) v = Math.min(v, d[k - 1] + a);
+      if (j > 0) { v = Math.min(v, d[k - n] + a); if (i > 0) v = Math.min(v, d[k - n - 1] + b); if (i < n - 1) v = Math.min(v, d[k - n + 1] + b); }
+      d[k] = v;
+    }
+    for (let j = n - 1; j >= 0; j--) for (let i = n - 1; i >= 0; i--) {
+      const k = j * n + i; if (!d[k]) continue;
+      let v = d[k];
+      if (i < n - 1) v = Math.min(v, d[k + 1] + a);
+      if (j < n - 1) { v = Math.min(v, d[k + n] + a); if (i < n - 1) v = Math.min(v, d[k + n + 1] + b); if (i > 0) v = Math.min(v, d[k + n - 1] + b); }
+      d[k] = v;
+    }
+    return d;
+  };
+  const din = dist(1), dout = dist(0);
+  CD = new Float32Array(n * n);
+  for (let k = 0; k < n * n; k++) CD[k] = land[k] ? din[k] - CD_STEP / 2 : -(dout[k] - CD_STEP / 2);
+}
+// distance inland from the shore (negative at sea), with a wobble so the coast reads as sand and rock
+export function coastDist(x, z) {
+  if (!CD) buildCoast();
+  const gx = (x + SIZE / 2) / CD_STEP, gz = (z + SIZE / 2) / CD_STEP;
+  if (gx < 0 || gz < 0 || gx >= CD_N - 1 || gz >= CD_N - 1) return -40;
+  const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, o = j * CD_N + i;
+  const d = (CD[o] * (1 - fx) + CD[o + 1] * fx) * (1 - fz) + (CD[o + CD_N] * (1 - fx) + CD[o + CD_N + 1] * fx) * fz;
+  return d + Math.sin(x * 0.21 + z * 0.13) * Math.sin(z * 0.17 - x * 0.09) * 1.1;
+}
 function trackDist(x, z) {
   let d = 1e9;
   for (const p of TRACKS) for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]));
   return d;
 }
 const inPost = (x, z, pad = 0) => x > POST.x0 - pad && x < POST.x1 + pad && z > POST.z0 - pad && z < POST.z1 + pad;
-const mesaQ = (m, x, z) => Math.pow(Math.pow(Math.abs(x - m.x) / m.rx, 4) + Math.pow(Math.abs(z - m.z) / m.rz, 4), 0.25) + Math.sin(Math.atan2(z - m.z, x - m.x) * 7 + m.x) * 0.03;
+// (rounded, with a wandering rim: not a box with soft corners)
+const mesaQ = (m, x, z) => { const a = Math.atan2(z - m.z, x - m.x); return Math.pow(Math.pow(Math.abs(x - m.x) / m.rx, 2.6) + Math.pow(Math.abs(z - m.z) / m.rz, 2.6), 1 / 2.6) + Math.sin(a * 7 + m.x) * 0.03 + Math.sin(a * 3 + m.z) * 0.06; };
 
 // --- dig terraces: rings 16→12→8→4 m, each 1.6 m lower; one ramp per ring boundary at its own angle
 const DIG_RAMPS = [0.35, 2.55, 4.6];
@@ -94,7 +167,6 @@ function digHeight(x, z) {
 }
 
 function heightFn(x, z) {
-  const a = Math.atan2(z, x), s = Math.hypot(x, z) / islandR(a);
   // dunes: long crests across the wind (from the west) with a cross ripple
   const crest = Math.max(0, Math.sin(x * 0.085 + z * 0.045 + Math.sin(z * 0.035) * 1.2));
   let dunes = crest * crest * 2.0 + Math.sin(x * 0.19 + z * 0.12) * 0.35 + Math.sin(x * 0.05 - z * 0.08) * 0.6;
@@ -108,6 +180,9 @@ function heightFn(x, z) {
   flat = Math.max(flat, smoothstep(10, 5, Math.hypot(x - RUINS.x, z - RUINS.z)));
   flat = Math.max(flat, keshFlat(x, z));
   let h = BASE + dunes * (1 - flat);
+  // the original's ground away from our places: its high ground rises as rock, its low ground rolls (WORLD-SHAPE)
+  const wr = smoothstep(0, RELIEF_GAP, keepDist(x, z));
+  if (wr > 0) { const O = origH(x, z); h += wr * (Math.max(0, O - 4) * 1.25 + (Math.min(O, 4) - 2) * 0.5); }
   // Kesh's sand (keshlife.js): the dune against the cool room, sand banked on the screens, a drift over the yacht's track
   h += keshBank(x, z) + DRIFT_H * keshDrift(x, z);
   // the post sits on a levelled concrete pad
@@ -116,22 +191,26 @@ function heightFn(x, z) {
   const od = Math.hypot(x - OASIS.x, z - OASIS.z);
   if (od < OASIS.r + 5) h -= 1.5 * smoothstep(OASIS.r + 5, OASIS.r - 2, od);
   // mesas: flat tops, sheer sides
+  let rock = 0;
   for (const m of MESAS) {
+    if (m.gone) continue;
     const q = mesaQ(m, x, z);
     if (q < 1.15) {
       const t = smoothstep(1.1, 0.95, q);
       const top = BASE + m.h + Math.sin(x * 0.3) * Math.sin(z * 0.27) * 0.4;
-      h = h + (top - h) * t;
+      h = Math.max(h, h + (top - h) * t); rock = Math.max(rock, t);
     }
   }
   const dg = digHeight(x, z);
   if (dg != null) h = Math.min(h, dg);
-  // the shore: a short beach, then the sea floor
-  const land = smoothstep(1.03, 0.88, s);
+  // the shore: a long low beach as the original's (rising 1 in 2.2), steeper only where one of our places stands
+  // close to the sea; then the sea floor
+  // (and where the ground behind is high rock, the original's or a mesa: a sea cliff)
+  const cd = coastDist(x, z), sl = 0.45 + 0.6 * smoothstep(6, 0, keepDist(x, z)) + 0.2 * Math.max(0, origH(x, z) - 2) + 3 * rock;
   // near the pier the beach slopes gently down to the deck
   const dd = Math.hypot(x - (DOCK.x + 8), (z - DOCK.z) * 0.8);
   if (dd < 22) h = h + (DOCK.deck + 0.2 + (h - DOCK.deck - 0.2) * smoothstep(4, 22, dd) - h) * (1 - smoothstep(16, 22, dd));
-  const out = -3.2 + (h + 3.2) * land;
+  const out = Math.max(-3.2, Math.min(h, -0.8 + sl * cd));
   // the pier's landward end steps onto sand at the deck's height: after the shore blend, which would otherwise
   // pull the ground there down to the sea floor (below the water line: a gap nobody can walk across)
   const ex = x - (DOCK.x + 17), w = (1 - smoothstep(3, 10, Math.abs(z - DOCK.z))) * smoothstep(-2.5, -1.0, ex) * (1 - smoothstep(4, 8, ex));
@@ -168,6 +247,52 @@ function splatFn(x, z, h, slope, w) {
   const od = Math.hypot(x - OASIS.x, z - OASIS.z);
   if (od > OASIS.r - 1 && od < OASIS.r + 4) w[0] = 0.7 * smoothstep(OASIS.r + 4, OASIS.r + 1, od);
   if (inPost(x, z)) { w[4] = 2; w[1] = 0; w[3] = 0; }
+}
+
+// The ground on the terrain's own grid, checked for soft-locks as on Citadel (world.js fixTraps): every walkable
+// point must be able to walk back to Kesh (drops are fine, climbs only up to the walkable slope). A pit the
+// original's sea cliffs and our mesas leave (a strip of beach under a cliff, a hollow between rocks) is lifted
+// into a ramp from its rim until none is left.
+function groundGrid() {
+  const n = SEGS + 1, step = SIZE / SEGS, x0 = -SIZE / 2, h = new Float32Array(n * n);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) h[j * n + i] = heightFn(x0 + i * step, x0 + j * step);
+  const climb = step * 0.95, SEA = -0.35;
+  // a sliver of wet sand at the foot of a sea cliff (one point wide) goes under the water: the cliff stands in the sea
+  for (let j = 1; j < n - 1; j++) for (let i = 1; i < n - 1; i++) {
+    const k = j * n + i, v = h[k];
+    if (v < SEA || v > 0.6) continue;
+    const top = Math.max(h[k - 1], h[k + 1], h[k - n], h[k + n]), low = Math.min(h[k - 1], h[k + 1], h[k - n], h[k + n]);
+    if (top - v > 3 && low < SEA) h[k] = -0.6;
+  }
+  // one flood from Kesh: a neighbour joins if it can walk back up to the point it was reached from; those that
+  // can't wait until the flood has gone everywhere it can, then each still left out is lifted to just under that
+  // point (a step of the ramp) and the flood goes on from it
+  const si = Math.round((VILLAGE.x - x0) / step), sj = Math.round((VILLAGE.z - x0) / step);
+  let fixed = 0;
+  const seen = new Uint8Array(n * n), q = new Int32Array(n * n);
+  let qh = 0, qt = 0, wait = [];
+  seen[sj * n + si] = 1; q[qt++] = sj * n + si;
+  for (;;) {
+    while (qh < qt) {
+      const c = q[qh++], ci = c % n, cj = (c - ci) / n;
+      for (let k = 0; k < 4; k++) {
+        const ai = ci + (k === 0 ? 1 : k === 1 ? -1 : 0), aj = cj + (k === 2 ? 1 : k === 3 ? -1 : 0);
+        if (ai < 0 || aj < 0 || ai >= n || aj >= n) continue;
+        const a = aj * n + ai;
+        if (seen[a] || h[a] < SEA) continue;
+        if (h[c] - h[a] > climb) { wait.push(a, c); continue; }
+        seen[a] = 1; q[qt++] = a;
+      }
+    }
+    if (!wait.length) break;
+    const w = wait; wait = [];
+    for (let k = 0; k < w.length; k += 2) {
+      const a = w[k], c = w[k + 1];
+      if (seen[a]) continue;
+      h[a] = h[c] - climb * 0.9; fixed++; seen[a] = 1; q[qt++] = a;
+    }
+  }
+  return { fixed, at: (x, z) => h[Math.min(SEGS, Math.max(0, Math.round((z - x0) / step))) * n + Math.min(SEGS, Math.max(0, Math.round((x - x0) / step)))] };
 }
 
 // ================================================================== painted textures (desert only)
@@ -212,13 +337,16 @@ export function buildDesert(scene, physics) {
   const TX = textures();
 
   // --- ground
-  const terrain = new Terrain({ size: SIZE, segs: SEGS, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: TX.concrete } });
+  const R0 = {};
+  const ground = groundGrid();
+  const terrain = new Terrain({ size: SIZE, segs: SEGS, heightFn: ground.at, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: TX.concrete } });
+  R0.trapFixes = ground.fixed;
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   const H = (x, z) => terrain.heightAt(x, z);
 
   const R = {
-    id: 'desert', outdoor: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
+    ...R0, id: 'desert', outdoor: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
     music: 'desert',
     env: { fog: '#f0d2a2', sun: '#fff0d4', hemiSky: '#ffe6bc', hemiGround: '#b4845a', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },
     terrain, H: (x, z) => H(x - ox, z - oz),
@@ -470,12 +598,12 @@ export function buildDesert(scene, physics) {
     for (const m of MESAS) for (let i = 0; i < 18; i++) {
       const a = rr() * Math.PI * 2, q = 1.05 + rr() * 0.25;
       const x = m.x + Math.cos(a) * m.rx * q, z = m.z + Math.sin(a) * m.rz * q;
-      if (Math.hypot(x, z) > 82) continue;
+      if (m.gone || coastDist(x, z) < 4) continue;
       rocks.push({ x, y: H(x, z) - 0.15, z, ry: rr() * 6, s: 0.5 + rr() * 1.1 });
     }
     for (let i = 0; i < 70; i++) {
       const x = (rr() - 0.5) * 170, z = (rr() - 0.5) * 170;
-      if (Math.hypot(x, z) > 80 || trackDist(x, z) < 5 || inPost(x, z, 4) || Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r + 3 || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 3) continue;
+      if (coastDist(x, z) < 6 || trackDist(x, z) < 5 || inPost(x, z, 4) || Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r + 3 || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 3) continue;
       rocks.push({ x, y: H(x, z) - 0.1, z, ry: rr() * 6, s: 0.25 + rr() * 0.5 });
     }
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
@@ -493,7 +621,7 @@ export function buildDesert(scene, physics) {
     const list = [];
     for (let i = 0; i < 220; i++) {
       const x = (rr() - 0.5) * 170, z = (rr() - 0.5) * 170;
-      if (Math.hypot(x, z) > 82 || trackDist(x, z) < 2.5 || inPost(x, z, 2) || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 1) continue;
+      if (coastDist(x, z) < 5 || trackDist(x, z) < 2.5 || inPost(x, z, 2) || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 1) continue;
       const h = H(x, z); if (h > BASE + 4) continue;
       const it = { x, y: h + 0.1, z, ry: rr() * 6, s: 0.5 + rr() * 0.8, color: rr() < 0.5 ? '#9a8a4a' : '#7a7a3a' };
       if (!keshClear(x, z)) list.push(it);
@@ -503,7 +631,7 @@ export function buildDesert(scene, physics) {
     const CB = new Batch(group);
     for (let i = 0; i < 26; i++) {
       const x = (rr() - 0.5) * 160, z = (rr() - 0.5) * 160;
-      if (Math.hypot(x, z) > 78 || trackDist(x, z) < 3 || inPost(x, z, 3) || Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 2) continue;
+      if (coastDist(x, z) < 8 || trackDist(x, z) < 3 || inPost(x, z, 3) || Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r || Math.hypot(x - DIG.x, z - DIG.z) < DIG.r + 2) continue;
       const y = H(x, z), h = 1.6 + rr() * 1.6, keep = !keshClear(x, z);   // (the draws happen either way: the rest keep their places)
       if (keep) CB.add(cyl(0.2, 0.24, h, 8, 0), cactM, x, y + h / 2, z);
       if (keep) CB.add(new THREE.SphereGeometry(0.2, 8, 6), cactM, x, y + h, z);

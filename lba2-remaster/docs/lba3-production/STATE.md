@@ -79,6 +79,18 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   a person he faces (the lighthouse dial vs Zoé), and chapter10.mjs no longer depends on Zoé's facing (DONE ×3, forced
   ASSISTED exit 2). N2 (the pump's camera) left open: no camera zones exist. QA.md "REV-TY-5 fixes"; status REVIEW.
 
+## Done after (WORLD-SHAPE; status REVIEW)
+- The user: "the map still doesn't look like the original game (LBA2) in structure and size". A measured audit of
+  every region against the original islands (docs/lba3-production/reviews/WORLD-SHAPE/AUDIT.md): Citadel's coast and
+  houses are the original's (land IoU 0.92) but its terraces stand 1–2 m low; Zeelich's islands are faithful
+  (0.89–0.95); Desert Island was an invented round island (IoU 0.52, 71 % of the original's land) and the Hamalayi a
+  square box (93 % of its cliff edge axis-aligned).
+- Fixed: Desert Island's coast and high ground now follow the original (src/game/desert-layout.js, numbers only;
+  IoU 0.93, 33,146 of 34,394 m²; places and tracks unmoved; soft-lock flood fill); the Hamalayi's ring of peaks,
+  terraces and gorge made organic (35 % axis-aligned), its levels and story spots unchanged.
+- Follow-ups for the files other tasks own (AUDIT.md): Citadel's terraces (world.js + island.js POI_PLATEAU), the
+  harbour basin, walking speed (CTRL-1), the holomap's Desert frame (hud.js).
+
 ## Next exact task
 Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

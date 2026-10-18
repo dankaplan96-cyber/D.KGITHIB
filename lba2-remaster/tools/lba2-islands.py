@@ -24,7 +24,12 @@
 #             ground (the pit leaves only a narrow rim to walk on) and adds CELEBRA2's new objects as "risen":
 #             twelve years on the figure still stands, the pit round its feet filled and paved for the festival.
 # The Emerald Moon (EMERAUDE, MOON) is not wanted (the user); Citadel and Desert are built by our own code.
-import sys, os, json, struct
+#
+# Desert Island (WORLD-SHAPE): `python3 -I tools/lba2-islands.py <ILE folder> --desert src/game/desert-layout.js` writes
+# the original DESERT ground as numbers only: every 2nd point of its height grid (≈ 1.71 m apart), each height
+# rounded to 0.05 m and packed one byte per point (base64). desert.js turns it into its own frame, uses it for the
+# coast and the high ground, and keeps its own dunes, flats and places on top.
+import sys, os, json, struct, base64
 
 K = 2.07 / 1238          # metres per LBA unit (Twinsen 2.07 m)
 SEC = 32768              # a section's size in LBA units
@@ -121,7 +126,32 @@ def objects(C, x0, z0, w, d):
 
 LATER = {'CELEBRAT': 'CELEBRA2'}   # an island's later state, whose new objects are kept as "risen"
 
+def desert_js(src, out):
+    C = island(src)
+    xs = [k[0] for k in C]; zs = [k[1] for k in C]
+    x0, z0, nsx, nsz = min(xs), min(zs), max(xs) - min(xs) + 1, max(zs) - min(zs) + 1
+    STEP = 2
+    nx, nz = nsx * 64 // STEP + 1, nsz * 64 // STEP + 1
+    q = bytearray(nx * nz)
+    for (cx, cz), c in C.items():
+        for j in range(0, 65, STEP):
+            for i in range(0, 65, STEP):
+                gi = ((cx - x0) * 64 + i) // STEP; gj = ((cz - z0) * 64 + j) // STEP
+                q[gj * nx + gi] = max(0, min(255, round(c['Y'][j * 65 + i] * K / 0.05)))
+    w, d = nsx * SEC * K, nsz * SEC * K
+    with open(out, 'w') as f:
+        f.write('// Desert Island\'s ground after the original LBA2 island (DESERT), as numbers only: written by\n'
+                '// tools/lba2-islands.py --desert from the user\'s own files. Every 2nd point of the original height grid\n'
+                '// (CELL m apart, NX x NZ points, x east, z south, centred on the grid), each height in 0.05 m steps, one byte\n'
+                '// per point, base64. 0 is the sea. desert.js turns it into its own frame (see DESERT_FIT there).\n')
+        f.write('export const CELL = %.4f, NX = %d, NZ = %d, W = %.2f, D = %.2f, UNIT = 0.05;\n' % (SEC * K / 64 * STEP, nx, nz, w, d))
+        f.write("export const HEIGHTS = '%s';\n" % base64.b64encode(bytes(q)).decode())
+    print('desert layout', nx, 'x', nz, 'size m', round(w, 1), round(d, 1), 'bytes', os.path.getsize(out))
+
+
 if __name__ == '__main__':
+    if len(sys.argv) >= 4 and sys.argv[2] == '--desert':
+        desert_js(os.path.join(sys.argv[1], 'DESERT.ILE'), sys.argv[3]); sys.exit()
     if len(sys.argv) < 3: sys.exit(__doc__ or 'usage: lba2-islands.py <ILE folder> <out folder> [NAME ...]')
     src_dir, out_dir = sys.argv[1], sys.argv[2]
     os.makedirs(out_dir, exist_ok=True)
