@@ -748,11 +748,13 @@ class Game {
     const h = this.hero, W = this.world;
     let best = null, bd = 1e9;
     // ranking: distance, plus a penalty for things off to the side or behind Twinsen (so what he faces wins),
-    // and people a little ahead of signs and searches when they are about as close
+    // and people a little ahead of signs and searches when they are about as close, but only people in front of
+    // him: someone standing just behind him does not take the prompt from the pump he faces at arm's length
+    // (FIX-PUMP-N: Bram 0.9 m behind beat the pump 1.4 m ahead)
     const fx = Math.sin(h.angle), fz = Math.cos(h.angle);
     const consider = (d, max, o) => {
       if (!(d < max)) return;
-      const s = d + (o.kind === 'npc' ? -0.35 : 0);
+      const s = d + (o.kind === 'npc' && !o.behind ? -0.35 : 0);
       if (s < bd) { bd = s; best = o; }
     };
     const dist = (x, z) => {
@@ -767,9 +769,10 @@ class Game {
     let faced = null, fd = 1e9, fa = 0;
     for (const n of this.npcs) {
       if (!n.present || n.def.noTalk || h.pos.y - n.pos.y > TALK_ABOVE) continue;
-      const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk' };
-      consider(dist(n.pos.x, n.pos.z), 2.6, o);
       const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z), a = aim(n.pos.x, n.pos.z);
+      // (behind: in the half-plane at his back, not right on top of him)
+      const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk', behind: d >= 0.5 && a < 0 };
+      consider(dist(n.pos.x, n.pos.z), 2.6, o);
       if (d < 2.2 && d < fd && a > 0.7) { fd = d; fa = a; faced = o; }
     }
     if (!this.room) {
