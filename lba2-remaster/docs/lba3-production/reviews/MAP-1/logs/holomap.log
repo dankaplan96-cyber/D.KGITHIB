@@ -11,10 +11,10 @@ PASS zeelich: M opens the Holomap; his arrow is on his position (0.00 px off) an
 PASS zeelich: the drawn ground matches the world (land 845/847, sea 3116/3117) 
 PASS zeelich: 11 labels, none overlapping or outside the map 
 PASS isle_tralu: M opens the Holomap; his arrow is on his position (0.00 px off) and faces his way; he stands on land on the map 
-PASS isle_tralu: the drawn ground matches the world (land 276/276, sea 3563/3564) 
+PASS isle_tralu: the drawn ground matches the world (land 277/277, sea 3563/3564) 
 PASS isle_tralu: 3 labels, none overlapping or outside the map 
 PASS isle_otringal: M opens the Holomap; his arrow is on his position (0.00 px off) and faces his way; he stands on land on the map 
-PASS isle_otringal: the drawn ground matches the world (land 822/822, sea 2666/2676) 
+PASS isle_otringal: the drawn ground matches the world (land 819/819, sea 2666/2676) 
 PASS isle_otringal: 3 labels, none overlapping or outside the map 
 PASS mouse: the wheel zooms in, a drag pans the map 
 PASS keyboard: − zooms out, + zooms in, → pans east, Enter centres on Twinsen; the map stays open (no leaked action) 
@@ -23,7 +23,7 @@ PASS touch: a pinch zooms in
 PASS the Close button closes the map (touch and mouse) 
 PASS 20 quick open/close cycles (M, H, Esc): each opens and closes, play resumes, no pause menu leaks, no new listeners 
 PASS indoors (Twinsen's house, entered by its door): the title names the room, its plan is drawn, the door he used is recorded and marked, in view 
-PASS minimap: shown with the "Always on" HUD; north-up; drawing it costs 0.058 ms a frame (p95 0.100 ms, software canvas here) 
+PASS minimap: shown with the "Always on" HUD; north-up; drawing it costs 0.219 ms a frame (p95 0.200 ms, software canvas here) 
 PASS Settings → Minimap: "Turns with camera" is applied and kept in storage 
 PASS minimap turning with the camera: what lies ahead on screen is up on the minimap 
 PASS minimap indoors: the room's plan 

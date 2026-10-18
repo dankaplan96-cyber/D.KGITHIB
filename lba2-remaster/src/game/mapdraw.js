@@ -83,23 +83,26 @@ function texMean(tex, fallback) {
 }
 
 // the painted look of each terrain vertex: its colour × the splat mix of the textures' mean colours (0..1 RGB)
-function terrainAlbedo(T, pal) {
+// (a generator: built in slices like the rest; kept on the terrain, so a second map of it is free)
+function* terrainAlbedo(T, pal) {
   if (T._mapAlb) return T._mapAlb;
   const n = T.segs + 1, geo = T.mesh.userData.full, col = geo?.attributes.color?.array, spl = geo?.attributes.splat?.array, spl2 = geo?.attributes.splat2?.array;
   const tx = T.tex || {};
   const M = [texMean(tx.grass, [0.42, 0.55, 0.3]), texMean(tx.sand, [0.8, 0.72, 0.55]), texMean(tx.rock, [0.5, 0.48, 0.46]), texMean(tx.dirt, [0.55, 0.42, 0.3]), texMean(tx.cobble, [0.6, 0.58, 0.55])];
   const A = new Float32Array(n * n * 3), W = new Float32Array(n * n * 2);
   let lum = 0, cnt = 0;
-  for (let k = 0; k < n * n; k++) {
-    const vc = col ? [col[k * 3], col[k * 3 + 1], col[k * 3 + 2]] : [0.6, 0.6, 0.6];
-    let r = 0, gg = 0, b = 0;
+  for (let k = 0; k < n * n; k++) {   // (no allocation per vertex: ~80 000 of them on Citadel)
+    let r = 1, gg = 1, b = 1;
     if (spl) {
-      const w = [spl[k * 4], spl[k * 4 + 1], spl[k * 4 + 2], spl[k * 4 + 3], spl2 ? spl2[k] : 0];
-      for (let q = 0; q < 5; q++) { r += w[q] * M[q][0]; gg += w[q] * M[q][1]; b += w[q] * M[q][2]; }
-      W[k * 2] = w[3]; W[k * 2 + 1] = w[4];
-    } else { r = gg = b = 1; }
-    A[k * 3] = vc[0] * r; A[k * 3 + 1] = vc[1] * gg; A[k * 3 + 2] = vc[2] * b;
+      const w0 = spl[k * 4], w1 = spl[k * 4 + 1], w2 = spl[k * 4 + 2], w3 = spl[k * 4 + 3], w4 = spl2 ? spl2[k] : 0;
+      r = w0 * M[0][0] + w1 * M[1][0] + w2 * M[2][0] + w3 * M[3][0] + w4 * M[4][0];
+      gg = w0 * M[0][1] + w1 * M[1][1] + w2 * M[2][1] + w3 * M[3][1] + w4 * M[4][1];
+      b = w0 * M[0][2] + w1 * M[1][2] + w2 * M[2][2] + w3 * M[3][2] + w4 * M[4][2];
+      W[k * 2] = w3; W[k * 2 + 1] = w4;
+    }
+    A[k * 3] = (col ? col[k * 3] : 0.6) * r; A[k * 3 + 1] = (col ? col[k * 3 + 1] : 0.6) * gg; A[k * 3 + 2] = (col ? col[k * 3 + 2] : 0.6) * b;
     if (T.heights[k] > 0.5) { lum += 0.3 * A[k * 3] + 0.59 * A[k * 3 + 1] + 0.11 * A[k * 3 + 2]; cnt++; }
+    if (k % 16384 === 16383) yield;
   }
   // the scene is lit (a strong sun); the map shows the ground at about the brightness it is seen in play
   const gain = Math.max(1, Math.min(2.8, 0.6 / Math.max(0.05, cnt ? lum / cnt : 0.4)));
@@ -140,7 +143,7 @@ function* build(g, F, pal, B, room) {
   let tS = performance.now(); B.stages = {};
   const lap = (name) => { const n = performance.now(); B.stages[name] = +((B.stages[name] || 0) + n - tS).toFixed(1); tS = n; };
   // ---- the terrain
-  const alb = T ? terrainAlbedo(T, pal) : null;
+  const alb = T ? yield* terrainAlbedo(T, pal) : null;
   lap('albedo');
   for (let j = 0; j < N; j++) {
     const z = Z0 + (j + 0.5) * px;

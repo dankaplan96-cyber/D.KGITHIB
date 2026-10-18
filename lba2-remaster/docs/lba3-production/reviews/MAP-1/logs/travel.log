@@ -2,6 +2,11 @@ PASS chapter 2: no travel menu anywhere (the spaceport's shuttle reads the groun
 PASS chapter 4: the ferry runs (Citadel → Desert Island only); every glider field is closed 
 PASS chapter 5: the project has taken the ferry: no ferry menu on Desert Island's pier 
 PASS chapter 6: the glider joins Desert Island and the Hamalayi; Citadel's field still closed 
+PASS PLANET-1: every travel route that touches Zeelich is the spaceship (Citadel ⇄ Zeelich Spaceport) or a Zeelich shuttle; no ferry, glider or boat route reaches Zeelich 
+PASS chapter 2: Doran at the harbour takes Baldino's start code and goes ahead to the spaceport; no crossing from the harbour (INPUT) 
+PASS chapter 2 → 3: E at the project's ship on Citadel Spaceport's pad (INPUT) flies him to Zeelich: chapter 3 starts on Zeelich Spaceport's deck, the plan confiscated there; no sky-ferry at Zeelich's dock 
+PASS chapter 8 → 9: no ship at the harbour's quay; E at the project ship on Citadel Spaceport's pad (INPUT) → chapter 9 on Zeelich Spaceport's deck 
+PASS chapter 10: no Hesk on Zeelich; the spaceship takes him to Citadel; Hesk's glider menu there names only Twinsun (Citadel, Desert Island, the Hamalayi), never Zeelich (INPUT) 
 PASS Twinsun: Citadel ⇄ Desert Island ⇄ the Hamalayi, every region from every other by ferry or glider, by input (8 legs) 
 PASS Twinsun's ferry and glider menus name only Twinsun places (no Zeelich, no spaceship) 
 PASS Citadel Spaceport's menu lists only Zeelich Spaceport; the spaceship lands him on Zeelich's spaceport deck 
