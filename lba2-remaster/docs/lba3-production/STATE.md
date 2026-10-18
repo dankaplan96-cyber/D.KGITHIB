@@ -93,6 +93,13 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   a clover and 10 kashes); the old mill's stones two at a time (its relay still needs the brake). Saves never hold a
   position in the air; a save over the sea or inside something loads at the region's spawn. tests/jetpack.mjs; QA.md
   "Baldino's hop-pack (EQ-1)"; STORY_BIBLE.md "Baldino's hop-pack".
+## PERF-IGPU (status REVIEW, branch worktree-agent-a079faebfb0eeef59)
+- Black frames from the automatic resolution fixed (fixed canvas and targets; tests/dynres.mjs). Precompile into the
+  composer's target, shadow depth programs warmed, preset changes wait for their shaders; Low preset reworked and
+  auto-picked on Vega/Intel HD-UHD; trees/rocks batched, static shadow casters batched per cell, Kit colour merge.
+  Numbers: QA.md "Performance"; VISUAL_REMASTER "Performance on integrated GPUs".
+- Open: town.js/island.js merges (VP-10's files; VISUAL_REMASTER "Remaining" 3) for Medium street ≤ 300; the
+  user's benchmark on the laptop (GPU frame rate, startup on D3D11) is the judge.
 
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

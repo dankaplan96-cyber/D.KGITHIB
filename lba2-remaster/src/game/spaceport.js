@@ -20,6 +20,7 @@ import * as P from './props.js';
 import { Kit, rbox, cyl, lathe, plane, torus, sphere, canvasTex, MAT, paintVC, tinted } from './props.js';
 import { esmerShuttle } from './shuttle.js';
 import { occOf } from '../engine/occlude.js';
+import { mergeStatic } from '../engine/merge.js';
 
 // the platform: east of the town over the bay (the shore is at x ≈ −26 at ground level 2.3 m)
 const DECK = { x0: -14, x1: 14, z0: 26, z1: 54 };
@@ -191,6 +192,9 @@ export function buildSpaceport(root, physics, W) {
     add(sphere(0.17, 10, 8), MAT.glow('#fff4d8', '#ffd890', 1.2), x, Y + 2.45, BRIDGE.z + s * (BRIDGE.hw - 0.15));
   }
   k.flush(); f.flush();
+  // (PERF-IGPU) the two kits share most materials, and the landed shuttle never moves: one mesh per material for
+  // the whole port (the departures board and the blinking beacon stay their own meshes)
+  mergeStatic(g);
   // the tower's beacon blinks (its own mesh)
   const beacon = new THREE.Mesh(sphere(0.16, 10, 8), MAT.glow('#ff6050', '#ff3020', 2.2)); beacon.position.set(CT.x, Y + 11.85, CT.z); g.add(beacon);
   W.updaters.push((dt, t) => { beacon.visible = (t % 1.6) < 0.8; });
