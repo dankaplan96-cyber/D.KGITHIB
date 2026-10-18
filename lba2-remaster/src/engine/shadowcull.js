@@ -42,7 +42,7 @@ class Area {
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       if (!g.boundingSphere || !Number.isFinite(g.boundingSphere.radius)) return;
       const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true };
-      if (!batchable(o) || !shownIn(o, root)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) this.solo.push(C); return; }
+      if (!batchable(o) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) this.solo.push(C); return; }
       _c.copy(C.c).applyMatrix4(o.matrixWorld);
       const m = o.material, side = m.side + '|' + m.shadowSide;
       const key = Math.floor(_c.x / CELL) + ',' + Math.floor(_c.z / CELL) + '|' + side;
@@ -66,7 +66,12 @@ class Area {
       const g = C.o.geometry, P = g.attributes.position;
       _m.multiplyMatrices(this.inv, C.o.matrixWorld);
       const flip = _m.determinant() < 0;
-      for (let i = 0; i < P.count; i++) { _v.fromBufferAttribute(P, i).applyMatrix4(_m); pos[(vo + i) * 3] = _v.x; pos[(vo + i) * 3 + 1] = _v.y; pos[(vo + i) * 3 + 2] = _v.z; }
+      for (let i = 0; i < P.count; i++) {
+        _v.fromBufferAttribute(P, i);
+        if (!(Number.isFinite(_v.x) && Number.isFinite(_v.y) && Number.isFinite(_v.z))) _v.set(0, 0, 0); // (a few builder vertices are NaN: degenerate there, harmless in the original, not in a merged bound)
+        _v.applyMatrix4(_m); if (!Number.isFinite(_v.x + _v.y + _v.z)) _v.set(0, 0, 0);
+        pos[(vo + i) * 3] = _v.x; pos[(vo + i) * 3 + 1] = _v.y; pos[(vo + i) * 3 + 2] = _v.z;
+      }
       if (g.index) { const I = g.index; for (let i = 0; i < I.count; i += 3) { idx[io + i] = I.getX(i) + vo; idx[io + i + 1] = I.getX(flip ? i + 2 : i + 1) + vo; idx[io + i + 2] = I.getX(flip ? i + 1 : i + 2) + vo; } io += I.count; }
       else { for (let i = 0; i < P.count; i += 3) { idx[io + i] = vo + i; idx[io + i + 1] = vo + (flip ? i + 2 : i + 1); idx[io + i + 2] = vo + (flip ? i + 1 : i + 2); } io += P.count; }
       vo += P.count;

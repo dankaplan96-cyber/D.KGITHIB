@@ -334,28 +334,42 @@ class Game {
   // are not compiled by precompile(); left alone they compile on the first frame that casts with each kind. Here a
   // tiny copy of every kind found in the scene (with its own material) is cast into a throwaway shadow map once.
   warmShadows() {
-    const R = this.renderer.renderer;
-    if (!R.shadowMap.enabled) return;
-    const ws = new THREE.Scene(), box = new THREE.BoxGeometry(0.1, 0.1, 0.1), kinds = new Map();
+    const R = this.renderer.renderer, C = this.renderer.composer;
+    if (!R.shadowMap.enabled || !C) return 0;
+    const g = new THREE.Group(), made = [], kinds = new Map();
+    // a one-triangle geometry with the same attributes as src (the programs depend on which attributes exist)
+    const like = (src) => {
+      const t = new THREE.BufferGeometry();
+      for (const [n, a] of Object.entries(src.attributes)) t.setAttribute(n, new THREE.BufferAttribute(new (a.array.constructor)(3 * a.itemSize), a.itemSize, a.normalized));
+      t.attributes.position.array.set([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]);
+      t.setIndex([0, 1, 2]); made.push(t); return t;
+    };
+    const attrs = (geo) => Object.keys(geo.attributes).sort().join(',');
     const kindOf = (o) => (o.isSkinnedMesh ? 's' : o.isBatchedMesh ? 'b' : o.isInstancedMesh ? 'i' : 'm');
     this.scene.traverse((o) => {
       if (!o.isMesh || !o.castShadow || !o.material || Array.isArray(o.material) || o.customDepthMaterial) return;
-      const m = o.material, k = [kindOf(o), m.side, m.shadowSide, !!m.map, !!m.alphaMap, m.alphaTest > 0, !!m.displacementMap, m.wireframe, !!m.alphaToCoverage].join('|');
+      const m = o.material, k = [kindOf(o), attrs(o.geometry), m.side, m.shadowSide, !!m.map, !!m.alphaMap, m.alphaTest > 0, !!m.displacementMap, m.wireframe, !!m.alphaToCoverage].join('|');
       if (!kinds.has(k)) kinds.set(k, o);
     });
     for (const o of kinds.values()) {
       let c;
       if (o.isSkinnedMesh) { c = new THREE.SkinnedMesh(o.geometry, o.material); c.bind(o.skeleton, o.bindMatrix); }
-      else if (o.isBatchedMesh) { c = new THREE.BatchedMesh(1, box.attributes.position.count, box.index.count, o.material); c.addInstance(c.addGeometry(box)); }
-      else if (o.isInstancedMesh) { c = new THREE.InstancedMesh(box, o.material, 1); c.setMatrixAt(0, new THREE.Matrix4()); }
-      else c = new THREE.Mesh(box, o.material);
-      c.castShadow = true; c.frustumCulled = false; ws.add(c);
+      else if (o.isBatchedMesh) { const t = like(o.geometry); t.deleteAttribute('batchId'); c = new THREE.BatchedMesh(1, 3, 3, o.material); c.addInstance(c.addGeometry(t)); }
+      else if (o.isInstancedMesh) { c = new THREE.InstancedMesh(like(o.geometry), o.material, 1); c.setMatrixAt(0, new THREE.Matrix4()); }
+      else c = new THREE.Mesh(like(o.geometry), o.material);
+      c.castShadow = true; c.frustumCulled = false; g.add(c);
     }
     // (the shadow batches: engine/shadowcull.js)
-    for (const side of [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide]) { const c = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ side })); c.castShadow = true; c.frustumCulled = false; ws.add(c); }
-    const L = new THREE.DirectionalLight('#ffffff', 1); L.castShadow = true; L.shadow.mapSize.set(32, 32); ws.add(L, L.target);
-    try { R.shadowMap.render([L], ws, this.camera); } catch (e) { console.warn('shadow warm-up', e); }
-    L.shadow.map?.dispose(); box.dispose();
+    const posOnly = new THREE.BufferGeometry(); posOnly.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]), 3)); posOnly.setIndex([0, 1, 2]); made.push(posOnly);
+    for (const side of [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide]) { const c = new THREE.Mesh(posOnly, new THREE.MeshBasicMaterial({ side })); c.castShadow = true; c.frustumCulled = false; g.add(c); }
+    // one frame of the real scene (its lights: the programs depend on them) into a scratch target, with the copies
+    // at the sun's focus so the shadow pass draws them; nothing reaches the screen
+    g.position.copy(this.env.sun.target.position);
+    this.scene.add(g);
+    const prev = R.getRenderTarget();
+    try { R.setRenderTarget(C.renderTarget2); R.render(this.scene, this.camera); } catch (e) { console.warn('shadow warm-up', e); }
+    R.setRenderTarget(prev);
+    this.scene.remove(g); for (const t of made) t.dispose();
     return kinds.size;
   }
 
