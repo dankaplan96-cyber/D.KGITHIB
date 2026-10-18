@@ -115,8 +115,12 @@ export function buildSpaceport(root, physics, W) {
   add(lathe([[1.6, 0], [1.75, 0.35], [1.6, 0.9], [1.0, 1.45], [0.4, 1.8], [0.03, 2.1]], 16), MAT.paint('#8a5ac0', 0.4), tcx, Y + th + 0.25, tcz);
   add(cyl(0.05, 0.05, 0.8, 6), brass, tcx, Y + th + 2.6, tcz);
   add(plane(4.2, 0.8), MAT.map(nameTex(), 0.7, { side: THREE.DoubleSide }), tcx, Y + 2.95, T.z1 + 0.09);
-  // the door: a glass leaf in a blue frame under a little canopy
-  add(rbox(1.5, 2.2, 0.12, 0.02), glass, tcx + 3, Y + 1.1, T.z1 + 0.04);
+  // the door: a blue leaf with a dark glass pane and a brass push bar, in a blue frame under a little canopy (it was
+  // all pale glass over the white wall, which read as an empty frame: the user, "the door by the spaceship isn't drawn")
+  pv(k, rbox(1.5, 2.2, 0.1, 0.02), '#3f7fb0', tcx + 3, Y + 1.1, T.z1 + 0.05);
+  pv(k, rbox(1.06, 1.1, 0.04, 0.01), '#1d3550', tcx + 3, Y + 1.5, T.z1 + 0.11);
+  add(rbox(1.0, 1.04, 0.02, 0.01), glass, tcx + 3, Y + 1.5, T.z1 + 0.135);
+  add(rbox(0.9, 0.06, 0.06, 0.02), brass, tcx + 3, Y + 0.95, T.z1 + 0.15);
   pv(k, rbox(1.75, 0.12, 0.16, 0.03), '#2f6a9a', tcx + 3, Y + 2.26, T.z1 + 0.06);
   for (const s of [-1, 1]) pv(k, rbox(0.12, 2.26, 0.16, 0.03), '#2f6a9a', tcx + 3 + s * 0.82, Y + 1.13, T.z1 + 0.06);
   pv(k, rbox(2.3, 0.1, 1.1, 0.03), '#2f6a9a', tcx + 3, Y + 2.62, T.z1 + 0.55, 0, { rx: 0.08 });
