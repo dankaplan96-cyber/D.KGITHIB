@@ -38,20 +38,25 @@ fight; Aggressive mode's Space still attacks with the same moves.
 - **Ball:** states are idle → in hand → fly → impact → return. Movement is substepped (≤ 12 cm per step), so the
   ball never tunnels at low frame rates.
   - As in LBA2: every throw costs 1 magic. With magic it bounces 4 times and returns on the 5th contact;
-    without magic it returns at its first contact. A ground bounce restarts the arc from the throw's lift;
-    walls reflect it. Water returns it. It returns at about 10 m/s, speeding up (+22 m/s²) so a far miss comes
-    back quickly.
+    without magic it returns at its first contact. A ground bounce restarts the arc with the behaviour's own Vy
+    (LBA2's skips; a throw at a target: from at least 2.5 m/s, as before); walls reflect it. Water returns it. It
+    returns at about 10 m/s, speeding up (+22 m/s²) so a far miss comes back quickly.
+  - How far and how high: "The ball's throw" below (each behaviour its own LBA2 arc; Modern aims at a point; the
+    automatic aim at enemies kept).
   - Its colour shows the magic level: yellow, green, red, and at level 4 the fire ball.
   - It brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals).
   - Damage: the magic level (at least 1), +1 when charged (LBA2: 10/20/30/40 by level).
   - Each target is hit once per throw. A quick throw returns after its first hit. A charged throw ricochets on
     to the next visible enemy within 8 m.
   - The return never damages. Recall works after 0.2 s.
-  - It can't be lost: a 3.2 s flight limit, a 2.5 s return limit, and a reset on every scene change.
-  - A full charge needs magic (the throw's 1 point) and shows a short dotted arc while held. Magic
-    regenerates slowly (ours; the original refills only from flasks and givers).
+  - It can't be lost: a 4.2 s flight limit (Discreet's four tall hops take ~3.8 s), a 2.5 s return limit, and a
+    reset on every scene change.
+  - A full charge needs magic (the throw's 1 point). While charging, dots follow the whole first arc and a small ring
+    marks where it will first touch down (the same plan the throw uses). Magic regenerates slowly (ours; the
+    original refills only from flasks and givers).
 - **Classic controls (LBA2's keys, default):** Twinsen aims the way he faces; holding the ball key (Alt)
-  plants his feet and ←/→ turn him; the release throws. No mouse aim in Classic.
+  plants his feet and ←/→ turn him (90°/s, as LBA2 turns him while aiming); the release throws. No mouse aim in
+  Classic. The tank controls themselves: "Movement and camera" below.
 - **Aim and targeting (Modern):** aiming follows the lock, then the mouse cursor (projected onto the plane at Twinsen's
   chest height), then the stick, then the facing. Soft targeting uses a cone set in Settings (Off / Low /
   Normal / High) and needs line of sight. Lock-on lets go at once of a dead or absent target, at 17 m, or
@@ -75,6 +80,91 @@ fight; Aggressive mode's Space still attacks with the same moves.
   never enemy health.
 - **Hit-stop:** 45 ms on a hit, 85 ms on a heavy hit (actors only; input is still read). Camera shake follows
   the existing Shake setting.
+
+## Movement and camera (CTRL-1)
+The user: "the camera doesn't follow Twinsen comfortably, the tank control doesn't feel right like in the second game,
+and the ball throws to a fixed distance." The numbers below are LBA2's own, read from the engine source released by
+its rights holder in 2021 (the lba2-classic repository; numbers and rules only, no code copied) and from the user's
+ANIM.HQR / RESS.HQR (study scripts in the session's scratch space, as in docs/LBA2_MEASUREMENTS.md). Twinsen's height
+H = 1238 LBA2 units = 2.065 m here (1 unit ≈ 1.67 mm); LBA2's timers run in ms, its projectiles in 1/50 s ticks.
+
+### Tank controls (Classic) — `GAITS` in src/game/actors.js
+| Behaviour | Walk (LBA2 anim) | Back-step | Turn on the spot | Start to full speed | Stop |
+|---|---|---|---|---|---|
+| Normal | 2.00 m/s (anim 1: 960 units / 0.8 s = 0.97 H/s) | 1.78 m/s (anim 2: 0.86 H/s) | 100°/s (anims 3/4) | 0.12 s | 0.07 s |
+| Athletic | 4.96 m/s (anim 67: 2491 units / 0.84 s = 2.40 H/s) | 2.36 m/s (anim 68: 1.14 H/s) | 169°/s (anims 69/70) | 0.42 s (the run's build-up) | 0.17 s |
+| Aggressive | 2.52 m/s (anim 83: 1.22 H/s) | 1.64 m/s (anim 84: 0.79 H/s) | 116°/s (anims 85/86) | 0.12 s | 0.08 s |
+| Discreet | 0.67 m/s (anim 94: 0.32 H/s) | 0.67 m/s (anim 95) | 90°/s (anims 96/97 carry no root rotation) | 0.08 s | 0.05 s |
+
+- Speeds are the root motion of the original anims (each key's step ÷ its time, over the loop; the format from
+  LIB386/ANIM ANIM.ASM / INTERDEP.ASM). Walking, running or stepping back he turns at **90°/s in every behaviour**:
+  OBJECT.CPP `ManualRealAngle` sets the turn speed to ±1024 (of 4096) per second with no ramp (LIB386/3D/MOVE.CPP
+  `ChangeSpeedMove`). Standing, LBA2 plays the turn-on-the-spot anims, whose root rotation (`Master` flag 1) gives the
+  rates in the table. Holding the ball key turns him at 90°/s (OBJECT.CPP, `MOVE_MANUAL`, `I_THROW`).
+- LBA2 starts the walk only after the anim's blend to its first key (Normal 300 ms, Athletic 140 ms, Discreet 400 ms
+  of standing still) and stops dead. Ours has **no input lag**: the turn starts and stops on the frame of the key; the
+  walk starts at once and ramps up in the times above (the Athletic run builds up as its first keys do); it stops
+  short. No turn-before-move delay. He moves only along his facing, so a turn never drifts.
+- A stick turns in proportion to its tilt (short corrections); keys turn at the full rate. The same speeds apply in
+  Modern (camera-relative, otherwise unchanged). The previous speeds were 2.4 / 5.4 / 2.7 / 1.4 m/s, back-step ×0.5,
+  every turn 90°/s ("a little faster than LBA2"; Discreet twice LBA2's sneak).
+- Frame rate: everything integrates with the frame's dt (Game.advance splits slow frames into ≤ 1/30 s steps), so
+  30 fps and intermittent 0.1 s frames cover the same ground (tests/controls.mjs §5: within 1%).
+- For the animator and the camera, `hero.motion` each frame: `speed` (the ground really covered, m/s: zero against a
+  wall), `fwd` / `side` (that, relative to his facing), `turnRate` (rad/s, + = left), `grounded`, `landed` (the impact
+  speed on the frame he lands, else 0), `backward`, `blocked` (asked to move, got under a quarter of it), `wanted`.
+  The feet already follow the resolved speed: against a wall he stands instead of walking on the spot.
+
+### The follow camera (LBA view) — src/engine/camera.js
+LBA2 (PERSO.CPP main loop, INTEXT.CPP `CameraCenter`, GLOBAL.CPP `DefAlphaCam` / `DefVueDistance`): the view's angle
+never turns with Twinsen; when he leaves the box x 80–539, y 80–429 of the 640×480 screen it re-centres (a cut) on a
+point `DISTANCE_VISEE` (2500 units, ~2 H) ahead of his facing, keeping the angle; Enter re-centres behind him
+(`CameraCenter(1)`); two views, AlphaCam 300 / 530 at 10500 / 17000 units, focal 600.
+- **1997 look** (Retro): exactly that, hard cuts.
+- **Remaster** (default): the same rules made continuous. The angle holds through every turn (no swing, no snap; a
+  turn on the spot moves nothing). The aim point is DISTANCE_VISEE ahead along the way he really moves (stepping back
+  or blocked, it follows what he does, not his facing), swinging round gently with his turns and held when he stops,
+  so the view stays still while he stands or shuffles, as LBA2's does. A dead zone (±1.4 m across, ±1.0 m along)
+  keeps small moves from moving the view; a critically damped spring (5/s) follows: no lurch, no overshoot, the same
+  at 30 and 60 fps. The height follows the ground under him through its own spring (3.2/s): stairs and slopes glide,
+  a jump doesn't bob the view, a long fall is followed. He can never leave LBA2's frame box (a guard slides the view
+  just enough). Enter / R3 swing it round behind him, eased (≤ 60°/s).
+- Hidden for most of a second behind something solid (a wall, a cliff, a tower; not trees, posts or rails, which he
+  shows between): the smallest turn of the view, in 15° steps up to 90°, that shows him again, eased (≤ 60°/s), and
+  not again for 4 s. Before, it swung right round behind him at up to ~800°/s, and tree crowns set it off again and
+  again: measured on an open route, the yaw turned at up to 455°/s and Twinsen left the frame. Houses between the
+  camera and Twinsen fade instead (town.js / island.js, VP-10's work; not touched here).
+- The free camera is unchanged.
+
+### The ball's throw — `BALL_THROW`, `MagicBall.plan` in src/game/actors.js
+LBA2: each behaviour's File3D (RESS.HQR entry 44) gives the throw anim (LANCE, anim 6) an `F_THROW_MAGIC` on its 6th
+key (FICHE.CPP `GereAnimAction` → `ThrowMagicBall`): launch angle α (of 4096), speed (units per tick) and weight;
+EXTRA.CPP `InitFly` and the `EXTRA_FLY` step fly it as y = Vy·t − weight·t²/16 with Vy = speed·sin α and speed·cos α
+along his facing, released 1200 units up. Each bounce restarts the same Vy (`BounceExtra`). No input changes it: in
+LBA2 the behaviour is the distance.
+
+| Behaviour | α / speed / weight | Forward, up, gravity | First touch-down on the flat (LBA2) |
+|---|---|---|---|
+| Discreet | 572 (50°) / 100 / 35 | 5.33 m/s, 6.42 m/s, 18.2 m/s² | 2.4 H (5.0 m): a high lob (+1.1 m), tall hops |
+| Normal | 120 (10.5°) / 100 / 16 | 8.20, 1.53, 8.3 | 3.6 H (7.4 m): flat, low skips |
+| Athletic | 80 (7°) / 105 / 14 | 8.69, 1.07, 7.3 | 3.8 H (7.8 m): flatter |
+| Aggressive | 40 (3.5°) / 110 / 12 | 9.16, 0.56, 6.3 | 4.0 H (8.2 m): flat and fast |
+
+(So LBA2's Athletic throw is long but low, not high; its Discreet throw is the short, high lob.)
+- **Classic:** LBA2's throw for the behaviour, along his facing, from the hand (the forward speed scaled so the
+  touch-down on the flat is LBA2's despite our lower hand). A charged throw: ×1.3 the speed, so further.
+- **Modern:** aim at a point. The cursor (where its ray meets the ground) or an analog stick's tilt sets the distance,
+  0.8 m up to 1.6 × the behaviour's own throw (Discreet 8 m, Normal 11.8 m, Athletic 12.5 m, Aggressive 13.1 m); the
+  arc first lands there, at the behaviour's pace (its forward speed × √(distance ÷ its own distance): near is a softer
+  lob, far a faster, flatter throw). Keyboard only, no cursor: the behaviour's own throw. A charged aimed throw lands
+  on the same point, faster. While charging, dots follow the whole first arc and a ring marks the touch-down.
+- **The automatic aim at enemies is kept exactly as it was** (the user: "the ball aimed itself at them… keep it"):
+  when the aim assist picks a target (the lock, an enemy or a switch in the aim cone; the chevron shows it), the throw
+  goes to it, whatever distance the cursor asks for, with the same flight as before (13 / 15 / 19 / 9 m/s across for
+  Normal / Athletic / Aggressive / Discreet, ×1.3 charged, gravity 22 m/s²); the in-flight assist is unchanged. The
+  distance control applies only when there is no target. The puzzles' switches and targets are aimed this way, so
+  they solve as before.
+- Damage, magic cost, bounces (4, home on the 5th contact), ricochets, fetching and recall are unchanged.
 
 ## Enemy roles
 | Enemy | Role | Tell | Opening | Hit reaction |
@@ -177,8 +267,15 @@ the lightning from chapter 4, the Blowtron from chapter 6). The chapter fights a
 - the ball switch;
 - weapon save/load.
 
+`tests/controls.mjs` (CTRL-1 part) measures by input, at 60 fps, 30 fps and with intermittent long frames: the turn
+rates and a one-frame tap, start / stop / back-step speeds per behaviour, walls (no walking on the spot; sliding), the
+ball's touch-down per behaviour (Classic) and at near / far / out-of-range aim points (Modern) with the preview, the
+automatic aim at an enemy (kept), and the camera on an open route (frame box, lead / lag, acceleration, yaw,
+stillness), hidden behind a tower, and on stairs. Every number is printed on a MEASURE line.
+
 `tests/arsenal.mjs` covers the arsenal: each weapon and gadget obtained and used by input, its effect measured,
 ammunition and costs, Save & quit → Continue, and a format-3 save's migration. `tests/jetpack.mjs` covers the hop-pack:
 acquisition, flight, fuel, the test step, the mill, every boundary, interruptions, saves, a low frame rate and its cost.
 
-Not verified: feel with a real gamepad and touch screen, audio balance by ear, real-GPU frame rate.
+Not verified: feel with a real gamepad and touch screen; the feel of the tank controls and the camera by hand (only
+measured); audio balance by ear; real-GPU frame rate.
