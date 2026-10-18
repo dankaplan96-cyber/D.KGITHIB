@@ -165,7 +165,10 @@ class Game {
     this.rooms.arena = timed('arena', () => buildArena(S, P));
     timed('islands', () => Object.assign(this.rooms, buildIslands(S, P)));
     this.room = null;
-    this.version = VERSION;
+    // the desktop build's number (stamped by desktop/copy-game.mjs from the CI run), so the player can tell which
+    // download is installed; the web copy has none
+    this.version = VERSION + (window.LBA_BUILD ? ` (build ${window.LBA_BUILD})` : '');
+    { const v = document.querySelector('#ver'); if (v) v.textContent = 'v' + this.version; }
     this.bench = new Bench(this);
     this.audio = new AudioEngine();
     this.audio.setMood('title');
