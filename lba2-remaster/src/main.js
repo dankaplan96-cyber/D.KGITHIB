@@ -236,7 +236,7 @@ class Game {
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
-    this.warmShadows();
+    if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
     this.renderer.render();
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.perf.load = this.loadTimes;
@@ -362,14 +362,17 @@ class Game {
     // (the shadow batches: engine/shadowcull.js)
     const posOnly = new THREE.BufferGeometry(); posOnly.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]), 3)); posOnly.setIndex([0, 1, 2]); made.push(posOnly);
     for (const side of [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide]) { const c = new THREE.Mesh(posOnly, new THREE.MeshBasicMaterial({ side })); c.castShadow = true; c.frustumCulled = false; g.add(c); }
-    // one frame of the real scene (its lights: the programs depend on them) into a scratch target, with the copies
-    // at the sun's focus so the shadow pass draws them; nothing reaches the screen
+    // one frame of the real scene's lights (the programs depend on them) with only the copies in it, at the sun's
+    // focus so the shadow pass draws them, into a scratch target: nothing reaches the screen, and the GPU draws a few
+    // triangles (drawing the whole scene here queued seconds of work on a software renderer, felt at the first door)
     g.position.copy(this.env.sun.target.position);
+    const hidden = [];
+    for (const c of this.scene.children) if (!c.isLight && c.visible) { c.visible = false; hidden.push(c); }
     this.scene.add(g);
     const prev = R.getRenderTarget();
     try { R.setRenderTarget(C.renderTarget2); R.render(this.scene, this.camera); } catch (e) { console.warn('shadow warm-up', e); }
     R.setRenderTarget(prev);
-    this.scene.remove(g); for (const t of made) t.dispose();
+    this.scene.remove(g); for (const c of hidden) c.visible = true; for (const t of made) t.dispose();
     return kinds.size;
   }
 
