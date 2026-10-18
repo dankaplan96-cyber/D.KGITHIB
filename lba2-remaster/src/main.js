@@ -144,7 +144,7 @@ class Game {
     // so the GPU process compiles them while the interiors and regions are built below (prepare() then waits for
     // whatever is left). The light pool's size is fixed per preset; lamps placed later join it (collect, below).
     this.lightPool = new LightPool(this.scene, POOL_SIZE[this.settings.quality] ?? 8);
-    if (this.settings.visual !== '1997') {
+    if (this.settings.visual !== '1997' && !/[?&]noearly/.test(location.search)) { // (?noearly: for A/B timing)
       this.renderer.setQuality(this.settings.quality); this.env.setShadowQuality(this.settings.quality);
       this.earlyCompile = this.renderer.precompile().catch(() => {});
     }
