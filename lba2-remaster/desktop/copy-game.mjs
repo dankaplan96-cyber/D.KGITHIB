@@ -21,6 +21,8 @@ if (existsSync(join(ROOT, 'assets', 'fonts', 'rubik.css'))) {
   cpSync(join(ROOT, 'assets', 'fonts'), join(OUT, 'assets', 'fonts'), { recursive: true });
   html = html.replace(/<link rel="preconnect"[^>]*>\s*/g, '').replace(/<link href="https:\/\/fonts\.googleapis\.com[^>]*>/, '<link rel="stylesheet" href="assets/fonts/rubik.css">');
 }
+// the CI run number (BUILD_NUMBER), shown on the title screen and in the benchmark report
+if (process.env.BUILD_NUMBER) html = html.replace('<head>', `<head><script>window.LBA_BUILD = '${process.env.BUILD_NUMBER.replace(/\D/g, '')}';</script>`);
 writeFileSync(join(OUT, 'index.html'), html);
 cpSync(join(HERE, 'build', 'icon.png'), join(OUT, 'icon.png'));
 console.log(`desktop/game: ${n + 1} files`);
