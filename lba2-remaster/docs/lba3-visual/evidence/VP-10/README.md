@@ -142,6 +142,36 @@ camera are marked `camSkip`.
    - The other outdoor regions are separate rooms and keep their own code. Zeelich's houses still fade
      (zeelich.js), outside this task's files.
 
+### On CTRL-1's follow camera (merged 7f3f36e)
+
+CTRL-1 rewrote the remaster's camera as a continuous follow: a lead point, a dead zone, springs, a frame-box guard
+and an eased swing when a wall hides him. VP-10's rule now sits on top of it, without reverting it.
+
+**Remaster:**
+
+- The search runs every frame from the follow's own look-at point and heading.
+- The pitch rises eased: at most 50°/s and 1.5 rad/s². That works out to about 24 m/s² at the camera, under the
+  40 m/s² that CTRL-1 allows its swing.
+- It comes back down only after the way has been clear for 1 s.
+- The look-ahead shrinks as the view steepens, as LBA2's forced camera does.
+- A new scene starts already risen, so no rise is seen through the fade.
+- CTRL-1's swing stays for walls, cliffs, rocks and the lighthouse, which have no scenery volume. Its `sight`
+  filter (trees, posts and rails ignored) and `camSkip` both apply in `occluded()`.
+
+**1997 look (`_lbaCuts`):** `SearchCameraPos` runs on each cut, as before.
+
+**Measured on the merged tree** (`tests/occluders.mjs` b3), walking round behind the south house at 1/60 s:
+
+| Measure | Value |
+|---|---|
+| Pitch | 26° → 73° |
+| Camera acceleration, max | 26.7 m/s² |
+| Camera acceleration, 95th percentile | 24.2 m/s² |
+| View turn | 0°/s (the heading never moves for a house) |
+
+**`tests/controls.mjs` passes unchanged.** Its open route lies in the desert, and its hidden-behind check picked a
+non-volume collider and swung 45° at ≤ 58°/s.
+
 ### Changed files
 
 | File | Change |
@@ -355,6 +385,23 @@ All runs were on SwiftShader, port 8185, one browser at a time.
     colorWrite off by design) as "hidden" house meshes. The test now skips them.
 - **transitions, house, townlife, stability, spaceport: ALL PASSED.**
 - **`tests/perfbudget.mjs`, one preset per run: ALL PASSED;** the numbers are above.
+
+### Tests after merging CTRL-1 (7f3f36e)
+
+Logs are in `logs/after-ctrl1/`.
+
+- **All passed:** controls (unchanged; no check reworked), occluders (now with b3, the rise measure), transitions,
+  stability, combat, jetpack and holomap.
+- **perfbudget at Medium:** street 261 draw calls (max 275), 0 new programs.
+- **(b), the walk round three houses, on the merged tree:**
+
+  | House | In view | By silhouette |
+  |---|---|---|
+  | Bug St. | 74 | 13 |
+  | Stone | 77 | 7 |
+  | South | 85 | 11 |
+
+  More is in view than on the shot-based camera, because the rise starts as soon as a house is in the way.
 
 ## 5. Not verified / remaining
 

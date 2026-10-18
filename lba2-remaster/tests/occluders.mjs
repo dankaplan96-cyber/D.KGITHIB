@@ -116,6 +116,25 @@ for (const id of ['bug', 'stone', 'south']) {
     await snap(`test-b-walk-${id}-after-new-shot`);
   }
 }
+// (b3) the remaster's rise over a house (CTRL-1's follow + VP-10's pitch): eased like CTRL-1's swing behind a wall —
+// recorded every 1/60 s while he walks round behind the south house: camera acceleration and view turn rate
+const rise = await ev(() => {
+  const G = game, h = G.world.houses.find((q) => q.id === 'south'), a = h.ry, C = G.camRig;
+  window.__place({ x: h.x + Math.sin(a) * (h.d / 2 + 6), z: h.z + Math.cos(a) * (h.d / 2 + 6), a: a + Math.PI });
+  window.__drive(h.x - Math.sin(a) * (h.d / 2 + 2.2), h.z - Math.cos(a) * (h.d / 2 + 2.2), 0.9);
+  const Q = [], Y = [], dt = 1 / 60; let pMin = 99, pMax = 0;
+  for (let i = 0; i < 60 * 14; i++) { window.__driveStep(dt); const c = G.camera.position; Q.push([c.x, c.y, c.z]); Y.push(C.yaw); pMin = Math.min(pMin, C.pitch); pMax = Math.max(pMax, C.pitch);
+    if (Math.hypot(G.hero.pos.x - window.__D.tx, G.hero.pos.z - window.__D.tz) < 0.9 && i > 60) break; }
+  for (let i = 0; i < 90; i++) { window.__driveStep(dt); const c = G.camera.position; Q.push([c.x, c.y, c.z]); Y.push(C.yaw); pMax = Math.max(pMax, C.pitch); }
+  window.P.release();
+  const acc = [], yr = [];
+  for (let i = 2; i < Q.length; i++) acc.push(Math.hypot(...[0, 1, 2].map((k) => (Q[i][k] - 2 * Q[i - 1][k] + Q[i - 2][k]) / (dt * dt))));
+  for (let i = 1; i < Y.length; i++) yr.push(Math.abs(Math.atan2(Math.sin(Y[i] - Y[i - 1]), Math.cos(Y[i] - Y[i - 1]))) / dt * 180 / Math.PI);
+  const s = [...acc].sort((x, y) => x - y);
+  return { frames: Q.length, mode: G.settings.visual, accMax: +s[s.length - 1].toFixed(1), accP95: +s[Math.floor(0.95 * (s.length - 1))].toFixed(1), yawRateMax: +Math.max(...yr).toFixed(1), pitchDeg: [+(pMin * 57.3).toFixed(1), +(pMax * 57.3).toFixed(1)] };
+});
+console.log('MEASURE the rise over the south house (1/60 s)', JSON.stringify(rise));
+check('(b) the rise over a house is eased like the swing behind a wall: camera acceleration ≤ 40 m/s², the view turning ≤ 61°/s', rise.accMax <= 40 && rise.yawRateMax <= 61 && rise.pitchDeg[1] > rise.pitchDeg[0] + 5, rise);
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);
