@@ -15,7 +15,7 @@ import * as THREE from 'three';
 import { Actor } from './actors.js';
 import { createCharacter } from './characters.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
-import { KnockOut } from './death.js';
+import { KnockOut, koActive } from './death.js';
 
 function rifleProp() {
   const g = new THREE.Group();
@@ -61,7 +61,7 @@ export class Guard extends Actor {
   get aimY() { return this.grobo ? 1.3 : 1.15; }
   get markY() { return this.grobo ? 2.6 : 2.25; }
   // (a guard going down finishes its fall whatever the story does with the cast meanwhile: death.js)
-  setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if (this.ko || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
 
   // ---- hits (LBA1's HitObj: armour, two reactions)
@@ -110,7 +110,7 @@ export class Guard extends Actor {
   }
 
   update(dt) {
-    if (this.ko) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (beaten: death.js; then gone)
+    if (koActive(this)) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (beaten: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.hurtT = Math.max(0, this.hurtT - dt);

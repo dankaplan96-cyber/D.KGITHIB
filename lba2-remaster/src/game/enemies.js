@@ -10,7 +10,7 @@ import { GuardDog } from './guarddog.js';
 import { Guard } from './guards.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { angleDiff, dampAngle, clamp, damp } from '../engine/math.js';
-import { KnockOut } from './death.js';
+import { KnockOut, koActive } from './death.js';
 
 const vmat = (rough = 0.6, metal = 0) => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: rough, metalness: metal });
 
@@ -129,7 +129,7 @@ export class Mite extends Actor {
     this.material = 'crystal'; this.aimY = 0.4; this.markY = 0.9; this.hitH = 1.0; this.recentHitT = 0;
   }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; if (this.ko || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert() { if (this.alive && this.state === 'idle') this.state = 'chase'; }
   melee(D) { this.damage(D.dmg, this.game.hero.pos); return 'hit'; }
   ballHit(ball, p) { this.damage(ball.damage, p); return 'hit'; }
@@ -145,7 +145,7 @@ export class Mite extends Actor {
     if (this.hp <= 0) { this.state = 'dead'; g.combatDir?.done(this); g.audio.play('break'); g.particles.burst(this.pos.x, this.pos.y + 0.4, this.pos.z, '#bff8ff', 30, 5); this.rig.parts.crystals.visible = false; new KnockOut(this, 'mite', from); g.onEnemyKilled(this); }
   }
   update(dt) {
-    if (this.ko) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, D = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.hurtT = Math.max(0, this.hurtT - dt);
@@ -314,7 +314,7 @@ export class Drone extends Actor {
   // Baldino's pulse: the rotor stutters, it sags and can't fire for a while
   pulse(C) { if (!this.alive) return; this.state = 'stunned'; this.stateT = 0; this.stunT = C.stun; this.rig.hitFlash(); this.game.combatDir?.done(this); this.aimLine.visible = false; this.game.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 14, 3); }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if (this.ko || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if (!on) this.aimLine.visible = false; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.alive && (this.state === 'patrol' || this.state === 'search')) { this.state = 'alerted'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
   damage(n, from, poise = 1) {
     if (!this.alive) return;
@@ -355,7 +355,7 @@ export class Drone extends Actor {
     return P.lineOfSight(this.pos.x, this.pos.y + this.hover, this.pos.z, hero.pos.x, hero.pos.y + 1.2, hero.pos.z);
   }
   update(dt) {
-    if (this.ko) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (koActive(this)) { this.aimLine.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.hurtT = Math.max(0, this.hurtT - dt);
@@ -487,7 +487,7 @@ export class Guardian extends Drone {
   }
   // keep circling the hero at a firing distance, inside the arena
   update(dt) {
-    if (this.ko) { super.update(dt); return; }
+    if (koActive(this)) { super.update(dt); return; }
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics;
     this.stateT += dt;
@@ -629,7 +629,7 @@ export class Sentry extends Actor {
     this.material = 'armor'; this.aimY = 1.0; this.markY = 1.75; this.hitR = 0.85; this.hitH = 1.9; this.recentHitT = 0;
   }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; if (this.ko || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert() { if (this.alive && this.state === 'idle') { this.state = 'chase'; this.stateT = 0; } }
   guarding() { return this.state === 'idle' || this.state === 'chase' || this.state === 'windup'; }
   // is the hit coming at the shield? (a cone in front)
@@ -664,7 +664,7 @@ export class Sentry extends Actor {
     if (this.hp <= 0) { this.state = 'dead'; this.deadT = 0; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.25); g.particles.burst(this.pos.x, this.pos.y + 1, this.pos.z, '#ffd27a', 30, 5); new KnockOut(this, 'sentry', from); g.onEnemyKilled(this); }
   }
   update(dt) {
-    if (this.ko) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.recentHitT = Math.max(0, this.recentHitT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
@@ -754,7 +754,7 @@ export class Crawler extends Mite {
     if (this.hp <= 0) { this.state = 'dead'; this.ring.visible = false; g.combatDir?.done(this); g.audio.play('break'); g.camRig.shake(0.35); g.particles.burst(this.pos.x, this.pos.y + 0.8, this.pos.z, '#bff8ff', 50, 6); this.rig.parts.crystals.visible = false; new KnockOut(this, 'crawler', from); g.onEnemyKilled(this); }
   }
   update(dt) {
-    if (this.ko) { this.ring.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (koActive(this)) { this.ring.visible = false; this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.hurtT = Math.max(0, this.hurtT - dt); this.coolT = Math.max(0, this.coolT - dt); this.recentHitT = Math.max(0, this.recentHitT - dt);

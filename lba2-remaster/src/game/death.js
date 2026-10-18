@@ -91,6 +91,9 @@ export class KnockOut {
     this.vy = (kind === 'drone' || kind === 'guardian') ? 0 : (e.onGround === false ? Math.min(0, e.vy || 0) : 0);
     if (this.T.hop) { this.vy = this.T.hop; }
     this.yaw = e.angle; this.yaw0 = e.angle;
+    // (the body as it was, to put it back if a developer tool or a test brings the enemy back: koActive)
+    this.rest = [];
+    root.traverse((o) => this.rest.push([o, o.parent, o.position.clone(), o.quaternion.clone(), o.scale.clone(), o.visible, o.rotation.order]));
     root.rotation.order = 'YXZ';
     // what it holds goes flying as it falls (a guard's rifle), and lands on the ground beside it
     this.drops = []; this.held = e.rifle ? [e.rifle] : [];
@@ -308,6 +311,29 @@ export class KnockOut {
     rig.ko = { t, side: this.side, fdir: Math.cos(angleDiff(this.e.angle, this.away)) >= 0 ? 1 : -1, T: this.T, impactT: this.impactT, air: !!this.air };
     rig.play('dead'); rig.update(dt, 0);
   }
+}
+
+// Is the enemy in a knock-out? An enemy only dies once in the game; the developer arena and the tests bring one
+// back by giving it a living state again: then its body, shadow and tells are put back as they were before the blow.
+export function koActive(e) {
+  const k = e.ko;
+  if (!k) return false;
+  if (e.state === 'dead') return true;
+  const s = e.game.scene;
+  for (const d of k.drops || []) d.o.parent?.remove(d.o);
+  for (const [o, parent, p, q, sc, vis, order] of k.rest || []) {
+    if (parent && o.parent !== parent) parent.add(o);
+    o.position.copy(p); o.quaternion.copy(q); o.scale.copy(sc); o.visible = vis; o.rotation.order = order; o.rotation.setFromQuaternion(q, order);
+    if (o.userData.noContact) delete o.userData.noContact;
+  }
+  for (const o of [e.rig.root, e.shadow, e.aimLine, e.ring]) if (o && !o.parent) s.add(o);
+  if (e.aimLine) e.aimLine.visible = false;
+  if (e.ring) e.ring.visible = false;
+  if (e.shadow) e.shadow.visible = true;
+  if (e.rifle?.userData.glow) e.rifle.userData.glow.emissiveIntensity = 1.6;
+  e.rig.ko = null; e.rig.play?.('idle');
+  e.ko = null; e.gone = false; e.deadT = 0;
+  return false;
 }
 
 // removed for good (also a saved kill on load): out of the scene with its shadow and its tells

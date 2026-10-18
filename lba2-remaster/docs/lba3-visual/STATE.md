@@ -31,6 +31,7 @@ Production state stays in docs/lba3-production/STATE.md and BACKLOG.md; this fil
 | VP-9 | (design) | the holomap in other regions still shows Citadel, no hero dot — goes with CONNECT (holomap per planet) | REVIEW (CONNECT: hud.js drawHolomap — the region's own map with his dot, the planet inset; tests/travel.mjs) | VP-6 report; evidence/ZL-ALL/holomap-*.jpg |
 | VP-10 | graphics artist | how a faded house should read (now fully hidden, shadow kept); island.js faders may veil at 0.12 | TODO | VP-3 report |
 | VP-11 | animator | side-step around an NPC plays the forward walk | TODO | VP-2 report |
+| ANIM-DEATH | animator | every enemy's knock-out: fall with weight, on the ground, LBA blink, bonus on the ground (src/game/death.js; tests/deaths.mjs) | REVIEW | evidence/ANIM-DEATH/ |
 | VP-12 | graphics artist | the prologue's harbour master's shed by Doran is a plain box (src/game/story/prologue.js decorate) | TODO | VP-7 report |
 
 ## Next exact action

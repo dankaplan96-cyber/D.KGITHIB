@@ -325,6 +325,23 @@ for (const [key, label] of [
   check('the ball kills the auto-aimed mite; at once the aim moves on to the living one', r.first === r.a && !r.dyingAlive && r.then === r.b && !r.aimList.includes(r.a) && r.gone, r);
 }
 
+// 8. the developer arena and the tests bring a beaten enemy back by giving it a living state: it stands as it was
+{
+  const r = await ev(() => {
+    const G = D.G, out = {};
+    for (const kind of ['guard', 'mite', 'drone']) {
+      const e = D.spawn(kind, 6196, -9); D.only([e]); D.place(e, 6196, -9, -Math.PI / 2);
+      D.kill(e, { x: 6194.5, y: 0, z: -9 }); for (let i = 0; i < 40; i++) G.frame(1 / 60, false);   // (mid-fall)
+      e.state = e.patrol ? 'patrol' : 'idle'; e.hp = e.maxHp; e.setPresent(true);
+      for (let i = 0; i < 30; i++) G.frame(1 / 60, false);
+      out[kind] = { alive: e.alive, inScene: !!e.rig.root.parent, visible: e.rig.root.visible, ko: !!e.ko, tilt: +(1 - Math.abs(e.rig.root.up.clone().applyQuaternion(e.rig.root.quaternion).y)).toFixed(3) };
+      e.setPresent(false);
+    }
+    return out;
+  });
+  check('a beaten enemy given a living state again (the arena, tests) stands as before', Object.values(r).every((v) => v.alive && v.inScene && v.visible && !v.ko && v.tilt < 0.01), r);
+}
+
 console.log(errs.length ? errs.slice(0, 15).join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
 await browser.close();

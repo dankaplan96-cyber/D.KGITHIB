@@ -357,7 +357,7 @@ r = await ev(() => {
   const soft = gg.take(1, h.pos), hpSoft = gg.hp, hard = gg.take(2, h.pos), hpHard = gg.hp;
   const pk0 = G.pickups.list.length;
   for (let k = 0; k < 5 && gd.alive; k++) gd.take(1, h.pos);
-  C.step(0.6);
+  C.step(0.8);   // (ANIM-DEATH: the bonus comes out of the body when it hits the ground, 0.62 s after the blow)
   const out = { states: [...seen], line: +line.toFixed(2), hp: [hp0, shotHp], soft, hpSoft, hard, hpHard, down: !gd.alive, bonus: G.pickups.list.length - pk0 };
   gg.setPresent(false); gd.setPresent(false);
   return out;

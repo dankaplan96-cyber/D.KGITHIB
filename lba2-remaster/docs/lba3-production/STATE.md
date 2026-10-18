@@ -129,6 +129,19 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Open: the voices by ear (pleasantness, recognisability) — nobody can listen here. With OPEN-2 merged, the opening's subtitle voices use
   the same Babble API (start/chars/stop), unchanged. Baldino's voice already has a Grobo colour (PRODUCTION.md block 4: Baldino as a Grobo).
 
+## Done after (ANIM-DEATH; status REVIEW)
+- The user: "when a character dies the animation doesn't work well." Every enemy's knock-out now runs through one controller
+  (src/game/death.js; humanoid keys KO_HUMAN in src/engine/rig.js; rules and timings in docs/COMBAT.md "Knock-outs"): a hit
+  reaction, a fall with weight (gravity in the air, on slopes and stairs), impact and a small bounce, a short rest, LBA's blink and a
+  puff of stars, then out of the scene; the bonus leaves the body at the impact and lands on the ground; the enemy leaves every target
+  list on the blow (CTRL-1's auto-aim unchanged). Before: guards lay with arms and rifle sticking up and vanished in a frame, mites
+  flipped through the floor, drones and the guardian sank half into it, a sentry dropped 20 cm in a frame, a dog's legs snapped,
+  nothing fell when killed in the air (it floated), and the bonus popped out before the fall.
+- tests/deaths.mjs (160 checks): per type pose continuity, ground contact, removal, the bonus, listeners; 30/60/20 fps; mid-air; slope;
+  stairs; walls; pause, dialogue, scene change, cast change, reload; a real auto-aimed ball kill. Evidence:
+  docs/lba3-visual/evidence/ANIM-DEATH/. Open for the character artist: the long-coat guard's hem stays flared when he lies down
+  (his feet ~0.35 m off the ground) and the fat trooper's standing pose sinks 0.2 m into the ground.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

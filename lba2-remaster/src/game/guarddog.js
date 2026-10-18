@@ -10,7 +10,7 @@ import * as THREE from 'three';
 import { Actor } from './actors.js';
 import { dogRig } from './dogs.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
-import { KnockOut } from './death.js';
+import { KnockOut, koActive } from './death.js';
 
 export class GuardDog extends Actor {
   constructor(game, def) {
@@ -29,7 +29,7 @@ export class GuardDog extends Actor {
     this.sync();
   }
   get alive() { return this.state !== 'dead'; }
-  setPresent(on) { this.present = on; if (this.ko || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
+  setPresent(on) { this.present = on; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
   alert(pos) { if (this.alive && (this.state === 'guard' || this.state === 'home')) { this.state = 'warn'; this.stateT = 0; this.last = pos ? { x: pos.x, z: pos.z } : null; } }
 
   melee(D, h) { this.damage(D.dmg + (D.heavy ? 1 : 0), h.pos); return 'hit'; }
@@ -65,7 +65,7 @@ export class GuardDog extends Actor {
   bark() { this.rig.bark(); this.game.audio.play('bark'); }
 
   update(dt) {
-    if (this.ko) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
+    if (koActive(this)) { this.ko.update(dt); return; }   // (knocked out: death.js; then gone)
     if (!this.present || !this.alive) return;
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.hurtT = Math.max(0, this.hurtT - dt);

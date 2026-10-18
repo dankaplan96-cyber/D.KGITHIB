@@ -213,6 +213,8 @@ Now one controller runs every knock-out on game time (the same at 30 and 60 fps)
   rifle are taken out of the scene. Nothing waits for it: the player is never locked. The pause freezes it; a
   dialogue lets it land (only knock-outs move during a dialogue); leaving the place, or the story changing the cast,
   lets it finish on its own clock; a reload brings a saved kill back as gone.
+- Cost: a dying enemy's update takes 0.1–0.2 ms a frame (median, headless CPU), up to 1.4 ms on its first frame (its
+  vertices sampled once); only while it dies, nothing afterwards (it is out of the scene).
 - `tests/deaths.mjs` measures all of this per type (MEASURE lines); frame strips before/after per type:
   docs/lba3-visual/evidence/ANIM-DEATH/.
 
