@@ -91,9 +91,11 @@ await shot('C1-04-after.png');
 // home: Arthur's radio
 await ev(() => { const d = game.world.houses[0].door; T.door(d); T.talk('arthur'); const e = game.room.exits[0]; T.door(e); });
 log('radio', await ev(() => [game.flags.c1_radio, T.obj()]));
-// Doran: the ferry
+// Doran at the harbour, then the project's ship at Citadel Spaceport (PLANET-1)
 await ev(() => { T.talk('doran'); game.step(1.5); });
-log('end', await ev(() => [game.state, game.flags.c1_done]));
+log('doran', await ev(() => [game.flags.c1_ship, T.obj(), T.npc('doran').pos.x.toFixed(1), T.npc('doran').pos.z.toFixed(1)]));
+await ev(() => { const p = game.world.spaceport.pad; T.tp(p.x - 4.2, p.z); game.hero.angle = Math.PI / 2; game.step(0.1); T.tap('KeyE'); game.step(1.5); T.talkAll(); game.step(1.5); T.talkAll(); });
+log('end', await ev(() => [game.state, game.flags.chapterKey, game.room?.id]));
 await shot('C1-05-end.png');
 console.log(errs.slice(0, 20).join('\n') || 'no errors');
 await browser.close();

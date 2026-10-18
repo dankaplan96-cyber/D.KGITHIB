@@ -70,7 +70,25 @@ Object.assign(STR.en, {
   a_boards_thud: 'Thud. The boards don\'t care.',
   a_boards_cache: "Behind the boards, in the old chute: somebody's purse of kashes, and a clover.",
 
+  // ---- Baldino's hop-pack (EQ-1, src/game/jetpack.js)
+  it_jetpack: 'Hop-Pack', it_worn: 'worn',
+  itd_jetpack: 'Baldino\'s hop-pack. In Athletic mode, jump and hold the jump: it lifts you about one storey for a few seconds. It needs ground close below and open sky above, and refills on solid ground.',
+  a_jet_hint: 'One more thing. My hop-pack, on the peg by the door: take it. Hesk flies you between islands. That gets you up the last storey.',
+  a_jet_look: 'Baldino\'s hop-pack. Copper, brass, and an antenna that doesn\'t seem to do anything.',
+  a_jet_b1: 'It pushes against the ground, so it needs ground under it. Over a drop it just gives up.',
+  a_jet_b2: 'One storey up, a few seconds of push, then it wants solid ground to recharge. Under a roof it won\'t light at all.',
+  a_jet_tw: 'And the antenna?',
+  a_jet_b3: 'Makes it look finished. In athletic mode, jump and keep holding. Try my test step outside.',
+  a_jet_note: 'A label on the strap, in Baldino\'s hand: TWINSEN. JUMP AND HOLD. ONE STOREY ONLY. TRY THE TEST STEP. - B.',
+  a_jet_sign: 'BALDINO\'S TEST STEP. No ladder. That is the test.',
+  a_jet_tin: 'A tin on the deck, with a note: IT WORKS! Inside, a clover and ten kashes.',
+  a_toast_jethow: 'Hop-pack: in Athletic mode, jump and hold {k}',
+  a_toast_jeton: 'Hop-pack on (Athletic: jump and hold {k})', a_toast_jetoff: 'Hop-pack off',
+  a_toast_jetroof: 'The hop-pack needs open sky',
+
   // ---- journal
+  a_j_jet: 'Baldino\'s hop-pack hangs on the peg by his workshop door',
+  a_j_jetstep: 'Try the hop-pack on Baldino\'s test step, on the street outside his workshop',
   a_j_pearl: "Bersimon wants a pearl of incandescence (the School of Magic, Desert Island)",
   a_j_pearl_give: 'Take the pearl to Bersimon\'s tent on Citadel',
   a_j_dark: 'Something glints in the dark: a lantern would show it',

@@ -6,7 +6,9 @@
 // frequency, Arthur reads the needle, and gets to say "station ready"), Baldino's old mill on Zeelich (Oku;
 // brake it with the ball, climb, set the relay), the bore vent on Desert Island (Ilka and Dallan; project drones
 // come for the relay), and Sefa's dome on the Hamalayi (Pim holds the big mirror's chain; ice mites on the
-// ridge). Hesk's glider flies Twinsen between the islands, in any order. With all five lamps lit, the console
+// ridge). Hesk's glider flies Twinsen between Twinsun's regions (Citadel, Desert Island, the Hamalayi), in any
+// order; between Zeelich and Twinsun he takes the spaceship, Zeelich Spaceport ⇄ Citadel Spaceport (travel.js: the
+// planets are joined by spaceship only, PLANET-1). With all five lamps lit, the console
 // on the drill platform sends the code; every friend holds for a minute; the blast doors open → chapter 11.
 import { ChapterBase } from './base.js';
 import { VALVE_EFFECT, buildGlider, buildRelay } from '../valveroom.js';
@@ -29,17 +31,18 @@ export class Network extends ChapterBase {
   boreDrones() { return this.game.enemies.filter((e) => /^ndrone/.test(e.def?.id || '')); }
   ridgeMites() { return this.game.enemies.filter((e) => /^nmite|^ncrawler/.test(e.def?.id || '')); }
 
-  // where Hesk's glider comes down on each island, and where Hesk waits beside it
+  // where Hesk's glider comes down in each of Twinsun's regions, and where Hesk waits beside it (the glider never
+  // goes to Zeelich: on Zeelich, landing() is where the spaceship sets him down)
   landing(r) {
     const Z = this.Z, D = this.D, M = this.M;
     switch (r) {
-      case 'zeelich': return { x: Z.dock.x + 3.0, z: Z.dock.z - 1.3, a: Math.PI / 2 };
+      case 'zeelich': return Z.spaceport?.landing || Z.dock;
       case 'desert': return { x: D.dock.x + 28, z: D.dock.z, a: Math.PI / 2 }; // (past the pier)
       case 'hamalayi': return { x: M.monastery.yard.x + 2, z: M.monastery.yard.z + 3, a: Math.PI };
       default: return { x: CITADEL_LANDING.x, z: CITADEL_LANDING.z, a: Math.PI };
     }
   }
-  heskSpot(r) { const l = this.landing(r), x = l.x + Math.cos(l.a) * 1.8, z = l.z - Math.sin(l.a) * 1.8; return { x, z, a: Math.atan2(l.x - x, l.z - z) }; }
+  heskSpot(r) { if (r === 'zeelich') return null; const l = this.landing(r), x = l.x + Math.cos(l.a) * 1.8, z = l.z - Math.sin(l.a) * 1.8; return { x, z, a: Math.atan2(l.x - x, l.z - z) }; }
 
   // ---------------------------------------------------------------- props: gliders at the landings, relays
   decorate() {
@@ -47,7 +50,6 @@ export class Network extends ChapterBase {
     this.gliders = []; this.relays = {};
     const put = (obj, parent, x, y, z, ry) => { obj.position.set(x - parent.position.x, y - parent.position.y, z - parent.position.z); obj.rotation.y = ry; obj.visible = false; parent.add(obj); return obj; };
     const gy = (x, z) => g.physics.groundAt(x, z);
-    if (Z?.group) { const l = this.landing('zeelich'); this.gliders.push(put(buildGlider(), Z.group, l.x + 1.5, gy(l.x, l.z + 7), l.z + 7, Math.PI / 2)); }
     if (D?.group) { const l = this.landing('desert'); this.gliders.push(put(buildGlider(), D.group, l.x - 2, gy(l.x - 2, l.z - 7), l.z - 7, -Math.PI / 2)); }
     if (g.world?.root) { const l = CITADEL_LANDING; this.gliders.push(put(buildGlider(), g.world.root, l.x + 5, g.world.H(l.x + 5, l.z - 3), l.z - 3, 0.6)); }
     if (M?.group) { const l = this.landing('hamalayi'); this.gliders.push(put(buildGlider(), M.group, l.x + 6, gy(l.x + 6, l.z + 1), l.z + 1, 0.4)); }
@@ -159,8 +161,9 @@ export class Network extends ChapterBase {
   }
   openFlights() {
     const g = this.game, f = this.f, here = this.region();
-    const of = { zeelich: ['mill'], citadel: ['valves', 'light'], desert: ['bore'], hamalayi: ['dome'] };
-    const items = ['zeelich', 'citadel', 'desert', 'hamalayi'].map((r) => ({
+    // (Twinsun only: a glider doesn't cross to another planet)
+    const of = { citadel: ['valves', 'light'], desert: ['bore'], hamalayi: ['dome'] };
+    const items = ['citadel', 'desert', 'hamalayi'].map((r) => ({
       key: 'fly_' + r, id: r, disabled: r === here,
       note: r === here ? 'fly_here' : of[r].every((s) => f['c10_' + s]) ? 'fly_done' : '',
     }));

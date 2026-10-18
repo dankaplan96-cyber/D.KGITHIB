@@ -16,6 +16,15 @@
 import { rng } from '../engine/math.js';
 
 export const PLACES = ['tralu', 'orchard', 'oldwatch'];
+// what our buildings are for, by body (zislands.js draws each with props-esmer.js esmerBuilding): a store has a
+// wide door and a hoist beam over it; a sign names the house over its door (a word of the sign atlas)
+export const BUILDINGS = {
+  901: { role: 'house', sign: 'TRADING POST' },   // Tralu: the trading house (domed)
+  903: { role: 'house' },                         // Tralu: the clerk's office
+  905: { role: 'store' },                         // Tralu: the quay's warehouse
+  921: { role: 'store', sign: 'PRESS HOUSE' },    // the Orchard: the press house
+  922: { role: 'store' },                         // the Orchard: its store
+};
 const CELL = 1.7122;
 const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const angDiff = (a, b) => { let d = (b - a) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };

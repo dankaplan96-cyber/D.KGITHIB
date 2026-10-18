@@ -6,7 +6,8 @@
 //   Between the planets only the spaceship: Citadel Spaceport ⇄ Zeelich Spaceport. No Twinsun stop on Zeelich, no
 //              Zeelich island in Citadel's menu.
 // Every travel point is a place: a dressed dock, pad or field with a board naming where it goes. A route opens with
-// its chapter (the story's own crossings stay as they are) and everything is open after the main story.
+// its chapter and everything is open after the main story. The story's own crossings between the planets are by
+// spaceship too (PLANET-1: chapters 2→3, 3→4, 8→9 by the project's ships, chapter 10 by this network's spaceship).
 //
 // CONTRACT
 //   buildTravel(game) → game.travel = { points, routes }   (props and colliders added to the regions)
