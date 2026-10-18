@@ -29,12 +29,15 @@ export const LOOKS = {
     mouth: 'line', medallion: true, medalR: 0.085, medalY: 0.24, medalSides: 8, headS: 1.4, neck: 0.17,
   },
   zoe: {
-    // LBA2's Zoé (built from the original model's sections, tools/blender/cast_poly.py build_zoe): as tall as
-    // Twinsen, narrow shoulders and a slim waist over wide hips, a red outfit with a deep V neckline and bare
-    // shoulders and arms, trousers tapering to long pointed green shoes; a narrow head, red lips, and blonde
-    // hair in a bun of three balls
-    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#c62c2c', tunicTrim: '#9a1e20', belt: '#c62c2c', pants: '#c62c2c', shoes: '#4c9a46',
-    hair: '#ecd79a', skin: '#efc39a', hairStyle: 'bun', nose: 'button', eyes: '#3a6a3a', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
+    // LBA2's Zoé (BODY.HQR body 26, identified and measured in the user's own files; SRC-1, tools/blender/zoe_poly.py,
+    // docs/character-review.md §15): as tall as Twinsen, narrow shoulders and a slim waist over an A-line flare, a red
+    // halter top with a shallow V in front and an open back (a strap up the spine forking to the shoulders), red
+    // trousers, long pointed green shoes, bare arms ending in pointed hands; her own narrow head carried forward with
+    // a pointed nose, wide red lips, small dark slanted eyes, blue earrings and necklace; golden hair in a bun of three
+    // balls, drawn flat as LBA2 draws its spheres. Colours: the original's palette ramps (skin 32, red 64, shoes 128,
+    // hair 106). Twelve years on: no change of look (STORY_BIBLE names none). The sculpt below is the fallback.
+    race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#b32b27', pants: '#b32b27', shoes: '#3f7b47',
+    hair: '#e3af53', skin: '#d9a679', hairStyle: 'bun', nose: 'button', eyes: '#2f474b', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
     armSpread: 0.3, armLen: 1.1,
   },
   arthur: {
