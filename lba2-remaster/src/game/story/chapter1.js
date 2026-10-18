@@ -8,9 +8,13 @@
 // shows Twinsen the station built in Funfrock's old fortress: the same
 // crystals as at the bottom of the well. Zoe slips into the project office
 // (playable, stealth) and finds the evacuation plan: only part of the
-// population is on it. Confronted, Vesk leaves for Zeelich through the
-// transit beam. That evening Arthur's radio catches Baldino calling from
-// Zeelich; Doran takes Twinsen across on the project ferry.
+// population is on it. Confronted, Vesk steps into the transit beam, which
+// lifts him to his ship, and he is gone to Zeelich. That evening Arthur's radio
+// catches Baldino calling from Zeelich: Baldino has radioed Doran the start code
+// of the project's ship at Citadel Spaceport (passenger flights are grounded; a
+// project flight is the exception). Doran meets Twinsen at the spaceport and
+// flies him across. Twinsun and Zeelich are two planets: the crossing is always
+// by spaceship.
 import * as THREE from 'three';
 import { POI } from '../world.js';
 import { t } from '../i18n.js';
@@ -78,6 +82,12 @@ export class Chapter1 extends ChapterBase {
         return R.house.npcSpots.zoe;
       case 'arthur':
         return R.house.npcSpots.arthur;
+      case 'doran': {
+        // agreed to fly the project's ship: he waits for Twinsen by its hatch at the spaceport
+        const sp = W.spaceport;
+        if (f.c1_ship && sp) return { x: sp.landing.x - 1.0, z: sp.landing.z + 2.6, a: -Math.PI / 2 };   // (by the walkway, clear of the pad)
+        return this.isCur() ? { x: ps.x, z: ps.z + 2.2, a: Math.PI } : undefined;   // (at his harbour, as the prologue left him)
+      }
       case 'gilbert':
         return f.c1_water ? { x: W.well.x + 2.2, z: W.well.z + 1.4, a: Math.atan2(-1, 1.4), anim: 'idle' } : R.office?.npcSpots?.gilbert ?? undefined;
       case 'mira':
@@ -133,6 +143,10 @@ export class Chapter1 extends ChapterBase {
       if (!W.gate.open) consider(dist(W.gate.x, W.gate.z), 3.0, { kind: 'c1gate', label: 'p_gate' });
       const st = W.station;
       if (st && f.c1_veskGone && !f.c1_radio) consider(dist(st.beamPad.x, st.beamPad.z), 2.5, { kind: 'beam', label: 'p_look' });
+      // the project's ship on the spaceport's pad, once Doran has its start code (same spot and reach as the
+      // pad's grounded notice: the chapter's interaction wins the tie, story/islands.js)
+      const sp = W.spaceport;
+      if (sp && f.c1_ship) consider(dist(sp.pad.x, sp.pad.z), 5.0, { kind: 'c1ship', label: 'p_board' });
     } else if (g.room.id === 'projoffice') {
       for (const s of g.room.searches || []) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'locker', spot: s, label: 'p_search' });
     } else if (g.room.id === 'office') {
@@ -174,6 +188,9 @@ export class Chapter1 extends ChapterBase {
       case 'beam':
         this.chain([['hero', 'c1_beam_dead']]);
         return true;
+      case 'c1ship':
+        this.chain([['doran', 'c1_doran_board']], () => this.toZeelich());
+        return true;
     }
     return false;
   }
@@ -209,7 +226,9 @@ export class Chapter1 extends ChapterBase {
       case 'gilbert': return c([['gilbert', f.c1_water ? 'c1_gil_water' : f.c1_task ? 'c1_gil_task' : 'c1_gil_idle']]);
       case 'mira': return c([['mira', f.c1_map ? 'c1_mira_after' : 'c1_mira_idle']]);
       case 'doran':
-        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2']], () => this.toZeelich());
+        // at the harbour he agrees and goes ahead to the spaceport; there, by the ship, he takes Twinsen aboard
+        if (f.c1_ship) return c([['doran', 'c1_doran_board']], () => this.toZeelich());
+        if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2']], () => { f.c1_ship = true; this.story.refreshCast(); g.updateObjective(); g.save(false); });
         return c([['doran', f.c1_task ? 'c1_doran_drones' : 'c1_doran_idle']]);
       case 'xil': return c([['xil', f.c1_water ? 'c1_xil_2' : 'c1_xil_1']]);
       case 'pippa':
@@ -404,7 +423,7 @@ export class Chapter1 extends ChapterBase {
     };
   }
 
-  // Doran takes Twinsen to Zeelich on the project ferry
+  // Doran flies Twinsen to Zeelich in the project's ship, from Citadel Spaceport
   toZeelich() {
     const g = this.game, f = this.f;
     g.startTransition(() => {
@@ -471,6 +490,7 @@ export class Chapter1 extends ChapterBase {
     const f = this.f, g = this.game;
     const valves = g.world.valves || [];
     if (!f.c1_started) return '';
+    if (f.c1_ship) return this.goal('c1_obj_ship');
     if (f.c1_radio) return this.goal('c1_obj_ferry');
     if (f.c1_veskGone) return this.goal('c1_obj_home');
     if (f.c1_zoeDone) return this.goal('c1_obj_confront');
@@ -493,7 +513,8 @@ export class Chapter1 extends ChapterBase {
     if (f.c1_water && !f.c1_tour) npcAt('vesk', 'n_vesk');
     if (f.c1_needZoe && !f.c1_zoeStart) npcAt('zoe', 'n_zoe');
     if (f.c1_veskGone && !f.c1_radio) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
-    if (f.c1_radio) npcAt('doran', 'n_doran');
+    if (f.c1_ship && W.spaceport) m.push({ x: W.spaceport.pad.x, z: W.spaceport.pad.z, kind: 'star', color: gold, r: 7, edge: true, label: t('n_doran') });
+    else if (f.c1_radio) npcAt('doran', 'n_doran');
     return m;
   }
   items() {

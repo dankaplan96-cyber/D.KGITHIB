@@ -1,6 +1,8 @@
 // Chapter 2 — "Zeelich".
 //
-// Doran's ferry brings Twinsen up to Zeelich, the island above the clouds. On the Esmer street he finds
+// Doran flies Twinsen to Zeelich in the project's ship (Twinsun and Zeelich are two planets: the crossing is by
+// spaceship, PLANET-1); they set down on Zeelich Spaceport, the deck off the terminal island's south shore, and a
+// project guard meets the ship there. On the Esmer street he finds
 // Baldino's workshop. Baldino explains the shell around the planet and Vesk's drill: stopping the drill
 // halfway would crack the shell, it has to be turned around from below. To get past the drill platform's
 // shield they need his override key — still missing a cog from the top of the old mill (a climb) and the
@@ -19,6 +21,8 @@ const SOLUTION = [0, 1, 2];
 
 export class Chapter2 extends ChapterBase {
   get Z() { return this.game.rooms.zeelich; }
+  // where the project's ship sets him down: Zeelich Spaceport's deck (travel.js), the dock in a build without it
+  arrival() { const Z = this.Z; return Z.spaceport?.landing || Z.dock; }
   inZ() { return this.game.room?.id === 'zeelich'; }
   millsBraked() { return (this.Z?.mills || []).filter((m) => this.f['c2_mill_' + m.id]).length; }
 
@@ -62,10 +66,10 @@ export class Chapter2 extends ChapterBase {
         return R.workshop?.npcSpots?.baldino ?? S.baldinoOut;
       case 'nara': return S.esmer1;
       case 'oku': return S.esmer2;
-      case 'doran': return S.doran;
+      case 'doran': { const L = this.arrival(); return { x: L.x - 1.8, z: L.z + 0.8, a: Math.PI / 2 }; }   // (by the ship he flew)
       case 'vesk': return f.c2_veskDown ? null : S.vesk;
       case 'guard':
-        if (f.c2_started && !f.c2_planTaken && Z.dock) return { x: Z.dock.x + 1.6, z: Z.dock.z + 1.2, a: Math.PI }; // (meets the ferry)
+        if (f.c2_started && !f.c2_planTaken) { const L = this.arrival(); return { x: L.x + 0.6, z: L.z - 1.8, a: 0 }; } // (meets the ship)
         return f.c2_shield ? { x: plat.gate.x + 0.5, z: plat.gate.z + 3.2, a: -Math.PI / 2 } : S.guard;
       case 'zoe': return f.c2_zoeStart && !f.c2_broadcast ? null : undefined;
       case 'worker': return null;
@@ -76,9 +80,9 @@ export class Chapter2 extends ChapterBase {
   // ---------------------------------------------------------------- arrival
   begin() {
     const g = this.game, Z = this.Z;
-    g.enterRoom('zeelich', Z.dock, true);
+    g.enterRoom('zeelich', this.arrival(), true);
     g.hero.hasBall = true;
-    Z.ferry?.setVisible?.(true);
+    Z.ferry?.setVisible?.(false);   // (the sky-ferry at the dock is not how he came: no ferry crosses to Twinsun)
     this.story.refreshCast();
     this.chain([['narrator', 'c2_arrive'], ['doran', 'c2_doran_1'], ['hero', 'c2_tw_arrive']], () => {
       this.f.c2_started = true;
@@ -86,7 +90,7 @@ export class Chapter2 extends ChapterBase {
       this.confiscate();
     });
   }
-  // the setback: the project's guard meets the ferry and takes the evacuation plan (it ends up in the depot)
+  // the setback: the project's guard meets the ship and takes the evacuation plan (it ends up in the depot)
   confiscate() {
     const g = this.game, f = this.f;
     if (f.c2_planTaken || !f.c1_plan) { g.updateObjective(); g.save(false); return; }
@@ -352,7 +356,7 @@ export class Chapter2 extends ChapterBase {
     };
   }
   // the shaft: Vesk has sealed it from below. Baldino sends Twinsen south to learn what the shell is
-  // (chapter 4, Desert Island). A save from the old end-of-demo screen gets here again from the lift.
+  // (chapter 4, Desert Island): Doran flies him home to Citadel Spaceport and takes the ferry south from there. A save from the old end-of-demo screen gets here again from the lift.
   toShell() {
     const g = this.game, f = this.f;
     if (f.c2_done) { g.startTransition(() => this.story.nextChapter()); return; }
@@ -382,11 +386,11 @@ export class Chapter2 extends ChapterBase {
   }
   applyFlags() {
     const f = this.f, Z = this.Z;
+    Z?.ferry?.setVisible?.(false);   // (the dock's sky-ferry stays away: Twinsun and Zeelich are joined by spaceship only)
     if (!this.reached()) return;
     for (const m of Z.mills) if (f['c2_mill_' + m.id]) this.brakeMill(m, true);
     if (f.c2_shield) { f.c2_shield = false; this.shieldDown(true); }
     if (f.c2_zoeStart && !f.c2_broadcast) f.c2_zoeStart = false;
-    Z.ferry?.setVisible?.(true);
   }
 
   // ---------------------------------------------------------------- HUD

@@ -10,7 +10,7 @@
 // footprint radius in Place.r (for spacing and the walkability check). Materials are the island builder's own
 // where they exist (same kit.js cache keys), so most pieces add no new material at all.
 import * as THREE from 'three';
-import { tm, pm, cached, bbox, cyl, lathe, tube, compose, tint, ctex, brassM, VC } from './kit.js';
+import { tm, pm, cached, bbox, boxUV, cyl, lathe, tube, compose, tint, ctex, brassM, VC, panelGeo, frameGeo, fillGeo } from './kit.js';
 import { rng } from '../engine/math.js';
 import { tulipGeometry } from './vegetation.js';
 
@@ -631,6 +631,40 @@ export function laundry(P, { w = 3.2, colors = ['#f4eee0', '#3a7ac8', '#e8608a',
   P.r = w / 2 + 0.3;
   return P;
 }
+// a harbour's water (Knartas): the clouds penned between the quays settle into a calm lilac pool, glossy, with
+// soft swirls, ripple rings and glints (seamless; its own copy, so each harbour can drift it)
+export const harbourTex = () => {
+  const t = ctex('eharbour', 256, 256, (x, S) => {
+    const r = rng(41);
+    const g = x.createLinearGradient(0, 0, S, S); g.addColorStop(0, '#b8a8dc'); g.addColorStop(0.5, '#c8b8e6'); g.addColorStop(1, '#b0a4d8'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+    wrap(S, (ox, oy) => {
+      const rr = rng(43);
+      for (let i = 0; i < 26; i++) { const cx = rr() * S + ox, cy = rr() * S + oy, rx = 14 + rr() * 30, ry = 5 + rr() * 9; x.fillStyle = `rgba(250,244,255,${0.12 + rr() * 0.16})`; x.beginPath(); x.ellipse(cx, cy, rx, ry, rr() * 0.4 - 0.2, 0, 7); x.fill(); }
+      const r2 = rng(47);
+      x.lineWidth = 1.6;
+      for (let i = 0; i < 18; i++) { const cx = r2() * S + ox, cy = r2() * S + oy, R = 6 + r2() * 16; x.strokeStyle = `rgba(255,255,255,${0.25 + r2() * 0.25})`; x.beginPath(); x.ellipse(cx, cy, R, R * 0.38, 0, 0.15, Math.PI - 0.15); x.stroke(); }
+    });
+    for (let i = 0; i < 70; i++) { x.fillStyle = 'rgba(255,255,255,0.7)'; x.fillRect(r() * S, r() * S, 2 + r() * 3, 1); }
+  });
+  const c = t.clone(); c.needsUpdate = true; c.wrapS = c.wrapT = THREE.RepeatWrapping; return c;
+};
+const wrap = (S, fn) => { for (const a of [-S, 0, S]) for (const b of [-S, 0, S]) fn(a, b); };
+// an alpha ramp for a water sheet's open side ('x0' | 'x1' | 'z0' | 'z1'): clear at that edge, solid a quarter in
+// (a plane rotated flat: u runs with +x, the canvas' top row is its -z edge)
+export const fadeTex = (side = 'x0') => ctex('efade' + side, 64, 64, (x, S) => {
+  const g = side[0] === 'x' ? x.createLinearGradient(side === 'x0' ? 0 : S, 0, side === 'x0' ? S : 0, 0) : x.createLinearGradient(0, side === 'z0' ? 0 : S, 0, side === 'z0' ? S : 0);
+  g.addColorStop(0, '#000'); g.addColorStop(0.28, '#fff'); g.addColorStop(1, '#fff'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+}, false);
+// a moored skiff merged into the island's batch (a harbour's calm water: no bobbing, no draw calls of its own):
+// the hull in its paint (vertex colour), the rail, deck, mast and the furled sail as the free skiff's
+export function mooredSkiff(P, { color = '#c84a3a' } = {}) {
+  P.add(T(cached('eskiffhull', () => { const g2 = lathe([[0, 0], [0.5, 0.05], [0.75, 0.35], [0.8, 0.6], [0, 0.6]], 12); g2.scale(1, 1, 2.6); return g2; }), color, 'skiffhull'), EM.vc());
+  P.add(cached('eskiffrail', () => new THREE.TorusGeometry(0.8, 0.04, 4, 20).scale(1, 2.6, 1).rotateX(Math.PI / 2)), EM.brass(), 0, 0.6, 0);
+  P.add(cached('eskiffdeck', () => bbox(1.3, 0.05, 3.4, 0.01, 0.7)), EM.wood(), 0, 0.5, 0);
+  P.add(cached('eskiffmast', () => cyl(0.05, 0.06, 3.0, 6)), EM.wood(), 0, 2.0, 0.3);
+  P.add(cached('eskiffsail', () => tint(cyl(0.12, 0.12, 2.0, 8).rotateX(Math.PI / 2), '#f4eee0')), EM.vc(), 0, 2.2, -0.6, 0.15);
+  return P;
+}
 // a cloud skiff: a small boat hull, a mast and a furled sail (its own group: it bobs on the clouds)
 export function skiff(parent, x, y, z, ry, color = '#c84a3a') {
   const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; parent.add(g);
@@ -897,4 +931,233 @@ export function shuttleBoard(P, { title = 'ESMER SHUTTLE', lines = [] } = {}) {
   P.add(cached('eboardroof', () => bbox(2.1, 0.08, 0.5, 0.02, 1)), EM.tiles(), 0, 2.55, 0.0, 0.25);
   P.box(0, -0.04, 0.95, 0.12, 2.6); P.r = 1.1;
   return P;
+}
+
+// ================================================================== Esmer buildings (shared: zislands.js, zplaces.js' places, zeelich.js)
+// LBA2's Zeelich look, in our own pieces: battered plaster walls with real recessed horseshoe-arched openings
+// (carved lattice set back in them, painted frames proud of the wall), rounded corner piers with brass knobs, a
+// tiled frieze under a moulded cornice, a scalloped parapet, an onion dome with gilded ribs on a windowed drum
+// and a finial with a crescent; balconies, awnings, flower boxes and wall lanterns here and there. Everything
+// merges into the caller's Batch per material (walls and domes are the caller's own, frames and trims are vertex
+// colours, the lattice is one shared material), so a whole island of buildings adds only a couple of draw calls.
+// Drawing only: the caller keeps each building's collider; the footprint, height and door stay the caller's.
+const _bv = new THREE.Vector3(), _bq = new THREE.Quaternion(), _be = new THREE.Euler(), _bs = new THREE.Vector3(1, 1, 1);
+export const latticeTex = () => ctex('elattice', 128, 128, (x, S) => {
+  x.fillStyle = '#2c2846'; x.fillRect(0, 0, S, S);
+  const g = x.createLinearGradient(0, 0, S, S); g.addColorStop(0, 'rgba(255,200,240,0.18)'); g.addColorStop(1, 'rgba(80,160,255,0.1)'); x.fillStyle = g; x.fillRect(0, 0, S, S);
+  x.strokeStyle = '#f2e6d4'; x.lineWidth = 5;
+  for (let i = 0; i <= 2; i++) for (let j = 0; j <= 2; j++) {
+    const cx = i * 64, cy = j * 64;
+    x.beginPath(); for (let q = 0; q <= 8; q++) { const a = (q / 8) * Math.PI * 2 + Math.PI / 8; x.lineTo(cx + Math.cos(a) * 26, cy + Math.sin(a) * 26); } x.stroke();
+  }
+  x.lineWidth = 4; x.beginPath(); for (const v of [32, 96]) { x.moveTo(v, 0); x.lineTo(v, S); x.moveTo(0, v); x.lineTo(S, v); } x.stroke();
+});
+let LATTICE = null;
+export const latticeM = () => (LATTICE ||= new THREE.MeshStandardMaterial({ map: latticeTex(), roughness: 0.4, emissive: '#3a2a50', emissiveIntensity: 0.4 }));
+
+// the onion dome (radius R0 at its foot, height H): a shell and gilded ribs along it (the finial goes on top)
+const ONION = [[1, 0], [1.12, 0.128], [1.16, 0.256], [1.06, 0.42], [0.78, 0.585], [0.42, 0.728], [0.16, 0.862], [0.02, 1]];
+const onionAt = (t) => { for (let i = 1; i < ONION.length; i++) if (t <= ONION[i][1]) { const [a0, b0] = ONION[i - 1], [a1, b1] = ONION[i]; return a0 + (a1 - a0) * ((t - b0) / (b1 - b0)); } return 0.02; };
+export function domeParts(R0, H, { ribs = 8, seg = 24 } = {}) {
+  const k = R0.toFixed(2) + '|' + H.toFixed(2) + '|' + ribs + '|' + seg;
+  const shell = cached('edomeshell' + k, () => lathe(ONION.map(([a, b]) => [a * R0, b * H]), seg, 1.1));
+  const rib = ribs ? cached('edomerib' + k, () => {
+    const rr = Math.max(0.022, R0 * 0.022), parts = [];
+    for (let q = 0; q < ribs; q++) {
+      const a = (q / ribs) * Math.PI * 2 + Math.PI / ribs, pts = [];
+      for (const t of [0.02, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.96]) { const rad = onionAt(t) * R0 + rr * 0.4; pts.push([Math.sin(a) * rad, t * H, Math.cos(a) * rad]); }
+      parts.push([tube(pts, rr, 4, 1)]);
+    }
+    parts.push([new THREE.TorusGeometry(R0 * 1.005, rr * 1.6, 4, seg).rotateX(Math.PI / 2), 0, 0.02, 0]);
+    return compose(parts);
+  }) : null;
+  return { shell, rib };
+}
+// the finial (FINIAL_H tall at scale 1): a turned brass spike with a crescent
+export const finialGeo = () => cached('efinial', () => compose([[lathe([[0, 0], [0.07, 0], [0.07, 0.12], [0.16, 0.22], [0.16, 0.3], [0.06, 0.38], [0.04, 0.55], [0.11, 0.62], [0.11, 0.7], [0.03, 0.78], [0.015, 1.05], [0, 1.08]], 10)], [new THREE.TorusGeometry(0.16, 0.035, 6, 14, Math.PI * 1.4), 0, 1.12, 0, 0, 0, -Math.PI * 0.2]]));
+export const FINIAL_H = 1.31;
+// the scalloped parapet stone (0.44 wide, 0.5 tall, 0.2 deep)
+const merlonGeo = () => cached('emerlon', () => { const s = new THREE.Shape(); s.moveTo(-0.22, 0); s.lineTo(0.22, 0); s.lineTo(0.22, 0.18); s.quadraticCurveTo(0.22, 0.42, 0, 0.5); s.quadraticCurveTo(-0.22, 0.42, -0.22, 0.18); s.lineTo(-0.22, 0); const g = new THREE.ExtrudeGeometry(s, { depth: 0.2, bevelEnabled: false, curveSegments: 3 }); g.translate(0, 0, -0.1); return boxUV(g, 1); });
+const pierGeo = (rp, H) => cached('epier' + rp.toFixed(2) + '|' + H.toFixed(1), () => lathe([[rp * 1.15, 0], [rp * 1.15, 0.32], [rp * 0.92, 0.44], [rp * 0.86, H - 0.34], [rp * 1.1, H - 0.24], [rp * 1.1, H - 0.08], [rp * 0.72, H], [0, H]], 10, 2.2));
+const knobGeo = () => cached('eknob', () => lathe([[0, 0], [0.16, 0.05], [0.19, 0.18], [0.1, 0.32], [0.03, 0.42], [0.02, 0.6], [0, 0.62]], 10));
+const awningGeo = (w) => cached('eawning' + w.toFixed(2), () => {
+  // a sloped canvas with a scalloped valance; stripes run down the slope (u along its width)
+  const d = 0.95, parts = [];
+  const top = new THREE.PlaneGeometry(w, d, 1, 1); top.rotateX(-Math.PI / 2 + 0.5); top.translate(0, -Math.sin(0.5) * d / 2, Math.cos(0.5) * d / 2);
+  parts.push([top]);
+  const s = new THREE.Shape(); s.moveTo(-w / 2, 0); const n = Math.max(3, Math.round(w / 0.32));
+  for (let i = 0; i < n; i++) { const x0 = -w / 2 + (i / n) * w, x1 = -w / 2 + ((i + 1) / n) * w; s.quadraticCurveTo((x0 + x1) / 2, -0.34, x1, 0); }
+  s.lineTo(w / 2, 0.02); s.lineTo(-w / 2, 0.02); s.closePath();
+  const v = new THREE.ShapeGeometry(s, 3); v.translate(0, -Math.sin(0.5) * d, Math.cos(0.5) * d); parts.push([v]);
+  const g = compose(parts), p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, p.getX(i) / 0.5, p.getY(i) / 0.5);
+  return g;
+});
+
+// a dome on a roof (Place-local x, z; from height `base` up to the finial's tip at `h`, at most R wide): a drum with
+// a tiled band and little lattice windows (drum: false on a round tower), the ribbed onion, the finial
+export function domeStack(P, { x = 0, z = 0, base, h, R, wallM, domeM, drum = true }) {
+  const M = (ly, lx = 0, lz = 0, lry = 0, s = 1) => { const [wx, wz] = P.pt(x + lx, z + lz); return new THREE.Matrix4().compose(_bv.set(wx, P.y + ly, wz), _bq.setFromEuler(_be.set(0, P.ry + lry, 0, 'YXZ')), _bs.set(s, s, s)); };
+  const Hd = h - base, fin = Math.min(0.85, Math.max(0.3, Hd * 0.13)), rest = Hd - fin * 0.92;
+  let R0 = R / 1.16, hdr = drum ? Math.min(1.2, Math.max(0.4, rest * 0.22)) : 0, hdm = rest - hdr;
+  if (hdm > 2.0 * R0) { if (drum) hdr += hdm - 2.0 * R0; hdm = 2.0 * R0; }
+  if (hdm < R0) R0 = Math.max(0.6, hdm);
+  if (drum) {
+    const k = R0.toFixed(2) + '|' + hdr.toFixed(2), bh = Math.min(0.28, hdr * 0.25);
+    P.B.addM(cached('edrum' + k, () => lathe([[R0 + 0.1, 0], [R0 + 0.1, 0.14], [R0, 0.2], [R0, hdr - 0.14], [R0 + 0.12, hdr - 0.1], [R0 + 0.12, hdr], [0, hdr]], 20, 2.2)), wallM, M(base));
+    if (hdr >= 0.5) P.B.addM(cached('edrumband' + k, () => cyl(R0 + 0.012, R0 + 0.012, bh, 20, 1, true)), EM.tiles(), M(base + 0.2 + bh / 2));
+    if (hdr >= 0.85) {
+      const wo = { x: 0, y: 0, w: +Math.min(0.3, R0 * 0.2).toFixed(2), h: +Math.min(0.55, hdr * 0.42).toFixed(2), horse: true };
+      for (let q = 0; q < 8; q++) { const a = (q / 8) * Math.PI * 2; P.B.addM(fillGeo(wo, 0.02, 0), latticeM(), M(base + 0.24 + bh + (hdr - 0.38 - bh - wo.h) / 2, Math.sin(a) * (R0 + 0.014), Math.cos(a) * (R0 + 0.014), a)); }
+    }
+  }
+  const D0 = domeParts(R0, hdm, { ribs: R0 > 1.2 ? 8 : 6 });
+  P.B.addM(D0.shell, domeM, M(base + hdr));
+  P.B.addM(D0.rib, EM.brass(), M(base + hdr));
+  P.B.addM(finialGeo(), EM.brass(), M(base + hdr + hdm - fin * 0.08, 0, 0, 0, fin / FINIAL_H));
+  return { R0, top: base + hdr + hdm };
+}
+
+// P: a Place whose +z is the building's front (the door, at local x = o.doorX ?? 0). Options:
+//   w, d (footprint along / across the front), h (its top: the parapet, or the finial's tip), wallH (a domed
+//   body's height), wall (plaster material), domeM (dome material: no dome without one), trim / accent (frame
+//   colours), seed, door (true), role ('house' | 'store'), sign (a word of the sign atlas), awning [a, b]
+export function esmerBuilding(P, o) {
+  const r = rng(((o.seed | 0) + 1) * 7919 + 17);
+  const { w, d, h } = o, small = Math.min(w, d), wallM = o.wall, stone = EM.stone(), vc = EM.vc(), lat = latticeM();
+  const trim = o.trim || '#3a86b8', accent = o.accent || '#e8b84a', role = o.role || 'house';
+  const domed = !!o.domeM && o.domed !== false && h > 4.5 && small >= 2.4;
+  const parapet = h >= 2.6 && small >= 1.2 ? 0.46 : 0;
+  const top = domed ? o.wallH : h - parapet;        // the cornice's top (the roof)
+  const solid = small < 2.2 || top < 2.3;            // (too thin or low to hollow out: a solid body)
+  const base = Math.min(0.38, top * 0.15), bury = 0.6, ci = small < 2.2 ? 0.08 : 0.16, t = 0.28;
+  const W = w - 2 * ci, D = d - 2 * ci, corn = 0.18, wallTop = top - corn + 0.04, ph = wallTop - base;
+  const lean = solid ? 0 : Math.min(0.018, 0.08 / ph), inset = lean * ph;   // (the batter: walls lean in a little)
+  const M = (lx, ly, lz, lry = 0, rx = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = P.pt(lx, lz); return new THREE.Matrix4().compose(_bv.set(x, P.y + ly, z), _bq.setFromEuler(_be.set(rx, P.ry + lry, 0, 'YXZ')), _bs.set(sx, sy, sz)); };
+  const T = (m, x, y, z, ry = 0, sx = 1, sy = 1, sz = 1) => m.clone().multiply(new THREE.Matrix4().compose(_bv.set(x, y, z), _bq.setFromEuler(_be.set(0, ry, 0)), _bs.set(sx, sy, sz)));
+  const add = (geo, mat, m) => P.B.addM(geo, mat, m);
+  const tintC = (geo, col, key) => cached('etint' + key + col, () => tint(geo, col));
+  // plinth: a stone base, down into a slope
+  add(bbox(w, base + bury, d, 0.05, 1.8), stone, M(0, (base - bury) / 2, 0));
+  const sides = [
+    { n: 'front', len: W, ry: 0, x: 0, z: D / 2 - t, face: W },
+    { n: 'back', len: W, ry: Math.PI, x: 0, z: -D / 2 + t, face: W },
+    { n: 'left', len: D - 2 * t, ry: -Math.PI / 2, x: -W / 2 + t, z: 0, face: D },
+    { n: 'right', len: D - 2 * t, ry: Math.PI / 2, x: W / 2 - t, z: 0, face: D },
+  ];
+  // openings (panel-local: x along, y up from the plinth)
+  const dw = role === 'store' ? Math.min(2.1, W - 1.2) : Math.min(1.2, W - 0.8), dh = Math.min(role === 'store' ? 2.6 : 2.35, ph - 0.9);
+  const hasDoor = o.door !== false && dh >= 1.7 && dw >= 0.8, doorX = o.doorX ?? 0;
+  const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: 0.82, h: 1.25 }, row2 = ph >= 4.9 ? { y: 3.1, h: 1.15 } : null;
+  const ops = { front: [], back: [], left: [], right: [] };
+  if (hasDoor) ops.front.push({ x: doorX, y: 0, w: dw, h: dh, door: true });
+  const balconySide = !solid && row2 && r() < 0.55 ? ['left', 'right', 'back'][Math.floor(r() * 3)] : null;
+  if (!solid) for (const sd of sides) {
+    const n = Math.max(0, Math.floor((sd.len - 0.9) / 2.1));
+    for (const row of [row1, row2]) {
+      if (!row || ph < row.y + row.h + 0.5) continue;
+      for (let q = 0; q < n; q++) {
+        const u = (q - (n - 1) / 2) * 2.1;
+        if (Math.abs(u) + ww / 2 > sd.len / 2 - 0.42) continue;
+        if (sd.n === 'front' && hasDoor && row === row1 && Math.abs(u - doorX) < dw / 2 + ww / 2 + 0.5) continue;
+        if (row === row2 && sd.n === balconySide && Math.abs(u) < 1.3) continue;
+        ops[sd.n].push({ x: u, y: row.y, w: ww, h: row.h });
+      }
+    }
+    if (sd.n === balconySide && sd.len > 2.6) ops[sd.n].push({ x: 0, y: row2.y - 0.55, w: 0.95, h: 1.85, balcony: true });
+  }
+  const shape = (op) => ({ x: 0, y: 0, w: +op.w.toFixed(2), h: +op.h.toFixed(2), horse: true });
+  // the body
+  if (solid) {
+    const rr = Math.min(0.24, small * 0.12);
+    add(bbox(W, wallTop - base + 0.02, D, rr, 2.2), wallM, M(0, base + (wallTop - base) / 2, 0));
+    if (top >= 1.5) add(tintC(bbox(W + 0.05, 0.26, D + 0.05, rr, 1), accent, 'esolidband' + W.toFixed(2) + D.toFixed(2)), vc, M(0, wallTop - 0.42, 0));
+    // blind arcades on the faces of a tall solid (a garden wall, a screen): frames and lattice on the face
+    if (top >= 2.4) for (const sd of sides) {
+      const n = Math.floor((sd.face - 0.6) / 1.6); if (n < 1) continue;
+      const fz = sd.n === 'front' || sd.n === 'back' ? D / 2 : W / 2, op = { x: 0, y: 0, w: 0.7, h: +Math.min(1.6, top - 1.2).toFixed(2), horse: true };
+      for (let q = 0; q < n; q++) {
+        const u = (q - (n - 1) / 2) * 1.6, at = sd.n === 'front' ? [u, fz] : sd.n === 'back' ? [-u, -fz] : sd.n === 'left' ? [-fz, -u] : [fz, u];
+        const m = M(at[0], base + 0.35, at[1], sd.ry);
+        add(fillGeo(op, 0.02, 0), lat, T(m, 0, 0, 0.012));
+        add(tintC(frameGeo(op, 0.1, 0.05), trim, 'eblind' + op.h), vc, m);
+      }
+    }
+  } else for (const sd of sides) {
+    const m = M(sd.x, base, sd.z, sd.ry, -lean);
+    add(panelGeo(+sd.len.toFixed(3), ph, t, ops[sd.n].map((op) => ({ x: op.x, y: op.y, w: op.w, h: op.h, horse: true }))), wallM, m);
+    // the tiled frieze under the cornice, a string course between the floors
+    const fl = sd.face - 0.5;
+    add(bbox(fl, 0.32, 0.05, 0.01, 1), EM.tiles(), T(m, 0, ph - 0.5, t + 0.02));
+    if (row2) add(bbox(fl, 0.1, 0.12, 0.02, 1.8), stone, T(m, 0, row2.y - 0.32, t + 0.04));
+    for (const op of ops[sd.n]) {
+      const S0 = shape(op), mo = T(m, op.x, op.y, 0);
+      if (op.door) {
+        add(frameGeo(S0, 0.2, 0.1), EM.tiles(), T(mo, 0, 0, t - 0.02));
+        add(fillGeo(S0, 0.03, 0.05), EM.wood(), T(mo, 0, 0, t * 0.3));
+        add(cached('edring', () => new THREE.TorusGeometry(0.07, 0.016, 5, 12)), EM.brass(), T(mo, op.w * 0.28, 1.05, t * 0.3 + 0.07));
+        // the alfiz: a painted rectangle round the arch
+        const aw = op.w + 0.7, ah = op.h + 0.42;
+        for (const s of [-1, 1]) add(tintC(bbox(0.12, ah, 0.07, 0.02, 1), trim, 'ealfv' + ah.toFixed(2)), vc, T(mo, s * aw / 2, ah / 2, t + 0.04));
+        add(tintC(bbox(aw + 0.12, 0.12, 0.07, 0.02, 1), trim, 'ealfh' + aw.toFixed(2)), vc, T(mo, 0, ah, t + 0.04));
+        continue;
+      }
+      add(fillGeo(S0, 0.03, 0), lat, T(mo, 0, 0, t * 0.42));
+      add(tintC(frameGeo(S0, op.balcony ? 0.14 : 0.11, 0.08), trim, 'efr' + JSON.stringify(S0) + (op.balcony ? 'b' : '')), vc, T(mo, 0, 0, t - 0.02));
+      if (op.balcony) {
+        // a balcony: a stone slab on two corbels, brass balusters and rail
+        add(bbox(1.9, 0.14, 0.66, 0.03, 1.8), stone, T(mo, 0, -0.07, t + 0.3));
+        for (const s of [-0.6, 0.6]) add(cached('ecorbel', () => lathe([[0.02, 0], [0.12, 0.02], [0.1, 0.14], [0.16, 0.3], [0, 0.32]], 6)), stone, T(mo, s, -0.46, t + 0.18));
+        for (let k = 0; k < 7; k++) add(cached('ebalust', () => lathe([[0.035, 0], [0.05, 0.08], [0.03, 0.3], [0.05, 0.6], [0.03, 0.72]], 6)), EM.brass(), T(mo, -0.84 + k * 0.28, 0, t + 0.56));
+        add(cached('ebalrail', () => bbox(1.86, 0.05, 0.06, 0.01, 1)), EM.brass(), T(mo, 0, 0.74, t + 0.56));
+        for (const s of [-1, 1]) add(cached('ebalrails', () => bbox(0.05, 0.05, 0.6, 0.01, 1)), EM.brass(), T(mo, s * 0.93, 0.74, t + 0.28));
+        continue;
+      }
+      add(cached('esill' + op.w, () => bbox(op.w + 0.3, 0.08, 0.2, 0.02, 1)), stone, T(mo, 0, -0.04, t + 0.08));
+      // a flower box under some ground-floor windows
+      if (op.y < 1 && r() < 0.3) {
+        add(tintC(bbox(op.w + 0.12, 0.2, 0.22, 0.03, 1), accent, 'efbox' + op.w), vc, T(mo, 0, -0.2, t + 0.17));
+        for (let k = 0; k < 5; k++) add(cached('efl' + (k % 3), () => tint(new THREE.IcosahedronGeometry(0.075, 0), ['#ff6fa3', '#ffd84a', '#b28cff'][k % 3])), vc, T(mo, -op.w / 2 + 0.1 + (k / 4) * (op.w - 0.2), -0.04, t + 0.19 + (k % 2) * 0.05));
+      }
+    }
+  }
+  // corner piers with brass knobs (they cover the battered walls' corners)
+  const rp = solid ? Math.min(0.2, small * 0.12) : small >= 4 ? 0.28 : 0.22, pierH = top + (parapet ? 0.3 : 0.16);
+  if (small >= 1.2) for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+    add(pierGeo(rp, pierH), wallM, M(sx * (W / 2 - rp * 0.25), 0, sz * (D / 2 - rp * 0.25)));
+    if (parapet) add(knobGeo(), EM.brass(), M(sx * (W / 2 - rp * 0.25), pierH, sz * (D / 2 - rp * 0.25), 0, 0, rp * 2.4, Math.min(0.75, (h + 0.12 - pierH) / 0.62), rp * 2.4));
+  }
+  // the cornice (a stone moulding in two steps), the roof, the scalloped parapet
+  const Wt = W - 2 * inset, Dt = D - 2 * inset;
+  add(bbox(Wt + 0.34, corn, Dt + 0.34, 0.05, 1.8), stone, M(0, top - corn / 2, 0));
+  add(bbox(Wt + 0.16, 0.1, Dt + 0.16, 0.03, 1.8), stone, M(0, top - corn - 0.04, 0));
+  if (parapet) {
+    const mg = merlonGeo(), sy = parapet / 0.5;
+    for (const [len, ax, lry] of [[Wt, Dt / 2 + 0.06, 0], [Wt, Dt / 2 + 0.06, Math.PI], [Dt, Wt / 2 + 0.06, Math.PI / 2], [Dt, Wt / 2 + 0.06, -Math.PI / 2]]) {
+      const n = Math.floor((len - 0.5) / 0.62), c = Math.cos(lry), s = Math.sin(lry);
+      for (let i = 0; i < n; i++) { const u = -((n - 1) * 0.62) / 2 + i * 0.62; add(mg, wallM, M(c * u + s * ax, top, -s * u + c * ax, lry, 0, 1, sy, 1)); }
+    }
+  }
+  if (domed) domeStack(P, { base: top, h, R: Math.min(Wt, Dt) * 0.36, wallM, domeM: o.domeM });
+  // by the door: a wall lantern, an awning or a sign board; a store's hoist beam over its wide door
+  if (hasDoor && !solid) {
+    const m = M(0, base, D / 2), lx = doorX + (dw / 2 + 0.62) * (doorX > 0.3 ? -1 : 1), ly = Math.min(dh + 0.25, ph - 0.8);
+    if (dh + 0.9 < ph) {
+      add(cached('ewlamp', () => compose([[bbox(0.07, 0.07, 0.34, 0.02, 1), 0, 0, 0.17], [cyl(0.015, 0.015, 0.2, 5), 0, -0.1, 0.32], [lathe([[0, 0], [0.12, 0], [0.08, 0.09], [0.02, 0.16], [0, 0.18]], 8), 0, -0.24, 0.32]])), EM.brass(), T(m, lx, ly, 0));
+      add(cached('ewlampg', () => lathe([[0, 0], [0.09, 0.03], [0.11, 0.13], [0.08, 0.24], [0.02, 0.27], [0, 0.27]], 8)), EM.glow(), T(m, lx, ly - 0.52, 0.32));
+    }
+    if (o.sign && dh + 0.85 < ph) {
+      add(cached('esignboard', () => bbox(1.5, 0.42, 0.06, 0.02, 1)), EM.wood(), T(m, doorX, dh + 0.62, 0.05));
+      add(wordPlane(o.sign, 1.36, 0.32), signMat(), T(m, doorX, dh + 0.62, 0.085));
+    } else if (role === 'store' && dh + 1.1 < ph) {
+      add(bbox(0.16, 0.16, 1.1, 0.02, 1), EM.wood(), T(m, doorX, dh + 0.75, 0.5));
+      add(cached('epulley', () => new THREE.TorusGeometry(0.12, 0.03, 5, 12)), EM.brass(), T(m, doorX, dh + 0.58, 0.98, Math.PI / 2));
+      add(cached('ehoistrope', () => cyl(0.012, 0.012, 1.0, 4)), EM.wood(), T(m, doorX, dh + 0.05, 1.06));
+    } else if (o.awning && dh + 0.7 < ph && r() < 0.6) {
+      const aw = dw + 0.9;
+      add(awningGeo(aw), EM.canvas(o.awning[0], o.awning[1]), T(m, doorX, dh + 0.62, 0.02));
+      for (const s of [-1, 1]) add(cached('eawstrut', () => cyl(0.015, 0.015, 1.0, 4).rotateX(0.95)), EM.brass(), T(m, doorX + s * aw / 2 * 0.9, dh + 0.25, 0.36));
+    }
+  }
+  return { top, domed, solid, door: hasDoor ? { x: doorX, z: D / 2 } : null };
 }

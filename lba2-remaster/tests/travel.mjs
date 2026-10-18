@@ -7,6 +7,10 @@
 //   - the menus: Citadel Spaceport lists only Zeelich Spaceport; Zeelich Spaceport only Citadel; Zeelich's shuttles
 //     only Zeelich's places; no Twinsun stop on Zeelich, no Zeelich island on Twinsun
 //   - the Holomap shows the planet he is on, with his dot, in every outdoor region
+//   - PLANET-1: every route touching Zeelich is the spaceship or a Zeelich shuttle; the story's crossings by input:
+//     chapter 2 (Doran at the harbour → the project's ship at Citadel Spaceport → Zeelich Spaceport's deck), chapter 8
+//     (no ship at the quay; the project ship at the spaceport), chapter 10 (no Hesk on Zeelich; the spaceship to
+//     Citadel; Hesk's glider menu names only Twinsun)
 // ISO (logged): the chapter is set by its flags; before walking to a travel point he is put ~8 m from it (the walk,
 // the menu and the arrival are by input).
 import { launch, open, menu, checker } from './lib/boot.mjs';
@@ -61,6 +65,44 @@ await setChapter('pass');
 const g6 = {};
 for (const pid of ['desert_glider', 'hamalayi_glider', 'citadel_glider']) { await near(pid); const r = await take(pid, null); g6[pid] = r.items || null; }
 check('chapter 6: the glider joins Desert Island and the Hamalayi; Citadel\'s field still closed', JSON.stringify(g6.desert_glider) === JSON.stringify(['The Hamalayi: the foothills']) && JSON.stringify(g6.hamalayi_glider) === JSON.stringify(['Desert Island: the glider field']) && !g6.citadel_glider, g6);
+
+// ---------------------------------------------------------------- PLANET-1: the story's crossings are spaceship flights
+// (the user: "Twinsun and Zeelich are two separate planets, so the crossing between them is a spaceship")
+const routesPlanet = await ev(() => { const T = game.travel, pl = (id) => (T.points[id].region.startsWith('isle_') || T.points[id].region === 'zeelich' ? 'zeelich' : 'twinsun');
+  return T.routes.map((r) => ({ a: r.a, b: r.b, mode: r.mode, pa: pl(r.a), pb: pl(r.b) })); });
+check('PLANET-1: every travel route that touches Zeelich is the spaceship (Citadel ⇄ Zeelich Spaceport) or a Zeelich shuttle; no ferry, glider or boat route reaches Zeelich',
+  routesPlanet.every((r) => (r.pa !== r.pb ? r.mode === 'ship' : r.pa === 'zeelich' ? r.mode === 'shuttle' : ['ferry', 'glider'].includes(r.mode))) && routesPlanet.filter((r) => r.pa !== r.pb).length === 1, routesPlanet.filter((r) => r.pa !== r.pb || r.mode === 'ship'));
+await ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines.map((l) => String(l).slice(0, 60))); return sv.call(this, n, lines, ...a); }; } });
+const said = () => ev(() => window._said.splice(0));
+// chapter 2 → 3 by input: Doran at the harbour agrees and goes ahead; the project's ship at Citadel Spaceport flies him over
+const C1 = { c1_started: true, c1_home: true, c1_arrived: true, c1_task: true, c1_water: true, c1_tour: true, c1_needZoe: true, c1_zoeStart: true, c1_zoeDone: true, c1_plan: true, c1_veskGone: true, c1_radio: true };
+await setChapter('project', C1);
+await near('citadel_ferry');
+const p2a = await ev(() => { const r = P.talk('doran', { run: true }); const d = P.npc('doran'), sp = game.world.spaceport; return { r: r.r, ship: !!game.flags.c1_ship, ch: game.flags.chapterKey, room: game.room?.id ?? 'citadel', doranAtPort: Math.hypot(d.pos.x - sp.pad.x, d.pos.z - sp.pad.z) < 8, obj: document.querySelector('#objective')?.textContent }; });
+check('chapter 2: Doran at the harbour takes Baldino\'s start code and goes ahead to the spaceport; no crossing from the harbour (INPUT)', p2a.r === 'talked' && p2a.ship && p2a.ch === 'project' && p2a.room === 'citadel' && p2a.doranAtPort && /spaceport/i.test(p2a.obj || ''), p2a);
+// (a remark on the way — someone in town calling out — stops the walk; a player walks on: up to three tries)
+await said();
+const p2b = await ev(() => { const sp = game.world.spaceport; let r; for (let k = 0; k < 3 && game.flags.chapterKey === 'project'; k++) { r = P.use(sp.pad.x - 4.2, sp.pad.z, { run: true, kind: 'c1ship' }); P.settle(60); } const Z = game.rooms.zeelich, L = Z.spaceport.landing, h = game.hero;
+  return { r: r.r, kind: r.target?.kind, ch: game.flags.chapterKey, room: game.room?.id, state: game.state, onPortDeck: Math.hypot(h.pos.x - L.x, h.pos.z - L.z) < 4, ferry: Z.ferry?.group?.visible ?? null, taken: !!game.flags.c2_planTaken }; });
+p2b.said = await said();
+check('chapter 2 → 3: E at the project\'s ship on Citadel Spaceport\'s pad (INPUT) flies him to Zeelich: chapter 3 starts on Zeelich Spaceport\'s deck, the plan confiscated there; no sky-ferry at Zeelich\'s dock', p2b.kind === 'c1ship' && p2b.ch === 'zeelich' && p2b.room === 'zeelich' && p2b.state === 'play' && p2b.onPortDeck && p2b.ferry === false && p2b.taken, p2b);
+// chapter 8 → 9 by input: the project ship boards at the spaceport, not at the harbour
+await setChapter('evacuation', { c8_started: true, c8_home: true, c8_relay: true, c8_vesk: true, c8_zoeDone: true });
+await near('citadel_ferry');
+const p8a = await ev(() => { const Q = game.world.pierStart; P.go(Q.x - 6, Q.z, { tol: 1.0, run: true }); P.face(Q.x - 7, Q.z); return { kind: P.target()?.kind ?? null }; });
+await said();
+const p8b = await ev(() => { const sp = game.world.spaceport; let r; for (let k = 0; k < 3 && game.flags.chapterKey === 'evacuation'; k++) { r = P.use(sp.pad.x - 4.2, sp.pad.z, { run: true, kind: 'c8ship' }); P.settle(60); } const L = game.rooms.zeelich.spaceport.landing, h = game.hero;
+  return { r: r.r, kind: r.target?.kind, ch: game.flags.chapterKey, room: game.room?.id, onPortDeck: Math.hypot(h.pos.x - L.x, h.pos.z - L.z) < 4 }; });
+p8b.said = await said();
+check('chapter 8 → 9: no ship at the harbour\'s quay; E at the project ship on Citadel Spaceport\'s pad (INPUT) → chapter 9 on Zeelich Spaceport\'s deck', p8a.kind !== 'c8ship' && p8b.kind === 'c8ship' && p8b.ch === 'council' && p8b.room === 'zeelich' && p8b.onPortDeck, { p8a, p8b });
+// chapter 10: Hesk's glider is Twinsun's only; Zeelich ⇄ Citadel by the spaceship
+await setChapter('network', { c10_started: true, c10_pulse: true });
+await near('zeelich_port');
+const h10a = await ev(() => ({ room: game.room?.id, hesk: !!P.npc('hesk')?.present }));
+const h10b = await take('zeelich_port', 'Twinsun');
+const h10c = await ev(() => { const G = game, n = P.npc('hesk'); if (!n?.present) return { r: 'absent' }; const g = P.go(n.pos.x, n.pos.z, { tol: 1.6, run: true }); P.face(n.pos.x, n.pos.z); const tk = P.target()?.kind; P.tap('KeyE', 0.1);
+  for (let k = 0; k < 40 && G.state === 'dialog'; k++) P.tap('KeyE', 0.12); const r = { r: G.state === 'shop' && tk === 'npc' ? 'talked' : 'no menu: ' + G.state + '/' + tk + '/' + g.r }; const title = document.querySelector('#shop h2')?.textContent, items = [...document.querySelectorAll('#shop .item')].map((b) => b.querySelector('span').textContent + (b.disabled ? '*' : '')); document.querySelector('#shop .leave')?.click(); game.step(0.2); P.settle(); return { r: r.r, title, items }; });
+check('chapter 10: no Hesk on Zeelich; the spaceship takes him to Citadel; Hesk\'s glider menu there names only Twinsun (Citadel, Desert Island, the Hamalayi), never Zeelich (INPUT)', !h10a.hesk && h10b.room === 'citadel' && h10c.r === 'talked' && h10c.items.length === 3 && h10c.items.every((x) => !/Zeelich/i.test(x)) && /Citadel/.test(h10c.items[0]) && /Desert/.test(h10c.items[1]) && /Hamalayi/.test(h10c.items[2]), { h10a, h10b: { room: h10b.room, items: h10b.items }, h10c });
 
 // ---------------------------------------------------------------- after the main story: the matrix by input
 await setChapter('home', { ep_free: true });

@@ -63,7 +63,8 @@ player can do · what stays different afterwards.
   the project's posts dark, the pump is the lane's water and Bram's lines say so.
 
 ### The harbour: trade between two worlds and The Mislabelled Shipment
-- Changed: Esmer shuttle traffic and the ferry made the harbour a trading quay. New: a modest customs booth
+- Changed: Esmer shuttle traffic (its cargo comes round from the spaceport by barge) and the ferry to Desert Island
+  made the harbour a trading quay. New: a modest customs booth
   (Officer Odile, a Rabbibunny, new), cargo from both worlds (Esmer crates, Mosquibee honey jars beside the
   project's crates and Twinsun barrels), and Nell's repair shop for imported machines (Nell, a young Quetch,
   new): Esmer engines are wonderful, spare parts take three weeks by shuttle.
@@ -190,7 +191,7 @@ chiselled its crest off. Everything below is a proposed development of this pass
   a tag, CONNECTION NEXT QUARTER. Jobs: Mr Pelleck keeps the depot's books, Tavo carries rolls to the depot, his cousin
   works on the platform. Traffic: the project's heat makes the flowers bloom twice (Bzizz flies twice as much); in
   chapter 3 Nara's cloud flowers wait by the shuttle pad, crated for Citadel and HELD (the project grounds the shuttles
-  and its ferry takes project cargo first); from chapter 4 they are gone, and Xil sells them on at Citadel's harbour.
+  and its own ship takes project cargo first); from chapter 4 they are gone, and Xil sells them on at Citadel's harbour.
 - **Rebuilding.** Mr Pelleck's dome is being re-tiled from the bottom up: scaffold, a pulley and a bucket, a ladder,
   tile stacks, the lower half in new blue tiles ("they don't make the old violet any more"), a band of bare mortar,
   the old violet above.
@@ -248,8 +249,10 @@ depot hasn't signed for it, and unsigned crates stay on the stage).
   - **The Old Watch**: a crescent ridge over the clouds with the broken watchtower of the old guard (older than the
     council; its dome lies fallen beside it), toppled columns and wall blocks along the crest, and an old telescope on
     the south horn looking out. A bit of magic lies by the telescope.
-- **Zeelich is another planet.** Twelve years on the Esmers' shuttles are local traffic between Zeelich's islands;
-  the crossing to Twinsun is a spaceship between Citadel Spaceport and **Zeelich Spaceport** (ours: a deck off the
+- **Zeelich is another planet: Twinsun ⇄ Zeelich is by spaceship only** (PLANET-1, the user's decision; the
+  story's crossings too: the project's ships in chapters 2, 3→4 and 8, the spaceship in chapter 10; the harbour's
+  timetable lists only Twinsun sailings). Twelve years on the Esmers' shuttles are local traffic between Zeelich's
+  islands; the crossing to Twinsun is a spaceship between Citadel Spaceport and **Zeelich Spaceport** (ours: a deck off the
   terminal island's south shore, a footbridge, the larger craft on its pad, a board). On Twinsun the ferry runs from
   Citadel's harbour to Desert Island's pier (not while the project holds the ferry in chapter 5), and gliders fly
   between the fields on Citadel's plateau, Desert Island's beach and the Hamalayi foothills (ours: the fields, their

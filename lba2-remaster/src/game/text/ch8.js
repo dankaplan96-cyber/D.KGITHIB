@@ -6,12 +6,12 @@ Object.assign(STR.en, {
   p_lever: 'Pull', p_shelter: 'Inspect',
 
   c8_narr: 'The glider skims the cliffs and comes down in the grass above the lighthouse. Below, Citadel is not the island Twinsen left.',
-  c8_hesk_1: "Two project ships in your harbour, and a queue to the end of the pier. I'll take the glider back south before they take her too. Good luck, Twinsen.",
+  c8_hesk_1: "Project ships at your spaceport, and a queue down the whole bridge. I'll take the glider back south before they take her too. Good luck, Twinsen.",
   c8_tw_1: "The heat posts are dark. And the square is fenced off. Home first.",
 
   c8_zoe_1: 'You came back! Arthur, he came back!',
   c8_ar_1: 'Dad! I told you he would! Did you see the snow? Did you bring me snow?',
-  c8_zoe_2: "The project ships take only the list. The heat posts went dark yesterday, to save power for the bore. People on the list are at the harbour. Everyone else was told to wait.",
+  c8_zoe_2: "The project ships take only the list. The heat posts went dark yesterday, to save power for the bore. People on the list are queuing at the spaceport. Everyone else was told to wait.",
   c8_tw_z1: "Then we take everyone else. Where's safe?",
   c8_zoe_3: "The lighthouse cliffs are high and solid, and Doran's old boats are moored under them. I'll get the hill families there. You find somewhere for the town.",
   c8_ar_2: 'Grandpa Gilbert says FunFrock dug tunnels under everything! He says it all the time. Nobody listens.',
@@ -51,7 +51,7 @@ Object.assign(STR.en, {
   c8_vesk_1: "This is Vesk. To all stations: the bore reaches full depth in three days. Evacuation of listed personnel continues. That is all.",
   c8_tw_c1: 'Three days.',
   c8_zoe_radio: "Twinsen, I heard. The lighthouse relays to Zeelich's council. If they order the bore reversed, the project has to obey. Go and make them listen. I'll keep everyone safe here.",
-  c8_tw_c2: "Baldino's on Zeelich. And Doran's ferry is still in Kesh... the project ships, then. They're going to Zeelich anyway.",
+  c8_tw_c2: "Baldino's on Zeelich. The project ships fly there all day. I'll get on one.",
 
   c8_obj_home: 'Go home to Zoé',
   c8_obj_shelters: 'Get the town to safety',
@@ -64,7 +64,7 @@ Object.assign(STR.en, {
   c8_obj_farms: 'Zoé: bring the hill families to the lighthouse ({n}/3)',
   c8_obj_lighthouse: 'Zoé: go to the lighthouse',
   c8_obj_control: "Go to the station's control room",
-  c8_obj_ship: 'Board a project ship to Zeelich',
+  c8_obj_ship: 'Board a project ship at the spaceport',
   c8_j_home: 'Citadel is being evacuated by the project\'s list. The heat posts are dark.',
   c8_j_shelters: "FunFrock's tunnels under the fortress and the depot are shelters now. Mira and Pippa stocked them.",
   c8_j_farms: 'Zoé brought the hill families to the lighthouse cliffs.',

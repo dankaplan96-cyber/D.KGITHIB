@@ -21,11 +21,11 @@ import { textures } from '../engine/textures.js';
 import { rng, smoothstep } from '../engine/math.js';
 import { MAX_SLOPE } from '../engine/physics.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
-import { tm, pm, cached, bbox, cyl, lathe, Batch, instances, brassM } from './kit.js';
+import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, brassM, panelGeo, frameGeo, fillGeo } from './kit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
-import { placeLayout, PLACES, TRALU, OLDWATCH, watchAt } from './zplaces.js';
+import { placeLayout, PLACES, TRALU, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
 
 // The original's Zeelich islands (assets/lba2/islands, numbers from the user's files: tools/lba2-islands.py), then
 // our own places (src/game/zplaces.js). (Appended at the end: an island's place in the world is its index, and
@@ -259,6 +259,11 @@ const STYLE = {
     trees: '#d8f0f8', ground: ['#e8f0b0', '#dce8a4', '#e8dcc0'], pave: 'concrete', paveAt: (x, z) => x < -7.5 && z < -6,
     walls: ['#f8f0e4', '#e6f0f4', '#f4e4d4', '#eef4e4'], domes: [['#2f8a9a', '#a8e8ee'], ['#3a6ac0', '#c8dcff'], ['#d89a30', '#ffe6a8']],
     target: { x: -13.5, z: -22.0, word: 'HARBOUR' }, near: 10, far: 34, padClear: 3.3, padSlope: 1.4, padR: 3.3, D: [9, 8, 7, 6.5], ahead: 3, padIn: (x, z) => x < -8, gate: { x0: -5.0, x1: 5.6, z0: -23.6, z1: -20.9 },
+    // the jars at a potter's size; the basin between the quay's arms a harbour: a calm cloud-water surface (open to
+    // the west), quay walls with a kerb along its three land sides, skiffs moored in it (below: dress)
+    // (the original's tall posts along the quay, each with a head on top, are its harbour lamps)
+    shape: (o) => (o.body === 13 && o.kind === 'tall' ? 'lamp' : o.body === 14 && o.y > 5 ? 'skip' : null),
+    lampPosts: true, jarMax: 1.15, harbour: { x0: -42, x1: -16.2, z0: -34.6, z1: -20.1, water: -0.12, open: 'x0' },
     crates: 'wood', lines: ['#f4eee0', '#3a7ac8', '#e8608a', '#f0c040'],
     landmark(api) {
       const pois = [{ ...api.S.target }];
@@ -271,7 +276,9 @@ const STYLE = {
       for (const [x0, x1, z, side] of [[-34, -10, -45.4, -1], [-34, -10, -35.0, 1], [-34, -10, -21.3, -1], [-34, -10, -14.6, 1]]) {
         for (let x = x0; x <= x1; x += 6) api.near('bollard', x, z - side * 0.2, 0, {}, 0.6);
       }
-      for (const [x, z, ry] of [[-24, -48.6, Math.PI / 2], [-16, -31.6, -Math.PI / 2], [-27, -11.4, -Math.PI / 2], [-12.5, -48.8, Math.PI / 2 + 0.2]]) api.add('skiff', x, z, ry, { color: ['#c84a3a', '#2f7f86', '#d89a30', '#7a3a8a'][Math.abs(Math.round(x)) % 4] });
+      for (const [x, z, ry] of [[-24, -48.6, Math.PI / 2], [-27, -11.4, -Math.PI / 2], [-12.5, -48.8, Math.PI / 2 + 0.2]]) api.add('skiff', x, z, ry, { color: ['#c84a3a', '#2f7f86', '#d89a30', '#7a3a8a'][Math.abs(Math.round(x)) % 4] });
+      // moored in the harbour basin, tied to the quay (seen from the landing on the quay's spine)
+      for (const [x, z, ry, c, tie] of [[-20.6, -30.4, Math.PI / 2, '#2f7f86', [-17.0, -30.4]], [-21.4, -25.6, Math.PI / 2 + 0.12, '#c84a3a', [-17.0, -25.6]], [-27.5, -31.6, 0.1, '#d89a30', [-27.5, -34.4]], [-30.5, -23.4, Math.PI - 0.15, '#7a3a8a', [-30.5, -20.3]]]) api.add('skiff', x, z, ry, { color: c, harbour: true, tie });
       api.open('netRack', 3, { lo: 1.6, space: 6, around: { x: -22, z: -40, r: 14 }, face: { x: -22, z: -30 } });
       api.open('crates', 5, { lo: 1.4, space: 4, around: { x: -15, z: -30, r: 16 }, opts: (i) => ({ n: 2 + (i % 3), seed: i + 3 }) });
       api.open('barrels', 3, { lo: 1.3, space: 5, around: { x: -18, z: -18, r: 12 } });
@@ -531,6 +538,14 @@ const FOOT = {
   shuttleBoard: () => ({ hw: 1.0, hd: 0.3 }), weighBeam: () => ({ r: 1.6 }), cloudCatcher: () => ({ r: 4.7 }), nectarPress: () => ({ hw: 1.15, hd: 0.9 }),
   ruinedTower: () => ({ r: 2.6 }), telescope: () => ({ r: 1.8 }), brokenCol: () => ({ r: 0.5 }), fallenDome: () => ({ r: 2.3 }), liftTower: (o) => ({ r: (o.w ?? 3) * 0.75 }),
 };
+// how tall each piece stands (for the camera's view: the big ones are kept out of a chosen view's foreground)
+const HGT = { gasHolder: (o) => (o.r ?? 2.6) > 2.2 ? (o.h ?? 5.2) + 1.2 : (o.h ?? 4.2) + 1.2, crane: (o) => o.h ?? 9, mast: (o) => o.h ?? 8, waterTank: () => 3.6, beacon: () => 5.9,
+  greatHive: () => 5.2, stall: () => 2.6, pump: () => 2.8, liftTower: (o) => o.h ?? 11, cloudCatcher: (o) => o.h ?? 6.8, ruinedTower: (o) => o.h ?? 7.5,
+  weighBeam: () => 4.6, telescope: () => 2.4, stage: () => 2.0, nectarPress: () => 2.6, fountain: () => 3.6, plinth: () => 3.2, netRack: () => 2.3, laundry: () => 2.3,
+  colossus: (o) => o.h ?? 28, fallenDome: () => 2.0, hive: () => 1.3, crates: () => 1.3, barrels: () => 0.9, honey: () => 1.0, bench: () => 0.9, planter: () => 1.2,
+  boxPlanter: () => 0.8, flowerBed: () => 0.6, bin: () => 1.1, jars: () => 0.8, bottles: () => 1.2, barrier: () => 1.1, brokenCol: (o) => o.h ?? 2.2, warn: () => 2.0 };
+const pieceH = (kind, o = {}) => HGT[kind]?.(o) ?? 1.0;
+const THIN_PIECES = new Set(['lamp', 'cageLamp', 'banner', 'pole', 'signpost', 'flagPole', 'bollard', 'post', 'shuttleBoard', 'skiff', 'warn']);
 const FS = 0.5;   // the plan's grid (m)
 let DEBUG_PLAN = null;
 
@@ -584,6 +599,49 @@ function planIsland(name, L, A, debug = false) {
   const disc = (x, z, r, pred) => { for (let j = cj(z - r); j <= cj(z + r); j++) for (let i = ci(x - r); i <= ci(x + r); i++) { const dx = wx(i) - x, dz = wz(j) - z; if (dx * dx + dz * dz > r * r) continue; if (!inF(i, j) || !pred(j * fx + i)) return false; } return true; };
   const line = (ax, az, bx, bz, pred) => { const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 0.25); for (let t = 0; t <= n; t++) { const k = K(ax + ((bx - ax) * t) / n, az + ((bz - az) * t) / n); if (k < 0 || !pred(k)) return false; } return true; };
   const range = (x, z, r) => { let lo = 1e9, hi = -1e9; for (let a = -r; a <= r + 1e-6; a += 1) for (let b = -r; b <= r + 1e-6; b += 1) { if (a * a + b * b > r * r + 0.01) continue; const h = hAt(x + a, z + b); if (h == null) return 1e9; lo = Math.min(lo, h); hi = Math.max(hi, h); } return hi - lo; };
+  // ---- the play camera's view (src/engine/camera.js, the LBA view): what stands between it and him. `tall` holds
+  // the top of whatever solid stands on each cell (the original's objects now, our pieces as they are placed;
+  // slender things — lamps, poles, sign posts — don't count). view() casts a fan of rays over the lower part of
+  // the frame (the ground between the camera and him) and to his body: the share of them stopped by an object
+  // short of him is the foreground clutter, `body` whether he is hidden. camKeep marks the ground under those
+  // rays (low enough to be hit by a tall piece) so the dressing keeps tall pieces out of a chosen view.
+  const tall = new Float32Array(N).fill(-1e9);
+  const THIN = new Set(['plant', 'slab', 'deck', 'pier', 'fence', 'post', 'pole', 'lamp', 'skip', 'figure']);
+  for (const o of A.decor) if (o.solid && !THIN.has(o.shape)) rect(o.x, o.z, Math.max(0.1, o.sx / 2), Math.max(0.1, o.sz / 2), (k) => { tall[k] = Math.max(tall[k], o.y + o.sy); });
+  const VIEW = (() => { const pitch = (300 / 4096) * Math.PI * 2; return { cp: Math.cos(pitch), sp: Math.sin(pitch), dist: 11800 / 750, ah: 2500 / 750, ty: Math.tan((43.6 / 2) * Math.PI / 180) }; })();
+  const camKeep = new Uint8Array(N);
+  const view = (hx, hz, ux, uz, { stamp = false } = {}) => {
+    const hy = hAt(hx, hz) ?? 0, { cp, sp, dist, ah, ty } = VIEW, tx = ty * 16 / 9;
+    const fxp = hx + ux * ah, fzp = hz + uz * ah, cx0 = fxp - ux * cp * dist, cz0 = fzp - uz * cp * dist;
+    const cy0 = Math.max(hy + 1 + sp * dist, (hAt(cx0, cz0) ?? -9) + 1.5);
+    // the camera's frame: forward f (to the look point), right r, up v
+    let f = [fxp - cx0, hy + 1 - cy0, fzp - cz0]; const fl = Math.hypot(...f); f = f.map((c) => c / fl);
+    let rv = [-f[2], 0, f[0]]; const rl = Math.hypot(...rv); rv = rv.map((c) => c / rl);
+    const v = [rv[1] * f[2] - rv[2] * f[1], rv[2] * f[0] - rv[0] * f[2], rv[0] * f[1] - rv[1] * f[0]];
+    const tHero = Math.hypot(hx - cx0, hy + 1 - cy0, hz - cz0);
+    const march = (d, tMax, mark) => {
+      for (let t = 0.6; t < tMax; t += 0.35) {
+        const x = cx0 + d[0] * t, y = cy0 + d[1] * t, z = cz0 + d[2] * t, k = K(x, z);
+        if (k < 0) continue;
+        if (mark && y - (hAt(x, z) ?? -9) < 4.5 && t < tHero) camKeep[k] = 1;
+        if (tall[k] > y) return t;
+        const g = hAt(x, z); if (g != null && y < g) return -1;
+      }
+      return -1;
+    };
+    // (a ray stopped short of him counts whole; one stopped beside him, at his depth, half: a big thing filling a
+    // side of the frame right by him crowds the view too)
+    let hit = 0, n = 0;
+    for (const sy of [-0.85, -0.55, -0.25, 0.05, 0.35]) for (const sx of [-0.85, -0.5, -0.17, 0.17, 0.5, 0.85]) {
+      const d = [f[0] + rv[0] * sx * tx + v[0] * sy * ty, f[1] + rv[1] * sx * tx + v[1] * sy * ty, f[2] + rv[2] * sx * tx + v[2] * sy * ty], dl = Math.hypot(...d);
+      const t = march(d.map((c) => c / dl), tHero + 2.6, stamp && sy < 0.2); n++;   // (nothing past him counts)
+      if (t > 0 && t < tHero - 1.0) hit++;
+      else if (t > 0 && t < tHero + 2.5) hit += 0.5;
+    }
+    let body = 0;
+    for (const yy of [0.5, 1.2, 1.8]) { const d = [hx - cx0, hy + yy - cy0, hz - cz0], dl = Math.hypot(...d); if (march(d.map((c) => c / dl), dl - 0.6, false) > 0) body++; }
+    return { fg: hit / n, body: body / 3, cam: { x: cx0, z: cz0 } };
+  };
 
   // ---- the landing: the shuttle at one side of the main area, Twinsen a few metres toward the landmark, facing it
   // (the play camera sits behind him, so the shuttle stays behind the camera and the first view is the island)
@@ -619,7 +677,7 @@ function planIsland(name, L, A, debug = false) {
     }
     if (!ok) tReach.fill(1);
   }
-  let best = null; const why = [0, 0, 0, 0, 0, 0, 0, 0];
+  let best = null; const why = [0, 0, 0, 0, 0, 0, 0, 0], cands = [];
   for (let z = Z0 + 5; z < -Z0 - 5; z += 1) for (let x = X0 + 5; x < -X0 - 5; x += 1) {
     const k = K(x, z); if (k < 0 || !walk[k] || (S.padIn && !S.padIn(x, z))) continue;
     if (dSol[k] < (S.padClear ?? 3.9) || dStp[k] < (S.padSlope ?? 2.6)) { why[0]++; continue; }
@@ -639,8 +697,15 @@ function planIsland(name, L, A, debug = false) {
       const ak = K(sx + ux * 4, sz + uz * 4), ahead = ak >= 0 && area[ak] === main ? 4 : 0;
       const seen = shuttleSeen(sx, hs, sz, ux, uz, x, hp, z);
       const score = Math.min(dT, S.far ?? 34) + ahead - fl * 3 - Math.abs(hs - hp) * 0.6 + Math.min(dSol[k], 7) * 0.3 - seen * 4 - Math.abs(beta) * 2;
-      if (!best || score > best.score) best = { score, x, z, sx, sz, a: Math.atan2(ux, uz), seen };
+      cands.push({ score, x, z, sx, sz, a: Math.atan2(ux, uz), seen });
     }
+  }
+  // (and nothing big between the camera and him: the original's objects here, the dressing kept out below; the
+  // camera's view is cast for the best few dozen only)
+  cands.sort((a, b) => b.score - a.score);
+  for (const c of cands.slice(0, 48)) {
+    const V = view(c.sx, c.sz, Math.sin(c.a), Math.cos(c.a)); c.fg = V.fg; c.score -= Math.max(0, V.fg - 0.08) * 14 + V.body * 8;   // (a little clutter is a town's: only more counts)
+    if (!best || c.score > best.score) best = c;
   }
   const pad = best ? { x: best.x, z: best.z, toward: best.a } : { x: A.pad.x, z: A.pad.z, toward: A.pad.toward };
   { let s = 0, n = 0; for (let a = -1.7; a <= 1.7; a += 1.7) for (let b = -1.7; b <= 1.7; b += 1.7) { const h = hAt(pad.x + a, pad.z + b); if (h != null) { s += h; n++; } } pad.y = n ? s / n : A.pad.y; }
@@ -649,7 +714,7 @@ function planIsland(name, L, A, debug = false) {
   const stamp = (x, z, r, arr, v = 1) => disc(x, z, r, (k) => { arr[k] = v; return true; });
   stamp(pad.x, pad.z, 5.0, keep); stamp(pad.x, pad.z, 3.6, walk, 0);
   for (const f of A.floors || []) if (f.stair) rect((f.x0 + f.x1) / 2, (f.z0 + f.z1) / 2, (f.x1 - f.x0) / 2 + 0.8, (f.z1 - f.z0) / 2 + 0.8, (k) => { keep[k] = 1; });   // (stairs stay clear)
-  if (spawn) { stamp(spawn.x, spawn.z, 2.0, keep); line(pad.x, pad.z, spawn.x, spawn.z, (k) => { keep[k] = 1; return true; }); }
+  if (spawn) { stamp(spawn.x, spawn.z, 2.0, keep); line(pad.x, pad.z, spawn.x, spawn.z, (k) => { keep[k] = 1; return true; }); view(spawn.x, spawn.z, Math.sin(spawn.a), Math.cos(spawn.a), { stamp: true }); }
   const start = spawn ? K(spawn.x, spawn.z) : K(pad.x + Math.sin(pad.toward) * 4.8, pad.z + Math.cos(pad.toward) * 4.8);
 
   // ---- reach: what he can walk to from the landing (the plan never cuts any of it off)
@@ -694,9 +759,10 @@ function planIsland(name, L, A, debug = false) {
   const put = (kind, x, z, ry = 0, o = {}) => {
     const F = fit(kind, x, z, ry, o); if (!F || !F.inside.length) { rej[0]++; return null; }
     let lo = 1e9, hi = -1e9;
+    const hg = pieceH(kind, o), big = hg >= 2.2 && !THIN_PIECES.has(kind);
     for (const k of F.inside) {
       if (occ[k]) { rej[1]++; return null; }
-      if (keep[k]) { rej[2]++; return null; }
+      if (keep[k] || (big && camKeep[k])) { rej[2]++; return null; }
       if (stp[k] || sol[k]) { rej[3]++; return null; }
       if (o.any ? area[k] < 0 : area[k] !== main) { rej[4]++; return null; }
       if (dStp[k] < (o.slopeGap ?? 0.9)) { rej[5]++; return null; }
@@ -715,6 +781,7 @@ function planIsland(name, L, A, debug = false) {
     const gap = o.gap ?? 0.45;
     for (const k of F.ring) occ[k] = 1;
     if (gap > 0.45) disc(x, z, F.R0 + gap, (k) => { occ[k] = 1; return true; });
+    if (!THIN_PIECES.has(kind)) for (const k of F.inside) tall[k] = Math.max(tall[k], lo + hg);
     const it = { kind, x: +x.toFixed(2), z: +z.toFixed(2), ry: +ry.toFixed(3), o };
     items.push(it);
     return it;
@@ -727,10 +794,18 @@ function planIsland(name, L, A, debug = false) {
     }
     return null;
   };
-  const add = (kind, x, z, ry = 0, o = {}) => { const it = { kind, x, z, ry, o }; items.push(it); return it; };
+  const add = (kind, x, z, ry = 0, o = {}) => {
+    const it = { kind, x, z, ry, o }; items.push(it);
+    const f = FOOT[kind]?.(o), y = hAt(x, z);
+    if (f && y != null && !THIN_PIECES.has(kind)) disc(x, z, f.r ?? Math.max(f.hw, f.hd), (k) => { tall[k] = Math.max(tall[k], y + pieceH(kind, o)); return true; });
+    return it;
+  };
   const lines = [];
   const lineItem = (a, ha, b, hb, o = {}) => lines.push({ kind: 'line', a: { x: a.x, z: a.z, h: ha }, b: { x: b.x, z: b.z, h: hb }, o });
-  const pipe = (pts) => { const m = pts[Math.floor(pts.length / 2)]; items.push({ kind: 'pipe', pts, x: m.x, z: m.z, ry: 0, o: {} }); };
+  const pipe = (pts) => {
+    const m = pts[Math.floor(pts.length / 2)]; items.push({ kind: 'pipe', pts, x: m.x, z: m.z, ry: 0, o: {} });
+    for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; line(a.x, a.z, b.x, b.z, (k) => { tall[k] = Math.max(tall[k], (hAt(wx(k % fx), wz(Math.floor(k / fx))) ?? 0) + Math.max(a.h, b.h) + 0.2); return true; }); }
+  };
 
   // ---- the landmark, then the routes to it (kept clear, painted as paths where the ground isn't paved)
   const api = { S, A, pad, spawn: spawn || { x: pad.x, z: pad.z }, put, near, add, line: lineItem, pipe, pois: [], r: rr, givers: [] };
@@ -748,20 +823,44 @@ function planIsland(name, L, A, debug = false) {
   // a giver (LBA2's zone giver: a hop there shakes out a bonus, once) by a piece, on reachable ground beside it
   api.giver = (kinds, x, z, n = 1) => {
     let bk = -1, bd = 1e9;
-    for (let j = cj(z - 3); j <= cj(z + 3); j++) for (let i = ci(x - 3); i <= ci(x + 3); i++) { if (!inF(i, j)) continue; const k = j * fx + i; if (!reach[k]) continue; const dd = Math.hypot(wx(i) - x, wz(j) - z); if (dd > 0.9 && dd < bd) { bd = dd; bk = k; } }
+    for (let j = cj(z - 3); j <= cj(z + 3); j++) for (let i = ci(x - 3); i <= ci(x + 3); i++) { if (!inF(i, j)) continue; const k = j * fx + i; if (!reach[k]) continue; const dd = Math.hypot(wx(i) - x, wz(j) - z); if (dd > 0.9 && dd < bd && disc(wx(i), wz(j), 0.75, (q) => reach[q] === 1)) { bd = dd; bk = k; } }
     if (bk < 0) return null;
     const g = { kinds, n, x: wx(bk % fx), z: wz(Math.floor(bk / fx)), y: hAt(wx(bk % fx), wz(Math.floor(bk / fx))) };
+    stamp(g.x, g.z, 1.1, keep);   // (open ground round it: he can stand there and hop)
     api.givers.push(g); return g;
   };
   const P0 = (S.landmark ? S.landmark(api) : [T]) || [T];
   api.pois.push(...P0); pois.push(...P0);
   reachN = bfs();
   const routes = [];
+  const sp0 = spawn || { x: pad.x, z: pad.z };
   for (const p of pois) {
     // the reachable cell nearest the point, then back along the walk to the landing
     let bk = -1, bd = 1e9;
     for (let j = cj(p.z - 5); j <= cj(p.z + 5); j++) for (let i = ci(p.x - 5); i <= ci(p.x + 5); i++) { if (!inF(i, j)) continue; const k = j * fx + i; if (!reach[k]) continue; const d = Math.hypot(wx(i) - p.x, wz(j) - p.z); if (d < bd) { bd = d; bk = k; } }
     if (bk < 0) continue;
+    // the landmark's view (the first point): where he stands to look at it, the play camera behind him clear of
+    // big things in front (view() above); near the point, facing what it shows (its object, or on along the way
+    // he came when he stands on the point itself)
+    if (p === pois[0]) {
+      const L = p.at || (S.grand && p.word === S.target?.word ? S.grand : null) || p, dir = (x, z) => {
+        const d = Math.hypot(L.x - x, L.z - z); if (d > 2.5) return [(L.x - x) / d, (L.z - z) / d];
+        const e = Math.hypot(L.x - sp0.x, L.z - sp0.z) || 1; return [(L.x - sp0.x) / e, (L.z - sp0.z) / e];
+      };
+      const score = (k) => { const x = wx(k % fx), z = wz(Math.floor(k / fx)), [ux, uz] = dir(x, z), V = view(x, z, ux, uz); return { s: -Math.hypot(x - p.x, z - p.z) * 0.3 - V.fg * 20 - V.body * 10, fg: V.fg, body: V.body }; };
+      let best = { k: bk, ...score(bk) }; const near0 = bk, fg0 = best.fg;
+      if (best.fg > 0.06 || best.body > 0) {
+        for (let j = cj(p.z - 7); j <= cj(p.z + 7); j += 3) for (let i = ci(p.x - 7); i <= ci(p.x + 7); i += 3) {
+          if (!inF(i, j)) continue; const k = j * fx + i; if (!reach[k] || Math.hypot(wx(i) - p.x, wz(j) - p.z) > 7 || dSol[k] < 0.9) continue;
+          const c = score(k); if (c.s > best.s) best = { k, ...c };
+        }
+      }
+      bk = best.k;
+      const x = wx(bk % fx), z = wz(Math.floor(bk / fx)), [ux, uz] = dir(x, z);
+      p.look = { x: x + ux * Math.max(3, Math.hypot(L.x - x, L.z - z)), z: z + uz * Math.max(3, Math.hypot(L.x - x, L.z - z)) };
+      p.view = { fg: +best.fg.toFixed(2), body: +best.body.toFixed(2), moved: best.k !== near0, fg0: +fg0.toFixed(2) };
+      view(x, z, ux, uz, { stamp: true });
+    }
     p.reach = { x: wx(bk % fx), z: wz(Math.floor(bk / fx)) };
     const path = []; for (let k = bk, n = 0; k >= 0 && n < 4000; k = par[k], n++) path.push([wx(k % fx), wz(Math.floor(k / fx))]);
     path.reverse(); routes.push(path);
@@ -916,7 +1015,7 @@ function planIsland(name, L, A, debug = false) {
   };
   if (S.dress) S.dress(api);
   const dbg = DEBUG_PLAN && { cands: DEBUG_PLAN, fx, fz, X0, Z0, dSol: Array.from(dSol, (v) => +v.toFixed(1)), dStp: Array.from(dStp, (v) => +v.toFixed(1)), walk: Array.from(walk), occ: Array.from(occ), area: Array.from(area), stp: Array.from(stp), sol: Array.from(sol), reach: Array.from(reach), tReach: Array.from(tReach) }; DEBUG_PLAN = null;
-  return { pad, spawn, items, lines, pois, routes, reachN, why, rej, dbg, seen: best?.seen ?? -1, givers: api.givers, board: api.board || null };
+  return { pad, spawn, items, lines, pois, routes, reachN, why, rej, dbg, seen: best?.seen ?? -1, arrivalView: best ? { fg: +best.fg.toFixed(2) } : null,  givers: api.givers, board: api.board || null };
 }
 
 // ================================================================== ground colours (Zeelich's palette)
@@ -1037,11 +1136,16 @@ function buildIsland(scene, physics, name, L, at) {
   const stoneM = tm('stone', { color: '#ecdce4' });
   const brass = brassM();
   const jarM = pm('#d87a5a', 0.6);
-  const winM = pm('#3a3050', 0.35, { emissive: '#5a4060', emissiveIntensity: 0.25 });
-  const domeGeo = cached('isle-dome', () => lathe([[1.0, 0], [1.08, 0.25], [1.02, 0.6], [0.7, 0.95], [0.32, 1.2], [0.04, 1.42]], 16, 1));
   const spireGeo = cached('isle-spire', () => lathe([[0.5, 0], [0.42, 0.1], [0.3, 0.5], [0.22, 0.85], [0.16, 0.97], [0.0, 1.0]], 10));
   const trees = [[], []], rocks = [[], [], []], bushes = [], plants = [];
   const pick = (o, list) => list[o.body % list.length];
+  // a building's look on this island: its walls and dome from the island's palette, painted frames in the domes'
+  // colours; a place of ours may give a building its role (zplaces.js BUILDINGS: a store's wide door, a sign)
+  const trims = (S.domes || [['#2f8a9a']]).map(([a]) => a);
+  const look = (o) => {
+    const b = BUILDINGS[o.body] || {};
+    return { wall: pick(o, walls), domeM: pick(o, domes), trim: trims[(o.body + 1) % trims.length], accent: S.accent || '#e8b84a', seed: o.body * 13 + Math.round(Math.abs(o.x * 7 + o.z * 3)), awning: [trims[0], '#f8eee4'], role: b.role, sign: b.sign, domed: b.domed };
+  };
   // the Grand Hall (Otringal): a portico of four columns before its door, a tiled frieze, broad steps
   const grandHall = (o, wallH) => {
     const ex = o.sx, ez = o.sz, t = Math.abs(A.mid.x - o.x) > Math.abs(A.mid.z - o.z) ? [Math.sign(A.mid.x - o.x), 0] : [0, Math.sign(A.mid.z - o.z)];
@@ -1108,17 +1212,24 @@ function buildIsland(scene, physics, name, L, at) {
         break;
       }
       case 'gate': {   // a gatehouse: its two halves either side of the causeway, a lintel and a roof over the passage
-        const wallH = o.sy > 4.5 ? o.sy * 0.62 : o.sy, m = pick(o, walls);
+        // (each half an Esmer building without a door; the passage a horseshoe arch through both faces under a
+        // vault, the dome over the middle)
+        const wallH = o.sy > 4.5 ? o.sy * 0.62 : o.sy, lk = look(o), m = lk.wall, pw = G.z1 - G.z0, zc = (G.z0 + G.z1) / 2;
+        const roof = wallH + 0.22 - 0.46, hp = Math.min(3.1, roof - 0.7);
         for (const [z0, z1] of [[o.z - ez / 2, G.z0], [G.z1, o.z + ez / 2]]) {
           const dz = z1 - z0; if (dz < 0.4) continue;
-          B.add(bbox(ex - 0.15, wallH, dz, 0.06, 2.2), m, o.x, y0 + wallH / 2, (z0 + z1) / 2);
+          EP.esmerBuilding(new EP.Place(B, o.x, y0, (z0 + z1) / 2, 0), { ...lk, w: ex, d: dz, h: wallH + 0.22, wallH, door: false, domed: false });
           col({ type: 'box', x: o.x, z: (z0 + z1) / 2, hw: ex / 2 - 0.05, hd: dz / 2 - 0.02, top, noStand: true });
         }
-        const lh = Math.max(0.5, wallH - 2.5);
-        B.add(bbox(ex - 0.15, lh, G.z0 - G.z1 + 0.1, 0.05, 2.2), m, o.x, y0 + wallH - lh / 2, (G.z0 + G.z1) / 2);
-        B.add(bbox(ex + 0.1, 0.22, ez + 0.1, 0.05, 1.6), stoneM, o.x, y0 + wallH + 0.11, o.z);
-        for (const sx of [-1, 1]) B.add(bbox(0.16, 0.3, G.z0 - G.z1 + 0.5, 0.03, 1), stoneM, o.x + sx * (ex / 2 - 0.02), y0 + wallH - lh - 0.15, (G.z0 + G.z1) / 2);
-        if (o.sy > 4.5) { const rr = Math.min(ex, ez) * 0.42, dh = (o.sy - wallH - 0.22) / 1.42; B.add(domeGeo, pick(o, domes), o.x, y0 + wallH + 0.22, o.z, 0, 0, 0, rr, Math.max(0.3, dh), rr); }
+        const arch = { x: 0, y: 0, w: +(pw - 0.2).toFixed(2), h: +hp.toFixed(2), horse: true };
+        for (const s of [-1, 1]) {
+          const P = new EP.Place(B, o.x + s * (ex / 2 - 0.44), y0, zc, s * Math.PI / 2);
+          P.add(panelGeo(pw + 0.5, roof, 0.28, [arch]), m, 0, 0, 0);
+          P.add(frameGeo(arch, 0.22, 0.1), EP.EM.tiles(), 0, 0, 0.26);
+        }
+        B.add(bbox(ex - 0.6, roof - hp + 0.3, pw + 0.3, 0.04, 2.2), m, o.x, y0 + hp - 0.3 + (roof - hp + 0.3) / 2, zc);
+        B.add(bbox(ex + 0.18, 0.18, pw + 0.5, 0.05, 1.8), stoneM, o.x, y0 + roof - 0.09, zc);
+        if (o.sy > 4.5) EP.domeStack(new EP.Place(B, o.x, y0, o.z, 0), { base: roof, h: o.sy, R: Math.min(ex, ez) * 0.34, wallM: m, domeM: lk.domeM });
         break;
       }
       case 'pole': {
@@ -1131,40 +1242,34 @@ function buildIsland(scene, physics, name, L, at) {
       case 'house': {
         const wallH = o.sy > 4.5 ? o.sy * 0.62 : o.sy;
         if (S.grand && Math.hypot(o.x - S.grand.x, o.z - S.grand.z) < 1) grandHall(o, wallH);
-        B.add(bbox(ex - 0.15, wallH, ez - 0.15, 0.06, 2.2), pick(o, walls), o.x, y0 + wallH / 2, o.z);
-        B.add(bbox(ex + 0.1, 0.22, ez + 0.1, 0.05, 1.6), stoneM, o.x, y0 + wallH + 0.11, o.z);
-        if (o.sy > 4.5) {
-          const rr = Math.min(ex, ez) * 0.42, dh = (o.sy - wallH - 0.22) / 1.42;
-          B.add(domeGeo, pick(o, domes), o.x, y0 + wallH + 0.22, o.z, 0, 0, 0, rr, Math.max(0.3, dh), rr);
-          B.add(cyl(0.05, 0.05, 0.6, 6), brass, o.x, top - 0.1, o.z);
-        }
-        // a door on the side facing the island's middle, and a few windows
+        // an Esmer building (props-esmer.js) on the same footprint and height, its door where it was: on the side
+        // facing the island's middle
         const toward = Math.abs(A.mid.x - o.x) > Math.abs(A.mid.z - o.z) ? [Math.sign(A.mid.x - o.x), 0] : [0, Math.sign(A.mid.z - o.z)];
-        const dx = toward[0] * (ex / 2 - 0.02), dz = toward[1] * (ez / 2 - 0.02);
-        B.add(bbox(toward[0] ? 0.12 : 1.0, Math.min(2.0, wallH * 0.8), toward[1] ? 0.12 : 1.0, 0.02), plankM, o.x + dx, y0 + Math.min(2.0, wallH * 0.8) / 2, o.z + dz);
-        // round-topped windows: a dark pane in a pale frame, along each wall at 1.6 m
-        if (wallH > 2.4) for (const [nx, nz, len] of [[1, 0, ez], [-1, 0, ez], [0, 1, ex], [0, -1, ex]]) {
-          const n = Math.max(0, Math.floor((len - 1.2) / 2.2));
-          for (let q = 0; q < n; q++) {
-            const u = (q - (n - 1) / 2) * 2.2, wx = o.x + (nx ? nx * (ex / 2 - 0.04) : u), wz = o.z + (nz ? nz * (ez / 2 - 0.04) : u);
-            if ((nx === toward[0] && nz === toward[1]) && Math.abs(u) < 1.0) continue;   // (not over the door)
-            B.add(bbox(nx ? 0.1 : 0.7, 0.95, nz ? 0.1 : 0.7, 0.02), winM, wx, y0 + Math.min(wallH - 0.7, 1.9), wz);
-          }
-        }
+        const P = new EP.Place(B, o.x, y0, o.z, Math.atan2(toward[0], toward[1]));
+        EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, ...look(o) });
         col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
         break;
       }
       case 'tower': {
         const rr = Math.min(ex, ez) * 0.48;
-        B.add(cyl(rr * 0.85, rr, o.sy * 0.78, 12, 2), pick(o, walls), o.x, y0 + o.sy * 0.39, o.z);
-        B.add(domeGeo, pick(o, domes), o.x, y0 + o.sy * 0.78, o.z, 0, 0, 0, rr * 0.95, (o.sy * 0.22) / 1.42, rr * 0.95);
-        // brass bands, slit windows, a door toward the landing (a watchtower, not a plain drum)
-        const H0 = o.sy * 0.78;
-        for (const f of [0.08, 0.5, 0.97]) { const rf = rr - (rr * 0.15) * f; B.add(cached('isle-tband' + rf.toFixed(2), () => new THREE.TorusGeometry(rf + 0.03, 0.07, 4, 24).rotateX(Math.PI / 2)), brass, o.x, y0 + H0 * f, o.z); }
-        const sp = plan.spawn || pad, da = Math.atan2(sp.x - o.x, sp.z - o.z);
-        for (let q = 0; q < 6; q++) { const a = da + Math.PI / 6 + (q / 6) * Math.PI * 2, y = y0 + H0 * 0.72, rf = rr - rr * 0.15 * 0.72; B.add(bbox(0.36, 1.1, 0.14, 0.03), winM, o.x + Math.sin(a) * (rf - 0.02), y, o.z + Math.cos(a) * (rf - 0.02), 0, a); }
-        B.add(bbox(1.2, 2.1, 0.16, 0.03), plankM, o.x + Math.sin(da) * (rr - 0.04), y0 + 1.05, o.z + Math.cos(da) * (rr - 0.04), 0, da);
-        B.add(bbox(1.5, 0.22, 0.3, 0.03, 1), stoneM, o.x + Math.sin(da) * rr, y0 + 2.2, o.z + Math.cos(da) * rr, 0, da);
+        const lk = look(o), H0 = o.sy * 0.78;
+        B.add(cyl(rr * 0.85, rr, H0, 16, 2), lk.wall, o.x, y0 + H0 / 2, o.z);
+        // a stone base, a corbelled cornice under the ribbed onion dome (props-esmer.js), brass bands
+        B.add(cyl(rr + 0.08, rr + 0.12, 0.5, 16, 1.8), stoneM, o.x, y0 + 0.05, o.z);
+        B.add(cached('isle-tcorn' + rr.toFixed(2), () => lathe([[rr * 0.85, 0], [rr * 0.85 + 0.18, 0.14], [rr * 0.85 + 0.22, 0.32], [0, 0.32]], 16, 1.8)), stoneM, o.x, y0 + H0 - 0.3, o.z);
+        EP.domeStack(new EP.Place(B, o.x, y0, o.z, 0), { base: H0 + 0.02, h: o.sy, R: rr * 0.92, domeM: lk.domeM, drum: false });
+        for (const f of [0.08, 0.5]) { const rf = rr - (rr * 0.15) * f; B.add(cached('isle-tband' + rf.toFixed(2), () => new THREE.TorusGeometry(rf + 0.03, 0.07, 4, 24).rotateX(Math.PI / 2)), brass, o.x, y0 + H0 * f, o.z); }
+        // arched lattice windows in painted frames, an arched door toward the landing (a watchtower, not a drum)
+        const sp = plan.spawn || pad, da = Math.atan2(sp.x - o.x, sp.z - o.z), tw = { x: 0, y: 0, w: 0.5, h: 1.1, horse: true };
+        const tfr = cached('isle-tfr' + lk.trim, () => tint(frameGeo(tw, 0.1, 0.06), lk.trim));
+        for (let q = 0; q < 6; q++) {
+          const a = da + Math.PI / 6 + (q / 6) * Math.PI * 2, y = y0 + H0 * 0.66, rf = rr - rr * 0.15 * 0.66;
+          B.add(fillGeo(tw, 0.02, 0), EP.latticeM(), o.x + Math.sin(a) * (rf + 0.01), y, o.z + Math.cos(a) * (rf + 0.01), 0, a);
+          B.add(tfr, EP.EM.vc(), o.x + Math.sin(a) * (rf - 0.01), y, o.z + Math.cos(a) * (rf - 0.01), 0, a);
+        }
+        const td = { x: 0, y: 0, w: 1.1, h: 2.15, horse: true };
+        B.add(fillGeo(td, 0.03, 0.06), plankM, o.x + Math.sin(da) * (rr - 0.04), y0 + 0.3, o.z + Math.cos(da) * (rr - 0.04), 0, da);
+        B.add(frameGeo(td, 0.18, 0.1), EP.EM.tiles(), o.x + Math.sin(da) * (rr - 0.02), y0 + 0.3, o.z + Math.cos(da) * (rr - 0.02), 0, da);
         col({ type: 'cyl', x: o.x, z: o.z, r: rr, top, noStand: true });
         break;
       }
@@ -1196,6 +1301,8 @@ function buildIsland(scene, physics, name, L, at) {
         break;
       }
       case 'lamp': {
+        // (a style's lamp posts: the Esmer street lamp, its arm turned with the original's object)
+        if (S.lampPosts && o.sy >= 3) { EP.lamp(new EP.Place(B, o.x, y0, o.z, (o.beta / 4096) * Math.PI * 2)); col({ type: 'cyl', x: o.x, z: o.z, r: 0.2, top: y0 + 3.4, noStand: true }); break; }
         B.add(cyl(0.07, 0.09, o.sy - 0.4, 8), brass, o.x, y0 + (o.sy - 0.4) / 2, o.z);
         B.add(cached('isle-lamp', () => new THREE.SphereGeometry(0.22, 12, 8)), pm('#fff4d8', 0.3, { emissive: '#ffd890', emissiveIntensity: 1.2 }), o.x, top - 0.25, o.z);
         col({ type: 'cyl', x: o.x, z: o.z, r: 0.2, top, noStand: true });
@@ -1209,8 +1316,17 @@ function buildIsland(scene, physics, name, L, at) {
         break;
       }
       case 'jar': {
-        const rr = Math.min(ex, ez) * 0.45;
-        B.add(cached('isle-jar', () => lathe([[0.0, 0], [0.7, 0.05], [1.0, 0.4], [0.85, 0.8], [0.45, 0.92], [0.5, 1.0], [0, 1.0]], 12)), jarM, o.x, y0, o.z, 0, 0, 0, rr, o.sy, rr);
+        const rr = Math.min(ex, ez) * 0.45, jarG = cached('isle-jar', () => lathe([[0.0, 0], [0.7, 0.05], [1.0, 0.4], [0.85, 0.8], [0.45, 0.92], [0.5, 1.0], [0, 1.0]], 12));
+        if (S.jarMax && o.sy > S.jarMax) {
+          // (a style may cap the jars at a size a potter makes: Knartas' 2–2.5 m ones crowded its walkway) one
+          // jar of that size at the original's place, a smaller one leaning beside it; the collider round the big one
+          const hj = S.jarMax * (0.86 + 0.14 * ((o.body * 37) % 10) / 10), rj = Math.min(rr, hj * 0.4), a = (o.beta / 4096) * Math.PI * 2;
+          B.add(jarG, jarM, o.x, y0, o.z, 0, a, 0, rj, hj, rj);
+          if (rr > rj * 1.5) B.add(jarG, jarM, o.x + Math.sin(a) * rj * 1.45, y0, o.z + Math.cos(a) * rj * 1.45, 0.12, a, 0, rj * 0.62, hj * 0.6, rj * 0.62);
+          small({ type: 'cyl', x: o.x, z: o.z, r: rj, top: y0 + hj, noStand: hj > 1.2 });
+          break;
+        }
+        B.add(jarG, jarM, o.x, y0, o.z, 0, 0, 0, rr, o.sy, rr);
         if (Math.max(ex, ez) >= 0.5) small({ type: 'cyl', x: o.x, z: o.z, r: rr, top, noStand: o.sy > 1.2 });
         break;
       }
@@ -1247,8 +1363,15 @@ function buildIsland(scene, physics, name, L, at) {
       const pc = []; EP.pipeRun(B, it.pts.map((p) => [p.x, gy(p.x, p.z) + p.h, p.z]), { cols: pc, gy }); for (const c of pc) col(c); pieces++; continue;
     }
     if (it.kind === 'skiff') {
-      const g = EP.skiff(group, it.x, CLOUD_Y + 0.15, it.z, it.ry, it.o.color), ph = it.x * 0.7;
-      updaters.push((dt, t) => { g.position.y = CLOUD_Y + 0.15 + Math.sin(t * 0.9 + ph) * 0.12; g.rotation.z = Math.sin(t * 0.7 + ph) * 0.04; }); pieces++; continue;
+      // (on the clouds; in a harbour, afloat on its water and tied to the quay by a line)
+      const y = it.o.harbour && S.harbour ? S.harbour.water - 0.28 : CLOUD_Y + 0.15;
+      if (it.o.harbour) EP.mooredSkiff(new EP.Place(B, it.x, y, it.z, it.ry), { color: it.o.color });
+      if (it.o.tie) {   // (from the hull's end nearer the quay)
+        const [tx, tz] = it.o.tie, ux = Math.sin(it.ry), uz = Math.cos(it.ry), e = (ux * (tx - it.x) + uz * (tz - it.z) > 0 ? 1 : -1) * 1.7;
+        EP.hangingLine(B, [it.x + ux * e, y + 0.62, it.z + uz * e], [tx, gy(tx, tz) + 0.45, tz], { kind: 'plain', sag: 0.3 });
+      }
+      if (!it.o.harbour) { const g = EP.skiff(group, it.x, y, it.z, it.ry, it.o.color), ph = it.x * 0.7; updaters.push((dt, t) => { g.position.y = y + Math.sin(t * 0.9 + ph) * 0.12; g.rotation.z = Math.sin(t * 0.7 + ph) * 0.04; }); }
+      pieces++; continue;
     }
     const f = BUILD[it.kind]; if (!f) continue;
     const fr = FOOT[it.kind]?.(it.o) || { r: 0.5 };
@@ -1303,6 +1426,36 @@ function buildIsland(scene, physics, name, L, at) {
       }
     }
   }
+  // --- a harbour (S.harbour: Knartas' basin between the quay's arms): quay walls of dressed stone down to the
+  // water along every land edge inside it, a kerb on top where the edge holds him (the edge blocks stay as they are)
+  const HB = S.harbour, inHarbour = (x, z, m = 0) => HB && x > HB.x0 - m && x < HB.x1 + m && z > HB.z0 - m && z < HB.z1 + m;
+  if (HB) {
+    const runs = new Map();
+    for (let j = 0; j < L.nz; j++) for (let i = 0; i < L.nx; i++) {
+      const v = H[j * L.nx + i]; if (v == null || !inHarbour(cx(i), cz(j), cell)) continue;
+      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const a = i + di, b = j + dj; if (a < 0 || b < 0 || a >= L.nx || b >= L.nz || H[b * L.nx + a] != null || !inHarbour(cx(a), cz(b))) continue;
+        const key = di ? `x${i}:${di}` : `z${j}:${dj}`;
+        if (!runs.has(key)) runs.set(key, { di, dj, line: di ? cx(i) : cz(j), at: [], hs: [] });
+        runs.get(key).at.push(di ? cz(j) : cx(i)); runs.get(key).hs.push(tgy(cx(i), cz(j)));
+      }
+    }
+    const quayM = stoneM, kerbM = stoneM, lineM = EP.EM.vc();
+    for (const q of runs.values()) {
+      q.at.sort((a, b) => a - b);
+      const a0 = q.at[0] - cell / 2, a1 = q.at[q.at.length - 1] + cell / 2, len = a1 - a0, mid = (a0 + a1) / 2, top = Math.min(...q.hs);
+      const n = q.di || q.dj, th = cell + 0.25, hgt = top - (HB.water - 0.9), along = !!q.dj;   // (along x when the edge faces ±z)
+      const c = q.line + n * (th / 2 - 0.12);
+      const [bx, bz] = along ? [mid, c] : [c, mid];
+      B.add(bbox(along ? len : th, hgt, along ? th : len, 0.05, 1.8), quayM, bx, top - hgt / 2 - 0.03, bz);
+      // a band of darker stone at the waterline, the kerb on top, mooring rings on the face
+      B.add(cached(`isle-wline${len.toFixed(2)}|${along}`, () => tint(bbox(along ? len + 0.02 : th + 0.04, 0.35, along ? th + 0.04 : len + 0.02, 0.03, 1.8), '#8a7c98')), lineM, bx, HB.water + 0.12, bz);
+      const kc = q.line + n * 0.2;
+      B.add(bbox(along ? len : 0.42, 0.34, along ? 0.42 : len, 0.06, 1.8), kerbM, along ? mid : kc, top + 0.14, along ? kc : mid);
+      const face = q.line + n * (th - 0.12);
+      for (let u = a0 + 2.0; u < a1 - 1.0; u += 3.4) B.add(cached('isle-mring', () => new THREE.TorusGeometry(0.16, 0.035, 5, 12)), brass, along ? u : face + n * 0.02, top - 0.55, along ? face + n * 0.02 : u, 0, along ? 0 : Math.PI / 2);
+    }
+  }
   B.build();
   // instanced pieces, each scaled to its object's box (by the geometry's own size)
   const fit = (geo, list, mat, ys = 1) => {
@@ -1339,10 +1492,11 @@ function buildIsland(scene, physics, name, L, at) {
   }
   // the landmark (its approach, where the routes end) and the plan's tally; sample points clear of the new pieces
   const p0 = plan.pois[0]?.reach || plan.pois[0];
-  const lk = plan.pois[0]?.at || (S.grand && plan.pois[0]?.word === S.target?.word ? S.grand : null) || plan.pois[0];
+  const lk = plan.pois[0]?.look || plan.pois[0]?.at || (S.grand && plan.pois[0]?.word === S.target?.word ? S.grand : null) || plan.pois[0];
   R.landmark = p0 ? { x: ox + p0.x, z: oz + p0.z, word: plan.pois[0].word, look: { x: ox + lk.x, z: oz + lk.z } } : null;
   R.pois = plan.pois.filter((p) => p.reach).map((p) => ({ x: ox + p.reach.x, z: oz + p.reach.z, word: p.word }));
   R.dressing = pieces; R.rails = rails;
+  R.views = { arrival: plan.arrivalView, landmark: plan.pois[0]?.view || null };   // (the planner's camera model: foreground share, his body hidden)
   // LBA2's zone givers: a hop on the spot shakes out a bonus, once (game.giverHop; ids kept in the save)
   R.givers = (plan.givers || []).map((g, i) => ({ id: name + '-' + i, x: ox + g.x, z: oz + g.z, y: g.y, r: 1.1, kinds: g.kinds, n: g.n }));
   R.board = plan.board ? { x: ox + plan.board.x, z: oz + plan.board.z } : null;
@@ -1371,11 +1525,20 @@ function buildIsland(scene, physics, name, L, at) {
       const k = j * L.nx + i; if (H[k] != null) continue;
       // sea next to land
       let near = false; for (let b = -3; b <= 3 && !near; b++) for (let a = -3; a <= 3; a++) { const m = (j + b) * L.nx + (i + a); if (i + a >= 0 && j + b >= 0 && i + a < L.nx && j + b < L.nz && H[m] != null) { near = true; break; } }
-      if (!near || r() < 0.4) continue;
+      if (!near || r() < 0.4 || inHarbour(cx(i), cz(j), 3)) continue;   // (none in a harbour: its water shows)
       const sp = new THREE.Sprite(puffM); const s = 5 + r() * 6, y = CLOUD_Y + 0.6 + r() * 1.5;
       sp.position.set(cx(i) + (r() - 0.5) * 4, y, cz(j) + (r() - 0.5) * 4); sp.scale.set(s * 1.6, s, 1); group.add(sp); puffs.push({ sp, y, ph: r() * 6 });
     }
     updaters.push((dt, t) => { for (const p of puffs) p.sp.position.y = p.y + Math.sin(t * 0.25 + p.ph) * 0.4; });
+    // the harbour's water: a calm, glossy lilac cloud-water with ripples, fading out on its open side
+    if (HB) {
+      const map = EP.harbourTex(), fade = EP.fadeTex(HB.open);
+      map.repeat.set((HB.x1 - HB.x0) / 7, (HB.z1 - HB.z0) / 7);
+      const m = new THREE.MeshStandardMaterial({ map, alphaMap: fade, color: '#ffffff', roughness: 0.22, metalness: 0.15, transparent: true, opacity: 0.94, depthWrite: false, emissive: '#5a4a80', emissiveIntensity: 0.18 });
+      const pl = new THREE.Mesh(new THREE.PlaneGeometry(HB.x1 - HB.x0, HB.z1 - HB.z0).rotateX(-Math.PI / 2), m);
+      pl.position.set((HB.x0 + HB.x1) / 2, HB.water, (HB.z0 + HB.z1) / 2); pl.receiveShadow = true; group.add(pl);
+      updaters.push((dt, t) => { map.offset.set(Math.sin(t * 0.05) * 0.08, t * 0.006); });
+    }
     shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 30 + L.maxH, r: Math.max(w, d) * 0.7 + 30, n: 2, speed: 0.04 });
   }
   return R;

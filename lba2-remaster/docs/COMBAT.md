@@ -209,9 +209,25 @@ are saved with the hero (`hero.arms`, save format 4; older saves migrate to an e
 | Arthur's conch | Arthur lends it, at home (2) | — | 4 s between calls; dogs within 14 m cower 3 s; people within 16 m look; the Dino-Fly (Citadel, 70 m) answers | calls off guard dogs; the Dino-Fly answers (he can't fly any more: no flight) |
 | Lantern | Pippa (2) | 10 | a warm light (8 m) from the light pool | shows the dark places: the gap in the cellar's foundations, the Wannie mine, the galleries' hollow boulder (11: a clover) |
 
-No jetpack: the story bible keeps flight out of this game (the Dino-Fly is too old to fly; the islands' edges, the
-cliffs' puzzle and the chapters' routes are built on walking and jumping), and a jetpack confined to marked zones
-would add a tool no chapter uses.
+Baldino's hop-pack (EQ-1, 0.30.0; src/game/jetpack.js, story/arsenal.js): the one exception to "no flight", and a hop,
+not a flight. From chapter 10, on its peg by Baldino's workshop door (he points it out after his briefing). Worn on the
+back; the inventory takes it off and puts it on (E). In Athletic mode: jump, keep holding the jump key (Space / pad A /
+touch ⬤) — once the jump stops rising the pack lights (a fresh press in the air lights it too; letting go cuts it).
+
+| | Number | Why |
+|---|---|---|
+| Lift | at most 2.4 m above the take-off ground and above the ground under him (a jump: ~1.8 m) | one storey; no climbing a stack of ledges or a slope in one flight |
+| Ground grip | it pushes on the highest ground within 0.9 m of his feet; with none within 3.1 m it fades out over 1 m | never over a drop, a gap, the sea or the cloud sea: he falls as from a jump |
+| Fuel | 2.2 s of thrust; refills by itself on firm ground (0.3 s, then 1.4 s from empty) | short hops, nothing to buy |
+| Air speed | 3.0 m/s, gentle steering (a run's momentum fades into it) | a hover, not a race |
+| Fences | while it has him airborne his feet must clear a thin unstandable thing's top by 0.15 m | fences of ~2.4 m and more (built against a jump) hold |
+| Ceiling | no rising with less than 0.2 m between his head and anything solid overhead | no rising into an overhang |
+| Cushion | held near the ground it brakes a fall to ≤1.6 m/s | soft landings |
+| Not | indoors, underground, under anything overhead, as Zoé or in the borrowed coat, in Normal/Aggressive/Discreet; doors wait until he lands; dialogue, menus, a fade, a hit or death put it out and it needs a fresh press | |
+
+HUD: a slim gauge beside Twinsen while it fires or refills (blue, amber when low, red and shaking when empty, ✕ when it
+can't fire there); the bead on top of the pack shows the same colours. Sounds: short synthesised bursts only (nothing
+keeps sounding through a pause or a dialogue). Particles: one puff per 0.06 s from the shared pool, dust near the ground.
 
 Balance: nothing on the main path needs the arsenal. The blowgun (chapter 2) hits for 1 and is stopped by a Grobo's
 armour; the harder hitters arrive later and cost kashes or magic (the laser at chapter 3 for 30 kashes, the glove and
@@ -258,7 +274,8 @@ automatic aim at an enemy (kept), and the camera on an open route (frame box, le
 stillness), hidden behind a tower, and on stairs. Every number is printed on a MEASURE line.
 
 `tests/arsenal.mjs` covers the arsenal: each weapon and gadget obtained and used by input, its effect measured,
-ammunition and costs, Save & quit → Continue, and a format-3 save's migration.
+ammunition and costs, Save & quit → Continue, and a format-3 save's migration. `tests/jetpack.mjs` covers the hop-pack:
+acquisition, flight, fuel, the test step, the mill, every boundary, interruptions, saves, a low frame rate and its cost.
 
 Not verified: feel with a real gamepad and touch screen; the feel of the tank controls and the camera by hand (only
 measured); audio balance by ear; real-GPU frame rate.

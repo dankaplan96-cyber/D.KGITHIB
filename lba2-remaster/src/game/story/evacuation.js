@@ -1,12 +1,13 @@
 // Chapter 8 — "Evacuation" (Citadel Island, changed).
 //
-// Twinsen comes home to an island being evacuated by the project's list: ships in the harbour, the heat
-// posts dark, the square fenced. Zoé's plan: the town goes underground, the hill families to the lighthouse
+// Twinsen comes home to an island being evacuated by the project's list: project ships at the spaceport and a
+// queue on its bridge, the heat posts dark, the square fenced. Zoé's plan: the town goes underground, the hill families to the lighthouse
 // cliffs. Gilbert knows FunFrock's two shelters (a lever by the old cistern in the station yard, guarded by
 // crowd-control drones; a rusted hatch wheel on the depot bunker — the ball), Mira gives water and the key
 // to FunFrock's valve control room, Pippa sends supplies. Zoé (playable) brings the three hill farms to the
 // lighthouse and finds that its transmitter relays to Zeelich's council chamber. In the station's control
-// room Vesk announces three days to full depth. Twinsen boards a project ship for Zeelich. → chapter 9.
+// room Vesk announces three days to full depth. Twinsen boards a project ship at Citadel Spaceport for Zeelich
+// (the planets are joined by spaceship only, PLANET-1). → chapter 9.
 import * as THREE from 'three';
 import { ChapterBase } from './base.js';
 import { tm, pm, bbox, cyl, mesh } from '../kit.js';
@@ -95,6 +96,7 @@ export class Evacuation extends ChapterBase {
     }
     if (!this.reached()) return undefined;
     const V = W.well, S = W.stall, Q = W.pierStart; // (the quay, where the pier starts)
+    const B = W.spaceport?.bridge;                   // (the project's boarding queue: on the spaceport's bridge)
     switch (id) {
       case 'zoe':
         if (f.c8_zoeStart && !f.c8_zoeDone) return null;
@@ -105,9 +107,9 @@ export class Evacuation extends ChapterBase {
       case 'tim': return f.c8_pippa ? { x: DEPOT.door.x - 2.4, z: DEPOT.door.z + 1.6, a: 0 } : { x: Q.x + 2.5, z: Q.z + 2, a: Math.PI / 2 };
       case 'lulu': return f.c8_pippa ? { x: DEPOT.door.x - 2.4, z: DEPOT.door.z + 2.6, a: 0 } : { x: Q.x + 2.5, z: Q.z + 3.2, a: Math.PI / 2 };
       case 'xil': return { x: Q.x + 4.5, z: Q.z - 0.5, a: -Math.PI / 2 };
-      case 'worker': return { x: Q.x + 6.5, z: Q.z + 0.2, a: -Math.PI / 2 };
+      case 'worker': return B ? { x: B.x1 - 3.0, z: B.z + 1.3, a: Math.PI / 2 } : { x: Q.x + 6.5, z: Q.z + 0.2, a: -Math.PI / 2 };
       case 'doran': case 'vesk': case 'hesk': return null;
-      case 'guard': return { x: Q.x - 0.5, z: Q.z, a: -Math.PI / 2 };
+      case 'guard': return B ? { x: B.x1 + 1.6, z: B.z + 1.4, a: -Math.PI / 2 } : { x: Q.x - 0.5, z: Q.z, a: -Math.PI / 2 };
     }
     return undefined;
   }
@@ -132,7 +134,9 @@ export class Evacuation extends ChapterBase {
     if (!this.isCur() || !this.outdoors()) return;
     if (f.c8_gilbert && !f.c8_fort) consider(dist(FORT.lever.x, FORT.lever.z), 1.6, { kind: 'c8lever', label: 'p_lever' });
     if (f.c8_gilbert && !f.c8_depot) consider(dist(DEPOT.door.x - 2.2, DEPOT.door.z), 2.2, { kind: 'c8hatch', label: 'p_shelter' });
-    if (f.c8_relay && f.c8_vesk) { const F = this.W.pierStart; consider(dist(F.x - 6, F.z), 3.0, { kind: 'c8ship', label: 'p_board' }); }
+    // a project ship on the spaceport's pad (same spot and reach as the pad's travel menu: the chapter wins the tie)
+    const sp = this.W.spaceport;
+    if (f.c8_relay && f.c8_vesk && sp) consider(dist(sp.pad.x, sp.pad.z), 5.0, { kind: 'c8ship', label: 'p_board' });
     void g;
   }
   interact(it) {
@@ -261,6 +265,10 @@ export class Evacuation extends ChapterBase {
     return this.goal('c8_obj_home');
   }
   items() { return this.f.c8_mira ? [{ id: 'valvekey', icon: 'key' }] : []; }
+  markers() {
+    const sp = this.W.spaceport;
+    return this.isCur() && this.f.c8_vesk && sp ? [{ x: sp.pad.x, z: sp.pad.z, kind: 'star', color: '#ffcf4a', r: 7, edge: true }] : [];
+  }
   journal() {
     const f = this.f;
     return [
