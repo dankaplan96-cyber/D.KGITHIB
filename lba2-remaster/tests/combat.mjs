@@ -319,7 +319,7 @@ check('the follow-through blends into the walk (no arm snap)', r.layered && r.ma
 check('Aim Assist Off: no soft target, no correction', !r.off.soft && !r.off.target && r.off.drift < 0.05, r.off);
 check('a camera drag never toggles the lock; a right tap does', !r.dragLock && r.tapLock, { drag: r.dragLock, tap: r.tapLock });
 
-// 19. Classic (LBA2's keys and tank controls): the arrows turn at 90°/s and walk; holding Alt plants the feet,
+// 19. Classic (LBA2's keys and tank controls): the arrows turn (on the spot ~100°/s in Normal) and walk; holding Alt plants the feet,
 //     the arrows turn the aim, the release throws the way he faces; X dodges; the mouse doesn't aim
 r = await ev(() => {
   const { G } = C, h = G.hero, B = G.ball, I = G.input;
@@ -338,7 +338,7 @@ r = await ev(() => {
   G.settings.controls = 'modern'; G.applySettings();
   return { turn, walked, planted, aimTurn, along, dodged, thrown: !!shot };
 });
-check('classic: the arrows turn at ~90°/s and walk', Math.abs(r.turn - Math.PI / 2) < 0.12 && r.walked > 0.6, r);
+check('classic: the arrows turn on the spot at LBA2\'s ~100°/s (Normal) and walk', Math.abs(r.turn - 100 * Math.PI / 180) < 0.12 && r.walked > 0.6, r);
 check('classic: holding Alt plants the feet and the arrows turn the aim', r.planted < 0.05 && r.aimTurn > 0.5, r);
 check('classic: the release throws the way he faces (the resting cursor does not aim)', r.thrown && r.along > 0.98, r);
 check('classic: X dodges', r.dodged > 1.5, r);

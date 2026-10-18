@@ -20,7 +20,7 @@ Object.assign(STR.en, {
   zl_tag_sw: 'Another dark post, another tag: CONNECTION NEXT QUARTER. The lit ones are by the council house, the depot and the bakery.',
   zl_tag_burrow: 'CONNECTION NEXT QUARTER, over the moles\' burrow. Warm air comes out of their vent anyway.',
   zl_burrow: 'Warm air breathes out of the moles\' vent. It smells of earth and root tea.',
-  zl_flowers: 'Nara\'s cloud flowers, crated for Citadel. A project tag: HELD. The shuttles are grounded, and the ferry takes project cargo first.',
+  zl_flowers: 'Nara\'s cloud flowers, crated for Citadel. A project tag: HELD. The shuttles are grounded, and the project\'s ship takes project cargo first.',
 
   // ---- the roof
   zl_shoved: 'Off the flue it goes. It can sit on the stage like the others.',

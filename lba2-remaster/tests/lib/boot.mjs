@@ -23,7 +23,7 @@ export async function open(page, query = '', { freeze = true } = {}) {
     try { await page.goto(URL0 + query, { waitUntil: 'load', timeout: 180000 }); break; }
     catch (e) { if (i >= 2 || !/ERR_ABORTED|frame was detached/.test(e.message)) throw e; await page.waitForLoadState('load').catch(() => {}); await page.waitForTimeout(1500); }
   }
-  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: +process.env.BOOT_TIMEOUT || 300000 }); // (BOOT_TIMEOUT: a loaded machine)
   if (freeze) await page.evaluate(() => { game.testFreeze = true; });
   await page.addScriptTag({ path: HARNESS });
 }

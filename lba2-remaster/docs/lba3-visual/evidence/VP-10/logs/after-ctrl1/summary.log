@@ -1,0 +1,8 @@
+occluders exit 0 ALL PASSED
+transitions exit 0 ALL PASSED
+stability exit 0 ALL PASSED
+combat exit 0 ALL PASSED
+jetpack exit 0 ALL PASSED
+holomap exit 0 ALL PASSED
+perfbudget medium exit 0 medium street     calls  261 (max 275) · tris 833k (max 844k) · submit 12.7 ms · first frame 16 ms · new programs 0 
+T3DONE

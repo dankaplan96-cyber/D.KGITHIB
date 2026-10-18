@@ -5,7 +5,7 @@ Object.assign(STR.en, {
   n_ilkaradio: 'Ilka (radio)', n_yornaradio: 'Yorna (radio)', n_heskradio: 'Hesk (radio)', n_pimradio: 'Pim (radio)',
   p_relay: 'Set relay', p_fly: 'Fly', p_station: 'Console',
   fly_title: "Hesk's glider: where to?",
-  fly_zeelich: 'Zeelich', fly_citadel: 'Citadel Island', fly_desert: 'Desert Island', fly_hamalayi: 'The Hamalayi',
+  fly_citadel: 'Citadel Island', fly_desert: 'Desert Island', fly_hamalayi: 'The Hamalayi',
   fly_done: '(done)', fly_here: '(you are here)',
 
   c10_narr: "Baldino's workshop, late into the night. Every bench is covered in wire.",
@@ -17,7 +17,7 @@ Object.assign(STR.en, {
   c10_bal_pulse2: "It does nothing at all to anything alive, and it needs a few seconds to recharge. Don't wave it at mites and expect miracles.",
   c10_toast_pulse: 'Pulse Tool · hold X to choose it · jams machines for a moment',
   c10_bal_4: "The way is already here. Listen.",
-  c10_hesk_1: "Hesk here! I got the council's message. The glider's moored on Zeelich, by the dock. I'll fly you anywhere with a flat bit of ground. Not into the shaft, mind. She's a glider, not a mole.",
+  c10_hesk_1: "Hesk here! I got the council's message. Take the spaceship over to Citadel, and you'll find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind. She's a glider, not a rocket.",
   c10_toast_relays: 'Baldino\'s relays (5)',
   c10_bal_after: "Five relays, five friends. And Twinsen, the relays are delicate. Don't throw the ball at them.",
 
@@ -92,10 +92,10 @@ Object.assign(STR.en, {
   c10_sub_light: 'Citadel: the lighthouse (Zoé and Arthur)',
   c10_sub_bore: 'Desert Island: the bore (Ilka and Dallan)',
   c10_sub_dome: 'The Hamalayi: the dome (Yorna, Pim and Sefa)',
-  c10_sub_fly: "(Hesk's glider is at the dock on Zeelich)",
+  c10_sub_fly: '(the spaceship to Citadel leaves from Zeelich Spaceport; Hesk waits on Citadel with his glider)',
   c10_obj_platform: 'Go to the drill platform on Zeelich',
   c10_j_plan: "Baldino's network: five relays at five stations, each powered by what's there, each held by a friend.",
-  c10_j_fly: 'Hesk flies me between the islands in his glider.',
+  c10_j_fly: 'Between the planets I take the spaceship. On Twinsun, Hesk flies me about in his glider.',
   c10_j_all: 'All five stations held at once. The shaft is open.',
   it_relay: 'Relay', itd_relay: "Baldino's relays: a box, a mast, a bit of genius.",
 });

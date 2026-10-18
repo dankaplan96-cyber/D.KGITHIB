@@ -56,7 +56,7 @@
 
   <div id="dialog" class="hidden lba-frame"><div class="name"></div><div class="text"></div><div class="next">▼</div></div>
   <div id="shop" class="hidden"></div>
-  <div id="holomap" class="hidden"><div class="frame"><div class="title"></div><canvas width="720" height="720"></canvas><div class="objective"></div><div class="close"></div></div></div>
+  <div id="holomap" class="hidden" role="dialog" aria-label="Holomap"><div class="frame"><div class="title"></div><canvas width="720" height="720"></canvas><div class="objective"></div><div class="foot"><span class="legend"></span><span class="hint"></span><button class="close" type="button"></button></div></div></div>
 
   <!-- ===== touch controls ===== -->
   <div id="touch" class="hidden">
@@ -113,6 +113,8 @@
       <div class="seg" data-setting="camera"><button data-v="lba" data-i18n="cam_lba"></button><button data-v="free" data-i18n="cam_free"></button></div>
       <label data-i18n="hud"></label>
       <div class="seg" data-setting="hud"><button data-v="lba" data-i18n="hud_lba"></button><button data-v="modern" data-i18n="hud_modern"></button></div>
+      <label data-i18n="mm_label"></label>
+      <div class="seg" data-setting="minimap"><button data-v="north" data-i18n="mm_north"></button><button data-v="camera" data-i18n="mm_camera"></button></div>
       <label data-i18n="quality"></label>
       <div class="seg" data-setting="quality"><button data-v="high" data-i18n="q_high"></button><button data-v="medium" data-i18n="q_medium"></button><button data-v="low" data-i18n="q_low"></button></div>
       <label data-i18n="res_label"></label>

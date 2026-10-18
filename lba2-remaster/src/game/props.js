@@ -118,6 +118,17 @@ export class Kit {
     return g;
   }
   flush() {
+    // flat / painted colours of one kind share a vertex-coloured twin: their colour goes into the vertices
+    if (this.recolor !== false) {
+      for (const [mat, list] of [...this.buckets]) {
+        if (!mat.userData.vcKey) continue;
+        const twin = vcTwin(mat), c = mat.color.clone();
+        for (const e of list) e.c = c;
+        if (!this.buckets.has(twin)) this.buckets.set(twin, []);
+        this.buckets.get(twin).push(...list);
+        this.buckets.delete(mat);
+      }
+    }
     for (const [mat, list] of this.buckets) {
       const geo = mergeEntries(list, mat.userData.tile || 0, !!mat.vertexColors);
       const mesh = new THREE.Mesh(geo, mat);
@@ -159,7 +170,7 @@ function mergeEntries(list, tile, withColor) {
         u = u / tile + e.o[0]; w = w / tile + e.o[1];
       } else if (U) { u = U.getX(i) * rep + e.o[0]; w = U.getY(i) * rep + e.o[1]; } else { u = 0; w = 0; }
       uv[(vo + i) * 2] = u; uv[(vo + i) * 2 + 1] = w;
-      if (col) { if (C) { col[k] = C.getX(i); col[k + 1] = C.getY(i); col[k + 2] = C.getZ(i); } else { col[k] = col[k + 1] = col[k + 2] = 1; } }
+      if (col) { if (e.c) { col[k] = e.c.r; col[k + 1] = e.c.g; col[k + 2] = e.c.b; } else if (C) { col[k] = C.getX(i); col[k + 1] = C.getY(i); col[k + 2] = C.getZ(i); } else { col[k] = col[k + 1] = col[k + 2] = 1; } }
     }
     if (g.index) {
       const I = g.index.array;
@@ -528,6 +539,13 @@ const MC = new Map();
 export function M(key, make) { let m = MC.get(key); if (!m) { m = make(); MC.set(key, m); } return m; }
 const std = (o, tile = 0, extra = {}) => { const m = new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0, ...o }); m.userData.tile = tile; Object.assign(m.userData, extra); return m; };
 
+// (PERF-IGPU) a flat or painted colour with nothing else to it: a Kit draws all of one kind (same roughness and
+// extras) as one vertex-coloured mesh instead of one mesh per colour (see Kit.flush). Cached MAT materials are
+// shared by every builder, so they are never changed at runtime; emissive or see-through ones keep their own.
+const PLAIN = (x) => !Object.keys(x).some((k) => /emissive|transparent|opacity|map|alpha|blending|depth|visible/i.test(k));
+const vcTwin = (m) => M('vc:' + m.userData.vcKey, () => {
+  const v = m.clone(); v.color.set('#ffffff'); v.vertexColors = true; v.userData = { ...m.userData }; delete v.userData.vcKey; return v;
+});
 export const MAT = {
   wood: (pal = 'honey') => M('w' + pal, () => std({ map: TEX.wood(pal), roughness: 0.62 }, 1)),
   planks: (pal = 'honey') => M('pk' + pal, () => std({ map: TEX.planks(pal), roughness: 0.75 }, 2)),
@@ -543,9 +561,9 @@ export const MAT = {
   copper: () => M('copper', () => std({ map: TEX.brushed(), color: '#d58a5a', roughness: 0.35, metalness: 0.7 }, 0.5)),
   steel: () => M('steel', () => std({ map: TEX.brushed(), color: '#b8bcc4', roughness: 0.38, metalness: 0.7 }, 0.5)),
   iron: () => M('iron', () => std({ map: TEX.brushed(), color: '#4a4c54', roughness: 0.55, metalness: 0.55 }, 0.5)),
-  paint: (c, rough = 0.6) => M('pa' + c + rough, () => std({ color: c, roughness: rough, map: TEX.brushed() }, 0.5)),
+  paint: (c, rough = 0.6) => M('pa' + c + rough, () => std({ color: c, roughness: rough, map: TEX.brushed() }, 0.5, { vcKey: 'pa' + rough })),
   cloth: (base, alt = '#000000') => M('cl' + base + alt, () => std({ map: TEX.fabric(base, alt), roughness: 0.95 }, 0.5)),
-  flat: (c, rough = 0.8, extra = {}) => M('fl' + c + rough + JSON.stringify(extra), () => std({ color: c, roughness: rough, ...extra })),
+  flat: (c, rough = 0.8, extra = {}) => M('fl' + c + rough + JSON.stringify(extra), () => std({ color: c, roughness: rough, ...extra }, 0, PLAIN(extra) ? { vcKey: 'fl' + rough + JSON.stringify(extra) } : {})),
   glow: (c, e, k = 1.5) => M('gl' + c + e + k, () => std({ color: c, emissive: e, emissiveIntensity: k, roughness: 0.4 }, 0, { noShadow: true })),
   glass: (c = '#bfe6ff', op = 0.35) => M('gs' + c + op, () => std({ color: c, roughness: 0.08, metalness: 0.1, transparent: true, opacity: op, depthWrite: false }, 0, { noShadow: true })),
   map: (t, rough = 0.85, extra = {}) => M('mp' + t.uuid, () => std({ map: t, roughness: rough, ...extra })),
@@ -2485,7 +2503,8 @@ const BOARD_FACES = {
     x.fillStyle = '#e8c040'; x.font = 'bold 40px Rubik, sans-serif'; x.textAlign = 'center'; x.fillText('HARBOUR · FERRY', W / 2, 62);
     x.fillStyle = 'rgba(232,192,64,0.5)'; x.fillRect(30, 80, W - 60, 3);
     x.font = 'bold 30px monospace'; x.textAlign = 'left';
-    [['ZEELICH', '08:30'], ['ZEELICH', '13:00'], ['ZEELICH', '17:30'], ['DESERT ISLAND', '10:15']].forEach(([a, b], i) => { x.fillStyle = '#f4efe2'; x.fillText(a, 34, 128 + i * 54); x.fillStyle = '#9fe0ff'; x.fillText(b, 370, 128 + i * 54); });
+    // (Twinsun sailings only: Zeelich is another planet, by spaceship from the spaceport)
+    [['DESERT ISLAND', '08:30'], ['DESERT ISLAND', '10:15'], ['DESERT ISLAND', '13:00'], ['DESERT ISLAND', '17:30']].forEach(([a, b], i) => { x.fillStyle = '#f4efe2'; x.fillText(a, 34, 128 + i * 54); x.fillStyle = '#9fe0ff'; x.fillText(b, 370, 128 + i * 54); });
   }),
   departures: () => canvasTex(1024, 512, (x, W, H) => {
     x.fillStyle = '#18202c'; x.fillRect(0, 0, W, H); x.strokeStyle = '#e8c040'; x.lineWidth = 10; x.strokeRect(8, 8, W - 16, H - 16);

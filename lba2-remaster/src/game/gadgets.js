@@ -11,9 +11,12 @@
 //    Citadel the Dino-Fly (he can't fly any more) lifts his head and answers.
 //  - Lantern: on or off. A warm light in Twinsen's left hand (one of the light pool's sources, so no shader
 //    recompiles); it shows what the dark places hide (story/arsenal.js: the nooks).
+//  - Baldino's hop-pack (EQ-1, chapter 10): worn or taken off from here; it flies from Athletic's jump key. Its
+//    rules, model and flight live in jetpack.js (this.jet: updated and reset with the other gadgets).
 import * as THREE from 'three';
 import { writeBodyStencil } from './characters.js';
 import { hitEnemy } from './weapons.js';
+import { Jetpack } from './jetpack.js';
 
 export const GADGET = {
   penguin: { life: 7, speed: 1.3, lureR: 11, hp: 2, popR: 2.2, popDmg: 2 },
@@ -72,6 +75,7 @@ export class Gadgets {
     this.light = new THREE.PointLight(GADGET.lantern.color, 0, GADGET.lantern.distance, GADGET.lantern.decay);
     this.light.name = 'lantern';
     game.scene.add(this.light);
+    this.jet = new Jetpack(game);   // Baldino's hop-pack (Hero.update calls jet.step)
   }
   get h() { return this.game.hero; }
   get arms() { return this.h.arms; }
@@ -85,6 +89,7 @@ export class Gadgets {
       case 'protect': return this.castProtect();
       case 'conch': return this.blowConch();
       case 'lantern': return this.toggleLantern();
+      case 'jetpack': return this.jet.toggleWorn();
     }
     return false;
   }
@@ -268,12 +273,14 @@ export class Gadgets {
       if (D.t >= 1.6) { D.o.position.y = D.y0; D.o.rotation.z = 0; this.dino = null; }
     }
     this.updateLantern();
+    this.jet.update(dt);
   }
   // a scene change: the penguin stays behind (it is gone), the shell and the lantern go with him
   reset() {
     if (this.penguin) { this.game.scene.remove(this.penguin.m); this.penguin = null; }
     for (const L of this.looks) if (L.npc.listenTo === this.h) L.npc.listenTo = null;
     this.looks = [];
+    this.jet.reset();
   }
   sound(kind) {
     const au = this.game.audio;
