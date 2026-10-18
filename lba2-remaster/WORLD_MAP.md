@@ -2,6 +2,10 @@
 
 Connected regions with local freedom; the story opens routes. Status: ✅ built · 🔧 needs work · ⬜ to build.
 
+**Two planets.** Twinsun (Citadel, Desert Island, the Hamalayi) and Zeelich (the terminal island and its islands)
+are separate planets: the only way between them is the spaceship, Citadel Spaceport ⇄ Zeelich Spaceport, in the
+story and in free travel alike. No ferry, boat, glider or beam crosses (see "Travel: two planets").
+
 ## Citadel Island (home region) ✅
 Exterior map with the LBA camera; interiors use the iso camera.
 
@@ -31,7 +35,7 @@ the original doesn't have is ours:
 | Town square | the well with a red roof, blue-globe lamps | the dry well, the water-bill row | prologue goal | well steams (ch1); runs cool (epilogue) |
 | Water office (interior) | pipe map on the wall | Mira's bureaucracy | valve map (ch1) | finale: Mira opens the valves |
 | Pippa's stall | yellow awning | trade | shop | stock changes with events (clovers before the evacuation) |
-| Harbour (west end of the original's pier) | pier, Doran's boat, project ferry | Xil's stuck cargo | permit, ferry to Zeelich | ferry docks (ch1); leaves (ch2) |
+| Harbour (west end of the original's pier) | pier, Doran's boat, project ferry; the ferry timetable lists Twinsun sailings only (DESERT ISLAND) | Xil's stuck cargo | permit; Doran agrees to fly the project's ship (ch2); the ferry to Desert Island | ferry docks (ch1), round from Desert Island |
 | Lighthouse (+ top room) | tall tower on the south-west headland, "at the end of the island" as in the original | — | Zoé's broadcast (ch2); finale signal | lit beacon after the broadcast |
 | Whispering Cliffs | stepping stones, old target | — | cliff valve (ch1) | stones stay raised |
 | Orchard | barred valve | — | orchard valve (ch1) | — |
@@ -45,7 +49,8 @@ the original doesn't have is ours:
 | Pippa's stall and Arthur's conch (WPN-1) | her stall sells the blowgun, darts, meca-penguins and a lantern from ch. 2; the conch on the table by Arthur's radio | Arthur lends it (or his note does) | gear for the side paths | — |
 
 Connections: house ⇄ street ⇄ square ⇄ harbour ⇄ lighthouse path ⇄ cliffs; square ⇄ orchard ⇄ depot ⇄ station.
-Access: well (lid key + rope); station gate (water restored); ferry (ch1 end, via Doran).
+Access: well (lid key + rope); station gate (water restored); Zeelich only by spaceship: the project's ship from
+Citadel Spaceport (ch2 end, via Doran at the harbour), the project ships in ch8, the public spaceship from ch4.
 Street furniture after the original (`PROPS` in citadel-layout.js): the four lamps at the square's corners,
 the plaza's lamps and benches, lanterns along the promenade, bollard runs, railings, picket fences and tulip rows;
 each piece is fitted to our ground and left out where something of ours stands (island.js buildOriginalProps).
@@ -58,7 +63,8 @@ Pink sky, cloud sea, floating isles.
 
 | Place | Identity / landmark | Life | Story role | Changes |
 |---|---|---|---|---|
-| Ferry dock | the light-ferry | project guard | arrival; setback: plan confiscated | — |
+| Zeelich Spaceport (*ours*: the deck off the south shore, travel.js) | the larger Esmer craft on its pad, a footbridge to the island | project guard (ch3) | arrival by spaceship (ch3, ch9, and the public spaceship from ch4); setback: plan confiscated here | — |
+| Sky pier (the island's west end) | the pier and horseshoe gateway; the shuttle pad beside it (Zeelich's islands only) | — | — | the project's sky-ferry model is kept out of sight (PLANET-1: no ferry crosses to Twinsun) |
 | Esmer street | domes and arches, stalls; behind the north houses the dog-training yard (palisade, track, block tower, tunnel, hurdles) | Nara's cloud flowers, Oku; street folk after LBA2's Zeelich: Mosquibees (Bzizz, Madam Zuzzara), moles (Old Grumm, Mother Snuff) and triangle-headed townsfolk (Mr Pelleck, Tavo); the project's guard dogs in training (two running the course, one in the yard; they bark at Twinsen) | directions, opinions about the project | lines change once they see the plan |
 | The old watch house = Snuff's bakery (north side of the street's east end, x 8.6…13.4, z −13.8…−9.2 local; twelve years on, docs/TWELVE_YEARS.md set 4) | a squat tower of dark ashlar older than the council, its crest chiselled off; the guards' window a bread hatch (counter, striped awning, SNUFF'S BREAD, a slate); the guards' stair up the west wall to the flat roof (parapet, merlons); the oven's flue stack; a copper feed from the depot under the street (fresh cobbles) to a heat box with a lamp | Mother Snuff bakes on the project's heat; Bzizz lands his nectar crates on the roof; Tavo carries rolls to the depot | The Second Bake (optional, from ch. 3): Bzizz's crate on the flue trips the heat box; shove it off on the roof, or knock it off with the ball from the street (it breaks) | the hatch glows, loaves on the counter, FRESH BREAD, the flue breathes, Tavo at the counter; Snuff pays 5 kashes; a roll restores life |
 | Heat posts, the burrow hatch, Pelleck's scaffold, Nara's crates (twelve years on) | posts lit at the bakery, the council house and the depot gate; dark with CONNECTION NEXT QUARTER at Pelleck's house, the south-west house and the moles' burrow hatch (stone collar, plank lid, a warm vent); Pelleck's dome half re-tiled (new blue tiles, bare mortar, the old violet; scaffold, ladder, tile stacks); Nara's flower crates for Citadel by the shuttle pad | Old Grumm by his burrow, Mr Pelleck under his scaffold; the street argues about the project's heat | who gains (bakery, council house, depot) and who waits (the west end, the burrows) | Nara's crates HELD in ch. 3 (shuttles grounded), gone from ch. 4; lines change with the shield, the council and the network |
@@ -68,7 +74,8 @@ Pink sky, cloud sea, floating isles.
 | Drill platform | shield, gate console, lift | Vesk | shield down, Vesk descends | shaft open |
 | Nara's case (beside Nara's place on the street; WPN-1) | a glass-topped trade case on brass legs, a jar for the honest | Nara, or a note: BACK SOON. PAY IN THE JAR | the Esmer laser pistol and crystal cells (ch. 3), darts, penguins, the Blowtron (ch. 6) | — |
 
-Access: from Citadel by the ferry (ch2 start). Platform gate: override key + three mills braked.
+Access: from Citadel Spaceport by spaceship only (ch2 end: Doran flies the project's ship; ch8: a project ship;
+from ch4 the public spaceship). Platform gate: override key + three mills braked.
 
 ## Citadel Spaceport (Citadel Island, east of the town) ✅ (src/game/spaceport.js)
 Twelve years after LBA2 the Esmers' shuttles are ordinary traffic, so Citadel has a port for them: a landing
@@ -76,9 +83,10 @@ platform on stilts over the bay east of the town (deck x −14…14, z 26…54, 
 footbridge from the east shore at z 40, a terminal (Twinsun stone, an Esmer dome), a control tower with a beacon,
 the departures board (read it), benches, lamps, railings all round (no walking off into the bay), and an Esmer
 shuttle on the pad. From chapter 4 on its spaceship flies to **Zeelich Spaceport only** (Zeelich is another planet;
-its islands are reached from there by Esmer shuttle); before that a note on the hatch says the flights are grounded
-by the Joint Project (its ferry at the harbour is the only crossing — the story's ferry stays as it was). The
-departures board names only ZEELICH SPACEPORT.
+its islands are reached from there by Esmer shuttle); before that a note on the hatch says passenger flights are
+grounded by the Joint Project (project crews only): the one crossing is the project's ship Doran flies at the end of
+chapter 2 (PLANET-1). In chapter 8 the project ships board here (a queue on the bridge). The departures board names
+only ZEELICH SPACEPORT.
 
 ## Travel: two planets (CONNECT, src/game/travel.js) ✅
 Every travel point is a place with a board naming where it goes; E there opens the menu of what is open now.
@@ -93,8 +101,11 @@ Every travel point is a place with a board naming where it goes; E there opens t
 | between | Citadel Spaceport ⇄ **Zeelich Spaceport** (*ours*: a deck off the terminal island's south shore, a footbridge, the larger craft) | each other only | ch. 4 |
 | Zeelich | the shuttle pad by Zeelich's dock, and every island's pad | the spaceport island and all 11 islands | ch. 4 |
 
-No Twinsun stop on Zeelich, no Zeelich island on Twinsun. After the main story everything is open. The story's own
-crossings (the project's ferry in chapters 1–3, Hesk's flights in chapter 10) are unchanged. The Holomap shows the
+No Twinsun stop on Zeelich, no Zeelich island on Twinsun. After the main story everything is open.
+**Twinsun ⇄ Zeelich is by spaceship only** (PLANET-1, the user's decision), the story's own crossings too: chapter 2→3
+the project's ship (Doran, from Citadel Spaceport to Zeelich Spaceport); chapter 3→4 the project's ship home to
+Citadel Spaceport, then the ferry to Desert Island; chapter 8→9 a project ship from Citadel Spaceport; chapter 10 the
+spaceship between the planets, Hesk's glider on Twinsun only (Citadel, Desert Island, the Hamalayi). The Holomap shows the
 planet he is on: the region's own map with his dot and the travel points, and an inset of the planet with its places
 and the open links (ferry, glider, shuttle; the spaceship leaving the planet).
 

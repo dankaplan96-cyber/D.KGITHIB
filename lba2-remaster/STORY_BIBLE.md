@@ -3,10 +3,12 @@
 Unofficial fan continuation of Little Big Adventure 1–2. English only. Twelve years after LBA2.
 Twinsen lives on Citadel Island with Zoé and their son Arthur. Twinsun and Zeelich trade and share research;
 trust is still fragile. FunFrock is dead (his old fortress and pipeline remain). Sendell is good. Two suns:
-no Earth-style night.
+no Earth-style night. **Twinsun and Zeelich are two separate planets: the crossing between them is always by
+spaceship** (Citadel Spaceport ⇄ Zeelich Spaceport; the user's decision). No ferry, boat, glider or beam crosses;
+the ferry and Hesk's glider work on Twinsun only, the Esmer shuttles between Zeelich's islands only.
 
 **The core conflict.** The Joint Project drills into Twinsun for heat. It really helps people (warm water,
-light, a ferry that runs on light, jobs on Zeelich). It is also cracking the shell around a being Sendell
+light, a ferry that runs on light around Twinsun, jobs on Zeelich). It is also cracking the shell around a being Sendell
 protects ("her"), which is waking too early. Vesk, the project's chief engineer and the story's villain, learns
 what lies under the shell and wants its power for the project: he hides the danger and plans a selective
 evacuation (the thirty percent he chose) instead of stopping. Stopping the drill now would crack the shell anyway.
@@ -61,16 +63,19 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 ### 2 — The Joint Project ✅
 - **Wants:** the town's water back. **Vesk is useful first:** the three bypass valves bring the water back
   (hot); the project's heat posts light every door. **Contradiction:** crystals in the station's pipes, "shell"
-  readings called noise. **Zoé (playable):** finds the evacuation plan (30%). **Result:** Vesk leaves through
-  the beam; Arthur's radio reaches Baldino; Doran sails the ferry to Zeelich.
+  readings called noise. **Zoé (playable):** finds the evacuation plan (30%). **Result:** Vesk leaves: the
+  beam lifts him to his ship; Arthur's radio reaches Baldino, who has radioed Doran the start code of the project's
+  ship at Citadel Spaceport (passenger flights are grounded; a project flight is the exception); Doran meets
+  Twinsen at the spaceport and flies him to Zeelich.
 
 ### 3 — Zeelich ✅ (ending changes)
 - **Wants:** reach Baldino, stop Vesk. **The other side:** Zeelich lives on the project. **Setback:** the plan
-  is confiscated at the dock, recovered in the depot. **Revelation (Baldino):** the shell; stopping halfway
+  is confiscated by a project guard who meets the ship on Zeelich Spaceport, recovered in the depot. **Revelation (Baldino):** the shell; stopping halfway
   cracks it. **Does:** mill cog, code cylinder, three mill brakes; Zoé tunes the lighthouse.
 - **New ending:** the shield drops, Vesk descends and **seals the shaft** behind him (blast doors, a code only
   the bore's own network can open). Baldino: "We can't follow him, and we don't know enough to reverse a bore
-  through a shell nobody has seen. The first crystals were dug up on Desert Island. Start there."
+  through a shell nobody has seen. The first crystals were dug up on Desert Island. Start there." Doran flies
+  him home to Citadel Spaceport and takes the project's ferry south from there (chapter 4 opens at Kesh's pier).
 
 ### 4 — The Dig ✅ (Desert Island)
 - **Wants:** learn what the shell is. **Knows:** crystals came from a dig. **Doesn't know:** that the heat
@@ -118,14 +123,15 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
   project's way.
 
 ### 8 — Evacuation ✅ (Citadel Island, changed)
-- **Wants:** get everyone out, not 30%. **The familiar island changed:** queues at the harbour, the heat posts
-  dark, the square fenced, the well steaming, people packing.
+- **Wants:** get everyone out, not 30%. **The familiar island changed:** queues for the project ships at the spaceport,
+  the heat posts dark, the square fenced, the well steaming, people packing.
 - **Does:** Zoé (playable) and Twinsen split up: Zoé gets the hill families to the lighthouse cliffs with Doran's
   fishing boats; Twinsen opens the old FunFrock tunnels as shelters (the fortress, the depot), deals with the
   project's crowd-control drones, and convinces Gilbert, Mira and Pippa to help (each one's local problem pays
   off). Vesk's message from below: he will finish the bore in three days.
 - **Result:** the island is safe without the project's list. Mira finds the old valve-control room; Zoé finds
-  that the lighthouse signal reaches Zeelich's council chamber.
+  that the lighthouse signal reaches Zeelich's council chamber. Twinsen boards a project ship at Citadel
+  Spaceport; it sets him down on Zeelich Spaceport (chapter 9).
 
 ### 9 — The Council ⬜ (Zeelich upper districts)
 - **Wants:** Zeelich's council to order the bore reversed. **The other world's choice:** the council fears
@@ -141,7 +147,8 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
   any order, each in a region already visited and each using a mechanic learned there: Citadel (Mira's valves,
   water to cool the emitter), Zeelich (Oku's mills released), the lighthouse (Zoé's sun–wave–star signal),
   Desert Island (Ilka and Dallan hold the vent open), Hamalayi (Yorna and Pim keep the mirror array aimed).
-  Baldino's inventions have limits: the relay radio needs line of sight, the coupler overheats.
+  Baldino's inventions have limits: the relay radio needs line of sight, the coupler overheats. Hesk's glider
+  flies between Twinsun's regions only; between Zeelich and Twinsun Twinsen takes the spaceship.
 - **Result:** all stations online; the shaft code opens the blast doors.
 
 ### 11 — The Shell 🔧 (rooms built)
@@ -164,9 +171,9 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 | **Zoé** | the truth; family safe | being told to stay home | town gossip, how to sneak | finds the plan, broadcasts the warning, playable twice | from worried to the one who moves the island |
 | **Arthur** | to be included | being treated as a baby | radios, kids' secrets | fixes the radio, relays in the finale | gets his real job, not a chosen-one moment |
 | **Baldino** | to build the thing that works | being ignored | the shell, machines | inventions with limits (override key; the network) | proves the reversal works |
-| **Vesk** (villain) | the power under the shell, for the project and Zeelich's upper districts | losing control, being made small | the readings, and what they mean | charming and useful at first (valves, water, ferry), then obstructs (link cut, guards, the evacuation he chose) | does not turn: overloads the guardian in the core, is beaten and handed to the joint council |
+| **Vesk** (villain) | the power under the shell, for the project and Zeelich's upper districts | losing control, being made small | the readings, and what they mean | charming and useful at first (valves, water, the project's ferry round Twinsun), then obstructs (link cut, guards, the evacuation he chose) | does not turn: overloads the guardian in the core, is beaten and handed to the joint council |
 | **Sendell** | to protect "her" | waking her too soon | everything below | warnings, then the plain truth | asks for help instead of saving everyone |
-| **Doran** | to sleep, to sail | fuss | the sea, the ferry | stamp, the ferry to Zeelich | sails into the unknown |
+| **Doran** | to sleep, to sail | fuss | the sea, the ferry | stamp; flies the project's ship to Zeelich with Baldino's start code, then the ferry to Desert Island | sails, then flies, into the unknown |
 | **Mira** | rules followed, credit for the office | blame | every pipe on the island | lid key, valve map, opens the valves in the finale | from bureaucrat to hero of the report |
 | **Gilbert** | his water and his refund | being cheated | old FunFrock days | grumbles, local history | gets his water (and refund) |
 | **Xil** | his cargo moved | missing business | the project's cargo | rope ladder, gossip about Vesk | — |
@@ -229,13 +236,14 @@ project's sites with the drones, carry stun rifles and batons, and are knocked o
 - **Joe the Elf** (LBA2): still in town by the square, still having trouble with his magic; he once hid in an
   Esmer shuttle and ended up on the wrong planet.
 - **The Esmers' shuttles** (LBA2's round craft: red base, gold hull, blue canopy, landing legs): Zeelich's
-  ordinary traffic twelve years on. One stands on its pad by Zeelich's dock; others cross the skies of Citadel,
+  ordinary traffic twelve years on. One stands on its pad by Zeelich's dock (for Zeelich's islands only); others cross the skies of Citadel,
   Zeelich and Desert Island, coming and going through Bald Mountain as they always did.
 - **Citadel Spaceport**: twelve years on, Citadel has a port for the shuttles, a platform on stilts in the bay
-  east of the town. While the Joint Project runs things (chapters 1–3) a note on the shuttle says the flights are
-  grounded by its order and the project's ferry is the only crossing; from chapter 4 the shuttles fly again —
-  to Zeelich and to Zeelich's other islands (Otringal, Knartas, Mosquibee Island, Celebration Island, Under
-  Celebration, the CX Islet, the Platform), places to explore with no story of their own.
+  east of the town. While the Joint Project runs things (chapters 1–3) a note on the ship's hatch says passenger flights are
+  grounded by its order (project crews only: Doran flies the project's ship across in chapter 2); from chapter 4
+  the spaceship flies again — to Zeelich Spaceport only; Zeelich's other islands (Otringal, Knartas, Mosquibee
+  Island, Celebration Island, Under Celebration, the CX Islet, the Platform and the rest) are reached from there by
+  Esmer shuttle, places to explore with no story of their own.
 - **The Temple of Bù** (LBA2, Temple-Park by Bald Mountain): the project dug down to it; its great relief shows
   Sendell, her well and the shell's vents.
 - **The guard dogs** (LBA2's, bodies 51–53): Zeelich's big-mouthed guard dogs (a round blob of head and body, a
@@ -271,11 +279,14 @@ goal. Important scenes are played, not narrated.
 
 ## Established facts (do not contradict)
 - The well dried up because the project diverted the groundwater; three FunFrock-era bypass valves restore it.
-- The ferry runs on light; Doran can sail it; Baldino sent the start code.
-- The evacuation plan: Citadel town centre and Zeelich upper districts; ferry capacity 30%.
+- Twinsun ⇄ Zeelich only by spaceship (Citadel Spaceport ⇄ Zeelich Spaceport). The project's ferry runs on light
+  on Twinsun's seas (Citadel ⇄ Desert Island); Doran can sail it, and fly the project's ship; Baldino sent him the
+  start code.
+- The evacuation plan: Citadel town centre and Zeelich upper districts; ship capacity 30%.
 - Zoé's lighthouse dials: sun, wave, star.
 - The platform shield is fed by Zeelich's three mills; the override key = old mill cog + project code cylinder.
-- Vesk crossed to Zeelich through the beam pad at the station and cut the link.
+- Vesk left from the beam pad at the station: the beam lifted him to his ship, which took him to Zeelich; he
+  cut the link.
 
 ## Open questions
 - The being's name (Sendell only says "her"). Keep it unnamed unless a scene needs a name.

@@ -6,7 +6,7 @@ Object.assign(STR.en, {
   p_cabinet: 'Search', p_coat: 'Take coat', p_counter: 'Hand in',
   chapter_council: 'The Council',
 
-  c9_narr: 'The project ship docks at Zeelich in a gust of pink cloud. Its passengers hurry off toward the drill platform. Nobody looks twice at one more traveller.',
+  c9_narr: 'The project ship sets down on Zeelich Spaceport in a gust of pink cloud. Its passengers hurry off toward the drill platform. Nobody looks twice at one more traveller.',
   c9_tw_arrive: "Three days. Baldino first. He'll know how the council works.",
 
   c9_bal_1: "Twinsen! I heard Zoé on the relay, every word. So did half the island. So did the council, and they did what councils do: they formed a committee.",

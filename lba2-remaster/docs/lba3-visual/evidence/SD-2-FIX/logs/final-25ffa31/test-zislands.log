@@ -1,0 +1,15 @@
+PASS all eleven Zeelich places are built (the original's 7 + the Lift Dock + our 3), each with a walkable area (≥ 100 m²) and its spawn on land 
+PASS before chapter 4: no shuttle prompt at Zeelich's pad 
+PASS chapter 4: E at Zeelich's shuttle opens the shuttle menu (the spaceport island marked here, the 11 islands; no Twinsun stop) 
+PASS picking Otringal lands him there, in play, beside its shuttle 
+PASS Otringal: he walks to far points of the island (at least 4 of 5) 
+PASS every island: running at the sea from the spawn in 8 directions, he stops at the waterline (never below -0.35, no fall) 
+PASS no traps: from every sample point of each island he walks away in some direction 
+PASS Otringal → Knartas by its shuttle 
+PASS Knartas → back to Zeelich, beside its pad, in play 
+PASS the Lift Dock, Tralu Rock, the Nectar Orchard, the Old Watch and Celebration: every landmark walked to from the arrival (INPUT) 
+PASS each new place has a giver that gives once 
+PASS save & quit on Celebration Island → Continue: back on it where he was, in play 
+PASS holomap opens and closes on an island 
+no errors
+ALL PASSED

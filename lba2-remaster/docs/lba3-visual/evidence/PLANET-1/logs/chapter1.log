@@ -1,0 +1,28 @@
+ch1 start [ 1, true, 'play', 'out' ]
+home [ 'house', true, 'Meet Vesk at the harbour' ]
+arrived [ true, true, 'play' ]
+task [
+  true,
+  'Open the three bypass valves◆ Depot at the old camp (drones)◆ Orchard (behind bars: use the ball)◆ Whispering Cliffs (target and stones)'
+]
+map [ true, 'out' ]
+valves [{"id":"depot","kind":"use","x":-68,"y":15.440000000000001,"z":-71.4},{"id":"orchard","kind":"ball","x":-79.60000000000001,"y":16.970064155872052,"z":-54.9},{"id":"cliff","kind":"use","x":-55.2,"y":18.35,"z":-36.6}]
+valve depot true
+valve orchard true
+valve cliff true
+save/load flags equal true true,true,true
+water [ true, true, 'Visit Vesk at the station in the old fortress' ]
+tour [ true, true ]
+zoe start [ true, 'zoe', 'projoffice' ]
+plan true
+zoe done [ true, 'twinsen', 'out' ]
+vesk gone [ true, false ]
+radio [ true, 'Talk to Doran at the harbour' ]
+doran [
+  true,
+  'Meet Doran at the spaceport and fly to Zeelich',
+  '-2.7',
+  '42.1'
+]
+end [ 'play', 'zeelich', 'zeelich' ]
+no errors

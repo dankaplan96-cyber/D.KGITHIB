@@ -2,8 +2,9 @@
 // them: a landing platform on stilts over the bay east of the town, a footbridge from the shore, a small terminal
 // (Twinsun stone below, an Esmer dome above), a control tower, the departures board, and a shuttle on the pad.
 // From chapter 4 on it flies to Zeelich Spaceport only — Zeelich is another planet; its islands are reached from
-// there by Esmer shuttle (src/game/travel.js, CONNECT); before that the flights are
-// grounded and only the Joint Project's ferry crosses (the board and the gate say so).
+// there by Esmer shuttle (src/game/travel.js, CONNECT); before that passenger flights are
+// grounded by the Joint Project (the note on the hatch says so) and only a project ship flies: in chapter 2 Doran
+// takes Twinsen across in one (PLANET-1, story/chapter1.js).
 //
 // A small working port (SD-1): passengers wait on benches in front of the terminal between planters and bins,
 // read the departures board by the bridge's end and buy tickets at a kiosk across the way; luggage trolleys, cargo

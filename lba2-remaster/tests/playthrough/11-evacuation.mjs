@@ -1,6 +1,6 @@
 // Chapter 8 (Evacuation, Citadel): home to Zoé, Gilbert's tunnels, the fortress shelter's lever, the depot bunker's
 // wheel (ball), Mira's water, Pippa's supplies, Zoé's run to the hill farms, the relay at the lighthouse, the
-// control room, a project ship to Zeelich.
+// control room, a project ship from Citadel Spaceport to Zeelich (PLANET-1).
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['home: Zoé', () => { const d = game.world.houses[0].door; P.enter('house', { run: true }); const r = P.talk('zoe'); return { ...r, home: game.flags.c8_home, fail: game.flags.c8_home ? null : 'home' }; }],
@@ -13,5 +13,5 @@ export const steps = [
   ['the three farms', () => { for (const id of ['farmer1', 'farmer2', 'farmer3']) { P.talk(id, { run: true }); P.wait(1); P.settle(); } return { done: game.story.cur.farmsDone(), fail: game.story.cur.farmsDone() >= 3 ? null : 'farms' }; }],
   ['the lighthouse gathering', () => { const G = game; P.go(-66, -53, { tol: 2, run: true, maxT: 200 }); let t = 0; while (!G.flags.c8_relay && t < 20) { G.step(0.1); t += 0.1; if (G.state !== 'play') P.settle(); } P.settle(); return { relay: G.flags.c8_relay, body: G.hero.body, fail: G.flags.c8_relay ? null : 'relay' }; }],
   ['the control room', () => { P.enter('control', { run: true }); P.wait(0.5); P.settle(); return { vesk: game.flags.c8_vesk, fail: game.flags.c8_vesk ? null : 'control' }; }],
-  ['a ship to Zeelich → chapter 9', () => { if (P.here() !== 'citadel') P.enter('citadel'); const F = game.world.pierStart; const r = P.use(F.x - 6, F.z, { run: true }); P.settle(60); P.settle(30); return { ...r, chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'council' ? null : 'no chapter 9' }; }],
+  ['a project ship at the spaceport → chapter 9', () => { if (P.here() !== 'citadel') P.enter('citadel'); const p = game.world.spaceport.pad; let r; for (let k = 0; k < 3 && game.flags.chapterKey === 'evacuation'; k++) { r = P.use(p.x - 4.2, p.z, { run: true, kind: 'c8ship' }); P.settle(60); P.settle(30); } return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'council' ? null : 'no chapter 9' }; }],
 ];

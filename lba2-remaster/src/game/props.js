@@ -2503,7 +2503,8 @@ const BOARD_FACES = {
     x.fillStyle = '#e8c040'; x.font = 'bold 40px Rubik, sans-serif'; x.textAlign = 'center'; x.fillText('HARBOUR · FERRY', W / 2, 62);
     x.fillStyle = 'rgba(232,192,64,0.5)'; x.fillRect(30, 80, W - 60, 3);
     x.font = 'bold 30px monospace'; x.textAlign = 'left';
-    [['ZEELICH', '08:30'], ['ZEELICH', '13:00'], ['ZEELICH', '17:30'], ['DESERT ISLAND', '10:15']].forEach(([a, b], i) => { x.fillStyle = '#f4efe2'; x.fillText(a, 34, 128 + i * 54); x.fillStyle = '#9fe0ff'; x.fillText(b, 370, 128 + i * 54); });
+    // (Twinsun sailings only: Zeelich is another planet, by spaceship from the spaceport)
+    [['DESERT ISLAND', '08:30'], ['DESERT ISLAND', '10:15'], ['DESERT ISLAND', '13:00'], ['DESERT ISLAND', '17:30']].forEach(([a, b], i) => { x.fillStyle = '#f4efe2'; x.fillText(a, 34, 128 + i * 54); x.fillStyle = '#9fe0ff'; x.fillText(b, 370, 128 + i * 54); });
   }),
   departures: () => canvasTex(1024, 512, (x, W, H) => {
     x.fillStyle = '#18202c'; x.fillRect(0, 0, W, H); x.strokeStyle = '#e8c040'; x.lineWidth = 10; x.strokeRect(8, 8, W - 16, H - 16);
