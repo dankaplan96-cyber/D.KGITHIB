@@ -236,6 +236,7 @@ class Game {
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
+    this.warmShadows();
     this.renderer.render();
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.perf.load = this.loadTimes;
@@ -329,6 +330,35 @@ class Game {
     T.hold = true; T.holdT = performance.now();
     this.renderer.precompile().catch(() => {}).finally(() => { T.hold = false; });
   }
+  // The shadow pass's depth programs (one per kind of caster: side, texture/alpha test, instanced, batched, skinned)
+  // are not compiled by precompile(); left alone they compile on the first frame that casts with each kind. Here a
+  // tiny copy of every kind found in the scene (with its own material) is cast into a throwaway shadow map once.
+  warmShadows() {
+    const R = this.renderer.renderer;
+    if (!R.shadowMap.enabled) return;
+    const ws = new THREE.Scene(), box = new THREE.BoxGeometry(0.1, 0.1, 0.1), kinds = new Map();
+    const kindOf = (o) => (o.isSkinnedMesh ? 's' : o.isBatchedMesh ? 'b' : o.isInstancedMesh ? 'i' : 'm');
+    this.scene.traverse((o) => {
+      if (!o.isMesh || !o.castShadow || !o.material || Array.isArray(o.material) || o.customDepthMaterial) return;
+      const m = o.material, k = [kindOf(o), m.side, m.shadowSide, !!m.map, !!m.alphaMap, m.alphaTest > 0, !!m.displacementMap, m.wireframe, !!m.alphaToCoverage].join('|');
+      if (!kinds.has(k)) kinds.set(k, o);
+    });
+    for (const o of kinds.values()) {
+      let c;
+      if (o.isSkinnedMesh) { c = new THREE.SkinnedMesh(o.geometry, o.material); c.bind(o.skeleton, o.bindMatrix); }
+      else if (o.isBatchedMesh) { c = new THREE.BatchedMesh(1, box.attributes.position.count, box.index.count, o.material); c.addInstance(c.addGeometry(box)); }
+      else if (o.isInstancedMesh) { c = new THREE.InstancedMesh(box, o.material, 1); c.setMatrixAt(0, new THREE.Matrix4()); }
+      else c = new THREE.Mesh(box, o.material);
+      c.castShadow = true; c.frustumCulled = false; ws.add(c);
+    }
+    // (the shadow batches: engine/shadowcull.js)
+    for (const side of [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide]) { const c = new THREE.Mesh(box, new THREE.MeshBasicMaterial({ side })); c.castShadow = true; c.frustumCulled = false; ws.add(c); }
+    const L = new THREE.DirectionalLight('#ffffff', 1); L.castShadow = true; L.shadow.mapSize.set(32, 32); ws.add(L, L.target);
+    try { R.shadowMap.render([L], ws, this.camera); } catch (e) { console.warn('shadow warm-up', e); }
+    L.shadow.map?.dispose(); box.dispose();
+    return kinds.size;
+  }
+
   // what the current preset does, for the benchmark's report
   graphicsConfig() {
     const R = this.renderer, W = this.world;
@@ -341,6 +371,7 @@ class Game {
     const R = this.renderer.renderer;
     if (this.testFreeze || this.preparing || !R.compileAsync || !this.lightPool) return;
     const hold = (this.gfxHold = { t: performance.now() });
+    this.warmShadows();
     this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : this.hero.pos);
     this.renderer.precompile().catch(() => {}).finally(() => { if (this.gfxHold === hold) this.gfxHold = null; });
   }
