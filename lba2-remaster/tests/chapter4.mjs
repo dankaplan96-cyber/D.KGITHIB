@@ -127,9 +127,9 @@ const F0 = F, n0 = F0.s.filter(Boolean).length;   // (a ball thrown at a mite on
 check('the objective counts the door\'s seals (n/3)', new RegExp('seals \\(' + n0 + '\\/3\\)').test(await obj()), { obj: await obj(), F0 });
 await shot('C4-04-dig.png');
 const lin = await ev(() => { const c = game.rooms.desert.dig.carvings; return P.use(c.x, c.z, { kind: 'c4lintel' }); }); const s3 = await said();
+check('the carving over the door can be inspected: five vents puffing (INPUT)', has(s3, /puffing like a kettle/), { lin, s3 });
 const wi = F0.s.indexOf(false), w0 = await throwAt(['seal', wi]); F = await fl();
 check('a warm disc opens and glows, counted in the objective (INPUT)', w0.r === 'hit' && F.s[wi] && F.on[wi] && new RegExp('\\(' + (n0 + 1) + '\\/3\\)').test(await obj()), { wi, w0, F, obj: await obj() });
-check('a warm disc opens and glows (1/3) (INPUT)', w0.r === 'hit' && F.s[0] && F.on[0] && /\(1\/3\)/.test(await obj()), { w0, F });
 await said();
 const c1 = await throwAt(['cold', 0]); const s4 = await said(); F = await fl();
 check('a cold disc: a thud, and every open disc grinds shut (line, flags, glow) (INPUT)', c1.r === 'hit' && !F.s.some(Boolean) && !F.on.some(Boolean) && F.cold === 1 && has(s4, /open ones ground shut/), { c1, F, s4 });

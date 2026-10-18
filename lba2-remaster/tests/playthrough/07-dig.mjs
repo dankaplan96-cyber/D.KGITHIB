@@ -27,14 +27,20 @@ export const steps = [
   }],
   ['the dig\'s gate', () => { const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { run: true }); P.wait(1); P.settle(); return { ...r, open: game.flags.c4_digOpen, fail: game.flags.c4_digOpen ? null : 'gate' }; }],
   ['down to the bottom', () => { const D = game.rooms.desert.dig; let r; for (let k = 0; k < 4 && Math.abs(game.hero.pos.y - D.bottomY) >= 0.8; k++) { r = P.go(D.x + 1.5, D.z - 1.0, { tol: 1.0, maxT: 120 }); P.settle(); }   /* (a line on the way down: settle it, walk on) */ return { r: r.r, y: +game.hero.pos.y.toFixed(2), bottom: D.bottomY, fail: Math.abs(game.hero.pos.y - D.bottomY) < 0.8 ? null : 'not at the bottom' }; }],
-  ['the three seals (ball)', () => {
-    const G = game, out = [];
-    for (const tg of G.room.ballTargets.filter((t) => t.seal != null)) {
-      for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * 3.5, tg.z - Math.cos(a) * 3.5, { tol: 0.8, maxT: 40 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
-      out.push(tg.done);
+  // (ADV-1: five discs, the three warm ones are the `seal` targets; a stray ball on a cold disc shuts the open ones,
+  // so passes repeat until the door opens, as a player would start again)
+  ['the warm seals (ball)', () => {
+    const G = game, D = G.rooms.desert.dig; let out = [], pass = 0;
+    for (; pass < 4 && !G.flags.c4_seals3; pass++) {
+      out = [];
+      for (const tg of G.room.ballTargets.filter((t) => t.seal != null)) {
+        // from the floor's side, in front of the disc's face
+        for (let k = 0; k < 6 && !tg.done; k++) { const a = Math.atan2(D.x - tg.x, D.z - tg.z) + [0, 0.35, -0.35, 0.7, -0.7, 0][k], r = 2.8 + (k % 2) * 0.6; P.go(tg.x + Math.sin(a) * r, tg.z + Math.cos(a) * r, { tol: 0.5, maxT: 40 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
+        out.push(tg.done);
+      }
+      P.wait(1); P.settle();
     }
-    P.wait(1); P.settle();
-    return { seals: out, fail: out.every(Boolean) ? null : 'seals' };
+    return { seals: out, passes: pass, cold: G.flags.c4_coldHits || 0, fail: G.flags.c4_seals3 ? null : 'seals' };
   }],
   ['into the temple', () => { const d = game.rooms.desert.dig.door; const r = P.through(d.x, d.z); return { ...r, seen: game.flags.c4_templeSeen, fail: game.room?.id === 'butemple' ? null : 'temple' }; }],
   ['the great carving → chapter 5', () => { const c = game.rooms.butemple.carving; const r = P.use(c.x, c.z); P.settle(60); P.settle(30); return { ...r, carving: game.flags.c4_carving, chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'steam' ? null : 'no chapter 5' }; }],

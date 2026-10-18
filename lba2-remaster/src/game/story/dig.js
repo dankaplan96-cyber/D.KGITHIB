@@ -213,6 +213,8 @@ export class Dig extends ChapterBase {
       if (tg.gear != null && f.c4_pumpTask) { tg.done = true; this.freeGear(tg.gear); return true; }
       // (the discs answer once he is down there and has seen them: a ball thrown at a mite on the terraces above
       // mustn't count a cold disc he hasn't met yet)
+      // (a disc is struck on its carved face, from the floor's side, not by a ball grazing past it from behind)
+      if ((tg.seal != null || tg.cold != null) && this.D && (p.x - tg.x) * (this.D.dig.x - tg.x) + (p.z - tg.z) * (this.D.dig.z - tg.z) < 0) continue;
       if (tg.seal != null && f.c4_digOpen && f.c4_bottom) { tg.done = true; this.openSeal(tg.seal); return true; }
       if (tg.cold != null && f.c4_bottom && !f.c4_seals3) { this.coldHit(tg); return true; }
     }
@@ -244,7 +246,7 @@ export class Dig extends ChapterBase {
       g.audio.play('rumble'); g.camRig.shake(0.3);
       this.story.refreshCast();
       this.chain([['narrator', 'c4_seals_all']], () => { g.updateObjective(); g.save(false); });
-    } else g.save(false);
+    } else { g.updateObjective(); g.save(false); }   // (the count on the HUD follows each disc)
   }
   // a cold disc: a dull thud, and any warm disc already open grinds shut again (the door wants live heat only)
   coldHit(tg) {

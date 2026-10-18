@@ -74,16 +74,23 @@ the carving read out by Ilka → Dallan → chapter 5.
 - The discs answer the ball only once he has reached the bottom and seen them (the first test run showed a ball
   thrown at a crystal mite on the terraces striking a cold disc before Twinsen had met any: a line about a "cold
   disc" out of nowhere).
+  A disc counts only when struck on its face (from the floor's side), so a ball grazing past from behind does not
+  reset anything. The HUD count now follows each disc (before, it stayed at 0/3 until the door opened).
 - Recovery: every disc and the cold count are saved; a reset saves; Save & quit → Continue and death → Retry restore
   open discs, glow and ball targets. Old saves keep working (warm discs keep the ids `c4_seal0–2`; the cold ones are
   separate targets, so tests/playthrough/07 still plays). The glow material is now per disc.
 
-Files: src/game/story/dig.js, src/game/text/ch4.js, src/game/desert.js (the dig's bottom only), tests/chapter4.mjs.
+Files: src/game/story/dig.js, src/game/text/ch4.js, src/game/desert.js (the dig's bottom only: five discs, crystal
+batch, one point cloud of dust motes, the crack), tests/chapter4.mjs, tests/playthrough/07-dig.mjs (its seals step:
+warm targets from the face side, passes repeat after a stray cold hit).
 
 ## Tested vs judged
 
-- Tested (tests/chapter4.mjs, by input from the open gate): see QA in the task report; plus chapter5, desert-life,
-  stability.
+- Tested: tests/chapter4.mjs, 18 checks, by input with the player harness from the open gate (Ilka at the rim, the
+  crack line before the discs line, the carving over the door, warm opens, cold resets with line then toast, Ilka's
+  stronger hint, Save & quit → Continue with two open, death → Retry with one open, door, journal, the temple line,
+  chapter 5). The steps before the gate still use the older teleport helpers (ISO). Also chapter5, desert-life,
+  stability, and playthrough segment 07 from the chapter-4 start save (REV-TY-4/save-06.json, origin rewritten).
 - **Not tested:** a first-time player. The test is played by an agent who knows the solution, so whether the
   crystals read as "warm" and whether the crack → discs link is noticed are design judgments awaiting a fresh
   player. GPU look (software rendering only), sound by ear.
