@@ -523,8 +523,8 @@ to: nobody here can hear the result.
 | Timing | a syllable per ~4 typed letters, all scheduled at once when frames bunch | same trigger (16 syllables on the test line vs 15), kept on a voice clock: never in the past, never queued > 0.22 s behind the text | voices.mjs |
 | Stops cleanly | grains ran out by themselves | skip (E mid-line), close, new speaker, cinematic pause: silent within 0.25 s, sources ended; nothing resumes after a pause | voices.mjs (in game, analyser on the voice bus) |
 | Cost | ~7 nodes per syllable (108 per test line) | 2 pooled filter chains built once; 4 nodes per line after the first (6 for a bee); nothing per frame | voices.mjs, measurements.json "nodesPerLine" |
-Regressions (port 8196, one browser at a time): voices 24/24, opening 16/16, townlife 36/36, stability 16/16, audio 5/5,
-no page errors. Not verified: how the voices sound to a listener (pleasantness, recognisability by ear).
+Regressions (port 8196, one browser at a time) after merging origin a1ff730 (OPEN-2's voiced opening subtitles): voices 24/24,
+opening 22/22 ("every spoken line babbles in its speaker's voice" included), townlife 36/36, stability 16/16, audio 5/5, no page errors. Not verified: how the voices sound to a listener (pleasantness, recognisability by ear).
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
