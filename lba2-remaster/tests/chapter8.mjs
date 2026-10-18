@@ -67,6 +67,7 @@ log('farms', await ev(() => { for (const id of ['farmer1', 'farmer2', 'farmer3']
 await shot('C8-03-farms.png');
 log('lighthouse', await ev(() => { const G = game; T.tp(-66, -53); for (let i = 0; i < 60 && !G.flags.c8_relay; i++) { G.step(0.1); T.talkAll(); } G.step(1); return [G.flags.c8_relay, G.hero.body, T.obj()]; }));
 log('control', await ev(() => { const r = T.door(game.world.station.control.door); game.step(0.5); T.talkAll(); return [r, game.flags.c8_vesk, T.obj()]; }));
-log('ship', await ev(() => { T.out(); const F = game.world.pierStart; T.useAt(F.x - 6, F.z); game.step(1.5); T.talkAll(); return [game.flags.c8_done, game.flags.chapterKey, game.room?.id ?? 'out']; }));
+// (PLANET-1: the project ships leave from Citadel Spaceport; Zeelich is another planet)
+log('ship', await ev(() => { T.out(); const p = game.world.spaceport.pad; T.tp(p.x - 4.2, p.z, Math.PI / 2); const it = game.findInteractable()?.kind; T.tap('KeyE'); game.step(1.5); T.talkAll(); const L = game.rooms.zeelich.spaceport.landing, h = game.hero; return [it, game.flags.c8_done, game.flags.chapterKey, game.room?.id ?? 'out', +Math.hypot(h.pos.x - L.x, h.pos.z - L.z).toFixed(1)]; }));
 console.log(errs.length ? errs.join('\n') : 'no errors');
 await browser.close();

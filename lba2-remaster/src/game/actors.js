@@ -158,7 +158,8 @@ export class Hero extends Actor {
     const mvDir = this.moveDir(mv, g);
     this.wantsMove = Math.hypot(mv.x, mv.y) > 0.3;
     // the pad has no separate interact button: A talks / opens whenever something is in reach, in every behaviour
-    const padTalk = !wheel && input.padAction && input.pressed('action') && this.actT <= 0 && !this.combat.busy && !!g.findInteractable();
+    const jet = g.gadgets?.jet;   // Baldino's hop-pack (jetpack.js): in the air on it, A and E don't talk or use
+    const padTalk = !wheel && input.padAction && input.pressed('action') && this.actT <= 0 && !this.combat.busy && !jet?.air && !!g.findInteractable();
     const cs = this.combat.update(dt, input, mvDir, {
       blocked: wheel || this.hiding || this.hurtT > 0.15 || this.actT > 0 || g.trans || !this.hasBall && this.noBehaviours,
       actionAttack: beh === 'aggressive' && !wheel && !padTalk && input.pressed('action'),
@@ -222,8 +223,10 @@ export class Hero extends Actor {
     this.rig.roll = clamp(turning * Math.min(1, Math.hypot(this.vel.x, this.vel.y) / 4) * 0.12, -0.15, 0.15);
     this.rig.turn = turning;
 
+    jet?.step(this, dt, input, wx, wz);   // (the pack's thrust and steering, before the move and the fall)
     this.prevPos.copy(this.pos);
     P.move(this, this.vel.x * dt, this.vel.y * dt);
+    jet?.clearance(this);
     this.applyKnockback(dt);
     this.keepApart(dt);
     const wasAir = !this.onGround;
@@ -266,7 +269,7 @@ export class Hero extends Actor {
         if (!g.tryInteract() && this.onGround) this.hop();
       }
     }
-    if (!wheel && input.pressed('interact') && this.actT <= 0 && !this.combat.busy && !g.tryInteract() && beh === 'normal' && this.onGround) this.hop();
+    if (!wheel && input.pressed('interact') && this.actT <= 0 && !this.combat.busy && !jet?.air && !g.tryInteract() && beh === 'normal' && this.onGround) this.hop();
 
     if (this.hasSword || this.swordMesh) this.showSword(this.combat.weapon === 'sword');
     // animation state
@@ -280,7 +283,7 @@ export class Hero extends Actor {
     else if (this.hurtT > 0) anim = 'hurt';
     else if (cs.upper && moving) anim = this.speed > 3.6 ? 'run' : 'walk';
     else if (cs.anim) anim = cs.anim;
-    else if (!this.onGround || this.sliding) anim = this.vy > 0.5 ? 'jump' : 'fall';
+    else if (!this.onGround || this.sliding) anim = jet?.firing ? 'jet' : this.vy > 0.5 ? 'jump' : 'fall';
     else if (this.hiding) anim = 'hide';
     else if (this.speed > 0.3) anim = beh === 'discreet' ? 'sneak' : this.speed > 3.6 ? 'run' : 'walk';
     else if (Math.abs(turning) > 0.5) anim = turning > 0 ? 'turnR' : 'turnL';

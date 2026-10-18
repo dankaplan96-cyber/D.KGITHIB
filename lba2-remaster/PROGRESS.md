@@ -613,6 +613,27 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - Tests: zeelich-life 38/38, chapter10 DONE ×3 + forced ASSISTED (exit 2), townlife, workshop, stability, chapter2,
   chapter9, prologue, chapter1, chapter3, chapter4, desert-life (QA.md). Not verified: chapters 5–8 and 11+ after
   the talk change, feel by hand, GPU.
+## Session: the story's crossings to Zeelich by spaceship (PLANET-1, 0.29.2)
+- The user: "Twinsun and Zeelich are two separate planets, so the crossing between them is a spaceship." Every
+  crossing found and made a spaceship trip:
+  - Chapter 2 → 3: Baldino radios Doran the start code of the project's ship at Citadel Spaceport (passenger flights
+    grounded, project crews only: the exception). Doran agrees at the harbour and goes ahead; Twinsen walks to the
+    spaceport and boards (E at the pad, or Doran by the walkway). Chapter 3 opens on Zeelich Spaceport's deck; the
+    project guard meets the ship there and confiscates the plan. The dock's sky-ferry model is kept out of sight.
+  - Chapter 2's beam: Vesk's transit beam lifts him to his ship (lines and journal), not across the planets.
+  - Chapter 3 → 4: Doran flies Twinsen home to Citadel Spaceport and takes the project's ferry south (lines only;
+    chapter 4 still opens at Kesh's pier).
+  - Chapter 8 → 9: the project ships board at Citadel Spaceport (the queue on its bridge, a marker on the pad); no
+    ship at the harbour's quay; chapter 9 opens on Zeelich Spaceport's deck.
+  - Chapter 10: Hesk's glider flies Twinsun only (Citadel, Desert Island, the Hamalayi); no Hesk or glider on
+    Zeelich; between the planets the spaceship (travel.js). Hesk's radio line and the objective say so.
+  - Signs and boards: the harbour sign "Ferry to Desert Island"; the harbour's timetable DESERT ISLAND only; the
+    spaceport's grounded note "Project crews only"; Nara's crates wait for the project's ship; Xil's cargo came on a
+    project ship and sits on the barge; the evacuation plan's "Ship capacity: 30%"; the demo-end text.
+- Docs: STORY_BIBLE, WORLD_MAP, docs/TWELVE_YEARS.md, PROJECT_BRIEF say plainly: Twinsun ⇄ Zeelich by spaceship only.
+- Tests: tests/travel.mjs gains the PLANET-1 checks (route data + the chapter 2, 8 and 10 crossings by input);
+  chapter1/chapter8/chapter10 tests and playthrough segments 05/11 follow the new boarding points.
+  Evidence: docs/lba3-visual/evidence/PLANET-1/.
 
 ## MAP-1: the Holomap and the minimap from the world (status REVIEW)
 - src/game/mapdraw.js draws each region's base map once from the game's own data (terrain heights, colours and splats; physics bricks

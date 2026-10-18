@@ -116,6 +116,31 @@ export class HUD {
     el.classList.toggle('show', this.weaponShowT > 0 || !!engaged);
     if (this.flashT > 0) { this.flashT -= 1 / 60; if (this.flashT <= 0) el.classList.remove('flash'); }
   }
+  // Baldino's hop-pack (jetpack.js): a slim charge gauge beside Twinsen while it is in use or refilling (blue; amber
+  // when low; red and shaking when empty; a cross when it can't fire here). Out of play it steps aside (busy).
+  jet(s) {
+    let el = this._jetEl;
+    if (!el) {
+      el = this._jetEl = document.createElement('div');
+      el.id = 'jetgauge';
+      el.style.cssText = 'position:fixed;width:9px;height:46px;border:2px solid #2a1e10;border-radius:5px;background:rgba(20,16,10,.55);box-shadow:0 0 0 1px rgba(255,230,170,.5);pointer-events:none;opacity:0;transition:opacity .25s;z-index:5';
+      el.innerHTML = '<i style="position:absolute;left:0;right:0;bottom:0;border-radius:3px;background:#4ab8ff"></i><b style="position:absolute;left:-14px;top:-18px;width:37px;text-align:center;font:800 13px sans-serif;color:#ff6a4a;text-shadow:0 1px 2px #000"></b>';
+      this.el.appendChild(el);
+    }
+    const on = !!s?.show && !this.el.classList.contains('busy');
+    if (on !== this._jetOn) { this._jetOn = on; el.style.opacity = on ? '1' : '0'; }
+    if (!on) return;
+    const v = (this._jv ??= new Vector3()).set(s.pos.x, s.pos.y + 1.1, s.pos.z).project(this.game.camera);
+    el.style.left = Math.round(((v.x + 1) / 2) * innerWidth + 34) + 'px';
+    el.style.top = Math.round(((1 - v.y) / 2) * innerHeight - 23) + 'px';
+    const fill = el.firstChild, k = Math.max(0, Math.min(1, s.fuel));
+    fill.style.height = (k * 100).toFixed(1) + '%';
+    fill.style.background = k < 0.02 ? '#ff3a2a' : s.low ? '#ffa030' : '#4ab8ff';
+    const shake = k < 0.02 && s.why === 'empty' ? Math.sin(performance.now() / 30) * 1.5 : 0;
+    el.style.transform = shake ? 'translateX(' + shake.toFixed(1) + 'px)' : '';
+    const mark = s.why === 'roof' || s.why === 'ground' ? '✕' : '';
+    if (el.lastChild.textContent !== mark) el.lastChild.textContent = mark;
+  }
   wpName(h, w) { return t(w === 'blowgun' && h.arms?.blowtron ? 'wp_blowtron' : 'wp_' + w); }
   weaponFlash() { const el = $('#weapon'); el?.classList.add('flash'); this.flashT = 0.25; this.weaponShowT = 1.5; }
   // the selector ring: open while held; returns the chosen weapon when it closes
@@ -187,6 +212,7 @@ export class HUD {
     this.el.classList.toggle('busy', on);
     if (!on) return;
     this.prompt(null);
+    if (this._jetOn) this.jet({ show: false });
     if (this.wselOpen) { this.wselOpen = false; $('#wsel')?.classList.add('hidden'); }
   }
 

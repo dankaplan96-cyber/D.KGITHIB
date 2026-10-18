@@ -3,7 +3,7 @@
 Update before a handoff or a session limit. Do not mark a task done twice after resuming: check BACKLOG.md first.
 
 ## Build
-- Game version 0.28.1 (desktop/package.json; 0.26.1 = TY-3-FIX, 0.27.0 = TY-4 Zeelich twelve years on, 0.28.0 = WPN-1 weapons and gadgets, 0.28.1 = TY-5-FIX; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
+- Game version 0.30.0 (desktop/package.json; 0.30.0 = EQ-1 Baldino's hop-pack; 0.26.1 = TY-3-FIX, 0.27.0 = TY-4 Zeelich twelve years on, 0.28.0 = WPN-1 weapons and gadgets, 0.28.1 = TY-5-FIX; was 0.24.0 when this section was written) on branch `ccr-adf00ea7-37ebl3`: the stabilization pass (0.22.1,
   D1–D18, see QA.md), then Zeelich's islands and Citadel Spaceport.
 - Milestone (PRODUCTION.md): 1 — Stabilize.
 
@@ -71,6 +71,12 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Travel (src/game/travel.js): Zeelich separate — Citadel Spaceport ⇄ Zeelich Spaceport (ours) by spaceship only;
   Esmer shuttles between Zeelich's 12 places only; on Twinsun the ferry and three glider fields; gates by chapter.
   The Holomap per planet with his dot (VP-9). tests/travel.mjs, tests/zislands.mjs, tests/spaceport.mjs.
+## Done after (PLANET-1, 0.29.2; status REVIEW)
+- The story's crossings to Zeelich are spaceship flights (the user's decision): chapter 2 → 3 the project's ship from
+  Citadel Spaceport (Doran, Baldino's start code; arrival on Zeelich Spaceport's deck), chapter 3 → 4 home by ship
+  then the ferry south, chapter 8 → 9 the project ships board at the spaceport, chapter 10 the spaceship between the
+  planets and Hesk's glider on Twinsun only. The harbour's timetable and sign: Twinsun sailings only. Vesk's beam lifts
+  him to his ship. tests/travel.mjs PLANET-1 checks; evidence docs/lba3-visual/evidence/PLANET-1/.
 
 ## Done after the pass (0.28.1)
 - TY-5-FIX (REV-TY-5's items): the ball way keeps street lines (also after a Continue from a mid-fall save); Snuff is
@@ -78,6 +84,15 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   asked again, Snuff and Bzizz follow the phase; a room search under his feet no longer takes the prompt from
   a person he faces (the lighthouse dial vs Zoé), and chapter10.mjs no longer depends on Zoé's facing (DONE ×3, forced
   ASSISTED exit 2). N2 (the pump's camera) left open: no camera zones exist. QA.md "REV-TY-5 fixes"; status REVIEW.
+
+## Done after (0.30.0, EQ-1; status REVIEW)
+- Baldino's hop-pack (src/game/jetpack.js): from chapter 10 on its peg by his workshop door; Athletic, jump and hold;
+  one storey (2.4 m over the take-off ground and the ground under him), 2.2 s of thrust refilled on firm ground, needs
+  ground within ~3 m under it (never over a drop or the sea), open sky only, feet must clear a fence, no rising into
+  anything overhead, doors wait until he lands, a soft-landing cushion. Baldino's test step behind his workshop (a tin:
+  a clover and 10 kashes); the old mill's stones two at a time (its relay still needs the brake). Saves never hold a
+  position in the air; a save over the sea or inside something loads at the region's spawn. tests/jetpack.mjs; QA.md
+  "Baldino's hop-pack (EQ-1)"; STORY_BIBLE.md "Baldino's hop-pack".
 
 ## Done after (MAP-1; status REVIEW)
 - The Holomap and the minimap drawn from the built world (src/game/mapdraw.js; the user: "the map isn't detailed enough and it's
@@ -89,7 +104,7 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   and chapter 1; invisible blockers are not flagged on colliders, so a long invisible wall reads as a wall/floor on the map.
 
 ## Next exact task
-Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
+Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
 ## Resume
 Saves made through the game's own Save & quit live in the session scratchpad (not in the repo; regenerate by

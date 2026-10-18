@@ -6,7 +6,7 @@ Object.assign(STR.en, {
   p_rope: 'Pick Up', p_desk: 'Search', p_code: 'Enter Code', p_carving: 'Inspect', p_ride: 'Ride',
 
   // arrival
-  c4_arrive: 'Two days south of Zeelich, the light-ferry slides into the shallows of Desert Island.',
+  c4_arrive: 'Back on Twinsun, Doran trades the ship for the project\'s ferry. Two days south of Citadel, it slides into the shallows of Desert Island.',
   c4_doran_1: "Kesh, the only village on the island. I'll wait at the pier. Don't let the sun cook your brain.",
   c4_tw_arrive: "A professor the project sacked. Someone in the village must know her.",
 
