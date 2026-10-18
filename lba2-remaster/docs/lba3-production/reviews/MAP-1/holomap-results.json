@@ -1,0 +1,274 @@
+{
+ "rows": [
+  {
+   "region": "citadel",
+   "state": "map",
+   "hero": {
+    "x": 799.0645137543562,
+    "y": 265.29683222392,
+    "region": "citadel",
+    "planet": "twinsun",
+    "angle": 1.0188790204786395,
+    "inside": null
+   },
+   "expect": [
+    799.0645137543562,
+    265.29683222392
+   ],
+   "heroCls": 1,
+   "facing": [
+    1.019,
+    1.019
+   ],
+   "land": 975,
+   "landOK": 975,
+   "sea": 2886,
+   "seaOK": 2882,
+   "labels": [
+    "Town Square",
+    "Twinsen's house",
+    "Harbour",
+    "Lighthouse",
+    "Project station",
+    "Whispering Cliffs",
+    "Spaceport"
+   ],
+   "overlaps": 0,
+   "outside": 0,
+   "title": "Holomap · Twinsun · Citadel Island",
+   "base": [
+    768,
+    260,
+    658.1000000042841
+   ]
+  },
+  {
+   "region": "desert",
+   "state": "map",
+   "hero": {
+    "x": 446.16813342486637,
+    "y": 333.35346586230906,
+    "region": "desert",
+    "planet": "twinsun",
+    "angle": 1.204277183876087,
+    "inside": null
+   },
+   "expect": [
+    446.16813342486637,
+    333.35346586230906
+   ],
+   "heroCls": 1,
+   "facing": [
+    1.204,
+    1.204
+   ],
+   "land": 1482,
+   "landOK": 1482,
+   "sea": 2404,
+   "seaOK": 2402,
+   "labels": [
+    "Kesh",
+    "Oasis",
+    "Pier",
+    "Ilka's camp",
+    "Research post",
+    "The dig",
+    "Condenser hall",
+    "Ferry",
+    "Glider"
+   ],
+   "overlaps": 0,
+   "outside": 0,
+   "title": "Holomap · Twinsun · Desert Island",
+   "base": [
+    768,
+    250,
+    725.1999999992549
+   ]
+  },
+  {
+   "region": "hamalayi",
+   "state": "map",
+   "hero": {
+    "x": 693.3576616553584,
+    "y": 514.737007411334,
+    "region": "hamalayi",
+    "planet": "twinsun",
+    "angle": 1.584783560988451,
+    "inside": null
+   },
+   "expect": [
+    693.3576616553584,
+    514.737007411334
+   ],
+   "heroCls": 1,
+   "facing": [
+    1.585,
+    1.585
+   ],
+   "land": 2453,
+   "landOK": 2453,
+   "sea": 0,
+   "seaOK": 0,
+   "labels": [
+    "Foothills",
+    "Lhar",
+    "Monastery",
+    "Observatory"
+   ],
+   "overlaps": 0,
+   "outside": 0,
+   "title": "Holomap · Twinsun · The Hamalayi",
+   "base": [
+    768,
+    230,
+    529.3999999975786
+   ]
+  },
+  {
+   "region": "zeelich",
+   "state": "map",
+   "hero": {
+    "x": 671.2677048038205,
+    "y": 468.1121456104688,
+    "region": "zeelich",
+    "planet": "zeelich",
+    "angle": 5.916666164260779,
+    "inside": null
+   },
+   "expect": [
+    671.2677048038205,
+    468.1121456104688
+   ],
+   "heroCls": 2,
+   "facing": [
+    5.917,
+    5.917
+   ],
+   "land": 847,
+   "landOK": 845,
+   "sea": 3117,
+   "seaOK": 3116,
+   "labels": [
+    "Esmer street",
+    "Ferry dock",
+    "Project depot",
+    "Drill platform",
+    "Zeelich Spaceport",
+    "Windmills",
+    "Dog yard",
+    "Baldino's workshop",
+    "Council house",
+    "Spaceship",
+    "Shuttle"
+   ],
+   "overlaps": 0,
+   "outside": 0,
+   "title": "Holomap · Zeelich · Zeelich: the spaceport island",
+   "base": [
+    768,
+    155.4,
+    910.9999999990687
+   ]
+  },
+  {
+   "region": "isle_tralu",
+   "state": "map",
+   "hero": {
+    "x": 604.9311015899129,
+    "y": 342.02518581108075,
+    "region": "isle_tralu",
+    "planet": "zeelich",
+    "angle": 4.716984562001324,
+    "inside": null
+   },
+   "expect": [
+    604.9311015899129,
+    342.02518581108075
+   ],
+   "heroCls": 1,
+   "facing": [
+    4.717,
+    4.717
+   ],
+   "land": 277,
+   "landOK": 277,
+   "sea": 3564,
+   "seaOK": 3563,
+   "labels": [
+    "Weigh beam",
+    "Quay",
+    "Shuttle"
+   ],
+   "overlaps": 0,
+   "outside": 0,
+   "title": "Holomap · Zeelich · Tralu Rock",
+   "base": [
+    685,
+    137,
+    207.39999999571592
+   ]
+  },
+  {
+   "region": "isle_otringal",
+   "state": "map",
+   "hero": {
+    "x": 692.8930393574577,
+    "y": 341.01245384533456,
+    "region": "isle_otringal",
+    "planet": "zeelich",
+    "angle": 5.865714140847359,
+    "inside": null
+   },
+   "expect": [
+    692.8930393574577,
+    341.01245384533456
+   ],
+   "heroCls": 1,
+   "facing": [
+    5.866,
+    5.866
+   ],
+   "land": 819,
+   "landOK": 819,
+   "sea": 2676,
+   "seaOK": 2666,
+   "labels": [
+    "Grand hall",
+    "Fountain",
+    "Shuttle"
+   ],
+   "overlaps": 0,
+   "outside": 0,
+   "title": "Holomap · Zeelich · Otringal",
+   "base": [
+    768,
+    212.3,
+    317.699999996461
+   ]
+  }
+ ],
+ "mm": {
+  "visible": true,
+  "avg": 0.21924999999813735,
+  "p50": 0,
+  "p95": 0.20000000018626451,
+  "max": 61.5,
+  "mode": "north"
+ },
+ "small": {
+  "frame": [
+   10,
+   10,
+   620,
+   340
+  ],
+  "fits": true,
+  "overlaps": 0,
+  "labels": 7,
+  "canvas": [
+   600,
+   264
+  ]
+ }
+}
