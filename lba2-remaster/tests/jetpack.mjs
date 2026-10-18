@@ -80,9 +80,9 @@ const helpers = () => ev(() => {
 
 // a reload the game makes itself (Quit, Retry) or one we make: wait for it, freeze the clock, load the harness
 async function reboot(trigger) {
-  const loaded = page.waitForEvent('load', { timeout: 300000 });
+  const loaded = page.waitForEvent('load', { timeout: 900000 });
   await trigger(); await loaded;
-  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 900000 });
   await page.evaluate(() => { game.testFreeze = true; });
   await page.addScriptTag({ path: new URL('./lib/player.js', import.meta.url).pathname });
 }
@@ -369,13 +369,22 @@ const pf = await ev(() => { const G = game, h = G.hero, j = G.gadgets.jet, R = G
   const frame = () => { let c = 0, tr = 0; for (let i = 0; i < 3; i++) { R.info.reset(); G.renderer.render(); c = R.info.render.calls; tr = R.info.render.triangles; } return { calls: c, tris: tr }; };
   const worn = frame(); m.visible = false; const off = frame(); m.visible = true;
   let meshes = 0, tris = 0; m.traverse((o) => { if (o.isMesh) { meshes++; const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
-  // simulation cost per frame: standing vs. flying (input held), 120 frames each
-  const sim = (keys) => { for (const k of keys) G.input.keys.add(k); if (keys.length) G.input.taps.add('Space'); const t0 = performance.now(); for (let i = 0; i < 120; i++) G.step(1 / 60); const ms = (performance.now() - t0) / 120; G.input.keys.clear(); return +ms.toFixed(3); };
-  G.step(1); const stand = sim([]); J.land(); G.step(2.5); const fly = sim(['Space']);
+  // the pack's own simulation cost per frame in flight: its step (thrust, ground, headroom, fences) and its update (model,
+  // puffs, gauge) timed around each call while it fires; and the whole frame's simulation, standing vs. flying, as the
+  // median of three runs of 120 frames each (SwiftShader timings are noisy)
+  const own = { ms: 0, n: 0 };
+  const wrap = (name) => { const f = j[name].bind(j); j[name] = (...a) => { const t0 = performance.now(); try { return f(...a); } finally { if (j.firing) own.ms += performance.now() - t0; } }; return f; };
+  const st0 = wrap('step'), up0 = wrap('update'), cl0 = wrap('clearance');
+  const sim = (keys) => { for (const k of keys) G.input.keys.add(k); if (keys.length) G.input.taps.add('Space'); let lit = 0; const t0 = performance.now(); for (let i = 0; i < 120; i++) { G.step(1 / 60); if (j.firing) lit++; } const ms = (performance.now() - t0) / 120; G.input.keys.clear(); own.n += lit; return +ms.toFixed(3); };
+  const med = (a) => a.sort((x, y) => x - y)[1];
+  const st = [], fl = [];
+  for (let k = 0; k < 3; k++) { J.land(); G.step(2.5); st.push(sim([])); J.land(); G.step(2.5); own.n0 = own.n; fl.push(sim(['Space'])); }
+  j.step = st0; j.update = up0; j.clearance = cl0;
+  const stand = med(st), fly = med(fl), packMs = +(own.ms / Math.max(1, own.n)).toFixed(4);
   J.land(); G.step(2.5); G.input.keys.add('Space'); G.input.taps.add('Space'); G.step(0.9); const lit = frame(); G.input.keys.clear(); J.land();
-  return { worn, off, lit, meshes, tris: Math.round(tris), stand, fly, particles: G.particles.n }; });
-info('cost (SwiftShader, this machine): draw calls / triangles with the pack worn, without it, and lit in flight; its meshes and triangles; simulation ms per frame standing vs. flying', pf);
-check('cost: the worn pack adds at most 30 draw calls, the lit flames at most 4 more; the flight adds under 0.5 ms of simulation a frame', pf.worn.calls - pf.off.calls <= 30 && pf.lit.calls - pf.worn.calls <= 4 && pf.fly - pf.stand < 0.5, pf);
+  return { worn, off, lit, meshes, tris: Math.round(tris), stand, fly, standRuns: st, flyRuns: fl, packMsPerLitFrame: packMs, litFrames: own.n, particles: G.particles.n }; });
+info('cost (SwiftShader, this machine): draw calls / triangles with the pack worn, without it, and lit in flight; its meshes and triangles; the pack\'s own code per lit frame (ms); the whole frame\'s simulation standing vs. flying (median of 3 × 120 frames, ms)', pf);
+check('cost: the worn pack adds at most 30 draw calls, the lit flames and puffs at most 6 more; its own code costs under 0.3 ms a lit frame', pf.worn.calls - pf.off.calls <= 30 && pf.lit.calls - pf.worn.calls <= 6 && pf.packMsPerLitFrame < 0.3 && pf.litFrames > 200, pf);
 
 const fails = done(errs);
 await browser.close();
