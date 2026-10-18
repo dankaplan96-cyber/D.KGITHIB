@@ -634,3 +634,11 @@ SwiftShader (CPU rendering); not measured on a real GPU.
 - Tests: tests/travel.mjs gains the PLANET-1 checks (route data + the chapter 2, 8 and 10 crossings by input);
   chapter1/chapter8/chapter10 tests and playthrough segments 05/11 follow the new boarding points.
   Evidence: docs/lba3-visual/evidence/PLANET-1/.
+
+## MAP-1: the Holomap and the minimap from the world (status REVIEW)
+- src/game/mapdraw.js draws each region's base map once from the game's own data (terrain heights, colours and splats; physics bricks
+  as floors, buildings, walls and trees; place names from the regions' fields); hud.js draws it with zoom/pan, labels placed without
+  overlaps, Twinsen's arrow, objectives, doors used, travel points, compass, scale, the planet inset, the room's plan indoors.
+- Minimap: north-up or turning with the camera (Settings → Minimap), in every region and indoors.
+- tests/holomap.mjs (Citadel, Desert Island, the Hamalayi, Zeelich, Tralu Rock, Otringal; input by mouse, keys, pad, touch).
+  Not verified: a real gamepad and touch screen by hand, GPU canvas cost on the user's Vega 8.

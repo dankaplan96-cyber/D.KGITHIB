@@ -85,6 +85,14 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   a person he faces (the lighthouse dial vs Zoé), and chapter10.mjs no longer depends on Zoé's facing (DONE ×3, forced
   ASSISTED exit 2). N2 (the pump's camera) left open: no camera zones exist. QA.md "REV-TY-5 fixes"; status REVIEW.
 
+## PERF-IGPU (status REVIEW, branch worktree-agent-a079faebfb0eeef59)
+- Black frames from the automatic resolution fixed (fixed canvas and targets; tests/dynres.mjs). Precompile into the
+  composer's target, shadow depth programs warmed, preset changes wait for their shaders; Low preset reworked and
+  auto-picked on Vega/Intel HD-UHD; trees/rocks batched, static shadow casters batched per cell, Kit colour merge.
+  Numbers: QA.md "Performance"; VISUAL_REMASTER "Performance on integrated GPUs".
+- Open: town.js/island.js merges (VP-10's files; VISUAL_REMASTER "Remaining" 3) for Medium street ≤ 300; the
+  user's benchmark on the laptop (GPU frame rate, startup on D3D11) is the judge.
+
 ## Done after (0.30.0, EQ-1; status REVIEW)
 - Baldino's hop-pack (src/game/jetpack.js): from chapter 10 on its peg by his workshop door; Athletic, jump and hold;
   one storey (2.4 m over the take-off ground and the ground under him), 2.2 s of thrust refilled on firm ground, needs
@@ -93,13 +101,23 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   a clover and 10 kashes); the old mill's stones two at a time (its relay still needs the brake). Saves never hold a
   position in the air; a save over the sea or inside something loads at the region's spawn. tests/jetpack.mjs; QA.md
   "Baldino's hop-pack (EQ-1)"; STORY_BIBLE.md "Baldino's hop-pack".
-## PERF-IGPU (status REVIEW, branch worktree-agent-a079faebfb0eeef59)
-- Black frames from the automatic resolution fixed (fixed canvas and targets; tests/dynres.mjs). Precompile into the
-  composer's target, shadow depth programs warmed, preset changes wait for their shaders; Low preset reworked and
-  auto-picked on Vega/Intel HD-UHD; trees/rocks batched, static shadow casters batched per cell, Kit colour merge.
-  Numbers: QA.md "Performance"; VISUAL_REMASTER "Performance on integrated GPUs".
-- Open: town.js/island.js merges (VP-10's files; VISUAL_REMASTER "Remaining" 3) for Medium street ≤ 300; the
-  user's benchmark on the laptop (GPU frame rate, startup on D3D11) is the judge.
+
+## Done after (MAP-1; status REVIEW)
+- The Holomap and the minimap drawn from the built world (src/game/mapdraw.js; the user: "the map isn't detailed enough and it's
+  hard to find your way with it"): terrain look and heights, coast, cliffs, paths and streets from the splats, every brick as floor or
+  building, trees, place names from each region's own fields, Twinsen's facing, objective stars, doors used (flags.mapDoors), travel
+  points, compass and scale; zoom/pan by mouse, keys, pad and touch; indoors the room's name and plan; a minimap setting (north-up /
+  turns with camera). tests/holomap.mjs; evidence docs/lba3-production/reviews/MAP-1/. The map follows WORLD-SHAPE's changes by itself.
+- Hooks for others: chapters 2–12 give no objective markers (story/*.js markers()), so the map can mark an objective only in the prologue
+  and chapter 1; invisible blockers are not flagged on colliders, so a long invisible wall reads as a wall/floor on the map.
+
+## Done after (VP-10; status REVIEW, branch worktree-agent-a9f2b2a9c69e4dcf2)
+- Scenery between the camera and Twinsen as in LBA2 (the user: "like the original game"): nothing fades; the houses, the
+  fortress, the project buildings, the spaceport terminal/dome and Nell's lean-to give the camera their shapes
+  (src/engine/occlude.js) and LBA2's SearchCameraPos lifts the view over them (1997 look: on each cut; remaster: on top
+  of CTRL-1's follow, eased). The silhouette now reads over every roof (sky cyan at 0.5). tests/occluders.mjs: a house
+  he stands at never vanishes; behind one he is always in view or drawn by the silhouette. PERF-IGPU's open item done:
+  town.js/island.js merges, Medium street 324 → 274. Evidence docs/lba3-visual/evidence/VP-10/.
 
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

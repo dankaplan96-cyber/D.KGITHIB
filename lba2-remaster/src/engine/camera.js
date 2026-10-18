@@ -1,20 +1,27 @@
 // Cameras.
 //
-// "lba" reproduces LBA2's exterior camera (see PERSO.CPP / INTEXT.CPP in the
-// GPL source): the view stays still while Twinsen walks around in it. When he
-// gets close to the edge of the screen (Xp<80 || Xp>539 || Yp<80 || Yp>429 on
-// a 640x480 screen) the camera re-centres on a point DISTANCE_VISEE ahead of
-// him, keeping its angle. Enter re-centres *behind* him. Two views exist:
-// AlphaCam 300 or 530 (of 4096) at distance 10500 or 17000, focal 600.
-// The remaster glides between shots instead of cutting (the 1997 look cuts).
-// Scenery in the way (VP-10, src/engine/occlude.js): as in LBA2, each new shot runs SearchCameraPos — the camera
-// keeps its heading and distance and rises over whatever stands between it and Twinsen (nothing fades); the shot
-// keeps that pitch until the next re-centre, which starts again from the view's own. One addition to the 1997 rule:
-// if scenery hides him for a moment mid-shot, the shot re-centres (LBA2 waits for him to reach the screen edge).
+// "lba" follows LBA2's exterior camera (the 2021 GPL source: PERSO.CPP's main loop, INTEXT.CPP CameraCenter): a fixed
+// view angle that never turns with Twinsen; when he gets near the edge of the screen (Xp<80 || Xp>539 || Yp<80 ||
+// Yp>429 on 640×480) it re-centres on a point DISTANCE_VISEE (2500 units, ~2 body heights) ahead of him, keeping its
+// angle; Enter re-centres *behind* him. Two views: AlphaCam 300 or 530 (of 4096) at 10500 or 17000, focal 600.
+//  - 1997 look (`cut`): exactly that, hard cuts (_lbaCuts).
+//  - remaster (CTRL-1): the same rules made continuous (_lba). The angle still never follows his turns (no swing, no
+//    snap: turning on the spot moves nothing); the aim point is DISTANCE_VISEE ahead along the way he really moves,
+//    turning with him gently and held when he stops (so the view stays still, as LBA2's does, while he stands or
+//    shuffles); a dead zone round it keeps small moves from moving the view; a critically damped spring follows (no
+//    lurch, no overshoot, the same at 30 and 60 fps); the height follows the ground under him through its own spring
+//    (stairs and slopes glide, jumps don't bob the view); and he can never leave LBA2's frame box. Enter (or R3)
+//    swings it behind him; hidden behind a wall, a cliff or the lighthouse for a moment, it swings round.
+// Scenery in the way (VP-10, src/engine/occlude.js): nothing fades, as in LBA2. The houses, the fortress, the project
+// buildings, the spaceport terminal and Nell's lean-to give the camera their shapes, and LBA2's SearchCameraPos
+// (3DEXT/MAPTOOLS.CPP) lifts the view's pitch over whatever of them stands between it and Twinsen, keeping its
+// heading and distance: in the 1997 look on each cut, as LBA2 does; in the remaster continuously, eased (≤ 50°/s,
+// ≤ 1.5 rad/s²) and let down only once the way has been clear for a second, while the look-ahead shrinks as the view
+// steepens (LBA2's forced camera). Until the view has risen, the silhouette shows him (characters.js).
 //
 // "free" is a modern third-person orbit with obstacle avoidance.
 import * as THREE from 'three';
-import { clamp, damp, dampAngle } from './math.js';
+import { clamp, damp, dampAngle, angleDiff } from './math.js';
 import { EYE } from './occlude.js';
 
 const UNIT = 1 / 750; // LBA2 world units per metre (hero ≈ 1400 units tall)
@@ -25,9 +32,24 @@ const LBA_VIEWS = [
 ];
 const LBA_FOV = (2 * Math.atan(240 / 600) * 180) / Math.PI; // 43.6°
 const AHEAD = 2500 * UNIT; // DISTANCE_VISEE
+// the remaster's follow (_lba): dead zone half-sizes across / along the view (m), spring rates (1/s), the frame box
+// Twinsen never leaves (NDC, inside LBA2's 80..539 × 80..429 of 640×480 = x −0.75..0.68, y −0.79..0.66)
+const DEAD_R = 1.4, DEAD_F = 1.0, FOLLOW_W = 5, HEIGHT_W = 3.2, LEAD_RATE = 2;
+const BOX = { x0: -0.62, x1: 0.6, y0: -0.66, y1: 0.55 };
+const SWING_V = (60 * Math.PI) / 180, SWING_A = (90 * Math.PI) / 180;   // the view's swing: top speed, ease (rad/s, rad/s²)
+// VP-10: the rise over scenery: top pitch, pitch speed and ease (rad, rad/s, rad/s²), how long the way stays clear
+// before the view comes back down (s)
+const MAX_PITCH = 1.4, RISE_V = (50 * Math.PI) / 180, RISE_A = 1.5, RISE_HOLD = 1.0;
+// critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
+function spring(o, k, target, w, dt) {
+  const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
+  o[k] = target + (e + t1 * dt) * ex;
+  o['v' + k] = (o['v' + k] - w * t1 * dt) * ex;
+}
 
 const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3();
-const MAX_PITCH = 1.4; // (80°: looking almost straight down over a tall wall right behind him)
+// LBA2's forced camera: the look-ahead shrinks with the sine of the pitch above the view's own, to nothing at 90°
+const aheadK = (p, p0) => (p <= p0 + 1e-4 ? 1 : clamp(1 - (Math.sin(p) - Math.sin(p0)) / (1 - Math.sin(p0)), 0, 1));
 
 export class CameraRig {
   constructor(camera, terrain, physics) {
@@ -58,7 +80,11 @@ export class CameraRig {
   recenter() { this.lba.behind = true; }
   shake(s = 0.35) { this.shakeT = Math.max(this.shakeT, s * (this.shakeScale ?? 1)); }
 
-  occluded(t, cp, sp, yaw, maxD, withOcc = true) {
+  // how far along the view from Twinsen before something solid is in the way (`sight`: only what really hides him —
+  // walls, cliffs, big rocks; not trees, posts or rails, which he shows between; the free camera still keeps out of them).
+  // Colliders marked camSkip give the camera their shape as scenery volumes instead (VP-10); `withOcc` tests those too
+  // (the free camera keeps out of them; the LBA view rises over them instead, see _scenePitch)
+  occluded(t, cp, sp, yaw, maxD, sight = false, withOcc = false) {
     if (!this.physics) return maxD;
     const P = this.physics;
     for (let d = 1.2; d <= maxD; d += 0.5) {
@@ -66,7 +92,8 @@ export class CameraRig {
       const z = t.z + Math.cos(yaw) * cp * d;
       const y = t.y + 1.4 + sp * d;
       for (const c of P.near(x, z)) {
-        if (!c.enabled || c.fades || c.camSkip || c.top < y || c.bottom > y) continue; // (camSkip: its shape is in the scenery volumes)
+        if (!c.enabled || c.fades || c.camSkip || c.top < y || c.bottom > y) continue; // (fades: Zeelich's faded houses)
+        if (sight && (c.seeThrough || (c.type === 'cyl' && c.r < 1.5))) continue; // (a tree's crown, a post, a rail)
         if (c.type === 'cyl') {
           if (Math.hypot(x - c.x, z - c.z) < (c.camR ?? c.r) + 0.3) return Math.max(2, d - 0.6);
         } else if (P._inside(c, x, z, 0.3)) return Math.max(2, d - 0.6);
@@ -76,22 +103,21 @@ export class CameraRig {
     return maxD;
   }
 
-  // what hides Twinsen from the camera now: 'scenery' (a registered volume or the terrain: a new LBA2 shot rises
-  // over it), 'collider' (a tree, the lighthouse…: swing round behind him, as before), or null. Hidden = both his
-  // middle and his head are cut off.
-  hiddenBy(hero) {
-    const occ = this.occ?.(), cam = this.cam.position;
-    if (occ) {
-      occ.setUnder(hero);
-      let n = 0;
-      for (const hy of [EYE, 1.45]) if (occ.blocked(cam, _a.set(hero.x, hero.y + hy, hero.z))) n++;
-      if (n === 2) return 'scenery';
+  // VP-10: the pitch at which a camera `dist` from look-at point F (heading yaw) sees Twinsen's middle over the scenery:
+  // LBA2's SearchCameraPos from him, then checked on the view as built (our camera hangs off the look-at point, LBA2's
+  // forced one off Twinsen) and tipped further while the line is still cut. → [pitch, clear]
+  _scenePitch(hero, F, yaw, p0, dist, lookY) {
+    const occ = this.occ?.();
+    if (!occ) return [p0, true];
+    let p = occ.search(hero, yaw, p0, dist, { maxPitch: MAX_PITCH });
+    for (let i = 0; i < 25; i++) {
+      const cp = Math.cos(p);
+      _b.set(F.x + Math.sin(yaw) * cp * dist, lookY + Math.sin(p) * dist, F.z + Math.cos(yaw) * cp * dist);
+      if (!occ.blocked(_b, _a.set(hero.x, hero.y + EYE, hero.z))) return [p, true];
+      if (p >= MAX_PITCH) return [p, false];
+      p = Math.min(MAX_PITCH, p + 0.035);
     }
-    const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
-    _v.set(hero.x, hero.y, hero.z);
-    const toCam = Math.atan2(cam.x - hero.x, cam.z - hero.z);
-    const dHero = Math.hypot(cam.x - hero.x, cam.z - hero.z) / Math.max(cp, 0.1);
-    return this.occluded(_v, cp, sp, toCam, dHero, false) < dHero - 0.5 ? 'collider' : null;
+    return [p, false];
   }
 
   update(dt, focus, heroAngle, moving, input) {
@@ -117,22 +143,131 @@ export class CameraRig {
   }
 
   _lba(dt, hero, heroAngle) {
+    if (this.cut) { this._lbaCuts(dt, hero, heroAngle); return; }
+    const cam = this.cam, L = this.lba, v = LBA_VIEWS[this.view], P = this.physics;
+    cam.fov = LBA_FOV;
+    cam.updateProjectionMatrix();
+    dt = Math.max(dt, 1e-4);
+    // the ground under him (a jump doesn't lift the view); falling further than a jump, it follows him down
+    const groundY = () => Math.max(P ? P.groundAt(hero.x, hero.z, hero.y + 0.3) : hero.y, hero.y - 2.5);
+    // first frame, a new scene, or a jump of more than 4 m (a teleport): start behind him, looking ahead
+    if (!L.init || !L.f || Math.hypot(hero.x - L.last.x, hero.z - L.last.z) > 4) {
+      L.goalYaw = L.yaw = heroAngle + Math.PI;
+      L.lead = { x: Math.sin(heroAngle) * AHEAD, z: Math.cos(heroAngle) * AHEAD };
+      L.f = { x: hero.x + L.lead.x, z: hero.z + L.lead.z, y: groundY(), vx: 0, vz: 0, vy: 0 };
+      L.last = { x: hero.x, z: hero.z }; L.vel = { x: 0, z: 0 }; L.lift = 0; L.pull = 0; L.yawV = 0;
+      L.init = true; L.behind = false; this.hiddenT = 0;
+      // (a new scene starts already risen over the scenery, as LBA2's CameraCenter does: no rise seen through a fade)
+      const [p] = this._scenePitch(hero, L.f, L.yaw, v.pitch, v.dist, L.f.y + 1);
+      this.pitch = L.risePitch = p; L.riseV = 0; L.clearT = 0; this.dist = v.dist;
+    }
+    // the way he really moves (resolved ground velocity, lightly smoothed)
+    {
+      const k = 1 - Math.exp(-10 * dt);
+      L.vel.x += ((hero.x - L.last.x) / dt - L.vel.x) * k; L.vel.z += ((hero.z - L.last.z) / dt - L.vel.z) * k;
+      L.last.x = hero.x; L.last.z = hero.z;
+    }
+    if (L.behind) {
+      // Enter / R3 / hidden: round behind him, aim point straight ahead of his facing (LBA2's CameraCenter(1))
+      L.goalYaw = heroAngle + Math.PI; L.behind = false; L.pull = 1.2;
+      L.lead.x = Math.sin(heroAngle) * AHEAD; L.lead.z = Math.cos(heroAngle) * AHEAD;
+    }
+    const sp = Math.hypot(L.vel.x, L.vel.z);
+    if (sp > 0.6) {
+      // DISTANCE_VISEE ahead along his way (in full from a brisk walk up), swinging round gently when he turns
+      const a = Math.min(1, sp / 1.8) * AHEAD * aheadK(this.pitch, v.pitch), k = 1 - Math.exp(-LEAD_RATE * dt);
+      L.lead.x += ((L.vel.x / sp) * a - L.lead.x) * k; L.lead.z += ((L.vel.z / sp) * a - L.lead.z) * k;
+    }
+    L.pull = Math.max(0, L.pull - dt);
+    // a swing (Enter: round behind him; hidden: just far enough round to see him): eased in and out, at most 60°/s
+    {
+      const d = angleDiff(L.yaw, L.goalYaw), want = clamp(d * 2.2, -SWING_V, SWING_V), a = SWING_A * dt;
+      L.yawV = (L.yawV || 0) + clamp(want - (L.yawV || 0), -a, a);
+      if (Math.abs(d) < 1e-3 && Math.abs(L.yawV) < 1e-3) { L.yaw = L.goalYaw; L.yawV = 0; } else L.yaw += L.yawV * dt;
+    }
+    this.yaw = L.yaw;
+    const F = L.f, rx = Math.cos(L.yaw), rz = -Math.sin(L.yaw), fx = -Math.sin(L.yaw), fz = -Math.cos(L.yaw);
+    // the dead zone, in the view's own axes (across the screen / into it)
+    const ex = hero.x + L.lead.x - F.x, ez = hero.z + L.lead.z - F.z;
+    const er = ex * rx + ez * rz, ef = ex * fx + ez * fz, dr = L.pull > 0 ? 0 : DEAD_R, df = L.pull > 0 ? 0 : DEAD_F;
+    const cr = er - clamp(er, -dr, dr), cf = ef - clamp(ef, -df, df);
+    spring(F, 'x', F.x + rx * cr + fx * cf, FOLLOW_W, dt);
+    spring(F, 'z', F.z + rz * cr + fz * cf, FOLLOW_W, dt);
+    spring(F, 'y', groundY(), HEIGHT_W, dt);
+    this.dist = damp(this.dist, v.dist, 4, dt);
+    // VP-10: risen over the scenery between the view and him (LBA2's SearchCameraPos, here every frame): up as soon as
+    // it is needed, down only after the way has stayed clear for RISE_HOLD; the pitch moves eased, never jerks
+    {
+      const [want, clear] = this._scenePitch(hero, F, L.yaw, v.pitch, this.dist, F.y + 1);
+      L.clear = clear;
+      if (want >= L.risePitch - 1e-3) { L.risePitch = want; L.clearT = 0; }
+      else if ((L.clearT += dt) > RISE_HOLD) L.risePitch = want;
+      const d = L.risePitch - this.pitch, wantV = clamp(d * 2.2, -RISE_V, RISE_V), a = RISE_A * dt;
+      L.riseV += clamp(wantV - L.riseV, -a, a);
+      if (Math.abs(d) < 1e-3 && Math.abs(L.riseV) < 1e-3) { this.pitch = L.risePitch; L.riseV = 0; } else this.pitch += L.riseV * dt;
+    }
+    const cp = Math.cos(this.pitch), sn = Math.sin(this.pitch);
+    const place = () => {
+      const x = F.x + Math.sin(L.yaw) * cp * this.dist, z = F.z + Math.cos(L.yaw) * cp * this.dist;
+      const y = F.y + 1 + sn * this.dist;
+      return [x, y, z];
+    };
+    let [x, y, z] = place();
+    // clear the ground under the camera (risen at once, let down gently: no bob over bumps)
+    const need = Math.max(0, this.terrain.heightAt(x, z) + 1.5 - y, 1.5 - y);
+    L.lift = need > L.lift ? L.lift + (need - L.lift) * (1 - Math.exp(-12 * dt)) : damp(L.lift, need, 2, dt);
+    const pose = () => { cam.position.set(x, y + Math.max(L.lift, need), z); this.look.set(F.x, F.y + 1, F.z); cam.lookAt(this.look); cam.updateMatrixWorld(); };
+    pose();
+    // never out of LBA2's frame box: if he is (a sprint, a fall, a fast lift), the view slides just enough
+    for (let i = 0; i < 3; i++) {
+      _v.set(hero.x, hero.y + 0.9, hero.z).project(cam);
+      const ox = _v.x < BOX.x0 ? _v.x / BOX.x0 : _v.x > BOX.x1 ? _v.x / BOX.x1 : 1;
+      const oy = _v.y < BOX.y0 ? _v.y / BOX.y0 : _v.y > BOX.y1 ? _v.y / BOX.y1 : 1;
+      const o = Math.max(ox, oy);
+      if (!(o > 1.0001) || _v.z > 1) break;
+      const q = Math.min(1, 1 - 1 / o + 0.02);
+      F.x += (hero.x - F.x) * q; F.z += (hero.z - F.z) * q;
+      [x, y, z] = place(); pose();
+    }
+    this.target.copy(hero);
+    // hidden behind something solid for a moment (not the scenery volumes: the view rises over those): round behind him
+    {
+      const toCam = Math.atan2(cam.position.x - hero.x, cam.position.z - hero.z);
+      const dHero = Math.hypot(cam.position.x - hero.x, cam.position.z - hero.z) / Math.max(cp, 0.1);
+      _v.set(hero.x, hero.y, hero.z);
+      L.hideCool = Math.max(0, (L.hideCool || 0) - dt);
+      if (this.occluded(_v, cp, sn, toCam, dHero, true) < dHero - 0.5) this.hiddenT += dt; else this.hiddenT = 0;
+      // hidden for most of a second (and not again for 4 s: passing a tree trunk or two doesn't swing the view about):
+      // the smallest turn of the view, 15° at a time up to 90° either way, that shows him again (none: it stays)
+      if (this.hiddenT > 0.8 && !L.hideCool) {
+        this.hiddenT = 0; L.hideCool = 4;
+        search: for (let k = 1; k <= 6; k++) for (const sg of [1, -1]) {
+          const y2 = L.goalYaw + sg * k * (Math.PI / 12);
+          if (this.occluded(_v, cp, sn, y2, dHero, true) >= dHero - 0.5) { L.goalYaw = y2; break search; }
+        }
+      }
+    }
+  }
+
+  // LBA2's own exterior camera, as in 1997: a still view, a cut when he leaves the frame box (the 1997 look). Each new
+  // shot runs SearchCameraPos (VP-10): over the scenery in the way, keeping its heading and distance.
+  _lbaCuts(dt, hero, heroAngle) {
     const cam = this.cam, L = this.lba;
+    L.f = null;   // (the remaster's follow starts afresh when the look changes back)
     const v = LBA_VIEWS[this.view];
     cam.fov = LBA_FOV;
     cam.updateProjectionMatrix();
-    // a new shot (LBA2's CameraCenter): behind him (Enter, a scene start) or keeping the heading (he nears the edge
-    // of the screen), from the view's own pitch, then SearchCameraPos lifts it over the scenery in the way
     const shoot = (behind) => {
       if (behind) L.goalYaw = heroAngle + Math.PI;
       L.view = this.view;
+      // the look-at point, DISTANCE_VISEE ahead (along the view once the camera is forced up, shrinking with its pitch)
+      const aim = (p) => (p <= v.pitch + 1e-4 ? L.goal.set(hero.x + Math.sin(heroAngle) * AHEAD, hero.y, hero.z + Math.cos(heroAngle) * AHEAD)
+        : L.goal.set(hero.x - Math.sin(L.goalYaw) * AHEAD * aheadK(p, v.pitch), hero.y, hero.z - Math.cos(L.goalYaw) * AHEAD * aheadK(p, v.pitch)));
       const occ = this.occ?.();
       let p = occ ? occ.search(hero, L.goalYaw, v.pitch, v.dist, { maxPitch: MAX_PITCH }) : v.pitch;
-      // our camera hangs off the look-at point, not off Twinsen as LBA2's forced camera does: check the sight line
-      // of the shot as it will be built and tip it further while it is still cut (rarely more than a few degrees)
       L.clear = true;
       for (let i = 0; ; i++) {
-        this._aim(L.goal, hero, heroAngle, L.goalYaw, p, v.pitch);
+        aim(p);
         if (!occ || i > 24) break;
         this._camAt(_b, L.goal, L.goalYaw, p, v.dist);
         if (!occ.blocked(_b, _a.set(hero.x, hero.y + EYE, hero.z))) break;
@@ -153,8 +288,8 @@ export class CameraRig {
       _v.set(hero.x, hero.y + 0.9, hero.z).project(cam);
       if (_v.x < -0.75 || _v.x > 0.68 || _v.y > 0.66 || _v.y < -0.79 || _v.z > 1 || L.view !== this.view) shoot(false);
       else {
-        // hidden for a moment mid-shot: a new shot over the scenery in the way; behind a tree, the lighthouse and
-        // other solid props (not in the scenery volumes), or when no pitch clears the view, swing round behind him
+        // hidden for a moment: a new shot over the scenery in the way; behind a wall, a cliff or the lighthouse (not
+        // scenery volumes), or when no pitch clears the view, round behind him
         const why = this.hiddenBy(hero);
         if (why) this.hiddenT += dt; else this.hiddenT = 0;
         if (this.hiddenT > 0.35) { if (why === 'scenery' && L.clear) shoot(false); else { this.hiddenT = 0; L.behind = true; } }
@@ -176,12 +311,21 @@ export class CameraRig {
     this.target.copy(hero);
   }
 
-  // the look-at point of a shot: DISTANCE_VISEE ahead of him at the view's pitch; as LBA2's forced camera tips up
-  // it moves along the view and shrinks with the sine of the pitch, to nothing looking straight down
-  _aim(out, hero, heroAngle, yaw, p, p0) {
-    if (p <= p0 + 1e-4) return out.set(hero.x + Math.sin(heroAngle) * AHEAD, hero.y, hero.z + Math.cos(heroAngle) * AHEAD);
-    const k = clamp(1 - (Math.sin(p) - Math.sin(p0)) / (1 - Math.sin(p0)), 0, 1);
-    return out.set(hero.x - Math.sin(yaw) * AHEAD * k, hero.y, hero.z - Math.cos(yaw) * AHEAD * k);
+  // what hides Twinsen from the camera now: 'scenery' (a registered volume or the terrain: a new shot rises over it),
+  // 'collider' (a wall, a cliff, the lighthouse: round behind him), or null. Hidden = his middle and head both cut off.
+  hiddenBy(hero) {
+    const occ = this.occ?.(), cam = this.cam.position;
+    if (occ) {
+      occ.setUnder(hero);
+      let n = 0;
+      for (const hy of [EYE, 1.45]) if (occ.blocked(cam, _a.set(hero.x, hero.y + hy, hero.z))) n++;
+      if (n === 2) return 'scenery';
+    }
+    const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
+    _v.set(hero.x, hero.y, hero.z);
+    const toCam = Math.atan2(cam.x - hero.x, cam.z - hero.z);
+    const dHero = Math.hypot(cam.x - hero.x, cam.z - hero.z) / Math.max(cp, 0.1);
+    return this.occluded(_v, cp, sp, toCam, dHero) < dHero - 0.5 ? 'collider' : null;
   }
 
   _camAt(out, f, yaw, pitch, dist) {
@@ -235,7 +379,7 @@ export class CameraRig {
     this.target.lerp(focus, 1 - Math.exp(-dt * 10));
     const t = this.target;
     const cp = Math.cos(this.pitch), sp = Math.sin(this.pitch);
-    const want = this.occluded(t, cp, sp, this.yaw, this.dist);
+    const want = this.occluded(t, cp, sp, this.yaw, this.dist, false, true);
     this.occDist = want < this.occDist ? want : damp(this.occDist, want, 2, dt);
     const dist = Math.min(this.dist, this.occDist);
     const x = t.x + Math.sin(this.yaw) * cp * dist;

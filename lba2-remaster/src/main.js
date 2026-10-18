@@ -100,7 +100,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     if (!(this.settings.v >= 2)) { this.settings.controls = 'classic'; this.settings.keys = {}; this.settings.v = 2; }
@@ -237,7 +237,7 @@ class Game {
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
-    this.warmShadows();
+    if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
     this.renderer.render();
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.perf.load = this.loadTimes;
@@ -363,14 +363,17 @@ class Game {
     // (the shadow batches: engine/shadowcull.js)
     const posOnly = new THREE.BufferGeometry(); posOnly.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]), 3)); posOnly.setIndex([0, 1, 2]); made.push(posOnly);
     for (const side of [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide]) { const c = new THREE.Mesh(posOnly, new THREE.MeshBasicMaterial({ side })); c.castShadow = true; c.frustumCulled = false; g.add(c); }
-    // one frame of the real scene (its lights: the programs depend on them) into a scratch target, with the copies
-    // at the sun's focus so the shadow pass draws them; nothing reaches the screen
+    // one frame of the real scene's lights (the programs depend on them) with only the copies in it, at the sun's
+    // focus so the shadow pass draws them, into a scratch target: nothing reaches the screen, and the GPU draws a few
+    // triangles (drawing the whole scene here queued seconds of work on a software renderer, felt at the first door)
     g.position.copy(this.env.sun.target.position);
+    const hidden = [];
+    for (const c of this.scene.children) if (!c.isLight && c.visible) { c.visible = false; hidden.push(c); }
     this.scene.add(g);
     const prev = R.getRenderTarget();
     try { R.setRenderTarget(C.renderTarget2); R.render(this.scene, this.camera); } catch (e) { console.warn('shadow warm-up', e); }
     R.setRenderTarget(prev);
-    this.scene.remove(g); for (const t of made) t.dispose();
+    this.scene.remove(g); for (const c of hidden) c.visible = true; for (const t of made) t.dispose();
     return kinds.size;
   }
 
@@ -1165,8 +1168,7 @@ class Game {
         else if (input.pressed('inventory') || input.pressed('pause') || input.pressed('interact')) { this.inventory.show(false); this.setState('play'); }
         break;
       case 'map':
-        this.hud.drawHolomap(this.time);
-        if (input.pressed('map') || input.pressed('pause')) { $('#holomap').classList.add('hidden'); this.setState('play'); }
+        if (this.hud.holomapUpdate(input, dt)) { this.hud.closeHolomap(); this.setState('play'); }
         break;
       case 'pause': case 'gameover': case 'ending':
         // a grace period, so a key still held from the last line of dialogue doesn't press a button
@@ -1234,7 +1236,7 @@ class Game {
     const input = this.input, h = this.hero;
     this.dirty = true;
     if (input.pressed('pause')) { this.pause(); return; }
-    if (input.pressed('map') && h.hasBall) { this.setState('map'); $('#holomap').classList.remove('hidden'); return; }
+    if (input.pressed('map') && h.hasBall) { this.setState('map'); this.hud.openHolomap(); return; }
     if (input.pressed('inventory')) { this.setState('inventory'); this.inventory.show(true); this.audio.play('select'); return; }
     if (input.down('wheel')) {
       // hold Ctrl: behaviour menu, world frozen
@@ -1300,7 +1302,7 @@ class Game {
     const it = this.findInteractable();
     this.hud.prompt(it ? t(it.label) : null);
     this.hud.stats(h);
-    if (!this.room) this.hud.drawMinimap();
+    this.hud.mapTick();   // (where he is and the doors he used, for the maps; the minimap when shown)
     this.camRig.update(dt, h.pos, h.angle, h.speed > 0.5, input);
     this.occluders(dt);
   }
