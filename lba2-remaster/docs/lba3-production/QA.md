@@ -505,6 +505,11 @@ counts them — 0); invalid/old saves written by hand.
 Not verified: feel with a gamepad and on a touch screen, the sounds by ear, real-GPU cost; Desert Island's mesa edges
 (the scan from its spawn met no 6 m rise in reach — its edges are the sea, checked by the same rule as the pier).
 
+### FIX-PUMP-N (0.31.0 + fix): the pump's prompt with Bram behind him
+| Item | Reproduction (before) | Root cause | Fix | Evidence | Result |
+|---|---|---|---|---|---|
+| Facing the pump at arm's length gave "Talk" (Bram) | Chapter 2 with the pin out (ISO: chapter by flags, as tests/townlife.mjs): walk to the pump's north side, stop between Bram and the pump at (pump +0.25, −1.35), turn to face the pump (error 0.04 rad). The prompt is "Talk": Bram, 0.93 m straight behind him, scores 0.93 + 1.69×0.45 − 0.35 = 1.34 against the pump's 1.37. townlife's N3 check failed (round.north = p_talk) from cb07e22 (CTRL-1) on. CTRL-1 did not break the facing, and keep-apart did not move him (0.93 m > R 0.85). His new gait made P.go stop 0.25 m further north (the edge of its tolerance), which showed a ranking flaw that already existed | Game.findInteractable (src/main.js) gave people a −0.35 preference even when they stood at his back | The people preference counts only for someone in front of him or right on top of him (< 0.5 m). Someone behind can still be talked to when nothing else is in reach | Probe at the same spot, same facing: p_talk before, p_pump after. New townlife check: at that spot, facing the pump gives "Pump" and turning round to Bram gives "Talk". Regression on :8195, run one after another: townlife 36/36, controls 69/69, combat 59/59, stability 16/16, house 2/2, chapter1 (log run: every milestone true, ends in play on Zeelich), no page errors | FAIL → FIXED |
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.
