@@ -8,6 +8,22 @@ import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 import { HeroCombat } from './combat.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
+// How each behaviour moves, from LBA2 itself (CTRL-1; docs/COMBAT.md "Movement and camera"). Speeds are the root motion
+// of the original walk / back-step anims (ANIM.HQR 1/2, 67/68, 83/84, 94/95: distance per loop ÷ loop time, in body
+// heights H = 1238 units, here 2.065 m): Normal 0.97 / 0.86 H/s, Athletic 2.40 / 1.14, Aggressive 1.22 / 0.79,
+// Discreet 0.32 / 0.32. Turning while moving is 90°/s in every behaviour (OBJECT.CPP ManualRealAngle: 1024 of 4096 a
+// second, no ramp); standing, the turn-on-the-spot anims (3/4, 69/70, 85/86, 96/97: root rotation ÷ time) turn
+// Normal 100°/s, Athletic 169°/s, Aggressive 116°/s, Discreet 90°/s. LBA2 starts its walk after the anim's blend
+// (0.14–0.4 s standing still) and stops dead; ours starts at once and ramps up in a beat (`up`, m/s²: Athletic builds
+// up over ~0.45 s as the run's first keys do) and stops in < 0.2 s (`down`), with no turn-before-move delay.
+export const GAITS = {
+  normal: { fwd: 2.0, back: 1.78, turn: 100, up: 18, down: 30 },
+  athletic: { fwd: 4.96, back: 2.36, turn: 169, up: 11, down: 30 },
+  aggressive: { fwd: 2.52, back: 1.64, turn: 116, up: 22, down: 30 },
+  discreet: { fwd: 0.67, back: 0.67, turn: 90, up: 8, down: 16 },
+};
+const WALK_TURN = Math.PI / 2;   // 90°/s while walking (and while aiming the ball with the arrows)
+const DEG = Math.PI / 180;
 // Twinsen: blue tunic, light trousers, brown ponytail
 export const HERO_LOOK = 'twinsen';
 
@@ -81,6 +97,12 @@ export class Hero extends Actor {
     this.combat = new HeroCombat(this);
     this.speed = 0; this.stepAcc = 0;
     this.vel = new THREE.Vector2();
+    this.fwdSpeed = 0;   // Classic: the speed along the facing (signed; the tank moves only along it)
+    // What the body really did this frame, for the animator, the camera and the sounds (CTRL-1): resolved speed
+    // (m/s, the ground actually covered: zero against a wall), its forward / sideways parts relative to the facing,
+    // the turn rate (rad/s, + = left), grounded, `landed` (the impact speed on the frame he lands, else 0), whether he
+    // steps backward, and `blocked` (asked to move, got less than a quarter of it).
+    this.motion = { speed: 0, fwd: 0, side: 0, turnRate: 0, grounded: true, landed: 0, backward: false, blocked: false, wanted: 0 };
     this.actT = 0;
     this.prevPos = this.pos.clone();
   }
@@ -143,9 +165,10 @@ export class Hero extends Actor {
 
     const mv = wheel ? { x: 0, y: 0 } : input.move();
     const beh = this.behaviour;
-    // LBA2 (measured on the original anims): walk 0.93 H/s, athletic run 2.29 H/s → with H ≈ 2.1 m about 2 and
-    // 4.8 m/s; a little faster here so the bigger islands stay pleasant to cross
-    const maxSpeed = { normal: 2.4, athletic: 5.4, aggressive: 2.7, discreet: 1.4 }[beh] * (this.speedK || 1);
+    const gait = GAITS[beh] || GAITS.normal;
+    const maxSpeed = gait.fwd * (this.speedK || 1);
+    const angle0 = this.angle;
+    let wanted = 0, classicGround = false;
     this.hiding = beh === 'discreet' && input.down('action') && this.onGround && !wheel;
     let wx = 0, wz = 0, turning = 0;
     // one-shot actions (use, pick up, open door, knockdown/get-up) own the body
@@ -173,16 +196,26 @@ export class Hero extends Actor {
       wx = s.wx; wz = s.wz; turning = s.turning;
     } else if (!locked) {
       if (g.settings.controls === 'classic') {
-        // LBA2's tank controls: left/right turn the body (90°/s, OBJECT.CPP), up walks forward, down walks backward
-        // slowly; no strafing. Holding the ball to aim plants the feet: left/right turn the aim, release throws.
-        const kx = Math.abs(mv.x) > 0.3 ? Math.sign(mv.x) : 0, ky = Math.abs(mv.y) > 0.3 ? Math.sign(mv.y) : 0;
-        this.angle -= kx * (Math.PI / 2) * dt;
-        turning = -kx;
+        // LBA2's tank controls: left/right turn the body, up walks forward, down steps backward; no strafing. Holding
+        // the ball to aim plants the feet: left/right turn the aim (90°/s, as LBA2 turns him while aiming), release
+        // throws. The turn starts and stops on the frame of the key (a stick turns in proportion to its tilt); the
+        // walk ramps up in a beat and stops short (GAITS). He moves only along his facing, so a turn never drifts.
+        const ax = Math.abs(mv.x), ky = Math.abs(mv.y) > 0.3 ? Math.sign(mv.y) : 0;
+        const kx = mv.analog ? Math.sign(mv.x) * clamp((ax - 0.2) / 0.6, 0, 1) : (ax > 0.3 ? Math.sign(mv.x) : 0);
         const planted = cs.anim === 'charge';
-        const f = planted ? 0 : (ky > 0 ? ky : ky * 0.5) * speedK;
-        wx = Math.sin(this.angle) * f * maxSpeed;
-        wz = Math.cos(this.angle) * f * maxSpeed;
-        this.backward = ky < 0 && !planted;
+        const walking = ky !== 0 && !planted;
+        this.angle -= kx * (walking || planted ? WALK_TURN : gait.turn * DEG) * dt;
+        turning = -Math.sign(kx);
+        const target = planted ? 0 : (ky > 0 ? gait.fwd : ky < 0 ? -gait.back : 0) * (this.speedK || 1) * speedK;
+        if (this.vel.lengthSq() < 1e-6) this.fwdSpeed = 0;   // (stopped by the game: a scene change, a dialogue, a placement)
+        const f0 = this.fwdSpeed;
+        const acc = target !== 0 && Math.sign(target) === Math.sign(f0 || target) && Math.abs(target) >= Math.abs(f0) ? gait.up : gait.down;
+        this.fwdSpeed = f0 + clamp(target - f0, -acc * dt, acc * dt);
+        wx = Math.sin(this.angle) * this.fwdSpeed;
+        wz = Math.cos(this.angle) * this.fwdSpeed;
+        wanted = Math.abs(target);
+        classicGround = this.onGround;
+        this.backward = this.fwdSpeed < -0.05;
       } else {
         const m = Math.hypot(mv.x, mv.y);
         if (m > 0.08) {
@@ -200,11 +233,12 @@ export class Hero extends Actor {
           if (cs.face != null) {
             // aiming: walk (slower) in the stick's direction without turning the body away
             const sp = maxSpeed * Math.min(1, m) * speedK, d = Math.hypot(dx, dz) || 1;
-            wx = (dx / d) * sp; wz = (dz / d) * sp;
+            wx = (dx / d) * sp; wz = (dz / d) * sp; wanted = sp;
           } else {
             const sp = maxSpeed * Math.min(1, m) * speedK * (still && Math.abs(diff) > 1.2 ? 0.15 : Math.max(0.25, Math.cos(Math.min(Math.abs(diff), 1.5))));
             wx = Math.sin(this.angle) * sp;
             wz = Math.cos(this.angle) * sp;
+            wanted = sp;
           }
         } else if (cs.face != null) this.angle = dampAngle(this.angle, cs.face, 12, dt);
       }
@@ -212,12 +246,17 @@ export class Hero extends Actor {
     if (cs.drive) { wx = cs.drive.x; wz = cs.drive.z; }
     // weight: accelerate and brake instead of snapping to speed (less grip in the air)
     const prevFwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
-    // (classic: LBA2 starts and stops almost at once — its motion comes from the animation, not a push)
+    // (classic on the ground: the ramp is already in fwdSpeed — LBA2 starts and stops almost at once, its motion
+    // comes from the animation, not a push; in the air, in a dodge or while an action holds him: as before)
     const classic = g.settings.controls === 'classic';
-    const accel = cs.drive ? 40 : !this.onGround ? 3 : classic ? 26 : (wx || wz) ? (beh === 'athletic' ? 9 : 12) : 14;
-    const k = 1 - Math.exp(-accel * dt);
-    this.vel.x += (wx - this.vel.x) * k; this.vel.y += (wz - this.vel.y) * k;
+    if (classicGround && !cs.drive) this.vel.set(wx, wz);
+    else {
+      const accel = cs.drive ? 40 : !this.onGround ? 3 : classic ? 26 : (wx || wz) ? (beh === 'athletic' ? 9 : 12) : 14;
+      const k = 1 - Math.exp(-accel * dt);
+      this.vel.x += (wx - this.vel.x) * k; this.vel.y += (wz - this.vel.y) * k;
+    }
     const fwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
+    if (!classicGround || cs.drive) this.fwdSpeed = fwd;   // (Classic picks up from what the body is really doing)
     this.rig.lean = clamp(((fwd - prevFwd) / Math.max(dt, 1e-3)) * 0.012, -0.18, 0.22);
     this.rig.roll = clamp(turning * Math.min(1, Math.hypot(this.vel.x, this.vel.y) / 4) * 0.12, -0.15, 0.15);
     this.rig.turn = turning;
@@ -248,6 +287,15 @@ export class Hero extends Actor {
     }
     if (this.pos.y < -3) this.respawnFromFall();
     this.speed = Math.hypot(this.pos.x - this.prevPos.x, this.pos.z - this.prevPos.z) / Math.max(dt, 1e-4);
+    {
+      // what really happened (resolved displacement, not the request): see `motion` in the constructor
+      const M = this.motion, ddx = (this.pos.x - this.prevPos.x) / Math.max(dt, 1e-4), ddz = (this.pos.z - this.prevPos.z) / Math.max(dt, 1e-4);
+      const sa = Math.sin(this.angle), ca = Math.cos(this.angle);
+      M.speed = this.speed; M.fwd = ddx * sa + ddz * ca; M.side = ddx * ca - ddz * sa;
+      M.turnRate = angleDiff(angle0, this.angle) / Math.max(dt, 1e-4);
+      M.grounded = this.onGround; M.landed = landed ? -landed : 0; M.backward = M.fwd < -0.05;
+      M.wanted = wanted; M.blocked = wanted > 0.3 && this.speed < wanted * 0.25;
+    }
 
     // footsteps
     if (this.onGround && this.speed > 0.5) {
@@ -353,6 +401,9 @@ export class Hero extends Actor {
     this.game.giverHop();
   }
 
+  // stand still now (placed by the game: a scene change, a respawn, a test)
+  resetMotion() { this.vel.set(0, 0); this.fwdSpeed = 0; this.kb.set(0, 0); }
+
   // anticipation: a quick crouch, then the take-off (in the air already? jump now)
   jump() {
     this.prevRunSpeed = Math.hypot(this.vel.x, this.vel.y);
@@ -417,7 +468,7 @@ export class Hero extends Actor {
   respawnFromFall() {
     const p = this.game.lastSafe;
     this.pos.set(p.x, this.game.physics.groundAt(p.x, p.z), p.z);
-    this.vy = 0; this.onGround = true; this.vel.set(0, 0);
+    this.vy = 0; this.onGround = true; this.resetMotion();
     this.damage(1, null);
   }
 
@@ -766,26 +817,42 @@ export class Sentinel extends Actor {
 }
 
 // ------------------------------------------------------------------ magic ball
-// The magic ball's throw styles per behaviour (speed f, lift up)
-const BALL_THROW = {
-  normal: { f: 13, up: 5 },
-  athletic: { f: 15, up: 8 },
-  aggressive: { f: 19, up: 2.5 },
-  discreet: { f: 9, up: 3 },
-};
+// The magic ball's throw per behaviour, as LBA2 throws it (CTRL-1). Each behaviour's File3D (RESS.HQR entry 44) gives
+// the LANCE anim an F_THROW_MAGIC on its 6th key (FICHE.CPP GereAnimAction → ThrowMagicBall): launch angle alpha (of
+// 4096), speed (units per 1/50 s tick) and weight; EXTRA.CPP InitFly / the EXTRA_FLY step fly it as
+// y = Vy·t − weight·t²/16 with Vy = speed·sin α and speed·cos α along the facing. Released 1200 units up.
+//   Normal 120 / 100 / 16 · Athletic 80 / 105 / 14 · Aggressive 40 / 110 / 12 · Discreet 572 / 100 / 35
+// In metres (1238 units = Twinsen's 2.065 m): forward / up m/s, gravity m/s² — Normal 8.20 / 1.53 / 8.3, Athletic
+// 8.69 / 1.07 / 7.3, Aggressive 9.16 / 0.56 / 6.3, Discreet 5.33 / 6.42 / 18.2. On flat ground the first contact
+// comes after ~0.9 s at about 2.4 H (Discreet: a high lob), 3.6 H (Normal), 3.8 H (Athletic) and 4.0 H (Aggressive:
+// flat and fast); every bounce then starts the same Vy again (low skips; Discreet's tall hops). No input changes it in
+// LBA2: the behaviour is the distance. Classic keeps exactly that; Modern aims at a point (MagicBall.plan).
+const LBA_BALL = { normal: [120, 100, 16], athletic: [80, 105, 14], aggressive: [40, 110, 12], discreet: [572, 100, 35] };
+const LBA_UNIT = 2.065 / 1238;   // metres per LBA2 unit (Twinsen's height)
+export const BALL_THROW = Object.fromEntries(Object.entries(LBA_BALL).map(([b, [al, v, w]]) => {
+  const a = (al / 4096) * Math.PI * 2, s = v * 50 * LBA_UNIT;
+  return [b, { vx: s * Math.cos(a), vy: s * Math.sin(a), g: (w / 8) * 2500 * LBA_UNIT }];
+}));
+const BALL_RANGE_K = 1.6;        // Modern: the farthest aim, × the behaviour's own flat-ground throw
+const BALL_CHARGE_K = 1.3;       // a charged throw: 1.3× the speed (Classic: further; aimed: the same point, faster)
+// A throw at a target (the soft aim-assist target, an enemy or a switch in the cone, or the lock) keeps the flight it has
+// always had — the user's call: "the ball aimed itself at the enemies… keep it": pace per behaviour (m/s), gravity
+// 22 m/s², bounces from at least 2.5 m/s. The behaviour arcs and the aimed distance only apply when there is no target.
+const BALL_TARGET_PACE = { normal: 13, athletic: 15, aggressive: 19, discreet: 9 }, BALL_TARGET_G = 22;
 // Flight rules (kept deliberately simple, so puzzles never depend on luck):
 //  - states: idle (ready, in the pocket) → inhand (wind-up / charge) → fly → impact (a beat at the hit) →
 //    return (homing back to the hand, passes through scenery, never damages) → idle.
 //  - movement is substepped (≤ BALL_STEP per step), so it can't tunnel through thin walls or small targets.
 //  - as in LBA2: a throw costs 1 magic point; with magic it bounces 4 times and returns on the 5th contact,
-//    without magic it returns at its first contact. Each ground bounce restarts the arc from the throw's own
-//    lift; walls reflect it; water swallows it (it returns). It returns at about 10 m/s, speeding up (+22 m/s²).
+//    without magic it returns at its first contact. Each ground bounce restarts the arc with the behaviour's own
+//    Vy (LBA2's skips); walls reflect it; water swallows it (it returns). It returns at about 10 m/s, speeding up
+//    (+22 m/s²). Gravity is the behaviour's (BALL_THROW).
 //  - damage: the magic level (+1 charged). Its colour shows the level: yellow, green, red, fire.
 //  - it brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals).
 //  - each target is hit at most once per throw. A quick throw returns after its first hit; a charged throw
 //    with bounces left ricochets on to the nearest other visible enemy within 8 m (ours, not the original's).
-//  - limits: 3.2 s of flight, then it returns; a return that takes over 2.5 s (or a scene change) puts it
-//    straight back in the hand. The ball can't be lost.
+//  - limits: 4.2 s of flight (Discreet's four tall hops take ~3.8 s), then it returns; a return that takes over
+//    2.5 s (or a scene change) puts it straight back in the hand. The ball can't be lost.
 const BALL_STEP = 0.12, BALL_R = 0.14;
 // the ball's colour by magic level (1 yellow, 2 green, 3 red, 4 the fire ball)
 const BALL_LEVEL = [null, ['#ffe68a', '#ffc400'], ['#9dff8a', '#30d020'], ['#ff8a7a', '#ff2a10'], ['#ffc070', '#ff6a00']];
@@ -817,6 +884,10 @@ export class MagicBall {
     this.dots = [];
     const dg = new THREE.SphereGeometry(0.05, 6, 4), dm = new THREE.MeshBasicMaterial({ color: '#fff0b0', transparent: true, opacity: 0.55, depthWrite: false });
     for (let i = 0; i < 9; i++) { const d = new THREE.Mesh(dg, dm); d.visible = false; game.scene.add(d); this.dots.push(d); }
+    // ... ending in a small ring where it will first touch down (the dots and the ring follow the same plan as the throw)
+    this.landMark = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.24, 20), new THREE.MeshBasicMaterial({ color: '#fff0b0', transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }));
+    this.landMark.rotation.x = -Math.PI / 2; this.landMark.visible = false; this.landMark.renderOrder = 5; game.scene.add(this.landMark);
+    this.grav = BALL_THROW.normal.g;
     this.history = [];
     this.hits = new Set();
     this.charge = 0;
@@ -860,19 +931,73 @@ export class MagicBall {
   // a scene change credits a carried bonus; a load or a world reset lets it go ('drop')
   reset(carry = 'credit') { this.toHand(true, carry); }
 
-  // velocity for a throw along aim (or at a target), with the behaviour's style
-  launchVelocity(hero, beh, aim, target, charged) {
-    const t = BALL_THROW[beh] || BALL_THROW.normal;
-    const f = t.f * (charged ? 1.3 : 1);
-    const from = this.pos;
+  // The throw, decided once for the launch and for the preview: its velocity, gravity, and the lift every bounce
+  // restarts with.
+  //  - at a target (the lock, an enemy or a switch in the aim cone; the chevron shows it): an arc onto it, exactly as
+  //    before CTRL-1 (BALL_TARGET_PACE): the automatic aim always wins over the aimed distance;
+  //  - Modern, aimed with the cursor (or an analog stick's tilt): an arc that first lands on the aimed ground point,
+  //    within the behaviour's range (0.8 m … BALL_RANGE_K × its own throw), at the behaviour's pace (its forward speed
+  //    × √(distance ÷ its own distance): near is a slower, softer lob, far a faster, flatter throw);
+  //  - otherwise (Classic; Modern on the keyboard with no cursor): LBA2's own throw for the behaviour, along the aim.
+  plan(hero, beh, aim, target, charged, from = this.pos) {
+    const st = BALL_THROW[beh] || BALL_THROW.normal, g = this.game;
+    const out = { grav: st.g, lift: st.vy, vel: new THREE.Vector3(), point: null };
+    // the behaviour's own throw on flat ground from this height: where it first lands
+    const h0 = Math.max(0.2, from.y - hero.pos.y), d0 = st.vx * (st.vy + Math.sqrt(st.vy * st.vy + 2 * st.g * h0)) / st.g;
+    let to = null;
     if (target) {
-      const tp = target.pos || target;
+      const tp = target.pos || target, f = (BALL_TARGET_PACE[beh] || BALL_TARGET_PACE.normal) * (charged ? BALL_CHARGE_K : 1);
       const ty = target.pos ? tp.y + (target.hover ?? 0) + (target.aimY ?? 0.5) : tp.y;
-      const dx = tp.x - from.x, dz = tp.z - from.z, d = Math.hypot(dx, dz) || 1;
-      const tt = Math.max(0.12, d / f);
-      return new THREE.Vector3((dx / d) * f, (ty - from.y + 0.5 * 22 * tt * tt) / tt, (dz / d) * f);
+      const dx = tp.x - from.x, dz = tp.z - from.z, d = Math.hypot(dx, dz) || 1, tt = Math.max(0.12, d / f);
+      out.vel.set((dx / d) * f, (ty - from.y + 0.5 * BALL_TARGET_G * tt * tt) / tt, (dz / d) * f);
+      out.grav = BALL_TARGET_G; out.lift = Math.max(2.5, out.vel.y);
+      return out;
+    } else if (aim && g.settings?.controls !== 'classic') {
+      to = out.point = this.aimPoint(hero, aim, d0 * BALL_RANGE_K);
     }
-    return new THREE.Vector3(aim.x * f, t.up * (charged ? 0.75 : 1), aim.z * f);
+    if (to) {
+      const dx = to.x - from.x, dz = to.z - from.z, d = Math.hypot(dx, dz) || 1e-3;
+      const vx = st.vx * clamp(Math.sqrt(d / d0), 0.55, BALL_RANGE_K) * (charged ? BALL_CHARGE_K : 1);
+      const tt = Math.max(0.12, d / vx);
+      out.vel.set((dx / d) * vx, (to.y - from.y + 0.5 * st.g * tt * tt) / tt, (dz / d) * vx);
+    } else {
+      const k = charged ? BALL_CHARGE_K : 1, a = aim || { x: Math.sin(hero.angle), z: Math.cos(hero.angle) }, al = Math.hypot(a.x, a.z) || 1;
+      out.vel.set((a.x / al) * st.vx * k, st.vy * k, (a.z / al) * st.vx * k);
+      out.lift = st.vy * k;
+    }
+    return out;
+  }
+  // Modern: the ground point a throw is aimed at, or null (then the behaviour's own throw). The cursor: where its ray
+  // meets the ground (Game.mouseAim gives the ray's point at chest height; followed on down to the ground). An analog
+  // stick: its tilt sets the distance (a light push near, full tilt the range). The point stays on the aim line.
+  aimPoint(hero, aim, maxD) {
+    const g = this.game, P = g.physics, h = hero.pos;
+    let d = null;
+    if (aim.src === 'mouse' && g.mouseAim) {
+      const m = g.mouseAim();
+      if (m) {
+        const c = g.camera.position, py = h.y + 1.0;
+        let dx = m.x - c.x, dy = py - c.y, dz = m.z - c.z;
+        const L = Math.hypot(dx, dy, dz) || 1; dx /= L; dy /= L; dz /= L;
+        let px = m.x, pz = m.z;
+        if (dy < -0.02) {
+          // on down the ray to the ground (never far: the camera looks down on Twinsen)
+          for (let s = 0.25, n = 0; n < 160; n++, s += 0.25) {
+            const x = m.x + dx * s, y = py + dy * s, z = m.z + dz * s;
+            if (y <= P.groundAt(x, z, y + 0.5)) break;
+            px = x; pz = z;
+          }
+        }
+        d = Math.hypot(px - h.x, pz - h.z);
+      }
+    } else if (aim.src === 'stick' && g.input && g.input.lastDevice !== 'kbd') {
+      const mv = g.input.move(), m = Math.hypot(mv.x, mv.y);
+      if (m > 0.25) d = 1.5 + (maxD - 1.5) * clamp((m - 0.25) / 0.7, 0, 1);
+    }
+    if (d == null) return null;
+    d = clamp(d, 0.8, maxD);
+    const al = Math.hypot(aim.x, aim.z) || 1, x = h.x + (aim.x / al) * d, z = h.z + (aim.z / al) * d;
+    return { x, y: P.groundAt(x, z, h.y + 1.5) + 0.17, z };
   }
 
   launch(hero, beh, level, opts = {}) {
@@ -893,8 +1018,9 @@ export class MagicBall {
     if (this.state === 'inhand') { this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, hero.pos.y + 1.2); }
     else this.pos.set(hero.pos.x + Math.sin(hero.angle) * 0.5, hero.pos.y + 1.6, hero.pos.z + Math.cos(hero.angle) * 0.5);
     const aim = opts.aim || { x: Math.sin(hero.angle), z: Math.cos(hero.angle) };
-    this.vel.copy(this.launchVelocity(hero, beh, aim, opts.target, charged));
-    this.lift = Math.max(2.5, this.vel.y);
+    const pl = this.plan(hero, beh, aim, opts.target, charged);
+    this.vel.copy(pl.vel);
+    this.grav = pl.grav; this.lift = pl.lift;
     this.state = 'fly';
     this.life = 0; this.retT = 0;
     this.hits = new Set();
@@ -905,23 +1031,33 @@ export class MagicBall {
     this.preview(null);
   }
 
-  // a short dotted arc of the first 0.7 s (charging only)
+  // while charging: dots along the first arc to where it will touch down, and a ring there (the same plan as the throw)
   preview(hero, aim, full) {
-    if (!hero) { this.dots.forEach((d) => (d.visible = false)); return; }
-    const beh = hero.behaviour, g = this.game;
+    if (!hero) { this.dots.forEach((d) => (d.visible = false)); this.landMark.visible = false; return; }
+    const g = this.game, P = g.physics;
     const tgt = g.targeting?.throwTarget(aim);
     const p = this.mesh.position.clone();
-    const save = this.pos.clone(); this.pos.copy(p);
-    const v = this.launchVelocity(hero, beh, aim, tgt, !!full);
-    this.pos.copy(save);
-    const P = g.physics;
-    let alive = true;
+    p.y = Math.max(p.y, hero.pos.y + 1.2);
+    const pl = this.plan(hero, hero.behaviour, aim, tgt, !!full, p);
+    // follow the arc in small steps to its first contact: the ground, a wall, or the target
+    const v = pl.vel, G = pl.grav, pts = [], tp = tgt ? (tgt.pos || tgt) : null;
+    let x = p.x, y = p.y, z = p.z, vy = v.y, land = null;
+    for (let i = 0; i < 400 && !land; i++) {
+      const h = 0.01;
+      x += v.x * h; z += v.z * h; vy -= G * h; y += vy * h;
+      if (i % 2 === 0) pts.push([x, y, z]);
+      const gy = P.groundAt(x, z, y + 0.3) + 0.17;
+      if (y <= gy) land = [x, gy, z];
+      else if (P.solidAt(x, z, y, 0.1)) land = [x, y, z, 'wall'];
+      else if (tp && Math.hypot(tp.x - x, tp.z - z) < 0.35) land = [x, y, z, 'target'];
+    }
+    const n = this.dots.length, m = pts.length;
     this.dots.forEach((d, i) => {
-      const tt = 0.06 + i * 0.075;
-      const x = p.x + v.x * tt, z = p.z + v.z * tt, y = p.y + v.y * tt - 11 * tt * tt;
-      if (alive && (P.solidAt(x, z, y, 0.1) || y < P.groundAt(x, z, y + 0.5))) alive = false;
-      d.visible = alive; if (alive) d.position.set(x, y, z);
+      const q = pts[Math.min(m - 1, Math.round(((i + 1) / (n + 1)) * (m - 1)))];
+      d.visible = !!q; if (q) d.position.set(q[0], q[1], q[2]);
     });
+    this.landMark.visible = !!land && !land[3];
+    if (this.landMark.visible) this.landMark.position.set(land[0], land[1] - 0.15, land[2]);
   }
 
   update(dt) {
@@ -939,7 +1075,7 @@ export class MagicBall {
       const n = Math.max(1, Math.ceil((sp * dt) / BALL_STEP));
       const h = dt / n;
       for (let i = 0; i < n && this.state === 'fly'; i++) this.substep(h, i === 0 ? dt : 0);
-      if (this.state === 'fly' && this.life > 3.2) { this.state = 'return'; this.retT = 0; }
+      if (this.state === 'fly' && this.life > 4.2) { this.state = 'return'; this.retT = 0; }
       if (this.fire && Math.random() < dt * 30) g.particles.burst(this.pos.x, this.pos.y, this.pos.z, Math.random() < 0.5 ? '#ffb040' : '#ff5a10', 1, 0.6);
     } else if (this.state === 'return') {
       this.retT += dt;
@@ -965,7 +1101,7 @@ export class MagicBall {
 
   substep(h, frameDt) {
     const g = this.game, P = g.physics;
-    this.vel.y -= 22 * h;
+    this.vel.y -= this.grav * h;
     if (frameDt) this.assist(frameDt);
     // targets first, so things mounted on posts register before the post deflects the ball
     const hit = g.ballHitTest(this.pos, this);
@@ -990,7 +1126,7 @@ export class MagicBall {
       // into the sea (open terrain at sea level; a room's floor at height 0 is a floor)
       if (gy < 0.2 && !gi.brick && !this.game.room) { this.state = 'return'; this.retT = 0; return; }
       this.pos.y = gy;
-      this.vel.y = this.lift; // (the arc starts again from the throw's own lift)
+      this.vel.y = this.lift; // (the arc starts again from the behaviour's own Vy, as LBA2's BounceExtra does)
       this.bounce('ground');
     }
   }
@@ -1007,7 +1143,7 @@ export class MagicBall {
         const sp = Math.max(12, Math.hypot(this.vel.x, this.vel.z));
         const ty = next.pos.y + (next.hover ?? 0) + (next.aimY ?? 0.5);
         const dx = next.pos.x - this.pos.x, dz = next.pos.z - this.pos.z, d = Math.hypot(dx, dz), tt = Math.max(0.1, d / sp);
-        this.vel.set((dx / d) * sp, (ty - this.pos.y + 11 * tt * tt) / tt, (dz / d) * sp);
+        this.vel.set((dx / d) * sp, (ty - this.pos.y + 0.5 * this.grav * tt * tt) / tt, (dz / d) * sp);
         g.audio.play('bounce');
         return;
       }
@@ -1050,7 +1186,7 @@ export class MagicBall {
     const nx = hx + (dx / d - hx) * k, nz = hz + (dz / d - hz) * k, nl = Math.hypot(nx, nz);
     this.vel.x = (nx / nl) * sp; this.vel.z = (nz / nl) * sp;
     const tFly = d / sp;
-    const wantVy = (best.y - this.pos.y) / Math.max(tFly, 0.12) + 11 * tFly;
+    const wantVy = (best.y - this.pos.y) / Math.max(tFly, 0.12) + 0.5 * this.grav * tFly;
     this.vel.y += (wantVy - this.vel.y) * Math.min(1, dt * 5);
   }
 
