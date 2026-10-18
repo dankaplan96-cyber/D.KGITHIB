@@ -540,6 +540,13 @@ export class Rig {
         T.legL = up ? -0.55 : -0.3; T.legR = up ? -0.4 : -0.2; T.kneeL = up ? 1.0 : 0.5; T.kneeR = up ? 0.85 : 0.45;
         T.armL = up ? -1.3 : -0.9; T.armR = up ? -1.1 : -1.0; T.elL = -0.5; T.elR = -0.5; armOut = 0.7;
       }
+    } else if (a === 'jet') {
+      // riding Baldino's hop-pack (src/game/jetpack.js): legs together and a little bent, toes down, hands on the
+      // straps at the chest, a slight lean into the thrust; a small shiver from the jets
+      const w = Math.sin(this.t * 31) * 0.015;
+      T.legL = -0.28; T.legR = -0.12; T.kneeL = 0.5; T.kneeR = 0.35; T.footL = 0.45; T.footR = 0.4;
+      T.armL = -0.55 + w; T.armR = -0.6 - w; T.elL = -1.75; T.elR = -1.7; armOut = 0.15;
+      torsoX = 0.12; headX = -0.1; hipsY = 0.95 + w;
     } else if (a === 'punch' || a === 'punch2') {
       // a jab: the fist draws back a little (startup), snaps out straight with the shoulder turned into it
       // (active), then comes back to a guard (recovery); timing from the move, as the sword's

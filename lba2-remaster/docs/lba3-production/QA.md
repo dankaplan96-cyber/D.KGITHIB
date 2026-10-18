@@ -471,6 +471,35 @@ before = 31deb6c served from a `git archive` export of that commit, run with the
 Not checked here: chapters 5–8 and 11+ tests after the talk-prompt change (it touches every conversation: a person
 more than 1.8 m below Twinsen can no longer be talked to; none of the run tests needed that); the feel by hand; GPU.
 
+### Baldino's hop-pack (0.30.0; EQ-1; src/game/jetpack.js; STORY_BIBLE.md "Baldino's hop-pack")
+`tests/jetpack.mjs` (port 8188; SwiftShader, 960×540; ~35 min): 48/48 PASS, no page errors (2026-10-18). Regressions on the same build: arsenal 34/34, combat 59/59, stability 16/16, travel 12/12, chapter2 to its end (chapter 4 reached), no errors. Captures: captures/jetpack/. INPUT: F2 (Athletic), Space held, the
+arrows, E, the inventory (I / arrows / E), Esc and the pause menu's buttons, the title's Continue, game-over Retry.
+ISO (logged): chapter 10 reached by its flags (as chapter10.mjs); the Hamalayi, Desert Island, Citadel's pier and the
+galleries reached by the room switch the glider/shuttle use; a hit, a death and a line of dialogue injected mid-flight;
+a 9 m drop placed by hand; a test slab for the ceiling (the engine has no outdoor overhang with room under it: the test
+counts them — 0); invalid/old saves written by hand.
+
+| Check | Result |
+|---|---|
+| Not offered before chapter 10; after Baldino's ch. 10 briefing he points it out (once); E on the peg: his lines on its limits, worn at once, saved at once, toast | PASS |
+| Inventory: "Hop-Pack — worn", description with the limits; E takes it off / puts it on; no second pack | PASS |
+| Indoors (workshop) and underground (c3gallery): never lights; "needs open sky" toast | PASS |
+| Test step (2.35 m): a running jump can't reach it; with the pack he lands on the deck; the tin: a clover + 10 kashes, once; journal lines done | PASS |
+| Lift ≤ 2.4 m over the take-off (2.42 measured); 2.2 s of thrust (133 frames at 60); refill < 2 s on firm ground; never in Normal mode | PASS |
+| Zeelich's edge (never over the cloud sea), a house wall 3.8 m (no roof), the depot fence 2.4 m (never inside), a ceiling (head ≤ underside), the workshop door (no entry in the air; in on landing) | PASS |
+| Oku's mill (ch. 10): stones two at a time — 4 hops to the gallery instead of 7; unbraked, no relay prompt on top (the gate holds) | PASS |
+| 9 m drop: without the pack hurts; Space held: no damage, one cushion | PASS |
+| Mid-flight: dialogue (flame opacity 0 on the rendered frame, no thrust; a held key does not relight), pause (still; resume needs a fresh press), scene change (arrives standing, pack out), a hit (cut), Zoé (no pack, no flight) | PASS |
+| Save & quit → Continue pressed in the air: on the ground at his last safe spot, pack worn and full, tin/peg stay empty, kashes kept | PASS |
+| Death mid-flight: pack out at once, falls, game over; Retry: standing, pack worn and full | PASS |
+| Citadel's pier end (never over the sea, back on the deck); the Hamalayi lift's cliff (≤ one storey, the lift stays the way up); 8 cliffs at the Hamalayi's edges found by scan (gain 2.36–2.59 m, all back down; the Desert scan found none within its range) | PASS |
+| A save placing him over the cloud sea → the region's spawn, standing; a save without the pack fields → no pack, back on its peg | PASS |
+| 30 vs 60 steps a second: the same height, both on the deck; the fence holds at both | PASS |
+| Cost (renderer.info, SwiftShader, Zeelich's green, 960×540): the pack is 11 meshes / 1,100 triangles (static parts merged per material); worn +12 draw calls (848 vs 836, shadows included), lit +5 (flames, puffs); its own code 0.15 ms per lit frame; whole-frame simulation standing 2.22 / flying 1.63 ms (medians of 3×120 frames: noise larger than the pack). No GPU claim | PASS |
+
+Not verified: feel with a gamepad and on a touch screen, the sounds by ear, real-GPU cost; Desert Island's mesa edges
+(the scan from its spawn met no 6 m rise in reach — its edges are the sea, checked by the same rule as the pier).
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.

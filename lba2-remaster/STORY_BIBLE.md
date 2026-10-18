@@ -295,4 +295,24 @@ goal. Important scenes are played, not narrated.
 ### The Dino-Fly
 Twinsen's friend from LBA2, twelve years older. Too old now to carry the family over the sea (so they take the
 ferry), he naps in the garden north of Twinsen's house, follows Twinsen with his eyes, stretches his wings now
-and then, and rumbles when Twinsen talks to him. No flying in this game.
+and then, and rumbles when Twinsen talks to him. Nobody flies in this game; the one exception is a hop, not a flight:
+Baldino's hop-pack (below).
+
+### Baldino's hop-pack (EQ-1; this sequel's invention, not LBA2's jetpack)
+A short-hop jetpack Baldino built in his workshop: a copper tank between two brass cylinders, a lilac cap, a glass bead
+that shows the charge, his bent little antenna ("makes it look finished"). Its limits are the story's, not only the
+code's (src/game/jetpack.js; tests/jetpack.mjs):
+- **When:** chapter 10 (Baldino's Network), after his briefing, from its peg by his workshop door; every later chapter
+  too. Never before: chapters 1–9 are built on walking and jumping (the cliffs' stones, the gorge, the lift, the fences).
+- **What it does:** one storey. In Athletic mode, jump and keep holding the jump: it lifts Twinsen at most 2.5 m above
+  the ground he took off from (a jump: about 1.8 m), for about 2.2 s of thrust, at a walking pace; it refills by itself on
+  solid ground. Held near the ground it brakes a fall (a soft landing).
+- **What it can't do:** it pushes against the ground, so it needs ground within about three metres under it: over a
+  drop, a gap or a cliff edge it gives up and he falls as from any jump; it never carries him over the sea or the cloud
+  sea, so it can't leave an island or reach another one. It won't light indoors, underground (chapters 11–12) or under
+  anything solid overhead; it can't lift him over a fence his feet don't clear, onto a roof, or up a cliff more than one
+  storey at a time. Zoé never wears it. No doors while he is in the air on it.
+- **Gates:** no story gate is physical from chapter 10 on except the old mill's climb, and the mill's relay still needs
+  the brake (the pack only shortens the climb). Fences built against a jump (about 2.4 m and more) hold against it.
+- **Uses:** Baldino's test step behind his workshop (a clover and kashes on a deck a jump can't reach), the old mill's
+  stair-stones (every other stone), soft landings.
