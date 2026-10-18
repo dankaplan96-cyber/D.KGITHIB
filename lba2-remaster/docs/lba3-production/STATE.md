@@ -85,6 +85,14 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   a person he faces (the lighthouse dial vs Zoé), and chapter10.mjs no longer depends on Zoé's facing (DONE ×3, forced
   ASSISTED exit 2). N2 (the pump's camera) left open: no camera zones exist. QA.md "REV-TY-5 fixes"; status REVIEW.
 
+## PERF-IGPU (status REVIEW, branch worktree-agent-a079faebfb0eeef59)
+- Black frames from the automatic resolution fixed (fixed canvas and targets; tests/dynres.mjs). Precompile into the
+  composer's target, shadow depth programs warmed, preset changes wait for their shaders; Low preset reworked and
+  auto-picked on Vega/Intel HD-UHD; trees/rocks batched, static shadow casters batched per cell, Kit colour merge.
+  Numbers: QA.md "Performance"; VISUAL_REMASTER "Performance on integrated GPUs".
+- Open: town.js/island.js merges (VP-10's files; VISUAL_REMASTER "Remaining" 3) for Medium street ≤ 300; the
+  user's benchmark on the laptop (GPU frame rate, startup on D3D11) is the judge.
+
 ## Done after (0.30.0, EQ-1; status REVIEW)
 - Baldino's hop-pack (src/game/jetpack.js): from chapter 10 on its peg by his workshop door; Athletic, jump and hold;
   one storey (2.4 m over the take-off ground and the ground under him), 2.2 s of thrust refilled on firm ground, needs

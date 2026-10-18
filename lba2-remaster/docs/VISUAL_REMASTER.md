@@ -127,9 +127,48 @@ really stood on the shop roof).
 - Verified: combat (22/22), chapters 1 and 5 pass. Standard captures (R11) show no change apart from the
   silhouette where Twinsen is hidden; no page errors.
 
+## Performance on integrated GPUs (PERF-IGPU, 2026-10-18)
+Target: the user's laptop (HP 255 G7, Ryzen 5 3500U, Radeon Vega 8, 1366×768, Electron/D3D11). Its benchmark
+(0.29.1) showed Medium bound by draw-call submission (21.8 ms CPU at 621 calls in the street) and GPU fill,
+High stalling on shader compiles, and black frames every few seconds.
+- Black frames: the automatic resolution resized the canvas right after a frame was drawn (that clears the
+  drawing buffer, so the browser showed black) and reallocated the composer's targets. Now the canvas, its
+  buffer and the targets keep their size; the scene pass draws into the lower-left part of the target and the
+  output pass reads that part. Steps: down when the 90th-percentile frame misses 20 ms, up after three windows
+  under 17.5 ms; a step up that fails at once is not retried for 30 s, then 60, 120… Window and preset changes
+  are applied just before the next frame is drawn. tests/dynres.mjs (before: every step showed a black frame).
+- Shader compiles: precompile() now compiles into the composer's target (no tone mapping / sRGB in the
+  material). It used to compile for the canvas, so every program was built twice (Medium: 115 → 79 programs at
+  load). The shadow pass's depth programs are warmed at load from one copy of every kind of caster. A preset
+  change holds the last frame while its variants compile (lamp count, shadow type). The benchmark waits for
+  that too, so it reports the steady state ("no lamps" was measuring the recompile).
+- Draw calls: trees, palms, bushes and rocks are one BatchedMesh per material (kit.js LodBatch; one call per
+  pass, per-instance LOD, coarse sculpts in the shadow map). The regions' lodInstances use the same.
+  Static shadow casters are merged per 24 m cell into depth-only batches drawn in the shadow pass only
+  (engine/shadowcull.js). A piece that moves or is hidden leaves its batch. Casters whose shadow can't reach
+  the view skip the shadow map. The spaceport is merged per material. A Kit draws MAT.flat / MAT.paint
+  colours of one kind as one vertex-coloured mesh. On Medium/Low, static props under 4 px (Low 7 px) on
+  screen are skipped.
+- Presets: Low = pixel ratio 0.85 (automatic down to 0.7), no MSAA, FXAA, no shadows, no bloom, 2 lamp lights,
+  trees detailed to 26 m, grass/flowers to 36 m at 60 %. Medium = 1.0, MSAA 2×, PCF shadows (1024), 4 lamps,
+  34 m / 46 m. High unchanged. First start picks Low on Vega 3–11 / Intel HD-UHD / mobile GPUs, Medium on Iris /
+  "Radeon(TM) Graphics", High otherwise.
+- Measured (SwiftShader, 1366×768, same routes before/after; counts exact, CPU times not GPU times):
+
+  | Route | Low | Medium | High |
+  |---|---|---|---|
+  | street calls | 344 → 277 | 630 → 325 | 713 → 365 |
+  | interior calls | 151 → 117 | 255 → 121 | 268 → 135 |
+  | combat calls | 144 → 145 | 217 → 214 | 230 → 227 |
+  | transition calls | 224 → 161 | 412 → 206 | 483 → 230 |
+
+  Evidence: docs/lba3-visual/evidence/PERF-IGPU/ (before/after captures per preset and route, dynres log).
+
 ## Remaining (ranked)
 1. Cliff bases still slightly soft; shoreline and water edge.
 2. Animation polish beyond idle: turn-in-place steps, landing variety, NPC-specific idles.
-3. Draw calls: vegetation tiles (≈140 instanced calls in view, ≈110 in the shadow pass) could use larger
-   tiles; the remaining loose props in island.js (station, depot, pipeline) could be merged like the harbour.
+3. Draw calls in the street (Medium 325): the town's loose props (Pippa's stall ≈35 meshes, the heat posts,
+   the well) and island.js's original-props / dressing groups are unmerged. mergeStatic(group, { recolor, cell })
+   would take the street to ≈250 (measured as a what-if). The dog (25 parts × 2 passes) and the characters'
+   separate parts are the next largest.
 4. Head outlines are still 7–11-sided at close-up range (shading is smooth; the outline is geometry).

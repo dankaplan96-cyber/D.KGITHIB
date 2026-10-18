@@ -1,9 +1,12 @@
 // In-game benchmark: the same routes, timed on the machine that plays. Runs from the pause menu (or ?bench once
 // a game is going) and never touches the save: the game is snapshotted first, saving is off while it runs, and
 // the snapshot is put back at the end.
-// Each route warms up (scene change, shaders) and is then measured: average fps, frame time p50/p95/p99 and
+// Each route warms up (scene change, shaders: a preset change or a breakdown variant first waits for its shader
+// variants to finish compiling, so the numbers are the steady state, not the recompile) and is then measured: average fps, frame time p50/p95/p99 and
 // max, stalls (frames over 50 ms), simulation CPU time, render submission CPU time (not GPU time: the GPU's work
 // is only visible in the frame time), draw calls and triangles. Routes run once per quality preset.
+import { gpuQuality } from './perf.js';
+import { POOL_SIZE as POOL_N } from './lightpool.js';
 const WARM = 1.5, MEASURE = 6;
 
 export class Bench {
@@ -61,7 +64,7 @@ export class Bench {
   }
 
   // runs every route at each quality; resolves with the report text
-  run(qualities = ['medium', 'high']) {
+  run(qualities = ['low', 'medium', 'high']) {
     const G = this.g;
     if (this.running) return Promise.resolve(null);
     this.running = true;
@@ -72,12 +75,12 @@ export class Bench {
     const plan = [];
     for (const q of qualities) for (const r of this.routes()) plan.push({ q, r });
     // breakdown: the street and the house at Medium, each with one cost taken away, to see what the GPU pays for
-    const R = G.renderer, LP = G.lightPool, n0 = LP?.lights.length ?? 0;
+    const R = G.renderer, LP = G.lightPool, n0 = () => POOL_N[G.settings.quality] ?? 4;
     const variants = [
       { id: 'as is', apply() {}, undo() {} },
-      { id: 'no shadows', apply() { R.renderer.shadowMap.enabled = false; }, undo() { R.applyDerived(); } },
-      { id: 'no lamps', apply() { LP?.setSize(0); }, undo() { LP?.setSize(n0); } },
-      { id: 'res x0.6', apply() { R.autoRes = true; R.dyn = 0.6; R.resize(); }, undo() { R.autoRes = false; R.dyn = 1; R.resize(); } },
+      { id: 'no shadows', apply() { R.renderer.shadowMap.enabled = false; G.warmGraphics(); }, undo() { R.applyDerived(); G.warmGraphics(); } },
+      { id: 'no lamps', apply() { LP?.setSize(0); G.warmGraphics(); }, undo() { LP?.setSize(n0()); G.warmGraphics(); } },
+      { id: 'res x0.6', apply() { R.autoRes = true; R.setDyn(0.6); }, undo() { R.autoRes = false; R.setDyn(1); } },
     ];
     const brk = this.routes().filter((r) => r.id === 'street' || r.id === 'interior');
     for (const r of brk) for (const v of variants) plan.push({ q: 'medium', r, v, short: true });
@@ -95,6 +98,8 @@ export class Bench {
       };
       G.benchTick = (real) => {
         if (!cur) return;
+        // (a preset change or a variant's shaders still compiling: the warm-up starts once they are ready)
+        if (G.gfxHold) { warm = 0; t = 0; return; }
         t += real;
         G.state = 'play';
         cur.r.drive(t, real);
@@ -103,7 +108,7 @@ export class Bench {
           const s = G.perf.stats();
           const stalls = G.perf.buf.filter((f) => f.ms > 50).length;
           const R = G.renderer;
-          const cfg = { pr: +R.renderer.getPixelRatio().toFixed(2), msaa: R.composer?.renderTarget1?.samples ?? 0, shadows: R.renderer.shadowMap.enabled, bloom: !!R.bloom?.enabled, lamps: G.lightPool?.lights.length ?? 0 };
+          const cfg = G.graphicsConfig();
           results.push({ q: cur.q, id: cur.r.id, label: cur.r.label, s, stalls, warmMaxMs: +maxWarm.toFixed(0), cfg, v: cur.v?.id });
           next();
         }
@@ -130,7 +135,7 @@ export class Bench {
     const v = G.version || '?';
     const lines = [];
     lines.push(`LBA3: The Awakening benchmark · build ${v} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`);
-    lines.push(`GPU (as reported by the browser): ${G.perf.gpu}`);
+    lines.push(`GPU (as reported by the browser): ${G.perf.gpu} · preset picked for it on a first start: ${gpuQuality(G.perf.gpu)} · playing on: ${G.settings.quality} · automatic resolution: ${G.settings.res !== 'full' ? 'on (off while measuring)' : 'off'}`);
     lines.push(`window ${innerWidth}×${innerHeight} · devicePixelRatio ${devicePixelRatio} · user agent ${navigator.userAgent.match(/(Electron|Chrome)\/[\d.]+/g)?.join(' ') || navigator.userAgent}`);
     if (G.perf.load) lines.push(`startup: build ${(G.perf.load.total / 1000).toFixed(1)} s · shader preparation ${(G.perf.load.shaders / 1000).toFixed(1)} s`);
     let q = null;
@@ -138,7 +143,7 @@ export class Bench {
     for (const x of results.filter((r) => !r.v)) {
       if (x.q !== q) {
         q = x.q; const c = x.cfg;
-        lines.push('', `quality ${q}: render pixel ratio ${c.pr} · MSAA ${c.msaa}× · shadows ${c.shadows ? 'on' : 'off'} · bloom ${c.bloom ? 'on' : 'off'} · lamp lights ${c.lamps}`);
+        lines.push('', `quality ${q}: render pixel ratio ${c.pr} · MSAA ${c.msaa}× · FXAA ${c.fxaa ? 'on' : 'off'} · shadows ${c.shadows ? `on (${c.shadowMap} px)` : 'off'} · bloom ${c.bloom ? 'on' : 'off'} · lamp lights ${c.lamps} · grass/flowers to ${c.smallFar} m · trees detailed to ${c.treeNear} m`);
       }
       const s = x.s;
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
