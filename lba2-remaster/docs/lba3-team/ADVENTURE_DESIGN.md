@@ -91,6 +91,9 @@ warm targets from the face side, passes repeat after a stray cold hit).
   stronger hint, Save & quit → Continue with two open, death → Retry with one open, door, journal, the temple line,
   chapter 5). The steps before the gate still use the older teleport helpers (ISO). Also chapter5, desert-life,
   stability, and playthrough segment 07 from the chapter-4 start save (REV-TY-4/save-06.json, origin rewritten).
+  Result on the tree merged with 0.31.0 (1ee0ef4): chapter4 18/18, chapter5 to chapter 6, desert-life 30/30,
+  stability 16/16, segment 07 to chapter 5 with no stops, no page errors. Earlier failures were boot timeouts on a
+  page reload while the shared machine ran at load 30+, and two test-side counts disturbed by mite fights (fixed).
 - **Not tested:** a first-time player. The test is played by an agent who knows the solution, so whether the
   crystals read as "warm" and whether the crack → discs link is noticed are design judgments awaiting a fresh
   player. GPU look (software rendering only), sound by ear.
