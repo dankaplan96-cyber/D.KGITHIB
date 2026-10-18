@@ -6,8 +6,11 @@
 // needs rope from the pier before it can fly. Ilka's notebook — the dig's gate code — sits on the foreman's
 // desk at the research post: go in during one of the sandstorms that blind the drones and send the gate
 // guard indoors. The project dug Temple-Park down to the Temple of Bù's gate (three terraces, crystal mites);
-// three stone seals open the gate, and inside the temple (src/game/temple.js) a great carving shows the shell
-// and its vents, which the project is closing. Dallan throws them out — but he knows.
+// five stone discs stand round its door, like the five vents carved over it; only the three with heat behind them
+// open it (crystals crust those: they grow where heat leaks, as Ilka said and a crack on the way down shows); a
+// cold disc shuts the others again. Ilka waits at the rim with hints that grow with his mistakes. Inside the
+// temple (src/game/temple.js) a great carving shows the shell and its vents, which the project is closing (that
+// is why two discs were cold). Dallan throws them out — but he knows.
 // → chapter 5 (Steam and Sand): open the vent under this island without boiling Kesh.
 import { ChapterBase } from './base.js';
 import '../text/ch4.js';
@@ -20,6 +23,12 @@ export class Dig extends ChapterBase {
   inD() { return this.game.room?.id === 'desert'; }
   gears() { return [0, 1, 2].filter((i) => this.f['c4_gear' + i]).length; }
   seals() { return [0, 1, 2].filter((i) => this.f['c4_seal' + i]).length; }
+  // where Ilka waits once she has her notebook back: outside the dig's gate, out of the keypad's way
+  ilkaRim() {
+    const dg = this.D.dig, g = dg.gate, dx = g.x - dg.x, dz = g.z - dg.z, a = Math.atan2(dz, dx) + 0.12, r = Math.hypot(dx, dz) + 2.4;
+    const x = dg.x + Math.cos(a) * r, z = dg.z + Math.sin(a) * r;
+    return { x, z, a: Math.atan2(dg.x - x, dg.z - z) };
+  }
 
   // ---------------------------------------------------------------- cast
   npcDefs() {
@@ -63,6 +72,7 @@ export class Dig extends ChapterBase {
       case 'tarra': return S.tarra;
       case 'ilka':
         if (f.c4_seals3 && this.T) return this.T.npcSpots.ilka;   // (she follows him into the temple)
+        if (f.c4_notebook && D.dig) return this.ilkaRim();          // (and waits at the dig before that)
         return S.ilka;
       case 'dallan':
         if (f.c4_carving && this.T) return this.T.npcSpots.dallan;
@@ -98,6 +108,8 @@ export class Dig extends ChapterBase {
     if (f.c4_heskAsk && !f.c4_rope) consider(dist(D.rope.x, D.rope.z), 1.4, { kind: 'c4rope', label: 'p_rope' });
     if (f.c4_ilka && !f.c4_notebook) consider(dist(D.post.desk.x, D.post.desk.z), 1.5, { kind: 'c4desk', label: 'p_desk' });
     if (!f.c4_digOpen) consider(dist(D.dig.gate.x, D.dig.gate.z), 1.8, { kind: 'c4gate', label: 'p_code' });
+    // the carving over the temple's door (five vents breathing), from the bottom of the dig
+    if (f.c4_digOpen && !f.c4_seals3 && h.pos.y < D.dig.bottomY + 1) consider(dist(D.dig.carvings.x, D.dig.carvings.z), 1.6, { kind: 'c4lintel', label: 'p_carving' });
   }
   // the temple: its gate at the bottom of the dig, once the seals are open
   doors() {
@@ -119,6 +131,7 @@ export class Dig extends ChapterBase {
         return true;
       case 'c4desk':
         f.c4_notebook = true; g.audio.play('chest'); g.hud.toast('c4_toast_notebook');
+        this.story.refreshCast();   // (Ilka goes to wait at the dig)
         this.chain([['hero', 'c4_desk_1'], ['hero', 'c4_dallan_note']], () => { g.updateObjective(); g.save(false); });
         return true;
       case 'c4gate':
@@ -127,6 +140,7 @@ export class Dig extends ChapterBase {
         this.story.refreshCast();
         this.chain([['hero', 'c4_gate_open']], () => { g.updateObjective(); g.save(false); });
         return true;
+      case 'c4lintel': this.chain([['hero', 'c4_lintel']], () => { f.c4_lintel = true; g.save(false); }); return true;
       case 'c4carve': this.readCarving(); return true;
     }
     return false;
@@ -153,7 +167,11 @@ export class Dig extends ChapterBase {
             f.c4_ilka = true; this.stormT = STORM_PERIOD - 8; g.updateObjective(); g.save(false);
           });
         }
-        return c([['ilka', f.c4_notebook ? 'c4_ilka_dig' : 'c4_ilka_wait']]);
+        if (!f.c4_notebook) return c([['ilka', 'c4_ilka_wait']]);
+        // at the dig: a hint that grows with his mistakes, never more than the next step
+        if (!f.c4_digOpen) return c([['ilka', 'c4_ilka_dig']]);
+        if (!f.c4_bottom) return c([['ilka', 'c4_ilka_down']]);
+        return c([['ilka', f.c4_coldHits ? 'c4_ilka_h2' : 'c4_ilka_h1']]);
       case 'guard': return c([['guard', 'c4_guard_1']]);
       case 'dallan': return c([['dallan', f.c4_carving ? 'c4_dallan_3' : 'c4_guard_1']]);
     }
@@ -193,7 +211,12 @@ export class Dig extends ChapterBase {
     for (const tg of g.room.ballTargets) {
       if (tg.done || Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) > (tg.r || 0.8) + 0.15) continue;
       if (tg.gear != null && f.c4_pumpTask) { tg.done = true; this.freeGear(tg.gear); return true; }
-      if (tg.seal != null && f.c4_digOpen) { tg.done = true; this.openSeal(tg.seal); return true; }
+      // (the discs answer once he is down there and has seen them: a ball thrown at a mite on the terraces above
+      // mustn't count a cold disc he hasn't met yet)
+      // (a disc is struck on its carved face, from the floor's side, not by a ball grazing past it from behind)
+      if ((tg.seal != null || tg.cold != null) && this.D && (p.x - tg.x) * (this.D.dig.x - tg.x) + (p.z - tg.z) * (this.D.dig.z - tg.z) < 0) continue;
+      if (tg.seal != null && f.c4_digOpen && f.c4_bottom) { tg.done = true; this.openSeal(tg.seal); return true; }
+      if (tg.cold != null && f.c4_bottom && !f.c4_seals3) { this.coldHit(tg); return true; }
     }
     return false;
   }
@@ -223,11 +246,25 @@ export class Dig extends ChapterBase {
       g.audio.play('rumble'); g.camRig.shake(0.3);
       this.story.refreshCast();
       this.chain([['narrator', 'c4_seals_all']], () => { g.updateObjective(); g.save(false); });
-    } else g.save(false);
+    } else { g.updateObjective(); g.save(false); }   // (the count on the HUD follows each disc)
+  }
+  // a cold disc: a dull thud, and any warm disc already open grinds shut again (the door wants live heat only)
+  coldHit(tg) {
+    const g = this.game, f = this.f, D = this.D;
+    const open = [0, 1, 2].filter((i) => f['c4_seal' + i]);
+    for (const i of open) { f['c4_seal' + i] = false; D.dig.seals[i].setOn(false); }
+    for (const t of g.room.ballTargets) if (t.seal != null) t.done = false;
+    f.c4_coldHits = (f.c4_coldHits || 0) + 1;
+    g.audio.play('hitStone'); g.particles.burst(tg.x, tg.y, tg.z, '#bfb2a0', 14, 1.6);
+    if (open.length) { g.audio.play('rumble'); g.camRig.shake(0.12); }
+    const key = open.length ? 'c4_cold_shut' : 'c4_cold';
+    const done = () => { g.updateObjective(); g.save(false); };
+    if (f.c4_coldHits === 1) this.chain([['hero', key]], done);
+    else { g.hud.toast(open.length ? 'c4_toast_shut' : 'c4_toast_cold'); done(); }
   }
   readCarving() {
     const g = this.game, f = this.f;
-    this.chain([['hero', 'c4_carving_1'], ['ilka', 'c4_ilka_c1'], ['ilka', 'c4_ilka_c2'], ['hero', 'c4_tw_c1'], ['ilka', 'c4_ilka_c3']], () => {
+    this.chain([['hero', 'c4_carving_1'], ['ilka', 'c4_ilka_c1'], ['ilka', 'c4_ilka_c2'], ['hero', 'c4_tw_cold'], ['hero', 'c4_tw_c1'], ['ilka', 'c4_ilka_c3']], () => {
       f.c4_carving = true;
       this.story.refreshCast();
       this.chain([['dallan', 'c4_dallan_1'], ['ilka', 'c4_ilka_d1'], ['dallan', 'c4_dallan_2'], ['hero', 'c4_tw_d1'], ['dallan', 'c4_dallan_3'], ['ilka', 'c4_ilka_end']], () => {
@@ -270,7 +307,14 @@ export class Dig extends ChapterBase {
     // first steps down into the dig
     const h = g.hero;
     if (f.c4_digOpen && !f.c4_digSeen && g.state === 'play' && this.inD() && h.pos.y < D.dig.bottomY + 3.6 && Math.hypot(h.pos.x - D.dig.x, h.pos.z - D.dig.z) < 13) {
-      f.c4_digSeen = true; this.chain([['hero', 'c4_dig_in'], ['hero', 'c4_seals_hint']]);
+      f.c4_digSeen = true; this.chain([['hero', 'c4_dig_in']]);
+    }
+    // at the bottom: the warm crack beside the last ramp (the rule, shown safely), then the five discs
+    if (f.c4_digOpen && !f.c4_seals3 && g.state === 'play' && this.inD() && h.pos.y < D.dig.bottomY + 0.9) {
+      const cr = D.dig.crack;
+      // (the last ramp's foot is ~3.6 m from the crack)
+      if (!f.c4_crack && cr && Math.hypot(h.pos.x - cr.x, h.pos.z - cr.z) < 6.5) { f.c4_crack = true; this.chain([['hero', 'c4_crack']], () => g.save(false)); }
+      else if (!f.c4_bottom && Math.hypot(h.pos.x - D.dig.x, h.pos.z - D.dig.z) < 5.6) { f.c4_bottom = true; this.chain([['hero', 'c4_bottom']], () => { g.updateObjective(); g.save(false); }); }
     }
   }
 
@@ -293,7 +337,8 @@ export class Dig extends ChapterBase {
     const f = this.f;
     if (!f.c4_started) return '';
     if (f.c4_seals3) return this.goal(this.game.room?.id === 'butemple' || f.c4_templeSeen ? 'c4_obj_carving' : 'c4_obj_temple');
-    if (f.c4_digOpen) return this.goal('c4_obj_seals', { n: this.seals() });
+    if (f.c4_digOpen && f.c4_bottom) return this.goal('c4_obj_seals', { n: this.seals() }) + (f.c4_coldHits ? this.sub(false, 'c4_sub_warm') : '');
+    if (f.c4_digOpen) return this.goal('c4_obj_bottom');
     if (f.c4_notebook) return this.goal('c4_obj_dig');
     if (f.c4_ilka) return this.goal('c4_obj_notebook') + this.sub(false, 'c4_sub_storm');
     if (f.c4_trust) return this.goal('c4_obj_ilka') + this.sub(!!f.c4_rope, f.c4_heskAsk ? 'c4_sub_rope' : 'c4_sub_hesk');
@@ -314,6 +359,10 @@ export class Dig extends ChapterBase {
       { key: 'c4_j_pump', done: !!f.c4_trust },
       { key: 'c4_j_ilka', done: !!f.c4_ilka },
       { key: 'c4_j_notebook', done: !!f.c4_notebook },
+      // what he has seen for himself at the dig (recalled, never the answer)
+      ...(f.c4_crack ? [{ key: 'c4_j_crack', done: true }] : []),
+      ...(f.c4_bottom ? [{ key: 'c4_j_discs', done: true }] : []),
+      ...(f.c4_coldHits ? [{ key: 'c4_j_cold', done: true }] : []),
       { key: 'c4_j_carving', done: !!f.c4_carving },
       { key: 'c4_j_dallan', done: !!f.c4_done },
     ].filter((l, i, a) => i === 0 || a[i - 1].done);
