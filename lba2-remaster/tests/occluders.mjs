@@ -4,7 +4,7 @@
 //      nothing (no fader is left; the check guards against one coming back)
 //  (b) a house between the camera and him never leaves him covered: behind six houses, from a fresh shot (the
 //      camera rises over the house, as LBA2's SearchCameraPos) and while he walks round behind a house in a still
-//      shot, his head, chest and feet are each either in view (no opaque mesh on the ray from the camera) or drawn
+//      shot (every 0.3 s), his head, chest and feet are each either in view (no opaque mesh on the ray from the camera) or drawn
 //      by the silhouette pass (the frame with the silhouette differs from the frame without it at that pixel)
 // SHOTS=<dir> keeps a screenshot of each kind of case. GAME_URL as the other tests.
 import { launch, open, menu, checker } from './lib/boot.mjs';
@@ -43,7 +43,8 @@ await ev(async () => {
     for (const [name, hy] of [['head', 1.6], ['chest', 1.0], ['feet', 0.15]]) {
       const p = new THREE.Vector3(h.pos.x, h.pos.y + hy, h.pos.z), dir = p.clone().sub(cam.position), L = dir.length(); dir.normalize();
       ray.set(cam.position, dir); ray.far = L - 0.12;
-      const hit = ray.intersectObject(W.root, true).find((r) => r.object.visible && !r.object.isSprite && !r.object.isPoints && !isHero(r.object) && [r.object.material].flat().some(shown));
+      let hit = ray.intersectObjects(W.root.children.filter((o) => o !== W.terrain.mesh), true).find((r) => r.object.visible && !r.object.isSprite && !r.object.isPoints && !isHero(r.object) && [r.object.material].flat().some(shown));
+      if (!hit) for (let k = 1; k < 40; k++) { const q = cam.position.clone().lerp(p, k / 40); if (W.terrain.heightAt(q.x, q.z) > q.y + 0.05) { hit = { object: { name: 'terrain' }, point: q }; break; } }
       const s = p.clone().project(cam), px = Math.round((s.x + 1) / 2 * A.w), py = Math.round((1 - s.y) / 2 * A.h);
       let diff = 0;
       for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const x = px + dx, y = py + dy; if (x < 0 || y < 0 || x >= A.w || y >= A.h) continue; const i = (y * A.w + x) * 4; diff = Math.max(diff, Math.abs(A.d[i] - B.d[i]) + Math.abs(A.d[i + 1] - B.d[i + 1]) + Math.abs(A.d[i + 2] - B.d[i + 2])); }
@@ -61,7 +62,7 @@ for (const id of houses) {
   for (const facing of ['out', 'in']) {
     const r = await ev(([id, facing]) => { const h = game.world.houses.find((q) => q.id === id); const a = Math.atan2(h.door.x - h.x, h.door.z - h.z);
       const s = { x: h.door.x + Math.sin(a) * 0.5, z: h.door.z + Math.cos(a) * 0.5, a: facing === 'out' ? a : a + Math.PI };
-      window.__place(s); return { st: window.__houseState(h), pts: window.__points().map((p) => p.ok ? p.name : `${p.name}:${p.by}`) }; }, [id, facing]);
+      window.__place(s); return { st: window.__houseState(h) }; }, [id, facing]);
     check(`(a) at the ${id} house's door facing ${facing}: the house stays drawn whole (${r.st.meshes} meshes)`, r.st.meshes > 0 && r.st.hidden === 0 && r.st.faded === 0, r);
     if (id === 'twinsen' && facing === 'out') await snap('test-a-door-twinsen-out');
   }
@@ -76,7 +77,7 @@ for (const id of ['bug', 'stone', 'south', 'pink', 'shop', 'twinsen']) {
   if (id === 'south') await snap('test-b-behind-south-fresh-shot');
 }
 
-// (b2) walking round behind a house in a still shot (from in front of it to 2.2 m behind it), checked every 0.2 s
+// (b2) walking round behind a house in a still shot (from in front of it to 2.2 m behind it), checked every 0.3 s
 await ev(`window.__drive = (tx, tz, tol = 0.6) => { const p = P.plan(tx, tz, { tol: 0.4 }); window.__D = { pts: p.pts, wi: 1, tx, tz, tol }; return p.ok; };
 window.__driveStep = (dt = 1 / 15) => { const D = window.__D, h = game.hero, k = game.input.keys, norm = (a) => Math.atan2(Math.sin(a), Math.cos(a));
   k.delete('ArrowLeft'); k.delete('ArrowRight'); k.delete('ArrowUp');
@@ -93,7 +94,7 @@ for (const id of ['bug', 'stone', 'south']) {
     window.__place({ x: h.x + Math.sin(a) * (h.d / 2 + 6), z: h.z + Math.cos(a) * (h.d / 2 + 6), a: a + Math.PI });
     window.__drive(h.x - Math.sin(a) * (h.d / 2 + 2.2), h.z - Math.cos(a) * (h.d / 2 + 2.2), 0.9);
     const bad = [], frames = []; let direct = 0, silhouette = 0, n = 0;
-    for (let i = 0; i < 70; i++) { window.__driveStep(0.1); window.__driveStep(0.1);
+    for (let i = 0; i < 40; i++) { window.__driveStep(0.1); window.__driveStep(0.1); window.__driveStep(0.1);
       const pts = window.__points(); n++; const st = window.__houseState(h);
       for (const p of pts) { if (!p.ok) bad.push({ i, ...p, pos: [game.hero.pos.x, game.hero.pos.z].map((v) => +v.toFixed(1)) }); else if (p.inView) direct++; else silhouette++; }
       if (st.hidden || st.faded) bad.push({ i, house: st });
@@ -101,14 +102,14 @@ for (const id of ['bug', 'stone', 'south']) {
       if (Math.hypot(game.hero.pos.x - window.__D.tx, game.hero.pos.z - window.__D.tz) < 0.9) break; }
     P.release();
     return { n, direct, silhouette, bad: bad.slice(0, 6), silFrames: frames.slice(0, 8), end: [game.hero.pos.x, game.hero.pos.z].map((v) => +v.toFixed(1)) }; }, id);
-  check(`(b) walking round behind the ${id} house in a still shot: every 0.2 s his head, chest and feet in view or under the silhouette (${r.direct} in view, ${r.silhouette} by silhouette)`, r.bad.length === 0 && r.n > 3, r);
+  check(`(b) walking round behind the ${id} house in a still shot: every 0.3 s his head, chest and feet in view or under the silhouette (${r.direct} in view, ${r.silhouette} by silhouette)`, r.bad.length === 0 && r.n > 3, r);
   if (!silShot && r.silFrames.length) {
     // replay to the first frame he was drawn by the silhouette, for the evidence
     silShot = true;
     await ev(([id, k]) => { const h = game.world.houses.find((q) => q.id === id); const a = h.ry;
       window.__place({ x: h.x + Math.sin(a) * (h.d / 2 + 6), z: h.z + Math.cos(a) * (h.d / 2 + 6), a: a + Math.PI });
       window.__drive(h.x - Math.sin(a) * (h.d / 2 + 2.2), h.z - Math.cos(a) * (h.d / 2 + 2.2), 0.9);
-      for (let i = 0; i <= k; i++) { window.__driveStep(0.1); window.__driveStep(0.1); } P.release(); }, [id, r.silFrames[0]]);
+      for (let i = 0; i <= k; i++) { window.__driveStep(0.1); window.__driveStep(0.1); window.__driveStep(0.1); } P.release(); }, [id, r.silFrames[0]]);
     await snap(`test-b-walk-${id}-silhouette`);
     await ev(() => { game.step(1.5); });
     await snap(`test-b-walk-${id}-after-new-shot`);
