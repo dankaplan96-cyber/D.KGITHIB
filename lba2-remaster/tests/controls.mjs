@@ -2,6 +2,8 @@
 //   1. the interact prompt names the key in use: E, a rebound key, A on a pad (one source: Input.label)
 //   2. pad A talks / searches when something is in reach, in every behaviour (Athletic does not jump instead)
 //   3. an NPC's gait follows the ground it really covers: a slow route walks slower, a blocked walker stands
+// CTRL-1 (4–8): LBA2's tank controls, the ball's arcs and aimed distance (the automatic aim at enemies kept), the follow
+// camera — measured by input at 60 / 30 fps (MEASURE lines). ONLY=tank,ball,camera runs just those sections.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
