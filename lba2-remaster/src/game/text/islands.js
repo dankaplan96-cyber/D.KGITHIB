@@ -47,5 +47,5 @@ Object.assign(STR.en, {
   map_to_zeelich: 'spaceship to Zeelich',
   map_to_twinsun: 'spaceship to Twinsun',
   port_board: 'CITADEL SPACEPORT · Departures: Zeelich Spaceport, by spaceship. For Zeelich\'s islands, change there to an Esmer shuttle.',
-  port_grounded: 'A note on the shuttle\'s hatch: "All flights grounded by order of the Joint Project. Passengers for Zeelich: the project\'s ferry, at the harbour."',
+  port_grounded: 'A note on the ship\'s hatch: "All passenger flights grounded by order of the Joint Project. Project crews only."',
 });

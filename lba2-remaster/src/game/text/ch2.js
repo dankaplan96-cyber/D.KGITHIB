@@ -6,8 +6,8 @@ Object.assign(STR.he, {
   p_climb: 'קח', p_brake: 'בלם', p_console: 'מסוף', p_dial: 'סובב', p_mic: 'שדר', p_bench: 'הרכב', p_shaft: 'רד',
 
   // arrival
-  c2_arrive: 'המעבורת עולה מעל העננים. השמיים כאן ורודים, והאי של זיליך מרחף מעל ים של צמר גפן.',
-  c2_doran_1: 'זהו, טווינסן. עד כאן אני. המעבורת חוזרת למצודה עם הערב. אם וסק ישאל, לא ראית אותי.',
+  c2_arrive: 'שעות אחרי שעזבה את טווינסאן, החללית נוחתת בזיליך. השמיים כאן ורודים, והאיים מרחפים מעל ים של צמר גפן.',
+  c2_doran_1: 'זהו, טווינסן. עד כאן אני. אני אשמור על החללית חמה ליד המשטח. אם וסק ישאל, לא ראית אותי.',
   c2_tw_arrive: 'בלדינו אמר שהסדנה שלו ברחוב האסמרים. נמצא אותה.',
   c2_doran_idle: 'הכנפיים של הטחנות האלה... אצלנו היו מכינים מהן שלוש סירות.',
 
@@ -91,7 +91,7 @@ Object.assign(STR.he, {
   c2_obj_gate: 'לפתוח את מגן הרציף במסוף שליד השער',
   c2_obj_vesk: 'לעצור את וסק על הרציף',
   c2_obj_shaft: 'לרדת בפיר המקדח',
-  c2_j_arrive: 'הגעתי לזיליך במעבורת של דורן.',
+  c2_j_arrive: 'דורן הטיס אותי לזיליך בחללית של המיזם.',
   c2_j_bal: 'בלדינו: וסק קודח דרך הקליפה של הכוכב. צריך להפוך את המקדח, לא לעצור אותו.',
   c2_j_parts: 'השגתי גלגל שיניים וגליל קוד.',
   c2_j_key: 'בלדינו בנה מפתח עקיפה.',
@@ -107,8 +107,8 @@ Object.assign(STR.en, {
   n_nara: 'Nara', n_oku: 'Oku',
   p_climb: 'Pick Up', p_brake: 'Brake', p_console: 'Use', p_dial: 'Turn', p_mic: 'Broadcast', p_bench: 'Assemble', p_shaft: 'Descend',
 
-  c2_arrive: 'The ferry climbs above the clouds. The sky here is pink, and Zeelich floats on a sea of cotton wool.',
-  c2_doran_1: 'This is as far as I go, Twinsen. The ferry heads back to Citadel Island tonight. If Vesk asks, you never saw me.',
+  c2_arrive: 'Hours out from Twinsun, the ship sets down on Zeelich. The sky here is pink, and the islands float on a sea of cotton wool.',
+  c2_doran_1: "This is as far as I go, Twinsen. I'll keep the ship warm by the pad. If Vesk asks, you never saw me.",
   c2_tw_arrive: "Baldino said his workshop is on the Esmer street. Let's find it.",
   c2_doran_idle: "The sails on those mills... back home we'd get three boats out of them.",
 
@@ -190,7 +190,7 @@ Object.assign(STR.en, {
   c2_oku_plan: 'Thirty percent. And the wind works for that. Take the steps of the old mill, then. Tell the cog I said goodbye.',
   c2_tw_show_nara: "Read this. It's Vesk's evacuation plan.",
   c2_nara_plan: 'Upper districts only? My whole family lives down by the docks. Keep the flower. Stop him.',
-  c2_j_taken: 'A project guard confiscated the evacuation plan at the dock.',
+  c2_j_taken: 'A project guard confiscated the evacuation plan at the spaceport.',
   c2_j_back: 'I got the plan back from the depot. Oku saw it and let me climb his mill.',
   c2_sub_cyl: 'A code cylinder (project depot, drones)',
   c2_sub_mills: 'Brake the three mills with the ball ({n}/3)',
@@ -205,8 +205,8 @@ Object.assign(STR.en, {
   c2_bal_sealed1: "Those doors only open on the bore's own network code, and every project station has to send it at once. We can't do that. Not yet.",
   c2_tw_sealed: "So we wait while he drills?",
   c2_bal_sealed2: "No. We learn what the shell is, so that when we get down there we know how to turn the bore around. The first crystals were dug up on Desert Island, by a professor the project sacked for asking questions. Find her.",
-  c2_doran_sealed: "Desert Island? Two days south. The ferry runs on light, and there's plenty of light down there. Climb aboard.",
-  c2_j_arrive: "I reached Zeelich on Doran's ferry.",
+  c2_doran_sealed: "Desert Island? I'll fly us home to Citadel first. From there it's two days south on the project's ferry. Climb aboard.",
+  c2_j_arrive: "Doran flew me to Zeelich in the project's ship.",
   c2_j_bal: "Baldino says Vesk is drilling through the planet's shell. We need to reverse the drill, not stop it.",
   c2_j_parts: 'I found the cog and the code cylinder.',
   c2_j_key: 'Baldino built the override key.',

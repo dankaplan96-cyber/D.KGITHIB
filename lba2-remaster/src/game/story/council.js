@@ -1,7 +1,7 @@
 // Chapter 9 — "The Council" (Zeelich and its upper district).
 //
-// A project ship brings Twinsen back up to Zeelich. Baldino explains how the council works: a petition on
-// Form 12-B with two citizens' stamps. Nara stamps it after hearing him out; Oku wants the mills turning
+// A project ship flies Twinsen from Citadel Spaceport to Zeelich Spaceport. Baldino explains how the council
+// works: a petition on Form 12-B with two citizens' stamps. Nara stamps it after hearing him out; Oku wants the mills turning
 // again first (Twinsen braked them for the shield in chapter 3), so the ball knocks the three brakes loose.
 // The clerk in the council house lets him through. The council fears the cold more than the crack, and
 // wants proof the project itself wrote down. Next door is the project's archive: a locker holds a
@@ -57,7 +57,7 @@ export class Council extends ChapterBase {
 
   begin() {
     const g = this.game, Z = this.Z;
-    g.enterRoom('zeelich', Z.dock, true);
+    g.enterRoom('zeelich', Z.spaceport?.landing || Z.dock, true);   // (off the project ship, on Zeelich Spaceport's deck)
     g.hero.hasBall = true;
     this.freezeMills();
     this.story.refreshCast();

@@ -1,9 +1,10 @@
 // Travel by input (CONNECT; src/game/travel.js): at a travel point — a spaceport pad, a shuttle pad, the ferry
 // stops, the glider fields — E opens the menu of where that craft goes now. Twinsun's regions are joined by the
 // ferry and the glider, Zeelich's by Esmer shuttles, and the two planets only by the spaceship between Citadel
-// Spaceport and Zeelich Spaceport. Routes open with their chapters (travel.js); the story's own crossings (the
-// project's ferry, Hesk's flights) stay as they were. Every chapter's world stays as it was: travelling only moves
-// Twinsen.
+// Spaceport and Zeelich Spaceport. Routes open with their chapters (travel.js). The story's own crossings between the
+// planets are spaceship flights too (PLANET-1): the project's ship in chapter 2 (the one exception to the grounded
+// notice below), the project ships in chapters 3→4 and 8, the public spaceship in chapter 10; Hesk's glider flies
+// on Twinsun only. Every chapter's world stays as it was: travelling only moves Twinsen.
 import { buildTravel, destinations, travelTo, TITLE, LABEL } from '../travel.js';
 import { t } from '../i18n.js';
 import '../text/islands.js';
