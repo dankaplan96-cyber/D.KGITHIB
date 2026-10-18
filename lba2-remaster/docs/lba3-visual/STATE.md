@@ -32,6 +32,7 @@ Production state stays in docs/lba3-production/STATE.md and BACKLOG.md; this fil
 | VP-10 | graphics artist | how a faded house should read (now fully hidden, shadow kept); island.js faders may veil at 0.12 | TODO | VP-3 report |
 | VP-11 | animator | side-step around an NPC plays the forward walk | TODO | VP-2 report |
 | VP-12 | graphics artist | the prologue's harbour master's shed by Doran is a plain box (src/game/story/prologue.js decorate) | TODO | VP-7 report |
+| SRC-2 | source-character integrator | Baldino rebuilt from LBA2 body 139 (a Grobo; his own skeleton, ear/trunk bones, his walk/idle/talk timing); Zoé no longer pregnant (the user); the Dino-Fly's doze (REV-V-1 D1/D2: wings folded along the flanks, one-eyed look, subtler rounder muzzle) | REVIEW (visual review next) | evidence/SRC-2/, character-review §16 |
 
 ## Next exact action
 All of VP-1..VP-8 are dispatched. As each returns: re-run its tests in the main checkout, merge, push, then

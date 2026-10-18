@@ -31,7 +31,7 @@
  },
  "sources_location": "the user's files in the session scratch space (never committed)",
  "outputs_sha256": {
-  "assets/poly/zoe.json": "c0ba71d480b24fea10269faad1821dd017de8deffc6d1d3b3c1aa62b99085fba"
+  "assets/poly/zoe.json": "84815498e54534dd5d44480ff431b4b19e0b676a2d678f529e78866f42f985e2"
  },
  "outputs_other": [
   "art/characters/zoe/zoe_poly.blend (editable; rewritten by the script)"
@@ -110,5 +110,6 @@
   "her own clips are not used; the rig.js procedural set drives her",
   "the strap ends on the shoulder at the side seam (a small red patch)",
   "the eyes are small dark slants as in the original; in close-ups they read as half-closed"
- ]
+ ],
+ "built_by_src2": "python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly art/characters/zoe/zoe_poly.blend (SRC-2: ZOE_BODY without the pregnancy; ZOE_LBA2=1 for the measured figure)"
 }

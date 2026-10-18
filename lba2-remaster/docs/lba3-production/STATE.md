@@ -119,6 +119,43 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   he stands at never vanishes; behind one he is always in view or drawn by the silhouette. PERF-IGPU's open item done:
   town.js/island.js merges, Medium street 324 → 274. Evidence docs/lba3-visual/evidence/VP-10/.
 
+## Done after (SRC-2; status REVIEW)
+- **Baldino as in LBA2 (the user).** He is identified in the user's files with certainty: body 139, File3D 93.
+  - Its scene objects give Twinsen the car part, the portable radio and the Proto-Pack news, and ask for gazogem for
+    "our vessel".
+  - Measured (character-review §16): a short, broad Grobo, 1.78 m. A big grey-violet head carried low, a trunk curling
+    out to the belt, great flat ears, goggles over the eyes, a white chevron collar, an olive pear-shaped smock over a
+    grey chest, brown trousers on square legs set wide apart, thin arms with round grey hands.
+- **Rebuilt as Zoé was** (`tools/blender/baldino_poly.py` → `assets/poly/baldino.json`), on his own skeleton (LOOKS.baldino:
+  the original's joints, ear and trunk bones).
+  - rig.js uses his walk's cycle length (1.3 m), his idle's 1.6 s and a talk loop keyed to ANIM 718: fists on the hips,
+    arms wide, arms forward with a nod.
+  - The ears waft, flap and swing, and the trunk sways.
+  - His soft-contact radius is 0.6 m.
+  - Twelve years on: no change (STORY_BIBLE names none).
+  - `cast_poly.py` no longer rebuilds him.
+- **Every scene he is in was checked from the play camera, before and after, with the Talk/Take prompts:** chapter 3's
+  workshop, chapter 9's council, chapter 10's workshop and EQ-1's peg. Chapter 1 has only his radio voice; the opening
+  has no Baldino.
+- **The Dino-Fly (REV-V-1 D1/D2 again):**
+  - The wings fold along the flanks (each membrane panel in the flank's slope, the forearm's turned over).
+  - He looks at Twinsen with one eye and the head bowed, so the play camera sees the head's length, not a tube.
+  - The muzzle's grey is subtler and its tip rounder.
+- **Zoé (the user's extra item):** no longer pregnant. LBA2's body 26 is expecting. `zoe_poly.py` now builds her without
+  the belly and with a natural waist (the measured figure kept as `ZOE_BODY_LBA2`, `ZOE_LBA2=1`). She was checked in
+  the opening, at home and as the player.
+- **Evidence:** docs/lba3-visual/evidence/SRC-2/.
+- **Regressions** (on the tree merged with a1ff730; one browser at a time, its own server): workshop, chapter1,
+  chapter2, chapter10 (CHAPTER 10 DONE), jetpack, house, stability and opening ALL PASSED.
+  - zoe-resume failed once (Zoé caught while sneaking out, under a machine load average of ~20), then passed on a
+    rerun. It also passes on the same tree with the old Zoé, so the failure was a timing flake, not the new mesh.
+- **Open:**
+  - An independent visual review of SRC-2.
+  - His own clips could replace the keyed talk/idle if the animator wants exact curves.
+  - The trunk can brush Twinsen's front when he presses straight into him.
+  - Next candidates for SRC: Bersimon (body 111) and the School of Magic master (123), moderate gaps; Joe the Elf (110?)
+    needs identification first.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
