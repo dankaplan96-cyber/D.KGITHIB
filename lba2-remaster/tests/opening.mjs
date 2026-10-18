@@ -5,8 +5,10 @@
 //   4. Continue from the save after the opening: no replay
 //   5. a second new game: no duplicated props, characters or flags
 //   6. the first objective is playable (the door wants the ball; the cupboard gives it)
+//   7. every spoken line babbles in its speaker's voice (voice.js); every character on screen is from the poly cast
+//      (assets/poly/*.json); nobody vanishes or jumps on screen (only under a dip to black, the door transition)
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 const errs = [];
 page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
@@ -17,12 +19,13 @@ const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${
 
 const boot = async (mode, clear = true) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/'), { waitUntil: 'load', timeout: 180000 });
-  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: +(process.env.BOOT_MS || 240000) });
   if (clear) await ev(() => localStorage.clear());
   await ev(() => { game.testFreeze = true; });
   if (mode === 'new') {
     await page.click('[data-act="new"]', { timeout: 180000 });
-    await page.waitForFunction(() => game.cine && game.cine.state === 'run', null, { timeout: 240000 });
+    await page.waitForFunction(() => game.cine && game.cine.state === 'run', null, { timeout: +(process.env.BOOT_MS || 240000) });
+    await ev(async () => { window.__cine = game.cine; await game.audio.ctx?.resume?.(); });
   } else if (mode) await page.click(`[data-act="${mode}"]`, { timeout: 180000 });
 };
 // advance the game clock by s seconds at 30 fps
@@ -44,7 +47,7 @@ const endState = () => ev(() => {
     state: G.state, room: G.room?.id, cine: !!G.cine, camCine: !!G.camRig.cine, hud: !document.querySelector('#hud').classList.contains('hidden'),
     cineUI: !document.querySelector('#cine').classList.contains('hidden'), fade: document.querySelector('#fade').classList.contains('on'),
     intro: !!f.intro, opening: !!f.opening, ball: !!G.hero.hasBall,
-    objective: document.querySelector('#objective').textContent.trim(),
+    objective: document.querySelector('#objective').textContent.trim(), objectiveShown: getComputedStyle(document.querySelector('#objective')).display !== 'none' || (G.hud.toastLog || []).some((m) => m.startsWith('Check the well')), // (the LBA HUD hides the panel: a toast says it)
     zoeOut: zoe.present && Math.hypot(zoe.pos.x - water.door.x, zoe.pos.z - water.door.z) < 2, zoeControlled: !!zoe.controlled,
     arthur: [ar.forceAnim, !!ar.controlled], hero: [+(G.hero.pos.x - G.rooms.house.center.x).toFixed(2), +G.hero.pos.z.toFixed(2)],
     lift: +G.world.cargoLift.u.toFixed(2), stream: G.rooms.house.kitchen.stream.visible, sd: G.rooms.house.table.screwdriver.parent === G.rooms.house.group,
@@ -53,26 +56,62 @@ const endState = () => ev(() => {
   };
 });
 const good = (s) => s.state === 'play' && s.room === 'house' && !s.cine && !s.camCine && s.hud && !s.cineUI && !s.fade && s.intro && s.opening && !s.ball
-  && s.objective === 'Check the well' && s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house';
+  && s.objective.startsWith('Check the well') && s.objective.includes('Take the magic ball from the cupboard') && s.objectiveShown && s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house';
 
 // ---------------------------------------------------------------- 1. full playback
 await boot('new');
 const during = await ev(() => ({ state: game.state, hud: !document.querySelector('#hud').classList.contains('hidden'), prompt: document.querySelector('#prompt')?.classList.contains('show') ?? false, saved: !!localStorage.getItem('lba3_save_v1') }));
 check('opening starts as a cinematic with the HUD hidden and nothing saved', during.state === 'cinematic' && !during.hud && !during.prompt && !during.saved, during);
-await runTo(30);
-const mid = await ev(() => ({ room: game.room?.id, saved: !!localStorage.getItem('lba3_save_v1'), sub: document.querySelector('#cine-sub').textContent }));
-check('the scene moves to the house; still nothing saved mid-scene', mid.room === 'house' && !mid.saved, mid);
-await runTo(46);
-const sub = await ev(() => document.querySelector('#cine-sub').textContent);
-check('subtitles with the speaker', sub.startsWith('Zoé') && sub.includes("The tap's stopped again"), sub);
-await runTo(100);
+// the whole scene, frame by frame (30 fps): who is on screen, from which model, and whether anyone vanishes or
+// jumps while the picture is up
+const polySizes = await ev(async () => {
+  const names = await (await fetch('assets/poly/index.json')).json(), o = {};
+  for (const n of names) { const j = await (await fetch(`assets/poly/${n}.json`)).json(); o[j.pos.length / 3] = (o[j.pos.length / 3] || []).concat(n); }
+  return o;
+});
+const watch = await ev((polySizes) => {
+  const G = game, c = G.cine, cam = G.camera, v = new G.camera.position.constructor();
+  const cast = { twinsen: G.hero, zoe: G.npcs.find((n) => n.def.id === 'zoe'), arthur: G.npcs.find((n) => n.def.id === 'arthur') };
+  const seen = new Set(), notPoly = [], pops = [], subsAt = [];
+  let prev = {}, lastSub = '', mid = null;
+  const onScreen = (o) => { o.getWorldPosition(v); const d = v.distanceTo(cam.position); v.project(cam); return v.z < 1 && Math.abs(v.x) < 1 && Math.abs(v.y) < 1 && d < 40; };
+  for (let i = 0; i < 4000 && G.cine; i++) {
+    G.frame(1 / 30, false);
+    if (!G.cine) break;
+    if (!mid && c.t > 31) mid = { room: G.room?.id, saved: !!localStorage.getItem('lba3_save_v1') };
+    const dark = document.querySelector('#fade').classList.contains('on');
+    // every visible skinned character in view: its mesh must be one of the poly cast's
+    G.scene.traverseVisible((o) => {
+      if (!o.isSkinnedMesh || o.material?.depthFunc === 5 /* (the hero's silhouette) */ || !onScreen(o)) return;
+      const names = polySizes[o.geometry.attributes.position.count];
+      if (names) names.forEach((n) => seen.add(n)); else if (notPoly.length < 5) notPoly.push({ t: +c.t.toFixed(2), n: o.geometry.attributes.position.count });
+    });
+    // the family: on screen one frame and gone (or a metre away) the next, without a dip to black
+    for (const [id, a] of Object.entries(cast)) {
+      const vis = a.rig.root.visible && (id !== 'zoe' || a.present) && (!G.room || Math.abs(a.pos.x - G.room.center.x) < 30) && onScreen(a.rig.root);
+      const p = prev[id];
+      if (p && p.vis && !dark && !p.dark && (!vis || Math.hypot(a.pos.x - p.x, a.pos.z - p.z) > 0.8)) pops.push({ id, t: +c.t.toFixed(2), vis, from: [p.x, p.z].map((x) => +x.toFixed(1)), to: [a.pos.x, a.pos.z].map((x) => +x.toFixed(1)) });
+      prev[id] = { vis, x: a.pos.x, z: a.pos.z, dark };
+    }
+    const sub = document.querySelector('#cine-sub').classList.contains('show') ? document.querySelector('#cine-sub').textContent : '';
+    if (sub && sub !== lastSub) subsAt.push(sub);
+    lastSub = sub;
+  }
+  const subs = window.__cine.def.subs;
+  return { mid, seen: [...seen].sort(), notPoly, pops, subsAt, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
+}, polySizes);
+check('the scene moves to the house; still nothing saved mid-scene', watch.mid?.room === 'house' && !watch.mid.saved, watch.mid);
+check('every character on screen is from the poly cast (assets/poly)', watch.notPoly.length === 0 && ['twinsen', 'zoe', 'arthur', 'worker'].every((n) => watch.seen.includes(n)), { notPoly: watch.notPoly, seen: watch.seen });
+check('nobody vanishes or jumps on screen (only under a dip to black)', watch.pops.length === 0, watch.pops.slice(0, 6));
+check('subtitles with the speaker, in order', watch.subsAt.length === watch.lines && watch.subsAt.some((x) => x.startsWith('Zoé') && x.includes("The tap's stopped again")) && watch.subsAt[0].startsWith('Resident'), watch.subsAt);
+check("every spoken line babbles in its speaker's voice", watch.ctx === 'running' && watch.voiced.every(([vk, n]) => vk && n >= 2), watch.voiced);
 await run(0.5);
 const full = await endState();
 check('played through: control in the house, objective, save, cast placed', good(full), full);
 const kids0 = full.sceneKids;
 
 // ---------------------------------------------------------------- 2. skipping
-for (const at of [3, 50, 81]) {
+for (const at of [3, 21, 50, 64, 77, 85]) {
   await boot('new');
   await runTo(at);
   await holdSkip();
@@ -108,7 +147,7 @@ check('...and it still ends cleanly', good(await endState()));
 await boot('continue', false);
 await run(1.5);
 const cont = await endState();
-check('continue: no replay, in the house with the objective', cont.state === 'play' && !cont.cine && cont.room === 'house' && cont.objective === 'Check the well' && cont.zoeOut && cont.arthur[0] === 'kneelWork', cont);
+check('continue: no replay, in the house with the objective', cont.state === 'play' && !cont.cine && cont.room === 'house' && cont.objective.startsWith('Check the well') && cont.zoeOut && cont.arthur[0] === 'kneelWork', cont);
 
 // ---------------------------------------------------------------- 5. new game again (from the title, with a save present)
 await boot('new', false);
