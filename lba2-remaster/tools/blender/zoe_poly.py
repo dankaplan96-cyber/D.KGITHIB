@@ -143,7 +143,13 @@ EYE = [(0.015, 0.926), (0.026, 0.935), (0.042, 0.934), (0.031, 0.923)]
 EARRING = [(0.054, 0.909, -0.036), (0.054, 0.882, -0.026), (0.054, 0.882, -0.048)]
 NECKLACE = [(0.021, 0.834, -0.054), (0.048, 0.807, -0.001), (0.032, 0.780, 0.027), (0.0, 0.758, 0.037)]
 # the bun: three spheres (centre y, z, r) on the three bun groups, drawn flat; built as one mass like Twinsen's (VP-1b)
-ZOE_BUN = ((1.001, -0.135, 0.052), (0.974, -0.188, 0.037), (0.937, -0.204, 0.026))
+# CHAR-OPEN (OPEN-3 #11): as measured (ZOE_BUN_LBA2) the first ball only grazes the back of the crown and the other two
+# hang 0.03-0.05 H behind the skull; carried by the tail bones, the follow-through then swung the mass off the head
+# and in profile it floated with bare scalp between. Now the same three balls (same sizes, same downward-backward
+# run) are seated on the skull: the first sunk into the crown's back, the second and third against the back of the
+# head; and the whole bun is on the head bone (a bun is pinned hair: it does not swing like a tail).
+ZOE_BUN_LBA2 = ((1.001, -0.135, 0.052), (0.974, -0.188, 0.037), (0.937, -0.204, 0.026))
+ZOE_BUN = ((0.982, -0.108, 0.052), (0.953, -0.146, 0.037), (0.921, -0.140, 0.026))
 BUN_FILL = 0.7
 BUN_M = 12
 
@@ -404,9 +410,7 @@ BUN_U = {}
 
 
 def w_bun(p):
-    u = BUN_U[tuple(round(c, 6) for c in p)]
-    a, c_, d = smooth(-0.6, 0.2, u), smooth(0.8, 1.4, u), smooth(1.4, 2.0, u)
-    return {k: v for k, v in (('head', 1 - a), ('tail0', a - c_), ('tail1', c_ - d), ('tail2', d)) if v > 1e-4}
+    return {'head': 1.0}   # (CHAR-OPEN: the bun rides the head; it was passed along tail0..2 like a ponytail)
 
 
 bun = b.P('bun', COL['hair'], w_bun, 80)

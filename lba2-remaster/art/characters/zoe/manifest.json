@@ -31,7 +31,7 @@
  },
  "sources_location": "the user's files in the session scratch space (never committed)",
  "outputs_sha256": {
-  "assets/poly/zoe.json": "84815498e54534dd5d44480ff431b4b19e0b676a2d678f529e78866f42f985e2"
+  "assets/poly/zoe.json": "ee9d3680c854532898fe21ca0dc7d987ae01524d6763783f0af14e757212496c"
  },
  "outputs_other": [
   "art/characters/zoe/zoe_poly.blend (editable; rewritten by the script)"
@@ -103,7 +103,8 @@
  "rollback": [
   "restore assets/poly/zoe.json from commit c0264c8",
   "or: python tools/blender/cast_poly.py art/characters/skeletons.json assets/poly zoe (the earlier build_zoe)",
-  "SRC-2's slimming: ZOE_LBA2=1 python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly (SRC-1's figure), or git checkout 292a775 -- lba2-remaster/assets/poly/zoe.json"
+  "SRC-2's slimming: ZOE_LBA2=1 python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly (SRC-1's figure), or git checkout 292a775 -- lba2-remaster/assets/poly/zoe.json",
+  "CHAR-OPEN: restore lba2-remaster/assets/poly/zoe.json from commit 40946f8"
  ],
  "limitations": [
   "the skeleton's pivots differ from the original's (docs/character-review.md §15)",
@@ -111,5 +112,8 @@
   "the strap ends on the shoulder at the side seam (a small red patch)",
   "the eyes are small dark slants as in the original; in close-ups they read as half-closed"
  ],
- "built_by_src2": "python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly art/characters/zoe/zoe_poly.blend (SRC-2: ZOE_BODY without the pregnancy; ZOE_LBA2=1 for the measured figure)"
+ "built_by_src2": "python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly art/characters/zoe/zoe_poly.blend (SRC-2: ZOE_BODY without the pregnancy; ZOE_LBA2=1 for the measured figure)",
+ "char_open": {
+  "bun (OPEN-3 #11)": "the three bun balls keep their measured sizes and their downward-backward run but are seated on the skull (ZOE_BUN; the measured ones are ZOE_BUN_LBA2), and the bun is weighted to the head bone only (it was passed along tail0..2, whose follow-through swung it off the head)"
+ }
 }
