@@ -172,7 +172,7 @@ with only the benchmark's new route and counters (so both sides measure the same
 | Door parts and the small-prop culling (the user's "door not fully drawn") | tests/doorcull.mjs (new): 16 house doors (Citadel and Zeelich), Twinsen 2/6/12 m out, LBA + free camera, Low and Medium vs High. Before: **FAIL** — a 4 cm brass part by Twinsen's own door culled at Low and Medium with him 2.7 m away, two parts of Baldino's workshop door at Low. After: PASS 192/192 (nothing within 16 m of Twinsen is culled for size) |
 | Look | same-frame captures before/after (look/*-cmp.jpg: before · after · difference ×6) at 7 Citadel views: static scenery identical; differences are the NPCs' animation phase and the water's clock |
 | Shader programs | at load Low/Medium/High 70/81/89 → 74/85/93 (the folded twins); 0 new programs on any route after loading, every preset |
-| Regression (this build) | merge, dynres, stability, transitions, occluders (house lookup taught the merged town), camclear, townlife, holomap, deaths, opening, doorcull: ALL PASSED |
+| Regression (this build) | merge, dynres, stability, transitions, occluders (house lookup taught the merged town), camclear, townlife, holomap, deaths, opening, doorcull: ALL PASSED; opening again after merging OPEN-3 (9750466, with its per-frame solids check): ALL PASSED |
 | perfbudget budgets (unchanged) on the new, heavier route | Medium street ≤ 300: FAIL (350); High ≤ 450: PASS (438); Low ≤ 260: FAIL (292); interiors ≤ 150: PASS; no new programs: PASS. The budgets were set on the LBA-camera route; not relaxed |
 
 ### Story and progression (player-input playthrough, tests/playthrough/01–14)
