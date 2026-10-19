@@ -188,6 +188,7 @@ export const LOOKS = {
     // a Quetch guard: a round helmet with a violet visor, a knee-length uniform coat, a stun rifle (a prop)
     race: 'quetch', outfit: 'tunic', hem: 0.42, tunic: '#1a2a33', tunicTrim: '#1a2a33', belt: '#c8a050', buckle: '#e8c870', pants: '#16141a', shoes: '#16141a',
     skin: '#e0b48c', hairStyle: 'bald', helmetQ: '#2a3a44', visor: '#c070ff', emblem: '#e090ff', eyes: '#2a2a2a', height: 1.02,
+    coatLegs: 0.5, hemW: 0.9, // (CHAR-OPEN: toward the hem half the coat's skirt rides the thighs (cast_poly.py w_skirt), a little less flare)
   },
   vguardG: {
     // a Grobo guard: the great body in the uniform, a helmet with a dark visor; armoured (light hits only shake it)

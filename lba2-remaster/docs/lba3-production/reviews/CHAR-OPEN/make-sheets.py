@@ -42,7 +42,7 @@ if cmd == 'pair':
     print(out, im.size)
 elif cmd == 'grid':
     out, cell, cols = sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
-    items = [x.split(':', 1) for x in sys.argv[5:]]
+    items = [x.rsplit(':', 1) for x in sys.argv[5:]]
     rows = (len(items) + cols - 1) // cols
     im = Image.new('RGB', (cols * cell + (cols - 1) * 4, rows * cell + (rows - 1) * 4), (30, 30, 30))
     for i, (lab, p) in enumerate(items):
@@ -54,7 +54,7 @@ elif cmd == 'grid':
     print(out, im.size)
 elif cmd == 'rows':
     out, w = sys.argv[2], int(sys.argv[3])
-    items = [x.split(':', 1) for x in sys.argv[4:]]
+    items = [x.rsplit(':', 1) for x in sys.argv[4:]]
     cw = w // 2 - 3
     cells = [label(fit(Image.open(p).convert('RGB'), cw), lab) for lab, p in items]
     ch = max(c.height for c in cells)

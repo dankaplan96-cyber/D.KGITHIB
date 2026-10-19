@@ -2,7 +2,7 @@
 // floor (as tests/deaths.mjs does it), hit from the front (falls on his back) and from behind (falls on his front).
 //   GAME_URL=http://127.0.0.1:8173/ node ko-shots.mjs <outdir> [prefix]
 // For each: frames from the side and three-quarter at 0.6 s / rest (1.4 s), and the measures at rest: the feet's and
-// the hips' height over the floor, the lowest vertex's bone, and how far the coat (vertices on the skirt bones) stands
+// the hips' height over the floor, the lowest vertex's bone, and how far the coat (vertices with any weight on the skirt bones) stands
 // off the line of the body (its highest point over the floor, lying).
 import { launch, open, menu } from '../../../../tests/lib/boot.mjs';
 import path from 'node:path';
@@ -36,7 +36,7 @@ await ev(async () => {
           o.getVertexPosition(i, v); v.applyMatrix4(o.matrixWorld); const d = gy(v);
           if (d < lo) { lo = d; loB = B[SI.getX(i)].name; }
           const skirt = [0, 1, 2, 3].reduce((s, k) => s + (/^skirt/.test(B[SI.getComponent(i, k)].name) ? SW.getComponent(i, k) : 0), 0);
-          if (skirt > 0.5) { coatHi = Math.max(coatHi, d); coatLo = Math.min(coatLo, d); }
+          if (skirt > 0.05) { coatHi = Math.max(coatHi, d); coatLo = Math.min(coatLo, d); }
         }
       });
       const j = e.rig.j;
