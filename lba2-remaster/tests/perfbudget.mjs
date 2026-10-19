@@ -4,7 +4,7 @@
 // Runs on SwiftShader: the counts (calls, triangles, programs) are exact, the times are CPU/software-renderer
 // proxies only, never GPU timings. The user's in-game Benchmark on the real laptop is the judge.
 //   PERF_JSON=out.json  writes the numbers;  PERF_SHOTS=dir  saves a JPEG per route per preset
-//   PERF_BUDGET=0       prints only (no budget checks; for a "before" run)
+//   PERF_BUDGET=0       prints only (no budget checks; for a "before" run);  ROUTES=street,transition  only those
 import { launch, open, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 const { check, done } = checker();
@@ -32,36 +32,38 @@ const save = () => {
 };
 for (const q of QS) {
   await ev((q) => { game.settings.quality = q; game.applySettings(); }, q);
-  for (const id of ['street', 'interior', 'combat', 'transition']) {
+  for (const id of (process.env.ROUTES || 'street,interior,combat,transition').split(',')) {
     const r = await ev(async ({ id }) => {
       const G = game, R = G.renderer.renderer;
       const route = G.bench.routes().find((x) => x.id === id);
       G.state = 'play'; route.setup(); G.state = 'play';
       const p0 = R.info.programs.length;
       const rows = [];
-      // 4 s of the route (simulated at 30 fps), drawn every 0.3 s (SwiftShader takes seconds per frame);
-      // the first drawn frame (any new shader compiles) is reported apart
-      let t = 0;
-      for (let i = 0; i < 120; i++) {
+      // the in-game benchmark's window (PERF-2): 1.5 s of warm-up then 6 s, simulated at 30 fps and drawn every
+      // 0.25 s (SwiftShader takes seconds per frame), so the turning camera covers the same headings as on the
+      // player's machine; the first drawn frame (any new shader compiles) is reported apart
+      let t = 0, first = true;
+      for (let i = 0; i < 225; i++) {
         const dt = 1 / 30; t += dt;
         route.drive(t, dt);
-        const draw = i % 9 === 0;
+        const draw = first || (t >= 1.5 && i % 8 === 0); first = false;
         // (drain the software GPU's queue first, so the timed render() is CPU submission, not waiting on it)
         if (draw) { const gl = R.getContext(); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4)); }
         G.perf.beginFrame(); G._renderMs = 0;
         G.frame(dt, draw);
         if (!draw) continue;
         // the transition route swaps scenes behind a fade: count only frames that drew
-        if (G._renderMs > 0) rows.push({ ms: G._renderMs, calls: R.info.render.calls, tris: R.info.render.triangles });
+        if (G._renderMs > 0) rows.push({ ms: G._renderMs, calls: R.info.render.calls, tris: R.info.render.triangles, draws: R.info.render.calls + G.perf.sub, shadow: G.perf.shadow });
       }
       const med = (k) => { const v = rows.slice(1).map((x) => x[k]).sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : 0; };
       const max = (k) => Math.max(0, ...rows.slice(1).map((x) => x[k]));
-      return { calls: med('calls'), callsMax: max('calls'), tris: med('tris'), trisMax: max('tris'), renderMs: +med('ms').toFixed(1), firstMs: +(rows[0]?.ms ?? 0).toFixed(0),
+      const p95 = (k) => { const v = rows.slice(1).map((x) => x[k]).sort((a, b) => a - b); return v.length ? v[Math.min(v.length - 1, Math.floor(v.length * 0.95))] : 0; };
+      return { calls: med('calls'), callsMax: max('calls'), callsP95: p95('calls'), draws: med('draws'), shadow: med('shadow'), tris: med('tris'), trisMax: max('tris'), renderMs: +med('ms').toFixed(1), firstMs: +(rows[0]?.ms ?? 0).toFixed(0),
         newPrograms: R.info.programs.length - p0, newNames: R.info.programs.slice(p0).map((p) => p.name + ':' + String(p.cacheKey).slice(0, 90)), frames: rows.length, pr: +(G.renderer.renderer.getPixelRatio() * (G.renderer.effScale?.() ?? 1)).toFixed(2), lamps: G.lightPool.lights.length };
     }, { id });
     out.routes[`${q}/${id}`] = r; save();
     if (r.newPrograms) console.log('   new programs:', JSON.stringify(r.newNames).slice(0, 1500));
-    console.log(`${q.padEnd(6)} ${id.padEnd(10)} calls ${String(r.calls).padStart(4)} (max ${r.callsMax}) · tris ${(r.tris / 1000).toFixed(0)}k (max ${(r.trisMax / 1000).toFixed(0)}k) · submit ${r.renderMs} ms · first frame ${r.firstMs} ms · new programs ${r.newPrograms} · pr ${r.pr} · lamps ${r.lamps}`);
+    console.log(`${q.padEnd(6)} ${id.padEnd(10)} calls ${String(r.calls).padStart(4)} (p95 ${r.callsP95}, max ${r.callsMax}, shadow ${r.shadow}) · GPU draws ${r.draws} · tris ${(r.tris / 1000).toFixed(0)}k (max ${(r.trisMax / 1000).toFixed(0)}k) · submit ${r.renderMs} ms · first frame ${r.firstMs} ms · new programs ${r.newPrograms} · pr ${r.pr} · lamps ${r.lamps}`);
     if (shots) { await ev(() => { game.renderer.render(); }); await page.screenshot({ path: `${shots}/${q}-${id}.jpg`, type: 'jpeg', quality: 70, timeout: 180000 }); }
   }
 }

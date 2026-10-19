@@ -13,6 +13,7 @@
 //
 // CONTRACT: buildCityDressing(root, physics, W) → W.cityDress = { placed, kinds {name: n}, skipped: ['name (x, z): why'] }
 import * as THREE from 'three';
+import { mergeStatic } from '../engine/merge.js';
 import * as P from './props.js';
 import { Kit } from './props.js';
 import { streetDist } from './town.js';
@@ -160,6 +161,9 @@ export function buildCityDressing(root, physics, W) {
   bench(-34.6, 43.6, Math.PI / 2 + 0.3, '#7a52b0'); bin(-34.0, 45.1); tub(-33.6, 36.2, 41, '#e8c040'); planter(-36.0, 36.6, 0.1, 12);
 
   for (const k of kits.values()) k.flush();
+  // (PERF-2: then across the kits' cells, the colours, roughness and textures of one kind folded together — merge.js
+  // recolor/retex; every piece here is static and no material of the dressing changes at runtime)
+  mergeStatic(g, { recolor: true, retex: true, cell: 64 });
   W.cityDress = { placed: count, kinds, skipped };
   return W.cityDress;
 }

@@ -13,12 +13,16 @@
 //    bounding sphere grown by its size / tan(sun elevation), moved half that down-sun) touches the view frustum.
 // 3. Small props (under 2 m) casting on their own: no shadow beyond SMALL_FAR[preset] from the focus.
 // 4. Distance detail (Medium, Low): a static piece drawn smaller than MIN_PX pixels on screen is left out of both
-//    passes (through its layers; the game's own `visible` flags are untouched).
+//    passes (through its layers; the game's own `visible` flags are untouched). Never within KEEP_NEAR of the focus
+//    (PERF-2): a door's handle, a hinge or a frame by Twinsen stays drawn whatever its size on screen.
+//    PERF-2: the same rule for the pieces that cast no shadow, or cast one on their own (pots, flowers, small signs,
+//    window panes, bolts: the stragglers a merge leaves alone), half of them tested per frame (its size on screen
+//    only changes with distance, so a turning camera never sees one late).
 import * as THREE from 'three';
 
 export const SMALL_FAR = { high: 24, medium: 18, low: 18 };
 export const MIN_PX = { high: 0, medium: 4, low: 7 };
-const SMALL_R = 2, CELL = 24;
+const SMALL_R = 2, CELL = 24, KEEP_NEAR = 16;
 const _f = new THREE.Frustum(), _m = new THREE.Matrix4(), _s = new THREE.Sphere(), _c = new THREE.Vector3(), _v = new THREE.Vector3();
 
 // may this mesh's shadow be drawn by a merged, material-less batch?
@@ -33,16 +37,19 @@ const shownIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if
 
 class Area {
   constructor(root) {
-    this.root = root; this.cells = new Map(); this.members = []; this.solo = []; this.proxies = []; this.tick = 0;
+    this.root = root; this.cells = new Map(); this.members = []; this.solo = []; this.proxies = []; this.tick = 0; this.quiet = [];
     root.updateMatrixWorld(true);
     const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
     this.inv = inv;
+    // (distance detail for a piece that is not a member: a plain mesh, culled by its own bounds as three does)
+    const quiet = (o, C) => { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh && o.frustumCulled !== false && Number.isFinite(C.r)) this.quiet.push(C); };
     root.traverse((o) => {
-      if (!o.isMesh || !o.castShadow || o.userData.shadowProxy) return;
+      if (!o.isMesh || o.userData.shadowProxy) return;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       if (!g.boundingSphere || !Number.isFinite(g.boundingSphere.radius)) return;
       const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true };
-      if (!batchable(o) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) this.solo.push(C); return; }
+      if (!o.castShadow) { quiet(o, C); return; }
+      if (!batchable(o) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } return; }
       _c.copy(C.c).applyMatrix4(o.matrixWorld);
       const m = o.material, side = m.side + '|' + m.shadowSide;
       const key = Math.floor(_c.x / CELL) + ',' + Math.floor(_c.z / CELL) + '|' + side;
@@ -101,7 +108,8 @@ class Area {
     for (const cell of this.cells.values()) if (cell.dirty) this.build(cell);
   }
   restore() {
-    for (const C of this.members) if (!C.solo) C.o.castShadow = true;
+    for (const C of this.members) { if (!C.solo) C.o.castShadow = true; C.o.layers.enable(0); }
+    for (const C of this.quiet) C.o.layers.enable(0);
     for (const C of this.solo) { C.o.castShadow = true; C.o.layers.enable(0); }
     for (const p of this.proxies) { p.geometry.dispose(); this.root.remove(p); }
   }
@@ -166,7 +174,19 @@ export class ShadowCull {
         if (minPx) {
           _c.copy(C.c).applyMatrix4(o.matrixWorld);
           const px = (C.r * o.matrixWorld.getMaxScaleOnAxis() * pxK) / Math.max(0.1, _c.distanceTo(cam));
-          shown = C.shown ? px > minPx * 0.85 : px > minPx;
+          shown = !(px >= 0) || (focus && Math.hypot(focus.x - _c.x, focus.z - _c.z) < KEEP_NEAR) || (C.shown ? px > minPx * 0.85 : px > minPx);
+        }
+        if (shown !== C.shown) { C.shown = shown; if (shown) o.layers.enable(0); else o.layers.disable(0); }
+      }
+      const Q = A.quiet, step = minPx ? 2 : 1;   // (all at once when the detail is switched off: everything shows again)
+      for (let i = minPx ? A.tick & 1 : 0; i < Q.length; i += step) {
+        const C = Q[i], o = C.o;
+        let shown = true;
+        if (minPx) {
+          _c.copy(C.c).applyMatrix4(o.matrixWorld);
+          const px = (C.r * o.matrixWorld.getMaxScaleOnAxis() * pxK) / Math.max(0.1, _c.distanceTo(cam));
+          // (bounds that aren't finite — a builder's stray NaN vertex — can't be judged: drawn as before)
+          shown = !(px >= 0) || (focus && Math.hypot(focus.x - _c.x, focus.z - _c.z) < KEEP_NEAR) || (C.shown ? px > minPx * 0.85 : px > minPx);
         }
         if (shown !== C.shown) { C.shown = shown; if (shown) o.layers.enable(0); else o.layers.disable(0); }
       }

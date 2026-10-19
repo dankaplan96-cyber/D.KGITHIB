@@ -104,7 +104,9 @@ export class Terrain {
     // drawn in tiles of TILE × TILE cells sharing the vertex data, each with its own bounds, so the camera
     // culls what it doesn't see; tiles wholly deep under the sea (the water there is opaque) aren't drawn
     const group = new THREE.Group(); group.name = 'terrain';
-    const TILE = 40;
+    // (PERF-2: 70 cells ≈ 65 m on Citadel, 16 tiles instead of 49: a turning camera drew 15–20 of them, one call each;
+    // the island's whole terrain is ~160k triangles, so the few more drawn off-screen cost the GPU little)
+    const TILE = 70;
     for (let tj = 0; tj < this.segs; tj += TILE) {
       for (let ti = 0; ti < this.segs; ti += TILE) {
         const j1 = Math.min(this.segs, tj + TILE), i1 = Math.min(this.segs, ti + TILE);

@@ -25,16 +25,29 @@ export class Perf {
     this.el = null;
     this.uiT = 0;
     if (renderer) renderer.info.autoReset = false; // the composer renders several passes per frame: count them all
+    // What the GPU receives (PERF-2). renderer.info counts a BatchedMesh drawn with WEBGL_multi_draw as one call,
+    // but the driver still gets one draw per instance group (ANGLE on D3D11 loops over them); and the shadow pass is
+    // counted with the main one. Per frame: `shadow` calls of the shadow pass, `sub` extra draws inside multi-draws.
+    this.shadow = 0; this.sub = 0;
+    if (renderer?.renderBufferDirect) {
+      const orig = renderer.renderBufferDirect.bind(renderer), multi = !!renderer.extensions?.has?.('WEBGL_multi_draw');
+      this.multiDraw = multi;
+      renderer.renderBufferDirect = (camera, scene, geometry, material, object, group) => {
+        if (scene === null) this.shadow++;
+        if (multi && object.isBatchedMesh && object._multiDrawCount > 1) this.sub += object._multiDrawCount - 1;
+        return orig(camera, scene, geometry, material, object, group);
+      };
+    }
     // which GPU is drawing (a software renderer here explains a slow game)
     try {
       const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
       this.gpu = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)).replace(/^ANGLE \((.*)\)$/, '$1');
     } catch { this.gpu = '?'; }
   }
-  beginFrame() { if (this.r) this.r.info.reset(); }
+  beginFrame() { if (this.r) this.r.info.reset(); this.shadow = 0; this.sub = 0; }
   record(f) {
     const info = this.r?.info.render;
-    f.calls = info?.calls ?? 0; f.tris = info?.triangles ?? 0;
+    f.calls = info?.calls ?? 0; f.tris = info?.triangles ?? 0; f.shadowCalls = this.shadow; f.draws = f.calls + this.sub;
     if (this.buf.length < N) this.buf.push(f); else this.buf[this.i] = f;
     this.i = (this.i + 1) % N;
     if (this.el && (this.uiT += f.real) > 0.25) { this.uiT = 0; this.draw(); }
@@ -55,6 +68,8 @@ export class Perf {
       steps: { mean: +(sum('steps') / b.length).toFixed(2), max: Math.max(...b.map((f) => f.steps)) },
       lostS: +sum('lost').toFixed(3), // real time not simulated (stalls beyond the catch-up limit)
       calls: pct('calls', 0.5), tris: pct('tris', 0.5),
+      // (the calls' 95th percentile: a turning camera's heavy views; GPU-level draws; the shadow pass's share)
+      callsP95: pct('calls', 0.95), draws: pct('draws', 0.5), shadowCalls: pct('shadowCalls', 0.5),
     };
   }
   overlay(on = !this.el) {

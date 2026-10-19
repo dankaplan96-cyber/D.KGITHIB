@@ -8,6 +8,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { updateShownWorld } from './drawcull.js';
 
 const RetroShader = {
   uniforms: { tDiffuse: { value: null }, levels: { value: 9.0 }, resolution: { value: new THREE.Vector2(1, 1) } },
@@ -204,7 +205,17 @@ export class Renderer {
     this.fxaa?.uniforms.texel.value.set(1 / tw, 1 / th);
   }
 
-  render() { this.applyResize(); this.composer.render(); }
+  // (PERF-2, engine/drawcull.js: `pre` runs first (actors of other areas left out), then the world matrices of the
+  // shown objects only, the passes, and `post` (what `pre` hid is shown again))
+  render() {
+    this.applyResize();
+    this.pre?.();
+    const S = this.scene, auto = S.matrixWorldAutoUpdate;
+    try {
+      if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
+      this.composer.render();
+    } finally { S.matrixWorldAutoUpdate = auto; this.post?.(); }
+  }
 
   // Compiles every material in the scene for the way it is really drawn: into the composer's target (no tone
   // mapping or sRGB in the material: the output pass does those), with the current lights, fog and shadow

@@ -5,6 +5,12 @@
 // variants to finish compiling, so the numbers are the steady state, not the recompile) and is then measured: average fps, frame time p50/p95/p99 and
 // max, stalls (frames over 50 ms), simulation CPU time, render submission CPU time (not GPU time: the GPU's work
 // is only visible in the frame time), draw calls and triangles. Routes run once per quality preset.
+// PERF-2: the camera is the same for everyone. The street's "camera turning" only turns the free orbit, so a player on
+// the LBA camera measured the follow view (≈ 200–270 calls) and one on the free camera (the user) the views across
+// the town (≈ 470–540), from wherever their camera last pointed: the routes now always use the free orbit from the
+// same heading, pitch and distance, and the player's camera is put back afterwards. "draw calls" stays three.js's count (one per WebGL call, the CPU
+// cost); "GPU draws" adds the draws inside a multi-draw (one call for many trees, which ANGLE on D3D11 still
+// issues one by one) and "shadow" is the shadow pass's share of the calls.
 import { gpuQuality } from './perf.js';
 import { POOL_SIZE as POOL_N } from './lightpool.js';
 const WARM = 1.5, MEASURE = 6;
@@ -28,13 +34,20 @@ export class Bench {
         h.angle = Math.atan2(b.x - a.x, b.z - a.z); h.vel.set(0, 0);
       };
     };
-    const outdoor = (x, z) => { G.exitRoom({ x, z, a: 0 }, true, true); };
+    const outdoor = (x, z) => { G.exitRoom({ x, z, a: 0 }, true, true); this.camera(); };
     return [
-      {
-        id: 'street', label: 'Populated street (the square, the shop, NPCs), camera turning',
-        setup: () => { outdoor(-42, 2); },
-        drive: (() => { const w = walk([{ x: -46, z: 2 }, { x: -38, z: 2 }, { x: -36, z: -8 }, { x: -48, z: -9 }]); return (t, dt) => { w(t); G.camRig.yaw = (G.camRig.yaw || 0) + dt * 0.35; }; })(),
-      },
+      // The free orbit as a player has it: it turns slowly (0.35 rad/s, as before) while it swings back behind the
+      // walking Twinsen (camera.js _free), always from the same heading (π/4): the views across the square and up
+      // the town (headings 1.3–2.5 rad) that the 0.31.0 benchmark measured on the user's laptop (Low 477 calls,
+      // 697k triangles; this route on SwiftShader, same build: 471 calls, 690k).
+      (() => {
+        const w = walk([{ x: -46, z: 2 }, { x: -38, z: 2 }, { x: -36, z: -8 }, { x: -48, z: -9 }]);
+        return {
+          id: 'street', label: 'Populated street (the square, the shop, NPCs), camera turning',
+          setup: () => { outdoor(-42, 2); w(0); G.camRig.yaw = Math.PI / 4; },
+          drive: (t, dt) => { w(t); G.camRig.yaw += dt * 0.35; },
+        };
+      })(),
       {
         id: 'interior', label: "Furnished interior (Twinsen's house)",
         setup: () => { G.enterRoom('house', null, true, true); },
@@ -43,7 +56,7 @@ export class Bench {
       {
         id: 'combat', label: 'Combat: enemies and a throw every 0.6 s',
         setup: () => {
-          G.devArena(); G.state = 'play';
+          G.devArena(); G.state = 'play'; this.camera();
           for (const e of G.enemies) if (e.id?.startsWith('a_')) e.setPresent(true);
         },
         drive: (() => { let next = 0; return (t) => {
@@ -63,12 +76,19 @@ export class Bench {
     ];
   }
 
+  // the benchmark's camera: the free orbit, from the same heading, pitch and view every time (PERF-2)
+  camera() {
+    const C = this.g.camRig;
+    C.setMode('free'); C.view = 0; C.yaw = Math.PI * 0.85; C.pitch = 0.42; C.idleT = 0; C.snap?.();
+  }
+
   // runs every route at each quality; resolves with the report text
   run(qualities = ['low', 'medium', 'high']) {
     const G = this.g;
     if (this.running) return Promise.resolve(null);
     this.running = true;
     const snap = G.snapshot(), quality0 = G.settings.quality, state0 = G.state;
+    const C = G.camRig, cam0 = { view: C.view, yaw: C.yaw, pitch: C.pitch };
     G.benching = true; // (no saves while it runs; fixed settings: no automatic resolution)
     const auto0 = G.renderer.autoRes; G.renderer.setAutoRes(false);
     G.hideScreens?.(); G.setState('play');
@@ -120,6 +140,7 @@ export class Bench {
         G.resetCombat('drop');
         G.applySave(snap);
         G.benching = false; G.renderer.setAutoRes(auto0);
+        C.setMode(G.settings.camera); Object.assign(C, cam0); C.snap?.();
         G.setState(state0 === 'title' ? 'play' : state0 === 'pause' ? 'play' : state0);
         this.running = false;
         const text = this.report(results);
@@ -137,6 +158,7 @@ export class Bench {
     lines.push(`LBA3: The Awakening benchmark · build ${v} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`);
     lines.push(`GPU (as reported by the browser): ${G.perf.gpu} · preset picked for it on a first start: ${gpuQuality(G.perf.gpu)} · playing on: ${G.settings.quality} · automatic resolution: ${G.settings.res !== 'full' ? 'on (off while measuring)' : 'off'}`);
     lines.push(`window ${innerWidth}×${innerHeight} · devicePixelRatio ${devicePixelRatio} · user agent ${navigator.userAgent.match(/(Electron|Chrome)\/[\d.]+/g)?.join(' ') || navigator.userAgent}`);
+    lines.push(`camera: free orbit from a fixed heading for every route (your camera setting: ${G.settings.camera}) · WEBGL_multi_draw ${G.perf.multiDraw ? 'yes' : 'no'}`);
     if (G.perf.load) lines.push(`startup: build ${(G.perf.load.total / 1000).toFixed(1)} s · shader preparation ${(G.perf.load.shaders / 1000).toFixed(1)} s`);
     let q = null;
     const brk = results.filter((x) => x.v);
@@ -148,7 +170,7 @@ export class Bench {
       const s = x.s;
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
       lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · stalls>50ms ${x.stalls}`
-        + ` · sim CPU p50 ${s.simMs.p50} ms · render submit CPU p50 ${s.renderMs.p50} ms · draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`);
+        + ` · sim CPU p50 ${s.simMs.p50} ms · render submit CPU p50 ${s.renderMs.p50} ms · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`);
     }
     if (brk.length) {
       lines.push('', 'breakdown at Medium (one cost taken away at a time):');

@@ -202,7 +202,7 @@ function heatPosts(parent, W, spots) {
     physics.add({ type: 'cyl', x, z, r: 0.2, top: y + 1.95, noStand: true, seeThrough: true });
     posts.push({ x, y: y + 1.82, z });
   }
-  mergeStatic(hp, { cell: 24 });   // (PERF-IGPU: ~11 posts × 5 parts → a few draws per cell; the crystal's material is kept, its glow animates)
+  mergeStatic(hp, { cell: 64, recolor: true, retex: true });   // (PERF-IGPU: ~11 posts × 5 parts → a few draws per cell; the crystal's material is kept (emissive: never folded), its glow animates. PERF-2: teal and brass folded, 64 m cells)
   let level = 0, puffT = 0;
   W.updaters.push((dt, t) => {
     const on = W.station?.active ? 1 : 0;
@@ -421,6 +421,7 @@ export function buildTown(scene, W) {
     physics.add({ type: 'box', x: sx, z: sz, hw: 1.55, hd: 0.6, rot: sry, top: g + 1.0, noStand: true, seeThrough: true });
     W.stall = { x: sx + Math.sin(sry) * 1.6, z: sz + Math.cos(sry) * 1.6, a: sry };
     mergeStatic(st, { recolor: true });   // (PERF-IGPU: ~35 meshes, the four fruit colours in one draw → ~4)
+    W.stallGroup = st;
   }
 
   // static street dressing goes into one group that is merged per material at the end
@@ -485,6 +486,20 @@ export function buildTown(scene, W) {
       occ.add({ kind: 'box', x: hd.x + Math.cos(rot) * cx + Math.sin(rot) * cz, z: hd.z - Math.sin(rot) * cx + Math.cos(rot) * cz, rot, hw: 0.4, hd: 0.4, y0: yb, y1: yb + ch + 0.35, name: hd.id + ' chimney' });
     }
     mergeStatic(b.group);   // each house is static: one mesh per material
+  }
+  // PERF-2: then across the houses, the square's dressing and Pippa's stall, per 64 m cell: one draw per material
+  // per cell instead of per house (a turning camera sees most of the town at once), with plain and simply textured
+  // materials folded together by their colour (merge.js recolor/retex). All of it is static and none of these
+  // materials is changed at runtime; lights and the stall's physics stay where they are.
+  {
+    const all = new THREE.Group(); all.name = 'townMerged'; scene.add(all); all.updateWorldMatrix(true, false);
+    const st = W.stallGroup;
+    for (const grp of [...built.map((b) => b.group), dress, st].filter(Boolean)) {
+      grp.updateMatrixWorld(true);
+      const ms = []; grp.traverse((o) => { if (o.isMesh && !o.isInstancedMesh && !o.isSkinnedMesh && !o.isBatchedMesh) ms.push(o); });
+      for (const m of ms) all.attach(m);
+    }
+    mergeStatic(all, { recolor: true, retex: true, cell: 96 });
   }
 
   // the Joint Project's heat posts: a teal pipe with brass collars and a crystal cap by every front door and at

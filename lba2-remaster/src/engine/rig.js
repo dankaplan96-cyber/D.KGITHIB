@@ -35,6 +35,8 @@ export function pumpAngle(t) {
 const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe', 'reachHigh']);
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
+// every blob shadow made (PERF-2: engine/drawcull.js BlobBatch draws the shown ones in one instanced call)
+export const BLOBS = [];
 export function createBlobShadow(radius) {
   blobGeo ??= new THREE.CircleGeometry(1, 20);
   blobMat ??= new THREE.MeshBasicMaterial({ map: textures().blob, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, fog: true });
@@ -42,6 +44,7 @@ export function createBlobShadow(radius) {
   m.scale.setScalar(radius);
   m.renderOrder = 1;
   m.userData.r = radius;
+  BLOBS.push(m);
   return m;
 }
 const _n = new THREE.Vector3(), _z = new THREE.Vector3(0, 0, 1);

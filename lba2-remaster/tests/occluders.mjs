@@ -28,7 +28,10 @@ await ev(async () => {
     W.root.traverse((o) => { if (!o.isMesh || !o.geometry) return; if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
       c.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld); const dx = c.x - h.x, dz = c.z - h.z;
       const lx = dx * Math.cos(h.ry) - dz * Math.sin(h.ry), lz = dx * Math.sin(h.ry) + dz * Math.cos(h.ry);
-      if (Math.abs(lx) < h.w / 2 + 0.6 && Math.abs(lz) < h.d / 2 + 0.6 && c.y > h.g + 0.5 && o.geometry.boundingSphere.radius < Math.max(h.w, h.d)) out.push(o); });
+      if (Math.abs(lx) < h.w / 2 + 0.6 && Math.abs(lz) < h.d / 2 + 0.6 && c.y > h.g + 0.5 && o.geometry.boundingSphere.radius < Math.max(h.w, h.d)) out.push(o);
+      // (PERF-2: the houses are merged across the town per material and cell, town.js 'townMerged': a merged mesh whose
+      // bounds hold the house carries part of it)
+      else if (o.parent?.name === 'townMerged' && o.name === 'merged' && Math.hypot(dx, dz) < o.geometry.boundingSphere.radius * o.matrixWorld.getMaxScaleOnAxis()) out.push(o); });
     return out; };
   window.__houseState = (h) => { const ms = window.__houseMeshes(h); let hidden = 0, faded = 0;
     for (const o of ms) { if (o.userData.shadowProxy) continue; const mats = [o.material].flat();   // (shadowcull.js's shadow casters stand in for shown meshes)
