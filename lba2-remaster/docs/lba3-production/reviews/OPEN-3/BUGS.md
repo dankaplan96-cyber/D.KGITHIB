@@ -20,6 +20,29 @@ Times are scene seconds. Crops: `crops/NN-before.jpg`, `crops/NN-after.jpg` (sam
 Status: **FIXED** (re-captured, committed on its own) · **NEEDS-MODEL** (character model or rig: for routing) ·
 **NEEDS-WORLD** (a world asset outside the opening's files: for routing) · **OPEN** (not done yet) · **NOT A BUG** (checked).
 
+## Result
+
+30 items (28 from the first viewing, #29 found while fixing #18–19, #30 found by the new pass-through check):
+26 FIXED, each re-captured and committed on its own; 2 NEEDS-MODEL (#11 Zoé's bun, #28 the cast's build); 1
+NEEDS-WORLD (#02 the detached quay return in island.js); 1 NOT A BUG (#08, checked from the side).
+
+- Before/after recording: `before-after.mp4` (the whole opening, before left, after right, one frame every 0.2 s of
+  scene time played at 5 frames a second = normal speed; no sound: the capture has none).
+- `tests/opening.mjs` passes with the new check: every actor's per-frame path (every frame at 30 fps while the screen
+  isn't black) stays out of the colliders taller than their floor (walls, furniture, counters, fences, railings, the
+  pier's posts) with a 0.22 m body, and nobody comes within 0.44 m of anybody else. On the old opening this check
+  finds the fence (#25), the chair (#23), the column (#30) and the two on the pier (#06). Log: `opening-test.log`.
+- The after capture's per-frame log: no solid crossed, feet on the floor (ankles 0.06–0.12 m in every action), no
+  on-screen pop. Single-frame idle at the end of a walk (worker 25.17, Zoé 40.93) is the walk's last step.
+- After review: the whole opening captured again at 1280×720 every 0.2 s and at 960×540 every 0.25 s; the same
+  per-frame log clean at both; the new framings hold at 960×540 (heads, the title over the sky, subtitles clear).
+- tests: opening (ALL PASSED: full playback, skip at 3/21/50/64/77/85 s → the same end state, short press, pause and
+  resume, focus loss, Continue, a second new game, the first objective, and the new pass-through check), prologue (to
+  its end, into chapter 1), house (ALL PASSED), stability (ALL PASSED, 17).
+- Not verified here: sound by ear (no listening; voice and subtitle timing checked against the shot list only), a
+  real GPU and display (SwiftShader), the "before" pass at 960×540 (it was cut off by a container restart; the
+  before review is 1280×720 only).
+
 ## The list
 
 | # | Time | Shot | Who | Problem | Cause | Status |
