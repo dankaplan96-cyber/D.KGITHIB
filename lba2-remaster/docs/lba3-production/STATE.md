@@ -213,6 +213,21 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   docs/lba3-visual/evidence/ANIM-DEATH/. Open for the character artist: the long-coat guard's hem stays flared when he lies down
   (his feet ~0.35 m off the ground) and the fat trooper's standing pose sinks 0.2 m into the ground.
 
+## Done after (ADV-2; status REVIEW)
+- Chapter 4's first half (docs/lba3-team/ADVENTURE_DESIGN.md "ADV-2"): the wind-pump's fault is found, not told. Brosk blames
+  the test bore's tremors; Sani hears two gears clack and one grind; at the tower each gust (3.4 s, Listen brings one at once)
+  shows the jammed gear holding, shuddering and spitting sand while the sound ones rock. The ball frees it (a sound gear only
+  rings; Sani's hint grows), then the water sprays from a pipe joint the tremors shook apart: push it home. Any order (the
+  pump before Tarra asks). The dig's gate code is entered by the player on the keypad (1, 4, 7 worn; the notebook's order).
+- Layout (desert.js, chapter 4's pump only): the gears are a gearbox across the tower's west face at 1.7 m (a thrown ball
+  reaches ~2 m there: the old 3.6/5 m gears were out of reach), the tank moved south-east, one palm in the line left out.
+- Small changes outside the owned files: story/kesh.js (Brosk and Sani take the pump lines from dig.js keshLines), engine/
+  audio.js (two sounds: gearClack, grind), tests/playthrough/07-dig.mjs (the pump and keypad steps).
+- Saves: same format; c4_gear1 keeps meaning the jammed gear; new flags c4_joint, c4_gearMiss, c4_brosk, c4_sani,
+  c4_listened, c4_worn, c4_codeTries. Old format-3 saves from REV-TY-4 load and complete (tests/chapter4.mjs).
+- Open: a first-time player's read of the gust and the keypad; sounds by ear; an independent review. Next adaptation: the
+  research post's storm wait (ADVENTURE_DESIGN.md).
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
