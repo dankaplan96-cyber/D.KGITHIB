@@ -180,7 +180,8 @@ export function playOpening(story) {
   ];
   function overShoulder() {     // (behind Twinsen's shoulder, toward Zoé)
     const a = angleTo(tw, zo.pos), f = { x: Math.sin(a), z: Math.cos(a) }, r = { x: -Math.cos(a), z: Math.sin(a) };
-    return P(V(tw.pos.x - f.x * 1.45 + r.x * 0.7, 1.95, tw.pos.z - f.z * 1.45 + r.z * 0.7), head(zo, 1.35), 40);
+    // (further back and wider of his shoulder: his head was a third of the frame and his shrug was out of it)
+    return P(V(tw.pos.x - f.x * 1.95 + r.x * 0.95, 1.85, tw.pos.z - f.z * 1.95 + r.z * 0.95), head(zo, 1.25), 40);
   }
   // ...and as she turns for the hall the camera eases back along the wall and pans with her, so she leaves the room
   // in frame, whole, instead of walking past the lens with her head cut
