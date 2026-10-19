@@ -569,10 +569,31 @@ opening 22/22 ("every spoken line babbles in its speaker's voice" included), tow
 Not verified: a first-time player's read (does the gust read at the play camera, does a choice of three orders feel like a keypad), the
 clack/grind and the spray's sound by ear, the GPU look.
 
+### CHAR-OPEN: OPEN-3's model leftovers (block 6; evidence docs/lba3-production/reviews/CHAR-OPEN/)
+Captures: headless Chromium, SwiftShader, our renders only. "Before" = 40946f8 served from a mirror of the tree with
+the old models and code; lookdev = char-lookdev.html (same light, distance and framing before/after), the opening on
+the game's own 1/30 s clock (opening-shots.mjs), the knock-out in the dev arena as tests/deaths.mjs runs it
+(ko-shots.mjs).
+
+| Item | Before | Cause | Fix | Evidence | Result |
+|---|---|---|---|---|---|
+| #11 Zoé's bun stands off her head | In profile at the tap (41.0, 58.6) the bun floats behind the skull with bare scalp between; it swings further in a run | The measured balls only graze the crown's back and the mass rode tail0..2 (the follow-through) | zoe_poly.py: the same three balls seated on the skull, the bun on the head bone only | 11-zoe-bun-views.jpg (idle, run sway ×2, roll, run; front/¾/side/back), 11-zoe-bun-opening.jpg (41.0, 46.0, 58.6, 77.5) | FIXED (on the head at every view and pose captured) |
+| #28a Twinsen's arms and shrug | His arms are lost in the bell: at 49.4 a gesture is a blue lump; the shrug at 53.0 is a blue dome from behind; windup and charge tear the cape into membranes; a hole opens at the back between belt and robe in deep bends | One cape shell out to ±0.214 H with its sides skinned to the arms | twinsen_poly.py: a tunic body (flat yoke ±0.15 H, ±0.122 H over the belt) + two wide sleeves of their own (sh/el, blended at the elbow), ball hands in the cuffs, a hips → torso waist band; drawn at armSpread 0.3 (unchanged) | 28a-twinsen-views.jpg, 28a-twinsen-close.jpg (idle, shrug peak, talk, reach), 28a-twinsen-deform-grey.jpg (run, windup, throw, charge, hands, pick-up, sit), 28a-twinsen-opening.jpg (49.4, 53.2, 53.35), 28a-twinsen-hop-pack.jpg | FIXED (arms and shrug read; no tears or holes in the poses captured) |
+| #28b Zoé's arms are thin rods | 6 → 4 cm tubes, the hands 0.45 m out from her sides in the idle | Straight tubes r 3.1/2.6/2.0 cm; LOOKS.zoe armSpread 0.3 | zoe_poly.py: nine sections (shoulder cap, upper arm 9–10 cm, elbow, forearm swell, 5 cm wrist); armSpread 0.08; opening.js: her arms-in bend (45–58 s) removed and the tap/stream bends' z −0.22 (the same angles) | 28b-zoe-arms-views.jpg, -close.jpg, -deform-grey.jpg, -opening.jpg (41–77.5); opening-hands.mjs: her right wrist at the tap 1.361/1.397 m high (before 1.370/1.391) and in the stream 1.049–1.060 (before 1.054–1.059), same x/z within 1 cm | FIXED (slim, SRC-2's figure, not pregnant) |
+| #4 the long-coat guard's hem lying | Knocked out on his front the coat's back stands 0.60 m up over his legs like a tent; on his back the front does (0.73 m) and the sides open round the legs | The skirt only on the four skirt bones (a stiff cone); in the KO the top panel followed the forward leg and the sides turned out (+0.2) | cast_poly.py w_skirt `coatLegs` (vguard 0.5: toward the hem half the skirt rides the thigh on its side), `hemW` 0.9; rig.js KO cloth: the top panel on the thighs' mean pressed in ±0.4, sides in ∓0.12 | 04-vguard-ko.jpg (0.6 s and at rest, side and ¾, both falls), 04-vguard-coat-views.jpg (standing, walking, running) | FIXED: the coat's top lying on his front 0.37 m (hips 0.24), on his back 0.61 m over the raised knee (0.48 m) |
+| (found) KO on his back: the body 0.36 m off the floor | Lying on his back the hips are 0.36 m up, the body held on the heels (feet 0.12/0.28 m) | KO_HUMAN.back's keys (legR −0.25, kneeR 0.75: the shin points into the floor); not the coat (the lowest point is the left heel before and after) | — (the animator's keys) | ko-shots.mjs measures | OPEN (animator, see STATE.md) |
+
+Counts (one LbaMaterial with vertex colours per character, no textures; unindexed triangles): Twinsen 2372 → 2572
+(+8 %: sleeves, waist band), Zoé 4434 → 4646 (+5 %: the arms), the guard 1954 → 1954. Skeletons, bone names,
+hierarchy, bind transforms and sockets unchanged.
+
+Regressions on the final tree (own server :8173, one browser at a time): opening ALL PASSED (24), deaths ALL PASSED (160), stability ALL PASSED (16), prologue to its end into chapter 1 (no errors), house ALL PASSED, jetpack ALL PASSED (48; Twinsen with the pack on the new tunic), combat ALL PASSED (59), zoe-resume ALL PASSED (5; Zoé as the player); reviews/CHAR-OPEN/tests.log.
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.
 - Fullscreen: NOT TESTED (headless).
+- CHAR-OPEN's models on a real GPU and display, and an independent visual review: NOT DONE (SwiftShader captures only).
 - Optional content beyond what the main path walks past (all wizard rooms' extras, every giver, crystals beyond those
   picked up on the way, the LBA1 rooms' full routes): covered by their LOGIC tests (wizards, lba1rooms, givers), not by
   an input playthrough.

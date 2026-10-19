@@ -862,9 +862,14 @@ export class Rig {
       // knocked out, lying: the coat's hem under the body is pressed against the legs instead of standing out
       // (a stiff bell of cloth under a lying guard would hold his legs up off the ground)
       if (ko && this.ko?.mode !== 'slump') {
-        const f = koFall(this.ko.t), under = this.ko.dir > 0 ? j.skirt.B : j.skirt.F;
-        set(under, (this.ko.dir > 0 ? -0.45 : 0.45) * f, 'x', 14);
-        set(j.skirt.L, 0.2 * f, 'z', 10); set(j.skirt.R, -0.2 * f, 'z', 10);
+        const f = koFall(this.ko.t), back = this.ko.dir > 0, under = back ? j.skirt.B : j.skirt.F;
+        set(under, (back ? -0.45 : 0.45) * f, 'x', 14);
+        // CHAR-OPEN: the sides and the panel on top lie down on the legs as well: the sides turned out (+0.2, the coat
+        // stood open like a bell's mouth round the legs) and the top followed the forward leg and stood over them like a
+        // tent; now the sides come in a little and the top takes the thighs' mean, pressed in by about the coat's flare
+        set(j.skirt.L, -0.12 * f, 'z', 10); set(j.skirt.R, 0.12 * f, 'z', 10);
+        const top = back ? j.skirt.F : j.skirt.B, legs = (j.legL.hip.rotation.x + j.legR.hip.rotation.x) / 2;
+        set(top, (legs + (back ? 0.4 : -0.4)) * f, 'x', 14);
       }
     }
 

@@ -430,10 +430,11 @@ export function playOpening(story) {
   pivot(tw, -1.95, 46.35, 0.75);
   pivot(tw, 0.35, 54.9, 0.8);
   at(53.0, () => tw.rig.doGesture('shrug'));
-  bend(zo, 45.0, 58.0, { shL: [0, 0, -0.22], shR: [0, 0, 0.22] });
+  // (CHAR-OPEN: her look's armSpread is now 0.08, the arms at her sides, so the 45-58 s arms-in bend (z ∓0.22) is gone
+  // and the z offsets below are 0.22 smaller: the same arm angles as before)
   // her hand on the tap's handle (reach / tapTurn lift the arm straight ahead of the shoulder, beside the tap)
-  const TAPHAND = { shR: [-0.12, 0, 0.55], elR: [0.25], torso: [0.14] };
-  bend(zo, 41.0, 44.7, TAPHAND); bend(zo, 58.0, 60.15, TAPHAND); bend(zo, 69.0, 70.35, TAPHAND);   // (her listening arms at rest: the idle's stand off her sides, NEEDS-MODEL #28)
+  const TAPHAND = { shR: [-0.12, 0, 0.33], elR: [0.25], torso: [0.14] };
+  bend(zo, 41.0, 44.7, TAPHAND); bend(zo, 58.0, 60.15, TAPHAND); bend(zo, 69.0, 70.35, TAPHAND);
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
   at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
@@ -450,7 +451,7 @@ export function playOpening(story) {
   at(59.4, () => look(zo, V(K.spout.x, K.spout.y - 0.1, K.spout.z)));
   at(60.0, () => from(zo, 'touchWater'));
   // her fingers into the stream under the spout (touchWater holds the hand at chest height, 0.44 m to her right)
-  bend(zo, 60.0, 66.3, { shR: [0.0, 0, 0.6], elR: [0.45], torso: [0.22], head: [0.05] });
+  bend(zo, 60.0, 66.3, { shR: [0.0, 0, 0.38], elR: [0.45], torso: [0.22], head: [0.05] });
   // down the well (a dip, the cave, a dip back)
   at(62.05, () => fade(true));
   at(62.4, () => {

@@ -17,8 +17,8 @@ const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 
 // ------------------------------------------------------------------ cast
 export const LOOKS = {
   twinsen: {
-    // LBA2's in-game Twinsen, measured on the original model (docs/character-review.md §11–12): cape-like robe
-    // with flat shoulders and broad sleeves, thin orange belt, a nearly straight robe to the ankles, small
+    // LBA2's in-game Twinsen, measured on the original model (docs/character-review.md §11–12): a tunic with flat
+    // shoulders and broad sleeves of its own (CHAR-OPEN: the original's one-shell cape hid the arms), thin orange belt, a nearly straight robe to the ankles, small
     // orange shoes, ball hands; a narrow egg head at the original's size on a long thin neck, small pale eyes,
     // no hair on the skull: a dark crown knot and a tuft arching back (LBA2 draws them as three flat unlit spheres; ours is one constant-shade mass, VP-1b); a pale gold medallion. Colours from its palette.
     poly: 'twinsen', // the low-poly model (tools/blender/twinsen_poly.py); the sculpt below is the fallback
@@ -40,7 +40,9 @@ export const LOOKS = {
     // The sculpt below is the fallback.
     race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#b32b27', pants: '#b32b27', shoes: '#3f7b47',
     hair: '#e3af53', skin: '#d9a679', hairStyle: 'bun', nose: 'button', eyes: '#2f474b', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
-    armSpread: 0.3, armLen: 1.1,
+    // CHAR-OPEN (OPEN-3 #28): her arms hang at her sides (0.08 rad out from the skeleton's rest; 0.3 held the hands
+    // 0.45 m out, the "rods standing off her sides"); the opening's pose layer was brought in by the same 0.22
+    armSpread: 0.08, armLen: 1.1,
   },
   arthur: {
     // a curious kid: knee tunic in his father's blue with an orange belt, scuffed knees, a spiky tuft
@@ -186,6 +188,7 @@ export const LOOKS = {
     // a Quetch guard: a round helmet with a violet visor, a knee-length uniform coat, a stun rifle (a prop)
     race: 'quetch', outfit: 'tunic', hem: 0.42, tunic: '#1a2a33', tunicTrim: '#1a2a33', belt: '#c8a050', buckle: '#e8c870', pants: '#16141a', shoes: '#16141a',
     skin: '#e0b48c', hairStyle: 'bald', helmetQ: '#2a3a44', visor: '#c070ff', emblem: '#e090ff', eyes: '#2a2a2a', height: 1.02,
+    coatLegs: 0.5, hemW: 0.9, // (CHAR-OPEN: toward the hem half the coat's skirt rides the thighs (cast_poly.py w_skirt), a little less flare)
   },
   vguardG: {
     // a Grobo guard: the great body in the uniform, a helmet with a dark visor; armoured (light hits only shake it)
