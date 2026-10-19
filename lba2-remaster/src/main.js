@@ -354,7 +354,11 @@ class Game {
     this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
     const key = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
     const warmed = (this._warmed ??= new Map());
-    this.uploadGeometry(this.room?.group || this.world.root);   // (FRAME-1: its geometry too, in this black frame)
+    // (FRAME-1: its geometry too, in this black frame, the shadow batches included: they are built on the area's
+    // first update, which used to come later in this frame, so a house's 4.5 MB of batches went up on the first frame shown)
+    const root = this.room?.group || this.world.root;
+    if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);
+    this.uploadGeometry(root);
     if (warmed.get(key) === R.info.programs.length) return;
     T.hold = true; T.holdT = performance.now();
     this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); T.hold = false; });
