@@ -65,6 +65,9 @@ export function playOpening(story) {
     a.sync();
   };
   const play = (a, anim) => a.rig.play(anim);
+  // go into an everyday action already at its held pose: the joints still ease there from wherever they are (the rig's
+  // damping), without the action's own wind-up from rest
+  const from = (a, anim, at = 0.6) => { a.rig.play(anim); a.rig.actionT = at; };
   const look = (a, p) => { a.rig.lookAt = p; };
   const head = (a, h = 1.5) => V(a.pos.x, a.pos.y + h * (a.rig.root.scale.y || 1), a.pos.z);
   const loop = (name, opts) => { const h = g.audio.loop?.(name, opts); if (h) loops.push(h); return h; };
@@ -400,8 +403,11 @@ export function playOpening(story) {
   at(58.6, () => sfx('tapSqueak'));
   at(59.0, () => sfx('gurgle'));
   at(59.2, () => loop('trickle'));
-  at(59.4, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y - 0.1, K.spout.z)); });
-  at(60.0, () => play(zo, 'touchWater'));
+  // (her hand stays at the tap while she looks at the water, then goes straight from the tap to the stream: dropping
+  // to the idle between swept it through the basin and the watering can; `from` skips touchWater's ease-in from
+  // the arms-down pose, so the hand travels tap → stream instead of dipping to her side and back)
+  at(59.4, () => look(zo, V(K.spout.x, K.spout.y - 0.1, K.spout.z)));
+  at(60.0, () => from(zo, 'touchWater'));
   // her fingers into the stream under the spout (touchWater holds the hand at chest height, 0.44 m to her right)
   bend(zo, 60.0, 66.3, { shR: [0.0, 0, 0.6], elR: [0.45], torso: [0.22], head: [0.05] });
   // down the well (a dip, the cave, a dip back)
