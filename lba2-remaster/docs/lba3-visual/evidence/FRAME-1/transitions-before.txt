@@ -1,0 +1,4 @@
+# tests/transitions.mjs (FRAME-1 version) against the base build ea9f446 (pristine copy, port 8172), 2026-10-19, load avg ~14
+FAIL real time: black while the new room compiles, then the fade-in runs in full {"room":"cellar","held":1,"heldBlack":false,"swap":{"t":0.3500333333333304,"set":1,"shown":0.619143},"noCssEase":false,"done":true,"maxJump":0.1}
+FAIL real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) {"room":"cellar","held":1,"heldBlack":false,"swap":{"t":0.3500333333333304,"set":1,"shown":0.619143},"noCssEase":false,"done":true,"maxJump":0.1}
+2 FAILED (the four door checks before them PASS)

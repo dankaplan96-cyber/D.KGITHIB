@@ -1,6 +1,6 @@
 // Frame-rate independence and instrumentation (review fixes), in the developer arena, driving the real loop
 // body (game.advance(realSeconds)) as rAF would at a given frame rate:
-//   1. walking distance and a sword swing's duration are the same at 60, 30, 20, 15 and 10 fps
+//   1. walking distance and a sword swing's duration are the same at 144, 120, 60, 30, 20, 15 and 10 fps
 //      (before: dt was clamped to 50 ms, so below 20 fps everything ran in slow motion)
 //   2. a long stall is dropped, not caught up (bounded steps), and the next frames are normal
 //   3. a press on a slow frame (several steps) acts once
@@ -35,7 +35,7 @@ await ev(() => {
 });
 
 // ---------------------------------------------------------------- 1. distance and duration across frame rates
-const rates = [60, 30, 20, 15, 10];
+const rates = [60, 144, 120, 30, 20, 15, 10];   // (FRAME-1: 120/144 Hz displays too)
 const fr = await ev((rates) => {
   const G = game, h = G.hero, out = {};
   for (const fps of rates) {
@@ -65,15 +65,18 @@ console.log('       (the old loop at 10 fps walked', fr.old10.walk, 'm in 1 s ag
 // ---------------------------------------------------------------- 2. a stall
 const stall = await ev(() => {
   const G = game, h = G.hero; X.reset(0); G.perf.reset();
-  G.input.keys.add('KeyW'); X.run(0.5, 60);
+  G.input.keys.add('KeyW'); X.run(1.0, 60);   // (up to full walking speed first)
+  const pb = h.pos.clone(); X.run(0.25, 60); const before = h.pos.distanceTo(pb) / 0.25;
   const p0 = h.pos.clone(); X.adv(1.5); const jump = h.pos.distanceTo(p0);
   const s1 = G.perf.stats(1);
   const p1 = h.pos.clone(); X.run(0.25, 60); const after = h.pos.distanceTo(p1) / 0.25;
   G.input.keys.delete('KeyW');
-  return { jump: +jump.toFixed(2), steps: s1.steps.max, lost: s1.lostS, speedAfter: +after.toFixed(2) };
+  return { jump: +jump.toFixed(2), steps: s1.steps.max, lost: s1.lostS, speedBefore: +before.toFixed(2), speedAfter: +after.toFixed(2) };
 });
 check('a 1.5 s stall is simulated as at most 4 steps; the rest is dropped', stall.steps === 4 && stall.lost > 1.3 && stall.jump < 0.4, stall);
-check('...and the frames after it move at normal speed', stall.speedAfter > 2 && stall.speedAfter < 2.7, stall);
+// (FRAME-1: compared with the walk just before the stall; the old fixed window 2–2.7 m/s (exclusive) predates CTRL-1's
+// LBA2 walking speed of 2.0 m/s, so it failed at exactly full speed)
+check('...and the frames after it move at normal speed (as fast as just before it, ±5 %)', stall.speedBefore > 1.5 && Math.abs(stall.speedAfter - stall.speedBefore) <= stall.speedBefore * 0.05, stall);
 
 // ---------------------------------------------------------------- 3. one press on a slow frame acts once
 const once = await ev(() => {
@@ -116,6 +119,51 @@ const inst = await ev(() => {
 const L = inst.load, S = inst.stats;
 check('perf.stats: frames, fps, sim/render split and draw calls', S.frames === 30 && Math.abs(S.fps - 30) < 0.5 && S.renderMs.p50 > 0 && S.calls > 0 && S.tris > 0, S);
 check('loadTimes: each region timed on its own', ['world', 'interiors', 'zeelich', 'underground', 'desert', 'condenser', 'hamalayi', 'upper', 'arena', 'actors', 'total'].every((k) => L[k] >= 0) && L.total >= L.world, L);
+
+// ---------------------------------------------------------------- 6. the frame-rate limit (FRAME-1)
+// Game.loop fed synthetic display refreshes (rAF timestamps) at 60 and 144 Hz, the real advance() replaced by a
+// recorder: which refreshes are simulated/drawn and the intervals between them; a 120 ms hitch is not caught up with
+// a burst; a key tapped on a skipped refresh is still there for the next frame; the automatic resolution reads a
+// steady 33 ms at the 30 limit as on budget (no step down) but as missed without the limit.
+const cap = await ev(() => {
+  const G = game, raf = window.requestAnimationFrame, adv = G.advance, out = {};
+  const run = (fps, hz, n, hitchAt = -1) => {
+    G.settings.fps = fps; G.applySettings();
+    const got = []; let now = 1000, skippedTapKept = null;
+    G.advance = (real) => got.push(+(real * 1000).toFixed(2));
+    G.last = now; G._rafT = undefined; G._vsync = 0; G._due = 0; G.testFreeze = false;
+    for (let i = 0; i < n; i++) {
+      now += i === hitchAt ? 120 : 1000 / hz;
+      const before = got.length, tap = i >= 50 && skippedTapKept === null;
+      if (tap) G.input.taps.add('KeyF');
+      G.loop(now);
+      // (the first refresh from the 50th on that is skipped: the tap must still be waiting)
+      if (tap) { if (got.length === before) skippedTapKept = G.input.taps.has('KeyF'); G.input.taps.delete('KeyF'); }
+    }
+    G.testFreeze = true; G.input.taps.clear();
+    const iv = got.slice(5), mean = iv.reduce((a, b) => a + b, 0) / iv.length;
+    return { frames: got.length, mean: +mean.toFixed(2), min: Math.min(...iv), max: Math.max(...iv), after: got.slice(got.findIndex((x) => x > 100) + 1, got.findIndex((x) => x > 100) + 4), skippedTapKept };
+  };
+  window.requestAnimationFrame = () => 0;
+  try {
+    out.off60 = run('auto', 60, 600); out.cap30at60 = run('30', 60, 600); out.cap60at60 = run('60', 60, 600);
+    out.cap60at144 = run('60', 144, 1440); out.cap30at144 = run('30', 144, 1440); out.hitch = run('30', 60, 300, 100);
+    // the automatic resolution at the 30 limit: 90 frames of 33.3 ms
+    const R = G.renderer, d0 = R.dyn, a0 = R.autoRes;
+    R.setAutoRes(true); for (let i = 0; i < 90; i++) R.adapt(33.3, 1e6); out.dynAt30 = R.dyn;
+    G.settings.fps = 'auto'; G.applySettings(); R.setAutoRes(true); for (let i = 0; i < 90; i++) R.adapt(33.3, 2e6); out.dynUncapped = R.dyn;
+    R.setAutoRes(a0); R.setDyn(d0);
+  } finally { window.requestAnimationFrame = raf; G.advance = adv; G.settings.fps = 'auto'; G.applySettings(); G.last = performance.now(); G._rafT = undefined; G._due = 0; }
+  return out;
+});
+check('frame-rate limit off: every refresh is a frame (60 Hz → 16.7 ms)', cap.off60.frames === 600 && Math.abs(cap.off60.mean - 16.67) < 0.05, cap.off60);
+check('limit 30 on a 60 Hz screen: every other refresh, an even 33.3 ms', Math.abs(cap.cap30at60.frames - 300) <= 1 && cap.cap30at60.min > 33.2 && cap.cap30at60.max < 33.4, cap.cap30at60);
+check('limit 60 on a 60 Hz screen: every refresh', cap.cap60at60.frames >= 599 && cap.cap60at60.max < 16.8, cap.cap60at60);
+check('limit 60 on a 144 Hz screen: 60 frames a second on average (13.9/20.8 ms: 144 is not a multiple of 60)', Math.abs(cap.cap60at144.mean - 16.67) < 0.3 && cap.cap60at144.max < 21, cap.cap60at144);
+check('limit 30 on a 144 Hz screen: 30 a second on average', Math.abs(cap.cap30at144.mean - 33.3) < 0.6 && cap.cap30at144.max < 35, cap.cap30at144);
+check('limit 30: after a 120 ms hitch, back to 33.3 ms frames (no burst to catch up)', cap.hitch.after.length === 3 && cap.hitch.after.every((x) => x > 33.2 && x < 33.4), cap.hitch);
+check('limit 30: a key tapped on a skipped refresh waits for the next frame', cap.cap30at60.skippedTapKept === true, cap.cap30at60);
+check('automatic resolution: 33 ms frames at the 30 limit are on budget (no step down); without the limit they are not', cap.dynAt30 === 1 && cap.dynUncapped < 1, cap);
 
 console.log(errs.length ? errs.slice(0, 10).join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');

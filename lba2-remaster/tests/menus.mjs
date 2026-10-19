@@ -34,14 +34,18 @@ check('title: the arrow keys move the selection', sel >= 1, sel);
 await page.click('#title [data-act="settings"]'); await step(0.05);
 await page.click('#settings .seg[data-setting="quality"] button[data-v="medium"]');
 await page.click('#settings .seg[data-setting="textSpeed"] button[data-v="fast"]');
-const q1 = await ev(() => [game.settings.quality, game.settings.textSpeed, game.hud.textRate]);
+await page.click('#settings .seg[data-setting="fps"] button[data-v="30"]');   // (FRAME-1: the frame-rate limit)
+const q1 = await ev(() => [game.settings.quality, game.settings.textSpeed, game.hud.textRate, game.settings.fps, Math.round(game.frameCapMs * 10) / 10, Math.round(game.renderer.budgetMs * 10) / 10]);
 await page.click('#settings [data-act="back"]');
 await page.reload(); await open(page, '?nocine');
 await page.click('#title [data-act="settings"]'); await step(0.05);
-const q2 = await ev(() => [game.settings.quality, game.settings.textSpeed, document.querySelector('#settings .seg[data-setting="quality"] button.on')?.dataset.v]);
+const q2 = await ev(() => [game.settings.quality, game.settings.textSpeed, document.querySelector('#settings .seg[data-setting="quality"] button.on')?.dataset.v, game.settings.fps, document.querySelector('#settings .seg[data-setting="fps"] button.on')?.dataset.v, Math.round(game.frameCapMs * 10) / 10]);
+await page.click('#settings .seg[data-setting="fps"] button[data-v="auto"]');   // (back to no limit for the rest)
+const q3 = await ev(() => [game.settings.fps, game.frameCapMs, Math.round(game.renderer.budgetMs * 10) / 10]);
 await page.click('#settings [data-act="back"]'); await step(0.05);
 check('settings: quality and text speed apply at once', q1[0] === 'medium' && q1[1] === 'fast' && q1[2] === 95, q1);
 check('settings: kept after relaunch, and the menu shows them', q2[0] === 'medium' && q2[1] === 'fast' && q2[2] === 'medium', q2);
+check('settings: the frame-rate limit applies at once (30: 33.3 ms, the automatic resolution\'s budget too), is kept after relaunch, and Off clears it', q1[3] === '30' && q1[4] === 33.3 && q1[5] === 33.3 && q2[3] === '30' && q2[4] === '30' && q2[5] === 33.3 && q3[0] === 'auto' && q3[1] === 0 && q3[2] === 16.7, { q1, q2, q3 });
 
 // ---- new game
 await page.click('#title [data-act="new"]');

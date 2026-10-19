@@ -731,9 +731,14 @@ function mooringLine(W, parent) {
   const line = { taut: 0 };
   const pts = Array.from({ length: 14 }, () => new THREE.Vector3());
   let acc = 0;
+  const bittW = parent.localToWorld(bitt.clone());
   W.updaters.push((dt) => {
     acc += dt;
     if (acc < 1 / 30 && rope) return;
+    // (FRAME-1: a rope 4 cm thick is under a pixel from a camera beyond ~90 m: not reshaped then. This ran 30 times a second
+    // anywhere on Citadel, each time with a new tube geometry: new GPU buffers, and garbage every frame)
+    const c = W._cam?.position;
+    if (rope && c && (c.x - bittW.x) ** 2 + (c.y - bittW.y) ** 2 + (c.z - bittW.z) ** 2 > 90 * 90) return;
     acc = 0;
     boat.updateMatrixWorld(true);
     parent.worldToLocal(bow.copy(bowLocal).applyMatrix4(boat.matrixWorld));
@@ -746,7 +751,12 @@ function mooringLine(W, parent) {
       pts[i].y -= Math.sin(u * Math.PI) * sag;
     }
     const geo = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 20, 0.022, 5, false);
-    if (rope) { rope.geometry.dispose(); rope.geometry = geo; } else { rope = mesh(parent, geo, ropeMat, 0, 0, 0); rope.userData.keep = true; }
+    if (!rope) { rope = mesh(parent, geo, ropeMat, 0, 0, 0); rope.userData.keep = true; return; }
+    // the same vertex count every time: the new shape goes into the rope's own buffers (no reallocation)
+    const G = rope.geometry;
+    for (const k of ['position', 'normal']) { G.attributes[k].array.set(geo.attributes[k].array); G.attributes[k].needsUpdate = true; }
+    G.computeBoundingSphere();
+    geo.dispose();
   });
   W.mooring = line;
 }

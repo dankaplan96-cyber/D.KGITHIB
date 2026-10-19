@@ -51,13 +51,20 @@ const rt = await page.evaluate(async () => {
   const e = G.rooms.house.exits.find((x) => x.room === 'cellar');
   h.pos.set(e.x, G.physics.groundAt(e.x, e.z, h.pos.y + 3), e.z); G.doorCool = 0;
   G.testFreeze = false;
-  const s = [], t0 = performance.now();
-  await new Promise((res) => { const tick = () => { const T = G.trans; s.push([T ? T.t : null, !!T?.hold, +(document.querySelector('#fade').style.opacity || 0), G.room?.id]); if (performance.now() - t0 < 20000 && (T || performance.now() - t0 < 500)) requestAnimationFrame(tick); else res(); }; requestAnimationFrame(tick); });
+  // per frame: [fade time, held, opacity written, opacity shown (computed: the stylesheet has its own transition), room, transition-duration]
+  const s = [], t0 = performance.now(), f = document.querySelector('#fade');
+  await new Promise((res) => { const tick = () => { const T = G.trans, cs = getComputedStyle(f); s.push([T ? T.t : null, !!T?.hold, +(f.style.opacity || 0), +cs.opacity, G.room?.id, cs.transitionDuration]); if (performance.now() - t0 < 60000 && (T || performance.now() - t0 < 500)) requestAnimationFrame(tick); else res(); }; requestAnimationFrame(tick); });
   G.testFreeze = true;
-  const held = s.filter((x) => x[1]);
-  return { room: G.room?.id, held: held.length, heldBlack: held.every((x) => x[2] === 1), done: s[s.length - 1][0] === null, maxJump: Math.max(...s.slice(1).map((x, i) => (x[0] ?? 0.7) - (s[i][0] ?? 0))) };
+  const held = s.filter((x) => x[1]), swap = s.find((x) => x[4] === 'cellar'), during = s.filter((x) => x[0] !== null);
+  // (frames, ms: under heavy machine load a software-rendered frame takes seconds; the 60 s cap only bounds the wait,
+  // FRAME-1: at load 17 on 4 cores one run of ten needed more than the old 20 s with every frame black/correct)
+  return { frames: s.length, ms: Math.round(performance.now() - t0), room: G.room?.id, held: held.length, heldBlack: held.every((x) => x[2] === 1 && x[3] === 1), swap: swap && { t: swap[0], set: swap[2], shown: swap[3] },
+    noCssEase: during.every((x) => x[5] === '0s'), done: s[s.length - 1][0] === null, maxJump: Math.max(...s.slice(1).map((x, i) => (x[0] ?? 0.7) - (s[i][0] ?? 0))) };
 });
 check('real time: black while the new room compiles, then the fade-in runs in full', rt.room === 'cellar' && rt.held > 0 && rt.heldBlack && rt.done && rt.maxJump <= 0.11, rt);
+// FRAME-1: the room swaps on a fully black screen as shown (before, the frame that crossed t = 0.35 showed the swap
+// through a part-transparent fade, and the stylesheet's 0.6 s easing kept the shown opacity far behind the written one)
+check('real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing)', rt.swap && Math.abs(rt.swap.t - 0.35) < 1e-9 && rt.swap.set === 1 && rt.swap.shown === 1 && rt.noCssEase, rt);
 console.log(errs.length ? errs.join('\n') : 'no errors');
 console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
 await browser.close();
