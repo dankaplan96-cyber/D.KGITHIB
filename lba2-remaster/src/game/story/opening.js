@@ -136,13 +136,17 @@ export function playOpening(story) {
     const a = angleTo(tw, zo.pos), f = { x: Math.sin(a), z: Math.cos(a) }, r = { x: -Math.cos(a), z: Math.sin(a) };
     return P(V(tw.pos.x - f.x * 1.45 + r.x * 0.7, 1.95, tw.pos.z - f.z * 1.45 + r.z * 0.7), head(zo, 1.35), 40);
   }
-  // in front of the house: she comes out by the door and walks toward the camera, which turns to watch her go on
-  // to the neighbours' (their green shutters beyond), rising a little for the title
+  // in front of the house, from the lane's far side (north-east of the door, clear of the trees): she comes out by
+  // the door, comes up the path toward us and turns along the lane past the neighbours' fence; the camera pans with
+  // her, rising a little for the title, their red roof and green shutters ahead of her
+  const stY = g.physics.groundAt(-44.4, 81.2);
   function street() {
     const k = sm((cine.t - 75.2) / 6.4);
-    const pos = V(-39.0 + 1.2 * k, 3.3 + 1.2 * k, 81.0 + 1.4 * k);
-    const her = V(zo.pos.x, zo.pos.y + 1.2, zo.pos.z), door = V(home.door.x, zo.pos.y + 1.1, home.door.z), next = V(nbr.door.x, zo.pos.y + 1.4, nbr.door.z);
-    const lk = door.lerp(next, sm((cine.t - 75.6) / 5.4)).lerp(her, 0.55);
+    const pos = V(-44.6 + 0.7 * k, stY + 1.75 + 0.45 * k, 81.15 + 0.2 * k);
+    const her = V(zo.pos.x, zo.pos.y + 1.15, zo.pos.z), door = V(home.door.x, stY + 1.3, home.door.z), ahead = V(nbr.door.x - 4.5, stY + 1.4, nbr.door.z + 2.6);
+    const lk = door.lerp(her, sm((cine.t - 75.5) / 1.4)).lerp(ahead, 0.3 * sm((cine.t - 77.5) / 4.0));
+    // (from the title on, she is kept right of centre and low: the title sits over the middle of the sky)
+    lk.add(V(-0.8, 0.45, -1.05).multiplyScalar(sm((cine.t - 76.0) / 1.2)));
     return P(pos, lk, 46);
   }
 
