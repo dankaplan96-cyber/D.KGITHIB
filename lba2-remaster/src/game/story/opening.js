@@ -121,7 +121,7 @@ export function playOpening(story) {
   // ---------------------------------------------------------------- shots (world positions)
   const shot = (t0, t1, from, to, extra2 = {}) => ({ t0, t1, from, to, ...extra2 });
   const P = (pos, lk, fov = 40) => ({ pos, look: lk, fov });
-  const twSpot = hx(-0.45, -0.25), zoTray = hx(-1.78, -2.6), zoSink = hx(-2.3, -2.6);
+  const twSpot = hx(-0.45, -0.25), zoTray = hx(-1.78, -2.6), zoSink = hx(-2.42, -2.55);   // (sink: 0.12 m west of the spout's line, her right hand's side; clear of the stove)
   const cupboard = hv(-4.1, 1.25, -1.6);
   const twEnd = hx(1.55, -1.75), twEndA = Math.atan2(-1, 0.25);
   // (indoors the house is an open set like LBA2's: the south and east walls are cut away for the game's camera,
@@ -402,6 +402,8 @@ export function playOpening(story) {
   at(59.2, () => loop('trickle'));
   at(59.4, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y - 0.1, K.spout.z)); });
   at(60.0, () => play(zo, 'touchWater'));
+  // her fingers into the stream under the spout (touchWater holds the hand at chest height, 0.44 m to her right)
+  bend(zo, 60.0, 66.3, { shR: [0.0, 0, 0.6], elR: [0.45], torso: [0.22], head: [0.05] });
   // down the well (a dip, the cave, a dip back)
   at(62.05, () => fade(true));
   at(62.4, () => {
