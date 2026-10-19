@@ -19,6 +19,7 @@ import { Cinematic } from '../../engine/cinematic.js';
 import { dampAngle } from '../../engine/math.js';
 import { createCharacter } from '../characters.js';
 import { glowSprite } from '../interiors.js';
+import { MAT, Kit } from '../props.js';
 import { t } from '../i18n.js';
 import '../text/opening.js';
 import { SHIFT } from '../island.js';
@@ -89,6 +90,32 @@ export function playOpening(story) {
   const water = (k) => {
     stream.visible = k > 0.01;
     if (stream.visible) stream.scale.set(k, 1, k);
+  };
+
+  // ---------------------------------------------------------------- the house as a set
+  // The game draws the house as an open set (the east and south walls cut away, no ceiling) for its own camera; the
+  // scene's low cameras looked over the walls into the black around the room. For the scene the house gets a
+  // ceiling and its east wall back (room-local, in the room's group: hidden with it outdoors); both fade out as the
+  // handoff's camera rises into the game's view (83.6–84.0), and finish() removes them.
+  const setMats = [];
+  const flats = new THREE.Group(); flats.name = 'openingSet';
+  {
+    const own = (m) => { const c = m.clone(); setMats.push(c); return c; };
+    const ceil = own(new THREE.MeshStandardMaterial({ color: '#4a3424', roughness: 0.95, side: THREE.DoubleSide }));
+    const plaster = own(MAT.plaster('#f0e4c8')), low = own(MAT.wainscot('honey')), cap = own(MAT.wood('dark'));
+    // (the Kit gives the textures their world-scale tiling, as the house's own walls have; house frame: x -13.5..4.5,
+    // z -3.5..11.5, walls 3.0 high, 0.4 thick)
+    const k = new Kit(flats); k.recolor = false;
+    k.add(new THREE.BoxGeometry(18.8, 0.12, 15.8), ceil, -4.5, 3.06, 4.0);
+    k.add(new THREE.BoxGeometry(0.4, 3.0, 15.4), plaster, 4.7, 1.5, 3.8);           // the east wall
+    k.add(new THREE.BoxGeometry(0.03, 1.05, 15.0), low, 4.49, 0.525, 4.0);          // its panelling
+    k.add(new THREE.BoxGeometry(0.07, 0.07, 15.0), cap, 4.47, 1.05, 4.0);           // and rail
+    k.flush();
+    flats.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+  }
+  const setFade = (k) => {
+    for (const m of setMats) { m.transparent = k < 1; m.opacity = k; m.depthWrite = k > 0.5; m.needsUpdate = true; }
+    flats.visible = k > 0.01;
   };
 
   // ---------------------------------------------------------------- shots (world positions)
@@ -225,6 +252,7 @@ export function playOpening(story) {
   track(58.5, 59.1, (k) => { handle.rotation.y = -2.2 * sm(k); });
   track(69.2, 69.7, (k) => { handle.rotation.y = -2.2 * (1 - sm(k)); });
   // under the island: the vein brightens and fades with the hum
+  track(83.6, 84.0, (k) => setFade(1 - k));
   track(62.4, 66.5, (k) => { WR.vein.power = Math.sin(k * Math.PI) * 0.9 + Math.max(0, Math.sin(k * Math.PI * 5)) * 0.25 * Math.sin(k * Math.PI); });
 
   // walks
@@ -477,6 +505,7 @@ export function playOpening(story) {
       put(ar, R.npcSpots.arthur.x, R.npcSpots.arthur.z, R.npcSpots.arthur.a, 'kneelWork');
       hold(BT.mast, ar, [0, -0.03, 0.01], [Math.PI, 0, 0]);
       zoe.setPresent(true);
+      R.group.add(flats); temps.push(flats); setFade(1);
       put(worker, wkSpot.x, wkSpot.z, angleTo({ pos: wkSpot }, column), 'idle');
       put(resident, resSpot.x, resSpot.z, Math.atan2(wkSpot.x - resSpot.x, wkSpot.z - resSpot.z), 'idle');
       L.pose(0); L.shake(0); W.boatSurge = 0; WR.vein.power = 0;
@@ -492,6 +521,7 @@ export function playOpening(story) {
     finish(skipped) {
       for (const h of loops) h.stop(skipped ? 0.2 : 0.8);
       for (const o of temps) o.parent?.remove(o);
+      flats.traverse((o) => o.geometry?.dispose()); for (const m of setMats) m.dispose();
       for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; }
       if (skipped) { g.audio.endCue(); }
       document.querySelector('#fade').classList.remove('quick');
