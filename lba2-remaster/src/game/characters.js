@@ -40,7 +40,9 @@ export const LOOKS = {
     // The sculpt below is the fallback.
     race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#b32b27', pants: '#b32b27', shoes: '#3f7b47',
     hair: '#e3af53', skin: '#d9a679', hairStyle: 'bun', nose: 'button', eyes: '#2f474b', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,
-    armSpread: 0.3, armLen: 1.1,
+    // CHAR-OPEN (OPEN-3 #28): her arms hang at her sides (0.08 rad out from the skeleton's rest; 0.3 held the hands
+    // 0.45 m out, the "rods standing off her sides"); the opening's pose layer was brought in by the same 0.22
+    armSpread: 0.08, armLen: 1.1,
   },
   arthur: {
     // a curious kid: knee tunic in his father's blue with an orange belt, scuffed knees, a spiky tuft

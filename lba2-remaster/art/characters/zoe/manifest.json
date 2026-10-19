@@ -31,7 +31,7 @@
  },
  "sources_location": "the user's files in the session scratch space (never committed)",
  "outputs_sha256": {
-  "assets/poly/zoe.json": "ee9d3680c854532898fe21ca0dc7d987ae01524d6763783f0af14e757212496c"
+  "assets/poly/zoe.json": "6832a3a55b2264be3edc41ba92728b7c9bb4800fb5c58a5475c4b8c329223514"
  },
  "outputs_other": [
   "art/characters/zoe/zoe_poly.blend (editable; rewritten by the script)"
@@ -110,10 +110,12 @@
   "the skeleton's pivots differ from the original's (docs/character-review.md §15)",
   "her own clips are not used; the rig.js procedural set drives her",
   "the strap ends on the shoulder at the side seam (a small red patch)",
-  "the eyes are small dark slants as in the original; in close-ups they read as half-closed"
+  "the eyes are small dark slants as in the original; in close-ups they read as half-closed",
+  "CHAR-OPEN: the arms are an artistic choice (fuller than the original's thin arms, which read as rods in our light); still slim, as SRC-2's slimmer figure"
  ],
  "built_by_src2": "python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly art/characters/zoe/zoe_poly.blend (SRC-2: ZOE_BODY without the pregnancy; ZOE_LBA2=1 for the measured figure)",
  "char_open": {
-  "bun (OPEN-3 #11)": "the three bun balls keep their measured sizes and their downward-backward run but are seated on the skull (ZOE_BUN; the measured ones are ZOE_BUN_LBA2), and the bun is weighted to the head bone only (it was passed along tail0..2, whose follow-through swung it off the head)"
+  "bun (OPEN-3 #11)": "the three bun balls keep their measured sizes and their downward-backward run but are seated on the skull (ZOE_BUN; the measured ones are ZOE_BUN_LBA2), and the bun is weighted to the head bone only (it was passed along tail0..2, whose follow-through swung it off the head)",
+  "arms (OPEN-3 #28)": "the two straight tubes (r 3.1 -> 2.6 -> 2.0 cm) are now a slim adult arm in nine sections along the bones (ARM: a shoulder cap in the body's edge, upper arm 9-10 cm across, the elbow, a small forearm swell, a 5 cm wrist), same bones and weights (sh / el blended at the elbow); the look's armSpread 0.3 -> 0.08 (characters.js), so they hang at her sides; triangles 4434 -> 4646"
  }
 }
