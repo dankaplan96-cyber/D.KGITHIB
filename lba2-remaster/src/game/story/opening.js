@@ -77,7 +77,8 @@ export function playOpening(story) {
 
   const tw = actor(H), zo = actor(zoe), ar = actor(arthur);
   const worker = extra('worker'), resident = extra('farmerB');
-  const wkSpot = HP(-84.35, -3.05), resSpot = HP(-83.3, -4.3), column = HP(-85.0, -2.75);
+  // (the worker stands a step off the lift column's base: at (-84.35, -3.05) his body was in it)
+  const wkSpot = HP(-84.25, -3.1), resSpot = HP(-83.3, -4.3), column = HP(-85.0, -2.75);
   const resSpot2 = HP(-82.3, -4.4);   // (where he stands after the drill's cutaway: clear of the crate in shot 4's view)
 
   // ---------------------------------------------------------------- props held in hands
