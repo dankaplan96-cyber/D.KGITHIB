@@ -356,7 +356,9 @@ export function playOpening(story) {
   at(MUSIC_AT, () => g.audio.cue('opening'));
   at(6.2, () => loop('winch', { quiet: true }));
   at(13.6, () => sfx('clunk'));
-  at(14.2, () => { loop('motor'); play(worker, 'reach'); look(resident, head(worker)); });   // (a hand on the lift's control)
+  at(14.2, () => { loop('motor'); play(worker, 'reach'); look(resident, head(worker)); });
+  // the worker glances back at the man asking while his hand stays on the control
+  at(15.0, () => look(worker, head(resident)));   // (a hand on the lift's control)
   at(16.85, () => { play(worker, 'idle'); look(worker, head(resident)); });
   turn(worker, Math.atan2(resSpot.x - wkSpot.x, resSpot.z - wkSpot.z) - 0.35, 16.85, 0.5);
   turn(worker, angleTo({ pos: wkSpot }, column), 19.7, 0.3);
@@ -510,7 +512,7 @@ export function playOpening(story) {
     subs.push({ t: tt, d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
     if (a && talk !== false) { at(tt, () => { play(a, 'talk'); if (typeof talk === 'number') a.rig.gesture = talk; }); at(tt + d - 0.15, () => { if (a.rig.anim === 'talk') play(a, 'idle'); }); }
   };
-  say(14.6, 'resident', 'op_res_1', 2.3, resident);
+  say(14.6, 'resident', 'op_res_1', 2.3, resident, 4);   // (hands together: asking, not waving)
   say(16.95, 'worker', 'op_wk_1', 2.6, worker, false);   // (ends with the cut to the drill at 19.6, not over it)
   say(24.0, 'resident', 'op_res_2', 1.7, resident);
   say(25.8, 'worker', 'op_wk_2', 2.4, worker, false);
