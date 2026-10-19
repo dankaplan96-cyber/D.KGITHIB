@@ -54,15 +54,15 @@ let next = T0;
 for (;;) {
   const st = await ev(() => { if (!game.cine) return null; return game.cine.t; });
   if (st == null || st > T1) break;
-  if (st >= next - 1e-6) {
+  if (st + 1 / 30 >= next - 1e-6) {
+    // the next frame lands on (or just past) the sample time: render it and save the picture
     await ev(() => { game.frame(1 / 30, true); window.__sample(); });
     const t = await ev(() => game.cine?.t ?? 999);
     await page.screenshot({ path: path.join(OUT, `f_${fmt(t)}.jpg`), type: 'jpeg', quality: 82, timeout: 120000 });
-    next += STEP;
-    while (next < t) next += STEP;
+    while (next <= t + 1e-6) next += STEP;
   } else {
-    // step without rendering until the next sample
-    await ev((n) => { for (let i = 0; i < 200 && game.cine && game.cine.t < n - 1 / 30 + 1e-6; i++) { game.frame(1 / 30, false); window.__sample(); } }, next);
+    // step without rendering until the frame before the next sample (at least one step)
+    await ev((n) => { let i = 0; do { game.frame(1 / 30, false); window.__sample(); i++; } while (i < 300 && game.cine && game.cine.t + 2 / 30 < n - 1e-6); }, next);
   }
 }
 fs.writeFileSync(path.join(OUT, 'log.json'), JSON.stringify(await ev(() => window.__rec)));

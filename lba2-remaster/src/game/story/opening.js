@@ -219,8 +219,12 @@ export function playOpening(story) {
   walk(zo, [zoTray, zoSink], 40.3, 0.9, 'idle', Math.PI);
   // Zoé out of the family room and down the hall to the front door (seen as far as the hall; the door is the cut)
   walk(zo, [zoSink, hx(0.7, -1.4), hx(1.2, 2.6), hx(1.2, 6.5)], 71.0, 1.45);
-  // outside: from where the game's door puts you, along the lane to the neighbours'
-  walk(zo, [homeOut, nbrSpot], 75.2, 1.35, 'idle');
+  // outside: from where the game's door puts you, round the neighbours' fenced yard (the pickets of
+  // citadel-layout.js run x -41.8, z 70.9–78.5 and z ≈ 77.8, x -41..-37.3) and their house, to their door on the far
+  // side. (A straight line went through the fence and the house.) Only the first 8.6 m are seen; finish() puts
+  // her at the door.
+  walk(zo, [homeOut, { x: -43.3, z: 77.5 }, { x: -42.2, z: 79.3 }, { x: -37.6, z: 79.4 }, { x: -36.4, z: 80.9 },
+    { x: -33.0, z: 81.0 }, { x: -30.4, z: 79.6 }, { x: -28.6, z: 77.7 }, nbrSpot], 75.2, 1.35, 'idle');
 
   // turns
   turn(zo, angleTo({ pos: zoSink }, twSpot), 50.6, 0.5);
