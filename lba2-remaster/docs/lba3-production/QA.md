@@ -155,6 +155,26 @@ and fights its way through with keys only.
 | PERF-IGPU regression (same build) | dynres 8/8, merge 3/3, stability 16/16, display 15/15, transitions 5/5, house 2/2, townlife 35/35, spaceport 7/7, opening, shipfiles, timing: see the PERF-IGPU report; no page errors |
 
 
+### PERF-2: draw calls and CPU per frame on the laptop's routes (2026-10-19; evidence docs/lba3-visual/evidence/PERF-2/)
+Measured here on SwiftShader (headless Chromium, 1366×768, the preset saved before loading): counts are exact, times are
+CPU proxies on a loaded machine (load average 6–8 from parallel work), never GPU time. Baseline = this branch at 533d0b5
+with only the benchmark's new route and counters (so both sides measure the same frames).
+
+| Check | Result |
+|---|---|
+| Why the laptop's bench showed 542 calls and perfbudget ~290 | The user plays with the **free camera**. The 0.31.0 bench's street route turns only the free orbit (`camRig.yaw += …`); with the default LBA camera it measures the follow view (~260–290), with the free one the views across the square and up the town (Low 471 / Medium 521 calls here, laptop 477 / 542; triangles 690k / 1071k here, laptop 697k / 1091k). Not multi-draw emulation, not the shadow layers, not double counting: three counts one call per WebGL call; WEBGL_multi_draw is present in Chromium/Electron on D3D11 (ANGLE then issues each sub-draw itself: now reported as "GPU draws") |
+| Benchmark route fixed (bench.js) | every route runs the free orbit from a fixed heading/pitch/distance, the player's camera put back after; the street starts at heading π/4 and reproduces the laptop's 0.31.0 numbers (Low 478 calls / 693k tris vs the laptop's 477 / 697k; Medium 527 / 1086k vs 542 / 1091k). The report adds the calls' p95, the shadow pass's calls, GPU draws and WEBGL_multi_draw. perfbudget.mjs samples the bench's own 1.5–7.5 s window |
+| Street calls, median (p95) Low / Medium / High | 478 (640) / 527 (732) / 602 (837) → **292 (347) / 350 (444) / 438 (550)**; GPU draws 561 / 709 / 817 → 374 / 532 / 652; shadow pass (Medium) 35 → 36 |
+| Interior · combat · transition calls, Low / Medium / High | interior 118 / 122 / 136 → 103 / 105 / 118; combat 147 / 216 / 229 → 121 / 190 / 203; transition 632 / 701 / 804 → 358 / 428 / 543 (the transition route's outdoor frames now use the free orbit at the house door, looking over the town: the laptop's 118–122 was mostly interior frames) |
+| Triangles, street | Low 693k → 761k, Medium 1086k → 1158k (+5–7 %: town merged in 96 m cells and 70-cell terrain tiles draw some geometry just off screen) |
+| CPU per frame (cpu.mjs, matched A/B, the street's three heaviest headings, GPU queue drained before each timed render, median of 30) | render submission Low 10.3–11.4 → 5.7–5.9 ms (−46 %), Medium 13.6–15.3 → 7.8–9.2 ms (−42 %) at load ≈ 3–4 on both sides (cpu-ab-lowload.txt); −33 % in the two rounds at load 7–9 (cpu-ab.txt). Simulation unchanged (2.4 / 3.1 ms). The matrix update of hidden subtrees was the largest single JS cost (profile: ~30 % of render's own time) |
+| Transition stall source | Game.warmScene ran three's compileAsync over the whole scene (~6 400 meshes) at **every** door: 70–130 ms of main thread here with nothing left to compile. Now once per scene and light/graphics state: first entry 72–81 ms, every later entry 0.2–4 ms (warm.mjs) |
+| Door parts and the small-prop culling (the user's "door not fully drawn") | tests/doorcull.mjs (new): 16 house doors (Citadel and Zeelich), Twinsen 2/6/12 m out, LBA + free camera, Low and Medium vs High. Before: **FAIL** — a 4 cm brass part by Twinsen's own door culled at Low and Medium with him 2.7 m away, two parts of Baldino's workshop door at Low. After: PASS 192/192 (nothing within 16 m of Twinsen is culled for size) |
+| Look | same-frame captures before/after (look/*-cmp.jpg: before · after · difference ×6) at 7 Citadel views: static scenery identical; differences are the NPCs' animation phase and the water's clock |
+| Shader programs | at load Low/Medium/High 70/81/89 → 74/85/93 (the folded twins); 0 new programs on any route after loading, every preset |
+| Regression (this build) | merge, dynres, stability, transitions, occluders (house lookup taught the merged town), camclear, townlife, holomap, deaths, opening, doorcull: ALL PASSED; opening again after merging OPEN-3 (9750466, with its per-frame solids check): ALL PASSED |
+| perfbudget budgets (unchanged) on the new, heavier route | Medium street ≤ 300: FAIL (350); High ≤ 450: PASS (438); Low ≤ 260: FAIL (292); interiors ≤ 150: PASS; no new programs: PASS. The budgets were set on the LBA-camera route; not relaxed |
+
 ### Story and progression (player-input playthrough, tests/playthrough/01–14)
 Each segment continues from the previous one's real save (Esc → Save & quit → Continue). INPUT = keys only (arrows,
 E, F hold/tap, Space, X, K, R, F1/F2, menu clicks). ISO assist = a fight or move the bot can't do, finished through the

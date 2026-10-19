@@ -93,6 +93,28 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Open: town.js/island.js merges (VP-10's files; VISUAL_REMASTER "Remaining" 3) for Medium street ≤ 300; the
   user's benchmark on the laptop (GPU frame rate, startup on D3D11) is the judge.
 
+## PERF-2 (status REVIEW; worktree commit on 533d0b5)
+- Why the laptop's bench said 542 calls where perfbudget said ~290: the user plays with the free camera, and the
+  0.31.0 street route turned only the free orbit — a different view per camera setting (reproduced here: Low 478 /
+  Medium 527 calls, 693k / 1086k triangles vs the laptop's 477 / 542, 697k / 1091k). The bench now uses the free orbit
+  from a fixed heading on every route (the player's camera is restored) and reports p95 calls, shadow-pass calls and
+  GPU-level draws (multi-draw sub-draws).
+- Street calls Low/Medium/High 478/527/602 → 292/350/438 (p95 640/732/837 → 347/444/550); triangles +5–7 %.
+  World matrices only for shown objects (7 000 of 9 500 sat under hidden rooms/regions), actors of other areas and
+  sub-pixel actor parts out of the frame, blob shadows instanced, the town merged across houses with colours,
+  textures and roughness/metalness folded into vertex attributes (merge.js retex), harbour/original props/heat posts/
+  city dressing folded, terrain tiles 70 cells, buried rising stones hidden until they rise.
+- Transitions: Game.warmScene compiled the whole scene at every door (70–130 ms main thread); once per scene/light state now.
+- Door parts: nothing within 16 m of Twinsen is culled for size (a brass part by his own door was, at Low/Medium);
+  tests/doorcull.mjs.
+- Open: Low ≤ 200 / Medium ≤ 250 not reached (left: grass/flower tiles, the harbour's instanced props, NPC bodies and
+  eyes — one draw per distinct texture or instanced kind). GPU time and real stalls: the user's benchmark.
+- For the frame-pacing engineer (block 6): Renderer.render() now runs `pre` (FarCull + BlobBatch hide), the
+  shown-only world-matrix update (engine/drawcull.js updateShownWorld; `renderer.shownOnly = false` turns it off for
+  A/B), the composer, then `post` (restore). The bench's per-frame counters live in Perf (renderBufferDirect is
+  wrapped once). warmScene's cache key: room, quality, visual, shadow type, visible lights by type; it re-warms when
+  any new program was compiled since. The transition route's outdoor view is now heavier (free orbit over the town).
+
 ## Done after (0.30.0, EQ-1; status REVIEW)
 - Baldino's hop-pack (src/game/jetpack.js): from chapter 10 on its peg by his workshop door; Athletic, jump and hold;
   one storey (2.4 m over the take-off ground and the ground under him), 2.2 s of thrust refilled on firm ground, needs

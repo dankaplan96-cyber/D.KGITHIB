@@ -20,6 +20,10 @@ function texMat(name, opts = {}) {
   return m;
 }
 const plain = (color, rough = 0.85, extra = {}) => texMat('_' + color, { color, rough, ...extra });
+// (PERF-2: one material per kind instead of one per window pane / valance scallop, so a house merges them into a
+// single draw; the panes' glow and the scallops' colours are fixed at build time, nothing changes them later)
+const SHARED = new Map();
+const shared = (key, make) => { if (!SHARED.has(key)) SHARED.set(key, make()); return SHARED.get(key); };
 
 // world-scaled UVs for extruded panels: 1 texture tile per `tile` metres
 function scaleUV(geo, sx, sy = sx) {
@@ -135,7 +139,7 @@ export function buildHouse(opts) {
     // openings: reveals (inner faces come from the extrusion), frames, glass, sills, shutters
     for (const op of holes[sd.name]) {
       if (op.win) {
-        const glass = mesh(new THREE.PlaneGeometry(op.w, op.h), new THREE.MeshStandardMaterial({ color: '#2f4f6a', roughness: 0.15, metalness: 0.1, emissive: '#ffcf80', emissiveIntensity: o.lit ? 0.35 : 0.0 }), panel, op.x, op.y + op.h / 2, 0.08);
+        const glass = mesh(new THREE.PlaneGeometry(op.w, op.h), shared('glass' + !!o.lit, () => new THREE.MeshStandardMaterial({ color: '#2f4f6a', roughness: 0.15, metalness: 0.1, emissive: '#ffcf80', emissiveIntensity: o.lit ? 0.35 : 0.0 })), panel, op.x, op.y + op.h / 2, 0.08);
         glass.castShadow = false;
         const fw = 0.06;
         for (const [fx, fy, w2, h2] of [[op.x, op.y + fw / 2, op.w, fw], [op.x, op.y + op.h - fw / 2, op.w, fw], [op.x - op.w / 2 + fw / 2, op.y + op.h / 2, fw, op.h], [op.x + op.w / 2 - fw / 2, op.y + op.h / 2, fw, op.h], [op.x, op.y + op.h / 2, 0.04, op.h], [op.x, op.y + op.h * 0.55, op.w, 0.04]]) {
@@ -258,7 +262,7 @@ export function buildHouse(opts) {
     m.scale.set(1, 1, 1);
     // scalloped valance
     for (let i = 0; i < Math.round(w / 0.3); i++) {
-      const v = mesh(new THREE.CircleGeometry(0.15, 10, Math.PI, Math.PI), new THREE.MeshStandardMaterial({ color: i % 2 ? '#ffffff' : o.awning, side: THREE.DoubleSide }), aw, -w / 2 + 0.15 + i * 0.3, -0.62, 0.87);
+      const v = mesh(new THREE.CircleGeometry(0.15, 10, Math.PI, Math.PI), shared('valance' + (i % 2 ? '#ffffff' : o.awning), () => new THREE.MeshStandardMaterial({ color: i % 2 ? '#ffffff' : o.awning, side: THREE.DoubleSide })), aw, -w / 2 + 0.15 + i * 0.3, -0.62, 0.87);
       v.castShadow = false;
     }
     for (const sx of [-1, 1]) mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 6), plain('#3a3a3a', 0.5), aw, sx * (w / 2 - 0.05), -0.35, 0.45).rotation.x = 1.1;

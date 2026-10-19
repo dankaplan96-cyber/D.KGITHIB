@@ -9,6 +9,8 @@ import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { Perf, gpuQuality, oldGpuQuality } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
+import { FarCull, BlobBatch } from './engine/drawcull.js';
+import { BLOBS } from './engine/rig.js';
 import { LightPool, POOL_SIZE } from './engine/lightpool.js';
 import { ShadowCull } from './engine/shadowcull.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
@@ -207,6 +209,11 @@ class Game {
     this.cutscene = null;
 
     timed('actors', () => this.spawnActors());
+    // (PERF-2: actors of other areas are left out of the render; engine/drawcull.js)
+    this.farCull = new FarCull(() => [this.npcs, this.enemies], this.camera, this.scene.fog);
+    this.blobBatch = new BlobBatch(this.scene, BLOBS);
+    this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); };
+    this.renderer.post = () => { this.blobBatch.restore(); this.farCull.restore(); };
     this.lightPool.collect(); // (after every builder has placed its lamps)
     this.loadTimes.total = Math.round(performance.now() - tm);
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
@@ -328,12 +335,21 @@ class Game {
     if (T.t >= 0.7) { this.trans = null; $('#fade').style.opacity = ''; }
   }
   // compile the new scene's shaders behind the black screen (not under the automated tests' fixed stepping)
+  // PERF-2: once per scene and light/graphics state. The warm-up walks every mesh of the scene (~6 400) to work out
+  // its program, ~70–130 ms of main-thread time on SwiftShader's CPU even when nothing is left to compile: on the
+  // user's laptop the transition stalls (up to 200 ms) at every door. A state already warmed, with no program made
+  // since (anything new compiled anywhere starts it over), needs nothing.
   warmScene(T) {
     const R = this.renderer.renderer;
     if (this.testFreeze || !R.compileAsync || this.state !== 'play') return;
     this.lightPool.update(this.hero.pos);
+    const lights = {};
+    this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
+    const key = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
+    const warmed = (this._warmed ??= new Map());
+    if (warmed.get(key) === R.info.programs.length) return;
     T.hold = true; T.holdT = performance.now();
-    this.renderer.precompile().catch(() => {}).finally(() => { T.hold = false; });
+    this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); T.hold = false; });
   }
   // The shadow pass's depth programs (one per kind of caster: side, texture/alpha test, instanced, batched, skinned)
   // are not compiled by precompile(); left alone they compile on the first frame that casts with each kind. Here a

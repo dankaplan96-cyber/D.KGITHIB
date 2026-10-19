@@ -167,8 +167,9 @@ High stalling on shader compiles, and black frames every few seconds.
 ## Remaining (ranked)
 1. Cliff bases still slightly soft; shoreline and water edge.
 2. Animation polish beyond idle: turn-in-place steps, landing variety, NPC-specific idles.
-3. Draw calls in the street (Medium 325): the town's loose props (Pippa's stall ≈35 meshes, the heat posts,
-   the well) and island.js's original-props / dressing groups are unmerged. mergeStatic(group, { recolor, cell })
-   would take the street to ≈250 (measured as a what-if). The dog (25 parts × 2 passes) and the characters'
-   separate parts are the next largest.
+3. Draw calls in the street. PERF-2 (2026-10-19): on the benchmark's route as the user's free camera sees it,
+   Low/Medium/High 478/527/602 → 292/350/438 (town merged across houses, colours/textures/roughness folded into
+   vertex attributes, shown-only world matrices, other areas' actors out of the frame; QA.md "PERF-2"). What is
+   left is one draw per distinct texture or instanced kind: grass and flower tiles (~20), the harbour's instanced
+   props, NPC bodies and eyes.
 4. Head outlines are still 7–11-sided at close-up range (shading is smooth; the outline is geometry).

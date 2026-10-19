@@ -591,7 +591,9 @@ function buildHarbour(W0, root, r) {
   // everything else on the quay is static: one mesh per material (≈335 → ≈60 draw calls with shadows)
   // (the boat and the ferry bob as a whole, so each is merged within its own group)
   W.fishingBoat.userData.keep = true; W.ferry.group.userData.keep = true;
-  mergeStatic(g); mergeStatic(W.fishingBoat); mergeStatic(W.ferry.group);
+  // (PERF-2: plain and simply textured materials folded by colour, per 64 m cell — see merge.js recolor/retex; none of
+  // the quay's static materials changes at runtime, the animated and toggled parts above are `keep`)
+  mergeStatic(g, { recolor: true, retex: true, cell: 64 }); mergeStatic(W.fishingBoat); mergeStatic(W.ferry.group);
   // to world coordinates: what the story and the tests read (the ferry's group stays in the harbour's frame)
   movePt(d, W.pierEnd, W.pierStart, W.harbourShed, W.harbourShed.door, W.ferry, W.ferry.gangway);
   const L = W.cargoLift; L.cratePierW = L.cratePier.clone().add(new THREE.Vector3(d.x, 0, d.z));
@@ -2477,7 +2479,7 @@ function buildOriginalProps(W, root, r) {
     if (at) { tulipBed(W, grp, at[0], at[1], w, 1.1, 0, r); n++; }
   }
   W.propsPlaced = n;
-  mergeStatic(grp, { recolor: true, cell: 24 });   // (all static; instanced lamps/posts are left as they are. PERF-IGPU)
+  mergeStatic(grp, { recolor: true, retex: true, cell: 24 });   // (all static; instanced lamps/posts are left as they are. PERF-IGPU; retex PERF-2)
 }
 
 // ================================================================== entry
