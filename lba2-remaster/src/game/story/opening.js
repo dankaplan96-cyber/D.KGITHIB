@@ -269,7 +269,7 @@ export function playOpening(story) {
   // resident then turns away from him toward the ferry — their walks no longer meet: they passed within 0.39 m)
   walk(resident, [resSpot2, HP(-83.0, -5.0), HP(-84.4, -5.6)], 26.4, 1.2, 'idle', Math.PI);
   walk(worker, [wkSpot, HP(-84.2, -3.65)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-84.2, -3.65) }, L.cratePierW));
-  walk(zo, [zoTray, zoSink], 40.3, 0.9, 'idle', Math.PI);
+  walk(zo, [zoTray, zoSink], 40.2, 0.9, 'idle', Math.PI);   // (done by 40.91, before her reach at 41.0)
   // Zoé out of the family room and down the hall to the front door (seen as far as the hall; the door is the cut)
   // (wide of the chair at the table's east end: the corner at hx(0.7, -1.4) took her through it)
   walk(zo, [zoSink, hx(1.15, -1.2), hx(1.25, 2.6), hx(1.2, 6.5)], 71.0, 1.45);
@@ -377,13 +377,13 @@ export function playOpening(story) {
   at(39.5, () => play(zo, 'wipe'));
   // the tap
   at(41.0, () => play(zo, 'reach'));
-  at(41.35, () => play(zo, 'tapTurn'));
+  at(41.35, () => from(zo, 'tapTurn', 0.4));   // (from: the hand stays on the handle as the twist starts)
   at(41.5, () => sfx('tapSqueak'));
   at(42.3, () => sfx('pipeKnock'));
   at(42.65, () => sfx('pipeKnock'));
   at(42.95, () => { sfx('waterRun'); g.particles.burst(K.basin.x, K.basin.y + 0.05, K.basin.z, '#cfe8ff', 6, 0.8); });
   at(43.65, () => sfx('gurgle'));
-  at(44.0, () => play(zo, 'reach'));
+  at(44.0, () => from(zo, 'reach', 0.4));
   at(44.6, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y, K.spout.z)); });
   at(45.2, () => look(zo, head(tw)));
   // he turns round from the lamp to answer her (she is behind him: a look alone stopped at his shoulder, facing
@@ -392,14 +392,17 @@ export function playOpening(story) {
   pivot(tw, -1.95, 46.35, 0.75);
   pivot(tw, 0.35, 54.9, 0.8);
   at(53.0, () => tw.rig.doGesture('shrug'));
-  bend(zo, 47.7, 58.0, { shL: [0, 0, -0.22], shR: [0, 0, 0.22] });   // (her listening arms at rest: the idle's stand off her sides, NEEDS-MODEL #28)
+  bend(zo, 47.7, 58.0, { shL: [0, 0, -0.22], shR: [0, 0, 0.22] });
+  // her hand on the tap's handle (reach / tapTurn lift the arm straight ahead of the shoulder, beside the tap)
+  const TAPHAND = { shR: [-0.12, 0, 0.55], elR: [0.25], torso: [0.14] };
+  bend(zo, 41.0, 44.7, TAPHAND); bend(zo, 58.0, 60.15, TAPHAND); bend(zo, 69.0, 70.35, TAPHAND);   // (her listening arms at rest: the idle's stand off her sides, NEEDS-MODEL #28)
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
   at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
   at(54.8, () => { look(ar, head(tw)); look(tw, head(ar, 0.9)); look(zo, head(ar, 0.9)); });
   at(57.6, () => { look(zo, null); });
   at(58.0, () => { play(zo, 'reach'); look(tw, head(zo)); play(ar, 'kneelWork'); look(ar, null); });
-  at(58.5, () => play(zo, 'tapTurn'));
+  at(58.5, () => from(zo, 'tapTurn', 0.4));
   at(58.6, () => sfx('tapSqueak'));
   at(59.0, () => sfx('gurgle'));
   at(59.2, () => loop('trickle'));
@@ -433,7 +436,7 @@ export function playOpening(story) {
   at(66.65, () => play(tw, 'setDown'));
   at(67.1, () => { rest(TB.screwdriver, R.group, { x: sdRest.x, y: sdRest.y, z: sdRest.z, ry: sdRest.ry }); sfx('put'); });
   at(69.0, () => { play(zo, 'reach'); look(zo, null); });
-  at(69.3, () => play(zo, 'tapTurn'));
+  at(69.3, () => from(zo, 'tapTurn', 0.4));
   at(69.5, () => { stopLoop('trickle'); sfx('tapSqueak'); });
   at(70.3, () => { play(zo, 'wipe'); look(zo, head(tw)); });
   at(71.3, () => { play(zo, 'idle'); });
