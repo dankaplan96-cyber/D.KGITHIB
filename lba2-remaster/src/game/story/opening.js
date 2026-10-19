@@ -73,6 +73,7 @@ export function playOpening(story) {
   const tw = actor(H), zo = actor(zoe), ar = actor(arthur);
   const worker = extra('worker'), resident = extra('farmerB');
   const wkSpot = HP(-84.35, -3.05), resSpot = HP(-83.3, -4.3), column = HP(-85.0, -2.75);
+  const resSpot2 = HP(-82.3, -4.4);   // (where he stands after the drill's cutaway: clear of the crate in shot 4's view)
 
   // ---------------------------------------------------------------- props held in hands
   const hold = (obj, a, pos, rot, side = 'R') => { const hand = a.rig.j['arm' + side].hand; hand.add(obj); obj.position.set(...pos); obj.rotation.set(...rot); };
@@ -109,7 +110,9 @@ export function playOpening(story) {
     // 4 — back at the pier, a little above head height: the lantern settles; "Just the drill."; the crate is set
     // down. (The look point is on the people, 0.7 m over the deck (2.16): it was below the deck, which put their
     // heads at the top edge, cut.)
-    shot(23.8, 29.0, P(HV(-79.0, 3.95, -6.8), HV(-84.0, 2.85, -3.7), 44), P(HV(-79.3, 3.9, -6.6), HV(-84.0, 2.8, -3.8), 44)),
+    // (from the ferry's side of the pier, so the worker answers toward us and his bend to the crate reads; from the
+    // town's side the resident hid him)
+    shot(23.8, 29.0, P(HV(-80.9, 3.85, 0.3), HV(-83.8, 2.8, -3.9), 44), P(HV(-81.1, 3.8, 0.1), HV(-83.8, 2.75, -4.0), 44)),
     // 5 — home: the whole family at their own things; over Arthur's shoulder: "Dad! The mast fits!"
     shot(29.0, 31.2, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.6, -0.55), 44), P(hv(4.2, 2.68, 4.2), hv(0.15, 0.6, -0.58), 44)),
     shot(31.2, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
@@ -220,10 +223,10 @@ export function playOpening(story) {
 
   // walks
   // the resident waits by the lift for his word with the worker, then goes on to the ferry
-  // (the worker steps to the crate's side of the pier while the resident is still there; the resident then turns
-  // away from him toward the ferry — their walks no longer meet: they passed within 0.39 m of each other)
-  walk(resident, [resSpot, HP(-83.0, -5.0), HP(-84.4, -5.6)], 26.4, 1.2, 'idle', Math.PI);
-  walk(worker, [wkSpot, HP(-83.75, -4.05)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-83.75, -4.05) }, L.cratePierW));
+  // (the worker steps to the crate's side of the pier, by its west face, while the resident is still there; the
+  // resident then turns away from him toward the ferry — their walks no longer meet: they passed within 0.39 m)
+  walk(resident, [resSpot2, HP(-83.0, -5.0), HP(-84.4, -5.6)], 26.4, 1.2, 'idle', Math.PI);
+  walk(worker, [wkSpot, HP(-84.2, -3.65)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-84.2, -3.65) }, L.cratePierW));
   walk(zo, [zoTray, zoSink], 40.3, 0.9, 'idle', Math.PI);
   // Zoé out of the family room and down the hall to the front door (seen as far as the hall; the door is the cut)
   // (wide of the chair at the table's east end: the corner at hx(0.7, -1.4) took her through it)
@@ -242,10 +245,38 @@ export function playOpening(story) {
   turn(zo, angleTo({ pos: zoSink }, twSpot), 69.85, 0.45);
   turn(tw, twEndA, 81.7, 0.7);   // to the cupboard, where the ball is
 
+  // The scene's own pose layer: small offsets on top of the rig's actions where a hand must land on something (the
+  // crate's top, the stream, the table). bend(actor, t0, t1, offsets) eases in over the first 0.3 s and out over the
+  // last 0.3 s; offsets are joint rotations (torso/head/shoulder/elbow/knee, radians) and hips (metres, down < 0).
+  // Each frame the last offsets are taken off before the rig updates and the new ones put on after, so the rig's
+  // own damping never sees (or compounds) them.
+  const bends = [];
+  const bend = (a, t0, t1, o) => bends.push({ a, t0, t1, o });
+  const JOINT = { torso: (j) => j.torso.rotation, head: (j) => j.head.rotation, shR: (j) => j.armR.sh.rotation, elR: (j) => j.armR.el.rotation,
+    shL: (j) => j.armL.sh.rotation, elL: (j) => j.armL.el.rotation, kneeL: (j) => j.legL.knee.rotation, kneeR: (j) => j.legR.knee.rotation,
+    hipL: (j) => j.legL.hip.rotation, hipR: (j) => j.legR.hip.rotation };
+  const applyBend = (a, sign) => {
+    const j = a.rig.j, o = a._bend;
+    if (!o) return;
+    for (const [key, v] of Object.entries(o)) {
+      if (key === 'hips') { j.hips.position.y += sign * v; continue; }
+      const r = JOINT[key](j); r.x += sign * (v[0] || 0); r.y += sign * (v[1] || 0); r.z += sign * (v[2] || 0);
+    }
+  };
   // everyone's rig, every frame (after the moves above)
   track(0, OPENING_LENGTH, (k, tt, dt) => {
     for (const a of cast) {
+      applyBend(a, -1); a._bend = null;
       if (dt > 0) a.rig.update(dt, a._speed || 0);
+      for (const b of bends) {
+        if (b.a !== a || tt < b.t0 || tt > b.t1) continue;
+        const w = sm((tt - b.t0) / 0.3) * sm((b.t1 - tt) / 0.3), o = a._bend ??= {};
+        for (const [key, v] of Object.entries(b.o)) {
+          if (key === 'hips') o.hips = (o.hips || 0) + v * w;
+          else { const c = o[key] ??= [0, 0, 0]; v.forEach((x, i) => (c[i] += x * w)); }
+        }
+      }
+      applyBend(a, 1);
       a.sync();
     }
   });
@@ -272,12 +303,16 @@ export function playOpening(story) {
   at(19.2, () => sfx('rattle'));
   at(19.55, () => { cine.focus = V(bore.x, boreY, bore.z); W.station.setActive(true); });
   at(20.8, () => sfx('hum'));
-  at(23.75, () => { W.station.setActive(stationWas); cine.focus = harbourFocus; });
+  at(23.75, () => { W.station.setActive(stationWas); cine.focus = harbourFocus; put(resident, resSpot2.x, resSpot2.z, Math.atan2(wkSpot.x - resSpot2.x, wkSpot.z - resSpot2.z)); });
   at(22.6, () => { look(worker, null); });
   at(23.9, () => { look(resident, head(worker)); look(worker, head(resident)); });
-  at(26.65, () => { play(worker, 'reach'); look(worker, L.crate.getWorldPosition(new THREE.Vector3())); look(resident, null); });
+  // the worker answers over his shoulder, then bends to the crate and frees the hook (his hand on the crate's
+  // top as it settles: the thump), straightens and watches the hook go up
+  at(26.4, () => { look(worker, L.crate.getWorldPosition(new THREE.Vector3()).setY(L.cratePierW.y + 0.3)); look(resident, null); });
+  at(26.6, () => play(worker, 'setDown'));
+  bend(worker, 26.75, 27.55, { torso: [0.34], kneeL: [0.12], kneeR: [0.12], hipL: [-0.06], hipR: [-0.06], shR: [-0.2] });   // (down to the crate's top, 0.82 m: setDown is for a table)
   at(27.0, () => { sfx('thump'); });
-  at(27.4, () => { play(worker, 'setDown'); });
+  at(27.9, () => look(worker, L.crate.getWorldPosition(new THREE.Vector3()).setY(L.cratePierW.y + 2.4)));
   at(28.6, () => { stopLoop('motor'); stopLoop('winch'); look(worker, null); });
   // to the house: a short dip to black
   at(28.62, () => fade(true));
