@@ -166,7 +166,10 @@ export function playOpening(story) {
     // 10 — where the warmth comes from: under the well, something in the rock glows with the hum
     shot(62.4, 66.5, P(wv(2.0, 8.0, 5.0), wv(6.5, 0.8, -4.5), 46), P(wv(3.5, 6.5, 2.5), wv(7.0, 0.9, -4.8), 44)),
     // 11 — the decision; Zoé goes out of the room toward the hall
-    shot(66.5, 75.2, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.75, 2.05, 2.75), hv(-0.3, 1.0, -1.0), 48)),
+    shot(66.5, 72.2, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.8, 2.05, 2.7), hv(-0.45, 1.02, -1.15), 47)),
+    // (then from the east wall: she comes toward us past him saying "Take your magic ball." — from the first camera
+    // she passed behind him as she said it)
+    shot(72.2, 75.2, P(hv(3.6, 1.95, 0.4), hv(-1.0, 1.1, -1.6), 46), P(hv(3.65, 1.97, 0.35), hv(-1.0, 1.1, -1.6), 46)),
     // 12 — outside (the game's door transition): Zoé goes next door, past the house's new heat post; the title
     shot(75.2, 81.6, () => street(), null),
     // 13 — inside again: Twinsen turns to the cupboard (the ball); then into the game's own camera
