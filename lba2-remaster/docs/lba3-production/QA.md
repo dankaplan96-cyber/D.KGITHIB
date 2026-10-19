@@ -566,6 +566,7 @@ opening 22/22 ("every spoken line babbles in its speaker's voice" included), tow
 | Journal | The steps only | Facts heard/seen (Brosk, Sani, a sound gear, the spray, worn keys, the notebook's last page, a wrong order), never the answer; facts no longer hold back or reveal a step (the old filter hid steps after a fact line) | chapter4 | PASS |
 | chapter4 (all, incl. ADV-1's discs; the cold-count checks made relative: a stray ball at a mite can strike a cold disc) | — | 54/54, no page errors | reviews/ADV-2/chapter4.log | PASS |
 | Regressions (own server :8172, one browser at a time, on 25115cf) | — | chapter5 to chapter 6 (no errors); desert-life 30/30; stability 16/16; save-migration (v1 migrates, missing room → outdoors, corrupt kept aside; rc 0); travel 17/17; segment 07 from REV-TY-4's format-3 chapter-4 start save to chapter 5 (no stops, no assists); camclear "ch4 the dig: a pump gear" 3/3 | reviews/ADV-2/reg-*.log | PASS |
+| After merging origin 1dea515 (CHAR-OPEN: Twinsen's, Zoé's and the guard's models, rig.js) | — | chapter4 54/54, stability 16/16, no page errors | reviews/ADV-2/postmerge-ch4.log | PASS |
 Not verified: a first-time player's read (does the gust read at the play camera, does a choice of three orders feel like a keypad), the
 clack/grind and the spray's sound by ear, the GPU look.
 
