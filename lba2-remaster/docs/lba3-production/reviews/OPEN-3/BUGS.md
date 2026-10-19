@@ -1,0 +1,59 @@
+# OPEN-3: the opening, bug by bug
+
+The opening is **real-time** (in-engine, `src/game/story/opening.js` on `src/engine/cinematic.js`); there is no
+pre-rendered video. Every fix below is a change to that scene and is re-captured from the game itself.
+
+## How it was watched
+
+- `capture.mjs` (this folder) plays a new game's opening on the game's own clock: deterministic 1/30 s steps,
+  i.e. the picture at normal speed, with no frames dropped by the slow software renderer. It saves a page screenshot
+  (subtitles, captions, the fade and the title included) every 0.2 s at 1280×720 and every 0.25 s at 960×540, plus a
+  per-frame log of every actor: position, facing, animation, the feet's height over the floor, the hands, and every
+  collider the actor's body overlaps.
+- `analyze.py` reads that log: solids crossed, feet floating or sinking, sliding, jumps between frames.
+- Revision: `origin/ccr-adf00ea7-37ebl3` at 533d0b5 (after BUG-WALL), headless Chromium, SwiftShader (ANGLE), the
+  default quality, DPR 1. The same scene on a real GPU is not verified here.
+- Not possible here: listening. The voices (gibberish babble, voice.js) and the music cue were not heard; their
+  timing was checked against the subtitles and the shot list only (BLOCKED for "by ear").
+
+Times are scene seconds. Crops: `crops/NN-before.jpg`, `crops/NN-after.jpg` (same moment after the fix).
+Status: **FIXED** (re-captured, committed on its own) · **NEEDS-MODEL** (character model or rig: for routing) ·
+**NEEDS-WORLD** (a world asset outside the opening's files) · **OPEN** (not done yet) · **NOT A BUG** (checked).
+
+## The list
+
+| # | Time | Shot | Who | Problem | Cause | Status |
+|---|---|---|---|---|---|---|
+| 01 | 11.6–13.0 | 1 air → harbour | camera | The dive to the harbour skims the coal shed's roof and the blue booth (they fill a quarter of the frame), then cuts mid-dive to the lift. ![](crops/01-before.jpg) | Shot 1b ends low (5.6 m) right over the quay's buildings, still moving at speed when the cut comes. | OPEN |
+| 02 | 12.0–13.0 | 1 | — | A grey block hangs in the air over the water right of the pier. ![](crops/02-before.jpg) | A mesh of the world's `harbour` group at (-122.3, 1.1, 35.8) (island.js), not part of the scene. | OPEN |
+| 03 | 14.6–19.6 | 2 the lift | resident, worker | The resident asks with his back half to us and one arm stuck out at nothing; the worker faces the lens, not the man talking to him. ![](crops/03-before.jpg) | The worker is turned to the lift column until 16.85; the generic talk gesture picks a random arm swing. | OPEN |
+| 04 | 13–29 | 2, 4 | Doran | Doran stands frozen right behind the worker in every pier shot, staring ahead; at 24–29 his head is cut by the frame. ![](crops/04-before.jpg) | An ambient NPC left where he stands; nobody gives him a reason to be there. | OPEN |
+| 05 | 23.8–28.6 | 4 the pier again | worker, Doran | Heads cut by the top of the frame. ![](crops/05-before.jpg) | Shot 4 is high and looks down at 1.25 m: the people near the lift are at the top edge. | OPEN |
+| 06 | 26.3–26.9 | 4 | resident, worker | The resident walks through the worker (0.39 m centre to centre). ![](crops/06-before.jpg) | Their two walks cross at the same moment. | OPEN |
+| 07 | 26.65–28.6 | 4 | worker | He reaches for and "sets down" the crate with nothing in his hands: the crate already stands on the pier, a metre away; he says his line walking away, back to us. ![](crops/07-before.jpg) | `reach`/`setDown` played at a spot away from the crate; his walk overlaps his line. | OPEN |
+| 08 | 29–35, 48–53.4, 66.5–75.2 | 5, 7, 11 | Twinsen | His tunic's hem dips under the table edge. ![](crops/08-before.jpg) | He stands 0.35 m from the table's collider; the tunic is wider. | OPEN |
+| 09 | 31.2–35 | 5 over Arthur's shoulder | Arthur | Arthur's face is never seen: "Dad! The mast fits!" comes from a spiky hair shape at the bottom edge (OPEN-2 leftover). ![](crops/09-before.jpg) | The camera is behind and above his head. | OPEN |
+| 10 | 29–48, 53.4–62.4, 81.6–83.6 | 5, 6, 8, 9, 13 | camera | A black band over the house's walls at the top of the frame (OPEN-2 leftover). ![](crops/10-before.jpg) | The camera sees over the low walls into the empty space around the room. | OPEN |
+| 11 | 35–44, 58–60 | 6, 9 | Zoé | In profile her hair bun floats off the back of her head, with bare scalp between. ![](crops/11-before.jpg) | The model (assets/poly/zoe.json): the bun is a shell that stands off the scalp. | NEEDS-MODEL |
+| 12 | 45.4–47.9 | 6 the tap | Zoé | "Twinsen. The tap's stopped again." with her arm swung out over the stove: an empty gesture. ![](crops/12-before.jpg) | The generic talk gesture, while she is calling across the room. | OPEN |
+| 13 | 48.3–50.8 | 7 the exchange | Twinsen | He answers her facing the lens, his head turned as far as it goes: she is behind him. ![](crops/13-before.jpg) | He keeps facing south (the table) and only `lookAt` her; the head's turn is clamped at 1.1 rad. | OPEN |
+| 14 | 48–50.6 | 7 | Zoé | Back to him while he answers, both arms held out stiffly from her sides. ![](crops/14-before.jpg) | She turns only at 50.6; the plain idle. | OPEN |
+| 15 | 50.8–53.4 | 7 over his shoulder | Twinsen | His bald head fills a third of the frame; his shrug (53.0) is out of the picture. ![](crops/15-before.jpg) | The over-the-shoulder offset is 0.7 m to the side, 1.45 m behind, at his head's height. | OPEN |
+| 16 | 55–57.9 | 8 the house hums | Arthur | Arthur's longest line ("Lulu says...") is said with his back to us at the bottom edge, his head under the subtitle; "all three look up" can't be read. ![](crops/16-before.jpg) | The wide shot of 29 s reused, from behind Arthur. | OPEN |
+| 17 | 55.0–57.9 | 8 | subtitle | 70 characters in 2.9 s (24 a second): too fast to read. ![](crops/17-before.jpg) | The line's duration. | OPEN |
+| 18 | 60.1–62.4 | 9 close | Zoé | "That's warm." while her hand is up at the tap's pipe, nowhere near the stream: the close-up shows the watering can. ![](crops/18-before.jpg) | `touchWater` puts the hand at chest height; she stands 0.3 m off the spout's line. | OPEN |
+| 19 | 59.4–59.9 | 9 | Zoé | Her hand sweeps down into the watering can as she lets go of the tap. ![](crops/19-before.jpg) | `tapTurn` → `idle` drops the arm straight through the basin. | OPEN |
+| 20 | 62.4–66.5 | 10 under the island | camera | The cave: crystals fill the foreground, the glowing vein (the point of the shot) can't be read, black void top right (OPEN-2 leftover). ![](crops/20-before.jpg) | The framing. | OPEN |
+| 21 | 66.6–67.1 | 11 the decision | Twinsen | The screwdriver jumps from his hand to the table: his hand reaches toward the lamp, not to where it lands. ![](crops/21-before.jpg) | `setDown` reaches straight ahead; the screwdriver is re-parented at its rest spot. | OPEN |
+| 22 | 72.4–73.6 | 11 | Zoé | "Take your magic ball. Just in case." is said while she is hidden behind Twinsen. ![](crops/22-before.jpg) | Her walk passes behind him, in the camera's line, as she speaks. | OPEN |
+| 23 | 74.3–74.8 | 11 | Zoé | She walks through the chair by the table. ![](crops/23-before.jpg) | The walk's corner hx(0.7, -1.4) → hx(1.2, 2.6) passes inside the chair's collider. | OPEN |
+| 24 | 74.5–75.2 | 11 | Zoé | She walks into the lens and out of the frame's right edge, head cut, just before the cut. ![](crops/24-before.jpg) | The camera stands on her way to the hall. | OPEN |
+| 25 | 77.2–78.0 | 12 outside | Zoé | She walks through the neighbours' picket fence (the user's report). ![](crops/25-before.jpg) | A straight line from the door to the neighbours' door: it crosses the yard's fence and would go through their house. | OPEN |
+| 26 | 79–81.6 | 12 | camera | The title shot ends on the neighbours' bare side wall; Zoé is small, behind a fence, at the left edge. ![](crops/26-before.jpg) | The camera follows the straight-line walk. | OPEN |
+| 27 | 19.6–20.0 | 3 the drill | subtitle | The worker's line stays up 0.4 s into the drill shot. ![](crops/27-before.jpg) | The line ends at 20.0, the cut is at 19.6. | OPEN |
+| 28 | all | all | Twinsen, Zoé | The characters' build: Twinsen's tunic is a wide bell with the hands lost in it, Zoé's arms are thin straight sticks, both heads read bald from behind. ![](crops/28-before.jpg) | The poly cast's models. | NEEDS-MODEL |
+
+Checked and not a bug: feet on the floor (ankles 7–12 cm over the floor standing, kneeling and in every action; no
+sinking); no T-poses; no actor pops between frames outside a dip to black (tests/opening.mjs); props held in hands
+stay attached (the screwdriver is on his hand at 32 s; the mast in Arthur's); the handoff (83.6–88) eases out
+without a jump; captions and the title hold their timing.

@@ -450,5 +450,6 @@ export function playOpening(story) {
       story.cur.afterOpening();   // flags, the family's places, control, objective (with the ball step), save
     },
   });
+  cine.extras = { worker, resident };   // (the scene-only cast, for the tests' per-frame checks)
   return cine;
 }
