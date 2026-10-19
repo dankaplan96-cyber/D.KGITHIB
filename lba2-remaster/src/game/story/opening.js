@@ -153,7 +153,10 @@ export function playOpening(story) {
     shot(48.0, 50.8, P(hv(-2.9, 1.85, 1.5), hv(-1.05, 1.0, -1.6), 46), P(hv(-2.85, 1.83, 1.4), hv(-1.05, 1.0, -1.6), 46)),
     shot(50.8, 53.4, () => overShoulder(), null),
     // 8 — the house hums too: dust from the beams, all three look up; Arthur knows what it is
-    shot(53.4, 58.0, P(hv(4.2, 2.7, 4.2), hv(0.0, 0.6, -0.7), 46), P(hv(4.05, 2.62, 4.05), hv(-0.1, 0.6, -0.75), 46)),
+    // (from the bed's foot: all three in one frame as the dust falls and they look up; then Arthur's close-up for his
+    // line, the same angle as his first)
+    shot(53.4, 55.0, P(hv(-3.0, 2.3, 3.0), hv(0.3, 1.0, -0.6), 54), P(hv(-2.9, 2.27, 2.9), hv(0.3, 1.0, -0.6), 54)),
+    shot(55.0, 58.0, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.47, 1.2, 2.32), hv(2.0, 0.82, 2.05), 42)),
     // 9 — the second try: a warm trickle, steam
     shot(58.0, 60.1, P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43), P(hv(-0.3, 1.8, -2.93), hv(-2.3, 1.48, -2.95), 42)),
     shot(60.1, 62.4, P(hv(-1.35, 1.45, -3.0), hv(-2.3, 0.98, -3.18), 38), P(hv(-1.4, 1.43, -3.0), hv(-2.3, 0.98, -3.18), 35)),
