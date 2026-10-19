@@ -245,7 +245,8 @@ export function playOpening(story) {
     { x: -33.0, z: 81.0 }, { x: -30.4, z: 79.6 }, { x: -28.6, z: 77.7 }, nbrSpot], 75.2, 1.35, 'idle');
 
   // turns
-  turn(zo, angleTo({ pos: zoSink }, twSpot), 50.6, 0.5);
+  // she turns to him as her line ends (he answers to her face, not her back) and listens with her arms at rest
+  pivot(zo, angleTo({ pos: zoSink }, twSpot), 47.7, 0.6, 'listen');
   turn(zo, Math.PI, 57.6, 0.4);
   turn(tw, -0.9, 67.4, 0.5);    // (half toward her: "I'll check the well.")
   turn(zo, angleTo({ pos: zoSink }, twSpot), 69.85, 0.45);
@@ -355,6 +356,7 @@ export function playOpening(story) {
   pivot(tw, -1.95, 46.35, 0.75);
   pivot(tw, 0.35, 54.9, 0.8);
   at(53.0, () => tw.rig.doGesture('shrug'));
+  bend(zo, 47.7, 58.0, { shL: [0, 0, -0.22], shR: [0, 0, 0.22] });   // (her listening arms at rest: the idle's stand off her sides, NEEDS-MODEL #28)
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
   at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
