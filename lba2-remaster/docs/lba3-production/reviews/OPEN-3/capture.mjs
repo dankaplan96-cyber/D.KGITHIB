@@ -33,7 +33,8 @@ await ev(() => {
     const P = G.physics, shots = c.def.shots, t = c.t;
     const si = shots.findIndex((s) => t >= s.t0 && t < s.t1);
     const cam = G.camera;
-    const r = { t: +t.toFixed(3), shot: si, room: G.room?.id || 'out', fade: document.querySelector('#fade').classList.contains('on'), cam: [cam.position.x, cam.position.y, cam.position.z].map((x) => +x.toFixed(2)), a: {} };
+    const sub = document.querySelector('#cine-sub');
+    const r = { t: +t.toFixed(3), shot: si, sub: sub.classList.contains('show') ? sub.textContent : '', room: G.room?.id || 'out', fade: document.querySelector('#fade').classList.contains('on'), cam: [cam.position.x, cam.position.y, cam.position.z].map((x) => +x.toFixed(2)), a: {} };
     for (const [id, a] of Object.entries(cast())) {
       const rig = a.rig, vis = rig.root.visible && (id !== 'zoe' || a.present);
       const fl = P.groundAt(a.pos.x, a.pos.z, a.pos.y + 0.3);

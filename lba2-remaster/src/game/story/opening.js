@@ -155,8 +155,8 @@ export function playOpening(story) {
     // 8 — the house hums too: dust from the beams, all three look up; Arthur knows what it is
     // (from the bed's foot: all three in one frame as the dust falls and they look up; then Arthur's close-up for his
     // line, the same angle as his first)
-    shot(53.4, 55.0, P(hv(-3.0, 2.3, 3.0), hv(0.3, 1.0, -0.6), 54), P(hv(-2.9, 2.27, 2.9), hv(0.3, 1.0, -0.6), 54)),
-    shot(55.0, 58.0, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.47, 1.2, 2.32), hv(2.0, 0.82, 2.05), 42)),
+    shot(53.4, 54.8, P(hv(-3.0, 2.3, 3.0), hv(0.3, 1.0, -0.6), 54), P(hv(-2.9, 2.27, 2.9), hv(0.3, 1.0, -0.6), 54)),
+    shot(54.8, 58.0, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.47, 1.2, 2.32), hv(2.0, 0.82, 2.05), 42)),
     // 9 — the second try: a warm trickle, steam
     shot(58.0, 60.1, P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43), P(hv(-0.3, 1.8, -2.93), hv(-2.3, 1.48, -2.95), 42)),
     shot(60.1, 62.4, P(hv(-1.35, 1.45, -3.0), hv(-2.3, 0.98, -3.18), 38), P(hv(-1.4, 1.43, -3.0), hv(-2.3, 0.98, -3.18), 35)),
@@ -393,7 +393,7 @@ export function playOpening(story) {
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
   at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
-  at(55.0, () => { look(ar, head(tw)); look(tw, head(ar, 0.9)); look(zo, head(ar, 0.9)); });
+  at(54.8, () => { look(ar, head(tw)); look(tw, head(ar, 0.9)); look(zo, head(ar, 0.9)); });
   at(57.6, () => { look(zo, null); });
   at(58.0, () => { play(zo, 'reach'); look(tw, head(zo)); play(ar, 'kneelWork'); look(ar, null); });
   at(58.5, () => play(zo, 'tapTurn'));
@@ -482,7 +482,7 @@ export function playOpening(story) {
   say(45.4, 'zoe', 'op_zoe_1', 2.5, zo);
   say(48.3, 'hero', 'op_tw_1', 2.0, tw);
   say(51.0, 'zoe', 'op_zoe_2', 1.8, zo);
-  say(55.0, 'arthur', 'op_ar_2', 2.9, ar, false);
+  say(54.8, 'arthur', 'op_ar_2', 3.8, ar, false);   // (70 characters: 18 a second, readable; it runs on over the cut to the tap)
   say(60.6, 'zoe', 'op_zoe_3', 1.8, zo, false);
   say(67.9, 'hero', 'op_tw_2', 1.7, tw);
   say(69.6, 'zoe', 'op_zoe_4', 1.7, zo, false);
