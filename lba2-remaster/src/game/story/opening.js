@@ -169,7 +169,7 @@ export function playOpening(story) {
     shot(66.5, 72.2, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.8, 2.05, 2.7), hv(-0.45, 1.02, -1.15), 47)),
     // (then from the east wall: she comes toward us past him saying "Take your magic ball." — from the first camera
     // she passed behind him as she said it)
-    shot(72.2, 75.2, P(hv(3.6, 1.95, 0.4), hv(-1.0, 1.1, -1.6), 46), P(hv(3.65, 1.97, 0.35), hv(-1.0, 1.1, -1.6), 46)),
+    shot(72.2, 75.2, () => goingOut(), null),
     // 12 — outside (the game's door transition): Zoé goes next door, past the house's new heat post; the title
     shot(75.2, 81.6, () => street(), null),
     // 13 — inside again: Twinsen turns to the cupboard (the ball); then into the game's own camera
@@ -179,6 +179,14 @@ export function playOpening(story) {
   function overShoulder() {     // (behind Twinsen's shoulder, toward Zoé)
     const a = angleTo(tw, zo.pos), f = { x: Math.sin(a), z: Math.cos(a) }, r = { x: -Math.cos(a), z: Math.sin(a) };
     return P(V(tw.pos.x - f.x * 1.45 + r.x * 0.7, 1.95, tw.pos.z - f.z * 1.45 + r.z * 0.7), head(zo, 1.35), 40);
+  }
+  // ...and as she turns for the hall the camera eases back along the wall and pans with her, so she leaves the room
+  // in frame, whole, instead of walking past the lens with her head cut
+  function goingOut() {
+    const k = sm((cine.t - 73.3) / 1.4);
+    const pos = hv(3.6 + 0.3 * k, 1.95 + 0.1 * k, 0.4 + 0.55 * k);
+    const lk = hv(-1.0, 1.1, -1.6).lerp(V(zo.pos.x, zo.pos.y + 1.1, zo.pos.z), 0.85 * k);
+    return P(pos, lk, 46);
   }
   // in front of the house, from the lane's far side (north-east of the door, clear of the trees): she comes out by
   // the door, comes up the path toward us and turns along the lane past the neighbours' fence; the camera pans with
