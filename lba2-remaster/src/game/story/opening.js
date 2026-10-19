@@ -19,6 +19,7 @@ import { Cinematic } from '../../engine/cinematic.js';
 import { dampAngle } from '../../engine/math.js';
 import { createCharacter } from '../characters.js';
 import { glowSprite } from '../interiors.js';
+import { MAT, Kit } from '../props.js';
 import { t } from '../i18n.js';
 import '../text/opening.js';
 import { SHIFT } from '../island.js';
@@ -36,6 +37,7 @@ const sm = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x);
 export function playOpening(story) {
   const g = story.game, W = g.world, R = g.rooms.house, H = g.hero, WR = g.rooms.well;
   const zoe = story.cur.npc('zoe'), arthur = story.cur.npc('arthur');
+  const xil = g.npcs.find((n) => n.def.id === 'xil');   // (on the pier behind the lift: he listens in)
   const L = W.cargoLift, K = R.kitchen, TB = R.table, BT = R.boat;
   const hx = (x, z) => ({ x: R.center.x + x, z: R.center.z + z });   // house-local → world
   const hv = (x, y, z) => V(R.center.x + x, y, R.center.z + z);
@@ -64,6 +66,9 @@ export function playOpening(story) {
     a.sync();
   };
   const play = (a, anim) => a.rig.play(anim);
+  // go into an everyday action already at its held pose: the joints still ease there from wherever they are (the rig's
+  // damping), without the action's own wind-up from rest
+  const from = (a, anim, at = 0.6) => { a.rig.play(anim); a.rig.actionT = at; };
   const look = (a, p) => { a.rig.lookAt = p; };
   const head = (a, h = 1.5) => V(a.pos.x, a.pos.y + h * (a.rig.root.scale.y || 1), a.pos.z);
   const loop = (name, opts) => { const h = g.audio.loop?.(name, opts); if (h) loops.push(h); return h; };
@@ -72,12 +77,16 @@ export function playOpening(story) {
 
   const tw = actor(H), zo = actor(zoe), ar = actor(arthur);
   const worker = extra('worker'), resident = extra('farmerB');
-  const wkSpot = HP(-84.35, -3.05), resSpot = HP(-83.3, -4.3), column = HP(-85.0, -2.75);
+  // (the worker stands a step off the lift column's base: at (-84.35, -3.05) his body was in it)
+  const wkSpot = HP(-84.25, -3.1), resSpot = HP(-83.3, -4.3), column = HP(-85.0, -2.75);
+  const resSpot2 = HP(-82.3, -4.4);   // (where he stands after the drill's cutaway: clear of the crate in shot 4's view)
 
   // ---------------------------------------------------------------- props held in hands
   const hold = (obj, a, pos, rot, side = 'R') => { const hand = a.rig.j['arm' + side].hand; hand.add(obj); obj.position.set(...pos); obj.rotation.set(...rot); };
   const rest = (obj, parent, p, extraRot = [0, 0, 0]) => { parent.add(obj); obj.position.set(p.x, p.y, p.z); obj.rotation.set(extraRot[0], p.ry ?? 0, extraRot[2]); };
-  const sdRest = { x: TB.sdRest.x, y: TB.sdRest.y, z: TB.sdRest.z, ry: TB.sdRest.ry };
+  // where he lays the screwdriver down: under his right hand at the bottom of setDown (measured), on the table's near
+  // edge by the fruit bowl — the room's own rest spot is 0.75 m from his hand, so it jumped there when let go
+  const sdRest = { x: TB.sdRest.x - 0.69, y: TB.sdRest.y, z: TB.sdRest.z - 0.04, ry: TB.sdRest.ry };   // (its tip clear of the edge)
   const mastFitted = { x: BT.mastRest.x, y: 0.085, z: BT.mastRest.z, ry: BT.mastRest.ry }; // (room-local)
 
   // ---------------------------------------------------------------- the tap
@@ -90,10 +99,42 @@ export function playOpening(story) {
     if (stream.visible) stream.scale.set(k, 1, k);
   };
 
+  // ---------------------------------------------------------------- the house as a set
+  // The game draws the house as an open set (the east and south walls cut away, no ceiling) for its own camera; the
+  // scene's low cameras looked over the walls into the black around the room. For the scene the house gets a
+  // ceiling and its east wall back (room-local, in the room's group: hidden with it outdoors); both fade out as the
+  // handoff's camera rises into the game's view (83.6–84.0), and finish() removes them.
+  const setMats = [];
+  const flats = new THREE.Group(); flats.name = 'openingSet';
+  const caveFlat = new THREE.Group(); caveFlat.name = 'openingSetCave';
+  {
+    const own = (m) => { const c = m.clone(); setMats.push(c); return c; };
+    const ceil = own(new THREE.MeshStandardMaterial({ color: '#4a3424', roughness: 0.95, side: THREE.DoubleSide }));
+    const plaster = own(MAT.plaster('#f0e4c8')), low = own(MAT.wainscot('honey')), cap = own(MAT.wood('dark'));
+    // (the Kit gives the textures their world-scale tiling, as the house's own walls have; house frame: x -13.5..4.5,
+    // z -3.5..11.5, walls 3.0 high, 0.4 thick)
+    const k = new Kit(flats); k.recolor = false;
+    k.add(new THREE.BoxGeometry(18.8, 0.12, 15.8), ceil, -4.5, 3.06, 4.0);
+    k.add(new THREE.BoxGeometry(0.4, 3.0, 15.4), plaster, 4.7, 1.5, 3.8);           // the east wall
+    k.add(new THREE.BoxGeometry(0.03, 1.05, 15.0), low, 4.49, 0.525, 4.0);          // its panelling
+    k.add(new THREE.BoxGeometry(0.07, 0.07, 15.0), cap, 4.47, 1.05, 4.0);           // and rail
+    k.flush();
+    flats.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+    // the well's cave gets its east wall too (the vein's chamber is at that end: x 4.5..10.5, walls 4 m, 0.5 thick)
+    const kc = new Kit(caveFlat); kc.recolor = false;
+    kc.add(new THREE.BoxGeometry(0.5, 4.0, 14.5), own(MAT.stone('slate', 2)), 10.75, 2.0, 0);
+    kc.flush();
+    caveFlat.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+  }
+  const setFade = (k) => {
+    for (const m of setMats) { m.transparent = k < 1; m.opacity = k; m.depthWrite = k > 0.5; m.needsUpdate = true; }
+    flats.visible = k > 0.01;
+  };
+
   // ---------------------------------------------------------------- shots (world positions)
   const shot = (t0, t1, from, to, extra2 = {}) => ({ t0, t1, from, to, ...extra2 });
   const P = (pos, lk, fov = 40) => ({ pos, look: lk, fov });
-  const twSpot = hx(-0.45, -0.25), zoTray = hx(-1.78, -2.6), zoSink = hx(-2.3, -2.6);
+  const twSpot = hx(-0.45, -0.25), zoTray = hx(-1.78, -2.6), zoSink = hx(-2.42, -2.55);   // (sink: 0.12 m west of the spout's line, her right hand's side; clear of the stove)
   const cupboard = hv(-4.1, 1.25, -1.6);
   const twEnd = hx(1.55, -1.75), twEndA = Math.atan2(-1, 0.25);
   // (indoors the house is an open set like LBA2's: the south and east walls are cut away for the game's camera,
@@ -101,31 +142,53 @@ export function playOpening(story) {
   const shots = [
     // 1 — Citadel Island from the air, then down over the water to the harbour (the caption: where, when)
     shot(0, 9.0, P(HV(-34, 26, 58), HV(-2, 6, -38), 50), P(HV(-50, 17, 38), HV(-30, 4, -42), 50)),
-    shot(9.0, 13.0, P(HV(-50, 17, 38), HV(-30, 4, -42), 50), P(HV(-74.2, 5.6, 5.9), HV(-83.4, 2.0, -2.9), 44)),
+    // (it settles high over the water by the pier, the lift, the barge and the ferry in one view: it ended low over the
+    // quay's roofs, still diving)
+    // ...and the descent arcs over the quay's roofs (a straight line skimmed the coal shed's)
+    shot(9.0, 13.0, () => {
+      const k = sm((cine.t - 9.0) / 4.0), A = HV(-50, 17, 38), B = HV(-72.5, 8.5, 4.0);
+      const pos = A.clone().lerp(B, k); pos.y += 3.5 * Math.sin(k * Math.PI) * (1 - k * 0.5);
+      return P(pos, HV(-30, 4, -42).lerp(HV(-83.4, 2.2, -3.2), k), 50 - 6 * k);
+    }, null),
     // 2 — the project's lift: the crate comes up off the barge; a resident asks the worker about the heat
     shot(13.0, 19.6, P(HV(-79.7, 3.3, -1.75), HV(-85.1, 2.25, -3.05), 44), P(HV(-79.9, 3.2, -1.85), HV(-85.1, 2.4, -3.1), 44)),
     // 3 — the hum: the drill turning in FunFrock's old fortress, up on the plateau, the town beyond
     shot(19.6, 23.8, P(V(bore.x + 22, boreY + 9, bore.z + 12), V(bore.x, boreY + 5, bore.z), 46), P(V(bore.x + 18, boreY + 7.6, bore.z + 10), V(bore.x, boreY + 5.6, bore.z), 46)),
-    // 4 — back at the pier, from above: the lantern settles; "Just the drill."; the crate is set down
-    shot(23.8, 29.0, P(HV(-79.0, 4.2, -6.8), HV(-84.0, 1.3, -3.6), 44), P(HV(-79.3, 4.0, -6.6), HV(-84.0, 1.25, -3.7), 44)),
+    // 4 — back at the pier, a little above head height: the lantern settles; "Just the drill."; the crate is set
+    // down. (The look point is on the people, 0.7 m over the deck (2.16): it was below the deck, which put their
+    // heads at the top edge, cut.)
+    // (from the ferry's side of the pier, so the worker answers toward us and his bend to the crate reads; from the
+    // town's side the resident hid him)
+    shot(23.8, 29.0, P(HV(-80.9, 3.85, 0.3), HV(-83.8, 2.8, -3.9), 44), P(HV(-81.1, 3.8, 0.1), HV(-83.8, 2.75, -4.0), 44)),
     // 5 — home: the whole family at their own things; over Arthur's shoulder: "Dad! The mast fits!"
     shot(29.0, 31.2, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.6, -0.55), 44), P(hv(4.2, 2.68, 4.2), hv(0.15, 0.6, -0.58), 44)),
-    shot(31.2, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
+    // (Arthur's face: a three-quarter close-up as he shows the mast; then over his shoulder for his father's answer)
+    shot(31.2, 33.1, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.45, 1.2, 2.33), hv(2.0, 0.82, 2.05), 42)),
+    shot(33.1, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
     // 6 — Zoé at the counter, then the tap
     shot(35.0, 41.0, P(hv(0.15, 1.8, -2.85), hv(-2.2, 1.55, -2.75), 46), P(hv(0.05, 1.8, -2.87), hv(-2.25, 1.55, -2.77), 46)),
     shot(41.0, 48.0, P(hv(-0.05, 1.8, -2.9), hv(-2.3, 1.5, -2.95), 44), P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43)),
     // 7 — the exchange: Twinsen answers from the table; over his shoulder for hers
-    shot(48.0, 50.8, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.85, 2.03, 2.5), hv(-0.7, 1.05, -1.4), 46)),
+    // (from the west, so his face is seen as he turns round to her)
+    shot(48.0, 50.8, P(hv(-2.9, 1.85, 1.5), hv(-1.05, 1.0, -1.6), 46), P(hv(-2.85, 1.83, 1.4), hv(-1.05, 1.0, -1.6), 46)),
     shot(50.8, 53.4, () => overShoulder(), null),
     // 8 — the house hums too: dust from the beams, all three look up; Arthur knows what it is
-    shot(53.4, 58.0, P(hv(4.2, 2.7, 4.2), hv(0.0, 0.6, -0.7), 46), P(hv(4.05, 2.62, 4.05), hv(-0.1, 0.6, -0.75), 46)),
+    // (from the bed's foot: all three in one frame as the dust falls and they look up; then Arthur's close-up for his
+    // line, the same angle as his first)
+    shot(53.4, 54.8, P(hv(-3.0, 2.3, 3.0), hv(0.3, 1.0, -0.6), 54), P(hv(-2.9, 2.27, 2.9), hv(0.3, 1.0, -0.6), 54)),
+    shot(54.8, 58.0, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.47, 1.2, 2.32), hv(2.0, 0.82, 2.05), 42)),
     // 9 — the second try: a warm trickle, steam
     shot(58.0, 60.1, P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43), P(hv(-0.3, 1.8, -2.93), hv(-2.3, 1.48, -2.95), 42)),
     shot(60.1, 62.4, P(hv(-1.35, 1.45, -3.0), hv(-2.3, 0.98, -3.18), 38), P(hv(-1.4, 1.43, -3.0), hv(-2.3, 0.98, -3.18), 35)),
     // 10 — where the warmth comes from: under the well, something in the rock glows with the hum
-    shot(62.4, 66.5, P(wv(2.0, 8.0, 5.0), wv(6.5, 0.8, -4.5), 46), P(wv(3.5, 6.5, 2.5), wv(7.0, 0.9, -4.8), 44)),
+    // (inside the last chamber, low, facing the vein: the glowing rock fills the frame and pulses with the hum, the
+    // pool in front; it was seen from high above through the barrier's crystals)
+    shot(62.4, 66.5, P(wv(7.7, 1.55, 0.6), wv(8.0, 1.9, -6.2), 50), P(wv(7.85, 1.6, -0.8), wv(8.0, 1.95, -6.2), 48)),
     // 11 — the decision; Zoé goes out of the room toward the hall
-    shot(66.5, 75.2, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.75, 2.05, 2.75), hv(-0.3, 1.0, -1.0), 48)),
+    shot(66.5, 72.2, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.8, 2.05, 2.7), hv(-0.45, 1.02, -1.15), 47)),
+    // (then from the east wall: she comes toward us past him saying "Take your magic ball." — from the first camera
+    // she passed behind him as she said it)
+    shot(72.2, 75.2, () => goingOut(), null),
     // 12 — outside (the game's door transition): Zoé goes next door, past the house's new heat post; the title
     shot(75.2, 81.6, () => street(), null),
     // 13 — inside again: Twinsen turns to the cupboard (the ball); then into the game's own camera
@@ -134,15 +197,28 @@ export function playOpening(story) {
   ];
   function overShoulder() {     // (behind Twinsen's shoulder, toward Zoé)
     const a = angleTo(tw, zo.pos), f = { x: Math.sin(a), z: Math.cos(a) }, r = { x: -Math.cos(a), z: Math.sin(a) };
-    return P(V(tw.pos.x - f.x * 1.45 + r.x * 0.7, 1.95, tw.pos.z - f.z * 1.45 + r.z * 0.7), head(zo, 1.35), 40);
+    // (further back and wider of his shoulder: his head was a third of the frame and his shrug was out of it)
+    return P(V(tw.pos.x - f.x * 1.95 + r.x * 0.95, 1.85, tw.pos.z - f.z * 1.95 + r.z * 0.95), head(zo, 1.25), 40);
   }
-  // in front of the house: she comes out by the door and walks toward the camera, which turns to watch her go on
-  // to the neighbours' (their green shutters beyond), rising a little for the title
+  // ...and as she turns for the hall the camera eases back along the wall and pans with her, so she leaves the room
+  // in frame, whole, instead of walking past the lens with her head cut
+  function goingOut() {
+    const k = sm((cine.t - 73.3) / 1.4);
+    const pos = hv(3.6 + 0.3 * k, 1.95 + 0.1 * k, 0.4 + 0.55 * k);
+    const lk = hv(-1.0, 1.1, -1.6).lerp(V(zo.pos.x, zo.pos.y + 1.1, zo.pos.z), 0.85 * k);
+    return P(pos, lk, 46);
+  }
+  // in front of the house, from the lane's far side (north-east of the door, clear of the trees): she comes out by
+  // the door, comes up the path toward us and turns along the lane past the neighbours' fence; the camera pans with
+  // her, rising a little for the title, their red roof and green shutters ahead of her
+  const stY = g.physics.groundAt(-44.4, 81.2);
   function street() {
     const k = sm((cine.t - 75.2) / 6.4);
-    const pos = V(-39.0 + 1.2 * k, 3.3 + 1.2 * k, 81.0 + 1.4 * k);
-    const her = V(zo.pos.x, zo.pos.y + 1.2, zo.pos.z), door = V(home.door.x, zo.pos.y + 1.1, home.door.z), next = V(nbr.door.x, zo.pos.y + 1.4, nbr.door.z);
-    const lk = door.lerp(next, sm((cine.t - 75.6) / 5.4)).lerp(her, 0.55);
+    const pos = V(-44.6 + 0.7 * k, stY + 1.75 + 0.45 * k, 81.15 + 0.2 * k);
+    const her = V(zo.pos.x, zo.pos.y + 1.15, zo.pos.z), door = V(home.door.x, stY + 1.3, home.door.z), ahead = V(nbr.door.x - 4.5, stY + 1.4, nbr.door.z + 2.6);
+    const lk = door.lerp(her, sm((cine.t - 75.5) / 1.4)).lerp(ahead, 0.3 * sm((cine.t - 77.5) / 4.0));
+    // (from the title on, she is kept right of centre and low: the title sits over the middle of the sky)
+    lk.add(V(-0.8, 0.45, -1.05).multiplyScalar(sm((cine.t - 76.0) / 1.2)));
     return P(pos, lk, 46);
   }
 
@@ -174,6 +250,11 @@ export function playOpening(story) {
     });
   };
   const angleTo = (a, p) => Math.atan2(p.x - a.pos.x, p.z - a.pos.z);
+  // a turn on the spot with the feet stepping round (the gameplay turn: turnL / turnR), then `after`
+  const pivot = (a, ang, t0, dur, after = 'idle') => {
+    turn(a, ang, t0, dur);
+    track(t0, t0 + dur, (k) => { if (k < 1) { const d = Math.atan2(Math.sin(ang - a.angle), Math.cos(ang - a.angle)); if (Math.abs(d) > 0.05) a.rig.play(d > 0 ? 'turnR' : 'turnL'); } else a.rig.play(after); });
+  };
 
   // the lift's unload cycle on the clock
   const liftU = [[6.0, 0], [13.0, 0.16], [14.2, 0.22], [21.0, 0.45], [24.8, 0.7], [27.0, 0.88], [28.6, 1.0]];
@@ -210,29 +291,66 @@ export function playOpening(story) {
   track(58.5, 59.1, (k) => { handle.rotation.y = -2.2 * sm(k); });
   track(69.2, 69.7, (k) => { handle.rotation.y = -2.2 * (1 - sm(k)); });
   // under the island: the vein brightens and fades with the hum
+  track(83.6, 84.0, (k) => setFade(1 - k));
   track(62.4, 66.5, (k) => { WR.vein.power = Math.sin(k * Math.PI) * 0.9 + Math.max(0, Math.sin(k * Math.PI * 5)) * 0.25 * Math.sin(k * Math.PI); });
 
   // walks
   // the resident waits by the lift for his word with the worker, then goes on to the ferry
-  walk(resident, [resSpot, HP(-82.7, -5.35), HP(-84.4, -5.75)], 26.4, 1.2, 'idle', Math.PI);
-  walk(worker, [wkSpot, HP(-84.0, -4.5), HP(-83.55, -4.65)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-83.55, -4.65) }, L.cratePierW));
-  walk(zo, [zoTray, zoSink], 40.3, 0.9, 'idle', Math.PI);
+  // (the worker steps to the crate's side of the pier, by its west face, while the resident is still there; the
+  // resident then turns away from him toward the ferry — their walks no longer meet: they passed within 0.39 m)
+  walk(resident, [resSpot2, HP(-83.0, -5.0), HP(-84.4, -5.6)], 26.4, 1.2, 'idle', Math.PI);
+  walk(worker, [wkSpot, HP(-84.2, -3.65)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-84.2, -3.65) }, L.cratePierW));
+  walk(zo, [zoTray, zoSink], 40.2, 0.9, 'idle', Math.PI);   // (done by 40.91, before her reach at 41.0)
   // Zoé out of the family room and down the hall to the front door (seen as far as the hall; the door is the cut)
-  walk(zo, [zoSink, hx(0.7, -1.4), hx(1.2, 2.6), hx(1.2, 6.5)], 71.0, 1.45);
-  // outside: from where the game's door puts you, along the lane to the neighbours'
-  walk(zo, [homeOut, nbrSpot], 75.2, 1.35, 'idle');
+  // (wide of the chair at the table's east end: the corner at hx(0.7, -1.4) took her through it)
+  walk(zo, [zoSink, hx(1.15, -1.2), hx(1.25, 2.6), hx(1.2, 6.5)], 71.0, 1.45);
+  // outside: from where the game's door puts you, round the neighbours' fenced yard (the pickets of
+  // citadel-layout.js run x -41.8, z 70.9–78.5 and z ≈ 77.8, x -41..-37.3) and their house, to their door on the far
+  // side. (A straight line went through the fence and the house.) Only the first 8.6 m are seen; finish() puts
+  // her at the door.
+  walk(zo, [homeOut, { x: -43.3, z: 77.5 }, { x: -42.2, z: 79.3 }, { x: -37.6, z: 79.4 }, { x: -36.4, z: 80.9 },
+    { x: -33.0, z: 81.0 }, { x: -30.4, z: 79.6 }, { x: -28.6, z: 77.7 }, nbrSpot], 75.2, 1.35, 'idle');
 
   // turns
-  turn(zo, angleTo({ pos: zoSink }, twSpot), 50.6, 0.5);
+  // she turns to him as her line ends (he answers to her face, not her back) and listens with her arms at rest
+  pivot(zo, angleTo({ pos: zoSink }, twSpot), 47.7, 0.6, 'listen');
   turn(zo, Math.PI, 57.6, 0.4);
   turn(tw, -0.9, 67.4, 0.5);    // (half toward her: "I'll check the well.")
   turn(zo, angleTo({ pos: zoSink }, twSpot), 69.85, 0.45);
   turn(tw, twEndA, 81.7, 0.7);   // to the cupboard, where the ball is
 
+  // The scene's own pose layer: small offsets on top of the rig's actions where a hand must land on something (the
+  // crate's top, the stream, the table). bend(actor, t0, t1, offsets) eases in over the first 0.3 s and out over the
+  // last 0.3 s; offsets are joint rotations (torso/head/shoulder/elbow/knee, radians) and hips (metres, down < 0).
+  // Each frame the last offsets are taken off before the rig updates and the new ones put on after, so the rig's
+  // own damping never sees (or compounds) them.
+  const bends = [];
+  const bend = (a, t0, t1, o) => bends.push({ a, t0, t1, o });
+  const JOINT = { torso: (j) => j.torso.rotation, head: (j) => j.head.rotation, shR: (j) => j.armR.sh.rotation, elR: (j) => j.armR.el.rotation,
+    shL: (j) => j.armL.sh.rotation, elL: (j) => j.armL.el.rotation, kneeL: (j) => j.legL.knee.rotation, kneeR: (j) => j.legR.knee.rotation,
+    hipL: (j) => j.legL.hip.rotation, hipR: (j) => j.legR.hip.rotation };
+  const applyBend = (a, sign) => {
+    const j = a.rig.j, o = a._bend;
+    if (!o) return;
+    for (const [key, v] of Object.entries(o)) {
+      if (key === 'hips') { j.hips.position.y += sign * v; continue; }
+      const r = JOINT[key](j); r.x += sign * (v[0] || 0); r.y += sign * (v[1] || 0); r.z += sign * (v[2] || 0);
+    }
+  };
   // everyone's rig, every frame (after the moves above)
   track(0, OPENING_LENGTH, (k, tt, dt) => {
     for (const a of cast) {
+      applyBend(a, -1); a._bend = null;
       if (dt > 0) a.rig.update(dt, a._speed || 0);
+      for (const b of bends) {
+        if (b.a !== a || tt < b.t0 || tt > b.t1) continue;
+        const w = sm((tt - b.t0) / 0.3) * sm((b.t1 - tt) / 0.3), o = a._bend ??= {};
+        for (const [key, v] of Object.entries(b.o)) {
+          if (key === 'hips') o.hips = (o.hips || 0) + v * w;
+          else { const c = o[key] ??= [0, 0, 0]; v.forEach((x, i) => (c[i] += x * w)); }
+        }
+      }
+      applyBend(a, 1);
       a.sync();
     }
   });
@@ -247,7 +365,13 @@ export function playOpening(story) {
   at(MUSIC_AT, () => g.audio.cue('opening'));
   at(6.2, () => loop('winch', { quiet: true }));
   at(13.6, () => sfx('clunk'));
-  at(14.2, () => { loop('motor'); play(worker, 'reach'); look(resident, head(worker)); });   // (a hand on the lift's control)
+  at(14.2, () => { loop('motor'); play(worker, 'reach'); look(resident, head(worker)); });
+  // the worker glances back at the man asking while his hand stays on the control; Xil, on the pier behind, turns
+  // to listen in, looks up at the lift when the hum shakes it, and listens again on the way back
+  at(15.0, () => look(worker, head(resident)));
+  at(14.8, () => { if (xil) xil.listenTo = resident; });
+  at(18.7, () => { if (xil) { xil.listenTo = null; xil.rig.lookAt = V(column.x, 4.6, column.z); } });
+  at(23.9, () => { if (xil) { xil.rig.lookAt = null; xil.listenTo = worker; } });   // (a hand on the lift's control)
   at(16.85, () => { play(worker, 'idle'); look(worker, head(resident)); });
   turn(worker, Math.atan2(resSpot.x - wkSpot.x, resSpot.z - wkSpot.z) - 0.35, 16.85, 0.5);
   turn(worker, angleTo({ pos: wkSpot }, column), 19.7, 0.3);
@@ -259,12 +383,16 @@ export function playOpening(story) {
   at(19.2, () => sfx('rattle'));
   at(19.55, () => { cine.focus = V(bore.x, boreY, bore.z); W.station.setActive(true); });
   at(20.8, () => sfx('hum'));
-  at(23.75, () => { W.station.setActive(stationWas); cine.focus = harbourFocus; });
+  at(23.75, () => { W.station.setActive(stationWas); cine.focus = harbourFocus; put(resident, resSpot2.x, resSpot2.z, Math.atan2(wkSpot.x - resSpot2.x, wkSpot.z - resSpot2.z)); });
   at(22.6, () => { look(worker, null); });
   at(23.9, () => { look(resident, head(worker)); look(worker, head(resident)); });
-  at(26.65, () => { play(worker, 'reach'); look(worker, L.crate.getWorldPosition(new THREE.Vector3())); look(resident, null); });
+  // the worker answers over his shoulder, then bends to the crate and frees the hook (his hand on the crate's
+  // top as it settles: the thump), straightens and watches the hook go up
+  at(26.4, () => { look(worker, L.crate.getWorldPosition(new THREE.Vector3()).setY(L.cratePierW.y + 0.3)); look(resident, null); });
+  at(26.6, () => play(worker, 'setDown'));
+  bend(worker, 26.75, 27.55, { torso: [0.34], kneeL: [0.12], kneeR: [0.12], hipL: [-0.06], hipR: [-0.06], shR: [-0.2] });   // (down to the crate's top, 0.82 m: setDown is for a table)
   at(27.0, () => { sfx('thump'); });
-  at(27.4, () => { play(worker, 'setDown'); });
+  at(27.9, () => look(worker, L.crate.getWorldPosition(new THREE.Vector3()).setY(L.cratePierW.y + 2.4)));
   at(28.6, () => { stopLoop('motor'); stopLoop('winch'); look(worker, null); });
   // to the house: a short dip to black
   at(28.62, () => fade(true));
@@ -286,29 +414,43 @@ export function playOpening(story) {
   at(39.5, () => play(zo, 'wipe'));
   // the tap
   at(41.0, () => play(zo, 'reach'));
-  at(41.35, () => play(zo, 'tapTurn'));
+  at(41.35, () => from(zo, 'tapTurn', 0.4));   // (from: the hand stays on the handle as the twist starts)
   at(41.5, () => sfx('tapSqueak'));
   at(42.3, () => sfx('pipeKnock'));
   at(42.65, () => sfx('pipeKnock'));
   at(42.95, () => { sfx('waterRun'); g.particles.burst(K.basin.x, K.basin.y + 0.05, K.basin.z, '#cfe8ff', 6, 0.8); });
   at(43.65, () => sfx('gurgle'));
-  at(44.0, () => play(zo, 'reach'));
+  at(44.0, () => from(zo, 'reach', 0.4));
   at(44.6, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y, K.spout.z)); });
   at(45.2, () => look(zo, head(tw)));
+  pivot(zo, angleTo({ pos: zoSink }, twSpot), 44.75, 0.6, 'listen');   // (she turns from the tap to call him: he is behind her)
+  // he turns round from the lamp to answer her (she is behind him: a look alone stopped at his shoulder, facing
+  // the lens), and back to Arthur when Arthur speaks
   at(46.2, () => { play(tw, 'idle'); look(tw, head(zo)); });
+  pivot(tw, -1.95, 46.35, 0.75);
+  pivot(tw, 0.35, 54.9, 0.8);
   at(53.0, () => tw.rig.doGesture('shrug'));
+  bend(zo, 45.0, 58.0, { shL: [0, 0, -0.22], shR: [0, 0, 0.22] });
+  // her hand on the tap's handle (reach / tapTurn lift the arm straight ahead of the shoulder, beside the tap)
+  const TAPHAND = { shR: [-0.12, 0, 0.55], elR: [0.25], torso: [0.14] };
+  bend(zo, 41.0, 44.7, TAPHAND); bend(zo, 58.0, 60.15, TAPHAND); bend(zo, 69.0, 70.35, TAPHAND);   // (her listening arms at rest: the idle's stand off her sides, NEEDS-MODEL #28)
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
   at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
-  at(55.0, () => { look(ar, head(tw)); look(tw, head(ar, 0.9)); look(zo, head(ar, 0.9)); });
+  at(54.8, () => { look(ar, head(tw)); look(tw, head(ar, 0.9)); look(zo, head(ar, 0.9)); });
   at(57.6, () => { look(zo, null); });
   at(58.0, () => { play(zo, 'reach'); look(tw, head(zo)); play(ar, 'kneelWork'); look(ar, null); });
-  at(58.5, () => play(zo, 'tapTurn'));
+  at(58.5, () => from(zo, 'tapTurn', 0.4));
   at(58.6, () => sfx('tapSqueak'));
   at(59.0, () => sfx('gurgle'));
   at(59.2, () => loop('trickle'));
-  at(59.4, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y - 0.1, K.spout.z)); });
-  at(60.0, () => play(zo, 'touchWater'));
+  // (her hand stays at the tap while she looks at the water, then goes straight from the tap to the stream: dropping
+  // to the idle between swept it through the basin and the watering can; `from` skips touchWater's ease-in from
+  // the arms-down pose, so the hand travels tap → stream instead of dipping to her side and back)
+  at(59.4, () => look(zo, V(K.spout.x, K.spout.y - 0.1, K.spout.z)));
+  at(60.0, () => from(zo, 'touchWater'));
+  // her fingers into the stream under the spout (touchWater holds the hand at chest height, 0.44 m to her right)
+  bend(zo, 60.0, 66.3, { shR: [0.0, 0, 0.6], elR: [0.45], torso: [0.22], head: [0.05] });
   // down the well (a dip, the cave, a dip back)
   at(62.05, () => fade(true));
   at(62.4, () => {
@@ -330,9 +472,10 @@ export function playOpening(story) {
   });
   // the decision
   at(66.65, () => play(tw, 'setDown'));
-  at(67.1, () => { rest(TB.screwdriver, R.group, { x: sdRest.x, y: sdRest.y, z: sdRest.z, ry: sdRest.ry }); sfx('put'); });
+  bend(tw, 66.75, 67.45, { torso: [0.34], kneeL: [0.14], kneeR: [0.14], hipL: [-0.07], hipR: [-0.07], shR: [0.06], elR: [0.4] });   // (down to the table top)
+  at(67.15, () => { rest(TB.screwdriver, R.group, { x: sdRest.x, y: sdRest.y, z: sdRest.z, ry: sdRest.ry }); sfx('put'); });
   at(69.0, () => { play(zo, 'reach'); look(zo, null); });
-  at(69.3, () => play(zo, 'tapTurn'));
+  at(69.3, () => from(zo, 'tapTurn', 0.4));
   at(69.5, () => { stopLoop('trickle'); sfx('tapSqueak'); });
   at(70.3, () => { play(zo, 'wipe'); look(zo, head(tw)); });
   at(71.3, () => { play(zo, 'idle'); });
@@ -376,20 +519,22 @@ export function playOpening(story) {
   const C = { zoe: '#ffb0d0', hero: '#8fc2ff', arthur: '#ffe070', worker: '#9fe0d8', resident: '#e8d8a0' };
   const subs = [];
   // say(at, speaker, text key, seconds, the actor who talks; talk: play the talk gestures)
+  // talk: true plays the rig's talk with a gesture of its choosing; a number picks the gesture (rig.js: 0 the right
+  // hand forward, 1 both hands, 2 a hand raised, 3 the left hand presenting, 4 hands together)
   const say = (tt, id, key, d, a = null, talk = true) => {
     subs.push({ t: tt, d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
-    if (a && talk) { at(tt, () => play(a, 'talk')); at(tt + d - 0.15, () => { if (a.rig.anim === 'talk') play(a, 'idle'); }); }
+    if (a && talk !== false) { at(tt, () => { play(a, 'talk'); if (typeof talk === 'number') a.rig.gesture = talk; }); at(tt + d - 0.15, () => { if (a.rig.anim === 'talk') play(a, 'idle'); }); }
   };
-  say(14.6, 'resident', 'op_res_1', 2.3, resident);
-  say(17.1, 'worker', 'op_wk_1', 2.9, worker, false);
+  say(14.6, 'resident', 'op_res_1', 2.3, resident, 4);   // (hands together: asking, not waving)
+  say(16.95, 'worker', 'op_wk_1', 2.6, worker, false);   // (ends with the cut to the drill at 19.6, not over it)
   say(24.0, 'resident', 'op_res_2', 1.7, resident);
   say(25.8, 'worker', 'op_wk_2', 2.4, worker, false);
   say(31.3, 'arthur', 'op_ar_1', 1.8, ar, false);
   say(33.2, 'hero', 'op_tw_0', 1.9, tw);
-  say(45.4, 'zoe', 'op_zoe_1', 2.5, zo);
+  say(45.4, 'zoe', 'op_zoe_1', 2.5, zo, false);   // (called across the room, no arm waving: the talk gesture swung her arm out over the stove)
   say(48.3, 'hero', 'op_tw_1', 2.0, tw);
   say(51.0, 'zoe', 'op_zoe_2', 1.8, zo);
-  say(55.0, 'arthur', 'op_ar_2', 2.9, ar, false);
+  say(54.8, 'arthur', 'op_ar_2', 3.8, ar, false);   // (70 characters: 18 a second, readable; it runs on over the cut to the tap)
   say(60.6, 'zoe', 'op_zoe_3', 1.8, zo, false);
   say(67.9, 'hero', 'op_tw_2', 1.7, tw);
   say(69.6, 'zoe', 'op_zoe_4', 1.7, zo, false);
@@ -417,6 +562,8 @@ export function playOpening(story) {
       put(ar, R.npcSpots.arthur.x, R.npcSpots.arthur.z, R.npcSpots.arthur.a, 'kneelWork');
       hold(BT.mast, ar, [0, -0.03, 0.01], [Math.PI, 0, 0]);
       zoe.setPresent(true);
+      R.group.add(flats); temps.push(flats); setFade(1);
+      WR.group.add(caveFlat); temps.push(caveFlat);
       put(worker, wkSpot.x, wkSpot.z, angleTo({ pos: wkSpot }, column), 'idle');
       put(resident, resSpot.x, resSpot.z, Math.atan2(wkSpot.x - resSpot.x, wkSpot.z - resSpot.z), 'idle');
       L.pose(0); L.shake(0); W.boatSurge = 0; WR.vein.power = 0;
@@ -432,6 +579,7 @@ export function playOpening(story) {
     finish(skipped) {
       for (const h of loops) h.stop(skipped ? 0.2 : 0.8);
       for (const o of temps) o.parent?.remove(o);
+      for (const g2 of [flats, caveFlat]) g2.traverse((o) => o.geometry?.dispose()); for (const m of setMats) m.dispose();
       for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; }
       if (skipped) { g.audio.endCue(); }
       document.querySelector('#fade').classList.remove('quick');
@@ -446,9 +594,11 @@ export function playOpening(story) {
       W.station.setActive(stationWas);
       reveal();
       for (const a of [zoe, arthur]) a.controlled = false;
+      if (xil) { xil.listenTo = null; xil.rig.lookAt = null; }
       put(tw, twEnd.x, twEnd.z, twEndA, 'idle');
       story.cur.afterOpening();   // flags, the family's places, control, objective (with the ball step), save
     },
   });
+  cine.extras = { worker, resident };   // (the scene-only cast, for the tests' per-frame checks)
   return cine;
 }
