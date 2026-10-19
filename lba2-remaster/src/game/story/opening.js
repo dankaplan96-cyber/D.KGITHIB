@@ -82,7 +82,9 @@ export function playOpening(story) {
   // ---------------------------------------------------------------- props held in hands
   const hold = (obj, a, pos, rot, side = 'R') => { const hand = a.rig.j['arm' + side].hand; hand.add(obj); obj.position.set(...pos); obj.rotation.set(...rot); };
   const rest = (obj, parent, p, extraRot = [0, 0, 0]) => { parent.add(obj); obj.position.set(p.x, p.y, p.z); obj.rotation.set(extraRot[0], p.ry ?? 0, extraRot[2]); };
-  const sdRest = { x: TB.sdRest.x, y: TB.sdRest.y, z: TB.sdRest.z, ry: TB.sdRest.ry };
+  // where he lays the screwdriver down: under his right hand at the bottom of setDown (measured), on the table's near
+  // edge by the fruit bowl — the room's own rest spot is 0.75 m from his hand, so it jumped there when let go
+  const sdRest = { x: TB.sdRest.x - 0.69, y: TB.sdRest.y, z: TB.sdRest.z - 0.04, ry: TB.sdRest.ry };   // (its tip clear of the edge)
   const mastFitted = { x: BT.mastRest.x, y: 0.085, z: BT.mastRest.z, ry: BT.mastRest.ry }; // (room-local)
 
   // ---------------------------------------------------------------- the tap
@@ -446,7 +448,8 @@ export function playOpening(story) {
   });
   // the decision
   at(66.65, () => play(tw, 'setDown'));
-  at(67.1, () => { rest(TB.screwdriver, R.group, { x: sdRest.x, y: sdRest.y, z: sdRest.z, ry: sdRest.ry }); sfx('put'); });
+  bend(tw, 66.75, 67.45, { torso: [0.34], kneeL: [0.14], kneeR: [0.14], hipL: [-0.07], hipR: [-0.07], shR: [0.06], elR: [0.4] });   // (down to the table top)
+  at(67.15, () => { rest(TB.screwdriver, R.group, { x: sdRest.x, y: sdRest.y, z: sdRest.z, ry: sdRest.ry }); sfx('put'); });
   at(69.0, () => { play(zo, 'reach'); look(zo, null); });
   at(69.3, () => from(zo, 'tapTurn', 0.4));
   at(69.5, () => { stopLoop('trickle'); sfx('tapSqueak'); });
