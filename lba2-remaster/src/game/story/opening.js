@@ -218,8 +218,10 @@ export function playOpening(story) {
 
   // walks
   // the resident waits by the lift for his word with the worker, then goes on to the ferry
-  walk(resident, [resSpot, HP(-82.7, -5.35), HP(-84.4, -5.75)], 26.4, 1.2, 'idle', Math.PI);
-  walk(worker, [wkSpot, HP(-84.0, -4.5), HP(-83.55, -4.65)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-83.55, -4.65) }, L.cratePierW));
+  // (the worker steps to the crate's side of the pier while the resident is still there; the resident then turns
+  // away from him toward the ferry — their walks no longer meet: they passed within 0.39 m of each other)
+  walk(resident, [resSpot, HP(-83.0, -5.0), HP(-84.4, -5.6)], 26.4, 1.2, 'idle', Math.PI);
+  walk(worker, [wkSpot, HP(-83.75, -4.05)], 24.6, 1.0, 'idle', angleTo({ pos: HP(-83.75, -4.05) }, L.cratePierW));
   walk(zo, [zoTray, zoSink], 40.3, 0.9, 'idle', Math.PI);
   // Zoé out of the family room and down the hall to the front door (seen as far as the hall; the door is the cut)
   // (wide of the chair at the table's east end: the corner at hx(0.7, -1.4) took her through it)
