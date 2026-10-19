@@ -3,7 +3,9 @@
 # (our renders only).
 #   python3 make-sheets.py pair <before.png> <after.png> <out.jpg> [width] [label-before] [label-after] [side]
 #   python3 make-sheets.py grid <out.jpg> <cell px> <cols> <label:path> [<label:path> ...]
-# pair: before above after (or side by side with "side"), scaled to the width; grid: square cells, labelled.
+#   python3 make-sheets.py rows <out.jpg> <width> <label:before> <label:after> [<label:before> <label:after> ...]
+# pair: before above after (or side by side with "side"), scaled to the width; grid: square cells, labelled;
+# rows: whole frames, each row a before/after pair side by side.
 import sys
 
 from PIL import Image, ImageDraw
@@ -48,5 +50,17 @@ elif cmd == 'grid':
         s = min(c.width, c.height)
         c = c.crop(((c.width - s) // 2, (c.height - s) // 2, (c.width - s) // 2 + s, (c.height - s) // 2 + s)).resize((cell, cell), Image.LANCZOS)
         im.paste(label(c, lab), ((i % cols) * (cell + 4), (i // cols) * (cell + 4)))
+    im.save(out, quality=82)
+    print(out, im.size)
+elif cmd == 'rows':
+    out, w = sys.argv[2], int(sys.argv[3])
+    items = [x.split(':', 1) for x in sys.argv[4:]]
+    cw = w // 2 - 3
+    cells = [label(fit(Image.open(p).convert('RGB'), cw), lab) for lab, p in items]
+    ch = max(c.height for c in cells)
+    rows = (len(cells) + 1) // 2
+    im = Image.new('RGB', (w, rows * ch + (rows - 1) * 6), (30, 30, 30))
+    for i, c in enumerate(cells):
+        im.paste(c, ((i % 2) * (cw + 6), (i // 2) * (ch + 6)))
     im.save(out, quality=82)
     print(out, im.size)

@@ -56,6 +56,12 @@ const POSES = {
   // 0.234·0.28·(i+1)+0.02; turning: rotation.z = −roll·(i+1)·0.6 with roll ±0.15), set on the bones directly
   swayBack: ['run', 0.45, 6.5, null, (g) => tails(g).forEach((s, i) => { s.rotation.x = 0.234 * 0.28 * (i + 1) + 0.02; s.rotation.z = 0; })],
   swayRoll: ['walk', 0.45, 1.4, null, (g) => tails(g).forEach((s, i) => { s.rotation.x = -0.04 * 0.28 * (i + 1) - 0.02; s.rotation.z = -0.15 * (i + 1) * 0.6; })],
+  hands: ['talk', 1.2, 0, (g) => { g.gesture = 4; }],
+  present: ['talk', 1.2, 0, (g) => { g.gesture = 3; }],
+  point: ['talk', 1.2, 0, (g) => { g.gesture = 0; }],
+  pickup: ['pickup', 0.45, 0, null, null, null, 1.0],
+  sit: ['sit', 1.2, 0],
+  charge: ['charge', 0.6, 0, null, null, null, 1.0],
   shrug: ['listen', 1.45, 0, null, null, [[1.0, (g) => g.doGesture('shrug')]]],
   shrugTalk: ['talk', 1.45, 0, null, null, [[1.0, (g) => g.doGesture('shrug')]]],
   throw: ['throwQuick', 0.2, 0, null, null, null, 1.0],

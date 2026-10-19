@@ -17,8 +17,8 @@ const lerp3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, 
 // ------------------------------------------------------------------ cast
 export const LOOKS = {
   twinsen: {
-    // LBA2's in-game Twinsen, measured on the original model (docs/character-review.md §11–12): cape-like robe
-    // with flat shoulders and broad sleeves, thin orange belt, a nearly straight robe to the ankles, small
+    // LBA2's in-game Twinsen, measured on the original model (docs/character-review.md §11–12): a tunic with flat
+    // shoulders and broad sleeves of its own (CHAR-OPEN: the original's one-shell cape hid the arms), thin orange belt, a nearly straight robe to the ankles, small
     // orange shoes, ball hands; a narrow egg head at the original's size on a long thin neck, small pale eyes,
     // no hair on the skull: a dark crown knot and a tuft arching back (LBA2 draws them as three flat unlit spheres; ours is one constant-shade mass, VP-1b); a pale gold medallion. Colours from its palette.
     poly: 'twinsen', // the low-poly model (tools/blender/twinsen_poly.py); the sculpt below is the fallback
