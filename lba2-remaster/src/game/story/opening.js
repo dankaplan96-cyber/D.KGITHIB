@@ -37,6 +37,7 @@ const sm = (x) => { x = Math.min(1, Math.max(0, x)); return x * x * (3 - 2 * x);
 export function playOpening(story) {
   const g = story.game, W = g.world, R = g.rooms.house, H = g.hero, WR = g.rooms.well;
   const zoe = story.cur.npc('zoe'), arthur = story.cur.npc('arthur');
+  const xil = g.npcs.find((n) => n.def.id === 'xil');   // (on the pier behind the lift: he listens in)
   const L = W.cargoLift, K = R.kitchen, TB = R.table, BT = R.boat;
   const hx = (x, z) => ({ x: R.center.x + x, z: R.center.z + z });   // house-local → world
   const hv = (x, y, z) => V(R.center.x + x, y, R.center.z + z);
@@ -357,8 +358,12 @@ export function playOpening(story) {
   at(6.2, () => loop('winch', { quiet: true }));
   at(13.6, () => sfx('clunk'));
   at(14.2, () => { loop('motor'); play(worker, 'reach'); look(resident, head(worker)); });
-  // the worker glances back at the man asking while his hand stays on the control
-  at(15.0, () => look(worker, head(resident)));   // (a hand on the lift's control)
+  // the worker glances back at the man asking while his hand stays on the control; Xil, on the pier behind, turns
+  // to listen in, looks up at the lift when the hum shakes it, and listens again on the way back
+  at(15.0, () => look(worker, head(resident)));
+  at(14.8, () => { if (xil) xil.listenTo = resident; });
+  at(18.7, () => { if (xil) { xil.listenTo = null; xil.rig.lookAt = V(column.x, 4.6, column.z); } });
+  at(23.9, () => { if (xil) { xil.rig.lookAt = null; xil.listenTo = worker; } });   // (a hand on the lift's control)
   at(16.85, () => { play(worker, 'idle'); look(worker, head(resident)); });
   turn(worker, Math.atan2(resSpot.x - wkSpot.x, resSpot.z - wkSpot.z) - 0.35, 16.85, 0.5);
   turn(worker, angleTo({ pos: wkSpot }, column), 19.7, 0.3);
@@ -581,6 +586,7 @@ export function playOpening(story) {
       W.station.setActive(stationWas);
       reveal();
       for (const a of [zoe, arthur]) a.controlled = false;
+      if (xil) { xil.listenTo = null; xil.rig.lookAt = null; }
       put(tw, twEnd.x, twEnd.z, twEndA, 'idle');
       story.cur.afterOpening();   // flags, the family's places, control, objective (with the ball step), save
     },
