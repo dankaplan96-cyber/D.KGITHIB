@@ -142,15 +142,26 @@ def build(name):
                     box(bt, -0.016, 0.016, y - 0.016, y + 0.016, fz - 0.01, fz + 0.012)
 
         # ---------------------------------------------------------------- skirt / robe / tunic bottom
+        coat_legs = L.get('coatLegs') or 0   # (CHAR-OPEN: a coat whose skirt partly rides the thighs, see below)
+
         def w_skirt(p):
             x, y, z = p
             k = smooth(waistY - 0.02, waistY - 0.3, y)
             a = math.atan2(x, z - 0.01)
             c, s = math.cos(a), math.sin(a)
+            # a long coat's skirt (CHAR-OPEN, vguard): toward the hem a share of it is carried by the thigh on its side,
+            # as LBA2 skins its robes, so it stays round the legs whatever they do: knocked out and lying, the skirt
+            # bones alone held the stiff cone out from the legs (the hem stood off the body, the feet in the air)
+            g = coat_legs * smooth(waistY - 0.1, hemY + 0.05, y) if coat_legs else 0.0
             w = {'hips': 1 - k}
             for bn, v in (('skirtF', max(0, c) ** 2), ('skirtB', max(0, -c) ** 2), ('skirtL', max(0, s) ** 2), ('skirtR', max(0, -s) ** 2)):
                 if v > 0:
-                    w[bn] = k * v
+                    w[bn] = k * v * (1 - g)
+            if g > 0:
+                l = smooth(-0.05, 0.05, x)
+                for bn, v in (('hipL', l), ('hipR', 1 - l)):
+                    if v > 0:
+                        w[bn] = k * g * v
             return w
 
         if gown:

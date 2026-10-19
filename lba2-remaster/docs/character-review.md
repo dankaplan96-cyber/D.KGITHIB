@@ -859,3 +859,36 @@ pregnancy came with them:
   parts use).
 - **Evidence:** `zoe-slim-{body,grey}-before-after.jpg`, `zoe-slim-ingame-opening-*.jpg` and
   `zoe-slim-ingame-crops-before-after.jpg` in docs/lba3-visual/evidence/SRC-2/.
+
+## 17. OPEN-3's model leftovers (CHAR-OPEN)
+
+The opening's review (docs/lba3-production/reviews/OPEN-3/BUGS.md #11, #28) and ANIM-DEATH left four model items. Each
+was fixed and committed on its own, with before/after captures in docs/lba3-production/reviews/CHAR-OPEN/.
+
+- **Zoé's bun (#11).** The three measured balls only grazed the back of the crown and rode tail0..2; the follow-through
+  swung the mass off the head, and in profile it floated with bare scalp between. The balls keep their sizes and their
+  downward-backward run but sit on the skull (`ZOE_BUN`; the measured ones are `ZOE_BUN_LBA2`), and the bun is on the
+  head bone only: a bun is pinned hair.
+- **Twinsen's tunic (#28a).** LBA2's one-shell cape (out to ±0.214 H, its sides skinned to the arms) hid the arms: a
+  gesture or the opening's shrug only stretched the bell, and the windup and the charge tore it into membranes. The
+  tunic is now a body with flat shoulders (the yoke out to ±0.15 H, its edge 40 % on the shoulder) narrowing to
+  ±0.122 H over the belt, and two wide sleeves of its own from inside the yoke to a flared cuff at the wrist, the ball
+  hands in the cuffs. A waist band (hips → torso) closes the hole that opened at the back in deep bends. Drawn at the
+  game's armSpread (0.3, unchanged), so what is modelled is what is shown. At rest the sleeves hang where the cape's
+  sides were; the blue tunic, the ponytail, the medallion and the robe are as before. The measured cape stays as
+  `CAPE_LBA2` (`TUNIC_CAPE=1`). 2372 → 2572 triangles.
+- **Zoé's arms (#28b).** Two straight tubes (r 3.1 → 2.6 → 2.0 cm) spread 0.3 rad out: rods 0.45 m from her sides.
+  Now nine sections along the same bones (a shoulder cap in the body's edge, the upper arm 9–10 cm across, the elbow, a
+  small forearm swell, a 5 cm wrist into the mitten hand) and her look's armSpread 0.08: the arms hang at her sides.
+  Fuller than the original's (an artistic choice; still slim, SRC-2's figure, not pregnant). The opening's pose layer
+  for her arms was brought in by the same 0.22, so its arm angles are unchanged. 4434 → 4646 triangles.
+- **The guard's coat lying (ANIM-DEATH's open item).** The knee-length coat hung on the four skirt bones only, a stiff
+  cone: knocked out it stood over the legs like a tent (front or back panel) and opened round them like a bell's
+  mouth (the sides turned out). Toward the hem half of it now rides the thigh on its side (`coatLegs`, as LBA2 skins
+  its robes; the flare `hemW` 0.9), and rig.js's knock-out cloth lays the top panel on the thighs and brings the sides
+  in. Lying on his back the hips stay 0.36 m up: KO_HUMAN.back's bent right knee puts the heel under the body (the
+  animator's keys, not the coat).
+- **Not changed:** the skeletons, bone names, hierarchy, bind transforms and sockets (the props and the hop-pack ride
+  the same bones; checked with the pack). "Both heads read bald from behind" (OPEN-3 #28) is LBA2's own design (no hair
+  on the skull) and stays.
+

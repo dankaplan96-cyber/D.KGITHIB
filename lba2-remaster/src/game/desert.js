@@ -7,12 +7,14 @@
 //   R.dock {x,z,a}            arrival from the ferry; R.ferry {setVisible(b)}
 //   R.npcSpots {hesk, tarra, ilka, dallan, guard, kid, trader, weaver} {x,z,a}
 //   R.oasis {x,z,r, level, setLevel(0..1)}          the pond: dry (0) → full (1); palms green up with it
-//   R.pump {x,z, gears:[{x,y,z,turning,setTurning(b)}], setRunning(b), running}   wind-pump; gears are ball targets
+//   R.pump {x,z, gears:[{x,y,z,i,jam,turning,setTurning(b),kick()}], jam, state, setState('jammed'|'leak'|'running'),
+//          setRunning(b), running, strain, onGust, gustNow(), joint:{x,z,y,loose,spraying,setLoose(b),setSpray(b)}}
+//          wind-pump: the jammed gear is ball target `gear`, the two sound ones `gearOk`; the pipe's loose joint
 //   R.yacht {x,z,a, ride(pathKey, done)}            Hesk's sand-yacht; paths: 'toCamp', 'toDig', 'toVillage'
 //   R.camp {x,z}                                     Ilka's camp under the north mesa
 //   R.post {x0,z0,x1,z1, gate:{x,z,open(),isOpen}, office:{x,z}, desk:{x,z}, patrol:[[x,z]...], cover:[{x,z,r}]}
 //   R.storm {level, setLevel(0..1)}                 sandstorm: fog closes in, dust blows; drones see less
-//   R.dig {x,z, gate:{x,z,open(),isOpen}, seals:[{x,y,z,on,setOn(b)}], carvings:{x,z}, door:{x,z}, bottomY, reveal()}
+//   R.dig {x,z, gate:{x,z,open(),isOpen,flash(ok),keypad:{x,z,y}}, seals:[{x,y,z,on,setOn(b)}], carvings:{x,z}, door:{x,z}, bottomY, reveal()}
 //        seals = the three warm discs (ball targets `seal`); cold:[{x,y,z}] the two cold ones (targets `cold`);
 //        crack {x,z,y} the crystal-crusted crack beside the last ramp
 //        the bottom of the excavation is the Temple of Bù's gate; reveal() slides its stone door away
@@ -42,6 +44,10 @@ const DOCK = { x: -106, z: 4, deck: 2.0 };
 const VILLAGE = { x: -50, z: 2, r: 19 };
 const OASIS = { x: -40, z: -15, r: 7.5 };
 const PUMP = { x: -30, z: -7 };
+const PUMP_JAM = 1;   // the wind-pump's jammed gear: the middle one (ADV-2)
+const PIPE_J = { x: -32.2, z: -11.6 };   // the pipe's low joint, on walkable ground east of the oasis basin (ADV-2)
+const GEAR_S = 1.3, GEAR_Y = 1.7;   // the pump's gears: scale, and height on the tower
+const PUMP_TANK = { x: PUMP.x + 1.0, z: PUMP.z - 4.0 };   // the pump's water tank on stilts   // the pump's gears, larger than the first version's so a gust's shudder reads from the play camera
 const POST = { x0: 26, x1: 58, z0: -34, z1: -8, y: BASE + 0.35, gateZ: -21 };
 const DIG = { x: 64, z: 28, r: 16 };
 const CAMP = { x: -10, z: -46 };
@@ -526,6 +532,9 @@ export function buildDesert(scene, physics) {
       const leafMat = pm('#5a8a3a', 0.8, { side: THREE.DoubleSide });
       for (let k = 0; k < 8; k++) { const f = new THREE.Mesh(frond, leafMat); f.rotation.y = k / 8 * Math.PI * 2 + rr() * 0.3; f.rotation.z = 0.15; f.castShadow = true; crown.add(f); }
       palms.push({ g, crown, leafMat, ph: rr() * 6 });
+      // (ADV-2: the one palm in front of the pump's gearbox is left out, so the ball and the eye reach the gears from
+      // the village side; its random draws still happen, so everything placed after it stays where it was)
+      if (px < PUMP.x - 1.5 && px > PUMP.x - 7 && Math.abs(pz - PUMP.z) < 2.6) { g.visible = false; continue; }
       col({ type: 'cyl', x: px, z: pz, r: 0.3 * s, top: H(px, pz) + 6, seeThrough: true });
     }
     updaters.push((dt, t) => { for (const p of palms) p.crown.rotation.x = Math.sin(t * 0.9 + p.ph) * 0.04; });
@@ -561,11 +570,12 @@ export function buildDesert(scene, physics) {
     PB.add(bbox(0.05, 1.0, 1.4, 0.01, 1), pm('#c84a3a', 0.7), PUMP.x + 2.6, pumpGy + h + 0.2, PUMP.z);
     // the pump rod, the tank on stilts, a pipe to the pond
     PB.add(cyl(0.05, 0.05, h - 0.4, 6, 0), iron, PUMP.x, pumpGy + (h - 0.4) / 2, PUMP.z);
-    const tk = { x: PUMP.x - 4.2, z: PUMP.z - 2 };
+    const tk = PUMP_TANK;   // (south-east of the tower: out of the line from the village side to the gearbox)
     for (const [dx, dz] of [[-0.9, -0.9], [0.9, -0.9], [0.9, 0.9], [-0.9, 0.9]]) PB.add(cyl(0.1, 0.1, 3.4, 6, 0), darkWood, tk.x + dx, pumpGy + 1.7, tk.z + dz);
     PB.add(cyl(1.25, 1.25, 1.8, 18, 1.5, false), tm('planks', { color: '#b88a5a' }), tk.x, pumpGy + 4.3, tk.z);
     for (const y of [3.6, 5.0]) PB.add(new THREE.TorusGeometry(1.27, 0.04, 6, 24).rotateX(Math.PI / 2), iron, tk.x, pumpGy + y, tk.z);
-    PB.add(tube([[tk.x - 0.6, pumpGy + 3.5, tk.z - 0.6], [tk.x - 2.5, pumpGy + 1.0, tk.z - 3], [OASIS.x + 5, oasisY + 0.6, OASIS.z + 4]], 0.09, 6, 1), iron, 0, 0, 0);
+    // (down to a joint at hand height on the flat east of the oasis basin, then into the basin: PIPE_J, ADV-2)
+    PB.add(tube([[tk.x - 0.6, pumpGy + 3.5, tk.z - 0.6], [PIPE_J.x, H(PIPE_J.x, PIPE_J.z) + 0.9, PIPE_J.z], [OASIS.x + 5, oasisY + 0.6, OASIS.z + 4]], 0.09, 6, 1), iron, 0, 0, 0);
     PB.build();
     col({ type: 'box', x: PUMP.x, z: PUMP.z, hw: b, hd: b, top: pumpGy + 9, noStand: true, seeThrough: true });
     col({ type: 'cyl', x: tk.x, z: tk.z, r: 1.3, top: pumpGy + 5.2, noStand: true, seeThrough: true });
@@ -577,7 +587,10 @@ export function buildDesert(scene, physics) {
     for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2; WB.add(bbox(1.25, 0.34, 0.03, 0.01, 1), pm('#d8d0c0', 0.5, { metalness: 0.4 }), Math.cos(a) * 1.25, Math.sin(a) * 1.25, 0, 0.4, 0, a); }
     WB.add(cyl(0.18, 0.18, 0.3, 10, 0), iron, 0, 0, 0, Math.PI / 2, 0, 0);
     WB.build();
-    // three seized gears on the gear train down the tower (the ball knocks each one loose)
+    // three gears in the tower's gearbox (ADV-2). Since the test bore's tremors began, sand has packed into
+    // one of them (PUMP_JAM): at each gust the wheel tugs at the train; the two sound gears rock a little and clack,
+    // the jammed one stays put, shudders and spits sand (story/dig.js adds the sand, sparks and sounds: R.pump.onGust).
+    // Close up, sand is caked in its teeth. The ball knocks it loose; a sound gear struck only rings and swings back.
     const gearG = cached('gear', () => {
       const s = new THREE.Shape();
       for (let i = 0; i <= 24; i++) { const a = i / 24 * Math.PI * 2, r = i % 2 ? 0.42 : 0.5; s.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
@@ -585,22 +598,105 @@ export function buildDesert(scene, physics) {
       const g = new THREE.ExtrudeGeometry(s, { depth: 0.12, bevelEnabled: false }); g.translate(0, 0, -0.06); return g;
     });
     const gearM = pm('#b88a3a', 0.4, { metalness: 0.7 });
-    for (const [k, y] of [[0, 2.2], [1, 3.6], [2, 5.0]].entries()) {
-      void k;
-      const gx = PUMP.x + 0.3 * (y[0] - 1), gz = PUMP.z + 1.9 - y[1] * 0.12;
-      const m = mesh(group, gearG, gearM, gx, pumpGy + y[1], gz, 0);
-      const rustSpot = mesh(group, cached('rustdisc', () => new THREE.CircleGeometry(0.22, 12)), pm('#a85a2a', 0.9), gx, pumpGy + y[1], gz + 0.07, 0, { cast: false });
-      const G = { x: ox + gx, y: pumpGy + y[1], z: oz + gz, turning: false, setTurning(b) { this.turning = !!b; rustSpot.visible = !b; } };
-      updaters.push((dt) => { if (G.turning) m.rotation.z += dt * (y[0] % 2 ? -2.2 : 2.2) * (R.pump.running ? 1.6 : 1); });
+    // sand packed into the lower teeth of the jammed gear (an arc of lumps on its rim)
+    const cakeG = cached('gearSand', () => new THREE.TorusGeometry(0.46, 0.085, 5, 14, Math.PI * 0.8).rotateZ(Math.PI * 1.1));
+    // a gearbox across the tower's west face, facing the way Kesh comes (and the play camera looks) from: three gears
+    // in a row on a beam at the height a thrown ball reaches (~2 m by the tower; the first version's 3.6 and 5 m gears
+    // were out of its reach), 1.35 m apart so the ball's aim, which goes by direction, picks each one
+    B.add(bbox(0.14, 0.16, 3.6, 0.02, 1), rust, PUMP.x - 1.6, pumpGy + GEAR_Y, PUMP.z);
+    for (const i of [0, 1, 2]) {
+      const jam = i === PUMP_JAM, dir = i % 2 ? -1 : 1;
+      const gx = PUMP.x - 1.75, gy = pumpGy + GEAR_Y, gz = PUMP.z + 1.35 * (i - 1);
+      const m = mesh(group, gearG, gearM, gx, gy, gz, -Math.PI / 2); m.scale.setScalar(GEAR_S);
+      const rustSpot = mesh(group, cached('rustdisc', () => new THREE.CircleGeometry(0.22, 12)), pm('#a85a2a', 0.9), gx - 0.07 * GEAR_S, gy, gz, -Math.PI / 2, { cast: false });
+      rustSpot.scale.setScalar(GEAR_S);
+      const cake = jam ? mesh(group, cakeG, pm('#d2b07a', 1), gx - 0.02, gy, gz, -Math.PI / 2, { cast: false }) : null;
+      cake?.scale.setScalar(GEAR_S);
+      const G = {
+        x: ox + gx, y: gy, z: oz + gz, nx: -1, nz: 0, i, jam, mesh: m, turning: false, ring: 0,   // (n: the way its face looks)
+        setTurning(b) { this.turning = !!b; rustSpot.visible = !b; if (cake) cake.visible = !b; },
+        // struck by the ball while the train is held: a sound gear rings and swings back
+        kick() { this.ring = 1; },
+      };
+      updaters.push((dt, t) => {
+        const P = R.pump;
+        if (G.turning) { m.rotation.z += dt * dir * 2.2 * (P.running ? 1.6 : 1); m.position.set(gx, gy, gz); return; }
+        G.ring = Math.max(0, G.ring - dt * 0.7);
+        const s = P.strain;
+        if (jam) {   // held fast: it shudders against its seat and does not turn
+          const j = 0.04 * s;
+          m.position.set(gx, gy + Math.sin(t * 47) * j, gz + Math.sin(t * 61) * j);
+          m.rotation.z = Math.sin(t * 53) * 0.03 * s;
+          if (cake) cake.position.set(m.position.x - 0.02, m.position.y, m.position.z);
+        } else m.rotation.z = dir * (0.28 * s + Math.sin(t * 9) * 0.5 * G.ring * G.ring);
+      });
       gears.push(G);
-      R.ballTargets.push({ x: G.x, y: G.y, z: G.z, r: 0.75, gear: y[0] });
+      // the jammed gear is the pump's `gear` target; the sound ones `gearOk` (they ring, nothing more)
+      R.ballTargets.push(jam ? { x: G.x, y: G.y, z: G.z, r: 0.7, gear: i } : { x: G.x, y: G.y, z: G.z, r: 0.7, gearOk: i });
     }
   }
+  // the pipe from the tank to the pond: the tremors shook its low joint apart. Once the gear is free the pump lifts
+  // water and it sprays out there, short of the pond; pushing the collar home sends it on (story/dig.js)
+  const joint = (() => {
+    const tk = PUMP_TANK;
+    const jp = new THREE.Vector3(PIPE_J.x, H(PIPE_J.x, PIPE_J.z) + 0.9, PIPE_J.z);
+    const tan = new THREE.Vector3(OASIS.x + 5 - (tk.x - 0.6), oasisY + 0.6 - (pumpGy + 3.5), OASIS.z + 4 - (tk.z - 0.6)).normalize();
+    const side = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    const collar = new THREE.Group(); collar.position.copy(jp); group.add(collar);
+    mesh(collar, cyl(0.15, 0.15, 0.36, 10, 0), pm('#9a6a3a', 0.45, { metalness: 0.6 }), 0, 0, 0, 0);
+    for (const y of [0.17, -0.17]) mesh(collar, cyl(0.17, 0.17, 0.05, 10, 0), iron, 0, y, 0, 0);
+    const qHome = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), tan);
+    const qLoose = new THREE.Quaternion().setFromAxisAngle(side, 0.32).multiply(qHome);
+    // the spray: droplets thrown out sideways and up, and a dark wet patch on the sand under it
+    const N = 60, sp = new Float32Array(N * 3), sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+    const spray = new THREE.Points(sg, new THREE.PointsMaterial({ color: '#d8f2ff', size: 0.13, transparent: true, opacity: 0.9, depthWrite: false }));
+    spray.frustumCulled = false; spray.visible = false; group.add(spray);
+    const wet = mesh(group, cached('wetdisc', () => new THREE.CircleGeometry(1.1, 16)), pm('#9a7448', 1, { transparent: true, opacity: 0.7 }), jp.x + side.x * 1.2, H(jp.x + side.x * 1.2, jp.z + side.z * 1.2) + 0.03, jp.z + side.z * 1.2, 0, { cast: false, rx: -Math.PI / 2 });
+    wet.visible = false;
+    const jr = rng(4747);   // (its own sequence: rr's draws place the scenery after this)
+    const drops = Array.from({ length: N }, (_, k) => ({ ph: k / N, a: (jr() - 0.5) * 0.9, v: 2.2 + jr() * 1.4 }));
+    updaters.push((dt, t) => {
+      if (!spray.visible) return;
+      drops.forEach((d, k) => {
+        const u = (t * 1.3 + d.ph) % 1, tt = u * 0.75, c = Math.cos(d.a), s = Math.sin(d.a);
+        const hx = side.x * c - side.z * s, hz = side.z * c + side.x * s;   // (the side direction turned by d.a)
+        sp[k * 3] = jp.x + hx * d.v * tt; sp[k * 3 + 1] = jp.y + 0.15 + 2.4 * tt - 4.9 * tt * tt; sp[k * 3 + 2] = jp.z + hz * d.v * tt;
+      });
+      sg.attributes.position.needsUpdate = true;
+    });
+    const J = {
+      ...W(jp.x, jp.z), y: jp.y, loose: true, spraying: false,
+      setLoose(b) { this.loose = !!b; collar.quaternion.copy(b ? qLoose : qHome); collar.position.copy(jp).addScaledVector(tan, b ? 0.14 : 0); },
+      setSpray(b) { this.spraying = !!b; spray.visible = !!b; wet.visible = !!b; },
+    };
+    J.setLoose(true);
+    return J;
+  })();
+  // the pump's state: 'jammed' (the wheel tugs at each gust and stops) → 'leak' (the train turns, the water sprays at
+  // the joint) → 'running' (water into the pond)
+  const GUST = 3.4;   // seconds from one gust to the next
   R.pump = {
-    ...W(PUMP.x, PUMP.z), gears, running: false,
-    setRunning(b) { this.running = !!b; },
+    ...W(PUMP.x, PUMP.z), gears, jam: PUMP_JAM, joint, running: false, state: 'jammed', strain: 0, gustT: 0, onGust: null, _cyc: 0,
+    setState(s) {
+      this.state = s; this.running = s === 'running';
+      for (const G of gears) G.setTurning(s !== 'jammed');
+      for (const t of R.ballTargets) if (t.gear != null || t.gearOk != null) t.done = s !== 'jammed';   // (no more aim at a turning train)
+      joint.setLoose(s !== 'running'); joint.setSpray(s === 'leak');
+    },
+    setRunning(b) { this.setState(b ? 'running' : 'jammed'); },   // (older callers)
+    gustNow() { this.gustT = (Math.floor(this.gustT / GUST) + 1) * GUST - 0.02; },   // (the next gust at once: after he listens)
   };
-  updaters.push((dt) => { wheel.rotation.z += dt * (R.pump.running ? 2.4 : 0.05); });
+  updaters.push((dt) => {
+    const P = R.pump;
+    if (P.state !== 'jammed') { P.strain = 0; wheel.rotation.z += dt * (P.running ? 2.4 : 2.0); return; }
+    P.gustT += dt;
+    const u = P.gustT % GUST, cyc = Math.floor(P.gustT / GUST);
+    P.strain = u < 0.9 ? Math.sin(Math.PI * u / 0.9) : 0;
+    if (u > 0.3 && P._cyc !== cyc) { P._cyc = cyc; P.onGust?.(); }
+    // the wheel swings round with the gust and is pulled back by the held train
+    wheel.rotation.z = (P.wheelRest ??= wheel.rotation.z) + 0.3 * P.strain;
+  });
 
   // ================================================================ mesas: rock rubble at their feet
   {
@@ -821,6 +917,19 @@ export function buildDesert(scene, physics) {
     PB2.add(bbox(0.12, 0.12, 4.2, 0.03, 0.5), tm('hazard'), 0, 0, 0);
     PB2.build();
     DB.add(bbox(0.4, 1.2, 0.4, 0.04, 1), concrete, gx, H(gx, gz) + 0.6, gz - 2.2);
+    // the keypad on the post's outer face (ADV-2): nine keys, three of them (1, 4, 7: the left column) worn shiny; a
+    // lamp over it flashes red for a wrong code and stays green once open (story/dig.js)
+    const kpY = H(gx, gz) + 1.0, kpX = gx - 0.22, kpZ = gz - 2.2;
+    DB.add(bbox(0.05, 0.36, 0.28, 0.01, 1), pm('#33302c', 0.6, { metalness: 0.4 }), kpX, kpY, kpZ);
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) {
+      DB.add(bbox(0.03, 0.06, 0.06, 0.008, 1), c === 0 ? pm('#e6dcc0', 0.25, { metalness: 0.8 }) : pm('#6a645c', 0.8), kpX - 0.035, kpY + 0.09 - r * 0.085, kpZ - 0.08 + c * 0.08);
+    }
+    const kpLampM = new THREE.MeshStandardMaterial({ color: '#402020', emissive: '#000000', roughness: 0.4 });
+    mesh(group, cached('kpLamp', () => new THREE.SphereGeometry(0.035, 8, 6)), kpLampM, kpX - 0.03, kpY + 0.22, kpZ, 0, { cast: false });
+    let kpFlash = 0;
+    updaters.push((dt) => { if (kpFlash > 0) { kpFlash -= dt; if (kpFlash <= 0) kpLampM.emissive.set(digGate.open ? '#30ff60' : '#000000'); } });
+    digGate.lamp = (ok) => { kpLampM.emissive.set(ok ? '#30ff60' : '#ff2a1a'); kpFlash = ok ? 0 : 1.2; if (ok) digGate.open = true; };
+    R.digKeypad = { ...W(kpX - 0.4, kpZ), y: kpY };
     const gc = col({ type: 'box', x: gx, z: gz, hw: 0.2, hd: 2.1, top: H(gx, gz) + 1.6, noStand: true, seeThrough: true });
     digGate.push(pole, gc);
     R.digGateSpot = W(gx - 1.5, gz);
@@ -926,7 +1035,7 @@ export function buildDesert(scene, physics) {
     DB.build();
     R.dig = {
       ...W(DIG.x, DIG.z), bottomY, seals, cold, crack: { ...W(crx, crz), y: bottomY },
-      gate: { ...R.digGateSpot, isOpen: false, open() { this.isOpen = true; digGate[0].rotation.x = -1.4; digGate[0].position.y += 1.2; digGate[1].enabled = false; } },
+      gate: { ...R.digGateSpot, isOpen: false, open() { if (this.isOpen) return; this.isOpen = true; digGate[0].rotation.x = -1.4; digGate[0].position.y += 1.2; digGate[1].enabled = false; digGate.lamp(true); }, flash(ok) { digGate.lamp(ok); }, keypad: R.digKeypad },
       carvings: W(DIG.x + Math.cos(wallA) * 2.0, DIG.z + Math.sin(wallA) * 2.0),
       door: W(DIG.x + Math.cos(wallA) * 2.7, DIG.z + Math.sin(wallA) * 2.7),   // the temple's gate (enter here)
       reveal() { cover2.visible = false; },

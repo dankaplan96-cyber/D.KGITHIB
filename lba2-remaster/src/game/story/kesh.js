@@ -133,6 +133,8 @@ export class KeshLife extends ChapterBase {
     const g = this.game, f = this.f, id = npc.def.id, ph = this.phase();
     const dig = this.story.cur?.key === 'dig';
     const c = (lines, done) => { this.chain(lines.filter(Boolean), done); return true; };
+    // chapter 4: what Brosk and Sani say about the wind-pump comes first (story/dig.js keshLines, ADV-2)
+    const pump = () => (dig ? this.story.cur.keshLines?.(id) || [] : []);
     // one of a list, a different one each time
     const pick = (key) => { const a = t(key); return Array.isArray(a) ? a[(f['k_n_' + key] = ((f['k_n_' + key] ?? -1) + 1) % a.length)] : a; };
     const one = (spk, key) => { g.say('n_' + spk, [pick(key)], null, this.speaker(spk)); return true; };
@@ -149,9 +151,9 @@ export class KeshLife extends ChapterBase {
         }
         if (f.k_done) return one('dtrader', ph === 'after' ? 'k_brosk_after' : ph === 'steam' ? 'k_brosk_steamdone' : 'k_brosk_done');
         // sand in his dates: what to do next depends on how it stands up there
-        if (f.k_sand) return c([['dtrader', 'k_brosk_sand'], ['dtrader', this.dir === 0 ? 'k_brosk_sand_screen' : f.k_fit ? 'k_brosk_sand_fit' : 'k_brosk_sand_turn']], () => { f.k_ask = true; });
-        if (!f.k_ask) return c([dig ? ['dtrader', f.c4_pump ? 'c4_trader_2' : 'c4_trader_1'] : null, ['dtrader', 'k_brosk_i_' + ph], ['dtrader', 'k_brosk_2']], () => { f.k_ask = true; g.save(false); });
-        return c([['dtrader', 'k_brosk_wait']]);
+        if (f.k_sand) return c([...pump(), ['dtrader', 'k_brosk_sand'], ['dtrader', this.dir === 0 ? 'k_brosk_sand_screen' : f.k_fit ? 'k_brosk_sand_fit' : 'k_brosk_sand_turn']], () => { f.k_ask = true; });
+        if (!f.k_ask) return c([...pump(), ['dtrader', 'k_brosk_i_' + ph], ['dtrader', 'k_brosk_2']], () => { f.k_ask = true; g.save(false); });
+        return c([...pump(), ['dtrader', 'k_brosk_wait']]);
       }
       case 'weaver':
         if (f.k_done) return one('weaver', ph === 'after' ? 'k_lumi_after' : 'k_lumi_done');
@@ -165,7 +167,7 @@ export class KeshLife extends ChapterBase {
         return c([['weaver', f.k_fit ? 'k_lumi_fit' : 'k_lumi_wait']]);
       case 'dkid':
         if (f.k_done) return one('dkid', ph === 'steam' ? 'k_sani_steam' : 'k_sani_done');
-        return c([dig ? ['dkid', f.c4_pump ? 'c4_kid_2' : 'c4_kid_1'] : null, ['dkid', 'k_sani_wind']]);
+        return c([...pump(), ['dkid', 'k_sani_wind']]);
     }
     return false;
   }

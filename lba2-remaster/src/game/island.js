@@ -452,12 +452,7 @@ function buildHarbour(W0, root, r) {
     const wallGeo = extrude(s, Z1 - Z0 + 1.2, TILE.rubble);
     // shape is in XY (x outward→inward, y up), extruded along z
     B.add(wallGeo, tm('rubble', { color: '#d8d4dc' }), QX, 0, Z0 - 0.6);
-    // the bay's side walls (short returns) so the quay corners look built
-    for (const [zz, dir] of [[Z0 + 0.6, 1], [Z1 - 0.6, -1]]) {
-      const s2 = new THREE.Shape();
-      s2.moveTo(0, -3.6); s2.lineTo(1.4, -3.6); s2.lineTo(1.2, QH - 0.18); s2.lineTo(0, QH - 0.18); s2.lineTo(0, -3.6);
-      B.add(extrude(s2, 2.6, TILE.rubble), tm('rubble', { color: '#d8d4dc' }), QX - 2.6, 0, zz + (dir > 0 ? -1.4 : 0), 0, Math.PI / 2 * 0, 0);
-    }
+    // (no side returns: the quay's ends meet the rock shore; the old returns stood 1.2 m out in the water, OPEN-3 #02)
     // coping stones: individual bevelled blocks with slight jitter
     const cope = [];
     for (let z = Z0 - 0.4; z < Z1 + 0.4; z += 0.9) cope.push({ x: QX + 0.32, y: QH - 0.2, z: z + 0.45, ry: (r() - 0.5) * 0.03, sx: 1, sy: 1, sz: 1, color: new THREE.Color().setScalar(0.85 + r() * 0.2) });

@@ -85,7 +85,10 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 - **People:** Professor Ilka (Rabbibunny geologist, found the first crystals, sacked by the project for asking
   questions); Hesk (Grobo caravan driver, sand-yacht); Mother Tarra (village elder); project foreman Dallan (the
   guard who confiscated the plan on Zeelich, now running the post: follows rules, hard but not cruel).
-- **Does:** gets the oasis pump running again with Hesk (ball switches on the wind-pump, a sand-yacht ride);
+- **Does:** gets the oasis pump running again (ADV-2: Brosk blames the test bore's tremors, Sani hears from the roof
+  that two gears clack and one grinds; at the tower a gust shows which, the ball knocks it loose, and the pipe joint
+  the tremors shook apart is pushed home), then rides Hesk's sand-yacht; enters the dig's gate code himself (the
+  keypad's worn keys, the order from Ilka's notebook);
   sneaks into the fenced dig at the time of the sandstorm (cover moves with the wind); in the dig's lowest
   trench finds carvings older than FunFrock: a map of the shell with **vents**, places where the planet
   breathes out heat.

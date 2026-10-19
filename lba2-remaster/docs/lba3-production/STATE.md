@@ -211,7 +211,45 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - tests/deaths.mjs (160 checks): per type pose continuity, ground contact, removal, the bonus, listeners; 30/60/20 fps; mid-air; slope;
   stairs; walls; pause, dialogue, scene change, cast change, reload; a real auto-aimed ball kill. Evidence:
   docs/lba3-visual/evidence/ANIM-DEATH/. Open for the character artist: the long-coat guard's hem stays flared when he lies down
-  (his feet ~0.35 m off the ground) and the fat trooper's standing pose sinks 0.2 m into the ground.
+  (his feet ~0.35 m off the ground; CHAR-OPEN: the coat now lies on the legs; the lift is the back fall's keys, see below)
+  and the fat trooper's standing pose sinks 0.2 m into the ground.
+
+## Done after (CHAR-OPEN, block 6; status REVIEW)
+- OPEN-3's model leftovers, each fixed, re-captured and committed on its own (character artist; evidence and capture
+  scripts in docs/lba3-production/reviews/CHAR-OPEN/, QA.md "CHAR-OPEN", character-review §17):
+  - #11 Zoé's bun seated on the skull and carried by the head bone (it rode tail0..2 and floated in profile).
+  - #28a Twinsen's tunic: a body with flat shoulders and two wide sleeves of its own instead of LBA2's one-shell cape;
+    his arms and the opening's shrug (53.0) read, the windup/charge no longer tear the cloth. Blue tunic, ponytail,
+    medallion, robe kept; armSpread 0.3 unchanged.
+  - #28b Zoé's arms shaped and slim (were 6 → 4 cm tubes); armSpread 0.3 → 0.08 (they hang at her sides); opening.js's
+    three bends on her arms brought in by the same 0.22 (her hand at the tap and in the stream within 1 cm of before).
+  - #4 the guard's (vguard) coat stays on his legs when knocked out: half its skirt rides the thighs toward the hem
+    (cast_poly.py `coatLegs`), and rig.js's knock-out cloth lays the top panel and the sides on the legs.
+- Counts: Twinsen 2372 → 2572 triangles, Zoé 4434 → 4646, the guard 1954; one material each, no textures. Skeletons,
+  bone names, hierarchy, bind transforms and sockets unchanged.
+- Tests (own server, one browser at a time): opening ALL PASSED (24), deaths ALL PASSED (160), stability ALL PASSED (16), prologue to its end into chapter 1 (no errors), house ALL PASSED, jetpack ALL PASSED (48; Twinsen with the pack on the new tunic), combat ALL PASSED (59), zoe-resume ALL PASSED (5; Zoé as the player); reviews/CHAR-OPEN/tests.log.
+- Open:
+  - Independent visual review of CHAR-OPEN; a look by hand on a real GPU.
+  - For the animator: KO_HUMAN.back (rig.js) holds a lying body 0.36 m off the floor on its heels (legR −0.25 with kneeR
+    0.75 puts the right shin into the floor, so death.js rests it on the heel): a straighter right leg or a deeper hip
+    flexion would let the back lie on the floor. The shrug (rig.js doGesture) has no shoulder lift (no clavicle bone):
+    armOut + elbows + head tilt only; it now reads, a shoulder raise would be the animator's addition.
+  - The fat trooper's standing pose sinking 0.2 m (ANIM-DEATH) was not in this block.
+
+## Done after (ADV-2; status REVIEW)
+- Chapter 4's first half (docs/lba3-team/ADVENTURE_DESIGN.md "ADV-2"): the wind-pump's fault is found, not told. Brosk blames
+  the test bore's tremors; Sani hears two gears clack and one grind; at the tower each gust (3.4 s, Listen brings one at once)
+  shows the jammed gear holding, shuddering and spitting sand while the sound ones rock. The ball frees it (a sound gear only
+  rings; Sani's hint grows), then the water sprays from a pipe joint the tremors shook apart: push it home. Any order (the
+  pump before Tarra asks). The dig's gate code is entered by the player on the keypad (1, 4, 7 worn; the notebook's order).
+- Layout (desert.js, chapter 4's pump only): the gears are a gearbox across the tower's west face at 1.7 m (a thrown ball
+  reaches ~2 m there: the old 3.6/5 m gears were out of reach), the tank moved south-east, one palm in the line left out.
+- Small changes outside the owned files: story/kesh.js (Brosk and Sani take the pump lines from dig.js keshLines), engine/
+  audio.js (two sounds: gearClack, grind), tests/playthrough/07-dig.mjs (the pump and keypad steps).
+- Saves: same format; c4_gear1 keeps meaning the jammed gear; new flags c4_joint, c4_gearMiss, c4_brosk, c4_sani,
+  c4_listened, c4_worn, c4_codeTries. Old format-3 saves from REV-TY-4 load and complete (tests/chapter4.mjs).
+- Open: a first-time player's read of the gust and the keypad; sounds by ear; an independent review. Next adaptation: the
+  research post's storm wait (ADVENTURE_DESIGN.md).
 
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

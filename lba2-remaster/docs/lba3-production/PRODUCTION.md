@@ -110,7 +110,7 @@ benchmarks only on a quiet machine.
 
 | Block | Agents | Owned paths (no overlap inside a block) |
 |---|---|---|
-| 4 (running) | VOICE-1 (voices), ANIM-DEATH (enemy deaths), BUG-WALL (camera in a wall), SRC-2 (Baldino as a Grobo, Dino-Fly pose); WORLD-SHAPE finishing | voice.js · enemies/guards/guarddog/combat death code · camera.js/occlude.js · characters/assets/poly/dinofly · terrain/region layouts |
-| 5 | runtime-performance-engineer (PERF-2: the laptop's street at 542 calls / 26 ms submit, doors not fully drawn) + opening-cinematic-animator (OPEN-3: Zoé through the fence, character graphics in the opening, leftovers) | renderer/bench/shadowcull/merge/kit + town/island merges · story/opening.js, text/opening.js, cinematic.js |
-| 6 | frame-pacing-hardware-engineer (frame delivery, presets, stalls on the candidate from block 5) + ADV-2 (chapter 4's first half) | main loop/presets/settings · story/dig.js, desert.js, text/ch4.js |
+| 4 (done) | VOICE-1 (voices), ANIM-DEATH (enemy deaths), BUG-WALL (camera in a wall), SRC-2 (Baldino as a Grobo, Dino-Fly pose); WORLD-SHAPE finishing | voice.js · enemies/guards/guarddog/combat death code · camera.js/occlude.js · characters/assets/poly/dinofly · terrain/region layouts |
+| 5 (done: PERF-2 ea9f446, OPEN-3 9750466) | runtime-performance-engineer (PERF-2: the laptop's street at 542 calls / 26 ms submit, doors not fully drawn) + opening-cinematic-animator (OPEN-3: Zoé through the fence, character graphics in the opening, leftovers) | renderer/bench/shadowcull/merge/kit + town/island merges · story/opening.js, text/opening.js, cinematic.js |
+| 6 (running) | frame-pacing-hardware-engineer (FRAME-1: frame delivery, presets, stalls on the candidate from block 5, BUG-WALL-T) + ADV-2 (chapter 4's first half) + character-artist (CHAR-OPEN: OPEN-3's model leftovers) | main loop/presets/settings/renderer timing · story/dig.js, desert.js, text/ch4.js · characters poly/json, rig.js armSpread, guard model |
 | 7 | lba3-final-release-auditor on a frozen candidate | read-only + reports |
