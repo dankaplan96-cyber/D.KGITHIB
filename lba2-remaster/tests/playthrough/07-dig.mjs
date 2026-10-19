@@ -1,18 +1,20 @@
-// Chapter 4 (The Dig, Desert Island): Mother Tarra and the wind-pump's three gears (ball), Hesk and the rope,
-// the sand-yacht to Ilka's camp, the notebook from the research post in a sandstorm, the dig's gate, down the
-// terraces, the three seals (ball), into the Temple of Bù, the great carving.
+// Chapter 4 (The Dig, Desert Island): Mother Tarra and the wind-pump (ADV-2: the jammed gear by ball from the
+// west, the shaken pipe joint pushed home), Hesk and the rope, the sand-yacht to Ilka's camp, the notebook from the
+// research post in a sandstorm, the dig's gate (the keypad: 4 · 1 · 7 from the notebook), down the terraces, the
+// three warm seals (ball), into the Temple of Bù, the great carving.
 export const steps = [
   ['continue (Desert Island)', () => { P.settle(); return { room: game.room?.id, chapter: game.flags.chapterKey }; }],
   ['Mother Tarra', () => ({ ...P.talk('tarra', { run: true }), task: game.flags.c4_pumpTask, fail: game.flags.c4_pumpTask ? null : 'tarra' })],
-  ['the pump\'s three gears (ball)', () => {
+  ['the pump\'s jammed gear (ball, from the west where its face looks)', () => {
     const G = game, out = [];
     for (const tg of G.room.ballTargets.filter((t) => t.gear != null)) {
-      for (let k = 0; k < 6 && !tg.done; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * 4, tg.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 60 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
+      for (let k = 0; k < 6 && !tg.done; k++) { const r = 4 + (k % 3) * 0.6, off = [0, 0.4, -0.3][k % 3]; P.go(tg.x - r, tg.z + off, { tol: 0.4, run: true, maxT: 60 }); P.settle(); P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); }
       out.push(tg.done);
     }
-    P.wait(1.5); P.settle();
-    return { gears: out, pump: G.flags.c4_pump, fail: G.flags.c4_pump ? null : 'pump' };
+    P.wait(1); P.settle();
+    return { gears: out, state: G.rooms.desert.pump.state, fail: G.flags.c4_gear1 ? null : 'gear' };
   }],
+  ['the pipe joint pushed home', () => { const J = game.rooms.desert.pump.joint; const r = P.use(J.x, J.z, { kind: 'c4joint', run: true }); P.wait(1.5); P.settle(); return { ...r, pump: game.flags.c4_pump, fail: game.flags.c4_pump ? null : 'pump' }; }],
   ['Tarra trusts him', () => ({ ...P.talk('tarra', { run: true }), trust: game.flags.c4_trust, fail: game.flags.c4_trust ? null : 'trust' })],
   ['Hesk', () => ({ ...P.talk('hesk', { run: true }), ask: game.flags.c4_heskAsk })],
   ['the rope from the pier', () => { const R = game.rooms.desert.rope; const r = P.use(R.x, R.z, { run: true }); return { ...r, rope: game.flags.c4_rope, fail: game.flags.c4_rope ? null : 'rope' }; }],
@@ -25,7 +27,7 @@ export const steps = [
     const r = P.use(Post.desk.x, Post.desk.z, { near: 1.2 }); P.wait(1); P.settle();
     return { waited: t, stormy: G.story.cur.stormy, ...r, notebook: G.flags.c4_notebook, fail: G.flags.c4_notebook ? null : 'notebook' };
   }],
-  ['the dig\'s gate', () => { const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { run: true }); P.wait(1); P.settle(); return { ...r, open: game.flags.c4_digOpen, fail: game.flags.c4_digOpen ? null : 'gate' }; }],
+  ['the dig\'s gate (the keypad)', () => { const g = game.rooms.desert.dig.gate; const r = P.use(g.x, g.z, { run: true, kind: 'c4gate' }); const m = P.menuPick(1); P.wait(1); P.settle(); return { ...r, menu: m.r, open: game.flags.c4_digOpen, fail: game.flags.c4_digOpen ? null : 'gate' }; }],
   ['down to the bottom', () => { const D = game.rooms.desert.dig; let r; for (let k = 0; k < 4 && Math.abs(game.hero.pos.y - D.bottomY) >= 0.8; k++) { r = P.go(D.x + 1.5, D.z - 1.0, { tol: 1.0, maxT: 120 }); P.settle(); }   /* (a line on the way down: settle it, walk on) */ return { r: r.r, y: +game.hero.pos.y.toFixed(2), bottom: D.bottomY, fail: Math.abs(game.hero.pos.y - D.bottomY) < 0.8 ? null : 'not at the bottom' }; }],
   // (ADV-1: five discs, the three warm ones are the `seal` targets; a stray ball on a cold disc shuts the open ones,
   // so passes repeat until the door opens, as a player would start again)

@@ -3,7 +3,7 @@ import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
   n_hesk: 'Hesk', n_tarra: 'Mother Tarra', n_ilka: 'Professor Ilka', n_dallan: 'Dallan', n_dkid: 'Sani', n_dtrader: 'Brosk', n_weaver: 'Lumi',
-  p_rope: 'Pick Up', p_desk: 'Search', p_code: 'Enter Code', p_carving: 'Inspect', p_ride: 'Ride',
+  p_rope: 'Pick Up', p_desk: 'Search', p_code: 'Enter Code', p_carving: 'Inspect', p_ride: 'Ride', p_listen: 'Listen', p_push: 'Push',
 
   // arrival
   c4_arrive: 'Back on Twinsun, Doran trades the ship for the project\'s ferry. Two days south of Citadel, it slides into the shallows of Desert Island.',
@@ -12,23 +12,38 @@ Object.assign(STR.en, {
 
   // the village
   c4_kid_1: "You came on the project's ferry. Mum says project people take the water and leave the bill.",
+  c4_kid_pump: "I hear the pump from my roof. Every gust it goes clack, clack, grrrk. Two gears clack. One grinds.",
+  c4_kid_pump2: "Not a clacky one! Watch them when the wind pulls. The grinding one doesn't turn. It spits sand.",
+  c4_kid_leak: 'Now it goes thump, thump, and then splash. On the ground, not in the oasis.',
   c4_kid_2: 'The pump is working! I can hear it from my roof!',
   c4_trader_1: "Water costs more than anything I sell. The pump seized when the project's test bore started shaking the ground.",
-  c4_trader_2: 'Water in the oasis, customers in the square. Funny how that works.',
+  c4_trader_1b: "Kick it, hit it, it won't help. It's the ground. Tell the project to stop shaking it.",
+  c4_trader_leak: "Water all over the sand? The shaking knocked that pipe loose too. I'd bet my dates on it.",
+  c4_trader_2: 'Water in the oasis, customers in the square. And who said it was the shaking? I said it was the shaking.',
   c4_weaver_1: "Mother Tarra won't talk to anyone who comes off that ferry. Can't blame her.",
   c4_weaver_2: "You fixed the pump? Then you're welcome at my loom any time. Mind the threads.",
   c4_tarra_1: 'Another one from the project. We have nothing left for you to drill.',
   c4_tw_tarra1: "I'm not with the project. I'm looking for a professor who found crystals here.",
   c4_tarra_2: 'Everyone says they are not with the project. Show me. The wind-pump has been stuck for a month and the oasis is drying. Start it, and we will talk.',
-  c4_tarra_wait: 'The pump, stranger. Three gears up the tower, all seized with sand.',
+  c4_tarra_2b: 'Brosk says the ground broke it. Sani says the pump talks. Children hear everything.',
+  c4_tarra_wait: 'The pump, stranger. Ask Brosk at his stall, or Sani. Or listen to it yourself.',
+  c4_tarra_leak: 'It turns, and it spills our water on the sand. Finish it, stranger.',
+  c4_tarra_early: 'You are the one who started our pump? Before anyone asked you?',
   c4_tarra_3: 'Water. Real water, in the oasis. All right. You are not with the project.',
   c4_tarra_4: 'The one you want is Ilka. She dug up the glowing stones, told the project they were dangerous, and they threw her out. She lives in a tent under the north mesa.',
   c4_tarra_5: 'Hesk can take you on his sand-yacht. He owes me a favour. Several.',
   c4_tarra_idle: 'The children are swimming in the oasis. I had forgotten that sound.',
 
-  c4_pump_hint: '(The gears are seized. A good hit with the ball should knock the sand out of them.)',
-  c4_toast_gear: 'Gear freed ({n}/3)',
-  c4_pump_runs: 'The wheel turns, the rod thumps, and water spills into the oasis.',
+  // the wind-pump (ADV-2: the fault is found by listening and watching a gust)
+  c4_listen_1: 'The wheel tugs at every gust and stops dead. Clack, clack... and something grinds.',
+  c4_listen_sani: 'Clack, clack, grrrk. Just as Sani said. Which one?',
+  c4_listen_miss: 'That one rang and swung back. The grinding comes from another one.',
+  c4_gear_ok: 'Clang. It swings free and settles back. Not that one.',
+  c4_toast_gearok: 'It swings free',
+  c4_toast_gear: 'Gear freed',
+  c4_gear_free: 'Sand bursts out of its teeth. The wheel swings into the wind, and the whole train turns.',
+  c4_leak: "The rod thumps... and the water sprays out of a pipe joint before it reaches the oasis.",
+  c4_pump_runs: 'The collar slides home. The spray stops, and water spills into the oasis.',
 
   // Hesk and the sand-yacht
   c4_hesk_1: "You want a ride? My yacht's mast stay snapped in the last storm. No rope, no sail, no ride.",
@@ -65,7 +80,11 @@ Object.assign(STR.en, {
   c4_dallan_note: '(A memo on the desk: "Test bore pressure rising. Keep drilling. Signed: Dallan, Foreman.")',
 
   // the dig
-  c4_gate_locked: 'A keypad on the barrier. I need the code.',
+  c4_gate_locked: "A keypad on the barrier. The 1, 4 and 7 are worn shiny. Without the code I'd only be guessing the order.",
+  c4_keypad: 'Keypad: 1, 4 and 7 are worn',
+  c4_code_147: '1 · 4 · 7', c4_code_417: '4 · 1 · 7', c4_code_741: '7 · 4 · 1',
+  c4_code_wrong: "A buzz, and a red light. Wrong order. Ilka's notebook has it.",
+  c4_toast_code: 'Wrong code',
   c4_gate_open: 'Four, one, seven. The barrier lifts.',
   c4_dig_in: "Three terraces down to the Temple of Bù's gate. And something is crawling around on them.",
   c4_crack: 'Warm air from a crack in the wall, and crystals all round it. Just as Ilka said: they grow where the heat gets out.',
@@ -94,7 +113,9 @@ Object.assign(STR.en, {
 
   // objectives and journal
   c4_obj_find: 'Find the professor who found the crystals',
-  c4_obj_pump: 'Restart the wind-pump ({n}/3)',
+  c4_obj_pump: 'Restart the wind-pump',
+  c4_sub_grind: 'Find the gear that grinds',
+  c4_sub_leak: 'Stop the leak in the pipe',
   c4_obj_tarra: 'Talk to Mother Tarra',
   c4_obj_ilka: "Find Ilka's camp under the north mesa",
   c4_sub_hesk: 'Hesk can take you on his sand-yacht',
@@ -107,9 +128,15 @@ Object.assign(STR.en, {
   c4_sub_warm: 'A cold disc shuts the others',
   c4_obj_carving: 'Read the great carving in the temple',
   c4_j_arrive: 'Baldino sent me to Desert Island to learn what the shell is.',
+  c4_j_brosk: 'Brosk blames the test bore: the pump seized when the ground began to shake.',
+  c4_j_sani: 'Sani hears the pump from the roof: at each gust two gears clack and one grinds.',
+  c4_j_gearok: 'A sound gear rings and swings back when the ball strikes it.',
+  c4_j_leak: 'With the gear free, water sprays from a loose pipe joint short of the oasis.',
   c4_j_pump: "I restarted Kesh's wind-pump. Mother Tarra told me about Ilka.",
   c4_j_ilka: 'Ilka: the crystals grow where heat leaks from deep down. She thinks the old carvings at the dig show what lies under the ground.',
-  c4_j_notebook: "I took Ilka's notebook from the research post in a sandstorm.",
+  c4_j_worn: "The dig's keypad: the 1, 4 and 7 are worn shiny.",
+  c4_j_notebook: "I took Ilka's notebook from the research post in a sandstorm. The dig's gate code is on its last page.",
+  c4_j_code: 'The keypad buzzes at a wrong order.',
   c4_j_crack: 'At the dig, crystals crust a crack where warm air comes out.',
   c4_j_discs: "Five stone discs stand round the temple's door, under a carving of five puffing vents.",
   c4_j_cold: 'Striking a cold disc shuts the open ones again.',
