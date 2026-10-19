@@ -142,7 +142,9 @@ export function playOpening(story) {
     shot(23.8, 29.0, P(HV(-80.9, 3.85, 0.3), HV(-83.8, 2.8, -3.9), 44), P(HV(-81.1, 3.8, 0.1), HV(-83.8, 2.75, -4.0), 44)),
     // 5 — home: the whole family at their own things; over Arthur's shoulder: "Dad! The mast fits!"
     shot(29.0, 31.2, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.6, -0.55), 44), P(hv(4.2, 2.68, 4.2), hv(0.15, 0.6, -0.58), 44)),
-    shot(31.2, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
+    // (Arthur's face: a three-quarter close-up as he shows the mast; then over his shoulder for his father's answer)
+    shot(31.2, 33.1, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.45, 1.2, 2.33), hv(2.0, 0.82, 2.05), 42)),
+    shot(33.1, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
     // 6 — Zoé at the counter, then the tap
     shot(35.0, 41.0, P(hv(0.15, 1.8, -2.85), hv(-2.2, 1.55, -2.75), 46), P(hv(0.05, 1.8, -2.87), hv(-2.25, 1.55, -2.77), 46)),
     shot(41.0, 48.0, P(hv(-0.05, 1.8, -2.9), hv(-2.3, 1.5, -2.95), 44), P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43)),
