@@ -141,7 +141,14 @@ export function playOpening(story) {
   const shots = [
     // 1 — Citadel Island from the air, then down over the water to the harbour (the caption: where, when)
     shot(0, 9.0, P(HV(-34, 26, 58), HV(-2, 6, -38), 50), P(HV(-50, 17, 38), HV(-30, 4, -42), 50)),
-    shot(9.0, 13.0, P(HV(-50, 17, 38), HV(-30, 4, -42), 50), P(HV(-74.2, 5.6, 5.9), HV(-83.4, 2.0, -2.9), 44)),
+    // (it settles high over the water by the pier, the lift, the barge and the ferry in one view: it ended low over the
+    // quay's roofs, still diving)
+    // ...and the descent arcs over the quay's roofs (a straight line skimmed the coal shed's)
+    shot(9.0, 13.0, () => {
+      const k = sm((cine.t - 9.0) / 4.0), A = HV(-50, 17, 38), B = HV(-72.5, 8.5, 4.0);
+      const pos = A.clone().lerp(B, k); pos.y += 3.5 * Math.sin(k * Math.PI) * (1 - k * 0.5);
+      return P(pos, HV(-30, 4, -42).lerp(HV(-83.4, 2.2, -3.2), k), 50 - 6 * k);
+    }, null),
     // 2 — the project's lift: the crate comes up off the barge; a resident asks the worker about the heat
     shot(13.0, 19.6, P(HV(-79.7, 3.3, -1.75), HV(-85.1, 2.25, -3.05), 44), P(HV(-79.9, 3.2, -1.85), HV(-85.1, 2.4, -3.1), 44)),
     // 3 — the hum: the drill turning in FunFrock's old fortress, up on the plateau, the town beyond
