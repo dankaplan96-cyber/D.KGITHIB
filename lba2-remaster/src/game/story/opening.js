@@ -104,6 +104,7 @@ export function playOpening(story) {
   // handoff's camera rises into the game's view (83.6–84.0), and finish() removes them.
   const setMats = [];
   const flats = new THREE.Group(); flats.name = 'openingSet';
+  const caveFlat = new THREE.Group(); caveFlat.name = 'openingSetCave';
   {
     const own = (m) => { const c = m.clone(); setMats.push(c); return c; };
     const ceil = own(new THREE.MeshStandardMaterial({ color: '#4a3424', roughness: 0.95, side: THREE.DoubleSide }));
@@ -117,6 +118,11 @@ export function playOpening(story) {
     k.add(new THREE.BoxGeometry(0.07, 0.07, 15.0), cap, 4.47, 1.05, 4.0);           // and rail
     k.flush();
     flats.traverse((o) => { if (o.isMesh) o.castShadow = false; });
+    // the well's cave gets its east wall too (the vein's chamber is at that end: x 4.5..10.5, walls 4 m, 0.5 thick)
+    const kc = new Kit(caveFlat); kc.recolor = false;
+    kc.add(new THREE.BoxGeometry(0.5, 4.0, 14.5), own(MAT.stone('slate', 2)), 10.75, 2.0, 0);
+    kc.flush();
+    caveFlat.traverse((o) => { if (o.isMesh) o.castShadow = false; });
   }
   const setFade = (k) => {
     for (const m of setMats) { m.transparent = k < 1; m.opacity = k; m.depthWrite = k > 0.5; m.needsUpdate = true; }
@@ -166,7 +172,9 @@ export function playOpening(story) {
     shot(58.0, 60.1, P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43), P(hv(-0.3, 1.8, -2.93), hv(-2.3, 1.48, -2.95), 42)),
     shot(60.1, 62.4, P(hv(-1.35, 1.45, -3.0), hv(-2.3, 0.98, -3.18), 38), P(hv(-1.4, 1.43, -3.0), hv(-2.3, 0.98, -3.18), 35)),
     // 10 — where the warmth comes from: under the well, something in the rock glows with the hum
-    shot(62.4, 66.5, P(wv(2.0, 8.0, 5.0), wv(6.5, 0.8, -4.5), 46), P(wv(3.5, 6.5, 2.5), wv(7.0, 0.9, -4.8), 44)),
+    // (inside the last chamber, low, facing the vein: the glowing rock fills the frame and pulses with the hum, the
+    // pool in front; it was seen from high above through the barrier's crystals)
+    shot(62.4, 66.5, P(wv(7.7, 1.55, 0.6), wv(8.0, 1.9, -6.2), 50), P(wv(7.85, 1.6, -0.8), wv(8.0, 1.95, -6.2), 48)),
     // 11 — the decision; Zoé goes out of the room toward the hall
     shot(66.5, 72.2, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.8, 2.05, 2.7), hv(-0.45, 1.02, -1.15), 47)),
     // (then from the east wall: she comes toward us past him saying "Take your magic ball." — from the first camera
@@ -540,6 +548,7 @@ export function playOpening(story) {
       hold(BT.mast, ar, [0, -0.03, 0.01], [Math.PI, 0, 0]);
       zoe.setPresent(true);
       R.group.add(flats); temps.push(flats); setFade(1);
+      WR.group.add(caveFlat); temps.push(caveFlat);
       put(worker, wkSpot.x, wkSpot.z, angleTo({ pos: wkSpot }, column), 'idle');
       put(resident, resSpot.x, resSpot.z, Math.atan2(wkSpot.x - resSpot.x, wkSpot.z - resSpot.z), 'idle');
       L.pose(0); L.shake(0); W.boatSurge = 0; WR.vein.power = 0;
@@ -555,7 +564,7 @@ export function playOpening(story) {
     finish(skipped) {
       for (const h of loops) h.stop(skipped ? 0.2 : 0.8);
       for (const o of temps) o.parent?.remove(o);
-      flats.traverse((o) => o.geometry?.dispose()); for (const m of setMats) m.dispose();
+      for (const g2 of [flats, caveFlat]) g2.traverse((o) => o.geometry?.dispose()); for (const m of setMats) m.dispose();
       for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; }
       if (skipped) { g.audio.endCue(); }
       document.querySelector('#fade').classList.remove('quick');
