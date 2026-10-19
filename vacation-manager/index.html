@@ -459,10 +459,12 @@ async function deriveHash(pw,salt,iter){const k=await crypto.subtle.importKey('r
 async function passwordRecord(pw){const salt=randomSalt();return{salt,hash:await deriveHash(pw,salt,PBKDF2_ITER),iterations:PBKDF2_ITER}}
 function safeEqual(a,b){if(a.length!==b.length)return false;let r=0;for(let i=0;i<a.length;i++)r|=a.charCodeAt(i)^b.charCodeAt(i);return r===0}
 async function verifyRecord(rec,pw){if(!rec?.salt||!rec?.hash)return false;return safeEqual(await deriveHash(pw,rec.salt,rec.iterations||120000),rec.hash)}
-function pwProblem(pw){if(!pw||pw.length<8)return 'הסיסמה חייבת להכיל לפחות 8 תווים';if(!/[0-9]/.test(pw)||!/[^0-9]/.test(pw))return 'הסיסמה חייבת לכלול גם ספרות וגם אותיות';return ''}
+function pwProblem(pw){if(pw===INITIAL_PASSWORD)return 'יש לבחור סיסמה שונה מהסיסמה הראשונית';if(!pw||pw.length<8)return 'הסיסמה חייבת להכיל לפחות 8 תווים';if(!/[0-9]/.test(pw)||!/[^0-9]/.test(pw))return 'הסיסמה חייבת לכלול גם ספרות וגם אותיות';return ''}
 function pwScore(pw){let s=0;if(pw.length>=8)s++;if(pw.length>=12)s++;if(/[0-9]/.test(pw)&&/[a-zA-Zא-ת]/.test(pw))s++;if(/[A-Z]/.test(pw)&&/[a-z]/.test(pw))s++;if(/[^a-zA-Z0-9א-ת]/.test(pw))s++;return Math.min(4,s)}
 function randomChars(n,alphabet){const a=new Uint32Array(n);crypto.getRandomValues(a);return [...a].map(x=>alphabet[x%alphabet.length]).join('')}
-const tempPassword=()=>'Hofesh-'+randomChars(6,'23456789abcdefghjkmnpqrstuvwxyz');
+/** סיסמה ראשונית אחידה לכל משתמש חדש / אחרי איפוס. בכניסה הראשונה חובה להחליף אותה בסיסמה אישית. */
+const INITIAL_PASSWORD='1234567';
+const tempPassword=()=>INITIAL_PASSWORD;
 const recoveryCode=()=>randomChars(16,'ABCDEFGHJKLMNPQRSTUVWXYZ23456789').match(/.{4}/g).join('-');
 const normCode=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
 
@@ -720,6 +722,7 @@ function loginFormHTML(){
    <div class="merr hidden" id="loginErr"></div>
    <button class="btn lg block" type="submit">כניסה</button>
    <div style="display:flex;justify-content:space-between;margin-top:10px"><button type="button" class="linkbtn" data-act="forgotPw">שכחתי סיסמה</button><span class="small muted">ננעל אוטומטית לאחר ${S.data.settings.sessionMinutes} דק׳ ללא פעילות</span></div>
+   <div class="notice small" style="margin-top:10px">כניסה ראשונה? הסיסמה הראשונית היא <b dir="ltr">${INITIAL_PASSWORD}</b>. מיד אחרי הכניסה תתבקש/י לבחור סיסמה אישית.</div>
   </form>`;
 }
 ON.loginFilter=el=>{const q=el.value.trim();const sel=$('#loginUid');let first=null;for(const o of sel.options){const show=!q||o.textContent.includes(q);o.hidden=!show;if(show&&!first)first=o}if(first)sel.value=first.value};
@@ -763,7 +766,7 @@ function logout(msg){S.me=null;closeModal(true);if(S.page!=='calendar'&&S.page!=
 function checkIdle(){if(!S.me||!S.data)return;if(Date.now()-S.lastActivity>S.data.settings.sessionMinutes*60e3)logout('נותקת אוטומטית לאחר חוסר פעילות (הגנה על עמדה משותפת).')}
 async function forcePasswordChange(){
   await formModal({title:'הגדרת סיסמה אישית',locked:true,cancel:false,ok:'שמירת סיסמה',
-    body:`<div class="notice warn" style="margin-bottom:12px">זו כניסה ראשונה או שהסיסמה אופסה. יש לבחור סיסמה אישית חדשה לפני ההמשך.</div>
+    body:`<div class="notice warn" style="margin-bottom:12px">נכנסת עם הסיסמה הראשונית (${INITIAL_PASSWORD}). יש לבחור עכשיו סיסמה אישית חדשה לפני ההמשך.</div>
     <div class="field"><label>סיסמה חדשה</label>${pwInput('pw',{auto:'new-password',meter:true,placeholder:'לפחות 8 תווים, אותיות וספרות'})}</div>
     <div class="field"><label>אימות סיסמה</label>${pwInput('pw2',{auto:'new-password'})}</div>`,
     onSubmit:async v=>{const p=pwProblem(v.pw);if(p)throw new Error(p);if(v.pw!==v.pw2)throw new Error('הסיסמאות אינן תואמות');const rec=await passwordRecord(v.pw);await mutate((st,a)=>{Object.assign(a,rec);a.mustChange=false;a.passwordChangedAt=nowISO();audit(st,a,'password_set')})}});
@@ -779,7 +782,7 @@ ACT.forgotPw=async()=>{
   const admins=S.data.users.filter(u=>u.role==='admin'&&u.active);
   const hasCode=!!S.data.settings.recovery;
   const r=await formModal({title:'שכחתי סיסמה',ok:'איפוס סיסמת מנהל/ת',
-    body:`<div class="notice" style="margin-bottom:12px"><b>עובד/ת?</b> פנה/י למנהל/ת המערכת – הוא/היא יאפס/תאפס לך סיסמה זמנית.</div>
+    body:`<div class="notice" style="margin-bottom:12px"><b>עובד/ת?</b> פנה/י למנהל/ת המערכת לאיפוס. אחרי האיפוס הסיסמה חוזרת ל-<b dir="ltr">${INITIAL_PASSWORD}</b>, ובכניסה תתבקש/י לבחור סיסמה חדשה.</div>
     ${hasCode?`<p class="small">איפוס סיסמת <b>מנהל/ת מערכת</b> באמצעות קוד השחזור שנוצר בעת הקמת המערכת:</p>
     <div class="field"><label>חשבון מנהל/ת</label><select name="uid">${admins.map(a=>`<option value="${esc(a.id)}">${esc(a.displayName)}</option>`).join('')}</select></div>
     <div class="field"><label>קוד שחזור</label><input name="code" dir="ltr" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off"></div>
@@ -1175,13 +1178,13 @@ PAGES.employees=()=>{
     <td class="small">${u?(u.mustChange?'<span class="badge st-pending">ממתין לסיסמה אישית</span>':'<span class="badge st-approved">פעיל</span>'):'<span class="muted">אין משתמש</span>'}${u?.manager?' <span class="badge st-cancelreq">מנהל/ת</span>':''}</td>
     <td class="small muted">${u?.lastLogin?fmtDT(u.lastLogin):'—'}</td>
     <td><div class="actions"><button class="btn sm outline" data-act="editEmp" data-id="${e.id}">עריכה</button><button class="btn sm outline" data-act="resetPw" data-id="${e.id}">איפוס סיסמה</button><button class="btn sm ${e.active?'gray':'green'}" data-act="toggleEmp" data-id="${e.id}">${e.active?'השבתה':'הפעלה'}</button><button class="btn sm red" data-act="deleteEmp" data-id="${e.id}" title="מחיקה">🗑</button></div></td></tr>`}).join('');
-  return head('עובדים והרשאות',`${es.filter(e=>e.active).length} עובדים פעילים · לכל עובד/ת נוצר משתמש עם סיסמה זמנית שיש להחליף בכניסה הראשונה`,`<button class="btn green" data-act="addEmp">➕ עובד/ת חדש/ה</button><button class="btn outline" data-act="importEmps">📥 ייבוא רשימה</button>`)+
+  return head('עובדים והרשאות',`${es.filter(e=>e.active).length} עובדים פעילים · סיסמה ראשונית לכל עובד/ת חדש/ה: <b dir="ltr">${INITIAL_PASSWORD}</b> – בכניסה הראשונה מחליפים לסיסמה אישית`,`<button class="btn green" data-act="addEmp">➕ עובד/ת חדש/ה</button><button class="btn outline" data-act="importEmps">📥 ייבוא רשימה</button>`)+
   `<div class="card">${es.length?`<div class="table-wrap"><table class="table"><thead><tr><th>שם</th><th>קבוצה</th><th>מכסה ${y}</th><th>יתרה</th><th>משתמש</th><th>כניסה אחרונה</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="empty">עדיין אין עובדים. התחל/י ב<b>ייבוא רשימה</b> (הדבקה מאקסל) או בהוספה ידנית.</div>`}</div>
   <div class="card"><h3>חשבונות מנהל/ת מערכת <button class="btn sm outline" data-act="addAdmin">➕ מנהל/ת נוסף/ת</button></h3><div class="list">${admins.map(a=>`<div class="row"><div><div class="row-title">${esc(a.displayName)}${a.id===S.me.id?' (את/ה)':''}</div><div class="row-sub">כניסה אחרונה: ${a.lastLogin?fmtDT(a.lastLogin):'—'}${a.active?'':' · מושבת'}</div></div>${isSysAdmin()&&a.id!==S.me.id?`<div class="actions" style="display:flex;gap:6px"><button class="btn sm outline" data-act="resetAdminPw" data-id="${esc(a.id)}">איפוס סיסמה</button><button class="btn sm ${a.active?'gray':'green'}" data-act="toggleAdmin" data-id="${esc(a.id)}">${a.active?'השבתה':'הפעלה'}</button></div>`:''}</div>`).join('')}</div>
   <div class="small muted" style="margin-top:8px">ניתן גם לתת לעובד/ת הרשאת <b>מנהל/ת</b> (אישור בקשות וניהול) דרך "עריכה" – כך הוא/היא יכול/ה גם להגיש בקשות וגם לאשר בקשות של אחרים.</div></div>`;
 };
 function credentialsModal(list,title='פרטי כניסה'){
-  openModal(`<h3>${title}</h3><div class="notice warn" style="margin-bottom:10px">הסיסמאות הזמניות מוצגות <b>פעם אחת בלבד</b>. מסור/מסרי אותן לעובדים – בכניסה הראשונה יתבקשו לבחור סיסמה אישית.</div>
+  openModal(`<h3>${title}</h3><div class="notice warn" style="margin-bottom:10px">הסיסמה הראשונית של כולם היא <b dir="ltr">${INITIAL_PASSWORD}</b>. בכניסה הראשונה כל אחד/ת יתבקש/תתבקש לבחור סיסמה אישית חדשה.</div>
    <div class="table-wrap" style="max-height:340px"><table class="table"><thead><tr><th>שם</th><th>קבוצה</th><th>סיסמה זמנית</th></tr></thead><tbody>${list.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.group||'')}</td><td dir="ltr" style="font-family:Consolas,monospace;text-align:right">${esc(x.password)}</td></tr>`).join('')}</tbody></table></div>
    <div class="modal-actions"><button class="btn" data-act="dlCreds">⬇ הורדה (CSV)</button><button class="btn outline" data-act="printCreds">🖨️ הדפסת פתקים</button><button class="btn outline" data-act="closeModal">סגירה</button></div>`,{wide:true});
   ACT.dlCreds=()=>downloadFile(`פרטי_כניסה_${todayISO()}.csv`,toCSV([['שם','קבוצה','סיסמה זמנית'],...list.map(x=>[x.name,x.group,x.password])]));
@@ -1254,7 +1257,7 @@ ACT.editEmp=async d=>{
 };
 ACT.resetPw=async d=>{
   const e=empById(Number(d.id));if(!e)return;
-  if(!await confirmBox(`לאפס את הסיסמה של <b>${esc(e.name)}</b>? תיווצר סיסמה זמנית חדשה.`,{ok:'איפוס',kind:'amber'}))return;
+  if(!await confirmBox(`לאפס את הסיסמה של <b>${esc(e.name)}</b>? הסיסמה תחזור ל-<b dir="ltr">${INITIAL_PASSWORD}</b>, ובכניסה הבאה יתבקש/תתבקש לבחור סיסמה חדשה.`,{ok:'איפוס',kind:'amber'}))return;
   const password=tempPassword(),rec=await passwordRecord(password);
   await mutate((st,a)=>{
     if(!(a.role==='admin'||a.manager))throw new Error('נדרשת הרשאת מנהל/ת');
@@ -1280,7 +1283,7 @@ ACT.deleteEmp=async d=>{
 ACT.addAdmin=async()=>{
   if(!isSysAdmin()){toast('רק מנהל/ת מערכת יכול/ה להוסיף מנהלים','err');return}
   let cred=null;
-  const v=await formModal({title:'מנהל/ת מערכת נוסף/ת',ok:'יצירה',body:`<div class="field"><label>שם</label><input name="name" required></div><p class="small muted">תיווצר סיסמה זמנית שיש להחליף בכניסה הראשונה. למנהל/ת זה/זו אין כרטיס עובד/ת (לא מגיש/ה בקשות). לעובד/ת שצריך/ה גם לאשר – השתמש/י בהרשאת מנהל/ת בעריכת העובד/ת.</p>`,
+  const v=await formModal({title:'מנהל/ת מערכת נוסף/ת',ok:'יצירה',body:`<div class="field"><label>שם</label><input name="name" required></div><p class="small muted">הסיסמה הראשונית תהיה <b dir="ltr">${INITIAL_PASSWORD}</b>, ויש להחליף אותה בכניסה הראשונה. למנהל/ת זה/זו אין כרטיס עובד/ת (לא מגיש/ה בקשות). לעובד/ת שצריך/ה גם לאשר – השתמש/י בהרשאת מנהל/ת בעריכת העובד/ת.</p>`,
     onSubmit:async v=>{if(!v.name)throw new Error('יש להזין שם');const password=tempPassword(),rec=await passwordRecord(password);await mutate((st,a)=>{if(a.role!=='admin')throw new Error('נדרשת הרשאת מנהל/ת מערכת');const id='admin-'+Date.now().toString(36);st.users.push({id,displayName:v.name,role:'admin',employeeId:null,active:true,mustChange:true,createdAt:nowISO(),...rec});audit(st,a,'admin_added',v.name)});cred=[{name:v.name,group:'מנהל/ת מערכת',password}]}});
   if(v&&cred)credentialsModal(cred,'נוצר חשבון מנהל/ת');
 };
