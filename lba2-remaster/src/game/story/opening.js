@@ -386,13 +386,14 @@ export function playOpening(story) {
   at(44.0, () => from(zo, 'reach', 0.4));
   at(44.6, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y, K.spout.z)); });
   at(45.2, () => look(zo, head(tw)));
+  pivot(zo, angleTo({ pos: zoSink }, twSpot), 44.75, 0.6, 'listen');   // (she turns from the tap to call him: he is behind her)
   // he turns round from the lamp to answer her (she is behind him: a look alone stopped at his shoulder, facing
   // the lens), and back to Arthur when Arthur speaks
   at(46.2, () => { play(tw, 'idle'); look(tw, head(zo)); });
   pivot(tw, -1.95, 46.35, 0.75);
   pivot(tw, 0.35, 54.9, 0.8);
   at(53.0, () => tw.rig.doGesture('shrug'));
-  bend(zo, 47.7, 58.0, { shL: [0, 0, -0.22], shR: [0, 0, 0.22] });
+  bend(zo, 45.0, 58.0, { shL: [0, 0, -0.22], shR: [0, 0, 0.22] });
   // her hand on the tap's handle (reach / tapTurn lift the arm straight ahead of the shoulder, beside the tap)
   const TAPHAND = { shR: [-0.12, 0, 0.55], elR: [0.25], torso: [0.14] };
   bend(zo, 41.0, 44.7, TAPHAND); bend(zo, 58.0, 60.15, TAPHAND); bend(zo, 69.0, 70.35, TAPHAND);   // (her listening arms at rest: the idle's stand off her sides, NEEDS-MODEL #28)
@@ -480,9 +481,11 @@ export function playOpening(story) {
   const C = { zoe: '#ffb0d0', hero: '#8fc2ff', arthur: '#ffe070', worker: '#9fe0d8', resident: '#e8d8a0' };
   const subs = [];
   // say(at, speaker, text key, seconds, the actor who talks; talk: play the talk gestures)
+  // talk: true plays the rig's talk with a gesture of its choosing; a number picks the gesture (rig.js: 0 the right
+  // hand forward, 1 both hands, 2 a hand raised, 3 the left hand presenting, 4 hands together)
   const say = (tt, id, key, d, a = null, talk = true) => {
     subs.push({ t: tt, d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
-    if (a && talk) { at(tt, () => play(a, 'talk')); at(tt + d - 0.15, () => { if (a.rig.anim === 'talk') play(a, 'idle'); }); }
+    if (a && talk !== false) { at(tt, () => { play(a, 'talk'); if (typeof talk === 'number') a.rig.gesture = talk; }); at(tt + d - 0.15, () => { if (a.rig.anim === 'talk') play(a, 'idle'); }); }
   };
   say(14.6, 'resident', 'op_res_1', 2.3, resident);
   say(16.95, 'worker', 'op_wk_1', 2.6, worker, false);   // (ends with the cut to the drill at 19.6, not over it)
@@ -490,7 +493,7 @@ export function playOpening(story) {
   say(25.8, 'worker', 'op_wk_2', 2.4, worker, false);
   say(31.3, 'arthur', 'op_ar_1', 1.8, ar, false);
   say(33.2, 'hero', 'op_tw_0', 1.9, tw);
-  say(45.4, 'zoe', 'op_zoe_1', 2.5, zo);
+  say(45.4, 'zoe', 'op_zoe_1', 2.5, zo, false);   // (called across the room, no arm waving: the talk gesture swung her arm out over the stove)
   say(48.3, 'hero', 'op_tw_1', 2.0, tw);
   say(51.0, 'zoe', 'op_zoe_2', 1.8, zo);
   say(54.8, 'arthur', 'op_ar_2', 3.8, ar, false);   // (70 characters: 18 a second, readable; it runs on over the cut to the tap)
