@@ -27,6 +27,12 @@ Characters in a scene don't fidget (`rig.noFidget`) and the player's occlusion s
 scene is made with `createCharacter` (the poly cast, `assets/poly/*.json`); talking is the rig's generic `talk`
 gesture while the line babbles: there is no lip-sync and no recorded voice.
 
+The house as a set: for the scene the house gets a ceiling and its east wall back (the game draws it open for its
+own camera), and the well's cave its east wall; they fade out in the handoff (83.6–84.0) and `finish` removes them.
+A scene pose layer, `bend(actor, t0, t1, offsets)`, adds small joint offsets on top of the rig's actions where a hand
+must land on something (the crate, the tap's handle, the stream, the table); `from(actor, action)` enters an action
+at its held pose. OPEN-3's item list: docs/lba3-production/reviews/OPEN-3/BUGS.md.
+
 Doors: somebody who leaves through a door walks out of the shot or into the game's door transition (a dip to black,
 the door sound, and they are outside, already a step past the door, as the game puts the hero) — never into a
 closed door. Interiors are open sets like LBA2's (the south and east walls are cut away for the game's camera), so
@@ -56,14 +62,14 @@ What a player who never played LBA should know by the end, shown rather than tol
 | 13–19.6 | the lift | the worker runs the lift; a crate with the project's emblem comes up off the barge. Resident: "When does the harbour row get the heat?" Worker: "Next quarter. Every home gets it. Vesk promised." 18.6: a hum, the lantern and the hook tremble, the puddle ripples | there is a project bringing heat to every home; Vesk is behind it; not everyone has it yet |
 | 19.6–23.8 | the drill | the derrick turning inside FunFrock's old fortress on the plateau, the hum | the project drills into the island |
 | 23.8–29 | the pier again | Resident: "What's that hum?" Worker: "Just the drill. It's a long way down." The crate is set down; the resident goes on to the ferry | the hum comes from the drill; the people in charge aren't worried |
-| 29–35 | home | the family room: Twinsen mends the reading lamp, Zoé pots seedlings, Arthur kneels at his model boat. Over Arthur's shoulder: "Dad! The mast fits!" / "Told you. Now the sail." | Twinsen, his son Arthur, his wife Zoé: an ordinary home |
+| 29–35 | home | the family room: Twinsen mends the reading lamp, Zoé pots seedlings, Arthur kneels at his model boat. Arthur's close-up: "Dad! The mast fits!"; over his shoulder: "Told you. Now the sail." | Twinsen, his son Arthur, his wife Zoé: an ordinary home |
 | 35–48 | Zoé at the counter, the tap | she wipes her hands, turns the tap: a squeak, two knocks, a short stream, a sputter, nothing. "Twinsen. The tap's stopped again." | — |
-| 48–53.4 | the exchange | Twinsen answers from the table: "I fixed that yesterday." Over his shoulder: "It worked yesterday." (a shrug) | — |
-| 53.4–58 | the house hums | the hum again, dust from the beams, all three look up. Arthur: "The drill again. Lulu says they're digging to the middle of the world." | the drill reaches their house too |
+| 48–53.4 | the exchange | Zoé turns to him; Twinsen turns round from the table (seen from her side): "I fixed that yesterday." Over his shoulder: "It worked yesterday." (a shrug) | — |
+| 53.4–58 | the house hums | the hum again, dust from the ceiling, all three look up (a wide from the bed's foot); Arthur's close-up: "The drill again. Lulu says they're digging to the middle of the world." | the drill reaches their house too |
 | 58–62.4 | the second try | a thin warm trickle, a little steam; her fingers under it: "That's warm. It's never warm." The music turns (the Entity cell) | the water is wrong |
-| 62.4–66.5 | under the island | a dip to black, the well's cave: the crystal vein in the rock glows brighter with the hum, then a dip back | the hook: something under the island answers the drill (what the player finds at the bottom of the well) |
+| 62.4–66.5 | under the island | a dip to black, the well's cave, inside the last chamber facing the crystal vein: it glows brighter with the hum, then a dip back | the hook: something under the island answers the drill (what the player finds at the bottom of the well) |
 | 66.5–75.2 | the decision | Twinsen puts the screwdriver down: "I'll check the well." Zoé turns the tap off: "I'll ask next door." and, going: "Take your magic ball. Just in case." She walks out of the shot toward the hall | the first goal (the well) and the first step (the ball); Zoé acts on her own |
-| 75.2–81.6 | outside | the game's door transition (a dip, the door): Zoé steps out by the house's new heat post (dark: the heat hasn't come yet) and walks to the neighbours'; the title, 76.4–81 | — |
+| 75.2–81.6 | outside | the game's door transition (a dip, the door): Zoé steps out by the house's new heat post (dark: the heat hasn't come yet), comes up the path and walks along the lane round the neighbours' fenced yard; the title over the sky, 76.4–81 | — |
 | 81.6–83.6 | inside | Twinsen turns to the cupboard where the ball is | where the ball is |
 | 83.6–88 | handoff | the camera eases into the game's isometric view; control, the objective "Check the well ◆ Take the magic ball from the cupboard" (the default LBA HUD hides the objective panel, so a toast says it once), the save | what to do now |
 
