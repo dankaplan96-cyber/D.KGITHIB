@@ -218,6 +218,8 @@ const LEAVE_TYPES=[
   {id:'reserve',name:'מילואים',icon:'🎖️'},
   {id:'personal',name:'אחר / אישי',icon:'📌'}
 ];
+const ROLE_SUGGESTIONS=['מנהל/ת מחלקה','אח/ות אחראי/ת','סגן/ית אח/ות אחראי/ת','רופא/ה מנהל/ת','מזכיר/ת מחלקה','מנהל/ת סיעוד','מנהל/ת משאבי אנוש'];
+const roleList=id=>`<datalist id="${id}">${ROLE_SUGGESTIONS.map(r=>`<option value="${r}">`).join('')}</datalist>`;
 const STATUS={approved:'מאושר',pending:'ממתין לאישור',rejected:'נדחה',cancelled:'בוטל'};
 const HEB_MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 const HEB_DAYS=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
@@ -568,7 +570,7 @@ function renderTop(){
   else{txt=S.conn==='setup'?'הקמת מערכת':'לא מחובר'}
   pill.innerHTML=`<span class="dot ${cls}"></span><span>${esc(txt)}</span>`;
   const ua=$('#userArea');
-  if(S.me&&me())ua.innerHTML=`<span class="user-chip">👤 ${esc(displayName())}${isAdmin()?' · מנהל/ת':''}</span><button class="btn ghost sm" data-act="changePw">שינוי סיסמה</button><button class="btn light sm" data-act="logout">יציאה</button>`;
+  if(S.me&&me())ua.innerHTML=`<span class="user-chip">👤 ${esc(displayName())}${me().title?' · '+esc(me().title):isAdmin()?' · מנהל/ת':''}</span><button class="btn ghost sm" data-act="changePw">שינוי סיסמה</button><button class="btn light sm" data-act="logout">יציאה</button>`;
   else if(S.conn==='connected'&&S.data)ua.innerHTML=`<button class="btn light sm" data-act="login">🔑 כניסה אישית</button>`;
   else ua.innerHTML='';
   renderBanner();
@@ -671,11 +673,13 @@ ACT.syncNow=async()=>{await syncNow(true);closeModal();toast(S.online?'הנתו�
 
 /* ---------------- first-run setup ---------------- */
 function setupHTML(){
-  return `<div class="screen-card"><h1>הקמת מערכת חדשה</h1><p>לא נמצאו נתונים בתיקייה <b>${esc(S.connName)}</b>. הגדר/י את המחלקה ואת חשבון <b>מנהל/ת המערכת</b> הראשון.</p>
+  return `<div class="screen-card"><h1>הקמת מערכת חדשה</h1><p>לא נמצאו נתונים בתיקייה <b>${esc(S.connName)}</b>. הגדר/י את המחלקה ואת החשבון שלך כ<b>מנהל/ת המערכת</b>: שם המשתמש, הסיסמה והתפקיד נקבעים על ידך.</p>
   <form id="setupForm" novalidate>
    <div class="field"><label>שם המחלקה / היחידה</label><input name="dept" required placeholder="לדוגמה: מחלקה גריאטרית א׳"></div>
-   <div class="field"><label>שם מנהל/ת המערכת</label><input name="name" required value="מנהל מערכת"></div>
-   <div class="field"><label>סיסמת מנהל/ת</label>${pwInput('pw',{auto:'new-password',meter:true,placeholder:'לפחות 8 תווים, אותיות וספרות'})}</div>
+   <div class="form-grid"><div class="field"><label>שם משתמש</label><input name="name" required maxlength="60" placeholder="לדוגמה: דנה כהן" autocomplete="username"><div class="hint">השם שיופיע ברשימת הכניסה</div></div>
+   <div class="field"><label>תפקיד</label><input name="title" required maxlength="60" list="setupRoles" placeholder="לדוגמה: אח/ות אחראי/ת">${roleList('setupRoles')}<div class="hint">בחר/י מהרשימה או הקלד/י תפקיד</div></div></div>
+   <label class="check" style="margin-bottom:12px"><input type="checkbox" name="isStaff"> אני גם חלק מצוות המחלקה ומגיש/ה בקשות חופשה בעצמי</label>
+   <div class="field"><label>סיסמה</label>${pwInput('pw',{auto:'new-password',meter:true,placeholder:'לפחות 8 תווים, אותיות וספרות'})}</div>
    <div class="field"><label>אימות סיסמה</label>${pwInput('pw2',{auto:'new-password'})}</div>
    <div class="form-grid"><div class="field"><label>מכסת ימי חופשה שנתית (ברירת מחדל)</label><input name="allowance" type="number" min="0" max="60" value="22"></div>
    <div class="field"><label>התראת עומס מ-X עובדים בחופשה</label><input name="threshold" type="number" min="1" max="50" value="3"></div></div>
@@ -687,7 +691,7 @@ document.addEventListener('submit',async e=>{
   if(e.target.id==='setupForm'){
     e.preventDefault();const v=formValues(e.target),err=$('#setupErr');err.classList.add('hidden');
     const show=m=>{err.textContent=m;err.classList.remove('hidden')};
-    if(!v.dept)return show('יש להזין שם מחלקה');if(!v.name)return show('יש להזין שם מנהל/ת');
+    if(!v.dept)return show('יש להזין שם מחלקה');if(!v.name)return show('יש להזין שם משתמש');if(!v.title)return show('יש להזין תפקיד');
     const p=pwProblem(v.pw);if(p)return show(p);if(v.pw!==v.pw2)return show('הסיסמאות אינן תואמות');
     const btn=e.target.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='יוצר…';
     try{await createSystem(v)}catch(x){show(x.message);btn.disabled=false;btn.textContent='הקמת המערכת'}
@@ -698,8 +702,9 @@ async function createSystem(v){
   try{
     if(await readText(FS.data,DATA_FILE))throw new Error('כבר קיימת מערכת בתיקייה זו (ייתכן שהוקמה ממחשב אחר). רענן/י את הדף.');
     code=recoveryCode();
-    const admin={id:'admin',displayName:v.name,role:'admin',employeeId:null,active:true,mustChange:false,createdAt:nowISO(),...await passwordRecord(v.pw)};
-    const st=normalizeState({revision:1,settings:{...DEFAULT_SETTINGS,department:v.dept,defaultAllowance:Number(v.allowance)||22,warningThreshold:Number(v.threshold)||3,recovery:await passwordRecord(normCode(code))},users:[admin],employees:[],requests:[],audit:[]});
+    const admin={id:'admin',displayName:v.name,title:v.title,role:'admin',employeeId:v.isStaff?1:null,active:true,mustChange:false,createdAt:nowISO(),...await passwordRecord(v.pw)};
+    const employees=v.isStaff?[{id:1,name:v.name,group:v.title,active:true,allowance:null,carry:{}}]:[];
+    const st=normalizeState({revision:1,nextEmployeeId:employees.length+1,settings:{...DEFAULT_SETTINGS,department:v.dept,defaultAllowance:Number(v.allowance)||22,warningThreshold:Number(v.threshold)||3,recovery:await passwordRecord(normCode(code))},users:[admin],employees,requests:[],audit:[]});
     audit(st,admin,'system_created',v.dept);
     await writeText(FS.data,DATA_FILE,JSON.stringify(st));
   }finally{await releaseLock()}
@@ -715,7 +720,7 @@ ACT.dlRecovery=d=>downloadFile('קוד_שחזור_מערכת_חופשות.txt',`
 /* ---------------- login / logout / passwords ---------------- */
 function loginFormHTML(){
   const us=S.data.users.filter(u=>u.active).slice().sort((a,b)=>(a.role==='admin'?0:1)-(b.role==='admin'?0:1)||a.displayName.localeCompare(b.displayName,'he'));
-  const opts=us.map(u=>`<option value="${esc(u.id)}">${esc(u.displayName)}${u.role==='admin'?' (מנהל/ת מערכת)':''}</option>`).join('');
+  const opts=us.map(u=>`<option value="${esc(u.id)}">${esc(u.displayName)}${u.role==='admin'?` (${esc(u.title||'מנהל/ת מערכת')})`:''}</option>`).join('');
   return `<form id="loginForm" novalidate>
    <div class="field"><label>משתמש/ת</label><input class="input" id="loginSearch" placeholder="🔎 הקלד/י שם לחיפוש…" data-on="loginFilter" style="margin-bottom:6px"><select name="uid" id="loginUid" size="1">${opts||'<option value="">אין משתמשים</option>'}</select></div>
    <div class="field"><label>סיסמה</label>${pwInput('pw',{placeholder:'הסיסמה האישית שלך'})}</div>
@@ -1180,7 +1185,7 @@ PAGES.employees=()=>{
     <td><div class="actions"><button class="btn sm outline" data-act="editEmp" data-id="${e.id}">עריכה</button><button class="btn sm outline" data-act="resetPw" data-id="${e.id}">איפוס סיסמה</button><button class="btn sm ${e.active?'gray':'green'}" data-act="toggleEmp" data-id="${e.id}">${e.active?'השבתה':'הפעלה'}</button><button class="btn sm red" data-act="deleteEmp" data-id="${e.id}" title="מחיקה">🗑</button></div></td></tr>`}).join('');
   return head('עובדים והרשאות',`${es.filter(e=>e.active).length} עובדים פעילים · סיסמה ראשונית לכל עובד/ת חדש/ה: <b dir="ltr">${INITIAL_PASSWORD}</b> – בכניסה הראשונה מחליפים לסיסמה אישית`,`<button class="btn green" data-act="addEmp">➕ עובד/ת חדש/ה</button><button class="btn outline" data-act="importEmps">📥 ייבוא רשימה</button>`)+
   `<div class="card">${es.length?`<div class="table-wrap"><table class="table"><thead><tr><th>שם</th><th>קבוצה</th><th>מכסה ${y}</th><th>יתרה</th><th>משתמש</th><th>כניסה אחרונה</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="empty">עדיין אין עובדים. התחל/י ב<b>ייבוא רשימה</b> (הדבקה מאקסל) או בהוספה ידנית.</div>`}</div>
-  <div class="card"><h3>חשבונות מנהל/ת מערכת <button class="btn sm outline" data-act="addAdmin">➕ מנהל/ת נוסף/ת</button></h3><div class="list">${admins.map(a=>`<div class="row"><div><div class="row-title">${esc(a.displayName)}${a.id===S.me.id?' (את/ה)':''}</div><div class="row-sub">כניסה אחרונה: ${a.lastLogin?fmtDT(a.lastLogin):'—'}${a.active?'':' · מושבת'}</div></div>${isSysAdmin()&&a.id!==S.me.id?`<div class="actions" style="display:flex;gap:6px"><button class="btn sm outline" data-act="resetAdminPw" data-id="${esc(a.id)}">איפוס סיסמה</button><button class="btn sm ${a.active?'gray':'green'}" data-act="toggleAdmin" data-id="${esc(a.id)}">${a.active?'השבתה':'הפעלה'}</button></div>`:''}</div>`).join('')}</div>
+  <div class="card"><h3>חשבונות מנהל/ת מערכת <button class="btn sm outline" data-act="addAdmin">➕ מנהל/ת נוסף/ת</button></h3><div class="list">${admins.map(a=>`<div class="row"><div><div class="row-title">${esc(a.displayName)}${a.id===S.me.id?' (את/ה)':''}</div><div class="row-sub">${esc(a.title||'מנהל/ת מערכת')} · כניסה אחרונה: ${a.lastLogin?fmtDT(a.lastLogin):'—'}${a.active?'':' · מושבת'}</div></div>${isSysAdmin()&&a.id===S.me.id?`<div class="actions"><button class="btn sm outline" data-act="editAdmin" data-id="${esc(a.id)}">עריכת הפרטים שלי</button></div>`:''}${isSysAdmin()&&a.id!==S.me.id?`<div class="actions" style="display:flex;gap:6px"><button class="btn sm outline" data-act="editAdmin" data-id="${esc(a.id)}">עריכה</button><button class="btn sm outline" data-act="resetAdminPw" data-id="${esc(a.id)}">איפוס סיסמה</button><button class="btn sm ${a.active?'gray':'green'}" data-act="toggleAdmin" data-id="${esc(a.id)}">${a.active?'השבתה':'הפעלה'}</button></div>`:''}</div>`).join('')}</div>
   <div class="small muted" style="margin-top:8px">ניתן גם לתת לעובד/ת הרשאת <b>מנהל/ת</b> (אישור בקשות וניהול) דרך "עריכה" – כך הוא/היא יכול/ה גם להגיש בקשות וגם לאשר בקשות של אחרים.</div></div>`;
 };
 function credentialsModal(list,title='פרטי כניסה'){
@@ -1283,9 +1288,22 @@ ACT.deleteEmp=async d=>{
 ACT.addAdmin=async()=>{
   if(!isSysAdmin()){toast('רק מנהל/ת מערכת יכול/ה להוסיף מנהלים','err');return}
   let cred=null;
-  const v=await formModal({title:'מנהל/ת מערכת נוסף/ת',ok:'יצירה',body:`<div class="field"><label>שם</label><input name="name" required></div><p class="small muted">הסיסמה הראשונית תהיה <b dir="ltr">${INITIAL_PASSWORD}</b>, ויש להחליף אותה בכניסה הראשונה. למנהל/ת זה/זו אין כרטיס עובד/ת (לא מגיש/ה בקשות). לעובד/ת שצריך/ה גם לאשר – השתמש/י בהרשאת מנהל/ת בעריכת העובד/ת.</p>`,
-    onSubmit:async v=>{if(!v.name)throw new Error('יש להזין שם');const password=tempPassword(),rec=await passwordRecord(password);await mutate((st,a)=>{if(a.role!=='admin')throw new Error('נדרשת הרשאת מנהל/ת מערכת');const id='admin-'+Date.now().toString(36);st.users.push({id,displayName:v.name,role:'admin',employeeId:null,active:true,mustChange:true,createdAt:nowISO(),...rec});audit(st,a,'admin_added',v.name)});cred=[{name:v.name,group:'מנהל/ת מערכת',password}]}});
+  const v=await formModal({title:'מנהל/ת מערכת נוסף/ת',ok:'יצירה',body:`<div class="form-grid"><div class="field"><label>שם משתמש</label><input name="name" required maxlength="60"></div><div class="field"><label>תפקיד</label><input name="title" maxlength="60" list="admRoles">${roleList('admRoles')}</div></div><p class="small muted">הסיסמה הראשונית תהיה <b dir="ltr">${INITIAL_PASSWORD}</b>, ויש להחליף אותה בכניסה הראשונה. למנהל/ת זה/זו אין כרטיס עובד/ת (לא מגיש/ה בקשות). לעובד/ת שצריך/ה גם לאשר – השתמש/י בהרשאת מנהל/ת בעריכת העובד/ת.</p>`,
+    onSubmit:async v=>{if(!v.name)throw new Error('יש להזין שם');const password=tempPassword(),rec=await passwordRecord(password);await mutate((st,a)=>{if(a.role!=='admin')throw new Error('נדרשת הרשאת מנהל/ת מערכת');const id='admin-'+Date.now().toString(36);if(st.users.some(u=>u.displayName.toLocaleLowerCase('he')===v.name.toLocaleLowerCase('he')))throw new Error('כבר קיים משתמש בשם זה');st.users.push({id,displayName:v.name,title:v.title,role:'admin',employeeId:null,active:true,mustChange:true,createdAt:nowISO(),...rec});audit(st,a,'admin_added',v.name)});cred=[{name:v.name,group:v.title||'מנהל/ת מערכת',password}]}});
   if(v&&cred)credentialsModal(cred,'נוצר חשבון מנהל/ת');
+};
+ACT.editAdmin=async d=>{
+  const u=S.data.users.find(x=>x.id===d.id);if(!u)return;
+  const v=await formModal({title:u.id===S.me.id?'עריכת הפרטים שלי':`עריכת מנהל/ת – ${esc(u.displayName)}`,body:`<div class="form-grid"><div class="field"><label>שם משתמש</label><input name="name" value="${esc(u.displayName)}" required maxlength="60"></div><div class="field"><label>תפקיד</label><input name="title" value="${esc(u.title||'')}" maxlength="60" list="edRoles">${roleList('edRoles')}</div></div>`,
+    onSubmit:v=>{if(!v.name)throw new Error('יש להזין שם משתמש');return mutate((st,a)=>{
+      if(a.role!=='admin')throw new Error('נדרשת הרשאת מנהל/ת מערכת');
+      const x=st.users.find(q=>q.id===u.id);if(!x)throw new Error('המשתמש לא נמצא');
+      if(st.users.some(q=>q.id!==x.id&&q.displayName.toLocaleLowerCase('he')===v.name.toLocaleLowerCase('he')))throw new Error('כבר קיים משתמש בשם זה');
+      x.displayName=v.name;x.title=v.title;
+      const e=x.employeeId&&st.employees.find(q=>q.id===x.employeeId);if(e)e.name=v.name;
+      audit(st,a,'admin_edited',`${v.name}${v.title?' · '+v.title:''}`);
+    })}});
+  if(v)toast('הפרטים נשמרו','ok');
 };
 ACT.resetAdminPw=async d=>{
   const u=S.data.users.find(x=>x.id===d.id);if(!u||!await confirmBox(`לאפס את הסיסמה של ${esc(u.displayName)}?`,{ok:'איפוס',kind:'amber'}))return;
@@ -1370,7 +1388,7 @@ ACT.newRecovery=async()=>{
 };
 
 /* ---- audit log (admin) ---- */
-const AUDIT_LABELS={system_created:'הקמת מערכת',blank_system_created:'הקמת מערכת',login:'כניסה',password_set:'הגדרת סיסמה',password_changed:'שינוי סיסמה',password_reset:'איפוס סיסמה',admin_password_recovered:'שחזור סיסמת מנהל/ת',request_created:'בקשה חדשה',request_cancelled:'ביטול בקשה',cancel_requested:'בקשת ביטול',cancel_request_withdrawn:'חזרה מבקשת ביטול',request_approved:'אישור בקשה',request_rejected:'דחיית בקשה',bulk_approved:'אישור מרוכז',cancel_approved:'אישור ביטול',cancel_rejected:'דחיית ביטול',leave_added_by_admin:'הוספת חופשה ע״י מנהל/ת',leave_edited:'עריכת חופשה',leave_deleted:'מחיקת חופשה',employee_added:'הוספת עובד/ת',employees_imported:'ייבוא עובדים',bulk_import_employees:'ייבוא עובדים',employee_edited:'עריכת עובד/ת',employee_enabled:'הפעלת עובד/ת',employee_disabled:'השבתת עובד/ת',employee_deleted:'מחיקת עובד/ת',admin_added:'הוספת מנהל/ת',admin_enabled:'הפעלת מנהל/ת',admin_disabled:'השבתת מנהל/ת',settings_saved:'שמירת הגדרות',restored_from_backup:'שחזור מגיבוי',recovery_code_created:'קוד שחזור חדש'};
+const AUDIT_LABELS={system_created:'הקמת מערכת',blank_system_created:'הקמת מערכת',login:'כניסה',password_set:'הגדרת סיסמה',password_changed:'שינוי סיסמה',password_reset:'איפוס סיסמה',admin_password_recovered:'שחזור סיסמת מנהל/ת',request_created:'בקשה חדשה',request_cancelled:'ביטול בקשה',cancel_requested:'בקשת ביטול',cancel_request_withdrawn:'חזרה מבקשת ביטול',request_approved:'אישור בקשה',request_rejected:'דחיית בקשה',bulk_approved:'אישור מרוכז',cancel_approved:'אישור ביטול',cancel_rejected:'דחיית ביטול',leave_added_by_admin:'הוספת חופשה ע״י מנהל/ת',leave_edited:'עריכת חופשה',leave_deleted:'מחיקת חופשה',employee_added:'הוספת עובד/ת',employees_imported:'ייבוא עובדים',bulk_import_employees:'ייבוא עובדים',employee_edited:'עריכת עובד/ת',employee_enabled:'הפעלת עובד/ת',employee_disabled:'השבתת עובד/ת',employee_deleted:'מחיקת עובד/ת',admin_added:'הוספת מנהל/ת',admin_edited:'עריכת פרטי מנהל/ת',admin_enabled:'הפעלת מנהל/ת',admin_disabled:'השבתת מנהל/ת',settings_saved:'שמירת הגדרות',restored_from_backup:'שחזור מגיבוי',recovery_code_created:'קוד שחזור חדש'};
 PAGES.audit=()=>{
   if(!isAdmin())return '';
   const q=S.auditQ.toLowerCase();
