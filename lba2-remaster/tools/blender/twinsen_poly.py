@@ -7,7 +7,10 @@
 # Built from the measurements of LBA2's in-game model (docs/character-review.md §11): every ring below is a
 # horizontal section of the original (height, half-width, front and back extent, fractions of the height H).
 # Skinned like LBA2 skins its models: each part follows one bone, with blends only where cloth spans two
-# (the cape's sides follow the arms, each half of the robe follows its leg as in the original, the hair's tuft swings).
+# (the sleeves follow the arms, each half of the robe follows its leg as in the original, the hair's tuft swings).
+# CHAR-OPEN (OPEN-3 #28): the original's cape (one shell from the collar out to ±0.214 H, its sides skinned to the arms)
+# swallowed the arms: a shrug or a gesture only stretched the bell. The tunic is now a body with flat shoulders and two
+# wide sleeves of its own, hanging where the cape's sides were (the same outline at rest), so the arms read.
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
 import json, math, os, sys
 
@@ -24,7 +27,7 @@ if os.path.isdir(OUT):   # (README form: <skeletons.json> assets/poly → assets
 skel = json.load(open(SKEL))
 skel = skel.get('twinsen', skel)   # (all the game's skeletons, as tools/dump-skeletons.mjs writes them, or Twinsen's alone)
 B = skel['bones']
-SPREAD = 0.2  # the arm angle the geometry below is drawn at (the game spreads them by the look's armSpread)
+SPREAD = 0.3  # the arm angle the geometry below is drawn at = the look's armSpread (characters.js), so what is drawn is what is shown
 S = 2.1  # the game's height for H (top of the hair)
 
 COL = {
@@ -194,32 +197,122 @@ def side(x):
     return 'L' if x > 0 else 'R'
 
 
+# ---- the arms in the display pose (the game spreads them by SPREAD at the shoulder; to_rest() below un-spreads)
+def rot_z(a, pivot):
+    T = Matrix.Translation(Vector(pivot))
+    return T @ Matrix.Rotation(a, 4, 'Z') @ T.inverted()
+
+
+ARM_M = {}
+for s_, sg in (('L', 1), ('R', -1)):
+    piv = [c / S for c in B['sh' + s_]['p']]
+    m_ = rot_z(sg * SPREAD, piv)
+    for b_ in ('sh' + s_, 'el' + s_, 'hand' + s_):
+        ARM_M[b_] = m_
+
+
+def shown(b):
+    """a bone's head in the display pose, in H"""
+    return ARM_M.get(b, Matrix.Identity(4)) @ Vector([c / S for c in B[b]['p']])
+
+
+# CHAR-OPEN: LBA2's measured cape (kept as CAPE_LBA2 for the record; TUNIC_CAPE=1 builds it) was one shell out to
+# ±0.214 H with its sides on the arms. The tunic is now a body with flat shoulders (the yoke out to ±0.15 H over the
+# sleeves' tops) narrowing to ±0.122 H over the belt, and two wide sleeves of its own from the shoulder to a flared cuff
+# at the original's cuff height; at rest the sleeves hang where the cape's sides were, so the outline is the same.
+CAPE_LBA2 = [(None, 0.212, 0.128, -0.077, 0.62), (0.54, 0.214, 0.132, -0.077, 0.62), (0.62, 0.197, 0.138, -0.066, 0.66),
+             (0.70, 0.163, 0.118, -0.046, 0.72), (0.74, 0.122, 0.096, -0.028, 0.8), (0.765, 0.052, 0.082, 0.012, 0.9), (0.772, 0.03, 0.074, 0.026, 1.0)]
+TUNIC = [(None, 0.122, 0.128, -0.077, 0.7), (0.54, 0.126, 0.132, -0.077, 0.7), (0.62, 0.13, 0.138, -0.066, 0.7),
+         (0.68, 0.142, 0.13, -0.056, 0.66), (0.715, 0.15, 0.112, -0.042, 0.62), (0.742, 0.118, 0.094, -0.028, 0.8),
+         (0.765, 0.052, 0.082, 0.012, 0.9), (0.772, 0.03, 0.074, 0.026, 1.0)]
+LBA2_CAPE = bool(os.environ.get('TUNIC_CAPE'))
+
+
 def w_cape(p):
     x, y, z = p
-    arm = smooth(0.095, 0.165, abs(x)) * (1 - smooth(0.70, 0.745, y))
-    el = arm * (1 - smooth(0.49, 0.6, y))
     s = side(x)
-    return {'torso': 1 - arm, 'sh' + s: arm - el, 'el' + s: el}
+    if LBA2_CAPE:
+        arm = smooth(0.095, 0.165, abs(x)) * (1 - smooth(0.70, 0.745, y))
+        el = arm * (1 - smooth(0.49, 0.6, y))
+        return {'torso': 1 - arm, 'sh' + s: arm - el, 'el' + s: el}
+    # the yoke's outer edge rides a little on the shoulder (it lifts with a shrug), the body is the torso's
+    arm = 0.4 * smooth(0.105, 0.15, abs(x)) * smooth(0.64, 0.7, y)
+    return {k: v for k, v in (('torso', 1 - arm), ('sh' + s, arm)) if v > 0}
 
 
 cape = Part('cape', 'tunic', w_cape, angle=55)
 hem = lambda t: 0.448 - 0.04 * abs(math.sin(t)) ** 1.6   # the hem rises over the belt in front and behind
 N = 24
+SECS = CAPE_LBA2 if LBA2_CAPE else TUNIC
 # the cloth has thickness: an inner lip turns up under the cape's edge (darker, in its own shadow)
 lip = Part('capeLip', 'inner', w_cape, angle=70)
-loft(lip, [ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62)])
+hw0 = SECS[0][1]
+loft(lip, [ring(lambda t: hem(t) + 0.03, hw0 - 0.022, 0.112, -0.064, N, SECS[0][4]), ring(hem, hw0 - 0.003, 0.126, -0.075, N, SECS[0][4])])
 PARTS.append(lip)
-loft(cape, [
-    ring(hem, 0.212, 0.128, -0.077, N, 0.62),
-    ring(0.54, 0.214, 0.132, -0.077, N, 0.62),
-    ring(0.62, 0.197, 0.138, -0.066, N, 0.66),
-    ring(0.70, 0.163, 0.118, -0.046, N, 0.72),
-    ring(0.74, 0.122, 0.096, -0.028, N, 0.8),
-    ring(0.765, 0.052, 0.082, 0.012, N, 0.9),
-    ring(0.772, 0.03, 0.074, 0.026, N, 1.0),
-])
+loft(cape, [ring(hem if y is None else y, hw, zf, zb, N, pw) for y, hw, zf, zb, pw in SECS])
 PARTS.append(cape)
 
+# the sleeves: wide and soft, from inside the yoke at the shoulder down to a flared cuff at the original's cuff height
+# (0.39-0.455 H), the hand's ball coming out of it; elliptical sections square to the arm, deeper than wide, on the
+# upper arm's bone above the elbow and the forearm's below (blended across the elbow so a bend rounds it)
+SLEEVE = [(0.025, 0.04, 0.05), (0.36, 0.043, 0.052), (0.64, 0.045, 0.054), (1.0, 0.056, 0.061)]   # (along, across, depth)
+SLEEVE_N = 12
+SLEEVE_U = {}
+
+
+def w_sleeve(p, s):
+    u = SLEEVE_U[tuple(round(c, 6) for c in p)]
+    e = smooth(0.38, 0.62, u)   # (the elbow is at u = 0.5)
+    return {k: v for k, v in (('sh' + s, 1 - e), ('el' + s, e)) if v > 1e-4}
+
+
+if not LBA2_CAPE:
+    for s_, sx in (('L', 1), ('R', -1)):
+        S0, E0, H0 = shown('sh' + s_), shown('el' + s_), shown('hand' + s_)
+        cuff_end = H0   # (the cuff ends at the wrist: the hand's ball sits in its mouth)
+        # the arm's line: shoulder → elbow (u 0 → 0.5) → the cuff's end (u 1)
+        def along(u):
+            return S0 + (E0 - S0) * (u / 0.5) if u <= 0.5 else E0 + (cuff_end - E0) * ((u - 0.5) / 0.5)
+        sl = Part('sleeve' + s_, 'tunic', lambda p, s_=s_: w_sleeve(p, s_), angle=55)
+        rings = []
+        for u, ra, rd in SLEEVE:
+            c = along(u)
+            d = (along(min(1.0, u + 0.05)) - along(max(0.0, u - 0.05))).normalized()
+            across = Vector((d.y, -d.x, 0.0)).normalized()   # (in the arm's plane, square to it)
+            rr = []
+            for i in range(SLEEVE_N):
+                a = 2 * math.pi * i / SLEEVE_N
+                q = c + across * (math.cos(a) * ra) + Vector((0, 0, 1)) * (math.sin(a) * rd)
+                rr.append(tuple(q))
+                SLEEVE_U[tuple(round(v, 6) for v in q)] = u
+            rings.append(rr)
+        loft_along(sl, rings, cap0=True, cap1=False)
+        # faces outward: the first side quad's normal must point away from the sleeve's axis
+        f0 = sl.f[0]
+        a_, b_, c_ = (Vector(sl.v[i]) for i in f0[:3])
+        cen = sum((Vector(sl.v[i]) for i in f0), Vector()) / len(f0)
+        if (b_ - a_).cross(c_ - a_).dot(cen - along(0.025)) < 0:
+            sl.f = [list(reversed(f)) for f in sl.f]
+        # (the cap at the shoulder lies inside the yoke; its centre point needs a weight too)
+        SLEEVE_U[tuple(round(v, 6) for v in sl.v[-1])] = 0.0
+        PARTS.append(sl)
+        # the cuff's inside: dark, a little up into the sleeve
+        cin = Part('cuffIn' + s_, 'inner', lambda p, s_=s_: {'el' + s_: 1.0}, angle=70)
+        d = (cuff_end - E0).normalized()
+        across = Vector((d.y, -d.x, 0.0)).normalized()
+        cc = cuff_end - d * 0.012
+        ring_in = [tuple(cc + across * (math.cos(2 * math.pi * i / SLEEVE_N) * 0.052) + Vector((0, 0, 1)) * (math.sin(2 * math.pi * i / SLEEVE_N) * 0.057)) for i in range(SLEEVE_N)]
+        # (facing down the sleeve, out of the cuff)
+        a_, b_, c_ = (Vector(q) for q in ring_in[:3])
+        cin.add(ring_in if (b_ - a_).cross(c_ - a_).dot(d) > 0 else list(reversed(ring_in)), [list(range(SLEEVE_N))])
+        PARTS.append(cin)
+
+# CHAR-OPEN: a band of the robe inside the belt, passing from the hips to the torso: bending deep (the throw's
+# release, a pick-up) the belt and the tunic go with the chest and the robe's top stays with the hips, which opened a
+# hole at the back between them (the cape's wide back used to hide it)
+waist = Part('waist', 'tunic', lambda p: {k: v for k, v in (('hips', 1 - smooth(0.4, 0.47, p[1])), ('torso', smooth(0.4, 0.47, p[1]))) if v > 0}, angle=55)
+loft(waist, [ring(0.37, 0.101, 0.117, -0.071, 16, 0.75), ring(0.5, 0.096, 0.113, -0.066, 16, 0.75)])
+PARTS.append(waist)
 belt = Part('belt', 'belt', lambda p: {'torso': 1.0}, angle=50)
 loft(belt, [ring(0.405, 0.104, 0.121, -0.071, N, 0.75), ring(0.47, 0.1, 0.119, -0.069, N, 0.75)])  # (inside the cape)
 PARTS.append(belt)
@@ -286,16 +379,20 @@ for sx in (1, -1):
     box_wedge(sole, cx - 0.026, cx + 0.026, -0.052, 0.088, 0.0, 0.006, 0.006)
     PARTS.append(sole)
     hb = (lambda b: (lambda p: {b: 1.0}))('hand' + s)
-    # the sleeve's cuff: a flared opening under the cape's side, dark inside, the wrist coming out of it
-    cuff = Part('cuff' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=50)
-    tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
-    PARTS.append(cuff)
-    cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
-    cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
-    PARTS.append(cin)
-    # the hand: LBA2's ball (the original's: r 0.036 H, centred 0.376 H, just under the cuff)
+    if LBA2_CAPE:
+        # the sleeve's cuff: a flared opening under the cape's side, dark inside, the wrist coming out of it
+        cuff = Part('cuff' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=50)
+        tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
+        PARTS.append(cuff)
+        cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
+        cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
+        PARTS.append(cin)
+    # the hand: LBA2's ball (the original's: r 0.036 H, centred 0.376 H, just under the cuff); CHAR-OPEN: on the
+    # hand bone's line, 0.026 H past the wrist, in the mouth of the sleeve's cuff
     hand = Part('hand' + s, 'skin', hb, angle=60)
-    sphere(hand, (sx * 0.19, 0.378, 0.02), 0.036, 10, 7)
+    E0, H0 = shown('el' + s), shown('hand' + s)
+    hc = H0 + (H0 - E0).normalized() * 0.026 + Vector((0, 0, 0.006))
+    sphere(hand, (sx * 0.19, 0.378, 0.02) if LBA2_CAPE else tuple(hc), 0.036, 10, 7)
     PARTS.append(hand)
 
 neck = Part('neck', 'skin', lambda p: {'neck': 1 - smooth(0.79, 0.83, p[1]), 'head': smooth(0.79, 0.83, p[1])}, angle=60)
@@ -518,20 +615,7 @@ for sx in (1, -1):
     EYES.append({'pivot': piv, 'tris': [(white, 'white'), (iris, 'iris'), (pupil, 'pupil')]})
 
 
-# ------------------------------------------------------------------ arms: model in the display pose, store the rest pose
-def rot_z(a, pivot):
-    T = Matrix.Translation(Vector(pivot))
-    return T @ Matrix.Rotation(a, 4, 'Z') @ T.inverted()
-
-
-ARM_M = {}
-for s, sg in (('L', 1), ('R', -1)):
-    piv = [c / S for c in B['sh' + s]['p']]
-    m = rot_z(sg * SPREAD, piv)
-    for b in ('sh' + s, 'el' + s, 'hand' + s):
-        ARM_M[b] = m
-
-
+# ------------------------------------------------------------------ arms: modelled in the display pose (ARM_M, above), stored at rest
 def to_rest(p, w):
     # the game spreads the arms by SPREAD at the shoulder: un-spread the vertex by its own blend of bones
     M = Matrix(((0, 0, 0, 0),) * 4)

@@ -143,7 +143,13 @@ EYE = [(0.015, 0.926), (0.026, 0.935), (0.042, 0.934), (0.031, 0.923)]
 EARRING = [(0.054, 0.909, -0.036), (0.054, 0.882, -0.026), (0.054, 0.882, -0.048)]
 NECKLACE = [(0.021, 0.834, -0.054), (0.048, 0.807, -0.001), (0.032, 0.780, 0.027), (0.0, 0.758, 0.037)]
 # the bun: three spheres (centre y, z, r) on the three bun groups, drawn flat; built as one mass like Twinsen's (VP-1b)
-ZOE_BUN = ((1.001, -0.135, 0.052), (0.974, -0.188, 0.037), (0.937, -0.204, 0.026))
+# CHAR-OPEN (OPEN-3 #11): as measured (ZOE_BUN_LBA2) the first ball only grazes the back of the crown and the other two
+# hang 0.03-0.05 H behind the skull; carried by the tail bones, the follow-through then swung the mass off the head
+# and in profile it floated with bare scalp between. Now the same three balls (same sizes, same downward-backward
+# run) are seated on the skull: the first sunk into the crown's back, the second and third against the back of the
+# head; and the whole bun is on the head bone (a bun is pinned hair: it does not swing like a tail).
+ZOE_BUN_LBA2 = ((1.001, -0.135, 0.052), (0.974, -0.188, 0.037), (0.937, -0.204, 0.026))
+ZOE_BUN = ((0.982, -0.108, 0.052), (0.953, -0.146, 0.037), (0.921, -0.140, 0.026))
 BUN_FILL = 0.7
 BUN_M = 12
 
@@ -239,12 +245,54 @@ for s_, sx in (('L', 1), ('R', -1)):
     ff += [[len(vv) - 1, (len(rr) - 1) * 8 + i, (len(rr) - 1) * 8 + (i + 1) % 8] for i in range(8)]
     sh.add(vv, ff)
 
-# ------------------------------------------------------------------ bare thin arms, the forearm narrowing to a pointed hand
+# ------------------------------------------------------------------ bare arms, the forearm narrowing to the hand
+# CHAR-OPEN (OPEN-3 #28): the arms were two straight tubes (r 0.031 → 0.026 → 0.020 m: 6 cm across at the shoulder,
+# rods next to her 0.4 m bust). Now a slim adult arm in sections along the bones: a rounded shoulder cap sunk into the
+# body's shoulder, the upper arm 9-10 cm across tapering to the elbow, a small swell of the forearm below it and a 5 cm
+# wrist into the mitten hand; a little deeper than wide (front to back), as arms are. Slim like her body (SRC-2), not
+# muscular. The skeleton and the bones' weights are the same as before (sh above the elbow, el below, blended there).
+ARM = [   # (u along the arm: 0 the shoulder, 0.5 the elbow, 1 the wrist; half-width across, half-depth; metres)
+    (-0.06, 0.032, 0.034), (0.0, 0.046, 0.047), (0.1, 0.05, 0.05), (0.27, 0.046, 0.047), (0.43, 0.039, 0.041),
+    (0.52, 0.035, 0.037), (0.62, 0.039, 0.041), (0.8, 0.033, 0.035), (1.0, 0.025, 0.027),
+]
+ARM_N = 10
 for s_, sx in (('L', 1), ('R', -1)):
     shp, el, hd = bp('sh' + s_), bp('el' + s_), bp('hand' + s_)
-    up = b.P('upper' + s_, COL['skin'], lambda p, s_=s_, e=el[1]: {'sh' + s_: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s_: smooth(e + 0.05, e - 0.03, p[1])}, 50)
-    tube(up, (shp[0] - sx * 0.022, shp[1] + 0.03, shp[2] - 0.02), el, 0.031, 0.026, 8)
-    tube(b.P('fore' + s_, COL['skin'], 'el' + s_, 50), el, hd, 0.026, 0.02, 8)
+    S0 = Vector((shp[0] - sx * 0.012, shp[1] + 0.012, shp[2] - 0.006))   # (the shoulder's top, inside the body's edge)
+    E0, H0 = Vector(el), Vector(hd)
+
+    def along(u, S0=S0, E0=E0, H0=H0):
+        if u <= 0.5:
+            return S0 + (E0 - S0) * (u / 0.5)
+        return E0 + (H0 - E0) * ((u - 0.5) / 0.5)
+    AU = {}
+
+    def w_arm(p, s_=s_, AU=AU):
+        u = AU[tuple(round(c, 6) for c in p)]
+        e = smooth(0.42, 0.6, u)
+        return {k: v for k, v in (('sh' + s_, 1 - e), ('el' + s_, e)) if v > 1e-4}
+    arm = b.P('arm' + s_, COL['skin'], w_arm, 50)
+    rings = []
+    for u, ra, rd in ARM:
+        c = along(u)
+        d = (along(min(1.0, u + 0.06)) - along(max(-0.06, u - 0.06))).normalized()
+        across = Vector((d.y, -d.x, 0.0)).normalized()
+        dep = d.cross(across).normalized()
+        if dep.z < 0:
+            dep = -dep
+        rr = [tuple(c + across * (math.cos(2 * math.pi * i / ARM_N) * ra) + dep * (math.sin(2 * math.pi * i / ARM_N) * rd)) for i in range(ARM_N)]
+        for q in rr:
+            AU[tuple(round(v, 6) for v in q)] = u
+        rings.append(rr)
+    loft(arm, rings, cap_bottom=True)
+    AU[tuple(round(v, 6) for v in arm.v[-1])] = ARM[0][0]
+    # faces outward (the sections' order decides the winding)
+    f0 = arm.f[ARM_N]
+    a_, b_, c_ = (Vector(arm.v[i]) for i in f0[:3])
+    cen = sum((Vector(arm.v[i]) for i in f0), Vector()) / len(f0)
+    if (b_ - a_).cross(c_ - a_).dot(cen - along(ARM[1][0])) < 0:
+        arm.f = [list(reversed(f)) for f in arm.f]
+    el, hd = tuple(E0), tuple(H0)
     d = (Vector(hd) - Vector(el)).normalized()
     # the hand: the original's forearm narrows to a long point (≈0.14 m past the wrist); ours is a short flattened
     # mitten with a round end (a point read as a spike in close-ups)
@@ -404,9 +452,7 @@ BUN_U = {}
 
 
 def w_bun(p):
-    u = BUN_U[tuple(round(c, 6) for c in p)]
-    a, c_, d = smooth(-0.6, 0.2, u), smooth(0.8, 1.4, u), smooth(1.4, 2.0, u)
-    return {k: v for k, v in (('head', 1 - a), ('tail0', a - c_), ('tail1', c_ - d), ('tail2', d)) if v > 1e-4}
+    return {'head': 1.0}   # (CHAR-OPEN: the bun rides the head; it was passed along tail0..2 like a ponytail)
 
 
 bun = b.P('bun', COL['hair'], w_bun, 80)
