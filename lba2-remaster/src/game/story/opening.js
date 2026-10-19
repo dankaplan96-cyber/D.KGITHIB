@@ -474,7 +474,7 @@ export function playOpening(story) {
     if (a && talk) { at(tt, () => play(a, 'talk')); at(tt + d - 0.15, () => { if (a.rig.anim === 'talk') play(a, 'idle'); }); }
   };
   say(14.6, 'resident', 'op_res_1', 2.3, resident);
-  say(17.1, 'worker', 'op_wk_1', 2.9, worker, false);
+  say(16.95, 'worker', 'op_wk_1', 2.6, worker, false);   // (ends with the cut to the drill at 19.6, not over it)
   say(24.0, 'resident', 'op_res_2', 1.7, resident);
   say(25.8, 'worker', 'op_wk_2', 2.4, worker, false);
   say(31.3, 'arthur', 'op_ar_1', 1.8, ar, false);
