@@ -106,8 +106,10 @@ export function playOpening(story) {
     shot(13.0, 19.6, P(HV(-79.7, 3.3, -1.75), HV(-85.1, 2.25, -3.05), 44), P(HV(-79.9, 3.2, -1.85), HV(-85.1, 2.4, -3.1), 44)),
     // 3 — the hum: the drill turning in FunFrock's old fortress, up on the plateau, the town beyond
     shot(19.6, 23.8, P(V(bore.x + 22, boreY + 9, bore.z + 12), V(bore.x, boreY + 5, bore.z), 46), P(V(bore.x + 18, boreY + 7.6, bore.z + 10), V(bore.x, boreY + 5.6, bore.z), 46)),
-    // 4 — back at the pier, from above: the lantern settles; "Just the drill."; the crate is set down
-    shot(23.8, 29.0, P(HV(-79.0, 4.2, -6.8), HV(-84.0, 1.3, -3.6), 44), P(HV(-79.3, 4.0, -6.6), HV(-84.0, 1.25, -3.7), 44)),
+    // 4 — back at the pier, a little above head height: the lantern settles; "Just the drill."; the crate is set
+    // down. (The look point is on the people, 0.7 m over the deck (2.16): it was below the deck, which put their
+    // heads at the top edge, cut.)
+    shot(23.8, 29.0, P(HV(-79.0, 3.95, -6.8), HV(-84.0, 2.85, -3.7), 44), P(HV(-79.3, 3.9, -6.6), HV(-84.0, 2.8, -3.8), 44)),
     // 5 — home: the whole family at their own things; over Arthur's shoulder: "Dad! The mast fits!"
     shot(29.0, 31.2, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.6, -0.55), 44), P(hv(4.2, 2.68, 4.2), hv(0.15, 0.6, -0.58), 44)),
     shot(31.2, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
