@@ -120,7 +120,8 @@ export function playOpening(story) {
     shot(35.0, 41.0, P(hv(0.15, 1.8, -2.85), hv(-2.2, 1.55, -2.75), 46), P(hv(0.05, 1.8, -2.87), hv(-2.25, 1.55, -2.77), 46)),
     shot(41.0, 48.0, P(hv(-0.05, 1.8, -2.9), hv(-2.3, 1.5, -2.95), 44), P(hv(-0.2, 1.8, -2.92), hv(-2.3, 1.5, -2.95), 43)),
     // 7 — the exchange: Twinsen answers from the table; over his shoulder for hers
-    shot(48.0, 50.8, P(hv(-1.9, 2.05, 2.6), hv(-0.7, 1.05, -1.4), 46), P(hv(-1.85, 2.03, 2.5), hv(-0.7, 1.05, -1.4), 46)),
+    // (from the west, so his face is seen as he turns round to her)
+    shot(48.0, 50.8, P(hv(-2.9, 1.85, 1.5), hv(-1.05, 1.0, -1.6), 46), P(hv(-2.85, 1.83, 1.4), hv(-1.05, 1.0, -1.6), 46)),
     shot(50.8, 53.4, () => overShoulder(), null),
     // 8 — the house hums too: dust from the beams, all three look up; Arthur knows what it is
     shot(53.4, 58.0, P(hv(4.2, 2.7, 4.2), hv(0.0, 0.6, -0.7), 46), P(hv(4.05, 2.62, 4.05), hv(-0.1, 0.6, -0.75), 46)),
@@ -183,6 +184,11 @@ export function playOpening(story) {
     });
   };
   const angleTo = (a, p) => Math.atan2(p.x - a.pos.x, p.z - a.pos.z);
+  // a turn on the spot with the feet stepping round (the gameplay turn: turnL / turnR), then `after`
+  const pivot = (a, ang, t0, dur, after = 'idle') => {
+    turn(a, ang, t0, dur);
+    track(t0, t0 + dur, (k) => { if (k < 1) { const d = Math.atan2(Math.sin(ang - a.angle), Math.cos(ang - a.angle)); if (Math.abs(d) > 0.05) a.rig.play(d > 0 ? 'turnR' : 'turnL'); } else a.rig.play(after); });
+  };
 
   // the lift's unload cycle on the clock
   const liftU = [[6.0, 0], [13.0, 0.16], [14.2, 0.22], [21.0, 0.45], [24.8, 0.7], [27.0, 0.88], [28.6, 1.0]];
@@ -343,7 +349,11 @@ export function playOpening(story) {
   at(44.0, () => play(zo, 'reach'));
   at(44.6, () => { play(zo, 'idle'); look(zo, V(K.spout.x, K.spout.y, K.spout.z)); });
   at(45.2, () => look(zo, head(tw)));
+  // he turns round from the lamp to answer her (she is behind him: a look alone stopped at his shoulder, facing
+  // the lens), and back to Arthur when Arthur speaks
   at(46.2, () => { play(tw, 'idle'); look(tw, head(zo)); });
+  pivot(tw, -1.95, 46.35, 0.75);
+  pivot(tw, 0.35, 54.9, 0.8);
   at(53.0, () => tw.rig.doGesture('shrug'));
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
