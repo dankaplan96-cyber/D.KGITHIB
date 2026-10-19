@@ -1,11 +1,17 @@
 // Chapter 4 — "The Dig" (Desert Island).
 //
 // Baldino sent Twinsen south to learn what the shell is. Kesh, the island's village, distrusts anyone off
-// the project's ferry: restarting the wind-pump (three seized gears, the magic ball) earns Mother Tarra's
-// trust and the name of Professor Ilka, who found the first crystals and was sacked for it. Hesk's sand-yacht
-// needs rope from the pier before it can fly. Ilka's notebook — the dig's gate code — sits on the foreman's
-// desk at the research post: go in during one of the sandstorms that blind the drones and send the gate
-// guard indoors. The project dug Temple-Park down to the Temple of Bù's gate (three terraces, crystal mites);
+// the project's ferry: restarting the wind-pump earns Mother Tarra's trust and the name of Professor Ilka, who
+// found the first crystals and was sacked for it. The pump (ADV-2) is found out, not told: Brosk blames the test
+// bore's tremors; Sani hears it from the roof (at each gust two gears clack and one grinds). At the tower each gust
+// shows it: the sound gears rock, the jammed one shudders and spits sand (Listen there brings the next gust at once).
+// The ball knocks the jammed one loose; a sound gear only rings (a line, then a toast; Sani's hint grows). Then the
+// pump lifts water and it sprays from a pipe joint the tremors shook apart (Brosk was half right): push it home and
+// the oasis fills. Any order: the pump can be fixed before Tarra asks. Hesk's sand-yacht needs rope from the pier
+// before it can fly. Ilka's notebook — the dig's gate code — sits on the foreman's desk at the research post: go
+// in during one of the sandstorms that blind the drones and send the gate guard indoors. At the dig the player
+// enters the code on the keypad (three worn keys, three orders: the notebook says which; a wrong one buzzes).
+// The project dug Temple-Park down to the Temple of Bù's gate (three terraces, crystal mites);
 // five stone discs stand round its door, like the five vents carved over it; only the three with heat behind them
 // open it (crystals crust those: they grow where heat leaks, as Ilka said and a crack on the way down shows); a
 // cold disc shuts the others again. Ilka waits at the rim with hints that grow with his mistakes. Inside the
@@ -16,12 +22,12 @@ import { ChapterBase } from './base.js';
 import '../text/ch4.js';
 
 const STORM_PERIOD = 75, STORM_LEN = 30; // seconds (game time) between storms, and how long one blows
+const CODES = ['c4_code_147', 'c4_code_417', 'c4_code_741'];   // the keypad: three orders of its worn keys (the notebook: 4-1-7)
 
 export class Dig extends ChapterBase {
   get D() { return this.game.rooms.desert; }
   get T() { return this.game.rooms.butemple; }
   inD() { return this.game.room?.id === 'desert'; }
-  gears() { return [0, 1, 2].filter((i) => this.f['c4_gear' + i]).length; }
   seals() { return [0, 1, 2].filter((i) => this.f['c4_seal' + i]).length; }
   // where Ilka waits once she has her notebook back: outside the dig's gate, out of the keypad's way
   ilkaRim() {
@@ -105,6 +111,10 @@ export class Dig extends ChapterBase {
     const g = this.game, f = this.f, D = this.D, h = g.hero;
     if (this.isCur() && g.room?.id === 'butemple' && f.c4_seals3 && !f.c4_carving && this.T) consider(dist(this.T.carving.x, this.T.carving.z), 2.2, { kind: 'c4carve', label: 'p_carving' });
     if (!this.isCur() || !this.inD()) return;
+    // the wind-pump: listen at the tower while it is jammed; push the shaken joint home while it sprays
+    const pu = D.pump;
+    if (f.c4_started && pu.state === 'jammed') consider(dist(pu.x, pu.z), 3.7, { kind: 'c4listen', label: 'p_listen' });
+    if (pu.state === 'leak') consider(dist(pu.joint.x, pu.joint.z), 1.5, { kind: 'c4joint', label: 'p_push' });
     if (f.c4_heskAsk && !f.c4_rope) consider(dist(D.rope.x, D.rope.z), 1.4, { kind: 'c4rope', label: 'p_rope' });
     if (f.c4_ilka && !f.c4_notebook) consider(dist(D.post.desk.x, D.post.desk.z), 1.5, { kind: 'c4desk', label: 'p_desk' });
     if (!f.c4_digOpen) consider(dist(D.dig.gate.x, D.dig.gate.z), 1.8, { kind: 'c4gate', label: 'p_code' });
@@ -135,10 +145,17 @@ export class Dig extends ChapterBase {
         this.chain([['hero', 'c4_desk_1'], ['hero', 'c4_dallan_note']], () => { g.updateObjective(); g.save(false); });
         return true;
       case 'c4gate':
-        if (!f.c4_notebook) { this.chain([['hero', 'c4_gate_locked']]); return true; }
-        f.c4_digOpen = true; D.dig.gate.open(); g.audio.play('door');
-        this.story.refreshCast();
-        this.chain([['hero', 'c4_gate_open']], () => { g.updateObjective(); g.save(false); });
+        // without the code he only sees the worn keys; with the notebook he enters it himself
+        if (!f.c4_notebook) { this.chain([['hero', 'c4_gate_locked']], () => { if (!f.c4_worn) { f.c4_worn = true; g.save(false); } }); return true; }
+        g.openMenu('c4_keypad', CODES.map((key) => ({ key })), (it) => this.enterCode(it.key));
+        return true;
+      case 'c4listen': {
+        const key = f.c4_gearMiss ? 'c4_listen_miss' : f.c4_sani ? 'c4_listen_sani' : 'c4_listen_1';
+        this.chain([['hero', key]], () => { D.pump.gustNow(); if (!f.c4_listened) { f.c4_listened = true; g.updateObjective(); g.save(false); } });
+        return true;
+      }
+      case 'c4joint':
+        g.hero.act('use', 0.8, () => { if (!f.c4_joint) this.fixJoint(); }, 0.4);
         return true;
       case 'c4lintel': this.chain([['hero', 'c4_lintel']], () => { f.c4_lintel = true; g.save(false); }); return true;
       case 'c4carve': this.readCarving(); return true;
@@ -151,12 +168,13 @@ export class Dig extends ChapterBase {
     const c = (lines, done) => { this.chain(lines, done); return true; };
     switch (id) {
       case 'doran': return c([['doran', 'c4_doran_1']]);
-      case 'dkid': return c([['dkid', f.c4_pump ? 'c4_kid_2' : 'c4_kid_1']]);
-      case 'dtrader': return c([['dtrader', f.c4_pump ? 'c4_trader_2' : 'c4_trader_1']]);
+      case 'dkid': case 'dtrader': { const l = this.keshLines(id); return l.length ? c(l, () => g.updateObjective()) : false; }
       case 'weaver': return c([['weaver', f.c4_pump ? 'c4_weaver_2' : 'c4_weaver_1']]);
       case 'tarra':
-        if (!f.c4_pumpTask) return c([['tarra', 'c4_tarra_1'], ['hero', 'c4_tw_tarra1'], ['tarra', 'c4_tarra_2'], ['hero', 'c4_pump_hint']], () => { f.c4_pumpTask = true; g.updateObjective(); g.save(false); });
-        if (!f.c4_pump) return c([['tarra', 'c4_tarra_wait']]);
+        // (the pump started before she asked: straight to her trust)
+        if (!f.c4_pumpTask && f.c4_pump) return c([['tarra', 'c4_tarra_early'], ['hero', 'c4_tw_tarra1'], ['tarra', 'c4_tarra_4'], ['tarra', 'c4_tarra_5']], () => { f.c4_pumpTask = true; f.c4_trust = true; g.updateObjective(); g.save(false); });
+        if (!f.c4_pumpTask) return c([['tarra', 'c4_tarra_1'], ['hero', 'c4_tw_tarra1'], ['tarra', 'c4_tarra_2'], ['tarra', f.c4_gear1 ? 'c4_tarra_leak' : 'c4_tarra_2b']], () => { f.c4_pumpTask = true; g.updateObjective(); g.save(false); });
+        if (!f.c4_pump) return c([['tarra', f.c4_gear1 ? 'c4_tarra_leak' : 'c4_tarra_wait']]);
         if (!f.c4_trust) return c([['tarra', 'c4_tarra_3'], ['tarra', 'c4_tarra_4'], ['tarra', 'c4_tarra_5']], () => { f.c4_trust = true; g.updateObjective(); g.save(false); });
         return c([['tarra', 'c4_tarra_idle']]);
       case 'hesk': return this.talkHesk(c);
@@ -204,13 +222,24 @@ export class Dig extends ChapterBase {
     });
   }
 
-  // ---------------------------------------------------------------- the ball: gears and seals
+  // ---------------------------------------------------------------- the ball: the pump's gears and the dig's discs
   ballHit(p) {
     const g = this.game, f = this.f;
     if (!this.isCur() || !this.inD()) return false;
+    // the pump (from his arrival on: he may fix it before Tarra asks): the jammed gear frees, a sound one rings. The
+    // gears sit close together, so the nearest one the ball reaches is the one struck
+    if (f.c4_started && !f.c4_gear1) {
+      let tg = null, bd = 1e9;
+      for (const t of g.room.ballTargets) {
+        if (t.gear == null && t.gearOk == null) continue;
+        const d = Math.hypot(p.x - t.x, p.y - t.y, p.z - t.z);
+        if (d <= (t.r || 0.8) + 0.15 && d < bd) { bd = d; tg = t; }
+      }
+      if (tg?.gear != null) { tg.done = true; this.freeGear(); return true; }
+      if (tg) { this.soundGear(tg); return true; }
+    }
     for (const tg of g.room.ballTargets) {
-      if (tg.done || Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) > (tg.r || 0.8) + 0.15) continue;
-      if (tg.gear != null && f.c4_pumpTask) { tg.done = true; this.freeGear(tg.gear); return true; }
+      if (tg.done || tg.gear != null || tg.gearOk != null || Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) > (tg.r || 0.8) + 0.15) continue;
       // (the discs answer once he is down there and has seen them: a ball thrown at a mite on the terraces above
       // mustn't count a cold disc he hasn't met yet)
       // (a disc is struck on its carved face, from the floor's side, not by a ball grazing past it from behind)
@@ -220,19 +249,74 @@ export class Dig extends ChapterBase {
     }
     return false;
   }
-  freeGear(i, silent = false) {
+  // the jammed gear knocked loose (its flag is c4_gear1, as in older saves): the train turns, and the water sprays
+  // out at the joint the tremors shook apart
+  freeGear() {
+    const g = this.game, f = this.f, D = this.D, J = D.pump.gears[D.pump.jam];
+    f.c4_gear1 = true;
+    D.pump.setState(f.c4_joint ? 'running' : 'leak');
+    g.audio.play('clang'); g.audio.play('chest'); g.particles.burst(J.x + J.nx * 0.25, J.y, J.z + J.nz * 0.25, '#e8c890', 24, 2.8);
+    g.hud.toast('c4_toast_gear');
+    this.chain([['narrator', 'c4_gear_free'], ['hero', 'c4_leak']], () => { g.updateObjective(); g.save(false); });
+  }
+  // a sound gear struck while the train is held: it rings and swings back, nothing more (a line, then a toast)
+  soundGear(tg) {
+    const g = this.game, f = this.f, G = this.D.pump.gears[tg.gearOk];
+    G.kick(); g.audio.play('clang'); g.particles.burst(G.x + G.nx * 0.2, G.y, G.z + G.nz * 0.2, '#fff0c0', 6, 1.4);
+    f.c4_gearMiss = (f.c4_gearMiss || 0) + 1;
+    const done = () => { g.updateObjective(); g.save(false); };
+    if (f.c4_gearMiss === 1) this.chain([['hero', 'c4_gear_ok']], done);
+    else { g.hud.toast('c4_toast_gearok'); done(); }
+  }
+  fixJoint() {
     const g = this.game, f = this.f, D = this.D;
-    f['c4_gear' + i] = true;
-    D.pump.gears[i].setTurning(true);
-    if (silent) return;
-    const n = this.gears();
-    g.audio.play('chest'); g.particles.burst(D.pump.gears[i].x, D.pump.gears[i].y, D.pump.gears[i].z, '#e8c890', 16, 2.5);
-    g.hud.toast('c4_toast_gear', { n });
-    if (n >= 3) {
-      f.c4_pump = true; D.pump.setRunning(true); this.fill = 0.15;
-      g.audio.play('rumble');
-      this.chain([['narrator', 'c4_pump_runs']], () => { g.updateObjective(); g.save(false); });
-    } else { g.updateObjective(); g.save(false); }
+    f.c4_joint = true; f.c4_pump = true; D.pump.setState('running');
+    g.audio.play('clunk'); g.audio.play('waterRun'); g.audio.play('rumble');
+    this.chain([['narrator', 'c4_pump_runs']], () => { g.updateObjective(); g.save(false); });
+  }
+  // a gust at the jammed pump: sand and a few sparks from the held gear; the clacks and the grind within earshot
+  gust() {
+    const g = this.game, D = this.D, P = D.pump, h = g.hero;
+    if (!this.isCur() || !this.inD() || P.state !== 'jammed') return;
+    const d = Math.hypot(h.pos.x - P.x, h.pos.z - P.z);
+    if (d > 45) return;
+    const J = P.gears[P.jam];
+    const ox = J.x + J.nx * 0.2, oz = J.z + J.nz * 0.2;
+    g.particles.burst(ox, J.y - 0.4, oz, '#d8b878', 12, 1.4);   // (sand from its lower teeth)
+    g.particles.burst(ox, J.y + 0.45, oz, '#ffd060', 4, 2.4);   // (and sparks off the top)
+    if (d < 18 && g.state === 'play') { g.audio.play('gearClack'); g.audio.play('grind'); }   // (not positional: only near, or it would beat over all Kesh)
+  }
+  // the gate's keypad: three orders of the worn keys; the notebook says which
+  enterCode(key) {
+    const g = this.game, f = this.f, D = this.D;
+    if (key === 'c4_code_417') {
+      f.c4_digOpen = true; D.dig.gate.open(); g.audio.play('select'); g.audio.play('door');
+      this.story.refreshCast();
+      this.chain([['hero', 'c4_gate_open']], () => { g.updateObjective(); g.save(false); });
+      return;
+    }
+    f.c4_codeTries = (f.c4_codeTries || 0) + 1;
+    D.dig.gate.flash(false); g.audio.play('deny');
+    const done = () => { g.updateObjective(); g.save(false); };
+    if (f.c4_codeTries === 1) this.chain([['hero', 'c4_code_wrong']], done);
+    else { g.hud.toast('c4_toast_code'); done(); }
+  }
+  // what Brosk and Sani add about the pump (Kesh's own talk asks first: story/kesh.js)
+  keshLines(id) {
+    const f = this.f;
+    if (!this.isCur() || !f.c4_started) return [];
+    if (id === 'dtrader') {
+      if (!f.c4_gear1) { const first = !f.c4_brosk; f.c4_brosk = true; this.game.updateObjective(); return first ? [['dtrader', 'c4_trader_1'], ['dtrader', 'c4_trader_1b']] : [['dtrader', 'c4_trader_1b']]; }
+      if (!f.c4_pump) return [['dtrader', 'c4_trader_leak']];
+      if (!f.c4_broskSaid) { f.c4_broskSaid = true; return [['dtrader', 'c4_trader_2']]; }
+      return [];
+    }
+    if (id === 'dkid') {
+      if (!f.c4_gear1) { const first = !f.c4_sani; f.c4_sani = true; this.game.updateObjective(); return [...(first ? [['dkid', 'c4_kid_1']] : []), ['dkid', f.c4_gearMiss ? 'c4_kid_pump2' : 'c4_kid_pump']]; }
+      if (!f.c4_pump) return [['dkid', 'c4_kid_leak']];
+      return [['dkid', 'c4_kid_2']];
+    }
+    return [];
   }
   openSeal(i, silent = false) {
     const g = this.game, f = this.f, D = this.D;
@@ -283,6 +367,7 @@ export class Dig extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f, D = this.D;
     if (!this.isCur() || !D) return;
+    D.pump.onGust ??= () => this.gust();
     // the oasis fills after the pump starts
     if (f.c4_pump && D.oasis.level < 1) D.oasis.setLevel(Math.min(1, D.oasis.level + dt * 0.08));
     // sandstorms, once Ilka has explained them, until the notebook is out
@@ -321,8 +406,10 @@ export class Dig extends ChapterBase {
   applyFlags() {
     const f = this.f, D = this.D;
     if (!this.reached() || !D) return;
-    for (const i of [0, 1, 2]) if (f['c4_gear' + i]) { this.freeGear(i, true); for (const tg of D.ballTargets) if (tg.gear === i) tg.done = true; }
-    if (f.c4_pump) { D.pump.setRunning(true); D.oasis.setLevel(1); }
+    // the pump (older saves: c4_gear1 is the jammed gear's flag, c4_gear0/2 no longer matter; c4_pump means it runs)
+    D.pump.setState(f.c4_pump ? 'running' : f.c4_gear1 ? 'leak' : 'jammed');
+    for (const tg of D.ballTargets) if (tg.gear != null) tg.done = !!(f.c4_gear1 || f.c4_pump);
+    if (f.c4_pump) D.oasis.setLevel(1);
     if (f.c4_rope) D.rope.setVisible(false);
     if (f.c4_yacht) D.yacht.placeAt(f.c4_yacht);
     if (f.c4_digOpen) D.dig.gate.open();
@@ -343,7 +430,7 @@ export class Dig extends ChapterBase {
     if (f.c4_ilka) return this.goal('c4_obj_notebook') + this.sub(false, 'c4_sub_storm');
     if (f.c4_trust) return this.goal('c4_obj_ilka') + this.sub(!!f.c4_rope, f.c4_heskAsk ? 'c4_sub_rope' : 'c4_sub_hesk');
     if (f.c4_pump) return this.goal('c4_obj_tarra');
-    if (f.c4_pumpTask) return this.goal('c4_obj_pump', { n: this.gears() });
+    if (f.c4_pumpTask) return this.goal('c4_obj_pump') + (f.c4_gear1 ? this.sub(false, 'c4_sub_leak') : f.c4_sani || f.c4_listened ? this.sub(false, 'c4_sub_grind') : '');
     return this.goal('c4_obj_find');
   }
   items() {
@@ -352,19 +439,20 @@ export class Dig extends ChapterBase {
     if (f.c4_notebook && !f.c4_done) out.push({ id: 'notebook', icon: 'leaflet' });
     return out;
   }
+  // The chapter's steps, each shown once the one before is done; after a shown step, the facts he has heard or seen
+  // that belong to it (recalled, never the answer): they never hold back or reveal a step themselves
   journal() {
-    const f = this.f;
-    return [
-      { key: 'c4_j_arrive', done: !!f.c4_started },
+    const f = this.f, fact = (on, key) => (on ? [{ key, done: true }] : []);
+    const steps = [
+      { key: 'c4_j_arrive', done: !!f.c4_started, facts: [...fact(f.c4_brosk, 'c4_j_brosk'), ...fact(f.c4_sani, 'c4_j_sani'), ...fact(f.c4_gearMiss, 'c4_j_gearok'), ...fact(f.c4_gear1 && !f.c4_pump, 'c4_j_leak'), ...fact(f.c4_worn && !f.c4_notebook, 'c4_j_worn')] },
       { key: 'c4_j_pump', done: !!f.c4_trust },
       { key: 'c4_j_ilka', done: !!f.c4_ilka },
-      { key: 'c4_j_notebook', done: !!f.c4_notebook },
-      // what he has seen for himself at the dig (recalled, never the answer)
-      ...(f.c4_crack ? [{ key: 'c4_j_crack', done: true }] : []),
-      ...(f.c4_bottom ? [{ key: 'c4_j_discs', done: true }] : []),
-      ...(f.c4_coldHits ? [{ key: 'c4_j_cold', done: true }] : []),
+      { key: 'c4_j_notebook', done: !!f.c4_notebook, facts: [...fact(f.c4_codeTries, 'c4_j_code'), ...fact(f.c4_crack, 'c4_j_crack'), ...fact(f.c4_bottom, 'c4_j_discs'), ...fact(f.c4_coldHits, 'c4_j_cold')] },
       { key: 'c4_j_carving', done: !!f.c4_carving },
       { key: 'c4_j_dallan', done: !!f.c4_done },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ];
+    const out = [];
+    steps.forEach((l, i) => { if (i === 0 || steps[i - 1].done) out.push({ key: l.key, done: l.done }, ...(l.facts || [])); });
+    return out;
   }
 }

@@ -259,6 +259,9 @@ export class AudioEngine {
       case 'yelp': this._tone({ type: 'triangle', f0: 1300, f1: 700, dur: 0.16, vol: 0.06 }); this._burst({ dur: 0.1, vol: 0.06, f: 2400, f1: 1200, type: 'bandpass', q: 3 }); break;
       case 'growl': this._tone({ type: 'sawtooth', f0: 95, f1: 110, dur: 0.5, vol: 0.07 }); this._burst({ dur: 0.5, vol: 0.06, f: 420, f1: 300, type: 'bandpass', q: 4 }); break;
       case 'clunk': this._tone({ f0: 150, f1: 90, dur: 0.12, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.12, f: 1800, f1: 400 }); break;
+      // the wind-pump at a gust (chapter 4): two sound gears clack, then the jammed one grinds against its sand
+      case 'gearClack': [0, 0.16].forEach((at) => { this._tone({ type: 'triangle', f0: 620, f1: 480, dur: 0.06, vol: 0.06, at }); this._burst({ dur: 0.05, vol: 0.1, f: 2600, f1: 1400, type: 'bandpass', q: 3, at }); }); break;
+      case 'grind': this._burst({ dur: 0.55, vol: 0.16, f: 1500, f1: 700, type: 'bandpass', q: 1.6, at: 0.3 }); this._tone({ type: 'sawtooth', f0: 72, f1: 64, dur: 0.5, vol: 0.05, at: 0.3 }); break;
       case 'thump': this._burst({ dur: 0.25, vol: 0.3, f: 320, f1: 60 }); this._tone({ f0: 85, f1: 45, dur: 0.22, vol: 0.14 }); break;
       case 'hum': {
         const ctx = this.ctx, t = ctx.currentTime, o = ctx.createOscillator(), gg = ctx.createGain();

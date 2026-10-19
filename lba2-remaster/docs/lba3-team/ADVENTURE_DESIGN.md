@@ -98,9 +98,63 @@ warm targets from the face side, passes repeat after a stray cold hit).
   crystals read as "warm" and whether the crack → discs link is noticed are design judgments awaiting a fresh
   player. GPU look (software rendering only), sound by ear.
 
-## Next useful adaptation
+## Next useful adaptation (done in ADV-2, below)
 
 Chapter 4's opening half: the wind-pump's three gears repeat the ball-on-three-targets pattern and are told outright.
 Following sample 1/6: let the pump's fault be found (Brosk: the test bore's tremors; Sani on the roof hears which
 gear grinds), so the player observes which part is jammed instead of being told "hit the gears". And give the gate
 code a use (the notebook's survey sketch matched to the keypad's worn keys) rather than auto-entry.
+
+## ADV-2: chapter 4's first half (the wind-pump and the dig's keypad)
+
+Same sources and limits as above (text banks only; no scene scripts decoded, no footage, no playable original).
+Added samples, cited as before:
+
+| # | Evidence (O) | Interpretation (I) and confidence |
+|---|---|---|
+| 9 | LBA1 desert: "Did you know that there are strange noises coming from that symbol on the rocks?" (L1 b10 #28, id 66). LBA2: the ferryman is called "with this song. Listen to me and don't forget." (L2 b18 #52, id 550) | A person points the player at a *sound* at a place; the player goes there and finds out. The rule comes from a person, the proof from the place. Medium. |
+| 10 | LBA2: a notice gives "new password … operation GREEN MOON" (L2 b10 #65, id 117); the moon base asks "give your password" (b12 #15, id 501), answered "Right code." / "Wrong code." (#16–17); parallel strings sit beside it: "Code Operation GREEN MOON", "Code Operation Dark Monk", "Operation Moon.", "Code 36AX 95." (b12 #3–6) | A code read in one place is *used* at its checkpoint, chosen among plausible answers, and a wrong one is stated. That those strings are a choice menu is inferred from their form, not from a decoded script: medium. |
+| 11 | LBA1: the keypad "allows access to a room filled with Meca-Penguins" (L1 b4 #53, id 124), from someone who got it "by accident" (b12 #110, id 211) | A code has one concrete use the player needs, and arrives with a joke. High for the use, low for how it played. |
+
+**Before (O, tests/chapter4.mjs at 40946f8):** Tarra: "Three gears up the tower, all seized with sand", then Twinsen's own
+hint "(…A good hit with the ball should knock the sand out of them.)"; three identical ball hits and a 0/3 count. Brosk's
+tremor line led nowhere. At the dig, "Enter Code" auto-entered 4-1-7 once the notebook was carried.
+
+**Evidence → principle → gap → adaptation → acceptance** (acceptance: tests/chapter4.mjs, by INPUT)
+
+- 9 + sample 6 (hints from several people) → P1, P3 → the fault was told → **Sani hears it from the roof** ("clack, clack,
+  grrrk. Two gears clack. One grinds"), never which one; **Tarra** sends him to Brosk and Sani. **At the tower each gust
+  shows it** (every 3.4 s): the wheel swings and is pulled back, the two sound gears rock and clack, the jammed one (the
+  middle one) holds, shudders and spits sand and a few sparks with a grinding scrape; close up, sand is caked in its
+  teeth. **Listen** at the tower brings the next gust at once (no waiting). The gears are now a gearbox in a row across
+  the tower's west face (where Kesh and the play camera look from), 1.7 m up and 1.35 m apart: measured, a thrown ball
+  only reaches ~2 m by the tower, so the first version's gears at 3.6 m and 5 m were never really struck (its test fell
+  back to a "forced" hit), and the ball's aim goes by direction, so neighbours must be well apart (now each marked gear
+  is reached within 0.01–0.08 m from 3.6–5.2 m away, its neighbours 1.35 m off). The water tank moved to the tower's
+  south-east and one palm in front of the gearbox was left out, both of which stood in that line. → no solution in
+  Tarra's, Sani's or Brosk's lines; in a gust the sound gears turn > 0.15 rad, the jammed one < 0.05 rad and shakes;
+  the sand/grind cue is called.
+- Sample 1 (failure stated, retry free) → P2 → **a wrong guess**: a sound gear rings and swings back ("Not that one", then a
+  toast); nothing resets. **Sani's hint grows** after a mistake ("The grinding one doesn't turn. It spits sand").
+- Samples 6 (partly unreliable voices) and 7 (a comic consequence) → P5 → Brosk's tremor theory had no use → **Brosk is
+  half right**: "Kick it, hit it, it won't help. It's the ground." The ground did shake something loose: once the gear
+  turns, the water sprays out of **a pipe joint** short of the pond (a second, different verb: push it home). Brosk then
+  takes the credit ("I said it was the shaking"). The bore's harm to Kesh is seen before chapter 5 asks about it.
+- 10, 11 → P1 → the code was auto-entered → **the keypad**: three keys worn shiny (1, 4, 7; seen before the notebook and
+  kept in the journal); with the notebook, a choice of the three orders of those keys; a wrong order buzzes and flashes
+  red ("Wrong order. Ilka's notebook has it", then a toast); 4 · 1 · 7 lifts the barrier.
+- Any order: the pump can be fixed before Tarra asks ("You are the one who started our pump? Before anyone asked you?"),
+  and she goes straight to Ilka.
+- Recovery: c4_gear1 (the jammed gear: the same flag as before), c4_joint, c4_gearMiss, c4_brosk, c4_sani, c4_listened,
+  c4_worn, c4_codeTries are saved; Continue restores jammed, spraying or running. Old saves (format 3): c4_pump → running;
+  c4_gear1 without c4_pump → spraying; the old c4_gear0/2 no longer count; a notebook with the gate shut → the keypad.
+- Journal: Brosk's theory, Sani's clack-clack-grrrk, that a sound gear swings back, the spraying joint, the worn keys, the
+  notebook's last page, that a wrong order buzzes (what he has heard or seen, never "the middle gear" or "4-1-7").
+
+**Tested vs judged.** Tested by input, by an agent who knows the solution (tests/chapter4.mjs). Not tested: whether a
+first-time player notices the jammed gear in a gust from the play camera (palm fronds by the oasis cover part of the tower
+from some spots), whether a choice of three orders feels like a keypad, and the sounds by ear. Design judgments awaiting a
+fresh player.
+
+**Next useful adaptation:** the research post (the storm wait of up to ~45 s, still teleport-tested): let the storm's
+approach be read (Hesk's flags stream harder, the drones' lamps dim) and give the player something to do while it comes.
