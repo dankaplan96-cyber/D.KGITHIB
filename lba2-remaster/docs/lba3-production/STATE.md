@@ -251,6 +251,20 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Open: a first-time player's read of the gust and the keypad; sounds by ear; an independent review. Next adaptation: the
   research post's storm wait (ADVENTURE_DESIGN.md).
 
+## Done after (FRAME-1, block 6; status REVIEW)
+- Frame delivery measured per frame (CPU proxy on SwiftShader, loaded machine; uploads/garbage exact): QA.md "FRAME-1",
+  evidence docs/lba3-visual/evidence/FRAME-1/ (framelog.mjs and the other probes are re-runnable).
+- The door fade: #fade's stylesheet 0.6 s transition eased every per-frame write, so at 60 fps the screen was ~14 % dark
+  when the room swapped; now drawn frame by frame and black at the swap (t clamped to 0.35). BUG-WALL-T fixed by the same.
+- Geometry goes to the GPU behind the loading screen (Citadel) and in each scene's first black swap frame
+  (Game.uploadGeometry: a render with the draw step off; nothing compiles); Doran's mooring line no longer makes a new
+  geometry 30×/s. Settings → Frame rate limit (Off/60/30). Benchmark: stalls behind black, > 33 ms, longest frames.
+- For others: per-frame garbage 200–630 KB (island.js materials shared by instanced + plain meshes make three switch
+  programs every frame — no measured CPU gain from splitting; camera clearance, shadowcull, rig, physics); shadowcull
+  rebuilds a 24 m cell when a batched piece first moves (shuttle, dogs).
+- Not verifiable here: the laptop's GPU frame rate, real hitch sizes, input feel, the 30 fps limit's feel, fullscreen.
+  The user's benchmark (pause → Benchmark → Copy) is the judge; what to send: the FRAME-1 report.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
