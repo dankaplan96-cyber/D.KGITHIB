@@ -1,0 +1,8 @@
+PASS through a door: the hero walks on into it while the screen darkens 
+PASS and walks in on the other side while it clears, then stands 
+PASS out through an exit: the same, onto Citadel 
+PASS a scene change that is not a door: no walk 
+FAIL real time: black while the new room compiles, then the fade-in runs in full {"frames":10,"ms":9151,"room":"cellar","held":1,"heldBlack":false,"swap":{"t":0.3500333333333377,"set":1,"shown":0.619143},"noCssEase":false,"done":true,"maxJump":0.10000000000000003}
+FAIL real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing) {"frames":10,"ms":9151,"room":"cellar","held":1,"heldBlack":false,"swap":{"t":0.3500333333333377,"set":1,"shown":0.619143},"noCssEase":false,"done":true,"maxJump":0.10000000000000003}
+no errors
+2 FAILED

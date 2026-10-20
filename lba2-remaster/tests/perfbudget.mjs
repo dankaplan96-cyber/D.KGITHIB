@@ -5,6 +5,7 @@
 // proxies only, never GPU timings. The user's in-game Benchmark on the real laptop is the judge.
 //   PERF_JSON=out.json  writes the numbers;  PERF_SHOTS=dir  saves a JPEG per route per preset
 //   PERF_BUDGET=0       prints only (no budget checks; for a "before" run);  ROUTES=street,transition  only those
+// FRAME-1 adds a pacing check on every run: no object's geometry rebuilt while a route plays (see `rebuilt`).
 import { launch, open, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 const { check, done } = checker();
@@ -39,6 +40,14 @@ for (const q of QS) {
       G.state = 'play'; route.setup(); G.state = 'play';
       const p0 = R.info.programs.length;
       const rows = [];
+      // (FRAME-1) geometries the GPU sees for the first time, per object: one is a first view (an upload), more than
+      // two on one object means it is rebuilt while it plays (garbage and a new GPU buffer each time: Doran's mooring
+      // line was rebuilt 30 times a second anywhere on Citadel)
+      const seenGeo = new WeakSet(), newPer = new Map(), rbd = R.renderBufferDirect;
+      R.renderBufferDirect = function (c, sc, geometry, material, object, ...a) {
+        if (!seenGeo.has(geometry)) { seenGeo.add(geometry); if (rows.length) newPer.set(object, (newPer.get(object) || 0) + 1); }
+        return rbd.call(this, c, sc, geometry, material, object, ...a);
+      };
       // the in-game benchmark's window (PERF-2): 1.5 s of warm-up then 6 s, simulated at 30 fps and drawn every
       // 0.25 s (SwiftShader takes seconds per frame), so the turning camera covers the same headings as on the
       // player's machine; the first drawn frame (any new shader compiles) is reported apart
@@ -55,11 +64,14 @@ for (const q of QS) {
         // the transition route swaps scenes behind a fade: count only frames that drew
         if (G._renderMs > 0) rows.push({ ms: G._renderMs, calls: R.info.render.calls, tris: R.info.render.triangles, draws: R.info.render.calls + G.perf.sub, shadow: G.perf.shadow });
       }
+      R.renderBufferDirect = rbd;
+      const pathOf = (o) => { const p = []; for (let x = o; x && x !== G.scene; x = x.parent) p.push(x.name || x.type); return p.slice(0, 4).join(' < '); };
+      const rebuilt = [...newPer].filter(([, n]) => n > 2).map(([o, n]) => `${pathOf(o)} ×${n}`);
       const med = (k) => { const v = rows.slice(1).map((x) => x[k]).sort((a, b) => a - b); return v.length ? v[Math.floor(v.length / 2)] : 0; };
       const max = (k) => Math.max(0, ...rows.slice(1).map((x) => x[k]));
       const p95 = (k) => { const v = rows.slice(1).map((x) => x[k]).sort((a, b) => a - b); return v.length ? v[Math.min(v.length - 1, Math.floor(v.length * 0.95))] : 0; };
       return { calls: med('calls'), callsMax: max('calls'), callsP95: p95('calls'), draws: med('draws'), shadow: med('shadow'), tris: med('tris'), trisMax: max('tris'), renderMs: +med('ms').toFixed(1), firstMs: +(rows[0]?.ms ?? 0).toFixed(0),
-        newPrograms: R.info.programs.length - p0, newNames: R.info.programs.slice(p0).map((p) => p.name + ':' + String(p.cacheKey).slice(0, 90)), frames: rows.length, pr: +(G.renderer.renderer.getPixelRatio() * (G.renderer.effScale?.() ?? 1)).toFixed(2), lamps: G.lightPool.lights.length };
+        rebuilt, newPrograms: R.info.programs.length - p0, newNames: R.info.programs.slice(p0).map((p) => p.name + ':' + String(p.cacheKey).slice(0, 90)), frames: rows.length, pr: +(G.renderer.renderer.getPixelRatio() * (G.renderer.effScale?.() ?? 1)).toFixed(2), lamps: G.lightPool.lights.length };
     }, { id });
     out.routes[`${q}/${id}`] = r; save();
     if (r.newPrograms) console.log('   new programs:', JSON.stringify(r.newNames).slice(0, 1500));
@@ -76,6 +88,8 @@ if (budget && QS.length === 3) {
   for (const q of ['low', 'medium', 'high']) check(`interior at ${q}: ≤ 150 draw calls`, R[`${q}/interior`].calls <= 150, R[`${q}/interior`]);
   check('no shader compiles on the routes after loading (Low/Medium/High, transitions included)', Object.values(R).every((x) => x.newPrograms === 0), Object.fromEntries(Object.entries(R).map(([k, v]) => [k, v.newPrograms])));
 }
+// (FRAME-1, any preset run): nothing rebuilds its geometry while a route plays
+if (budget) check('frame pacing: no object gets a new geometry more than twice while a route plays (no per-frame rebuilds: garbage + a GPU upload each time)', Object.values(out.routes).every((x) => !x.rebuilt?.length), Object.fromEntries(Object.entries(out.routes).filter(([, v]) => v.rebuilt?.length).map(([k, v]) => [k, v.rebuilt])));
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);

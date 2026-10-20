@@ -164,6 +164,12 @@ High stalling on shader compiles, and black frames every few seconds.
 
   Evidence: docs/lba3-visual/evidence/PERF-IGPU/ (before/after captures per preset and route, dynres log).
 
+- FRAME-1 (2026-10-19): presets reviewed and unchanged (no laptop numbers after PERF-2 yet). New in Settings: Frame
+  rate limit Off / 60 / 30 (off by default; one loop that skips refreshes until the next frame is due; at 30 on a 60 Hz
+  screen an even 33.3 ms; the automatic resolution's budget follows the limit so 33 ms frames are not read as a miss).
+  The door fade is now drawn frame by frame (the stylesheet's easing had left it ~14 % dark at the swap at 60 fps), and
+  geometry goes to the GPU behind the loading screen / the black swap frame instead of in visible frames. QA.md "FRAME-1".
+
 ## Remaining (ranked)
 1. Cliff bases still slightly soft; shoreline and water edge.
 2. Animation polish beyond idle: turn-in-place steps, landing variety, NPC-specific idles.

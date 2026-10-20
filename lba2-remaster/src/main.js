@@ -103,7 +103,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     if (!(this.settings.v >= 2)) { this.settings.controls = 'classic'; this.settings.keys = {}; this.settings.v = 2; }
@@ -243,6 +243,7 @@ class Game {
     const tex = new Set();
     this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap']) if (m[k]?.isTexture) tex.add(m[k]); });
     for (const t of tex) R.initTexture(t);
+    this.uploadGeometry(this.world.root);   // (FRAME-1: Citadel's geometry too; each room/region at its first entry)
     loadingStep('Almost there…');
     await nextPaint();
     this.titleCamera(0);
@@ -323,16 +324,22 @@ class Game {
     this.walkNext = false;
     this.hud.prompt(null); // (the last room's prompt would otherwise come back with the new scene's first frames)
   }
+  // FRAME-1: the fade is drawn frame by frame here, so the stylesheet's own 0.6 s opacity transition is off while it
+  // runs (each write restarted that easing: at 60 fps the screen was only ~14 % dark when the room swapped, never
+  // over ~25 %). The swap happens at exactly t = 0.35 (a frame that overshot it showed the swap, or the shader
+  // hold's frame, through a part-transparent fade: BUG-WALL-T), so that frame and any hold after it are fully black.
   updateTransition(dt) {
     const T = this.trans;
     if (!T) return;
-    if (T.hold) { $('#fade').style.opacity = 1; if (performance.now() - T.holdT > 4000) T.hold = false; return; }
+    const f = $('#fade');
+    f.style.transition = 'none';
+    if (T.hold) { f.style.opacity = 1; if (performance.now() - T.holdT > 4000) T.hold = false; return; }
     if (this._transBudget != null) { dt = Math.min(dt, this._transBudget); this._transBudget -= dt; }
     T.t += dt;
-    if (T.t >= 0.35 && !T.called) { T.called = true; T.mid(); this.warmScene(T); }
+    if (T.t >= 0.35 && !T.called) { T.t = 0.35; T.called = true; T.mid(); this.warmScene(T); }
     const op = T.t < 0.35 ? T.t / 0.35 : Math.max(0, 1 - (T.t - 0.35) / 0.35);
-    $('#fade').style.opacity = op;
-    if (T.t >= 0.7) { this.trans = null; $('#fade').style.opacity = ''; }
+    f.style.opacity = op; this._fadeOp = op;
+    if (T.t >= 0.7) { this.trans = null; f.style.opacity = ''; f.style.transition = ''; }
   }
   // compile the new scene's shaders behind the black screen (not under the automated tests' fixed stepping)
   // PERF-2: once per scene and light/graphics state. The warm-up walks every mesh of the scene (~6 400) to work out
@@ -347,9 +354,46 @@ class Game {
     this.scene.traverseVisible((o) => { if (o.isLight) { const k = o.type + (o.castShadow ? '+s' : ''); lights[k] = (lights[k] || 0) + 1; } });
     const key = [this.room?.id || 'citadel', this.settings.quality, this.settings.visual, R.shadowMap.enabled, R.shadowMap.type, JSON.stringify(lights)].join('|');
     const warmed = (this._warmed ??= new Map());
+    // (FRAME-1: its geometry too, in this black frame, the shadow batches included: they are built on the area's
+    // first update, which used to come later in this frame, so a house's 4.5 MB of batches went up on the first frame shown)
+    const root = this.room?.group || this.world.root;
+    if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);
+    this.uploadGeometry(root);
     if (warmed.get(key) === R.info.programs.length) return;
     T.hold = true; T.holdT = performance.now();
     this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); T.hold = false; });
+  }
+  // FRAME-1: every geometry under `root` (hidden parts too) and everything shown is sent to the GPU now, instead of on
+  // the first frame that shows it. Left to that frame, the street at Medium uploaded 17 MB mid-play as the camera
+  // first turned onto the harbour and the town, up to 4.4 MB in one frame. Called behind the loading screen (Citadel)
+  // and in a scene change's black frame (each room/region once). three uploads an object's buffers while it builds
+  // the frame's render list (before any draw), so: one render with nothing culled and the draw step itself switched
+  // off (no draw call, no shader chosen or compiled, no texture bound; the shadow map is not redrawn). The lights keep
+  // their state (nothing that was off is counted on), and everything is put back.
+  uploadGeometry(root) {
+    const R = this.renderer.renderer, C = this.renderer.composer, S = this.scene;
+    const done = (this._uploaded ??= new WeakSet());
+    if (!C || !root || done.has(root) || this.testFreeze) return 0;
+    for (let p = root; p; p = p.parent) if (!p.visible) return 0;   // (not on show any more: next time)
+    done.add(root);
+    const t0 = performance.now(), g0 = R.info.memory.geometries, lit = new Set(), shown = [], off = [], culled = [];
+    S.traverseVisible((o) => { if (o.isLight) lit.add(o); });
+    root.traverse((o) => { if (!o.visible && !o.isLight) { o.visible = true; shown.push(o); } });
+    S.traverseVisible((o) => {
+      if (o.isLight) { if (!lit.has(o)) { o.visible = false; off.push(o); } return; }
+      if (o.frustumCulled && (o.isMesh || o.isPoints || o.isLine || o.isSprite)) { o.frustumCulled = false; culled.push(o); }
+    });
+    const prevT = R.getRenderTarget(), au = R.shadowMap.autoUpdate, draw = R.renderBufferDirect;
+    try { R.shadowMap.autoUpdate = false; R.renderBufferDirect = () => {}; R.setRenderTarget(C.renderTarget1); R.render(S, this.camera); }
+    catch (e) { console.warn('geometry upload', e); }
+    finally {
+      R.renderBufferDirect = draw; R.setRenderTarget(prevT); R.shadowMap.autoUpdate = au;
+      for (const o of culled) o.frustumCulled = true;
+      for (const o of off) o.visible = true;
+      for (const o of shown) o.visible = false;
+    }
+    (this.uploadLog ??= []).push({ root: this.room?.id || 'citadel', ms: Math.round(performance.now() - t0), newGeometries: R.info.memory.geometries - g0 });
+    return R.info.memory.geometries - g0;
   }
   // The shadow pass's depth programs (one per kind of caster: side, texture/alpha test, instanced, batched, skinned)
   // are not compiled by precompile(); left alone they compile on the first frame that casts with each kind. Here a
@@ -733,6 +777,8 @@ class Game {
       if (was.quality) this.warmGraphics();
     }
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
+    // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
+    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; }
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);
@@ -1125,6 +1171,18 @@ class Game {
 
   // ------------------------------------------------ main loop
   loop(now) {
+    // the display's refresh interval (ms, smoothed), from the rAF timestamps
+    const d = now - (this._rafT ?? now); this._rafT = now;
+    if (d > 0) this._vsync = this._vsync ? this._vsync + (Math.min(50, d) - this._vsync) * 0.1 : Math.min(50, d);
+    // FRAME-1: frame-rate limit (Settings; off by default, off while benchmarking). A refresh before the next frame
+    // is due is skipped: nothing is simulated or drawn, the last frame stays on screen, and keys tapped meanwhile
+    // wait in Input for the next frame. Due times step by the limit (a frame late by more than one interval
+    // starts the count again), so at 30 on a 60 Hz screen every other refresh is drawn: an even 33 ms.
+    const cap = this.benching ? 0 : this.frameCapMs;
+    if (cap && !this.testFreeze && !this.preparing) {
+      if (now < (this._due || 0) - (this._vsync || 16.7) / 2) { requestAnimationFrame((t2) => this.loop(t2)); return; }
+      this._due = now - (this._due || 0) > cap ? now + cap : this._due + cap;
+    }
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
@@ -1146,7 +1204,11 @@ class Game {
     this._transBudget = Math.min(real, 0.1);
     for (let i = 0; i < n; i++) this.frame(sub, i === n - 1);
     const ms = performance.now() - t0;
-    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs });
+    // (FRAME-1: `black`: this interval was spent with a fully black screen on show (a scene change's fade or shader
+    // hold), so a long one is a pause behind the fade, not a hitch in view)
+    const black = !!this._shownBlack;
+    this._shownBlack = !!this.trans && (this.trans.hold || this._fadeOp >= 0.999);
+    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black });
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark)
     if (this.state === 'play' && !this.trans && !this.benching) this.renderer.adapt(real * 1000);
   }
@@ -1224,7 +1286,7 @@ class Game {
     this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : focus);
     if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     else if (this.room.outdoor) updateKitLod(this.hero.pos);
-    this.world._hero = this.hero;
+    this.world._hero = this.hero; this.world._cam = this.camera;
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
     this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);

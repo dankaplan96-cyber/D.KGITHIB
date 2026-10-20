@@ -3,7 +3,7 @@
 // render() (CPU side only: GPU time is not measured), and the draw calls / triangles of the frame.
 //   game.perf.stats()  → percentiles over the last N frames
 //   ?perf or F9        → a small overlay
-const N = 600;
+const N = 1200; // (FRAME-1: the benchmark's 6 s window at up to 200 Hz)
 
 // The graphics preset a first start picks from the GPU the browser reports (ANGLE's renderer string):
 //   Low    older integrated GPUs and phones: Vega 3–11 (Ryzen 2000–4000 APUs), Intel HD / UHD, Mali, Adreno, PowerVR

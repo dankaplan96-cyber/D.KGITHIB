@@ -231,18 +231,19 @@ export class Renderer {
     return p;
   }
 
-  // Automatic resolution, fed the displayed frame time (ms). Every 90 frames: a 90th percentile over 20 ms (the
-  // 60 Hz budget missed) lowers the internal resolution a step; one under 17.5 ms (holding 60) three times in a
-  // row raises it a step. A step up that fails at once is not tried again for 30 s, then 60, 120… so it settles
+  // Automatic resolution, fed the displayed frame time (ms). Every 90 frames: a 90th percentile over 1.2× the frame
+  // budget (20 ms at 60 fps: the budget missed) lowers the internal resolution a step; one under 1.05× (17.5 ms:
+  // holding it) three times in a row raises it a step. The budget is 60 fps's, or the frame-rate limit's (FRAME-1:
+  // at a 30 fps limit every frame is ~33 ms by design, which must not read as missing 60). A step up that fails at once is not tried again for 30 s, then 60, 120… so it settles
   // at the highest level that holds instead of see-sawing. No allocation and no canvas resize: see applyScale.
   adapt(ms, now = performance.now()) {
     if (!this.autoRes || this.retro) return;
     const b = this._fb; b.push(ms);
     if (b.length < 90) return;
     const p90 = b.slice().sort((x, y) => x - y)[Math.floor(b.length * 0.9)]; b.length = 0;
-    const lo = this.minDyn();
-    this._good = p90 < 17.5 ? (this._good || 0) + 1 : 0;
-    if (p90 > 20 && this.dyn > lo + 1e-3) {
+    const lo = this.minDyn(), B = this.budgetMs || 1000 / 60;
+    this._good = p90 < B * 1.05 ? (this._good || 0) + 1 : 0;
+    if (p90 > B * 1.2 && this.dyn > lo + 1e-3) {
       this.dyn = Math.max(lo, +(this.dyn - 0.1).toFixed(2));
       // a level just reached by stepping up that could not be held: back off before trying it again
       if (this._upAt && now - this._upAt < 6000) { this._back = Math.min(6, (this._back || 0) + 1); this._blockUntil = now + 15000 * 2 ** this._back; this._blockAbove = this.dyn; }
