@@ -83,3 +83,6 @@ Checked and not a bug: feet on the floor (ankles 7–12 cm over the floor standi
 sinking); no T-poses; no actor pops between frames outside a dip to black (tests/opening.mjs); props held in hands
 stay attached (the screwdriver is on his hand at 32 s; the mast in Arthur's); the handoff (83.6–88) eases out
 without a jump; captions and the title hold their timing.
+
+
+**2026-10-20, #28a reverted:** the user rejected Twinsen's sleeved tunic (CHAR-OPEN 812c694): in LBA2 the arms are not separate from the cape, and the previous model was better. Twinsen is back to the one-shell cape; #28a stays open only as "keep the original's cape" (no sleeves).
