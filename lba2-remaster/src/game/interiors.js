@@ -217,7 +217,7 @@ export class RoomBuilder {
       for (const s of [-1, 1]) k.add(rbox(fw, h + 0.1, 0.06, 0.02), fm, a + s * (w / 2 + fw / 2 - 0.02), y0 + h / 2, 0.03);
       k.add(rbox(w + 0.2, fw, 0.06, 0.02), fm, a, y0 + h + fw / 2 - 0.02, 0.03);
       // casement: frame, mullions, glass
-      const gz = -t * 0.45, gm = p.glass || MAT.glow('#d8eeff', '#a8d4ff', 0.9);
+      const gz = -t * 0.45, gm = p.glass || (p.view ? MAT.glass('#e4f4ff', 0.18) : MAT.glow('#d8eeff', '#a8d4ff', 0.9)); // (HOUSE-WIN: see-through glass over the outside view)
       k.add(plane(w, h), gm, a, y0 + h / 2, gz - 0.01);
       const mm = p.mullion || MAT.paint('#f4efe2', 0.5);
       k.add(rbox(w, 0.05, 0.05, 0.012), mm, a, y0 + h * 0.62, gz);
@@ -333,7 +333,7 @@ function buildHouse(scene, physics) {
     body: bodyM, low: MAT.wainscot('honey'), dado: 1.05, rail, cap: capM, beam: MAT.wood('dark'),
     posts: MAT.wood('dark'), postsAt: (L) => [0.48, L - 0.48, L / 2],
     back: [
-      { kind: 'window', at: 0.3 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sky') },
+      { kind: 'window', at: 0.3 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sea') },
       { kind: 'window', at: 2.6 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('citadel') },
       { kind: 'window', at: -9.5 - hcx, w: 1.1, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('sky') },
     ],
