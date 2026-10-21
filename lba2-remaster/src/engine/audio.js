@@ -8,6 +8,7 @@
 
 import { Music } from './music.js';
 import { Babble } from './voice.js';
+const VOICE_BOOST = 2.2, MUSIC_DUCK = 0.5; // VOICE-MIX
 
 export class AudioEngine {
   constructor() {
@@ -41,7 +42,14 @@ export class AudioEngine {
     const revGain = ctx.createGain();
     revGain.gain.value = 0.35;
     this.reverb.connect(revGain).connect(this.master);
-    for (const b of [this.musicBus, this.sfxBus, this.ambBus, this.voiceBus]) b.connect(this.master);
+    for (const b of [this.musicBus, this.sfxBus, this.ambBus]) b.connect(this.master);
+    // the voices (VOICE-MIX, the user: "too quiet against the music, even with the music turned down"): louder,
+    // through a gentle compressor so loud syllables don't clip; the music ducks while someone speaks (duck)
+    this.voiceComp = ctx.createDynamicsCompressor();
+    this.voiceComp.threshold.value = -20; this.voiceComp.knee.value = 12; this.voiceComp.ratio.value = 3.5;
+    this.voiceComp.attack.value = 0.004; this.voiceComp.release.value = 0.18;
+    this.voiceBus.connect(this.voiceComp).connect(this.master);
+    this.ducked = false;
     this.sfxBus.connect(this.reverb); // the music files carry their own room
     this.noiseBuf = this._noise(2);
     this.applyVolumes();
@@ -53,10 +61,19 @@ export class AudioEngine {
   applyVolumes() {
     if (!this.ctx) return;
     this.master.gain.value = this.vol.master;
-    this.musicBus.gain.value = this.vol.music;
+    this.musicBus.gain.value = this.vol.music * (this.ducked ? MUSIC_DUCK : 1);
     this.sfxBus.gain.value = this.vol.sfx;
     this.ambBus.gain.value = this.vol.sfx * 0.6;
-    this.voiceBus.gain.value = this.vol.voice ?? 0.8;
+    this.voiceBus.gain.value = (this.vol.voice ?? 0.8) * VOICE_BOOST;
+  }
+
+  // the music steps back while a character speaks, and comes back after
+  duck(on) {
+    if (!this.ctx || this.ducked === on) return;
+    this.ducked = on;
+    const g = this.musicBus.gain, t = this.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(this.vol.music * (on ? MUSIC_DUCK : 1), t + (on ? 0.12 : 0.6));
   }
 
   _noise(sec) {

@@ -10,6 +10,8 @@ const N = 1200; // (FRAME-1: the benchmark's 6 s window at up to 200 Hz)
 //   Medium newer integrated GPUs: Intel Iris (Xe), "AMD Radeon(TM) Graphics" (Ryzen 5000+ APUs, incl. 680M/780M)
 //   High   everything else (discrete GPUs, Apple silicon, software renderers: the automated tests keep High)
 export function gpuQuality(gpu = '') {
+  // a software renderer (no usable GPU driver): Low for a player; the automated tests (navigator.webdriver) keep High
+  if (/SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu)) return typeof navigator !== 'undefined' && navigator.webdriver ? 'high' : 'low';
   if (/Vega \d|Radeon Vega|Radeon\(TM\) Vega|Intel\(R\) HD|\bHD Graphics|UHD Graphics|Mali|Adreno|PowerVR|GMA/i.test(gpu)) return 'low';
   if (/Iris|Radeon\(TM\) Graphics|Radeon Graphics|Intel/i.test(gpu)) return 'medium';
   return 'high';

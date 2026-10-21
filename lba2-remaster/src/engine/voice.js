@@ -206,9 +206,10 @@ export class Babble {
     this.hush();
     this.v = voiceFor(nameKey);
     this.cur = null; this.acc = 0; this.text = null; this.tNext = 0;
+    this.audio.duck?.(!!this.v);
   }
   // the speaker is done (dialogue closed, scene over): silence now, softly
-  stop() { this.hush(); this.v = null; this.cur = null; }
+  stop() { this.hush(); this.v = null; this.cur = null; this.audio.duck?.(false); }
   // stop the sound but keep the speaker (the text was skipped to its end, the game paused)
   hush() {
     const ctx = this.ctx;

@@ -106,7 +106,14 @@ class Game {
     this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
-    if (!(this.settings.v >= 2)) { this.settings.controls = 'classic'; this.settings.keys = {}; this.settings.v = 2; }
+    // (R1-MIGRATE: an update keeps the player's choices; only a missing or unknown scheme falls back to Classic,
+    //  and only key bindings that aren't valid key codes are dropped)
+    if (!(this.settings.v >= 2)) {
+      if (!['classic', 'modern'].includes(this.settings.controls)) this.settings.controls = 'classic';
+      const k = this.settings.keys;
+      this.settings.keys = k && typeof k === 'object' ? Object.fromEntries(Object.entries(k).filter(([, c]) => typeof c === 'string' && c)) : {};
+      this.settings.v = 2;
+    }
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
     setLang(this.settings.lang);
