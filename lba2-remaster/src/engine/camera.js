@@ -74,7 +74,7 @@ const STEEP = (48 * Math.PI) / 180, STEEP_OK = (40 * Math.PI) / 180, STEEP_T = 0
 // scenery between it and him draws it in quickly but eased (≤ OCC_IN_V m/s, never a jump), and it lets out only after
 // the way has been clear for OCC_HOLD s (≤ OCC_OUT_V m/s): no pumping in and out along a wall
 const AUTO_V = (24 * Math.PI) / 180, AUTO_A = (45 * Math.PI) / 180, AUTO_MIN = (25 * Math.PI) / 180, AUTO_OFF = (4 * Math.PI) / 180, AUTO_MAX = (115 * Math.PI) / 180, AUTO_IDLE = 2, STEADY = 0.6;
-const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_DELAY = 0.2, TALL_FREE = 1.0;
+const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, OCC_DELAY = 0.2, TALL_FREE = 1.0;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -651,8 +651,9 @@ export class CameraRig {
         if (want < this.occDist - 0.05) { A.clearT = 0; A.blockT = (A.blockT || 0) + dt; } else { A.blockT = 0; A.clearT += dt; }
         const goal = A.blockT > OCC_DELAY || (A.clearT > OCC_HOLD && want > this.occDist) ? want : null;
         // (toward the goal no faster than it can stop on it; with none — in the delay or the hold — it only slows)
-        const e = goal == null ? 0 : goal - this.occDist, vw = goal == null ? 0 : Math.sign(e) * Math.min(e < 0 ? OCC_IN_V : OCC_OUT_V, Math.sqrt(1.6 * OCC_A * Math.abs(e)));
-        A.occV += clamp(vw - A.occV, -OCC_A * dt, OCC_A * dt);
+        const e = goal == null ? 0 : goal - this.occDist, vw = goal == null ? 0 : Math.sign(e) * Math.min(e < 0 ? OCC_IN_V : OCC_OUT_V, Math.sqrt(1.6 * (e < 0 ? OCC_A : OCC_A_OUT) * Math.abs(e)));
+        const acc = (vw > 0 && A.occV >= 0 ? OCC_A_OUT : OCC_A) * dt;   // (letting out: gently)
+        A.occV += clamp(vw - A.occV, -acc, acc);
         const n = this.occDist + A.occV * dt;
         if (goal != null && ((A.occV < 0 && n < goal) || (A.occV > 0 && n > goal))) { this.occDist = goal; A.occV = 0; } else this.occDist = Math.min(this.dist, Math.max(1.5, n));
       }

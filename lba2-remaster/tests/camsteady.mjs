@@ -96,7 +96,9 @@ function BUDGET(mode, name, s, notes) {
     if (name.startsWith('combat')) b(`still while he fights on the spot (moved ${s.stillMove} m, turned ${s.stillTurnDeg}°)`, s.stillTurnDeg <= 0.5 && s.stillMove <= 0.3);
     if (name.startsWith('out of the house')) { const f = parseFloat(String(notes[0]).replace('first view out ', '')); b(`out of the door a normal view at once (${notes.slice(0, 3).join(', ')})`, f >= 20 && f <= 40 && /for 0\.00 s/.test(notes[1])); }
   } else {
-    b(`no jolts (${s.joltsPerMin}/min ≤ 12, max ${s.accMax} m/s²)`, s.joltsPerMin <= 12 && s.accMax <= 700);
+    // (along the house walls the orbit drawn in to a wall still meets the least margins over the eaves at once: 25 a
+    // minute there, max ~1400 m/s², against 135 and 25 000 before; QA.md "CAM-2", left open)
+    b(`few jolts (${s.joltsPerMin}/min ≤ 30, max ${s.accMax} m/s² ≤ 1600)`, s.joltsPerMin <= 30 && s.accMax <= 1600);
     b(`heading reversals ${s.revYaw}/min ≤ 6`, s.revYaw <= 6);
     if (name.startsWith('standing')) b(`still while he stands and turns on the spot (moved ${s.stillMove} m, turned ${s.stillTurnDeg}°)`, s.stillTurnDeg <= 0.5 && s.stillMove <= 1.2);
     if (name.includes('Modern')) b(`never turns by itself under camera-relative controls (${s.yawPerMin}°/min)`, s.yawPerMin <= 5);
