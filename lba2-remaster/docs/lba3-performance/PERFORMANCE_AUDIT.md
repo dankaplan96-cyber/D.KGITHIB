@@ -340,33 +340,34 @@ p95 and the long frames go down everywhere; p50 rises 2 ms in the desert and the
 is now spread evenly (one 2.5 ms slice a displayed frame) instead of in bursts. Map chunks (`mapchunks.mjs`, quiet
 round): ~200 → 970–2 450 per map, chunk p95 7–10 → 0.4–1.1 ms, chunks over 10 ms 5–9 → 0–2.
 
-**Every region's steady frame (F8 draw batches, F9 lamp skip; `regions.mjs`: one page, one frozen frame each way, free
-camera, 1366×768, median of 7; calls = main + shadow pass, shadow pass in brackets; submit = the game's render CPU,
-GPU queue drained; raster = SwiftShader's time to draw the frame, a CPU PROXY for GPU work, not the laptop's):**
+**Every region's steady frame, as shipped (F8 draw batches without folding, F9 lamp skip; `regions.mjs`: one page, one
+frozen frame each way, free camera, 1366×768, median of 5; calls = main + shadow pass, shadow pass in brackets; submit =
+the game's render CPU, GPU queue drained; raster = SwiftShader's time to draw the frame, a CPU PROXY for GPU work, not
+the laptop's; `results/regions-medium.json`, `-high.json`):**
 
 | Area / view | Medium calls (shadow) off → on | submit CPU ms off → on | raster proxy, lamp skip off → on | High calls (shadow) off → on | submit CPU ms off → on | raster proxy, lamp skip off → on |
 |---|---|---|---|---|---|---|
-| citadel street | 360 (31) → 293 (31) -19 % | 10 → 8.6 -14 % | 2402.3 → 2372.8 -1 % (lamps 2 of 4) | 461 (42) → 394 (42) -15 % | 11.2 → 10.2 -9 % | 3103.5 → 3186 +3 % (lamps 2 of 8) |
-| citadel harbour | 244 (24) → 200 (24) -18 % | 7.2 → 8.2 +14 % | 1986.3 → 1989.2 +0 % (lamps 2 of 4) | 331 (44) → 287 (44) -13 % | 8.7 → 9 +3 % | 2545.6 → 2531.6 -1 % (lamps 2 of 8) |
-| citadel house door | 448 (28) → 345 (28) -23 % | 11.1 → 10 -10 % | 3083.7 → 3091.4 +0 % (lamps 1 of 4) | 545 (38) → 442 (38) -19 % | 12.1 → 10.8 -11 % | 3848.5 → 3809.1 -1 % (lamps 1 of 8) |
-| house | 99 (3) → 74 (3) -25 % | 3.6 → 3.1 -14 % | 856.8 → 844.8 -1 % (lamps 4 of 4) | 112 (3) → 87 (3) -22 % | 3.1 → 3.6 +16 % | 1294.3 → 1325.1 +2 % (lamps 8 of 8) |
-| workshop | 168 (3) → 112 (3) -33 % | 4.6 → 3.6 -22 % | 644.4 → 673.8 +5 % (lamps 4 of 4) | 181 (3) → 125 (3) -31 % | 4.3 → 3.7 -14 % | 1025.9 → 1039.1 +1 % (lamps 8 of 8) |
-| well | 159 (34) → 155 (34) -3 % | 2.5 → 2.7 +8 % | 777.2 → 775.2 -0 % (lamps 4 of 4) | 173 (34) → 169 (34) -2 % | 2.9 → 2.8 -3 % | 1136.5 → 1132.7 -0 % (lamps 5 of 8) |
-| office | 76 (5) → 64 (5) -16 % | 2.4 → 2.4 +0 % | 560.6 → 554.2 -1 % (lamps 4 of 4) | 89 (5) → 77 (5) -13 % | 2.9 → 2.7 -7 % | 894.9 → 909.9 +2 % (lamps 5 of 8) |
-| zeelich | 127 (15) → 112 (15) -12 % | 5 → 4.4 -12 % | 1101 → 1107.9 +1 % (lamps 0 of 4) | 145 (20) → 130 (20) -10 % | 3.9 → 4.3 +10 % | 1458.7 → 1462.9 +0 % (lamps 0 of 8) |
-| desert | 33 (8) → 32 (8) -3 % | 2.6 → 2.9 +12 % | 1071.5 → 1115 +4 % (lamps 0 of 4) | 47 (8) → 46 (8) -2 % | 2.8 → 3 +7 % | 1408.3 → 1472.5 +5 % (lamps 0 of 8) |
-| hamalayi | 47 (9) → 40 (9) -15 % | 2.8 → 3.4 +21 % | 1116.8 → 1087.2 -3 % (lamps 0 of 4) | 60 (9) → 53 (9) -12 % | 2.7 → 2.9 +7 % | 1520.4 → 1543.6 +2 % (lamps 0 of 8) |
-| isle otringal | 133 (18) → 125 (18) -6 % | 3.4 → 3.6 +6 % | 2614.3 → 2609.5 -0 % (lamps 0 of 4) | 146 (18) → 138 (18) -5 % | 3.3 → 3.3 +0 % | 3230.6 → 3239.1 +0 % (lamps 0 of 8) |
-| isle tralu | 66 (6) → 46 (6) -30 % | 2 → 1.9 -5 % | 1456.5 → 1460.4 +0 % (lamps 0 of 4) | 79 (6) → 59 (6) -25 % | 2.5 → 2.3 -8 % | 1951.4 → 1951.5 +0 % (lamps 0 of 8) |
-| isle liftdock | 53 (2) → 36 (2) -32 % | 2.1 → 1.8 -14 % | 733.7 → 754.4 +3 % (lamps 0 of 4) | 66 (2) → 49 (2) -26 % | 2 → 2.2 +10 % | 1224.1 → 1142.2 -7 % (lamps 0 of 8) |
-| underground c3deep | 103 (5) → 69 (5) -33 % | 2.8 → 2.4 -14 % | 788.7 → 747.6 -5 % (lamps 4 of 4) | 116 (5) → 82 (5) -29 % | 3 → 2.6 -13 % | 1273 → 1287.2 +1 % (lamps 8 of 8) |
+| citadel street | 358 (31) → 322 (31) -10 % | 9.9 → 8.5 -14 % | 2437.8 → 2440.2 +0 % (lamps 2 of 4) | 461 (42) → 425 (42) -8 % | 13.6 → 13.5 -1 % | 3457.6 → 3429.8 -1 % (lamps 2 of 8) |
+| citadel harbour | 243 (24) → 218 (24) -10 % | 8 → 9.2 +15 % | 2000.9 → 1944.9 -3 % (lamps 2 of 4) | 331 (44) → 306 (44) -8 % | 10.8 → 10 -7 % | 2514.7 → 2657.1 +6 % (lamps 2 of 8) |
+| citadel house door | 445 (28) → 389 (28) -13 % | 13.5 → 11.1 -18 % | 2948.3 → 2947.3 -0 % (lamps 1 of 4) | 545 (38) → 489 (38) -10 % | 10.9 → 12.9 +18 % | 3855.5 → 3822.5 -1 % (lamps 1 of 8) |
+| house | 99 (3) → 96 (3) -3 % | 3.3 → 2.7 -18 % | 858 → 857.9 -0 % (lamps 4 of 4) | 112 (3) → 109 (3) -3 % | 3.2 → 3.3 +3 % | 1336 → 1262.8 -5 % (lamps 8 of 8) |
+| workshop | 168 (3) → 141 (3) -16 % | 3.8 → 4.2 +11 % | 567.9 → 629.2 +11 % (lamps 4 of 4) | 181 (3) → 154 (3) -15 % | 5.9 → 4.7 -20 % | 1009.3 → 1047.6 +4 % (lamps 8 of 8) |
+| well | 161 (34) → 161 (34) +0 % | 2.5 → 2.5 +0 % | 724.4 → 731.4 +1 % (lamps 4 of 4) | 177 (34) → 177 (34) +0 % | 2.9 → 2.8 -3 % | 1102.3 → 1167.7 +6 % (lamps 5 of 8) |
+| office | 76 (5) → 76 (5) +0 % | 2.3 → 2.4 +4 % | 541.7 → 547.2 +1 % (lamps 4 of 4) | 89 (5) → 89 (5) +0 % | 2.6 → 2.6 +0 % | 858.4 → 875.7 +2 % (lamps 5 of 8) |
+| zeelich | 127 (15) → 121 (15) -5 % | 4.1 → 4.7 +15 % | 1026.3 → 1041 +1 % (lamps 0 of 4) | 145 (20) → 139 (20) -4 % | 4 → 4.2 +5 % | 1429.9 → 1383.2 -3 % (lamps 0 of 8) |
+| desert | 33 (8) → 33 (8) +0 % | 2.5 → 2.6 +4 % | 996.7 → 1032.3 +4 % (lamps 0 of 4) | 47 (8) → 47 (8) +0 % | 2.8 → 2.9 +4 % | 1471.7 → 1465.3 -0 % (lamps 0 of 8) |
+| hamalayi | 47 (9) → 46 (9) -2 % | 2.4 → 2.5 +4 % | 1165.9 → 1186.3 +2 % (lamps 0 of 4) | 60 (9) → 59 (9) -2 % | 2.7 → 2.8 +4 % | 1531.7 → 1550.4 +1 % (lamps 0 of 8) |
+| isle otringal | 133 (18) → 133 (18) +0 % | 3.1 → 3.4 +10 % | 2653.4 → 2660.7 +0 % (lamps 0 of 4) | 146 (18) → 146 (18) +0 % | 3.3 → 3.9 +18 % | 3366.9 → 3152 -6 % (lamps 0 of 8) |
+| isle tralu | 66 (6) → 55 (6) -17 % | 2.3 → 2.5 +9 % | 1525.2 → 1486 -3 % (lamps 0 of 4) | 79 (6) → 68 (6) -14 % | 2.5 → 3.1 +24 % | 1927 → 1949.1 +1 % (lamps 0 of 8) |
+| isle liftdock | 53 (2) → 47 (2) -11 % | 1.9 → 2 +5 % | 856.7 → 805.2 -6 % (lamps 0 of 4) | 66 (2) → 60 (2) -9 % | 2.4 → 2.3 -4 % | 1082.9 → 1131 +4 % (lamps 0 of 8) |
+| underground c3deep | 103 (5) → 86 (5) -17 % | 3.7 → 3.4 -8 % | 897.2 → 884.7 -1 % (lamps 4 of 4) | 116 (5) → 99 (5) -15 % | 3.1 → 3.1 +0 % | 1243.2 → 1248.7 +0 % (lamps 8 of 8) |
 
-Draw calls go down in every area (−2 to −33 %; Citadel's street −19 % at Medium / −15 % at High, the house −25 %,
-the workshop −33 %, the underground −33 %, Zeelich's islands −6 to −32 %); render submission CPU follows where the
-calls fall most (−9 to −22 %); in areas with few calls the change is within the noise of 7 frames (±10–20 %).
-SwiftShader's raster time does not move with the lamp skip (±5 %): its software rasteriser gains nothing from the
-skipped branch; a GPU skips the work per pixel group — NOT VERIFIED until the laptop's run. The desert has 33 calls
-to start with (little to merge).
+Draw calls go down 0–17 % (Citadel −8 to −13 %, the workshop −16 %, the underground −17 %, Zeelich's small islands
+−11 to −17 %); areas whose builders already merged well (the desert, the Hamalayi, Otringal, the well, the office) are
+unchanged. Render-submission CPU follows only where calls fell most; elsewhere 5 frames are within ±15–20 % noise.
+SwiftShader's raster time does not move with the lamp skip. With folding on (not shipped: §6 F8) the same views fell
+−2 to −33 % (`results/regions-table-fold.md`). On the laptop (build 127, folding on) the batches made no measurable GPU
+difference: their gain is CPU; the GPU's big item is MSAA (§1b, F10, F11).
 
 Depth/stencil resolve off (F10, `gpulab.mjs`, SwiftShader): street raster −4 %, house −1 % (Vulkan resolves depth in
 hardware; Direct3D 11 does not — the laptop's "depth resolve on" breakdown line will show its real cost).
@@ -429,8 +430,9 @@ setting and the merge of origin: menus, display (the settings screen at 640×360
    pixel-exact), F11 (Settings → Edges: Smooth/Fast), the benchmark (GPU time per pass, arrival route, >100 ms counts,
    lamps lit, startup per area, memory line, FRAME-1's "limited by", eight new breakdown lines). Files: §13.
 6. **What improved, by how much, under which conditions?** §10 (SwiftShader, Medium/High, 1366×768): arrivals'
-   p95 −20 to −27 % and frames over 16.7 ms halved on Citadel/Zeelich; draw calls −2 to −33 % in every area, render
-   submission CPU −9 to −22 % where calls fell most; F9/F10 pixel-identical, their GPU saving unmeasurable here. The
+   p95 −20 to −27 % and frames over 16.7 ms halved on Citadel/Zeelich; draw calls −0 to −17 % per area (benchmark
+   routes −9 to −11 %), render submission CPU lower where calls fell most; F8/F9/F10 pixel-identical, their GPU saving
+   unmeasurable here. The
    laptop (build 122, plugged in): Medium 43–60 fps, High 25–34 fps, GPU-bound — before F8–F10. Whether Medium now holds
    60 on the street: NOT VERIFIED (the next benchmark).
 7. **What remains unverified?** On the laptop: how much of MSAA's ~10 ms F10 removes, F9's GPU saving, FXAA's cost,
