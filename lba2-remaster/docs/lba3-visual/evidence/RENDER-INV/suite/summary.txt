@@ -12,3 +12,7 @@ zislands rc=0 434s load=6.07 :: ALL PASSED
 holomap rc=0 80s load=5.38 :: ALL PASSED
 dynres rc=0 91s load=3.80 :: ALL PASSED
 timing rc=0 40s load=3.66 :: ALL PASSED
+menus rc=0 87s load=2.83 :: ALL PASSED
+display rc=0 62s load=2.89 :: ALL PASSED
+stability rc=0 53s load=3.17 :: ALL PASSED
+transitions rc=0 50s load=3.28 :: ALL PASSED

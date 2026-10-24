@@ -590,6 +590,23 @@ hierarchy, bind transforms and sockets unchanged.
 
 Regressions on the final tree (own server :8173, one browser at a time): opening ALL PASSED (24), deaths ALL PASSED (160), stability ALL PASSED (16), prologue to its end into chapter 1 (no errors), house ALL PASSED, jetpack ALL PASSED (48; Twinsen with the pack on the new tunic), combat ALL PASSED (59), zoe-resume ALL PASSED (5; Zoé as the player); reviews/CHAR-OPEN/tests.log.
 
+### RENDER-INV: what costs a frame, and the fixes (block 7a; docs/lba3-performance/PERFORMANCE_AUDIT.md)
+SwiftShader here (counts exact, CPU times proxies, no GPU timing); the user's laptop benchmarks (builds 120, 122, 127)
+are the GPU evidence. Evidence: docs/lba3-visual/evidence/RENDER-INV/.
+| Check | Result |
+|---|---|
+| Is the whole world drawn? (every draw attributed to its area: title, opening, house, street, harbour, combat, Zeelich, desert, revisit) | NO for drawing: only the current area (main and shadow pass); the title orbit and the opening's first shot draw all of Citadel by design. YES for memory: every area built at startup and kept (~1 GB renderer + ~1 GB GPU process here) — not changed (audit R1) |
+| Laptop (build 127, Medium) | GPU-bound: street 19 ms GPU, interior 14 ms; MSAA 2× ≈ 10 ms of it (no MSAA: 9.3 / 8.8 ms) |
+| Map build after arriving (F1/F2; arrival.mjs, 2 rounds, 2 steps a frame) | CPU per frame p95: Citadel 26.9/25.8 → 19.7/19.2 ms, Zeelich 26.7/27.3 → 21.8/21.5; frames > 16.7 ms halved; chunk p95 7–10 → 0.4–1.1 ms |
+| Draw batches (F8; perfbudget base → this build) | street calls Low/Medium/High 292/340/437 → 261/304/397; interiors −7 %; transitions −10 %; combat unchanged; every region −2 to −33 % (regions.mjs) |
+| Look: batches (folding off), lamp skip (F9), colour-only resolve (F10) | pixel-exact in one page / one frozen frame (Citadel, house, workshop, Zeelich, desert, Hamalayi, Otringal); folding (off) would change ≤ 0.3 % of pixels |
+| Settings → Edges: Fast (FXAA) vs Smooth (MSAA) | same frame: edges smooth, fine texture slightly softer (3–8 % of pixels > 8 levels); default stays Smooth |
+| First use of every weapon/gadget | 0 new shader programs; save 0.6 ms, load 3.5 ms |
+| Repeated transitions (20 house + 5 Zeelich) | geometries/textures/programs/objects unchanged |
+| Regression | stability, transitions, townlife, opening, chapter1, occluders, doorcull, travel, chapter4, zislands, holomap, dynres, timing, menus, display: ALL PASSED; perfbudget: 3 FAILED, the same 3 fail on base (street budgets 304 > 300 / 261 > 260, were 340 / 292; in-page preset switches compile programs on base too) |
+| 30-minute session | NOT TESTED |
+| GPU saving of F9/F10/Edges on the laptop | NOT VERIFIED (the next benchmark) |
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.

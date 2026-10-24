@@ -41,6 +41,17 @@ with margin); High is improved only where it is cheap and invisible.
 |---|---|---|---|---|---|
 | 120 (= base 9faa1a8) | 1366×768 | 66.6 ms / — (no timer) | 49.8 ms | 100.6 ms | sim CPU 4 / 8 / 12 ms at Low / Medium / High; power state unknown |
 | 122 (base + F1/F2 + timer) | 1366×697 | 16.8 ms / 18.6 ms GPU (43 fps) | 16.7 ms / 14.0 GPU (58 fps) | 33.5 ms / 36.0 GPU (25 fps) | plugged in; GPU timer works |
+| 127 (+ F8 with folding, F9, per-pass timer; **no F10**) | 1366×768 | GPU 18.75 ms [scene 17.9, shadow map 0.8] | GPU 14.2 | GPU 35.4 [scene 33.1, shadow 2.3] | plugged in |
+
+**Build 127's Medium breakdown (GPU p50, street / interior):** as is 19.2 / 14.1 · no shadows 16.0 / 13.2 · no lamps 18.0 /
+13.6 · res ×0.6 15.8 / 12.4 · shadow map kept 17.6 / 14.0 · **no MSAA 9.3 / 8.8** · draw batches off 17.9 / 14.3.
+**MSAA 2× is ~10 ms of the street's 19 ms and ~5 ms indoors** — more than everything else together; the shadow map's
+drawing 0.1–1.6 ms; the lamps ~0.5–1 ms; the draw batches made no measurable GPU difference (17.9 off vs 19.2 on is
+within run noise; their gain is CPU). Resolution ×0.6 removes only ~3.4 ms, while MSAA removes ~10: most of MSAA's cost
+does not shrink with the drawn area — it is fixed per frame on the full-size target (clears and resolves). Build 127
+still resolved depth and stencil on every frame (F10 came after it): Direct3D 11 has no depth/stencil resolve, so
+ANGLE emulates it — INFERRED to be a large part of those ~10 ms; the next benchmark's `depth resolve on` line (the old
+behaviour) against `as is` measures it.
 
 - **The laptop is GPU-bound** at Medium and High (build 122: CPU 7.5–20 ms a frame against 25–36 ms of GPU at High;
   Medium street 18.6 ms GPU). Low runs at 59–60 fps everywhere (GPU 8–9 ms).
@@ -209,12 +220,15 @@ vertices); the originals left in place, out of the main pass through layer 0; ev
 the matrices (moved, hidden, removed, another material or geometry, geometry edited, casting, its folded material's
 colour/roughness/metalness/visibility/map transform) and released at once, its cell rebuilt in the same frame.
 Excluded: anything transparent, non-depth-writing, with its own shader edits or ShaderMaterial, skinned/instanced/
-batched, `userData.keep`, not frustum-culled. Result: §10 (per region, Medium and High). Look: within one page and one
-frozen frame, batches on vs off differ in 0.001–0.004 % of the pixels (Citadel views; max 18–64 levels), all of it
-far props smaller than 4 px that Medium/Low used to cull and the batch now draws (none at High, which culls none).
-Tradeoff: +~35 MB of merged geometry on Citadel (652k vertices; the originals are kept for the release path); a cell
-is rebuilt (a few ms) the first time one of its pieces moves (a door opening). Status: MEASURED (counts, CPU);
-GPU effect on the laptop NOT VERIFIED (the benchmark's new "draw batches off" line will show it).
+batched, `userData.keep`, not frustum-culled. Result: §10 (per region, Medium and High). Look: **folding is off** in the build — with it, batches
+changed 0.003–0.3 % of the pixels (where two surfaces of different materials coincide the draw order decides which
+shows; the workshop, the house, the Hamalayi); without it the batches are **pixel-exact** (one page, one frozen
+frame, batches on vs off: 0 differing pixels in the workshop, `batchdiff.mjs FOLD=0`). Folding would save another
+20–40 calls on Citadel (street 298 → 264, harbour 297 → 258, house 96 → 74; `who.mjs FOLD=0/1`): kept in the code,
+switchable (`DrawBatch.fold`), for a decision with a visual review.
+Tradeoff: tens of MB of merged geometry on Citadel (the originals are kept for the release path); a cell is rebuilt
+(a few ms) the first time one of its pieces moves (a door opening). Status: MEASURED (counts, CPU); on the laptop
+(build 127, with folding) no measurable GPU change — the batches are a CPU saving.
 
 **F9 — lamps paid for on every lit pixel, also where they give no light (every area).** Symptom: the laptop's "no
 lamps" saves 1.4 ms of GPU on the street and 1.9 ms in the interior at Medium (8 lamps at High). Evidence
@@ -245,6 +259,16 @@ mis-sample — not worth a black screen. Lower MSAA, a smaller shadow map, fewer
 target would each save GPU time but change the look: not done; the benchmark now measures each (§9) so the choice can
 be made with the user.
 
+**F11 — antialiasing: Settings → Edges.** Symptom: MSAA 2× is ~10 ms of Medium's GPU time on the laptop (build 127).
+Change: F10 (colour-only resolve) is the exact part; in case it is not enough, Settings → Edges offers **Smooth**
+(MSAA, the default, unchanged) or **Fast** (FXAA, the single cheap full-screen pass Low already uses, at the preset's
+resolution; renderer.js `setAA`, index.html one row, text/common.js three words). Look (same frame, Medium,
+`aalook.mjs`, evidence `RENDER-INV/aa/`): FXAA keeps edges smooth but softens fine texture detail (the cobbles'
+grout lines); 3–8 % of the pixels differ by more than 8 levels. Not made the default: the user decides after the
+next benchmark (its `FXAA instead of MSAA` line prices it). SMAA (three's SMAAPass) is not vendored and was not added
+in this block. Status: MEASURED (look); GPU saving: build 127's `no MSAA` (−10 ms street) bounds it, FXAA's own pass
+NOT VERIFIED on the laptop.
+
 **F7 — shader warm-up walk behind the black fade** (~100 ms on first entries; once seen on a revisit). Behind black,
 does not reach the screen. Status: MEASURED, NOT CHANGED.
 
@@ -274,7 +298,8 @@ brief's references. The three.js behaviour quoted is read in the vendored r180 b
 
 - 20 house door cycles and 5 Zeelich round trips (`audit.mjs` cycles): geometries 1 419 → 1 419, textures 475 → 475,
   programs 87 → 87, scene objects 9 394 → 9 394, shadow areas 5 → 5.
-- 30-minute session (`session30.mjs`): SESSION30_RESULT
+- 30-minute session: NOT TESTED in this block (the probe `session30.mjs` is ready; the time went to the GPU work the
+  laptop showed). The 20 + 5 transition cycles and longsession.mjs (30 cycles, earlier) show no growth.
 
 ## 9. Benchmark on the laptop (the judge)
 
@@ -284,6 +309,8 @@ brief's references. The three.js behaviour quoted is read in the vendored r180 b
 3. Esc → **Benchmark**. Don't touch anything until the results appear (a few minutes: Low, Medium, High, then the
    Medium breakdown on the street and in the house).
 4. **Copy**, and send the whole text (and say whether it was plugged in).
+5. Then, to see the choice: Settings → **Edges: Fast**, walk the street a minute, and say whether the picture is still
+   good enough (edges, cobbles, text) and whether it feels smoother. Put it back to Smooth if not.
 
 What to read in it:
 - per route: frame p50/p95/p99, `>33ms` / `>100ms` counts, the longest frames; `sim CPU` and `render submit CPU` (the
@@ -344,6 +371,25 @@ to start with (little to merge).
 Depth/stencil resolve off (F10, `gpulab.mjs`, SwiftShader): street raster −4 %, house −1 % (Vulkan resolves depth in
 hardware; Direct3D 11 does not — the laptop's "depth resolve on" breakdown line will show its real cost).
 
+**The benchmark's routes (tests/perfbudget.mjs, base 9faa1a8 vs this build with folding off; exact counts, one page,
+Low → Medium → High; `results/perfbudget-base.log`, `suite/perfbudget.log`):**
+
+| Route | Low calls | Medium calls (GPU draws) | High calls |
+|---|---|---|---|
+| street | 292 → 261 (−11 %) | 340 → 304 (−11 %) (522 → 486) | 437 → 397 (−9 %) |
+| interior | 102 → 95 | 104 → 97 | 117 → 110 |
+| transition | 358 → 324 | 430 → 384 | 543 → 487 |
+| combat | 121 → 121 | 191 → 191 | 195 → 195 |
+
+perfbudget's budgets: street Medium ≤ 300 (304) and Low ≤ 260 (261) still just fail (were 340 / 292 on base: FAIL
+there too); "no shader compiles after loading" fails identically on base (34 / 43 / 6 programs on the street: the
+test switches presets inside one page with the warm-up skipped under test stepping) — not a regression.
+
+**Regression tests** (one at a time, GAME_URL=http://localhost:8176/, `suite/`): stability, transitions, townlife,
+opening, chapter1, occluders, doorcull, travel, chapter4, zislands, holomap, dynres, timing: ALL PASSED (chapter1 prints
+no verdict line: rc 0, no FAIL, no errors); perfbudget: 3 FAILED, all three failing on base too (above). After the Edges
+setting and the merge of origin: menus, display (the settings screen at 640×360), stability, transitions: ALL PASSED.
+
 ## 11. Remaining limits and recommendations
 
 - **R1 — build areas on demand (startup, memory).** Keep Citadel + the interiors of the current area at startup;
@@ -379,16 +425,17 @@ hardware; Direct3D 11 does not — the laptop's "depth resolve on" breakdown lin
    for drawing), streaming with an explicit lifecycle and resource release (recommended, R1/R2), batching (graphics
    agent); occlusion culling and distance-reduced animation were not justified by the numbers (§7).
 5. **What changed?** F1 (map build slices), F2 (picture-only work once per displayed frame), F8 (draw batches in every
-   area), F9 (lamps skip their math where they give no light), F10 (colour-only MSAA resolve), the benchmark (GPU time
-   per pass, arrival route, >100 ms counts, lamps lit, startup per area, memory line, FRAME-1's "limited by", five new
-   breakdown lines). Files: §13.
+   area, pixel-exact), F9 (lamps skip their math where they give no light, pixel-exact), F10 (colour-only MSAA resolve,
+   pixel-exact), F11 (Settings → Edges: Smooth/Fast), the benchmark (GPU time per pass, arrival route, >100 ms counts,
+   lamps lit, startup per area, memory line, FRAME-1's "limited by", eight new breakdown lines). Files: §13.
 6. **What improved, by how much, under which conditions?** §10 (SwiftShader, Medium/High, 1366×768): arrivals'
    p95 −20 to −27 % and frames over 16.7 ms halved on Citadel/Zeelich; draw calls −2 to −33 % in every area, render
    submission CPU −9 to −22 % where calls fell most; F9/F10 pixel-identical, their GPU saving unmeasurable here. The
    laptop (build 122, plugged in): Medium 43–60 fps, High 25–34 fps, GPU-bound — before F8–F10. Whether Medium now holds
    60 on the street: NOT VERIFIED (the next benchmark).
-7. **What remains unverified?** The laptop's GPU time and frame rate, whether the laptop is CPU- or GPU-bound at
-   Medium, real stutter sizes, input feel, the packaged installer; startup time on the laptop.
+7. **What remains unverified?** On the laptop: how much of MSAA's ~10 ms F10 removes, F9's GPU saving, FXAA's cost,
+   and so whether Medium now holds 60 on the street (target GPU p50 < ~12–15 ms); real stutter sizes; input feel; the
+   packaged installer. Here: the 30-minute session (not run).
 
 ## 13. Files changed
 
@@ -402,5 +449,6 @@ hardware; Direct3D 11 does not — the laptop's "depth resolve on" breakdown lin
   marks.
 - src/engine/perf.js — `GpuTimer` per pass (EXT_disjoint_timer_query_webgl2), `gpuMs`, lamps lit in stats.
 - src/engine/bench.js — arrival route, GPU time per pass, >100 ms, lamps lit, startup per area, memory line, FRAME-1's
-  estimate, five breakdown diagnostics.
+  estimate, eight breakdown diagnostics.
+- index.html, src/game/text/common.js — Settings → Edges (one row, three words; the clarity editor's file, paused).
 - Region construction and town/island geometry: not changed (the batches act at run time on what the builders made).

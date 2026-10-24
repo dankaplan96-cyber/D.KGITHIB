@@ -274,6 +274,8 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   static pieces merged per 48 m cell and material, watched every frame); lamps skip their lighting where they give no
   light (F9); the MSAA target resolves colour only (F10). Folding colours into the batches is kept switchable, off
   (it would save another 20–40 calls on Citadel but changes up to 0.3 % of pixels).
+- Laptop build 127 (interim): MSAA 2× is ~10 ms of Medium's 19 ms GPU on the street. Build 127 still resolved depth
+  and stencil every frame (F10 came after); Settings → Edges (Smooth = MSAA default / Fast = FXAA) lets the user choose.
 - The benchmark reports GPU time per pass, lamps lit, an arrival route and a breakdown that prices every option
   (shadow map kept, no MSAA, 8-bit target, depth resolve on, draw batches off, shadow filter basic, shadow map 512,
   FXAA instead of MSAA).
