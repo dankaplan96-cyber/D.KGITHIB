@@ -37,6 +37,9 @@ export const LOOKS = {
     // balls, drawn flat as LBA2 draws its spheres. Colours: the original's palette ramps (skin 32, red 64, shoes 128,
     // hair 106). Twelve years on: she is no longer expecting (LBA2's Zoé is pregnant; Arthur is their son): SRC-2 took the
     // belly out and gave her a natural waist (tools/blender/zoe_poly.py ZOE_BODY; the measured figure is ZOE_BODY_LBA2).
+    // ZOE-OPEN (CHAR-2): her head from designed sections at the measured size (brow, cheekbones, a rounded chin, a nose
+    // of its own), a smaller smiling mouth, white almond eyes with iris and pupil under lid lines and brows, teardrop
+    // hoops for the triangle earrings, and curled mitten hands with a thumb (docs/character-review.md §18).
     // The sculpt below is the fallback.
     race: 'quetch', outfit: 'gown', hem: 0.06, tunic: '#b32b27', tunicTrim: '#8b1712', belt: '#b32b27', pants: '#b32b27', shoes: '#3f7b47',
     hair: '#e3af53', skin: '#d9a679', hairStyle: 'bun', nose: 'button', eyes: '#2f474b', lashes: true, headS: 1.15, neck: 0.07, height: 1.0,

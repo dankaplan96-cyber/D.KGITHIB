@@ -590,6 +590,30 @@ hierarchy, bind transforms and sockets unchanged.
 
 Regressions on the final tree (own server :8173, one browser at a time): opening ALL PASSED (24), deaths ALL PASSED (160), stability ALL PASSED (16), prologue to its end into chapter 1 (no errors), house ALL PASSED, jetpack ALL PASSED (48; Twinsen with the pack on the new tunic), combat ALL PASSED (59), zoe-resume ALL PASSED (5; Zoé as the player); reviews/CHAR-OPEN/tests.log.
 
+### CHAR-2: Twinsen's neck and Zoé in the opening (block 8; evidence docs/lba3-production/reviews/CHAR-2/)
+Captures: headless Chromium, SwiftShader, our renders only. "Before" = the same tree with the previous
+assets/poly/{twinsen,zoe}.json swapped in (the code is identical); lookdev = char-lookdev.html (CHAR-OPEN's, plus
+`ty`, `at=handR`, the play camera from behind and a high ¾-back view, and head extremes nod/lookUp/lookAside), the
+opening on the game's own 1/30 s clock (opening-shots.mjs), the play camera (ingame-shots.mjs for Twinsen,
+zoe-ingame-shots.mjs for Zoé as the player). character-review §18 has the detail and the animator handoff.
+
+| Item | Before | Cause | Fix | Evidence | Result |
+|---|---|---|---|---|---|
+| NECK-TW Twinsen's neck | From behind a thin stick "cut off" by a flat cape top, a crease down the nape, a notched collar edge, the head a ball on a stick with background between (the user's photos; opening 52.1 over his shoulder) | ring() puts a section's sides at z = 0: for the neck (front +0.08, back +0.02 H) and the cape's top rings the back point lay forward of the sides; the cape top flat (0.765 → 0.772 H) | twinsen_poly.py: oring() round sections; LBA2's thin neck (±0.031 H) with a wider base, a nape leaning into the skull, closed base; the cape's shoulders sloping into a rolled collar (top 0.78 H) with a dark inside; head turn blended over 0.785 → 0.855 H | neck-tw-views-before-after.jpg (idle/nod/lookUp/lookAside/shrug × front/¾/side/back/¾-back/high/play-back), neck-tw-body-before-after.jpg, neck-tw-hop-pack.jpg, neck-tw-opening.jpg, neck-tw-opening-52s.jpg, neck-tw-play-camera.jpg | FIXED (a neck with a collar and nape in every view and head pose captured; one-shell cape and silhouette kept) |
+| ZOE-OPEN Zoé in the opening | Angular wedge face (one ridge chin → forehead), lips a crescent across the jaw, dark slit eyes (closed), triangle earrings, a 10-sided rod forearm ending in a flat paddle (the user's photo; BUILD109 §4) | The head lofted from the measured cuts (each a forward wedge); the measured lip crescent and eye slits; the SRC-1 mitten | zoe_poly.py: designed head sections at the measured size (brow, cheekbones, rounded chin), a nose loft, a smaller smiling mouth + mouth line, white almond eyes with iris/pupil, lid lines, brows, teardrop hoops; 12-sided arms with elbow, forearm swell, flatter wrist; build_hand (palm, curled mitten, thumb) | zoe-open-head-, -face-, -hands-, -arms-grey-, -deform-grey-, -body-before-after.jpg, zoe-open-opening.jpg (41, 46, 52.1, 58.6), zoe-open-opening-58s-profile.jpg, zoe-open-opening-61s-hand.jpg, zoe-open-play-camera.jpg | FIXED (profile, eyes, mouth, hoops, wrist and hand read at the opening's cameras; deformation as before) |
+
+Counts (one LbaMaterial with vertex colours per character, no textures; unindexed triangles): Twinsen 2372 → 2724
+(+14.8 %: collar rings, round 16-sided neck, its inside), Zoé 4646 → 5382 (+15.8 %: head rings, nose, eyes, hoops,
+12-sided arms, hands); Zoé's skinned colours 6 → 7, eye colours 1 → 3. Skeletons, bone names, hierarchy, bind
+transforms, sockets, armSpread and opening.js unchanged.
+
+Regressions on 8ba8a0e (own server :8178, one browser at a time, 2026-10-24): opening ALL PASSED (24), prologue to its
+end (rc 0, saved, "Tell Zoé what happened in the well"; no page errors), house ALL PASSED, stability ALL PASSED (16),
+deaths ALL PASSED (160), zoe-resume ALL PASSED (5; Zoé as the player on the new mesh), jetpack ALL PASSED (48; the pack
+over the new collar), combat ALL PASSED (59); reviews/CHAR-2/tests.log. After merging origin e2ba54f (CLAR-2 +
+HINTS-LESS: hud, text, story, main.js) the same eight again on da2bd15: all ALL PASSED with the same counts, the
+prologue to its end ("Go home and tell Zoé"), no page errors.
+
 ### RENDER-INV: what costs a frame, and the fixes (block 7a; docs/lba3-performance/PERFORMANCE_AUDIT.md)
 SwiftShader here (counts exact, CPU times proxies, no GPU timing); the user's laptop benchmarks (builds 120, 122, 127)
 are the GPU evidence. Evidence: docs/lba3-visual/evidence/RENDER-INV/.

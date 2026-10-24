@@ -1,0 +1,55 @@
+CHAR-2 regressions, tree 8ba8a0e (NECK-TW + ZOE-OPEN), own server :8178, one browser at a time, 2026-10-24
+opening rc=0 842s | ALL PASSED
+prologue rc=0 224s | 
+house rc=0 84s | ALL PASSED
+stability rc=0 86s | ALL PASSED
+deaths rc=0 89s | ALL PASSED
+zoe-resume rc=0 209s | ALL PASSED
+jetpack rc=0 776s | ALL PASSED
+combat rc=0 74s | ALL PASSED
+
+[exited with code 0]
+== opening
+no errors
+ALL PASSED
+== house
+no errors
+ALL PASSED
+== stability
+no errors
+ALL PASSED
+== deaths
+no errors
+ALL PASSED
+== zoe-resume
+no errors
+ALL PASSED
+== jetpack
+no errors
+ALL PASSED
+== combat
+no errors
+ALL PASSED
+== prologue (tail)
+  'play',
+  'outdoor',
+  [ -40.2, 2.2, -5.6 ],
+  'Tell Zoé what happened in the well (home, Bug Street)'
+]
+save {"room":null,"flags":19,"ball":true}
+warning: THREE.WebGLRenderer: KHR_parallel_shader_compile extension not supported.
+
+After merging origin/ccr-adf00ea7-37ebl3 (e2ba54f, CLAR-2 + HINTS-LESS) at da2bd15, same server, one browser at a time:
+opening rc=0 746s | ALL PASSED
+prologue rc=0 207s | 
+house rc=0 81s | ALL PASSED
+stability rc=0 88s | ALL PASSED
+deaths rc=0 68s | ALL PASSED
+zoe-resume rc=0 173s | ALL PASSED
+jetpack rc=0 763s | ALL PASSED
+combat rc=0 84s | ALL PASSED
+
+[exited with code 0]
+counts: opening 24, house 2, stability 16, deaths 160, zoe-resume 5, jetpack 48, combat 59 PASS; no page errors in any log
+prologue (tail): after intro [ 'play', 'house', true, false ]
+after [ 'play', 'outdoor', [ -40.2, 2.2, -5.6 ], 'Go home and tell Zoé' ]
