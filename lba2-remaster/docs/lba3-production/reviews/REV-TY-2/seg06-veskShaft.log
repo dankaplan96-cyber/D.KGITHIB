@@ -1,0 +1,15 @@
+[2s +2s] out of the workshop to the platform: {"r":"arrived","room":"zeelich"} | zeelich [2434.88,6,4.91] hp 9 | Stop Vesk on the platform
+[2s +1s] Vesk goes down: {"r":"talked","to":"vesk","state":"play","lines":18,"down":true,"fail":null} | zeelich [2445.24,6.42,-4.17] hp 9 | Go down the drill shaft
+[22s +20s] the shaft → chapter 4: {"r":"used","target":{"kind":"c2shaft","id":"p_shaft","label":"p_shaft"},"state":"play","lines":18,"chapter":"dig","room":"desert","fail":null} | desert [3292,2,4] hp 9 | Find the professor who found the crystals
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[0.2] go → (1502.8, -3.0) plan ok=true pts=5 left=0.2
+[4.8] go: transition (workshop → workshop, trans true) at (1502.21, -2.65)
+[5.7] go → (2436.0, 4.0) plan ok=true pts=5 left=0.64
+[16.5] go → (2446.5, -4.5) plan ok=true pts=3 left=0.85
+[29.6] go → (2450.0, 0.0) plan ok=false pts=4 left=1.97
+[36.7] go → (2450.0, 0.0) plan ok=true pts=2 left=0.37
+[37.2] go → (2450.0, 0.0) plan ok=true pts=2 left=0.39
+[37.2] go → (2450.0, 0.0) plan ok=true pts=2 left=0.39
+kept /home/user/geriatrics-course/lba2-remaster/docs/lba3-production/reviews/REV-TY-2/save-06b.json
+no errors

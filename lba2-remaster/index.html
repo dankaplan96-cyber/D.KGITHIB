@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1720">
+  <title>LBA3 — The Awakening</title>
+  <meta name="description" content="LBA3 – The Awakening: an unofficial fan sequel to Little Big Adventure 2, playable in the browser.">
+  <link rel="stylesheet" href="assets/fonts/rubik.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three/build/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+  </script>
+</head>
+<body>
+  <div id="game"></div>
+
+  <!-- ===== HUD ===== -->
+  <div id="hud" class="hidden">
+    <div id="stats">
+      <div id="lifebar" class="bar"><i></i></div>
+      <div id="magicbar" class="bar"><i></i></div>
+      <div class="counters">
+        <span id="clovers" class="ctr"><svg viewBox="0 0 24 24"><g fill="#5fe36a" stroke="#14501d" stroke-width="1.2"><circle cx="12" cy="7" r="4.5"/><circle cx="7" cy="14" r="4.5"/><circle cx="17" cy="14" r="4.5"/></g><path d="M12 14 L13 22" stroke="#14501d" stroke-width="2"/></svg><b>0</b></span>
+        <span id="coins" class="ctr"><svg viewBox="0 0 24 24"><path d="M12 2 L20 12 L12 22 L4 12 Z" fill="#ffd23a" stroke="#8a5a00" stroke-width="1.5"/></svg><b>0</b></span>
+        <span id="keyicon" class="ctr hidden"><svg viewBox="0 0 24 24"><circle cx="7" cy="12" r="4.5" fill="none" stroke="#e6c25a" stroke-width="2.5"/><path d="M11 12 H22 M18 12 V16 M21 12 V15" stroke="#e6c25a" stroke-width="2.5"/></svg></span>
+      </div>
+      <div id="shards"><i></i><i></i><i></i></div>
+    </div>
+    <div id="objective"></div>
+    <div id="behaviour"></div>
+    <canvas id="minimap" width="190" height="190"></canvas>
+    <div id="prompt"></div>
+    <div id="toast"></div>
+    <div id="bossbar" class="hidden"><span></span><div><i></i></div></div>
+    <div id="weapon"><span class="ico"></span><span class="name"></span><span class="ready"></span><span class="alt"></span></div>
+    <button id="pausebtn" aria-label="pause">II</button>
+  </div>
+  <div id="wsel" class="hidden"><div class="slot" data-dir="up"></div><div class="slot" data-dir="right"></div><div class="slot" data-dir="down"></div><div class="slot" data-dir="left"></div><div class="mid"></div></div>
+  <div id="vignette"></div>
+
+  <div id="floats"></div>
+
+  <!-- behaviour menu (hold Ctrl), after LBA2's COMPORTE.CPP -->
+  <div id="behmenu" class="hidden">
+    <div class="bboxes"><div class="bbox lba-frame"></div><div class="bbox lba-frame"></div><div class="bbox lba-frame"></div><div class="bbox lba-frame"></div></div>
+    <div class="blabel lba-frame"></div>
+    <div class="binfo lba-frame">
+      <div class="row"><span class="ico heart"></span><div class="gauge life"><i></i></div><span class="ico kashico"></span><span class="kash"><b>0</b></span></div>
+      <div class="row"><span class="ico flask"></span><div class="gtrack"><div class="gauge magic"><i></i></div></div><span class="ico keyico"></span><span class="keys"><b>0</b></span></div>
+      <div class="row"><span class="clovers"></span><span class="shardrow"></span></div>
+    </div>
+  </div>
+
+  <div id="dialog" class="hidden lba-frame"><div class="name"></div><div class="text"></div><div class="next">▼</div></div>
+  <div id="shop" class="hidden"></div>
+  <div id="holomap" class="hidden" role="dialog" aria-label="Holomap"><div class="frame"><div class="title"></div><canvas width="720" height="720"></canvas><div class="objective"></div><div class="foot"><span class="legend"></span><span class="hint"></span><button class="close" type="button"></button></div></div></div>
+
+  <!-- ===== touch controls ===== -->
+  <div id="touch" class="hidden">
+    <div id="stick"><i></i></div>
+    <div class="tbtns">
+      <button data-touch="action">⬤</button>
+      <button data-touch="attack">⚔</button>
+      <button data-touch="ball">✦</button>
+      <button data-touch="dodge">»</button>
+      <button data-touch="interact">✋</button>
+      <button data-touch="swap">⇄</button>
+      <button data-touch="cycle">⟳</button>
+      <button data-touch="map">⌖</button>
+    </div>
+  </div>
+
+  <!-- ===== screens ===== -->
+  <div id="title" class="screen">
+    <div class="logo">
+      <div class="logo-top">LBA 3</div>
+      <div class="logo-bottom" data-i18n="logo_sub"></div>
+      <div class="sub" data-i18n="title_sub"></div>
+    </div>
+    <div class="menu">
+      <button data-act="continue" id="btn-continue" data-i18n="continue"></button>
+      <button data-act="new" data-i18n="new_game"></button>
+      <button data-act="settings" data-i18n="settings"></button>
+      <button data-act="controls" data-i18n="controls"></button>
+      <button data-act="exitapp" class="desktop-only">Quit Game</button>
+    </div>
+    <div class="disclaimer" data-i18n="disclaimer"></div>
+    <div id="ver" style="position:absolute;right:12px;bottom:8px;font-size:12px;opacity:.6"></div>
+  </div>
+
+  <div id="pause" class="screen hidden">
+    <h1 data-i18n="paused"></h1>
+    <div id="pause-objective" class="lba-frame"></div>
+    <div class="menu">
+      <button data-act="resume" data-i18n="resume"></button>
+      <button data-act="settings" data-i18n="settings"></button>
+      <button data-act="controls" data-i18n="controls"></button>
+      <button data-act="bench" data-i18n="bench"></button>
+      <button data-act="quit" data-i18n="save_quit"></button>
+    </div>
+  </div>
+
+  <div id="settings" class="screen hidden">
+    <h1 data-i18n="settings"></h1>
+    <div class="settings">
+      <label data-i18n="visual"></label>
+      <div class="seg" data-setting="visual"><button data-v="2026" data-i18n="vis_2026"></button><button data-v="1997" data-i18n="vis_1997"></button></div>
+      <label data-i18n="control_scheme"></label>
+      <div class="seg" data-setting="controls"><button data-v="modern" data-i18n="ctrl_modern"></button><button data-v="classic" data-i18n="ctrl_classic"></button></div>
+      <label data-i18n="camera"></label>
+      <div class="seg" data-setting="camera"><button data-v="lba" data-i18n="cam_lba"></button><button data-v="free" data-i18n="cam_free"></button></div>
+      <label data-i18n="hud"></label>
+      <div class="seg" data-setting="hud"><button data-v="lba" data-i18n="hud_lba"></button><button data-v="modern" data-i18n="hud_modern"></button></div>
+      <label data-i18n="mm_label"></label>
+      <div class="seg" data-setting="minimap"><button data-v="north" data-i18n="mm_north"></button><button data-v="camera" data-i18n="mm_camera"></button></div>
+      <label data-i18n="quality"></label>
+      <div class="seg" data-setting="quality"><button data-v="high" data-i18n="q_high"></button><button data-v="medium" data-i18n="q_medium"></button><button data-v="low" data-i18n="q_low"></button></div>
+      <label data-i18n="res_label"></label>
+      <div class="seg" data-setting="res"><button data-v="auto" data-i18n="res_auto"></button><button data-v="full" data-i18n="res_full"></button></div>
+      <label data-i18n="fps_label"></label>
+      <div class="seg" data-setting="fps"><button data-v="auto" data-i18n="fps_auto"></button><button data-v="60" data-i18n="fps_60"></button><button data-v="30" data-i18n="fps_30"></button></div>
+      <label data-i18n="text_speed"></label>
+      <div class="seg" data-setting="textSpeed"><button data-v="slow" data-i18n="ts_slow"></button><button data-v="normal" data-i18n="ts_normal"></button><button data-v="fast" data-i18n="ts_fast"></button><button data-v="instant" data-i18n="ts_instant"></button></div>
+      <label data-i18n="text_size"></label>
+      <div class="seg" data-setting="textSize"><button data-v="normal" data-i18n="tsz_normal"></button><button data-v="large" data-i18n="tsz_large"></button></div>
+      <label data-i18n="shake_set"></label>
+      <div class="seg" data-setting="shake"><button data-v="on" data-i18n="sh_on"></button><button data-v="reduced" data-i18n="sh_reduced"></button><button data-v="off" data-i18n="sh_off"></button></div>
+      <label data-i18n="difficulty"></label>
+      <div class="seg" data-setting="difficulty"><button data-v="gentle" data-i18n="df_gentle"></button><button data-v="normal" data-i18n="df_normal"></button><button data-v="hard" data-i18n="df_hard"></button></div>
+      <label data-i18n="aim_assist"></label>
+      <div class="seg" data-setting="aimAssist"><button data-v="off" data-i18n="aa_off"></button><button data-v="low" data-i18n="aa_low"></button><button data-v="normal" data-i18n="aa_normal"></button><button data-v="high" data-i18n="aa_high"></button></div>
+      <label data-i18n="lock_mode"></label>
+      <div class="seg" data-setting="lockMode"><button data-v="toggle" data-i18n="lm_toggle"></button><button data-v="hold" data-i18n="lm_hold"></button></div>
+      <label data-i18n="music"></label>
+      <input type="range" min="0" max="1" step="0.05" data-range="music">
+      <label data-i18n="sfx"></label>
+      <input type="range" min="0" max="1" step="0.05" data-range="sfx">
+      <label data-i18n="voice_vol"></label>
+      <input type="range" min="0" max="1" step="0.05" data-range="voice">
+    </div>
+    <div class="menu"><button data-act="back" data-i18n="back"></button></div>
+  </div>
+
+  <div id="controls" class="screen hidden">
+    <h1 data-i18n="controls"></h1>
+    <table class="keys" data-i18n-html="controls_html"></table>
+    <h2 data-i18n="rebind_title"></h2>
+    <p class="hint" data-i18n="rebind_hint"></p>
+    <div id="rebind" class="settings"></div>
+    <div class="menu"><button data-act="resetkeys" data-i18n="rebind_reset"></button><button data-act="back" data-i18n="back"></button></div>
+  </div>
+
+  <div id="benchres" class="screen hidden">
+    <h1 data-i18n="bench_title"></h1>
+    <textarea id="bench-out" readonly spellcheck="false" style="width:min(92vw,1100px);height:52vh;font:12px/1.4 monospace;background:rgba(0,0,0,.55);color:#e8f0ff;border:1px solid #6a8;padding:8px;white-space:pre;overflow:auto"></textarea>
+    <div class="menu"><button data-act="benchcopy" data-i18n="bench_copy"></button><button data-act="resume" data-i18n="resume"></button></div>
+  </div>
+
+  <div id="gameover" class="screen hidden">
+    <h1 data-i18n="gameover"></h1>
+    <p data-i18n="gameover_sub"></p>
+    <div class="menu"><button data-act="retry" data-i18n="retry"></button></div>
+  </div>
+
+  <div id="ending" class="screen hidden">
+    <h1 data-i18n="ending_title"></h1>
+    <p data-i18n-html="ending_text"></p>
+    <div class="menu"><button data-act="explore" data-i18n="keep_exploring"></button><button data-act="quit" data-i18n="to_title"></button></div>
+  </div>
+
+  <div id="loading" class="screen"><div class="spinner"></div><p id="loading-step">Loading…</p></div>
+  <div id="inventory" class="hidden"></div>
+  <!-- story scenes (src/engine/cinematic.js): title, subtitles, hold-to-skip -->
+  <div id="cine" class="hidden">
+    <div id="cine-title"><h1>LBA3</h1><p>The Awakening</p></div>
+    <div id="cine-sub"></div>
+    <div id="cine-skip"><span class="bar"></span><kbd>E</kbd> Hold to skip</div>
+  </div>
+  <div id="chapter"><small></small><h2></h2></div>
+  <div id="fade"></div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

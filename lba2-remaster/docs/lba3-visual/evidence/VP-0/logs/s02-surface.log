@@ -1,0 +1,40 @@
+zoe at [ -29.25, 2.3594695384685807, 75.3 ]
+{
+  tg: { kind: 'npc', id: 'zoe', x: -29.25, z: 75.3, label: 'p_talk' },
+  st: 'dialog'
+}
+zoe talk [["dialog","zoe","listen","talk","Same next door. The"],["dialog","zoe","listen","talk","Same next door. Their tap coughe"],["dialog","zoe","listen","talk","Same next door. Their tap coughed and stopped"],["dialog","zoe","listen","talk","Same next door. Their tap coughed and stopped too."],["dialog","zoe","listen","talk","And what came"],["dialog","zoe","listen","talk","And what came out was warm"],["dialog","zoe","listen","talk","And what came out was warm. Go on, the w"],["dialog","zoe","listen","talk","And what came out was warm. Go on, the well."],["play","-","idle","idle","And what came out was warm. Go on, the well."],["play","-","idle","idle","And what came out was warm. Go on, the well."],["play","-","idle","idle","And what came out was warm. Go on, the well."],["play","-","idle","idle","And what came out was warm. Go on, the well."],["play","-","idle","idle","And what came out was warm. Go on, the well."],["play","-","idle","idle","And what came out was warm. Go on, the well."],["play","-","idle","idle","And what came out was warm. Go on, the well."],["play","-","idle","idle","And what came out was warm. Go on, the well."]]
+{ state: 'play', lines: 0 }
+run [["turnR",0],["turnR",0],["turnR",0],["run",4.44],["run",5.23],["run",5.37],["run",5.39],["run",5.4],["run",5.4],["run",5.4],["run",5.4],["run",5.4],["run",5.4],["run",5.4],["run",5.4],["run",5.4],["walk",0.95],["turnR",0.17],["turnR",0.03],["run",4.45],["walk",0.79],["idle",0.14],["idle",0.02],["idle",0],["idle",0],["idle",0],["idle",0],["idle",0],["idle",0],["idle",0]]
+walk [["walk",1.75],["walk",2.22],["walk",2.35],["walk",2.39],["walk",2.4],["walk",2.4],["walk",2.4],["walk",2.34],["walk",2.38],["walk",2.4],["walk",2.4],["walk",2.4],["walk",2.4],["walk",2.4],["walk",2.4],["walk",2.4]]
+STEP look at the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":4,"fail":null} | citadel [-43.59,2.2,-3.54] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+gilbert at [ -39.6, 2.200000047683716, -2.4 ]
+{
+  r: { r: 'arrived', t: 1.5000000000000013 },
+  tg: { kind: 'npc', id: 'mira', x: -40.8, z: -1.1, label: 'p_talk' }
+}
+gilbert talk [["dialog","gilbert","listen","talk","I paid my water bil"],["dialog","gilbert","listen","talk","I paid my water bill! So where i"],["dialog","gilbert","listen","talk","I paid my water bill! So where is my water?"],["dialog","gilbert","listen","talk","I paid my water bill! So where is my water?"],["dialog","mira","listen","listen","Mr Gilbert, t"],["dialog","mira","listen","listen","Mr Gilbert, the bill cover"],["dialog","mira","listen","listen","Mr Gilbert, the bill covers the connecti"],["dialog","mira","listen","listen","Mr Gilbert, the bill covers the connection, not the w"],["dialog","mira","listen","listen","Mr Gilbert, the bill covers the connection, not the water."],["dialog","mira","listen","listen","Mr Gilbert, the bill covers the connection, not the water."],["dialog","mira","listen","listen","Mr Gilbert, the bill covers the connection, not the water."],["dialog","mira","listen","listen","Mr Gilbert, the bill covers the connection, not the water."],["dialog","gilbert","listen","talk","So I'm paying"],["dialog","gilbert","listen","talk","So I'm paying for an empty"],["dialog","gilbert","listen","talk","So I'm paying for an empty pipe?"],["dialog","gilbert","listen","talk","So I'm paying for an empty pipe?"]]
+STEP Gilbert: the key: {"r":"talked","state":"play","lines":7,"fail":null} | citadel [-40.87,2.2,-1.85] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+STEP Xil: {"r":"talked","to":"xil","state":"play","lines":6,"fail":null} | citadel [-130.25,1.75,42.29] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+STEP Doran: the stamp: {"r":"talked","to":"doran","state":"play","lines":8,"fail":null} | citadel [-119.31,1.84,44.34] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+STEP Xil: the rope: {"r":"talked","to":"xil","state":"play","lines":4,"fail":null} | citadel [-130.36,1.75,42.97] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+STEP Tim and Lulu: {"r":"talked","to":"tim","state":"play","lines":6} | citadel [-49.61,2.2,5.14] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+{ r: 'arrived', t: 3.3333333333333313 }
+STEP overhear (Discreet): {"overheard":true,"fail":null} | citadel [-45.5,2.2,3.46] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+STEP Tim confesses: {"r":"talked","to":"tim","state":"play","lines":8,"fail":null} | citadel [-48.11,2.2,3.87] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+STEP the clover Tim gives back: {"found":true,"clovers":[2,3]} | citadel [-48.37,2.2,3.69] | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+{
+  r: { r: 'arrived', t: 2.666666666666667, early: true },
+  tg: {
+    kind: 'well',
+    id: 'p_well',
+    x: undefined,
+    z: undefined,
+    label: 'p_well'
+  }
+}
+well [["dialog","citadel","","talk",[-43.66,2.2,-2.92]],["dialog","citadel","","talk",[-43.66,2.2,-2.92]],["play","citadel","0.333333","idle",[-43.66,2.2,-2.92]],["play","citadel","0.666667","idle",[-43.66,2.2,-2.92]],["dialog","well","1","talk",[1093.4,0,3.3]],["dialog","well","0.619048","talk",[1093.4,0,3.3]],["dialog","well","0.238095","talk",[1093.4,0,3.3]],["dialog","well","","talk",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]],["play","well","","idle",[1093.4,0,3.3]]]
+{"state":"play","room":"well","pos":[1093.18,0,3.3],"hp":9,"chapter":"well","obj":"Find the source of the heat◆ Wake the three crystals with the magic ball"}
+kept /tmp/claude-0/-home-user-geriatrics-course/a5ce8310-2ebe-5d1c-8bbd-0df4d308f0fe/scratchpad/vp0-save-02.json
+no page errors
+EXIT 0

@@ -1,0 +1,7 @@
+loaded (ready): {"on":false,"heat":0,"sync":0,"lift":1,"up":true,"tap":true,"pair":false,"paid":false,"ask":true,"trips":2,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+switch on: {"r":"used","tgt":"wlever","label":"p_switch_on"}
+success: {"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[[-1.45,1.74,-2,5]]}
+lines: ["Both lamps hold steady. The little panel fills, one light at a time.","n_baldino: Listen to that! They hear each other. Ilo owes me a dinner.","n_baldino: The shuttle yard pays for every pair that works. Half is yours.","TOAST w_toast_pair"]
+after continue: {"on":false,"heat":0,"sync":0,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}
+talk after continue: {"lines":["n_baldino: A cog from the old mill, a code cylinder from the depot. And don't forget the brakes!","n_baldino: Ilo from the shuttle yard draws my housings. I draw the parts that catch fire."],"st":{"on":false,"heat":0,"sync":0,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":2,"room":"workshop","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]}}
+no errors

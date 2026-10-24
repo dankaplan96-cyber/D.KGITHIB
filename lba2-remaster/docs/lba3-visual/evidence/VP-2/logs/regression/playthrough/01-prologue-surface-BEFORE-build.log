@@ -1,0 +1,28 @@
+[0s +0s] intro: {"state":"play","lines":0} | house [1001.55,0,-1.75] hp 10 | Check the well
+[1s +1s] cupboard: {"r":"used","target":{"kind":"roomsearch","id":"p_search","label":"p_search"},"state":"play","lines":4,"ball":true,"fail":null} | house [997.24,0,-1.65] hp 10 | Check the well
+[7s +6s] out of the house: {"r":"transition","from":"house","to":"citadel","fail":null} | citadel [-43.99,2.34,77.2] hp 10 | Check the well
+[359s +352s] look at the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":4,"fail":null} | citadel [-40.59,2.2,-3.15] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[362s +3s] Gilbert: the key: {"r":"talked","to":"gilbert","state":"play","lines":12,"fail":null} | citadel [-40.59,2.2,-3.15] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[368s +6s] Xil: {"r":"talked","to":"xil","state":"play","lines":6,"fail":null} | citadel [-130.32,1.75,42.22] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[370s +2s] Doran: the stamp: {"r":"talked","to":"doran","state":"play","lines":8,"fail":null} | citadel [-119.21,1.84,44.32] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[372s +2s] Xil: the rope: {"r":"talked","to":"xil","state":"play","lines":4,"fail":null} | citadel [-130.43,1.75,42.9] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[377s +4s] Tim and Lulu: {"r":"talked","to":"tim","state":"play","lines":6} | citadel [-49.39,2.2,5.38] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[377s +0s] overhear (Discreet): {"overheard":true,"fail":null} | citadel [-49.39,2.2,5.38] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[377s +0s] Tim confesses: {"r":"talked","to":"tim","state":"play","lines":8,"fail":null} | citadel [-49.39,2.2,5.38] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[378s +1s] the clover Tim gives back: {"found":true,"clovers":[2,2]} | citadel [-48.62,2.2,3.8] hp 10 | Climb down the well◆ Lid key (water office)◆ A rope (harbour)◆ Optional: what did Tim throw in the well?
+[720s +343s] down the well: {"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":6,"fail":null} | well [1093.4,0,3.3] hp 10 | Find the source of the heat◆ Wake the three crystals with the magic ball
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[283.1] stuck at (-42.9, -2.6): replan
+[288.5] stuck at (-40.7, -2.9): replan
+[293.9] stuck at (-40.4, -3.9): replan
+[301.8] stuck at (-43.3, -5.0): replan
+[307.3] stuck at (-41.4, -5.5): replan
+[315.3] go → (-42.0, -4.0) plan ok=false pts=3 left=1.63
+[320.4] stuck at (-43.4, -3.1): replan
+[328.4] stuck at (-40.8, -5.1): replan
+[336.3] stuck at (-42.8, -2.6): replan
+[344.3] stuck at (-40.7, -5.0): replan
+[349.7] stuck at (-40.4, -4.0): replan
+[357.7] stuck at (-43.1, -5.3): replan
+no errors

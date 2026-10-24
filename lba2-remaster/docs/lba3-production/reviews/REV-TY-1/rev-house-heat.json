@@ -1,0 +1,63 @@
+{
+ "start": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -56,
+   16.76,
+   -36.73
+  ],
+  "hp": 4,
+  "chapter": "project",
+  "obj": "Visit Vesk at the station in the old fortress",
+  "items": [],
+  "coins": 7,
+  "clovers": 3,
+  "l": {}
+ },
+ "house": {
+  "desk": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: Zoé's connections board. Green pins are on the project's heat, red ones still wait. Bug Street is green. The harbour row is all red.",
+    "n_hero: (She sends the office a new list every week. If anyone knows who's been left out, it's her.)"
+   ]
+  },
+  "trunk": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: The old travel trunk. Desert Island, Zeelich... these days it holds seed packets."
+   ]
+  },
+  "mend": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: Things to take back: Gilbert's kettle, the baker's scales. Gilbert will want the kettle before he wants to say thanks."
+   ]
+  },
+  "meter": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: Zoé's note on the meter: \"Jumps when the ground hums. Three times today. -Z\"",
+    "n_hero: (She noticed before I did. Again.)"
+   ]
+  },
+  "bench": {
+   "r": "used",
+   "target": "lhome",
+   "label": "p_look",
+   "lines": [
+    "n_hero: Arthur's paddle boat, built to beat Lulu's. The plan says \"rudder needs pin (pliers?)\". So that's where my pliers went."
+   ]
+  }
+ },
+ "errors": []
+}

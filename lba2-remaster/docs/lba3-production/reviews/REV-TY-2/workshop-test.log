@@ -1,0 +1,30 @@
+ISO  chapter 2 marked done by flags (c1_done, c1_plan, …); story.nextChapter() starts chapter 3 as tests/chapter2.mjs does
+PASS Twinsen walks from the dock into Baldino's workshop (INPUT) 
+PASS the workshop has its relay table, hoist, fan, thunder box, tea experiment and Ilo's crate 
+PASS collision: from the door he walks to every new thing, under the hoist to the crates, to Baldino and back (INPUT) 
+PASS the fan, the thunder box, the tea experiment and Ilo's crate each have a short look, with a word from Baldino (INPUT) 
+PASS the failed experiment reads as one: lid in the ceiling, "TEA: BY HAND", boiled dry 
+PASS the thunder box shows its limit (three seconds, then ten to recover) 
+PASS collaboration: Ilo of the shuttle yard (crate, Baldino) 
+PASS first talk: Baldino's chapter-3 explanation as before (the plan), no side task yet 
+PASS next talk: Baldino brings up his test pair (two relays that won't hear each other) 
+PASS then: the reminder of the key's parts and one line of his years, a different one each time 
+PASS lever: the pair starts; the hanging relay can't see the other (hoist down) and blinks; no sync (INPUT) 
+PASS left running with the drip shut the coupler glows (warning), then trips and switches off (recoverable) 
+PASS crank: the old hoist raises the relay above the flying machine (INPUT) 
+PASS save & Continue: back in the workshop, the hoist still up, the tap still shut, the pair off 
+PASS raised and switched on: the pair links (the SYNC lamps start), but the coupler still trips before they hold (INPUT) 
+PASS a save made with the pair running comes back with it off and cold (hoist kept) 
+PASS the drip tap opens (Baldino's sandwich note) and keeps the coupler cool (INPUT) 
+PASS held together for ten seconds: the pair talks; Baldino is delighted and pays half the shuttle yard's fee 
+PASS the reward: a coin worth five kashes, tossed his way and picked up (INPUT) 
+PASS afterwards the workshop shows it: both relays lit, the SYNC panel full, the hoist up, the drip running; the parts are only looked at now 
+PASS the journal keeps the rules it taught (relays by sight; couplers need cooling) 
+PASS save & Continue after success: the pair still talks (lamps, panel, hoist, drip) 
+ISO  the cog and the code cylinder given by flags (c2_cog, c2_cyl) for the main-path check
+PASS chapter 3's main path is unchanged: Baldino builds the override key and the story cuts to Zoé at the lighthouse 
+ISO  chapter 9 marked done by flags (as tests/chapter10.mjs does); story.nextChapter() starts chapter 10 in the workshop
+PASS chapter 10 opens in the workshop; Baldino recalls the test pair's rules; the pair is still talking 
+PASS chapter 10: the thunder box is gone from the shelf (it's the pulse tool now) 
+no errors
+ALL PASSED

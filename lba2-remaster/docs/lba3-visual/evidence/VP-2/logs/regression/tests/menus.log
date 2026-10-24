@@ -1,0 +1,27 @@
+PASS first launch: the title menu is up, nothing else 
+PASS first launch: Continue is unavailable without a save 
+PASS first launch: settings are the defaults (Classic controls, LBA camera) 
+PASS settings open/close ×5 from the title, back to the title 
+PASS controls open/close ×3, back to the title 
+PASS title: the arrow keys move the selection 
+PASS settings: quality and text speed apply at once 
+PASS settings: kept after relaunch, and the menu shows them 
+PASS New Game: in play, in the house, the title gone 
+PASS Esc pauses: the pause menu is up 
+PASS paused: holding Up does not move the hero 
+PASS Esc again resumes, the menu is gone 
+PASS 20 Esc presses 50 ms apart: back in play, no screen left over 
+PASS pause → settings → back returns to the pause menu 
+PASS Resume button: back in play 
+PASS focus lost while holding Up: the hero stops, no key stays held 
+PASS dialogue: holding Up does not move the hero 
+PASS dialogue: E advances to the end, back in play with the ball 
+PASS I opens the inventory and closes it again 
+PASS Ctrl + Right switches the behaviour (Normal → Athletic) 
+PASS F1 picks Normal again 
+PASS H opens the holomap and closes it 
+PASS rebinding: interact → G is stored and named 
+PASS reset keys: back to the defaults 
+PASS after the menus: in play, no overlay 
+no errors
+ALL PASSED

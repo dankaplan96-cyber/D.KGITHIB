@@ -1,0 +1,16 @@
+play ["toast:480,90,0x0 op1"]
+{
+  r: { r: 'arrived', t: 7.966666666666648 },
+  tg: { kind: 'npc', id: 'zoe', x: -29.25, z: 75.3, label: 'p_talk' }
+}
+prompt ["prompt:430,388,101x39 op0.34638","toast:480,90,0x0 op1","weapon:759,488,185x36 op0.887244"]
+dialog ["prompt:430,381,101x39 op1","toast:480,90,0x0 op1","dialog:8,392,944x140 op1"]
+inventory ["prompt:430,388,101x39 op0.346258","toast:480,90,0x0 op1","inventory:0,0,960x540 op1"] inventory
+journal scroll [ 270, 270 ]
+map map
+pause ["prompt:430,381,101x39 op1","toast:480,90,0x0 op1","pause:0,0,960x540 op1"] pause
+enter {"r":"entered"}
+exit {"t":28.63,"st":"play","anim":"walk","spd":0.92,"pos":[-44.02,2.34,77.2],"ang":1.57,"fade":"","prompt":"","trans":false,"room":"citadel"}
+{"t":32.68,"st":"play","anim":"idle","spd":0,"pos":[-43.99,2.34,77.2],"ang":1.57,"fade":"","prompt":"","trans":false,"room":"citadel","cam":[-55.4,10.3,77.2]}
+no page errors
+EXIT 0

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Character Review</title>
+<style>html,body{margin:0;height:100%;background:#2a2f36;color:#eee;font:14px system-ui;overflow:hidden}
+#info{position:fixed;left:12px;top:10px;text-shadow:0 1px 2px #000}
+.lbl{position:fixed;transform:translateX(-50%);font:12px system-ui;color:#123;background:#ffffffcc;padding:1px 6px;border-radius:8px;white-space:nowrap}</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three/build/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }</script>
+</head><body><div id="info"></div>
+<script type="module">
+// Character review scene (docs/LBA3_CHARACTER_ART_GUIDE.md §11).
+//   ?c=a,b,c          characters (default: the whole cast)
+//   &cam=front|side|back|34|game|free   camera preset (sets the yaw of every character; game = LBA2 exterior camera)
+//   &views=0,1.57     several fixed yaws per character, side by side (overrides cam yaw)
+//   &yaw=0            fixed yaw for all (no spinning)
+//   &anim=walk&t=0.4  clip + freeze time in seconds (deterministic: random timers are reset); &speed= ground speed
+//   &light=neutral|outdoor|indoor   &mat=color|grey|sil   &props=0 hides door/step/chair  &grid=0
+//   &dist, &cy, &ly, &fov, &gap, &labels=0, &bg=#hex
+//   &baked=1          load baked geometry (assets/characters) via preloadCharacters first
+//   &ov={json}        design overrides applied to every character (proportion variants)
+import * as THREE from 'three';
+import * as CH from './src/game/characters.js';
+const { createCharacter, LOOKS } = CH;
+const q = new URLSearchParams(location.search);
+const names = (q.get('c') || Object.keys(LOOKS).join(',')).split(',');
+const anim = q.get('anim') || 'idle';
+const camMode = q.get('cam') || (q.get('yaw') != null || q.get('views') ? 'front' : 'free');
+const presetYaw = { front: 0, side: Math.PI / 2, back: Math.PI, '34': 0.62, game: 0.62, free: null }[camMode];
+const views = q.get('views') ? q.get('views').split(',').map(Number) : null;
+const lightMode = q.get('light') || 'neutral';
+const matMode = q.get('mat') || 'color';
+const ov = q.get('ov') ? JSON.parse(q.get('ov')) : {};
+
+const r = new THREE.WebGLRenderer({ antialias: true });
+r.setPixelRatio(Math.min(devicePixelRatio, 2)); r.setSize(innerWidth, innerHeight);
+r.toneMapping = THREE.NeutralToneMapping;
+document.body.appendChild(r.domElement);
+const scene = new THREE.Scene();
+
+// ---- lighting presets
+const L = {
+  neutral: { bg: '#8c939b', floor: '#7d8288', hemi: ['#f4f6f8', '#5c6066', 1.5], sun: ['#ffffff', 2.0, [2, 6, 6]] },
+  outdoor: { bg: '#9fc4e6', floor: '#7f9a5a', hemi: ['#d8ecff', '#6a7a4a', 1.2], sun: ['#fff3e0', 2.2, [-3.5, 6, 2.5]] }, // environment.js values
+  indoor: { bg: '#3a2c24', floor: '#9a6a4a', hemi: ['#ffe2bc', '#3a2a20', 0.8], sun: ['#ffcf90', 1.4, [1.5, 3.2, 2.5]], point: ['#ffb060', 6, [-1.6, 2.4, 1.6]] },
+}[lightMode];
+scene.background = new THREE.Color(q.get('bg') || L.bg);
+scene.add(new THREE.HemisphereLight(...L.hemi));
+const sun = new THREE.DirectionalLight(L.sun[0], L.sun[1]); sun.position.set(...L.sun[2]); scene.add(sun);
+if (L.point) { const p = new THREE.PointLight(L.point[0], L.point[1], 8); p.position.set(...L.point[2]); scene.add(p); }
+
+// ---- floor with 1 m grid and a height ruler
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: matMode === 'sil' ? '#e8e8e8' : L.floor, roughness: 0.95 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+if (matMode === 'sil') scene.background = new THREE.Color('#ffffff');
+if (q.get('grid') !== '0') {
+  const g = new THREE.GridHelper(40, 40, '#30343a', '#4a4f56'); g.position.y = 0.002; g.material.opacity = 0.5; g.material.transparent = true; scene.add(g);
+}
+const propMat = new THREE.MeshStandardMaterial({ color: matMode === 'sil' ? '#c8c8c8' : '#b8a690', roughness: 0.9 });
+const propDark = new THREE.MeshStandardMaterial({ color: matMode === 'sil' ? '#c8c8c8' : '#6a5440', roughness: 0.9 });
+const box = (w, h, d, x, y, z, m = propMat) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y + h / 2, z); scene.add(b); return b; };
+
+// ---- characters
+if (CH.preloadCharacters) await CH.preloadCharacters(names); // (polygon models; baked geometry with &baked=1)
+const slots = [];
+for (const n of names) for (const v of views || [presetYaw]) slots.push([n, v]);
+const gap = +(q.get('gap') || (views ? 0.95 : 1.05));
+const times = [];
+const grey = new THREE.MeshStandardMaterial({ color: '#a4a4a4', roughness: 0.8 });
+const black = new THREE.MeshBasicMaterial({ color: '#000000' });
+const t0 = performance.now();
+const rigs = slots.map(([n, v], i) => {
+  const s = performance.now();
+  const rig = createCharacter(n, ov);
+  times.push(`${n} ${(performance.now() - s).toFixed(0)}`);
+  rig.root.position.x = (i - (slots.length - 1) / 2) * gap;
+  rig.fixedYaw = v;
+  rig.t = 0; rig.blinkT = 99; rig.fidgetT = 99; // deterministic freeze frames
+  if (matMode !== 'color') rig.root.traverse((m) => { if (m.isMesh) m.material = matMode === 'grey' ? grey : black; });
+  scene.add(rig.root);
+  return rig;
+});
+document.getElementById('info').textContent = `${slots.length} rigs, ${(performance.now() - t0).toFixed(0)} ms — ${[...new Set(times)].join(', ')}`;
+const span = slots.length * gap;
+if (q.get('props') !== '0') {
+  // door 2.15 m (frame + panel), a 0.25 m step and a chair (seat 0.45 m) for scale
+  const dx = span / 2 + 0.9;
+  box(0.12, 2.27, 0.16, dx - 0.5, 0, -0.6, propDark); box(0.12, 2.27, 0.16, dx + 0.5, 0, -0.6, propDark); box(1.12, 0.12, 0.16, dx, 2.15, -0.6, propDark);
+  box(0.88, 2.15, 0.05, dx, 0, -0.65);
+  box(0.9, 0.25, 0.6, -span / 2 - 0.9, 0, -0.2);
+  const cx = -span / 2 - 0.9, cz = 0.9;
+  box(0.45, 0.05, 0.45, cx, 0.42, cz); box(0.45, 0.5, 0.05, cx, 0.47, cz - 0.2);
+  for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) box(0.04, 0.42, 0.04, cx + a * 0.2, 0, cz + b * 0.2);
+  // height ruler: 0.25 m marks up to 2.5 m
+  for (let i = 0; i < 10; i++) box(0.05, 0.25, 0.05, -span / 2 - 0.35, i * 0.25, -0.6, i % 2 ? propDark : new THREE.MeshStandardMaterial({ color: '#f0f0f0' }));
+}
+
+// ---- camera
+const cam = new THREE.PerspectiveCamera(q.get('fov') ? +q.get('fov') : camMode === 'game' ? 43.6 : 30, innerWidth / innerHeight, 0.05, 200);
+if (camMode === 'game') {
+  // LBA2 exterior camera: FOV 43.6°, ~13.4 m from the target, 38° down
+  const d = +(q.get('dist') || 13.4), p = (+(q.get('pitch') || 38) * Math.PI) / 180;
+  cam.position.set(0, 1 + Math.sin(p) * d, Math.cos(p) * d); cam.lookAt(0, 1, 0);
+} else {
+  const dist = +(q.get('dist') || Math.max(3.2, span * 1.5));
+  cam.position.set(0, +(q.get('cy') || 1.3), dist); cam.lookAt(0, +(q.get('ly') || 1.0), 0);
+}
+cam.updateMatrixWorld();
+if (q.get('labels') !== '0') {
+  slots.forEach(([n, v], i) => {
+    if (views && v !== views[0]) return;
+    const p = new THREE.Vector3(rigs[i].root.position.x + (views ? (views.length - 1) * gap / 2 : 0), 0, 0.3).project(cam);
+    const d = document.createElement('div'); d.className = 'lbl'; d.textContent = n;
+    d.style.left = ((p.x + 1) / 2 * innerWidth) + 'px'; d.style.top = Math.min(innerHeight - 22, (1 - p.y) / 2 * innerHeight + 4) + 'px';
+    document.body.appendChild(d);
+  });
+}
+const yaw = q.get('yaw') != null ? +q.get('yaw') : null;
+const speed = q.get('speed') != null ? +q.get('speed') : anim === 'walk' ? 1.4 : anim === 'run' ? 6.5 : anim === 'sneak' ? 1.0 : 0;
+const step = (dt) => rigs.forEach((g) => {
+  g.play(anim); g.update(dt, speed);
+  g.root.rotation.y = g.fixedYaw != null ? g.fixedYaw : yaw != null ? yaw : g.root.rotation.y;
+});
+// freeze at time t: advance the clip deterministically, then keep rendering that frame
+const tFreeze = q.get('t') != null ? +q.get('t') : null;
+if (tFreeze != null) { const n = Math.round(tFreeze * 60); for (let i = 0; i < n; i++) step(1 / 60); }
+window.lookdev = { rigs, render: (dt = 1 / 60) => { if (tFreeze == null) step(dt); r.render(scene, cam); } };
+const still = camMode !== 'free' || views != null || tFreeze != null;
+let last = performance.now();
+function loop(t) { const dt = Math.min(0.05, (t - last) / 1000); last = t; if (!still) rigs.forEach((g) => (g.root.rotation.y += dt * 0.4)); window.lookdev.render(dt); if (!still) requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+</script></body></html>

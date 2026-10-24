@@ -1,0 +1,18 @@
+start: {"state":"play","room":"citadel","pos":[-56,16.76,-36.73],"hp":4,"chapter":"project","obj":"Visit Vesk at the station in the old fortress","items":[],"coins":7,"clovers":3,"l":{}}
+house: {"desk":{"r":"used","target":"lhome","label":"p_look","lines":["n_hero: Zoé's connections board. Green pins are on the project's heat, red ones still wait. Bug Street is green. The harbour row is all red.","n_hero: (She sends the office a new list every week. If anyone knows who's been left out, it's her.)"]},"trunk":{"r":"used","target":"lhome","label":"p_look","lines":["n_hero: The old travel trunk. Desert Island, Zeelich... these days it holds seed packets."]},"mend":{"r":"used","target":"lhome","label":"p_look","lines":["n_hero: Things to take back: Gilbert's kettle, the baker's scales. Gilbert will want the kettle before he wants to say thanks."]},"meter":{"r":"used","target":"lhome","label":"p_look","lines":["n_hero: Zoé's note on the meter: \"Jumps when the ground hums. Three times today. -Z\"","n_hero: (She noticed before I did. Again.)"]},"bench":{"r":"used","target":"lhome","la
+errors: []
+[87.8] go → (1003.1, 9.1) plan ok=true pts=2 left=0.12
+[88.3] go → (1003.1, 9.1) plan ok=true pts=1 left=0.24
+[88.3] go → (1003.1, 9.1) plan ok=true pts=1 left=0.24
+[88.8] go → (1002.6, 10.2) plan ok=true pts=2 left=0.23
+[89.8] go → (1002.6, 10.2) plan ok=true pts=2 left=0.23
+[90.7] go → (1002.6, 10.2) plan ok=true pts=1 left=0.25
+[90.7] go → (1002.6, 10.2) plan ok=true pts=1 left=0.25
+[91.3] go → (1003.5, 10.4) plan ok=true pts=2 left=0.08
+[92.4] go → (1003.5, 10.4) plan ok=true pts=2 left=0.08
+[92.7] go → (1003.5, 10.4) plan ok=true pts=2 left=0.24
+[92.7] go → (1003.5, 10.4) plan ok=true pts=2 left=0.24
+[93.5] go → (994.4, -2.2) plan ok=true pts=3 left=0.16
+[102.4] go → (994.4, -2.2) plan ok=true pts=2 left=0.25
+[102.8] go → (994.4, -2.2) plan ok=true pts=1 left=0.27
+[102.8] go → (994.4, -2.2) plan ok=true pts=1 left=0.27

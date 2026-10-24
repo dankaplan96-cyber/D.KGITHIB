@@ -1,0 +1,15 @@
+loaded: {"st":{"on":false,"heat":0,"sync":0,"lift":0,"up":false,"tap":false,"pair":false,"paid":false,"ask":false,"trips":0,"room":"zeelich","coins":7,"state":"play","chapter":"zeelich","coinPickups":[]},"bal":{"present":true,"at":[2434.4,1.4]},"f":["c2_started","c2_planTaken","c2_plan","c2_cyl","c2_planBack","c2_okuOK","c2_cog","c2_mill_north","c2_mill_east","c2_mill_south","c2_key","c2_zoeStart","c2_broadcast","c2_shield"]}
+enter: {"r":"entered","room":"workshop","balHere":false}
+look fan: {"r":"used","tgt":"wlook","label":"p_look"}
+lines: ["n_hero: A fan with three blades: brass, wood and a bit of tin. One from each repair."]
+look kettle: {"r":"used","tgt":"wlook","label":"p_look"}
+lines: ["n_hero: A kettle wired to a coupler, black with soot. The lid is stuck in the ceiling.","n_hero: A note on the wall: \"TEA: BY HAND.\""]
+crank: {"r":"used","tgt":"wcrank","label":"p_crank"}
+tap: {"r":"used","tgt":"wtap","label":"p_tap_open"}
+lever: {"r":"used","tgt":"wlever","label":"p_switch_on"}
+success (absent): {"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":0,"room":"workshop","coins":12,"state":"play","chapter":"zeelich","coinPickups":[]}
+lines: ["n_hero: A tag on the lever: \"TEST PAIR. Won't talk. -B\"","Both lamps hold steady. The little panel fills, one light at a time.","n_hero: They're talking.","n_hero: The tin on the table says \"TEST FEE. Half to whoever fixes it. -B\" Fair enough.","TOAST w_toast_pair"]
+tin reward: {"c0":12,"c1":12}
+end: {"on":false,"heat":0.3,"sync":1,"lift":1,"up":true,"tap":true,"pair":true,"paid":true,"ask":true,"trips":0,"room":"workshop","coins":12,"state":"play","chapter":"zeelich","coinPickups":[]}
+kept save-absent.json
+no errors

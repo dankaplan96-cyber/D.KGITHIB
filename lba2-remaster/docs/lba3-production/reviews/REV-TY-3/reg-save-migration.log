@@ -1,0 +1,4 @@
+["v1 save (no lists)",{"state":"play","room":null,"chapter":1,"chapterKey":"project","cur":"project","keys":["lba3_save_v1","lba3_save_v1_backup_v1"],"savedV":3,"toast":""},"no errors"]
+["save in a missing room",{"state":"play","room":null,"chapter":1,"chapterKey":"project","cur":"project","keys":["lba3_save_v1","lba3_save_v1_backup_v2"],"savedV":3,"toast":""},"no errors"]
+["corrupt save",{"state":"cinematicEnd","room":null,"chapter":0,"chapterKey":"well","cur":"well","keys":["lba3_save_v1_unreadable"],"savedV":null,"toast":"The save couldn't be loaded. It was kept aside; starting a new game."},"no errors"]
+rc=0

@@ -1,0 +1,39 @@
+start: {"room":"desert","ch":"dig","k":{},"cowl":2,"jars":2,"ferry":true,"items":["evacplan"],"coins":7,"hp":"9/11","pos":[3292,2,4],"lying":[],"state":"play"}
+walk to the track by the cool room: {"r":"arrived","t":16.399999999999974}
+vis from the track: {"crank":"OFF-SCREEN (ndc -1.01,-0.79)","cowlMouth":"OFF-SCREEN (ndc -1.15,-0.23)","cowlTop":"VISIBLE 5.6 m, ndc -0.93,0.03","door":"HIDDEN (BufferGeometry at 5.6 of 10.7 m)","pumpWheel":"OFF-SCREEN (ndc -27.95,3.12)","nearestPole":"OFF-SCREEN (ndc -4.42,0.26)"}
+sani: {"r":"talked","to":"dkid","state":"play","lines":4}
+sani lines: ["n_dkid: You came on the project's ferry. Mum says project people take the water and leave the bill.","n_dkid: Hesk says the pump's wheel always looks into the wind. And his flags point where the wind goes."]
+brosk: {"r":"talked","to":"dtrader","state":"play","lines":6}
+brosk lines: ["n_dtrader: Water costs more than anything I sell. The pump seized when the project's test bore started shaking the ground.","n_dtrader: The last two jars of water in Kesh are going warm in the cool room. The storm turned its wind-catcher round.","n_dtrader: The stair's up the side. I'd go, but somebody has to mind the stall."]
+brosk again: {"r":"talked","to":"dtrader","state":"play","lines":2}
+brosk again lines: ["n_dtrader: The wind-catcher. On the cool room's roof. Into the wind."]
+lumi: {"r":"talked","to":"weaver","state":"play","lines":2}
+lumi lines: ["n_weaver: Mother Tarra won't talk to anyone who comes off that ferry. Can't blame her."]
+door: {"r":"used","label":"p_look"}
+door lines: ["n_hero: Kesh's cool room. It was one of FunFrock's blockhouses. Kesh dug the door out of the dune and built a wind-catcher on the roof.","n_hero: Inside: two jars of water, and air like soup.","n_hero: (Up on the roof, the wind-catcher's mouth is turned the wrong way.)"]
+state: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true},"cowl":2,"jars":2,"ferry":true,"items":["evacplan"],"journal":[{"key":"k_j_cool","done":false}],"coins":7,"hp":"9/11","pos":[3330.65,5.09,-2.67],"lying":[],"state":"play"}
+to the roof by walking: {"r":"arrived","t":7.4,"y":8.01,"roofY":8.01,"prompt":null,"trace":["[48.3] go → (3330.4, -6.0) plan ok=true pts=8 left=0.26"]}
+vis on the roof at the crank: {"crank":"HIDDEN (BufferGeometry at 13.9 of 14.2 m)","cowlMouth":"HIDDEN (BufferGeometry at 12.5 of 13.6 m)","cowlTop":"VISIBLE 13.8 m, ndc -0.56,0.14","door":"HIDDEN (PlaneGeometry at 12.2 of 14.1 m)","pumpWheel":"OFF-SCREEN (ndc 7.48,0.60)","nearestPole":"OFF-SCREEN (ndc -45.28,20.80)"}
+turn 1: {"r":"used","label":"p_turn","dir":3,"cowl":3,"turning":false,"sand":false}
+turn 1 lines: ["n_hero: Side-on to the wind. Barely a breath."]
+turn 2: {"r":"used","label":"p_turn","dir":0,"cowl":0,"turning":false,"sand":true}
+turn 2 lines: ["n_hero: Air rushes down the tower, and half a dune with it.","n_hero: (It needs a screen over the mouth.)"]
+vis after the sand: {"crank":"HIDDEN (BufferGeometry at 13.7 of 14.2 m)","cowlMouth":"HIDDEN (BufferGeometry at 13.2 of 14.5 m)","cowlTop":"VISIBLE 13.8 m, ndc -0.56,0.14","door":"HIDDEN (PlaneGeometry at 12.2 of 14.1 m)","pumpWheel":"OFF-SCREEN (ndc 7.48,0.60)","nearestPole":"OFF-SCREEN (ndc -45.32,20.82)"}
+E spam on the crank (8 taps): {"d0":0,"d1":1,"turns":1,"cowl":1,"sand":true}
+spam lines: ["n_hero: Side-on to the wind. Barely a breath."]
+turn to north: {"dir":1,"cowl":1,"sand":true,"turns":3}
+overshoot lines: []
+roof edges (walk, then jump): {"north":{"walk":{"y":8.01,"x":1.41,"z":1.66,"hp":0},"jump":{"y":5.01,"x":0.97,"z":6.1,"hp":-2,"onRoof":false},"back":{"r":"arrived","y":8.01}},"south":{"walk":{"y":8.01,"x":1.35,"z":-1.66,"hp":0},"jump":{"y":5.05,"x":1.02,"z":-6.11,"hp":-2,"onRoof":false},"back":{"r":"arrived","y":8.01}},"west(n of tower)":{"walk":{"y":8.01,"x":-0.2,"z":0.65,"hp":0},"jump":{"y":8.01,"x":-0.2,"z":0.19,"hp":0,"onRoof":true}},"east (parapet)":{"walk":{"y":8.01,"x":2.36,"z":0.43,"hp":0},"jump":{"y":5,"x":6.68,"z":0.12,"hp":-2,"onRoof":false},"back":{"r":"arrived","y":8.01}},"roofY":8.01}
+stair falls: {"offEastMid":{"from":7.15,"y":5,"hp":0,"dead":false},"backUp":{"r":"arrived","y":8.01},"offTopNorth":{"from":8.01,"y":5.01,"hp":0,"dead":false}}
+ISO  trap scan: the planner started from sampled spots round the blockhouse (planning only; the hero is put back)
+trap scan (walkable back to the door?): {"bad":[],"n":52,"blocked":7}
+to the door: "arrived"
+door with sand: "p_look"
+door sand lines: ["n_hero: Sand on the floor, sand on the jars. Brosk is not going to like this.","n_hero: (Up on the roof, the wind-catcher's mouth is turned the wrong way.)"]
+brosk with sand: "talked"
+brosk sand lines: ["n_dtrader: Sand! In my dates! Whatever you did up there, do the opposite."]
+lumi with sand (dry): "talked"
+lumi sand lines: ["n_weaver: Mother Tarra won't talk to anyone who comes off that ferry. Can't blame her.","n_weaver: And now there's sand in the cool room. My wool's in there."]
+end: {"room":"desert","ch":"dig","k":{"k_ask":true,"k_doorSeen":true,"k_dir":1,"k_turns":3,"k_sand":true},"cowl":1,"jars":2,"ferry":true,"items":["evacplan"],"journal":[{"key":"k_j_cool","done":false}],"coins":7,"hp":"3/11","pos":[3342.39,5,-1.68],"lying":[],"state":"play"}
+kept save-k1.json
+no errors
