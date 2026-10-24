@@ -171,7 +171,20 @@
     <div class="menu"><button data-act="explore" data-i18n="keep_exploring"></button><button data-act="quit" data-i18n="to_title"></button></div>
   </div>
 
-  <div id="loading" class="screen"><div class="spinner"></div><p id="loading-step">Loading…</p></div>
+  <div id="loading" class="screen">
+    <!-- MEA Studio first (the logo of the studio's other games, lo-meushar), then a picture of the game with a real progress bar -->
+    <div id="mea" aria-label="MEA Studio">
+      <svg class="logo" viewBox="0 0 310 150" aria-hidden="true"><defs><linearGradient id="meag" x1="0" x2="1"><stop offset="0" stop-color="#ff4fa3"/><stop offset=".55" stop-color="#ffb36b"/><stop offset="1" stop-color="#6ee7ff"/></linearGradient></defs>
+        <path class="m" d="M22 112 L22 26 L62 78 L102 26 L102 112"/><path class="e" d="M198 26 L134 26 L134 112 L198 112 M134 69 L184 69"/><path class="a" d="M216 112 L252 26 L288 112 M229 82 L275 82"/>
+        <circle cx="288" cy="118" r="5"/></svg>
+      <div class="studio">STUDIO</div><div class="shine"></div>
+    </div>
+    <div id="load-art"></div>
+    <div id="load-title">LBA3<span>The Awakening</span></div>
+    <div id="load-bar"><i id="load-fill"></i></div>
+    <p id="loading-step">Loading…</p>
+    <div id="load-by">MEA Studio</div>
+  </div>
   <div id="inventory" class="hidden"></div>
   <!-- story scenes (src/engine/cinematic.js): title, subtitles, hold-to-skip -->
   <div id="cine" class="hidden">
