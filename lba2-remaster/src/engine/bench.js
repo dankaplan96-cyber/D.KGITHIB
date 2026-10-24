@@ -114,6 +114,11 @@ export class Bench {
       { id: 'no shadows', apply() { R.renderer.shadowMap.enabled = false; G.warmGraphics(); }, undo() { R.applyDerived(); G.warmGraphics(); } },
       { id: 'no lamps', apply() { LP?.setSize(0); G.warmGraphics(); }, undo() { LP?.setSize(n0()); G.warmGraphics(); } },
       { id: 'res x0.6', apply() { R.autoRes = true; R.setDyn(0.6); }, undo() { R.autoRes = false; R.setDyn(1); } },
+      // (RENDER-INV, diagnostics: what the shadow map's drawing costs apart from its use; what MSAA costs; what the
+      //  draw batches save; none of these is a setting)
+      { id: 'shadow map kept', apply() { R.renderer.shadowMap.autoUpdate = false; }, undo() { R.renderer.shadowMap.autoUpdate = true; } },
+      { id: 'no MSAA', apply() { this._ms = R.composer.renderTarget1.samples; for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = 0; T.dispose(); } }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = this._ms; T.dispose(); } } },
+      { id: 'draw batches off', apply() { if (G.drawBatch) G.drawBatch.enabled = false; }, undo() { if (G.drawBatch) G.drawBatch.enabled = true; } },
     ];
     const brk = this.routes().filter((r) => r.id === 'street' || r.id === 'interior');
     for (const r of brk) for (const v of variants) plan.push({ q: 'medium', r, v, short: true });
@@ -212,12 +217,12 @@ export class Bench {
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
       const P = x.pacing;
       lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · stalls>50ms ${x.stalls}${P ? ` (${P.stallsBlack} behind black) · >33ms ${P.over33} >100ms ${P.over100 ?? 0} of ${s.frames} · longest ${P.worst} ms` : ''}`
-        + ` · sim CPU p50 ${s.simMs.p50} (p95 ${s.simMs.p95}) ms · render submit CPU p50 ${s.renderMs.p50} ms${s.gpuMs ? ` · GPU time p50 ${s.gpuMs.p50} (p95 ${s.gpuMs.p95}) ms` : ''} · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`
+        + ` · sim CPU p50 ${s.simMs.p50} (p95 ${s.simMs.p95}) ms · render submit CPU p50 ${s.renderMs.p50} ms${s.gpuMs ? ` · GPU time p50 ${s.gpuMs.p50} (p95 ${s.gpuMs.p95}) ms [${Object.entries(s.gpuMs.passes || {}).map(([k, v]) => `${k} ${v}`).join(' · ')}]` : ''} · lamps lit ${s.lamps ?? '?'} · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`
         + ` · limited by (estimate): ${this.bound(s)}`);
     }
     if (brk.length) {
       lines.push('', 'breakdown at Medium (one cost taken away at a time):');
-      for (const x of brk) { const s = x.s; lines.push(`  ${(x.id + ' · ' + x.v).padEnd(24)} ${s ? `${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} ms${s.gpuMs ? ` · GPU p50 ${s.gpuMs.p50} ms` : ''} · render pixel ratio ${x.cfg.pr}` : 'no frames'}`); }
+      for (const x of brk) { const s = x.s; lines.push(`  ${(x.id + ' · ' + x.v).padEnd(28)} ${s ? `${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} ms${s.gpuMs ? ` · GPU p50 ${s.gpuMs.p50} ms [${Object.entries(s.gpuMs.passes || {}).map(([k, v]) => `${k} ${v}`).join(' · ')}]` : ''} · submit CPU ${s.renderMs.p50} ms · calls ${s.calls} · render pixel ratio ${x.cfg.pr}` : 'no frames'}`); }
     }
     lines.push('', `Frame time includes the GPU (the browser waits for it); "render submit" is CPU time only; "GPU time" (when shown) is the GPU's own time for a frame.`);
     return lines.join('\n');

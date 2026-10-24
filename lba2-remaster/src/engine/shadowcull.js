@@ -108,9 +108,10 @@ class Area {
     for (const cell of this.cells.values()) if (cell.dirty) this.build(cell);
   }
   restore() {
-    for (const C of this.members) { if (!C.solo) C.o.castShadow = true; C.o.layers.enable(0); }
-    for (const C of this.quiet) C.o.layers.enable(0);
-    for (const C of this.solo) { C.o.castShadow = true; C.o.layers.enable(0); }
+    const on = (o) => { if (!o.userData.drawBatched) o.layers.enable(0); };   // (a draw batch's piece stays out of the main pass)
+    for (const C of this.members) { if (!C.solo) C.o.castShadow = true; on(C.o); }
+    for (const C of this.quiet) on(C.o);
+    for (const C of this.solo) { C.o.castShadow = true; on(C.o); }
     for (const p of this.proxies) { p.geometry.dispose(); this.root.remove(p); }
   }
 }
@@ -170,6 +171,7 @@ export class ShadowCull {
       A.pxOn = !!minPx;
       for (const C of A.members) {
         const o = C.o;
+        if (o.userData.drawBatched) { C.shown = true; continue; }   // (RENDER-INV: drawn by a draw batch: engine/drawbatch.js)
         let shown = true;
         if (minPx) {
           _c.copy(C.c).applyMatrix4(o.matrixWorld);
@@ -181,6 +183,7 @@ export class ShadowCull {
       const Q = A.quiet, step = minPx ? 2 : 1;   // (all at once when the detail is switched off: everything shows again)
       for (let i = minPx ? A.tick & 1 : 0; i < Q.length; i += step) {
         const C = Q[i], o = C.o;
+        if (o.userData.drawBatched) { C.shown = true; continue; }
         let shown = true;
         if (minPx) {
           _c.copy(C.c).applyMatrix4(o.matrixWorld);
