@@ -51,7 +51,7 @@ const AHEAD = 2500 * UNIT; // DISTANCE_VISEE
 // correction leave it where it is (it used to swing the whole 3.3 m round, and the view with it, on every one); a
 // walking turn swings it round over a few steps. The height keeps a dead band of DEAD_Y m (a kerb, a bump in the
 // lane, a step don't bob the view; a stair or a slope still carries it)
-const DEAD_R = 1.8, DEAD_F = 1.3, FOLLOW_W = 5, HEIGHT_W = 3.2, LEAD_DIST = 2.2, COMMIT = 1.5, RUN_TOL = 0.6, DEAD_Y = 0.35;
+const DEAD_R = 1.8, DEAD_F = 1.3, FOLLOW_W = 5, HEIGHT_W = 3.2, LEAD_DIST = 2.2, COMMIT = 1.5, RUN_TOL = 0.6, RUN_TURN = 2.5, DEAD_Y = 0.35;
 const BOX = { x0: -0.62, x1: 0.6, y0: -0.66, y1: 0.55 };
 const SWING_V = (60 * Math.PI) / 180, SWING_A = (90 * Math.PI) / 180;   // the view's swing: top speed, ease (rad/s, rad/s²)
 // VP-10: the rise over scenery: top pitch, pitch speed and ease (rad, rad/s, rad/s²), how long the way stays clear
@@ -300,14 +300,18 @@ export class CameraRig {
     const sp = Math.hypot(L.vel.x, L.vel.z);
     if (sp > 0.6) {
       // the way he keeps to (CAM-2: COMMIT, RUN_TOL): a new one starts from nothing; a curve carries it round
-      const way = Math.atan2(L.vel.x, L.vel.z), R = L.run, off = angleDiff(R.dir, way);
-      if (Math.abs(off) < RUN_TOL) { R.dist += sp * dt; R.dir += off * Math.min(1, (sp * dt) / LEAD_DIST); } else { R.dir = way; R.dist = 0; }
+      // (a way that bends no faster than RUN_TURN — a walking or running curve — is the same way: it carries the run
+      // round with it; a sudden new direction, or a new start that isn't within RUN_TOL of the last way, starts afresh)
+      const way = Math.atan2(L.vel.x, L.vel.z), R = L.run;
+      const smooth = R.prev != null && Math.abs(angleDiff(R.prev, way)) <= RUN_TURN * dt + 0.01;
+      if (smooth || (R.prev == null && Math.abs(angleDiff(R.dir, way)) < RUN_TOL)) { R.dist += sp * dt; R.dir = way; } else { R.dir = way; R.dist = 0; }
+      R.prev = way;
       if (R.dist >= COMMIT) {
         // DISTANCE_VISEE ahead along his way (in full from a brisk walk up), swinging round with the ground he covers
         const a = Math.min(1, sp / 1.8) * AHEAD * aheadK(this.pitch, v.pitch), k = 1 - Math.exp(-(sp * dt) / LEAD_DIST);
         L.lead.x += (Math.sin(R.dir) * a - L.lead.x) * k; L.lead.z += (Math.cos(R.dir) * a - L.lead.z) * k;
       }
-    }
+    } else L.run.prev = null;
     L.pull = Math.max(0, L.pull - dt);
     L.userHold = Math.max(0, L.userHold - dt); L.steepCool = Math.max(0, L.steepCool - dt);
     // a swing (Enter: round behind him; hidden: just far enough round to see him): eased in and out, at most 60°/s

@@ -284,6 +284,20 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Not verified: the laptop's GPU saving and whether Medium now holds 60 on the street (the next benchmark: pause →
   Benchmark → Copy, plugged in).
 
+## Done after (CAM-2, block 7a; status REVIEW)
+- The play camera measured on 10 routes × both cameras (tests/camsteady.mjs, tests/lib/camrec.js; budgets) and calmed:
+  the LBA view's rise over houses stops at 48° and turns round instead of looking straight down (was up to 80°),
+  holds its need 2 s and comes down at 22°/s; out of a door it starts at the normal 26° (was 67°, BUILD109 §6); the
+  look-ahead moves only once he keeps to a way (shuffles, steps back and turns on the spot leave the view still); the
+  height has a 0.35 m dead band; the hard floor lets go gently; a shake is a smooth tremor. The free orbit no longer
+  turns by itself under Modern controls nor pumps in and out past posts (jolts 22–710/min → 0–13).
+- Started from docs/lba3-production/wip/CAM-2.wip.patch (kept: lead by distance, rise hold/band, the free orbit's
+  auto-turn rules, input.camera(dt), the recorder); finished, measured and fixed beyond it.
+- main.js: one line (camRig.relative, next to the camera's creation). Merged origin (RENDER-INV) cleanly.
+- Evidence: QA.md "CAM-2", docs/lba3-production/reviews/CAM-2/ (side-by-side clips, before/after table, logs).
+- Not verified: the feel on a real GPU/display, pad and touch on the free orbit. Open: the free orbit by house eaves
+  (13 jolts/min, can look down 60–70°); the 1997 cuts unchanged.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
