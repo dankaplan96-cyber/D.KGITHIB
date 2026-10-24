@@ -49,7 +49,7 @@ const endState = () => ev(() => {
     state: G.state, room: G.room?.id, cine: !!G.cine, camCine: !!G.camRig.cine, hud: !document.querySelector('#hud').classList.contains('hidden'),
     cineUI: !document.querySelector('#cine').classList.contains('hidden'), fade: document.querySelector('#fade').classList.contains('on'),
     intro: !!f.intro, opening: !!f.opening, ball: !!G.hero.hasBall,
-    objective: document.querySelector('#objective').textContent.trim(), objectiveShown: getComputedStyle(document.querySelector('#objective')).display !== 'none' || (G.hud.toastLog || []).some((m) => m.startsWith('Check the well')), // (the LBA HUD hides the panel: a toast says it)
+    objective: document.querySelector('#pause-objective').textContent.trim(), objectiveShown: G.hud.objT > 0 && !(G.hud.toastLog || []).some((m) => m.startsWith('Check the well')), // (CLAR-2: the panel comes up for a few seconds as control comes back, in either HUD; no toast repeats it)
     zoeOut: zoe.present && Math.hypot(zoe.pos.x - water.door.x, zoe.pos.z - water.door.z) < 2, zoeControlled: !!zoe.controlled,
     arthur: [ar.forceAnim, !!ar.controlled], hero: [+(G.hero.pos.x - G.rooms.house.center.x).toFixed(2), +G.hero.pos.z.toFixed(2)],
     lift: +G.world.cargoLift.u.toFixed(2), stream: G.rooms.house.kitchen.stream.visible, sd: G.rooms.house.table.screwdriver.parent === G.rooms.house.group,
@@ -190,7 +190,7 @@ const blocked = await ev(() => {
   G.hero.pos.set(e.x, 0, e.z); G.step(0.5);
   const st = G.state;
   for (let i = 0; i < 40 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
-  return { st, room: G.room?.id, hint: !!G.flags.ballHint, obj: document.querySelector('#objective').textContent };
+  return { st, room: G.room?.id, hint: !!G.flags.ballHint, obj: document.querySelector('#pause-objective').textContent };
 });
 check('without the ball the door holds him, with a hint', blocked.st === 'dialog' && blocked.room === 'house' && blocked.hint && blocked.obj.includes('cupboard'), blocked);
 const took = await ev(() => {
@@ -200,7 +200,7 @@ const took = await ev(() => {
   for (let i = 0; i < 40 && G.state !== 'play'; i++) { G.input.taps.add('KeyE'); G.step(0.05); }
   const e = G.room.exits.find((x) => x.to === 'outdoor');
   G.hero.pos.set(e.x, 0, e.z); G.step(2.0);
-  return { ball: G.hero.hasBall, room: G.room?.id ?? 'outdoors', obj: document.querySelector('#objective').textContent };
+  return { ball: G.hero.hasBall, room: G.room?.id ?? 'outdoors', obj: document.querySelector('#pause-objective').textContent };
 });
 check('the cupboard gives the ball and the door lets him out', took.ball && took.room === 'outdoors' && took.obj.startsWith('Check the well'), took);
 

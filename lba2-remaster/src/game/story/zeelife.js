@@ -145,7 +145,7 @@ export class ZeelichLife extends ChapterBase {
     if (first) lines.push(['hero', first]);
     // on the roof the heat box is somewhere below; from the street (the ball way) he sees its lamp
     lines.push(['hero', this.up() ? 'zl_draws' : 'zl_draws_st'], ['zmole2', 'zl_snuff_warm']);
-    this.chain(lines, () => { g.hud.toast('zl_toast_oven'); g.save(false); });
+    this.chain(lines, () => { g.save(false); });
   }
 
   // ---------------------------------------------------------------- people (asked before the chapter)

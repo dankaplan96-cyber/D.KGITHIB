@@ -1073,8 +1073,8 @@ class Game {
     if (!silent) {
       this.audio.play('rumble');
       this.camRig.shake(0.8);
-      this.hud.toast('toast_stones');
-      setTimeout(() => this.hud.toast('hint_jump'), 2400);
+      // (the stones are seen and heard rising; the hint says how to climb them, with the player's keys)
+      setTimeout(() => this.hud.toast('hint_jump', { b: this.hud.key('b2'), k: this.hud.key('action') }), 1200);
       this.save(false);
     }
   }
@@ -1115,7 +1115,7 @@ class Game {
       case 'coin': h.coins += p.value || 1; this.audio.play('coin'); break;
       case 'heart': h.hp = Math.min(h.maxHp, h.hp + 3); this.audio.play('heal'); break;
       case 'flask': h.mp = h.mpMax; this.audio.play('heal'); break;
-      case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('heal'); this.hud.toast('toast_clover_found'); break;
+      case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('heal'); break;   // (the ♣ and the counter say it)
       case 'crystal': {
         const n = this.crystalCount();
         this.applyCrystals(); h.hp = h.maxHp;
@@ -1135,8 +1135,9 @@ class Game {
     const h = this.hero;
     if (z.type === 'checkpoint') {
       this.lastSafe = { x: h.pos.x, z: h.pos.z };
-      if (this.saveTimer <= 0) { this.save(true); this.saveTimer = 20; }
-    } else if (z.type === 'hint' && !this.flags.target) this.hud.toast('hint_target');
+      if (this.saveTimer <= 0) { this.save(false); this.saveTimer = 20; }   // (silent, as LBA2's own saves)
+    }
+    // (the cliffs' 'hint' zone says nothing: Mira's saying and the target itself are the clue, the journal keeps a nudge: HINTS-LESS)
   }
 
   // doors outside, exits inside

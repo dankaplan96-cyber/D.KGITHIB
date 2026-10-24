@@ -405,5 +405,5 @@
   };
   // a menu (shop, Hesk's flights): click its item as a player does
   P.menuPick = (i) => { const el = document.querySelector(`#shop .item[data-i="${i}"]`); if (!el) return { r: 'no item ' + i, state: G.state }; el.click(); G.step(0.2); P.settle(); return { r: 'picked', state: G.state }; };
-  P.state = () => ({ state: G.state, room: G.room?.id ?? 'citadel', pos: [hero().pos.x, hero().pos.y, hero().pos.z].map((v) => +v.toFixed(2)), hp: hero().hp, chapter: G.flags.chapterKey, obj: document.querySelector('#objective')?.textContent || '' });
+  P.state = () => ({ state: G.state, room: G.room?.id ?? 'citadel', pos: [hero().pos.x, hero().pos.y, hero().pos.z].map((v) => +v.toFixed(2)), hp: hero().hp, chapter: G.flags.chapterKey, obj: document.querySelector('#pause-objective')?.textContent || '' });
 })();

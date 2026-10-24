@@ -40,6 +40,12 @@ button { font-family: inherit; }
 #objective b { color: var(--accent); display: block; margin-bottom: 2px; font-size: 15px; }
 #objective .s { display: block; color: var(--ink-dim); }
 #objective .s.ok { color: #8ef08e; text-decoration: line-through; }
+/* CLAR-2: the panel comes up when the goal changes and steps aside after a few seconds (hud.js OBJ_SHOW); the pause
+   menu, the Holomap and the journal keep it. Finished steps stay out of the brief panel. */
+#objective { opacity: 0; transform: translateY(-6px); transition: opacity 0.5s, transform 0.5s; pointer-events: none; }
+#objective.show { opacity: 1; transform: none; }
+#objective .s.ok { display: none; }
+#hud.busy #objective { opacity: 0; transition: none; }
 
 #behaviour { position: absolute; bottom: 16px; inset-inline-start: 16px; display: flex; gap: 8px; pointer-events: auto; transition: transform 0.2s; }
 #behaviour.wheel { transform: scale(1.18) translateY(-12px); }
@@ -219,7 +225,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 #shop button.sel, #shop button:hover { background: linear-gradient(0deg, #6a0c00, #d24a00 60%, #ffb43a); border-color: #fff; }
 
 /* incrust HUD: hidden until something changes */
-body.hud-lba #objective, body.hud-lba #minimap, body.hud-lba #behaviour, body.hud-lba #pausebtn { display: none; }
+body.hud-lba #minimap, body.hud-lba #behaviour, body.hud-lba #pausebtn { display: none; }
+body.hud-lba #objective { border-radius: 0; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.8); backdrop-filter: none; }
 body.hud-lba #stats { opacity: 0; transform: translateY(-6px); transition: opacity 0.35s, transform 0.35s; }
 body.hud-lba #stats.show { opacity: 1; transform: none; }
 body.hud-lba #prompt { border-radius: 0; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.8); }

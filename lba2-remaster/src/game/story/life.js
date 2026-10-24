@@ -138,7 +138,7 @@ export class TownLife extends ChapterBase {
             f.l_pump = true; L.pump.setRunning(true); g.audio.play('chest');
             g.particles.burst(L.trough.x, g.physics.groundAt(L.trough.x, L.trough.z) + 0.5, L.trough.z, '#bfe6ff', 16, 2);
             // (his line once the stroke is finished: his hands stay on the handle until it is back up)
-            this.later = { t: PUMP_POSE.back + 0.02, fn: () => say(['l_pump_runs'], () => { g.hud.toast('l_toast_pump'); g.save(false); }) };
+            this.later = { t: PUMP_POSE.back + 0.02, fn: () => say(['l_pump_runs'], () => { g.save(false); }) };
           }
         };
         if (Math.hypot(h.pos.x - U.x, h.pos.z - U.z) < 0.04 && Math.abs(h.angle - U.a) < 0.05) { h.angle = U.a; stroke(); }
@@ -185,7 +185,7 @@ export class TownLife extends ChapterBase {
       h.act('use', 0.6, () => {
         this.cs = 'done'; f.l_coupler = true; C.setVisible(true); C.setHeat(0, 'settled'); L.shop.engine.setRunning(true); g.audio.play('chest');
         this.story.refreshCast();
-        this.chain([['hero', 'l_coupler_settled'], ['nell', 'l_nell_runs']], () => { g.hud.toast('l_toast_engine'); g.save(false); });
+        this.chain([['hero', 'l_coupler_settled'], ['nell', 'l_nell_runs']], () => { g.save(false); });
       }, 0.3);
       return true;
     }
@@ -248,7 +248,7 @@ export class TownLife extends ChapterBase {
         if (!f.l_odileMet) return c([['odile', 'l_odile_1'], ['hero', 'l_tw_odile'], ['odile', 'l_odile_2'], ['odile', 'l_odile_3']], () => { f.l_odileMet = true; f.l_crateAsk = true; g.save(false); });
         if (f.l_coupler && !f.l_cleared) {
           return c([['odile', 'l_odile_clear1'], ['hero', 'l_tw_clear'], ['odile', 'l_odile_clear2']], () => {
-            f.l_cleared = true; this.L.crate.setState('cleared'); g.audio.play('select'); g.hud.toast('l_toast_cleared'); g.save(false);
+            f.l_cleared = true; this.L.crate.setState('cleared'); g.audio.play('select'); g.save(false);
           });
         }
         if (f.l_cleared) return one('odile', 'l_odile_after');

@@ -118,7 +118,7 @@ export class Network extends ChapterBase {
     this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
       f.c10_started = true; f.c10_pulse = true;
       g.hero.hasPulse = true;
-      g.hud.toast('c10_toast_relays'); setTimeout(() => g.hud.toast('c10_toast_pulse'), 1800);
+      g.hud.toast('c10_toast_pulse', { k: g.hud.key('weapons') });   // (the relays: the objective panel names them)
       this.story.refreshCast(); g.updateObjective(); g.save(false);
     });
   }
@@ -230,7 +230,7 @@ export class Network extends ChapterBase {
         h.act('use', 1.0, () => {
           f.c10_boreRelay = true; this.lightRelay('bore');
           this.story.refreshCast(); g.audio.play('alert');
-          this.chain([['narrator', 'c10_relay_bore'], ['hero', 'c10_drones']], () => { g.hud.toast('c10_toast_drones'); g.updateObjective(); g.save(false); });
+          this.chain([['narrator', 'c10_relay_bore'], ['hero', 'c10_drones']], () => { g.updateObjective(); g.save(false); });
         }, 0.5);
         return true;
       case 'c10domeRelay':
@@ -309,7 +309,7 @@ export class Network extends ChapterBase {
         return c([['mira', f.c10_valves ? 'c10_mira_3' : 'c10_mira_2']]);
       case 'zoe':
         if (!f.c10_zoeAsk) return c([['zoe', 'c10_zoe_1'], ['arthur', 'c10_ar_1'], ['zoe', 'c10_zoe_2']], () => { f.c10_zoeAsk = true; ok(); });
-        return c([['zoe', f.c10_light ? 'c10_zoe_after' : 'c10_zoe_2']]);
+        return c([['zoe', f.c10_light ? 'c10_zoe_after' : 'c10_zoe_again']]);   // (asked again: the channel plainly)
       case 'arthur':
         if (!f.c10_zoeAsk) return this.talk(this.npc('zoe'));
         return c([['arthur', f.c10_light ? 'c10_ar_right' : 'c10_ar_1']]);

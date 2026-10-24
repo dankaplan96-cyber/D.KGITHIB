@@ -4,7 +4,7 @@ import { t, getLang } from './i18n.js';
 import { BEHAVIOURS } from './actors.js';
 import { Color, Vector3 } from 'three';
 import { WEAPON_INFO } from './combat.js';
-import { keyFor, keyLabel } from '../engine/input.js';
+import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
 import { regionOf, planetOf, PLANETS } from './travel.js';
 import { mapBuilder, regionPlaces, roomName, palOf } from './mapdraw.js';
 
@@ -17,6 +17,18 @@ const PLANET_POS = { citadel: [-0.38, 0.22], desert: [0.42, 0.42], hamalayi: [0.
 PLANETS.zeelich.slice(1).forEach((id, i, a) => { const ang = (i / a.length) * Math.PI * 2 - Math.PI / 2; PLANET_POS[id] = [Math.cos(ang) * 0.66, Math.sin(ang) * 0.66]; });
 const REGION_NAME = (r) => ({ citadel: 'map_citadel', desert: 'map_desert', hamalayi: 'map_hamalayi', zeelich: 'isle_zeelich' }[r] || r);
 const SHORT_NAME = (r) => ({ citadel: 'map_citadel_s', desert: 'map_desert_s', hamalayi: 'map_hamalayi_s', zeelich: 'map_zeelich_s' }[r] || r);
+
+// CLAR-2 (the user: "still a lot of unnecessary text on screen"; LBA2 shows almost none). The objective panel comes up
+// for a few seconds when the goal changes, then steps aside; it stays in the pause menu, the Holomap and the journal.
+// A count in the goal ("(2/3)") is progress, told by its own short toast: it does not bring the panel back.
+const OBJ_SHOW = 5;          // seconds of play the panel stays up after a new goal
+const PROMPT_DWELL = 0.15;   // a target must stay in reach this long before its prompt shows (no flicker walking past)
+const RUN_SPEED = 3.6;       // (Hero: faster than this is the run) running past things shows no prompt
+const goalOf = (html) => {
+  const d = document.createElement('div'); d.innerHTML = html || '';
+  const b = d.querySelector('b');
+  return (b || d).textContent.replace(/\s*\(\d+\s*\/\s*\d+\)/g, '').replace(/\s+/g, ' ').trim();
+};
 
 export class HUD {
   constructor(game) {
@@ -60,7 +72,8 @@ export class HUD {
   show(on) { this.el.classList.toggle('hidden', !on); }
 
   behaviour(b) {
-    document.querySelectorAll('#behaviour .beh').forEach((d) => d.classList.toggle('on', d.dataset.b === b));
+    // (the Always-on bar: icons and keys for all four, the name only under the one in use)
+    document.querySelectorAll('#behaviour .beh').forEach((d) => { const on = d.dataset.b === b; d.classList.toggle('on', on); d.querySelector('.lbl').style.visibility = on ? '' : 'hidden'; });
   }
   wheel(on) { $('#behaviour').classList.toggle('wheel', on); }
 
@@ -79,6 +92,7 @@ export class HUD {
 
   stats(h) {
     this._incrust(h);
+    this._objTick();
     $('#lifebar i').style.width = (100 * h.hp) / h.maxHp + '%';
     $('#magicbar i').style.width = (100 * h.mp) / h.mpMax + '%';
     $('#magicbar').dataset.level = h.magicLevel;
@@ -93,14 +107,16 @@ export class HUD {
     const el = $('#weapon'); if (!el) return;
     const c = h.combat, w = c.weapon, g = this.game;
     const wn = this.wpName(h, w);
-    if (this._w !== w || this._wn !== wn) { this._w = w; this._wn = wn; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = wn; this.weaponShowT = 2.5; }
+    // (shown for a moment when the weapon changes; not for the one he already held when play starts or loads)
+    if (this._w !== w || this._wn !== wn) { const first = this._w === undefined; this._w = w; this._wn = wn; el.querySelector('.ico').textContent = WEAPON_INFO[w]?.icon || ''; el.querySelector('.name').textContent = wn; if (!first) this.weaponShowT = 2.5; }
     // ammunition: darts, the pistol's crystal charge (or its magic cost), the spell's magic cost
     const a = h.arms || {};
     const ammo = w === 'blowgun' ? `${a.darts}` : w === 'laser' ? (a.charge > 0 ? `◆${a.charge}` : '✦2') : w === 'lightning' ? '✦3' : '';
     let ae = el.querySelector('.ammo');
     if (!ae) { ae = document.createElement('span'); ae.className = 'ammo'; ae.style.cssText = 'font-weight:800;color:#ffe35a;font-size:13px;min-width:1ch'; el.querySelector('.name').after(ae); }
     if (this._ammo !== ammo) { this._ammo = ammo; ae.textContent = ammo; ae.style.display = ammo ? '' : 'none'; }
-    const alt = h.prevWeapon && c.has(h.prevWeapon) && h.prevWeapon !== w ? h.prevWeapon : null;
+    // the swap key and the last weapon: while the pill shows a change, not through a whole fight
+    const alt = (this.weaponShowT || 0) > 0 && h.prevWeapon && c.has(h.prevWeapon) && h.prevWeapon !== w ? h.prevWeapon : null;
     const altTxt = alt ? `${keyLabel(keyFor('swap'))}: ${t('wp_' + alt)}` : '';
     if (this._alt !== altTxt) { this._alt = altTxt; el.querySelector('.alt').textContent = altTxt; }
     const r = el.querySelector('.ready');
@@ -176,9 +192,30 @@ export class HUD {
   }
 
   objective(html) {
-    $('#objective').innerHTML = html;
+    // (the brief panel names the goal only; its steps, the "where" and "who" for a stuck player, wait in the
+    //  pause menu, the Holomap and the journal: HINTS-LESS)
+    const d = document.createElement('div'); d.innerHTML = html || '';
+    const b = d.querySelector('b');
+    $('#objective').innerHTML = b ? b.outerHTML : html;
     $('#pause-objective').innerHTML = html;
     $('#holomap .objective').innerHTML = html;
+    const goal = goalOf(html);
+    if (goal !== this._goal) { this._goal = goal; this.objT = goal ? OBJ_SHOW : 0; }
+  }
+  // the panel's few seconds, counted in play only (dialogue, menus and cut-scenes hold it: #hud.busy hides it)
+  _objTick() {
+    const now = this.game.time ?? 0, dt = Math.min(0.1, Math.max(0, now - (this._objAt ?? now)));
+    this._objAt = now;
+    if (this.objT > 0) this.objT = Math.max(0, this.objT - dt);
+    const on = this.objT > 0;
+    if (on !== this.objShown) { this.objShown = on; $('#objective').classList.toggle('show', on); }
+  }
+  // the key (or pad button) the player uses for an action, for hints; the behaviour keys (b1–b4) are the
+  // behaviour menu (LT) on a pad
+  key(a) {
+    const I = this.game.input;
+    if (/^b[1-4]$/.test(a) && I.lastDevice === 'pad') return PAD_LABELS.wheel;
+    return I.label(a) || keyLabel(keyFor(a));
   }
 
   // Floating numbers at pickups (INCRUST_NUM in the original)
@@ -217,7 +254,12 @@ export class HUD {
   }
 
   prompt(text) {
-    if (!text) { if (this._prompt) { this.promptEl.classList.remove('show'); this._prompt = ''; } return; }
+    const hide = () => { if (this._prompt) { this.promptEl.classList.remove('show'); this._prompt = ''; } };
+    if (!text) { this._pFor = null; hide(); return; }
+    // a target he only passes (in reach for a blink, or while he runs) gets no prompt
+    const now = this.game.time ?? 0;
+    if (this._pFor !== text) { this._pFor = text; this._pSince = now; }
+    if (now - this._pSince < PROMPT_DWELL || (this.game.hero?.speed || 0) > RUN_SPEED) { hide(); return; }
     const html = `<kbd>${this.game.input.label('interact')}</kbd> ${text}`;
     if (html !== this._prompt) { this.promptEl.innerHTML = html; this._prompt = html; }
     this.promptEl.classList.add('show');
@@ -241,6 +283,9 @@ export class HUD {
 
   toast(key, vars) {
     const msg = t(key, vars);
+    // the same words already up (a repeated action), or the goal the objective panel shows: not again
+    const up = [...this.toastEl.children].find((e) => e.textContent === msg && !e.classList.contains('out'));
+    if (up || (this.objShown && msg === this._goal)) return;
     const d = document.createElement('div');
     d.className = 'toast';
     d.textContent = msg;
