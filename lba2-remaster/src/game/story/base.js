@@ -67,6 +67,17 @@ export class ChapterBase {
     return true;
   }
 
+  // A nudge for a stuck player (HINTS-LESS): its toast comes only after `after` seconds of play during which `stuck`
+  // held all along, and once per session. A player who works it out never sees it. (Called from update(dt).)
+  nudge(dt, id, stuck, after, key, vars) {
+    const g = this.game, N = (this._nudges ||= {});
+    if (N[id] === -1) return;
+    if (!stuck) { N[id] = 0; return; }
+    if (g.state !== 'play' || g.trans) return;
+    N[id] = (N[id] || 0) + (dt || 0);
+    if (N[id] >= after) { N[id] = -1; g.hud.toast(key, vars); }
+  }
+
   // Run a conversation between several speakers: [[speakerId, textKey], ...]
   chain(lines, done) {
     const g = this.game;

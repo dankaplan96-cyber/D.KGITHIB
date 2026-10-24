@@ -62,7 +62,7 @@ log('overheard', await ev(() => [game.state, game.flags.overheard]));
 await shot('P6-overhear.png');
 await ev(() => { T.talkAll(); T.tap('Digit1'); T.talk('tim'); game.step(1.5); const c = game.pickups.list.find((p) => p.type === 'clover' && !p.id); if (c) { game.hero.pos.set(c.pos.x, game.hero.pos.y, c.pos.z); game.step(0.3); } });
 log('tim confessed', await ev(() => [game.flags.timConfessed, game.hero.clovers]));
-log('objective', await ev(() => document.querySelector('#objective').textContent));
+log('objective', await ev(() => document.querySelector('#pause-objective').textContent));
 // down the well
 await ev(() => { const w = game.world.well; T.tp(w.x - 2.2, w.z, Math.PI / 2); T.tap('KeyE'); game.step(0.05); T.talkAll(); game.step(1); T.talkAll(); });
 log('in well', await ev(() => [game.state, game.room?.id, game.flags.inWell]));
@@ -87,7 +87,7 @@ await shot('P11-end.png');
 // the prologue flows straight into chapter 1 (fade, title card, morning dialogue)
 await ev(() => { game.step(1.2); T.talkAll(); game.step(0.5); });
 log('chapter', await ev(() => [game.flags.chapter, game.flags.c1_started]));
-log('after', await ev(() => [game.state, game.room?.id ?? 'outdoor', T.p(), document.querySelector('#objective').textContent]));
+log('after', await ev(() => [game.state, game.room?.id ?? 'outdoor', T.p(), document.querySelector('#pause-objective').textContent]));
 const save = await ev(() => JSON.parse(localStorage.getItem('lba3_save_v1')));
 log('save', JSON.stringify({ room: save.room, flags: Object.keys(save.flags).length, ball: save.hero.hasBall }));
 console.log(errs.slice(0, 20).join('\n') || 'no errors');

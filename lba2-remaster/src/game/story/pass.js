@@ -155,7 +155,7 @@ export class Pass extends ChapterBase {
         if (f.c6_thawed && !f.c6_liftReady) return c([['yorna', 'c6_yorna_lift'], ['yorna', 'c6_yorna_sword1'], ['hero', 'c6_tw_sword'], ['yorna', 'c6_yorna_sword2']], () => {
           f.c6_liftReady = true; f.c6_sword = true;
           const h = g.hero; h.hasSword = true; h.combat.equip('sword');
-          g.audio.play('chest'); g.hud.toast('c6_toast_sword');
+          g.audio.play('chest'); g.hud.toast('c6_toast_sword', { k: g.hud.key('attack') });
           g.updateObjective(); g.save(false);
         });
         if (f.c6_up) return c([['yorna', 'c6_yorna_end']]);

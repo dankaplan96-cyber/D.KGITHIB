@@ -24,7 +24,6 @@ Object.assign(STR.en, {
   a_toast_nopenguin: 'No penguins left', a_toast_onepenguin: 'One penguin at a time', a_toast_penguinroom: 'The penguin needs level, open ground',
   a_toast_protect: 'Protection: 15 seconds', a_toast_lanternon: 'Lantern lit', a_toast_lanternoff: 'Lantern out',
   a_toast_got: 'New: {n}', a_toast_darts: '+{n} darts', a_toast_kashes: '+{n} kashes',
-  a_toast_wheel: 'Hold the weapon key ({k}) to choose a weapon',
 
   // ---- stalls
   a_shop_zeelich: "Nara's stall",
@@ -83,7 +82,7 @@ Object.assign(STR.en, {
   a_jet_sign: 'BALDINO\'S TEST STEP. No ladder. That is the test.',
   a_jet_tin: 'A tin on the deck, with a note: IT WORKS! Inside, a clover and ten kashes.',
   a_toast_jethow: 'Hop-pack: in Athletic mode, jump and hold {k}',
-  a_toast_jeton: 'Hop-pack on (Athletic: jump and hold {k})', a_toast_jetoff: 'Hop-pack off',
+  a_toast_jeton: 'Hop-pack on', a_toast_jetoff: 'Hop-pack off',
   a_toast_jetroof: 'The hop-pack needs open sky',
 
   // ---- journal

@@ -28,7 +28,7 @@ Object.assign(STR.en, {
   c6_yorna_sword1: "And take this. My brother's blade. The ice mites come up the cliff whenever the lift creaks, and up close a blade is quicker than any ball.",
   c6_tw_sword: "I'll bring it back.",
   c6_yorna_sword2: "Bring yourself back. First job: the platform's mooring rope has frozen solid. Cut it.",
-  c6_toast_sword: 'Sword · K or left click to strike · hold for a heavy blow · R swaps',
+  c6_toast_sword: 'Sword: {k} to strike, hold for a heavy blow',
   c6_rope_frozen: 'The platform is still moored. The rope is frozen as hard as iron. The sword should cut it.',
   c6_rope_fists: "Fists won't cut frozen rope. The sword will.",
   c6_rope_cut: 'The blade bites through ice and rope. The platform swings free.',

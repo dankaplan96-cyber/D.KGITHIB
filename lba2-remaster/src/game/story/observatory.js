@@ -132,7 +132,7 @@ export class Observatory extends ChapterBase {
       this.chain([['hero', 'c7_drone_down']], () => { g.updateObjective(); g.save(false); });
     }
     if (f.c7_scope && !f.c7_droneSeen && hd?.present && this.room() === 'hamalayi' && Math.hypot(h.pos.x - M.vent.x, h.pos.z - M.vent.z) < 22 && g.state === 'play') {
-      f.c7_droneSeen = true; g.hud.toast('c7_toast_drone'); this.chain([['hero', 'c7_drone_in']]);
+      f.c7_droneSeen = true; this.chain([['hero', 'c7_drone_in']]);
     }
     if (f.c7_vent && !f.c7_done && g.state === 'play' && this.room() === 'hamalayi' && Math.hypot(h.pos.x - M.monastery.gate.x, h.pos.z - M.monastery.gate.z) < 4) this.leave();
   }

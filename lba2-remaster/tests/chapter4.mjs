@@ -52,7 +52,7 @@ const boot = async (mode) => {
       // walk onto an exit and let the room change happen
       exit(to) { const e = G.room.exits.find((x) => x.to === to); if (!e) return 'no exit ' + to; T.tp(e.x, e.z, 0, e.y ?? Math.max(G.hero.pos.y, G.room.deckY ?? -1e9) + 0.5); G.step(1.6); T.talkAll(); return G.room?.id ?? 'out'; },
       f() { return { ...G.flags }; },
-      obj() { return document.querySelector('#objective')?.textContent || ''; },
+      obj() { return document.querySelector('#pause-objective')?.textContent || ''; },
     };
   });
   await page.addScriptTag({ path: HARNESS });
@@ -60,7 +60,7 @@ const boot = async (mode) => {
 // what was said (every line through game.say since the last call)
 const said = () => ev(() => { if (!window._said) { window._said = []; const sv = game.say; game.say = function (n, lines, ...a) { window._said.push(...lines); return sv.call(this, n, lines, ...a); }; } const s = window._said.slice(); window._said.length = 0; return s; });
 const has = (lines, re) => lines.some((l) => re.test(l));
-const obj = () => ev(() => document.querySelector('#objective')?.textContent || '');
+const obj = () => ev(() => document.querySelector('#pause-objective')?.textContent || '');
 const journal = () => ev(() => game.story.journal().flatMap((c) => c.lines.map((l) => l.key)));
 const pumpState = () => ev(() => { const pu = game.rooms.desert.pump, f = game.flags; return { state: pu.state, spray: pu.joint.spraying, loose: pu.joint.loose, gear1: !!f.c4_gear1, miss: f.c4_gearMiss || 0, pump: !!f.c4_pump, joint: !!f.c4_joint, target: !!game.rooms.desert.ballTargets.find((t) => t.gear != null)?.done }; });
 // throw at one of the pump's gears as a player does: stand west of the tower in front of it, turn until the aim
@@ -260,7 +260,7 @@ const jr = await journal();
 check('the journal recalls the crack, the discs and what a cold disc does (not the answer)', ['c4_j_ilka', 'c4_j_crack', 'c4_j_discs', 'c4_j_cold'].every((k) => jr.includes(k)), jr);
 await said();
 // the seals open the Temple of Bù's gate: walk in, read the great carving inside
-const tin = await ev(() => { const G = game, d = G.rooms.desert.dig.door; P.settle(); const r = P.through(d.x, d.z); return [G.room?.id, G.flags.c4_templeSeen, r.r, document.querySelector('#objective')?.textContent || '']; });
+const tin = await ev(() => { const G = game, d = G.rooms.desert.dig.door; P.settle(); const r = P.through(d.x, d.z); return [G.room?.id, G.flags.c4_templeSeen, r.r, document.querySelector('#pause-objective')?.textContent || '']; });
 log('temple', tin);
 check('into the temple through the opened door (INPUT)', tin[0] === 'butemple' && tin[1], tin);
 await shot('C4-05-temple.png');
@@ -268,7 +268,7 @@ log('carving', await ev(() => { const G = game, c = G.rooms.butemple.carving; co
 const s7 = await said();
 check('the carving: Twinsen ties the cold discs to the closing vents', has(s7, /two of the discs out there were cold/), s7);
 await shot('C4-05-carving.png');
-const nx = await ev(() => { const G = game; G.step(1.5); P.settle(); return [G.flags.chapterKey, G.room?.id, document.querySelector('#objective')?.textContent || '']; });
+const nx = await ev(() => { const G = game; G.step(1.5); P.settle(); return [G.flags.chapterKey, G.room?.id, document.querySelector('#pause-objective')?.textContent || '']; });
 log('next', nx);
 check('chapter 5 follows', nx[0] === 'steam', nx);
 

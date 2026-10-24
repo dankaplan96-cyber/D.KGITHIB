@@ -38,7 +38,6 @@ Object.assign(STR.en, {
   c5_hangar_in: 'A hangar. Three condensers, and something big under a tarp.',
   c5_glider_1: 'A FunFrock cargo glider. The wings are sound. Hesk would know what to do with it.',
   c5_hatch: 'The roof hatch grinds open. Daylight pours in.',
-  c5_toast_hatch: 'Roof hatch open',
 
   // the relief valve
   c5_dallan_gate1: 'Twinsen. I suppose you want me to look the other way.',
@@ -47,7 +46,6 @@ Object.assign(STR.en, {
   c5_tw_gate2: 'Your orders say sixty people stay behind. You knew that on Zeelich.',
   c5_dallan_gate3: '...The gate is open. I didn\'t see you. Be quick, the pressure is higher than the reports say.',
   c5_relief_1: 'The wheel is stiff. One turn. Two. The ground starts to shake.',
-  c5_toast_out: 'Get out of the post!',
   c5_vent_1: 'Geysers burst through the pad, then fall back. Far to the south, two white plumes rise from the dunes. The condensers are working.',
   c5_tw_vent: "It's breathing. And Kesh is dry. In the good way.",
 

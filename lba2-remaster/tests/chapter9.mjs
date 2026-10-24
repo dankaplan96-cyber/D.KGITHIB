@@ -44,7 +44,7 @@ const boot = async (mode) => {
       door(d) { T.tp(d.x, d.z + 1.5); G.step(1.2); T.tp(d.x, d.z); G.step(1.2); T.talkAll(); return G.room?.id ?? 'out'; },
       out() { const e = G.room.exits[0]; T.tp(e.x, e.z); G.step(1.6); T.talkAll(); return G.room?.id ?? 'out'; },
       f() { return { ...G.flags }; },
-      obj() { return document.querySelector('#objective')?.textContent || ''; },
+      obj() { return document.querySelector('#pause-objective')?.textContent || ''; },
     };
   });
 };

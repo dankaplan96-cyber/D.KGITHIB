@@ -129,7 +129,7 @@ export class Chapter3 extends ChapterBase {
     f.c3_cooled = true;
     D.coolDoor?.open?.();
     g.audio.play('rumble'); g.camRig.shake(0.25);
-    this.chain([['hero', 'c3_cooled']], () => { g.hud.toast('c3_toast_door'); g.updateObjective(); g.save(false); });
+    this.chain([['hero', 'c3_cooled']], () => { g.updateObjective(); g.save(false); });
   }
 
   // ---------------------------------------------------------------- the magic ball
@@ -180,7 +180,7 @@ export class Chapter3 extends ChapterBase {
     this.story.refreshCast();
     const gd = this.guardian;
     if (gd) { gd.state = 'chase'; gd.stateT = 0; gd.coolT = 2.5; gd.setLevel?.(this.pylons()); }
-    g.hud.toast('c3_toast_fight');
+    // (no toast: Baldino's radio said how; a stuck player gets a nudge later, update())
     g.audio.setMood?.('boss');
     g.updateObjective();
     if (this.pylons() >= 3) this.overload(); // (a reload after the third pylon: straight to Vesk's overload)
@@ -209,8 +209,7 @@ export class Chapter3 extends ChapterBase {
       const gd = this.guardian;
       if (gd) { gd.setLevel?.(4); gd.state = 'chase'; gd.stateT = 0; gd.coolT = 1.5; }
       g.audio.play('rumble'); g.camRig.shake(0.3);
-      g.hud.toast('c3_toast_coil');
-      g.updateObjective(); g.save(false);
+      g.updateObjective(); g.save(false);   // (the objective names the coil; a nudge comes only if he is stuck)
     });
   }
   // the coil: a crackling ball of light over Vesk's console, a ball target while the overload lasts
@@ -327,6 +326,10 @@ export class Chapter3 extends ChapterBase {
       this.ensureCoil();
       if (this.coil) { const t = g.time; this.coil.grp.rotation.y = t * 1.3; this.coil.halo.rotation.x = t * 0.7; this.coil.mat.opacity = 0.6 + Math.sin(t * 9) * 0.25; }
     }
+    // nudges for a stuck player only (HINTS-LESS): no pylon after 40 s of the fight, no hit on the coil after 25 s
+    const core = g.room?.id === 'c3core';
+    this.nudge(dt, 'pylons', core && f.c3_fight && !f.c3_overload && this.pylons() === 0, 40, 'c3_toast_fight');
+    this.nudge(dt, 'coil', core && f.c3_overload && !f.c3_turned && !(f.c3_coil > 0) && !!this.coil, 25, 'c3_toast_coil');
     // a defeat during the fight respawns at the core's entrance with the fight still on (pylons kept)
     if (f.c3_fight && !f.c3_turned && g.room?.id === 'c3core') {
       const gd = this.guardian;
