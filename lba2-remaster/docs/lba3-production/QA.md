@@ -610,7 +610,9 @@ transforms, sockets, armSpread and opening.js unchanged.
 Regressions on 8ba8a0e (own server :8178, one browser at a time, 2026-10-24): opening ALL PASSED (24), prologue to its
 end (rc 0, saved, "Tell Zoé what happened in the well"; no page errors), house ALL PASSED, stability ALL PASSED (16),
 deaths ALL PASSED (160), zoe-resume ALL PASSED (5; Zoé as the player on the new mesh), jetpack ALL PASSED (48; the pack
-over the new collar), combat ALL PASSED (59); reviews/CHAR-2/tests.log.
+over the new collar), combat ALL PASSED (59); reviews/CHAR-2/tests.log. After merging origin e2ba54f (CLAR-2 +
+HINTS-LESS: hud, text, story, main.js) the same eight again on da2bd15: all ALL PASSED with the same counts, the
+prologue to its end ("Go home and tell Zoé"), no page errors.
 
 ### RENDER-INV: what costs a frame, and the fixes (block 7a; docs/lba3-performance/PERFORMANCE_AUDIT.md)
 SwiftShader here (counts exact, CPU times proxies, no GPU timing); the user's laptop benchmarks (builds 120, 122, 127)
