@@ -7,3 +7,4 @@ breakdown medium street GPU: as is 18.1 · no shadows 15.9 · no lamps 16.7 · r
 startup build 15.3 s (Citadel 5.0) · shaders 7.0 s · 1785 geometries, 525 textures, 420 programs, JS heap 758 MB · GPU timer: yes
 vs build 120 (same laptop, window 1366x768): medium street 15.9 -> 43.1 fps, interior 23.4 -> 58.2, high street 9.6 -> 24.6.
 Caveats: window 9% smaller; power/plug state not recorded; build 120's sim CPU grew with quality (sync stall?), build 122's does not.
+Power: plugged in for build 122 (the user); build 120's power state unknown -> the 120->122 comparison is confounded. The user: Medium is a good target; High only where cheap and invisible.
