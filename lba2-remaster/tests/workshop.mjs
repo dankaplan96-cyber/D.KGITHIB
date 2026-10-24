@@ -130,7 +130,7 @@ const race = await ev(() => { const L = game.rooms.workshop.life, W = game.story
   const at = +W.sync.toFixed(3), tg = P.target()?.kind; P.tap('KeyE', 0); P.wait(1.5); P.settle(); P.wait(1.5);
   return { at, tg, owe: game.flags.w_owe || 0, lying: game.pickups.list.filter((p) => p.type === 'coin' && p.owe === 'w_owe').length }; });
 const s6 = await state(), l6s = await said();
-check('held together for ten seconds: the pair talks; Baldino is delighted and pays half the shuttle yard\'s fee', s6.pair && l6s.some((l) => /Ilo owes me/.test(l)) && l6s.some((l) => /Half is yours/.test(l)) && l6s.includes('[toast] w_toast_pair'), { s6, l6s });
+check('held together for ten seconds: the pair talks (the lines say so; no toast repeats it, CLAR-2); Baldino is delighted and pays half the shuttle yard\'s fee', s6.pair && l6s.some((l) => /Both lamps hold steady/.test(l)) && l6s.some((l) => /Ilo owes me/.test(l)) && l6s.some((l) => /Half is yours/.test(l)) && !l6s.some((l) => l.startsWith('[toast] w_toast_pair')), { s6, l6s });
 check('the crank pressed in the pair\'s last moment does nothing after success: the hoist stays up (REV-TY-2 D1)', race.tg === 'wcrank' && race.at >= 0.98 && s6.up && s6.lift === 1, { race, s6 });
 check('the reward: a coin worth five kashes tossed his way, owed until he picks it up', race.owe === 1 && race.lying === 1, race);
 // save & Continue with the coin still on the floor: it is given on loading (REV-TY-2 D4)

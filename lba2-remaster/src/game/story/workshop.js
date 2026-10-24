@@ -198,6 +198,6 @@ export class WorkshopLife extends ChapterBase {
     g.particles.burst(C.x, C.y + 0.4, C.z, '#ffe8a0', 18, 2.5);
     const bal = this.balHere();
     const lines = [['narrator', 'w_pair_ok'], ...(bal ? [['baldino', 'w_bal_ok1'], ['baldino', 'w_bal_ok2']] : [['hero', 'w_tw_ok'], ['hero', 'w_tin']])];
-    this.chain(lines, () => { g.hud.toast('w_toast_pair'); this.pay(bal ? this.npc('baldino') : null); });
+    this.chain(lines, () => { this.pay(bal ? this.npc('baldino') : null); });
   }
 }

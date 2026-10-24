@@ -23,7 +23,6 @@ Object.assign(STR.en, {
   c7_scope: 'The dome grinds round. A shaft of light swings out over the glacier, and the ice cap over the vent begins to steam.',
   c7_keeper_5: 'Hurry. The meltwater will fill the basin. And I see something flying down there. Something with the project\'s colours.',
   c7_drone_in: "A heavy drone! The project doesn't want this vent opened either.",
-  c7_toast_drone: 'Destroy the heavy drone',
   c7_drone_down: 'The drone smashes into the ice.',
   c7_vent_seal: "Under the melted cap: a stone seal, carved like the ones at the dig. It's turning!",
   c7_vent_open: 'The seal turns, and the vent breathes: a column of white steam roars up from the glacier. The ground stops trembling.',

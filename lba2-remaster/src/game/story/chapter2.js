@@ -97,7 +97,6 @@ export class Chapter2 extends ChapterBase {
     this.chain([['guard', 'c2_guard_dock1'], ['hero', 'c2_tw_dock1'], ['guard', 'c2_guard_dock2']], () => {
       f.c2_planTaken = true;
       g.audio.play('deny');
-      g.hud.toast('c2_toast_plan_taken');
       this.story.refreshCast();
       this.chain([['hero', 'c2_tw_dock2']], () => { g.updateObjective(); g.save(false); });
     });
@@ -163,7 +162,6 @@ export class Chapter2 extends ChapterBase {
           if (back) f.c2_planBack = true;
           this.chain([['hero', 'c2_got_cyl'], ...(back ? [['hero', 'c2_got_plan']] : [])], () => {
             g.hud.toast('c2_toast_cyl');
-            if (back) g.hud.toast('c2_toast_plan_back');
             g.updateObjective(); g.save(false);
           });
         }, 0.5);
@@ -288,7 +286,6 @@ export class Chapter2 extends ChapterBase {
       h.hasBall = false; h.noBehaviours = true; h.behaviour = 'normal';
       g.hud.behaviour('normal');
       g.enterRoom('lighttop', null, true);
-      g.hud.toast('c2_toast_zoe');
       g.updateObjective();
     });
   }

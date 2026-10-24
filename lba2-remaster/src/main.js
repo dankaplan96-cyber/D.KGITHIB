@@ -246,7 +246,9 @@ class Game {
     this.preparing = true;
     const t0 = performance.now();
     loadingStep('Preparing graphics…');
+    loadBar(0.72);
     await nextPaint();
+    loadBar(0.95, loadEst.shaders || 7000);
     const R = this.renderer.renderer;
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
@@ -257,6 +259,7 @@ class Game {
     for (const t of tex) R.initTexture(t);
     this.uploadGeometry(this.world.root);   // (FRAME-1: Citadel's geometry too; each room/region at its first entry)
     loadingStep('Almost there…');
+    loadBar(0.97);
     await nextPaint();
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
@@ -270,6 +273,8 @@ class Game {
     this.last = performance.now();
     const boot = sessionStorage.getItem(BOOT_KEY);
     sessionStorage.removeItem(BOOT_KEY);
+    loadBar(1, 150);
+    try { localStorage.setItem(LOADT_KEY, JSON.stringify({ total: this.loadTimes.total, shaders: this.loadTimes.shaders })); } catch { /* (private mode) */ }
     $('#loading').classList.add('hidden');
     if (boot === 'new') this.startNew();
     else if (boot === 'continue' && store.get(SAVE_KEY)) this.startContinue();
@@ -1081,8 +1086,8 @@ class Game {
     if (!silent) {
       this.audio.play('rumble');
       this.camRig.shake(0.8);
-      this.hud.toast('toast_stones');
-      setTimeout(() => this.hud.toast('hint_jump'), 2400);
+      // (the stones are seen and heard rising; the hint says how to climb them, with the player's keys)
+      setTimeout(() => this.hud.toast('hint_jump', { b: this.hud.key('b2'), k: this.hud.key('action') }), 1200);
       this.save(false);
     }
   }
@@ -1123,7 +1128,7 @@ class Game {
       case 'coin': h.coins += p.value || 1; this.audio.play('coin'); break;
       case 'heart': h.hp = Math.min(h.maxHp, h.hp + 3); this.audio.play('heal'); break;
       case 'flask': h.mp = h.mpMax; this.audio.play('heal'); break;
-      case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('heal'); this.hud.toast('toast_clover_found'); break;
+      case 'clover': h.clovers = Math.min(9, h.clovers + 1); this.audio.play('heal'); break;   // (the ♣ and the counter say it)
       case 'crystal': {
         const n = this.crystalCount();
         this.applyCrystals(); h.hp = h.maxHp;
@@ -1143,8 +1148,9 @@ class Game {
     const h = this.hero;
     if (z.type === 'checkpoint') {
       this.lastSafe = { x: h.pos.x, z: h.pos.z };
-      if (this.saveTimer <= 0) { this.save(true); this.saveTimer = 20; }
-    } else if (z.type === 'hint' && !this.flags.target) this.hud.toast('hint_target');
+      if (this.saveTimer <= 0) { this.save(false); this.saveTimer = 20; }   // (silent, as LBA2's own saves)
+    }
+    // (the cliffs' 'hint' zone says nothing: Mira's saying and the target itself are the clue, the journal keeps a nudge: HINTS-LESS)
   }
 
   // doors outside, exits inside
@@ -1434,10 +1440,23 @@ class Game {
 
 const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
 const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e) e.textContent = text; };
+// the loading screen's bar (#27): real steps, and across the long synchronous builds an estimated pace (this
+// computer's previous start) animated on the compositor, so it keeps moving while the main thread builds
+const LOADT_KEY = 'lba3.loadTimes';
+const loadEst = (() => { try { return JSON.parse(localStorage.getItem(LOADT_KEY)) || {}; } catch { return {}; } })();
+const loadBar = (to, ms = 300) => {
+  const f = document.querySelector('#load-fill'); if (!f) return;
+  f.style.transition = `transform ${ms}ms ${ms > 600 ? 'cubic-bezier(.25,.6,.45,1)' : 'ease-out'}`;
+  f.style.transform = `scaleX(${to})`;
+};
+// MEA Studio's logo plays first (2.6 s) while the assets download; the automated tests skip it
+const SPLASH_MS = (navigator.webdriver && !/[?&]splash/.test(location.search)) || /[?&]nosplash/.test(location.search) ? 0 : 2600;
+const splashDone = new Promise((r) => setTimeout(() => { document.querySelector('#loading')?.classList.add('art'); r(); }, SPLASH_MS));
+loadBar(0.08);
 // resolves after the browser has painted (so a loading message shows before a long synchronous step)
 const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
 
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
-Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(async () => { loadingStep('Building the island…'); await nextPaint(); window.game = new Game(); });
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building the island…'); loadBar(0.25); await nextPaint(); loadBar(0.7, loadEst.total || 12000); await nextPaint(); window.game = new Game(); });

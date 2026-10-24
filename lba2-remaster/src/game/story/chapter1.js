@@ -175,7 +175,7 @@ export class Chapter1 extends ChapterBase {
       case 'pipemap':
         f.c1_map = true;
         g.audio.play('select');
-        this.chain([['hero', 'c1_map_1'], ['mira', 'c1_mira_map']], () => { g.hud.toast('c1_toast_map'); g.updateObjective(); });
+        this.chain([['hero', 'c1_map_1'], ['mira', 'c1_mira_map']], () => { g.updateObjective(); });   // (Mira says she marked them)
         return true;
       case 'locker':
         g.searched.push(it.spot.id);
@@ -212,7 +212,7 @@ export class Chapter1 extends ChapterBase {
       case 'vesk':
         if (!f.c1_task) {
           return c([['vesk', 'c1_vesk_1'], ['hero', 'c1_tw_vesk1'], ['vesk', 'c1_vesk_2'], ['hero', 'c1_tw_vesk2'], ['vesk', 'c1_vesk_3'], ['vesk', 'c1_vesk_4']], () => {
-            f.c1_task = true; g.hud.toast('c1_toast_task'); g.updateObjective(); g.save(false);
+            f.c1_task = true; g.updateObjective(); g.save(false);   // (the new goal shows in the objective panel)
           });
         }
         if (!f.c1_water) return c([['vesk', 'c1_vesk_wait']]);
@@ -347,7 +347,7 @@ export class Chapter1 extends ChapterBase {
     h.swapBody('zoe');
     h.hasBall = false; h.noBehaviours = true; h.behaviour = 'discreet';
     g.hud.behaviour('discreet');
-    g.hud.toast('c1_toast_zoe');
+    // (the objective panel says it as the room comes up: "Zoé: find the evacuation plan without getting caught")
     const guard = this.npc('guard');
     if (R && guard) {
       guard.controlled = true;
@@ -373,7 +373,7 @@ export class Chapter1 extends ChapterBase {
     f.c1_plan = true;
     g.audio.cue('revelation');
     g.audio.play('shard');
-    this.chain([['zoe', 'c1_zoe_plan1'], ['zoe', 'c1_zoe_plan2'], ['zoe', 'c1_zoe_plan3']], () => { g.audio.endCue(); g.hud.toast('c1_toast_plan'); g.updateObjective(); g.save(false); });
+    this.chain([['zoe', 'c1_zoe_plan1'], ['zoe', 'c1_zoe_plan2'], ['zoe', 'c1_zoe_plan3']], () => { g.audio.endCue(); g.updateObjective(); g.save(false); });
   }
   endZoe() {
     const g = this.game, f = this.f, h = g.hero;

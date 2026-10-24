@@ -607,6 +607,58 @@ are the GPU evidence. Evidence: docs/lba3-visual/evidence/RENDER-INV/.
 | 30-minute session | NOT TESTED |
 | GPU saving of F9/F10/Edges on the laptop | NOT VERIFIED (the next benchmark) |
 
+### CLAR-2 + HINTS-LESS: less text on screen, quests that point instead of explain (block 7a; evidence docs/lba3-production/reviews/CLAR-2/)
+Measured with tests/clarity.mjs (INPUT, LBA HUD = the default), the same script on the base (9faa1a8 served from a copy)
+and on this build: five routes — the opening's hand-off and the prologue's first minutes, Citadel's street, the
+prologue's cave fight, chapter 4's wind-pump, chapter 11's core fight. "Put up" = every toast, objective change,
+prompt label and chapter card the game raised on the route (tests/lib/textcensus.js); "on screen" = the words visible
+at the route's busiest moments (jpgs `before-lba-*` / `after-lba-*`).
+
+| Route | Put up before → after (items / chars) | Toasts before → after | Busiest moment before → after (items / chars) |
+|---|---|---|---|
+| Prologue (hand-off → rope) | 34 / 383 → 32 / 313 | 6 / 134 → 4 / 64 | hand-off 2 / 67 ("Check the well. Take the magic ball from the cupboard first." + "Fists") → 1 / 14 ("Check the well", fades after 5 s of play) |
+| Street | 8 / 41 → 7 / 31 | 1 / 10 → 0 | harbour 1 / 6 → 0 / 0 (no prompt while he runs past) |
+| Cave fight | 28 / 238 → 27 / 206 | 2 / 36 → 1 / 19 | fight 1 / 21 ("Magic Ball R: Fists") → 1 / 12 |
+| Chapter 4 | 18 / 321 → 16 / 256 | 2 / 45 → 0 | (the panel's goal now shows ~5 s when it changes: arrive 1 / 6 → 2 / 47) |
+| Core fight | 3 / 136 → 3 / 109 | instruction toast at once → only after 40 s stuck | fight start 2 / 113 → 2 / 42 |
+| All five | 91 / 1119 → 85 / 915 (−18 % chars) | 12 / 317 → 6 / 148 (−53 %) | |
+
+In code: 110 → 82 toast call sites; about 30 strings deleted and 56 rewritten (text/*.js, i18n.js).
+
+| Item | Before | After | Result |
+|---|---|---|---|
+| Objective | LBA HUD: hidden, the first goal as a long toast; Modern: always up with all its steps | Both HUDs: the goal line only, ~5 s of play when the goal changes (dialogue/menus hold the clock); its steps ("◆ Lid key (water office)") in the pause menu, the Holomap and the journal; a count change ("2/3") doesn't bring it back | PASS (clarity: goal-only at every moment; opening: objT > 0 at hand-off, no toast repeating it) |
+| Toasts that restate | "New task…", "You're playing as Zoé…", "The evacuation plan was confiscated", "The shutter opens", "Get out of the post!", "Valves marked on the holomap", "Roof hatch open", "Gear freed", the side stories' "…runs again / draws again / is hot again / is talking / cleared", "You overhear whispering…", "The stones rise!", "Found a clover leaf!" | cut: a line, the objective or the world already says it | PASS |
+| System toasts | "Game saved" at every checkpoint; the place's name after every trip | silent (LBA2 saves silently; he picked the place in the menu) | PASS (clarity) |
+| Key hints | "(2) … Space", fixed F/M | the player's bindings / pad buttons: "Magic ball (Alt) · Holomap (H)", "Athletic (F2), then Space to jump", sword, pulse tool | PASS (clarity: the cupboard toast names input.label) |
+| Prompts | "Ferry", "Spaceship", "Shuttle", "Glider", "Take coat", "Cool it", "Console" | verbs: Board, Fly, Take, Cool, Use; no prompt while running past or in reach < 0.15 s | PASS |
+| Weapon pill | "Fists" at the hand-off; "R: Fists" through a whole fight | only when the weapon changes; the swap key only then | PASS (clarity) |
+| Settings | "Modern (camera-relative)", "Classic (LBA2 keys, tank)", "Free (mouse / stick)", "Auto (keeps the frame rate)", "30 (steadier on slow PCs)" | Modern, Classic (LBA2), Free, Auto, 30; RENDER-INV's Edges: Smooth / Fast kept | — (layout untouched: WORKLIST #28) |
+
+HINTS-LESS (wording and hint frequency only; no puzzle logic changed):
+| Chapter | Before | After (the nudge that stays) |
+|---|---|---|
+| Prologue | Twinsen: "sneak up in Discreet mode"; step "Wake the three crystals with the magic ball" | "If I sneak up quietly…" (Arthur's hint unchanged); "Wake the three dark crystals" (his cave line still names the ball) |
+| 1 | Orchard: "bounce it off the wall"; steps "(behind bars: use the ball)", "(target and stones)"; the cliff zone's "Try hitting it with the magic ball" | "My hand won't fit through. The magic ball might."; steps name places ("The orchard (behind bars)", "The Whispering Cliffs (the old target)"); the zone says nothing (Mira's saying is the clue) |
+| 2 | Baldino: "Brake them with your ball"; objective "…with the ball", "…at the console by the gate"; radio: "sun, wave, star" outright | Baldino: "Stop the mills" (Oku: "we stopped them with a stone. You have a ball."); the radio's riddle ("what wakes us, what the sea does, what keeps watch at night"), plain after a wrong try; Baldino asked again: "the console by the platform gate" |
+| 4 | — | ADV-2 kept as is (one restating toast cut) |
+| 8 | Gilbert: "a lever by the old cistern… a hatch wheel up on its frame"; the wheel: "The ball should turn it." | "opens from inside the yard, by the old cistern… a hatch up on its frame"; "Too high to reach by hand." |
+| 10 | Zoé: "star, sun, wave" | "my old warning, with the star moved to the front" (Arthur's needle feedback unchanged); asked again: "Star, sun, wave" |
+| 11 (core) | instructions as a toast as the fight starts, the coil's at once | Baldino's radio line; the plate/panel toast after 40 s with no pylon, the coil's after 25 s with no hit (ChapterBase.nudge, once per session) |
+| Side stories | "cool it in the water barrel" / "it needs cooling" | "The coupler is glowing" (Nell's and Baldino's lines and the journal keep the cure) |
+
+Kept on purpose: item names on pickup (Lid Key, Rope Ladder, Override Key…: the inventory changed), control bindings,
+consequences ("Disguised: the archivist is slower to notice you", "A clover leaf saved you!", "Spotted!"), counts of
+progress (valves, mills, seals, relays), the sandstorm warning, ADV-2's observation clues, chapter cards, every line of
+dialogue (voice and humour), signs. Open (UI): inventory.js prints fixed keys ("I / J to close", "E: use").
+
+Regressions after merging origin ad2be62 (RENDER-INV), own server :8191, one browser at a time (reviews/CLAR-2/tests.log):
+opening 24/24, menus 26/26, stability 16/16, holomap 30/30, clarity 10/10, chapter4 54/54, townlife 36/36, workshop
+32/32, desert-life 30/30, resume 2/2 (ALL PASSED); prologue, chapter1–3 and 5–10 (LOGIC) each reach the next chapter, no
+page errors. Not verified: a first-time player's read of the riddles and of the 5-second panel; the Modern HUD route
+(clarity HUD=modern) not rerun.
+After merging origin f30d36d (the loading screen): menus 26/26, stability 16/16, opening 24/24, clarity 10/10.
+
 ### CAM-2: the play camera "moves a lot" (block 7a; evidence docs/lba3-production/reviews/CAM-2/)
 Recorded by tests/camsteady.mjs + tests/lib/camrec.js: 10 repeatable routes walked by input on Citadel (street and
 square, along house walls, a door in and out, out of Twinsen's door, the pier, the bay below the cliffs, standing /

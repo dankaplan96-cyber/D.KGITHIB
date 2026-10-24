@@ -5,7 +5,6 @@ import { STR } from '../i18n.js';
 Object.assign(STR.en, {
   zl_title: 'Zeelich',
   p_shove: 'Shove', p_roll: 'Take a roll',
-  zl_toast_oven: "Snuff's oven is hot again",
   zl_toast_owed: "Snuff's payment: {n} kashes",
 
   // ---- looks

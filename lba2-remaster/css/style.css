@@ -40,6 +40,12 @@ button { font-family: inherit; }
 #objective b { color: var(--accent); display: block; margin-bottom: 2px; font-size: 15px; }
 #objective .s { display: block; color: var(--ink-dim); }
 #objective .s.ok { color: #8ef08e; text-decoration: line-through; }
+/* CLAR-2: the panel comes up when the goal changes and steps aside after a few seconds (hud.js OBJ_SHOW); the pause
+   menu, the Holomap and the journal keep it. Finished steps stay out of the brief panel. */
+#objective { opacity: 0; transform: translateY(-6px); transition: opacity 0.5s, transform 0.5s; pointer-events: none; }
+#objective.show { opacity: 1; transform: none; }
+#objective .s.ok { display: none; }
+#hud.busy #objective { opacity: 0; transition: none; }
 
 #behaviour { position: absolute; bottom: 16px; inset-inline-start: 16px; display: flex; gap: 8px; pointer-events: auto; transition: transform 0.2s; }
 #behaviour.wheel { transform: scale(1.18) translateY(-12px); }
@@ -219,7 +225,8 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
 #shop button.sel, #shop button:hover { background: linear-gradient(0deg, #6a0c00, #d24a00 60%, #ffb43a); border-color: #fff; }
 
 /* incrust HUD: hidden until something changes */
-body.hud-lba #objective, body.hud-lba #minimap, body.hud-lba #behaviour, body.hud-lba #pausebtn { display: none; }
+body.hud-lba #minimap, body.hud-lba #behaviour, body.hud-lba #pausebtn { display: none; }
+body.hud-lba #objective { border-radius: 0; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.8); backdrop-filter: none; }
 body.hud-lba #stats { opacity: 0; transform: translateY(-6px); transition: opacity 0.35s, transform 0.35s; }
 body.hud-lba #stats.show { opacity: 1; transform: none; }
 body.hud-lba #prompt { border-radius: 0; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.8); }
@@ -355,3 +362,30 @@ body.hud-lba #weapon.show { opacity: 1; }
 /* the desktop app (desktop/): things only it has */
 .desktop-only { display: none !important; }
 body.desktop .desktop-only { display: block !important; }
+
+/* ---- loading screen (#27): MEA Studio, then a picture of the game and a progress bar ---- */
+#loading { background: #07060c; padding: 0; gap: 0; justify-content: flex-end; overflow: hidden; }
+#load-art { position: absolute; inset: 0; background: url(../assets/ui-loading.jpg) center / cover no-repeat; transform: scale(1.06); opacity: 0; transition: opacity 1.2s ease, transform 14s linear; }
+#load-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7, 6, 12, 0.15) 0%, rgba(7, 6, 12, 0.05) 45%, rgba(7, 6, 12, 0.85) 100%); }
+#load-title { position: relative; margin: 0 0 22px; font-size: clamp(34px, 6vw, 64px); font-weight: 900; letter-spacing: 0.04em; color: #fff; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7); opacity: 0; transition: opacity 0.8s 0.3s; }
+#load-title span { display: block; font-size: 0.42em; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #ffe3c8; }
+#load-bar { position: relative; width: min(56vw, 520px); height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.16); overflow: hidden; opacity: 0; transition: opacity 0.6s 0.4s; }
+#load-fill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); will-change: transform; background: linear-gradient(90deg, #ff4fa3, #ffb36b 55%, #6ee7ff); box-shadow: 0 0 12px rgba(255, 140, 120, 0.7); }
+#loading-step { position: relative; margin: 10px 0 0; font-size: 13px; opacity: 0; color: #fff; transition: opacity 0.6s 0.4s; }
+#load-by { position: relative; margin: 18px 0 26px; font-size: 11px; letter-spacing: 0.5em; color: rgba(255, 227, 241, 0.55); opacity: 0; transition: opacity 0.6s 0.6s; }
+#loading.art #load-art { opacity: 1; transform: scale(1); }
+#loading.art #load-title, #loading.art #load-bar, #loading.art #load-by { opacity: 1; }
+#loading.art #loading-step { opacity: 0.75; }
+#mea { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; background: radial-gradient(120% 90% at 50% 45%, #16101f 0%, #07060c 70%); transition: opacity 0.7s ease; }
+#loading.art #mea { opacity: 0; pointer-events: none; }
+#mea .logo { width: min(70vw, 380px); }
+#mea .logo path { fill: none; stroke: url(#meag); stroke-width: 15; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 400; stroke-dashoffset: 400; filter: drop-shadow(0 0 6px rgba(255, 79, 163, 0.55)); animation: meadraw 0.9s cubic-bezier(0.6, 0.05, 0.3, 1) forwards; }
+#mea .logo path.e { animation-delay: 0.3s; } #mea .logo path.a { animation-delay: 0.6s; }
+@keyframes meadraw { to { stroke-dashoffset: 0; } }
+#mea .logo circle { fill: #ff4fa3; opacity: 0; animation: meadrip 1.4s 1.5s ease-in forwards; }
+@keyframes meadrip { 0% { opacity: 0; transform: translateY(0) scaleY(0.6); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(46px) scaleY(1.4); } }
+#mea .studio { margin-top: 10px; font-size: 15px; font-weight: 800; letter-spacing: 1.1em; padding-left: 1.1em; color: #ffe3f1; opacity: 0; transform: translateY(6px); animation: meastudio 1.6s 1.3s forwards; }
+@keyframes meastudio { to { opacity: 1; transform: none; letter-spacing: 0.6em; } }
+#mea .shine { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.08) 50%, transparent 60%); transform: translateX(-100%); pointer-events: none; animation: meashine 1.4s 1.2s ease-in-out forwards; }
+@keyframes meashine { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { #mea .logo path { stroke-dashoffset: 0; animation: none; } #mea .logo circle, #mea .shine { display: none; } #mea .studio { animation-duration: 0.01s; } }

@@ -44,7 +44,7 @@ const boot = async (mode) => {
         return tg.done ? 'forced' : 'FAILED';
       },
       f() { return { ...G.flags }; },
-      obj() { return document.querySelector('#objective')?.textContent || ''; },
+      obj() { return document.querySelector('#pause-objective')?.textContent || ''; },
     };
   });
 };

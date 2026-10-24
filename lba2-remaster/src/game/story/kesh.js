@@ -124,7 +124,7 @@ export class KeshLife extends ChapterBase {
     C.setDrawing(true); C.setSand(false); C.setDates(true);
     g.audio.play('chest');
     this.story.refreshCast();
-    this.chain([...(first ? [['hero', first]] : []), ['hero', 'k_draws']], () => { g.hud.toast('k_toast_cool'); g.save(false); });
+    this.chain([...(first ? [['hero', first]] : []), ['hero', 'k_draws']], () => { g.save(false); });
   }
 
   // ---------------------------------------------------------------- people (asked before the chapter)

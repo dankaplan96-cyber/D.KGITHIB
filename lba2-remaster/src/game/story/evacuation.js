@@ -211,8 +211,7 @@ export class Evacuation extends ChapterBase {
       if (g.room) g.exitRoom(this.story.exitTo('outdoor'), true);
       h.swapBody('zoe'); h.hasBall = false; h.noBehaviours = true; h.behaviour = 'normal'; g.hud.behaviour('normal');
       this.story.refreshCast();
-      g.hud.toast('c8_toast_zoe');
-      this.progress();
+      this.progress();   // (the objective panel: "Zoé: bring the hill families to the lighthouse")
     });
   }
   endZoe() {
