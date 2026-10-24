@@ -46,7 +46,10 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
       const w = step * (0.95 + r() * 0.35);          // overlapping neighbours
       const depth = 1.0 + r() * 0.5;
       const out = 0.12 + r() * 0.22;                 // relief out of the slope at mid-height
-      const y0 = bot - 0.35, y1 = top - 0.04 - r() * 0.12;
+      // (WORLD-FIX: each block's top 9 mm steps off its neighbours' (13 levels: no two blocks within two cells share one) (no two overlapping blocks in one plane:
+      // they z-fought on the terraces' rims; the random draw is kept so the rest of the island is unchanged)
+      const ix = Math.round((x - terrain.cx) / step), iz = Math.round((z - terrain.cz) / step); r();
+      const y0 = bot - 0.35, y1 = top - 0.04 - ((((ix * 2 + iz * 5) % 13) + 13) % 13) * 0.009;
       const ym = y0 + (y1 - y0) * (0.4 + r() * 0.25);
       // corners: o = outer face (downhill), i = inner (in the hill)
       const P = (s, n, y) => {

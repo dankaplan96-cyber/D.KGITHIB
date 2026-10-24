@@ -11,6 +11,7 @@ import { textures } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, distToSegment, smoothstep } from '../engine/math.js';
 import { PROPS } from './citadel-layout.js';
+import { fitAdd } from './worldfit.js';
 
 export const V = { x: -42, z: -4 }; // the town square (well)
 
@@ -50,16 +51,19 @@ const HOUSES = [
   // the others stand by the original's doors (LBA2's scenes 5, 37, 15, 3, 17, 9, 7, 8, 14), in our own styles
   { id: 'bug', x: -57, z: -16.8, ry: 0.25, w: 7.6, d: 6.2, h: 3.1, door: { x: 1.9 }, wall: 'stone', tint: '#f0e8dc', roof: 'roofBlue', shutters: '#d8a13b', chimneyX: 0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 0.4 }] },
-  { id: 'stone', x: -31.7, z: -24.6, ry: 0.05, w: 8.0, d: 5.4, h: 3.1, door: { x: 1.7 }, wall: 'stone', roof: 'roofBlue', shutters: '#3f9a6a', chimneyX: 0.3,
-    windows: [{ side: 'front', x: 1.4 }, { side: 'left', x: 0 }, { side: 'right', x: -0.6, y: 1.4, w: 0.6, h: 0.7 }] },
+  // (WORLD-FIX: the stone house stood with its west end on the ramp up to the plateau and its back 0.8 m from the
+  // terrace (the ground 2.3 m up its back wall, 1.4 m over its west window) and a window under its door's surround:
+  // narrower and shallower, 2.4 m east and 1.2 m south, the window to the other side of the door)
+  { id: 'stone', x: -28.6, z: -23.4, ry: 0.05, w: 6.4, d: 5.0, h: 3.1, door: { x: 1.6 }, wall: 'stone', roof: 'roofBlue', shutters: '#3f9a6a', chimneyX: 0.3,
+    windows: [{ side: 'front', x: -1.3 }, { side: 'left', x: 0 }, { side: 'right', x: -0.6, y: 1.4, w: 0.6, h: 0.7 }] },
   { id: 'shop', x: -30, z: 0.5, ry: -Math.PI / 2, w: 7, d: 5.6, h: 3.4, door: { x: -1.6, arch: false }, wall: 'stone', tint: '#f4f0ea', roof: 'roof', shutters: '#c8452f', awning: '#c8452f', awningW: 3.4, awningX: 0.6, beams: true,
     windows: [{ side: 'front', x: 0.9, y: 0.9, w: 1.6, h: 1.2, noShutters: true }, { side: 'right', x: 0.4 }, { side: 'left', x: 0.8 }] },
   { id: 'water', x: -68.7, z: 11.0, ry: Math.PI / 2, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#dfe8f2', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'right', x: 0 }] },
   { id: 'pink', x: -28.5, z: 24.6, ry: 0, w: 6.0, d: 5, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#f8dcd2', roof: 'roof', shutters: '#8f4fc1', beams: true,
-    windows: [{ side: 'front', x: -1.2 }, { side: 'left', x: 0.3 }] },
+    windows: [{ side: 'front', x: -1.65 }, { side: 'left', x: 0.3 }] },   // (WORLD-FIX: the window's open shutter lay on the door's surround at −1.2)
   { id: 'south', x: -48.2, z: 23.3, ry: 0, w: 9.0, d: 6.2, h: 3.2, door: { x: 2.1 }, wall: 'stone', roof: 'roof', shutters: '#d8a13b', chimneyX: 0.3,
-    windows: [{ side: 'front', x: 1.2 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },
+    windows: [{ side: 'front', x: -0.6 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: at 1.2 the window ran under the door's surround)
   { id: 'nbr', x: -33.6, z: 75.3, ry: Math.PI / 2, w: 5.6, d: 5.0, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#e8f0d8', roof: 'roof', shutters: '#3f9a6a', chimneyX: 0.2,
     windows: [{ side: 'front', x: -1.5 }, { side: 'left', x: 0 }] },
   // the harbour wing: the baggage claim building and its neighbour (LBA2's holomap), and the big house by the field
@@ -68,7 +72,7 @@ const HOUSES = [
   { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'plaster', tint: '#f4ead8', roof: 'roof', shutters: '#c8452f', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
   { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'plaster', tint: '#f0e0f0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
-    windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.4 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },
+    windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.2 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: 3.4 put its shutter on the corner quoins)
 ];
 // the houses beyond the square stand on level pads; those round it keep the town's own ground (world.js)
 for (const h of HOUSES) if (!h.pad && Math.hypot(h.x - V.x, h.z - V.z) > 18) h.pad = Math.max(h.w, h.d) * 0.75 + 2;
@@ -76,6 +80,14 @@ export const HOUSE_KEEP = HOUSES.filter((h) => !h.pad).map((h) => [h.x, h.z, Mat
 
 // houses that stand outside the town core get a level pad (world.js)
 export const HOUSE_PADS = HOUSES.filter((h) => h.pad).map((h) => ({ x: h.x, z: h.z, r: h.pad }));
+// WORLD-FIX: and every house its own floor: the ground under its footprint and FLAT m round it is levelled to the
+// ground before its door (the street or path it opens on), then eases back to the land over EASE m (world.js
+// islandHeight, last). The bug house's door was 0.75 m under the street, the stone house sat in the ramp and the
+// terrace, others had a corner or a side 0.2–0.6 m up their walls.
+export const HOUSE_FLATS = HOUSES.map((h) => {
+  const c = Math.cos(h.ry), s = Math.sin(h.ry), dx = h.door?.x ?? 0, dz = h.d / 2 + 0.9;
+  return { id: h.id, x: h.x, z: h.z, c, s, hw: h.w / 2, hd: h.d / 2, flat: 1.15, ease: h.ease ?? 2.6, door: [h.x + c * dx + s * dz, h.z - s * dx + c * dz] };
+});
 
 // ------------------------------------------------------------------ helpers
 const M = new Map();
@@ -389,6 +401,7 @@ export function buildTown(scene, W) {
     const dz = built[i].door.z, dx = built[i].door.x;
     const door = { x: hd.x + Math.sin(hd.ry) * dz + Math.cos(hd.ry) * dx, z: hd.z + Math.cos(hd.ry) * dz - Math.sin(hd.ry) * dx };
     const info = { x: hd.x, z: hd.z, ry: hd.ry, w: hd.w, d: hd.d, g, door, id: hd.id };
+    fitAdd({ region: 'citadel', name: 'house ' + hd.id, x: hd.x, z: hd.z, ry: hd.ry, oy: g - 0.05, ...built[i].fit });
     W.houses.push(info);
     houseInfo[hd.id] = info;
   }

@@ -63,15 +63,20 @@ export function makeTextures() {
     const [c, x] = canvas(S); const r = rng(11);
     // (a warmer, slightly olive green like Citadel's lawns: the cool pure green read as neon under the sun)
     x.fillStyle = '#5a8a38'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#4c7a30', '#6a9642', '#537f33', '#76a24a'], 20, 60, 0.6);
+    // (R6, outdoor readability: the tufts' strokes nearer the ground's own tone and no bright speckle — at play
+    // distance the white, yellow and pink dots and the pale strokes read as high-frequency glitter round every path;
+    // the broad blotches carry the painted variation instead. The same random draws as before.)
+    blotches(x, S, r, 40, ['#4f7c31', '#64903f', '#557f34', '#6c9844'], 20, 60, 0.6);
     x.lineCap = 'round';
     for (let i = 0; i < 700; i++) {
       const px = r() * S, py = r() * S, l = 3 + r() * 5, a = -Math.PI / 2 + (r() - 0.5) * 0.9;
-      x.strokeStyle = ['#3f6e2a', '#86b450', '#4a7e2e', '#98c060'][Math.floor(r() * 4)];
+      x.strokeStyle = ['#4a7830', '#729e46', '#517f33', '#7aa44c'][Math.floor(r() * 4)];
       x.lineWidth = 1 + r();
+      x.globalAlpha = 0.7;
       wrap(S, (ox, oy) => { x.beginPath(); x.moveTo(px + ox, py + oy); x.lineTo(px + ox + Math.cos(a) * l, py + oy + Math.sin(a) * l); x.stroke(); });
+      x.globalAlpha = 1;
     }
-    speckle(x, S, r, 25, ['#fff6a0', '#ffffff', '#ffb0c8'], 0.9, 0.8);
+    speckle(x, S, r, 25, ['#6a9440', '#5f8a3a', '#78a04a'], 0.5, 0.8);
     T.grass = toTex(c);
   }
   // sand
@@ -111,7 +116,7 @@ export function makeTextures() {
       const px = r() * S, py = r() * S, rr = 1.5 + r() * 3.5;
       wrap(S, (ox, oy) => {
         x.fillStyle = 'rgba(80,58,36,0.5)'; x.beginPath(); x.ellipse(px + ox + 0.8, py + oy + 0.8, rr, rr * 0.7, 0, 0, 7); x.fill();
-        x.fillStyle = ['#b8946e', '#957a60', '#c4a682'][i % 3]; x.beginPath(); x.ellipse(px + ox, py + oy, rr, rr * 0.7, 0, 0, 7); x.fill();
+        x.fillStyle = ['#b08c66', '#957a60', '#b89a76'][i % 3]; x.beginPath();   // (R6: the pebbles a little less bright) x.ellipse(px + ox, py + oy, rr, rr * 0.7, 0, 0, 7); x.fill();
       });
     }
     T.dirt = toTex(c);

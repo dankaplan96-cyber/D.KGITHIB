@@ -26,6 +26,7 @@ import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
 import { placeLayout, PLACES, TRALU, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
+import { fitAdd } from './worldfit.js';
 
 // The original's Zeelich islands (assets/lba2/islands, numbers from the user's files: tools/lba2-islands.py), then
 // our own places (src/game/zplaces.js). (Appended at the end: an island's place in the world is its index, and
@@ -78,6 +79,7 @@ function analyse(L, S = {}) {
   const cx = (i) => -w / 2 + i * cell, cz = (j) => -d / 2 + j * cell;
   const decor = L.decor.map(([x, z, y, sx, sy, sz, beta, kind, body]) => ({ x, z, y, sx, sy, sz, beta, kind, body }));
   for (const o of decor) o.shape = shapeOf(o, S);
+  fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks: !!L.floorAt });
   // cells under a solid object
   const blocked = new Uint8Array(nx * nz);
   for (const o of decor) {
@@ -169,6 +171,102 @@ function analyse(L, S = {}) {
   const pi = pad % nx, pj = (pad - pi) / nx;
   let ph = 0, pn = 0; for (let b = pj - 1; b <= pj + 1; b++) for (let a = pi - 1; a <= pi + 1; a++) { const v = H[b * nx + a]; if (v != null) { ph += v; pn++; } }
   return { w, d, H, steep, decor, comp, main, clear, cx, cz, gx, gz, pad: { x: cx(pi), z: cz(pj), y: ph / pn, toward: Math.atan2(mx - cx(pi), mz - cz(pj)) }, mid: { x: mx, z: mz }, floorAt: L.floorAt || null, floors: L.floors || null };
+}
+
+// WORLD-FIX (tests/worldfit.mjs): the original's buildings on our ground. The ground here is the original's height
+// grid at every second point (1.71 m apart), so under a building it rose through one wall and fell away from
+// another: doors under the ground or hanging a metre over it, windows at the ground, plinths floating over slopes.
+// And the original sometimes places one building twice, or a building's parts as overlapping objects, which drawn as
+// our pieces put walls, doors and windows through each other. Here, before the ground is analysed:
+//  - two houses (or towers) whose footprints overlap become one: one mostly inside the other is left out (the other
+//    as tall as the taller); two that overlap partly are cut back to meet;
+//  - each house's door goes on the side whose ground lies nearest its floor (the island's middle wins a near tie);
+//  - the ground under each house and 2.6 m round it (all the grid points whose cells reach its walls) is cut down to
+//    its floor, the ground before its door levelled to it; where the ground still falls away, the stone plinth
+//    goes down to it (o.bury, its depth under the floor).
+const FIT_M = 2.6;
+function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }) {
+  const isH = (o) => o.shape === 'house' || o.shape === 'tower';
+  const hs = decor.filter(isH);
+  for (let pass = 0; pass < 3; pass++) for (let i = 0; i < hs.length; i++) for (let j = i + 1; j < hs.length; j++) {
+    const A = hs[i], B = hs[j];
+    if (!isH(A) || !isH(B)) continue;
+    const ox = Math.min(A.x + A.sx / 2, B.x + B.sx / 2) - Math.max(A.x - A.sx / 2, B.x - B.sx / 2), oz = Math.min(A.z + A.sz / 2, B.z + B.sz / 2) - Math.max(A.z - A.sz / 2, B.z - B.sz / 2);
+    if (ox <= 0.02 || oz <= 0.02) continue;
+    const sm = A.sx * A.sz <= B.sx * B.sz ? A : B, bg = sm === A ? B : A;
+    if (ox * oz >= 0.6 * sm.sx * sm.sz) { bg.sy = Math.max(bg.sy, sm.y + sm.sy - bg.y); sm.shape = 'skip'; sm.solid = false; continue; }   // (a storey stacked on top: the one building as tall as both)
+    if (ox <= oz) {
+      const sg = Math.sign(sm.x - bg.x) || 1, edge = bg.x + sg * (bg.sx / 2 + 0.05), far = sm.x + sg * sm.sx / 2;
+      sm.sx = Math.abs(far - edge); sm.x = (far + edge) / 2;
+    } else {
+      const sg = Math.sign(sm.z - bg.z) || 1, edge = bg.z + sg * (bg.sz / 2 + 0.05), far = sm.z + sg * sm.sz / 2;
+      sm.sz = Math.abs(far - edge); sm.z = (far + edge) / 2;
+    }
+    if (Math.min(sm.sx, sm.sz) < 1.3) { sm.shape = 'skip'; sm.solid = false; }
+  }
+  if (decks) return;
+  const at = (x, z) => { const i = Math.round(gx(x)), j = Math.round(gz(z)); return i < 0 || j < 0 || i >= nx || j >= nz ? null : H[j * nx + i]; };
+  let mx = 0, mz = 0, mn = 0; for (let k = 0; k < nx * nz; k++) if (H[k] != null) { mx += cx(k % nx); mz += cz(Math.floor(k / nx)); mn++; }
+  mx /= mn || 1; mz /= mn || 1;
+  const near = new Float32Array(nx * nz).fill(1e9), target = new Float32Array(nx * nz).fill(NaN);
+  for (const o of decor) {
+    if (o.shape !== 'house' && o.shape !== 'tower') continue;
+    let land = 0; for (const a of [-0.4, 0, 0.4]) for (const b of [-0.4, 0, 0.4]) if (at(o.x + a * o.sx, o.z + b * o.sz) != null) land++;
+    if (land < 4) continue;   // (in the clouds: a moored barge, not a house on the ground)
+    o.fitted = true;
+    // the door's side: one with land before it (not the cloud sea, not another building) whose ground lies nearest
+    // the floor; none: no door (the original's objects have none of their own: the door is ours)
+    const mid = Math.abs(mx - o.x) > Math.abs(mz - o.z) ? [Math.sign(mx - o.x) || 1, 0] : [0, Math.sign(mz - o.z) || 1];
+    const apron = (f) => f[0] ? { x0: Math.min(o.x + f[0] * o.sx / 2, o.x + f[0] * (o.sx / 2 + FIT_M)), x1: Math.max(o.x + f[0] * o.sx / 2, o.x + f[0] * (o.sx / 2 + FIT_M)), z0: o.z - 1.9, z1: o.z + 1.9 }
+      : { x0: o.x - 1.9, x1: o.x + 1.9, z0: Math.min(o.z + f[1] * o.sz / 2, o.z + f[1] * (o.sz / 2 + FIT_M)), z1: Math.max(o.z + f[1] * o.sz / 2, o.z + f[1] * (o.sz / 2 + FIT_M)) };
+    const blocked = (r) => hs.some((q) => q !== o && isH(q) && q.x + q.sx / 2 > r.x0 && q.x - q.sx / 2 < r.x1 && q.z + q.sz / 2 > r.z0 && q.z - q.sz / 2 < r.z1);
+    let best = 1e9; o.face = null;
+    for (const f of [mid, [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const g1 = at(o.x + f[0] * (o.sx / 2 + 1.4), o.z + f[1] * (o.sz / 2 + 1.4)), g2 = at(o.x + f[0] * (o.sx / 2 + FIT_M + 0.9), o.z + f[1] * (o.sz / 2 + FIT_M + 0.9));
+      const r = apron(f), side = [at(r.x0, r.z0), at(r.x1, r.z0), at(r.x0, r.z1), at(r.x1, r.z1)];
+      if (g1 == null || g2 == null || side.some((v) => v == null) || blocked(r)) continue;
+      const sc = Math.abs(g1 - o.y) + 0.5 * Math.max(0, Math.abs(g2 - o.y) - 1) + (f === mid ? 0 : 0.35);
+      if (sc < best - 1e-6) { best = sc; o.face = f; }
+    }
+    if (S.grand && Math.hypot(o.x - S.grand.x, o.z - S.grand.z) < 1) o.face = mid;   // (the Grand Hall's portico stands toward the plaza)
+    o.noDoor = !o.face; o.face ??= mid;
+    const i0 = Math.max(0, Math.floor(gx(o.x - o.sx / 2 - FIT_M))), i1 = Math.min(nx - 1, Math.ceil(gx(o.x + o.sx / 2 + FIT_M)));
+    const j0 = Math.max(0, Math.floor(gz(o.z - o.sz / 2 - FIT_M))), j1 = Math.min(nz - 1, Math.ceil(gz(o.z + o.sz / 2 + FIT_M)));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const k = j * nx + i; if (H[k] == null) continue;
+      const ex = Math.abs(cx(i) - o.x) - o.sx / 2, ez = Math.abs(cz(j) - o.z) - o.sz / 2, dd = Math.max(ex, ez, 0);
+      if (dd > FIT_M || dd >= near[k]) continue;
+      // before the door: out from its side, across the door and a little either side
+      const fr = o.face[0] ? (cx(i) - o.x) * o.face[0] - o.sx / 2 : (cz(j) - o.z) * o.face[1] - o.sz / 2, lat = o.face[0] ? Math.abs(cz(j) - o.z) : Math.abs(cx(i) - o.x);
+      const apron = !o.noDoor && fr > -0.1 && lat < 1.9;
+      near[k] = dd; target[k] = (dd <= 0 || apron || H[k] > o.y + 0.02) ? o.y + 0.02 : NaN;
+    }
+  }
+  for (let k = 0; k < nx * nz; k++) if (!Number.isNaN(target[k])) H[k] = target[k];
+  // the plinth down to the lowest ground round the walls (the ground's cells there reach a cell further out); a wall
+  // whose ground stays well over the floor (a house set into a terrace, its back to the rise above) is banked: blind
+  for (const o of decor) {
+    if (!o.fitted || o.shape === 'skip') continue;
+    let lo = o.y;
+    const R = FIT_M + cell;
+    const i0 = Math.max(0, Math.floor(gx(o.x - o.sx / 2 - R))), i1 = Math.min(nx - 1, Math.ceil(gx(o.x + o.sx / 2 + R)));
+    const j0 = Math.max(0, Math.floor(gz(o.z - o.sz / 2 - R))), j1 = Math.min(nz - 1, Math.ceil(gz(o.z + o.sz / 2 + R)));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const ex = Math.abs(cx(i) - o.x) - o.sx / 2, ez = Math.abs(cz(j) - o.z) - o.sz / 2;
+      if (Math.max(ex, ez) > R) continue;
+      const v = H[j * nx + i]; lo = Math.min(lo, v == null ? CLOUD_Y - 0.6 : v);   // (over the cloud sea: down under the clouds)
+    }
+    o.bury = Math.min(10, Math.max(0.6, o.y - lo + 0.3));
+    // (every grid point whose cells reach a wall's foot: within a cell and a bit outside it, along its length)
+    const hi = { '1,0': -1e9, '-1,0': -1e9, '0,1': -1e9, '0,-1': -1e9 }, reach = cell + 0.3;
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const v = H[j * nx + i]; if (v == null) continue;
+      const dx = cx(i) - o.x, dz = cz(j) - o.z, ex = Math.abs(dx) - o.sx / 2, ez = Math.abs(dz) - o.sz / 2;
+      if (ex > 0 && ex <= reach && ez <= 0.6) { const k = Math.sign(dx) + ',0'; hi[k] = Math.max(hi[k], v); }
+      if (ez > 0 && ez <= reach && ex <= 0.6) { const k = '0,' + Math.sign(dz); hi[k] = Math.max(hi[k], v); }
+    }
+    o.banked = Object.entries(hi).filter(([, v]) => v > o.y + 0.4).map(([k]) => k.split(',').map(Number));
+  }
 }
 
 // A place built on decks (the Lift Dock, the original's ASCENCE: its ground is a slab at the cloud line under
@@ -917,7 +1015,7 @@ function planIsland(name, L, A, debug = false) {
     for (const o of houses) {
       if (rr() > doors) continue;
       const ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
-      const t = Math.abs(A.mid.x - o.x) > Math.abs(A.mid.z - o.z) ? [Math.sign(A.mid.x - o.x), 0] : [0, Math.sign(A.mid.z - o.z)];
+      const t = o.face || (Math.abs(A.mid.x - o.x) > Math.abs(A.mid.z - o.z) ? [Math.sign(A.mid.x - o.x), 0] : [0, Math.sign(A.mid.z - o.z)]);
       const dx = o.x + t[0] * (ex / 2), dz = o.z + t[1] * (ez / 2), fk = K(dx + t[0] * 1.0, dz + t[1] * 1.0);
       if (fk < 0 || !reach[fk]) continue;
       rect(dx + t[0] * 1.0, dz + t[1] * 1.0, t[0] ? 1.0 : 0.8, t[1] ? 1.0 : 0.8, (k) => { keep[k] = 1; });
@@ -1163,6 +1261,10 @@ function buildIsland(scene, physics, name, L, at) {
     const [sx, sz] = P.pt(0, 1.4); col({ type: 'box', x: sx, z: sz, hw: t[0] ? 1.5 : fw * 0.45, hd: t[0] ? fw * 0.45 : 1.5, top: o.y + 0.15 });
   };
   const G = S.gate;
+  // (WORLD-FIX: the original's walls, piers, decks, slabs and crates often meet or overlap at one height; drawn as
+  // boxes their faces shared planes and z-fought. Each is lifted 0–16 mm by its own fixed amount, a wall also a hair
+  // thinner, so no two share a plane; what they collide with is unchanged)
+  const jy = (o) => (((o.body * 7 + Math.round(o.x * 13 + o.z * 17 + o.y * 29)) % 8 + 8) % 8) * 0.003;
   const landFrac = (o) => { let n = 0, t = 0; for (const a of [-0.4, 0, 0.4]) for (const b of [-0.4, 0, 0.4]) { t++; if (raw(o.x + a * o.sx, o.z + b * o.sz) != null) n++; } return n / t; };
   for (const o of A.decor) {
     const y0 = o.y, top = o.y + o.sy, ex = Math.max(0.2, o.sx), ez = Math.max(0.2, o.sz);
@@ -1202,12 +1304,12 @@ function buildIsland(scene, physics, name, L, at) {
         break;
       }
       case 'pier': {   // a stone pier under a deck
-        B.add(bbox(ex * 0.8, o.sy, ez * 0.8, 0.06, 1.8), stoneM, o.x, y0 + o.sy / 2, o.z);
+        B.add(bbox(ex * 0.8, o.sy, ez * 0.8, 0.06, 1.8), stoneM, o.x, y0 + o.sy / 2 + jy(o), o.z);
         break;
       }
       case 'block': {   // a fallen block of the old wall
         const a = (o.beta / 4096) * Math.PI * 2;
-        B.add(bbox(ex, o.sy, ez, 0.08, 1.8), stoneM, o.x, y0 + o.sy / 2 - 0.08, o.z, 0.06, a, 0.04);
+        B.add(bbox(ex, o.sy, ez, 0.08, 1.8), stoneM, o.x, y0 + o.sy / 2 - 0.08 + jy(o), o.z, 0.06, a, 0.04);
         small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.45, hd: ez * 0.45, rot: a, top: y0 + o.sy - 0.1, noStand: o.sy > 0.5 });
         break;
       }
@@ -1218,7 +1320,7 @@ function buildIsland(scene, physics, name, L, at) {
         const roof = wallH + 0.22 - 0.46, hp = Math.min(3.1, roof - 0.7);
         for (const [z0, z1] of [[o.z - ez / 2, G.z0], [G.z1, o.z + ez / 2]]) {
           const dz = z1 - z0; if (dz < 0.4) continue;
-          EP.esmerBuilding(new EP.Place(B, o.x, y0, (z0 + z1) / 2, 0), { ...lk, w: ex, d: dz, h: wallH + 0.22, wallH, door: false, domed: false });
+          EP.esmerBuilding(new EP.Place(B, o.x, y0, (z0 + z1) / 2, 0), { ...lk, w: ex, d: dz, h: wallH + 0.22, wallH, door: false, domed: false, bury: o.bury, fit: { region: 'isle_' + name, name: `gatehouse half (${o.x.toFixed(1)}, ${((z0 + z1) / 2).toFixed(1)})`, ox, oz } });
           col({ type: 'box', x: o.x, z: (z0 + z1) / 2, hw: ex / 2 - 0.05, hd: dz / 2 - 0.02, top, noStand: true });
         }
         const arch = { x: 0, y: 0, w: +(pw - 0.2).toFixed(2), h: +hp.toFixed(2), horse: true };
@@ -1227,8 +1329,10 @@ function buildIsland(scene, physics, name, L, at) {
           P.add(panelGeo(pw + 0.5, roof, 0.28, [arch]), m, 0, 0, 0);
           P.add(frameGeo(arch, 0.22, 0.1), EP.EM.tiles(), 0, 0, 0.26);
         }
-        B.add(bbox(ex - 0.6, roof - hp + 0.3, pw + 0.3, 0.04, 2.2), m, o.x, y0 + hp - 0.3 + (roof - hp + 0.3) / 2, zc);
-        B.add(bbox(ex + 0.18, 0.18, pw + 0.5, 0.05, 1.8), stoneM, o.x, y0 + roof - 0.09, zc);
+        // (WORLD-FIX: the vault's top 2 cm under the halves' roofs and the slab over it 1.5 cm proud of them: all three
+        // shared one plane and z-fought)
+        B.add(bbox(ex - 0.6, roof - hp + 0.28, pw + 0.3, 0.04, 2.2), m, o.x, y0 + hp - 0.3 + (roof - hp + 0.28) / 2, zc);
+        B.add(bbox(ex + 0.18, 0.18, pw + 0.5, 0.05, 1.8), stoneM, o.x, y0 + roof - 0.075, zc);
         if (o.sy > 4.5) EP.domeStack(new EP.Place(B, o.x, y0, o.z, 0), { base: roof, h: o.sy, R: Math.min(ex, ez) * 0.34, wallM: m, domeM: lk.domeM });
         break;
       }
@@ -1244,9 +1348,12 @@ function buildIsland(scene, physics, name, L, at) {
         if (S.grand && Math.hypot(o.x - S.grand.x, o.z - S.grand.z) < 1) grandHall(o, wallH);
         // an Esmer building (props-esmer.js) on the same footprint and height, its door where it was: on the side
         // facing the island's middle
-        const toward = Math.abs(A.mid.x - o.x) > Math.abs(A.mid.z - o.z) ? [Math.sign(A.mid.x - o.x), 0] : [0, Math.sign(A.mid.z - o.z)];
+        const toward = o.face || (Math.abs(A.mid.x - o.x) > Math.abs(A.mid.z - o.z) ? [Math.sign(A.mid.x - o.x), 0] : [0, Math.sign(A.mid.z - o.z)]);
         const P = new EP.Place(B, o.x, y0, o.z, Math.atan2(toward[0], toward[1]));
-        EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, ...look(o) });
+        // (sides banked into a rise behind them get no windows; world direction → the building's own sides)
+        const sideOf = ([vx, vz]) => vx === toward[0] && vz === toward[1] ? 'front' : vx === -toward[0] && vz === -toward[1] ? 'back' : vx === toward[1] && vz === -toward[0] ? 'right' : 'left';
+        const blind = (o.banked || []).map(sideOf);
+        EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor ? { door: false } : {}), ...look(o), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
         col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
         break;
       }
@@ -1255,7 +1362,8 @@ function buildIsland(scene, physics, name, L, at) {
         const lk = look(o), H0 = o.sy * 0.78;
         B.add(cyl(rr * 0.85, rr, H0, 16, 2), lk.wall, o.x, y0 + H0 / 2, o.z);
         // a stone base, a corbelled cornice under the ribbed onion dome (props-esmer.js), brass bands
-        B.add(cyl(rr + 0.08, rr + 0.12, 0.5, 16, 1.8), stoneM, o.x, y0 + 0.05, o.z);
+        const tb = Math.max(0.5, (o.bury ?? 0.2) + 0.3);   // (WORLD-FIX: the base down to the lowest ground round it)
+        B.add(cyl(rr + 0.08, rr + 0.12, tb, 16, 1.8), stoneM, o.x, y0 + 0.3 - tb / 2, o.z);
         B.add(cached('isle-tcorn' + rr.toFixed(2), () => lathe([[rr * 0.85, 0], [rr * 0.85 + 0.18, 0.14], [rr * 0.85 + 0.22, 0.32], [0, 0.32]], 16, 1.8)), stoneM, o.x, y0 + H0 - 0.3, o.z);
         EP.domeStack(new EP.Place(B, o.x, y0, o.z, 0), { base: H0 + 0.02, h: o.sy, R: rr * 0.92, domeM: lk.domeM, drum: false });
         for (const f of [0.08, 0.5]) { const rf = rr - (rr * 0.15) * f; B.add(cached('isle-tband' + rf.toFixed(2), () => new THREE.TorusGeometry(rf + 0.03, 0.07, 4, 24).rotateX(Math.PI / 2)), brass, o.x, y0 + H0 * f, o.z); }
@@ -1271,16 +1379,17 @@ function buildIsland(scene, physics, name, L, at) {
         B.add(fillGeo(td, 0.03, 0.06), plankM, o.x + Math.sin(da) * (rr - 0.04), y0 + 0.3, o.z + Math.cos(da) * (rr - 0.04), 0, da);
         B.add(frameGeo(td, 0.18, 0.1), EP.EM.tiles(), o.x + Math.sin(da) * (rr - 0.02), y0 + 0.3, o.z + Math.cos(da) * (rr - 0.02), 0, da);
         col({ type: 'cyl', x: o.x, z: o.z, r: rr, top, noStand: true });
+        fitAdd({ region: 'isle_' + name, name: `tower (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, round: true, x: o.x + ox, z: o.z + oz, ry: da, oy: y0, w: (rr + 0.12) * 2, d: (rr + 0.12) * 2, base: 0.3 - tb, plinth: 0.3, floor: 0.3, steps: 0.45 });
         break;
       }
       case 'wall': {
-        B.add(bbox(ex, o.sy, ez, 0.04, 2.2), stoneM, o.x, y0 + o.sy / 2, o.z);
+        B.add(bbox(ex - jy(o) * 0.5, o.sy, ez - jy(o) * 0.5, 0.04, 2.2), stoneM, o.x, y0 + o.sy / 2 + jy(o), o.z);
         col({ type: 'box', x: o.x, z: o.z, hw: ex / 2, hd: ez / 2, top, noStand: o.sy > 1.2 });
         break;
       }
       case 'deck': case 'slab': {
         const t = Math.max(0.12, o.sy);
-        B.add(bbox(ex, t, ez, 0.04, 2), o.shape === 'deck' ? deckM : stoneM, o.x, top - t / 2, o.z);
+        B.add(bbox(ex, t, ez, 0.04, 2), o.shape === 'deck' ? deckM : stoneM, o.x, top - t / 2 + jy(o), o.z);
         // posts down to the ground (or into the clouds) under a deck that stands clear of it
         const g = tgy(o.x, o.z);
         if (A.floorAt && o.shape === 'deck') {   // (the Lift Dock: timber stilts every few metres, down into the clouds)
@@ -1311,7 +1420,7 @@ function buildIsland(scene, physics, name, L, at) {
       case 'tree': trees[o.body % 2].push(o); col({ type: 'cyl', x: o.x, z: o.z, r: 0.3, top, noStand: true }); break;
       case 'rock': rocks[o.body % 3].push(o); small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.4, hd: ez * 0.4, top: y0 + o.sy * 0.85, noStand: o.sy > 1.2 }); break;
       case 'crate': {
-        B.add(bbox(ex * 0.9, o.sy, ez * 0.9, 0.04, 1), plankM, o.x, y0 + o.sy / 2, o.z);
+        B.add(bbox(ex * 0.9 - jy(o), o.sy, ez * 0.9 - jy(o), 0.04, 1), plankM, o.x, y0 + o.sy / 2 + jy(o), o.z);
         if (Math.max(ex, ez) >= 0.5) small({ type: 'box', x: o.x, z: o.z, hw: ex * 0.45, hd: ez * 0.45, top, noStand: o.sy > 1.2 });
         break;
       }
@@ -1334,7 +1443,7 @@ function buildIsland(scene, physics, name, L, at) {
         // posts and two rails along its length
         const along = ex > ez, len = along ? ex : ez, n = Math.max(2, Math.round(len / 1.2) + 1), h = Math.min(o.sy, 1.3);
         for (let q = 0; q < n; q++) { const u = -len / 2 + (q / (n - 1)) * len; B.add(cyl(0.06, 0.07, h, 6), plankM, o.x + (along ? u : 0), y0 + h / 2, o.z + (along ? 0 : u)); }
-        for (const ry of [h * 0.45, h * 0.9]) B.add(bbox(along ? len : 0.07, 0.08, along ? 0.07 : len, 0.02), plankM, o.x, y0 + ry, o.z);
+        for (const ry of [h * 0.45, h * 0.9]) B.add(bbox(along ? len : 0.07, 0.08, along ? 0.07 : len, 0.02), plankM, o.x + (along ? 0 : jy(o)), y0 + ry + jy(o), o.z + (along ? jy(o) : 0));   // (WORLD-FIX: overlapping fences' rails off each other's planes)
         small({ type: 'box', x: o.x, z: o.z, hw: Math.max(0.12, ex / 2), hd: Math.max(0.12, ez / 2), top: y0 + h, noStand: true });
         break;
       }
@@ -1399,7 +1508,8 @@ function buildIsland(scene, physics, name, L, at) {
         for (let k = 1; k <= s.n; k++) {
           const t0 = (k - 1) / s.n, t1 = k / s.n, y = s.y0 + (s.y1 - s.y0) * t1, mx = s.ax + (s.bx - s.ax) * (t0 + t1) / 2, mz = s.az + (s.bz - s.az) * (t0 + t1) / 2;
           const dl = L2 / s.n + 0.24, hgt = y - s.y0 + 0.5, hw = along === 'x' ? dl / 2 : s.w / 2, hd = along === 'x' ? s.w / 2 : dl / 2;
-          B.add(bbox(hw * 2, hgt, hd * 2, 0.03, 1.4), plankM, mx, y - hgt / 2, mz);
+          const nw = (k % 2) * 0.012;   // (WORLD-FIX: the overlapping steps' sides alternate 6 mm in: they shared planes and z-fought)
+          B.add(bbox(hw * 2 - (along === 'x' ? 0 : nw), hgt, hd * 2 - (along === 'x' ? nw : 0), 0.03, 1.4), plankM, mx, y - hgt / 2, mz);
           col({ type: 'box', x: mx, z: mz, hw, hd, top: y, bottom: s.y0 - 0.6, stair: true });   // (overlapping: no seam between steps; the height under the feet decides)
         }
         for (const sd of [-1, 1]) {
@@ -1441,17 +1551,19 @@ function buildIsland(scene, physics, name, L, at) {
       }
     }
     const quayM = stoneM, kerbM = stoneM, lineM = EP.EM.vc();
+    let qk = 0;   // (WORLD-FIX: each run's wall and kerb a few mm off its neighbours': where two meet at a corner their tops z-fought)
     for (const q of runs.values()) {
+      const qy = (qk++ % 3) * 0.006;
       q.at.sort((a, b) => a - b);
       const a0 = q.at[0] - cell / 2, a1 = q.at[q.at.length - 1] + cell / 2, len = a1 - a0, mid = (a0 + a1) / 2, top = Math.min(...q.hs);
       const n = q.di || q.dj, th = cell + 0.25, hgt = top - (HB.water - 0.9), along = !!q.dj;   // (along x when the edge faces ±z)
       const c = q.line + n * (th / 2 - 0.12);
       const [bx, bz] = along ? [mid, c] : [c, mid];
-      B.add(bbox(along ? len : th, hgt, along ? th : len, 0.05, 1.8), quayM, bx, top - hgt / 2 - 0.03, bz);
+      B.add(bbox(along ? len : th, hgt, along ? th : len, 0.05, 1.8), quayM, bx, top - hgt / 2 - 0.03 + qy, bz);
       // a band of darker stone at the waterline, the kerb on top, mooring rings on the face
       B.add(cached(`isle-wline${len.toFixed(2)}|${along}`, () => tint(bbox(along ? len + 0.02 : th + 0.04, 0.35, along ? th + 0.04 : len + 0.02, 0.03, 1.8), '#8a7c98')), lineM, bx, HB.water + 0.12, bz);
       const kc = q.line + n * 0.2;
-      B.add(bbox(along ? len : 0.42, 0.34, along ? 0.42 : len, 0.06, 1.8), kerbM, along ? mid : kc, top + 0.14, along ? kc : mid);
+      B.add(bbox(along ? len : 0.42, 0.34, along ? 0.42 : len, 0.06, 1.8), kerbM, along ? mid : kc, top + 0.14 + qy, along ? kc : mid);
       const face = q.line + n * (th - 0.12);
       for (let u = a0 + 2.0; u < a1 - 1.0; u += 3.4) B.add(cached('isle-mring', () => new THREE.TorusGeometry(0.16, 0.035, 5, 12)), brass, along ? u : face + n * 0.02, top - 0.55, along ? face + n * 0.02 : u, 0, along ? 0 : Math.PI / 2);
     }

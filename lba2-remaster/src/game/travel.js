@@ -137,7 +137,7 @@ export function buildTravel(game) {
     // the deck on stilts into the clouds, the footbridge from the shore
     B.add(bbox(p.x1 - p.x0, 0.45, p.z1 - p.z0, 0.06, 2), deck, (p.x0 + p.x1) / 2, Y - 0.225, (p.z0 + p.z1) / 2);
     wbox(p.x0, p.x1, p.z0, p.z1, Y, { bottom: Y - 0.6 });
-    B.add(bbox(br.hw * 2, 0.35, br.z1 - br.z0 + 0.4, 0.05, 2), deck, br.x, Y - 0.175, (br.z0 + br.z1) / 2);
+    B.add(bbox(br.hw * 2, 0.35, br.z1 - br.z0 + 0.4, 0.05, 2), deck, br.x, Y - 0.165, (br.z0 + br.z1) / 2);   // (WORLD-FIX: 1 cm proud of the turf and the deck, whose planes it shared)
     wbox(br.x - br.hw, br.x + br.hw, br.z0, br.z1 + 0.3, Y, { bottom: Y - 0.6 });
     for (let x = p.x0 + 1; x <= p.x1 - 1; x += 6) for (let z = p.z0 + 1; z <= p.z1 - 1; z += 5.6) B.add(cyl(0.25, 0.32, 14, 8), stone, x, Y - 7.4, z);
     // rails all round (open to the bridge), along the bridge

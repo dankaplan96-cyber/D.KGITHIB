@@ -14,6 +14,7 @@ import { rockGeometry, treeGeometry } from './vegetation.js';
 import { buildHouse } from './architecture.js';
 import { mergeStatic } from '../engine/merge.js';
 import { occOf } from '../engine/occlude.js';
+import { fitAdd } from './worldfit.js';
 import { t } from './i18n.js';
 import { PROPS } from './citadel-layout.js';
 import { streetDist } from './town.js';
@@ -518,11 +519,13 @@ function buildHarbour(W0, root, r) {
   // --- Doran's harbour shed: rubble walls, plank roof, a door that stays shut
   {
     const sx = -67.2, sz = 4.4, ry = Math.PI;
-    const shed = buildHouse({ w: 4.8, d: 3.6, h: 2.5, pitch: 0.5, overhang: 0.3, wall: 'rubble', tint: '#e8e4e8', roof: 'planks', door: { x: 1.1, arch: false }, doorColor: '#7a5a3a', shutters: '#2a8a7a', chimney: false, seed: 41,
+    // (WORLD-FIX: h 2.65, was 2.5: the door's surround ran into the eave beam)
+    const shed = buildHouse({ w: 4.8, d: 3.6, h: 2.65, pitch: 0.5, overhang: 0.3, wall: 'rubble', tint: '#e8e4e8', roof: 'planks', door: { x: 1.1, arch: false }, doorColor: '#7a5a3a', shutters: '#2a8a7a', chimney: false, seed: 41,
       windows: [{ side: 'front', x: -1.0, y: 1.2, w: 0.7, h: 0.75 }, { side: 'right', x: 0, y: 1.25, w: 0.6, h: 0.6 }] });
     const y = H(sx, sz);
     shed.group.position.set(sx, y - 0.05, sz); shed.group.rotation.y = ry;
     g.add(shed.group);
+    fitAdd({ region: 'citadel', name: "Doran's harbour shed", x: sx + d.x, z: sz + d.z, ry, oy: y - 0.05, ...shed.fit });
     for (const c of shed.colliders) physics.add({ type: 'box', x: sx, z: sz, hw: c.hw, hd: c.hd, rot: ry, top: y + 4 });
     W.harbourShed = { x: sx, z: sz, door: { x: sx - 1.1, z: sz - 3.6 / 2 - 0.75 } };
     // fishing tools against the wall: oars, a net on a rack, lobster pots
@@ -863,7 +866,7 @@ function buildFerry(W, parent, x, z) {
   {
     const s = new THREE.Shape();
     const n = 24, pts = [];
-    for (let i = 0; i <= n; i++) { const u = i / n; pts.push([L * (u - 0.5), Math.max(0.02, hull.hb(u) - 0.12)]); }
+    for (let i = 0; i <= n; i++) { const u = i / n; pts.push([L * (u - 0.5) * 0.996, Math.max(0.02, hull.hb(u) - 0.12)]); }   // (WORLD-FIX: its ends a hair inside the transom, whose plane they shared)
     pts.forEach(([a, b], i) => (i ? s.lineTo(a, b) : s.moveTo(a, b)));
     for (let i = n; i >= 0; i--) s.lineTo(pts[i][0], -pts[i][1]);
     const dg = extrude(s, 0.12, TILE.deck); dg.rotateX(Math.PI / 2);
@@ -1231,7 +1234,8 @@ function buildFortress(W, root, g) {
   for (const sd of sides) {
     const grp = new THREE.Group(); root.add(grp);
     const B = new Batch(grp);
-    B.add(fortWallGeo(+sd.L.toFixed(2)), stoneM, sd.x, g, sd.z, 0, sd.ry, 0);
+    // (WORLD-FIX: the walls running east–west 12 mm higher: where two walls cross at a corner their walk-tops z-fought)
+    B.add(fortWallGeo(+sd.L.toFixed(2)), stoneM, sd.x, g + (Math.abs(Math.sin(sd.ry)) > 0.5 ? 0 : 0.012), sd.z, 0, sd.ry, 0);
     const n = Math.floor(sd.L / 1.75), list = [];
     const at = frame(sd.x, sd.z, sd.ry);
     for (let i = 0; i < n; i++) {
@@ -1296,7 +1300,7 @@ function buildFortress(W, root, g) {
       B.add(bbox(0.16, 1.0, 0.12, 0.02, 1), slitM, GATE.x0 - 0.01, g + 3.2, GATE.z + sz * (hw + 1.3));
     }
     // corbelled parapet with merlons on three sides
-    B.add(bbox(D + 0.5, 0.3, Wd + 0.5, 0.05, 1), stoneM, (GATE.x0 + GATE.x1) / 2, g + top - 0.15, GATE.z);
+    B.add(bbox(D + 0.5, 0.3, Wd + 0.5, 0.05, 1), stoneM, (GATE.x0 + GATE.x1) / 2, g + top - 0.11, GATE.z);   // (WORLD-FIX: 4 cm proud of the body's top, which lay in the same plane and z-fought)
     const list = [];
     for (let i = 0; i < 5; i++) list.push({ x: GATE.x0 + 0.12, y: g + top, z: GATE.z - GATE.half + 0.6 + i * ((Wd - 1.2) / 4), ry: Math.PI / 2 });
     for (const sz of [-1, 1]) for (let i = 1; i < 3; i++) list.push({ x: GATE.x0 - 0.05 + i * (D / 2.6), y: g + top, z: GATE.z + sz * (GATE.half - 0.18), ry: 0 });
@@ -1515,6 +1519,17 @@ function techBuilding(W, root, x, z, ry, { w, d, h, wins = [], picto = null, roo
   }
   B.build();
   const bc = W.physics.add({ type: 'box', x, z, hw: w / 2 + 0.2, hd: d / 2 + 0.2, rot: ry, top: g + base + h + 1.0 });
+  {   // (WORLD-FIX, src/game/worldfit.js: in the walls' own coordinates, y up from the panels' foot)
+    const sh = W._shift || { x: 0, z: 0 }, ops = [];
+    for (const [side, list] of Object.entries(holes)) for (const o of list) {
+      if (o === door) {
+        ops.push({ side, kind: 'door', x0: o.x - 0.76, x1: o.x + 0.76, y0: 0, y1: 2.46 }, { side, kind: 'sign', x0: o.x - 0.95, x1: o.x + 0.95, y0: 2.6, y1: 3.1 }, { side, kind: 'step', x0: o.x - 0.85, x1: o.x + 0.85, y0: -base, y1: -base + 0.2 });
+        if (picto) ops.push({ side, kind: 'sign', x0: o.x + 0.77, x1: o.x + 1.27, y0: 1.3, y1: 1.8 });
+      } else ops.push({ side, kind: 'window', x0: o.x - o.w / 2 - (o.round ? 0.11 : 0.12), x1: o.x + o.w / 2 + (o.round ? 0.11 : 0.12), y0: o.y - (o.round ? 0.11 : 0.12), y1: o.y + o.h + (o.round ? 0.11 : 0.12) });
+    }
+    fitAdd({ region: 'citadel', name: 'project building ' + key, x: x + sh.x, z: z + sh.z, ry, oy: g + base, w, d, base: -base - 0.02, plinth: -0.02, floor: 0, steps: base + 0.25,
+      sides: { front: w / 2 - 0.23, back: w / 2 - 0.23, left: d / 2 - 0.23, right: d / 2 - 0.23 }, top: { front: h - 0.14, back: h - 0.14, left: h - 0.14, right: h - 0.14 }, openings: ops });
+  }
   const f = frame(x, z, ry);
   const [dx, dz] = f(0, d / 2 + 1.0);
   // walls and the barrel roof (its crown along local z, falling to the eaves across x; the roof kit is too slight)
@@ -1716,10 +1731,10 @@ function buildStation(W0, root, r) {
   }
 
   // --- office and control buildings, doors facing the yard (north)
-  const office = techBuilding(W, grp, 43.2, 45.5, Math.PI, { w: 6.2, d: 4.4, h: 3.0, picto: pictoTex('office'), roofKit: 'vent',
+  const office = techBuilding(W, grp, 43.2, 45.5, Math.PI, { key: 'office', w: 6.2, d: 4.4, h: 3.0, picto: pictoTex('office'), roofKit: 'vent',
     wins: [{ side: 'front', x: -1.9, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'front', x: 1.9, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'left', x: 0, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'right', x: 0, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'back', x: -1.5, y: 1.0, w: 0.85, h: 0.85, round: true }, { side: 'back', x: 1.5, y: 1.0, w: 0.85, h: 0.85, round: true }] });
-  const control = techBuilding(W, grp, 50.3, 45.6, Math.PI, { w: 5.0, d: 4.2, h: 3.0, picto: pictoTex('control'), roofKit: 'dish',
-    wins: [{ side: 'front', x: -1.6, y: 1.0, w: 0.75, h: 1.0, win: true }, { side: 'front', x: 1.75, y: 1.0, w: 0.75, h: 1.0, win: true }, { side: 'right', x: 0, y: 1.0, w: 0.8, h: 0.8, round: true }, { side: 'left', x: 0, y: 1.0, w: 0.8, h: 0.8, round: true }] });
+  const control = techBuilding(W, grp, 50.3, 45.6, Math.PI, { key: 'control', w: 5.0, d: 4.2, h: 3.0, picto: pictoTex('control'), roofKit: 'dish',
+    wins: [{ side: 'front', x: -1.6, y: 1.0, w: 0.75, h: 1.0, win: true }, { side: 'front', x: 1.8, y: 1.0, w: 0.6, h: 1.0, win: true }, /* (WORLD-FIX: 1.75 × 0.75 put the frame under the door's sign) */ { side: 'right', x: 0, y: 1.0, w: 0.8, h: 0.8, round: true }, { side: 'left', x: 0, y: 1.0, w: 0.8, h: 0.8, round: true }] });
 
   // --- transit beam pad: stepped round platform, hazard ring, emitter, the horned arch, the light column
   const BP = { x: 56.4, z: 40.4 };
@@ -1765,7 +1780,8 @@ function buildStation(W0, root, r) {
   techCrates(W, grp, [[57.8, 34.6, 2, 0.95], [58.4, 36.0, 1, 0.95]], r);
   barrels(W, grp, [[36.9, 41.0], [37.6, 41.4], [37.1, 40.1, false]], r);
   // walkway plates from the gate passage to the pad
-  for (let x = 38.0; x < 53.4; x += 1.6) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);
+  // (WORLD-FIX: every other plate 5 mm higher: where the walk turns, two plates overlap and their tops z-fought)
+  for (let x = 38.0, i = 0; x < 53.4; x += 1.6, i++) B.add(boxUV(bbox(1.55, 0.05, 2.2, 0.02, 1), TILE.deck), deck, x + 0.8, g + 0.025 + (i % 2) * 0.005, 36.0 + (x > 47 ? (x - 47) * 0.62 : 0), 0, x > 47 ? -0.55 : 0, 0);
   B.build();
 
   // --- machinery animation and steam (setActive), the beam (setBeam)
