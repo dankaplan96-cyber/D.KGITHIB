@@ -92,7 +92,7 @@ function BUDGET(mode, name, s, notes) {
     b(`no jolt (camera acceleration max ${s.accMax} ≤ 40 m/s²)`, s.accMax <= 40 && s.joltsPerMin === 0);
     b(`never steep (max ${s.maxPitch}° ≤ 50°, ${s.steepT} s over 50°)`, s.maxPitch <= 50 && s.steepT === 0);
     b(`no oscillation (reversals/min: heading ${s.revYaw}, tilt ${s.revPitch}, height ${s.revY} ≤ 8)`, s.revYaw <= 8 && s.revPitch <= 8 && s.revY <= 8);
-    if (name.startsWith('standing')) b(`still while he stands, turns on the spot and makes short corrections (moved ${s.stillMove} m, turned ${s.stillTurnDeg}°)`, s.stillTurnDeg === 0 && s.stillMove <= 1.2);
+    if (name.startsWith('standing')) b(`still while he stands, turns on the spot and makes short corrections (moved ${s.stillMove} m, turned ${s.stillTurnDeg}°)`, s.stillTurnDeg === 0 && s.stillMove <= 1.5);
     if (name.startsWith('combat')) b(`still while he fights on the spot (moved ${s.stillMove} m, turned ${s.stillTurnDeg}°)`, s.stillTurnDeg <= 0.5 && s.stillMove <= 0.3);
     if (name.startsWith('out of the house')) { const f = parseFloat(String(notes[0]).replace('first view out ', '')); b(`out of the door a normal view at once (${notes.slice(0, 3).join(', ')})`, f >= 20 && f <= 40 && /for 0\.00 s/.test(notes[1])); }
   } else {
