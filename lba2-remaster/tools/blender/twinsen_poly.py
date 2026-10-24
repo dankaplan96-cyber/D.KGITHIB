@@ -83,6 +83,19 @@ def ring(y, hw, zf, zb, n, p=0.75, x0=0.0):
     return pts
 
 
+def oring(y, hw, zf, zb, n, p=0.9):
+    # like ring(), but round its own centre (zf + zb) / 2: ring() puts the sides at z = 0, which for a section lying
+    # wholly in front of the body's axis (the neck, the collar) folds the back point forward of the sides (a crease
+    # down the nape, a notched collar edge)
+    zc = (zf + zb) / 2
+    pts = []
+    for k in range(n):
+        t = 2 * math.pi * k / n
+        s, c = math.sin(t), math.cos(t)
+        pts.append((hw * math.copysign(abs(s) ** p, s), y, zc + (zf - zc) * math.copysign(abs(c) ** p, c)))
+    return pts
+
+
 def loft(part, rings, cap_bottom=False, cap_top=False):
     n = len(rings[0])
     verts = [p for r in rings for p in r]
@@ -205,6 +218,17 @@ def w_cape(p):
 cape = Part('cape', 'tunic', w_cape, angle=55)
 hem = lambda t: 0.448 - 0.04 * abs(math.sin(t)) ** 1.6   # the hem rises over the belt in front and behind
 N = 24
+# NECK-TW: the cape's top. It was flat (0.765 → 0.772 H while narrowing from ±0.052 to ±0.03) and, being ring()s,
+# notched at the back, so the neck stuck out of it like a cut pipe. Now the shoulders slope up into a soft rolled
+# collar round the neck, as the original's cape rises onto its neck (measured: ±0.138 at 0.744, ±0.107 at 0.768,
+# ±0.067 at 0.792, ±0.035 at 0.804 round a ±0.027 neck), the roll standing a little off it with a dark inside.
+CAPE_TOP = [
+    oring(0.754, 0.094, 0.093, -0.012, N, 0.85),
+    oring(0.765, 0.064, 0.091, 0.002, N, 0.95),
+    oring(0.7735, 0.0475, 0.094, 0.006, N, 1.0),   # the roll's outer face, standing out a little
+    oring(0.7805, 0.042, 0.0915, 0.0105, N, 1.0),  # its rounded top
+    oring(0.7785, 0.0365, 0.0875, 0.0145, N, 1.0),  # its inner edge (the dark inside goes down from here)
+]
 # the cloth has thickness: an inner lip turns up under the cape's edge (darker, in its own shadow)
 lip = Part('capeLip', 'inner', w_cape, angle=70)
 loft(lip, [ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62)])
@@ -215,10 +239,12 @@ loft(cape, [
     ring(0.62, 0.197, 0.138, -0.066, N, 0.66),
     ring(0.70, 0.163, 0.118, -0.046, N, 0.72),
     ring(0.74, 0.122, 0.096, -0.028, N, 0.8),
-    ring(0.765, 0.052, 0.082, 0.012, N, 0.9),
-    ring(0.772, 0.03, 0.074, 0.026, N, 1.0),
-])
+] + CAPE_TOP)
 PARTS.append(cape)
+# the neckline's inside: from the collar's inner edge down into the cape, dark (the opening seen from above)
+neckIn = Part('neckIn', 'inner', lambda p: {'torso': 1.0}, angle=70)
+loft(neckIn, [oring(0.7785, 0.0365, 0.0875, 0.0145, N, 1.0), oring(0.762, 0.034, 0.085, 0.016, N, 1.0)])
+PARTS.append(neckIn)
 
 belt = Part('belt', 'belt', lambda p: {'torso': 1.0}, angle=50)
 loft(belt, [ring(0.405, 0.104, 0.121, -0.071, N, 0.75), ring(0.47, 0.1, 0.119, -0.069, N, 0.75)])  # (inside the cape)
@@ -298,8 +324,23 @@ for sx in (1, -1):
     sphere(hand, (sx * 0.19, 0.378, 0.02), 0.036, 10, 7)
     PARTS.append(hand)
 
-neck = Part('neck', 'skin', lambda p: {'neck': 1 - smooth(0.79, 0.83, p[1]), 'head': smooth(0.79, 0.83, p[1])}, angle=60)
-loft(neck, [ring(0.735, 0.031, 0.08, 0.02, 12, 0.9), ring(0.785, 0.027, 0.078, 0.022, 12, 0.9), ring(0.83, 0.028, 0.082, 0.02, 12, 0.9)])
+# NECK-TW: LBA2's long thin neck (±0.027 H), but a neck and not a pipe: round sections (the old ring()s creased the
+# nape and read as a square stick), a little wider at the base where it leaves the collar, slimmest just above it, and
+# a nape that widens and leans back into the skull (from behind the head no longer sits on the neck like a ball on a
+# stick, and no background shows between them). The base is closed inside the cape and the top runs inside the head.
+# The head's turn spreads over the neck's length (0.785 → 0.855 H, was 0.79 → 0.83), so a look aside twists it
+# instead of shearing it at the jaw.
+NECK = [   # y, half-width, front z, back z (fractions of H)
+    (0.735, 0.044, 0.086, 0.004),
+    (0.762, 0.036, 0.083, 0.013),
+    (0.786, 0.0315, 0.081, 0.019),
+    (0.812, 0.031, 0.081, 0.019),
+    (0.832, 0.036, 0.079, 0.010),
+    (0.850, 0.046, 0.072, 0.002),
+    (0.868, 0.052, 0.062, -0.010),
+]
+neck = Part('neck', 'skin', lambda p: {'neck': 1 - smooth(0.785, 0.855, p[1]), 'head': smooth(0.785, 0.855, p[1])}, angle=70)
+loft(neck, [oring(y, hw, zf, zb, 16, 0.9) for y, hw, zf, zb in NECK], cap_bottom=True)
 PARTS.append(neck)
 
 # the head: horizontal sections of the original (half outlines from the front centre round the side to the back

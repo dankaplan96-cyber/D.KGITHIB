@@ -892,3 +892,105 @@ was fixed and committed on its own, with before/after captures in docs/lba3-prod
   the same bones; checked with the pack). "Both heads read bald from behind" (OPEN-3 #28) is LBA2's own design (no hair
   on the skull) and stays.
 
+## 18. Twinsen's neck and Zoé in the opening (CHAR-2)
+
+Two of the user's items from build 111 (photos in docs/lba3-production/reviews/USER-111/), each fixed, captured before and
+after, and committed on its own. Evidence and capture scripts: docs/lba3-production/reviews/CHAR-2/.
+
+### NECK-TW: Twinsen's neck
+
+The user: from behind the neck reads as a thin cylinder "cut off". The cape top is flat, the neck sticks out of it, and
+there is a gap between the dark crown knot/tuft and the cape. LBA2's Twinsen does have a long thin neck. Measured on
+body 1 (numbers only): a ±0.027 H neck from 0.78 to 0.84 H. The cape rises onto it: ±0.107 H at 0.768, ±0.067 at 0.792
+and ±0.035 at 0.804.
+
+- **Cause.** The neck and the cape's top three rings were built with `ring()`, which puts a section's sides at z = 0.
+  For a section lying wholly in front of the body's axis (the neck: front +0.08, back +0.02), the back point therefore
+  sat forward of the sides. This gave a crease down the nape, and a notched, flat cape top (0.765 → 0.772 H while it
+  narrowed from ±0.052 to ±0.03) round a 12-sided stick. From behind, the head sat on it like a ball on a stick, with
+  background between them.
+- **Fix** (`twinsen_poly.py`):
+  - `oring()` makes round sections about their own centre.
+  - The neck keeps LBA2's thinness (±0.031 H at its slimmest), with a slightly wider base and a closed bottom.
+  - The nape widens and leans back into the skull, so no background shows between the head and the neck.
+  - The cape's shoulders slope up into a soft rolled collar (`CAPE_TOP`). Its top is at 0.78 H, near the old cape
+    top, so the neck stays long in front. The collar has a dark inside (`neckIn`).
+  - The head's turn now spreads over the neck's length (0.785 → 0.855 H, was 0.79 → 0.83), so a look aside twists
+    the neck instead of shearing it at the jaw.
+- **Kept:** the one-shell cape, the medallion, the belt, the colours and the silhouette (the body sheets match apart
+  from the collar).
+- **Counts:** 2372 → 2724 triangles, one material, 10 colours.
+- **Not changed:** the skeleton, bone names, bind transforms and sockets (checked with the hop-pack).
+- **Checked:** front, ¾, side, back, a high ¾-back view and the play camera from behind. Idle, talk, walk, turn,
+  shrug, nod (head x 0.6), look up (−0.42) and look aside (head y 0.85 + torso 0.25). The whole figure in idle, run,
+  throw, windup and shrug. The opening at 32, 49.4, 52.1 (over his shoulder: the user's photo angle) and 53.45. The
+  play camera in the house (dialogue, walking toward and away) and outdoors (idle, walk, run, walk away).
+
+### ZOE-OPEN: Zoé in the opening
+
+The user: "Zoé looks terrible in the video": angular face planes, a triangle earring, a long thin stick arm and a flat
+profile. BUILD109_REVIEW §4 agrees: her profile, facial planes, forearms and simplified hands look angular and
+under-articulated.
+
+- **Causes:**
+  - The head was lofted from the measured cuts of body 26. Every cut is a wedge pointing forward, so one ridge ran from
+    the chin over the "nose" to the forehead, with hard planes either side and no brow, nose or chin of its own.
+  - The lips were the measured crescent, ±0.037 H wide and down to 0.860: a slash across the whole jaw.
+  - The eyes were dark slits under brown lids, which read as closed.
+  - The earrings were triangle frames.
+  - The forearm ran on as a 10-sided rod into a round flattened paddle.
+- **Fix** (`zoe_poly.py`):
+  - **The head** (`ZOE_HEAD_DESIGN`, `head_design()`) is built from designed sections at the measured size and place:
+    the same widths, the long skull carried back, the crown and the bun's seat. It has a broad, gently curved face
+    front, a brow, cheekbones, and a jaw narrowing to a small rounded chin. The temples are a touch fuller than the
+    cheeks, so the side is not one flat board in the kitchen light.
+  - **The nose** (`NOSE_ROWS`) is its own small loft. It is rounded and pointed, its tip 0.014 H off the face.
+  - **The mouth** (`LIPS2_*`) is smaller, with an upper and a lower lip and a dark line between them. The corners turn
+    up (her smile).
+  - **The eyes** (`EYE2`) are white almonds with the outer corner raised (her slant), a teal iris and a dark pupil, in
+    the same blink group as before. Above each is a lid line with a small flick at the outer corner, and a thin brow.
+  - **The earrings** (`EAR2`) are blue teardrop hoops.
+  - **The arms** have 12 sides in 11 sections. The elbow is a little deeper than wide, the forearm swells just below
+    it, and the wrist is flatter (wider thumb to little finger than it is thick).
+  - **The hands** (`build_hand`) have a palm a little wider than the wrist and the four fingers as one mitten curling
+    toward the palm (to 56° at the tip). A thumb of its own sits on the front side at rest and lies along the hand,
+    its tip turned in. All of it is on the hand bone, as before.
+- **Kept:**
+  - Her identity: a narrow face carried forward, a pointed nose, red smiling lips, slanted eyes, the blue necklace,
+    the golden bun on the head bone (CHAR-OPEN #11), and the red halter outfit.
+  - SRC-2's slim, no-longer-pregnant figure.
+  - The skeleton, the bones each part is weighted to, armSpread 0.08, and opening.js (no pose had to change).
+- **Counts:**
+  - 4646 → 5382 triangles (+15.8 %; the target was within about +20 %), one material.
+  - Skinned colours 6 → 7 (the mouth line), and three eye colours (white, iris, pupil).
+- **Rollback:** `ZOE_HEAD_LBA2=1` builds the measured head and SRC-1's face features (the new arms and hands stay).
+  The measured tables stay in the script.
+- **Checked:**
+  - The head in front, ¾, both sides, back and the game camera, in idle, talk and look aside.
+  - Face close-ups.
+  - The hand close-up in idle, talk, hands, reach and point.
+  - Shoulder and elbow deformation in grey: idle, talk, hands, reach, shrug, turn, windup, throw and pick-up. It is
+    unchanged from before (the same weights), with no tears. The small notch on the shoulder's top in the throw is as
+    before.
+  - The opening at 41, 46, 52.1, 58.6 (her profile at the tap) and 61 (her hand in the stream).
+  - Zoé as the player from the play camera, in the house and outdoors.
+
+### For the animator (handoff; no contract was changed)
+
+- **Zoé's eyes.** Each of her two eye groups (json `eyes`, bone `head`) now holds the white, the iris and the pupil.
+  rig.js's blink squashes the group on y about its pivot (the eye's centre on the face), as before.
+  - A gaze would need the iris and pupil in groups of their own. That would be a contract change: four eye entries
+    per character instead of two, with the blink squashing all four.
+  - This is a proposal only. Nothing reads gaze today.
+- **Mouths.** No poly face has mouth poses. The lips and the mouth line are part of the skinned head mesh, and nothing
+  opens or shapes them.
+  - A simple talk motion would need the mouth exported as a group of its own (like the eyes, pivot at the mouth's
+    centre), which rig.js could scale or offset while a line plays. That is generic talking, not lip-sync.
+  - Doing it means a change to the json, polyCharacter and rig.js, to be agreed before anyone edits them.
+- **Zoé's hands.** The new hand reaches about 12 cm past the hand bone (the old one about 7.5 cm). The fingers curl
+  toward the palm, and the thumb is on the front at rest, so it points up in a forward reach.
+  - The opening's tap (58.6) and stream (61.0) poses are unchanged and read: the hand meets the handle area, and the
+    open hand is under the stream.
+  - A tighter grip on the handle would need the hand bone turned. rig.js does not rotate the hand bones today.
+- **Twinsen's neck.** The head's turn now blends over 0.785 → 0.855 H. At lookAt's extreme (head y ±0.82 with the
+  torso's share) the neck twists visibly but holds. Nothing in the curves needs to change.
