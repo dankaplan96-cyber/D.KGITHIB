@@ -113,7 +113,8 @@ const box = document.body;
 ROWS.forEach((rn, ri) => COLS.forEach((cn, ci) => {
   const g = rigs[ri], hp = headPos(g);
   const ko = g.anim === 'ko', hw = new THREE.Vector3(); g.j.hips.getWorldPosition(hw);
-  const tgt = ko ? new THREE.Vector3(hw.x, 0.25, hw.z) : BODY ? new THREE.Vector3(g.root.position.x, 1.05, 0) : new THREE.Vector3(hp.x, hp.y + 0.12 + +(q.get('ty') || 0), hp.z);
+  const AT = q.get('at'), atJ = AT && (AT === 'handR' ? g.j.armR.hand : AT === 'handL' ? g.j.armL.hand : AT === 'elR' ? g.j.armR.el : null);
+  const tgt = atJ ? atJ.getWorldPosition(new THREE.Vector3()) : ko ? new THREE.Vector3(hw.x, 0.25, hw.z) : BODY ? new THREE.Vector3(g.root.position.x, 1.05, 0) : new THREE.Vector3(hp.x, hp.y + 0.12 + +(q.get('ty') || 0), hp.z);   // (&at=handR|handL|elR: framed on that joint)
   const dist = +(q.get('dist') || (BODY ? 5.2 : 1.25));
   cam.fov = 30; cam.clearViewOffset();
   const yaw = { front: 0, 34: 0.62, side: Math.PI / 2, back: Math.PI, '34back': Math.PI - 0.62, sideR: -Math.PI / 2, high34back: Math.PI - 0.62 }[cn];
