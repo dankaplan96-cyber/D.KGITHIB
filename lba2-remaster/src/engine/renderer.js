@@ -10,6 +10,23 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { updateShownWorld } from './drawcull.js';
 
+// RENDER-INV: lamps cost nothing where they don't reach. three evaluates the whole lighting model (RE_Direct: the
+// standard material's GGX specular + diffuse) for every point light on every lit pixel, also where the lamp's light
+// is exactly zero: beyond its range (three's distance falloff is 0 there) and for the light pool's unused slots
+// (intensity 0). three already computes `directLight.visible` (its colour is not zero); the model now runs only for
+// a visible lamp. A zero colour added exactly nothing, so every pixel is the same; the GPU skips the work for most of
+// the screen outdoors. (Toon materials, whose gradient map is sampled in RE_Direct, keep the plain loop; the game has
+// none.) Must run before any shader is compiled: this module is imported before the scene is built.
+{
+  const C = THREE.ShaderChunk, src = C.lights_fragment_begin;
+  const call = '\t\tRE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );';
+  const gated = '\t\t#ifndef TOON\n\t\tif ( directLight.visible )\n\t\t#endif\n' + call;
+  const pt = src.indexOf('getPointLightInfo( pointLight'), sp = src.indexOf('getSpotLightInfo( spotLight'), dir = src.indexOf('getDirectionalLightInfo(');
+  const a = src.indexOf(call, pt), b = src.indexOf(call, sp);
+  if (pt > 0 && sp > pt && dir > sp && a > pt && a < sp && b > sp && b < dir) C.lights_fragment_begin = src.slice(0, a) + gated + src.slice(a + call.length, b) + gated + src.slice(b + call.length);
+  else console.warn('lamp skip: three.js lights chunk not as expected; left as it is');
+}
+
 const RetroShader = {
   uniforms: { tDiffuse: { value: null }, levels: { value: 9.0 }, resolution: { value: new THREE.Vector2(1, 1) } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
@@ -81,6 +98,9 @@ export class Renderer {
     // so a change never clears the screen or reallocates anything (each change used to show a black frame).
     this.autoRes = true; this.dyn = 1; this._fb = [];
     this.quality = 'high';
+    // edges (Settings → Edges): 'msaa' (multisampling, Medium 2× / High 4×) or 'fxaa' (one cheap full-screen pass, as
+    // Low has). RENDER-INV: on the user's Vega 8 (Direct3D 11) MSAA 2× measured ~10 ms of GPU a frame on the street
+    this.aa = 'msaa';
   }
 
   setup(scene, camera) {
@@ -90,6 +110,11 @@ export class Renderer {
     // the post-processing chain, so without this the "2026" look had no anti-aliasing at all
     const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4, stencilBuffer: true }); // (stencil: the hero's silhouette)
     const c = (this.composer = new EffectComposer(this.renderer, rt));
+    // RENDER-INV: the multisampled targets resolve their colour only. three resolves depth and stencil too by default
+    // (one blit of all three every frame); nothing reads them after the scene pass (the passes after it sample colour;
+    // the hero's stencil silhouette is drawn inside the scene pass), and Direct3D 11 cannot resolve depth/stencil in
+    // hardware, so ANGLE emulates it. Without them three just discards the multisampled depth/stencil. Same pixels.
+    for (const T of [c.renderTarget1, c.renderTarget2]) { T.resolveDepthBuffer = false; T.resolveStencilBuffer = false; }
     this.scenePass = new ScaledRenderPass(scene, camera);
     c.addPass(this.scenePass);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.35, 0.92);
@@ -111,6 +136,14 @@ export class Renderer {
     addEventListener('resize', () => this.resize());
     this.resize();
     this.applyResize();
+    // (RENDER-INV: the benchmark's GPU time per pass, perf.js GpuTimer: each pass and the shadow map mark their part;
+    //  nothing happens while no timer is set)
+    const sm = this.renderer.shadowMap, smr = sm.render.bind(sm);
+    sm.render = (...a) => { const T = this.timer; T?.mark('shadow map'); try { return smr(...a); } finally { T?.mark('scene'); } };
+    for (const [p, label] of [[this.scenePass, 'scene'], [this.bloom, 'bloom'], [this.output, 'output'], [this.fxaa, 'fxaa'], [this.retroPass, 'retro']]) {
+      const r = p.render.bind(p);
+      p.render = (...a) => { this.timer?.mark(label); return r(...a); };
+    }
   }
 
   setQuality(q) {
@@ -129,8 +162,10 @@ export class Renderer {
     const type = this.quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     if (this.renderer.shadowMap.type !== type) { this.renderer.shadowMap.type = type; this.renderer.shadowMap.needsUpdate = true; }
     if (this.bloom) this.bloom.enabled = on && this.quality === 'high' && this.bloomOn !== false;
-    if (this.fxaa) this.fxaa.enabled = !this.retro && this.quality === 'low';
+    if (this.fxaa) this.fxaa.enabled = !this.retro && (this.quality === 'low' || this.aa === 'fxaa');
   }
+
+  setAA(a) { this.aa = a === 'fxaa' ? 'fxaa' : 'msaa'; this.applyDerived(); this.resize(); }
 
   setRetro(on) {
     this.retro = on;
@@ -166,9 +201,9 @@ export class Renderer {
     // MSAA: 4× on high (2× once the pixel ratio is high enough to smooth edges by itself), 2× on medium, none on
     // low (FXAA instead) / retro (the retro look wants hard pixels)
     // (Medium on a high-density screen: none, the pixel ratio smooths the edges and the GPU is spared the resolve)
-    const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 ? 2 : 4;
+    const ms = this.retro || this.quality === 'low' || this.aa === 'fxaa' ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 ? 2 : 4;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
-    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${!!this.composer}`;
+    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${!!this.composer}`;
     if (key !== this._size) { this._size = key; this._want = { w, h, pr, ms }; }
     if (this.dyn < this.minDyn()) this.dyn = this.minDyn();
     this.applyScale();
@@ -206,15 +241,18 @@ export class Renderer {
   }
 
   // (PERF-2, engine/drawcull.js: `pre` runs first (actors of other areas left out), then the world matrices of the
-  // shown objects only, the passes, and `post` (what `pre` hid is shown again))
+  // shown objects only, `mid` (RENDER-INV: the draw batches), the passes, and `post` (what `pre` hid is shown again))
   render() {
     this.applyResize();
     this.pre?.();
     const S = this.scene, auto = S.matrixWorldAutoUpdate;
     try {
       if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
+      else if (this.mid) S.updateMatrixWorld();
+      this.mid?.();   // (RENDER-INV: the draw batches check their pieces with this frame's matrices: engine/drawbatch.js)
+      this.timer?.begin();   // (RENDER-INV: the GPU's time for the frame, while the benchmark runs: perf.js GpuTimer)
       this.composer.render();
-    } finally { S.matrixWorldAutoUpdate = auto; this.post?.(); }
+    } finally { this.timer?.end(); S.matrixWorldAutoUpdate = auto; this.post?.(); }
   }
 
   // Compiles every material in the scene for the way it is really drawn: into the composer's target (no tone
