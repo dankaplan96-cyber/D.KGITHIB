@@ -81,10 +81,10 @@ export const STR = {
   en: {
     continue: 'Continue', new_game: 'New Game', settings: 'Settings', controls: 'Controls', back: 'Back',
     resume: 'Resume', save_quit: 'Save & Quit', paused: 'Paused',
-    language: 'Language', control_scheme: 'Movement', ctrl_modern: 'Modern (camera-relative)', ctrl_classic: 'Classic (LBA2 keys, tank)',
+    language: 'Language', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',
     visual: 'Look', vis_2026: 'Remaster', vis_1997: 'Retro 1997',
     quality: 'Graphics', q_high: 'High', q_medium: 'Medium', q_low: 'Low',
-    camera: 'Camera', cam_lba: 'Fixed (LBA2)', cam_free: 'Free (mouse / stick)',
+    camera: 'Camera', cam_lba: 'Fixed (LBA2)', cam_free: 'Free',
     hud: 'HUD', hud_lba: 'Minimal (LBA2)', hud_modern: 'Always on',
     music: 'Music', sfx: 'Sound Effects', voice_vol: 'Voice',
     rebind_title: 'Key Bindings', rebind_hint: 'Click an action, then press a key. Esc cancels.', rebind_press: 'Press a key…', rebind_reset: 'Reset to Defaults',
