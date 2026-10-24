@@ -1209,7 +1209,8 @@ class Game {
     this._renderMs = 0;
     this.benchTick?.(real);
     this._transBudget = Math.min(real, 0.1);
-    for (let i = 0; i < n; i++) this.frame(sub, i === n - 1);
+    // (RENDER-INV: `_inner`: a catch-up step before the drawn one; what only serves the picture runs on the drawn one)
+    try { for (let i = 0; i < n; i++) { this._inner = i < n - 1; this.frame(sub, i === n - 1); } } finally { this._inner = false; }
     const ms = performance.now() - t0;
     // (FRAME-1: `black`: this interval was spent with a fully black screen on show (a scene change's fade or shader
     // hold), so a long one is a pause behind the fade, not a hitch in view)
@@ -1291,12 +1292,13 @@ class Game {
     this.audio.setStorm(this.storm);
     const focus = this.cine?.focus || this.hero.pos;
     this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : focus);
-    if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
+    // (RENDER-INV: detail levels and the lamps' lights serve the picture only: once per displayed frame, not per catch-up step)
+    if (this._inner) { /* (the drawn step does it) */ } else if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     else if (this.room.outdoor) updateKitLod(this.hero.pos);
     this.world._hero = this.hero; this.world._cam = this.camera;
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
-    this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
+    if (!this._inner) this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     if (render) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
     if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0, this.state === 'dialog' ? dt : 0);
@@ -1398,7 +1400,9 @@ class Game {
     const it = this.findInteractable();
     this.hud.prompt(it ? t(it.label) : null);
     this.hud.stats(h);
-    this.hud.mapTick();   // (where he is and the doors he used, for the maps; the minimap when shown)
+    // (where he is and the doors he used, for the maps; the region's map drawn a slice further; the minimap when shown.
+    //  RENDER-INV: once per displayed frame: a slow frame's catch-up steps each drew another slice of the map)
+    if (!this._inner) this.hud.mapTick();
     this.camRig.update(dt, h.pos, h.angle, h.speed > 0.5, input);
     this.occluders(dt);
   }

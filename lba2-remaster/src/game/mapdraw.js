@@ -102,7 +102,7 @@ function* terrainAlbedo(T, pal) {
     }
     A[k * 3] = (col ? col[k * 3] : 0.6) * r; A[k * 3 + 1] = (col ? col[k * 3 + 1] : 0.6) * gg; A[k * 3 + 2] = (col ? col[k * 3 + 2] : 0.6) * b;
     if (T.heights[k] > 0.5) { lum += 0.3 * A[k * 3] + 0.59 * A[k * 3 + 1] + 0.11 * A[k * 3 + 2]; cnt++; }
-    if (k % 16384 === 16383) yield;
+    if (k % 2048 === 2047) yield;   // (RENDER-INV: slices of ~1 ms; 16 384 vertices made 20 ms slices)
   }
   // the scene is lit (a strong sun); the map shows the ground at about the brightness it is seen in play
   const gain = Math.max(1, Math.min(2.8, 0.6 / Math.max(0.05, cnt ? lum / cnt : 0.4)));
@@ -171,7 +171,7 @@ function* build(g, F, pal, B, room) {
       b = b * 255 * (1 - kp - kc) + pal.path[2] * kp + pal.street[2] * kc;
       rgb[p * 3] = r; rgb[p * 3 + 1] = gg; rgb[p * 3 + 2] = b;
     }
-    if (j % 8 === 7) { lap('terrain'); yield; tS = performance.now(); }
+    lap('terrain'); yield; tS = performance.now();   // (RENDER-INV: every row; 8 rows ran past the 2.5 ms asked)
   }
   // ---- the bricks
   const k = 1 / px, bricks = [], trees = [], lines = [];
@@ -200,15 +200,15 @@ function* build(g, F, pal, B, room) {
         if (P._inside(c, X0 + (i + 0.5) * px, z, m) && (id[p] < 0 || c.top >= Hd[p])) { id[p] = bi; Hd[p] = c.top; }
       }
       work += i1 - i0 + 1;
-      if (work > 40000) { work = 0; lap('raster'); yield; tS = performance.now(); }
+      if (work > 4000) { work = 0; lap('raster'); yield; tS = performance.now(); }
     }
   }
   lap('raster'); B.stages.bricks = bricks.length;
   yield; tS = performance.now();
   // floor or building: how far the brick's top stands above the ground just outside it (water left out)
   const kind = new Uint8Array(bricks.length), ref = new Float32Array(bricks.length);
-  bricks.forEach((c, bi) => {
-    const hs = [];
+  for (let bi = 0; bi < bricks.length; bi++) {
+    const c = bricks[bi], hs = [];
     const d = c.type === 'box' ? 0.7 : c.r + 0.7;
     const pts = c.type === 'box'
       ? [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]].map(([u, v]) => { const lx = u * (c.hw + 0.7), lz = v * (c.hd + 0.7); return [c.x + lx * c.cos + lz * c.sin, c.z - lx * c.sin + lz * c.cos]; })
@@ -225,8 +225,10 @@ function* build(g, F, pal, B, room) {
     const r = hs.length ? hs[Math.floor((hs.length - 1) * 0.25)] : c.top;
     ref[bi] = r;
     kind[bi] = c.top - r > 1.5 && !(c.bound > 14 && c.top - r < 4) ? 3 : 2;
-  });
+    if (bi % 256 === 255) { lap('classify'); yield; tS = performance.now(); }
+  }
   for (let p = 0; p < NN; p++) {
+    if ((p & 65535) === 65535) { lap('classify'); yield; tS = performance.now(); }
     const bi = id[p]; if (bi < 0) continue;
     cls[p] = kind[bi];
     if (kind[bi] === 3) Hd[p] = Math.min(Hd[p], ref[bi] + 7);
@@ -277,12 +279,13 @@ function* build(g, F, pal, B, room) {
       const o = p * 4;
       D[o] = r; D[o + 1] = gg; D[o + 2] = b; D[o + 3] = 255;
     }
-    if (j % 8 === 7) { lap('shade'); yield; tS = performance.now(); }
+    lap('shade'); yield; tS = performance.now();
   }
   lap('shade');
   const cv = document.createElement('canvas'); cv.width = cv.height = N;
   const x = cv.getContext('2d');
   x.putImageData(img, 0, 0);
+  lap('vectors'); yield; tS = performance.now();
   // ---- walls, fences, trees (vectors on top)
   x.setTransform(k, 0, 0, k, -X0 * k, -Z0 * k);
   x.lineCap = 'round';
