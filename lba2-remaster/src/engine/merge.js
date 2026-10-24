@@ -20,12 +20,12 @@ import * as THREE from 'three';
 const TWINS = new Map(), WHITE = new THREE.Color(1, 1, 1);
 // (withMap: a colour map is allowed, for retex)
 // (withVC: vertex colours allowed too — the part's own colours are multiplied by the material's, for retex)
-const plain = (m, withMap = false, withVC = false) => m.isMeshStandardMaterial && !m.isMeshPhysicalMaterial && (withVC || !m.vertexColors) && !m.transparent && m.opacity === 1 && !m.alphaTest
+export const plain = (m, withMap = false, withVC = false) => m.isMeshStandardMaterial && !m.isMeshPhysicalMaterial && (withVC || !m.vertexColors) && !m.transparent && m.opacity === 1 && !m.alphaTest
   && (withMap || !m.map) && !m.emissiveMap && !m.normalMap && !m.roughnessMap && !m.metalnessMap && !m.aoMap && !m.bumpMap && !m.alphaMap && !m.lightMap && !m.envMap && !m.displacementMap
   && m.emissive.r + m.emissive.g + m.emissive.b === 0
   && m.onBeforeCompile === THREE.Material.prototype.onBeforeCompile && m.customProgramCacheKey === THREE.Material.prototype.customProgramCacheKey;
 // a colour map only, sampled from uv with repeat wrapping (so a baked repeat/offset samples the same texels)
-const texOnly = (m, withVC = false) => {
+export const texOnly = (m, withVC = false) => {
   const t = m.map;
   // (a canvas texture is fine: the twin's map is a clone sharing its source, so a redrawn canvas still reaches it)
   if (!t || !t.isTexture || t.isRenderTargetTexture || t.isVideoTexture || t.channel !== 0 || !t.source) return false;
@@ -43,7 +43,7 @@ function perVertexRM(t) {
   };
   t.customProgramCacheKey = () => 'merged-rm';
 }
-function twinOf(m, rm = false) {
+export function twinOf(m, rm = false) {
   const t0 = m.map || null;
   const tk = t0 ? [t0.source.uuid, t0.wrapS, t0.wrapT, t0.magFilter, t0.minFilter, t0.anisotropy, t0.colorSpace, t0.flipY, t0.generateMipmaps, t0.premultiplyAlpha, t0.unpackAlignment, t0.format, t0.type].join(',') : '';
   const k = [rm ? 'vcrm' : 'vc', rm ? '' : m.roughness, rm ? '' : m.metalness, m.side, m.flatShading, m.fog, m.depthWrite, m.depthTest, m.polygonOffset, m.polygonOffsetFactor, m.wireframe, tk].join('|');

@@ -10,6 +10,23 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { updateShownWorld } from './drawcull.js';
 
+// RENDER-INV: lamps cost nothing where they don't reach. three evaluates the whole lighting model (RE_Direct: the
+// standard material's GGX specular + diffuse) for every point light on every lit pixel, also where the lamp's light
+// is exactly zero: beyond its range (three's distance falloff is 0 there) and for the light pool's unused slots
+// (intensity 0). three already computes `directLight.visible` (its colour is not zero); the model now runs only for
+// a visible lamp. A zero colour added exactly nothing, so every pixel is the same; the GPU skips the work for most of
+// the screen outdoors. (Toon materials, whose gradient map is sampled in RE_Direct, keep the plain loop; the game has
+// none.) Must run before any shader is compiled: this module is imported before the scene is built.
+{
+  const C = THREE.ShaderChunk, src = C.lights_fragment_begin;
+  const call = '\t\tRE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );';
+  const gated = '\t\t#ifndef TOON\n\t\tif ( directLight.visible )\n\t\t#endif\n' + call;
+  const pt = src.indexOf('getPointLightInfo( pointLight'), sp = src.indexOf('getSpotLightInfo( spotLight'), dir = src.indexOf('getDirectionalLightInfo(');
+  const a = src.indexOf(call, pt), b = src.indexOf(call, sp);
+  if (pt > 0 && sp > pt && dir > sp && a > pt && a < sp && b > sp && b < dir) C.lights_fragment_begin = src.slice(0, a) + gated + src.slice(a + call.length, b) + gated + src.slice(b + call.length);
+  else console.warn('lamp skip: three.js lights chunk not as expected; left as it is');
+}
+
 const RetroShader = {
   uniforms: { tDiffuse: { value: null }, levels: { value: 9.0 }, resolution: { value: new THREE.Vector2(1, 1) } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
@@ -111,6 +128,14 @@ export class Renderer {
     addEventListener('resize', () => this.resize());
     this.resize();
     this.applyResize();
+    // (RENDER-INV: the benchmark's GPU time per pass, perf.js GpuTimer: each pass and the shadow map mark their part;
+    //  nothing happens while no timer is set)
+    const sm = this.renderer.shadowMap, smr = sm.render.bind(sm);
+    sm.render = (...a) => { const T = this.timer; T?.mark('shadow map'); try { return smr(...a); } finally { T?.mark('scene'); } };
+    for (const [p, label] of [[this.scenePass, 'scene'], [this.bloom, 'bloom'], [this.output, 'output'], [this.fxaa, 'fxaa'], [this.retroPass, 'retro']]) {
+      const r = p.render.bind(p);
+      p.render = (...a) => { this.timer?.mark(label); return r(...a); };
+    }
   }
 
   setQuality(q) {
@@ -206,13 +231,15 @@ export class Renderer {
   }
 
   // (PERF-2, engine/drawcull.js: `pre` runs first (actors of other areas left out), then the world matrices of the
-  // shown objects only, the passes, and `post` (what `pre` hid is shown again))
+  // shown objects only, `mid` (RENDER-INV: the draw batches), the passes, and `post` (what `pre` hid is shown again))
   render() {
     this.applyResize();
     this.pre?.();
     const S = this.scene, auto = S.matrixWorldAutoUpdate;
     try {
       if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
+      else if (this.mid) S.updateMatrixWorld();
+      this.mid?.();   // (RENDER-INV: the draw batches check their pieces with this frame's matrices: engine/drawbatch.js)
       this.timer?.begin();   // (RENDER-INV: the GPU's time for the frame, while the benchmark runs: perf.js GpuTimer)
       this.composer.render();
     } finally { this.timer?.end(); S.matrixWorldAutoUpdate = auto; this.post?.(); }

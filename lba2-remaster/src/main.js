@@ -13,6 +13,7 @@ import { FarCull, BlobBatch } from './engine/drawcull.js';
 import { BLOBS } from './engine/rig.js';
 import { LightPool, POOL_SIZE } from './engine/lightpool.js';
 import { ShadowCull } from './engine/shadowcull.js';
+import { DrawBatch } from './engine/drawbatch.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
@@ -220,6 +221,9 @@ class Game {
     this.farCull = new FarCull(() => [this.npcs, this.enemies], this.camera, this.scene.fog);
     this.blobBatch = new BlobBatch(this.scene, BLOBS);
     this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); };
+    // (RENDER-INV: an area's static pieces drawn in one call per material and 48 m cell: engine/drawbatch.js)
+    this.drawBatch = new DrawBatch();
+    this.renderer.mid = () => { if (this.shadowCull.areas.has(this.room?.group || this.world.root)) this.drawBatch.update(this.room?.group || this.world.root); };
     this.renderer.post = () => { this.blobBatch.restore(); this.farCull.restore(); };
     this.lightPool.collect(); // (after every builder has placed its lamps)
     this.loadTimes.total = Math.round(performance.now() - tm);
@@ -256,6 +260,7 @@ class Game {
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
+    this.drawBatch.update(this.world.root);   // (and its draw batches, uploaded by the render below)
     if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
     this.renderer.render();
     this.loadTimes.shaders = Math.round(performance.now() - t0);
@@ -365,6 +370,7 @@ class Game {
     // first update, which used to come later in this frame, so a house's 4.5 MB of batches went up on the first frame shown)
     const root = this.room?.group || this.world.root;
     if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);
+    if (!this.drawBatch.has(root)) this.drawBatch.update(root);   // (RENDER-INV: the area's draw batches, before the upload)
     this.uploadGeometry(root);
     if (warmed.get(key) === R.info.programs.length) return;
     T.hold = true; T.holdT = performance.now();
@@ -1216,7 +1222,8 @@ class Game {
     // hold), so a long one is a pause behind the fade, not a hitch in view)
     const black = !!this._shownBlack;
     this._shownBlack = !!this.trans && (this.trans.hold || this._fadeOp >= 0.999);
-    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black });
+    let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
+    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps });
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark)
     if (this.state === 'play' && !this.trans && !this.benching) this.renderer.adapt(real * 1000);
   }
