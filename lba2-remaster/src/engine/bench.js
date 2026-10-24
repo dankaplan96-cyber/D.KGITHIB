@@ -142,7 +142,7 @@ export class Bench {
           // (FRAME-1) long frames: over 33 ms (a 30 fps frame missed), over 50 ms ("stalls"), how many of those were
           // spent behind a fully black screen (a scene change's fade or shader hold), and the three longest
           const buf = G.perf.buf, stalls = buf.filter((f) => f.ms > 50).length;
-          const pacing = { over33: buf.filter((f) => f.ms > 33.4).length, stallsBlack: buf.filter((f) => f.ms > 50 && f.black).length,
+          const pacing = { over33: buf.filter((f) => f.ms > 33.4).length, over100: buf.filter((f) => f.ms > 100).length, stallsBlack: buf.filter((f) => f.ms > 50 && f.black).length,
             worst: buf.slice().sort((a, b) => b.ms - a.ms).slice(0, 3).map((f) => `${f.ms.toFixed(0)}${f.black ? ' (black)' : ''}`).join(', '),
             minMs: Math.min(...buf.map((f) => f.ms)) };
           const R = G.renderer;
@@ -211,7 +211,7 @@ export class Bench {
       const s = x.s;
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
       const P = x.pacing;
-      lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · stalls>50ms ${x.stalls}${P ? ` (${P.stallsBlack} behind black) · >33ms ${P.over33} of ${s.frames} · longest ${P.worst} ms` : ''}`
+      lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · stalls>50ms ${x.stalls}${P ? ` (${P.stallsBlack} behind black) · >33ms ${P.over33} >100ms ${P.over100 ?? 0} of ${s.frames} · longest ${P.worst} ms` : ''}`
         + ` · sim CPU p50 ${s.simMs.p50} (p95 ${s.simMs.p95}) ms · render submit CPU p50 ${s.renderMs.p50} ms${s.gpuMs ? ` · GPU time p50 ${s.gpuMs.p50} (p95 ${s.gpuMs.p95}) ms` : ''} · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`
         + ` · limited by (estimate): ${this.bound(s)}`);
     }
