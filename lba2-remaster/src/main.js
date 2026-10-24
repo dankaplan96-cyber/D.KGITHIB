@@ -186,6 +186,7 @@ class Game {
     this.input = new Input(this.renderer.canvas);
     this.camRig = new CameraRig(this.camera, this.terrain, this.physics);
     this.camRig.occ = () => (this.room ? null : this.world.occ);   // Citadel's scenery volumes for the play camera (Game.occluders)
+    this.camRig.relative = () => this.settings.controls !== 'classic';   // (CAM-2: camera-relative controls: the free orbit never turns by itself)
     this.particles = new Particles(this.scene);
     this.world.particles = this.particles;
     this.pickups = new Pickups(this);
