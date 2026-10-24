@@ -284,6 +284,23 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Not verified: the laptop's GPU saving and whether Medium now holds 60 on the street (the next benchmark: pause →
   Benchmark → Copy, plugged in).
 
+## Done after (CLAR-2 + HINTS-LESS, block 7a; status REVIEW)
+- The stopped CLAR-2 WIP patch applied (its i18n conflicts resolved for R3's key-free hints), reviewed and finished.
+  The objective panel shows the goal line only, ~5 s of play when the goal changes, in both HUDs; its steps (the
+  "where"/"who" nudges) live in the pause menu, the Holomap and the journal. 28 toast call sites gone (110 → 82): every
+  toast that restated a line, the objective or the world; "Game saved" at checkpoints; the place name after travel.
+  Key hints follow the player's bindings. Prompts are verbs. Settings options 1–3 words (RENDER-INV's Edges row kept).
+- HINTS-LESS: objectives and lines point to where/whom; methods come from a character, the world or asking again
+  (ch1 bars/target, ch2 Baldino → Oku, the lighthouse dials and ch10's channel as riddles with the plain answer after a
+  wrong try / when asked again, ch8 Gilbert's shelters); the core fight's instructions are a nudge after 40 s stuck
+  (ChapterBase.nudge). No puzzle logic changed; ADV-2's chapter 4 kept.
+- Evidence: tests/clarity.mjs (5 routes, base vs build: 91/1119 → 85/915 texts/chars put up, toasts 12/317 → 6/148),
+  reviews/CLAR-2/ jpgs, json, logs; QA.md "CLAR-2 + HINTS-LESS". Tests that read #objective now read
+  #pause-objective (the full objective).
+- Note for the coordinator: port 8175 was held by another agent's server (a copy of the base in the shared scratchpad);
+  this work was served on :8191 (build) and :8192 (base copy).
+- Open (UI): inventory.js prints fixed keys ("I / J to close", "E: use"); needs input.label like the toasts.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

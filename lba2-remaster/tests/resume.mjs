@@ -34,7 +34,7 @@ await ev(() => { const G = game, f = G.flags, ch = G.story.cur; P.settle(); f.c3
 const d16a = await ev(() => ({ fight: game.flags.c3_fight, over: game.flags.c3_overload, coil: !!game.room.ballTargets.find((x) => x.coil) }));
 await reloadContinue();
 const d16 = await ev(() => { const G = game, f = G.flags; for (let i = 0; i < 300; i++) { G.step(1 / 30); if (G.state !== 'play') P.settle(); }
-  return { room: G.room?.id, fight: !!f.c3_fight, over: !!f.c3_overload, coil: !!G.room?.ballTargets?.find((x) => x.coil), obj: document.querySelector('#objective')?.textContent };
+  return { room: G.room?.id, fight: !!f.c3_fight, over: !!f.c3_overload, coil: !!G.room?.ballTargets?.find((x) => x.coil), obj: document.querySelector('#pause-objective')?.textContent };
 });
 check('D16: Continue during the core fight\'s coil phase: the fight and the coil are back', d16a.coil && d16.room === 'c3core' && d16.fight && d16.over && d16.coil, { d16a, d16 });
 

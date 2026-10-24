@@ -3,7 +3,7 @@ import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
   n_ilkaradio: 'Ilka (radio)', n_yornaradio: 'Yorna (radio)', n_heskradio: 'Hesk (radio)', n_pimradio: 'Pim (radio)',
-  p_relay: 'Set relay', p_fly: 'Fly', p_station: 'Console',
+  p_relay: 'Set relay', p_fly: 'Fly', p_station: 'Use',
   fly_title: "Hesk's glider: where to?",
   fly_citadel: 'Citadel Island', fly_desert: 'Desert Island', fly_hamalayi: 'The Hamalayi',
   fly_done: '(done)', fly_here: '(you are here)',
@@ -15,10 +15,9 @@ Object.assign(STR.en, {
   c10_tw_b1: "Then we need friends at five stations, and a way to reach them all.",
   c10_bal_pulse1: "Oh, and before I forget. Take this. My pulse tool: a little thunder in a box. It jams anything with gears or wires for a few seconds. Drones, automatons, mills, doors.",
   c10_bal_pulse2: "It does nothing at all to anything alive, and it needs a few seconds to recharge. Don't wave it at mites and expect miracles.",
-  c10_toast_pulse: 'Pulse Tool · hold X to choose it · jams machines for a moment',
+  c10_toast_pulse: 'Pulse Tool: hold {k} to choose it',
   c10_bal_4: "The way is already here. Listen.",
   c10_hesk_1: "Hesk here! I got the council's message. Take the spaceship over to Citadel, and you'll find me on the plateau by the station. I'll fly you anywhere on Twinsun with a flat bit of ground. Not into space, mind. She's a glider, not a rocket.",
-  c10_toast_relays: 'Baldino\'s relays (5)',
   c10_bal_after: "Five relays, five friends. And Twinsen, the relays are delicate. Don't throw the ball at them.",
 
   c10_hesk_fly: 'Where to?',
@@ -42,7 +41,8 @@ Object.assign(STR.en, {
   // Citadel: the lighthouse
   c10_zoe_1: "There you are. The transmitter's warm, and Arthur's been reading the needle for an hour.",
   c10_ar_1: "It's on the wrong channel, Dad! I can tell. When it's right, the needle sits still.",
-  c10_zoe_2: "Baldino's network channel is star, sun, wave. Set the dials, and Arthur will tell you if it's right. I'll hold the frequency.",
+  c10_zoe_2: "Baldino's network channel is my old warning, with the star moved to the front. Set the dials, and Arthur will tell you if it's right. I'll hold the frequency.",
+  c10_zoe_again: "Star, sun, wave, Twinsen. Arthur's watching the needle.",
   c10_ar_wrong: 'The needle is jumping. Not that one!',
   c10_ar_close: "Closer! It's only wobbling now!",
   c10_ar_right: "It's still! It's sitting completely still!",
@@ -55,7 +55,6 @@ Object.assign(STR.en, {
   c10_ilka_2: "Set it on the bore's frame. And keep your ball handy: the project's drones don't like anything they didn't build.",
   c10_relay_bore: 'The relay clicks onto the bore\'s frame. Steam rattles through its little pipe, and the lamp lights up.',
   c10_drones: 'Drones! Three of them, coming in low over the post.',
-  c10_toast_drones: 'Protect the relay at the bore',
   c10_ilka_3: "That's the last of them. Dallan and I will keep the vent clear. Go, go!",
   c10_dallan_1: "I spent a year guarding this bore for the project. I can guard it a little longer for everyone else.",
 
@@ -71,7 +70,7 @@ Object.assign(STR.en, {
   c10_mites: 'Ice mites, on the ridge!',
 
   // all five
-  c10_toast_station: 'Relay lamps lit: {n} of 5',
+  c10_toast_station: 'Relay lit ({n}/5)',
   c10_all_1: 'Five lamps! All five! Twinsen, come to the drill platform on Zeelich. Time to call everyone at once.',
   c10_bal_p1: "Here's the console the project used to send its codes to the shaft. Ours goes out on all five relays at once. Everyone has to hold for one minute.",
   c10_tw_p1: 'Then everyone hold on.',
@@ -92,7 +91,7 @@ Object.assign(STR.en, {
   c10_sub_light: 'Citadel: the lighthouse (Zoé and Arthur)',
   c10_sub_bore: 'Desert Island: the bore (Ilka and Dallan)',
   c10_sub_dome: 'The Hamalayi: the dome (Yorna, Pim and Sefa)',
-  c10_sub_fly: '(the spaceship to Citadel leaves from Zeelich Spaceport; Hesk waits on Citadel with his glider)',
+  c10_sub_fly: "(the spaceship to Citadel, then Hesk's glider)",
   c10_obj_platform: 'Go to the drill platform on Zeelich',
   c10_j_plan: "Baldino's network: five relays at five stations, each powered by what's there, each held by a friend.",
   c10_j_fly: 'Between the planets I take the spaceship. On Twinsun, Hesk flies me about in his glider.',

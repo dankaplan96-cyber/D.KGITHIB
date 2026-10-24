@@ -35,9 +35,8 @@ Object.assign(STR.en, {
   w_tw_ok: "They're talking.",
   w_tin: 'The tin on the table says "TEST FEE. Half to whoever fixes it. -B" Fair enough.',
   w_pair_after: 'The pair still talks. Baldino checks on it every time he passes.',
-  w_toast_hot: 'The coupler is glowing: it needs cooling',
+  w_toast_hot: 'The coupler is glowing',
   w_toast_trip: 'The coupler tripped. Start it again.',
-  w_toast_pair: "Baldino's test pair is talking",
   w_toast_owed: "Baldino's coin: {n} kashes",
 
   // ---- looks

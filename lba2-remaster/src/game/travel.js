@@ -214,7 +214,7 @@ export function pointHere(game) {
 export const TITLE = { ship: 'tr_title_ship', shuttle: 'isle_title', ferry: 'tr_title_ferry', glider: 'tr_title_glider' };
 export const LABEL = { ship: 'p_ship', shuttle: 'p_shuttle', ferry: 'p_ferry', glider: 'p_glider' };
 
-// go: under the fade, to the destination's landing; the story is told (cast, objective), then a short toast
+// go: under the fade, to the destination's landing; the story is told (cast, objective). No arrival toast: he picked the place in the menu (CLAR-2)
 export function travelTo(game, p) {
   const g = game;
   g.startTransition(() => {
@@ -225,7 +225,6 @@ export function travelTo(game, p) {
     } else g.enterRoom(p.region, l, true);
     g.story.refreshCast();
     g.audio.play('door');
-    g.hud.toast(p.name);
     g.updateObjective();
   });
 }

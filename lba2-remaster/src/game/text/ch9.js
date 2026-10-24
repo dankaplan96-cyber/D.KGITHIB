@@ -3,7 +3,7 @@ import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
   n_clerk: 'Clerk Ottavo', n_chair: 'Councillor Amaru', n_councilB: 'Councillor Sela', n_councilC: 'Councillor Brum', n_archivist: 'Archivist',
-  p_cabinet: 'Search', p_coat: 'Take coat', p_counter: 'Hand in',
+  p_cabinet: 'Search', p_coat: 'Take', p_counter: 'Hand in',
   chapter_council: 'The Council',
 
   c9_narr: 'The project ship sets down on Zeelich Spaceport in a gust of pink cloud. Its passengers hurry off toward the drill platform. Nobody looks twice at one more traveller.',
@@ -47,7 +47,7 @@ Object.assign(STR.en, {
 
   c9_arch_door: 'The archive. Shelves, cabinets, and someone walking between them.',
   c9_coat_1: "A technician's coat in the locker. Grey-teal, with a project badge. It's a little long.",
-  c9_toast_coat: "Disguised: the archivist will take longer to notice you",
+  c9_toast_coat: "Disguised: the archivist is slower to notice you",
   c9_cab_tunnels: "TUNNELS: FunFrock's old tunnels on every island, surveyed for 'cold storage'. Useful, but not proof.",
   c9_cab_ferries: "FERRIES: evacuation schedules. Lists, lists, lists. My name isn't on any of them.",
   c9_cab_bore: 'BORE: the master plans. The final page is a cross-section of the planet: the bore goes straight through the shell, and someone has written in the margin: "Integrity: not assessed."',

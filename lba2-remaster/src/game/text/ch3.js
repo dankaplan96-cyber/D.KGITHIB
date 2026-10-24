@@ -21,7 +21,6 @@ Object.assign(STR.en, {
   c3_valve_drain: 'That one dumps the coolant down the drain. Better close it.',
   c3_ladder: 'That dropped the catwalk ladder.',
   c3_cooled: "The exchanger hisses. The shutter's lock lets go.",
-  c3_toast_door: 'The shutter opens',
 
   // the crystal galleries
   c3_gallery_in: 'The crystals from the well. These are as big as houses.',
@@ -46,7 +45,7 @@ Object.assign(STR.en, {
   c3_core_tw1: "She's alive, Vesk. Waking her this early cracks the whole shell. Baldino's network turns the bore into a shield. Stop.",
   c3_core_vesk2: "Thirty percent was never a mistake. It's who I chose. Zeelich's upper districts will never be cold again, and the rest will learn to live with less.",
   c3_core_vesk3: 'Guardian. Keep him away from the pylons.',
-  c3_toast_fight: 'Convert the three pylons: stand on a glowing plate and bounce the ball off the brass panels.',
+  c3_toast_fight: 'Stand on a glowing plate and bounce the ball off the brass panels',
   c3_pylon_1: 'Signal is out. Sun, wave, star. Just like last time!',
   c3_pylon_2: 'All three valves open. If anyone asks, the water office did this.',
   c3_pylon_3: 'The mills are free. Listen to that wind!',
@@ -56,7 +55,7 @@ Object.assign(STR.en, {
   c3_tw_over: 'The cracks are closing, Vesk. Switch it to shield mode. It is over.',
   c3_vesk_over2: 'Over? I built this machine. Guardian, full overload. Burn the pylons down if you have to.',
   c3_vesk_over3: "And if she wakes, she wakes for me.",
-  c3_toast_coil: 'Vesk is overloading the guardian! Hit the glowing coil over his console with the ball (3 times).',
+  c3_toast_coil: "Hit the glowing coil over Vesk's console with the ball",
   c3_toast_coil_hit: 'Coil damaged ({n}/3)',
   c3_vesk_hit1: 'Stop that! Do you know what that coil cost?',
   c3_vesk_hit2: 'The readings... no. No, no, no!',
@@ -69,7 +68,7 @@ Object.assign(STR.en, {
   c3_sendell_end: 'Thank you, Twinsen. She is asleep again.',
 
   c3_obj_shaft: "Find the bore's machinery",
-  c3_obj_cool: 'Cool the exchanger to open the shutter',
+  c3_obj_cool: 'Open the jammed shutter',
   c3_sub_diagram: 'Read the cooling diagram',
   c3_sub_up: 'Reach the catwalk',
   c3_obj_gallery: 'Cross the crystal galleries',

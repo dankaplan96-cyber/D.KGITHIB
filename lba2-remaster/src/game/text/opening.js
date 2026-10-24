@@ -23,7 +23,6 @@ Object.assign(STR.en, {
   op_zoe_4: "I'll ask next door.",
   op_zoe_5: 'Take your magic ball. Just in case.',
   pr_obj_well: 'Check the well',
-  pr_toast_goal: 'Check the well. Take the magic ball from the cupboard first.',
   pr_tw_ballfirst: "I'd better take the magic ball along. It's in the cupboard.",
   pr_zoe_next: ["Same next door. Their tap coughed and stopped too.", 'And what came out was warm. Go on, the well.'],
 });

@@ -20,7 +20,7 @@ Object.assign(STR.en, {
   c8_gil_1: "Twinsen! They fenced my well. MY well. I paid for that water twice.",
   c8_tw_g1: 'Gilbert, the tunnels. FunFrock\'s tunnels. Arthur says you know them.',
   c8_gil_2: "Know them? I dug them! Well, I carried the buckets. Two shelters, big enough for the whole town: one under the fortress, one under the old depot.",
-  c8_gil_3: "The fortress one opens from a lever by the old cistern, inside the yard. The depot bunker has a hatch wheel up on its frame. Rusted, last I saw. FunFrock never oiled anything.",
+  c8_gil_3: "The fortress one opens from inside the yard, by the old cistern. The depot bunker has a hatch up on its frame. Rusted, last I saw. FunFrock never oiled anything.",
   c8_gil_after: "Down the tunnels, everyone! Bring blankets. Bring cake, if you have cake.",
 
   c8_mira_1: 'Twinsen. The project says the water office is "non-essential". I have been non-essential for two days.',
@@ -34,12 +34,11 @@ Object.assign(STR.en, {
 
   c8_lever_1: "A heavy lever by the old cistern, under rust and project paint. It moves. Somewhere outside, a door grinds open.",
   c8_shelter_fort: 'The fortress shelter is open. Steps lead down into the dark, and the air is dry.',
-  c8_wheel_hint: '(The hatch wheel is up on the frame. Too high to reach. The ball should turn it.)',
+  c8_wheel_hint: '(The hatch wheel is up on the frame. Too high to reach by hand.)',
   c8_shelter_depot: 'The bunker hatch swings open. Inside: benches, old lamps, and dust. It will do.',
 
   c8_tw_z2: "The shelters are open, Zoé. Gilbert's leading the town down. Mira's got water to them, Pippa's sending supplies.",
   c8_zoe_5: "Then it's my turn. The hill farms. Joss, Bryn and Grull won't leave their animals for anyone but me.",
-  c8_toast_zoe: "You're playing as Zoé. Bring the hill families to the lighthouse.",
   c8_f1_1: "Zoé? At this hour? ...The cliffs? With the goats? ...All right, all right. For you.",
   c8_f2_1: "The project said to wait for instructions. You're the instructions? Good. Children, coats!",
   c8_f3_1: "Grull doesn't leave the farm. Grull... Grull will make an exception. Only because you asked.",

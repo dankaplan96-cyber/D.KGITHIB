@@ -164,7 +164,7 @@ export class Steam extends ChapterBase {
     f.c5_hatch = true; Bh.ballSwitch.setOn(true); Bh.hatch.open();
     for (const tg of Bh.ballTargets) if (tg.hatch) tg.done = true;
     if (silent) return;
-    g.audio.play('door'); g.hud.toast('c5_toast_hatch');
+    g.audio.play('door');   // (his line says it opens: no toast on top)
     this.chain([['hero', 'c5_hatch']], () => { g.updateObjective(); g.save(false); });
   }
   openRelief() {
@@ -172,7 +172,7 @@ export class Steam extends ChapterBase {
     h.act('use', 1.2, () => {
       f.c5_relief = true; this.ventT = 0;
       g.audio.play('rumble'); g.camRig.shake(0.5);
-      this.chain([['hero', 'c5_relief_1']], () => { g.hud.toast('c5_toast_out'); g.updateObjective(); });
+      this.chain([['hero', 'c5_relief_1']], () => { g.updateObjective(); });   // (the panel: "Get out of the post!")
     }, 0.8);
   }
   board() {

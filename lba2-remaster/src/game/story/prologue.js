@@ -104,11 +104,8 @@ export class Prologue extends ChapterBase {
     g.camRig.cine = false;
     g.camRig.override = null;
     g.setState('play');
+    // (the first goal comes up in the objective panel for a few seconds as control comes back, in either HUD: CLAR-2)
     g.updateObjective();
-    const ob = document.querySelector('#objective');
-    ob?.classList.remove('flash'); void ob?.offsetWidth; ob?.classList.add('flash');
-    // (the LBA HUD hides the objective panel: the first goal is said once, on screen, as control comes back)
-    if (g.hud.lba && !g.hero.hasBall) g.hud.toast('pr_toast_goal');
     g.audio.setMood('home');
     g.save(false);
   }
@@ -221,7 +218,7 @@ export class Prologue extends ChapterBase {
         g.searched.push(it.spot.id);
         g.audio.play('chest');
         h.hasBall = true;
-        g.say('n_hero', t('pr_cupboard'), () => { g.hud.toast('pr_toast_ball'); g.updateObjective(); g.save(false); }, h);
+        g.say('n_hero', t('pr_cupboard'), () => { g.hud.toast('pr_toast_ball', { ball: g.hud.key('ball'), map: g.hud.key('map') }); g.updateObjective(); g.save(false); }, h);
         return true;
       case 'well':
         if (f.prologueDone) { g.say('n_hero', t('pr_well_after'), null, h); return true; }
@@ -357,7 +354,7 @@ export class Prologue extends ChapterBase {
     this.f.nodes = (this.f.nodes || 0) + 1;
     g.audio.play('heal');
     g.particles.burst(n.x, n.y, n.z, '#bff8ff', 24, 4);
-    g.hud.toast('pr_toast_node');
+    g.hud.toast('pr_toast_node', { n: this.f.nodes });
     g.updateObjective();
     if (this.f.nodes >= 3) this.barrierT = 0.7;
   }
@@ -371,7 +368,6 @@ export class Prologue extends ChapterBase {
     g.camRig.shake(0.6);
     const p = B.c;
     g.particles.burst(p.x, 1.5, p.z, '#bff8ff', 60, 6);
-    g.hud.toast('pr_toast_barrier');
     g.updateObjective();
     g.save(false);
   }
@@ -443,7 +439,6 @@ export class Prologue extends ChapterBase {
       const tim = this.speaker('tim');
       if (tim && h.distTo(tim) < 3.6) {
         f.overheard = true;
-        g.hud.toast('pr_toast_overhear');
         this.chain([['lulu', 'pr_lulu_2'], ['tim', 'pr_tim_2a'], ['tim', 'pr_tim_2b'], ['lulu', 'pr_lulu_3']], () => g.updateObjective());
         return;
       }
@@ -456,7 +451,8 @@ export class Prologue extends ChapterBase {
         g.camRig.shake(0.7);
         g.audio.play('rumble');
         g.particles.burst(h.pos.x, h.pos.y + 0.2, h.pos.z, '#c8b48a', 20, 3);
-        if (!f.tremorSeen) { f.tremorSeen = true; g.hud.toast('pr_toast_tremor'); }
+        // (felt and heard; said in words only for a player who turned the camera shake off)
+        if (!f.tremorSeen) { f.tremorSeen = true; if (g.settings?.shake === 'off') g.hud.toast('pr_toast_tremor'); }
       }
     }
     // reaching the vein

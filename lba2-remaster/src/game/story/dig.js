@@ -256,7 +256,6 @@ export class Dig extends ChapterBase {
     f.c4_gear1 = true;
     D.pump.setState(f.c4_joint ? 'running' : 'leak');
     g.audio.play('clang'); g.audio.play('chest'); g.particles.burst(J.x + J.nx * 0.25, J.y, J.z + J.nz * 0.25, '#e8c890', 24, 2.8);
-    g.hud.toast('c4_toast_gear');
     this.chain([['narrator', 'c4_gear_free'], ['hero', 'c4_leak']], () => { g.updateObjective(); g.save(false); });
   }
   // a sound gear struck while the train is held: it rings and swings back, nothing more (a line, then a toast)

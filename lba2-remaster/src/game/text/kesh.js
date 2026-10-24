@@ -7,7 +7,6 @@ Object.assign(STR.en, {
   p_turn: 'Turn', p_fit: 'Fit',
   it_kscreen: "Lumi's screen", itd_kscreen: "A sand screen Lumi wove for the cool room's wind-catcher. Striped, of course.",
   k_toast_screen: "Lumi's screen",
-  k_toast_cool: 'The cool room draws again',
   k_toast_owed: "Brosk's payment: {n} kashes",
 
   // ---- the cool room's door

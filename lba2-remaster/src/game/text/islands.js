@@ -3,10 +3,10 @@
 import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
-  p_shuttle: 'Shuttle',
-  p_ship: 'Spaceship',
-  p_ferry: 'Ferry',
-  p_glider: 'Glider',
+  p_shuttle: 'Board',
+  p_ship: 'Board',
+  p_ferry: 'Board',
+  p_glider: 'Fly',
   isle_title: 'Esmer shuttle: where to?',
   tr_title_ship: 'Spaceship: where to?',
   tr_title_ferry: 'Ferry: where to?',

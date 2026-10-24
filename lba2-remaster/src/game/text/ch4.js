@@ -40,7 +40,6 @@ Object.assign(STR.en, {
   c4_listen_miss: 'That one rang and swung back. The grinding comes from another one.',
   c4_gear_ok: 'Clang. It swings free and settles back. Not that one.',
   c4_toast_gearok: 'It swings free',
-  c4_toast_gear: 'Gear freed',
   c4_gear_free: 'Sand bursts out of its teeth. The wheel swings into the wind, and the whole train turns.',
   c4_leak: "The rod thumps... and the water sprays out of a pipe joint before it reaches the oasis.",
   c4_pump_runs: 'The collar slides home. The spray stops, and water spills into the oasis.',

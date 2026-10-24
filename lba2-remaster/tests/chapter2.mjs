@@ -25,7 +25,7 @@ const boot = async (mode) => {
       useAt(x, z) { T.tp(x + 1.0, z + 0.4); G.hero.angle = Math.atan2(x - G.hero.pos.x, z - G.hero.pos.z); T.tap('KeyE'); G.step(2.0); T.talkAll(); },
       door(d) { T.tp(d.x, d.z + 1.5); G.step(1.2); T.tp(d.x, d.z); G.step(1.2); T.talkAll(); },
       f() { return { ...G.flags }; },
-      obj() { return document.querySelector('#objective')?.textContent || ''; },
+      obj() { return document.querySelector('#pause-objective')?.textContent || ''; },
     };
   });
 };
