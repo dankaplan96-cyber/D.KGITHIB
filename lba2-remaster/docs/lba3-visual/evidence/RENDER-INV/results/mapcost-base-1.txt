@@ -1,0 +1,143 @@
+{
+ "load": 12.8,
+ "loadAfter": 14.86,
+ "out": {
+  "citadel": {
+   "framesWithWork": 110,
+   "slices": 110,
+   "totalMs": 923,
+   "maxSliceMs": 69.1,
+   "meanSliceMs": 8.4,
+   "N": 768,
+   "stages": {
+    "albedo": 74.3,
+    "terrain": 314.8,
+    "raster": 27.6,
+    "bricks": 181,
+    "classify": 13.9,
+    "shade": 434.7,
+    "vectors": 60
+   }
+  },
+  "desert": {
+   "framesWithWork": 95,
+   "slices": 95,
+   "totalMs": 813,
+   "maxSliceMs": 129.6,
+   "meanSliceMs": 8.6,
+   "N": 768,
+   "stages": {
+    "albedo": 170.2,
+    "terrain": 407.8,
+    "raster": 9.6,
+    "bricks": 88,
+    "classify": 24.9,
+    "shade": 250.3,
+    "vectors": 2.3
+   }
+  },
+  "zeelich": {
+   "framesWithWork": 177,
+   "slices": 177,
+   "totalMs": 1998,
+   "maxSliceMs": 165.5,
+   "meanSliceMs": 11.3,
+   "N": 768,
+   "stages": {
+    "albedo": 0,
+    "terrain": 41.7,
+    "raster": 1867.1,
+    "bricks": 205,
+    "classify": 6.2,
+    "shade": 71.8,
+    "vectors": 2.2
+   }
+  },
+  "hamalayi": {
+   "framesWithWork": 143,
+   "slices": 143,
+   "totalMs": 1288,
+   "maxSliceMs": 132.5,
+   "meanSliceMs": 9,
+   "N": 768,
+   "stages": {
+    "albedo": 116.4,
+    "terrain": 935.8,
+    "raster": 5.9,
+    "bricks": 152,
+    "classify": 2.9,
+    "shade": 225.5,
+    "vectors": 1.2
+   }
+  },
+  "isle_otringal": {
+   "framesWithWork": 63,
+   "slices": 63,
+   "totalMs": 234,
+   "maxSliceMs": 11.3,
+   "meanSliceMs": 3.7,
+   "N": 768,
+   "stages": {
+    "albedo": 1.1,
+    "terrain": 146.1,
+    "raster": 5.5,
+    "bricks": 108,
+    "classify": 2.7,
+    "shade": 74.5,
+    "vectors": 1.4
+   }
+  },
+  "isle_tralu": {
+   "framesWithWork": 67,
+   "slices": 67,
+   "totalMs": 408,
+   "maxSliceMs": 30.1,
+   "meanSliceMs": 6.1,
+   "N": 685,
+   "stages": {
+    "albedo": 0.6,
+    "terrain": 128.6,
+    "raster": 1.8,
+    "bricks": 7,
+    "classify": 8.2,
+    "shade": 264.9,
+    "vectors": 2
+   }
+  },
+  "isle_knartas": {
+   "framesWithWork": 86,
+   "slices": 86,
+   "totalMs": 1698,
+   "maxSliceMs": 298,
+   "meanSliceMs": 19.7,
+   "N": 768,
+   "stages": {
+    "albedo": 1.2,
+    "terrain": 277.7,
+    "raster": 12.6,
+    "bricks": 83,
+    "classify": 6.8,
+    "shade": 1113.8,
+    "vectors": 1.9
+   }
+  },
+  "citadel-again": {
+   "framesWithWork": 67,
+   "slices": 67,
+   "totalMs": 767,
+   "maxSliceMs": 164.7,
+   "meanSliceMs": 11.5,
+   "N": 768,
+   "stages": {
+    "albedo": 0.1,
+    "terrain": 663.9,
+    "raster": 12.6,
+    "bricks": 181,
+    "classify": 8.8,
+    "shade": 72.9,
+    "vectors": 2
+   }
+  }
+ },
+ "errors": []
+}

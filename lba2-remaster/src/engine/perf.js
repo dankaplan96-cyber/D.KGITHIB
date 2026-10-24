@@ -45,6 +45,8 @@ export class Perf {
       const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
       this.gpu = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)).replace(/^ANGLE \((.*)\)$/, '$1');
     } catch { this.gpu = '?'; }
+    // (RENDER-INV) the GPU's own time per frame, where the browser offers a timer query (see GpuTimer)
+    try { this.gpuTimer = renderer ? GpuTimer.make(renderer.getContext()) : null; } catch { this.gpuTimer = null; }
   }
   beginFrame() { if (this.r) this.r.info.reset(); this.shadow = 0; this.sub = 0; }
   record(f) {
@@ -54,7 +56,7 @@ export class Perf {
     this.i = (this.i + 1) % N;
     if (this.el && (this.uiT += f.real) > 0.25) { this.uiT = 0; this.draw(); }
   }
-  reset() { this.buf = []; this.i = 0; }
+  reset() { this.buf = []; this.i = 0; this.gpuTimer?.reset(); }
   stats(last = N) {
     const b = this.buf.length < N ? this.buf.slice(-last) : [...this.buf.slice(this.i), ...this.buf.slice(0, this.i)].slice(-last);
     if (!b.length) return null;
@@ -72,6 +74,8 @@ export class Perf {
       calls: pct('calls', 0.5), tris: pct('tris', 0.5),
       // (the calls' 95th percentile: a turning camera's heavy views; GPU-level draws; the shadow pass's share)
       callsP95: pct('calls', 0.95), draws: pct('draws', 0.5), shadowCalls: pct('shadowCalls', 0.5),
+      gpuMs: this.gpuTimer?.stats() ?? null,   // (null: no timer query in this browser)
+      lamps: b[0]?.lamps != null ? pct('lamps', 0.5) : null,   // (lamps lit by the light pool: each one is lighting math on the pixels it reaches)
     };
   }
   overlay(on = !this.el) {
@@ -90,5 +94,52 @@ export class Perf {
       + `draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k${s.lostS ? ` · lost ${s.lostS}s` : ''}\n`
       + `pixel ratio ${(this.game?.renderer?.pixelRatio?.() ?? this.r?.getPixelRatio?.())?.toFixed(2)}${this.game?.renderer?.autoRes ? ` (auto ×${this.game.renderer.effScale()})` : ''} · ${this.game?.settings?.quality ?? ''}\n`
       + `${this.gpu}${this.load ? `\nstartup: build ${(this.load.total / 1000).toFixed(1)} s · shaders ${(this.load.shaders / 1000).toFixed(1)} s` : ''}`;
+  }
+}
+
+// RENDER-INV: the GPU's execution time of each frame's render (all passes), from EXT_disjoint_timer_query_webgl2
+// where the browser exposes it (Chrome hides it on some systems; then none: the report says so). Results arrive a
+// few frames later; a frame the driver marks "disjoint" (a power state change, another program) is dropped. This
+// is the number that tells a GPU-bound frame (pixels, shadows, MSAA) from a CPU-bound one (draw calls, simulation).
+export class GpuTimer {
+  static make(gl) { const ext = gl?.getExtension?.('EXT_disjoint_timer_query_webgl2'); return ext ? new GpuTimer(gl, ext) : null; }
+  constructor(gl, ext) { this.gl = gl; this.ext = ext; this.free = []; this.frames = []; this.f = null; this.cur = null; this.ms = []; this.pass = new Map(); }
+  // a frame's time is measured pass by pass (queries can't nest): mark(label) closes the running query and opens one
+  // for `label`; the frame's total is their sum. Labels: shadow map, scene (main view), bloom, output, fxaa, retro.
+  begin(label = 'scene') {
+    if (this.f || this.frames.length > 6) return;
+    this.f = { q: [] }; this.mark(label);
+  }
+  mark(label) {
+    const gl = this.gl; if (!this.f) return;
+    if (this.cur) { gl.endQuery(this.ext.TIME_ELAPSED_EXT); this.cur = null; }
+    const q = this.free.pop() || gl.createQuery(); if (!q) return;
+    gl.beginQuery(this.ext.TIME_ELAPSED_EXT, q); this.cur = q; this.f.q.push([label, q]);
+  }
+  end() {
+    const gl = this.gl;
+    if (this.f) {
+      if (this.cur) { gl.endQuery(this.ext.TIME_ELAPSED_EXT); this.cur = null; }
+      this.frames.push(this.f); this.f = null;
+    }
+    // (results are collected on every frame, also one that started no query: a GPU running more than 6 frames behind
+    //  would otherwise never be asked again)
+    const ready = (F) => F.q.every(([, q]) => gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE));
+    if (!this.frames.length || !ready(this.frames[0])) return;
+    const disjoint = gl.getParameter(this.ext.GPU_DISJOINT_EXT);
+    while (this.frames.length && ready(this.frames[0])) {
+      const F = this.frames.shift(), by = {};
+      let tot = 0;
+      for (const [label, q] of F.q) { const ms = gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6; by[label] = (by[label] || 0) + ms; tot += ms; this.free.push(q); }
+      if (disjoint) continue;
+      this.ms.push(tot); if (this.ms.length > 1200) this.ms.shift();
+      for (const [label, ms] of Object.entries(by)) { let a = this.pass.get(label); if (!a) this.pass.set(label, (a = [])); a.push(ms); if (a.length > 1200) a.shift(); }
+    }
+  }
+  reset() { this.ms.length = 0; this.pass.clear(); }
+  stats() {
+    if (!this.ms.length) return null;
+    const pc = (a, k) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(k * v.length))].toFixed(2); };
+    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
   }
 }

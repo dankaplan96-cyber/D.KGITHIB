@@ -265,6 +265,25 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Not verifiable here: the laptop's GPU frame rate, real hitch sizes, input feel, the 30 fps limit's feel, fullscreen.
   The user's benchmark (pause → Benchmark → Copy) is the judge; what to send: the FRAME-1 report.
 
+## Done after (RENDER-INV, block 7a; status REVIEW)
+- The user's hypothesis checked: only the current area is drawn (main and shadow pass; every situation measured, three's
+  source); every area is built at startup and kept in memory (not changed; plan R1 in the audit). The laptop (build
+  122, plugged in) is GPU-bound: Medium street 18.6 ms GPU, High 25–36 ms.
+- Fixed, look unchanged (pixel-exact in one-page checks): the map's background build in short slices once per displayed
+  frame (F1/F2: no stutter after arriving somewhere); draw batches for every area (F8, src/engine/drawbatch.js:
+  static pieces merged per 48 m cell and material, watched every frame); lamps skip their lighting where they give no
+  light (F9); the MSAA target resolves colour only (F10). Folding colours into the batches is kept switchable, off
+  (it would save another 20–40 calls on Citadel but changes up to 0.3 % of pixels).
+- Laptop build 127 (interim): MSAA 2× is ~10 ms of Medium's 19 ms GPU on the street. Build 127 still resolved depth
+  and stencil every frame (F10 came after); Settings → Edges (Smooth = MSAA default / Fast = FXAA) lets the user choose.
+- The benchmark reports GPU time per pass, lamps lit, an arrival route and a breakdown that prices every option
+  (shadow map kept, no MSAA, 8-bit target, depth resolve on, draw batches off, shadow filter basic, shadow map 512,
+  FXAA instead of MSAA).
+- Evidence: docs/lba3-performance/PERFORMANCE_AUDIT.md (RENDERING_AUDIT.md points to it), docs/lba3-visual/evidence/
+  RENDER-INV/ (probes, results, suite logs). QA.md "RENDER-INV".
+- Not verified: the laptop's GPU saving and whether Medium now holds 60 on the street (the next benchmark: pause →
+  Benchmark → Copy, plugged in).
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

@@ -1,0 +1,5 @@
+doors 16 checks 192 meshes per door (median) 4
+PASS Citadel house doors: no door part culled at Low/Medium near Twinsen (2/6/12 m, LBA + free camera) 
+PASS Zeelich house doors: no door part culled at Low/Medium near Twinsen (2/6/12 m, LBA + free camera) 
+no errors
+ALL PASSED

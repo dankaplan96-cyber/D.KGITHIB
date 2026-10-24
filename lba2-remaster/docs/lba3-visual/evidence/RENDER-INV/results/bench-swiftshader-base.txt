@@ -1,0 +1,28 @@
+LBA3: The Awakening benchmark · build 0.31.0 · 2026-10-23 10:33
+GPU (as reported by the browser): Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver · preset picked for it on a first start: high · playing on: medium · automatic resolution: on (off while measuring)
+NOTE: software rendering (no GPU acceleration in this browser/app): every number below is CPU-drawn
+window 1366×768 · devicePixelRatio 1 · user agent Chrome/141.0.7390.37
+camera: free orbit from a fixed heading for every route (your camera setting: lba) · WEBGL_multi_draw yes
+frame-rate limit: off (off while measuring) · shortest frame interval seen 16.7 ms (≈ 60 Hz)
+startup: build 11.9 s · shader preparation 44.0 s
+
+quality medium: render pixel ratio 1 · MSAA 2× · FXAA off · shadows on (1024 px) · bloom off · lamp lights 4 · grass/flowers to 46 m · trees detailed to 34 m
+  street       0.1 fps · frame p50 7899.7 p95 7899.7 p99 7899.7 max 7899.7 ms · stalls>50ms 1 (0 behind black) · >33ms 1 of 1 · longest 7900 ms · sim CPU p50 75.8 ms · render submit CPU p50 14.1 ms · draw calls 214 (p95 214, shadow 42) · GPU draws 302 · triangles 967k · warm-up max 7900 ms
+  interior     2.5 fps · frame p50 116.7 p95 2299.9 p99 2299.9 max 2299.9 ms · stalls>50ms 6 (0 behind black) · >33ms 7 of 9 · longest 2300, 700, 233 ms · sim CPU p50 5 ms · render submit CPU p50 3.6 ms · draw calls 103 (p95 111, shadow 3) · GPU draws 103 · triangles 422k · warm-up max 2300 ms
+  combat       0.2 fps · frame p50 4433.2 p95 4433.2 p99 4433.2 max 4433.2 ms · stalls>50ms 1 (0 behind black) · >33ms 1 of 1 · longest 4433 ms · sim CPU p50 26 ms · render submit CPU p50 10.5 ms · draw calls 183 (p95 183, shadow 70) · GPU draws 183 · triangles 233k · warm-up max 4433 ms
+  transition   0.5 fps · frame p50 1866.5 p95 1866.5 p99 1866.5 max 1866.5 ms · stalls>50ms 1 (0 behind black) · >33ms 1 of 1 · longest 1867 ms · sim CPU p50 8.6 ms · render submit CPU p50 9662.9 ms · draw calls 166 (p95 166, shadow 33) · GPU draws 313 · triangles 853k · warm-up max 1867 ms
+
+breakdown at Medium (one cost taken away at a time):
+  street · as is             0.4 fps · frame p50 2283.2 p95 2283.2 ms · render pixel ratio 1
+  street · no shadows        0.6 fps · frame p50 2649.8 p95 2666.6 ms · render pixel ratio 1
+  street · no lamps          0.1 fps · frame p50 9249.7 p95 9249.7 ms · render pixel ratio 1
+  street · res x0.6          1.2 fps · frame p50 300 p95 2983.2 ms · render pixel ratio 0.6
+  interior · as is           0.6 fps · frame p50 3033.2 p95 3033.2 ms · render pixel ratio 1
+  interior · no shadows      0.3 fps · frame p50 3883.2 p95 3883.2 ms · render pixel ratio 1
+  interior · no lamps        0.1 fps · frame p50 6866.4 p95 6866.4 ms · render pixel ratio 1
+  interior · res x0.6        0.1 fps · frame p50 6866.4 p95 6866.4 ms · render pixel ratio 0.6
+
+Frame time includes the GPU (the browser waits for it); "render submit" is CPU time only.
+
+(load average before 7.84 6.16 6.03 · after 14.66 9.31 7.20)
+no page errors

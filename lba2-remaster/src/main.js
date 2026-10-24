@@ -13,6 +13,7 @@ import { FarCull, BlobBatch } from './engine/drawcull.js';
 import { BLOBS } from './engine/rig.js';
 import { LightPool, POOL_SIZE } from './engine/lightpool.js';
 import { ShadowCull } from './engine/shadowcull.js';
+import { DrawBatch } from './engine/drawbatch.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
@@ -103,7 +104,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     // (R1-MIGRATE: an update keeps the player's choices; only a missing or unknown scheme falls back to Classic,
@@ -221,6 +222,9 @@ class Game {
     this.farCull = new FarCull(() => [this.npcs, this.enemies], this.camera, this.scene.fog);
     this.blobBatch = new BlobBatch(this.scene, BLOBS);
     this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); };
+    // (RENDER-INV: an area's static pieces drawn in one call per material and 48 m cell: engine/drawbatch.js)
+    this.drawBatch = new DrawBatch();
+    this.renderer.mid = () => { if (this.shadowCull.areas.has(this.room?.group || this.world.root)) this.drawBatch.update(this.room?.group || this.world.root); };
     this.renderer.post = () => { this.blobBatch.restore(); this.farCull.restore(); };
     this.lightPool.collect(); // (after every builder has placed its lamps)
     this.loadTimes.total = Math.round(performance.now() - tm);
@@ -257,6 +261,7 @@ class Game {
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
+    this.drawBatch.update(this.world.root);   // (and its draw batches, uploaded by the render below)
     if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
     this.renderer.render();
     this.loadTimes.shaders = Math.round(performance.now() - t0);
@@ -366,6 +371,7 @@ class Game {
     // first update, which used to come later in this frame, so a house's 4.5 MB of batches went up on the first frame shown)
     const root = this.room?.group || this.world.root;
     if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);
+    if (!this.drawBatch.has(root)) this.drawBatch.update(root);   // (RENDER-INV: the area's draw batches, before the upload)
     this.uploadGeometry(root);
     if (warmed.get(key) === R.info.programs.length) return;
     T.hold = true; T.holdT = performance.now();
@@ -785,6 +791,7 @@ class Game {
       if (was.quality) this.warmGraphics();
     }
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
+    if (changed('aa')) this.renderer.setAA(s.aa);   // (RENDER-INV: Settings → Edges; Low always uses FXAA)
     // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
     if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; }
     const retro = s.visual === '1997';
@@ -1210,13 +1217,15 @@ class Game {
     this._renderMs = 0;
     this.benchTick?.(real);
     this._transBudget = Math.min(real, 0.1);
-    for (let i = 0; i < n; i++) this.frame(sub, i === n - 1);
+    // (RENDER-INV: `_inner`: a catch-up step before the drawn one; what only serves the picture runs on the drawn one)
+    try { for (let i = 0; i < n; i++) { this._inner = i < n - 1; this.frame(sub, i === n - 1); } } finally { this._inner = false; }
     const ms = performance.now() - t0;
     // (FRAME-1: `black`: this interval was spent with a fully black screen on show (a scene change's fade or shader
     // hold), so a long one is a pause behind the fade, not a hitch in view)
     const black = !!this._shownBlack;
     this._shownBlack = !!this.trans && (this.trans.hold || this._fadeOp >= 0.999);
-    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black });
+    let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
+    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps });
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark)
     if (this.state === 'play' && !this.trans && !this.benching) this.renderer.adapt(real * 1000);
   }
@@ -1292,12 +1301,13 @@ class Game {
     this.audio.setStorm(this.storm);
     const focus = this.cine?.focus || this.hero.pos;
     this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : focus);
-    if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
+    // (RENDER-INV: detail levels and the lamps' lights serve the picture only: once per displayed frame, not per catch-up step)
+    if (this._inner) { /* (the drawn step does it) */ } else if (!this.room) this.world.updateLod?.(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     else if (this.room.outdoor) updateKitLod(this.hero.pos);
     this.world._hero = this.hero; this.world._cam = this.camera;
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time);
-    this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
+    if (!this._inner) this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     if (render) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
     if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0, this.state === 'dialog' ? dt : 0);
@@ -1399,7 +1409,9 @@ class Game {
     const it = this.findInteractable();
     this.hud.prompt(it ? t(it.label) : null);
     this.hud.stats(h);
-    this.hud.mapTick();   // (where he is and the doors he used, for the maps; the minimap when shown)
+    // (where he is and the doors he used, for the maps; the region's map drawn a slice further; the minimap when shown.
+    //  RENDER-INV: once per displayed frame: a slow frame's catch-up steps each drew another slice of the map)
+    if (!this._inner) this.hud.mapTick();
     this.camRig.update(dt, h.pos, h.angle, h.speed > 0.5, input);
     this.occluders(dt);
   }

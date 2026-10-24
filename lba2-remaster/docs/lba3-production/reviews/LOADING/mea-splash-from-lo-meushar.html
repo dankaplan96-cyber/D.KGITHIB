@@ -1,0 +1,56 @@
+<style id="lm-36-mea">
+#lm36-mea{position:fixed;inset:0;z-index:2147483000;background:radial-gradient(120% 90% at 50% 45%,#16101f 0%,#07060c 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:inherit;direction:rtl;-webkit-tap-highlight-color:transparent;cursor:pointer;transition:opacity .7s ease;}
+#lm36-mea.out{opacity:0;pointer-events:none;}
+#lm36-mea .gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .4s;}
+#lm36-mea .gate .dot{width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,140,198,.6);display:flex;align-items:center;justify-content:center;animation:lm36pulse 1.6s ease-in-out infinite;}
+#lm36-mea .gate .dot i{width:18px;height:18px;border-radius:50%;background:#ff4fa3;box-shadow:0 0 18px #ff4fa3;}
+#lm36-mea .gate span{font-size:14px;letter-spacing:.08em;color:rgba(255,255,255,.7);}
+#lm36-mea .gate small{font-size:11px;color:rgba(255,255,255,.35);}
+@keyframes lm36pulse{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.12);opacity:1}}
+#lm36-mea.play .gate{opacity:0;pointer-events:none;}
+#lm36-mea .logo{width:min(78vw,380px);opacity:0;}
+#lm36-mea.play .logo{opacity:1;}
+#lm36-mea .logo path{fill:none;stroke:url(#lm36g);stroke-width:15;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:400;stroke-dashoffset:400;filter:drop-shadow(0 0 6px rgba(255,79,163,.55));}
+#lm36-mea.play .logo path{animation:lm36draw .9s cubic-bezier(.6,.05,.3,1) forwards;}
+#lm36-mea.play .logo path.e{animation-delay:.3s;} #lm36-mea.play .logo path.a{animation-delay:.6s;}
+@keyframes lm36draw{to{stroke-dashoffset:0}}
+#lm36-mea .logo circle{fill:#ff4fa3;opacity:0;}
+#lm36-mea.play .logo circle{animation:lm36drip 1.4s ease-in forwards;}
+@keyframes lm36drip{0%{opacity:0;transform:translateY(0) scaleY(.6)}15%{opacity:1}100%{opacity:0;transform:translateY(46px) scaleY(1.4)}}
+#lm36-mea .studio{margin-top:10px;font-size:15px;font-weight:800;letter-spacing:1.1em;padding-left:1.1em;color:#ffe3f1;opacity:0;transform:translateY(6px);transition:opacity .8s 1.3s,transform .8s 1.3s,letter-spacing 1.6s 1.3s;direction:ltr;}
+#lm36-mea.play .studio{opacity:1;transform:none;letter-spacing:.6em;}
+#lm36-mea .pres{margin-top:16px;font-size:12px;color:rgba(255,255,255,.55);letter-spacing:.15em;opacity:0;transition:opacity .8s 2s;}
+#lm36-mea.play .pres{opacity:1;}
+#lm36-mea .shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.08) 50%,transparent 60%);transform:translateX(-100%);pointer-events:none;}
+#lm36-mea.play .shine{animation:lm36shine 1.4s 1.2s ease-in-out forwards;}
+@keyframes lm36shine{to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){#lm36-mea .logo path{stroke-dashoffset:0!important;animation:none!important}#lm36-mea .logo circle,#lm36-mea .shine{display:none}}
+</style>
+<script id="lm-36-mea-js">
+/* 0.36 — MEA Studio splash. A first tap ("tap to start") unlocks sound on phones; then the
+   studio logo paints itself in with a sound sting, and the title screen follows with its music.
+   Tap again to skip the logo. */
+(function(){
+  'use strict';
+  function build(){
+    if(document.getElementById('lm36-mea')) return;
+    const o=document.createElement('div'); o.id='lm36-mea'; o.setAttribute('role','button'); o.setAttribute('aria-label','MEA Studio — הקישו כדי להתחיל');
+    o.innerHTML='<div class="gate"><div class="dot"><i></i></div><span>הקישו כדי להתחיל</span><small>מומלץ עם סאונד 🎧</small></div>'+
+      '<svg class="logo" viewBox="0 0 310 150" aria-hidden="true"><defs><linearGradient id="lm36g" x1="0" x2="1"><stop offset="0" stop-color="#ff4fa3"/><stop offset=".55" stop-color="#ffb36b"/><stop offset="1" stop-color="#6ee7ff"/></linearGradient></defs>'+
+      '<path class="m" d="M22 112 L22 26 L62 78 L102 26 L102 112"/><path class="e" d="M198 26 L134 26 L134 112 L198 112 M134 69 L184 69"/><path class="a" d="M216 112 L252 26 L288 112 M229 82 L275 82"/>'+
+      '<circle cx="22" cy="118" r="5" style="animation-delay:.9s"/><circle cx="134" cy="118" r="4" style="animation-delay:1.25s"/><circle cx="288" cy="118" r="5" style="animation-delay:1.5s"/></svg>'+
+      '<div class="studio">STUDIO</div><div class="pres">סטודיו MEA מציג</div><div class="shine"></div>';
+    document.body.appendChild(o);
+    let stage=0, timer=null;
+    const finish=()=>{ if(stage>=2) return; stage=2; clearTimeout(timer); o.classList.add('out'); setTimeout(()=>{ o.remove(); try{ window.LMAUDIO&&LMAUDIO.play('title'); }catch(e){} },700); };
+    o.addEventListener('click',e=>{
+      e.preventDefault(); e.stopPropagation();
+      if(stage===0){ stage=1; try{ window.LMAUDIO&&LMAUDIO.resume(); setTimeout(()=>{ try{ LMAUDIO.jingle('studio'); LMAUDIO.prep&&LMAUDIO.prep('title'); }catch(e){} },60); }catch(e){} o.classList.add('play'); timer=setTimeout(finish,3600); }
+      // 0.38: no skipping the studio logo
+    });
+    window.LM36MEA={finish};
+    document.addEventListener('keydown',function k(e){ if(!document.getElementById('lm36-mea')){ document.removeEventListener('keydown',k,true); return; } e.preventDefault(); e.stopPropagation(); if(stage===0&&(e.key==='Enter'||e.key===' ')) o.click(); },true);
+  }
+  if(document.body) build(); else document.addEventListener('DOMContentLoaded',build,{once:true});
+})();
+</script>
