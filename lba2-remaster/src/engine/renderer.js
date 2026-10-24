@@ -213,8 +213,9 @@ export class Renderer {
     const S = this.scene, auto = S.matrixWorldAutoUpdate;
     try {
       if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
+      this.timer?.begin();   // (RENDER-INV: the GPU's time for the frame, while the benchmark runs: perf.js GpuTimer)
       this.composer.render();
-    } finally { S.matrixWorldAutoUpdate = auto; this.post?.(); }
+    } finally { this.timer?.end(); S.matrixWorldAutoUpdate = auto; this.post?.(); }
   }
 
   // Compiles every material in the scene for the way it is really drawn: into the composer's target (no tone

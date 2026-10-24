@@ -73,6 +73,18 @@ export class Bench {
           if (inside) G.enterRoom('house', null, false, true); else G.exitRoom({ x: -45, z: 76, a: 0 }, false, true);
         }; })(),
       },
+      // (RENDER-INV) arriving somewhere: every 3 s the next outdoor area, its map drawn afresh as on a first visit
+      // (the map is drawn in the background in the first seconds after an arrival: MAP-1, hud.mapTick)
+      {
+        id: 'arrival', label: 'Arriving in an area (Zeelich, Desert Island, the Hamalayi, Citadel), every 3 s',
+        setup: () => { outdoor(-42, 2); },
+        drive: (() => { let next = 0, k = 0; const seq = ['zeelich', 'desert', 'hamalayi', null]; return (t) => {
+          if (t < next || G.trans) return;
+          next = t + 3; const id = seq[k++ % seq.length];
+          G.hud?._bases?.delete(id || 'citadel');
+          if (id && G.rooms[id]) G.enterRoom(id, null, false, true); else G.exitRoom({ x: -42, z: 2, a: 0 }, false, true);
+        }; })(),
+      },
     ];
   }
 
@@ -90,6 +102,7 @@ export class Bench {
     const snap = G.snapshot(), quality0 = G.settings.quality, state0 = G.state;
     const C = G.camRig, cam0 = { view: C.view, yaw: C.yaw, pitch: C.pitch };
     G.benching = true; // (no saves while it runs; fixed settings: no automatic resolution)
+    G.renderer.timer = G.perf.gpuTimer;   // (RENDER-INV: the GPU's own time per frame, where the browser has a timer query)
     const auto0 = G.renderer.autoRes; G.renderer.setAutoRes(false);
     G.hideScreens?.(); G.setState('play');
     const plan = [];
@@ -144,7 +157,7 @@ export class Bench {
         if (G.settings.quality !== quality0) { G.settings.quality = quality0; G.applySettings(); }
         G.resetCombat('drop');
         G.applySave(snap);
-        G.benching = false; G.renderer.setAutoRes(auto0);
+        G.benching = false; G.renderer.setAutoRes(auto0); G.renderer.timer = null;
         C.setMode(G.settings.camera); Object.assign(C, cam0); C.snap?.();
         G.setState(state0 === 'title' ? 'play' : state0 === 'pause' ? 'play' : state0);
         this.running = false;
@@ -154,6 +167,17 @@ export class Bench {
       };
       next();
     });
+  }
+
+  // (FRAME-1) what a route's typical frame waits on, from its own medians: the game's CPU work (simulation + render
+  // submission) against the whole frame interval. Mostly CPU: fewer draw calls / simpler scenes help, a lower
+  // resolution does not. Mostly the rest: the GPU (pixels, shadows, MSAA, lamps) or the display's pacing. An estimate.
+  // RENDER-INV: with the GPU's own time (timer query) the estimate compares both sides directly.
+  bound(s) {
+    const f = s.frameMs.p50, cpu = s.simMs.p50 + s.renderMs.p50;
+    if (f <= 17.5) return 'keeps up with a 60 Hz display';
+    if (s.gpuMs) return s.gpuMs.p50 >= cpu ? `GPU (GPU ${s.gpuMs.p50} ms vs CPU ${cpu.toFixed(1)} ms a frame: resolution, shadows, MSAA, lamps)` : `CPU (CPU ${cpu.toFixed(1)} ms vs GPU ${s.gpuMs.p50} ms a frame: draw calls, simulation)`;
+    return cpu >= 0.75 * f ? `CPU (${cpu.toFixed(1)} of ${f} ms is the game's own work: draw calls)` : `GPU (${cpu.toFixed(1)} of ${f} ms is CPU work; the rest is waiting: resolution, shadows, MSAA, lamps)`;
   }
 
   report(results) {
@@ -169,7 +193,14 @@ export class Bench {
     // (FRAME-1: the shortest frame interval seen is the display's refresh interval if the game ever kept up with it)
     const minMs = Math.min(...results.map((x) => x.pacing?.minMs ?? Infinity));
     lines.push(`frame-rate limit: ${G.settings.fps === '30' || G.settings.fps === '60' ? G.settings.fps : 'off'} (off while measuring) · shortest frame interval seen ${Number.isFinite(minMs) ? minMs.toFixed(1) + ' ms (≈ ' + (1000 / minMs).toFixed(0) + ' Hz)' : '?'}`);
-    if (G.perf.load) lines.push(`startup: build ${(G.perf.load.total / 1000).toFixed(1)} s · shader preparation ${(G.perf.load.shaders / 1000).toFixed(1)} s`);
+    if (G.perf.load) {
+      // (RENDER-INV: every area is built at startup; what Citadel itself took, and the largest of the others)
+      const L = G.perf.load, own = (L.world || 0) + (L.spaceport || 0) + (L.townlife || 0) + (L.citydress || 0), skip = new Set(['world', 'spaceport', 'townlife', 'citydress', 'total', 'shaders', 'actors']);
+      const big = Object.entries(L).filter(([k]) => !skip.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, ms]) => `${k} ${(ms / 1000).toFixed(1)}`).join(', ');
+      lines.push(`startup: build ${(L.total / 1000).toFixed(1)} s (Citadel ${(own / 1000).toFixed(1)} s; largest other areas: ${big} s) · shader preparation ${(L.shaders / 1000).toFixed(1)} s`);
+    }
+    { const M = G.renderer.renderer.info.memory, heap = performance.memory?.usedJSHeapSize;
+      lines.push(`memory: ${M.geometries} geometries and ${M.textures} textures on the GPU · ${G.renderer.renderer.info.programs?.length ?? '?'} shader programs${heap ? ` · JavaScript heap ${(heap / 1048576).toFixed(0)} MB` : ''} · GPU timer: ${G.perf.gpuTimer ? 'yes' : 'not offered by this browser'}`); }
     let q = null;
     const brk = results.filter((x) => x.v);
     for (const x of results.filter((r) => !r.v)) {
@@ -181,13 +212,14 @@ export class Bench {
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
       const P = x.pacing;
       lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · stalls>50ms ${x.stalls}${P ? ` (${P.stallsBlack} behind black) · >33ms ${P.over33} of ${s.frames} · longest ${P.worst} ms` : ''}`
-        + ` · sim CPU p50 ${s.simMs.p50} ms · render submit CPU p50 ${s.renderMs.p50} ms · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`);
+        + ` · sim CPU p50 ${s.simMs.p50} (p95 ${s.simMs.p95}) ms · render submit CPU p50 ${s.renderMs.p50} ms${s.gpuMs ? ` · GPU time p50 ${s.gpuMs.p50} (p95 ${s.gpuMs.p95}) ms` : ''} · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`
+        + ` · limited by (estimate): ${this.bound(s)}`);
     }
     if (brk.length) {
       lines.push('', 'breakdown at Medium (one cost taken away at a time):');
-      for (const x of brk) { const s = x.s; lines.push(`  ${(x.id + ' · ' + x.v).padEnd(24)} ${s ? `${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} ms · render pixel ratio ${x.cfg.pr}` : 'no frames'}`); }
+      for (const x of brk) { const s = x.s; lines.push(`  ${(x.id + ' · ' + x.v).padEnd(24)} ${s ? `${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} ms${s.gpuMs ? ` · GPU p50 ${s.gpuMs.p50} ms` : ''} · render pixel ratio ${x.cfg.pr}` : 'no frames'}`); }
     }
-    lines.push('', `Frame time includes the GPU (the browser waits for it); "render submit" is CPU time only.`);
+    lines.push('', `Frame time includes the GPU (the browser waits for it); "render submit" is CPU time only; "GPU time" (when shown) is the GPU's own time for a frame.`);
     return lines.join('\n');
   }
 }
