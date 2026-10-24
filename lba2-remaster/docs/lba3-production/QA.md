@@ -725,6 +725,7 @@ cliffs 47 → 0, standing 41 → 0, combat 22 → 0, Modern 710 → 0.9; heading
 | camsteady RATES=30,jank (30 fps; 60 fps with a 0.1 s frame every 15th) on the house routes and the cliffs | ALL PASSED (32 checks; same budgets) |
 | Cost | camRig.update 0.32 ms/frame by a house (SwiftShader machine, CPU); the heading search 0.6–3 ms, at most once per 4 s and at a scene start |
 | Regressions (after merging origin f30d36d: RENDER-INV, CLAR-2, the loading screen; own server :8174, one browser at a time) | camsteady 50/50, camclear 44/44, occluders 32/32 (the rise over the south house 26.4° → 48°, acc max 25.1, turn ≤ 43.5°/s), controls 69/69, transitions 6/6, stability 16/16, townlife 36/36, opening 24/24, combat 59/59, chapter1 end to end (no errors) |
+| After merging origin e65f548 (CHAR-2: characters.js and models) | occluders 32/32, opening 24/24, camsteady 50/50 (reviews/CAM-2/regressions.log) |
 | controls' camera route (CTRL-1 budgets), before → after | lead 0.60 → 0.28 m, worst behind −2.04 → −2.41 m (≤ 2.5), drift after a stop 0.16 → 0.36 m (< 0.6), acc max 15.9 → 15.4, the turn on the spot 0.01 → 0.01 m: CTRL-1's dead zone kept; the look-ahead now waits for 1 m on a steady way (a larger dead zone, the WIP's 1.8 × 1.3 m, trailed by 0.6 m: not kept) |
 Evidence: reviews/CAM-2/walls-side-by-side.mp4/.jpg (before | after, walking round the south house: 72–78° down → 46–48°
 and a turn), door-side-by-side.mp4/.jpg (out of Twinsen's door: 67° → 26°), before-after.txt, routes-*.json.
