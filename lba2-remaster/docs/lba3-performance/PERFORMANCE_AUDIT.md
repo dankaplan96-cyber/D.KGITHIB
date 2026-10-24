@@ -188,9 +188,9 @@ needs the desert) — SOURCE-CONFIRMED. Recommended plan: R1 (§11). Status: MEA
 **F4 — the title and the opening's first shot draw the whole of Citadel** (586 / 498 calls, all 51 people present at
 the title). By design of those shots; not changed (a visual decision). Status: MEASURED.
 
-**F5 — Citadel's draw submission is the steady-state CPU cost** (200–320 calls, §4). What is left after PERF-2 and
-VP-10 is one draw per distinct texture, instanced kind and character part (PERF-2's analysis); more merging belongs to
-the graphics agent's town/architecture files (block 7b). Status: MEASURED, NOT CHANGED (ownership).
+**F5 — Citadel's draw submission is the steady-state CPU cost** (200–320 calls, §4): addressed by F8 for every area.
+On the laptop the frame turned out to be GPU-bound (§1b), so F8's CPU saving matters less there than its effect on the
+GPU's per-draw work (NOT VERIFIED). Status: MEASURED, see F8.
 
 **F6 — simulation of far areas** (Citadel's people and updaters while indoors: ~1 ms here). Distance-reduced
 animation was considered (Unity's Animator culling modes do this) and **not implemented**: ~0.3 ms of rig updates
@@ -226,6 +226,18 @@ compiled): `if ( directLight.visible ) RE_Direct(...)` for point and spot lights
 the game has none; no texture is sampled inside the branch, so no derivative issue on ANGLE/D3D11). Result: pixel-exact
 (within one page, one frame, patched vs three's chunk: 0 differing pixels on the Citadel views); SwiftShader's raster
 time (a CPU proxy for GPU work): §10. Status: MEASURED (identity, proxy); laptop GPU saving NOT VERIFIED.
+
+**F10 — the multisampled scene target resolved depth and stencil every frame, unused.** Symptom: on the laptop ~10 ms
+of Medium's GPU time scales neither with the pixel count (resolution ×0.6 only saves 3.6 ms, and the target stays full
+size) nor with shadows or lamps, and Low (no MSAA, so no resolve) runs at 8–9 ms. Evidence (SOURCE-CONFIRMED in three
+r180's WebGLRenderer: `resolveDepthBuffer` / `resolveStencilBuffer` default to true, so every MSAA resolve blits colour
++ depth + stencil); nothing reads the resolved depth/stencil (the output and bloom passes sample colour; the hero's
+stencil silhouette is drawn inside the scene pass). INFERRED: Direct3D 11 cannot resolve depth/stencil in hardware, so
+ANGLE emulates the blit — possibly a large part of that fixed cost, NOT VERIFIED. Change (renderer.js): both targets
+resolve colour only; three then discards the multisampled depth/stencil. Same pixels by construction (checked in one
+page: §10). Result: SwiftShader −1 to −4 % (it resolves depth natively); the laptop's real saving is in the new
+breakdown line "depth resolve on" (the old behaviour) vs "as is". Status: change MEASURED as identical; GPU saving
+NOT VERIFIED.
 
 Not done (considered): skipping the sun's shadow lookup on surfaces facing away from the sun would also be exact, but
 it puts a shadow-texture lookup in per-pixel divergent control flow, which ANGLE's D3D11 translation may reject or
@@ -266,24 +278,71 @@ brief's references. The three.js behaviour quoted is read in the vendored r180 b
 
 ## 9. Benchmark on the laptop (the judge)
 
-1. Install the new build; start the game, Settings → Graphics **Medium** (as played), Frame rate limit **Off**.
+1. Install the new build; laptop **plugged in**; other programs closed. Start the game, Settings → Graphics
+   **Medium**, Frame rate limit **Off**.
 2. Start or continue a game; wait until Twinsen stands in Citadel.
 3. Esc → **Benchmark**. Don't touch anything until the results appear (a few minutes: Low, Medium, High, then the
-   Medium breakdown). Keep other programs closed; the laptop on mains power.
-4. **Copy**, and send the whole text.
-5. If time allows: Settings → Frame rate limit **30**, play a minute on the street and say whether it feels steadier.
+   Medium breakdown on the street and in the house).
+4. **Copy**, and send the whole text (and say whether it was plugged in).
 
-What to read in it: per route `frame p50/p95/p99`, `>33ms` / `>100ms` counts and the longest frames; `sim CPU` and
-`render submit CPU` (the game's CPU); **`GPU time`** (new: the GPU's own time per frame, when the browser offers a
-timer query — the `memory:` line says "GPU timer: yes/not offered"); `limited by (estimate)` compares them; the
-`arrival` route (new) measures the first seconds after arriving in Zeelich, Desert Island, the Hamalayi and Citadel
-(map drawn afresh); `startup:` now lists Citadel's build time and the largest other areas.
+What to read in it:
+- per route: frame p50/p95/p99, `>33ms` / `>100ms` counts, the longest frames; `sim CPU` and `render submit CPU` (the
+  game's CPU); **`GPU time`** with its passes in brackets (`scene` — the main view, `shadow map`, `output`, `bloom` at
+  High, `fxaa` at Low): the GPU's own time; `lamps lit`; `limited by (estimate)` compares GPU and CPU.
+- the `arrival` route: the first seconds after arriving in Zeelich, Desert Island, the Hamalayi and Citadel.
+- the Medium breakdown (one change at a time, street and house): `no shadows`, `no lamps`, `res x0.6` (as before);
+  new: `shadow map kept` (the shadow map not redrawn: what drawing it costs), `no MSAA`, `8-bit target` (what the
+  half-float colour buffer costs), `depth resolve on` (the old resolve, F10: its difference to `as is` is what F10
+  saved), `draw batches off` (F8: what the batches save). Diagnostics only; none is a setting.
+- `startup:` (Citadel's build and the largest other areas) and `memory:` (GPU timer yes/no).
 
 ## 10. Before / after (MEASURED, SwiftShader CPU proxy, matched conditions)
 
-ARRIVAL_TABLE
+**Arrivals (F1 + F2; `arrival.mjs`, two interleaved rounds per side, CPU per displayed frame in the first 150
+frames after arriving with the area's map not drawn yet, 2 simulation steps per frame as on a slow machine, Medium,
+1366×768, GPU queue drained; round 1 / round 2):**
 
-Steady state (street, harbour, house, combat, Zeelich, maps finished): STEADY_RESULT
+| Area | p50 ms before → after | p95 | max | frames > 16.7 ms | frames > 33 ms |
+|---|---|---|---|---|---|
+| citadel | 11.8 / 11.9 → 13.7 / 13.7 | 26.9 / 25.8 → 19.7 / 19.2 | 44.9 / 49 → 36.9 / 26.9 | 40 / 45 → 22 / 30 | 4 / 2 → 2 / 0 |
+| zeelich | 18.3 / 18.2 → 15.1 / 15.5 | 26.7 / 27.3 → 21.8 / 21.5 | 44.1 / 45.3 → 30.5 / 42.5 | 94 / 97 → 47 / 52 | 2 / 2 → 0 / 2 |
+| desert | 7 / 6.9 → 9 / 9.4 | 15.2 / 15.9 → 12.4 / 12.9 | 27.3 / 31 → 22.1 / 30 | 2 / 4 → 3 / 2 | 0 → 0 |
+| hamalayi | 6.1 / 6.9 → 8.4 / 8.9 | 15.8 / 18.3 → 11.5 / 13.2 | 20.7 / 25.5 → 19.1 / 21.7 | 4 / 8 → 3 / 4 | 0 → 0 |
+
+p95 and the long frames go down everywhere; p50 rises 2 ms in the desert and the Hamalayi because the same map work
+is now spread evenly (one 2.5 ms slice a displayed frame) instead of in bursts. Map chunks (`mapchunks.mjs`, quiet
+round): ~200 → 970–2 450 per map, chunk p95 7–10 → 0.4–1.1 ms, chunks over 10 ms 5–9 → 0–2.
+
+**Every region's steady frame (F8 draw batches, F9 lamp skip; `regions.mjs`: one page, one frozen frame each way, free
+camera, 1366×768, median of 7; calls = main + shadow pass, shadow pass in brackets; submit = the game's render CPU,
+GPU queue drained; raster = SwiftShader's time to draw the frame, a CPU PROXY for GPU work, not the laptop's):**
+
+| Area / view | Medium calls (shadow) off → on | submit CPU ms off → on | raster proxy, lamp skip off → on | High calls (shadow) off → on | submit CPU ms off → on | raster proxy, lamp skip off → on |
+|---|---|---|---|---|---|---|
+| citadel street | 360 (31) → 293 (31) -19 % | 10 → 8.6 -14 % | 2402.3 → 2372.8 -1 % (lamps 2 of 4) | 461 (42) → 394 (42) -15 % | 11.2 → 10.2 -9 % | 3103.5 → 3186 +3 % (lamps 2 of 8) |
+| citadel harbour | 244 (24) → 200 (24) -18 % | 7.2 → 8.2 +14 % | 1986.3 → 1989.2 +0 % (lamps 2 of 4) | 331 (44) → 287 (44) -13 % | 8.7 → 9 +3 % | 2545.6 → 2531.6 -1 % (lamps 2 of 8) |
+| citadel house door | 448 (28) → 345 (28) -23 % | 11.1 → 10 -10 % | 3083.7 → 3091.4 +0 % (lamps 1 of 4) | 545 (38) → 442 (38) -19 % | 12.1 → 10.8 -11 % | 3848.5 → 3809.1 -1 % (lamps 1 of 8) |
+| house | 99 (3) → 74 (3) -25 % | 3.6 → 3.1 -14 % | 856.8 → 844.8 -1 % (lamps 4 of 4) | 112 (3) → 87 (3) -22 % | 3.1 → 3.6 +16 % | 1294.3 → 1325.1 +2 % (lamps 8 of 8) |
+| workshop | 168 (3) → 112 (3) -33 % | 4.6 → 3.6 -22 % | 644.4 → 673.8 +5 % (lamps 4 of 4) | 181 (3) → 125 (3) -31 % | 4.3 → 3.7 -14 % | 1025.9 → 1039.1 +1 % (lamps 8 of 8) |
+| well | 159 (34) → 155 (34) -3 % | 2.5 → 2.7 +8 % | 777.2 → 775.2 -0 % (lamps 4 of 4) | 173 (34) → 169 (34) -2 % | 2.9 → 2.8 -3 % | 1136.5 → 1132.7 -0 % (lamps 5 of 8) |
+| office | 76 (5) → 64 (5) -16 % | 2.4 → 2.4 +0 % | 560.6 → 554.2 -1 % (lamps 4 of 4) | 89 (5) → 77 (5) -13 % | 2.9 → 2.7 -7 % | 894.9 → 909.9 +2 % (lamps 5 of 8) |
+| zeelich | 127 (15) → 112 (15) -12 % | 5 → 4.4 -12 % | 1101 → 1107.9 +1 % (lamps 0 of 4) | 145 (20) → 130 (20) -10 % | 3.9 → 4.3 +10 % | 1458.7 → 1462.9 +0 % (lamps 0 of 8) |
+| desert | 33 (8) → 32 (8) -3 % | 2.6 → 2.9 +12 % | 1071.5 → 1115 +4 % (lamps 0 of 4) | 47 (8) → 46 (8) -2 % | 2.8 → 3 +7 % | 1408.3 → 1472.5 +5 % (lamps 0 of 8) |
+| hamalayi | 47 (9) → 40 (9) -15 % | 2.8 → 3.4 +21 % | 1116.8 → 1087.2 -3 % (lamps 0 of 4) | 60 (9) → 53 (9) -12 % | 2.7 → 2.9 +7 % | 1520.4 → 1543.6 +2 % (lamps 0 of 8) |
+| isle otringal | 133 (18) → 125 (18) -6 % | 3.4 → 3.6 +6 % | 2614.3 → 2609.5 -0 % (lamps 0 of 4) | 146 (18) → 138 (18) -5 % | 3.3 → 3.3 +0 % | 3230.6 → 3239.1 +0 % (lamps 0 of 8) |
+| isle tralu | 66 (6) → 46 (6) -30 % | 2 → 1.9 -5 % | 1456.5 → 1460.4 +0 % (lamps 0 of 4) | 79 (6) → 59 (6) -25 % | 2.5 → 2.3 -8 % | 1951.4 → 1951.5 +0 % (lamps 0 of 8) |
+| isle liftdock | 53 (2) → 36 (2) -32 % | 2.1 → 1.8 -14 % | 733.7 → 754.4 +3 % (lamps 0 of 4) | 66 (2) → 49 (2) -26 % | 2 → 2.2 +10 % | 1224.1 → 1142.2 -7 % (lamps 0 of 8) |
+| underground c3deep | 103 (5) → 69 (5) -33 % | 2.8 → 2.4 -14 % | 788.7 → 747.6 -5 % (lamps 4 of 4) | 116 (5) → 82 (5) -29 % | 3 → 2.6 -13 % | 1273 → 1287.2 +1 % (lamps 8 of 8) |
+
+Draw calls go down in every area (−2 to −33 %; Citadel's street −19 % at Medium / −15 % at High, the house −25 %,
+the workshop −33 %, the underground −33 %, Zeelich's islands −6 to −32 %); render submission CPU follows where the
+calls fall most (−9 to −22 %); in areas with few calls the change is within the noise of 7 frames (±10–20 %).
+SwiftShader's raster time does not move with the lamp skip (±5 %): its software rasteriser gains nothing from the
+skipped branch; a GPU skips the work per pixel group — NOT VERIFIED until the laptop's run. The desert has 33 calls
+to start with (little to merge).
+
+Depth/stencil resolve off (F10, `gpulab.mjs`, SwiftShader): street raster −4 %, house −1 % (Vulkan resolves depth in
+hardware; Direct3D 11 does not — the laptop's "depth resolve on" breakdown line will show its real cost).
 
 ## 11. Remaining limits and recommendations
 
@@ -296,7 +355,10 @@ Steady state (street, harbour, house, combat, Zeelich, maps finished): STEADY_RE
   here), renderer memory down by the unbuilt areas. Owner: a future block with the story owner.
 - **R2 — release GPU copies of areas left long ago** (dispose geometries of areas not visited for N transitions,
   keep the CPU arrays; re-upload behind the black frame on return). Only if the laptop shows memory pressure.
-- **R3 — fewer Citadel draw calls** (town/architecture merging): graphics agent, block 7b.
+- **R3 — the remaining GPU cost on the laptop**: decide from the next benchmark's per-pass GPU times and breakdown
+  lines (shadow map kept / no MSAA / 8-bit target / depth resolve on). Options that change the look slightly and need
+  the user's eye: MSAA 2× → FXAA or 1.25× supersampling on Medium; a compact HDR target (R11G11B10F); shadow map
+  redrawn only when something moved; grass distance on Medium.
 - GPU time, real frame rate, real stutters, input feel and the desktop installer on the laptop: **NOT VERIFIED**.
 
 ## 12. The seven answers
@@ -304,8 +366,10 @@ Steady state (street, harbour, house, combat, Zeelich, maps finished): STEADY_RE
 1. **Was the entire world being rendered?** No (MEASURED, SOURCE-CONFIRMED): only the current area is drawn, in
    the main and shadow passes. Everything is **built and kept in memory** from startup (MEASURED), and the title and
    the opening's first shot draw the whole of Citadel by design.
-2. **What was the main cost?** Steady play: draw-call submission on Citadel (60–75 % of the game's CPU, MEASURED);
-   GPU time unknown (NOT VERIFIED). Stutters: the map's background build after every arrival (MEASURED, fixed).
+2. **What was the main cost?** On the laptop: **GPU time** (MEASURED by the user's build-122 benchmark: Medium street
+   18.6 ms of GPU, High 25–36 ms); of the GPU time only ~20 % scales with the pixel count, shadows ~2.2 ms and lamps
+   ~1.4 ms, the rest is fixed per frame (INFERRED suspects: the depth/stencil resolve F10, per-draw work F8). Here on
+   SwiftShader: draw-call submission is 60–75 % of the game's own CPU. Stutters: the map's background build after every arrival (MEASURED, fixed).
    Startup and memory: building every area up front (MEASURED, not changed).
 3. **What was already optimised?** Hidden-area skipping (three), shown-only world matrices, far-actor and sub-pixel
    culling, instanced blob shadows, merged towns and textured materials, static shadow batches per cell with view
@@ -314,19 +378,29 @@ Steady state (street, harbour, house, combat, Zeelich, maps finished): STEADY_RE
 4. **Which techniques were relevant?** Time-slicing background work (applied), region activation (already in place
    for drawing), streaming with an explicit lifecycle and resource release (recommended, R1/R2), batching (graphics
    agent); occlusion culling and distance-reduced animation were not justified by the numbers (§7).
-5. **What changed?** F1 (map build slices), F2 (picture-only work once per displayed frame), the benchmark (GPU time,
-   arrival route, >100 ms counts, startup per area, memory line, FRAME-1's "limited by"). Files: §13.
-6. **What improved, by how much, under which conditions?** §10: stutter after arrivals (CPU per frame p95 and
-   frames over 16.7/33 ms in the first 5 s, 2 steps per frame, SwiftShader CPU proxy, Medium 1366×768). Steady-state
-   frames unchanged. Laptop: NOT VERIFIED.
+5. **What changed?** F1 (map build slices), F2 (picture-only work once per displayed frame), F8 (draw batches in every
+   area), F9 (lamps skip their math where they give no light), F10 (colour-only MSAA resolve), the benchmark (GPU time
+   per pass, arrival route, >100 ms counts, lamps lit, startup per area, memory line, FRAME-1's "limited by", five new
+   breakdown lines). Files: §13.
+6. **What improved, by how much, under which conditions?** §10 (SwiftShader, Medium/High, 1366×768): arrivals'
+   p95 −20 to −27 % and frames over 16.7 ms halved on Citadel/Zeelich; draw calls −2 to −33 % in every area, render
+   submission CPU −9 to −22 % where calls fell most; F9/F10 pixel-identical, their GPU saving unmeasurable here. The
+   laptop (build 122, plugged in): Medium 43–60 fps, High 25–34 fps, GPU-bound — before F8–F10. Whether Medium now holds
+   60 on the street: NOT VERIFIED (the next benchmark).
 7. **What remains unverified?** The laptop's GPU time and frame rate, whether the laptop is CPU- or GPU-bound at
    Medium, real stutter sizes, input feel, the packaged installer; startup time on the laptop.
 
 ## 13. Files changed
 
 - src/game/mapdraw.js — generator yields only (F1). (MAP-1's file; no owner in block 7a.)
-- src/main.js — `advance`/`frame`/`updatePlay`: `_inner` (F2).
-- src/engine/perf.js — `GpuTimer` (EXT_disjoint_timer_query_webgl2), `gpuMs` in stats.
-- src/engine/renderer.js — the timer around the composer while benchmarking.
-- src/engine/bench.js — arrival route, GPU time, >100 ms, startup per area, memory line, FRAME-1's estimate.
-- Region construction: not changed.
+- src/main.js — `advance`/`frame`/`updatePlay`: `_inner` (F2); `DrawBatch` wired (Renderer.mid, prepare, warmScene)
+  (F8); lamps lit recorded for the benchmark.
+- src/engine/drawbatch.js (new) — the draw batches (F8).
+- src/engine/merge.js — `plain`, `texOnly`, `twinOf` exported for the batches (unchanged behaviour).
+- src/engine/shadowcull.js — leaves batched pieces' main-pass layer alone (F8).
+- src/engine/renderer.js — lamp skip in three's lights chunk (F9), colour-only resolve (F10), `mid` hook, per-pass GPU
+  marks.
+- src/engine/perf.js — `GpuTimer` per pass (EXT_disjoint_timer_query_webgl2), `gpuMs`, lamps lit in stats.
+- src/engine/bench.js — arrival route, GPU time per pass, >100 ms, lamps lit, startup per area, memory line, FRAME-1's
+  estimate, five breakdown diagnostics.
+- Region construction and town/island geometry: not changed (the batches act at run time on what the builders made).

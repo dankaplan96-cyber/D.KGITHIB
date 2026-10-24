@@ -64,7 +64,7 @@ function recipe(o) {
 const lookOf = (m) => { const t = m.map; return [m.color.r, m.color.g, m.color.b, m.roughness, m.metalness, m.visible, m.opacity, m.emissive.r + m.emissive.g + m.emissive.b, m.transparent, t ? t.offset.x + ',' + t.offset.y + ',' + t.repeat.x + ',' + t.repeat.y + ',' + t.rotation : ''].join('|'); };
 
 class Area {
-  constructor(root, cell) {
+  constructor(root, cell, fold = true) {
     this.root = root; this.cells = new Map(); this.members = []; this.ms = 0;
     const t0 = performance.now();
     root.updateMatrixWorld(true);
@@ -75,7 +75,7 @@ class Area {
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       _c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
       if (!Number.isFinite(_c.x + _c.z)) return;
-      const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F = recipe(o);
+      const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F = fold ? recipe(o) : null;
       const mat = F ? F.twin : o.material, sig = F ? (F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
       const key = [mat.uuid, sig, o.receiveShadow, o.renderOrder, flip, Math.floor(_c.x / cell) + ',' + Math.floor(_c.z / cell)].join('|');
       let C = this.cells.get(key);
@@ -149,12 +149,15 @@ class Area {
 }
 
 export class DrawBatch {
-  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.left = 0; }
+  // fold: off. Folded batches change a few pixels (0.003–0.3 % of a frame: where two surfaces of different materials
+  // coincide, the draw order decides which shows) and the look must stay identical; folding would save another ~20–40
+  // calls on Citadel (RENDER-INV audit, F8). Without it the batches are pixel-exact.
+  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.fold = false; this.left = 0; }
   // build the area's batches (once) and check its pieces; call after the world matrices are up to date
   update(root) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return null; }
     let A = this.areas.get(root);
-    if (!A) { A = new Area(root, this.cell); this.areas.set(root, A); }
+    if (!A) { A = new Area(root, this.cell, this.fold); this.areas.set(root, A); }
     this.left += A.watch();
     return A;
   }
