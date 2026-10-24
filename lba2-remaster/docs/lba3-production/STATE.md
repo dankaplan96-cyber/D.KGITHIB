@@ -284,6 +284,22 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Not verified: the laptop's GPU saving and whether Medium now holds 60 on the street (the next benchmark: pause →
   Benchmark → Copy, plugged in).
 
+## Done after (CHAR-2, block 8: NECK-TW + ZOE-OPEN; status REVIEW)
+- Character artist; each item captured before/after and committed on its own; evidence and capture scripts in
+  docs/lba3-production/reviews/CHAR-2/, docs/character-review.md §18 (with the animator handoff), QA.md "CHAR-2".
+  - NECK-TW (the user's photos reviews/USER-111/twinsen-neck-*.jpg): the neck and cape top were ring()s whose back
+    point lay forward of the sides (a creased nape, a notched flat cape top round a stick). Now round sections, LBA2's
+    thin neck with a wider base and a nape leaning into the skull, the cape's shoulders sloping into a rolled collar
+    with a dark inside; the head's turn spread over the neck. One-shell cape, medallion, belt, colours kept.
+    Twinsen 2372 → 2724 triangles.
+  - ZOE-OPEN (reviews/USER-111/zoe-opening.jpg, BUILD109_REVIEW §4): her head from designed sections at the measured
+    size (brow, cheekbones, rounded chin), a small rounded pointed nose, a smaller smiling mouth with a mouth line,
+    white almond eyes with iris and pupil, lid lines and brows, teardrop hoops; arms 12-sided with an elbow, forearm
+    swell and flatter wrist; curled mitten hands with a thumb. Zoé 4646 → 5382 triangles (+15.8 %).
+  - Skeletons, bone names, bind transforms, sockets, armSpread and opening.js unchanged; one material each.
+- Open: an independent visual review and a look on a real GPU; mouth poses and gaze need rig support (handoff in
+  character-review §18, a proposed contract change, not made).
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
