@@ -51,7 +51,7 @@ const AHEAD = 2500 * UNIT; // DISTANCE_VISEE
 // correction leave it where it is (it used to swing the whole 3.3 m round, and the view with it, on every one); a
 // walking turn swings it round over a few steps. The height keeps a dead band of DEAD_Y m (a kerb, a bump in the
 // lane, a step don't bob the view; a stair or a slope still carries it)
-const DEAD_R = 1.8, DEAD_F = 1.3, FOLLOW_W = 5, HEIGHT_W = 3.2, LEAD_DIST = 2.2, COMMIT = 1.5, RUN_TOL = 0.6, RUN_TURN = 2.5, DEAD_Y = 0.35;
+const DEAD_R = 1.4, DEAD_F = 1.0, FOLLOW_W = 5, HEIGHT_W = 3.2, LEAD_DIST = 2.2, COMMIT = 1.0, RUN_TOL = 0.6, RUN_TURN = 2.5, DEAD_Y = 0.35;
 const BOX = { x0: -0.62, x1: 0.6, y0: -0.66, y1: 0.55 };
 const SWING_V = (60 * Math.PI) / 180, SWING_A = (90 * Math.PI) / 180;   // the view's swing: top speed, ease (rad/s, rad/s²)
 // VP-10: the rise over scenery: top pitch, pitch speed and ease (rad, rad/s, rad/s²), how long the way stays clear
