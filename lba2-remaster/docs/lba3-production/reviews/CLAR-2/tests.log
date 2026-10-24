@@ -19,3 +19,8 @@ chapter8 rc=0 pass=0 fail=0 107s | no errors
 chapter9 rc=0 pass=0 fail=0 104s | no errors
 chapter10 rc=0 pass=0 fail=0 121s | CHAPTER 10 DONE
 DONE
+post-merge f30d36d: menus rc=0 pass=26 fail=0 148s | ALL PASSED
+post-merge f30d36d: stability rc=0 pass=16 fail=0 97s | ALL PASSED
+post-merge f30d36d: opening rc=0 pass=24 fail=0 848s | ALL PASSED
+post-merge f30d36d: clarity rc=0 pass=10 fail=0 463s | ALL PASSED
+post-merge f30d36d: DONE

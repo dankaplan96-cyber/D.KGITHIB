@@ -657,6 +657,7 @@ opening 24/24, menus 26/26, stability 16/16, holomap 30/30, clarity 10/10, chapt
 32/32, desert-life 30/30, resume 2/2 (ALL PASSED); prologue, chapter1–3 and 5–10 (LOGIC) each reach the next chapter, no
 page errors. Not verified: a first-time player's read of the riddles and of the 5-second panel; the Modern HUD route
 (clarity HUD=modern) not rerun.
+After merging origin f30d36d (the loading screen): menus 26/26, stability 16/16, opening 24/24, clarity 10/10.
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
