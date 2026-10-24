@@ -1,5 +1,5 @@
 lba · street and square
-   score                 4.29        2.82
+   score                 4.29        3.79
    turnPerM                 0           0
    pitchPerMin              0           0
    yawPerMin                0           0
@@ -9,14 +9,14 @@ lba · street and square
    revPitch                 0           0
    revY                   3.7         0.8
    joltsPerMin              0           0
-   accMax                14.4         9.4
-   stillMove            10.37        6.96
+   accMax                14.4        10.8
+   stillMove            10.37        9.44
    stillTurnDeg             0           0
    stillT                26.4        25.4
    heroPath              97.9        97.9
    dur                   80.9        79.9
 lba · along house walls
-   score                22.37       34.86
+   score                22.37       34.56
    turnPerM              1.42        1.34
    pitchPerMin          158.2        83.2
    yawPerMin                0       113.8
@@ -26,16 +26,16 @@ lba · along house walls
    revPitch               3.7         3.8
    revY                   9.9         3.8
    joltsPerMin            1.2           0
-   accMax                42.4        25.2
-   stillMove             4.24        4.69
-   stillTurnDeg         10.17        9.12
+   accMax                42.4        27.6
+   stillMove             4.24        4.64
+   stillTurnDeg         10.17         9.1
    stillT                 2.7         1.7
    heroPath                90          90
    dur                   48.5        47.4
 lba · through a door in and out
-   score                14.46        6.95
-   turnPerM              3.44        1.66
-   pitchPerMin          268.6        94.3
+   score                14.46        6.83
+   turnPerM              3.44        1.65
+   pitchPerMin          268.6          94
    yawPerMin                0        68.1
    maxPitch              80.2          48
    steepT                 6.6           0
@@ -44,13 +44,13 @@ lba · through a door in and out
    revY                   6.6         6.8
    joltsPerMin              0           0
    accMax                29.4        25.5
-   stillMove             6.68        2.47
+   stillMove             6.68        2.39
    stillTurnDeg         15.19        1.17
    stillT                 8.4         7.4
    heroPath              35.8        35.8
    dur                   27.4        26.4
 lba · out of the house door (the view on the way out)
-   score                10.91        4.12
+   score                10.91        4.19
    turnPerM               2.7           0
    pitchPerMin          179.2           0
    yawPerMin                0           0
@@ -60,14 +60,14 @@ lba · out of the house door (the view on the way out)
    revPitch               9.3           5
    revY                   9.3           5
    joltsPerMin              0           0
-   accMax                25.1        11.6
-   stillMove              2.5        1.11
+   accMax                25.1        10.8
+   stillMove              2.5        1.14
    stillTurnDeg          8.25           0
    stillT                 5.2         4.2
    heroPath              14.3        14.3
    dur                   12.9        11.9
 lba · harbour pier
-   score                 5.05        7.12
+   score                 5.05        7.16
    turnPerM                 0           0
    pitchPerMin              0           0
    yawPerMin                0           0
@@ -77,14 +77,14 @@ lba · harbour pier
    revPitch                 0           0
    revY                   5.7           0
    joltsPerMin              0           0
-   accMax                16.9        11.8
-   stillMove              1.5        1.91
+   accMax                16.9          12
+   stillMove              1.5        1.92
    stillTurnDeg             0           0
    stillT                 3.3         2.7
    heroPath              56.1        55.2
    dur                   31.8        30.8
 lba · near cliffs (the bay to the lighthouse)
-   score                 4.62        6.57
+   score                 4.62        6.52
    turnPerM              0.23        0.26
    pitchPerMin           24.9        29.1
    yawPerMin                0           0
@@ -95,13 +95,13 @@ lba · near cliffs (the bay to the lighthouse)
    revY                  10.3         4.5
    joltsPerMin              0           0
    accMax                25.3        25.5
-   stillMove             0.99        1.19
+   stillMove             0.99        1.18
    stillTurnDeg             0           0
    stillT                 3.1         2.1
    heroPath              74.2        74.2
    dur                   40.6        39.6
 lba · standing, turning on the spot, short corrections
-   score                 2.55        0.92
+   score                 2.55        1.29
    turnPerM                 0           0
    pitchPerMin              0           0
    yawPerMin                0           0
@@ -111,14 +111,14 @@ lba · standing, turning on the spot, short corrections
    revPitch                 0           0
    revY                     0           0
    joltsPerMin              0           0
-   accMax                10.2         7.6
-   stillMove             3.23        1.01
+   accMax                10.2         7.4
+   stillMove             3.23        1.41
    stillTurnDeg             0           0
    stillT                12.7          11
    heroPath               8.9         8.9
    dur                   17.6        15.8
 lba · combat (four mites in the fields)
-   score                 0.01           0
+   score                 0.01        0.08
    turnPerM                 0           0
    pitchPerMin              0           0
    yawPerMin                0           0
@@ -128,12 +128,12 @@ lba · combat (four mites in the fields)
    revPitch                 0           0
    revY                     0           0
    joltsPerMin              0           0
-   accMax                 2.5           0
-   stillMove             0.02           0
+   accMax                 2.5         2.4
+   stillMove             0.02         0.1
    stillTurnDeg             0           0
-   stillT                17.6        17.2
+   stillT                17.6          13
    heroPath               1.2         1.2
-   dur                   18.3        17.9
+   dur                   18.3        13.7
 lba · street, Modern controls
    score                 0.34        0.21
    turnPerM                 0           0
@@ -145,15 +145,15 @@ lba · street, Modern controls
    revPitch                 0           0
    revY                   2.8         0.9
    joltsPerMin              0           0
-   accMax                12.1         8.1
+   accMax                12.1         9.1
    stillMove             0.01        0.01
    stillTurnDeg             0           0
    stillT                 1.8         0.8
    heroPath              93.1        92.9
    dur                   64.9        63.9
 free · street and square
-   score                21.73        2.95
-   turnPerM              8.64        1.18
+   score                21.73        2.96
+   turnPerM              8.64         1.2
    pitchPerMin            2.6         0.7
    yawPerMin            705.3        98.1
    maxPitch              27.8        27.4
@@ -163,18 +163,18 @@ free · street and square
    revY                   5.9         5.3
    joltsPerMin           51.9           0
    accMax              1066.6        38.1
-   stillMove             2.83        2.89
+   stillMove             2.83        2.91
    stillTurnDeg          0.07        0.02
-   stillT                26.4          25
-   heroPath              98.2        99.3
+   stillT                26.4        25.4
+   heroPath              98.2        97.9
    dur                   80.9        79.9
 free · along house walls
-   score                41.21       29.07
-   turnPerM              7.58        3.67
-   pitchPerMin          462.6       283.5
-   yawPerMin            552.3       427.6
+   score                41.21       29.05
+   turnPerM              7.58        3.65
+   pitchPerMin          462.6       287.5
+   yawPerMin            552.3       408.2
    maxPitch              60.7        71.8
-   steepT                 6.3        15.9
+   steepT                 6.3        15.2
    revYaw                 3.7           0
    revPitch              24.8        15.2
    revY                  30.9          24
@@ -203,39 +203,39 @@ free · through a door in and out
    heroPath              34.3        35.8
    dur                   26.7        26.4
 free · out of the house door (the view on the way out)
-   score               139.55        8.75
-   turnPerM             20.86        2.27
-   pitchPerMin          440.9         141
-   yawPerMin           1442.7        53.5
+   score               139.55        8.84
+   turnPerM             20.86        2.63
+   pitchPerMin          440.9       172.5
+   yawPerMin           1442.7        55.2
    maxPitch              60.8        60.9
-   steepT                 2.1         2.1
+   steepT                 2.1         2.8
    revYaw                 9.3           0
-   revPitch               107         5.4
-   revY                 153.5        37.6
+   revPitch               107           5
+   revY                 153.5        35.3
    joltsPerMin          451.2           0
    accMax             11990.8        17.1
    stillMove             0.67        0.66
    stillTurnDeg          1.01        2.63
    stillT                 5.2         4.2
-   heroPath              14.3        12.9
-   dur                   12.9        11.2
+   heroPath              14.3        14.3
+   dur                   12.9        11.9
 free · harbour pier
-   score                 21.6        3.68
-   turnPerM              6.03        0.92
+   score                 21.6        3.71
+   turnPerM              6.03        0.94
    pitchPerMin          135.3           0
-   yawPerMin            619.5       110.6
+   yawPerMin            619.5       113.1
    maxPitch              47.3        26.9
    steepT                   0           0
    revYaw                 9.4         1.9
    revPitch              13.2           0
-   revY                  20.7         5.7
+   revY                  20.7         5.8
    joltsPerMin             49           0
    accMax             26025.8          23
    stillMove             0.53        0.53
    stillTurnDeg             0        0.07
    stillT                 3.7         2.7
-   heroPath              55.2        56.6
-   dur                   31.8        31.5
+   heroPath              55.2        55.2
+   dur                   31.8        30.8
 free · near cliffs (the bay to the lighthouse)
    score                20.05        6.58
    turnPerM              6.12        1.66
@@ -268,8 +268,8 @@ free · standing, turning on the spot, short corrections
    stillMove             1.37        0.58
    stillTurnDeg          0.16           0
    stillT                12.7        11.7
-   heroPath               8.9         7.4
-   dur                   17.6        15.8
+   heroPath               8.9         8.9
+   dur                   17.6        16.6
 free · combat (four mites in the fields)
    score                23.61        0.08
    turnPerM             17.43           0
@@ -284,9 +284,9 @@ free · combat (four mites in the fields)
    accMax              8644.6        14.6
    stillMove             1.14        0.12
    stillTurnDeg          0.91           0
-   stillT                13.1        15.1
+   stillT                13.1        14.7
    heroPath               1.2         1.2
-   dur                   13.8        15.8
+   dur                   13.8        15.4
 free · street, Modern controls
    score               162.74        3.99
    turnPerM             10.27        0.03
