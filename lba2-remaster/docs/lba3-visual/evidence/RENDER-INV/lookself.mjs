@@ -6,7 +6,7 @@
 import { launch, open } from '../../../../tests/lib/boot.mjs';
 import fs from 'node:fs';
 const quality = process.env.QUALITY || 'medium', OUT = process.env.OUT;
-for (const d of ['shipped', 'nobatch', 'nolampskip']) fs.mkdirSync(`${OUT}/${d}`, { recursive: true });
+for (const d of ['shipped', 'nobatch', 'nolampskip', 'depthresolve']) fs.mkdirSync(`${OUT}/${d}`, { recursive: true });
 const { browser, page, errs } = await launch({ width: 1366, height: 768 });
 await page.addInitScript((q) => { try { if (!sessionStorage.getItem('pq')) { localStorage.setItem('sunshard_settings_v1', JSON.stringify({ quality: q, qPicked: true, qv: 1, v: 2, camera: 'free', res: 'full' })); sessionStorage.setItem('pq', q); } } catch {} }, quality);
 await open(page, '?nocine');
@@ -31,6 +31,10 @@ for (const v of all.filter((x) => !want || want.includes(x.id))) {
   await page.evaluate(() => { game.drawBatch.enabled = false; });
   await draw(); await page.screenshot({ path: `${OUT}/nobatch/${quality}-${v.id}.png`, timeout: 300000 });
   await page.evaluate(() => { game.drawBatch.enabled = true; });
+  // depth/stencil resolved as three does by default
+  await page.evaluate(() => { for (const T of [game.renderer.composer.renderTarget1, game.renderer.composer.renderTarget2]) { T.resolveDepthBuffer = true; T.resolveStencilBuffer = true; } });
+  await draw(); await page.screenshot({ path: `${OUT}/depthresolve/${quality}-${v.id}.png`, timeout: 300000 });
+  await page.evaluate(() => { for (const T of [game.renderer.composer.renderTarget1, game.renderer.composer.renderTarget2]) { T.resolveDepthBuffer = false; T.resolveStencilBuffer = false; } });
   // lamp skip off: three's own chunk, every material recompiled
   await page.evaluate(async () => {
     const G = game, C = window.__chunks ??= await import(new URL('vendor/three/build/three.module.min.js', location.href).href).then((T) => T.ShaderChunk);

@@ -5,15 +5,16 @@
 import { launch, open } from '../../../../tests/lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
 const RA = fileURLToPath(new URL('./ra.js', import.meta.url));
-const CELL = +(process.env.CELL || 0), quality = process.env.QUALITY || 'medium', VIEWS = (process.env.VIEWS || 'street,harbour,door').split(','), TOP = +(process.env.TOP || 25);
+const FOLD = process.env.FOLD, CELL = +(process.env.CELL || 0), quality = process.env.QUALITY || 'medium', VIEWS = (process.env.VIEWS || 'street,harbour,door').split(','), TOP = +(process.env.TOP || 25);
 const { browser, page, errs } = await launch({ width: 1366, height: 768 });
 await page.addInitScript((q) => { try { if (!sessionStorage.getItem('pq')) { localStorage.setItem('sunshard_settings_v1', JSON.stringify({ quality: q, qPicked: true, qv: 1, v: 2 })); sessionStorage.setItem('pq', q); } } catch {} }, quality);
 await open(page, '?nocine');
 await page.addScriptTag({ path: RA });
-const out = await page.evaluate(({ VIEWS, TOP, CELL }) => {
+const out = await page.evaluate(({ VIEWS, TOP, CELL, FOLD }) => {
   document.querySelector('[data-act="new"]').click(); const G = game; G.testFreeze = true; G.step(0.3); G.setState('play');
   if (CELL && G.drawBatch) { G.drawBatch.reset(); G.drawBatch.cell = CELL; }   // (a cell size to compare; CELL=-1: draw batches off)
   if (CELL < 0 && G.drawBatch) G.drawBatch.enabled = false;
+  if (FOLD === '0' && G.drawBatch) { G.drawBatch.reset(); G.drawBatch.fold = false; }   // (the batches without folding colours)
   const W = G.renderer.renderer, res = {};
   const views = {
     street: { setup: () => { const r = G.bench.routes().find((x) => x.id === 'street'); r.setup(); return (t, dt) => r.drive(t, dt); }, at: [2.5, 4, 5.5] },
@@ -55,6 +56,6 @@ const out = await page.evaluate(({ VIEWS, TOP, CELL }) => {
     res[v] = { batches: G.drawBatch?.stats(), frames, callsPerFrame: +(calls / frames).toFixed(1), byClass: Object.fromEntries([...cls].sort((a, b) => b[1] - a[1]).map(([k, n]) => [k, +(n / frames).toFixed(1)])), trisK: Object.fromEntries([...tris].sort((a, b) => b[1] - a[1]).map(([k, n]) => [k, Math.round(n / frames / 1000)])), infoTris: W.info.render.triangles, perCellMergeSaves: +(saved / frames).toFixed(1), ofDraws: +(mergeable / frames).toFixed(1), topMaterials: [...byMat].sort((a, b) => b[1] - a[1]).slice(0, TOP).map(([k, n]) => `${(n / frames).toFixed(1)} ${k}`) };
   }
   return res;
-}, { VIEWS, TOP, CELL });
+}, { VIEWS, TOP, CELL, FOLD });
 console.log(JSON.stringify({ quality, out, errors: errs.slice(0, 5) }, null, 1));
 await browser.close();

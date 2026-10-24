@@ -117,9 +117,13 @@ export class GpuTimer {
     gl.beginQuery(this.ext.TIME_ELAPSED_EXT, q); this.cur = q; this.f.q.push([label, q]);
   }
   end() {
-    const gl = this.gl; if (!this.f) return;
-    if (this.cur) { gl.endQuery(this.ext.TIME_ELAPSED_EXT); this.cur = null; }
-    this.frames.push(this.f); this.f = null;
+    const gl = this.gl;
+    if (this.f) {
+      if (this.cur) { gl.endQuery(this.ext.TIME_ELAPSED_EXT); this.cur = null; }
+      this.frames.push(this.f); this.f = null;
+    }
+    // (results are collected on every frame, also one that started no query: a GPU running more than 6 frames behind
+    //  would otherwise never be asked again)
     const ready = (F) => F.q.every(([, q]) => gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE));
     if (!this.frames.length || !ready(this.frames[0])) return;
     const disjoint = gl.getParameter(this.ext.GPU_DISJOINT_EXT);

@@ -98,6 +98,9 @@ export class Renderer {
     // so a change never clears the screen or reallocates anything (each change used to show a black frame).
     this.autoRes = true; this.dyn = 1; this._fb = [];
     this.quality = 'high';
+    // edges (Settings → Edges): 'msaa' (multisampling, Medium 2× / High 4×) or 'fxaa' (one cheap full-screen pass, as
+    // Low has). RENDER-INV: on the user's Vega 8 (Direct3D 11) MSAA 2× measured ~10 ms of GPU a frame on the street
+    this.aa = 'msaa';
   }
 
   setup(scene, camera) {
@@ -107,6 +110,11 @@ export class Renderer {
     // the post-processing chain, so without this the "2026" look had no anti-aliasing at all
     const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4, stencilBuffer: true }); // (stencil: the hero's silhouette)
     const c = (this.composer = new EffectComposer(this.renderer, rt));
+    // RENDER-INV: the multisampled targets resolve their colour only. three resolves depth and stencil too by default
+    // (one blit of all three every frame); nothing reads them after the scene pass (the passes after it sample colour;
+    // the hero's stencil silhouette is drawn inside the scene pass), and Direct3D 11 cannot resolve depth/stencil in
+    // hardware, so ANGLE emulates it. Without them three just discards the multisampled depth/stencil. Same pixels.
+    for (const T of [c.renderTarget1, c.renderTarget2]) { T.resolveDepthBuffer = false; T.resolveStencilBuffer = false; }
     this.scenePass = new ScaledRenderPass(scene, camera);
     c.addPass(this.scenePass);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.35, 0.92);
@@ -154,8 +162,10 @@ export class Renderer {
     const type = this.quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     if (this.renderer.shadowMap.type !== type) { this.renderer.shadowMap.type = type; this.renderer.shadowMap.needsUpdate = true; }
     if (this.bloom) this.bloom.enabled = on && this.quality === 'high' && this.bloomOn !== false;
-    if (this.fxaa) this.fxaa.enabled = !this.retro && this.quality === 'low';
+    if (this.fxaa) this.fxaa.enabled = !this.retro && (this.quality === 'low' || this.aa === 'fxaa');
   }
+
+  setAA(a) { this.aa = a === 'fxaa' ? 'fxaa' : 'msaa'; this.applyDerived(); this.resize(); }
 
   setRetro(on) {
     this.retro = on;
@@ -191,9 +201,9 @@ export class Renderer {
     // MSAA: 4× on high (2× once the pixel ratio is high enough to smooth edges by itself), 2× on medium, none on
     // low (FXAA instead) / retro (the retro look wants hard pixels)
     // (Medium on a high-density screen: none, the pixel ratio smooths the edges and the GPU is spared the resolve)
-    const ms = this.retro || this.quality === 'low' ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 ? 2 : 4;
+    const ms = this.retro || this.quality === 'low' || this.aa === 'fxaa' ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 ? 2 : 4;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
-    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${!!this.composer}`;
+    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${!!this.composer}`;
     if (key !== this._size) { this._size = key; this._want = { w, h, pr, ms }; }
     if (this.dyn < this.minDyn()) this.dyn = this.minDyn();
     this.applyScale();

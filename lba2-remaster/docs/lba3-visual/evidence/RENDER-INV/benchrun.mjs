@@ -4,7 +4,7 @@
 import { launch, open } from '../../../../tests/lib/boot.mjs';
 import os from 'node:os';
 const Q = (process.env.QUALITIES || 'medium').split(',');
-const { browser, page, errs } = await launch({ width: 1366, height: 768 });
+const { browser, page, errs } = await launch({ width: +(process.env.W || 1366), height: +(process.env.H || 768) });
 await page.addInitScript(() => { try { if (!sessionStorage.getItem('pq')) { localStorage.setItem('sunshard_settings_v1', JSON.stringify({ quality: 'medium', qPicked: true, qv: 1, v: 2 })); sessionStorage.setItem('pq', '1'); } } catch {} });
 await open(page, '?nocine', { freeze: false });
 const l0 = os.loadavg().map((x) => +x.toFixed(2));

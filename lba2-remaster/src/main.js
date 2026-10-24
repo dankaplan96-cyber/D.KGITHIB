@@ -104,7 +104,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     // (R1-MIGRATE: an update keeps the player's choices; only a missing or unknown scheme falls back to Classic,
@@ -790,6 +790,7 @@ class Game {
       if (was.quality) this.warmGraphics();
     }
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
+    if (changed('aa')) this.renderer.setAA(s.aa);   // (RENDER-INV: Settings → Edges; Low always uses FXAA)
     // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
     if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; }
     const retro = s.visual === '1997';
