@@ -118,6 +118,8 @@ export class Bench {
       //  draw batches save; none of these is a setting)
       { id: 'shadow map kept', apply() { R.renderer.shadowMap.autoUpdate = false; }, undo() { R.renderer.shadowMap.autoUpdate = true; } },
       { id: 'no MSAA', apply() { this._ms = R.composer.renderTarget1.samples; for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = 0; T.dispose(); } }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = this._ms; T.dispose(); } } },
+      { id: '8-bit target', apply() { this._ty = R.composer.renderTarget1.texture.type; for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.texture.type = 1009; T.dispose(); } }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.texture.type = this._ty; T.dispose(); } } },
+      { id: 'depth resolve on', apply() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.resolveDepthBuffer = true; T.resolveStencilBuffer = true; } }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.resolveDepthBuffer = false; T.resolveStencilBuffer = false; } } },
       { id: 'draw batches off', apply() { if (G.drawBatch) G.drawBatch.enabled = false; }, undo() { if (G.drawBatch) G.drawBatch.enabled = true; } },
     ];
     const brk = this.routes().filter((r) => r.id === 'street' || r.id === 'interior');

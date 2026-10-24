@@ -32,6 +32,32 @@ human).
 Loading-screen time is reported separately (startup: build + shader preparation). Average FPS alone never passes a
 profile. **Hardware acceptance: NOT VERIFIED** (no GPU here); the user's benchmark (§9) is the judge.
 
+The user's priority (2026-10-24): **Medium holds a steady 60 everywhere** on his laptop (street GPU p50 under ~15 ms
+with margin); High is improved only where it is cheap and invisible.
+
+## 1b. The laptop's own numbers (MEASURED by the user: docs/lba3-performance/results/laptop-build120.txt, -122.txt)
+
+| Build | Window | Medium street frame / GPU | Medium interior | High street | Notes |
+|---|---|---|---|---|---|
+| 120 (= base 9faa1a8) | 1366×768 | 66.6 ms / — (no timer) | 49.8 ms | 100.6 ms | sim CPU 4 / 8 / 12 ms at Low / Medium / High; power state unknown |
+| 122 (base + F1/F2 + timer) | 1366×697 | 16.8 ms / 18.6 ms GPU (43 fps) | 16.7 ms / 14.0 GPU (58 fps) | 33.5 ms / 36.0 GPU (25 fps) | plugged in; GPU timer works |
+
+- **The laptop is GPU-bound** at Medium and High (build 122: CPU 7.5–20 ms a frame against 25–36 ms of GPU at High;
+  Medium street 18.6 ms GPU). Low runs at 59–60 fps everywhere (GPU 8–9 ms).
+- Medium street breakdown (GPU p50): as is 18.1 · no shadows 15.9 · no lamps 16.7 · resolution ×0.6 14.5 ms. Interior:
+  14.5 · 11.4 · 12.6 · 11.3 ms. Only ~3.6 ms of the street's 18 ms scales with the pixel count; shadows (~2.2 ms) and
+  lamps (~1.4 ms) are the two separable costs; the rest (~10 ms) is neither pixels nor those two (geometry, draws,
+  fixed full-screen work: unresolved, see §9's new per-pass times).
+- **Build 120 → 122 is confounded** (window 9 % smaller; build 120's power state unknown, 122 plugged in). The
+  interior's GPU work (50 ms frames → 14 ms GPU) cannot have been changed by code: between those builds only F1/F2
+  (CPU), the benchmark and its timer changed (git diff 9faa1a8..0c4a30d, SOURCE-CONFIRMED). F1/F2 are credited only
+  with what the matched A/B shows (§10). INFERRED: power/clock state explains most of that jump. NOT VERIFIED.
+- **Build 120's "sim CPU grows with quality"** (4.2 / 7.8 / 11.5 ms in the interior) is not a GPU sync stall: a 50 ms
+  frame runs 2 simulation steps and an 84 ms one 3 (`advance`: steps of at most 1/30 s), so the same ~4 ms step is
+  counted 2–3 times (SOURCE-CONFIRMED by the loop; the numbers match). In build 122 every frame is one step again.
+- Vsync quantisation: every frame time is a multiple of 16.7 ms; a GPU at 18 ms shows as 33 ms frames half the time,
+  so getting the street's GPU time under ~15 ms is what turns 43 fps into a steady 60.
+
 ## 2. Architecture as built (SOURCE-CONFIRMED unless marked)
 
 - **Startup** (main.js `Game` constructor): Citadel (`buildWorld` + spaceport, town life, city dressing) and then
@@ -170,6 +196,42 @@ the graphics agent's town/architecture files (block 7b). Status: MEASURED, NOT C
 animation was considered (Unity's Animator culling modes do this) and **not implemented**: ~0.3 ms of rig updates
 measured, below the risk of cinematics and story actors showing stale poses after a cut. Status: MEASURED, NOT
 CHANGED (not justified).
+
+**F8 — static pieces of one area drawn one call per builder and colour (every area).** Symptom: Citadel's street
+submitted ~325 calls at Medium, 400 at High; the laptop pays CPU submission and (INFERRED) GPU-side driver time per
+draw. Evidence (`who.mjs`, `whynot.mjs`): most static draws are pieces of different builders (town, harbour, props,
+city dressing, the island's own) sharing a material or a plain colour inside one 48 m cell; each builder had merged
+only within its own group. Change: `src/engine/drawbatch.js` — one mechanism for every area (Citadel, every room,
+every region and island), built when the area is first drawn (Citadel behind the loading screen, others in their
+black frame before the geometry upload): static, non-casting pieces merged per 48 m cell and material; plain-colour
+and texture-only materials folded first by merge.js's own rules (colour, roughness/metalness, map transform into the
+vertices); the originals left in place, out of the main pass through layer 0; every piece checked every frame after
+the matrices (moved, hidden, removed, another material or geometry, geometry edited, casting, its folded material's
+colour/roughness/metalness/visibility/map transform) and released at once, its cell rebuilt in the same frame.
+Excluded: anything transparent, non-depth-writing, with its own shader edits or ShaderMaterial, skinned/instanced/
+batched, `userData.keep`, not frustum-culled. Result: §10 (per region, Medium and High). Look: within one page and one
+frozen frame, batches on vs off differ in 0.001–0.004 % of the pixels (Citadel views; max 18–64 levels), all of it
+far props smaller than 4 px that Medium/Low used to cull and the batch now draws (none at High, which culls none).
+Tradeoff: +~35 MB of merged geometry on Citadel (652k vertices; the originals are kept for the release path); a cell
+is rebuilt (a few ms) the first time one of its pieces moves (a door opening). Status: MEASURED (counts, CPU);
+GPU effect on the laptop NOT VERIFIED (the benchmark's new "draw batches off" line will show it).
+
+**F9 — lamps paid for on every lit pixel, also where they give no light (every area).** Symptom: the laptop's "no
+lamps" saves 1.4 ms of GPU on the street and 1.9 ms in the interior at Medium (8 lamps at High). Evidence
+(SOURCE-CONFIRMED, three r180 `lights_fragment_begin`): every point/spot light runs the full lighting model
+(`RE_Direct`: GGX specular + diffuse) on every fragment of every lit material, also where its attenuated colour is
+exactly zero (beyond its range: three's distance falloff is 0 there; the light pool's unused slots: intensity 0);
+three already computes `directLight.visible` for it. Change (src/engine/renderer.js, at load, before any shader is
+compiled): `if ( directLight.visible ) RE_Direct(...)` for point and spot lights (toon materials keep the plain loop;
+the game has none; no texture is sampled inside the branch, so no derivative issue on ANGLE/D3D11). Result: pixel-exact
+(within one page, one frame, patched vs three's chunk: 0 differing pixels on the Citadel views); SwiftShader's raster
+time (a CPU proxy for GPU work): §10. Status: MEASURED (identity, proxy); laptop GPU saving NOT VERIFIED.
+
+Not done (considered): skipping the sun's shadow lookup on surfaces facing away from the sun would also be exact, but
+it puts a shadow-texture lookup in per-pixel divergent control flow, which ANGLE's D3D11 translation may reject or
+mis-sample — not worth a black screen. Lower MSAA, a smaller shadow map, fewer lamps, a lower resolution or an 8-bit
+target would each save GPU time but change the look: not done; the benchmark now measures each (§9) so the choice can
+be made with the user.
 
 **F7 — shader warm-up walk behind the black fade** (~100 ms on first entries; once seen on a revisit). Behind black,
 does not reach the screen. Status: MEASURED, NOT CHANGED.

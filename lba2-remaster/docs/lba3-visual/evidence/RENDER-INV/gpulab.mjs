@@ -54,6 +54,7 @@ for (const view of VIEWS) {
       else if (v === 'lamps0' || v === 'lamps2') { LP.setSize(v === 'lamps0' ? 0 : 2); LP.update(G.hero.pos); await R.precompile(); out[v] = measure(); LP.setSize(n0); LP.update(G.hero.pos); await R.precompile(); }
       else if (v === 'msaa0') { const s = [C.renderTarget1.samples, C.renderTarget2.samples]; for (const T of [C.renderTarget1, C.renderTarget2]) { T.samples = 0; T.dispose(); } out.msaa0 = measure(); [C.renderTarget1.samples, C.renderTarget2.samples] = s; C.renderTarget1.dispose(); C.renderTarget2.dispose(); }
       else if (v === 'rt8') { const ty = C.renderTarget1.texture.type; for (const T of [C.renderTarget1, C.renderTarget2]) { T.texture.type = 1009; T.dispose(); } out.rt8 = measure(); for (const T of [C.renderTarget1, C.renderTarget2]) { T.texture.type = ty; T.dispose(); } }
+      else if (v === 'depthResolve' || v === 'noDepthResolve') { const on = v === 'depthResolve'; const was = C.renderTarget1.resolveDepthBuffer; for (const T of [C.renderTarget1, C.renderTarget2]) { T.resolveDepthBuffer = on; T.resolveStencilBuffer = on; } out[v] = measure(); for (const T of [C.renderTarget1, C.renderTarget2]) { T.resolveDepthBuffer = was; T.resolveStencilBuffer = was; } }
       else if (v === 'pr085') { R.autoRes = true; R.setDyn(0.85); out.pr085 = measure(); R.setDyn(1); R.autoRes = false; }
     }
     out.calls = W.info.render.calls; out.lights = { pool: LP.lights.filter((l) => l.intensity > 0).length, of: LP.lights.length };

@@ -40,6 +40,9 @@ function eligible(o, root) {
   if (o.castShadow || !o.frustumCulled || o.onBeforeRender !== BASE_OBR || Array.isArray(o.material)) return false;
   const m = o.material, g = o.geometry;
   if (!m || !g?.attributes?.position || m.transparent || m.depthWrite === false || m.userData?.noBatch) return false;
+  // (a shader of the game's own may read the object-space position — the foliage sway does: a batch's vertices are in
+  //  the area's space; merge.js's twins only move roughness/metalness into the vertices, so they may)
+  if (m.isShaderMaterial || ((m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile || m.customProgramCacheKey !== THREE.Material.prototype.customProgramCacheKey) && !m.userData?.twin)) return false;
   if (g.attributes.tangent || (g.morphAttributes && Object.keys(g.morphAttributes).length) || g.drawRange.start !== 0 || g.drawRange.count !== Infinity) return false;
   for (const a of Object.values(g.attributes)) if (a.isInterleavedBufferAttribute) return false;
   for (let p = o; p && p !== root; p = p.parent) if (p.userData.keep) return false;

@@ -107,6 +107,11 @@ export class Renderer {
     // the post-processing chain, so without this the "2026" look had no anti-aliasing at all
     const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4, stencilBuffer: true }); // (stencil: the hero's silhouette)
     const c = (this.composer = new EffectComposer(this.renderer, rt));
+    // RENDER-INV: the multisampled targets resolve their colour only. three resolves depth and stencil too by default
+    // (one blit of all three every frame); nothing reads them after the scene pass (the passes after it sample colour;
+    // the hero's stencil silhouette is drawn inside the scene pass), and Direct3D 11 cannot resolve depth/stencil in
+    // hardware, so ANGLE emulates it. Without them three just discards the multisampled depth/stencil. Same pixels.
+    for (const T of [c.renderTarget1, c.renderTarget2]) { T.resolveDepthBuffer = false; T.resolveStencilBuffer = false; }
     this.scenePass = new ScaledRenderPass(scene, camera);
     c.addPass(this.scenePass);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.35, 0.92);
