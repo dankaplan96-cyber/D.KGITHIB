@@ -246,11 +246,14 @@ export class Input {
   }
 
   // Camera delta (consumed).
-  camera() {
-    let dx = this.mouse.dx * 0.005 + this.padAxes[2] * 0.045;
-    let dy = this.mouse.dy * 0.004 + this.padAxes[3] * 0.03;
-    if (this.down('camL')) dx -= 0.035;
-    if (this.down('camR')) dx += 0.035;
+  // (CAM-2: the stick and the keys turn it at a rate per second — 2.7 / 1.8 rad/s and 2.1 rad/s, what they did per frame
+  // at 60 fps — so the same at any frame rate; the mouse by how far it moved)
+  camera(dt = 1 / 60) {
+    const k = dt * 60;
+    let dx = this.mouse.dx * 0.005 + this.padAxes[2] * 0.045 * k;
+    let dy = this.mouse.dy * 0.004 + this.padAxes[3] * 0.03 * k;
+    if (this.down('camL')) dx -= 0.035 * k;
+    if (this.down('camR')) dx += 0.035 * k;
     this.mouse.dx = this.mouse.dy = 0;
     return { dx, dy };
   }
