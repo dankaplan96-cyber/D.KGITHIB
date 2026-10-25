@@ -590,6 +590,30 @@ hierarchy, bind transforms and sockets unchanged.
 
 Regressions on the final tree (own server :8173, one browser at a time): opening ALL PASSED (24), deaths ALL PASSED (160), stability ALL PASSED (16), prologue to its end into chapter 1 (no errors), house ALL PASSED, jetpack ALL PASSED (48; Twinsen with the pack on the new tunic), combat ALL PASSED (59), zoe-resume ALL PASSED (5; Zoé as the player); reviews/CHAR-OPEN/tests.log.
 
+### CHAR-2: Twinsen's neck and Zoé in the opening (block 8; evidence docs/lba3-production/reviews/CHAR-2/)
+Captures: headless Chromium, SwiftShader, our renders only. "Before" = the same tree with the previous
+assets/poly/{twinsen,zoe}.json swapped in (the code is identical); lookdev = char-lookdev.html (CHAR-OPEN's, plus
+`ty`, `at=handR`, the play camera from behind and a high ¾-back view, and head extremes nod/lookUp/lookAside), the
+opening on the game's own 1/30 s clock (opening-shots.mjs), the play camera (ingame-shots.mjs for Twinsen,
+zoe-ingame-shots.mjs for Zoé as the player). character-review §18 has the detail and the animator handoff.
+
+| Item | Before | Cause | Fix | Evidence | Result |
+|---|---|---|---|---|---|
+| NECK-TW Twinsen's neck | From behind a thin stick "cut off" by a flat cape top, a crease down the nape, a notched collar edge, the head a ball on a stick with background between (the user's photos; opening 52.1 over his shoulder) | ring() puts a section's sides at z = 0: for the neck (front +0.08, back +0.02 H) and the cape's top rings the back point lay forward of the sides; the cape top flat (0.765 → 0.772 H) | twinsen_poly.py: oring() round sections; LBA2's thin neck (±0.031 H) with a wider base, a nape leaning into the skull, closed base; the cape's shoulders sloping into a rolled collar (top 0.78 H) with a dark inside; head turn blended over 0.785 → 0.855 H | neck-tw-views-before-after.jpg (idle/nod/lookUp/lookAside/shrug × front/¾/side/back/¾-back/high/play-back), neck-tw-body-before-after.jpg, neck-tw-hop-pack.jpg, neck-tw-opening.jpg, neck-tw-opening-52s.jpg, neck-tw-play-camera.jpg | FIXED (a neck with a collar and nape in every view and head pose captured; one-shell cape and silhouette kept) |
+| ZOE-OPEN Zoé in the opening | Angular wedge face (one ridge chin → forehead), lips a crescent across the jaw, dark slit eyes (closed), triangle earrings, a 10-sided rod forearm ending in a flat paddle (the user's photo; BUILD109 §4) | The head lofted from the measured cuts (each a forward wedge); the measured lip crescent and eye slits; the SRC-1 mitten | zoe_poly.py: designed head sections at the measured size (brow, cheekbones, rounded chin), a nose loft, a smaller smiling mouth + mouth line, white almond eyes with iris/pupil, lid lines, brows, teardrop hoops; 12-sided arms with elbow, forearm swell, flatter wrist; build_hand (palm, curled mitten, thumb) | zoe-open-head-, -face-, -hands-, -arms-grey-, -deform-grey-, -body-before-after.jpg, zoe-open-opening.jpg (41, 46, 52.1, 58.6), zoe-open-opening-58s-profile.jpg, zoe-open-opening-61s-hand.jpg, zoe-open-play-camera.jpg | FIXED (profile, eyes, mouth, hoops, wrist and hand read at the opening's cameras; deformation as before) |
+
+Counts (one LbaMaterial with vertex colours per character, no textures; unindexed triangles): Twinsen 2372 → 2724
+(+14.8 %: collar rings, round 16-sided neck, its inside), Zoé 4646 → 5382 (+15.8 %: head rings, nose, eyes, hoops,
+12-sided arms, hands); Zoé's skinned colours 6 → 7, eye colours 1 → 3. Skeletons, bone names, hierarchy, bind
+transforms, sockets, armSpread and opening.js unchanged.
+
+Regressions on 8ba8a0e (own server :8178, one browser at a time, 2026-10-24): opening ALL PASSED (24), prologue to its
+end (rc 0, saved, "Tell Zoé what happened in the well"; no page errors), house ALL PASSED, stability ALL PASSED (16),
+deaths ALL PASSED (160), zoe-resume ALL PASSED (5; Zoé as the player on the new mesh), jetpack ALL PASSED (48; the pack
+over the new collar), combat ALL PASSED (59); reviews/CHAR-2/tests.log. After merging origin e2ba54f (CLAR-2 +
+HINTS-LESS: hud, text, story, main.js) the same eight again on da2bd15: all ALL PASSED with the same counts, the
+prologue to its end ("Go home and tell Zoé"), no page errors.
+
 ### RENDER-INV: what costs a frame, and the fixes (block 7a; docs/lba3-performance/PERFORMANCE_AUDIT.md)
 SwiftShader here (counts exact, CPU times proxies, no GPU timing); the user's laptop benchmarks (builds 120, 122, 127)
 are the GPU evidence. Evidence: docs/lba3-visual/evidence/RENDER-INV/.
@@ -658,6 +682,58 @@ opening 24/24, menus 26/26, stability 16/16, holomap 30/30, clarity 10/10, chapt
 page errors. Not verified: a first-time player's read of the riddles and of the 5-second panel; the Modern HUD route
 (clarity HUD=modern) not rerun.
 After merging origin f30d36d (the loading screen): menus 26/26, stability 16/16, opening 24/24, clarity 10/10.
+
+### CAM-2: the play camera "moves a lot" (block 7a; evidence docs/lba3-production/reviews/CAM-2/)
+Recorded by tests/camsteady.mjs + tests/lib/camrec.js: 10 repeatable routes walked by input on Citadel (street and
+square, along house walls, a door in and out, out of Twinsen's door, the pier, the bay below the cliffs, standing /
+turning on the spot / short corrections, a fight with four mites, the street with Modern controls), both cameras, every
+frame. "Before" = the same routes against ccr-adf00ea7 at 9faa1a8 (block 7a's start) served from a copy. SwiftShader,
+the game's own deterministic clock: motion is measured, not how smooth it looks on a GPU. A shake's frames are left out
+of both (feedback, not the camera's rules).
+
+| What made it restless (before) | Numbers before | Fix (src/engine/camera.js) | After |
+|---|---|---|---|
+| The rise over houses (VP-10) went as high as needed every frame and came back at 50°/s: beside a house with the view on its far side, 80° — straight down on him — then down again a few steps on | along the walls max 80.1°, 4.7 s over 50°, tilt 158°/min; door in/out 80.2°, 6.6 s, 269°/min | Rise held at its highest need for 2 s, comes down at 22°/s, stops at 48°; needing more for 0.5 s, the view turns (15° steps, up to 105°, eased ≤ 60°/s) to the least heading that sees him at ≤ 40°; cooldown 4 s; Enter's swing behind him is kept 6 s | max 48°, 0 s over 50°; tilt 83 and 94°/min; the turns add 114 and 68°/min of heading (once or twice per house passed) |
+| Out of a door (BUILD109 §6): the fresh shot is behind him, i.e. over the house he just left | first view out 66.8°, over 45° for 5.9 s | A new scene starts from the least turn of behind-him that needs ≤ 40° | first view 26.4°, never over 45° |
+| The look-ahead (3.3 m) swung round with every change of direction, by time: a step back, a shuffle or a turn on the spot moved the whole view | standing/turning/corrections: camera moved 3.23 m while he stood | The look-ahead moves only after he keeps to a way for 1.5 m (within 34°), and then by the ground he covers | 1.41 m (the ease-out after his steps), 0° turned |
+| Height followed every bump of the ground | height reversals 9.9 (walls), 10.3 (cliffs) /min | 0.35 m dead band on the ground height | 3.8, 4.5 /min |
+| The least-margin floor (BUG-WALL) dropped back in one frame when it let go | — (seen as 1 m steps in the free orbit) | What it lifts becomes the eased lift's, let down gently | free orbit's worst step 0.98 → 0.39 m |
+| Shake: a new random offset every frame (white noise, different at 30/60 fps) | LBA view in the mite fight, shake counted: heading 33, tilt 26, height 55 reversals/min | Smooth noise tremor, same at any frame rate | (shake frames excluded from the table) |
+| Free orbit: auto-turn behind him under camera-relative (Modern) controls — the two chase each other | Modern street: 993°/min of heading, 88 reversals/min, 710 jolts/min | No auto-turn under Modern; under Classic only after 0.6 s of a steady way, eased (≤ 24°/s), never within 2 s of the player's own camera input | 0°/min, 0 reversals, 0.9 jolts/min |
+| Free orbit: pulled in instantly behind every post/corner and let out at a fixed rate (pumping); the keep-out pulled it out of tall walls with jumps; terrain lift at once | jolts 47–451/min on every route, accMax 8 600–27 000 m/s² | Thin things ignored for the pull-in (the silhouette shows him); blocked 0.2 s before it draws in, eased (≤ 8 m/s in, 2.5 out after 0.7 s clear); tall walls beside its way taken early; lift eased with look-ahead; a new scene starts behind him | 0–13 jolts/min, accMax 15–41 m/s² except by house eaves (1 433) |
+| Mouse/finger drags piled up while no orbit used them, then swung the free orbit all at once | — (code reading) | Drained when the free orbit is not in use; keys/stick turn per second, not per frame | — |
+
+Before → after per route (all numbers: reviews/CAM-2/before-after.txt; LBA follow):
+| Route | max tilt | s over 50° | tilt °/min | heading °/min | reversals/min (heading/tilt/height) | jolts | still: moved m / turned ° |
+|---|---|---|---|---|---|---|---|
+| street and square | 26.4 → 26.4 | 0 → 0 | 0 → 0 | 0 → 0 | 0/0/3.7 → 0/0/0.8 | 0 → 0 | 10.4/0 → 9.4/0 (the bot stuck 40 s at its first waypoint, both builds: the follow's ease-out after each try) |
+| along house walls | 80.1 → 48 | 4.7 → 0 | 158 → 83 | 0 → 114 | 0/3.7/9.9 → 1.3/3.8/3.8 | 1.2 → 0 | 4.2/10.2 → 4.6/9.1 (a turn finishing as he stops) |
+| door in and out | 80.2 → 48 | 6.6 → 0 | 269 → 94 | 0 → 68 | 0/6.6/6.6 → 4.5/6.8/6.8 | 0 → 0 | 6.7/15.2 → 2.4/1.2 |
+| out of the house door | 63.8 → 33.2 | 3.6 → 0 | 179 → 0 | 0 → 0 | 0/9.3/9.3 → 5/5/5 | 0 → 0 | 2.5/8.3 → 1.1/0 |
+| pier | 26.4 → 26.4 | 0 | 0 | 0 | 0/0/5.7 → 0/0/0 | 0 | 1.5/0 → 1.9/0 |
+| bay below the cliffs | 34.8 → 36 | 0 | 25 → 29 | 0 | 0/1.5/10.3 → 0/1.5/4.5 | 0 | 1.0/0 → 1.2/0 |
+| standing, turning, corrections | 26.4 | 0 | 0 | 0 | 0 | 0 | 3.2/0 → 1.4/0 |
+| combat, four mites | 26.4 | 0 | 0 | 0 | 0 | 0 | 0.02/0 → 0.1/0 |
+| street, Modern controls | 26.4 | 0 | 0 | 0 | 0/0/2.8 → 0/0/0.9 | 0 | — |
+Free orbit, jolts/min before → after: street 52 → 0, walls 129 → 13, door 224 → 2, out of the door 451 → 0, pier 49 → 0,
+cliffs 47 → 0, standing 41 → 0, combat 22 → 0, Modern 710 → 0.9; heading °/min: 705 → 98, 552 → 408, 936 → 263,
+1443 → 55, 620 → 113, 747 → 202, 483 → 0, 99 → 0, 993 → 0.
+
+| Check | Result |
+|---|---|
+| tests/camsteady.mjs (60 fps, both cameras, budgets) | after: ALL PASSED; before: 25 budget failures (reviews/CAM-2/camsteady-*.log) |
+| camsteady RATES=30,jank (30 fps; 60 fps with a 0.1 s frame every 15th) on the house routes and the cliffs | ALL PASSED (32 checks; same budgets) |
+| Cost | camRig.update 0.32 ms/frame by a house (SwiftShader machine, CPU); the heading search 0.6–3 ms, at most once per 4 s and at a scene start |
+| Regressions (after merging origin f30d36d: RENDER-INV, CLAR-2, the loading screen; own server :8174, one browser at a time) | camsteady 50/50, camclear 44/44, occluders 32/32 (the rise over the south house 26.4° → 48°, acc max 25.1, turn ≤ 43.5°/s), controls 69/69, transitions 6/6, stability 16/16, townlife 36/36, opening 24/24, combat 59/59, chapter1 end to end (no errors) |
+| After merging origin e65f548 (CHAR-2: characters.js and models) | occluders 32/32, opening 24/24, camsteady 50/50 (reviews/CAM-2/regressions.log) |
+| controls' camera route (CTRL-1 budgets), before → after | lead 0.60 → 0.28 m, worst behind −2.04 → −2.41 m (≤ 2.5), drift after a stop 0.16 → 0.36 m (< 0.6), acc max 15.9 → 15.4, the turn on the spot 0.01 → 0.01 m: CTRL-1's dead zone kept; the look-ahead now waits for 1 m on a steady way (a larger dead zone, the WIP's 1.8 × 1.3 m, trailed by 0.6 m: not kept) |
+Evidence: reviews/CAM-2/walls-side-by-side.mp4/.jpg (before | after, walking round the south house: 72–78° down → 46–48°
+and a turn), door-side-by-side.mp4/.jpg (out of Twinsen's door: 67° → 26°), before-after.txt, routes-*.json.
+Not verified: the feel on a real GPU and display (SwiftShader; motion measured, not judged by eye in real time), a pad's
+right stick on the free orbit, touch drags. Left open: the free orbit drawn in to a house wall meets the least margins
+over the eaves at once (13 jolts/min there, worst 1 433 m/s²) and can look down 60–70° by houses; the 1997 look's cuts
+are unchanged (LBA2's own rise, up to 80°); under Modern controls a steep-view turn (≤ 60°/s) turns his stick
+directions with it, as the hidden-behind-a-wall swing already did.
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.

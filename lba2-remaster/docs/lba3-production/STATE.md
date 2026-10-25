@@ -284,6 +284,22 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Not verified: the laptop's GPU saving and whether Medium now holds 60 on the street (the next benchmark: pause →
   Benchmark → Copy, plugged in).
 
+## Done after (CHAR-2, block 8: NECK-TW + ZOE-OPEN; status REVIEW)
+- Character artist; each item captured before/after and committed on its own; evidence and capture scripts in
+  docs/lba3-production/reviews/CHAR-2/, docs/character-review.md §18 (with the animator handoff), QA.md "CHAR-2".
+  - NECK-TW (the user's photos reviews/USER-111/twinsen-neck-*.jpg): the neck and cape top were ring()s whose back
+    point lay forward of the sides (a creased nape, a notched flat cape top round a stick). Now round sections, LBA2's
+    thin neck with a wider base and a nape leaning into the skull, the cape's shoulders sloping into a rolled collar
+    with a dark inside; the head's turn spread over the neck. One-shell cape, medallion, belt, colours kept.
+    Twinsen 2372 → 2724 triangles.
+  - ZOE-OPEN (reviews/USER-111/zoe-opening.jpg, BUILD109_REVIEW §4): her head from designed sections at the measured
+    size (brow, cheekbones, rounded chin), a small rounded pointed nose, a smaller smiling mouth with a mouth line,
+    white almond eyes with iris and pupil, lid lines and brows, teardrop hoops; arms 12-sided with an elbow, forearm
+    swell and flatter wrist; curled mitten hands with a thumb. Zoé 4646 → 5382 triangles (+15.8 %).
+  - Skeletons, bone names, bind transforms, sockets, armSpread and opening.js unchanged; one material each.
+- Open: an independent visual review and a look on a real GPU; mouth poses and gaze need rig support (handoff in
+  character-review §18, a proposed contract change, not made).
+
 ## Done after (CLAR-2 + HINTS-LESS, block 7a; status REVIEW)
 - The stopped CLAR-2 WIP patch applied (its i18n conflicts resolved for R3's key-free hints), reviewed and finished.
   The objective panel shows the goal line only, ~5 s of play when the goal changes, in both HUDs; its steps (the
@@ -300,6 +316,20 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Note for the coordinator: port 8175 was held by another agent's server (a copy of the base in the shared scratchpad);
   this work was served on :8191 (build) and :8192 (base copy).
 - Open (UI): inventory.js prints fixed keys ("I / J to close", "E: use"); needs input.label like the toasts.
+
+## Done after (CAM-2, block 7a; status REVIEW)
+- The play camera measured on 10 routes × both cameras (tests/camsteady.mjs, tests/lib/camrec.js; budgets) and calmed:
+  the LBA view's rise over houses stops at 48° and turns round instead of looking straight down (was up to 80°),
+  holds its need 2 s and comes down at 22°/s; out of a door it starts at the normal 26° (was 67°, BUILD109 §6); the
+  look-ahead moves only once he keeps to a way (shuffles, steps back and turns on the spot leave the view still); the
+  height has a 0.35 m dead band; the hard floor lets go gently; a shake is a smooth tremor. The free orbit no longer
+  turns by itself under Modern controls nor pumps in and out past posts (jolts 22–710/min → 0–13).
+- Started from docs/lba3-production/wip/CAM-2.wip.patch (kept: lead by distance, rise hold/band, the free orbit's
+  auto-turn rules, input.camera(dt), the recorder); finished, measured and fixed beyond it.
+- main.js: one line (camRig.relative, next to the camera's creation). Merged origin (RENDER-INV, then CLAR-2 and the loading screen) with no code conflicts.
+- Evidence: QA.md "CAM-2", docs/lba3-production/reviews/CAM-2/ (side-by-side clips, before/after table, logs).
+- Not verified: the feel on a real GPU/display, pad and touch on the free orbit. Open: the free orbit by house eaves
+  (13 jolts/min, can look down 60–70°); the 1997 cuts unchanged.
 
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

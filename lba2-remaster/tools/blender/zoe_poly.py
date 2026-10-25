@@ -50,6 +50,8 @@ COL = {
     'eye': '#2f474b',       # byte 181, solid
     'blue': '#1b4b67',      # byte 197: the necklace and earrings (lines in the original)
     'hair': '#cc8f00',      # renders #e3af6b with HAIR_UP (palette 106 #e3af53)
+    # ZOE-OPEN (ours): the eyes' white (warm, not paper), iris and pupil, and the line between the lips
+    'white': '#e9ded2', 'iris': '#3f7480', 'pupil': '#16272b', 'mouth': '#6a1a16',
 }
 # A constant shade for the hair: with every normal straight up LbaMaterial gives t = n·L = 0.8 from any side
 # (out = 1.025·base + 0.15 in linear light), the way LBA2 draws its spheres as flat unlit discs.
@@ -114,7 +116,7 @@ def outfit_field(p):
 
 
 # ---- her head (group 12), half-contours from the front centre round her left (+x) to the back centre, (x, z) in H
-ZOE_HEAD = [
+ZOE_HEAD_LBA2 = [   # (as measured; ZOE_HEAD_LBA2=1 builds SRC-1's head from it)
     (0.862, [(0.0, 0.0488), (0.0108, 0.04), (0.0183, 0.0322), (0.0245, 0.024), (0.0233, 0.0139), (0.0214, 0.005), (0.0192, -0.0053), (0.012, -0.03), (0.0, -0.045)]),
     (0.872, [(0.0, 0.0553), (0.0174, 0.0396), (0.0315, 0.029), (0.0355, 0.0123), (0.0324, -0.0025), (0.0298, -0.0148), (0.0268, -0.0293), (0.0174, -0.0445), (0.0, -0.0602)]),
     (0.882, [(0.0, 0.0582), (0.0204, 0.0431), (0.0359, 0.0299), (0.0439, 0.0122), (0.0416, -0.006), (0.0384, -0.0219), (0.0347, -0.0407), (0.0211, -0.057), (0.0, -0.0702)]),
@@ -142,6 +144,66 @@ LID = [(0.014, 0.929), (0.022, 0.935), (0.044, 0.940), (0.043, 0.935)]   # (the 
 EYE = [(0.015, 0.926), (0.026, 0.935), (0.042, 0.934), (0.031, 0.923)]
 EARRING = [(0.054, 0.909, -0.036), (0.054, 0.882, -0.026), (0.054, 0.882, -0.048)]
 NECKLACE = [(0.021, 0.834, -0.054), (0.048, 0.807, -0.001), (0.032, 0.780, 0.027), (0.0, 0.758, 0.037)]
+# ZOE-OPEN (CHAR-2; the user on the opening: "Zoé looks terrible in the video": angular face planes, a flat profile;
+# BUILD109_REVIEW §4). The measured cuts above make a wedge: every section comes to a point at the front, so one ridge
+# runs from the chin over the "nose" to the forehead, with no brow, nose or chin of its own and hard planes either
+# side. Her head is now built from designed sections at the same size and place (the widths, the long skull carried
+# back, the crown and the bun's seat are the measured ones): a face front that is broad and gently curved, a brow over
+# the eyes, cheekbones, a small rounded chin and a jaw that narrows to it; the nose is its own small part. Identity
+# kept: narrow face carried forward, pointed nose, red lips turned up at the corners, slanted eyes, golden bun.
+#   (y, half-width, z where widest, front centre z, back centre z, front exponent: < 1 flatter across the face)
+ZOE_HEAD_DESIGN = [
+    (0.859, 0.017, 0.008, 0.037, -0.024, 1.0),
+    (0.866, 0.026, 0.004, 0.0495, -0.040, 0.9),
+    (0.874, 0.0345, 0.0, 0.0515, -0.055, 0.85),
+    (0.882, 0.0415, -0.004, 0.0545, -0.066, 0.8),
+    (0.890, 0.0465, -0.008, 0.0575, -0.076, 0.75),
+    (0.899, 0.0490, -0.010, 0.0585, -0.085, 0.7),
+    (0.909, 0.0505, -0.013, 0.0575, -0.094, 0.65),
+    (0.919, 0.0512, -0.015, 0.0555, -0.100, 0.62),
+    (0.929, 0.0516, -0.017, 0.0535, -0.104, 0.62),
+    (0.939, 0.0520, -0.019, 0.0555, -0.105, 0.62),
+    (0.949, 0.0515, -0.023, 0.0515, -0.104, 0.66),
+    (0.959, 0.0490, -0.027, 0.0445, -0.101, 0.75),
+    (0.969, 0.0425, -0.031, 0.0335, -0.098, 0.85),
+    (0.978, 0.0360, -0.037, 0.0165, -0.094, 0.9),
+    (0.986, 0.0270, -0.045, -0.0065, -0.087, 1.0),
+    (0.992, 0.0150, -0.053, -0.0330, -0.074, 1.0),
+]
+CHIN2 = (0.0, 0.854, 0.014)
+
+
+def head_design():
+    out = []
+    for y, w, zs, f, bk, pf in ZOE_HEAD_DESIGN:
+        half = []
+        for k in range(25):
+            t = math.pi * k / 24
+            sn, cs = math.sin(t), math.cos(t)
+            x = w * sn ** 0.92
+            z = zs + (f - zs) * cs ** pf if cs >= 0 else zs - (zs - bk) * (-cs) ** 0.9
+            half.append((x, z))
+        out.append((y, half))
+    return out
+
+
+# the nose: a small pointed wedge of its own on the face (H): the bridge between the eyes, the tip, the wings, the
+# underside (the tip as far forward as the original's, +0.075 against its +0.069 on a face 0.01 further back)
+#   (y, how far the ridge stands off the face, half-width): the tip 0.014 H proud at 0.9035 (z ≈ 0.073; pointed, as hers)
+NOSE_ROWS = [(0.9275, 0.0, 0.0042), (0.921, 0.0032, 0.0050), (0.914, 0.0068, 0.0057), (0.908, 0.0108, 0.0068),
+             (0.9035, 0.0142, 0.0080), (0.9003, 0.0118, 0.0105), (0.8975, 0.0058, 0.0118), (0.8962, 0.0, 0.0095)]
+# the lips: a smaller mouth (the measured crescent ran from cheek to cheek and down to the chin, a slash across the
+# face), upper and lower lip and the line between, corners up (her smile); x >= 0, mirrored
+LIPS2_TOP = [(0.0, 0.8912), (0.004, 0.8918), (0.0125, 0.8905), (0.0235, 0.8877)]
+LIPS2_MID = [(0.0, 0.8866), (0.004, 0.8866), (0.0125, 0.8868), (0.0235, 0.8877)]
+LIPS2_LOW = [(0.0, 0.8812), (0.004, 0.8813), (0.0125, 0.8826), (0.0235, 0.8877)]
+# the eyes: a white almond (outer corner raised: her slant) with a teal iris and a dark pupil, so the eye shape and the
+# gaze read at the opening's distances (the measured dark slits under brown lids read as closed eyes); a brown lid
+# line over the top with a small flick at the outer corner, and a thin brow
+EYE2 = (0.0265, 0.9285, 0.0098, 0.0052, 0.11)       # centre x, y, half-width, half-height, slant (rise per unit x)
+BROW = [(0.0105, 0.9425), (0.0195, 0.9465), (0.0300, 0.9475), (0.0405, 0.9445)]
+# the earrings: a blue teardrop hoop (the original's are line triangles; the triangle frame read as a hard shape)
+EAR2 = (0.0535, 0.9035, -0.024, 0.0068, 0.0185)   # x, hook y, z, hoop radius, drop (hook to bottom)
 # the bun: three spheres (centre y, z, r) on the three bun groups, drawn flat; built as one mass like Twinsen's (VP-1b)
 # CHAR-OPEN (OPEN-3 #11): as measured (ZOE_BUN_LBA2) the first ball only grazes the back of the crown and the other two
 # hang 0.03-0.05 H behind the skull; carried by the tail bones, the follow-through then swung the mass off the head
@@ -251,11 +313,85 @@ for s_, sx in (('L', 1), ('R', -1)):
 # body's shoulder, the upper arm 9-10 cm across tapering to the elbow, a small swell of the forearm below it and a 5 cm
 # wrist into the mitten hand; a little deeper than wide (front to back), as arms are. Slim like her body (SRC-2), not
 # muscular. The skeleton and the bones' weights are the same as before (sh above the elbow, el below, blended there).
+# ZOE-OPEN (CHAR-2; the user: "a long thin stick arm", BUILD109_REVIEW §4: forearms and hands under-articulated): 12
+# sides (10 read as facets in the tap close-up); the elbow a little deeper than wide (its point behind), the forearm
+# swelling just below it and narrowing to a wrist that is wider (thumb to little finger, front to back at rest) than
+# thick, so the forearm turns flat into the hand instead of running on as a rod.
 ARM = [   # (u along the arm: 0 the shoulder, 0.5 the elbow, 1 the wrist; half-width across, half-depth; metres)
-    (-0.06, 0.032, 0.034), (0.0, 0.046, 0.047), (0.1, 0.05, 0.05), (0.27, 0.046, 0.047), (0.43, 0.039, 0.041),
-    (0.52, 0.035, 0.037), (0.62, 0.039, 0.041), (0.8, 0.033, 0.035), (1.0, 0.025, 0.027),
+    (-0.06, 0.032, 0.034), (0.0, 0.046, 0.047), (0.1, 0.05, 0.05), (0.27, 0.046, 0.047), (0.42, 0.038, 0.040),
+    (0.5, 0.034, 0.038), (0.58, 0.038, 0.041), (0.66, 0.041, 0.042), (0.8, 0.033, 0.036), (0.93, 0.023, 0.029),
+    (1.0, 0.0195, 0.026),
 ]
-ARM_N = 10
+ARM_N = 12
+
+
+def build_hand(part, el, hd, sx):
+    """ZOE-OPEN: a hand that reads at the opening's tap close-up, in place of the flat paddle (the original's forearm
+    narrows to a long point; SRC-1 made it a short flattened mitten, which read as a stick's end). A palm a little
+    wider than the wrist, the four fingers as one mitten curling gently toward the palm, and a thumb of its own on the
+    front side (at rest the palm faces her thigh, the thumb forward), so the hand has a direction and a grip. About
+    12 cm from the wrist to the fingertips, slim like her arms. All on the hand bone, as before."""
+    d = (hd - el).normalized()
+    palm = Vector((-sx, 0.0, 0.0))                      # (toward her middle at rest)
+    palm = (palm - d * palm.dot(d)).normalized()
+    wv = palm.cross(d).normalized()
+    if wv.z < 0:
+        wv = -wv                                         # (the thumb's side: forward at rest)
+    NH = 10
+
+    def sec(c, ax, hw, ht, sq=0.7):
+        # a section across the hand at c: half-width along wv, half-thickness along the palm normal, rounded box;
+        # ax is the hand's axis there (the curl turns it toward the palm)
+        nrm = (palm - ax * palm.dot(ax)).normalized()
+        w2 = nrm.cross(ax).normalized()
+        if w2.dot(wv) < 0:
+            w2 = -w2
+        out = []
+        for i in range(NH):
+            t = 2 * math.pi * i / NH
+            s, c_ = math.sin(t), math.cos(t)
+            out.append(tuple(c + w2 * (math.copysign(abs(c_) ** sq, c_) * hw) + nrm * (math.copysign(abs(s) ** sq, s) * ht)))
+        return out
+    # (distance along the hand, curl toward the palm in degrees, half-width, half-thickness, offset toward the palm)
+    STA = [(-0.010, 0, 0.0235, 0.0175, 0.0), (0.012, 0, 0.0275, 0.015, 0.001), (0.040, 0, 0.030, 0.0125, 0.002),
+           (0.064, 4, 0.0295, 0.0112, 0.002), (0.085, 16, 0.027, 0.0098, 0.0), (0.103, 30, 0.0235, 0.0088, 0.0),
+           (0.116, 44, 0.018, 0.0078, 0.0), (0.123, 56, 0.011, 0.0062, 0.0)]
+    rings, p, prev_s, ax = [], hd + d * STA[0][0], STA[0][0], d
+    for s, curl, hw, ht, off in STA:
+        a = math.radians(curl)
+        ax = (d * math.cos(a) + palm * math.sin(a)).normalized()
+        p = p + ax * (s - prev_s)
+        prev_s = s
+        rings.append(sec(p + palm * off, ax, hw, ht))
+    # winding: outward
+    loft(part, rings, cap_bottom=False, cap_top=True)
+    f0 = part.f[NH]
+    a_, b_, c_ = (Vector(part.v[i]) for i in f0[:3])
+    cen = sum((Vector(part.v[i]) for i in f0), Vector()) / len(f0)
+    o0 = len(part.v) - (len(rings) * NH + 1)
+    axis_pt = Vector(tuple(sum(Vector(q)[k] for q in rings[1]) / NH for k in range(3)))
+    if (b_ - a_).cross(c_ - a_).dot(cen - axis_pt) < 0:
+        part.f = [list(reversed(f)) for f in part.f]
+    # the thumb: from the palm's front edge near the wrist, out and forward, its tip turned toward the palm
+    t0 = hd + d * 0.010 + wv * 0.017 + palm * 0.004
+    dir1 = (d * 0.80 + wv * 0.42 + palm * 0.28).normalized()
+    t1 = t0 + dir1 * 0.032
+    dir2 = (d * 0.85 + wv * 0.08 + palm * 0.52).normalized()
+    t2 = t1 + dir2 * 0.026
+    k0 = len(part.f)
+    th = []
+    for c, r, ax in ((t0 - dir1 * 0.008, 0.0125, dir1), (t1, 0.0094, (dir1 + dir2).normalized()), (t2, 0.0068, dir2)):
+        u = ax.cross(palm).normalized()
+        w = ax.cross(u).normalized()
+        th.append([tuple(c + u * (math.cos(2 * math.pi * i / 8) * r) + w * (math.sin(2 * math.pi * i / 8) * r * 0.85)) for i in range(8)])
+    loft(part, th, cap_bottom=False, cap_top=True)
+    f0 = part.f[k0 + 8]
+    a_, b_, c_ = (Vector(part.v[i]) for i in f0[:3])
+    cen = sum((Vector(part.v[i]) for i in f0), Vector()) / len(f0)
+    if (b_ - a_).cross(c_ - a_).dot(cen - t1) < 0:
+        part.f = part.f[:k0] + [list(reversed(f)) for f in part.f[k0:]]
+
+
 for s_, sx in (('L', 1), ('R', -1)):
     shp, el, hd = bp('sh' + s_), bp('el' + s_), bp('hand' + s_)
     S0 = Vector((shp[0] - sx * 0.012, shp[1] + 0.012, shp[2] - 0.006))   # (the shoulder's top, inside the body's edge)
@@ -293,23 +429,12 @@ for s_, sx in (('L', 1), ('R', -1)):
     if (b_ - a_).cross(c_ - a_).dot(cen - along(ARM[1][0])) < 0:
         arm.f = [list(reversed(f)) for f in arm.f]
     el, hd = tuple(E0), tuple(H0)
-    d = (Vector(hd) - Vector(el)).normalized()
-    # the hand: the original's forearm narrows to a long point (≈0.14 m past the wrist); ours is a short flattened
-    # mitten with a round end (a point read as a spike in close-ups)
-    hand = b.P('hand' + s_, COL['skin'], 'hand' + s_, 60)
-    mid = tuple(Vector(hd) + d * 0.045)
-    tube(hand, tuple(Vector(hd) - d * 0.012), mid, 0.023, 0.021, 8, cap=False, squash=0.6)
-    sphere(hand, mid, 0.021, 8, 5, (1.0, 1.0, 1.0))
-    c0, side = Vector(mid), d.cross(Vector((0, 0, 1))).normalized()
-    flat = side.cross(d).normalized()
-    # (the round end drawn out along the hand x1.4 and flattened across the palm x0.6, like the mitten)
-    hand.v[-34:] = [tuple(c0 + d * (Vector(p) - c0).dot(d) * 1.4 + side * (Vector(p) - c0).dot(side) + flat * (Vector(p) - c0).dot(flat) * 0.6)
-                    for p in hand.v[-34:]]
+    build_hand(b.P('hand' + s_, COL['skin'], 'hand' + s_, 55), Vector(el), Vector(hd), sx)
 
 # ------------------------------------------------------------------ neck and head
 neckY, headY = bp('neck')[1], bp('head')[1]
 tube(b.P('neck', COL['skin'], lambda p: {'neck': 1 - smooth(headY - 0.02, headY + 0.04, p[1]), 'head': smooth(headY - 0.02, headY + 0.04, p[1])}, 60),
-     (0, neckY - 0.05, -0.03), (0, 0.875 * ZH, -0.03), 0.042, 0.038, 10)
+     (0, neckY - 0.05, -0.03), (0, 0.875 * ZH, -0.03), 0.042, 0.038, 12)   # (ZOE-OPEN: 12 sides, was 10)
 HK = 13   # points per half-contour after resampling
 
 
@@ -327,13 +452,13 @@ def resample(half, k):
 
 
 head_rings = []
-for y, half in ZOE_HEAD:
+for y, half in (ZOE_HEAD_LBA2 if os.environ.get('ZOE_HEAD_LBA2') else head_design()):
     h = resample(half, HK)
     head_rings.append([m((x, y, z)) for x, z in h] + [m((-x, y, z)) for x, z in reversed(h[1:-1])])
 hpart = b.P('head', COL['skin'], 'head', 70)
 loft(hpart, head_rings)
 n_, o_ = len(head_rings[0]), len(hpart.v)
-hpart.add([m(CHIN), m(CROWN)], [])
+hpart.add([m(CHIN if os.environ.get('ZOE_HEAD_LBA2') else CHIN2), m(CROWN)], [])
 hpart.f += [[(i + 1) % n_, i, o_] for i in range(n_)] + [[(len(head_rings) - 1) * n_ + i, (len(head_rings) - 1) * n_ + (i + 1) % n_, o_ + 1] for i in range(n_)]
 # the face features lie on the head's surface: ray-cast from the front onto it
 htree = BVHTree.FromPolygons([Vector(v) for v in hpart.v], hpart.f)
@@ -377,23 +502,132 @@ def face_poly(part, pts, lift=0.0025, n=4):
 
 
 feat = lambda name, col: b.P(name, col, 'head', 20)
-lips = feat('lips', COL['red'])
-lips.normal = (0.0, 0.15, 1.0)  # (one even shade, n·L ≈ 0.6 = the colour itself: the lower lip faces down, where our ramp runs near-black)
-for k in range(len(LIPS_TOP) - 1):   # (a crescent: quads between its upper and lower edge)
-    q = [LIPS_TOP[k], LIPS_TOP[k + 1], LIPS_LOW[k + 1], LIPS_LOW[k]]
-    face_poly(lips, [p for i, p in enumerate(q) if p not in q[:i]], 0.003)
-# (UNDERNOSE is not built: the original darkens the nose's underside with a brown polygon because its flat palette
-# shading would not; our ramp already shades it, and the extra brown read as a moustache)
+LBA2_FACE = bool(os.environ.get('ZOE_HEAD_LBA2'))
+
+
+def strip(part, pts, thick, lift, up=(0.0, 1.0)):
+    # a thin band along a polyline on the face (x/y in H), `thick` wide toward `up` (a lid line, a brow)
+    for k in range(len(pts) - 1):
+        a, c = pts[k], pts[k + 1]
+        ta = thick * (0.55 if k == 0 else 1.0)
+        tc = thick * (0.55 if k == len(pts) - 2 else 1.0)
+        face_poly(part, [a, c, (c[0] + up[0] * tc, c[1] + up[1] * tc), (a[0] + up[0] * ta, a[1] + up[1] * ta)], lift, 1)
+
+
+if LBA2_FACE:
+    lips = feat('lips', COL['red'])
+    lips.normal = (0.0, 0.15, 1.0)
+    for k in range(len(LIPS_TOP) - 1):
+        q = [LIPS_TOP[k], LIPS_TOP[k + 1], LIPS_LOW[k + 1], LIPS_LOW[k]]
+        face_poly(lips, [p for i, p in enumerate(q) if p not in q[:i]], 0.003)
+else:
+    # the lips: upper and lower lip, one even shade (n·L ≈ 0.6 = the colour itself: the lower lip faces down, where
+    # our ramp runs near-black), and the dark line between them
+    lips = feat('lips', COL['red'])
+    lips.normal = (0.0, 0.15, 1.0)
+    full = lambda L: [(-x, y) for x, y in reversed(L[1:])] + list(L)
+    T, M, Lo = full(LIPS2_TOP), full(LIPS2_MID), full(LIPS2_LOW)
+    for k in range(len(T) - 1):
+        for q in ([T[k], T[k + 1], M[k + 1], M[k]], [M[k], M[k + 1], Lo[k + 1], Lo[k]]):
+            q = [p for i, p in enumerate(q) if p not in q[:i]]
+            if len(q) >= 3:
+                face_poly(lips, q, 0.003, 2)
+    ml = feat('mouthLine', COL['mouth'])
+    ml.normal = (0.0, 0.15, 1.0)
+    strip(ml, M, 0.0011, 0.0034, (0.0, -1.0))
+    # the nose (skin, on the head): its base points sunk a little into the face, the tip and the underside out of it
+    # rows from the bridge down over the tip to the underside: each an arc across the nose from its left foot (sunk
+    # into the face) over the ridge to the right foot, so the nose is rounded, not a cut-out wedge
+    npart = b.P('nose', COL['skin'], 'head', 75)
+    nrows = []
+    for y, ridge, hw in NOSE_ROWS:
+        row = []
+        for k in range(7):
+            ph = math.pi * (k / 6 - 0.5)
+            x = hw * math.sin(ph)
+            base = on_face(x, y, 0.0)
+            row.append((base[0], base[1], base[2] - 0.0035 + ridge * ZH * abs(math.cos(ph)) ** 0.7))
+        nrows.append(row)
+    inner = Vector(m((0.0, 0.905, 0.035)))
+    nf = []   # (shared corners, so the normals round off across the rows)
+    for j in range(len(nrows) - 1):
+        for k in range(6):
+            f = [j * 7 + k, j * 7 + k + 1, (j + 1) * 7 + k + 1, (j + 1) * 7 + k]
+            q = [nrows[i // 7][i % 7] for i in f]
+            v0, v1, v2 = (Vector(x) for x in q[:3])
+            if (v1 - v0).cross(v2 - v0).dot(sum((Vector(x) for x in q), Vector()) / 4 - inner) < 0:
+                f.reverse()
+            nf.append(f)
+    npart.add([p for r in nrows for p in r], nf)
+    # brows
+    for sxx in (1, -1):
+        strip(feat('brow', COL['brown']), [(sxx * x, y) for x, y in BROW], 0.0024, 0.003)
 for sxx in (1, -1):
-    face_poly(feat('lid', COL['brown']), [(sxx * x, y) for x, y in LID], 0.004, 3)
-    e = ccw([(sxx * x, y) for x, y in EYE])
-    c = (sum(x for x, _ in e) / 4, sum(y for _, y in e) / 4)
-    b.eye(on_face(*c, 0.005), [([on_face(x, y, 0.005) for x, y in e], COL['eye'])])
-    # earrings: a small blue triangle frame hanging from the ear (lines in the original)
-    ear = [m((sxx * x, y, z)) for x, y, z in EARRING]
-    ep = b.P('earring', COL['blue'], 'head', 20)
-    for k in range(3):
-        tube(ep, ear[k], ear[(k + 1) % 3], 0.0035, 0.0035, 4)
+    if LBA2_FACE:
+        face_poly(feat('lid', COL['brown']), [(sxx * x, y) for x, y in LID], 0.004, 3)
+        e = ccw([(sxx * x, y) for x, y in EYE])
+        c = (sum(x for x, _ in e) / 4, sum(y for _, y in e) / 4)
+        b.eye(on_face(*c, 0.005), [([on_face(x, y, 0.005) for x, y in e], COL['eye'])])
+        ear = [m((sxx * x, y, z)) for x, y, z in EARRING]
+        ep = b.P('earring', COL['blue'], 'head', 20)
+        for k in range(3):
+            tube(ep, ear[k], ear[(k + 1) % 3], 0.0035, 0.0035, 4)
+        continue
+    # the eye: an almond, its outer corner raised (the slant), the iris and pupil looking a touch inward and up; one
+    # group per eye on the head bone (rig.js squashes it for the blink); the lid line stays on the head
+    ex, ey, ew, eh, sl = EYE2
+    cx = sxx * ex
+    alm = lambda t: (cx + ew * math.cos(t), ey + eh * math.sin(t) * (1 - 0.18 * math.cos(t) * sxx) + sl * ew * math.cos(t) * sxx)
+    white = [alm(2 * math.pi * k / 14) for k in range(14)]
+    half_h = lambda x: eh * math.sqrt(max(0.0, 1 - ((x - cx) / ew) ** 2)) * 0.96
+    ic = (cx - sxx * 0.0009, ey + 0.0004)
+
+    def clipped(r, n):
+        out = []
+        for k in range(n):
+            t = 2 * math.pi * k / n
+            x, y = ic[0] + r * math.cos(t), ic[1] + r * math.sin(t)
+            yc = ey + sl * (x - cx) * sxx
+            h = half_h(x)
+            out.append((x, min(max(y, yc - h), yc + h)))
+        return out
+    pv = on_face(cx, ey, 0.0042)
+    b.eye(pv, [([on_face(x, y, 0.0042) for x, y in white], COL['white']),
+               ([on_face(x, y, 0.0050) for x, y in clipped(0.0049, 12)], COL['iris']),
+               ([on_face(x, y, 0.0056) for x, y in clipped(0.0024, 8)], COL['pupil'])])
+    # the lid line along the almond's upper edge, a small flick out past the outer corner
+    upper = [alm(math.pi - math.pi * k / 6) if sxx > 0 else alm(math.pi * k / 6) for k in range(7)]
+    upper = sorted(upper, key=lambda p: sxx * p[0])
+    upper.append((upper[-1][0] + sxx * 0.0035, upper[-1][1] + 0.0022))
+    strip(feat('lid', COL['brown']), upper, 0.0016, 0.0047)
+    # the earring: a teardrop hoop hanging from the ear's place, in the head's side plane
+    exx, ehy, ez, er, edrop = EAR2
+    ctr_y = ehy - edrop + er
+    loop = []
+    for k in range(14):
+        t = 2 * math.pi * k / 14
+        z, y = ez + er * math.sin(t), ctr_y - er * math.cos(t)
+        s_top = max(0.0, -math.cos(t))            # (the upper half drawn in and up to the hook)
+        z = ez + (z - ez) * (1 - 0.75 * s_top ** 1.5)
+        y = y + s_top ** 1.5 * (ehy - (ctr_y + er))
+        loop.append(m((sxx * exx, y, z)))
+    ep = b.P('earring', COL['blue'], 'head', 60)
+    rings_e = []
+    for k in range(14):
+        p0, pp, pn = Vector(loop[k]), Vector(loop[k - 1]), Vector(loop[(k + 1) % 14])
+        tg = (pn - pp).normalized()
+        u = Vector((1.0, 0.0, 0.0))
+        w = tg.cross(u).normalized()
+        rings_e.append([tuple(p0 + u * (math.cos(2 * math.pi * i / 4) * 0.0032) + w * (math.sin(2 * math.pi * i / 4) * 0.0032)) for i in range(4)])
+    for k in range(14):
+        a_, c_ = rings_e[k], rings_e[(k + 1) % 14]
+        mid_ = (Vector(loop[k]) + Vector(loop[(k + 1) % 14])) / 2
+        for i in range(4):
+            q = [a_[i], a_[(i + 1) % 4], c_[(i + 1) % 4], c_[i]]
+            v0, v1, v2 = (Vector(x) for x in q[:3])
+            if (v1 - v0).cross(v2 - v0).dot(sum((Vector(x) for x in q), Vector()) / 4 - mid_) < 0:
+                q.reverse()
+            ep.add(q, [[0, 1, 2, 3]])
 
 # ------------------------------------------------------------------ the necklace: laid on the skin round the neck
 btree = BVHTree.FromPolygons([Vector(v) for v in skin.v + dress.v], skin.f + [[i + len(skin.v) for i in f] for f in dress.f])
