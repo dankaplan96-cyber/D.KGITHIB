@@ -905,6 +905,7 @@ one browser; baseline the same), not caused here. GPU time on the laptop: not me
 | perfbudget | draw-call budgets PASS (street Low 191 ≤ 260, Medium 250 ≤ 300, High 282 ≤ 450; interiors ≤ 150), frame pacing PASS; "no shader compiles on the routes" FAILS on the baseline alike (above) |
 | zislands | ALL PASSED |
 | doorcull | ALL PASSED (16 doors, 192 checks) |
+| After merging origin 3dca29c (R5-OPENING: opening, cinematic, voice, hud) | opening, stability, worldfit ALL PASSED; prologue and chapter1 to the end, no errors |
 
 Not verified: the look on a real GPU and display (SwiftShader captures), the GPU frame time (perfbudget's times are
 CPU/software proxies on a loaded shared machine), an independent visual review; the islands' long views beyond the
