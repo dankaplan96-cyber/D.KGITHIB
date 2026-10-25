@@ -857,7 +857,13 @@ class Game {
   act(a) {
     switch (a) {
       case 'continue': this.startContinue(); break;
-      case 'new': if (this.dirty) this.reloadInto('new'); else this.startNew(); break;
+      // New Game over an existing save asks first (the user: one press used to wipe the progress); the old save
+      // is kept aside as lba3_save_v1_before_new, so even a yes can be undone by hand
+      case 'new': if (store.get(SAVE_KEY) && this.screen === 'title') { this.openChild('confirmnew'); break; } // falls through
+      case 'newyes':
+        if (store.get(SAVE_KEY)) store.set(SAVE_KEY + '_before_new', store.get(SAVE_KEY));
+        if (this.dirty) this.reloadInto('new'); else this.startNew();
+        break;
       case 'settings': case 'controls': this.openChild(a); break;
       case 'resetkeys': this.settings.keys = {}; this.applySettings(); this.buildRebind(); break;
       case 'back': this.closeChild(); break;

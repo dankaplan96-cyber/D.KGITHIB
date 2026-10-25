@@ -3,7 +3,7 @@
 export const STR = {
   he: {
     title_sub: 'רימאסטר מחווה ל־Little Big Adventure 2 (1997) · מהדורת 2026',
-    continue: 'המשך משחק', new_game: 'משחק חדש', settings: 'הגדרות', controls: 'מקשים', back: 'חזרה',
+    continue: 'המשך משחק', new_game: 'משחק חדש', overwrite_q: 'להתחיל משחק חדש?', overwrite_sub: 'המשחק השמור יוחלף.', overwrite_yes: 'משחק חדש', settings: 'הגדרות', controls: 'מקשים', back: 'חזרה',
     resume: 'חזרה למשחק', save_quit: 'שמירה ויציאה לתפריט', paused: 'הפסקה',
     language: 'שפה', control_scheme: 'שיטת שליטה', ctrl_modern: 'מודרנית (יחסית למצלמה)', ctrl_classic: 'קלאסית 1997 (טנק)',
     visual: 'מראה', vis_2026: 'רימאסטר – סגנון LBA2 עם תאורה מודרנית', vis_1997: '1997 – רזולוציה נמוכה, פיקסלים, ערפל קרוב',
@@ -79,7 +79,7 @@ export const STR = {
     d_boss: ['עוד ילד עם כדור? השבר הזה שלי. הסערה שלי!'],
   },
   en: {
-    continue: 'Continue', new_game: 'New Game', settings: 'Settings', controls: 'Controls', back: 'Back',
+    continue: 'Continue', new_game: 'New Game', overwrite_q: 'Start a new game?', overwrite_sub: 'Your saved game will be replaced.', overwrite_yes: 'New Game', settings: 'Settings', controls: 'Controls', back: 'Back',
     resume: 'Resume', save_quit: 'Save & Quit', paused: 'Paused',
     language: 'Language', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',
     visual: 'Look', vis_2026: 'Remaster', vis_1997: 'Retro 1997',
