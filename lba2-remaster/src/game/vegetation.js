@@ -81,7 +81,9 @@ const VARIANTS = {
   },
 };
 
-const COLORS = { bark: '#6a4a30', leaf: '#4f9a38', leafDark: '#3a7a3a', needle: '#2f6b3a', fruit: '#e0402a', blossom: '#ff8ac0' };
+// (R6: the foliage a deeper, slightly cooler green than the warm olive lawns, so trees and bushes stand apart from
+// the ground; was leaf #4f9a38, leafDark #3a7a3a, needle #2f6b3a)
+const COLORS = { bark: '#6a4a30', leaf: '#3f8c3c', leafDark: '#2f6e3c', needle: '#2a6038', fruit: '#e0402a', blossom: '#ff8ac0' };
 
 const geos = new Map();
 // lod 1: the same tree sculpted on a 2.6× coarser grid (≈1/6 of the triangles), for distant tiles
@@ -136,7 +138,9 @@ export function rockGeometry(seed = 1, lod = 0) {
 export function grassClumpGeometry(seed = 1, blades = 9) {
   const r = rng(seed);
   const pos = [], col = [], idx = [];
-  const root = new THREE.Color('#4a742c'), tip = new THREE.Color('#b0cc62'); // (warm, toward the lawns' olive)
+  // (warm, toward the lawns' olive; R6: root and tip nearer the ground's tone, so tufts don't speckle the lawns dark
+  // and light)
+  const root = new THREE.Color('#527d31'), tip = new THREE.Color('#98b65a');
   const c = new THREE.Color();
   for (let b = 0; b < blades; b++) {
     const a = r() * Math.PI * 2, lean = 0.15 + r() * 0.35, h = 0.28 + r() * 0.32, w = 0.03 + r() * 0.02;

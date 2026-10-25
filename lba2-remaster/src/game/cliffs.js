@@ -46,7 +46,10 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
       const w = step * (0.95 + r() * 0.35);          // overlapping neighbours
       const depth = 1.0 + r() * 0.5;
       const out = 0.12 + r() * 0.22;                 // relief out of the slope at mid-height
-      const y0 = bot - 0.35, y1 = top - 0.04 - r() * 0.12;
+      // (WORLD-FIX: each block's top falls back into the hill at its own slope, so no two overlapping blocks share
+      // one plane: their flat tops z-fought on the terraces' rims)
+      const ix = Math.round((x - terrain.cx) / step), iz = Math.round((z - terrain.cz) / step);
+      const y0 = bot - 0.35, y1 = top - 0.04 - r() * 0.12, tilt = ((((ix * 2 + iz * 5) % 13) + 13) % 13) * 0.013;
       const ym = y0 + (y1 - y0) * (0.4 + r() * 0.25);
       // corners: o = outer face (downhill), i = inner (in the hill)
       const P = (s, n, y) => {
@@ -59,7 +62,7 @@ export function buildCliffRocks(parent, terrain, tex, { skip = () => false, step
       const oM = [P(-1.04, out + skew, ym), P(1.04, out - skew, ym)];
       const oT = [P(-0.94, out * 0.35 + lean, y1 - 0.18), P(0.94, out * 0.35 - lean, y1 - 0.12)];
       const lip = [P(-0.9, -0.2, y1), P(0.9, -0.2, y1)];
-      const iT = [P(-0.9, -depth, y1), P(0.9, -depth, y1)];
+      const iT = [P(-0.9, -depth, y1 - tilt), P(0.9, -depth, y1 - tilt)];
       const iB = [P(-1, -depth, y0), P(1, -depth, y0)];
       const tone = 0.9 + r() * 0.1;
       c.setRGB(tone, tone * (0.98 + r() * 0.03), tone * (1.0 + r() * 0.04));

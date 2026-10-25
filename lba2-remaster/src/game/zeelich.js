@@ -26,6 +26,7 @@
 // Heights the story may need: walking level Y0 = 6.0, platform deck DECK = 6.42 (both world y), cloud sea
 // R.cloudY = -3. Mill brakes are 3.0 m above the ground; the old mill's balcony (R.millTop.y) is 8.75 m up.
 import * as THREE from 'three';
+import { fitAdd } from './worldfit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
 import { domeParts, finialGeo, esmerBuilding, Place } from './props-esmer.js';
@@ -796,7 +797,7 @@ export function buildZeelich(scene, physics) {
   function buildPier() {
     const { x0, x1, hw } = PIER, L = x1 - x0, cxp = (x0 + x1) / 2;
     const planks = tm('planks', { color: '#ecc8a8' });
-    B.add(boxUV(bbox(L, 0.24, hw * 2, 0.04, 1), TILE.planks), planks, cxp, Y0 - 0.12, 0);
+    B.add(boxUV(bbox(L, 0.24, hw * 2, 0.04, 1), TILE.planks), planks, cxp, Y0 - 0.11, 0);   // (WORLD-FIX: 1 cm proud of the turf, whose plane its end shared)
     // stringers, cross beams and diagonal brass struts down into the cliff
     for (const s of [-1, 1]) B.add(boxUV(bbox(L + 0.2, 0.36, 0.26, 0.04, 1), TILE.teal), tealM(), cxp, Y0 - 0.38, s * (hw - 0.15));
     for (let x = x0 + 0.6; x < x1; x += 2.4) {
@@ -981,7 +982,8 @@ export function buildZeelich(scene, physics) {
     HB.add(bbox(w + 0.4, base + 0.12, d + 0.4, 0.05, TILE.stone), stoneM, 0, base / 2 - 0.06, 0);
     // openings
     const doorX = o.doorX ?? 0;
-    const door = { x: doorX, y: 0.02, w: 1.25, h: 2.45, horse: true, door: true };
+    const door = { x: doorX, y: 0.02, w: 1.25, h: 2.35, horse: true, door: true };   // (WORLD-FIX: 2.45 put the arch's frame into the frieze of the 3.6 m house)
+    const friezeY = h - 0.66 - base;   // (the tiled frieze's foot, in the walls' coordinates: nothing on a wall reaches above it)
     const holes = { front: [door], back: [], left: [], right: [] };
     const winY = 1.15;
     const addWin = (side, x, ww = 0.82, hh = 1.25) => holes[side].push({ x, y: winY, w: ww, h: hh, horse: true });
@@ -1001,11 +1003,17 @@ export function buildZeelich(scene, physics) {
     ];
     const lattice = tm(latticeTex(), { rough: 0.4, emissive: '#3a2a50', ei: 0.4 });
     const doorM = tm('planks', { color: o.workshop ? '#b8e0d8' : '#c8906a', rough: 0.8 });
+    // (WORLD-FIX: what stands round each opening, in wall coordinates seen from outside: tests/worldfit.mjs)
+    const fitOps = [], fx = (side, kind, x0, x1, y0, y1) => { const e = { side, kind, x0, x1, y0, y1 }; fitOps.push(e); return e; };
     for (const sd of sides) {
       const m4 = new THREE.Matrix4().compose(new THREE.Vector3(...sd.pos), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, sd.ry, 0)), new THREE.Vector3(1, 1, 1));
       HB.addM(panelGeo(+sd.len.toFixed(3), h - base, t, holes[sd.n]), wallM, m4);
       const at = (lx, ly, lz, ry = 0) => new THREE.Matrix4().compose(new THREE.Vector3(lx, ly, lz).applyMatrix4(m4), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, sd.ry + ry, 0)), new THREE.Vector3(1, 1, 1));
       for (const op of holes[sd.n]) {
+        const fe = op.round ? fx(sd.n, 'window', op.x - op.w / 2 - 0.18, op.x + op.w / 2 + 0.18, op.y - 0.18, op.y + op.h + 0.18)
+          : op.door ? fx(sd.n, 'door', op.x - op.w / 2 - 0.2, op.x + op.w / 2 + 0.2, op.y, op.y + op.h + 0.2)
+          : fx(sd.n, 'window', op.x - op.w / 2 - 0.175, op.x + op.w / 2 + 0.175, op.y - 0.085, op.y + op.h + 0.13);
+        if (op.door) fx(sd.n, 'step', op.x - 0.95, op.x + 0.95, -base, -base + 0.14);
         if (op.round) {
           // Baldino's big round workshop window: brass ring, spokes, warm lit glass
           const cy = op.y + op.h / 2;
@@ -1021,15 +1029,20 @@ export function buildZeelich(scene, physics) {
           HB.addM(fillGeo(op, 0.05, 0.08, 0.6), doorM, at(0, 0, t * 0.3));
           for (let k = 0; k < 10; k++) HB.addM(cached('stud', () => new THREE.SphereGeometry(0.035, 6, 4)), brassM(), at(op.x + ((k % 2) - 0.5) * 0.7, 0.3 + Math.floor(k / 2) * 0.42, t * 0.3 + 0.1));
           HB.addM(cached('dring', () => new THREE.TorusGeometry(0.08, 0.018, 6, 14)), brassM(), at(op.x + 0.32, 1.1, t * 0.3 + 0.12));
-          const aw = op.w + 0.9, ah = op.h + 0.55;
-          for (const s of [-1, 1]) HB.addM(bbox(0.14, ah, 0.08, 0.02, 1), trimM, at(op.x + s * aw / 2, ah / 2, t + 0.03));
-          HB.addM(bbox(aw + 0.14, 0.14, 0.08, 0.02, 1), trimM, at(op.x, ah, t + 0.03));
+          // (WORLD-FIX: the alfiz stays clear of the frieze above and the lantern beside it, or is left out)
+          const aw = op.w + 0.6, ah = Math.min(op.h + 0.55, friezeY - 0.09);
+          if (ah - 0.07 >= op.y + op.h + 0.22) {
+            for (const s of [-1, 1]) HB.addM(bbox(0.14, ah, 0.08, 0.02, 1), trimM, at(op.x + s * aw / 2, ah / 2, t + 0.03));
+            HB.addM(bbox(aw + 0.14, 0.14, 0.08, 0.02, 1), trimM, at(op.x, ah, t + 0.03));
+            Object.assign(fe, { x0: op.x - aw / 2 - 0.07, x1: op.x + aw / 2 + 0.07, y1: ah + 0.07 });
+          }
           HB.addM(boxUV(bbox(1.9, 0.14, 0.7, 0.03, 1), 1), stoneM, at(op.x, -base + 0.07, t + 0.35));
         } else {
           HB.addM(fillGeo(op, 0.05, 0, 0.5), lattice, at(0, 0, t * 0.45));
           HB.addM(bbox(op.w + 0.35, 0.09, 0.26, 0.02, 1), stoneM, at(op.x, op.y - 0.04, t + 0.06));
           // flower box under some windows
           if (rr() < 0.55) {
+            fe.y0 = op.y - 0.3;
             HB.addM(boxUV(bbox(op.w + 0.1, 0.2, 0.22, 0.03, 1), 1), tiles, at(op.x, op.y - 0.2, t + 0.16));
             for (let k = 0; k < 5; k++) HB.addM(cached('fl' + (k % 3), () => tint(new THREE.IcosahedronGeometry(0.075, 0), ['#ff6fa3', '#ffd84a', '#b28cff'][k % 3])), VC(), at(op.x - op.w / 2 + 0.1 + (k / 4) * (op.w - 0.2), op.y - 0.04, t + 0.18 + (k % 2) * 0.05));
           }
@@ -1046,7 +1059,7 @@ export function buildZeelich(scene, physics) {
       HB.add(boxUV(bbox(len, 0.42, 0.06, 0.01, 1), TILE.tiles), tiles, x + Math.sin(ry) * 0.02, h - 0.45, z + Math.cos(ry) * 0.02, 0, ry, 0);
     }
     HB.add(boxUV(bbox(w + 0.5, 0.18, d + 0.5, 0.06, 1), TILE.stone), stoneM, 0, h - 0.12, 0);
-    HB.add(boxUV(bbox(w + 0.1, 0.14, d + 0.1, 0.03, 1), 1.6), tm('concrete', { color: '#e6d8d0' }), 0, h - 0.1, 0);
+    HB.add(boxUV(bbox(w + 0.1, 0.14, d + 0.1, 0.03, 1), 1.6), tm('concrete', { color: '#e6d8d0' }), 0, h - 0.08, 0);   // (WORLD-FIX: at h − 0.1 its top lay in the cornice's top plane: the roof z-fought)
     const merlon = cached('hmerlon', () => { const s = new THREE.Shape(); s.moveTo(-0.22, 0); s.lineTo(0.22, 0); s.lineTo(0.22, 0.18); s.quadraticCurveTo(0.22, 0.42, 0, 0.5); s.quadraticCurveTo(-0.22, 0.42, -0.22, 0.18); s.lineTo(-0.22, 0); return boxUV(new THREE.ExtrudeGeometry(s, { depth: 0.2, bevelEnabled: true, bevelSize: 0.015, bevelThickness: 0.015, bevelSegments: 1, curveSegments: 5 }), 1); });
     for (const [len, z, ry] of [[w, d / 2, 0], [w, -d / 2, Math.PI], [d, w / 2, Math.PI / 2], [d, -w / 2, -Math.PI / 2]]) {
       const nn = Math.floor((len - 0.9) / 0.62);
@@ -1123,11 +1136,15 @@ export function buildZeelich(scene, physics) {
         const awc = [['#e8608a', '#f8eee4'], ['#3a9aa0', '#f8eee4'], ['#e8b84a', '#f8eee4']][o.seed % 3];
         HB.add(aw, tm(stripeTex(...awc), { rough: 0.9, side: THREE.DoubleSide }), ax, winY + 1.75, d / 2 + 0.02);
       }
-      const lx = doorX + (doorX > 0.5 ? -1.05 : 1.05) * (o.workshop ? -1 : 1);
+      const lx = doorX + (doorX > 0.5 ? -1.16 : 1.16) * (o.workshop ? -1 : 1);   // (WORLD-FIX: at 1.05 the lantern's bracket sat on the alfiz)
+      if (!o.arcade) fx('front', 'lamp', lx - 0.13, lx + 0.13, 2.06 - base, 2.6 - base);
       HB.add(cached('wlamp', () => compose([[bbox(0.08, 0.08, 0.36, 0.02, 1), 0, 0, 0.18], [cyl(0.015, 0.015, 0.2, 5), 0, -0.1, 0.34]])), brassM(), lx, 2.55, d / 2 + arcadeDepth + 0.02);
       HB.add(cached('wlampg', () => lathe([[0, 0], [0.1, 0.03], [0.13, 0.15], [0.1, 0.27], [0.03, 0.31], [0, 0.31]], 10)), pm('#ffe0f0', 0.3, { emissive: '#ffb8d8', emissiveIntensity: 1.6 }), lx, 2.06, d / 2 + arcadeDepth + 0.36);
       HB.add(cached('wlampc', () => lathe([[0, 0], [0.13, 0], [0.09, 0.1], [0.03, 0.18], [0.01, 0.26], [0, 0.26]], 10)), brassM(), lx, 2.36, d / 2 + arcadeDepth + 0.36);
     }
+    fitAdd({ region: 'zeelich', name: o.workshop ? "Baldino's workshop" : 'house ' + o.seed, x: ox + o.x, z: oz + o.z, ry: o.ry, oy: Y0 + base, w, d, base: -base - 0.12, plinth: 0, floor: 0.02, steps: base + 0.1,
+      sides: { front: w / 2 - 0.4, back: w / 2 - 0.4, left: d / 2 - 0.4, right: d / 2 - 0.4 },
+      top: Object.fromEntries(['front', 'back', 'left', 'right'].map((k) => [k, h - 0.45 - 0.21 - base])), openings: fitOps });
     let out = {};
     if (o.workshop) out = workshopClutter(HB, G, o, f, tiles);
     HB.build();
@@ -1685,7 +1702,8 @@ export function buildZeelich(scene, physics) {
     PB.add(boxUV(bbox(0.8, 0.14, GATE.half * 2 + 1.0, 0.04, 1), 1.6), brassM(), gx, Y0 + 4.85, 0);
     PB.add(emq(), emblemMaterial(), gx - 0.36, Y0 + 4.55, 0, 0, -Math.PI / 2, 0, 0.75);
     // the neck step up onto the deck
-    PB.add(boxUV(bbox(1.2, DECK - Y0, 11.6, 0.03, 1), TILE.deck), tm('deck', { color: '#d4ccdc', rough: 0.65, metal: 0.25 }), 40.0, Y0 + (DECK - Y0) / 2, 0);
+    // (WORLD-FIX: 12 mm under the deck's top, which it shared where they overlap: z-fighting)
+    PB.add(boxUV(bbox(1.2, DECK - Y0 - 0.012, 11.6, 0.03, 1), TILE.deck), tm('deck', { color: '#d4ccdc', rough: 0.65, metal: 0.25 }), 40.0, Y0 + (DECK - Y0 - 0.012) / 2, 0);
     col({ type: 'box', x: 39.9, z: 0, hw: 0.5, hd: 5.6, rot: 0, top: DECK, seeThrough: true });
     // console at the gate (outside, on the island side)
     const CX = 34.9, CZ = -4.3;

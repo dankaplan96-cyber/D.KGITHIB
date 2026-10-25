@@ -9,10 +9,11 @@ import { ZoneSystem } from '../engine/scripts.js';
 import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/math.js';
 import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
-import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP } from './town.js';
+import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, STUMP, SHIFT } from './island.js';
 import { buildDinoFly } from './dinofly.js';
+import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { COAST, LEVELS, PROPS } from './citadel-layout.js';
@@ -266,11 +267,29 @@ function pathRamp(x, z, h) {
   return lerp(h, hsum / wsum, wmax);
 }
 
-export function islandHeight(x, z) {
+function islandHeight0(x, z) {
   let h = pathRamp(x, z, baseHeight(x, z));
   const k = townKeep(x, z);
   if (k > 0) h = lerp(h, townCoreHeight(x, z), k);
   return h;
+}
+// WORLD-FIX: every house stands on its own level floor (town.js HOUSE_FLATS): the ground under its footprint and a
+// margin round it at the height of the ground before its door, easing back to the land beyond. Applied last, so
+// no ramp, rise or town noise tilts a house again. (The ground round each house was measured by tests/worldfit.mjs.)
+let FLAT_LVL = null;
+function houseFlats(x, z, h) {
+  FLAT_LVL ??= HOUSE_FLATS.map((f) => islandHeight0(f.door[0], f.door[1]));
+  for (let i = 0; i < HOUSE_FLATS.length; i++) {
+    const f = HOUSE_FLATS[i], dx = x - f.x, dz = z - f.z, R = f.flat + f.ease;
+    if (Math.abs(dx) > f.hw + f.hd + R || Math.abs(dz) > f.hw + f.hd + R) continue;
+    const ex = Math.abs(f.c * dx - f.s * dz) - f.hw, ez = Math.abs(f.s * dx + f.c * dz) - f.hd;
+    const d = ex > 0 && ez > 0 ? Math.hypot(ex, ez) : Math.max(ex, ez);
+    if (d < R) h = lerp(FLAT_LVL[i], h, smoothstep(f.flat, R, d));
+  }
+  return h;
+}
+export function islandHeight(x, z) {
+  return houseFlats(x, z, islandHeight0(x, z));
 }
 export const debugHeight = islandHeight;
 
@@ -463,6 +482,9 @@ export function buildWorld(parentScene) {
 
   // ---------- Lupin-Burg: houses, square, streets, props (see town.js) ----------
   { const n0 = scene.children.length; buildTown(scene, W); tagSrc(scene, n0, 'town'); }
+  // the statue of Twinsen and Zoé (STATUE; src/game/statue.js): the original's stands in the middle of the square,
+  // where the well is now; it stands at the square's north side, facing the well
+  { const n0 = scene.children.length; buildStatue(scene, W, -43.2, -10.4, Math.atan2(-42 - -43.2, -4 - -10.4)); tagSrc(scene, n0, 'statue'); }
   const V = POI.village;
 
   // ---------- trees / grass / rocks (sculpted, instanced; see vegetation.js) ----------
@@ -601,6 +623,16 @@ export function buildWorld(parentScene) {
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
   clearLife(trees); clearLife(bushes);
+  // (WORLD-FIX / R6: the way out of every house door stays open — no tree or bush in a 4 m lane straight out of it for
+  //  11 m, so the first steps out of a door are never into a bush. Filtered after the scatter: no random draw moves.)
+  const doorLane = (x, z, pad) => W.houses.some((h) => {
+    if (!h.door) return false;
+    const nx = Math.sin(h.ry), nz = Math.cos(h.ry);   // (the front wall's outward normal: the door is in the front wall)
+    const dx = x - h.door.x, dz = z - h.door.z, along = dx * nx + dz * nz, across = Math.abs(dx * nz - dz * nx);
+    return along > -0.5 && along < 11 && across < 2 + pad;
+  });
+  for (const t of trees) if (!t.gone && doorLane(t.x, t.z, 0.45 * t.s)) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && doorLane(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
     const list = trees.filter((t, i) => t.kind === kind && i % nv === v);
@@ -636,7 +668,14 @@ export function buildWorld(parentScene) {
     if (rand() < 0.15) flowers.push({ x, z, h: H(x, z), s: 0.9, ry: rand() * 6 });
   }
   const grassMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, side: THREE.DoubleSide }), 0.16);
-  const grassTint = (c) => c.setHSL(0.27 + (rand() - 0.5) * 0.05, 0.25 + rand() * 0.2, 0.85 + rand() * 0.15).lerp(new THREE.Color(1, 1, 1), 0.6);
+  // (R6: a narrower spread of brightness from tuft to tuft — the same random draws, the bright end brought down)
+  const grassTint = (c) => c.setHSL(0.27 + (rand() - 0.5) * 0.04, 0.22 + rand() * 0.14, 0.8 + rand() * 0.08).lerp(new THREE.Color(1, 1, 1), 0.45);
+  // R6, outdoor readability: the walking routes' edges stay calm — no tufts within 2.2 m of a path's line or 0.9 m of
+  // a street, no wild flowers within 3 m (the tulip beds stay: they are placed by the paths on purpose). Filtered
+  // after the scatter, so the random draws and everything placed after them are unchanged.
+  const calm = (t, r) => pathDist(t.x, t.z) >= r && !(Math.hypot(t.x - POI.village.x, t.z - POI.village.z) < 36 && streetDist(t.x, t.z) < r - 1.3);
+  for (const t of grass) if (!calm(t, 2.2)) { t.s = 1e-4; t.gone = true; }
+  for (const t of flowers) if (!calm(t, 3.0)) { t.s = 1e-4; t.gone = true; }
   clearLife(grass); clearLife(flowers);
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
@@ -699,6 +738,7 @@ export function buildWorld(parentScene) {
     if (!okSpot(x, z, 2.5) && h > 1.3) continue;
     rocks.push({ x, z, h: h - 0.1, s: 0.3 + rand() * 0.8, ry: rand() * 6 });
   }
+  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1)) r.s = 1e-4;   // (the doors' lanes, as the trees and bushes)
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   if (BATCH.on) batchFor(rockMat).build();
@@ -847,8 +887,10 @@ export function buildWorld(parentScene) {
   // givers outdoors (most are indoors, as in the original): the sage's barrels and the old stump
   W.givers.push({ id: 'barrels', x: W.barrels.x, z: W.barrels.z, r: 2.0, top: 1.1, kinds: ['magic'] });
   W.givers.push({ id: 'stump', ...STUMP, r: 2.0, top: 0.8, kinds: ['clover'] });
-  // the Dino-Fly naps in the garden north of Twinsen's house
-  buildDinoFly(scene, W, -50.5, 68.5, 1.9);
+  // the Dino-Fly naps where he lay in LBA2 (DINOFLY-POS): the user's files place him (scene 49, the start of LBA2 after
+  // the storm, and scene 195; File3D 109, body 167) south-west of Twinsen's house, at our (-58.0, 95.3), turned 1200 of
+  // 4096 (1.84 rad); twelve years on it is still his spot in the grass behind the house
+  buildDinoFly(scene, W, -58.0, 95.3, 1.84);
   W.storm = 1;
   W.update = (dt, t) => {
     swayU.uTime.value = t;

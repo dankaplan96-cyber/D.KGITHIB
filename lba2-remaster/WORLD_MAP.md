@@ -31,8 +31,8 @@ the original doesn't have is ours:
 | Place | Identity / landmark | Local problem / life | Story role | Changes after events |
 |---|---|---|---|---|
 | Twinsen's house (south of the village, where the original's stands; Bug Street leads there) | after the original's plan: family room (kitchen, table, Arthur's corner, the cupboard), Arthur's room (the old nursery, blue star wallpaper), reading room, hall with the stairs down; the cellar (training room: target, dummy, radio) | family | start; hub between chapters | Arthur's radio (ch1); dinner (epilogue) |
-| Twinsen's garden | the Dino-Fly napping north of the house | — | talk to him (he is too old to fly over the sea) | — |
-| Town square | the well with a red roof, blue-globe lamps | the dry well, the water-bill row | prologue goal | well steams (ch1); runs cool (epilogue) |
+| Twinsen's garden | the Dino-Fly napping on the rise south-west of the house (-58.0, 95.3), where LBA2's scene 49 has him after the storm (DINOFLY-POS) | — | talk to him (he is too old to fly over the sea) | — |
+| Town square | the well with a red roof, blue-globe lamps; the statue of Twinsen and Zoé on its north side (-43.2, -10.4) — in the original it stands in the square's middle (CITADEL.OBL body 24), where the well is now; bronze gone green, a plaque TWINSEN & ZOE · WHO SAVED TWINSUN (STATUE, src/game/statue.js) | the dry well, the water-bill row | prologue goal | well steams (ch1); runs cool (epilogue) |
 | Water office (interior) | pipe map on the wall | Mira's bureaucracy | valve map (ch1) | finale: Mira opens the valves |
 | Pippa's stall | yellow awning | trade | shop | stock changes with events (clovers before the evacuation) |
 | Harbour (west end of the original's pier) | pier, Doran's boat, project ferry; the ferry timetable lists Twinsun sailings only (DESERT ISLAND) | Xil's stuck cargo | permit; Doran agrees to fly the project's ship (ch2); the ferry to Desert Island | ferry docks (ch1), round from Desert Island |

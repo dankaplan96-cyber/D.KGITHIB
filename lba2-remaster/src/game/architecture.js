@@ -130,6 +130,9 @@ export function buildHouse(opts) {
     { name: 'left', len: o.d - 2 * T + 0.002, pos: [-o.w / 2 + T, 0, 0], ry: -Math.PI / 2, gable: 0 },
     { name: 'right', len: o.d - 2 * T + 0.002, pos: [o.w / 2 - T, 0, 0], ry: Math.PI / 2, gable: 0 },
   ];
+  // (WORLD-FIX: what stands round each opening, in wall coordinates seen from outside, for tests/worldfit.mjs)
+  const fitOps = [];
+  const ext = (side, kind, x0, x1, y0, y1) => { const e = { side, kind, x0, x1, y0, y1 }; fitOps.push(e); return e; };
   for (const sd of sides) {
     const panel = new THREE.Group();
     panel.position.set(...sd.pos);
@@ -139,6 +142,7 @@ export function buildHouse(opts) {
     // openings: reveals (inner faces come from the extrusion), frames, glass, sills, shutters
     for (const op of holes[sd.name]) {
       if (op.win) {
+        const e = ext(sd.name, 'window', op.x - op.w / 2 - 0.15, op.x + op.w / 2 + 0.15, op.y - 0.08, op.y + op.h + 0.16);
         const glass = mesh(new THREE.PlaneGeometry(op.w, op.h), shared('glass' + !!o.lit, () => new THREE.MeshStandardMaterial({ color: '#2f4f6a', roughness: 0.15, metalness: 0.1, emissive: '#ffcf80', emissiveIntensity: o.lit ? 0.35 : 0.0 })), panel, op.x, op.y + op.h / 2, 0.08);
         glass.castShadow = false;
         const fw = 0.06;
@@ -146,7 +150,7 @@ export function buildHouse(opts) {
           mesh(new THREE.BoxGeometry(w2, h2, 0.07), plain('#f4efe2', 0.7), panel, fx, fy, 0.1);
         }
         // stone sill
-        mesh(new THREE.BoxGeometry(op.w + 0.24, 0.08, 0.2), stone, panel, op.x, op.y - 0.04, T + 0.06);
+        mesh(new THREE.BoxGeometry(op.w + 0.24, 0.08, 0.2), stone, panel, op.x, op.y - 0.03, T + 0.06);   // (WORLD-FIX: 1 cm proud of the opening's foot, whose face it shared)
         // lintel stones
         mesh(new THREE.BoxGeometry(op.w + 0.3, 0.16, 0.06), stone, panel, op.x, op.y + op.h + 0.08, T + 0.02);
         if (o.shutters && !op.noShutters) for (const sx of [-1, 1]) {
@@ -154,12 +158,16 @@ export function buildHouse(opts) {
           hinge.position.set(op.x + sx * (op.w / 2 + 0.03), op.y + op.h / 2, T + 0.03);
           hinge.rotation.y = sx * (0.35 + r() * 0.5);
           panel.add(hinge);
+          const reach = op.w / 2 + 0.03 + (op.w / 2) * Math.cos(hinge.rotation.y);
+          if (sx < 0) e.x0 = Math.min(e.x0, op.x - reach); else e.x1 = Math.max(e.x1, op.x + reach);
           const sh = mesh(new THREE.BoxGeometry(op.w / 2, op.h + 0.04, 0.05), plain(o.shutters, 0.8), hinge, sx * op.w / 4, 0, 0.02);
           for (let k = -2; k <= 2; k++) mesh(new THREE.BoxGeometry(op.w / 2 - 0.06, 0.03, 0.02), plain(shade(o.shutters, 0.8), 0.8), sh, 0, k * op.h * 0.18, 0.035);
         }
-        if (op.y > 0.9 && r() < 0.75 && sd.name !== 'back') flowerBox(panel, op.x, op.y - 0.14, T + 0.2, op.w + 0.1, r);
+        if (op.y > 0.9 && r() < 0.75 && sd.name !== 'back') { flowerBox(panel, op.x, op.y - 0.14, T + 0.2, op.w + 0.1, r); e.y0 = op.y - 0.22; }
       } else {
         // the door: wood planks recessed in the opening, stone arch surround, step
+        ext(sd.name, 'door', op.x - op.w / 2 - 0.16, op.x + op.w / 2 + 0.16, op.y, op.y + op.h + 0.16);
+        ext(sd.name, 'step', op.x - op.w / 2 - 0.3, op.x + op.w / 2 + 0.3, 0, 0.18);
         const dg = new THREE.Group();
         dg.position.set(op.x, op.y, 0.07);
         panel.add(dg);
@@ -269,7 +277,17 @@ export function buildHouse(opts) {
   }
 
   const colliders = [{ x: 0, z: 0, hw: o.w / 2 + 0.05, hd: o.d / 2 + 0.05, top: 6 }];
-  return { group: g, colliders, door: { x: door.x, z: o.d / 2 + 0.75 }, gableH };
+  // WORLD-FIX (src/game/worldfit.js): the house in its own coordinates (y up from the group's origin): the plinth
+  // from −0.05 to 0.37, the door sill at the door's foot, the walls' corners kept by the quoins (0.46 m on the front
+  // and back, 0.41 m on the sides), the downpipe on the right wall by the front corner; openings below the eave beam
+  ext('right', 'pipe', -(o.d / 2 - 0.35) - 0.09, -(o.d / 2 - 0.35) + 0.09, 0, o.h);   // (right wall u = −local z)
+  const fit = {
+    w: o.w, d: o.d, base: -0.05, plinth: plinthH - 0.05, floor: door.y, steps: 0.18 + 0.3,
+    sides: { front: o.w / 2 - 0.46, back: o.w / 2 - 0.46, left: o.d / 2 - 0.41, right: o.d / 2 - 0.41 },
+    top: { front: o.h - 0.14, back: o.h - 0.14, left: o.h, right: o.h },
+    openings: fitOps,
+  };
+  return { group: g, colliders, door: { x: door.x, z: o.d / 2 + 0.75 }, gableH, fit };
 }
 
 function shade(hex, k) { return '#' + new THREE.Color(hex).multiplyScalar(k).getHexString(); }

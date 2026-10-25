@@ -114,7 +114,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     // battered plinth, the walls, a string course with corbels under the parapet
     B.add(bbox(WH.w + 0.36, 0.55, WH.d + 0.36, 0.06, 1.8), C.ashD, WH.x, Y0 + 0.2, WH.z);
     B.add(bbox(WH.w, WH.h - 0.08, WH.d, 0.05, 1.9), C.ash, WH.x, Y0 + (WH.h - 0.08) / 2, WH.z);
-    B.add(bbox(WH.w + 0.26, 0.14, WH.d + 0.26, 0.03, 1.8), C.ashD, WH.x, roofY - 0.05, WH.z);
+    B.add(bbox(WH.w + 0.26, 0.14, WH.d + 0.26, 0.03, 1.8), C.ashD, WH.x, roofY - 0.06, WH.z);   // (WORLD-FIX: 1 cm lower: its top lay in the roof deck's and z-fought)
     B.add(bbox(WH.w + 0.08, 0.1, WH.d + 0.08, 0.02, 1.8), C.ashD, WH.x, Y0 + 2.45, WH.z);
     const corb = cached('zlcorb', () => bbox(0.2, 0.22, 0.16, 0.02, 1));
     for (let x = X0 + 0.3; x < X1 - 0.2; x += 0.55) for (const s of [-1, 1]) B.add(corb, C.ashD, x, roofY - 0.25, WH.z + s * (WH.d / 2 + 0.06));

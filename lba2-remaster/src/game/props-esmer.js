@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { tm, pm, cached, bbox, boxUV, cyl, lathe, tube, compose, tint, ctex, brassM, VC, panelGeo, frameGeo, fillGeo } from './kit.js';
 import { rng } from '../engine/math.js';
 import { tulipGeometry } from './vegetation.js';
+import { fitAdd } from './worldfit.js';
 
 // ================================================================== materials (shared with zislands.js)
 export const EM = {
@@ -1030,7 +1031,7 @@ export function esmerBuilding(P, o) {
   const parapet = h >= 2.6 && small >= 1.2 ? 0.46 : 0;
   const top = domed ? o.wallH : h - parapet;        // the cornice's top (the roof)
   const solid = small < 2.2 || top < 2.3;            // (too thin or low to hollow out: a solid body)
-  const base = Math.min(0.38, top * 0.15), bury = 0.6, ci = small < 2.2 ? 0.08 : 0.16, t = 0.28;
+  const base = Math.min(0.38, top * 0.15), bury = o.bury ?? 0.6, ci = small < 2.2 ? 0.08 : 0.16, t = 0.28;
   const W = w - 2 * ci, D = d - 2 * ci, corn = 0.18, wallTop = top - corn + 0.04, ph = wallTop - base;
   const lean = solid ? 0 : Math.min(0.018, 0.08 / ph), inset = lean * ph;   // (the batter: walls lean in a little)
   const M = (lx, ly, lz, lry = 0, rx = 0, sx = 1, sy = 1, sz = 1) => { const [x, z] = P.pt(lx, lz); return new THREE.Matrix4().compose(_bv.set(x, P.y + ly, z), _bq.setFromEuler(_be.set(rx, P.ry + lry, 0, 'YXZ')), _bs.set(sx, sy, sz)); };
@@ -1046,27 +1047,35 @@ export function esmerBuilding(P, o) {
     { n: 'right', len: D - 2 * t, ry: Math.PI / 2, x: W / 2 - t, z: 0, face: D },
   ];
   // openings (panel-local: x along, y up from the plinth)
-  const dw = role === 'store' ? Math.min(2.1, W - 1.2) : Math.min(1.2, W - 0.8), dh = Math.min(role === 'store' ? 2.6 : 2.35, ph - 0.9);
+  // (WORLD-FIX: nothing on a wall reaches into the tiled frieze under the cornice (its foot at friezeY) or across the
+  // string course between the floors; a sign board takes the alfiz's place over a door; see tests/worldfit.mjs)
+  const friezeY = ph - 0.66, row2 = ph >= 4.9 ? { y: 3.1, h: 1.15 } : null, courseY = row2 ? row2.y - 0.37 : Infinity;
+  const dw = role === 'store' ? Math.min(2.1, W - 1.2) : Math.min(1.2, W - 0.8);
+  const dh = Math.min(role === 'store' ? 2.6 : 2.35, ph - 0.9, courseY - 0.22, o.sign ? friezeY - 0.85 : Infinity);
   const hasDoor = o.door !== false && dh >= 1.7 && dw >= 0.8, doorX = o.doorX ?? 0;
-  const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: 0.82, h: 1.25 }, row2 = ph >= 4.9 ? { y: 3.1, h: 1.15 } : null;
+  const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: 0.82, h: Math.min(1.25, friezeY - 0.96, courseY - 0.96) };
   const ops = { front: [], back: [], left: [], right: [] };
   if (hasDoor) ops.front.push({ x: doorX, y: 0, w: dw, h: dh, door: true });
   const balconySide = !solid && row2 && r() < 0.55 ? ['left', 'right', 'back'][Math.floor(r() * 3)] : null;
   if (!solid) for (const sd of sides) {
+    if (o.blind?.includes(sd.n)) continue;   // (WORLD-FIX: a wall set into the rise behind it has no windows)
     const n = Math.max(0, Math.floor((sd.len - 0.9) / 2.1));
     for (const row of [row1, row2]) {
-      if (!row || ph < row.y + row.h + 0.5) continue;
+      if (!row || row.h < 0.8 || row.y + row.h + 0.14 > (row === row1 ? Math.min(friezeY, courseY) : friezeY)) continue;
       for (let q = 0; q < n; q++) {
         const u = (q - (n - 1) / 2) * 2.1;
         if (Math.abs(u) + ww / 2 > sd.len / 2 - 0.42) continue;
         if (sd.n === 'front' && hasDoor && row === row1 && Math.abs(u - doorX) < dw / 2 + ww / 2 + 0.5) continue;
-        if (row === row2 && sd.n === balconySide && Math.abs(u) < 1.3) continue;
+        if (sd.n === balconySide && Math.abs(u) < 1.3) continue;   // (WORLD-FIX: the balcony's corbels hung into the window under it)
         ops[sd.n].push({ x: u, y: row.y, w: ww, h: row.h });
       }
     }
     if (sd.n === balconySide && sd.len > 2.6) ops[sd.n].push({ x: 0, y: row2.y - 0.55, w: 0.95, h: 1.85, balcony: true });
   }
   const shape = (op) => ({ x: 0, y: 0, w: +op.w.toFixed(2), h: +op.h.toFixed(2), horse: true });
+  // (WORLD-FIX: what stands round each opening, in wall coordinates seen from outside, when the caller registers the
+  // building for tests/worldfit.mjs: o.fit = { region, name })
+  const fitOps = [], fx = (side, kind, x0, x1, y0, y1) => { const e = { side, kind, x0, x1, y0, y1 }; fitOps.push(e); return e; };
   // the body
   if (solid) {
     const rr = Math.min(0.24, small * 0.12);
@@ -1090,16 +1099,23 @@ export function esmerBuilding(P, o) {
     const fl = sd.face - 0.5;
     add(bbox(fl, 0.32, 0.05, 0.01, 1), EM.tiles(), T(m, 0, ph - 0.5, t + 0.02));
     if (row2) add(bbox(fl, 0.1, 0.12, 0.02, 1.8), stone, T(m, 0, row2.y - 0.32, t + 0.04));
+    if (row2) fx(sd.n, 'band', -fl / 2, fl / 2, row2.y - 0.37, row2.y - 0.27);
     for (const op of ops[sd.n]) {
       const S0 = shape(op), mo = T(m, op.x, op.y, 0);
+      if (op.door) {
+        // the alfiz only where it has room: under the frieze and the string course, inside the corner piers, no sign
+        const aw = op.w + 0.7, ah = op.h + 0.42, piers = small >= 1.2 ? (small >= 4 ? 0.28 : 0.22) * 1.25 : 0;
+        op.alfiz = !o.sign && ah + 0.06 <= Math.min(friezeY, courseY) && Math.abs(op.x) + aw / 2 + 0.06 <= W / 2 - piers;
+        fx(sd.n, 'door', op.x - op.w / 2 - (op.alfiz ? 0.41 : 0.2), op.x + op.w / 2 + (op.alfiz ? 0.41 : 0.2), op.y, op.y + (op.alfiz ? ah + 0.06 : op.h + 0.2));
+      } else fx(sd.n, op.balcony ? 'balcony' : 'window', op.x - Math.max(op.w / 2 + 0.15, op.balcony ? 0.95 : 0), op.x + Math.max(op.w / 2 + 0.15, op.balcony ? 0.95 : 0), op.y - (op.balcony ? 0.5 : op.y < 1 ? 0.3 : 0.08), op.y + op.h + 0.14);
       if (op.door) {
         add(frameGeo(S0, 0.2, 0.1), EM.tiles(), T(mo, 0, 0, t - 0.02));
         add(fillGeo(S0, 0.03, 0.05), EM.wood(), T(mo, 0, 0, t * 0.3));
         add(cached('edring', () => new THREE.TorusGeometry(0.07, 0.016, 5, 12)), EM.brass(), T(mo, op.w * 0.28, 1.05, t * 0.3 + 0.07));
         // the alfiz: a painted rectangle round the arch
         const aw = op.w + 0.7, ah = op.h + 0.42;
-        for (const s of [-1, 1]) add(tintC(bbox(0.12, ah, 0.07, 0.02, 1), trim, 'ealfv' + ah.toFixed(2)), vc, T(mo, s * aw / 2, ah / 2, t + 0.04));
-        add(tintC(bbox(aw + 0.12, 0.12, 0.07, 0.02, 1), trim, 'ealfh' + aw.toFixed(2)), vc, T(mo, 0, ah, t + 0.04));
+        if (op.alfiz) for (const s of [-1, 1]) add(tintC(bbox(0.12, ah, 0.07, 0.02, 1), trim, 'ealfv' + ah.toFixed(2)), vc, T(mo, s * aw / 2, ah / 2, t + 0.04));
+        if (op.alfiz) add(tintC(bbox(aw + 0.12, 0.12, 0.07, 0.02, 1), trim, 'ealfh' + aw.toFixed(2)), vc, T(mo, 0, ah, t + 0.04));
         continue;
       }
       add(fillGeo(S0, 0.03, 0), lat, T(mo, 0, 0, t * 0.42));
@@ -1142,11 +1158,14 @@ export function esmerBuilding(P, o) {
   // by the door: a wall lantern, an awning or a sign board; a store's hoist beam over its wide door
   if (hasDoor && !solid) {
     const m = M(0, base, D / 2), lx = doorX + (dw / 2 + 0.62) * (doorX > 0.3 ? -1 : 1), ly = Math.min(dh + 0.25, ph - 0.8);
-    if (dh + 0.9 < ph) {
+    const pierIn = small >= 1.2 ? rp * 1.25 : 0;
+    if (dh + 0.9 < ph && ly + 0.05 <= friezeY && Math.abs(lx) + 0.13 <= W / 2 - pierIn) {   // (WORLD-FIX: not into the corner pier or the frieze)
+      fx('front', 'lamp', lx - 0.13, lx + 0.13, ly - 0.66, ly + 0.05);
       add(cached('ewlamp', () => compose([[bbox(0.07, 0.07, 0.34, 0.02, 1), 0, 0, 0.17], [cyl(0.015, 0.015, 0.2, 5), 0, -0.1, 0.32], [lathe([[0, 0], [0.12, 0], [0.08, 0.09], [0.02, 0.16], [0, 0.18]], 8), 0, -0.24, 0.32]])), EM.brass(), T(m, lx, ly, 0));
       add(cached('ewlampg', () => lathe([[0, 0], [0.09, 0.03], [0.11, 0.13], [0.08, 0.24], [0.02, 0.27], [0, 0.27]], 8)), EM.glow(), T(m, lx, ly - 0.52, 0.32));
     }
-    if (o.sign && dh + 0.85 < ph) {
+    if (o.sign && dh + 0.83 <= friezeY) {
+      fx('front', 'sign', doorX - 0.75, doorX + 0.75, dh + 0.41, dh + 0.83);
       add(cached('esignboard', () => bbox(1.5, 0.42, 0.06, 0.02, 1)), EM.wood(), T(m, doorX, dh + 0.62, 0.05));
       add(wordPlane(o.sign, 1.36, 0.32), signMat(), T(m, doorX, dh + 0.62, 0.085));
     } else if (role === 'store' && dh + 1.1 < ph) {
@@ -1158,6 +1177,14 @@ export function esmerBuilding(P, o) {
       add(awningGeo(aw), EM.canvas(o.awning[0], o.awning[1]), T(m, doorX, dh + 0.62, 0.02));
       for (const s of [-1, 1]) add(cached('eawstrut', () => cyl(0.015, 0.015, 1.0, 4).rotateX(0.95)), EM.brass(), T(m, doorX + s * aw / 2 * 0.9, dh + 0.25, 0.36));
     }
+  }
+  if (o.fit) {
+    // the plinth from bury below the building's foot to its top (base); the walls' panels and the door from there up
+    const [cx, cz] = P.pt(0, 0), piers = small >= 1.2 ? rp * 1.25 : 0, { ox = 0, oz = 0, ...reg } = o.fit;   // (ox, oz: the caller's group's place)
+    fitAdd({ ...reg, x: cx + ox, z: cz + oz, ry: P.ry, oy: P.y + base, w, d, base: -base - bury, plinth: 0, floor: 0, steps: base + 0.1,
+      sides: { front: W / 2 - piers, back: W / 2 - piers, left: D / 2 - piers, right: D / 2 - piers },
+      top: solid ? null : { front: ph - 0.66, back: ph - 0.66, left: ph - 0.66, right: ph - 0.66 },
+      openings: solid ? [] : fitOps.filter((e) => e.kind !== 'band' || fitOps.some((q) => q.side === e.side && q.kind !== 'band')), solid, door: hasDoor && !solid, banked: o.blind || [] });
   }
   return { top, domed, solid, door: hasDoor ? { x: doorX, z: D / 2 } : null };
 }

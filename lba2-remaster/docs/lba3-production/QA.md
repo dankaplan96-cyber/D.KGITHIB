@@ -804,6 +804,113 @@ real-time playback (5–7 fps here); an independent visual review. Known: the st
 walk cycle); her bun at the top edge 41–44 s; a contact patch moving under Twinsen's cape as he sets the screwdriver down
 (66.8–67.1, hidden by the table and the cape).
 
+### WORLD-FIX + R6 + DINOFLY-POS + STATUE (block 9; evidence docs/lba3-production/reviews/WORLD-FIX/)
+The user (2026-10-20): "in the open world there are places where the world swallows the houses, and elements like
+windows and doors lie on top of each other." Scan kept as tests/worldfit.mjs; the builders register each building
+(src/game/worldfit.js: footprint, turn, plinth, floor, steps, wall lengths, eaves line, every opening with its frame,
+shutters, sill, lamp, sign, pipe; walls built into a rise marked banked). The test checks (1) footprint against the ground
+(ground over the plinth, a gap under it, the door sill under the ground, a door hanging beyond its steps, a window at the
+ground), (2) openings on top of each other, duplicated, into a corner or the eaves, and buildings cutting into each other,
+(3) z-fighting over every drawn static triangle of Citadel, Zeelich and the eleven isles (exactly coplanar, same
+facing, overlapping, different look, seen from the sky side the play camera looks from; ≥ 0.15 m² fails, smaller listed).
+
+Before (origin 48992d3, same test) → after (this branch, merged with origin):
+| Area | Fit findings | Visible z-fighting ≥ 0.15 m² (smaller) |
+|---|---|---|
+| Citadel | 19 → 0 | 11 (68) → 0 (listed only) |
+| Zeelich | 8 → 0 | 15 (33) → 0 |
+| Islands | 385 → 0 | 502 (823; Mosquibee 473, Knartas 15, Lift Dock 14) → 0 |
+| Total | 412 → 0 | 528 (924) → 0 (180) |
+
+Findings fixed (at the builder, coordinates world x, y, z):
+- Citadel, bug house: door sill 0.75 m under the street and the ground 0.82 m over the front plinth at (-54.66, 3.57,
+  -13.68); the back floating 0.24 m at (-55.32, 2.35, -20.74); a window at the ground (-52.93, 3.63, -17.62). Stone
+  house: in the plateau ramp, 2.28 m of terrace up its back wall (-33.45, 5.13, -27.52), a window 1.36 m under the
+  ground (-36.07, 4.72, -24.99), its door 1.14 m over a window (-29.87, 3.81, -21.99) — moved to (-28.6, -23.4), 6.4 × 5.0 m,
+  openings re-laid. Shop back 0.56 m swallowed (-26.9, 3.08, 4), baggage 0.41 (-82.7, 3.08, 20.7), museum 0.53 and a
+  window into the corner (-67, 4.09, 39.12), Twinsen's house 0.22 (-51.9, 2.89, 84.8), wing2 0.19; pink house door over a
+  window (-28.5, 3.63, 27.1), south house (-46.1, 3.63, 26.4); Doran's harbour shed door into the eaves (-113.8, 3.08,
+  49.6); the project office's sign on a window (-26.72, 15.77, -57.5). Fix: every house stands on its own level floor
+  (world.js houseFlats over town.js HOUSE_FLATS: footprint + 1.15 m at the ground before its door, easing back over
+  2.6 m), openings moved apart, shed walls 2.65 m.
+- Zeelich: the four house doors' frames ran 0.05–0.45 m into the frieze and their lamps sat on the alfiz (houses 1, 3,
+  4 and Baldino's workshop, e.g. (2389, 7.87, -8.1)) — door 2.35 m, frieze above it, alfiz and lamp only where they fit;
+  two house roofs (23 m² each at (2387.0, 9.97, 13.0) and (2375.6, 10.27, -14.0)) and the bakery's cornice/roof deck
+  (10 m² at (2411.6, 10.0, -12.1)) z-fought — roof slab 8 cm lower, cornice 1 cm lower; the platform step, pier planks
+  and the footbridge (travel.js) moved off the deck and grass planes.
+- Islands (zislands.js, from the original's object lists): duplicated houses inside each other (Mosquibee (2585.8, 5.6,
+  1815.3); Celebration three in one at (-8.5, 2.1/4.1/6.4) local) merged or cut; doors 0.4–2.1 m under the ground (Otringal
+  house (-42.2, -0.4) local: 2.13 m) or 0.7–1.7 m over it with no steps; plinths floating up to 8 m over the cliff edge;
+  windows at the ground. Each Esmer building now gets a door on a free face (not toward the sea or another building), a
+  plinth buried from the lowest ground round it, blind walls where it is set into a rise (13 such walls), a gatehouse
+  parapet and fort walls off the shared planes; the Mosquibee terraces' 473 z-fights (stacked decks, piers and crates at
+  one height) now sit 0–21 mm apart in 3 mm steps (by body and position). Citadel's cliff blocks no longer share flat tops (each tilts into the hill).
+- Listed, under 0.15 m² (not fixed): e.g. the pipeline 0.12 m² (-32.97, 17.3, -49.89), harbour and glider benches about
+  0.1 m² (-112.11, 3.56, 39.63) and (-103.08, 15.73, -60.59), Zeelich's paired brass members 0.11 m² (2338.4, 7, 1.7 and
+  8.4), spaceport trims 0.05 m². Large colliders not yet registered (castle, lighthouse, the desert and Hamalayi
+  buildings, the Lift Dock blocks) are listed by the test, not checked.
+- Vegetation layout: levelling the ground round the houses and moving the stone house change the terrain the scatter
+  samples, so trees, rocks and tufts in Citadel lie differently from before (same density and rules). The re-roll put
+  a bush and a rock across the way out of Twinsen's door ((-37.6, 76.2), (-35.8, 76.4)): camsteady's "out of the house
+  door" bot walked 34 m round them and the view rose to 48° for 6.4 s (3 budget failures). Now no tree, bush or rock
+  stands in a 4 m lane straight out of any house door for 11 m (filtered after the scatter, no random draw moved): the
+  route is back to the baseline's (14.3 m, 26.4°, 0 s steep).
+
+R6, outdoor readability (BUILD109_REVIEW §6): grass texture without the white/yellow/pink speckle and with softer strokes;
+tufts nearer the ground tone (root #527d31, tip #98b65a) with a narrower brightness spread; no tufts within 2.2 m or wild
+flowers within 3 m of a path line (by a street 0.9 and 1.7 m; filtered after the scatter so no random draw moves); path pebbles
+less bright; foliage deeper and cooler (leaf #3f8c3c, dark #2f6e3c, needle #2a6038). No fog, blur or bloom change. Low
+and High at the same five positions: reviews/WORLD-FIX/r6-low-*.jpg, r6-high-*.jpg (each before | after).
+
+DINOFLY-POS: the user's LBA2 files (read only, numbers only): SCENE.HQR scenes 49 (the game's start after the storm) and
+195 put actor File3D 109 / body 167 (the hurt Dino-Fly) at section (8, 10), (18.03, 79.27) in the layout's reference
+frame, y 3.34, beta 1200/4096 → our (-57.97, 95.27), 1.84 rad: south-west of Twinsen's house, one terrace up. Moved
+from (-50.5, 68.5). Other placements of File3D 109 (scenes 44, 46, 48: our (-132, 15.6), (-102.9, 101.5), (-33.1, -1.2))
+are later chapters' flights, not his nap. Evidence dino-old-spot.jpg, dino-new-spot.jpg.
+
+STATUE: CITADEL.OBL body 24 (312 points, 483 polygons, the island's most detailed object: a young man and a woman with
+her hair up on a plinth, 1.6 × 2.4 × 3.7 m) stands in the middle of the town square, our (-41.6, -4.4), y 1.05 — where
+our well stands. Ours (src/game/statue.js) stands 5 m north at (-43.2, -10.4), facing the well: the game's own Twinsen
+and Zoé (createCharacter, 1.12 ×) posed (his arm raised with the ball, hers out), baked to one static bronze mesh with
+verdigris in the creases, on a stepped stone plinth with moss and a plaque TWINSEN & ZOE / WHO SAVED TWINSUN streaked
+green (twelve years on). One collider (2.9 × 2.3 m, camera skips it) and two camera occluder boxes. Evidence
+statue-from-well.jpg, statue-side.jpg.
+
+Performance (tests/perfbudget.mjs, 1366×768, SwiftShader on this container, same warm-up and routes; baseline = origin
+48992d3 served from a copy, candidate = this branch; counts are exact, "submit" is the CPU submission proxy, not GPU time):
+| Route (median frame) | Low calls / tris | Medium calls / GPU draws / tris | High calls / tris | Medium submit ms |
+|---|---|---|---|---|
+| street | 186 → 191 / 586k → 588k | 246 → 250 / 351 → 338 / 1030k → 1036k | 277 → 282 / 1165k → 1167k | 11.9 → 10.3 |
+| interior | 95 → 95 / 206k → 206k | 97 → 97 / 97 → 97 / 423k → 423k | 110 → 110 / 423k → 423k | 5.5 → 4.7 |
+| combat | 121 → 121 / 126k → 126k | 191 → 191 / 191 → 191 / 234k → 234k | 195 → 195 / 233k → 233k | 5.9 → 5.5 |
+| transition (Twinsen's door) | 114 → 119 / 497k → 542k | 157 → 164 / 301 → 329 / 860k → 927k | 179 → 187 / 901k → 970k | 6.3 → 6.3 |
+(Counts: the final merged tree. Submit: the baseline and the candidate run back to back on a quiet container, before the
+door lane; later runs shared the machine with other agents' browsers, so their times are not comparable.)
+Where the extra draws come from (per-source count on the same frames, scratch probe): the street, the statue (4 draws in view:
+the two figures as one mesh, the plaque, the plinth's stone and moss as one 48 m cell batch each; it was 6 before the
+figures were merged and the plinth given one stone material) and one more vegetation draw; the
+transition, an original-layout tulip row of 171 tulips at (-36.7, 69.7) that the furniture fitter (island.js
+buildOriginalProps) now accepts on the levelled ground by Twinsen's house (2 instanced draws, ~29k triangles) and the
+Dino-Fly now in that view. Draw budgets pass (street Medium 250 ≤ 300, High 282 ≤ 450, Low 191 ≤ 260; interiors
+≤ 150); the 48 m cell draw batches work (frame pacing check passes, no rebuilds). The check "no shader compiles on the
+routes" fails on both builds alike (27/35 programs on the first street route of Low/Medium when all three presets run in
+one browser; baseline the same), not caused here. GPU time on the laptop: not measured (no GPU here).
+
+| Check (merged with origin e87209b incl. ANIM-COMBAT; own server :8179, one test at a time) | Result |
+|---|---|
+| worldfit (new) | ALL PASSED: 0 fit findings, 0 z-fights ≥ 0.15 m² (180 smaller listed); baseline: 412 fit findings, 528 z-fights |
+| camsteady (after the door lane) | ALL PASSED (before the door lane: 3 failures on the door routes, see the vegetation note) |
+| occluders, camclear, townlife, stability, opening, anim-combat, arsenal (the Dino-Fly), travel | ALL PASSED |
+| prologue, chapter1 (logic, end to end) | through to the chapter's end, no errors |
+| perfbudget | draw-call budgets PASS (street Low 191 ≤ 260, Medium 250 ≤ 300, High 282 ≤ 450; interiors ≤ 150), frame pacing PASS; "no shader compiles on the routes" FAILS on the baseline alike (above) |
+| zislands | ALL PASSED |
+| doorcull | ALL PASSED (16 doors, 192 checks) |
+| After merging origin 3dca29c (R5-OPENING: opening, cinematic, voice, hud) | opening, stability, worldfit ALL PASSED; prologue and chapter1 to the end, no errors |
+
+Not verified: the look on a real GPU and display (SwiftShader captures), the GPU frame time (perfbudget's times are
+CPU/software proxies on a loaded shared machine), an independent visual review; the islands' long views beyond the
+scan's spots; the unregistered buildings (castle, lighthouse, desert, Hamalayi, Lift Dock) are listed, not checked.
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.
