@@ -911,6 +911,39 @@ Not verified: the look on a real GPU and display (SwiftShader captures), the GPU
 CPU/software proxies on a loaded shared machine), an independent visual review; the islands' long views beyond the
 scan's spots; the unregistered buildings (castle, lighthouse, desert, Hamalayi, Lift Dock) are listed, not checked.
 
+### CONTAINERS + R10: bonuses from bins, barrels, crates and suitcases (evidence docs/lba3-production/reviews/CONTAINERS/)
+What LBA2 does (the user's files, numbers only, and the GPL engine source, behaviour only): a zone giver (SCENE.HQR zone
+type 4) gives one bonus per Normal-mode action (any behaviour with the W key), the kind WhichBonus finds most needed;
+it pops toward Twinsen, cannot be taken in flight, and every bonus but a key times out after 20 s (blinking the last
+3). A heart is taken only while life < max, a flask only with magic < level × 20: otherwise it is left and hops off
+(EXTRA.CPP). The giver's flag resets whenever its scene loads (it gives again on a later visit). Outdoor givers:
+Citadel 9 (by its baskets), Desert ~60, Otringal 20, Knartas 12, the Platform 4, the CX islet 2.
+
+Ours (the user's rules): a container gives once ever; its bonus lands and stays until taken (no timeout), kept in the
+save as `loot` (absent in older saves = none; no format bump), shown only in its own area; a heart/flask at a full bar
+stays (it hops aside when walked into); coins, keys and clovers always taken; the ball doesn't fetch what he can't take.
+Enemy bonuses keep LBA2's 20 s. The interact key searches a container in any behaviour (LBA2's W); a "Search" verb
+prompt in reach of an unsearched one; a small glint every few seconds on the nearest unsearched ones (none once
+searched). Outdoor containers (src/game/containers.js): Citadel 9 — at the original's 8 outdoor giver spots (the
+ninth is Twinsen's house, which has its barrels): two where the harbour path leaves the lane, three along the harbour
+path, two west of the square, one on the lighthouse headland — plus a luggage trolley (suitcases) on the quay; built
+with props.js's bin/barrel/crate/trolley before the dressing, so citydress keeps clear and the draw/shadow batches take
+them; fitted off paths, door lanes (WORLD-FIX's 4 m lanes), signs, NPC spots and brinks (≤ 1.5 m from the original's
+spot, the headland crate moved inland off the cliff). Zeelich 3 (the pier's crates — a new barrel beside them —, the
+drill yard's barrels). Zeelich's islands 9 at the original's spots: on the island's own piece where zislands rebuilt
+one there (jars), else a new Esmer barrel/crate; not by the shuttle board/pad (the key would answer the board).
+
+| Test | Result |
+|---|---|
+| containers (new, 29 checks; log reviews/CONTAINERS/containers-test.log) | ALL PASSED: placements; pop/land outside the container/stay 40 s; walk-over collect (+n kashes); full life heart stays 25 s, hurt takes it; full magic flask stays; coins always; mashing Space/E → 1 bonus 1 record; E in Athletic; save → quit → Continue (page reload) same bonuses same place, saved, no second gift, taken and forgotten by the save; Zeelich and back (hidden away, there on return; Zeelich's not seen on Citadel); a door / a dialogue / a save in mid-flight; death → Retry; quest reward (owed coins) unaffected; glint only on unsearched |
+
+| Found and fixed on the way | a bonus out of a container started inside the container's own collider, so the wall test stopped its drift and it dropped back inside the barrel (seen in the close-up, 04): it now ignores the container it came out of (`from`); a placement on the lighthouse headland's brink (Twinsen slid into the sea standing by it): no drop > 0.7 m within 1.3 m; island containers kept 4.5 m from the shuttle board/pad (the key answers the board there) |
+| After merging origin 923ba48 (SETTINGS-UI, VOICE-MIX audio test) | containers, givers, crosssystem, menus, stability ALL PASSED |
+| Harness note | the test logs a Space press that searched nothing while a container was in reach and presses again: once per run, on Otringal, with 0.05 s of the previous action still running (a press during an action is ignored, as LBA2's ALL_THEN) |
+| Regressions (after the change, before the merge) | givers ALL PASSED (a container's bonus stays; others still go after 20 s), stability ALL PASSED, prologue to its end, chapter1 to Zeelich, townlife ALL PASSED, combat ALL PASSED, zislands ALL PASSED, holomap ALL PASSED, worldfit ALL PASSED, crosssystem ALL PASSED, workshop ALL PASSED, save-migration all cases, no errors |
+
+Not verified: a real GPU (SwiftShader captures), an independent review, the feel of the glint and the hop-aside by
+hand; Desert Island has no new containers (its ~60 original spots don't map onto our remapped desert).
 ### SETTINGS-UI: a calm settings screen after LBA2's options menu (WORKLIST #28; evidence docs/lba3-production/reviews/SETTINGS-UI/)
 The user (2026-10-25): "The settings screen is very busy. I want something faithful to the original (LBA2), but more
 2026." Before: 18 rows of segmented buttons on one panel, scrolling at 1366×768 (1013 px of 768) and at 640×360
