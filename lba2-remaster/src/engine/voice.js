@@ -210,8 +210,17 @@ export class Babble {
   }
   // the speaker is done (dialogue closed, scene over): silence now, softly
   stop() { this.hush(); this.v = null; this.cur = null; this.audio.duck?.(false); }
+  // VOICE-LEN (the user: "long lines, short gibberish"): the text types faster than a voice speaks, so the
+  // syllables it gets ahead by wait here and are spoken at the voice's own pace, after the text has finished
+  // typing too, until the line is closed (stop) or skipped (hush). Called every frame while a line is up.
+  pump() {
+    const ctx = this.audio.ctx;
+    if (!this.v || !this.text || !this.pend?.length || !ctx) return;
+    while (this.pend.length && Math.max(ctx.currentTime + LEAD, this.tNext) <= ctx.currentTime + MAXQ) this.syllable(this.text, this.pend.shift());
+  }
   // stop the sound but keep the speaker (the text was skipped to its end, the game paused)
   hush() {
+    this.pend = [];
     const ctx = this.ctx;
     if (!ctx || !this.chans) return;
     const now = ctx.currentTime;
@@ -226,7 +235,7 @@ export class Babble {
   chars(text, from, to) {
     const v = this.v;
     if (!v) return false;
-    if (text !== this.text) { this.text = text; this.lineHash = hashStr(text); this.syl = 0; this.acc = 4 - v.rate; }
+    if (text !== this.text) { this.text = text; this.lineHash = hashStr(text); this.syl = 0; this.acc = 4 - v.rate; this.pend = []; }
     for (let i = from; i < to; i++) {
       const c = text[i] || ' ';
       if (BREAK.has(c)) { if (PUNCT.has(c)) this.acc = -1.2; continue; } // a pause at punctuation
@@ -318,7 +327,7 @@ export class Babble {
     if (ctx !== this.ctx) this._build(ctx);
     const now = ctx.currentTime;
     const ts = Math.max(now + LEAD, this.tNext);
-    if (ts > now + MAXQ) return;
+    if (ts > now + MAXQ) { (this.pend ||= []).push(i); return; } // (VOICE-LEN: queued, spoken once the voice catches up)
     this.count++;
     const n = this.syl++;
     const r = rng(v.seed ^ this.lineHash ^ Math.imul(i + 1, 0x9e3779b1));
