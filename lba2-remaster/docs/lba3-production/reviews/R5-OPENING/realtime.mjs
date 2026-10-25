@@ -4,6 +4,7 @@
 //                     opacity (the CSS fade as it is drawn), the fade's and the title's opacity, the frame interval
 //   per subtitle      the moments its text went in and its `show` class went on and off (MutationObserver)
 //   per syllable      the moment each babble syllable was scheduled and on the audio clock (voice.js)
+//   QUALITY=low       the graphics preset (as a player on a software renderer gets)
 //   PAUSE_AT=<t>      also pause the scene at scene time t for 2 s (the pause menu) and resume, mid-line
 //   node realtime.mjs <outdir> [width height]       GAME_URL (default http://localhost:8181/)
 // Writes <outdir>/video.webm (Playwright's screencast: what the page showed, at the rate it was drawn) and log.json.
@@ -27,6 +28,12 @@ const ev = (f, a) => page.evaluate(f, a);
 await page.goto(URL0, { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
 await ev(() => localStorage.clear());
+if (process.env.QUALITY) {
+  // QUALITY=low|medium|high: the graphics preset a player would have (a software renderer gives players Low)
+  await ev((q) => localStorage.setItem('sunshard_settings_v1', JSON.stringify({ quality: q, qv: 1, qPicked: true })), process.env.QUALITY);
+  await page.reload({ waitUntil: 'load', timeout: 180000 });
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
+}
 const tStart = Date.now();
 await page.click('[data-act="new"]', { timeout: 180000 });
 await page.waitForFunction(() => game.cine && game.cine.state === 'run', null, { timeout: 300000 });

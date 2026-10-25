@@ -15,7 +15,7 @@
 // harbour 2.5–13, the lift 13–29, home 29–41, the tap 41–59, "That's warm." 59–66.5, the decision 66.5–76,
 // the title 76–83.
 import * as THREE from 'three';
-import { Cinematic } from '../../engine/cinematic.js';
+import { Cinematic, voiceSeconds } from '../../engine/cinematic.js';
 import { dampAngle } from '../../engine/math.js';
 import { createCharacter } from '../characters.js';
 import { glowSprite } from '../interiors.js';
@@ -682,7 +682,10 @@ export function playOpening(story) {
   // hand forward, 1 both hands, 2 a hand raised, 3 the left hand presenting, 4 hands together)
   const say = (tt, id, key, d, a = null, talk = true) => {
     subs.push({ t: tt, d, who: t('n_' + id), color: C[id], text: t(key), voice: 'n_' + id });
-    if (a && talk !== false) { at(tt, () => { play(a, 'talk'); if (typeof talk === 'number') a.rig.gesture = talk; }); at(tt + d - 0.15, () => { if (a.rig.anim === 'talk') play(a, 'idle'); }); }
+    // (R5: the gesture ends with the voice, a beat after its last syllable, not with the subtitle: the voice of a short
+    // line is heard for about a third of the time its text stays up, and the hands went on talking in silence)
+    const end = tt + Math.min(d - 0.15, voiceSeconds(t(key), d) + 0.35);
+    if (a && talk !== false) { at(tt, () => { play(a, 'talk'); if (typeof talk === 'number') a.rig.gesture = talk; }); at(end, () => { if (a.rig.anim === 'talk') { play(a, 'idle'); a.rig.blendT = 0.3; } }); }
   };
   say(14.6, 'resident', 'op_res_1', 2.3, resident, 4);   // (hands together: asking, not waving)
   say(16.95, 'worker', 'op_wk_1', 2.6, worker, false);   // (ends with the cut to the drill at 19.6, not over it)

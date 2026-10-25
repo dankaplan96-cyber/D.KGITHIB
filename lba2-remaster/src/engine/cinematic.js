@@ -33,6 +33,10 @@ function fitFov(fov, aspect) {
   return Math.min(100, (2 * Math.atan(Math.tan(h / 2) / aspect) * 180) / Math.PI);
 }
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _q = new THREE.Quaternion();
+// how fast a line types out for its voice (characters a second: about 8 syllables a second, finishing a little before
+// the subtitle goes), and so how long the voice is heard — a scene ends a speaker's talk gesture with it (R5)
+export const lineCps = (text, d) => Math.min(50, Math.max(28, text.length / (d * 0.8)));
+export const voiceSeconds = (text, d) => text.length / lineCps(text, d);
 
 export class Cinematic {
   constructor(game, def) {
@@ -165,7 +169,7 @@ export class Cinematic {
       el.classList.add('show');
       // the speaker babbles the line (voice.js), paced like dialogue typing out: about 8 syllables a second,
       // finishing a little before the subtitle goes
-      this._say = { s, i, typed: 0, cps: Math.min(50, Math.max(28, s.text.length / (s.d * 0.8))), c0: B?.count ?? 0 };
+      this._say = { s, i, typed: 0, cps: lineCps(s.text, s.d), c0: B?.count ?? 0 };
       if (s.voice) B?.start(s.voice);
     }
     const S = this._say;

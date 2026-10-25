@@ -77,6 +77,7 @@ await ev(() => {
   window.__rec = [];
   window.__sample = (heavy) => {
     const P = G.physics, shots = c.def.shots, t = c.t;
+    if (heavy && window.__HW && (t < window.__HW[0] || t > window.__HW[1])) heavy = false;   // (HEAVY_T0 / HEAVY_T1: the measures only there)
     const si = shots.findIndex((s) => t >= s.t0 && t < s.t1);
     const cam = G.camera, sub = document.querySelector('#cine-sub');
     if (heavy) { cam.updateMatrixWorld(); G.scene.updateMatrixWorld(); }
@@ -144,6 +145,7 @@ await ev(() => {
     window.__rec.push(r);
   };
 });
+await ev((hw) => { window.__HW = hw; }, [+(process.env.HEAVY_T0 ?? -1), +(process.env.HEAVY_T1 ?? 999)]);
 // a Raycaster class from the page's own three.js module
 await ev(async () => { const T = await import('three'); window.__RC = T.Raycaster; });
 const fmt = (t) => t.toFixed(2).padStart(6, '0');
