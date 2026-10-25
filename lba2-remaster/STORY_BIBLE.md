@@ -297,7 +297,8 @@ goal. Important scenes are played, not narrated.
 
 ### The Dino-Fly
 Twinsen's friend from LBA2, twelve years older. Too old now to carry the family over the sea (so they take the
-ferry), he naps in the garden north of Twinsen's house, follows Twinsen with his eyes, stretches his wings now
+ferry), he naps on the grass above and south-west of Twinsen's house, the spot where he lay after the storm at the start of LBA2
+(DINOFLY-POS: the user's files, scene 49), follows Twinsen with his eyes, stretches his wings now
 and then, and rumbles when Twinsen talks to him. Nobody flies in this game; the one exception is a hop, not a flight:
 Baldino's hop-pack (below).
 
