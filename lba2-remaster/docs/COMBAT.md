@@ -73,7 +73,7 @@ fight; Aggressive mode's Space still attacks with the same moves.
 - **Throw animation:** standing, the planted full-body throw; on the move, an upper-body layer over the walk
   (the legs step sideways or backwards while aiming). The controls are free again at 0.36 s; the follow-through
   runs on to ~0.62 s on the layer and blends into the walk or idle. The ball leaves the hand at 0.16 s on the
-  same clock as the pose. Charging allows a slow aimed walk (×0.42).
+  same clock as the pose. Charging allows a slow aimed walk (×0.42). How each move is posed: "Twinsen's combat animation" below.
 - **Attack director:** at most 2 enemies may be winding up or attacking at once (Gentle 1, Hard 3). Enemies
   can't start an attack for 1.2 s after a scene change (0.6 s after dialogue).
 - **Difficulty** changes damage taken (×0.5 / 1 / 1.5), wind-up length (×1.3 / 1 / 0.85) and cooldowns,
@@ -165,6 +165,41 @@ LBA2 the behaviour is the distance.
   distance control applies only when there is no target. The puzzles' switches and targets are aimed this way, so
   they solve as before.
 - Damage, magic cost, bounces (4, home on the 5th contact), ricochets, fetching and recall are unchanged.
+
+## Twinsen's combat animation (ANIM-COMBAT) — src/engine/rig.js
+The user: "in combat Twinsen's movements feel unnatural and weird." The animation was reworked; no timing, hit window,
+damage, cooldown, input lock or speed changed (the numbers above and in `COMBAT` / `MOVES` are untouched; the poses are
+keyed on the same clocks: the throw's on `throwing.at`, each strike's on its own startup / active / recovery).
+Posed after LBA2's own anims (ANIM.HQR, measured: numbers only): the throw LANCE (6), the Aggressive idle (82) and
+punches (87–89), the sword attack (42), the hit reactions (7–9).
+- **The ball throw** (`THROW`): the arm rises out to the side and cocks behind the head with the chest turned away and
+  the free arm on the target, the front knee lifts (0–0.115 s; the loaded pose is also what a held press waits in and
+  what a charge holds); the whip brings the hand over the top to the release point, high in front of the head, as the
+  front foot lands, and the ball leaves from the hand there at 0.16 s; the arm follows through across the body into a
+  bow over the front foot, the head kept on the target, back up by 0.62 s. Before: the chest turned the throwing
+  shoulder toward the target in the wind-up (the sign was inverted), the arm swung up in front of the face, the
+  release snapped in one frame into a held bow (51 rad/s) and the ball appeared 35 cm from the hand. On the move the
+  same arm plays over the walk with half the chest's turn and no deep bow; throw → charge → release is one motion
+  (the layer no longer dips out and back).
+- **Strikes** (`STRIKES`, keyed in phase units so the blade or fist crosses the middle of its arc in the middle of the
+  active frames, where the hit is swept): sword 1 a backhand cocked over the left shoulder, sword 2 a forehand back the
+  other way, sword 3 two hands overhead into a bow that holds the blow's weight, the heavy blow from the raised blade
+  (`heavyCharge`); the jab drives the right shoulder into it (it turned back before), the left jab mirrors it, the kick
+  chambers the knee, snaps out, comes back and is put down (it used to stay out through its whole recovery). The upper
+  arm can now turn about its length (shoulder order X·Z·Y, as LBA2's): the forearm folds across for a backhand.
+- **Feet** (`Rig._plant`, the hero only): standing, striking, throwing or hurt, a foot on the ground stays where it was put
+  down; when the pose wants it more than 12 cm away (a strike's forward step, a turn, a push) it takes a short lifted step;
+  a foot the pose lifts (a throw's front knee, a kick) is put down where the pose lands it. Walking, running, jumps and
+  story poses keep their own legs.
+- **Hit reaction** (`_hurtPose`, the hero): the chest and head snap away from the blow and the arms fly up, the body sags
+  and rebounds into his stance by 0.42 s (`hurtT` 0.4); the feet stumble back with the push. A second blow restarts it.
+- **Stance** (`GUARD`): engaged (a lock, a move, a held charge, a hit, and 2.5 s after) his idle eases into his combat
+  stance for the weapon in hand (fists: LBA2's guard, fists up; sword: the blade forward; ball: the hand ready), with no
+  fidgets; the strikes start and end in it. With a lock his head and chest turn toward the target (`Rig.combatLook`).
+- **Interruptions**: a hit, death, pause, dialogue or scene change calls the throw off with no whip played on
+  (`HeroCombat.reset` clears the layer); nothing is left in the hand.
+- `tests/anim-combat.mjs` checks all of this at 30, 60 and 120 fps; frame strips and capture tools:
+  docs/lba3-production/reviews/ANIM-COMBAT/.
 
 ## Enemy roles
 | Enemy | Role | Tell | Opening | Hit reaction |
