@@ -44,7 +44,8 @@ fight; Aggressive mode's Space still attacks with the same moves.
   - How far and how high: "The ball's throw" below (each behaviour its own LBA2 arc; Modern aims at a point; the
     automatic aim at enemies kept).
   - Its colour shows the magic level: yellow, green, red, and at level 4 the fire ball.
-  - It brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals).
+  - It brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals), except a heart while life
+    is full or a flask while magic is full (CONTAINERS: those stay on the ground).
   - Damage: the magic level (at least 1), +1 when charged (LBA2: 10/20/30/40 by level).
   - Each target is hit once per throw. A quick throw returns after its first hit. A charged throw ricochets on
     to the next visible enemy within 8 m.
@@ -244,6 +245,10 @@ Now one controller runs every knock-out on game time (the same at 30 and 60 fps)
   the ball's automatic aim move on to a living enemy, hits pass through the body). CTRL-1's auto-aim is unchanged.
 - The bonus (LBA's GiveExtraBonus) comes out of the body when it hits the ground, in an arc toward Twinsen, and lands
   on the ground (a wall in its way stops its drift). The guardian still gives none.
+- Bonuses and full bars (CONTAINERS, the user's decision 2026-10-25; LBA2 does the same, EXTRA.CPP): a heart is not
+  taken while life is full, nor a flask while magic is full. Walking into one makes it hop aside (the bonus sound) and
+  it stays on the ground. Coins, keys and clovers are always taken. An enemy's bonus keeps LBA2's 20 s (blinking for
+  the last 3); a container's never times out (docs/LBA2_MEASUREMENTS.md "Givers and bonuses").
 - The end is LBA's blink (faster and faster), a puff of stars, and the body, its shadow, its tells and its dropped
   rifle are taken out of the scene. Nothing waits for it: the player is never locked. The pause freezes it; a
   dialogue lets it land (only knock-outs move during a dialogue); leaving the place, or the story changing the cast,

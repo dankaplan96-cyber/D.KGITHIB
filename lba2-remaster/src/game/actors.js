@@ -6,6 +6,7 @@ import { createCharacter, addSilhouette, writeBodyStencil, LOOKS } from './chara
 import { TrackRunner } from '../engine/scripts.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 import { HeroCombat } from './combat.js';
+import { WATER_FLOOR } from '../engine/physics.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // How each behaviour moves, from LBA2 itself (CTRL-1; docs/COMBAT.md "Movement and camera"). Speeds are the root motion
@@ -318,7 +319,8 @@ export class Hero extends Actor {
         if (!g.tryInteract() && this.onGround) this.hop();
       }
     }
-    if (!wheel && input.pressed('interact') && this.actT <= 0 && !this.combat.busy && !jet?.air && !g.tryInteract() && beh === 'normal' && this.onGround) this.hop();
+    // (the interact key also searches a container in any behaviour, as LBA2's action key does: OBJECT.CPP ActionNormal)
+    if (!wheel && input.pressed('interact') && this.actT <= 0 && !this.combat.busy && !jet?.air && !g.tryInteract() && (beh === 'normal' || g.giverInReach()) && this.onGround) this.hop();
 
     if (this.hasSword || this.swordMesh) this.showSword(this.combat.weapon === 'sword');
     // animation state
@@ -938,7 +940,8 @@ export class MagicBall {
     if (c) {
       const P = this.game.pickups, i = P.list.indexOf(c);
       c.carried = false;
-      if (i >= 0 && carry === 'credit') { P.list.splice(i, 1); this.game.scene.remove(c.mesh); this.game.collect(c); }
+      // (a heart or flask he can no longer take — full by now — is set down at his feet instead: CONTAINERS)
+      if (i >= 0 && carry === 'credit' && this.game.canTake(c)) { P.list.splice(i, 1); this.game.scene.remove(c.mesh); this.game.collect(c); }
       else if (i >= 0) { c.baseY = this.game.physics.groundAt(c.pos.x, c.pos.z, c.pos.y + 0.5) + 0.45; c.pos.y = c.baseY; }
     }
     this.state = 'idle'; this.mesh.visible = false; this.shadow.visible = false; this.mesh.scale.setScalar(1);
@@ -1128,7 +1131,7 @@ export class MagicBall {
     if (hit) { this.onHit(hit); return; }
     // a bonus within reach rides back with it
     if (!this.carry) for (const p of g.pickups?.list || []) {
-      if (p.fly || p.carried || p.type === 'shard' || p.delay > 0) continue;
+      if (p.fly || p.carried || p.type === 'shard' || p.delay > 0 || (p.where && p.where !== g.where()) || !g.canTake(p)) continue;
       if (Math.hypot(p.pos.x - this.pos.x, p.pos.y - this.pos.y, p.pos.z - this.pos.z) < 0.7) { p.carried = true; this.carry = p; g.audio.play('catch'); this.state = 'return'; this.retT = 0; return; }
     }
     const nx = this.pos.x + this.vel.x * h, nz = this.pos.z + this.vel.z * h;
@@ -1334,6 +1337,11 @@ export class Pickups {
     const g = this.game;
     p.vel.y -= 7.84 * dt;
     if ((p.vel.x || p.vel.z) && g.physics.solidAt(p.pos.x + p.vel.x * dt, p.pos.z + p.vel.z * dt, p.pos.y, 0.12)) { p.vel.x = 0; p.vel.z = 0; }
+    // (nor over the sea or a drop: a container's bonus must stay where he can walk to it — CONTAINERS)
+    if ((p.vel.x || p.vel.z) && p.loot) {
+      const nx = p.pos.x + p.vel.x * dt * 6, nz = p.pos.z + p.vel.z * dt * 6, gy = g.physics.groundAt(nx, nz, p.pos.y), here = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y);
+      if (gy < WATER_FLOOR || gy < here - 0.8) { p.vel.x = 0; p.vel.z = 0; }
+    }
     p.pos.addScaledVector(p.vel, dt);
     const gy = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y + 0.3) + 0.3;
     if (p.vel.y < 0 && p.pos.y <= gy) { p.pos.y = gy; p.vel.set(0, 0, 0); p.fly = null; }
@@ -1345,7 +1353,9 @@ export class Pickups {
     const g = this.game, hero = g.hero;
     for (let i = this.list.length - 1; i >= 0; i--) {
       const p = this.list[i];
-      if (!dt && flyDt && p.fly && p.koDrop) { this.flyStep(p, flyDt); continue; }
+      // (another area's bonus — a room's, a region's — waits there, unseen: CONTAINERS)
+      if (p.where && p.where !== g.where()) { p.mesh.visible = false; continue; }
+      if (!dt && flyDt && p.fly && (p.koDrop || p.loot)) { this.flyStep(p, flyDt); continue; }
       p.t += dt;
       p.delay -= dt;
       // a bonus that nobody takes goes after 20 s, blinking for the last 3 (LBA2: 8 ticks on, 8 off)
@@ -1371,6 +1381,20 @@ export class Pickups {
       if (p.type === 'coin' && d < 3.2 && dy < 2.5) { p.pos.x += (dx / d) * dt * 9; p.pos.z += (dz / d) * dt * 9; p.baseY += (hero.pos.y + 0.8 - p.baseY) * dt * 6; }
       const big = p.type === 'shard' || p.type === 'crystal';
       if (d < (big ? 1.4 : 1.0) && dy < (big ? 2.6 : 1.6)) {
+        // a heart with his life full, a flask with his magic full: not taken; it hops aside once in a while (LBA2:
+        // InitFly, the bonus sound) and stays where it lands
+        if (!g.canTake(p)) {
+          p.refuse = (p.refuse || 0) - dt;
+          if (p.refuse <= 0) {
+            p.refuse = 1.4;
+            const a = Math.atan2(-dx, -dz) + (Math.random() - 0.5) * 0.8;
+            const tx = p.pos.x + Math.sin(a) * 0.9, tz = p.pos.z + Math.cos(a) * 0.9, ty = g.physics.groundAt(tx, tz, p.pos.y);
+            const ok = ty > WATER_FLOOR && Math.abs(ty - g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y)) < 0.6 && !g.physics.solidAt(tx, tz, p.pos.y, 0.15);
+            p.fly = true; p.vel.set(ok ? Math.sin(a) * 1.1 : 0, 2.6, ok ? Math.cos(a) * 1.1 : 0);
+            g.audio.play('bonus');
+          }
+          continue;
+        }
         g.collect(p);
         g.scene.remove(p.mesh);
         this.list.splice(i, 1);

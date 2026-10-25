@@ -2,7 +2,7 @@
 //   1. Space in Normal mode with nothing in reach plays the hop (0.58 s); away from a giver nothing pops
 //   2. by a giver the hop pops one bonus toward Twinsen on an arc; it lands, he takes it; a giver gives once
 //   3. the bonus is what Twinsen needs most (broke: kashes worth n; hurt badly: a heart)
-//   4. an untaken bonus blinks in its last 3 s and goes after 20 s
+//   4. a container's untaken bonus stays (CONTAINERS); any other bonus blinks in its last 3 s and goes after 20 s
 //   5. no kashes lie around outdoors; a save keeps the giver taken
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -31,7 +31,7 @@ await ev(() => {
   };
   window.hop = () => { G.input.taps.add('Space'); G.step(1 / 60); return { act: G.hero.actAnim, actT: +G.hero.actT.toFixed(2) }; };
   window.run = (s) => { for (let t = 0; t < s; t += 1 / 30) G.step(1 / 30); };
-  window.bonuses = () => G.pickups.list.filter((p) => p.life !== Infinity).map((p) => ({ type: p.type, value: p.value, fly: !!p.fly, y: +p.pos.y.toFixed(2), vis: p.mesh.visible, life: +p.life.toFixed(1) }));
+  window.bonuses = () => G.pickups.list.filter((p) => p.loot || p.life !== Infinity).map((p) => ({ type: p.type, value: p.value, fly: !!p.fly, y: +p.pos.y.toFixed(2), vis: p.mesh.visible, life: +p.life.toFixed(1) }));
 });
 
 // ---------------------------------------------------------------- 1. the hop
@@ -53,7 +53,7 @@ const pop = await ev(() => {
 check('a hop by the dresser pops one bonus', pop.r.act === 'action' && pop.b0.length === 1 && pop.b0[0].fly, pop);
 check('it flies up, then lands and stays (until taken)', pop.mid[0]?.y > pop.b0[0]?.y && pop.landed[0] && !pop.landed[0].fly, pop);
 check('broke: the bonus is kashes worth 5', pop.b0[0]?.type === 'coin' && pop.b0[0]?.value === 5, pop.b0);
-const take = await ev(() => { const G = game, p = G.pickups.list.find((q) => q.life !== Infinity); if (!p) return { none: true }; G.hero.pos.set(p.pos.x, G.physics.groundAt(p.pos.x, p.pos.z), p.pos.z); G.step(0.1); G.step(0.1); return { coins: G.hero.coins, left: bonuses().length }; });
+const take = await ev(() => { const G = game, p = G.pickups.list.find((q) => q.loot || q.life !== Infinity); if (!p) return { none: true }; G.hero.pos.set(p.pos.x, G.physics.groundAt(p.pos.x, p.pos.z), p.pos.z); G.step(0.1); G.step(0.1); return { coins: G.hero.coins, left: bonuses().length }; });
 check('taking it adds 5 kashes', take.coins === 5 && take.left === 0, take);
 const again = await ev(() => { const G = game, gv = G.room.givers.find((g) => g.id === 'dresser'); standBy(gv); hop(); run(0.7); return bonuses().length; });
 check('the same giver gives once', again === 0, again);
@@ -73,9 +73,18 @@ check('hurt badly → life, out of magic → magic, broke → money', need.life 
 check('a magic-only giver gives a heart before the ball', need.noMagic === 'life', need);
 check('the chest pops a heart for a hurt Twinsen', need.b[0]?.type === 'heart', need.b);
 
-// ---------------------------------------------------------------- 4. blink and time out
-const tout = await ev(() => { run(16.5); const a = bonuses()[0]; const vis = []; for (let i = 0; i < 40; i++) { game.step(0.05); vis.push(bonuses()[0]?.vis); } run(2); return { life: a?.life, blinks: vis.includes(false) && vis.includes(true), left: bonuses().length }; });
-check('an untaken bonus blinks at the end and goes after 20 s', tout.life > 1 && tout.blinks && tout.left === 0, tout);
+// ---------------------------------------------------------------- 4. a container's bonus stays; other bonuses time out
+// (CONTAINERS, the user's decision: a container's bonus stays until taken — tests/containers.mjs; a bonus from
+//  anything else, e.g. a beaten enemy, keeps LBA2's 20 s with the blink)
+const tout = await ev(() => {
+  const G = game; run(16.5);
+  const kept = G.pickups.list.filter((p) => p.loot).length;
+  const p = G.giveBonus(['money'], 1, G.room.center.x - 2, 1, G.room.center.z - 2); run(16.5);
+  const vis = []; for (let i = 0; i < 40; i++) { game.step(0.05); vis.push(p.mesh.visible); } run(2);
+  return { kept, keptAfter: G.pickups.list.filter((q) => q.loot).length, blinks: vis.includes(false) && vis.includes(true), gone: !G.pickups.list.includes(p) };
+});
+check('a container\'s untaken bonus stays (no timeout)', tout.kept === 1 && tout.keptAfter === 1, tout);
+check('any other bonus blinks at the end and goes after 20 s', tout.blinks && tout.gone, tout);
 
 // ---------------------------------------------------------------- 5. outdoors and saves
 const out = await ev(() => { const G = game; G.save(false); const s = JSON.parse(localStorage.getItem(Object.keys(localStorage).find((k) => k.includes('save')) || '') || '{}');

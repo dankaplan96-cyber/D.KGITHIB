@@ -32,6 +32,7 @@ import { preloadIslands, buildIslands } from './game/zislands.js';
 import { buildSpaceport } from './game/spaceport.js';
 import { buildTownLife } from './game/townlife.js';
 import { buildCityDressing } from './game/citydress.js';
+import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './game/containers.js';
 import { buildHamalayi } from './game/hamalayi.js';
 import { buildObsRoom } from './game/obsroom.js';
 import { buildUpper3 } from './game/upper.js';
@@ -138,6 +139,7 @@ class Game {
     const S = this.scene, P = this.physics;
     timed('spaceport', () => buildSpaceport(this.world.root, P, this.world));
     timed('townlife', () => buildTownLife(this.world.root, P, this.world));
+    timed('containers', () => buildCitadelContainers(this.world.root, P, this.world));   // (before the dressing: it keeps clear of them)
     timed('citydress', () => buildCityDressing(this.world.root, P, this.world));
     this.env = new Environment(this.scene, this.terrain);
     this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
@@ -174,6 +176,7 @@ class Game {
     this.rooms.valves = timed('valves', () => buildValveRoom(S, P));
     this.rooms.arena = timed('arena', () => buildArena(S, P));
     timed('islands', () => Object.assign(this.rooms, buildIslands(S, P)));
+    this.regionContainers = timed('regioncontainers', () => buildRegionContainers(this.rooms, P));
     this.room = null;
     // the desktop build's number (stamped by desktop/copy-game.mjs from the CI run), so the player can tell which
     // download is installed; the web copy has none
@@ -190,6 +193,7 @@ class Game {
     this.particles = new Particles(this.scene);
     this.world.particles = this.particles;
     this.pickups = new Pickups(this);
+    this.cues = new ContainerCues(this.scene);   // (the glint on searchable containers: containers.js)
     this.bolts = new Bolts(this);
     this.ball = new MagicBall(this);
     this.weapons = new Weapons(this);   // the blowgun, the laser pistol, the glove, the lightning (weapons.js)
@@ -577,7 +581,31 @@ class Game {
       room: this.room?.id || null,
       hero: { x: this.room && !air ? h.pos.x : this.lastSafe.x, z: this.room && !air ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon, arms: freshArms(h.arms) },
       flags: this.flags, killed: this.killed, collected: this.collected, searched: this.searched, crates: this.brokenCrates,
+      loot: this.lootSnapshot(),
     };
+  }
+  // CONTAINERS: what a searched container (a giver, a broken crate) let out and nobody has taken yet, where it lies
+  // (an area: a room/region id or 'out' for Citadel). A bonus still in the air is saved where it is and falls from
+  // there when the save is loaded.
+  lootSnapshot() {
+    const out = [];
+    for (const p of this.pickups.list) {
+      if (!p.loot) continue;
+      const fly = !!p.fly || p.carried;
+      out.push({ k: p.loot, t: p.type, v: p.value || 1, w: p.where, x: +p.pos.x.toFixed(2), y: +(fly ? p.pos.y : p.baseY).toFixed(2), z: +p.pos.z.toFixed(2), ...(fly ? { f: 1 } : {}) });
+    }
+    return out;
+  }
+  restoreLoot(list) {
+    // (a load in the same page: Continue from the menus — the bonuses of before go, the save's come back)
+    for (const p of [...this.pickups.list]) if (p.loot) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
+    if (this.ball?.carry?.loot) this.ball.carry = null;
+    const seen = new Set();
+    for (const L of Array.isArray(list) ? list : []) {
+      if (!L || typeof L.k !== 'string' || seen.has(L.k) || !PICK_TYPES.has(L.t) || ![L.x, L.y, L.z].every(Number.isFinite)) continue;
+      seen.add(L.k);
+      this.pickups.spawn(L.t, L.x, L.y, L.z, { loot: L.k, where: L.w, value: L.v || 1, life: Infinity, ...(L.f ? { fly: { vx: 0, vy: 0, vz: 0 } } : {}) });
+    }
   }
   // the developer combat yard (?arena): never saved, never part of the story
   devArena() { return enterArena(this); }
@@ -604,6 +632,7 @@ class Game {
     for (const e of this.enemies) if (this.killed.includes(e.id)) koGone(e);
     for (const p of [...this.pickups.list]) if (p.id && this.collected.includes(p.id)) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
     this.brokenCrates.forEach((i) => { if (this.world.crates[i]) this.breakCrate(this.world.crates[i], true); });
+    this.restoreLoot(s.loot);
     if (this.flags.target) this.hitTarget(true);
     this.story.applyFlags();
     const at = { x: s.hero.x, z: s.hero.z, a: 0 };
@@ -889,19 +918,30 @@ class Game {
   // (of those the spot may give) Twinsen needs most, as LBA2's WhichBonus decides; a bonus of n kashes is one
   // coin worth n.
   givers() { return (this.room ? this.room.givers : this.world.givers) || []; }
-  giverHop() {
+  where() { return this.room?.id || 'out'; }   // (the area a bonus lies in: a room/region id, or Citadel)
+  giverKey(gv) { return 'giver:' + this.where() + ':' + gv.id; }
+  // (saves from before the givers kept the outdoor two as plain searches: same ids)
+  giverTaken(gv) { return this.searched.includes(this.giverKey(gv)) || (!this.room && this.searched.includes(gv.id)); }
+  // the unsearched giver a hop here would search (in reach, about level with him), or null
+  giverInReach() {
     const h = this.hero;
     for (const gv of this.givers()) {
-      const key = 'giver:' + (this.room?.id || 'out') + ':' + gv.id;
-      // (saves from before the givers kept the outdoor two as plain searches: same ids)
-      if (this.searched.includes(key) || !this.room && this.searched.includes(gv.id) || Math.hypot(h.pos.x - gv.x, h.pos.z - gv.z) > gv.r) continue;
-      if (Math.abs(h.pos.y - (gv.y ?? h.pos.y)) > 1.5) continue;
-      this.searched.push(key);
-      const y = (gv.y ?? this.physics.groundAt(gv.x, gv.z)) + (gv.top ?? 1);
-      this.giveBonus(gv.kinds, gv.n || 1, gv.x, y, gv.z, h.pos);
-      return true;
+      if (Math.hypot(h.pos.x - gv.x, h.pos.z - gv.z) > gv.r || Math.abs(h.pos.y - (gv.y ?? h.pos.y)) > 1.5 || this.giverTaken(gv)) continue;
+      return gv;
     }
-    return false;
+    return null;
+  }
+  // CONTAINERS: the bonus pops out toward Twinsen, lands and stays until he takes it (no 20 s timeout: the user's
+  // rule), in the save as `loot` under the giver's key, so a container gives exactly once whatever happens between
+  // the search and the taking (a save, a load, a door, a death and Retry).
+  giverHop() {
+    const gv = this.giverInReach();
+    if (!gv) return false;
+    const key = this.giverKey(gv);
+    this.searched.push(key);
+    const y = (gv.y ?? this.physics.groundAt(gv.x, gv.z, this.hero.pos.y + 1)) + (gv.top ?? 1);
+    this.giveBonus(gv.kinds, gv.n || 1, gv.x, y, gv.z, this.hero.pos, { loot: key });
+    return true;
   }
   whichBonus(kinds) {
     const h = this.hero;
@@ -917,7 +957,8 @@ class Game {
   }
   // pop a bonus out of (x, y, z): toward `to` like a giver (70° up, ±13°), or straight up when there is no `to`
   // (a broken crate, a defeated enemy). LBA2: 40 units/tick at weight 15 → 3.15 m/s up, 1.13 m/s out, 7.8 m/s².
-  giveBonus(kinds, n, x, y, z, to = null) {
+  // (opts.loot: a container's bonus, kept until taken; any other bonus goes after LBA2's 20 s, keys and clovers excepted)
+  giveBonus(kinds, n, x, y, z, to = null, opts = {}) {
     const k = this.whichBonus(kinds);
     if (!k) return null;
     const type = { money: 'coin', life: 'heart', magic: 'flask', clover: 'clover', key: 'key' }[k];
@@ -928,7 +969,8 @@ class Game {
       vx = Math.sin(a) * 1.13; vz = Math.cos(a) * 1.13;
     }
     this.audio.play('bonus');
-    return this.pickups.spawn(type, x, y, z, { fly: { vx, vy: to ? 3.15 : 3.35, vz }, value: type === 'coin' ? n : 1, life: type === 'clover' || type === 'key' ? Infinity : 20 });
+    const life = opts.loot || type === 'clover' || type === 'key' ? Infinity : 20;
+    return this.pickups.spawn(type, x, y, z, { fly: { vx, vy: to ? 3.15 : 3.35, vz }, value: type === 'coin' ? n : 1, life, where: this.where(), ...opts });
   }
 
   say(name, lines, done, speaker = null, color = null) {
@@ -1102,7 +1144,7 @@ class Game {
     if (silent) return;
     this.audio.play('break');
     this.particles.burst(c.x, c.y, c.z, '#c8904a', 24, 4);
-    this.giveBonus(['money', 'life', 'magic'], 2, c.x, c.y + 0.4, c.z);
+    this.giveBonus(['money', 'life', 'magic'], 2, c.x, c.y + 0.4, c.z, null, { loot: 'crate:' + i });
   }
 
   alertGroup(group, pos, chance = 1) {
@@ -1118,6 +1160,14 @@ class Game {
   // LBA's GiveExtraBonus for a beaten enemy: one bonus out of its body, in an arc toward Twinsen, onto the ground
   enemyBonus(e, x, y, z) { return this.giveBonus(['money', 'life', 'magic'], 1, x, y, z, this.hero.pos); }
 
+  // A heart is not taken while his life is full, nor a flask while his magic is (LBA2 does the same: EXTRA.CPP leaves
+  // it and it hops off); it stays on the ground for later. Coins, keys, clovers and the rest are always taken.
+  canTake(p) {
+    const h = this.hero;
+    if (p.type === 'heart') return h.hp < h.maxHp;
+    if (p.type === 'flask') return h.mp < h.mpMax - 0.01;
+    return true;
+  }
   collect(p) {
     const h = this.hero;
     if (p.id) this.collected.push(p.id);
@@ -1317,6 +1367,7 @@ class Game {
     if (render) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
     if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0, this.state === 'dialog' ? dt : 0);
+    this.cues.update(dt, this, this.state === 'play' && !this.trans);
     if (this.state !== 'play') this.behMenu.show(false);
     this.hud.updateFloats(dt, this.camera);
     if (this.state !== 'dialog') this.bubble.visible = false;
@@ -1413,7 +1464,8 @@ class Game {
     this.audio.setCombat(this.combat);
 
     const it = this.findInteractable();
-    this.hud.prompt(it ? t(it.label) : null);
+    // (nothing else in reach and an unsearched container by him: the verb, no more — CONTAINERS)
+    this.hud.prompt(it ? t(it.label) : h.onGround && this.giverInReach() ? t('p_rummage') : null);
     this.hud.stats(h);
     // (where he is and the doors he used, for the maps; the region's map drawn a slice further; the minimap when shown.
     //  RENDER-INV: once per displayed frame: a slow frame's catch-up steps each drew another slice of the map)

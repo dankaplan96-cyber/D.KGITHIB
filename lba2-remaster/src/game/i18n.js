@@ -31,7 +31,7 @@ export const STR = {
       <tr><td>Esc / P</td><td>הפסקה</td></tr>
       <tr><td>גיימפד</td><td>A פעולה · B כדור · X דיבור · Y מפה · LB/RB התנהגות · LT תפריט · R3 מרכוז · Start הפסקה</td></tr>`,
     beh_normal: 'רגיל', beh_athletic: 'אתלטי', beh_aggressive: 'אגרסיבי', beh_discreet: 'דיסקרטי',
-    p_talk: 'דבר', p_search: 'חפש', p_read: 'קרא', p_open: 'פתח', p_shop: 'קנה', p_gate: 'שער',
+    p_talk: 'דבר', p_search: 'חפש', p_rummage: 'חפש', p_read: 'קרא', p_open: 'פתח', p_shop: 'קנה', p_gate: 'שער',
     obj_sage: 'מצא את חכם מזג־האוויר במגדלור שבצפון',
     obj_shards: 'אסוף את שלושת שברי השמש ({n}/3)',
     obj_s1: 'צוקי הלחישה במזרח', obj_s2: 'מחנה הזקיפים בדרום', obj_s3: 'המבצר העתיק – הסוהר קרל',
@@ -118,7 +118,7 @@ export const STR = {
     aim_assist: 'Aim Assist', aa_off: 'Off', aa_low: 'Low', aa_normal: 'Normal', aa_high: 'High',
     lock_mode: 'Focus Button', lm_toggle: 'Toggle', lm_hold: 'Hold',
     beh_normal: 'Normal', beh_athletic: 'Athletic', beh_aggressive: 'Aggressive', beh_discreet: 'Discreet',
-    p_talk: 'Talk', p_search: 'Inspect', p_read: 'Read', p_open: 'Open', p_shop: 'Shop', p_gate: 'Inspect',
+    p_talk: 'Talk', p_search: 'Inspect', p_rummage: 'Search', p_read: 'Read', p_open: 'Open', p_shop: 'Shop', p_gate: 'Inspect',
     toast_saved: 'Game saved', toast_clover: 'A clover leaf saved you!', toast_save_error: "The save couldn't be loaded. It was kept aside; starting a new game.",
     toast_magic: 'Magic level {n}!', toast_nomp: 'Not enough magic: weak throw',
     toast_clover_found: 'Clover leaf',
