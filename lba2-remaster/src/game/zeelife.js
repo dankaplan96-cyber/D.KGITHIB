@@ -114,7 +114,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     // battered plinth, the walls, a string course with corbels under the parapet
     B.add(bbox(WH.w + 0.36, 0.55, WH.d + 0.36, 0.06, 1.8), C.ashD, WH.x, Y0 + 0.2, WH.z);
     B.add(bbox(WH.w, WH.h - 0.08, WH.d, 0.05, 1.9), C.ash, WH.x, Y0 + (WH.h - 0.08) / 2, WH.z);
-    B.add(bbox(WH.w + 0.26, 0.14, WH.d + 0.26, 0.03, 1.8), C.ashD, WH.x, roofY - 0.05, WH.z);
+    B.add(bbox(WH.w + 0.26, 0.14, WH.d + 0.26, 0.03, 1.8), C.ashD, WH.x, roofY - 0.06, WH.z);   // (WORLD-FIX: 1 cm lower: its top lay in the roof deck's and z-fought)
     B.add(bbox(WH.w + 0.08, 0.1, WH.d + 0.08, 0.02, 1.8), C.ashD, WH.x, Y0 + 2.45, WH.z);
     const corb = cached('zlcorb', () => bbox(0.2, 0.22, 0.16, 0.02, 1));
     for (let x = X0 + 0.3; x < X1 - 0.2; x += 0.55) for (const s of [-1, 1]) B.add(corb, C.ashD, x, roofY - 0.25, WH.z + s * (WH.d / 2 + 0.06));
@@ -134,7 +134,7 @@ export function buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: PH
     wallRun(X1 - PT / 2, Z0 + PT, X1 - PT / 2, Z1 - PT);               // east
     wallRun(X0 + PT / 2, gap[1], X0 + PT / 2, Z1 - PT);                // west, south of the gap
     // the roof: flagstones, Bzizz's landing mark
-    B.add(bbox(WH.w - 0.1, 0.04, WH.d - 0.1, 0.01, 1.6), C.ashD, WH.x, roofY + 0.017, WH.z);   // (WORLD-FIX: 17 mm up: its top lay in the cornice's and z-fought)
+    B.add(bbox(WH.w - 0.1, 0.04, WH.d - 0.1, 0.01, 1.6), C.ashD, WH.x, roofY + 0.0, WH.z);
     B.add(cached('zlmark', () => tint(new THREE.RingGeometry(0.62, 0.78, 24).rotateX(-Math.PI / 2), '#e8b84a')), C.VC, WH.x - 0.6, roofY + 0.03, WH.z - 0.2);
     col({ type: 'box', x: WH.x, z: WH.z, hw: WH.w / 2, hd: WH.d / 2, rot: 0, top: roofY });
     // the old door: planks, iron bands and a grilled spy window; the crest above it, chiselled off

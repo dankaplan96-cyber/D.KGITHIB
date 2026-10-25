@@ -331,6 +331,23 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Not verified: the feel on a real GPU/display, pad and touch on the free orbit. Open: the free orbit by house eaves
   (13 jolts/min, can look down 60–70°); the 1997 cuts unchanged.
 
+## Done after (WORLD-FIX + R6 + DINOFLY-POS + STATUE, block 9; status REVIEW)
+- tests/worldfit.mjs (new) with src/game/worldfit.js (the builders register every building): footprint vs ground,
+  doors, windows, openings with their frames/shutters/sills/lamps/signs, buildings cutting into each other, and
+  z-fighting over every drawn static triangle. Before → after: fit findings Citadel 19 → 0, Zeelich 8 → 0, islands
+  385 → 0; visible z-fighting ≥ 0.15 m² 528 → 0 (smaller 924 → 180, listed in QA.md). Fixed at the builders: each
+  Citadel house on its own level floor (world.js houseFlats), the stone house moved out of the plateau ramp,
+  openings re-laid; Zeelich doors under the frieze, lamps/alfiz only where they fit, roofs off the shared planes;
+  the islands' Esmer buildings with free-face doors, buried plinths, banked blind walls, duplicates merged.
+- R6: calmer grass texture and tufts, no tufts/wild flowers on the path edges, deeper foliage (Low and High captures).
+- DINOFLY-POS: at LBA2's spot from the user's files (scenes 49/195): our (-58.0, 95.3), was (-50.5, 68.5).
+- STATUE: src/game/statue.js (new): Twinsen and Zoé in weathered bronze on a stone plinth with a plaque, 5 m north of
+  the well (the original's stood where the well is, CITADEL.OBL body 24).
+- Citadel's vegetation lies differently (the scatter samples the levelled terrain); same rules and density.
+- Evidence: QA.md "WORLD-FIX + R6 + DINOFLY-POS + STATUE", docs/lba3-production/reviews/WORLD-FIX/.
+- Not verified: a real GPU/display, an independent visual review; the unregistered big buildings (castle, lighthouse,
+  desert, Hamalayi, Lift Dock) are listed by the test, not checked.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
