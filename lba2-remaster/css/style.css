@@ -465,3 +465,6 @@ body.desktop .desktop-only { display: block !important; }
   .menu button.sel::after, .menu button:hover::after, #rebind .keybtn.wait { animation: none; }
   .set-tabs button, .set-fold::before, .menu button { transition: none; }
 }
+
+/* the pointer hides while it is not in use (main.js) */
+body.no-cursor, body.no-cursor * { cursor: none !important; }

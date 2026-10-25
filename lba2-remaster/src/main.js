@@ -1664,6 +1664,33 @@ const loadBar = (to, ms = 300) => {
 // MEA Studio's logo plays first (2.6 s) while the assets download; the automated tests skip it
 const SPLASH_MS = (navigator.webdriver && !/[?&]splash/.test(location.search)) || /[?&]nosplash/.test(location.search) ? 0 : 2600;
 const splashDone = new Promise((r) => setTimeout(() => { document.querySelector('#loading')?.classList.add('art'); r(); }, SPLASH_MS));
+// the logo's sound (the user: "the opening screen has no sound effects"), synthesized and timed to the CSS: a
+// rising pluck per letter stroke (0, .3, .6 s), a drop per drip (.9, 1.25, 1.5 s), a soft chord as STUDIO opens
+// (1.3 s) under the shine's sweep (1.2 s). The desktop build may play sound without a click; a browser may not
+const meaSting = () => {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+  let ctx; try { ctx = new AC(); } catch { return; }
+  const s = store.get(SET_KEY) || {}, out = ctx.createGain();
+  out.gain.value = 0.8 * (s.sfx ?? 0.8); out.connect(ctx.destination);
+  const t0 = ctx.currentTime + 0.05;
+  const tone = (type, f, at, att, len, peak, f2) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0 + at); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + at + len * 0.6);
+    g.gain.setValueAtTime(0.0001, t0 + at); g.gain.exponentialRampToValueAtTime(peak, t0 + at + att); g.gain.exponentialRampToValueAtTime(0.0001, t0 + at + len);
+    o.connect(g).connect(out); o.start(t0 + at); o.stop(t0 + at + len + 0.05);
+  };
+  [523.25, 659.25, 783.99].forEach((f, i) => { tone('triangle', f, i * 0.3, 0.01, 0.7, 0.22); tone('sine', f * 2, i * 0.3, 0.01, 0.4, 0.06); });
+  [0.9, 1.25, 1.5].forEach((at, i) => tone('sine', 1400 - i * 180, at, 0.005, 0.22, 0.14, 420 - i * 40));
+  [261.63, 329.63, 392, 493.88].forEach((f) => { tone('sine', f, 1.3, 0.45, 2.2, 0.07); tone('triangle', f * 2, 1.3, 0.6, 1.8, 0.015); });
+  const n = ctx.createBufferSource(), buf = ctx.createBuffer(1, ctx.sampleRate * 1.4, ctx.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const bp = ctx.createBiquadFilter(), ng = ctx.createGain();
+  bp.type = 'bandpass'; bp.Q.value = 6; bp.frequency.setValueAtTime(1500, t0 + 1.2); bp.frequency.exponentialRampToValueAtTime(7000, t0 + 2.4);
+  ng.gain.setValueAtTime(0.0001, t0 + 1.2); ng.gain.exponentialRampToValueAtTime(0.05, t0 + 1.7); ng.gain.exponentialRampToValueAtTime(0.0001, t0 + 2.6);
+  n.buffer = buf; n.connect(bp).connect(ng).connect(out); n.start(t0 + 1.2); n.stop(t0 + 2.6);
+  setTimeout(() => ctx.close().catch(() => {}), 4500);
+};
+if (SPLASH_MS) meaSting();
 loadBar(0.08);
 // resolves after the browser has painted (so a loading message shows before a long synchronous step)
 const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
@@ -1672,3 +1699,15 @@ const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeou
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
 Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building the island…'); loadBar(0.25); await nextPaint(); loadBar(0.7, loadEst.total || 12000); await nextPaint(); window.game = new Game(); });
+
+// the mouse pointer (the user: "a mouse appears in the game and doesn't go away"): hidden while playing with the
+// keys or a pad, or after it rests 2.5 s; any mouse move brings it straight back (menus, aiming the ball)
+{
+  let idle = 0;
+  const hide = () => document.body.classList.add('no-cursor');
+  const show = () => { document.body.classList.remove('no-cursor'); clearTimeout(idle); idle = setTimeout(hide, 2500); };
+  addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse' && (e.movementX || e.movementY)) show(); }, { passive: true });
+  addEventListener('keydown', hide, true);
+  addEventListener('gamepadconnected', hide);
+  idle = setTimeout(hide, 2500);
+}
