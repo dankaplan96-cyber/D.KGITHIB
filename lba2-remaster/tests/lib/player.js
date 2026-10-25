@@ -340,36 +340,41 @@
   P.flyTo = (i) => { P.talk('hesk', { run: true }); if (G.state !== 'shop') { P.tap('KeyE', 0.1); P.settle(); } const r = P.menuPick(i); P.settle(30); return { ...r, room: G.room?.id ?? 'citadel' }; };
   // a ball target: throw from up to six spots around it (r metres off) until it is done
   P.hitTarget = (tg, r = 4, { run = true, maxT = 60, fight = true, tries = 6 } = {}) => { for (let k = 0; k < tries && !tg.done && !hero().dead; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * r, tg.z - Math.cos(a) * r, { tol: 0.8, run, maxT, fight }); P.settle(); if (hero().dead) break; P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return tg.done; };
-  // Zeelich's old mill: its stair-stones spiral up 1.25 m apart — jumps (Athletic), stepping to the middle of each
-  // stone first and letting go of Up in the air so he doesn't overshoot; then the hop onto the gallery
+  // Zeelich's old mill: its stair-stones (millTop.stones, 1.09 m apart since CONTROL-FEEL) spiral up — jumps (Athletic),
+  // stepping to the middle of each stone first and letting go of Up in the air so he doesn't overshoot; then the hop
+  // onto the gallery (millTop.landing)
   P.climbOldMill = () => {
-    const h = hero(), mt = G.rooms.zeelich.millTop, cx = mt.x, cz = mt.z - 3.3, Y0 = mt.y - 8.75, out = [];
-    const st = (k, r = 3.475) => { const phi = 0.9 + k * Math.PI / 6; return { x: cx + Math.sin(phi) * r, z: cz + Math.cos(phi) * r, top: Y0 + 1.25 * (k + 1) }; };
+    const h = hero(), mt = G.rooms.zeelich.millTop, cx = mt.x, cz = mt.z - 3.3, out = [], S = mt.stones, n = S.length;
+    const rise = S[1].y - S[0].y;
+    const st = (k, r = 3.475) => { const s = S[k], a = Math.atan2(s.x - cx, s.z - cz); return { x: cx + Math.sin(a) * r, z: cz + Math.cos(a) * r, top: s.y }; };
+    const a0 = Math.atan2(S[0].x - cx, S[0].z - cz) - 0.6;
     for (let attempt = 0; attempt < 3 && h.pos.y < mt.y - 0.3; attempt++) {
-      P.go(cx + Math.sin(0.3) * 6, cz + Math.cos(0.3) * 6, { tol: 0.6, run: true });
-      for (let k = 0; k < 6; k++) {
+      P.go(cx + Math.sin(a0) * 6, cz + Math.cos(a0) * 6, { tol: 0.6, run: true });
+      for (let k = 0; k < n; k++) {
         const s = st(k, k ? 3.3 : 3.475); let y = 0;
         for (let tries = 0; tries < 3; tries++) {
-          if (k > 0 && Math.abs(h.pos.y - (s.top - 1.25)) < 0.2) { const c = st(k - 1); P.go(c.x, c.z, { tol: 0.2, maxT: 4, fight: false }); }
-          y = P.hopTo(s.x, s.z, s.top, { walk: k === 0 || h.pos.y < Y0 + 0.5, brake: k ? 1.2 : 0.5 });
-          if (Math.abs(y - s.top) < 0.3 || h.pos.y < s.top - 1.3) break;
+          if (k > 0 && Math.abs(h.pos.y - (s.top - rise)) < 0.2) { const c = st(k - 1); P.go(c.x, c.z, { tol: 0.2, maxT: 4, fight: false }); }
+          y = P.hopTo(s.x, s.z, s.top, { walk: k === 0 || h.pos.y < S[0].y - rise + 0.5, brake: k ? 1.2 : 0.5 });
+          if (Math.abs(y - s.top) < 0.3 || h.pos.y < s.top - rise - 0.05) break;
         }
         out.push(y); if (Math.abs(y - s.top) > 0.3) break;
       }
-      if (Math.abs(h.pos.y - st(5).top) < 0.3) { const c = st(5); P.go(c.x, c.z, { tol: 0.2, maxT: 4, fight: false }); const ga = 0.9 + 5 * Math.PI / 6 + 0.55; out.push(P.hopTo(cx + Math.sin(ga) * 3.4, cz + Math.cos(ga) * 3.4, mt.y, { walk: false, brake: 1.2 })); }
+      if (Math.abs(h.pos.y - S[n - 1].y) < 0.3) { const c = st(n - 1); P.go(c.x, c.z, { tol: 0.2, maxT: 4, fight: false }); out.push(P.hopTo(mt.landing.x, mt.landing.z, mt.y, { walk: false, brake: 1.2 })); }
     }
     return { heights: out, y: +h.pos.y.toFixed(2), top: h.pos.y > mt.y - 0.3 };
   };
   // athletic jump onto a raised spot (a stepping stone): line up 1.6 m short of its centre, run at it, jump (Space)
   // and wait for the landing. Returns the height reached.
-  P.hopTo = (x, z, top, { from = 1.7, walk = true, brake = 0.5 } = {}) => {
+  // pre: how long Up is held before Space (the run-up's speed sets the hop's length: a jump carries on in the air;
+  // a hop across a gap onto a small stone wants ~0.25 s — CONTROL-FEEL)
+  P.hopTo = (x, z, top, { from = 1.7, walk = true, brake = 0.5, pre = 0.12 } = {}) => {
     const h = hero();
     if (h.behaviour !== 'athletic') P.tap('F2');
     const a = Math.atan2(x - h.pos.x, z - h.pos.z);
     const sx = x - Math.sin(a) * from, sz = z - Math.cos(a) * from;
     if (walk && Math.hypot(h.pos.x - sx, h.pos.z - sz) > 0.6 && Math.abs(h.pos.y - top) > 0.3) P.go(sx, sz, { tol: 0.4, maxT: 20, run: true });
     P.face(x, z);
-    keys.add('ArrowUp'); G.step(0.12); P.tap('Space', 0); keys.add('ArrowUp');
+    keys.add('ArrowUp'); G.step(pre); P.tap('Space', 0); keys.add('ArrowUp');
     let t = 0, air = false;
     while (t < 2.5) { G.step(DT); t += DT; if (!h.onGround) air = true; if (air && h.onGround) break;
       // over the target: stop pushing forward so he doesn't run off its far side

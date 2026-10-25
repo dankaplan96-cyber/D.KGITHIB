@@ -107,7 +107,30 @@ smooth normals is kept.
 - 6 throw (LANCE): 11 keys, 1.22 s, the ball leaves on key 6 at 0.56 s (F_THROW_MAGIC). Coil: torso turned away up
   to 57°, the throwing arm cocked high behind, the front knee lifted (thigh −94°, knee 104°); release: a lunge,
   pelvis 38–44° forward, the head up; a long crouched follow-through.
-- 12 crouched sneak (pelvis 45°, knees up to 158°), 21 looking around, 26 a forward jump (720 ms).
+- 12 crouched sneak (pelvis 45°, knees up to 158°), 21 looking around, 26 a low forward move (720 ms; not the jump:
+  see "Jump and dodges").
+
+## Jump and dodges (CONTROL-FEEL, WORKLIST #31)
+Root motion of the hero's anims (each key's step x/y/z is the move over that key, interpolated linearly; +x is his left,
++z ahead, +y up; H = 1238 units). Read 2026-10-25 from the user's ANIM.HQR with a study script in the scratchpad.
+- 71 jump (the File3D jump in every behaviour): 8 keys, 1.52 s. A crouch of 0.52 s with no motion (body down 32 then
+  97 units), then five 200 ms keys: up 260, 293, 161, down 287, 428; ahead 624, 314, 405, 483, 93. **Apex 714 units =
+  0.577 H** (at 1.12 s, end of the climb); **length 1919 units = 1.55 H**, all of it in the 1.0 s off the ground (he
+  lands back at the take-off height; the last key squats 182 units). Speed ahead in the air 1.55 H/s, against the run's
+  2.40 H/s.
+- 26 (called "a forward jump" above): four keys, 0.72 s, 333 units ahead per key (1332 = 1.08 H) and **no step up**;
+  the body is held 219–358 units low the whole time. Not the jump the File3D plays: not used for the jump's numbers.
+- Dodges (the File3D's 52–55, 78/79 athletic, 100/101 discreet): sideways and ahead / back:
+  78/79 athletic: 400 + 400 + 400 + 243 = **1443 units = 1.17 H** aside in 0.68 s (keys 100/140/200/240 ms).
+  54/55: 0 + 500 + 500 + 433 + 148 = 1581 units = 1.28 H aside in 0.82 / 0.78 s (a 0.12 s wind-up first).
+  52: 473 + 395 = **868 units = 0.70 H** ahead in 0.42 s. 53: 150 + 366 + 400 + 300 = **1216 units = 0.98 H** back in
+  0.62 s. 100/101 discreet: 342 + 357 + 87 = 786 units = 0.63 H aside in 0.62 s.
+- In our scale (H = 2.065 m, src/game/actors.js): the jump 1.19 m up, 3.20 m along; the dodges 2.41 m aside, 2.03 m
+  back, 1.45 m ahead. Used: `JUMP` in actors.js (the same height and length over 0.72 s in the air; LBA2's own arc
+  floats 1.0 s after its 0.52 s crouch, ours keeps the 0.09 s crouch) and `COMBAT.dodge` side / back / fwd in
+  combat.js (our dodge keeps its 0.36 s). Measured in the game at 60 fps (tests/controls.mjs 6b, tests/combat.mjs
+  14b): apex 1.14 m (1.08 m at 30 fps: the step's integration), 0.72 s in the air, 3.1 m at a run; dodges 2.44 / 2.06 /
+  1.47 m. Before: apex 1.69 m measured (1.77 m by the numbers), 3.5 m at a run, the dodge 3.3 m every way.
 
 ## Citadel Island's layout
 - An island (.ILE) is 16×16 sections of 32768 units (≈ 54.8 m); Citadel uses 4×4 (≈ 219 m across). Each section:

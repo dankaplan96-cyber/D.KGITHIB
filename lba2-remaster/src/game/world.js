@@ -804,7 +804,10 @@ export function buildWorld(parentScene) {
     // the last stone stands wholly on the plateau's flat top, so you step off it onto level ground
     // (stepping onto the steep cliff face beside it would slide you back down)
     const edge = dl - (P.r - 1.4) / Math.hypot(ux, uz * 1.15);
-    const base = H(S.x, S.z);
+    // (CONTROL-FEEL: the first stone stands 1 m over the lowest ground he can come at it from — the street's side is
+    // 1 m under its foot; that took the old 1.77 m jump, not LBA2's 1.19 m)
+    let base = H(S.x, S.z);
+    for (let i = 0; i < 12; i++) base = Math.min(base, H(S.x + Math.sin(i * Math.PI / 6) * 1.9, S.z + Math.cos(i * Math.PI / 6) * 1.9));
     const n = Math.ceil((P.h - base) / 1.05);
     W.stones = [];
     const stoneMat = mat('#8d8578', { roughness: 0.95 });

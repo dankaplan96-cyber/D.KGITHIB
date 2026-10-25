@@ -9,6 +9,17 @@ import { HeroCombat } from './combat.js';
 import { WATER_FLOOR } from '../engine/physics.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
+// The jump (CONTROL-FEEL, WORKLIST #31; the user: "the jump is too high"). LBA2's jump (ANIM.HQR 71, the hero's File3D
+// jump in every behaviour; docs/LBA2_MEASUREMENTS.md "Jump and dodges") rises 714 of Twinsen's 1238 units (0.577 H) and
+// carries him 1919 units (1.55 H) forward. Here the same height and length, H = 2.065 m: 1.19 m up, 3.2 m along (it was
+// 1.77 m up, 3.6 m at a run). The time in the air stays 0.72 s (LBA2 crouches 0.52 s first and floats 1.0 s; ours keeps
+// its quick 0.09 s crouch), so the jump has its own gravity (`g`) until he is back down at his take-off height; a fall
+// further, the ball, enemies and pickups keep GRAVITY. A run's speed is trimmed to `speed` at the take-off and in the
+// air. The landing looks and sounds as before (`feel`: the take-off speed its squash and dust were tuned on).
+export const JUMP = (() => {
+  const H = 2.065, apex = (714 / 1238) * H, len = (1919 / 1238) * H, air = 0.72;
+  return { apex, len, air, vy: (4 * apex) / air, g: (8 * apex) / (air * air), speed: len / air, feel: 9.6 };
+})();
 // How each behaviour moves, from LBA2 itself (CTRL-1; docs/COMBAT.md "Movement and camera"). Speeds are the root motion
 // of the original walk / back-step anims (ANIM.HQR 1/2, 67/68, 83/84, 94/95: distance per loop ÷ loop time, in body
 // heights H = 1238 units, here 2.065 m): Normal 0.97 / 0.86 H/s, Athletic 2.40 / 1.14, Aggressive 1.22 / 0.79,
@@ -222,7 +233,7 @@ export class Hero extends Actor {
       } else {
         const m = Math.hypot(mv.x, mv.y);
         if (m > 0.08) {
-          const yaw = g.camRig.yaw;
+          const yaw = this.inputYaw(mv, g);
           const fx = -Math.sin(yaw), fz = -Math.cos(yaw);
           const rx = Math.cos(yaw), rz = -Math.sin(yaw);
           const dx = rx * mv.x + fx * mv.y, dz = rz * mv.x + fz * mv.y;
@@ -247,6 +258,8 @@ export class Hero extends Actor {
       }
     }
     if (cs.drive) { wx = cs.drive.x; wz = cs.drive.z; }
+    // (in a jump's air the run is held to the jump's own speed: JUMP)
+    if (this.gravity && !this.onGround) { const w = Math.hypot(wx, wz); if (w > JUMP.speed) { wx *= JUMP.speed / w; wz *= JUMP.speed / w; } }
     // weight: accelerate and brake instead of snapping to speed (less grip in the air)
     const prevFwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
     // (classic on the ground: the ramp is already in fwdSpeed — LBA2 starts and stops almost at once, its motion
@@ -271,6 +284,8 @@ export class Hero extends Actor {
     this.applyKnockback(dt);
     this.keepApart(dt);
     const wasAir = !this.onGround;
+    // the jump's own gravity ends once he is back down at his take-off height, or the hop-pack has him (JUMP)
+    if (this.gravity && (this.onGround || this.vy < -JUMP.vy || jet?.firing)) this.gravity = null;
     const landed = P.fall(this, dt);
     // too steep to stand on: slide down (and no jumping from here)
     const steep = this.onGround ? P.steepAt(this.pos.x, this.pos.z, this.pos.y) : null;
@@ -284,9 +299,11 @@ export class Hero extends Actor {
       if (this.slideStuck > 1) { this.slideStuck = 0; this.respawnFromFall(); }
     } else this.slideStuck = 0;
     if (landed) {
-      const v = -landed;
+      // (a jump's landing looks and sounds as it did before the jump was lowered: `feel` is that jump's own speed)
+      const v = -landed, vf = this.gravity ? v * (JUMP.feel / JUMP.vy) : v;
+      this.gravity = null;
       if (v > 13) { this.damage(2, null); this.act('knockdown', 0.45, null, 0, ['getup', 0.8]); }
-      else if (v > 6) { this.rig.land(Math.min(1.2, v / 10)); g.audio.play('land'); g.particles.burst(this.pos.x, this.pos.y + 0.1, this.pos.z, '#cbb994', 8, 2); }
+      else if (vf > 6) { this.rig.land(Math.min(1.2, vf / 10)); g.audio.play('land'); g.particles.burst(this.pos.x, this.pos.y + 0.1, this.pos.z, '#cbb994', 8, 2); }
       else if (wasAir) this.rig.land(0.4);
       if (this.jumpBuf > 0 && beh === 'athletic' && !this.sliding) this.jump();
     }
@@ -429,9 +446,10 @@ export class Hero extends Actor {
     this.act('jumpPrep', 0.09, () => this.takeOff(), 0.001);
   }
   takeOff() {
-    this.vy = 9.6; this.onGround = false; this.actT = 0;
-    this.vel.x = Math.sin(this.angle) * Math.max(Math.hypot(this.vel.x, this.vel.y), this.prevRunSpeed || 0);
-    this.vel.y = Math.cos(this.angle) * Math.max(Math.hypot(this.vel.x, this.vel.y), this.prevRunSpeed || 0);
+    this.vy = JUMP.vy; this.gravity = JUMP.g; this.onGround = false; this.actT = 0;
+    const s = Math.min(JUMP.speed, Math.max(Math.hypot(this.vel.x, this.vel.y), this.prevRunSpeed || 0));
+    this.vel.x = Math.sin(this.angle) * s;
+    this.vel.y = Math.cos(this.angle) * s;
     this.game.audio.play('jump');
   }
 
@@ -492,8 +510,18 @@ export class Hero extends Actor {
   // camera-relative world direction of the stick (classic controls: relative to the facing)
   moveDir(mv, g) {
     if (g.settings.controls === 'classic') { const a = this.angle; return { x: Math.sin(a) * mv.y - Math.cos(a) * mv.x, z: Math.cos(a) * mv.y + Math.sin(a) * mv.x }; }
-    const yaw = g.camRig.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+    const yaw = this.inputYaw(mv, g), fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
     return { x: rx * mv.x + fx * mv.y, z: rz * mv.x + fz * mv.y };
+  }
+  // the view's heading the camera-relative (Modern) stick is read against. Under the Follow camera (CONTROL-FEEL) the
+  // view turns round behind him by itself: the stick keeps the heading it was pushed under until it is let go or pushed
+  // a new way (more than 45°), so the view's swing never turns his way and chases itself
+  inputYaw(mv, g) {
+    const yaw = g.camRig.yaw;
+    if (g.camRig.mode !== 'follow' || Math.hypot(mv.x, mv.y) <= 0.08) { this.refYaw = null; return yaw; }
+    const a = Math.atan2(mv.x, mv.y);
+    if (this.refYaw == null || Math.abs(angleDiff(this.refStick, a)) > Math.PI / 4) { this.refYaw = yaw; this.refStick = a; }
+    return this.refYaw;
   }
   // the sword in the hand (only while it is the equipped weapon)
   showSword(on) {

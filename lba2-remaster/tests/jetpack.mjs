@@ -25,7 +25,7 @@ const helpers = () => ev(() => {
     athletic() { if (G.hero.behaviour !== 'athletic') P.tap('F2', 0.05); return G.hero.behaviour; },
     // hold `keys` for t seconds (Space pressed as a fresh press at the start when it's among them); per frame: the
     // highest and lowest point, frames lit, whether he was ever over the sea, the room
-    hold(keys, t, { dt = 1 / 60, letGoUp = null, until = null } = {}) {
+    hold(keys, t, { dt = 1 / 60, letGoUp = null, letGo = null, until = null } = {}) {
       const h = G.hero, j = G.gadgets.jet, P0 = G.physics;
       const r = { y0: h.pos.y, maxY: h.pos.y, minY: h.pos.y, lit: 0, frames: 0, overSea: 0, rooms: new Set(), hp0: h.hp, x0: h.pos.x, z0: h.pos.z, firstLit: null, hud: 0, minFuel: 1 };
       for (const k of keys) { I.keys.add(k); if (k === 'Space') I.taps.add(k); }
@@ -40,6 +40,7 @@ const helpers = () => ev(() => {
         r.rooms.add(G.room?.id ?? 'citadel');
         if (document.querySelector('#jetgauge')?.style.opacity === '1') r.hud++;
         if (letGoUp && letGoUp()) I.keys.delete('ArrowUp');
+        if (letGo && letGo()) { I.keys.delete('Space'); I.keys.delete('ArrowUp'); }
         if (until && until()) break;
       }
       for (const k of keys) I.keys.delete(k);
@@ -50,13 +51,14 @@ const helpers = () => ev(() => {
     land(max = 6) { let t = 0; while (t < max && !(G.hero.onGround && !G.hero.sliding)) { G.step(1 / 30); t += 1 / 30; } G.step(0.2); return +G.hero.pos.y.toFixed(2); },
     // a hop with the pack onto a raised spot: line up `from` metres short, face it, walk on, Space held until he lands on
     // something; let go of Up once over the target
-    jetHop(x, z, { from = 1.6, t = 3.5, brake = 0.35, walk = true } = {}) {
+    // (top: the spot's height when the pack can hover above it — let go of everything once over it, and he drops on)
+    jetHop(x, z, { from = 1.6, t = 3.5, brake = 0.35, walk = true, top = null } = {}) {
       const h = G.hero;
       const a = Math.atan2(x - h.pos.x, z - h.pos.z);
       if (walk) P.go(x - Math.sin(a) * from, z - Math.cos(a) * from, { tol: 0.35, maxT: 25, fight: false });
       J.athletic(); P.face(x, z);
       let air = false;
-      const r = J.hold(['Space', 'ArrowUp'], t, { letGoUp: () => Math.hypot(h.pos.x - x, h.pos.z - z) < brake, until: () => { if (!h.onGround) air = true; return air && h.onGround; } });
+      const r = J.hold(['Space', 'ArrowUp'], t, { letGoUp: () => Math.hypot(h.pos.x - x, h.pos.z - z) < brake, letGo: top == null ? null : () => Math.hypot(h.pos.x - x, h.pos.z - z) < 0.5 && h.pos.y > top + 0.05, until: () => { if (!h.onGround) air = true; return air && h.onGround; } });
       G.step(0.25);
       return { ...r, y: +h.pos.y.toFixed(2) };
     },
@@ -195,16 +197,16 @@ await ev(() => { P.exitTo('zeelich-workshop'); P.settle(); });
 
 // ---- the later use: the old mill's climb (chapter 10) — a shortcut, not a way past the brake
 const m1 = await ev(() => { const G = game, mt = G.rooms.zeelich.millTop, f = G.flags, h = G.hero;
-  const cx = mt.x, cz = mt.z - 3.3, Y0 = mt.y - 8.75;
-  const st = (k, r = 3.3) => { const phi = 0.9 + k * Math.PI / 6; return { x: cx + Math.sin(phi) * r, z: cz + Math.cos(phi) * r, top: Y0 + 1.25 * (k + 1) }; };
-  P.go(cx + Math.sin(0.3) * 6, cz + Math.cos(0.3) * 6, { tol: 0.6, fight: false });
+  // (the stair-stones: millTop.stones, seven 1.09 m apart, the gallery 1.09 m over the last — CONTROL-FEEL)
+  const cx = mt.x, cz = mt.z - 3.3, S = mt.stones, a0 = Math.atan2(S[0].x - cx, S[0].z - cz) - 0.6;
+  P.go(cx + Math.sin(a0) * 6, cz + Math.cos(a0) * 6, { tol: 0.6, fight: false });
   const t0 = G.time, hops = [];
-  for (const k of [1, 3, 5]) { const s = st(k); hops.push(J.jetHop(s.x, s.z, { from: 1.6, walk: k === 1, t: 4 }).y); G.step(1.6); }
-  const ga = 0.9 + 5 * Math.PI / 6 + 0.55; hops.push(J.jetHop(cx + Math.sin(ga) * 3.4, cz + Math.cos(ga) * 3.4, { walk: false, t: 4 }).y);
+  for (const k of [1, 3, 5]) { const s = S[k]; hops.push(J.jetHop(s.x, s.z, { from: 1.6, walk: k === 1, t: 4, top: s.y }).y); G.step(1.6); }
+  hops.push(J.jetHop(mt.landing.x, mt.landing.z, { walk: false, t: 4, top: mt.y }).y);
   const secs = +(G.time - t0).toFixed(1), top = h.pos.y > mt.y - 0.3;
   const relayBefore = (() => { const it = []; G.story.interactables((d, m, o) => { if (d < m) it.push(o.kind); }, (x, z) => Math.hypot(x - h.pos.x, z - h.pos.z)); return it; })();
   return { hops, secs, top, braked: !!f.c10_millBraked, relayBefore, millY: mt.y }; });
-check('later use (chapter 10, Oku\'s mill): the pack skips every other stair-stone — up in 4 hops instead of 7', m1.top && m1.hops.length === 4 && m1.hops.every((y, i) => i === 3 ? y > m1.millY - 0.3 : true), m1);
+check('later use (chapter 10, Oku\'s mill): the pack skips every other stair-stone — up in 4 hops instead of 8', m1.top && m1.hops.length === 4 && m1.hops.every((y, i) => i === 3 ? y > m1.millY - 0.3 : true), m1);
 check('the story gate holds: on top with the mill unbraked there is no relay to set (the brake still comes first)', !m1.braked && !m1.relayBefore.includes('c10mill'), m1);
 const m2 = await ev(() => { const G = game, S = G.story.arsenal.step, h = G.hero;
   // the fall: ISO dropped from 9 m over the green (the speed of a fall off the old mill's 8.75 m gallery) — first with

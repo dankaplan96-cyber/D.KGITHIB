@@ -40,7 +40,7 @@ const SPOT = {
   galNook: { x: -9.0, z: -7.4, a: 0.3 },            // gallery-local: a boulder by the back wall of the start-side shelf
   adit: { dx: -13, dz: -6, a: 1.14 },               // Under Celebration (isle_undergas): from the shuttle pad, its mouth toward the pad
   jetPeg: { x: 3.35, z: -1.3, a: -Math.PI / 2 },     // workshop-local: a peg post by the door, against the open side
-  testStep: { h: 2.35, lx: -23, lz: 24 },           // Zeelich-local: the green behind the workshop; deck height (a jump: ~2.0)
+  testStep: { h: 2.35, lx: -23, lz: 24 },           // Zeelich-local: the green behind the workshop; deck height (a jump reaches ~1.4)
 };
 
 const LIT_R = 5;   // how near the lantern must be to show a dark place's contents

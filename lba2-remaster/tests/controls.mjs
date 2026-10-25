@@ -3,7 +3,8 @@
 //   2. pad A talks / searches when something is in reach, in every behaviour (Athletic does not jump instead)
 //   3. an NPC's gait follows the ground it really covers: a slow route walks slower, a blocked walker stands
 // CTRL-1 (4–8): LBA2's tank controls, the ball's arcs and aimed distance (the automatic aim at enemies kept), the follow
-// camera — measured by input at 60 / 30 fps (MEASURE lines). ONLY=tank,ball,camera runs just those sections.
+// camera — measured by input at 60 / 30 fps (MEASURE lines); CONTROL-FEEL: the jump's height and length (6b). ONLY=tank,jump,ball,camera
+// runs just those sections.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -184,6 +185,66 @@ measure('walls', wall);
 check('into a wall: no walking on the spot (resolved speed ~0, idle)', wall.head.speed < 0.1 && wall.head.anim !== 'walk', wall.head);
 check('along a wall at 45°: he slides along it', Math.abs(wall.slide.dz) > 1.5 && wall.slide.speed > 0.8, wall.slide);
 
+}
+
+if (!ONLY || ONLY.includes('jump')) {
+// ---------------------------------------------------------------- 6b. the jump (CONTROL-FEEL): LBA2's height and length
+// LBA2's jump (ANIM.HQR 71) rises 0.577 H and carries 1.55 H (H = 2.065 m: 1.19 m, 3.2 m); ours keeps 0.72 s in the
+// air. Measured by input (Athletic, Space), standing and at a run, at 60 and 30 fps; the jump's own gravity is off
+// again once he lands; a fall that is not a jump still falls at GRAVITY (26 m/s²); a press just before landing jumps
+// again (the buffer), and the landing's squash is the one it had before (0.96 of 0.22 s).
+const jump = await ev(() => {
+  const { h, I } = K, G = game, out = {};
+  for (const dt of [1 / 60, 1 / 30]) {
+    const o = (out[dt < 0.02 ? 'f60' : 'f30'] = {});
+    for (const run of [false, true]) {
+      K.place(6200, -11, 0, 'athletic');
+      if (run) K.run(['ArrowUp'], 1.0, dt);
+      if (run) I.keys.add('ArrowUp');
+      const y0 = h.pos.y; let apex = y0, t = 0, tUp = null, pUp = null, land = null, g = [], landT = 0;
+      I.keys.add('Space'); I.taps.add('Space'); G.frame(dt, false); I.keys.delete('Space');
+      for (let i = 0; i < 3 / dt; i++) {
+        const vy0 = h.vy, air0 = !h.onGround, p = h.pos.clone();
+        G.frame(dt, false); t += dt;
+        if (!h.onGround && tUp == null) { tUp = t - dt; pUp = p; }
+        if (air0 && !h.onGround) g.push({ a: (vy0 - h.vy) / dt, up: h.vy > 0 });
+        apex = Math.max(apex, h.pos.y);
+        if (tUp != null && h.onGround) { land = { t: t - tUp, x: h.pos.x, z: h.pos.z }; landT = h.rig.landT; break; }
+      }
+      I.keys.delete('ArrowUp');
+      const r = (o[run ? 'run' : 'stand'] = { apex: +(apex - y0).toFixed(3), air: land ? +land.t.toFixed(3) : null, len: land && pUp ? +Math.hypot(land.x - pUp.x, land.z - pUp.z).toFixed(2) : null,
+        gUp: g.length ? +(g.filter((q) => q.up).reduce((s, q) => s + q.a, 0) / Math.max(1, g.filter((q) => q.up).length)).toFixed(1) : null, gravAfter: h.gravity ?? null, landT: +landT.toFixed(3) });
+      K.run([], 0.5, dt);
+    }
+    // a fall that is not a jump: dropped from 6 m, its gravity
+    K.place(6200, -11, 0, 'athletic'); h.pos.y += 6; h.onGround = false; h.vy = 0;
+    const a = []; for (let i = 0; i < 0.4 / dt; i++) { const v0 = h.vy; G.frame(dt, false); if (!h.onGround) a.push((v0 - h.vy) / dt); }
+    o.fallG = +(a.reduce((s, q) => s + q, 0) / Math.max(1, a.length)).toFixed(1);
+    K.run([], 1.5, dt);
+    // the buffer: Space pressed 0.08 s before landing jumps again at once
+    K.place(6200, -11, 0, 'athletic');
+    I.keys.add('Space'); I.taps.add('Space'); G.frame(dt, false); I.keys.delete('Space');
+    let pressed = false, again = false;
+    for (let i = 0; i < 3 / dt && !again; i++) {
+      G.frame(dt, false);
+      if (!pressed && !h.onGround && h.vy < 0 && h.pos.y - G.physics.groundAt(h.pos.x, h.pos.z) < -h.vy * 0.08) { I.keys.add('Space'); I.taps.add('Space'); G.frame(dt, false); I.keys.delete('Space'); pressed = true; }
+      if (pressed && h.vy > 3) again = true;
+    }
+    o.buffered = again;
+    K.run([], 1.5, dt);
+  }
+  return out;
+});
+measure('jump (m, s, m/s²)', jump);
+const JH = 2.065;
+for (const k of ['f60', 'f30']) {
+  const j = jump[k];
+  check(`jump ${k}: LBA2's height — about 0.58 H (${(j.stand.apex / JH).toFixed(2)} H = ${j.stand.apex} m; it was 1.77 m) — standing and at a run`, j.stand.apex >= 1.0 && j.stand.apex <= 1.22 && Math.abs(j.run.apex - j.stand.apex) < 0.03, j);
+  check(`jump ${k}: 0.72 s in the air (as before)`, Math.abs(j.stand.air - 0.72) <= 0.05 && Math.abs(j.run.air - 0.72) <= 0.05, j);
+  check(`jump ${k}: a running jump carries LBA2's 1.55 H (${(j.run.len / JH).toFixed(2)} H = ${j.run.len} m, ±0.3 m)`, Math.abs(j.run.len - 3.2) <= 0.3, j.run);
+  check(`jump ${k}: its own gravity only in the jump (${j.stand.gUp} m/s² rising); off when he lands; a fall at GRAVITY (${j.fallG} m/s²)`, Math.abs(j.stand.gUp - 18.4) < 0.6 && j.stand.gravAfter === null && j.run.gravAfter === null && Math.abs(j.fallG - 26) < 0.6, j);
+  check(`jump ${k}: the landing squash as before (0.96 × 0.22 s at its take-off speed, less the landing frame) and a press just before landing jumps again`, j.stand.landT >= 0.15 && j.stand.landT <= 0.212 && j.buffered, j);
+}
 }
 
 if (!ONLY || ONLY.includes('ball')) {

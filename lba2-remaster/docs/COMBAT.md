@@ -32,9 +32,11 @@ fight; Aggressive mode's Space still attacks with the same moves.
   (3 damage, staggers). Holding attack through the first strike winds up a heavy blow, released by letting go
   (4 damage). It breaks guards.
 - **Fists** (before the sword): jab, jab, kick.
-- **Dodge:** a 0.36 s hop of about 2.5 m in the stick's direction, or a backstep with no direction. It is
-  invulnerable from 0.04 to 0.27 s, with a 0.28 s cooldown. It cancels late recovery, never a startup or
-  active frames.
+- **Dodge:** a 0.36 s hop in the stick's direction, or a backstep with no direction. Its distance is LBA2's by the
+  way it goes from his facing (CONTROL-FEEL; docs/LBA2_MEASUREMENTS.md "Jump and dodges"): 2.41 m aside (1.17 H,
+  anims 78/79), 2.03 m back and for the backstep (0.98 H, 53), 1.45 m ahead (0.70 H, 52), blended between; it was
+  3.1 m every way (3.3 m measured). It is invulnerable from 0.04 to 0.27 s, with a 0.28 s cooldown. It cancels late
+  recovery, never a startup or active frames.
 - **Ball:** states are idle → in hand → fly → impact → return. Movement is substepped (≤ 12 cm per step), so the
   ball never tunnels at low frame rates.
   - As in LBA2: every throw costs 1 magic. With magic it bounces 4 times and returns on the 5th contact;
@@ -136,6 +138,27 @@ point `DISTANCE_VISEE` (2500 units, ~2 H) ahead of his facing, keeping the angle
   again: measured on an open route, the yaw turned at up to 455°/s and Twinsen left the frame. Houses between the
   camera and Twinsen fade instead (town.js / island.js, VP-10's work; not touched here).
 - The free camera is unchanged.
+- **Follow** (CONTROL-FEEL, the user: "when I turn round he runs toward me, which is strange"; Settings → Camera, the
+  third choice; LBA2's view stays the default): the remaster's view above, and once he has kept one way (within 23°)
+  at a walk or more for 1.2 s, the view swings round behind him, eased like Enter's (≤ 60°/s, ≤ 90°/s²), and keeps
+  behind him while he keeps on (a curve up to ~1.6 rad/s carries it round; a sharp turn ends it and the view stays).
+  Never while he stands, turns on the spot, makes short corrections, runs less than 1.2 s, fights (a lock-on or a
+  move), or indoors (the iso rooms); not toward a heading where a wall hides him or that needs a steep view, and not
+  for the 4 s after a hidden or steep swing. With Modern controls the stick keeps the heading it was pushed under
+  until it is let go or pushed a new way (45°+), so the swing never turns his way and chases itself. In the 1997
+  look it glides too. tests/camfollow.mjs; tests/camsteady.mjs runs its routes in Follow as well.
+
+### The jump — `JUMP` in src/game/actors.js
+LBA2's jump (ANIM.HQR 71) rises 0.577 H and carries him 1.55 H: here 1.19 m up and 3.2 m along (it was 1.77 m up and
+3.6 m at a run; the user: "the jump is too high"). The time in the air stays 0.72 s, so the jump has its own gravity
+(18.4 m/s²) from the take-off until he is back down at its height; anything further, and the ball, enemies and pickups,
+fall at 26 m/s². A run is trimmed to 4.44 m/s at the take-off and in the air. The crouch (0.09 s), coyote time
+(0.12 s), the press buffer (0.15 s) and the landing's squash and dust are as before. In the air his feet catch a
+ledge up to 0.25 m above them: he takes a ledge about 1.4 m up (1.33 m at 30 fps), 2.0 m before. Measured (60 fps):
+apex 1.14 m, 0.72 s, 3.1 m at a run (tests/controls.mjs 6b).
+- Places built for the jump, checked: the Whispering Cliffs' stones (rises ≤ 1.05 m), the shell's stepping stones
+  (flush, 0.9 m gaps), Zeelich's old mill (now seven stair-stones 1.09 m apart and the gallery 1.09 m over the last; it
+  was six 1.25 m apart). Built against it: the test step's deck (2.35 m) and the fences of ~2.4 m.
 
 ### The ball's throw — `BALL_THROW`, `MagicBall.plan` in src/game/actors.js
 LBA2: each behaviour's File3D (RESS.HQR entry 44) gives the throw anim (LANCE, anim 6) an `F_THROW_MAGIC` on its 6th
@@ -294,7 +317,7 @@ touch ⬤) — once the jump stops rising the pack lights (a fresh press in the 
 
 | | Number | Why |
 |---|---|---|
-| Lift | at most 2.4 m above the take-off ground and above the ground under him (a jump: ~1.8 m) | one storey; no climbing a stack of ledges or a slope in one flight |
+| Lift | at most 2.4 m above the take-off ground and above the ground under him (a jump: ~1.2 m) | one storey; no climbing a stack of ledges or a slope in one flight |
 | Ground grip | it pushes on the highest ground within 0.9 m of his feet; with none within 3.1 m it fades out over 1 m | never over a drop, a gap, the sea or the cloud sea: he falls as from a jump |
 | Fuel | 2.2 s of thrust; refills by itself on firm ground (0.3 s, then 1.4 s from empty) | short hops, nothing to buy |
 | Air speed | 3.0 m/s, gentle steering (a run's momentum fades into it) | a hover, not a race |

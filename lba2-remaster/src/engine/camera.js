@@ -31,6 +31,12 @@
 // counted, so at a cliff's brink it stood inside the rock face beside it, and a collider (the Whispering Cliffs'
 // stepping stones rising through it after the target, a tank, a pillar) was never tested at all.
 //
+// "follow" (CONTROL-FEEL, the user: "when I turn round he runs toward me, which is strange"): the remaster's LBA view as
+// above, and once he has kept to one way for FOLLOW_T s at a walk or more, the view swings round behind him (eased, the
+// same swing as Enter's) and keeps behind him while he keeps that way. Standing, a short turn, a fight (a lock-on, a move,
+// enemies after him), a room (the iso view), a heading where a wall would hide him or that needs a steep view: it does
+// what the LBA view does.
+//
 // "free" is a modern third-person orbit with obstacle avoidance.
 import * as THREE from 'three';
 import { clamp, lerp, smoothstep, damp, dampAngle, angleDiff, noise2 } from './math.js';
@@ -75,6 +81,11 @@ const STEEP = (48 * Math.PI) / 180, STEEP_OK = (40 * Math.PI) / 180, STEEP_T = 0
 // the way has been clear for OCC_HOLD s (≤ OCC_OUT_V m/s): no pumping in and out along a wall
 const AUTO_V = (24 * Math.PI) / 180, AUTO_A = (45 * Math.PI) / 180, AUTO_MIN = (25 * Math.PI) / 180, AUTO_OFF = (4 * Math.PI) / 180, AUTO_MAX = (115 * Math.PI) / 180, AUTO_IDLE = 2, STEADY = 0.6;
 const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, OCC_DELAY = 0.2, TALL_FREE = 1.0;
+// CONTROL-FEEL, the Follow view: he keeps one way (within FOLLOW_TOL of where the run began) at FOLLOW_SP m/s or more for
+// FOLLOW_T s, then the view swings round behind him if it is more than FOLLOW_MIN off; while he keeps on (his way may
+// bend at most FOLLOW_TURN rad/s, smoothed at FOL_W 1/s) it stays behind him; the heading is checked for a wall or a
+// steep view every FOLLOW_CHECK s (and none for a hidden or steep swing's cool-down)
+const FOLLOW_T = 1.2, FOLLOW_SP = 1.2, FOLLOW_TOL = 0.4, FOLLOW_MIN = (20 * Math.PI) / 180, FOLLOW_TURN = 1.6, FOL_W = 2.5, FOLLOW_CHECK = 0.25;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -129,13 +140,14 @@ export class CameraRig {
     this.override = null; // {pos, look} for cutscenes
     this.occ = null;      // () → the scenery volumes in force (Citadel outdoors), or null (main.js)
     this.relative = false; // () → true when the controls are camera-relative (Modern): the free orbit never turns by itself (main.js)
+    this.busy = null;      // () → true while he fights (a lock-on, a move, enemies after him): no Follow swing (main.js)
     this.base = new THREE.Vector3();   // (CAM-2: where the camera stands before a shake's tremor; tests/lib/camrec.js)
     // CAM-2: what moved the view this frame (tests/camsteady.mjs reads it; a few numbers, always kept)
     this.why = { mode: '', follow: 0, box: 0, swing: 0, swingBy: '', rise: 0, lift: 0, keep: 0, dist: 0, auto: 0, user: 0, occ: 0, ground: 0, snap: false };
     this.lba = { init: false, focus: new THREE.Vector3(), goal: new THREE.Vector3(), yaw: 0, goalYaw: 0, goalPitch: 0, behind: false, view: 0, clear: true };
   }
 
-  setMode(m) { this.mode = m === 'free' ? 'free' : 'lba'; this.lba.init = false; if (this.fr) this.fr.init = false; }
+  setMode(m) { this.mode = m === 'free' || m === 'follow' ? m : 'lba'; this.lba.init = false; if (this.fr) this.fr.init = false; }
   // Interiors: fixed isometric view rotated 45°, like LBA2's indoor scenes.
   setIso(room) { this.iso = room; this.snap(); }
   // a scene change (a door, an exit, travel, a load, a respawn): the next frame starts the new shot outright, behind
@@ -235,7 +247,7 @@ export class CameraRig {
     if (this.cine) return; // a cinematic places the camera itself (src/engine/cinematic.js)
     const snap = this._snap;
     this._snap = false;
-    { const W = this.why; W.follow = W.box = W.swing = W.rise = W.lift = W.keep = W.dist = W.auto = W.user = W.occ = W.ground = 0; W.swingBy = ''; W.snap = !!snap; W.mode = this.override ? 'override' : this.iso ? 'iso' : this.mode === 'lba' ? (this.cut ? 'cuts' : 'lba') : 'free'; }
+    { const W = this.why; W.follow = W.box = W.swing = W.rise = W.lift = W.keep = W.dist = W.auto = W.user = W.occ = W.ground = 0; W.swingBy = ''; W.snap = !!snap; W.mode = this.override ? 'override' : this.iso ? 'iso' : this.mode === 'lba' ? (this.cut ? 'cuts' : 'lba') : this.mode; }
     if (this.override) {
       if (snap) { cam.position.copy(this.override.pos); this.look.copy(this.override.look); }
       cam.position.lerp(this.override.pos, 1 - Math.exp(-dt * 2));
@@ -247,7 +259,7 @@ export class CameraRig {
       return;
     }
     if (this.iso) this._iso(dt, focus);
-    else if (this.mode === 'lba') this._lba(dt, focus, heroAngle);
+    else if (this.mode === 'lba' || this.mode === 'follow') this._lba(dt, focus, heroAngle);
     else this._free(dt, focus, heroAngle, moving, input, snap);
     this.base.copy(cam.position);
     if (this.shakeT > 0) {
@@ -262,7 +274,7 @@ export class CameraRig {
   }
 
   _lba(dt, hero, heroAngle) {
-    if (this.cut) { this._lbaCuts(dt, hero, heroAngle); return; }
+    if (this.cut && this.mode !== 'follow') { this._lbaCuts(dt, hero, heroAngle); return; }   // (Follow glides in either look)
     const cam = this.cam, L = this.lba, v = LBA_VIEWS[this.view], P = this.physics;
     cam.fov = LBA_FOV;
     cam.updateProjectionMatrix();
@@ -278,6 +290,7 @@ export class CameraRig {
       L.gy = L.f.y;
       L.last = { x: hero.x, z: hero.z }; L.vel = { x: 0, z: 0 }; L.lift = 0; L.vlift = 0; L.pv = null; L.fresh = true; L.pull = 0; L.yawV = 0;
       L.init = true; L.behind = false; this.hiddenT = 0; L.steepT = 0; L.steepCool = 0; L.userHold = 0; L.swingBy = '';
+      if (L.fol) { L.fol.t = 0; L.fol.on = false; L.fol.track = false; L.fol.at = null; }   // (Follow: a new shot, a new run)
       // (a new scene starts already risen over the scenery, as LBA2's CameraCenter does: no rise seen through a fade;
       // CAM-2: and from a heading that needs no steep view — out of a door he faces away from the house, so behind him
       // is over its roof)
@@ -314,6 +327,7 @@ export class CameraRig {
     } else L.run.prev = null;
     L.pull = Math.max(0, L.pull - dt);
     L.userHold = Math.max(0, L.userHold - dt); L.steepCool = Math.max(0, L.steepCool - dt);
+    if (this.mode === 'follow') this._follow(L, hero, sp, v, dt);
     // a swing (Enter: round behind him; hidden: just far enough round to see him): eased in and out, at most 60°/s
     {
       const d = angleDiff(L.yaw, L.goalYaw), want = clamp(d * 2.2, -SWING_V, SWING_V), a = SWING_A * dt;
@@ -424,6 +438,39 @@ export class CameraRig {
         }
       }
     }
+  }
+
+  // CONTROL-FEEL, the Follow view (see FOLLOW_T): after a steady run one way, round behind him, eased; otherwise nothing
+  _follow(L, hero, sp, v, dt) {
+    const Fo = (L.fol ??= { dir: 0, t: 0, on: false, track: false, chkT: 0, ok: false, at: null });
+    const reset = () => { Fo.t = 0; Fo.on = false; Fo.track = false; Fo.at = null; };
+    if (sp < FOLLOW_SP || this.busy?.() || L.steepCool > 0) { reset(); return; }
+    const way = Math.atan2(L.vel.x, L.vel.z);
+    if (!Fo.on) {
+      // one way: within FOLLOW_TOL of where this run began (a turn, a zigzag or a short correction starts it afresh)
+      if (Fo.t === 0 || Math.abs(angleDiff(Fo.dir, way)) > FOLLOW_TOL) { Fo.dir = way; Fo.t = dt; return; }
+      Fo.t += dt;
+      if (Fo.t < FOLLOW_T) return;
+      Fo.dir = way; Fo.on = true; Fo.chkT = 0;
+    } else {
+      // kept on: a curve carries the view round with it; a sharp new way ends the follow (the view stays where it is)
+      if (Math.abs(angleDiff(Fo.dir, way)) > FOLLOW_TURN / FOL_W) { reset(); Fo.dir = way; Fo.t = dt; return; }
+      Fo.dir = dampAngle(Fo.dir, way, FOL_W, dt);
+    }
+    const goal = Fo.dir + Math.PI;
+    // the heading behind him must show him (no wall or cliff in the way) without a steep view over the scenery
+    Fo.chkT -= dt;
+    if (Fo.chkT <= 0 || Fo.at == null || Math.abs(angleDiff(Fo.at, goal)) > 0.25) {
+      Fo.chkT = FOLLOW_CHECK; Fo.at = goal;
+      const cp = Math.cos(v.pitch), sn = Math.sin(v.pitch);
+      _c.set(hero.x, hero.y, hero.z);
+      Fo.ok = this.occluded(_c, cp, sn, goal, v.dist, true) >= v.dist - 0.5 && this._scenePitch(hero, L.f, goal, v.pitch, v.dist, L.f.y + 1, STEEP)[0] <= STEEP;
+    }
+    if (!Fo.ok) return;
+    // (already about behind him: no swing for a small difference; once it has swung, it keeps behind him)
+    if (!Fo.track && Math.abs(angleDiff(L.yaw, goal)) < FOLLOW_MIN && Math.abs(angleDiff(L.yaw, L.goalYaw)) < 0.02) return;
+    if (!Fo.track) Fo.swings = (Fo.swings || 0) + 1;   // (a new follow swing: tests/camfollow.mjs counts them)
+    Fo.track = true; L.goalYaw = goal; L.swingBy = 'follow';
   }
 
   // LBA2's own exterior camera, as in 1997: a still view, a cut when he leaves the frame box (the 1997 look). Each new

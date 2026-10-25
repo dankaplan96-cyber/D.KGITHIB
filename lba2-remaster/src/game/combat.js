@@ -23,7 +23,11 @@ export const COMBAT = {
   meleeAssist: 3.2,          // m: melee turn-to-target range
   lockRange: 14, lockBreak: 17, lockLosGrace: 1.5,
   assistCone: { off: 0, low: 0.22, normal: 0.42, high: 0.7 },   // rad half-angle for soft targeting
-  dodge: { dur: 0.36, dist: 3.1, iStart: 0.04, iEnd: 0.27, cooldown: 0.28, cancelFrom: 0.62 },
+  // the dodge's distance (CONTROL-FEEL; the user: "the dodge takes him very far"; it was 3.1 m every way) is LBA2's,
+  // by the way it goes from his facing (ANIM.HQR root motion, docs/LBA2_MEASUREMENTS.md "Jump and dodges"; H 2.065 m):
+  // aside 1443 of 1238 units (1.17 H, the athletic dodges 78/79), back 1216 (0.98 H, 53), forward 868 (0.70 H, 52);
+  // between them by the square of the cosine. Its timing and invulnerable window are as before (LBA2's take 0.62–0.68 s)
+  dodge: { dur: 0.36, side: 2.41, back: 2.03, fwd: 1.45, iStart: 0.04, iEnd: 0.27, cooldown: 0.28, cancelFrom: 0.62 },
   // quickDur: the throw holds the controls only this long (the follow-through then blends out over walking or
   // idle on the rig's upper-body layer until ~0.62 s, without holding anything up)
   throw: { quickRelease: 0.16, quickDur: 0.36, windHold: 0.12, chargeAfter: 0.2, chargeFull: 0.75, moveK: 0.6, chargeMoveK: 0.42, // (charging: a slow aimed walk)
@@ -38,6 +42,11 @@ export const COMBAT = {
     hard: { dmg: 1.5, windup: 0.85, cool: 0.8 },
   },
 };
+// the dodge's distance for a hop `rel` rad round from his facing (0 ahead, ±π behind): COMBAT.dodge side / back / fwd
+export function dodgeDist(rel) {
+  const D = COMBAT.dodge, c = Math.cos(rel), c2 = c * c;
+  return D.side * (1 - c2) + (c < 0 ? D.back : D.fwd) * c2;
+}
 
 // Melee moves. s/a/r = startup, active, recovery (s). arc = blade sweep from → to (rad, relative to the
 // facing; + is to Twinsen's left). reach = from his centre. poise = stagger power. step = forward step (m).
@@ -244,7 +253,7 @@ export class HeroCombat {
     this.buf = new InputBuffer();
     this.move = null;         // the melee move in progress {def, t, hit:Set, phase}
     this.combo = 0; this.comboT = 0; this.comboOf = null;
-    this.dodgeT = 0; this.dodgeCool = 0; this.dodgeDir = { x: 0, z: 1 };
+    this.dodgeT = 0; this.dodgeCool = 0; this.dodgeDir = { x: 0, z: 1 }; this.dodgeDist = COMBAT.dodge.back;
     this.throwT = 0; this.throwing = null; // {charged, released, t}
     this.holdT = 0; this.holding = null;    // what the held attack button is preparing ('ball' | 'heavy')
     this.pulseCool = 0; this.pulseT = 0; this.shotCool = 0;
@@ -320,8 +329,10 @@ export class HeroCombat {
     if (this.dodgeT > 0) {
       const D = COMBAT.dodge, t = D.dur - this.dodgeT;
       this.dodgeT -= dt;
-      // fast out, ease in: most of the distance early
-      const v = (D.dist / D.dur) * 2 * Math.max(0, 1 - t / D.dur); // integrates to D.dist
+      // fast out, ease in: most of the distance early (speed 2·dist/dur·(1 − t/dur); per frame, the ground that
+      // speed covers over the frame, so the hop is its distance at any frame rate)
+      const F = (u) => { u = clamp(u, 0, 1); return u * (2 - u); };
+      const v = (this.dodgeDist * (F((t + dt) / D.dur) - F(t / D.dur))) / Math.max(dt, 1e-4);
       out.lock = true; out.drive = { x: this.dodgeDir.x * v, z: this.dodgeDir.z * v };
       out.anim = 'dodge';
       if (this.dodgeT <= 0) { this.dodgeCool = D.cooldown; h.rig.atk = null; }
@@ -403,6 +414,7 @@ export class HeroCombat {
     this.dodgeT = COMBAT.dodge.dur;
     // the body keeps facing its target (or where it faced); the hop goes the asked way
     const rel = angleDiff(h.angle, Math.atan2(dx, dz));
+    this.dodgeDist = dodgeDist(rel);
     h.rig.atk = { kind: 'dodge', rel };
     h.rig.play('dodge'); h.rig.actionT = 0;
     g.audio.play('whoosh');

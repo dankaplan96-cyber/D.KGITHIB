@@ -25,7 +25,7 @@ export const steps = [
     return { ...r, cyl: game.flags.c2_cyl, back: game.flags.c2_planBack, hp: game.hero.hp, fail: game.flags.c2_cyl ? null : 'locker' };
   }],
   ['Oku sees the plan', () => ({ ...P.talk('oku', { run: true }), ok: game.flags.c2_okuOK, fail: game.flags.c2_okuOK ? null : 'oku' })],
-  // the old mill's stair-stones spiral up 1.25 m apart: jumps (Athletic), stepping to the middle of each stone first
+  // the old mill's stair-stones spiral up 1.09 m apart (CONTROL-FEEL): jumps (Athletic), stepping to the middle of each stone first
   // and letting go of Up in the air so he doesn't overshoot; then the last hop onto the gallery
   ['climb the old mill (jumps)', () => { const r = P.climbOldMill(); return { ...r, fail: r.top ? null : 'climb' }; }],
   ['the cog, top of the old mill', () => {

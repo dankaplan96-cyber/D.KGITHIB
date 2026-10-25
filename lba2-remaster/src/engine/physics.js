@@ -188,7 +188,8 @@ export class Physics {
     p.x = nx; p.z = nz;
   }
 
-  // Vertical integration; returns true when landing this frame.
+  // Vertical integration; returns true when landing this frame. (actor.gravity: an actor's own for the moment — the
+  // hero's jump, actors.js JUMP — else GRAVITY)
   fall(actor, dt) {
     const p = actor.pos;
     const g = this.groundAt(p.x, p.z, p.y);
@@ -197,7 +198,7 @@ export class Physics {
       if (p.y - g > 0.6) { actor.onGround = false; actor.vy = 0; }
       else { p.y = g; actor.vy = 0; return false; }
     }
-    actor.vy -= GRAVITY * dt;
+    actor.vy -= (actor.gravity || GRAVITY) * dt;
     p.y += actor.vy * dt;
     if (p.y <= g) {
       p.y = g;

@@ -2,7 +2,7 @@
 // the measured values. Covers: input buffer and combo, active-frame timing and single hits, walls blocking
 // melee and targeting, the dodge's invulnerability, the ball at low frame rates (no tunnelling), recall,
 // scene changes, presses during dialogue, lock-on, the sentry's shield and guard break, the crawler's slam,
-// the ball switch, weapon save/load, dodge distance at 30 vs 60 fps, and the ball's LBA2 rules (magic, bounces, fetch).
+// the ball switch, weapon save/load, dodge distance at 30 vs 60 fps and by direction (LBA2's), and the ball's LBA2 rules (magic, bounces, fetch).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -189,7 +189,28 @@ r = await ev(() => {
   }
   return { d30: out[0], d60: out[1] };
 });
-check('dodge distance consistent at 30 and 60 fps', Math.abs(r.d30 - r.d60) < 0.35 && r.d60 > 2, r);
+check('dodge distance consistent at 30 and 60 fps', Math.abs(r.d30 - r.d60) < 0.12 && r.d60 > 1.4 && r.d60 < 2.6, r);
+
+// 14b. CONTROL-FEEL: the dodge goes LBA2's distance by its way from his facing (ANIM.HQR root motion, H = 2.065 m):
+// aside 2.41 m (78/79), back 2.03 m (53, also the backstep with no direction), forward 1.45 m (52); it was 3.1 m every way
+r = await ev(() => {
+  const { G } = C; G.devArena(); const out = {};
+  for (const dt of [1 / 60, 1 / 30]) {
+    const o = (out[dt < 0.02 ? 'f60' : 'f30'] = {});
+    for (const [name, key] of [['side', 'KeyD'], ['back', 'KeyS'], ['fwd', 'KeyW'], ['none', null]]) {
+      C.only([], [6190, 6], 0); const h = G.hero, yaw = G.camRig.yaw;
+      h.angle = Math.atan2(-Math.sin(yaw), -Math.cos(yaw));   // (facing the view's forward: the keys go aside, back, ahead)
+      C.step(0.2, dt); const p0 = h.pos.clone();
+      if (key) G.input.keys.add(key);
+      G.input.keys.add('ShiftLeft'); G.input.taps.add('ShiftLeft'); C.step(dt, dt); G.input.keys.delete('ShiftLeft'); if (key) G.input.keys.delete(key);
+      C.step(0.8, dt);
+      o[name] = +Math.hypot(h.pos.x - p0.x, h.pos.z - p0.z).toFixed(2);
+    }
+  }
+  return out;
+});
+for (const k of ['f60', 'f30']) check(`dodge ${k}: LBA2's distances — aside 2.41, back 2.03 (and the backstep), forward 1.45 m (±0.15)`,
+  Math.abs(r[k].side - 2.41) <= 0.15 && Math.abs(r[k].back - 2.03) <= 0.15 && Math.abs(r[k].none - 2.03) <= 0.15 && Math.abs(r[k].fwd - 1.45) <= 0.15, r[k]);
 
 // 15. the ball: tap or hold, decided by the button that started it, the same at 30, 60 and 120 fps
 r = await ev(() => {
