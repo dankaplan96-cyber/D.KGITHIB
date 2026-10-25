@@ -34,6 +34,18 @@ for (const seq of seqs) {
     }
     out[f] = { plantedS: +planted.toFixed(2), slideCm: +(slide * 100).toFixed(1), worstCmS: +(worst * 100).toFixed(0) };
   }
+  // walking: the stance foot (the lower one) should stand still while the body moves over it: its mean ground speed
+  // over the body's mean speed (0 = no skating, 1 = the foot glides with the body), over steps moving faster than 0.5 m/s
+  {
+    let fv = 0, bv = 0, n = 0;
+    for (let i = 1; i < S.length; i++) {
+      const s = S[i], p = S[i - 1];
+      if (s.speed < 0.5) continue;
+      const f = s.footL[1] < s.footR[1] ? 'footL' : 'footR';
+      fv += Math.hypot(s[f][0] - p[f][0], s[f][2] - p[f][2]) / s.dt; bv += s.speed; n++;
+    }
+    if (n > 5) out.walkStance = { steps: n, bodyMs: +(bv / n).toFixed(2), stanceFootMs: +(fv / n).toFixed(2), ratio: +(fv / bv).toFixed(2) };
+  }
   // release
   const ri = S.findIndex((s, i) => i > 0 && s.ball.state === 'fly' && S[i - 1].ball.state === 'inhand');
   if (ri > 0) {

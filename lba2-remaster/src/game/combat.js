@@ -257,6 +257,8 @@ export class HeroCombat {
   reset() {
     this.buf.clear(); this.move = null; this.dodgeT = 0; this.dodgeCool = 0; this.throwing = null; this.holding = null; this.holdT = 0; this.pulseT = 0; this.combo = 0; this.comboT = 0;
     const h = this.hero; if (h.rig.atk) h.rig.atk = null;
+    // (a throw cut short never plays on: no whip or follow-through of a ball that was not thrown)
+    h.rig.over = null; h.rig.chargeFull = false;
     if (this.g.ball?.state === 'inhand') this.g.ball.cancelHold?.();
   }
 
@@ -352,6 +354,7 @@ export class HeroCombat {
     if (w === 'sword' && attackDown && this.holding === 'heavy') {
       this.holdT += dt; out.speedK = 0.35; out.anim = 'heavyCharge';
       if (this.holdT > HEAVY_HOLD && !this.heavyReady) { this.heavyReady = true; g.audio.play('chargeFull'); }
+      h.rig.chargeFull = this.heavyReady;
       return out;
     }
     if (this.holding === 'heavy' && !attackDown) {
@@ -515,7 +518,7 @@ export class HeroCombat {
     // let: the starting button has been released (latched: pressing again does not turn it back into a hold)
     this.throwing = { t: 0, at: 0, let: false, released: false, button, aim };
     g.ball.holdIn(h);
-    h.rig.atk = { kind: 'throw' };
+    h.rig.atk = { kind: 'throw' }; h.rig.chargeFull = false;
     h.rig.play('throwQuick'); h.rig.actionT = 0;
   }
   // Tap: the quick throw, released at quickRelease on the animation's clock. Hold past chargeAfter: charge, and
@@ -544,7 +547,7 @@ export class HeroCombat {
       h.rig.actionT = T.at;
       out.speedK = C.moveK; out.anim = 'throwQuick'; out.upper = { kind: 'throw', t: T.at }; out.face = want;
       if (T.at >= C.quickRelease) {
-        T.released = true; T.relAt = T.t;
+        T.released = true; T.relAt = T.t; h.rig.chargeFull = false;
         const full = !!T.full && h.mp >= 1;
         if (T.full && !full) g.hud.toast('toast_nomp');
         g.ball.preview?.(null);

@@ -340,6 +340,14 @@ export class Hero extends Actor {
     // (the rig plants his feet in world space: it needs this frame's place and facing, and to know he stands on firm ground)
     this.rig.root.position.copy(this.pos); this.rig.root.rotation.y = this.angle;
     this.rig.plantFrame = this.onGround && !this.sliding;
+    // engaged in a fight (a locked target, a move, a held charge or heavy blow, a hit taken, and 2.5 s after): his idle
+    // is his combat stance for the weapon in hand; with a lock his head and chest turn to the target
+    const C = this.combat, lock = g.targeting?.lock;
+    this.engagedT = lock || C.busy || C.holding || this.hurtT > 0 ? 2.5 : Math.max(0, (this.engagedT || 0) - dt);
+    this.rig.guard = this.engagedT > 0 && this.body !== 'zoe' && this.body !== 'worker';
+    this.rig.guardKind = C.weapon;
+    if (lock?.alive && lock.pos) (this._lookV ??= new THREE.Vector3()).set(lock.pos.x, lock.pos.y + (lock.aimY ?? 0.9), lock.pos.z);
+    this.rig.combatLook = lock?.alive && lock.pos ? this._lookV : null;
     this.rig.update(dt, this.speed);
     // blink while invulnerable
     this.rig.root.visible = this.invuln <= 0.5 || Math.floor(this.invuln * 20) % 2 === 0;
@@ -505,6 +513,7 @@ export class Hero extends Actor {
     this.hp -= n;
     this.invuln = 1.1;
     this.hurtT = 0.4;
+    if (this.rig.anim === 'hurt') this.rig.actionT = 0;   // (a second blow restarts the reaction)
     g.audio.play('hurt');
     g.hud.hurt();
     g.camRig.shake(0.3);

@@ -14,6 +14,7 @@ const seqs = process.argv.slice(2);
 fs.mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 900, height: 560 } });
+page.setDefaultTimeout(240000);
 const errs = [];
 page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
@@ -52,7 +53,7 @@ await page.evaluate(() => {
         ball: { state: b.state, pos: [+b.mesh.position.x.toFixed(4), +b.mesh.position.y.toFixed(4), +b.mesh.position.z.toFixed(4)] },
         thr: c.throwing ? { at: +c.throwing.at.toFixed(3), released: c.throwing.released, charging: !!c.throwing.charging } : null,
         move: c.move ? { key: c.move.key, t: +c.move.t.toFixed(3), hits: c.move.hit.size } : null,
-        hurtT: +h.hurtT.toFixed(3), lock: !!G.targeting.lock, dbg: r._dbg ? JSON.parse(JSON.stringify(r._dbg)) : null,
+        hurtT: +h.hurtT.toFixed(3), lock: !!G.targeting.lock,
         plant: r._feet ? ['L', 'R'].map((k) => { const f = r._feet[k]; return (f.on ? (f.stepping ? 'S' : 'P') : '-') + (+f.w.toFixed(2)); }).concat(+r._feet.w.toFixed(2)) : null,
       };
     },
