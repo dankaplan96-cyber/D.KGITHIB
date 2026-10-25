@@ -182,10 +182,11 @@ export function playOpening(story) {
     shot(31.2, 33.1, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.45, 1.2, 2.33), hv(2.0, 0.82, 2.05), 42)),
     shot(33.1, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
     // 6 — Zoé at the counter, then the tap
-    // (R5: from the kitchen's west end at her eye level, three-quarter front: her face, her hands on the tray and the
-    // tap, Twinsen at his table behind her; one shot with a slow push in as she goes to the tap. The side-on view from
-    // the east was a third dark ceiling and her profile, with a near-identical cut at 41.0)
-    shot(35.0, 45.3, P(hv(-3.55, 1.7, -3.3), hv(-2.0, 1.32, -2.52), 54), P(hv(-3.52, 1.68, -3.3), hv(-2.12, 1.46, -2.58), 54)),
+    // (R5: from the kitchen's west end a little over her eye level, three-quarter front: her face, her hands on the tray
+    // and the tap, Twinsen at his table behind her; one shot with a slow push in as she goes to the tap. Pitched so the
+    // frame's top stays under the far ceiling (7 % of the frame, was 20 % in the side-on view from the east, her
+    // profile, with a near-identical cut at 41.0); higher, it looked down on her scalp, lower it filled with ceiling)
+    shot(35.0, 45.3, P(hv(-3.6, 1.8, -3.15), hv(-2.0, 1.38, -2.52), 52), P(hv(-3.55, 1.8, -3.15), hv(-2.1, 1.41, -2.55), 51)),
     // (...and as she turns from the tap to call him, her face from his side of the room: the cut on her turn)
     shot(45.3, 48.0, P(hv(-0.9, 1.75, -1.0), hv(-2.4, 1.45, -2.5), 42), P(hv(-0.95, 1.74, -1.05), hv(-2.4, 1.46, -2.52), 41)),
     // 7 — the exchange: Twinsen answers from the table; over his shoulder for hers
@@ -198,7 +199,7 @@ export function playOpening(story) {
     shot(53.4, 54.8, P(hv(-3.0, 2.3, 3.0), hv(0.3, 1.0, -0.6), 54), P(hv(-2.9, 2.27, 2.9), hv(0.3, 1.0, -0.6), 54)),
     shot(54.8, 58.0, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.47, 1.2, 2.32), hv(2.0, 0.82, 2.05), 42)),
     // 9 — the second try: a warm trickle, steam
-    shot(58.0, 60.1, P(hv(-3.52, 1.68, -3.3), hv(-2.12, 1.46, -2.58), 54), P(hv(-3.5, 1.67, -3.3), hv(-2.18, 1.4, -2.62), 53)),   // (R5: the first try's angle)
+    shot(58.0, 60.1, P(hv(-3.55, 1.8, -3.15), hv(-2.1, 1.41, -2.55), 51), P(hv(-3.53, 1.79, -3.15), hv(-2.15, 1.38, -2.58), 50)),   // (R5: the first try's angle)
     shot(60.1, 62.4, P(hv(-1.35, 1.45, -3.0), hv(-2.3, 0.98, -3.18), 38), P(hv(-1.4, 1.43, -3.0), hv(-2.3, 0.98, -3.18), 35)),
     // 10 — where the warmth comes from: under the well, something in the rock glows with the hum
     // (inside the last chamber, low, facing the vein: the glowing rock fills the frame and pulses with the hum, the
@@ -549,7 +550,6 @@ export function playOpening(story) {
     cine.focus = null;
     put(tw, twSpot.x, twSpot.z, 0, 'tinker');
     loop('room');
-    setTimeout(() => fade(false), 40);
   });
   // "Dad! The mast fits!" / "Told you. Now the sail."
   at(31.15, () => { play(ar, 'kneelShow'); look(ar, head(tw)); });
@@ -616,7 +616,7 @@ export function playOpening(story) {
     g.hero.pos.set(twSpot.x, 0, twSpot.z);     // (the hero stays at home; the room change moved him)
     // the cave's crystal mites stand still while nothing runs them: out of the picture until the prologue
     for (const e of g.enemies || []) if (e.rig?.root && Math.abs(e.pos.x - WR.center.x) < 40) { unseen.push([e, e.rig.root.visible, e.shadow?.visible]); e.rig.root.visible = false; if (e.shadow) e.shadow.visible = false; }
-    sfx('hum'); setTimeout(() => fade(false), 40);
+    sfx('hum');
   });
   at(63.9, () => sfx('hum'));
   at(66.1, () => fade(true));
@@ -626,7 +626,6 @@ export function playOpening(story) {
     g.enterRoom('house', twSpot, true, true);
     put(tw, twSpot.x, twSpot.z, 0, 'idle');    // (turned to the table, to put the screwdriver down)
     play(zo, 'idle'); look(zo, head(tw));
-    setTimeout(() => fade(false), 40);
   });
   // the decision
   at(66.65, () => play(tw, 'setDown'));
@@ -650,7 +649,6 @@ export function playOpening(story) {
     // (the hero waits inside, out of sight; the exit moved him to the door)
     put(tw, twEnd.x, twEnd.z, twEndA + 0.6, 'idle'); look(tw, null);
     loop('lap', { quiet: true });
-    setTimeout(() => fade(false), 60);
   });
   at(76.4, () => document.querySelector('#cine-title').classList.add('show'));
   at(81.0, () => document.querySelector('#cine-title').classList.remove('show'));
@@ -662,10 +660,13 @@ export function playOpening(story) {
     cine.focus = null;
     put(tw, twEnd.x, twEnd.z, twEndA + 0.6, 'idle');
     loop('room');
-    setTimeout(() => fade(false), 40);
   });
   at(82.0, () => look(tw, cupboard));
 
+  // the dips' way back up, on the scene's clock (R5: they were wall-clock timers, outside the timeline: they ran on
+  // under a pause, and never inside a test's stepped frames, where the picture then read as black from 28.6 s on and
+  // the per-frame checks "while the picture is up" covered only the harbour)
+  for (const tt of [29.04, 62.44, 66.54, 75.26, 81.64]) at(tt, () => fade(false));
   // footsteps while walking: on the boards (house), on the lane (outside)
   const steps = (t0, t1, kind, rate = 2.6) => { let acc = 0; track(t0, t1, (k, tt, dt) => { acc += (dt || 0) * rate; if (acc > 1) { acc = 0; sfx(kind); } }); };
   steps(71.5, 75.0, 'step-wood');

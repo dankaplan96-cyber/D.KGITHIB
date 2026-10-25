@@ -43,6 +43,22 @@ for (const spec of SPECS) {
     return nm;
   }, [cam]);
   const tt = await ev(() => game.cine?.t ?? 0);
+  // in the house: the ceiling's share of the frame (downward-facing surfaces over 2 m) and where Zoé's crown and chin are
+  const m = await ev(async () => {
+    const G = game, R = G.rooms.house, cam = G.camera;
+    if (G.room !== R) return null;
+    const T = await import('three'), rc = new T.Raycaster(); rc.camera = cam; cam.updateMatrixWorld();
+    let down = 0, n = 0;
+    for (let iy = 0; iy < 18; iy++) for (let ix = 0; ix < 32; ix++) {
+      rc.setFromCamera({ x: -1 + (ix + 0.5) / 16, y: 1 - (iy + 0.5) / 9 }, cam); n++;
+      const h = rc.intersectObject(R.group, true).find((x) => x.object.isMesh && x.object.visible && x.object.material.opacity !== 0);
+      if (h && h.face && h.face.normal.clone().transformDirection(h.object.matrixWorld).y < -0.5 && h.point.y > 2.0) down++;
+    }
+    const z = G.npcs.find((x) => x.def.id === 'zoe'), hp = z.rig.j.head.getWorldPosition(new T.Vector3());
+    const crown = hp.clone().add(new T.Vector3(0, 0.26, 0)).project(cam), chin = hp.clone().add(new T.Vector3(0, -0.08, 0)).project(cam);
+    return { ceiling: +(down / n).toFixed(3), zoeCrown: +crown.y.toFixed(2), zoeChin: +chin.y.toFixed(2), zoeX: +crown.x.toFixed(2) };
+  });
+  if (m) console.log('measure', tt.toFixed(2), name, JSON.stringify(m));
   await page.screenshot({ path: path.join(OUT, `p_${tt.toFixed(2).padStart(6, '0')}_${name}.jpg`), type: 'jpeg', quality: 88 });
   console.log('shot', tt.toFixed(2), name);
 }
