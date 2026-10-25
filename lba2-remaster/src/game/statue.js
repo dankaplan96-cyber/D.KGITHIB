@@ -11,7 +11,8 @@
 // Ours: the game's own Twinsen and Zoé models (assets/poly, the character artist's: used as they are, nothing of
 // theirs is changed), posed side by side, his arm round her and the magic ball raised, baked into one static bronze
 // mesh with twelve years of verdigris on the upward faces; a stepped stone plinth, weathered, with moss at its foot and
-// a bronze plaque. One draw per material, merged with the square's other static pieces (engine/drawbatch.js).
+// a bronze plaque. Four draws where it is in view (measured): the figures as one mesh, the plaque, and the plinth's
+// stone and moss each one draw batch (engine/drawbatch.js).
 import * as THREE from 'three';
 import { createCharacter } from './characters.js';
 import { textures } from '../engine/textures.js';
@@ -102,11 +103,10 @@ export function buildStatue(scene, W, x, z, ry) {
   grp.updateMatrixWorld(true);
   const TX = textures(), stoneMap = TX.stone.clone(); stoneMap.needsUpdate = true; stoneMap.wrapS = stoneMap.wrapT = THREE.RepeatWrapping;
   const stone = new THREE.MeshStandardMaterial({ map: stoneMap, color: '#d9d2c4', roughness: 0.92 });
-  const stoneDark = new THREE.MeshStandardMaterial({ map: stoneMap, color: '#b8b0a2', roughness: 0.95 });
   const moss = new THREE.MeshStandardMaterial({ color: '#5f7e3c', roughness: 1 });
   const box = (w, h, d, m, y, ox = 0, oz = 0) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(ox, y, oz); b.castShadow = b.receiveShadow = true; grp.add(b); return b; };
   // the plinth (1.6 × 2.4 m in the original): a broad lower step, the die, a moulded cap
-  box(2.9, 0.34, 2.3, stoneDark, 0.12);
+  box(2.9, 0.34, 2.3, stone, 0.12);   // (one stone material for the whole plinth: one draw batch)
   box(2.45, 0.22, 1.85, stone, 0.4);
   box(2.0, 0.95, 1.45, stone, 0.98);
   box(2.2, 0.16, 1.62, stone, 1.53);
@@ -130,8 +130,17 @@ export function buildStatue(scene, W, x, z, ry) {
   const parts = [bake(tw, fig), bake(zo, fig)];
   fig.remove(tw.root, zo.root);
   const bronzeM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.35 });
-  parts.forEach((pg, i) => { bronzeColors(pg, i * 7.3); const m = new THREE.Mesh(pg, bronzeM); m.castShadow = m.receiveShadow = true; fig.add(m); });
-  let figTop = 0; for (const pg of parts) { pg.computeBoundingBox(); figTop = Math.max(figTop, pg.boundingBox.max.y); }
+  // (the two figures as one mesh: one draw)
+  parts.forEach((pg, i) => bronzeColors(pg, i * 7.3));
+  const both = new THREE.BufferGeometry();
+  for (const name of ['position', 'normal', 'color']) {
+    const arr = new Float32Array(parts.reduce((a, pg) => a + pg.attributes[name].array.length, 0));
+    let o = 0; for (const pg of parts) { arr.set(pg.attributes[name].array, o); o += pg.attributes[name].array.length; }
+    both.setAttribute(name, new THREE.BufferAttribute(arr, 3));
+  }
+  parts.forEach((pg) => pg.dispose());
+  const figs = new THREE.Mesh(both, bronzeM); figs.name = 'statue figures'; figs.castShadow = figs.receiveShadow = true; fig.add(figs);
+  both.computeBoundingBox(); const figTop = both.boundingBox.max.y;
 
   // blocks walking (the plinth's footprint); the camera rises over it as over a house (engine/occlude.js)
   const H = top + figTop;
