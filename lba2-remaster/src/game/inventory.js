@@ -2,6 +2,7 @@
 // painted style (no image files); the journal lists what happened so far,
 // chapter by chapter. Kept compact: one panel, the game paused behind it.
 import { t } from './i18n.js';
+import { keyFor, keyLabel } from '../engine/input.js';
 
 const ICON = 72;
 
@@ -119,16 +120,24 @@ export class Inventory {
     this.el.classList.toggle('hidden', !on);
     if (on) this.render();
   }
+  // the controls line, in the keys the player uses (rebound keys by name) or the pad's buttons (CLAR-2)
+  hint(K) {
+    if (this.game.input?.lastDevice === 'pad') return t('inv_hint_keys', { move: 'D-pad', close: K('pause') });
+    const mv = ['up', 'left', 'down', 'right'].map(K), move = mv.every((s) => s.length === 1) ? mv.join('') : mv.join(' ');
+    const close = [...new Set([K('inventory'), keyLabel(keyFor('pause'))])].join(' / ');
+    return t('inv_hint_keys', { move, close });
+  }
   render() {
     const g = this.game;
+    const K = (a) => g.hud?.key?.(a) ?? keyLabel(keyFor(a));
     const items = this.items();
     const grid = items.map((it, i) => `<button class="inv-item${i === this.sel ? ' sel' : ''}" data-i="${i}"><img src="${itemIcon(it.icon)}" alt=""><span>${t('it_' + it.id)}</span>${it.n != null ? `<em>${it.id === 'ball' ? t('it_level', { n: it.n }) : it.n}</em>` : ''}</button>`).join('');
     const sel = items[this.sel ?? 0];
     const journal = g.story.journal().map((c) => c.lines.length ? `<h3>${c.title}</h3><ul>${c.lines.map((l) => `<li class="${l.done ? 'done' : ''}">${t(l.key)}</li>`).join('')}</ul>` : '').join('');
     this.el.innerHTML = `<div class="inv-panel lba-frame">
-      <section class="inv-items"><h2>${t('inv_title')}</h2><div class="inv-grid">${grid}</div><p class="inv-desc">${sel ? t('itd_' + sel.id) + (USE.has(sel.id) ? ' <b>' + t('it_use_hint') + '</b>' : '') : ''}</p></section>
+      <section class="inv-items"><h2>${t('inv_title')}</h2><div class="inv-grid">${grid}</div><p class="inv-desc">${sel ? t('itd_' + sel.id) + (USE.has(sel.id) ? ' <b>' + t('inv_use', { k: K('interact') }) + '</b>' : '') : ''}</p></section>
       <section class="inv-journal"><h2>${t('journal_title')}</h2><div class="inv-obj">${g.story.objective()}</div>${journal}</section>
-      <div class="inv-hint">${t('inv_hint')}</div></div>`;
+      <div class="inv-hint">${this.hint(K)}</div></div>`;
     this.el.querySelectorAll('.inv-item').forEach((b) => b.addEventListener('click', () => { this.sel = +b.dataset.i; this.render(); }));
   }
   nav(input) {

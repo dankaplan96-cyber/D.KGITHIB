@@ -21,7 +21,7 @@ const measure = () => ev(() => {
   const c = game.renderer.renderer.domElement; out.canvas = [c.clientWidth, c.clientHeight];
   return out;
 });
-for (const [w, h] of [[1920, 1080], [1280, 720], [1024, 768], [800, 600], [640, 360]]) {
+for (const [w, h] of [[1920, 1080], [1366, 768], [1280, 720], [1024, 768], [800, 600], [640, 360]]) {
   await page.setViewportSize({ width: w, height: h });
   await ev(() => { dispatchEvent(new Event('resize')); game.step(0.1); game.renderer.render(); });
   const play = await measure();
@@ -34,11 +34,40 @@ for (const [w, h] of [[1920, 1080], [1280, 720], [1024, 768], [800, 600], [640, 
   // the pause menu
   await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
   const pm = await ev(() => { const r = document.querySelector('#pause .menu').getBoundingClientRect(); return [r.top >= 0 && r.bottom <= innerHeight, Math.round(r.bottom), innerHeight]; });
-  await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
+  // the settings (SETTINGS-UI): each page inside the window with Back, no text cut; closed Advanced: no scrolling;
+  // open Advanced: only the page's own list may scroll (the selected row is kept in view)
+  await page.click('#pause [data-act="settings"]'); await ev(() => game.step(0.05));
+  const sets = [];
+  for (const tab of ['game', 'controls', 'display', 'sound']) {
+    for (const adv of [false, true]) {
+      const m = await ev(([tab, adv]) => {
+        game.setAdv = { [tab]: adv }; game.setTabTo(tab); game.step(0.05);
+        const S = document.querySelector('#settings'), pg = S.querySelector('.set-page.on'), back = S.querySelector('.menu button').getBoundingClientRect(), tabs = S.querySelector('.set-tabs').getBoundingClientRect();
+        const cut = [...S.querySelectorAll('.set-page.on button, .set-page.on .set-label, .set-page.on .set-hint, .set-tabs button, .menu button')].filter((e) => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map((e) => e.textContent);
+        const hasAdv = !!pg.querySelector('.set-adv');
+        return { tab, adv, hasAdv, screenScroll: S.scrollHeight - S.clientHeight, pageScroll: pg.scrollHeight - pg.clientHeight, inside: tabs.top >= 0 && back.bottom <= innerHeight && back.top >= 0, cut };
+      }, [tab, adv]);
+      if (!adv || m.hasAdv) sets.push(m);
+    }
+  }
+  await page.keyboard.press('Escape'); await ev(() => { game.setAdv = {}; game.step(0.1); });   // (Esc in the pause's settings resumes, as before)
+  const bad = sets.filter((m) => !m.inside || m.cut.length || m.screenScroll > 1 || (!m.adv && m.pageScroll > 1));
+  check(`${w}×${h}: settings pages fit with Back, no text cut, no scrolling unless Advanced is open`, !bad.length, bad);
+  check(`${w}×${h}: Esc from the settings resumes play`, await ev(() => game.state === 'play'), await ev(() => game.state));
   check(`${w}×${h}: the canvas fills the window`, Math.abs(play.canvas[0] - w) <= 2 && Math.abs(play.canvas[1] - h) <= 2, play.canvas);
   check(`${w}×${h}: HUD inside the window, no clipped text (in play and in dialogue)`, !play.off.length && !play.clipped.length && !dlg.off.length && !dlg.clipped.length, { play, dlg });
   check(`${w}×${h}: the pause menu fits`, pm[0], pm);
 }
+// reduced motion (the system setting): the menus' and the settings' fire bars hold still
+await page.emulateMedia({ reducedMotion: 'reduce' });
+await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
+const rmPause = await ev(() => getComputedStyle(document.querySelector('#pause .menu button.sel')).animationName);
+await page.click('#pause [data-act="settings"]'); await ev(() => { game.setTabTo('game'); game.menuSel = 1; game.focusMenu(); game.step(0.05); });
+const rmRow = await ev(() => getComputedStyle(document.querySelector('#settings .set-row.sel')).animationName);
+await page.emulateMedia({ reducedMotion: 'no-preference' });
+const rmOff = await ev(() => getComputedStyle(document.querySelector('#settings .set-row.sel')).animationName);
+check('reduced motion: the selected menu entry and settings row don\'t animate (they do without it)', rmPause === 'none' && rmRow === 'none' && rmOff === 'fire', { rmPause, rmRow, rmOff });
+await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);
