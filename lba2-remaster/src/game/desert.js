@@ -154,7 +154,7 @@ export function coastDist(x, z) {
 }
 // keepDist read from the same 2 m grid (the ground asks it twice per point)
 const keepNear = (x, z) => gridAt(true, x, z, 99);
-function trackDist(x, z) {
+export function trackDist(x, z) {   // (the sand tracks; also containers.js keeps off them)
   let d = 1e9;
   for (const p of TRACKS) for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]));
   return d;

@@ -140,9 +140,13 @@ smooth normals is kept.
   (DISKFUNC.CPP), so in the original a bin gives again on every visit; the save keeps the flag and the bonuses lying
   in the current scene (SAVEGAME.CPP). The original's outdoor givers: Citadel 9 (by its baskets, objects 34 and 41
   of CITADEL.OBL), Desert Island ~60, Otringal 20, Knartas 12, the Platform 4, the CX islet 2.
-- Ours (the user's rules): each container gives once ever; its bonus never times out and is kept in the save until
-  taken (`loot`); a heart/flask at a full bar stays on the ground. src/game/containers.js places the outdoor ones at
-  the original's spots (Citadel, Zeelich's islands) and on pieces of our own Zeelich; tests/containers.mjs.
+- Ours (the user's rules): each container gives once per visit (CONTAINERS-2, 2026-10-25: as the original, it fills
+  again after a door, a region change or a shuttle; a clover or key giver still gives once ever); its bonus never
+  times out and is kept in the save until taken (`loot`); a heart/flask at a full bar stays on the ground.
+  src/game/containers.js places the outdoor ones at the original's spots (Citadel's 9; Otringal 9 of its 17 clusters,
+  Knartas 5 of 12, the Platform 2 of 4, the CX islet 2 of 2: scenes 87–90, 99, 107–108, 110, island-centred as
+  (X − centre of the island's cubes) × 1.7122/1024 m), on our own spots by Citadel's houses, market and harbour, on
+  Zeelich's street and on Desert Island (our layout); tests/containers.mjs.
 
 ## Used in the game
 - `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle).

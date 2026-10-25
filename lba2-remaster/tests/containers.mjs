@@ -12,6 +12,11 @@
 //   8. interrupted: a door in the middle of the flight, a save in mid-air, a line of dialogue: it lands and stays
 //   9. death and Retry: the bonus left before the last save is back
 //  10. quest rewards (owed pickups) are untouched; the glint shows on unsearched containers only
+//  11. refill (CONTAINERS-2, the user: "they should refill every time"): within one visit a container stays empty
+//      (90 s, repeated presses); after a region change or a door it is full again (glint, prompt, one more bonus)
+//      while the first bonus still lies there; the house's givers refill too, the clover stump does not; a save
+//      mid-visit keeps the visit; an older save's records of other areas are dropped; three untaken bonuses from one
+//      container keep it shut (no pile-up of full-life hearts)
 // GAME_URL as the other tests.
 import { launch, open, menu, checker, quitAndKeep } from './lib/boot.mjs';
 import fs from 'node:fs';
@@ -64,9 +69,34 @@ const where = await ev(() => {
   const G = game, rc = G.regionContainers || {};
   return { citadel: G.world.containers, kinds: [...new Set(G.world.givers.map((g) => g.kind).filter(Boolean))], regions: Object.fromEntries(Object.entries(rc).map(([k, v]) => [k, v.placed.length])), skipped: Object.values(rc).flatMap((v) => v.skipped) };
 });
-check('Citadel: the original\'s outdoor spots hold a container (bins, barrels, crates, a suitcase trolley), none skipped', where.citadel.placed.length >= 8 && !where.citadel.skipped.length && ['bin', 'barrel', 'crate', 'cases'].every((k) => where.kinds.includes(k)), where);
+check('Citadel: the original\'s spots and ours by the houses, market, corners and harbour hold a container (bins, barrels, crates, suitcases, a trolley), none skipped', where.citadel.placed.length >= 18 && !where.citadel.skipped.length && ['bin', 'barrel', 'crate', 'cases', 'suitcases'].every((k) => where.kinds.includes(k)), where);
 check('Citadel: each stands within 3 m of its spot', where.citadel.placed.every((p) => p.moved <= 3), where.citadel.placed);
-check('Zeelich and its islands have containers', where.regions.zeelich >= 2 && Object.keys(where.regions).filter((k) => k.startsWith('isle_')).length >= 3 && !where.skipped.length, where);
+const isles = Object.entries(where.regions).filter(([k]) => k.startsWith('isle_')).reduce((s, [, n]) => s + n, 0);
+check('Zeelich (6+) and its islands (16+) have containers, none skipped', where.regions.zeelich >= 6 && isles >= 16 && !where.skipped.length, { ...where, isles });
+check('Desert Island has containers by Kesh\'s houses, the camp, the way to the dig and its rim (8+)', where.regions.desert >= 8, where.regions);
+// every outdoor container has a level place beside it where the action searches it (and nothing else answers the key)
+const reach = await ev(() => {
+  const G = game, h = G.hero, bad = [];
+  let n = 0;
+  const areas = [[null, G.world.givers], ...Object.entries(G.rooms).filter(([, R]) => R.outdoor && R.givers?.length).map(([id, R]) => [id, R.givers])];
+  for (const [id, list] of areas) for (const gv of list) {
+    if (!gv.kind) continue;
+    n++;
+    if (id) { if (G.room?.id !== id) G.enterRoom(id, null, true); } else if (G.room) G.exitRoom({ x: -42, z: -4 }, true);
+    let ok = false;
+    for (let k = 0; k < 16 && !ok; k++) {
+      const a = (k * Math.PI) / 8, d = gv.r - 0.35, x = gv.x + Math.sin(a) * d, z = gv.z + Math.cos(a) * d;
+      const y = G.physics.groundAt(x, z, (gv.y ?? h.pos.y) + 0.6), g0 = gv.y ?? G.physics.groundAt(gv.x, gv.z, y + 0.6);
+      if (G.physics.blockedAt(x, z, y, 0.35) || Math.abs(y - g0) > 0.3) continue;
+      h.pos.set(x, y, z); h.vel.set(0, 0); h.vy = 0; h.onGround = true; G.lastSafe = { x, z }; G.step(0.05);
+      ok = G.giverInReach()?.id === gv.id && !G.findInteractable();
+    }
+    if (!ok) bad.push((id || 'citadel') + ':' + gv.id);
+  }
+  C.out();
+  return { n, bad };
+});
+check('every outdoor container can be reached and searched', reach.n >= 50 && !reach.bad.length, reach);
 
 // ---------------------------------------------------------------- 2./3. pop, land, stay, take by walking
 const pop = await ev(() => {
@@ -163,7 +193,7 @@ const region = await ev(() => {
   G.enterRoom('zeelich', null, true); P.settle(); G.step(0.5);
   const away = C.loot().find((p) => p.k === b.k);
   // search one of Zeelich's, leave its bonus there
-  const zg = G.givers()[G.givers().length - 1]; C.standBy(zg.id); C.hopHeart(); G.step(2);
+  const zg = G.givers().find((g) => g.id === 'z-yard-barrels'); C.standBy(zg.id); C.hopHeart(); G.step(2);   // (life or magic only: a heart, which stays)
   const zb = C.loot().find((p) => p.w === 'zeelich');
   G.exitRoom({ x: -108, z: 95 }, true); P.settle(); G.step(0.3);
   const back = C.loot().find((p) => p.k === b.k), zOut = C.loot().find((p) => p.k === zb?.k);
@@ -231,13 +261,115 @@ const quest = await ev(() => {
   return { owed, inLoot: inLoot === G.lootSnapshot().length, gained: h.coins - c0, left: G.flags.t_owe || 0 };
 });
 check('a quest reward (owed pickups) is not container loot and still settles its debt', quest.owed === 2 && quest.inLoot && quest.gained === 2 && quest.left === 0, quest);
+// (frames of 120 in which a glint shows over giver `id` of this area, Twinsen 3 m off it)
+await ev(() => { C.seen = (id) => { const G = game, gv = G.givers().find((g) => g.id === id); C.standBy(id); G.hero.pos.x += 3; G.step(0.6); let v = 0; for (let i = 0; i < 120; i++) { G.step(1 / 30); if (G.cues.sprites.some((s) => s.visible && Math.hypot(s.position.x - gv.x, s.position.z - gv.z) < 0.5)) v++; } return v; }; });
 const glint = await ev(() => {
-  const G = game, seen = (id) => { C.standBy(id); const h = G.hero; h.pos.x += 3; G.step(0.6); let v = 0; for (let i = 0; i < 120; i++) { G.step(1 / 30); if (G.cues.sprites.some((s) => s.visible && Math.hypot(s.position.x - G.givers().find((g) => g.id === id).x, s.position.z - G.givers().find((g) => g.id === id).z) < 0.5)) v++; } return v; };
+  const G = game;
   G.exitRoom({ x: -42, z: -4 }, true); P.settle();
-  const fresh = G.givers().find((g) => !G.giverTaken(g));   // (the house's barrels, the shop's: this test searched all the new ones)
-  return { fresh: fresh?.id, unsearched: fresh ? seen(fresh.id) : -1, searched: seen('c-path-bin') };
+  const fresh = G.givers().find((g) => !G.giverTaken(g) && g.kind);
+  C.standBy('c-path-bin'); C.hopHeart(); G.step(1);   // (searched in this visit)
+  return { fresh: fresh?.id, unsearched: fresh ? C.seen(fresh.id) : -1, searched: C.seen('c-path-bin') };
 });
 check('a glint twinkles over an unsearched container, none over a searched one', glint.unsearched > 0 && glint.searched === 0, glint);
+
+// ---------------------------------------------------------------- 11. refill (CONTAINERS-2: as in LBA2, a container gives
+// again on each visit to its area: a door, a region change, a shuttle; never twice in one visit, however long)
+const visit = await ev(() => {
+  const G = game, h = G.hero, id = 'c-path-bin', gv = G.givers().find((g) => g.id === id);
+  const first = C.loot().filter((p) => p.k.startsWith('giver:out:' + id));   // (the heart from just above, left lying)
+  // still in the same visit: walk away, let 90 s pass, come back, press Space/E again and again
+  C.away(6); for (let i = 0; i < 90; i++) G.step(1);
+  C.standBy(id); G.step(0.6); const pr = C.prompt();
+  let spawned = 0; const sp = G.pickups.spawn; G.pickups.spawn = function (...a) { spawned++; return sp.apply(this, a); };
+  for (let i = 0; i < 10; i++) P.tap(i % 2 ? 'Space' : 'KeyE', 0.05);
+  G.step(1); G.pickups.spawn = sp;
+  return { first: first.map((p) => p.k), taken: G.giverTaken(gv), pr, spawned, glint: C.seen(id) };
+});
+check('within one visit a searched container stays empty: 90 s later, 10 presses, no bonus, no prompt, no glint', visit.first.length === 1 && visit.taken && visit.spawned === 0 && !/Search/.test(visit.pr) && visit.glint === 0, visit);
+const back = await ev(() => {
+  const G = game, h = G.hero, id = 'c-path-bin';
+  const lying = C.loot().filter((p) => p.k.startsWith('giver:out:' + id));
+  // a region change (the ferry to Zeelich) and back
+  G.enterRoom('zeelich', null, true); P.settle(); G.step(0.5);
+  const away = { searchedHere: G.searched.filter((k) => k.startsWith('giver:out:')) };
+  G.exitRoom({ x: -60, z: 30 }, true); P.settle(); G.step(0.3);
+  const gv = G.givers().find((g) => g.id === id), refilled = !G.giverTaken(gv);
+  const glint = C.seen(id);
+  C.standBy(id); G.step(0.6); const pr = C.prompt();
+  h.hp = h.maxHp; h.mp = h.mpMax; h.coins = 99; const rnd = Math.random; Math.random = () => 0.4;
+  let spawned = 0; const sp = G.pickups.spawn; G.pickups.spawn = function (...a) { spawned++; return sp.apply(this, a); };
+  for (let i = 0; i < 6; i++) P.tap(i % 2 ? 'Space' : 'KeyE', 0.05);
+  G.step(2); G.pickups.spawn = sp; Math.random = rnd;
+  const now = C.loot().filter((p) => p.k.startsWith('giver:out:' + id));
+  return { lying, away, refilled, glint, pr, spawned, now, still: lying.every((a) => now.some((b) => b.k === a.k && Math.hypot(a.x - b.x, a.z - b.z) < 0.05)) };
+});
+check('away in another region, the Citadel containers are no longer marked searched', back.away.searchedHere.length === 0, back.away);
+check('back on Citadel the container is full again: the glint and the "Search" prompt are back', back.refilled && back.glint > 0 && /Search$/.test(back.pr), back);
+check('...it gives one more bonus (mashing: one), and the first one still lies where it fell', back.spawned === 1 && back.now.length === 2 && back.still && back.now.some((p) => p.k.endsWith('#2')), back);
+// a door: into Twinsen's house and out again, by walking (the player's way), then the same container
+const door = await ev(() => {
+  const G = game, h = G.hero, id = 'c-path-bin';
+  const d = G.story.doors().find((q) => !q.region && q.room === 'house');
+  let how = 'walk';
+  if (d) { P.go(d.x, d.z, { tol: 0.2, maxT: 90 }); for (let i = 0; i < 90 && G.room?.id !== 'house'; i++) G.step(0.1); }
+  if (G.room?.id !== 'house') { how = 'enterRoom'; G.enterRoom('house', null, true); }
+  P.settle(); G.step(0.5);
+  const inHouse = G.room?.id;
+  const ex = G.room.exits.find((e) => !e.room);
+  if (ex) { P.go(ex.x, ex.z, { tol: 0.2, maxT: 60 }); for (let i = 0; i < 90 && G.room; i++) G.step(0.1); }
+  if (G.room) { how += '+exitRoom'; G.exitRoom({ x: -60, z: 30 }, true); }
+  P.settle(); G.step(0.5);
+  const gv = G.givers().find((g) => g.id === id);
+  return { how, inHouse, out: !G.room, refilled: !G.giverTaken(gv) };
+});
+check('through a door and back: the container is full again', door.inHouse === 'house' && door.out && door.refilled, door);
+console.log('the door round trip went by:', door.how);
+// the house's own givers (interiors) refill the same way; a clover giver (the stump) still gives once ever
+const rooms = await ev(() => {
+  const G = game, h = G.hero;
+  G.enterRoom('house', null, true); P.settle();
+  const ids = G.room.givers.map((g) => g.id);
+  h.coins = 0; C.standBy('dresser'); C.hop(); G.step(1); const t1 = G.giverTaken(G.room.givers.find((g) => g.id === 'dresser'));
+  G.exitRoom({ x: -60, z: 30 }, true); P.settle(); G.enterRoom('house', null, true); P.settle();
+  const t2 = G.giverTaken(G.room.givers.find((g) => g.id === 'dresser'));
+  G.exitRoom({ x: -60, z: 30 }, true); P.settle();
+  // (the stump stands on a rise the stand-by helper can't level with: its record is set as giverHop sets it)
+  const stump = G.world.givers.find((g) => g.id === 'stump');
+  G.searched.push(G.giverKey(stump)); const s1 = G.giverTaken(stump);
+  G.enterRoom('zeelich', null, true); P.settle(); G.exitRoom({ x: -60, z: 30 }, true); P.settle();
+  return { ids, t1, t2, once: G.giverOnce(stump), s1, s2: G.giverTaken(stump) };
+});
+check('the house keeps its givers, and they refill on the next visit too', rooms.ids.length >= 4 && rooms.t1 && !rooms.t2, rooms);
+check('the clover stump\'s record survives a region change (gives once ever)', rooms.once && rooms.s1 && rooms.s2, rooms);
+// a save in the middle of a visit: loaded, the visit goes on (searched stays searched); an older save's keys of
+// other areas (and the old per-container record) are dropped
+const saved = await ev(() => {
+  const G = game, id = 'c-path-bin', gv = () => G.givers().find((g) => g.id === id);
+  C.standBy(id); C.hopHeart(); G.step(1); const t0 = G.giverTaken(gv());
+  G.save(false);
+  const key = Object.keys(localStorage).find((k) => /save/.test(k) && !/backup|unreadable|settings/.test(k));
+  const s = JSON.parse(localStorage.getItem(key));
+  G.startContinue(); P.settle(); G.step(0.5);
+  const t1 = G.giverTaken(gv());
+  // an older save (CONTAINERS: searched forever): Citadel's, the house's, Zeelich's, an island's keys
+  s.searched = [...s.searched, 'giver:house:dresser', 'giver:zeelich:z-pier-crates', 'giver:isle_otringal:otringal-c1', 'giver:out:c-west-bin', 'locker1'];
+  localStorage.setItem(key, JSON.stringify(s));
+  G.startContinue(); P.settle(); G.step(0.5);
+  return { t0, t1, room: G.room?.id || 'out', searched: G.searched.filter((k) => k.startsWith('giver:') || k === 'locker1'), state: G.state };
+});
+check('a save mid-visit: after loading, the container searched before the save stays searched', saved.t0 && saved.t1, saved);
+check('an older save loads: other areas\' giver keys are dropped, this area\'s and story searches kept', saved.state === 'play' && saved.room === 'out' && !saved.searched.some((k) => /giver:(house|zeelich|isle_)/.test(k)) && saved.searched.includes('giver:out:c-west-bin') && saved.searched.includes('locker1'), saved);
+// hearts left at full life don't pile up: with three of its bonuses lying, a container stays shut until one is taken
+const pile = await ev(() => {
+  const G = game, h = G.hero, id = 'c-path-bin', lying = () => C.loot().filter((p) => p.k.startsWith('giver:out:' + id + '#') || p.k === 'giver:out:' + id).length;
+  const trip = () => { G.enterRoom('zeelich', null, true); P.settle(); G.exitRoom({ x: -60, z: 30 }, true); P.settle(); return !G.giverTaken(G.givers().find((g) => g.id === id)); };
+  const trips = [];
+  for (let t = 0; t < 4; t++) { const open = trip(); if (open) { C.standBy(id); C.hopHeart(); G.step(2); C.away(5); } trips.push({ open, lying: lying() }); }
+  h.hp = 2; const k = C.loot().find((p) => p.k.startsWith('giver:out:' + id)).k; C.walkTo(k); h.hp = h.maxHp;
+  const afterTake = lying(), reopen = trip();
+  return { trips, afterTake, reopen };
+});
+check('no pile-up: a container with 3 bonuses lying stays shut (no prompt, no glint); one or more taken, it gives again on the next visit', pile.trips.every((t) => t.lying <= 3) && pile.trips.some((t) => !t.open && t.lying === 3) && pile.afterTake < 3 && pile.reopen, pile);
 
 console.log('first presses that searched nothing (pressed again):', JSON.stringify(await ev(() => C.misses || [])));
 fs.rmSync(keepFile, { force: true });

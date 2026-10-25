@@ -2571,6 +2571,21 @@ export function luggageTrolley(k, { seed = 1, load = 3 } = {}) {
   }
   return { hw: 0.56, hd: 0.33, top: Math.max(0.98, y) };
 }
+// ---- suitcases left on the ground (CONTAINERS-2): two or three of the trolley's cases stacked, the same paints
+export function suitcaseStack(k, { seed = 1, n = 2 } = {}) {
+  const r = rng(seed * 11 + 5);
+  let y = 0;
+  for (let i = 0; i < n; i++) {
+    const w = 0.72 - i * 0.12 + r() * 0.05, h = 0.22 + r() * 0.06, d = 0.46 - i * 0.05, c = CASES[Math.floor(r() * CASES.length)], ry = (r() - 0.5) * 0.35;
+    k.at((r() - 0.5) * 0.06, y, (r() - 0.5) * 0.04, ry, () => {
+      pv(k, rbox(w, h, d, 0.045), c, 0, h / 2, 0);
+      for (const sx of [-1, 1]) k.add(rbox(0.05, h + 0.012, d + 0.012, 0.01), MAT.flat('#5a3a22', 0.8), sx * w * 0.25, h / 2, 0);
+      k.add(torus(0.05, 0.012, 4, 10, Math.PI), MAT.brass(), 0, h, 0);
+    });
+    y += h;
+  }
+  return { hw: 0.4, hd: 0.27, top: y };
+}
 
 // ---- waiting bench: painted cast ends with armrests, three seat slats, two back slats; the sitter faces +z
 export function waitingBench(k, { w = 1.8, color = SFC.blue, pal = 'honey' } = {}) {
