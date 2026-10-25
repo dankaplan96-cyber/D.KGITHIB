@@ -8,6 +8,7 @@
 const { app, BrowserWindow, protocol, ipcMain, Menu, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs/promises');
+const fsSync = require('node:fs');
 
 const GAME = path.join(__dirname, 'game');
 const TYPES = {
@@ -39,15 +40,28 @@ async function serve(request) {
   }
 }
 
+// the game opens fullscreen (the user: "not F11 every time"); leaving it with F11 / Alt+Enter is remembered for
+// the next start (window.json in the app-data folder). --windowed on the command line opens a window once
+const WINDOW_PREFS = () => path.join(app.getPath('userData'), 'window.json');
+function readFullscreen() {
+  if (process.argv.includes('--windowed')) return false;
+  try { return JSON.parse(fsSync.readFileSync(WINDOW_PREFS(), 'utf8')).fullscreen !== false; } catch { return true; }
+}
+function rememberFullscreen(on) {
+  try { fsSync.writeFileSync(WINDOW_PREFS(), JSON.stringify({ fullscreen: !!on })); } catch { /* read-only profile: start fullscreen again */ }
+}
+
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1280, height: 720, minWidth: 800, minHeight: 450,
+    width: 1280, height: 720, minWidth: 800, minHeight: 450, fullscreen: readFullscreen(),
     backgroundColor: '#000000', title: 'LBA3: The Awakening', autoHideMenuBar: true, show: false,
     icon: path.join(__dirname, 'game', 'icon.png'),
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: true, backgroundThrottling: false },
   });
   Menu.setApplicationMenu(null);
   win.once('ready-to-show', () => win.show());
+  win.on('enter-full-screen', () => rememberFullscreen(true));
+  win.on('leave-full-screen', () => rememberFullscreen(false));
   // F11 / Alt+Enter: fullscreen; Ctrl+Shift+I: developer tools
   win.webContents.on('before-input-event', (e, input) => {
     if (input.type !== 'keyDown') return;
