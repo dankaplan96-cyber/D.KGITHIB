@@ -795,6 +795,9 @@ context suspended, the subtitle stayed up, the line ended at its time after resu
 Regressions on this branch (after merging origin e87209b; :8181, one at a time, 2026-10-25): opening ALL PASSED (27),
 prologue to its end (rc 0, chapter 1, "Go home and tell Zoé"), house ALL PASSED, stability ALL PASSED (16), transitions
 ALL PASSED (6).
+After merging origin 843e3a5 (VOICE-LEN: voice.js queues the syllables the typing gets ahead by; the scene runner now
+pumps them while a line is up, as the dialogue box does): opening ALL PASSED (27), voices ALL PASSED (24), and the
+real-time run again (5.1 fps): the same syllable counts and timing per line (none queued in the opening's lines).
 
 Not verified: the sound by ear (voices, effects, the cue against the picture); a real GPU and display; normal-speed
 real-time playback (5–7 fps here); an independent visual review. Known: the stance foot's slide while walking (rig

@@ -75,3 +75,7 @@ ending [ 'cutscene', true ]
 chapter [ 1, true ]
 after [ 'play', 'outdoor', [ -40.2, 2.2, -5.6 ], 'Go home and tell Zoé' ]
 save {"room":null,"flags":19,"ball":true}
+opening rc=0 599s 27 pass 0 fail | ALL PASSED
+voices rc=0 84s 24 pass 0 fail | ALL PASSED
+done 681 frames no errors
+suite2-done
