@@ -1,0 +1,81 @@
+ANIM-COMBAT regressions, one browser at a time against the worktree served on :8180 (SwiftShader, load average 8-16).
+Run 1 (0c3a0d6: the work merged with origin after CAM-2):
+=== anim-combat 05:26:15
+exit 0
+no errors
+ALL PASSED
+=== combat 05:28:15
+exit 0
+no errors
+ALL PASSED
+=== controls 05:29:59
+exit 0
+no errors
+ALL PASSED
+=== deaths 05:36:59
+exit 0
+no errors
+ALL PASSED
+=== arsenal 05:39:14
+exit 0
+no errors
+ALL PASSED
+=== stability 05:57:46
+exit 0
+no errors
+ALL PASSED
+=== opening 05:59:28
+exit 0
+no errors
+ALL PASSED
+=== chapter1 06:09:49
+exit 0
+no errors
+=== camsteady 06:12:14 (cut off by the session stop; run again in run 2)
+
+Run 2 (after the late rig edits: the overheads' contact key, no target look while talking; same merge):
+=== anim-combat 06:26:44
+exit 0
+no errors
+ALL PASSED
+=== combat 06:28:09
+exit 0
+no errors
+ALL PASSED
+=== camsteady 06:29:42
+exit 0
+no errors
+ALL PASSED
+=== zoe-resume 06:33:33
+exit 1
+FAIL Continue: Zoé finds the plan again and gets out; the chapter goes on {"room":"citadel","ball":true,"beh":"normal","f":{"zoeStart":false,"plan":false},"searched":[],"obj":"Meet Zoé at the station gate","outside":true,"talk":{"r":"talked","to":"zoe","state":"play","lines":8},"body2":"zoe","room2":"projoffice","lockersOffered":["locker2","locker1","locker3"],"sn0":{"r":"arrived","t":18.900000000000098},"use0":{"r":"used","target":{"kind":"locker","id":"p_search","label":"p_search"},"state":"play","lines":6},"plan2":true,"sneakOut":{"r":"state:dialog","t":11.266666666666637},"exit":{"r":"state:dialog","from":"projoffice","to":"projoffice"},"final":{"state":"play","
+no errors
+1 FAILED
+=== jetpack 06:36:28
+exit 0
+no errors
+ALL PASSED
+=== all done
+=== zoe-resume 06:50:14
+exit 0
+no errors
+ALL PASSED
+=== all done
+
+zoe-resume, run 2 first try (Zoé caught while sneaking out under load; STATE records the same flake under SRC-2); passed on the rerun above:
+FAIL Continue: Zoé finds the plan again and gets out; the chapter goes on {"room":"citadel","ball":true,"beh":"normal","f":{"zoeStart":false,"plan":false},"searched":[],"obj":"Meet Zoé at the station gate","outside":true,"talk":{"r":"talked","to":"zoe","state":"play","lines":8},"body2":"zoe","room2"
+
+chapter1 (run 1) ends: vesk gone [ true, false ] | radio [ true, 'Talk to Doran at the harbour' ] | doran [ true, 'Meet Doran at the spaceport', '-2.7', '42.1' ] | end [ 'play', 'zeelich', 'zeelich' ] | no errors
+
+tests/anim-combat.mjs MEASURE lines (run 2):
+MEASURE throw 30 fps {"fps":30,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.701,"up":1.745,"side":-0.352}},"freeAt":0.4,"backStep":null,"backFootCm":0,"maxLegStep60":0.273,"maxArmStep60":0.883,"nan":false}
+MEASURE throw 60 fps {"fps":60,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.584,"up":1.808,"side":-0.421}},"freeAt":0.383,"backStep":null,"backFootCm":0,"maxLegStep60":0.36,"maxArmStep60":0.738,"nan":false}
+MEASURE throw 120 fps {"fps":120,"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.461,"up":1.859,"side":-0.436}},"freeAt":0.375,"backStep":null,"backFootCm":0,"maxLegStep60":0.517,"maxArmStep60":0.587,"nan":false}
+MEASURE throw on the move (walking) {"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.055,"up":1.852,"side":-0.498},"legs":"walk"},"nan":false}
+MEASURE throw on the move (sideways, locked) {"shot":{"clock":0.1667,"fromHand":0.08,"hand":{"fwd":0.141,"up":1.862,"side":-0.49},"legs":"walk"},"nan":false}
+MEASURE slash1 30 fps {"fps":30,"s":0.11,"a":0.1,"hitAt":0.1667,"yawFirst":2.13,"yawLast":-0.98,"yaws":[2.13,0.45,0.37,0.29,-0.98],"plantedGlideCm":7.7,"nan":false}
+MEASURE slash1 60 fps {"fps":60,"s":0.11,"a":0.1,"hitAt":0.15,"yawFirst":2.98,"yawLast":-0.79,"yaws":[2.98,2.36,1.5,1.44,1.38,1.31,0.47,-0.22,-0.79],"plantedGlideCm":5.1,"nan":false}
+MEASURE slash1 120 fps {"fps":120,"s":0.11,"a":0.1,"hitAt":0.15,"yawFirst":3.05,"yawLast":-0.69,"yaws":[3.05,2.82,2.5,2.11,1.67,1.64,1.6,1.56,1.52,1.49,1.45,1.01,0.6,0.24,-0.1,-0.41,-0.69],"plantedGlideCm":4.8,"nan":false}
+MEASURE jab {"s":0.07,"a":0.08,"r":0.17,"reachFwd":0.84,"at":0.15}
+MEASURE interruptions {"hitInCoil":{"anim":"hurt","over":false,"ball":"idle","launched":0,"later":"idle","ballLater":"idle","busy":false,"nan":false},"deathInCharge":{"dead":true,"anim":"dead","ball":"idle","launched":0,"nan":false},"pause":{"frozen":true,"launched":0,"anim":"idle","ball":"idle","over":false,"nan":false},"dialogue":{"inTalk":"talk","after":"idle","busy":false,"nan":false},"swap":{"weapon":"ball","anim":"idle","busy":false,"sword":false,"nan":false},"mash":{"anim":"idle","busy":false,"ball":"idle","launched":0,"over":false,"nan":false},"scene":{"anim":"idle","ball":"idle","launched":0,"over":false,"nan":false,"feetW":1}}
+MEASURE stance {"calm":{"guard":false,"w":0},"locked":{"guard":true,"w":0.98,"headY":0.86},"after":{"guard":false,"w":0.01}}
