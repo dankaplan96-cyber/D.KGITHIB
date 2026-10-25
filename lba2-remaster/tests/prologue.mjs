@@ -67,8 +67,9 @@ await ev(() => { const w = game.world.well; T.tp(w.x - 2.2, w.z, Math.PI / 2); T
 is('down the well', await ev(() => [game.state, game.room?.id, game.flags.inWell]), (v) => v[0] === 'play' && v[1] === 'well' && v[2] === true);
 await shot('P7-cave.png');
 // fight a mite with the ball
+// (16 tries a mite: a wandering mite dodged all 8 once in four runs, 25.10)
 // (the well's own mites only: G.enemies holds every chapter's enemies, and teleporting to those elsewhere left the well)
-const mites = await ev(() => { const G = game, h = G.hero; h.hp = 10; let kills = 0; const well = G.enemies.filter((m) => /^mite\d+$/.test(m.def.id)); for (const m of well) { for (let i = 0; i < 8 && m.alive; i++) { h.pos.set(m.pos.x - 4, 0, m.pos.z); h.angle = h.angleTo(m) + (i % 3 - 1) * 0.3; G.ball.state = 'idle'; T.tap('KeyF'); G.step(0.9); h.hp = 10; } if (!m.alive) kills++; } return [kills, well.length, G.room?.id]; });
+const mites = await ev(() => { const G = game, h = G.hero; h.hp = 10; let kills = 0; const well = G.enemies.filter((m) => /^mite\d+$/.test(m.def.id)); for (const m of well) { for (let i = 0; i < 16 && m.alive; i++) { h.pos.set(m.pos.x - 4, 0, m.pos.z); h.angle = h.angleTo(m) + (i % 3 - 1) * 0.3; G.ball.state = 'idle'; T.tap('KeyF'); G.step(0.9); h.hp = 10; } if (!m.alive) kills++; } return [kills, well.length, G.room?.id]; });
 is("the well's mites beaten with the ball", mites, (v) => v[1] > 0 && v[0] === v[1] && v[2] === 'well');
 // wake the nodes
 const nodes = await ev(() => { const G = game, h = G.hero; const out = []; for (const n of G.room.nodes) { for (let i = 0; i < 12 && !n.lit; i++) { const a = i * 0.52, r = 3 + (i % 3); h.pos.set(n.x - Math.cos(a) * r, 0, n.z - Math.sin(a) * r); h.onGround = true; h.angle = Math.atan2(n.x - h.pos.x, n.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); } out.push(n.lit); } G.step(1.5); return [out, G.flags.nodes, G.rooms.well.barrier.c.enabled]; });
