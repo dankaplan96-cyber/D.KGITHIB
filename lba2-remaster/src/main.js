@@ -940,7 +940,8 @@ class Game {
     const key = this.giverKey(gv);
     this.searched.push(key);
     const y = (gv.y ?? this.physics.groundAt(gv.x, gv.z, this.hero.pos.y + 1)) + (gv.top ?? 1);
-    this.giveBonus(gv.kinds, gv.n || 1, gv.x, y, gv.z, this.hero.pos, { loot: key });
+    // (from: it leaves the container's own collider before walls count, or it would drop back inside it)
+    this.giveBonus(gv.kinds, gv.n || 1, gv.x, y, gv.z, this.hero.pos, { loot: key, from: { x: gv.x, z: gv.z, r: Math.max(0.3, gv.r - 1.0) } });
     return true;
   }
   whichBonus(kinds) {

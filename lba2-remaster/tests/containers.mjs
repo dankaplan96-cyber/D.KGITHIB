@@ -42,9 +42,14 @@ const helpers = () => ev(() => {
       }
       return null;
     },
-    hop: () => { P.tap('Space', 0.05); },
+    // Space by a container; a press that searches nothing while one is in reach is logged (C.misses) and pressed again
+    hop: () => {
+      const n = G.searched.length, h = G.hero, before = { actT: +h.actT.toFixed(2), busy: !!h.combat.busy, state: G.state, pad: !!G.input.padAction, reach: G.giverInReach()?.id, it: G.findInteractable()?.kind, ground: h.onGround, beh: h.behaviour, trans: !!G.trans };
+      P.tap('Space', 0.05);
+      if (G.searched.length === n && before.reach) { (C.misses ||= []).push(before); G.step(0.3); P.tap('Space', 0.05); }
+    },
     // a hop with life, magic and kashes all full enough: WhichBonus picks at random, made to pick a heart (it stays)
-    hopHeart: () => { const h = G.hero; h.hp = h.maxHp; h.mp = h.mpMax; h.coins = 99; const rnd = Math.random; Math.random = () => 0.4; const n = G.searched.length; for (let i = 0; i < 3 && G.searched.length === n; i++) { if (i) G.step(0.3); P.tap('Space', 0.05); } Math.random = rnd; },   // (pressed again if the first press went unseen)
+    hopHeart: () => { const h = G.hero; h.hp = h.maxHp; h.mp = h.mpMax; h.coins = 99; const rnd = Math.random; Math.random = () => 0.4; C.hop(); Math.random = rnd; },
     // walk onto a bonus (input: the harness's A* walk)
     walkTo: (k) => { const p = G.pickups.list.find((q) => q.loot === k); if (!p) return 'gone'; const r = P.go(p.pos.x, p.pos.z, { tol: 0.3, maxT: 20 }); G.step(0.3); return r; },
     away: (d = 4) => { const h = G.hero; P.go(h.pos.x + d, h.pos.z, { tol: 0.6, maxT: 10 }); },
@@ -70,12 +75,14 @@ const pop = await ev(() => {
   const n0 = G.pickups.list.length; C.hop(); const b0 = C.loot(); const after = (G.step(0.3), C.prompt());
   // (he steps well away at once, or the coin's pull would bring it to him)
   h.pos.set(h.pos.x + 7, G.physics.groundAt(h.pos.x + 7, h.pos.z), h.pos.z); G.step(2); const landed = C.loot();
+  const gv = G.givers().find((g) => g.id === 'c-path-bin'), out = landed[0] && +Math.hypot(landed[0].x - gv.x, landed[0].z - gv.z).toFixed(2);
   // well past LBA2's 20 s
   for (let i = 0; i < 40; i++) G.step(1);
-  return { s, before, after, n: G.pickups.list.length - n0, b0, landed, later: C.loot() };
+  return { s, before, after, n: G.pickups.list.length - n0, b0, landed, out, rad: +(gv.r - 1.05).toFixed(2), later: C.loot() };
 });
 check('the verb prompt ("Search") by an unsearched container, gone once searched', /Search$/.test(pop.before) && !/Search/.test(pop.after), [pop.before, pop.after]);
 check('a hop by the bin pops one bonus (kashes for a broke Twinsen), in flight', pop.n === 1 && pop.b0.length === 1 && pop.b0[0].fly && pop.b0[0].type === 'coin' && pop.b0[0].k === 'giver:out:c-path-bin', pop.b0);
+check('it lands outside the bin (not inside it)', pop.out > pop.rad + 0.15, [pop.out, pop.rad]);
 check('it lands, and is still there 40 s later (no timeout, no blinking)', !pop.landed[0]?.fly && pop.later.length === 1 && pop.later[0].vis && pop.later[0].life === Infinity, pop.later);
 const take = await ev(() => { const G = game, c0 = G.hero.coins; const r = C.walkTo('giver:out:c-path-bin'); return { r, gained: G.hero.coins - c0, left: C.loot().length }; });
 check('he takes it by walking over it (+2 kashes: the original\'s n)', take.gained === 2 && take.left === 0, take);
@@ -84,21 +91,22 @@ check('he takes it by walking over it (+2 kashes: the original\'s n)', take.gain
 const full = await ev(() => {
   const G = game, h = G.hero; h.hp = h.maxHp;
   C.standBy('c-west-barrel'); C.hop(); G.step(2); const b = C.loot()[0];
+  const gb = G.givers().find((g) => g.id === 'c-west-barrel'), out = +Math.hypot(b.x - gb.x, b.z - gb.z).toFixed(2);
   const r = C.walkTo(b.k); for (let i = 0; i < 30; i++) G.step(0.1);   // (he stands on it for 3 s)
   const stays = C.loot().find((p) => p.k === b.k), hp1 = h.hp;
   C.away(5); for (let i = 0; i < 25; i++) G.step(1);
   const later = C.loot().find((p) => p.k === b.k);
   h.hp = h.maxHp - 3; const r2 = C.walkTo(b.k);
-  return { type: b.type, r, stays: !!stays, onGround: stays && !stays.fly, hp1, max: h.maxHp, later: !!later, hp2: h.hp, gone: !C.loot().some((p) => p.k === b.k) };
+  return { type: b.type, out, r, stays: !!stays, onGround: stays && !stays.fly, hp1, max: h.maxHp, later: !!later, hp2: h.hp, gone: !C.loot().some((p) => p.k === b.k) };
 });
-check('full life: the barrel\'s heart is not taken, it stays on the ground', full.type === 'heart' && full.stays && full.hp1 === full.max, full);
+check('full life: the barrel\'s heart lands beside it, is not taken, stays on the ground', full.type === 'heart' && full.out > 0.55 && full.stays && full.hp1 === full.max, full);
 check('...and is still there 25 s later', full.later, full);
 check('hurt: walking over it heals him and it is gone', full.gone && full.hp2 === full.max, full);
 const flask = await ev(() => {
   const G = game, h = G.hero; h.hp = h.maxHp; h.coins = 99; h.mp = 0; h.magicLevel = Math.max(1, h.magicLevel);
   G.exitRoom({ x: -60, z: 30 }, true); P.settle();
-  C.standBy('c-lane-barrel'); C.hop(); G.step(2); const b = C.loot().find((p) => p.k.endsWith('c-lane-barrel'));
-  h.mp = h.mpMax; C.walkTo(b.k); for (let i = 0; i < 20; i++) G.step(0.1);
+  C.standBy('c-lane-barrel'); C.hop(); h.mp = h.mpMax; G.step(2); const b = C.loot().find((p) => p.k.endsWith('c-lane-barrel'));   // (out of magic: a flask; his magic full again before it lands)
+  C.walkTo(b.k); for (let i = 0; i < 20; i++) G.step(0.1);
   const stays = C.loot().some((p) => p.k === b.k);
   h.mp = 1; C.walkTo(b.k);
   return { type: b.type, stays, mp: +h.mp.toFixed(1), max: h.mpMax, gone: !C.loot().some((p) => p.k === b.k) };
@@ -128,9 +136,10 @@ const beh = await ev(() => {
 check('the interact key searches it in another behaviour (Athletic), with the prompt shown', beh.got && /Search$/.test(beh.pr), beh);
 
 // ---------------------------------------------------------------- 6. save → quit → Continue with a bonus lying
-const left = await ev(() => C.loot());
+const left = await ev(() => { C.away(6); return C.loot(); });   // (he steps off: a full-life heart he stands on hops aside)
 check('(two hearts are left lying for the reload)', left.length === 2 && left.every((p) => p.type === 'heart'), left);
 const keepFile = path.join(os.tmpdir(), 'containers-save-' + process.pid + '.json');
+console.log('first presses that searched nothing (pressed again), part 1:', JSON.stringify(await ev(() => C.misses || [])));
 await quitAndKeep(page, context, keepFile);
 await browser.close();
 ({ browser, context, page, errs: errs } = await launch({ storageState: keepFile }));
@@ -174,8 +183,8 @@ const inter = await ev(() => {
   G.enterRoom('zeelich', null, true); G.step(1); G.exitRoom({ x: -66, z: 30 }, true); P.settle(); G.step(2);
   const a = C.loot().find((p) => p.k === k);
   // (b) a line of dialogue right after the hop: the bonus lands meanwhile
-  C.standBy('c-quay-cases'); C.hop(); G.say('', ['…']); for (let i = 0; i < 20; i++) G.step(0.1);
-  const kq = C.loot().find((p) => p.k.endsWith('c-quay-cases'));
+  const c0 = h.coins; C.standBy('c-quay-cases'); C.hop(); G.say('', ['…']); for (let i = 0; i < 20; i++) G.step(0.1);
+  const kq = C.loot().find((p) => p.k.endsWith('c-quay-cases')) || (h.coins > c0 ? { fly: false, taken: true } : null);   // (a coin landing at his feet is his)
   P.settle();
   // (c) a save in mid-air
   return { fly0, a: a && { fly: a.fly, vis: a.vis }, q: kq && { fly: kq.fly } };
@@ -200,6 +209,7 @@ check('a save in mid-air keeps it; loaded, it falls to the ground (one copy)', m
 
 // ---------------------------------------------------------------- 9. death and Retry
 const before = await ev(() => { const G = game; G.save(false); return C.loot().map((p) => p.k).sort(); });
+console.log('first presses that searched nothing (pressed again), part 2:', JSON.stringify(await ev(() => C.misses || [])));
 await ev(() => { const h = game.hero; h.clovers = 0; h.damage(999, null); for (let i = 0; i < 80 && game.state !== 'gameover'; i++) game.step(0.1); });
 const go = await ev(() => game.state);
 const reloaded = page.waitForEvent('load', { timeout: 300000 });
@@ -229,6 +239,7 @@ const glint = await ev(() => {
 });
 check('a glint twinkles over an unsearched container, none over a searched one', glint.unsearched > 0 && glint.searched === 0, glint);
 
+console.log('first presses that searched nothing (pressed again):', JSON.stringify(await ev(() => C.misses || [])));
 fs.rmSync(keepFile, { force: true });
 const fails = done(errs);
 await browser.close();

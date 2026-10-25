@@ -1336,7 +1336,8 @@ export class Pickups {
   flyStep(p, dt) {
     const g = this.game;
     p.vel.y -= 7.84 * dt;
-    if ((p.vel.x || p.vel.z) && g.physics.solidAt(p.pos.x + p.vel.x * dt, p.pos.z + p.vel.z * dt, p.pos.y, 0.12)) { p.vel.x = 0; p.vel.z = 0; }
+    const inside = p.from && Math.hypot(p.pos.x - p.from.x, p.pos.z - p.from.z) < p.from.r + 0.2;   // (still over the container it came out of)
+    if ((p.vel.x || p.vel.z) && !inside && g.physics.solidAt(p.pos.x + p.vel.x * dt, p.pos.z + p.vel.z * dt, p.pos.y, 0.12)) { p.vel.x = 0; p.vel.z = 0; }
     // (nor over the sea or a drop: a container's bonus must stay where he can walk to it — CONTAINERS)
     if ((p.vel.x || p.vel.z) && p.loot) {
       const nx = p.pos.x + p.vel.x * dt * 6, nz = p.pos.z + p.vel.z * dt * 6, gy = g.physics.groundAt(nx, nz, p.pos.y), here = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y);
