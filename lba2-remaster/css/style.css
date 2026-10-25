@@ -365,7 +365,14 @@ body.desktop .desktop-only { display: block !important; }
 
 /* ---- loading screen (#27): MEA Studio, then a picture of the game and a progress bar ---- */
 #loading { background: #07060c; padding: 0; gap: 0; justify-content: flex-end; overflow: hidden; }
-#load-art { position: absolute; inset: 0; background: url(../assets/ui-loading.jpg) center / cover no-repeat; transform: scale(1.06); opacity: 0; transition: opacity 1.2s ease, transform 14s linear; }
+#load-art { position: absolute; inset: 0; background: #07060c; opacity: 0; transition: opacity 1.2s ease; }
+/* the world while it loads (the user: "the picture is static, maybe more shots of the game's world"): five shots,
+   5 s each with a slow push-in and a 1 s cross-fade. Keyframed opacity/transform run on the compositor, so they
+   keep moving while the main thread builds the island */
+#load-art .sl { position: absolute; inset: 0; background: center / cover no-repeat; opacity: 0; will-change: opacity, transform; }
+#loading.art #load-art .sl { animation: loadsl 25s linear infinite; animation-delay: calc(var(--i) * 5s - 0.01s); }
+#loading.art #load-art .sl:first-child { animation-delay: -1s; }
+@keyframes loadsl { 0% { opacity: 0; transform: scale(1.09); } 4% { opacity: 1; } 20% { opacity: 1; } 24% { opacity: 0; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
 #load-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7, 6, 12, 0.15) 0%, rgba(7, 6, 12, 0.05) 45%, rgba(7, 6, 12, 0.85) 100%); }
 #load-title { position: relative; margin: 0 0 22px; font-size: clamp(34px, 6vw, 64px); font-weight: 900; letter-spacing: 0.04em; color: #fff; text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7); opacity: 0; transition: opacity 0.8s 0.3s; }
 #load-title span { display: block; font-size: 0.42em; font-weight: 500; letter-spacing: 0.32em; text-transform: uppercase; color: #ffe3c8; }
@@ -373,7 +380,7 @@ body.desktop .desktop-only { display: block !important; }
 #load-fill { position: absolute; inset: 0; transform-origin: 0 50%; transform: scaleX(0); will-change: transform; background: linear-gradient(90deg, #ff4fa3, #ffb36b 55%, #6ee7ff); box-shadow: 0 0 12px rgba(255, 140, 120, 0.7); }
 #loading-step { position: relative; margin: 10px 0 0; font-size: 13px; opacity: 0; color: #fff; transition: opacity 0.6s 0.4s; }
 #load-by { position: relative; margin: 18px 0 26px; font-size: 11px; letter-spacing: 0.5em; color: rgba(255, 227, 241, 0.55); opacity: 0; transition: opacity 0.6s 0.6s; }
-#loading.art #load-art { opacity: 1; transform: scale(1); }
+#loading.art #load-art { opacity: 1; }
 #loading.art #load-title, #loading.art #load-bar, #loading.art #load-by { opacity: 1; }
 #loading.art #loading-step { opacity: 0.75; }
 #mea { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; background: radial-gradient(120% 90% at 50% 45%, #16101f 0%, #07060c 70%); transition: opacity 0.7s ease; }

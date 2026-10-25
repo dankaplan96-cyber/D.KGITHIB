@@ -280,6 +280,8 @@ class Game {
     loadBar(1, 150);
     try { localStorage.setItem(LOADT_KEY, JSON.stringify({ total: this.loadTimes.total, shaders: this.loadTimes.shaders })); } catch { /* (private mode) */ }
     $('#loading').classList.add('hidden');
+    // the loading tune hands over to the game's music where the window may play sound unasked (the desktop app)
+    if (window.loadMusicEnd?.(true)) this.audio.init();
     if (boot === 'new') this.startNew();
     else if (boot === 'continue' && store.get(SAVE_KEY)) this.startContinue();
     else this.showScreen('title');
@@ -1694,7 +1696,34 @@ const meaSting = () => {
   bp.type = 'bandpass'; bp.Q.value = 6; bp.frequency.setValueAtTime(1500, t0 + 1.2); bp.frequency.exponentialRampToValueAtTime(7000, t0 + 2.4);
   ng.gain.setValueAtTime(0.0001, t0 + 1.2); ng.gain.exponentialRampToValueAtTime(0.05, t0 + 1.7); ng.gain.exponentialRampToValueAtTime(0.0001, t0 + 2.6);
   n.buffer = buf; n.connect(bp).connect(ng).connect(out); n.start(t0 + 1.2); n.stop(t0 + 2.6);
-  setTimeout(() => ctx.close().catch(() => {}), 4500);
+  // then a small loading tune (the user: "the opening screen isn't accompanied by a little music"): a slow
+  // C – Am – F – G pad with a soft plucked arpeggio over it. All of it is scheduled at once (60 s), because the
+  // island's build blocks the main thread; the title's own music takes over (loadMusicEnd) and this fades out
+  const bed = ctx.createGain(), lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass'; lp.frequency.value = 1800; bed.gain.value = 0.0001; bed.connect(lp).connect(out);
+  bed.gain.setValueAtTime(0.0001, t0 + 2.2); bed.gain.exponentialRampToValueAtTime(1, t0 + 4.5);
+  const chords = [[261.63, 329.63, 392, 493.88], [220, 261.63, 329.63, 392], [174.61, 220, 261.63, 329.63], [196, 246.94, 293.66, 392]];
+  const note = (type, f, at, att, len, peak) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(peak, at + att); g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(g).connect(bed); o.start(at); o.stop(at + len + 0.05);
+  };
+  for (let bar = 0, at = t0 + 2.4; at < t0 + 62; bar++, at += 3.2) {
+    const c = chords[bar % 4];
+    c.forEach((f) => note('sine', f / 2, at, 1.2, 4.2, 0.045));
+    [0, 1, 2, 3, 2, 1].forEach((k, j) => note('triangle', c[k] * 2, at + j * 0.53, 0.01, 1.1, 0.03));
+  }
+  let ended = false;
+  const end = (handOver) => {
+    if (ended) return; ended = true;
+    const now = ctx.currentTime;
+    bed.gain.cancelScheduledValues(now); bed.gain.setValueAtTime(Math.max(0.0001, bed.gain.value), now); bed.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+    setTimeout(() => ctx.close().catch(() => {}), 2000);
+    return handOver && ctx.state === 'running'; // (true: this window may play sound without a click)
+  };
+  window.loadMusicEnd = end;
+  setTimeout(() => end(false), 64000);
 };
 if (SPLASH_MS) meaSting();
 loadBar(0.08);
