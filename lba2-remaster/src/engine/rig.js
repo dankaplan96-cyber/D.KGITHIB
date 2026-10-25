@@ -935,7 +935,7 @@ export class Rig {
     if (this.turn) { headY += this.turn * 0.35; torsoY += this.turn * 0.12; }
 
     // head looks toward a point of interest (in body space)
-    const look = this.lookAt || this.combatLook;
+    const look = this.lookAt || (a !== 'talk' && a !== 'listen' ? this.combatLook : null);   // (in a conversation he faces the speaker)
     let lookTwist = 0;
     if (look && a !== 'dead' && a !== 'ko') {
       const p = this.root.position, ry = this.root.rotation.y;
@@ -1252,8 +1252,9 @@ const STRIKES = {
     legL: [-0.3, -0.42, -0.42, -0.45, -0.45, -0.42, -0.3], kneeL: [0.15, 0.3, 0.28, 0.25, 0.28, 0.25, 0.15],
     legR: [0.22, 0.28, 0.3, 0.32, 0.32, 0.3, 0.22], hipsY: [0.91, 0.9, 0.89, 0.87, 0.87, 0.88, 0.91], hipsZ: [0.05, 0.06, 0.07, 0.12, 0.13, 0.11, 0.05] },
   // sword 3: overhead (arc ±0.3): both hands take the blade up behind the head, the front foot steps in, the chest bows
-  // the blade down through the target and holds the weight of the blow a moment before it rises back
-  slash3: { guard: 'sword', u: [0, 0.75, 1, 1.5, 2, 2.35, 3],
+  // the blade down through the target and holds the weight of the blow a moment before it rises back (its arc is narrow,
+  // so a target in front is hit early in the active frames: the blade comes through at u 1.25)
+  slash3: { guard: 'sword', u: [0, 0.75, 1, 1.25, 2, 2.35, 3],
     armR: [-0.8, -2.85, -3.0, -1.75, -0.95, -0.7, -0.75], elR: [-0.8, -1.5, -1.6, -0.35, -0.15, -0.25, -0.85],
     outR: [0, 0.1, 0.1, 0, -0.1, -0.1, 0], twR: [0.2, 0, 0, 0.1, 0.2, 0.2, 0.2],
     armL: [-0.4, -2.4, -2.5, -1.5, -0.9, -0.7, -0.35], elL: [-1.2, -1.4, -1.45, -0.5, -0.3, -0.5, -1.2], outL: [0.3, -0.3, -0.3, -0.25, -0.15, 0, 0.3], twL: [0, 0, 0, 0, 0, 0, 0],
@@ -1262,7 +1263,7 @@ const STRIKES = {
     legL: [-0.3, -0.45, -0.5, -0.55, -0.55, -0.52, -0.3], kneeL: [0.15, 0.55, 0.45, 0.4, 0.5, 0.5, 0.15],
     legR: [0.22, 0.12, 0.12, 0.3, 0.35, 0.35, 0.22], hipsY: [0.91, 0.94, 0.94, 0.86, 0.82, 0.83, 0.91], hipsZ: [0.05, -0.03, -0.03, 0.13, 0.17, 0.16, 0.05] },
   // the heavy blow, released from heavyCharge's raised blade: a last hitch back, then down with the whole body
-  heavy: { guard: 'sword', u: [0, 1, 1.5, 2, 2.5, 3],
+  heavy: { guard: 'sword', u: [0, 1, 1.25, 2, 2.5, 3],
     armR: [-2.95, -3.1, -1.6, -0.7, -0.6, -0.75], elR: [-1.55, -1.6, -0.3, -0.1, -0.2, -0.85], outR: [0.1, 0.1, 0, -0.1, -0.1, 0], twR: [0, 0, 0.1, 0.2, 0.2, 0.2],
     armL: [-2.4, -2.5, -1.4, -0.75, -0.6, -0.35], elL: [-1.4, -1.45, -0.45, -0.3, -0.45, -1.2], outL: [-0.25, -0.3, -0.25, -0.1, 0, 0.3], twL: [0, 0, 0, 0, 0, 0],
     torsoX: [-0.2, -0.25, 0.45, 0.7, 0.62, 0.1], torsoY: [-0.25, -0.28, -0.05, 0.05, 0.05, -0.15],
