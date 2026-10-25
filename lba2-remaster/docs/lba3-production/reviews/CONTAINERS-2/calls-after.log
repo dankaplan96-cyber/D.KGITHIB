@@ -1,0 +1,9 @@
+{"view":"citadel square","calls":238,"main":203,"shadow":35,"materials":105,"containersWithin30m":10}
+{"view":"citadel harbour path","calls":236,"main":203,"shadow":33,"materials":123,"containersWithin30m":11}
+{"view":"citadel quay","calls":259,"main":212,"shadow":48,"materials":130,"containersWithin30m":5}
+{"view":"citadel south lane","calls":221,"main":190,"shadow":31,"materials":109,"containersWithin30m":8}
+{"view":"zeelich pier","calls":449,"main":423,"shadow":26,"materials":230,"containersWithin30m":4}
+{"view":"desert village","calls":166,"main":148,"shadow":18,"materials":73,"containersWithin30m":3}
+{"view":"desert camp","calls":39,"main":28,"shadow":11,"materials":22,"containersWithin30m":2}
+{"view":"desert dig","calls":62,"main":51,"shadow":12,"materials":41,"containersWithin30m":3}
+no errors

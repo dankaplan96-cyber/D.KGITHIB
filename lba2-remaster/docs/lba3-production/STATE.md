@@ -381,6 +381,28 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Not verified: a real GPU/display, an independent visual review; the unregistered big buildings (castle, lighthouse,
   desert, Hamalayi, Lift Dock) are listed by the test, not checked.
 
+## Done after (CONTAINERS + R10, status REVIEW)
+- The user's decision (2026-10-25): bonuses from bins, barrels, crates and suitcases as in LBA2; a heart/flask at a
+  full bar stays on the ground; kept in the save. LBA2's behaviour read from the user's files and the GPL source
+  (QA.md "CONTAINERS + R10"; docs/LBA2_MEASUREMENTS.md "Givers and bonuses").
+- Game: a container's bonus has no timeout and is saved as `loot` until taken (no save-format bump); full bars refuse
+  hearts/flasks (they hop aside); bonuses are kept per area; the interact key searches in any behaviour; a "Search"
+  prompt; a small glint on unsearched containers. src/game/containers.js: 9 on Citadel (the original's 8 outdoor giver
+  spots + a luggage trolley on the quay), 3 on Zeelich, 9 on Zeelich's islands (the original's spots).
+- tests/containers.mjs (new, 29 checks) ALL PASSED; tests/givers.mjs updated (a container's bonus stays; others still
+  time out). Regression runs: QA.md.
+- Open: an independent review; a real GPU look at the glint and the pieces; the desert's original spots (our desert
+  is remapped; none placed). (Once-ever giving and the desert gap are superseded by CONTAINERS-2 below.)
+## Done after (CONTAINERS-2, status REVIEW)
+- The user (2026-10-25): "We need more containers, and yes, they should refill every time." A container (and an
+  interior giver) now gives once per visit, as in LBA2: leaving the area (a door, a region change, a shuttle) and
+  coming back fills it again; a timer never does. Clover/key givers still give once ever. Bonuses on the ground stay
+  as before (`loot`). No save-format change: `searched` keeps only the current area's giver keys; an older save's
+  other-area keys are dropped on load.
+- Outdoor containers 21 → 52: Citadel 19, Zeelich 7, its islands 18 (more of the original's spots), Desert Island 8
+  (Kesh's houses, Ilka's camp, the way to the dig and its rim; drawn in the island's own materials).
+- tests/containers.mjs extended (refill and placement checks); results and the regression runs: QA.md "CONTAINERS-2".
+- Open: an independent review; a real GPU; the feel by hand.
 ## Done after (SETTINGS-UI, WORKLIST #28; status REVIEW)
 - The settings screen after LBA2's options menu, calmer: four pages (Game · Controls · Display · Sound) with ≤ 4 rows,
   Advanced folds on Controls (Aim Assist, Focus Button) and Display (Resolution, Edges, Frame Rate Limit, Minimap),

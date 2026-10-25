@@ -132,6 +132,21 @@ smooth normals is kept.
 - The bonus leaves the zone's top at 70° elevation toward Twinsen ±13°, speed 40 units/tick at weight 15
   (≈ 3.15 m/s up, 1.13 m/s out, gravity ≈ 7.8 m/s²), stops where it lands, cannot be taken in flight, and goes
   after 20 s, blinking (8 ticks on, 8 off) for the last 3 s. A destroyed object pops its bonus straight up.
+- (CONTAINERS, from the GPL source, behaviour only) The zone giver's bonus leaves at 180 × 4 units = 63° (an object's
+  bonus at 200 × 4 = 70°) and waits 0.7 s first (EXTRA_TIME_IN, during the hop). Every bonus but a key has the 20 s
+  timeout (EXTRA_TIME_OUT). Taking: never in flight; a heart is taken only while life < max, a flask only with the
+  ball and magic < level × 20 — otherwise it is not taken and hops off again (InitFly, the bonus sound), and still
+  times out. Kashes, keys and clovers are always taken. A giver's "taken" flag is reset whenever its scene is loaded
+  (DISKFUNC.CPP), so in the original a bin gives again on every visit; the save keeps the flag and the bonuses lying
+  in the current scene (SAVEGAME.CPP). The original's outdoor givers: Citadel 9 (by its baskets, objects 34 and 41
+  of CITADEL.OBL), Desert Island ~60, Otringal 20, Knartas 12, the Platform 4, the CX islet 2.
+- Ours (the user's rules): each container gives once per visit (CONTAINERS-2, 2026-10-25: as the original, it fills
+  again after a door, a region change or a shuttle; a clover or key giver still gives once ever); its bonus never
+  times out and is kept in the save until taken (`loot`); a heart/flask at a full bar stays on the ground.
+  src/game/containers.js places the outdoor ones at the original's spots (Citadel's 9; Otringal 9 of its 17 clusters,
+  Knartas 5 of 12, the Platform 2 of 4, the CX islet 2 of 2: scenes 87–90, 99, 107–108, 110, island-centred as
+  (X − centre of the island's cubes) × 1.7122/1024 m), on our own spots by Citadel's houses, market and harbour, on
+  Zeelich's street and on Desert Island (our layout); tests/containers.mjs.
 
 ## Used in the game
 - `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle).
