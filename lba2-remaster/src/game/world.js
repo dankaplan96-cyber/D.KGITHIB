@@ -623,6 +623,16 @@ export function buildWorld(parentScene) {
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
   clearLife(trees); clearLife(bushes);
+  // (WORLD-FIX / R6: the way out of every house door stays open — no tree or bush in a 4 m lane straight out of it for
+  //  11 m, so the first steps out of a door are never into a bush. Filtered after the scatter: no random draw moves.)
+  const doorLane = (x, z, pad) => W.houses.some((h) => {
+    if (!h.door) return false;
+    const nx = Math.sin(h.ry), nz = Math.cos(h.ry);   // (the front wall's outward normal: the door is in the front wall)
+    const dx = x - h.door.x, dz = z - h.door.z, along = dx * nx + dz * nz, across = Math.abs(dx * nz - dz * nx);
+    return along > -0.5 && along < 11 && across < 2 + pad;
+  });
+  for (const t of trees) if (!t.gone && doorLane(t.x, t.z, 0.45 * t.s)) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && doorLane(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
     const list = trees.filter((t, i) => t.kind === kind && i % nv === v);
@@ -728,6 +738,7 @@ export function buildWorld(parentScene) {
     if (!okSpot(x, z, 2.5) && h > 1.3) continue;
     rocks.push({ x, z, h: h - 0.1, s: 0.3 + rand() * 0.8, ry: rand() * 6 });
   }
+  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1)) r.s = 1e-4;   // (the doors' lanes, as the trees and bushes)
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   if (BATCH.on) batchFor(rockMat).build();
