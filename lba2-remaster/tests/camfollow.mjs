@@ -55,10 +55,10 @@ await ev(() => {
     offBehind() { const way = Math.atan2(h.vel.x, h.vel.y); return +Math.abs(deg(ad(C.yaw, way + Math.PI))).toFixed(1); },
     turned(R) { return +Math.abs(deg(ad(R.yaw0, C.yaw))).toFixed(1); },
   };
-  // open ground for an 18 m run: walkable all the way (the harness' own step test), dry, no wall within 2 m of it and
-  // nothing tall within 12 m of its middle that could hide him (the Follow view must be free to come round)
+  // open ground for an 18 m run: walkable all the way (the harness' own step test), dry, no wall within 2 m of it,
+  // nothing tall within 10 m of its middle that could hide him and no scenery volume near (the view free to come round)
   const P0 = G.physics, out = [];
-  for (let x = -100; x <= 20; x += 4) for (let z = -60; z <= 60; z += 4) {
+  for (let x = -120; x <= 40; x += 4) for (let z = -100; z <= 100; z += 4) {
     const y0 = P0.groundAt(x, z); if (y0 < 0.3) continue;
     if (G.npcs.some((n) => n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 20)) continue;
     for (let k = 0; k < 8; k++) {
@@ -67,6 +67,10 @@ await ev(() => {
       if (!ok) continue;
       const mx = x + sx * 9, mz = z + sz * 9;
       if (P0.colliders.some((c) => c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 1.5) && c.top > y0 + 3 && Math.hypot(c.x - mx, c.z - mz) < 10)) continue;
+      // (and no house or other scenery volume within ~20 m of it: Follow swings only where the view needs no rise)
+      let vols = 0; const occ = G.world.occ;
+      if (occ) for (let ox = -20; ox <= 20; ox += 4) for (let oz = -20; oz <= 20; oz += 4) vols += occ.near(mx + ox, mz + oz).length;
+      if (vols) continue;
       out.push({ x, z, a });
     }
   }
