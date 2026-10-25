@@ -176,6 +176,7 @@ export class Cinematic {
     if (i < 0 || !S || !S.s.voice || !B) return;
     const now = Math.min(S.s.text.length, Math.floor((this.t - S.s.t) * S.cps));
     if (now > S.typed) { B.chars(S.s.text, S.typed, now); S.typed = now; }
+    B.pump?.();   // (VOICE-LEN: syllables the typing got ahead by are spoken at the voice's pace while the line is up)
     this.voiced[S.i] = B.count - S.c0;
   }
 

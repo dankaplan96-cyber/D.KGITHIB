@@ -345,6 +345,7 @@ export class HUD {
   }
   updateDialog(dt) {
     const D = this.dialog;
+    if (this.talking) this.game.audio.babble?.pump?.();
     if (!this.talking || D.shown >= D.full.length) return;
     const before = Math.floor(D.shown);
     D.shown = Math.min(D.full.length, D.shown + dt * (this.textRate ?? 50));
