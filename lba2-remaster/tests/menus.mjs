@@ -30,16 +30,62 @@ await page.keyboard.press('ArrowDown'); await step(0.05); await page.keyboard.pr
 const sel = await ev(() => [...document.querySelectorAll('#title .menu button')].findIndex((b) => b.classList.contains('sel')));
 check('title: the arrow keys move the selection', sel >= 1, sel);
 
-// ---- a setting changed in the menu is applied and kept after a reload
+// ---- the settings screen (SETTINGS-UI): four pages, every stored setting still there, a few rows per page
 await page.click('#title [data-act="settings"]'); await step(0.05);
+const layout = await ev(() => {
+  const S = document.querySelector('#settings');
+  const keys = [...S.querySelectorAll('[data-setting]')].map((e) => e.dataset.setting).concat([...S.querySelectorAll('[data-range]')].map((e) => e.dataset.range));
+  const pages = {};
+  for (const p of S.querySelectorAll('.set-page')) pages[p.dataset.page] = { shown: p.querySelectorAll(':scope > .set-row').length, advanced: p.querySelectorAll('.set-adv .set-row').length };
+  return { keys: keys.sort(), pages, tabs: [...S.querySelectorAll('.set-tabs [data-tab]')].map((b) => b.textContent), open: game.setTab, sel: S.querySelector('.sel')?.className };
+});
+const KEYS = ['aa', 'aimAssist', 'camera', 'controls', 'difficulty', 'fps', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'res', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice'];
+check('settings: every stored setting has its control (same keys as before)', JSON.stringify(layout.keys) === JSON.stringify(KEYS), layout.keys);
+check('settings: four pages (Game, Controls, Display, Sound), at most 4 rows each before Advanced; opens on Game with the tabs selected', layout.tabs.join() === 'Game,Controls,Display,Sound' && Object.values(layout.pages).every((p) => p.shown <= 4) && layout.open === 'game' && /set-tabs/.test(layout.sel), layout);
+// keyboard: → on the tabs turns the page, ↓ to Movement, → picks Modern (applied: Modern's keys), ← Classic again
+await page.keyboard.press('ArrowRight'); await step(0.05);
+await page.keyboard.press('ArrowDown'); await step(0.05);
+const k0 = await ev(() => [game.setTab, document.querySelector('#settings .sel')?.querySelector('.seg')?.dataset.setting]);
+await page.keyboard.press('ArrowRight'); await step(0.05);
+const k1 = await ev(() => [game.settings.controls, game.keyName('up'), document.querySelector('#settings [data-hint="controls"] .set-hint').textContent]);
+await page.keyboard.press('ArrowLeft'); await step(0.05);
+const k2 = await ev(() => [game.settings.controls, game.keyName('up')]);
+check('settings by keys: → turns to Controls, ↓ selects Movement, → Modern (WASD, its hint), ← Classic (arrows)', k0[0] === 'controls' && k0[1] === 'controls' && k1[0] === 'modern' && k1[1] === 'W' && /push/.test(k1[2]) && k2[0] === 'classic' && k2[1] === '↑', { k0, k1, k2 });
+// Advanced by Enter on the fold; the free camera's hint names the keys in use
+const foldAt = await ev(() => game.settingsItems().findIndex((e) => e.classList.contains('set-fold')));
+for (let n = 1; n < foldAt; n++) { await page.keyboard.press('ArrowDown'); await step(0.05); }
+await page.keyboard.press('Enter'); await step(0.05);
+const adv = await ev(() => [game.setAdv?.controls, [...document.querySelectorAll('#settings .set-page.on .set-adv .set-row')].every((r) => r.offsetParent !== null), document.querySelector('#settings .sel')?.classList.contains('set-fold')]);
+await page.keyboard.press('Enter'); await step(0.05);
+const adv2 = await ev(() => [game.setAdv?.controls, document.querySelector('#settings .set-page.on .set-adv').offsetParent === null]);
+check('settings: Enter on Advanced opens it (its rows shown, the fold still selected) and closes it', adv[0] === true && adv[1] && adv[2] && adv2[0] === false && adv2[1], { foldAt, adv, adv2 });
+// a slider by keys (Sound page), held → repeats
+await page.click('#settings [data-tab="sound"]'); await step(0.05);
+await page.keyboard.press('ArrowDown'); await step(0.05);
+const m0 = await ev(() => game.settings.music);
+await page.keyboard.press('ArrowLeft'); await step(0.05);
+const m1 = await ev(() => [game.settings.music, game.audio.vol.music, document.querySelector('#settings [data-range="music"] + output').textContent]);
+await page.keyboard.press('ArrowRight'); await step(0.05);
+check('settings: ← / → step the music volume by 5 % (applied, the level shown)', Math.abs(m1[0] - (m0 - 0.05)) < 1e-9 && m1[1] === m1[0] && m1[2] === `${Math.round(m1[0] * 100)}%` && Math.abs(await ev(() => game.settings.music) - m0) < 1e-9, { m0, m1 });
+// the mouse: hovering a row selects it (one highlight), a click on a chip sets the value
+await page.click('#settings [data-tab="game"]'); await step(0.05);
+await page.hover('#settings .seg[data-setting="shake"] button[data-v="reduced"]'); await step(0.05);
+const hv = await ev(() => [document.querySelectorAll('#settings .sel').length, document.querySelector('#settings .sel .seg')?.dataset.setting]);
+check('settings: the row under the mouse is the selected one (one highlight)', hv[0] === 1 && hv[1] === 'shake', hv);
+
+// ---- a setting changed in the menu is applied and kept after a reload
+await page.click('#settings [data-tab="display"]');
 await page.click('#settings .seg[data-setting="quality"] button[data-v="medium"]');
+await page.click('#settings [data-tab="game"]');
 await page.click('#settings .seg[data-setting="textSpeed"] button[data-v="fast"]');
+await page.click('#settings [data-tab="display"]'); await page.click('#settings .set-page.on .set-fold');
 await page.click('#settings .seg[data-setting="fps"] button[data-v="30"]');   // (FRAME-1: the frame-rate limit)
 const q1 = await ev(() => [game.settings.quality, game.settings.textSpeed, game.hud.textRate, game.settings.fps, Math.round(game.frameCapMs * 10) / 10, Math.round(game.renderer.budgetMs * 10) / 10]);
 await page.click('#settings [data-act="back"]');
 await page.reload(); await open(page, '?nocine');
 await page.click('#title [data-act="settings"]'); await step(0.05);
 const q2 = await ev(() => [game.settings.quality, game.settings.textSpeed, document.querySelector('#settings .seg[data-setting="quality"] button.on')?.dataset.v, game.settings.fps, document.querySelector('#settings .seg[data-setting="fps"] button.on')?.dataset.v, Math.round(game.frameCapMs * 10) / 10]);
+await page.click('#settings [data-tab="display"]'); await page.click('#settings .set-page.on .set-fold');
 await page.click('#settings .seg[data-setting="fps"] button[data-v="auto"]');   // (back to no limit for the rest)
 const q3 = await ev(() => [game.settings.fps, game.frameCapMs, Math.round(game.renderer.budgetMs * 10) / 10]);
 await page.click('#settings [data-act="back"]'); await step(0.05);
@@ -69,6 +115,29 @@ await page.keyboard.press('Escape'); await step(0.1);
 await page.click('#pause [data-act="settings"]'); await step(0.05);
 await page.click('#settings [data-act="back"]'); await step(0.05);
 check('pause → settings → back returns to the pause menu', JSON.stringify(await shown()) === '["pause"]', await shown());
+const back1 = await ev(() => document.querySelector('#pause .menu button.sel')?.dataset.act);
+check('back in the pause menu, Settings is still the selected entry', back1 === 'settings', back1);
+// settings → Keys → the controls screen → Back (Keys still selected) → Back (pause, Settings selected), by keys
+await page.click('#pause [data-act="settings"]'); await step(0.05);
+await page.click('#settings [data-tab="controls"]'); await step(0.05);
+await page.click('#settings .set-link'); await step(0.05);
+const ck1 = JSON.stringify(await shown());
+await page.click('#controls [data-act="back"]'); await step(0.05);
+const ck2 = await ev(() => [game.screen, game.setTab, document.querySelector('#settings .sel')?.classList.contains('set-link')]);
+const backAt = await ev(() => game.settingsItems().length - 1);
+for (let n = 0; n < 10 && (await ev(() => game.menuSel)) !== backAt; n++) { await page.keyboard.press('ArrowDown'); await step(0.05); }
+await page.keyboard.press('Enter'); await step(0.05);
+const ck3 = await ev(() => [game.screen, game.state, document.querySelector('#pause .menu button.sel')?.dataset.act]);
+check('settings → Keys opens the controls screen; its Back returns to Settings with Keys selected; Back by Enter returns to the pause menu', ck1 === '["controls"]' && ck2[0] === 'settings' && ck2[1] === 'controls' && ck2[2] && ck3[0] === 'pause' && ck3[1] === 'pause' && ck3[2] === 'settings', { ck1, ck2, ck3 });
+// a pad: B backs out of the settings (Esc is unchanged: it resumes play from the pause's settings)
+await page.click('#pause [data-act="settings"]'); await step(0.05);
+await ev(() => { const btn = (p) => ({ pressed: p, value: p ? 1 : 0 }); window.__pad = { connected: true, axes: [0, 0, 0, 0], buttons: Array.from({ length: 17 }, () => btn(false)) }; navigator.getGamepads = () => [window.__pad]; game.step(0.05); window.__pad.buttons[1] = btn(true); game.step(0.05); window.__pad.buttons[1] = btn(false); game.step(0.05); window.__pad.connected = false; game.step(0.05); });
+const pb = JSON.stringify(await shown());
+await page.click('#pause [data-act="settings"]'); await step(0.05);
+await page.keyboard.press('Escape'); await step(0.1);
+const esc = await ev(() => [game.state, document.querySelector('#settings').classList.contains('hidden')]);
+check('pad B in the settings returns to the pause menu; Esc in them resumes play (as before)', pb === '["pause"]' && esc[0] === 'play' && esc[1], { pb, esc });
+await page.keyboard.press('Escape'); await step(0.1);
 await page.click('#pause [data-act="resume"]'); await step(0.1);
 check('Resume button: back in play', await ev(() => game.state === 'play') && (await shown()).length === 0, await shown());
 
@@ -97,7 +166,8 @@ check('dialogue: E advances to the end, back in play with the ball', await ev(()
 
 // ---- inventory and journal (I), behaviour menu (Ctrl)
 await page.keyboard.press('KeyI'); await step(0.1);
-const inv = await ev(() => [game.state, !document.querySelector('#inventory').classList.contains('hidden')]);
+const inv = await ev(() => [game.state, !document.querySelector('#inventory').classList.contains('hidden'), document.querySelector('#inventory .inv-hint')?.textContent]);
+check('the inventory\'s controls line names the keys in use (Classic: arrows, Shift / Esc)', inv[2] === '↑←↓→: select · Shift / Esc: close', inv[2]);
 await page.keyboard.press('KeyI'); await step(0.1);
 const inv2 = await ev(() => [game.state, !document.querySelector('#inventory').classList.contains('hidden')]);
 check('I opens the inventory and closes it again', inv[0] === 'inventory' && inv[1] && inv2[0] === 'play' && !inv2[1], { inv, inv2 });
@@ -123,6 +193,25 @@ await page.click(`#rebind button.keybtn >> nth=${idx}`);
 await page.keyboard.press('KeyG');
 const rb = await ev(() => [game.settings.keys, game.keyName('interact')]);
 check('rebinding: interact → G is stored and named', rb[1] === 'G', rb);
+// the inventory's line follows a rebound key (inventory → U)
+const invAt = await ev(() => [...document.querySelectorAll('#rebind label')].findIndex((l) => /inventory/i.test(l.textContent)));
+await page.click(`#rebind button.keybtn >> nth=${invAt}`); await page.keyboard.press('KeyU');
+await page.click('#controls [data-act="back"]'); await page.click('#pause [data-act="resume"]'); await step(0.1);
+await page.keyboard.press('KeyU'); await step(0.1);
+const invU = await ev(() => [game.state, document.querySelector('#inventory .inv-hint')?.textContent]);
+await page.keyboard.press('KeyU'); await step(0.1);
+check('rebound inventory key U: it opens the inventory and its line says U', invU[0] === 'inventory' && /U \/ Esc: close/.test(invU[1]), invU);
+await page.keyboard.press('Escape'); await step(0.1);
+await page.click('#pause [data-act="controls"]'); await step(0.05);
+// one key awaited at a time; leaving the screen cancels it (a later key press rebinds nothing)
+const before = await ev(() => JSON.stringify(game.settings.keys));
+await page.click('#rebind button.keybtn >> nth=0'); await page.click('#rebind button.keybtn >> nth=1');
+const waiting = await ev(() => document.querySelectorAll('#rebind .keybtn.wait').length);
+await page.click('#controls [data-act="back"]'); await step(0.05);
+await page.keyboard.press('KeyY'); await step(0.05);
+const after = await ev(() => JSON.stringify(game.settings.keys));
+check('rebinding: a second click replaces the first wait; leaving the screen cancels it (Y bound to nothing)', waiting === 1 && after === before && !after.includes('KeyY'), { before, after, waiting });
+await page.click('#pause [data-act="controls"]'); await step(0.05);
 await page.click('#controls [data-act="resetkeys"]');
 check('reset keys: back to the defaults', await ev(() => game.keyName('interact') !== 'G' && Object.keys(game.settings.keys || {}).length === 0), await ev(() => [game.settings.keys, game.keyName('interact')]));
 await page.click('#controls [data-act="back"]'); await page.click('#pause [data-act="resume"]'); await step(0.1);

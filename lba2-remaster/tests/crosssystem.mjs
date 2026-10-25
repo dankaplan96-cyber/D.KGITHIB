@@ -79,6 +79,7 @@ check('mashing E/Space at a giver: one bonus, recorded once', c5.none || (c5.spa
 for (let i = 0; i < 10; i++) {
   await page.keyboard.press('Escape'); await step(0.05);
   await page.click('#pause [data-act="settings"]');
+  await page.click('#settings [data-tab="display"]');   // (SETTINGS-UI: Graphics is on the Display page)
   await page.click(`#settings .seg[data-setting="quality"] button >> nth=${i % 3}`);
   await page.click('#settings [data-act="back"]');
   await page.click('#pause [data-act="resume"]'); await step(0.1);
