@@ -30,6 +30,8 @@ const boot = async (mode, clear = true) => {
   await ev(() => { game.testFreeze = true; });
   if (mode === 'new') {
     await page.click('[data-act="new"]', { timeout: 180000 });
+    // with a save present New Game asks first (7fcaade): confirm
+    if (await ev(() => game.screen === 'confirmnew')) await page.click('#confirmnew [data-act="newyes"]', { timeout: 180000 });
     await page.waitForFunction(() => game.cine && game.cine.state === 'run', null, { timeout: +(process.env.BOOT_MS || 240000) });
     await ev(async () => { window.__cine = game.cine; await game.audio.ctx?.resume?.(); });
   } else if (mode) await page.click(`[data-act="${mode}"]`, { timeout: 180000 });
