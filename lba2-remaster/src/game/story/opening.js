@@ -184,9 +184,9 @@ export function playOpening(story) {
     // 6 — Zoé at the counter, then the tap
     // (R5: from the kitchen's west end a little over her eye level, three-quarter front: her face, her hands on the tray
     // and the tap, Twinsen at his table behind her; one shot with a slow push in as she goes to the tap. Pitched so the
-    // frame's top stays under the far ceiling (7 % of the frame, was 20 % in the side-on view from the east, her
+    // frame's top stays near the far ceiling (about 7 % of the frame, was 20 % in the side-on view from the east, her
     // profile, with a near-identical cut at 41.0); higher, it looked down on her scalp, lower it filled with ceiling)
-    shot(35.0, 45.3, P(hv(-3.6, 1.8, -3.15), hv(-2.0, 1.38, -2.52), 52), P(hv(-3.55, 1.8, -3.15), hv(-2.1, 1.41, -2.55), 51)),
+    shot(35.0, 45.3, P(hv(-3.65, 1.84, -3.12), hv(-2.0, 1.44, -2.52), 54), P(hv(-3.62, 1.84, -3.15), hv(-2.1, 1.47, -2.55), 53)),
     // (...and as she turns from the tap to call him, her face from his side of the room: the cut on her turn)
     shot(45.3, 48.0, P(hv(-0.9, 1.75, -1.0), hv(-2.4, 1.45, -2.5), 42), P(hv(-0.95, 1.74, -1.05), hv(-2.4, 1.46, -2.52), 41)),
     // 7 — the exchange: Twinsen answers from the table; over his shoulder for hers
@@ -199,7 +199,7 @@ export function playOpening(story) {
     shot(53.4, 54.8, P(hv(-3.0, 2.3, 3.0), hv(0.3, 1.0, -0.6), 54), P(hv(-2.9, 2.27, 2.9), hv(0.3, 1.0, -0.6), 54)),
     shot(54.8, 58.0, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.47, 1.2, 2.32), hv(2.0, 0.82, 2.05), 42)),
     // 9 — the second try: a warm trickle, steam
-    shot(58.0, 60.1, P(hv(-3.55, 1.8, -3.15), hv(-2.1, 1.41, -2.55), 51), P(hv(-3.53, 1.79, -3.15), hv(-2.15, 1.38, -2.58), 50)),   // (R5: the first try's angle)
+    shot(58.0, 60.1, P(hv(-3.62, 1.84, -3.15), hv(-2.1, 1.47, -2.55), 53), P(hv(-3.6, 1.83, -3.15), hv(-2.15, 1.45, -2.58), 52)),   // (R5: the first try's angle)
     shot(60.1, 62.4, P(hv(-1.35, 1.45, -3.0), hv(-2.3, 0.98, -3.18), 38), P(hv(-1.4, 1.43, -3.0), hv(-2.3, 0.98, -3.18), 35)),
     // 10 — where the warmth comes from: under the well, something in the rock glows with the hum
     // (inside the last chamber, low, facing the vein: the glowing rock fills the frame and pulses with the hum, the

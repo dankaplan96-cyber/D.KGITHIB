@@ -12,6 +12,9 @@
 //   9. R5: Zoé's hand (the skinned hand's vertices, CHAR-2's longer hand) is on the tap's handle every frame it turns,
 //      and in the stream under the spout; standing feet don't jump; the scene's pose layers are off every joint after
 //      it (no hand bone left turned), played or skipped
+//   (R5: the scene's dips now come back up on its own clock, so 7 and 8 cover the whole scene: with wall-clock timers the
+//   stepped frames read as black from 28.6 s on and these checks only ever saw the harbour; a cut to another shot is
+//   not a vanishing)
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
@@ -106,8 +109,10 @@ const watch = await ev((polySizes) => {
   for (let i = 0; i < 4000 && G.cine; i++) {
     G.frame(1 / 30, false);
     if (!G.cine) break;
+    cam.updateMatrixWorld();   // (an unrendered step leaves the camera's matrices a frame behind its placement: a cut read late)
     if (!mid && c.t > 31) mid = { room: G.room?.id, saved: !!localStorage.getItem('lba3_save_v1') };
     const dark = document.querySelector('#fade').classList.contains('on');
+    const shotNow = c.def.shots.findIndex((sh) => c.t >= sh.t0 && c.t < sh.t1);
     // every visible skinned character in view: its mesh must be one of the poly cast's
     G.scene.traverseVisible((o) => {
       if (!o.isSkinnedMesh || o.material?.depthFunc === 5 /* (the hero's silhouette) */ || !onScreen(o)) return;
@@ -118,8 +123,10 @@ const watch = await ev((polySizes) => {
     for (const [id, a] of Object.entries(cast)) {
       const vis = a.rig.root.visible && (id !== 'zoe' || a.present) && (!G.room || Math.abs(a.pos.x - G.room.center.x) < 30) && onScreen(a.rig.root);
       const p = prev[id];
-      if (p && p.vis && !dark && !p.dark && (!vis || Math.hypot(a.pos.x - p.x, a.pos.z - p.z) > 0.8)) pops.push({ id, t: +c.t.toFixed(2), vis, from: [p.x, p.z].map((x) => +x.toFixed(1)), to: [a.pos.x, a.pos.z].map((x) => +x.toFixed(1)) });
-      prev[id] = { vis, x: a.pos.x, z: a.pos.z, dark };
+      // (vanishing: hidden or taken out of the scene while on screen; walking out of the frame or the camera moving on is not)
+      const gone = !a.rig.root.visible || (id === 'zoe' && !a.present) || (G.room && Math.abs(a.pos.x - G.room.center.x) >= 30);
+      if (p && p.vis && !dark && !p.dark && ((gone && p.shot === shotNow) || Math.hypot(a.pos.x - p.x, a.pos.z - p.z) > 0.8)) pops.push({ id, t: +c.t.toFixed(2), vis, from: [p.x, p.z].map((x) => +x.toFixed(1)), to: [a.pos.x, a.pos.z].map((x) => +x.toFixed(1)) });
+      prev[id] = { vis, x: a.pos.x, z: a.pos.z, dark, shot: shotNow };
     }
     if (!dark) {
       const shown = Object.entries(everyone).filter(([id, a]) => a.rig.root.visible && a.rig.root.parent && (id !== 'zoe' || a.present) && (!G.room || Math.abs(a.pos.x - G.room.center.x) < 30));
