@@ -79,7 +79,7 @@ await shot('C10-00-workshop.png');
 is('Oku on Zeelich asks for the mill braked', await ev(() => { T.out(); T.talk('oku'); return [game.room?.id, game.flags.c10_okuAsk]; }), (v) => v[0] === 'zeelich' && v[1] === true);
 { const b = await ev(() => { const G = game, f = G.flags, m = G.rooms.zeelich.mills[0]; return [T.hit({ ...m.brake, get done() { return !!f.c10_millBraked; } }), m.spinning]; });
   check('the mill brake hit (the mill stops)', b[0] === 'thrown' || b[0] === 'forced', b); if (b[0] !== 'thrown') { assists.push('mill brake: ' + b[0]); log('ISO  the mill brake was not hit by a throw: ' + b[0]); } }
-is("the old mill's relay set, the mill stopped (1/5)", await ev(() => { const mt = game.rooms.zeelich.millTop; T.useAt(mt.x, mt.z, mt.y); return [game.flags.c10_mill, game.rooms.zeelich.mills[0].spinning, T.obj()]; }), (v) => v[0] === true && v[1] === false && v[2].length > 0);
+is("the old mill's relay set (1/5); the mill turns again", await ev(() => { const mt = game.rooms.zeelich.millTop; T.useAt(mt.x, mt.z, mt.y); return [game.flags.c10_mill, game.rooms.zeelich.mills[0].spinning, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);   // braked to climb it; src/game/story/network.js: released once the relay is set
 await shot('C10-01-mill.png');
 is('Hesk is not on Zeelich (no glider to another planet)', await ev(() => [T.npc('hesk')?.present ?? null, game.story.cur.region()]), (v) => v[0] !== true && v[1] === 'zeelich');
 is('the spaceship to Citadel', await ev(() => T.ship('zeelich_port')), (v) => v[0] === 'out');
