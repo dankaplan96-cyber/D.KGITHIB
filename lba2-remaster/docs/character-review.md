@@ -994,3 +994,69 @@ under-articulated.
   - A tighter grip on the handle would need the hand bone turned. rig.js does not rotate the hand bones today.
 - **Twinsen's neck.** The head's turn now blends over 0.785 → 0.855 H. At lookAt's extreme (head y ±0.82 with the
   torso's share) the neck twists visibly but holds. Nothing in the curves needs to change.
+
+## 19. Arthur at twelve (ARTHUR-12, WORKLIST #30)
+
+The user: Arthur is Twinsen's son, Zoé was expecting at the end of LBA2, so after twelve years he should be twelve;
+he looked much younger. Decision: keep the twelve years and make him look twelve. Evidence:
+docs/lba3-production/reviews/ARTHUR-12/ (before and after under the same light and cameras; SwiftShader captures).
+
+- **Before.** LOOKS.arthur was the small-child template (`kid: true`): legs 0.74, torso 0.82, arms 0.78 of an adult's,
+  the head 1.3×, then the whole figure scaled by height/0.78 = 0.795. Eyes at 1.26 m (0.67 of Twinsen's 1.88), top of
+  the spikes 1.55 m, the hips at 36 % of his height and the head (chin to crown) at 25 %: a six- or seven-year-old.
+  The prologue's `scale: 0.62` and `anim: 'hide'` on his NPC entry were never used (a `char` NPC takes its look's
+  size, and the prologue's place() kneels him at his boat).
+- **After.** A preteen in the same style, not the child scaled up (`teen: true`, characters.js design(); the
+  skeleton's bone names, parents and count are unchanged, only the bind positions moved):
+  - **Height:** eyes 1.57 m = **0.835 of Twinsen** and 0.87 of Zoé; top of the hair 1.74 m = 0.83 of Twinsen (2.10
+    with his knot) and 0.86 of Zoé (2.02 with her bun). His crown is at Twinsen's chin. With LBA2's long necks and tall
+    heads the adults' shoulders are at 1.47 m, so "up to his father's shoulder" is his eye line, not his crown.
+  - **Proportions:** legs 0.82 (the hips at 45 % of his height, as Twinsen's), arms 0.9 (the hands hang below the
+    hips, a lanky boy's), torso 0.8, shoulders 0.88 of an adult's, a slimmer body (0.9), thinner limbs and neck (0.86,
+    0.88), smaller hands (0.9). The head is near an adult's size (headS 0.92, no child multiplier): chin to crown 21 %
+    of his height (was 25 %).
+  - **Face:** the same head sections as his father's (cast_poly.py scales Twinsen's measured head onto each Quetch),
+    now an egg skull a touch taller (1.05) and narrower (0.93): a slimmer, less round face with his father's snout.
+    Upper lid lines in the hair colour like his father's (a strip in each eye group: they blink with it) and thin brows
+    a little lifted at the inner end. No mouth (as his father).
+  - **Hair:** the four upright spikes are gone. A fuller crop (`hairCuts`: the line further forward over the top, the
+    shell a little thicker), the fringe swept up into a low quiff with three locks combed back, and a short tuft
+    arching back at the crown that answers his father's knot.
+  - **Clothes** (an older cut, his palette): a shorter tunic in #2a66d9 (trim #1d4c9e) over long trousers #f2ead6, the
+    hem above the knee and less flared (hemW 0.84); sleeves rolled to the elbow, bare forearms to the ball hands; the
+    orange belt with a small brown tool pouch at his right hip (the pliers' story), on the hips bone outside the
+    tunic's flare; orange shoes. (The model's tunic was #5a9ad8 and trousers #e8dcc0; the prologue's palette, which the
+    model never used, is now the model's.)
+  - **Joints:** a ball at each knee on the knee bone: kneeling at his boat (2.3 rad) opened the thigh's and shin's tube
+    ends into a gap, in the opening's main pose (the old model had the same gap). The bare forearm runs on to the hand
+    bone, under the ball hand (a gap showed in the close-ups otherwise).
+- **Counts:** 1888 → 2210 triangles (1840 → 2146 skinned, eyes 48 → 64), +17 %: the knee balls (160), the pouch, the
+  quiff and locks, the brows and lids. One material (LbaMaterial, vertex colours), no textures; skinned colours 8 → 9
+  (the pouch), eye colours 3 → 4 (the lid). Bones 20, unchanged.
+- **Scenes adjusted** (src/game/story/opening.js): his two close-ups (31.2–33.1, 54.8–58.0) raised 0.28 m at the
+  same angle (kneeling, his eyes are at 1.2 m, were 0.85: the old frame cut his head off); the over-his-shoulder shot
+  (33.1–35.0) 0.15 m higher; Twinsen's and Zoé's looks at him read his head bone (`eyesOf`) instead of a fixed 0.9 ×
+  his scale (they looked at his chest). The mast he holds is drawn at full size in his hand, as on the boat (it was
+  0.795 in his hand and jumped to 1.0 when fitted). prologue.js: his NPC entry without the unused scale, its default
+  pose his boat's (`kneelWork`).
+- **Not changed (checked):** nobody kneels to him or hugs him (no such pose exists; the opening's looks are the only
+  height-dependent acting); the house's doors (2.15 m), his bed (1.95 m) and his workbench (0.78 m, now at his hip)
+  fit; the speech bubble follows rig.height; the dialogue has no portraits. His lines already read as a curious
+  11–12-year-old (the radio, the boats, "I was going to put them back. Today. Probably.").
+- **Rebuilt with** `GAME_URL=… node tools/dump-skeletons.mjs arthur art/characters/skeletons.json`, then
+  `python3 tools/blender/cast_poly.py art/characters/skeletons.json assets/poly arthur` (bpy 5.2.2; a one-character
+  build writes art/characters/cast_poly_arthur.blend and leaves cast_poly.blend as it was). Every new look key
+  (`teen`, `tuftSwept`, `hairCuts`, `lids`, `brows`, `rolled`, `pouch`) is off for every other look, so no other model
+  changes; only Arthur was rebuilt (skeletons.json: only his entry differs).
+
+### For the animator (handoff; no contract changed)
+
+- **Skeleton:** the same 20 bones, names, parents and sockets (the hand carries the mast as before); the bind
+  positions moved (legs, arms, neck and head higher, shoulders narrower). rig.js scales its pose heights by each rig's
+  own hip height, so every clip works unchanged. Root scale is 1 (was 0.795), so the walk and run strides and cycle
+  follow his longer legs by themselves.
+- **His poses:** kneelWork, kneelShow and kneelLook read as a lanky boy kneeling; the thighs come out under the
+  tunic's front (the skirt bones follow min(legL, legR) only). The generic `hide` crouch is not played by him anywhere
+  (his NPC entry no longer names it; Doran's still does, unchanged). If a playful twelve-year-old's hide is wanted
+  later (a peek round the bed, one knee down), it is a new clip for the animator, not a model change.
+- **Face:** the lid strips are in the eye groups (blink unchanged). The brows are static on the head mesh. No mouth.

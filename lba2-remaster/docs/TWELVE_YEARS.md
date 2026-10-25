@@ -29,6 +29,13 @@ Each entry: what changed over the twelve years · why · who gains or loses · w
 player can do · what stays different afterwards.
 
 ### Twinsen and Zoé's house (src/game/homelife.js)
+- **Arthur is twelve** (ARTHUR-12, WORKLIST #30; the user's decision, 2026-10-25). LBA2's Zoé is expecting, so a son
+  born at the end of LBA2 is twelve now. The twelve years stand, and he looks twelve: about 0.83 of his father's
+  height (eyes 1.57 m against Twinsen's 1.88 m and Zoé's 1.81 m; top of the hair 1.74 against 2.10 and 2.02), long
+  legs and arms, a head near an adult's size, his father's egg-shaped face, a shorter tunic over long trousers,
+  sleeves rolled to the elbow and a tool pouch on his belt. He was the small-child template at 0.62 (eyes at 0.67 of
+  his father's), which read as six or seven. His lines, his boats, his radio and the pliers are unchanged.
+  docs/character-review.md §19; evidence docs/lba3-production/reviews/ARTHUR-12/.
 - **Zoé's work corner** (reading room). She keeps the Water Office's connection register: which houses get
   the project's heat next. Why: the project arrived, and somebody had to decide the order. Bug Street gains;
   the harbour row waits. Sees: a desk with ledgers and a board of the island with green and red pins. Does:

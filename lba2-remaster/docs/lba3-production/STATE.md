@@ -427,6 +427,17 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - A test that fails now fails loudly: a run that printed "ALL PASSED" with errors before can turn red without any game
   change. tests/containers.mjs (CONTAINERS) already used launch()/done(), so the policy applies to it as is.
 
+## Done after (ARTHUR-12, WORKLIST #30; status REVIEW)
+- Arthur is twelve and looks it: a preteen build (`teen: true`) instead of the small-child template scaled to 0.62. Eyes
+  0.835 of Twinsen's and 0.87 of Zoé's (top of the hair 0.83 / 0.86); legs 0.82, arms 0.9, the head near an adult's
+  size; his father's egg face slimmer, lid lines and brows; a swept quiff and a crown tuft; a shorter tunic (#2a66d9)
+  over long trousers (#f2ead6), rolled sleeves, a tool pouch; knee balls for his kneeling pose. Same 20 bones and names
+  (bind positions moved); only Arthur rebuilt (1888 → 2210 triangles, one material). The opening's two close-ups and the
+  looks at him follow his height; the prologue entry lost its unused 0.62 / 'hide'.
+- Evidence: docs/character-review.md §19 (with the animator handoff), QA.md "ARTHUR-12",
+  docs/lba3-production/reviews/ARTHUR-12/. Not verified: a real GPU, an independent review, the user's eye. Pim
+  (STORY_BIBLE: "Arthur's age") and Tim/Lulu still use the small-child template: a follow-up, not changed here.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

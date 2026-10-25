@@ -34,6 +34,7 @@ Production state stays in docs/lba3-production/STATE.md and BACKLOG.md; this fil
 | ANIM-DEATH | animator | every enemy's knock-out: fall with weight, on the ground, LBA blink, bonus on the ground (src/game/death.js; tests/deaths.mjs) | REVIEW | evidence/ANIM-DEATH/ |
 | VP-12 | graphics artist | the prologue's harbour master's shed by Doran is a plain box (src/game/story/prologue.js decorate) | TODO | VP-7 report |
 | SRC-2 | source-character integrator | Baldino rebuilt from LBA2 body 139 (a Grobo; his own skeleton, ear/trunk bones, his walk/idle/talk timing); Zoé no longer pregnant (the user); the Dino-Fly's doze (REV-V-1 D1/D2: wings folded along the flanks, one-eyed look, subtler rounder muzzle) | REVIEW (visual review next) | evidence/SRC-2/, character-review §16 |
+| ARTHUR-12 | character artist | WORKLIST #30: Arthur at twelve (eyes 0.835 of Twinsen; preteen proportions, his father's face, an older cut; the opening's close-ups and looks follow his height) | REVIEW (visual review next) | docs/lba3-production/reviews/ARTHUR-12/, character-review §19 |
 | CHAR-OPEN | character artist | OPEN-3's model leftovers: Zoé's bun on the head; Twinsen's tunic with sleeves of its own (arms and shrug read); Zoé's arms with volume, armSpread 0.08; the guard's coat on the legs when knocked out | REVIEW (visual review next) | docs/lba3-production/reviews/CHAR-OPEN/, character-review §17 |
 
 ## Next exact action

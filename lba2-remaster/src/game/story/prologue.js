@@ -28,7 +28,9 @@ export class Prologue extends ChapterBase {
     const kids = { x: V.x - 7, z: V.z + 8 };
     return [
       { id: 'zoe', name: 'n_zoe', char: 'zoe', color: '#ffb0d0', ...R.house.npcSpots.zoe, angle: R.house.npcSpots.zoe.a, look: { tunic: '#3f9a6a', robe: '#3f9a6a', hair: '#8a3a1a', ponytail: true, skin: '#f0c49b' } },
-      { id: 'arthur', name: 'n_arthur', char: 'arthur', color: '#ffe070', ...R.house.npcSpots.arthur, angle: R.house.npcSpots.arthur.a, look: { tunic: '#2a66d9', pants: '#f2ead6', hair: '#6a3a1a', scale: 0.62 }, anim: 'hide' },
+      // (ARTHUR-12: twelve; his model and size are LOOKS.arthur's — `look` is only the fallback palette — and his own
+      // pose is at his boat, as place() puts him: the small boy's 0.62 scale and 'hide' crouch are gone)
+      { id: 'arthur', name: 'n_arthur', char: 'arthur', color: '#ffe070', ...R.house.npcSpots.arthur, angle: R.house.npcSpots.arthur.a, look: { tunic: '#2a66d9', pants: '#f2ead6', hair: '#6a3a1a' }, anim: 'kneelWork' },
       { id: 'gilbert', name: 'n_gilbert', char: 'gilbert', color: '#ffb070', x: well.x + 2.4, z: well.z + 1.6, angle: Math.atan2(-1.2, 1.3), look: { tunic: '#b8483b', pants: '#5a4a3a', hair: '#c0c0c0', beard: '#c0c0c0', skin: '#e6b993' }, anim: 'talk' },
       { id: 'mira', name: 'n_mira', char: 'mira', color: '#d8a8ff', x: well.x + 1.2, z: well.z + 2.9, angle: Math.atan2(1.2, -1.3), look: { tunic: '#3b5bb8', pants: '#3b5bb8', ears: '#f4e9dc', skin: '#f4e9dc', hair: '#f4e9dc', apron: '#dfe6f5' }, anim: 'talk' },
       { id: 'pippa', name: 'n_pippa', char: 'pippa', color: '#ffb070', x: W.stall.x, z: W.stall.z, angle: W.stall.a, look: { tunic: '#e58a3a', pants: '#6a4a8a', ears: '#f4e9dc', apron: '#ffffff', skin: '#f4e9dc', hair: '#f4e9dc' } },

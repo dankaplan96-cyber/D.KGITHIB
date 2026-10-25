@@ -48,9 +48,16 @@ export const LOOKS = {
     armSpread: 0.08, armLen: 1.1,
   },
   arthur: {
-    // a curious kid: knee tunic in his father's blue with an orange belt, scuffed knees, a spiky tuft
-    race: 'quetch', kid: true, outfit: 'tunic', hem: 0.36, tunic: '#5a9ad8', tunicTrim: '#2f6aa8', belt: '#f07a28', pants: '#e8dcc0', shoes: '#d9653a',
-    hair: '#6a3a1a', skin: '#f2c49a', hairStyle: 'tuft', nose: 'ball', noseS: 0.9, eyes: '#2a4a8a', mouth: 'open', height: 0.62, neck: 0.1,
+    // ARTHUR-12 (WORKLIST #30): Arthur is twelve (born at the end of LBA2). A preteen, not the small-child template:
+    // about 0.83 of his father's height (to Zoé's eyes), long legs and arms, a head near an adult's size on a longer
+    // body, a narrower egg-shaped face like his father's (the same head sections, tools/blender/cast_poly.py), lid
+    // lines like his father's and thin brows. An older cut: a shorter tunic in his father's blue over long trousers,
+    // sleeves rolled to the elbow (he works on his boats), a tool pouch on the orange belt, the forelock swept back
+    // with a little tuft at the crown that answers his father's knot. Palette: tunic #2a66d9, trousers #f2ead6,
+    // hair #6a3a1a.
+    race: 'quetch', teen: true, outfit: 'tunic', hem: 0.46, tunic: '#2a66d9', tunicTrim: '#1d4c9e', belt: '#f07a28', pants: '#f2ead6', shoes: '#d9653a',
+    hair: '#6a3a1a', skin: '#f2c49a', hairStyle: 'tuft', tuftSwept: true, hairCuts: [0.0, 0.035, 0.072, 0.092, 0.11], nose: 'ball', noseS: 0.85, eyes: '#2a4a8a', eyeScale: 1.06, lids: true, brows: true,
+    skull: 'egg', skullY: 1.05, skullW: 0.93, headS: 0.92, neck: 0.1, handS: 0.9, rolled: true, pouch: '#8a5a2a', hemW: 0.84, legLen: 0.82, height: 1,
   },
   gilbert: {
     race: 'quetch', outfit: 'tunic', hem: 0.62, belly: 0.1, stoop: 0.1, tunic: '#b8483b', tunicTrim: '#7a2a20', belt: '#3a2a1a', pants: '#4a5a6a', shoes: '#3a2a1a',
@@ -320,16 +327,20 @@ LOOKS.twinsenSculpt = { ...LOOKS.twinsen, poly: null };
 // ------------------------------------------------------------------ body design
 function design(L) {
   const kid = !!L.kid;
+  // a preteen (ARTHUR-12: Arthur at twelve): not the small-child template scaled up — longer legs and arms, a head
+  // nearer an adult's size on a longer body, narrower shoulders and a slimmer build than an adult's; the skeleton is
+  // the same (names, hierarchy), drawn at full scale (root scale = height, no kid divisor)
+  const teen = !kid && !!L.teen;
   const slim = L.slim ? 0.86 : 1;
   const grobo = L.race === 'grobo', bunny = L.race === 'bunny', esmer = L.race === 'esmer', quetch = L.race === 'quetch';
   // (LBA1's Spheros, bodies 68–70: short legs, the shoulders at the tips of a star-shaped body, 0.67 of Twinsen's height)
   const sphero = L.race === 'sphero';
   // (LBA1's FunFrock troopers, bodies 18–20: a fat greatcoat to the ankles, the shoulders high, long arms)
   const fclone = L.race === 'fclone';
-  const legLen = L.legLen ?? (fclone ? 0.5 : sphero ? 0.62 : kid ? 0.74 : grobo ? 0.8 : esmer ? 1.08 : 1);
-  const torsoLen = L.torsoLen ?? (fclone ? 1.95 : kid ? 0.82 : grobo ? 1.05 : 1);
+  const legLen = L.legLen ?? (fclone ? 0.5 : sphero ? 0.62 : kid ? 0.74 : teen ? 0.8 : grobo ? 0.8 : esmer ? 1.08 : 1);
+  const torsoLen = L.torsoLen ?? (fclone ? 1.95 : kid ? 0.82 : teen ? 0.8 : grobo ? 1.05 : 1);
   const hs = (L.headS || 1) * (kid ? 1.3 : 1) * (grobo ? 1.1 : 1);
-  const wide = (grobo ? 1.5 : 1) * slim * (kid ? 0.92 : 1);
+  const wide = (grobo ? 1.5 : 1) * slim * (kid ? 0.92 : teen ? 0.9 : 1);
   const belly = L.belly || 0;
   const neckLen = L.neck ?? 0.1;
 
@@ -345,9 +356,9 @@ function design(L) {
   const headP = bone('head', [0, neckP[1] + neckLen, neckP[2] + (L.stoop || 0) * 0.4], 'neck');
   const Hc = add(headP, [0, 0.13 * hs, 0]);
   B.head.tip = add(Hc, [0, 0.18 * hs, 0]);
-  const shX = (fclone ? 0.49 : sphero ? 0.676 : grobo ? 0.33 : 0.2) * slim * (kid ? 0.95 : 1) * (L.shoulders || 1), shY = ty + 0.47 * torsoLen;
-  const armLen = (esmer ? 1.15 : kid ? 0.78 : 1) * (L.armLen || 1);
-  const legX = L.legX ?? (fclone ? 0.16 : sphero ? 0.29 : grobo ? 0.15 : 0.1) * slim;
+  const shX = (fclone ? 0.49 : sphero ? 0.676 : grobo ? 0.33 : 0.2) * slim * (kid ? 0.95 : teen ? 0.88 : 1) * (L.shoulders || 1), shY = ty + 0.47 * torsoLen;
+  const armLen = (esmer ? 1.15 : kid ? 0.78 : teen ? 0.9 : 1) * (L.armLen || 1);
+  const legX = L.legX ?? (fclone ? 0.16 : sphero ? 0.29 : grobo ? 0.15 : teen ? 0.092 : 0.1) * slim;
   for (const [s, sx] of [['L', 1], ['R', -1]]) {
     const sh = bone('sh' + s, [sx * shX, shY, L.shZ || 0], 'torso');
     const el = bone('el' + s, add(sh, [sx * 0.05, -0.29 * armLen, 0.0]), 'sh' + s);
@@ -360,7 +371,7 @@ function design(L) {
   if (L.earBones) for (const [s, sx] of [['L', 1], ['R', -1]]) bone('ear' + s, [sx * L.earBones[0], L.earBones[1], L.earBones[2]], 'head', { noSeg: true });
   if (L.trunkBones) L.trunkBones.forEach((p, i) => bone('trunk' + i, p, i ? 'trunk' + (i - 1) : 'head', { noSeg: true }));
   const hemY = Math.max(0.06, L.hem ?? 0.5);
-  const hemR = (L.hemW ?? 1) * (L.outfit === 'robe2' || L.outfit === 'tw' || L.outfit === 'lba' ? 0.36 : L.outfit === 'bell' ? 0.43 : L.outfit === 'dress' ? 0.34 : L.outfit === 'robe' ? 0.32 : 0.27) * wide * (kid ? 0.92 : 1) + belly * 0.4;
+  const hemR = (L.hemW ?? 1) * (L.outfit === 'robe2' || L.outfit === 'tw' || L.outfit === 'lba' ? 0.36 : L.outfit === 'bell' ? 0.43 : L.outfit === 'dress' ? 0.34 : L.outfit === 'robe' ? 0.32 : 0.27) * wide * (kid || teen ? 0.92 : 1) + belly * 0.4;
   for (const [nm, dx, dz] of [['skirtF', 0, 1], ['skirtB', 0, -1], ['skirtL', 1, 0], ['skirtR', -1, 0]]) {
     bone(nm, [dx * 0.08, ty - 0.04, dz * 0.06], 'hips', { tip: [dx * hemR * 0.9, hemY, dz * hemR * 0.75], noSeg: true });
   }
@@ -653,7 +664,7 @@ function design(L) {
     const sh = B['sh' + s].pos, el = B['el' + s].pos, hd = B['hand' + s].pos;
     const g = 'arm' + s;
     G[g] = 0.03;
-    const thick = (grobo ? 1.35 : 1) * slim * (kid ? 0.95 : 1);
+    const thick = (grobo ? 1.35 : 1) * slim * (kid ? 0.95 : teen ? 0.88 : 1);
     if (L.outfit === 'lba') {
       // the cape's sides: a broad, flat sleeve hanging from the shoulder, its hem cut level at 0.41 H
       const HH = 2.1;
@@ -729,7 +740,7 @@ function design(L) {
     const hp = B['hip' + s].pos, kn = B['knee' + s].pos, ft = B['foot' + s].pos;
     const g = 'leg' + s;
     G[g] = 0.03;
-    const thick = (grobo ? 1.5 : 1) * slim * (kid ? 0.92 : 1) * (L.outfit === 'bell' ? 1.12 : 1);
+    const thick = (grobo ? 1.5 : 1) * slim * (kid ? 0.92 : teen ? 0.86 : 1) * (L.outfit === 'bell' ? 1.12 : 1);
     cone(hp, kn, 0.075 * thick, 0.058 * thick, 'hip' + s, 'pants', g);
     cone(kn, add(ft, [0, 0.0, 0]), 0.056 * thick, 0.046 * thick, 'knee' + s, 'pants', g);
   }
@@ -766,7 +777,7 @@ function design(L) {
   return {
     prims: P, groups: G, joinK: 0.012, bones: B, chains, colors, paint, hard: ['belt', 'buckle', 'visor', 'brassDark', 'hardhat'],
     bounds: { min: [-halfW, 0.0, -0.55], max: [halfW, top, 0.5] },
-    cell: kid ? 0.012 : 0.014,
+    cell: kid || teen ? 0.012 : 0.014,
     face, Hc, hs, hipsY,
   };
 }
@@ -1060,7 +1071,7 @@ function finishRig(L, def, root, mesh, bones, eyes) {
   if (L.outfit === 'lba' || L.outfit === 'gown') rig.legCloth = true;
   if (L.outfit === 'lba' || L.race === 'esmer' || L.longCoat) rig.robeLegs = true; // (one robe, or an Esmer's capsule, over both legs: a shorter stride)
   rig.bell = L.outfit === 'bell';
-  root.scale.setScalar(L.height ? (L.kid ? L.height / 0.78 : L.height) : 1);
+  root.scale.setScalar(L.height ? (L.kid ? L.height / 0.78 : L.height) : 1);   // (a teen look is drawn at full scale: height 1)
   return rig;
 }
 

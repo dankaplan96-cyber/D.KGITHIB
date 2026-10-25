@@ -71,6 +71,9 @@ export function playOpening(story) {
   const from = (a, anim, at = 0.6) => { a.rig.play(anim); a.rig.actionT = at; };
   const look = (a, p) => { a.rig.lookAt = p; };
   const head = (a, h = 1.5) => V(a.pos.x, a.pos.y + h * (a.rig.root.scale.y || 1), a.pos.z);
+  // (ARTHUR-12) where a kneeling Arthur's eyes are, from his head bone when the look is given: at twelve his head is
+  // well above the small boy's (a fixed 0.9 × his scale had his father look at his chest)
+  const eyesOf = (a) => a.rig.j.head.getWorldPosition(V(0, 0, 0)).add(V(0, 0.18 * (a.rig.root.scale.y || 1), 0));
   const loop = (name, opts) => { const h = g.audio.loop?.(name, opts); if (h) loops.push(h); return h; };
   const sfx = (name) => g.audio.play(name);
   const fade = (on, quick = true) => { const f = document.querySelector('#fade'); f.classList.toggle('quick', quick); f.classList.toggle('on', on); };
@@ -179,8 +182,10 @@ export function playOpening(story) {
     // 5 — home: the whole family at their own things; over Arthur's shoulder: "Dad! The mast fits!"
     shot(29.0, 31.2, P(hv(4.35, 2.75, 4.35), hv(0.2, 0.6, -0.55), 44), P(hv(4.2, 2.68, 4.2), hv(0.15, 0.6, -0.58), 44)),
     // (Arthur's face: a three-quarter close-up as he shows the mast; then over his shoulder for his father's answer)
-    shot(31.2, 33.1, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.45, 1.2, 2.33), hv(2.0, 0.82, 2.05), 42)),
-    shot(33.1, 35.0, P(hv(3.4, 1.9, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 1.88, 2.9), hv(0.0, 0.8, -0.5), 42)),
+    // (ARTHUR-12: at twelve, kneeling, his eyes are at 1.2 m, not 0.85: the close-up's lens and aim 0.28 m higher,
+    // the same angle; the over-the-shoulder camera 0.15 m higher so his head sits in the corner, not over his father)
+    shot(31.2, 33.1, P(hv(0.4, 1.5, 2.35), hv(2.0, 1.1, 2.05), 42), P(hv(0.45, 1.48, 2.33), hv(2.0, 1.1, 2.05), 42)),
+    shot(33.1, 35.0, P(hv(3.4, 2.05, 3.0), hv(0.0, 0.8, -0.5), 42), P(hv(3.3, 2.03, 2.9), hv(0.0, 0.8, -0.5), 42)),
     // 6 — Zoé at the counter, then the tap
     // (R5: from the kitchen's west end a little over her eye level, three-quarter front: her face, her hands on the tray
     // and the tap, Twinsen at his table behind her; one shot with a slow push in as she goes to the tap. Pitched so the
@@ -198,7 +203,7 @@ export function playOpening(story) {
     // (from the bed's foot: all three in one frame as the dust falls and they look up; then Arthur's close-up for his
     // line, the same angle as his first)
     shot(53.4, 54.8, P(hv(-3.0, 2.3, 3.0), hv(0.3, 1.0, -0.6), 54), P(hv(-2.9, 2.27, 2.9), hv(0.3, 1.0, -0.6), 54)),
-    shot(54.8, 58.0, P(hv(0.4, 1.22, 2.35), hv(2.0, 0.82, 2.05), 42), P(hv(0.47, 1.2, 2.32), hv(2.0, 0.82, 2.05), 42)),
+    shot(54.8, 58.0, P(hv(0.4, 1.5, 2.35), hv(2.0, 1.1, 2.05), 42), P(hv(0.47, 1.48, 2.32), hv(2.0, 1.1, 2.05), 42)),
     // 9 — the second try: a warm trickle, steam
     shot(58.0, 60.1, P(hv(-3.62, 1.84, -3.15), hv(-2.1, 1.47, -2.55), 53), P(hv(-3.6, 1.83, -3.15), hv(-2.15, 1.45, -2.58), 52)),   // (R5: the first try's angle)
     shot(60.1, 62.4, P(hv(-1.35, 1.45, -3.0), hv(-2.3, 0.98, -3.18), 38), P(hv(-1.4, 1.43, -3.0), hv(-2.3, 0.98, -3.18), 35)),
@@ -554,7 +559,7 @@ export function playOpening(story) {
   });
   // "Dad! The mast fits!" / "Told you. Now the sail."
   at(31.15, () => { play(ar, 'kneelShow'); look(ar, head(tw)); });
-  at(31.6, () => { play(tw, 'idle'); look(tw, head(ar, 0.9)); });
+  at(31.6, () => { play(tw, 'idle'); look(tw, eyesOf(ar)); });
   at(33.1, () => tw.rig.doGesture('nod'));
   at(35.2, () => { play(tw, 'tinker'); look(tw, null); });
   at(35.0, () => { play(ar, 'kneelWork'); look(ar, null); });
@@ -595,7 +600,7 @@ export function playOpening(story) {
   // the house hums: dust from the beams, everybody looks up; Arthur knows what it is
   at(53.6, () => { sfx('hum'); sfx('rattle'); for (const [x, z] of [[-0.5, 0.5], [1.5, -1.0], [-2.0, -2.0]]) { const p = hx(x, z); g.particles.burst(p.x, 2.85, p.z, '#d8c8a8', 5, 0.4); } });
   at(53.8, () => { look(tw, hv(-0.4, 3.0, 0.2)); look(zo, hv(-1.6, 3.0, -2.0)); play(ar, 'kneelLook'); look(ar, hv(2.0, 3.0, 1.6)); });
-  at(54.8, () => { look(ar, head(tw)); look(tw, head(ar, 0.9)); look(zo, head(ar, 0.9)); });
+  at(54.8, () => { look(ar, head(tw)); look(tw, eyesOf(ar)); look(zo, eyesOf(ar)); });
   at(57.25, () => { look(zo, tapAt()); });   // (her eyes back to the tap first, then she turns)
   at(58.1, () => play(zo, 'reach'));
   at(58.0, () => { look(tw, head(zo)); play(ar, 'kneelWork'); look(ar, null); });
