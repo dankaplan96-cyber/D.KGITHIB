@@ -762,9 +762,14 @@ clock: motion measured, not how it looks on a GPU.
 - Interruptions (tests/anim-combat.mjs): a hit in the coil (no throw, no whip played on, ball home, reaction then stance);
   death in a charge; pause in the coil (frozen, called off on resume as before); dialogue in a strike; a weapon swap in
   a strike; every button in one frame; a scene change in a charge — no stuck pose, no ball left in the hand.
-- Cost: the hero's foot planting is one matrix update of his skeleton and two two-bone solves a frame (see
-  reviews/ANIM-COMBAT/tests.log for the measured time); no new meshes, materials or draw calls.
-- Regressions: reviews/ANIM-COMBAT/tests.log.
+- Cost (reviews/ANIM-COMBAT/perf.js → perf.txt, headless CPU): the hero rig's update 0.02 ms a frame median with foot
+  planting (0.005-0.01 without), p95 0.03-0.035 ms; one matrix update of his skeleton and two two-bone solves a frame;
+  no new meshes, materials or draw calls.
+- Regressions (reviews/ANIM-COMBAT/tests.log, merged with origin after CAM-2): anim-combat, combat, controls, deaths,
+  arsenal, stability, opening, camsteady, jetpack ALL PASSED; chapter1 to its end (Zeelich), no errors; zoe-resume failed
+  once (Zoé caught while sneaking out under load, the flake STATE records under SRC-2) and passed on the rerun.
+- The moving throw's release point is higher (1.85 m vs 1.24-1.55 m before), so a targeted ball's flight starts higher;
+  its rules (MagicBall.plan from the hand) are unchanged and the landing distances are LBA2's (controls.mjs passes).
 - Not verified: the look on a real GPU and by hand with a pad; the walk's own stride (CTRL-1's keys) was not changed;
   the planted-foot rule stands on flat ground only (on slopes and stairs the feet keep the body's ground height).
 

@@ -37,5 +37,5 @@ for c in range(chunks):
         y = (c * len(sets) + si) * TH
         if d2: dr.text((4, y + TH // 2), labels[si], fill=(255, 255, 255))
         for i, t in enumerate(ts[c * COLS:(c + 1) * COLS]): img.paste(t, (LW + i * TW, y))
-img.save(out, quality=80)
+img.save(out, quality=62)
 print(out, img.size)
