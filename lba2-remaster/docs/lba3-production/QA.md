@@ -943,6 +943,59 @@ one there (jars), else a new Esmer barrel/crate; not by the shuttle board/pad (t
 
 Not verified: a real GPU (SwiftShader captures), an independent review, the feel of the glint and the hop-aside by
 hand; Desert Island has no new containers (its ~60 original spots don't map onto our remapped desert).
+### SETTINGS-UI: a calm settings screen after LBA2's options menu (WORKLIST #28; evidence docs/lba3-production/reviews/SETTINGS-UI/)
+The user (2026-10-25): "The settings screen is very busy. I want something faithful to the original (LBA2), but more
+2026." Before: 18 rows of segmented buttons on one panel, scrolling at 1366×768 (1013 px of 768) and at 640×360
+(1498 px of 360, the title out of view); the arrow keys and a pad reached only Back (the rows were mouse/touch only).
+
+Reference (read-only, the user's files): LBA2's GAMEMENU.CPP / TEXT.HQR. Its options menu is one short column of wide
+framed bars (DrawCadre with corner angles, a shaded box behind), centred text, the selected bar burning (DrawFireBar);
+volumes are a sub-menu of fire-filled sliders that play a sound while they move; toggles change their label in place;
+"Return to previous menu" first, Esc leaves.
+
+After: four pages, a tab bar (Game · Controls · Display · Sound) over one framed column of rows, a label left and the
+choices right as equal chips (the chosen one filled: shape and lightness, not colour alone); the selection burns as
+in LBA2, with corner marks; sliders are fire-filled bars with the level in numbers; a one-line hint only under
+Movement, Camera, Resolution, Edges and Minimap (what the choice does, or what it depends on).
+
+| Page | Shown | Advanced |
+|---|---|---|
+| Game | Difficulty, Text Speed, Subtitle Size, Camera Shake | — |
+| Controls | Movement (Classic first, the default), Camera, Keys → the controls screen | Aim Assist, Focus Button |
+| Display | Graphics, Look, HUD | Resolution, Edges, Frame Rate Limit, Minimap |
+| Sound | Music, Sound Effects, Voices | — |
+
+- Every stored key and value is as before (data-setting / data-range; applySettings and R1-MIGRATE untouched); the
+  language stays hidden; pause → Benchmark untouched. Hints follow the state: Edges on Low says Low always uses Fast;
+  Minimap says it shows with HUD Always on; the free camera's hint names the turn keys in use.
+- Navigation: ↑/↓ (d-pad, stick) move between the tab bar, the rows, the Advanced fold and Back; ←/→ change the
+  selected row (a slider steps 5 % and repeats when held); Enter/E/Space/A on a row picks the next value; on the tab
+  bar ←/→ or Enter turn the page, Tab / Shift+Tab and the pad's LB/RB anywhere; the pad's B goes back from Settings
+  and Controls. Esc is unchanged (in the pause's settings it resumes play). The mouse selects the row under it (one
+  highlight); touch taps chips and tabs and drags sliders. A clicked menu entry becomes the selected one, and Back
+  returns the selection to the entry that opened the child (pause → Settings → Back: Settings selected; Settings →
+  Keys → Back: Keys selected). Clicked buttons and sliders keep no DOM focus (Enter can't press twice; Esc and the
+  arrows reach the game after a slider drag).
+- Controls screen: the key buttons are reachable by keys and pad and scroll into view; one rebinding awaited at a
+  time (a second click replaces the first; before, both bound to the next key); leaving the screen cancels a
+  pending rebinding (it used to bind the next key pressed anywhere); a held Enter doesn't become the new key.
+- Inventory: the controls line and the gadget's "use" follow the bindings (CLAR-2's open item): Classic "↑←↓→: select ·
+  Shift / Esc: close", Modern "WASD: …", rebound keys by name, the pad "D-pad … Menu".
+- Fit (tests/display.mjs, each page with Advanced closed and open): 1920×1080, 1366×768, 1280×720, 1024×768, 800×600
+  and 640×360 — everything inside the window with Back, no text cut, no scrolling with Advanced closed; at 640×360 only
+  Display's open Advanced list scrolls (77 px, inside the panel; the title is dropped below 440 px of height).
+- Reduced motion (the system setting): the fire bars of the menus, the settings and the key buttons hold still.
+
+| Test | Result |
+|---|---|
+| menus | ALL PASSED (38; new: same keys, ≤ 4 rows per page, keys/arrows/Enter on tabs, rows, the fold and a slider, mouse hover, focus return from Settings and Keys, pad B, Esc unchanged, rebinding wait/cancel, the inventory line in Classic and with a rebound key) |
+| display | ALL PASSED (31; settings fit at 6 sizes, Esc from the settings, reduced motion) |
+| controls, stability, opening, crosssystem (Graphics clicked on the Display page), holomap (the minimap setting) | ALL PASSED (69, 16, 27, 10, 30) |
+| audio | 4/5: "sliders set the buses" fails on the voice bus, 0.44 for the slider's 0.2 — VOICE-MIX's ×2.2 voice boost (fea86ca), which the test predates; the setting itself is 0.2. Not from this change; the test needs VOICE_BOOST in its expectation (audio.mjs is not this task's file) |
+
+Not verified: a real gamepad and a touch screen by hand (simulated pad buttons only), a screen reader (roles and
+aria-selected/expanded/pressed are set, not audited), the look on a real display; the controls screen's key table is
+still long (left as it was: only its navigation changed).
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.

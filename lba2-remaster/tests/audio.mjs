@@ -14,7 +14,7 @@ await page.keyboard.press('Escape'); await ev(() => game.step(0.1));
 await page.click('#pause [data-act="settings"]');
 for (const [k, v] of [['music', '0.3'], ['sfx', '0.5'], ['voice', '0.2']]) await page.$eval(`[data-range="${k}"]`, (e, v) => { e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); }, v);
 const buses = await ev(() => { const A = game.audio; return { music: A.musicBus.gain.value, sfx: A.sfxBus.gain.value, voice: A.voiceBus.gain.value, amb: A.ambBus.gain.value }; });
-check('sliders set the music, effects, voice and ambience buses', Math.abs(buses.music - 0.3) < 1e-6 && Math.abs(buses.sfx - 0.5) < 1e-6 && Math.abs(buses.voice - 0.2) < 1e-6 && Math.abs(buses.amb - 0.3) < 1e-6, buses);
+check('sliders set the music, effects, voice (x2.2, VOICE-MIX) and ambience buses', Math.abs(buses.music - 0.3) < 1e-6 && Math.abs(buses.sfx - 0.5) < 1e-6 && Math.abs(buses.voice - 0.2 * 2.2) < 1e-6 && Math.abs(buses.amb - 0.3) < 1e-6, buses);
 await page.click('#settings [data-act="back"]'); await page.click('#pause [data-act="resume"]');
 
 // music per place, through doors (played)

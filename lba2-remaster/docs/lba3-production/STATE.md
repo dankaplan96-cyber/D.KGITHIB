@@ -393,6 +393,16 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   time out). Regression runs: QA.md.
 - Open: an independent review; a real GPU look at the glint and the pieces; the desert's original spots (our desert
   is remapped; none placed).
+## Done after (SETTINGS-UI, WORKLIST #28; status REVIEW)
+- The settings screen after LBA2's options menu, calmer: four pages (Game · Controls · Display · Sound) with ≤ 4 rows,
+  Advanced folds on Controls (Aim Assist, Focus Button) and Display (Resolution, Edges, Frame Rate Limit, Minimap),
+  the selection burning as in LBA2, chosen values as filled chips, hints only under Movement, Camera, Resolution,
+  Edges and Minimap. Same stored keys and values; Esc unchanged.
+- Keys/pad reach every row (←/→ change, Enter cycles, LB/RB or Tab turn pages, pad B backs out); Back returns the
+  selection to the entry that opened the child; the controls screen's key buttons are reachable; one pending rebinding
+  at a time, cancelled on leaving. Inventory's key line and gadget "use" follow the bindings (CLAR-2's open item).
+- Evidence: QA.md "SETTINGS-UI", docs/lba3-production/reviews/SETTINGS-UI/. Not verified: a real pad/touch screen by
+  hand, an independent review.
 
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

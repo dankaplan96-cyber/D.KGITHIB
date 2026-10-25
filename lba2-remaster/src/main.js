@@ -702,18 +702,110 @@ class Game {
   // ------------------------------------------------ UI
   showScreen(id) {
     this.hideScreens();
+    this._rebindOff?.(); // (a key press after leaving the controls screen never rebinds anything)
     document.querySelector('#chapter')?.classList.remove('show'); // (a chapter title never sits on top of a screen)
     $('#' + id).classList.remove('hidden');
     if (id === 'title') $('#btn-continue').disabled = !store.get(SAVE_KEY);
-    if (id === 'settings') this.syncSettingsUI();
     this.screen = id;
+    if (id === 'settings') { this.syncSettingsUI(); this.setTabTo(this.setTab || 'game'); }
     this.screenT = 0;
     this.menuSel = 0;
     this.focusMenu();
   }
   hideScreens() { document.querySelectorAll('.screen').forEach((e) => { if (e.id !== 'loading') e.classList.add('hidden'); }); this.screen = null; }
-  menuButtons() { return this.screen ? [...document.querySelectorAll(`#${this.screen} .menu button:not(:disabled)`)] : []; }
-  focusMenu() { this.menuButtons().forEach((b, i) => b.classList.toggle('sel', i === this.menuSel)); }
+  // what the arrows / d-pad move between: the screen's menu buttons; on the controls screen the key buttons too;
+  // on the settings screen the tab bar, the rows of the open page and Back (settingsItems)
+  menuButtons() {
+    if (!this.screen) return [];
+    if (this.screen === 'settings') return this.settingsItems();
+    const keys = this.screen === 'controls' ? '#rebind .keybtn, ' : '';
+    return [...document.querySelectorAll(`#${this.screen} :is(${keys}.menu button):not(:disabled)`)];
+  }
+  focusMenu(scroll = false) {
+    const btns = this.menuButtons();
+    this.menuSel = Math.max(0, Math.min(this.menuSel, btns.length - 1));
+    if (this.screen === 'settings') document.querySelectorAll('#settings .sel').forEach((e) => e.classList.remove('sel'));
+    btns.forEach((b, i) => b.classList.toggle('sel', i === this.menuSel));
+    if (scroll) btns[this.menuSel]?.scrollIntoView?.({ block: 'nearest' });
+  }
+  // a child menu (Settings, Controls) remembers where its parent's selection was; Back returns to it
+  openChild(id) {
+    if (!this.menuStack || !this.screen || this.screen === 'title' || this.screen === 'pause') this.menuStack = [];
+    if (this.screen) this.menuStack.push({ id: this.screen, sel: this.menuSel });
+    this.prevScreen = this.screen;
+    this.showScreen(id);
+    if (id === 'controls') this.buildRebind();
+  }
+  closeChild() {
+    const top = this.menuStack?.pop();
+    this.showScreen(top?.id || this.prevScreen || 'title');
+    if (top) { this.menuSel = top.sel; this.focusMenu(true); }
+  }
+
+  // ---- settings screen (SETTINGS-UI): four pages, an Advanced fold on two of them
+  settingsItems() {
+    const S = $('#settings'), page = S.querySelector(`.set-page[data-page="${this.setTab || 'game'}"]`);
+    const rows = [...page.querySelectorAll('.set-row, .set-fold')].filter((e) => e.offsetParent !== null);
+    return [S.querySelector('.set-tabs'), ...rows, S.querySelector('.menu button')];
+  }
+  setTabTo(tab) {
+    if (this.setTab !== tab) $('#settings .set-page.on')?.scrollTo?.(0, 0);
+    this.setTab = tab;
+    this.setAdv ??= {};
+    document.querySelectorAll('#settings .set-tabs [data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === tab));
+    document.querySelectorAll('#settings .set-page').forEach((p) => {
+      p.classList.toggle('on', p.dataset.page === tab);
+      p.classList.toggle('adv-open', !!this.setAdv[p.dataset.page]);
+      p.querySelector('.set-fold')?.setAttribute('aria-expanded', !!this.setAdv[p.dataset.page]);
+    });
+    if (this.screen === 'settings') this.focusMenu();
+  }
+  toggleAdvanced() {
+    this.setAdv ??= {};
+    this.setAdv[this.setTab] = !this.setAdv[this.setTab];
+    this.setTabTo(this.setTab);
+    // opened: the fold goes to the top of the list so the advanced rows show under it (it stays selected)
+    if (this.setAdv[this.setTab]) $('#settings .set-page.on .set-fold')?.scrollIntoView?.({ block: 'start' });
+  }
+  // left / right change the selected row's value (a slider steps, and repeats while held), Enter / A on a row picks
+  // the next value, the tab bar (or Tab, LB / RB) turns the page; true when it used the confirm press
+  settingsNav(btns) {
+    const i = this.input, it = btns[this.menuSel], now = performance.now();
+    const pad = i.lastDevice === 'pad';
+    let tab = 0;
+    if (i.pressed('cycle')) tab = i.keys.has('ShiftLeft') || i.keys.has('ShiftRight') ? -1 : 1;
+    if (pad && i.pressed('swap')) tab = -1;
+    if (pad && i.pressed('focus')) tab = 1;
+    let dir = i.pressed('right') ? 1 : i.pressed('left') ? -1 : 0;
+    if (dir) this._setHeld = now;
+    const slider = it?.querySelector?.('input[type=range]');
+    const held = (i.down('right') ? 1 : 0) - (i.down('left') ? 1 : 0);
+    if (!dir && slider && held && now - (this._setHeld || 0) > 380 && now - (this._setRep || 0) > 70) { dir = held; this._setRep = now; }
+    const confirm = i.pressed('interact') || i.pressed('action') || i.pressed('recenter');
+    if (it?.classList.contains('set-tabs')) { tab ||= dir; if (confirm && !tab) tab = 1; dir = 0; }
+    if (tab) {
+      const T = ['game', 'controls', 'display', 'sound'], k = (T.indexOf(this.setTab) + tab + T.length) % T.length;
+      this.setTabTo(T[k]); this.audio.play('blip');
+      return confirm;
+    }
+    const seg = it?.querySelector?.('.seg');
+    if (seg && (dir || confirm)) {
+      const opts = [...seg.querySelectorAll('button')], cur = opts.findIndex((b) => b.classList.contains('on'));
+      const k = confirm ? (cur + 1) % opts.length : Math.max(0, Math.min(opts.length - 1, cur + dir));
+      if (k !== cur) { opts[k].click(); this.audio.play('blip'); }
+      return confirm;
+    }
+    if (slider && dir) {
+      const v = Math.round(Math.max(0, Math.min(1, +slider.value + dir * 0.05)) * 20) / 20;
+      if (v !== +slider.value) { slider.value = v; slider.dispatchEvent(new Event('input', { bubbles: true })); }
+    }
+    return confirm && !!slider;
+  }
+  syncRange(r) {
+    const v = +r.value;
+    r.style.setProperty('--v', `${v * 100}%`);
+    const o = r.parentElement.querySelector('output'); if (o) o.textContent = `${Math.round(v * 100)}%`;
+  }
 
   wireUI() {
     if (window.desktop) document.body.classList.add('desktop');
@@ -721,11 +813,31 @@ class Game {
       const b = e.target.closest('button');
       if (!b) return;
       this.audio.init();
+      // (a menu button keeps no DOM focus: Enter on it would press it a second time through the browser)
+      if (b.closest('.screen')) { b.blur(); const k = this.menuButtons().indexOf(b); if (k >= 0) this.menuSel = k; } // (a clicked entry is the selected one, also for Back's return)
       if (b.dataset.act) { this.audio.play('select'); this.act(b.dataset.act); }
       const seg = b.closest('.seg');
       if (seg && b.dataset.v) { this.settings[seg.dataset.setting] = b.dataset.v; if (seg.dataset.setting === 'quality') this.settings.qPicked = true; this.applySettings(); this.syncSettingsUI(); }
+      if (b.dataset.tab) { this.setTabTo(b.dataset.tab); this.audio.play('blip'); }
+      if (b.classList.contains('set-fold')) { this.toggleAdvanced(); this.audio.play('blip'); }
     });
-    document.querySelectorAll('[data-range]').forEach((r) => r.addEventListener('input', () => { this.settings[r.dataset.range] = +r.value; this.applySettings(); }));
+    document.querySelectorAll('[data-range]').forEach((r) => {
+      r.addEventListener('input', () => {
+        this.settings[r.dataset.range] = +r.value; this.applySettings(); this.syncRange(r);
+        // LBA2 plays a sound while its effects slider moves: a short one at the new level
+        if (r.dataset.range === 'sfx' && performance.now() - (this._sfxPreview || 0) > 120) { this._sfxPreview = performance.now(); this.audio.play('select'); }
+      });
+      r.addEventListener('change', () => r.blur()); // (a slider keeps no focus: Esc and the arrows go back to the game)
+    });
+    // the mouse (or a touch) selects the row under it: one row highlighted, not one by the pointer and one by keys
+    const pick = (e) => {
+      if (this.screen !== 'settings' || (e.type === 'pointermove' && e.pointerType !== 'mouse')) return;
+      const el = e.target.closest('.set-tabs, .set-row, .set-fold, .menu button'); if (!el) return;
+      const k = this.settingsItems().indexOf(el);
+      if (k >= 0 && k !== this.menuSel) { this.menuSel = k; this.focusMenu(); }
+    };
+    $('#settings').addEventListener('pointermove', pick);
+    $('#settings').addEventListener('pointerdown', pick);
     $('#pausebtn').addEventListener('click', () => this.pause());
     // a story scene stops when the window loses focus (its music would run on without the picture)
     document.addEventListener('visibilitychange', () => {
@@ -744,10 +856,9 @@ class Game {
     switch (a) {
       case 'continue': this.startContinue(); break;
       case 'new': if (this.dirty) this.reloadInto('new'); else this.startNew(); break;
-      case 'settings': this.prevScreen = this.screen; this.showScreen('settings'); break;
-      case 'controls': this.prevScreen = this.screen; this.showScreen('controls'); this.buildRebind(); break;
+      case 'settings': case 'controls': this.openChild(a); break;
       case 'resetkeys': this.settings.keys = {}; this.applySettings(); this.buildRebind(); break;
-      case 'back': this.showScreen(this.prevScreen || 'title'); break;
+      case 'back': this.closeChild(); break;
       case 'exitapp': window.desktop?.quit(); break; // (the desktop app only: desktop/preload.js)
       case 'resume':
         this.hideScreens();
@@ -777,8 +888,18 @@ class Game {
   }
 
   syncSettingsUI() {
-    document.querySelectorAll('.seg').forEach((s) => s.querySelectorAll('button').forEach((b) => b.classList.toggle('on', String(this.settings[s.dataset.setting]) === b.dataset.v)));
-    document.querySelectorAll('[data-range]').forEach((r) => { r.value = this.settings[r.dataset.range]; });
+    const s = this.settings, L = (a) => keyLabel(keyFor(a));
+    document.querySelectorAll('.seg').forEach((g) => g.querySelectorAll('button').forEach((b) => { const on = String(s[g.dataset.setting]) === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
+    document.querySelectorAll('[data-range]').forEach((r) => { r.value = s[r.dataset.range]; this.syncRange(r); });
+    // one line under a few rows, only where the choice isn't obvious (or depends on another setting)
+    const hint = {
+      controls: () => t('set_h_' + s.controls),
+      camera: () => t('set_h_cam_' + s.camera, { l: L('camL'), r: L('camR') }),
+      res: () => t('set_h_res_' + s.res),
+      aa: () => t(s.quality === 'low' ? 'set_h_aa_low' : 'set_h_aa_' + s.aa),
+      minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
+    };
+    document.querySelectorAll('#settings [data-hint]').forEach((row) => { row.querySelector('.set-hint').textContent = hint[row.dataset.hint]?.() ?? ''; });
   }
 
   // key rebinding (controls screen): click an action, press the new key
@@ -788,15 +909,21 @@ class Game {
     el.innerHTML = '';
     for (const a of REBINDABLE) {
       const lab = document.createElement('label'); lab.textContent = t('kb_' + a);
-      const b = document.createElement('button'); b.className = 'keybtn'; b.textContent = keyLabel(keyFor(a));
+      const b = document.createElement('button'); b.className = 'keybtn'; b.textContent = b.dataset.key = keyLabel(keyFor(a));
       b.addEventListener('click', () => {
+        // one key awaited at a time: a second click (on this or another action) replaces the first
+        this._rebindOff?.(); el.querySelectorAll('.keybtn.wait').forEach((x) => { x.classList.remove('wait'); x.textContent = x.dataset.key; });
         b.textContent = t('rebind_press'); b.classList.add('wait');
+        const sel = Math.max(0, this.menuButtons().indexOf(b));
         const on = (e) => {
           e.preventDefault(); e.stopPropagation();
-          removeEventListener('keydown', on, true);
+          if (e.repeat) return; // (Enter held from pressing the button is not the new key)
+          this._rebindOff();
           if (e.code !== 'Escape') { this.settings.keys = { ...(this.settings.keys || {}), [a]: e.code }; this.applySettings(); }
-          this.buildRebind();
+          this.buildRebind(); this.menuSel = sel; this.focusMenu();
+          this.input.clearEdges?.(); // (the key just taken doesn't also act on the menu)
         };
+        this._rebindOff = () => { removeEventListener('keydown', on, true); this._rebindOff = null; };
         addEventListener('keydown', on, true);
       });
       el.append(lab, b);
@@ -1382,10 +1509,13 @@ class Game {
 
   menuNav() {
     const btns = this.menuButtons();
-    if (!btns.length) return;
+    if (!btns.length || this._rebindOff) return; // (while a key is awaited, the keys belong to the rebinding)
     const i = this.input;
-    if (i.pressed('down')) { this.menuSel = (this.menuSel + 1) % btns.length; this.focusMenu(); this.audio.play('blip'); }
-    if (i.pressed('up')) { this.menuSel = (this.menuSel + btns.length - 1) % btns.length; this.focusMenu(); this.audio.play('blip'); }
+    // a pad's B goes back from a child menu (Esc keeps its meaning: in the pause menus it resumes)
+    if (i.lastDevice === 'pad' && i.pressed('dodge') && (this.screen === 'settings' || this.screen === 'controls')) { this.audio.play('select'); this.act('back'); return; }
+    if (this.screen === 'settings' && this.settingsNav(btns)) return;
+    if (i.pressed('down')) { this.menuSel = (this.menuSel + 1) % btns.length; this.focusMenu(true); this.audio.play('blip'); }
+    if (i.pressed('up')) { this.menuSel = (this.menuSel + btns.length - 1) % btns.length; this.focusMenu(true); this.audio.play('blip'); }
     if (i.pressed('interact') || i.pressed('action') || i.pressed('recenter')) { this.audio.init(); btns[this.menuSel]?.click(); }
   }
 

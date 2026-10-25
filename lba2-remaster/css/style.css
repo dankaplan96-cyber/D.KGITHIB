@@ -389,3 +389,79 @@ body.desktop .desktop-only { display: block !important; }
 #mea .shine { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.08) 50%, transparent 60%); transform: translateX(-100%); pointer-events: none; animation: meashine 1.4s 1.2s ease-in-out forwards; }
 @keyframes meashine { to { transform: translateX(100%); } }
 @media (prefers-reduced-motion: reduce) { #mea .logo path { stroke-dashoffset: 0; animation: none; } #mea .logo circle, #mea .shine { display: none; } #mea .studio { animation-duration: 0.01s; } }
+
+/* =====================================================================
+   Settings (SETTINGS-UI). LBA2's options menu is one column of framed bars on the shaded picture, the selected
+   bar burning (DrawFireBar), its sliders filled with fire. Here: four pages (Game, Controls, Display, Sound),
+   a label on the left and the choices on the right, technical rows under Advanced. One thing burns at a time
+   (the selection, as in LBA2); a chosen value is a filled chip, not a colour alone.
+   ===================================================================== */
+#settings { gap: 12px; }
+#settings h1 { font-size: clamp(26px, 4vw, 40px); }
+.set-tabs { display: flex; width: min(680px, 100%); flex: none; }
+.set-tabs button { flex: 1 1 0; min-width: 0; padding: 11px 6px 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-dim); background: rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.45); border-left-width: 0; border-radius: 0; cursor: pointer; text-shadow: 1px 1px 0 #000; transition: color 0.15s; }
+.set-tabs button:first-child { border-left-width: 1px; }
+.set-tabs button:hover { color: #fff; }
+.set-tabs button[aria-selected="true"] { color: #fff; background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 -3px 0 #fff; }
+.set-panel { display: flex; flex-direction: column; width: min(680px, 100%); flex: 0 1 auto; min-height: 0; text-align: start; background: rgba(0, 0, 0, 0.6); }
+.set-page { display: none; flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.5) transparent; }
+.set-page.on { display: block; }
+.set-row { position: relative; display: grid; grid-template-columns: minmax(120px, 34%) 1fr; align-items: center; column-gap: 16px; min-height: 52px; padding: 9px 16px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+.set-page > .set-row:first-child { border-top: 0; }
+.set-label { font-size: 16px; font-weight: 700; color: var(--ink); text-shadow: 1px 1px 0 #000; }
+#settings .set-hint { grid-column: 2; margin: 5px 0 0; min-height: 1.3em; font-size: 13px; line-height: 1.3; color: var(--ink-dim); text-align: start; }
+/* the choices: equal chips, the chosen one filled */
+#settings .seg { display: flex; gap: 6px; flex-wrap: nowrap; min-width: 0; }
+#settings .seg button { flex: 1 1 0; min-width: 0; min-height: 34px; padding: 7px 6px; font-size: 14px; font-weight: 600; color: var(--ink); background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.32); border-radius: 0; white-space: nowrap; cursor: pointer; text-shadow: 1px 1px 0 #000; }
+#settings .seg button:hover { border-color: #fff; }
+#settings .seg button.on { background: #fff3d1; color: #1d0e00; border-color: #fff; font-weight: 800; text-shadow: none; }
+/* a link to the key bindings, as a row */
+.set-link { width: 100%; margin: 0; font: inherit; color: inherit; background: none; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); text-align: start; cursor: pointer; }
+.set-go { justify-self: start; min-height: 34px; padding: 7px 16px; font-size: 14px; font-weight: 600; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.32); text-shadow: 1px 1px 0 #000; }
+.set-go::after { content: ' \203A'; }
+.set-link:hover .set-go { border-color: #fff; }
+/* Advanced: a fold at the end of the page */
+.set-fold { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; margin: 0; padding: 10px 16px; font: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-dim); background: none; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.1); text-align: start; cursor: pointer; text-shadow: 1px 1px 0 #000; }
+.set-fold::before { content: ''; border-left: 7px solid currentColor; border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform 0.15s; }
+.set-fold:hover { color: #fff; }
+.set-page.adv-open .set-fold::before { transform: rotate(90deg); }
+.set-adv { display: none; background: rgba(255, 255, 255, 0.035); }
+.set-page.adv-open .set-adv { display: block; }
+/* sliders: a framed bar filled with fire up to the level, and the level in numbers */
+.set-slider { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.set-slider output { min-width: 4.2ch; font-weight: 700; font-variant-numeric: tabular-nums; text-align: end; text-shadow: 1px 1px 0 #000; }
+#settings input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 18px; margin: 0; border: 1px solid rgba(255, 255, 255, 0.85); border-radius: 0; cursor: pointer;
+  background: linear-gradient(0deg, #6a0c00, #d24a00 55%, #ffb43a) 0 0 / var(--v, 50%) 100% no-repeat, rgba(0, 0, 0, 0.55); }
+#settings input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 24px; background: #fff; border: 1px solid #000; border-radius: 0; }
+#settings input[type=range]::-moz-range-thumb { width: 10px; height: 24px; background: #fff; border: 1px solid #000; border-radius: 0; }
+/* the selection burns (LBA2's fire bar), with corner marks so it doesn't rest on colour alone */
+.set-row.sel, .set-fold.sel, .set-tabs.sel button[aria-selected="true"], #rebind .keybtn.sel {
+  color: #fff; background: linear-gradient(0deg, #2a0300 0%, #8e1600 40%, #d85400 75%, #f39a20 100%); background-size: 100% 300%; animation: fire 0.9s linear infinite alternate; }
+#settings .set-row.sel .set-hint { color: #fff; text-shadow: 1px 1px 0 #000; }
+.set-row.sel::before, .set-row.sel::after, .set-fold.sel::after { content: ''; position: absolute; width: 10px; height: 10px; border: 0 solid #fff; pointer-events: none; }
+.set-row.sel::before { top: 3px; left: 3px; border-width: 2px 0 0 2px; }
+.set-row.sel::after, .set-fold.sel::after { bottom: 3px; right: 3px; border-width: 0 2px 2px 0; }
+#rebind .keybtn.sel { border-color: #fff; color: #fff; text-shadow: 1px 1px 0 #000; }
+/* a phone held sideways (640x360) and other short windows: everything on one screen, no title (the tabs say it) */
+@media (max-height: 440px) {
+  #settings { gap: 6px; padding-top: 8px; padding-bottom: 8px; }
+  #settings h1 { display: none; }
+  .set-tabs button { padding: 7px 4px; font-size: 11px; letter-spacing: 0.12em; }
+  .set-row { min-height: 38px; padding: 4px 12px; }
+  .set-label { font-size: 14px; }
+  #settings .seg button, .set-go { min-height: 28px; padding: 3px 6px; font-size: 13px; }
+  #settings .set-hint { margin-top: 1px; font-size: 11.5px; }
+  .set-fold { min-height: 32px; padding: 6px 12px; font-size: 11px; }
+  #settings input[type=range] { height: 16px; }
+}
+@media (max-width: 520px) {
+  .set-row { grid-template-columns: 1fr; row-gap: 6px; }
+  #settings .set-hint { grid-column: 1; margin-top: 0; }
+  .set-tabs button { letter-spacing: 0.06em; }
+}
+/* reduced motion: the fire bars hold still (menus, settings, key buttons) */
+@media (prefers-reduced-motion: reduce) {
+  .menu button.sel, .menu button:hover, .menu button:focus-visible, .set-row.sel, .set-fold.sel, .set-tabs.sel button, #rebind .keybtn.sel { animation: none; background-position: 0 50%; }
+  .menu button.sel::after, .menu button:hover::after, #rebind .keybtn.wait { animation: none; }
+  .set-tabs button, .set-fold::before, .menu button { transition: none; }
+}
