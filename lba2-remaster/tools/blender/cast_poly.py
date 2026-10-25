@@ -52,13 +52,17 @@ def build(name):
     bp = lambda n: tuple(B[n]['p'])
     race = L.get('race', 'quetch')
     kid, slim = bool(L.get('kid')), (0.86 if L.get('slim') else 1.0)
+    # a preteen (ARTHUR-12, characters.js design()): the skeleton gives the proportions; here a slimmer build than an
+    # adult's — narrower body, thinner limbs and neck, smaller hands — at full scale
+    teen = not kid and bool(L.get('teen'))
+    limb = 0.86 if teen else 1.0
     grobo, bunny, esmer = race == 'grobo', race == 'bunny', race == 'esmer'
-    wide = (1.5 if grobo else 1.0) * slim * (0.92 if kid else 1.0)
+    wide = (1.5 if grobo else 1.0) * slim * (0.92 if kid else 0.9 if teen else 1.0)
     belly = L.get('belly', 0) or 0
     hs = (L.get('headS') or 1) * (1.3 if kid else 1) * (1.1 if grobo else 1)
     outfit = L.get('outfit', 'tunic')
     hemY = max(0.06, L.get('hem', 0.5))
-    hemR = (L.get('hemW') or 1) * {'dress': 0.34, 'robe': 0.32}.get(outfit, 0.27) * wide * (0.92 if kid else 1) + belly * 0.4
+    hemR = (L.get('hemW') or 1) * {'dress': 0.34, 'robe': 0.32}.get(outfit, 0.27) * wide * (0.92 if kid or teen else 1) + belly * 0.4
     hipsY, shY, neckY, headY = bp('hips')[1], bp('shL')[1], bp('neck')[1], bp('head')[1]
     shX = bp('shL')[0]
     legX = bp('hipL')[0]
@@ -197,6 +201,13 @@ def build(name):
                 sphere(bw, (sxx * 0.05, waistY + 0.01, bz - 0.02), 0.045, 7, 5, (1.2, 0.7, 0.45))
                 tube(bw, (sxx * 0.015, waistY - 0.01, bz - 0.02), (sxx * 0.05, waistY - 0.2, bz - 0.03), 0.02, 0.012, 5, squash=0.4)
             sphere(bw, (0, waistY + 0.01, bz - 0.025), 0.022, 6, 4)
+        if L.get('pouch') and not gown:
+            # (ARTHUR-12) a small tool pouch on the belt at his right hip, flap and all (the pliers' story): on the hips
+            # bone, outside the tunic's flare, so a stride swings the cloth past it rather than through it
+            px0 = -(max(tw * 1.12, legX + 0.1 * wide) + 0.004)
+            pc = b.P('pouch', L['pouch'], 'hips', 30)
+            box(pc, px0 - 0.034, px0, waistY - 0.13, waistY - 0.005, -0.045, 0.045)
+            box(b.P('pouchFlap', L.get('belt', '#5a3a1a'), 'hips', 30), px0 - 0.04, px0 - 0.026, waistY - 0.06, waistY + 0.004, -0.05, 0.05)
         if L.get('buckle') and not L.get('bow') and not gown:
             fz = 0.118 * wide + belly * 0.72 + zc(waistY)
             box(b.P('buckle', L.get('buckle') or '#d8b04a', 'torso', 20), -0.03, 0.03, waistY - 0.025, waistY + 0.04, fz - 0.01, fz + 0.012)
@@ -219,7 +230,7 @@ def build(name):
     pants, shoes = L.get('pants', '#555555'), L.get('shoes', '#3a2a1a')
     for s, sx in (('L', 1), ('R', -1)):
         hp, kn, ft = bp('hip' + s), bp('knee' + s), bp('foot' + s)
-        r1, r2 = (0.085 if grobo else 0.06) * slim, (0.075 if grobo else 0.05) * slim
+        r1, r2 = (0.085 if grobo else 0.06) * slim * limb, (0.075 if grobo else 0.05) * slim * limb
         if gown:
             # (each leg of the outfit: from the hips, tapering to the ankle, like the original's leg panels)
             thigh = b.P('thigh' + s, tunic, lambda p, s=s, k=kn[1]: {'hip' + s: 1 - smooth(k + 0.08, k - 0.04, p[1]), 'knee' + s: smooth(k + 0.08, k - 0.04, p[1])}, 50)
@@ -232,6 +243,10 @@ def build(name):
             tube(thigh, (hp[0], min(hemY + 0.06, hp[1]), hp[2]), kn, r1, r2 * 1.05, 8)
         if hemY > ft[1] + 0.08 and not gown and not grobo:  # (a mid-length coat still shows the shins)
             tube(b.P('shin' + s, pants, 'knee' + s, 50), (kn[0], min(kn[1], hemY + 0.06), kn[2]), (ft[0], ft[1] + 0.03, ft[2]), r2 * 1.05, r2 * 0.9, 8)
+            if teen and hemY > kn[1] - 0.12:
+                # (ARTHUR-12) the knee as a ball on its own bone: kneeling at his boat (kneelWork, 2.3 rad) opened the
+                # thigh's and the shin's tube ends into a gap; the ball fills the joint at any bend
+                sphere(b.P('knee' + s, pants, 'knee' + s, 50), kn, r2 * 1.1, 8, 6)
         fx, fl, fh = (0.07 if grobo else 0.05) * slim, (0.2 if bunny else 0.15 if grobo else 0.13), (0.09 if grobo else 0.07)
         shoe = b.P('shoe' + s, shoes, 'foot' + s, 35)
         if grobo:
@@ -254,15 +269,24 @@ def build(name):
     # ---------------------------------------------------------------- arms and hands
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
-        ra = (0.08 if grobo else 0.066) * slim * (0.92 if kid else 1)
+        ra = (0.08 if grobo else 0.066) * slim * (0.92 if kid else 1) * limb
         sleeve = skin if gown else tunic
+        rolled = bool(L.get('rolled')) and not gown   # (sleeves rolled to the elbow: the bare forearm, a roll of cloth)
         up = b.P('upper' + s, sleeve, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s: smooth(e + 0.06, e - 0.04, p[1])}, 50)
         tube(up, (sh[0] - sx * 0.02, sh[1] + 0.03, sh[2]), el, ra * 1.05, ra, 8)
         wrist = lerp(el, hd, 0.82)
-        tube(b.P('fore' + s, sleeve, 'el' + s, 50), el, wrist, ra * (0.85 if gown else 1), ra * (0.8 if gown else 1.08), 8)  # (sleeves widen a little toward the cuff)
-        if not gown:
+        if rolled:
+            # the forearm bare and slim to the wrist; the sleeve rolled up in a band just below the elbow (it keeps
+            # the elbow's crease covered: the roll is on the forearm's bone, the upper sleeve meets it)
+            # (it runs on to the hand bone, under the ball hand: a bare forearm stopping at the sleeve's wrist left a
+            # gap before the ball that showed in the opening's close-ups)
+            tube(b.P('fore' + s, skin, 'el' + s, 50), lerp(el, hd, 0.12), hd, ra * 0.72, ra * 0.56, 8)
+            tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, -0.02), lerp(el, hd, 0.2), ra * 1.1, ra * 1.04, 8)
+        else:
+            tube(b.P('fore' + s, sleeve, 'el' + s, 50), el, wrist, ra * (0.85 if gown else 1), ra * (0.8 if gown else 1.08), 8)  # (sleeves widen a little toward the cuff)
+        if not gown and not rolled:
             tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, 0.72), lerp(el, hd, 0.86), ra * 1.12, ra * 1.12, 8)
-        hr = (0.075 if grobo else 0.05) * (0.9 if kid else 1)
+        hr = (0.075 if grobo else 0.05) * (0.9 if kid else 1) * (L.get('handS') or 1)
         # the hand: LBA2's ball, hanging just out of the cuff
         ax = [hd[i] - wrist[i] for i in range(3)]
         al = math.sqrt(sum(c * c for c in ax)) or 1
@@ -274,7 +298,7 @@ def build(name):
 
     # ---------------------------------------------------------------- neck and head
     head_w = lambda p: {'head': 1.0}
-    nr = (0.075 if grobo else 0.052) * (1.0 if not kid else 0.9)
+    nr = (0.075 if grobo else 0.052) * (1.0 if not kid else 0.9) * (0.88 if teen else 1.0)
     tube(b.P('neck', skin, lambda p: {'neck': 1 - smooth(headY - 0.02, headY + 0.04, p[1]), 'head': smooth(headY - 0.02, headY + 0.04, p[1])}, 60),
          (0, neckY - 0.04, neckZ), (0, headY + 0.08, headZ), nr, nr * 0.95, 8)
     # LBA2 heads are big: scale the design's head about the chin (quetch/esmer ×1.2, bunny ×1.1)
@@ -300,7 +324,10 @@ def build(name):
             pq = [on(ic + ir * 0.45 * math.cos(t), ir * 0.45 * math.sin(t), 0.0022) for t in ts[::1][:10]]
             lid = [on(-w * 1.05, h * 0.15, 0.0028), on(-w * 0.5, h * 1.02, 0.0028), on(0, h * 1.18, 0.0028), on(w * 0.5, h * 1.08, 0.0028), on(w * 1.08, h * 0.45, 0.0028),
                    on(w * 1.0, h * 0.75, 0.0028), on(w * 0.5, h * 1.4, 0.0028), on(0, h * 1.5, 0.0028), on(-w * 0.5, h * 1.34, 0.0028), on(-w * 1.0, h * 0.42, 0.0028)]
-            b.eye(on(0, 0), [(wq, white), (iq, color), (pq, '#141820')])
+            quads = [(wq, white), (iq, color), (pq, '#141820')]
+            if L.get('lids'):   # (ARTHUR-12) the upper lid line over the eye, as his father's: a strip that blinks with it
+                quads.append((lid, lidc, 'strip'))
+            b.eye(on(0, 0), quads)
 
     eyec = L.get('eyes', '#2a2a2a')
     if race == 'quetch':
@@ -346,6 +373,24 @@ def build(name):
                     return fz(ha) + (fz(hb) - fz(ha)) * t
             return Hc[2] + hd_
         eyes_on(front, my(0.896), 0.037 * sx_, 0.025 * sx_ * (L.get('eyeScale') or 1) * (1.2 if kid else 1), eyec)
+        if L.get('brows'):
+            # (ARTHUR-12) thin brows in the hair colour, a little arched and lifted at the inner end (alert, not
+            # surprised): they read in the opening's close-ups and give the face an age the bare kid face lacked
+            esz = 0.025 * sx_ * (L.get('eyeScale') or 1)
+            ew, eh, ey_, ex_ = esz * 0.66, esz * 0.36, my(0.896), 0.037 * sx_
+            bw_ = b.P('brows', L.get('browColor') or hair, head_w, 30)
+            for sxx in (1, -1):
+                line = [(sxx * (ex_ - ew * 0.95), ey_ + eh * 2.55), (sxx * ex_, ey_ + eh * 2.85), (sxx * (ex_ + ew * 1.05), ey_ + eh * 2.35)]
+                thick = [eh * 0.42, eh * 0.38, eh * 0.24]
+                vv, ff = [], []
+                for (x, y), t in zip(line, thick):
+                    vv += [(x, y - t, front(x, y - t) + 0.005), (x, y + t, front(x, y + t) + 0.005)]
+                for i in range(len(line) - 1):
+                    f = [2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1]
+                    a, c, d = vv[f[0]], vv[f[1]], vv[f[3]]
+                    nz = (c[0] - a[0]) * (d[1] - a[1]) - (c[1] - a[1]) * (d[0] - a[0])
+                    ff.append(f if nz > 0 else f[::-1])   # (facing forward on both sides of the mirror)
+                bw_.add(vv, ff)
         top_y, back_z = my(0.95), mz(-0.05)
         style = L.get('hairStyle', 'cap')
         if style not in ('bald', 'bun'):
@@ -354,6 +399,9 @@ def build(name):
             cap = b.P('hair', hair, head_w, 70)
             M_ = 13
             zcuts = [0.0, 0.03, 0.05, 0.07, 0.085] if style not in ('longtail', 'bun') else [0.02, 0.05, 0.07, 0.09, 0.1]
+            off_ = 0.007
+            if L.get('hairCuts'):   # (a fuller head of hair: the line further forward over the top, a little thicker; ARTHUR-12)
+                zcuts, off_ = L['hairCuts'], 0.012
             rows = []
             for (y, half), zc_ in zip(TW_HEAD[2:], zcuts):
                 full = resample(half, 25)
@@ -369,11 +417,11 @@ def build(name):
                     t = min(1, d / seg[i]) if seg[i] else 0
                     x = arc[i][0] + (arc[i + 1][0] - arc[i][0]) * t; z = arc[i][1] + (arc[i + 1][1] - arc[i][1]) * t
                     r = math.hypot(x, z - 0.06) or 1
-                    row.append((x * sx_ + x / r * 0.007, my(y), mz(z) + (z - 0.06) / r * 0.007))
+                    row.append((x * sx_ + x / r * off_, my(y), mz(z) + (z - 0.06) / r * off_))
                 rows.append(row)
             vv = [p for r in rows for p in r]
             ff = [[(j + 1) * M_ + i, (j + 1) * M_ + i + 1, j * M_ + i + 1, j * M_ + i] for j in range(len(rows) - 1) for i in range(M_ - 1)]
-            vv.append((0, my(0.962), mz(0.03)))
+            vv.append((0, my(0.966), mz(0.045)) if L.get('hairCuts') else (0, my(0.962), mz(0.03)))   # (the crown: over the fuller line's top)
             o_ = (len(rows) - 1) * M_
             ff += [[o_ + i + 1, o_ + i, len(vv) - 1] for i in range(M_ - 1)]
             cap.add(vv, ff)
@@ -399,8 +447,18 @@ def build(name):
                 bone = tails[min(i, len(tails) - 1)] if tails else 'head'
                 tube(b.P('tail%d' % i, hair, bone, 75), pts[i], pts[i + 1], rad[i] * sx_, rad[i + 1] * sx_, 10, squash=0.75)
             sphere(b.P('tie', L.get('tie') or L.get('belt') or hair, tails[0] if tails else 'head', 180), pts[0], 0.022 * sx_, 7, 5)
+        elif style == 'tuft' and L.get('tuftSwept'):
+            # (ARTHUR-12, Arthur at twelve) the fringe swept up off the forehead into a low quiff, three locks combed back
+            # from it over the crown, and a short tuft arching back at the crown that answers his father's knot (the
+            # small boy's upright spikes are gone)
+            tf = b.P('tuft', hair, head_w, 40)
+            sphere(tf, (0, my(0.948), mz(0.058)), 1.0, 9, 6, (0.05 * sx_, my(0.964) - my(0.948), mz(0.1) - mz(0.058)))
+            for dx in (-0.024, 0.0, 0.024):
+                tube(tf, (dx * sx_, my(0.958), mz(0.05)), (dx * 1.15 * sx_, my(0.963), mz(0.0)), 0.016 * sx_, 0.004, 6, squash=0.6)
+            tube(tf, (0, my(0.955), mz(-0.012)), (0, my(0.966), mz(-0.03)), 0.017 * sx_, 0.012 * sx_, 6, squash=0.8)
+            tube(tf, (0, my(0.966), mz(-0.03)), (0, my(0.958), mz(-0.046)), 0.012 * sx_, 0.004, 6, squash=0.8)
         elif style == 'tuft':
-            # a spiky tuft over the forehead (Arthur)
+            # a spiky tuft over the forehead
             tf = b.P('tuft', hair, head_w, 30)
             for dx, dy, dz in ((-0.025, 0.06, 0.05), (0.0, 0.075, 0.035), (0.025, 0.06, 0.05), (0.0, 0.05, 0.08)):
                 tube(tf, (dx * sx_, my(0.94), mz(0.0 + dz * 0.4)), (dx * 1.4 * sx_, my(0.94 + dy), mz(dz)), 0.024 * sx_, 0.003, 6)
