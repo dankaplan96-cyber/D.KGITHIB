@@ -957,7 +957,9 @@ Movement, Camera, Resolution, Edges and Minimap (what the choice does, or what i
 | Test | Result |
 |---|---|
 | menus | ALL PASSED (38; new: same keys, ≤ 4 rows per page, keys/arrows/Enter on tabs, rows, the fold and a slider, mouse hover, focus return from Settings and Keys, pad B, Esc unchanged, rebinding wait/cancel, the inventory line in Classic and with a rebound key) |
-| display | ALL PASSED (32; settings fit at 6 sizes, Esc from the settings, reduced motion) |
+| display | ALL PASSED (31; settings fit at 6 sizes, Esc from the settings, reduced motion) |
+| controls, stability, opening, crosssystem (Graphics clicked on the Display page), holomap (the minimap setting) | ALL PASSED (69, 16, 27, 10, 30) |
+| audio | 4/5: "sliders set the buses" fails on the voice bus, 0.44 for the slider's 0.2 — VOICE-MIX's ×2.2 voice boost (fea86ca), which the test predates; the setting itself is 0.2. Not from this change; the test needs VOICE_BOOST in its expectation (audio.mjs is not this task's file) |
 
 Not verified: a real gamepad and a touch screen by hand (simulated pad buttons only), a screen reader (roles and
 aria-selected/expanded/pressed are set, not audited), the look on a real display; the controls screen's key table is
