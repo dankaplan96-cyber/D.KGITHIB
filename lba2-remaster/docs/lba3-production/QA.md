@@ -21,7 +21,8 @@ node tests/stability.mjs        # the defects fixed in the stabilization pass (r
 node tests/shipfiles.mjs        # every file the game requests is in the shipped list (desktop/publish)
 node tests/transitions.mjs      # door walk-through, black hold while shaders compile
 node tests/lib/seg.mjs tests/playthrough/NN-*.mjs   # player-input playthrough, one segment (LOAD=/KEEP= saves; see below)
-node tests/chapterN.mjs en-US   # LOGIC chapter scripts (print their values: read them, exit 0 alone is no pass)
+node tests/chapterN.mjs en-US   # LOGIC chapter scripts: each step's end state judged PASS/FAIL (R7-VERDICTS)
+node tests/verdicts.mjs         # the result policy's self-test (tests/README.md "Reading a verdict")
 ```
 `tests/lib/player.js` is the input harness (A* over the game's own collision, Classic tank steering, E to use,
 F to throw, Space to jump/crouch, threat-aware fighting, stealth past a watcher). `tests/lib/try.mjs <script>`
@@ -1057,6 +1058,55 @@ Movement, Camera, Resolution, Edges and Minimap (what the choice does, or what i
 Not verified: a real gamepad and a touch screen by hand (simulated pad buttons only), a screen reader (roles and
 aria-selected/expanded/pressed are set, not audited), the look on a real display; the controls screen's key table is
 still long (left as it was: only its navigation changed).
+
+### R7-VERDICTS: one result policy for every test (BUILD109_REVIEW §7; evidence below)
+
+**Before** (read from the source and the baseline runs of 2026-10-25 on 923ba48): `done(errs)` in tests/lib/boot.mjs
+printed captured errors and still said ALL PASSED (only failed checks counted); givers, voices, merge, chapter4 and
+anim-combat counted every captured error; audit, combat, house, lba1rooms, transitions and wizards printed ALL PASSED
+or N FAILED but always exited 0; the story tests (prologue, chapter1–3, 5–10) printed values with no verdict at all
+(chapter10 its own DONE/ASSISTED/NOT DONE with exit 0/2/1), drawcalls and save-migration no verdict; several tests
+listened to page errors only (no console errors), none to failed requests.
+
+**Policy** (tests/lib/boot.mjs; how to read it: tests/README.md "Reading a verdict"): a failed check, a page error,
+a console error, a crashed page, a failed request for one of the game's own files (any 404) or for an outside URL
+not declared optional → FAIL. Declared optional resources → OPTIONAL, listed with their reason (none today: the game
+asks for nothing outside its folder since R8). Errors a test provokes on purpose → EXPECTED, listed (save-migration's
+corrupt save: `save load failed`). Requests cancelled by a navigation (`net::ERR_ABORTED`, e.g. a test's own reload)
+→ NOTE, listed. Summary lines: functional / errors / resources / visual (`checkVisual` measurements and every
+screenshot as a capture for review); one VERDICT line; exit code non-zero on any FAIL, also a FAIL captured after
+the verdict (`LATE FAIL`) or with no verdict printed. Every test, plus tests/lib/seg.mjs, try.mjs and shots.mjs, now
+uses it; the story tests judge each step (chapter reached, flags set, objective shown, save → Continue kept).
+
+**Self-test** `node tests/verdicts.mjs`: ALL PASSED (27): clean → PASS exit 0; injected page error → FAIL exit 1;
+console.error → FAIL; Doran's model answered 404 (the game falls back to its sculpt silently) → FAIL (resource);
+a missing texture → FAIL (resource); the Google Fonts Rubik stylesheet offline, declared optional → OPTIONAL listed,
+PASS exit 0; the same undeclared → FAIL (resource); a failed check → FAIL (functional); a page error after the verdict
+→ LATE FAIL, exit 1.
+
+**Every test once under the policy** (one at a time, `GAME_URL=http://localhost:8184/`, SwiftShader, 4 shared cores,
+2026-10-25, on 923ba48 + this change; logs in the session scratchpad, not kept in the repo):
+
+| Result | Tests (functional checks passed; visual checks / captures where any) |
+|---|---|
+| PASS | prologue 20, chapter1 19, chapter2 18, chapter3 25, chapter4 54, chapter5 20, chapter6 17, chapter7 9, chapter8 13, chapter9 16, chapter10 21, save-migration 3 (+1 EXPECTED), audit 7, drawcalls 1, combat 59, anim-combat 35, arsenal 34, audio 5, camclear 14 (+30 visual), camsteady 50, clarity 10, crosssystem 10, deaths 160, desert-life 30, display 31, doorcull (2 visual), dynres 8, givers 15, holomap 30, house 2, jetpack 48, lba1rooms 7, longsession 5, menus 38, merge 3, occluders 1 (+31 visual), opening 27, resume 2, spaceport 7, stability 16, timing 29, townlife 36, transitions 6, travel 17, voices 24, wizards 6, workshop 32, worldfit 1 (+8 visual), zeelich-life 38, zislands 13, zoe-resume 5, controls 69 (second run) |
+| FAIL → fixed | shipfiles: `assets/fonts/rubik.css` and `rubik-latin.woff2` are requested but not in tools/game-files.mjs since R8 linked the local font (the published page would 404 its font; the desktop copy adds the fonts itself). One line in tools/game-files.mjs (fonts + OFL.txt); rerun below |
+| FAIL (real, open) | perfbudget: "no shader compiles on the routes after loading" — Low street 27, Medium street 35, High street 5 new programs, interiors 0–3, transitions 0–3. Known and logged by FRAME-1/RENDER-INV (their suite logs fail alike); a renderer owner's task, not changed here |
+| FAIL once (flaky check) | controls "classic ball: the same landing at 30 fps (±0.3 m)": Normal 7.66 vs 8.01 m (0.35) on the first run; 7.77 vs 8.05 (0.28) on the second, which passed; SETTINGS-UI's run 7.76 vs 8.04. The 30 fps throw lands ~0.3 m further, right at the tolerance; left as is (a frame-rate dependence to look at, not a reason to widen it) |
+| FAIL → test fixed | prologue (baseline: crashed, rc 1): the mite fight iterated every chapter's enemies (66) and teleported Twinsen to them, out of the well; now the well's own mites (4/4). chapter10 (first run): my expectation of the mill after its relay was wrong (network.js: it turns again once the relay is set) |
+
+No test captured a page error, a console error or a missing local file under the policy; no OPTIONAL resource was
+seen. NOTEs (requests cut by a test's own reload/navigation): audio 15, menus 14, resume 15, chapter2 1, zoe-resume 1.
+
+After merging origin (CONTAINERS, CONTAINERS-2, the splash sting; e4eb048), rerun of what the merge and the fix touch,
+one at a time: shipfiles 2 (now PASS), containers 41, givers 16, menus 38, stability 16, prologue 20, chapter1 19,
+save-migration 3 (+1 EXPECTED), resume 2, zoe-resume 5, desert-life 30, zislands 13, townlife 36, verdicts 27: all
+PASS, no error or missing file. tests/containers.mjs already used launch()/done(): the policy applies to it unchanged
+(both of its browsers are watched).
+
+Not run under the policy: the player-input playthrough segments 03–14 (tests/playthrough, through seg.mjs; hours of
+software rendering). 01 → 02 through tests/lib/seg.mjs (01 kept its save via Esc → Save & quit, 02 continued from it),
+after the merge: both VERDICT PASS (the segment ran every step), 0 deaths, 0 ISO assists, no error or missing file.
 
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
