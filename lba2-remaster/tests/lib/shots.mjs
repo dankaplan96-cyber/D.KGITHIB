@@ -1,6 +1,7 @@
 // progress screenshots: node tests/lib/shots.mjs <outdir> [only,names | islands]  (GAME_URL as the tests). One browser, 1280x720,
 // a new game, then each place from the normal play camera (outdoor regions and rooms entered directly, no story).
-import { launch, open, menu } from './boot.mjs';
+import { launch, open, menu, checker } from './boot.mjs';
+const { check, done } = checker();
 import path from 'node:path';
 import fs from 'node:fs';
 const OUT = process.argv[2]; fs.mkdirSync(OUT, { recursive: true });
@@ -51,7 +52,8 @@ for (const [name, s0] of SHOTS) {
   if (!want(name)) continue;
   let s = s0;
   if (s.spaceport) s = await ev(() => { const L = game.world.spaceport.landing; return { x: L.x, z: L.z, a: L.a }; });
-  try { console.log(name, await place(s)); await snap(name); } catch (e) { console.log('FAILED', name, e.message.slice(0, 200)); }
+  try { console.log(name, await place(s)); await snap(name); check('shot ' + name, true); } catch (e) { check('shot ' + name, false, e.message.slice(0, 200)); }
 }
-console.log(errs.slice(0, 10).join('\n') || 'no errors');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

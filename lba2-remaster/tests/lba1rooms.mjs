@@ -3,12 +3,11 @@
 // the stair-well), and the Temple of Bù's maze and halls (down the stair from our temple, through the maze to the
 // halls with their crystal mites, and back up at the far end).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, ok ? '' : JSON.stringify(info)); };
+const errs = watch(page);
+const { check, done } = checker({ info: 'fail' });
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await page.evaluate(() => { localStorage.clear(); game.testFreeze = true; });
@@ -46,6 +45,6 @@ check('out by the stair-well, back on Citadel', r.out === 'citadel', r);
 check("the Temple of Bù: down the stair into the maze", r.maze === 'bumaze' && r.mazeFloor, r);
 check("through the maze to the halls, the crystal mites there", r.halls === 'buhalls' && r.mites >= 4, r);
 check('the far end of the halls leads back up to the temple', r.back === 'butemple', r);
-console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

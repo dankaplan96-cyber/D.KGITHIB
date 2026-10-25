@@ -1,8 +1,9 @@
 // Diagnostic (PERF-IGPU): where a frame's draw calls go. Draws one frame of a benchmark route and lists the
 // calls by pass (main / shadow) and by source (the builder group under the scene root, the object kind, the
-// material), largest first. Not a pass/fail test.
+// material), largest first. A diagnostic: its verdict covers only that the route drew and the page's errors/resources.
 //   node tests/drawcalls.mjs [route=street] [quality=medium]
-import { launch, open } from './lib/boot.mjs';
+import { launch, open, checker } from './lib/boot.mjs';
+const { check, done } = checker();
 const route = process.argv[2] || 'street', quality = process.argv[3] || 'medium';
 const { browser, page, errs } = await launch({ width: 1366, height: 768 });
 await open(page, '?nocine');
@@ -44,5 +45,7 @@ for (const [k, n] of rows.byLabel) console.log(String(n).padStart(4), k);
 console.log('--- by source/kind/material');
 for (const [k, n] of rows.top) console.log(String(n).padStart(4), k);
 console.log('--- shader programs', rows.nprog, JSON.stringify(rows.progs));
-console.log(errs.length ? errs.slice(0, 5).join('\n') : 'no errors');
+check('the route drew a frame', rows.calls > 0, rows.calls);
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

@@ -2,12 +2,11 @@
 // and walks in on the other side while it fades back in; a scene change that isn't a door (a story cut) doesn't
 // walk; in real time the screen holds black while the new scene's shaders compile, then fades in.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 640, height: 360 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, ok ? '' : JSON.stringify(info)); };
+const errs = watch(page);
+const { check, done } = checker({ info: 'fail' });
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await page.evaluate(() => { localStorage.clear(); game.testFreeze = true; });
@@ -65,6 +64,6 @@ check('real time: black while the new room compiles, then the fade-in runs in fu
 // FRAME-1: the room swaps on a fully black screen as shown (before, the frame that crossed t = 0.35 showed the swap
 // through a part-transparent fade, and the stylesheet's 0.6 s easing kept the shown opacity far behind the written one)
 check('real time: the room swaps on a fully black screen (shown), the fade drawn frame by frame (no stylesheet easing)', rt.swap && Math.abs(rt.swap.t - 0.35) < 1e-9 && rt.swap.set === 1 && rt.swap.shown === 1 && rt.noCssEase, rt);
-console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

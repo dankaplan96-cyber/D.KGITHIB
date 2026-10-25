@@ -1,12 +1,11 @@
 // Twinsen's house: walking (real key presses, classic controls) down the hall's stairs reaches the cellar, and
 // walking up the cellar stairs comes back to the hall; the stairs carry him up and down step by step.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, JSON.stringify(info)); };
+const errs = watch(page);
+const { check, done } = checker({ info: 'always' });
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await page.evaluate(() => localStorage.clear());
@@ -34,6 +33,6 @@ const r = await page.evaluate(() => {
 });
 check('walking down the hall stairs reaches the cellar, going down step by step', r.down.room === 'cellar' && r.down.minY < -0.25, r.down);
 check('walking up the cellar stairs climbs them and reaches the hall', r.up.room === 'house' && r.up.maxY > 0.6, r.up);
-console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

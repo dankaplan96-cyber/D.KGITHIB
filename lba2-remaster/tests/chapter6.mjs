@@ -2,14 +2,13 @@
 // across the gorge (ball) → Lhar, Yorna → the heating station (no fuse) → Pim's kite on the icefall (ball) →
 // the fuse, the winch thaws → two trips up the cliff with ice mites in between → the last ride → the
 // monastery → the next chapter.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+import { launch, checker } from './lib/boot.mjs';
+const { browser, page, errs } = await launch({ width: 960, height: 540 });
+const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
+// a story step's end state, judged (R7-VERDICTS): PASS/FAIL with the values it read
+const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
@@ -48,27 +47,28 @@ const boot = async (mode) => {
 };
 
 await boot('new');
-log('start', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 4, chapterKey: 'steam', c5_planned: true, c5_vent: true, c5_glider: true, c5_done: true });
-  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }));
+is('chapter 6 (pass) starts on the Hamalayi, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 4, chapterKey: 'steam', c5_planned: true, c5_vent: true, c5_glider: true, c5_done: true });
+  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }), (v) => v[0] === 'pass' && v[1] === 'hamalayi' && v[2] === 'play' && v[3].length > 0);
 await shot('C6-00-landing.png');
-log('tree', await ev(() => { const tg = game.room.ballTargets.find((t) => t.tree); const r = T.hit(tg); game.step(2); T.talkAll(); return [r, game.flags.c6_bridge, T.obj()]; }));
-log('cross', await ev(() => { const G = game, t = G.rooms.hamalayi.gorge.tree; const x = t.x - 0.6; let z = t.z + 10; T.tp(x, z); for (let i = 0; i < 80; i++) { G.physics.move(G.hero, 0, -0.2); G.step(0.02); } return [G.hero.pos.z.toFixed(1), G.hero.pos.y.toFixed(2), t.z.toFixed(1)]; }));
-log('lhar', await ev(() => { const G = game, L = G.rooms.hamalayi.lhar; T.tp(L.x, L.z + 8); G.step(0.5); T.talkAll(); return [G.flags.c6_lhar, T.obj()]; }));
+is('the dead tree knocked down by the ball: a bridge, an objective set', await ev(() => { const tg = game.room.ballTargets.find((t) => t.tree); const r = T.hit(tg); game.step(2); T.talkAll(); return [r, game.flags.c6_bridge, T.obj()]; }), (v) => v[0] !== 'FAILED' && v[1] === true && v[2].length > 0);
+is('walking across the tree bridge reaches the far side', await ev(() => { const G = game, t = G.rooms.hamalayi.gorge.tree; const x = t.x - 0.6; let z = t.z + 10; T.tp(x, z); for (let i = 0; i < 80; i++) { G.physics.move(G.hero, 0, -0.2); G.step(0.02); } return [G.hero.pos.z.toFixed(1), G.hero.pos.y.toFixed(2), t.z.toFixed(1)]; }), (v) => +v[0] < +v[2] - 3);
+is('Lhar reached', await ev(() => { const G = game, L = G.rooms.hamalayi.lhar; T.tp(L.x, L.z + 8); G.step(0.5); T.talkAll(); return [G.flags.c6_lhar, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 await shot('C6-01-lhar.png');
-log('yorna', await ev(() => { T.talk('yorna'); return [game.flags.c6_yorna, T.obj()]; }));
-log('station', await ev(() => { const p = game.rooms.hamalayi.heatPost; T.useAt(p.x, p.z); return [game.flags.c6_needFuse, T.obj()]; }));
-log('pim', await ev(() => { T.talk('pim'); return [game.flags.c6_kiteAsk, T.obj()]; }));
-log('kite', await ev(() => { const tg = game.room.ballTargets.find((t) => t.kite); return [T.hit(tg), game.flags.c6_kite]; }));
-log('fuse', await ev(() => { T.talk('pim'); return [game.flags.c6_fuse, T.obj()]; }));
-log('heat', await ev(() => { const p = game.rooms.hamalayi.heatPost; T.useAt(p.x, p.z); game.step(5); T.talkAll(); return [game.flags.c6_heat, game.flags.c6_thawed, T.obj()]; }));
-log('lift ready', await ev(() => { T.talk('yorna'); return [game.flags.c6_liftReady, T.obj()]; }));
+is('Yorna: switch on the heating', await ev(() => { T.talk('yorna'); return [game.flags.c6_yorna, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('the heating station needs a fuse', await ev(() => { const p = game.rooms.hamalayi.heatPost; T.useAt(p.x, p.z); return [game.flags.c6_needFuse, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('Pim asks for his kite', await ev(() => { T.talk('pim'); return [game.flags.c6_kiteAsk, T.obj()]; }), (v) => v[0] === true);
+is('the kite freed by the ball', await ev(() => { const tg = game.room.ballTargets.find((t) => t.kite); return [T.hit(tg), game.flags.c6_kite]; }), (v) => v[0] !== 'FAILED' && v[1] === true);
+is("Pim's fuse", await ev(() => { T.talk('pim'); return [game.flags.c6_fuse, T.obj()]; }), (v) => v[0] === true);
+is('the heating on, the winch thawed, an objective set', await ev(() => { const p = game.rooms.hamalayi.heatPost; T.useAt(p.x, p.z); game.step(5); T.talkAll(); return [game.flags.c6_heat, game.flags.c6_thawed, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);
+is('Yorna: the lift ready', await ev(() => { T.talk('yorna'); return [game.flags.c6_liftReady, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 await shot('C6-02-lift.png');
-log('sword + rope', await ev(() => { const G = game, h = G.hero, R = G.story.cur.rope; const before = [h.hasSword, h.combat.weapon]; T.tp(R.x - 1.2, R.z); h.angle = Math.atan2(R.x - h.pos.x, R.z - h.pos.z); G.step(0.2); T.tap('KeyK'); G.step(0.8); T.talkAll(); return [before, G.flags.c6_rope, T.obj()]; }));
-log('trip 1', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip1; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip1, T.obj()]; }));
-log('mites', await ev(() => { const G = game, h = G.hero; const ms = G.enemies.filter((e) => e.def?.id?.startsWith('imite')); for (const m of ms) for (let i = 0; i < 30 && m.alive; i++) { h.pos.set(m.pos.x - 3, G.physics.groundAt(m.pos.x - 3, m.pos.z), m.pos.z); h.angle = h.angleTo(m); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('KeyF'); G.step(1.0); } return [ms.length, ms.filter((m) => m.alive).length, T.obj()]; }));
-log('trip 2', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip2; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip2, T.obj()]; }));
-log('ride up', await ev(() => { const G = game, p = G.rooms.hamalayi.lift.pad; T.tp(p.x, p.z); for (let i = 0; i < 400 && !G.flags.c6_up; i++) G.step(0.05); return [G.flags.c6_up, G.hero.pos.y.toFixed(1), T.obj()]; }));
+is('the sword cuts the mooring rope', await ev(() => { const G = game, h = G.hero, R = G.story.cur.rope; const before = [h.hasSword, h.combat.weapon]; T.tp(R.x - 1.2, R.z); h.angle = Math.atan2(R.x - h.pos.x, R.z - h.pos.z); G.step(0.2); T.tap('KeyK'); G.step(0.8); T.talkAll(); return [before, G.flags.c6_rope, T.obj()]; }), (v) => v[0][0] === true && v[1] === true && v[2].length > 0);
+is('the first trip up', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip1; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip1, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('the ice mites driven off', await ev(() => { const G = game, h = G.hero; const ms = G.enemies.filter((e) => e.def?.id?.startsWith('imite')); for (const m of ms) for (let i = 0; i < 30 && m.alive; i++) { h.pos.set(m.pos.x - 3, G.physics.groundAt(m.pos.x - 3, m.pos.z), m.pos.z); h.angle = h.angleTo(m); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('KeyF'); G.step(1.0); } return [ms.length, ms.filter((m) => m.alive).length, T.obj()]; }), (v) => v[0] > 0 && v[1] === 0);
+is('the second trip up', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip2; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip2, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('Twinsen rides the platform up', await ev(() => { const G = game, p = G.rooms.hamalayi.lift.pad; T.tp(p.x, p.z); for (let i = 0; i < 400 && !G.flags.c6_up; i++) G.step(0.05); return [G.flags.c6_up, G.hero.pos.y.toFixed(1), T.obj()]; }), (v) => v[0] === true && v[2].length > 0);
 await shot('C6-03-top.png');
-log('to monastery', await ev(() => { const G = game, M = G.rooms.hamalayi.monastery.yard, L = G.rooms.hamalayi.lift.top; T.tp(L.x, L.z - 2, 0, 30); G.step(0.3); const h = G.hero; for (let i = 0; i < 300 && !G.flags.c6_done; i++) { const a = Math.atan2(M.x - h.pos.x, M.z - h.pos.z); G.physics.move(h, Math.sin(a) * 0.15, Math.cos(a) * 0.15); G.step(0.02); } T.talkAll(); G.step(1.5); T.talkAll(); return [G.flags.c6_done, G.flags.chapterKey, Math.round(h.pos.x), Math.round(h.pos.z), Math.round(h.pos.y)]; }));
-console.log(errs.length ? errs.join('\n') : 'no errors');
+is('chapter 6 ends at the monastery: the next chapter (observatory)', await ev(() => { const G = game, M = G.rooms.hamalayi.monastery.yard, L = G.rooms.hamalayi.lift.top; T.tp(L.x, L.z - 2, 0, 30); G.step(0.3); const h = G.hero; for (let i = 0; i < 300 && !G.flags.c6_done; i++) { const a = Math.atan2(M.x - h.pos.x, M.z - h.pos.z); G.physics.move(h, Math.sin(a) * 0.15, Math.cos(a) * 0.15); G.step(0.02); } T.talkAll(); G.step(1.5); T.talkAll(); return [G.flags.c6_done, G.flags.chapterKey, Math.round(h.pos.x), Math.round(h.pos.z), Math.round(h.pos.y)]; }), (v) => v[0] === true && v[1] === 'observatory');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

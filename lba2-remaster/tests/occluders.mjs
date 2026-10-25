@@ -11,7 +11,7 @@ import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
-const { check, done } = checker();
+const { check, checkVisual, done } = checker();
 const ev = (f, a) => page.evaluate(f, a);
 await open(page, '?nocine');
 await menu(page, 'new');
@@ -67,7 +67,7 @@ for (const id of houses) {
     const r = await ev(([id, facing]) => { const h = game.world.houses.find((q) => q.id === id); const a = Math.atan2(h.door.x - h.x, h.door.z - h.z);
       const s = { x: h.door.x + Math.sin(a) * 0.5, z: h.door.z + Math.cos(a) * 0.5, a: facing === 'out' ? a : a + Math.PI };
       window.__place(s); return { st: window.__houseState(h) }; }, [id, facing]);
-    check(`(a) at the ${id} house's door facing ${facing}: the house stays drawn whole (${r.st.meshes} meshes)`, r.st.meshes > 0 && r.st.hidden === 0 && r.st.faded === 0, r);
+    checkVisual(`(a) at the ${id} house's door facing ${facing}: the house stays drawn whole (${r.st.meshes} meshes)`, r.st.meshes > 0 && r.st.hidden === 0 && r.st.faded === 0, r);
     if (id === 'twinsen' && facing === 'out') await snap('test-a-door-twinsen-out');
   }
 }
@@ -77,7 +77,7 @@ for (const id of ['bug', 'stone', 'south', 'pink', 'shop', 'twinsen']) {
   const r = await ev((id) => { const h = game.world.houses.find((q) => q.id === id); const a = h.ry + Math.PI; const rr = h.d / 2 + 1.6;
     window.__place({ x: h.x + Math.sin(a) * rr, z: h.z + Math.cos(a) * rr, a }); const c = game.camera.position, p = game.hero.pos;
     return { pitch: +(Math.atan2(c.y - p.y, Math.hypot(c.x - p.x, c.z - p.z)) * 57.3).toFixed(1), st: window.__houseState(h), pts: window.__points() }; }, id);
-  check(`(b) behind the ${id} house, a fresh shot: head, chest and feet in view or under the silhouette; the house drawn whole`, r.pts.every((p) => p.ok) && r.st.hidden === 0 && r.st.faded === 0, r);
+  checkVisual(`(b) behind the ${id} house, a fresh shot: head, chest and feet in view or under the silhouette; the house drawn whole`, r.pts.every((p) => p.ok) && r.st.hidden === 0 && r.st.faded === 0, r);
   if (id === 'south') await snap('test-b-behind-south-fresh-shot');
 }
 
@@ -106,7 +106,7 @@ for (const id of ['bug', 'stone', 'south']) {
       if (Math.hypot(game.hero.pos.x - window.__D.tx, game.hero.pos.z - window.__D.tz) < 0.9) break; }
     P.release();
     return { n, direct, silhouette, bad: bad.slice(0, 6), silFrames: frames.slice(0, 8), end: [game.hero.pos.x, game.hero.pos.z].map((v) => +v.toFixed(1)) }; }, id);
-  check(`(b) walking round behind the ${id} house in a still shot: every 0.3 s his head, chest and feet in view or under the silhouette (${r.direct} in view, ${r.silhouette} by silhouette)`, r.bad.length === 0 && r.n > 3, r);
+  checkVisual(`(b) walking round behind the ${id} house in a still shot: every 0.3 s his head, chest and feet in view or under the silhouette (${r.direct} in view, ${r.silhouette} by silhouette)`, r.bad.length === 0 && r.n > 3, r);
   if (!silShot && r.silFrames.length) {
     // replay to the first frame he was drawn by the silhouette, for the evidence
     silShot = true;

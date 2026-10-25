@@ -4,7 +4,7 @@
 // front of the door; one frame is drawn and every mesh whose bounds lie within 2.5 m of the door is checked: shown
 // in the main view (layer 0 on) whenever the same mesh is shown at High (no culling there).
 import { launch, open, checker } from './lib/boot.mjs';
-const { check, done } = checker();
+const { check, checkVisual, done } = checker();
 const { browser, page, errs } = await launch({ width: 1366, height: 768 });
 await open(page, '?nocine');
 await page.evaluate(() => { document.querySelector('[data-act="new"]').click(); game.testFreeze = true; game.step(0.3); game.setState('play'); });
@@ -62,8 +62,8 @@ const res = await page.evaluate(() => {
 const bad = res.out.filter((r) => r.lost.length);
 console.log('doors', res.nd, 'checks', res.out.length, 'meshes per door (median)', res.out.map((r) => r.n).sort((a, b) => a - b)[res.out.length >> 1]);
 for (const r of bad.slice(0, 20)) console.log('  culled:', JSON.stringify(r));
-check('Citadel house doors: no door part culled at Low/Medium near Twinsen (2/6/12 m, LBA + free camera)', !bad.some((r) => r.door.startsWith('citadel')), bad.filter((r) => r.door.startsWith('citadel')).slice(0, 5));
-check('Zeelich house doors: no door part culled at Low/Medium near Twinsen (2/6/12 m, LBA + free camera)', res.out.some((r) => r.door.startsWith('zeelich')) && !bad.some((r) => r.door.startsWith('zeelich')), bad.filter((r) => r.door.startsWith('zeelich')).slice(0, 5));
+checkVisual('Citadel house doors: no door part culled at Low/Medium near Twinsen (2/6/12 m, LBA + free camera)', !bad.some((r) => r.door.startsWith('citadel')), bad.filter((r) => r.door.startsWith('citadel')).slice(0, 5));
+checkVisual('Zeelich house doors: no door part culled at Low/Medium near Twinsen (2/6/12 m, LBA + free camera)', res.out.some((r) => r.door.startsWith('zeelich')) && !bad.some((r) => r.door.startsWith('zeelich')), bad.filter((r) => r.door.startsWith('zeelich')).slice(0, 5));
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);

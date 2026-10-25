@@ -7,18 +7,16 @@
 //    keeps sounding after the text is skipped, the dialogue closes, or a cinematic pauses.
 // Not a listening test: nothing here says how a voice sounds to a person.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const URL0 = process.env.GAME_URL || 'http://localhost:8123/';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const errs = watch(page);
 const ev = (f, a) => page.evaluate(f, a);
-let fails = 0;
-const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info !== '' ? ' ' + JSON.stringify(info) : ''}`); if (!ok) fails++; };
+const { check, done } = checker({ info: 'always' });
 
 // every speaker name key the game shows (n_*), from the English text
 const keys = new Set();
@@ -158,8 +156,6 @@ check('skipping the text stops the voice: silent 0.25 s later, its sources ended
 check('closing the dialogue drops the speaker', r.closed === 'play' && r.voiceAfterClose === null, r);
 check('a cinematic pause stops the line: silent after resume, sources ended', r.cineSpeaking > 0.01 && r.suspended === 'suspended' && r.resumed === 'running' && r.afterPause < 0.001 && r.liveAfterPause === 0,
   { speaking: r.cineSpeaking, suspended: r.suspended, resumed: r.resumed, after: r.afterPause, live: r.liveAfterPause });
-console.log(errs.length ? errs.join('\n') : 'no errors');
-if (errs.length) fails++;
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

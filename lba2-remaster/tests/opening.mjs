@@ -16,14 +16,12 @@
 //   stepped frames read as black from 28.6 s on and these checks only ever saw the harbour; a cut to another shot is
 //   not a vanishing)
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch as watchPage, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const errs = watchPage(page);
 const ev = (f, a) => page.evaluate(f, a);
-let fails = 0;
-const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info ? ' ' + JSON.stringify(info) : ''}`); if (!ok) fails++; };
+const { check, done } = checker({ info: 'always' });
 
 const boot = async (mode, clear = true) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/'), { waitUntil: 'load', timeout: 180000 });
@@ -247,7 +245,6 @@ const took = await ev(() => {
 });
 check('the cupboard gives the ball and the door lets him out', took.ball && took.room === 'outdoors' && took.obj.startsWith('Check the well'), took);
 
-console.log(errs.length ? errs.slice(0, 10).join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

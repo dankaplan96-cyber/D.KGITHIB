@@ -1,14 +1,13 @@
 // Chapter 7 playthrough (the Hamalayi): jump to the end of chapter 6 → the monastery → the observatory (Sefa,
 // four mirrors, the crystal, Sendell) → the telescope melts the vent's ice cap → the heavy drone → the vent →
 // Arthur's call → Hesk at the monastery → the next chapter.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+import { launch, checker } from './lib/boot.mjs';
+const { browser, page, errs } = await launch({ width: 960, height: 540 });
+const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
+// a story step's end state, judged (R7-VERDICTS): PASS/FAIL with the values it read
+const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
@@ -47,18 +46,19 @@ const boot = async (mode) => {
 };
 
 await boot('new');
-log('start', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 5, chapterKey: 'pass', c6_started: true, c6_bridge: true, c6_heat: true, c6_thawed: true, c6_trip1: true, c6_trip2: true, c6_up: true, c6_done: true });
-  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }));
-log('to observatory', await ev(() => { const G = game, d = G.rooms.hamalayi.observatory.door; T.tp(d.x, d.z + 1.6, 0, 31); G.step(0.3); T.tp(d.x, d.z, 0, 31); G.step(1.6); T.talkAll(); return [G.room?.id, T.obj()]; }));
-log('keeper', await ev(() => { T.talk('keeper'); return [game.flags.c7_keeper, T.obj()]; }));
+is('chapter 7 (observatory) starts on the Hamalayi, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 5, chapterKey: 'pass', c6_started: true, c6_bridge: true, c6_heat: true, c6_thawed: true, c6_trip1: true, c6_trip2: true, c6_up: true, c6_done: true });
+  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }), (v) => v[0] === 'observatory' && v[1] === 'hamalayi' && v[2] === 'play' && v[3].length > 0);
+is('into the observatory', await ev(() => { const G = game, d = G.rooms.hamalayi.observatory.door; T.tp(d.x, d.z + 1.6, 0, 31); G.step(0.3); T.tp(d.x, d.z, 0, 31); G.step(1.6); T.talkAll(); return [G.room?.id, T.obj()]; }), (v) => v[0] === 'obsv');
+is('the keeper: carry the light', await ev(() => { T.talk('keeper'); return [game.flags.c7_keeper, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 await shot('C7-00-obs.png');
-log('mirrors', await ev(() => { const G = game, O = G.rooms.obsv; for (const i of [0, 1, 2]) { const m = O.mirrors[i]; T.useAt(m.x, m.z); G.step(0.5); } T.talkAll(); return [O.trace().lit, G.flags.c7_lit, G.flags.c7_sendell, T.obj()]; }));
+is('the three mirrors light the crystal; Sendell', await ev(() => { const G = game, O = G.rooms.obsv; for (const i of [0, 1, 2]) { const m = O.mirrors[i]; T.useAt(m.x, m.z); G.step(0.5); } T.talkAll(); return [O.trace().lit, G.flags.c7_lit, G.flags.c7_sendell, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2] === true && v[3].length > 0);
 await shot('C7-01-lit.png');
-log('scope', await ev(() => { const O = game.rooms.obsv; T.useAt(O.telescope.x, O.telescope.z); T.talkAll(); return [game.flags.c7_scope, T.obj()]; }));
-log('out', await ev(() => T.exit('obs-out')));
-log('drone', await ev(() => { const G = game, h = G.hero, V = G.rooms.hamalayi.vent; T.tp(V.x + 8, V.z + 8); G.step(1); T.talkAll(); const d = G.story.cur.heavy(); for (let i = 0; i < 40 && d.alive; i++) { h.pos.set(d.pos.x - 3.5, G.physics.groundAt(d.pos.x - 3.5, d.pos.z), d.pos.z); h.angle = h.angleTo(d); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('KeyF'); G.step(1.0); if (G.state === 'dialog') T.talkAll(); } G.step(0.5); T.talkAll(); return [d.alive, G.flags.c7_droneDown, T.obj()]; }));
+is('the telescope turned, an objective set', await ev(() => { const O = game.rooms.obsv; T.useAt(O.telescope.x, O.telescope.z); T.talkAll(); return [game.flags.c7_scope, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('back out on the Hamalayi', await ev(() => T.exit('obs-out')), (v) => v === 'hamalayi');
+is('the heavy drone destroyed by the ball', await ev(() => { const G = game, h = G.hero, V = G.rooms.hamalayi.vent; T.tp(V.x + 8, V.z + 8); G.step(1); T.talkAll(); const d = G.story.cur.heavy(); for (let i = 0; i < 40 && d.alive; i++) { h.pos.set(d.pos.x - 3.5, G.physics.groundAt(d.pos.x - 3.5, d.pos.z), d.pos.z); h.angle = h.angleTo(d); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('KeyF'); G.step(1.0); if (G.state === 'dialog') T.talkAll(); } G.step(0.5); T.talkAll(); return [d.alive, G.flags.c7_droneDown, T.obj()]; }), (v) => v[0] === false && v[1] === true && v[2].length > 0);
 await shot('C7-02-vent.png');
-log('vent', await ev(() => { const V = game.rooms.hamalayi.vent; T.useAt(V.x + 2.8, V.z); game.step(2); T.talkAll(); return [game.flags.c7_vent, T.obj()]; }));
-log('home', await ev(() => { const G = game, g = G.rooms.hamalayi.monastery.gate; T.tp(g.x, g.z + 1); G.step(0.5); T.talkAll(); G.step(1.5); T.talkAll(); return [G.flags.c7_done, G.flags.chapterKey, G.room?.id]; }));
-console.log(errs.length ? errs.join('\n') : 'no errors');
+is('the glacier vent opened, an objective set', await ev(() => { const V = game.rooms.hamalayi.vent; T.useAt(V.x + 2.8, V.z); game.step(2); T.talkAll(); return [game.flags.c7_vent, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('chapter 7 ends: the next chapter (evacuation)', await ev(() => { const G = game, g = G.rooms.hamalayi.monastery.gate; T.tp(g.x, g.z + 1); G.step(0.5); T.talkAll(); G.step(1.5); T.talkAll(); return [G.flags.c7_done, G.flags.chapterKey, G.room?.id]; }), (v) => v[0] === true && v[1] === 'evacuation');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

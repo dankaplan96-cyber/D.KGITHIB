@@ -4,14 +4,12 @@
 // scene changes, presses during dialogue, lock-on, the sentry's shield and guard break, the crawler's slam,
 // the ball switch, weapon save/load, dodge distance at 30 vs 60 fps, and the ball's LBA2 rules (magic, bounces, fetch).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 4).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const errs = watch(page);
 const ev = (f, a) => page.evaluate(f, a);
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, JSON.stringify(info)); };
+const { check, done } = checker({ info: 'always' });
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/'), { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await ev(() => {
@@ -398,6 +396,6 @@ r = await ev(() => {
 });
 check("FunFrock's trooper: spots, aims, fires; a weak hit is taken on its armour", r.states.includes('aim') && r.hp[1] < r.hp[0] && r.soft === 'blocked' && r.armour === 2, r);
 
-console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);
