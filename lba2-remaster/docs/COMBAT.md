@@ -139,14 +139,16 @@ point `DISTANCE_VISEE` (2500 units, ~2 H) ahead of his facing, keeping the angle
   camera and Twinsen fade instead (town.js / island.js, VP-10's work; not touched here).
 - The free camera is unchanged.
 - **Follow** (CONTROL-FEEL, the user: "when I turn round he runs toward me, which is strange"; Settings → Camera, the
-  third choice; LBA2's view stays the default): the remaster's view above, and once he has kept one way (within 23°)
-  at a walk or more for 1.2 s, the view swings round behind him, eased like Enter's (≤ 60°/s, ≤ 90°/s²), and keeps
-  behind him while he keeps on (a curve up to ~1.6 rad/s carries it round; a sharp turn ends it and the view stays).
-  Never while he stands, turns on the spot, makes short corrections, runs less than 1.2 s, fights (a lock-on or a
-  move), or indoors (the iso rooms); not toward a heading where a wall hides him or that needs a steep view, and not
-  for the 4 s after a hidden or steep swing. With Modern controls the stick keeps the heading it was pushed under
-  until it is let go or pushed a new way (45°+), so the swing never turns his way and chases itself. In the 1997
-  look it glides too. tests/camfollow.mjs; tests/camsteady.mjs runs its routes in Follow as well.
+  third choice; LBA2's view stays the default): the remaster's view above, and once he has kept one way (within 23°,
+  never turning faster than 40°/s) at a walk or more for 1.2 s, the view swings round behind him, eased and gentler than
+  Enter's (≤ 45°/s, ≤ 60°/s²), and keeps behind him while he keeps on (a curve up to ~1.6 rad/s carries it round,
+  re-aimed only past 8°; a sharp turn ends it and the view stays). Never while he stands, turns on the spot, makes short
+  corrections, runs less than 1.2 s, fights (a lock-on, a move, enemies after him), or indoors (the iso rooms); only to
+  a heading where nothing hides him and where neither it nor the way round to it needs the view to rise over the
+  scenery (so by the houses it often stays as LBA2's); none for 4 s after a hidden or steep swing, nor for 2.5 s after a
+  follow ends. With Modern controls the stick keeps the heading it was pushed under until it is let go or pushed a new way
+  (45°+), so the swing never turns his way and chases itself. In the 1997 look it glides too. tests/camfollow.mjs;
+  tests/camsteady.mjs runs its routes in Follow with the LBA view's budgets.
 
 ### The jump — `JUMP` in src/game/actors.js
 LBA2's jump (ANIM.HQR 71) rises 0.577 H and carries him 1.55 H: here 1.19 m up and 3.2 m along (it was 1.77 m up and
@@ -156,9 +158,13 @@ fall at 26 m/s². A run is trimmed to 4.44 m/s at the take-off and in the air. T
 (0.12 s), the press buffer (0.15 s) and the landing's squash and dust are as before. In the air his feet catch a
 ledge up to 0.25 m above them: he takes a ledge about 1.4 m up (1.33 m at 30 fps), 2.0 m before. Measured (60 fps):
 apex 1.14 m, 0.72 s, 3.1 m at a run (tests/controls.mjs 6b).
-- Places built for the jump, checked: the Whispering Cliffs' stones (rises ≤ 1.05 m), the shell's stepping stones
-  (flush, 0.9 m gaps), Zeelich's old mill (now seven stair-stones 1.09 m apart and the gallery 1.09 m over the last; it
-  was six 1.25 m apart). Built against it: the test step's deck (2.35 m) and the fences of ~2.4 m.
+- Places built for the jump, crossed by jumps in tests/jumpreach.mjs (at the harness' 30 fps): the Whispering Cliffs'
+  13 stones (rises 0.98 m; the first now 1 m over the lowest ground beside it — from the street's side it stood 2 m up,
+  which only the old jump took), the deep installation's stepping stones (flush, 0.9–1.0 m gaps: a short hop from the
+  brink; a full run carries ~3 m, past a 1.3 m stone, as the old jump's 3.6 m did), Zeelich's old mill (now seven
+  stair-stones 1.09 m apart, the gallery 1.09 m over the last and its planks starting just past it; it was six 1.25 m
+  apart with a 0.6 m gap to the gallery). Built against it, still out of reach: the test step's deck (2.35 m), the
+  depot's fence (2.4 m).
 
 ### The ball's throw — `BALL_THROW`, `MagicBall.plan` in src/game/actors.js
 LBA2: each behaviour's File3D (RESS.HQR entry 44) gives the throw anim (LANCE, anim 6) an `F_THROW_MAGIC` on its 6th

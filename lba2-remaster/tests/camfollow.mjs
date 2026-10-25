@@ -2,8 +2,8 @@
 // runs toward me, which is strange"). By input (the keys a player presses), at 60 fps, on open ground on Citadel:
 //   1. the setting: three choices, LBA2 the default for a new player, Follow chosen by a click and kept after a reload,
 //      an unknown saved value falls back to LBA2
-//   2. a sustained run one way turns the view round behind him (Classic and Modern controls), eased: no frame turns
-//      it more than 1.2° (≤ 61°/s), no jolt; the LBA2 view on the same run never turns
+//   2. a sustained walk one way turns the view round behind him (Classic and Modern controls), eased: no frame turns
+//      it more than 0.8° (≤ 48°/s), no jolt; the LBA2 view on the same walk never turns
 //   3. no swing while he stands, turns on the spot, makes short corrections, runs less than a second, or fights with a
 //      lock-on; indoors (the iso rooms) nothing changes
 //   4. Modern controls: while the view swings, the held direction keeps his way (the stick's heading is kept until it
@@ -89,12 +89,12 @@ if (!spot.none) {
 const run = await ev(async ({ spot, shots }) => {
   const G = game, h = G.hero, C = G.camRig, out = {};
   for (const m of ['lba', 'follow']) {
-    // standing at the start facing the run's way, turned 90° on the spot first (the view stays: he runs across it)
-    F.cam(m); F.place(spot, spot.a + Math.PI / 2); h.behaviour = 'athletic';
-    F.hold(['ArrowLeft'], (Math.PI / 2) / (169 * Math.PI / 180));
+    // standing at the start facing the run's way, turned 90° on the spot first (the view stays: he walks across it)
+    F.cam(m); F.place(spot, spot.a + Math.PI / 2); h.behaviour = 'normal';
+    F.hold(['ArrowLeft'], (Math.PI / 2) / (100 * Math.PI / 180));
     const R = F.rec(), t1 = [];
     F.hold(['ArrowUp'], 1.1, () => { R.fn(); }); const at09 = F.turned(R);
-    F.hold(['ArrowUp'], 2.9, () => { R.fn(); t1.push(F.offBehind()); });
+    F.hold(['ArrowUp'], 4.4, () => { R.fn(); t1.push(F.offBehind()); });
     if (m === 'follow' && shots) window.__shots = true;
     out[m] = { turnedBy09s: at09, turned: F.turned(R), offBehind: F.offBehind(), maxStepDeg: +R.maxStep.toFixed(2), accMax: +R.acc.toFixed(1), swingBy: [...R.swingBy], mode: [...R.modes] };
     G.step(1);
@@ -103,15 +103,15 @@ const run = await ev(async ({ spot, shots }) => {
 }, { spot, shots: !!SHOTS });
 check('LBA2 view (the default): a run across the view never turns it', run.lba.turned < 0.5, run.lba);
 check('Follow: nothing in the first 1.1 s of the run, then the view comes round behind him (within 12°)', run.follow.turnedBy09s < 0.5 && run.follow.offBehind <= 12 && run.follow.turned > 60 && run.follow.swingBy.includes('follow') && run.follow.mode.includes('follow'), run.follow);
-check('Follow: eased, never a snap (≤ 1.2° a frame = 72°/s at 60 fps) and no jolt (camera acceleration ≤ 40 m/s²)', run.follow.maxStepDeg <= 1.2 && run.follow.accMax <= 40, run.follow);
+check('Follow: eased, never a snap (≤ 0.8° a frame = 48°/s at 60 fps) and no jolt (camera acceleration ≤ 40 m/s²)', run.follow.maxStepDeg <= 0.8 && run.follow.accMax <= 40, run.follow);
 
 // frames of the swing (docs/lba3-production/reviews/CONTROL-FEEL/)
 if (SHOTS) {
   fs.mkdirSync(SHOTS, { recursive: true });
-  await ev((spot) => { const h = game.hero; F.cam('follow'); F.place(spot, spot.a + Math.PI / 2); h.behaviour = 'athletic'; F.hold(['ArrowLeft'], (Math.PI / 2) / (169 * Math.PI / 180)); game.frame(1 / 60, true); }, spot);
-  for (const [i, t] of [[0, 0], [1, 1.0], [2, 1.0], [3, 1.0]]) {
+  await ev((spot) => { const h = game.hero; F.cam('follow'); F.place(spot, spot.a + Math.PI / 2); h.behaviour = 'normal'; F.hold(['ArrowLeft'], (Math.PI / 2) / (100 * Math.PI / 180)); game.frame(1 / 60, true); }, spot);
+  for (const [i, t] of [[0, 0], [1, 1.4], [2, 1.4], [3, 1.4]]) {
     await ev((t) => { const I = game.input; I.keys.add('ArrowUp'); for (let s = 0; s < t - 1e-9; s += 1 / 60) game.frame(1 / 60, false); game.frame(1 / 60, true); }, t);
-    await page.screenshot({ path: path.join(SHOTS, `follow-${i}-t${(i ? i * 1.0 : 0).toFixed(1)}s.png`) });
+    await page.screenshot({ path: path.join(SHOTS, `follow-${i}-t${(i * 1.4).toFixed(1)}s.png`) });
   }
   await ev(() => { game.input.keys.clear(); game.step(1); });
 }
@@ -159,17 +159,17 @@ check('Follow: no swing while he fights with a lock-on', calm.lock.none || (calm
 const modern = await ev((spot) => {
   const G = game, h = G.hero, C = G.camRig, out = {};
   G.settings.controls = 'modern'; G.applySettings(); F.cam('follow');
-  // the view behind him at the start; he runs to the screen's left (the held arrow) for 4 s
-  F.place(spot, spot.a - Math.PI / 2); h.behaviour = 'athletic';
+  // the view behind him at the start; he walks to the screen's left (the held arrow) for 5.5 s
+  F.place(spot, spot.a - Math.PI / 2); h.behaviour = 'normal';
   const R = F.rec(); F.hold(['ArrowLeft'], 0.5, R.fn); const w0 = Math.atan2(h.vel.x, h.vel.y);
-  F.hold(['ArrowLeft'], 3.5, R.fn); const w1 = Math.atan2(h.vel.x, h.vel.y);
+  F.hold(['ArrowLeft'], 5.0, R.fn); const w1 = Math.atan2(h.vel.x, h.vel.y);
   out.wayDrift = +Math.abs(F.deg(F.ad(w0, w1))).toFixed(1); out.turned = F.turned(R); out.offBehind = F.offBehind(); out.maxStepDeg = +R.maxStep.toFixed(2);
   // let go and push Up: now relative to the view behind him, so straight on
   G.step(0.3); F.hold(['ArrowUp'], 0.6); const w2 = Math.atan2(h.vel.x, h.vel.y); out.upAfter = +Math.abs(F.deg(F.ad(w1, w2))).toFixed(1);
   G.settings.controls = 'classic'; G.applySettings();
   return out;
 }, spot);
-check('Follow, Modern controls: the held arrow keeps his way while the view swings behind him (he runs straight)', modern.wayDrift <= 10 && modern.turned > 60 && modern.offBehind <= 15 && modern.maxStepDeg <= 1.2, modern);
+check('Follow, Modern controls: the held arrow keeps his way while the view swings behind him (he walks straight)', modern.wayDrift <= 10 && modern.turned > 60 && modern.offBehind <= 15 && modern.maxStepDeg <= 0.8, modern);
 check('Follow, Modern controls: let go and pushed Up, he goes on the way the view now looks', modern.upAfter <= 15, modern);
 
 // ---------------------------------------------------------------- 5. indoors: the iso view, nothing follows
