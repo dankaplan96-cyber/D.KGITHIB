@@ -198,10 +198,11 @@ await ev(() => { P.exitTo('zeelich-workshop'); P.settle(); });
 // ---- the later use: the old mill's climb (chapter 10) — a shortcut, not a way past the brake
 const m1 = await ev(() => { const G = game, mt = G.rooms.zeelich.millTop, f = G.flags, h = G.hero;
   // (the stair-stones: millTop.stones, seven 1.09 m apart, the gallery 1.09 m over the last — CONTROL-FEEL)
-  const cx = mt.x, cz = mt.z - 3.3, S = mt.stones, a0 = Math.atan2(S[0].x - cx, S[0].z - cz) - 0.6;
-  P.go(cx + Math.sin(a0) * 6, cz + Math.cos(a0) * 6, { tol: 0.6, fight: false });
+  // (the first hop from the green outside the second stone, not from under it: its underside is 1.8 m up)
+  const cx = mt.x, cz = mt.z - 3.3, S = mt.stones, a1 = Math.atan2(S[1].x - cx, S[1].z - cz);
+  P.go(cx + Math.sin(a1) * 4.9, cz + Math.cos(a1) * 4.9, { tol: 0.3, fight: false });
   const t0 = G.time, hops = [];
-  for (const k of [1, 3, 5]) { const s = S[k]; hops.push(J.jetHop(s.x, s.z, { from: 1.6, walk: k === 1, t: 4, top: s.y }).y); G.step(1.6); }
+  for (const k of [1, 3, 5]) { const s = S[k]; hops.push(J.jetHop(s.x, s.z, { walk: false, t: 4, top: s.y }).y); G.step(1.6); }
   hops.push(J.jetHop(mt.landing.x, mt.landing.z, { walk: false, t: 4, top: mt.y }).y);
   const secs = +(G.time - t0).toFixed(1), top = h.pos.y > mt.y - 0.3;
   const relayBefore = (() => { const it = []; G.story.interactables((d, m, o) => { if (d < m) it.push(o.kind); }, (x, z) => Math.hypot(x - h.pos.x, z - h.pos.z)); return it; })();

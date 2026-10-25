@@ -81,11 +81,15 @@ const STEEP = (48 * Math.PI) / 180, STEEP_OK = (40 * Math.PI) / 180, STEEP_T = 0
 // the way has been clear for OCC_HOLD s (≤ OCC_OUT_V m/s): no pumping in and out along a wall
 const AUTO_V = (24 * Math.PI) / 180, AUTO_A = (45 * Math.PI) / 180, AUTO_MIN = (25 * Math.PI) / 180, AUTO_OFF = (4 * Math.PI) / 180, AUTO_MAX = (115 * Math.PI) / 180, AUTO_IDLE = 2, STEADY = 0.6;
 const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, OCC_DELAY = 0.2, TALL_FREE = 1.0;
-// CONTROL-FEEL, the Follow view: he keeps one way (within FOLLOW_TOL of where the run began) at FOLLOW_SP m/s or more for
-// FOLLOW_T s, then the view swings round behind him if it is more than FOLLOW_MIN off; while he keeps on (his way may
-// bend at most FOLLOW_TURN rad/s, smoothed at FOL_W 1/s) it stays behind him; the heading is checked for a wall or a
-// steep view every FOLLOW_CHECK s (and none for a hidden or steep swing's cool-down)
-const FOLLOW_T = 1.2, FOLLOW_SP = 1.2, FOLLOW_TOL = 0.4, FOLLOW_MIN = (20 * Math.PI) / 180, FOLLOW_TURN = 1.6, FOL_W = 2.5, FOLLOW_CHECK = 0.25;
+// CONTROL-FEEL, the Follow view: he keeps one way (within FOLLOW_TOL of where the run began, never turning faster than
+// FOLLOW_RATE rad/s: a walking turn starts it afresh) at FOLLOW_SP m/s or more for FOLLOW_T s, then the view swings round
+// behind him if it is more than FOLLOW_MIN off — gentler than Enter's (≤ FOLLOW_V, FOLLOW_A); while he keeps on (his way
+// may bend at most FOLLOW_TURN rad/s, smoothed at FOL_W 1/s) it stays behind him, re-aimed only once his way has moved
+// FOLLOW_DEAD from where it aims (a weaving run doesn't rock the view). Only to a heading where nothing hides
+// him and no rise over the scenery is needed (checked every FOLLOW_CHECK s); none for a hidden or steep swing's cool-down,
+// and none for FOLLOW_COOL s after a follow ends (a zigzag doesn't swing it to and fro)
+const FOLLOW_T = 1.2, FOLLOW_SP = 1.2, FOLLOW_TOL = 0.4, FOLLOW_RATE = 0.7, FOLLOW_MIN = (20 * Math.PI) / 180, FOLLOW_TURN = 1.6, FOL_W = 2.5, FOLLOW_CHECK = 0.25, FOLLOW_COOL = 2.5, FOLLOW_DEAD = (8 * Math.PI) / 180;
+const FOLLOW_V = (45 * Math.PI) / 180, FOLLOW_A = (60 * Math.PI) / 180;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -330,7 +334,7 @@ export class CameraRig {
     if (this.mode === 'follow') this._follow(L, hero, sp, v, dt);
     // a swing (Enter: round behind him; hidden: just far enough round to see him): eased in and out, at most 60°/s
     {
-      const d = angleDiff(L.yaw, L.goalYaw), want = clamp(d * 2.2, -SWING_V, SWING_V), a = SWING_A * dt;
+      const fol = L.swingBy === 'follow', d = angleDiff(L.yaw, L.goalYaw), want = clamp(d * 2.2, -(fol ? FOLLOW_V : SWING_V), fol ? FOLLOW_V : SWING_V), a = (fol ? FOLLOW_A : SWING_A) * dt;
       L.yawV = (L.yawV || 0) + clamp(want - (L.yawV || 0), -a, a);
       if (Math.abs(d) < 1e-3 && Math.abs(L.yawV) < 1e-3) { L.yaw = L.goalYaw; L.yawV = 0; } else L.yaw += L.yawV * dt;
     }
@@ -442,13 +446,16 @@ export class CameraRig {
 
   // CONTROL-FEEL, the Follow view (see FOLLOW_T): after a steady run one way, round behind him, eased; otherwise nothing
   _follow(L, hero, sp, v, dt) {
-    const Fo = (L.fol ??= { dir: 0, t: 0, on: false, track: false, chkT: 0, ok: false, at: null });
-    const reset = () => { Fo.t = 0; Fo.on = false; Fo.track = false; Fo.at = null; };
+    const Fo = (L.fol ??= { dir: 0, t: 0, on: false, track: false, chkT: 0, ok: false, at: null, prev: null, cool: 0 });
+    const reset = () => { if (Fo.track) Fo.cool = FOLLOW_COOL; Fo.t = 0; Fo.on = false; Fo.track = false; Fo.at = null; };
+    Fo.cool = Math.max(0, Fo.cool - dt);
+    const way = Math.atan2(L.vel.x, L.vel.z), rate = Fo.prev == null ? 0 : Math.abs(angleDiff(Fo.prev, way)) / dt;
+    Fo.prev = sp < FOLLOW_SP ? null : way;
     if (sp < FOLLOW_SP || this.busy?.() || L.steepCool > 0) { reset(); return; }
-    const way = Math.atan2(L.vel.x, L.vel.z);
     if (!Fo.on) {
-      // one way: within FOLLOW_TOL of where this run began (a turn, a zigzag or a short correction starts it afresh)
-      if (Fo.t === 0 || Math.abs(angleDiff(Fo.dir, way)) > FOLLOW_TOL) { Fo.dir = way; Fo.t = dt; return; }
+      // one way: within FOLLOW_TOL of where this run began, not turning (a turn, a zigzag or a short correction starts
+      // it afresh)
+      if (Fo.t === 0 || Fo.cool > 0 || rate > FOLLOW_RATE || Math.abs(angleDiff(Fo.dir, way)) > FOLLOW_TOL) { Fo.dir = way; Fo.t = dt; return; }
       Fo.t += dt;
       if (Fo.t < FOLLOW_T) return;
       Fo.dir = way; Fo.on = true; Fo.chkT = 0;
@@ -458,17 +465,21 @@ export class CameraRig {
       Fo.dir = dampAngle(Fo.dir, way, FOL_W, dt);
     }
     const goal = Fo.dir + Math.PI;
-    // the heading behind him must show him (no wall or cliff in the way) without a steep view over the scenery
+    // the heading behind him must show him (no wall or cliff in the way), and neither it nor the way round to it may need
+    // the view to rise over the scenery (each 15° of the swing checked: a swing that tilts up and down is the rocking
+    // CAM-2 took out)
     Fo.chkT -= dt;
     if (Fo.chkT <= 0 || Fo.at == null || Math.abs(angleDiff(Fo.at, goal)) > 0.25) {
       Fo.chkT = FOLLOW_CHECK; Fo.at = goal;
-      const cp = Math.cos(v.pitch), sn = Math.sin(v.pitch);
+      const cp = Math.cos(v.pitch), sn = Math.sin(v.pitch), arc = angleDiff(L.yaw, goal), n = Math.ceil(Math.abs(arc) / (Math.PI / 12));
       _c.set(hero.x, hero.y, hero.z);
-      Fo.ok = this.occluded(_c, cp, sn, goal, v.dist, true) >= v.dist - 0.5 && this._scenePitch(hero, L.f, goal, v.pitch, v.dist, L.f.y + 1, STEEP)[0] <= STEEP;
+      Fo.ok = this.occluded(_c, cp, sn, goal, v.dist, true) >= v.dist - 0.5;
+      for (let i = n; i >= 0 && Fo.ok; i--) if (this._scenePitch(hero, L.f, L.yaw + (arc * i) / Math.max(1, n), v.pitch, v.dist, L.f.y + 1, v.pitch + 0.06)[0] > v.pitch + 0.05) Fo.ok = false;
     }
     if (!Fo.ok) return;
     // (already about behind him: no swing for a small difference; once it has swung, it keeps behind him)
     if (!Fo.track && Math.abs(angleDiff(L.yaw, goal)) < FOLLOW_MIN && Math.abs(angleDiff(L.yaw, L.goalYaw)) < 0.02) return;
+    if (Fo.track && Math.abs(angleDiff(L.goalYaw, goal)) < FOLLOW_DEAD) return;
     if (!Fo.track) Fo.swings = (Fo.swings || 0) + 1;   // (a new follow swing: tests/camfollow.mjs counts them)
     Fo.track = true; L.goalYaw = goal; L.swingBy = 'follow';
   }
