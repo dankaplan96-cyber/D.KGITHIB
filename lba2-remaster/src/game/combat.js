@@ -534,6 +534,7 @@ export class HeroCombat {
         T.chargeT += dt;
         if (T.chargeT >= C.chargeFull && !T.full) { T.full = true; g.audio.play('chargeFull'); g.particles.burst(h.pos.x, h.pos.y + 2.0, h.pos.z, '#ffe27a', 8, 1.5); }
         g.ball.setCharge?.(Math.min(1, T.chargeT / C.chargeFull));
+        h.rig.chargeFull = !!T.full;
         out.speedK = C.chargeMoveK; out.anim = 'charge'; out.upper = { kind: 'charge', t: T.chargeT }; out.face = want;
         g.ball.preview?.(h, aim, T.full);
         return;
