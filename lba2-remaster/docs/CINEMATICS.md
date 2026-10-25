@@ -30,13 +30,34 @@ gesture while the line babbles: there is no lip-sync and no recorded voice.
 The house as a set: for the scene the house gets a ceiling and its east wall back (the game draws it open for its
 own camera), and the well's cave its east wall; they fade out in the handoff (83.6–84.0) and `finish` removes them.
 A scene pose layer, `bend(actor, t0, t1, offsets)`, adds small joint offsets on top of the rig's actions where a hand
-must land on something (the crate, the tap's handle, the stream, the table); `from(actor, action)` enters an action
-at its held pose. OPEN-3's item list: docs/lba3-production/reviews/OPEN-3/BUGS.md.
+must land on something (the crate, the table); `from(actor, action)` enters an action at its held pose. OPEN-3's item
+list: docs/lba3-production/reviews/OPEN-3/BUGS.md.
+
+Two more layers since R5 (docs/lba3-production/reviews/R5-OPENING/), set every frame from the rig's own pose and
+taken off again before the next rig update (the joints' values are kept and put back, so the rig's damping never sees
+them, and `finish` takes them off, played or skipped — the gameplay rig never turns a hand bone):
+- `grip(actor, side, t0, t1, target, {ein, eout})`: the hand on a thing. `target(t)` gives where the palm goes (world),
+  which way the fingers point and which way the palm faces; the shoulder and elbow are solved for the wrist (damped
+  least squares, four joints, starting each frame from the action's own arm, so the elbow keeps the action's shape)
+  and the hand bone turned to the orientation; eased in and out. Zoé's hand on the tap's cross handle (palm down,
+  turning with it) and palm up under the stream use it; it works from the skinned hand CHAR-2 made (12 cm past the
+  wrist), not from offsets tuned for a shorter hand.
+- Foot planting (every actor, not while walking or kneeling): a foot that is down stays where it was put down (the
+  hip turns, flexes and swings to hold it, the foot keeps its sole level); when it can't — more than 10 cm or 0.4 rad
+  away — it steps there (lifted ~4 cm, 0.28 s), one foot at a time. `pivot` turns on the spot with the head leading
+  (the rig's turn lean) and lets the feet step round; the gameplay turn's shuffle (turnL / turnR) skated the planted
+  foot round with the body. `walk(..., {acc, dec})` gets up to speed and settles; a walk's end facing is reached in
+  its last steps and then by a short turn (it used to snap there in one frame).
+- Talking: each line's gesture is chosen for it (`say(..., gesture)`: a hand up for "Now the sail.", the
+  screwdriver's hand toward the tap, one open hand, hands together for a question) or none (calling across the room,
+  "I'll check the well." with a nod). Still no lip-sync and no mouth motion (no poly face has mouth poses).
 
 Doors: somebody who leaves through a door walks out of the shot or into the game's door transition (a dip to black,
 the door sound, and they are outside, already a step past the door, as the game puts the hero) — never into a
 closed door. Interiors are open sets like LBA2's (the south and east walls are cut away for the game's camera), so
-shots indoors look north or west and are pitched to keep the frame under the wall tops.
+shots indoors look north or west and are pitched to keep the frame under the wall tops — or, with the opening's set
+pieces (the house's ceiling and east wall), across the room from its west end (R5's kitchen shots: the far end is the
+restored east wall).
 
 ## Playback rules
 - The game is in the `cinematic` state: no gameplay, the HUD and touch controls hidden, the gameplay camera
@@ -63,12 +84,12 @@ What a player who never played LBA should know by the end, shown rather than tol
 | 19.6–23.8 | the drill | the derrick turning inside FunFrock's old fortress on the plateau, the hum | the project drills into the island |
 | 23.8–29 | the pier again | Resident: "What's that hum?" Worker: "Just the drill. It's a long way down." The crate is set down; the resident goes on to the ferry | the hum comes from the drill; the people in charge aren't worried |
 | 29–35 | home | the family room: Twinsen mends the reading lamp, Zoé pots seedlings, Arthur kneels at his model boat. Arthur's close-up: "Dad! The mast fits!"; over his shoulder: "Told you. Now the sail." | Twinsen, his son Arthur, his wife Zoé: an ordinary home |
-| 35–48 | Zoé at the counter, the tap | she wipes her hands, turns the tap: a squeak, two knocks, a short stream, a sputter, nothing. "Twinsen. The tap's stopped again." | — |
+| 35–48 | Zoé at the counter, the tap | one shot from the kitchen's west end at her eye level (three-quarter front, Twinsen at his table behind her), a slow push in: she pots, wipes her hands, her eyes go to the tap, she walks over and reaches as she settles; her hand lands on the cross handle and turns with it: a squeak, two knocks (she glances up at the pipe), a short stream (down at the water), a sputter, nothing (a beat on the spout); she turns it off, breathes out, lifts her hand away, looks round to him and turns (stepping round). Cut on her turn (45.3) to her face from his side of the room: "Twinsen. The tap's stopped again." | — |
 | 48–53.4 | the exchange | Zoé turns to him; Twinsen turns round from the table (seen from her side): "I fixed that yesterday." Over his shoulder: "It worked yesterday." (a shrug) | — |
 | 53.4–58 | the house hums | the hum again, dust from the ceiling, all three look up (a wide from the bed's foot); Arthur's close-up: "The drill again. Lulu says they're digging to the middle of the world." | the drill reaches their house too |
-| 58–62.4 | the second try | a thin warm trickle, a little steam; her fingers under it: "That's warm. It's never warm." The music turns (the Entity cell) | the water is wrong |
+| 58–62.4 | the second try | her eyes back to the tap, she steps round to it (the first try's angle), her hand on the handle; a thin warm trickle, a little steam; her hand goes from the tap to under the stream, palm up, the water landing on it (the stream ends at her palm), a small start: "That's warm. It's never warm." The music turns (the Entity cell) | the water is wrong |
 | 62.4–66.5 | under the island | a dip to black, the well's cave, inside the last chamber facing the crystal vein: it glows brighter with the hum, then a dip back | the hook: something under the island answers the drill (what the player finds at the bottom of the well) |
-| 66.5–75.2 | the decision | Twinsen puts the screwdriver down: "I'll check the well." Zoé turns the tap off: "I'll ask next door." and, going: "Take your magic ball. Just in case." She walks out of the shot toward the hall | the first goal (the well) and the first step (the ball); Zoé acts on her own |
+| 66.5–75.2 | the decision | Twinsen puts the screwdriver down: "I'll check the well." (a nod). Zoé turns the tap off (her hand on the handle): "I'll ask next door.", lets go, steps round to him drying her hands and, going: "Take your magic ball. Just in case." She walks out of the shot toward the hall | the first goal (the well) and the first step (the ball); Zoé acts on her own |
 | 75.2–81.6 | outside | the game's door transition (a dip, the door): Zoé steps out by the house's new heat post (dark: the heat hasn't come yet), comes up the path and walks along the lane round the neighbours' fenced yard; the title over the sky, 76.4–81 | — |
 | 81.6–83.6 | inside | Twinsen turns to the cupboard where the ball is | where the ball is |
 | 83.6–88 | handoff | the camera eases into the game's isometric view; control, the objective "Check the well ◆ Take the magic ball from the cupboard" (the default LBA HUD hides the objective panel, so a toast says it once), the save | what to do now |
