@@ -513,6 +513,7 @@ class Game {
       this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
       this.audio.setPlace?.(R.outdoor ? (id === 'zeelich' || id === 'hamalayi' || R.sky ? 'sky' : 'island') : id.startsWith('c3') || id === 'well' ? 'under' : 'interior');
+      this.refillGivers();   // (CONTAINERS-2: a new visit, the containers here give again)
       if (quiet) return; // (a cinematic changing scenes: its music, its own story, no save mid-scene)
       this.audio.setMood(R.music || ROOM_MUSIC[id] || 'citadel');
       this.story.onEnterRoom(id);
@@ -539,6 +540,7 @@ class Game {
       this.occSnap = true;   // (Nell's roof takes its faded state at once on the first frame: Game.occluders)
       this.doorCool = 1;
       this.audio.setPlace?.('island');
+      this.refillGivers();
       if (quiet) return;
       this.audio.setOutdoorArea(to, POI);
       if (R) this.story.onExitRoom(R.id);
@@ -1040,15 +1042,39 @@ class Game {
   }
 
   // ------------------------------------------------ givers (LBA2's "zone giver")
-  // A giver is a spot by a bin, a cupboard, a barrel: Twinsen's hop there shakes out one bonus, once (the
-  // ids go into `searched`, so saves keep them). Most are indoors, as in the original. The bonus is the kind
-  // (of those the spot may give) Twinsen needs most, as LBA2's WhichBonus decides; a bonus of n kashes is one
-  // coin worth n.
+  // A giver is a spot by a bin, a cupboard, a barrel: Twinsen's hop there shakes out one bonus. Most are indoors, as
+  // in the original. The bonus is the kind (of those the spot may give) Twinsen needs most, as LBA2's WhichBonus
+  // decides; a bonus of n kashes is one coin worth n.
+  // CONTAINERS-2 (the user, 2026-10-25: "they should refill every time"): as in LBA2 (DISKFUNC.CPP resets a giver's
+  // taken flag whenever its scene is loaded) a giver gives once per visit. Its key ('giver:<area>:<id>') goes into
+  // `searched` while Twinsen stays in the area and is dropped when he goes through a door, changes region or takes
+  // a shuttle (enterRoom / exitRoom → refillGivers), so it gives again when he comes back; a timer alone never
+  // refills it. A save keeps the keys of the area he is in (a load continues the visit); an older save's keys of
+  // other areas are dropped when it loads. A giver that may give a clover or a key still gives once ever.
   givers() { return (this.room ? this.room.givers : this.world.givers) || []; }
   where() { return this.room?.id || 'out'; }   // (the area a bonus lies in: a room/region id, or Citadel)
   giverKey(gv) { return 'giver:' + this.where() + ':' + gv.id; }
-  // (saves from before the givers kept the outdoor two as plain searches: same ids)
-  giverTaken(gv) { return this.searched.includes(this.giverKey(gv)) || (!this.room && this.searched.includes(gv.id)); }
+  giverOnce(gv) { return !!gv && (!!gv.once || gv.kinds.includes('clover') || gv.kinds.includes('key')); }
+  // (saves from before the givers kept the outdoor two as plain searches: same ids; only the stump's clover counts now)
+  // (and a container with three of its bonuses still lying untaken gives no more until one is picked up: nothing times
+  //  out here, unlike LBA2, so hearts left at full life would otherwise pile up visit after visit)
+  giverTaken(gv) {
+    const key = this.giverKey(gv);
+    if (this.searched.includes(key) || (!this.room && this.giverOnce(gv) && this.searched.includes(gv.id))) return true;
+    let lying = 0;
+    for (const p of this.pickups.list) if (p.loot && (p.loot === key || p.loot.startsWith(key + '#')) && ++lying >= 3) return true;
+    return false;
+  }
+  // a new visit to the area he is now in: every other area's refillable giver keys go
+  refillGivers() {
+    const here = 'giver:' + this.where() + ':';
+    this.searched = this.searched.filter((k) => {
+      if (typeof k !== 'string' || !k.startsWith('giver:') || k.startsWith(here)) return true;
+      const i = k.indexOf(':', 6), area = k.slice(6, i), id = k.slice(i + 1);
+      const list = area === 'out' ? this.world.givers : this.rooms[area]?.givers;
+      return this.giverOnce(list?.find((g) => g.id === id));
+    });
+  }
   // the unsearched giver a hop here would search (in reach, about level with him), or null
   giverInReach() {
     const h = this.hero;
@@ -1059,16 +1085,19 @@ class Game {
     return null;
   }
   // CONTAINERS: the bonus pops out toward Twinsen, lands and stays until he takes it (no 20 s timeout: the user's
-  // rule), in the save as `loot` under the giver's key, so a container gives exactly once whatever happens between
-  // the search and the taking (a save, a load, a door, a death and Retry).
+  // rule), in the save as `loot` under the giver's key, so nothing is lost between the search and the taking (a save,
+  // a load, a door, a death and Retry). Refilled, a container can leave a second bonus beside an untaken first one:
+  // that one's loot key gets '#2', '#3'… (restoreLoot keeps one bonus per key).
   giverHop() {
     const gv = this.giverInReach();
     if (!gv) return false;
     const key = this.giverKey(gv);
     this.searched.push(key);
+    let lk = key;
+    for (let i = 2; this.pickups.list.some((p) => p.loot === lk) || this.ball?.carry?.loot === lk; i++) lk = key + '#' + i;
     const y = (gv.y ?? this.physics.groundAt(gv.x, gv.z, this.hero.pos.y + 1)) + (gv.top ?? 1);
     // (from: it leaves the container's own collider before walls count, or it would drop back inside it)
-    this.giveBonus(gv.kinds, gv.n || 1, gv.x, y, gv.z, this.hero.pos, { loot: key, from: { x: gv.x, z: gv.z, r: Math.max(0.3, gv.r - 1.0) } });
+    this.giveBonus(gv.kinds, gv.n || 1, gv.x, y, gv.z, this.hero.pos, { loot: lk, from: { x: gv.x, z: gv.z, r: Math.max(0.3, gv.r - 1.0) } });
     return true;
   }
   whichBonus(kinds) {

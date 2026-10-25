@@ -944,6 +944,66 @@ one there (jars), else a new Esmer barrel/crate; not by the shuttle board/pad (t
 
 Not verified: a real GPU (SwiftShader captures), an independent review, the feel of the glint and the hop-aside by
 hand; Desert Island has no new containers (its ~60 original spots don't map onto our remapped desert).
+### CONTAINERS-2: containers refill on every visit; about twice as many outdoors (evidence docs/lba3-production/reviews/CONTAINERS-2/)
+The user (2026-10-25): "We need more containers, and yes, they should refill every time." LBA2 resets a giver's taken
+flag whenever its scene loads (QA "CONTAINERS + R10" above), so a bin gives again on each visit.
+
+Ours: a giver (outdoor container or interior giver) gives once per visit. Its key `giver:<area>:<id>` stays in
+`searched` while Twinsen is in the area; enterRoom/exitRoom (a door, a region change, a shuttle, a story move) drop
+every other area's keys (main.js refillGivers), so on his return it is full again: the glint and the "Search" prompt
+come back. Standing by it, waiting or pressing again does nothing within the visit. A save keeps the current area's
+keys, so a load continues the visit; an older save's keys for other areas (CONTAINERS' once-ever records) are dropped
+when it loads; no format change. A giver that may give a clover or a key (the stump, two LBA1 rooms) still gives once
+ever. Bonuses lying on the ground are kept as before; a refilled container's next bonus gets the loot key `…#2`; one
+with three of its bonuses still lying stays shut until one is taken (nothing times out here, so full-life hearts would
+otherwise pile up visit after visit).
+
+Placements (src/game/containers.js), outdoor containers 21 → 52:
+- Citadel 9 → 19: behind the fruit stall on the square, the south lane's bend, by the Bug Street house, the pink house,
+  behind the south lane's stone house, behind the museum, suitcases outside the baggage claim, by the harbour wing, the
+  quay's end, by the neighbour's house at Twinsen's end of town. Ours: the original has only its 9 outdoor givers here.
+  House spots are given in the house's frame; each is moved up to 3 m off paths, door lanes, signs, NPC places,
+  townlife places, crystals, dogs' yards and drops (none needed more than 1 m).
+- Zeelich 3 → 7: four on the Esmer street by the houses' corners (not the street's middle), off zeelife's places.
+- Its islands 9 → 18: more of the original's own spots (SCENE.HQR type-4 zones read from the user's files as numbers,
+  island-centred: Otringal 3 → 9, Knartas 3 → 5, the CX islet 1 → 2; the Platform's other two are within 3 m of its
+  two); kashes capped at 3.
+- Desert Island 0 → 8 (our layout): by Kesh's houses (3), Ilka's tent (a trunk and a crate), the last bend of the track
+  to the dig, the dig's rim (2). Kept off the coast, the sand tracks, the yacht's routes and stops, Kesh's poles and
+  screens, the research post and its drones' round, the pump, the oasis, the dig's pit and gate, NPC places. Drawn in
+  the materials desert.js already uses (kit.js caches them), so they share the island's batches.
+- Kinds: bins, barrels, crates, suitcases, a trolley, a trunk; bonuses mostly kashes (1–3), some money/life/magic (the
+  most needed), a few life or life/magic; no keys.
+- tools: reviews/CONTAINERS-2/clearance.mjs (nearest NPC, patrol, story door, exit, zone for every container: the only
+  "tight" ones are three of CONTAINERS' original spots, 2.6–2.7 m from a door beside its lane, unchanged).
+
+Draw calls (reviews/CONTAINERS-2/calls.mjs: Medium, 1366×768, one frame per view, SwiftShader; counts, not timing),
+before (6d7bc38) → after: Citadel square 237 → 238, harbour path 237 → 236, quay 258 → 259, south lane 220 → 221,
+Zeelich pier 442 → 442 (one of three runs read 449: the view has moving actors), Desert village 163 → 166, camp
+36 → 39, dig 57 → 62 (one call per material a cell did not have yet, main and shadow, not per container: Citadel's
+containers are one mesh per material for the whole island; the desert's use the island's own materials).
+tests/drawcalls.mjs street Medium: 237 → 238 calls (containers' own 3 → 3), shader programs 121 → 121. No GPU time
+measured (software renderer); Medium at 60 fps on the user's laptop is not verified here.
+
+| Test (2026-10-25, worktree, GAME_URL :8173, one at a time) | Result |
+|---|---|
+| containers (41 checks; log reviews/CONTAINERS-2/containers-test.log) | ALL PASSED: the 29 earlier checks (the glint check now searches the bin in the same visit first; the Zeelich heart from the life/magic yard barrels) + placements (Citadel ≥ 18 with all kinds, Zeelich ≥ 6, islands ≥ 16, desert ≥ 8, none skipped), every outdoor container reachable and searched by the action with nothing else answering the key (52), within one visit nothing more (90 s, 10 presses, no prompt, no glint), away the Citadel records are gone, back the glint and "Search" return and one more bonus pops (#2) beside the first, through a door and back full again, the house's givers refill, the stump's record survives, a save mid-visit keeps the visit, an older save's other-area keys dropped (story searches kept), three lying bonuses keep a container shut until one is taken |
+| worldfit | ALL PASSED (no finding near a new container; desert z-fight listing unchanged in kind: the post gate, the village houses) |
+| drawcalls (street, Medium) | 238 calls, no errors (above) |
+| stability | ALL PASSED |
+| chapter1 | to Zeelich, every step true, no errors |
+| chapter2 (Zeelich) | to chapter 4's start, no errors |
+| chapter4 (Desert Island) | ALL PASSED (54) |
+| chapter5 (Desert Island) | to the Hamalayi board, every step true, no errors |
+| givers, zislands, workshop | ALL PASSED |
+| save-migration | all cases, no errors |
+
+Notes: the door round trip in the test walks in through Twinsen's front door; walking out of the house's exit did not
+trigger within 9 s there, so the test leaves with exitRoom (the same call the exit makes) and says so in its log.
+Not verified: a real GPU or the user's laptop (frame time, the look of the new pieces), an independent review, the
+feel of refilling by hand, every chapter's NPC routes (clearance.mjs checks NPC places at the start of a new game,
+enemy patrols and story doors of all chapters).
+
 ### SETTINGS-UI: a calm settings screen after LBA2's options menu (WORKLIST #28; evidence docs/lba3-production/reviews/SETTINGS-UI/)
 The user (2026-10-25): "The settings screen is very busy. I want something faithful to the original (LBA2), but more
 2026." Before: 18 rows of segmented buttons on one panel, scrolling at 1366×768 (1013 px of 768) and at 640×360
