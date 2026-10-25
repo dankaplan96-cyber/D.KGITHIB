@@ -1108,7 +1108,44 @@ Not run under the policy: the player-input playthrough segments 03–14 (tests/p
 software rendering). 01 → 02 through tests/lib/seg.mjs (01 kept its save via Esc → Save & quit, 02 continued from it),
 after the merge: both VERDICT PASS (the segment ran every step), 0 deaths, 0 ISO assists, no error or missing file.
 
+### ARTHUR-12: Arthur looks twelve (WORKLIST #30; evidence docs/lba3-production/reviews/ARTHUR-12/)
+
+**Before** (ccr-adf00ea7-37ebl3 at 699cc60, measured in lookdev and in the game): Arthur's eyes at 1.26 m against
+Twinsen's 1.88 m (0.67), Zoé's 1.81 m (0.69); the small-child template (legs 0.74, arms 0.78, head 1.3×) scaled by
+0.795. **After:** eyes 1.57 m (0.835 of Twinsen, 0.87 of Zoé), top of the hair 1.74 m (0.83 / 0.86), standing in the
+house's family room in the game: eyes 1.573 against 1.886 and 1.812. Kneeling at his boat his eyes are at 1.2 m (were
+0.85–1.0). Details, counts and the animator handoff: docs/character-review.md §19.
+
+| Check | How | Result |
+|---|---|---|
+| Height and proportions read as a preteen beside his parents | lookdev line-up front / ¾ / side and the game camera, same light, before over after (01, 03); the house in the play camera (04, 06) | DONE (captures; SwiftShader) |
+| Face in front, ¾ and side; hair has no gap to the skull | 02; the hair shell's skin hole above the temple (first build) closed (thicker shell, crown point forward) | DONE |
+| The opening's Arthur shots | the same six frames before/after (07–12): his close-ups at 32.3 and 56.5 s had his head cut at the top with the new height → both shots 0.28 m higher, same angle; over his shoulder at 34.2 s 0.15 m higher | FIXED |
+| Twinsen and Zoé look at his eyes, not his chest | opening.js `eyesOf` (his head bone + 0.18 m) at 31.6 and 54.8 s | FIXED |
+| Kneeling (kneelWork/Show/Look), idle, walk, run, talk | 13 (colour), 14 (grey: walk, the arm raised, knees at 2.3 rad) | DONE: the knee gap of the old and the first new build closed by knee balls; the bare forearm reached the ball hand. Open: the thighs come out under the tunic's front when kneeling (the skirt bones' follow, rig.js) |
+| Mast in his hand vs fitted | the prop's size no longer jumps (his root scale is 1) | DONE |
+| Other looks unchanged | skeletons.json differs only in his entry; only assets/poly/arthur.json rebuilt | DONE |
+
+**Tests** (one at a time, R7 policy, `GAME_URL=http://localhost:8176/`, SwiftShader on a shared machine, 2026-10-25, on
+ab461f3): prologue 20, house 2, zoe-resume 5, chapter1 19, chapter7 9, chapter8 13, chapter10 21, arsenal 34, townlife
+36, controls 69, stability 16, audit 7: all VERDICT PASS, no error, no missing file. opening: no verdict, twice: its first 24 checks PASS (the whole scene frame by frame:
+the cast is the poly cast, nobody vanishes or jumps, nobody walks through a solid or anybody else, Zoé's hand on the
+tap and in the stream, feet, subtitles, voices; played through and skipped at 3/21/50/64/77/85 s to the same end
+state with Arthur at his boat; pause/resume/focus; Continue), then part 5, "a second new game from the title, with a
+save present", waits for the scene that never starts: since 7fcaade (New Game asks before replacing a save) the
+title opens the `confirmnew` dialog and the test does not press Yes (`newyes`). Not ARTHUR-12's; the test needs that
+press (owner of tests/opening.mjs).
+A first pass of the same list hit `net::ERR_INSUFFICIENT_RESOURCES` on the game's own files (zoe-resume 15, chapter1 30,
+chapter7 3, chapter8 1, arsenal 22 resource FAILs, the opening's and arsenal's boot timing out, the opening's first
+boot with a three.js page error "reading 'isReady'" after a failed load; all functional checks
+that ran passed): the machine's root disk was full (236 MB free) and Chromium could not cache. Rerun with
+`TMPDIR=/dev/shm/…` (the browsers' profiles on tmpfs): the results above. The first pass's one prologue check that
+failed ("the well's mites beaten with the ball", 3/4) is the known wandering-mite flake (38a92e7); it passed on the
+rerun (4/4).
+
 ### Not tested / blocked
+- Arthur at twelve (ARTHUR-12) on a real GPU and by the user's eye: NOT DONE (SwiftShader captures only); no
+  independent visual review yet.
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.
 - Fullscreen: NOT TESTED (headless).
