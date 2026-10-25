@@ -9,6 +9,12 @@
 //      (assets/poly/*.json); nobody vanishes or jumps on screen (only under a dip to black, the door transition)
 //   8. OPEN-3: every actor's per-frame path stays out of the colliders (walls, furniture, fences, railings, the pier's)
 //      and out of the other actors while the screen isn't black
+//   9. R5: Zoé's hand (the skinned hand's vertices, CHAR-2's longer hand) is on the tap's handle every frame it turns,
+//      and in the stream under the spout; standing feet don't jump; the scene's pose layers are off every joint after
+//      it (no hand bone left turned), played or skipped
+//   (R5: the scene's dips now come back up on its own clock, so 7 and 8 cover the whole scene: with wall-clock timers the
+//   stepped frames read as black from 28.6 s on and these checks only ever saw the harbour; a cut to another shot is
+//   not a vanishing)
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
@@ -55,10 +61,12 @@ const endState = () => ev(() => {
     lift: +G.world.cargoLift.u.toFixed(2), stream: G.rooms.house.kitchen.stream.visible, sd: G.rooms.house.table.screwdriver.parent === G.rooms.house.group,
     saved: !!save?.flags?.opening, savedRoom: save?.room,
     sceneKids: G.scene.children.length,
+    // (R5: the scene's grips turn hand bones, which the gameplay rig never touches: they must be back at rest)
+    handsTurned: [G.hero, zoe, ar].reduce((n, a) => n + ['armL', 'armR'].reduce((m, s) => m + Math.abs(a.rig.j[s].hand.rotation.x) + Math.abs(a.rig.j[s].hand.rotation.y) + Math.abs(a.rig.j[s].hand.rotation.z), 0), 0) < 1e-6,
   };
 });
 const good = (s) => s.state === 'play' && s.room === 'house' && !s.cine && !s.camCine && s.hud && !s.cineUI && !s.fade && s.intro && s.opening && !s.ball
-  && s.objective.startsWith('Check the well') && s.objective.includes('Take the magic ball from the cupboard') && s.objectiveShown && s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house';
+  && s.objective.startsWith('Check the well') && s.objective.includes('Take the magic ball from the cupboard') && s.objectiveShown && s.zoeOut && !s.zoeControlled && s.arthur[0] === 'kneelWork' && !s.arthur[1] && s.lift === 1 && !s.stream && s.sd && s.saved && s.savedRoom === 'house' && s.handsTurned;
 
 // ---------------------------------------------------------------- 1. full playback
 await boot('new');
@@ -76,6 +84,15 @@ const watch = await ev((polySizes) => {
   const cast = { twinsen: G.hero, zoe: G.npcs.find((n) => n.def.id === 'zoe'), arthur: G.npcs.find((n) => n.def.id === 'arthur') };
   const seen = new Set(), notPoly = [], pops = [], subsAt = [], solids = [], bumps = [];
   let prev = {}, lastSub = '', mid = null;
+  // R5: Zoé's right hand against the tap's handle (a disc of the cross's radius) and the stream's axis
+  const K = G.rooms.house.kitchen, zj = cast.zoe.rig.j, hand = { on: 0, off: [], wet: 0, dry: [] };
+  let zMesh = null; cast.zoe.rig.root.traverse((o) => { if (o.isSkinnedMesh && !zMesh) zMesh = o; });
+  const hIdx = [];
+  { const bi = zMesh.skeleton.bones.indexOf(zj.armR.hand), si = zMesh.geometry.attributes.skinIndex, sw = zMesh.geometry.attributes.skinWeight;
+    for (let i = 0; i < si.count; i++) for (let k = 0; k < 4; k++) if (si.getComponent(i, k) === bi && sw.getComponent(i, k) > 0.5) { hIdx.push(i); break; } }
+  const handPts = () => { cast.zoe.rig.root.updateMatrixWorld(true); return hIdx.map((i) => zMesh.getVertexPosition(i, new v.constructor()).applyMatrix4(zMesh.matrixWorld)); };
+  const TURNS = [[41.5, 42.2], [44.05, 44.5], [58.6, 59.1], [69.45, 69.85]], WET = [60.3, 62.0];
+  const feetPrev = {}, footJumps = [];
   // OPEN-3: every actor's path, frame by frame, stays out of the solids (walls, furniture, counters, fences,
   // railings: the physics colliders taller than the floor they stand on) and out of each other while the picture is
   // up. BODY is a body's half-width at the hips (the gameplay radius, 0.45, also keeps a reach's distance free);
@@ -92,8 +109,10 @@ const watch = await ev((polySizes) => {
   for (let i = 0; i < 4000 && G.cine; i++) {
     G.frame(1 / 30, false);
     if (!G.cine) break;
+    cam.updateMatrixWorld();   // (an unrendered step leaves the camera's matrices a frame behind its placement: a cut read late)
     if (!mid && c.t > 31) mid = { room: G.room?.id, saved: !!localStorage.getItem('lba3_save_v1') };
     const dark = document.querySelector('#fade').classList.contains('on');
+    const shotNow = c.def.shots.findIndex((sh) => c.t >= sh.t0 && c.t < sh.t1);
     // every visible skinned character in view: its mesh must be one of the poly cast's
     G.scene.traverseVisible((o) => {
       if (!o.isSkinnedMesh || o.material?.depthFunc === 5 /* (the hero's silhouette) */ || !onScreen(o)) return;
@@ -104,8 +123,10 @@ const watch = await ev((polySizes) => {
     for (const [id, a] of Object.entries(cast)) {
       const vis = a.rig.root.visible && (id !== 'zoe' || a.present) && (!G.room || Math.abs(a.pos.x - G.room.center.x) < 30) && onScreen(a.rig.root);
       const p = prev[id];
-      if (p && p.vis && !dark && !p.dark && (!vis || Math.hypot(a.pos.x - p.x, a.pos.z - p.z) > 0.8)) pops.push({ id, t: +c.t.toFixed(2), vis, from: [p.x, p.z].map((x) => +x.toFixed(1)), to: [a.pos.x, a.pos.z].map((x) => +x.toFixed(1)) });
-      prev[id] = { vis, x: a.pos.x, z: a.pos.z, dark };
+      // (vanishing: hidden or taken out of the scene while on screen; walking out of the frame or the camera moving on is not)
+      const gone = !a.rig.root.visible || (id === 'zoe' && !a.present) || (G.room && Math.abs(a.pos.x - G.room.center.x) >= 30);
+      if (p && p.vis && !dark && !p.dark && ((gone && p.shot === shotNow) || Math.hypot(a.pos.x - p.x, a.pos.z - p.z) > 0.8)) pops.push({ id, t: +c.t.toFixed(2), vis, from: [p.x, p.z].map((x) => +x.toFixed(1)), to: [a.pos.x, a.pos.z].map((x) => +x.toFixed(1)) });
+      prev[id] = { vis, x: a.pos.x, z: a.pos.z, dark, shot: shotNow };
     }
     if (!dark) {
       const shown = Object.entries(everyone).filter(([id, a]) => a.rig.root.visible && a.rig.root.parent && (id !== 'zoe' || a.present) && (!G.room || Math.abs(a.pos.x - G.room.center.x) < 30));
@@ -118,18 +139,40 @@ const watch = await ev((polySizes) => {
         if (d < 2 * BODY && Math.abs(a.pos.y - b.pos.y) < 1.5 && bumps.length < 12) bumps.push({ t: +c.t.toFixed(2), who: [ia, ib], d: +d.toFixed(2) });
       }
     }
+    if (!dark && G.room === G.rooms.house) {
+      if (TURNS.some(([a, b]) => c.t >= a && c.t <= b)) {
+        const h = K.handle.getWorldPosition(new v.constructor());
+        let d = 9; for (const p of handPts()) d = Math.min(d, Math.hypot(Math.max(0, Math.hypot(p.x - h.x, p.z - h.z) - 0.075), Math.max(0, Math.abs(p.y - h.y) - 0.02)));
+        if (d <= 0.02) hand.on++; else if (hand.off.length < 6) hand.off.push([+c.t.toFixed(2), +d.toFixed(3)]);
+      }
+      if (c.t >= WET[0] && c.t <= WET[1]) {
+        const n = handPts().filter((p) => p.y < K.spout.y && p.y > K.basin.y && Math.hypot(p.x - K.spout.x, p.z - K.spout.z) < 0.03).length;
+        if (n > 0 && K.stream.visible) hand.wet++; else if (hand.dry.length < 6) hand.dry.push(+c.t.toFixed(2));
+      }
+    }
+    // standing feet (not walking or kneeling) don't jump while the picture is up
+    for (const [id, a] of Object.entries(everyone)) {
+      if (!a.rig.root.visible || (id === 'zoe' && !a.present)) { delete feetPrev[id]; continue; }
+      const f = ['legL', 'legR'].map((s) => a.rig.j[s].foot.getWorldPosition(new v.constructor()));
+      const p = feetPrev[id], still = !/^(walk|run|kneel)/.test(a.rig.anim);
+      if (p && still && p.still && !dark && !p.dark) for (let i = 0; i < 2; i++) { const d = Math.hypot(f[i].x - p.f[i].x, f[i].z - p.f[i].z); if (d > 0.09 && d < 0.8 && footJumps.length < 8) footJumps.push({ id, t: +c.t.toFixed(2), d: +d.toFixed(3) }); }
+      feetPrev[id] = { f, still, dark };
+    }
     const sub = document.querySelector('#cine-sub').classList.contains('show') ? document.querySelector('#cine-sub').textContent : '';
     if (sub && sub !== lastSub) subsAt.push(sub);
     lastSub = sub;
   }
   const subs = window.__cine.def.subs;
-  return { mid, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
+  return { mid, hand, footJumps, seen: [...seen].sort(), notPoly, pops, subsAt, solids, bumps, lines: subs.length, voiced: subs.map((s, i) => [s.voice, window.__cine.voiced[i] || 0]), ctx: G.audio.ctx?.state };
 }, polySizes);
 check('the scene moves to the house; still nothing saved mid-scene', watch.mid?.room === 'house' && !watch.mid.saved, watch.mid);
 check('every character on screen is from the poly cast (assets/poly)', watch.notPoly.length === 0 && ['twinsen', 'zoe', 'arthur', 'worker'].every((n) => watch.seen.includes(n)), { notPoly: watch.notPoly, seen: watch.seen });
 check('nobody vanishes or jumps on screen (only under a dip to black)', watch.pops.length === 0, watch.pops.slice(0, 6));
 check('nobody walks through a solid (walls, furniture, fences, railings) while the picture is up', watch.solids.length === 0, watch.solids);
 check('nobody walks through anybody else while the picture is up', watch.bumps.length === 0, watch.bumps);
+check("R5: Zoé's hand is on the tap's handle every frame it turns (within 2 cm)", watch.hand.on >= 50 && watch.hand.off.length === 0, watch.hand);
+check('R5: her fingers are in the stream under the spout', watch.hand.wet >= 45 && watch.hand.dry.length === 0, watch.hand);
+check("R5: standing feet don't jump (more than 9 cm in a frame) while the picture is up", watch.footJumps.length === 0, watch.footJumps);
 check('subtitles with the speaker, in order', watch.subsAt.length === watch.lines && watch.subsAt.some((x) => x.startsWith('Zoé') && x.includes("The tap's stopped again")) && watch.subsAt[0].startsWith('Resident'), watch.subsAt);
 check("every spoken line babbles in its speaker's voice", watch.ctx === 'running' && watch.voiced.every(([vk, n]) => vk && n >= 2), watch.voiced);
 await run(0.5);
