@@ -348,6 +348,22 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Note: port 8180 was held by another agent's server (a base copy) at the start of this block; the "before" captures
   were redone from a copy of this branch's base served on 8188.
 
+## Done after (R5-OPENING, block 9; status REVIEW)
+- Opening animator; the real-time opening (opening.js on cinematic.js). Evidence docs/lba3-production/reviews/R5-OPENING/
+  (before-after.mp4 at normal speed, 01–05 jpgs per item, SHOTS.md, realtime/), QA.md "R5-OPENING", CINEMATICS.md.
+  - Zoé at the tap: the arm solved for the palm (grip): on the cross handle turning with it, palm up under the stream
+    (the stream ends on her palm); eyes to the tap first, glances at the pipe/water/spout, a breath, the release.
+  - Kitchen: from the west end ¾ front, one shot with a push in (ceiling 19.5/12.4 % → 11.2 %), a cut to her face for
+    her line (1.3 %); shot 7 now shows Twinsen's face.
+  - Feet: foot planting in the scene's pose layer, pivots that step, walks that settle; contact travel in Zoé's turns
+    160/144 → 7/22 cm; her walk-end snap gone.
+  - Subtitles measured on the wall clock (5–7 fps here): on time, fades in 2–3 frames, the voice ends ~1 s before each
+    line goes, so talk gestures now end with the voice.
+  - The dips' fade-ups are on the scene clock: tests/opening.mjs's per-frame checks now cover the whole scene.
+- Tests: opening ALL PASSED (27), prologue to its end, house, stability (16), transitions (6) ALL PASSED.
+- Open: sound by ear; a real GPU and normal-speed real-time viewing; the walk cycle's stance slide (rig); the scene
+  falls behind its music cue below 7.5 fps (frame pacing); an independent review.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

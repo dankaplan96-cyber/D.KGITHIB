@@ -773,6 +773,34 @@ clock: motion measured, not how it looks on a GPU.
 - Not verified: the look on a real GPU and by hand with a pad; the walk's own stride (CTRL-1's keys) was not changed;
   the planted-foot rule stands on flat ground only (on slopes and stairs the feet keep the body's ground height).
 
+### R5-OPENING: the opening's acting and framing (block 9; evidence docs/lba3-production/reviews/R5-OPENING/)
+Real-time scene (opening.js on cinematic.js); every change re-captured from the game. "Before" = origin e87209b (after
+ANIM-COMBAT), "after" = this branch with origin merged; headless Chromium, SwiftShader, DPR 1. Captures on the game's
+own 1/30 s clock (capture.mjs: a per-frame log of hands, soles, gaze, faces in the frame, the ceiling's share; probe.mjs:
+test cameras), and on the wall clock (realtime.mjs). before-after.mp4: the whole opening, 10 frames per second of scene
+time played at 10 fps = normal speed, no sound. Shot checklist: SHOTS.md.
+
+| Item | Before | Fix | Evidence | Result |
+|---|---|---|---|---|
+| 1 Zoé at the tap | Her hand beside the cross handle or with the fingers through its stem (CHAR-2's hand reaches 12 cm past the wrist; the offsets were tuned to the old 7.5 cm hand); the twist a forearm wobble; the arm swung up from her side in 0.35 s with no look first; let go in a frame; in the stream her hand went down to 0.99 m, into the watering can (handle 1.02); the gaze straight ahead throughout | `grip()`: the arm solved for the palm every frame: palm down on the cross, fingers over it, turning with the handle (0.7 of its turn); palm up under the spout, the stream ending on her palm. Eyes to the tap as she sets off, a reach as the last step settles, glances at the knocking pipe, the water, the spout; off, a breath (sigh), the hand lifts away, the head leads the turn. One grip per turn (the second try's turn 2.2 → 1.6 rad) | 01-tap-hand.jpg (side, top, the stream, the scene's close-up); tests/opening.mjs "hand on the handle every frame it turns" / "fingers in the stream" | FIXED (on the handle every frame it turns, 4 turns; in the stream 59 of 62 frames, lowest point 1.056 m) |
+| 2 Kitchen framing | Side-on from the east: dark ceiling 19.5 % of the frame (35–41) and 12.4 % (41–48), her profile, a near-identical cut at 41.0, a third of the frame the plate rack | One shot from the kitchen's west end a little over her eye level, ¾ front, slow push in (Twinsen at his table behind her), pitched so the top stays near the far ceiling; a cut on her turn to her face from his side of the room for her line | 02-kitchen-framing.jpg; analyze.py `ceil` | FIXED: 11.2 % (35–45.3; about 7 % is ceiling, the rest a near shelf's underside) and 1.3 % (her line); the second try 9.1 → 10.2 % on the new angle (her face instead of her profile). Her bun touches the top edge at 41–44 s |
+| 3 Feet | Planted feet skated round with the body in every turn (the gameplay turnL/turnR shuffle, and plain `turn()`s): contact-patch travel Zoé 160/144 cm (44.6–45.5), 136/159 (57.6–58.4), 67/82 (70.0–70.5), Twinsen 133/111 and 152/142, the worker 92–104; a 95° one-frame snap at the end of her walk to the sink (40.93) | Foot planting in the scene's pose layer (every actor, not walking or kneeling): the hip holds a planted foot in place and direction, the sole kept level; past 10 cm / 0.4 rad it steps (lifted ~4 cm, 0.28 s), one foot at a time. Pivots step round with the head leading; walks speed up / settle and turn to their end facing in the last steps | 03-feet.jpg (69.8–71.2 and 44.5–45.3 at 10 fps); analyze.py `feet`; tests/opening.mjs "standing feet don't jump" | FIXED: Zoé 7/22, 8/0, 0/10 cm; Twinsen 7/13, 27/6; the worker ≤ 18; the snap gone. Walking: the stance foot still slides ~3.7 cm/frame (the rig's LBA2 walk keys against the speed: rig-owned, not changed) |
+| 4 Subtitles in real time | — (deterministic stepping hides the CSS fades and the voice's pacing) | Measured on the wall clock (realtime.mjs, Low, 480×270): every line shows within one drawn frame of its time and goes at its end; the 0.25 s CSS fade reaches full opacity in 2–3 frames; back-to-back lines swap without a gap; the voice's first syllable within a frame of the text, its last 0.9–1.4 s before the line goes (≈8 syllables/s). Fix: the speaker's talk gesture now ends with the voice (+0.35 s) instead of with the subtitle; gestures chosen per line | 04-subtitles-realtime.jpg, realtime/after-low-480.mp4 + realtime/*.json, rt_analyze.py | MEASURED, not at normal speed: SwiftShader drew 5–7 fps here, below the 7.5 fps the game keeps real time to, so the scene ran slower than its clock and the cue ran ahead. Not listened to |
+| 5 Faces after CHAR-2 | Shot 7 (48–50.8, "I fixed that yesterday.") showed the back of Twinsen's head (his face turned to her, away from the west camera) | Shot 7 from her side of the room: his face, the screwdriver's hand toward the tap, Arthur behind him | 05-faces.jpg (9 moments); analyze.py `faces` (no crown cut by the frame in any house shot) | FIXED (shot 7); the rest checked: Zoé's new face, eyes and hoops read in 6b, 7 (over his shoulder), 11; Twinsen's neck at 52.0 |
+| 6 Keep | — | The dips' fade-ups moved onto the scene clock: as wall-clock timers they never ran inside the test's stepped frames, so its per-frame checks (solids, people in people, vanishing) saw a black screen from 28.6 s and only ever covered the harbour; now they cover the whole scene (a cut or camera move is not a vanishing). Hand bones reset by finish, played or skipped | tests/opening.mjs | Skip at 3/21/50/64/77/85 s → the same end state; pause/resume, focus loss, Continue, a second new game, the first objective; no solid crossed, nobody in anybody over the whole scene |
+
+Real-time pause (realtime/after-low-pause51.json, paused at 51.69 mid-line for 2.1 s): the scene clock held, the audio
+context suspended, the subtitle stayed up, the line ended at its time after resume.
+
+Regressions on this branch (after merging origin e87209b; :8181, one at a time, 2026-10-25): opening ALL PASSED (27),
+prologue to its end (rc 0, chapter 1, "Go home and tell Zoé"), house ALL PASSED, stability ALL PASSED (16), transitions
+ALL PASSED (6).
+
+Not verified: the sound by ear (voices, effects, the cue against the picture); a real GPU and display; normal-speed
+real-time playback (5–7 fps here); an independent visual review. Known: the stance foot's slide while walking (rig
+walk cycle); her bun at the top edge 41–44 s; a contact patch moving under Twinsen's cape as he sets the screwdriver down
+(66.8–67.1, hidden by the table and the cape).
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.

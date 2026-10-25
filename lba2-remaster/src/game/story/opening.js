@@ -190,8 +190,9 @@ export function playOpening(story) {
     // (...and as she turns from the tap to call him, her face from his side of the room: the cut on her turn)
     shot(45.3, 48.0, P(hv(-0.9, 1.75, -1.0), hv(-2.4, 1.45, -2.5), 42), P(hv(-0.95, 1.74, -1.05), hv(-2.4, 1.46, -2.52), 41)),
     // 7 — the exchange: Twinsen answers from the table; over his shoulder for hers
-    // (from the west, so his face is seen as he turns round to her)
-    shot(48.0, 50.8, P(hv(-2.9, 1.85, 1.5), hv(-1.05, 1.0, -1.6), 46), P(hv(-2.85, 1.83, 1.4), hv(-1.05, 1.0, -1.6), 46)),
+    // (R5: from her side of the room, his face as he answers her, Arthur at his boat behind him — the reverse of her
+    // line's shot. From the west, with his head turned to her, the camera saw the back of his head and the knot)
+    shot(48.0, 50.8, P(hv(-2.45, 1.8, -0.95), hv(-0.5, 1.45, -0.3), 46), P(hv(-2.4, 1.79, -0.92), hv(-0.5, 1.45, -0.3), 45)),
     shot(50.8, 53.4, () => overShoulder(), null),
     // 8 — the house hums too: dust from the beams, all three look up; Arthur knows what it is
     // (from the bed's foot: all three in one frame as the dust falls and they look up; then Arthur's close-up for his

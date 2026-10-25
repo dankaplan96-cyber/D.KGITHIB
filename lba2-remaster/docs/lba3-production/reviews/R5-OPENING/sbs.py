@@ -25,5 +25,5 @@ for n, k in enumerate(keys):
         d.text((x, 4), f'{lab}  t={k / fps:5.2f}', fill=(255, 230, 120))
     im.save(os.path.join(tmp, f'{n:05d}.jpg'), quality=88)
 subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', str(fps), '-i', os.path.join(tmp, '%05d.jpg'),
-                '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '24', '-preset', 'slow', '-movflags', '+faststart', out], check=True)
+                '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '29', '-preset', 'slow', '-movflags', '+faststart', out], check=True)
 print(out, len(keys), 'frames', f'{len(keys) / fps:.1f} s')

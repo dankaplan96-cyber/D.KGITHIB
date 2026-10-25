@@ -85,7 +85,7 @@ What a player who never played LBA should know by the end, shown rather than tol
 | 23.8–29 | the pier again | Resident: "What's that hum?" Worker: "Just the drill. It's a long way down." The crate is set down; the resident goes on to the ferry | the hum comes from the drill; the people in charge aren't worried |
 | 29–35 | home | the family room: Twinsen mends the reading lamp, Zoé pots seedlings, Arthur kneels at his model boat. Arthur's close-up: "Dad! The mast fits!"; over his shoulder: "Told you. Now the sail." | Twinsen, his son Arthur, his wife Zoé: an ordinary home |
 | 35–48 | Zoé at the counter, the tap | one shot from the kitchen's west end at her eye level (three-quarter front, Twinsen at his table behind her), a slow push in: she pots, wipes her hands, her eyes go to the tap, she walks over and reaches as she settles; her hand lands on the cross handle and turns with it: a squeak, two knocks (she glances up at the pipe), a short stream (down at the water), a sputter, nothing (a beat on the spout); she turns it off, breathes out, lifts her hand away, looks round to him and turns (stepping round). Cut on her turn (45.3) to her face from his side of the room: "Twinsen. The tap's stopped again." | — |
-| 48–53.4 | the exchange | Zoé turns to him; Twinsen turns round from the table (seen from her side): "I fixed that yesterday." Over his shoulder: "It worked yesterday." (a shrug) | — |
+| 48–53.4 | the exchange | Twinsen turns round from the table (stepping round); his face from her side of the room, Arthur behind him, the screwdriver's hand toward the tap: "I fixed that yesterday." Over his shoulder: "It worked yesterday." (one open hand; his shrug) | — |
 | 53.4–58 | the house hums | the hum again, dust from the ceiling, all three look up (a wide from the bed's foot); Arthur's close-up: "The drill again. Lulu says they're digging to the middle of the world." | the drill reaches their house too |
 | 58–62.4 | the second try | her eyes back to the tap, she steps round to it (the first try's angle), her hand on the handle; a thin warm trickle, a little steam; her hand goes from the tap to under the stream, palm up, the water landing on it (the stream ends at her palm), a small start: "That's warm. It's never warm." The music turns (the Entity cell) | the water is wrong |
 | 62.4–66.5 | under the island | a dip to black, the well's cave, inside the last chamber facing the crystal vein: it glows brighter with the hum, then a dip back | the hook: something under the island answers the drill (what the player finds at the bottom of the well) |
@@ -111,10 +111,22 @@ leftover objects; every spoken line babbles in its speaker's voice; every charac
 cast's meshes; nobody vanishes or jumps more than a metre on screen except under a dip to black; a short press doesn't skip; pause and resume
 (clock stopped); losing focus pauses; Continue doesn't replay; a second new game duplicates nothing; the first
 objective is playable. Chapter tests start with `?nocine` (the opening's end state without the scene).
+Since R5 the per-frame checks (solids, people in people, vanishing) cover the whole scene: the dips come back up on
+the scene's clock (they were wall-clock timers, which never ran inside the test's stepped frames, so the picture read
+as black from 28.6 s on and the checks only ever saw the harbour); a cut or a camera move that takes someone out of the
+frame is not a vanishing. Also: Zoé's hand on the tap's handle every frame it turns and in the stream, standing feet
+that don't jump, and no hand bone left turned after the scene (played or skipped).
+R5's evidence (docs/lba3-production/reviews/R5-OPENING/): capture.mjs + analyze.py (per-frame log on the game's clock:
+hands against the tap and the stream, contact patches of the soles, gaze, faces in the frame, the ceiling's share of
+the frame), probe.mjs (test cameras), realtime.mjs + rt_analyze.py + rt_chart.py (the opening on the wall clock: the
+subtitle's opacity as drawn, the voice's syllables, the pause), before-after.mp4 (10 fps of scene time = normal speed).
 Contact sheets in `captures/opening/` (before/after at the same timestamps, SwiftShader at Medium quality,
 1280×720) and the story beats with a frame each.
 
 Not verified: the scene on a real GPU and display, the sound mix by ear (the effects and the gibberish voices are
 synthesised and the cue is a rendered draft like the rest of the soundtrack; the voices' timing against the music
 and the hum's level can only be judged by watching with sound), touch-and-hold skipping on a real phone, gamepad
-skipping.
+skipping. Real time at normal speed: SwiftShader here draws the opening at 5–7 fps (Low, 480×270); below 7.5 fps the
+game lets time go (MAX_STEP), so on this machine the scene runs slower than its clock and the music cue drifts
+ahead of the picture (syncMusic leaves gaps over 1.5 s alone) — a slow-machine behaviour to look at with the
+frame-pacing owner, not a scene bug; the fades and the voice were measured against the scene clock in that run.
