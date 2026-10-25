@@ -2,14 +2,13 @@
 // lighthouse → home (Zoé's plan) → Gilbert (the tunnels) → the cistern lever in the station yard → the depot
 // bunker's hatch wheel (ball) → Mira (water, the valve-room key) → Pippa (supplies) → Zoé's run to the three
 // hill farms and the lighthouse relay → Vesk on the control-room screen → a project ship → the next chapter.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+import { launch, checker } from './lib/boot.mjs';
+const { browser, page, errs } = await launch({ width: 960, height: 540 });
+const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
+// a story step's end state, judged (R7-VERDICTS): PASS/FAIL with the values it read
+const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
@@ -50,24 +49,25 @@ const boot = async (mode) => {
 };
 
 await boot('new');
-log('start', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 6, chapterKey: 'observatory', c1_water: true, c1_done: true, c7_started: true, c7_vent: true, c7_done: true });
-  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.state, T.obj()]; }));
+is('chapter 8 (evacuation) starts on Citadel, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 6, chapterKey: 'observatory', c1_water: true, c1_done: true, c7_started: true, c7_vent: true, c7_done: true });
+  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.state, T.obj()]; }), (v) => v[0] === 'evacuation' && v[2] === 'play' && v[3].length > 0);
 await shot('C8-00-landing.png');
-log('home', await ev(() => { const r = T.door(game.world.houses[0].door); T.talk('zoe'); return [r, game.flags.c8_home, T.obj()]; }));
-log('out', await ev(() => T.out()));
+is('home: Zoé gives the plan, the objectives set', await ev(() => { const r = T.door(game.world.houses[0].door); T.talk('zoe'); return [r, game.flags.c8_home, T.obj()]; }), (v) => v[0] === 'house' && v[1] === true && v[2].length > 0);
+is('back outside', await ev(() => T.out()), (v) => v === 'out');
 await shot('C8-01-square.png');
-log('gilbert', await ev(() => { T.talk('gilbert'); return [game.flags.c8_gilbert, T.obj()]; }));
-log('lever', await ev(() => { T.useAt(-33, -70); game.step(1); T.talkAll(); return [game.flags.c8_fort]; }));
-log('hatch', await ev(() => { const G = game, h = G.hero, w = G.story.cur.wheelSpot; for (let i = 0; i < 8 && !G.flags.c8_depot; i++) { const a = i * 0.8; T.tp(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4); h.angle = Math.atan2(w.x - h.pos.x, w.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); T.talkAll(); } const thrown = !!G.flags.c8_depot; if (!thrown) { G.story.ballHit({ x: w.x, y: w.y, z: w.z }); T.talkAll(); } return [thrown ? 'thrown' : 'forced', G.flags.c8_depot]; }));
+is('Gilbert: the shelters', await ev(() => { T.talk('gilbert'); return [game.flags.c8_gilbert, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is("the fortress shelter's lever", await ev(() => { T.useAt(-33, -70); game.step(1); T.talkAll(); return [game.flags.c8_fort]; }), (v) => v[0] === true);
+is("the depot bunker's wheel hit by the ball", await ev(() => { const G = game, h = G.hero, w = G.story.cur.wheelSpot; for (let i = 0; i < 8 && !G.flags.c8_depot; i++) { const a = i * 0.8; T.tp(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4); h.angle = Math.atan2(w.x - h.pos.x, w.z - h.pos.z); G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.4); T.talkAll(); } const thrown = !!G.flags.c8_depot; if (!thrown) { G.story.ballHit({ x: w.x, y: w.y, z: w.z }); T.talkAll(); } return [thrown ? 'thrown' : 'forced', G.flags.c8_depot]; }), (v) => (v[0] === 'thrown' || v[0] === 'forced') && v[1] === true);
 await shot('C8-02-bunker.png');
-log('mira', await ev(() => { const o = game.world.houses.find((h) => h.id === 'water').door; const r = T.door(o); T.talk('mira'); const back = T.out(); return [r, game.flags.c8_mira, back]; }));
-log('pippa', await ev(() => { T.talk('pippa'); return [game.flags.c8_pippa, T.obj()]; }));
-log('zoe', await ev(() => { T.door(game.world.houses[0].door); T.talk('zoe'); game.step(1); T.talkAll(); return [game.flags.c8_zoeStart, game.hero.body, game.room?.id ?? 'out', T.obj()]; }));
-log('farms', await ev(() => { for (const id of ['farmer1', 'farmer2', 'farmer3']) { T.talk(id); game.step(1); T.talkAll(); } return [game.story.cur.farmsDone(), T.obj()]; }));
+is('Mira in the Water Office: water', await ev(() => { const o = game.world.houses.find((h) => h.id === 'water').door; const r = T.door(o); T.talk('mira'); const back = T.out(); return [r, game.flags.c8_mira, back]; }), (v) => v[0] === 'office' && v[1] === true && v[2] === 'out');
+is('Pippa: supplies, an objective set', await ev(() => { T.talk('pippa'); return [game.flags.c8_pippa, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is("Zoé's run starts: playing Zoé outside", await ev(() => { T.door(game.world.houses[0].door); T.talk('zoe'); game.step(1); T.talkAll(); return [game.flags.c8_zoeStart, game.hero.body, game.room?.id ?? 'out', T.obj()]; }), (v) => v[0] === true && v[1] === 'zoe' && v[2] === 'out' && v[3].length > 0);
+is('the three hill farms told', await ev(() => { for (const id of ['farmer1', 'farmer2', 'farmer3']) { T.talk(id); game.step(1); T.talkAll(); } return [game.story.cur.farmsDone(), T.obj()]; }), (v) => v[0] === 3 && v[1].length > 0);
 await shot('C8-03-farms.png');
-log('lighthouse', await ev(() => { const G = game; T.tp(-66, -53); for (let i = 0; i < 60 && !G.flags.c8_relay; i++) { G.step(0.1); T.talkAll(); } G.step(1); return [G.flags.c8_relay, G.hero.body, T.obj()]; }));
-log('control', await ev(() => { const r = T.door(game.world.station.control.door); game.step(0.5); T.talkAll(); return [r, game.flags.c8_vesk, T.obj()]; }));
+is('the lighthouse relay; back to Twinsen', await ev(() => { const G = game; T.tp(-66, -53); for (let i = 0; i < 60 && !G.flags.c8_relay; i++) { G.step(0.1); T.talkAll(); } G.step(1); return [G.flags.c8_relay, G.hero.body, T.obj()]; }), (v) => v[0] === true && v[1] === 'twinsen' && v[2].length > 0);
+is('the control room: Vesk, an objective set', await ev(() => { const r = T.door(game.world.station.control.door); game.step(0.5); T.talkAll(); return [r, game.flags.c8_vesk, T.obj()]; }), (v) => v[0] === 'control' && v[1] === true && v[2].length > 0);
 // (PLANET-1: the project ships leave from Citadel Spaceport; Zeelich is another planet)
-log('ship', await ev(() => { T.out(); const p = game.world.spaceport.pad; T.tp(p.x - 4.2, p.z, Math.PI / 2); const it = game.findInteractable()?.kind; T.tap('KeyE'); game.step(1.5); T.talkAll(); const L = game.rooms.zeelich.spaceport.landing, h = game.hero; return [it, game.flags.c8_done, game.flags.chapterKey, game.room?.id ?? 'out', +Math.hypot(h.pos.x - L.x, h.pos.z - L.z).toFixed(1)]; }));
-console.log(errs.length ? errs.join('\n') : 'no errors');
+is('chapter 8 ends on a project ship: the next chapter (council) on Zeelich, at its spaceport', await ev(() => { T.out(); const p = game.world.spaceport.pad; T.tp(p.x - 4.2, p.z, Math.PI / 2); const it = game.findInteractable()?.kind; T.tap('KeyE'); game.step(1.5); T.talkAll(); const L = game.rooms.zeelich.spaceport.landing, h = game.hero; return [it, game.flags.c8_done, game.flags.chapterKey, game.room?.id ?? 'out', +Math.hypot(h.pos.x - L.x, h.pos.z - L.z).toFixed(1)]; }), (v) => v[0] === 'c8ship' && v[1] === true && v[2] === 'council' && v[3] === 'zeelich' && v[4] < 3);
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

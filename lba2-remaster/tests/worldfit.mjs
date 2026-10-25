@@ -17,7 +17,7 @@
 // REPORT=<file.json> keeps every finding with its coordinates. GAME_URL as the other tests.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
-const { check, done } = checker();
+const { check, checkVisual, done } = checker();
 const { browser, page, errs } = await launch({ width: 640, height: 360 });
 await open(page, '?nocine');
 await menu(page, 'new');
@@ -300,16 +300,16 @@ check('every area has registered buildings: Citadel (the town, the harbour shed,
 for (const kind of ['swallowed', 'floating', 'door sill under', 'door hanging', 'window at the ground']) {
   const key = { swallowed: 'ground over the plinth', floating: 'gap under the plinth', 'door sill under': 'door sill under', 'door hanging': 'door hanging', 'window at the ground': 'window at the ground' }[kind];
   const bad = res.fit.filter((f) => judged(f.area) && f.kind.startsWith(key));
-  check(`(1) no building ${kind === 'swallowed' ? 'swallowed by the ground round it (ground over its plinth)' : kind === 'floating' ? 'floating (a gap under its plinth)' : kind === 'door sill under' ? 'with a door sill under the ground' : kind === 'door hanging' ? 'with a door hanging over the ground beyond its steps' : 'with a window at the ground'} in Citadel, Zeelich or the islands (${bad.length})`, bad.length === 0, bad.slice(0, 6));
+  checkVisual(`(1) no building ${kind === 'swallowed' ? 'swallowed by the ground round it (ground over its plinth)' : kind === 'floating' ? 'floating (a gap under its plinth)' : kind === 'door sill under' ? 'with a door sill under the ground' : kind === 'door hanging' ? 'with a door hanging over the ground beyond its steps' : 'with a window at the ground'} in Citadel, Zeelich or the islands (${bad.length})`, bad.length === 0, bad.slice(0, 6));
 }
 const fac = res.fit.filter((f) => judged(f.area) && / overlaps |duplicated|runs into/.test(f.kind));
-check(`(2) no opening on top of another (door, window, frame, shutter, sill, lantern, sign, pipe), duplicated, or running into a corner or the eaves (${fac.length})`, fac.length === 0, fac.slice(0, 6));
+checkVisual(`(2) no opening on top of another (door, window, frame, shutter, sill, lantern, sign, pipe), duplicated, or running into a corner or the eaves (${fac.length})`, fac.length === 0, fac.slice(0, 6));
 const cut = res.fit.filter((f) => judged(f.area) && f.kind.startsWith('cuts into'));
-check(`(2) no two buildings cut into each other (${cut.length})`, cut.length === 0, cut.slice(0, 6));
+checkVisual(`(2) no two buildings cut into each other (${cut.length})`, cut.length === 0, cut.slice(0, 6));
 // (judged: an overlap of 0.15 m² or more — a 40 cm square of flicker; the smaller ones are printed above and in REPORT,
 // and the residual list is kept in QA.md)
 const zj = res.zf.filter((z) => z.judged && z.m2 >= 0.15);
 console.log('banked (blind) walls set into a rise:', res.banked);
-check(`(3) no visible z-fighting (coplanar overlapping faces of 0.15 m² or more seen from the play camera's side) in Citadel, Zeelich or the islands (${zj.length}; smaller, listed: ${res.zf.filter((z) => z.judged && z.m2 < 0.15).length})`, zj.length === 0, zj.slice(0, 6));
+checkVisual(`(3) no visible z-fighting (coplanar overlapping faces of 0.15 m² or more seen from the play camera's side) in Citadel, Zeelich or the islands (${zj.length}; smaller, listed: ${res.zf.filter((z) => z.judged && z.m2 < 0.15).length})`, zj.length === 0, zj.slice(0, 6));
 await browser.close();
 process.exit(done(errs) ? 1 : 0);

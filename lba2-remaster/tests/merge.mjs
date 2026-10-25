@@ -4,11 +4,11 @@
 //   2. cell: a 60 m long group merged with cell 20 gives one mesh per cell
 //   3. Kit: MAT.flat / MAT.paint colours merge into one mesh per kind, MAT.glow keeps its own
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage();
-const errs = []; page.on('pageerror', (e) => errs.push(e.message));
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, ok ? '' : JSON.stringify(info)); };
+const errs = watch(page);
+const { check, done } = checker({ info: 'fail' });
 // a blank page on the game's origin, with its import map
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + 'ASSET_MANIFEST.md');
 await page.setContent(`<script type="importmap">{ "imports": { "three": "${(process.env.GAME_URL || 'http://localhost:8123/')}vendor/three/build/three.module.min.js" } }</script>`);
@@ -52,7 +52,6 @@ const r = await page.evaluate(async (base) => {
 check('recolor: 6 parts in 2 colours → one vertex-coloured mesh holding both colours; textured parts merge by material; emissive and keep stay', r.recolor.vcVerts === 6 * 24 && r.recolor.colours.length === 2 && r.recolor.keptStays && r.recolor.glowStays && r.recolor.texMerged === 1 && r.recolor.meshes === 4, r.recolor);
 check('cell: a 60 m group merged per 20 m cell → 3 meshes', r.cell === 3, r.cell);
 check('Kit: flat colours → 1 mesh, painted colours → 1 mesh, the glow keeps its own (3 meshes)', r.kit.length === 3 && r.kit.filter((x) => x[0]).length === 2, r.kit);
-console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
-process.exit(fails || errs.length ? 1 : 0);
+process.exit(fails ? 1 : 0);

@@ -16,7 +16,7 @@
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
-const { check, done } = checker();
+const { check, checkVisual, done } = checker();
 const SHOTS = process.env.SHOTS, ONLY = process.env.ONLY, PART = process.env.PART;
 const allErrs = [];
 
@@ -177,8 +177,8 @@ if (!PART || PART === 'a') for (const C of CASES) {
         return { ...res, fired: !!isDone(tg), frames: __mon.frames, nBad: __mon.nBad, bad: __mon.bad, seen, room: game.room?.id ?? 'citadel', state: game.state }; })()`);
       console.log('  ' + tname + ':', JSON.stringify(r).slice(0, 700));
       check(`${C.name} — ${tname}: the event fires`, r.fired, r);
-      check(`${C.name} — ${tname}: camera never inside a collider, a scenery volume or the terrain (${r.frames} frames)`, !r.missing && r.frames > 0 && r.nBad === 0, r.bad);
-      check(`${C.name} — ${tname}: Twinsen on screen and seen afterwards`, r.seen?.ok, r.seen);
+      checkVisual(`${C.name} — ${tname}: camera never inside a collider, a scenery volume or the terrain (${r.frames} frames)`, !r.missing && r.frames > 0 && r.nBad === 0, r.bad);
+      checkVisual(`${C.name} — ${tname}: Twinsen on screen and seen afterwards`, r.seen?.ok, r.seen);
       if (SHOTS) { fs.mkdirSync(SHOTS, { recursive: true }); await page.evaluate(() => game.renderer.render()); await page.screenshot({ path: path.join(SHOTS, (C.name.split(' ')[0] + '-' + tname).replace(/[^a-z0-9]+/gi, '_') + '.jpg'), type: 'jpeg', quality: 78, timeout: 240000 }); }
     }
   } catch (e) { check(`${C.name}: ran`, false, e.message.split('\n')[0]); }
@@ -202,8 +202,8 @@ if ((!PART || PART === 'b') && !ONLY) {
   });
   console.log('  the target by input:', JSON.stringify(r0).slice(0, 700));
   check('cliffs: the target hit by input, the stones risen', r0.hit, r0);
-  check(`cliffs: the stones rising, camera never inside anything (${r0.frames} frames)`, r0.nBad === 0, r0.bad);
-  check('cliffs: the stones rising, no surface within 0.15 m of the camera', r0.near.d >= 0.15, r0.near);
+  checkVisual(`cliffs: the stones rising, camera never inside anything (${r0.frames} frames)`, r0.nBad === 0, r0.bad);
+  checkVisual('cliffs: the stones rising, no surface within 0.15 m of the camera', r0.near.d >= 0.15, r0.near);
   // placements round the target, the stones and the rock stack
   const r1 = await page.evaluate(() => {
     const G = game, h = G.hero, out = { n: 0, bad: [], near: [], unseen: [] };
@@ -229,9 +229,9 @@ if ((!PART || PART === 'b') && !ONLY) {
   });
   console.log('  placements:', r1.n, 'inside:', r1.bad.length, 'near a surface:', r1.near.length, 'not seen:', r1.unseen.length);
   for (const b of [...r1.bad, ...r1.near, ...r1.unseen].slice(0, 12)) console.log('   ', JSON.stringify(b).slice(0, 300));
-  check(`cliffs: ${r1.n} placements (grid ×8 headings, every stone both ways), camera never inside anything`, r1.n > 300 && r1.bad.length === 0, r1.bad.slice(0, 3));
-  check('cliffs: placements, no surface within 0.15 m of the camera', r1.near.length === 0, r1.near.slice(0, 3));
-  check('cliffs: placements, Twinsen on screen and seen', r1.unseen.length === 0, r1.unseen.slice(0, 3));
+  checkVisual(`cliffs: ${r1.n} placements (grid ×8 headings, every stone both ways), camera never inside anything`, r1.n > 300 && r1.bad.length === 0, r1.bad.slice(0, 3));
+  checkVisual('cliffs: placements, no surface within 0.15 m of the camera', r1.near.length === 0, r1.near.slice(0, 3));
+  checkVisual('cliffs: placements, Twinsen on screen and seen', r1.unseen.length === 0, r1.unseen.slice(0, 3));
   // across the plateau by input, from the top stone to the shard pedestal, round the standing stones, to the valve
   const r2 = await page.evaluate(() => {
     const G = game, S = G.world.stones, top = S[S.length - 1].c, P0 = G.world.shard1Spot;
@@ -245,9 +245,9 @@ if ((!PART || PART === 'b') && !ONLY) {
     return { got, end: P.state().pos, frames: __mon.frames, nBad: __mon.nBad, bad: __mon.bad, near: __mon.near, seen: __seen() };
   });
   console.log('  the plateau by input:', JSON.stringify(r2).slice(0, 600));
-  check(`cliffs: walking the plateau by input, camera never inside anything (${r2.frames} frames)`, r2.frames > 100 && r2.nBad === 0, r2.bad);
-  check('cliffs: walking the plateau, no surface within 0.15 m of the camera', r2.near.d >= 0.15, r2.near);
-  check('cliffs: walking the plateau, Twinsen seen at the end', r2.seen.ok, r2.seen);
+  checkVisual(`cliffs: walking the plateau by input, camera never inside anything (${r2.frames} frames)`, r2.frames > 100 && r2.nBad === 0, r2.bad);
+  checkVisual('cliffs: walking the plateau, no surface within 0.15 m of the camera', r2.near.d >= 0.15, r2.near);
+  checkVisual('cliffs: walking the plateau, Twinsen seen at the end', r2.seen.ok, r2.seen);
   if (SHOTS) { fs.mkdirSync(SHOTS, { recursive: true }); await page.evaluate(() => game.renderer.render()); await page.screenshot({ path: path.join(SHOTS, 'cliffs-plateau.jpg'), type: 'jpeg', quality: 78, timeout: 240000 }); }
   allErrs.push(...errs);
   await browser.close();

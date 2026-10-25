@@ -3,14 +3,12 @@
 // every order (and on a start with saved Low settings); the frame-time overlay has its own key (F9), never
 // changes the behaviour, and a held key toggles it once.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const errs = [];
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, JSON.stringify(info)); };
+const { check, done } = checker({ info: 'always' });
 const open = async (query = '', pre = null) => {
   const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-  page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
-  page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+  watch(page);
   if (pre) await page.addInitScript(pre);
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + query, { waitUntil: 'load', timeout: 180000 });
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
@@ -87,6 +85,6 @@ check('F9: one toggle per press (key repeat ignored)', r.on1 === !r.on0, r);
 check('F9: the overlay never changes the behaviour', r.b1 === r.b0, r);
 check('F3: picks a behaviour and leaves the overlay alone', r.overlayAfterF3 === r.on1, r);
 
-console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

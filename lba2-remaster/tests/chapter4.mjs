@@ -17,19 +17,14 @@
 // death → Retry, the three warm discs, the temple's line about the cold discs, the journal.
 // Hesk → the notebook still use the older teleport helpers (T: ISO), as before. PASS/FAIL lines and the exit code.
 // (Played by an agent who knows the solution: not a first-time player's test.) SHOTS=<dir> keeps the ADV-2 views.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { launch, checker } from './lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 const HARNESS = fileURLToPath(new URL('./lib/player.js', import.meta.url));
 const REV4 = fileURLToPath(new URL('../docs/lba3-production/reviews/REV-TY-4/', import.meta.url));
 const SHOTS = process.env.SHOTS;
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, ok ? '' : JSON.stringify(info)?.slice(0, 700)); };
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const { check, done } = checker();
+const { browser, page, errs } = await launch({ width: 960, height: 540 });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
@@ -310,7 +305,6 @@ await continueFrom(saveOf('save-k1.json'));
 const o6 = await ev(() => { const g = game.rooms.desert.dig.gate; T.tp(g.x - 1.2, g.z + 0.2); const r = P.use(g.x, g.z, { kind: 'c4gate' }); return { ...r, st: game.state, worn: !!game.flags.c4_worn, open: !!game.flags.c4_digOpen }; }); s = await said();
 check('the keypad without the notebook: the 1, 4 and 7 worn shiny, no menu, the gate shut (INPUT)', o6.r === 'used' && o6.st === 'play' && o6.worn && !o6.open && has(s, /1, 4 and 7 are worn shiny/), { o6, s });
 check('the journal keeps the worn keys', (await journal()).includes('c4_j_worn'), await journal());
-console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fails || errs.length ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
-process.exit(fails || errs.length ? 1 : 0);
+process.exit(fails ? 1 : 0);

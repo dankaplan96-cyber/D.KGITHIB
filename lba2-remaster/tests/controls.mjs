@@ -5,14 +5,12 @@
 // CTRL-1 (4–8): LBA2's tank controls, the ball's arcs and aimed distance (the automatic aim at enemies kept), the follow
 // camera — measured by input at 60 / 30 fps (MEASURE lines). ONLY=tank,ball,camera runs just those sections.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const errs = watch(page);
 const ev = (f, a) => page.evaluate(f, a);
-let fails = 0;
-const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info !== '' ? ' ' + JSON.stringify(info) : ''}`); if (!ok) fails++; };
+const { check, done } = checker({ info: 'always' });
 
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
@@ -457,7 +455,6 @@ if (stairs.room) for (const k of ['f60', 'f30']) check(`camera stairs ${k}: no b
 
 }
 
-console.log(errs.length ? errs.slice(0, 10).join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

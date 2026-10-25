@@ -4,14 +4,13 @@
 // Ball targets are first tried with a real throw; if a throw misses, the hit is applied directly and the
 // log says "forced" (aiming is covered by the earlier tests; this one checks the story can be finished).
 // Also: a save taken mid-chapter (after the galleries) reloads with the progress intact.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+import { launch, checker } from './lib/boot.mjs';
+const { browser, page, errs } = await launch({ width: 960, height: 540 });
+const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
+// a story step's end state, judged (R7-VERDICTS): PASS/FAIL with the values it read
+const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
@@ -57,66 +56,67 @@ await ev(() => { const G = game; Object.assign(G.flags, { c2_plan: true, c2_plan
   G.story.cur.toShell?.(); G.step(1.5); T.talkAll(); G.step(0.5); T.talkAll();
   // chapters between Zeelich and the shell (Desert Island, …) have their own tests: skip to the shell
   for (let i = 0; i < 12 && G.story.cur.key !== 'shell'; i++) { G.story.nextChapter(); G.step(0.5); T.talkAll(); } });
-log('ch3 start', await ev(() => [game.flags.chapter, game.flags.c3_started, game.room?.id, game.state, T.obj()]));
+is('chapter 11 (shell) starts in the shaft, in play, an objective set', await ev(() => [game.flags.chapter, game.flags.c3_started, game.room?.id, game.state, T.obj()]), (v) => v[0] === 10 && v[1] === true && v[2] === 'c3shaft' && v[3] === 'play' && v[4].length > 0);
 await shot('C3-00-shaft.png');
 
 // the deep installation
-log('to deep', await ev(() => T.exit('c3-deep')));
+is('down to the deep installation', await ev(() => T.exit('c3-deep')), (v) => v === 'c3deep');
 await shot('C3-01-deep.png');
-log('diagram', await ev(() => { const D = game.room; T.useAt(D.diagram.x, D.diagram.z); return [game.flags.c3_diagram, T.obj()]; }));
-log('valve B (wrong)', await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled]; }));
+is('the cooling diagram read', await ev(() => { const D = game.room; T.useAt(D.diagram.x, D.diagram.z); return [game.flags.c3_diagram, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('the wrong valve (B) opens but cools nothing', await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled]; }), (v) => v[0] === true && !v[1]);
 await ev(() => { const v = game.room.valves.find((x) => x.id === 'B'); T.useAt(v.x, v.z, v.y); });
-log('valve A', await ev(() => { const v = game.room.valves.find((x) => x.id === 'A'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled]; }));
-log('ball switch', await ev(() => { const tg = game.room.ballTargets.find((x) => x.ballSwitch); return [T.hit(tg), game.flags.c3_ladder]; }));
-log('valve C (catwalk)', await ev(() => { const v = game.room.valves.find((x) => x.id === 'C'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled, game.hero.pos.y.toFixed(2), v.y]; }));
-log('cooled', await ev(() => [game.flags.c3_cooled, T.obj()]));
+is('valve A opened (not cooled yet)', await ev(() => { const v = game.room.valves.find((x) => x.id === 'A'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled]; }), (v) => v[0] === true && !v[1]);
+is("the ladder's ball switch hit, the ladder down", await ev(() => { const tg = game.room.ballTargets.find((x) => x.ballSwitch); return [T.hit(tg), game.flags.c3_ladder]; }), (v) => v[0] !== 'FAILED' && v[1] === true);
+is('valve C on the catwalk: cooled', await ev(() => { const v = game.room.valves.find((x) => x.id === 'C'); T.useAt(v.x, v.z, v.y); return [v.open, game.flags.c3_cooled, game.hero.pos.y.toFixed(2), v.y]; }), (v) => v[0] === true && v[1] === true);
+is('the machinery cooled, an objective set', await ev(() => [game.flags.c3_cooled, T.obj()]), (v) => v[0] === true && v[1].length > 0);
 await shot('C3-02-cooled.png');
 
 // the galleries
-log('to gallery', await ev(() => T.exit('c3-gallery')));
+is('on to the crystal galleries', await ev(() => T.exit('c3-gallery')), (v) => v === 'c3gallery');
 await shot('C3-03-gallery.png');
-log('pillars', await ev(() => game.room.ballTargets.filter((x) => x.pillar != null).map((tg) => T.hit(tg))));
-log('stones', await ev(() => [game.flags.c3_pillar0, game.flags.c3_pillar1, game.flags.c3_pillar2, T.obj()]));
+is('the three pillars hit', await ev(() => game.room.ballTargets.filter((x) => x.pillar != null).map((tg) => T.hit(tg))), (v) => v.length === 3 && v.every((x) => x !== 'FAILED'));
+is('the stones raised, an objective set', await ev(() => [game.flags.c3_pillar0, game.flags.c3_pillar1, game.flags.c3_pillar2, T.obj()]), (v) => v[0] && v[1] && v[2] && v[3].length > 0);
 await shot('C3-04-stones.png');
 
 // mid-chapter save → reload → Continue
 const before = await ev(() => { game.save(false); return JSON.stringify(['c3_cooled', 'c3_ladder', 'c3_pillar0', 'c3_pillar1', 'c3_pillar2'].map((k) => !!game.flags[k])); });
 await boot('continue');
 const after = await ev(() => { T.talkAll(); return JSON.stringify(['c3_cooled', 'c3_ladder', 'c3_pillar0', 'c3_pillar1', 'c3_pillar2'].map((k) => !!game.flags[k])); });
-log('save/load', before === after, after, await ev(() => [game.room?.id, game.flags.chapter, T.obj()]));
+is('save → Continue: the chapter-11 progress survives, back in the galleries', [before === after, after, ...await ev(() => [game.room?.id, game.flags.chapter, T.obj()])], (v) => v[0] && v[2] === 'c3gallery' && v[3] === 10);
 
 // Sendell
-log('to sendell', await ev(() => { if (game.room?.id !== 'c3gallery') T.exit('c3-gallery'); return T.exit('c3-sendell'); }));
-log('sendell', await ev(() => { T.talkAll(); return [game.flags.c3_sendell, T.obj()]; }));
+is('on to Sendell', await ev(() => { if (game.room?.id !== 'c3gallery') T.exit('c3-gallery'); return T.exit('c3-sendell'); }), (v) => v === 'c3sendell');
+is("Sendell's words, the core objective", await ev(() => { T.talkAll(); return [game.flags.c3_sendell, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 await shot('C3-05-sendell.png');
 
 // the core: Vesk, the guardian, the pylons
-log('to core', await ev(() => { const r = T.exit('c3-core'); T.talkAll(); return [r, game.flags.c3_fight, T.obj()]; }));
-log('guardian', await ev(() => { const g = game.story.cur.guardian; return g ? [g.present, g.state, g.alive] : 'none'; }));
-log('leave blocked', await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); return game.room?.id; }));
+is('in the core: the fight starts, an objective set', await ev(() => { const r = T.exit('c3-core'); T.talkAll(); return [r, game.flags.c3_fight, T.obj()]; }), (v) => v[0] === 'c3core' && v[1] === true && v[2].length > 0);
+is('the guardian is there and alive', await ev(() => { const g = game.story.cur.guardian; return g ? [g.present, g.state, g.alive] : 'none'; }), (v) => Array.isArray(v) && v[0] === true && v[2] === true);
+is("the core can't be left during the fight", await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); return game.room?.id; }), (v) => v === 'c3core');
 await shot('C3-06-core.png');
 // bank shots: walk onto each pylon's glowing plate (it lines Twinsen up), throw in normal behaviour
-log('pylons', await ev(() => game.story.cur.plates().map((p) => {
+is('the three pylons converted', await ev(() => game.story.cur.plates().map((p) => {
   const G = game, h = G.hero, tg = G.room.ballTargets.find((x) => x.pylon === p.i);
   for (let k = 0; k < 3 && !tg.done; k++) {
     T.tp(p.x + 0.3, p.z - 0.2, 0); h.hp = h.maxHp; G.step(0.6); // stand still: the plate centres and turns him
     G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.6); T.talkAll();
   }
   return tg.done ? 'bank shot' : T.hit(tg);
-})));
-log('overload', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); const tg = game.room.ballTargets.find((x) => x.coil); return [game.flags.c3_overload, !!tg, T.obj()]; }));
+})), (v) => v.length === 3 && v.every((x) => x !== 'FAILED'));
+is('the overload: the coil appears, an objective set', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); const tg = game.room.ballTargets.find((x) => x.coil); return [game.flags.c3_overload, !!tg, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);
 // Vesk's coil: three hits (real throws first, T.hit forces a hit only if the throws miss)
-log('coil', await ev(() => { const tg = game.room.ballTargets.find((x) => x.coil); const r = []; for (let k = 0; tg && k < 3 && !tg.done; k++) r.push(T.hit(tg)); T.talkAll(); return [tg ? r : 'no coil', game.flags.c3_coil, tg?.done]; }));
-log('turned', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state]; }));
+is("Vesk's coil broken", await ev(() => { const tg = game.room.ballTargets.find((x) => x.coil); const r = []; for (let k = 0; tg && k < 3 && !tg.done; k++) r.push(T.hit(tg)); T.talkAll(); return [tg ? r : 'no coil', game.flags.c3_coil, tg?.done]; }), (v) => v[1] && v[2] === true);
+is('the chapter ends: the epilogue (chapter 11, home) reached', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state]; }), (v) => v[0] === true && v[1] === true && v[2] === 11);
 
 // epilogue: dinner → end screen
-log('epilogue', await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); } return [G.flags.chapter, G.flags.ep_dinner, G.state, document.querySelector('#ending h1')?.textContent]; }));
+is("the epilogue's dinner, then the end screen", await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); } return [G.flags.chapter, G.flags.ep_dinner, G.state, document.querySelector('#ending h1')?.textContent]; }), (v) => v[1] === true && v[2] === 'ending');
 await shot('C3-07-end.png');
 const buttons = await ev(() => [...document.querySelectorAll('#ending button')].filter((b) => b.offsetParent).map((b) => b.textContent.trim()));
-log('end buttons', buttons);
+is('the end screen offers buttons (Keep Exploring)', buttons, (v) => v.length >= 2);
 // keep exploring
-log('free roam', await ev(() => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); return [game.state, game.flags.ep_free, T.obj()]; }));
-log('gilbert', await ev(() => { if (game.room) { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); } T.talk('gilbert'); return game.state; }));
+is('Keep Exploring: in play, free roam, an objective set', await ev(() => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); return [game.state, game.flags.ep_free, T.obj()]; }), (v) => v[0] === 'play' && v[1] === true && v[2].length > 0);
+is('free roam: talking to Gilbert ends back in play', await ev(() => { if (game.room) { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); } T.talk('gilbert'); return game.state; }), (v) => v === 'play');
 
-console.log(errs.length ? errs.join('\n') : 'no errors');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

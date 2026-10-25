@@ -2,14 +2,13 @@
 // workshop (the petition) → Nara's stamp → Oku's errand (knock the three mill brakes loose with the ball) →
 // Oku's stamp → the council house: the clerk → the first hearing → the archive (the coat, the wrong cabinet,
 // the master plans) → the second hearing with Dallan → the vote → the next chapter.
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+import { launch, checker } from './lib/boot.mjs';
+const { browser, page, errs } = await launch({ width: 960, height: 540 });
+const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
+// a story step's end state, judged (R7-VERDICTS): PASS/FAIL with the values it read
+const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
@@ -50,28 +49,29 @@ const boot = async (mode) => {
 };
 
 await boot('new');
-log('start', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 7, chapterKey: 'evacuation', c1_water: true, c1_done: true, c2_shield: true, c2_mill_north: true, c8_started: true, c8_vesk: true, c8_done: true });
-  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.state, T.obj()]; }));
+is('chapter 9 (council) starts on Zeelich, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 7, chapterKey: 'evacuation', c1_water: true, c1_done: true, c2_shield: true, c2_mill_north: true, c8_started: true, c8_vesk: true, c8_done: true });
+  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id ?? 'out', G.state, T.obj()]; }), (v) => v[0] === 'council' && v[1] === 'zeelich' && v[2] === 'play' && v[3].length > 0);
 await shot('C9-00-dock.png');
-log('street folk (Mosquibees, moles, triangle heads)', await ev(() => ['zbee1', 'zbee2', 'zmole1', 'zmole2', 'ztri1', 'ztri2'].map((id) => { const n = T.npc(id); if (!n) return id + ' missing'; const g = game.physics.groundAt(n.pos.x, n.pos.z, n.pos.y + 1); T.talk(id); return id + (Math.abs(g - n.pos.y) < 0.3 ? ' on the street' : ' OFF THE GROUND') + (game.state === 'play' ? ', talked' : ' STUCK ' + game.state); })));
-log('baldino', await ev(() => { const Z = game.rooms.zeelich; const r = T.door(Z.workshopDoor); T.talk('baldino'); const back = T.out(); return [r, game.flags.c9_form, back, T.obj()]; }));
-log('nara', await ev(() => { T.talk('nara'); return [game.flags.c9_nara]; }));
-log('oku', await ev(() => { T.talk('oku'); return [game.flags.c9_okuAsk, game.rooms.zeelich.mills.map((m) => m.spinning)]; }));
-log('mills', await ev(() => { const G = game, f = G.flags; return G.rooms.zeelich.mills.map((m) => T.hit({ ...m.brake, get done() { return !!f['c9_free_' + m.id]; } })).concat([G.story.cur.millsFree()]); }));
+is('the street folk (Mosquibees, moles, triangle heads) stand on the street and talk', await ev(() => ['zbee1', 'zbee2', 'zmole1', 'zmole2', 'ztri1', 'ztri2'].map((id) => { const n = T.npc(id); if (!n) return id + ' missing'; const g = game.physics.groundAt(n.pos.x, n.pos.z, n.pos.y + 1); T.talk(id); return id + (Math.abs(g - n.pos.y) < 0.3 ? ' on the street' : ' OFF THE GROUND') + (game.state === 'play' ? ', talked' : ' STUCK ' + game.state); })), (v) => v.length === 6 && v.every((x) => x.endsWith('on the street, talked')));
+is('Baldino: the petition, back out, an objective set', await ev(() => { const Z = game.rooms.zeelich; const r = T.door(Z.workshopDoor); T.talk('baldino'); const back = T.out(); return [r, game.flags.c9_form, back, T.obj()]; }), (v) => v[0] === 'workshop' && v[1] === true && v[2] === 'zeelich' && v[3].length > 0);
+is("Nara's stamp", await ev(() => { T.talk('nara'); return [game.flags.c9_nara]; }), (v) => v[0] === true);
+is('Oku asks for the mills to be freed (all braked)', await ev(() => { T.talk('oku'); return [game.flags.c9_okuAsk, game.rooms.zeelich.mills.map((m) => m.spinning)]; }), (v) => v[0] === true && v[1].every((m) => m === false));
+is('the three mills freed by the ball', await ev(() => { const G = game, f = G.flags; return G.rooms.zeelich.mills.map((m) => T.hit({ ...m.brake, get done() { return !!f['c9_free_' + m.id]; } })).concat([G.story.cur.millsFree()]); }), (v) => v.slice(0, 3).every((x) => x !== 'FAILED') && v[3] === 3);
 await shot('C9-01-mills.png');
-log('oku stamp', await ev(() => { T.talk('oku'); return [game.flags.c9_oku, T.obj()]; }));
-log('council house', await ev(() => { const r = T.door(game.rooms.zeelich.councilDoor); return [r, T.obj()]; }));
+is("Oku's stamp, an objective set", await ev(() => { T.talk('oku'); return [game.flags.c9_oku, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('into the council house', await ev(() => { const r = T.door(game.rooms.zeelich.councilDoor); return [r, T.obj()]; }), (v) => v[0] === 'upper');
 await shot('C9-02-antechamber.png');
-log('refused archive', await ev(() => { const r = T.exit('up-archive'); return [r]; }));
-log('clerk', await ev(() => { T.talk('clerk'); return [game.flags.c9_clerk, T.obj()]; }));
-log('hearing', await ev(() => { const r = T.exit('up-council'); game.step(0.5); T.talkAll(); return [r, game.flags.c9_heard, T.obj()]; }));
+is('the archive refused before the hearing', await ev(() => { const r = T.exit('up-archive'); return [r]; }), (v) => v[0] === 'upper');
+is('the clerk takes the petition', await ev(() => { T.talk('clerk'); return [game.flags.c9_clerk, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('the hearing, an objective set', await ev(() => { const r = T.exit('up-council'); game.step(0.5); T.talkAll(); return [r, game.flags.c9_heard, T.obj()]; }), (v) => v[0] === 'council' && v[1] === true && v[2].length > 0);
 await shot('C9-03-council.png');
-log('archive', await ev(() => { T.exit('council-out'); const r = T.exit('up-archive'); game.step(0.3); T.talkAll(); return [r, !!game.story.cur.watcher?.active]; }));
+is('into the archive, its watcher on', await ev(() => { T.exit('council-out'); const r = T.exit('up-archive'); game.step(0.3); T.talkAll(); return [r, !!game.story.cur.watcher?.active]; }), (v) => v[0] === 'archive' && v[1] === true);
 await shot('C9-04-archive.png');
-log('coat', await ev(() => { const L = game.rooms.archive.locker; T.useAt(L.x, L.z); return [game.flags.c9_coat, game.hero.body, game.hero.disguised]; }));
-log('wrong cabinet', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'FERRIES'); T.useAt(c.x, c.z); return [game.flags.c9_plans]; }));
-log('plans', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'BORE'); T.useAt(c.x, c.z); return [game.flags.c9_plans, T.obj()]; }));
+is("the worker's coat: disguised", await ev(() => { const L = game.rooms.archive.locker; T.useAt(L.x, L.z); return [game.flags.c9_coat, game.hero.body, game.hero.disguised]; }), (v) => v[0] === true && v[1] === 'worker' && v[2] === true);
+is('the wrong cabinet (FERRIES) has no plans', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'FERRIES'); T.useAt(c.x, c.z); return [game.flags.c9_plans]; }), (v) => !v[0]);
+is('the BORE cabinet: the plans, an objective set', await ev(() => { const c = game.rooms.archive.cabinets.find((x) => x.label === 'BORE'); T.useAt(c.x, c.z); return [game.flags.c9_plans, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 log('spot test', await ev(() => { const G = game; return [G.story.cur.watcher?.active]; }));
-log('back', await ev(() => { const r1 = T.exit('archive-out'); const b = game.hero.body; const r2 = T.exit('up-council'); game.step(0.5); T.talkAll(); for (let i = 0; i < 20; i++) { game.step(0.2); T.talkAll(); } return [r1, b, r2, game.flags.c9_vote, game.flags.chapterKey]; }));
-console.log(errs.length ? errs.join('\n') : 'no errors');
+is('chapter 9 ends with the vote: back to Twinsen, the next chapter (network)', await ev(() => { const r1 = T.exit('archive-out'); const b = game.hero.body; const r2 = T.exit('up-council'); game.step(0.5); T.talkAll(); for (let i = 0; i < 20; i++) { game.step(0.2); T.talkAll(); } return [r1, b, r2, game.flags.c9_vote, game.flags.chapterKey]; }), (v) => v[1] === 'twinsen' && v[2] === 'council' && v[3] === true && v[4] === 'network');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

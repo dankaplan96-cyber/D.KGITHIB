@@ -414,6 +414,19 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Evidence: QA.md "SETTINGS-UI", docs/lba3-production/reviews/SETTINGS-UI/. Not verified: a real pad/touch screen by
   hand, an independent review.
 
+## Done after (R7-VERDICTS, BUILD109_REVIEW §7; status REVIEW)
+- One result policy for every test in tests/lib/boot.mjs (how to read it: tests/README.md "Reading a verdict"): page and
+  console errors, crashed pages, 404s on the game's own files and undeclared outside requests FAIL; declared optional
+  resources are OPTIONAL and listed (none today); provoked errors EXPECTED; navigation-cancelled requests NOTE; functional,
+  error, resource and visual results printed apart; exit code non-zero on any FAIL (also a late one). All tests and
+  seg/try/shots use it; the story tests (prologue, chapter1–10) judge every step; tests/verdicts.mjs is its self-test.
+- Every test run once under it (QA.md "R7-VERDICTS"): no page/console error or missing file anywhere. Found: shipfiles
+  (Rubik's local files not in tools/game-files.mjs since R8: fixed, one line), perfbudget's shader compiles on the
+  routes (known, open), controls' 30 fps ball landing flaky at its 0.3 m tolerance, prologue's mite fight leaving the
+  well (test fixed).
+- A test that fails now fails loudly: a run that printed "ALL PASSED" with errors before can turn red without any game
+  change. tests/containers.mjs (CONTAINERS) already used launch()/done(), so the policy applies to it as is.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

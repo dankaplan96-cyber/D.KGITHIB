@@ -2,14 +2,13 @@
 // requisitioned) → Brosk's jar, the oasis, the shovel → the buried door → the valve hall (diagram, valves 1, 3,
 // 4; FunFrock's drones) → the hangar (glider, roof hatch by ball) → Dallan at the gate → the relief valve and
 // the geysers → Tarra, Zoé on the radio → Hesk and the glider → chapter 11 (until chapters 6-10 exist).
-import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
-const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+import { launch, checker } from './lib/boot.mjs';
+const { browser, page, errs } = await launch({ width: 960, height: 540 });
+const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
+// a story step's end state, judged (R7-VERDICTS): PASS/FAIL with the values it read
+const is = (label, v, ok) => { check(label, !!ok(v), v); return v; };
 const shot = async (n) => { await ev(() => game.renderer.render()); await page.screenshot({ path: n, timeout: 180000 }); };
 const boot = async (mode) => {
   await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
@@ -48,31 +47,32 @@ const boot = async (mode) => {
 };
 
 await boot('new');
-log('start', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 3, chapterKey: 'dig', c4_started: true, c4_done: true, c4_pump: true, c4_trust: true, c4_carving: true });
-  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }));
+is('chapter 5 (steam) starts at Kesh on Desert Island, in play, an objective set', await ev(() => { const G = game; T.talkAll(); Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 3, chapterKey: 'dig', c4_started: true, c4_done: true, c4_pump: true, c4_trust: true, c4_carving: true });
+  G.hero.hasBall = true; G.story.nextChapter(); G.step(0.5); T.talkAll(); return [G.flags.chapterKey, G.room?.id, G.state, T.obj()]; }), (v) => v[0] === 'steam' && v[1] === 'desert' && v[2] === 'play' && v[3].length > 0);
 await shot('C5-00-kesh.png');
-log('jar', await ev(() => { T.talk('dtrader'); return [game.flags.c5_jar, T.obj()]; }));
-log('fill', await ev(() => { const e = game.rooms.desert.oasisEdge; T.useAt(e.x, e.z); return [game.flags.c5_water]; }));
-log('shovel', await ev(() => { T.talk('dtrader'); return [game.flags.c5_shovel, T.obj()]; }));
-log('dig out', await ev(() => { const d = game.rooms.desert.ruins.door; T.useAt(d.x, d.z + 1.2); game.step(1.5); T.talkAll(); return [game.flags.c5_dug, T.obj()]; }));
-log('into hall', await ev(() => { const G = game, d = G.rooms.desert.ruins.door; T.tp(d.x, d.z + 1.6); G.step(0.3); T.tp(d.x, d.z); G.step(1.6); T.talkAll(); return G.room?.id; }));
+is("the trader's jar, the objectives set", await ev(() => { T.talk('dtrader'); return [game.flags.c5_jar, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('the jar filled at the oasis', await ev(() => { const e = game.rooms.desert.oasisEdge; T.useAt(e.x, e.z); return [game.flags.c5_water]; }), (v) => v[0] === true);
+is('the shovel from the trader', await ev(() => { T.talk('dtrader'); return [game.flags.c5_shovel, T.obj()]; }), (v) => v[0] === true);
+is("the ruins' door dug out, an objective set", await ev(() => { const d = game.rooms.desert.ruins.door; T.useAt(d.x, d.z + 1.2); game.step(1.5); T.talkAll(); return [game.flags.c5_dug, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('into the condenser hall', await ev(() => { const G = game, d = G.rooms.desert.ruins.door; T.tp(d.x, d.z + 1.6); G.step(0.3); T.tp(d.x, d.z); G.step(1.6); T.talkAll(); return G.room?.id; }), (v) => v === 'condA');
 await shot('C5-01-hall.png');
-log('diagram', await ev(() => { const A = game.rooms.condA; T.useAt(A.diagram.x, A.diagram.z); return game.flags.c5_diagram; }));
+is('the diagram read', await ev(() => { const A = game.rooms.condA; T.useAt(A.diagram.x, A.diagram.z); return game.flags.c5_diagram; }), (v) => v === true);
 // FunFrock's old trooper guards the hall (LBA1's, kind fclone): beat him first, as a player would
-log('trooper', await ev(() => { const G = game, e = G.enemies.find((x) => x.id === 'ffclone1'); if (!e) return 'absent'; for (let k = 0; k < 8 && e.alive; k++) { e.take(2, G.hero.pos); G.step(0.1); } G.step(2.6); return e.alive ? 'standing' : 'down'; }));
-log('valves', await ev(() => { const A = game.rooms.condA; for (const id of [1, 3, 4]) { const v = A.valves.find((x) => x.id === id); T.useAt(v.x, v.z); } return [JSON.stringify(game.flags.c5_valves), game.flags.c5_routed, T.obj()]; }));
-log('hangar', await ev(() => T.exit('cond-b')));
+is("FunFrock's trooper in the hall beaten", await ev(() => { const G = game, e = G.enemies.find((x) => x.id === 'ffclone1'); if (!e) return 'absent'; for (let k = 0; k < 8 && e.alive; k++) { e.take(2, G.hero.pos); G.step(0.1); } G.step(2.6); return e.alive ? 'standing' : 'down'; }), (v) => v === 'down');
+is('the steam routed through valves 1, 3, 4, an objective set', await ev(() => { const A = game.rooms.condA; for (const id of [1, 3, 4]) { const v = A.valves.find((x) => x.id === id); T.useAt(v.x, v.z); } return [JSON.stringify(game.flags.c5_valves), game.flags.c5_routed, T.obj()]; }), (v) => v[0] === '{"1":true,"3":true,"4":true}' && v[1] === true && v[2].length > 0);
+is('into the hangar', await ev(() => T.exit('cond-b')), (v) => v === 'condB');
 await shot('C5-02-hangar.png');
-log('glider', await ev(() => { const g = game.rooms.condB.glider; T.useAt(g.x, g.z); return game.flags.c5_gliderSeen; }));
-log('hatch', await ev(() => { const tg = game.room.ballTargets.find((t) => t.hatch); return [T.hit(tg), game.flags.c5_hatch]; }));
-log('out', await ev(() => { T.exit('cond-a'); return T.exit('cond-out'); }));
-log('dallan', await ev(() => { T.talk('dallan'); return [game.flags.c5_dallanOK, game.rooms.desert.post.gate.isOpen, T.obj()]; }));
-log('relief', await ev(() => { const v = game.rooms.desert.bore.valve; T.useAt(v.x, v.z); return [game.flags.c5_relief, T.obj()]; }));
+is('the glider seen', await ev(() => { const g = game.rooms.condB.glider; T.useAt(g.x, g.z); return game.flags.c5_gliderSeen; }), (v) => v === true);
+is('the hatch switch hit', await ev(() => { const tg = game.room.ballTargets.find((t) => t.hatch); return [T.hit(tg), game.flags.c5_hatch]; }), (v) => v[0] !== 'FAILED' && v[1] === true);
+is('back out to the desert', await ev(() => { T.exit('cond-a'); return T.exit('cond-out'); }), (v) => v === 'desert');
+is('Dallan agrees, the post gate opens', await ev(() => { T.talk('dallan'); return [game.flags.c5_dallanOK, game.rooms.desert.post.gate.isOpen, T.obj()]; }), (v) => v[0] === true && v[1] === true);
+is('the relief valve opened, an objective set', await ev(() => { const v = game.rooms.desert.bore.valve; T.useAt(v.x, v.z); return [game.flags.c5_relief, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 await shot('C5-03-geysers.png');
-log('vent', await ev(() => { const G = game, P = G.rooms.desert.post; T.tp(P.x0 - 6, (P.z0 + P.z1) / 2); for (let i = 0; i < 400 && !G.flags.c5_vent; i++) { G.hero.hp = G.hero.maxHp; G.step(0.05); } T.talkAll(); return [G.flags.c5_vent, T.obj()]; }));
-log('tarra', await ev(() => { T.talk('tarra'); T.talkAll(); return [game.flags.c5_clover, game.flags.c5_radio, T.obj()]; }));
-log('hesk', await ev(() => { T.talk('hesk'); return [game.flags.c5_glider, T.obj()]; }));
-log('to hangar', await ev(() => { const G = game, d = G.rooms.desert.ruins.door; T.tp(d.x, d.z + 1.6); G.step(0.3); T.tp(d.x, d.z); G.step(1.6); T.talkAll(); T.exit('cond-b'); return G.room?.id; }));
-log('board', await ev(() => { const G = game, g = G.rooms.condB.glider; T.useAt(g.x, g.z); G.step(2); T.talkAll(); G.step(1.5); T.talkAll(); return [G.flags.c5_done, G.flags.chapterKey, G.room?.id]; }));
-console.log(errs.length ? errs.join('\n') : 'no errors');
+is('the bore vents, an objective set', await ev(() => { const G = game, P = G.rooms.desert.post; T.tp(P.x0 - 6, (P.z0 + P.z1) / 2); for (let i = 0; i < 400 && !G.flags.c5_vent; i++) { G.hero.hp = G.hero.maxHp; G.step(0.05); } T.talkAll(); return [G.flags.c5_vent, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('Tarra: the clover and the radio', await ev(() => { T.talk('tarra'); T.talkAll(); return [game.flags.c5_clover, game.flags.c5_radio, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);
+is('Hesk: the glider promised, an objective set', await ev(() => { T.talk('hesk'); return [game.flags.c5_glider, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
+is('back to the hangar', await ev(() => { const G = game, d = G.rooms.desert.ruins.door; T.tp(d.x, d.z + 1.6); G.step(0.3); T.tp(d.x, d.z); G.step(1.6); T.talkAll(); T.exit('cond-b'); return G.room?.id; }), (v) => v === 'condB');
+is('chapter 5 ends on the glider: the next chapter (pass) on the Hamalayi', await ev(() => { const G = game, g = G.rooms.condB.glider; T.useAt(g.x, g.z); G.step(2); T.talkAll(); G.step(1.5); T.talkAll(); return [G.flags.c5_done, G.flags.chapterKey, G.room?.id]; }), (v) => v[0] === true && v[1] === 'pass' && v[2] === 'hamalayi');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

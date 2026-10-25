@@ -2,7 +2,8 @@
 // A segment module exports `steps`: [[label, pageFn(arg) → result, arg?], ...]. Each step runs as its own
 // page.evaluate so progress is printed as it goes and a stuck step shows where. A step returning { fail } stops.
 // env: LOAD=<storage.json> (Continue from it), KEEP=<storage.json> (Esc → Save & quit afterwards, keep the save)
-import { launch, open, menu, quitAndKeep } from './boot.mjs';
+import { launch, open, menu, quitAndKeep, checker } from './boot.mjs';
+const { check, done } = checker();
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 const seg = await import(pathToFileURL(path.resolve(process.argv[2])).href);
@@ -12,7 +13,7 @@ await menu(page, process.env.MENU || (process.env.LOAD ? 'continue' : 'new'));
 // ASSIST=1: fights the bot is losing (2 HP left) are finished by an ISO assist, logged as 'ISO assist' (never INPUT evidence)
 if (process.env.ASSIST) await page.evaluate(() => { P.assist = true; });
 const t0 = Date.now();
-let failed = false;
+let failed = false, stop = null;
 import { fileURLToPath } from 'node:url';
 const HARNESS = fileURLToPath(new URL('./player.js', import.meta.url));
 // game over: Retry (continue from the last save) as a player would, then the step again
@@ -41,14 +42,15 @@ for (const [label, fn, arg, opt] of seg.steps) {
     for (const l of await page.evaluate(() => { const out = P.trace.filter((x, i) => x.includes('ISO assist') && i >= (P._assistSeen || 0)); P._assistSeen = P.trace.length; return out; })) console.log('  ' + l);
     const st = await page.evaluate(() => P.state());
     console.log(`[${((Date.now() - t0) / 1000).toFixed(0)}s +${((Date.now() - s0) / 1000).toFixed(0)}s] ${label}: ${JSON.stringify(r)?.slice(0, 400)} | ${st.room} ${JSON.stringify(st.pos)} hp ${st.hp} | ${st.obj.slice(0, 120)}`);
-    if (r && r.fail) { failed = true; console.log('  STOP: ' + r.fail); break; }
-  } catch (e) { failed = true; console.log(`${label}: ERROR ${e.message.split('\n')[0]}`); break; }
+    if (r && r.fail) { failed = true; stop = `${label}: ${r.fail}`; console.log('  STOP: ' + r.fail); break; }
+  } catch (e) { failed = true; stop = `${label}: ERROR ${e.message.split('\n')[0]}`; console.log(stop); break; }
 }
+check('the segment ran every step to its end', !failed, stop);
 console.log('deaths (Retry):', deaths);
 console.log('ISO assists:', await page.evaluate(() => P.trace.filter((l) => l.includes('ISO assist')).length), '(this page; see the trace)');
 console.log((await page.evaluate(() => P.trace.slice(-12))).join('\n'));
 if (process.env.SHOT) { await page.evaluate(() => game.renderer.render()); await page.screenshot({ path: process.env.SHOT }); }
 if (process.env.KEEP && !failed) { await quitAndKeep(page, context, process.env.KEEP); console.log('kept', process.env.KEEP); }
-console.log(errs.join('\n') || 'no errors');
+const fails = done();
 await browser.close();
-process.exit(failed ? 1 : 0);
+process.exit(fails ? 1 : 0);

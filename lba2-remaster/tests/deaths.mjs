@@ -14,11 +14,10 @@
 //    (slumps), the player leaving the scene, a dialogue, the pause, a story change of cast, a reload mid-fall.
 // Prints PASS/FAIL lines with the measured values (MEASURE lines for the tables in QA).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 4).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const errs = watch(page);
 // count live event listeners (window, document, elements) from the start
 await page.addInitScript(() => {
   window.__listeners = 0;
@@ -27,8 +26,7 @@ await page.addInitScript(() => {
   EventTarget.prototype.removeEventListener = function (t, f, o) { const m = seen.get(this); if (f && m?.has(f)) { m.delete(f); window.__listeners--; } return rem.call(this, t, f, o); };
 });
 const ev = (f, a) => page.evaluate(f, a);
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, JSON.stringify(info)); };
+const { check, done } = checker({ info: 'always' });
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
 
@@ -342,7 +340,6 @@ for (const [key, label] of [
   check('a beaten enemy given a living state again (the arena, tests) stands as before', Object.values(r).every((v) => v.alive && v.inScene && v.visible && !v.ko && v.tilt < 0.01), r);
 }
 
-console.log(errs.length ? errs.slice(0, 15).join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

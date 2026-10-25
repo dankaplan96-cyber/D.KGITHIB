@@ -4,13 +4,12 @@
 // judged between cycle 5 and the last. Played through the input harness. Software rendering (SwiftShader):
 // the memory/object counts are meaningful, frame times are not.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
-import { open, menu, checker, URL0 } from './lib/boot.mjs';
+import { open, menu, checker, watch, URL0 } from './lib/boot.mjs';
 const N = +(process.env.CYCLES || 30);
 const { check, done } = checker();
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--enable-precise-memory-info', '--js-flags=--expose-gc'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
+const errs = watch(page);
 await page.addInitScript(() => {
   // count live intervals and listeners added (the game never removes most listeners: they are added once)
   const live = new Set(); const si = window.setInterval, ci = window.clearInterval;

@@ -11,14 +11,12 @@
 //    chest; the throwing arm's whip ≤ 1.2).
 // Prints MEASURE lines with the numbers. GAME_URL (default http://localhost:8123/).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 4).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const errs = watch(page);
 const ev = (f, a) => page.evaluate(f, a);
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, JSON.stringify(info)); };
+const { check, done } = checker({ info: 'always' });
 const measure = (name, info) => console.log('MEASURE ' + name, JSON.stringify(info));
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/'), { waitUntil: 'load', timeout: 240000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 300000 });
@@ -208,7 +206,6 @@ for (const fps of [30, 60, 120]) {
   check('combat stance: off at rest, on with a lock (the head turned toward the target on his left), off 2.5 s after', !r.calm.guard && r.calm.w < 0.05 && r.locked.guard && r.locked.w > 0.9 && r.locked.headY > 0.15 && !r.after.guard && r.after.w < 0.2, r);
 }
 
-console.log(errs.length ? 'ERRORS\n' + errs.join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
-process.exit(fails || errs.length ? 1 : 0);
+process.exit(fails ? 1 : 0);

@@ -3,7 +3,7 @@
 //
 // Follows the ES-module imports from src/main.js (relative paths, 'three' and 'three/addons/...', including
 // three's own relative imports such as build/three.core.min.js), then adds what is fetched at run time:
-// the stylesheet, the character models, LBA1's room layouts, the music and the geometry bake (published as assets/bake.wasm,
+// the stylesheet, the bundled Rubik font (index.html links assets/fonts/rubik.css since R8), the character models, LBA1's room layouts, the music and the geometry bake (published as assets/bake.wasm,
 // because artifact hosting serves only web media types; the published page sets window.LBA_BAKE_URL).
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, normalize, posix } from 'node:path';
@@ -30,7 +30,7 @@ export function gameFiles() {
     files[p] = p;
     for (const m of readFileSync(join(ROOT, p), 'utf-8').matchAll(SPEC)) { const r = resolve(m[1], p); if (r) todo.push(r); }
   }
-  for (const p of [...list('css', /\.css$/), ...list('assets/poly', /\.json$/), ...list('assets/lba1', /\.json$/), ...list('assets/lba2/islands', /\.json$/), ...list('assets/music', /\.mp3$/), 'assets/music/manifest.json', 'assets/ui-loading.jpg']) files[p] = p;
+  for (const p of [...list('css', /\.css$/), ...list('assets/fonts', /\.(css|woff2|txt)$/), ...list('assets/poly', /\.json$/), ...list('assets/lba1', /\.json$/), ...list('assets/lba2/islands', /\.json$/), ...list('assets/music', /\.mp3$/), 'assets/music/manifest.json', 'assets/ui-loading.jpg']) files[p] = p;
   files['assets/bake.wasm'] = 'assets/bake.bin';
   return Object.fromEntries(Object.entries(files).sort());
 }

@@ -5,14 +5,12 @@
 //   4. a container's untaken bonus stays (CONTAINERS); any other bonus blinks in its last 3 s and goes after 20 s
 //   5. no kashes lie around outdoors; a save keeps the giver taken
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message + '\n' + (e.stack || '').split('\n').slice(0, 3).join('\n')));
-page.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
+const errs = watch(page);
 const ev = (f, a) => page.evaluate(f, a);
-let fails = 0;
-const check = (name, ok, info = '') => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${info !== '' ? ' ' + JSON.stringify(info) : ''}`); if (!ok) fails++; };
+const { check, done } = checker({ info: 'always' });
 
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
@@ -93,8 +91,6 @@ check('no kashes lie around outdoors', out.coinsOutside === 0, out);
 check('a few givers outdoors (barrels, the stump)', out.outGivers.length >= 4 && out.outGivers.includes('stump'), out.outGivers);
 check('the save keeps the givers taken', out.saved.includes('giver:house:dresser') && out.saved.includes('giver:house:chest'), out.saved);
 
-console.log(errs.length ? errs.join('\n') : 'no errors');
-if (errs.length) fails++;
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

@@ -2,12 +2,11 @@
 // through its door, he tops up Twinsen's magic, walk back out), and the School of Magic's stone face on Desert
 // Island (walk in, the rector is there, Ker'aooc heals Twinsen, walk back out to the desert).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
+import { watch, checker } from './lib/boot.mjs';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
-const errs = [];
-page.on('pageerror', (e) => errs.push('pageerror: ' + e.message));
-let fails = 0;
-const check = (name, ok, info) => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, ok ? '' : JSON.stringify(info)); };
+const errs = watch(page);
+const { check, done } = checker({ info: 'fail' });
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 240000 });
 await page.evaluate(() => { localStorage.clear(); game.testFreeze = true; });
@@ -38,6 +37,6 @@ check('out of the tent, back on Citadel', r.tentOut === 'citadel', r);
 check("the School of Magic: in through the stone face's door; the rector stands on the floor", r.school === 'school' && r.rector, r);
 check("Ker'aooc talks and heals", r.kTalk === 'dialog' && r.hp[0] === r.hp[1], r);
 check('out of the school, back on Desert Island', r.schoolOut === 'desert', r);
-console.log(errs.length ? errs.join('\n') : 'no errors');
-console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
+process.exit(fails ? 1 : 0);

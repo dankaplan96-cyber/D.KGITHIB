@@ -10,14 +10,14 @@
 // dialogue lines (counted apart). With the budgets (not MEASURE) the CLAR-2 rules are checked: the objective is
 // shown when it changes and then steps aside (kept in the pause menu and the Holomap), no toast repeats what the
 // objective or the dialogue just said, key names in hints follow the player's bindings.
-import { launch, open, menu } from './lib/boot.mjs';
+import { launch, open, menu, checker } from './lib/boot.mjs';
 import { fileURLToPath } from 'node:url';
 import fs from 'node:fs';
 const CENSUS = fileURLToPath(new URL('./lib/textcensus.js', import.meta.url));
 const HUD = process.env.HUD || 'lba', OUT = process.env.OUT, TAG = process.env.TAG || 'run', MEASURE = !!process.env.MEASURE;
 if (OUT) fs.mkdirSync(OUT, { recursive: true });
-let fails = 0;
-const check = (name, ok, info) => { if (MEASURE) return; if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name, ok ? '' : JSON.stringify(info)?.slice(0, 700)); };
+const { check: check0, done } = checker();
+const check = (name, ok, info) => { if (!MEASURE) check0(name, ok, info); };   // MEASURE: errors and resources still judged
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
 const ev = (f, a) => page.evaluate(f, a);
 const results = {};
@@ -182,7 +182,6 @@ for (const [r, v] of Object.entries(results)) {
   console.log(`  ${r.padEnd(9)} put up ${String(v.sum.n).padStart(3)} texts ${String(v.sum.chars).padStart(5)} chars | dialogue ${v.sum.lines} lines | on screen (items/chars): ${m}`);
 }
 if (OUT) fs.writeFileSync(`${OUT}/${TAG}-${HUD}.json`, JSON.stringify(results, null, 1));
-console.log(errs.length ? errs.slice(0, 10).join('\n') : 'no errors');
-if (!MEASURE) console.log(fails ? `${fails} FAILED` : 'ALL PASSED');
+const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);
