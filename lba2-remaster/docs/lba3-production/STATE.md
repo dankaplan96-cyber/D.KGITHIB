@@ -331,6 +331,23 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Not verified: the feel on a real GPU/display, pad and touch on the free orbit. Open: the free orbit by house eaves
   (13 jolts/min, can look down 60–70°); the 1997 cuts unchanged.
 
+## Done after (ANIM-COMBAT, block 9; status REVIEW)
+- The user: "in combat Twinsen's movements feel unnatural and weird." Animator; src/engine/rig.js (THROW, STRIKES, GUARD,
+  HURT, foot planting `Rig._plant`), Hero hooks in src/game/actors.js, src/game/combat.js (the layer cleared on reset).
+  No gameplay number changed (COMBAT, MOVES); the ball's auto-aim untouched.
+  - Throw: cocked behind the head → whip → the ball leaves from the hand high in front at the same clock (0.16) →
+    follow-through; the wind-up's chest turn had the wrong sign. On the move the same arm over the walk.
+  - Strikes keyed in phase units (contact in the active frames at any timing); jab shoulder sign fixed; the kick returns.
+  - Feet: the hero's planted feet stay put and step when the pose moves away (throw's back foot 77 → 0 cm).
+  - Hit reaction keyed; a combat stance per weapon while engaged; the head on a locked target.
+- tests/anim-combat.mjs (new; 30/60/120 fps, interruptions). Evidence: reviews/ANIM-COMBAT/ (strips, clips, tools,
+  tests.log); QA.md "ANIM-COMBAT"; docs/COMBAT.md "Twinsen's combat animation".
+- Open: an independent visual review and a look on a GPU with a pad; the moving throw releases over the head rather than
+  in front; the kick is mostly hidden by the robe; the shrug's shoulder lift (no clavicle bone) and Zoé's hand reach
+  (CHAR-2 §18) were not in this block; the death/KO keys untouched.
+- Note: port 8180 was held by another agent's server (a base copy) at the start of this block; the "before" captures
+  were redone from a copy of this branch's base served on 8188.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

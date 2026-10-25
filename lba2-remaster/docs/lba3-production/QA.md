@@ -735,6 +735,44 @@ over the eaves at once (13 jolts/min there, worst 1 433 m/s²) and can look down
 are unchanged (LBA2's own rise, up to 80°); under Modern controls a steep-view turn (≤ 60°/s) turns his stick
 directions with it, as the hidden-behind-a-wall swing already did.
 
+### ANIM-COMBAT: Twinsen's combat animation (block 9; evidence docs/lba3-production/reviews/ANIM-COMBAT/)
+The user: "in combat Twinsen's movements feel unnatural and weird." Every move was played by input in the developer
+arena and recorded step by step (reviews/ANIM-COMBAT/cap.mjs: joint angles, hand / feet / ball positions, the combat
+clocks; side-view crops) before (the base, served from a copy) and after, at 60 fps (30/120 in tests/anim-combat.mjs).
+metrics.mjs reads the numbers; strip.py / mkclip.py make the strips and the side-by-side clips. LBA2's own anims were
+read for timing and poses (ANIM.HQR 6, 82, 87-89, 42, 7-9; numbers only, nothing copied). SwiftShader, the game's own
+clock: motion measured, not how it looks on a GPU.
+
+| What read wrong (before) | Measured before | After |
+|---|---|---|
+| The throw's wind-up turned the throwing shoulder toward the target (torsoY sign inverted) and raised the arm in front of the face | the hand 0.80 m in front at 1.24 m in the "coil" | the arm out to the side and cocked behind the head, the chest turned away, the free arm on the target |
+| The release snapped into a held bow; the ball left from where the hand no longer was | shoulder 51, elbow 46, chest 37 rad/s in one step at the release; on the first flight frame the hand 0.87 m up, the ball 1.22 m (35 cm apart) | a whip over the top; the ball leaves 0.08 m from the hand, 0.56 m in front at 1.82 m; the release clock 0.167 at 60 fps as before |
+| Standing throw: the feet scissored under a still pelvis | back foot 77 cm of travel while planted, front 47 cm | back foot 0 cm (planted), front foot lifts and lands (its own step) |
+| Throw on the move: a push from the chest | the hand at 1.24-1.55 m, 0.55 m out in front at chest height | the arm cocked and whipped over the walk; leaves over the head (1.85-1.9 m, 0.05-0.14 m in front) |
+| Charge: the hold before the charge was an arm held forward, then a pop up into the charge; the charge's arm straight up | arm 52 rad/s into the charge | the hold is the throw's loaded pose and the charge keeps it; release whips from it |
+| Sword: one straight arm swung by the chest; the overhead raised a vertical arm | feet 82 / 22 cm of glide over the combo | backhand cocked over the left shoulder, forehand back, two-handed overhead into a bow; feet 15 / 6 cm (their steps) |
+| Fists: the right jab turned its shoulder back; the kick stayed out through its whole recovery, then blended | feet 90 / 83 cm | the shoulder drives into the jab; the kick chambers, snaps out, returns, is put down; feet 46 / 26 cm (the strikes' forward steps) |
+| Hit reaction: one recoil pose held for 0.4 s while knock-back slid him | 0.4 s still, feet 93 / 50 cm | snap away from the blow (0.05 s), sag, rebound into the stance by 0.42; the feet stumble back |
+| No combat stance; idle fidgets mid-fight | — | a stance per weapon while engaged (no fidgets), out of it 2.5 s after; head and chest on a locked target |
+
+- Timing kept: no number in COMBAT / MOVES changed. First hits in the same step as before: slash1 at 0.15 s, jab at 0.083 s
+  (60 fps). The throw frees the controls at 0.36 s on its clock as before. tests/anim-combat.mjs: the release clock
+  0.16-0.17, from the hand, at 30/60/120 fps; slash1's hit in its active frames at 30/60/120 with the blade sweeping
+  from his left to his right through them; the jab's fist furthest out in its active frames.
+- Interruptions (tests/anim-combat.mjs): a hit in the coil (no throw, no whip played on, ball home, reaction then stance);
+  death in a charge; pause in the coil (frozen, called off on resume as before); dialogue in a strike; a weapon swap in
+  a strike; every button in one frame; a scene change in a charge — no stuck pose, no ball left in the hand.
+- Cost (reviews/ANIM-COMBAT/perf.js → perf.txt, headless CPU): the hero rig's update 0.02 ms a frame median with foot
+  planting (0.005-0.01 without), p95 0.03-0.035 ms; one matrix update of his skeleton and two two-bone solves a frame;
+  no new meshes, materials or draw calls.
+- Regressions (reviews/ANIM-COMBAT/tests.log, merged with origin after CAM-2): anim-combat, combat, controls, deaths,
+  arsenal, stability, opening, camsteady, jetpack ALL PASSED; chapter1 to its end (Zeelich), no errors; zoe-resume failed
+  once (Zoé caught while sneaking out under load, the flake STATE records under SRC-2) and passed on the rerun.
+- The moving throw's release point is higher (1.85 m vs 1.24-1.55 m before), so a targeted ball's flight starts higher;
+  its rules (MagicBall.plan from the hand) are unchanged and the landing distances are LBA2's (controls.mjs passes).
+- Not verified: the look on a real GPU and by hand with a pad; the walk's own stride (CTRL-1's keys) was not changed;
+  the planted-foot rule stands on flat ground only (on slopes and stairs the feet keep the body's ground height).
+
 ### Not tested / blocked
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
 - Listening (music mix, effects, voices), gamepad and touch feel: BLOCKED — human.
