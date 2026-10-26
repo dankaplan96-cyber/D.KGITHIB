@@ -215,7 +215,7 @@ export class Bench {
         + (L.prep ? ` (${Object.entries(L.prep).map(([k, ms]) => `${k} ${(ms / 1000).toFixed(1)}`).join(', ')}) · ${L.programs ?? '?'} shader programs ready at the title` : ''));
     }
     { const M = G.renderer.renderer.info.memory, heap = performance.memory?.usedJSHeapSize;
-      lines.push(`memory: ${M.geometries} geometries and ${M.textures} textures on the GPU · ${G.renderer.renderer.info.programs?.length ?? '?'} shader programs (every preset and breakdown variant run has its own)${heap ? ` · JavaScript heap ${(heap / 1048576).toFixed(0)} MB` : ''} · GPU timer: ${G.perf.gpuTimer ? 'yes' : 'not offered by this browser'}`); }
+      lines.push(`memory: ${M.geometries} geometries and ${M.textures} textures on the GPU · ${G.renderer.renderer.info.programs?.length ?? '?'} shader programs (every preset and breakdown variant run has its own)${heap ? ` · JavaScript heap ${(heap / 1048576).toFixed(0)} MB` : ''} · GPU timer: ${G.perf.gpuTimer ? 'yes' : 'not offered by this browser'} · parallel shader compile (KHR_parallel_shader_compile): ${G.renderer.renderer.extensions?.has?.('KHR_parallel_shader_compile') ? 'yes' : 'no'}`); }
     let q = null;
     const brk = results.filter((x) => x.v);
     for (const x of results.filter((r) => !r.v)) {

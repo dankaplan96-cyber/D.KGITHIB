@@ -1,0 +1,847 @@
+{
+ "task": "PERF-ARRIVAL",
+ "renderer": "SwiftShader (software GL, no KHR_parallel_shader_compile), headless Chromium, 1366x768, dpr 1; shared 4-core machine, load 10-14: counts exact, times are noisy CPU proxies, not the laptop's",
+ "base": "b9de5a7",
+ "candidate": "worktree-agent-ac6e4f5664b532a0d",
+ "perfbudget": {
+  "how": "tests/perfbudget.mjs: one page loaded at High, then Low -> Medium -> High, 4 routes each, the tests' fixed stepping",
+  "before": {
+   "startup": {
+    "programs": 94,
+    "buildMs": 21259,
+    "shadersMs": 44975,
+    "prep": null
+   },
+   "routes": {
+    "low/street": {
+     "calls": 195,
+     "callsP95": 206,
+     "callsMax": 210,
+     "shadow": 0,
+     "draws": 207,
+     "tris": 604362,
+     "renderMs": 9.1,
+     "newPrograms": 28
+    },
+    "low/interior": {
+     "calls": 95,
+     "callsP95": 101,
+     "callsMax": 102,
+     "shadow": 0,
+     "draws": 95,
+     "tris": 206189,
+     "renderMs": 3.4,
+     "newPrograms": 3
+    },
+    "low/combat": {
+     "calls": 121,
+     "callsP95": 123,
+     "callsMax": 123,
+     "shadow": 0,
+     "draws": 121,
+     "tris": 125826,
+     "renderMs": 3.8,
+     "newPrograms": 0
+    },
+    "low/transition": {
+     "calls": 121,
+     "callsP95": 125,
+     "callsMax": 125,
+     "shadow": 0,
+     "draws": 163,
+     "tris": 546806,
+     "renderMs": 5.1,
+     "newPrograms": 2
+    },
+    "medium/street": {
+     "calls": 256,
+     "callsP95": 268,
+     "callsMax": 271,
+     "shadow": 59,
+     "draws": 344,
+     "tris": 1073570,
+     "renderMs": 10.6,
+     "newPrograms": 35
+    },
+    "medium/interior": {
+     "calls": 98,
+     "callsP95": 103,
+     "callsMax": 103,
+     "shadow": 3,
+     "draws": 98,
+     "tris": 423296,
+     "renderMs": 4.9,
+     "newPrograms": 1
+    },
+    "medium/combat": {
+     "calls": 191,
+     "callsP95": 192,
+     "callsMax": 192,
+     "shadow": 70,
+     "draws": 191,
+     "tris": 233973,
+     "renderMs": 5.3,
+     "newPrograms": 0
+    },
+    "medium/transition": {
+     "calls": 168,
+     "callsP95": 172,
+     "callsMax": 173,
+     "shadow": 36,
+     "draws": 333,
+     "tris": 981200,
+     "renderMs": 6.9,
+     "newPrograms": 3
+    },
+    "high/street": {
+     "calls": 289,
+     "callsP95": 306,
+     "callsMax": 310,
+     "shadow": 72,
+     "draws": 425,
+     "tris": 1205061,
+     "renderMs": 11.9,
+     "newPrograms": 5
+    },
+    "high/interior": {
+     "calls": 110,
+     "callsP95": 115,
+     "callsMax": 116,
+     "shadow": 3,
+     "draws": 110,
+     "tris": 423305,
+     "renderMs": 4.4,
+     "newPrograms": 0
+    },
+    "high/combat": {
+     "calls": 195,
+     "callsP95": 205,
+     "callsMax": 207,
+     "shadow": 70,
+     "draws": 195,
+     "tris": 233266,
+     "renderMs": 4.9,
+     "newPrograms": 0
+    },
+    "high/transition": {
+     "calls": 191,
+     "callsP95": 195,
+     "callsMax": 196,
+     "shadow": 42,
+     "draws": 395,
+     "tris": 1024089,
+     "renderMs": 8.2,
+     "newPrograms": 0
+    }
+   }
+  },
+  "after": {
+   "startup": {
+    "programs": 101,
+    "buildMs": 21729,
+    "shadersMs": 88528,
+    "prep": {
+     "paint": 103,
+     "programs": 367,
+     "textures": 39883,
+     "geometry": 1380,
+     "paint2": 4,
+     "batches": 283,
+     "shadowPrograms": 13627,
+     "firstFrame": 32880
+    }
+   },
+   "routes": {
+    "low/street": {
+     "calls": 195,
+     "callsP95": 206,
+     "callsMax": 210,
+     "shadow": 0,
+     "draws": 207,
+     "tris": 604362,
+     "renderMs": 9.2,
+     "newPrograms": 0
+    },
+    "low/interior": {
+     "calls": 95,
+     "callsP95": 101,
+     "callsMax": 102,
+     "shadow": 0,
+     "draws": 95,
+     "tris": 206189,
+     "renderMs": 4.6,
+     "newPrograms": 0
+    },
+    "low/combat": {
+     "calls": 121,
+     "callsP95": 123,
+     "callsMax": 123,
+     "shadow": 0,
+     "draws": 121,
+     "tris": 125826,
+     "renderMs": 4,
+     "newPrograms": 0
+    },
+    "low/transition": {
+     "calls": 121,
+     "callsP95": 125,
+     "callsMax": 125,
+     "shadow": 0,
+     "draws": 163,
+     "tris": 546806,
+     "renderMs": 6.2,
+     "newPrograms": 0
+    },
+    "medium/street": {
+     "calls": 256,
+     "callsP95": 268,
+     "callsMax": 271,
+     "shadow": 59,
+     "draws": 344,
+     "tris": 1073570,
+     "renderMs": 11.5,
+     "newPrograms": 0
+    },
+    "medium/interior": {
+     "calls": 98,
+     "callsP95": 103,
+     "callsMax": 103,
+     "shadow": 3,
+     "draws": 98,
+     "tris": 423296,
+     "renderMs": 5.8,
+     "newPrograms": 0
+    },
+    "medium/combat": {
+     "calls": 191,
+     "callsP95": 192,
+     "callsMax": 192,
+     "shadow": 70,
+     "draws": 191,
+     "tris": 233973,
+     "renderMs": 5.6,
+     "newPrograms": 0
+    },
+    "medium/transition": {
+     "calls": 168,
+     "callsP95": 172,
+     "callsMax": 173,
+     "shadow": 36,
+     "draws": 333,
+     "tris": 981200,
+     "renderMs": 8.6,
+     "newPrograms": 0
+    },
+    "high/street": {
+     "calls": 289,
+     "callsP95": 306,
+     "callsMax": 310,
+     "shadow": 72,
+     "draws": 425,
+     "tris": 1205061,
+     "renderMs": 12.4,
+     "newPrograms": 0
+    },
+    "high/interior": {
+     "calls": 110,
+     "callsP95": 115,
+     "callsMax": 116,
+     "shadow": 3,
+     "draws": 110,
+     "tris": 423305,
+     "renderMs": 6,
+     "newPrograms": 0
+    },
+    "high/combat": {
+     "calls": 195,
+     "callsP95": 205,
+     "callsMax": 207,
+     "shadow": 70,
+     "draws": 195,
+     "tris": 233266,
+     "renderMs": 5.2,
+     "newPrograms": 0
+    },
+    "high/transition": {
+     "calls": 191,
+     "callsP95": 195,
+     "callsMax": 196,
+     "shadow": 42,
+     "draws": 395,
+     "tris": 1024089,
+     "renderMs": 9.2,
+     "newPrograms": 0
+    }
+   }
+  },
+  "verdict": {
+   "before": "FAIL (no shader compiles on the routes)",
+   "after": "PASS"
+  }
+ },
+ "realplay": {
+  "how": "PERF-ARRIVAL/realplay.mjs: loaded at Medium, then Low -> Medium -> High as the in-game benchmark, the game's own warm-ups running, 225 frames of 1/30 s per route, every 8th drawn",
+  "before": {
+   "bootPrograms": 86,
+   "switch": {
+    "switch-low": {
+     "compiledBySwitch": 72,
+     "holdLeft": false
+    },
+    "switch-medium": {
+     "compiledBySwitch": 8,
+     "holdLeft": false
+    },
+    "switch-high": {
+     "compiledBySwitch": 81,
+     "holdLeft": false
+    }
+   },
+   "routes": {
+    "low/street": {
+     "newPrograms": 1,
+     "calls50": 199,
+     "calls95": 210,
+     "callsMax": 212,
+     "shadow50": 0,
+     "tris50": 602108,
+     "tris95": 642140,
+     "newProgramWho": [
+      "main Mesh Mesh unspecified:ShaderMaterial"
+     ]
+    },
+    "low/interior": {
+     "newPrograms": 0,
+     "calls50": 95,
+     "calls95": 102,
+     "callsMax": 102,
+     "shadow50": 0,
+     "tris50": 206189,
+     "tris95": 226861,
+     "newProgramWho": []
+    },
+    "low/combat": {
+     "newPrograms": 0,
+     "calls50": 121,
+     "calls95": 123,
+     "callsMax": 123,
+     "shadow50": 0,
+     "tris50": 125826,
+     "tris95": 126066,
+     "newProgramWho": []
+    },
+    "low/transition": {
+     "newPrograms": 0,
+     "calls50": 121,
+     "calls95": 125,
+     "callsMax": 125,
+     "shadow50": 0,
+     "tris50": 546806,
+     "tris95": 546898,
+     "newProgramWho": []
+    },
+    "low/arrival": {
+     "newPrograms": 0,
+     "calls50": 321,
+     "calls95": 475,
+     "callsMax": 475,
+     "shadow50": 0,
+     "tris50": 407225,
+     "tris95": 769189,
+     "newProgramWho": []
+    },
+    "medium/street": {
+     "newPrograms": 0,
+     "calls50": 258,
+     "calls95": 271,
+     "callsMax": 272,
+     "shadow50": 59,
+     "tris50": 1068069,
+     "tris95": 1122055,
+     "newProgramWho": []
+    },
+    "medium/interior": {
+     "newPrograms": 0,
+     "calls50": 97,
+     "calls95": 103,
+     "callsMax": 103,
+     "shadow50": 3,
+     "tris50": 423294,
+     "tris95": 443962,
+     "newProgramWho": []
+    },
+    "medium/combat": {
+     "newPrograms": 0,
+     "calls50": 191,
+     "calls95": 191,
+     "callsMax": 191,
+     "shadow50": 70,
+     "tris50": 233973,
+     "tris95": 233973,
+     "newProgramWho": []
+    },
+    "medium/transition": {
+     "newPrograms": 0,
+     "calls50": 168,
+     "calls95": 172,
+     "callsMax": 173,
+     "shadow50": 36,
+     "tris50": 981200,
+     "tris95": 981292,
+     "newProgramWho": []
+    },
+    "medium/arrival": {
+     "newPrograms": 1,
+     "calls50": 344,
+     "calls95": 539,
+     "callsMax": 539,
+     "shadow50": 17,
+     "tris50": 549203,
+     "tris95": 1234582,
+     "newProgramWho": [
+      "shadow instanced Mesh < zeelich :MeshDepthMaterial"
+     ]
+    },
+    "high/street": {
+     "newPrograms": 13,
+     "calls50": 288,
+     "calls95": 306,
+     "callsMax": 310,
+     "shadow50": 72,
+     "tris50": 1199724,
+     "tris95": 1242856,
+     "newProgramWho": [
+      "shadow batched lodBatch < Group :MeshDepthMaterial",
+      "shadow instanced Mesh < Group < Group :MeshDepthMaterial",
+      "shadow Mesh Mesh < Group < pipeline < Group :MeshDepthMaterial",
+      "shadow instanced Mesh < pipeline < Group :MeshDepthMaterial",
+      "shadow skinned dinofly-mesh < dinofly < Group :MeshDepthMaterial",
+      "main Mesh Mesh :ShaderMaterial",
+      "main Mesh Mesh :ShaderMaterial",
+      "main Mesh Mesh :ShaderMaterial",
+      "main Mesh Mesh :ShaderMaterial",
+      "main Mesh Mesh :ShaderMaterial",
+      "main Mesh Mesh :ShaderMaterial",
+      "main Mesh Mesh :ShaderMaterial",
+      "main Mesh Mesh :ShaderMaterial"
+     ]
+    },
+    "high/interior": {
+     "newPrograms": 0,
+     "calls50": 110,
+     "calls95": 116,
+     "callsMax": 117,
+     "shadow50": 3,
+     "tris50": 423307,
+     "tris95": 443977,
+     "newProgramWho": []
+    },
+    "high/combat": {
+     "newPrograms": 0,
+     "calls50": 199,
+     "calls95": 204,
+     "callsMax": 206,
+     "shadow50": 70,
+     "tris50": 233522,
+     "tris95": 233986,
+     "newProgramWho": []
+    },
+    "high/transition": {
+     "newPrograms": 1,
+     "calls50": 191,
+     "calls95": 196,
+     "callsMax": 196,
+     "shadow50": 42,
+     "tris50": 1024089,
+     "tris95": 1024183,
+     "newProgramWho": [
+      "shadow Mesh shadowBatch < Group :MeshDepthMaterial"
+     ]
+    },
+    "high/arrival": {
+     "newPrograms": 3,
+     "calls50": 394,
+     "calls95": 652,
+     "callsMax": 652,
+     "shadow50": 21,
+     "tris50": 599810,
+     "tris95": 1432116,
+     "newProgramWho": [
+      "shadow Mesh Mesh < Group < Group < Group < zeelich :MeshDepthMaterial",
+      "shadow instanced Mesh < zeelich :MeshDepthMaterial",
+      "shadow Mesh Mesh < zeelich :MeshDepthMaterial"
+     ]
+    }
+   },
+   "programsAtEnd": 266
+  },
+  "after": {
+   "bootPrograms": 93,
+   "switch": {
+    "switch-low": {
+     "compiledBySwitch": 74,
+     "holdLeft": false
+    },
+    "switch-medium": {
+     "compiledBySwitch": 1,
+     "holdLeft": false
+    },
+    "switch-high": {
+     "compiledBySwitch": 98,
+     "holdLeft": false
+    }
+   },
+   "routes": {
+    "low/street": {
+     "newPrograms": 0,
+     "calls50": 199,
+     "calls95": 210,
+     "callsMax": 211,
+     "shadow50": 0,
+     "tris50": 602108,
+     "tris95": 642140,
+     "newProgramWho": []
+    },
+    "low/interior": {
+     "newPrograms": 0,
+     "calls50": 95,
+     "calls95": 101,
+     "callsMax": 102,
+     "shadow50": 0,
+     "tris50": 206189,
+     "tris95": 226859,
+     "newProgramWho": []
+    },
+    "low/combat": {
+     "newPrograms": 0,
+     "calls50": 121,
+     "calls95": 123,
+     "callsMax": 123,
+     "shadow50": 0,
+     "tris50": 125826,
+     "tris95": 126066,
+     "newProgramWho": []
+    },
+    "low/transition": {
+     "newPrograms": 0,
+     "calls50": 117,
+     "calls95": 125,
+     "callsMax": 125,
+     "shadow50": 0,
+     "tris50": 546806,
+     "tris95": 546898,
+     "newProgramWho": []
+    },
+    "low/arrival": {
+     "newPrograms": 0,
+     "calls50": 321,
+     "calls95": 322,
+     "callsMax": 323,
+     "shadow50": 0,
+     "tris50": 407217,
+     "tris95": 769189,
+     "newProgramWho": []
+    },
+    "medium/street": {
+     "newPrograms": 0,
+     "calls50": 258,
+     "calls95": 271,
+     "callsMax": 272,
+     "shadow50": 59,
+     "tris50": 1068069,
+     "tris95": 1122055,
+     "newProgramWho": []
+    },
+    "medium/interior": {
+     "newPrograms": 0,
+     "calls50": 97,
+     "calls95": 103,
+     "callsMax": 103,
+     "shadow50": 3,
+     "tris50": 423296,
+     "tris95": 443962,
+     "newProgramWho": []
+    },
+    "medium/combat": {
+     "newPrograms": 0,
+     "calls50": 191,
+     "calls95": 191,
+     "callsMax": 191,
+     "shadow50": 70,
+     "tris50": 233973,
+     "tris95": 233973,
+     "newProgramWho": []
+    },
+    "medium/transition": {
+     "newPrograms": 0,
+     "calls50": 168,
+     "calls95": 172,
+     "callsMax": 173,
+     "shadow50": 36,
+     "tris50": 981200,
+     "tris95": 981292,
+     "newProgramWho": []
+    },
+    "medium/arrival": {
+     "newPrograms": 0,
+     "calls50": 344,
+     "calls95": 388,
+     "callsMax": 388,
+     "shadow50": 17,
+     "tris50": 549203,
+     "tris95": 1234582,
+     "newProgramWho": []
+    },
+    "high/street": {
+     "newPrograms": 0,
+     "calls50": 288,
+     "calls95": 307,
+     "callsMax": 310,
+     "shadow50": 72,
+     "tris50": 1199724,
+     "tris95": 1242856,
+     "newProgramWho": []
+    },
+    "high/interior": {
+     "newPrograms": 0,
+     "calls50": 110,
+     "calls95": 116,
+     "callsMax": 116,
+     "shadow50": 3,
+     "tris50": 423307,
+     "tris95": 443975,
+     "newProgramWho": []
+    },
+    "high/combat": {
+     "newPrograms": 0,
+     "calls50": 199,
+     "calls95": 204,
+     "callsMax": 206,
+     "shadow50": 70,
+     "tris50": 233522,
+     "tris95": 233986,
+     "newProgramWho": []
+    },
+    "high/transition": {
+     "newPrograms": 0,
+     "calls50": 191,
+     "calls95": 196,
+     "callsMax": 196,
+     "shadow50": 42,
+     "tris50": 1024089,
+     "tris95": 1024183,
+     "newProgramWho": []
+    },
+    "high/arrival": {
+     "newPrograms": 0,
+     "calls50": 394,
+     "calls95": 500,
+     "callsMax": 501,
+     "shadow50": 21,
+     "tris50": 599810,
+     "tris95": 1432116,
+     "newProgramWho": []
+    }
+   },
+   "programsAtEnd": 266
+  }
+ },
+ "arrivalTimelineHighBase": {
+  "how": "realplay.mjs ROUTES=arrival QUALITY=high EVERY=1 DYN=0.5 (base): draw calls per drawn frame, by area",
+  "perArea": {
+   "citadel": {
+    "min": 317,
+    "max": 319,
+    "frames": 56
+   },
+   "zeelich": {
+    "min": 633,
+    "max": 652,
+    "frames": 90
+   },
+   "desert": {
+    "min": 392,
+    "max": 394,
+    "frames": 90
+   },
+   "hamalayi": {
+    "min": 158,
+    "max": 160,
+    "frames": 90
+   }
+  }
+ },
+ "zeelichArrivalViewHigh": {
+  "how": "PERF-ARRIVAL/areawho.mjs",
+  "before": {
+   "calls": 649,
+   "shadow": 49,
+   "spriteCalls": 152
+  },
+  "after": {
+   "calls": 498,
+   "shadow": 49,
+   "spriteBatchCalls": 1
+  }
+ },
+ "boot": [
+  {
+   "url": "http://localhost:8178/",
+   "quality": "medium",
+   "bootS": 122.341,
+   "buildMs": 43858,
+   "shadersMs": 75006,
+   "prep": null,
+   "programs": 86,
+   "zeelich": 13966,
+   "world": 19706,
+   "islands": 4438,
+   "load": [
+    10.8,
+    11.8
+   ],
+   "errors": 0
+  },
+  {
+   "url": "http://localhost:8177/",
+   "quality": "medium",
+   "bootS": 83.41,
+   "buildMs": 18175,
+   "shadersMs": 62553,
+   "prep": {
+    "paint": 101,
+    "programs": 178,
+    "textures": 32670,
+    "geometry": 2726,
+    "paint2": 4,
+    "batches": 427,
+    "shadowPrograms": 8539,
+    "firstFrame": 17908
+   },
+   "programs": 93,
+   "zeelich": 709,
+   "world": 5423,
+   "islands": 4615,
+   "load": [
+    11.7,
+    12.6
+   ],
+   "errors": 0
+  },
+  {
+   "url": "http://localhost:8178/",
+   "quality": "medium",
+   "bootS": 102.512,
+   "buildMs": 31682,
+   "shadersMs": 68036,
+   "prep": null,
+   "programs": 86,
+   "zeelich": 10422,
+   "world": 8656,
+   "islands": 4573,
+   "load": [
+    12.9,
+    12.9
+   ],
+   "errors": 0
+  },
+  {
+   "url": "http://localhost:8177/",
+   "quality": "medium",
+   "bootS": 92.758,
+   "buildMs": 20307,
+   "shadersMs": 68920,
+   "prep": {
+    "paint": 80,
+    "programs": 222,
+    "textures": 36146,
+    "geometry": 3625,
+    "paint2": 4,
+    "batches": 246,
+    "shadowPrograms": 7586,
+    "firstFrame": 21012
+   },
+   "programs": 93,
+   "zeelich": 776,
+   "world": 6547,
+   "islands": 5382,
+   "load": [
+    12.6,
+    13.6
+   ],
+   "errors": 0
+  }
+ ],
+ "firstUse": {
+  "before": {
+   "behaviour menu": {
+    "byAction": 0,
+    "inFramesAfter": 2
+   },
+   "inventory": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "inventory closed": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "bonus spawned (error)": "TypeError: PICK[type] is not a function",
+   "bonus spawned": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "magic ball": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "switch to high (then frames)": {
+    "byAction": 0,
+    "inFramesAfter": 45
+   },
+   "switch to low (then frames)": {
+    "byAction": 0,
+    "inFramesAfter": 26
+   },
+   "switch to medium (then frames)": {
+    "byAction": 0,
+    "inFramesAfter": 5
+   }
+  },
+  "after": {
+   "behaviour menu": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "inventory": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "inventory closed": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "bonus spawned (error)": "TypeError: PICK[type] is not a function",
+   "bonus spawned": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "magic ball": {
+    "byAction": 0,
+    "inFramesAfter": 0
+   },
+   "switch to high (then frames)": {
+    "byAction": 98,
+    "inFramesAfter": 0
+   },
+   "switch to low (then frames)": {
+    "byAction": 74,
+    "inFramesAfter": 0
+   },
+   "switch to medium (then frames)": {
+    "byAction": 1,
+    "inFramesAfter": 0
+   }
+  }
+ }
+}
