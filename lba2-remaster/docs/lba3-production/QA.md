@@ -1235,7 +1235,10 @@ already serving another tree):
 - Captures: save-screen.png (the Save list after saving slot 3), load-screen.png (the Load list on the title), both
   960x540 from tests/saveslots.mjs; load-screen-640x360.png and load-screen-1366x768.png (saves put in storage: the
   list fits both windows without scrolling; at 640x360 a slot takes two lines). Logs: logs/saveslots.log,
-  logs/suite-summary.txt (every run above, and the base build's).
+  logs/suite-summary.txt (every run above, and the base build's). display.mjs (not in the list, run because the
+  pause menu gained a row): PASS, the pause menu and settings fit at all six sizes.
+- Known: on the title at 640x360 the menu (now one row longer) still fits (bottom at 347 of 360) but the disclaimer
+  under it now needs a 43 px scroll; 800x600 and up: no scroll.
 - Not verified: a real GPU (the picture's cost and look there; the main-thread step is measured here only under
   SwiftShader), the desktop app (the worker is made from a blob: URL; if the app refuses it, slots simply have no
   picture), a pad and touch by hand (the pad's B was simulated), Hebrew layout (the language is fixed to English),
