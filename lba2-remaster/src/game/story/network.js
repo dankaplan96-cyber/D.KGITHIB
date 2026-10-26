@@ -47,22 +47,22 @@ export class Network extends ChapterBase {
   // ---------------------------------------------------------------- props: gliders at the landings, relays
   decorate() {
     const g = this.game, Z = this.Z, D = this.D, M = this.M;
-    this.gliders = []; this.relays = {};
+    this.gliders ??= []; this.relays ??= {};
     const put = (obj, parent, x, y, z, ry) => { obj.position.set(x - parent.position.x, y - parent.position.y, z - parent.position.z); obj.rotation.y = ry; obj.visible = false; parent.add(obj); return obj; };
     const gy = (x, z) => g.physics.groundAt(x, z);
-    if (D?.group) { const l = this.landing('desert'); this.gliders.push(put(buildGlider(), D.group, l.x - 2, gy(l.x - 2, l.z - 7), l.z - 7, -Math.PI / 2)); }
-    if (g.world?.root) { const l = CITADEL_LANDING; this.gliders.push(put(buildGlider(), g.world.root, l.x + 5, g.world.H(l.x + 5, l.z - 3), l.z - 3, 0.6)); }
-    if (M?.group) { const l = this.landing('hamalayi'); this.gliders.push(put(buildGlider(), M.group, l.x + 6, gy(l.x + 6, l.z + 1), l.z + 1, 0.4)); }
+    if (D?.group && this.once('gl-desert')) { const l = this.landing('desert'); this.gliders.push(put(buildGlider(), D.group, l.x - 2, gy(l.x - 2, l.z - 7), l.z - 7, -Math.PI / 2)); }
+    if (g.world?.root && this.once('gl-citadel')) { const l = CITADEL_LANDING; this.gliders.push(put(buildGlider(), g.world.root, l.x + 5, g.world.H(l.x + 5, l.z - 3), l.z - 3, 0.6)); }
+    if (M?.group && this.once('gl-hamalayi')) { const l = this.landing('hamalayi'); this.gliders.push(put(buildGlider(), M.group, l.x + 6, gy(l.x + 6, l.z + 1), l.z + 1, 0.4)); }
     // relays: one at each station
     const mt = Z?.millTop;
-    if (mt) this.relays.mill = put(buildRelay(), Z.group, mt.x + 0.5, mt.y - 0.05, mt.z + 0.3, 0);
+    if (mt && !this.relays.mill) this.relays.mill = put(buildRelay(), Z.group, mt.x + 0.5, mt.y - 0.05, mt.z + 0.3, 0);
     const V = this.R.valves;
-    if (V) this.relays.valves = put(buildRelay(), V.group, V.board.x + 2.8, 0, V.board.z - 0.5, 0);
+    if (V && !this.relays.valves) this.relays.valves = put(buildRelay(), V.group, V.board.x + 2.8, 0, V.board.z - 0.5, 0);
     const L = this.R.lighttop;
-    if (L?.npcSpots?.zoe) { const s = L.npcSpots.zoe; this.relays.light = put(buildRelay(), L.group, s.x + (L.group.position.x - s.x) * 0.25, 0, s.z + (L.group.position.z - s.z) * 0.25, 0); }
-    if (D?.bore) this.relays.bore = put(buildRelay(), D.group, D.bore.x + 1.4, (D.bore.y ?? gy(D.bore.x, D.bore.z)), D.bore.z - 1.2, 0);
+    if (L?.npcSpots?.zoe && !this.relays.light) { const s = L.npcSpots.zoe; this.relays.light = put(buildRelay(), L.group, s.x + (L.group.position.x - s.x) * 0.25, 0, s.z + (L.group.position.z - s.z) * 0.25, 0); }
+    if (D?.bore && !this.relays.bore) this.relays.bore = put(buildRelay(), D.group, D.bore.x + 1.4, (D.bore.y ?? gy(D.bore.x, D.bore.z)), D.bore.z - 1.2, 0);
     const O = this.R.obsv;
-    if (O?.telescope) this.relays.dome = put(buildRelay(), O.group, O.telescope.x - 1.3, 0, O.telescope.z - 0.4, 0);
+    if (O?.telescope && !this.relays.dome) this.relays.dome = put(buildRelay(), O.group, O.telescope.x - 1.3, 0, O.telescope.z - 0.4, 0);
   }
 
   // ---------------------------------------------------------------- cast
@@ -89,8 +89,14 @@ export class Network extends ChapterBase {
     return out;
   }
   place(id) {
-    const f = this.f, R = this.R, Z = this.Z, D = this.D;
-    if (!this.reached() || !Z) return undefined;
+    const f = this.f, R = this.R;
+    if (!this.reached()) return undefined;
+    if (id === 'vesk' || id === 'doran') return null;
+    if (!['baldino', 'hesk', 'oku', 'mira', 'zoe', 'arthur', 'ilka', 'dallan', 'pim'].includes(id)) return undefined;
+    // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
+    //  yet waits for it, Story.refreshCast)
+    const Z = this.Z, D = id === 'ilka' || id === 'dallan' ? this.D : null;
+    if (!Z) return undefined;
     const plat = Z.platform;
     switch (id) {
       case 'baldino':
@@ -127,18 +133,18 @@ export class Network extends ChapterBase {
   doors() {
     if (!this.isCur()) return [];
     const out = [];
-    const Z = this.Z, M = this.M;
-    out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
+    const RG = this.game.regions, Z = RG.built('zeelich'), M = RG.built('hamalayi');   // (doors in an area: once it is built)
+    if (Z) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
     out.push(...this.story.townDoors());
-    if (this.R.lighttop) out.push({ x: LIGHTHOUSE_DOOR.x, z: LIGHTHOUSE_DOOR.z, r: 1.0, room: 'lighttop' });
-    if (M?.observatory && this.R.obsv) out.push({ region: 'hamalayi', x: M.observatory.door.x, z: M.observatory.door.z, r: 1.0, room: 'obsv' });
+    if (RG.has('lighttop')) out.push({ x: LIGHTHOUSE_DOOR.x, z: LIGHTHOUSE_DOOR.z, r: 1.0, room: 'lighttop' });
+    if (M?.observatory && RG.has('obsv')) out.push({ region: 'hamalayi', x: M.observatory.door.x, z: M.observatory.door.z, r: 1.0, room: 'obsv' });
     return out;
   }
   exitTo(to) {
     const R = this.R;
     if (!this.isCur()) return null;
     if (to === 'outdoor-lighthouse') return { x: LIGHTHOUSE_DOOR.x, z: LIGHTHOUSE_DOOR.z + 2.2, a: 0 };
-    if (to === 'valves-out') return { room: 'office', ...R.office.spawn };
+    if (to === 'valves-out') return { room: 'office', ...R.office.spawn };   // (R: the rooms, read only here)
     return null;
   }
   canExit(room) {
@@ -338,7 +344,7 @@ export class Network extends ChapterBase {
       this.chain([['narrator', 'c10_shaft'], ['baldino', 'c10_bal_p3'], ['hero', 'c10_tw_p2']], () => {
         g.audio.endCue?.(); this.sending = false;
         f.c10_done = true; g.save(false);
-        g.startTransition(() => this.story.nextChapter());
+        g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
       });
     });
   }
@@ -361,16 +367,26 @@ export class Network extends ChapterBase {
       f.c10_mitesSeen = true; this.chain([['hero', 'c10_mites']]);
     }
   }
+  // the gliders and relays as the flags have them (again after an area's build brings new ones: regionBuilt)
+  showProps() {
+    const f = this.f, on = this.isCur();
+    for (const gl of this.gliders || []) gl.visible = on;
+    for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && (!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); r.userData.setOn?.(!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); }
+  }
+  regionBuilt() { this.showProps(); }
   applyFlags() {
     const f = this.f, on = this.isCur();
     // the pulse tool is Twinsen's from here on (older saves past this chapter get it too)
     if (f.c10_pulse || this.story.index > this.pos) this.game.hero.hasPulse = true;
-    for (const gl of this.gliders || []) gl.visible = on;
-    for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && (!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); r.userData.setOn?.(!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); }
-    if (!on || !this.Z) return;
-    // the mills turn again (chapter 9), the north one held still for the climb
-    for (const m of this.Z.mills) m.setSpinning(!(m === this.Z.mills[0] && f.c10_millBraked && !f.c10_mill));
-    this.Z.ferry?.setVisible?.(false);
+    this.showProps();
+    if (!on) return;
+    // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
+    //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
+    this.game.regions.whenBuilt('zeelich', (Z) => {
+      // the mills turn again (chapter 9), the north one held still for the climb
+      for (const m of Z.mills) m.setSpinning(!(m === Z.mills[0] && f.c10_millBraked && !f.c10_mill));
+      Z.ferry?.setVisible?.(false);
+    });
     if (f.c10_bore === 'pending') f.c10_bore = false;
     this.setupRoom();
   }

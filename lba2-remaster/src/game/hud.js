@@ -281,7 +281,7 @@ export class HUD {
     document.querySelector('#chapter').classList.remove('show');
   }
 
-  toast(key, vars) {
+  toast(key, vars, ms = 2300) {
     const msg = t(key, vars);
     // the same words already up (a repeated action), or the goal the objective panel shows: not again
     const up = [...this.toastEl.children].find((e) => e.textContent === msg && !e.classList.contains('out'));
@@ -292,8 +292,8 @@ export class HUD {
     this.toastEl.appendChild(d);
     (this.toastLog ||= []).push(msg); if (this.toastLog.length > 12) this.toastLog.shift();   // (recent toasts, for tests: they fade after 2.8 s of real time)
     while (this.toastEl.children.length > 3) this.toastEl.firstChild.remove();
-    setTimeout(() => d.classList.add('out'), 2300);
-    setTimeout(() => d.remove(), 2800);
+    setTimeout(() => d.classList.add('out'), ms);
+    setTimeout(() => d.remove(), ms + 500);
   }
 
   hurt() {
@@ -813,7 +813,7 @@ export class HUD {
     }
     // the places
     for (const id of PLANETS[planet]) {
-      const p = at(id); if (!p || !g.rooms[id] && id !== 'citadel') continue;
+      const p = at(id); if (!p || !g.regions.has(id) && id !== 'citadel') continue;
       ctx.fillStyle = id === region ? '#fff' : '#cfeeff'; ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(p[0], p[1], id === region ? 4.5 : 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
       if (id === region) { ctx.strokeStyle = '#7ff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p[0], p[1], 7 + Math.sin(time * 5) * 2, 0, Math.PI * 2); ctx.stroke(); }

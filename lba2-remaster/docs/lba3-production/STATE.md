@@ -482,6 +482,45 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   caught-sneaking FAIL); prologue 3 of 5 (the known well-mite step; base 1 of 2). Not verified: a real GPU, the
   desktop app (the picture's worker), pad/touch by hand, an independent review.
 
+## Done after (MUSIC-2, WORKLIST #20; status REVIEW; needs the user's ears)
+- The long-stay places play a playlist instead of one looping track (src/engine/music.js PLAYLISTS): town
+  village ↔ Market Day, the open island island ↔ Sea Wind, Zeelich zeelich ↔ Cloud Gardens, the Desert Sea Wind ↔
+  island, the Hamalayi the well alone. Each piece once to its end; outdoors a 20–60 s silence, indoors the next piece
+  at once; arrivals at a random phrase start; a change of place crossfades from the old track's next bar line. Combat
+  and cues unchanged. The same music now returns after 6–7 min outdoors (was 2:06–2:13).
+- Three new pieces (tools/music/tracks/{village_b,island_b,zeelich_b}.py; 2:47–3:00; +7.3 MB), rendered with
+  MuseScore_General_HQ from Ubuntu's archive (the osuosl download fails TLS here; see docs/MUSIC.md "Sources").
+- Ducking: `AudioEngine.duck` was defined twice; VOICE-MIX's 0.5 never applied (0.55 was). Fixed: 0.5.
+- Evidence: docs/MUSIC.md "MUSIC-2", QA.md "MUSIC-2", tests/music.mjs, excerpts docs/lba3-production/reviews/MUSIC-2/.
+- To rebuild the new pieces: `apt-get download musescore-general-soundfont-lossless`, `dpkg-deb -x`, then
+  `MUSIC_SF2=<…>/MuseScore_General_Full.sf2 tools/music/.venv/bin/python tools/music/build.py village_b island_b zeelich_b`.
+## Done after (VALVE-STUCK; status REVIEW; harness only, no game code)
+- Segment 04 stopped at the depot step. Cause: in the harness's `P.fight`, a throw aimed by the game at a different
+  enemy than the one faced was never counted as a miss. Both enemies were behind the depot's fence, so the bot threw
+  into the fence forever. A player was not stuck. Fixed in tests/lib/player.js.
+- Evidence: QA.md "VALVE-STUCK", docs/lba3-production/reviews/VALVE-STUCK/. Segments 01–06 PASS in one chain;
+  combat, containers, chapter2, chapter3, stability and worldfit PASS. Segments 07–14 not re-run here.
+
+## Done after (LAZY-REGIONS + AUTO-FIT; status REVIEW; the user's two computers NOT VERIFIED)
+- Startup builds Citadel (21 labelled steps with a paint between: world.js buildWorldSteps), the house, the well and the
+  newest save's room and chapter areas; every other area (33 groups: interiors one by one, Zeelich, the underground,
+  Desert Island, the Hamalayi, each island…) is built the first time it is needed — a door, an exit, travel, a chapter's
+  start, a load, the benchmark — behind the black under a loading card ("Arriving at Zeelich…"), warmed there, and kept
+  (src/game/regions.js; `game.rooms` builds on access as a safety net, recorded; `?allregions` builds all at startup).
+- Story, travel, cast, containers, crystals, refill keys, doors and exits take their part of an area when it is built
+  (decorations made once, NPCs placed from `pending`, the cast placement probed, a load's flags applied per area).
+- The bake was stale since WORLD-FIX (the trees re-sculpted on every start): re-baked; tools/bake.mjs builds every area.
+- AUTO-FIT: on an integrated GPU with devicePixelRatio > 1, Medium 1.0 and High 1.25 (MSAA 2×); one suggestion per
+  preset when play stays under ~50 fps with the automatic resolution at its lowest (src/engine/autofit.js); the first-
+  start pick and the player's choices kept. The benchmark's startup line lists the areas built at startup and since.
+- Measured here (SwiftShader, interleaved): page load → title 46–48 → 24–25 s, build 10.7–10.9 → 4.0 s, shader
+  preparation 34–36 → 19 s, JS heap after GC 128 → 60 MB (122 MB with every area built); first entry 0.2–0.9 s per area.
+- Tests (one at a time): the listed set and playthrough 01–06 (one chain) PASS; first-run FAILs, each fixed or a known
+  flake and passed on rerun: prologue (the well's mites), chapter4 (the cold-disc check made relative; the base failed
+  it too), chapter8, timing, lazyregions (QA.md).
+- Evidence: docs/lba3-performance/LAZY_REGIONS.md, results/lazy-regions.json, QA.md "LAZY-REGIONS + AUTO-FIT".
+  Needs: the Intel UHD's and the Vega laptop's benchmark and startup (LAZY_REGIONS.md §8).
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

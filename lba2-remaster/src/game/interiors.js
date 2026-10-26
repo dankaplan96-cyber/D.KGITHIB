@@ -1655,6 +1655,8 @@ function buildLightTop(scene, physics) {
   return B.finish();
 }
 
+// LAZY-REGIONS: each interior on its own, built the first time it is needed (src/game/regions.js)
+export const INTERIOR_BUILDERS = { house: buildHouse, well: buildWell, office: buildOffice, projoffice: buildProjOffice, control: buildControl, workshop: buildWorkshop, lighttop: buildLightTop, cellar: buildCellar };
 export function buildInteriors(scene, physics) {
   const rooms = {
     house: buildHouse(scene, physics), well: buildWell(scene, physics),

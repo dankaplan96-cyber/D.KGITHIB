@@ -383,6 +383,11 @@ body.desktop .desktop-only { display: block !important; }
 #loading.art #load-art { opacity: 1; }
 #loading.art #load-title, #loading.art #load-bar, #loading.art #load-by { opacity: 1; }
 #loading.art #loading-step { opacity: 0.75; }
+/* LAZY-REGIONS: the same screen as the loading card of a scene change into an area built on its first visit, over
+   the black fade; it appears only if the build takes a moment (a short build shows nothing but the black) */
+#loading.arrive { z-index: 30; animation: arriveIn 0.35s 0.25s both; }
+#loading.arrive.now { animation-delay: 0s; }
+@keyframes arriveIn { from { opacity: 0; } to { opacity: 1; } }
 #mea { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; background: radial-gradient(120% 90% at 50% 45%, #16101f 0%, #07060c 70%); transition: opacity 0.7s ease; }
 #loading.art #mea { opacity: 0; pointer-events: none; }
 #mea .logo { width: min(70vw, 380px); }

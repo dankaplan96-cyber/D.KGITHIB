@@ -11,8 +11,8 @@ const { browser, context, page, errs } = await launch();
 const ev = (f, a) => page.evaluate(f, a);
 await open(page, '?nocine'); await menu(page, 'new');
 
-// every island is built
-const isles = await ev(() => Object.values(game.rooms).filter((R) => R.isle).map((R) => ({ id: R.id, objects: R.objects, sample: R.sample.length, walk: Math.round(R.walk), spawnLand: R.land(R.spawn.x, R.spawn.z) })));
+// every island is built (LAZY-REGIONS: on first need; here all of them, through the game's own path)
+const isles = await ev(() => game.regions.ensureAll('test') || Object.values(game.rooms).filter((R) => R.isle).map((R) => ({ id: R.id, objects: R.objects, sample: R.sample.length, walk: Math.round(R.walk), spawnLand: R.land(R.spawn.x, R.spawn.z) })));
 check('all eleven Zeelich places are built (the original\'s 7 + the Lift Dock + our 3), each with a walkable area (≥ 100 m²) and its spawn on land', isles.length === 11 && isles.every((i) => i.sample >= 1 && i.walk >= 100 && i.spawnLand), isles);
 
 // before chapter 4 the shuttle offers nothing (ISO: put on Zeelich in the prologue)

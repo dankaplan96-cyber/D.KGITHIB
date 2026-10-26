@@ -130,6 +130,7 @@ and fights its way through with keys only.
 ### Audio (state only: nothing here was listened to)
 | Feature | Test | Result |
 |---|---|---|
+| Playlists in the long-stay places, silences outdoors only, phrase starts, bar-line crossfades, ducking to 0.5 (MUSIC-2) | music.mjs | PASS |
 | Volumes from the sliders reach the buses, kept after relaunch | audio.mjs | PASS |
 | Music per place; one voice playing, ≤2 alive (fading) after each door | audio.mjs, longsession.mjs | PASS |
 | Voices (gibberish babble) timed to text; distinct, under a level ceiling, no clicks, silent after skip/close/pause (VOICE-1) | voices.mjs | PASS |
@@ -1263,7 +1264,94 @@ already serving another tree):
   picture), a pad and touch by hand (the pad's B was simulated), Hebrew layout (the language is fixed to English),
   a real full disk (the quota error was simulated by replacing Storage.setItem), an independent review.
 
+### MUSIC-2: playlists, silences outdoors, three new pieces (WORKLIST #20; docs/MUSIC.md "MUSIC-2")
+
+Measured, not listened to. Evidence: tests/music.mjs, `tools/music/check.py` (MP3-only mode), excerpts in
+docs/lba3-production/reviews/MUSIC-2/.
+
+| Check | How | Result |
+|---|---|---|
+| Where the repetition came from | music.js + manifest before the change | one looping track per place, repeating every 126–133 s outdoors, always from bar 1 of the intro, no silence |
+| Loop seams of the shipped MP3s | `check.py` (masters git-ignored: MP3-only seam test) | seam error −26…−50 dB re. signal, click ratio 0.10–0.63 (< 1): no seam fix needed |
+| Playlist rotates (town: village → Market Day → village) | music.mjs, real audio clock, silences shortened to 8 s | PASS |
+| Outdoors: a silence after a piece, the next piece from its first bar | music.mjs | PASS |
+| A fight during a silence brings the combat music; after it the silence goes on | music.mjs (setCombat held at 1, then 0) | PASS |
+| Indoors (a Zeelich interior on the playlist): no silence, the next piece follows | music.mjs | PASS |
+| Arrival at a phrase start (bar 1 or the first bar of an 8-bar phrase), different between visits | music.mjs (8 draws: ≥ 3 different) | PASS |
+| End of a piece scheduled at its own end | music.mjs (endsIn = end − position) | PASS |
+| A change of place: equal-power crossfade, started on the old track's bar line (≤ 3.2 s wait) | music.mjs (gains sampled every 100 ms; sum of squares 0.95–1.14; old track 0.001 s from a bar line) | PASS |
+| Dialogue ducks the music to 0.5 and back to 1; music bus = slider; voice bus = slider × 2.2 | music.mjs | PASS (was 0.55: `AudioEngine.duck` was defined twice, the later one won) |
+| Every manifest track is a shipped file; every playlist piece is in the manifest | music.mjs, shipfiles.mjs | PASS |
+| New pieces: loudness / true peak / LRA | check.py | Market Day −17.4 LUFS, −2.6 dBTP, 11.0 LU; Sea Wind −17.9, −5.4, 6.4; Cloud Gardens −17.9, −4.4, 7.3 |
+| How it sounds (tunes, balance, the HQ soundfont next to older renders, silence length in play) | — | NOT TESTED (needs ears) |
+
+**Tests** (one at a time, R7 policy, `GAME_URL=http://localhost:8180/`, SwiftShader on a shared machine, load ~15,
+2026-10-26, on commit a36fa83): audio, music, voices, menus, opening, stability, shipfiles, longsession — all VERDICT
+PASS, no error, no missing file (logs and check.py before/after: docs/lba3-production/reviews/MUSIC-2/logs/).
+### VALVE-STUCK: segment 04 stuck outside the depot fence (evidence docs/lba3-production/reviews/VALVE-STUCK/)
+- Repro (base 6ad111c, also b9de5a7): chain 01 → 03, then 04. After the orchard valve Twinsen stands at (−71.8, 13.9,
+  −56.7), just north of the depot's north chain-link fence (z −62). drone1 and gdog1 chase him from inside and stop
+  against the fence at (−73.0, −62.6), 6 m away. Their bolts and lunges never reach him (10/10 HP throughout).
+- Cause (the test harness, not the game): the fence collider is `seeThrough`, so the aim's line of sight passes and
+  the aim assist picks the dog, but `solidAt` stops the ball, so every throw hits the fence. `P.fight` only counted a
+  wasted throw when the game aimed at the enemy the bot was facing. Facing drone1 with the throw aimed at gdog1
+  counted nothing, so the fight ran to its 40 s limit eight times and `go` never took a step (probe1.log).
+- Player: not stuck. Nothing blocks his movement, and the walk round to the east gate (x −65) plans fine. A player
+  stops throwing and walks to the gate.
+- Fix (tests/lib/player.js `P.fight`): a throw that hits nothing, neither the faced enemy nor the one the game aimed
+  at, counts as a miss for both. After six, both are left for 25 s, as before. The bot now walks to the east gate
+  and fights the guard, both drones and the dog inside. It uses the valve with a clover spent (probe2.log, 04.log).
+  No check changed.
+- Results (one chain from a new game, port 8197): segments 01–06 PASS (06: its declared ISO assist in the Zeelich
+  depot fight, as before). combat 61/61, containers 41/41, chapter2 18/18, chapter3 25/25, stability 16/16,
+  worldfit 1/1 + 8/8 visual: all VERDICT PASS.
+- Seen, not changed: `P.use`'s "step closer" loop treats a story prompt with no position (a valve, a console) as
+  the wrong target. It walks into the thing's collider until the stuck-replan gives up, three times: about 85 s
+  extra at the depot valve, the Whispering Cliffs valve and the platform shield in 06. Slow, not failing.
+- Game note (not a blocker): the aim marker can sit on an enemy behind a chain-link fence that the ball cannot pass.
+
+### LAZY-REGIONS + AUTO-FIT: areas built on first entry; resolution that fits the machine (docs/lba3-performance/LAZY_REGIONS.md)
+
+Base f09ce7e (served from a git archive on port 8185 for A/B); candidate this branch on port 8184; SwiftShader,
+quiet machine, tests one at a time. `REGIONS_LOG=1` prints every area built "on access" (read by code, not built by
+a planned path) with where it was read; the count per test is in the table.
+
+| Check | How | Result |
+|---|---|---|
+| Startup, page load → title | boot.mjs, 2 interleaved boots each | 46.5–48.4 s → 24.0–24.7 s; build 10.7–10.9 → 4.0 s (Citadel 3.35 s); shader preparation 34.3–35.8 → 18.6–19.1 s; programs at the title 93 → 74 |
+| The bar never still for long | boot.mjs timeline; ×6 CPU throttle | longest build step 2.6 s under throttle (SwiftShader's GPU waits in the preparation run longer here: the bar creeps through them) |
+| First entry per area (build ms behind the black / programs compiled) | arrive.mjs, real frame loop, Medium | Zeelich 806 / 9, Desert Island 852 / 3, the Hamalayi 927 / 1, Otringal 873 / 0, workshop 379 / 2, upper Zeelich 663 / 0, underground 588 / 7, office 208 / 0; a second entry 0 / 0 everywhere |
+| JS heap after GC | lazyregions.mjs (CDP) | 128 MB → 60 MB at the title; 70 after Zeelich, 98 after 8 areas, 122 with every area built |
+| No program compiled while measured | perfbudget.mjs | PASS (0 on every route, every preset) |
+| Same look | look.mjs + lookdiff.py, 8 views, Medium | no object, colour or layout change; ≤ 3-level shading noise over 0–8.6 % of pixels (re-baked trees, run variation), strong pixels only in the objective label and one pickup's sparkle |
+| Auto-fit caps and suggestion | autofit.mjs (devicePixelRatio 1.475, integrated GPU reported) | PASS: Medium 1.0, High 1.25, Low ≤ 0.85; automatic resolution on by default, an explicit choice kept; one suggestion after sustained slow windows, preset unchanged; the first-start pick (Low) stays applied |
+
+| Test | Verdict | On access |
+|---|---|---|
+| lazyregions (new) | FAIL once (the card counted by a 50 ms poll missed it; now a MutationObserver), PASS on the rerun | 2 (the test's own instant room changes) |
+| autofit (new) | PASS | 0 |
+| perfbudget, drawcalls | PASS, PASS | 0, 0 |
+| stability, transitions | PASS, PASS | 1, 1 (test teleports) |
+| travel, zislands, spaceport, holomap | PASS, PASS, PASS, PASS | 3, 0, 1, 5 (test teleports and the test reading island landings; spaceport's was the dig's per-frame code: fixed, below) |
+| desert-life, zeelich-life, townlife, containers | PASS ×4 | 0, 0, 0, 3 (test teleports) |
+| saveslots, save-migration, resume, menus | PASS ×4 | 0, 0, 1, 0 |
+| opening | PASS | 0 |
+| prologue | FAIL once at the well's mites (the known flaky step, see SAVE-SLOTS), PASS on the rerun | 0 |
+| chapter1–3, 5–7, 9, 10 | PASS | 0 |
+| chapter4 | FAIL in 4 of 5 runs at "a cold disc: a thud, and every open disc grinds shut"; the base failed it in 1 of 4 (a stray cold hit during the warm-disc throw). The check now compares cold hits before and after the throw (the speech the first time, the "Cold disc" toast after); PASS on the rerun | 0 |
+| chapter8 | FAIL (Zoé waited for Zeelich: chapter 2's placement read Zeelich before her case) → FIXED, PASS | 0 |
+| display, dynres, longsession, shipfiles | PASS ×4 | 0 |
+| timing | FAIL (expected per-area load times at startup) → test updated, PASS | 1 |
+| playthrough 01–06, one KEEP/LOAD chain from a new game, port 8184 | 01 PASS, 02 PASS, 03 PASS, 04 PASS, 05 PASS, 06 PASS (its declared ISO assist in the Zeelich depot fight, as before; Zeelich built by the planned path) | 0 in every segment |
+
+Found by the on-access log after the full run: chapters 4–7's per-frame code read their area every frame (in play the
+chapter's start builds it first; `spaceport` sets the chapter by flags). Now read only once built.
+The same for the current chapter's things-to-use list and its action handler (chapter 2, the dig, the steam, the pass).
+After both fixes: spaceport PASS with 0 on access (was 1), chapter2, chapter4, chapter5, chapter6 PASS (0 on access);
+chapter7 and chapter8 PASS after the first of the two.
+
 ### Not tested / blocked
+- LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).
 - PERF-ARRIVAL on the user's laptop (High arrival and street fps, startup, compiles per route = 0): NOT VERIFIED.
 - Arthur at twelve (ARTHUR-12) on a real GPU and by the user's eye: NOT DONE (SwiftShader captures only); no
   independent visual review yet.

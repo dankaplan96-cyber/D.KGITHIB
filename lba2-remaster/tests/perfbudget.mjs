@@ -23,6 +23,8 @@ const budget = process.env.PERF_BUDGET !== '0';
 const start = await ev(() => ({ load: game.loadTimes, programs: game.renderer.renderer.info.programs?.length ?? 0, gpu: game.perf.gpu }));
 console.log('startup', JSON.stringify(start), 'page boot', bootS, 's');
 await ev(() => { document.querySelector('[data-act="new"]').click(); game.testFreeze = true; game.step(0.3); game.setState('play'); });
+// (LAZY-REGIONS: the routes' areas are built first, as the in-game benchmark does: src/engine/bench.js prepareAreas)
+await ev(() => game.bench.prepareAreas());
 
 const out = { start, bootS, routes: {} };
 // (runs split by quality add to the same file; written after every route, so a crashed browser loses little)

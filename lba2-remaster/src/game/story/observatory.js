@@ -16,8 +16,8 @@ export class Observatory extends ChapterBase {
   heavy() { return this.game.enemies.find((e) => e.def?.id === 'heavydrone'); }
 
   npcDefs() {
-    const k = this.O?.npcSpots?.keeper || { x: 0, z: 0, a: 0 };
-    return [{ id: 'keeper', name: 'n_keeper', char: 'keeper', color: '#b0c8ff', x: k.x, z: k.z, angle: k.a }];
+    const k = this.O?.npcSpots?.keeper || { x: 0, z: 0, a: 0, pending: true };
+    return [{ id: 'keeper', name: 'n_keeper', char: 'keeper', color: '#b0c8ff', x: k.x, z: k.z, angle: k.a, ...(k.pending ? { pending: true } : {}) }];
   }
   enemyDefs() {
     const M = this.M;
@@ -26,8 +26,12 @@ export class Observatory extends ChapterBase {
     return [{ id: 'heavydrone', kind: 'drone', group: 'vent', hp: 8, x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !!f.c7_scope && !f.c7_droneDown }];
   }
   place(id) {
-    const f = this.f, M = this.M;
+    const f = this.f;
     if (!this.reached()) return id === 'keeper' ? null : undefined;
+    if (id !== 'keeper' && id !== 'hesk') return undefined;
+    // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
+    //  yet waits for it, Story.refreshCast)
+    const M = this.M;
     if (!M) return undefined;
     switch (id) {
       case 'keeper': return this.O.npcSpots.keeper;
@@ -42,11 +46,11 @@ export class Observatory extends ChapterBase {
     this.chain([['narrator', 'c7_narr'], ['yorna', 'c7_yorna_1']], () => { this.f.c7_started = true; g.updateObjective(); g.save(false); });
   }
   doors() {
-    const M = this.M;
+    const M = this.game.regions.built('hamalayi');   // (a door in the Hamalayi: once it is built)
     return this.isCur() && M ? [{ region: 'hamalayi', x: M.observatory.door.x, z: M.observatory.door.z, r: 1.0, room: 'obsv' }] : [];
   }
   exitTo(to) {
-    const M = this.M;
+    const M = to === 'obs-out' ? this.M : null;
     if (to === 'obs-out') return { room: 'hamalayi', x: M.observatory.door.x, z: M.observatory.door.z + 2.2, a: 0 };
     return null;
   }
@@ -118,10 +122,10 @@ export class Observatory extends ChapterBase {
     const g = this.game, f = this.f;
     if (f.c7_done) return;
     f.c7_done = true;
-    this.chain([['hesk', 'c6_hesk_1']], () => { g.save(false); g.startTransition(() => this.story.nextChapter()); });
+    this.chain([['hesk', 'c6_hesk_1']], () => { g.save(false); g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); });
   }
   update() {
-    const g = this.game, f = this.f, M = this.M, h = g.hero;
+    const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !M) return;
     M.snow.focus = h.pos;
     // the heavy drone: bigger, and its fall is the cue
@@ -137,13 +141,19 @@ export class Observatory extends ChapterBase {
     if (f.c7_vent && !f.c7_done && g.state === 'play' && this.room() === 'hamalayi' && Math.hypot(h.pos.x - M.monastery.gate.x, h.pos.z - M.monastery.gate.z) < 4) this.leave();
   }
   applyFlags() {
-    const f = this.f, O = this.O, M = this.M;
-    if (!this.reached() || !O || !M) return;
-    for (const m of O.mirrors) if (f.c7_mirrors?.[m.i]) m.setType(f.c7_mirrors[m.i]);
-    O.trace();
-    if (f.c7_lit) this.lightCrystal(true);
-    if (f.c7_scope) M.vent.melt(true);
-    if (f.c7_vent) M.vent.setOpen(true);
+    const f = this.f, RG = this.game.regions;
+    if (!this.reached()) return;
+    // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
+    //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
+    RG.whenBuilt('obsv', (O) => {
+      for (const m of O.mirrors) if (f.c7_mirrors?.[m.i]) m.setType(f.c7_mirrors[m.i]);
+      O.trace();
+      if (f.c7_lit) this.lightCrystal(true);
+    });
+    RG.whenBuilt('hamalayi', (M) => {
+      if (f.c7_scope) M.vent.melt(true);
+      if (f.c7_vent) M.vent.setOpen(true);
+    });
   }
   objective() {
     const f = this.f, r = this.room();

@@ -188,3 +188,20 @@ frame with north (−z) up; Desert Island's is the original's own turn, ours bei
 - The bar at the bottom left is 50 m.
 
 Files: citadel, desert, otringal, knartas, mosquibee, celebration, undergas, cxislet, platform, liftdock.
+
+
+## The user's decisions (26.10.2026)
+- **Hamalayi:** stays our own, larger region by design, but with a few places clearly recognisable from LBA1's Hamalayi ledges. Its 80% target does not apply. Instead, pick 3–4 LBA1 spots by their numbers (tools/worldscore/ref/hamalayi-lba1.json) and rebuild them in our style inside our layout.
+- **The School of Magic (the user, with a reference frame from a Let's Play, kept in the scratchpad only):** leaving the village, turn right and it is there.
+  - **How it looks:** a squat stone block with a crenellated roof and a Moorish arched doorway (blue tiled surround, orange edge). It stands on a paved stone plaza with a palm, low tiled walls and a wooden signpost, by sand and cliffs.
+  - **Two candidates in the numbers:**
+    - the north-west hall and high front at (−67.8, −61.7) and (−69.1, −72.7), about 37 m west of the village, with no door zone;
+    - the building with three doors into one scene (24) at (80–87, 47–52).
+  - **Settled by a second reference (26.10):** the School's face is a giant stone mask set in a canyon wall.
+    - Grey, with deep brows and glowing orange-red eyes, and a carved door in the chin.
+    - Beside it stand a white block or tomb and horned stone pillars, with an arched stone bridge in front.
+  - **This is candidate 1:** the "high façade" (6.7 × 3.3 m, 8.6 m tall) at (−69.1, −72.7) is the mask, and the great hall beside it (7.0 × 10.2 m, 6.7 m tall) at (−67.8, −61.7) is the arched stone block from the first reference.
+  - **The Desert batch:**
+    - moves our School of Magic there, built in our style: the mask face with its door, the hall, the pillars and the bridge;
+    - retires the invented mesa at (−70, 52);
+    - and keeps the story's School scenes working.

@@ -70,13 +70,14 @@ export function watch(page) {
   // every screenshot is a visual capture for review: listed under "visual", never judged here
   const shot = page.screenshot.bind(page);
   page.screenshot = async (o = {}) => { const r = await shot(o); report.captures.push(o.path || '(in memory)'); return r; };
+  if (process.env.REGIONS_LOG) page.on('console', (m) => { if (/^\[regions\]/.test(m.text())) console.log('REGIONS', m.text()); });   // (LAZY-REGIONS: areas built where something read them)
   if (process.env.LIVE_ERRS) { page.on('pageerror', (e) => console.log('LIVE pageerror', e.message)); page.on('console', (m) => { if (m.type() === 'error') console.log('LIVE console', m.text()); }); }
   return errs;
 }
 
-export async function launch({ width = 960, height = 540, storageState, locale } = {}) {
+export async function launch({ width = 960, height = 540, storageState, locale, scale } = {}) {
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-  const context = await browser.newContext({ viewport: { width, height }, ...(storageState ? { storageState } : {}), ...(locale ? { locale } : {}) });
+  const context = await browser.newContext({ viewport: { width, height }, ...(storageState ? { storageState } : {}), ...(locale ? { locale } : {}), ...(scale ? { deviceScaleFactor: scale } : {}) });
   const page = await context.newPage();
   const errs = watch(page);
   return { browser, context, page, errs };

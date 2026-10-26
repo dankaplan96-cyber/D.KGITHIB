@@ -66,7 +66,9 @@ await ev(() => { game.hero.clovers = 0; C.out(); });
 
 // ---------------------------------------------------------------- 1. where they stand
 const where = await ev(() => {
-  const G = game, rc = G.regionContainers || {};
+  const G = game;
+  G.regions.ensureAll('test');   // (LAZY-REGIONS: every area's containers: every area built, through the game's own path)
+  const rc = G.regionContainers || {};
   return { citadel: G.world.containers, kinds: [...new Set(G.world.givers.map((g) => g.kind).filter(Boolean))], regions: Object.fromEntries(Object.entries(rc).map(([k, v]) => [k, v.placed.length])), skipped: Object.values(rc).flatMap((v) => v.skipped) };
 });
 check('Citadel: the original\'s spots and ours by the houses, market, corners and harbour hold a container (bins, barrels, crates, suitcases, a trolley), none skipped', where.citadel.placed.length >= 18 && !where.citadel.skipped.length && ['bin', 'barrel', 'crate', 'cases', 'suitcases'].every((k) => where.kinds.includes(k)), where);

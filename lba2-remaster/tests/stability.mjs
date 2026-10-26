@@ -90,6 +90,7 @@ const d11 = await ev(() => {
   G.enterRoom('condB', { room: 'condB' }, true); G.step(0.2);
   const pos = [h.pos.x, h.pos.y, h.pos.z], sp = G.rooms.condB.spawn;
   const bare = [];
+  G.regions.ensureAll('test');   // (LAZY-REGIONS: every room's exits, so every room built)
   for (const c of G.story.chapters) for (const R of Object.values(G.rooms)) for (const e of R.exits || []) { if (!e.to) continue; let t = null; try { t = c.exitTo(e.to); } catch { /* chapter state */ } if (t && t.room && !(Number.isFinite(t.x) && Number.isFinite(t.z))) bare.push(c.key + ':' + e.to); }
   G.exitRoom({ x: -40, z: -5 }, true); G.step(0.2);
   return { pos, finite: pos.every(Number.isFinite), atSpawn: Math.hypot(pos[0] - sp.x, pos[2] - sp.z) < 0.5, bare: [...new Set(bare)] };

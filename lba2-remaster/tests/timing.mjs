@@ -116,7 +116,8 @@ const inst = await ev(() => {
 });
 const L = inst.load, S = inst.stats;
 check('perf.stats: frames, fps, sim/render split and draw calls', S.frames === 30 && Math.abs(S.fps - 30) < 0.5 && S.renderMs.p50 > 0 && S.calls > 0 && S.tris > 0, S);
-check('loadTimes: each region timed on its own', ['world', 'interiors', 'zeelich', 'underground', 'desert', 'condenser', 'hamalayi', 'upper', 'arena', 'actors', 'total'].every((k) => L[k] >= 0) && L.total >= L.world, L);
+// (LAZY-REGIONS: startup times Citadel's steps and the areas built then; the others are timed when they are built)
+check('loadTimes: Citadel, its steps and each area built at startup timed on its own; the rest listed as not built yet', ['world', 'citadel', 'house', 'well', 'actors', 'story', 'total'].every((k) => L[k] >= 0) && Object.keys(L.worldSteps || {}).length >= 10 && L.total >= L.citadel && ['zeelich', 'desert', 'hamalayi', 'underground', 'upper'].every((g) => L.regions?.deferred.includes(g)), L);
 
 // ---------------------------------------------------------------- 6. the frame-rate limit (FRAME-1)
 // Game.loop fed synthetic display refreshes (rAF timestamps) at 60 and 144 Hz, the real advance() replaced by a

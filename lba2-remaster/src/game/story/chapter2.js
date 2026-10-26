@@ -29,13 +29,13 @@ export class Chapter2 extends ChapterBase {
   // ---------------------------------------------------------------- cast
   npcDefs() {
     const S = this.Z?.npcSpots || {};
-    const at = (k) => S[k] || { x: 0, z: 0, a: 0 };
+    const at = (k) => S[k] || { x: 0, z: 0, a: 0, pending: true }, pend = (k) => (S[k] ? {} : { pending: true });
     return [
-      { id: 'baldino', name: 'n_baldino', char: 'baldino', color: '#ffd890', x: at('baldinoOut').x, z: at('baldinoOut').z, angle: at('baldinoOut').a },
-      { id: 'nara', name: 'n_nara', char: 'nara', color: '#ffc0a0', x: at('esmer1').x, z: at('esmer1').z, angle: at('esmer1').a },
-      { id: 'oku', name: 'n_oku', char: 'oku', color: '#bfe8d8', x: at('esmer2').x, z: at('esmer2').z, angle: at('esmer2').a },
+      { id: 'baldino', name: 'n_baldino', char: 'baldino', color: '#ffd890', x: at('baldinoOut').x, z: at('baldinoOut').z, angle: at('baldinoOut').a, ...pend('baldinoOut') },
+      { id: 'nara', name: 'n_nara', char: 'nara', color: '#ffc0a0', x: at('esmer1').x, z: at('esmer1').z, angle: at('esmer1').a, ...pend('esmer1') },
+      { id: 'oku', name: 'n_oku', char: 'oku', color: '#bfe8d8', x: at('esmer2').x, z: at('esmer2').z, angle: at('esmer2').a, ...pend('esmer2') },
       // street life: Mosquibees, moles and the triangle-headed townsfolk (they only chat: baseTalk's idle_<id> lines)
-      ...ZFOLK.map(([id, spot]) => ({ id, name: 'n_' + id, char: id, color: '#e8e0c0', x: at(spot).x, z: at(spot).z, angle: at(spot).a })),
+      ...ZFOLK.map(([id, spot]) => ({ id, name: 'n_' + id, char: id, color: '#e8e0c0', x: at(spot).x, z: at(spot).z, angle: at(spot).a, ...pend(spot) })),
     ];
   }
 
@@ -54,9 +54,14 @@ export class Chapter2 extends ChapterBase {
 
   // where everyone is during chapter 2 (null: not here, undefined: another chapter decides)
   place(id) {
-    const f = this.f, Z = this.Z, R = this.game.rooms;
+    const f = this.f, R = this.game.rooms;
     const folk = ZFOLK.find((z) => z[0] === id);
     if (!this.reached()) return ['baldino', 'nara', 'oku'].includes(id) || folk ? null : undefined;
+    if (!folk && !['baldino', 'nara', 'oku', 'doran', 'vesk', 'guard', 'zoe', 'worker'].includes(id)) return undefined;
+    // (LAZY-REGIONS: Zoé and the worker are placed without Zeelich; the rest stand on it)
+    if (id === 'zoe') return f.c2_zoeStart && !f.c2_broadcast ? null : undefined;
+    if (id === 'worker') return null;
+    const Z = this.Z;
     if (folk) return this.story.zlife?.spot(id) || this.Z.npcSpots[folk[1]];   // (Tavo at Snuff's counter once her oven is hot: zeelife.js)
     const S = Z.npcSpots;
     const plat = Z.platform;
@@ -103,13 +108,13 @@ export class Chapter2 extends ChapterBase {
   }
 
   doors() {
-    const Z = this.Z, out = [];
-    if (this.reached() && this.game.rooms.workshop) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
+    const Z = this.game.regions.built('zeelich'), out = [];   // (a door on Zeelich: none to find before Zeelich is built)
+    if (this.reached() && Z && this.game.regions.has('workshop')) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
     return out;
   }
   exitTo(to) {
-    const Z = this.Z;
     if (to === 'zeelich-workshop') {
+      const Z = this.Z;   // (LAZY-REGIONS: read only for this exit)
       // step out of the door toward the street
       const d = Z.workshopDoor, s = Z.street, a = Math.atan2(s.x - d.x, s.z - d.z), l = Math.hypot(s.x - d.x, s.z - d.z) || 1;
       return { room: 'zeelich', x: d.x + ((s.x - d.x) / l) * 1.7, z: d.z + ((s.z - d.z) / l) * 1.7, a };
@@ -124,7 +129,7 @@ export class Chapter2 extends ChapterBase {
 
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
-    const g = this.game, f = this.f, Z = this.Z, h = g.hero;
+    const g = this.game, f = this.f, Z = g.regions?.built('zeelich'), h = g.hero;   // (LAZY-REGIONS: read each frame: never builds)
     if (!this.reached()) return;
     if (this.inZ()) {
       const mt = Z.millTop;
@@ -146,7 +151,7 @@ export class Chapter2 extends ChapterBase {
   }
 
   interact(it) {
-    const g = this.game, f = this.f, h = g.hero, Z = this.Z;
+    const g = this.game, f = this.f, h = g.hero, Z = g.regions?.built('zeelich');   // (LAZY-REGIONS: its things exist only once built)
     switch (it.kind) {
       case 'c2cog':
         if (f.c2_planTaken && !f.c2_okuOK) { this.chain([['hero', 'c2_cog_ask']]); return true; }
@@ -274,7 +279,7 @@ export class Chapter2 extends ChapterBase {
   // ---------------------------------------------------------------- Zoe at the lighthouse (Citadel)
   startZoe() {
     const g = this.game, f = this.f, h = g.hero;
-    if (!g.rooms.lighttop) { f.c2_zoeStart = true; f.c2_broadcast = true; g.updateObjective(); return; } // room not in this build
+    if (!g.regions.has('lighttop')) { f.c2_zoeStart = true; f.c2_broadcast = true; g.updateObjective(); return; } // room not in this build
     f.c2_zoeStart = true;
     this.saved = { behaviour: h.behaviour, hasBall: h.hasBall };
     this.story.refreshCast();
@@ -304,7 +309,7 @@ export class Chapter2 extends ChapterBase {
       h.behaviour = this.saved?.behaviour || 'normal';
       g.hud.behaviour(h.behaviour);
       this.story.refreshCast();
-      if (g.rooms.workshop) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
+      if (g.regions.has('workshop')) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
       g.updateObjective();
       g.save(false);
     });
@@ -356,7 +361,7 @@ export class Chapter2 extends ChapterBase {
   // (chapter 4, Desert Island): Doran flies him home to Citadel Spaceport and takes the ferry south from there. A save from the old end-of-demo screen gets here again from the lift.
   toShell() {
     const g = this.game, f = this.f;
-    if (f.c2_done) { g.startTransition(() => this.story.nextChapter()); return; }
+    if (f.c2_done) { g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); return; }
     g.audio.play('door'); g.camRig.shake(0.35);
     const lines = [['narrator', 'c2_sealed_1'], ['hero', 'c2_tw_sealed0']];
     if (this.npc('baldino')?.present) lines.push(['baldino', 'c2_bal_sealed1'], ['hero', 'c2_tw_sealed'], ['baldino', 'c2_bal_sealed2']);
@@ -365,7 +370,7 @@ export class Chapter2 extends ChapterBase {
     this.chain(lines, () => {
       f.c2_done = true;
       g.save(false);
-      g.startTransition(() => this.story.nextChapter());
+      g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
     });
   }
 
@@ -375,18 +380,22 @@ export class Chapter2 extends ChapterBase {
     const g = this.game, f = this.f;
     if (!this.reached()) return;
     // a save made during Zoe's segment resumes before it (in the workshop, as Twinsen)
-    if (g.room?.id === 'lighttop' && !f.c2_zoeStart && g.state === 'play' && !g.trans) g.enterRoom(g.rooms.workshop ? 'workshop' : 'zeelich', null, true);
+    if (g.room?.id === 'lighttop' && !f.c2_zoeStart && g.state === 'play' && !g.trans) g.enterRoom(g.regions.has('workshop') ? 'workshop' : 'zeelich', null, true);
   }
   onEnterRoom(id) {
     const f = this.f;
     if (id === 'lighttop' && f.c2_zoeStart && !f.c2_broadcast) this.chain([['zoe', 'c2_zoe_in'], ['radio', 'c2_radio_freq']]);
   }
   applyFlags() {
-    const f = this.f, Z = this.Z;
-    Z?.ferry?.setVisible?.(false);   // (the dock's sky-ferry stays away: Twinsun and Zeelich are joined by spaceship only)
+    const f = this.f, RG = this.game.regions;
+    // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
+    //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
+    RG.whenBuilt('zeelich', (Z) => Z.ferry?.setVisible?.(false));   // (the dock's sky-ferry stays away: Twinsun and Zeelich are joined by spaceship only)
     if (!this.reached()) return;
-    for (const m of Z.mills) if (f['c2_mill_' + m.id]) this.brakeMill(m, true);
-    if (f.c2_shield) { f.c2_shield = false; this.shieldDown(true); }
+    RG.whenBuilt('zeelich', (Z) => {
+      for (const m of Z.mills) if (f['c2_mill_' + m.id]) this.brakeMill(m, true);
+      if (f.c2_shield) this.shieldDown(true);   // (keeps the flag set; the shield goes down)
+    });
     if (f.c2_zoeStart && !f.c2_broadcast) f.c2_zoeStart = false;
   }
 

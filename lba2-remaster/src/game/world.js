@@ -498,18 +498,25 @@ function add(scene, geo, material, x, y, z, { rx = 0, ry = 0, rz = 0, cast = tru
 let W_cliffs = null;
 // (diagnostics: which builder made a top-level object, for tests/drawcalls.mjs)
 export function tagSrc(root, from, name) { for (let i = from; i < root.children.length; i++) root.children[i].userData.src ??= name; }
-export function buildWorld(parentScene) {
+// LAZY-REGIONS: the build runs in steps (a generator: each `yield` is a point where the loading screen may paint and
+// move its bar; the statements and their order, so every random draw, are those of the one-piece build).
+// buildWorld() runs it to the end in one go.
+export function buildWorld(parentScene) { const it = buildWorldSteps(parentScene); for (;;) { const r = it.next(); if (r.done) return r.value; } }
+export function* buildWorldSteps(parentScene) {
   // everything outdoors lives in one group so interiors can hide it
   const scene = new THREE.Group();
   parentScene.add(scene);
   const TX = textures();
+  yield 'textures';
   const grid = buildHeightGrid(TERRAIN_SIZE, TERRAIN_SEGS);
+  yield 'heights';
   const terrain = new Terrain({ size: TERRAIN_SIZE, segs: TERRAIN_SEGS, cx: ISLAND.cx, cz: ISLAND.cz, heightFn: grid.at, colorFn: islandColor, splatFn: islandSplat, textures: { ...TX, rock: TX.cliff } });
   tintGrid = null;
   scene.add(terrain.mesh);
   const physics = new Physics(terrain);
   const zones = new ZoneSystem();
   const H = (x, z) => terrain.heightAt(x, z);
+  yield 'ground';
   // faceted rock faces on the terrace cliffs (not on the path ramps or the paved quay)
   // (WORLD-80: the scatter's view of the ground, as it stood before step 2: see PATHS_SCATTER)
   const SG = scatterGround(terrain), HS = SG.heightAt;
@@ -545,13 +552,16 @@ export function buildWorld(parentScene) {
     return m;
   };
 
+  yield 'terrain';
   // ---------- Lupin-Burg: houses, square, streets, props (see town.js) ----------
   { const n0 = scene.children.length; buildTown(scene, W); tagSrc(scene, n0, 'town'); }
+  yield 'town';
   // the statue of Twinsen and Zoé (STATUE; src/game/statue.js): the original's stands in the middle of the square,
   // where the well is now; it stands at the square's north side, facing the well
   { const n0 = scene.children.length; buildStatue(scene, W, -43.2, -10.4, Math.atan2(-42 - -43.2, -4 - -10.4)); tagSrc(scene, n0, 'statue'); }
   const V = POI.village;
 
+  yield 'statue';
   // ---------- trees / grass / rocks (sculpted, instanced; see vegetation.js) ----------
   const exclusions = [
     { ...POI.village, r: 22 }, { ...POI.camp, r: 17 }, { x: POI.fort.x, z: POI.fort.z, r: 18 },
@@ -707,10 +717,12 @@ export function buildWorld(parentScene) {
   // islet's raised rock face)
   for (const t of trees) if (!t.gone && (newPathDist(t.x, t.z) < 2.2 || inNewHouse(t.x, t.z, 1.4) || isletSteep(t.x, t.z, 0.55))) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && (newPathDist(b.x, b.z) < 1.9 || inNewHouse(b.x, b.z, 0.9) || isletSteep(b.x, b.z, 0.55))) { b.s = 1e-4; b.gone = true; }
+  yield 'tree spots';
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
     const list = trees.filter((t, i) => t.kind === kind && i % nv === v);
     if (list.length) mkInst(treeGeometry(kind, v + 1), leafMat, list, true, shadeVar, treeGeometry(kind, v + 1, 1));
+    yield 'tree ' + kind;
   }
   const palmList = trees.filter((t) => t.kind === 'palm');
   for (let v = 0; v < 2; v++) { const list = palmList.filter((t, i) => i % 2 === v); if (list.length) mkInst(palmGeometry(v + 1), leafMat, list, true, shadeVar, palmGeometry(v + 1, 1)); }
@@ -720,6 +732,7 @@ export function buildWorld(parentScene) {
   for (const b of bushes) if (!b.gone) physics.add({ type: 'cyl', x: b.x, z: b.z, r: 0.6 * b.s, top: b.h + 0.9 * b.s, noStand: true, seeThrough: true });
   W.trees = trees;
 
+  yield 'trees';
   // grass clumps + wild flowers (none on streets, the square or inside houses)
   const grass = [], flowers = [];
   for (let i = 0; i < 16000 && grass.length < 5200; i++) {
@@ -820,11 +833,13 @@ export function buildWorld(parentScene) {
   if (BATCH.on) batchFor(rockMat).build();
   for (const r of rocks) if (r.s > 0.6) physics.add({ type: 'cyl', x: r.x, z: r.z, r: r.s * 1.1, top: r.h + r.s * 0.95, seeThrough: true });
 
+  yield 'plants';
   // ---------- harbour, station, depot, pipeline, valves (see island.js) ----------
   W.signs = [];
   W.pathDist = pathDist;
   { const n0 = scene.children.length; buildIsland(scene, W); tagSrc(scene, n0, 'island'); }
 
+  yield 'island';
   // ---------- lighthouse ----------
   {
     const L = POI.lighthouse, g = H(L.x, L.z);
@@ -952,6 +967,7 @@ export function buildWorld(parentScene) {
     }
   }
 
+  yield 'landmarks';
   // ---------- zones (LBA-style) ----------
   zones.add({ type: 'checkpoint', id: 'cp_village', x: V.x, z: V.z, r: 8 });
   zones.add({ type: 'checkpoint', id: 'cp_lighthouse', x: POI.sage.x, z: POI.sage.z + 3, r: 6 });

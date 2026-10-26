@@ -61,19 +61,10 @@ export class AudioEngine {
   applyVolumes() {
     if (!this.ctx) return;
     this.master.gain.value = this.vol.master;
-    this.musicBus.gain.value = this.vol.music * (this.ducked ? MUSIC_DUCK : 1);
+    this.musicBus.gain.value = this.vol.music; // (the ducking is a stage of its own in music.js: the slider never fights it)
     this.sfxBus.gain.value = this.vol.sfx;
     this.ambBus.gain.value = this.vol.sfx * 0.6;
     this.voiceBus.gain.value = (this.vol.voice ?? 0.8) * VOICE_BOOST;
-  }
-
-  // the music steps back while a character speaks, and comes back after
-  duck(on) {
-    if (!this.ctx || this.ducked === on) return;
-    this.ducked = on;
-    const g = this.musicBus.gain, t = this.ctx.currentTime;
-    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
-    g.linearRampToValueAtTime(this.vol.music * (on ? MUSIC_DUCK : 1), t + (on ? 0.12 : 0.6));
   }
 
   _noise(sec) {
@@ -157,6 +148,7 @@ export class AudioEngine {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     this.surfPlace.gain.setTargetAtTime(kind === 'island' ? 1 : 0, t, 0.6);
+    this.music.placeChanged(); // (indoors a silence between two pieces ends)
     this.placeWind = kind === 'sky' ? 0.12 : 0;
     this.windGain.gain.setTargetAtTime(0.25 * this.storm + 0.03 + this.placeWind, t, 0.6);
   }
@@ -185,7 +177,10 @@ export class AudioEngine {
   cue(name) { if (this.ctx) this.music.cue(name); }
   endCue() { if (this.ctx) this.music.endCue(); }
   setCombat(c) { this.combat = c; if (this.ctx) this.music.setCombat(c); }
-  duck(on) { this.music.duck(on); }
+  // the music steps back to MUSIC_DUCK while a character speaks, and comes back after (music.js: 0.25 s down; up over
+  // 0.9 s, 0.45 s after the last line, so consecutive lines do not pump). (MUSIC-2: this was defined twice; the later
+  // definition, ducking to 0.55, was the one in force and VOICE-MIX's 0.5 never applied.)
+  duck(on) { this.ducked = on; this.music.duck(on, MUSIC_DUCK); }
   // outdoors on Citadel island the music follows the area (village / open island / project station)
   setOutdoorArea(pos, POI) { this.setMood(this.music.outdoorMood(pos, POI)); }
 

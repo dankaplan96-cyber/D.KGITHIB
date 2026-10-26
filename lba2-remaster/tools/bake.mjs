@@ -12,7 +12,8 @@ for (const p of ['playwright', '/opt/node-tools/node_modules/playwright/index.mj
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 320, height: 240 } });
 page.on('pageerror', (e) => console.error('pageerror', e.message));
-await page.goto(`http://localhost:${port}/?nobake`, { waitUntil: 'load', timeout: 300000 });
+// (LAZY-REGIONS: every area built at startup, so every area's sculpted models are in the bake)
+await page.goto(`http://localhost:${port}/?nobake&allregions`, { waitUntil: 'load', timeout: 300000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden'), null, { timeout: 600000 });
 const b64 = await page.evaluate(async () => {
   window.game.testFreeze = true;
