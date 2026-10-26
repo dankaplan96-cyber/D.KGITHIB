@@ -22,9 +22,15 @@ export const steps = [
     // on a stone: at its height and held by it (physics.groundInfo holds him over a drop up to 6 cm past its rim —
     // a landing right on the rim is on the stone, not a fall back to the street)
     const on = (q) => Math.abs(h.pos.y - q.c.top) < 0.3 && Math.hypot(h.pos.x - q.c.x, h.pos.z - q.c.z) < q.c.r + 0.06;
+    // (already on one — the stones rose under him at the target: on up from there, not back down to the first)
+    i = W.stones.findIndex(on) + 1;
     while (i < W.stones.length && tries < 30) {
       const s = W.stones[i]; tries++;
-      P.hopTo(s.c.x, s.c.z, s.c.top);
+      // from a stone: step to its middle first, then the hop (a run-up spot off the stone's rim, or into the cliff's
+      // rim behind the top ones, had him walk off it); from the street, the usual run-up
+      const pv = i > 0 && on(W.stones[i - 1]) ? W.stones[i - 1].c : null;
+      if (pv) { P.go(pv.x, pv.z, { tol: 0.25, maxT: 4, fight: false }); P.hopTo(s.c.x, s.c.z, s.c.top, { walk: false, pre: 0.25 }); }
+      else P.hopTo(s.c.x, s.c.z, s.c.top);
       if (on(s)) i++;
       else i = W.stones.findIndex(on) + 1;
     }
