@@ -460,6 +460,18 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Evidence: docs/lba3-performance/PERF_ARRIVAL.md, results/perf-arrival.json, QA.md "PERF-ARRIVAL". Needs the
   laptop's benchmark (PERF_ARRIVAL.md §6).
 
+## Done after (WORLD-80 step 1, WORKLIST #19; status REVIEW; measurement only, no world code)
+- `tools/worldscore.mjs`: a similarity score per island out of 100 against the original's numbers (coast IoU 30,
+  height 20, landmarks 30, objects per area 20; the twelve years' additions excluded), re-runnable after each fix
+  (about 3 min here; `--from` rescores a kept dump). References as numbers: tools/worldscore/ref/ (`tools/lba2-islands.py
+  --ref / --hamalayi`).
+- Now: Citadel 77.5, Desert Island 39.6, the Hamalayi 27.4 (partial), Zeelich's islands 84.5–94.7, the Lift Dock 37.7
+  (partial), Zeelich's terminal island n/a. Plan, ranked differences and batches: docs/WORLD_SIMILARITY.md; overlays
+  and scores: docs/lba3-production/reviews/WORLD-80/.
+- Next for WORLD-80: step 2, the Citadel batch (the west islet's dome, figure and ground; Bug Street's pair; the
+  plateau's and the stone house's doors) → ≈ 85; then Desert batches A and B. Open for the user: should the Hamalayi
+  follow LBA1's ledges; is the original's high façade (Desert, body 43) the School of Magic's face.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
