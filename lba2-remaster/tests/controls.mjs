@@ -252,6 +252,9 @@ if (!ONLY || ONLY.includes('ball')) {
 const ballFlight = `(() => {
   const G = game, b = G.ball, h = G.hero; const p0 = { x: h.pos.x, y: h.pos.y, z: h.pos.z };
   let t = 0, rel = null, apex = -1e9, first = null, bounces0 = null;
+  // where it first touches is read at the touch (Ball.bounce), not at the end of the frame it happens in: the rest of
+  // that frame's substeps fly on, up to speed × dt (0.17 m at 60 fps, 0.33 m at 30 fps), which is the frame's, not the throw's
+  let hit = null; b.bounce = function (...a) { if (!hit) hit = { x: this.pos.x, y: this.pos.y, z: this.pos.z }; return Object.getPrototypeOf(b).bounce.apply(this, a); };
   for (let i = 0; i < 400 && !first; i++) {
     G.frame(window.__dt || 1 / 60, false); t += window.__dt || 1 / 60;
     if (b.state === 'fly') {
@@ -260,7 +263,9 @@ const ballFlight = `(() => {
       if (b.bounces < bounces0) first = { x: b.pos.x, y: b.pos.y, z: b.pos.z, t };
     } else if (rel && b.state !== 'fly') first = { x: b.pos.x, y: b.pos.y, z: b.pos.z, t, end: b.state };
   }
+  delete b.bounce;
   if (!rel || !first) return { rel: !!rel, first: !!first, state: b.state };
+  if (hit) { first.x = hit.x; first.z = hit.z; }
   return { dist: +Math.hypot(first.x - p0.x, first.z - p0.z).toFixed(2), time: +(first.t - rel.t).toFixed(2), apex: +(apex - rel.y).toFixed(2), relY: +(rel.y - p0.y).toFixed(2), land: [first.x, first.z] };
 })()`;
 const balls = await ev((flight) => {
@@ -280,7 +285,10 @@ measure('classic ball (first contact on flat ground: m, s; apex above the releas
 const bd = (b, k = 'tap') => balls[b][k].dist;
 check('classic ball: each behaviour its own arc — Discreet the short lob, then Normal, Athletic, Aggressive the longest and flattest',
   bd('discreet') < bd('normal') - 1 && bd('normal') < bd('athletic') && bd('athletic') < bd('aggressive') && balls.discreet.tap.apex > 0.8 && balls.aggressive.tap.apex < 0.15, balls);
-check('classic ball: the same landing at 30 fps (±0.3 m)', ['discreet', 'normal', 'athletic', 'aggressive'].every((b) => Math.abs(bd(b, 'tap30') - bd(b)) < 0.3), balls);
+// (±0.15 m: BALL-30FPS. The release frame used to seat the ball on the previous frame's hand pose and then fly it a whole
+// frame, which put it 0.2-0.3 m apart at 30 vs 60 fps. Now the ball leaves this frame's hand pose unflown and the touch is
+// read at the touch: measured 0.01-0.09 m across the four behaviours)
+check('classic ball: the same landing at 30 fps (±0.15 m)', ['discreet', 'normal', 'athletic', 'aggressive'].every((b) => Math.abs(bd(b, 'tap30') - bd(b)) < 0.15), balls);
 check('classic ball: a charged throw goes further', ['discreet', 'normal', 'athletic', 'aggressive'].every((b) => bd(b, 'charged') > bd(b) + 0.5), balls);
 
 // Modern: the cursor on the ground ahead (near, middle, beyond the range): a charged throw lands where it points

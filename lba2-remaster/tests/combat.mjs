@@ -98,7 +98,9 @@ check('ball: back in hand afterwards', r.state === 'idle', r);
 r = await ev(() => {
   const { G } = C; C.only([], [6190, 8], Math.PI / 2);
   C.press('KeyF'); C.step(0.1); C.press('KeyF'); const st1 = G.ball.state;
-  C.step(0.25); C.press('KeyF'); const st2 = G.ball.state;
+  // (0.3 s, not 0.25: a recall needs 0.2 s of flight and the ball is released at 0.16 s of the throw. Its release frame now
+  // flies 0 s, not a whole frame (BALL-30FPS), so 0.25 s left it just under 0.2 s and passed only by a frame's slack)
+  C.step(0.3); C.press('KeyF'); const st2 = G.ball.state;
   C.step(3); return { st1, st2, end: G.ball.state };
 });
 check('ball: a second press before 0.2 s does not recall or duplicate', r.st1 === 'fly' || r.st1 === 'inhand', r);
