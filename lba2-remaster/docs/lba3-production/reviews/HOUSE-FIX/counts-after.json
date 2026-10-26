@@ -1,0 +1,46 @@
+{
+ "house": {
+  "group": {
+   "meshes": 110,
+   "tris": 204373,
+   "colliders": 59,
+   "lights": 10
+  },
+  "views": {
+   "family": {
+    "calls": 106,
+    "triangles": 399417,
+    "geometries": 999,
+    "textures": 182
+   },
+   "reading": {
+    "calls": 92,
+    "triangles": 410056,
+    "geometries": 1011,
+    "textures": 182
+   },
+   "door": {
+    "calls": 112,
+    "triangles": 411657,
+    "geometries": 1016,
+    "textures": 182
+   }
+  }
+ },
+ "cellar": {
+  "group": {
+   "meshes": 37,
+   "tris": 43806,
+   "colliders": 23,
+   "lights": 2
+  },
+  "views": {
+   "middle": {
+    "calls": 57,
+    "triangles": 94868,
+    "geometries": 1052,
+    "textures": 185
+   }
+  }
+ }
+}

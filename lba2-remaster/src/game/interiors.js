@@ -333,8 +333,10 @@ function buildHouse(scene, physics) {
     body: bodyM, low: MAT.wainscot('honey'), dado: 1.05, rail, cap: capM, beam: MAT.wood('dark'),
     posts: MAT.wood('dark'), postsAt: (L) => [0.48, L - 0.48, L / 2],
     back: [
-      { kind: 'window', at: 0.3 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sea') },
-      { kind: 'window', at: 2.6 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('citadel') },
+      // (HOUSE-FIX: 0.3 → 0.6 and 2.6 → 2.8: the sea window's left curtain hung through the dresser's plate rack,
+      //  and the island picture between the two windows sat behind a curtain)
+      { kind: 'window', at: 0.6 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sea') },
+      { kind: 'window', at: 2.8 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('citadel') },
       { kind: 'window', at: -9.5 - hcx, w: 1.1, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('sky') },
     ],
     left: [
@@ -345,7 +347,10 @@ function buildHouse(scene, physics) {
   const BZ = -D / 2, LX = -W / 2;
   // inside walls: low dividers (the camera sees over them, as in LBA2's interiors)
   const divider = (x0, z0, x1, z1, doors = []) => B.partition(x0, z0, x1, z1, { h: 1.15, body: bodyM, cap: capM, rail, low: MAT.wainscot('honey'), dado: 0.9, doors });
-  divider(LX, BZ, LX, HZ1, [{ at: 8.5, w: 1.3 }, { at: 13.1, w: 1.3 }]);   // family room and hall | Arthur's room, reading room
+  // family room and hall | Arthur's room, reading room. (HOUSE-FIX: the reading room's doorway was at 13.1, z 9.6,
+  //  opening straight onto the stairwell — through it Twinsen dropped 0.65 m onto the stairs against the railing; now
+  //  at the south end, between the stairwell's railing and the front wall)
+  divider(LX, BZ, LX, HZ1, [{ at: 8.5, w: 1.3 }, { at: 14.4, w: 1.0 }]);
   divider(HX0, 7.0, LX, 7.0, [{ at: 4.4, w: 1.2 }]);                        // Arthur's room | reading room
   divider(LX, -BZ, 0.2, -BZ);                                               // family room | hall
   // the front door, cut away like the rest of the near wall (as LBA2 draws a door in a near wall): the low wall
@@ -392,7 +397,7 @@ function buildHouse(scene, physics) {
   const stoveLight = B.light('#ff8a3a', 3.2, 4.5, stX, 0.6, BZ + 1.0);
 
   // --- dresser with plates
-  const drX = -0.82;
+  const drX = -0.87;   // (HOUSE-FIX: clear of the sea window's curtain, clear of the sink)
   B.put(drX, BZ + 0.28, 0, P.dresser, { w: 1.1 });
   B.giver('dresser', drX, BZ + 0.28, ['money'], 5, { r: 1.3, top: 1.2 });
 
@@ -459,8 +464,10 @@ function buildHouse(scene, physics) {
 
   // --- bed, nightstand, Dino-Fly painting
   const bedZ = 2.2;
-  B.put(LX + 1.1, bedZ, -Math.PI / 2, P.bed, { w: 1.45, l: 2.15 });
-  k.at(-3.0, 1.85, BZ + 0.02, 0, () => P.frame(k, 1.0, 0.75, P.painting('dinofly')));
+  // (HOUSE-FIX: the headboard against the divider, by the nightstand; it stood at the foot, out in the room)
+  B.put(LX + 1.1, bedZ, Math.PI / 2, P.bed, { w: 1.45, l: 2.15 });
+  // the Dino-Fly painting over the sink, between the stove's shelf and the dresser (it hung behind the shelf's jars)
+  k.at(-2.05, 1.97, BZ + 0.02, 0, () => P.frame(k, 0.78, 0.58, P.painting('dinofly')));
   B.put(LX + 0.3, 0.95 + 0.0, Math.PI / 2, P.nightstand, {});
   B.giver('nightstand', LX + 0.3, 0.95, ['life', 'magic'], 1, { r: 1.0, top: 0.7 });
   P.candle(k, LX + 0.3, 0.62, 0.9);
@@ -498,11 +505,10 @@ function buildHouse(scene, physics) {
   k.at(tX, 0, tZ, 0, () => P.hangingLamp(k, 2.15, H + 0.2, { shade: '#3f7a5a' }));
   B.light('#ffd6a0', 9, 11, tX, 2.0, tZ);
 
-  // --- coat stand and family portrait by the door
-  k.at(3.95, 0, BZ + 0.45, 0, () => P.coatStand(k));
-  B.ccol(3.95, BZ + 0.45, 0.25, 1.8, { noStand: true });
-  k.at(3.95, 1.75, BZ + 0.0, 0, () => P.frame(k, 0.7, 0.85, P.painting('portrait'), { mat: MAT.wood('dark') }));
-  k.at(1.2, 2.0, BZ + 0.0, 0, () => P.frame(k, 0.5, 0.4, P.painting('island')));
+  // --- the family portrait in the corner, the island picture between the windows (the coat stand that stood in
+  //     front of the portrait is by the front door now: buildHouseWings)
+  k.at(4.02, 1.75, BZ + 0.0, 0, () => P.frame(k, 0.7, 0.85, P.painting('portrait'), { mat: MAT.wood('dark') }));
+  k.at(1.7, 2.0, BZ + 0.0, 0, () => P.frame(k, 0.42, 0.36, P.painting('island')));
 
   // --- Arthur's toy corner: rug, toy chest, blocks, boat, plush Dino-Fly, and the radio
   k.at(2.55, 0, 2.25, 0.08, () => P.rug(k, 2.4, 1.7, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 7));
@@ -529,7 +535,7 @@ function buildHouse(scene, physics) {
   mast.position.set(mastRest.x, mastRest.y, mastRest.z); mast.rotation.y = mastRest.ry;
   B.group.add(mast);
   R.boat = { mast, mastRest, ...B.world(abX, abZ) };
-  k.at(3.45, 0.47, 2.85, -0.9, () => P.plushDino(k));
+  k.at(3.38, 0.0, 2.95, -1.3, () => P.plushDino(k));   // (HOUSE-FIX: sitting against the toy chest; it floated in front of it)
   P.spinningTop(k, 2.6, 2.95);
   k.add(sphere(0.1, 12, 8), MAT.paint('#e03a3a', 0.4), 1.75, 0.1, 1.75);
   B.put(3.9, 1.35, 0, P.sideTable, {});
@@ -559,13 +565,15 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   const paper = MAT.paper('#2e6f88', '#e8c86a', 'star');
   k.add(plane(LX - HX0 - 0.05, H - 1.12), paper, (HX0 + LX) / 2, 1.12 + (H - 1.12) / 2, HZ0 + 0.012);
   k.at(HX0 + 0.012, 0, (HZ0 + 7) / 2, Math.PI / 2, () => k.add(plane(7 - HZ0 - 0.05, H - 1.12), paper, 0, 1.12 + (H - 1.12) / 2, 0));
-  B.put(HX0 + 1.0, 4.9, -Math.PI / 2, P.bed, { w: 1.05, l: 1.95, quilt: ['#3b78d8', '#e9c46a', '#e0503a', '#f2ead6', '#3a8a5a'], key: 'arthur' });
+  B.put(HX0 + 1.0, 4.9, Math.PI / 2, P.bed, { w: 1.05, l: 1.95, quilt: ['#3b78d8', '#e9c46a', '#e0503a', '#f2ead6', '#3a8a5a'], key: 'arthur' });
   B.put(HX0 + 0.3, 3.55, Math.PI / 2, P.nightstand, {});
   P.candle(k, HX0 + 0.3, 0.62, 3.5);
-  B.put(-8.4, HZ0 + 0.42, 0, P.desk, { w: 1.4, d: 0.65, pal: 'honey', leather: '#3b6fc4' });
-  B.put(-8.4, HZ0 + 1.2, Math.PI, P.chair, { cushion: '#3b78d8' }, { noStand: true, seeThrough: true });
-  k.at(-8.9, 0.78, HZ0 + 0.35, 0.3, () => P.deskLamp(k, { shade: '#e0503a' }));
-  k.at(-7.9, 0.78, HZ0 + 0.4, -0.4, () => P.toyBoat(k));
+  // (HOUSE-FIX: his bed's headboard to the wall; the desk east of the window: it stood half under the curtain)
+  const adX = -7.75;
+  B.put(adX, HZ0 + 0.42, 0, P.desk, { w: 1.4, d: 0.65, pal: 'honey', leather: '#3b6fc4' });
+  B.put(adX, HZ0 + 1.2, Math.PI, P.chair, { cushion: '#3b78d8' }, { noStand: true, seeThrough: true });
+  k.at(adX - 0.5, 0.78, HZ0 + 0.35, 0.3, () => P.deskLamp(k, { shade: '#e0503a' }));
+  k.at(adX + 0.5, 0.78, HZ0 + 0.4, -0.4, () => P.toyBoat(k));
   k.at(-11.2, 1.75, HZ0 + 0.15, 0, () => P.wallShelf(k, { w: 1.4, d: 0.24 }));
   for (const [x, c] of [[-11.7, '#e0503a'], [-11.25, '#3b78d8'], [-10.75, '#e9c46a']]) k.at(x, 1.77, HZ0 + 0.17, 0.2, () => P.spinningTop(k, 0, 0, c));
   B.put(HX0 + 0.42, -1.6, Math.PI / 2, P.chest, { w: 0.85, d: 0.5, h: 0.46, pal: 'red', band: MAT.paint('#e9c46a', 0.5) });
@@ -576,15 +584,17 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   B.giver('arthurbed', HX0 + 1.0, 4.9, ['life'], 1, { r: 1.4, top: 0.6 });
   B.light('#ffe0b0', 6, 9, -9.0, 2.3, 1.0);
   // the reading room: x HX0..LX, z 7..HZ1
-  for (const [z, sd] of [[8.1, 2], [9.3, 5], [10.5, 7]]) B.put(HX0 + 0.22, z, Math.PI / 2, P.bookcase, { w: 1.1, h: 2.1, pal: 'dark', seed: sd });
-  B.giver('bookcase', HX0 + 0.22, 9.3, ['magic'], 10, { r: 1.3, top: 1.8 });
-  B.put(-10.6, 9.6, -Math.PI / 2 - 0.4, P.armchair, {});
-  B.put(-10.7, 8.0, 0, P.floorLamp, {});
-  B.light('#ffcf90', 3, 5, -10.7, 1.5, 8.0);
-  B.put(-11.5, 10.8, 0, P.sideTable, {});
-  P.bookStack(k, -11.5, 0.62, 10.8, 1, 4);
-  B.giver('readchair', -10.6, 9.6, ['money', 'life', 'magic'], 5, { r: 1.2, top: 0.7 });
-  k.at(-9.4, 0, 9.4, 0, () => P.rug(k, 2.4, 2.0, ['#a8382a', '#2a4a7a', '#e0b050', '#f0e0b8', '#3a1a12'], 3));
+  // (HOUSE-FIX: the three bookcases stood in a row across the west window; now two flank it, the reading chair sits
+  //  under it facing the room — it faced the shelves from a metre away — with the lamp and a side table beside it)
+  for (const [z, sd] of [[7.85, 2], [10.75, 5]]) B.put(HX0 + 0.22, z, Math.PI / 2, P.bookcase, { w: 1.1, h: 2.1, pal: 'dark', seed: sd });
+  B.giver('bookcase', HX0 + 0.22, 10.75, ['magic'], 10, { r: 1.3, top: 1.8 });
+  B.put(HX0 + 0.85, 9.3, Math.PI / 2, P.armchair, {});
+  B.put(HX0 + 0.75, 8.35, 0, P.floorLamp, {});
+  B.light('#ffcf90', 3, 5, HX0 + 0.75, 1.5, 8.35);
+  B.put(HX0 + 0.9, 10.2, 0, P.sideTable, {});
+  P.bookStack(k, HX0 + 0.9, 0.62, 10.2, 1, 4);
+  B.giver('readchair', HX0 + 0.85, 9.3, ['money', 'life', 'magic'], 5, { r: 1.2, top: 0.7 });
+  k.at(-11.2, 0, 9.3, 0, () => P.rug(k, 2.4, 2.0, ['#a8382a', '#2a4a7a', '#e0b050', '#f0e0b8', '#3a1a12'], 3));
   B.light('#ffe0b0', 4, 7, -9.0, 2.3, 9.3);
   // the hall: x LX..HX1, z -BZ..HZ1 — armchairs round a rug, the family portrait, the stairs down
   k.at(-0.8, 0, 6.3, 0, () => P.rug(k, 3.2, 2.4, ['#2a4a7a', '#a8382a', '#e9c46a', '#f2ead6', '#1a2a3a'], 5));
@@ -593,8 +603,17 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   B.put(-0.75, 5.1, 0, P.sideTable, {});
   P.candle(k, -0.75, 0.62, 5.1);
   B.giver('hallchair', -1.9, 5.6, ['life', 'magic'], 7, { r: 1.2, top: 0.7 });
-  B.put(HX1 - 0.32, 6.5, -Math.PI / 2, P.dresser, { w: 1.1 });
-  k.at(HX1 - 0.02, 1.8, 6.5, -Math.PI / 2, () => P.frame(k, 0.75, 0.9, P.painting('portrait'), { mat: MAT.wood('dark') }));
+  // (HOUSE-FIX: a low sideboard against the cut-away east wall, the family photo standing on it; a tall dresser
+  //  stood there with its back to the camera, the portrait hanging in the air behind it with no wall)
+  B.put(HX1 - 0.32, 6.5, -Math.PI / 2, P.dresser, { w: 1.1, rack: false });
+  k.at(HX1 - 0.4, 0.92, 6.35, -Math.PI / 2, () => {
+    k.at(0, 0.26, 0, 0, () => P.frame(k, 0.4, 0.48, P.painting('portrait'), { mat: MAT.wood('dark'), prof: 0.045 }));
+    k.add(rbox(0.04, 0.42, 0.02, 0.008), MAT.wood('dark'), 0, 0.2, -0.1, 0, { rx: 0.35 });
+  });
+  P.candle(k, HX1 - 0.4, 0.92, 6.95);
+  // the coat stand by the front door (it stood in the family room, in front of the portrait)
+  k.at(0.05, 0, HZ1 - 0.45, 0, () => P.coatStand(k));
+  B.ccol(0.05, HZ1 - 0.45, 0.25, 1.8, { noStand: true });
   k.at(3.4, 0, HZ1 - 0.5, 0, () => P.pottedPlant(k, { kind: 'spiky', s: 1.1, potColor: '#3a6fb0' }));
   // the stairs down: a stairwell cut in the floor against the west divider (shell hole), a railing, and the
   // steps going down from its north edge into the dark
@@ -654,13 +673,15 @@ function buildCellar(scene, physics) {
   // bookshelves and a chair on the west wall, the radio set on a sideboard on the north wall
   for (const [z, sd] of [[-2.2, 4], [-1.0, 8]]) B.put(LX + 0.22, z, Math.PI / 2, P.bookcase, { w: 1.1, h: 1.9, pal: 'honey', seed: sd });
   B.put(LX + 0.9, 0.6, Math.PI / 2, P.chair, { cushion: '#2f6f78' }, { noStand: true, seeThrough: true });
-  B.put(2.2, BZ + 0.36, 0, P.dresser, { w: 1.6 });
-  k.at(2.2, 1.0, BZ + 0.3, 0, () => P.radio(k, { s: 1.1 }));
+  // (HOUSE-FIX: a sideboard without the plate rack — the radio stood inside the rack's shelves, 10 cm above the top)
+  B.put(2.2, BZ + 0.36, 0, P.dresser, { w: 1.6, rack: false });
+  k.at(2.2, 0.92, BZ + 0.36, 0, () => P.radio(k, { s: 1.1 }));
   B.put(4.6, BZ + 0.5, 0, P.barrel, { r: 0.34, h: 0.9, pal: 'honey' });
   B.giver('barrel', 4.6, BZ + 0.5, ['money', 'life', 'magic'], 3, { r: 1.1, top: 1.0 });
   for (const [x, z, s] of [[3.8, BZ + 0.45, 0.6], [4.0, BZ + 1.2, 0.5]]) B.put(x, z, 0.2, P.crate, s);
   B.giver('crates', 3.9, BZ + 0.8, ['life', 'magic'], 2, { r: 1.2, top: 0.7 });
-  k.at(W / 2 - 0.02, 1.6, -1.0, -Math.PI / 2, () => P.frame(k, 0.8, 1.0, P.painting('dinofly')));
+  // the Dino-Fly poster on the west wall over the chair (HOUSE-FIX: it hung in the air over the cut-away east wall)
+  k.at(LX + 0.02, 1.6, 1.25, Math.PI / 2, () => P.frame(k, 0.8, 1.0, P.painting('dinofly')));
   B.put(W / 2 - 0.6, 0.6, -Math.PI / 2, P.bench, { w: 1.4 });
   B.put(-1.4, 1.3, 0.5, P.armchair, {});
   B.put(0.6, 1.8, -0.3, P.armchair, {});

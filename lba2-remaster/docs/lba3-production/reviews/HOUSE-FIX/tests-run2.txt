@@ -1,0 +1,7 @@
+house exit=0 35s VERDICT: PASS
+opening exit=0 352s VERDICT: PASS
+prologue exit=1 46s 
+givers exit=0 47s VERDICT: PASS
+containers exit=0 198s VERDICT: PASS
+zoe-resume exit=0 120s VERDICT: PASS
+prologue exit=0 94s VERDICT: PASS

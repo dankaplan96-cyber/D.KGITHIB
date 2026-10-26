@@ -521,6 +521,18 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Evidence: docs/lba3-performance/LAZY_REGIONS.md, results/lazy-regions.json, QA.md "LAZY-REGIONS + AUTO-FIT".
   Needs: the Intel UHD's and the Vega laptop's benchmark and startup (LAZY_REGIONS.md §8).
 
+## Done after (HOUSE-FIX; status REVIEW; the user's report on build 169)
+- Twinsen's house and the cellar audited room by room (play camera, overhead, wall elevations, a collider/walk audit);
+  14 findings fixed in src/game/interiors.js (+ `dresser({ rack: false })` in props.js): the reading room's bookcases
+  across its window, both beds the wrong way round, the reading chair facing the shelves, a curtain through the dresser,
+  pictures behind a shelf and a curtain, the coat stand before the portrait, the hall's portrait in the air, the plush in
+  the air, Arthur's desk under a curtain, the reading room's doorway onto the stairwell (moved to the divider's south end),
+  the cellar's radio in the plate rack and its poster in the air.
+- Spots, givers, the opening's marks and the camera kept; the opening's shots frame the same. Tests PASS one at a time
+  (house, opening, prologue, givers, containers, zoe-resume, chapter1, camclear, stability, perfbudget); worldfit FAILs
+  on the base too (LAZY-REGIONS). Evidence: QA.md "HOUSE-FIX", docs/lba3-production/reviews/HOUSE-FIX/.
+  Not verified: a real GPU, an independent review, the user's eye.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
