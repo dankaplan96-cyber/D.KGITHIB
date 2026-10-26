@@ -1350,6 +1350,50 @@ The same for the current chapter's things-to-use list and its action handler (ch
 After both fixes: spaceport PASS with 0 on access (was 1), chapter2, chapter4, chapter5, chapter6 PASS (0 on access);
 chapter7 and chapter8 PASS after the first of the two.
 
+### WORLD-80 step 2: the Citadel batch (evidence docs/lba3-production/reviews/WORLD-80/citadel/)
+The plan's first batch (docs/WORLD_SIMILARITY.md): Citadel 77.5 → 84.9 (coast 90.9 =, height 75.2 → 76.6, landmarks
+75.7 → 98.9, objects 62.3 → 63.4), same scorer and references, run on the merged tree (after LAZY-REGIONS). What was
+built and where: WORLD_SIMILARITY.md "Citadel Island: 77.5 → 84.9".
+
+- Collision and interaction: every new piece has a collider of its gameplay kind (the dome and the tunnel vaults solid
+  and camSkip with an occluder volume of their own; the figure solid; the tunnels' landings stood on; the cellar hatch
+  flush with the yard, no collider: nothing to trip over in the yard's fights). The four shut doors are reached and
+  answer "Locked." from their own level only (W.shutDoors; prologue.js baseInteractables). The Bug Street barrel
+  (c-bug-barrel) moved to the pair's north house's north side; every Citadel container still places (containers.mjs).
+  The stepping stones' first step is the same metre for metre (jumpreach: 13 stones, rises ≤ 0.98 m); the trap filler's
+  count is unchanged (1760).
+- Nothing else moved: the collider and tree lists of the scorer's dumps before and after differ only inside the six
+  changed places (scratchpad cmp on before.json / after.json: 0 removed, 0 added outside them).
+- Performance (SwiftShader counts, not GPU time): street route at Medium 256 → 259 draw calls (p95 268 → 276), High
+  289 → 294, Low 195 → 197; triangles +1.2 %; interior, combat and transition routes unchanged; 0 shader programs
+  compiled on any route at any preset (the new pieces are plain tm/pm materials of island.js already in the warm-up).
+  tests/drawcalls.mjs street/medium 249 → 239 (merged tree; the shadow pass 45 → 38). Not measured: GPU time, the
+  user's laptop (its benchmark is the judge).
+
+Tests on the merged tree (SwiftShader, one at a time, TMPDIR=/dev/shm, port 8181, R7 verdict policy; logs under
+/dev/shm/w80tests-m2 at the time, not kept):
+
+| Test | Verdict |
+|---|---|
+| worldfit (now opened with ?allregions, so it scans Zeelich and the islands as before LAZY-REGIONS) | PASS (first run before the fix: the porch `stoneup` floated 0.07 m and its door ran into the eaves; moved 0.25 m west, its floor margin 0.8 m, its walls 2.75 m) |
+| occluders (b: now behind seven houses, Bug Street's pair both) | PASS |
+| doorcull (now the four shut doors too at 2 and 6 m: 22 doors) | PASS (22 doors, 248 checks, nothing culled) |
+| drawcalls | PASS |
+| perfbudget | PASS (0 compiles, budgets kept) |
+| containers | PASS |
+| prologue | PASS |
+| chapter1 | PASS |
+| stability | PASS |
+| camclear | PASS |
+| camsteady (its two town routes follow the west street's new line) | PASS before the merge |
+| transitions, givers, townlife, chapter2, chapter3, chapter10, opening, jumpreach, jetpack | PASS before the merge |
+
+- Screenshots (1280x720, the play camera and one overview each): before/ and after/ islet-overview, islet-play,
+  bug-overview, bug-play, bug-back, door-s2-overview, door-s2-play, door-s51n-overview, door-s51n-play,
+  door-s51s-play, door-s17u-overview, door-s17u-play; citadel-overlay-after.png.
+- Not verified: a real GPU (frame time, the look of the blue dome and the stone figure on the user's screen), an
+  independent visual review, the optional coast pull (#6, +1.6) and the terraces (#7).
+
 ### Not tested / blocked
 - LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).
 - PERF-ARRIVAL on the user's laptop (High arrival and street fps, startup, compiles per route = 0): NOT VERIFIED.
