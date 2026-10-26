@@ -1,7 +1,0 @@
-[
-  { "name": "bugwest", "x": -66, "z": -13, "a": 0, "info": true, "r": 9, "grid": 10, "step": 2, "noshot": true },
-  { "name": "islet-dome", "x": -160, "z": -10, "a": 0, "info": true, "r": 14, "grid": 16, "step": 2, "noshot": true },
-  { "name": "s2north", "x": -80.7, "z": -82, "a": 0, "info": true, "r": 6, "grid": 8, "step": 1, "noshot": true },
-  { "name": "s17u", "x": -25, "z": -31, "a": 0, "info": true, "r": 6, "grid": 4, "step": 1, "noshot": true },
-  { "name": "s51n", "x": -25.9, "z": -83, "a": 0, "info": true, "r": 6, "grid": 4, "step": 1, "noshot": true }
-]

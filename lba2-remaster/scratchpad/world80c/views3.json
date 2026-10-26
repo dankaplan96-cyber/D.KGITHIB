@@ -1,4 +1,0 @@
-[
-  { "name": "fort-top", "x": -24.5, "z": -59.5, "a": 3.14, "info": true, "r": 9, "cam": { "x": -24.5, "y": 40, "z": -63.0, "tx": -24.5, "ty": 13, "tz": -63.6, "fov": 40 } },
-  { "name": "islet-fig", "x": -156.4, "z": 4.0, "a": 0, "info": true, "r": 3, "grid": 2, "step": 1, "noshot": true }
-]
