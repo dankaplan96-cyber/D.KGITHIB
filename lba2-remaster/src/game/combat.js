@@ -141,8 +141,8 @@ export class Targeting {
     const ey = e.pos.y + (e.aimY ?? 0.6);
     return this.game.physics.lineOfSight(h.pos.x, h.pos.y + 1.2, h.pos.z, e.pos.x, ey, e.pos.z);
   }
-  // best enemy along a direction: angle matters most, then distance
-  pick(dir, range, cone) {
+  // best enemy along a direction: angle matters most, then distance (ok: an extra test an enemy must pass)
+  pick(dir, range, cone, ok = null) {
     const h = this.game.hero;
     let best = null, bs = 1e9;
     const da = Math.atan2(dir.x, dir.z);
@@ -154,9 +154,30 @@ export class Targeting {
       const c = cone + Math.atan2(e.radius || 0.5, Math.max(d, 0.5)) * 0.8;
       if (a > c) continue;
       const s = a * 3 + d / range;
-      if (s < bs) { bs = s; best = e; }
+      if (s < bs && (!ok || ok(e))) { bs = s; best = e; }
     }
     return best;
+  }
+  // can the ball get to this enemy? The throw's own arc at it (MagicBall.plan, as the launch computes it) is followed
+  // from his hand: a see-through collider that stops the ball (a chain-link fence, a railing; Physics.ballFenceAt)
+  // before the enemy's hit cylinder means every throw would hit the fence. Such an enemy is still seen (visible(),
+  // lock-on): only the throw's aim leaves it out. An arc that clears a low railing keeps its enemy.
+  ballReaches(e) {
+    const g = this.game, h = g.hero, B = g.ball, P = g.physics;
+    if (!B?.plan) return true;
+    const from = { x: h.pos.x + Math.sin(h.angle) * 0.3, y: h.pos.y + 1.35, z: h.pos.z + Math.cos(h.angle) * 0.3 };
+    const pl = B.plan(h, h.behaviour, null, e, false, from), v = pl.vel, R = 0.14;   // (R: the ball's radius, BALL_R)
+    const hr = e.hitR || 0.75, y0 = e.pos.y - 0.2, y1 = e.pos.y + (e.hitH || 2);
+    let x = from.x, y = from.y, z = from.z, vy = v.y, last = 1e9;
+    for (let t = 0, dt = 1 / 120; t < 2.5; t += dt) {
+      x += v.x * dt; z += v.z * dt; vy -= pl.grav * dt; y += vy * dt;
+      const d = Math.hypot(e.pos.x - x, e.pos.z - z);
+      if (d < hr && y > y0 && y < y1) return true;          // (the hit test comes first in the flight, too)
+      if (P.ballFenceAt(x, z, y, R)) return false;
+      if (d > last + 1e-4 || y < P.groundAt(x, z, y + 0.3)) return true;   // past it or down: not a fence's doing
+      last = d;
+    }
+    return true;
   }
   get current() { return this.lock || this.soft; }
   // what a throw along `aim` means: the lock, an enemy in the cone, or a switch / target in the cone
@@ -165,7 +186,8 @@ export class Targeting {
     if (this.lock) return this.lock;
     const cone = this.cone();
     if (cone <= 0) return null;
-    const e = this.pick(aim, COMBAT.softRange, cone);
+    // (an enemy the ball can't get to, behind a chain-link fence, is not offered: the throw would only hit the fence)
+    const e = this.pick(aim, COMBAT.softRange, cone, (x) => this.ballReaches(x));
     if (e) return e;
     const g = this.game, h = g.hero, P = g.physics, da = Math.atan2(aim.x, aim.z);
     let best = null, bs = 1e9;

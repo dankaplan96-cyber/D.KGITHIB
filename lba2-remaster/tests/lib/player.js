@@ -85,7 +85,7 @@
     if (!G.room || G.room.outdoor) for (const d of G.story.doors()) if ((d.region || undefined) === G.room?.id) out.push(d);
     return out.filter((d) => Math.hypot(d.x - tx, d.z - tz) > 1.2).map((d) => ({ x: d.x, z: d.z, r: d.r + 0.35 }));
   };
-  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5 } = {}) => {
+  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5, raw = false } = {}) => {
     const h = hero(), sx = h.pos.x, sz = h.pos.z;
     const avoid = triggers(tx, tz);   // door/exit triggers: kept out of, except to walk out of one he stands in
     const key = (ix, iz, y) => ix + ',' + iz + ',' + Math.round(y * 2);
@@ -125,6 +125,8 @@
     const pts = [];
     for (let k = end; k; k = from.get(k)) { const c = node.get(k); pts.push({ x: c.x, y: c.y, z: c.z }); }
     pts.reverse();
+    // (raw: every cell of the path, for picking his way along it step by step after he got stuck on a smoothed line)
+    if (raw) return { ok: !!goal, nodes: n, left: +cd.toFixed(2), pts, raw: true };
     // string-pull: keep only the corners
     const out = [pts[0]];
     let i = 0;
@@ -164,7 +166,7 @@
         lastFight = t;
         if (P.threats().length && fights < 8) { fights++; P.release(); P.note('threat: fight'); const fr = P.fight({ maxT: 40, threatsOnly: true, minHp: P.assist ? 2 : 0 }); if (P.assist && !h.dead && h.hp <= 2 && P.threats(14).length) fr.assisted = P.assistFight({ r: 16 }); t += fr.t || 1; P.note('fight → ' + JSON.stringify(fr)); if (h.dead || G.state !== 'play') { P.release(); return { r: h.dead ? 'dead' : 'state:' + G.state, t }; } plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }); wi = 1; lastP = { x: h.pos.x, z: h.pos.z, t }; continue; }
       }
-      while (wi < plan.pts.length - 1 && Math.hypot(plan.pts[wi].x - h.pos.x, plan.pts[wi].z - h.pos.z) < 0.45) wi++;
+      while (wi < plan.pts.length - 1 && Math.hypot(plan.pts[wi].x - h.pos.x, plan.pts[wi].z - h.pos.z) < (plan.raw ? 0.2 : 0.45)) wi++;   // (cell by cell: onto each one)
       const w = plan.pts[Math.min(wi, plan.pts.length - 1)] || { x: tx, z: tz };
       const want = Math.atan2(w.x - h.pos.x, w.z - h.pos.z), diff = norm(want - h.angle);
       keys.delete('ArrowLeft'); keys.delete('ArrowRight'); keys.delete('ArrowUp');
@@ -176,9 +178,11 @@
         if (Math.hypot(h.pos.x - lastP.x, h.pos.z - lastP.z) < 0.4) {
           if (++replans > 6) { P.release(); return { r: 'stuck', t, at: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) }; }
           P.note(`stuck at (${h.pos.x.toFixed(1)}, ${h.pos.z.toFixed(1)}): replan`);
-          // back off a little, then plan again
+          // back off a little, then plan again; stuck twice: follow the planned cells one by one instead of the
+          // smoothed corners (a straight line between two corners can graze a slope too steep to walk, and cutting
+          // a corner by the 0.45 m a waypoint counts as reached puts him on it), as a player picks his way round
           P.release(); P.holdFor(['ArrowDown'], 0.4);
-          plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }); wi = 1;
+          plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6), raw: replans >= 2 }); wi = 1;
         }
         lastP = { x: h.pos.x, z: h.pos.z, t };
       }
@@ -214,8 +218,13 @@
     if (G.state === 'play') {
       P.face(x, z);
       // the prompt must be for this thing: if something else is picked (a person standing by), step closer
+      // (a story thing's prompt — a valve, a console, one of three dials — carries no position, so it can't be told
+      // from a neighbour of the same kind: one step closer, at most 4 s, then it is taken as this thing, as in
+      // ready(). Walking on would only push him into its collider until the stuck-replan gives up, three times.)
+      const noPos = (q) => !!q && q.x == null && q.kind !== 'npc';
+      const forThis = (q, k) => !!q && (q.x == null ? q.kind !== 'npc' && k > 0 : Math.hypot(q.x - x, q.z - z) <= match);
       tg = P.target();
-      for (let k = 0; k < 3 && (!tg || tg.x == null || Math.hypot(tg.x - x, tg.z - z) > match); k++) { P.go(x, z, { tol: Math.max(0.35, near * 0.5) }); P.face(x, z); tg = P.target(); }
+      for (let k = 0; k < 3 && !forThis(tg, k); k++) { P.go(x, z, { tol: Math.max(0.35, near * 0.5), ...(noPos(tg) ? { maxT: 4 } : {}) }); P.face(x, z); tg = P.target(); }
       // (a particular thing asked for and someone walking by has the prompt: wait for them to pass, as a player would)
       for (let k = 0; kind && k < 20 && P.target()?.kind !== kind; k++) { G.step(0.25); if (k % 4 === 3) { P.go(x, z, { tol: Math.max(0.35, near * 0.5), maxT: 4 }); P.face(x, z); } }
       P.tap('KeyE', 0.1);

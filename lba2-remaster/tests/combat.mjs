@@ -417,6 +417,52 @@ r = await ev(() => {
 });
 check("FunFrock's trooper: spots, aims, fires; a weak hit is taken on its armour", r.states.includes('aim') && r.hp[1] < r.hp[0] && r.soft === 'blocked' && r.armour === 2, r);
 
+// 23. PLAY-REST: an enemy behind a chain-link fence (a see-through collider that stops the ball, as the depot's,
+//     island.js meshFence: 0.24 m thick, 2.3 m high) is still seen and can be locked, but the aim marker and the aim
+//     assist don't pick it: a throw goes to an enemy the ball can reach. A low railing the arc clears, or a
+//     see-through thing the ball passes (noBall), leaves the enemy a throw target.
+r = await ev(() => {
+  const { G, E } = C, h = G.hero, T = G.targeting, PH = G.physics;
+  const fence = PH.add({ type: 'box', x: 6189, z: 7, hw: 0.4, hd: 0.12, rot: 0, top: 2.3, seeThrough: true, noStand: true });
+  G.input.mouse.inside = false;   // (§18 left a cursor on the canvas: here the throw goes the way he faces)
+  const setup = (ids) => {
+    C.only(ids, [6189, 4], 0); const d = C.put('a_dummy', 6189, 9); d.hits = 0;
+    if (ids.includes('a_mite')) { const m = C.put('a_mite', 6191, 9); m.state = 'idle'; m.hp = m.maxHp = 50; m.coolT = 99; m.update = () => {}; }   // (held still: a chase would take it behind the fence)
+    h.combat.equip('ball', true); h.mp = h.mpMax; G.ball.reset?.(); T.release();
+    return d;
+  };
+  const aim = { x: 0, z: 1 }, id = (e) => e?.id || (e ? 'other' : null);
+  const out = {};
+  // the fence alone: seen, lockable, but no throw target and no marker
+  let d = setup(['a_dummy']);
+  T.update(1 / 60, aim, true);
+  out.fenced = { visible: T.visible(d, 9), pick: id(T.pick(aim, 9, T.cone())), throwT: id(T.throwTarget(aim)), marker: id(T.soft), reaches: T.ballReaches(d) };
+  T.toggleLock(aim); out.fenced.lock = id(T.lock); T.release();
+  // a quick throw straight at the fence: it does not count as aimed at the dummy, and it can't hurt it
+  C.press('KeyF'); C.step(1.5); out.fenced.hits = d.hits;
+  // the same spot without the fence: the dummy is the throw target (the filter acts only through the fence)
+  fence.enabled = false; d = setup(['a_dummy']); T.update(1 / 60, aim, true);
+  out.open = { throwT: id(T.throwTarget(aim)), marker: id(T.soft) };
+  // a low railing (1.0 m, as Zeelich's): the throw's arc clears it, the dummy stays the target and is hit
+  fence.top = 1.0; fence.enabled = true; d = setup(['a_dummy']); T.update(1 / 60, aim, true);
+  out.rail = { throwT: id(T.throwTarget(aim)) }; C.press('KeyF'); C.step(1.5); out.rail.hits = d.hits;
+  // a see-through thing the ball passes (noBall): no change
+  fence.top = 2.3; fence.noBall = true; d = setup(['a_dummy']);
+  out.noBall = { throwT: id(T.throwTarget(aim)) };
+  // the fence with a reachable enemy in the cone beside it: the aim takes that one, and the throw hits it
+  fence.noBall = false; d = setup(['a_dummy', 'a_mite']); const m = E('a_mite'); T.update(1 / 60, aim, true);
+  out.both = { throwT: id(T.throwTarget(aim)), marker: id(T.soft), mite: m.hp }; C.press('KeyF'); C.step(1.5);
+  out.both.miteAfter = m.hp; out.both.dummyHits = d.hits;
+  fence.enabled = false; T.release(); delete m.update; m.setPresent(false);
+  return out;
+});
+check('fence: an enemy behind a chain-link fence is still seen and can be locked', r.fenced.visible && r.fenced.pick === 'a_dummy' && r.fenced.lock === 'a_dummy', r.fenced);
+check('fence: ...but it is no throw target and gets no aim marker', !r.fenced.reaches && r.fenced.throwT === null && r.fenced.marker === null && r.fenced.hits === 0, r.fenced);
+check('fence: without the fence the same enemy is the throw target', r.open.throwT === 'a_dummy' && r.open.marker === 'a_dummy', r.open);
+check('fence: a low railing the arc clears keeps the target, and the throw hits it', r.rail.throwT === 'a_dummy' && r.rail.hits >= 1, r.rail);
+check('fence: a see-through collider the ball passes (noBall) keeps the target', r.noBall.throwT === 'a_dummy', r.noBall);
+check('fence: with a reachable enemy in the cone the aim takes it and the throw hits it', r.both.throwT === 'a_mite' && r.both.marker === 'a_mite' && r.both.miteAfter < r.both.mite && r.both.dummyHits === 0, r.both);
+
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

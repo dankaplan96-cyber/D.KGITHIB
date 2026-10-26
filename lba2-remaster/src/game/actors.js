@@ -1231,6 +1231,8 @@ export class MagicBall {
       if (d < 0.3 || d > bd) continue;
       if ((dx * hx + dz * hz) / d < cosMax) continue;
       if (!g.physics.clearTo(this.pos.x, this.pos.y, this.pos.z, t.x, t.y, t.z, 0.8)) continue;
+      // (nor toward an enemy behind a chain-link fence: seen through, but it stops the ball — Targeting.ballReaches)
+      if (t.enemy && g.physics.ballFenceBetween?.(this.pos.x, this.pos.y, this.pos.z, t.x, t.y, t.z, t.enemy.hitR || 0.75, BALL_R)) continue;
       best = t; bd = d;
     }
     if (!best) return;

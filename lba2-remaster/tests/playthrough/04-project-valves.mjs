@@ -16,11 +16,14 @@ export const steps = [
   }],
   ['cliffs: up the stones', () => {
     const G = game, W = G.world, h = G.hero; let i = 0, tries = 0;
+    // on a stone: at its height and held by it (physics.groundInfo holds him over a drop up to 6 cm past its rim —
+    // a landing right on the rim is on the stone, not a fall back to the street)
+    const on = (q) => Math.abs(h.pos.y - q.c.top) < 0.3 && Math.hypot(h.pos.x - q.c.x, h.pos.z - q.c.z) < q.c.r + 0.06;
     while (i < W.stones.length && tries < 30) {
       const s = W.stones[i]; tries++;
-      const y = P.hopTo(s.c.x, s.c.z, s.c.top);
-      if (Math.abs(y - s.c.top) < 0.3 && Math.hypot(h.pos.x - s.c.x, h.pos.z - s.c.z) < s.c.r) i++;
-      else { const j = W.stones.findIndex((q) => Math.abs(h.pos.y - q.c.top) < 0.3 && Math.hypot(h.pos.x - q.c.x, h.pos.z - q.c.z) < q.c.r); i = j + 1; }
+      P.hopTo(s.c.x, s.c.z, s.c.top);
+      if (on(s)) i++;
+      else i = W.stones.findIndex(on) + 1;
     }
     return { reached: i, of: W.stones.length, tries, y: +h.pos.y.toFixed(2), fail: i >= W.stones.length ? null : 'stones' };
   }],
