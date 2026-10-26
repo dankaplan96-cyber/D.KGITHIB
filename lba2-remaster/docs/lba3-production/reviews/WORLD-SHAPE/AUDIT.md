@@ -27,7 +27,7 @@ overlay images are in the session scratchpad (`worldshape/`, listed at the end) 
 | 2 | The Hamalayi | A square box: the wall of peaks a 200 m square, the terraces cut along straight lines (z = 31, z = −26, x = 0, x = 46), a ruler-straight gorge | 93 % of all cliff edge axis-aligned (a natural outline ≈ 11 %; the original Citadel 47 %, the original Desert 28 %) | **Fixed** (organic edges; levels kept) |
 | 3 | Walking speed | Every crossing 20 % shorter in time than LBA2's | 1.93 vs 2.4 m/s | **Fixed** by CTRL-1 (2.0 m/s) |
 | 4 | Citadel terraces | Our four steps are uniform 2.9 m; the original's shelves stand 3.8 / 7.3 / 11.1 / 13.6 m above the town (ours 2.8 / 5.8 / 8.7 / 11.6): the plateau 2 m low, the second step 1.5 m low | plateau-top (> 12.5 m) IoU 0.21; height error on common land 1.45 m (mean) | **Tried and reverted** (block 3): it measured 3.69 / 7.31 / 11.01 / 13.57 m, plateau-top IoU 0.71, error 1.11 m, but broke two input tests (below); plan ready |
-| 5 | Citadel harbour | A rectangular basin cut from x −400 into the quay (world.js `BAY`), a square quay, the square fort pad and depot yard | 1,147 m² of land the original doesn't have (mostly the quay and the coast's 1–2 m fringe) | Open, small (plan below) |
+| 5 | Citadel harbour | A rectangular basin cut from x −400 into the quay (world.js `BAY`), a square quay, the square fort pad and depot yard | 1,147 m² of land the original doesn't have (mostly the quay and the coast's 1–2 m fringe) | סגור (HARBOUR-CUT): basin an ellipse 14 × 9 m semi-axes at (−121, 44), quay corners rounded 2 m (below) |
 | 6 | Zeelich terminal island | Ours (no original counterpart): 124 × 79 m, 5,353 m² | — | Leave (story place) |
 
 The Zeelich islands made from the original's grids are faithful (table below); Citadel's coast and buildings are
@@ -176,6 +176,12 @@ the first shelf would leave the west street's bank as it is and may avoid the oc
 ## Still open
 
 **Citadel terraces**: above.
+
+**Citadel harbour — done (HARBOUR-CUT)**: world.js `BAY` is now an ellipse (semi-axes 14 × 9 m, centre (−121, 44), the quay
+face 1 m east of it) that only digs (`min(h, −3.2)`: the old straight cut also lifted the sea floor to 3.2 m all the
+way to the map's edge, a pale bar in the water); the quay's outline is a rounded box (`QUAY_R` = 2 m, island.js) that
+world.js's ground, paving and drop use and island.js's wall (a quarter-ring section), coping, rail and colliders
+follow. The pier, ferry, boats and cargo lift did not move. Plan as written:
 
 **Citadel harbour** (world.js `BAY`, island.js harbour): replace the basin's `boxDist(x, z, -400, …)` with a
 rounded basin (an ellipse 14 × 9 m at (−121, 44)) so the cut no longer runs straight to the map's edge; round the

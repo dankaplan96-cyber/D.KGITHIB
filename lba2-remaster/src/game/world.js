@@ -11,7 +11,7 @@ import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
-import { buildIsland, keepClear, STUMP, SHIFT, ISLET } from './island.js';
+import { buildIsland, keepClear, STUMP, SHIFT, ISLET, QUAY_R } from './island.js';
 import { buildDinoFly } from './dinofly.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
@@ -57,7 +57,9 @@ const FLATS = [{ ...POI.village, r: 20, h: 2.2 }];
 // (at the west end of the original's pier; see island.js SHIFT.harbour)
 const HS = SHIFT.harbour;
 export const QUAY = { x0: -74.5 + HS.x, x1: -61.5 + HS.x, z0: -13 + HS.z, z1: 7 + HS.z, h: 1.8 };
-const BAY = { x1: QUAY.x0 - 0.1, z0: QUAY.z0 + 0.6, z1: QUAY.z1 - 0.6 };
+// (HARBOUR-CUT: the basin is a rounded one, an ellipse 14 m × 9 m semi-axes centred 1 m off the quay face in front of
+// the quay's middle, so the cut no longer runs straight on to the map's edge; the quay's corners are rounded, QUAY_R)
+const BAY = { x: QUAY.x0 - 1, z: (QUAY.z0 + QUAY.z1) / 2, a: 14, b: 9 };
 
 export const PATHS = [
   [[-42, -4], [-37, -20], [-34, -36], [-42, -50], [-48, -56]],                          // from the square up to the plateau
@@ -96,6 +98,18 @@ function boxDist(x, z, x0, z0, x1, z1) {
   const dx = Math.max(x0 - x, x - x1), dz = Math.max(z0 - z, z - z1);
   return dx > 0 && dz > 0 ? Math.hypot(dx, dz) : Math.max(dx, dz);
 }
+// the same with the four corners rounded to radius r (negative inside)
+function roundBoxDist(x, z, x0, z0, x1, z1, r) {
+  const qx = Math.abs(x - (x0 + x1) / 2) - ((x1 - x0) / 2 - r), qz = Math.abs(z - (z0 + z1) / 2) - ((z1 - z0) / 2 - r);
+  return Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0) - r;
+}
+// signed distance (first-order) to an ellipse with semi-axes a (x) and b (z), negative inside
+function ellipseDist(x, z, cx, cz, a, b) {
+  const dx = x - cx, dz = z - cz, k0 = Math.hypot(dx / a, dz / b), k1 = Math.hypot(dx / (a * a), dz / (b * b));
+  return k1 < 1e-9 ? -Math.min(a, b) : (k0 * (k0 - 1)) / k1;
+}
+// the harbour quay's outline (its corners rounded: QUAY_R, island.js builds its wall, rail and coping on the same arcs)
+const quayDist = (x, z) => roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1, QUAY.z1, QUAY_R);
 
 // the heights the town was built on (kept verbatim in the town core)
 function townCoreHeight(x, z) {
@@ -221,12 +235,14 @@ function baseHeight(x, z) {
   }
   // harbour: the basin and the quay
   {
-    const db = boxDist(x, z, -400, BAY.z0, BAY.x1, BAY.z1);
-    h = lerp(h, -3.2, 1 - smoothstep(-0.6, 0.8, db));
-    const dq = boxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1, QUAY.z1);
+    // (the basin only digs: where the sea floor is already deeper than 3.2 m it is left as it is, the old straight cut
+    // lifted it to 3.2 m all the way to the map's edge and showed as a pale bar in the water)
+    const db = ellipseDist(x, z, BAY.x, BAY.z, BAY.a, BAY.b);
+    h = lerp(h, Math.min(h, -3.2), 1 - smoothstep(-0.6, 0.8, db));
+    const dq = quayDist(x, z);
     h = lerp(h, QUAY.h, 1 - smoothstep(0, 3.5, dq));
-    // the quay drops straight into the basin (the embankment wall hides the step)
-    if (x < QUAY.x0 + 0.3 && db < 0.8) h = Math.min(h, lerp(-3.2, QUAY.h, smoothstep(QUAY.x0 - 0.6, QUAY.x0 + 0.3, x)));
+    // the quay drops straight into the basin (the embankment wall hides the step; round the corners, too)
+    if (x < QUAY.x0 + QUAY_R + 0.3 && db < 0.8) h = Math.min(h, lerp(-3.2, QUAY.h, smoothstep(0.6, -0.3, dq)));
   }
   // the Whispering Cliffs: a rock stack on the plateau's rim
   {
@@ -363,7 +379,7 @@ function islandSplat(x, z, h, slope, w) {
     w[0] *= 1 - soil * 0.95;
   }
   // the quay is paved
-  if (boxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 - 1, QUAY.z1) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
+  if (Math.max(roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 + 3, QUAY.z1, QUAY_R), x - (QUAY.x1 - 1)) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
   const fd = Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z));
   if (fd < POI.fort.half) w[4] = 3;
   if (boxDist(x, z, POI.fort.x - POI.fort.half - 5, POI.fort.z - 4.5, POI.fort.x - POI.fort.half + 1, POI.fort.z + 4.5) < n * 1.2) w[4] = 3; // the forecourt

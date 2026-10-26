@@ -31,6 +31,9 @@ const HARBOUR0 = { quayX: -74.5, z: -4, pierLen: 16.5, pierW: 3.2, deck: 1.75 };
 // The harbour stands at the west end of the original's pier (its first place was the west shore by the square).
 export const SHIFT = { station: { x: -76, z: -101 }, depot: { x: -84, z: -122 }, orchard: { x: -58, z: -87.5 }, harbour: { x: -45.5, z: 47 } };
 export const HARBOUR = { ...HARBOUR0, quayX: HARBOUR0.quayX + SHIFT.harbour.x, z: HARBOUR0.z + SHIFT.harbour.z };
+// HARBOUR-CUT: the quay's outer corners are rounded to this radius (m): world.js shapes the ground on it, buildHarbour
+// its wall, coping and rail
+export const QUAY_R = 2;
 const sh = (k, x, z) => ({ x: x + SHIFT[k].x, z: z + SHIFT[k].z });
 export const LIGHTHOUSE = { x: -107.5, z: 90.5, half: 2.35, cottage: { x: -98, z: 99, ry: -Math.PI / 2 - 0.2 } };
 const STATION0 = { x: 48, z: 36, half: 13, wall: 2.0 };
@@ -434,6 +437,42 @@ const PICT = {
   cross(c, x, y) { c.save(); c.translate(x, y); c.rotate(Math.PI / 4); c.fillStyle = '#b02a1a'; c.fillRect(-28, -6, 56, 12); c.fillRect(-6, -28, 12, 56); c.restore(); c.fillStyle = '#3a2410'; },
 };
 
+// HARBOUR-CUT: the quay wall's corner, a quarter ring of the straight wall's section (r from the arc's centre, y):
+// built round the origin, the arc running from the face (west, s = 0) to the side (north for sign -1, south for +1)
+function quayCornerWall(sign, R, QH) {
+  const N = 8, P = [[R + 0.2, -3.6], [R - 0.18, QH - 0.18], [R - 1.6, QH - 0.18], [R - 1.6, -3.6]];   // outer foot, outer top, inner top, inner foot
+  const pos = [], nor = [], uv = [], idx = [];
+  const at = (r, y, phi) => [r * Math.sin(phi), y, r * Math.cos(phi)];
+  const quad = (a, b, c, d, n) => {           // four vertices round a face, wound so that it faces along n
+    const base = pos.length / 3;
+    for (const v of [a, b, c, d]) { pos.push(...v.p); nor.push(...v.n); uv.push(...v.uv); }
+    const e1 = [b.p[0] - a.p[0], b.p[1] - a.p[1], b.p[2] - a.p[2]], e2 = [c.p[0] - a.p[0], c.p[1] - a.p[1], c.p[2] - a.p[2]];
+    const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+    if (cr[0] * n[0] + cr[1] * n[1] + cr[2] * n[2] >= 0) idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    else idx.push(base, base + 2, base + 1, base, base + 3, base + 2);
+  };
+  const T = TILE.rubble, phiAt = (i) => -Math.PI / 2 + sign * (i / N) * (Math.PI / 2);
+  const vtx = (j, i, nrm) => { const phi = phiAt(i), [r, y] = P[j]; return { p: at(r, y, phi), n: nrm(phi), uv: [(r * (Math.PI / 2) * (i / N)) / T, y / T] }; };
+  const ey = QH + 3.42, el = Math.hypot(ey, 0.38);
+  const outer = (phi) => [(Math.sin(phi) * ey) / el, 0.38 / el, (Math.cos(phi) * ey) / el];   // the battered face leans back: its normal tips up a little
+  const up = () => [0, 1, 0];
+  for (let i = 0; i < N; i++) {
+    quad(vtx(0, i, outer), vtx(0, i + 1, outer), vtx(1, i + 1, outer), vtx(1, i, outer), outer(phiAt(i + 0.5)));   // the face
+    quad(vtx(1, i, up), vtx(1, i + 1, up), vtx(2, i + 1, up), vtx(2, i, up), [0, 1, 0]);                             // the top
+  }
+  {                                                                                                                   // the open end at the quay's side (the other meets the straight wall)
+    const phi = phiAt(N), tan = [sign * Math.cos(phi), 0, -sign * Math.sin(phi)];
+    const v = (j) => ({ p: at(P[j][0], P[j][1], phi), n: tan, uv: [P[j][0] / T, P[j][1] / T] });
+    quad(v(0), v(1), v(2), v(3), tan);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  geo.setIndex(idx);
+  return geo;
+}
+
 // ================================================================== harbour
 function buildHarbour(W0, root, r) {
   // built in its design frame (the west shore by the square, where it first stood) and shifted as a whole to
@@ -447,43 +486,61 @@ function buildHarbour(W0, root, r) {
   const pz = HARBOUR0.z, pw = HARBOUR0.pierW, deck = HARBOUR0.deck, plen = HARBOUR0.pierLen;
 
   // --- rubble embankment along the quay face, battered, with a dressed coping course
+  // (HARBOUR-CUT: the straight run stops where the quay's corners begin; each corner is a quarter ring of the same
+  // section round a centre QR m in from the face and the side, and the coping, rail and colliders follow that arc)
+  const QR = QUAY_R, zA = Z0 + QR, zB = Z1 - QR;
+  const corners = [{ cz: zA, sign: -1 }, { cz: zB, sign: 1 }];   // north-west, south-west: the arc runs from the face (s = 0) to the side (s = π/2)
+  const onArc = (c, rho, sArc) => { const phi = -Math.PI / 2 + c.sign * sArc; return { x: QX + QR + rho * Math.sin(phi), z: c.cz + rho * Math.cos(phi), phi }; };
   {
     const s = new THREE.Shape();
     s.moveTo(-0.2, -3.6); s.lineTo(1.6, -3.6); s.lineTo(1.6, QH - 0.18); s.lineTo(0.18, QH - 0.18); s.lineTo(-0.2, -3.6);
-    const wallGeo = extrude(s, Z1 - Z0 + 1.2, TILE.rubble);
+    const wallGeo = extrude(s, zB - zA, TILE.rubble);
     // shape is in XY (x outward→inward, y up), extruded along z
-    B.add(wallGeo, tm('rubble', { color: '#d8d4dc' }), QX, 0, Z0 - 0.6);
+    B.add(wallGeo, tm('rubble', { color: '#d8d4dc' }), QX, 0, zA);
+    for (const c of corners) B.add(quayCornerWall(c.sign, QR, QH), tm('rubble', { color: '#d8d4dc' }), QX + QR, 0, c.cz);
     // (no side returns: the quay's ends meet the rock shore; the old returns stood 1.2 m out in the water, OPEN-3 #02)
     // coping stones: individual bevelled blocks with slight jitter
     const cope = [];
-    for (let z = Z0 - 0.4; z < Z1 + 0.4; z += 0.9) cope.push({ x: QX + 0.32, y: QH - 0.2, z: z + 0.45, ry: (r() - 0.5) * 0.03, sx: 1, sy: 1, sz: 1, color: new THREE.Color().setScalar(0.85 + r() * 0.2) });
+    for (let z = zA + 0.45; z < zB; z += 0.9) cope.push({ x: QX + 0.32, y: QH - 0.2, z, ry: (r() - 0.5) * 0.03, sx: 1, sy: 1, sz: 1, color: new THREE.Color().setScalar(0.85 + r() * 0.2) });
+    for (const c of corners) for (let k = 0; k < 3; k++) {
+      const p = onArc(c, QR - 0.32, ((k + 0.5) / 3) * (Math.PI / 2));
+      cope.push({ x: p.x, y: QH - 0.2, z: p.z, ry: Math.atan2(Math.cos(p.phi), -Math.sin(p.phi)) + (r() - 0.5) * 0.03, sx: 1, sy: 1, sz: 1, color: new THREE.Color().setScalar(0.85 + r() * 0.2) });
+    }
     instances(g, cached('cope', () => bbox(0.9, 0.24, 0.88, 0.04, TILE.stone).translate(0, 0.12, 0)), tm('stone', { color: '#e8e4dc' }), cope);
-    physics.add({ type: 'box', x: QX + 0.6, z: (Z0 + Z1) / 2, hw: 0.6, hd: (Z1 - Z0) / 2 + 0.6, rot: 0, top: QH + 0.04, seeThrough: true });
+    physics.add({ type: 'box', x: QX + 0.6, z: (zA + zB) / 2, hw: 0.6, hd: (zB - zA) / 2, rot: 0, top: QH + 0.04, seeThrough: true });
+    // (the walkable lip round each corner: chords of the arc, a little over their ends so they meet)
+    for (const c of corners) for (let k = 0; k < 3; k++) {
+      const a = onArc(c, 1.4, (k / 3) * (Math.PI / 2)), b = onArc(c, 1.4, ((k + 1) / 3) * (Math.PI / 2));
+      physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.6, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2 + 0.06, rot: Math.atan2(b.x - a.x, b.z - a.z), top: QH + 0.04, seeThrough: true });
+    }
   }
 
   // --- square white bollards with teal rails along the quay edge (#47)
   {
     const bollard = bollardGeo();
-    const posts = [];
     const gapA = pz - pw / 2 - 0.5, gapB = pz + pw / 2 + 0.5;
     const zs = [];
-    for (let z = Z0 + 0.1; z <= Z1 - 0.1; z += 3.0) if (z < gapA || z > gapB) zs.push(z);
-    zs.push(gapA, gapB); zs.sort((a, b) => a - b);
-    for (const z of zs) posts.push({ x: QX + 0.45, y: QH + 0.04, z, ry: (r() - 0.5) * 0.06 });
+    for (let z = zA; z <= zB + 1e-6; z += 3.0) if (z < gapA || z > gapB) zs.push(z);
+    zs.push(gapA, gapB, zB); zs.sort((a, b) => a - b);
+    // the rail's route: up round the north-west corner's arc, along the face, round the south-west arc (a post at
+    // every chord's end); the gap at the pier stays open
+    const route = [];
+    for (let k = 3; k >= 1; k--) route.push(onArc(corners[0], QR - 0.45, (k / 3) * (Math.PI / 2)));
+    for (const z of [...new Set(zs)]) route.push({ x: QX + 0.45, z, gapA: z === gapA, gapB: z === gapB });
+    for (let k = 1; k <= 3; k++) route.push(onArc(corners[1], QR - 0.45, (k / 3) * (Math.PI / 2)));
+    // (the old run drew 8 of the quay's random numbers here; the 8 are still drawn, so the rest of the quay's jitter
+    // — barrels, crates, tulips — stays as it was, and the extra posts take their twist from a stream of their own)
+    for (let i = 0; i < 8; i++) r();
+    const rj = rng(4417);
+    const posts = route.map((p) => ({ x: p.x, y: QH + 0.04, z: p.z, ry: (rj() - 0.5) * 0.06 }));
     instances(g, bollard, tm('concrete', { color: '#f4f2ee', rough: 0.75 }), posts);
     const teal = pm('#2a9a8a', 0.4, { metalness: 0.5 });
-    for (let i = 0; i < zs.length - 1; i++) {
-      const a = zs[i], b = zs[i + 1];
-      if (a === gapA && b === gapB) continue;
-      for (const hy of [0.55]) B.add(cyl(0.045, 0.045, b - a, 8), teal, QX + 0.45, QH + hy, (a + b) / 2, Math.PI / 2, 0, 0);
-    }
+    const runs = [];   // the rail's runs (the pier's gap leaves none)
+    for (let i = 0; i < route.length - 1; i++) if (!(route[i].gapA && route[i + 1].gapB)) runs.push([route[i], route[i + 1]]);
+    for (const [a, b] of runs) B.add(cyl(0.045, 0.045, Math.hypot(b.x - a.x, b.z - a.z), 8), teal, (a.x + b.x) / 2, QH + 0.55, (a.z + b.z) / 2, Math.PI / 2, Math.atan2(b.x - a.x, b.z - a.z), 0);
     for (const p of posts) physics.add({ type: 'box', x: p.x, z: p.z, hw: 0.3, hd: 0.3, rot: 0, top: QH + 1.1, seeThrough: true });
     // the rail itself blocks (you cannot step off the quay into the basin except over the pier)
-    for (let i = 0; i < zs.length - 1; i++) {
-      const a = zs[i], b = zs[i + 1];
-      if (a === gapA && b === gapB) continue;
-      physics.add({ type: 'box', x: QX + 0.45, z: (a + b) / 2, hw: 0.12, hd: (b - a) / 2, rot: 0, top: QH + 1.05, seeThrough: true, noStand: true });
-    }
+    for (const [a, b] of runs) physics.add({ type: 'box', x: (a.x + b.x) / 2, z: (a.z + b.z) / 2, hw: 0.12, hd: Math.hypot(b.x - a.x, b.z - a.z) / 2, rot: Math.atan2(b.x - a.x, b.z - a.z), top: QH + 1.05, seeThrough: true, noStand: true });
   }
 
   // --- plank pier on piles
