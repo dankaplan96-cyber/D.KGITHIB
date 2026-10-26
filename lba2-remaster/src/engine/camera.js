@@ -86,8 +86,8 @@ const STEEP = (48 * Math.PI) / 180, STEEP_OK = (40 * Math.PI) / 180, STEEP_T = 0
 // the way has been clear for OCC_HOLD s (≤ OCC_OUT_V m/s): no pumping in and out along a wall
 const AUTO_V = (24 * Math.PI) / 180, AUTO_A = (45 * Math.PI) / 180, AUTO_MIN = (25 * Math.PI) / 180, AUTO_OFF = (4 * Math.PI) / 180, AUTO_MAX = (115 * Math.PI) / 180, AUTO_IDLE = 2, STEADY = 0.6;
 const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, OCC_DELAY = 0.2, TALL_FREE = 1.0;
-// CAM-FOLLOW, the chase camera (_chase): the arm from his pivot (CH_PIVOT m over the ground under him) is CH_ARM m long
-// at CH_PITCH, with a CH_FOV° lens; it looks CH_AHEAD m ahead of him, CH_LOOK m up (eased at CH_LOOK_W 1/s). The heading
+// CAM-FOLLOW, the chase camera (_chase): the arm from his pivot (CH_PIVOT m over the ground under him) is CH_DIST's arm
+// long at its pitch (Settings → Camera distance; the user: "too close and too low" → Medium, a step out and up, the default), with a CH_FOV° lens; it looks CH_AHEAD m ahead of him, CH_LOOK m up (eased at CH_LOOK_W 1/s). The heading
 // follows his facing (a steering correction within CH_DEAD_YAW moves nothing until his facing has held CH_STEADY s)
 // through a spring (CH_W 1/s: within 15° of a 90° turn in 0.25 s, settled in ~0.45 s) that never turns faster than
 // CH_VMAX (4°/frame at 60 fps, 8° at 30). The pivot's height keeps a dead band of CH_DEAD m, then its own spring (CH_HW).
@@ -95,16 +95,18 @@ const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, 
 // stick goes another way and he faces less than CH_HOLD_OUT from the view's own way.
 // The spring arm: the longest (CH_MIN..CH_ARM, 0.25 m steps) whose camera, over the ground (_groundNeed), keeps CH_GAP m
 // from everything solid and sees him — also CH_LEAD s on down a swing or his walk, and at the heading it is turning to;
-// none: the same with the least margins (CH_NEAR, the ground's least: a tight spot, under eaves); none (his back to a
+// or the same with the least margins (CH_NEAR, the ground's least: a tight spot, under eaves) when that arm is more
+// than CH_TIER_PREF m longer (along a house's eaves: 5 m out and 0.2 m from them, not 1.6 m under them); none (his back to a
 // wall): over his shoulder, looking down (CH_OVER_ARM at the least of CH_OVER_P that does: ~45-60° beside a house, up
 // to 83° only with his back against a wall under its eaves —, eased in and out at CH_OVER_RATE 1/s; none: the silhouette shows him for the step it takes). Drawn in at up to CH_IN_V m/s,
 // eased by CH_IN_A m/s², out only after CH_HOLD s clear, at most CH_OUT_V m/s eased by CH_OUT_A, never through something
 // to a clear spot beyond; drawn in, the view tilts up by CH_UP rad at CH_SHORT m (CH_UP2 more at CH_MIN m). While the arm
 // is out further than it wants, the heading turns slower (to a fifth of CH_VMAX at CH_LAG m out). The pipeline's tube
 // keeps CH_PIPE m more (its stays and saddles stand outside its volume).
-const CH_ARM = 7.0, CH_PITCH = 0.34, CH_PIVOT = 1.4, CH_AHEAD = 1.2, CH_LOOK = 0.8, CH_FOV = 50, CH_W = 11, CH_VMAX = (240 * Math.PI) / 180, CH_DEAD_YAW = (3 * Math.PI) / 180, CH_STEADY = 0.3;
+const CH_DIST = { near: { arm: 7.0, pitch: 0.34 }, medium: { arm: 8.75, pitch: 0.42 }, far: { arm: 10.75, pitch: 0.5 } };
+const CH_PIVOT = 1.4, CH_AHEAD = 1.2, CH_LOOK = 0.8, CH_FOV = 50, CH_W = 11, CH_VMAX = (240 * Math.PI) / 180, CH_DEAD_YAW = (3 * Math.PI) / 180, CH_STEADY = 0.3;
 const CH_DEAD = 0.25, CH_HW = 4, CH_BACK = (110 * Math.PI) / 180, CH_HOLD_OUT = (95 * Math.PI) / 180;
-const CH_GAP = 0.4, CH_NEAR = 0.15, CH_PIPE = 0.35, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_LOOK_W = 8;
+const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_W = 6, CH_GAP = 0.4, CH_NEAR = 0.15, CH_INSIDE = 0.05, CH_RIM = 0.5, CH_FLICK = 0.3, CH_CONFIRM = 0.06, CH_TIER_PREF = 1.5, CH_PIPE = 0.35, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_OVER_T = 0.3, CH_LIFT_AHEAD = 0.5, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_LOOK_W = 8;
 // A lock-on: behind his shoulder (CH_SHOULDER rad round from the line target → him), looking at a point CH_LOCK_K of the
 // way to the target (at most CH_LOCK_MAX m), the arm longer by CH_LOCK_ARM of the distance (at most CH_LOCK_ARM_MAX m).
 const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, CH_LOCK_ARM_MAX = 3;
@@ -137,7 +139,7 @@ function outside(c, x, z) {
   return Math.hypot(Math.max(0, Math.abs(lx) - c.hw), Math.max(0, Math.abs(lz) - c.hd));
 }
 const _seen = new Set(), _cells = [], NO_SKIP = new Set();
-const GAP4 = [[-1, -1], [1, -1], [-1, 1], [1, 1]], GAP11 = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, 0.7], [-0.7, 0, -0.7]];
+const RIM5 = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]], GAP4 = [[-1, -1], [1, -1], [-1, 1], [1, 1]], GAP11 = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, 0.7], [-0.7, 0, -0.7]];
 
 const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3();
 // LBA2's forced camera: the look-ahead shrinks with the sine of the pitch above the view's own, to nothing at 90°
@@ -170,6 +172,8 @@ export class CameraRig {
     this.lba = { init: false, focus: new THREE.Vector3(), goal: new THREE.Vector3(), yaw: 0, goalYaw: 0, goalPitch: 0, behind: false, view: 0, clear: true };
   }
 
+  // CAM-FOLLOW: the Follow camera's distance and height (Settings → Camera distance: near, medium, far)
+  setFollowDistance(d) { this.chDist = CH_DIST[d] ?? CH_DIST.medium; }
   setMode(m) { this.mode = m === 'free' || m === 'follow' ? m : 'lba'; this.lba.init = false; if (this.fr) this.fr.init = false; if (this.ch) this.ch.init = false; }
   // Interiors: fixed isometric view rotated 45°, like LBA2's indoor scenes.
   setIso(room) { this.iso = room; this.snap(); }
@@ -485,11 +489,17 @@ export class CameraRig {
     return false;
   }
 
-  // CAM-FOLLOW: is p over a house's roof (over a scenery volume's footprint)? In a tight spot the camera stays down by him
-  // rather than up over the roof
+  // CAM-FOLLOW: is p over a house's roof — over a scenery volume's footprint by more than CH_RIM all round (grazing an
+  // eave's rim by inches, the way a camera running along a house does, is not over it)? In a tight spot the camera
+  // stays down by him rather than up over the roof
   _overRoof(p) {
     const occ = this.occ?.();
-    if (occ) for (const v of occ.near(p.x, p.z)) if (!v.camOnly && p.y > occ.topAt(v, p.x, p.z)) return true;
+    if (occ) for (const v of occ.near(p.x, p.z)) {
+      if (v.camOnly) continue;
+      let over = true;
+      for (const [dx, dz] of RIM5) { const t = occ.topAt(v, p.x + dx * CH_RIM, p.z + dz * CH_RIM); if (!(t > -Infinity && p.y > t)) { over = false; break; } }
+      if (over) return true;
+    }
     return false;
   }
 
@@ -580,7 +590,10 @@ export class CameraRig {
     const T = (C.T ??= new THREE.Vector3()).set(hero.x, C.h, hero.z);
     // the spring arm: the line from his pivot out to the camera (and a little past it) cut by a wall, a cliff or the
     // scenery draws it in, quickly; out again slowly once the way has stayed clear. Drawn in, the view tilts up.
+    const { arm: CH_ARM, pitch: CH_PITCH } = this.chDist ?? CH_DIST.medium;
     const full = CH_ARM + (lock ? Math.min(CH_LOCK_ARM_MAX, lockD * CH_LOCK_ARM) : 0), a0 = C.arm ?? full;
+    // (the tilt as it comes in keeps the camera's height about level near the full arm: an arm drawn in a little by a
+    // passing house neither bobs nor nods the view much)
     const pitchAt = (arm) => CH_PITCH + CH_UP * clamp((CH_ARM - arm) / (CH_ARM - CH_SHORT), 0, 1) + CH_UP2 * clamp((CH_SHORT - arm) / (CH_SHORT - CH_MIN), 0, 1);
     const at = (out, yw, a, O = T, q = pitchAt(a)) => { const h = Math.cos(q) * a; return out.set(O.x + Math.sin(yw) * h, O.y + CH_PIVOT + Math.sin(q) * a, O.z + Math.cos(yw) * h); };
     // the longest arm along heading yw whose camera — over the ground as it will be — keeps CH_GAP from everything
@@ -589,16 +602,23 @@ export class CameraRig {
     // the walls' cut (the silhouette shows him) → [arm, sees, tier: 0 comfortable, 1 tight, 2 over his head]
     const armFor = (yw, T) => {
       const p = pitchAt(a0), cut = Math.min(full, this.occluded(T, Math.cos(p), Math.sin(p), yw, full + 0.6, true, true));
-      let free = null;
       _v.set(T.x, hero.y + T.y - C.h, T.z);
+      // (each tier's longest arm that sees him, else its longest clear one; the comfortable tier wins unless the tight
+      // one's arm is CH_TIER_PREF longer: running along a house's eaves, 5 m out and 0.2 m from them beats 1.6 m
+      // under them — and the arm then shortens by inches as he goes, not by 5 m at once)
+      const best = [];
       for (const tight of [false, true]) {
+        let free = null, seen = null;
         for (let a = cut; ; a = Math.max(CH_MIN, a - 0.25)) {
           at(_b, yw, a, T); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, tight);
-          if (!this._solidAt(_b, tight ? CH_NEAR : CH_GAP) && !(tight && this._overRoof(_b))) { free ??= [a, tight ? 1 : 0]; if (this._sees(_b, _v)) return [a, true, tight ? 1 : 0]; }
+          if (!this._solidAt(_b, tight ? CH_NEAR : CH_GAP) && !(tight && this._overRoof(_b))) { free ??= a; if (this._sees(_b, _v)) { seen = a; break; } }
           if (a <= CH_MIN) break;
         }
-        if (free) return [free[0], false, free[1]];
+        best.push(seen != null ? [seen, true, tight ? 1 : 0] : free != null ? [free, false, tight ? 1 : 0] : null);
       }
+      const [b0, b1] = best;
+      if (b0 && (!b1 || (b0[1] >= b1[1] && b0[0] >= b1[0] - CH_TIER_PREF))) return b0;
+      if (b1) return b1;
       // (over his head: the least tilt up from CH_OVER_P[0] that stands clear and sees him)
       let clearQ = null;
       for (const q of CH_OVER_P) { at(_b, yw, CH_OVER_ARM, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true); if (!this._solidAt(_b, CH_NEAR) && !this._overRoof(_b)) { clearQ ??= q; if (this._sees(_b, _v)) return [CH_MIN, true, 2, q]; } }
@@ -618,13 +638,21 @@ export class CameraRig {
         if (Math.abs(gd) > 0.05) { want = Math.min(want, armFor(g, T)[0]); if (Math.abs(gd) > 0.6) want = Math.min(want, armFor(yaw + gd / 2, T)[0]); }
       }
       (C.pT ??= new THREE.Vector3()).copy(T);
+      // (a cut in of more than CH_FLICK m must hold CH_CONFIRM s: walking along a house's eaves the sight line grazes
+      // their rim and the search drops to the shortest arm for a frame, then back — that pumped the view in and out; a
+      // real wall stays, and the camera never stands in anything meanwhile, below)
+      if (!fresh && C.arm != null && want < C.arm - CH_FLICK) { C.lowT = (C.lowT || 0) + dt; if (C.lowT < CH_CONFIRM) want = C.arm - CH_FLICK; } else C.lowT = 0;
       // (letting out, only as far as the way out is clear: never out through a tree's trunk to the clear spot beyond)
       if (!fresh && C.arm != null && want > C.arm) for (let a = C.arm + 0.1; a < want + 0.1; a += 0.1) {
         at(_b, yaw, Math.min(a, want)); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, tier > 0);
         if (this._solidAt(_b, tier > 0 ? CH_NEAR : CH_GAP)) { want = Math.max(C.arm, a - 0.1); break; }
       }
       // (over his head: in and out of it eased, CH_OVER_RATE)
-      C.overK = fresh ? (over ? 1 : 0) : clamp((C.overK || 0) + (over ? 1 : -1) * CH_OVER_RATE * dt, 0, 1);
+      // (in only once over his head has been wanted CH_OVER_T s, or at once when he is out of sight from where it stands: a
+      // step past a corner of the eaves doesn't bob it up and down)
+      C.overT = over ? (C.overT || 0) + dt : 0;
+      const goOver = over && (C.overT >= CH_OVER_T || C.overK > 0 || !this._sees(cam.position, hero));
+      C.overK = fresh ? (over ? 1 : 0) : clamp((C.overK || 0) + (goOver ? 1 : -1) * CH_OVER_RATE * dt, 0, 1);
       if (fresh || C.arm == null) { C.arm = want; C.armV = 0; }
       else if (want < C.arm - 0.005) {
         // in: quickly (≤ CH_IN_V), eased in and out (CH_IN_A: it can always stop on the arm it wants, never past it)
@@ -642,7 +670,8 @@ export class CameraRig {
       W.occ = C.arm - a0; C.want = want; C.tight = tier > 0;
     }
     // (over his head: the tilt first, then the arm — out of it the arm first: the way between never crosses the eaves)
-    const so = smoothstep(0, 0.6, C.overK), sa = smoothstep(0.4, 1, C.overK), arm = (this.dist = lerp(C.arm, CH_OVER_ARM, sa)), pitch = (this.pitch = lerp(pitchAt(C.arm), C.overQ ?? CH_OVER_P[0], so));
+    const so = smoothstep(0, 0.6, C.overK), sa = smoothstep(0.4, 1, C.overK), arm = (this.dist = lerp(C.arm, CH_OVER_ARM, sa));
+    const pitch = (this.pitch = lerp(pitchAt(C.arm), C.overQ ?? CH_OVER_P[0], so));
     if (!fresh) cam.fov = damp(cam.fov, CH_FOV, 3, dt);
     cam.updateProjectionMatrix();
     const { x, y, z } = at(_a, yaw, arm, T, pitch);
@@ -658,11 +687,13 @@ export class CameraRig {
     }
     // over the ground round it and between it and him, eased as the other views do (up quickly, down gently, looking
     // down its own way)
-    // (in a tight spot only the ground's least: the comfortable lift would take it up into the eaves it is under)
+    // (in a tight spot only the ground's least: the comfortable lift would take it up into the eaves it is under; looking
+    // ahead down its own way no further than CH_LIFT_AHEAD s: swinging round him, a straight line further out reads
+    // ground it never reaches and bobs it up and down)
     let need = this._groundNeed(x, y, z, T, C.tight);
     if (C.pv && !fresh) {
       const vx = (x - C.pv.x) / dt, vy = (y - C.pv.y) / dt, vz = (z - C.pv.z) / dt;
-      if (Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 60) for (const t of LIFT_AHEAD) { const n = this._groundNeed(x + vx * t, y + vy * t, z + vz * t, T, C.tight); if (n > 0) need = Math.max(need, n + vy * t); }
+      if (Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 60) for (const t of LIFT_AHEAD) { if (t > CH_LIFT_AHEAD) break; const n = this._groundNeed(x + vx * t, y + vy * t, z + vz * t, T, C.tight); if (n > 0) need = Math.max(need, n + vy * t); }
     }
     C.pv = { x, y, z };
     const l0 = C.lift;
@@ -673,17 +704,31 @@ export class CameraRig {
     cam.position.set(x, y + C.lift, z);
     // never in anything: in, along the line to him, as far as it takes (a tree's trunk the view swung into, a corner the
     // arm was still on its way in to)
-    // (closer than CH_MIN, to CH_CLOSE: pressed into a corner it stands over his shoulder rather than lifted over the eaves)
-    if (so === 0 && this._solidAt(cam.position, CH_NEAR)) {
+    // (closer than CH_MIN, to CH_CLOSE: pressed into a corner it stands over his shoulder rather than lifted over the eaves;
+    // only within CH_INSIDE of a surface — the arm search keeps CH_NEAR, so grazing an eave's rim by an inch as he walks
+    // along a house doesn't cut it in by metres)
+    if (so === 0 && this._solidAt(cam.position, CH_INSIDE)) {
       for (let a = C.arm - 0.1; a >= CH_CLOSE - 1e-6; a -= 0.1) {
         at(_b, yaw, a); const n = this._groundNeed(_b.x, _b.y, _b.z, T, true); _b.y += n;
-        if (this._solidAt(_b, CH_NEAR)) continue;
+        if (this._solidAt(_b, CH_INSIDE)) continue;
         cam.position.copy(_b); C.arm = this.dist = a; C.armV = 0; this.pitch = pitchAt(a); C.lift = n; C.vlift = 0; W.keep = 1;
         break;
       }
     }
     // (nowhere clear at all — pressed into a corner under a roof: BUG-WALL's least margins, as the other views)
     if (this._solidAt(cam.position, 0)) this._keepOut(cam.position, this.look, 0, 0.4, HARD);
+    // (drawn in and lifted over a slope or a terrace beside him, it would look down steeply on him: it looks further
+    // along its way instead, no steeper than CH_EL_MAX — or as little more as keeps his chest CH_EL_KEEP inside the
+    // frame's lower edge)
+    if (!lock) {
+      const c = cam.position, dh = Math.hypot(this.look.x - c.x, this.look.z - c.z), dv = c.y - this.look.y;
+      const hh = Math.hypot(hero.x - c.x, hero.z - c.z), heroEl = Math.atan2(c.y - (hero.y + 1.0), Math.max(hh, 0.05));
+      const elMax = Math.max(CH_EL_MAX, heroEl - (cam.fov * Math.PI) / 360 + CH_EL_KEEP), el = Math.atan2(dv, dh);
+      // (the cap itself eased: the camera passing close over him moves it, never the view in a frame)
+      const want = Math.min(el, elMax);
+      C.el = fresh || C.el == null ? want : damp(C.el, want, CH_EL_W, dt);
+      if (dv > 0 && el > C.el && dh > 1e-3) { const k = dv / Math.tan(C.el) / dh; this.look.x = c.x + (this.look.x - c.x) * k; this.look.z = c.z + (this.look.z - c.z) * k; }   // (further along the same way)
+    } else C.el = null;
     cam.lookAt(this.look);
     this.target.copy(hero);
   }

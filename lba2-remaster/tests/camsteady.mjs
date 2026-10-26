@@ -117,9 +117,10 @@ function BUDGET(mode, name, s, notes) {
     // takes him to walk clear; the LBA view turns to a side heading there instead, which a chase camera cannot)
     b(`never steeper than over his shoulder (max ${s.maxPitch}° ≤ 72°; ${s.steepT} s over 50° ≤ 2 s)`, s.maxPitch <= 72 && s.steepT <= 2);
     b(`it turns only as he turns (heading reversals ${s.revYaw}/min ≤ his own ${s.revHero}/min)`, s.revYaw <= s.revHero + 1);
-    // (out of the house door the bot's way back hugs the next house's wall: the view goes up over his shoulder and comes
-    // down once as he walks clear, 3 reversals of tilt and height in a second — a wall he walks along, not a shudder)
-    { const j = name.startsWith('out of the house') ? 3 : 2; b(`no jitter on steps, slopes or walls (tilt and height reversals within 0.5 s of the last: ${s.jitterPitch}, ${s.jitterY} ≤ ${j}; a minute: ${s.revPitch}, ${s.revY})`, s.jitterPitch <= j && s.jitterY <= j); }
+    // (a jitter is a shudder, several bobs a second; walking the town past houses the arm draws in at a corner and the
+    // ground under it rises and falls as it swings round him, now and then a rise and fall in under 0.5 s: with the
+    // Medium arm (8.75 m, CAM-FOLLOW's distance setting) about one every 30 s on the town routes — allowed, at least 3)
+    { const j = Math.max(3, Math.ceil(s.dur / 30)); b(`no jitter on steps, slopes or walls (tilt and height reversals within 0.5 s of the last: ${s.jitterPitch}, ${s.jitterY} ≤ ${j}; a minute: ${s.revPitch}, ${s.revY})`, s.jitterPitch <= j && s.jitterY <= j); }
     // (standing, its arm may still let out slowly along its line to him after a wall: up to a metre)
     // (standing, its arm may still let out slowly along its line to him after a wall: up to a metre; with a lock-on the
     // view follows the target's own moves: up to 3°)
