@@ -333,6 +333,7 @@ export function regionPlaces(g, region) {
     add(R.plaza, 'mp_kesh'); add(R.oasis, 'mp_oasis'); add(R.dock, 'mp_pier'); add(R.camp, 'mp_camp');
     if (R.post) add({ x: (R.post.x0 + R.post.x1) / 2, z: (R.post.z0 + R.post.z1) / 2 }, 'mp_post');
     add(R.dig, 'mp_dig'); add(R.ruins, 'mp_condenser', 2);
+    add(R.school, 'mp_school', 2);   // (WORLD-80 step 3: the School of Magic at the original's place)
   } else if (region === 'hamalayi') {
     const R = g.rooms.hamalayi;
     add(R.landing, 'mp_foothills'); add(R.lhar, 'mp_lhar'); add(R.monastery?.gate, 'mp_monastery'); add(R.observatory, 'mp_observatory');

@@ -1443,6 +1443,54 @@ Tests on the merged tree (SwiftShader, one at a time, TMPDIR=/dev/shm, port 8181
 - Not verified: a real GPU (frame time, the look of the blue dome and the stone figure on the user's screen), an
   independent visual review, the optional coast pull (#6, +1.6) and the terraces (#7).
 
+### WORLD-80 step 3: the Desert batches (evidence docs/lba3-production/reviews/WORLD-80/desert/)
+The plan's Desert batches A (the ground and the beach) and B (the missing buildings and figures), with batch C's
+School, body 49, the islet and the gateway (docs/WORLD_SIMILARITY.md): Desert Island 39.4 → 85.0 (coast 90.0 →
+97.7, height 0.0 → 78.2, landmarks 15.9 → 88.1, objects 38.0 → 68.3), same scorer and references.
+The scorer now boots with `?allregions` (since LAZY-REGIONS it had measured the unbuilt desert as sea: NaN). What was
+built and where: WORLD_SIMILARITY.md "Desert Island: 39.4 → 85.0".
+
+- Collision and interaction: every new piece has a collider of its gameplay kind (houses, the hall, the mask and its
+  rock wall solid, camSkip on the big ones; the forecourt, the bridge's deck and steps, the plaza stair and the hall's
+  threshold stood on; fences, parapets, garden walls, troughs and the signpost noStand + seeThrough; jars and
+  crates stop him; sacks and small rocks are stepped over). The nine shut doors (the hall, S40, S28, body 49, the
+  compound's three, S113, the islet) answer "Locked." from their own level (R.shutDoors; prologue.js
+  baseInteractables, now for an outdoor room too). The School's door spot (WIZ.school.door) stands on the forecourt
+  before the mask's chin; `school-out` puts him on the bridge, facing east (tests/wizards.mjs).
+- Nothing of the story moved: Kesh's houses, the plaza, the oasis, the pump and its targets, the camp, the post and
+  its gate, the dig and its gate, the condenser hall's door, the yacht and its four lines, Hesk's poles and board, the
+  ferry and glider stops keep their places; the eight containers place with none skipped (containers.mjs); the new
+  track to the School crosses no yacht line and passes the oasis's rim and S40's wall gap. The ground under our
+  places is flat at their levels (the smoke numbers: village 5.0, oasis basin 3.54, pump 4.83, camp 3.0, dig bottom
+  0.2, post 1.6, glider 1.8, pier end 1.91).
+- Performance (SwiftShader counts, not GPU time; 1366×768, Medium, the benchmark's own camera): the arrival
+  route's Desert Island frame 284 → 309 draw calls (+8.8 %; main pass 268 → 289, shadow pass 17 → 21), 0 programs compiled after the
+  warm-up on every route (perfbudget; the scratch count's 3 programs on the arrival frame are the same 3 before and
+  after: the area entered fresh inside that measurement); the dock view 338 → 363, the plaza 92 → 113, the compound 252 → 280;
+  triangles at the arrival frame 353k → 449k (+27 %) (the new pieces join the island's one batch per material, which is
+  always drawn; the old places' rocks go through the LOD-instanced rock tiles, small parts carry no bevel). Not
+  measured: GPU time, the user's laptop (its benchmark is the judge).
+
+Tests (SwiftShader, one at a time, TMPDIR=/dev/shm, port 8188, R7 verdict policy; logs in the session scratchpad,
+not kept). Under the user's new rule (26.10: only the tests that touch the change; the full suite runs at night after
+several merges) these four ran; desert-life was not needed (no NPC place moved); containers, travel, chapter5,
+stability, transitions, holomap, drawcalls and the rest are left to the nightly run:
+
+| Test | Verdict |
+|---|---|
+| worldfit (?allregions) | PASS (124 s; the desert is listed, not judged: 16 registered buildings, z-fight scan 26 visible candidates; listed gaps under a plinth of 0.15–0.33 m on the post's three cabins and Kesh's south-east house — existing geometry, seen now that they are registered — and at the mask's front edge by the water channel) |
+| wizards (the School's door moved: in through the mask's chin, the rector, Ker'aooc, out onto the bridge) | PASS (44 s) |
+| chapter4 (the pump, the post's storm, the dig's gate and discs, the temple, Continue) | PASS (575 s, 54 checks) |
+| perfbudget (four routes × three presets) | PASS (470 s; new programs 0 on every route at every preset; street Medium 259 calls, as after step 2) |
+
+- Screenshots (1280×720, the play camera and an overhead each): before/ and after/ village-play, village-over,
+  school-play, school-play2 (after only: the hall from the rim), school-over, compound-play, compound-over, beach-play,
+  beach-over, s40-play, s40-over, s28-play, yard-play (after), yard-over, camp-play, dig-track-play, figures-over,
+  islet-over, island-over (after, without fog; the before one is in the fog), sign-close and mask-close (after);
+  desert-overlay-before/after.png from the numbers.
+- Not verified: a real GPU (frame time, the look on the user's screen: the mask's grey in the shade of its east face,
+  the pool's water), an independent visual review; Kesh's village was not moved (said so in WORLD_SIMILARITY.md).
+
 ### Not tested / blocked
 - HOUSE-FIX on a real GPU and by the user's eye: NOT DONE (SwiftShader captures; self-reviewed, no independent review).
 - LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).
