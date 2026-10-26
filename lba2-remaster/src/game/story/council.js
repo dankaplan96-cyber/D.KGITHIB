@@ -24,14 +24,14 @@ export class Council extends ChapterBase {
   stamps() { return (this.f.c9_nara ? 1 : 0) + (this.f.c9_oku ? 1 : 0); }
 
   npcDefs() {
-    const sp = (R, k) => R?.npcSpots?.[k] || { x: 0, z: 0, a: 0 };
-    const d = (id, char, color, s) => ({ id, name: 'n_' + id, char, color, x: s.x, z: s.z, angle: s.a });
+    const sp = (R, k) => R?.npcSpots?.[k] || { x: 0, z: 0, a: 0, pending: true };
+    const d = (id, char, color, s) => ({ id, name: 'n_' + id, char, color, x: s.x, z: s.z, angle: s.a, ...(s.pending ? { pending: true } : {}) });
     return [
       d('clerk', 'clerk', '#d8d0ff', sp(this.U, 'clerk')),
       d('chair', 'councilChair', '#e8c0ff', sp(this.C, 'chair')),
       d('councilB', 'councilB', '#ffb0c8', sp(this.C, 'c2')),
       d('councilC', 'councilC', '#a8b8ff', sp(this.C, 'c3')),
-      d('archivist', 'archivist', '#9fe0d0', { x: this.A?.patrol?.[0]?.[0] ?? 0, z: this.A?.patrol?.[0]?.[1] ?? 0, a: 0 }),
+      d('archivist', 'archivist', '#9fe0d0', this.A?.patrol?.[0] ? { x: this.A.patrol[0][0], z: this.A.patrol[0][1], a: 0 } : { x: 0, z: 0, a: 0, pending: true }),
     ];
   }
   place(id) {
@@ -67,13 +67,14 @@ export class Council extends ChapterBase {
   freezeMills() { for (const m of this.Z?.mills || []) m.setSpinning(!!this.f['c9_free_' + m.id]); }
 
   doors() {
-    const Z = this.Z;
+    const Z = this.game.regions.built('zeelich');   // (doors on Zeelich: once it is built)
     if (!this.isCur() || !Z) return [];
     const out = [{ region: 'zeelich', x: Z.councilDoor.x, z: Z.councilDoor.z, r: 1.0, room: 'upper' }];
-    if (this.game.rooms.workshop) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
+    if (this.game.regions.has('workshop')) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
     return out;
   }
   exitTo(to) {
+    if (!['up-down', 'up-council', 'up-archive', 'council-out', 'archive-out'].includes(to)) return null;
     const Z = this.Z, U = this.U, C = this.C, A = this.A;
     if (!U) return null;
     const ux = U.spawn.x + 5, uz = U.spawn.z; // the antechamber's centre
@@ -216,7 +217,7 @@ export class Council extends ChapterBase {
         this.chain([['chair', 'c9_chair_4'], ['baldino', 'c9_bal_c2'], ['baldino', 'c9_bal_c3'], ['hero', 'c9_tw_c3']], () => {
           g.audio.endCue?.(); this.busy = false;
           f.c9_vote = true; g.save(false);
-          g.startTransition(() => this.story.nextChapter());
+          g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
         });
       });
     });

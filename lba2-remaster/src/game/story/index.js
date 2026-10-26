@@ -4,6 +4,7 @@
 import { wizardDoors, wizardExit } from '../wizards.js';
 import { lba1Doors, lba1Exit } from '../lba1places.js';
 import { t } from '../i18n.js';
+import { CHAPTER_AREAS } from '../regions.js';
 import { Prologue } from './prologue.js';
 import { Chapter1 } from './chapter1.js';
 import { Chapter2 } from './chapter2.js';
@@ -73,11 +74,15 @@ export class Story {
     this.chapters[0].start();
   }
   // move on to the next chapter: title card, the chapter sets up the world
+  // LAZY-REGIONS: the areas the next chapter works in (src/game/regions.js CHAPTER_AREAS): a scene change into it
+  // builds them behind its black, under the loading card (startTransition's need)
+  nextAreas() { return CHAPTER_AREAS[ORDER[Math.min(this.index + 1, this.chapters.length - 1)]] || null; }
   nextChapter() {
     const g = this.game;
     const i = Math.min(this.index + 1, this.chapters.length - 1);
     this.f.chapter = i; this.f.chapterKey = ORDER[i];
     const c = this.cur;
+    for (const id of CHAPTER_AREAS[c.key] || []) g.regions?.ensure(id, 'chapter');   // (built already when a scene change led here)
     this.refreshCast();
     // (the epilogue's card shows only its title)
     const n = NUMBER[c.key];
@@ -122,12 +127,23 @@ export class Story {
 
   // place/hide NPCs for the current chapter
   refreshCast() {
-    const g = this.game;
+    const g = this.game, R = g.regions;
     for (const n of g.npcs) {
-      let p;
+      let p, wait = false;
       // every chapter is asked: a later chapter hides its own cast before it begins
       // (returns null), and the latest chapter that has an opinion wins
-      for (let i = 0; i < this.chapters.length; i++) { const r = this.chapters[i].place(n.def.id); if (r !== undefined && (i <= this.index || r === null)) p = r; }
+      // (LAZY-REGIONS: a place read from an area not built yet — his spot is there — is not known yet: he waits
+      //  hidden, and is placed when that area is built: regionBuilt calls this again. Nothing is built here.)
+      for (let i = 0; i < this.chapters.length; i++) {
+        const pr = R ? R.probe(() => this.chapters[i].place(n.def.id)) : { value: this.chapters[i].place(n.def.id), misses: new Set() };
+        // (no opinion, though it looked at an area not built: nothing to wait for)
+        if (pr.misses.size && (pr.error || pr.value !== undefined)) { if (i <= this.index) { p = undefined; wait = true; } continue; }
+        if (pr.error) throw pr.error;
+        const r = pr.value;
+        if (r !== undefined && (i <= this.index || r === null)) { p = r; wait = false; }
+      }
+      if (wait) { n.setPresent(false); continue; }
+      if (n.def.pending && p === undefined) continue;   // (his own area not built yet: he stays hidden: Game.addActors)
       if (p === undefined) p = this.life.place(n.def.id);
       if (p === undefined) continue;
       n.setPresent(!!p);
@@ -163,7 +179,7 @@ export class Story {
   townDoors() {
     const out = (this.chapters.find((c) => c.key === 'project')?.doors() || []).filter((d) => d.room !== 'projoffice');
     const st = this.game.world.station;
-    if (st && this.game.rooms.control && !out.some((d) => d.room === 'control')) out.push({ x: st.control.door.x, z: st.control.door.z, r: 0.9, room: 'control' });
+    if (st && this.game.regions.has('control') && !out.some((d) => d.room === 'control')) out.push({ x: st.control.door.x, z: st.control.door.z, r: 0.9, room: 'control' });
     return out;
   }
   canExit(room, to) { return this.cur.canExit(room, to); }
@@ -187,4 +203,6 @@ export class Story {
     this.refreshCast();
   }
   afterEnding() { this.cur.afterEnding?.(); }
+  // LAZY-REGIONS: after an area's build (src/main.js regionBuilt): what each part of the story keeps on it
+  regionBuilt(ids) { for (const c of [...this.chapters, this.workshop, this.kesh, this.zlife, this.arsenal]) c.regionBuilt?.(ids); }
 }

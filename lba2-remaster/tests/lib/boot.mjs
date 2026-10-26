@@ -70,6 +70,7 @@ export function watch(page) {
   // every screenshot is a visual capture for review: listed under "visual", never judged here
   const shot = page.screenshot.bind(page);
   page.screenshot = async (o = {}) => { const r = await shot(o); report.captures.push(o.path || '(in memory)'); return r; };
+  if (process.env.REGIONS_LOG) page.on('console', (m) => { if (/^\[regions\]/.test(m.text())) console.log('REGIONS', m.text()); });   // (LAZY-REGIONS: areas built where something read them)
   if (process.env.LIVE_ERRS) { page.on('pageerror', (e) => console.log('LIVE pageerror', e.message)); page.on('console', (m) => { if (m.type() === 'error') console.log('LIVE console', m.text()); }); }
   return errs;
 }

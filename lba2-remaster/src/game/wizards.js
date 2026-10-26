@@ -225,12 +225,19 @@ function buildSchoolRoom(scene, physics) {
 }
 
 export function buildWizards(scene, physics, desert, world) {
+  buildWizardTent(scene, physics, world);
+  if (desert) buildSchoolFace(physics, desert);
+  return { wtent: buildTentRoom(scene, physics), school: buildSchoolRoom(scene, physics) };
+}
+// LAZY-REGIONS (src/game/regions.js): the tent stands on Citadel (built with it), the school's face on Desert Island
+// (built with the desert), the two rooms each the first time they are needed
+export function buildWizardTent(scene, physics, world) {
   const tent = buildTentOutside(scene, physics);
   world?.updaters.push((dt, t) => tent.spin(t));   // (the finial turns, the pennant flaps)
   WIZ.tent.door = tent.door;
-  if (desert) WIZ.school.door = buildSchoolOutside(physics, desert).door;
-  return { wtent: buildTentRoom(scene, physics), school: buildSchoolRoom(scene, physics) };
 }
+export function buildSchoolFace(physics, desert) { if (!WIZ.school.door) WIZ.school.door = buildSchoolOutside(physics, desert).door; }
+export const WIZARD_ROOMS = { wtent: buildTentRoom, school: buildSchoolRoom };
 
 // doors and exits, the same in every chapter
 export function wizardDoors() {

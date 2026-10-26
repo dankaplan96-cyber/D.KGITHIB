@@ -22,6 +22,9 @@ export class ChapterBase {
   npcDefs() { return []; }
   enemyDefs() { return []; }
   decorate() {}
+  // LAZY-REGIONS: decorate() runs again after each area's build (src/main.js regionBuilt); a part made once is not
+  // made again
+  once(k) { const s = (this._dec ??= new Set()); if (s.has(k)) return false; s.add(k); return true; }
   begin() {}                      // called once when the chapter starts
   place() { return undefined; }   // (npcId) → {x,z,a,anim,room} | null (absent) | undefined (leave as is)
   doors() { return []; }

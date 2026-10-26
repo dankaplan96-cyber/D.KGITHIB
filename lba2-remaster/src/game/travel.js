@@ -18,7 +18,10 @@
 import * as THREE from 'three';
 import { esmerShuttle } from './shuttle.js';
 import { buildGlider } from './valveroom.js';
-import { ISLES, BOARD_NAME } from './zislands.js';
+import { ISLES, BOARD_NAME, hasIsland } from './zislands.js';
+import { DESERT_DOCK } from './desert.js';
+import { HAMALAYI_FIELD } from './hamalayi.js';
+import { ZEELICH } from './zeelich.js';
 import { ORDER } from './story/index.js';
 import { ctex, cached, bbox, cyl, lathe, pm, tm, brassM, Batch } from './kit.js';
 import { t } from './i18n.js';
@@ -80,10 +83,10 @@ function fieldRing(parent, x, y, z, r) {
 }
 
 export function buildTravel(game) {
-  const G = game, W = G.world, P = G.physics, R = G.rooms, points = {}, routes = [];
+  const G = game, W = G.world, P = G.physics, points = {}, routes = [];
+  G.travel = { points, routes, done: new Set() };
   const updaters = W.updaters;
   const gy = (x, z) => P.groundAt(x, z, 60);
-  const local = (room, x, z) => ({ x: x - room.group.position.x, z: z - room.group.position.z });
   const pt = (id, o) => (points[id] = { id, ...o });
 
   // ---- Twinsun: Citadel's harbour (the ferry), its glider field on the plateau, the spaceport
@@ -101,6 +104,45 @@ export function buildTravel(game) {
     P.add({ type: 'cyl', x: g.sock[0], z: g.sock[1], r: 0.15, top: gy(g.sock[0], g.sock[1]) + 4, noStand: true });
     fieldRing(W.root, g.x, gy(g.x, g.z), g.z, 5.2);
   }
+  // ---- the other regions' points (LAZY-REGIONS: the regions are built when first needed, src/game/regions.js). Each
+  // point is here from the start, in the same order; what is known before its region is built is filled in now (the
+  // ferry and glider stops, Zeelich's spaceport); the rest (Zeelich's shuttle pad, the islands' pads) is read from the
+  // built region, so reading it builds the region. travelRegion() dresses a region and fills its points once built.
+  const later = (p) => { for (const k of ['x', 'z', 'landing']) if (!(k in p)) Object.defineProperty(p, k, { configurable: true, enumerable: true, get() { G.rooms[p.region]; return Object.getOwnPropertyDescriptor(p, k)?.get ? undefined : p[k]; } }); return p; };
+  { const f = DES.ferry; pt('desert_ferry', { region: 'desert', mode: 'ferry', x: f.x, z: f.z, r: 3.4, landing: { ...DESERT_DOCK }, name: 'tr_desert_pier' }); }
+  { const g = DES.glider; pt('desert_glider', { region: 'desert', mode: 'glider', x: g.x, z: g.z, r: 4.0, landing: g.land, name: 'tr_desert_field' }); }
+  { const F = HAMALAYI_FIELD; pt('hamalayi_glider', { region: 'hamalayi', mode: 'glider', x: F.glider.x, z: F.glider.z, r: 4.5, landing: { ...F.landing }, name: 'tr_hamalayi_field' }); }
+  { const o = ZEELICH, p = ZPORT.pad; pt('zeelich_port', { region: 'zeelich', mode: 'ship', x: o.x + p.x, z: o.z + p.z, r: 6.4, landing: { x: o.x + p.x, z: o.z + p.z - 7.2, a: Math.PI }, name: 'tr_zeelich_port' }); }
+  later(pt('zeelich_shuttle', { region: 'zeelich', mode: 'shuttle', r: 5.0, name: 'isle_zeelich' }));
+  for (const n of ISLES) if (hasIsland(n)) later(pt('isle_' + n, { region: 'isle_' + n, mode: 'shuttle', r: 5.0, name: 'isle_' + n }));
+  for (const id of ['desert', 'hamalayi', 'zeelich', ...ISLES.map((n) => 'isle_' + n)]) if (G.regions?.built(id)) travelRegion(G, id);
+
+  // ---- the routes and their gates
+  const reached = (key) => (story) => story.index >= ORDER.indexOf(key);
+  const edge = (a, b, mode, gate) => { if (points[a] && points[b]) routes.push({ a, b, mode, gate }); };
+  const story = G.story;
+  edge('citadel_ferry', 'desert_ferry', 'ferry', (s) => reached('dig')(s) && s.cur.key !== 'steam');   // (in ch. 5 the project has taken the ferry)
+  edge('desert_glider', 'hamalayi_glider', 'glider', reached('pass'));
+  edge('hamalayi_glider', 'citadel_glider', 'glider', reached('evacuation'));
+  edge('desert_glider', 'citadel_glider', 'glider', reached('evacuation'));
+  edge('citadel_port', 'zeelich_port', 'ship', reached('dig'));
+  const shuttles = Object.values(points).filter((q) => q.mode === 'shuttle').map((q) => q.id);
+  for (let i = 0; i < shuttles.length; i++) for (let j = i + 1; j < shuttles.length; j++) edge(shuttles[i], shuttles[j], 'shuttle', reached('dig'));
+  void story;
+  return G.travel;
+}
+
+// LAZY-REGIONS: a region's travel stops (boards, the glider, the windsock, Zeelich's spaceport deck) once it is built,
+// and its points' positions read from it; a stop the region turned out not to have is taken off the network
+export function travelRegion(game, id) {
+  const G = game, T = G.travel, P = G.physics, R = G.regions ? { [id]: G.regions.built(id) } : G.rooms;
+  if (!T || T.done.has(id) || !R[id]) return;
+  T.done.add(id);
+  const points = T.points, gy = (x, z) => P.groundAt(x, z, 60);
+  const local = (room, x, z) => ({ x: x - room.group.position.x, z: z - room.group.position.z });
+  const set = (pid, o) => { const p = points[pid]; if (!p) return; for (const [k, v] of Object.entries(o)) Object.defineProperty(p, k, { value: v, writable: true, enumerable: true, configurable: true }); };
+  const drop = (pid) => { delete points[pid]; for (let i = T.routes.length - 1; i >= 0; i--) if (T.routes[i].a === pid || T.routes[i].b === pid) T.routes.splice(i, 1); };
+  const pt = (pid, o) => set(pid, o);
   // ---- Desert Island: the ferry stop at the pier's foot, the glider field on the beach south of it
   const D = R.desert;
   if (D) {
@@ -164,6 +206,7 @@ export function buildTravel(game) {
     void b; P.add({ type: 'box', x: o.x + br.x + 3.4, z: o.z + p.z0 + 2.2, hw: 1.1, hd: 0.15, rot: Math.PI * 0.75, top: Y + 2.7, noStand: true });
     Z.spaceport = { pad: { x: o.x + p.pad.x, z: o.z + p.pad.z, y: Y }, landing: { x: o.x + p.pad.x, z: o.z + p.pad.z - 7.2, a: Math.PI }, deck: { x0: o.x + p.x0, x1: o.x + p.x1, z0: o.z + p.z0, z1: o.z + p.z1, y: Y } };
     pt('zeelich_port', { region: 'zeelich', mode: 'ship', x: Z.spaceport.pad.x, z: Z.spaceport.pad.z, r: 6.4, landing: Z.spaceport.landing, name: 'tr_zeelich_port' });
+    if (!Z.shuttlePad) drop('zeelich_shuttle');
     if (Z.shuttlePad) {
       const sp = Z.shuttlePad, cx = o.x, cz = o.z, a = Math.atan2(cx - sp.x, cz - sp.z);
       pt('zeelich_shuttle', { region: 'zeelich', mode: 'shuttle', x: sp.x, z: sp.z, r: 5.0, landing: { x: sp.x + Math.sin(a) * 5.4, z: sp.z + Math.cos(a) * 5.4, a }, name: 'isle_zeelich' });
@@ -173,21 +216,8 @@ export function buildTravel(game) {
       P.add({ type: 'box', x: bx, z: bz, hw: 1.1, hd: 0.15, rot: Math.atan2(sp.x + Math.sin(a) * 5.4 - bx, sp.z + Math.cos(a) * 5.4 - bz), top: gy(bx, bz) + 2.7, noStand: true });
     }
   }
-  for (const n of ISLES) { const I = R['isle_' + n]; if (I?.pad) pt('isle_' + n, { region: 'isle_' + n, mode: 'shuttle', x: I.pad.x, z: I.pad.z, r: 5.0, landing: I.spawn, name: 'isle_' + n }); }
+  if (id.startsWith('isle_')) { const I = R[id]; if (I?.pad) set(id, { x: I.pad.x, z: I.pad.z, landing: I.spawn }); else drop(id); }
 
-  // ---- the routes and their gates
-  const reached = (key) => (story) => story.index >= ORDER.indexOf(key);
-  const edge = (a, b, mode, gate) => { if (points[a] && points[b]) routes.push({ a, b, mode, gate }); };
-  const story = G.story;
-  edge('citadel_ferry', 'desert_ferry', 'ferry', (s) => reached('dig')(s) && s.cur.key !== 'steam');   // (in ch. 5 the project has taken the ferry)
-  edge('desert_glider', 'hamalayi_glider', 'glider', reached('pass'));
-  edge('hamalayi_glider', 'citadel_glider', 'glider', reached('evacuation'));
-  edge('desert_glider', 'citadel_glider', 'glider', reached('evacuation'));
-  edge('citadel_port', 'zeelich_port', 'ship', reached('dig'));
-  const shuttles = Object.values(points).filter((q) => q.mode === 'shuttle').map((q) => q.id);
-  for (let i = 0; i < shuttles.length; i++) for (let j = i + 1; j < shuttles.length; j++) edge(shuttles[i], shuttles[j], 'shuttle', reached('dig'));
-  void story;
-  return (G.travel = { points, routes });
 }
 
 // what one can reach from a point now: [{ point, mode }]
@@ -226,6 +256,6 @@ export function travelTo(game, p) {
     g.story.refreshCast();
     g.audio.play('door');
     g.updateObjective();
-  });
+  }, p.region === 'citadel' ? null : [p.region]);   // (LAZY-REGIONS: a region not built yet is built behind the black, under its card)
 }
 export const label = (p) => t(p.name);

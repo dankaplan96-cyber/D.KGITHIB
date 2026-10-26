@@ -7,8 +7,9 @@ import { loadBake } from './engine/sculpt.js';
 import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
-import { Perf, gpuQuality, oldGpuQuality } from './engine/perf.js';
+import { Perf, gpuQuality, oldGpuQuality, integratedGpu } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
+import { FitWatch } from './engine/autofit.js';
 import { FarCull, BlobBatch } from './engine/drawcull.js';
 import { BLOBS } from './engine/rig.js';
 import { LightPool, POOL_SIZE } from './engine/lightpool.js';
@@ -18,27 +19,19 @@ import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
-import { buildWorld, POI, QUAY } from './game/world.js';
+import { buildWorldSteps, POI, QUAY } from './game/world.js';
 import { streetDist } from './game/town.js';
-import { buildInteriors } from './game/interiors.js';
-import { buildZeelich } from './game/zeelich.js';
-import { buildUnderground } from './game/underground.js';
-import { buildDesert } from './game/desert.js';
-import { buildCondenser } from './game/condenser.js';
-import { buildTemple } from './game/temple.js';
-import { buildWizards } from './game/wizards.js';
-import { buildLba1Places } from './game/lba1places.js';
+import { buildWizardTent } from './game/wizards.js';
+import { buildLba1Door } from './game/lba1places.js';
 import { preloadLba1Rooms } from './game/lba1room.js';
-import { preloadIslands, buildIslands } from './game/zislands.js';
+import { preloadIslands } from './game/zislands.js';
 import { buildSpaceport } from './game/spaceport.js';
 import { buildTownLife } from './game/townlife.js';
 import { buildCityDressing } from './game/citydress.js';
 import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './game/containers.js';
-import { buildHamalayi } from './game/hamalayi.js';
-import { buildObsRoom } from './game/obsroom.js';
-import { buildUpper3 } from './game/upper.js';
-import { buildValveRoom } from './game/valveroom.js';
-import { buildArena, enterArena } from './game/arena.js';
+import { enterArena } from './game/arena.js';
+import { Regions, CITADEL_REF, CHAPTER_AREAS } from './game/regions.js';
+import { travelRegion } from './game/travel.js';
 import { updateKitLod, enableBatching } from './game/kit.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK, PICK_TYPES } from './game/actors.js';
 import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
@@ -169,28 +162,66 @@ class Game {
     this.renderer = new Renderer($('#game'));
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 2500);
-    // startup cost per region (ms), for profiling: game.loadTimes
-    const tm = performance.now(); this.loadTimes = {};
+    this.loadTimes = {};
+    this.preparing = true;
+    this.ready = this.boot().catch((e) => { console.error('startup failed', e); loadingStep('The game could not start: ' + (e?.message || e)); throw e; });
+  }
+
+  // LAZY-REGIONS: startup builds Citadel (the title's backdrop), Twinsen's house and the well (a new game's opening)
+  // and the area the autosave stands in, in steps with a paint between them, so the loading bar moves with a real
+  // label (src/game/regions.js; every other area is built the first time it is needed, behind a scene change's black).
+  async boot() {
+    // startup cost per step (ms), for profiling: game.loadTimes
+    const tm = performance.now(), L = this.loadTimes;
     const timed = (name, fn) => {
       const t0 = performance.now(), n0 = this.scene.children.length, w0 = this.world?.root.children.length ?? 0, r = fn();
-      this.loadTimes[name] = Math.round(performance.now() - t0);
+      L[name] = (L[name] || 0) + Math.round(performance.now() - t0);
       // (diagnostics: tag what each builder added, for tests/drawcalls.mjs)
       for (const [root, from] of [[this.scene, n0], [this.world?.root, w0]]) if (root) for (let i = from; i < root.children.length; i++) root.children[i].userData.src ??= name;
       return r;
     };
+    // the bar: 0.25 → 0.70 across the build, each step animated (on the compositor) over its estimated time at this
+    // computer's pace (measured on the steps so far), so it keeps moving while a step blocks the main thread
+    const areas = this.bootAreas();
+    const bar = new BootBar(0.25, 0.7, BUILD_REF.total + (areas[0] === '*' ? 10000 : areas.length * 300));
     enableBatching(this.renderer.renderer); // (vegetation in one draw call where WEBGL_multi_draw is there: kit.js)
-    this.world = timed('world', () => buildWorld(this.scene));
+    {
+      const it = buildWorldSteps(this.scene);
+      let r = null;
+      L.worldSteps = {};
+      for (let i = 0; ; i++) {
+        const ref = BUILD_REF.world[i] ?? 150;
+        await bar.step('Building Citadel…', ref);
+        const t0 = performance.now();
+        r = timed('world', () => it.next());
+        const ms = Math.round(performance.now() - t0), k = r.done ? 'end' : r.value;
+        L.worldSteps[k] = (L.worldSteps[k] || 0) + ms;
+        bar.measured(ref, ms);
+        if (r.done) break;
+      }
+      this.world = r.value;
+    }
     this.terrain = this.world.terrain;
     this.physics = this.world.physics;
     const S = this.scene, P = this.physics;
-    timed('spaceport', () => buildSpaceport(this.world.root, P, this.world));
-    timed('townlife', () => buildTownLife(this.world.root, P, this.world));
-    timed('containers', () => buildCitadelContainers(this.world.root, P, this.world));   // (before the dressing: it keeps clear of them)
-    timed('citydress', () => buildCityDressing(this.world.root, P, this.world));
+    await bar.step('Building Citadel…', BUILD_REF.town);
+    {
+      const t0 = performance.now();
+      timed('spaceport', () => buildSpaceport(this.world.root, P, this.world));
+      timed('townlife', () => buildTownLife(this.world.root, P, this.world));
+      timed('containers', () => buildCitadelContainers(this.world.root, P, this.world));   // (before the dressing: it keeps clear of them)
+      timed('citydress', () => buildCityDressing(this.world.root, P, this.world));
+      // (the wizard's tent and the asylum's block-house stand on Citadel; their rooms are built when needed)
+      timed('wizards', () => buildWizardTent(S, P, this.world));
+      timed('lba1', () => buildLba1Door(S, P));
+      bar.measured(BUILD_REF.town, performance.now() - t0);
+    }
+    L.citadel = Math.round(performance.now() - tm);
     this.env = new Environment(this.scene, this.terrain);
     this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
     this.renderer.setup(this.scene, this.camera);
     this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
+    this.renderer.setIntegrated(integratedGpu(this.perf.gpu || ''));   // (AUTO-FIT: the presets' pixel ratio on a high-density screen)
     // the graphics preset follows the GPU on a first start (integrated GPUs: Low or Medium, see perf.js); settings
     // saved before the presets were reworked (qv < 1) are re-picked too, unless they hold something other than the
     // old automatic choice (then the player chose it). A choice in Settings sticks (qPicked).
@@ -200,30 +231,31 @@ class Game {
       this.settings.qv = 1;
     }
     // Startup overlap: the Citadel's shaders are sent to the driver now, with the final lights, shadows and preset,
-    // so the GPU process compiles them while the interiors and regions are built below (prepare() then waits for
-    // whatever is left). The light pool's size is fixed per preset; lamps placed later join it (collect, below).
+    // so the GPU process compiles them while the rest is built below (prepare() then waits for whatever is left).
+    // The light pool's size is fixed per preset; lamps placed later join it (collect, below and on each area's build).
     this.lightPool = new LightPool(this.scene, POOL_SIZE[this.settings.quality] ?? 8);
     if (this.settings.visual !== '1997' && !/[?&]noearly/.test(location.search)) { // (?noearly: for A/B timing)
       this.renderer.setQuality(this.settings.quality); this.env.setShadowQuality(this.settings.quality);
       this.earlyCompile = this.renderer.precompile().catch(() => {});
     }
-    this.rooms = timed('interiors', () => buildInteriors(S, P));
-    // outdoor regions are rooms flagged `outdoor`: LBA camera, own sky, doors to their own interiors
-    this.rooms.zeelich = timed('zeelich', () => buildZeelich(S, P));
-    timed('underground', () => Object.assign(this.rooms, buildUnderground(S, P)));
-    this.rooms.desert = timed('desert', () => buildDesert(S, P));
-    timed('condenser', () => Object.assign(this.rooms, buildCondenser(S, P)));
-    timed('temple', () => Object.assign(this.rooms, buildTemple(S, P)));
-    timed('wizards', () => Object.assign(this.rooms, buildWizards(S, P, this.rooms.desert, this.world)));
-    timed('lba1', () => Object.assign(this.rooms, buildLba1Places(S, P)));
-    this.rooms.hamalayi = timed('hamalayi', () => buildHamalayi(S, P));
-    timed('obsroom', () => Object.assign(this.rooms, buildObsRoom(S, P)));
-    timed('upper', () => Object.assign(this.rooms, buildUpper3(S, P)));
-    this.rooms.valves = timed('valves', () => buildValveRoom(S, P));
-    this.rooms.arena = timed('arena', () => buildArena(S, P));
-    timed('islands', () => Object.assign(this.rooms, buildIslands(S, P)));
-    this.regionContainers = timed('regioncontainers', () => buildRegionContainers(this.rooms, P));
+    // the areas (src/game/regions.js): this computer's pace on Citadel sets the loading card's estimates
+    this.regions = new Regions(S, P, (gid, rooms, why) => this.regionBuilt(gid, rooms, why));
+    this.regions.afterBuilt = (gid, rooms) => this.regionReady(gid, rooms);
+    this.regions.speed = Math.min(30, Math.max(0.2, L.citadel / CITADEL_REF));
+    this.rooms = this.regions.rooms;
+    for (const id of areas[0] === '*' ? [...this.regions.groups.values()].map((G) => G.rooms[0]) : areas) {
+      const gid = this.regions.groupOf(id);
+      if (!gid || this.regions.stateOf(id) !== 'unloaded') continue;
+      const ref = this.regions.groups.get(gid).ref;
+      await bar.step(`Building ${placeName(id)}…`, ref);
+      const t0 = performance.now();
+      try { this.regions.buildGroup(gid, 'startup'); } catch (e) { console.warn('startup area', id, e); }
+      L[gid] = Math.round(performance.now() - t0);
+      bar.measured(ref, L[gid]);
+    }
     this.room = null;
+    await bar.step('Preparing the story…', BUILD_REF.story);
+    const ts = performance.now();
     // the desktop build's number (stamped by desktop/copy-game.mjs from the CI run), so the player can tell which
     // download is installed; the web copy has none
     this.version = VERSION + (window.LBA_BUILD ? ` (build ${window.LBA_BUILD})` : '');
@@ -252,7 +284,10 @@ class Game {
     this.hud = new HUD(this);
     this.inventory = new Inventory(this);
     this.hud.buildMapImage(this.terrain);
-    this.story = new Story(this);
+    // (an area not built yet reads as missing while the story, the travel network and the cast are set up; each
+    //  area's part of them follows its build: regionBuilt)
+    this.regionContainers = timed('regioncontainers', () => this.regions.peek(() => buildRegionContainers(this.rooms, P)));
+    this.story = this.regions.peek(() => new Story(this));
 
     this.state = 'loading';
     this.time = 0;
@@ -270,7 +305,7 @@ class Game {
     this.trans = null;
     this.cutscene = null;
 
-    timed('actors', () => this.spawnActors());
+    timed('actors', () => this.regions.peek(() => this.spawnActors()));
     // (PERF-2: actors of other areas are left out of the render; engine/drawcull.js)
     this.farCull = new FarCull(() => [this.npcs, this.enemies], this.camera, this.scene.fog);
     this.blobBatch = new BlobBatch(this.scene, BLOBS);
@@ -280,7 +315,12 @@ class Game {
     this.renderer.mid = () => { if (this.shadowCull.areas.has(this.room?.group || this.world.root)) this.drawBatch.update(this.room?.group || this.world.root); };
     this.renderer.post = () => { this.blobBatch.restore(); this.farCull.restore(); };
     this.lightPool.collect(); // (after every builder has placed its lamps)
-    this.loadTimes.total = Math.round(performance.now() - tm);
+    this.regionsLive = true;  // (from here on an area's build brings its part of the story, the cast and travel: regionBuilt)
+    L.story = Math.round(performance.now() - ts);
+    bar.measured(BUILD_REF.story, L.story);
+    L.total = Math.round(performance.now() - tm);
+    L.regions = this.regions.summary();
+    this.fit = new FitWatch(this);   // (AUTO-FIT: one suggestion when the preset can't hold ~50 fps in play: engine/autofit.js)
     this.behMenu = new BehaviourMenu(this, HERO_LOOK);
     this.bubble = this.makeBubble();
     this.applySettings();
@@ -289,7 +329,7 @@ class Game {
     requestAnimationFrame((t2) => this.loop(t2));
 
     if (matchMedia('(pointer: coarse)').matches) this.touch = true;
-    this.ready = this.prepare();
+    await this.prepare();
   }
 
   // Compile every shader the island, the rooms and the regions use before the title shows, while the loading
@@ -302,47 +342,59 @@ class Game {
     //  finish the programs, texture uploads, Citadel's geometry upload, its shadow and draw batches, the shadow
     //  programs, the first frame)
     const prep = (this.loadTimes.prep = {}); let tp = t0;
-    const lap = (k) => { const n = performance.now(); prep[k] = Math.round(n - tp); tp = n; };
-    loadingStep('Preparing graphics…');
-    loadBar(0.72);
-    await nextPaint();
-    loadBar(0.95, loadEst.shaders || 7000);
+    const lap = (k) => { const n = performance.now(); prep[k] = (prep[k] || 0) + Math.round(n - tp); tp = n; };
+    // LAZY-REGIONS: a labelled step each, the bar animated over the step's time on this computer's last start
+    // (a little longer, so it creeps on rather than stops when a step runs late)
+    const last = loadEst.prep || {};
+    const step = async (label, to, k, dflt) => { loadingStep(label); loadBar(to, Math.max(300, (last[k] ?? dflt) * 1.5)); await nextPaint(); lap('paint'); };
+    await step('Preparing graphics…', 0.8, 'programs', 3000);
     const R = this.renderer.renderer;
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
-    lap('paint');
     try { await this.renderer.precompile(); } catch (e) { console.warn('shader precompile', e); }
     this.warmMenus();
     lap('programs');
     // upload every texture now too, and draw the title's first view (shadow and post-processing passes)
+    await step('Preparing graphics…', 0.84, 'textures', 1500);
     const tex = new Set();
-    this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap']) if (m[k]?.isTexture) tex.add(m[k]); });
+    this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k of TEX_SLOTS) if (m[k]?.isTexture) tex.add(m[k]); });
     for (const t of tex) R.initTexture(t);
+    (this._texUp ??= new WeakSet()).add(this.world.root);   // (the rooms built so far get theirs at their first entry)
     lap('textures');
-    this.uploadGeometry(this.world.root);   // (FRAME-1: Citadel's geometry too; each room/region at its first entry)
-    lap('geometry');
-    loadingStep('Almost there…');
-    loadBar(0.97);
-    await nextPaint();
-    lap('paint2');
+    // (FRAME-1: Citadel's geometry too, in parts with a paint between; each room/region at its first entry)
+    {
+      const kids = [...this.world.root.children], K = 6;
+      for (let c = 0; c < K; c++) {
+        await step('Preparing Citadel…', 0.84 + 0.09 * (c + 1) / K, 'geometryPart', 500);
+        this.uploadGeometry(this.world.root, new Set(kids.slice(Math.floor((c * kids.length) / K), Math.floor(((c + 1) * kids.length) / K))));
+        lap('geometry');
+        prep.geometryPart = Math.round(prep.geometry / (c + 1));
+      }
+      this.uploadGeometry(this.world.root);   // (anything left, and marks it done)
+      lap('geometry');
+    }
+    await step('Almost there…', 0.95, 'batches', 1500);
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
     this.drawBatch.update(this.world.root);   // (and its draw batches, uploaded by the render below)
     lap('batches');
+    await step('Almost there…', 0.96, 'shadowPrograms', 1000);
     if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
     lap('shadowPrograms');
+    await step('Almost there…', 0.99, 'firstFrame', 3000);
     this.renderer.render();
     lap('firstFrame');
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.loadTimes.programs = R.info.programs.length;
+    this.regions.phase = 'play';   // (an area built from here on is built in play: regions.summary's "later")
     this.perf.load = this.loadTimes;
     this.preparing = false;
     this.last = performance.now();
     const boot = sessionStorage.getItem(BOOT_KEY);
     sessionStorage.removeItem(BOOT_KEY);
     loadBar(1, 150);
-    try { localStorage.setItem(LOADT_KEY, JSON.stringify({ total: this.loadTimes.total, shaders: this.loadTimes.shaders })); } catch { /* (private mode) */ }
+    try { localStorage.setItem(LOADT_KEY, JSON.stringify({ total: this.loadTimes.total, shaders: this.loadTimes.shaders, pace: this.regions.speed, prep: this.loadTimes.prep })); } catch { /* (private mode) */ }
     $('#loading').classList.add('hidden');
     // the loading tune hands over to the game's music where the window may play sound unasked (the desktop app)
     if (window.loadMusicEnd?.(true)) this.audio.init();
@@ -355,23 +407,100 @@ class Game {
   spawnActors() {
     this.hero = new Hero(this, POI.start.x, POI.start.z);
     this.hero.arms = freshArms();
-    this.npcs = this.story.npcDefs().map((d) => new NPC(this, d));
+    // (LAZY-REGIONS: an NPC whose spot is in an area not built yet waits hidden for it: addActors)
+    this.npcs = this.story.npcDefs().map((d) => { const n = new NPC(this, d); if (d.pending) n.setPresent(false); return n; });
     this.enemies = this.story.enemyDefs().map((d) => createEnemy(this, d));
     this.story.decorate();
     // reward on top of the Whispering Cliffs (optional ball + jumping puzzle); kashes come from the givers
     const s = this.world.shard1Spot;
     this.pickups.spawn('clover', s.x, s.y, s.z, { id: 'cliff-clover' });
     // six singing crystals, hidden off the paths (each one: +1 max health; all six: Sendell notices)
-    for (const c of this.crystalSpots()) this.pickups.spawn('crystal', c.x, c.y, c.z, { id: c.id });
+    this.spawnCrystals();
+  }
+  // the crystals whose spots are built (the mill's is on Zeelich: it appears when Zeelich is built), each once
+  spawnCrystals() {
+    for (const c of this.crystalSpots()) {
+      if (c.pending || this.pickups.list.some((p) => p.id === c.id) || (this.regionsLive && this.collected.includes(c.id))) continue;
+      this.pickups.spawn('crystal', c.x, c.y, c.z, { id: c.id });
+    }
   }
   crystalSpots() {
-    const W = this.world, G = (x, z) => this.physics.groundAt(x, z) + 0.75, mt = this.rooms.zeelich?.millTop;
+    const W = this.world, G = (x, z) => this.physics.groundAt(x, z) + 0.75, mt = this.regions.built('zeelich')?.millTop;
     const out = [
       { id: 'sc-lighthouse', x: -113, z: 85 }, { id: 'sc-orchard', x: -85, z: -49.5 }, { id: 'sc-pier', x: W.pierEnd.x - 0.6, z: W.pierEnd.z },
       { id: 'sc-east', x: -28, z: 40 }, { id: 'sc-north', x: -45, z: -84 },
     ].map((c) => ({ ...c, y: G(c.x, c.z) }));
+    // (the count is six whether or not Zeelich is built yet)
     if (mt) out.push({ id: 'sc-mill', x: mt.x - 0.9, y: mt.y + 0.75, z: mt.z });
+    else if (this.regions.has('zeelich')) out.push({ id: 'sc-mill', pending: true });
     return out;
+  }
+  // LAZY-REGIONS (src/game/regions.js): the areas built at startup besides Citadel — a new game's opening (the house,
+  // the well) and where the autosave stands (its room and its chapter's areas). ?allregions builds every area.
+  bootAreas() {
+    if (/[?&]allregions\b/.test(location.search)) return ['*'];
+    const out = ['house', 'well'];
+    const n = this.newestSlot();   // (what Continue loads)
+    let s = null; try { s = n == null ? null : migrateSave(store.get(slotKey(n))); } catch { s = null; }
+    if (s) out.push(...this.saveAreas(s));
+    return out;
+  }
+  // builds the areas not built yet under the loading screen (a load, the benchmark); resolves when done (under the
+  // tests' fixed stepping: at once)
+  buildAreas(ids, text = 'Loading…') {
+    if (!this.regions.missing(ids).length) return Promise.resolve();
+    if (this.testFreeze) { for (const id of ids) this.regions.ensure(id, 'load'); return Promise.resolve(); }
+    const card = new ArriveCard(text, true);
+    return this.regions.buildAsync(ids, 'load', async (i, n, gid, est) => { card.step(i, n, est); await nextPaint(); }).finally(() => card.hide());
+  }
+  // the areas a save needs as it loads: the room it stands in and the areas of its chapter
+  saveAreas(s) { return [...(s?.room ? [s.room] : []), ...(CHAPTER_AREAS[s?.flags?.chapterKey] || [])]; }
+  // after an area's build (src/game/regions.js): its containers, travel points, cast, the story's things in it, its
+  // lamps; containers searched before the game was loaded give again; the cast is placed again
+  regionBuilt(gid, rooms) {
+    if (!this.regionsLive) return;   // (startup: the story's construction reads whatever is built by then)
+    const P = this.physics, ids = Object.keys(rooms);
+    this.regions.peek(() => {
+      Object.assign(this.regionContainers ||= {}, buildRegionContainers(rooms, P));
+      for (const id of ids) travelRegion(this, id);
+      this.addActors();
+      this.story.decorate();
+      this.spawnCrystals();
+    });
+    this.lightPool.collect();
+    this.pruneGivers(ids);
+    this._shadowWarm = true;   // (its kinds of shadow caster: depth programs at the next warm-up, warmScene)
+  }
+  // (after the story's waiting states went on the new area: regions.whenBuilt)
+  regionReady(gid, rooms) {
+    if (!this.regionsLive) return;
+    this.story.regionBuilt?.(Object.keys(rooms));
+    this.story.refreshCast();
+  }
+  // the cast of an area just built: NPCs that waited for its spots go there, its enemies are made
+  addActors() {
+    for (const d of this.story.npcDefs()) {
+      const n = this.npcs.find((x) => x.def.id === d.id);
+      if (!n) { const m = new NPC(this, d); if (d.pending) m.setPresent(false); this.npcs.push(m); continue; }
+      if (n.def.pending && !d.pending) { n.def = d; n.placeAt({ x: d.x, z: d.z, a: d.angle ?? 0, anim: d.anim ?? null }); n.setPresent(true); }
+    }
+    for (const d of this.story.enemyDefs()) {
+      if (this.enemies.some((e) => e.def?.id === d.id)) continue;
+      const e = createEnemy(this, d);
+      this.enemies.push(e);
+      if (this.killed.includes(e.id)) koGone(e);
+    }
+  }
+  // (refillGivers keeps the keys of areas not built yet: the hero has not been there since the game was loaded, so
+  //  once it is built its refillable containers give again, as they would have after any scene change elsewhere)
+  pruneGivers(ids) {
+    const here = this.where();
+    this.searched = this.searched.filter((k) => {
+      if (typeof k !== 'string' || !k.startsWith('giver:')) return true;
+      const i = k.indexOf(':', 6), area = k.slice(6, i), id = k.slice(i + 1);
+      if (!ids.includes(area) || area === here) return true;
+      return this.giverOnce(this.regions.built(area)?.givers?.find((g) => g.id === id));
+    });
   }
   // what Twinsen walks on, for the footsteps
   surfaceAt(p) {
@@ -407,10 +536,22 @@ class Game {
   // While black, the new scene's shaders compile (in parallel where the driver allows) and nothing is drawn until
   // they're ready, so the first frames of a room never stutter; the fade advances at most 0.1 s per real frame,
   // so even a slow first frame (buffer uploads) can't skip the fade-in.
-  startTransition(mid) {
-    this.trans = { t: 0, mid, called: false, walk: !!this.walkNext, hold: false };
+  // LAZY-REGIONS: `need` names the rooms the scene change goes to; any not built yet are built while the screen is
+  // black, under a loading card (the loading screen's look: "Arriving at Zeelich…" and a bar), before mid() runs.
+  startTransition(mid, need = null) {
+    this.trans = { t: 0, mid, called: false, walk: !!this.walkNext, hold: false, need: need?.filter(Boolean) || null };
     this.walkNext = false;
     this.hud.prompt(null); // (the last room's prompt would otherwise come back with the new scene's first frames)
+  }
+  // the areas a scene change needs, built behind the black screen with the loading card; a failed build keeps the
+  // player where he was (the card says so, then the screen clears on the old scene)
+  arrive(T) {
+    T.building = true; T.hold = true; T.holdT = performance.now();
+    const card = (T.card = new ArriveCard(arriveText(T.need[0])));
+    this.regions.buildAsync(T.need, 'enter', async (i, n, gid, est) => { card.step(i, n, est); await nextPaint(); })
+      .then(() => { T.built = true; T.long = true; })
+      .catch((e) => { console.warn('area build failed', e); T.failed = true; card.fail(`${placeName(T.need[0])} could not be built.`); })
+      .finally(() => { T.building = false; T.holdT = performance.now(); if (T.failed) { this.doorCool = 3; setTimeout(() => { T.hold = false; }, 2200); } else T.hold = false; });
   }
   // FRAME-1: the fade is drawn frame by frame here, so the stylesheet's own 0.6 s opacity transition is off while it
   // runs (each write restarted that easing: at 60 fps the screen was only ~14 % dark when the room swapped, never
@@ -421,10 +562,19 @@ class Game {
     if (!T) return;
     const f = $('#fade');
     f.style.transition = 'none';
-    if (T.hold) { f.style.opacity = 1; if (performance.now() - T.holdT > 4000) T.hold = false; return; }
+    // (a freshly built area's shaders may take longer than a known one's: up to 20 s behind its card)
+    if (T.hold) { f.style.opacity = 1; if (!T.building && performance.now() - T.holdT > (T.long ? 20000 : 4000)) T.hold = false; return; }
+    if (T.card && T.called) { T.card.hide(); T.card = null; }
     if (this._transBudget != null) { dt = Math.min(dt, this._transBudget); this._transBudget -= dt; }
     T.t += dt;
-    if (T.t >= 0.35 && !T.called) { T.t = 0.35; T.called = true; T.mid(); this.warmScene(T); }
+    if (T.t >= 0.35 && !T.called) {
+      T.t = 0.35;
+      if (T.need && !T.built && !T.failed && this.regions.missing(T.need).length && !this.testFreeze) { f.style.opacity = 1; this._fadeOp = 1; this.arrive(T); return; }
+      if (T.need && this.testFreeze) for (const id of T.need) this.regions.ensure(id, 'enter');   // (tests' fixed stepping: at once)
+      T.called = true;
+      if (T.failed) { T.card?.hide(); T.card = null; }   // (stays where he was)
+      else { T.mid(); this.warmScene(T); }
+    }
     const op = T.t < 0.35 ? T.t / 0.35 : Math.max(0, 1 - (T.t - 0.35) / 0.35);
     f.style.opacity = op; this._fadeOp = op;
     if (T.t >= 0.7) { this.trans = null; f.style.opacity = ''; f.style.transition = ''; }
@@ -448,6 +598,8 @@ class Game {
     if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);
     if (!this.drawBatch.has(root)) this.drawBatch.update(root);   // (RENDER-INV: the area's draw batches, before the upload)
     this.uploadGeometry(root);
+    this.uploadTextures(root);
+    if (this._shadowWarm) { this._shadowWarm = false; this.warmShadows(); }   // (LAZY-REGIONS: an area built since the last warm-up)
     if (warmed.get(key) === R.info.programs.length) return;
     T.hold = true; T.holdT = performance.now();
     this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); T.hold = false; });
@@ -459,15 +611,18 @@ class Game {
   // the frame's render list (before any draw), so: one render with nothing culled and the draw step itself switched
   // off (no draw call, no shader chosen or compiled, no texture bound; the shadow map is not redrawn). The lights keep
   // their state (nothing that was off is counted on), and everything is put back.
-  uploadGeometry(root) {
+  // (`part`: only those children of root, the others hidden meanwhile — startup sends Citadel up in parts with a
+  //  paint between them; root is marked done by a call without a part)
+  uploadGeometry(root, part = null) {
     const R = this.renderer.renderer, C = this.renderer.composer, S = this.scene;
     const done = (this._uploaded ??= new WeakSet());
     if (!C || !root || done.has(root) || this.testFreeze) return 0;
     for (let p = root; p; p = p.parent) if (!p.visible) return 0;   // (not on show any more: next time)
-    done.add(root);
-    const t0 = performance.now(), g0 = R.info.memory.geometries, lit = new Set(), shown = [], off = [], culled = [];
+    if (!part) done.add(root);
+    const t0 = performance.now(), g0 = R.info.memory.geometries, lit = new Set(), shown = [], off = [], culled = [], out = [];
     S.traverseVisible((o) => { if (o.isLight) lit.add(o); });
-    root.traverse((o) => { if (!o.visible && !o.isLight) { o.visible = true; shown.push(o); } });
+    if (part) for (const k of root.children) if (!part.has(k) && k.visible) { k.visible = false; out.push(k); }
+    for (const r of part || [root]) r.traverse((o) => { if (!o.visible && !o.isLight) { o.visible = true; shown.push(o); } });
     S.traverseVisible((o) => {
       if (o.isLight) { if (!lit.has(o)) { o.visible = false; off.push(o); } return; }
       if (o.frustumCulled && (o.isMesh || o.isPoints || o.isLine || o.isSprite)) { o.frustumCulled = false; culled.push(o); }
@@ -480,9 +635,20 @@ class Game {
       for (const o of culled) o.frustumCulled = true;
       for (const o of off) o.visible = true;
       for (const o of shown) o.visible = false;
+      for (const o of out) o.visible = true;
     }
     (this.uploadLog ??= []).push({ root: this.room?.id || 'citadel', ms: Math.round(performance.now() - t0), newGeometries: R.info.memory.geometries - g0 });
     return R.info.memory.geometries - g0;
+  }
+  // LAZY-REGIONS: an area built after startup sends its textures to the GPU in its black frame too (startup does
+  // Citadel's in prepare), not on the first frames shown
+  uploadTextures(root) {
+    const R = this.renderer.renderer, done = (this._texUp ??= new WeakSet());
+    if (!root || done.has(root) || this.testFreeze) return;
+    done.add(root);
+    const tex = new Set();
+    root.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k of TEX_SLOTS) if (m[k]?.isTexture) tex.add(m[k]); });
+    for (const t of tex) R.initTexture(t);
   }
   // The shadow pass's depth programs (one per kind of caster: side, texture/alpha test, instanced, batched, skinned)
   // are not compiled by precompile(); left alone they compile on the first frame that casts with each kind. Here a
@@ -540,8 +706,14 @@ class Game {
 
   enterRoom(id, spawn = null, instant = false, quiet = false) {
     const go = () => {
+      // (LAZY-REGIONS: built now if nothing built it before — the black screen of a scene change, a story scene, a
+      //  test; a door or a travel builds it ahead, under its loading card: startTransition's `need`)
+      const R = this.rooms[id];
+      if (!R) { console.warn('no such room', id); this.doorCool = 3; return; }
+      if (typeof spawn === 'function') spawn = spawn(R);
       if (this.room) this.room.group.visible = false;
-      const R = (this.room = this.rooms[id]);
+      this.room = R;
+      this.regions.activate(id);
       R.group.visible = true;
       R.lights.forEach((l) => { l.intensity = l.userData.base; });
       this.world.root.visible = false;
@@ -563,12 +735,13 @@ class Game {
       this.story.onEnterRoom(id);
       if (this.state !== 'title') this.save(false);
     };
-    if (instant) go(); else this.startTransition(go);
+    if (instant) go(); else this.startTransition(go, [id]);
   }
 
   exitRoom(to, instant = false, quiet = false) {
     const go = () => {
       const R = this.room;
+      this.regions.activate(null);
       if (R) { R.group.visible = false; R.lights.forEach((l) => { l.intensity = 0; }); }
       this.room = null;
       this.world.root.visible = true;
@@ -672,6 +845,7 @@ class Game {
   }
   applySave(s) {
     const h = this.hero;
+    this.regions.clearWaits();   // (a load in the same page: the last load's waiting area states go)
     Object.assign(h, { hp: s.hero.hp, mp: s.hero.mp, magicLevel: s.hero.magicLevel, clovers: s.hero.clovers, coins: s.hero.coins, hasBall: !!s.hero.hasBall });
     h.behaviour = s.hero.behaviour || 'normal';
     // weapons: what was owned, what was in hand (never more than one of each; unknown names fall back)
@@ -694,7 +868,7 @@ class Game {
     this.story.applyFlags();
     const at = { x: s.hero.x, z: s.hero.z, a: 0 };
     this.resetCombat('drop'); // (a bonus on the ball from before the load is nobody's)
-    if (s.room && this.rooms[s.room]) this.enterRoom(s.room, at, true);
+    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, at, true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
     this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)
@@ -711,6 +885,14 @@ class Game {
   startContinue(key = SAVE_KEY) {
     const raw = store.get(key);
     let s = null; try { s = migrateSave(raw); } catch { s = null; }
+    // LAZY-REGIONS: the areas the save stands in that are not built yet are built first, under the loading screen
+    // (the newest save's are built at startup: Continue goes straight on; under the tests' fixed stepping: at once)
+    if (s && !this.testFreeze && !this._loadingAreas && this.regions.missing(this.saveAreas(s)).length) {
+      this._loadingAreas = true;
+      this.buildAreas(this.saveAreas(s)).catch((e) => console.warn('area build failed', e))
+        .finally(() => { this.startContinue(key); this._loadingAreas = false; });
+      return;
+    }
     // an older format is kept untouched next to the migrated save
     if (raw && s && raw.v !== SAVE_VERSION) store.set(key + '_backup_v' + (raw.v || 1), raw);
     try {
@@ -1231,6 +1413,7 @@ class Game {
     store.set(SET_KEY, s);
   }
 
+  saveSettings() { store.set(SET_KEY, this.settings); }
   updateObjective() { this.hud.objective(this.story.objective()); }
 
   mapMarkers() {
@@ -1324,7 +1507,8 @@ class Game {
     this.searched = this.searched.filter((k) => {
       if (typeof k !== 'string' || !k.startsWith('giver:') || k.startsWith(here)) return true;
       const i = k.indexOf(':', 6), area = k.slice(6, i), id = k.slice(i + 1);
-      const list = area === 'out' ? this.world.givers : this.rooms[area]?.givers;
+      const list = area === 'out' ? this.world.givers : this.regions.built(area)?.givers;
+      if (!list && this.regions.has(area)) return true;   // (an area not built yet: pruneGivers when it is)
       return this.giverOnce(list?.find((g) => g.id === id));
     });
   }
@@ -1626,13 +1810,17 @@ class Game {
         if (this.exitRefused?.e === e) continue;
         if (Math.hypot(h.pos.x - e.x, h.pos.z - e.z) < e.r) {
           // a door between two rooms of one building (Twinsen's house and its cellar)
-          if (e.room) { this.audio.play('door'); this.walkNext = true; const R2 = this.rooms[e.room]; this.enterRoom(e.room, R2.entries?.[this.room.id] || R2.spawn); this.walkNext = false; this.doorCool = 1.5; return; }
+          if (e.room) { this.audio.play('door'); this.walkNext = true; const from = this.room.id; this.enterRoom(e.room, (R2) => R2.entries?.[from] || R2.spawn); this.walkNext = false; this.doorCool = 1.5; return; }
           if (this.story.canExit(this.room, e.to)) {
             this.audio.play('door');
             // an exit leads outdoors on Citadel, or into another room/region ({ room, x, z, a })
-            const to = this.story.exitTo(e.to);
+            // (LAZY-REGIONS: where it lands may be read from an area not built yet: then that area is built behind
+            //  the black, under its card, and the exit is worked out there)
+            const pr = this.regions.probe(() => this.story.exitTo(e.to)), ek = e.to;
+            if (pr.error && !pr.misses.size) throw pr.error;
             this.walkNext = true;
-            if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(to);
+            if (pr.misses.size) this.startTransition(() => { const to = this.story.exitTo(ek); if (to?.room) this.enterRoom(to.room, to, true); else this.exitRoom(to, true); }, [...pr.misses]);
+            else { const to = pr.value; if (to?.room) this.enterRoom(to.room, to); else this.exitRoom(to); }
             this.walkNext = false;   // (a story exit may have started its own scene instead)
           } else this.exitRefused = { e, room: this.room };
           this.doorCool = 1.5;
@@ -1667,7 +1855,7 @@ class Game {
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
-    if (!this.testFreeze && !this.preparing) this.advance(real);
+    if (!this.testFreeze && !this.preparing) { this.advance(real); this.fit?.frame(real); }
     requestAnimationFrame((t2) => this.loop(t2));
   }
 
@@ -1909,6 +2097,7 @@ class Game {
 }
 
 const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
+const TEX_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap'];
 const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e) e.textContent = text; };
 // the loading screen's bar (#27): real steps, and across the long synchronous builds an estimated pace (this
 // computer's previous start) animated on the compositor, so it keeps moving while the main thread builds
@@ -1919,6 +2108,38 @@ const loadBar = (to, ms = 300) => {
   f.style.transition = `transform ${ms}ms ${ms > 600 ? 'cubic-bezier(.25,.6,.45,1)' : 'ease-out'}`;
   f.style.transform = `scaleX(${to})`;
 };
+// LAZY-REGIONS: reference times (ms, the development container, quiet) of the startup's steps — Citadel's build
+// steps (world.js buildWorldSteps), the town's dressing, the story and cast — for the bar's pace on this computer
+const BUILD_REF = { world: [220, 560, 145, 45, 260, 50, 10, 200, 200, 200, 225, 225, 72, 72, 110, 110, 155, 50, 350, 5, 15], town: 580, story: 210 };
+BUILD_REF.total = BUILD_REF.world.reduce((a, b) => a + b, 0) + BUILD_REF.town + BUILD_REF.story;
+// the startup bar from `a` to `b`: each step moves it by its share, animated over the step's estimated time at the
+// pace measured so far (the last start's pace before any step is measured), so it moves while a step blocks
+class BootBar {
+  constructor(a, b, total) { this.a = a; this.b = b; this.total = total; this.done = 0; this.ref = 0; this.real = 0; }
+  pace() { return this.ref >= 1000 ? Math.min(30, Math.max(0.2, this.real / this.ref)) : (loadEst.pace || 1); }
+  async step(label, ref) {
+    loadingStep(label);
+    this.done += ref;
+    loadBar(this.a + (this.b - this.a) * Math.min(1, this.done / this.total), Math.max(150, ref * this.pace()));
+    await nextPaint();
+  }
+  measured(ref, ms) { this.ref += ref; this.real += ms; }
+}
+// LAZY-REGIONS: the loading card of a scene change into an area not built yet (or of a load): the loading screen
+// itself over the black fade, its bar moving per area at its estimated pace (shown after a short delay, so a quick
+// build is only black)
+const arriveText = (id) => (REGION_KEY[id] || /^isle_/.test(id) ? `Arriving at ${placeName(id)}…` : `Entering ${placeName(id)}…`);
+class ArriveCard {
+  constructor(text, now = false) {
+    this.el = document.querySelector('#loading'); this.text = text;
+    const f = document.querySelector('#load-fill'); if (f) { f.style.transition = 'none'; f.style.transform = 'scaleX(0.03)'; }
+    loadingStep(text);
+    this.el?.classList.add('art', 'arrive'); this.el?.classList.toggle('now', now); this.el?.classList.remove('hidden');
+  }
+  step(i, n, est) { loadingStep(this.text); loadBar(0.05 + 0.85 * ((i + 1) / n), Math.max(150, est)); }
+  fail(msg) { loadingStep(msg); }
+  hide() { this.el?.classList.add('hidden'); this.el?.classList.remove('arrive', 'now'); }
+}
 // MEA Studio's logo plays first (2.6 s) while the assets download; the automated tests skip it
 const SPLASH_MS = (navigator.webdriver && !/[?&]splash/.test(location.search)) || /[?&]nosplash/.test(location.search) ? 0 : 2600;
 const splashDone = new Promise((r) => setTimeout(() => { document.querySelector('#loading')?.classList.add('art'); r(); }, SPLASH_MS));
@@ -1983,7 +2204,7 @@ const nextPaint = () => new Promise((r) => requestAnimationFrame(() => setTimeou
 // Load the pre-sculpted geometry (tools/bake.mjs) before building the world; anything
 // missing or changed since the bake is sculpted at load as before.
 const noBake = new URLSearchParams(location.search).has('nobake');
-Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building the island…'); loadBar(0.25); await nextPaint(); loadBar(0.7, loadEst.total || 12000); await nextPaint(); window.game = new Game(); });
+Promise.all([noBake ? Promise.resolve(false) : loadBake(window.LBA_BAKE_URL || 'assets/bake.bin').catch(() => false), preloadCharacters(), preloadLba1Rooms(), preloadIslands()]).then(() => { loadBar(0.22); return splashDone; }).then(async () => { if (SPLASH_MS) await new Promise((r) => setTimeout(r, 1200)); loadingStep('Building Citadel…'); loadBar(0.25); await nextPaint(); window.game = new Game(); });
 
 // the mouse pointer (the user: "a mouse appears in the game and doesn't go away"): hidden while playing with the
 // keys or a pad, or after it rests 2.5 s; any mouse move brings it straight back (menus, aiming the ball)

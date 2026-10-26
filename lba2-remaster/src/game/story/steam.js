@@ -68,15 +68,14 @@ export class Steam extends ChapterBase {
   }
 
   doors() {
-    const D = this.D;
+    const D = this.game.regions.built('desert');   // (a door on Desert Island: once it is built)
     if (this.f.c5_dug && D) return [{ region: 'desert', x: D.ruins.door.x, z: D.ruins.door.z, r: 1.0, room: 'condA' }];
     return [];
   }
   exitTo(to) {
-    const D = this.D, A = this.A;
-    if (to === 'cond-out') return { room: 'desert', x: D.ruins.stand.x, z: D.ruins.stand.z, a: 0 };
+    if (to === 'cond-out') { const D = this.D; return { room: 'desert', x: D.ruins.stand.x, z: D.ruins.stand.z, a: 0 }; }
     if (to === 'cond-b') return { room: 'condB' };
-    if (to === 'cond-a') return { room: 'condA', x: A.hangarDoor.x, z: A.hangarDoor.z + 0.9, a: 0 };
+    if (to === 'cond-a') { const A = this.A; return { room: 'condA', x: A.hangarDoor.x, z: A.hangarDoor.z + 0.9, a: 0 }; }
     return null;
   }
 
@@ -180,7 +179,7 @@ export class Steam extends ChapterBase {
     this.Bh.glider.uncover();
     this.chain([['narrator', 'c5_board_1'], ['hesk', 'c5_hesk_board']], () => {
       f.c5_done = true; g.save(false);
-      g.startTransition(() => this.story.nextChapter());
+      g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
     });
   }
 
@@ -260,17 +259,24 @@ export class Steam extends ChapterBase {
     if (id === 'condB' && !f.c5_hangarSeen) { f.c5_hangarSeen = true; this.chain([['hero', 'c5_hangar_in']]); }
   }
   applyFlags() {
-    const f = this.f, D = this.D, A = this.A;
-    if (!this.reached() || !D || !A) return;
-    if (f.c5_ferryTaken) D.ferry?.setVisible?.(false);
-    if (f.c5_dug) D.ruins.setDrift(false);
-    for (const v of A.valves) { const o = !!f.c5_valves?.[v.id]; v.setOpen(o); }
-    this.updateGauges();
-    if (f.c5_routed) { A.hangarDoor.open(); for (const c of this.Bh.condensers) c.setSteam(0.4); }
-    if (f.c5_hatch) this.openHatch(true);
-    if (f.c5_dallanOK) D.post.gate.open();
-    if (f.c5_relief && !f.c5_vent) this.vent(true); // (a save mid-eruption: the steam is through)
-    if (f.c5_vent) this.vent(true);
+    const f = this.f, RG = this.game.regions;
+    if (!this.reached()) return;
+    // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
+    //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
+    if (f.c5_relief) f.c5_vent = true;   // (a save mid-eruption: the steam is through)
+    RG.whenBuilt('desert', (D) => {
+      if (f.c5_ferryTaken) D.ferry?.setVisible?.(false);
+      if (f.c5_dug) D.ruins.setDrift(false);
+      if (f.c5_dallanOK) D.post.gate.open();
+      if (f.c5_vent) D.ruins.setPlume(1);
+    });
+    RG.whenBuilt('condA', (A) => {   // (the condenser's two halls are built together)
+      for (const v of A.valves) { const o = !!f.c5_valves?.[v.id]; v.setOpen(o); }
+      this.updateGauges();
+      if (f.c5_routed) { A.hangarDoor.open(); for (const c of this.Bh.condensers) c.setSteam(0.4); }
+      if (f.c5_hatch) this.openHatch(true);
+      if (f.c5_vent) for (const c of this.Bh?.condensers || []) c.setSteam(1);
+    });
   }
 
   // ---------------------------------------------------------------- HUD

@@ -24,7 +24,7 @@ export class Pass extends ChapterBase {
   // the platform's frozen mooring rope (cut with the sword before the first trip)
   decorate() {
     const M = this.M;
-    if (!M?.group) return;
+    if (!M?.group || !this.once('rope')) return;
     const w = M.lift.winch, gp = M.group.position, gy = this.game.physics.groundAt(w.x + 1.4, w.z - 0.8);
     const g = new THREE.Group(); g.position.set(w.x + 1.4 - gp.x, gy - gp.y, w.z - 0.8 - gp.z); M.group.add(g);
     const wood = new THREE.MeshStandardMaterial({ color: '#6a4a2a', roughness: 0.85 }), rope = new THREE.MeshStandardMaterial({ color: '#c8b890', roughness: 0.9 }), ice = new THREE.MeshStandardMaterial({ color: '#dff4ff', roughness: 0.2, transparent: true, opacity: 0.8 });
@@ -51,8 +51,8 @@ export class Pass extends ChapterBase {
 
   npcDefs() {
     const S = this.M?.npcSpots || {};
-    const at = (k) => S[k] || { x: 0, z: 0, a: 0 };
-    const def = (id, char, spot, color) => ({ id, name: 'n_' + id, char, color, x: at(spot).x, z: at(spot).z, angle: at(spot).a });
+    const at = (k) => S[k] || { x: 0, z: 0, a: 0, pending: true };
+    const def = (id, char, spot, color) => ({ id, name: 'n_' + id, char, color, x: at(spot).x, z: at(spot).z, angle: at(spot).a, ...(S[spot] ? {} : { pending: true }) });
     return [def('yorna', 'yorna', 'yorna', '#ffb090'), def('pim', 'pim', 'pim', '#a0c8ff'), def('lhar1', 'lharMan', 'v1', '#e8c890'), def('lhar2', 'lharWoman', 'v2', '#a8e0c8'), def('lhar3', 'lharElder', 'v3', '#d8c0f0')];
   }
   enemyDefs() {
@@ -193,14 +193,21 @@ export class Pass extends ChapterBase {
     }
     if (f.c6_up && !f.c6_done && Math.hypot(h.pos.x - M.monastery.yard.x, h.pos.z - M.monastery.yard.z) < 7) {
       f.c6_done = true;
-      this.chain([['narrator', 'c6_monastery'], ['yorna', 'c6_yorna_end'], ['pim', 'c6_pim_end']], () => { g.save(false); g.startTransition(() => this.story.nextChapter()); });
+      this.chain([['narrator', 'c6_monastery'], ['yorna', 'c6_yorna_end'], ['pim', 'c6_pim_end']], () => { g.save(false); g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); });
     }
   }
   applyFlags() {
-    const f = this.f, M = this.M;
-    if (!this.reached() || !M) return;
+    const f = this.f;
+    if (!this.reached()) return;
     // the sword is Twinsen's from here on (older saves past this chapter get it too)
     if (f.c6_sword || this.story.index > this.pos) this.game.hero.hasSword = true;
+    if (f.c6_heat && !f.c6_thawed) f.c6_thawed = true;
+    // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
+    //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
+    this.game.regions.whenBuilt('hamalayi', () => this.applyHamalayi());
+  }
+  applyHamalayi() {
+    const f = this.f, M = this.M;
     if (f.c6_rope || this.story.index > this.pos) this.cutRope(true);
     if (f.c6_bridge) { M.gorge.tree.fell(true); for (const tg of M.ballTargets) if (tg.tree) tg.done = true; }
     if (f.c6_kite) { M.kite.setVisible(false); for (const tg of M.ballTargets) if (tg.kite) tg.done = true; }

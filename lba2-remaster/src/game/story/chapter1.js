@@ -113,10 +113,10 @@ export class Chapter1 extends ChapterBase {
     const h0 = W.houses[0];
     out.push({ house: h0.id, x: h0.door.x, z: h0.door.z, r: 0.9, room: 'house' });
     const office = W.houses.find((h) => h.id === 'water');
-    if (office && g.rooms.office) out.push({ house: 'water', x: office.door.x, z: office.door.z, r: 0.9, room: 'office' });
+    if (office && g.regions.has('office')) out.push({ house: 'water', x: office.door.x, z: office.door.z, r: 0.9, room: 'office' });
     const st = W.station;
-    if (st && f.c1_water && g.rooms.control && !f.c1_zoeStart) out.push({ x: st.control.door.x, z: st.control.door.z, r: 0.9, room: 'control' });
-    if (st && f.c1_zoeStart && !f.c1_zoeDone && g.rooms.projoffice) out.push({ x: st.office.door.x, z: st.office.door.z, r: 0.9, room: 'projoffice' });
+    if (st && f.c1_water && g.regions.has('control') && !f.c1_zoeStart) out.push({ x: st.control.door.x, z: st.control.door.z, r: 0.9, room: 'control' });
+    if (st && f.c1_zoeStart && !f.c1_zoeDone && g.regions.has('projoffice')) out.push({ x: st.office.door.x, z: st.office.door.z, r: 0.9, room: 'projoffice' });
     return out;
   }
 
@@ -435,7 +435,7 @@ export class Chapter1 extends ChapterBase {
       g.hud.show(false);
       g.showScreen('ending');
       g.audio.setMood('ending');
-    });
+    }, this.story.nextAreas());   // (LAZY-REGIONS: Zeelich built behind the black, under its card)
   }
   afterEnding() { this.game.updateObjective(); }
 

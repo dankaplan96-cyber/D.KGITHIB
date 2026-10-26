@@ -44,19 +44,20 @@ export class Prologue extends ChapterBase {
       { id: 'sphero1', name: 'n_sphero1', char: 'sphero1', color: '#9fe0a0', x: V.x + 2, z: V.z + 10, angle: Math.PI },
       { id: 'sphero2', name: 'n_sphero2', char: 'sphero2', color: '#e8c890', x: V.x + 8, z: V.z - 3.5, angle: -Math.PI / 2 },
       // Twinsun's wizards (src/game/wizards.js): Bersimon in his tent; the rector and Ker'aooc at the School of Magic
-      { id: 'bersimon', name: 'n_bersimon', char: 'bersimon', color: '#7fe0e8', ...R.wtent.npcSpots.bersimon, angle: R.wtent.npcSpots.bersimon.a },
-      { id: 'magus', name: 'n_magus', char: 'magus', color: '#9fc8ff', ...R.school.npcSpots.magus, angle: R.school.npcSpots.magus.a },
-      { id: 'keraooc', name: 'n_keraooc', char: 'keraooc', color: '#b0e0ff', ...R.school.npcSpots.keraooc, angle: R.school.npcSpots.keraooc.a },
+      { id: 'bersimon', name: 'n_bersimon', char: 'bersimon', color: '#7fe0e8', ...(R.wtent?.npcSpots?.bersimon || { x: 0, z: 0, a: 0, pending: true }), angle: R.wtent?.npcSpots?.bersimon?.a ?? 0 },
+      { id: 'magus', name: 'n_magus', char: 'magus', color: '#9fc8ff', ...(R.school?.npcSpots?.magus || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.magus?.a ?? 0 },
+      { id: 'keraooc', name: 'n_keraooc', char: 'keraooc', color: '#b0e0ff', ...(R.school?.npcSpots?.keraooc || { x: 0, z: 0, a: 0, pending: true }), angle: R.school?.npcSpots?.keraooc?.a ?? 0 },
     ];
   }
 
   enemyDefs() {
     // (and LBA1's places, open in every chapter: src/game/lba1places.js)
-    return this.game.rooms.well.mites.map((p, i) => ({ id: 'mite' + i, kind: 'mite', ...p })).concat(lba1EnemyDefs(this.game.rooms));
+    return (this.game.rooms.well?.mites || []).map((p, i) => ({ id: 'mite' + i, kind: 'mite', ...p })).concat(lba1EnemyDefs(this.game.rooms));
   }
 
   // Esmer cargo on the pier, stamped with the energy project's emblem
   decorate() {
+    if (!this.once('citadel')) return;
     const W = this.game.world, scene = W.root;
     const e = W.pierEnd;
     const crate = new THREE.MeshStandardMaterial({ color: '#5a6a80', roughness: 0.5, metalness: 0.4 });
@@ -425,7 +426,7 @@ export class Prologue extends ChapterBase {
     g.rooms.well.vein.power = 0;
     g.audio.play('victory');
     // on to chapter 1: fade out of the cave, title card, morning in the square
-    g.startTransition(() => this.story.nextChapter());
+    g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
   }
   afterEnding() {
     // back to the surface, the ball returns home

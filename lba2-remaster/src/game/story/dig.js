@@ -39,8 +39,8 @@ export class Dig extends ChapterBase {
   // ---------------------------------------------------------------- cast
   npcDefs() {
     const S = this.D?.npcSpots || {};
-    const at = (k) => S[k] || { x: 0, z: 0, a: 0 };
-    const def = (id, char, spot, color) => ({ id, name: 'n_' + id, char, color, x: at(spot).x, z: at(spot).z, angle: at(spot).a });
+    const at = (k) => S[k] || { x: 0, z: 0, a: 0, pending: true };
+    const def = (id, char, spot, color) => ({ id, name: 'n_' + id, char, color, x: at(spot).x, z: at(spot).z, angle: at(spot).a, ...(S[spot] ? {} : { pending: true }) });
     return [
       def('hesk', 'hesk', 'hesk', '#ffc890'), def('tarra', 'tarra', 'tarra', '#f0c0e0'), def('ilka', 'ilka', 'ilka', '#e8e0b0'),
       def('dallan', 'dallan', 'dallan', '#a8e0e8'), def('dkid', 'desertkid', 'kid', '#ffe0a0'), def('dtrader', 'desertTrader', 'trader', '#a8d8f0'),
@@ -65,10 +65,11 @@ export class Dig extends ChapterBase {
     return out;
   }
   place(id) {
-    const f = this.f, D = this.D;
+    const f = this.f;
     const mine = ['hesk', 'tarra', 'ilka', 'dallan', 'dkid', 'dtrader', 'weaver'];
     if (!this.reached()) return mine.includes(id) ? null : undefined;
-    const S = D.npcSpots;
+    if (!mine.includes(id) && id !== 'guard' && id !== 'doran') return undefined;
+    const D = this.D, S = D.npcSpots;
     switch (id) {
       case 'hesk': {
         const y = f.c4_yacht || 'village';
@@ -123,12 +124,12 @@ export class Dig extends ChapterBase {
   }
   // the temple: its gate at the bottom of the dig, once the seals are open
   doors() {
-    const D = this.D;
-    if (this.f.c4_seals3 && D?.dig?.door && this.T) return [{ region: 'desert', x: D.dig.door.x, z: D.dig.door.z, r: 1.3, room: 'butemple' }];
+    const D = this.game.regions.built('desert');   // (a door on Desert Island: once it is built)
+    if (this.f.c4_seals3 && D?.dig?.door && this.game.regions.has('butemple')) return [{ region: 'desert', x: D.dig.door.x, z: D.dig.door.z, r: 1.3, room: 'butemple' }];
     return [];
   }
   exitTo(to) {
-    const D = this.D;
+    const D = to === 'bu-out' ? this.D : null;
     if (to === 'bu-out' && D) { const c = D.dig.carvings; return { room: 'desert', x: D.dig.x, z: D.dig.z, a: Math.atan2(D.dig.x - c.x, D.dig.z - c.z) }; }   // (out at the middle of the dig floor, clear of the gate)
     return null;
   }
@@ -353,7 +354,7 @@ export class Dig extends ChapterBase {
       this.chain([['dallan', 'c4_dallan_1'], ['ilka', 'c4_ilka_d1'], ['dallan', 'c4_dallan_2'], ['hero', 'c4_tw_d1'], ['dallan', 'c4_dallan_3'], ['ilka', 'c4_ilka_end']], () => {
         f.c4_done = true;
         g.save(false);
-        g.startTransition(() => this.story.nextChapter());
+        g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
       });
     });
   }
@@ -403,8 +404,13 @@ export class Dig extends ChapterBase {
   }
 
   applyFlags() {
+    if (!this.reached()) return;
+    // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
+    //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
+    this.game.regions.whenBuilt('desert', () => this.applyDesert());
+  }
+  applyDesert() {
     const f = this.f, D = this.D;
-    if (!this.reached() || !D) return;
     // the pump (older saves: c4_gear1 is the jammed gear's flag, c4_gear0/2 no longer matter; c4_pump means it runs)
     D.pump.setState(f.c4_pump ? 'running' : f.c4_gear1 ? 'leak' : 'jammed');
     for (const tg of D.ballTargets) if (tg.gear != null) tg.done = !!(f.c4_gear1 || f.c4_pump);

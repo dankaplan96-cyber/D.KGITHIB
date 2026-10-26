@@ -14,6 +14,7 @@
 import { gpuQuality } from './perf.js';
 import { POOL_SIZE as POOL_N } from './lightpool.js';
 const WARM = 1.5, MEASURE = 6;
+export const BENCH_AREAS = ['house', 'arena', 'zeelich', 'desert', 'hamalayi'];
 
 export class Bench {
   constructor(game) { this.g = game; this.running = false; }
@@ -82,7 +83,7 @@ export class Bench {
           if (t < next || G.trans) return;
           next = t + 3; const id = seq[k++ % seq.length];
           G.hud?._bases?.delete(id || 'citadel');
-          if (id && G.rooms[id]) G.enterRoom(id, null, false, true); else G.exitRoom({ x: -42, z: 2, a: 0 }, false, true);
+          if (id && G.regions.has(id)) G.enterRoom(id, null, false, true); else G.exitRoom({ x: -42, z: 2, a: 0 }, false, true);
         }; })(),
       },
     ];
@@ -94,10 +95,14 @@ export class Bench {
     C.setMode('free'); C.view = 0; C.yaw = Math.PI * 0.85; C.pitch = 0.42; C.idleT = 0; C.snap?.();
   }
 
+  // LAZY-REGIONS: the areas the routes go to (the house, the arena, the arrival's three regions), built before the
+  // first route under the loading screen, so no route measures an area's first build
+  prepareAreas() { return this.g.buildAreas(BENCH_AREAS, 'Preparing the benchmark…').then(() => { if (this.g._shadowWarm) { this.g._shadowWarm = false; this.g.warmShadows(); } }); }
   // runs every route at each quality; resolves with the report text
   run(qualities = ['low', 'medium', 'high']) {
     const G = this.g;
     if (this.running) return Promise.resolve(null);
+    if (G.regions.missing(BENCH_AREAS).length) return this.prepareAreas().then(() => this.run(qualities));
     this.running = true;
     const snap = G.snapshot(), quality0 = G.settings.quality, state0 = G.state;
     const C = G.camRig, cam0 = { view: C.view, yaw: C.yaw, pitch: C.pitch };
@@ -207,12 +212,14 @@ export class Bench {
     const minMs = Math.min(...results.map((x) => x.pacing?.minMs ?? Infinity));
     lines.push(`frame-rate limit: ${G.settings.fps === '30' || G.settings.fps === '60' ? G.settings.fps : 'off'} (off while measuring) · shortest frame interval seen ${Number.isFinite(minMs) ? minMs.toFixed(1) + ' ms (≈ ' + (1000 / minMs).toFixed(0) + ' Hz)' : '?'}`);
     if (G.perf.load) {
-      // (RENDER-INV: every area is built at startup; what Citadel itself took, and the largest of the others)
-      const L = G.perf.load, own = (L.world || 0) + (L.spaceport || 0) + (L.townlife || 0) + (L.citydress || 0), skip = new Set(['world', 'spaceport', 'townlife', 'citydress', 'total', 'shaders', 'actors', 'prep', 'programs']);
-      const big = Object.entries(L).filter(([k]) => !skip.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, ms]) => `${k} ${(ms / 1000).toFixed(1)}`).join(', ');
-      lines.push(`startup: build ${(L.total / 1000).toFixed(1)} s (Citadel ${(own / 1000).toFixed(1)} s; largest other areas: ${big} s) · shader preparation ${(L.shaders / 1000).toFixed(1)} s`
+      // (LAZY-REGIONS: startup builds Citadel and the areas a new game or the newest save starts in; every other area is
+      //  built the first time it is needed: which were built at startup, which since, and how long each took)
+      const L = G.perf.load, S = G.regions?.summary?.() || L.regions || { startup: [], later: [], deferred: [] }, sec = (ms) => (ms / 1000).toFixed(1);
+      const list = (a) => a.map((x) => `${x.group} ${sec(x.ms)}`).join(', ') || 'none';
+      lines.push(`startup: build ${sec(L.total)} s (Citadel ${sec(L.citadel ?? 0)} s; areas built at startup: ${list(S.startup)}) · shader preparation ${sec(L.shaders)} s`
         // (PERF-ARRIVAL: the preparation's parts, s, and the programs it left ready)
-        + (L.prep ? ` (${Object.entries(L.prep).map(([k, ms]) => `${k} ${(ms / 1000).toFixed(1)}`).join(', ')}) · ${L.programs ?? '?'} shader programs ready at the title` : ''));
+        + (L.prep ? ` (${Object.entries(L.prep).map(([k, ms]) => `${k} ${sec(ms)}`).join(', ')}) · ${L.programs ?? '?'} shader programs ready at the title` : ''));
+      lines.push(`areas built since startup, on their first visit (s): ${list(S.later)} · not built yet: ${S.deferred.length ? S.deferred.join(', ') : 'none'}`);
     }
     { const M = G.renderer.renderer.info.memory, heap = performance.memory?.usedJSHeapSize;
       lines.push(`memory: ${M.geometries} geometries and ${M.textures} textures on the GPU · ${G.renderer.renderer.info.programs?.length ?? '?'} shader programs (every preset and breakdown variant run has its own)${heap ? ` · JavaScript heap ${(heap / 1048576).toFixed(0)} MB` : ''} · GPU timer: ${G.perf.gpuTimer ? 'yes' : 'not offered by this browser'} · parallel shader compile (KHR_parallel_shader_compile): ${G.renderer.renderer.extensions?.has?.('KHR_parallel_shader_compile') ? 'yes' : 'no'}`); }

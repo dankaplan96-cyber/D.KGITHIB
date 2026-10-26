@@ -24,7 +24,8 @@ import { ChapterBase } from './base.js';
 import '../text/kesh.js';
 
 export class KeshLife extends ChapterBase {
-  get K() { return this.game.rooms.desert?.kesh; }
+  // (LAZY-REGIONS: Desert Island once it is built; never builds it — the cool room's state goes on it as it is built)
+  get K() { return this.game.regions?.built('desert')?.kesh; }
   idx(key) { return this.story.chapters.findIndex((c) => c.key === key); }
   get open() { const i = this.idx('dig'); return i >= 0 && this.story.index >= i; }
   here() { return this.game.room?.id === 'desert' && !!this.K; }
@@ -40,6 +41,11 @@ export class KeshLife extends ChapterBase {
 
   // ---------------------------------------------------------------- state → world
   applyFlags() {
+    this.applyCool();
+    this.settleOwed('k_owe', 'coin', 5, 'k_toast_owed');
+  }
+  // the cool room as the flags have it (on a load; on Desert Island's build after it)
+  applyCool() {
     const f = this.f, C = this.K?.cool;
     if (!C) return;
     C.setDir(this.dir, true);
@@ -48,8 +54,8 @@ export class KeshLife extends ChapterBase {
     C.setSand(!!f.k_sand && !f.k_done);
     C.setDates(!!f.k_done);
     this.push();
-    this.settleOwed('k_owe', 'coin', 5, 'k_toast_owed');
   }
+  regionBuilt(ids) { if (ids.includes('desert')) { this._jars = this._ferry = undefined; this.applyCool(); } }
   // the things that follow the main story: the water jars (few before the pump), the ferry chalked out on the board
   push() {
     const K = this.K; if (!K) return;

@@ -131,6 +131,7 @@ export const STR = {
     lock_mode: 'Focus Button', lm_toggle: 'Toggle', lm_hold: 'Hold',
     beh_normal: 'Normal', beh_athletic: 'Athletic', beh_aggressive: 'Aggressive', beh_discreet: 'Discreet',
     p_talk: 'Talk', p_search: 'Inspect', p_rummage: 'Search', p_read: 'Read', p_open: 'Open', p_shop: 'Shop', p_gate: 'Inspect',
+    fit_lower: 'The game runs below 50 fps here. Try the {q} graphics preset in Settings.', fit_res: 'The game runs below 50 fps here. Try Resolution: Auto in Settings.',
     toast_saved: 'Game saved', toast_save_full: 'Storage is full: the autosave failed. Delete old slots from Load Game.', toast_save_fail: "Can't save: the browser's storage isn't available.", toast_clover: 'A clover leaf saved you!', toast_save_error: "The save couldn't be loaded. It was kept aside; starting a new game.",
     toast_magic: 'Magic level {n}!', toast_nomp: 'Not enough magic: weak throw',
     toast_clover_found: 'Clover leaf',

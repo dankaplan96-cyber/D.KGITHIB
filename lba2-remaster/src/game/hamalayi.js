@@ -33,6 +33,8 @@ const L0 = 3.0, L1 = 12.0, L3 = 22.0, L4 = 30.0, LB = 16.0; // foothills, Lhar, 
 
 // ================================================================== layout (local)
 const LANDING = { x: 4, z: 86 };
+// (LAZY-REGIONS: the glider field, known before the Hamalayi is built: travel.js)
+export const HAMALAYI_FIELD = { landing: { x: HAMALAYI.x + LANDING.x, z: HAMALAYI.z + LANDING.z, a: Math.PI }, glider: { x: HAMALAYI.x + LANDING.x + 5, z: HAMALAYI.z + LANDING.z - 2 } };
 const HUT = { x: -12, z: 80 };
 const GORGE = { z0: 39, z1: 47, bridgeX: -6 };
 const TRAIL = [[16, 34], [30, 25], [24, 15], [12, 9]];           // switchbacks L0 → L1

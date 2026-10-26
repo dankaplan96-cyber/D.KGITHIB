@@ -53,9 +53,11 @@ export class Arsenal extends ChapterBase {
   lit() { return !!this.game.gadgets?.lanternLit(); }
 
   // ---------------------------------------------------------------- the props
+  // LAZY-REGIONS: runs again after each area's build; each part is made once, when its area is there
+  once(k) { const s = (this._dec ??= new Set()); if (s.has(k)) return false; s.add(k); return true; }
   decorate() {
     const g = this.game, R = g.rooms;
-    this.nooks = [];
+    this.nooks ??= [];
     // a group in a room at world (or room-local) coordinates
     const holder = (room, x, y, z, ry = 0, local = false) => {
       const grp = new THREE.Group(), gp = room.group.position;
@@ -64,7 +66,7 @@ export class Arsenal extends ChapterBase {
     };
     const world = (room, grp) => { const v = new THREE.Vector3(); grp.getWorldPosition(v); return v; };
     // ---- Arthur's conch
-    if (R.house) {
+    if (R.house && this.once('conch')) {
       const grp = holder(R.house, SPOT.conch.x, SPOT.conch.y, SPOT.conch.z, 0.6, true);
       const shell = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.28, 9, 1).rotateZ(Math.PI / 2), MAT.flat('#f8c8b8', 0.45));
       shell.scale.set(1, 0.8, 1); shell.position.y = 0.05; grp.add(shell);
@@ -75,7 +77,7 @@ export class Arsenal extends ChapterBase {
     }
     // ---- Nara's case on Zeelich's street: a glass-topped trade case on legs, a jar for the honest
     const Z = R.zeelich, s1 = Z?.npcSpots?.esmer1;
-    if (Z && s1) {
+    if (Z && s1 && this.once('case')) {
       const x = s1.x + SPOT.case.dx, z = s1.z + SPOT.case.dz, y = g.physics.groundAt(x, z, 30);
       const grp = holder(Z, x, y, z, SPOT.case.a), k = new Kit(grp);
       const wood = MAT.wood('red'), brass = MAT.brass();
@@ -97,7 +99,7 @@ export class Arsenal extends ChapterBase {
     }
     // ---- the house cellar: the gap in the foundations (lantern) and the coal chute's boards (glove)
     const W = R.cellar;
-    if (W) {
+    if (W && this.once('cellar')) {
       const n = SPOT.cellarNook, grp = holder(W, n.x, 0, n.z, n.a, true), k = new Kit(grp);
       k.add(rbox(0.8, 1.5, 0.3, 0.08), MAT.flat('#07080a', 1), 0, 0.85, 0.0);
       k.add(rbox(1.0, 0.22, 0.45, 0.06), MAT.rubble('grey'), 0, 0.11, 0.12, 0, { jit: true });
@@ -119,7 +121,7 @@ export class Arsenal extends ChapterBase {
     }
     // ---- the crystal galleries: a niche cut by hand
     const GL = R.c3gallery;
-    if (GL) {
+    if (GL && this.once('gal')) {
       const at = this.galSpot(GL);
       const grp = holder(GL, at.x, at.y, at.z, at.a, true), k = new Kit(grp);
       const rockM = MAT.flat('#9a8ea8', 0.9, { vertexColors: true });
@@ -134,7 +136,7 @@ export class Arsenal extends ChapterBase {
     }
     // ---- Baldino's hop-pack on its peg post by the workshop door (EQ-1)
     const WS = R.workshop;
-    if (WS) {
+    if (WS && this.once('peg')) {
       const pg = SPOT.jetPeg, grp = holder(WS, pg.x, 0, pg.z, pg.a, true), k = new Kit(grp);
       const wood = MAT.wood('dark'), brass = MAT.brass();
       k.add(cyl(0.035, 0.045, 1.85, 8), wood, 0, 0.93, 0);
@@ -148,7 +150,7 @@ export class Arsenal extends ChapterBase {
       this.jetPeg = { grp, pack, room: 'workshop', ...pick(v) };
     }
     // ---- Baldino's test step on Zeelich's street: a timber deck one storey up, a sign at its foot, a tin on top
-    if (Z?.workshopDoor) {
+    if (Z?.workshopDoor && this.once('step')) {
       const sp = this.stepSpot(Z);
       if (sp) {
         const H = SPOT.testStep.h, grp = holder(Z, sp.x, sp.y, sp.z, sp.a), k = new Kit(grp);
@@ -176,7 +178,7 @@ export class Arsenal extends ChapterBase {
     }
     // ---- Under Celebration (isle_undergas): the old Wannie mine (a timber-framed adit in the rock, dark inside)
     const U = R.isle_undergas;
-    if (U?.pad) {
+    if (U?.pad && this.once('adit')) {
       const spot = this.aditSpot(U);
       SPOT.adit.a = spot.a;
       const { x, z, y } = spot;
@@ -261,6 +263,7 @@ export class Arsenal extends ChapterBase {
   galSpot(GL) { return { x: SPOT.galNook.x, y: GL.deckY ?? 3, z: SPOT.galNook.z, a: SPOT.galNook.a }; }
 
   // ---------------------------------------------------------------- state → world
+  regionBuilt() { this.applyFlags(); }   // (LAZY-REGIONS: the things just made in a new area, as the flags have them)
   applyFlags() {
     const f = this.f, A = this.A;
     if (this.conch) this.conch.grp.visible = !A.conch;
