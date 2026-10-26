@@ -9,7 +9,9 @@ export const steps = [
   ['dig out the door', () => { const d = game.rooms.desert.ruins.door; const r = P.use(d.x, d.z + 1.2, { run: true, near: 1.4 }); P.wait(1.5); P.settle(); return { ...r, dug: game.flags.c5_dug, fail: game.flags.c5_dug ? null : 'dig' }; }],
   ['into the hall', () => { const d = game.rooms.desert.ruins.door; const r = P.through(d.x, d.z); return { ...r, fail: game.room?.id === 'condA' ? null : 'hall' }; }],
   ['the diagram', () => { const A = game.rooms.condA; const r = P.use(A.diagram.x, A.diagram.z); return { ...r, diagram: game.flags.c5_diagram, fail: game.flags.c5_diagram ? null : 'diagram' }; }],
-  ['the old trooper', () => { const r = P.fight({ group: null, maxT: 120 }); return { ...r, trooper: game.enemies.find((e) => e.id === 'ffclone1')?.alive }; }],
+  // (the hall's own guards, wherever they stand: once 'every enemy within 30 m' found none at all while the trooper
+  // was alive, and Twinsen died at the valves)
+  ['the old trooper', () => { const r = P.fight({ group: 'condA', maxT: 120 }); return { ...r, trooper: game.enemies.find((e) => e.id === 'ffclone1')?.alive }; }],
   ['the valves 1, 3, 4', () => { const A = game.rooms.condA; for (const id of [1, 3, 4]) { const v = A.valves.find((x) => x.id === id); P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle(); } return { valves: game.flags.c5_valves, routed: game.flags.c5_routed, fail: game.flags.c5_routed ? null : 'valves' }; }],
   ['the hangar', () => P.exitTo('cond-b')],
   ['the glider', () => { const g = game.rooms.condB.glider; return { ...P.use(g.x, g.z), seen: game.flags.c5_gliderSeen }; }],
