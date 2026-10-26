@@ -391,7 +391,10 @@ const cam = await ev(({ camRec, camStats }) => {
   const segs = [['normal', ['ArrowUp'], 3], ['normal', ['ArrowUp', 'ArrowLeft'], 2], ['normal', ['ArrowUp'], 2], ['normal', [], 1], ['athletic', ['ArrowUp'], 3], ['athletic', ['ArrowUp', 'ArrowRight'], 1.5], ['athletic', [], 1.5], ['normal', ['ArrowLeft'], 2]];
   // Where: the most open 30 m line (walkable by the harness' own step test), away from people, with open ground round
   // its middle (the route turns and runs on: dry, within 4 m of the start's height, no walls within 10 m, no tower or
-  // high wall within 26 m — the hidden swing has its own check below); Citadel first, then the other open regions.
+  // high wall within 26 m — one that can hide him: 3 m wide at least, as the hidden swing's own `big` below; a slender
+  // pillar does not —, the hidden swing has its own check below); Citadel first, then the other open regions, each
+  // searched 180 m round where it is entered (the rebuilt Desert's open ground is on its far side, 130–160 m from the
+  // landing; Hamalayi's is under a 106 m mountain wall, where the view is risen 1.4 m a frame: terrain, not these rules).
   // The best few are walked once: the first where he neither falls (a cliff, the sea) nor is put back is the route.
   let start = null, tried = 0;
   for (const rid of [null, 'desert', 'zeelich', 'hamalayi']) {
@@ -399,7 +402,7 @@ const cam = await ev(({ camRec, camStats }) => {
     if (rid) G.enterRoom(rid, null, true); else G.exitRoom({ x: -40, z: -5 }, true);
     G.step(0.5);
     const cx = rid ? h.pos.x : -40, cz = rid ? h.pos.z : -5, cands = [];
-    for (let x = cx - 120; x <= cx + 120; x += 4) for (let z = cz - 120; z <= cz + 120; z += 4) {
+    for (let x = cx - 180; x <= cx + 180; x += 4) for (let z = cz - 180; z <= cz + 180; z += 4) {
       const y0 = PH.groundAt(x, z); if (y0 < 0.3) continue;
       if (G.npcs.some((n) => n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 40)) continue;
       for (let k = 0; k < 8; k++) {
@@ -413,7 +416,7 @@ const cam = await ev(({ camRec, camStats }) => {
           if (Math.abs(gy - y0) > 4 || gy < 0.6 || (ox * ox + oz * oz <= 100 && PH.blockedAt(px, pz, gy + 0.5, 0.3))) bad++;
         }
         const mx = x + sx * 14, mz = z + sz * 14;
-        for (const c of PH.colliders) if (c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 1.5) && c.top > y0 + 3 && Math.hypot(c.x - mx, c.z - mz) < 26) bad += 3;
+        for (const c of PH.colliders) if (c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' ? c.r < 1.5 : Math.min(c.hw || 0, c.hd || 0) < 1.5) && c.top > y0 + 3 && Math.hypot(c.x - mx, c.z - mz) < 26) bad += 3;
         if (bad <= 2) cands.push({ room: rid || 'citadel', x, z, a, bad });
       }
     }
