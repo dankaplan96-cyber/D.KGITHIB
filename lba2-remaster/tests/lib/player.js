@@ -307,6 +307,7 @@
       P.face(e.pos.x, e.pos.z, 1.5);
       const hp0 = e.hp, tg = G.targeting?.throwTarget?.({ x: Math.sin(h.angle), z: Math.cos(h.angle) });
       const aimed = tg && tg.alive !== undefined ? tg : e;   // the throw goes where the game aims it
+      const ahp0 = aimed.hp;
       // the ball can't get at it (behind something) but the sword is in hand: walk up and strike, as a player would
       const close = melee || (h.hasSword && (e._miss || 0) >= 2);
       if (close && !melee) { P.go(e.pos.x, e.pos.z, { tol: 1.1, maxT: 8, fight: false }); P.face(e.pos.x, e.pos.z, 1.5); if (h.combat?.weapon !== 'sword') P.tap('KeyR', 0.1); }
@@ -318,7 +319,11 @@
         P.face(aimed.pos.x, aimed.pos.z, 1.5);
         keys.add('KeyF'); I.taps.add('KeyF'); P.gstep(1.3); keys.delete('KeyF'); P.gstep(1.0); t += 2.3; }   // full charge: chargeAfter 0.2 + chargeFull 0.75 s, with a margin
       else { P.tap('KeyF', 0.05); P.gstep(1.1); t += 1.2; }
-      if (e.hp === hp0 && (aimed === e || close)) { e._miss = (e._miss || 0) + 1; if (e._miss >= 6) { e._miss = 0; P.ignore.set(e, G.time + 25); P.note(`fight: ${e.id} unreachable from here, leaving it`); } } else e._miss = 0;
+      // a wasted throw: nothing was hit, neither this enemy nor the one the game aimed at instead (both behind a
+      // fence the ball can't pass, say). It counts for both, so after a few a player stops throwing and walks on.
+      const wasted = e.hp === hp0 && (close || aimed === e || aimed.hp === ahp0);
+      if (wasted) for (const q of aimed === e || close ? [e] : [e, aimed]) { q._miss = (q._miss || 0) + 1; if (q._miss >= 6) { q._miss = 0; P.ignore.set(q, G.time + 25); P.note(`fight: ${q.id} unreachable from here, leaving it`); } }
+      else e._miss = 0;
       P.note(`fight ${e.id || e.def?.kind} d=${d.toFixed(1)} st=${e.state} aim=${tg ? (tg === e ? 'it' : 'other:' + (tg.id || tg.def?.id || tg.kind || 'pt') + '@' + (tg.pos || tg).x?.toFixed(1) + ',' + (tg.pos || tg).z?.toFixed(1) + ' d' + Math.hypot((tg.pos || tg).x - h.pos.x, (tg.pos || tg).z - h.pos.z).toFixed(1)) : 'none'} e@${e.pos.x.toFixed(1)},${e.pos.y.toFixed(1)},${e.pos.z.toFixed(1)} me@${h.pos.x.toFixed(1)},${h.pos.y.toFixed(1)},${h.pos.z.toFixed(1)} ball=${G.ball.state} hp ${hp0}→${e.hp} me ${h.hp} mp ${h.mp}`);
       if (G.state !== 'play') P.settle();
     }
