@@ -9,7 +9,8 @@ export const steps = [
   ['climb the old mill (jumps)', () => { const r = P.climbOldMill(); return { ...r, fail: r.top ? null : 'climb' }; }],
   ['the mill relay', () => { const mt = game.rooms.zeelich.millTop; let r; for (let k = 0; k < 3 && !game.flags.c10_mill; k++) { r = P.use(mt.x, mt.z, { near: 1.2 }); P.settle(); } return { ...r, mill: game.flags.c10_mill, fail: game.flags.c10_mill ? null : 'mill relay' }; }],
   ['fly to Citadel', () => P.flyTo(1)],
-  ['Mira: the valve room', () => { if (!P.npc('mira')?.present) P.enter('office', { run: true }); const r = P.talk('mira', { run: true });   // (at her desk: placed when he walks in) P.wait(1.5); P.settle(); return { ...r, room: game.room?.id, ask: game.flags.c10_miraAsk }; }],
+  // (Mira at her desk in the Water Office: placed when he walks in)
+  ['Mira: the valve room', () => { if (!P.npc('mira')?.present) P.enter('office', { run: true }); const r = P.talk('mira', { run: true }); P.wait(1.5); P.settle(); return { ...r, room: game.room?.id, ask: game.flags.c10_miraAsk }; }],
   ['the three valves', () => { const V = game.rooms.valves; for (let pass = 0; pass < 3 && !game.flags.c10_valves; pass++) for (const v of V.valves) { P.use(v.x, v.z, { near: 0.9 }); P.settle(); } return { valves: game.flags.c10_valves, levels: game.story.cur.gaugeLevels(), fail: game.flags.c10_valves ? null : 'valves' }; }],
   ['out', () => { P.exitTo('valves-out'); if (game.room) { const e = game.room.exits.find((x) => !x.room); if (e) P.through(e.x, e.z); } return { room: P.here() }; }],
   ['the lighthouse: Zoé', () => { const r = P.talk('zoe', { run: true }); return { ...r, ask: game.flags.c10_zoeAsk, room: game.room?.id }; }],
