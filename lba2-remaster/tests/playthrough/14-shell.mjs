@@ -11,8 +11,8 @@ export const steps = [
   ['valve C on the catwalk', () => { const v = game.room.valves.find((x) => x.id === 'C'), L = game.room.ladder; P.go(L.x, L.z - 0.2, { tol: 0.4 }); P.go(L.x, L.z - 5.4, { tol: 0.4 }); P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle(); return { open: v.open, y: +game.hero.pos.y.toFixed(2), cooled: game.flags.c3_cooled, fail: game.flags.c3_cooled ? null : 'cooling' }; }],
   ['the galleries', () => P.exitTo('c3-gallery')],
   ['three pillars (ball)', () => { const out = game.room.ballTargets.filter((x) => x.pillar != null).map((tg) => P.hitTarget(tg, 3.5, { run: false, maxT: 40 })); return { out, fail: out.every(Boolean) ? null : 'pillars' }; }],
-  // across the chasm on the raised stepping stones (flush with the shelves, 0.9 m gaps: Athletic hops, letting go of
-  // Up early); fallen in, he first walks back up the rough ledges against the start cliff
+  // across the chasm on the raised stepping stones (flush with the shelves, 0.9 m gaps: Athletic hops from the brink);
+  // fallen in, he first walks back up the rough ledges against the start cliff
   ['across the stepping stones', () => {
     const G = game, h = G.hero, R = G.room, st = R.stones.sets.flat(), c0 = st[2].c, top = st[0].top, tries = [];
     for (let attempt = 0; attempt < 3 && !(h.pos.x > c0.x + 5 && Math.abs(h.pos.y - top) < 0.3); attempt++) {
@@ -20,8 +20,11 @@ export const steps = [
       if (h.pos.y < top - 1) { for (let i = 1; i <= 7; i++) P.go(c0.x - 5 + 0.65, c0.z + 9.3 - (i - 1) * 0.72, { tol: 0.35, maxT: 20 }); P.go(c0.x - 6.2, c0.z + 4.6, { tol: 0.5 }); }   // up the ledges, one by one
       P.go(st[0].c.x - 1.9, st[0].c.z + 1.0, { tol: 0.4 });                                                      // the start shelf's edge
       if (Math.abs(h.pos.y - top) > 0.3) { tries.push({ shelf: false, y: +h.pos.y.toFixed(2) }); continue; }
-      for (const s of st) { let y = 0; for (let k = 0; k < 2; k++) { y = P.hopTo(s.c.x, s.c.z, top, { walk: false, brake: 1.0, from: 1.6 }); if (Math.abs(y - top) < 0.3 || h.pos.y < top - 1) break; } out.push(+y.toFixed(2)); if (h.pos.y < top - 1) break; P.go(s.c.x, s.c.z, { tol: 0.2, maxT: 3, fight: false }); }
-      if (h.pos.y > top - 1) out.push(P.hopTo(c0.x + 5 + 1.2, c0.z - 1.9, top, { walk: false, brake: 1.0 }));
+      // (CONTROL-FEEL: each hop from the brink — Normal, short steps until 1.85 m short of the next stone's centre — then a
+      // short hop; as tests/jumpreach.mjs, which crosses in one attempt)
+      const brink = (x, z) => { if (h.behaviour !== 'normal') P.tap('F1'); P.face(x, z); for (let i = 0; i < 40 && Math.hypot(x - h.pos.x, z - h.pos.z) > 1.85; i++) { game.input.keys.add('ArrowUp'); game.step(1 / 30); game.input.keys.delete('ArrowUp'); game.step(1 / 30); } game.step(0.2); };
+      for (const s of st) { let y = 0; for (let k = 0; k < 2; k++) { brink(s.c.x, s.c.z); y = P.hopTo(s.c.x, s.c.z, top, { walk: false, brake: 0.9 }); if (Math.abs(y - top) < 0.3 || h.pos.y < top - 1) break; } out.push(+y.toFixed(2)); if (h.pos.y < top - 1) break; P.go(s.c.x, s.c.z, { tol: 0.2, maxT: 3, fight: false }); }
+      if (h.pos.y > top - 1) { brink(c0.x + 5 + 1.2, c0.z - 1.9); out.push(P.hopTo(c0.x + 5 + 1.2, c0.z - 1.9, top, { walk: false, brake: 0.9 })); }
       tries.push(out);
     }
     // (the bot's hops are unreliable; the crossing was made by input in an earlier run — QA.md. Under ASSIST, after three

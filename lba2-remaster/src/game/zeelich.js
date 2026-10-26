@@ -1404,8 +1404,11 @@ export function buildZeelich(scene, physics) {
     // the old mill: stair-stones spiralling up to a wooden balcony gallery
     let top = null;
     if (old) {
-      const phi0 = 0.9, dphi = (30 * Math.PI) / 180, rs = 3.475;
-      const tops = [1.25, 2.5, 3.75, 5.0, 6.25, 7.5];
+      // (CONTROL-FEEL: seven stones 1.09 m apart, and the gallery 1.09 m over the last; it was six 1.25 m apart, made
+      // for a jump that rose 1.77 m. LBA2's jump, ours now, rises 1.19 m and takes a ledge ~1.4 m up: a margin kept)
+      const phi0 = 0.9, dphi = (30 * Math.PI) / 180, rs = 3.475, balY = 8.75, nS = 7;
+      const tops = Array.from({ length: nS }, (_, k) => +((balY * (k + 1)) / (nS + 1)).toFixed(3));
+      const stones = [];
       const stone = tm('stone', { color: '#e8d2de' });
       tops.forEach((ty, k) => {
         const phi = phi0 + k * dphi, inner = Rat(ty) - 0.25, outer = rs + 0.66, mid = (inner + outer) / 2;
@@ -1413,9 +1416,11 @@ export function buildZeelich(scene, physics) {
         if (k > 0) MB.add(cached('corbel', () => { const s = new THREE.Shape(); s.moveTo(0, 0); s.lineTo(0.9, 0); s.quadraticCurveTo(0.2, -0.1, 0, -0.8); s.lineTo(0, 0); const g = new THREE.ExtrudeGeometry(s, { depth: 0.5, bevelEnabled: false }); g.translate(0, 0, -0.25); g.rotateY(-Math.PI / 2); return boxUV(g, 1); }), stone, Math.sin(phi) * (Rat(ty) - 0.05), ty - 0.4, Math.cos(phi) * (Rat(ty) - 0.05), 0, phi, 0);
         else MB.add(boxUV(bbox(1.5, ty - 0.4, 1.3, 0.06, 1), 1.2), stone, Math.sin(phi) * rs, (ty - 0.4) / 2, Math.cos(phi) * rs, 0, phi, 0);
         col({ type: 'box', x: m.x + Math.sin(phi) * rs, z: m.z + Math.cos(phi) * rs, hw: 0.75, hd: 0.64, rot: phi, top: Y0 + ty, bottom: k === 0 ? undefined : Y0 + ty - 0.4 });
+        stones.push({ x: m.x + ox + Math.sin(phi) * 3.3, y: Y0 + ty, z: m.z + oz + Math.cos(phi) * 3.3 });
       });
-      // the gallery: a ring of planks with a gap where the last stones arrive
-      const balY = 8.75, gap0 = phi0 + 4 * dphi - 0.29, gap1 = phi0 + 5 * dphi + 0.39;
+      // the gallery: a ring of planks with a gap where the last stones arrive (its planks start just past the last
+      // stone's end: a hop up, not a hop up and across — CONTROL-FEEL; it was 0.6 m across)
+      const gap0 = phi0 + (nS - 2) * dphi - 0.29, gap1 = phi0 + (nS - 1) * dphi + 0.26;
       const span = Math.PI * 2 - (gap1 - gap0);
       MB.add(lathe([[Rat(balY) - 0.1, -0.3], [4.05, -0.3], [4.12, -0.18], [4.05, 0], [Rat(balY) - 0.1, 0]], 40, TILE.planks, gap1, span), tm('planks', { color: '#d8b898' }), 0, balY, 0);
       const nb = 14;
@@ -1434,7 +1439,9 @@ export function buildZeelich(scene, physics) {
       }
       // the gearbox where the cog belongs, on the gallery facing the street
       const ta = 0.0;
-      top = { x: m.x + ox + Math.sin(ta) * 3.3, y: Y0 + balY, z: m.z + oz + Math.cos(ta) * 3.3 };
+      // (stones: where to stand on each stair-stone; landing: the gallery's first planks past the gap — tests/lib/player.js)
+      const la = phi0 + (nS - 1) * dphi + 0.5;
+      top = { x: m.x + ox + Math.sin(ta) * 3.3, y: Y0 + balY, z: m.z + oz + Math.cos(ta) * 3.3, stones, landing: { x: m.x + ox + Math.sin(la) * 3.4, z: m.z + oz + Math.cos(la) * 3.4 } };
       MB.add(boxUV(bbox(0.9, 0.8, 0.5, 0.06, 1), 1), tm('wood', { color: '#9a7058' }), Math.sin(ta) * (Rat(balY) + 0.15), balY + 0.4, Math.cos(ta) * (Rat(balY) + 0.15), 0, ta, 0);
       MB.add(cached('gbcog', () => { const s = new THREE.Shape(); for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2, rr = i % 2 ? 0.26 : 0.34; if (i) s.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); else s.moveTo(Math.cos(a) * rr, Math.sin(a) * rr); } s.closePath(); return boxUV(new THREE.ExtrudeGeometry(s, { depth: 0.06, bevelEnabled: false }), 0.5); }), darkSteel(), Math.sin(ta) * (Rat(balY) + 0.42) + 0.25, balY + 0.55, Math.cos(ta) * (Rat(balY) + 0.42), 0, ta, 0);
       // stair-stones keep the vegetation off

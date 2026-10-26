@@ -1,7 +1,7 @@
 // CAM-2: the play camera stays calm (the user, 2026-10-20: "the camera doesn't work very well — it moves a lot").
 // Repeatable routes walked by input (tests/lib/player.js, Classic controls unless named) on Citadel, recorded every frame
-// by tests/lib/camrec.js: where the camera stands and looks, and which of its rules moved it. Both camera settings: the
-// LBA follow (remaster) and the free orbit. Measured per route (camrec.js CR.stats):
+// by tests/lib/camrec.js: where the camera stands and looks, and which of its rules moved it. All three camera settings: the
+// LBA follow (remaster), the free orbit and Follow (CONTROL-FEEL: the LBA view's budgets). Measured per route (CR.stats):
 //   turnPerM    how far the view turns (°) per metre Twinsen walks — LBA2's view keeps its angle while it follows
 //   revYaw/revPitch/revY/revDist   reversals per minute of the view's heading, tilt (≥ 0.5°), the camera's height
 //               (≥ 5 cm) and its distance from him (≥ 10 cm): oscillation, rules undoing each other
@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 const CAMREC = fileURLToPath(new URL('./lib/camrec.js', import.meta.url));
 const { check, done } = checker();
-const RECORD = process.env.RECORD, ONLY = process.env.ONLY, MODES = (process.env.MODES || 'lba,free').split(',');
+const RECORD = process.env.RECORD, ONLY = process.env.ONLY, MODES = (process.env.MODES || 'lba,free,follow').split(',');
 
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
 await open(page, '?nocine');
@@ -31,7 +31,7 @@ await page.evaluate(() => {
   for (let i = 0; i < 80 && G.state !== 'play'; i++) { I.taps.add('KeyE'); G.step(0.05); }
   Object.assign(G.flags, { prologueDone: true, intro: true }); h.hasBall = true;
   window.R = {
-    mode(m) { G.settings.camera = m === 'free' ? 'free' : 'lba'; rig.setMode(G.settings.camera); rig.cut = false; },
+    mode(m) { G.settings.camera = m === 'free' || m === 'follow' ? m : 'lba'; rig.setMode(G.settings.camera); rig.cut = false; },
     // a scene start at a spot (as a load or a door would): the camera's fresh shot, then a second to settle
     place(x, z, a) { G.exitRoom({ x, z, a }, true, true); G.step(0.3); h.angle = a; h.vel.set(0, 0); h.resetMotion?.(); rig.lba.init = false; rig.snap(); G.step(1.0); },
     walk(pts, o = {}) { const res = []; for (const [x, z] of pts) res.push(P.go(x, z, { tol: 0.8, maxT: 40, fight: false, ...o }).r); P.release(); return res; },
@@ -88,7 +88,7 @@ const ROUTES = [
 function BUDGET(mode, name, s, notes) {
   const out = [], b = (what, ok) => out.push([what, ok]);
   if (s.dur < 3) return [['recorded', false]];
-  if (mode === 'lba') {
+  if (mode === 'lba' || mode === 'follow') {   // (CONTROL-FEEL: the Follow view keeps the LBA view's budgets)
     b(`no jolt (camera acceleration max ${s.accMax} ≤ 40 m/s²)`, s.accMax <= 40 && s.joltsPerMin === 0);
     b(`never steep (max ${s.maxPitch}° ≤ 50°, ${s.steepT} s over 50°)`, s.maxPitch <= 50 && s.steepT === 0);
     b(`no oscillation (reversals/min: heading ${s.revYaw}, tilt ${s.revPitch}, height ${s.revY} ≤ 8)`, s.revYaw <= 8 && s.revPitch <= 8 && s.revY <= 8);

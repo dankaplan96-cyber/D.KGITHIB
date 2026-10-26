@@ -1142,6 +1142,42 @@ that ran passed): the machine's root disk was full (236 MB free) and Chromium co
 `TMPDIR=/dev/shm/…` (the browsers' profiles on tmpfs): the results above. The first pass's one prologue check that
 failed ("the well's mites beaten with the ball", 3/4) is the known wandering-mite flake (38a92e7); it passed on the
 rerun (4/4).
+### CONTROL-FEEL: the jump, the dodge, a Follow camera (WORKLIST #31; evidence docs/lba3-production/reviews/CONTROL-FEEL/)
+The user: "the jump is too high", "the dodge takes him very far", "when I turn round he runs toward me" (chose a third
+camera, Follow; LBA2's stays the default). Measured in the user's ANIM.HQR (docs/LBA2_MEASUREMENTS.md "Jump and
+dodges"): the jump (anim 71) rises 0.577 H and carries 1.55 H (1.0 s off the ground after a 0.52 s crouch); anim 26 is
+not a jump (no step up). Dodges: aside 1.17 H (78/79), back 0.98 H (53), ahead 0.70 H (52).
+
+| | Before (699cc60) | After |
+|---|---|---|
+| Jump apex (60 fps, measured) | 1.69 m (1.77 by the numbers) | 1.14 m (1.19 by the numbers = 0.577 H); 1.08 m at 30 fps |
+| Air time | 0.73 s | 0.72 s (its own gravity 18.4 m/s² until back at take-off height; everything else 26) |
+| Running jump length (60 fps) | 3.49 m | 3.12 m (3.2 = 1.55 H; take-off trimmed to 4.44 m/s) |
+| Highest ledge a jump takes | ~2.0 m | ~1.38 m (60 fps), 1.33 m (30 fps) |
+| Dodge | 3.3 m every way | aside 2.44, back / backstep 2.06, ahead 1.47 m (60 and 30 fps alike) |
+
+- Geometry adjusted so every jump place stays crossable (tests/jumpreach.mjs, by input at 30 fps, one attempt each):
+  the Whispering Cliffs (the first stone stood 2.0 m over the street side's ground: now 1 m over the lowest ground by
+  it; 13 stones of 0.98 m), Zeelich's old mill (7 stair-stones of 1.09 m, was 6 of 1.25; its gallery's planks now
+  start just past the last stone, was a 0.6 m gap), the galleries' stepping stones (unchanged; a hop from the brink).
+  Still out of reach: the test step's deck (2.35 m), the depot fence (2.4 m). The hop-pack still climbs the mill in 4
+  hops (tests/jetpack.mjs). Before the cliffs fix the new jump could not get onto the first stone from the street.
+- Follow (src/engine/camera.js `_follow`): swings behind him after 1.2 s one way, ≤ 45°/s; not for standing, turns,
+  short corrections, runs under 1.2 s, a lock-on or a fight, indoors; only to headings that need no rise over the
+  scenery (so in the town it mostly stays as LBA2's). Modern controls keep the stick's heading during the swing.
+- Results (GAME_URL=http://localhost:8175/, one at a time, R7 verdicts, SwiftShader; commits 951c014 → 5d92bd9; logs in
+  the session scratchpad): controls 79, combat 61, anim-combat 35, camsteady 80 (lba, free and follow routes), camclear
+  14, timing 29, jetpack 48, menus 38, jumpreach 4, camfollow 16, worldfit 1, deaths 160, stability 16, chapter1 19,
+  chapter2 18, chapter3 25, chapter4 54, chapter5 20, chapter6 17, chapter7 9, chapter8 13, chapter9 16, chapter10 21:
+  all VERDICT PASS. prologue: 2 FAIL and 1 PASS (20/20) on the current build — the well's mites step (1/4, 1/4 kills;
+  magic runs out when throws miss a wandering mite); the pre-change build passed it 3 of 3, the bisect pointed at the
+  cliffs' stones (world.js), which cannot reach the well room (x 1100); a step-by-step rerun killed 4/4. Recorded as
+  the known flaky step (38a92e7), not proven unrelated.
+- Captures: jump-apex-before.png / jump-apex-after.png (the town square, the same frame of the jump's top; old build
+  served from `git archive 699cc60`), follow-0..3 (a walk across the view, 1.4 s apart: the view comes round behind
+  him).
+- Not verified: the feel by hand (keyboard, pad, touch), a human crossing the galleries' stones and the mill, any frame
+  rate on a GPU. The playthrough segments (tests/playthrough 04, 06, 13, 14 use the jumps) were not rerun.
 
 ### Not tested / blocked
 - Arthur at twelve (ARTHUR-12) on a real GPU and by the user's eye: NOT DONE (SwiftShader captures only); no

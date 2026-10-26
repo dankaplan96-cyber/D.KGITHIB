@@ -31,7 +31,7 @@ import { Kit } from './props.js';
 import { GRAVITY, STEP_UP, WATER_FLOOR } from '../engine/physics.js';
 
 export const JET = {
-  cap: 2.4,          // m: the highest lift above the take-off ground (and above the ground under him); a jump: ~1.8
+  cap: 2.4,          // m: the highest lift above the take-off ground (and above the ground under him); a jump: ~1.2
   grip: 3.1,         // m: the pack needs ground this close under the feet...
   fade: 1.0,         // ...and loses it over the next metre
   spread: 0.9,       // m: the jet pushes on the highest ground within this radius of his feet
@@ -175,7 +175,7 @@ export class Jetpack {
     }
     if (!this.firing) this.ignite(h);
     const r = 1 - Math.exp(-JET.respond * k * dt);
-    h.vy += (target - h.vy) * r + GRAVITY * dt * k;   // (fall() takes the gravity off again)
+    h.vy += (target - h.vy) * r + GRAVITY * dt * k;   // (fall() takes the gravity off again: lit, the jump's own is off)
     if (h.vy < -4 && hag < 2.2) this.cushioning = true;
     // gentle steering at a walking pace; a running jump's momentum fades into it
     const ws = Math.hypot(wx, wz), sc = ws > JET.airSpeed ? JET.airSpeed / ws : 1;

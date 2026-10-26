@@ -106,7 +106,7 @@ const SHOP = [
 class Game {
   constructor() {
     this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
-    if (!['lba', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
+    if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     // (R1-MIGRATE: an update keeps the player's choices; only a missing or unknown scheme falls back to Classic,
     //  and only key bindings that aren't valid key codes are dropped)
@@ -190,6 +190,8 @@ class Game {
     this.camRig = new CameraRig(this.camera, this.terrain, this.physics);
     this.camRig.occ = () => (this.room ? null : this.world.occ);   // Citadel's scenery volumes for the play camera (Game.occluders)
     this.camRig.relative = () => this.settings.controls !== 'classic';   // (CAM-2: camera-relative controls: the free orbit never turns by itself)
+    // (CONTROL-FEEL: the Follow view holds while he fights: a lock-on, a move, or enemies after him — the combat music's mix)
+    this.camRig.busy = () => !!(this.targeting?.lock || this.hero?.combat?.busy || this.combat > 0.3);
     this.particles = new Particles(this.scene);
     this.world.particles = this.particles;
     this.pickups = new Pickups(this);
