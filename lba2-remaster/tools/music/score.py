@@ -54,6 +54,9 @@ INSTR = {
     'warmpad': (17, 89, True), 'polysynth': (17, 90, True), 'spacevoice': (17, 91, True), 'glass': (17, 92, True),
     'halo': (17, 94, True), 'sweep': (17, 95, True), 'atmos': (17, 99, True), 'star': (17, 103, True),
     'sine': (18, 80, True), 'drums': (128, 48, False),  # orchestra kit (channel 10)
+    # (MUSIC-2) folk colours for the playlist pieces; present in MuseScore_General and MuseScore_General_HQ
+    'accordion': (17, 21, True), 'fiddle': (17, 110, True), 'whistle': (17, 78, True), 'sitar': (0, 104, False),
+    'shamisen': (0, 106, False), 'fretless': (0, 35, False), 'steelgtr': (0, 25, False),
 }
 
 # Orchestra kit notes (MuseScore_General 128:48)
