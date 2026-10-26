@@ -19,6 +19,7 @@ import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
 import { textures } from '../engine/textures.js';
 import { rng, smoothstep } from '../engine/math.js';
+import { SpriteBatch } from '../engine/spritebatch.js';
 import { MAX_SLOPE } from '../engine/physics.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
 import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, brassM, panelGeo, frameGeo, fillGeo } from './kit.js';
@@ -1632,16 +1633,23 @@ function buildIsland(scene, physics, name, L, at) {
     mk(cloudTex(false), CLOUD_Y, 10, '#ffffff', 0.9, 0.002, true);
     mk(cloudTex(false), CLOUD_Y + 1.1, 6, '#fff0f6', 0.45, -0.0015, true);
     const puffM = new THREE.SpriteMaterial({ map: puffTex(), color: '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
-    const puffs = [];
+    const puffs = [], spots = [];
     for (let j = 0; j < L.nz; j += 4) for (let i = 0; i < L.nx; i += 4) {
       const k = j * L.nx + i; if (H[k] != null) continue;
       // sea next to land
       let near = false; for (let b = -3; b <= 3 && !near; b++) for (let a = -3; a <= 3; a++) { const m = (j + b) * L.nx + (i + a); if (i + a >= 0 && j + b >= 0 && i + a < L.nx && j + b < L.nz && H[m] != null) { near = true; break; } }
       if (!near || r() < 0.4 || inHarbour(cx(i), cz(j), 3)) continue;   // (none in a harbour: its water shows)
-      const sp = new THREE.Sprite(puffM); const s = 5 + r() * 6, y = CLOUD_Y + 0.6 + r() * 1.5;
-      sp.position.set(cx(i) + (r() - 0.5) * 4, y, cz(j) + (r() - 0.5) * 4); sp.scale.set(s * 1.6, s, 1); group.add(sp); puffs.push({ sp, y, ph: r() * 6 });
+      const s = 5 + r() * 6, y = CLOUD_Y + 0.6 + r() * 1.5;
+      const x = cx(i) + (r() - 0.5) * 4, z = cz(j) + (r() - 0.5) * 4;
+      spots.push({ x, y, z, s, ph: r() * 6 });
     }
-    updaters.push((dt, t) => { for (const p of puffs) p.sp.position.y = p.y + Math.sin(t * 0.25 + p.ph) * 0.4; });
+    // (PERF-ARRIVAL: all the puffs in one draw call, engine/spritebatch.js; they were one call each)
+    if (spots.length) {
+      const SB = new SpriteBatch(group, puffM, spots.length);
+      for (const p of spots) puffs.push({ sp: SB.add(p.x, p.y, p.z, p.s * 1.6, p.s), y: p.y, ph: p.ph });
+      SB.update();
+      updaters.push((dt, t) => { for (const p of puffs) p.sp.y = p.y + Math.sin(t * 0.25 + p.ph) * 0.4; SB.update(); });
+    }
     // the harbour's water: a calm, glossy lilac cloud-water with ripples, fading out on its open side
     if (HB) {
       const map = EP.harbourTex(), fade = EP.fadeTex(HB.open);

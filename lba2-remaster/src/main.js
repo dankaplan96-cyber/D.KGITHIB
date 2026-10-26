@@ -14,6 +14,7 @@ import { BLOBS } from './engine/rig.js';
 import { LightPool, POOL_SIZE } from './engine/lightpool.js';
 import { ShadowCull } from './engine/shadowcull.js';
 import { DrawBatch } from './engine/drawbatch.js';
+import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
 import { lerp, angleDiff, dampAngle } from './engine/math.js';
@@ -251,6 +252,11 @@ class Game {
   async prepare() {
     this.preparing = true;
     const t0 = performance.now();
+    // (PERF-ARRIVAL: where the preparation's time goes, for the benchmark's startup line: waiting for the driver to
+    //  finish the programs, texture uploads, Citadel's geometry upload, its shadow and draw batches, the shadow
+    //  programs, the first frame)
+    const prep = (this.loadTimes.prep = {}); let tp = t0;
+    const lap = (k) => { const n = performance.now(); prep[k] = Math.round(n - tp); tp = n; };
     loadingStep('Preparing graphics…');
     loadBar(0.72);
     await nextPaint();
@@ -258,22 +264,32 @@ class Game {
     const R = this.renderer.renderer;
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
+    lap('paint');
     try { await this.renderer.precompile(); } catch (e) { console.warn('shader precompile', e); }
+    this.warmMenus();
+    lap('programs');
     // upload every texture now too, and draw the title's first view (shadow and post-processing passes)
     const tex = new Set();
     this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap']) if (m[k]?.isTexture) tex.add(m[k]); });
     for (const t of tex) R.initTexture(t);
+    lap('textures');
     this.uploadGeometry(this.world.root);   // (FRAME-1: Citadel's geometry too; each room/region at its first entry)
+    lap('geometry');
     loadingStep('Almost there…');
     loadBar(0.97);
     await nextPaint();
+    lap('paint2');
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
     this.drawBatch.update(this.world.root);   // (and its draw batches, uploaded by the render below)
+    lap('batches');
     if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
+    lap('shadowPrograms');
     this.renderer.render();
+    lap('firstFrame');
     this.loadTimes.shaders = Math.round(performance.now() - t0);
+    this.loadTimes.programs = R.info.programs.length;
     this.perf.load = this.loadTimes;
     this.preparing = false;
     this.last = performance.now();
@@ -424,48 +440,22 @@ class Game {
   }
   // The shadow pass's depth programs (one per kind of caster: side, texture/alpha test, instanced, batched, skinned)
   // are not compiled by precompile(); left alone they compile on the first frame that casts with each kind. Here a
-  // tiny copy of every kind found in the scene (with its own material) is cast into a throwaway shadow map once.
+  // tiny copy of every kind found in the scene (with its own material) is cast into a throwaway shadow map once
+  // (PERF-ARRIVAL: also the casters the shadow culling has switched off or merged for now: engine/warmup.js).
   warmShadows() {
     const R = this.renderer.renderer, C = this.renderer.composer;
     if (!R.shadowMap.enabled || !C) return 0;
-    const g = new THREE.Group(), made = [], kinds = new Map();
-    // a one-triangle geometry with the same attributes as src (the programs depend on which attributes exist)
-    const like = (src) => {
-      const t = new THREE.BufferGeometry();
-      for (const [n, a] of Object.entries(src.attributes)) t.setAttribute(n, new THREE.BufferAttribute(new (a.array.constructor)(3 * a.itemSize), a.itemSize, a.normalized));
-      t.attributes.position.array.set([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]);
-      t.setIndex([0, 1, 2]); made.push(t); return t;
-    };
-    const attrs = (geo) => Object.keys(geo.attributes).sort().join(',');
-    const kindOf = (o) => (o.isSkinnedMesh ? 's' : o.isBatchedMesh ? 'b' : o.isInstancedMesh ? 'i' : 'm');
-    this.scene.traverse((o) => {
-      if (!o.isMesh || !o.castShadow || !o.material || Array.isArray(o.material) || o.customDepthMaterial) return;
-      const m = o.material, k = [kindOf(o), attrs(o.geometry), m.side, m.shadowSide, !!m.map, !!m.alphaMap, m.alphaTest > 0, !!m.displacementMap, m.wireframe, !!m.alphaToCoverage].join('|');
-      if (!kinds.has(k)) kinds.set(k, o);
-    });
-    for (const o of kinds.values()) {
-      let c;
-      if (o.isSkinnedMesh) { c = new THREE.SkinnedMesh(o.geometry, o.material); c.bind(o.skeleton, o.bindMatrix); }
-      else if (o.isBatchedMesh) { const t = like(o.geometry); t.deleteAttribute('batchId'); c = new THREE.BatchedMesh(1, 3, 3, o.material); c.addInstance(c.addGeometry(t)); }
-      else if (o.isInstancedMesh) { c = new THREE.InstancedMesh(like(o.geometry), o.material, 1); c.setMatrixAt(0, new THREE.Matrix4()); }
-      else c = new THREE.Mesh(like(o.geometry), o.material);
-      c.castShadow = true; c.frustumCulled = false; g.add(c);
-    }
-    // (the shadow batches: engine/shadowcull.js)
-    const posOnly = new THREE.BufferGeometry(); posOnly.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]), 3)); posOnly.setIndex([0, 1, 2]); made.push(posOnly);
-    for (const side of [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide]) { const c = new THREE.Mesh(posOnly, new THREE.MeshBasicMaterial({ side })); c.castShadow = true; c.frustumCulled = false; g.add(c); }
-    // one frame of the real scene's lights (the programs depend on them) with only the copies in it, at the sun's
-    // focus so the shadow pass draws them, into a scratch target: nothing reaches the screen, and the GPU draws a few
-    // triangles (drawing the whole scene here queued seconds of work on a software renderer, felt at the first door)
-    g.position.copy(this.env.sun.target.position);
-    const hidden = [];
-    for (const c of this.scene.children) if (!c.isLight && c.visible) { c.visible = false; hidden.push(c); }
-    this.scene.add(g);
+    const may = new Set();
+    for (const A of this.shadowCull?.areas.values() ?? []) { for (const M of A.members) may.add(M.o); for (const M of A.solo) may.add(M.o); }
+    return warmShadowPrograms(R, C.renderTarget2, this.scene, this.camera, this.env.sun.target.position, (o) => may.has(o));
+  }
+  // PERF-ARRIVAL: the behaviour menu's portraits (their own scene and lights, drawn straight to the screen) compiled
+  // their programs the first time Ctrl was held in play
+  warmMenus() {
+    const R = this.renderer.renderer, B = this.behMenu;
+    if (!B?.scene || !R.compile) return;
     const prev = R.getRenderTarget();
-    try { R.setRenderTarget(C.renderTarget2); R.render(this.scene, this.camera); } catch (e) { console.warn('shadow warm-up', e); }
-    R.setRenderTarget(prev);
-    this.scene.remove(g); for (const c of hidden) c.visible = true; for (const t of made) t.dispose();
-    return kinds.size;
+    try { R.setRenderTarget(null); R.compile(B.scene, B.cam); } catch (e) { console.warn('menu warm-up', e); } finally { R.setRenderTarget(prev); }
   }
 
   // what the current preset does, for the benchmark's report
@@ -476,13 +466,17 @@ class Game {
   }
   // after a graphics change (preset: lamp count, shadows): the new shader variants compile before the next frame
   // is drawn (the last frame stays on screen meanwhile, at most 4 s), instead of stalling the first frame
+  // (PERF-ARRIVAL: under the automated tests' fixed stepping too, without the hold: the programs are made the same way,
+  //  so a test measures the compiles a player would get; the post-processing passes and menus included)
   warmGraphics() {
     const R = this.renderer.renderer;
-    if (this.testFreeze || this.preparing || !R.compileAsync || !this.lightPool) return;
-    const hold = (this.gfxHold = { t: performance.now() });
+    if (this.preparing || !R.compileAsync || !this.lightPool) return;
+    const hold = this.testFreeze ? null : (this.gfxHold = { t: performance.now() });
     this.warmShadows();
+    warmPassPrograms(R, this.renderer.composer);
+    this.warmMenus();
     this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : this.hero.pos);
-    this.renderer.precompile().catch(() => {}).finally(() => { if (this.gfxHold === hold) this.gfxHold = null; });
+    this.renderer.precompile().catch(() => {}).finally(() => { if (hold && this.gfxHold === hold) this.gfxHold = null; });
   }
   // the hero walks on through the door (fading out), and in from the doorway (fading in)
   transWalk(dt) {

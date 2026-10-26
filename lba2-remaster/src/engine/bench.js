@@ -138,6 +138,7 @@ export class Bench {
         cur = plan[i];
         if (G.settings.quality !== cur.q) { G.settings.quality = cur.q; G.applySettings(); }
         G.state = 'play'; cur.r.setup(); cur.v?.apply(); t = 0; warm = 0; maxWarm = 0;
+        cur.p0 = G.renderer.renderer.info.programs.length; cur.pw = cur.p0;   // (PERF-ARRIVAL: programs compiled in the warm-up / the measured window)
         G.hud?.toast?.('bench_route', { n: i + 1, of: plan.length });
       };
       G.benchTick = (real) => {
@@ -147,7 +148,7 @@ export class Bench {
         t += real;
         G.state = 'play';
         cur.r.drive(t, real);
-        if (warm < WARM) { warm += real; maxWarm = Math.max(maxWarm, real * 1000); if (warm >= WARM) G.perf.reset(); return; }
+        if (warm < WARM) { warm += real; maxWarm = Math.max(maxWarm, real * 1000); if (warm >= WARM) { G.perf.reset(); cur.pw = G.renderer.renderer.info.programs.length; } return; }
         if (t >= WARM + (cur.short ? 4 : MEASURE)) {
           const s = G.perf.stats();
           // (FRAME-1) long frames: over 33 ms (a 30 fps frame missed), over 50 ms ("stalls"), how many of those were
@@ -158,7 +159,8 @@ export class Bench {
             minMs: Math.min(...buf.map((f) => f.ms)) };
           const R = G.renderer;
           const cfg = G.graphicsConfig();
-          results.push({ q: cur.q, id: cur.r.id, label: cur.r.label, s, stalls, pacing, warmMaxMs: +maxWarm.toFixed(0), cfg, v: cur.v?.id });
+          const np = G.renderer.renderer.info.programs.length;
+          results.push({ q: cur.q, id: cur.r.id, label: cur.r.label, s, stalls, pacing, warmMaxMs: +maxWarm.toFixed(0), cfg, v: cur.v?.id, prog: { warm: cur.pw - cur.p0, measured: np - cur.pw } });
           next();
         }
       };
@@ -206,12 +208,14 @@ export class Bench {
     lines.push(`frame-rate limit: ${G.settings.fps === '30' || G.settings.fps === '60' ? G.settings.fps : 'off'} (off while measuring) · shortest frame interval seen ${Number.isFinite(minMs) ? minMs.toFixed(1) + ' ms (≈ ' + (1000 / minMs).toFixed(0) + ' Hz)' : '?'}`);
     if (G.perf.load) {
       // (RENDER-INV: every area is built at startup; what Citadel itself took, and the largest of the others)
-      const L = G.perf.load, own = (L.world || 0) + (L.spaceport || 0) + (L.townlife || 0) + (L.citydress || 0), skip = new Set(['world', 'spaceport', 'townlife', 'citydress', 'total', 'shaders', 'actors']);
+      const L = G.perf.load, own = (L.world || 0) + (L.spaceport || 0) + (L.townlife || 0) + (L.citydress || 0), skip = new Set(['world', 'spaceport', 'townlife', 'citydress', 'total', 'shaders', 'actors', 'prep', 'programs']);
       const big = Object.entries(L).filter(([k]) => !skip.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, ms]) => `${k} ${(ms / 1000).toFixed(1)}`).join(', ');
-      lines.push(`startup: build ${(L.total / 1000).toFixed(1)} s (Citadel ${(own / 1000).toFixed(1)} s; largest other areas: ${big} s) · shader preparation ${(L.shaders / 1000).toFixed(1)} s`);
+      lines.push(`startup: build ${(L.total / 1000).toFixed(1)} s (Citadel ${(own / 1000).toFixed(1)} s; largest other areas: ${big} s) · shader preparation ${(L.shaders / 1000).toFixed(1)} s`
+        // (PERF-ARRIVAL: the preparation's parts, s, and the programs it left ready)
+        + (L.prep ? ` (${Object.entries(L.prep).map(([k, ms]) => `${k} ${(ms / 1000).toFixed(1)}`).join(', ')}) · ${L.programs ?? '?'} shader programs ready at the title` : ''));
     }
     { const M = G.renderer.renderer.info.memory, heap = performance.memory?.usedJSHeapSize;
-      lines.push(`memory: ${M.geometries} geometries and ${M.textures} textures on the GPU · ${G.renderer.renderer.info.programs?.length ?? '?'} shader programs${heap ? ` · JavaScript heap ${(heap / 1048576).toFixed(0)} MB` : ''} · GPU timer: ${G.perf.gpuTimer ? 'yes' : 'not offered by this browser'}`); }
+      lines.push(`memory: ${M.geometries} geometries and ${M.textures} textures on the GPU · ${G.renderer.renderer.info.programs?.length ?? '?'} shader programs (every preset and breakdown variant run has its own)${heap ? ` · JavaScript heap ${(heap / 1048576).toFixed(0)} MB` : ''} · GPU timer: ${G.perf.gpuTimer ? 'yes' : 'not offered by this browser'} · parallel shader compile (KHR_parallel_shader_compile): ${G.renderer.renderer.extensions?.has?.('KHR_parallel_shader_compile') ? 'yes' : 'no'}`); }
     let q = null;
     const brk = results.filter((x) => x.v);
     for (const x of results.filter((r) => !r.v)) {
@@ -223,7 +227,7 @@ export class Bench {
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
       const P = x.pacing;
       lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · stalls>50ms ${x.stalls}${P ? ` (${P.stallsBlack} behind black) · >33ms ${P.over33} >100ms ${P.over100 ?? 0} of ${s.frames} · longest ${P.worst} ms` : ''}`
-        + ` · sim CPU p50 ${s.simMs.p50} (p95 ${s.simMs.p95}) ms · render submit CPU p50 ${s.renderMs.p50} ms${s.gpuMs ? ` · GPU time p50 ${s.gpuMs.p50} (p95 ${s.gpuMs.p95}) ms [${Object.entries(s.gpuMs.passes || {}).map(([k, v]) => `${k} ${v}`).join(' · ')}]` : ''} · lamps lit ${s.lamps ?? '?'} · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms`
+        + ` · sim CPU p50 ${s.simMs.p50} (p95 ${s.simMs.p95}) ms · render submit CPU p50 ${s.renderMs.p50} ms${s.gpuMs ? ` · GPU time p50 ${s.gpuMs.p50} (p95 ${s.gpuMs.p95}) ms [${Object.entries(s.gpuMs.passes || {}).map(([k, v]) => `${k} ${v}`).join(' · ')}]` : ''} · lamps lit ${s.lamps ?? '?'} · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms${x.prog ? ` · shader programs compiled while measured ${x.prog.measured} (in the warm-up ${x.prog.warm})` : ''}`
         + ` · limited by (estimate): ${this.bound(s)}`);
     }
     if (brk.length) {

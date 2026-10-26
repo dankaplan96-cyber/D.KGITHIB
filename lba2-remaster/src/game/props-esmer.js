@@ -12,6 +12,7 @@
 import * as THREE from 'three';
 import { tm, pm, cached, bbox, boxUV, cyl, lathe, tube, compose, tint, ctex, brassM, VC, panelGeo, frameGeo, fillGeo } from './kit.js';
 import { rng } from '../engine/math.js';
+import { keyJSON } from '../engine/textures.js';
 import { tulipGeometry } from './vegetation.js';
 import { fitAdd } from './worldfit.js';
 
@@ -36,7 +37,7 @@ export const EM = {
 // a material for a painted canvas texture (kit.tm keys by name, which for a texture object isn't unique)
 const CM = new Map();
 export function cm(tex, opts = {}) {
-  const key = tex.uuid + JSON.stringify(opts);
+  const key = tex.uuid + keyJSON(opts);
   if (!CM.has(key)) CM.set(key, new THREE.MeshStandardMaterial({ map: tex, color: opts.color || '#ffffff', roughness: opts.rough ?? 0.88, metalness: opts.metal ?? 0, side: opts.side ?? THREE.FrontSide }));
   return CM.get(key);
 }

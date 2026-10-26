@@ -31,8 +31,9 @@ import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
 import { domeParts, finialGeo, esmerBuilding, Place } from './props-esmer.js';
 const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
-import { textures } from '../engine/textures.js';
+import { textures, keyJSON } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
+import { SpriteBatch } from '../engine/spritebatch.js';
 import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
 import { rugTex } from './props.js';
 import { buildZeelichLife, zlClear } from './zeelife.js';
@@ -74,7 +75,7 @@ const HOUSES = [
 const MC = new Map();
 const TILE = { cliff: 4.5, stone: 1.8, plaster: 2.2, planks: 2.2, brass: 1.6, teal: 2.2, hazard: 0.9, deck: 2.0, cobble: 3.2, grass: 4.0, dirt: 3.0, rubble: 1.7, tiles: 1.0, concrete: 2.6, metal: 2.6, roof: 1.6 };
 function tm(name, opts = {}) {
-  const key = name + JSON.stringify(opts);
+  const key = name + keyJSON(opts);
   if (MC.has(key)) return MC.get(key);
   const map = typeof name === 'string' ? textures()[name] : name;
   const m = new THREE.MeshStandardMaterial({ map, color: opts.color || '#ffffff', roughness: opts.rough ?? 0.88, metalness: opts.metal ?? 0, vertexColors: !!opts.vc, emissive: opts.emissive || '#000000', emissiveIntensity: opts.ei ?? 1, side: opts.side ?? THREE.FrontSide, transparent: !!opts.transparent, alphaTest: opts.alphaTest ?? 0 });
@@ -82,7 +83,7 @@ function tm(name, opts = {}) {
   return m;
 }
 function pm(color, rough = 0.8, extra = {}) {
-  const key = '_' + color + rough + JSON.stringify(extra);
+  const key = '_' + color + rough + keyJSON(extra);
   if (MC.has(key)) return MC.get(key);
   const m = new THREE.MeshStandardMaterial({ color, roughness: rough, ...extra });
   MC.set(key, m);
@@ -1806,7 +1807,9 @@ export function buildZeelich(scene, physics) {
     const ring = resample(ISL, 7);
     const puffs = [];
     const pm2 = new THREE.SpriteMaterial({ map: puffTex(), color: '#fff4f8', transparent: true, depthWrite: false, fog: true, opacity: 0.8 });
-    const add = (x, y, z, s) => { const sp = new THREE.Sprite(pm2); sp.position.set(x, y, z); sp.scale.set(s * 1.6, s, 1); group.add(sp); puffs.push({ sp, y, ph: r() * 6 }); };
+    // (PERF-ARRIVAL: all the puffs in one draw call, engine/spritebatch.js; they were one call each)
+    const SB = new SpriteBatch(group, pm2, ring.length + Math.ceil(ring.length / 2) + 8);
+    const add = (x, y, z, s) => { const sp = SB.add(x, y, z, s * 1.6, s); puffs.push({ sp, y, ph: r() * 6 }); };
     let cx = 0, cz = 0; for (const [x, z] of ISL) { cx += x; cz += z; } cx /= ISL.length; cz /= ISL.length;
     ring.forEach(([x, z], i) => {
       const dx = x - cx, dz = z - cz, l = Math.hypot(dx, dz);
@@ -1814,7 +1817,8 @@ export function buildZeelich(scene, physics) {
       if (r() < 0.25) add(x + (dx / l) * (20 + r() * 40), CLOUD_Y + 1 + r() * 3, z + (dz / l) * (20 + r() * 40), 10 + r() * 10);
     });
     for (const [x, z] of [[50, 0], [46, -9], [56, 8], [-58, 0], [-62, 6]]) add(x, CLOUD_Y + 2.5, z, 12 + r() * 6);
-    updaters.push((dt, t) => { for (const p of puffs) p.sp.position.y = p.y + Math.sin(t * 0.25 + p.ph) * 0.4; });
+    SB.update();
+    updaters.push((dt, t) => { for (const p of puffs) p.sp.y = p.y + Math.sin(t * 0.25 + p.ph) * 0.4; SB.update(); });
   }
   function buildIslets() {
     const list = [[-110, -60, 9, 3], [-95, 70, 13, 6], [30, -95, 16, 5], [120, -50, 11, 2], [115, 60, 18, 7], [-40, 100, 10, 1], [70, 105, 8, 4], [-150, 10, 20, 8]];

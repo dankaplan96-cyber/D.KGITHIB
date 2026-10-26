@@ -538,3 +538,21 @@ function islandTextures(T) {
 
 let cache = null;
 export const textures = () => (cache ??= makeTextures());
+
+// PERF-ARRIVAL: the JSON of a material cache key's options, a texture in them standing for itself by its identity and
+// settings. JSON.stringify of a THREE.Texture calls its toJSON, which encodes the whole image as a PNG data URL
+// (canvas.toDataURL) on every call: the builders' pm(color, rough, { map }) did that thousands of times at startup
+// (≈ 20 s of the build on the test machine, most of Zeelich's and Citadel's). The same textures and settings give the
+// same key as before (toJSON's output holds the texture's own uuid, so equal keys meant the same texture object then too).
+const texSig = (t) => ({ tex: t.uuid, image: t.source?.uuid, name: t.name, mapping: t.mapping, channel: t.channel, repeat: [t.repeat.x, t.repeat.y], offset: [t.offset.x, t.offset.y],
+  center: [t.center.x, t.center.y], rotation: t.rotation, wrap: [t.wrapS, t.wrapT], format: t.format, internalFormat: t.internalFormat, type: t.type, colorSpace: t.colorSpace,
+  minFilter: t.minFilter, magFilter: t.magFilter, anisotropy: t.anisotropy, flipY: t.flipY, generateMipmaps: t.generateMipmaps, premultiplyAlpha: t.premultiplyAlpha, unpackAlignment: t.unpackAlignment, userData: t.userData });
+export function keyJSON(o) {
+  if (o && typeof o === 'object' && !Array.isArray(o)) {
+    for (const v of Object.values(o)) if (v?.isTexture) {
+      const c = {}; for (const [k, x] of Object.entries(o)) c[k] = x?.isTexture ? texSig(x) : x;
+      return JSON.stringify(c);
+    }
+  }
+  return JSON.stringify(o);
+}

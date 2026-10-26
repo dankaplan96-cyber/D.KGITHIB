@@ -385,6 +385,7 @@ Low → Medium → High; `results/perfbudget-base.log`, `suite/perfbudget.log`):
 perfbudget's budgets: street Medium ≤ 300 (304) and Low ≤ 260 (261) still just fail (were 340 / 292 on base: FAIL
 there too); "no shader compiles after loading" fails identically on base (34 / 43 / 6 programs on the street: the
 test switches presets inside one page with the warm-up skipped under test stepping) — not a regression.
+(PERF-ARRIVAL, 2026-10-26: fixed — the check passes; the compiles were partly that skipped warm-up and partly real: the post passes, shadow depth programs, the behaviour menu. See PERF_ARRIVAL.md.)
 
 **Regression tests** (one at a time, GAME_URL=http://localhost:8176/, `suite/`): stability, transitions, townlife,
 opening, chapter1, occluders, doorcull, travel, chapter4, zislands, holomap, dynres, timing: ALL PASSED (chapter1 prints
