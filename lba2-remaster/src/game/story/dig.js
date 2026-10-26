@@ -109,7 +109,7 @@ export class Dig extends ChapterBase {
 
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
-    const g = this.game, f = this.f, D = this.D, h = g.hero;
+    const g = this.game, f = this.f, D = g.regions?.built('desert'), h = g.hero;   // (LAZY-REGIONS: read each frame: never builds)
     if (this.isCur() && g.room?.id === 'butemple' && f.c4_seals3 && !f.c4_carving && this.T) consider(dist(this.T.carving.x, this.T.carving.z), 2.2, { kind: 'c4carve', label: 'p_carving' });
     if (!this.isCur() || !this.inD()) return;
     // the wind-pump: listen at the tower while it is jammed; push the shaken joint home while it sprays
@@ -134,7 +134,7 @@ export class Dig extends ChapterBase {
     return null;
   }
   interact(it) {
-    const g = this.game, f = this.f, D = this.D;
+    const g = this.game, f = this.f, D = g.regions?.built('desert');   // (LAZY-REGIONS: its things exist only once built)
     switch (it.kind) {
       case 'c4rope':
         f.c4_rope = true; D.rope.setVisible(false); g.audio.play('chest'); g.hud.toast('c4_toast_rope');

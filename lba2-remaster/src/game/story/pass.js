@@ -103,7 +103,7 @@ export class Pass extends ChapterBase {
     if (f.c6_liftReady && !f.c6_trip2 && Math.abs(h.pos.y - M.lift.y0) < 1.2) consider(dist(M.lift.winch.x, M.lift.winch.z), 1.6, { kind: 'c6winch', label: 'p_winch' });
   }
   interact(it) {
-    const g = this.game, f = this.f, M = this.M, h = g.hero;
+    const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: its things exist only once built)
     switch (it.kind) {
       case 'c6heat':
         if (!f.c6_fuse) { this.chain([['hero', 'c6_heat_locked']], () => { f.c6_needFuse = true; g.updateObjective(); }); return true; }

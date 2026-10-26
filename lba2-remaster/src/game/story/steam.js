@@ -86,7 +86,7 @@ export class Steam extends ChapterBase {
 
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
-    const g = this.game, f = this.f, D = this.D, r = this.room();
+    const g = this.game, f = this.f, D = g.regions?.built('desert'), r = this.room();   // (LAZY-REGIONS: read each frame: never builds)
     if (!this.isCur()) return;
     if (r === 'desert') {
       if (f.c5_planned && !f.c5_dug) consider(dist(D.ruins.door.x, D.ruins.door.z), 2.4, { kind: 'c5drift', label: f.c5_shovel ? 'p_dig' : 'p_look' });
@@ -104,7 +104,7 @@ export class Steam extends ChapterBase {
     void g;
   }
   interact(it) {
-    const g = this.game, f = this.f, D = this.D, h = g.hero;
+    const g = this.game, f = this.f, D = g.regions?.built('desert'), h = g.hero;   // (LAZY-REGIONS: its things exist only once built)
     switch (it.kind) {
       case 'c5drift':
         if (!f.c5_shovel) { this.chain([['hero', 'c5_drift']], () => { f.c5_needShovel = true; g.updateObjective(); }); return true; }

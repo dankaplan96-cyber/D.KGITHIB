@@ -129,7 +129,7 @@ export class Chapter2 extends ChapterBase {
 
   // ---------------------------------------------------------------- interaction
   interactables(consider, dist) {
-    const g = this.game, f = this.f, Z = this.Z, h = g.hero;
+    const g = this.game, f = this.f, Z = g.regions?.built('zeelich'), h = g.hero;   // (LAZY-REGIONS: read each frame: never builds)
     if (!this.reached()) return;
     if (this.inZ()) {
       const mt = Z.millTop;
@@ -151,7 +151,7 @@ export class Chapter2 extends ChapterBase {
   }
 
   interact(it) {
-    const g = this.game, f = this.f, h = g.hero, Z = this.Z;
+    const g = this.game, f = this.f, h = g.hero, Z = g.regions?.built('zeelich');   // (LAZY-REGIONS: its things exist only once built)
     switch (it.kind) {
       case 'c2cog':
         if (f.c2_planTaken && !f.c2_okuOK) { this.chain([['hero', 'c2_cog_ask']]); return true; }
