@@ -168,13 +168,31 @@ export class Targeting {
     const from = { x: h.pos.x + Math.sin(h.angle) * 0.3, y: h.pos.y + 1.35, z: h.pos.z + Math.cos(h.angle) * 0.3 };
     const pl = B.plan(h, h.behaviour, null, e, false, from), v = pl.vel, R = 0.14;   // (R: the ball's radius, BALL_R)
     const hr = e.hitR || 0.75, y0 = e.pos.y - 0.2, y1 = e.pos.y + (e.hitH || 2);
-    let x = from.x, y = from.y, z = from.z, vy = v.y, last = 1e9;
+    // the flight's first half second bends the ball onto him (MagicBall.assist: toward his aim point, Game.ballAimTargets,
+    // never along a line through a fence): followed here too, or a high arc over a fence onto a drone hovering just
+    // behind it, which the assist brings down in the open but not through the wire, would count as a hit
+    const ay = e.pos.y + (e.hover != null ? e.hover : 0.45), cosMax = Math.cos(this.cone() * 0.7);
+    let x = from.x, y = from.y, z = from.z, vx = v.x, vz = v.z, vy = v.y, last = 1e9, over = false;
     for (let t = 0, dt = 1 / 120; t < 2.5; t += dt) {
-      x += v.x * dt; z += v.z * dt; vy -= pl.grav * dt; y += vy * dt;
+      const sp = Math.hypot(vx, vz);
+      if (t <= 0.5 && sp >= 1) {
+        const hx = vx / sp, hz = vz / sp, dx = e.pos.x - x, dz = e.pos.z - z, d = Math.hypot(dx, dz);
+        if (d >= 0.3 && d <= 9 && (dx * hx + dz * hz) / d >= cosMax && P.clearTo(x, y, z, e.pos.x, ay, e.pos.z, 0.8) && !P.ballFenceBetween(x, y, z, e.pos.x, ay, e.pos.z, hr, R)) {
+          const k = Math.min(1, dt * 4), nx = hx + (dx / d - hx) * k, nz = hz + (dz / d - hz) * k, nl = Math.hypot(nx, nz);
+          vx = (nx / nl) * sp; vz = (nz / nl) * sp;
+          const tf = d / sp, want = (ay - y) / Math.max(tf, 0.12) + 0.5 * pl.grav * tf;
+          vy += (want - vy) * Math.min(1, dt * 5);
+        }
+      }
+      x += vx * dt; z += vz * dt; vy -= pl.grav * dt; y += vy * dt;
       const d = Math.hypot(e.pos.x - x, e.pos.z - z);
-      if (d < hr && y > y0 && y < y1) return true;          // (the hit test comes first in the flight, too)
+      // (the fence first: the flight never moves the ball into a collider, so a spot inside the fence's reach is
+      // never hit-tested there, even where an enemy pressed against the far side has his hit cylinder poke through)
       if (P.ballFenceAt(x, z, y, R)) return false;
-      if (d > last + 1e-4 || y < P.groundAt(x, z, y + 0.3)) return true;   // past it or down: not a fence's doing
+      if (d < hr && y > y0 && y < y1) return true;
+      // over: the arc has crossed above such a fence; a miss after that is the fence's doing, any other miss is not
+      if (!over && P.ballFenceAt(x, z, e.pos.y + 1, R)) over = true;
+      if (d > last + 1e-4 || y < P.groundAt(x, z, y + 0.3)) return !over;
       last = d;
     }
     return true;

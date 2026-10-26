@@ -453,7 +453,24 @@ r = await ev(() => {
   fence.noBall = false; d = setup(['a_dummy', 'a_mite']); const m = E('a_mite'); T.update(1 / 60, aim, true);
   out.both = { throwT: id(T.throwTarget(aim)), marker: id(T.soft), mite: m.hp }; C.press('KeyF'); C.step(1.5);
   out.both.miteAfter = m.hp; out.both.dummyHits = d.hits;
-  fence.enabled = false; T.release(); delete m.update; m.setPresent(false);
+  delete m.update; m.setPresent(false);
+  // a drone hovering just behind the fence (the depot's, pressed against it in a chase): its hit cylinder pokes
+  // through the wire, and an arc aimed at it may sail over the fence and past it. From several spots 4.5-7.5 m off:
+  // whenever the aim offers it as the throw target, the throw gets to it (offered ⇒ hurt). In the open it is offered
+  // and hit.
+  const drone = (open, hx, hz) => {
+    fence.enabled = !open; C.only(['a_drone'], [hx, hz], 0);
+    const q = C.put('a_drone', 6189, 7.6); h.angle = Math.atan2(q.pos.x - h.pos.x, q.pos.z - h.pos.z);
+    q.hp = q.maxHp; q.hover = 1.3; q.state = 'patrol'; q.coolT = 99; q.update = () => {};
+    h.combat.equip('ball', true); h.mp = h.mpMax; G.ball.reset?.(); T.release();
+    const a = { x: Math.sin(h.angle), z: Math.cos(h.angle) }; T.update(1 / 60, a, true);
+    const o = { at: [hx, hz], reaches: T.ballReaches(q), throwT: id(T.throwTarget(a)), hp: q.hp };
+    C.press('KeyF'); C.step(1.5); o.hurt = q.hp < o.hp; delete q.update; q.setPresent(false); return o;
+  };
+  out.drone = [];
+  for (const hz of [0.1, 0.9, 1.6, 2.3, 3.1]) for (const hx of [6189, 6189.3]) out.drone.push(drone(false, hx, hz));
+  out.droneOpen = drone(true, 6189, 1.6);
+  fence.enabled = false; T.release();
   return out;
 });
 check('fence: an enemy behind a chain-link fence is still seen and can be locked', r.fenced.visible && r.fenced.pick === 'a_dummy' && r.fenced.lock === 'a_dummy', r.fenced);
@@ -462,6 +479,8 @@ check('fence: without the fence the same enemy is the throw target', r.open.thro
 check('fence: a low railing the arc clears keeps the target, and the throw hits it', r.rail.throwT === 'a_dummy' && r.rail.hits >= 1, r.rail);
 check('fence: a see-through collider the ball passes (noBall) keeps the target', r.noBall.throwT === 'a_dummy', r.noBall);
 check('fence: with a reachable enemy in the cone the aim takes it and the throw hits it', r.both.throwT === 'a_mite' && r.both.marker === 'a_mite' && r.both.miteAfter < r.both.mite && r.both.dummyHits === 0, r.both);
+check('fence: a drone just behind it is offered as the throw target only where the throw gets to it', r.drone.every((o) => o.throwT !== 'a_drone' || o.hurt), r.drone.map((o) => `${o.at[0] - 6189},${o.at[1]}: ${o.throwT}${o.hurt ? ' hurt' : ''}`).join(' | '));
+check('fence: the same drone in the open is the throw target, and the throw hits it', r.droneOpen.reaches && r.droneOpen.throwT === 'a_drone' && r.droneOpen.hurt, r.droneOpen);
 
 const fails = done();
 await browser.close();

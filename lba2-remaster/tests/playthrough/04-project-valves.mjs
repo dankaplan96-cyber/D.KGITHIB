@@ -7,7 +7,10 @@ export const steps = [
     for (let k = 0; k < 5 && !v.open; k++) { P.go(v.x + 7.5, v.z + (k - 2) * 0.8, { tol: 0.8, run: true, maxT: 90 }); P.settle(); P.tap('F1'); P.throwAt(v.x, v.z); P.settle(); }
     return { open: v.open, fail: v.open ? null : 'orchard' };
   }],
-  ['depot (fight the guards on the way)', () => { const v = game.world.valves.find((q) => q.id === 'depot'); const r = P.use(v.x, v.z, { near: 1.3, run: true }); P.wait(1); P.settle(); return { ...r, open: v.open, hp: game.hero.hp, clovers: game.hero.clovers, fail: v.open ? null : 'depot' }; }],
+  // (a hit while he turns the wheel stops the turn: as a player, see off whoever is at him and turn it again)
+  ['depot (fight the guards on the way)', () => { const v = game.world.valves.find((q) => q.id === 'depot'); let r, tries = 0;
+    for (; tries < 3 && !v.open && !game.hero.dead; tries++) { if (tries) { P.release(); P.fight({ maxT: 30, threatsOnly: true }); } r = P.use(v.x, v.z, { near: 1.3, run: true }); P.wait(1); P.settle(); }
+    return { ...r, tries, open: v.open, hp: game.hero.hp, clovers: game.hero.clovers, fail: v.open ? null : 'depot' }; }],
   ['cliffs: the target', () => {
     const T = game.world.target;
     for (let k = 0; k < 6 && !T.hit; k++) { const a = Math.PI + (k - 2.5) * 0.4; P.go(T.x + Math.sin(a) * 7, T.z + Math.cos(a) * 7, { tol: 1, run: true, maxT: 90 }); P.settle(); P.tap('F1'); P.throwAt(T.x, T.z); P.settle(); }
