@@ -30,7 +30,7 @@ S = 2.1  # the game's height for H (top of the hair)
 COL = {
     'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#e98c6c', 'skin': '#e2bc90', 'hair': '#553916', 'hairTuft': '#6a4722',
     'white': '#f2f2f6', 'iris': '#7fb8e0', 'pupil': '#1c3a5a', 'lid': '#5a3a28', 'medal': '#d8bc68', 'medalFace': '#f2e2a0',
-    'cord': '#c8502a', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414',
+    'cord': '#c8502a', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414', 'mouth': '#6a2a2a',
 }
 HEAD_K = 1.0                      # the head at the original's measured size (≈0.156 H wide; it was drawn ×1.24 before)
 CHIN = (0.0, 0.80, 0.09)          # …scaled about the chin, so the neck joint stays where it was
@@ -541,6 +541,26 @@ for sx in (1, -1):
     ff = [[2 * i + 1, 2 * i, 2 * i + 2, 2 * i + 3] for i in range(len(pts) - 1)]
     cord.add(vv, ff)
 # (the original shows no cord: not exported)
+
+# the mouth (FACE-MOUTH): he had none. A short, calm, slightly upturned line on the lower face (a thin tapered
+# crescent, the corners a touch higher than the middle: a gentle friendly rest, not a gape), laid 4 mm off the skin
+# on the head bone. A strip of 7 stations on the face surface, so it follows the snout's slope; 12 triangles.
+MOUTH = Part('mouth', 'mouth', lambda p: {'head': 1.0}, angle=85, big=True)
+MOUTH_Y, MOUTH_HW, MOUTH_T = 0.842, 0.0215, 0.0030      # centre height (fraction of H), half-width, half-thickness
+_mv, _mf = [], []
+for _i in range(7):
+    _u = _i / 6 * 2 - 1                                  # -1 … 1 across the mouth
+    _x = _u * MOUTH_HW
+    _lift = 0.0045 * _u * _u                             # the corners rise
+    _t = MOUTH_T * (1.0 - 0.55 * _u * _u)                # tapered towards the corners
+    for _dy in (_t, -_t):
+        _y = MOUTH_Y + _lift + _dy
+        _mv.append((_x, _y, head_front(_x, _y) + 0.004))
+for _i in range(6):
+    _a = 2 * _i
+    _mf.append([_a, _a + 1, _a + 3, _a + 2])             # (counter-clockwise seen from the front, +z)
+MOUTH.add(_mv, _mf)
+PARTS.append(MOUTH)
 
 # eyes (separate, so they can blink): a flat diamond on the face, the iris a smaller one on top of it
 EYES = []
