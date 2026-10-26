@@ -19,7 +19,7 @@ import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 const { check, checkVisual, done } = checker();
 const { browser, page, errs } = await launch({ width: 640, height: 360 });
-await open(page, '?nocine');
+await open(page, '?nocine&allregions');   // (LAZY-REGIONS: every area built, so the scan covers Zeelich and the islands too)
 await menu(page, 'new');
 
 const res = await page.evaluate(async (ONLY) => {
