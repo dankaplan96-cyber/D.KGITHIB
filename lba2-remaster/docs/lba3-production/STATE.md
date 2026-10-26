@@ -445,6 +445,17 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Evidence: QA.md "CONTROL-FEEL", docs/lba3-production/reviews/CONTROL-FEEL/. Not verified: the feel by hand, the
   playthrough segments 04/06/13/14 (they use the jumps); prologue's well-mite step flaky (2 of 3 runs FAIL here).
 
+## Done after (SAVE-SLOTS, WORKLIST #29; status REVIEW)
+- Six manual save slots beside the Autosave (`lba3_save_v1`, so old saves show as the Autosave; slots
+  `lba3_slot_1`–`6`, the same snapshot plus time, play time and a small picture): Save Game in the pause menu
+  (asks before overwriting; refused with a reason in a story scene, a fight or while he is down), Load Game on the
+  title (Delete with a confirmation), Continue loads the newest, New Game replaces only the autosave, a full storage
+  is said in words. No save-format bump; version not bumped.
+- Evidence: QA.md "SAVE-SLOTS", docs/lba3-production/reviews/SAVE-SLOTS/. tests/saveslots.mjs PASS; save-migration,
+  resume, menus, opening, chapter1, deaths, longsession, stability, controls PASS; zoe-resume PASS on rerun (one
+  caught-sneaking FAIL); prologue 3 of 5 (the known well-mite step; base 1 of 2). Not verified: a real GPU, the
+  desktop app (the picture's worker), pad/touch by hand, an independent review.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

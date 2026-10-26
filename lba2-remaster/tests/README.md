@@ -10,6 +10,7 @@ node tests/prologue.mjs        # new game → prologue end → save
 node tests/chapter1.mjs        # chapter 1 end to end, with save → reload in the middle
 node tests/chapter2.mjs        # chapter 2 end to end, incl. the confiscated-plan setback
 node tests/save-migration.mjs  # v1 save upgrade + backup, missing room, corrupt save recovery
+node tests/saveslots.mjs       # SAVE-SLOTS: Save Game / Load Game / Continue = newest / Delete / New Game keeps slots / full storage
 node tests/anim-combat.mjs     # Twinsen's combat animation: release/contact timing at 30/60/120 fps, planted feet, interruptions
 ```
 

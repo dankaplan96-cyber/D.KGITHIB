@@ -466,6 +466,65 @@ body.desktop .desktop-only { display: block !important; }
   #settings .set-hint { grid-column: 1; margin-top: 0; }
   .set-tabs button { letter-spacing: 0.06em; }
 }
+/* =====================================================================
+   Save slots (SAVE-SLOTS): Save Game (pause) and Load Game (title). The same framed bars as the options menu, one
+   per slot: a small picture, the slot's name, the chapter, then the place, the play time and the date. The
+   selected slot burns like every other menu entry; an empty slot on the Load list is dimmed and skipped.
+   ===================================================================== */
+.slots-screen { gap: 10px; }
+.slots-screen h1 { font-size: clamp(26px, 4vw, 40px); }
+.slot-list { width: min(680px, 100%); gap: 6px; }
+.slot-row { display: flex; gap: 6px; align-items: stretch; }
+.menu .slot { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 14px; padding: 6px 14px 6px 6px; text-align: start; font-weight: 400; }
+.slot-pic { flex: none; width: 96px; height: 54px; display: flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.35); overflow: hidden; }
+.slot-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.slot-pic i { font-style: normal; font-size: 22px; font-weight: 900; color: rgba(255, 255, 255, 0.45); }
+.slot-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.slot-txt > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.slot-name { font-size: 17px; font-weight: 800; color: #fff; }
+.slot-tag { margin-inline-start: 10px; padding: 1px 6px; font-size: 11px; font-style: normal; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #1d0e00; background: #fff3d1; vertical-align: 2px; }
+.slot-ch { font-size: 15px; font-weight: 600; color: var(--ink); }
+.slot-meta { font-size: 13px; color: var(--ink-dim); }
+.menu .slot.sel .slot-meta, .menu .slot:hover .slot-meta { color: #fff; }
+.menu .slot.empty .slot-ch { color: var(--ink-dim); font-weight: 400; font-style: italic; }
+.menu .slot-del { flex: none; padding: 6px 14px; font-size: 14px; font-weight: 700; }
+.menu .slot-back { margin-top: 6px; align-self: center; min-width: min(320px, 100%); }
+.menu-msg { min-height: 1.5em; font-size: 15px !important; line-height: 1.4 !important; color: #fff3d1; text-shadow: 1px 1px 0 #000; }
+.menu-msg.bad { color: #ffb08a; }
+#pause .menu button.blocked { opacity: 0.55; }
+/* one burning bar: on these screens the mouse selects (main.js pickSlot), a hover alone does not burn */
+:is(#savegame, #loadgame, #slotconfirm) .menu button:hover:not(.sel) { background: rgba(0, 0, 0, 0.6); animation: none; }
+:is(#savegame, #loadgame, #slotconfirm) .menu button:hover:not(.sel)::after { content: none; }
+/* the confirmation shows the slot it is about */
+#slotconfirm .slot-card { display: flex; align-items: center; gap: 14px; width: min(520px, 100%); padding: 8px 14px 8px 8px; text-align: start; background: rgba(0, 0, 0, 0.6); }
+#slotconfirm .menu { flex-direction: row; justify-content: center; }
+#slotconfirm .menu button { min-width: 150px; }
+/* a laptop-height window (960x540 and the like): seven slots and Back on one screen */
+@media (max-height: 680px) {
+  .slots-screen { gap: 6px; padding-top: 12px; padding-bottom: 12px; }
+  .slots-screen h1 { font-size: 26px; }
+  .slot-list { gap: 4px; }
+  .slot-pic { width: 72px; height: 40px; }
+  .menu .slot { padding: 3px 12px 3px 3px; }
+  .slot-name { font-size: 15px; } .slot-ch { font-size: 14px; } .slot-meta { font-size: 12.5px; }
+  .menu .slot-back { margin-top: 2px; padding-top: 8px; padding-bottom: 8px; }
+}
+@media (max-height: 440px) {
+  .slots-screen { gap: 4px; padding-top: 6px; padding-bottom: 6px; }
+  .slots-screen h1 { display: none; }
+  .slot-list { gap: 3px; }
+  .slot-pic { width: 52px; height: 29px; }
+  /* two lines a slot: its name and chapter side by side, then the place, time and date */
+  .slot-txt { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: baseline; }
+  .slot-meta { grid-column: 1 / -1; }
+  .menu .slot-back { margin-top: 0; padding-top: 5px; padding-bottom: 5px; }
+  .menu .slot { gap: 10px; padding: 3px 10px 3px 3px; }
+  .slot-name { font-size: 14px; } .slot-ch { font-size: 13px; } .slot-meta { font-size: 11.5px; }
+  .menu .slot-del { padding: 3px 10px; font-size: 12px; }
+  .menu-msg { min-height: 0; font-size: 13px !important; }
+}
+@media (max-width: 520px) { .slot-pic { width: 64px; height: 36px; } }
+
 /* reduced motion: the fire bars hold still (menus, settings, key buttons) */
 @media (prefers-reduced-motion: reduce) {
   .menu button.sel, .menu button:hover, .menu button:focus-visible, .set-row.sel, .set-fold.sel, .set-tabs.sel button, #rebind .keybtn.sel { animation: none; background-position: 0 50%; }
