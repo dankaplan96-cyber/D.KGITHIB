@@ -468,6 +468,57 @@ if (cam.start) for (const k of ['f60', 'f30']) {
   check(`camera ${k}: still when he stops and when he turns on the spot`, c.driftAfterStop < 0.6 && c.moveTurnOnSpot < 0.05, c);
 }
 
+// CAM-CLIFF: Hamalayi's mountain wall (3-20 m rise per metre, 30-70 m high) west of the landing. A walk at it from (4212, 2): out
+// 3 s facing +x, a walking turn round 2 s, then straight on toward x = 4204 for 7 s (he stops at the foot, x ≈ 4206, the
+// slope too steep to climb), 2 s standing. The view hangs 12 m behind him, so it is the wall that the camera meets first, 12 m
+// before him (the height lift went 7.6 → 14 m in five frames, ~3600 m/s², the eased lift being capped at 5 m/s over a face
+// that climbs 3-20 m per metre), and then, at the foot, the wall is a metre from the lens: swung up on its arm, never lifted.
+// The same limits as the open-ground route; he stays in the frame; the camera is never inside terrain; the face never
+// stands between the lens and him; and the look-at point never trails him on the way in.
+const cliff = await ev(({ camRec, camStats }) => {
+  const G = game, h = G.hero, I = K.I, C = G.camRig, PH = G.physics;
+  G.settings.controls = 'classic'; G.settings.camera = 'lba'; G.applySettings();
+  if (!G.rooms.hamalayi) return { room: null };
+  G.enterRoom('hamalayi', null, true); G.step(0.5);
+  for (const e of G.enemies) e.setPresent?.(false);
+  const segs = [['normal', ['ArrowUp'], 3], ['normal', ['ArrowUp', 'ArrowLeft'], 2], ['normal', ['ArrowUp'], 7], ['normal', [], 2]];
+  const T = C.terrain, out = { room: 'hamalayi' };
+  for (const dt of [1 / 60, 1 / 30]) {
+    h.pos.set(4212, PH.groundAt(4212, 2), 2); h.angle = Math.PI / 2; h.vel.set(0, 0); h.resetMotion?.(); h.behaviour = 'normal';
+    C.lba.init = false; for (let t = 0; t < 1; t += dt) G.frame(dt, false);
+    window.__cam = []; let nTurn = 0, i0 = 0;
+    segs.forEach(([beh, keys, s], si) => {
+      h.behaviour = beh; if (si === 2) i0 = window.__cam.length;
+      for (const c of keys) { I.keys.add(c); I.taps.add(c); }
+      for (let t = 0; t < s - 1e-9; t += dt) { G.frame(dt, false); eval(camRec); }
+      for (const c of keys) I.keys.delete(c);
+    });
+    const S = window.__cam, st = eval(camStats)(S, dt), run = eval(camStats)(S.slice(i0 + Math.round(1.5 / dt)), dt);   // (the straight walk once the turn has settled: 1.5 s on)
+    // never inside the terrain (the camera's height over the ground under it, and over the ground in the last metre
+    // round it), and the line from the lens to his chest clear of it (sampled every 0.25 m)
+    let inside = 1e9, hidden = 0;
+    for (const f of S) {
+      const [x, y, z] = f.p;
+      inside = Math.min(inside, y - T.heightAt(x, z));
+      const hx = f.hero[0], hy = f.hero[1] + 1, hz = f.hero[2], n = Math.max(2, Math.ceil(Math.hypot(hx - x, hy - y, hz - z) / 0.25));
+      for (let k = 1; k < n; k++) { const u = k / n; if (T.heightAt(x + (hx - x) * u, z + (hz - z) * u) > y + (hy - y) * u + 0.05) { hidden++; break; } }
+    }
+    const o = { ...st, walkBehind: run.worstBehind, walkLead: run.lead, minX: +Math.min(...S.map((f) => f.hero[0])).toFixed(1), aboveGround: +inside.toFixed(2), hiddenFrames: hidden };
+    out[dt < 0.02 ? 'f60' : 'f30'] = o;
+  }
+  return out;
+}, { camRec, camStats });
+measure('camera at Hamalayi\'s wall (LBA view; NDC; m; m/s²)', cliff);
+check('camera at the wall: Hamalayi is there', cliff.room === 'hamalayi', cliff);
+if (cliff.room) for (const k of ['f60', 'f30']) {
+  const c = cliff[k];
+  check(`camera at the wall ${k}: he walks up to the foot of the wall (x ≤ 4208)`, c.minX <= 4208, c);
+  check(`camera at the wall ${k}: smooth — no lurch (camera acceleration ≤ 25 m/s², 95% ≤ 12)`, c.accMax <= 25 && c.accP95 <= 12, c);
+  check(`camera at the wall ${k}: he stays inside LBA2's frame box`, c.outOfBox === 0 && c.maxNdc < 0.7, c);
+  check(`camera at the wall ${k}: the look-at point never trails him by more than 2.5 m on the straight walk in`, c.walkBehind > -2.5, c);
+  check(`camera at the wall ${k}: never inside the terrain (≥ 0.2 m over it), the wall never between the lens and him`, c.aboveGround >= 0.2 && c.hiddenFrames === 0, c);
+}
+
 // hidden behind a tower or a wall (not a tree: he shows between its leaves; houses fade, VP-10): the view turns just far
 // enough round to show him, eased (≤ 60°/s), never a cut
 const hidden = await ev(({ camRec, camStats }) => {

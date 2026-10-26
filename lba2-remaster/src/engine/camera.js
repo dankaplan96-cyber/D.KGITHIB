@@ -127,6 +127,15 @@ function spring(o, k, target, w, dt) {
 // LIFT_A m/s², looking LIFT_AHEAD s down its own way) over a floor of HARD × them (the terrain within HARD_R only):
 // the least it may ever come to a surface, held at once.
 const CLEAR_R = 1.6, CLEAR_IN = 0.45, CLEAR_TOP = 0.5, LIFT_MAX = 4, HARD = 0.25, HARD_R = 0.8, LIFT_UP_W = 8, LIFT_DOWN_W = 2.5, LIFT_V = 5, LIFT_A = 7, LIFT_AHEAD = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25];
+// ROCK FACES (the LBA view only): where the terrain beside the camera climbs more than CLIFF_CAP above it (Hamalayi's mountain
+// wall: 3-20 m per metre, 30-70 m high), the view is not risen over — the eased lift (LIFT_V) cannot climb it, and the least
+// margins popped it up the face 1.4 m a frame — but drawn in on its arm to CLIFF_A m (the first of the swing k) and then
+// tipped up to CLIFF_P over the look-at point (the rest, overlapping: LBA2's forced camera looking down on him), by the least that
+// stands it CLIFF_R m off the face. The swing's amount k (0..1) is eased (CLIFF_K_V /s, CLIFF_K_A /s²) toward the most it will need over the lift's
+// own look-ahead, so it starts before the wall and slows into it as it slows out of it. The look-at point's own lead stops
+// short of a face (CLIFF_R_F off it) too: it would stand in the rock the view is lifted from.
+const CLIFF_CAP = 3, CLIFF_R = 2.2, CLIFF_R_F = 1.2, CLIFF_P = 1.5, CLIFF_A = 5.5, CLIFF_STEP = 0.1, CLIFF_K_V = 0.4, CLIFF_K_A = 0.3;
+const FACE_DIRS = Array.from({ length: 12 }, (_, i) => [Math.sin((i * Math.PI) / 6), Math.cos((i * Math.PI) / 6)]);
 const RING = [0.4, 0.8, 1.2, 1.6].flatMap((r) => Array.from({ length: 12 }, (_, i) => [r, Math.sin((i * Math.PI) / 6) * r, Math.cos((i * Math.PI) / 6) * r]));
 const CORNERS = [[-CLEAR_R, -CLEAR_R], [CLEAR_R, -CLEAR_R], [-CLEAR_R, CLEAR_R], [CLEAR_R, CLEAR_R]];
 const clearW = (s) => (s <= CLEAR_IN ? 1 : s >= CLEAR_R ? 0 : smoothstep(CLEAR_R, CLEAR_IN, s));
@@ -141,7 +150,7 @@ function outside(c, x, z) {
 const _seen = new Set(), _cells = [], NO_SKIP = new Set();
 const RIM5 = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]], GAP4 = [[-1, -1], [1, -1], [-1, 1], [1, 1]], GAP11 = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, 0.7], [-0.7, 0, -0.7]];
 
-const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3();
+const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _cd = new THREE.Vector3();
 // LBA2's forced camera: the look-ahead shrinks with the sine of the pitch above the view's own, to nothing at 90°
 const aheadK = (p, p0) => (p <= p0 + 1e-4 ? 1 : clamp(1 - (Math.sin(p) - Math.sin(p0)) / (1 - Math.sin(p0)), 0, 1));
 
@@ -317,7 +326,7 @@ export class CameraRig {
       L.run = { dir: heroAngle, dist: COMMIT };
       L.f = { x: hero.x + L.lead.x, z: hero.z + L.lead.z, y: groundY(), vx: 0, vz: 0, vy: 0 };
       L.gy = L.f.y;
-      L.last = { x: hero.x, z: hero.z }; L.vel = { x: 0, z: 0 }; L.lift = 0; L.vlift = 0; L.pv = null; L.fresh = true; L.pull = 0; L.yawV = 0;
+      L.last = { x: hero.x, z: hero.z }; L.vel = { x: 0, z: 0 }; L.lift = 0; L.vlift = 0; L.pv = null; L.fresh = true; L.pull = 0; L.yawV = 0; L.cp = { lift: 0, vlift: 0 };
       L.init = true; L.behind = false; this.hiddenT = 0; L.steepT = 0; L.steepCool = 0; L.userHold = 0; L.swingBy = '';
       // (a new scene starts already risen over the scenery, as LBA2's CameraCenter does: no rise seen through a fade;
       // CAM-2: and from a heading that needs no steep view — out of a door he faces away from the house, so behind him
@@ -366,8 +375,18 @@ export class CameraRig {
     const W = this.why, f0x = F.x, f0y = F.y, f0z = F.z, p0 = this.pitch, l0 = L.lift, d0 = this.dist;
     W.swing = angleDiff(this._yaw0 ?? L.yaw, L.yaw); this._yaw0 = L.yaw; W.swingBy = L.swingBy || '';
     // the dead zone, in the view's own axes (across the screen / into it)
-    const ex = hero.x + L.lead.x - F.x, ez = hero.z + L.lead.z - F.z;
-    const er = ex * rx + ez * rz, ef = ex * fx + ez * fz, dr = L.pull > 0 ? 0 : DEAD_R, df = L.pull > 0 ? 0 : DEAD_F;
+    // (ROCK FACES: the aim point's lead stops short of a face, CLIFF_R_F m off it)
+    let lk = 1;
+    if (this.terrain && this._faceDist(hero.x + L.lead.x, hero.y + 1.5, hero.z + L.lead.z, CLIFF_R_F) < CLIFF_R_F) {
+      let lo = 0, hi = 1;
+      for (let i = 0; i < 14; i++) { const m = (lo + hi) / 2; if (this._faceDist(hero.x + L.lead.x * m, hero.y + 1.5, hero.z + L.lead.z * m, CLIFF_R_F) < CLIFF_R_F) hi = m; else lo = m; }
+      lk = lo;
+    }
+    // (and swung up over him, the screen shows less ground: the lead and the dead zone shrink with the swing)
+    const sw = 1 - L.cp.lift;
+    lk *= 1 - 0.75 * L.cp.lift;
+    const ex = hero.x + L.lead.x * lk - F.x, ez = hero.z + L.lead.z * lk - F.z;
+    const er = ex * rx + ez * rz, ef = ex * fx + ez * fz, dr = L.pull > 0 ? 0 : DEAD_R * sw, df = L.pull > 0 ? 0 : DEAD_F * sw;
     const cr = er - clamp(er, -dr, dr), cf = ef - clamp(ef, -df, df);
     spring(F, 'x', F.x + rx * cr + fx * cf, FOLLOW_W, dt);
     spring(F, 'z', F.z + rz * cr + fz * cf, FOLLOW_W, dt);
@@ -401,20 +420,25 @@ export class CameraRig {
       if (Math.abs(d) < 1e-3 && Math.abs(L.riseV) < 1e-3) { this.pitch = L.risePitch; L.riseV = 0; } else this.pitch += L.riseV * dt;
     }
     const cp = Math.cos(this.pitch), sn = Math.sin(this.pitch);
-    const place = () => {
-      const x = F.x + Math.sin(L.yaw) * cp * this.dist, z = F.z + Math.cos(L.yaw) * cp * this.dist;
-      const y = F.y + 1 + sn * this.dist;
-      return [x, y, z];
-    };
+    // (ROCK FACES: how far the view is swung up over the look-at point, k; the look-ahead follows the look-at point down its own way)
+    {
+      const K = L.cp, vf = L.fpv ? [(F.x - L.fpv.x) / dt, (F.y - L.fpv.y) / dt, (F.z - L.fpv.z) / dt] : [0, 0, 0], ks = [this._cliffK(F.x, F.y, F.z, L.yaw, this.pitch, this.dist)];
+      if (Math.hypot(vf[0], vf[2]) > 0.5 && Math.hypot(vf[0], vf[2]) < 60) for (const T of LIFT_AHEAD) ks.push(this._cliffK(F.x + vf[0] * T, F.y + vf[1] * T, F.z + vf[2] * T, L.yaw, this.pitch, this.dist));
+      this._ease(K, Math.max(...ks), dt, CLIFF_K_V, CLIFF_K_A);
+      K.lift = Math.min(1, K.lift);
+      if (L.fresh) { K.lift = ks[0]; K.vlift = 0; }
+      (L.fpv ??= {}).x = F.x; L.fpv.y = F.y; L.fpv.z = F.z;
+    }
+    const place = () => this._armAt(F.x, F.y, F.z, L.yaw, this.pitch, this.dist, L.cp.lift, _a).toArray();
     let [x, y, z] = place();
     // clear of the ground and of everything solid round the camera (BUG-WALL: _clearance). The comfortable margins are
     // eased in with a bounded speed and acceleration (quick up, gentle down: the need's kinks over ridges, rock rims and
     // roofs would otherwise jolt the view); the least margins (HARD) hold at once, every frame: never inside anything
     // (and looking down the camera's own way, LIFT_AHEAD s on: a swing round into a roof starts rising before it)
-    let need = this._clearance(x, y, z);
+    let need = this._clearance(x, y, z, null, 1.5, 1, true);
     if (L.pv) {
       const vx = (x - L.pv.x) / dt, vy = (y - L.pv.y) / dt, vz = (z - L.pv.z) / dt;
-      if (Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 60) for (const T of LIFT_AHEAD) { const n = this._clearance(x + vx * T, y + vy * T, z + vz * T); if (n > 0) need = Math.max(need, n + vy * T); }
+      if (Math.hypot(vx, vz) > 0.5 && Math.hypot(vx, vz) < 60) for (const T of LIFT_AHEAD) { const n = this._clearance(x + vx * T, y + vy * T, z + vz * T, null, 1.5, 1, true); if (n > 0) need = Math.max(need, n + vy * T); }
     }
     (L.pv ??= {}).x = x; L.pv.y = y; L.pv.z = z;
     {
@@ -799,10 +823,13 @@ export class CameraRig {
   // BUG-WALL: how far a camera at (x, y, z) must rise (m, ≥ 0) to stand clear of the terrain, the colliders and the
   // scenery volumes round it (see CLEAR_R); colliders too tall to rise over that it stands in or against go to `tall`
   // (k scales every margin: 1 the view's comfortable distance, HARD the least it may ever come to a surface)
-  _clearance(x, y, z, tall = null, base = 1.5, k = 1) {
+  _clearance(x, y, z, tall = null, base = 1.5, k = 1, rock = false) {
     const T = this.terrain, P = this.physics, occ = this.occ?.(), top = CLEAR_TOP * k, W = k < 1 ? hardW : clearW;
     let need = Math.max(T.heightAt(x, z) + base, base) - y;   // (the ground straight under it, as before)
-    for (const [r, dx, dz] of RING) { if (k < 1 && r > HARD_R) break; const n = T.heightAt(x + dx, z + dz) + lerp(base, 0.3 * k, r / CLEAR_R) - y; if (n > need) need = n; }
+    // (`rock`, the LBA view's comfortable lift: a face beside it is for the swing up over him, see CLIFF_CAP; the lift asks no
+    // more than CLIFF_CAP over what the ground under it asks)
+    const lim = rock ? need + CLIFF_CAP : Infinity;
+    for (const [r, dx, dz] of RING) { if (k < 1 && r > HARD_R) break; const n = Math.min(lim, T.heightAt(x + dx, z + dz) + lerp(base, 0.3 * k, r / CLEAR_R) - y); if (n > need) need = n; }
     if (P) {
       _seen.clear();
       for (const [dx, dz] of CORNERS) for (const c of P.near(x + dx, z + dz)) {
@@ -830,6 +857,43 @@ export class CameraRig {
       }
     }
     return Math.max(0, need);
+  }
+
+  // ROCK FACES: how far (m) from (x, y, z) the terrain first climbs more than CLIFF_CAP above y, at most `reach` (a continuous
+  // measure: the crossing is placed between samples by the height, so it moves smoothly as the camera does)
+  _faceDist(x, y, z, reach) {
+    const T = this.terrain, lvl = y + CLIFF_CAP;
+    let best = reach;
+    if (T.heightAt(x, z) > lvl) return 0;
+    for (const [sx, sz] of FACE_DIRS) {
+      let h0 = T.heightAt(x, z);
+      for (let r = 0.5; r < best + 0.5; r += 0.5) {
+        const h1 = T.heightAt(x + sx * r, z + sz * r);
+        if (h1 > lvl) { best = Math.min(best, r - 0.5 + 0.5 * (lvl - h0) / (h1 - h0)); break; }
+        h0 = h1;
+      }
+    }
+    return best;
+  }
+
+  // ROCK FACES: the camera hung off the look-at point (the focus F, looking at F.y + 1) at heading yaw, with the arm swung up
+  // by k: pitch → max(pitch, CLIFF_P), length → min(dist, CLIFF_A)
+  _armAt(fx, fy, fz, yaw, pitch, dist, k, out) {
+    const p = lerp(pitch, Math.max(pitch, CLIFF_P), smoothstep(0.3, 1, k)), d = lerp(dist, Math.min(dist, CLIFF_A), smoothstep(0, 0.7, k)), c = Math.cos(p) * d;
+    return out.set(fx + Math.sin(yaw) * c, fy + 1 + Math.sin(p) * d, fz + Math.cos(yaw) * c);
+  }
+
+  // ROCK FACES: the least swing k (0..1) that stands the view CLIFF_R m clear of a face (0 where nothing is near it)
+  _cliffK(fx, fy, fz, yaw, pitch, dist) {
+    if (!this.terrain) return 0;
+    const bad = (k) => { const c = this._armAt(fx, fy, fz, yaw, pitch, dist, k, _cd); return this._faceDist(c.x, c.y, c.z, CLIFF_R) < CLIFF_R; };
+    if (!bad(0)) return 0;
+    let lo = 0, k = CLIFF_STEP;
+    for (; k < 1 && bad(k); k += CLIFF_STEP) lo = k;
+    if (k >= 1 && bad(1)) return 1;
+    let hi = Math.min(k, 1);
+    for (let i = 0; i < 12; i++) { const m = (lo + hi) / 2; if (bad(m)) lo = m; else hi = m; }   // (to the thousandth: the view slides along the face, no steps)
+    return hi;
   }
 
   // BUG-WALL: the camera at p (looking at `look`) moved clear of solids: drawn in toward the look-at point out of a
@@ -1004,8 +1068,8 @@ export class CameraRig {
 
   // the clearance lift eased toward `need` (st.lift, st.vlift): quick up, gentle down, at most LIFT_V m/s and LIFT_A m/s²,
   // and never faster than it can stop on the need (no overshoot)
-  _ease(st, need, dt) {
-    const e = need - st.lift, want = Math.sign(e) * Math.min(LIFT_V, Math.sqrt(1.6 * LIFT_A * Math.abs(e)), Math.abs(e) * (e > 0 ? LIFT_UP_W : LIFT_DOWN_W)), a = LIFT_A * dt;
+  _ease(st, need, dt, vMax = LIFT_V, aMax = LIFT_A) {
+    const e = need - st.lift, want = Math.sign(e) * Math.min(vMax, Math.sqrt(1.6 * aMax * Math.abs(e)), Math.abs(e) * (e > 0 ? LIFT_UP_W : LIFT_DOWN_W)), a = aMax * dt;
     st.vlift += clamp(want - st.vlift, -a, a);
     st.lift = Math.max(0, st.lift + st.vlift * dt);
   }
