@@ -188,3 +188,8 @@ frame with north (−z) up; Desert Island's is the original's own turn, ours bei
 - The bar at the bottom left is 50 m.
 
 Files: citadel, desert, otringal, knartas, mosquibee, celebration, undergas, cxislet, platform, liftdock.
+
+
+## The user's decisions (26.10.2026)
+- **Hamalayi:** stays our own, larger region by design, but with a few places clearly recognisable from LBA1's Hamalayi ledges. Its 80% target does not apply. Instead, pick 3–4 LBA1 spots by their numbers (tools/worldscore/ref/hamalayi-lba1.json) and rebuild them in our style inside our layout.
+- **The Desert's high façade (#4):** open. Asked the user whether LBA2's School of Magic stands in the north-west, by the great hall and the tall front at (−69.1, −72.7).
