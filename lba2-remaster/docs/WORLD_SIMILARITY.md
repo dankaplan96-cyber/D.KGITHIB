@@ -73,7 +73,7 @@ the original that an addition displaced is still scored. The additions excluded:
 | **Citadel Island** (after step 2) | **84.9** | 90.9 | 76.6 | 98.9 | 63.4 | coast unchanged; lift +1.1 m, MAE 1.06 m; 270 objects / 473; every landmark but the plateau's door within 5 m |
 | **Desert Island** (step 1) | **39.6** | 90.0 | 0.0 | 15.9 | 38.9 | IoU 0.900; land 29,237 / 26,833 m²; lift +2.2 m, MAE 2.29 m on a 1.90 m spread; 315 objects / 119 |
 | **Desert Island** (after step 3) | **85.0** | 97.7 | 78.2 | 88.1 | 68.3 | IoU 0.977; land 29,237 / 29,847; lift 0.0 m, MAE 0.40 m; 315 objects / 231 |
-| The Hamalayi (against LBA1) | 27.4 (partial) | 37.3 | 12.7 | — | — | walkable 31,825 m² ours vs 11,860 in LBA1's eight scenes; 90 % of it within 25.5 m of the lowest level vs 6.4 m |
+| The Hamalayi (against LBA1) | 27.4 (partial) | 37.3 | 12.7 | — | — | walkable 31,825 m² ours vs 11,860 in LBA1's eight scenes; 90 % of it within 25.5 m of the lowest level vs 6.4 m. Not a target any more (the user's decision, 26.10): four LBA1 places added, below |
 | Zeelich (the terminal island) | n/a | | | | | no original island has its layout (below) |
 | Otringal | 92.6 | 100 | 97.7 | 100 | 65.3 | 555 objects / 422 counted |
 | Knartas Island | 94.7 | 100 | 83.4 | 100 | 90.2 | |
@@ -260,8 +260,32 @@ first.
 - **The Hamalayi** (27.4, partial). LBA2 has no Hamalayi. LBA1's is eight separate 55 m ledge scenes with no common
   map, so only the amount of walkable ground and its heights are compared. Ours has 2.7× the ground and four times
   the climb. That comes from the story's lift, ledge and ridge, not from a shape error. Reaching 80 would mean a
-  story change (about 12,000–16,000 m² of ground, 90 % within 6–8 m). **Ask the user** whether the Hamalayi should
-  follow LBA1's ledges or stay ours by design; until then, no fix proposed.
+  story change (about 12,000–16,000 m² of ground, 90 % within 6–8 m). **Decided by the user (26.10.2026): it stays
+  ours, larger by design, with a few LBA1 places in it** (the 80 target does not apply). Four are in
+  (`src/game/props-lba1hamalayi.js`, placed in `hamalayi.js`; numbers read from the grids and actor lists of scenes
+  65, 69 and 9, 0.867 m a cell and 0.434 m a layer, no brick or picture used):
+  - **The gantry** (scene 65): a stone causeway 24 m long, 1 cell wide and 4.8 m up, ending in a T with a lantern block,
+    and at its head an arcade of three piers (2.6 × 4.3 × 6.1 m) with two lintel spans (3.5 m wide, 5.2 m under).
+    The only piece of that scene one cannot mistake. East foothills, arcade at (50, 62), causeway running east to
+    x = 77. A stair of 12 steps up the arcade's west face, two steps down to the deck, a 0.66 m kerb (the original
+    had none) and a deck 1.8 m wide (the original 0.87) so that it walks. A prayer-flag line from a mast on the
+    platform to the lantern. You can walk under the arches and under the deck.
+  - **The old gate** (scene 69, beside which a tripod gun's clone stood): two pillars 0.87 m square and 4.8 m tall,
+    4.3 m apart, a lintel at 3.5–4.3 m and a block on its middle. Across the walk from the landing to the gorge at
+    (−5.5, 58), the opening centred on it (the walk is 3.6 m wide, the opening 4.3).
+  - **The rebels' camp** (scene 9, where LBA1's camouflaged Rabbibunny clones, bodies 66 and 67, and its camouflaged
+    Sphero, 68, stand together): a platform 5 × 8 cells (4.3 × 6.9 m) raised one layer on ramped edges, the three
+    blocks 1.3 m high of its middle as snow-white tents with camouflage patches, the low one beside them as a stack
+    of sacks, and the three sentries' spots as crescents of snow blocks. West of the landing at (−47, 64). No people
+    in it: our story has no rebels here.
+  - **The waystone** (scenes 9 and 65, twice): a pad 4 × 3 cells with a stepped plinth round a stone 2.2 m taller, a lit
+    niche in its face. On the monastery terrace's east snowfield at (62, −50).
+  Nothing the story uses is moved: no spot, path, NPC, the lift, the ledge or the ridge is touched, each place stands
+  on bare snow clear of them (the region's own check, `R.dress.log`, stays empty), pines and rocks keep out of
+  them, and the random streams are unchanged. Cost: four merged meshes (stone, snow, lit glass, canvas), about
+  14,000 triangles, +5 to +7 draw calls in the Hamalayi (the shadow pass included) and no new shader program. Not
+  taken from LBA1 (no number in them that reads as a place we could use without breaking the chapters): its eight
+  ledge scenes' own layout, the cliffs' switchbacks (our trail has them), the colonnade of scene 71.
 - **Zeelich (the terminal island)**: not comparable. No original island has its layout. It is our story hub (the
   spaceport deck, the Esmer street, the mills, the depot, the drill platform) built from LBA2's Esmer pieces, and its
   ground is physics bricks over the cloud sea.
@@ -272,8 +296,8 @@ first.
    77.5 → ≈ 85.~~ Done (step 2): 77.5 → 84.9.
 2. ~~Desert batch A (ground and beach): 39.6 → ≈ 59.~~ Done (step 3, with B).
 3. ~~Desert batch B (Kesh's neighbours and figures, the north-east compound): → ≈ 81.~~ Done (step 3): 39.4 → 85.0, batch C's School, body 49, the islet and the gateway included.
-4. The scorer's two steps for Zeelich's islands and the Lift Dock, then a look by eye. The Hamalayi waits for the
-   user's answer.
+4. The scorer's two steps for Zeelich's islands and the Lift Dock, then a look by eye. The Hamalayi is decided (the user, 26.10.2026): ours, with four LBA1 places
+   added (the Hamalayi bullet above).
 
 Rerun `tools/worldscore.mjs` after each batch and record the before and after here.
 
@@ -293,7 +317,7 @@ Files: citadel, desert, otringal, knartas, mosquibee, celebration, undergas, cxi
 
 
 ## The user's decisions (26.10.2026)
-- **Hamalayi:** stays our own, larger region by design, but with a few places clearly recognisable from LBA1's Hamalayi ledges. Its 80% target does not apply. Instead, pick 3–4 LBA1 spots by their numbers (tools/worldscore/ref/hamalayi-lba1.json) and rebuild them in our style inside our layout.
+- **Hamalayi:** stays our own, larger region by design, but with a few places clearly recognisable from LBA1's Hamalayi ledges. Its 80% target does not apply. Instead, pick 3–4 LBA1 spots by their numbers (tools/worldscore/ref/hamalayi-lba1.json) and rebuild them in our style inside our layout. **Done:** the gantry (causeway and arcade), the old gate, the rebels' camp and the waystone (the Hamalayi bullet under "The other islands" above).
 - **The School of Magic (the user, with a reference frame from a Let's Play, kept in the scratchpad only):** leaving the village, turn right and it is there.
   - **How it looks:** a squat stone block with a crenellated roof and a Moorish arched doorway (blue tiled surround, orange edge). It stands on a paved stone plaza with a palm, low tiled walls and a wooden signpost, by sand and cliffs.
   - **Two candidates in the numbers:**

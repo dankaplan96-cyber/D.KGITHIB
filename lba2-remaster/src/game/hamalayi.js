@@ -25,6 +25,7 @@ import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
 import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances } from './kit.js';
 import { Kit, MAT, barrel, crate, handCart } from './props.js';
+import { gantry, oldGate, rebelCamp, waystone } from './props-lba1hamalayi.js';
 import { MM, TRIM, mountainHouse, mountainSign, noticeBoard, dryWall, fence, woodpile, sledge, trough, hayRack, dryingRack, lanternPost, firePit, markerFlag, windsock, bellPost, wheel, liftWinch, prayerWheels, monasteryHall, monasteryGate, observatory, heatCabinetDress, drift, logGeo } from './props-mountain.js';
 
 export const HAMALAYI = { x: 4300, z: 0 };
@@ -614,6 +615,38 @@ export function buildHamalayi(scene, physics) {
   R.basin = W(BASIN.x, BASIN.z);
   col({ type: 'cyl', x: VENT.x, z: VENT.z, r: 3.4, top: H(VENT.x, VENT.z) + 1.2, noStand: true });
 
+  // ---- four places of LBA1's Hamalayi, rebuilt from the numbers of its scenes in our style (props-lba1hamalayi.js; the
+  // user's decision of 26.10.2026, docs/WORLD_SIMILARITY.md): the gantry (a long narrow causeway and its arcade, scene 65) on
+  // the east foothills, the old gate (scene 69) across the walk from the landing to the gorge, the rebels' camp (scene 9)
+  // west of the landing, the waystone (scenes 9, 65) on the monastery terrace. Nothing the story uses is moved: they stand
+  // on bare snow clear of every walk and spot (checked below), the pines and rocks keep out of them, and each is one Kit
+  // (a few merged meshes, the materials the village already uses).
+  const lba1 = { zones: [], places: {}, within(x, z, pad = 0) { return this.zones.some((q) => { const dx = x - q.x, dz = z - q.z, c = Math.cos(q.ry), s = Math.sin(q.ry); return Math.abs(dx * c - dz * s) < q.hw + pad && Math.abs(dx * s + dz * c) < q.hd + pad; }); } };
+  R.lba1 = lba1;
+  {
+    const place = (id, x, z, ry, builder, probe) => {
+      let gy = 1e9;
+      for (const [lx, lz] of probe) { const [px, pz] = loc(x, z, ry, lx, lz); gy = Math.min(gy, H(px, pz)); }
+      const info = kitOf('lba1').at(x, gy, z, ry, () => builder(kitOf('lba1')));   // (one kit for the four: four meshes in all)
+      for (const c of info.colliders) {
+        const [px, pz] = loc(x, z, ry, c.x, c.z);
+        if (c.bottom == null && c.top > 1) check(id, px, pz, Math.max(c.hw, c.hd) * 1.4);
+        col({ type: 'box', x: px, z: pz, hw: c.hw, hd: c.hd, rot: ry, top: gy + c.top, bottom: c.bottom != null ? gy + c.bottom : undefined, noStand: c.noStand, seeThrough: c.see });
+      }
+      for (const q of info.zones) { const [px, pz] = loc(x, z, ry, q.x, q.z); lba1.zones.push({ x: px, z: pz, hw: q.hw, hd: q.hd, ry }); }
+      dress.placed.push({ name: id, x, z, r: 1 });
+      const at = (lx, ly, lz) => { const [px, pz] = loc(x, z, ry, lx, lz); return [px, gy + ly, pz]; };
+      return (lba1.places[id] = { ...info, ...W(x, z), ry, gy, at, world: (lx, lz) => { const [px, pz] = loc(x, z, ry, lx, lz); return W(px, pz); } });
+    };
+    // the gantry: the arcade across z, the causeway east to a T with a lantern; a prayer-flag line from a mast on the platform to the lantern
+    const gt = place('lba1-gantry', 50, 62, 0, (k) => gantry(k), [[-9.4, 0], [-8.8, 0.9], [-8.8, -0.9], [-7.5, 0], [-6, 0]]);
+    flagLine(gt.at(gt.mast.x, gt.mast.y, gt.mast.z), gt.at(gt.lantern.x, gt.lantern.y + 0.4, gt.lantern.z), 1.4, 0.7);
+    // the old gate, centred on the walk (the landing → the tree bridge), its opening across it
+    place('lba1-gate', -5.5, 58, 0, (k) => oldGate(k), [[-2.6, 0], [0, 0], [2.6, 0]]);
+    place('lba1-camp', -47, 64, 0.3, (k) => rebelCamp(k), [[-3.1, -4.4], [3.1, -4.4], [-3.1, 4.4], [3.1, 4.4], [0, 0]]);
+    place('lba1-waystone', 62, -50, 0.5, (k) => waystone(k), [[-2.1, -1.5], [2.1, -1.5], [-2.1, 1.5], [2.1, 1.5], [0, 0]]);
+  }
+
   // ---- pines on the lower slopes, rocks everywhere
   {
     const pine = treeGeometry('pine', 1), pm2 = pm('#ffffff', 0.85, { vertexColors: true });
@@ -633,6 +666,7 @@ export function buildHamalayi(scene, physics) {
       check('pine', x, z, 0.5 * s);
       list.push({ x, y: H(x, z) - 0.1, z, ry: (x * 7.3 + z) % 6, s, color: '#d8e4dc' });
     }
+    for (let i = list.length - 1; i >= 0; i--) if (lba1.within(list[i].x, list[i].z, 1.2)) list.splice(i, 1);   // (the four places of LBA1's Hamalayi stand clear)
     lodInstances(group, pine, treeGeometry('pine', 1, 1), pm2, list);
     for (const t of list) col({ type: 'cyl', x: t.x, z: t.z, r: 0.4 * t.s, top: t.y + 6, seeThrough: true });
     const rocks = [];
@@ -642,8 +676,8 @@ export function buildHamalayi(scene, physics) {
       rocks.push({ x, y: H(x, z) - 0.1, z, ry: r0() * 6, s: 0.3 + r0() * 0.9, color: '#c8c8d0' });
     }
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
-    for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((_, i) => i % 3 === v));
-    for (const r of rocks) if (r.s > 0.6) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });
+    for (let v = 0; v < 3; v++) lodInstances(group, rockGeometry(v + 1), rockGeometry(v + 1, 1), rm, rocks.filter((r, i) => i % 3 === v && !lba1.within(r.x, r.z, 0.8)));
+    for (const r of rocks) if (r.s > 0.6 && !lba1.within(r.x, r.z, 0.8)) col({ type: 'cyl', x: r.x, z: r.z, r: r.s, top: r.y + r.s * 0.9, seeThrough: true });
   }
 
   // ---- chimney smoke and falling snow

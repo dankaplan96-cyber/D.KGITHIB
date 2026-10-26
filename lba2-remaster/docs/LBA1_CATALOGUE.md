@@ -70,6 +70,12 @@ Tippett, Brundle, Fortress, Polar Island; which bank is which island is not mapp
     way on at cell (14, 1, 11).
   - room 40, the temple's dark halls: in at (3, 17, 3.2), the far exit (61, 17, 1.4) back up to our temple;
     crystal mites at the spots of body 59.
+- The Hamalayi's places, from the exterior scenes' grids and actor lists (numbers only; `src/game/props-lba1hamalayi.js`):
+  the gantry (scene 65: a causeway 28 cells long and one wide, 11 layers over the ground, a T at its end, an arcade of
+  three 3 × 5-cell piers 14 layers tall with 4-cell lintel spans 12 layers up), the old gate (scene 69: pillars 11 layers
+  tall 5 cells apart, a lintel at layers 8–10), the rebels' camp (scene 9: a 5 × 8-cell platform one layer up with ramped
+  edges; blocks 3 layers tall at cells (27,14) (29,14) (28,16), a one-layer one at (29,16); bodies 66, 67, 68 at (27,10)
+  (35,11) (32,14)), the waystone (scenes 9, 65: a pad 4 × 3 cells, a ring of ramps round a stone 5 layers above it).
 
 ## Rooms and maps (LBA_GRI / LBA_BLL / LBA_BRK, SCENE)
 Format (from SOURCES/GRILLE.C, GRILLE_A.ASM, DISKFUNC.C, OBJECT.C): a grid is 64×64 columns, 25 cells high; a
