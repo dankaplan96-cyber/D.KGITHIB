@@ -346,12 +346,15 @@ class Game {
     // LAZY-REGIONS: a labelled step each, the bar animated over the step's time on this computer's last start
     // (a little longer, so it creeps on rather than stops when a step runs late)
     const last = loadEst.prep || {};
-    const step = async (label, to, k, dflt) => { loadingStep(label); loadBar(to, Math.max(300, (last[k] ?? dflt) * 1.5)); await nextPaint(); lap('paint'); };
-    await step('Preparing graphics…', 0.8, 'programs', 3000);
+    const step = async (label, to, k, dflt) => { (BootBar.timeline ||= []).push([Math.round(performance.now()), label]); loadingStep(label); loadBar(to, Math.max(300, (last[k] ?? dflt) * 1.5)); await nextPaint(); lap('paint'); };
+    await step('Preparing graphics…', 0.74, 'programs', 600);
     const R = this.renderer.renderer;
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
-    try { await this.renderer.precompile(); } catch (e) { console.warn('shader precompile', e); }
+    // (the driver compiles in parallel where it can, the main thread waiting free: the bar creeps on toward the step's
+    //  end meanwhile, a little slower each time, so a long compile never shows a bar standing still)
+    { let at = 0.74; const creep = setInterval(() => { at += (0.8 - at) * 0.12; loadBar(at, 900); }, 1000);
+      try { await this.renderer.precompile(); } catch (e) { console.warn('shader precompile', e); } finally { clearInterval(creep); } }
     this.warmMenus();
     lap('programs');
     // upload every texture now too, and draw the title's first view (shadow and post-processing passes)
@@ -388,6 +391,8 @@ class Game {
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.loadTimes.programs = R.info.programs.length;
     this.regions.phase = 'play';   // (an area built from here on is built in play: regions.summary's "later")
+    // (the startup's steps: [ms since the page started, label], and the longest gap between two)
+    { const T = (BootBar.timeline || []).concat([[Math.round(performance.now()), 'title']]); this.loadTimes.timeline = T; this.loadTimes.longestStep = Math.max(0, ...T.slice(1).map((x, i) => x[0] - T[i][0])); }
     this.perf.load = this.loadTimes;
     this.preparing = false;
     this.last = performance.now();
@@ -2118,6 +2123,7 @@ class BootBar {
   constructor(a, b, total) { this.a = a; this.b = b; this.total = total; this.done = 0; this.ref = 0; this.real = 0; }
   pace() { return this.ref >= 1000 ? Math.min(30, Math.max(0.2, this.real / this.ref)) : (loadEst.pace || 1); }
   async step(label, ref) {
+    (BootBar.timeline ||= []).push([Math.round(performance.now()), label]);   // (when each step began: loadTimes.timeline)
     loadingStep(label);
     this.done += ref;
     loadBar(this.a + (this.b - this.a) * Math.min(1, this.done / this.total), Math.max(150, ref * this.pace()));

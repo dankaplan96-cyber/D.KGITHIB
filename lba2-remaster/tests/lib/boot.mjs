@@ -75,9 +75,9 @@ export function watch(page) {
   return errs;
 }
 
-export async function launch({ width = 960, height = 540, storageState, locale } = {}) {
+export async function launch({ width = 960, height = 540, storageState, locale, scale } = {}) {
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
-  const context = await browser.newContext({ viewport: { width, height }, ...(storageState ? { storageState } : {}), ...(locale ? { locale } : {}) });
+  const context = await browser.newContext({ viewport: { width, height }, ...(storageState ? { storageState } : {}), ...(locale ? { locale } : {}), ...(scale ? { deviceScaleFactor: scale } : {}) });
   const page = await context.newPage();
   const errs = watch(page);
   return { browser, context, page, errs };
