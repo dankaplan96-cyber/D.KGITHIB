@@ -438,6 +438,8 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   docs/lba3-production/reviews/ARTHUR-12/. Not verified: a real GPU, an independent review, the user's eye. Pim
   (STORY_BIBLE: "Arthur's age") and Tim/Lulu still use the small-child template: a follow-up, not changed here.
 ## Done after (CAM-FOLLOW; status REVIEW)
+- CAM-FOLLOW-2: Settings → Camera distance (Near 7 m / Medium 8.75 m, the default / Far 10.75 m, each higher), and the
+  Follow camera's corner handling along Bug Street's pair (camsteady's town routes); QA.md "CAM-FOLLOW".
 - Follow (Settings → Camera) is a chase camera at his back: turns with him (settled ~0.25 s after a turn, no
   overshoot), still when he stands, keeps its heading when he walks backwards, draws in along the line to him at
   walls (never inside anything, never over a roof; over his shoulder with his back to a wall), frames him and a locked

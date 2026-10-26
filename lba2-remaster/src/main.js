@@ -144,8 +144,9 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
+    if (!['near', 'medium', 'far'].includes(this.settings.camDist)) this.settings.camDist = 'medium';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     // (R1-MIGRATE: an update keeps the player's choices; only a missing or unknown scheme falls back to Classic,
     //  and only key bindings that aren't valid key codes are dropped)
@@ -1337,6 +1338,7 @@ class Game {
     const hint = {
       controls: () => t('set_h_' + s.controls),
       camera: () => t('set_h_cam_' + s.camera, { l: L('camL'), r: L('camR') }),
+      camDist: () => t('set_h_cd'),
       res: () => t('set_h_res_' + s.res),
       aa: () => t(s.quality === 'low' ? 'set_h_aa_low' : 'set_h_aa_' + s.aa),
       minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
@@ -1405,6 +1407,7 @@ class Game {
       this.env.waterU.uWaveAmp.value = retro ? 0.3 : 1;
     }
     if (changed('camera')) this.camRig.setMode(s.camera);
+    if (changed('camDist')) this.camRig.setFollowDistance(s.camDist);   // (CAM-FOLLOW: Follow's distance and height)
     if (changed('hud')) this.hud.setStyle(s.hud === 'lba');
     // comfort: dialogue speed (LBA2 types 50 chars/s), subtitle size, camera shake
     this.hud.textRate = { slow: 28, normal: 50, fast: 95, instant: 1e9 }[s.textSpeed] ?? 50;

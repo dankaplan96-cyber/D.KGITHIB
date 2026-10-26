@@ -38,6 +38,9 @@ const set1 = await ev(() => ({ cam: game.settings.camera, rig: game.camRig.mode,
 check('a click on Follow chooses it (the camera follows) and stores it', set1.cam === 'follow' && set1.rig === 'follow' && set1.on && set1.stored.length === 1, set1);
 const he = await ev(() => { game.settings.lang = 'he'; game.applySettings(); const t = document.querySelector('[data-setting="camera"] [data-v="follow"]').textContent.trim(); game.settings.lang = 'en'; game.applySettings(); return t; });
 check('the Hebrew label is "עוקבת"', he === 'עוקבת', he);
+// CAM-FOLLOW (the user: "works well but feels too close and too low"): Settings → Camera distance, Medium by default
+const cd = await ev(() => { const o = [...document.querySelectorAll('[data-setting="camDist"] button')].map((b) => [b.dataset.v, b.textContent.trim()]); game.settings.lang = 'he'; game.applySettings(); const heL = document.querySelector('#settings [data-i18n="cam_dist"]')?.textContent.trim(); game.settings.lang = 'en'; game.applySettings(); return { d: game.settings.camDist, opts: o, heL }; });
+check('Settings → Camera distance offers Near, Medium, Far; Medium for a new player (Hebrew "מרחק מצלמה")', cd.d === 'medium' && cd.opts.map((o) => o[0]).join() === 'near,medium,far' && cd.opts[1][1] === 'Medium' && cd.heL === 'מרחק מצלמה', cd);
 
 await menu(page, 'new');
 await ev(async () => {
@@ -251,6 +254,18 @@ else {
 await ev(() => { game.hero.behaviour = 'normal'; game.step(0.5); });
 
 // ---------------------------------------------------------------- 7. comfort: the camera shake setting
+// the three distances on open ground, standing behind him: each a step further back and higher than the last
+const dist = await ev((spot) => {
+  const G = game, h = G.hero, out = {};
+  F.cam('follow');
+  for (const d of ['near', 'medium', 'far']) {
+    G.settings.camDist = d; G.applySettings(); F.place(spot, spot.a); F.hold([], 1);
+    const c = G.camera.position; out[d] = { back: +Math.hypot(c.x - h.pos.x, c.z - h.pos.z).toFixed(2), up: +(c.y - h.pos.y).toFixed(2), off: F.off(), look: +(-Math.asin((G.camRig.look.y - c.y) / G.camRig.look.distanceTo(c)) * 57.3).toFixed(1) };
+  }
+  G.settings.camDist = 'medium'; G.applySettings();
+  return out;
+}, spot);
+check('Camera distance: Medium stands further back and higher than Near, Far further and higher still; behind his back each time', dist.medium.back > dist.near.back + 1 && dist.medium.up > dist.near.up + 0.5 && dist.far.back > dist.medium.back + 1 && dist.far.up > dist.medium.up + 0.5 && ['near', 'medium', 'far'].every((d) => Math.abs(dist[d].off) <= 3), dist);
 const shake = await ev((spot) => {
   const G = game, C = G.camRig, out = {};
   F.cam('follow'); F.place(spot, spot.a);
@@ -322,6 +337,16 @@ if (wall.spots > 0) {
     check('Follow, walking away from the wall: let out slowly (≤ 2.6 m/s) to the full arm; never inside anything, he is always seen', r.away.inside === 0 && r.away.unseen === 0 && r.away.vOut <= 2.6 && r.away.armEnd >= 6.5, r.away);
     check('Follow, backing up to the wall: drawn in as he goes; never inside anything, he is always seen', r.backUp.inside === 0 && r.backUp.unseen === 0 && r.backUp.armEnd <= 5, r.backUp);
     check('Follow, a full turn on the spot by the wall: never inside anything, he is always seen, smooth (≤ 4.1° a frame)', r.turn.inside === 0 && r.turn.unseen === 0 && r.turn.maxStep <= 4.1, r.turn);
+    // (and at Far: the arm drawn in the same, never inside anything, he is seen while he backs up to the wall)
+    const far = await ev((s) => {
+      const G = game, C = G.camRig; G.settings.camDist = 'far'; G.applySettings();
+      F.place({ x: s.x, z: s.z }, s.a); const o = { start: { arm: +C.dist.toFixed(2), inside: F.inside(), seen: F.seen() }, inside: 0, unseen: 0, full: 0 };
+      F.hold(['ArrowUp'], 3); F.hold([], 3); o.full = +C.dist.toFixed(2);
+      F.hold(['ArrowDown'], 4, () => { if (F.inside()) o.inside++; if (!F.seen()) o.unseen++; }); o.end = +C.dist.toFixed(2);
+      G.settings.camDist = 'medium'; G.applySettings();
+      return o;
+    }, r.spot);
+    check('Follow at Far by the wall: drawn in at the wall, out to its longer arm away from it, never inside anything, he is always seen backing up', far.start.arm <= 5 && !far.start.inside && far.start.seen && far.full >= 9 && far.inside === 0 && far.unseen === 0 && far.end <= 5, far);
     if (SHOTS) {
       await ev((s) => { F.place({ x: s.x, z: s.z }, s.a); F.hold(['ArrowUp'], 3); F.hold([], 2.5); }, r.spot);
       for (let i = 0; i < 6; i++) { await shot(`wall-${i}`); await ev(() => F.hold(['ArrowDown'], 0.7)); }
@@ -344,14 +369,14 @@ check('Follow indoors: the iso view as before (it never turns)', iso.room === 'h
 // ---------------------------------------------------------------- 8. the stored choice after a restart; an unknown one
 // (a fresh browser on the stored profile, as tests/lib/boot.mjs quitAndKeep does)
 const state = path.join(os.tmpdir(), `camfollow-${process.pid}.json`);
-await ev(() => { game.settings.camera = 'follow'; game.applySettings(); game.saveSettings?.(); });
+await ev(() => { game.settings.camera = 'follow'; game.settings.camDist = 'far'; game.applySettings(); game.saveSettings?.(); });
 await context.storageState({ path: state });
 await page.waitForLoadState('networkidle').catch(() => {});   // (its models still loading when the browser closes read as failed requests)
 await browser.close();
 const B2 = await launch({ width: 640, height: 360, storageState: state });
 await open(B2.page, '?nocine');
-const set2 = await B2.page.evaluate(() => ({ cam: game.settings.camera, rig: game.camRig.mode }));
-check('Follow is kept after a restart', set2.cam === 'follow' && set2.rig === 'follow', set2);
+const set2 = await B2.page.evaluate(() => ({ cam: game.settings.camera, rig: game.camRig.mode, d: game.settings.camDist, arm: game.camRig.chDist?.arm }));
+check('Follow and its distance (Far) are kept after a restart', set2.cam === 'follow' && set2.rig === 'follow' && set2.d === 'far' && set2.arm > 10, set2);
 await B2.page.evaluate(() => { for (const k of Object.keys(localStorage)) { const v = localStorage.getItem(k) || ''; if (/"camera":"follow"/.test(v)) localStorage.setItem(k, v.replace('"camera":"follow"', '"camera":"orbit"')); } });
 await B2.context.storageState({ path: state });
 await B2.page.waitForLoadState('networkidle').catch(() => {});

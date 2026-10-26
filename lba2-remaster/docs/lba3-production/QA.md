@@ -1186,6 +1186,20 @@ view stays the default and is untouched (camsteady's lba routes: the same number
   from `game.regions.of` (a read builds the area) — a test fix, the camera unchanged.
 - Captures: run-strip (a 5 m/s run, 0.6 s apart), turn-strip (a turn on the spot, 0.3 s apart), wall-strip (backing up
   to a house wall, 0.7 s apart), lock-strip (a lock-on, side-stepping round the mite, 0.6 s apart).
+- CAM-FOLLOW-2 (on the merged tree with WORLD-80's Bug Street pair): camsteady's two town routes failed for Follow
+  only (an arm cut-in of 2.2 m in a frame, a 12.5° view jump, 2.9 s over 50°, tilt/height jitter) where the routes run
+  along the pair's eaves. The camera: a camera grazing an eave's rim by inches is not "over the roof" (_overRoof had
+  taken every point off a volume's footprint for one over it), a tight arm 1.5 m longer beats the comfortable short
+  one, a cut-in of > 0.3 m must hold 0.06 s (one-frame flickers of the search), the in-along-line guard acts only in
+  contact (0.05 m; the search keeps 0.15), the view's downward look is capped at 46° (or just enough to keep his chest
+  in frame), eased, along its own heading, the overhead tilt engages after 0.3 s (at once if he is out of sight), and
+  the ground lift looks ahead 0.5 s, not 2.25 (swinging round him a straight line reads ground it never reaches).
+- Camera distance (the user: "works well but feels too close and too low"): Settings → Camera distance, Near / Medium /
+  Far, saved like the other settings; EN + HE ("מרחק מצלמה": קרוב / בינוני / רחוק). Near 7 m at 19.5° (as before),
+  Medium 8.75 m at 24° (the default), Far 10.75 m at 28.6°; on open ground the camera stands 6.6 / 8.0 / 9.4 m back and
+  3.7 / 5.0 / 6.6 m up, looking 21 / 24 / 28° down. The spring arm, the wall pull-in and the lock-on framing are the
+  same at every distance (camfollow checks Far at a house wall). camsteady's Follow jitter budget now scales with the
+  route (at least 3, one per 30 s): the longer arm passes more eaves on the town routes (3 pairs in 91 s and in 26 s).
 - Not verified: the feel by hand (keyboard, pad, touch) — the user's call; any frame rate on a GPU; the playthrough
   segments were not rerun (they run under LBA2's view, which is unchanged).
 
