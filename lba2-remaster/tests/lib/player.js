@@ -353,6 +353,16 @@
   // walk out through the current room's exit to `to`
   P.exitTo = (to) => { const e = G.room?.exits?.find((x) => x.to === to); if (!e) return { r: 'no exit ' + to, fail: 'no exit ' + to }; return P.through(e.x, e.z); };
   // Hesk's flights: talk to him, pick destination i in his menu
+  // the spaceship between the planets (travel.js, PLANET-1): to the pad's travel point, E, the menu's one stop
+  P.shipTo = (pid) => {
+    const p = G.travel?.points?.[pid]; if (!p) return { r: 'no point ' + pid };
+    const L = p.landing || p, mx = (p.x + L.x) / 2, mz = (p.z + L.z) / 2;
+    const where = P.sceneOf(mx, mz); if (where !== P.here()) P.enter(where, { run: true });
+    P.go(mx, mz, { tol: 1.0, run: true }); P.face(p.x, p.z);
+    const tg = P.target(); if (tg?.kind !== 'isleShuttle') return { r: 'no prompt: ' + (tg?.kind || 'none'), room: P.here() };
+    P.tap('KeyE', 0.1); G.step(0.2); if (G.state !== 'shop') { P.settle(); return { r: 'no menu: ' + G.state, room: P.here() }; }
+    const r = P.menuPick(0); P.settle(30); return { ...r, room: P.here() };
+  };
   P.flyTo = (i) => { P.talk('hesk', { run: true }); if (G.state !== 'shop') { P.tap('KeyE', 0.1); P.settle(); } const r = P.menuPick(i); P.settle(30); return { ...r, room: G.room?.id ?? 'citadel' }; };
   // a ball target: throw from up to six spots around it (r metres off) until it is done
   P.hitTarget = (tg, r = 4, { run = true, maxT = 60, fight = true, tries = 6 } = {}) => { for (let k = 0; k < tries && !tg.done && !hero().dead; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * r, tg.z - Math.cos(a) * r, { tol: 0.8, run, maxT, fight }); P.settle(); if (hero().dead) break; P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return tg.done; };
