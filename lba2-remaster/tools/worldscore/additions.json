@@ -1,0 +1,33 @@
+{
+  "_": "WORLD-80: the twelve years' additions (docs/TWELVE_YEARS.md, WORLD_MAP.md, STORY_BIBLE.md), intentional and not penalised: inside these shapes (our world frame, metres) the coast, height and objects parts leave both sides out. rect: [x0, z0, x1, z1]; circle: [x, z, r]; spot + r: a circle round a named spot of the region (the dump's). A landmark of the original that one of these displaced is still scored.",
+  "citadel": [
+    { "name": "Citadel Spaceport (deck, footbridge, terminal, tower)", "rect": [-32, 22, 16, 58] },
+    { "name": "the Joint Project's station in FunFrock's old fort", "rect": [-46, -80, -14, -50] },
+    { "name": "the project depot", "rect": [-88, -80, -63, -60] },
+    { "name": "the Citadel Asylum (LBA1's, placed by us)", "rect": [-18, -72, -4, -58] },
+    { "name": "the Whispering Cliffs rock stack (the story's)", "circle": [-56, -44, 11] },
+    { "name": "Pippa's shop", "rect": [-35, -3.5, -25, 4.5] },
+    { "name": "the well on the square (where the statue stood)", "circle": [-42, -4, 3.5] },
+    { "name": "the lane's old pump and the project's pipe", "circle": [-42, 65, 4] },
+    { "name": "Zoé's garden (beds, pond, Arthur's boat box)", "circle": [-60, 83, 6] },
+    { "name": "the harbour's customs booth and Nell's repair shop", "rect": [-111, 30, -102, 41] },
+    { "name": "the glider field on the plateau", "circle": [-107, -64, 7] }
+  ],
+  "desert": [
+    { "name": "the Joint Project's research post and test bore", "rect": [3418, -42, 3466, 0] },
+    { "name": "the dig: Temple-Park's shored terraces", "circle": [3464, 28, 24] },
+    { "name": "FunFrock's buried condenser hall", "circle": [3412, 50, 12] },
+    { "name": "Professor Ilka's camp and its mesa", "circle": [3390, -46, 12] },
+    { "name": "the oasis and the wind-pump", "circle": [3363, -11, 10] },
+    { "name": "Kesh's cool room in FunFrock's blockhouse", "circle": [3330, -6, 6] },
+    { "name": "the glider field by the beach", "circle": [3340, -35, 8] }
+  ],
+  "otringal": [{ "name": "the shuttle pad", "spot": "pad", "r": 7 }],
+  "knartas": [{ "name": "the shuttle pad", "spot": "pad", "r": 7 }],
+  "mosquibee": [{ "name": "the shuttle pad", "spot": "pad", "r": 7 }],
+  "celebration": [{ "name": "the shuttle pad", "spot": "pad", "r": 7 }],
+  "undergas": [{ "name": "the shuttle pad", "spot": "pad", "r": 7 }, { "name": "the old Wannie mine (WPN-1)", "spot": "mine", "r": 5 }],
+  "cxislet": [{ "name": "the shuttle pad", "spot": "pad", "r": 7 }],
+  "platform": [{ "name": "the shuttle pad", "spot": "pad", "r": 7 }],
+  "liftdock": [{ "name": "the shuttle pad", "spot": "pad", "r": 7 }]
+}

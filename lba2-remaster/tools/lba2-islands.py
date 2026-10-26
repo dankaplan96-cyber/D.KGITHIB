@@ -149,7 +149,114 @@ def desert_js(src, out):
     print('desert layout', nx, 'x', nz, 'size m', round(w, 1), round(d, 1), 'bytes', os.path.getsize(out))
 
 
+# ------------------------------------------------------------------ WORLD-80: reference layouts for tools/worldscore.mjs
+# `python3 -I tools/lba2-islands.py <LBA2 folder> --ref tools/worldscore/ref` writes citadel.json and desert.json in the
+# format of the Zeelich files above (heights every 2nd point, objects) plus the island's exterior doors from SCENE.HQR:
+# doors: [x, z, y, to scene, from scene] in metres, island-centred. Numbers only.
+# `python3 -I tools/lba2-islands.py <LBA1 folder> --hamalayi tools/worldscore/ref/hamalayi-lba1.json` writes, for
+# LBA1's Hamalayi exterior scenes, each scene's walkable top (cell count, area, height of each walkable cell in
+# 0.43 m layers): numbers only, no bricks or graphics.
+ISLAND_NO = {'CITADEL': 0, 'DESERT': 2}
+
+
+def scene_doors(scene_path, island_no, x0, z0, w, d):
+    E = entries(scene_path); out = []; seen = set()
+    for num in range(len(E) - 1):
+        s = E[num + 1]
+        if not s or len(s) < 64 or s[0] != island_no: continue
+        cube = (s[1], s[2])
+        if cube == (0, 0): continue          # an interior of the island
+        o = 0
+
+        def rd(fmt):
+            nonlocal o
+            v = struct.unpack_from('<' + fmt, s, o); o += struct.calcsize('<' + fmt)
+            return v if len(v) > 1 else v[0]
+        try:
+            rd('3b'); rd('4b'); rd('2h'); rd('20h'); rd('2hb'); rd('3h')
+            t = rd('h'); o += t; t = rd('h'); o += t   # (the hero's track and life scripts)
+            n = rd('h')
+            for _ in range(1, n):            # the scene's objects (lba-source/lbadata.py scene2)
+                flags = rd('I'); rd('h'); rd('b'); rd('h'); rd('h'); rd('3h'); rd('b'); rd('h'); rd('h'); rd('h'); rd('b'); rd('4h'); rd('h'); rd('b')
+                if flags & (1 << 18): rd('Ih')
+                rd('2b'); t = rd('h'); o += t; t = rd('h'); o += t
+            o += 4
+            nz = rd('h')
+            for _ in range(nz):              # zones: box (6 × s32), info0..7, type, num
+                v = struct.unpack_from('<14i2h', s, o); o += 60
+                box, typ, to = v[0:6], v[14], v[15]
+                if typ != 0 or box[3] - box[0] > 4000 or box[5] - box[2] > 4000: continue   # (section-edge strips)
+                cx = ((cube[0] - x0) * SEC + (box[0] + box[3]) / 2) * K - w / 2
+                cz = ((cube[1] - z0) * SEC + (box[2] + box[5]) / 2) * K - d / 2
+                key = (to, round(cx), round(cz))
+                if key in seen: continue
+                seen.add(key); out.append([round(cx, 2), round(cz, 2), round(box[1] * K, 2), to, num])
+        except struct.error:
+            continue
+    return out
+
+
+def ref(src_dir, out_dir):
+    os.makedirs(out_dir, exist_ok=True)
+    for src, name in (('CITADEL', 'citadel'), ('DESERT', 'desert')):
+        convert(os.path.join(src_dir, src + '.ILE'), name, out_dir)
+        p = os.path.join(out_dir, name + '.json'); L = json.load(open(p))
+        C = island(os.path.join(src_dir, src + '.ILE'))
+        xs = [k[0] for k in C]; zs = [k[1] for k in C]
+        L['doors'] = scene_doors(os.path.join(src_dir, 'SCENE.HQR'), ISLAND_NO[src], min(xs), min(zs), L['size'][0], L['size'][1])
+        L['note'] += ' doors: the exterior door zones of its scenes [x, z, y, to scene, from scene].'
+        with open(p, 'w') as f: json.dump(L, f, separators=(',', ':'))
+        print(name, 'doors', len(L['doors']), 'bytes', os.path.getsize(p))
+
+
+HAMALAYI_SCENES = [9, 62, 63, 65, 69, 71, 72, 82]   # LBA1 island 5's exterior scenes (WORLD-SHAPE audit)
+
+
+def hamalayi(src_dir, out):
+    GRI, BLL = entries(os.path.join(src_dir, 'LBA_GRI.HQR')), entries(os.path.join(src_dir, 'LBA_BLL.HQR'))
+    SC = entries(os.path.join(src_dir, 'SCENE.HQR'))
+
+    def blocks(i):
+        b = BLL[i]; n = struct.unpack_from('<I', b, 0)[0] // 4; res = []
+        for k in range(n):
+            o = struct.unpack_from('<I', b, k * 4)[0]
+            dx, dy, dz = b[o], b[o + 1], b[o + 2]
+            res.append([struct.unpack_from('<BBH', b, o + 3 + j * 4) for j in range(dx * dy * dz)])
+        return res
+    scenes = []
+    for num in HAMALAYI_SCENES:
+        g = GRI[num]; B = blocks(num); top = {}
+        for z in range(64):
+            for x in range(64):
+                p = struct.unpack_from('<H', g, (x + z * 64) * 2)[0]; n = g[p]; p += 1; y = 0; solid = []
+                for _ in range(n):           # a column's runs (GPL source: GRILLE_A.ASM DecompColonne)
+                    op = g[p]; p += 1; cnt = (op & 0x3F) + 1
+                    if not (op & 0xC0): y += cnt; continue
+                    if op & 0x40:
+                        for _ in range(cnt):
+                            blk, pos = g[p], g[p + 1]; p += 2
+                            if blk and blk - 1 < len(B) and pos < len(B[blk - 1]) and B[blk - 1][pos][0]: solid.append(y)
+                            y += 1
+                    else:
+                        blk, pos = g[p], g[p + 1]; p += 2
+                        for _ in range(cnt):
+                            if blk and blk - 1 < len(B) and pos < len(B[blk - 1]) and B[blk - 1][pos][0]: solid.append(y)
+                            y += 1
+                if solid: top[(x, z)] = max(solid) + 1   # the walkable top of the column, in layers
+        layers = sorted(top.values())
+        scenes.append(dict(scene=num, island=SC[num][0] if SC[num] else None, cells=len(top), area=round(len(top) * (512 * K) ** 2),
+                           layers=[layers.count(v) for v in range(26)]))
+    res = dict(cell=round(512 * K, 4), layer=round(256 * K, 4), scenes=scenes,
+               note='LBA1 Hamalayi exterior scenes (64 x 64 cells each): the walkable top of each column, counted per height layer. Numbers only.')
+    with open(out, 'w') as f: json.dump(res, f, separators=(',', ':'))
+    print('hamalayi scenes', [(s['scene'], s['island'], s['area']) for s in scenes])
+
+
 if __name__ == '__main__':
+    if len(sys.argv) >= 4 and sys.argv[2] == '--ref':
+        ref(sys.argv[1], sys.argv[3]); sys.exit()
+    if len(sys.argv) >= 4 and sys.argv[2] == '--hamalayi':
+        hamalayi(sys.argv[1], sys.argv[3]); sys.exit()
     if len(sys.argv) >= 4 and sys.argv[2] == '--desert':
         desert_js(os.path.join(sys.argv[1], 'DESERT.ILE'), sys.argv[3]); sys.exit()
     if len(sys.argv) < 3: sys.exit(__doc__ or 'usage: lba2-islands.py <ILE folder> <out folder> [NAME ...]')
