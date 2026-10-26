@@ -438,6 +438,21 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   docs/lba3-production/reviews/ARTHUR-12/. Not verified: a real GPU, an independent review, the user's eye. Pim
   (STORY_BIBLE: "Arthur's age") and Tim/Lulu still use the small-child template: a follow-up, not changed here.
 
+## Done after (PERF-ARRIVAL; status REVIEW, laptop NOT VERIFIED)
+- No shader program compiles in play on any benchmark route at Low, Medium or High (was 19 in real play; perfbudget's
+  check now passes unchanged): the shadow pass's depth programs warmed for every kind of caster (also those the shadow
+  culling has switched off or merged, instance colours, every side × map: three's shared depth material re-picks its
+  program only on a kind change), the warm-up frame lit first (three draws shadows with the previous frame's light
+  count); the post passes (bloom, FXAA) and the behaviour menu warmed; a preset change warms under the tests' stepping
+  too (engine/warmup.js, main.js warmShadows/warmMenus/warmGraphics/prepare).
+- High arrival: no spike after arriving; its p95 was Zeelich's steady view (651 calls). Zeelich's and its islands'
+  cloud puffs drawn in one call (engine/spritebatch.js): Zeelich 649 → 498 calls, arrival p95 652 → 501 (Medium 539 → 388).
+- Startup: material cache keys no longer PNG-encode textures (engine/textures.js keyJSON): build 32–44 s → 18–20 s
+  here; the benchmark prints the preparation's parts, the programs ready, parallel shader compile, and per route the
+  programs compiled while measured.
+- Evidence: docs/lba3-performance/PERF_ARRIVAL.md, results/perf-arrival.json, QA.md "PERF-ARRIVAL". Needs the
+  laptop's benchmark (PERF_ARRIVAL.md §6).
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

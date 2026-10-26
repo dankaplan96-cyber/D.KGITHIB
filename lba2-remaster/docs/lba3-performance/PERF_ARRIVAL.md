@@ -193,7 +193,9 @@ variants.
 
 ## 5. Verification
 
-Tests, one at a time (R7 verdict policy, GAME_URL=http://localhost:8177/): see QA.md "PERF-ARRIVAL" for the
+Tests, one at a time (R7 verdict policy, GAME_URL=http://localhost:8177/, load 10–14): perfbudget, drawcalls, stability,
+transitions, doorcull, occluders, dynres, display, timing, menus, prologue, chapter1, audit, longsession, shipfiles: all
+VERDICT PASS (no error, no missing file). A 30-minute session: NOT TESTED. QA.md "PERF-ARRIVAL" has the
 verdicts. `perfbudget`: PASS (was FAIL on base).
 
 ## 6. Needs the user's laptop

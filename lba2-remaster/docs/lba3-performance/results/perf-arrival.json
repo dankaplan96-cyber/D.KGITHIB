@@ -786,7 +786,6 @@
     "byAction": 0,
     "inFramesAfter": 0
    },
-   "bonus spawned (error)": "TypeError: PICK[type] is not a function",
    "bonus spawned": {
     "byAction": 0,
     "inFramesAfter": 0
@@ -821,7 +820,6 @@
     "byAction": 0,
     "inFramesAfter": 0
    },
-   "bonus spawned (error)": "TypeError: PICK[type] is not a function",
    "bonus spawned": {
     "byAction": 0,
     "inFramesAfter": 0

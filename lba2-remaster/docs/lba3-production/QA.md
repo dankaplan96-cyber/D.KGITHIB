@@ -1143,7 +1143,28 @@ that ran passed): the machine's root disk was full (236 MB free) and Chromium co
 failed ("the well's mites beaten with the ball", 3/4) is the known wandering-mite flake (38a92e7); it passed on the
 rerun (4/4).
 
+### PERF-ARRIVAL: no shader compiles in play; Zeelich's cloud puffs in one call; faster build (docs/lba3-performance/PERF_ARRIVAL.md)
+
+SwiftShader counts (`results/perf-arrival.json`, probes in docs/lba3-performance/PERF-ARRIVAL/); base `b9de5a7`.
+
+| Check | How | Result |
+|---|---|---|
+| No shader program compiles on the routes, any preset | tests/perfbudget.mjs (unchanged) | PASS (was FAIL: Low street 28, Medium street 35, High street 5) |
+| The same in real play, benchmark order Medium → Low → Medium → High, 5 routes each, the game's own warm-ups | realplay.mjs | 0 programs on all 15 routes (was 19 on 5 routes: FXAA, 8 bloom, 10 shadow depth) |
+| First behaviour menu, bonus, ball, inventory; frames after a preset change | firstopen.mjs | 0 (was 2 for the behaviour menu; 45 / 26 / 5 after a change to High / Low / Medium) |
+| High arrival route draw calls p50 / p95 | realplay.mjs | 394 / 501 (was 394 / 652); Zeelich's view 649 → 498 (152 puff sprites → 1 call); Medium p95 539 → 388 |
+| Same look | look.mjs + lookdiff.py, 6 views of Zeelich and its islands at High | 0.00–0.11 % of pixels differ by ≤ 1 level; one 15×8 px puff corner behind a see-through fence (0.008 %) |
+| Build time | boottime.mjs, interleaved | 31.7–43.9 s → 18.2–20.3 s here (Zeelich 10–14 s → 0.7 s: material cache keys no longer PNG-encode textures) |
+| Benchmark report | benchrun.mjs (real time, Medium) | prints per route "shader programs compiled while measured N (in the warm-up M)", the preparation's parts, programs ready at the title, parallel shader compile yes/no |
+
+**Tests** (one at a time, R7 policy, `GAME_URL=http://localhost:8177/`, SwiftShader on a shared machine, load 10–14,
+2026-10-26): perfbudget, drawcalls, stability, transitions, doorcull, occluders, dynres, display, timing, menus,
+prologue, chapter1, audit, longsession, shipfiles (15 tests): all VERDICT PASS, no error, no missing file. A
+30-minute session: NOT TESTED in this block (longsession is the suite's own shorter loop). On the laptop: NOT VERIFIED
+(PERF_ARRIVAL.md §6).
+
 ### Not tested / blocked
+- PERF-ARRIVAL on the user's laptop (High arrival and street fps, startup, compiles per route = 0): NOT VERIFIED.
 - Arthur at twelve (ARTHUR-12) on a real GPU and by the user's eye: NOT DONE (SwiftShader captures only); no
   independent visual review yet.
 - Frame rate on a real GPU (60 FPS gate): BLOCKED — software rendering here; the in-game benchmark on the user's PC.
