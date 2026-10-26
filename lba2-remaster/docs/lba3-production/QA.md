@@ -1288,6 +1288,27 @@ docs/lba3-production/reviews/MUSIC-2/.
 **Tests** (one at a time, R7 policy, `GAME_URL=http://localhost:8180/`, SwiftShader on a shared machine, load ~15,
 2026-10-26, on commit a36fa83): audio, music, voices, menus, opening, stability, shipfiles, longsession — all VERDICT
 PASS, no error, no missing file (logs and check.py before/after: docs/lba3-production/reviews/MUSIC-2/logs/).
+### VALVE-STUCK: segment 04 stuck outside the depot fence (evidence docs/lba3-production/reviews/VALVE-STUCK/)
+- Repro (base 6ad111c, also b9de5a7): chain 01 → 03, then 04. After the orchard valve Twinsen stands at (−71.8, 13.9,
+  −56.7), just north of the depot's north chain-link fence (z −62). drone1 and gdog1 chase him from inside and stop
+  against the fence at (−73.0, −62.6), 6 m away. Their bolts and lunges never reach him (10/10 HP throughout).
+- Cause (the test harness, not the game): the fence collider is `seeThrough`, so the aim's line of sight passes and
+  the aim assist picks the dog, but `solidAt` stops the ball, so every throw hits the fence. `P.fight` only counted a
+  wasted throw when the game aimed at the enemy the bot was facing. Facing drone1 with the throw aimed at gdog1
+  counted nothing, so the fight ran to its 40 s limit eight times and `go` never took a step (probe1.log).
+- Player: not stuck. Nothing blocks his movement, and the walk round to the east gate (x −65) plans fine. A player
+  stops throwing and walks to the gate.
+- Fix (tests/lib/player.js `P.fight`): a throw that hits nothing, neither the faced enemy nor the one the game aimed
+  at, counts as a miss for both. After six, both are left for 25 s, as before. The bot now walks to the east gate
+  and fights the guard, both drones and the dog inside. It uses the valve with a clover spent (probe2.log, 04.log).
+  No check changed.
+- Results (one chain from a new game, port 8197): segments 01–06 PASS (06: its declared ISO assist in the Zeelich
+  depot fight, as before). combat 61/61, containers 41/41, chapter2 18/18, chapter3 25/25, stability 16/16,
+  worldfit 1/1 + 8/8 visual: all VERDICT PASS.
+- Seen, not changed: `P.use`'s "step closer" loop treats a story prompt with no position (a valve, a console) as
+  the wrong target. It walks into the thing's collider until the stuck-replan gives up, three times: about 85 s
+  extra at the depot valve, the Whispering Cliffs valve and the platform shield in 06. Slow, not failing.
+- Game note (not a blocker): the aim marker can sit on an enemy behind a chain-link fence that the ball cannot pass.
 
 ### Not tested / blocked
 - PERF-ARRIVAL on the user's laptop (High arrival and street fps, startup, compiles per route = 0): NOT VERIFIED.

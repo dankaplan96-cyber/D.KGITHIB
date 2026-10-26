@@ -494,6 +494,12 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Evidence: docs/MUSIC.md "MUSIC-2", QA.md "MUSIC-2", tests/music.mjs, excerpts docs/lba3-production/reviews/MUSIC-2/.
 - To rebuild the new pieces: `apt-get download musescore-general-soundfont-lossless`, `dpkg-deb -x`, then
   `MUSIC_SF2=<…>/MuseScore_General_Full.sf2 tools/music/.venv/bin/python tools/music/build.py village_b island_b zeelich_b`.
+## Done after (VALVE-STUCK; status REVIEW; harness only, no game code)
+- Segment 04 stopped at the depot step. Cause: in the harness's `P.fight`, a throw aimed by the game at a different
+  enemy than the one faced was never counted as a miss. Both enemies were behind the depot's fence, so the bot threw
+  into the fence forever. A player was not stuck. Fixed in tests/lib/player.js.
+- Evidence: QA.md "VALVE-STUCK", docs/lba3-production/reviews/VALVE-STUCK/. Segments 01–06 PASS in one chain;
+  combat, containers, chapter2, chapter3, stability and worldfit PASS. Segments 07–14 not re-run here.
 
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.

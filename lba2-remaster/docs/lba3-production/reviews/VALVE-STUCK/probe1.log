@@ -1,0 +1,85 @@
+continue {"state":"play","lines":0}
+orchard (ball over the cage) {"open":true,"fail":null}
+DUMP {"pos":[-71.81,13.89,-56.7],"ang":4.97,"beh":"normal","hp":10,"mp":7.565833333333336,"state":"play","ball":"idle","valve":{"x":-68,"z":-71.4,"open":false},"plan":{"ok":false,"nodes":60000,"left":0.92,"pts":[[-71.8,13.9,-56.7],[-64.2,14,-61.9],[-62.6,13.9,-72.7],[-65,14,-73.9],[-67.8,14,-72.3]]},"threats":[],"en":[{"id":"drone1","kind":"drone","st":"chase","p":[-77.68,14,-66.87],"hp":3,"d":11.74,"vis":true,"los":true,"home":{"x":-80,"z":-73.4},"planOk":true},{"id":"drone2","kind":"drone","st":"chase","p":[-71.42,14,-66.24],"hp":3,"d":9.55,"vis":false,"los":false,"home":{"x":-71,"z":-66.8},"planOk":true},{"id":"guard1","kind":"guard","st":"home","p":[-78.98,14,-70.89],"hp":3,"d":15.9,"vis":true,"los":true,"home":{"x":-80,"z":-66.8},"planOk":true},{"id":"gdog1","kind":"gdog","st":"chase","p":[-76.02,14,-63.88],"hp":3,"d":8.33,"vis":true,"los":true,"home":{"x":-71,"z":-66.8},"leash":14,"planOk":true}]}
+TRY {"r":"go:timeout","at":[-71.80856567645759,-56.69736694741638]} false
+[23.8] go → (-68.0, -71.4) plan ok=false pts=5 left=0.92
+[24.4] threat: fight
+[25.6] fight gdog1 d=6.7 st=chase aim=it e@-73.0,14.0,-62.7 me@-71.8,13.9,-56.7 ball=fly hp 3→3 me 10 mp 7.2016666666666715
+[27.4] fight gdog1 d=6.1 st=chase aim=it e@-73.0,14.0,-62.7 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 6.831666666666674
+[28.7] fight gdog1 d=6.1 st=chase aim=it e@-73.0,14.0,-62.7 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 6.275000000000009
+[29.9] fight gdog1 d=6.1 st=chase aim=it e@-73.0,14.0,-62.7 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 5.718333333333344
+[31.2] fight drone1 d=6.1 st=chase aim=it e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=fly hp 3→3 me 10 mp 5.1616666666666795
+[32.9] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 4.745000000000015
+[34.2] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 4.200000000000017
+[35.5] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 3.655000000000019
+[36.8] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 3.1100000000000207
+[38.1] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 2.5650000000000226
+[39.4] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 2.0200000000000244
+[40.7] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 1.4750000000000263
+[42.0] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.9300000000000281
+[43.3] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.385000000000029
+[44.6] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8400000000000308
+[45.7] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2483333333333657
+[46.9] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6566666666667007
+[48.2] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.1116666666667026
+[49.4] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.5200000000000372
+[50.7] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.9750000000000391
+[51.8] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.38333333333337294
+[53.1] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8383333333333748
+[54.3] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2466666666667097
+[55.5] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6550000000000447
+[56.8] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.1100000000000465
+[57.9] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.5183333333333812
+[59.2] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.973333333333383
+[60.4] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.3816666666667169
+[61.7] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8366666666667187
+[62.9] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2450000000000536
+[64.0] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6533333333333886
+[64.0] fight → {"left":2,"dead":false,"hp":10,"t":40.6}
+[64.0] threat: fight
+[65.3] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.1083333333333905
+[66.5] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.516666666666725
+[67.8] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.9716666666667269
+[69.0] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.38000000000006084
+[70.3] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8350000000000627
+[71.4] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2433333333333976
+[72.6] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6516666666667326
+[73.9] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.1066666666667344
+[75.1] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.515000000000069
+[76.4] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.9700000000000708
+[77.5] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.3783333333334048
+[78.8] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8333333333334066
+[80.0] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2416666666667415
+[81.2] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6500000000000765
+[82.5] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.1050000000000784
+[83.6] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.5133333333334129
+[84.9] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.9683333333334148
+[86.1] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.3766666666667487
+[87.4] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8316666666667505
+[88.6] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2400000000000855
+[89.7] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6483333333334205
+[91.0] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.1033333333334223
+[92.2] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.5116666666667569
+[93.5] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.9666666666667587
+[94.7] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.37500000000009265
+[96.0] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8300000000000944
+[97.1] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2383333333334294
+[98.3] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6466666666667644
+[99.6] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.1016666666667663
+[100.8] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.5100000000001008
+[102.1] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.9650000000001027
+[103.2] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.3733333333334366
+[103.2] fight → {"left":2,"dead":false,"hp":10,"t":40.3}
+[103.2] threat: fight
+[104.5] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8283333333334384
+[105.7] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2366666666667734
+[106.9] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6450000000001084
+[108.2] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.1000000000001102
+[109.3] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.5083333333334448
+[110.6] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.9633333333334466
+[111.8] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.37166666666678055
+[113.1] fight drone1 d=6.0 st=windup aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 0.8266666666667823
+[114.3] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.2350000000001173
+[115.4] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=return hp 3→3 me 10 mp 0.6433333333334523
+[116.7] fight drone1 d=6.0 st=chase aim=other:gdog1@-73.0,-62.7 d6.1 e@-73.0,14.0,-62.6 me@-71.8,13.9,-56.7 ball=idle hp 3→3 me 10 mp 1.0983333333334542
+DUMP2 {"pos":[-71.81,13.89,-56.7],"ang":2.91,"beh":"athletic","hp":10,"mp":1.2650000000002966,"state":"play","ball":"idle","valve":{"x":-68,"z":-71.4,"open":false},"plan":{"ok":false,"nodes":60000,"left":0.92,"pts":[[-71.8,13.9,-56.7],[-64.2,14,-61.9],[-62.6,13.9,-72.7],[-65,14,-73.9],[-67.8,14,-72.3]]},"threats":["drone1","gdog1"],"en":[{"id":"drone1","kind":"drone","st":"windup","p":[-72.95,13.98,-62.62],"hp":3,"d":6.03,"vis":true,"los":true,"home":{"x":-80,"z":-73.4},"planOk":true},{"id":"drone2","kind":"drone","st":"patrol","p":[-71.27,14,-70],"hp":3,"d":13.32,"vis":false,"los":false,"home":{"x":-71,"z":-66.8},"planOk":true},{"id":"guard1","kind":"guard","st":"patrol","p":[-75.01,14,-73.96],"hp":3,"d":17.55,"vis":true,"los":true,"home":{"x":-80,"z":-66.8},"planOk":true},{"id":"gdog1","kind":"gdog","st":"chase","p":[-73,13.98,-62.67],"hp":3,"d":6.09,"vis":true,"los":true,"home":{"x":-71,"z":-66.8},"leash":14,"planOk":true}]}
