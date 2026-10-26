@@ -2365,7 +2365,8 @@ function buildDressing(W, root, r) {
   const A = PICT;
   signpost(W, grp, -27.0, -8.2, -Math.PI / 2 + 0.2, 'w_sign_town', (c) => { A.well(c, 150, 66); A.arrow(c, 70, 64, -1, 1.1); });
   signpost(W, grp, -58.5, 71.0, 0.6, 'w_sign_lighthouse', (c) => { A.tower(c, 90, 66); A.arrow(c, 175, 64, 1, 1.1); });
-  signpost(W, grp, -63.5, -15.5, 0.0, 'w_sign_cliffs', (c) => { A.cliff(c, 100, 66); A.arrow(c, 190, 64, 1, 0.9); });
+  // (WORLD-80: by the west street's new line round Bug Street's pair; it stood where the pair's north house is now)
+  signpost(W, grp, -60.5, -21.8, 0.0, 'w_sign_cliffs', (c) => { A.cliff(c, 100, 66); A.arrow(c, 190, 64, 1, 0.9); });
   signpost(W, grp, -62.0, -79.0, -0.9, 'w_sign_depot', (c) => { A.gear(c, 128, 64, 30); });
   signpost(W, grp, -47.4, -60.4, -0.6, 'w_sign_station', (c) => { A.gear(c, 90, 64, 26); A.arrow(c, 180, 64, 1, 1.0); });
   signpost(W, grp, -73.5, -58.5, Math.PI / 2 + 0.25, 'w_sign_orchard', (c) => { A.drop(c, 96, 64); A.cross(c, 166, 64); });
@@ -2387,6 +2388,181 @@ function buildDressing(W, root, r) {
   }
   for (const c of W.crates) c.mesh.userData.keep = true;   // (they break: hidden one by one)
   mergeStatic(grp, { cell: 24 });   // (the signposts and the stump. PERF-IGPU)
+}
+
+// ================================================================== WORLD-80: the original's old places
+// Where the original island has a landmark or a door we had not built (docs/WORLD_SIMILARITY.md): the great dome on
+// the west islet (LBA2's scene 26 door, a 19 × 19 m body 12.9 m tall) and the 4.4 m figure beside it; the plateau's
+// door (scene 2) in the bank behind the depot; the two ends of the passage through the plateau (scene 51): a cellar
+// trapdoor in the fort's yard and a tunnel mouth in the north face. Places and sizes from the original's numbers
+// only (tools/worldscore/ref/citadel.json, LAYOUT applied), built in the fort's kit and materials. Every door is
+// shut: W.shutDoors (the story's base interactions answer "Locked."). The islet's raised top and the dome's floor
+// are the terrain's (world.js).
+export const ISLET = { dome: { x: -159.7, z: -10.0, r: 9.55, h: 12.9 }, figure: { x: -156.4, z: 4.0, ry: Math.PI / 2 } };   // (the figure 0.8 m in from the rim)
+// the tunnel mouths: the door's face (x, z), the way it faces (ry: its outward normal is (sin ry, cos ry)), how far
+// back into the slope the vault runs; the trapdoor in the fort's yard (its middle)
+export const OLD_DOORS = {
+  plateau: { x: -80.7, z: -82.0, ry: Math.PI, back: 3.0 },
+  passageN: { x: -25.9, z: -84.6, ry: Math.PI, back: 4.6, bars: true },
+  passageS: { x: -27.8, z: -61.6, ry: Math.PI / 2 },   // (3.6 m west of the original's: off the yard's deck-plate walk)
+};
+// (the shut doors' spots: the place before each door, for the interaction and tools/worldscore)
+function shutDoor(W, id, x, y, z, ry, out = 0.8) { (W.shutDoors ||= []).push({ id, x: x + Math.sin(ry) * out, y, z: z + Math.cos(ry) * out, ry }); }
+
+function buildWestIslet(W, root) {
+  const D = ISLET.dome, P = W.physics, R = D.r;
+  const grp = new THREE.Group(); grp.name = 'west-islet'; root.add(grp);
+  const B = new Batch(grp);
+  // (the town's warm stone and its blue scale tiles, not the fort's cold ashlar: an old building of the island's own)
+  const stoneM = tm('stone', { color: '#e8e4dc' }), trimM = tm('stone', { color: '#d8d4cc' }), slateM = tm('roofBlue', { color: '#e8eef8', rough: 0.8 });
+  const ironM = pm('#2a2d33', 0.45, { metalness: 0.6 }), slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
+  const g = W.H(D.x, D.z);
+  // the dome: a stepped plinth, a drum with pilasters and a cornice, a slate dome, a lantern and a finial (12.9 m)
+  const PL = 0.5, DR = 3.6, TOP = D.h;
+  B.add(lathe([[0, -1.6], [R + 0.5, -1.6], [R + 0.5, 0.22], [R + 0.38, 0.28], [R + 0.38, PL], [0, PL]], 48, TILE.stone), trimM, D.x, g, D.z);
+  B.add(lathe([[0, PL], [R, PL], [R, DR], [R + 0.22, DR + 0.08], [R + 0.3, DR + 0.42], [R - 0.05, DR + 0.5], [0, DR + 0.5]], 48, TILE.stone), stoneM, D.x, g, D.z);
+  const dome = [], rx = R - 0.12, ry0 = DR + 0.5, rise = TOP - 1.25 - ry0;
+  for (let i = 0; i <= 12; i++) { const a = (i / 12) * Math.PI / 2; dome.push([Math.max(0.0001, rx * Math.cos(a)), ry0 + rise * Math.sin(a)]); }
+  B.add(lathe(dome, 40, TILE.roof), slateM, D.x, g, D.z);
+  // eight stone ribs down the dome, and the lantern on its crown
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2 + Math.PI / 8, pts = [];
+    for (let i = 0; i <= 8; i++) { const t2 = (i / 8) * 0.92 * Math.PI / 2, rr = rx * Math.cos(t2) + 0.08, yy = ry0 + rise * Math.sin(t2) + 0.05; pts.push([D.x + Math.sin(a) * rr, g + yy, D.z + Math.cos(a) * rr]); }
+    B.add(tube(pts, 0.16, 5, TILE.stone), trimM);
+  }
+  B.add(lathe([[0, 0], [1.25, 0], [1.25, 0.2], [1.0, 0.25], [1.0, 0.75], [1.2, 0.8], [1.2, 0.95], [0.25, 1.15], [0, 1.2]], 16, TILE.stone), trimM, D.x, g + TOP - 1.4, D.z);
+  B.add(lathe([[0, 0], [0.12, 0], [0.08, 0.15], [0.14, 0.25], [0.04, 0.4], [0, 0.42]], 8), ironM, D.x, g + TOP - 0.42, D.z);
+  // pilasters round the drum, round windows between them (none over the door)
+  for (let k = 0; k < 16; k++) {
+    const a = (k / 16) * Math.PI * 2 + Math.PI / 16;
+    B.add(bbox(0.55, DR - PL - 0.05, 0.3, 0.04, 1), trimM, D.x + Math.sin(a) * (R + 0.08), g + (PL + DR) / 2, D.z + Math.cos(a) * (R + 0.08), 0, a, 0);
+    const w = a + Math.PI / 16;
+    if (Math.abs(Math.atan2(Math.sin(w), Math.cos(w))) < 0.45) continue;
+    B.add(cached('w80-ocu', () => new THREE.CircleGeometry(0.42, 14)), slitM, D.x + Math.sin(w) * (R + 0.02), g + 2.35, D.z + Math.cos(w) * (R + 0.02), 0, w, 0);
+    B.add(cached('w80-ocr', () => new THREE.TorusGeometry(0.48, 0.09, 6, 16)), trimM, D.x + Math.sin(w) * (R + 0.04), g + 2.35, D.z + Math.cos(w) * (R + 0.04), 0, w, 0);
+  }
+  // the door, to the south (the original's door zone): a stone porch with an arched, shut double door, two steps
+  {
+    const pz = D.z + R + 0.05, dw = 1.5, dh = 2.6;
+    B.add(bbox(3.2, DR + 0.3, 1.1, 0.05, 1), stoneM, D.x, g + (DR + 0.3) / 2, pz - 0.3);
+    B.add(bbox(3.5, 0.3, 1.3, 0.04, 1), trimM, D.x, g + DR + 0.42, pz - 0.3);
+    B.add(bbox(1.2, 0.5, 0.5, 0.04, 1), trimM, D.x, g + DR + 0.82, pz - 0.15);   // (the porch's pediment stone)
+    const ring = new THREE.Shape(), hw = dw / 2, sp = PL + dh - hw;
+    ring.absarc(0, sp, hw + 0.32, 0, Math.PI, false); ring.lineTo(-hw, sp); ring.absarc(0, sp, hw, Math.PI, 0, true); ring.lineTo(hw + 0.32, sp);
+    B.add(extrude(ring, 0.14, 1.4, 0.02), trimM, D.x, g, pz + 0.26);
+    for (const s of [-1, 1]) B.add(bbox(0.32, dh - hw, 0.16, 0.03, 1), trimM, D.x + s * (hw + 0.16), g + PL + (dh - hw) / 2, pz + 0.33);
+    const leaf = new THREE.Shape(); leaf.moveTo(-hw, PL); leaf.lineTo(hw, PL); leaf.lineTo(hw, sp); leaf.absarc(0, sp, hw, 0, Math.PI, false); leaf.lineTo(-hw, PL);
+    B.add(extrude(leaf, 0.08, TILE.wood), woodM, D.x, g, pz + 0.255);
+    B.add(bbox(0.04, dh - 0.1, 0.03, 0.01, 1), slitM, D.x, g + PL + (dh - 0.1) / 2, pz + 0.345);   // (the two leaves' meeting)
+    for (const hy of [0.7, 1.7]) B.add(bbox(dw - 0.1, 0.07, 0.03, 0.01, 1), ironM, D.x, g + PL + hy, pz + 0.35);
+    for (const s of [-1, 1]) B.add(cached('w80-ring', () => new THREE.TorusGeometry(0.1, 0.02, 4, 10)), ironM, D.x + s * 0.2, g + PL + 1.25, pz + 0.38);
+    // the sill, then two steps down to the islet's ground
+    B.add(bbox(2.0, 0.3, 0.32, 0.03, 1), trimM, D.x, g + PL - 0.15, pz + 0.41);
+    for (const k of [0, 1]) { const top = PL - 0.17 * (k + 1); B.add(bbox(2.6 + k * 0.5, top + 0.3, 0.5, 0.03, 1), trimM, D.x, g + top - (top + 0.3) / 2, pz + 0.82 + k * 0.5); }
+    P.add({ type: 'box', x: D.x, z: pz - 0.3, hw: 1.6, hd: 0.55, top: g + DR + 0.6, camSkip: true });
+    shutDoor(W, 'dome', D.x, g + PL, pz + 0.3, 0, 1.0);
+  }
+  B.build();
+  const c = P.add({ type: 'cyl', x: D.x, z: D.z, r: R + 0.45, top: g + TOP, camSkip: true });
+  addOccluder(W, { kind: 'rev', x: D.x, z: D.z, y0: g - 2, base: g, profile: [[0, TOP], [1.25, TOP - 1.2], [3.0, TOP - 1.25 - 0.6], [5.5, ry0 + rise * 0.78], [7.6, ry0 + rise * 0.55], [9.0, ry0 + rise * 0.25], [R + 0.3, DR + 0.42], [R + 0.5, PL]], name: 'islet dome' }, c);
+  fitAdd({ region: 'citadel', name: 'the west islet dome', round: true, x: D.x, z: D.z, ry: 0, oy: g, w: 2 * (R + 0.5), d: 2 * (R + 0.5), base: -1.6, plinth: PL, floor: PL, steps: 0.6 });
+  W.isletDome = { x: D.x, z: D.z, y: g, r: R };
+
+  // the figure beside it: a robed stone figure with a staff on a square plinth, facing the town (4.4 m)
+  {
+    const F = ISLET.figure, fg = W.H(F.x, F.z), f = frame(F.x, F.z, F.ry), ph = 0.9;
+    B.add(bbox(1.7, ph + 0.4, 1.7, 0.06, 1), trimM, F.x, fg + (ph - 0.4) / 2, F.z, 0, F.ry, 0);
+    B.add(bbox(1.85, 0.14, 1.85, 0.04, 1), trimM, F.x, fg + ph - 0.05, F.z, 0, F.ry, 0);
+    const y0 = fg + ph + 0.02;
+    // (the robe flares to the hem, narrows at the waist; broader across the shoulders than deep)
+    B.add(lathe([[0, 0], [0.7, 0], [0.72, 0.12], [0.6, 0.7], [0.46, 1.45], [0.5, 1.95], [0.58, 2.28], [0.4, 2.5], [0.15, 2.6], [0, 2.62]], 14, TILE.stone), stoneM, F.x, y0, F.z, 0, F.ry, 0, 1, 1, 0.72);
+    B.add(cached('w80-head', () => new THREE.SphereGeometry(0.25, 10, 8)), stoneM, F.x, y0 + 2.84, F.z);
+    // the hood round the head (set back a little from the face), then the arm and the staff on the figure's right
+    { const [hx0, hz0] = f(0, -0.06); B.add(lathe([[0.36, 0], [0.37, 0.2], [0.31, 0.44], [0.18, 0.7], [0.06, 0.92], [0, 0.97]], 10, TILE.stone), trimM, hx0, y0 + 2.58, hz0, 0, F.ry, 0); }
+    // (the shadow of the face in the hood's opening)
+    { const [fx, fz] = f(0, 0.255); B.add(cached('w80-face', () => new THREE.CircleGeometry(0.17, 10).scale(1, 1.25, 1)), slitM, fx, y0 + 2.86, fz, 0, F.ry, 0); }
+    const [sx, sz] = f(-0.58, 0.18);
+    B.add(cyl(0.045, 0.05, 3.42, 6), woodM, sx, y0 + 1.71 - 0.02, sz);
+    B.add(cached('w80-staff', () => new THREE.OctahedronGeometry(0.13, 0)), trimM, sx, y0 + 3.48, sz);
+    const [ax, az] = f(-0.42, 0.12), [hx, hz] = f(-0.55, 0.2);
+    B.add(tube([[ax, y0 + 2.28, az], [(ax + hx) / 2 - 0.02, y0 + 1.95, (az + hz) / 2], [hx, y0 + 1.72, hz]], 0.13, 6, TILE.stone), stoneM);
+    // the other arm folded across the chest
+    { const [a1x, a1z] = f(0.5, 0.05), [a2x, a2z] = f(0.42, 0.32), [a3x, a3z] = f(-0.05, 0.38); B.add(tube([[a1x, y0 + 2.25, a1z], [a2x, y0 + 1.8, a2z], [a3x, y0 + 1.82, a3z]], 0.12, 6, TILE.stone), stoneM); }
+    B.build();
+    P.add({ type: 'box', x: F.x, z: F.z, hw: 0.85, hd: 0.85, rot: F.ry, top: fg + 4.4 });
+    W.isletFigure = { x: F.x, z: F.z };
+  }
+}
+
+// a tunnel mouth in a slope: a barrel vault coming out of the bank, its face with an arched, shut door (bars before
+// it for the passage's north end), a landing slab before it to stand on
+function tunnelMouth(W, root, id, o) {
+  const P = W.physics, grp = new THREE.Group(); grp.name = 'old-door-' + id; root.add(grp);
+  const B = new Batch(grp);
+  const stoneM = tm('fortStone', { color: '#e6eaf2' }), trimM = tm('stone', { color: '#d8d4cc' });
+  const ironM = pm('#2a2d33', 0.45, { metalness: 0.6 }), slitM = pm('#14161a', 0.9), woodM = tm('wood', { color: '#8a5a32' });
+  const f = frame(o.x, o.z, o.ry), nx = Math.sin(o.ry), nz = Math.cos(o.ry);
+  // the sill: the ground just before the face
+  const y = W.H(o.x + nx * 0.6, o.z + nz * 0.6) + 0.1;
+  const W2 = 1.7, wall = 2.0, dw = 1.3, dh = 2.25;
+  // the vault: its section (a wall height and a half-round top) run back into the slope
+  const sec = new THREE.Shape();
+  sec.moveTo(-W2, -1.8); sec.lineTo(W2, -1.8); sec.lineTo(W2, wall); sec.absarc(0, wall, W2, 0, Math.PI, false); sec.lineTo(-W2, -1.8);
+  const vg = extrude(sec, o.back, TILE.fortStone, 0.03);   // (along +z from the face: rotate so it runs into the bank)
+  vg.translate(0, 0, -o.back);
+  B.add(vg, stoneM, o.x, y, o.z, 0, o.ry, 0);
+  // the face's arch ring and jambs, the door leaves (or the dark of an open grille's passage), a keystone
+  const hw = dw / 2, sp = dh - hw;
+  const ring = new THREE.Shape();
+  ring.absarc(0, sp, hw + 0.3, 0, Math.PI, false); ring.lineTo(-hw, sp); ring.absarc(0, sp, hw, Math.PI, 0, true); ring.lineTo(hw + 0.3, sp);
+  B.add(extrude(ring, 0.12, 1.4, 0.02), trimM, o.x + nx * 0.02, y, o.z + nz * 0.02, 0, o.ry, 0);
+  for (const s of [-1, 1]) { const [jx, jz] = f(s * (hw + 0.15), 0.08); B.add(bbox(0.3, sp, 0.14, 0.03, 1), trimM, jx, y + sp / 2, jz, 0, o.ry, 0); }
+  { const [kx, kz] = f(0, 0.1); B.add(bbox(0.34, 0.42, 0.18, 0.03, 1), trimM, kx, y + dh + 0.12, kz, 0, o.ry, 0); }
+  const leaf = new THREE.Shape(); leaf.moveTo(-hw, 0); leaf.lineTo(hw, 0); leaf.lineTo(hw, sp); leaf.absarc(0, sp, hw, 0, Math.PI, false); leaf.lineTo(-hw, 0);
+  { const [lx, lz] = f(0, 0.005); B.add(extrude(leaf, 0.08, TILE.wood), woodM, lx, y, lz, 0, o.ry, 0); }
+  for (const hy of [0.5, 1.5]) { const [bx, bz] = f(0, 0.1); B.add(bbox(dw - 0.08, 0.07, 0.03, 0.01, 1), ironM, bx, y + hy, bz, 0, o.ry, 0); }
+  { const [rx2, rz2] = f(0.3, 0.12); B.add(cached('w80-ring', () => new THREE.TorusGeometry(0.1, 0.02, 4, 10)), ironM, rx2, y + 1.05, rz2, 0, o.ry, 0); }
+  if (o.bars) {
+    for (let i = -2; i <= 2; i++) { const [bx, bz] = f(i * 0.26, 0.2); B.add(cyl(0.03, 0.03, dh + 0.1, 5), ironM, bx, y + (dh + 0.1) / 2, bz); }
+    for (const hy of [0.6, 1.6]) { const [bx, bz] = f(0, 0.2); B.add(bbox(dw + 0.1, 0.06, 0.05, 0.01, 1), ironM, bx, y + hy, bz, 0, o.ry, 0); }
+  }
+  // a landing slab before the door, level with the sill, and two steps down off its front
+  { const [lx, lz] = f(0, 0.75); B.add(bbox(2.6, 1.4, 1.4, 0.04, 1), trimM, lx, y - 0.72, lz, 0, o.ry, 0); }
+  { const [lx, lz] = f(0, 1.65); B.add(bbox(2.2, 1.2, 0.5, 0.04, 1), trimM, lx, y - 0.85, lz, 0, o.ry, 0); }
+  B.build();
+  // colliders: the vault (as far as it stands out of the slope), the landing to stand on
+  const [cx, cz] = f(0, -o.back / 2);
+  P.add({ type: 'box', x: cx, z: cz, hw: W2, hd: o.back / 2, rot: o.ry, top: y + wall + W2, camSkip: true });
+  const [lx, lz] = f(0, 0.95);
+  P.add({ type: 'box', x: lx, z: lz, hw: 1.3, hd: 0.95, rot: o.ry, top: y - 0.02 });
+  addOccluder(W, { kind: 'box', x: cx, z: cz, rot: o.ry, hw: W2, hd: o.back / 2, y0: y - 2, y1: y + wall + W2, name: 'old door ' + id });
+  shutDoor(W, id, o.x, y, o.z, o.ry, 1.0);
+}
+
+// a cellar trapdoor flush with the fort yard's paving (nothing to trip over in the yard's fights): a stone frame, two
+// leaves with iron bands, a ring and a padlock
+function cellarHatch(W, root, id, o) {
+  const grp = new THREE.Group(); grp.name = 'old-door-' + id; root.add(grp);
+  const B = new Batch(grp);
+  const trimM = tm('stone', { color: '#d8d4cc' }), woodM = tm('wood', { color: '#8a5a32' }), ironM = pm('#2a2d33', 0.45, { metalness: 0.6 });
+  const g = W.H(o.x, o.z);
+  for (const [w, d, x, z] of [[2.3, 0.22, 0, -1.29], [2.3, 0.22, 0, 1.29], [0.22, 2.36, -1.04, 0], [0.22, 2.36, 1.04, 0]]) {
+    const [px, pz] = frame(o.x, o.z, o.ry)(x, z); B.add(bbox(w, 0.2, d, 0.03, 1), trimM, px, g - 0.02, pz, 0, o.ry, 0);
+  }
+  for (const s of [-1, 1]) {
+    const [px, pz] = frame(o.x, o.z, o.ry)(s * 0.465, 0); B.add(bbox(0.9, 0.1, 2.34, 0.02, 1), woodM, px, g + 0.04, pz, 0, o.ry, 0);
+    for (const bz of [-0.75, 0.75]) { const [qx, qz] = frame(o.x, o.z, o.ry)(s * 0.465, bz); B.add(bbox(0.86, 0.03, 0.09, 0.01, 1), ironM, qx, g + 0.1, qz, 0, o.ry, 0); }
+  }
+  { const [px, pz] = frame(o.x, o.z, o.ry)(0, 0.95); B.add(bbox(0.16, 0.12, 0.08, 0.01, 1), ironM, px, g + 0.14, pz, 0, o.ry, 0); }
+  B.build();
+  shutDoor(W, id, o.x, g, o.z, o.ry, 1.0);
+}
+
+function buildOldPlaces(W, root) {
+  buildWestIslet(W, root);
+  tunnelMouth(W, root, 'plateau', OLD_DOORS.plateau);
+  tunnelMouth(W, root, 'passageN', OLD_DOORS.passageN);
+  cellarHatch(W, root, 'passageS', OLD_DOORS.passageS);
 }
 
 // ================================================================== the original's street furniture
@@ -2515,6 +2691,7 @@ export function buildIsland(scene, W) {
   buildDepot(W, scene, r);
   buildPipeline(W, scene, r);
   buildDressing(W, scene, r);
+  buildOldPlaces(W, scene);
   buildOriginalProps(W, scene, r);
   console.log(`[isl] harbour ${(T1 - T0) | 0} ms, station ${(T2 - T1) | 0} ms, depot+pipe ${(performance.now() - T2) | 0} ms`);
   W.island = { keepClear };

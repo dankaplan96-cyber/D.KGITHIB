@@ -195,6 +195,9 @@ export class Prologue extends ChapterBase {
     if (!g.room) {
       const open = new Set(cur.doors().map((d) => d.house));
       W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', label: 'p_door' }); });
+      // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
+      // from the door's own level, not from the slope above it)
+      for (const d of W.shutDoors || []) if (Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
       if (!W.chest.open) consider(dist(W.chest.x, W.chest.z), 2.2, { kind: 'chest', label: 'p_open' });
     } else {
       for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
@@ -243,6 +246,10 @@ export class Prologue extends ChapterBase {
     switch (it.kind) {
       case 'locked':
         g.say('n_hero', t('pr_locked'), null, h);
+        return true;
+      case 'shut':
+        g.audio.play('deny');
+        g.say('', [t('w_door_shut')]);
         return true;
       case 'chest':
         g.world.chest.open = true;

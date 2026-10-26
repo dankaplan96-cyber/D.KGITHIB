@@ -57,8 +57,11 @@ await page.evaluate(() => {
 
 // [name, function body run in the page (R, P, G in scope); returns notes]
 const ROUTES = [
-  ['street and square', `R.place(-38, 4, Math.PI); return R.walk([[-42, -4], [-50, -6], [-58, -6], [-66, -18], [-56, -9], [-44, -5], [-36, 3]]);`],
-  ['along house walls', `R.place(-55, 19.2, Math.PI / 2); return R.walk([[-42.7, 19.2], [-42.7, 25], [-44.5, 29.5], [-53, 29.5], [-54.2, 19.4], [-61.5, -12], [-61.5, -20], [-52, -21.5]]);`],
+  // (WORLD-80: the west street to the stepping stones now goes round Bug Street's pair, whose two houses stand where
+  // the old line ran (-58, -6 → -66, -18), and the one house of before stood where the pair's north house stands now (its
+  // west wall was the x = -61.5 leg below): both routes follow the new line, the pair's front and its north side)
+  ['street and square', `R.place(-38, 4, Math.PI); return R.walk([[-42, -4], [-50, -6], [-58, -6], [-54.8, -12.6], [-55.2, -19.2], [-66, -20.6], [-56, -9], [-44, -5], [-36, 3]]);`],
+  ['along house walls', `R.place(-55, 19.2, Math.PI / 2); return R.walk([[-42.7, 19.2], [-42.7, 25], [-44.5, 29.5], [-53, 29.5], [-54.2, 19.4], [-54.8, -11], [-54.8, -19.3], [-64.5, -19.6]]);`],
   ['through a door in and out', `const d = G.story.doors().find((q) => Math.hypot(q.x + 46.1, q.z - 77.2) < 4) || G.story.townDoors?.().find((q) => Math.hypot(q.x + 46.1, q.z - 77.2) < 4);
     R.place(d.x + 6, d.z - 3, -Math.PI / 2); const a = P.through(d.x, d.z); G.step(1.5); const e = G.room?.exits?.find((x) => !x.room) || G.room?.exits?.[0]; const b = e ? P.through(e.x, e.z) : { r: 'no exit' }; G.step(0.5);
     return [a.to, b.to, ...R.walk([[d.x + 4, d.z - 5], [d.x + 8, d.z - 10]])];`],

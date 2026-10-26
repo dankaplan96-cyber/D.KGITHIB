@@ -2,7 +2,7 @@
 //  (a) a house he stands next to or in front of never vanishes: at every house's door, facing out (the camera over
 //      the house) and facing in (the camera in front), none of that house's meshes is drawn see-through or as
 //      nothing (no fader is left; the check guards against one coming back)
-//  (b) a house between the camera and him never leaves him covered: behind six houses, from a fresh shot (the
+//  (b) a house between the camera and him never leaves him covered: behind seven houses, from a fresh shot (the
 //      camera rises over the house, as LBA2's SearchCameraPos) and while he walks round behind a house in a still
 //      shot (every 0.3 s), his head, chest and feet are each either in view (no opaque mesh on the ray from the camera) or drawn
 //      by the silhouette pass (the frame with the silhouette differs from the frame without it at that pixel)
@@ -72,8 +72,10 @@ for (const id of houses) {
   }
 }
 
-// (b1) behind six houses, a fresh shot behind him (the camera over the house)
-for (const id of ['bug', 'stone', 'south', 'pink', 'shop', 'twinsen']) {
+// (b1) behind seven houses, a fresh shot behind him (the camera over the house). WORLD-80: 'bug' is now the north house
+// of Bug Street's pair (the original's scene 5) and 'bug2' the south one, side by side: behind either, the camera rises
+// over the pair; walking round behind 'bug' (b2) he goes round the pair's north end
+for (const id of ['bug', 'bug2', 'stone', 'south', 'pink', 'shop', 'twinsen']) {
   const r = await ev((id) => { const h = game.world.houses.find((q) => q.id === id); const a = h.ry + Math.PI; const rr = h.d / 2 + 1.6;
     window.__place({ x: h.x + Math.sin(a) * rr, z: h.z + Math.cos(a) * rr, a }); const c = game.camera.position, p = game.hero.pos;
     return { pitch: +(Math.atan2(c.y - p.y, Math.hypot(c.x - p.x, c.z - p.z)) * 57.3).toFixed(1), st: window.__houseState(h), pts: window.__points() }; }, id);

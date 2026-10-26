@@ -1,0 +1,13 @@
+[
+  { "name": "islet-play", "x": -158, "z": 3, "a": 3.14, "info": true, "r": 14, "grid": 14, "step": 2 },
+  { "name": "islet-overview", "x": -158, "z": 3, "a": 3.14, "cam": { "x": -118, "y": 32, "z": 30, "tx": -158, "ty": 12, "tz": -6, "fov": 50 } },
+  { "name": "bug-play", "x": -52.5, "z": -11.5, "a": -1.9, "info": true, "r": 12, "grid": 10, "step": 2 },
+  { "name": "bug-overview", "x": -52.5, "z": -11.5, "a": -1.9, "cam": { "x": -40, "y": 22, "z": 4, "tx": -60, "ty": 2, "tz": -12, "fov": 50 } },
+  { "name": "door-s2-play", "x": -80.5, "z": -67, "a": 3.14, "info": true, "r": 10, "grid": 10, "step": 2 },
+  { "name": "door-s2-overview", "x": -80.5, "z": -67, "a": 3.14, "cam": { "x": -76, "y": 30, "z": -45, "tx": -80, "ty": 12, "tz": -72, "fov": 50 } },
+  { "name": "door-s51s-play", "x": -24.5, "z": -59.5, "a": 3.14, "info": true, "r": 8, "grid": 8, "step": 2 },
+  { "name": "door-s51n-play", "x": -25.9, "z": -86, "a": 0, "info": true, "r": 10, "grid": 10, "step": 2 },
+  { "name": "door-s51n-overview", "x": -25.9, "z": -86, "a": 0, "cam": { "x": -20, "y": 26, "z": -112, "tx": -26, "ty": 10, "tz": -80, "fov": 50 } },
+  { "name": "door-s17u-play", "x": -25, "z": -35, "a": 0, "info": true, "r": 8, "grid": 8, "step": 2 },
+  { "name": "door-s17u-overview", "x": -25, "z": -35, "a": 0, "cam": { "x": -14, "y": 20, "z": -12, "tx": -26, "ty": 6, "tz": -28, "fov": 50 } }
+]

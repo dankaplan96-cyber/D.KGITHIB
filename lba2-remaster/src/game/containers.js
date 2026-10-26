@@ -57,7 +57,7 @@ export const CITADEL = [
   // market, the street corners and the harbour
   { id: 'c-market-crate', kind: 'crate', x: -52.5, z: 4.5, kinds: ['money'], n: 1 },                 // behind the fruit stall
   { id: 'c-corner-bin', kind: 'bin', x: -47.0, z: 12.0, kinds: ['money'], n: 1 },                    // where the south lane bends
-  { id: 'c-bug-barrel', kind: 'barrel', house: 'bug', lx: -4.5, lz: 1.6, kinds: ANY, n: 2 },        // by the house in Bug Street
+  { id: 'c-bug-barrel', kind: 'barrel', house: 'bug', lx: 3.9, lz: 1.8, kinds: ANY, n: 2 },         // by the house in Bug Street (WORLD-80: the pair's north house, its north side)
   { id: 'c-pink-barrel', kind: 'barrel', house: 'pink', lx: -3.8, lz: 1.5, kinds: ['life'], n: 1 },   // by the pink house
   { id: 'c-south-crate', kind: 'crate', house: 'south', lx: -3.0, lz: -4.0, kinds: ['money'], n: 1 }, // behind the stone house in the south lane
   { id: 'c-museum-barrel', kind: 'barrel', x: -78.5, z: 46.0, kinds: ANY, n: 1 },                   // behind the museum

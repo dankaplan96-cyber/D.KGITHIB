@@ -6,7 +6,8 @@ everything is 80% similar rather than 100%, on the argument that twelve years pa
 
 This file measures how similar each island is now, as a score out of 100. It lists the differences that cost the
 most and proposes fix batches that reach at least 80 per island: Citadel first, then Desert Island, then the rest.
-Step 1 (this file) measures and plans only. No world code changed.
+Step 1 measured and planned only. Step 2 (the Citadel batch, below "Citadel Island: 77.5 → 84.9") built the west
+islet's dome and figure, Bug Street's pair and the plateau's and the stone house's doors.
 
 Measured on game 0.31.0, branch `ccr-adf00ea7-37ebl3` at 71da4f3, on 2026-10-26, in this container (SwiftShader,
 headless; the measure reads the built world, so the renderer doesn't matter). Raw results:
@@ -68,7 +69,8 @@ the original that an addition displaced is still scored. The additions excluded:
 
 | Island | Score | Coast | Height | Landmarks | Objects | Key measures |
 |---|---|---|---|---|---|---|
-| **Citadel Island** | **77.5** | 90.9 | 75.2 | 75.7 | 62.3 | IoU 0.909; land 13,782 m² original / 14,582 ours; lift +1.1 m, MAE 1.13 m on a 4.55 m spread; 270 objects / 469 |
+| **Citadel Island** (step 1) | **77.5** | 90.9 | 75.2 | 75.7 | 62.3 | IoU 0.909; land 13,782 m² original / 14,582 ours; lift +1.1 m, MAE 1.13 m on a 4.55 m spread; 270 objects / 469 |
+| **Citadel Island** (after step 2) | **84.9** | 90.9 | 76.6 | 98.9 | 63.4 | coast unchanged; lift +1.1 m, MAE 1.06 m; 270 objects / 473; every landmark but the plateau's door within 5 m |
 | **Desert Island** | **39.6** | 90.0 | 0.0 | 15.9 | 38.9 | IoU 0.900; land 29,237 / 26,833 m²; lift +2.2 m, MAE 2.29 m on a 1.90 m spread; 315 objects / 119 |
 | The Hamalayi (against LBA1) | 27.4 (partial) | 37.3 | 12.7 | — | — | walkable 31,825 m² ours vs 11,860 in LBA1's eight scenes; 90 % of it within 25.5 m of the lowest level vs 6.4 m |
 | Zeelich (the terminal island) | n/a | | | | | no original island has its layout (below) |
@@ -86,7 +88,49 @@ A partial island's missing parts are left out and the other parts re-weighted.
 Points below are points of the island's score. "Ours at" gives our world coordinates (Desert Island: world =
 local + 3400 in x).
 
-## Citadel Island: 77.5
+## Citadel Island: 77.5 → 84.9
+
+**Step 2 (the Citadel batch), per part, before → after** (same scorer, same references; game 0.31.0 after the
+LAZY-REGIONS merge, 2026-10-26; `docs/lba3-production/reviews/WORLD-80/citadel/scores-{before,after}.json`,
+`citadel-overlay-after.png`, screenshots `before/` and `after/`):
+
+| Part | Weight | Before | After | What changed |
+|---|---|---|---|---|
+| Coast | 30 | 90.9 | 90.9 | nothing (the optional coast pull, #6, was not done) |
+| Height | 20 | 75.2 | 76.6 | the west islet's top raised 2.2 m to the original's (world.js ISLET_LIFT), the dome's level floor on it |
+| Landmarks | 30 | 75.7 | 98.9 | the dome (0 m), the figure (0.8 m), Bug Street's north house S5 (0.3 m) and south house S22 (10.3 → 0.3 m), the passage's two doors S51 (2.8 / 3.6 m), the stone house's upper door S17 (11.4 → 2.2 m); the plateau's door S2 is 10 m north of the original's (80 %): its original place is in the depot's yard, so the tunnel mouth stands in the plateau's north face below it |
+| Objects | 20 | 62.3 | 63.4 | the new buildings and colliders in their cells |
+| **Score** | | **77.5** | **84.9** | |
+
+What was built (our kit and materials, from the original's numbers only; `src/game/island.js` "WORLD-80: the
+original's old places", `src/game/town.js` HOUSES, `src/game/world.js`):
+
+- **The west islet** (fixes 1, 2): a 19.1 m round building at (−159.7, −10.0) — stepped plinth, a drum of the town's
+  stone with pilasters and round windows, a blue-tiled dome with stone ribs, a lantern and a finial (12.9 m); its door
+  to the south (the original's zone) shut, with two steps. A 4.4 m robed stone figure with a staff on a square plinth
+  at (−156.4, 4.0), facing the town. The islet's top at the original's 12.1 m (+2.2 m: a taller last rock face), the
+  dome's floor level on it. Registered as `the west islet dome` (fitAdd, round) and `spots.isletFigure`.
+- **Bug Street's pair** (fix 3): the one house that stood between the original's pair is now the north house (S5, at
+  (−61.4, −14.3), 6.2 × 8.2 m, stone, blue roof) and a new south house `bug2` (S22, at (−62.3, −8.2), 4.9 × 6.6 m,
+  plaster, red roof) beside it, both with their doors east to the street, on one floor. The west street to the
+  stepping stones now goes round the north house (world.js PATHS[4]); the cliffs sign and the Bug Street barrel moved
+  with it. tests/occluders.mjs (b) runs behind both; camsteady's two town routes follow the new line.
+- **The doors** (fixes 4, 5, 8), all shut ("Locked." on use, `W.shutDoors`): the plateau's door S2 as a barrel-vaulted
+  tunnel mouth in the north face at (−80.7, −82) with a landing; the passage's north door S51 the same, with bars, at
+  (−25.9, −84.6); the passage's south door S51 as a flush cellar hatch in the fort's yard at (−27.8, −61.6) (3.6 m
+  west of the original's, off the yard's deck-plate walk); the stone house's upper door S17 as a small stone porch
+  `stoneup` on the terrace behind the house at (−25.5, −31.8), its door to the north.
+- **Nothing else on the island moved.** The scatter of trees, bushes, grass, flowers, tulip beds, rocks and cliff
+  blocks decides on the ground, paths and houses as they stood before step 2 (world.js `scatterGround`,
+  `PATHS_SCATTER`, `SCATTER_HOUSES`) and what lands on the new path, in the new houses or on the islet's new rock
+  face is taken out afterwards: the collider and tree lists of before and after differ only inside the six changed
+  places (checked on the scorer's dumps).
+
+Not done: fix 6 (the coast, +1.6) and fix 7 (the terraces): both touch the whole island's ground. Fix 9 (the
+museum's annexes) and 10 (railings) are left for a later pass. The S2 door's 10 m is the plateau's own shape (its
+original place is 9.4 m up a cliff that is our depot yard).
+
+**Step 1's measurement (kept as recorded):**
 
 What already matches: the coast (IoU 0.91), and twelve of the original's landmarks within 5 m. Those are Twinsen's
 house, the neighbour's, the south house, the water office, the stone house, the baggage claim and its wing, the
@@ -166,8 +210,8 @@ first.
 
 ## Order of work
 
-1. Citadel batch (dome, figure and islet ground; Bug Street's pair; the plateau's and the stone house's doors):
-   77.5 → ≈ 85.
+1. ~~Citadel batch (dome, figure and islet ground; Bug Street's pair; the plateau's and the stone house's doors):
+   77.5 → ≈ 85.~~ Done (step 2): 77.5 → 84.9.
 2. Desert batch A (ground and beach): 39.6 → ≈ 59.
 3. Desert batch B (Kesh's neighbours and figures, the north-east compound): → ≈ 81.
 4. The scorer's two steps for Zeelich's islands and the Lift Dock, then a look by eye. The Hamalayi waits for the

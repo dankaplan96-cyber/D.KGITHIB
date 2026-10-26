@@ -9,9 +9,9 @@ import { ZoneSystem } from '../engine/scripts.js';
 import { fbm, noise2, smoothstep, lerp, rng, distToSegment } from '../engine/math.js';
 import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
-import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS } from './town.js';
+import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
-import { buildIsland, keepClear, STUMP, SHIFT } from './island.js';
+import { buildIsland, keepClear, STUMP, SHIFT, ISLET } from './island.js';
 import { buildDinoFly } from './dinofly.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
@@ -21,7 +21,9 @@ import { lifeClear } from './townlife.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
-const clearLife = (list) => { for (const t of list) if (lifeClear(t.x, t.z)) { t.s = 1e-4; t.gone = true; } };
+// (WORLD-80: and the west islet's dome and figure keep it out the same way)
+const isletClear = (x, z) => x < -140 && (Math.hypot(x - ISLET.dome.x, z - ISLET.dome.z) < ISLET.dome.r + 1.4 || Math.hypot(x - ISLET.figure.x, z - ISLET.figure.z) < 1.8);
+const clearLife = (list) => { for (const t of list) if (lifeClear(t.x, t.z) || isletClear(t.x, t.z)) { t.s = 1e-4; t.gone = true; } };
 
 // Citadel Island follows the original LBA2 map (citadel-layout.js: the coast and four terrace levels). LAYOUT
 // places that map in our frame so its town falls on ours: the town and the harbour were built first, here, and
@@ -62,7 +64,8 @@ export const PATHS = [
   [[-48, -56], [-50, -62], [-45, -65]],                                                 // to the station gate
   [[-48, -56], [-58, -66], [-64, -75], [-86, -76], [-94, -70]],                         // through the depot to the Wizard's lane
   [[-58, -66], [-70, -60], [-75, -57]],                                                 // to the orchard
-  [[-58, -6], [-66, -18]],                                                              // the west street to the stepping stones
+  // the west street to the stepping stones (WORLD-80: from Bug Street's end round the north house of its pair)
+  [[-55.6, -12.6], [-55.4, -18.8], [-58.5, -19.6], [-66.5, -20.6]],
   [[-60, -4.5], [-73, -4.5]],                                                           // up onto the original's promenade above the shore
   [[-46, 31], [-60, 33], [-74, 35.5], [-90, 38], [-107.5, 39]],                        // west past the baggage-claim building to the harbour
   [[-44, 10], [-46, 40], [-45, 74], [-44.5, 79.5]],                                     // south through the fields to Twinsen's door
@@ -74,6 +77,19 @@ export function pathDist(x, z) {
   for (const p of PATHS) for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]));
   return d;
 }
+// WORLD-80: the scatter of trees, bushes, grass, flowers, tulip beds, rocks and the cliffs' rock faces draws its places
+// from one random sequence each, so a decision that changes moves everything drawn after it, all over the island (and
+// the bushes' and rocks' colliders with it). The scatter decides with the paths, the houses and the west islet's
+// ground as they stood before WORLD-80 step 2; whatever now stands on the new path, in the new houses or on the
+// islet's new rock face is taken out after the scatter (shrunk to nothing, no collider), as townlife's places are.
+const PATHS_SCATTER = PATHS.map((p, i) => (i === 4 ? [[-58, -6], [-66, -18]] : p));
+function pathDistScatter(x, z) {
+  let d = 1e9;
+  for (const p of PATHS_SCATTER) for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]));
+  return d;
+}
+const newPathDist = (x, z) => { const p = PATHS[4]; let d = 1e9; for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1])); return d; };
+const NEW_HOUSES = new Set(['bug', 'bug2', 'stoneup']);   // (moved or added by WORLD-80; 'bug' stood at town.js OLD_BUG)
 
 // signed distance to an axis-aligned rectangle (negative inside)
 function boxDist(x, z, x0, z0, x1, z1) {
@@ -157,14 +173,18 @@ function beachMask(x, z) {
   return b;
 }
 
+// WORLD-80: the west islet's top stands 2.2 m higher (the original's 12.1 m, our lift +1.1): its last step (level 3,
+// west of ISLET_X) is a taller rock face; the great dome stands on a level floor at that height (baseHeight)
+const ISLET_X = -132, ISLET_LIFT = 2.2, ISLET_TOP = LEVEL0 + 3 * LEVEL_STEP + ISLET_LIFT;
 // the layout's terraces: each level polygon adds one LBA2 step (2.9 m) with a craggy rock face at its edge
+let PRE80 = false;   // (true while the scatter's copy of the ground before WORLD-80 step 2 is computed: scatterGround)
 function terraces(x, z) {
   let h = LEVEL0, cliff = 0;
   for (let k = 1; k <= 4; k++) {
     const d = sd(k, x, z) + jag(x, z, k * 3.1);
     if (d < -1.2) continue;
     const s = smoothstep(-1.1, 1.1, d);
-    h += LEVEL_STEP * s;
+    h += (k === 3 && x < ISLET_X && !PRE80 ? LEVEL_STEP + ISLET_LIFT : LEVEL_STEP) * s;
     cliff = Math.max(cliff, s * (1 - s) * 4);
   }
   h += cliff * fbm(x * 0.5, z * 0.5, 2) * 0.7;                        // craggy faces
@@ -175,6 +195,8 @@ function terraces(x, z) {
 // everything except the path ramps
 function baseHeight(x, z) {
   let h = terraces(x, z);
+  // (WORLD-80: the dome's floor on the islet's top, a little wider than its plinth; the coast below still cuts it)
+  if (x < ISLET_X && !PRE80) { const D = ISLET.dome, d = Math.hypot(x - D.x, z - D.z); if (d < D.r + 3.4) h = lerp(h, ISLET_TOP, 1 - smoothstep(D.r + 1.3, D.r + 3.2, d)); }
   // coast: rock cliffs into the sea, sand in the bay
   const dc = coastDist(x, z), b = beachMask(x, z);
   const cliffCoast = lerp(h, -2.6, smoothstep(0.8, -1.6, dc));
@@ -184,7 +206,7 @@ function baseHeight(x, z) {
   {
     const d = Math.hypot(x - POI.lighthouse.x, z - POI.lighthouse.z);
     h = lerp(h, level(1) + fbm(x * 0.3, z * 0.3, 2) * 0.15, 1 - smoothstep(6.5, 8.6, d));
-    for (const p of HOUSE_PADS) h = lerp(h, LEVEL0 + 0.05, 1 - smoothstep(p.r * 0.7, p.r, Math.hypot(x - p.x, z - p.z)));
+    for (const p of PRE80 ? HOUSE_PADS_PRE : HOUSE_PADS) h = lerp(h, LEVEL0 + 0.05, 1 - smoothstep(p.r * 0.7, p.r, Math.hypot(x - p.x, z - p.z)));
   }
   // project depot yard (the old camp)
   {
@@ -220,10 +242,13 @@ function baseHeight(x, z) {
 // at most RAMP m/m; near the path the ground follows that profile, so every
 // path crosses the cliffs on a smooth ramp (cut half into the upper level,
 // half built out onto the lower one).
+// (WORLD-80: the ramps keep the paths and the ground as they stood before step 2 — PATHS_SCATTER, computed in PRE80 —
+// so the ground by the stepping stones, from which their first step is measured, is the same metre for metre; the
+// west street's new line round Bug Street's pair runs on level ground and needs no ramp of its own)
 const RAMP = 0.26, DS = 0.5;
 let profiles = null;
-function buildProfiles() {
-  profiles = PATHS.map((p) => {
+function buildProfiles(paths) {
+  return paths.map((p) => {
     const segs = [];
     let s0 = 0;
     for (let i = 0; i < p.length - 1; i++) { const L = Math.hypot(p[i + 1][0] - p[i][0], p[i + 1][1] - p[i][1]); segs.push({ a: p[i], b: p[i + 1], L, s0 }); s0 += L; }
@@ -246,7 +271,7 @@ function buildProfiles() {
   });
 }
 function pathRamp(x, z, h) {
-  if (!profiles) buildProfiles();
+  if (!profiles) { const was = PRE80; PRE80 = true; profiles = buildProfiles(PATHS_SCATTER); PRE80 = was; }
   let wsum = 0, hsum = 0, wmax = 0;
   for (const P of profiles) {
     let best = 1e9, bs = 0;
@@ -276,15 +301,17 @@ function islandHeight0(x, z) {
 // WORLD-FIX: every house stands on its own level floor (town.js HOUSE_FLATS): the ground under its footprint and a
 // margin round it at the height of the ground before its door, easing back to the land beyond. Applied last, so
 // no ramp, rise or town noise tilts a house again. (The ground round each house was measured by tests/worldfit.mjs.)
-let FLAT_LVL = null;
+let FLAT_LVL = null, FLAT_LVL_PRE = null;
+const flatLevels = (F) => F.map((f) => islandHeight0(f.door[0], f.door[1])).map((v, i, a) => (F[i].with != null ? a[F[i].with] : v));
 function houseFlats(x, z, h) {
-  FLAT_LVL ??= HOUSE_FLATS.map((f) => islandHeight0(f.door[0], f.door[1]));
-  for (let i = 0; i < HOUSE_FLATS.length; i++) {
-    const f = HOUSE_FLATS[i], dx = x - f.x, dz = z - f.z, R = f.flat + f.ease;
+  const FL = PRE80 ? HOUSE_FLATS_PRE : HOUSE_FLATS;
+  const LV = PRE80 ? (FLAT_LVL_PRE ??= flatLevels(FL)) : (FLAT_LVL ??= flatLevels(FL));
+  for (let i = 0; i < FL.length; i++) {
+    const f = FL[i], dx = x - f.x, dz = z - f.z, R = f.flat + f.ease;
     if (Math.abs(dx) > f.hw + f.hd + R || Math.abs(dz) > f.hw + f.hd + R) continue;
     const ex = Math.abs(f.c * dx - f.s * dz) - f.hw, ez = Math.abs(f.s * dx + f.c * dz) - f.hd;
     const d = ex > 0 && ez > 0 ? Math.hypot(ex, ez) : Math.max(ex, ez);
-    if (d < R) h = lerp(FLAT_LVL[i], h, smoothstep(f.flat, R, d));
+    if (d < R) h = lerp(LV[i], h, smoothstep(f.flat, R, d));
   }
   return h;
 }
@@ -350,6 +377,41 @@ function townSoil(x, z, n = 0) {
   if (vd > 36) return 0;
   const lawn = smoothstep(-0.08, 0.12, fbm(x * 0.07 + 3.1, z * 0.07 - 1.7, 2) + n * 0.15);
   return (1 - smoothstep(24, 36, vd)) * (1 - lawn);
+}
+
+// WORLD-80: the ground as the scatter sees it (PATHS_SCATTER): the ground before step 2 where step 2 changed it — the
+// west islet (its raised top, the dome's floor), Bug Street (its pair's floors, the path round them) and the stone
+// house's porch — on the terrain's own grid points (computed as before; the trap filler never reached those places)
+// and its own triangles (Terrain.heightAt); elsewhere the terrain itself.
+const PRE80_BOXES = [[-186, -40, ISLET_X + 1, 20], [-76, -30, -46, 2], [-33, -38, -18, -24]];
+function scatterGround(T) {
+  const n = T.segs + 1, pre = new Map();
+  const ix = (x) => Math.round((x - T.x0) / T.step), jz = (z) => Math.round((z - T.z0) / T.step);
+  // (the difference before − now added to the terrain's own point, so the pit fills and the trap filler's steps stay)
+  for (const [x0, z0, x1, z1] of PRE80_BOXES) {
+    for (let j = Math.max(0, jz(z0)); j <= Math.min(T.segs, jz(z1)); j++) for (let i = Math.max(0, ix(x0)); i <= Math.min(T.segs, ix(x1)); i++) {
+      const k = j * n + i, x = T.x0 + i * T.step, z = T.z0 + j * T.step;
+      if (pre.has(k)) continue;
+      PRE80 = true; const before = islandHeight(x, z); PRE80 = false;
+      const d = before - islandHeight(x, z);
+      if (d !== 0) pre.set(k, T.heights[k] + d);
+    }
+  }
+  const hv = (i, j) => { i = Math.max(0, Math.min(T.segs, i)); j = Math.max(0, Math.min(T.segs, j)); const k = j * n + i; return pre.has(k) ? pre.get(k) : T.heights[k]; };
+  const near = (x, z, m) => PRE80_BOXES.some(([x0, z0, x1, z1]) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m);
+  const heightAt = (x, z) => {
+    if (!near(x, z, 2)) return T.heightAt(x, z);
+    const gx = (x - T.x0) / T.step, gz = (z - T.z0) / T.step, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
+    const h00 = hv(i, j), h10 = hv(i + 1, j), h01 = hv(i, j + 1), h11 = hv(i + 1, j + 1);
+    if (fx + fz < 1) return h00 + (h10 - h00) * fx + (h01 - h00) * fz;
+    return h11 + (h01 - h11) * (1 - fx) + (h10 - h11) * (1 - fz);
+  };
+  const slopeAt = (x, z) => {
+    if (!near(x, z, 4)) return T.slopeAt(x, z);
+    const e = T.step, dx = heightAt(x + e, z) - heightAt(x - e, z), dz = heightAt(x, z + e) - heightAt(x, z - e);
+    return Math.hypot(dx, dz) / (2 * e);
+  };
+  return { heightAt, slopeAt };
 }
 
 // ---------- the terrain grid, checked for soft-locks ----------
@@ -456,8 +518,11 @@ export function* buildWorldSteps(parentScene) {
   const H = (x, z) => terrain.heightAt(x, z);
   yield 'ground';
   // faceted rock faces on the terrace cliffs (not on the path ramps or the paved quay)
+  // (WORLD-80: the scatter's view of the ground, as it stood before step 2: see PATHS_SCATTER)
+  const SG = scatterGround(terrain), HS = SG.heightAt;
   W_cliffs = buildCliffRocks(scene, terrain, TX.cliff, {
-    skip: (x, z) => pathDist(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
+    decide: SG,
+    skip: (x, z) => pathDistScatter(x, z) < 3.2 || boxDist(x, z, QUAY.x0 - 2, QUAY.z0 - 2, QUAY.x1 + 2, QUAY.z1 + 2) < 0,
   });
   const W = {
     terrain, physics, zones, H, POI, trapFixes: grid.trapped, givers: [],
@@ -502,16 +567,21 @@ export function* buildWorldSteps(parentScene) {
     { ...POI.village, r: 22 }, { ...POI.camp, r: 17 }, { x: POI.fort.x, z: POI.fort.z, r: 18 },
     { ...POI.lighthouse, r: 10 }, { ...POI.target, r: 5 }, { ...STUMP, r: 4 },
   ];
-  const inHouse = (x, z, pad) => W.houses.some((h) => {
+  const inHouseOf = (list) => (x, z, pad) => list.some((h) => {
     const dx = x - h.x, dz = z - h.z, lx = dx * Math.cos(h.ry) - dz * Math.sin(h.ry), lz = dx * Math.sin(h.ry) + dz * Math.cos(h.ry);
     return Math.abs(lx) < h.w / 2 + pad && Math.abs(lz) < h.d / 2 + pad;
   });
+  const inHouse = inHouseOf(W.houses);
+  // (WORLD-80: the scatter's view — the houses, paths and islet ground before step 2 — and what changed, filtered after)
+  const SCATTER_HOUSES = W.houses.filter((h) => h.id !== 'bug2' && h.id !== 'stoneup').map((h) => (h.id === 'bug' ? { ...h, ...OLD_BUG, door: null } : h));
+  const inHouseS = inHouseOf(SCATTER_HOUSES), inNewHouse = inHouseOf(W.houses.filter((h) => NEW_HOUSES.has(h.id)));
+  const isletSteep = (x, z, s) => x < ISLET_X + 2 && terrain.slopeAt(x, z) > s;
   const okSpot = (x, z, clear = 3) => {
-    const h = H(x, z);
+    const h = HS(x, z);
     if (h < 1.3) return false;
-    if (terrain.slopeAt(x, z) > 0.55) return false;
+    if (SG.slopeAt(x, z) > 0.55) return false;
     for (const e of exclusions) if (Math.hypot(x - e.x, z - e.z) < e.r) return false;
-    if (pathDist(x, z) < clear) return false;
+    if (pathDistScatter(x, z) < clear) return false;
     if (keepClear(x, z, 0.5)) return false;
     return true;
   };
@@ -519,7 +589,7 @@ export function* buildWorldSteps(parentScene) {
   // the original's trees and palms first, where they fit our island (off the paths, streets, houses and sites)
   for (const [x, z, k] of PROPS.trees) {
     const h = H(x, z);
-    if (h < 1.0 || terrain.slopeAt(x, z) > 0.6 || inHouse(x, z, 1.6) || pathDist(x, z) < 1.8 || streetDist(x, z) < 0.9 || keepClear(x, z, 1.2)) continue;
+    if (HS(x, z) < 1.0 || SG.slopeAt(x, z) > 0.6 || inHouseS(x, z, 1.6) || pathDistScatter(x, z) < 1.8 || streetDist(x, z) < 0.9 || keepClear(x, z, 1.2)) continue;
     if (physics.near(x, z).some((c) => c.enabled && c.top > h + 0.1 && physics._inside(c, x, z, 0.9))) continue;
     if (trees.some((t) => Math.hypot(t.x - x, t.z - z) < 2.2)) continue;
     trees.push({ x, z, h, s: k === 4 ? 0.75 : k === 1 ? 0.75 : 0.8, kind: k === 4 ? 'palm' : k === 1 ? 'tall' : 'round', ry: x * 1.3 + z, orig: true });
@@ -539,9 +609,9 @@ export function* buildWorldSteps(parentScene) {
   }
   // a few hand-placed trees and bushes around town
   for (const [x, z, kind, s] of [[-56, -21, 'round', 1.1], [-45, -21, 'fruit', 1.0], [-38, -12, 'round', 0.9], [-26, -11, 'tall', 1.0], [-51, 9.5, 'fruit', 0.95],
-    [-37, 11, 'round', 1.05], [-24, 3, 'tall', 1.1], [-60, -12, 'pine', 1.0], [-59.5, 8.5, 'round', 0.9], [-34.5, -23, 'pine', 1.1]]) if (!inHouse(x, z, 1.2) && !trees.some((t) => Math.hypot(t.x - x, t.z - z) < 2.5)) trees.push({ x, z, h: H(x, z), s: s * 0.8, kind, ry: x * 1.7 });
+    [-37, 11, 'round', 1.05], [-24, 3, 'tall', 1.1], [-60, -12, 'pine', 1.0], [-59.5, 8.5, 'round', 0.9], [-34.5, -23, 'pine', 1.1]]) if (!inHouseS(x, z, 1.2) && !trees.some((t) => Math.hypot(t.x - x, t.z - z) < 2.5)) trees.push({ x, z, h: H(x, z), s: s * 0.8, kind, ry: x * 1.7 });
   const bushes = [];
-  for (const [x, z] of [[-54.6, -10.6], [-47.0, -18.9], [-41.8, -19.2], [-36.5, -6.5], [-33.0, 4.2], [-53.2, 6.8], [-48.6, 11.6], [-40.6, 13.8], [-27.6, -13.7], [-58.4, -1.8], [-26.5, 9.6]]) if (!inHouse(x, z, 0.8)) bushes.push({ x, z, h: H(x, z), s: 0.9 + ((x * 7) % 1 + 1) % 1 * 0.4, ry: z });
+  for (const [x, z] of [[-54.6, -10.6], [-47.0, -18.9], [-41.8, -19.2], [-36.5, -6.5], [-33.0, 4.2], [-53.2, 6.8], [-48.6, 11.6], [-40.6, 13.8], [-27.6, -13.7], [-58.4, -1.8], [-26.5, 9.6]]) if (!inHouseS(x, z, 0.8)) bushes.push({ x, z, h: H(x, z), s: 0.9 + ((x * 7) % 1 + 1) % 1 * 0.4, ry: z });
   for (let i = 0; i < 600 && bushes.length < 120; i++) {
     const x = ISLAND.cx + (rand() - 0.5) * 190, z = ISLAND.cz + (rand() - 0.5) * 210;
     if (!okSpot(x, z, 2)) continue;
@@ -643,6 +713,10 @@ export function* buildWorldSteps(parentScene) {
   });
   for (const t of trees) if (!t.gone && doorLane(t.x, t.z, 0.45 * t.s)) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && doorLane(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+  // (WORLD-80: off the new path to the stepping stones, out of Bug Street's pair and the stone house's porch, off the
+  // islet's raised rock face)
+  for (const t of trees) if (!t.gone && (newPathDist(t.x, t.z) < 2.2 || inNewHouse(t.x, t.z, 1.4) || isletSteep(t.x, t.z, 0.55))) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && (newPathDist(b.x, b.z) < 1.9 || inNewHouse(b.x, b.z, 0.9) || isletSteep(b.x, b.z, 0.55))) { b.s = 1e-4; b.gone = true; }
   yield 'tree spots';
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
@@ -664,11 +738,11 @@ export function* buildWorldSteps(parentScene) {
   for (let i = 0; i < 16000 && grass.length < 5200; i++) {
     const x = ISLAND.cx + (rand() - 0.5) * 210, z = ISLAND.cz + (rand() - 0.5) * 220;
     const h = H(x, z);
-    if (h < 1.2 || terrain.slopeAt(x, z) > 0.6) continue;
+    if (HS(x, z) < 1.2 || SG.slopeAt(x, z) > 0.6) continue;
     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.5) continue;
-    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 32 && (streetDist(x, z) < 0.5 || inHouse(x, z, 0.4))) continue;
+    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 32 && (streetDist(x, z) < 0.5 || inHouseS(x, z, 0.4))) continue;
     if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < 11) continue;
-    if (pathDist(x, z) < 1.4 || townSoil(x, z) > 0.3) continue;
+    if (pathDistScatter(x, z) < 1.4 || townSoil(x, z) > 0.3) continue;
     if (keepClear(x, z, -0.6)) continue;
     grass.push({ x, z, h: h + 0.06, s: 0.7 + rand() * 0.8, ry: rand() * 6.28 });
     if (rand() < 0.1) flowers.push({ x: x + 0.3, z: z + 0.2, h: H(x + 0.3, z + 0.2), s: 0.8 + rand() * 0.5, ry: rand() * 6 });
@@ -676,7 +750,7 @@ export function* buildWorldSteps(parentScene) {
   // denser grass along the house walls and fences in town
   for (let i = 0; i < 4000; i++) {
     const x = POI.village.x + (rand() - 0.5) * 50, z = POI.village.z + (rand() - 0.5) * 50;
-    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.5 || streetDist(x, z) < 0.4 || inHouse(x, z, 0.25) || !inHouse(x, z, 1.4) || townSoil(x, z) > 0.5) continue;
+    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.5 || streetDist(x, z) < 0.4 || inHouseS(x, z, 0.25) || !inHouseS(x, z, 1.4) || townSoil(x, z) > 0.5) continue;
     grass.push({ x, z, h: H(x, z) + 0.04, s: 0.8 + rand() * 0.6, ry: rand() * 6.28 });
     if (rand() < 0.15) flowers.push({ x, z, h: H(x, z), s: 0.9, ry: rand() * 6 });
   }
@@ -690,6 +764,7 @@ export function* buildWorldSteps(parentScene) {
   for (const t of grass) if (!calm(t, 2.2)) { t.s = 1e-4; t.gone = true; }
   for (const t of flowers) if (!calm(t, 3.0)) { t.s = 1e-4; t.gone = true; }
   clearLife(grass); clearLife(flowers);
+  for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
   ['#ffd84a', '#ff6fa3', '#ffffff', '#b28cff', '#ff8a3d'].forEach((col, k) => mkInst(flowerGeometry(col), flowerMat, flowers.filter((f, i) => i % 5 === k), false, null, null, true));
@@ -698,12 +773,12 @@ export function* buildWorldSteps(parentScene) {
   const BED_COLS = ['#e8343a', '#ffd23a', '#3a6fe8', '#ff7ab0', '#f4f4f0'];
   const beds = BED_COLS.map(() => []);
   const bedOk = (x, z) => {
-    const h = H(x, z);
-    if (h < 1.3 || terrain.slopeAt(x, z) > 0.35) return false;
+    const h = HS(x, z);
+    if (h < 1.3 || SG.slopeAt(x, z) > 0.35) return false;
     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 10.8) return false;
-    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 34 && (streetDist(x, z) < 0.7 || inHouse(x, z, 0.5))) return false;
+    if (Math.hypot(x - POI.village.x, z - POI.village.z) < 34 && (streetDist(x, z) < 0.7 || inHouseS(x, z, 0.5))) return false;
     if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < 15) return false;
-    if (pathDist(x, z) < 1.7 || keepClear(x, z, 0.2)) return false;
+    if (pathDistScatter(x, z) < 1.7 || keepClear(x, z, 0.2)) return false;
     return true;
   };
   const addBed = (cx, cz, k, n, rx, rz, rot) => {
@@ -716,7 +791,7 @@ export function* buildWorldSteps(parentScene) {
     }
   };
   let bedN = 0;
-  for (const path of PATHS) {
+  for (const path of PATHS_SCATTER) {
     for (let i = 0; i < path.length - 1; i++) {
       const [x0, z0] = path[i], [x1, z1] = path[i + 1];
       const L = Math.hypot(x1 - x0, z1 - z0), tx = (x1 - x0) / L, tz = (z1 - z0) / L;
@@ -729,7 +804,7 @@ export function* buildWorldSteps(parentScene) {
     }
   }
   // beds along the town's house fronts
-  for (const hs of W.houses || []) {
+  for (const hs of SCATTER_HOUSES) {
     for (let k = 0; k < 2; k++) {
       const a = rand() * 6.28, r = 3.4 + rand() * 1.2;
       const cx = hs.x + Math.cos(a) * r, cz = hs.z + Math.sin(a) * r;
@@ -738,7 +813,7 @@ export function* buildWorldSteps(parentScene) {
   }
   // (hidden beyond FAR_SMALL like the grass: a bed far off is a few pixels of colour, and thousands of tulips)
   // (a bed reaching into one of the town's places — the pump's footpath, Nell's shop — is left out whole)
-  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z)) lifeBeds.add(t.bed);
+  const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7) lifeBeds.add(t.bed);
   for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
   W.flowerBeds = { beds: bedN, tulips: beds.reduce((a, l) => a + l.length, 0) };
@@ -746,12 +821,13 @@ export function* buildWorldSteps(parentScene) {
   const rocks = [];
   for (let i = 0; i < 600 && rocks.length < 140; i++) {
     const x = ISLAND.cx + (rand() - 0.5) * 220, z = ISLAND.cz + (rand() - 0.5) * 230;
-    const h = H(x, z);
-    if (h < -1 || h > 18) continue;
-    if (!okSpot(x, z, 2.5) && h > 1.3) continue;
+    const h = H(x, z), hs = HS(x, z);
+    if (hs < -1 || hs > 18) continue;
+    if (!okSpot(x, z, 2.5) && hs > 1.3) continue;
     rocks.push({ x, z, h: h - 0.1, s: 0.3 + rand() * 0.8, ry: rand() * 6 });
   }
-  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1)) r.s = 1e-4;   // (the doors' lanes, as the trees and bushes)
+  // (the doors' lanes, as the trees and bushes; WORLD-80: the new path, the new houses, the islet's dome and rock face)
+  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55))) r.s = 1e-4;
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   if (BATCH.on) batchFor(rockMat).build();

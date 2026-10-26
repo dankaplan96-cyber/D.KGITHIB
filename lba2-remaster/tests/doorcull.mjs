@@ -1,8 +1,9 @@
 // PERF-2: no door, frame or handle near Twinsen is left out by the small-prop culling (engine/shadowcull.js skips
 // static pieces under 4 px on Medium, 7 px on Low) or by the actor/far culling. For every Citadel house door and
 // every Zeelich house door, at Low and Medium, with the LBA and the free camera, Twinsen stands 2, 6 and 12 m out in
-// front of the door; one frame is drawn and every mesh whose bounds lie within 2.5 m of the door is checked: shown
-// in the main view (layer 0 on) whenever the same mesh is shown at High (no culling there).
+// front of the door (Citadel's shut doors, WORLD-80: 2 and 6 m); one frame is drawn and every mesh whose bounds lie
+// within 2.5 m of the door is checked: shown in the main view (layer 0 on) whenever the same mesh is shown at High (no
+// culling there).
 import { launch, open, checker } from './lib/boot.mjs';
 const { check, checkVisual, done } = checker();
 const { browser, page, errs } = await launch({ width: 1366, height: 768 });
@@ -13,6 +14,9 @@ const res = await page.evaluate(() => {
   const V = G.hero.pos.constructor;   // (THREE.Vector3; three isn't a page global)
   const doors = [];
   for (const h of G.world.houses) { let nx = h.door.x - h.x, nz = h.door.z - h.z; const l = Math.hypot(nx, nz) || 1; doors.push({ area: 'citadel', id: h.id, x: h.door.x, z: h.door.z, nx: nx / l, nz: nz / l }); }
+  // (WORLD-80: the original's shut doors — the islet's dome, the plateau's tunnel, the passage's two ends — at 2 and 6 m:
+  // 12 m out from the tunnels and the dome is over the sea)
+  for (const d of G.world.shutDoors || []) { const nx = Math.sin(d.ry), nz = Math.cos(d.ry); doors.push({ area: 'citadel', id: 'shut-' + d.id, x: d.x - nx, z: d.z - nz, nx, nz, dists: [2, 6] }); }
   const Z = G.rooms.zeelich;
   for (const [i, d] of (Z.houseDoors || []).entries()) {
     // (outward: away from the house group's centre; the door point is just outside the facade)
@@ -43,7 +47,7 @@ const res = await page.evaluate(() => {
   const frame = () => { for (let i = 0; i < 20; i++) G.frame(1 / 30, false); G.perf.beginFrame(); G.frame(1 / 30, true); };
   for (const cam of ['lba', 'free']) {
     G.settings.camera = cam; G.applySettings();
-    for (const D of doors) for (const dist of [2, 6, 12]) {
+    for (const D of doors) for (const dist of D.dists || [2, 6, 12]) {
       const shownAt = {};
       for (const q of ['high', 'medium', 'low']) {
         if (G.settings.quality !== q) { G.settings.quality = q; G.applySettings(); }

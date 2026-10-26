@@ -532,6 +532,17 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   (house, opening, prologue, givers, containers, zoe-resume, chapter1, camclear, stability, perfbudget); worldfit FAILs
   on the base too (LAZY-REGIONS). Evidence: QA.md "HOUSE-FIX", docs/lba3-production/reviews/HOUSE-FIX/.
   Not verified: a real GPU, an independent review, the user's eye.
+## Done after (WORLD-80 step 2, the Citadel batch; status REVIEW)
+- Citadel 77.5 → 84.9 (tools/worldscore.mjs, `--only citadel`; coast 90.9 unchanged, height 75.2 → 76.6, landmarks
+  75.7 → 98.9, objects 62.3 → 63.4). Built in our kit from the original's numbers: the west islet's 19 m dome (the
+  town's stone, blue tiles) and the 4.4 m robed figure, the islet's top at the original's height; Bug Street's pair
+  (the north house S5 and a new south house S22, the old one house between them gone), the west street going round
+  them; the plateau's door S2 and the passage's north door S51 as tunnel mouths in the north face, the passage's
+  south door as a cellar hatch in the fort's yard, the stone house's upper door as a porch on the terrace: all shut
+  ("Locked."). Nothing else on the island moved: the scatter decides on the ground, paths and houses of before.
+- Evidence: docs/WORLD_SIMILARITY.md ("Citadel Island: 77.5 → 84.9"), docs/lba3-production/reviews/WORLD-80/citadel/,
+  QA.md "WORLD-80 step 2". Not verified: a real GPU and the look on the user's screen; the optional coast pull (#6)
+  and the terraces (#7) are not done. Next for WORLD-80: Desert batch A (the ground and the beach).
 
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
