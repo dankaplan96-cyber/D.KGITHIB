@@ -4,9 +4,10 @@
 //    a stone room after the original's (the user's reference #63): a hearth with a great teal cauldron, a long table
 //    of bottles and bowls with benches, iron candle stands, star plaques on the walls, a spotted rug.
 //    Bersimon (look 'bersimon', body 111) tops up Twinsen's magic when they talk.
-//  - The School of Magic on Desert Island: its entrance is the original's great stone face in a cliff (reference
-//    #09: grey, glowing red eyes under a heavy brow, the door in its chin, two horned chimneys beside it), here in the
-//    north-west mesa's south side. Inside (references #26, #57): a stone hall floored with pentagram slabs, star
+//  - The School of Magic on Desert Island: its entrance is the original's great stone face (the user's reference: grey,
+//    deep brows, glowing orange-red eyes, the door carved in its chin) at the original's own place in the north-west,
+//    set in a rock wall beside the great hall in its pool (WORLD-80 step 3, src/game/desertold.js). Inside
+//    (references #26, #57): a stone hall floored with pentagram slabs, star
 //    windows, a blackboard on a dais, long tables of bowls and bottles, a red-clothed table. Rector Hougo (look
 //    'magus', body 123) teaches; Ker'aooc the healing wizard (look 'keraooc', after body 188) heals Twinsen.
 //
@@ -19,8 +20,11 @@ import * as THREE from 'three';
 import { RoomBuilder, glowSprite } from './interiors.js';
 import { MAT, rbox, plane, cyl, sphere, lathe, canvasTex, table, bench, jar, plate, candle, rug } from './props.js';
 import { DESERT } from './desert.js';
+import { SCHOOL_SITE, SCHOOL_DOOR } from './desertold.js';
 
-export const WIZ = { tent: { x: -100, z: -71 }, school: { local: { x: -70, z: 41.5 } } };
+// (the School's face stands at the original's place on Desert Island, WORLD-80 step 3: desertold.js builds it with the
+//  island; its door's spot is known before the island is built, so the story's door list has it from the start)
+export const WIZ = { tent: { x: -100, z: -71 }, school: { local: { x: SCHOOL_SITE.x, z: SCHOOL_SITE.z }, door: { x: DESERT.x + SCHOOL_DOOR.x, z: DESERT.z + SCHOOL_DOOR.z } } };
 const TENT_IN = { x: 5400, z: 0 }, SCHOOL_IN = { x: 5600, z: 0 };   // (clear of the regions' ground patches)
 
 // ---------------------------------------------------------------- painted cloths and plaques
@@ -139,40 +143,6 @@ function buildTentRoom(scene, physics) {
   return B.finish();
 }
 
-// ---------------------------------------------------------------- the School of Magic's stone face (Desert Island)
-function buildSchoolOutside(physics, desert) {
-  const L = WIZ.school.local, ox = DESERT.x, oz = DESERT.z;
-  const gy = physics.groundAt(ox + L.x, oz + L.z - 2.6);
-  const g = new THREE.Group(); g.name = 'schoolFace'; g.position.set(L.x, gy, L.z); g.rotation.y = Math.PI;   // (it looks south, toward the village)
-  desert.group.add(g);
-  const rock = MAT.stone('grey', 1), add = (geo, m, x, y, z, rx = 0, ry = 0, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.rotation.set(rx, ry, rz); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
-  const faceM = MAT.flat('#9a98a6', 0.85);
-  // the head: a broad egg, a heavy brow, angry sockets with glowing red eyes, a long nose, the door in the chin
-  add(new THREE.SphereGeometry(1, 14, 10), faceM, 0, 3.6, 0).scale.set(3.3, 4.0, 2.2);
-  for (const s of [-1, 1]) {
-    add(rbox(2.4, 0.6, 1.0, 0.2), faceM, s * 1.35, 5.3, 1.75, 0, -s * 0.25, s * 0.32);   // the brow, slanting down to the nose
-    const eye = add(new THREE.SphereGeometry(0.62, 12, 8), MAT.glow('#ff4a12', '#d02800', 1.3), s * 1.35, 4.65, 1.75);
-    eye.scale.set(1.25, 0.5, 0.4); eye.rotation.z = s * 0.3;
-  }
-  add(new THREE.ConeGeometry(0.5, 1.6, 4), faceM, 0, 3.9, 2.15, -0.2, Math.PI / 4);
-  add(rbox(1.5, 2.1, 0.3, 0.05), MAT.wood('dark'), 0, 1.05, 2.1);
-  add(new THREE.CircleGeometry(0.28, 12), MAT.glow('#bff4ff', '#40a0d0', 1.0), 0, 1.4, 2.27);
-  add(rbox(2.4, 0.25, 1.2, 0.05), rock, 0, 0.12, 2.6);
-  // two horned chimneys to the side
-  for (const s of [-1, 1]) {
-    add(cyl(0.45, 0.55, 3.6, 10), MAT.flat('#8a6a5a', 0.85), s * 4.6, 1.8, 0.6);
-    for (const h of [-1, 1]) add(new THREE.ConeGeometry(0.16, 0.9, 6), MAT.flat('#8a6a5a', 0.85), s * 4.6 + h * 0.32, 3.95, 0.6, 0, 0, -h * 0.45);
-  }
-  // and the sign
-  add(cyl(0.06, 0.07, 1.6, 6), MAT.wood('dark'), 2.4, 0.8, 3.6);
-  add(plane(1.3, 0.34), MAT.map(signTex('School of Magic'), 0.8, { side: THREE.DoubleSide }), 2.4, 1.45, 3.62);
-  // colliders (world): the head, the chimneys
-  const W = (x, z) => { const c = Math.cos(Math.PI), s = Math.sin(Math.PI); return { x: ox + L.x + x * c + z * s, z: oz + L.z - x * s + z * c }; };
-  physics.add({ type: 'cyl', ...W(0, 0), r: 3.0, top: gy + 7.5 });
-  for (const s of [-1, 1]) physics.add({ type: 'cyl', ...W(s * 4.6, 0.6), r: 0.55, top: gy + 3.6 });
-  return { door: W(0, 3.0) };
-}
-
 // ---------------------------------------------------------------- inside the School of Magic
 function buildSchoolRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'school', SCHOOL_IN.x, SCHOOL_IN.z);
@@ -226,17 +196,15 @@ function buildSchoolRoom(scene, physics) {
 
 export function buildWizards(scene, physics, desert, world) {
   buildWizardTent(scene, physics, world);
-  if (desert) buildSchoolFace(physics, desert);
   return { wtent: buildTentRoom(scene, physics), school: buildSchoolRoom(scene, physics) };
 }
 // LAZY-REGIONS (src/game/regions.js): the tent stands on Citadel (built with it), the school's face on Desert Island
-// (built with the desert), the two rooms each the first time they are needed
+// (built with the desert: desertold.js), the two rooms each the first time they are needed
 export function buildWizardTent(scene, physics, world) {
   const tent = buildTentOutside(scene, physics);
   world?.updaters.push((dt, t) => tent.spin(t));   // (the finial turns, the pennant flaps)
   WIZ.tent.door = tent.door;
 }
-export function buildSchoolFace(physics, desert) { if (!WIZ.school.door) WIZ.school.door = buildSchoolOutside(physics, desert).door; }
 export const WIZARD_ROOMS = { wtent: buildTentRoom, school: buildSchoolRoom };
 
 // doors and exits, the same in every chapter

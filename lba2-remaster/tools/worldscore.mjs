@@ -66,7 +66,7 @@ const SPECS = [
 async function dumpGame() {
   const { launch, open, menu } = await import(path.join(ROOT, 'tests/lib/boot.mjs'));
   const { browser, page } = await launch({ width: 480, height: 270 });
-  await open(page, '?nocine');
+  await open(page, '?nocine&allregions');   // (LAZY-REGIONS: every area built, so each island's ground and pieces are there to measure)
   await menu(page, 'new');
   const want = SPECS.map((s) => {
     if (!s.ref) return { id: s.id, frame: s.frame };

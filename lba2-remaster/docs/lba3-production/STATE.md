@@ -552,6 +552,20 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   QA.md "WORLD-80 step 2". Not verified: a real GPU and the look on the user's screen; the optional coast pull (#6)
   and the terraces (#7) are not done. Next for WORLD-80: Desert batch A (the ground and the beach).
 
+## Done after (WORLD-80 step 3, the Desert batches; status REVIEW)
+- Desert Island 39.4 → 85.0 (tools/worldscore.mjs `--only desert`, now booting with ?allregions; coast 90.0 → 97.7,
+  height 0.0 → 78.2, landmarks 15.9 → 88.1, objects 38.0 → 68.3). The ground is the original island's heightfield
+  outside our places (the mesas gone, the beaches above the sea; Kesh, the oasis, the pump, the pier road and the dig
+  on the old 5 m level, the camp, the glider field, the condenser hall and the post's pad at the original's ground).
+  Built from the original's numbers in our kit (src/game/desertold.js): the School of Magic as the user settled it
+  (the north-west stone mask with the door in its chin, the great hall in its pool with the Moorish arch, the plaza,
+  bridge, pillars and blocks), S40 with its stoop and garden wall, the S28 tower, body 49's house, the two figures,
+  the twin pillars and the old corral's fences, the walled compound, the gateway over the track to the dig, the S113
+  hut, the islet's door and figure; every door that leads nowhere shut ("Locked."). Kesh's village not moved.
+- Evidence: docs/WORLD_SIMILARITY.md ("Desert Island: 39.4 → 85.0"), docs/lba3-production/reviews/WORLD-80/desert/,
+  QA.md "WORLD-80 step 3". Not verified: a real GPU and the look on the user's screen. Next for WORLD-80: the scorer's
+  two steps for Zeelich's islands and the Lift Dock; the Hamalayi's 3–4 LBA1 spots (the user's decision).
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

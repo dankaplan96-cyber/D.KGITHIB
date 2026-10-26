@@ -17,7 +17,7 @@ headless; the measure reads the built world, so the renderer doesn't matter). Ra
 
 ```
 cd lba2-remaster
-python3 -m http.server 8179 &                      # the game, served
+python3 -m http.server 8179 &                      # the game, served (the scorer opens it with ?allregions: every area built)
 GAME_URL=http://localhost:8179/ TMPDIR=/dev/shm node tools/worldscore.mjs \
   --json docs/lba3-production/reviews/WORLD-80/scores.json --png docs/lba3-production/reviews/WORLD-80
 ```
@@ -71,7 +71,8 @@ the original that an addition displaced is still scored. The additions excluded:
 |---|---|---|---|---|---|---|
 | **Citadel Island** (step 1) | **77.5** | 90.9 | 75.2 | 75.7 | 62.3 | IoU 0.909; land 13,782 m² original / 14,582 ours; lift +1.1 m, MAE 1.13 m on a 4.55 m spread; 270 objects / 469 |
 | **Citadel Island** (after step 2) | **84.9** | 90.9 | 76.6 | 98.9 | 63.4 | coast unchanged; lift +1.1 m, MAE 1.06 m; 270 objects / 473; every landmark but the plateau's door within 5 m |
-| **Desert Island** | **39.6** | 90.0 | 0.0 | 15.9 | 38.9 | IoU 0.900; land 29,237 / 26,833 m²; lift +2.2 m, MAE 2.29 m on a 1.90 m spread; 315 objects / 119 |
+| **Desert Island** (step 1) | **39.6** | 90.0 | 0.0 | 15.9 | 38.9 | IoU 0.900; land 29,237 / 26,833 m²; lift +2.2 m, MAE 2.29 m on a 1.90 m spread; 315 objects / 119 |
+| **Desert Island** (after step 3) | **85.0** | 97.7 | 78.2 | 88.1 | 68.3 | IoU 0.977; land 29,237 / 29,847; lift 0.0 m, MAE 0.40 m; 315 objects / 231 |
 | The Hamalayi (against LBA1) | 27.4 (partial) | 37.3 | 12.7 | — | — | walkable 31,825 m² ours vs 11,860 in LBA1's eight scenes; 90 % of it within 25.5 m of the lowest level vs 6.4 m |
 | Zeelich (the terminal island) | n/a | | | | | no original island has its layout (below) |
 | Otringal | 92.6 | 100 | 97.7 | 100 | 65.3 | 555 objects / 422 counted |
@@ -161,7 +162,64 @@ Street's pair) and 4 + 5 + 8 (the plateau's doors and the stone house's upper do
 +7.6, giving about 85. Sizes: one M (the islet), one M (Bug Street, with the occluder test), three S. Optional
 after: 6 (the coast, +1.6, M) and 7 (the terraces, +1.0, M–L, with the two tests).
 
-## Desert Island: 39.6
+## Desert Island: 39.4 → 85.0
+
+**Step 3 (the Desert batches A and B, both in one step), per part, before → after** (same scorer and references; game
+0.31.0 after the Citadel batch, 2026-10-26; the scorer now boots with `?allregions`, since LAZY-REGIONS it measured
+an unbuilt desert as sea; `docs/lba3-production/reviews/WORLD-80/desert/scores-{before,after}.json`,
+`desert-overlay-{before,after}.png`, screenshots `before/` and `after/`):
+
+| Part | Weight | Before | After | What changed |
+|---|---|---|---|---|
+| Coast | 30 | 90.0 | 97.7 | the original's beaches stand above the sea (the ground only drops under the water where its shore ends: desert.js's shore cap applies at sea only); land 26,833 → 29,847 m² against 29,237; what is left is our places over the original's sea (the pier's foot, the camp's inlet) and the 1 m resampling of its 1.71 m grid |
+| Height | 20 | 0.0 | 78.2 | the ground is the original's heightfield outside our places (desert.js heightFn: `origGround`), lift 2.2 → 0.0 m, MAE 2.29 → 0.40 m; the three invented mesas are gone; our places keep their level within their keeps (Kesh, the oasis, the pump, the pier road and the dig at the old 5 m; the camp 3.0, the glider field 1.8, the condenser hall 1.6 and the post's pad 1.6 at the original's ground there) and blend over 6 m; the tracks and the yacht's routes follow the original's terraces, smoothed over 6 m so a track climbs them as a slope |
+| Landmarks | 30 | 15.9 | 88.1 | every missing building, figure and door built at the original's place (0–1.6 m): S40, S28, the compound's two houses, the great hall and the mask, body 49's house, S113, the islet's door, the two figures, the twin pillars, the gateway, the islet's figure; Kesh's houses registered (S35 4.2 m, S39 1.8 m, the west house 12.1 m, S38 21.8 m); still off: the village centre (15.1 m, 60 %) and S36 (its place is our oasis basin), the S10 house (the post's east cabin, 12.9 m) |
+| Objects | 20 | 38.0 | 68.3 | 116 → 231 counted: the corral's 29 fence pieces on the original's lines, the compound's walls, the new houses, figures, pillars, palms, jars, crates, barrels, sacks and rocks in the cells the original fills |
+| **Score** | | **39.4** | **85.0** | |
+
+**What was built** (our kit and Kesh's adobe, from the original's numbers only: `src/game/desertold.js`, registered with
+fitAdd / spots, the door of each shut, "Locked."):
+
+- **The School of Magic** (the user's decision): the "high façade" (body 43) is the mask — a 6.7 × 3.3 m, 8.6 m tall
+  grey stone face at (−69.1, −72.7) looking east, set in a rock wall (a cliff slab and boulders behind it), deep brows,
+  glowing orange-red eyes, the School's door carved in its chin with a stone forecourt before it; the great hall (body
+  48, 10.2 × 7.0 m, 6.7 m tall) at (−67.8, −61.7) stands in the sunken pool the original's numbers have there (its 0 m
+  hollow, 2.3 m below the rim), on a stone plinth rising out of the water, crenellated, its Moorish arched doorway
+  (blue tiled surround, orange edge) opening north onto the pool's rim walk; a water channel at the mask's foot with
+  an arched stone bridge in front of the door, down two steps onto a paved plaza (0.3 m, the original's level) with a
+  palm, low tiled walls, a wooden signpost and two horned pillars; the white blocks (bodies 46) and fallen cubes (45)
+  on the mask's terrace, the horned pillar of body 32 to the north; a stair up to the rim walk, parapets along the
+  pool. The School's door spot moved from the invented mesa at (−70, 41.5) to (−66.3, −72.7) (wizards.js WIZ.school,
+  from desertold.js SCHOOL_SITE / SCHOOL_DOOR); the School's interior, Rector Hougo and Ker'aooc are unchanged
+  (tests/wizards.mjs walks in and out). A new sand track leads there from the plaza: north past the oasis's rim,
+  through the gap in S40's garden wall, over the land bridge and along the pool's east rim. (The School's face had
+  not been built at all since LAZY-REGIONS: `buildSchoolFace` had lost its caller, so its door was unregistered;
+  desert.js builds it with the island now.)
+- **Around Kesh**: the big house S40 (6.1 × 7.6 m, two storeys, its door west with the original's 3 m stoop, body
+  28), its garden wall on the original's panel line (31), the horned pillar (32), the palm (9/10), a hand cart
+  (16/17); the tall building at S28 (2.5 × 7.2 m, 8.4 m) as a stone-and-adobe tower on the floor of its hollow under
+  the ridge, its roof at the ridge's top, its door west; the house of body 49 (7.5 × 7.7 m) north of the pool; the two
+  5.2 m hooded stone figures on the knoll and the promontory west of the village (bodies 0, 33).
+- **North of the post**: the twin 5.2 m horned pillars (80, 81) with their low stone walls; the old corral: 29
+  post-and-rail fence pieces at the original's places and turns (78), its gate open (84), three troughs (75, 77, 91),
+  the water tank on posts (83), the lean-to (85–90), three palms.
+- **The north-east**: the walled compound S24 — the main house (94, 6.7 × 7.4 m) and the second (95, 4.5 × 7.4 m)
+  facing each other across a paved yard closed by the two walls (98, 99) with a well (100), the south door of S24
+  shut, two pillars (32) and five palms.
+- **The gateway** (64) over the track's last leg to the dig: two 7 m stone piers 4.5 m either side of the track's line
+  (its centre 1.6 m from the original's, so the yacht and Twinsen pass between them), a 9 m carved lintel; the posts
+  are taller than the original's 5.2 / 6.1 m so Hesk's yacht clears the beam at its stop under it.
+- **The hut on the north-west plateau** (S113, 6.1 × 5.1 m) on the plateau's brink, on a plinth down the slope.
+- **The islet**: its door (S183) in the cove's cliff, the 4.6 m figure (104) and the 4 m pillar (103) before it; the
+  cove's floor held at 0.75 m (the original's is at the waterline) so they stand dry.
+- Kesh's village did not move (12–17 m south of the original's): the original's north houses stand where our oasis
+  and pump are, and its spots are pinned by the chapter 4 and desert-life tests; said so above.
+
+Not built: S36 (its place is the oasis basin), S10 / S127 (inside the post; the east cabin is named for it, 68 %).
+Not done: the village's move. The height part's remaining error is the village plateau's rim (3 m over ~800 m² west
+and south-east of Kesh) — the price of keeping Kesh at 5 m.
+
+**Step 1's measurement (kept as recorded):**
 
 What matches: the coast (IoU 0.90, since WORLD-SHAPE). Kesh is near the original's village: one house within 5 m,
 three more 12–17 m off, the village's centre 15 m off. Everything else of the original's is missing or reshaped.
@@ -212,8 +270,8 @@ first.
 
 1. ~~Citadel batch (dome, figure and islet ground; Bug Street's pair; the plateau's and the stone house's doors):
    77.5 → ≈ 85.~~ Done (step 2): 77.5 → 84.9.
-2. Desert batch A (ground and beach): 39.6 → ≈ 59.
-3. Desert batch B (Kesh's neighbours and figures, the north-east compound): → ≈ 81.
+2. ~~Desert batch A (ground and beach): 39.6 → ≈ 59.~~ Done (step 3, with B).
+3. ~~Desert batch B (Kesh's neighbours and figures, the north-east compound): → ≈ 81.~~ Done (step 3): 39.4 → 85.0, batch C's School, body 49, the islet and the gateway included.
 4. The scorer's two steps for Zeelich's islands and the Lift Dock, then a look by eye. The Hamalayi waits for the
    user's answer.
 

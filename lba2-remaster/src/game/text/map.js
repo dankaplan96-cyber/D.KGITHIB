@@ -37,6 +37,7 @@ Object.assign(STR.en, {
   mp_camp: "Ilka's camp",
   mp_post: 'Research post',
   mp_dig: 'The dig',
+  mp_school: 'School of Magic',
   mp_condenser: 'Condenser hall',
   mp_foothills: 'Foothills',
   mp_lhar: 'Lhar',

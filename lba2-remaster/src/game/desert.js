@@ -21,7 +21,11 @@
 //   R.ruins {x,z, door:{x,z}}                        FunFrock's buried condenser hall (chapter 5)
 //   R.bore {x,z}                                     the project's test bore inside the post (chapter 5)
 //   R.kesh                                           Kesh twelve years on (keshlife.js): the cool room, Lumi's loom, poles
-// Heights: island ground BASE = 5.0; the dig steps down 1.6 m per terrace to bottomY = 0.4.
+//   R.shutDoors [{id,x,y,z,ry}]  R.figures [{x,z}]  R.gateway {x,z}  R.school {x,z}   the original's old places (desertold.js)
+// Heights (WORLD-80 step 3): the ground is the original island's heightfield (its low plain 0.3–3 m, its ridge up to
+// 11 m) except within our places, which keep their own level: Kesh, the oasis, the pump, the pier road and the dig on
+// the old plain's BASE = 5.0 (the dig steps down 1.6 m per terrace to bottomY = 0.2), the post's pad, the camp, the
+// glider field and the condenser hall at the original's level there.
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
 import { textures } from '../engine/textures.js';
@@ -30,6 +34,8 @@ import { rockGeometry } from './vegetation.js';
 import { shuttleTraffic } from './shuttle.js';
 import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROUTES, routeDist } from './keshlife.js';
 import { CELL as OC, NX as ONX, NZ as ONZ, W as OW, D as OD, UNIT as OU, HEIGHTS as OHEIGHTS } from './desert-layout.js';
+import { fitAdd } from './worldfit.js';
+import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
 import {
   tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
 } from './kit.js';
@@ -50,15 +56,18 @@ const PUMP_JAM = 1;   // the wind-pump's jammed gear: the middle one (ADV-2)
 const PIPE_J = { x: -32.2, z: -11.6 };   // the pipe's low joint, on walkable ground east of the oasis basin (ADV-2)
 const GEAR_S = 1.3, GEAR_Y = 1.7;   // the pump's gears: scale, and height on the tower
 const PUMP_TANK = { x: PUMP.x + 1.0, z: PUMP.z - 4.0 };   // the pump's water tank on stilts   // the pump's gears, larger than the first version's so a gust's shudder reads from the play camera
-const POST = { x0: 26, x1: 58, z0: -34, z1: -8, y: BASE + 0.35, gateZ: -21 };
+const POST = { x0: 26, x1: 58, z0: -34, z1: -8, y: 1.6, gateZ: -21 };   // (WORLD-80 step 3: its pad a metre over the original's low ground; it stood on our old 5 m plain)
 const DIG = { x: 64, z: 28, r: 16 };
 const CAMP = { x: -10, z: -46 };
 const RUINS = { x: 12, z: 50 };
+const GLIDER = { x: -60, z: -36 };   // (travel.js DES.glider: the field on the beach terrace south-west of the village)
+// (WORLD-80 step 3: the three invented mesas are gone — the original's ground stands there; the list stays so the
+//  rubble's random draws below fall as they did)
 const MESAS = [
-  { x: -6, z: -70, rx: 24, rz: 13, h: 15 },
-  { x: 38, z: 72, rx: 17, rz: 11, h: 13, gone: true },   // (gone: the original's coast and high ground stand there now)
-  { x: 86, z: -26, rx: 9, rz: 15, h: 12 },
-  { x: -70, z: 52, rx: 13, rz: 9, h: 11 },
+  { x: -6, z: -70, rx: 24, rz: 13, h: 15, gone: true },
+  { x: 38, z: 72, rx: 17, rz: 11, h: 13, gone: true },
+  { x: 86, z: -26, rx: 9, rz: 15, h: 12, gone: true },
+  { x: -70, z: 52, rx: 13, rz: 9, h: 11, gone: true },
   { x: 92, z: 46, rx: 7, rz: 7, h: 9, gone: true },
 ];
 const TRACKS = [
@@ -66,6 +75,9 @@ const TRACKS = [
   [[0, 9], [18, 18], [42, 24], [50, 27]],
   [[-22, 7], [-18, -20], [-12, -38]],
   [[0, 9], [6, 30], [10, 44]],
+  // WORLD-80 step 3: from the plaza north past the oasis's rim, through the gap in the big house's garden wall, over
+  // the land bridge and along the pool's east rim to the School of Magic (desertold.js)
+  [[-46, -2], [-47, -26], [-45, -46], [-49, -58], [-49.5, -66.3], [-60, -67.3]],
 ];
 const HOUSES = [
   { x: -60, z: -8, w: 6.4, d: 5.2, h: 3.4, ry: 0.15, stair: 1, tint: '#e9b98a', awning: '#c84a3a' },
@@ -96,19 +108,33 @@ function origH(x, z) {
   const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, o = j * ONX + i;
   return ((OG[o] * (1 - fx) + OG[o + 1] * fx) * (1 - fz) + (OG[o + ONX] * (1 - fx) + OG[o + ONX + 1] * fx) * fz) * OU;
 }
-// our places: [x, z, r] — land at least r round each (the coast gives way a little where the original's is closer),
-// and the original's high ground kept off them (it rises from RELIEF_GAP m beyond r)
-const KEEP = [[-50, 2, 26], [-70, -6, 11], [-40, -15, 14], [-30, -7, 8], [64, 28, 24], [-10, -46, 12], [12, 50, 12], [-70, 41.5, 10],
-  [-60, -36, 11], [-21.6, 15.2, 5], [-84, 4, 6]];
-const RELIEF_GAP = 8;
+// our places (WORLD-80 step 3): [x, z, r, level] — each stays flat at its own level within r and blends into the
+// original's ground over RELIEF_GAP m beyond it; the land mask keeps land at least r round it (the coast gives way
+// where the original's is closer). Kesh, the oasis, the pump, Hesk's board, the pier road and the dig stay on our old
+// 5 m plain; the camp, the glider field and the condenser hall stand at the original's ground there. (The School of
+// Magic's mesa at (−70, 52) is gone: the School stands at the original's place, desertold.js.) The tracks and the
+// yacht's routes are no longer keeps: they follow the original's ground, smoothed (origGround).
+const CAMP_Y = 3.0, RUINS_Y = 1.6, GLIDER_Y = 1.8;
+const KEEP = [[-50, 2, 22, BASE], [-70, -6, 9, BASE], [-40, -15, 14, BASE], [-30, -7, 8, BASE], [64, 28, 24, BASE], [-10, -46, 12, CAMP_Y],
+  [12, 50, 12, RUINS_Y], [GLIDER.x, GLIDER.z, 11, GLIDER_Y], [-21.6, 15.2, 5, BASE], [-84, 4, 6, BASE]];
+const RELIEF_GAP = 6;
+const postDist = (x, z) => Math.max(POST.x0 - 8 - x, x - POST.x1 - 8, POST.z0 - 8 - z, z - POST.z1 - 8);
 function keepDist(x, z) {   // metres outside the nearest keep (negative inside)
-  let d = Math.max(POST.x0 - 8 - x, x - POST.x1 - 8, POST.z0 - 8 - z, z - POST.z1 - 8);
+  let d = postDist(x, z);
   for (const [kx, kz, r] of KEEP) d = Math.min(d, Math.hypot(x - kx, z - kz) - r);
-  d = Math.min(d, trackDist(x, z) - 5, routeDist(x, z) - 4);
   return d;
 }
-// signed distance to the coast (m, + inland) on a 2 m grid over the patch, from the original's land plus our keeps
-const CD_STEP = 2, CD_N = SIZE / CD_STEP + 1;
+// how much of our ground shows at (x, z) (1 inside a keep, 0 beyond the gap) and at which level (the keeps' levels,
+// weighted by how near each is)
+function keepMix(x, z) {
+  let w = 1, sw = 0, sl = 0;
+  const take = (d, level) => { const k = 1 - smoothstep(0, RELIEF_GAP, d); if (k <= 0) return; w *= 1 - k; sw += k; sl += k * level; };
+  take(postDist(x, z), POST.y);
+  for (const [kx, kz, r, level] of KEEP) take(Math.hypot(x - kx, z - kz) - r, level);
+  return [1 - w, sw ? sl / sw : BASE];
+}
+// signed distance to the coast (m, + inland) on a 1 m grid over the patch, from the original's land plus our keeps
+const CD_STEP = 1, CD_N = SIZE / CD_STEP + 1;
 let CD = null, KD = null;
 function buildCoast() {
   const n = CD_N, h0 = SIZE / 2, land = new Uint8Array(n * n);
@@ -150,20 +176,22 @@ function gridAt(kd, x, z, out) {
   const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, o = j * CD_N + i;
   return (F[o] * (1 - fx) + F[o + 1] * fx) * (1 - fz) + (F[o + CD_N] * (1 - fx) + F[o + CD_N + 1] * fx) * fz;
 }
-// distance inland from the shore (negative at sea), with a wobble so the coast reads as sand and rock
+// distance inland from the shore (negative at sea), with a small wobble so the coast reads as sand and rock (WORLD-80
+// step 3: 0.4 m, so the original's beach stays where its numbers put it)
 export function coastDist(x, z) {
-  return gridAt(false, x, z, -40) + Math.sin(x * 0.21 + z * 0.13) * Math.sin(z * 0.17 - x * 0.09) * 1.1;
+  return gridAt(false, x, z, -40) + Math.sin(x * 0.21 + z * 0.13) * Math.sin(z * 0.17 - x * 0.09) * 0.4;
 }
 // keepDist read from the same 2 m grid (the ground asks it twice per point)
 const keepNear = (x, z) => gridAt(true, x, z, 99);
-export function trackDist(x, z) {   // (the sand tracks; also containers.js keeps off them)
+export function trackDist(x, z, list = TRACKS) {   // (the sand tracks; also containers.js keeps off them)
   let d = 1e9;
-  for (const p of TRACKS) for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]));
+  for (const p of list) for (let i = 0; i < p.length - 1; i++) d = Math.min(d, distToSegment(x, z, p[i][0], p[i][1], p[i + 1][0], p[i + 1][1]));
   return d;
 }
+// the tracks whose ground is smoothed (origGround): the old ones over the ridge; the School's path keeps the original's
+// terraces (its rim walk and land bridge are narrow steps a smoothing would flatten)
+const SMOOTH_TRACKS = TRACKS.slice(0, 4);
 const inPost = (x, z, pad = 0) => x > POST.x0 - pad && x < POST.x1 + pad && z > POST.z0 - pad && z < POST.z1 + pad;
-// (rounded, with a wandering rim: not a box with soft corners)
-const mesaQ = (m, x, z) => { const a = Math.atan2(z - m.z, x - m.x); return Math.pow(Math.pow(Math.abs(x - m.x) / m.rx, 2.6) + Math.pow(Math.abs(z - m.z) / m.rz, 2.6), 1 / 2.6) + Math.sin(a * 7 + m.x) * 0.03 + Math.sin(a * 3 + m.z) * 0.06; };
 
 // --- dig terraces: rings 16→12→8→4 m, each 1.6 m lower; one ramp per ring boundary at its own angle
 const DIG_RAMPS = [0.35, 2.55, 4.6];
@@ -183,11 +211,22 @@ function digHeight(x, z) {
   return h;
 }
 
+// the original's ground under (x, z), smoothed along our tracks and the yacht's routes (its terraces are steps of a
+// metre or two: a sand track climbs them as a slope, not a kerb); only land is averaged, so a terrace by the water
+// keeps its edge
+function origGround(x, z) {
+  const O = origH(x, z), td = Math.min(trackDist(x, z, SMOOTH_TRACKS), routeDist(x, z));
+  if (td > 6 || O <= 0.05) return O;
+  let s = 0, n = 0;
+  for (const dx of [-3, 0, 3]) for (const dz of [-3, 0, 3]) { const v = origH(x + dx, z + dz); if (v > 0.05) { s += v; n++; } }
+  return O + ((n ? s / n : O) - O) * smoothstep(6, 2.5, td);
+}
+
 function heightFn(x, z) {
-  // dunes: long crests across the wind (from the west) with a cross ripple
+  // our places: the old plain with its dunes (long crests across the wind, from the west, with a cross ripple), flat
+  // where people live and drive, each place at its own level (keepMix)
   const crest = Math.max(0, Math.sin(x * 0.085 + z * 0.045 + Math.sin(z * 0.035) * 1.2));
-  let dunes = crest * crest * 2.0 + Math.sin(x * 0.19 + z * 0.12) * 0.35 + Math.sin(x * 0.05 - z * 0.08) * 0.6;
-  // flat where people live and drive
+  const dunes = crest * crest * 2.0 + Math.sin(x * 0.19 + z * 0.12) * 0.35 + Math.sin(x * 0.05 - z * 0.08) * 0.6;
   let flat = 0;
   flat = Math.max(flat, smoothstep(VILLAGE.r + 8, VILLAGE.r, Math.hypot(x - VILLAGE.x, z - VILLAGE.z)));
   flat = Math.max(flat, smoothstep(5, 2, trackDist(x, z)));
@@ -195,40 +234,38 @@ function heightFn(x, z) {
   flat = Math.max(flat, smoothstep(DIG.r + 8, DIG.r + 2, Math.hypot(x - DIG.x, z - DIG.z)));
   flat = Math.max(flat, smoothstep(12, 6, Math.hypot(x - CAMP.x, z - CAMP.z)));
   flat = Math.max(flat, smoothstep(10, 5, Math.hypot(x - RUINS.x, z - RUINS.z)));
+  flat = Math.max(flat, smoothstep(13, 7, Math.hypot(x - GLIDER.x, z - GLIDER.z)));
   flat = Math.max(flat, keshFlat(x, z));
-  let h = BASE + dunes * (1 - flat);
-  // the original's ground away from our places: its high ground rises as rock, its low ground rolls (WORLD-SHAPE)
-  const wr = smoothstep(0, RELIEF_GAP, keepNear(x, z));
-  if (wr > 0) { const O = origH(x, z); h += wr * (Math.max(0, O - 4) * 1.25 + (Math.min(O, 4) - 2) * 0.5); }
+  const [kw, level] = keepMix(x, z);
+  let ours = level + dunes * (1 - flat);
   // Kesh's sand (keshlife.js): the dune against the cool room, sand banked on the screens, a drift over the yacht's track
-  h += keshBank(x, z) + DRIFT_H * keshDrift(x, z);
+  ours += keshBank(x, z) + DRIFT_H * keshDrift(x, z);
   // the post sits on a levelled concrete pad
-  if (inPost(x, z)) h = POST.y;
+  if (inPost(x, z)) ours = POST.y;
   // the oasis basin
   const od = Math.hypot(x - OASIS.x, z - OASIS.z);
-  if (od < OASIS.r + 5) h -= 1.5 * smoothstep(OASIS.r + 5, OASIS.r - 2, od);
-  // mesas: flat tops, sheer sides
-  let rock = 0;
-  for (const m of MESAS) {
-    if (m.gone) continue;
-    const q = mesaQ(m, x, z);
-    if (q < 1.15) {
-      const t = smoothstep(1.1, 0.95, q);
-      const top = BASE + m.h + Math.sin(x * 0.3) * Math.sin(z * 0.27) * 0.4;
-      h = Math.max(h, h + (top - h) * t); rock = Math.max(rock, t);
-    }
-  }
+  if (od < OASIS.r + 5) ours -= 1.5 * smoothstep(OASIS.r + 5, OASIS.r - 2, od);
+  // a place of ours by the sea runs down to a beach (the original's own shores keep their heights, cliffs and all)
+  const cd = coastDist(x, z);
+  if (kw > 0) ours = Math.min(ours, 0.35 + 0.6 * Math.max(0, cd));
+  // everywhere else the ground is the original island's (WORLD-80 step 3): its terraces, its ridge, its low plain and
+  // its beaches as its numbers have them; our places blend into it over RELIEF_GAP m
+  let h = kw >= 1 ? ours : kw <= 0 ? origGround(x, z) : origGround(x, z) * (1 - kw) + ours * kw;
   const dg = digHeight(x, z);
   if (dg != null) h = Math.min(h, dg);
-  // the shore: a long low beach as the original's (rising 1 in 2.2), steeper only where one of our places stands
-  // close to the sea; then the sea floor
-  // (and where the ground behind is high rock, the original's or a mesa: a sea cliff)
-  // (the sea cliffs keep off our places: by the pier's foot the beach stays a beach, whatever the original had there)
-  const kn = keepNear(x, z), cd = coastDist(x, z), sl = 0.45 + 0.6 * smoothstep(6, 0, kn) + smoothstep(0, 8, kn) * (0.2 * Math.max(0, origH(x, z) - 2) + 3 * rock);
+  // the School's water channel at the mask's foot (desertold.js)
+  const rl = rillAt(x, z);
+  if (rl > 0) h = Math.min(h, -0.5 + 1.6 * (1 - rl));
   // near the pier the beach slopes gently down to the deck
   const dd = Math.hypot(x - (DOCK.x + 8), (z - DOCK.z) * 0.8);
   if (dd < 22) h = h + (DOCK.deck + 0.2 + (h - DOCK.deck - 0.2) * smoothstep(4, 22, dd) - h) * (1 - smoothstep(16, 22, dd));
-  const out = Math.max(-3.2, Math.min(h, -0.8 + sl * cd));
+  // the sea: beyond the shore (the original's, or one of our places') the ground drops under the water at once and
+  // the sea bed falls away, faster off a high shore
+  const kn = keepNear(x, z), sl = 0.45 + 0.6 * smoothstep(6, 0, kn) + smoothstep(0, 8, kn) * 0.2 * Math.max(0, origH(x, z) - 2);
+  let out = cd < 0 ? Math.max(-3.2, Math.min(h, -0.4 + sl * cd)) : h;
+  // the islet's cove floor, held just above the water (the original's door there stands at the waterline: desertold.js)
+  const cv = coveAt(x, z);
+  if (cv > 0) out = Math.max(out, 0.75 * cv);
   // the pier's landward end steps onto sand at the deck's height: after the shore blend, which would otherwise
   // pull the ground there down to the sea floor (below the water line: a gap nobody can walk across)
   const ex = x - (DOCK.x + 17), w = (1 - smoothstep(3, 10, Math.abs(z - DOCK.z))) * smoothstep(-2.5, -1.0, ex) * (1 - smoothstep(4, 8, ex));
@@ -237,11 +274,11 @@ function heightFn(x, z) {
 }
 
 const C = (h) => new THREE.Color(h);
-const COL = { sand: C('#fff2dc'), sandDark: C('#ead0a8'), rock: C('#e0a080'), rockTop: C('#ecc0a0'), dirt: C('#d8b090'), pad: C('#d8d0c4'), grass: C('#c8d890'), wet: C('#a88a60'), sandCrest: C('#fff8ec'), sandLee: C('#e2b888'), sandRed: C('#e8b48c') };
+const COL = { sand: C('#fff2dc'), sandDark: C('#ead0a8'), rock: C('#e0a080'), rockTop: C('#ecc0a0'), dirt: C('#d8b090'), pad: C('#d8d0c4'), pave: C('#e6dac6'), grass: C('#c8d890'), wet: C('#a88a60'), sandCrest: C('#fff8ec'), sandLee: C('#e2b888'), sandRed: C('#e8b48c') };
 function colorFn(x, z, h, slope, c) {
   c.copy(COL.sand);
   const n = Math.sin(x * 0.7 + z * 0.4) * Math.sin(z * 0.6 - x * 0.2);
-  c.lerp(COL.sandDark, 0.25 + n * 0.15 + smoothstep(BASE + 1.5, BASE - 1, h) * 0.2);
+  c.lerp(COL.sandDark, 0.25 + n * 0.15 + smoothstep(3.5, 1.0, h) * 0.12);   // (the low plain a shade warmer than the terraces)
   // wind-sorted sand: pale crests, a warmer lee side behind each crest, and broad patches of
   // redder sand so the open ground reads at a distance (same crest phase as heightFn)
   const ph = x * 0.085 + z * 0.045 + Math.sin(z * 0.035) * 1.2;
@@ -251,14 +288,18 @@ function colorFn(x, z, h, slope, c) {
   const big = Math.sin(x * 0.021 + 1.3) * Math.sin(z * 0.017 - 0.4) + Math.sin((x + z) * 0.011) * 0.5;
   c.lerp(COL.sandRed, smoothstep(0.35, 1.1, big) * 0.3);
   if (slope > 0.8) c.lerp(COL.rock, smoothstep(0.8, 1.6, slope));
-  if (h > BASE + 6) c.lerp(COL.rockTop, 0.6);
+  if (h > 10.5) c.lerp(COL.rockTop, 0.6);   // (the original's ridge top)
+  const pv = pavedAt(x, z);
+  if (pv > 0) c.lerp(COL.pave, pv * 0.85);   // (the School's plaza and rim walk, the compound's yard)
   if (inPost(x, z)) c.copy(COL.pad);
-  if (h < 1.2) c.lerp(COL.wet, smoothstep(1.2, -0.5, h));
+  if (h < 0.5) c.lerp(COL.wet, smoothstep(0.5, -0.5, h));   // (wet sand only at the waterline: the original's beaches lie at 0.3 m)
 }
 function splatFn(x, z, h, slope, w) {
   w[0] = 0; w[1] = 1; w[2] = 0; w[3] = 0; w[4] = 0;
-  const rk = smoothstep(0.75, 1.3, slope) + (h > BASE + 6 ? 0.45 : 0);
+  const rk = smoothstep(0.75, 1.3, slope) + (h > 10.5 ? 0.45 : 0);
   w[2] = rk; w[1] = Math.max(0, 1 - rk);
+  const pv = pavedAt(x, z);
+  if (pv > 0) { w[4] = 2 * pv; w[1] *= 1 - pv; }
   const td = trackDist(x, z);
   if (td < 2.4) { const dr = 1 - keshDrift(x, z); w[3] = smoothstep(2.4, 1.2, td) * 1.6 * dr; w[1] *= 0.5 + 0.5 * (1 - dr); }   // (the drift covers the track)
   if (Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < VILLAGE.r - 4) { w[3] += 0.8; }
@@ -336,10 +377,28 @@ const carvingTex = () => ctex('carving', 512, 256, (x, W, H) => {
   for (let i = 0; i < 26; i++) { x.fillStyle = 'rgba(255,230,190,0.18)'; x.fillRect(20 + r() * (W - 40), 10 + r() * (H - 20), 3, 1); }
 });
 const awningTex = (a, b) => ctex('aw' + a + b, 64, 64, (x, S) => { for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? b : a; x.fillRect(i * S / 4, 0, S / 4, S); } });
-const signTex = (text, bg = '#2f6a7a') => ctex('sign' + text, 256, 96, (x, W, H) => {
+const signTex = (text, bg = '#2f6a7a', w = 256) => ctex('sign' + text, w, 96, (x, W, H) => {   // (w: a longer text needs a wider board)
   x.fillStyle = bg; x.fillRect(0, 0, W, H); x.strokeStyle = '#f2e6c8'; x.lineWidth = 6; x.strokeRect(6, 6, W - 12, H - 12);
   x.fillStyle = '#f2e6c8'; x.font = 'bold 38px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2, H / 2 + 2);
 }, false);
+
+// ================================================================== palms (the oasis's swaying ones, and still ones elsewhere)
+const palmTrunkG = () => cached('palmTrunk', () => {
+  const parts = [];
+  for (let k = 0; k < 9; k++) parts.push([cyl(0.17 - k * 0.008, 0.2 - k * 0.008, 0.62, 8, 0), Math.sin(k * 0.25) * 0.25 * k * 0.12, 0.31 + k * 0.6, 0]);
+  return parts;
+});
+const frondG = () => cached('frond', () => {
+  const g = new THREE.BufferGeometry(); const pos = [], idx = [];
+  const n = 8;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, x = t * 2.6, y = Math.sin(t * Math.PI * 0.8) * 0.6 - t * t * 1.1, w = 0.42 * Math.sin(Math.PI * Math.min(1, t * 1.15 + 0.05));
+    pos.push(x, y, -w, x, y - 0.06, 0, x, y, w);
+    if (i < n) { const a = i * 3; idx.push(a, a + 3, a + 1, a + 1, a + 3, a + 4, a + 1, a + 4, a + 2, a + 2, a + 4, a + 5); }
+  }
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  return g;
+});
 
 // ================================================================== build
 export function buildDesert(scene, physics) {
@@ -481,6 +540,9 @@ export function buildDesert(scene, physics) {
       col({ type: 'box', ...wpos(0, 0), hw: hd.w / 2 - 0.25, hd: hd.d / 2 - 0.25, rot: hd.ry, top: gy + hd.h + 0.37 });
     }
     houseDoors.push({ ...wpos(0.6, hd.d / 2 + 0.9), house: i, tarra: !!hd.tarra });
+    // (WORLD-80: registered, so tools/worldscore.mjs can match the original's village houses to ours; the door's sill
+    //  is 0.3 m under the ground, as the house stands 0.3 m into the sand)
+    fitAdd({ region: 'desert', name: 'house kesh' + i, x: ox + hd.x, z: oz + hd.z, ry: hd.ry, oy: gy, w: hd.w, d: hd.d, base: 0, plinth: 0.35, floor: 0.3, steps: 0.6, openings: [{ side: 'front', kind: 'door', x0: -0.15, x1: 1.35, y0: 0, y1: 2.6 }] });
   }
   R.houseDoors = houseDoors.map((d) => ({ ...W(d.x, d.z), house: d.house, tarra: d.tarra }));
 
@@ -506,22 +568,7 @@ export function buildDesert(scene, physics) {
   col({ type: 'cyl', x: OASIS.x, z: OASIS.z, r: OASIS.r + 0.2, top: oasisY + 2.2, noStand: true, seeThrough: true });
   const palms = [];
   {
-    const trunkG = cached('palmTrunk', () => {
-      const parts = [];
-      for (let k = 0; k < 9; k++) parts.push([cyl(0.17 - k * 0.008, 0.2 - k * 0.008, 0.62, 8, 0), Math.sin(k * 0.25) * 0.25 * k * 0.12, 0.31 + k * 0.6, 0]);
-      return parts;
-    });
-    const frond = cached('frond', () => {
-      const g = new THREE.BufferGeometry(); const pos = [], idx = [];
-      const n = 8;
-      for (let i = 0; i <= n; i++) {
-        const t = i / n, x = t * 2.6, y = Math.sin(t * Math.PI * 0.8) * 0.6 - t * t * 1.1, w = 0.42 * Math.sin(Math.PI * Math.min(1, t * 1.15 + 0.05));
-        pos.push(x, y, -w, x, y - 0.06, 0, x, y, w);
-        if (i < n) { const a = i * 3; idx.push(a, a + 3, a + 1, a + 1, a + 3, a + 4, a + 1, a + 4, a + 2, a + 2, a + 4, a + 5); }
-      }
-      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
-      return g;
-    });
+    const trunkG = palmTrunkG(), frond = frondG();
     const trunkM = pm('#b89068', 0.9);
     for (let i = 0; i < 9; i++) {
       const a = i / 9 * Math.PI * 2 + rr() * 0.4, d = OASIS.r + 2.2 + rr() * 2.5;
@@ -721,6 +768,8 @@ export function buildDesert(scene, physics) {
       if (Math.hypot(x, z) < 80 || coastDist(x, z) < 6 || trackDist(x, z) < 5 || keepNear(x, z) < 2) continue;
       rocks.push({ x, y: H(x, z) - 0.1, z, ry, s: sz < 0.15 ? 0.7 + sz * 4 : 0.25 + sz * 0.5 });
     }
+    // the old places' rocks (WORLD-80 step 3, desertold.js): the boulders at the School's rock wall and a few by the houses
+    for (const [x, z, s, ry] of OLD_ROCKS) rocks.push({ x, y: H(x, z) - 0.15 * s, z, ry, s });
     const rm = pm('#ffffff', 0.95, { vertexColors: true });
     // (Kesh's places stay clear: filtered after the draw, so the island's other rocks keep their places)
     for (let i = rocks.length - 1; i >= 0; i--) if (keshClear(rocks[i].x, rocks[i].z, rocks[i].s)) rocks.splice(i, 1);
@@ -839,7 +888,9 @@ export function buildDesert(scene, physics) {
     }
     // cabins: teal prefab units with the project emblem
     const cabins = [{ x: 34, z: -30, w: 7, d: 3.4, office: true }, { x: 50, z: -30, w: 6, d: 3.2 }, { x: 52, z: -13, w: 5, d: 3.2, ry: Math.PI }];
-    for (const cb of cabins) {
+    for (const [ci, cb] of cabins.entries()) {
+      // (WORLD-80: registered for tools/worldscore.mjs; the east cabin is named for the original's house at S10 / S127, 13 m off)
+      fitAdd({ region: 'desert', name: 'post cabin ' + ci, x: ox + cb.x, z: oz + cb.z, ry: cb.ry || 0, oy: postY, w: cb.w, d: cb.d, base: 0.15, plinth: 0.2, floor: 0.15, steps: 0.6, openings: [{ side: 'front', kind: 'door', x0: cb.w / 2 - 1.4, x1: cb.w / 2 - 0.4, y0: 0.15, y1: 2.3 }] });
       PB.add(bbox(cb.w, 2.7, cb.d, 0.08, 2.2), teal, cb.x, postY + 1.35 + 0.15, cb.z);
       PB.add(bbox(cb.w + 0.3, 0.14, cb.d + 0.3, 0.03, 2), pm('#e8eef0', 0.5), cb.x, postY + 2.9, cb.z);
       for (let k = 0; k < 2; k++) PB.add(bbox(0.9, 0.7, 0.05, 0.01, 1), pm('#8ad0e0', 0.2, { emissive: '#2a6a7a', emissiveIntensity: 0.4 }), cb.x - cb.w / 4 + k * cb.w / 2, postY + 1.8, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2 + 0.02));
@@ -886,7 +937,7 @@ export function buildDesert(scene, physics) {
     PB.add(bbox(1.1, 0.6, 0.4, 0.05, 1), pm('#fff4d0', 0.3, { emissive: '#ffe0a0', emissiveIntensity: 1.2 }), 56.6, postY + 8, -9.4, 0.4, 0.6, 0);
     PB.build();
     // a sign on the gate
-    const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex('JOINT PROJECT · RESEARCH POST', '#2a5a6a'), roughness: 0.8, side: THREE.DoubleSide }));
+    const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex('JOINT PROJECT · RESEARCH POST', '#2a5a6a', 640), roughness: 0.8, side: THREE.DoubleSide }));
     sg.scale.set(3.4, 0.9, 1); sg.position.set(POST.x0 - 0.1, postY + 3.3, POST.gateZ); sg.rotation.y = -Math.PI / 2; group.add(sg);
   }
 
@@ -1157,6 +1208,25 @@ export function buildDesert(scene, physics) {
 
   // Kesh twelve years on: the cool room, Lumi's loom and sail, the sand screens, Hesk's poles and yacht stop
   R.kesh = buildKesh({ group, col, H, W, updaters, ox, oz });
+
+  // ================================================================ the original's old places (WORLD-80 step 3)
+  // a still palm (no sway), its trunk and fronds in the island's batch, for the plaza, the compound and the corral
+  const staticPalm = (px, pz, s, ry) => {
+    const y = H(px, pz) - 0.1, c = Math.cos(ry), sn = Math.sin(ry), trunkM = pm('#b89068', 0.9), leafM = pm('#5a8a3a', 0.8, { side: THREE.DoubleSide });
+    for (const [geo, lx, ly] of palmTrunkG()) B.add(geo, trunkM, px + c * lx * s, y + ly * s, pz - sn * lx * s, 0, ry, -0.06, s);
+    const cx = px + c * 0.55 * s, cz = pz - sn * 0.55 * s, cy = y + 5.6 * s;
+    for (let k = 0; k < 8; k++) B.add(frondG(), leafM, cx, cy, cz, 0, ry + k / 8 * Math.PI * 2 + Math.sin(k * 2.3 + px) * 0.15, 0.15, s);
+    col({ type: 'cyl', x: px, z: pz, r: 0.3 * s, top: y + 6 * s, seeThrough: true });
+  };
+  // a wooden signpost: the board on two posts, facing ry
+  const signAt = (text, x, z, ry, bg) => {
+    const y = H(x, z), c = Math.cos(ry), s = Math.sin(ry);
+    const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex(text, bg, 384), roughness: 0.8, side: THREE.DoubleSide }));
+    sg.scale.set(2.4, 0.6, 1); sg.position.set(x, y + 1.55, z); sg.rotation.y = ry; group.add(sg);
+    for (const k of [-1.25, 1.25]) rod(B, [x + c * k, y, z - s * k], [x + c * k, y + 1.95, z - s * k], 0.05, darkWood);
+    col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
+  };
+  buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt });
 
   B.build();
 
