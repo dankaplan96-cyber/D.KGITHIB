@@ -7,7 +7,7 @@
 // textures with world-scaled UVs, sculpted geometry for organic shapes,
 // instancing/merging for repeated parts, a collider for every solid thing.
 import * as THREE from 'three';
-import { textures } from '../engine/textures.js';
+import { textures, keyJSON } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
@@ -79,7 +79,7 @@ const MC = new Map();
 const TILE = { rubble: 1.7, fortStone: 3.2, stone: 2.2, planks: 2.2, brass: 1.6, teal: 2.2, hazard: 0.9, deck: 2.0, slate: 1.8, concrete: 2.6, pipe: 1.6, wood: 1.3, cliff: 4.5, plasterWall: 2.2, roof: 1.4 };
 // textured material; geometry carries world-scaled UVs (1 unit = 1 tile)
 function tm(name, opts = {}) {
-  const key = name + JSON.stringify(opts);
+  const key = name + keyJSON(opts);
   if (MC.has(key)) return MC.get(key);
   const map = textures()[name];
   const m = new THREE.MeshStandardMaterial({ map, color: opts.color || '#ffffff', roughness: opts.rough ?? 0.88, metalness: opts.metal ?? 0, vertexColors: !!opts.vc, emissive: opts.emissive || '#000000', emissiveIntensity: opts.ei ?? 1, side: opts.side ?? THREE.FrontSide, flatShading: !!opts.flat });
@@ -87,7 +87,7 @@ function tm(name, opts = {}) {
   return m;
 }
 function pm(color, rough = 0.8, extra = {}) {
-  const key = '_' + color + rough + JSON.stringify(extra);
+  const key = '_' + color + rough + keyJSON(extra);
   if (MC.has(key)) return MC.get(key);
   const m = new THREE.MeshStandardMaterial({ color, roughness: rough, ...extra });
   MC.set(key, m);

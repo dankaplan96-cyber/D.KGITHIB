@@ -5,12 +5,12 @@
 // sills/shutters/flower boxes and an arched stone door surround. Small
 // random offsets keep the houses from looking cloned.
 import * as THREE from 'three';
-import { textures } from '../engine/textures.js';
+import { textures, keyJSON } from '../engine/textures.js';
 import { rng } from '../engine/math.js';
 
 const cache = new Map();
 function texMat(name, opts = {}) {
-  const key = name + JSON.stringify(opts);
+  const key = name + keyJSON(opts);
   if (cache.has(key)) return cache.get(key);
   const T = textures();
   const map = T[name] ? T[name].clone() : null;

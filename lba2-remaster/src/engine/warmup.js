@@ -61,14 +61,14 @@ export function warmShadowPrograms(R, target, scene, camera, at, mayCast = () =>
     else if (o.isBatchedMesh) { c = new THREE.BatchedMesh(1, 3, 3, m); c.addInstance(c.addGeometry(like(o.geometry))); if (o._colorsTexture) c.setColorAt(0, white); made.push(c); }
     else if (o.isInstancedMesh) { c = new THREE.InstancedMesh(like(o.geometry), m, 1); c.setMatrixAt(0, I); if (o.instanceColor) c.setColorAt(0, white); made.push(c); }
     else c = new THREE.Mesh(like(o.geometry), m);
-    c.castShadow = true; c.frustumCulled = false; g.add(c);
+    c.castShadow = true; c.frustumCulled = false; fresh(c); g.add(c);
   }
   // the depth-only shadow batches (shadowcull.js): every side × shadowSide a cell can have
   const posOnly = new THREE.BufferGeometry(); posOnly.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]), 3)); posOnly.setIndex([0, 1, 2]); made.push(posOnly);
   const sides = [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide];
   for (const side of sides) for (const shadowSide of [null, ...sides]) {
     const mm = new THREE.MeshBasicMaterial({ side, shadowSide, colorWrite: false, depthWrite: false }); made.push(mm);
-    const c = new THREE.Mesh(posOnly, mm); c.castShadow = true; c.frustumCulled = false; g.add(c);
+    const c = new THREE.Mesh(posOnly, mm); c.castShadow = true; c.frustumCulled = false; fresh(c); g.add(c);
   }
   // one frame of the real scene's lights (the programs depend on them) with only the copies in it, at the sun's focus
   // so the shadow pass draws them, into a scratch target: nothing reaches the screen, and the GPU draws a few
@@ -93,6 +93,19 @@ export function warmShadowPrograms(R, target, scene, camera, at, mayCast = () =>
     for (const t of made) t.dispose?.();
   }
   return kinds.size;
+}
+// three draws every caster with ONE shared depth material, setting its side and map per caster without marking it
+// changed, and only picks a program again when the caster's kind changes (instanced / batched / skinned …). Which
+// side × map programs get made therefore depends on the order the shadow pass meets the casters: the street at
+// Medium made its "plain mesh, textured, front side" program only when one followed an instanced caster in the
+// list. Each warm-up copy marks the depth material changed just before it is drawn, so its own program is made.
+// (a BatchedMesh's own onBeforeShadow culls and sorts its instances: kept)
+function fresh(c) {
+  const base = c.onBeforeShadow;
+  c.onBeforeShadow = function (renderer, object, camera, shadowCamera, geometry, depthMaterial, group) {
+    if (depthMaterial) depthMaterial.needsUpdate = true;
+    return base.call(this, renderer, object, camera, shadowCamera, geometry, depthMaterial, group);
+  };
 }
 // a material with only what the depth program reads from m (its side), no maps: the same program as kit.js's
 // shadow stand-in material, cached per side

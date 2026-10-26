@@ -7,7 +7,7 @@ import * as THREE from 'three';
 import { buildHouse } from './architecture.js';
 import { mergeStatic } from '../engine/merge.js';
 import { occOf } from '../engine/occlude.js';
-import { textures } from '../engine/textures.js';
+import { textures, keyJSON } from '../engine/textures.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { rng, distToSegment, smoothstep } from '../engine/math.js';
 import { PROPS } from './citadel-layout.js';
@@ -92,7 +92,7 @@ export const HOUSE_FLATS = HOUSES.map((h) => {
 // ------------------------------------------------------------------ helpers
 const M = new Map();
 function mat(color, rough = 0.85, extra = {}) {
-  const k = color + rough + JSON.stringify(extra);
+  const k = color + rough + keyJSON(extra);
   if (!M.has(k)) M.set(k, new THREE.MeshStandardMaterial({ color, roughness: rough, ...extra }));
   return M.get(k);
 }

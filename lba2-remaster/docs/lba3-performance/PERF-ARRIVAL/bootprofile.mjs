@@ -32,5 +32,15 @@ const top = (m, n) => [...m].sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, us
 console.log('loadTimes', JSON.stringify(load));
 console.log('\n--- self time ---\n' + top(self, 45));
 console.log('\n--- inclusive time (src/ only) ---\n' + top(new Map([...incl].filter(([k]) => / src\//.test(k))), 70));
+// CALLERS=getDataURL,getMaxAnisotropy: the src/ call paths (up to 6 frames) that spent time in those functions
+for (const fn of (process.env.CALLERS || '').split(',').filter(Boolean)) {
+  const paths = new Map();
+  for (const [id, us] of dt) {
+    let x = id, hit = false; const p = [];
+    for (; x != null; x = parent.get(x)) { const n = nodes.get(x); if (n.callFrame.functionName === fn) hit = true; if (hit && / src\//.test(' ' + key(n).split(' ').slice(1).join(' '))) { p.push(key(n)); if (p.length >= 6) break; } }
+    if (hit) { const k = p.join(' ← '); paths.set(k, (paths.get(k) || 0) + us); }
+  }
+  console.log(`\n--- who calls ${fn} ---\n` + top(paths, 15));
+}
 console.log('errors', JSON.stringify(errs.slice(0, 5)));
 await browser.close();

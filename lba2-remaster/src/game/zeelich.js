@@ -31,7 +31,7 @@ import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { Dog, addDogs } from './dogs.js';
 import { domeParts, finialGeo, esmerBuilding, Place } from './props-esmer.js';
 const MAT_PAD = () => new THREE.MeshStandardMaterial({ color: '#8a8f9a', roughness: 0.7, metalness: 0.2 });
-import { textures } from '../engine/textures.js';
+import { textures, keyJSON } from '../engine/textures.js';
 import { rng, lerp, smoothstep } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
@@ -75,7 +75,7 @@ const HOUSES = [
 const MC = new Map();
 const TILE = { cliff: 4.5, stone: 1.8, plaster: 2.2, planks: 2.2, brass: 1.6, teal: 2.2, hazard: 0.9, deck: 2.0, cobble: 3.2, grass: 4.0, dirt: 3.0, rubble: 1.7, tiles: 1.0, concrete: 2.6, metal: 2.6, roof: 1.6 };
 function tm(name, opts = {}) {
-  const key = name + JSON.stringify(opts);
+  const key = name + keyJSON(opts);
   if (MC.has(key)) return MC.get(key);
   const map = typeof name === 'string' ? textures()[name] : name;
   const m = new THREE.MeshStandardMaterial({ map, color: opts.color || '#ffffff', roughness: opts.rough ?? 0.88, metalness: opts.metal ?? 0, vertexColors: !!opts.vc, emissive: opts.emissive || '#000000', emissiveIntensity: opts.ei ?? 1, side: opts.side ?? THREE.FrontSide, transparent: !!opts.transparent, alphaTest: opts.alphaTest ?? 0 });
@@ -83,7 +83,7 @@ function tm(name, opts = {}) {
   return m;
 }
 function pm(color, rough = 0.8, extra = {}) {
-  const key = '_' + color + rough + JSON.stringify(extra);
+  const key = '_' + color + rough + keyJSON(extra);
   if (MC.has(key)) return MC.get(key);
   const m = new THREE.MeshStandardMaterial({ color, roughness: rough, ...extra });
   MC.set(key, m);
