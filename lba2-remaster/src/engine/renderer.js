@@ -9,6 +9,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { updateShownWorld } from './drawcull.js';
+import { warmPassPrograms } from './warmup.js';
 
 // RENDER-INV: lamps cost nothing where they don't reach. three evaluates the whole lighting model (RE_Direct: the
 // standard material's GGX specular + diffuse) for every point light on every lit pixel, also where the lamp's light
@@ -165,7 +166,8 @@ export class Renderer {
     if (this.fxaa) this.fxaa.enabled = !this.retro && (this.quality === 'low' || this.aa === 'fxaa');
   }
 
-  setAA(a) { this.aa = a === 'fxaa' ? 'fxaa' : 'msaa'; this.applyDerived(); this.resize(); }
+  // (PERF-ARRIVAL: the FXAA pass's program is made now, not on the first frame drawn with it)
+  setAA(a) { this.aa = a === 'fxaa' ? 'fxaa' : 'msaa'; this.applyDerived(); this.resize(); warmPassPrograms(this.renderer, this.composer); }
 
   setRetro(on) {
     this.retro = on;
