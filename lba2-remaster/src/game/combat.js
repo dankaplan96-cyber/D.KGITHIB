@@ -185,14 +185,19 @@ export class Targeting {
         }
       }
       x += vx * dt; z += vz * dt; vy -= pl.grav * dt; y += vy * dt;
-      const d = Math.hypot(e.pos.x - x, e.pos.z - z);
+      const d = Math.hypot(e.pos.x - x, e.pos.z - z), gy = P.groundAt(x, z, y + 0.3);
       // (the fence first: the flight never moves the ball into a collider, so a spot inside the fence's reach is
-      // never hit-tested there, even where an enemy pressed against the far side has his hit cylinder poke through)
-      if (P.ballFenceAt(x, z, y, R)) return false;
-      if (d < hr && y > y0 && y < y1) return true;
-      // over: the arc has crossed above such a fence; a miss after that is the fence's doing, any other miss is not
-      if (!over && P.ballFenceAt(x, z, e.pos.y + 1, R)) over = true;
-      if (d > last + 1e-4 || y < P.groundAt(x, z, y + 0.3)) return !over;
+      // never hit-tested there, even where an enemy pressed against the far side has his hit cylinder poke through.
+      // The ball rides 0.17 m over the ground at the lowest — MagicBall.substep — so a collider flush with a floor
+      // is never met)
+      const yb = Math.max(y, gy + 0.17);
+      if (P.ballFenceAt(x, z, yb, R)) return false;
+      if (d < hr && yb > y0 && yb < y1) return true;
+      // over: the arc has crossed above a fence taller than the point the assist steers to (so it couldn't bring
+      // the ball down onto him there); a miss after that is the fence's doing. A miss over a low thing (a plate, a
+      // console, a railing under a hovering guardian) is not
+      if (!over && P.ballFenceAt(x, z, ay, R)) over = true;
+      if (d > last + 1e-4 || y < gy) return !over;
       last = d;
     }
     return true;

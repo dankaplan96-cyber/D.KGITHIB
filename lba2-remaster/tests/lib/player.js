@@ -353,6 +353,38 @@
   // walk out through the current room's exit to `to`
   P.exitTo = (to) => { const e = G.room?.exits?.find((x) => x.to === to); if (!e) return { r: 'no exit ' + to, fail: 'no exit ' + to }; return P.through(e.x, e.z); };
   // Hesk's flights: talk to him, pick destination i in his menu
+  // the core's guardian fight as a player plays it (chapter 11): a ball hit stuns the guardian for 2.6 s (it can't
+  // fire), and that window is for the objective — a plate's bank shot at a pylon ('pylons'), or a throw at Vesk's
+  // overload coil ('coil'); bolt fans are dodged (P.gstep). Input only. Ends when the phase's goal is met.
+  P.coreFight = (phase, { maxT = 300 } = {}) => {
+    const h = hero(), f = G.flags, C = G.story.cur, out = { stunThrows: 0, stuns: 0, shots: 0, hurt: 0, t: 0 };
+    const done = () => (phase === 'pylons' ? f.c3_overload || C.pylons() >= 3 : f.c3_turned);
+    let miss = 0;
+    let hp = h.hp; const tick = (s) => { P.gstep(s); out.t += s; if (h.hp < hp) out.hurt += hp - h.hp; hp = h.hp; };
+    const idle = () => { for (let w = 0; w < 300 && G.ball.state !== 'idle'; w++) tick(DT); };
+    for (let k = 0; k < 200 && !done() && !h.dead && out.t < maxT; k++) {
+      if (G.state !== 'play') { P.settle(); continue; }
+      idle(); const g = G.enemies.find((e) => e.id === 'guardian'); if (!g || !g.alive) break;
+      if (g.state !== 'stunned') {
+        P.face(g.pos.x, g.pos.z, 1); P.tap('F1'); P.tap('KeyF', 0.05); out.stunThrows++;
+        for (let s = 0; s < 1.3 && g.state !== 'stunned'; s += DT) tick(DT);
+        // (two misses running: something stands between them — Vesk's console, a pylon: as a player, step out into the
+        // open middle of the arena, toward it)
+        if (g.state !== 'stunned') { if (++miss >= 2) { miss = 0; const A = g.arena; if (A) P.go((A.x0 + A.x1) / 2 + (g.pos.x - (A.x0 + A.x1) / 2) * 0.3, (A.z0 + A.z1) / 2 + (g.pos.z - (A.z0 + A.z1) / 2) * 0.3, { tol: 1.0, maxT: 3, fight: false }); } continue; }
+        miss = 0; out.stuns++;
+      }
+      if (phase === 'pylons') {
+        const p = C.plates().find((q) => !f['c3_pylon' + q.i]); if (!p) { tick(0.5); continue; }
+        P.go(p.x, p.z, { tol: 0.35, maxT: 3, fight: false }); tick(0.35); idle();   // (standing still on a plate lines him up)
+      } else {
+        const tg = G.room.ballTargets.find((x) => x.coil); if (!tg) { tick(0.5); continue; }
+        const d = Math.hypot(tg.x - h.pos.x, tg.z - h.pos.z); if (d > 5.5) P.go(tg.x + (h.pos.x - tg.x) / d * 4, tg.z + (h.pos.z - tg.z) / d * 4, { tol: 1.0, maxT: 2, fight: false });
+        idle(); P.face(tg.x, tg.z, 1);
+      }
+      P.tap('KeyF', 0.05); out.shots++; tick(1.4); P.settle();
+    }
+    out.t = +out.t.toFixed(1); P.note(`core fight (${phase}): ` + JSON.stringify(out)); return out;
+  };
   // the spaceship between the planets (travel.js, PLANET-1): to the pad's travel point, E, the menu's one stop
   P.shipTo = (pid) => {
     const p = G.travel?.points?.[pid]; if (!p) return { r: 'no point ' + pid };
