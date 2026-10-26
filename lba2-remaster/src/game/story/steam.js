@@ -230,7 +230,7 @@ export class Steam extends ChapterBase {
 
   // ---------------------------------------------------------------- per frame
   update(dt) {
-    const g = this.game, f = this.f, D = this.D, h = g.hero;
+    const g = this.game, f = this.f, D = g.regions?.built('desert'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !D) return;
     // the geysers after the relief valve opens: get clear of the post
     if (f.c5_relief && !f.c5_vent && g.state === 'play') {

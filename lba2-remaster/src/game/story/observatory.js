@@ -125,7 +125,7 @@ export class Observatory extends ChapterBase {
     this.chain([['hesk', 'c6_hesk_1']], () => { g.save(false); g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); });
   }
   update() {
-    const g = this.game, f = this.f, M = this.M, h = g.hero;
+    const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !M) return;
     M.snow.focus = h.pos;
     // the heavy drone: bigger, and its fall is the cue

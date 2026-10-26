@@ -365,7 +365,7 @@ export class Dig extends ChapterBase {
 
   // ---------------------------------------------------------------- per frame
   update(dt) {
-    const g = this.game, f = this.f, D = this.D;
+    const g = this.game, f = this.f, D = g.regions?.built('desert');   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !D) return;
     D.pump.onGust ??= () => this.gust();
     // the oasis fills after the pump starts

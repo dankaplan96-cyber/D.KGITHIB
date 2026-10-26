@@ -177,7 +177,7 @@ export class Pass extends ChapterBase {
   }
 
   update(dt) {
-    const g = this.game, f = this.f, M = this.M, h = g.hero;
+    const g = this.game, f = this.f, M = g.regions?.built('hamalayi'), h = g.hero;   // (LAZY-REGIONS: a per-frame read never builds the area)
     if (!this.isCur() || !M) return;
     M.snow.focus = h.pos;
     if (this.thawT > 0 && (this.thawT -= dt) <= 0) { f.c6_thawed = true; M.lift.thaw(); g.audio.play('break'); this.story.refreshCast(); this.chain([['hero', 'c6_thawed']], () => { g.updateObjective(); g.save(false); }); }
