@@ -49,11 +49,35 @@ import { koGone } from './game/death.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
 import { Inventory } from './game/inventory.js';
-import { Story, OLD_ORDER } from './game/story/index.js';
-import { t, setLang } from './game/i18n.js';
+import { Story, OLD_ORDER, NUMBER as CH_NUMBER } from './game/story/index.js';
+import { t, setLang, getLang } from './game/i18n.js';
+import { roomName } from './game/mapdraw.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
 const SAVE_VERSION = 4;
+// SAVE-SLOTS: the autosave keeps SAVE_KEY (slot 0: an old single save shows as the Autosave); six manual slots of
+// their own. Every save is the same snapshot() plus `at` (when, ms since 1970), `played` (seconds of play, when the
+// game has counted them from a new game) and, in a manual slot, `thumb`: a small JPEG of the picture as the pause
+// menu opened (at most THUMB_MAX characters; none when the main thread's part of taking it went over THUMB_MS).
+export const SLOT_COUNT = 6;
+export const slotKey = (n) => (n ? 'lba3_slot_' + n : SAVE_KEY);
+const THUMB_W = 160, THUMB_H = 90, THUMB_MAX = 15000, THUMB_MS = 50;
+// (the slot picture's encoder, run as a worker from this text: the read-back of the frame waits for the GPU there,
+//  not on the main thread; a lower quality when the picture would be over the limit)
+const THUMB_WORKER = `onmessage = async (e) => {
+  const { bmp, max, token } = e.data;
+  try {
+    const c = new OffscreenCanvas(bmp.width, bmp.height); c.getContext('2d').drawImage(bmp, 0, 0); bmp.close();
+    let url = null;
+    for (const quality of [0.6, 0.35]) { const b = await c.convertToBlob({ type: 'image/jpeg', quality }); url = new FileReaderSync().readAsDataURL(b); if (url.length <= max) break; }
+    postMessage({ url, token });
+  } catch (err) { postMessage({ url: null, token }); }
+};`;
+const SLOT_SCREENS = new Set(['savegame', 'loadgame', 'slotconfirm']);
+// the states that count as play time (not the title, the pause menus, game over or the ending screen)
+const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd']);
+// an enemy in one of these states, near him, is a fight in progress: no manual save then
+const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn']);
 export const VERSION = '0.31.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
@@ -92,7 +116,28 @@ const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
   del(k) { try { localStorage.removeItem(k); } catch { /* ignore */ } },
+  // a write that says how it went: 'ok', 'quota' (the storage is full; the old value is kept) or 'fail'
+  put(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); return 'ok'; }
+    catch (e) { return e?.name === 'QuotaExceededError' || e?.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e?.code === 22 || e?.code === 1014 ? 'quota' : 'fail'; }
+  },
 };
+// what a slot holds, for the menus: null when empty; `s` is the save brought to the current format (null: unreadable)
+function slotInfo(n) {
+  const raw = store.get(slotKey(n));
+  if (!raw) return null;
+  let s = null; try { s = migrateSave(raw); } catch { s = null; }
+  return { n, raw, s, at: Number.isFinite(raw.at) ? raw.at : 0 };
+}
+const REGION_KEY = { desert: 'map_desert', hamalayi: 'map_hamalayi', zeelich: 'isle_zeelich' };
+// the name of where a save stands: Citadel outdoors, an outdoor region, an island, or the room he is in
+function placeName(room) {
+  if (!room) return t('map_citadel');
+  if (REGION_KEY[room]) return t(REGION_KEY[room]);
+  const isle = 'isle_' + room, s = t(isle);
+  return s !== isle ? s : roomName(room);
+}
+const playedText = (sec) => { const m = Math.max(1, Math.floor(sec / 60)), h = Math.floor(m / 60); return h ? `${h}h ${String(m % 60).padStart(2, '0')}m` : `${m}m`; };
 
 // what counts as having enough kashes when a giver chooses (LBA2: NecessaryChapterMoney)
 const MONEY_NEED = 20;
@@ -211,6 +256,7 @@ class Game {
 
     this.state = 'loading';
     this.time = 0;
+    this.played = null;   // (SAVE-SLOTS: seconds of play since a new game; null for a game loaded from a save that didn't count them)
     this.storm = 0;
     this.flags = {};
     this.killed = [];
@@ -609,10 +655,20 @@ class Game {
   }
   // the developer combat yard (?arena): never saved, never part of the story
   devArena() { return enterArena(this); }
+  // the autosave (SAVE-SLOTS: slot 0). Returns 'ok', 'skip' (not a moment to save), 'quota' or 'fail'; a full
+  // storage is told once per session (a toast), and Save & Quit asks before quitting without the save
   save(toast = true) {
-    if (this.benching || this.hero.dead || this.state === 'title' || this.room?.id === 'arena') return;
-    store.set(SAVE_KEY, this.snapshot());
+    if (this.benching || this.hero.dead || this.state === 'title' || this.room?.id === 'arena') return 'skip';
+    const r = store.put(SAVE_KEY, this.stamp(this.snapshot()));
+    if (r !== 'ok') { if (!this._saveWarned) { this._saveWarned = true; this.hud.toast(r === 'quota' ? 'toast_save_full' : 'toast_save_fail'); } return r; }
     if (toast) this.hud.toast('toast_saved');
+    return r;
+  }
+  // a snapshot with when it was made and the play time so far
+  stamp(s) {
+    s.at = Date.now();
+    if (this.played != null) s.played = Math.round(this.played);
+    return s;
   }
   applySave(s) {
     const h = this.hero;
@@ -628,6 +684,7 @@ class Game {
     this.collected = s.collected || [];
     this.searched = s.searched || [];
     this.brokenCrates = s.crates || [];
+    this.played = Number.isFinite(s.played) ? s.played : null;
     this.applyCrystals();
     for (const e of this.enemies) if (this.killed.includes(e.id)) koGone(e);
     for (const p of [...this.pickups.list]) if (p.id && this.collected.includes(p.id)) { this.scene.remove(p.mesh); this.pickups.list.splice(this.pickups.list.indexOf(p), 1); }
@@ -645,23 +702,28 @@ class Game {
 
   // ------------------------------------------------ flow
   startNew() {
-    store.del(SAVE_KEY);
+    store.del(SAVE_KEY);   // (the autosave only: the manual slots are never touched by a new game)
+    this.played = 0;
     this.beginPlay();
     this.story.start();
   }
-  startContinue() {
-    const raw = store.get(SAVE_KEY);
-    const s = migrateSave(raw);
+  // loads the autosave, or a manual slot's key (SAVE-SLOTS: Load Game); either goes through the same migration
+  startContinue(key = SAVE_KEY) {
+    const raw = store.get(key);
+    let s = null; try { s = migrateSave(raw); } catch { s = null; }
     // an older format is kept untouched next to the migrated save
-    if (raw && s && raw.v !== SAVE_VERSION) store.set(SAVE_KEY + '_backup_v' + (raw.v || 1), raw);
+    if (raw && s && raw.v !== SAVE_VERSION) store.set(key + '_backup_v' + (raw.v || 1), raw);
     try {
       if (!s) throw new Error('unreadable save');
       this.applySave(s);
     } catch (e) {
       // never delete a save we couldn't read: set it aside and start fresh
       console.error('save load failed', e);
-      if (raw) store.set(SAVE_KEY + '_unreadable', raw);
-      store.del(SAVE_KEY);
+      if (raw) store.set(key + '_unreadable', raw);
+      store.del(key);
+      // a manual slot that isn't a save at all: nothing was loaded, the Load menu stays and says so
+      if (key !== SAVE_KEY && !s) { this.slotMsg = t('slot_unreadable'); this.slotMsgBad = true; if (this.screen === 'loadgame') this.buildSlots('loadgame'); return; }
+      if (key !== SAVE_KEY && store.get(SAVE_KEY)) store.set(SAVE_KEY + '_before_new', store.get(SAVE_KEY));   // (the new game below replaces the autosave)
       this.startNew();
       this.hud.toast('toast_save_error');
       return;
@@ -705,9 +767,12 @@ class Game {
     this._rebindOff?.(); // (a key press after leaving the controls screen never rebinds anything)
     document.querySelector('#chapter')?.classList.remove('show'); // (a chapter title never sits on top of a screen)
     $('#' + id).classList.remove('hidden');
-    if (id === 'title') $('#btn-continue').disabled = !store.get(SAVE_KEY);
+    if (id === 'title') { const any = this.anySave(); $('#btn-continue').disabled = !any; $('#btn-load').disabled = !any; }
     this.screen = id;
     if (id === 'settings') { this.syncSettingsUI(); this.setTabTo(this.setTab || 'game'); }
+    if (id === 'savegame' || id === 'loadgame') this.buildSlots(id);
+    if (id === 'slotconfirm') this.buildSlotConfirm();
+    if (id === 'pause') { $('#pause-msg').textContent = ''; $('#btn-save').classList.toggle('blocked', !!this.saveBlockReason()); }
     this.screenT = 0;
     this.menuSel = 0;
     this.focusMenu();
@@ -815,7 +880,7 @@ class Game {
       this.audio.init();
       // (a menu button keeps no DOM focus: Enter on it would press it a second time through the browser)
       if (b.closest('.screen')) { b.blur(); const k = this.menuButtons().indexOf(b); if (k >= 0) this.menuSel = k; } // (a clicked entry is the selected one, also for Back's return)
-      if (b.dataset.act) { this.audio.play('select'); this.act(b.dataset.act); }
+      if (b.dataset.act) { this.audio.play('select'); this.act(b.dataset.act, b); }
       const seg = b.closest('.seg');
       if (seg && b.dataset.v) { this.settings[seg.dataset.setting] = b.dataset.v; if (seg.dataset.setting === 'quality') this.settings.qPicked = true; this.applySettings(); this.syncSettingsUI(); }
       if (b.dataset.tab) { this.setTabTo(b.dataset.tab); this.audio.play('blip'); }
@@ -838,6 +903,14 @@ class Game {
     };
     $('#settings').addEventListener('pointermove', pick);
     $('#settings').addEventListener('pointerdown', pick);
+    // (SAVE-SLOTS: the same on the slot screens — the slot under the mouse is the selected one, one burning bar)
+    const pickSlot = (e) => {
+      if (!SLOT_SCREENS.has(this.screen) || (e.type === 'pointermove' && e.pointerType !== 'mouse')) return;
+      const b = e.target.closest('.menu button'); if (!b) return;
+      const k = this.menuButtons().indexOf(b);
+      if (k >= 0 && k !== this.menuSel) { this.menuSel = k; this.focusMenu(); }
+    };
+    for (const id of SLOT_SCREENS) { $('#' + id).addEventListener('pointermove', pickSlot); $('#' + id).addEventListener('pointerdown', pickSlot); }
     $('#pausebtn').addEventListener('click', () => this.pause());
     // a story scene stops when the window loses focus (its music would run on without the picture)
     document.addEventListener('visibilitychange', () => {
@@ -852,11 +925,32 @@ class Game {
   // the label of the key bound to an action ("E", "Space"...), for prompts
   keyName(action) { return keyLabel(keyFor(action)); }
 
-  act(a) {
+  act(a, btn) {
     switch (a) {
-      case 'continue': this.startContinue(); break;
-      // New Game over an existing save asks first (the user: one press used to wipe the progress); the old save
-      // is kept aside as lba3_save_v1_before_new, so even a yes can be undone by hand
+      // Continue: the newest of the autosave and the manual slots (SAVE-SLOTS)
+      case 'continue': { const n = this.newestSlot(); if (n != null) this.startContinue(slotKey(n)); break; }
+      case 'loadgame': this.openChild('loadgame'); this.selectSlot(this.newestSlot()); break;
+      case 'savegame': {
+        // not during a story scene, a fight, or while he is down: say why, stay in the pause menu
+        const why = this.saveBlockReason();
+        if (why) { $('#pause-msg').textContent = why; this.audio.play('deny'); break; }
+        this.openChild('savegame');
+        break;
+      }
+      case 'slot': this.pickSlot(+btn?.dataset.slot); break;
+      case 'slotdel': if (slotInfo(+btn?.dataset.slot)) { this.slotAsk = { kind: 'delete', n: +btn.dataset.slot }; this.openChild('slotconfirm'); } break;
+      case 'slotyes': {
+        const A = this.slotAsk; this.slotAsk = null;
+        if (!A) { this.closeChild(); break; }
+        if (A.kind === 'overwrite') this.writeSlot(A.n);
+        else { store.del(slotKey(A.n)); this.slotMsg = t('slot_deleted', { n: A.n }); this.slotMsgBad = false; }
+        this.closeChild();
+        this.selectSlot(A.n);
+        break;
+      }
+      // New Game over an existing autosave asks first (the user: one press used to wipe the progress); the old
+      // autosave is kept aside as lba3_save_v1_before_new, so even a yes can be undone by hand. The manual slots
+      // are never touched (SAVE-SLOTS)
       case 'new': if (store.get(SAVE_KEY) && this.screen === 'title') { this.openChild('confirmnew'); break; } // falls through
       case 'newyes':
         if (store.get(SAVE_KEY)) store.set(SAVE_KEY + '_before_new', store.get(SAVE_KEY));
@@ -870,7 +964,13 @@ class Game {
         this.hideScreens();
         if (this.cine) { this.setState('cinematic'); this.cine.resume(); } else this.setState('play');
         break;
-      case 'quit': if (!this.cine) this.save(false); this.reloadInto('title'); break; // (never save half a cinematic)
+      case 'quit': {
+        // (never save half a cinematic) — a full storage asks once before quitting without the save
+        const r = this.cine ? 'skip' : this.save(false);
+        if ((r === 'quota' || r === 'fail') && !this._quitAnyway && this.screen === 'pause') { this._quitAnyway = true; $('#pause-msg').textContent = t('quit_full'); this.audio.play('deny'); break; }
+        this.reloadInto('title');
+        break;
+      }
       case 'bench':
         if (this.cine) break;
         this.hideScreens();
@@ -887,10 +987,159 @@ class Game {
   }
 
   pause() {
-    if (this.state === 'cinematic' && this.cine) { this.cine.pause(); this.setState('pause'); this.showScreen('pause'); return; }
+    if (this.state === 'cinematic' && this.cine) { this.pauseThumb = null; this.cine.pause(); this.setState('pause'); this.showScreen('pause'); return; }
     if (this.state !== 'play') return;
+    this.pauseThumb = null; this._thumbTok = (this._thumbTok || 0) + 1;
     this.setState('pause');
     this.showScreen('pause');
+    // SAVE-SLOTS: the picture for a save slot, taken from the frame drawn as the pause menu opens (after this frame's
+    // render, before the browser shows it and clears the canvas); never on a session where it once took too long
+    if (!this.thumbOff) { const f0 = this.renderer.renderer.info.render.frame; queueMicrotask(() => this.grabThumb(f0)); }
+  }
+
+  // ------------------------------------------------ save slots (SAVE-SLOTS)
+  anySave() { for (let n = 0; n <= SLOT_COUNT; n++) if (store.get(slotKey(n))) return true; return false; }
+  // the slot Continue loads: the newest readable save (the autosave on a tie, or when no save says when it was made)
+  newestSlot() {
+    let best = null;
+    for (let n = 0; n <= SLOT_COUNT; n++) { const I = slotInfo(n); if (I?.s && (!best || I.at > best.at)) best = I; }
+    return best ? best.n : store.get(SAVE_KEY) ? 0 : null;
+  }
+  // why a manual save can't be made now ('' when it can): LBA2 saves anywhere; here not in the middle of a story
+  // scene, a fight, or while he is down
+  saveBlockReason() {
+    const h = this.hero;
+    if (!h || this.state === 'title') return t('nosave_here');
+    if (this.cine || this.cutscene) return t('nosave_scene');
+    if (h.dead || h.hp <= 0) return t('nosave_dead');
+    if (this.benching || this.room?.id === 'arena') return t('nosave_here');
+    if (this.trans) return t('nosave_wait');
+    if (this.inFight()) return t('nosave_fight');
+    return '';
+  }
+  inFight() {
+    const h = this.hero;
+    if (this.combatDir?.holders.size) return true;
+    if ($('#bossbar') && !$('#bossbar').classList.contains('hidden')) return true;
+    return this.enemies.some((e) => e.alive && e.present && !e.def?.passive && FIGHT.has(e.state) && Math.hypot(e.pos.x - h.pos.x, e.pos.z - h.pos.z) < 15);
+  }
+  // A 160x90 JPEG of the canvas (cropped to 16:9) for a save slot. `f0`: the renderer's frame count when asked; a
+  // frame drawn since is still in the canvas, otherwise one is drawn here. The main thread only copies the frame out
+  // (createImageBitmap: a GPU-side copy, no wait) and hands it to a small worker (THUMB_WORKER), which reads it back,
+  // encodes it and answers with a data URL. Reading it back on the main thread (toDataURL / toBlob of a 2D canvas)
+  // blocked until the GPU had finished every frame queued before it. The main thread's step is timed (thumbMs); over
+  // THUMB_MS the picture is dropped and pictures stay off for the session. No worker or OffscreenCanvas: no picture.
+  // A save made before the picture is ready is made without one.
+  grabThumb(f0) {
+    if (this.state !== 'pause' || this.cine || typeof createImageBitmap !== 'function' || typeof OffscreenCanvas !== 'function') return;
+    const token = (this._thumbTok = (this._thumbTok || 0) + 1), t0 = performance.now();
+    const live = () => token === this._thumbTok && this.state === 'pause' && !this.thumbOff;
+    let bmp;
+    try {
+      const R = this.renderer.renderer, src = R.domElement;
+      if (R.info.render.frame === f0) this.renderer.render();
+      const W = src.width, H = src.height, k = Math.min(W / THUMB_W, H / THUMB_H), sw = Math.round(THUMB_W * k), sh = Math.round(THUMB_H * k);
+      bmp = createImageBitmap(src, Math.round((W - sw) / 2), Math.round((H - sh) / 2), sw, sh, { resizeWidth: THUMB_W, resizeHeight: THUMB_H, resizeQuality: 'medium' });
+      this._thumbW ??= new Worker(URL.createObjectURL(new Blob([THUMB_WORKER], { type: 'text/javascript' })));
+    } catch { this.thumbOff = true; return; }
+    this.thumbMs = performance.now() - t0;
+    if (this.thumbMs > THUMB_MS) { this.thumbOff = true; bmp.then((b) => b.close(), () => {}); return; }
+    const w = this._thumbW;
+    bmp.then((b) => {
+      if (!live()) { b.close(); return; }
+      w.onmessage = (e) => { const u = e.data?.url; if (e.data?.token !== this._thumbTok) return; if (live() && typeof u === 'string' && u.startsWith('data:image/jpeg') && u.length <= THUMB_MAX) this.pauseThumb = u; this.thumbDone = token; };
+      w.onerror = () => { this.thumbOff = true; this.thumbDone = token; };
+      w.postMessage({ bmp: b, max: THUMB_MAX, token }, [b]);
+    }, () => { this.thumbDone = token; });
+  }
+  // a manual save into slot n: the autosave's snapshot, its time, the picture. A full storage keeps the slot's old
+  // save and says so (first tried again without the picture).
+  writeSlot(n) {
+    const key = slotKey(n), data = this.stamp(this.snapshot());
+    let r = this.pauseThumb ? store.put(key, { ...data, thumb: this.pauseThumb }) : 'quota';
+    if (r === 'quota') r = store.put(key, data);
+    this.slotMsg = r === 'ok' ? t('slot_saved', { n }) : t(r === 'quota' ? 'slot_full' : 'slot_fail');
+    this.slotMsgBad = r !== 'ok';
+    if (r !== 'ok') this.audio.play('deny');
+    return r;
+  }
+  // a slot pressed: Save Game writes it (asking first over an occupied one), Load Game loads it
+  pickSlot(n) {
+    if (!(n >= 0 && n <= SLOT_COUNT)) return;
+    if (this.screen === 'loadgame') { if (store.get(slotKey(n))) this.startContinue(slotKey(n)); return; }
+    if (this.screen !== 'savegame' || !n) return;
+    if (slotInfo(n)) { this.slotAsk = { kind: 'overwrite', n }; this.openChild('slotconfirm'); return; }
+    this.writeSlot(n);
+    this.buildSlots('savegame');
+    this.selectSlot(n);
+  }
+  selectSlot(n) {
+    const k = this.menuButtons().findIndex((b) => b.classList.contains('slot') && +b.dataset.slot === n);
+    if (k >= 0) this.menuSel = k;
+    this.focusMenu(true);
+  }
+  // one slot's picture and lines (a button on the lists, a card on the confirmation)
+  slotCard(el, n, I, latest) {
+    const s = I?.s, mk = (tag, cls, text) => { const e = document.createElement(tag); e.className = cls; if (text != null) e.textContent = text; return e; };
+    const pic = mk('span', 'slot-pic');
+    if (typeof I?.raw.thumb === 'string' && I.raw.thumb.startsWith('data:image/jpeg')) { const im = document.createElement('img'); im.src = I.raw.thumb; im.alt = ''; pic.append(im); }
+    else pic.append(mk('i', '', n ? String(n) : 'A'));
+    const txt = mk('span', 'slot-txt'), name = mk('b', 'slot-name', n ? t('slot_n', { n }) : t('slot_auto'));
+    if (latest) name.append(mk('em', 'slot-tag', t('slot_latest')));
+    txt.append(name);
+    if (!I) txt.append(mk('span', 'slot-ch', t('slot_empty')));
+    else if (!s) txt.append(mk('span', 'slot-ch', t('slot_bad')));
+    else {
+      const key = s.flags.chapterKey, num = CH_NUMBER[key];
+      txt.append(mk('span', 'slot-ch', (num ? t('chapter_n', { n: num }) + ' · ' : '') + t('chapter_' + key)));
+      const meta = [placeName(s.room)];
+      if (Number.isFinite(s.played)) meta.push(playedText(s.played));
+      if (I.at) meta.push(new Date(I.at).toLocaleString(getLang() === 'he' ? 'he-IL' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }));
+      txt.append(mk('span', 'slot-meta', meta.join(' · ')));
+    }
+    el.classList.toggle('empty', !I);
+    el.append(pic, txt);
+  }
+  // the Save Game list (the six slots) or the Load Game list (the Autosave and the six slots, a Delete on each
+  // manual one), then Back
+  buildSlots(id) {
+    const load = id === 'loadgame', list = $(`#${id} .slot-list`), latest = load ? this.newestSlot() : null;
+    list.textContent = '';
+    for (let n = load ? 0 : 1; n <= SLOT_COUNT; n++) {
+      const I = slotInfo(n), row = document.createElement('div'), b = document.createElement('button');
+      row.className = 'slot-row';
+      b.className = 'slot'; b.dataset.act = 'slot'; b.dataset.slot = n;
+      this.slotCard(b, n, I, load && I && n === latest);
+      if (load && !I) b.disabled = true;
+      row.append(b);
+      if (load && n && I) { const d = document.createElement('button'); d.className = 'slot-del'; d.dataset.act = 'slotdel'; d.dataset.slot = n; d.textContent = t('slot_delete'); d.setAttribute('aria-label', t('slot_delete') + ' ' + t('slot_n', { n })); row.append(d); }
+      list.append(row);
+    }
+    const back = document.createElement('button'); back.dataset.act = 'back'; back.className = 'slot-back'; back.textContent = t('back');
+    list.append(back);
+    const m = $(`#${id} .menu-msg`);
+    m.textContent = this.slotMsg || ''; m.classList.toggle('bad', !!this.slotMsgBad);
+    this.slotMsg = ''; this.slotMsgBad = false;
+  }
+  buildSlotConfirm() {
+    const A = this.slotAsk || { kind: 'overwrite', n: 1 }, S = $('#slotconfirm');
+    S.querySelector('h1').textContent = t(A.kind === 'delete' ? 'slot_delete_q' : 'slot_overwrite_q', { n: A.n });
+    const card = S.querySelector('.slot-card'); card.textContent = '';
+    this.slotCard(card, A.n, slotInfo(A.n), false);
+    S.querySelector('[data-act="slotyes"]').textContent = t(A.kind === 'delete' ? 'slot_delete_yes' : 'slot_overwrite_yes');
+  }
+  // the Load list: up / down go from slot to slot (past the Delete buttons), right / left between a slot and its Delete
+  slotNav(btns) {
+    const i = this.input, cur = btns[this.menuSel], isDel = (b) => !!b?.classList.contains('slot-del');
+    const go = (b) => { const k = btns.indexOf(b); if (k >= 0 && k !== this.menuSel) { this.menuSel = k; this.focusMenu(true); this.audio.play('blip'); } };
+    if (i.pressed('right')) { if (cur?.classList.contains('slot')) go(cur.parentElement.querySelector('.slot-del')); return true; }
+    if (i.pressed('left')) { if (isDel(cur)) go(cur.parentElement.querySelector('.slot:not(:disabled)')); return true; }
+    const d = i.pressed('down') ? 1 : i.pressed('up') ? -1 : 0;
+    if (!d) return false;
+    let k = isDel(cur) ? Math.max(0, btns.indexOf(cur.parentElement.querySelector('.slot'))) : this.menuSel;
+    for (let n = 0; n < btns.length; n++) { k = (k + d + btns.length) % btns.length; if (!isDel(btns[k])) break; }
+    this.menuSel = k; this.focusMenu(true); this.audio.play('blip');
+    return true;
   }
 
   syncSettingsUI() {
@@ -1455,6 +1704,7 @@ class Game {
 
   frame(dt, render) {
     this.time += dt;
+    if (this.played != null && PLAYED.has(this.state)) this.played += dt;   // (SAVE-SLOTS: play time, shown in the save slots)
     const input = this.input;
     input.update();
 
@@ -1496,8 +1746,7 @@ class Game {
       case 'pause': case 'gameover': case 'ending':
         // a grace period, so a key still held from the last line of dialogue doesn't press a button
         if (this.state !== 'pause' && this.screenT < 1.2) { this.screenT += dt; break; }
-        this.menuNav();
-        if (this.state === 'pause' && input.pressed('pause')) this.act('resume');
+        if (!this.menuNav() && this.state === 'pause' && input.pressed('pause')) this.act('resume');
         break;
       case 'cinematic':
         if (input.pressed('pause')) { this.pause(); break; }
@@ -1540,16 +1789,21 @@ class Game {
     }
   }
 
+  // returns true when it used the pause key (Esc / Menu: Back on the save-slot screens)
   menuNav() {
     const btns = this.menuButtons();
-    if (!btns.length || this._rebindOff) return; // (while a key is awaited, the keys belong to the rebinding)
+    if (!btns.length || this._rebindOff) return false; // (while a key is awaited, the keys belong to the rebinding)
     const i = this.input;
+    // the save-slot screens (SAVE-SLOTS): Esc or a pad's B goes back one screen
+    if (SLOT_SCREENS.has(this.screen) && (i.pressed('pause') || (i.lastDevice === 'pad' && i.pressed('dodge')))) { this.audio.play('select'); this.act('back'); return true; }
     // a pad's B goes back from a child menu (Esc keeps its meaning: in the pause menus it resumes)
-    if (i.lastDevice === 'pad' && i.pressed('dodge') && (this.screen === 'settings' || this.screen === 'controls')) { this.audio.play('select'); this.act('back'); return; }
-    if (this.screen === 'settings' && this.settingsNav(btns)) return;
+    if (i.lastDevice === 'pad' && i.pressed('dodge') && (this.screen === 'settings' || this.screen === 'controls')) { this.audio.play('select'); this.act('back'); return false; }
+    if (this.screen === 'settings' && this.settingsNav(btns)) return false;
+    if (this.screen === 'loadgame' && this.slotNav(btns)) return false;
     if (i.pressed('down')) { this.menuSel = (this.menuSel + 1) % btns.length; this.focusMenu(true); this.audio.play('blip'); }
     if (i.pressed('up')) { this.menuSel = (this.menuSel + btns.length - 1) % btns.length; this.focusMenu(true); this.audio.play('blip'); }
     if (i.pressed('interact') || i.pressed('action') || i.pressed('recenter')) { this.audio.init(); btns[this.menuSel]?.click(); }
+    return false;
   }
 
   titleCamera(dt) {

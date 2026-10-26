@@ -80,6 +80,7 @@
     </div>
     <div class="menu">
       <button data-act="continue" id="btn-continue" data-i18n="continue"></button>
+      <button data-act="loadgame" id="btn-load" data-i18n="load_game"></button>
       <button data-act="new" data-i18n="new_game"></button>
       <button data-act="settings" data-i18n="settings"></button>
       <button data-act="controls" data-i18n="controls"></button>
@@ -102,10 +103,33 @@
     <div id="pause-objective" class="lba-frame"></div>
     <div class="menu">
       <button data-act="resume" data-i18n="resume"></button>
+      <button data-act="savegame" id="btn-save" data-i18n="save_game"></button>
       <button data-act="settings" data-i18n="settings"></button>
       <button data-act="controls" data-i18n="controls"></button>
       <button data-act="bench" data-i18n="bench"></button>
       <button data-act="quit" data-i18n="save_quit"></button>
+    </div>
+    <p id="pause-msg" class="menu-msg" role="status" aria-live="polite"></p>
+  </div>
+
+  <!-- Save slots (SAVE-SLOTS): Save Game from the pause menu (six manual slots), Load Game from the title (the
+       Autosave and the six slots). The lists are built by src/main.js buildSlots; the look follows SETTINGS-UI. -->
+  <div id="savegame" class="screen hidden slots-screen">
+    <h1 data-i18n="save_game"></h1>
+    <p class="menu-msg" role="status" aria-live="polite"></p>
+    <div class="menu slot-list"></div>
+  </div>
+  <div id="loadgame" class="screen hidden slots-screen">
+    <h1 data-i18n="load_game"></h1>
+    <p class="menu-msg" role="status" aria-live="polite"></p>
+    <div class="menu slot-list"></div>
+  </div>
+  <div id="slotconfirm" class="screen hidden">
+    <h1></h1>
+    <div class="slot-card lba-frame"></div>
+    <div class="menu">
+      <button data-act="back" data-i18n="back"></button>
+      <button data-act="slotyes"></button>
     </div>
   </div>
 

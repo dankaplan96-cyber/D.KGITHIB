@@ -1198,6 +1198,70 @@ SwiftShader counts (`results/perf-arrival.json`, probes in docs/lba3-performance
 prologue, chapter1, audit, longsession, shipfiles (15 tests): all VERDICT PASS, no error, no missing file. A
 30-minute session: NOT TESTED in this block (longsession is the suite's own shorter loop). On the laptop: NOT VERIFIED
 (PERF_ARRIVAL.md §6).
+### SAVE-SLOTS: save slots like LBA2 (WORKLIST #29; evidence docs/lba3-production/reviews/SAVE-SLOTS/)
+The user (Hebrew, paraphrased): "there are no saves, only New Game and Continue". Approved plan: several slots as in
+LBA2, Save in the pause menu, Load on the title, the autosave in a slot of its own.
+
+- Storage (localStorage; the desktop app keeps it in the user's app-data folder): the Autosave keeps `lba3_save_v1`
+  (an old single save shows as the Autosave and loads through migrateSave as before); manual slots `lba3_slot_1` …
+  `lba3_slot_6`. Each is the same snapshot() (format 4, no version bump) plus `at` (ms since 1970), `played` (seconds,
+  only for games started with this build; older games show no time) and, in a manual slot, `thumb` (a 160x90 JPEG
+  data URL, about 4 KB here, capped at 15 000 characters). Backups follow the key: `<key>_backup_vN`,
+  `<key>_unreadable`; New Game still keeps `lba3_save_v1_before_new`.
+- Save Game (pause menu, under Resume): the six slots; an empty one saves at once ("Saved in Slot 3."), an occupied one
+  asks "Overwrite Slot 3?" with Back selected. Refused with one line in the pause menu during a story scene
+  (a cinematic or a scripted scene), a fight (an enemy within 15 m chasing, winding up, striking …, an attack token
+  held, the boss bar up) or while he is down. Save & Quit is unchanged (the autosave).
+- Load Game (title, under Continue): the Autosave then slots 1–6 in slot order; the newest is marked LATEST and
+  selected; empty slots disabled; a Delete beside each saved manual slot, asking "Delete Slot 3?" first. Continue
+  loads the newest readable save (the Autosave on a tie). Loading uses startContinue(key): the same migration and
+  recovery; an unreadable manual slot is set aside and the Load list says so (nothing else changes).
+- Each slot: picture (or its number / A), Slot n or Autosave, "Chapter n · title", then place · play time · date.
+- New Game asks only when there is an autosave: "The autosave will be replaced. Your save slots are kept." The slots
+  are not touched (checked byte for byte).
+- Navigation as the other menus: ↑/↓ (and the d-pad) move, Enter / A press; on the Load list → / ← go between a slot
+  and its Delete and ↑/↓ skip the Delete buttons; Esc or a pad's B goes back one screen (the Save list returns to the
+  pause menu, not to the game; Esc in Settings still resumes, as before). The mouse selects the row under it (one
+  burning bar).
+- Full storage: a manual save that doesn't fit is retried without its picture; if it still doesn't fit the slot keeps
+  its old save and the list says "Not enough storage space. Save over an old slot, or delete slots from Load Game on
+  the title screen." A failing autosave shows one toast per session; Save & Quit with a failing autosave stays in the
+  pause menu and says so, a second press quits.
+- The picture: taken as the pause menu opens, from the frame just drawn. The main thread only copies the frame
+  (createImageBitmap) and hands it to a small worker that reads it back and encodes it; reading it back on the main
+  thread (toDataURL, then toBlob) blocked until the GPU had finished the queued frames: 8–10 s under SwiftShader
+  (render-queue bound, not a hardware number). Now the main thread's part measured 0.2–8.5 ms here; over 50 ms the
+  picture is dropped and pictures stay off for the session. A save made before the picture is ready has none.
+
+Tests (SwiftShader, 960x540, one at a time, R7 verdict policy; served from this worktree on port 8188 because 8178 was
+already serving another tree):
+
+| Test | Verdict |
+|---|---|
+| saveslots (new, 25 checks) | PASS (main-thread picture step 8.5 ms in this run; three earlier runs failed on the picture and on two wrong checks, fixed before this run) |
+| save-migration | PASS |
+| resume | PASS |
+| zoe-resume | FAIL once (Zoé's sneak out of the office ended in a dialogue: caught), PASS on the rerun |
+| menus | PASS |
+| opening | first run: 27/27 checks passed, 3 resource FAILs because this agent's server stopped at its time limit mid-run; rerun PASS |
+| prologue | 3 PASS of 5 runs; the 2 FAILs both at "the well's mites beaten with the ball" (the known flaky step). The base build 503b383 (git archive, served on port 8189) failed the same step in 1 of 2 runs |
+| chapter1 | PASS |
+| deaths | PASS |
+| longsession | PASS |
+| stability | PASS |
+| controls | PASS |
+
+- Captures: save-screen.png (the Save list after saving slot 3), load-screen.png (the Load list on the title), both
+  960x540 from tests/saveslots.mjs; load-screen-640x360.png and load-screen-1366x768.png (saves put in storage: the
+  list fits both windows without scrolling; at 640x360 a slot takes two lines). Logs: logs/saveslots.log,
+  logs/suite-summary.txt (every run above, and the base build's). display.mjs (not in the list, run because the
+  pause menu gained a row): PASS, the pause menu and settings fit at all six sizes.
+- Known: on the title at 640x360 the menu (now one row longer) still fits (bottom at 347 of 360) but the disclaimer
+  under it now needs a 43 px scroll; 800x600 and up: no scroll.
+- Not verified: a real GPU (the picture's cost and look there; the main-thread step is measured here only under
+  SwiftShader), the desktop app (the worker is made from a blob: URL; if the app refuses it, slots simply have no
+  picture), a pad and touch by hand (the pad's B was simulated), Hebrew layout (the language is fixed to English),
+  a real full disk (the quota error was simulated by replacing Storage.setItem), an independent review.
 
 ### Not tested / blocked
 - PERF-ARRIVAL on the user's laptop (High arrival and street fps, startup, compiles per route = 0): NOT VERIFIED.
