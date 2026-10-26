@@ -26,8 +26,12 @@ export class Observatory extends ChapterBase {
     return [{ id: 'heavydrone', kind: 'drone', group: 'vent', hp: 8, x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !!f.c7_scope && !f.c7_droneDown }];
   }
   place(id) {
-    const f = this.f, M = this.M;
+    const f = this.f;
     if (!this.reached()) return id === 'keeper' ? null : undefined;
+    if (id !== 'keeper' && id !== 'hesk') return undefined;
+    // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
+    //  yet waits for it, Story.refreshCast)
+    const M = this.M;
     if (!M) return undefined;
     switch (id) {
       case 'keeper': return this.O.npcSpots.keeper;

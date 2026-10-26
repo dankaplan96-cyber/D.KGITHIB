@@ -58,6 +58,9 @@ export class Chapter2 extends ChapterBase {
     const folk = ZFOLK.find((z) => z[0] === id);
     if (!this.reached()) return ['baldino', 'nara', 'oku'].includes(id) || folk ? null : undefined;
     if (!folk && !['baldino', 'nara', 'oku', 'doran', 'vesk', 'guard', 'zoe', 'worker'].includes(id)) return undefined;
+    // (LAZY-REGIONS: Zoé and the worker are placed without Zeelich; the rest stand on it)
+    if (id === 'zoe') return f.c2_zoeStart && !f.c2_broadcast ? null : undefined;
+    if (id === 'worker') return null;
     const Z = this.Z;
     if (folk) return this.story.zlife?.spot(id) || this.Z.npcSpots[folk[1]];   // (Tavo at Snuff's counter once her oven is hot: zeelife.js)
     const S = Z.npcSpots;

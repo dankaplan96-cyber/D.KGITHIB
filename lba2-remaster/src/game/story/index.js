@@ -136,8 +136,8 @@ export class Story {
       //  hidden, and is placed when that area is built: regionBuilt calls this again. Nothing is built here.)
       for (let i = 0; i < this.chapters.length; i++) {
         const pr = R ? R.probe(() => this.chapters[i].place(n.def.id)) : { value: this.chapters[i].place(n.def.id), misses: new Set() };
-        // (no opinion, though it looked at an area not built: nothing to wait for)
-        if (pr.misses.size && (pr.error || pr.value !== undefined)) { if (i <= this.index) { p = undefined; wait = true; } continue; }
+        // (each chapter reads an area only for its own cast: a read of an area not built means his spot is there)
+        if (pr.misses.size) { if (i <= this.index) { p = undefined; wait = true; } continue; }
         if (pr.error) throw pr.error;
         const r = pr.value;
         if (r !== undefined && (i <= this.index || r === null)) { p = r; wait = false; }

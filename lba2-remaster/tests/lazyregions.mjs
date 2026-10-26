@@ -45,9 +45,9 @@ const heap0 = await heapMB();
 await menu(page, 'new');
 await ev(() => { const G = game, f = G.flags; P.settle(); Object.assign(f, { prologueDone: true, intro: true, chapterKey: 'zeelich', c2_started: true }); f.chapter = G.story.chapters.findIndex((c) => c.key === 'zeelich'); G.hero.hasBall = true; G.story.refreshCast(); });
 const before = await ev(() => ({ nara: game.npcs.find((n) => n.def.id === 'nara').present, built: game.regions.stateOf('zeelich') }));
-await ev(() => { window._card = 0; window._obs = setInterval(() => { if (document.querySelector('#loading.arrive:not(.hidden)')) window._card++; }, 10); });
+await ev(() => { window._card = 0; window._obs = new MutationObserver(() => { const e = document.querySelector('#loading'); if (e.classList.contains('arrive') && !e.classList.contains('hidden')) window._card++; }); window._obs.observe(document.querySelector('#loading'), { attributes: true, attributeFilter: ['class'] }); });
 await realTime(() => game.enterRoom('zeelich'));
-const arr = await ev(() => { clearInterval(window._obs); const G = game, n = G.npcs.find((x) => x.def.id === 'nara'), sp = G.rooms.zeelich.npcSpots.esmer1;
+const arr = await ev(() => { window._obs.disconnect(); const G = game, n = G.npcs.find((x) => x.def.id === 'nara'), sp = G.rooms.zeelich.npcSpots.esmer1;
   return { room: G.room?.id, state: G.regions.stateOf('zeelich'), why: G.regions.groups.get('zeelich').why, card: window._card, loadingHidden: document.querySelector('#loading').classList.contains('hidden'), nara: { present: n.present, d: +Math.hypot(n.pos.x - sp.x, n.pos.z - sp.z).toFixed(2) } }; });
 check('before Zeelich is built its people wait hidden (their spots are there)', before.nara === false && before.built === 'unloaded', before);
 check('through a door into Zeelich: built behind the black under its loading card, then he is there', arr.room === 'zeelich' && arr.state === 'active' && arr.why === 'enter' && arr.card > 0 && arr.loadingHidden, arr);
@@ -79,10 +79,10 @@ await ev(() => {
 await page.reload(); await open(page, '?nocine');
 const s4 = await ev(() => game.regions.summary().startup.map((x) => x.group));
 await page.click('#title [data-act="loadgame"]');
-await ev(() => { game.testFreeze = false; game.last = performance.now(); window._card = 0; window._obs = setInterval(() => { if (document.querySelector('#loading.arrive:not(.hidden)')) window._card++; }, 10); });
+await ev(() => { game.testFreeze = false; game.last = performance.now(); window._card = 0; window._obs = new MutationObserver(() => { const e = document.querySelector('#loading'); if (e.classList.contains('arrive') && !e.classList.contains('hidden')) window._card++; }); window._obs.observe(document.querySelector('#loading'), { attributes: true, attributeFilter: ['class'] }); });
 await page.click('#loadgame .slot[data-slot="2"]');
 await page.waitForFunction(() => game.room?.id === 'hamalayi' && game.state === 'play', null, { timeout: 600000 }).catch(() => {});
-const l4 = await ev(() => { clearInterval(window._obs); const G = game; G.testFreeze = true; const S = G.regions.summary(); return { room: G.room?.id, state: G.state, ham: S.later.find((x) => x.group === 'hamalayi'), card: window._card, yorna: G.npcs.find((n) => n.def.id === 'yorna')?.present, onAccess: S.later.filter((x) => x.why === 'access') }; });
+const l4 = await ev(() => { window._obs.disconnect(); const G = game; G.testFreeze = true; const S = G.regions.summary(); return { room: G.room?.id, state: G.state, ham: S.later.find((x) => x.group === 'hamalayi'), card: window._card, yorna: G.npcs.find((n) => n.def.id === 'yorna')?.present, onAccess: S.later.filter((x) => x.why === 'access') }; });
 check('Load Game, a slot in the Hamalayi (not built: the newest save is on Desert Island)', !s4.includes('hamalayi'), s4);
 check('... the Hamalayi is built under the loading screen, then the save loads there, its people about', l4.room === 'hamalayi' && l4.state === 'play' && l4.ham?.why === 'load' && l4.card > 0 && l4.yorna, l4);
 

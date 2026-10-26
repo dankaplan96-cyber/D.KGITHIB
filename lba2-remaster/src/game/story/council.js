@@ -35,8 +35,13 @@ export class Council extends ChapterBase {
     ];
   }
   place(id) {
-    const f = this.f, Z = this.Z, C = this.C, R = this.game.rooms;
+    const f = this.f, R = this.game.rooms;
     if (!this.reached()) return ['clerk', 'chair', 'councilB', 'councilC', 'archivist'].includes(id) ? null : undefined;
+    if (!['clerk', 'chair', 'councilB', 'councilC', 'archivist', 'baldino', 'dallan', 'nara', 'oku', 'guard', 'vesk', 'doran', 'hesk', 'worker'].includes(id)) return undefined;
+    if (['vesk', 'doran', 'hesk', 'worker'].includes(id)) return null;
+    // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
+    //  yet waits for it, Story.refreshCast)
+    const Z = this.Z, C = this.C;
     if (!Z || !C) return undefined;
     const S = Z.npcSpots, pl = Z.platform;
     switch (id) {

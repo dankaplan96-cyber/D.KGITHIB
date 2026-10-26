@@ -89,8 +89,14 @@ export class Network extends ChapterBase {
     return out;
   }
   place(id) {
-    const f = this.f, R = this.R, Z = this.Z, D = this.D;
-    if (!this.reached() || !Z) return undefined;
+    const f = this.f, R = this.R;
+    if (!this.reached()) return undefined;
+    if (id === 'vesk' || id === 'doran') return null;
+    if (!['baldino', 'hesk', 'oku', 'mira', 'zoe', 'arthur', 'ilka', 'dallan', 'pim'].includes(id)) return undefined;
+    // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
+    //  yet waits for it, Story.refreshCast)
+    const Z = this.Z, D = id === 'ilka' || id === 'dallan' ? this.D : null;
+    if (!Z) return undefined;
     const plat = Z.platform;
     switch (id) {
       case 'baldino':

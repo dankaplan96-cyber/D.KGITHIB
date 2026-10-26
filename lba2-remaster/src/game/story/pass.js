@@ -62,9 +62,13 @@ export class Pass extends ChapterBase {
     return [[-4, 3], [3, 4], [6, 1]].map(([dx, dz], i) => ({ id: 'imite' + i, kind: 'mite', x: b.x + dx, z: b.z + dz, when: (f) => this.isCur(f) && !!f.c6_trip1 && !f.c6_trip2 }));
   }
   place(id) {
-    const f = this.f, M = this.M;
+    const f = this.f;
     const mine = ['yorna', 'pim', 'lhar1', 'lhar2', 'lhar3'];
     if (!this.reached()) return mine.includes(id) ? null : undefined;
+    if (!mine.includes(id) && id !== 'hesk') return undefined;
+    // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
+    //  yet waits for it, Story.refreshCast)
+    const M = this.M;
     if (!M) return undefined;
     const S = M.npcSpots, y = M.monastery.yard;
     const yard = (k) => ({ x: y.x - 3 + k * 1.5, z: y.z + (k % 2), a: Math.PI });

@@ -247,7 +247,7 @@ class Game {
       const gid = this.regions.groupOf(id);
       if (!gid || this.regions.stateOf(id) !== 'unloaded') continue;
       const ref = this.regions.groups.get(gid).ref;
-      await bar.step(`Building ${placeName(id)}…`, ref);
+      await bar.step(`Building ${inText(id)}…`, ref);
       const t0 = performance.now();
       try { this.regions.buildGroup(gid, 'startup'); } catch (e) { console.warn('startup area', id, e); }
       L[gid] = Math.round(performance.now() - t0);
@@ -555,7 +555,7 @@ class Game {
     const card = (T.card = new ArriveCard(arriveText(T.need[0])));
     this.regions.buildAsync(T.need, 'enter', async (i, n, gid, est) => { card.step(i, n, est); await nextPaint(); })
       .then(() => { T.built = true; T.long = true; })
-      .catch((e) => { console.warn('area build failed', e); T.failed = true; card.fail(`${placeName(T.need[0])} could not be built.`); })
+      .catch((e) => { console.warn('area build failed', e); T.failed = true; card.fail(`${placeName(T.need[0])} could not be loaded. You stay here.`); })
       .finally(() => { T.building = false; T.holdT = performance.now(); if (T.failed) { this.doorCool = 3; setTimeout(() => { T.hold = false; }, 2200); } else T.hold = false; });
   }
   // FRAME-1: the fade is drawn frame by frame here, so the stylesheet's own 0.6 s opacity transition is off while it
@@ -2115,7 +2115,7 @@ const loadBar = (to, ms = 300) => {
 };
 // LAZY-REGIONS: reference times (ms, the development container, quiet) of the startup's steps — Citadel's build
 // steps (world.js buildWorldSteps), the town's dressing, the story and cast — for the bar's pace on this computer
-const BUILD_REF = { world: [220, 560, 145, 45, 260, 50, 10, 200, 200, 200, 225, 225, 72, 72, 110, 110, 155, 50, 350, 5, 15], town: 580, story: 210 };
+const BUILD_REF = { world: [120, 520, 140, 30, 260, 70, 5, 5, 5, 5, 3, 3, 1, 1, 2, 2, 30, 70, 380, 2, 15], town: 450, story: 220 };
 BUILD_REF.total = BUILD_REF.world.reduce((a, b) => a + b, 0) + BUILD_REF.town + BUILD_REF.story;
 // the startup bar from `a` to `b`: each step moves it by its share, animated over the step's estimated time at the
 // pace measured so far (the last start's pace before any step is measured), so it moves while a step blocks
@@ -2134,11 +2134,12 @@ class BootBar {
 // LAZY-REGIONS: the loading card of a scene change into an area not built yet (or of a load): the loading screen
 // itself over the black fade, its bar moving per area at its estimated pace (shown after a short delay, so a quick
 // build is only black)
-const arriveText = (id) => (REGION_KEY[id] || /^isle_/.test(id) ? `Arriving at ${placeName(id)}…` : `Entering ${placeName(id)}…`);
+const inText = (id) => placeName(id).replace(/^The /, 'the ');   // (a place's name inside a sentence)
+const arriveText = (id) => (REGION_KEY[id] || /^isle_/.test(id) ? `Arriving at ${inText(id)}…` : `Entering ${inText(id)}…`);
 class ArriveCard {
   constructor(text, now = false) {
     this.el = document.querySelector('#loading'); this.text = text;
-    const f = document.querySelector('#load-fill'); if (f) { f.style.transition = 'none'; f.style.transform = 'scaleX(0.03)'; }
+    const f = document.querySelector('#load-fill'); if (f) { f.style.transition = 'none'; f.style.transform = 'scaleX(0.03)'; void f.getBoundingClientRect(); }   // (the bar starts from the left, not from the last load's end)
     loadingStep(text);
     this.el?.classList.add('art', 'arrive'); this.el?.classList.toggle('now', now); this.el?.classList.remove('hidden');
   }

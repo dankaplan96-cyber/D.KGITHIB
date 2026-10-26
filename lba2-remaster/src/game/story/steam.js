@@ -33,8 +33,13 @@ export class Steam extends ChapterBase {
     ];
   }
   place(id) {
-    const f = this.f, D = this.D;
-    if (!this.reached() || !D) return undefined;
+    const f = this.f;
+    if (!this.reached() || !['ilka', 'tarra', 'hesk', 'dallan', 'doran', 'weaver', 'guard'].includes(id)) return undefined;
+    if (id === 'guard') return null;
+    // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
+    //  yet waits for it, Story.refreshCast)
+    const D = this.D;
+    if (!D) return undefined;
     const pz = D.plaza, S = D.npcSpots;
     const around = (k, n = 6, r = 3.2) => { const a = (k / n) * Math.PI * 2; return { x: pz.x + Math.cos(a) * r, z: pz.z + Math.sin(a) * r, a: a + Math.PI / 2 + Math.PI }; };
     switch (id) {
