@@ -130,6 +130,7 @@ and fights its way through with keys only.
 ### Audio (state only: nothing here was listened to)
 | Feature | Test | Result |
 |---|---|---|
+| Playlists in the long-stay places, silences outdoors only, phrase starts, bar-line crossfades, ducking to 0.5 (MUSIC-2) | music.mjs | PASS |
 | Volumes from the sliders reach the buses, kept after relaunch | audio.mjs | PASS |
 | Music per place; one voice playing, ≤2 alive (fading) after each door | audio.mjs, longsession.mjs | PASS |
 | Voices (gibberish babble) timed to text; distinct, under a level ceiling, no clicks, silent after skip/close/pause (VOICE-1) | voices.mjs | PASS |
@@ -1198,6 +1199,31 @@ SwiftShader counts (`results/perf-arrival.json`, probes in docs/lba3-performance
 prologue, chapter1, audit, longsession, shipfiles (15 tests): all VERDICT PASS, no error, no missing file. A
 30-minute session: NOT TESTED in this block (longsession is the suite's own shorter loop). On the laptop: NOT VERIFIED
 (PERF_ARRIVAL.md §6).
+
+### MUSIC-2: playlists, silences outdoors, three new pieces (WORKLIST #20; docs/MUSIC.md "MUSIC-2")
+
+Measured, not listened to. Evidence: tests/music.mjs, `tools/music/check.py` (MP3-only mode), excerpts in
+docs/lba3-production/reviews/MUSIC-2/.
+
+| Check | How | Result |
+|---|---|---|
+| Where the repetition came from | music.js + manifest before the change | one looping track per place, repeating every 126–133 s outdoors, always from bar 1 of the intro, no silence |
+| Loop seams of the shipped MP3s | `check.py` (masters git-ignored: MP3-only seam test) | seam error −26…−50 dB re. signal, click ratio 0.10–0.63 (< 1): no seam fix needed |
+| Playlist rotates (town: village → Market Day → village) | music.mjs, real audio clock, silences shortened to 8 s | PASS |
+| Outdoors: a silence after a piece, the next piece from its first bar | music.mjs | PASS |
+| A fight during a silence brings the combat music; after it the silence goes on | music.mjs (setCombat held at 1, then 0) | PASS |
+| Indoors (a Zeelich interior on the playlist): no silence, the next piece follows | music.mjs | PASS |
+| Arrival at a phrase start (bar 1 or the first bar of an 8-bar phrase), different between visits | music.mjs (8 draws: ≥ 3 different) | PASS |
+| End of a piece scheduled at its own end | music.mjs (endsIn = end − position) | PASS |
+| A change of place: equal-power crossfade, started on the old track's bar line (≤ 3.2 s wait) | music.mjs (gains sampled every 100 ms; sum of squares 0.95–1.14; old track 0.001 s from a bar line) | PASS |
+| Dialogue ducks the music to 0.5 and back to 1; music bus = slider; voice bus = slider × 2.2 | music.mjs | PASS (was 0.55: `AudioEngine.duck` was defined twice, the later one won) |
+| Every manifest track is a shipped file; every playlist piece is in the manifest | music.mjs, shipfiles.mjs | PASS |
+| New pieces: loudness / true peak / LRA | check.py | Market Day −17.4 LUFS, −2.6 dBTP, 11.0 LU; Sea Wind −17.9, −5.4, 6.4; Cloud Gardens −17.9, −4.4, 7.3 |
+| How it sounds (tunes, balance, the HQ soundfont next to older renders, silence length in play) | — | NOT TESTED (needs ears) |
+
+**Tests** (one at a time, R7 policy, `GAME_URL=http://localhost:8180/`, SwiftShader on a shared machine, load ~15,
+2026-10-26, on commit a36fa83): audio, music, voices, menus, opening, stability, shipfiles, longsession — all VERDICT
+PASS, no error, no missing file (logs and check.py before/after: docs/lba3-production/reviews/MUSIC-2/logs/).
 
 ### Not tested / blocked
 - PERF-ARRIVAL on the user's laptop (High arrival and street fps, startup, compiles per route = 0): NOT VERIFIED.

@@ -472,6 +472,19 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   plateau's and the stone house's doors) → ≈ 85; then Desert batches A and B. Open for the user: should the Hamalayi
   follow LBA1's ledges; is the original's high façade (Desert, body 43) the School of Magic's face.
 
+## Done after (MUSIC-2, WORKLIST #20; status REVIEW; needs the user's ears)
+- The long-stay places play a playlist instead of one looping track (src/engine/music.js PLAYLISTS): town
+  village ↔ Market Day, the open island island ↔ Sea Wind, Zeelich zeelich ↔ Cloud Gardens, the Desert Sea Wind ↔
+  island, the Hamalayi the well alone. Each piece once to its end; outdoors a 20–60 s silence, indoors the next piece
+  at once; arrivals at a random phrase start; a change of place crossfades from the old track's next bar line. Combat
+  and cues unchanged. The same music now returns after 6–7 min outdoors (was 2:06–2:13).
+- Three new pieces (tools/music/tracks/{village_b,island_b,zeelich_b}.py; 2:47–3:00; +7.3 MB), rendered with
+  MuseScore_General_HQ from Ubuntu's archive (the osuosl download fails TLS here; see docs/MUSIC.md "Sources").
+- Ducking: `AudioEngine.duck` was defined twice; VOICE-MIX's 0.5 never applied (0.55 was). Fixed: 0.5.
+- Evidence: docs/MUSIC.md "MUSIC-2", QA.md "MUSIC-2", tests/music.mjs, excerpts docs/lba3-production/reviews/MUSIC-2/.
+- To rebuild the new pieces: `apt-get download musescore-general-soundfont-lossless`, `dpkg-deb -x`, then
+  `MUSIC_SF2=<…>/MuseScore_General_Full.sf2 tools/music/.venv/bin/python tools/music/build.py village_b island_b zeelich_b`.
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
