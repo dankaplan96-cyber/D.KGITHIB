@@ -192,4 +192,9 @@ Files: citadel, desert, otringal, knartas, mosquibee, celebration, undergas, cxi
 
 ## The user's decisions (26.10.2026)
 - **Hamalayi:** stays our own, larger region by design, but with a few places clearly recognisable from LBA1's Hamalayi ledges. Its 80% target does not apply. Instead, pick 3–4 LBA1 spots by their numbers (tools/worldscore/ref/hamalayi-lba1.json) and rebuild them in our style inside our layout.
-- **The Desert's high façade (#4):** open. Asked the user whether LBA2's School of Magic stands in the north-west, by the great hall and the tall front at (−69.1, −72.7).
+- **The School of Magic (the user, with a reference frame from a Let's Play, kept in the scratchpad only):** leaving the village, turn right and it is there.
+  - **How it looks:** a squat stone block with a crenellated roof and a Moorish arched doorway (blue tiled surround, orange edge). It stands on a paved stone plaza with a palm, low tiled walls and a wooden signpost, by sand and cliffs.
+  - **Two candidates in the numbers:**
+    - the north-west hall and high front at (−67.8, −61.7) and (−69.1, −72.7), about 37 m west of the village, with no door zone;
+    - the building with three doors into one scene (24) at (80–87, 47–52).
+  - **Next step:** the Desert batch settles it from the scenes' actors (wizards) and the door zones, then moves our School there and retires its invented mesa.
