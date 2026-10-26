@@ -32,22 +32,18 @@ export const steps = [
     let iso = false; if (P.assist && !(h.pos.x > c0.x + 5 && Math.abs(h.pos.y - top) < 0.3)) { h.pos.set(c0.x + 6.2, top, c0.z - 1.9); h.vel.set(0, 0); h.vy = 0; h.onGround = true; G.step(0.3); iso = true; P.note('ISO assist: placed on the far shelf of the stepping stones'); }
     return { tries, iso, x: +h.pos.x.toFixed(1), fail: h.pos.x > c0.x + 5 && Math.abs(h.pos.y - top) < 0.3 ? null : 'stones' };
   }],
-  ['Sendell', () => { P.exitTo('c3-sendell'); P.settle(); return { sendell: game.flags.c3_sendell, fail: game.flags.c3_sendell ? null : 'sendell' }; }],
+  // (straight to the way on, not stopping for the mites: a fight from the far shelf chased one off its edge, 3 m down,
+  // with no way back up but the stones again)
+  ['Sendell', () => { const e = game.room?.exits?.find((x) => x.to === 'c3-sendell'); if (e) P.through(e.x, e.z, { fight: false }); P.settle(); return { sendell: game.flags.c3_sendell, fail: game.flags.c3_sendell ? null : 'sendell' }; }],
   ['the core', () => { P.exitTo('c3-core'); P.settle(); return { fight: game.flags.c3_fight, room: game.room?.id }; }],
-  ['the pylons from their plates', () => {
-    const G = game, out = [];
-    for (const p of G.story.cur.plates()) {
-      const tg = G.room.ballTargets.find((x) => x.pylon === p.i);
-      for (let k = 0; k < 4 && !tg.done; k++) { P.go(p.x, p.z, { tol: 0.4, maxT: 40 }); P.wait(0.6); P.tap('F1'); P.tap('KeyF', 0.05); G.step(1.6); P.settle(); }
-      out.push(tg.done);
-    }
-    P.settle(); return { pylons: out, fail: out.every(Boolean) ? null : 'pylons' };
-  }],
-  // the coil: three ball hits while the overloaded guardian fights (input; the bot aims at the coil, not the guardian)
-  ['Vesk\'s overload coil', () => { const G = game; P.settle(); const tg = G.room.ballTargets.find((x) => x.coil); for (let k = 0; tg && k < 4 && !tg.done && !G.hero.dead && !(P.assist && G.hero.hp <= 3); k++) P.hitTarget(tg, 3.5, { run: false, maxT: 40, fight: false, tries: P.assist ? 2 : 6 });
+  // (the guardian's fight as a player plays it: stun it with the ball, then the plate's bank shot in the 2.6 s it
+  // sags — P.coreFight; walking plate to plate under its bolt fans killed the bot)
+  ['the pylons from their plates', () => { const G = game; P.settle(); const r = P.coreFight('pylons'); P.settle(); const n = G.story.cur.pylons(); return { ...r, pylons: n, fail: n >= 3 ? null : 'pylons' }; }],
+  // the coil: three ball hits while the overloaded guardian fights (input: stun it, then the coil in the window)
+  ['Vesk\'s overload coil', () => { const G = game; P.settle(); const tg = G.room.ballTargets.find((x) => x.coil); const r = tg && !tg.done ? P.coreFight('coil') : null;
     // (under ASSIST, after the bot's own tries: the remaining coil hits through the story's own hit — logged ISO)
     if (P.assist && tg && !tg.done && !G.hero.dead) { for (let n = 0; n < 3 && !tg.done; n++) { G.story.cur.hitCoil(tg); P.settle(); } P.note('ISO assist: the overload coil broken'); }
-    P.settle(60); return { coil: G.flags.c3_coil, turned: G.flags.c3_turned, fail: G.flags.c3_turned ? null : 'coil' }; }, null, { retryFrom: 'the core' }],
+    P.settle(60); return { ...r, coil: G.flags.c3_coil, turned: G.flags.c3_turned, fail: G.flags.c3_turned ? null : 'coil' }; }, null, { retryFrom: 'the core' }],
   ['the epilogue', () => { const G = game; let t = 0; while (G.state !== 'ending' && t < 120) { G.step(0.25); t += 0.25; if (G.state === 'dialog' || G.state === 'cutscene') P.settle(); } return { state: G.state, title: document.querySelector('#ending h1')?.textContent, fail: G.state === 'ending' ? null : 'no ending' }; }],
   ['Keep Exploring', () => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); P.settle(); return { state: game.state, free: game.flags.ep_free, obj: P.state().obj }; }],
 ];

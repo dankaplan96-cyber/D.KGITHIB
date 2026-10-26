@@ -7,7 +7,8 @@ export const steps = [
   ['Gilbert', () => ({ ...P.talk('gilbert', { run: true }), g: game.flags.c8_gilbert, fail: game.flags.c8_gilbert ? null : 'gilbert' })],
   ['the fortress lever', () => { const r = P.use(-33, -70, { run: true }); P.wait(1); P.settle(); return { ...r, fort: game.flags.c8_fort, fail: game.flags.c8_fort ? null : 'lever' }; }],
   ['the depot wheel (ball)', () => { const G = game, w = G.story.cur.wheelSpot; for (let k = 0; k < 8 && !G.flags.c8_depot; k++) { const a = k * 0.8; P.go(w.x - Math.sin(a) * 4, w.z - Math.cos(a) * 4, { tol: 0.8, run: true, maxT: 90 }); P.settle(); P.tap('F1'); P.throwAt(w.x, w.z); P.settle(); } return { depot: G.flags.c8_depot, fail: G.flags.c8_depot ? null : 'depot' }; }],
-  ['Mira (Water Office)', () => ({ ...P.talk('mira', { run: true }), mira: game.flags.c8_mira, fail: game.flags.c8_mira ? null : 'mira' })],
+  // (she is at her desk in the Water Office: the game places her there when he walks in, not before — in, then talk)
+  ['Mira (Water Office)', () => ({ ...(P.npc('mira')?.present ? {} : { door: P.enter('office', { run: true }).r }), ...P.talk('mira', { run: true }), mira: game.flags.c8_mira, fail: game.flags.c8_mira ? null : 'mira' })],
   ['Pippa', () => { if (P.here() !== 'citadel') P.enter('citadel'); const r = P.talk('pippa', { run: true }); P.settle(); if (game.state === 'shop') P.tap('Escape', 0.2); P.settle(); return { ...r, pippa: game.flags.c8_pippa, fail: game.flags.c8_pippa ? null : 'pippa' }; }],
   ['Zoé starts her run', () => { const r = P.talk('zoe', { run: true }); P.wait(1); P.settle(); return { ...r, start: game.flags.c8_zoeStart, body: game.hero.body, fail: game.flags.c8_zoeStart ? null : 'zoe' }; }],
   ['the three farms', () => { for (const id of ['farmer1', 'farmer2', 'farmer3']) { P.talk(id, { run: true }); P.wait(1); P.settle(); } return { done: game.story.cur.farmsDone(), fail: game.story.cur.farmsDone() >= 3 ? null : 'farms' }; }],

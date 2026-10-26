@@ -85,7 +85,7 @@
     if (!G.room || G.room.outdoor) for (const d of G.story.doors()) if ((d.region || undefined) === G.room?.id) out.push(d);
     return out.filter((d) => Math.hypot(d.x - tx, d.z - tz) > 1.2).map((d) => ({ x: d.x, z: d.z, r: d.r + 0.35 }));
   };
-  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5 } = {}) => {
+  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5, raw = false } = {}) => {
     const h = hero(), sx = h.pos.x, sz = h.pos.z;
     const avoid = triggers(tx, tz);   // door/exit triggers: kept out of, except to walk out of one he stands in
     const key = (ix, iz, y) => ix + ',' + iz + ',' + Math.round(y * 2);
@@ -125,6 +125,8 @@
     const pts = [];
     for (let k = end; k; k = from.get(k)) { const c = node.get(k); pts.push({ x: c.x, y: c.y, z: c.z }); }
     pts.reverse();
+    // (raw: every cell of the path, for picking his way along it step by step after he got stuck on a smoothed line)
+    if (raw) return { ok: !!goal, nodes: n, left: +cd.toFixed(2), pts, raw: true };
     // string-pull: keep only the corners
     const out = [pts[0]];
     let i = 0;
@@ -164,7 +166,7 @@
         lastFight = t;
         if (P.threats().length && fights < 8) { fights++; P.release(); P.note('threat: fight'); const fr = P.fight({ maxT: 40, threatsOnly: true, minHp: P.assist ? 2 : 0 }); if (P.assist && !h.dead && h.hp <= 2 && P.threats(14).length) fr.assisted = P.assistFight({ r: 16 }); t += fr.t || 1; P.note('fight → ' + JSON.stringify(fr)); if (h.dead || G.state !== 'play') { P.release(); return { r: h.dead ? 'dead' : 'state:' + G.state, t }; } plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }); wi = 1; lastP = { x: h.pos.x, z: h.pos.z, t }; continue; }
       }
-      while (wi < plan.pts.length - 1 && Math.hypot(plan.pts[wi].x - h.pos.x, plan.pts[wi].z - h.pos.z) < 0.45) wi++;
+      while (wi < plan.pts.length - 1 && Math.hypot(plan.pts[wi].x - h.pos.x, plan.pts[wi].z - h.pos.z) < (plan.raw ? 0.2 : 0.45)) wi++;   // (cell by cell: onto each one)
       const w = plan.pts[Math.min(wi, plan.pts.length - 1)] || { x: tx, z: tz };
       const want = Math.atan2(w.x - h.pos.x, w.z - h.pos.z), diff = norm(want - h.angle);
       keys.delete('ArrowLeft'); keys.delete('ArrowRight'); keys.delete('ArrowUp');
@@ -176,9 +178,11 @@
         if (Math.hypot(h.pos.x - lastP.x, h.pos.z - lastP.z) < 0.4) {
           if (++replans > 6) { P.release(); return { r: 'stuck', t, at: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) }; }
           P.note(`stuck at (${h.pos.x.toFixed(1)}, ${h.pos.z.toFixed(1)}): replan`);
-          // back off a little, then plan again
+          // back off a little, then plan again; stuck twice: follow the planned cells one by one instead of the
+          // smoothed corners (a straight line between two corners can graze a slope too steep to walk, and cutting
+          // a corner by the 0.45 m a waypoint counts as reached puts him on it), as a player picks his way round
           P.release(); P.holdFor(['ArrowDown'], 0.4);
-          plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6) }); wi = 1;
+          plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6), raw: replans >= 2 }); wi = 1;
         }
         lastP = { x: h.pos.x, z: h.pos.z, t };
       }
@@ -214,8 +218,13 @@
     if (G.state === 'play') {
       P.face(x, z);
       // the prompt must be for this thing: if something else is picked (a person standing by), step closer
+      // (a story thing's prompt — a valve, a console, one of three dials — carries no position, so it can't be told
+      // from a neighbour of the same kind: one step closer, at most 4 s, then it is taken as this thing, as in
+      // ready(). Walking on would only push him into its collider until the stuck-replan gives up, three times.)
+      const noPos = (q) => !!q && q.x == null && q.kind !== 'npc';
+      const forThis = (q, k) => !!q && (q.x == null ? q.kind !== 'npc' && k > 0 : Math.hypot(q.x - x, q.z - z) <= match);
       tg = P.target();
-      for (let k = 0; k < 3 && (!tg || tg.x == null || Math.hypot(tg.x - x, tg.z - z) > match); k++) { P.go(x, z, { tol: Math.max(0.35, near * 0.5) }); P.face(x, z); tg = P.target(); }
+      for (let k = 0; k < 3 && !forThis(tg, k); k++) { P.go(x, z, { tol: Math.max(0.35, near * 0.5), ...(noPos(tg) ? { maxT: 4 } : {}) }); P.face(x, z); tg = P.target(); }
       // (a particular thing asked for and someone walking by has the prompt: wait for them to pass, as a player would)
       for (let k = 0; kind && k < 20 && P.target()?.kind !== kind; k++) { G.step(0.25); if (k % 4 === 3) { P.go(x, z, { tol: Math.max(0.35, near * 0.5), maxT: 4 }); P.face(x, z); } }
       P.tap('KeyE', 0.1);
@@ -344,6 +353,48 @@
   // walk out through the current room's exit to `to`
   P.exitTo = (to) => { const e = G.room?.exits?.find((x) => x.to === to); if (!e) return { r: 'no exit ' + to, fail: 'no exit ' + to }; return P.through(e.x, e.z); };
   // Hesk's flights: talk to him, pick destination i in his menu
+  // the core's guardian fight as a player plays it (chapter 11): a ball hit stuns the guardian for 2.6 s (it can't
+  // fire), and that window is for the objective — a plate's bank shot at a pylon ('pylons'), or a throw at Vesk's
+  // overload coil ('coil'); bolt fans are dodged (P.gstep). Input only. Ends when the phase's goal is met.
+  P.coreFight = (phase, { maxT = 300 } = {}) => {
+    const h = hero(), f = G.flags, C = G.story.cur, out = { stunThrows: 0, stuns: 0, shots: 0, hurt: 0, t: 0 };
+    const done = () => (phase === 'pylons' ? f.c3_overload || C.pylons() >= 3 : f.c3_turned);
+    let miss = 0;
+    let hp = h.hp; const tick = (s) => { P.gstep(s); out.t += s; if (h.hp < hp) out.hurt += hp - h.hp; hp = h.hp; };
+    const idle = () => { for (let w = 0; w < 300 && G.ball.state !== 'idle'; w++) tick(DT); };
+    for (let k = 0; k < 200 && !done() && !h.dead && out.t < maxT; k++) {
+      if (G.state !== 'play') { P.settle(); continue; }
+      idle(); const g = G.enemies.find((e) => e.id === 'guardian'); if (!g || !g.alive) break;
+      if (g.state !== 'stunned') {
+        P.face(g.pos.x, g.pos.z, 1); P.tap('F1'); P.tap('KeyF', 0.05); out.stunThrows++;
+        for (let s = 0; s < 1.3 && g.state !== 'stunned'; s += DT) tick(DT);
+        // (two misses running: something stands between them — Vesk's console, a pylon: as a player, step out into the
+        // open middle of the arena, toward it)
+        if (g.state !== 'stunned') { if (++miss >= 2) { miss = 0; const A = g.arena; if (A) P.go((A.x0 + A.x1) / 2 + (g.pos.x - (A.x0 + A.x1) / 2) * 0.3, (A.z0 + A.z1) / 2 + (g.pos.z - (A.z0 + A.z1) / 2) * 0.3, { tol: 1.0, maxT: 3, fight: false }); } continue; }
+        miss = 0; out.stuns++;
+      }
+      if (phase === 'pylons') {
+        const p = C.plates().find((q) => !f['c3_pylon' + q.i]); if (!p) { tick(0.5); continue; }
+        P.go(p.x, p.z, { tol: 0.35, maxT: 3, fight: false }); tick(0.35); idle();   // (standing still on a plate lines him up)
+      } else {
+        const tg = G.room.ballTargets.find((x) => x.coil); if (!tg) { tick(0.5); continue; }
+        const d = Math.hypot(tg.x - h.pos.x, tg.z - h.pos.z); if (d > 5.5) P.go(tg.x + (h.pos.x - tg.x) / d * 4, tg.z + (h.pos.z - tg.z) / d * 4, { tol: 1.0, maxT: 2, fight: false });
+        idle(); P.face(tg.x, tg.z, 1);
+      }
+      P.tap('KeyF', 0.05); out.shots++; tick(1.4); P.settle();
+    }
+    out.t = +out.t.toFixed(1); P.note(`core fight (${phase}): ` + JSON.stringify(out)); return out;
+  };
+  // the spaceship between the planets (travel.js, PLANET-1): to the pad's travel point, E, the menu's one stop
+  P.shipTo = (pid) => {
+    const p = G.travel?.points?.[pid]; if (!p) return { r: 'no point ' + pid };
+    const L = p.landing || p, mx = (p.x + L.x) / 2, mz = (p.z + L.z) / 2;
+    const where = P.sceneOf(mx, mz); if (where !== P.here()) P.enter(where, { run: true });
+    P.go(mx, mz, { tol: 1.0, run: true }); P.face(p.x, p.z);
+    const tg = P.target(); if (tg?.kind !== 'isleShuttle') return { r: 'no prompt: ' + (tg?.kind || 'none'), room: P.here() };
+    P.tap('KeyE', 0.1); G.step(0.2); if (G.state !== 'shop') { P.settle(); return { r: 'no menu: ' + G.state, room: P.here() }; }
+    const r = P.menuPick(0); P.settle(30); return { ...r, room: P.here() };
+  };
   P.flyTo = (i) => { P.talk('hesk', { run: true }); if (G.state !== 'shop') { P.tap('KeyE', 0.1); P.settle(); } const r = P.menuPick(i); P.settle(30); return { ...r, room: G.room?.id ?? 'citadel' }; };
   // a ball target: throw from up to six spots around it (r metres off) until it is done
   P.hitTarget = (tg, r = 4, { run = true, maxT = 60, fight = true, tries = 6 } = {}) => { for (let k = 0; k < tries && !tg.done && !hero().dead; k++) { const a = k * 1.05; P.go(tg.x - Math.sin(a) * r, tg.z - Math.cos(a) * r, { tol: 0.8, run, maxT, fight }); P.settle(); if (hero().dead) break; P.tap('F1'); P.throwAt(tg.x, tg.z); P.settle(); } return tg.done; };

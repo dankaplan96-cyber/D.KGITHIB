@@ -18,7 +18,9 @@ import { fileURLToPath } from 'node:url';
 const HARNESS = fileURLToPath(new URL('./player.js', import.meta.url));
 // game over: Retry (continue from the last save) as a player would, then the step again
 const retry = async () => {
-  await page.click('#gameover [data-act="retry"]', { timeout: 60000 });
+  // (Retry reloads the page half a second later: the click must not wait on that navigation — a slow reload of a
+  // big save ran past the click's own timeout — the wait below covers the loading)
+  await Promise.all([page.waitForNavigation({ waitUntil: 'load', timeout: 300000 }), page.click('#gameover [data-act="retry"]', { timeout: 60000, noWaitAfter: true })]);
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing && window.game.state !== 'gameover', null, { timeout: 300000 });
   await page.addScriptTag({ path: HARNESS });
   await page.evaluate((a) => { game.testFreeze = true; P.assist = !!a; P.settle(); }, !!process.env.ASSIST);
@@ -49,6 +51,8 @@ check('the segment ran every step to its end', !failed, stop);
 console.log('deaths (Retry):', deaths);
 console.log('ISO assists:', await page.evaluate(() => P.trace.filter((l) => l.includes('ISO assist')).length), '(this page; see the trace)');
 console.log((await page.evaluate(() => P.trace.slice(-12))).join('\n'));
+// TRACE=<file>: the whole trace of this page, written there (for finding why a step stopped)
+if (process.env.TRACE) (await import('node:fs')).writeFileSync(process.env.TRACE, (await page.evaluate(() => P.trace)).join('\n'));
 if (process.env.SHOT) { await page.evaluate(() => game.renderer.render()); await page.screenshot({ path: process.env.SHOT }); }
 if (process.env.KEEP && !failed) { await quitAndKeep(page, context, process.env.KEEP); console.log('kept', process.env.KEEP); }
 const fails = done();

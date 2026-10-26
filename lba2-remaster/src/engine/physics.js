@@ -152,6 +152,26 @@ export class Physics {
     return false;
   }
 
+  // Is the point inside a collider that is seen through but stops the ball (a chain-link fence, a railing; not one
+  // marked noBall)? Line of sight passes these, solidAt does not: the aim uses this to leave out what the ball can't reach.
+  ballFenceAt(x, z, y, r = 0) {
+    for (const c of this.near(x, z)) {
+      if (c.enabled && c.seeThrough && !c.noBall && c.top > y - r && c.bottom < y + r && this._inside(c, x, z, r)) return true;
+    }
+    return false;
+  }
+  // ... anywhere on the straight line from a to b, stopping `margin` metres (horizontally) short of b
+  ballFenceBetween(ax, ay, az, bx, by, bz, margin = 0, r = 0) {
+    const d = Math.hypot(bx - ax, bz - az);
+    if (d <= margin) return false;
+    const n = Math.ceil((d - margin) / 0.1), k = (d - margin) / d;
+    for (let i = 1; i <= n; i++) {
+      const t = (i / n) * k;
+      if (this.ballFenceAt(ax + (bx - ax) * t, az + (bz - az) * t, ay + (by - ay) * t, r)) return true;
+    }
+    return false;
+  }
+
   // Move an actor (pos: Vector3, radius) by dx,dz with sliding + step/slope rules.
   move(actor, dx, dz) {
     const p = actor.pos;

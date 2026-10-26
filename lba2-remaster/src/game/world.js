@@ -915,15 +915,20 @@ export function* buildWorldSteps(parentScene) {
     // 1 m under its foot; that took the old 1.77 m jump, not LBA2's 1.19 m)
     let base = H(S.x, S.z);
     for (let i = 0; i < 12; i++) base = Math.min(base, H(S.x + Math.sin(i * Math.PI / 6) * 1.9, S.z + Math.cos(i * Math.PI / 6) * 1.9));
-    const n = Math.ceil((P.h - base) / 1.05);
+    // PLAY-7-14: the last stone's top is the plateau's own ground round it (WORLD-80's Citadel stands it 16.8-16.9 m,
+    // above POI.plateau.h): a top under it left a 1.15 m step from the last-but-one stone onto the plateau, past LBA2's
+    // 1.14 m apex, with the cliff's rim poking through that stone. The stones stand where they did (13 of them).
+    const at = (cnt, i) => { const wob = Math.sin(i * 1.7) * 1.2, k = i / (cnt - 1); return { x: S.x + ux * edge * k - uz * wob, z: S.z + uz * edge * k + ux * wob }; };
+    const rimTop = (q) => { let m = H(q.x, q.z); for (let a = 0; a < 12; a++) m = Math.max(m, H(q.x + Math.sin(a * Math.PI / 6) * 0.9, q.z + Math.cos(a * Math.PI / 6) * 0.9)); return m; };
+    let n = Math.ceil((P.h - base) / 1.05), endTop = P.h - 0.15;
+    for (let pass = 0; pass < 2; pass++) { endTop = Math.max(P.h - 0.15, rimTop(at(n, n - 1))); n = Math.ceil((endTop + 0.15 - base) / 1.05); }
     W.stones = [];
     const stoneMat = mat('#8d8578', { roughness: 0.95 });
     const mossMat = mat('#5d8a3a', { roughness: 0.95 });
     for (let i = 0; i < n; i++) {
       const k = i / (n - 1);
-      const wob = Math.sin(i * 1.7) * 1.2;
-      const x = S.x + ux * edge * k - uz * wob, z = S.z + uz * edge * k + ux * wob;
-      const top = base + 1.0 + (P.h - 0.15 - base - 1.0) * k;
+      const { x, z } = at(n, i);
+      const top = base + 1.0 + (endTop - base - 1.0) * k;
       const r = 1.15;
       const grp = new THREE.Group();
       const pillar = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.15, 30, 9), stoneMat);
