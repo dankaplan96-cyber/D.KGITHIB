@@ -13,10 +13,15 @@ export const steps = [
   ['the clerk', () => ({ ...P.talk('clerk'), clerk: game.flags.c9_clerk, fail: game.flags.c9_clerk ? null : 'clerk' })],
   ['the hearing', () => { P.exitTo('up-council'); P.wait(0.5); P.settle(); return { heard: game.flags.c9_heard, fail: game.flags.c9_heard ? null : 'hearing' }; }],
   ['the archive: the coat', () => { P.exitTo('council-out'); P.exitTo('up-archive'); P.settle(); const L = game.rooms.archive.locker; const r = P.use(L.x, L.z); return { ...r, coat: game.flags.c9_coat, disguised: game.hero.disguised, fail: game.flags.c9_coat ? null : 'coat' }; }],
-  // (in Discreet (F4), as a player sneaks: P.sneakTo crouches with Space, which only hides him in Discreet. Caught
-  // by the archivist he is sent back to the door: sneak in again, up to three times)
-  ['the BORE cabinet', () => { const G = game, c = G.rooms.archive.cabinets.find((x) => x.label === 'BORE'); let r, misses = 0;
-    for (let k = 0; k < 3 && !G.flags.c9_plans; k++) { const w = G.story.cur.watcher; if (G.hero.behaviour !== 'discreet') P.tap('F4'); if (w?.active) P.sneakTo(c.x, c.z, w, { tol: 0.8 }); r = P.use(c.x, c.z, { kind: 'c9cab', near: 0.8 }); if (!G.flags.c9_plans) misses++; }
-    return { ...r, misses, plans: G.flags.c9_plans, fail: G.flags.c9_plans ? null : 'plans' }; }],
+  // (the archivist walks a loop whose near side runs along the cabinets, so crouching in his way only gets him walked
+  // into. As a player times it: wait by the door till he has turned down the far side, away from the cabinets
+  // (patrol[3] → patrol[0]), then straight to the BORE cabinet. Caught, he is sent back to the door: up to 3 times)
+  ['the BORE cabinet', () => { const G = game, A = G.rooms.archive, c = A.cabinets.find((x) => x.label === 'BORE'); let r, misses = 0, waited = 0;
+    if (G.hero.behaviour !== 'normal') P.tap('F1');
+    for (let k = 0; k < 3 && !G.flags.c9_plans; k++) {
+      const w = G.story.cur.watcher, p0 = A.patrol[0], p3 = A.patrol[3];
+      for (let t = 0; w?.active && t < 90 && !(w.wp === 0 && w.npc.pos.z < p3[1] - 0.4 && w.npc.pos.z > p0[1] + 1.5 && w.suspicion < 0.2); t += 0.1) { G.step(0.1); waited += 0.1; if (G.state !== 'play') P.settle(); }
+      r = P.use(c.x, c.z, { kind: 'c9cab', near: 0.8, run: true }); P.settle(); if (!G.flags.c9_plans) misses++; }
+    return { ...r, misses, waited: +waited.toFixed(1), plans: G.flags.c9_plans, fail: G.flags.c9_plans ? null : 'plans' }; }],
   ['back to the council → chapter 10', () => { P.exitTo('archive-out'); P.exitTo('up-council'); P.settle(60); P.settle(30); return { vote: game.flags.c9_vote, chapter: game.flags.chapterKey, fail: game.flags.chapterKey === 'network' ? null : 'no chapter 10' }; }],
 ];
