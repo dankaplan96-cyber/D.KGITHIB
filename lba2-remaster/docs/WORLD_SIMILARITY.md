@@ -197,4 +197,11 @@ Files: citadel, desert, otringal, knartas, mosquibee, celebration, undergas, cxi
   - **Two candidates in the numbers:**
     - the north-west hall and high front at (−67.8, −61.7) and (−69.1, −72.7), about 37 m west of the village, with no door zone;
     - the building with three doors into one scene (24) at (80–87, 47–52).
-  - **Next step:** the Desert batch settles it from the scenes' actors (wizards) and the door zones, then moves our School there and retires its invented mesa.
+  - **Settled by a second reference (26.10):** the School's face is a giant stone mask set in a canyon wall.
+    - Grey, with deep brows and glowing orange-red eyes, and a carved door in the chin.
+    - Beside it stand a white block or tomb and horned stone pillars, with an arched stone bridge in front.
+  - **This is candidate 1:** the "high façade" (6.7 × 3.3 m, 8.6 m tall) at (−69.1, −72.7) is the mask, and the great hall beside it (7.0 × 10.2 m, 6.7 m tall) at (−67.8, −61.7) is the arched stone block from the first reference.
+  - **The Desert batch:**
+    - moves our School of Magic there, built in our style: the mask face with its door, the hall, the pillars and the bridge;
+    - retires the invented mesa at (−70, 52);
+    - and keeps the story's School scenes working.
