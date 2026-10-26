@@ -30,6 +30,7 @@ TW_HEAD = [
     (0.950, [(0, 0.08), (0.04, 0.072), (0.054, 0.05), (0.05, 0.02), (0.02, 0.0), (0, -0.005)]),
 ]
 TW_Y0, TW_Y1, TW_W, TW_Z0, TW_Z1 = 0.799, 0.956, 0.077, -0.026, 0.153
+QUETCH_MOUTH = {'arthur'}   # the quetch faces that carry a modelled mouth (the others' faces are still eyes only)
 
 
 def resample(half, k):
@@ -391,6 +392,19 @@ def build(name):
                     nz = (c[0] - a[0]) * (d[1] - a[1]) - (c[1] - a[1]) * (d[0] - a[0])
                     ff.append(f if nz > 0 else f[::-1])   # (facing forward on both sides of the mirror)
                 bw_.add(vv, ff)
+        if name in QUETCH_MOUTH:
+            # (FACE-MOUTH) the mouth, as his father's (twinsen_poly.py): a short tapered crescent on the lower face on
+            # the head bone, a touch smaller and with the corners lifted more (a younger, readier smile)
+            mo = b.P('mouth', '#6a2a2a', head_w, 30)
+            mw, mt, ml = 0.019 * sx_, 0.0031, 0.0065
+            mv, mf = [], []
+            for i in range(7):
+                u = i / 6 * 2 - 1
+                for dy in (mt * (1.0 - 0.55 * u * u), -mt * (1.0 - 0.55 * u * u)):
+                    yy = my(0.846) + ml * u * u + dy
+                    mv.append((u * mw, yy, front(u * mw, yy) + 0.004))
+            mf = [[2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2] for i in range(6)]   # (counter-clockwise seen from the front)
+            mo.add(mv, mf)
         top_y, back_z = my(0.95), mz(-0.05)
         style = L.get('hairStyle', 'cap')
         if style not in ('bald', 'bun'):
