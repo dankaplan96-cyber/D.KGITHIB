@@ -38,7 +38,7 @@ await ev(() => {
   window.F = {
     dt, deg, ad,
     cam(m) { G.settings.camera = m; G.applySettings(); C.cut = false; },
-    place(s, a) { G.exitRoom({ x: s.x, z: s.z, a }, true, true); G.step(0.3); h.pos.set(s.x, G.physics.groundAt(s.x, s.z), s.z); h.angle = a; h.resetMotion(); h.vy = 0; h.onGround = true; h.behaviour = 'normal'; C.snap(); for (let t = 0; t < 1; t += dt) G.frame(dt, false); },
+    place(s, a) { if (s.room) { if (G.room?.id !== s.room) G.enterRoom(s.room, null, true); } else G.exitRoom({ x: s.x, z: s.z, a }, true, true); G.step(0.3); h.pos.set(s.x, G.physics.groundAt(s.x, s.z), s.z); h.angle = a; h.resetMotion(); h.vy = 0; h.onGround = true; h.behaviour = 'normal'; C.snap(); for (let t = 0; t < 1; t += dt) G.frame(dt, false); },
     // hold keys for s seconds; per frame: the view's heading and its change, his way, the camera's acceleration
     hold(keys, s, rec) { for (const k of keys) { I.keys.add(k); I.taps.add(k); } for (let t = 0; t < s - 1e-9; t += dt) { G.frame(dt, false); rec?.(); } for (const k of keys) I.keys.delete(k); },
     rec() {
@@ -56,23 +56,28 @@ await ev(() => {
     turned(R) { return +Math.abs(deg(ad(R.yaw0, C.yaw))).toFixed(1); },
   };
   // open ground for an 18 m run: walkable all the way (the harness' own step test), dry, no wall within 2 m of it,
-  // nothing tall within 10 m of its middle that could hide him and no scenery volume near (the view free to come round)
+  // nothing tall within 10 m of its middle that could hide him and no scenery volume near (the view free to come round).
+  // Citadel first; its streets are full of houses (scenery volumes), so then Desert Island's open sand.
   const P0 = G.physics, out = [];
-  for (let x = -120; x <= 40; x += 4) for (let z = -100; z <= 100; z += 4) {
-    const y0 = P0.groundAt(x, z); if (y0 < 0.3) continue;
-    if (G.npcs.some((n) => n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 20)) continue;
-    for (let k = 0; k < 8; k++) {
-      const a = (k * Math.PI) / 4, sx = Math.sin(a), sz = Math.cos(a); let y = y0, ok = true;
-      for (let d = 0.5; d <= 20 && ok; d += 0.5) { const ny = P._stepTo(x + sx * (d - 0.5), y, z + sz * (d - 0.5), x + sx * d, z + sz * d); if (ny == null || Math.abs(ny - y0) > 1.2 || ny < 0.3) ok = false; else y = ny; for (const o of [-1.2, 1.2]) if (ok && P0.blockedAt(x + sx * d + sz * o, z + sz * d - sx * o, ny + 0.3, 0.3)) ok = false; }
-      if (!ok) continue;
-      const mx = x + sx * 9, mz = z + sz * 9;
-      if (P0.colliders.some((c) => c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 1.5) && c.top > y0 + 3 && Math.hypot(c.x - mx, c.z - mz) < 10)) continue;
-      // (and no house or other scenery volume within ~20 m of it: Follow swings only where the view needs no rise)
-      let vols = 0; const occ = G.world.occ;
-      if (occ) for (let ox = -20; ox <= 20; ox += 4) for (let oz = -20; oz <= 20; oz += 4) vols += occ.near(mx + ox, mz + oz).length;
-      if (vols) continue;
-      out.push({ x, z, a });
+  for (const rid of [null, 'desert']) {
+    if (rid) { if (!G.rooms[rid]) continue; G.enterRoom(rid, null, true); G.step(0.5); }
+    const cx = rid ? h.pos.x : -40, cz = rid ? h.pos.z : 0, occ = C.occ?.();
+    for (let x = cx - 80; x <= cx + 80; x += 4) for (let z = cz - 100; z <= cz + 100; z += 4) {
+      const y0 = P0.groundAt(x, z); if (y0 < 0.3) continue;
+      if (G.npcs.some((n) => n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 20)) continue;
+      for (let k = 0; k < 8; k++) {
+        const a = (k * Math.PI) / 4, sx = Math.sin(a), sz = Math.cos(a); let y = y0, ok = true;
+        for (let d = 0.5; d <= 20 && ok; d += 0.5) { const ny = P._stepTo(x + sx * (d - 0.5), y, z + sz * (d - 0.5), x + sx * d, z + sz * d); if (ny == null || Math.abs(ny - y0) > 1.2 || ny < 0.3) ok = false; else y = ny; for (const o of [-1.2, 1.2]) if (ok && P0.blockedAt(x + sx * d + sz * o, z + sz * d - sx * o, ny + 0.3, 0.3)) ok = false; }
+        if (!ok) continue;
+        const mx = x + sx * 9, mz = z + sz * 9;
+        if (P0.colliders.some((c) => c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 1.5) && c.top > y0 + 3 && Math.hypot(c.x - mx, c.z - mz) < 10)) continue;
+        let vols = 0;
+        if (occ) for (let ox = -20; ox <= 20; ox += 4) for (let oz = -20; oz <= 20; oz += 4) vols += occ.near(mx + ox, mz + oz).length;
+        if (vols) continue;
+        out.push({ room: rid, x, z, a });
+      }
     }
+    if (out.length) break;
   }
   window.F.spots = out;
 });
@@ -87,7 +92,7 @@ const spot = await ev(() => {
   }
   return { n: spots.length, none: true };
 });
-check('found open ground for an 18 m run on Citadel', !spot.none, spot);
+check('found open ground for an 18 m run (Citadel, else Desert Island)', !spot.none, spot);
 if (!spot.none) {
 // ---------------------------------------------------------------- 2. a sustained run turns the view behind him
 const run = await ev(async ({ spot, shots }) => {
@@ -157,7 +162,8 @@ const calm = await ev((spot) => {
 check('Follow: still while he stands and turns on the spot', calm.standTurn < 0.5, calm);
 check('Follow: no swing for short corrections (steps, short walking turns)', calm.corrections < 0.5, calm);
 check('Follow: no swing for runs shorter than a second (a zigzag)', calm.shortRuns < 0.5, calm);
-check('Follow: no swing while he fights with a lock-on', calm.lock.none || (calm.lock.locked0 && calm.lock.turned < 0.5 && !calm.lock.swingBy.includes('follow')), calm.lock);
+// (the LBA view's own rules — a steep view over the scenery, a wall hiding him — may still turn it, as in LBA2's view)
+check('Follow: no follow swing while he fights with a lock-on', calm.lock.none || (calm.lock.locked0 && calm.lock.lockedAll && !calm.lock.swingBy.includes('follow')), calm.lock);
 
 // ---------------------------------------------------------------- 4. Modern controls: the held way stays his way
 const modern = await ev((spot) => {

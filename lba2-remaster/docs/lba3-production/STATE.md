@@ -427,6 +427,14 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - A test that fails now fails loudly: a run that printed "ALL PASSED" with errors before can turn red without any game
   change. tests/containers.mjs (CONTAINERS) already used launch()/done(), so the policy applies to it as is.
 
+## Done after (CONTROL-FEEL, WORKLIST #31; status REVIEW)
+- The jump at LBA2's measured height and length (anim 71: 0.577 H up, 1.55 H along → 1.19 m, 3.2 m; 0.72 s in the air
+  through its own gravity), the dodge at LBA2's distances by direction (2.41 / 2.03 / 1.45 m; was 3.1), a third camera
+  "Follow" (Settings → Camera; "עוקבת"), LBA2's view still the default. The cliffs' first stone and the old mill's
+  stair-stones adjusted so the lower jump still climbs them.
+- Evidence: QA.md "CONTROL-FEEL", docs/lba3-production/reviews/CONTROL-FEEL/. Not verified: the feel by hand, the
+  playthrough segments 04/06/13/14 (they use the jumps); prologue's well-mite step flaky (2 of 3 runs FAIL here).
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 
