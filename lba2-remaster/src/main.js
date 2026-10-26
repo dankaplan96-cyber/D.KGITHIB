@@ -268,8 +268,8 @@ class Game {
     this.camRig = new CameraRig(this.camera, this.terrain, this.physics);
     this.camRig.occ = () => (this.room ? null : this.world.occ);   // Citadel's scenery volumes for the play camera (Game.occluders)
     this.camRig.relative = () => this.settings.controls !== 'classic';   // (CAM-2: camera-relative controls: the free orbit never turns by itself)
-    // (CONTROL-FEEL: the Follow view holds while he fights: a lock-on, a move, or enemies after him — the combat music's mix)
-    this.camRig.busy = () => !!(this.targeting?.lock || this.hero?.combat?.busy || this.combat > 0.3);
+    // (CAM-FOLLOW: with a lock-on the Follow camera stands behind his shoulder on the line from the target, framing both)
+    this.camRig.lockOn = () => { const e = this.targeting?.lock; return e && e.alive !== false && e.present !== false && e.pos ? e.pos : null; };
     this.particles = new Particles(this.scene);
     this.world.particles = this.particles;
     this.pickups = new Pickups(this);

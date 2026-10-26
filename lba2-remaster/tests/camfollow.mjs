@@ -1,14 +1,23 @@
-// CONTROL-FEEL (WORKLIST #31): the Follow camera, the third choice in Settings → Camera (the user: "when I turn round he
-// runs toward me, which is strange"). By input (the keys a player presses), at 60 fps, on open ground on Citadel:
-//   1. the setting: three choices, LBA2 the default for a new player, Follow chosen by a click and kept after a reload,
-//      an unknown saved value falls back to LBA2
-//   2. a sustained walk one way turns the view round behind him (Classic and Modern controls), eased: no frame turns
-//      it more than 0.8° (≤ 48°/s), no jolt; the LBA2 view on the same walk never turns
-//   3. no swing while he stands, turns on the spot, makes short corrections, runs less than a second, or fights with a
-//      lock-on; indoors (the iso rooms) nothing changes
-//   4. Modern controls: while the view swings, the held direction keeps his way (the stick's heading is kept until it
-//      is let go): he runs straight, the view comes round behind him
-// SHOTS=<dir> writes a few frames of the swing (docs/lba3-production/reviews/CONTROL-FEEL/). GAME_URL as the other tests.
+// CAM-FOLLOW (the user on build 169: "neither camera really follows behind Twinsen — let the new one stand at his
+// back"): the Follow camera, the second choice in Settings → Camera, is a chase camera behind his back. By input (the
+// keys a player presses), at 60 fps unless named, on open ground (Citadel, else Desert Island) and against a wall:
+//   1. the setting: three choices, LBA2 the default for a new player (and its view never turns on a run across it),
+//      Follow chosen by a click and kept after a reload, an unknown saved value falls back to LBA2
+//   2. behind his back: within 15° of his facing within 0.6 s of a turn on the spot (tank controls) and while he
+//      stands; the view turns with him while he turns, never overshoots, never more than 4.1° a frame at 60 fps (240°/s)
+//      nor 10° at 30 fps; on a run it stays behind him
+//   3. walking backwards (tank controls: Down) leaves the view where it is; camera-relative controls pushed back
+//      (toward the camera) hold its heading while he runs at it, and Up after it brings it round behind him again
+//   4. camera-relative (Modern) controls: Up goes where the view looks with no loop (the view holds still); a held
+//      side arrow keeps his way while the view comes round behind him; let go and Up, he goes where it now looks
+//   5. walls: with a wall behind him the arm is drawn in (the camera between him and the wall), let out slowly as he
+//      walks away (≤ 2.6 m/s), drawn in as he backs up to it, and through a full turn beside it: every frame the camera
+//      outside every collider, scenery volume and the terrain, and nothing solid between it and him
+//   6. a lock-on: the view stands behind his shoulder on the line from the target (within 15°), both on screen every
+//      frame while he moves locked; let go, it comes back behind him
+//   7. comfort: the camera-shake setting is respected (Off: no tremor); indoors (the iso rooms) nothing changes
+// SHOTS=<dir> writes frames of a run, a turn, a wall pull-in and a lock-on (tools: docs/lba3-production/reviews/
+// CAM-FOLLOW/ holds the strips). GAME_URL as the other tests.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import os from 'node:os';
 import fs from 'node:fs';
@@ -17,6 +26,7 @@ const { check, done } = checker({ info: 'always' });
 const SHOTS = process.env.SHOTS || '';
 const { browser, context, page } = await launch({ width: 960, height: 540 });
 const ev = (f, a) => page.evaluate(f, a);
+const shot = async (name) => { if (!SHOTS) return; fs.mkdirSync(SHOTS, { recursive: true }); await ev(() => game.frame(1 / 60, true)); await page.screenshot({ path: path.join(SHOTS, name + '.png') }); };
 await open(page, '?nocine');
 
 // ---------------------------------------------------------------- 1. the setting
@@ -30,47 +40,69 @@ const he = await ev(() => { game.settings.lang = 'he'; game.applySettings(); con
 check('the Hebrew label is "עוקבת"', he === 'עוקבת', he);
 
 await menu(page, 'new');
-await ev(() => {
-  const G = game, I = G.input, h = G.hero, C = G.camRig, dt = 1 / 60;
+await ev(async () => {
+  const THREE = await import('three');
+  const G = game, I = G.input, h = G.hero, C = G.camRig, P = G.physics;
   for (let i = 0; i < 80 && G.state !== 'play'; i++) { I.taps.add('KeyE'); G.step(0.05); }
   Object.assign(G.flags, { prologueDone: true, intro: true });
   const deg = (a) => (a * 180) / Math.PI, ad = (a, b) => Math.atan2(Math.sin(b - a), Math.cos(b - a));
   window.F = {
-    dt, deg, ad,
+    dt: 1 / 60, deg, ad,
     cam(m) { G.settings.camera = m; G.applySettings(); C.cut = false; },
-    place(s, a) { if (s.room) { if (G.room?.id !== s.room) G.enterRoom(s.room, null, true); } else G.exitRoom({ x: s.x, z: s.z, a }, true, true); G.step(0.3); h.pos.set(s.x, G.physics.groundAt(s.x, s.z), s.z); h.angle = a; h.resetMotion(); h.vy = 0; h.onGround = true; h.behaviour = 'normal'; C.snap(); for (let t = 0; t < 1; t += dt) G.frame(dt, false); },
-    // hold keys for s seconds; per frame: the view's heading and its change, his way, the camera's acceleration
-    hold(keys, s, rec) { for (const k of keys) { I.keys.add(k); I.taps.add(k); } for (let t = 0; t < s - 1e-9; t += dt) { G.frame(dt, false); rec?.(); } for (const k of keys) I.keys.delete(k); },
+    controls(c) { G.settings.controls = c; G.applySettings(); },
+    place(s, a) { if (s.room) { if (G.room?.id !== s.room) G.enterRoom(s.room, null, true); } else if (G.room) G.exitRoom({ x: s.x, z: s.z, a }, true, true); G.step(0.3); h.pos.set(s.x, P.groundAt(s.x, s.z), s.z); h.angle = a; h.resetMotion(); h.vy = 0; h.onGround = true; h.behaviour = 'normal'; C.snap(); for (let t = 0; t < 1; t += 1 / 60) G.frame(1 / 60, false); },
+    // hold keys for s seconds at `fps`; rec() after each frame
+    hold(keys, s, rec, fps = 60) { const dt = 1 / fps; for (const k of keys) { I.keys.add(k); I.taps.add(k); } for (let t = 0; t < s - 1e-9; t += dt) { G.frame(dt, false); rec?.(); } for (const k of keys) I.keys.delete(k); },
+    // the view's heading against "behind his back" (his facing + π), signed, in degrees
+    off() { return +deg(ad(h.angle + Math.PI, C.yaw)).toFixed(2); },
+    way() { return Math.atan2(h.vel.x, h.vel.y); },
+    // the camera's forward on the ground (where Up goes with camera-relative controls)
+    fwd() { return Math.atan2(-Math.sin(C.yaw), -Math.cos(C.yaw)); },
+    // per frame: the view's turn (max, °), its accumulated turn, the offset from his back
     rec() {
-      const R = { yaw0: C.yaw, maxStep: 0, acc: 0, p: [], swingBy: new Set(), modes: new Set(), heroA: [] };
-      R.fn = () => {
-        const y = C.yaw, p = G.camera.position.clone();
-        R.maxStep = Math.max(R.maxStep, Math.abs(deg(ad(R.prevYaw ?? y, y)))); R.prevYaw = y;
-        R.p.push(p); if (R.p.length >= 3) { const [a, b, c] = R.p.slice(-3); R.acc = Math.max(R.acc, c.clone().sub(b).sub(b.clone().sub(a)).length() / (dt * dt)); }
-        const sw = C.lba.fol?.swings ?? 0; if (sw > (R.sw0 ??= sw)) { R.swingBy.add('follow'); R.sw0 = sw; } if (C.why.swingBy && C.why.swingBy !== 'follow') R.swingBy.add(C.why.swingBy); R.modes.add(C.why.mode); R.heroA.push(Math.atan2(h.vel.x, h.vel.y));
-      };
+      const R = { yaw0: C.yaw, prev: C.yaw, maxStep: 0, offs: [], modes: new Set() };
+      R.fn = () => { R.maxStep = Math.max(R.maxStep, Math.abs(deg(ad(R.prev, C.yaw)))); R.prev = C.yaw; R.offs.push(F.off()); R.modes.add(C.why.mode); };
       return R;
     },
-    // the view's heading against "behind him" (his way of moving + π), in degrees
-    offBehind() { const way = Math.atan2(h.vel.x, h.vel.y); return +Math.abs(deg(ad(C.yaw, way + Math.PI))).toFixed(1); },
-    turned(R) { return +Math.abs(deg(ad(R.yaw0, C.yaw))).toFixed(1); },
+    turned(R) { return +Math.abs(deg(ad(R.yaw0, C.yaw))).toFixed(2); },
+    // the camera inside something solid? (camclear's test: every enabled collider — a house's camSkip box by its
+    // scenery volume —, the volumes, the terrain 0.3 m under it outdoors) → the reason or ''
+    inside() {
+      const c = G.camera.position, why = [], occ = G.room ? null : G.world.occ;
+      if (G.room?.outdoor || !G.room) { const th = G.world.terrain.heightAt(c.x, c.z); if (c.y < th + 0.3) why.push('terrain ' + (th - c.y).toFixed(2)); }
+      for (const k of P.near(c.x, c.z)) { if (!k.enabled || c.y >= k.top || c.y <= k.bottom || !P._inside(k, c.x, c.z, 0)) continue; if (k.camSkip && occ) continue; why.push(k.type + '@' + k.x.toFixed(1) + ',' + k.z.toFixed(1)); }
+      if (occ) for (const v of occ.near(c.x, c.z)) { const t = occ.topAt(v, c.x, c.z); if (t > -Infinity && c.y >= v.y0 && c.y <= t && !v.camOnly) why.push('volume@' + v.x.toFixed(1) + ',' + v.z.toFixed(1)); }
+      return why.join('; ');
+    },
+    // nothing solid between the camera and his head or chest (thin posts, rails and tree crowns he shows between, as
+    // the camera's own sight rule)
+    seen() {
+      const c = G.camera.position, occ = G.room ? null : G.world.occ;
+      const clear = (hy) => { const b = new THREE.Vector3(h.pos.x, h.pos.y + hy, h.pos.z), n = Math.ceil(c.distanceTo(b) / 0.25);
+        for (let i = 1; i < n - 1; i++) { const p = c.clone().lerp(b, i / n);
+          if ((G.room?.outdoor || !G.room) && G.world.terrain.heightAt(p.x, p.z) > p.y + 0.05) return false;
+          for (const k of P.near(p.x, p.z)) if (k.enabled && !k.seeThrough && !k.fades && !(k.camSkip && occ) && !(k.type === 'cyl' && k.r < 1.5) && p.y < k.top && p.y > k.bottom && P._inside(k, p.x, p.z, 0)) return false;
+          if (occ && occ.hit(p.x, p.y, p.z, new Set()) > -Infinity) return false; }
+        return true; };
+      return clear(1.5) || clear(1.0);
+    },
+    ndc(p, y = 0.9) { G.camera.updateMatrixWorld(); const v = new THREE.Vector3(p.x, p.y + y, p.z).project(G.camera); return [+v.x.toFixed(2), +v.y.toFixed(2), v.z]; },
   };
-  // open ground for an 18 m run: walkable all the way (the harness' own step test), dry, no wall within 2 m of it,
-  // nothing tall within 10 m of its middle that could hide him and no scenery volume near (the view free to come round).
-  // Citadel first; its streets are full of houses (scenery volumes), so then Desert Island's open sand.
-  const P0 = G.physics, out = [];
+  // open ground for an 18 m run: walkable all the way, dry, no wall within 1.2 m of it, nothing tall within 10 m of
+  // its middle and no scenery volume near. Citadel first, then Desert Island's open sand.
+  const out = [];
   for (const rid of [null, 'desert']) {
     if (rid) { if (!G.rooms[rid]) continue; G.enterRoom(rid, null, true); G.step(0.5); }
     const cx = rid ? h.pos.x : -40, cz = rid ? h.pos.z : 0, occ = C.occ?.();
     for (let x = cx - 80; x <= cx + 80; x += 4) for (let z = cz - 100; z <= cz + 100; z += 4) {
-      const y0 = P0.groundAt(x, z); if (y0 < 0.3) continue;
+      const y0 = P.groundAt(x, z); if (y0 < 0.3) continue;
       if (G.npcs.some((n) => n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 20)) continue;
       for (let k = 0; k < 8; k++) {
         const a = (k * Math.PI) / 4, sx = Math.sin(a), sz = Math.cos(a); let y = y0, ok = true;
-        for (let d = 0.5; d <= 20 && ok; d += 0.5) { const ny = P._stepTo(x + sx * (d - 0.5), y, z + sz * (d - 0.5), x + sx * d, z + sz * d); if (ny == null || Math.abs(ny - y0) > 1.2 || ny < 0.3) ok = false; else y = ny; for (const o of [-1.2, 1.2]) if (ok && P0.blockedAt(x + sx * d + sz * o, z + sz * d - sx * o, ny + 0.3, 0.3)) ok = false; }
+        for (let d = 0.5; d <= 20 && ok; d += 0.5) { const ny = window.P._stepTo(x + sx * (d - 0.5), y, z + sz * (d - 0.5), x + sx * d, z + sz * d); if (ny == null || Math.abs(ny - y0) > 1.2 || ny < 0.3) ok = false; else y = ny; for (const o of [-1.2, 1.2]) if (ok && P.blockedAt(x + sx * d + sz * o, z + sz * d - sx * o, ny + 0.3, 0.3)) ok = false; }
         if (!ok) continue;
         const mx = x + sx * 9, mz = z + sz * 9;
-        if (P0.colliders.some((c) => c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 1.5) && c.top > y0 + 3 && Math.hypot(c.x - mx, c.z - mz) < 10)) continue;
+        if (P.colliders.some((c) => c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 1.5) && c.top > y0 + 3 && Math.hypot(c.x - mx, c.z - mz) < 10)) continue;
         let vols = 0;
         if (occ) for (let ox = -20; ox <= 20; ox += 4) for (let oz = -20; oz <= 20; oz += 4) vols += occ.near(mx + ox, mz + oz).length;
         if (vols) continue;
@@ -80,6 +112,7 @@ await ev(() => {
     if (out.length) break;
   }
   window.F.spots = out;
+  F.cam('follow');
 });
 
 const spot = await ev(() => {
@@ -94,110 +127,224 @@ const spot = await ev(() => {
 });
 check('found open ground for an 18 m run (Citadel, else Desert Island)', !spot.none, spot);
 if (!spot.none) {
-// ---------------------------------------------------------------- 2. a sustained run turns the view behind him
-const run = await ev(async ({ spot, shots }) => {
+// ---------------------------------------------------------------- 1b/2. LBA2 untouched; behind his back
+const run = await ev((spot) => {
   const G = game, h = G.hero, C = G.camRig, out = {};
-  for (const m of ['lba', 'follow']) {
-    // standing at the start facing the run's way, turned 90° on the spot first (the view stays: he walks across it)
-    F.cam(m); F.place(spot, spot.a + Math.PI / 2); h.behaviour = 'normal';
-    F.hold(['ArrowLeft'], (Math.PI / 2) / (100 * Math.PI / 180));
-    const R = F.rec(), t1 = [];
-    F.hold(['ArrowUp'], 1.1, () => { R.fn(); }); const at09 = F.turned(R);
-    F.hold(['ArrowUp'], 4.4, () => { R.fn(); t1.push(F.offBehind()); });
-    if (m === 'follow' && shots) window.__shots = true;
-    out[m] = { turnedBy09s: at09, turned: F.turned(R), offBehind: F.offBehind(), maxStepDeg: +R.maxStep.toFixed(2), accMax: +R.acc.toFixed(1), swingBy: [...R.swingBy], mode: [...R.modes] };
-    G.step(1);
-  }
+  // LBA2 (the default): turned 90° on the spot, then a run across the view: its heading never moves
+  F.cam('lba'); F.place(spot, spot.a + Math.PI / 2); F.hold(['ArrowLeft'], (Math.PI / 2) / (100 * Math.PI / 180));
+  let R = F.rec(); F.hold(['ArrowUp'], 4, R.fn); out.lba = { turned: F.turned(R), mode: [...R.modes] };
+  // Follow: standing 2 s, then a turn on the spot 90° left (Classic, 100°/s), then standing 3 s
+  F.cam('follow'); F.place(spot, spot.a + Math.PI / 2);
+  R = F.rec(); F.hold([], 2, R.fn); out.standOff = Math.max(...R.offs.map(Math.abs));
+  R = F.rec(); F.hold(['ArrowLeft'], 0.9, R.fn); const during = R.offs.slice(), turnedDuring = F.turned(R);
+  const after = []; const R2 = F.rec(); F.hold([], 3, () => { R2.fn(); after.push(F.off()); });
+  const sign = Math.sign(after[0]) || 1, t15 = after.findIndex((o) => Math.abs(o) <= 15), t3 = after.findIndex((o) => Math.abs(o) <= 3);
+  out.turn = { turnedDuring, lagMax: Math.max(...during.map(Math.abs)), maxStep: +Math.max(R.maxStep, R2.maxStep).toFixed(2), within15At: t15 < 0 ? null : +((t15 + 1) / 60).toFixed(2), within3At: t3 < 0 ? null : +((t3 + 1) / 60).toFixed(2),
+    overshoot: +Math.max(0, ...after.map((o) => -o * sign)).toFixed(2), standAfter: +Math.max(...after.slice(60).map(Math.abs)).toFixed(2), modes: [...R.modes, ...R2.modes] };
+  // and back right 180° (Athletic, 169°/s), at 30 fps: never more than 10° a frame
+  h.behaviour = 'athletic'; R = F.rec(); F.hold(['ArrowRight'], Math.PI / (169 * Math.PI / 180), R.fn, 30); F.hold([], 1, R.fn, 30);
+  out.turn30 = { maxStep: +R.maxStep.toFixed(2), off: F.off() };
+  // a run straight on for 4 s: behind his back all the way
+  h.behaviour = 'athletic'; R = F.rec(); F.hold(['ArrowUp'], 4, R.fn); out.run = { maxOff: +Math.max(...R.offs.map(Math.abs)).toFixed(2), turned: F.turned(R) };
+  G.step(1); h.behaviour = 'normal';
   return out;
-}, { spot, shots: !!SHOTS });
-check('LBA2 view (the default): a run across the view never turns it', run.lba.turned < 0.5, run.lba);
-check('Follow: nothing in the first 1.1 s of the run, then the view comes round behind him (within 12°)', run.follow.turnedBy09s < 0.5 && run.follow.offBehind <= 12 && run.follow.turned > 60 && run.follow.swingBy.includes('follow') && run.follow.mode.includes('follow'), run.follow);
-check('Follow: eased, never a snap (≤ 0.8° a frame = 48°/s at 60 fps) and no jolt (camera acceleration ≤ 40 m/s²)', run.follow.maxStepDeg <= 0.8 && run.follow.accMax <= 40, run.follow);
+}, spot);
+check('LBA2 view (the default) unchanged: a run across the view never turns it', run.lba.turned < 0.5 && run.lba.mode.join() === 'lba', run.lba);
+check('Follow: standing, the view stays behind his back (within 15°)', run.standOff <= 15, run);
+check('Follow, Classic: a turn on the spot turns the view with him (it turns ≥ 65° while he turns 90°, never more than 25° behind)', run.turn.turnedDuring >= 65 && run.turn.lagMax <= 25, run.turn);
+check('Follow: behind his back (within 15°) within 0.6 s of the turn, settled (within 3°) within 0.8 s, no overshoot (≤ 1°)', run.turn.within15At != null && run.turn.within15At <= 0.6 && run.turn.within3At != null && run.turn.within3At <= 0.8 && run.turn.overshoot <= 1 && run.turn.standAfter <= 1, run.turn);
+check('Follow: smooth — never more than 4.1° a frame at 60 fps, 10° at 30 fps (a 180° turn at 169°/s)', run.turn.maxStep <= 4.1 && run.turn30.maxStep <= 10 && Math.abs(run.turn30.off) <= 15, { turn: run.turn, turn30: run.turn30 });
+check('Follow: on a straight run the view stays behind his back (within 5°)', run.run.maxOff <= 5, run.run);
 
-// frames of the swing (docs/lba3-production/reviews/CONTROL-FEEL/)
+// running frames (docs/lba3-production/reviews/CAM-FOLLOW/)
 if (SHOTS) {
-  fs.mkdirSync(SHOTS, { recursive: true });
-  await ev((spot) => { const h = game.hero; F.cam('follow'); F.place(spot, spot.a + Math.PI / 2); h.behaviour = 'normal'; F.hold(['ArrowLeft'], (Math.PI / 2) / (100 * Math.PI / 180)); game.frame(1 / 60, true); }, spot);
-  for (const [i, t] of [[0, 0], [1, 1.4], [2, 1.4], [3, 1.4]]) {
-    await ev((t) => { const I = game.input; I.keys.add('ArrowUp'); for (let s = 0; s < t - 1e-9; s += 1 / 60) game.frame(1 / 60, false); game.frame(1 / 60, true); }, t);
-    await page.screenshot({ path: path.join(SHOTS, `follow-${i}-t${(i * 1.4).toFixed(1)}s.png`) });
-  }
-  await ev(() => { game.input.keys.clear(); game.step(1); });
+  await ev((spot) => { F.cam('follow'); F.place(spot, spot.a); game.hero.behaviour = 'athletic'; }, spot);
+  for (let i = 0; i < 5; i++) { await shot(`run-${i}`); await ev(() => F.hold(['ArrowUp'], 0.6)); }
+  await ev((spot) => { F.place(spot, spot.a); game.hero.behaviour = 'normal'; }, spot);
+  for (let i = 0; i < 6; i++) { await shot(`turn-${i}`); await ev(() => F.hold(['ArrowLeft'], 0.3)); }
+  await ev(() => game.step(1));
 }
 
-// ---------------------------------------------------------------- 3. no swing: standing, turning, short moves, a fight
-const calm = await ev((spot) => {
-  const G = game, h = G.hero, C = G.camRig, I = G.input, out = {};
-  F.cam('follow');
-  // standing 3 s, a turn on the spot left 2.5 s and right 1.5 s
-  F.place(spot, spot.a); let R = F.rec();
-  F.hold([], 3, R.fn); F.hold(['ArrowLeft'], 2.5, R.fn); F.hold(['ArrowRight'], 1.5, R.fn);
-  out.standTurn = F.turned(R);
-  // short corrections (camsteady's): four 0.3 s steps, three walking turns of 0.6 s each with 0.5 s on
-  F.place(spot, spot.a); R = F.rec();
-  for (let i = 0; i < 4; i++) { F.hold(['ArrowUp'], 0.3, R.fn); F.hold([], 0.4, R.fn); }
-  for (let i = 0; i < 3; i++) { F.hold(['ArrowUp', i % 2 ? 'ArrowLeft' : 'ArrowRight'], 0.6, R.fn); F.hold(['ArrowUp'], 0.5, R.fn); }
-  F.hold([], 2, R.fn);
-  out.corrections = F.turned(R); out.correctionsBy = [...R.swingBy];
-  // runs of 0.7 s with a stop between, turned 60° each time (a zigzag)
-  F.place(spot, spot.a); h.behaviour = 'athletic'; R = F.rec();
-  for (let i = 0; i < 4; i++) { F.hold(['ArrowUp'], 0.7, R.fn); F.hold([], 0.3, R.fn); F.hold([i % 2 ? 'ArrowLeft' : 'ArrowRight'], 0.35, R.fn); }
-  F.hold([], 1.5, R.fn);
-  out.shortRuns = F.turned(R);
-  // a lock-on: a mite ahead, locked (the focus key), then a run of 3 s across the view while locked
-  const mite = G.enemies.find((e) => e.id?.startsWith('mite'));
-  if (mite) {
-    F.place(spot, spot.a + Math.PI / 2); h.behaviour = 'athletic';
-    const mx = h.pos.x + Math.sin(h.angle) * 6, mz = h.pos.z + Math.cos(h.angle) * 6;
-    mite.pos.set(mx, G.physics.groundAt(mx, mz), mz); mite.home = { x: mx, z: mz }; mite.setPresent(true); mite.hp = mite.maxHp;
-    G.step(0.2); F.hold(['KeyL'], 1 / 60); G.frame(1 / 60, false);
-    const locked0 = !!G.targeting.lock; R = F.rec(); let lockedAll = true;
-    F.hold(['ArrowUp'], 3, () => { R.fn(); if (!G.targeting.lock) lockedAll = false; });
-    out.lock = { locked0, lockedAll, turned: F.turned(R), swingBy: [...R.swingBy] };
-    if (G.targeting.lock) G.targeting.release?.();
-    mite.setPresent(false); G.step(0.5);
-  } else out.lock = { none: true };
+// ---------------------------------------------------------------- 3. backwards
+const back = await ev((spot) => {
+  const G = game, h = G.hero, C = G.camRig, out = {};
+  F.cam('follow'); F.place(spot, spot.a + Math.PI);
+  // Classic: Down walks him backwards, his facing kept: the view stays
+  let x0 = h.pos.x, z0 = h.pos.z, R = F.rec(); F.hold(['ArrowDown'], 2.5, R.fn); F.hold([], 0.5, R.fn);
+  out.classic = { moved: +Math.hypot(h.pos.x - x0, h.pos.z - z0).toFixed(2), turned: F.turned(R), maxStep: +R.maxStep.toFixed(2) };
+  // Modern: from behind his back, Down (toward the camera) for 2.5 s: he turns and runs at the camera, its heading held
+  F.controls('modern'); F.place(spot, spot.a); x0 = h.pos.x; z0 = h.pos.z; R = F.rec(); let onScreen = true;
+  F.hold(['ArrowDown'], 2.5, () => { R.fn(); const n = F.ndc(h.pos); if (Math.abs(n[0]) > 0.95 || Math.abs(n[1]) > 0.95 || n[2] > 1) onScreen = false; });
+  const facesCam = +Math.abs(F.deg(F.ad(h.angle, C.yaw))).toFixed(1);
+  F.hold([], 1, R.fn);
+  out.modern = { moved: +Math.hypot(h.pos.x - x0, h.pos.z - z0).toFixed(2), turned: F.turned(R), facesCam, onScreen };
+  // then Up: he turns away and runs on; the view comes round behind his back
+  const R2 = F.rec(); F.hold(['ArrowUp'], 1.4, R2.fn); out.modernUp = { off: F.off(), maxStep: +R2.maxStep.toFixed(2), turned: F.turned(R2) };
+  F.controls('classic'); G.step(0.5);
   return out;
 }, spot);
-check('Follow: still while he stands and turns on the spot', calm.standTurn < 0.5, calm);
-check('Follow: no swing for short corrections (steps, short walking turns)', calm.corrections < 0.5, calm);
-check('Follow: no swing for runs shorter than a second (a zigzag)', calm.shortRuns < 0.5, calm);
-// (the LBA view's own rules — a steep view over the scenery, a wall hiding him — may still turn it, as in LBA2's view)
-check('Follow: no follow swing while he fights with a lock-on', calm.lock.none || (calm.lock.locked0 && calm.lock.lockedAll && !calm.lock.swingBy.includes('follow')), calm.lock);
+check('Follow, Classic: walking backwards (Down) never turns the view', back.classic.moved > 2.5 && back.classic.turned <= 1, back.classic);
+check('Follow, Modern: pushed back toward the camera, he runs at it and the view does not spin round (≤ 5°); he stays on screen', back.modern.moved > 3 && back.modern.facesCam <= 30 && back.modern.turned <= 5 && back.modern.onScreen, back.modern);
+check('Follow, Modern: then Up, the view comes round behind his back (within 15°), smoothly', Math.abs(back.modernUp.off) <= 15 && back.modernUp.maxStep <= 4.1, back.modernUp);
 
-// ---------------------------------------------------------------- 4. Modern controls: the held way stays his way
+// ---------------------------------------------------------------- 4. Modern controls: Up goes where the view looks
 const modern = await ev((spot) => {
   const G = game, h = G.hero, C = G.camRig, out = {};
-  G.settings.controls = 'modern'; G.applySettings(); F.cam('follow');
-  // the view behind him at the start; he walks to the screen's left (the held arrow) for 5.5 s
-  F.place(spot, spot.a - Math.PI / 2); h.behaviour = 'normal';
-  const R = F.rec(); F.hold(['ArrowLeft'], 0.5, R.fn); const w0 = Math.atan2(h.vel.x, h.vel.y);
-  F.hold(['ArrowLeft'], 5.0, R.fn); const w1 = Math.atan2(h.vel.x, h.vel.y);
-  out.wayDrift = +Math.abs(F.deg(F.ad(w0, w1))).toFixed(1); out.turned = F.turned(R); out.offBehind = F.offBehind(); out.maxStepDeg = +R.maxStep.toFixed(2);
-  // let go and push Up: now relative to the view behind him, so straight on
-  G.step(0.3); F.hold(['ArrowUp'], 0.6); const w2 = Math.atan2(h.vel.x, h.vel.y); out.upAfter = +Math.abs(F.deg(F.ad(w1, w2))).toFixed(1);
-  G.settings.controls = 'classic'; G.applySettings();
+  F.controls('modern'); F.cam('follow');
+  F.place(spot, spot.a); const fwd0 = F.fwd(); let R = F.rec(); F.hold(['ArrowUp'], 2, R.fn);
+  out.up = { wayVsView: +Math.abs(F.deg(F.ad(fwd0, F.way()))).toFixed(1), turned: F.turned(R) };
+  // a held side arrow: his way kept while the view comes round behind him
+  F.place(spot, spot.a - Math.PI / 2);
+  R = F.rec(); F.hold(['ArrowLeft'], 0.5, R.fn); const w0 = F.way();
+  F.hold(['ArrowLeft'], 3.5, R.fn); const w1 = F.way();
+  out.side = { wayDrift: +Math.abs(F.deg(F.ad(w0, w1))).toFixed(1), turned: F.turned(R), off: F.off(), maxStep: +R.maxStep.toFixed(2) };
+  // let go and Up: on along the way the view now looks
+  G.step(0.3); const f1 = F.fwd(); F.hold(['ArrowUp'], 0.8); out.upAfter = +Math.abs(F.deg(F.ad(f1, F.way()))).toFixed(1);
+  F.controls('classic');
   return out;
 }, spot);
-check('Follow, Modern controls: the held arrow keeps his way while the view swings behind him (he walks straight)', modern.wayDrift <= 10 && modern.turned > 60 && modern.offBehind <= 15 && modern.maxStepDeg <= 0.8, modern);
-check('Follow, Modern controls: let go and pushed Up, he goes on the way the view now looks', modern.upAfter <= 15, modern);
+check('Follow, Modern: Up goes where the view looks (within 8°), the view holds still (no loop: ≤ 3°)', modern.up.wayVsView <= 8 && modern.up.turned <= 3, modern.up);
+check('Follow, Modern: a held side arrow keeps his way (≤ 10°) while the view comes round behind him (within 15°)', modern.side.wayDrift <= 10 && modern.side.turned >= 60 && Math.abs(modern.side.off) <= 15 && modern.side.maxStep <= 4.1, modern.side);
+check('Follow, Modern: let go and Up, he goes where the view now looks (within 15°)', modern.upAfter <= 15, modern);
 
-// ---------------------------------------------------------------- 5. indoors: the iso view, nothing follows
+// ---------------------------------------------------------------- 6. a lock-on
+const lock = await ev((spot) => {
+  const G = game, h = G.hero, C = G.camRig, out = {};
+  const mite = G.enemies.find((e) => e.id?.startsWith('mite'));
+  if (!mite) return { none: true };
+  F.cam('follow'); F.place(spot, spot.a); h.behaviour = 'athletic';
+  // the mite 7 m away, 50° to his right: he turns toward it a little and locks on
+  const a = h.angle - 0.9, mx = h.pos.x + Math.sin(a) * 7, mz = h.pos.z + Math.cos(a) * 7;
+  mite.pos.set(mx, G.physics.groundAt(mx, mz), mz); mite.home = { x: mx, z: mz }; mite.setPresent(true); mite.hp = mite.maxHp; mite.state = 'idle';
+  G.step(0.2); F.hold(['ArrowRight'], 0.3); F.hold(['KeyL'], 1 / 60);
+  out.locked = !!G.targeting.lock;
+  F.hold([], 0.8);
+  const line = () => Math.atan2(h.pos.x - mite.pos.x, h.pos.z - mite.pos.z);
+  out.offLine = +F.deg(F.ad(line(), C.yaw)).toFixed(1);
+  // he moves locked (Modern controls): toward it 1 s, then to the side 1.2 s: both on screen every locked frame
+  F.controls('modern');
+  let both = true, worst = null, lockedN = 0; const R = F.rec();
+  const each = () => { R.fn(); if (!G.targeting.lock) return; lockedN++; const a1 = F.ndc(h.pos), b1 = F.ndc(mite.pos, mite.aimY ?? 0.5); const m = Math.max(Math.abs(a1[0]), Math.abs(a1[1]), Math.abs(b1[0]), Math.abs(b1[1])); if (m > 0.95 || a1[2] > 1 || b1[2] > 1) { both = false; worst ??= { a1, b1, arm: C.dist, pitch: C.pitch, d: Math.hypot(h.pos.x - mite.pos.x, h.pos.z - mite.pos.z) }; } };
+  F.hold(['ArrowUp'], 1, each); F.hold(['ArrowLeft'], 1.2, each);
+  out.walk = { both, worst, lockedN, offLine: +F.deg(F.ad(line(), C.yaw)).toFixed(1), maxStep: +R.maxStep.toFixed(2), inside: F.inside(), d: +Math.hypot(h.pos.x - mite.pos.x, h.pos.z - mite.pos.z).toFixed(1) };
+  F.controls('classic');
+  window.__lockMite = mite;
+  return out;
+}, spot);
+if (lock.none) check('a mite to lock on to', false, lock);
+else {
+  check('Follow, lock-on: the view stands behind his shoulder on the line from the target (within 15°)', lock.locked && Math.abs(lock.offLine) <= 15, lock);
+  check('Follow, lock-on: Twinsen and the target both on screen every locked frame (≥ 2 s) while he moves; smooth (≤ 4.1° a frame)', lock.walk.lockedN >= 120 && lock.walk.both && lock.walk.maxStep <= 4.1 && !lock.walk.inside, lock.walk);
+  if (SHOTS) {
+    await ev(() => { game.hero.behaviour = 'normal'; });
+    for (let i = 0; i < 5; i++) { await shot(`lock-${i}`); await ev(() => { F.controls('modern'); F.hold(['ArrowLeft'], 0.6); F.controls('classic'); }); }
+  }
+  const rel = await ev(() => {
+    const G = game, mite = window.__lockMite;
+    G.targeting.release?.(); if (G.targeting.lock) G.targeting.lock = null;
+    mite.setPresent(false); mite.pos.set(mite.pos.x + 300, mite.pos.y, mite.pos.z);
+    const R = F.rec(); F.hold([], 1.5, R.fn);
+    return { off: F.off(), maxStep: +R.maxStep.toFixed(2) };
+  });
+  check('Follow: the lock let go, the view comes back behind his back (within 15° in 1.5 s), smoothly', Math.abs(rel.off) <= 15 && rel.maxStep <= 4.1, rel);
+}
+await ev(() => { game.hero.behaviour = 'normal'; game.step(0.5); });
+
+// ---------------------------------------------------------------- 7. comfort: the camera shake setting
+const shake = await ev((spot) => {
+  const G = game, C = G.camRig, out = {};
+  F.cam('follow'); F.place(spot, spot.a);
+  for (const s of ['off', 'on']) {
+    G.settings.shake = s; G.applySettings(); C.shake(0.5); let d = 0;
+    F.hold([], 0.3, () => { d = Math.max(d, G.camera.position.distanceTo(C.base)); });
+    out[s] = +d.toFixed(3);
+  }
+  return out;
+}, spot);
+check('Follow: the camera-shake setting is respected (Off: no tremor; On: a tremor)', shake.off === 0 && shake.on > 0.01, shake);
+}
+
+// ---------------------------------------------------------------- 5. walls: the spring arm
+// a wall behind him: a tall solid on Citadel (a house's scenery volume, a wall, a tower), Twinsen 2 m out from one of
+// its faces facing away, with walkable open ground 9 m ahead of him
+const wall = await ev(() => {
+  const G = game, h = G.hero, C = G.camRig, P = G.physics;
+  if (G.room) G.exitRoom({ x: -40, z: 0, a: 0 }, true, true); G.step(0.3);
+  const occ = G.world.occ, cands = [];
+  for (const c of P.colliders) { if (!c.enabled || c.fades || c.seeThrough || c.type === 'cyl' || c.hw < 1.5 || c.hd < 1.5) continue; cands.push(c); }
+  const spots = [];
+  for (const c of cands) for (const [lx, lz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    // (the box's local axes in world: local x = (cos, -sin), local z = (sin, cos) — physics._inside's inverse)
+    const nx = lx * c.cos + lz * c.sin, nz = -lx * c.sin + lz * c.cos, ext = lx ? c.hw : c.hd;
+    const x = c.x + nx * (ext + 2.0), z = c.z + nz * (ext + 2.0), y0 = P.groundAt(x, z);
+    if (y0 < 0.3 || c.top - y0 < 4 || c.bottom > y0 + 0.5 || P.blockedAt(x, z, y0, 0.4)) continue;
+    if (G.npcs.some((n) => n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 6)) continue;
+    let y = y0, ok = true;
+    for (let d = 0.5; d <= 9 && ok; d += 0.5) { const ny = window.P._stepTo(x + nx * (d - 0.5), y, z + nz * (d - 0.5), x + nx * d, z + nz * d); if (ny == null || Math.abs(ny - y0) > 1 || ny < 0.3) ok = false; else y = ny; for (const o of [-1, 1]) if (ok && P.blockedAt(x + nx * d + nz * o, z + nz * d - nx * o, ny + 0.3, 0.3)) ok = false; }
+    if (!ok) continue;
+    // (the wall really is in the way of the full arm: its face 2 m behind him, the arm 7 m)
+    spots.push({ x, z, a: Math.atan2(nx, nz), wall: c.type + '@' + c.x.toFixed(1) + ',' + c.z.toFixed(1), top: +(c.top - y0).toFixed(1), camSkip: !!c.camSkip });
+  }
+  window.__wallSpots = spots;
+  return { cands: cands.length, spots: spots.length, first: spots.slice(0, 3) };
+});
+check('found a wall with open ground in front of it on Citadel', wall.spots > 0, wall);
+if (wall.spots > 0) {
+  const W = await ev(() => {
+    const G = game, h = G.hero, C = G.camRig, out = { tried: [] };
+    F.cam('follow'); F.controls('classic');
+    const watch = (o) => () => { const why = F.inside(); if (why) { o.inside++; o.why ??= why; } if (!F.seen()) { o.unseen++; o.at ??= { cam: G.camera.position.toArray().map((v) => +v.toFixed(2)), hero: h.pos.toArray().map((v) => +v.toFixed(2)) }; } o.frames++; o.arm.push(C.dist); };
+    for (const s of window.__wallSpots.slice(0, 12)) {
+      const r = { spot: s };
+      // (a) placed against the wall, facing away: the arm drawn in at once, the camera between him and the wall
+      F.place({ x: s.x, z: s.z }, s.a); const a0 = C.dist;
+      if (a0 > 6) { out.tried.push({ spot: s, arm: +a0.toFixed(2), why: 'not in the way' }); continue; }
+      r.start = { arm: +a0.toFixed(2), inside: F.inside(), seen: F.seen(), toHero: +Math.hypot(G.camera.position.x - h.pos.x, G.camera.position.z - h.pos.z).toFixed(2) };
+      // (b) walking away 3 s: it lets out slowly
+      let o = { frames: 0, inside: 0, unseen: 0, arm: [] }; F.hold(['ArrowUp'], 3, watch(o)); F.hold([], 2.5, watch(o));
+      let vOut = 0; for (let i = 1; i < o.arm.length; i++) vOut = Math.max(vOut, (o.arm[i] - o.arm[i - 1]) * 60);
+      r.away = { inside: o.inside, unseen: o.unseen, why: o.why, at: o.at, armEnd: +o.arm[o.arm.length - 1].toFixed(2), vOut: +vOut.toFixed(2) };
+      // (c) backing up to the wall (Down) 4 s: drawn in as he goes, never inside, always seen
+      o = { frames: 0, inside: 0, unseen: 0, arm: [] }; F.hold(['ArrowDown'], 4, watch(o)); F.hold([], 0.5, watch(o));
+      r.backUp = { inside: o.inside, unseen: o.unseen, why: o.why, at: o.at, armEnd: +o.arm[o.arm.length - 1].toFixed(2), armMin: +Math.min(...o.arm).toFixed(2) };
+      // (d) a full turn on the spot there (Left 3.6 s at 100°/s)
+      o = { frames: 0, inside: 0, unseen: 0, arm: [] }; const R = F.rec(); F.hold(['ArrowLeft'], 3.6, () => { watch(o)(); R.fn(); }); F.hold([], 0.6, watch(o));
+      r.turn = { inside: o.inside, unseen: o.unseen, why: o.why, at: o.at, maxStep: +R.maxStep.toFixed(2) };
+      out.tried.push(r); out.ok = r; break;
+    }
+    return out;
+  });
+  const r = W.ok;
+  if (!r) check('a wall spot where the full arm would stand behind the wall', false, W.tried.slice(0, 4));
+  else {
+    console.log('INFO wall spot', JSON.stringify(r.spot), 'skipped', W.tried.length - 1);
+    check('Follow, a wall behind him: the arm drawn in (camera between him and the wall), outside everything, he is seen', r.start.arm <= 5 && !r.start.inside && r.start.seen && r.start.toHero < 4.5, r.start);
+    check('Follow, walking away from the wall: let out slowly (≤ 2.6 m/s) to the full arm; never inside anything, he is always seen', r.away.inside === 0 && r.away.unseen === 0 && r.away.vOut <= 2.6 && r.away.armEnd >= 6.5, r.away);
+    check('Follow, backing up to the wall: drawn in as he goes; never inside anything, he is always seen', r.backUp.inside === 0 && r.backUp.unseen === 0 && r.backUp.armEnd <= 5, r.backUp);
+    check('Follow, a full turn on the spot by the wall: never inside anything, he is always seen, smooth (≤ 4.1° a frame)', r.turn.inside === 0 && r.turn.unseen === 0 && r.turn.maxStep <= 4.1, r.turn);
+    if (SHOTS) {
+      await ev((s) => { F.place({ x: s.x, z: s.z }, s.a); F.hold(['ArrowUp'], 3); F.hold([], 2.5); }, r.spot);
+      for (let i = 0; i < 6; i++) { await shot(`wall-${i}`); await ev(() => F.hold(['ArrowDown'], 0.7)); }
+    }
+  }
+}
+
+// ---------------------------------------------------------------- 7b. indoors: the iso view, nothing follows
 const iso = await ev(() => {
   const G = game, h = G.hero, C = G.camRig;
   F.cam('follow'); G.enterRoom('house', null, true); G.step(0.5);
   const c = G.room.center || { x: h.pos.x, z: h.pos.z }; h.pos.set(c.x - 2, G.physics.groundAt(c.x - 2, c.z), c.z); h.angle = Math.PI / 2; h.resetMotion(); G.step(0.5);
   const R = F.rec(); F.hold(['ArrowUp'], 0.8, R.fn); F.hold(['ArrowLeft'], 0.5, R.fn); F.hold(['ArrowUp'], 1.6, R.fn);
-  const out = { room: G.room?.id, modes: [...R.modes], turned: F.turned(R), swingBy: [...R.swingBy] };
+  const out = { room: G.room?.id, modes: [...R.modes], turned: F.turned(R) };
   G.exitRoom({ x: -40, z: -5 }, true); G.step(0.5);
   return out;
 });
-check('Follow indoors: the iso view, no follow swing', iso.room === 'house' && iso.modes.every((m) => m === 'iso') && !iso.swingBy.includes('follow'), iso);
-}
+check('Follow indoors: the iso view as before (it never turns)', iso.room === 'house' && iso.modes.every((m) => m === 'iso') && iso.turned < 0.5, iso);
 
-// ---------------------------------------------------------------- 6. the stored choice after a restart; an unknown one
+// ---------------------------------------------------------------- 8. the stored choice after a restart; an unknown one
 // (a fresh browser on the stored profile, as tests/lib/boot.mjs quitAndKeep does)
 const state = path.join(os.tmpdir(), `camfollow-${process.pid}.json`);
+await ev(() => { game.settings.camera = 'follow'; game.applySettings(); game.saveSettings?.(); });
 await context.storageState({ path: state });
 await page.waitForLoadState('networkidle').catch(() => {});   // (its models still loading when the browser closes read as failed requests)
 await browser.close();

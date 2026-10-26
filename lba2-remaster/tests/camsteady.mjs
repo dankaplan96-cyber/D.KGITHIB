@@ -1,7 +1,7 @@
 // CAM-2: the play camera stays calm (the user, 2026-10-20: "the camera doesn't work very well — it moves a lot").
 // Repeatable routes walked by input (tests/lib/player.js, Classic controls unless named) on Citadel, recorded every frame
 // by tests/lib/camrec.js: where the camera stands and looks, and which of its rules moved it. All three camera settings: the
-// LBA follow (remaster), the free orbit and Follow (CONTROL-FEEL: the LBA view's budgets). Measured per route (CR.stats):
+// LBA follow (remaster), the free orbit and Follow (CAM-FOLLOW: a chase camera, its own budgets). Measured per route (CR.stats):
 //   turnPerM    how far the view turns (°) per metre Twinsen walks — LBA2's view keeps its angle while it follows
 //   revYaw/revPitch/revY/revDist   reversals per minute of the view's heading, tilt (≥ 0.5°), the camera's height
 //               (≥ 5 cm) and its distance from him (≥ 10 cm): oscillation, rules undoing each other
@@ -9,6 +9,9 @@
 //   snaps       frames where the camera jumps > 0.6 m or turns > 10° (scene changes left out)
 //   angAccP95 / accP95             the view's angular jolts (°/s²) and the camera's acceleration (m/s²)
 //   maxPitch / steepT              the steepest the view looked down (°) and how long steeper than 50° (s)
+//   revHero     reversals per minute of Twinsen's own facing (≥ 0.5°): what a camera that turns with him follows
+//   jitterPitch / jitterY          tilt / height reversals within 0.5 s of the one before (a bob, a shudder)
+//   idleTurnDeg / idleMove         the view turning / moving once he has stood a second without turning
 //   pitchPerMin / yawPerMin        how far the view tilted / turned (° a minute); joltsPerMin: frames > 40 m/s²
 // A shake's tremor is feedback, not the camera's rules: its frames are left out (shakeT). RECORD=<dir> writes every
 // route's stats and trace as JSON; ONLY=<route name substring>, MODES=lba,free, RATES=60,30,jank (jank: 60 fps with a
@@ -37,14 +40,24 @@ await page.evaluate(() => {
     walk(pts, o = {}) { const res = []; for (const [x, z] of pts) res.push(P.go(x, z, { tol: 0.8, maxT: 40, fight: false, ...o }).r); P.release(); return res; },
     // Modern controls: hold the arrow pair whose camera-relative direction is nearest the way to the next waypoint
     modernGo(tx, tz, maxT = 30) {
-      const plan = P.plan(tx, tz, { tol: 0.5 }); let wi = 1, t = 0;
+      const plan = P.plan(tx, tz, { tol: 0.5 }); let wi = 1, t = 0, prev = null;
       const dirs = [[0, 1, ['ArrowUp']], [1, 1, ['ArrowUp', 'ArrowRight']], [1, 0, ['ArrowRight']], [1, -1, ['ArrowDown', 'ArrowRight']], [0, -1, ['ArrowDown']], [-1, -1, ['ArrowDown', 'ArrowLeft']], [-1, 0, ['ArrowLeft']], [-1, 1, ['ArrowUp', 'ArrowLeft']]];
       while (t < maxT && Math.hypot(h.pos.x - tx, h.pos.z - tz) > 0.8) {
         while (wi < plan.pts.length - 1 && Math.hypot(plan.pts[wi].x - h.pos.x, plan.pts[wi].z - h.pos.z) < 0.6) wi++;
         const w = plan.pts[Math.min(wi, plan.pts.length - 1)], dx = w.x - h.pos.x, dz = w.z - h.pos.z;
-        const yaw = rig.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
-        let best = null, bv = -2;
-        for (const [mx, my, keys] of dirs) { const L = Math.hypot(mx, my), wx = (rx * mx + fx * my) / L, wz = (rz * mx + fz * my) / L, v = (wx * dx + wz * dz) / Math.hypot(dx, dz); if (v > bv) { bv = v; best = keys; } }
+        // (CAM-FOLLOW: the keys it holds keep the heading they were pressed under, h.refYaw — actors.js inputYaw; under the
+        // other cameras that is the view's own. A new choice reads the view as it is now.)
+        let best = null, bv = -2, held = -2;
+        for (const [mx, my, keys] of dirs) {
+          const yaw = keys === prev && h.refYaw != null ? h.refYaw : rig.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+          const L = Math.hypot(mx, my), wx = (rx * mx + fx * my) / L, wz = (rz * mx + fz * my) / L, v = (wx * dx + wz * dz) / Math.hypot(dx, dz);
+          if (v > bv) { bv = v; best = keys; } if (keys === prev) held = v;
+        }
+        // (CAM-FOLLOW: under the Follow camera the view turns with him, so a bot that changes keys whenever another 45°
+        // step points a little better zigzags between two of them and rocks the view with it. A player holds a direction
+        // while it is still about right: under Follow the bot keeps its keys while they point within 25° of the way)
+        if (rig.mode === 'follow' && prev && held > Math.cos((25 * Math.PI) / 180)) best = prev;
+        prev = best;
         I.keys.clear(); for (const k of best) I.keys.add(k);
         G.step(1 / 30); t += 1 / 30;
       }
@@ -91,7 +104,28 @@ const ROUTES = [
 function BUDGET(mode, name, s, notes) {
   const out = [], b = (what, ok) => out.push([what, ok]);
   if (s.dur < 3) return [['recorded', false]];
-  if (mode === 'lba' || mode === 'follow') {   // (CONTROL-FEEL: the Follow view keeps the LBA view's budgets)
+  if (mode === 'follow') {
+    // CAM-FOLLOW: the Follow camera became a chase camera behind his back (the user on build 169). It turns with him by
+    // design — a turn on the spot, a fight turning him round, a walk round a corner — so the LBA view's stillness while
+    // he turns and its 40 m/s² ceiling on the camera's acceleration measure the design, not discomfort: 7 m out, a turn
+    // at LBA2's 100°/s alone moves the camera at 12 m/s, and the turn's start accelerates it past 100 m/s². Its arm drawn
+    // in at a house turns the tilt, and its height follows the ground as it swings round him, so the LBA view's 8
+    // reversals a minute would count every house he passes. What a player would feel instead, measured here:
+    b(`the view never jumps round (max ${s.maxTurnStepDeg}° a frame ≤ 10°)`, s.maxTurnStepDeg <= 10);
+    b(`the camera never jumps but for its arm cut in toward him past a corner (max ${s.maxStep} m a frame ≤ 1.5)`, s.maxStep <= 1.5);
+    // (his back to a wall under the eaves — a house door — it looks down over his shoulder, ~60-70°, for the step it
+    // takes him to walk clear; the LBA view turns to a side heading there instead, which a chase camera cannot)
+    b(`never steeper than over his shoulder (max ${s.maxPitch}° ≤ 72°; ${s.steepT} s over 50° ≤ 2 s)`, s.maxPitch <= 72 && s.steepT <= 2);
+    b(`it turns only as he turns (heading reversals ${s.revYaw}/min ≤ his own ${s.revHero}/min)`, s.revYaw <= s.revHero + 1);
+    // (out of the house door the bot's way back hugs the next house's wall: the view goes up over his shoulder and comes
+    // down once as he walks clear, 3 reversals of tilt and height in a second — a wall he walks along, not a shudder)
+    { const j = name.startsWith('out of the house') ? 3 : 2; b(`no jitter on steps, slopes or walls (tilt and height reversals within 0.5 s of the last: ${s.jitterPitch}, ${s.jitterY} ≤ ${j}; a minute: ${s.revPitch}, ${s.revY})`, s.jitterPitch <= j && s.jitterY <= j); }
+    // (standing, its arm may still let out slowly along its line to him after a wall: up to a metre)
+    // (standing, its arm may still let out slowly along its line to him after a wall: up to a metre; with a lock-on the
+    // view follows the target's own moves: up to 3°)
+    if (s.idleT > 0.5) b(`still behind him once he has stood a second without turning (turned ${s.idleTurnDeg}° ≤ 3, moved ${s.idleMove} m ≤ 1 in ${s.idleT} s)`, s.idleTurnDeg <= 3 && s.idleMove <= 1);
+    if (name.startsWith('out of the house')) { const f = parseFloat(String(notes[0]).replace('first view out ', '')), st = parseFloat(String(notes[1]).replace(/^steeper than 45° for /, '')); b(`out of the door behind his back at once, over his shoulder (20..72°) until he has walked clear (${notes.slice(0, 3).join(', ')}; ≤ 1.5 s over 45°)`, f >= 20 && f <= 72 && st <= 1.5); }
+  } else if (mode === 'lba') {
     b(`no jolt (camera acceleration max ${s.accMax} ≤ 40 m/s²)`, s.accMax <= 40 && s.joltsPerMin === 0);
     b(`never steep (max ${s.maxPitch}° ≤ 50°, ${s.steepT} s over 50°)`, s.maxPitch <= 50 && s.steepT === 0);
     b(`no oscillation (reversals/min: heading ${s.revYaw}, tilt ${s.revPitch}, height ${s.revY} ≤ 8)`, s.revYaw <= 8 && s.revPitch <= 8 && s.revY <= 8);

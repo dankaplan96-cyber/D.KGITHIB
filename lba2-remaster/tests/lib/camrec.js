@@ -57,13 +57,26 @@
     }
     return n;
   };
+  // (CAM-FOLLOW) jitter: reversals (as above) that come within `gap` s of the one before — a bob on a step, a shudder;
+  // a slow rise and fall over a hill or a house passed is not one
+  const jitter = (xs, ts, min, gap = 0.5) => {
+    if (!xs.length) return 0;
+    let n = 0, dir = 0, hi = xs[0], lo = xs[0], last = -1e9;
+    const hit = (t) => { if (t - last < gap) n++; last = t; };
+    xs.forEach((x, i) => {
+      hi = Math.max(hi, x); lo = Math.min(lo, x);
+      if (dir >= 0 && x < hi - min) { if (dir > 0) hit(ts[i]); dir = -1; lo = x; }
+      else if (dir <= 0 && x > lo + min) { if (dir < 0) hit(ts[i]); dir = 1; hi = x; }
+    });
+    return n;
+  };
   const RULES = ['follow', 'box', 'swing', 'rise', 'lift', 'keep', 'dist', 'auto', 'occ', 'ground'];
   // the measures of a recording (frames of one scene, play state; scene changes and their first second left out)
   CR.stats = (S, { still = 0.15 } = {}) => {
     const out = { frames: S.length };
     if (S.length < 3) return out;
-    let heroPath = 0, camPath = 0, turn = 0, stillTurn = 0, stillMove = 0, stillT = 0, dur = 0, snaps = 0, maxStep = 0, maxTurnStep = 0, shakeT = 0, jolts = 0, yawTravel = 0, steepT = 0, maxPitch = 0, pitchTravel = 0;
-    const rate = [], acc = [], angAcc = [], az = [], el = [], camY = [], dist = [], ruleSum = {}, ruleTop = {}, ruleSeries = {};
+    let heroPath = 0, camPath = 0, turn = 0, stillTurn = 0, stillMove = 0, stillT = 0, idleTurn = 0, idleMove = 0, idleT = 0, busyT = -1e9, dur = 0, snaps = 0, maxStep = 0, maxTurnStep = 0, shakeT = 0, jolts = 0, yawTravel = 0, steepT = 0, maxPitch = 0, pitchTravel = 0;
+    const rate = [], acc = [], angAcc = [], az = [], ha = [], ts = [], el = [], camY = [], dist = [], ruleSum = {}, ruleTop = {}, ruleSeries = {};
     for (const r of RULES) { ruleSum[r] = 0; ruleTop[r] = 0; ruleSeries[r] = [0]; }
     let prevW = null, skip = 0; const worst = { acc: [0], ang: [0], step: [0] };
     const note = (k2, v, b) => { if (v > worst[k2][0]) worst[k2] = [+v.toFixed(2), +b.t.toFixed(2), Object.entries(b.why).filter(([, x]) => x && x !== true).map(([n, x]) => n + ':' + (typeof x === 'number' ? x.toFixed(3) : x)).join(' '), 'hero ' + b.h.map((x) => x.toFixed(1)).join(',') + ' hs ' + b.hs.toFixed(2),
@@ -84,6 +97,9 @@
       rate.push((dA / dt) * deg);
       // he stands (or turns on the spot): the view should not move at all
       if (b.hs < still && a.hs < still && !b.shake) { stillTurn += dA; stillMove += dp; stillT += dt; }
+      // (CAM-FOLLOW) idle: he has stood without turning for a second — any view settles by then
+      if (b.hs >= still || Math.abs(b.ha - a.ha) > 1e-4) busyT = b.t;
+      else if (b.t - busyT > 1) { idleTurn += dA; idleMove += dp; idleT += dt; }
       // angular velocity (as a vector: the forward's change) and its change (the view's own jolts)
       const w = [(b.f[0] - a.f[0]) / dt, (b.f[1] - a.f[1]) / dt, (b.f[2] - a.f[2]) / dt];
       if (prevW) { const v = Math.hypot(w[0] - prevW[0], w[1] - prevW[1], w[2] - prevW[2]) / ((dt + a.dt) / 2) * deg; angAcc.push(v); note('ang', v, b); }
@@ -94,7 +110,7 @@
         { const v = Math.hypot(...[0, 1, 2].map((k2) => ((b.p[k2] - a.p[k2]) / dt - (a.p[k2] - c.p[k2]) / a.dt) / ((dt + a.dt) / 2))); acc.push(v); note('acc', v, b); if (v > 40) jolts++; }
       }
       { const pd = -Math.asin(Math.max(-1, Math.min(1, b.f[1]))) * deg, pa = -Math.asin(Math.max(-1, Math.min(1, a.f[1]))) * deg; maxPitch = Math.max(maxPitch, pd); if (pd > 50) steepT += dt; pitchTravel += Math.abs(pd - pa); let dz = Math.atan2(b.f[0], b.f[2]) - Math.atan2(a.f[0], a.f[2]); dz -= Math.round(dz / (2 * Math.PI)) * 2 * Math.PI; yawTravel += Math.abs(dz); }
-      az.push(Math.atan2(b.f[0], b.f[2])); el.push(Math.asin(Math.max(-1, Math.min(1, b.f[1])))); camY.push(b.p[1]); dist.push(Math.hypot(b.p[0] - b.h[0], b.p[1] - b.h[1], b.p[2] - b.h[2]));
+      az.push(Math.atan2(b.f[0], b.f[2])); ha.push(b.ha); ts.push(b.t); el.push(Math.asin(Math.max(-1, Math.min(1, b.f[1])))); camY.push(b.p[1]); dist.push(Math.hypot(b.p[0] - b.h[0], b.p[1] - b.h[1], b.p[2] - b.h[2]));
       // what moved it: each rule's contribution this frame (m, or rad for the turns × the distance: metres at the camera)
       const W = b.why, D = b.dist || 10, c = { follow: W.follow, box: W.box, swing: Math.abs(W.swing) * D, rise: Math.abs(W.rise) * D, lift: Math.abs(W.lift), keep: W.keep, dist: Math.abs(W.dist), auto: Math.abs(W.auto) * D, occ: Math.abs(W.occ), ground: Math.abs(W.ground) };
       let top = null, tv = 1e-4;
@@ -104,7 +120,7 @@
       for (const r of RULES) ruleSeries[r].push(ruleSeries[r][ruleSeries[r].length - 1] + (sv[r] || 0));
     }
     // unwrap the azimuth
-    for (let i = 1; i < az.length; i++) { while (az[i] - az[i - 1] > Math.PI) az[i] -= 2 * Math.PI; while (az[i] - az[i - 1] < -Math.PI) az[i] += 2 * Math.PI; }
+    for (const A of [az, ha]) for (let i = 1; i < A.length; i++) { while (A[i] - A[i - 1] > Math.PI) A[i] -= 2 * Math.PI; while (A[i] - A[i - 1] < -Math.PI) A[i] += 2 * Math.PI; }
     const per = (n) => +((n / Math.max(dur, 1e-3)) * 60).toFixed(1);   // per minute
     const r1 = (x, d = 1) => +x.toFixed(d);
     Object.assign(out, {
@@ -115,8 +131,9 @@
       accP95: r1(q(acc, 0.95)), accMax: r1(q(acc, 1)),
       // oscillation: reversals of the view's heading (≥ 0.5°) and tilt (≥ 0.5°), of the camera's height (≥ 5 cm) and of
       // its distance from him (≥ 10 cm), per minute
-      revYaw: per(reversals(az, 0.5 / deg)), revPitch: per(reversals(el, 0.5 / deg)), revY: per(reversals(camY, 0.05)), revDist: per(reversals(dist, 0.1)),
-      stillT: r1(stillT), stillTurnDeg: r1(stillTurn * deg, 2), stillMove: r1(stillMove, 2),
+      revYaw: per(reversals(az, 0.5 / deg)), revHero: per(reversals(ha, 0.5 / deg)), revPitch: per(reversals(el, 0.5 / deg)), revY: per(reversals(camY, 0.05)), revDist: per(reversals(dist, 0.1)),
+      stillT: r1(stillT), stillTurnDeg: r1(stillTurn * deg, 2), stillMove: r1(stillMove, 2), idleT: r1(idleT), idleTurnDeg: r1(idleTurn * deg, 2), idleMove: r1(idleMove, 2),
+      jitterPitch: jitter(el, ts, 0.5 / deg), jitterY: jitter(camY, ts, 0.05),
       snaps, maxStep: r1(maxStep, 2), maxTurnStepDeg: r1(maxTurnStep * deg, 2),
       // the view's tilt: the steepest it got (°), how long it looked down steeper than 50° (s), how far it tilted (°/min);
       // its heading's travel (°/min); jolts: frames accelerating the camera > 40 m/s², per minute; shake time left out (s)

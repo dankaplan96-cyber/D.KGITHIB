@@ -513,14 +513,16 @@ export class Hero extends Actor {
     const yaw = this.inputYaw(mv, g), fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
     return { x: rx * mv.x + fx * mv.y, z: rz * mv.x + fz * mv.y };
   }
-  // the view's heading the camera-relative (Modern) stick is read against. Under the Follow camera (CONTROL-FEEL) the
-  // view turns round behind him by itself: the stick keeps the heading it was pushed under until it is let go or pushed
-  // a new way (more than 45°), so the view's swing never turns his way and chases itself
+  // the view's heading the camera-relative (Modern) stick is read against. Under the Follow camera (CAM-FOLLOW) the
+  // view turns round behind him as he turns: a direction held keeps the heading it was pushed under, so the view's
+  // swing never turns his way and chases itself (a held side arrow runs him straight on while the view comes round);
+  // a new direction (let go, or more than 20° another way: Up after Up-Right) reads the view as it is now, so Up goes
+  // where the view looks
   inputYaw(mv, g) {
     const yaw = g.camRig.yaw;
     if (g.camRig.mode !== 'follow' || Math.hypot(mv.x, mv.y) <= 0.08) { this.refYaw = null; return yaw; }
     const a = Math.atan2(mv.x, mv.y);
-    if (this.refYaw == null || Math.abs(angleDiff(this.refStick, a)) > Math.PI / 4) { this.refYaw = yaw; this.refStick = a; }
+    if (this.refYaw == null || Math.abs(angleDiff(this.refStick, a)) > Math.PI / 9) { this.refYaw = yaw; this.refStick = a; }
     return this.refYaw;
   }
   // the sword in the hand (only while it is the equipped weapon)

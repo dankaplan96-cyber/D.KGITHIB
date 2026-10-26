@@ -12,12 +12,13 @@
 //      the stones, the pipeline, every opaque mesh there) within 0.15 m of the camera (the near plane is 0.1 m).
 //  (c) scene changes: out of every Citadel door by input, the camera starts at its new shot (see below).
 // SHOTS=<dir> keeps a screenshot after each event. ONLY=<case name substring> runs some of (a); PART=a|b|c one part.
+// CAM=follow runs (a) and (b) under the Follow camera (CAM-FOLLOW: the chase camera behind his back); (c) always covers it.
 // GAME_URL as the other tests.
 import { launch, open, menu, checker } from './lib/boot.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 const { check, checkVisual, done } = checker();
-const SHOTS = process.env.SHOTS, ONLY = process.env.ONLY, PART = process.env.PART;
+const SHOTS = process.env.SHOTS, ONLY = process.env.ONLY, PART = process.env.PART, CAM = process.env.CAM;
 const allErrs = [];
 
 // page-side: the camera monitor, the throw at a target, the hero's visibility
@@ -27,7 +28,7 @@ async function install(page) {
     const G = game;
     window.T = {
       talkAll(max = 80) { for (let i = 0; i < max && G.state !== 'play' && G.state !== 'ending'; i++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.3); },
-      tp(x, z, a = 0, y = null) { const h = G.hero; h.pos.set(x, y == null ? G.physics.groundAt(x, z) : G.physics.groundAt(x, z, y + 1), z); h.angle = a; h.onGround = true; h.vy = 0; h.vel?.set?.(0, 0); G.camRig.lba.init = false; G.step(0.1); },
+      tp(x, z, a = 0, y = null) { const h = G.hero; h.pos.set(x, y == null ? G.physics.groundAt(x, z) : G.physics.groundAt(x, z, y + 1), z); h.angle = a; h.onGround = true; h.vy = 0; h.vel?.set?.(0, 0); G.camRig.lba.init = false; if (G.camRig.ch) G.camRig.ch.init = false; G.step(0.1); },
     };
     // is the camera inside something solid? (the reason, or '')
     window.__inside = (c) => {
@@ -131,6 +132,7 @@ async function boot() {
   await menu(s.page, 'new');
   await install(s.page);
   await s.page.evaluate(() => T.talkAll());
+  if (CAM) await s.page.evaluate((m) => { game.settings.camera = m; game.applySettings(); game.camRig.cut = false; }, CAM);
   return s;
 }
 
@@ -207,7 +209,7 @@ if ((!PART || PART === 'b') && !ONLY) {
   // placements round the target, the stones and the rock stack
   const r1 = await page.evaluate(() => {
     const G = game, h = G.hero, out = { n: 0, bad: [], near: [], unseen: [] };
-    const settle = () => { __monReset(); __mon.on = true; G.camRig.lba.init = false; for (let f = 0; f < 40; f++) G.step(1 / 30); __mon.on = false; };
+    const settle = () => { __monReset(); __mon.on = true; G.camRig.lba.init = false; if (G.camRig.ch) G.camRig.ch.init = false; for (let f = 0; f < 40; f++) G.step(1 / 30); __mon.on = false; };
     const one = (x, z, a, y = null) => {
       T.tp(x, z, a, y); settle(); out.n++;
       if (__mon.nBad) out.bad.push({ x, z, a: +a.toFixed(2), ...__mon.bad });
@@ -257,7 +259,7 @@ if ((!PART || PART === 'b') && !ONLY) {
 // Citadel, out over the sea: a camera smoothed from where it was would cross it. Every Citadel door: in (placed on
 // the door, ISO), out by input (walk into the exit); from the first frame after the switch (the screen still black,
 // then clearing) the camera must start at its shot: within 20 m of Twinsen, within 3 m of where it stands 1 s on,
-// and never more than 0.6 m in one frame. In the remaster follow every door; the 1997 cuts and the free orbit on two.
+// and never more than 0.6 m in one frame. In the remaster follow every door; the 1997 cuts, the free orbit and Follow on two.
 if ((!PART || PART === 'c') && !ONLY) {
   console.log('---- scene changes: out of every Citadel door');
   const { browser, page, errs } = await boot();
@@ -272,7 +274,7 @@ if ((!PART || PART === 'c') && !ONLY) {
     const rec = [], rig = G.camRig, up = rig.update.bind(rig);
     let on = false;
     rig.update = (...q) => { up(...q); if (on) { const c = G.camera.position; rec.push({ out: !G.room, trans: !!G.trans, c: c.clone(), h: h.pos.clone() }); } };
-    const modes = [['remaster', () => { G.settings.camera = 'lba'; rig.setMode('lba'); rig.cut = false; }], ['1997 cuts', () => { rig.setMode('lba'); rig.cut = true; }], ['free orbit', () => { rig.setMode('free'); rig.cut = false; }]];
+    const modes = [['remaster', () => { G.settings.camera = 'lba'; rig.setMode('lba'); rig.cut = false; }], ['1997 cuts', () => { rig.setMode('lba'); rig.cut = true; }], ['free orbit', () => { rig.setMode('free'); rig.cut = false; }], ['Follow', () => { rig.setMode('follow'); rig.cut = false; }]];
     for (const [i, d] of doors.entries()) for (const [mode, set] of modes) {
       if (mode !== 'remaster' && i > 1) continue;
       set(); leave();
@@ -295,7 +297,7 @@ if ((!PART || PART === 'c') && !ONLY) {
   for (const x of r) console.log('   ', JSON.stringify(x));
   const rm = r.filter((x) => x.mode === 'remaster' && !x.skip);
   check(`scene changes: ${rm.length} Citadel doors left by input (remaster follow), the camera starts at its shot`, rm.length >= 4 && rm.every((x) => x.ok), rm.filter((x) => !x.ok));
-  check('scene changes: the 1997 cuts and the free orbit too (two doors each)', r.filter((x) => x.mode !== 'remaster').length >= 4 && r.filter((x) => x.mode !== 'remaster').every((x) => x.ok), r.filter((x) => x.mode !== 'remaster' && !x.ok));
+  check('scene changes: the 1997 cuts, the free orbit and Follow too (two doors each)', r.filter((x) => x.mode !== 'remaster').length >= 6 && r.filter((x) => x.mode !== 'remaster').every((x) => x.ok), r.filter((x) => x.mode !== 'remaster' && !x.ok));
   allErrs.push(...errs);
   await browser.close();
 }

@@ -437,6 +437,14 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Evidence: docs/character-review.md §19 (with the animator handoff), QA.md "ARTHUR-12",
   docs/lba3-production/reviews/ARTHUR-12/. Not verified: a real GPU, an independent review, the user's eye. Pim
   (STORY_BIBLE: "Arthur's age") and Tim/Lulu still use the small-child template: a follow-up, not changed here.
+## Done after (CAM-FOLLOW; status REVIEW)
+- Follow (Settings → Camera) is a chase camera at his back: turns with him (settled ~0.25 s after a turn, no
+  overshoot), still when he stands, keeps its heading when he walks backwards, draws in along the line to him at
+  walls (never inside anything, never over a roof; over his shoulder with his back to a wall), frames him and a locked
+  target from behind his shoulder; iso rooms and LBA2's view (the default) unchanged.
+- Evidence: QA.md "CAM-FOLLOW", docs/lba3-production/reviews/CAM-FOLLOW/ (run, turn, wall, lock strips). Not verified:
+  the feel by hand (the user); a GPU.
+
 ## Done after (CONTROL-FEEL, WORKLIST #31; status REVIEW)
 - The jump at LBA2's measured height and length (anim 71: 0.577 H up, 1.55 H along → 1.19 m, 3.2 m; 0.72 s in the air
   through its own gravity), the dodge at LBA2's distances by direction (2.41 / 2.03 / 1.45 m; was 3.1), a third camera

@@ -484,7 +484,10 @@ check('camera: hidden behind a tower, it swings round just enough to show him, e
 // stairs (a flight on a Zeelich island's decks) and the ground under him: the view glides up, no bob
 const stairs = await ev(({ camRec, camStats }) => {
   const G = game, h = G.hero, I = K.I, C = G.camRig, PH = G.physics;
-  const ids = Object.keys(G.rooms).filter((id) => G.rooms[id].outdoor && id.startsWith('isle_'));
+  // (LAZY-REGIONS: an area not entered yet is not among the rooms' own keys; the regions know every id, and reading a
+  // room builds its area)
+  const known = [...new Set([...Object.keys(G.rooms), ...(G.regions?.of?.keys?.() ?? [])])];
+  const ids = known.filter((id) => id.startsWith('isle_') && G.rooms[id]?.outdoor);
   for (const id of ids) {
     G.enterRoom(id, null, true); G.step(0.3);
     const st = (PH.colliders || []).filter((c) => c.stair && c.enabled && Math.hypot(c.x - h.pos.x, c.z - h.pos.z) < 300);

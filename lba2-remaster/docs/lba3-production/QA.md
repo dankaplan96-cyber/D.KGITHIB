@@ -1143,6 +1143,52 @@ that ran passed): the machine's root disk was full (236 MB free) and Chromium co
 `TMPDIR=/dev/shm/…` (the browsers' profiles on tmpfs): the results above. The first pass's one prologue check that
 failed ("the well's mites beaten with the ball", 3/4) is the known wandering-mite flake (38a92e7); it passed on the
 rerun (4/4).
+### CAM-FOLLOW: the Follow camera stands at his back (evidence docs/lba3-production/reviews/CAM-FOLLOW/)
+The user on build 169: "neither the original nor the new one really follows behind Twinsen — let the new one really
+stand at his back". Follow (Settings → Camera, "עוקבת") is now a chase camera (src/engine/camera.js `_chase`); LBA2's
+view stays the default and is untouched (camsteady's lba routes: the same numbers, VERDICT PASS).
+
+- Behind his back: 7 m back, 1.4 m over the ground under him at 19° down (a 50° lens), looking 1.2 m ahead of him. The
+  heading follows his facing through a critically damped spring (11 1/s): after a 90° turn on the spot it is within 15°
+  in 0.03 s (it turns with him, at most 17° behind while he turns) and within 3° in 0.23 s, no overshoot; never more
+  than 1.7° a frame at 60 fps for LBA2's 100°/s turn, 5.6° at 30 fps for Athletic's 169°/s. Standing: still. Walking
+  backwards (Classic, Down): 0° turned over 4.4 m. Modern controls: Down runs him at the camera with its heading held
+  (the view does not spin), Up then brings it round behind him; Up goes where the view looks (0° off) with no feedback
+  loop; a held side arrow keeps his way (1.4° drift) while the view comes round behind him (actors.js inputYaw: a held
+  direction keeps the heading it was pressed under; a new one, > 20° off, reads the view as it is).
+- Walls (a spring arm): the longest arm whose camera keeps 0.4 m from every collider, scenery volume and the terrain and
+  sees him; drawn in at up to 25 m/s (eased, 200 m/s²), out only after 0.6 s clear at ≤ 2.5 m/s; checked 0.2 and 0.45
+  s ahead down a swing or his walk and at the heading the spring is turning to, so a turn beside a house starts coming
+  in before the wall is between them. A tight spot (under eaves, his back near a wall) uses the least margins without
+  rising over the roof; his back against a wall under the eaves, it stands 2.4 m up over his shoulder looking down (the
+  least of 45..83° that sees him); pressed into a corner, closer along its line (to 0.7 m) rather than lifted. Backing
+  up to a house wall by input: the arm 7 → 1.6 m, never inside anything, he is seen every frame; walking away it lets
+  out at ≤ 2.5 m/s; a full turn on the spot by the wall: seen every frame, ≤ 1.7° a frame.
+- Lock-on: behind his shoulder on the line from the target (12° off the line), the look point part of the way to it:
+  Twinsen and a mite both on screen on every one of 132 locked frames while he closes and side-steps; let go, back
+  behind his back within 1.5 s.
+- Comfort: height through a 0.25 m dead band and its own spring; the camera-shake setting respected (Off: 0 m tremor).
+  Indoors the iso rooms are unchanged. Scene changes (every Citadel door) start the shot behind the fade.
+- camsteady's budgets for Follow are its own (tests/camsteady.mjs BUDGET, with the reasons): a chase camera turns with
+  him by design, so LBA2's "never turns, ≤ 40 m/s²" measures the design, not discomfort. Measured instead: no view
+  turn > 10° a frame, no camera step > 1.5 m (its arm cut in past a corner), tilt ≤ 72° and ≤ 2 s over 50°, heading
+  reversals ≤ his own facing's, no tilt/height reversal within 0.5 s of the last (3 on the route that hugs a house
+  wall), still once he has stood a second (≤ 3° with a lock on a moving mite, ≤ 1 m of the arm letting out). The LBA2
+  and free budgets are unchanged. tests/lib/camrec.js gained revHero, jitterPitch/jitterY, idleTurnDeg/idleMove.
+- CPU: CameraRig.update under Follow 0.20 ms a frame mean, 2.3 max (LBA2's view 0.27 / 7.7) on a 4-core Xeon 2.1 GHz
+  under SwiftShader (JS time only, not a GPU number).
+- Results (GAME_URL=http://localhost:8187/, TMPDIR=/dev/shm, one at a time, R7 verdicts, SwiftShader, on this commit):
+  camfollow 28, camsteady 100 (lba 23, free 27, follow 50), camclear 14 + 30 visual (LBA2; Follow on two doors),
+  camclear CAM=follow 14 + 30 visual (every target event, 522 cliff placements, the plateau walk), controls 79, combat
+  61, jumpreach 4, menus 38, stability 16, chapter1 19, zeelich-life 38: all VERDICT PASS, no error, no missing file.
+  controls' "camera stairs" first FAILed on 705d354's harness: with LAZY-REGIONS an area not entered is not among
+  `Object.keys(game.rooms)` (the regions Proxy has no ownKeys trap), so the test found no isle; it now reads the ids
+  from `game.regions.of` (a read builds the area) — a test fix, the camera unchanged.
+- Captures: run-strip (a 5 m/s run, 0.6 s apart), turn-strip (a turn on the spot, 0.3 s apart), wall-strip (backing up
+  to a house wall, 0.7 s apart), lock-strip (a lock-on, side-stepping round the mite, 0.6 s apart).
+- Not verified: the feel by hand (keyboard, pad, touch) — the user's call; any frame rate on a GPU; the playthrough
+  segments were not rerun (they run under LBA2's view, which is unchanged).
+
 ### CONTROL-FEEL: the jump, the dodge, a Follow camera (WORKLIST #31; evidence docs/lba3-production/reviews/CONTROL-FEEL/)
 The user: "the jump is too high", "the dodge takes him very far", "when I turn round he runs toward me" (chose a third
 camera, Follow; LBA2's stays the default). Measured in the user's ANIM.HQR (docs/LBA2_MEASUREMENTS.md "Jump and
