@@ -6,8 +6,8 @@
     { "name": "the south house (S3)", "orig": { "body": 57 }, "ours": { "fit": "house south" } },
     { "name": "the water office (S15)", "orig": { "body": 30 }, "ours": { "fit": "house water" } },
     { "name": "the stone house (S37)", "orig": { "body": 35 }, "ours": { "fit": "house stone" } },
-    { "name": "Bug Street, the south house (S22)", "orig": { "body": 32 }, "ours": { "fit": "house bug" } },
-    { "name": "Bug Street, the north house (S5)", "orig": { "body": 33 }, "ours": { "auto": "building" } },
+    { "name": "Bug Street, the south house (S22)", "orig": { "body": 32 }, "ours": { "fit": "house bug2" } },
+    { "name": "Bug Street, the north house (S5)", "orig": { "body": 33 }, "ours": { "fit": "house bug" } },
     { "name": "the baggage claim (S8)", "orig": { "body": 48 }, "ours": { "fit": "house baggage" }, "w": 2 },
     { "name": "the baggage claim's wing (S7)", "orig": { "body": 49 }, "ours": { "fit": "house wing2" } },
     { "name": "the museum (S14)", "orig": { "body": 60 }, "ours": { "fit": "house museum" } },
@@ -15,13 +15,13 @@
     { "name": "the lighthouse", "orig": { "body": 75 }, "ours": { "spot": "POI.lighthouse" }, "w": 2 },
     { "name": "the statue of Twinsen and Zoé", "orig": { "body": 24 }, "ours": { "spot": "spots.statue" }, "w": 2 },
     { "name": "Bersimon's tent (S21)", "orig": { "body": 3 }, "ours": { "spot": "spots.wizTent" }, "w": 2 },
-    { "name": "the great dome on the west islet (S26)", "orig": { "body": 21 }, "ours": null, "w": 2, "note": "a 19 × 19 m dome 12 m up on the islet; we have the islet, no dome" },
+    { "name": "the great dome on the west islet (S26)", "orig": { "body": 21 }, "ours": { "fit": "the west islet dome" }, "w": 2, "note": "a 19 × 19 m dome 12 m up on the islet (WORLD-80 step 2: built, island.js buildWestIslet)" },
     { "name": "the plateau's door (S2)", "orig": { "door": 2 }, "ours": { "door": true } },
     { "name": "the passage through the plateau, south door (S51)", "orig": { "door": 51, "i": 0 }, "ours": { "door": true }, "w": 0.5 },
     { "name": "the passage through the plateau, north door (S51)", "orig": { "door": 51, "i": 1 }, "ours": { "door": true }, "w": 0.5 },
     { "name": "the east shore's door (S17)", "orig": { "door": 17, "i": 0 }, "ours": { "door": true } },
     { "name": "the stone house's upper door (S17)", "orig": { "door": 17, "i": 1 }, "ours": { "door": true } },
-    { "name": "the 4.4 m figure or spire on the west islet's top, beside the dome", "orig": { "body": 23 }, "ours": null, "note": "nothing of ours 2.5 m or taller stands within 12 m (checked WORLD-80)" }
+    { "name": "the 4.4 m figure or spire on the west islet's top, beside the dome", "orig": { "body": 23 }, "ours": { "spot": "spots.isletFigure" }, "note": "WORLD-80 step 2: a robed stone figure with a staff on its plinth (island.js buildWestIslet)" }
   ],
   "desert": [
     { "name": "the village (doors S35, S36, S38, S39)", "orig": { "xz": [-31.2, -45.9] }, "ours": { "spot": "spots.plaza" }, "w": 2 },

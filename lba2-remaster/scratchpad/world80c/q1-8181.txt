@@ -1,0 +1,269 @@
+{
+ "skipped": [],
+ "placed": [
+  {
+   "id": "c-lane-barrel",
+   "kind": "barrel",
+   "x": -48.77,
+   "z": 27.8,
+   "moved": 1
+  },
+  {
+   "id": "c-path-bin",
+   "kind": "bin",
+   "x": -63.4,
+   "z": 35,
+   "moved": 1.5
+  },
+  {
+   "id": "c-path-crate",
+   "kind": "crate",
+   "x": -65.8,
+   "z": 43.7,
+   "moved": 0.5
+  },
+  {
+   "id": "c-west-barrel",
+   "kind": "barrel",
+   "x": -63.6,
+   "z": -2.7,
+   "moved": 1.5
+  },
+  {
+   "id": "c-west-bin",
+   "kind": "bin",
+   "x": -57.5,
+   "z": -6.2,
+   "moved": 0.5
+  },
+  {
+   "id": "c-head-crate",
+   "kind": "crate",
+   "x": -112.2,
+   "z": 98.13,
+   "moved": 1
+  },
+  {
+   "id": "c-bug-barrel",
+   "kind": "barrel",
+   "x": -59.6,
+   "z": -18.2,
+   "moved": 0
+  },
+  {
+   "id": "c-quay-barrel",
+   "kind": "barrel",
+   "x": -117,
+   "z": 37.63,
+   "moved": 1
+  },
+  {
+   "id": "c-nbr-crate",
+   "kind": "crate",
+   "x": -32.17,
+   "z": 71.65,
+   "moved": 0.5
+  }
+ ],
+ "shut": [
+  {
+   "id": "dome",
+   "x": -159.7,
+   "y": 13.699999809265137,
+   "z": 0.9000000000000007,
+   "ry": 0
+  },
+  {
+   "id": "plateau",
+   "x": -80.7,
+   "y": 11.025088134178755,
+   "z": -83,
+   "ry": 3.141592653589793
+  },
+  {
+   "id": "passageN",
+   "x": -25.9,
+   "y": 11.246952203603898,
+   "z": -85.6,
+   "ry": 3.141592653589793
+  },
+  {
+   "id": "passageS",
+   "x": -26.8,
+   "y": 13.899999618530273,
+   "z": -61.6,
+   "ry": 1.5707963267948966
+  }
+ ],
+ "houses": [
+  [
+   "twinsen",
+   -50.6,
+   79.8,
+   2.34,
+   -46.15,
+   77.2
+  ],
+  [
+   "bug",
+   -61.4,
+   -14.3,
+   2.56,
+   -56.55,
+   -13.4
+  ],
+  [
+   "stone",
+   -28.6,
+   -23.4,
+   2.35,
+   -26.84,
+   -20.23
+  ],
+  [
+   "shop",
+   -30,
+   0.5,
+   2.2,
+   -33.55,
+   -1.1
+  ],
+  [
+   "water",
+   -68.7,
+   11,
+   2.35,
+   -65.55,
+   11
+  ],
+  [
+   "pink",
+   -28.5,
+   24.6,
+   2.35,
+   -28.5,
+   27.85
+  ],
+  [
+   "south",
+   -48.2,
+   23.3,
+   2.31,
+   -46.1,
+   27.15
+  ],
+  [
+   "nbr",
+   -33.6,
+   75.3,
+   2.35,
+   -30.35,
+   75.3
+  ],
+  [
+   "baggage",
+   -84.2,
+   25.4,
+   2.35,
+   -88.8,
+   30.55
+  ],
+  [
+   "wing2",
+   -100.8,
+   26.4,
+   2.35,
+   -99.1,
+   31.55
+  ],
+  [
+   "museum",
+   -71,
+   42.5,
+   2.35,
+   -66.25,
+   41.1
+  ],
+  [
+   "bug2",
+   -62.3,
+   -8.2,
+   2.56,
+   -58.25,
+   -8.8
+  ],
+  [
+   "stoneup",
+   -25.25,
+   -31.45,
+   8.23,
+   -25.25,
+   -33.3
+  ]
+ ],
+ "stones0": {
+  "ground": 4.86,
+  "top": 4.884,
+  "n": 13
+ },
+ "trapFixes": 1760,
+ "propsSkipped": 22,
+ "cityDress": {
+  "placed": 50,
+  "skipped": 6
+ },
+ "signs": [
+  [
+   -60.5,
+   -21.8
+  ]
+ ],
+ "flowerBeds": {
+  "beds": 37,
+  "tulips": 1231
+ },
+ "load": {
+  "world": 3677,
+  "spaceport": 470,
+  "townlife": 97,
+  "containers": 11,
+  "citydress": 95,
+  "interiors": 1100,
+  "zeelich": 606,
+  "underground": 418,
+  "desert": 769,
+  "condenser": 23,
+  "temple": 24,
+  "wizards": 37,
+  "lba1": 344,
+  "hamalayi": 523,
+  "obsroom": 8,
+  "upper": 420,
+  "valves": 15,
+  "arena": 5,
+  "islands": 3035,
+  "regioncontainers": 27,
+  "actors": 363,
+  "total": 12413,
+  "prep": {
+   "paint": 80,
+   "programs": 201,
+   "textures": 25444,
+   "geometry": 2479,
+   "paint2": 3,
+   "batches": 369,
+   "shadowPrograms": 7321,
+   "firstFrame": 9745
+  },
+  "shaders": 45642,
+  "programs": 101
+ }
+}
+
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 0 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

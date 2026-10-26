@@ -11,6 +11,7 @@ Object.assign(STR.he, {
   w_sign_station: '→ תחנת המיזם המשותף (במבצר הישן של פאנפרוק)',
   w_sign_pipe: 'צינור המים של המיזם · לא לטפס!',
   w_sign_orchard: 'הבוסתן הישן · המגוף נעול. אין כניסה.',
+  w_door_shut: 'נעול.',
 });
 
 Object.assign(STR.en, {
@@ -23,4 +24,5 @@ Object.assign(STR.en, {
   w_sign_station: '→ Joint Project Station (old fortress)',
   w_sign_pipe: 'Joint Project Water Main · No Climbing',
   w_sign_orchard: 'Old Orchard · Valve locked. Keep out.',
+  w_door_shut: 'Locked.',
 });

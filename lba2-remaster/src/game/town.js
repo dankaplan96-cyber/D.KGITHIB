@@ -49,8 +49,13 @@ const HOUSES = [
   { id: 'twinsen', x: -50.6, z: 79.8, ry: Math.PI / 2, pad: 9, w: 9.4, d: 7.4, h: 3.3, door: { x: 2.6 }, wall: 'plaster', tint: '#fff8ea', roof: 'roof', shutters: '#3b78d8', beams: true, chimneyX: -0.3, lit: true,
     windows: [{ side: 'front', x: -2.3 }, { side: 'front', x: -0.2, w: 0.7 }, { side: 'left', x: -1.2 }, { side: 'right', x: 1.2 }, { side: 'back', x: 0 }] },
   // the others stand by the original's doors (LBA2's scenes 5, 37, 15, 3, 17, 9, 7, 8, 14), in our own styles
-  { id: 'bug', x: -57, z: -16.8, ry: 0.25, w: 7.6, d: 6.2, h: 3.1, door: { x: 1.9 }, wall: 'stone', tint: '#f0e8dc', roof: 'roofBlue', shutters: '#d8a13b', chimneyX: 0.25,
-    windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 0.4 }] },
+  // WORLD-80: Bug Street's pair, as the original's (LBA2's scenes 5 and 22): two houses side by side at the street's
+  // west end, their doors to the east. This one is the north house (scene 5, 8.6 × 6.9 m); 'bug2' (below, last) is
+  // the south one. They stand on one floor, the south one's (flatWith: the original's ground there is low), and no pad
+  // of their own (noPad: their floors are enough). The north one's floor eases back over 2 m, not 2.6: the ground round
+  // the stepping stones' foot, 3.3 m off its corner, stays as it was (world.js measures their first step from it).
+  { id: 'bug', x: -61.4, z: -14.3, ry: Math.PI / 2, noPad: true, flatWith: 'bug2', ease: 2.0, w: 6.2, d: 8.2, h: 3.3, door: { x: -0.9 }, wall: 'stone', tint: '#f0e8dc', roof: 'roofBlue', shutters: '#d8a13b', chimneyX: 0.25,
+    windows: [{ side: 'front', x: 1.5 }, { side: 'right', x: 0 }, { side: 'back', x: 0.6 }] },
   // (WORLD-FIX: the stone house stood with its west end on the ramp up to the plateau and its back 0.8 m from the
   // terrace (the ground 2.3 m up its back wall, 1.4 m over its west window) and a window under its door's surround:
   // narrower and shallower, 2.4 m east and 1.2 m south, the window to the other side of the door)
@@ -73,21 +78,43 @@ const HOUSES = [
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
   { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'plaster', tint: '#f0e0f0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
     windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.2 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: 3.4 put its shutter on the corner quoins)
+  // WORLD-80 (appended, so the houses above keep their seeds and places in W.houses):
+  // Bug Street's south house (the original's scene 22, 6.9 × 5.2 m), beside the north one, which shares its floor
+  { id: 'bug2', x: -62.3, z: -8.2, ry: Math.PI / 2, noPad: true, w: 4.9, d: 6.6, h: 3.0, door: { x: 0.6 }, wall: 'plaster', tint: '#f6e6cc', roof: 'roof', shutters: '#3f9a6a', chimneyX: -0.25,
+    windows: [{ side: 'front', x: -1.3, w: 0.6 }, { side: 'left', x: 0 }] },
+  // the stone house's upper door (the original's second door to scene 17): a small stone porch on the terrace behind
+  // the house, its door to the north at the terrace's level, in the house's own stone and blue roof (no heat post:
+  // it is the house's back door; a small floor so the terrace's edge behind it stays where it is)
+  { id: 'stoneup', x: -25.5, z: -31.8, ry: Math.PI, noPad: true, flat: 0.8, ease: 0.9, heat: false, w: 2.6, d: 2.2, h: 2.75, door: { x: 0 }, wall: 'stone', roof: 'roofBlue', shutters: '#3f9a6a', chimney: false,
+    windows: [{ side: 'left', x: 0, y: 1.2, w: 0.5, h: 0.6 }] },
 ];
 // the houses beyond the square stand on level pads; those round it keep the town's own ground (world.js)
-for (const h of HOUSES) if (!h.pad && Math.hypot(h.x - V.x, h.z - V.z) > 18) h.pad = Math.max(h.w, h.d) * 0.75 + 2;
-export const HOUSE_KEEP = HOUSES.filter((h) => !h.pad).map((h) => [h.x, h.z, Math.max(h.w, h.d) * 0.72]);
+for (const h of HOUSES) if (!h.pad && !h.noPad && Math.hypot(h.x - V.x, h.z - V.z) > 18) h.pad = Math.max(h.w, h.d) * 0.75 + 2;
+export const HOUSE_KEEP = HOUSES.filter((h) => !h.pad && !h.noPad).map((h) => [h.x, h.z, Math.max(h.w, h.d) * 0.72]);
 
 // houses that stand outside the town core get a level pad (world.js)
-export const HOUSE_PADS = HOUSES.filter((h) => h.pad).map((h) => ({ x: h.x, z: h.z, r: h.pad }));
+const padsOf = (list) => list.filter((h) => h.pad).map((h) => ({ x: h.x, z: h.z, r: h.pad }));
+export const HOUSE_PADS = padsOf(HOUSES);
 // WORLD-FIX: and every house its own floor: the ground under its footprint and FLAT m round it is levelled to the
 // ground before its door (the street or path it opens on), then eases back to the land over EASE m (world.js
 // islandHeight, last). The bug house's door was 0.75 m under the street, the stone house sat in the ramp and the
 // terrace, others had a corner or a side 0.2–0.6 m up their walls.
-export const HOUSE_FLATS = HOUSES.map((h) => {
-  const c = Math.cos(h.ry), s = Math.sin(h.ry), dx = h.door?.x ?? 0, dz = h.d / 2 + 0.9;
-  return { id: h.id, x: h.x, z: h.z, c, s, hw: h.w / 2, hd: h.d / 2, flat: 1.15, ease: h.ease ?? 2.6, door: [h.x + c * dx + s * dz, h.z - s * dx + c * dz] };
-});
+const flatsOf = (list) => {
+  const F = list.map((h) => {
+    const c = Math.cos(h.ry), s = Math.sin(h.ry), dx = h.door?.x ?? 0, dz = h.d / 2 + 0.9;
+    return { id: h.id, x: h.x, z: h.z, c, s, hw: h.w / 2, hd: h.d / 2, flat: h.flat ?? 1.15, ease: h.ease ?? 2.6, door: [h.x + c * dx + s * dz, h.z - s * dx + c * dz] };
+  });
+  // (WORLD-80: two houses built side by side stand on one floor: the level before the named one's door)
+  for (const [i, h] of list.entries()) if (h.flatWith) F[i].with = list.findIndex((g) => g.id === h.flatWith);
+  return F;
+};
+export const HOUSE_FLATS = flatsOf(HOUSES);
+// WORLD-80: the houses as they stood before step 2 (Bug Street's one house between the original's pair, no porch on
+// the terrace): world.js's scatter decides with the ground they made, so nothing else on the island moves
+export const OLD_BUG = { id: 'bug', x: -57, z: -16.8, ry: 0.25, w: 7.6, d: 6.2, door: { x: 1.9 } };
+OLD_BUG.pad = Math.max(OLD_BUG.w, OLD_BUG.d) * 0.75 + 2;
+const HOUSES_PRE = HOUSES.filter((h) => h.id !== 'bug2' && h.id !== 'stoneup').map((h) => (h.id === 'bug' ? OLD_BUG : h));
+export const HOUSE_PADS_PRE = padsOf(HOUSES_PRE), HOUSE_FLATS_PRE = flatsOf(HOUSES_PRE);
 
 // ------------------------------------------------------------------ helpers
 const M = new Map();
@@ -519,7 +546,7 @@ export function buildTown(scene, W) {
   // Pippa's stall, fed from the station's heat line. Dark until the station runs (chapter 1, once the water is
   // back), then they glow and breathe a little warm air: the benefit the town sees before the evacuation plan.
   W.heatPosts = heatPosts(scene, W, [
-    ...W.houses.map((hs) => {
+    ...W.houses.filter((hs, i) => HOUSES[i].heat !== false).map((hs) => {
       let nx = hs.door.x - hs.x, nz = hs.door.z - hs.z; const l = Math.hypot(nx, nz) || 1; nx /= l; nz /= l;
       return [hs.door.x + nx * 1.0 - nz * 1.45, hs.door.z + nz * 1.0 + nx * 1.45];
     }),

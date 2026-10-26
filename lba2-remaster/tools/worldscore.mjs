@@ -278,8 +278,8 @@ function scoreIsland(S, D) {
     if (u.fit) { const b = fit.find((f) => f.name === u.fit); if (b) claimed.add('fit:' + b.name); return b ? { x: b.x, z: b.z, by: 'registered building "' + u.fit + '"' } : null; }
     if (u.spot) { const v = dig(u.spot); const p = Array.isArray(v) ? v[u.i ?? 0] : v; return p ? { x: p.x, z: p.z, by: u.spot } : null; }
     if (u.xz) return { x: u.xz[0], z: u.xz[1], by: 'our coordinates ' + (u.why || '') };
-    if (u.door) {   // the nearest of our doors (the houses' doors, the region's door spots and exits)
-      const doors = [...(spots.houses || []).map((h) => h.door).filter(Boolean), ...(spots.houseDoors || []), ...(spots.lharDoors || []), ...(spots.exitsAll || []), ...(u.also || []).map((p) => dig(p)).filter(Boolean)];
+    if (u.door) {   // the nearest of our doors (the houses' doors, the region's door spots, shut doors and exits)
+      const doors = [...(spots.houses || []).map((h) => h.door).filter(Boolean), ...(spots.houseDoors || []), ...(spots.shutDoors || []), ...(spots.lharDoors || []), ...(spots.exitsAll || []), ...(u.also || []).map((p) => dig(p)).filter(Boolean)];
       let best = null; for (const p of doors) { const dd = Math.hypot(p.x - near0[0], p.z - near0[1]); if (!best || dd < best.d) best = { ...p, d: dd }; }
       return best && best.d < 30 ? { x: best.x, z: best.z, by: 'nearest door of ours' } : null;
     }
