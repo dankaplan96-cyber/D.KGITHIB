@@ -111,8 +111,19 @@ def main(argv):
     for name in names:
         info = man['tracks'][name]
         dec = decode(os.path.join(MUSIC, info['file']))
-        ref, _ = sf.read(os.path.join(MASTERS, name + '.flac'), dtype='float64', always_2d=True)
-        if info['loop']:
+        mpath = os.path.join(MASTERS, name + '.flac')
+        ref = sf.read(mpath, dtype='float64', always_2d=True)[0] if os.path.exists(mpath) else None
+        if ref is None:  # masters are git-ignored: MP3-only checks (the seam test needs only the MP3: both passes shift together)
+            off = 0
+            if info['loop']:
+                ls, le = info['loopStartSample'], info['loopEndSample']
+                lufs = meter.integrated_loudness(dec[ls:le])
+                err_db, click = seam_report(dec, ls, le)
+            else:
+                lufs = meter.integrated_loudness(dec)
+                err_db = click = None
+            m_err = m_click = codec = None
+        elif info['loop']:
             ls, le = info['loopStartSample'], info['loopEndSample']
             off = offset(dec, ref, ls)
             body = dec[off + ls:off + le]

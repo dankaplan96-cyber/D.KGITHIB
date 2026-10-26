@@ -240,10 +240,31 @@ def _finish(song, y, mix, suffix):
     }
     if getattr(song, 'group', None):
         info['group'] = song.group  # stems of one performance: the player switches between them in sync
+    info.update(timing(song))
     if song.loop:
         info.update({'loopStart': round(ls / SR, 6), 'loopEnd': round(le / SR, 6), 'loopStartSample': ls,
                      'loopEndSample': le, 'loopLength': round((le - ls) / SR, 3), 'seamMaxDiff': seam})
     return name, info
+
+
+def timing(song):
+    """Bar lines for the music player (seconds in the file): `bars` = the start of every bar up to the end of the
+    file's music, `bodyBar` = index of the first bar of the loop body (0 for a piece with an ending), `bodyStart` /
+    `bodyEnd` = where the loop body starts and ends in its first pass (the player's playlists end a looping piece
+    there), `phrase` = bars per phrase (entry points for a piece started part-way)."""
+    end = song.render_end_beat()
+    bars = []
+    b = 0.0
+    while b < end - 1e-9:
+        bars.append(round(float(song.sample(b, SR)) / SR, 3))
+        b += song.bar_beats
+    out = {'bars': bars, 'phrase': getattr(song, 'phrase_bars', 8)}
+    if song.loop:
+        out.update({'bodyBar': song.intro_bars, 'bodyStart': round(float(song.sample(song.body_start, SR)) / SR, 3),
+                    'bodyEnd': round(float(song.sample(song.body_end, SR)) / SR, 3)})
+    else:
+        out['bodyBar'] = song.intro_bars  # (a piece with an ending: its phrases count from the end of its intro)
+    return out
 
 
 def update_manifest(entries):
