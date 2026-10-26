@@ -1,0 +1,21 @@
+LBA3: The Awakening benchmark · build 0.31.0 (build 167) · 2026-10-26 07:33 (the user's SECOND computer, pasted in chat)
+GPU: Intel(R) UHD Graphics (0x00008A56, Ice Lake G1 class) Direct3D11 · preset picked on a first start: low · playing on: medium · automatic resolution: OFF
+window 1042×695 · devicePixelRatio 1.475 · Electron/43.7.9 · display ~189 Hz shortest interval
+startup: build 81.4 s (Citadel 24.9, islands 16.4, interiors 10.9, zeelich 5.3, desert 4.6 s) · shader preparation 29.4 s (programs 13.7, geometry 9.6, firstFrame 3.1, batches 1.4, paint 1.2) · 78 programs ready at the title
+memory: 2194 geometries, 491 textures, 517 programs, JS heap 769 MB · parallel shader compile: yes
+shader programs compiled while measured: 0 on every route at every preset (PERF-ARRIVAL holds here too)
+
+fps (GPU p50 ms; limited by):
+                 low                     medium (pixel ratio 1.25)     high (pixel ratio 1.475, MSAA 4×)
+  street      28.4 (15.3; CPU 33.7 ms)   37.4 (21.9; GPU)              12.9 (64.1; GPU)
+  interior    56.5 (5.1)                 57.3 (11.4)                   21.5 (36.0; GPU)
+  combat      57.5 (3.6)                 58.8 (6.3)                    29.8 (23.0; GPU)
+  transition  58.8 (8.9)                 54.3 (11.4)                   26.3 (30.9; GPU)
+  arrival     40.9 (10.0)                37.0 (17.1)                   19.1 (37.1)
+breakdown at Medium, street: as is 39.7 fps · no shadows 55.5 · res x0.6 (ratio 0.75) 60 · shadow map kept 53.7 · no MSAA 46.7
+
+Reading (Claude):
+- Startup is the real problem here: about 110 s (81 s build + 29 s shaders), against about 20 s on the Vega laptop. Most of it builds areas the player is not in (islands, interiors, Zeelich, desert: about 37 s).
+- The Low street run was CPU-bound (sim 16 ms, submit 17 ms) while Medium's street sim was 5 ms. It ran first, right after startup, so background work after loading probably skewed it.
+- The window's devicePixelRatio is 1.475. Medium renders at 1.25 and High at 1.475, so High draws 2.2× the pixels the Vega laptop drew. Automatic resolution was off.
+- Medium is GPU-bound on the street (shadows about 2.8 ms; pixel count). Resolution ×0.6 gives 60 fps.
