@@ -1011,7 +1011,8 @@ export function stove(k) {
 }
 
 // Welsh dresser: cupboard base and plate rack ------------------------------
-export function dresser(k, { w = 1.5, pal = 'honey' } = {}) {
+// rack: false gives the low sideboard (the cupboard only, a top to set things on: 0.92 high)
+export function dresser(k, { w = 1.5, pal = 'honey', rack = true } = {}) {
   const m = MAT.wood(pal), md = MAT.wood(darker(pal)), br = MAT.brass();
   const d = 0.5;
   k.add(rbox(w, 0.1, d, 0.02), md, 0, 0.05, 0);
@@ -1025,6 +1026,7 @@ export function dresser(k, { w = 1.5, pal = 'honey' } = {}) {
     k.add(rbox(w / 2 - 0.24, 0.36, 0.025, 0.02), md, sx * (w / 4), 0.39, d / 2 + 0.01);
     k.add(sphere(0.022, 8, 6), br, sx * 0.08, 0.42, d / 2 + 0.03);
   }
+  if (!rack) return { hw: w / 2 + 0.03, hd: d / 2 + 0.02, top: 0.92 };
   // plate rack
   const rd = 0.24, rh = 1.15, z0 = -d / 2 + rd / 2;
   for (const sx of [-1, 1]) k.add(slab('rackside', (s) => { s.moveTo(-rd / 2, 0); s.lineTo(rd / 2, 0); s.lineTo(rd / 2, 0.2); s.quadraticCurveTo(-rd / 2 + 0.04, 0.3, -rd / 2 + 0.06, rh); s.lineTo(-rd / 2, rh); s.lineTo(-rd / 2, 0); }, 0.04, 0.008), m, sx * (w / 2 - 0.04), 0.92, z0, -Math.PI / 2);

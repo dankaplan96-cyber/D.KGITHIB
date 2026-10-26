@@ -1350,7 +1350,58 @@ The same for the current chapter's things-to-use list and its action handler (ch
 After both fixes: spaceport PASS with 0 on access (was 1), chapter2, chapter4, chapter5, chapter6 PASS (0 on access);
 chapter7 and chapter8 PASS after the first of the two.
 
+### HOUSE-FIX: Twinsen's house furnished the right way round (evidence docs/lba3-production/reviews/HOUSE-FIX/)
+The user on build 169 (Hebrew, paraphrased): "In Twinsen's house there are things like a wardrobe blocking a window,
+an upside-down bed, etc." Every room of the house and the cellar (the same furniture kit) was audited from the play
+camera at ten hero spots, overhead and from wall elevations (tools/shots.mjs), with a collider/navigation audit
+(tools/audit.mjs) and walking probes. Findings, all fixed (src/game/interiors.js; src/game/props.js `dresser({ rack: false })`):
+
+| # | Room | Finding | Fix | Sheet |
+|---|---|---|---|---|
+| 1 | reading room | three tall bookcases in a row across the west window (the "wardrobe blocking a window") | two bookcases flank the window; the bookcase giver moves with the south one | 01 |
+| 2 | reading room | the reading chair faced the shelves from a metre away, its back to the room | under the window facing the room, lamp and side table beside it, the rug before it; its giver moves with it | 01 |
+| 3 | family room | the bed the wrong way round: footboard against the divider, headboard and pillows out in the room (the "upside-down bed") | turned: headboard to the divider, by the nightstand | 02 |
+| 4 | Arthur's room | the same for Arthur's bed | turned | 03 |
+| 5 | family room | the sea window's left curtain hung through the dresser's plate rack | windows 0.3 → 0.6 and 2.6 → 2.8 m, dresser 5 cm west | 04 |
+| 6 | family room | the Dino-Fly painting behind the stove shelf's jars | over the sink, between the shelf and the dresser | 04 |
+| 7 | family room | the island picture half behind a curtain | between the two windows, a little smaller | 04 |
+| 8 | family room | the coat stand in front of the family portrait | by the front door in the hall | 06 |
+| 9 | hall | a tall dresser backed onto the cut-away east wall (its back to the camera), the portrait hanging in the air behind it | a low sideboard; the family photo stands on it with a candle | 06 |
+| 10 | family room | the plush Dino-Fly in the air in front of the toy chest (0.47 m up) | sitting on the floor against the chest | 07 |
+| 11 | Arthur's room | his desk half under the window's curtain, the lamp through it | 0.65 m east, clear of the curtain | 05 |
+| 12 | reading room / hall | the doorway in the divider (z 9.6) opened onto the stairwell: walked through, Twinsen dropped 0.65 m onto the stairs against the railing | doorway moved to the divider's south end, between the railing and the front wall | 13 |
+| 13 | cellar | the radio stood inside the dresser's plate rack, 10 cm above the top | a rack-less sideboard; the radio on its top | 08 |
+| 14 | cellar | the Dino-Fly poster in the air over the cut-away east wall | on the west wall over the chair | 08 |
+
+Checked and left as they were: Zoé's corner (desk, chair, board), Arthur's bench and his boat spot, the trunk, the mend
+box and the heat meter, the stove with the firewood giver and the cupboard (the wardrobe against the low divider:
+the magic ball's search, not in front of a window), the table and its chairs (all facing it), the hall's armchairs,
+the rugs (none through furniture), the tap and the sink (sheet 11).
+
+Collision and navigation (tools/audit.mjs, audit-before.log / audit-after.log): every story spot (spawn, the cellar
+entry and exit, the front door, Zoé's, Arthur's and Twinsen's spots, the opening's marks and Zoé's walk out, Zoé's desk,
+the bench, the trunk, the mend box, the meter, the cupboard) is free and reachable on foot from the spawn, unchanged;
+every giver is reached within its radius, as before; reachable floor 188 → 189.5 m². A walk by held keys (tools/
+quality.mjs) from the front door through the new doorway, the reading room, Arthur's room, the hall, the family room
+and back reaches all 14 waypoints; the house re-entered 3× (same meshes and colliders), quality Low → Medium → High →
+Low and a resize to 800×450 with 0 errors (sheet 14).
+
+Draw calls and triangles (tools/counts.mjs, 1280×720, game camera, same spots, counts only): house family 106 → 106
+calls, 423k → 399k triangles; reading room 92 → 92, 441k → 410k; door 111 → 112, 443k → 412k; cellar 60 → 57,
+103k → 95k; textures 182 / 185 unchanged; house colliders 60 → 59. No frame-time claim: SwiftShader only.
+
+Opening (sheet 12, the ARTHUR-12 capture tool): the six stepped shots frame the same; the background shows the turned
+bed, the clear window and the plush on the floor.
+
+| Test (2026-10-26, port 8186, one at a time; final code) | Verdict |
+|---|---|
+| house, opening, givers, containers, zoe-resume | PASS ×5 |
+| prologue | PASS (a first rerun stopped at the title's New Game click after 30 s with the machine at load 7: a boot timeout, no check reached; PASS alone) |
+| chapter1, camclear, stability, perfbudget | PASS ×4 |
+| worldfit | FAIL "every area has registered buildings" {"citadel":14}: the base (705d354) fails the same; Zeelich isn't built at startup since LAZY-REGIONS. Not this task |
+
 ### Not tested / blocked
+- HOUSE-FIX on a real GPU and by the user's eye: NOT DONE (SwiftShader captures; self-reviewed, no independent review).
 - LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).
 - PERF-ARRIVAL on the user's laptop (High arrival and street fps, startup, compiles per route = 0): NOT VERIFIED.
 - Arthur at twelve (ARTHUR-12) on a real GPU and by the user's eye: NOT DONE (SwiftShader captures only); no
