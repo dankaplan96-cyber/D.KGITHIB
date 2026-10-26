@@ -1068,7 +1068,10 @@ export class MagicBall {
     this.trail.forEach((m) => m.material.color.set(col[1]));
     this.fire = level >= 4;
     // released from the hand, at the hand's position (the release frame of the throw)
-    if (this.state === 'inhand') { this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, hero.pos.y + 1.2); }
+    // (the hand is the previous frame's pose here: the combat step runs before the rig is posed. update() re-seats the
+    // throw on this frame's hand and re-plans it, so the release does not depend on the frame time: BALL-30FPS)
+    this.reseat = null;
+    if (this.state === 'inhand') { this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, hero.pos.y + 1.2); this.reseat = { hero, beh, aim: opts.aim, target: opts.target, charged }; }
     else this.pos.set(hero.pos.x + Math.sin(hero.angle) * 0.5, hero.pos.y + 1.6, hero.pos.z + Math.cos(hero.angle) * 0.5);
     const aim = opts.aim || { x: Math.sin(hero.angle), z: Math.cos(hero.angle) };
     const pl = this.plan(hero, beh, aim, opts.target, charged);
@@ -1118,6 +1121,18 @@ export class MagicBall {
     this.shadow.visible = this.state === 'fly' || this.state === 'return' || this.state === 'impact';
     if (this.state === 'inhand') { this.followHand(); this.trail.forEach((m) => (m.visible = false)); return; }
     if (this.state === 'idle' || this.state === 'held') { this.trail.forEach((m) => (m.visible = false)); return; }
+    if (this.reseat) {
+      // the release frame: the ball leaves the hand as it is posed NOW (this frame's rig update has run) and has not
+      // flown yet (it was released at the pose, not a frame earlier and then flown a whole frame on)
+      const r = this.reseat; this.reseat = null;
+      if (this.state === 'fly' && this.holder) {
+        this.followHand(); this.pos.copy(this.mesh.position); this.pos.y = Math.max(this.pos.y, r.hero.pos.y + 1.2);
+        const aim = r.aim || { x: Math.sin(r.hero.angle), z: Math.cos(r.hero.angle) };
+        const pl = this.plan(r.hero, r.beh, aim, r.target, r.charged);
+        this.vel.copy(pl.vel); this.grav = pl.grav; this.lift = pl.lift;
+        dt = 0;
+      }
+    }
     this.life += dt;
     if (this.state === 'impact') {
       // a beat at the point of impact, then home
