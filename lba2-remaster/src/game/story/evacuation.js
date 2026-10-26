@@ -44,6 +44,7 @@ export class Evacuation extends ChapterBase {
 
   // ---------------------------------------------------------------- props on Citadel for this chapter
   decorate() {
+    if (!this.once('citadel')) return;
     const g = this.game, W = this.W, root = W.root, P = g.physics;
     const H = (x, z) => W.H(x, z);
     const grp = new THREE.Group(); grp.visible = false; root.add(grp);
@@ -152,7 +153,7 @@ export class Evacuation extends ChapterBase {
       case 'c8hatch': this.chain([['hero', 'c8_wheel_hint']]); return true;
       case 'c8ship':
         f.c8_done = true; g.save(false);
-        g.startTransition(() => this.story.nextChapter());
+        g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
         return true;
     }
     return false;

@@ -16,6 +16,9 @@ export function gpuQuality(gpu = '') {
   if (/Iris|Radeon\(TM\) Graphics|Radeon Graphics|Intel/i.test(gpu)) return 'medium';
   return 'high';
 }
+// AUTO-FIT: a GPU that shares the computer's memory and power (Intel, AMD APUs, phone GPUs) or a software renderer:
+// on a high-density screen its presets draw fewer pixels (renderer.js basePixelRatio). Apple's own GPUs are left out.
+export const integratedGpu = (gpu = '') => /Intel|Vega|Radeon\(TM\) Graphics|Radeon Graphics|Mali|Adreno|PowerVR|GMA|SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(gpu) && !/Apple/i.test(gpu);
 // the old rule (before 0.30): any integrated GPU started on Medium
 export const oldGpuQuality = (gpu = '') => (/Intel|UHD|Iris|Radeon\(TM\) Graphics|Radeon Vega|Vega \d|Mali|Adreno|PowerVR/i.test(gpu) ? 'medium' : 'high');
 

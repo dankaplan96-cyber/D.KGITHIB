@@ -401,6 +401,7 @@ setting and the merge of origin: menus, display (the settings screen at 640×360
   build, travel.js points read lazily, mapdraw.js iterating built areas only, crystal spots and wizards.js
   dependencies resolved. Expected: startup build −60–75 % (the non-Citadel builders are 70–75 % of build time
   here), renderer memory down by the unbuilt areas. Owner: a future block with the story owner.
+  **Done (2026-10-26): LAZY-REGIONS, see LAZY_REGIONS.md** — build 10.7–10.9 → 4.0 s here, JS heap after GC 128 → 60 MB.
 - **R2 — release GPU copies of areas left long ago** (dispose geometries of areas not visited for N transitions,
   keep the CPU arrays; re-upload behind the black frame on return). Only if the laptop shows memory pressure.
 - **R3 — the remaining GPU cost on the laptop**: decide from the next benchmark's per-pass GPU times and breakdown

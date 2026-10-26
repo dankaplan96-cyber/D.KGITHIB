@@ -21,7 +21,8 @@ import { ChapterBase } from './base.js';
 import '../text/zeelife.js';
 
 export class ZeelichLife extends ChapterBase {
-  get Z() { return this.game.rooms.zeelich; }
+  // (LAZY-REGIONS: Zeelich once it is built; never builds it — the street's state goes on it as it is built)
+  get Z() { return this.game.regions?.built('zeelich'); }
   get L() { return this.Z?.life; }
   idx(key) { return this.story.chapters.findIndex((c) => c.key === key); }
   get open() { const i = this.idx('zeelich'); return i >= 0 && this.story.index >= i; }
@@ -41,15 +42,21 @@ export class ZeelichLife extends ChapterBase {
 
   // ---------------------------------------------------------------- state → world
   applyFlags() {
-    const L = this.L; if (!L) return;
     const f = this.f;
     if (f.zl_crate && !f.zl_done) f.zl_done = true;   // (a save made while it fell)
+    this.applyStreet();
+    this.settleOwed('zl_owe', 'coin', 5, 'zl_toast_owed');
+  }
+  // the watch house as the flags have it (on a load; on Zeelich's build after it)
+  applyStreet() {
+    const L = this.L; if (!L) return;
+    const f = this.f;
     L.watch.setCrate(f.zl_crate || 'flue');
     L.watch.setOven(this.off);
     this._ph = null; this.push();
     this.target();
-    this.settleOwed('zl_owe', 'coin', 5, 'zl_toast_owed');
   }
+  regionBuilt(ids) { if (ids.includes('zeelich')) this.applyStreet(); }
   // what follows the main story: Nara's crates wait by the pad only while the project grounds the shuttles (ch. 3)
   push() {
     const L = this.L; if (!L) return;

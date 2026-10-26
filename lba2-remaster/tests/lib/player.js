@@ -228,7 +228,9 @@
   // which scene a point belongs to: a room (rooms are built far apart, each around its centre) or outdoors
   P.sceneOf = (x, z) => {
     let best = null, bd = 60;
-    for (const [id, R] of Object.entries(G.rooms)) { if (R.outdoor) continue; const d = Math.hypot(x - R.center.x, z - R.center.z); if (d < bd) { bd = d; best = id; } }
+    // (LAZY-REGIONS: every interior, built or not: the game knows where each stands, src/game/regions.js centreOf)
+    const inside = G.regions ? [...G.regions.of.keys()].map((id) => [id, G.regions.centreOf(id)]).filter(([, c]) => c && !c.outdoor) : Object.entries(G.rooms).filter(([, R]) => !R.outdoor).map(([id, R]) => [id, R.center]);
+    for (const [id, c] of inside) { const d = Math.hypot(x - c.x, z - c.z); if (d < bd) { bd = d; best = id; } }
     if (best) return best;
     // the outdoor region he is in (Zeelich, Desert Island, the Hamalayi have no centre): anything close by is in it
     if (G.room?.outdoor && Math.hypot(x - hero().pos.x, z - hero().pos.z) < 350) return G.room.id;

@@ -64,9 +64,14 @@ export function planOf(name) {
 }
 export function buildIslands(scene, physics) {
   const out = {};
-  EP.setSignWords(ESMER_WORDS);
-  ISLES.forEach((n, i) => { if (LAYOUTS[n]) out['isle_' + n] = buildIsland(scene, physics, n, LAYOUTS[n], ISLE_AT(i)); });
+  ISLES.forEach((n) => { if (LAYOUTS[n]) out['isle_' + n] = buildIsle(scene, physics, n); });
   return out;
+}
+// LAZY-REGIONS: one island, the first time it is needed (src/game/regions.js). The sign boards' atlas holds every
+// island's words, so it is the same whichever island is built first.
+export function buildIsle(scene, physics, n) {
+  EP.setSignWords(ESMER_WORDS);
+  return buildIsland(scene, physics, n, LAYOUTS[n], ISLE_AT(ISLES.indexOf(n)));
 }
 
 // ================================================================== layout analysis (on the data grid)

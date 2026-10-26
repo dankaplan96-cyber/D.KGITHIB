@@ -9,6 +9,7 @@
 // Doors and exits are open in every chapter (src/game/story/index.js via lba1Doors / lba1Exit).
 import * as THREE from 'three';
 import { buildLba1Room, hasLba1Room } from './lba1room.js';
+export { hasLba1Room };
 import { MAT, rbox, plane, cyl, canvasTex } from './props.js';
 
 export const LBA1_AT = { asylum: { x: 7000, z: 0 }, bumaze: { x: 7200, z: 0 }, buhalls: { x: 7400, z: 0 } };
@@ -40,10 +41,16 @@ function asylumDoor(scene, physics) {
 
 let DOOR = null;
 export function buildLba1Places(scene, physics) {
+  buildLba1Door(scene, physics);
+  return { ...buildLba1Asylum(scene, physics), ...buildLba1Temple(scene, physics) };
+}
+// LAZY-REGIONS (src/game/regions.js): the asylum's block-house stands on Citadel (built with it); the asylum, and the
+// temple's maze and halls together, are built the first time they are needed
+export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DOOR) DOOR = asylumDoor(scene, physics); }
+export function buildLba1Asylum(scene, physics) {
   const A = LBA1_AT, out = {};
   if (hasLba1Room('asylum')) {
     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, { stone: 'grey', lamp: '#e8f0ff', view: 24 });
-    DOOR = asylumDoor(scene, physics);
     // the low stair-well (the original's exit to the yard) leads out; you come in at its top
     const ex = R.cell(10.5, 1, 42.6), sp = R.cell(10.5, 5, 39.8);
     R.exits.push({ x: ex.x, z: ex.z, r: 1.0, to: 'asylum-out' });
@@ -54,6 +61,10 @@ export function buildLba1Places(scene, physics) {
     const gv = R.cell(50.5, 14, 22.5);
     R.givers.push({ id: 'asylum_desk', x: gv.x, z: gv.z, y: gv.y, r: 1.2, top: 1, kinds: ['money', 'life', 'clover'], n: 3 });
   }
+  return out;
+}
+export function buildLba1Temple(scene, physics) {
+  const A = LBA1_AT, out = {};
   if (hasLba1Room('bumaze')) {
     const R = out.bumaze = buildLba1Room(scene, physics, 'bumaze', 'bumaze', A.bumaze.x, A.bumaze.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 9, view: 16, noCut: true, tint: 1.6 });
     R.cave = true; R.music = 'cave';

@@ -41,6 +41,8 @@ const SEA_Y = -0.2;
 
 // ================================================================== layout (local coordinates)
 const DOCK = { x: -106, z: 4, deck: 2.0 };
+// (LAZY-REGIONS: where the ferry lands, known before the island is built: travel.js)
+export const DESERT_DOCK = { x: DESERT.x + DOCK.x - 2, z: DESERT.z + DOCK.z, a: Math.PI / 2 };
 const VILLAGE = { x: -50, z: 2, r: 19 };
 const OASIS = { x: -40, z: -15, r: 7.5 };
 const PUMP = { x: -30, z: -7 };

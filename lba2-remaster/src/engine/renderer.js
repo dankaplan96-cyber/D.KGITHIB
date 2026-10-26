@@ -185,11 +185,14 @@ export class Renderer {
 
   // the preset's pixel ratio (before the automatic resolution): High the screen's (up to 2), Medium up to 1.25,
   // Low 0.85 (a 1366×768 laptop draws 1161×653; the automatic resolution may take it down to 0.7)
+  // AUTO-FIT: with an integrated GPU (`integrated`, set from perf.js integratedGpu) on a high-density screen, High
+  // stops at 1.25 and Medium at 1.0 (the user's Intel UHD window at 1.475 drew 2.2× the Vega laptop's pixels on High)
   basePixelRatio() {
-    const dpr = Math.min(devicePixelRatio, 2);
+    const dpr = Math.min(devicePixelRatio, 2), igpu = this.integrated && dpr > 1;
     if (this.retro) return Math.min(1, 560 / innerWidth); // ~640x480-era internal resolution
-    return this.quality === 'high' ? dpr : this.quality === 'medium' ? Math.min(dpr, 1.25) : Math.min(dpr, 0.85);
+    return this.quality === 'high' ? Math.min(dpr, igpu ? 1.25 : 2) : this.quality === 'medium' ? Math.min(dpr, igpu ? 1 : 1.25) : Math.min(dpr, 0.85);
   }
+  setIntegrated(on) { this.integrated = !!on; this.resize(); }
   // the lowest automatic-resolution factor per preset (Low never below a 0.7 pixel ratio: text and faces blur)
   minDyn() { return this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : 0.6; }
   // the factor the scene is drawn at now, and the pixel ratio that makes
@@ -203,7 +206,8 @@ export class Renderer {
     // MSAA: 4× on high (2× once the pixel ratio is high enough to smooth edges by itself), 2× on medium, none on
     // low (FXAA instead) / retro (the retro look wants hard pixels)
     // (Medium on a high-density screen: none, the pixel ratio smooths the edges and the GPU is spared the resolve)
-    const ms = this.retro || this.quality === 'low' || this.aa === 'fxaa' ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 ? 2 : 4;
+    // (AUTO-FIT: High on an integrated GPU on a high-density screen: 2×, its pixel ratio smooths the rest)
+    const ms = this.retro || this.quality === 'low' || this.aa === 'fxaa' ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 || (this.integrated && devicePixelRatio > 1 && pr > 1.05) ? 2 : 4;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
     const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${!!this.composer}`;
     if (key !== this._size) { this._size = key; this._want = { w, h, pr, ms }; }

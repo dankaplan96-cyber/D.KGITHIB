@@ -211,8 +211,12 @@ check('the carving over the door can be inspected: five vents puffing (INPUT)', 
 const wi = F0.s.indexOf(false), w0 = await throwAt(['seal', wi]); F = await fl();
 check('a warm disc opens and glows, counted in the objective (INPUT)', w0.r === 'hit' && F.s[wi] && F.on[wi] && new RegExp('\\(' + F.s.filter(Boolean).length + '\\/3\\)').test(await obj()), { wi, w0, F, obj: await obj() });
 await said();
+// (relative, like the later cold-count checks: a ball thrown at the warm disc can strike a cold one on its way — the
+//  base build did so in 1 of 4 runs here, LAZY-REGIONS QA — and only the first cold hit is spoken, later ones a toast)
+const coldBefore = (await fl()).cold;
 const c1 = await throwAt(['cold', 0]); const s4 = await said(); F = await fl();
-check('a cold disc: a thud, and every open disc grinds shut (line, flags, glow) (INPUT)', c1.r === 'hit' && !F.s.some(Boolean) && !F.on.some(Boolean) && F.cold === 1 && has(s4, /open ones ground shut/), { c1, F, s4 });
+const toasted = await ev(() => (game.hud.toastLog || []).some((l) => /^Cold disc/.test(l)));
+check('a cold disc: a thud, and every open disc grinds shut (line, flags, glow) (INPUT)', c1.r === 'hit' && !F.s.some(Boolean) && !F.on.some(Boolean) && F.cold === coldBefore + 1 && (coldBefore === 0 ? has(s4, /open ones ground shut/) : toasted), { c1, F, s4, coldBefore, toasted });
 check('after a cold disc the objective recalls what it does', (await obj()).includes('A cold disc shuts the others'), await obj());
 const ik2 = await ev(() => P.talk('ilka', { run: true })); const s5 = await said();
 check('Ilka\'s hint after a cold disc is the stronger one (walked back up, INPUT)', ik2.r === 'talked' && has(s5, /Leave the bare ones/), { ik2, s5 });

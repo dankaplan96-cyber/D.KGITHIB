@@ -25,14 +25,15 @@ export class WorkshopLife extends ChapterBase {
     super(story);
     this.on = false; this.heat = 0; this.sync = 0; this.tOn = 0; this.warned = false; this.sightSaid = false;
   }
-  get L() { return this.game.rooms.workshop?.life; }
+  // (LAZY-REGIONS: the workshop once it is built; never builds it — its state goes on it as it is built: regionBuilt)
+  get L() { return this.game.regions?.built('workshop')?.life; }
   get open() { const i = this.story.chapters.findIndex((c) => c.key === 'zeelich'); return i >= 0 && this.story.index >= i; }
   // the pair's parts are his to show: from his "At last!" in chapter 3 (c2_plan), or any later chapter
   get ready() { const i = this.story.chapters.findIndex((c) => c.key === 'zeelich'); return this.open && (this.story.index > i || !!this.f.c2_plan); }
   here() { return this.game.room?.id === 'workshop' && !!this.L; }
   // Baldino in his workshop (not at the platform, not away)
   balHere() {
-    const b = this.npc('baldino'), c = this.game.rooms.workshop?.center;
+    const b = this.npc('baldino'), c = this.game.regions.built('workshop')?.center;   // (LAZY-REGIONS: never builds it)
     return !!(b && b.present && c && this.here() && Math.hypot(b.pos.x - c.x, b.pos.z - c.z) < 6);
   }
 
@@ -47,6 +48,7 @@ export class WorkshopLife extends ChapterBase {
     this.L?.snap();
     this.settleOwed('w_owe', 'coin', 5, 'w_toast_owed');
   }
+  regionBuilt(ids) { if (ids.includes('workshop')) { this.push(); this.L?.snap(); } }
   push() {
     const f = this.f, L = this.L;
     if (!L) return;

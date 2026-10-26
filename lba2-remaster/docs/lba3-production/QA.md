@@ -1310,7 +1310,48 @@ PASS, no error, no missing file (logs and check.py before/after: docs/lba3-produ
   extra at the depot valve, the Whispering Cliffs valve and the platform shield in 06. Slow, not failing.
 - Game note (not a blocker): the aim marker can sit on an enemy behind a chain-link fence that the ball cannot pass.
 
+### LAZY-REGIONS + AUTO-FIT: areas built on first entry; resolution that fits the machine (docs/lba3-performance/LAZY_REGIONS.md)
+
+Base f09ce7e (served from a git archive on port 8185 for A/B); candidate this branch on port 8184; SwiftShader,
+quiet machine, tests one at a time. `REGIONS_LOG=1` prints every area built "on access" (read by code, not built by
+a planned path) with where it was read; the count per test is in the table.
+
+| Check | How | Result |
+|---|---|---|
+| Startup, page load → title | boot.mjs, 2 interleaved boots each | 46.5–48.4 s → 24.0–24.7 s; build 10.7–10.9 → 4.0 s (Citadel 3.35 s); shader preparation 34.3–35.8 → 18.6–19.1 s; programs at the title 93 → 74 |
+| The bar never still for long | boot.mjs timeline; ×6 CPU throttle | longest build step 2.6 s under throttle (SwiftShader's GPU waits in the preparation run longer here: the bar creeps through them) |
+| First entry per area (build ms behind the black / programs compiled) | arrive.mjs, real frame loop, Medium | Zeelich 806 / 9, Desert Island 852 / 3, the Hamalayi 927 / 1, Otringal 873 / 0, workshop 379 / 2, upper Zeelich 663 / 0, underground 588 / 7, office 208 / 0; a second entry 0 / 0 everywhere |
+| JS heap after GC | lazyregions.mjs (CDP) | 128 MB → 60 MB at the title; 70 after Zeelich, 98 after 8 areas, 122 with every area built |
+| No program compiled while measured | perfbudget.mjs | PASS (0 on every route, every preset) |
+| Same look | look.mjs + lookdiff.py, 8 views, Medium | no object, colour or layout change; ≤ 3-level shading noise over 0–8.6 % of pixels (re-baked trees, run variation), strong pixels only in the objective label and one pickup's sparkle |
+| Auto-fit caps and suggestion | autofit.mjs (devicePixelRatio 1.475, integrated GPU reported) | PASS: Medium 1.0, High 1.25, Low ≤ 0.85; automatic resolution on by default, an explicit choice kept; one suggestion after sustained slow windows, preset unchanged; the first-start pick (Low) stays applied |
+
+| Test | Verdict | On access |
+|---|---|---|
+| lazyregions (new) | FAIL once (the card counted by a 50 ms poll missed it; now a MutationObserver), PASS on the rerun | 2 (the test's own instant room changes) |
+| autofit (new) | PASS | 0 |
+| perfbudget, drawcalls | PASS, PASS | 0, 0 |
+| stability, transitions | PASS, PASS | 1, 1 (test teleports) |
+| travel, zislands, spaceport, holomap | PASS, PASS, PASS, PASS | 3, 0, 1, 5 (test teleports and the test reading island landings; spaceport's was the dig's per-frame code: fixed, below) |
+| desert-life, zeelich-life, townlife, containers | PASS ×4 | 0, 0, 0, 3 (test teleports) |
+| saveslots, save-migration, resume, menus | PASS ×4 | 0, 0, 1, 0 |
+| opening | PASS | 0 |
+| prologue | FAIL once at the well's mites (the known flaky step, see SAVE-SLOTS), PASS on the rerun | 0 |
+| chapter1–3, 5–7, 9, 10 | PASS | 0 |
+| chapter4 | FAIL in 4 of 5 runs at "a cold disc: a thud, and every open disc grinds shut"; the base failed it in 1 of 4 (a stray cold hit during the warm-disc throw). The check now compares cold hits before and after the throw (the speech the first time, the "Cold disc" toast after); PASS on the rerun | 0 |
+| chapter8 | FAIL (Zoé waited for Zeelich: chapter 2's placement read Zeelich before her case) → FIXED, PASS | 0 |
+| display, dynres, longsession, shipfiles | PASS ×4 | 0 |
+| timing | FAIL (expected per-area load times at startup) → test updated, PASS | 1 |
+| playthrough 01–06, one KEEP/LOAD chain from a new game, port 8184 | 01 PASS, 02 PASS, 03 PASS, 04 PASS, 05 PASS, 06 PASS (its declared ISO assist in the Zeelich depot fight, as before; Zeelich built by the planned path) | 0 in every segment |
+
+Found by the on-access log after the full run: chapters 4–7's per-frame code read their area every frame (in play the
+chapter's start builds it first; `spaceport` sets the chapter by flags). Now read only once built.
+The same for the current chapter's things-to-use list and its action handler (chapter 2, the dig, the steam, the pass).
+After both fixes: spaceport PASS with 0 on access (was 1), chapter2, chapter4, chapter5, chapter6 PASS (0 on access);
+chapter7 and chapter8 PASS after the first of the two.
+
 ### Not tested / blocked
+- LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).
 - PERF-ARRIVAL on the user's laptop (High arrival and street fps, startup, compiles per route = 0): NOT VERIFIED.
 - Arthur at twelve (ARTHUR-12) on a real GPU and by the user's eye: NOT DONE (SwiftShader captures only); no
   independent visual review yet.

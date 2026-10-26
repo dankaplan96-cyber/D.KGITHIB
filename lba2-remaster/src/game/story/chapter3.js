@@ -259,7 +259,7 @@ export class Chapter3 extends ChapterBase {
     g.save(false);
     g.startTransition(() => {
       if (this.story.chapters.length > 4) this.story.nextChapter();
-    });
+    }, this.story.nextAreas());
   }
 
   // ---------------------------------------------------------------- per room
@@ -337,8 +337,21 @@ export class Chapter3 extends ChapterBase {
     }
   }
   applyFlags(past) {
-    const f = this.f, R = this.R;
+    const f = this.f;
     if (!this.reached()) return;
+    // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
+    //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
+    this.game.regions.whenBuilt('c3deep', () => this.applyRooms());
+    // a fight interrupted by a reload restarts once play is under way in the core (no intro again: the load enters the
+    // room while the title is still up, and a dialogue started then is cut by the switch to play)
+    if (f.c3_fight && !f.c3_turned) { f.c3_fight = false; this.resumeFight = true; }
+    if (f.c3_turned && !f.c3_done) f.c3_turned = false;
+    if (f.c3_overload && !f.c3_done) { f.c3_overload = false; f.c3_coil = 0; }
+    void past;
+  }
+  // the underground's rooms as the flags have them
+  applyRooms() {
+    const f = this.f, R = this.R;
     const D = R.c3deep, G = R.c3gallery, C = R.c3core;
     if (D) {
       for (const v of D.valves || []) { const o = !!f.c3_valves?.[v.id]; v.setOpen?.(o); v.open = o; }
@@ -351,11 +364,6 @@ export class Chapter3 extends ChapterBase {
       if (f.c3_done) { C.drill?.setMode?.('shield'); C.field?.setLevel?.(1); }
     }
     if (f.c3_sendell) { R.c3sendell?.presence?.setVisible?.(true); R.c3sendell?.presence?.setIntensity?.(0.45); }
-    // a fight interrupted by a reload restarts once play is under way in the core (no intro again: the load enters the
-    // room while the title is still up, and a dialogue started then is cut by the switch to play)
-    if (f.c3_fight && !f.c3_turned) { f.c3_fight = false; this.resumeFight = true; }
-    if (f.c3_turned && !f.c3_done) f.c3_turned = false;
-    if (f.c3_overload && !f.c3_done) { f.c3_overload = false; f.c3_coil = 0; }
   }
 
   // ---------------------------------------------------------------- HUD
