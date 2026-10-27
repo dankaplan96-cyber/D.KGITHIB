@@ -25,3 +25,7 @@ Screenshots stay in the session scratchpad (polish-audit/), not in the repo.
 Known, not re-listed: the Hamalayi rebels' camp (done, HAMALAYI-POLISH: canvas wall tents, fire ring, supplies, banners; props-lba1hamalayi.js), the ch11 galleries' difficulty, the Bug Street Follow snap, the ch6 depot fight's assist.
 Known, not re-listed: the Hamalayi rebels' camp, the ch11 galleries' difficulty (done, DIFFICULTY: the near mite sleeps 7 m from the way in, the four mites wake in pairs 2.5 s apart (Mite def.wake), nothing bites across a drop (a mite or a guard 3 m below no longer hits the hero on the shelf), two supply crates (givers `crates_near`, `crates_far`: a heart each visit, a hop beside them) on the shelves; a fall into the chasm still costs 2 HP), the Bug Street Follow snap, the ch6 depot fight's assist.
 Not tested: frame rate, audio, human-style fights, the opening cinematic.
+
+## Found while fixing (27.10)
+| 17 | Story talks (Sendell ×2, Vesk) | Twinsen keeps his sword drawn while he talks (seen in the reveal-camera close-ups) | story scenes / hero weapon | S | |
+| 18 | 11 Sendell's chamber | Hard additive-square motes, very visible in the new close-up (not the Particles FX-SOFT redid) | chapter3.js / underground.js room dressing | S | |
