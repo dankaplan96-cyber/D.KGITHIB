@@ -1433,10 +1433,16 @@ export class Bolts {
 
 // ------------------------------------------------------------------ pickups
 const PICK = {
+  // a Kash: a small gold coin standing on its edge (it spins about its upright axis), a raised rim round a flat face
+  // (was a 0.73 m gold octahedron, nearly half Twinsen's height: the user found the pickups far too big)
   coin: () => {
-    const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 0), new THREE.MeshStandardMaterial({ color: '#ffd23a', emissive: '#c88a00', emissiveIntensity: 1.2, metalness: 0.8, roughness: 0.25 }));
-    m.scale.set(1, 1.3, 0.45);
-    return m;
+    const g = new THREE.Group();
+    const gold = new THREE.MeshStandardMaterial({ color: '#ffd23a', emissive: '#c88a00', emissiveIntensity: 1.1, metalness: 0.8, roughness: 0.3 });
+    const face = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.03, 16), gold);
+    face.rotation.x = Math.PI / 2; g.add(face);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.016, 5, 16), gold);
+    g.add(rim);
+    return g;
   },
   heart: () => {
     const g = new THREE.Group();
@@ -1444,6 +1450,7 @@ const PICK = {
     const a = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), mt); a.position.set(-0.12, 0.08, 0); g.add(a);
     const b = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), mt); b.position.set(0.12, 0.08, 0); g.add(b);
     const c = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.35, 10), mt); c.rotation.z = Math.PI; c.position.y = -0.12; g.add(c);
+    g.scale.setScalar(0.6);   // (smaller: the user found the pickups too big)
     return g;
   },
   flask: () => {
@@ -1451,6 +1458,7 @@ const PICK = {
     const mt = new THREE.MeshStandardMaterial({ color: '#5ab0ff', emissive: '#1a60ff', emissiveIntensity: 1.5, transparent: true, opacity: 0.9 });
     const b = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 10), mt); g.add(b);
     const n = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.2, 8), mt); n.position.y = 0.25; g.add(n);
+    g.scale.setScalar(0.62);   // (smaller: the user found the pickups too big)
     return g;
   },
   clover: () => {
@@ -1461,6 +1469,7 @@ const PICK = {
       const a = (i / 3) * Math.PI * 2 + Math.PI / 2;
       l.position.set(Math.cos(a) * 0.14, Math.sin(a) * 0.14, 0); g.add(l);
     }
+    g.scale.setScalar(0.7);   // (smaller: the user found the pickups too big)
     return g;
   },
   // a singing crystal: three blue spikes from one root, like the well's crystals in miniature
