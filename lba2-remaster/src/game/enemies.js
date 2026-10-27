@@ -11,6 +11,7 @@ import { Guard } from './guards.js';
 import { sculptRigid } from '../engine/sculpt.js';
 import { angleDiff, dampAngle, clamp, damp } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
+import { createGuardianRig, createHaulerRig, createFan } from './bossmodels.js';
 
 const vmat = (rough = 0.6, metal = 0) => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: rough, metalness: metal });
 
@@ -295,9 +296,12 @@ function createDroneRig() {
   return rig;
 }
 
+// (POLISH-AUDIT #3: the two bosses have bodies of their own, bossmodels.js; every other drone is the warden)
+const droneRig = (def) => (def.kind === 'guardian' ? createGuardianRig() : def.model === 'hauler' ? createHaulerRig() : createDroneRig());
+
 export class Drone extends Actor {
   constructor(game, def) {
-    super(game, createDroneRig(), def.x, def.z, 0.5);
+    super(game, droneRig(def), def.x, def.z, 0.5);
     this.def = def;
     this.id = def.id;
     this.group = def.group || 'depot';
@@ -328,6 +332,7 @@ export class Drone extends Actor {
     if (!this.alive) return;
     const g = this.game;
     this.hp -= n; this.rig.hitFlash(); this.recentHitT = 2.5;
+    this.rig.setHp?.(Math.max(0, this.hp) / this.maxHp);   // (the hauler's weak spot shows its health)
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ffd27a', 10, 4);
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 7, Math.cos(a) * 7); }
     // stagger cancels a charging shot, but not endlessly: after two staggers in 2 s it steadies for a moment
@@ -371,6 +376,8 @@ export class Drone extends Actor {
     this.recentHitT = Math.max(0, this.recentHitT - dt);
     this.steadyT = Math.max(0, this.steadyT - dt);
     this.stateT += dt;
+    // the hauler's cracked weak spot spits sparks once the hull is half gone (bossmodels.js shows the glow; no effect on the fight)
+    if (this.rig.setHp && this.hp < this.maxHp * 0.5 && Math.random() < dt * 5) g.particles.burst(this.pos.x, this.pos.y + this.hover + 0.55 * this.rig.root.scale.y, this.pos.z, '#ffb060', 2, 2);
     if (this.state !== 'windup' || !this.alive) this.aimLine.visible = false;
     if (this.state === 'stunned' && this.alive) {
       // sagging, sparking, harmless
@@ -462,11 +469,13 @@ export class Drone extends Actor {
 // for a few seconds (the window to line up a bank shot on a pylon). Its attack is readable: it stops,
 // glows and hums for over a second, then fires a fan of three bolts — step sideways or duck behind a
 // pylon. Each converted pylon makes it a little quicker; when the third is converted it loses power.
+const FAN_OFFS = [-0.32, 0, 0.32];
 export class Guardian extends Drone {
   constructor(game, def) {
     super(game, def);
-    this.rig.root.scale.setScalar(2.1);
+    // (its own model, bossmodels.js: built at the size it is drawn, no longer the warden scaled by 2.1)
     this.shadow.scale.multiplyScalar(2.2);
+    this.fan = createFan(game.scene);   // the bolt fan's floor markers, shown through the wind-up
     this.hover = 2.6; this.hitR = 1.4; this.hitH = 4.2;
     this.arena = def.arena || null;
     this.level = 0; this.stunT = 0;
@@ -474,7 +483,11 @@ export class Guardian extends Drone {
     this.group = def.group || 'core';
     this.state = 'chase';
   }
-  setLevel(n) { this.level = n; }
+  setLevel(n) {
+    const was = this.level; this.level = n; this.rig.setLevel?.(n);
+    // a ring comes off for each converted pylon: a clank and a burst of sparks off the body
+    if (n !== was && n > was && n <= 3 && this.alive) { const g = this.game; g.audio.play('clunk'); g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#ffd27a', 26, 5); }
+  }
   damage(n, from) {
     if (!this.alive) return;
     const g = this.game;
@@ -487,7 +500,7 @@ export class Guardian extends Drone {
   powerDown() {
     if (!this.alive) return;
     const g = this.game;
-    this.state = 'dead'; this.deadT = 0;
+    this.state = 'dead'; this.deadT = 0; this.fan.hide();
     g.audio.play('break'); g.camRig.shake(0.35);
     g.particles.burst(this.pos.x, this.pos.y + this.hover, this.pos.z, '#9fe8ff', 40, 6);
     new KnockOut(this, 'guardian', null);
@@ -495,17 +508,21 @@ export class Guardian extends Drone {
   }
   // keep circling the hero at a firing distance, inside the arena
   update(dt) {
-    if (koActive(this)) { super.update(dt); return; }
-    if (!this.present || !this.alive) return;
+    if (koActive(this)) { this.fan.hide(); super.update(dt); return; }
+    if (!this.present || !this.alive) { this.fan.hide(); return; }
     const g = this.game, hero = g.hero, P = g.physics;
     this.stateT += dt;
     let face = this.angleTo(hero), sp = 0;
+    this.rig.k = 0;
+    if (this.state !== 'windup') this.fan.hide();
     const d = this.distTo(hero);
     if (this.state === 'stunned') {
       // sags, sparks, can't attack
       this.hover = Math.max(1.4, this.hover - dt * 2.5);
       this.rig.play('hurt');
       if (Math.random() < dt * 10) g.particles.burst(this.pos.x, this.pos.y + this.hover + 0.6, this.pos.z, '#bff4ff', 2, 2);
+      // (sparks spitting off the dead rings and the loose plates)
+      if (Math.random() < dt * 7) g.particles.burst(this.pos.x + (Math.random() - 0.5) * 2.4, this.pos.y + this.hover + (Math.random() - 0.3) * 1.4, this.pos.z + (Math.random() - 0.5) * 2.4, '#ffc870', 3, 3);
       face = null;
       if (this.stateT > this.stunT) { this.state = 'chase'; this.stateT = 0; this.coolT = 0.8; }
     } else {
@@ -523,12 +540,20 @@ export class Guardian extends Drone {
         // the tell: stops, glows, hums
         this.rig.play('windup');
         const tell = 1.35 - this.level * 0.15;
+        const k = Math.min(1, this.stateT / tell);
+        this.rig.k = k;
         if (Math.random() < dt * 14) g.particles.burst(this.pos.x + Math.sin(this.angle) * 1.1, this.pos.y + this.hover - 0.6, this.pos.z + Math.cos(this.angle) * 1.1, '#ffb070', 1, 1);
+        // the fan's floor markers: where the three bolts will run if he stays put (the same aim the shot below takes)
+        {
+          const mx = this.pos.x + Math.sin(this.angle) * 1.1, mz = this.pos.z + Math.cos(this.angle) * 1.1;
+          const dd = Math.hypot(hero.pos.x - mx, hero.pos.z - mz);
+          this.fan.set(mx, mz, hero.pos.y + 0.05, Math.atan2(hero.pos.x - mx, hero.pos.z - mz), FAN_OFFS, Math.min(15, dd + 2.5), k, this.stateT);
+        }
         if (this.stateT > tell) {
           const from = new THREE.Vector3(this.pos.x + Math.sin(this.angle) * 1.1, this.pos.y + this.hover - 0.8, this.pos.z + Math.cos(this.angle) * 1.1);
           const to = new THREE.Vector3(hero.pos.x, hero.pos.y + 0.9, hero.pos.z);
           const dir = to.sub(from).normalize();
-          for (const off of [-0.32, 0, 0.32]) g.bolts.fire(from.clone(), dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), off), 8.5, 1);
+          for (const off of FAN_OFFS) g.bolts.fire(from.clone(), dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), off), 8.5, 1);
           g.audio.play('zap');
           this.rig.play('fire');
           this.state = 'chase'; this.stateT = 0; this.coolT = 2.8 - this.level * 0.5;
