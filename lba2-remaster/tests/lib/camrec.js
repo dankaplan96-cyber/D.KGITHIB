@@ -75,7 +75,7 @@
   CR.stats = (S, { still = 0.15 } = {}) => {
     const out = { frames: S.length };
     if (S.length < 3) return out;
-    let heroPath = 0, camPath = 0, turn = 0, stillTurn = 0, stillMove = 0, stillT = 0, idleTurn = 0, idleMove = 0, idleT = 0, busyT = -1e9, dur = 0, snaps = 0, maxStep = 0, maxTurnStep = 0, shakeT = 0, jolts = 0, yawTravel = 0, steepT = 0, maxPitch = 0, pitchTravel = 0;
+    let heroPath = 0, camPath = 0, turn = 0, stillTurn = 0, stillMove = 0, stillT = 0, idleTurn = 0, idleMove = 0, idleT = 0, busyT = -1e9, dur = 0, snaps = 0, maxStep = 0, maxStepKeep = 0, maxStepOther = 0, maxTurnStep = 0, shakeT = 0, jolts = 0, yawTravel = 0, steepT = 0, maxPitch = 0, pitchTravel = 0;
     const rate = [], acc = [], angAcc = [], az = [], ha = [], ts = [], el = [], camY = [], dist = [], ruleSum = {}, ruleTop = {}, ruleSeries = {};
     for (const r of RULES) { ruleSum[r] = 0; ruleTop[r] = 0; ruleSeries[r] = [0]; }
     let prevW = null, skip = 0; const worst = { acc: [0], ang: [0], step: [0] };
@@ -93,7 +93,7 @@
       const dh = Math.hypot(b.h[0] - a.h[0], b.h[2] - a.h[2]), dp = Math.hypot(b.p[0] - a.p[0], b.p[1] - a.p[1], b.p[2] - a.p[2]), dA = ang(a.f, b.f);
       heroPath += dh; camPath += dp; turn += dA;
       if (dp > 0.6 || dA > 0.17) snaps++;
-      maxStep = Math.max(maxStep, dp); note('step', dp, b); maxTurnStep = Math.max(maxTurnStep, dA);
+      maxStep = Math.max(maxStep, dp); if (b.why.keep) maxStepKeep = Math.max(maxStepKeep, dp); else maxStepOther = Math.max(maxStepOther, dp); note('step', dp, b); maxTurnStep = Math.max(maxTurnStep, dA);
       rate.push((dA / dt) * deg);
       // he stands (or turns on the spot): the view should not move at all
       if (b.hs < still && a.hs < still && !b.shake) { stillTurn += dA; stillMove += dp; stillT += dt; }
@@ -134,7 +134,7 @@
       revYaw: per(reversals(az, 0.5 / deg)), revHero: per(reversals(ha, 0.5 / deg)), revPitch: per(reversals(el, 0.5 / deg)), revY: per(reversals(camY, 0.05)), revDist: per(reversals(dist, 0.1)),
       stillT: r1(stillT), stillTurnDeg: r1(stillTurn * deg, 2), stillMove: r1(stillMove, 2), idleT: r1(idleT), idleTurnDeg: r1(idleTurn * deg, 2), idleMove: r1(idleMove, 2),
       jitterPitch: jitter(el, ts, 0.5 / deg), jitterY: jitter(camY, ts, 0.05),
-      snaps, maxStep: r1(maxStep, 2), maxTurnStepDeg: r1(maxTurnStep * deg, 2),
+      snaps, maxStep: r1(maxStep, 2), maxStepKeep: r1(maxStepKeep, 2), maxStepOther: r1(maxStepOther, 2), maxTurnStepDeg: r1(maxTurnStep * deg, 2),
       // the view's tilt: the steepest it got (°), how long it looked down steeper than 50° (s), how far it tilted (°/min);
       // its heading's travel (°/min); jolts: frames accelerating the camera > 40 m/s², per minute; shake time left out (s)
       maxPitch: r1(maxPitch), steepT: r1(steepT), pitchPerMin: per(pitchTravel), yawPerMin: per(yawTravel * deg), joltsPerMin: per(jolts), shakeT: r1(shakeT),

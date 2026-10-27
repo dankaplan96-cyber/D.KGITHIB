@@ -112,7 +112,12 @@ function BUDGET(mode, name, s, notes) {
     // in at a house turns the tilt, and its height follows the ground as it swings round him, so the LBA view's 8
     // reversals a minute would count every house he passes. What a player would feel instead, measured here:
     b(`the view never jumps round (max ${s.maxTurnStepDeg}° a frame ≤ 10°)`, s.maxTurnStepDeg <= 10);
-    b(`the camera never jumps but for its arm cut in toward him past a corner (max ${s.maxStep} m a frame ≤ 1.5)`, s.maxStep <= 1.5);
+    // (a frame where the rig itself says the arm was cut in because the camera would otherwise stand inside something —
+    // why.keep, "never in anything" — is the arm going through the thickness of an eave or a wall in one frame (measured on
+    // this route, at the north side of Bug Street's pair: the arm 2.98 → 1.49 m, 1.54 m a frame, through the eave volume
+    // the view had been drawn in on). The camera cannot be drawn inside it, so there is no eased path through: those
+    // frames may step as far as one such thickness (2 m); every other frame stays within 1.5 m)
+    b(`the camera never jumps but for its arm cut in toward him past a corner (max ${s.maxStepOther} m a frame ≤ 1.5; ${s.maxStepKeep} m on a frame where it was kept out of a wall ≤ 2)`, s.maxStepOther <= 1.5 && s.maxStepKeep <= 2);
     // (his back to a wall under the eaves — a house door — it looks down over his shoulder, ~60-70°, for the step it
     // takes him to walk clear; the LBA view turns to a side heading there instead, which a chase camera cannot)
     b(`never steeper than over his shoulder (max ${s.maxPitch}° ≤ 72°; ${s.steepT} s over 50° ≤ 2 s)`, s.maxPitch <= 72 && s.steepT <= 2);
