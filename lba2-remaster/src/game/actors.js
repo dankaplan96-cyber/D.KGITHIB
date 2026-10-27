@@ -7,6 +7,7 @@ import { TrackRunner } from '../engine/scripts.js';
 import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 import { HeroCombat } from './combat.js';
 import { WATER_FLOOR } from '../engine/physics.js';
+import { SoftParticles } from '../engine/softfx.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // The jump (CONTROL-FEEL, WORKLIST #31; the user: "the jump is too high"). LBA2's jump (ANIM.HQR 71, the hero's File3D
@@ -1573,50 +1574,9 @@ export class Pickups {
 }
 
 // ------------------------------------------------------------------ particles
-export class Particles {
-  constructor(scene, n = 700) {
-    this.n = n;
-    this.pos = new Float32Array(n * 3).fill(-9999);
-    this.col = new Float32Array(n * 3);
-    this.vel = new Float32Array(n * 3);
-    this.life = new Float32Array(n);
-    this.i = 0;
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.BufferAttribute(this.pos, 3));
-    geo.setAttribute('color', new THREE.BufferAttribute(this.col, 3));
-    this.points = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.22, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
-    this.points.frustumCulled = false;
-    scene.add(this.points);
-    this.c = new THREE.Color();
-  }
-  burst(x, y, z, color, count = 10, speed = 3) {
-    this.c.set(color);
-    for (let k = 0; k < count; k++) {
-      const i = this.i; this.i = (this.i + 1) % this.n;
-      this.pos[i * 3] = x; this.pos[i * 3 + 1] = y; this.pos[i * 3 + 2] = z;
-      const a = Math.random() * Math.PI * 2, u = Math.random() * 2 - 1, s = speed * (0.4 + Math.random() * 0.6);
-      const r = Math.sqrt(1 - u * u);
-      this.vel[i * 3] = Math.cos(a) * r * s; this.vel[i * 3 + 1] = Math.abs(u) * s + 1; this.vel[i * 3 + 2] = Math.sin(a) * r * s;
-      this.col[i * 3] = this.c.r; this.col[i * 3 + 1] = this.c.g; this.col[i * 3 + 2] = this.c.b;
-      this.life[i] = 0.5 + Math.random() * 0.5;
-    }
-  }
-  update(dt) {
-    for (let i = 0; i < this.n; i++) {
-      if (this.life[i] <= 0) continue;
-      this.life[i] -= dt;
-      if (this.life[i] <= 0) { this.pos[i * 3 + 1] = -9999; continue; }
-      this.vel[i * 3 + 1] -= 9 * dt;
-      this.pos[i * 3] += this.vel[i * 3] * dt;
-      this.pos[i * 3 + 1] += this.vel[i * 3 + 1] * dt;
-      this.pos[i * 3 + 2] += this.vel[i * 3 + 2] * dt;
-      const f = 1 - dt * 2;
-      this.col[i * 3] *= f; this.col[i * 3 + 1] *= f; this.col[i * 3 + 2] *= f;
-    }
-    this.points.geometry.attributes.position.needsUpdate = true;
-    this.points.geometry.attributes.color.needsUpdate = true;
-  }
-}
+// Every hit, pickup, pylon and coil burst, and the geysers and vents: soft round sprites with their own size, fade
+// and drift, one draw call (engine/softfx.js). burst(x, y, z, color, count, speed) is the call everyone makes: unchanged.
+export class Particles extends SoftParticles {}
 
 // ------------------------------------------------------------------ crystal mites (the well)
 // Small creatures grown from the new crystals: they skitter, lunge and bite.

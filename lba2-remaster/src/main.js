@@ -373,6 +373,7 @@ class Game {
     await step('Preparing graphics…', 0.84, 'textures', 1500);
     const tex = new Set();
     this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) for (const k of TEX_SLOTS) if (m[k]?.isTexture) tex.add(m[k]); });
+    tex.add(this.particles.mesh.material.uniforms.map.value);   // (FX-SOFT: the particles' atlas is a uniform, not a material slot)
     for (const t of tex) R.initTexture(t);
     (this._texUp ??= new WeakSet()).add(this.world.root);   // (the rooms built so far get theirs at their first entry)
     lap('textures');
@@ -1979,7 +1980,7 @@ class Game {
     else if (this.room.outdoor) updateKitLod(this.hero.pos);
     this.world._hero = this.hero; this.world._cam = this.camera;
     this.world.update(dt, this.time);
-    if (this.room) for (const u of this.room.updaters) u(dt, this.time);
+    if (this.room) for (const u of this.room.updaters) u(dt, this.time, this.particles);   // (3rd: the area's vents and the like puff through it)
     if (!this._inner) this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
     if (render) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
