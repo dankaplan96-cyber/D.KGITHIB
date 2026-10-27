@@ -9,6 +9,11 @@ on:
     paths:
       - 'lba2-remaster/**'
       - '.github/workflows/desktop.yml'
+      # (a change to the docs or the tests alone builds nothing: the game shipped is the same)
+      - '!lba2-remaster/docs/**'
+      - '!lba2-remaster/tests/**'
+      - '!lba2-remaster/**/*.md'
+      - '!lba2-remaster/*.png'
 
 permissions:
   contents: write
