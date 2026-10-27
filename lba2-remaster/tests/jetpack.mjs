@@ -95,6 +95,8 @@ const c0 = await ev(() => { const G = game; P.settle();
   Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 8, chapterKey: 'council', c1_water: true, c1_done: true, c1_plan: true, c2_shield: true, c2_mill_north: true, c2_mill_east: true, c2_mill_south: true,
     c5_dallanOK: true, c5_relief: true, c5_vent: true, c6_up: true, c6_trip2: true, c6_thawed: true, c7_vent: true, c8_mira: true, c8_fort: true, c8_depot: true, c8_zoeDone: true, c9_started: true, c9_vote: true });
   G.hero.hasBall = true;
+  // LAZY-REGIONS: the peg is decorated when the workshop's area is built (first entry); build it first so the check reads the peg, not an unbuilt area
+  G.regions.ensure('workshop', 'test');
   const before = { peg: !!G.story.arsenal.jetPeg, ready: G.story.arsenal.jetReady() };
   G.story.nextChapter(); G.step(0.5);
   const s = P.settle();
