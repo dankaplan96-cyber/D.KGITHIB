@@ -39,7 +39,7 @@ const layout = await ev(() => {
   for (const p of S.querySelectorAll('.set-page')) pages[p.dataset.page] = { shown: p.querySelectorAll(':scope > .set-row').length, advanced: p.querySelectorAll('.set-adv .set-row').length };
   return { keys: keys.sort(), pages, tabs: [...S.querySelectorAll('.set-tabs [data-tab]')].map((b) => b.textContent), open: game.setTab, sel: S.querySelector('.sel')?.className };
 });
-const KEYS = ['aa', 'aimAssist', 'camera', 'controls', 'difficulty', 'fps', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'res', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice'];
+const KEYS = ['aa', 'aimAssist', 'camDist', 'camera', 'controls', 'difficulty', 'fps', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'res', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice'];
 check('settings: every stored setting has its control (same keys as before)', JSON.stringify(layout.keys) === JSON.stringify(KEYS), layout.keys);
 check('settings: four pages (Game, Controls, Display, Sound), at most 4 rows each before Advanced; opens on Game with the tabs selected', layout.tabs.join() === 'Game,Controls,Display,Sound' && Object.values(layout.pages).every((p) => p.shown <= 4) && layout.open === 'game' && /set-tabs/.test(layout.sel), layout);
 // keyboard: → on the tabs turns the page, ↓ to Movement, → picks Modern (applied: Modern's keys), ← Classic again
