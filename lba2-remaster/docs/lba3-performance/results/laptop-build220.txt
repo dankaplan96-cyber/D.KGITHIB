@@ -1,0 +1,23 @@
+LBA3: The Awakening benchmark · build 0.32.0 (build 220) · 2026-10-27 (the user's Vega 8 laptop, pasted in chat), PLUGGED IN then ON BATTERY
+Measured with automatic resolution OFF (the benchmark's rule), so the battery numbers are without the dynamic-resolution help the game uses in play.
+
+PLUGGED IN (power: plugged in, battery profile not applied) · fps (GPU p50 ms)
+                 low            medium          high
+  street      60   (8.75)     60   (9.13)     60   (13.12)
+  interior    58.8 (7.99)     59.5 (8.97)     59.5 (10.33)
+  combat      59.2 (7.21)     60   (8.59)     60   (9.04)
+  transition  59.5 (7.77)     59.5 (8.94)     59.5 (11.16)
+  arrival     49.3 (8.37)     58.3 (8.76)     55.8 (11.86)   (the drops are stalls behind black: 433/400 ms at Low)
+  Against build 172 plugged in: High street 57 → 60 (GPU 14.7 → 13.1), High arrival 52.9 → 55.8.
+
+ON BATTERY (power: on battery, battery profile applied at Medium/High) · fps (GPU p50 ms)
+                 low            medium          high
+  street      49.1 (16.19)    40.1 (21.19)    27.9 (31.92)
+  interior    58.5 (9.81)     57.3 (13.67)    38.1 (23.48)
+  combat      57.3 (7.33)     60   (10.37)    47.3 (16.35)
+  transition  57.3 (9.46)     50.8 (13.5)     34.3 (22.93)
+  arrival     46   (12.36)    44.8 (16.84)    34.2 (24.78)
+  Against build 206 on battery: Medium street 24.4 → 40.1 fps (GPU 37.6 → 21.2 ms); Medium interior 48 → 57; arrival 31 → 45.
+  Medium street breakdown on battery (GPU ms): as is 20.79 · no shadows 17.97 · no lamps 17.54 · res ×0.6 14.87 (53 fps) · shadow cache off 22.26 · battery profile off 27.37
+  Medium interior on battery: as is 13.93 · no lamps 8.83 (56 fps) · res ×0.6 8.58
+  CPU on battery, Medium street: sim 4.0 + render submit 12.8 ms ≈ 17 ms a frame (at the 16.7 ms limit).
