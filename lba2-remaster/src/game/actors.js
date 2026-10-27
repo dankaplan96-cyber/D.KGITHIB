@@ -906,6 +906,33 @@ const BALL_STEP = 0.12, BALL_R = 0.14;
 // the ball's colour by magic level (1 yellow, 2 green, 3 red, 4 the fire ball)
 const BALL_LEVEL = [null, ['#ffe68a', '#ffc400'], ['#9dff8a', '#30d020'], ['#ff8a7a', '#ff2a10'], ['#ffc070', '#ff6a00']];
 
+// The ball's look in flight (WELL-POLISH). Drawn from time, not from frames, so 30 and 60 fps look the same:
+//  - the trail is ONE camera-facing ribbon (a single draw call) laid along the last TRAIL_SPAN seconds of the ball's own
+//    path, read from a ring of timed samples (a smooth curve whatever the frame time; when the ball is caught or stops
+//    it drains into the ball instead of vanishing);
+//  - a soft halo follows the ball; a hit or a bounce flashes (a glow and an expanding ring) and sprays sparks.
+// All of it is basic additive materials, the same programs as the glow sprites elsewhere: no new shader.
+const TRAIL_N = 20, TRAIL_SPAN = 0.4, SAMPLES = 128;
+let _fxTex = null;
+function fxTextures() {
+  if (_fxTex) return _fxTex;
+  const make = (w, h, f) => {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d'), im = x.createImageData(w, h);
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      const a = Math.max(0, Math.min(1, f(i / (w - 1), j / (h - 1)))) * 255, k = (j * w + i) * 4;
+      im.data[k] = 255; im.data[k + 1] = 255; im.data[k + 2] = 255; im.data[k + 3] = a;
+    }
+    x.putImageData(im, 0, 0);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  };
+  // (u along the trail from the ball back, v across it)
+  const trail = make(64, 16, (u, v) => Math.pow(1 - u, 1.5) * Math.pow(Math.max(0, 1 - Math.abs(v * 2 - 1)), 1.2));
+  const halo = make(64, 64, (u, v) => { const d = Math.hypot(u - 0.5, v - 0.5) * 2; return d >= 1 ? 0 : Math.pow(1 - d, 2.2); });
+  return (_fxTex = { trail, halo });
+}
+const _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _v4 = new THREE.Vector3();
+
 export class MagicBall {
   constructor(game) {
     this.game = game;
@@ -920,14 +947,35 @@ export class MagicBall {
     this.shadow = createBlobShadow(0.3);
     this.shadow.visible = false;
     game.scene.add(this.shadow);
-    this.trail = [];
-    const tg = new THREE.SphereGeometry(0.085, 8, 6);
-    for (let i = 0; i < 10; i++) {
-      const m = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({ color: '#ffd04a', transparent: true, opacity: 0.5 - i * 0.045, blending: THREE.AdditiveBlending, depthWrite: false }));
-      m.scale.setScalar(1 - i * 0.08);
-      m.visible = false;
-      game.scene.add(m);
-      this.trail.push(m);
+    // the trail ribbon, the halo and the flashes (see TRAIL_N above)
+    const T = fxTextures(), add = { blending: THREE.AdditiveBlending, transparent: true, depthWrite: false };
+    this.span = TRAIL_SPAN; this.clock = 0; this.sbuf = new Float64Array(SAMPLES * 4); this.sn = 0; this.sh = 0; this.track = false;
+    this.tpos = new Float32Array(TRAIL_N * 2 * 3);
+    const tuv = new Float32Array(TRAIL_N * 2 * 2), tidx = [];
+    for (let i = 0; i < TRAIL_N; i++) {
+      tuv.set([i / (TRAIL_N - 1), 0, i / (TRAIL_N - 1), 1], i * 4);
+      if (i < TRAIL_N - 1) { const a = 2 * i; tidx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+    }
+    const tgeo = new THREE.BufferGeometry();
+    tgeo.setAttribute('position', new THREE.BufferAttribute(this.tpos, 3).setUsage(THREE.DynamicDrawUsage));
+    tgeo.setAttribute('uv', new THREE.BufferAttribute(tuv, 2));
+    tgeo.setIndex(tidx);
+    this.trailMat = new THREE.MeshBasicMaterial({ map: T.trail, color: '#ffd04a', ...add });
+    this.ribbon = new THREE.Mesh(tgeo, this.trailMat);
+    this.ribbon.frustumCulled = false; this.ribbon.visible = false; this.ribbon.renderOrder = 4;
+    game.scene.add(this.ribbon);
+    this.haloMat = new THREE.MeshBasicMaterial({ map: T.halo, color: '#ffd04a', opacity: 0.6, ...add });
+    this.halo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.haloMat);
+    this.halo.visible = false; this.halo.renderOrder = 4;
+    game.scene.add(this.halo);
+    // two flash slots (a hit, a bounce, a release): a soft white glow and a ring in the ball's colour
+    this.flashes = []; this.fi = 0;
+    const rg = new THREE.RingGeometry(0.8, 1.0, 32), pg = new THREE.PlaneGeometry(1, 1);
+    for (let i = 0; i < 2; i++) {
+      const glow = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ map: T.halo, color: '#ffffff', ...add }));
+      const ring = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ color: '#ffd04a', ...add }));
+      for (const m of [glow, ring]) { m.visible = false; m.renderOrder = 5; game.scene.add(m); }
+      this.flashes.push({ glow, ring, t: 1, dur: 0.3, s: 1 });
     }
     // the aiming preview while charging: a few faint dots along the first arc
     this.dots = [];
@@ -975,7 +1023,8 @@ export class MagicBall {
       else if (i >= 0) { c.baseY = this.game.physics.groundAt(c.pos.x, c.pos.z, c.pos.y + 0.5) + 0.45; c.pos.y = c.baseY; }
     }
     this.state = 'idle'; this.mesh.visible = false; this.shadow.visible = false; this.mesh.scale.setScalar(1);
-    this.trail.forEach((m) => (m.visible = false)); this.preview(null);
+    this.track = false; this.span = TRAIL_SPAN; this.halo.visible = false; if (silent) this.sn = 0; // (a catch lets the trail drain; a reset clears it)
+    this.preview(null);
     if (!silent) this.game.audio.play('catch');
   }
   // a scene change credits a carried bonus; a load or a world reset lets it go ('drop')
@@ -1065,7 +1114,8 @@ export class MagicBall {
     this.carry = null;
     const col = BALL_LEVEL[Math.max(1, Math.min(4, level))];
     this.mat.color.set(col[0]); this.mat.emissive.set(col[1]);
-    this.trail.forEach((m) => m.material.color.set(col[1]));
+    this.trailMat.color.set(col[1]); this.haloMat.color.set(col[1]);
+    this.sn = 0; // (a new throw, a new trail)
     this.fire = level >= 4;
     // released from the hand, at the hand's position (the release frame of the throw)
     // (the hand is the previous frame's pose here: the combat step runs before the rig is posed. update() re-seats the
@@ -1116,11 +1166,12 @@ export class MagicBall {
     if (this.landMark.visible) this.landMark.position.set(land[0], land[1] - 0.15, land[2]);
   }
 
-  update(dt) {
+  update(dt) { this.step(dt); this.fx(dt); }
+  step(dt) {
     const g = this.game, P = g.physics;
     this.shadow.visible = this.state === 'fly' || this.state === 'return' || this.state === 'impact';
-    if (this.state === 'inhand') { this.followHand(); this.trail.forEach((m) => (m.visible = false)); return; }
-    if (this.state === 'idle' || this.state === 'held') { this.trail.forEach((m) => (m.visible = false)); return; }
+    if (this.state === 'inhand') { this.followHand(); return; }
+    if (this.state === 'idle' || this.state === 'held') return;
     if (this.reseat) {
       // the release frame: the ball leaves the hand as it is posed NOW (this frame's rig update has run) and has not
       // flown yet (it was released at the pose, not a frame earlier and then flown a whole frame on)
@@ -1130,6 +1181,7 @@ export class MagicBall {
         const aim = r.aim || { x: Math.sin(r.hero.angle), z: Math.cos(r.hero.angle) };
         const pl = this.plan(r.hero, r.beh, aim, r.target, r.charged);
         this.vel.copy(pl.vel); this.grav = pl.grav; this.lift = pl.lift;
+        this.flash(this.pos.x, this.pos.y, this.pos.z, r.charged ? 0.5 : 0.3, false); // (a small pop where the ball leaves the hand)
         dt = 0;
       }
     }
@@ -1158,13 +1210,80 @@ export class MagicBall {
     }
     this.mesh.position.copy(this.pos);
     placeBlobShadow(this.shadow, P, this.pos.x, this.pos.y, this.pos.z);
-    this.history.unshift(this.pos.clone());
-    if (this.history.length > 20) this.history.pop();
-    this.trail.forEach((m, i) => {
-      const hh = this.history[i * 2 + 1];
-      m.visible = !!hh && !g.renderer.retro;
-      if (hh) m.position.copy(hh);
-    });
+  }
+
+  // ---- the look (see TRAIL_N): the trail ribbon from timed samples, the halo, the flashes
+  flash(x, y, z, scale = 1, sparks = true) {
+    const g = this.game, f = this.flashes[(this.fi = (this.fi + 1) % this.flashes.length)];
+    f.t = 0; f.s = scale; f.dur = 0.22 + 0.12 * scale;
+    f.glow.position.set(x, y, z); f.ring.position.set(x, y, z);
+    f.ring.material.color.copy(this.mat.emissive);
+    f.glow.visible = f.ring.visible = true;
+    if (sparks && !g.renderer.retro) {
+      g.particles.burst(x, y, z, '#ffffff', Math.round(8 * scale), 5.5);
+      g.particles.burst(x, y, z, '#' + this.mat.emissive.getHexString(), Math.round(14 * scale), 3.4);
+    }
+  }
+  fx(dt) {
+    const g = this.game, cam = g.camera, retro = !!g.renderer?.retro;
+    this.clock += dt;
+    const live = this.state === 'fly' || this.state === 'return' || this.state === 'impact' || this.track;
+    if (live && this.mesh.visible) {
+      const last = this.sn ? ((this.sh + SAMPLES - 1) % SAMPLES) * 4 : -1;
+      if (last < 0 || this.clock > this.sbuf[last + 3] + 1e-4) {
+        const i = this.sh * 4, p = this.mesh.position;
+        this.sbuf[i] = p.x; this.sbuf[i + 1] = p.y; this.sbuf[i + 2] = p.z; this.sbuf[i + 3] = this.clock;
+        this.sh = (this.sh + 1) % SAMPLES; this.sn = Math.min(SAMPLES, this.sn + 1);
+      }
+    }
+    // the ribbon: TRAIL_N points at even times back along the path (the newest sample first)
+    const newest = this.sn ? this.sbuf[((this.sh + SAMPLES - 1) % SAMPLES) * 4 + 3] : -9;
+    const drawTrail = !retro && this.sn > 1 && this.clock - newest < this.span;
+    this.ribbon.visible = drawTrail;
+    if (drawTrail) {
+      const B = this.sbuf, at = (k) => ((this.sh - 1 - k + SAMPLES * 2) % SAMPLES) * 4;
+      const cp = cam.position, pts = this._pts ??= Array.from({ length: TRAIL_N }, () => new THREE.Vector3());
+      let k = 0;
+      for (let i = 0; i < TRAIL_N; i++) {
+        const tt = this.clock - (i / (TRAIL_N - 1)) * this.span;
+        while (k < this.sn - 1 && B[at(k + 1) + 3] > tt) k++;
+        const a = at(k);
+        if (tt >= B[a + 3] || k >= this.sn - 1) pts[i].set(B[a], B[a + 1], B[a + 2]);
+        else { const b = at(k + 1), f = (tt - B[b + 3]) / Math.max(1e-6, B[a + 3] - B[b + 3]); pts[i].set(B[b] + (B[a] - B[b]) * f, B[b + 1] + (B[a + 1] - B[b + 1]) * f, B[b + 2] + (B[a + 2] - B[b + 2]) * f); }
+      }
+      const sc = this.mesh.scale.x;
+      for (let i = 0; i < TRAIL_N; i++) {
+        const p0 = pts[Math.max(0, i - 1)], p1 = pts[Math.min(TRAIL_N - 1, i + 1)];
+        _v1.subVectors(p1, p0); // tangent
+        _v2.subVectors(pts[i], cp); // view
+        _v3.crossVectors(_v2, _v1);
+        const l = _v3.length();
+        if (l < 1e-6) _v3.set(0, 0, 0); else _v3.multiplyScalar((0.075 * sc * Math.pow(1 - i / (TRAIL_N - 1), 0.8) + 0.01) / l);
+        this.tpos[i * 6] = pts[i].x - _v3.x; this.tpos[i * 6 + 1] = pts[i].y - _v3.y; this.tpos[i * 6 + 2] = pts[i].z - _v3.z;
+        this.tpos[i * 6 + 3] = pts[i].x + _v3.x; this.tpos[i * 6 + 4] = pts[i].y + _v3.y; this.tpos[i * 6 + 5] = pts[i].z + _v3.z;
+      }
+      this.ribbon.geometry.attributes.position.needsUpdate = true;
+    }
+    // the halo
+    const showHalo = !retro && this.mesh.visible && this.state !== 'idle';
+    this.halo.visible = showHalo;
+    if (showHalo) {
+      this.halo.position.copy(this.mesh.position); this.halo.quaternion.copy(cam.quaternion);
+      const e = this.mat.emissiveIntensity, s = (0.5 + Math.min(e, 6) * 0.07) * this.mesh.scale.x * (1 + Math.sin(this.clock * 22) * 0.05);
+      this.halo.scale.set(s, s, 1);
+      this.haloMat.opacity = Math.min(0.75, 0.25 + e * 0.08);
+    }
+    // the flashes: a glow that swells and fades, a ring that runs out (both face the camera)
+    for (const f of this.flashes) {
+      if (!f.glow.visible) continue;
+      f.t += dt;
+      const k = f.t / f.dur;
+      if (k >= 1) { f.glow.visible = f.ring.visible = false; continue; }
+      const out = 1 - (1 - k) * (1 - k);
+      f.glow.quaternion.copy(cam.quaternion); f.ring.quaternion.copy(cam.quaternion);
+      f.glow.scale.setScalar((0.4 + 1.5 * out) * f.s); f.glow.material.opacity = (1 - k) * (1 - k) * 0.95;
+      f.ring.scale.setScalar((0.15 + 0.8 * out) * f.s); f.ring.material.opacity = (1 - k) * 0.7;
+    }
   }
 
   substep(h, frameDt) {
@@ -1203,6 +1322,7 @@ export class MagicBall {
     const g = this.game;
     if (hit.enemy) this.hits.add(hit.enemy);
     g.impact(this.pos.x, this.pos.y, this.pos.z, hit.material || 'magic', hit.result || 'hit', 0.6);
+    this.flash(this.pos.x, this.pos.y, this.pos.z, this.charged ? 1.35 : 1.05); // (the hit flash, the ring and the sparks)
     // a charged throw with bounces left goes on to the next enemy
     if (this.charged && this.bounces > 0 && hit.enemy) {
       const next = this.nextTarget(hit.enemy);
@@ -1265,6 +1385,7 @@ export class MagicBall {
     const g = this.game;
     g.audio.play('bounce');
     g.particles.burst(this.pos.x, this.pos.y, this.pos.z, '#ffe9a0', 5, 2);
+    this.flash(this.pos.x, this.pos.y, this.pos.z, 0.35, false);
     if (this.bounces < 0) { this.state = 'return'; this.retT = 0; }
     void kind;
   }

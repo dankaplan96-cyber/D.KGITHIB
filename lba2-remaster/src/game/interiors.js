@@ -725,6 +725,61 @@ function blueRocks() {
     bounds: { min: [-0.6, -0.1, -0.6], max: [0.6, 0.65, 0.6] }, cell: 0.025,
   });
 }
+// ---- faceted crystal (WELL-POLISH): a six-sided prism with a pointed cap, flat-shaded (every facet its own normal),
+// unit radius and height (the base ring at y 0, the cap's apex at y 1). Four shapes (a straight point, two cut at an
+// angle, a stubby one); scaled per crystal. Non-indexed, so Kit merges them into one draw call per material.
+const _crystalGeos = [];
+function crystalGeo(v = 0) {
+  v = ((v % 4) + 4) % 4;
+  if (_crystalGeos[v]) return _crystalGeos[v];
+  const h = (n) => { const s = Math.sin((v + 1) * 12.9898 + n * 78.233) * 43758.5453; return s - Math.floor(s); };
+  const N = 6, shoulder = [0.66, 0.74, 0.7, 0.82][v], apexX = [0, 0.32, -0.25, 0.08][v], apexZ = [0, 0.1, 0.22, -0.12][v];
+  const bot = [], top = [];
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2 + (h(i) - 0.5) * 0.26, r = 0.86 + h(i + 9) * 0.14;
+    bot.push([Math.cos(a) * r, 0, Math.sin(a) * r]);
+    top.push([Math.cos(a) * r * 0.9, shoulder + (h(i + 3) - 0.5) * 0.06, Math.sin(a) * r * 0.9]);
+  }
+  const apex = [apexX, 1, apexZ], pos = [];
+  const tri = (a, b, c) => {
+    const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3 - 0.45, cz = (a[2] + b[2] + c[2]) / 3;
+    if (nx * cx + ny * cy + nz * cz < 0) [b, c] = [c, b]; // (outward)
+    pos.push(...a, ...b, ...c);
+  };
+  for (let i = 0; i < N; i++) {
+    const j = (i + 1) % N;
+    tri(bot[i], bot[j], top[j]); tri(bot[i], top[j], top[i]); // the side
+    tri(top[i], top[j], apex);                                // the cap
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.computeVertexNormals(); // (non-indexed: one normal per facet)
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array((pos.length / 3) * 2), 2));
+  return (_crystalGeos[v] = g);
+}
+// the two materials of a crystal: a translucent faceted shell (the existing lit, transparent standard material, so no
+// new shader) and an opaque emissive core inside it, which is the "inner glow" (unlit basic, brightened and pulsed per frame)
+const crystalShell = (c, e, kk = 0.4, op = 0.72) => { const m = new THREE.MeshStandardMaterial({ color: c, emissive: e, emissiveIntensity: kk, roughness: 0.1, metalness: 0.2, transparent: true, opacity: op, depthWrite: false }); m.userData.noShadow = true; return m; };
+const crystalCore = (c) => { const m = new THREE.MeshBasicMaterial({ color: c }); m.userData.noShadow = true; m.userData.base = new THREE.Color(c); return m; };
+// one crystal: its shell and the core inside it, rooted at (x, y, z), leaning `tilt` towards the heading `yaw`
+function growCrystal(k, shell, core, x, y, z, yaw, tilt, h, r, v, tips) {
+  k.add(crystalGeo(v), shell, x, y, z, yaw, { rx: tilt, sx: r, sy: h, sz: r });
+  k.add(crystalGeo(v + 1), core, x, y, z, yaw, { rx: tilt, sx: r * 0.5, sy: h * 0.84, sz: r * 0.5 });
+  if (tips && h > 0.7) tips.push([x + Math.sin(tilt) * Math.sin(yaw) * h, y + Math.cos(tilt) * h, z + Math.sin(tilt) * Math.cos(yaw) * h]);
+}
+// a cluster: a tall one in the middle, shorter ones fanned round it. `heading` is where it leans (towards the room),
+// `spread` how far the others fan round that heading (π: all round, for a floor cluster).
+function crystalCluster(k, shell, core, x, y, z, { n = 6, s = 1, heading = 0, spread = Math.PI, lean = 0.22, seed = 0, tips } = {}) {
+  const h = (i) => { const q = Math.sin((seed + 1) * 4.37 + i * 91.7) * 43758.5453; return q - Math.floor(q); };
+  growCrystal(k, shell, core, x, y, z, heading, lean * 0.6, s * (1.25 + h(0) * 0.35), s * 0.27, seed, tips);
+  for (let i = 1; i < n; i++) {
+    const a = heading + (h(i) * 2 - 1) * spread, d = s * (0.18 + h(i + 20) * 0.3), len = s * (0.45 + h(i + 40) * 0.7);
+    growCrystal(k, shell, core, x + Math.sin(a) * d, y - 0.05, z + Math.cos(a) * d, a, lean + 0.12 + h(i + 60) * 0.42, len, s * (0.13 + h(i + 80) * 0.1), seed + i, tips);
+  }
+}
+
 function buildWell(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'well', 1100, 0);
   const R = B.room, k = B.k;
@@ -824,67 +879,123 @@ function buildWell(scene, physics) {
     sg.attributes.position.needsUpdate = true;
   });
 
-  // crystals that "weren't there before"
-  const crystalMat = (c, e, kk = 1.5) => new THREE.MeshStandardMaterial({ color: c, emissive: e, emissiveIntensity: kk, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.92 });
-  const cyan = crystalMat('#aef6ff', '#2ad0ff', 1.6), violet = crystalMat('#e0c0ff', '#9a4aff', 1.4);
-  const cluster = (x, y, z, n, s, m) => {
-    for (let i = 0; i < n; i++) {
-      const c = new THREE.Mesh(new THREE.OctahedronGeometry(s * (0.5 + Math.random() * 0.6), 0), m);
-      c.scale.y = 2 + Math.random();
-      c.position.set(x + (Math.random() - 0.5) * s * 1.6, y + (Math.random() - 0.3) * s, z + (Math.random() - 0.5) * s * 1.6);
-      c.rotation.set((Math.random() - 0.5) * 0.9, Math.random() * 3, (Math.random() - 0.5) * 0.9);
-      B.group.add(c);
-    }
-  };
-  [[-9.8, 1.6, -4], [-9.85, 2.4, 3], [-3, 1.9, -6.7], [2.5, 1.4, -6.7], [-6, 0.4, -6.5]].forEach(([x, y, z], i) => cluster(x, y, z, 5, 0.35, i % 2 ? violet : cyan));
+  // crystals that "weren't there before" (WELL-POLISH: faceted six-sided prisms with pointed caps in clusters, a translucent
+  // shell over a glowing core, all the static ones merged into a few draw calls per colour)
+  const cyanS = crystalShell('#7fe0ff', '#1096d0', 0.4), violetS = crystalShell('#c8a0ff', '#6a2ad8', 0.4);
+  const cyanC = crystalCore('#7ff0ff'), violetC = crystalCore('#b78aff');
+  const tips = []; // (where a crystal points: the glints twinkle there)
+  // growing out of the walls (leaning into the room) and up from the floor
+  [[-10.35, 1.7, -4.0, Math.PI / 2, 0], [-10.35, 2.5, 3.0, Math.PI / 2, 1], [-3, 1.9, -6.85, 0, 0], [2.5, 1.5, -6.85, 0, 1],
+    [-10.3, 0, -4.6, Math.PI / 2, 1], [-10.3, 0.2, 3.9, Math.PI / 2, 0], [-6, 0.35, -6.8, 0, 1], [0.6, 0, -6.8, 0, 0]].forEach(([x, y, z, heading, c], i) => {
+    crystalCluster(k, c ? violetS : cyanS, c ? violetC : cyanC, x, y, z, { n: y > 1 ? 7 : 5, s: y > 1 ? 1.1 : 0.85, heading, spread: 0.9, lean: 0.5, seed: i * 3 + 1, tips });
+  });
 
-  // three crystal nodes on carved slate pedestals, to wake with the magic ball
+  // three crystal nodes on carved slate pedestals, to wake with the magic ball. Dull and dim until the ball strikes one:
+  // then it flashes, a ring runs out over the floor, and it goes on glowing and lighting its surroundings with a slight pulse
   R.nodes = [];
+  const smooth = (x) => x * x * (3 - 2 * x);
+  const dimShell = new THREE.Color('#6f8696'), litShell = new THREE.Color('#bff8ff'), dimEm = new THREE.Color('#0e3c52'), litEm = new THREE.Color('#40e0ff');
+  const dimCore = new THREE.Color('#2f7f98'), litCore = new THREE.Color('#e4ffff'), tmpC = new THREE.Color();
+  const haloGeo = new THREE.BufferGeometry(); haloGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0], 3));
   for (const [nx, nz] of [[-5, -4], [0.5, -5.2], [1, 4.8]]) {
     k.add(lathe([[0.001, 0], [0.66, 0], [0.68, 0.1], [0.56, 0.18], [0.44, 0.3], [0.4, 0.62], [0.5, 0.72], [0.58, 0.84], [0.56, 0.9], [0.001, 0.9]], 14), slate1, nx, 0, nz);
     k.add(torus(0.5, 0.03, 5, 20), iron, nx, 0.86, nz, 0, { rx: Math.PI / 2 });
     physics.add({ type: 'cyl', x: B.cx + nx, z: B.cz + nz, r: 0.6, top: 0.9 });
-    const m = crystalMat('#8a9aa8', '#000000', 0);
-    const c = B.mesh(new THREE.OctahedronGeometry(0.4, 0), m, nx, 1.55, nz);
-    c.scale.y = 1.6;
-    const node = { mesh: c, mat: m, lit: false, ...B.world(nx, nz), y: 1.55 };
+    const m = crystalShell('#6f8696', '#0e3c52', 0.5, 0.82), core = crystalCore('#2f7f98');
+    const grp = new THREE.Group(); grp.position.set(nx, 1.55, nz); B.group.add(grp);
+    const nk = new Kit(grp);
+    growCrystal(nk, m, core, 0, -0.7, 0, 0, 0, 1.5, 0.3, 0); // a tall prism with its cap…
+    for (let s = 0; s < 4; s++) { const a = s * 1.57 + 0.5; growCrystal(nk, m, core, Math.sin(a) * 0.14, -0.62, Math.cos(a) * 0.14, a, 0.62, 0.55 + (s % 2) * 0.16, 0.095, s + 1); } // …and four shards leaning out of its foot
+    nk.flush();
+    const halo = new THREE.Points(haloGeo, new THREE.PointsMaterial({ map: glowTex(), color: '#7fefff', size: 2.2, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    halo.frustumCulled = false; grp.add(halo);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.0, 40), new THREE.MeshBasicMaterial({ color: '#8ff4ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    ring.rotation.x = -Math.PI / 2; ring.position.set(nx, 0.96, nz); ring.visible = false; B.group.add(ring);
+    const light = B.light('#5fe8ff', 6, 9, nx, 2.1, nz); light.userData.base = 0; // (dark until lit)
+    const node = { mesh: grp, mat: m, core, halo, ring, light, lit: false, quiet: false, t0: null, spin: 0, ...B.world(nx, nz), y: 1.55 };
     R.nodes.push(node);
     R.ballTargets.push({ x: node.x, y: node.y, z: node.z, r: 1.0, node });
   }
-  R.updaters.push((dt, t) => { R.nodes.forEach((n, i) => { n.mesh.rotation.y = t * (n.lit ? 2 : 0.3) + i; }); });
+  R.updaters.push((dt, t) => {
+    let lit = 0;
+    R.nodes.forEach((n, i) => {
+      if (n.lit) lit++;
+      if (n.lit && n.t0 == null) n.t0 = n.quiet ? t - 9 : t; // (woken by the ball: it flashes; restored from a save: awake at once)
+      const age = n.lit ? t - n.t0 : 0, wake = n.lit ? smooth(Math.min(1, age / 0.45)) : 0, flash = n.lit ? Math.max(0, 1 - age / 0.55) : 0;
+      const breathe = 0.5 + 0.5 * Math.sin(t * (n.lit ? 3.1 : 1.2) + i * 2.1);
+      n.spin += dt * (0.3 + 1.6 * wake); // (an accumulated turn: its speed eases up, the crystal never jumps)
+      n.mesh.rotation.y = n.spin + i;
+      n.mesh.position.y = 1.55 + Math.sin(t * 1.5 + i * 2) * 0.05 * (0.4 + wake);
+      n.mat.color.copy(dimShell).lerp(litShell, wake);
+      n.mat.emissive.copy(dimEm).lerp(litEm, wake);
+      n.mat.emissiveIntensity = 0.5 + wake * (0.7 + 0.15 * breathe) + flash * 2.2;
+      tmpC.copy(dimCore).lerp(litCore, wake); n.core.color.copy(tmpC).multiplyScalar(0.5 + 0.2 * breathe + wake * (0.45 + 0.1 * breathe) + flash * 1.2);
+      n.halo.material.opacity = wake * (0.4 + 0.12 * breathe) + flash * 0.5;
+      n.halo.material.size = 2.0 + flash * 1.3;
+      n.ring.visible = flash > 0.01 && !n.quiet;
+      if (n.ring.visible) { n.ring.scale.setScalar(0.4 + (1 - flash) * 2.6); n.ring.material.opacity = flash * flash * 0.8; }
+      n.light.userData.base = 0; n.light.intensity = wake * (4.2 + 0.7 * Math.sin(t * 3.1 + i * 1.7)) + flash * 6;
+    });
+    R.nodesLit = lit;
+  });
 
-  // crystal barrier in the gap
-  const barrier = new THREE.Group();
-  for (let i = 0; i < 14; i++) {
-    const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.5 + Math.random() * 0.4, 0), i % 2 ? cyan : violet);
-    c.scale.y = 2.5 + Math.random() * 1.5;
-    c.position.set(gx + (Math.random() - 0.5) * 0.8, 0.8 + Math.random() * 1.5, -1.6 + (i / 13) * 3.2);
-    c.rotation.set((Math.random() - 0.5) * 0.6, Math.random() * 3, (Math.random() - 0.5) * 0.6);
-    barrier.add(c);
+  // crystal barrier in the gap: a thicket of tall prisms, its cores brightening as the nodes wake, shattered when all three have
+  const barrier = new THREE.Group(); B.group.add(barrier);
+  const bk = new Kit(barrier), bCoreC = crystalCore('#7ff0ff'), bCoreV = crystalCore('#b78aff');
+  for (let i = 0; i < 13; i++) {
+    const hh = (n) => { const s = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453; return s - Math.floor(s); };
+    const c = i % 2, z = -1.75 + (i / 12) * 3.5 + (hh(1) - 0.5) * 0.12;
+    growCrystal(bk, c ? violetS : cyanS, c ? bCoreV : bCoreC, gx + (hh(2) - 0.5) * 0.5, 0, z, i % 3 * 1.1 + 0.4, 0.08 + hh(3) * 0.2, 2.4 + hh(4) * 1.4, 0.3 + hh(5) * 0.12, i);
   }
-  B.group.add(barrier);
+  for (let i = 0; i < 8; i++) { // (the lower, wider ones in front, so the gap reads as grown shut, not as a fence)
+    const hh = (n) => { const s = Math.sin(i * 7.7 + n * 51.1) * 43758.5453; return s - Math.floor(s); };
+    growCrystal(bk, i % 2 ? cyanS : violetS, i % 2 ? bCoreC : bCoreV, gx + (i % 2 ? 0.5 : -0.5), 0, -1.6 + i * 0.45, i * 2.1, 0.45 + hh(1) * 0.3, 1.0 + hh(2) * 0.9, 0.24 + hh(3) * 0.08, i + 2);
+  }
+  bk.flush();
   R.barrier = { group: barrier, c: B.col(gx, 0, 0.6, 1.9, H) };
 
-  // the vein: something under the island is calling the magic ball
-  const veinMat = crystalMat('#d8fbff', '#40e0ff', 1.3);
-  const vein = new THREE.Group();
-  for (let i = 0; i < 22; i++) {
-    const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.4 + Math.random() * 0.7, 0), i % 4 === 0 ? violet : veinMat);
-    c.scale.y = 1.8 + Math.random() * 2;
-    c.position.set(6 + Math.random() * 4, 0.4 + Math.random() * 3.2, -D / 2 + 0.5 + Math.random() * 0.9);
-    c.rotation.set((Math.random() - 0.5) * 1.2, Math.random() * 3, (Math.random() - 0.5) * 1.2);
-    vein.add(c);
+  // the vein: something under the island is calling the magic ball. A great fan of crystals out of the back wall.
+  const veinS = crystalShell('#b8f0ff', '#28c8f8', 0.45, 0.74), veinC = crystalCore('#a8f4ff');
+  for (let i = 0; i < 16; i++) {
+    const hh = (n) => { const s = Math.sin(i * 3.3 + n * 91.7) * 43758.5453; return s - Math.floor(s); };
+    const v = i % 4 === 0;
+    growCrystal(k, v ? violetS : veinS, v ? violetC : veinC, 5.9 + (i / 15) * 4.2 + (hh(1) - 0.5) * 0.4, (i % 4) * 0.55 * (0.5 + hh(2)), -D / 2 + 0.25, (hh(3) - 0.5) * 0.7, 0.18 + hh(4) * 0.4, 1.7 + hh(5) * 2.3, 0.3 + hh(6) * 0.2, i, tips);
   }
-  B.group.add(vein);
   // the cracked slate around the vein
   for (const [x, s, sd] of [[5.9, 1.0, 1], [10.0, 1.1, 3]]) k.add(slateRock(sd), rockMat, x, 0, -D / 2 + 0.55, x, { sx: s, sy: s * 1.6, sz: s * 0.8 });
   B.col(8, -D / 2 + 0.9, 2.3, 0.9, H);
   const veinLight = B.light('#40d8ff', 22, 16, 8, 2.2, -D / 2 + 3);
-  R.vein = { ...B.world(8, -D / 2 + 1.9), y: 1.7, mat: veinMat, light: veinLight, power: 0 };
+  R.vein = { ...B.world(8, -D / 2 + 1.9), y: 1.7, mat: veinS, core: veinC, light: veinLight, power: 0 };
   R.updaters.push((dt, t) => {
     const p = 0.75 + Math.sin(t * 2.2) * 0.25 + R.vein.power;
-    veinMat.emissiveIntensity = 1.3 * Math.min(p, 1.8);
+    veinS.emissiveIntensity = 0.45 * Math.min(p, 1.8);
+    veinC.color.copy(veinC.userData.base).multiplyScalar(0.55 + 0.45 * Math.min(p, 1.8));
     veinLight.intensity = veinLight.userData.base * p;
+    // the other crystals' cores breathe (a slow, slightly different beat each colour); the barrier's brighten as the nodes wake
+    cyanC.color.copy(cyanC.userData.base).multiplyScalar(0.8 + 0.2 * Math.sin(t * 1.7));
+    violetC.color.copy(violetC.userData.base).multiplyScalar(0.8 + 0.2 * Math.sin(t * 1.3 + 2));
+    const b = 0.6 + (R.nodesLit || 0) * 0.25 + 0.1 * Math.sin(t * 2.6);
+    bCoreC.color.copy(bCoreC.userData.base).multiplyScalar(b); bCoreV.color.copy(bCoreV.userData.base).multiplyScalar(b);
+  });
+  // glints: a few small stars that twinkle on the crystals' points, each group hopping to other points as it fades
+  const glintGroups = [];
+  for (let g = 0; g < 3; g++) {
+    const gp = new Float32Array(5 * 3), gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.BufferAttribute(gp, 3));
+    const gm = new THREE.PointsMaterial({ map: glowTex(), color: '#dffcff', size: 0.6, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+    const pts = new THREE.Points(gg, gm); pts.frustumCulled = false; B.group.add(pts);
+    glintGroups.push({ gp, gg, gm, cyc: -1, ph: g * 2.1 });
+  }
+  R.updaters.push((dt, t) => {
+    for (const G of glintGroups) {
+      const u = t * 0.9 + G.ph, cyc = Math.floor(u / Math.PI), tw = Math.max(0, Math.sin(u));
+      if (cyc !== G.cyc && tips.length) {
+        G.cyc = cyc;
+        for (let j = 0; j < 5; j++) { const tp = tips[(cyc * 7 + j * 5 + glintGroups.indexOf(G) * 3 + 11) % tips.length]; G.gp[j * 3] = tp[0]; G.gp[j * 3 + 1] = tp[1]; G.gp[j * 3 + 2] = tp[2]; }
+        G.gg.attributes.position.needsUpdate = true;
+      }
+      G.gm.opacity = Math.pow(tw, 3) * 0.95;
+      G.gm.size = 0.35 + tw * 0.4;
+    }
   });
   R.chamberX = B.cx + gx + 1.2; // stepping past the barrier into the last chamber
   R.zones.push({ id: 'vein', ...B.world(gx + 2.5, 0), r: 2.4 });
@@ -941,7 +1052,8 @@ function buildWell(scene, physics) {
     mg.attributes.position.needsUpdate = true;
   });
   B.light('#fff1d0', 8, 8, ropeX, 3.5, ropeZ);
-  B.light('#9a6aff', 4, 10, 0, 2.5, 0);
+  const midLight = B.light('#9a6aff', 4, 10, 0, 2.5, 0);
+  R.updaters.push((dt, t) => { midLight.intensity = midLight.userData.base * (0.92 + 0.08 * Math.sin(t * 1.4)); }); // (a slight pulse)
   R.exits.push({ ...B.world(ropeX, ropeZ), r: 0.7, to: 'outdoor-well' });
   R.spawn = { ...B.world(ropeX + 1.4, ropeZ - 1.2), a: Math.PI * 0.75 };
   R.mites = [B.world(-2, -1.5), B.world(2.5, 1), B.world(-4.5, 4.5), B.world(3, -4)];

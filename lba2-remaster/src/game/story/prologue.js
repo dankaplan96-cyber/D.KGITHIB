@@ -14,6 +14,7 @@ import { playOpening } from './opening.js';
 import { lba1EnemyDefs } from '../lba1places.js';
 
 const V = POI.village;
+const _pullTmp = new THREE.Vector3(), _handTmp = new THREE.Vector3(); // (Sendell's pull, no per-frame allocation)
 
 export class Prologue extends ChapterBase {
   constructor(story) {
@@ -359,13 +360,15 @@ export class Prologue extends ChapterBase {
   }
 
   lightNode(n, silent = false) {
-    n.lit = true;
-    n.mat.color.set('#bff8ff'); n.mat.emissive.set('#40e0ff'); n.mat.emissiveIntensity = 2.5;
+    // (the node's own look — the flash, the ring over the floor, the glow and its light — is the well room's updater,
+    // interiors.js: it reads `lit` and `quiet`; a node restored from a save is awake at once, with no flash)
+    n.lit = true; n.quiet = silent;
     if (silent) return;
     const g = this.game;
     this.f.nodes = (this.f.nodes || 0) + 1;
     g.audio.play('heal');
-    g.particles.burst(n.x, n.y, n.z, '#bff8ff', 24, 4);
+    g.particles.burst(n.x, n.y, n.z, '#bff8ff', 26, 4);   // (sparks: a bright core and a wider cyan spray)
+    g.particles.burst(n.x, n.y, n.z, '#ffffff', 10, 6.5);
     g.hud.toast('pr_toast_node', { n: this.f.nodes });
     g.updateObjective();
     if (this.f.nodes >= 3) this.barrierT = 0.7;
@@ -393,35 +396,77 @@ export class Prologue extends ChapterBase {
     return false;
   }
 
-  // Sendell's call: the ball is pulled into the crystal vein
+  // Sendell's call: the ball is pulled into the crystal vein.
+  //  0.00–0.52  Twinsen's throw winds up (the rig's 'throw': the ball held high behind the head, in his hand), the ball
+  //             trembling and brightening as the vein calls it;
+  //  0.52       the whip: the ball leaves the hand (it is pulled out of it, not thrown: it takes up the hand's own
+  //             path first and is drawn off it over 0.2 s, so nothing snaps);
+  //  0.52–1.80  an eased flight to the vein, on a rising arc with a small spiral, trail and halo all along;
+  //  1.80–2.25  it sinks into the crystal: a flash and a ring where it goes in, then it shrinks and dims away to nothing.
+  // (every phase is on the clock `cut`, so 30 and 60 fps play the same; the words start at 2.6)
   startSendell() {
     const g = this.game, h = g.hero, R = g.rooms.well;
     this.f.sendellHeard = true;
     g.setState('cutscene');
     g.cutscene = (dt) => this.updateSendell(dt);
-    this.cut = 0;
-    this.ballPos = new THREE.Vector3(h.pos.x, h.pos.y + 1.4, h.pos.z);
+    this.cut = 0; this.spoke = false; this.absorbed = false; this.released = false;
     g.ball.state = 'held';
+    g.ball.holder = h;
     g.ball.mesh.visible = true;
+    g.ball.track = true; g.ball.sn = 0; g.ball.span = 0.9; // (a slow pull: a longer trail, so the path reads)
+    g.ball.mesh.scale.setScalar(1);
+    g.ball.followHand();
     g.audio.play('rumble');
-    this.veinTarget = new THREE.Vector3(R.vein.x - 0.6, R.vein.y, R.vein.z);
+    this.veinTarget = new THREE.Vector3(R.vein.x + 0.3, R.vein.y + 0.3, R.vein.z - 0.7);
     g.audio.cue('revelation');
   }
   updateSendell(dt) {
-    const g = this.game, h = g.hero, R = g.rooms.well;
+    const g = this.game, h = g.hero, R = g.rooms.well, B = g.ball;
     this.cut += dt;
+    const c = this.cut, T_REL = 0.52, T_FLY = 1.28, T_IN = T_REL + T_FLY, T_SINK = 0.45;
+    const ease = (k) => k * k * (3 - 2 * k);
     h.angle = Math.atan2(R.vein.x - h.pos.x, R.vein.z - h.pos.z);
-    h.rig.play(this.cut < 1.2 ? 'throw' : 'idle');
+    h.rig.play(c < 1.2 ? 'throw' : 'idle');
     h.rig.update(dt, 0); h.sync();
-    // the ball tugs out of Twinsen's hand and flies to the wall
-    const k = Math.min(1, Math.max(0, (this.cut - 0.8) / 1.6));
-    const p = this.ballPos.clone().lerp(this.veinTarget, k * k * (3 - 2 * k));
-    p.y += Math.sin(k * Math.PI) * 0.8 + Math.sin(this.cut * 9) * 0.03;
-    g.ball.mesh.position.copy(p);
-    g.ball.mat.emissiveIntensity = 3 + k * 4;
-    R.vein.power = k * 0.8;
-    if (this.cut > 0.8 && this.cut < 2.5) g.camRig.shake(0.08);
-    if (this.cut > 2.6 && !this.spoke) {
+    if (!this.released) {
+      // in the hand, as it winds up: a tremble and a brightening
+      B.followHand();
+      this.handPos ??= new THREE.Vector3();
+      this.handPos.copy(B.mesh.position);
+      const w = Math.min(1, c / T_REL);
+      B.mesh.position.x += Math.sin(c * 47) * 0.012 * w; B.mesh.position.y += Math.sin(c * 39) * 0.012 * w;
+      B.mesh.scale.setScalar(1 + w * 0.3);
+      B.mat.emissiveIntensity = 2.5 + w * 3;
+      R.vein.power = w * 0.35;
+      if (c >= T_REL) { this.released = true; this.p0 = this.handPos.clone(); B.flash(this.p0.x, this.p0.y, this.p0.z, 0.45, false); }
+    }
+    if (this.released && !this.absorbed) {
+      const k = Math.min(1, (c - T_REL) / T_FLY), e = ease(k);
+      const p = _pullTmp.copy(this.p0).lerp(this.veinTarget, e);
+      p.y += Math.sin(k * Math.PI) * 0.7;                                   // (a rising arc)
+      const sp = Math.sin(k * Math.PI * 2.5) * 0.22 * (1 - k);              // (a small spiral that dies away as it nears the wall)
+      p.x += Math.cos(k * 3) * sp * 0.4; p.z += sp; p.y += Math.sin(k * Math.PI * 2.5 + 1.2) * 0.12 * (1 - k);
+      // the first fifth of a second still carries the hand's own path: it is drawn off the hand, not cut loose from it
+      const hand = _handTmp;
+      B.followHand(); hand.copy(B.mesh.position);
+      const j = ease(Math.min(1, (c - T_REL) / 0.2));
+      B.mesh.position.copy(hand).lerp(p, j);
+      B.mesh.scale.setScalar(1.3 - 0.15 * e);
+      B.mat.emissiveIntensity = 5.5 + e * 3;
+      R.vein.power = 0.35 + e * 0.5;
+      g.camRig.shake(0.05 * Math.sin(k * Math.PI));
+      if (c >= T_IN) { this.absorbed = true; this.landPos = B.mesh.position.clone(); B.flash(this.landPos.x, this.landPos.y, this.landPos.z, 2.2); g.camRig.shake(0.3); g.audio.play('heal'); }
+    }
+    if (this.absorbed) {
+      // into the crystal: it goes a little further in as it shrinks and dims, the vein flaring as it takes it
+      const k = Math.min(1, (c - T_IN) / T_SINK), e = ease(k);
+      B.mesh.position.copy(this.landPos); B.mesh.position.z -= 0.35 * e;
+      B.mesh.scale.setScalar(Math.max(0.001, 1.15 * (1 - e)));
+      B.mat.emissiveIntensity = 8 * (1 - e * 0.6);
+      R.vein.power = 0.85 + 0.7 * Math.sin(Math.min(1, k * 1.6) * Math.PI * 0.5) * (1 - 0.4 * k);
+      if (k >= 1 && B.mesh.visible) { B.mesh.visible = false; B.track = false; B.span = 0.4; }
+    }
+    if (c > 2.6 && !this.spoke) {
       this.spoke = true;
       g.cutscene = null;
       this.chain([['hero', 'pr_tw_ball'], ['sendell', 'pr_sendell_1'], ['hero', 'pr_tw_sendell'], ['sendell', 'pr_sendell_2']], () => this.endPrologue());
@@ -431,7 +476,7 @@ export class Prologue extends ChapterBase {
     const g = this.game;
     this.f.prologueDone = true;
     g.ball.state = 'idle';
-    g.ball.mesh.visible = false;
+    g.ball.mesh.visible = false; g.ball.track = false; g.ball.span = 0.4; g.ball.mesh.scale.setScalar(1);
     g.rooms.well.vein.power = 0;
     g.audio.play('victory');
     // on to chapter 1: fade out of the cave, title card, morning in the square
