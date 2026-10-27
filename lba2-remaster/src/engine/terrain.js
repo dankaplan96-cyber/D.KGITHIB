@@ -173,9 +173,14 @@ export class Terrain {
           }
           // sand: a second, turned and coarser sample modulates the first so the tile's ripples never line up
           // into rows or repeat at one visible interval (POLISH-AUDIT #16)
-          vec3 sand1 = texture2D(tSand, tuv * 1.2).rgb;
-          vec3 sand2 = texture2D(tSand, mat2(0.8, 0.6, -0.6, 0.8) * tuv * 0.47 + vec2(0.37, 0.11)).rgb;
-          vec3 sandT = sand1 * (0.62 + 0.46 * sand2);
+          // (only where there is sand: elsewhere, Citadel's grass for one, it costs no texture reads at all; the weight
+          //  is near 0 at the borders, so the branch's edge never shows)
+          vec3 sandT = vec3(0.0);
+          if (sp.y > 0.003) {
+            vec3 sand1 = texture2D(tSand, tuv * 1.2).rgb;
+            vec3 sand2 = texture2D(tSand, mat2(0.8, 0.6, -0.6, 0.8) * tuv * 0.47 + vec2(0.37, 0.11)).rgb;
+            sandT = sand1 * (0.62 + 0.46 * sand2);
+          }
           vec3 tex = gtex * sp.x
                    + sandT * sp.y
                    + rock * sp.z
