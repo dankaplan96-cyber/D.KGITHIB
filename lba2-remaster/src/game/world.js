@@ -11,7 +11,7 @@ import { mat } from '../engine/rig.js';
 import { textures } from '../engine/textures.js';
 import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS, HOUSE_PADS_PRE, HOUSE_FLATS_PRE, OLD_BUG } from './town.js';
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
-import { buildIsland, keepClear, STUMP, SHIFT, ISLET, QUAY_R } from './island.js';
+import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R } from './island.js';
 import { buildDinoFly } from './dinofly.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
@@ -731,8 +731,8 @@ export function* buildWorldSteps(parentScene) {
   for (const b of bushes) if (!b.gone && doorLane(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
   // (WORLD-80: off the new path to the stepping stones, out of Bug Street's pair and the stone house's porch, off the
   // islet's raised rock face)
-  for (const t of trees) if (!t.gone && (newPathDist(t.x, t.z) < 2.2 || inNewHouse(t.x, t.z, 1.4) || isletSteep(t.x, t.z, 0.55))) { t.s = 1e-4; t.gone = true; }
-  for (const b of bushes) if (!b.gone && (newPathDist(b.x, b.z) < 1.9 || inNewHouse(b.x, b.z, 0.9) || isletSteep(b.x, b.z, 0.55))) { b.s = 1e-4; b.gone = true; }
+  for (const t of trees) if (!t.gone && (newPathDist(t.x, t.z) < 2.2 || inNewHouse(t.x, t.z, 1.4) || isletSteep(t.x, t.z, 0.55) || keepClearNew(t.x, t.z, 0.5))) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && (newPathDist(b.x, b.z) < 1.9 || inNewHouse(b.x, b.z, 0.9) || isletSteep(b.x, b.z, 0.55) || keepClearNew(b.x, b.z, 0.3))) { b.s = 1e-4; b.gone = true; }
   yield 'tree spots';
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
@@ -780,7 +780,7 @@ export function* buildWorldSteps(parentScene) {
   for (const t of grass) if (!calm(t, 2.2)) { t.s = 1e-4; t.gone = true; }
   for (const t of flowers) if (!calm(t, 3.0)) { t.s = 1e-4; t.gone = true; }
   clearLife(grass); clearLife(flowers);
-  for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
+  for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
   ['#ffd84a', '#ff6fa3', '#ffffff', '#b28cff', '#ff8a3d'].forEach((col, k) => mkInst(flowerGeometry(col), flowerMat, flowers.filter((f, i) => i % 5 === k), false, null, null, true));
@@ -843,7 +843,7 @@ export function* buildWorldSteps(parentScene) {
     rocks.push({ x, z, h: h - 0.1, s: 0.3 + rand() * 0.8, ry: rand() * 6 });
   }
   // (the doors' lanes, as the trees and bushes; WORLD-80: the new path, the new houses, the islet's dome and rock face)
-  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55))) r.s = 1e-4;
+  for (const r of rocks) if (doorLane(r.x, r.z, r.s * 1.1) || isletClear(r.x, r.z) || newPathDist(r.x, r.z) < 2.5 || inNewHouse(r.x, r.z, r.s * 1.1 + 0.3) || keepClearNew(r.x, r.z, r.s * 1.1) || (r.h > 1.2 && isletSteep(r.x, r.z, 0.55))) r.s = 1e-4;
   const rockMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
   for (let v = 0; v < 3; v++) mkInst(rockGeometry(v + 1), rockMat, rocks.filter((r, i) => i % 3 === v), true, (c) => c.setRGB(1, 1, 1).multiplyScalar(0.9 + rand() * 0.15), rockGeometry(v + 1, 1));
   if (BATCH.on) batchFor(rockMat).build();

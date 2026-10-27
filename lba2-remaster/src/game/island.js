@@ -48,10 +48,20 @@ export const ORCHARD = { ...sh('orchard', -21.9, 32.55), half: 2.0, dx: -22.4 + 
 export const ORCHARD_SHOT = sh('orchard', -15.2, 32.0); // where to stand for the magic-ball shot
 // the water main: from the station along the plateau, through the depot, past the orchard, then down the
 // cliffs by the west shore to the meter at the edge of town (where it dives into the meter portal)
-export const PIPE = [
+// (POLISH-AUDIT #2/#11: the main no longer runs out of the depot's west fence and doubles back round the bunker, a loop that
+// stood between the play camera and Twinsen at the depot shelter's door; it turns south inside the compound and goes
+// on to the orchard valve. The trees, bushes and rocks are still drawn with the main's OLD line (PIPE_OLD, keepClear),
+// as the scatter's random stream must not shift; keepClearNew then takes away what stands on the new line or in front of
+// the shelters, as WORLD-80 does for its new paths)
+const PIPE_OLD = [
   [-42.6, -57.3], [-47.5, -61.5], [-55.0, -68.5], [-60.0, -71.4], [-62.4, -71.4], [-64.5, -71.4], [-85.0, -71.4], [-89.5, -73.6],
   [-91.5, -66.0], [-86.0, -58.5], [-80.4, -53.9], [-76.5, -48.0], [-74.2, -38.0], [-73.4, -28.0], [-72.6, -21.0], [-72.4, -18.6],
 ];
+export const PIPE = [
+  [-42.6, -57.3], [-47.5, -61.5], [-55.0, -68.5], [-60.0, -71.4], [-62.4, -71.4], [-64.5, -71.4], [-72.0, -71.4], [-76.6, -68.4],
+  [-79.0, -62.4], [-79.6, -58.0], [-80.4, -53.9], [-76.5, -48.0], [-74.2, -38.0], [-73.4, -28.0], [-72.6, -21.0], [-72.4, -18.6],
+];
+const SHELTER_CLEAR = [[-93.3, -73.2, 3.6], [-88.2, -72.8, 3.6], [-50, -71, 3.6], [-49.0, -67.6, 3.6]];
 const METER = { x: -72.0, z: -17.0, ry: Math.PI / 2 };
 // to the reservoir under the Whispering Cliffs (the rock stack on the plateau's rim)
 export const BRANCH = [[-33.0, -50.0], [-35.5, -44.5], [-43.5, -37.0], [-51.0, -32.5], [-55.2, -31.9]];
@@ -68,7 +78,13 @@ export function keepClear(x, z, pad = 0) {
   if (x > DEPOT.x0 - 2 - pad && x < DEPOT.x1 + 2 + pad && z > DEPOT.z0 - 2 - pad && z < DEPOT.z1 + 2 + pad) return true;
   if (Math.hypot(x - ORCHARD.x, z - ORCHARD.z) < 4.0 + pad) return true;
   if (Math.hypot(x - METER.x, z - METER.z) < 2.5 + pad) return true;
-  if (polyDist(PIPE, x, z) < 1.4 + pad || polyDist(BRANCH, x, z) < 1.4 + pad) return true;
+  if (polyDist(PIPE_OLD, x, z) < 1.4 + pad || polyDist(BRANCH, x, z) < 1.4 + pad) return true;
+  return false;
+}
+// what the scatter drops after the fact: on the main's new line, on the shelters' earth mounds and in front of their doors
+export function keepClearNew(x, z, pad = 0) {
+  if (polyDist(PIPE, x, z) < 1.4 + pad) return true;
+  for (const [sx, sz, sr] of SHELTER_CLEAR) if (Math.hypot(x - sx, z - sz) < sr + pad) return true;
   return false;
 }
 function polyDist(P, x, z) {
@@ -2091,7 +2107,7 @@ function chaikin(P, n = 2) {
   return pts;
 }
 // sample a plan route every ds and lift it clear of the ground
-function pipeProfile(W, route, { clear = 2.75, y0 = null, fix = [], ds = 0.5 } = {}) {
+function pipeProfile(W, route, { clear = 2.75, y0 = null, fix = [], bury = [], ds = 0.5 } = {}) {
   const P = chaikin(route, 2);
   const xs = [], zs = [];
   for (let i = 0; i < P.length - 1; i++) {
@@ -2114,6 +2130,16 @@ function pipeProfile(W, route, { clear = 2.75, y0 = null, fix = [], ds = 0.5 } =
     for (let i = 0; i < n; i++) { const d = Math.abs(i - bi) * ds; if (d < span) y[i] = lerp(y[i], f.y, smoothstep(span, span * 0.35, d)); }
   }
   if (y0 != null) for (let i = 0; i < n; i++) { const d = i * ds; if (d < 6) y[i] = lerp(y0, y[i], smoothstep(0, 6, d)); }
+  // buried runs (POLISH-AUDIT #11: a high main between the play camera and Twinsen along the plateau route): from the
+  // sample nearest b.a to the one nearest b.b the pipe runs under the ground (b.depth below it), diving and rising over b.ramp m
+  for (const b of bury) {
+    const near = (p) => { let bi = 0, bd = 1e9; for (let i = 0; i < n; i++) { const d = Math.hypot(xs[i] - p[0], zs[i] - p[1]); if (d < bd) { bd = d; bi = i; } } return bi; };
+    const ia = near(b.a), ib = near(b.b), R = Math.round((b.ramp ?? 6) / ds);
+    for (let i = 0; i < n; i++) {
+      const w = smoothstep(ia - R, ia, i) * (1 - smoothstep(ib, ib + R, i));
+      if (w > 0) y[i] = lerp(y[i], gr[i] - (b.depth ?? 0.8), w);
+    }
+  }
   return { xs, zs, y, gr, n, ds };
 }
 function supportGeo() {
@@ -2136,6 +2162,7 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
   const q = new THREE.Quaternion();
   for (let s = every * 0.5; s < len - 0.5; s += every) {
     const u = s / len, p = curve.getPointAt(u), t = curve.getTangentAt(u);
+    if (p.y < W.H(p.x, p.z) - 0.1) continue;   // (a buried run: no flanges)
     q.setFromUnitVectors(_uy, t);
     const m = new THREE.Matrix4().compose(p, q, new THREE.Vector3(1, 1, 1));
     B.addM(fl, brassM(), m); B.addM(bolt, darkSteel(), m);
@@ -2147,6 +2174,7 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
     if (s - last < supEvery) continue;
     const x = xs[i], z = zs[i];
     if (avoid(x, z)) continue;
+    if (y[i] - gr[i] < 1.7) continue;          // (diving into or running under the ground: no trestle)
     last = s;
     const tx = xs[Math.min(i1, i + 1)] - xs[i - 1], tz = zs[Math.min(i1, i + 1)] - zs[i - 1], tl = Math.hypot(tx, tz) || 1;
     const nx = -tz / tl, nz = tx / tl, py = y[i] - r - 0.04;
@@ -2161,6 +2189,24 @@ function drawPipe(W, B, prof, { r = 0.3, every = 3.2, supEvery = 4.6, avoid = ()
     B.add(pad, tm('concrete', { color: '#d0ccc4' }), x - nx * 0.95, gb - 0.02, z - nz * 0.95);
     for (const sgn of [-1, 1]) W.physics.add({ type: 'cyl', x: x + sgn * nx * 0.9, z: z + sgn * nz * 0.9, r: 0.24, top: py, seeThrough: true });
   }
+  // a buried run: round access covers over the line and a vent standpipe (so the main is known to be there)
+  {
+    let k = 0, lastM = -1e9;
+    for (let i = from + 2; i <= i1 - 2; i++) {
+      const s = (i - from) * ds;
+      if (y[i] - gr[i] > -0.35 || s - lastM < 5.5 || avoid(xs[i], zs[i])) continue;
+      lastM = s; k++;
+      const x = xs[i], z = zs[i], g = W.H(x, z);
+      B.add(cached('pcover', () => cyl(0.46, 0.5, 0.1, 14)), darkSteel(), x, g + 0.03, z);
+      B.add(cached('pcoverr', () => new THREE.TorusGeometry(0.34, 0.025, 5, 14).rotateX(Math.PI / 2)), darkSteel(), x, g + 0.1, z);
+      if (k % 2 === 0) {   // (a vent standpipe beside it)
+        const vx = x + 0.9, vz = z + 0.2, vg = W.H(vx, vz);
+        B.add(cyl(0.12, 0.12, 1.0, 10), tealM(), vx, vg + 0.5, vz);
+        B.add(cyl(0.2, 0.0, 0.2, 10), darkSteel(), vx, vg + 1.08, vz);
+        W.physics.add({ type: 'cyl', x: vx, z: vz, r: 0.2, top: vg + 1.0, seeThrough: true });
+      }
+    }
+  }
   return { curve, pts };
 }
 // BUG-WALL: a run of pipe as the camera's own volumes (src/engine/occlude.js camOnly: the play camera keeps out of
@@ -2169,6 +2215,7 @@ function pipeVolumes(W, pts, r) {
   const occ = occOf(W), R = r * 1.42;   // (the flanges)
   for (let i = 0; i < pts.length - 1; i++) {
     const [ax, ay, az] = pts[i], [bx, by, bz] = pts[i + 1], dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz);
+    if (Math.max(ay, by) + R < Math.min(W.H(ax, az), W.H(bx, bz))) continue;   // (under the ground)
     occ.add({ kind: 'box', camOnly: true, x: (ax + bx) / 2, z: (az + bz) / 2, hw: L / 2 + R, hd: R, rot: L > 1e-4 ? Math.atan2(-dz, dx) : 0,
       y0: Math.min(ay, by) - R, y1: Math.max(ay, by) + R });
   }
@@ -2307,7 +2354,7 @@ function buildPipeline(W, root, r) {
   const D = DEPOT;
   const avoid = (x, z) => {
     if (x > D.x0 - 2 && x < D.x1 + 2 && z > D.z0 - 1 && z < D.z1 + 1) {
-      if (Math.abs(x - D.x0) < 0.9 || Math.abs(x - D.x1) < 0.9) return true;
+      if (Math.abs(x - D.x0) < 0.9 || Math.abs(x - D.x1) < 0.9 || Math.abs(z - D.z0) < 0.9 || Math.abs(z - D.z1) < 0.9) return true;
       for (const px of DEPOT_LOOP_X) if (Math.abs(x - px) < 1.4) return true;
       if (x > DEPOT_VALVE.x - 2.4 && x < DEPOT_VALVE.x + 2.4) return true;
     }
@@ -2317,7 +2364,7 @@ function buildPipeline(W, root, r) {
   };
   // --- the main
   // (over the orchard the main runs high: the ball's lob to the caged valve must pass under it)
-  const prof = pipeProfile(W, PIPE, { y0: gSt + 2.9, fix: [{ x: DEPOT_VALVE.x, z: DEPOT_VALVE.z, y: W.H(DEPOT_VALVE.x, DEPOT_VALVE.z) + 3.0, span: 7 },
+  const prof = pipeProfile(W, PIPE, { y0: gSt + 2.9, bury: [{ a: [-48.5, -62.5], b: [-54.0, -67.4], ramp: 6, depth: 0.85 }], fix: [{ x: DEPOT_VALVE.x, z: DEPOT_VALVE.z, y: W.H(DEPOT_VALVE.x, DEPOT_VALVE.z) + 3.0, span: 7 },
     { x: ORCHARD.dx, z: ORCHARD.dz + 1, y: W.H(ORCHARD.x, ORCHARD.z) + 5.6, span: 9 }] });
   pipeVolumes(W, drawPipe(W, B, prof, { avoid }).pts, 0.3);
   const valves = [];
