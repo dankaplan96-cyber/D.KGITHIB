@@ -171,8 +171,12 @@ export class Steam extends ChapterBase {
     g.audio.play('door');   // (his line says it opens: no toast on top)
     this.chain([['hero', 'c5_hatch']], () => { g.updateObjective(); g.save(false); });
   }
+  get geys() { return (this._geys ??= []); }   // (FX-SOFT: the spots chosen ahead, with their warning rings)
   openRelief() {
-    const g = this.game, f = this.f, h = g.hero;
+    const g = this.game, f = this.f, h = g.hero, D = this.D;
+    // (the wheel takes 0.8 s: the first three spots' rings grow meanwhile, so even the first burst is announced)
+    this.geys.length = 0;
+    if (D?.post) for (let k = 0; k < 3; k++) this.geys.push(this.geySpot(D, 0.8 + 0.35 * k));
     h.act('use', 1.2, () => {
       f.c5_relief = true; this.ventT = 0;
       g.audio.play('rumble'); g.camRig.shake(0.5);
@@ -238,18 +242,62 @@ export class Steam extends ChapterBase {
       this.burstT = (this.burstT || 0) - dt;
       if (this.burstT <= 0 && this.room() === 'desert') {
         this.burstT = 0.35;
-        const P = D.post, x = P.x0 + Math.random() * (P.x1 - P.x0), z = P.z0 + Math.random() * (P.z1 - P.z0);
-        g.particles.burst(x, D.bore.y + 0.3, z, '#ffffff', 18, 6);
+        // (the same 0.35 s schedule and the same random spot inside the post; FX-SOFT: a spot is chosen three bursts
+        //  ahead, so its ring on the ground has ~1 s to grow before the column comes up. The spots come from the same
+        //  Math.random() stream, only drawn earlier)
+        const sp = this.geys.shift() || this.geySpot(D, 0);
+        while (this.geys.length < 3) this.geys.push(this.geySpot(D, 0.35 * (this.geys.length + 1)));
+        const x = sp.x, z = sp.z;
+        this.geyser(x, D.bore.y + 0.3, z);
         g.camRig.shake(0.08);
         if (Math.hypot(h.pos.x - x, h.pos.z - z) < 2.2 && !h.dead) h.damage(1, { x, y: h.pos.y, z });
       }
       if (this.ventT > 14) this.vent();
     }
     if (f.c5_vent) D.ruins.setPlume(1);
+    // the warnings of the spots still waiting: bubbling at the spot that quickens as its burst comes
+    if (this.geys.length && g.state === 'play' && this.room() === 'desert') {
+      for (const sp of this.geys) {
+        sp.age += dt;
+        const k = Math.min(1, sp.age / sp.lead);
+        sp.acc += dt * (4 + 26 * k * k);
+        while (sp.acc >= 1) {
+          sp.acc -= 1;
+          const a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * (0.5 + 1.5 * k);
+          g.particles.spawn({ x: sp.x + Math.cos(a) * r, y: D.bore.y + 0.12, z: sp.z + Math.sin(a) * r, vx: (Math.random() - 0.5) * 0.3, vy: 0.9 + Math.random() * (0.8 + 1.6 * k), vz: (Math.random() - 0.5) * 0.3,
+            color: '#fff4e4', a: 0.3 + 0.3 * k, s0: 0.12, s1: 0.4 + 0.3 * k, life: 0.5 + Math.random() * 0.3, grav: -0.5, drag: 1, add: 0.1, cell: 1, fi: 0.2, fo: 0.4 });
+        }
+      }
+    }
+  }
+  // a spot where a geyser will break through in `lead` seconds: its ring (the 2.2 m the burst hurts in) and dust disc grow
+  // on the pad meanwhile. lead 0: no warning (the first burst of a save loaded mid-eruption)
+  geySpot(D, lead) {
+    const P = D.post, x = P.x0 + Math.random() * (P.x1 - P.x0), z = P.z0 + Math.random() * (P.z1 - P.z0);
+    if (lead > 0 && this.room() === 'desert') {
+      const y = D.bore.y + 0.06, fx = this.game.particles;
+      fx.spawn({ x, y, z, color: '#ff8a3c', a: 0.85, s0: 0.5, s1: 4.6, life: lead, add: 0, cell: 2, fi: 0.85, fo: 0.97 });
+      fx.spawn({ x, y: y + 0.01, z, color: '#ffe2b0', a: 0.4, s0: 0.4, s1: 4.2, life: lead, add: 0, cell: 3, fi: 0.9, fo: 0.97 });
+    }
+    return { x, z, lead: Math.max(0.01, lead), age: 0, acc: 0 };
+  }
+  // the burst: a column of steam shooting up from the pad (soft puffs rising, swelling and thinning), a flash and a ring of dust
+  geyser(x, y, z) {
+    const fx = this.game.particles, R = Math.random;
+    for (let k = 0; k < 26; k++) {
+      const vy = 5 + R() * 7.5, up = R() * 0.45;
+      fx.spawn({ x: x + (R() - 0.5) * 0.7, y: y + up * vy * 0.5, z: z + (R() - 0.5) * 0.7, vx: (R() - 0.5) * 1.3, vy, vz: (R() - 0.5) * 1.3,
+        color: '#f8fbff', a: 0.66, s0: 0.7 + R() * 0.4, s1: 2.4 + R() * 1.4, life: 0.9 + R() * 0.7, grav: 5.5, drag: 0.55, drift: 1.6, add: 0.08, cell: 1, fi: 0.08, fo: 0.35 });
+    }
+    fx.spawn({ x, y: y + 0.4, z, color: '#ffffff', a: 0.7, s0: 1.2, s1: 2.6, life: 0.28, add: 0.7, cell: 0, fi: 0.1, fo: 0.2, spin: 0 });
+    for (let k = 0; k < 6; k++) {
+      const a = k * 1.047 + R(), s = 1.6 + R() * 1.2;
+      fx.spawn({ x, y: y + 0.15, z, vx: Math.cos(a) * s, vy: 0.3, vz: Math.sin(a) * s, color: '#fff0dc', a: 0.5, s0: 0.5, s1: 1.5, life: 0.8 + R() * 0.4, drag: 2.2, add: 0.05, cell: 1, fi: 0.1, fo: 0.3 });
+    }
   }
   vent(silent = false) {
     const g = this.game, f = this.f, D = this.D;
-    f.c5_vent = true;
+    f.c5_vent = true; this._geys = [];
     D.ruins.setPlume(1);
     for (const c of this.Bh?.condensers || []) c.setSteam(1);
     this.story.refreshCast();

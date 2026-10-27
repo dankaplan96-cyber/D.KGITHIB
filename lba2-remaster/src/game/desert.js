@@ -35,6 +35,7 @@ import { shuttleTraffic } from './shuttle.js';
 import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROUTES, routeDist } from './keshlife.js';
 import { CELL as OC, NX as ONX, NZ as ONZ, W as OW, D as OD, UNIT as OU, HEIGHTS as OHEIGHTS } from './desert-layout.js';
 import { fitAdd } from './worldfit.js';
+import { Plume } from '../engine/softfx.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
 import {
   tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
@@ -1112,13 +1113,19 @@ export function buildDesert(scene, physics) {
   }
   // sand drifted against the door (chapter 5 digs it out), and the plume once the steam runs through
   const drift = mesh(group, new THREE.SphereGeometry(1.8, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.2, 0.75, 0.7), tm('sand', { color: '#f6deb0' }), RUINS.x, H(RUINS.x, RUINS.z + 1.6) - 0.1, RUINS.z + 1.6);
-  const plumes = [];
-  for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 1.4, 9, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false })); p.position.set(RUINS.x + s * 4.2, H(RUINS.x, RUINS.z) + 6.5, RUINS.z - 2.2); group.add(p); plumes.push(p); }
-  updaters.push((dt, t) => { for (const p of plumes) { p.rotation.y += dt * 0.3; p.scale.x = p.scale.z = 1 + Math.sin(t * 1.3) * 0.06; } });
+  // (FX-SOFT: the two plumes were hard white open cylinders: now soft puffs that rise from the pipes' tops, swell, wander
+  //  and thin out, from the game's particle system, which the room's updaters get as their third argument)
+  const plumes = [-1, 1].map((sx) => ({ sx, pl: new Plume({ rate: 11, rise: 2.5, h: 9.5, w0: 0.8, w1: 3.8, a: 0.6, add: 0.08, drift: 1.1 }) }));
+  let plumeLevel = 0;
+  updaters.push((dt, t, fx) => {
+    if (plumeLevel <= 0 || !fx) return;
+    const gy = H(RUINS.x, RUINS.z) + 2.4;
+    for (const p of plumes) p.pl.tick(fx, dt, ox + RUINS.x + p.sx * 4.2, gy, oz + RUINS.z - 2.2, plumeLevel);
+  });
   R.ruins = {
     ...W(RUINS.x, RUINS.z), door: W(RUINS.x, RUINS.z + 1.6), stand: W(RUINS.x, RUINS.z + 3.6),
     setDrift(b) { drift.visible = !!b; },
-    setPlume(v) { for (const p of plumes) p.material.opacity = v * 0.35; },
+    setPlume(v) { plumeLevel = v; },
   };
 
   // ================================================================ Hesk's sand-yacht

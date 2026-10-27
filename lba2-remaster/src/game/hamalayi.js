@@ -24,6 +24,7 @@ import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
 import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances } from './kit.js';
+import { Plume } from '../engine/softfx.js';
 import { Kit, MAT, barrel, crate, handCart } from './props.js';
 import { gantry, oldGate, rebelCamp, waystone } from './props-lba1hamalayi.js';
 import { MM, TRIM, mountainHouse, mountainSign, noticeBoard, dryWall, fence, woodpile, sledge, trough, hayRack, dryingRack, lanternPost, firePit, markerFlag, windsock, bellPost, wheel, liftWinch, prayerWheels, monasteryHall, monasteryGate, observatory, heatCabinetDress, drift, logGeo } from './props-mountain.js';
@@ -602,14 +603,16 @@ export function buildHamalayi(scene, physics) {
     for (let i = 0; i < 16; i++) { const a = r0() * 6.28, d = 6 + r0() * 14; const x = BASIN.x + Math.cos(a) * d, z = BASIN.z + Math.sin(a) * d; VB.add(new THREE.ConeGeometry(0.4 + r0() * 0.6, 1.2 + r0() * 2.5, 5), ice, x, H(x, z) + 0.6, z, r0() * 0.3, r0() * 6, r0() * 0.3); }
     VB.build();
   }
-  const steam = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 3.5, 16, 14, 1, true), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false }));
-  steam.position.set(VENT.x, H(VENT.x, VENT.z) + 8, VENT.z); group.add(steam);
-  updaters.push((dt) => { steam.rotation.y += dt * 0.4; });
+  // (FX-SOFT: the vent's steam was a hard white open cone: now a billowing column of soft puffs, from the game's particle
+  //  system, which the room's updaters get as their third argument)
+  const steamPl = new Plume({ rate: 15, rise: 3.2, h: 15, w0: 1.4, w1: 6.4, a: 0.5, add: 0.08, drift: 1.6, spread: 0.6, color: '#eef6ff' });
+  let steamLevel = 0;
+  updaters.push((dt, t, fx) => { if (steamLevel > 0 && fx) steamPl.tick(fx, dt, ox + VENT.x, H(VENT.x, VENT.z) + 0.9, oz + VENT.z, steamLevel); });
   const seal = mesh(group, cyl(1.6, 1.6, 0.3, 18, 0), tm('stone', { color: '#b8a898' }), VENT.x, H(VENT.x, VENT.z) + 0.15, VENT.z, 0);
   R.vent = {
     ...W(VENT.x, VENT.z), open: false, melted: false,
     melt(instant = false) { this.melted = true; if (instant) { ventCap.visible = false; return; } let t = 0; updaters.push(function m(dt) { t += dt; ventCap.scale.y = Math.max(0.01, 1 - t / 4); ventCap.position.y = H(VENT.x, VENT.z) + 0.4 - t * 0.2; if (t > 4) { ventCap.visible = false; updaters.splice(updaters.indexOf(m), 1); } }); },
-    setOpen(b) { this.open = !!b; if (b) { ventCap.visible = false; seal.rotation.y = 1.2; seal.position.y -= 0.4; } steam.material.opacity = b ? 0.3 : 0; },
+    setOpen(b) { this.open = !!b; if (b) { ventCap.visible = false; seal.rotation.y = 1.2; seal.position.y -= 0.4; } steamLevel = b ? 1 : 0; },
   };
   R.ventPatrol = [[VENT.x - 8, VENT.z - 4], [VENT.x + 6, VENT.z - 6], [VENT.x + 7, VENT.z + 6], [VENT.x - 6, VENT.z + 7]].map(([x, z]) => [ox + x, oz + z]);
   R.basin = W(BASIN.x, BASIN.z);
