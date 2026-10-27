@@ -374,7 +374,7 @@
         miss = 0; out.stuns++;
       }
       if (phase === 'pylons') {
-        const p = C.plates().find((q) => !f['c3_pylon' + q.i]); if (!p) { tick(0.5); continue; }
+        const p = C.plates().filter((q) => !f['c3_pylon' + q.i]).sort((a, b) => Math.hypot(a.x - h.pos.x, a.z - h.pos.z) - Math.hypot(b.x - h.pos.x, b.z - h.pos.z))[0]; if (!p) { tick(0.5); continue; }   // (the nearest plate: the walk is inside the 2.6 s window)
         P.go(p.x, p.z, { tol: 0.35, maxT: 3, fight: false }); tick(0.35); idle();   // (standing still on a plate lines him up)
       } else {
         const tg = G.room.ballTargets.find((x) => x.coil); if (!tg) { tick(0.5); continue; }

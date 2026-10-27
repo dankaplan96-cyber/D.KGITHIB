@@ -28,7 +28,9 @@ const CIRCUIT = { A: true, B: false, C: true }; // the diagram: A and C to the e
 const ALLIES = [['zoeradio', 'c3_pylon_1'], ['miraradio', 'c3_pylon_2'], ['okuradio', 'c3_pylon_3']];
 // a brass throw plate in front of each pylon: the spot (from the room's suggested bank-shot spot) and the
 // 8-way direction a bank shot off the panels was measured to reach the receiver from (tests/chapter3.mjs)
-const PLATE = [{ dx: 0, dz: 0, k: 7 }, { dx: -0.5, dz: 0, k: 5 }, { dx: -1, dz: 0, k: 3 }];
+// (the third plate: a shot from where it first stood (bankFrom - 1 m) struck the bay's shield wall; the shot clears it from
+//  0.5-1.0 m right of there. tests/chapter3.mjs throws from each plate's centre and wants the first throw to hit)
+const PLATE = [{ dx: 0, dz: 0, k: 7 }, { dx: -0.5, dz: 0, k: 5 }, { dx: -0.25, dz: 0, k: 3 }];
 
 export class Chapter3 extends ChapterBase {
   get part() { return 1; }   // 1: The Shell (to Sendell), 2: The Core (ChapterCore)
