@@ -24,6 +24,9 @@ concurrency:
 
 jobs:
   build:
+    # only versions meant for the user: a push whose commit message has [build] in it, or a run by hand (the user found
+    # a build per push too many to follow)
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[build]')
     strategy:
       fail-fast: false
       matrix:

@@ -2,6 +2,8 @@
 
 Every desktop build is tagged `desktop-build-N` on the exact commit it was built from; tags are never deleted. To get an old build back, run the "Desktop builds" workflow by hand (Actions → Desktop builds → Run workflow) on that tag. The milestones the user tested are marked ★.
 
+From 27.10 a build is made only for a version meant for the user: a commit whose message contains `[build]`, or a run by hand.
+
 | Build | Commit | Date | What changed |
 |---|---|---|---|
 | 213 | cee615f | 27.10 12:44 | Desktop builds: run artifacts kept 5 days instead of 30 (the installers stay on the release; the artifacts only carry them to it) |
