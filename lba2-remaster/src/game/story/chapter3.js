@@ -22,6 +22,7 @@ import * as THREE from 'three';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import '../text/ch3.js';
+import { FinaleFx, COIL_Y, COIL_R } from './finale-fx.js';
 
 const ROOMS = { 'c3-shaft': 'c3shaft', 'c3-deep': 'c3deep', 'c3-gallery': 'c3gallery', 'c3-sendell': 'c3sendell', 'c3-core': 'c3core' };
 const CIRCUIT = { A: true, B: false, C: true }; // the diagram: A and C to the exchanger, B to the drain
@@ -244,39 +245,39 @@ export class Chapter3 extends ChapterBase {
       g.updateObjective(); g.save(false);   // (the objective names the coil; a nudge comes only if he is stuck)
     });
   }
-  // the coil: a crackling ball of light over Vesk's console, a ball target while the overload lasts
+  // the coil: a crackling ball of light high over Vesk's console (finale-fx.js draws it, and the burst after it), a ball
+  // target while the overload lasts
+  get fx() { const C = this.R.c3core; return C ? (C.finaleFx ||= new FinaleFx(this.game, C)) : null; }
   ensureCoil() {
     const C = this.R.c3core, f = this.f;
     if (!C?.console || this.coil || !f.c3_overload || f.c3_turned) return;
-    const y = (C.floorY ?? 0) + 2.15, gp = C.group.position;
-    const mat = new THREE.MeshBasicMaterial({ color: '#d8a0ff', transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
-    const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.42, 1), mat);
-    const halo = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 1), new THREE.MeshBasicMaterial({ color: '#8a40ff', transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false, wireframe: true }));
-    const grp = new THREE.Group(); grp.position.set(C.console.x - gp.x, y, C.console.z - gp.z); grp.add(core, halo); C.group.add(grp);
-    const tg = { x: C.console.x, y, z: C.console.z, r: 1.0, coil: true };
+    this.fx.spawn(f.c3_coil || 0);
+    const tg = { x: C.console.x, y: COIL_Y, z: C.console.z, r: COIL_R, coil: true };
     C.ballTargets.push(tg);
-    this.coil = { grp, core, halo, mat, tg };
+    this.coil = { tg };
   }
   hitCoil(tg) {
-    const g = this.game, f = this.f, c = this.coil;
+    const g = this.game, f = this.f;
     f.c3_coil = (f.c3_coil || 0) + 1;
     g.audio.play('shard'); g.camRig.shake(0.25);
     g.particles.burst(tg.x, tg.y, tg.z, '#d8a0ff', 30, 5);
-    if (c) c.core.scale.setScalar(1 - f.c3_coil * 0.22);
+    if (f.c3_coil < 3) this.fx?.hit(f.c3_coil);
     g.hud.toast('c3_toast_coil_hit', { n: f.c3_coil });
     if (f.c3_coil >= 3) { tg.done = true; this.veskFalls(); return; }
     this.chain([['vesk', f.c3_coil === 1 ? 'c3_vesk_hit1' : 'c3_vesk_hit2']], () => { g.updateObjective(); g.save(false); });
   }
+  // the third hit: the coil bursts, the console blows out, Vesk is thrown against the rail (all on screen under the
+  // narrator's line, which opens at once as before: finale-fx.js plays it on the room's own clock, dialogue or not)
   veskFalls() {
     const g = this.game, f = this.f, C = this.R.c3core;
     f.c3_turned = true;
-    if (this.coil) { this.coil.grp.parent?.remove(this.coil.grp); this.coil = null; }
+    this.coil = null;
     this.guardian?.powerDown?.();
     this.story.refreshCast();
-    const vesk = this.npc('vesk');
+    const vesk = this.npc('vesk'), fx = this.fx;
     g.particles.burst(C.console.x, (C.floorY ?? 0) + 1.6, C.console.z, '#ffd080', 40, 6);
     g.audio.play('break'); g.camRig.shake(0.45);
-    vesk?.rig?.play?.('hurt');
+    if (fx) { fx.burst(); fx.throwVesk(vesk); } else vesk?.rig?.play?.('hurt');
     this.chain([['narrator', 'c3_vesk_fall'], ['vesk', 'c3_vesk_down'], ['hero', 'c3_tw_down'], ['hero', 'c3_tw_switch']], () => {
       g.hero?.act?.('use', 0.8);
       C.drill?.setMode?.('shield');
@@ -355,8 +356,7 @@ export class Chapter3 extends ChapterBase {
       }
     }
     if (g.room?.id === 'c3core' && f.c3_overload && !f.c3_turned) {
-      this.ensureCoil();
-      if (this.coil) { const t = g.time; this.coil.grp.rotation.y = t * 1.3; this.coil.halo.rotation.x = t * 0.7; this.coil.mat.opacity = 0.6 + Math.sin(t * 9) * 0.25; }
+      this.ensureCoil();   // (it animates itself: finale-fx.js, on the room's updaters)
     }
     // nudges for a stuck player only (HINTS-LESS): no pylon after 40 s of the fight, no hit on the coil after 25 s
     const core = g.room?.id === 'c3core';
@@ -394,7 +394,7 @@ export class Chapter3 extends ChapterBase {
     if (G) for (const i of [0, 1, 2]) if (f['c3_pillar' + i]) { for (const tg of G.ballTargets || []) if (tg.pillar === i) tg.done = true; this.lightPillar(i, true); }
     if (C) {
       for (const i of [0, 1, 2]) if (f['c3_pylon' + i]) { for (const tg of C.ballTargets || []) if (tg.pylon === i) tg.done = true; this.convertPylon(i, true); }
-      if (f.c3_done) { C.drill?.setMode?.('shield'); C.field?.setLevel?.(1); }
+      if (f.c3_done) { C.drill?.setMode?.('shield'); C.field?.setLevel?.(1); this.fx?.wreckNow(); }
     }
     if (f.c3_sendell) { R.c3sendell?.presence?.setVisible?.(true); R.c3sendell?.presence?.setIntensity?.(0.45); }
   }
