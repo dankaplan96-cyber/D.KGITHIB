@@ -349,6 +349,28 @@
     G.step(1); P.note(`ISO assist: ${left.length} enemies beaten (${left.map((e) => e.id).join(',')})`);
     return left.length;
   };
+  // take what lies about (a heart when hurt, a flask when the magic is low: Game.canTake): walk over each one within r
+  P.grab = (r = 9) => {
+    const h = hero(); let n = 0;
+    for (let k = 0; k < 4; k++) {
+      const p = G.pickups.list.filter((q) => q.mesh.visible && (!q.where || q.where === G.where()) && !q.fly && G.canTake(q) && Math.hypot(q.pos.x - h.pos.x, q.pos.z - h.pos.z) < r).sort((a, b) => Math.hypot(a.pos.x - h.pos.x, a.pos.z - h.pos.z) - Math.hypot(b.pos.x - h.pos.x, b.pos.z - h.pos.z))[0];
+      if (!p) break;
+      P.go(p.pos.x, p.pos.z, { tol: 0.5, maxT: 8, fight: false }); G.step(0.3); n++;
+    }
+    P.note(`grab: ${n} pickups, hp ${h.hp}`); return n;
+  };
+  // rummage a container (a giver: a hop beside it in Normal behaviour, the prompt "rummage"), then take what comes out. The
+  // nearest unsearched one of the room within r, or the one with this id
+  P.rummage = (id = null, r = 25) => {
+    const h = hero(), gv = G.givers().filter((g) => (!id || g.id === id) && !G.giverTaken(g) && Math.hypot(g.x - h.pos.x, g.z - h.pos.z) < r && Math.abs((g.y ?? h.pos.y) - h.pos.y) < 1.5)
+      .sort((a, b) => Math.hypot(a.x - h.pos.x, a.z - h.pos.z) - Math.hypot(b.x - h.pos.x, b.z - h.pos.z))[0];
+    if (!gv) return { r: 'no giver' };
+    P.go(gv.x, gv.z, { tol: gv.r * 0.6, maxT: 40 });
+    if (h.behaviour !== 'normal') P.tap('F1');
+    P.face(gv.x, gv.z, 1.0); P.tap('Space', 0.2); P.wait(1.4);
+    const n = P.grab(6);
+    P.note(`rummage ${gv.id}: ${n} taken, hp ${h.hp}`); return { r: 'rummaged', id: gv.id, taken: n, hp: h.hp };
+  };
   // segment helpers (segment page functions can't see module-scope helpers of their own file)
   // walk out through the current room's exit to `to`
   P.exitTo = (to) => { const e = G.room?.exits?.find((x) => x.to === to); if (!e) return { r: 'no exit ' + to, fail: 'no exit ' + to }; return P.through(e.x, e.z); };

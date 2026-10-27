@@ -13,7 +13,7 @@ Screenshots stay in the session scratchpad (polish-audit/), not in the repo.
 | 6 | Story reveals | No camera work for Sendell ×2, Vesk's descent, the ch10 shaft opening | chapter3.js, observatory.js, chapter2.js, network.js | L (M for three beats) | |
 | 7 | 4 sand-yacht | A plank, three discs and one flat triangle sail | desert.js ~L1124 | S–M | |
 | 8 | Hamalayi terrain | Sawtooth snow caps on every cliff edge, flat empty glacier basin, a disc for the ice vent | hamalayi.js ~L600 | M | |
-| 9 | 10 bore fight | Six enemies at once on a small pad; bot died and was assisted | story/network.js enemyDefs | M | |
+| 9 | 10 bore fight | Six enemies at once on a small pad; bot died and was assisted | story/network.js enemyDefs | M | done (DIFFICULTY): two waves. Wave 1: the three drones come over the east fence one after another (8 s / 16 s, or at once when one falls). Wave 2 (flag c10_boreW2, checkpoint save, a heart and a flask by his feet, a line from Ilka): the clone out of the north cabin (hp 4, armour 1), the Grobo guard 12 s later or when the clone falls, the sentry at the gate (it used to wait there from the start of the chapter: the bot reached the relay with 2 HP). The station is done when all five are down; a second heart drops when the clone falls and he is at 6 HP or less (c10_boreH2). Tests: tests/chapter10.mjs, playthrough 13 |
 | 10 | 6 gorge tree | Rigid pole fall, no landing, a spiky-twig log | hamalayi.js fell() | S | |
 | 11 | 8 farm run | Farmers vanish under a fade instead of walking; the heat pipe hides Twinsen | story/evacuation.js | M | done (CH8-SHELTERS): the farmers walk off along the road; the main is buried along the plateau route and no longer loops round the depot shelter (island.js PIPE, bury); the occluder system never fades (VP-10), so no fader was registered; carts and bundles added |
 | 12 | Epilogue | Twinsen has his sword drawn at the family dinner | story/epilogue.js begin() | S | done (FINALE-PAYOFF) |
@@ -22,5 +22,5 @@ Screenshots stay in the session scratchpad (polish-audit/), not in the repo.
 | 15 | 4 Ilka's camp, research post | Sparse: a flat lean-to, a bare pad | desert.js | S–M | |
 | 16 | Desert sand | Long parallel streaks like floorboards up close | desert texture | S | |
 
-Known, not re-listed: the Hamalayi rebels' camp, the ch11 galleries' difficulty, the Bug Street Follow snap, the ch6 depot fight's assist.
+Known, not re-listed: the Hamalayi rebels' camp, the ch11 galleries' difficulty (done, DIFFICULTY: the near mite sleeps 7 m from the way in, the four mites wake in pairs 2.5 s apart (Mite def.wake), nothing bites across a drop (a mite or a guard 3 m below no longer hits the hero on the shelf), two supply crates (givers `crates_near`, `crates_far`: a heart each visit, a hop beside them) on the shelves; a fall into the chasm still costs 2 HP), the Bug Street Follow snap, the ch6 depot fight's assist.
 Not tested: frame rate, audio, human-style fights, the opening cinematic.

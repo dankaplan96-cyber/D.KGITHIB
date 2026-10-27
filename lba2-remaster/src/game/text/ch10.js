@@ -55,6 +55,7 @@ Object.assign(STR.en, {
   c10_ilka_2: "Set it on the bore's frame. And keep your ball handy: the project's drones don't like anything they didn't build.",
   c10_relay_bore: 'The relay clicks onto the bore\'s frame. Steam rattles through its little pipe, and the lamp lights up.',
   c10_drones: 'Drones! Three of them, coming in low over the post.',
+  c10_ilka_w2: "Drones down! But Vesk's men are coming out of the cabins, and the sentry's awake at the gate. There's a heart by your feet. Breathe, then take them one at a time.",
   c10_ilka_3: "That's the last of them. Dallan and I will keep the vent clear. Go, go!",
   c10_dallan_1: "I spent a year guarding this bore for the project. I can guard it a little longer for everyone else.",
 

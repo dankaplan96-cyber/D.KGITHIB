@@ -158,13 +158,21 @@ export class Mite extends Actor {
       this.wanderT -= dt;
       if (this.wanderT < 0) { this.wanderT = 1.5 + Math.random() * 2; this.angle = Math.atan2(this.home.x - this.pos.x + (Math.random() - 0.5) * 4, this.home.z - this.pos.z + (Math.random() - 0.5) * 4); }
       sp = this.wanderT > 1 ? 1.2 : 0;
-      if (d < 6 && !hero.dead && hero.visibility() > 0.2) { this.state = 'chase'; g.audio.play('alert'); }
+      // (def.wake: a mite that has noticed him stirs for that long before it comes: DIFFICULTY, the galleries' mites
+      //  wake one after the other, not all with the first step into the room)
+      if (d < 6 && !hero.dead && hero.visibility() > 0.2) {
+        this.noticeT = (this.noticeT || 0) + dt;
+        if (this.def.wake) { this.angle = dampAngle(this.angle, this.angleTo(hero), 4, dt); sp = 0; }
+        if (this.noticeT >= (this.def.wake || 0)) { this.state = 'chase'; this.noticeT = 0; g.audio.play('alert'); }
+      } else this.noticeT = 0;
       this.rig.play('idle');
     } else if (this.state === 'chase') {
       this.angle = dampAngle(this.angle, this.angleTo(hero), 8, dt);
       this.rig.play('walk');
       // close in to striking distance; without permission to attack, circle at a wary distance
-      const may = d < 2.0 && this.coolT <= 0 && this.hurtT <= 0 && !hero.dead && (g.combatDir?.canAttack(this) ?? true);
+      // (DIFFICULTY: nothing bites across a drop: a mite that fell into the galleries' chasm cannot bite the hero on the shelf 3 m up)
+      const level = Math.abs(this.pos.y - hero.pos.y) < 1.6;
+      const may = d < 2.0 && level && this.coolT <= 0 && this.hurtT <= 0 && !hero.dead && (g.combatDir?.canAttack(this) ?? true);
       if (may) { this.state = 'windup'; this.stateT = 0; g.audio.play('zap'); }
       else if (d > 2.6) sp = 2.5;
       else { side = this.circle * 1.4; sp = d < 2.0 ? -0.8 : 0; if (Math.random() < dt * 0.4) this.circle *= -1; }
@@ -178,7 +186,7 @@ export class Mite extends Actor {
     } else if (this.state === 'lunge') {
       sp = 6;
       this.rig.play('lunge');
-      if (d < 1.0 && !this.bit) { this.bit = true; hero.damage(1, this.pos); }
+      if (d < 1.0 && !this.bit && Math.abs(this.pos.y - hero.pos.y) < 1.6) { this.bit = true; hero.damage(1, this.pos); }
       if (this.stateT > 0.18) { this.state = 'recover'; this.stateT = 0; this.bit = false; g.combatDir?.done(this); }
     } else if (this.state === 'recover') {
       // the opening: low and slow for a moment
@@ -689,7 +697,7 @@ export class Sentry extends Actor {
         break;
       case 'bash':
         this.rig.play('bash'); sp = 4.2;
-        if (!this.hitDone && d < 1.5 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(2, this.pos, true); g.audio.play('clang'); }
+        if (!this.hitDone && d < 1.5 && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(2, this.pos, true); g.audio.play('clang'); }
         if (this.stateT > 0.28) { this.state = 'open'; this.stateT = 0; g.combatDir?.done(this); }
         break;
       case 'open':

@@ -10,6 +10,9 @@ export const steps = [
   // (valve C is up on the catwalk, right above the floor: up the lowered stair first, then along the catwalk)
   ['valve C on the catwalk', () => { const v = game.room.valves.find((x) => x.id === 'C'), L = game.room.ladder; P.go(L.x, L.z - 0.2, { tol: 0.4 }); P.go(L.x, L.z - 5.4, { tol: 0.4 }); P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle(); return { open: v.open, y: +game.hero.pos.y.toFixed(2), cooled: game.flags.c3_cooled, fail: game.flags.c3_cooled ? null : 'cooling' }; }],
   ['the galleries', () => P.exitTo('c3-gallery')],
+  // (the crew's supply crates: a hop beside one, the heart that comes out; a player who is hurt rummages them — the bot only when
+  // it has lost 3 HP or more)
+  ['the supply crates (near shelf)', () => { const h = game.hero; return h.hp <= h.maxHp - 3 ? P.rummage('crates_near') : { r: 'not hurt', hp: h.hp }; }],
   ['three pillars (ball)', () => { const out = game.room.ballTargets.filter((x) => x.pillar != null).map((tg) => P.hitTarget(tg, 3.5, { run: false, maxT: 40 })); return { out, fail: out.every(Boolean) ? null : 'pillars' }; }],
   // across the chasm on the raised stepping stones (flush with the shelves, 0.9 m gaps: Athletic hops from the brink);
   // fallen in, he first walks back up the rough ledges against the start cliff
@@ -34,6 +37,7 @@ export const steps = [
   }],
   // (straight to the way on, not stopping for the mites: a fight from the far shelf chased one off its edge, 3 m down,
   // with no way back up but the stones again)
+  ['the supply crates (far shelf)', () => { const h = game.hero; return h.hp <= h.maxHp - 3 ? P.rummage('crates_far') : { r: 'not hurt', hp: h.hp }; }],
   ['Sendell', () => { const e = game.room?.exits?.find((x) => x.to === 'c3-sendell'); if (e) P.through(e.x, e.z, { fight: false }); P.settle(); return { sendell: game.flags.c3_sendell, fail: game.flags.c3_sendell ? null : 'sendell' }; }],
   // (the door from Sendell's chamber ends chapter 11: chapter 12's card, then Vesk's scene and the fight)
   ['the core → chapter 12', () => { P.exitTo('c3-core'); P.settle(); return { chapter: game.flags.chapterKey, fight: game.flags.c3_fight, room: game.room?.id, fail: game.flags.chapterKey === 'core' ? null : 'no chapter 12' }; }],

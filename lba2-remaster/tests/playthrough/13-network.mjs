@@ -28,9 +28,24 @@ export const steps = [
   ['the dials', () => { const L = game.rooms.lighttop; for (let pass = 0; pass < 3 && !game.flags.c10_light; pass++) for (const i of [1, 2, 3]) { if (game.flags.c10_light) break; const s = L.searches.find((x) => x.id === 'dial' + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); } return { dials: game.flags.c10_dials, light: game.flags.c10_light, fail: game.flags.c10_light ? null : 'light' }; }],
   ['fly to Desert Island', () => { P.exitTo('outdoor-lighthouse'); const r = P.flyTo(1); return { ...r, fail: r.room === 'desert' ? null : 'glider' }; }],
   ['Ilka: the bore relay', () => { P.talk('ilka', { run: true }); const b = game.rooms.desert.bore; const r = P.use(b.x, b.z, { run: true }); return { ...r, relay: game.flags.c10_boreRelay }; }],
-  // (the bore's drones: fought by input; below 3 HP the bot stops and an ISO assist beats the rest — QA.md: a
-  // human-playtest item, like the Zeelich depot)
-  ['the drones', () => { const r = P.fight({ maxT: 180, minHp: 2 }); r.assisted = game.enemies.some((e) => e.alive && e.present && e.pos.distanceTo(game.hero.pos) < 30) ? P.assistFight({}) : 0; P.wait(1); P.settle(); return { ...r, bore: game.flags.c10_bore, fail: game.flags.c10_bore ? null : 'bore' }; }],
+  // (the bore's two waves — the drones one after another, then Vesk's guards and the sentry — fought by input, a heart picked
+  // up between them; below 3 HP the bot stops and an ISO assist beats the rest — QA.md: a human-playtest item, like the
+  // Zeelich depot. The step reports the lowest HP of the fight and the HP at the break between the waves)
+  ['the drones', () => {
+    const G = game, h = G.hero, os = G.step.bind(G); let minHp = h.hp, breakHp = null; G.step = (dt) => { os(dt); minHp = Math.min(minHp, h.hp); if (breakHp == null && G.flags.c10_boreW2) breakHp = h.hp; };
+    const out = { left: 0, dead: false, t: 0, assisted: 0, waves: [] };
+    try {
+      for (let k = 0; k < 12 && !G.flags.c10_bore && !h.dead; k++) {
+        P.ignore?.clear?.();   // (a drone out on its patrol, a player goes after it again)
+        const wave = G.flags.c10_boreW2 ? 2 : 1, r = P.fight({ maxT: 180, minHp: 2 }); out.t += r.t; out.left = r.left; out.dead = r.dead;
+        out.waves.push({ wave, hp: h.hp });
+        if (G.enemies.some((e) => e.alive && e.present && e.pos.distanceTo(h.pos) < 30) && h.hp <= 2 && !h.dead) out.assisted += P.assistFight({});
+        P.wait(0.6); P.settle(); P.grab(9);
+        if (!G.flags.c10_bore && !G.enemies.some((e) => e.alive && e.present && e.pos.distanceTo(h.pos) < 30)) { P.wait(3); P.settle(); }   // (nothing in reach yet: the next of them is on its way)
+      }
+    } finally { G.step = os; }
+    P.wait(1); P.settle();
+    return { ...out, hp: h.hp, minHp, breakHp, w2: !!G.flags.c10_boreW2, bore: G.flags.c10_bore, fail: G.flags.c10_bore ? null : 'bore' }; }],
   ['fly to the Hamalayi', () => { const r = P.flyTo(2); return { ...r, fail: r.room === 'hamalayi' ? null : 'glider' }; }],
   ['Pim (Yorna)', () => ({ ...P.talk('yorna', { run: true }), pim: game.flags.c10_pim })],
   ['the dome', () => { const G = game, f = G.flags, d = G.rooms.hamalayi.observatory.door;

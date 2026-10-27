@@ -1143,7 +1143,13 @@ function buildGallery(scene, physics) {
   R.exits.push({ ...B.world(exX, BZ + 0.6), r: 0.85, to: 'c3-sendell' });
   R.exits.push({ ...B.world(LX + 0.45, entZ), r: 0.8, to: 'c3-deep' });
   R.spawn = { ...B.world(LX + 1.8, entZ), a: Math.PI / 2 };
-  R.mites = [B.world(-9.0, 2.6), B.world(-8.2, -5.6), B.world(8.4, -3.4), B.world(9.0, 4.8)];
+  // (DIFFICULTY: the near mite sleeps 7 m from the way in, not 3 m — the first step in the room is a breath, not a bite; the far
+  //  two sleep 5-6 m back from where the stones end. They wake one after the other: chapter3.js `wake`)
+  R.mites = [B.world(-7.0, -0.4), B.world(-8.2, -5.6), B.world(11.0, -6.8), B.world(10.0, 5.6)];
+  // two supply crates of the crew's, one on each shelf (the player can rummage them: a hop beside one, a heart each visit): the
+  // one by the way in, with the other stack; the other at the far shelf's rim, past the stones. A fall into the chasm costs 2 HP.
+  crateStack(B, 11.9, 0.6, -0.25, [[0.9, 0.75, 0.9], [0.7, 0.55, 0.7, null, 0.3]], DY);
+  for (const [id, x, z] of [['crates_near', -11.6, -1.4], ['crates_far', 11.9, 0.6]]) R.givers.push({ id, ...B.world(x, z), y: DY, r: 1.7, top: 1.5, kinds: ['life'], n: 1 });
 
   // --- light: cold crystal light from below and from the clusters, a dim violet fill
   for (const [x, y, z, c, i, d] of [[-10.5, DY + 2, -7.4, '#5ae0ff', 7, 9], [11.0, DY + 2, -5.0, '#5ae0ff', 6, 9], [-10.8, DY + 1.6, 7.6, '#b07aff', 3.5, 7], [10.6, DY + 1.6, 3.6, '#b07aff', 4, 7], [-3.0, DY - 0.5, -8.4, '#9a6aff', 5, 8], [0, CY + 1.2, 0, '#40c8ff', 6, 9], [0, CY + 1.2, 6.5, '#40c8ff', 3, 7]]) B.light(c, i, d, x, y, z);

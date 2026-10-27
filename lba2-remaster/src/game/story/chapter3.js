@@ -46,7 +46,8 @@ export class Chapter3 extends ChapterBase {
       const n = D.patrol.length;
       out.push({ id: 'c3drone', kind: 'drone', group: 'c3deep', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1 % n, when: (f) => this.isCur(f) });
     }
-    if (this.part === 1) (G?.mites || []).forEach((p, i) => out.push({ id: 'c3mite' + i, kind: 'mite', x: p.x, z: p.z, when: (f) => this.isCur(f) }));
+    // (DIFFICULTY: the four mites wake one after the other: the second of each shelf stirs 2.5 s after it notices him)
+    if (this.part === 1) (G?.mites || []).forEach((p, i) => out.push({ id: 'c3mite' + i, kind: 'mite', x: p.x, z: p.z, wake: i % 2 ? 2.5 : 0, when: (f) => this.isCur(f) }));
     if (this.part === 2 && C?.bossSpot) out.push({ id: 'guardian', kind: 'guardian', group: 'core', x: C.bossSpot.x, z: C.bossSpot.z, arena: C.arena, when: (f) => this.isCur(f) && !!f.c3_fight && !f.c3_turned });
     return out;
   }
