@@ -35,7 +35,7 @@ Object.assign(STR.en, {
   c8_lever_1: "A heavy lever by the old cistern, under rust and project paint. It moves. Somewhere outside, a door grinds open.",
   c8_shelter_fort: 'The fortress shelter is open. Steps lead down into the dark, and the air is dry.',
   c8_wheel_hint: '(The hatch wheel is up on the frame. Too high to reach by hand.)',
-  c8_shelter_depot: 'The bunker hatch swings open. Inside: benches, old lamps, and dust. It will do.',
+  c8_shelter_depot: 'The bunker door rolls open. Inside: benches, old lamps, and dust. It will do.',
 
   c8_tw_z2: "The shelters are open, Zoé. Gilbert's leading the town down. Mira's got water to them, Pippa's sending supplies.",
   c8_zoe_5: "Then it's my turn. The hill farms. Joss, Bryn and Grull won't leave their animals for anyone but me.",
