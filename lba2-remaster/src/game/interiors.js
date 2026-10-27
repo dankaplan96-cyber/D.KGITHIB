@@ -9,6 +9,7 @@ import { Kit, MAT, M, rbox, plane, cyl, sphere, torus, lathe, pipe, slab, soft, 
 import * as P from './props.js';
 import { dressHomeLife } from './homelife.js';
 import { dressWorkshop } from './workshoplife.js';
+import { windowViewMaterial, windowViewPlane, viewPlaneGeo, TILES as VIEW_TILES } from './windowviews.js';
 
 export const texMat = (tex, rx, ry, extra = {}) => {
   const t = tex.clone(); t.needsUpdate = true; t.repeat.set(rx, ry);
@@ -106,8 +107,8 @@ export class RoomBuilder {
     // the floor to stand on (around a stairwell, whose steps the room adds)
     for (const [x0, z0, x1, z1] of slabs(-W / 2, -D / 2, W / 2, D / 2)) this.col(cx0 + (x0 + x1) / 2, cz0 + (z0 + z1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, 0, { seeThrough: true, bottom: -1 });
     // far walls
-    k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t));
-    k.at(-W / 2, 0, D / 2 + t, Math.PI / 2, () => this.wallRun(D + t, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - p.at })), t, 0));
+    k.at(-W / 2 - t, 0, -D / 2, 0, () => this.wallRun(W + 2 * t, o, (o.back || []).map((p) => ({ ...p, at: p.at + W / 2 + t })), t, t, -1));
+    k.at(-W / 2, 0, D / 2 + t, Math.PI / 2, () => this.wallRun(D + t, o, (o.left || []).map((p) => ({ ...p, at: D / 2 + t - p.at })), t, 0, 1));
     // near rims
     const rh = o.rimH ?? 0.45, rm = o.rimMat || o.slab;
     if (rh > 0) {
@@ -149,7 +150,7 @@ export class RoomBuilder {
     piece(a, L);
   }
   // one far wall in its own frame: x along the run 0..L, inner face at z=0 facing +z
-  wallRun(L, o, openings, cutStart, cutEnd) {
+  wallRun(L, o, openings, cutStart, cutEnd, side = -1) {
     const k = this.k, H = o.H, t = o.t ?? 0.4, dado = o.dado ?? 1.0;
     const ops = openings.slice().sort((a, b) => a.at - b.at);
     // wall body: full-height columns between openings, lintels and sills
@@ -182,13 +183,16 @@ export class RoomBuilder {
     // timber posts
     if (o.posts) for (const px of o.postsAt?.(L) || []) k.add(rbox(0.16, H - 0.05, 0.08, 0.02), o.posts, px, (H - 0.05) / 2, 0.04);
     // openings
-    for (const p of ops) this.opening(p, o, t);
+    for (const p of ops) this.opening(p, o, t, side);
   }
-  opening(p, o, t) {
+  // side: which way the room camera's line of sight drifts along this wall's x going out through it (windowviews.js)
+  opening(p, o, t, side = -1) {
     const k = this.k, fm = p.frame || o.rail;
     const a = p.at, w = p.w, h = p.h, y0 = p.y0;
     // outside view behind the opening
-    if (p.view) k.add(plane(w + 0.3, h + 0.3), p.view, a, y0 + h / 2, -t - 0.05);
+    // (HOUSE-WINDOWS: a painted tile of the shared window atlas, set where the fixed camera's line of sight lands)
+    if (p.view?.tile) { const vp = windowViewPlane(p.view.tile, p, t, side); k.add(vp.geo, windowViewMaterial(), vp.x, vp.y, vp.z); }
+    else if (p.view) k.add(plane(w + 0.3, h + 0.3), p.view, a, y0 + h / 2, -t - 0.05);
     if (p.kind === 'door') {
       for (const s of [-1, 1]) k.add(rbox(0.13, h + 0.07, 0.07, 0.02), fm, a + s * (w / 2 + 0.05), (h + 0.07) / 2, 0.025);
       k.add(rbox(w + 0.34, 0.16, 0.09, 0.03), fm, a, h + 0.12, 0.03);
@@ -222,6 +226,11 @@ export class RoomBuilder {
       const mm = p.mullion || MAT.paint('#f4efe2', 0.5);
       k.add(rbox(w, 0.05, 0.05, 0.012), mm, a, y0 + h * 0.62, gz);
       k.add(rbox(0.05, h, 0.05, 0.012), mm, a, y0 + h / 2, gz);
+      // the reveal through the wall: pale plaster jambs and head, a wooden window board
+      const lin = p.lining || MAT.paint('#efe4cc', 0.85);
+      for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.02, h, t), lin, a + s * (w / 2 - 0.01), y0 + h / 2, -t / 2);
+      k.add(new THREE.BoxGeometry(w, 0.02, t), lin, a, y0 + h - 0.01, -t / 2);
+      k.add(rbox(w + 0.04, 0.05, t + 0.02, 0.012), p.sill || fm, a, y0 + 0.01, -t / 2);
       for (const s of [-1, 1]) k.add(new THREE.BoxGeometry(0.05, h, t * 0.5), fm, a + s * (w / 2 - 0.025), y0 + h / 2, -t * 0.25);
       k.add(new THREE.BoxGeometry(w, 0.05, t * 0.5), fm, a, y0 + h - 0.025, -t * 0.25);
       if (p.curtain) {
@@ -270,22 +279,12 @@ function curtainGeo(w, h, col) {
 
 // painted views through doors and windows (unlit so they read as daylight)
 function outsideView(kind) {
+  // (HOUSE-WINDOWS: the daylight views are tiles of one painted atlas, src/game/windowviews.js)
+  const tile = VIEW_TILES[kind] != null ? kind : ({ citadel: 'street', sky: 'village' })[kind];
+  if (tile) return { tile };
   const t = canvasTex(256, 256, (x, W, H) => {
     const g = x.createLinearGradient(0, 0, 0, H);
-    if (kind === 'citadel') {
-      g.addColorStop(0, '#9fd0f6'); g.addColorStop(0.5, '#e8f4fb'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-      x.fillStyle = 'rgba(255,255,255,0.85)'; for (const [cx, cy, rw] of [[60, 40, 50], [190, 70, 60], [120, 100, 40]]) { x.beginPath(); x.ellipse(cx, cy, rw, 10, 0, 0, 7); x.fill(); }
-      x.fillStyle = '#4f9a50'; x.fillRect(0, 150, W, 40);
-      x.fillStyle = '#6fb048'; x.beginPath(); x.ellipse(60, 150, 60, 30, 0, Math.PI, 0); x.fill(); x.beginPath(); x.ellipse(210, 155, 50, 26, 0, Math.PI, 0); x.fill();
-      x.fillStyle = '#9a9aa4'; x.fillRect(0, 180, W, 76);
-      x.strokeStyle = 'rgba(70,70,80,0.5)'; for (let y = 184; y < H; y += 12) { x.beginPath(); x.moveTo(0, y); x.lineTo(W, y); x.stroke(); for (let xx = (y / 12) % 2 * 16; xx < W; xx += 32) { x.beginPath(); x.moveTo(xx, y); x.lineTo(xx, y + 12); x.stroke(); } }
-    } else if (kind === 'sky') {
-      g.addColorStop(0, '#8cc4f0'); g.addColorStop(1, '#e4f2fb'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-      x.fillStyle = 'rgba(255,255,255,0.8)'; for (const [cx, cy, rw] of [[70, 60, 60], [180, 130, 70], [90, 200, 40]]) { x.beginPath(); x.ellipse(cx, cy, rw, 12, 0, 0, 7); x.fill(); }
-    } else if (kind === 'sea') {
-      g.addColorStop(0, '#8cc4f0'); g.addColorStop(0.55, '#dff0fa'); g.addColorStop(0.56, '#3a9ad0'); g.addColorStop(1, '#2468a8'); x.fillStyle = g; x.fillRect(0, 0, W, H);
-      x.strokeStyle = 'rgba(255,255,255,0.5)'; for (let i = 0; i < 40; i++) { const y = 150 + Math.random() * 100, xx = Math.random() * W; x.beginPath(); x.moveTo(xx, y); x.lineTo(xx + 12, y); x.stroke(); }
-    } else if (kind === 'mist') {
+    if (kind === 'mist') {
       g.addColorStop(0, '#c8c4d8'); g.addColorStop(1, '#eeeaf4'); x.fillStyle = g; x.fillRect(0, 0, W, H);
       x.fillStyle = 'rgba(255,255,255,0.7)'; for (let i = 0; i < 8; i++) { x.beginPath(); x.ellipse(Math.random() * W, Math.random() * H, 60, 14, 0, 0, 7); x.fill(); }
     } else if (kind === 'fort') {
@@ -335,13 +334,13 @@ function buildHouse(scene, physics) {
     back: [
       // (HOUSE-FIX: 0.3 → 0.6 and 2.6 → 2.8: the sea window's left curtain hung through the dresser's plate rack,
       //  and the island picture between the two windows sat behind a curtain)
-      { kind: 'window', at: 0.6 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sea') },
-      { kind: 'window', at: 2.8 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('citadel') },
-      { kind: 'window', at: -9.5 - hcx, w: 1.1, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('sky') },
+      { kind: 'window', at: 0.6 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('garden') },
+      { kind: 'window', at: 2.8 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('village') },
+      { kind: 'window', at: -9.5 - hcx, w: 1.1, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('orchard') },
     ],
     left: [
       { kind: 'window', at: 0.6 - hcz, w: 1.0, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('sea') },
-      { kind: 'window', at: 9.3 - hcz, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('sea') },
+      { kind: 'window', at: 9.3 - hcz, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('harbour') },
     ],
   });
   const BZ = -D / 2, LX = -W / 2;
@@ -563,8 +562,26 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   const k = B.k, H = 3.0;
   // Arthur's room: x HX0..LX, z HZ0..7
   const paper = MAT.paper('#2e6f88', '#e8c86a', 'star');
-  k.add(plane(LX - HX0 - 0.05, H - 1.12), paper, (HX0 + LX) / 2, 1.12 + (H - 1.12) / 2, HZ0 + 0.012);
-  k.at(HX0 + 0.012, 0, (HZ0 + 7) / 2, Math.PI / 2, () => k.add(plane(7 - HZ0 - 0.05, H - 1.12), paper, 0, 1.12 + (H - 1.12) / 2, 0));
+  // (HOUSE-WINDOWS: the paper stopped at the windows' edges — it hung across the glass and hid the view; the pieces
+  //  keep the wall's one-sheet mapping, so the pattern is the same as before)
+  const paperRun = (len, holes) => {
+    const y0 = 1.12, hh = H - 1.12;
+    const piece = (a, b, ya, yb) => {
+      if (b - a < 0.01 || yb - ya < 0.01) return;
+      const g = new THREE.PlaneGeometry(b - a, yb - ya); g.userData.keepUV = true;
+      const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, (a + uv.getX(i) * (b - a)) / len, (ya - y0 + uv.getY(i) * (yb - ya)) / hh);
+      k.add(g, paper, (a + b) / 2 - len / 2, (ya + yb) / 2, 0);
+    };
+    let x = 0;
+    for (const w of holes.slice().sort((p, q) => p.at - q.at)) {
+      const a = Math.max(0, w.at - w.w / 2 + 0.01), b = Math.min(len, w.at + w.w / 2 - 0.01), ya = Math.max(y0, w.y0 + 0.01), yb = Math.min(H, w.y0 + w.h - 0.01);
+      piece(x, a, y0, H); piece(a, b, yb, H); piece(a, b, y0, ya); x = b;
+    }
+    piece(x, len, y0, H);
+  };
+  // the north wall's run (x from HX0, window at x = -9.5) and the west wall's (it runs from z = 7 back to HZ0, window at z = 0.6)
+  k.at((HX0 + LX) / 2, 0, HZ0 + 0.012, 0, () => paperRun(LX - HX0 - 0.05, [{ at: -9.5 - HX0 - 0.025, w: 1.1, y0: 1.1, h: 1.15 }]));
+  k.at(HX0 + 0.012, 0, (HZ0 + 7) / 2, Math.PI / 2, () => paperRun(7 - HZ0 - 0.05, [{ at: 7 - 0.025 - 0.6, w: 1.0, y0: 1.1, h: 1.15 }]));
   B.put(HX0 + 1.0, 4.9, Math.PI / 2, P.bed, { w: 1.05, l: 1.95, quilt: ['#3b78d8', '#e9c46a', '#e0503a', '#f2ead6', '#3a8a5a'], key: 'arthur' });
   B.put(HX0 + 0.3, 3.55, Math.PI / 2, P.nightstand, {});
   P.candle(k, HX0 + 0.3, 0.62, 3.5);
@@ -643,6 +660,8 @@ function buildCellar(scene, physics) {
     W, D, H, t: 0.4,
     floor: MAT.tiles('#b8784a', '#a86a40', '#5a3a28', true, 6), slab: MAT.rubble('grey'), rimMat: MAT.stone('grey', 1.4),
     body: MAT.rubble('grey'), low: null, rail: MAT.wood('dark'), cap: MAT.wood('honey'),
+    // (HOUSE-WINDOWS: a cellar light high in the north wall, looking out at the yard at ground level)
+    back: [{ kind: 'window', at: 0.3, w: 1.1, h: 0.85, y0: 1.5, view: outsideView('yard'), mullion: MAT.paint('#e8dcc0', 0.5) }],
   });
   const BZ = -D / 2, LX = -W / 2;
   // the stairs up: along the south end of the west wall, climbing west to the wall (where the hall's stairwell is
@@ -1074,7 +1093,7 @@ function buildOffice(scene, physics) {
     body: MAT.paper('#dde4cc', '#3f6f62', 'diamond'), low: MAT.wainscot('dark'), dado: 1.1, rail, cap: rail, beam: rail,
     posts: rail, postsAt: (L) => [0.48, L - 0.48],
     back: [{ kind: 'door', at: doorX, w: 1.15, h: 2.2, y0: 0, leaf: MAT.wood('honey'), leafAngle: 1.95, view: outsideView('citadel') }],
-    left: [{ kind: 'window', at: 1.25, w: 0.95, h: 1.1, y0: 1.15, curtain: '#3f6f8a', view: outsideView('sky') }],
+    left: [{ kind: 'window', at: 1.25, w: 0.95, h: 1.1, y0: 1.15, curtain: '#3f6f8a', view: outsideView('village') }],
   });
   const BZ = -D / 2, LX = -W / 2;
   R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'outdoor-office' });
