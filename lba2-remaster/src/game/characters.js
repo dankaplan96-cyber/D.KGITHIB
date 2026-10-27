@@ -1156,9 +1156,14 @@ function polyCharacter(L, def, P) {
 // half strength (was a mid blue at 0.38, which all but vanished over the blue-slate roofs and dark stone): it now
 // reads over blue and orange roofs, white plaster, grey stone and grass alike.
 // everything that belongs to the hero's body (and what he holds) marks itself in the stencil where it is seen
+// It must be drawn after the opaque scenery that can hide it, or it marks the stencil before a wall drawn later covers
+// it, and no silhouette shows there: renderOrder 2 puts it after everything opaque (scenery 0, the terrain 1: renderer
+// draws opaque things by renderOrder first). PERF-BATTERY made that order matter: merged draw batches are sorted by a
+// cell's centre, often beyond him, and the terrain is drawn last (occluders.mjs: his head behind the stone house).
 export function writeBodyStencil(obj) {
   obj.traverse((o) => {
     if (!o.isMesh || o.material === silMat) return;
+    if (o.renderOrder < 2) o.renderOrder = 2;
     for (const m of [o.material].flat()) { m.stencilWrite = true; m.stencilRef = 1; m.stencilFunc = THREE.AlwaysStencilFunc; m.stencilZPass = THREE.ReplaceStencilOp; }
   });
 }
