@@ -84,10 +84,30 @@ export function makeTextures() {
     const [c, x] = canvas(S); const r = rng(12);
     x.fillStyle = '#e8d49a'; x.fillRect(0, 0, S, S);
     blotches(x, S, r, 30, ['#f2e0aa', '#d9c084', '#efd99e'], 20, 50, 0.6);
-    x.strokeStyle = 'rgba(190,160,100,0.35)'; x.lineWidth = 2;
-    for (let i = 0; i < 18; i++) {
-      const y = r() * S, ph = r() * 6;
-      wrap(S, (ox, oy) => { x.beginPath(); for (let k = 0; k <= S; k += 8) x.lineTo(k + ox, y + oy + Math.sin(k * 0.05 + ph) * 3); x.stroke(); });
+    // (POLISH-AUDIT #16: 18 wavy lines ran the whole width of the tile, so up close the sand looked like floorboards.
+    //  Wind ripples are short, forked crests, a pale ridge with a warm lee beside it, laid along a slowly turning flow
+    //  field on a jittered grid: dashes of 10-26 px in rows that bend and break, never one line across the tile.
+    //  The flow field is periodic in the tile, so the tile still repeats without a seam.)
+    const TAU = Math.PI * 2, flow = (px, py) => 0.5 * Math.sin(px / S * TAU + 0.7) + 0.35 * Math.cos(py / S * TAU + 1.3) + 0.12 * Math.sin((px + py) / S * TAU * 2);
+    const CELL = 11;
+    x.lineCap = 'round';
+    for (let gy = 0; gy < S; gy += CELL) for (let gx = 0; gx < S; gx += CELL) {
+      const px = gx + r() * CELL, py = gy + r() * CELL;
+      if (r() < 0.12) continue;   // gaps, so the rows break up
+      const a = flow(px, py) + (r() - 0.5) * 0.14, len = 14 + r() * 18, nx = -Math.sin(a), ny = Math.cos(a);
+      const bend = (r() - 0.5) * 3;
+      const crest = (ox, oy, dx, dy, w, col) => {
+        x.strokeStyle = col; x.lineWidth = w;
+        x.beginPath();
+        x.moveTo(px + ox - Math.cos(a) * len / 2 + dx, py + oy - Math.sin(a) * len / 2 + dy);
+        x.quadraticCurveTo(px + ox + nx * bend + dx, py + oy + ny * bend + dy, px + ox + Math.cos(a) * len / 2 + dx, py + oy + Math.sin(a) * len / 2 + dy);
+        x.stroke();
+      };
+      wrap(S, (ox, oy) => {
+        if (px + ox < -20 || px + ox > S + 20 || py + oy < -20 || py + oy > S + 20) return;
+        crest(ox, oy, nx * 2.1, ny * 2.1, 2.2, 'rgba(176,134,76,0.15)');   // the lee, a shade warmer
+        crest(ox, oy, 0, 0, 1.4, 'rgba(255,244,208,0.30)');                 // the crest, pale
+      });
     }
     speckle(x, S, r, 500, ['#c9ad70', '#fff1c4', '#b89a5e'], 0.7, 0.3);
     T.sand = toTex(c);
