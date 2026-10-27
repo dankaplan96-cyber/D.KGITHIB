@@ -25,8 +25,8 @@ const d17 = await ev(() => { const G = game, f = G.flags, s0 = G.state; let line
 });
 check('D17: Continue in the middle of Sendell\'s scene plays it on to its end (the way to the core opens)', d17.s0 === 'dialog' && d17.sendell, d17);
 
-// D16: the core fight, saved in its second phase (all three pylons), resumes after Continue
-await ev(() => { const G = game, f = G.flags, ch = G.story.cur; P.settle(); f.c3_sendell = true;
+// D16: the core fight, saved in its second phase (all three pylons), resumes after Continue (chapter 12, The Core)
+await ev(() => { const G = game, f = G.flags; P.settle(); f.c3_sendell = true; f.chapterKey = 'core'; f.chapter = G.story.chapters.findIndex((c) => c.key === 'core'); G.story.refreshCast(); const ch = G.story.cur;
   G.enterRoom('c3core', null, true); for (let i = 0; i < 60; i++) { G.step(1 / 30); if (G.state !== 'play') P.settle(); }
   for (const i of [0, 1, 2]) if (!f['c3_pylon' + i]) ch.convertPylon(i);
   for (let i = 0; i < 300; i++) { G.step(1 / 30); if (G.state !== 'play') P.settle(); }

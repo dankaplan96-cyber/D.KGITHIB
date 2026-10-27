@@ -147,8 +147,8 @@ await route('chapter4', async () => {
 // ---------------------------------------------------------------- 5. the core fight (chapter 11): the nudge is for a stuck player only
 await route('core', async () => {
   await ev(() => { const G = game, f = G.flags; P.settle();
-    Object.assign(f, { prologueDone: true, intro: true, chapterKey: 'shell', c3_started: true, c3_diagram: true, c3_ladder: true, c3_cooled: true, c3_pillar0: true, c3_pillar1: true, c3_pillar2: true, c3_sendell: true });
-    f.chapter = G.story.chapters.findIndex((c) => c.key === 'shell'); G.hero.hasBall = true; G.story.refreshCast(); G.updateObjective();
+    Object.assign(f, { prologueDone: true, intro: true, chapterKey: 'core', c3_started: true, c3_diagram: true, c3_ladder: true, c3_cooled: true, c3_pillar0: true, c3_pillar1: true, c3_pillar2: true, c3_sendell: true });
+    f.chapter = G.story.chapters.findIndex((c) => c.key === 'core'); G.hero.hasBall = true; G.story.refreshCast(); G.updateObjective();
     G.enterRoom('c3core', null, true); for (let i = 0; i < 90 && !f.c3_fight; i++) { G.step(1 / 30); if (G.state !== 'play') P.settle(); } P.settle(); G.step(0.3); });
   const f0 = await moment('core', '01-fight');
   // he stands about and does nothing for 45 s of play (kept on his feet): the stuck player's nudge comes up

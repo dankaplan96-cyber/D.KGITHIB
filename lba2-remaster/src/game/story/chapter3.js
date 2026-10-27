@@ -1,4 +1,12 @@
-// Chapter 3 — "The Shell".
+// Chapters 11 and 12 — "The Shell" and "The Core" (one story, one set of rooms and flags, two chapters).
+//
+// The Shell (chapter 11): the lift down the shaft, the deep installation, the crystal galleries and Sendell's
+// chamber. It ends when Twinsen leaves Sendell's chamber for the core (once her words are done): chapter 12's card
+// shows and The Core begins in the core room. The Core (chapter 12): Vesk, the guardian, the three pylons, the
+// overload coil, the console. -> the epilogue.
+// The two chapters are this one class (ChapterCore at the bottom is the second part): every hook the rooms need
+// works in both, so a room can be walked back through in either; only what starts, ends, shows and journals a part
+// differs.
 //
 // Twinsen follows Vesk down the drill shaft. In the project's deep installation he cools the bore's heat
 // exchanger to free a jammed shutter (a cooling diagram on the wall gives the circuit: valves A and C to
@@ -23,6 +31,7 @@ const ALLIES = [['zoeradio', 'c3_pylon_1'], ['miraradio', 'c3_pylon_2'], ['okura
 const PLATE = [{ dx: 0, dz: 0, k: 7 }, { dx: -0.5, dz: 0, k: 5 }, { dx: -1, dz: 0, k: 3 }];
 
 export class Chapter3 extends ChapterBase {
+  get part() { return 1; }   // 1: The Shell (to Sendell), 2: The Core (ChapterCore)
   get R() { return this.game.rooms; }
   on() { return this.isCur(); }
   pylons() { return [0, 1, 2].filter((i) => this.f['c3_pylon' + i]).length; }
@@ -30,12 +39,12 @@ export class Chapter3 extends ChapterBase {
   // ---------------------------------------------------------------- cast
   enemyDefs() {
     const D = this.R.c3deep, G = this.R.c3gallery, C = this.R.c3core, out = [];
-    if (D?.patrol?.length) {
+    if (this.part === 1 && D?.patrol?.length) {
       const n = D.patrol.length;
       out.push({ id: 'c3drone', kind: 'drone', group: 'c3deep', x: D.patrol[0][0], z: D.patrol[0][1], patrol: D.patrol, wp: 1 % n, when: (f) => this.isCur(f) });
     }
-    (G?.mites || []).forEach((p, i) => out.push({ id: 'c3mite' + i, kind: 'mite', x: p.x, z: p.z, when: (f) => this.isCur(f) }));
-    if (C?.bossSpot) out.push({ id: 'guardian', kind: 'guardian', group: 'core', x: C.bossSpot.x, z: C.bossSpot.z, arena: C.arena, when: (f) => this.isCur(f) && !!f.c3_fight && !f.c3_turned });
+    if (this.part === 1) (G?.mites || []).forEach((p, i) => out.push({ id: 'c3mite' + i, kind: 'mite', x: p.x, z: p.z, when: (f) => this.isCur(f) }));
+    if (this.part === 2 && C?.bossSpot) out.push({ id: 'guardian', kind: 'guardian', group: 'core', x: C.bossSpot.x, z: C.bossSpot.z, arena: C.arena, when: (f) => this.isCur(f) && !!f.c3_fight && !f.c3_turned });
     return out;
   }
   place(id) {
@@ -49,6 +58,12 @@ export class Chapter3 extends ChapterBase {
   // ---------------------------------------------------------------- start
   begin() {
     const g = this.game;
+    if (this.part === 2) {   // The Core: in through the door from Sendell's chamber; Vesk's scene starts as the room is entered
+      if (!this.R.c3core) return;
+      const to = this.exitTo('c3-core');
+      g.enterRoom('c3core', to?.x != null ? to : null, true);
+      return;
+    }
     if (!this.R.c3shaft) return; // (rooms missing in this build)
     g.enterRoom('c3shaft', null, true);
     this.chain([['narrator', 'c3_arrive'], ['hero', 'c3_tw_arrive'], ['balradio', 'c3_bal_radio1']], () => {
@@ -72,9 +87,20 @@ export class Chapter3 extends ChapterBase {
     const dx = T.center.x - back.x, dz = T.center.z - back.z, l = Math.hypot(dx, dz) || 1;
     return { room: id, x: back.x + (dx / l) * 1.7, z: back.z + (dz / l) * 1.7, a: Math.atan2(dx, dz) };
   }
-  canExit(room) {
+  canExit(room, to) {
+    // the door from Sendell's chamber to the core is where The Shell ends (once her words are done)
+    if (this.part === 1 && room.id === 'c3sendell' && to === 'c3-core') {
+      if (this.f.c3_sendell && !this.game.trans) this.toCore();
+      return false;
+    }
     if (room.id === 'c3core' && this.f.c3_fight && !this.f.c3_done) { this.chain([['hero', 'c3_exit_block']]); return false; }
     return true;
+  }
+  // chapter 12: its title card, then The Core's first scene (its rooms are built behind the black)
+  toCore() {
+    const g = this.game;
+    g.audio.play('door');
+    g.startTransition(() => { this.story.nextChapter(); }, this.story.nextAreas());
   }
 
   // ---------------------------------------------------------------- interaction
@@ -341,7 +367,8 @@ export class Chapter3 extends ChapterBase {
     if (!this.reached()) return;
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
-    this.game.regions.whenBuilt('c3deep', () => this.applyRooms());
+    if (this.part === 1) this.game.regions.whenBuilt('c3deep', () => this.applyRooms());   // (the rooms, for both parts: once)
+    if (this.part !== 2) return;
     // a fight interrupted by a reload restarts once play is under way in the core (no intro again: the load enters the
     // room while the title is still up, and a dialogue started then is cut by the switch to play)
     if (f.c3_fight && !f.c3_turned) { f.c3_fight = false; this.resumeFight = true; }
@@ -369,9 +396,12 @@ export class Chapter3 extends ChapterBase {
   // ---------------------------------------------------------------- HUD
   objective() {
     const f = this.f, room = this.game.room?.id;
+    if (this.part === 2) {
+      if (f.c3_overload && !f.c3_turned) return this.goal('c3_obj_coil', { n: f.c3_coil || 0 });
+      if (f.c3_fight) return this.goal('c3_obj_pylons', { n: this.pylons() });
+      return this.goal('c3_obj_core');
+    }
     if (!f.c3_started) return '';
-    if (f.c3_overload && !f.c3_turned) return this.goal('c3_obj_coil', { n: f.c3_coil || 0 });
-    if (f.c3_fight) return this.goal('c3_obj_pylons', { n: this.pylons() });
     if (f.c3_sendell) return this.goal('c3_obj_core');
     if (f.c3_cooled) return this.goal(room === 'c3gallery' ? 'c3_obj_gallery' : 'c3_obj_deeper');
     if (room === 'c3deep') return this.goal('c3_obj_cool') + this.sub(!!f.c3_diagram, 'c3_sub_diagram') + this.sub(!!f.c3_ladder, 'c3_sub_up');
@@ -379,13 +409,21 @@ export class Chapter3 extends ChapterBase {
   }
   journal() {
     const f = this.f;
-    return [
+    const lines = this.part === 2 ? [
+      { key: 'c3_j_core', done: !!f.c3_fight || !!f.c3_overload || !!f.c3_turned },
+      { key: 'c3_j_pylons', done: this.pylons() >= 3 },
+      { key: 'c3_j_vesk', done: !!f.c3_done },
+    ] : [
       { key: 'c3_j_shaft', done: !!f.c3_started },
       { key: 'c3_j_cool', done: !!f.c3_cooled },
       { key: 'c3_j_gallery', done: !!(f.c3_pillar0 && f.c3_pillar1 && f.c3_pillar2) },
       { key: 'c3_j_sendell', done: !!f.c3_sendell },
-      { key: 'c3_j_pylons', done: this.pylons() >= 3 },
-      { key: 'c3_j_vesk', done: !!f.c3_done },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ];
+    return lines.filter((l, i, a) => i === 0 || a[i - 1].done);
   }
+}
+
+// chapter 12, "The Core": the second part of the same story (see the top of this file)
+export class ChapterCore extends Chapter3 {
+  get part() { return 2; }
 }

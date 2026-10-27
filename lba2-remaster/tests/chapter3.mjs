@@ -1,6 +1,7 @@
-// Chapter 3 and epilogue playthrough: jump to the end of chapter 2 → the shaft → the deep installation
-// (diagram, ball switch, valves A and C) → the crystal galleries (three pillars, the stones) → Sendell →
-// the core (three pylons while the guardian fights) → epilogue dinner → end screen → free roam.
+// Chapters 11 and 12 (The Shell, The Core) and the epilogue playthrough: jump to the end of chapter 2 → the shaft →
+// the deep installation (diagram, ball switch, valves A and C) → the crystal galleries (three pillars, the stones) →
+// Sendell (end of chapter 11; the door to the core starts chapter 12, with its card) → the core (three pylons while
+// the guardian fights) → epilogue dinner → end screen → free roam.
 // Ball targets are first tried with a real throw; if a throw misses, the hit is applied directly and the
 // log says "forced" (aiming is covered by the earlier tests; this one checks the story can be finished).
 // Also: a save taken mid-chapter (after the galleries) reloads with the progress intact.
@@ -90,7 +91,16 @@ is("Sendell's words, the core objective", await ev(() => { T.talkAll(); return [
 await shot('C3-05-sendell.png');
 
 // the core: Vesk, the guardian, the pylons
-is('in the core: the fight starts, an objective set', await ev(() => { const r = T.exit('c3-core'); T.talkAll(); return [r, game.flags.c3_fight, T.obj()]; }), (v) => v[0] === 'c3core' && v[1] === true && v[2].length > 0);
+// the door from Sendell's chamber: chapter 11 ends, chapter 12's card shows, then Vesk's scene and the fight
+is("Sendell's door: chapter 12 (The Core) begins under its own title card, in the core room", await ev(() => {
+  const j0 = game.story.journal().map((c) => c.title);
+  const e = game.room.exits.find((x) => x.to === 'c3-core'); T.tp(e.x, e.z, 0, e.y ?? Math.max(game.hero.pos.y, game.room.deckY ?? -1e9) + 0.5);
+  let card = null; for (let i = 0; i < 60 && game.flags.chapterKey !== 'core'; i++) game.step(0.1);
+  game.step(0.3); const el = document.querySelector('#chapter'); card = el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
+  return { j0, key: game.flags.chapterKey, chapter: game.flags.chapter, card, room: game.room?.id, state: game.state }; }),
+  (v) => v.key === 'core' && v.chapter === 11 && /Chapter 12/.test(v.card) && /The Core/.test(v.card) && v.room === 'c3core' && v.j0.includes('11. The Shell') && !v.j0.includes('12. The Core'));
+is('in the core: the fight starts, an objective set', await ev(() => { T.talkAll(); return [game.room?.id, game.flags.c3_fight, T.obj()]; }), (v) => v[0] === 'c3core' && v[1] === true && v[2].length > 0);
+is('the journal keeps both chapters: 11 The Shell (its four lines) and 12 The Core (its first two lines, the fight begun)', await ev(() => game.story.journal().filter((c) => /Shell|Core/.test(c.title)).map((c) => [c.title, c.lines.length])), (v) => v.length === 2 && v[0][0] === '11. The Shell' && v[0][1] === 4 && v[1][0] === '12. The Core' && v[1][1] === 2);
 is('the guardian is there and alive', await ev(() => { const g = game.story.cur.guardian; return g ? [g.present, g.state, g.alive] : 'none'; }), (v) => Array.isArray(v) && v[0] === true && v[2] === true);
 is("the core can't be left during the fight", await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); return game.room?.id; }), (v) => v === 'c3core');
 await shot('C3-06-core.png');
@@ -106,7 +116,7 @@ is('the three pylons converted', await ev(() => game.story.cur.plates().map((p) 
 is('the overload: the coil appears, an objective set', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); const tg = game.room.ballTargets.find((x) => x.coil); return [game.flags.c3_overload, !!tg, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);
 // Vesk's coil: three hits (real throws first, T.hit forces a hit only if the throws miss)
 is("Vesk's coil broken", await ev(() => { const tg = game.room.ballTargets.find((x) => x.coil); const r = []; for (let k = 0; tg && k < 3 && !tg.done; k++) r.push(T.hit(tg)); T.talkAll(); return [tg ? r : 'no coil', game.flags.c3_coil, tg?.done]; }), (v) => v[1] && v[2] === true);
-is('the chapter ends: the epilogue (chapter 11, home) reached', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state]; }), (v) => v[0] === true && v[1] === true && v[2] === 11);
+is('the chapter ends: the epilogue (after chapter 12, home) reached', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state, game.flags.chapterKey]; }), (v) => v[0] === true && v[1] === true && v[2] === 12 && v[5] === 'home');
 
 // epilogue: dinner → end screen
 is("the epilogue's dinner, then the end screen", await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); } return [G.flags.chapter, G.flags.ep_dinner, G.state, document.querySelector('#ending h1')?.textContent]; }), (v) => v[1] === true && v[2] === 'ending');

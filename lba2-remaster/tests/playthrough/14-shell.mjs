@@ -1,4 +1,4 @@
-// Chapter 11 (The Shell) to the end: the bore's machinery (the cooling diagram, valves A and C, the ball switch for
+// Chapters 11 (The Shell) and 12 (The Core) to the end: the bore's machinery (the cooling diagram, valves A and C, the ball switch for
 // the ladder), the crystal galleries (three pillars: ball), Sendell, the core (the guardian, three pylons from
 // their plates, Vesk's overload coil), the epilogue: dinner, the end screen, Keep Exploring.
 export const steps = [
@@ -35,7 +35,8 @@ export const steps = [
   // (straight to the way on, not stopping for the mites: a fight from the far shelf chased one off its edge, 3 m down,
   // with no way back up but the stones again)
   ['Sendell', () => { const e = game.room?.exits?.find((x) => x.to === 'c3-sendell'); if (e) P.through(e.x, e.z, { fight: false }); P.settle(); return { sendell: game.flags.c3_sendell, fail: game.flags.c3_sendell ? null : 'sendell' }; }],
-  ['the core', () => { P.exitTo('c3-core'); P.settle(); return { fight: game.flags.c3_fight, room: game.room?.id }; }],
+  // (the door from Sendell's chamber ends chapter 11: chapter 12's card, then Vesk's scene and the fight)
+  ['the core → chapter 12', () => { P.exitTo('c3-core'); P.settle(); return { chapter: game.flags.chapterKey, fight: game.flags.c3_fight, room: game.room?.id, fail: game.flags.chapterKey === 'core' ? null : 'no chapter 12' }; }],
   // (the guardian's fight as a player plays it: stun it with the ball, then the plate's bank shot in the 2.6 s it
   // sags — P.coreFight; walking plate to plate under its bolt fans killed the bot)
   ['the pylons from their plates', () => { const G = game; P.settle(); const r = P.coreFight('pylons'); P.settle(); const n = G.story.cur.pylons(); return { ...r, pylons: n, fail: n >= 3 ? null : 'pylons' }; }],
@@ -43,7 +44,7 @@ export const steps = [
   ['Vesk\'s overload coil', () => { const G = game; P.settle(); const tg = G.room.ballTargets.find((x) => x.coil); const r = tg && !tg.done ? P.coreFight('coil') : null;
     // (under ASSIST, after the bot's own tries: the remaining coil hits through the story's own hit — logged ISO)
     if (P.assist && tg && !tg.done && !G.hero.dead) { for (let n = 0; n < 3 && !tg.done; n++) { G.story.cur.hitCoil(tg); P.settle(); } P.note('ISO assist: the overload coil broken'); }
-    P.settle(60); return { ...r, coil: G.flags.c3_coil, turned: G.flags.c3_turned, fail: G.flags.c3_turned ? null : 'coil' }; }, null, { retryFrom: 'the core' }],
+    P.settle(60); return { ...r, coil: G.flags.c3_coil, turned: G.flags.c3_turned, fail: G.flags.c3_turned ? null : 'coil' }; }, null, { retryFrom: 'the core → chapter 12' }],
   ['the epilogue', () => { const G = game; let t = 0; while (G.state !== 'ending' && t < 120) { G.step(0.25); t += 0.25; if (G.state === 'dialog' || G.state === 'cutscene') P.settle(); } return { state: G.state, title: document.querySelector('#ending h1')?.textContent, fail: G.state === 'ending' ? null : 'no ending' }; }],
   ['Keep Exploring', () => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); P.settle(); return { state: game.state, free: game.flags.ep_free, obj: P.state().obj }; }],
 ];

@@ -1,4 +1,4 @@
-// Chapter 3 — "The Shell" — and the epilogue. English only (the game ships in English; other languages
+// Chapters 11 and 12 — "The Shell" and "The Core" — and the epilogue. English only (the game ships in English; other languages
 // can add their own Object.assign(STR.<lang>, …) block with the same keys).
 import { STR } from '../i18n.js';
 
@@ -79,6 +79,7 @@ Object.assign(STR.en, {
   c3_j_cool: "I cooled the drill's exchanger and opened the shutter.",
   c3_j_gallery: "The galleries are full of the well's crystals, grown huge.",
   c3_j_sendell: "Sendell: under the shell sleeps a child of this world, waking too early. Stopping the drill won't close the cracks.",
+  c3_j_core: 'Sendell sent me on to the core, where Vesk is finishing the bore.',
   c3_j_pylons: 'With Zoé, Mira, Oku and Baldino, I converted the three pylons.',
   c3_j_vesk: "Vesk wanted her power for himself. I broke his overload coil and switched the bore to shield mode.",
 
