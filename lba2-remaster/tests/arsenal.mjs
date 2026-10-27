@@ -177,7 +177,7 @@ const keep = path.join(os.tmpdir(), 'arsenal-save-' + process.pid + '.json');
 await quitAndKeep(page, context, keep);
 await open(page, '?nocine'); await menu(page, 'continue'); await helpers();
 const after = await ev(() => ({ A: game.hero.arms, flags: Object.fromEntries(Object.entries(game.flags).filter(([k]) => k.startsWith('a_'))), weapon: game.hero.weapon, v: JSON.parse(localStorage.getItem('lba3_save_v1')).v, room: game.room?.id }));
-check('Save & quit → Continue: every weapon, gadget, count and errand flag kept (save format 4)', JSON.stringify(before.A) === JSON.stringify(after.A) && JSON.stringify(before.flags) === JSON.stringify(after.flags) && before.weapon === after.weapon && after.v === 4, { before, after });
+check('Save & quit → Continue: every weapon, gadget, count and errand flag kept (save format 5, since CH-11/12)', JSON.stringify(before.A) === JSON.stringify(after.A) && JSON.stringify(before.flags) === JSON.stringify(after.flags) && before.weapon === after.weapon && after.v === 5, { before, after });
 
 // ---- the effects, in the developer arena (never saved)
 await ev(() => { const G = game; G.devArena(); P.settle();
@@ -238,10 +238,10 @@ await page.waitForEvent('load', { timeout: 300000 }).catch(() => {});
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing && window.game.state !== 'loading', null, { timeout: 300000 });
 await page.evaluate(() => { game.testFreeze = true; game.step(0.5); });
 const m2 = await ev(() => ({ state: game.state, arms: game.hero.arms, v: JSON.parse(localStorage.getItem('lba3_save_v1')).v, backup: !!localStorage.getItem('lba3_save_v1_backup_v3'), wheel: game.hero.combat.owned() }));
-check('a format-3 save (no arsenal) continues: empty arsenal, the save rewritten as format 4, the old one kept', m2.state === 'play' && m2.arms && !m2.arms.blowgun && m2.arms.darts === 0 && m2.backup && m2.wheel.every((w) => ['ball', 'sword', 'pulse', 'fists'].includes(w)), m2);
+check('a format-3 save (no arsenal) continues: empty arsenal, the save rewritten as format 5, the old one kept', m2.state === 'play' && m2.arms && !m2.arms.blowgun && m2.arms.darts === 0 && m2.backup && m2.wheel.every((w) => ['ball', 'sword', 'pulse', 'fists'].includes(w)), m2);
 await ev(() => game.save(false));
 const m3 = await ev(() => JSON.parse(localStorage.getItem('lba3_save_v1')).v);
-check('…and saved again it is format 4', m3 === 4, m3);
+check('…and saved again it is format 5', m3 === 5, m3);
 
 const fails = done(errs);
 await browser.close();
