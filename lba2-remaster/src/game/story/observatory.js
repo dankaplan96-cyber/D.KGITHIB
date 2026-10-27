@@ -23,7 +23,7 @@ export class Observatory extends ChapterBase {
     const M = this.M;
     if (!M?.ventPatrol) return [];
     const P = M.ventPatrol;
-    return [{ id: 'heavydrone', kind: 'drone', group: 'vent', hp: 8, x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !!f.c7_scope && !f.c7_droneDown }];
+    return [{ id: 'heavydrone', kind: 'drone', model: 'hauler', group: 'vent', hp: 8, x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !!f.c7_scope && !f.c7_droneDown }];
   }
   place(id) {
     const f = this.f;

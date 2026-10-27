@@ -340,7 +340,7 @@ export function koActive(e) {
 export function koGone(e) {
   const s = e.game.scene;
   e.state = 'dead'; e.gone = true; e.deadT = Math.max(e.deadT || 0, 99);
-  for (const o of [e.rig?.root, e.shadow, e.aimLine, e.ring, e.icon, ...(e.ko?.drops || []).map((d) => d.o)]) if (o) { o.visible = false; o.parent?.remove(o); }
+  for (const o of [e.rig?.root, e.shadow, e.aimLine, e.ring, e.fan?.mesh, e.icon, ...(e.ko?.drops || []).map((d) => d.o)]) if (o) { o.visible = false; o.parent?.remove(o); }
   if (e.ko) e.ko.done = true;
   void s;
 }
