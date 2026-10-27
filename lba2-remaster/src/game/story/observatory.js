@@ -8,6 +8,7 @@
 // project is evacuating Citadel by its list. Hesk has the glider ready on the monastery slope. → chapter 8.
 import { ChapterBase } from './base.js';
 import '../text/ch7.js';
+import { revealBeat, twoShot, solidAt } from './revealcam.js';
 
 export class Observatory extends ChapterBase {
   get M() { return this.game.rooms.hamalayi; }
@@ -100,9 +101,23 @@ export class Observatory extends ChapterBase {
     f.c7_lit = true; this.O.crystal.setLit(true);
     if (silent) return;
     g.audio.play('shard'); g.audio.cue?.('revelation');
+    const beat = this.crystalBeat();   // (REVEAL-CAMS: the camera closes on Twinsen and the lit crystal; null with ?nocine and in the tests)
     this.chain([['narrator', 'c7_lit'], ['sendell', 'c7_sendell_1'], ['hero', 'c7_tw_s1'], ['sendell', 'c7_sendell_2'], ['sendell', 'c7_sendell_3'], ['hero', 'c7_tw_s2'], ['sendell', 'c7_sendell_4'], ['keeper', 'c7_keeper_4']], () => {
+      beat?.release();
       g.audio.endCue?.(); f.c7_sendell = true; g.updateObjective(); g.save(false);
-    });
+    }, (i, id) => { if (id === 'keeper') beat?.release(); });   // (her words done: the view eases back as Sefa answers)
+  }
+  // REVEAL-CAMS: a medium two-shot of Twinsen (wherever the last mirror left him) and Sendell's crystal, held through her
+  // words. The lens stays inside the hall (the walls are tall on the far sides) and out of the telescope and the plinth.
+  crystalBeat() {
+    const g = this.game, h = g.hero, O = this.O;
+    const beat = revealBeat(g, { room: 'obsv' });
+    if (!beat) return null;
+    const c = O.center, bounds = { box: { x0: c.x - 5.3, x1: c.x + 5.3, z0: c.z - 5.3, z1: c.z + 5.3 } };
+    const ok = (x, y, z) => !solidAt(g, x, y, z, 0.45);
+    const memo = {};
+    beat.show(({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.15, z: h.pos.z }, { x: O.crystal.x, y: 1.6, z: O.crystal.z - 0.6 }, { bounds, ok, memo, height: 1.9, drop: 0.95, fov: 50, dist: 6.2, t }));
+    return beat;
   }
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id;
