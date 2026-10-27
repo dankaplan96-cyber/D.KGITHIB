@@ -9,9 +9,9 @@ Screenshots stay in the session scratchpad (polish-audit/), not in the repo.
 | 2 | 8 shelters | The two bunkers are bare grey cubes, the door faces away from the camera, the hatch wheel floats as a gold hoop | story/evacuation.js decorate/bunker | M | done (CH8-SHELTERS): headwall, sliding door facing the approach, wheel on the door, earth mound; story/shelters.js |
 | 3 | Bosses (12 guardian, 7 heavy drone) | Scaled-up small drones, no silhouette or phase readout; the 12 pylon stage killed the bot often | enemies.js Guardian; story/observatory.js | M–L | |
 | 4 | 5 geysers, 5/7 vents; every hit | White pixel squares and hard tubes; Particles are hard additive squares game-wide | story/steam.js; desert.js plume; hamalayi.js steam; actors.js Particles | M | done (FX-SOFT) |
-| 5 | 4 Temple of Bù gate | The chapter's reveal renders as an unlit black slab | desert.js ~L1014 | S–M | |
+| 5 | 4 Temple of Bù gate | The chapter's reveal renders as an unlit black slab | desert.js ~L1014 | S–M | done (DESERT-POLISH): a pale sandstone pylon; the play camera sees its outer face (sun medallion with the five vents in relief, the three warm ones light as their discs open, lit inlays, lamps), the pit side has the long carved lintel and the door; reveal() sinks the door with a light-and-dust burst and the passage glows; readCarving and the carving/door positions untouched |
 | 6 | Story reveals | No camera work for Sendell ×2, Vesk's descent, the ch10 shaft opening | chapter3.js, observatory.js, chapter2.js, network.js | L (M for three beats) | |
-| 7 | 4 sand-yacht | A plank, three discs and one flat triangle sail | desert.js ~L1124 | S–M | |
+| 7 | 4 sand-yacht | A plank, three discs and one flat triangle sail | desert.js ~L1124 | S–M | done (DESERT-POLISH): planked hull with coaming and bench, keel, outrigger axle, three spoked wheels with tyres and hubs on a bowsprit fork, tapering mast, boom, double-sided cloth sail with belly, stays, shrouds, sheet, pennant; yachtCol, YACHT_ROUTES and ride() unchanged |
 | 8 | Hamalayi terrain | Sawtooth snow caps on every cliff edge, flat empty glacier basin, a disc for the ice vent | hamalayi.js ~L600 | M | |
 | 9 | 10 bore fight | Six enemies at once on a small pad; bot died and was assisted | story/network.js enemyDefs | M | |
 | 10 | 6 gorge tree | Rigid pole fall, no landing, a spiky-twig log | hamalayi.js fell() | S | |
@@ -19,8 +19,8 @@ Screenshots stay in the session scratchpad (polish-audit/), not in the repo.
 | 12 | Epilogue | Twinsen has his sword drawn at the family dinner | story/epilogue.js begin() | S | done (FINALE-PAYOFF) |
 | 13 | Toasts | Grey on bright scenes (shield dome, snow): unreadable | css .toast | S | done (FINALE-PAYOFF) |
 | 14 | Hamalayi trail, Citadel pipe | Foreground pine or pipe covers the hero | (check tests/occluders.mjs) | S–M | Citadel plateau part done with #11 (CH8-SHELTERS); the Hamalayi trail is open |
-| 15 | 4 Ilka's camp, research post | Sparse: a flat lean-to, a bare pad | desert.js | S–M | |
-| 16 | Desert sand | Long parallel streaks like floorboards up close | desert texture | S | |
+| 15 | 4 Ilka's camp, research post | Sparse: a flat lean-to, a bare pad | desert.js | S–M | done (DESERT-POLISH): src/game/desertdress.js. Camp: ridge tent with an open, lived-in door, teal bell tent, rug, fire pit (flicker and smoke), tarp over the table, lanterns, water barrels, survey easel, sieve, tools. Post: awnings on the three cabin doors, a break tent with rug and fire pit, barrels, workbench, pipe rack, tarped pile, drums, cable spool, lamp posts, safety markings. NPC spots, patrol and story triggers reachable as before (flood-fill check) |
+| 16 | Desert sand | Long parallel streaks like floorboards up close | desert texture | S | done (DESERT-POLISH): textures.js sand tile redrawn as short broken ripple crests (pale ridge, warm lee) on a turning flow field instead of 18 full-width lines; terrain.js modulates it with a second turned, coarser sample so rows and the 3.8 m repeat do not show. Same tile for the drifts and Hamalayi's snow |
 
 Known, not re-listed: the Hamalayi rebels' camp, the ch11 galleries' difficulty, the Bug Street Follow snap, the ch6 depot fight's assist.
 Not tested: frame rate, audio, human-style fights, the opening cinematic.

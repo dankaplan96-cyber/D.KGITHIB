@@ -171,8 +171,13 @@ export class Terrain {
             float dk = smoothstep(0.42, 0.58, d);
             sp.x = gs * (1.0 - dk); sp.w = gs * dk;
           }
+          // sand: a second, turned and coarser sample modulates the first so the tile's ripples never line up
+          // into rows or repeat at one visible interval (POLISH-AUDIT #16)
+          vec3 sand1 = texture2D(tSand, tuv * 1.2).rgb;
+          vec3 sand2 = texture2D(tSand, mat2(0.8, 0.6, -0.6, 0.8) * tuv * 0.47 + vec2(0.37, 0.11)).rgb;
+          vec3 sandT = sand1 * (0.62 + 0.46 * sand2);
           vec3 tex = gtex * sp.x
-                   + texture2D(tSand, tuv * 1.2).rgb * sp.y
+                   + sandT * sp.y
                    + rock * sp.z
                    + texture2D(tDirt, tuv * 1.3).rgb * sp.w
                    + texture2D(tCobble, vWPos.xz * 0.25).rgb * sp2;

@@ -36,9 +36,10 @@ import { buildKesh, keshFlat, keshBank, keshDrift, keshClear, DRIFT_H, YACHT_ROU
 import { CELL as OC, NX as ONX, NZ as ONZ, W as OW, D as OD, UNIT as OU, HEIGHTS as OHEIGHTS } from './desert-layout.js';
 import { fitAdd } from './worldfit.js';
 import { Plume } from '../engine/softfx.js';
+import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
 import {
-  tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
+  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
 } from './kit.js';
 
 export const DESERT = { x: 3400, z: 0 };
@@ -356,12 +357,28 @@ function groundGrid() {
 }
 
 // ================================================================== painted textures (desert only)
-const carvingTex = () => ctex('carving', 512, 256, (x, W, H) => {
-  // an old relief of the planet in its shell: two suns above, the shell's ring, seams and five vents
-  x.fillStyle = '#b8835c'; x.fillRect(0, 0, W, H);
+const carvingTex = () => ctex('carving', 1024, 256, (x, CW, H) => {
+  // an old relief of the planet in its shell: two suns above, the shell's ring, seams and five vents, drawn in the
+  // middle 512 px; a frieze of waves and sun glyphs runs out to either side (POLISH-AUDIT #5: the lintel is a long
+  // panel, and the picture was squashed to a sliver; pale stone, dark lines, so the relief reads)
+  const W = 512;
+  x.fillStyle = '#e4cba0'; x.fillRect(0, 0, CW, H);
   const r = rng(77);
-  for (let i = 0; i < 1400; i++) { x.fillStyle = `rgba(${90 + r() * 60},${50 + r() * 40},${30 + r() * 20},${0.15 + r() * 0.2})`; x.fillRect(r() * W, r() * H, 2 + r() * 3, 2 + r() * 3); }
-  const line = (w, a) => { x.lineWidth = w; x.strokeStyle = `rgba(60,30,18,${a})`; };
+  for (let i = 0; i < 2800; i++) { x.fillStyle = `rgba(${90 + r() * 60},${50 + r() * 40},${30 + r() * 20},${0.15 + r() * 0.2})`; x.fillRect(r() * CW, r() * H, 2 + r() * 3, 2 + r() * 3); }
+  const line = (w, a) => { x.lineWidth = w; x.strokeStyle = `rgba(74,34,16,${Math.min(1, a * 1.25)})`; };
+  // the friezes: three rows of waves between two rules, a sun glyph at the outer end of each
+  for (const s of [-1, 1]) {
+    for (let row = 0; row < 3; row++) {
+      line(3, 0.6); x.beginPath();
+      const y0 = 62 + row * 56;
+      for (let k = 0; k <= 200; k += 4) { const px = CW / 2 + s * (270 + k), py = y0 + Math.sin(k * 0.12 + row) * 8; k ? x.lineTo(px, py) : x.moveTo(px, py); }
+      x.stroke();
+    }
+    line(5, 0.7); x.beginPath(); x.moveTo(CW / 2 + s * 262, 24); x.lineTo(CW / 2 + s * 480, 24); x.moveTo(CW / 2 + s * 262, 232); x.lineTo(CW / 2 + s * 480, 232); x.stroke();
+    const sx = CW / 2 + s * 438, sy = 128; line(4, 0.7); x.beginPath(); x.arc(sx, sy, 20, 0, Math.PI * 2); x.stroke();
+    for (let k = 0; k < 10; k++) { const a = k * Math.PI / 5; x.beginPath(); x.moveTo(sx + Math.cos(a) * 26, sy + Math.sin(a) * 26); x.lineTo(sx + Math.cos(a) * 38, sy + Math.sin(a) * 38); x.stroke(); }
+  }
+  x.save(); x.translate((CW - W) / 2, 0);
   line(6, 0.75); x.beginPath(); x.arc(W / 2, H * 0.62, 78, 0, Math.PI * 2); x.stroke();
   line(3, 0.6); x.beginPath(); x.arc(W / 2, H * 0.62, 96, 0, Math.PI * 2); x.stroke();
   for (const [sx, sy] of [[W * 0.3, 30], [W * 0.7, 30]]) { line(4, 0.7); x.beginPath(); x.arc(sx, sy, 16, 0, Math.PI * 2); x.stroke(); for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; x.beginPath(); x.moveTo(sx + Math.cos(a) * 20, sy + Math.sin(a) * 20); x.lineTo(sx + Math.cos(a) * 28, sy + Math.sin(a) * 28); x.stroke(); } }
@@ -375,8 +392,47 @@ const carvingTex = () => ctex('carving', 512, 256, (x, W, H) => {
   // the sleeper inside, curled
   line(4, 0.65); x.beginPath(); x.arc(W / 2, H * 0.64, 36, 0.4, Math.PI * 1.8); x.stroke();
   x.beginPath(); x.arc(W / 2 + 10, H * 0.6, 12, 0, Math.PI * 2); x.stroke();
-  for (let i = 0; i < 26; i++) { x.fillStyle = 'rgba(255,230,190,0.18)'; x.fillRect(20 + r() * (W - 40), 10 + r() * (H - 20), 3, 1); }
+  x.restore();
+  for (let i = 0; i < 40; i++) { x.fillStyle = 'rgba(255,230,190,0.18)'; x.fillRect(20 + r() * (CW - 40), 10 + r() * (H - 20), 3, 1); }
 });
+// the Temple of Bù's masonry: pale warm ashlar with fine mortar, light enough that the gate's shaded face still reads
+const buStoneTex = () => ctex('buStone', 256, 256, (x, S) => {
+  const r = rng(51);
+  x.fillStyle = '#cdb690'; x.fillRect(0, 0, S, S);
+  const rows = [0, 58, 118, 172, 226, 256];
+  for (let j = 0; j < rows.length - 1; j++) {
+    const y0 = rows[j], h = rows[j + 1] - y0;
+    let xx = -r() * 50;
+    while (xx < S) {
+      const w = 56 + r() * 56, t = 226 + r() * 22;
+      for (const ox of [-S, 0, S]) {
+        const g = x.createLinearGradient(0, y0, 0, y0 + h);
+        g.addColorStop(0, `rgb(${t + 6},${t - 6},${t - 30})`); g.addColorStop(1, `rgb(${t - 16},${t - 26},${t - 52})`);
+        x.fillStyle = g; x.beginPath(); x.roundRect(xx + ox + 2, y0 + 2, w - 4, h - 4, 5); x.fill();
+      }
+      xx += w;
+    }
+  }
+  for (let i = 0; i < 260; i++) { x.fillStyle = `rgba(${120 + r() * 60},${90 + r() * 40},${50 + r() * 30},${0.08 + r() * 0.14})`; x.fillRect(r() * S, r() * S, 1 + r() * 3, 1 + r() * 2); }
+}, true);
+// the passage behind the door once it opens: a glow that is hot in the middle and falls away to the jambs
+const passageTex = () => ctex('buPassage', 128, 256, (x, W, H) => {
+  const g = x.createRadialGradient(W / 2, H * 0.62, 4, W / 2, H * 0.62, H * 0.78);
+  g.addColorStop(0, '#fff4d0'); g.addColorStop(0.35, '#ffc070'); g.addColorStop(0.75, '#d8661c'); g.addColorStop(1, '#6a2a0c');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+}, false);
+// Hesk's sail: sun-bleached cloth in panels, an orange band along the foot and a sun on the middle panels
+const sailTex = () => ctex('yachtSail', 128, 256, (x, W, H) => {
+  x.fillStyle = '#f2e4c4'; x.fillRect(0, 0, W, H);
+  for (let k = 0; k < 9; k++) { x.fillStyle = k % 2 ? 'rgba(210,160,90,0.10)' : 'rgba(255,250,235,0.10)'; x.fillRect(0, k * H / 9, W, H / 9); }
+  x.fillStyle = 'rgba(120,88,48,0.45)'; for (let k = 1; k < 9; k++) x.fillRect(0, k * H / 9 - 1, W, 2);
+  x.fillStyle = '#e8703a'; x.fillRect(0, H * 0.8, W, H * 0.07);
+  x.fillStyle = '#c04a22'; x.fillRect(0, H * 0.8 - 3, W, 3); x.fillRect(0, H * 0.87, W, 3);
+  x.strokeStyle = '#e8703a'; x.fillStyle = '#e8703a'; x.lineWidth = 3;
+  x.beginPath(); x.arc(W * 0.42, H * 0.56, 15, 0, Math.PI * 2); x.fill();
+  for (let k = 0; k < 10; k++) { const a = k * Math.PI / 5; x.beginPath(); x.moveTo(W * 0.42 + Math.cos(a) * 21, H * 0.56 + Math.sin(a) * 21); x.lineTo(W * 0.42 + Math.cos(a) * 32, H * 0.56 + Math.sin(a) * 32); x.stroke(); }
+  x.fillStyle = 'rgba(90,60,30,0.5)'; x.fillRect(0, 0, 4, H);   // the luff's tabling
+}, false);
 const awningTex = (a, b) => ctex('aw' + a + b, 64, 64, (x, S) => { for (let i = 0; i < 4; i++) { x.fillStyle = i % 2 ? b : a; x.fillRect(i * S / 4, 0, S / 4, S); } });
 const signTex = (text, bg = '#2f6a7a', w = 256) => ctex('sign' + text, w, 96, (x, W, H) => {   // (w: a longer text needs a wider board)
   x.fillStyle = bg; x.fillRect(0, 0, W, H); x.strokeStyle = '#f2e6c8'; x.lineWidth = 6; x.strokeRect(6, 6, W - 12, H - 12);
@@ -829,31 +885,8 @@ export function buildDesert(scene, physics) {
     CB.build();
   }
 
-  // ================================================================ Ilka's camp
-  {
-    const cx = CAMP.x, cz = CAMP.z, gy = H(cx, cz);
-    const KB = new Batch(group);
-    // a ridge tent
-    const tentG = cached('tent', () => {
-      const g = new THREE.BufferGeometry();
-      const L = 3.2, Wd = 2.6, Ht = 2.0;
-      const v = [-L / 2, 0, -Wd / 2, L / 2, 0, -Wd / 2, L / 2, Ht, 0, -L / 2, Ht, 0, -L / 2, 0, Wd / 2, L / 2, 0, Wd / 2];
-      g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
-      g.setIndex([0, 1, 2, 0, 2, 3, 4, 3, 2, 4, 2, 5, 0, 3, 4, 1, 5, 2]);
-      g.computeVertexNormals(); return g;
-    });
-    KB.add(tentG, canvas('#d8c8a0'), cx, gy, cz - 1.5);
-    KB.add(bbox(1.6, 0.08, 0.9, 0.02, 1), plank, cx + 2.6, gy + 0.78, cz + 0.6);
-    for (const [dx, dz] of [[-0.7, -0.35], [0.7, -0.35], [-0.7, 0.35], [0.7, 0.35]]) KB.add(cyl(0.03, 0.03, 0.76, 5, 0), iron, cx + 2.6 + dx, gy + 0.38, cz + 0.6 + dz);
-    // sample crates, a telescope, a lantern, papers
-    for (let k = 0; k < 4; k++) KB.add(bbox(0.6, 0.45, 0.45, 0.03, 1), tm('planks', { color: '#c8a070' }), cx - 2.4 + (k % 2) * 0.65, gy + 0.23 + Math.floor(k / 2) * 0.46, cz + 1.4);
-    for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; rod(KB, [cx + 4.2, gy + 1.3, cz - 1.0], [cx + 4.2 + Math.cos(a) * 0.5, gy, cz - 1.0 + Math.sin(a) * 0.5], 0.025, iron); }
-    KB.add(cyl(0.07, 0.1, 1.2, 10, 0), pm('#b88a3a', 0.35, { metalness: 0.7 }), cx + 4.2, gy + 1.5, cz - 1.0, 0, 0, -0.9);
-    KB.add(bbox(0.3, 0.02, 0.4, 0.004, 0.3), pm('#f4ecd8', 0.9), cx + 2.4, gy + 0.83, cz + 0.6, 0, 0.3, 0);
-    KB.build();
-    col({ type: 'box', x: cx, z: cz - 1.5, hw: 1.6, hd: 1.3, top: gy + 2, noStand: true });
-    col({ type: 'box', x: cx + 2.6, z: cz + 0.6, hw: 0.8, hd: 0.45, top: gy + 0.8, noStand: true, seeThrough: true });
-  }
+  // ================================================================ Ilka's camp (POLISH-AUDIT #15: desertdress.js)
+  dressCamp({ group, H, col, ox, oz, updaters }, CAMP);
   R.camp = W(CAMP.x, CAMP.z);
 
   // ================================================================ the project's research post
@@ -940,6 +973,7 @@ export function buildDesert(scene, physics) {
     // a sign on the gate
     const sg = new THREE.Mesh(emq(), new THREE.MeshStandardMaterial({ map: signTex('JOINT PROJECT · RESEARCH POST', '#2a5a6a', 640), roughness: 0.8, side: THREE.DoubleSide }));
     sg.scale.set(3.4, 0.9, 1); sg.position.set(POST.x0 - 0.1, postY + 3.3, POST.gateZ); sg.rotation.y = -Math.PI / 2; group.add(sg);
+    dressPost({ group, H, col, ox, oz, updaters }, POST);   // (POLISH-AUDIT #15: awnings, a break corner, the equipment of the job)
   }
 
   // ================================================================ the dig
@@ -1017,19 +1051,111 @@ export function buildDesert(scene, physics) {
     const wallA = DIG_RAMPS[2] + Math.PI;
     const cxw = DIG.x + Math.cos(wallA) * 3.2, czw = DIG.z + Math.sin(wallA) * 3.2;
     const face = new THREE.Group(); face.position.set(cxw, bottomY, czw); face.rotation.y = -wallA - Math.PI / 2; group.add(face);
-    // the Temple of Bù's gate (Temple-Park, under Bald Mountain): a slate portal with a lintel of carved arches;
-    // the three seals hold its stone door shut (src/game/temple.js is the temple inside)
-    const FB = new Batch(face);
-    FB.add(bbox(5.6, 3.6, 0.7, 0.12, 2), tm('fortStone', { color: '#6c6f74' }), 0, 1.8, -0.25);
-    FB.add(bbox(3.0, 0.7, 0.9, 0.08, 1), tm('fortStone', { color: '#8a5a62' }), 0, 3.15, 0.0);
-    for (const s of [-1, 1]) FB.add(bbox(0.6, 3.0, 0.8, 0.08, 1), tm('fortStone', { color: '#55575d' }), s * 1.45, 1.5, 0.05);
-    FB.add(bbox(2.3, 2.8, 0.2, 0.02, 1), pm('#141214', 1), 0, 1.4, 0.0);
+    // the Temple of Bù's gate (Temple-Park, under Bald Mountain), POLISH-AUDIT #5: a free-standing pale sandstone
+    // pylon. Local +z faces the pit's middle (the carved lintel, the stone door the three seals hold shut, the way in);
+    // local -z is the outer face, the one the play camera sees from the rim: a big sun medallion with the five vents of
+    // the carving in relief (the three warm ones light as their discs open), pilasters with inlays, lamps, a stepped
+    // crest. Everything is merged geometry in a handful of materials; the glow is emissive, so there is no light to
+    // add and no program to compile after loading. The door sinks into its groove on reveal() with a burst of warm
+    // light and dust (src/game/story/dig.js calls it; its positions are untouched).
+    const BU = cached('buVC', () => new THREE.MeshStandardMaterial({ map: buStoneTex(), color: '#ffffff', vertexColors: true, roughness: 0.92, emissive: '#4a3418', emissiveIntensity: 0.32 }));
+    const buBatch = (parent) => { const b0 = new Batch(parent), b = { add(geo, m, ...a) { if (typeof m === 'string') b0.add(tinted(geo, m), BU, ...a); else b0.add(geo, m, ...a); return b; }, build: () => b0.build() }; return b; };
+    const stL = '#fff8ea', stM = '#ecd0a4', stD = '#c29c70', terra = '#b9583c', recessM = pm('#1c120d', 1);
+    const glowMat = (c, e, i) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, emissive: e, emissiveIntensity: i });
+    const trimM = glowMat('#ffe2b0', '#ff9a3a', 0.55), lampM = glowMat('#ffd9a0', '#ff9a30', 1.15), innerM = new THREE.MeshStandardMaterial({ color: '#000000', roughness: 1, emissive: '#ffffff', emissiveMap: passageTex(), emissiveIntensity: 0 });
+    const ventM = [0, 1, 2].map(() => glowMat('#ffe2b0', '#ff9a3a', 0.12));
+    const FB = buBatch(face);
+    const HP = Math.PI / 2;
+    // the body: plinth, wall, terracotta band, cornice and a stepped crest with a small sun on both faces
+    FB.add(bbox(6.8, 0.35, 1.4, 0.05, 1.8), stM, 0, 0.175, -0.3);
+    FB.add(bbox(6.2, 3.05, 0.95, 0.05, 1.8), stL, 0, 1.875, -0.325);
+    FB.add(bbox(6.3, 0.28, 1.0, 0.03, 1.8), terra, 0, 3.2, -0.325);
+    FB.add(bbox(6.7, 0.28, 1.4, 0.04, 1.8), stM, 0, 3.54, -0.3);
+    FB.add(bbox(2.6, 0.3, 0.9, 0.04, 1.8), stL, 0, 3.83, -0.3);
+    // the outer face (toward the camera): the medallion in layers, the five vents, pilasters with lit inlays
+    FB.add(cyl(1.12, 1.12, 0.1, 28, 1.8), stM, 0, 1.75, -0.85, HP, 0, 0);
+    FB.add(cyl(0.96, 0.96, 0.08, 28, 1.8), stD, 0, 1.75, -0.9, HP, 0, 0);
+    FB.add(new THREE.TorusGeometry(0.82, 0.045, 5, 36), trimM, 0, 1.75, -0.955);
+    FB.add(cyl(0.7, 0.7, 0.1, 28, 1.8), stL, 0, 1.75, -0.97, HP, 0, 0);
+    FB.add(cyl(0.28, 0.34, 0.16, 16, 1.8), stM, 0, 1.75, -1.04, HP, 0, 0);
+    for (let k = 0; k < 5; k++) {
+      const a = HP + (k - 2) * 0.5, ex = Math.cos(a) * 1.42, ey = 1.75 + Math.sin(a) * 1.42;
+      FB.add(bbox(0.16, 0.5, 0.1, 0.02, 1), k % 2 ? stD : ventM[k / 2], ex, ey, -0.86, 0, 0, a - HP);
+    }
+    for (const s of [-1, 1]) {
+      FB.add(bbox(0.5, 2.75, 0.16, 0.03, 1.8), stM, s * 2.5, 1.75, -0.88);
+      FB.add(bbox(0.07, 2.3, 0.04, 0.01, 1), trimM, s * 2.5, 1.75, -0.97);
+      FB.add(bbox(0.5, 2.75, 0.16, 0.03, 1.8), stM, s * 2.5, 1.75, 0.23);
+    }
+    // the inner face (toward the pit): jambs, a carved header, the dark passage behind the door, lamps on pedestals
+    for (const s of [-1, 1]) FB.add(bbox(0.6, 2.25, 0.26, 0.04, 1.8), stM, s * 1.5, 1.475, 0.28);
+    FB.add(bbox(4.0, 0.8, 0.26, 0.04, 1.8), stL, 0, 3.0, 0.28);
+    FB.add(bbox(3.5, 0.07, 0.05, 0.01, 1), stD, 0, 3.43, 0.4);
+    FB.add(bbox(3.5, 0.07, 0.05, 0.01, 1), stD, 0, 2.57, 0.4);
+    FB.add(bbox(2.4, 2.25, 0.06, 0.01, 1), recessM, 0, 1.475, 0.2);
+    FB.add(bbox(2.2, 2.1, 0.02, 0.005, 1), innerM, 0, 1.45, 0.235);
+    for (const [lx, lz, s] of [[-3.65, -0.7, -1], [3.65, -0.7, 1], [-2.6, 0.22, -1], [2.6, 0.22, 1]]) {
+      FB.add(bbox(0.34, 1.35, 0.34, 0.04, 1.8), stM, lx, 0.675, lz);
+      FB.add(bbox(0.42, 0.1, 0.42, 0.02, 1.8), stL, lx, 1.4, lz);
+      FB.add(bbox(0.28, 0.42, 0.28, 0.04, 1), lampM, lx, 1.66, lz);
+      FB.add(cyl(0.02, 0.26, 0.22, 4, 0), stD, lx, 2.0, lz, 0, Math.PI / 4, 0);
+    }
     FB.build();
-    const carv = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.55), new THREE.MeshStandardMaterial({ map: carvingTex(), roughness: 0.95 }));
-    carv.position.set(0, 3.15, 0.47); face.add(carv);
-    const cover2 = new THREE.Mesh(new THREE.BoxGeometry(2.3, 2.8, 0.3), tm('fortStone', { color: '#7a7268' }));
-    cover2.position.set(0, 1.4, 0.15); cover2.castShadow = true; face.add(cover2);   // the stone door, until the seals open
-    col({ type: 'box', x: cxw, z: czw, hw: 2.6, hd: 0.4, rot: wallA + Math.PI / 2, top: bottomY + 3.2, noStand: true });
+    // the stone door, until the seals open: its own group, so it can sink into the floor
+    const doorG = new THREE.Group(); face.add(doorG);
+    {
+      const DG = buBatch(doorG);
+      DG.add(bbox(2.3, 2.22, 0.2, 0.03, 1.8), stM, 0, 1.46, 0.31);
+      DG.add(cyl(0.72, 0.72, 0.07, 26, 1.8), stL, 0, 1.5, 0.42, HP, 0, 0);
+      DG.add(cyl(0.5, 0.5, 0.09, 22, 1.8), stD, 0, 1.5, 0.43, HP, 0, 0);
+      DG.add(cyl(0.18, 0.22, 0.12, 14, 1.8), stL, 0, 1.5, 0.46, HP, 0, 0);
+      for (const y of [0.72, 2.28]) DG.add(bbox(2.3, 0.12, 0.06, 0.015, 1.8), stD, 0, y, 0.43);
+      DG.build();
+    }
+    const carv = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.8), new THREE.MeshStandardMaterial({ map: carvingTex(), roughness: 0.95 }));
+    carv.position.set(0, 3.0, 0.415); face.add(carv);
+    col({ type: 'box', x: cxw + Math.cos(wallA) * 0.3, z: czw + Math.sin(wallA) * 0.3, hw: 3.1, hd: 0.7, rot: wallA + Math.PI / 2, top: bottomY + 3.6, noStand: true });
+    // reveal(): the door sinks, the passage and the sun ring light, a plume of dust and warm light rises (the room's
+    // updaters get the particle system as their third argument). Called while the room has not yet run (a save
+    // restored with the seals open) it jumps to the end without the show.
+    let roomT = 0, rvT = -1, revealed = false, rvBurst = false, breathAcc = 0;
+    const warmOpen = [false, false, false];
+    const ease = (u) => u * u * (3 - 2 * u);
+    const setReveal = (k) => {
+      doorG.position.y = -2.6 * k;
+      innerM.emissiveIntensity = 1.5 * k;
+      trimM.emissiveIntensity = 0.55 + 1.1 * k;
+      for (let i = 0; i < 3; i++) ventM[i].emissiveIntensity = Math.max(warmOpen[i] ? 1.3 : 0.12, 1.3 * k);
+    };
+    const doorSpot = new THREE.Vector3();
+    updaters.push((dt, t, fx) => {
+      roomT += dt;
+      if (!fx) return;
+      if (rvT < 0) {
+        if (!revealed) return;
+        // afterwards: a little warm air still breathes out of the open passage
+        breathAcc += dt * 3;
+        while (breathAcc >= 1) { breathAcc -= 1; face.localToWorld(doorSpot.set((Math.random() - 0.5) * 1.6, 0.4, 0.55)); fx.spawn({ x: doorSpot.x, y: doorSpot.y, z: doorSpot.z, vy: 0.5, vx: (Math.random() - 0.5) * 0.2, color: '#ffd9a0', a: 0.28, s0: 0.3, s1: 1.1, life: 2.2, add: 0.7, cell: 0, fi: 0.2, fo: 0.5, drift: 0.2 }); }
+        return;
+      }
+      rvT += dt;
+      const k = Math.min(1, rvT / 1.8);
+      setReveal(ease(k));
+      trimM.emissiveIntensity += 1.4 * Math.max(0, 1 - Math.abs(rvT - 1.2) / 0.6);   // a flash as the door clears
+      if (!rvBurst) {
+        rvBurst = true;
+        face.localToWorld(doorSpot.set(0, 0.3, 0.7)); fx.burst(doorSpot.x, doorSpot.y, doorSpot.z, '#e8cfa0', 26, 1.1);
+        fx.spawn({ x: doorSpot.x, y: doorSpot.y + 1.2, z: doorSpot.z, color: '#ffd490', a: 0.6, s0: 1.5, s1: 7, life: 1.4, add: 1, cell: 0, fi: 0.08, fo: 0.5, spin: 0 });
+      }
+      if (rvT < 2.6) {
+        breathAcc += dt * 26;
+        while (breathAcc >= 1) {
+          breathAcc -= 1;
+          face.localToWorld(doorSpot.set((Math.random() - 0.5) * 2.4, 0.2 + Math.random() * 0.5, 0.5 + Math.random() * 0.7));
+          fx.spawn({ x: doorSpot.x, y: doorSpot.y, z: doorSpot.z, vx: (Math.random() - 0.5) * 0.5, vy: 1.4 + Math.random() * 1.2, vz: (Math.random() - 0.5) * 0.5, color: Math.random() < 0.5 ? '#e8cfa0' : '#ffd9a0', a: 0.5, s0: 0.4, s1: 1.8, life: 1.8 + Math.random() * 0.8, add: Math.random() < 0.5 ? 0.05 : 0.8, cell: Math.random() < 0.5 ? 1 : 0, drag: 0.4, grav: -0.2, drift: 0.4 });
+        }
+      } else if (rvT > 4) { rvT = -1; revealed = true; setReveal(1); }
+    });
     // Five discs on pillars, like the five vents carved over the door. Bù's builders tied the door to the planet's
     // breath: only a disc with live heat behind it slides. Three are warm (pale crystals crust them and dust rises
     // off them: crystals grow where heat leaks, as Ilka says); two are cold and bare, their vents already closing.
@@ -1056,7 +1182,7 @@ export function buildDesert(scene, physics) {
       const px = sx + Math.cos(a) * 0.55, pz = sz + Math.sin(a) * 0.55;
       DB.add(bbox(0.9, 3.0, 0.9, 0.08, 1.5), tm('fortStone', { color: kind === 'seal' ? '#b88a68' : '#9a8676' }), px, bottomY + 1.1, pz);
       col({ type: 'cyl', x: px, z: pz, r: 0.6, top: bottomY + 2.6, noStand: true });
-      const S = { x: ox + sx, y: bottomY + 1.6, z: oz + sz, slot: k, on: false, setOn(b) { this.on = !!b; glow.material.emissiveIntensity = b ? 2.2 : 0; } };
+      const S = { x: ox + sx, y: bottomY + 1.6, z: oz + sz, slot: k, on: false, setOn(b) { this.on = !!b; glow.material.emissiveIntensity = b ? 2.2 : 0; if (kind === 'seal') { warmOpen[idx] = !!b; ventM[idx].emissiveIntensity = b || revealed ? 1.3 : 0.12; } } };
       if (kind === 'seal') {
         breath(px, bottomY + 2.62, pz, 7, 0.7, 300 + k);                                                        // on the pillar's top
         breath(sx - Math.cos(a) * 0.12, bottomY + 2.1, sz - Math.sin(a) * 0.12, 4, 0.5, 320 + k);                // round the disc's rim
@@ -1092,7 +1218,11 @@ export function buildDesert(scene, physics) {
       gate: { ...R.digGateSpot, isOpen: false, open() { if (this.isOpen) return; this.isOpen = true; digGate[0].rotation.x = -1.4; digGate[0].position.y += 1.2; digGate[1].enabled = false; digGate.lamp(true); }, flash(ok) { digGate.lamp(ok); }, keypad: R.digKeypad },
       carvings: W(DIG.x + Math.cos(wallA) * 2.0, DIG.z + Math.sin(wallA) * 2.0),
       door: W(DIG.x + Math.cos(wallA) * 2.7, DIG.z + Math.sin(wallA) * 2.7),   // the temple's gate (enter here)
-      reveal() { cover2.visible = false; },
+      reveal() {
+        if (revealed || rvT >= 0) return;
+        if (roomT < 0.3) { revealed = true; setReveal(1); return; }   // (a restored save: no show)
+        rvT = 0; rvBurst = false;
+      },
     };
   }
 
@@ -1128,17 +1258,102 @@ export function buildDesert(scene, physics) {
     setPlume(v) { plumeLevel = v; },
   };
 
-  // ================================================================ Hesk's sand-yacht
+  // ================================================================ Hesk's sand-yacht (POLISH-AUDIT #7)
+  // A land-yacht: a planked hull with a coaming and a bench, a keel, an outrigger axle with two spoked wheels (rubber
+  // tyres, brass hubs), a single steering wheel in a fork under the bow with a tiller, a tapering mast with a boom, a
+  // double-sided cloth sail with some belly, stays, shrouds and a sheet, and a pennant. The hull sits where the old
+  // plank did (deck 0.72 m up, where the rider stands), the wheels keep the old track, and the parts are merged into
+  // five meshes plus the sail. Local +x is forward.
   const yacht = new THREE.Group();
   {
-    const YB = new Batch(yacht);
-    YB.add(bbox(3.4, 0.35, 1.2, 0.12, 1), plank, 0, 0.6, 0);
-    YB.add(bbox(0.2, 0.2, 3.2, 0.04, 1), darkWood, -0.6, 0.55, 0);
-    for (const [dx, dz] of [[1.5, 0], [-0.6, -1.5], [-0.6, 1.5]]) YB.add(cyl(0.28, 0.28, 0.14, 12, 0), iron, dx, 0.28, dz, Math.PI / 2, 0, 0);
-    YB.add(cyl(0.06, 0.06, 5.0, 6, 0), darkWood, 0.4, 3.1, 0);
+    const hullPts = () => {   // plan outline, x forward, (shape y = -z in the world)
+      const s = new THREE.Shape();
+      s.moveTo(1.3, 0);
+      s.bezierCurveTo(1.05, 0.26, 0.5, 0.62, -0.1, 0.64);
+      s.lineTo(-1.1, 0.6);
+      s.quadraticCurveTo(-1.8, 0.52, -1.8, 0);
+      s.quadraticCurveTo(-1.8, -0.52, -1.1, -0.6);
+      s.lineTo(-0.1, -0.64);
+      s.bezierCurveTo(0.5, -0.62, 1.05, -0.26, 1.3, 0);
+      return s;
+    };
+    const hullG = cached('yHull', () => {   // the planked body, 0.38 .. 0.72 m
+      const g = new THREE.ExtrudeGeometry(hullPts(), { depth: 0.34, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.04, bevelSegments: 2, curveSegments: 10 });
+      g.rotateX(-Math.PI / 2); g.translate(0, 0.38, 0);
+      return boxUV(g, 1.2);
+    });
+    const coamingG = cached('yCoaming', () => {   // the rim round the cockpit, 0.72 .. 0.92 m
+      const s = hullPts(), pts = s.getPoints(36), hole = new THREE.Path();
+      pts.forEach((p, i) => { const x = -0.2 + (p.x + 0.2) * 0.8, y = p.y * 0.62; if (i) hole.lineTo(x, y); else hole.moveTo(x, y); });
+      s.holes.push(hole);
+      const g = new THREE.ExtrudeGeometry(s, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.025, bevelSegments: 1, curveSegments: 10 });
+      g.rotateX(-Math.PI / 2); g.translate(0, 0.72, 0);
+      return boxUV(g, 1.2);
+    });
+    const tyreG = cached('yTyre', () => new THREE.TorusGeometry(0.25, 0.085, 8, 18));
+    const tyre = '#2a2522', hub = '#c8a050', ropeM = '#d8c49a', iron = '#4a4440', darkWood = Wd('#6a4528');
+    const YB = tintedBatch(yacht);
+    YB.add(hullG, Wd('#f6dcae'), 0, 0, 0);
+    YB.add(coamingG, Wd('#d4693c'), 0, 0, 0);   // (a painted rim: Hesk's orange)
+    YB.add(bbox(3.4, 0.14, 0.16, 0.04, 1), darkWood, -0.15, 0.31, 0);                // the keel
+    YB.add(bbox(0.2, 0.06, 0.9, 0.02, 1), darkWood, 1.12, 0.78, 0);                  // the foredeck beam
+    // the bench and its backrest, behind the rider
+    YB.add(bbox(0.5, 0.12, 0.95, 0.03, 1), Wd('#d8b080'), -1.0, 0.86, 0);
+    YB.add(bbox(0.1, 0.46, 0.95, 0.03, 1), Wd('#d8b080'), -1.3, 1.1, 0, 0, 0, -0.12);
+    // the rear axle: one beam through the hull, a brace to each wheel, a fork on each side of the wheel
+    YB.add(bbox(0.14, 0.12, 3.15, 0.03, 1), darkWood, -0.9, 0.55, 0);
+    for (const s of [-1, 1]) {
+      rod(YB, [-0.9, 0.55, s * 0.6], [-1.15, 0.9, s * 0.62], 0.025, darkWood);
+      rod(YB, [-0.9, 0.55, s * 1.5], [-0.5, 0.82, s * 0.62], 0.03, darkWood);
+      for (const k of [-1, 1]) YB.add(bbox(0.05, 0.34, 0.04, 0.01, 1), iron, -0.9, 0.46, s * 1.5 + k * 0.14);
+    }
+    // the wheels: tyre, hub and three crossed spokes each; the front one sits in a fork on a bowsprit
+    const wheel = (x, z) => {
+      YB.add(tyreG, tyre, x, 0.335, z);
+      YB.add(cyl(0.07, 0.07, 0.2, 10, 0), hub, x, 0.335, z, Math.PI / 2, 0, 0);
+      for (let k = 0; k < 3; k++) YB.add(bbox(0.5, 0.03, 0.03, 0.005, 1), iron, x, 0.335, z, 0, 0, k * Math.PI / 3);
+    };
+    wheel(-0.9, 1.5); wheel(-0.9, -1.5); wheel(1.62, 0);
+    YB.add(bbox(0.7, 0.1, 0.12, 0.02, 1), darkWood, 1.28, 0.7, 0);                  // the bowsprit
+    for (const k of [-1, 1]) YB.add(bbox(0.05, 0.42, 0.04, 0.01, 1), iron, 1.62, 0.55, k * 0.14);
+    YB.add(bbox(0.1, 0.05, 0.36, 0.01, 1), iron, 1.62, 0.76, 0);
+    rod(YB, [1.5, 0.78, 0], [0.45, 1.0, 0], 0.025, darkWood);                          // the tiller, a pole back to the rider
+    // the mast (tapering) with a masthead block, and the stays
+    YB.add(cyl(0.035, 0.07, 4.4, 8, 0), darkWood, 0.35, 2.92, 0);
+    YB.add(cyl(0.09, 0.09, 0.1, 8, 0), iron, 0.35, 5.12, 0);
+    const MH = [0.35, 5.08, 0];
+    rod(YB, MH, [1.28, 0.74, 0], 0.012, ropeM, 4);                                     // forestay to the bow
+    rod(YB, MH, [-1.75, 0.82, 0], 0.012, ropeM, 4);                                    // backstay to the stern
+    for (const s of [-1, 1]) { rod(YB, [0.35, 3.7, 0], [0.05, 0.9, s * 0.64], 0.012, ropeM, 4); rod(YB, [0.35, 3.7, 0], [0.75, 0.9, s * 0.62], 0.012, ropeM, 4); }
     YB.build();
-    const sail = new THREE.Mesh(cached('sailTri', () => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0.9, 0, 0, 5.3, 0, -2.6, 1.0, 0], 3)); g.setIndex([0, 1, 2]); g.computeVertexNormals(); return g; }), new THREE.MeshStandardMaterial({ map: awningTex('#e86a3a', '#f4e8d0'), side: THREE.DoubleSide }));
-    sail.position.set(0.35, 0, 0); sail.castShadow = true; yacht.add(sail);
+    // the rig that swings out: boom, sheet and the sail (it is turned a little off the keel, as if sheeted in)
+    const rig = new THREE.Group(); rig.position.set(0.35, 0, 0); rig.rotation.y = 0.1; yacht.add(rig);
+    {
+      const RB = tintedBatch(rig);
+      rod(RB, [0, 1.15, 0], [-2.3, 1.06, 0], 0.04, darkWood);                          // the boom
+      rod(RB, [-2.0, 1.08, 0], [-1.85, 0.86, 0.02], 0.012, ropeM, 4);   // the sheet down to a cleat
+      RB.add(bbox(0.1, 0.06, 0.1, 0.01, 1), iron, -1.85, 0.84, 0.02);
+      RB.build();
+      const sail = new THREE.Mesh(cached('sailGrid', () => {
+        // a triangular sail, luff on the mast (x 0), foot on the boom, head at the masthead; a belly of 0.28 m
+        const NU = 6, NV = 10, pos = [], uv = [], idx = [];
+        for (let j = 0; j <= NV; j++) {
+          const v = j / NV, chord = 2.25 * (1 - v) + 0.05, y = 1.2 + v * 3.75;
+          for (let i = 0; i <= NU; i++) {
+            const u = i / NU, belly = Math.sin(Math.PI * u) * chord * 0.12 * (1 - v * 0.35);
+            pos.push(-u * chord - 0.04, y - u * 0.1 * (1 - v), belly); uv.push(u, v);
+          }
+        }
+        for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) { const a = j * (NU + 1) + i, b = a + 1, c = a + NU + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+        return g;
+      }), new THREE.MeshStandardMaterial({ map: sailTex(), side: THREE.DoubleSide, roughness: 0.92 }));
+      sail.castShadow = true; rig.add(sail);
+    }
+    // a pennant at the masthead
+    const flag = new THREE.Mesh(cached('yFlag', () => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0.3, 0, -0.75, 0.15, 0.05], 3)); g.setIndex([0, 1, 2]); g.computeVertexNormals(); return g; }), canvas('#2f7a9a'));
+    flag.position.set(0.35, 5.0, 0); yacht.add(flag);
   }
   const YACHT = { x: -24, z: 11, a: 0 };
   yacht.position.set(YACHT.x, H(YACHT.x, YACHT.z), YACHT.z); group.add(yacht);
