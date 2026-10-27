@@ -223,7 +223,9 @@ export function setLod(T, near, proxy = LOD_DETAIL.proxy) {
 export const LOD_PRESETS = {
   high: { near: 40, smallFar: 58, proxy: true, small: 1 },
   medium: { near: 34, smallFar: 46, proxy: false, small: 1 },
-  low: { near: 26, smallFar: 36, proxy: false, small: 0.6 },
+  // (PERF-BATTERY-2: Low, the weak GPUs' first preset, 26 / 36 m and 60 % before: the detailed trees to 18 m, grass and
+  //  flowers to 26 m and half of them)
+  low: { near: 18, smallFar: 26, proxy: false, small: 0.5 },
 };
 export const LOD_DETAIL = { ...LOD_PRESETS.high };
 export function setLodDetail(q) { Object.assign(LOD_DETAIL, LOD_PRESETS[q] || LOD_PRESETS.high); for (const T of KIT_LOD.tiles) setLod(T, T.near); }

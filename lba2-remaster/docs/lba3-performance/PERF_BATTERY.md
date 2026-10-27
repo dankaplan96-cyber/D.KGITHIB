@@ -1,5 +1,8 @@
 # PERF-BATTERY: Medium at 60 on battery, High at 60 plugged in (Vega 8, 1366×768)
 
+> Followed by **PERF_BATTERY_2.md** (build 220's battery benchmark: "as played" benchmark runs, the battery lamps, box
+> culling and the submit path, Low's street, the Hamalayi).
+
 The user's target (2026-10-27): a steady 60 fps (p95 under ~20 ms) at every preset on the Vega 8 laptop with its 60 Hz
 screen; Medium must hold it on battery, High plugged in. Build 206 on battery: Medium street 24 fps, GPU 37.6 ms
 (`results/laptop-build206-battery.txt`); the CPU frame on battery was 17.9 ms (sim 6 + submit ~12).

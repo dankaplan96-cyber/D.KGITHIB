@@ -15,6 +15,11 @@
 // first in an area (behind its black fade) or after a change the cache can't follow.
 // The cache is dropped when anything it holds may differ: another area, a shadow batch rebuilt (a piece moved and
 // left it), the casters' set, a tree batch shown or hidden, the sun's direction, the map's size or box, the filter type.
+// PERF-BATTERY-2: instanced casters that stay still (the island's original props, the depot's crates: 6–7 of the ~21
+// draws of the live pass on Citadel's street) are static casters too. Each is watched (its world matrix, instances,
+// count, geometry, material, casting and showing): one that changes leaves the cache for good (one rebuild) and is
+// drawn live from then on. The vegetation tiles that switch detail with distance (`quiet(o)` false: the game's LOD
+// tiles) are never taken in: their switches would drop the cache again and again.
 // Off with Variance shadow maps (not used), for maps over 2048 texels (High's 4096: twice its memory for a copy;
 // left as it was), and while anything else renders the shadow map (warm-ups: the area is not on show then).
 import * as THREE from 'three';
@@ -26,6 +31,7 @@ export class ShadowCache {
   // extra(): other static casters (the trees' BatchedMeshes)
   constructor(R, sun, area, extra = () => []) {
     this.R = R; this.sun = sun; this.area = area; this.extra = extra; this.enabled = true;
+    this.quiet = () => true; this._inst = new WeakMap();
     this.cache = null; this.next = null; this.key = ''; this.stats = { full: 0, sliced: 0, swaps: 0, live: 0, bypass: 0 };
     this.layerCam = new THREE.Camera(); this.layerCam.layers.set(LAYER);
     this._r = new THREE.Vector3(); this._u = new THREE.Vector3(); this._t = new THREE.Vector3();
@@ -41,7 +47,25 @@ export class ShadowCache {
     const shown = (o) => { for (let p = o; p; p = p.parent) if (!p.visible && p !== o) return false; return true; };
     const out = [...A.proxies];
     for (const b of this.extra()) if (b && b.visible && b.castShadow !== false && shown(b) && isUnder(b, A.root)) out.push(b);
+    for (const E of this.still(A.root, (o) => o.visible && shown(o))) out.push(E.o);
     return out;
+  }
+  // (PERF-BATTERY-2) the area's instanced casters that have not changed since the area was first drawn
+  still(root, shown) {
+    let L = this._inst.get(root);
+    if (!L) {
+      L = [];
+      root.traverse((o) => { if (o.isInstancedMesh && o.castShadow && this.quiet(o)) L.push({ o, m: o.matrixWorld.clone(), v: o.instanceMatrix.version, n: o.count, g: o.geometry, mat: o.material, s: shown(o) }); });
+      this._inst.set(root, L);
+    }
+    let gone = false;
+    for (const E of L) {
+      const o = E.o;
+      if (o.castShadow && o.matrixWorld.equals(E.m) && o.instanceMatrix.version === E.v && o.count === E.n && o.geometry === E.g && o.material === E.mat && shown(o) === E.s) continue;
+      E.gone = gone = true;
+    }
+    if (gone) this._inst.set(root, (L = L.filter((E) => !E.gone)));
+    return L.filter((E) => E.s);
   }
 
   render(lights, scene, camera) {
