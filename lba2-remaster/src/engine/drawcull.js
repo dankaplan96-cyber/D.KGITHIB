@@ -114,3 +114,61 @@ export class BlobBatch {
   }
   restore() { for (const m of this.off) m.visible = true; this.off.length = 0; }
 }
+
+// 4. Box culling (PERF-BATTERY-2). three tests each object against the view with its bounding SPHERE. The area's big,
+//    flat or long static draws — the draw batches (drawbatch.js: one per 48 m cell and material, their pieces' parts
+//    reaching beyond the cell), the terrain tiles (65 m) and the instanced tiles (grass, flowers, rocks: 36 m squares
+//    a metre or two high) — have spheres far larger than what they cover: on Citadel's street at Medium three drew
+//    54 of the 136 draw batches, 305k triangles, of which 45k were in the view; with their boxes 31 batches, 156k.
+//    Each frame (Renderer.mid, after the world matrices) these are tested with their world-space box, grown by
+//    MARGIN m (a swaying tuft, a rounding error), and those wholly outside the view are left out of that frame's render;
+//    their `visible` flag is restored right after it (Renderer.post), so nothing else (warm-ups, shader preparation,
+//    uploads) sees a difference. Casters are left alone (three's shadow pass skips a hidden object, and one out of the
+//    view may throw its shadow into it). Nothing in view is left out: the same pixels, fewer draws and triangles.
+const MARGIN = 0.5;
+const _box = new THREE.Box3(), _fr = new THREE.Frustum(), _pm = new THREE.Matrix4(), _iv = new THREE.Matrix4();
+export class BoxCull {
+  constructor() { this.lists = new WeakMap(); this.off = []; this.enabled = true; this.n = 0; this.tested = 0; }
+  // the area's terrain tiles and instanced tiles (found once per area root; a tile's box is recomputed when its
+  // instances or count change)
+  listFor(root) {
+    let L = this.lists.get(root);
+    if (!L) {
+      L = [];
+      root.traverse((o) => {
+        if (!o.frustumCulled || o.isSkinnedMesh || o.isBatchedMesh || o.userData.drawBatch) return;
+        if (o.isInstancedMesh || (o.isMesh && o.name === 'terrain')) L.push({ o, v: -1, n: -1, g: null, box: null, changes: 0 });
+      });
+      this.lists.set(root, L);
+    }
+    return L;
+  }
+  boxOf(E) {
+    const o = E.o;
+    if (o.isInstancedMesh) {
+      // (instances that keep moving — a flock, rain — are left to three's own test: their box would be redone each frame)
+      if (E.v !== o.instanceMatrix.version || E.n !== o.count || E.g !== o.geometry) { if (++E.changes > 4) return null; o.computeBoundingBox(); E.box = o.boundingBox.clone(); E.v = o.instanceMatrix.version; E.n = o.count; E.g = o.geometry; }
+      return E.box;
+    }
+    const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox();
+    return g.boundingBox;
+  }
+  // root: the area on show; camera: the scene pass's; batches: the draw batch meshes drawn now (DrawBatch.meshes)
+  // (shadows: whether the sun's shadow pass runs: without it, casters are culled like the rest)
+  hide(root, camera, batches = NONE, shadows = true) {
+    this.n = 0; this.tested = 0;
+    if (!this.enabled || !root || !camera) return;
+    camera.updateMatrixWorld();
+    _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, _iv.copy(camera.matrixWorld).invert()));
+    const test = (o, box) => {
+      if (!o.visible || (o.castShadow && shadows) || !box || box.isEmpty()) return;   // (a caster out of view may still throw a shadow into it)
+      this.tested++;
+      _box.copy(box).applyMatrix4(o.matrixWorld).expandByScalar(MARGIN);
+      if (!_fr.intersectsBox(_box)) { o.visible = false; this.off.push(o); }
+    };
+    for (const m of batches) { const g = m.geometry; if (!g.boundingBox) g.computeBoundingBox(); test(m, g.boundingBox); }
+    for (const E of this.listFor(root)) if (E.o.visible) test(E.o, this.boxOf(E));
+    this.n = this.off.length;
+  }
+  restore() { for (const o of this.off) o.visible = true; this.off.length = 0; }
+}

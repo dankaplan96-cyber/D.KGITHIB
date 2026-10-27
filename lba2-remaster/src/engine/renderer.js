@@ -22,9 +22,15 @@ import { warmPassPrograms } from './warmup.js';
   const C = THREE.ShaderChunk, src = C.lights_fragment_begin;
   const call = '\t\tRE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );';
   const gated = '\t\t#ifndef TOON\n\t\tif ( directLight.visible )\n\t\t#endif\n' + call;
+  // PERF-BATTERY-2: the lamps (point lights) in the battery profile light the diffuse term only (Lambert: what three's
+  // model adds as directDiffuse), without the GGX specular highlight, which is most of the model's work per lamp and
+  // per pixel and, on the game's rough surfaces, a faint sheen at most. The battery profile is the only state with
+  // three's Basic shadow type (SHADOWMAP_TYPE_BASIC, patched below to a 5-read filter), so its programs carry the
+  // switch: no new program, nothing changes plugged in. The sun and the spot lights keep the full model.
+  const lamp = '\t\t#if defined( SHADOWMAP_TYPE_BASIC ) && !defined( TOON )\n\t\tif ( directLight.visible ) reflectedLight.directDiffuse += saturate( dot( geometryNormal, directLight.direction ) ) * directLight.color * BRDF_Lambert( material.diffuseColor );\n\t\t#else\n' + gated + '\n\t\t#endif';
   const pt = src.indexOf('getPointLightInfo( pointLight'), sp = src.indexOf('getSpotLightInfo( spotLight'), dir = src.indexOf('getDirectionalLightInfo(');
   const a = src.indexOf(call, pt), b = src.indexOf(call, sp);
-  if (pt > 0 && sp > pt && dir > sp && a > pt && a < sp && b > sp && b < dir) C.lights_fragment_begin = src.slice(0, a) + gated + src.slice(a + call.length, b) + gated + src.slice(b + call.length);
+  if (pt > 0 && sp > pt && dir > sp && a > pt && a < sp && b > sp && b < dir) C.lights_fragment_begin = src.slice(0, a) + lamp + src.slice(a + call.length, b) + gated + src.slice(b + call.length);
   else console.warn('lamp skip: three.js lights chunk not as expected; left as it is');
 }
 

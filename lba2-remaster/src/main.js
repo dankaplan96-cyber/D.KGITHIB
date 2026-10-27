@@ -10,9 +10,9 @@ import { AudioEngine } from './engine/audio.js';
 import { Perf, gpuQuality, oldGpuQuality, integratedGpu } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
-import { FarCull, BlobBatch } from './engine/drawcull.js';
+import { FarCull, BlobBatch, BoxCull } from './engine/drawcull.js';
 import { BLOBS } from './engine/rig.js';
-import { LightPool, POOL_SIZE } from './engine/lightpool.js';
+import { LightPool, poolSize } from './engine/lightpool.js';
 import { ShadowCull } from './engine/shadowcull.js';
 import { DrawBatch } from './engine/drawbatch.js';
 import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
@@ -32,7 +32,7 @@ import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './
 import { enterArena } from './game/arena.js';
 import { Regions, CITADEL_REF, CHAPTER_AREAS } from './game/regions.js';
 import { travelRegion } from './game/travel.js';
-import { updateKitLod, enableBatching, LOD_BATCHES } from './game/kit.js';
+import { updateKitLod, enableBatching, LOD_BATCHES, KIT_LOD } from './game/kit.js';
 import { ShadowCache } from './engine/shadowcache.js';
 import { Power } from './engine/power.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK, PICK_TYPES } from './game/actors.js';
@@ -241,6 +241,8 @@ class Game {
     this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
     // (PERF-BATTERY: the static casters drawn into a cached shadow map only when needed: engine/shadowcache.js)
     this.shadowCache = new ShadowCache(this.renderer.renderer, this.env.sun, () => this.shadowCull.area, () => LOD_BATCHES.map((b) => b.mesh));
+    // (PERF-BATTERY-2: still instanced casters join the cache, but not the vegetation tiles that switch detail with distance)
+    this.shadowCache.quiet = (o) => { for (const L of [this.world.lodTiles || [], KIT_LOD.tiles]) for (const T of L) if (T.hi === o || T.lo === o) return false; return true; };
     this.renderer.setIntegrated(integratedGpu(this.perf.gpu || ''));   // (AUTO-FIT: the presets' pixel ratio on a high-density screen)
     // the graphics preset follows the GPU on a first start (integrated GPUs: Low or Medium, see perf.js); settings
     // saved before the presets were reworked (qv < 1) are re-picked too, unless they hold something other than the
@@ -253,7 +255,8 @@ class Game {
     // Startup overlap: the Citadel's shaders are sent to the driver now, with the final lights, shadows and preset,
     // so the GPU process compiles them while the rest is built below (prepare() then waits for whatever is left).
     // The light pool's size is fixed per preset; lamps placed later join it (collect, below and on each area's build).
-    this.lightPool = new LightPool(this.scene, POOL_SIZE[this.settings.quality] ?? 8);
+    this.lightPool = new LightPool(this.scene, poolSize(this.settings.quality, this.renderer.battery));
+    this.lightPool.setFade(this.renderer.battery && this.settings.quality !== 'low');   // (PERF-BATTERY-2: on battery, the nearest lamps, faded)
     if (this.settings.visual !== '1997' && !/[?&]noearly/.test(location.search)) { // (?noearly: for A/B timing)
       this.renderer.setQuality(this.settings.quality); this.env.setShadowQuality(this.settings.quality);
       this.earlyCompile = this.renderer.precompile().catch(() => {});
@@ -332,8 +335,14 @@ class Game {
     this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); };
     // (RENDER-INV: an area's static pieces drawn in one call per material and 48 m cell: engine/drawbatch.js)
     this.drawBatch = new DrawBatch();
-    this.renderer.mid = () => { if (this.shadowCull.areas.has(this.room?.group || this.world.root)) this.drawBatch.update(this.room?.group || this.world.root); };
-    this.renderer.post = () => { this.blobBatch.restore(); this.farCull.restore(); };
+    // (PERF-BATTERY-2: then the draw batches, terrain tiles and instanced tiles wholly outside the view by their boxes)
+    this.boxCull = new BoxCull();
+    this.renderer.mid = () => {
+      const root = this.room?.group || this.world.root;
+      if (this.shadowCull.areas.has(root)) this.drawBatch.update(root);
+      this.boxCull.hide(root, this.renderer.camera, this.drawBatch.enabled ? this.drawBatch.meshes(root) : undefined, this.renderer.renderer.shadowMap.enabled);
+    };
+    this.renderer.post = () => { this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };
     this.lightPool.collect(); // (after every builder has placed its lamps)
     this.regionsLive = true;  // (from here on an area's build brings its part of the story, the cast and travel: regionBuilt)
     L.story = Math.round(performance.now() - ts);
@@ -706,10 +715,18 @@ class Game {
   // anything changed. (Also the benchmark's comparison and the tests: game.setBattery(true).)
   setBattery(on) {
     if (!this.renderer.setBattery(!!on)) return false;
+    this.syncLamps();   // (PERF-BATTERY-2: the light pool's size and fades; its programs are prepared with the rest below)
     if (this.preparing || !this.lightPool) this._powerWarm = true; else this.warmGraphics();
     this.fit?.reset();
     if (this.screen === 'settings') this.syncSettingsUI();
     return true;
+  }
+  // the light pool for the preset and the power state (engine/lightpool.js poolSize: on battery at Medium/High, the 2
+  // lamps nearest the hero, faded; otherwise the preset's 2/4/8)
+  syncLamps() {
+    const L = this.lightPool; if (!L) return;
+    const q = this.settings.quality, bat = this.renderer.battery && !this.renderer.retro;
+    L.setSize(poolSize(q, bat)); L.setFade(bat && q !== 'low');
   }
   // what the current preset does, for the benchmark's report
   graphicsConfig() {
@@ -1438,7 +1455,7 @@ class Game {
       if (this.hero) this.updateObjective();
     }
     if (changed('quality')) {
-      this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.lightPool?.setSize(POOL_SIZE[s.quality] ?? 8);
+      this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.syncLamps();
       this.world?.setDetail?.(s.quality);
       if (this.shadowCull) this.shadowCull.quality = s.quality;
       if (was.quality) this.warmGraphics();
@@ -1450,6 +1467,7 @@ class Game {
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);
+      this.syncLamps();   // (the battery profile's lamps don't apply to the 1997 look)
       this.camRig.cut = retro; // 1997: hard cuts between shots, remaster: glide
       this.env.setFogRange(...(retro ? [18, 72] : [45, 190]));
       this.env.waterU.uWaveAmp.value = retro ? 0.3 : 1;
@@ -1936,8 +1954,9 @@ class Game {
     this._shownBlack = !!this.trans && (this.trans.hold || this._fadeOp >= 0.999);
     let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
     this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps });
-    // automatic resolution follows the frame time in play (not through fades, menus or a benchmark)
-    if (this.state === 'play' && !this.trans && !this.benching && !this.background) this.renderer.adapt(real * 1000);
+    // automatic resolution follows the frame time in play (not through fades, menus or a benchmark's fixed runs; its
+    // "as played" runs keep it: PERF-BATTERY-2)
+    if (this.state === 'play' && !this.trans && (!this.benching || this.benchAuto) && !this.background) this.renderer.adapt(real * 1000);
   }
 
   // Deterministic stepping for automated tests: game.step(seconds).
@@ -2017,7 +2036,7 @@ class Game {
     this.world._hero = this.hero; this.world._cam = this.camera;
     this.world.update(dt, this.time);
     if (this.room) for (const u of this.room.updaters) u(dt, this.time, this.particles);   // (3rd: the area's vents and the like puff through it)
-    if (!this._inner) this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus);
+    if (!this._inner) this.lightPool.update(this.state === 'title' || this.state === 'loading' ? this.camera.position : focus, this.time);
     if (render) this.shadowCull.update(this.room?.group || this.world.root, this.camera, focus);
     this.particles.update(dt);
     if (this.state !== 'title') this.pickups.update(this.state === 'play' ? dt : 0, this.state === 'dialog' ? dt : 0);

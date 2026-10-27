@@ -696,7 +696,7 @@ export function* buildWorldSteps(parentScene) {
   };
   // (shadow distance of small props and the view-frustum test for every caster: engine/shadowcull.js)
   // the distances follow the graphics preset (kit.js LOD_PRESETS: High 40 / 58 m as before, Medium 34 / 46 m,
-  // Low 26 / 36 m and 60 % of the grass and flowers); W.setDetail(quality) applies one
+  // Low 18 / 26 m and half of the grass and flowers: PERF-BATTERY-2); W.setDetail(quality) applies one
   W.detail = { treeNear: LOD_NEAR, smallFar: FAR_SMALL };
   W.setDetail = (q) => {
     setLodDetail(q);

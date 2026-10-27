@@ -128,7 +128,7 @@ class Area {
   }
   build(C) {
     if (C.mesh) { C.mesh.geometry.dispose(); this.root.remove(C.mesh); C.mesh = null; }
-    C.dirty = false;
+    C.dirty = false; this._meshes = null;
     if (!C.list.length || (C.list.length === 1 && C.list[0].cells.length < 2)) { for (const M of [...C.list]) this.release(M); C.list.length = 0; C.dirty = false; return; }
     const fold = C.fold, g0 = C.list[0].geo;
     const names = fold ? ['position', 'normal', ...(fold.tex ? ['uv'] : []), 'color', 'rm'] : Object.keys(g0.attributes);
@@ -178,8 +178,10 @@ class Area {
     mesh.castShadow = false; mesh.receiveShadow = C.receiveShadow; mesh.renderOrder = C.renderOrder;
     mesh.matrixAutoUpdate = false; mesh.name = 'drawBatch'; mesh.userData.drawBatch = true;
     this.root.add(mesh); mesh.updateMatrixWorld(true);
-    C.mesh = mesh;
+    C.mesh = mesh; this._meshes = null;
   }
+  // (PERF-BATTERY-2: the batch meshes, for drawcull.js BoxCull)
+  meshes() { if (!this._meshes) { this._meshes = []; for (const C of this.cells.values()) if (C.mesh) this._meshes.push(C.mesh); } return this._meshes; }
   // (a piece leaves every cell it is in; the caller rebuilds the cells made dirty)
   release(M) {
     if (M.out) return;
@@ -189,11 +191,16 @@ class Area {
   // every batched piece, every frame (after the world matrices): anything changed leaves, its cell is rebuilt now
   watch() {
     let left = 0;
+    // (PERF-BATTERY-2: a folded material's look and a parent's visibility are worked out once a frame, not once per piece:
+    //  ~1 500 pieces share a few dozen materials and parents; the same checks, the same result)
+    const looks = this._looks ??= new Map(), shown = this._shown ??= new Map(); looks.clear(); shown.clear();
+    const lookNow = (m) => { let k = looks.get(m); if (k === undefined) looks.set(m, (k = lookOf(m))); return k; };
+    const root = this.root, up = (p) => { if (!p || p === root) return true; let v = shown.get(p); if (v === undefined) shown.set(p, (v = p.visible && up(p.parent))); return v; };
     for (const M of this.members) {
       if (M.out) continue;
       const o = M.o, g = o.geometry;
       if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
-        && o.matrixWorld.equals(M.mat) && shownIn(o, this.root) && (!M.look || lookOf(o.material) === M.look)) continue;
+        && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookNow(o.material) === M.look)) continue;
       this.release(M); left++;
     }
     // (a rebuild may release a piece left alone in a cell, which makes its other cells dirty: until none is)
@@ -203,7 +210,7 @@ class Area {
   restore() {
     for (const M of this.members) if (!M.out) this.release(M);
     for (const C of this.cells.values()) if (C.mesh) { C.mesh.geometry.dispose(); this.root.remove(C.mesh); C.mesh = null; }
-    this.members = []; this.cells.clear();
+    this.members = []; this.cells.clear(); this._meshes = null;
   }
   stats() { let batches = 0, pieces = 0, verts = 0, folded = 0; for (const C of this.cells.values()) if (C.mesh) { batches++; pieces += C.list.length; verts += C.mesh.geometry.attributes.position.count; if (C.fold) folded += C.list.length; } return { batches, pieces, folded, verts, buildMs: +this.ms.toFixed(1) }; }
 }
@@ -224,6 +231,7 @@ export class DrawBatch {
     return A;
   }
   has(root) { return this.areas.has(root); }
+  meshes(root) { return this.areas.get(root)?.meshes() ?? []; }
   // every piece drawn on its own again, batches removed (A/B comparisons, or switching it off)
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); }
   stats() { const s = {}; for (const [r, A] of this.areas) s[r.name || r.uuid.slice(0, 6)] = A.stats(); return s; }
