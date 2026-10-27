@@ -42,12 +42,12 @@ import { koGone } from './game/death.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
 import { Inventory } from './game/inventory.js';
-import { Story, OLD_ORDER, NUMBER as CH_NUMBER } from './game/story/index.js';
+import { Story, ORDER, OLD_ORDER, NUMBER as CH_NUMBER } from './game/story/index.js';
 import { t, setLang, getLang } from './game/i18n.js';
 import { roomName } from './game/mapdraw.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
-const SAVE_VERSION = 4;
+const SAVE_VERSION = 5;
 // SAVE-SLOTS: the autosave keeps SAVE_KEY (slot 0: an old single save shows as the Autosave); six manual slots of
 // their own. Every save is the same snapshot() plus `at` (when, ms since 1970), `played` (seconds of play, when the
 // game has counted them from a new game) and, in a manual slot, `thumb`: a small JPEG of the picture as the pause
@@ -75,7 +75,8 @@ export const VERSION = '0.31.0'; // (the desktop build's version: desktop/packag
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
-// carries his weapons and gadgets (hero.arms, weapons.js; an older save carries none).
+// carries his weapons and gadgets (hero.arms, weapons.js; an older save carries none); v4 → v5: the final chapter is two
+// (The Shell, The Core): a save in the core's part of the old one goes to The Core, and the stored position follows ORDER.
 export function migrateSave(raw) {
   if (!raw || typeof raw !== 'object' || !raw.hero || typeof raw.hero !== 'object') return null;
   const s = JSON.parse(JSON.stringify(raw));
@@ -93,6 +94,16 @@ export function migrateSave(raw) {
   if (v < 4) {
     s.hero.arms = freshArms(s.hero.arms);
     v = 4;
+  }
+  if (v < 5) {
+    // v4 → v5: chapter 11 was 'The Shell' to the end. The core's scenes (Vesk's talk, the guardian, the pylons, the coil)
+    // are now chapter 12, 'The Core'; a save in the core room or with the fight begun goes there, the rest stay in The Shell.
+    // (flags.chapter, the position, is redone: 'home' moved one place on; the key is what a load reads.)
+    const f = s.flags && typeof s.flags === 'object' ? s.flags : (s.flags = {});
+    if (f.chapterKey === 'shell' && (s.room === 'c3core' || f.c3_fight || f.c3_overload || f.c3_turned)) f.chapterKey = 'core';
+    const i = ORDER.indexOf(f.chapterKey);
+    if (i >= 0) f.chapter = i;
+    v = 5;
   }
   s.v = v;
   return s;

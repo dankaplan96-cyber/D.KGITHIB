@@ -64,6 +64,7 @@ export const CHAPTER_AREAS = {
   project: ['office', 'control', 'projoffice'],
   zeelich: ['zeelich', 'workshop', 'lighttop'],
   shell: ['c3shaft'],
+  core: ['c3core'],
   dig: ['desert', 'butemple'],
   steam: ['desert', 'condA'],
   pass: ['hamalayi'],

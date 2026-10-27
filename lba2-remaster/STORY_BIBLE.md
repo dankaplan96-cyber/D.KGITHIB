@@ -37,8 +37,8 @@ what the player knows / doesn't know · the turn · what the player does · the 
 | 8 | Evacuation | Citadel Island (changed) | 55 | ✅ (first version; tests/chapter8.mjs) |
 | 9 | The Council | Zeelich upper districts | 50 | ⬜ |
 | 10 | Baldino's Network | all regions | 55 | ⬜ |
-| 11 | The Shell | the shaft, deep installation, galleries | 45 | 🔧 (rooms built) |
-| 12 | The Core | Sendell's chamber, the core | 40 | 🔧 (core built) |
+| 11 | The Shell | the shaft, deep installation, galleries, Sendell | 45 | ✅ (ends at the door to the core) |
+| 12 | The Core | the core | 40 | ✅ (own chapter since the split; same class as 11, chapter3.js) |
 | — | Epilogue: Home | Citadel Island | 10 | ✅ |
 
 Tension curve: familiar routine (1–2) → contradiction and a new world (3) → the danger is everywhere (4–7) →

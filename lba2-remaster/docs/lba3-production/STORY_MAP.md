@@ -21,7 +21,8 @@ network 10 → shell 11 (with the Core, 12, inside it for now) → home (epilogu
 | 8 Evacuation (`evacuation`) | Home to Zoé; Gilbert's tunnels; the fortress shelter's lever; the depot bunker's wheel (ball); Mira's water; Pippa's supplies; Zoé's run to the hill farms; the lighthouse relay; the control room; a project ship to Zeelich. | 11 |
 | 9 The Council (`council`) | Street folk; Baldino's petition; Nara's stamp; Oku's stamp (free three mills: ball); the council house; the clerk; the hearing; the archive in a borrowed coat (the BORE cabinet); back to the council. | 12 |
 | 10 Baldino's Network (`network`) | Five relays: the old mill (Zeelich), the valve room and the lighthouse (Citadel, by Hesk's glider), the bore (Desert Island, drones), the dome (Hamalayi, telescope); back to Zeelich. | 13 |
-| 11–12 The Shell + Core (`shell`, chapter3.js) | The bore's machinery (cooling diagram, valves A and C, ball switch for the ladder); crystal galleries (three pillars: ball); Sendell; the core: the guardian, three pylons from their plates, Vesk's overload coil. | 14 |
+| 11 The Shell (`shell`, chapter3.js) | The bore's machinery (cooling diagram, valves A and C, ball switch for the ladder); crystal galleries (three pillars: ball); Sendell. Ends at the door from her chamber to the core. | 14 |
+| 12 The Core (`core`, chapter3.js `ChapterCore`) | Chapter 12's card, Vesk, the guardian, three pylons from their plates, Vesk's overload coil. Saves before format 5 (one chapter 'shell') go to `core` when saved in the core room or with the fight begun. | 14 |
 | Epilogue (`home`, epilogue.js) | Dinner at home; the end screen; Keep Exploring (free roam, new lines everywhere). | 14 |
 
 Continuity notes kept by the story code: FunFrock stays dead (his old machines and troopers are reactivated by
