@@ -12,9 +12,9 @@ Screenshots stay in the session scratchpad (polish-audit/), not in the repo.
 | 5 | 4 Temple of Bù gate | The chapter's reveal renders as an unlit black slab | desert.js ~L1014 | S–M | |
 | 6 | Story reveals | No camera work for Sendell ×2, Vesk's descent, the ch10 shaft opening | chapter3.js, observatory.js, chapter2.js, network.js | L (M for three beats) | |
 | 7 | 4 sand-yacht | A plank, three discs and one flat triangle sail | desert.js ~L1124 | S–M | |
-| 8 | Hamalayi terrain | Sawtooth snow caps on every cliff edge, flat empty glacier basin, a disc for the ice vent | hamalayi.js ~L600 | M | |
+| 8 | Hamalayi terrain | Sawtooth snow caps on every cliff edge, flat empty glacier basin, a disc for the ice vent | hamalayi.js ~L600 | M | done (HAMALAYI-POLISH): the snow/rock split is dilated and blurred so no comb of teeth, rounded irregular snow lips on every rim (hamalayi-finish.js snowLips, one merged mesh per 46 m chunk); glacier ice mottled, crevasses, seracs, drifts; the vent a heaved plate of cracked ice with meltwater; the gorge a river with stones, foam, ice shelves. Heights untouched |
 | 9 | 10 bore fight | Six enemies at once on a small pad; bot died and was assisted | story/network.js enemyDefs | M | |
-| 10 | 6 gorge tree | Rigid pole fall, no landing, a spiky-twig log | hamalayi.js fell() | S | |
+| 10 | 6 gorge tree | Rigid pole fall, no landing, a spiky-twig log | hamalayi.js fell() | S | done (HAMALAYI-POLISH): hamalayi-tree.js: bark, a root plate, three broken stubs; the fall is a pendulum (creak, whip), the tip lands with a thud, two small bounces and a snow puff, the snow blob lets go and drops |
 | 11 | 8 farm run | Farmers vanish under a fade instead of walking; the heat pipe hides Twinsen | story/evacuation.js | M | done (CH8-SHELTERS): the farmers walk off along the road; the main is buried along the plateau route and no longer loops round the depot shelter (island.js PIPE, bury); the occluder system never fades (VP-10), so no fader was registered; carts and bundles added |
 | 12 | Epilogue | Twinsen has his sword drawn at the family dinner | story/epilogue.js begin() | S | done (FINALE-PAYOFF) |
 | 13 | Toasts | Grey on bright scenes (shield dome, snow): unreadable | css .toast | S | done (FINALE-PAYOFF) |
@@ -22,5 +22,5 @@ Screenshots stay in the session scratchpad (polish-audit/), not in the repo.
 | 15 | 4 Ilka's camp, research post | Sparse: a flat lean-to, a bare pad | desert.js | S–M | |
 | 16 | Desert sand | Long parallel streaks like floorboards up close | desert texture | S | |
 
-Known, not re-listed: the Hamalayi rebels' camp, the ch11 galleries' difficulty, the Bug Street Follow snap, the ch6 depot fight's assist.
+Known, not re-listed: the Hamalayi rebels' camp (done, HAMALAYI-POLISH: canvas wall tents, fire ring, supplies, banners; props-lba1hamalayi.js), the ch11 galleries' difficulty, the Bug Street Follow snap, the ch6 depot fight's assist.
 Not tested: frame rate, audio, human-style fights, the opening cinematic.

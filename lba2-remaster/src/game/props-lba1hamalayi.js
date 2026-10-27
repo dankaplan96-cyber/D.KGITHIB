@@ -26,8 +26,8 @@
 // region needs: the colliders as local boxes {x, z, hw, hd, top, bottom?, noStand?, see?} (top and bottom above
 // the origin's ground) and the footprint zones the random pines and rocks keep out of.
 import * as THREE from 'three';
-import { MAT, rbox, cyl, sphere, tinted } from './props.js';
-import { MM, drift } from './props-mountain.js';
+import { MAT, rbox, cyl, sphere, tinted, crate, barrel } from './props.js';
+import { MM, drift, driftGeo, firePit, woodpile, logGeo } from './props-mountain.js';
 
 export const CELL = 2.1 / 1240 * 512;     // 0.867 m
 export const LAYER = 2.1 / 1240 * 256;    // 0.434 m
@@ -82,14 +82,34 @@ export const stairGeo = (n, w, rise, run) => mesh(`st${n},${r3(w)},${r3(rise)},$
     quad(_v(x1, 0, z0), _v(x0, 0, z0), _v(x0, y1, z0), _v(x1, y1, z0), _v(0, 0, -1));
   }
 });
-// a pup tent: ridge along z, w wide, l long, h high; open at the front (+z) with a dark door triangle
-export const tentGeo = (w, l, h) => mesh(`tt${r3(w)},${r3(l)},${r3(h)}`, (quad, tri) => {
+// a canvas wall tent: ridge along z, w wide, l long, low walls he high under a pitched roof to hr; the front (+z) is
+// open in an A-shaped doorway dw either side of the middle (up to the ridge). Three flat-shaded pieces so each can wear
+// its own colour: the canvas, the dark inside (back wall, side walls, groundsheet), the door flap.
+const poly = (tri, pts, out) => { for (let i = 1; i < pts.length - 1; i++) tri(pts[0], pts[i], pts[i + 1], out); };
+export const tentCanvas = (w, l, he, hr, dw) => mesh(`tc${r3(w)},${r3(l)},${r3(he)},${r3(hr)},${r3(dw)}`, (quad, tri) => {
   const x = w / 2, z = l / 2;
-  quad(_v(-x, 0, -z), _v(-x, 0, z), _v(0, h, z), _v(0, h, -z), _v(-1, 0.5, 0));
-  quad(_v(x, 0, z), _v(x, 0, -z), _v(0, h, -z), _v(0, h, z), _v(1, 0.5, 0));
-  tri(_v(-x, 0, -z), _v(0, h, -z), _v(x, 0, -z), _v(0, 0.2, -1));
+  quad(_v(-x, he, -z), _v(-x, he, z), _v(0, hr, z), _v(0, hr, -z), _v(-1, 1, 0));            // the roof's two pitches
+  quad(_v(x, he, z), _v(x, he, -z), _v(0, hr, -z), _v(0, hr, z), _v(1, 1, 0));
+  quad(_v(-x, 0, -z), _v(-x, 0, z), _v(-x, he, z), _v(-x, he, -z), _v(-1, 0, 0));            // the low walls
+  quad(_v(x, 0, z), _v(x, 0, -z), _v(x, he, -z), _v(x, he, z), _v(1, 0, 0));
+  poly(tri, [_v(-x, 0, -z), _v(x, 0, -z), _v(x, he, -z), _v(0, hr, -z), _v(-x, he, -z)], _v(0, 0.3, -1));   // the back
+  quad(_v(-x, 0, z), _v(-dw, 0, z), _v(0, hr, z), _v(-x, he, z), _v(0, 0.2, 1));              // the front, either side of the doorway
+  quad(_v(dw, 0, z), _v(x, 0, z), _v(x, he, z), _v(0, hr, z), _v(0, 0.2, 1));
 });
-export const tentDoor = (w, h) => mesh(`td${r3(w)},${r3(h)}`, (quad, tri) => { tri(_v(-w / 2, 0, 0), _v(w / 2, 0, 0), _v(0, h, 0), _v(0, 0, 1)); });
+export const tentInside = (w, l, he, hr) => mesh(`ti${r3(w)},${r3(l)},${r3(he)},${r3(hr)}`, (quad, tri) => {
+  const x = w / 2 - 0.03, z = l / 2 - 0.03;
+  poly(tri, [_v(-x, 0.03, -z), _v(x, 0.03, -z), _v(x, he, -z), _v(0, hr - 0.04, -z), _v(-x, he, -z)], _v(0, 0, 1));
+  quad(_v(-x, 0.03, -z), _v(-x, 0.03, z), _v(-x, he, z), _v(-x, he, -z), _v(1, 0, 0));
+  quad(_v(x, 0.03, z), _v(x, 0.03, -z), _v(x, he, -z), _v(x, he, z), _v(-1, 0, 0));
+  quad(_v(-x, 0.03, -z), _v(x, 0.03, -z), _v(x, 0.03, z), _v(-x, 0.03, z), _v(0, 1, 0));
+});
+export const tentFlap = (hr, dw) => mesh(`tf${r3(hr)},${r3(dw)}`, (quad, tri) => { tri(_v(0, hr - 0.02, 0), _v(-dw + 0.02, 0, 0), _v(-0.02, 0, 0), _v(0, 0, 1)); });
+// a banner: a swallow-tailed cloth w wide, h long, hanging from y = 0 (faces +z; double: the back is the same cloth)
+export const bannerGeo = (w, h, back) => mesh(`bn${r3(w)},${r3(h)},${back ? 1 : 0}`, (quad, tri) => {
+  const o = _v(0, 0, back ? -1 : 1), x = w / 2, n = 4;
+  const P = []; for (let i = 0; i <= n; i++) { const u = -x + w * i / n, zz = Math.sin(i * 1.3) * 0.03 * (back ? -1 : 1); P.push([_v(u, 0, zz), _v(u, -h + 0.34 * (1 - Math.abs(2 * i / n - 1)), zz)]); }   // (a swallow tail: the middle edge is shorter)
+  for (let i = 0; i < n; i++) quad(P[i][0], P[i + 1][0], P[i + 1][1], P[i][1], o);
+});
 const bx = (w, h, d) => rbox(r3(w), r3(h), r3(d), 0);          // a plain box, 12 triangles
 const rb = (w, h, d, r = 0.05) => rbox(r3(w), r3(h), r3(d), r); // a softly bevelled one (kept for the pieces seen close)
 const STONE = () => MM.stone('#d8d0c4');       // the stone of Lhar's houses (the same material, no new program)
@@ -209,34 +229,100 @@ export function oldGate(k) {
 
 // ================================================================ 3. the rebels' camp (scene 9)
 // origin: the middle of the platform on the ground, its long side along z.
+// (HAMALAYI-POLISH: the three tents of the original's blocks, now canvas wall tents with a ridge pole, door poles, guy
+// lines on pegs, a dark inside with a flap tied back; a fire ring with seats, supplies, a lashed tarp stack, two banners.)
 const NESTS = [[-1, -6.5], [7, -5.5], [4, -2.5]];   // the three sentries' spots, in cells from the platform's middle (b66, b67, b68)
+const shade = (c, f) => '#' + new THREE.Color(c).multiplyScalar(f).getHexString();
+const slab2 = (back) => mesh(`dm${back ? 1 : 0}`, (quad) => { const o = _v(0, 0, back ? -1 : 1); quad(_v(0, 0.2, 0), _v(0.16, 0, 0), _v(0, -0.2, 0), _v(-0.16, 0, 0), o); });
+// a thin line (a rope) from a to b, tinted
+const line = (k, a, b, color, t = 0.014) => {
+  const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], len = Math.hypot(dx, dy, dz), hz = Math.hypot(dx, dz);
+  k.add(tinted(bx(t, t, 1), color), MM.cloth(), (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, Math.atan2(dx, dz), { rx: -Math.atan2(dy, hz), sz: len });
+};
+const stick = (k, a, b, mat, t = 0.05) => {   // a pole from a to b
+  const dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2], len = Math.hypot(dx, dy, dz), hz = Math.hypot(dx, dz);
+  k.add(bx(t, t, 1), mat, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, Math.atan2(dx, dz), { rx: -Math.atan2(dy, hz), sz: len });
+};
+// one canvas tent at the current transform (the door toward +z): canvas colour, trim colour
+function wallTent(k, { canvas = '#d8ccb0', trim = '#2f6f78', w = 1.4, l = 1.8, he = 0.5, hr = 1.3, dw = 0.32 } = {}) {
+  const wood = MAT.wood('dark'), rope = '#8a7a5a', x = w / 2, z = l / 2;
+  cloth(k, tentCanvas(w, l, he, hr, dw), canvas, 0, 0, 0);
+  cloth(k, tentInside(w, l, he, hr), '#231f1f', 0, 0, 0);                          // (the dark inside: it is in the roof's shadow too)
+  cloth(k, tentFlap(hr, dw), shade(canvas, 0.9), 0, 0, z + 0.01);                  // the left flap hangs shut, the right is tied back
+  // inside: a bedroll against the back wall, a pack, a lantern's glow
+  cloth(k, rb(0.46, 0.14, 1.0, 0.06), '#6a4a3a', -0.28, 0.09, -0.1);
+  cloth(k, rb(0.3, 0.2, 0.28, 0.08), '#7a6a4a', 0.28, 0.12, -0.5);
+  k.add(rb(0.12, 0.14, 0.12, 0.03), MM.glow(), 0.26, 0.1, 0.18);
+  // the roll of the tied-back flap along the doorway's right edge, with two ties
+  const th = Math.atan2(dw, hr - 0.05);
+  cloth(k, cyl(0.05, 0.05, Math.hypot(dw, hr) * 0.92, 7), canvas, dw * 0.52, hr * 0.5, z + 0.04, 0, { rz: th });
+  for (const t of [0.25, 0.62]) cloth(k, cyl(0.062, 0.062, 0.03, 7), rope, dw * (1 - t), hr * t + 0.02, z + 0.04, 0, { rz: th });
+  // the ridge pole (past both ends, a knob on each), the doorway's two poles
+  stick(k, [0, hr + 0.02, -z - 0.38], [0, hr + 0.02, z + 0.42], wood, 0.06);
+  for (const e of [-1, 1]) k.add(sphere(0.055, 8, 6), wood, 0, hr + 0.02, e * (z + 0.42));
+  stick(k, [-dw, 0, z + 0.02], [0, hr, z + 0.02], wood, 0.05); stick(k, [dw, 0, z + 0.02], [0, hr, z + 0.02], wood, 0.05);
+  // the eave trim (a band of colour along each wall's top), a seam down each pitch, a band along the back foot
+  for (const s of [-1, 1]) { cloth(k, bx(0.04, 0.1, l + 0.02), trim, s * (x + 0.012), he - 0.03, 0); cloth(k, bx(0.025, 0.02, 1.0), '#a89a78', s * (x * 0.5), (he + hr) / 2 + 0.045, -0.1, 0, { rz: -s * Math.atan2(hr - he, x) }); }
+  cloth(k, bx(w + 0.04, 0.08, 0.03), trim, 0, 0.04, -z - 0.012);
+  // snow lying on the roof's lee and along the ridge
+  k.add(driftGeo(1), SNOW(), -x * 0.45, (he + hr) / 2 + 0.01, 0.1, 0, { rz: Math.atan2(hr - he, x), sx: 0.24, sy: 0.09, sz: 0.46 });
+  k.add(driftGeo(2), SNOW(), -x * 0.2, he + (hr - he) * 0.7, -0.62, 0, { rz: Math.atan2(hr - he, x), sx: 0.16, sy: 0.06, sz: 0.24 });
+  k.add(rb(0.07, 0.05, l * 0.62, 0.02), SNOW(), 0, hr + 0.07, -0.18);
+  // guy lines: ridge ends and eaves to pegs (short stakes, the line tied low)
+  const peg = (px, pz) => k.add(bx(0.04, 0.2, 0.04), wood, px, 0.1, pz, 0, { rx: 0.25 });
+  const g = [[0, hr + 0.02, z + 0.42, 0.0, z + 1.5], [0, hr + 0.02, -z - 0.38, 0.0, -z - 1.4], [-x - 0.02, he - 0.04, -0.5, -x - 0.95, -0.7], [x + 0.02, he - 0.04, -0.5, x + 0.95, -0.7], [-x - 0.02, he - 0.04, 0.55, -x - 0.95, 0.75], [x + 0.02, he - 0.04, 0.55, x + 0.95, 0.75]];
+  for (const [ax, ay, az, px, pz] of g) { line(k, [ax, ay, az], [px, 0.12, pz], rope); peg(px, pz); }
+}
 export function rebelCamp(k) {
   const TW = 5 * C, TD = 8 * C, E = 0.9;
-  const stone = STONE(), snow = SNOW(), cols = [], zones = [];
+  const stone = STONE(), snow = SNOW(), cols = [], zones = [], wood = MAT.wood('dark');
   k.add(frustum(TW, TD, TW + 2 * E, TD + 2 * E, Ly), stone, 0, 0, 0);
   k.add(bx(TW + 2 * E - 0.12, 0.5, TD + 2 * E - 0.12), stone, 0, -0.25, 0);
   cols.push({ x: 0, z: 0, hw: TW / 2 + E * 0.35, hd: TD / 2 + E * 0.35, top: Ly });
   // snow lying in the edges of the platform's ramps
   [[-TW / 2 - 0.7, 1.0, 3.0, 0.5, 1.4, 1.6, 1], [TW / 2 + 0.9, -1.4, 2.6, 0.45, 1.3, 1.5, 2], [0.3, TD / 2 + 0.9, 2.6, 0.4, 1.2, 0.05, 3], [-0.8, -TD / 2 - 0.8, 2.8, 0.45, 1.3, -0.1, 0]].forEach(([x, z, l, h, d, ry, sd]) => drift(k, x, -0.08, z, l, h, d, ry, sd));
-  // the three tents (the original's blocks 1.3 m high stood at cells (27,14) (29,14) (28,16); the fourth, 0.4 m, at (29,16)):
-  // snow-white canvas with camouflage patches, a dark door, ridge poles
-  const tents = [[-C, -2.5 * C, 0.05], [C, -2.5 * C, -0.05], [0, -0.5 * C, 0.02]];
-  const patch = ['#9aa6b8', '#8d8a80', '#b4bcc8'];
-  tents.forEach(([x, z, ry], i) => {
-    k.at(x, Ly, z, ry, () => {
-      cloth(k, tentGeo(1.35, 1.6, 1.3), '#eef2f8', 0, 0, 0);
-      cloth(k, tentDoor(0.9, 1.0), '#2a2e38', 0, 0.0, 0.8 + 0.01);
-      for (const s of [-1, 1]) {
-        cloth(k, bx(0.46 + i * 0.05, 0.03, 0.5), patch[(i + (s > 0 ? 1 : 0)) % 3], s * 0.34, 0.67, -0.35, 0, { rz: -s * Math.atan2(1.3, 0.675) });
-        cloth(k, bx(0.3, 0.03, 0.36), patch[(i + 2 + (s > 0 ? 1 : 0)) % 3], s * 0.2, 0.93, 0.28, 0, { rz: -s * Math.atan2(1.3, 0.675) });
-      }
-    });
-    cols.push({ x, z, hw: 0.7, hd: 0.82, top: Ly + 1.3, noStand: true, see: true });
+  // the three tents (the original's blocks 1.3 m high stood at cells (27,14) (29,14) (28,16)): the two at the back turned a
+  // little apart, the third in front, square. Each collider is the tent's footprint, turned with it.
+  const tents = [[-1.0, -2.3, -0.3, { canvas: '#d6c9a8', trim: '#2f6f78' }], [1.0, -2.3, 0.3, { canvas: '#c9d0d6', trim: '#a8502c' }], [0, -0.45, 0, { canvas: '#e2d8be', trim: '#a8502c', hr: 1.4 }]];
+  tents.forEach(([x, z, ry, o]) => {
+    k.at(x, Ly, z, ry, () => wallTent(k, o));
+    cols.push({ x, z, hw: 0.7, hd: 0.9, rot: ry, top: Ly + 1.3, noStand: true, see: true });
   });
-  // the low one: a stack of supply sacks under a snow-white cloth
-  k.add(rb(0.8, 0.5, 0.8, 0.12), SNOW(), C, Ly + 0.25, -0.5 * C + 1.3);
-  cloth(k, rb(0.84, 0.18, 0.84, 0.05), '#a8b2c2', C, Ly + 0.46, -0.5 * C + 1.3);
-  cols.push({ x: C, z: -0.5 * C + 1.3, hw: 0.42, hd: 0.42, top: Ly + 0.55, noStand: true, see: true });
+  // the low one: a tarp over lashed supplies, roped across
+  const sx = C, sz = -0.5 * C + 1.3;
+  k.at(sx, Ly, sz, 0.2, () => {
+    cloth(k, rb(0.86, 0.5, 0.86, 0.14), '#cfc4a6', 0, 0.25, 0);
+    cloth(k, rb(0.6, 0.2, 0.62, 0.09), '#c4b998', 0.02, 0.56, 0.0);
+    for (const t of [-0.2, 0.2]) cloth(k, bx(0.03, 0.52, 0.9), '#8a7a5a', t, 0.27, 0);
+    k.add(rb(0.5, 0.05, 0.5, 0.03), snow, 0.0, 0.67, 0.0);
+  });
+  cols.push({ x: sx, z: sz, hw: 0.45, hd: 0.45, top: Ly + 0.62, noStand: true, see: true });
+  // the fire: a ring of stones, a pot on a tripod, two log seats; crates, a barrel and sacks by the tents, a woodpile
+  k.at(0, Ly, 1.8, 0.3, () => firePit(k, { seed: 5 }));
+  cols.push({ x: 0, z: 1.8, hw: 0.5, hd: 0.5, top: Ly + 0.3, noStand: true, see: true });
+  for (const [x, z, ry] of [[-1.35, 2.05, 1.2], [1.3, 2.25, -1.25]]) k.at(x, Ly, z, ry, () => {
+    for (const s of [-0.45, 0.45]) k.add(cyl(0.13, 0.15, 0.26, 7), wood, s, 0.13, 0);
+    k.add(logGeo(0.17, 1.3), MM.logs(), 0, 0.4, 0, Math.PI / 2);
+  });
+  k.at(-1.55, Ly, 0.95, 0.35, () => {
+    crate(k, 0.6); k.at(0.04, 0.6, 0.0, 0.3, () => crate(k, 0.5, { pal: 'honey' }));
+    k.at(0.78, 0, 0.1, 0.0, () => barrel(k, { r: 0.3, h: 0.8 }));
+    for (const [x, z] of [[-0.55, 0.45], [0.2, 0.75]]) cloth(k, sphere(0.28, 10, 7), '#b6ab8e', x, 0.22, z, 0, { sx: 1.1, sy: 0.75, sz: 1.3 });
+  });
+  cols.push({ x: -1.3, z: 0.95, hw: 0.95, hd: 0.6, top: Ly + 1.15, noStand: true, see: true });
+  k.at(1.65, Ly, 0.3, -Math.PI / 2, () => woodpile(k, { w: 1.2, h: 0.8, lid: false }));
+  cols.push({ x: 1.65, z: 0.3, hw: 0.4, hd: 0.7, top: Ly + 0.9, noStand: true, see: true });
+  // two banners on tall poles at the front corners, a rebel colour with a pale diamond
+  for (const [x, z, col, ry] of [[-1.95, 2.95, '#2f6f78', 0.25], [1.95, 2.95, '#a8502c', -0.25]]) {
+    k.at(x, Ly, z, ry, () => {
+      k.add(cyl(0.05, 0.065, 3.5, 7), wood, 0, 1.75, 0);
+      k.add(sphere(0.085, 8, 6), MAT.brass(), 0, 3.55, 0);
+      k.add(bx(0.95, 0.05, 0.05), wood, 0.48, 3.28, 0);
+      for (const b of [false, true]) { cloth(k, bannerGeo(0.78, 1.5, b), col, 0.48, 3.25, 0.0); cloth(k, slab2(b), '#f0e4c0', 0.48, 2.7, b ? -0.012 : 0.012); }
+      k.add(rb(0.34, 0.2, 0.34, 0.05), stone, 0, 0.1, 0);
+    });
+    cols.push({ x, z, hw: 0.14, hd: 0.14, top: Ly + 3.5, noStand: true, see: true });
+  }
   // the sentries' snow nests: a crescent of snow blocks open toward the platform
   const nests = NESTS.map(([cx, cz]) => {
     const x = cx * C, z = cz * C, a0 = Math.atan2(-x, -z);     // the way to the middle of the platform
