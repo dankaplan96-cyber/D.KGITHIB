@@ -27,6 +27,8 @@ import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh,
 import { Plume } from '../engine/softfx.js';
 import { Kit, MAT, barrel, crate, handCart } from './props.js';
 import { gantry, oldGate, rebelCamp, waystone } from './props-lba1hamalayi.js';
+import { gridCapture, snowLips, iceTint, basinDress, ventDress, gorgeRiver } from './hamalayi-finish.js';
+import { makeTree } from './hamalayi-tree.js';
 import { MM, TRIM, mountainHouse, mountainSign, noticeBoard, dryWall, fence, woodpile, sledge, trough, hayRack, dryingRack, lanternPost, firePit, markerFlag, windsock, bellPost, wheel, liftWinch, prayerWheels, monasteryHall, monasteryGate, observatory, heatCabinetDress, drift, logGeo } from './props-mountain.js';
 
 export const HAMALAYI = { x: 4300, z: 0 };
@@ -134,17 +136,22 @@ function heightFn(x, z) {
 
 const C = (c) => new THREE.Color(c);
 const COL = { snow: C('#ffffff'), snowShade: C('#e4ecf8'), rock: C('#d8c8b8'), rockDark: C('#b8a898'), trail: C('#b8a088'), ice: C('#bcdcf0') };
+// (HAMALAYI-POLISH: GRID holds the heights the terrain was built from; its rock weight is the steep vertices grown by a
+// cell and blurred, so the snow/rock split falls on flat ground instead of in a comb of one-cell teeth: hamalayi-finish.js)
+let GRID = null;
+const _ice = new THREE.Color();
 function colorFn(x, z, h, slope, c) {
   c.copy(COL.snow).lerp(COL.snowShade, 0.25 + Math.sin(x * 0.5 + z * 0.3) * 0.1);
-  if (slope > 0.75) c.lerp(COL.rock, smoothstep(0.75, 1.4, slope));
+  const rk = Math.max(smoothstep(0.75, 1.4, slope), GRID ? GRID.rock(x, z) : 0);
+  if (rk > 0) c.lerp(COL.rock, rk);
   if (h > 32) c.lerp(COL.rockDark, 0.3);
-  if (Math.hypot(x - BASIN.x, z - BASIN.z) < BASIN.r + 4 && Math.abs(h - LB) < 1.2) c.lerp(COL.ice, 0.7);
+  if (Math.hypot(x - BASIN.x, z - BASIN.z) < BASIN.r + 4 && Math.abs(h - LB) < 1.2) { iceTint(x, z, _ice, Math.hypot(x - VENT.x, z - VENT.z)); c.lerp(_ice, 0.88 * (1 - rk)); }   // (mottled glacier ice: patches of deep blue, teal, frost, wind-blown powder)
 }
 function splatFn(x, z, h, slope, w) {
   w[0] = 0; w[1] = 1; w[2] = 0; w[3] = 0; w[4] = 0;
-  const rk = smoothstep(0.7, 1.25, slope);
-  w[2] = rk; w[1] = 1 - rk;
   const tr = Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z));
+  const rk0 = smoothstep(0.7, 1.25, slope), rk = GRID && tr > 1.3 ? Math.max(rk0, GRID.rock(x, z) * smoothstep(1.3, 2.4, tr)) : rk0;   // (the trails keep their own edge)
+  w[2] = rk; w[1] = 1 - rk;
   if (tr < 2.2) { w[3] = smoothstep(2.2, 1.0, tr) * 1.3; w[1] *= 0.6; }
   // trodden paths with a wandering edge (PATHS), a ragged paved square, the monastery's paved yard
   let pd = 1e9, pw = 0;
@@ -175,9 +182,14 @@ export function buildHamalayi(scene, physics) {
   const col = (c) => physics.add({ ...c, x: c.x + ox, z: c.z + oz });
   const updaters = [];
   const TX = textures();
-  const terrain = new Terrain({ size: SIZE, segs: SEGS, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, sand: snowTex(), cobble: TX.cobble } });
+  GRID = gridCapture(heightFn, SIZE, SEGS);
+  const terrain = new Terrain({ size: SIZE, segs: SEGS, heightFn: GRID.fn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, sand: snowTex(), cobble: TX.cobble } });
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
+  GRID = null;   // (the finish below reads the terrain itself)
+  const lips = snowLips(terrain, group, { levels: [L0, L1, LB, L3, 24, 26, L4],
+    // (no lip where a trail or a walk crosses the rim)
+    fade: (x, z) => smoothstep(1.4, 3.4, Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z))) * smoothstep(0.4, 2.4, Math.min(...PATHS.map(([P, hw]) => seg(P, x, z) - hw))) });
   const H = (x, z) => terrain.heightAt(x, z);
   const R = {
     id: 'hamalayi', outdoor: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters, music: 'hamalayi',
@@ -307,24 +319,11 @@ export function buildHamalayi(scene, physics) {
     put('landing', 'signGorge', 3, 38.4, 0, (k) => mountainSign(k, [{ text: 'LHAR', a: 1.9 }, { text: 'FOOTHILLS', a: -0.66 }]));
   }
 
-  // ---- the gorge: meltwater below, a dead tree on the north bank
-  {
-    const water = new THREE.Mesh(new THREE.PlaneGeometry(220, GORGE.z1 - GORGE.z0 + 3), new THREE.MeshStandardMaterial({ color: '#7ac0e0', roughness: 0.15, transparent: true, opacity: 0.9 }));
-    water.rotation.x = -Math.PI / 2; water.position.set(0, 0.7, (GORGE.z0 + GORGE.z1) / 2); group.add(water);
-    const flow = water.material; let ft = 0; updaters.push((dt) => { ft += dt; flow.color.setHSL(0.55, 0.55, 0.66 + Math.sin(ft * 2) * 0.02); });
-    // ice chunks drifting
-    for (let i = 0; i < 14; i++) { const g = bbox(0.8 + r0(), 0.3, 0.6 + r0(), 0.1, 1), fx = -60 + r0() * 120, fz = GORGE.z0 + 2 + r0() * (GORGE.z1 - GORGE.z0 - 4); B.add(g, ice, fx, 0.75, fz + GM(fx), 0, r0() * 3, 0); }
-  }
-  const tree = new THREE.Group();
+  // ---- the gorge: a river of meltwater between stone and ice banks (hamalayi-finish.js), a dead tree on the north bank
+  // (hamalayi-tree.js: bark, a root plate, three broken stubs; it falls on a pendulum, lands with a thud, a bounce and a snow puff)
+  gorgeRiver({ group, H, GM, GORGE, updaters, col, burn: (n) => { for (let i = 0; i < n; i++) r0(); } });
   const TREE = { x: GORGE.bridgeX, z: GORGE.z0 - 1.5 };
-  tree.position.set(TREE.x, H(TREE.x, TREE.z), TREE.z); group.add(tree);
-  {
-    const TB = new Batch(tree);
-    TB.add(cyl(0.28, 0.42, 11, 9, 1), tm('wood', { color: '#6a5a4a' }), 0, 5.5, 0);
-    for (let k = 0; k < 5; k++) { const a = k * 1.3, y = 4 + k * 1.3; TB.add(cyl(0.06, 0.12, 2.4, 6, 1), tm('wood', { color: '#6a5a4a' }), Math.cos(a) * 0.9, y + 0.6, Math.sin(a) * 0.9, 0, 0, Math.cos(a) * 0.9); }
-    TB.add(new THREE.SphereGeometry(0.9, 8, 6).scale(1.4, 0.5, 1.2), snowM, 0.6, 8.6, 0.3);
-    TB.build();
-  }
+  const T = makeTree({ group, ox, oz, TREE, H, L0, updaters, snowM });
   const treeCol = col({ type: 'cyl', x: TREE.x, z: TREE.z, r: 0.45, top: H(TREE.x, TREE.z) + 11 });
   const bridgeCol = col({ type: 'box', x: TREE.x, z: (GORGE.z0 + GORGE.z1) / 2, hw: 0.55, hd: (GORGE.z1 - GORGE.z0) / 2 + 2.5, top: L0 - 0.2, enabled: false });
   bridgeCol.enabled = false;
@@ -333,9 +332,7 @@ export function buildHamalayi(scene, physics) {
       x: ox + TREE.x + 0.6, y: H(TREE.x, TREE.z) + 8.2, z: oz + TREE.z + 0.3, fallen: false,
       fell(instant = false) {
         this.fallen = true; treeCol.enabled = false; bridgeCol.enabled = true;
-        if (instant) { tree.rotation.x = Math.PI / 2; tree.position.y = L0 - 0.55; return; }
-        let t = 0; const y0 = tree.position.y;
-        updaters.push(function fall(dt) { t += dt; const k = Math.min(1, (t / 1.4) ** 2); tree.rotation.x = k * Math.PI / 2; tree.position.y = y0 + (L0 - 0.55 - y0) * k; if (k >= 1) updaters.splice(updaters.indexOf(fall), 1); });
+        T.fell(instant);
       },
     },
   };
@@ -597,12 +594,12 @@ export function buildHamalayi(scene, physics) {
   R.observatory = { ...W(OBS.x, OBS.z), door: W(OBS.x, OBS.z + 6.0) };
 
   // ---- the glacier basin and the ice vent
-  const ventCap = mesh(group, new THREE.CylinderGeometry(3.2, 3.6, 1.6, 16), ice, VENT.x, H(VENT.x, VENT.z) + 0.4, VENT.z, 0);
-  {
-    const VB = new Batch(group);
-    for (let i = 0; i < 16; i++) { const a = r0() * 6.28, d = 6 + r0() * 14; const x = BASIN.x + Math.cos(a) * d, z = BASIN.z + Math.sin(a) * d; VB.add(new THREE.ConeGeometry(0.4 + r0() * 0.6, 1.2 + r0() * 2.5, 5), ice, x, H(x, z) + 0.6, z, r0() * 0.3, r0() * 6, r0() * 0.3); }
-    VB.build();
-  }
+  // (HAMALAYI-POLISH: the vent's plug is a heaved cap of cracked ice with meltwater pooled round it; the basin has seracs,
+  //  crevasses and wind-blown drifts, its ice is mottled. The old 16 random ice cones drew 112 numbers from r0: kept, so
+  //  every pine and rock placed after it stays where it was)
+  for (let i = 0; i < 112; i++) r0();
+  const ventCap = ventDress({ group, H, VENT, ventMat: pm('#ffffff', 0.32, { vertexColors: true, metalness: 0.08 }) }).cap;
+  basinDress({ group, H, col, BASIN, VENT, descent: DESCENT[DESCENT.length - 1], kitOf });
   // (FX-SOFT: the vent's steam was a hard white open cone: now a billowing column of soft puffs, from the game's particle
   //  system, which the room's updaters get as their third argument)
   const steamPl = new Plume({ rate: 15, rise: 3.2, h: 15, w0: 1.4, w1: 6.4, a: 0.5, add: 0.08, drift: 1.6, spread: 0.6, color: '#eef6ff' });
@@ -627,14 +624,14 @@ export function buildHamalayi(scene, physics) {
   const lba1 = { zones: [], places: {}, within(x, z, pad = 0) { return this.zones.some((q) => { const dx = x - q.x, dz = z - q.z, c = Math.cos(q.ry), s = Math.sin(q.ry); return Math.abs(dx * c - dz * s) < q.hw + pad && Math.abs(dx * s + dz * c) < q.hd + pad; }); } };
   R.lba1 = lba1;
   {
-    const place = (id, x, z, ry, builder, probe) => {
+    const place = (id, x, z, ry, builder, probe, area = 'lba1') => {
       let gy = 1e9;
       for (const [lx, lz] of probe) { const [px, pz] = loc(x, z, ry, lx, lz); gy = Math.min(gy, H(px, pz)); }
-      const info = kitOf('lba1').at(x, gy, z, ry, () => builder(kitOf('lba1')));   // (one kit for the four: four meshes in all)
+      const info = kitOf(area).at(x, gy, z, ry, () => builder(kitOf(area)));   // (one kit for the gantry, the gate and the stone; the camp, which now has many parts, its own: it is culled apart)
       for (const c of info.colliders) {
         const [px, pz] = loc(x, z, ry, c.x, c.z);
         if (c.bottom == null && c.top > 1) check(id, px, pz, Math.max(c.hw, c.hd) * 1.4);
-        col({ type: 'box', x: px, z: pz, hw: c.hw, hd: c.hd, rot: ry, top: gy + c.top, bottom: c.bottom != null ? gy + c.bottom : undefined, noStand: c.noStand, seeThrough: c.see });
+        col({ type: 'box', x: px, z: pz, hw: c.hw, hd: c.hd, rot: ry + (c.rot ?? 0), top: gy + c.top, bottom: c.bottom != null ? gy + c.bottom : undefined, noStand: c.noStand, seeThrough: c.see });
       }
       for (const q of info.zones) { const [px, pz] = loc(x, z, ry, q.x, q.z); lba1.zones.push({ x: px, z: pz, hw: q.hw, hd: q.hd, ry }); }
       dress.placed.push({ name: id, x, z, r: 1 });
@@ -646,7 +643,7 @@ export function buildHamalayi(scene, physics) {
     flagLine(gt.at(gt.mast.x, gt.mast.y, gt.mast.z), gt.at(gt.lantern.x, gt.lantern.y + 0.4, gt.lantern.z), 1.4, 0.7);
     // the old gate, centred on the walk (the landing → the tree bridge), its opening across it
     place('lba1-gate', -5.5, 58, 0, (k) => oldGate(k), [[-2.6, 0], [0, 0], [2.6, 0]]);
-    place('lba1-camp', -47, 64, 0.3, (k) => rebelCamp(k), [[-3.1, -4.4], [3.1, -4.4], [-3.1, 4.4], [3.1, 4.4], [0, 0]]);
+    place('lba1-camp', -47, 64, 0.3, (k) => rebelCamp(k), [[-3.1, -4.4], [3.1, -4.4], [-3.1, 4.4], [3.1, 4.4], [0, 0]], 'lba1camp');
     place('lba1-waystone', 62, -50, 0.5, (k) => waystone(k), [[-2.1, -1.5], [2.1, -1.5], [-2.1, 1.5], [2.1, 1.5], [0, 0]]);
   }
 
