@@ -1,6 +1,6 @@
 # POLISH-AUDIT, chapters 3–12 (27.10.2026, at 6720843)
 
-**SPOILERS. The user plays chapters 1–2 only; do not send him this list or its screenshots.**
+**SPOILERS. The user plays chapters 1–2 only; do not send this list or its screenshots.**
 Screenshots stay in the session scratchpad (polish-audit/), not in the repo.
 
 | # | Chapter / place | What is wrong | Source | Size | Status |
