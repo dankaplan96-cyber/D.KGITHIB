@@ -17,9 +17,10 @@ const WARM = 1.5, MEASURE = 6;
 // PERF-BATTERY-2: "as played": every route again with the automatic resolution ON, as the game runs it in play (the
 // fixed runs above keep it off, for comparison between machines and builds). Each preset's played routes run in a row
 // and the factor carries over from one route to the next, as it does in play; it starts at ×1 on the preset's first.
-// A played route's warm-up lasts until the factor has held for PLAY_HOLD s (at least PLAY_MIN, at most PLAY_MAX s),
-// then it is measured as the others; the report gives the factor it settled at and its range while measured.
-const PLAY_MIN = 4, PLAY_HOLD = 5, PLAY_MAX = 25;
+// A played route's warm-up lasts until the factor has held for PLAY_HOLD frames (two of the automatic resolution's
+// 90-frame windows; at least PLAY_MIN s, at most PLAY_MAX s: then "not settled"), then it is measured as the others;
+// the report gives the factor it settled at and its range while measured.
+const PLAY_MIN = 4, PLAY_HOLD = 180, PLAY_MAX = 25;
 export const BENCH_AREAS = ['house', 'arena', 'zeelich', 'desert', 'hamalayi'];
 
 export class Bench {
@@ -169,7 +170,7 @@ export class Bench {
         if (cur.played && !(prev?.played && prev.q === cur.q)) G.renderer.setAutoRes(true);
         else if (!cur.played && prev?.played) G.renderer.setAutoRes(false);
         G.benchAuto = !!cur.played;
-        cur.res = []; cur.dynAt = 0; cur.dyn = G.renderer.effScale();
+        cur.res = []; cur.held = 0; cur.dyn = G.renderer.effScale();
         G.state = 'play'; cur.r.setup(); cur.v?.apply(); t = 0; warm = 0; maxWarm = 0;
         cur.p0 = G.renderer.renderer.info.programs.length; cur.pw = cur.p0;   // (PERF-ARRIVAL: programs compiled in the warm-up / the measured window)
         G.hud?.toast?.('bench_route', { n: i + 1, of: plan.length });
@@ -184,8 +185,8 @@ export class Bench {
         if (cur.played && !cur.warmed) {
           // (as played: warm until the automatic resolution has settled)
           warm += real; maxWarm = Math.max(maxWarm, real * 1000);
-          const e = G.renderer.effScale(); if (e !== cur.dyn) { cur.dyn = e; cur.dynAt = warm; }
-          if ((warm >= PLAY_MIN && warm - cur.dynAt >= PLAY_HOLD) || warm >= PLAY_MAX) { cur.warmed = true; cur.warmS = warm; cur.t0 = t; G.perf.reset(); cur.pw = G.renderer.renderer.info.programs.length; }
+          const e = G.renderer.effScale(); if (e !== cur.dyn) { cur.dyn = e; cur.held = 0; } else cur.held = (cur.held || 0) + 1;
+          if ((warm >= PLAY_MIN && cur.held >= PLAY_HOLD) || warm >= PLAY_MAX) { cur.warmed = true; cur.warmS = warm; cur.capped = cur.held < PLAY_HOLD; cur.t0 = t; G.perf.reset(); cur.pw = G.renderer.renderer.info.programs.length; }
           return;
         }
         if (cur.played) cur.res.push(G.renderer.effScale());
@@ -201,7 +202,7 @@ export class Bench {
           const R = G.renderer;
           const cfg = G.graphicsConfig();
           const np = G.renderer.renderer.info.programs.length;
-          const rs = cur.res, res = cur.played && rs.length ? { end: rs[rs.length - 1], min: Math.min(...rs), max: Math.max(...rs), mean: +(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(2), changes: rs.filter((x, k) => k && x !== rs[k - 1]).length, warmS: +cur.warmS.toFixed(1) } : null;
+          const rs = cur.res, res = cur.played && rs.length ? { end: rs[rs.length - 1], min: Math.min(...rs), max: Math.max(...rs), mean: +(rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(2), changes: rs.filter((x, k) => k && x !== rs[k - 1]).length, warmS: +cur.warmS.toFixed(1), capped: !!cur.capped } : null;
           results.push({ q: cur.q, id: cur.r.id, label: cur.r.label, s, stalls, pacing, warmMaxMs: +maxWarm.toFixed(0), cfg, v: cur.v?.id, played: !!cur.played, res, prog: { warm: cur.pw - cur.p0, measured: np - cur.pw } });
           next();
         }
@@ -271,7 +272,7 @@ export class Bench {
       const s = x.s, P = x.pacing, r = x.res;
       if (!s) return `    ${x.id}: no frames`;
       return `    ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · >33ms ${P.over33} of ${s.frames}`
-        + ` · resolution settled at ×${r ? r.end : '?'}${r ? ` (×${r.min}–${r.max} while measured, mean ×${r.mean}, ${r.changes} change${r.changes === 1 ? '' : 's'}; settled after ${r.warmS} s)` : ''} · render pixel ratio ${x.cfg.pr}`
+        + ` · resolution settled at ×${r ? r.end : '?'}${r ? ` (×${r.min}–${r.max} while measured, mean ×${r.mean}, ${r.changes} change${r.changes === 1 ? '' : 's'}; ${r.capped ? `NOT settled within ${r.warmS} s` : `settled after ${r.warmS} s`})` : ''} · render pixel ratio ${x.cfg.pr}`
         + `${s.gpuMs ? ` · GPU time p50 ${s.gpuMs.p50} (p95 ${s.gpuMs.p95}) ms` : ''} · sim CPU p50 ${s.simMs.p50} · render submit CPU p50 ${s.renderMs.p50} ms · lamps lit ${s.lamps ?? '?'} · draw calls ${s.calls} · triangles ${(s.tris / 1000).toFixed(0)}k`;
     };
     for (const x of fixed) {

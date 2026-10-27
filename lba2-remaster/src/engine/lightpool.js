@@ -102,13 +102,14 @@ export class LightPool {
         x.s.getWorldPosition(_p); by.set(x.s, { s: x.s, x: _p.x, y: _p.y, z: _p.z });
       }
       x.w = want.has(x.s) ? Math.min(1, x.w + dt / FADE) : Math.max(0, x.w - dt / out);
-      if (x.w <= 0) x.s = null;
+      if (x.w <= 0) { x.s = null; x.rest = dt !== Infinity; }   // (a light that has just gone dark takes its next lamp a frame later: never a jump while lit)
     }
     for (const c of cand.slice(0, n)) {
       if (S.some((x) => x.s === c.s)) continue;
-      const free = S.find((x) => !x.s); if (!free) break;
+      const free = S.find((x) => !x.s && !x.rest); if (!free) break;
       free.s = c.s; free.w = dt === Infinity ? 1 : Math.min(1, dt / FADE);
     }
+    for (const x of S) x.rest = false;
     for (let i = 0; i < n; i++) {
       const L = this.lights[i], x = S[i], c = x.s && by.get(x.s);
       if (!c || !(x.w > 0)) { L.intensity = 0; continue; }

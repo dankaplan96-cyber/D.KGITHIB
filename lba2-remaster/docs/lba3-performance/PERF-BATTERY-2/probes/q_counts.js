@@ -45,12 +45,12 @@ void main(){ float n = 0.0; for (int i = 0; i < ${NL}; i++) { if (lp[i].w > 0.0 
   };
   // shaded fragments passing the depth test in three's draw order (an overdraw count, as PERF-BATTERY's attrib.mjs):
   // every fragment adds 1 to an 8-bit target at half resolution, ×4 and scaled to the scene pass's pixels
-  const over = new THREE.MeshBasicMaterial({ color: 0x010101, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, toneMapped: false, fog: false });
+  const over = new THREE.MeshBasicMaterial({ color: new THREE.Color().setRGB(1 / 255, 1 / 255, 1 / 255, THREE.LinearSRGBColorSpace), blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, toneMapped: false, fog: false });
   const frags = () => {
     const prev = R.getRenderTarget(), au = R.shadowMap.autoUpdate; R.shadowMap.autoUpdate = false;
     const bg = G.scene.background; G.scene.background = null; G.scene.overrideMaterial = over;
     R.setRenderTarget(T); R.setClearColor(0, 0); R.clear();
-    try { G.renderer.pre?.(); G.renderer.mid?.(); R.render(G.scene, G.camera); } finally { G.renderer.post?.(); G.scene.overrideMaterial = null; G.scene.background = bg; R.shadowMap.autoUpdate = au; R.setRenderTarget(prev); }
+    try { R.render(G.scene, G.camera); } finally { G.scene.overrideMaterial = null; G.scene.background = bg; R.shadowMap.autoUpdate = au; R.setRenderTarget(prev); }
     const px = new Uint8Array(Wt * Ht * 4); R.readRenderTargetPixels(T, 0, 0, Wt, Ht, px);
     let n = 0; for (let i = 0; i < px.length; i += 4) n += px[i];
     const T1 = G.renderer.composer.renderTarget1, s = G.renderer.effScale();
