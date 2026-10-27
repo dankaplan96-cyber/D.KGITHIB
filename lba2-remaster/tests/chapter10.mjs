@@ -99,24 +99,37 @@ await shot('C10-04-lighthouse.png');
 is("Hesk's glider to Desert Island", await ev(() => { T.exit('outdoor-lighthouse'); const L = game.story.cur.landing('citadel'); T.tp(L.x, L.z); return T.fly(1); }), (v) => v === 'desert');
 await shot('C10-05-desert-landing.png');
 is('Ilka; the bore relay set; the drones come', await ev(() => { T.talk('ilka'); const b = game.rooms.desert.bore; T.useAt(b.x, b.z); return [game.flags.c10_ilka, game.flags.c10_boreRelay, game.story.cur.boreDrones().filter((e) => e.present).length]; }), (v) => v[0] === true && v[1] === true && v[2] > 0);
-// the three drones by throws (the drones' AI uses unseeded Math.random, so a drone can dodge many throws in a row):
-// each throw from a fresh side and distance, aimed again a moment before it leaves the hand; up to 120 throws per
-// drone. Only a drone still flying after that is beaten through its own damage rule, and that is logged as ISO.
-const drones = await ev((MAXT) => { const G = game, h = G.hero, out = [], iso = [];
-  for (const d of G.story.cur.boreDrones()) {
+// the bore fight, two waves (DIFFICULTY): the three drones first (they come one after another), then Vesk's clone, the Grobo
+// guard and the sentry. Each by throws (the AI uses unseeded Math.random, so an enemy can dodge many throws in a row): each
+// throw from a fresh side and distance, aimed again a moment before it leaves the hand (a charged one at an armoured guard,
+// a sentry's shield: hold F); up to 120 throws per enemy. Only one still standing after that is beaten through its own damage
+// rule, and that is logged as ISO.
+await ev(() => { window.beat = (list, MAXT, charged) => { const G = game, h = G.hero, out = [], iso = [];
+  for (const d of list) {
     let n = 0;
     for (; n < MAXT && d.alive; n++) {
       const a = Math.PI / 2 + n * 2.4, r = 2.8 + (n % 3) * 0.5, x = d.pos.x - Math.sin(a) * r, z = d.pos.z - Math.cos(a) * r;
-      h.pos.set(x, G.physics.groundAt(x, z), z); h.onGround = true; h.vy = 0; h.hp = h.maxHp; G.ball.state = 'idle';
+      h.pos.set(x, G.physics.groundAt(x, z), z); h.onGround = true; h.vy = 0; h.hp = h.maxHp; h.mp = h.mpMax; G.ball.state = 'idle'; G.combatDir.grace = 0;
       h.angle = h.angleTo(d); G.step(0.05); h.angle = h.angleTo(d);
-      T.tap('KeyF'); G.step(1.0); if (G.state === 'dialog') T.talkAll();
+      if (charged) { G.input.keys.add('KeyF'); G.input.taps.add('KeyF'); G.step(1.3); G.input.keys.delete('KeyF'); G.step(1.0); } else { T.tap('KeyF'); G.step(1.0); }
+      if (G.state === 'dialog') T.talkAll();
     }
     if (d.alive) { d.damage(99, null); G.step(0.5); out.push(d.def.id + ': ISO assist after ' + n + ' throws'); iso.push(d.def.id + ' killed by its damage rule after ' + n + ' throws'); } else out.push(d.def.id + ': thrown (' + n + ' throws)');
   }
+  return [out, iso]; }; });
+const drones = await ev((MAXT) => { const G = game; const r = beat(G.story.cur.boreDrones(), MAXT, false);
   for (let i = 0; i < 20; i++) { G.step(0.2); T.talkAll(); }
-  return [out, G.story.cur.boreDrones().map((d) => d.alive), G.flags.c10_bore, T.obj(), iso]; }, MAX_THROWS);
-is("the bore's drones beaten, the bore relay done (4/5)", drones.slice(0, 4), (v) => v[1].every((a) => a === false) && v[2] === true && v[3].length > 0);
-for (const a of drones[4]) { assists.push('drone ' + a); log('ISO  drone ' + a); }
+  return [...r, G.story.cur.boreDrones().map((d) => d.alive), G.flags.c10_boreW2, G.flags.c10_bore]; }, MAX_THROWS);
+is("wave 1 (the drones) beaten: wave 2 is on, the station is not done yet", drones, (v) => v[2].every((a) => a === false) && v[3] === true && !v[4]);
+for (const a of drones[1]) { assists.push('drone ' + a); log('ISO  drone ' + a); }
+is('the break: a heart and a flask lie by him, the clone is out of the cabin, the guard follows, the sentry holds the gate', await ev(() => { const G = game, lk = G.pickups.list.filter((p) => p.loot).map((p) => p.type + ':' + p.loot);
+  G.step(0.5); const vis = Object.fromEntries(G.story.cur.boreGuards().map((e) => [e.def.id, e.present])); return { lk, vis, sentryAtGate: Math.hypot(G.enemies.find((e) => e.def.id === 'nsentry').pos.x - G.rooms.desert.post.gate.x, G.enemies.find((e) => e.def.id === 'nsentry').pos.z - G.rooms.desert.post.gate.z) < 6 }; }),
+  (v) => v.lk.some((x) => /^heart:c10-bore-heart/.test(x)) && v.lk.some((x) => /^flask:c10-bore-flask/.test(x)) && v.vis.nclone === true && v.vis.nsentry === true && v.sentryAtGate);
+const guards = await ev((MAXT) => { const G = game; const r = beat(G.story.cur.boreGuards(), MAXT, true);
+  for (let i = 0; i < 20; i++) { G.step(0.2); T.talkAll(); }
+  return [...r, G.story.cur.boreFoes().map((d) => d.alive), G.flags.c10_bore, T.obj()]; }, MAX_THROWS);
+is("wave 2 (clone, guard, sentry) beaten, the bore relay done (4/5)", guards, (v) => v[2].every((a) => a === false) && v[3] === true && v[4].length > 0);
+for (const a of guards[1]) { assists.push('guard ' + a); log('ISO  guard ' + a); }
 await shot('C10-06-bore.png');
 is('the glider to the Hamalayi', await ev(() => { const L = game.story.cur.landing('desert'); T.tp(L.x, L.z); return T.fly(2); }), (v) => v === 'hamalayi');
 await shot('C10-07-monastery.png');

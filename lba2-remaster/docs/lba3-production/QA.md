@@ -202,6 +202,20 @@ Human-playtest items (not judgeable by the bot; balance unchanged): the Zeelich 
 fights when HP is low, the stepping-stone hops, the overload-coil phase of the final fight. The bot never heals at
 givers and carries low HP through the late chapters; a player normally would.
 
+DIFFICULTY (the bore fight and the galleries; POLISH-AUDIT row 9). Bot (ASSIST=1, Retry on, 12 HP max), logs in the
+session scratchpad `difficulty/`. Before, segment 13 x3: the bore step ended at 1, 2, 1 HP with five enemies finished by an
+ISO assist each time (the first full log had one death); bore-only x3: the sentry at the gate took the bot from 10 to 2 HP
+before the relay, then an ISO assist beat all six. After, segment 13 x3: wave 1 (drones) ends at 10 HP each time; the bore
+step ends at 8, 11, 4 HP, 0 deaths, ISO assists for 1-2 enemies (the sentry's shield, once the guard too) instead of 5-6;
+bore-only x4 on the final numbers: 0 deaths, 1-2 assisted. (A first version with a 5-HP armour-2 clone killed the bot after
+two Retries in 2 of 4 runs: the clone is now 4 HP, armour 1.) Galleries (segment 14 to Sendell's door) x3 before: 8, 8, 2 HP;
+after: 12, 9, 10 HP (and 12, 7, 9 chained from the new segment 13 save), 0 deaths; the full segment 14 passes (0 deaths, 0
+assists). What changed: two waves with a checkpoint save, a heart and a flask between (and a second heart when the clone falls
+at 6 HP or less); the sentry is wave 2, not a fight on the way in; the galleries' mites sleep further from the way in and wake
+one after the other (Mite def.wake); nothing bites across a drop (mite, Grobo baton, sentry); two supply crates (givers) on
+the shelves. The bot rummages them only below 9 HP. The i-frames (Hero.damage, 1.1 s) are checked in tests/combat.mjs.
+Balance by a human is still untested.
+
 ### Packaged app
 | Check | Result |
 |---|---|

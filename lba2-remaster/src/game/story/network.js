@@ -29,6 +29,9 @@ export class Network extends ChapterBase {
   region() { return REGION_OF[this.room()] || 'citadel'; }
   done() { return STATIONS.filter((s) => this.f['c10_' + s]).length; }
   boreDrones() { return this.game.enemies.filter((e) => /^ndrone/.test(e.def?.id || '')); }
+  // the bore fight, wave 2: Vesk's guards out of the cabins (the clone and the Grobo guard) and the sentry at the gate
+  boreGuards() { return this.game.enemies.filter((e) => /^(nclone|nguard|nsentry)$/.test(e.def?.id || '')); }
+  boreFoes() { return [...this.boreDrones(), ...this.boreGuards()]; }
   ridgeMites() { return this.game.enemies.filter((e) => /^nmite|^ncrawler/.test(e.def?.id || '')); }
 
   // where Hesk's glider comes down in each of Twinsun's regions, and where Hesk waits beside it (the glider never
@@ -68,17 +71,31 @@ export class Network extends ChapterBase {
   // ---------------------------------------------------------------- cast
   enemyDefs() {
     const out = [], D = this.D, M = this.M;
-    if (D?.bore) for (let i = 0; i < 3; i++) {
-      const b = D.bore, P = [0, 1, 2, 3, 4, 5].map((k) => { const a = (k / 6) * Math.PI * 2 + i * 2.1; return [b.x + Math.cos(a) * 7, b.z + Math.sin(a) * 7]; });
-      out.push({ id: 'ndrone' + i, kind: 'drone', group: 'nbore', x: P[0][0], z: P[0][1], patrol: P, wp: 1, when: (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore });
+    // THE BORE FIGHT (DIFFICULTY: it was six at once on a small pad, the drones all round the relay from the first second).
+    // Wave 1: the three patrol drones, coming in over the east fence one after another (the second 8 s after the first,
+    // the third 16 s, or at once when one falls: boreWant) and patrolling the ring round the bore from their own side.
+    // Wave 2, once the drones are down (f.c10_boreW2: a heart and a flask, a breath, the save): Vesk's clone and Grobo
+    // guard out of the two north cabins' doors, and the sentry at the gate (the old pad's six, in two groups).
+    // The station is done when all of them are down.
+    const live = (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore;
+    if (D?.bore) {
+      const b = D.bore, post = D.post, R = 7, ring = [0, 1, 2, 3, 4, 5].map((k) => { const a = (k / 6) * Math.PI * 2; return [b.x + Math.cos(a) * R, b.z + Math.sin(a) * R]; });
+      // (the three come over the east fence, 3 m inside it; spread along it, never inside a cabin or the tank)
+      const xe = Math.min(b.x + 14, (post?.x1 ?? b.x + 16) - 2.5);
+      [[xe, b.z - 1.0], [xe - 1.0, b.z - 7.0], [xe - 1.0, b.z + 9.0]].forEach(([x, z], i) => {
+        const P = i === 1 ? [...ring].reverse() : ring, wp = P.reduce((best, p, k) => (Math.hypot(p[0] - x, p[1] - z) < Math.hypot(P[best][0] - x, P[best][1] - z) ? k : best), 0);
+        out.push({ id: 'ndrone' + i, kind: 'drone', group: 'nbore', x, z, patrol: P, wp, when: (f) => live(f) && !f.c10_boreW2 && (this.boreWant ?? 1) > i });
+      });
+      // a Grobo guard of Vesk's and a clone come out of the two north cabins (doors on the pad's side, 1 m clear of them)
+      const face = (x, z) => Math.atan2(b.x - x, b.z - z);
+      const cl = { x: b.x - 5.4, z: b.z - 9.3 }, gd = { x: b.x + 10.1, z: b.z - 9.4 };
+      out.push({ id: 'nclone', kind: 'fclone', group: 'nbore', x: cl.x, z: cl.z, angle: face(cl.x, cl.z), hp: 4, armour: 1, when: (f) => live(f) && !!f.c10_boreW2 });
+      out.push({ id: 'nguard', kind: 'guardG', group: 'nbore', x: gd.x, z: gd.z, angle: face(gd.x, gd.z), when: (f) => live(f) && !!f.c10_boreW2 && (this.boreWant ?? 2) > 1 });
     }
-    // a Grobo guard of Vesk's stands at the bore itself
-    if (D?.bore) out.push({ id: 'nclone', kind: 'fclone', group: 'nbore', x: D.bore.x - 4, z: D.bore.z + 4, angle: Math.PI * 0.75, when: (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore });
-    if (D?.bore) out.push({ id: 'nguard', kind: 'guardG', group: 'nbore', x: D.bore.x + 4, z: D.bore.z + 4, angle: Math.PI * 1.25, when: (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore });
     if (D?.bore && D.post) {
-      // a lone sentry automaton at the post's gate: met on its own before the drones at the bore
+      // the sentry automaton at the post's gate: the last of the second wave (it keeps its post: it comes at him when he walks to it)
       const gt = D.post.gate;
-      out.push({ id: 'nsentry', kind: 'sentry', x: gt.x + 1.5, z: gt.z + 2.5, angle: 0, group: 'npost', when: (f) => this.isCur(f) && !!f.c10_started && !f.c10_bore });
+      out.push({ id: 'nsentry', kind: 'sentry', x: gt.x + 1.5, z: gt.z + 2.5, angle: 0, group: 'npost', when: (f) => live(f) && !!f.c10_boreW2 });
     }
     if (M?.observatory) {
       const d = M.observatory.door, g = M.monastery.gate;
@@ -234,7 +251,7 @@ export class Network extends ChapterBase {
       }
       case 'c10bore':
         h.act('use', 1.0, () => {
-          f.c10_boreRelay = true; this.lightRelay('bore');
+          f.c10_boreRelay = true; this.lightRelay('bore'); this.boreT = 0; this.boreWant = undefined;
           this.story.refreshCast(); g.audio.play('alert');
           this.chain([['narrator', 'c10_relay_bore'], ['hero', 'c10_drones']], () => { g.updateObjective(); g.save(false); });
         }, 0.5);
@@ -355,13 +372,47 @@ export class Network extends ChapterBase {
     if (r === 'valves') { const V = this.R.valves; for (const v of V.valves) v.setOpen(!!f.c10_valveSet?.[v.i]); V.gauges.set(this.gaugeLevels()); }
     if (r === 'lighttop') { const d = f.c10_dials || [0, 1, 2]; this.R.lighttop.dials?.forEach((x, i) => x.set?.(d[i])); this.R.lighttop.transmitter?.setOn?.(!!f.c10_light); }
   }
-  update() {
+  // wave 2 of the bore fight: the last drone is down. A heart and a flask pop out beside him, Ilka says so, the guards
+  // come out of the cabins, and the save is made here (a Retry starts the second wave, not the first)
+  startBoreWave2() {
+    const g = this.game, f = this.f, h = g.hero;
+    f.c10_boreW2 = true; this.boreWant = 1; this.boreT = 0;   // (the clone first: the guard follows, see update)
+    const a = h.angle + Math.PI, x = h.pos.x + Math.sin(a) * 1.1, z = h.pos.z + Math.cos(a) * 1.1, y = g.physics.groundAt(x, z, h.pos.y + 1) + 1.0;
+    g.giveBonus(['life'], 1, x, y, z, null, { loot: 'c10-bore-heart' });
+    g.giveBonus(['magic'], 1, x, y, z, null, { loot: 'c10-bore-flask' });
+    this.story.refreshCast();
+    g.alertGroup('nbore', h.pos, 1);
+    g.audio.play('alert');
+    this.chain([['ilka', 'c10_ilka_w2']], () => { g.updateObjective(); g.save(false); });
+  }
+  update(dt = 0) {
     const g = this.game, f = this.f;
     if (!this.isCur()) return;
     if (this.room() === 'hamalayi') this.M.snow.focus = g.hero.pos;
-    if (f.c10_boreRelay && !f.c10_bore && g.state === 'play') {
+    if (!f.c10_boreRelay || f.c10_bore) { if (this.boreWant != null) { this.boreWant = undefined; this.boreT = 0; } }
+    else if (g.state === 'play') {
       const ds = this.boreDrones();
-      if (ds.length && ds.every((e) => !e.alive)) { f.c10_bore = 'pending'; this.chain([['ilka', 'c10_ilka_3'], ['dallan', 'c10_dallan_1']], () => { f.c10_bore = false; this.stationDone('bore'); }); }
+      if (!f.c10_boreW2) {
+        // wave 1: the drones come one at a time (see enemyDefs); the next is there at once when one falls
+        this.boreT = (this.boreT || 0) + dt;
+        const dead = ds.filter((e) => !e.alive).length, want = Math.min(3, Math.max(1 + (this.boreT >= 8) + (this.boreT >= 16), dead + 1));
+        if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast(); }
+        if (ds.length && dead === ds.length) this.startBoreWave2();
+      } else {
+        // wave 2: the clone, then the Grobo guard 12 s later (at once when the clone falls, or after a load); the sentry holds the gate
+        const clone = this.game.enemies.find((e) => e.def?.id === 'nclone');
+        if (this.boreWant == null) this.boreT = 12;
+        this.boreT = (this.boreT || 0) + dt;
+        const want = this.boreT >= 12 || (clone && !clone.alive) ? 2 : 1;
+        // the first of them down and he is hurt: the clone's bonus is a heart, whatever the dice say (once)
+        if (clone && !clone.alive && !f.c10_boreH2 && g.hero.hp <= 6) {
+          f.c10_boreH2 = true;
+          g.giveBonus(['life'], 1, clone.pos.x, clone.pos.y + 0.8, clone.pos.z, g.hero.pos, { loot: 'c10-bore-heart2' });
+        }
+        if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast(); }
+        const foes = this.boreFoes();
+        if (foes.length && foes.every((e) => !e.alive)) { f.c10_bore = 'pending'; this.chain([['ilka', 'c10_ilka_3'], ['dallan', 'c10_dallan_1']], () => { f.c10_bore = false; this.stationDone('bore'); }); }
+      }
     }
     if (f.c10_pim && !f.c10_mitesSeen && this.room() === 'hamalayi' && g.state === 'play' && this.ridgeMites().some((e) => e.present && e.alive && e.distTo?.(g.hero) < 12)) {
       f.c10_mitesSeen = true; this.chain([['hero', 'c10_mites']]);

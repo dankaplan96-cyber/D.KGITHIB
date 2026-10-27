@@ -170,7 +170,7 @@ export class Guard extends Actor {
         break;
       case 'strike':
         anim = 'heavy'; sp = 2.2;
-        if (!this.hitDone && this.stateT > 0.12 && d < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(this.grobo ? 2 : 1, this.pos, true); g.audio.play('punch'); }
+        if (!this.hitDone && this.stateT > 0.12 && d < 1.6 && Math.abs(this.pos.y - hero.pos.y) < 1.6 && Math.abs(angleDiff(this.angle, this.angleTo(hero))) < 0.9) { this.hitDone = true; hero.damage(this.grobo ? 2 : 1, this.pos, true); g.audio.play('punch'); }
         if (this.stateT > 0.35) { this.state = 'recover'; this.stateT = 0; this.coolT = 1.2 * DF.cool; g.combatDir?.done(this); }
         break;
       case 'hurt':

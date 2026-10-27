@@ -79,6 +79,21 @@ r = await ev(() => {
 check('dodge: hit during the hop misses', r.hpIn === r.max, r);
 check('dodge: hit after it lands', r.hpOut < r.max, r);
 
+// 4b. DIFFICULTY: after a hit the hero is invulnerable for 1.1 s (no juggling between hits), and nothing bites across a drop
+r = await ev(() => {
+  const { G } = C; C.only([], [6190, 6], 0); const h = G.hero; h.invuln = 0; h.hurtT = 0; h.hp = h.maxHp; h.dead = false;
+  h.damage(1, null); const a = h.hp; C.step(0.5); h.damage(1, null); const b = h.hp; C.step(0.7); h.damage(1, null); const c = h.hp;
+  // a mite in its lunge on the ground, the hero 3 m above it (the galleries' chasm): no bite; level with it: bitten
+  C.only(['a_mite'], [6190, 6], 0); const m = C.put('a_mite', 6190, 8.0); m.state = 'lunge'; m.stateT = 0; m.bit = false; m.hp = m.maxHp = 50;
+  h.invuln = 0; h.hp = h.maxHp; h.pos.set(6190, m.pos.y + 3.0, 8.0); const hp0 = h.hp; m.update(0.05); const above = h.hp;
+  m.state = 'lunge'; m.stateT = 0; m.bit = false; h.invuln = 0; h.pos.set(6190, m.pos.y, 8.0); m.update(0.05); const level = h.hp;
+  return { max: h.maxHp, a, b, c, hp0, above, level };
+});
+check('after a hit the hero is invulnerable: a second hit 0.5 s later does nothing', r.a === r.max - 1 && r.b === r.a, r);
+check('... and a hit after the 1.1 s lands', r.c === r.a - 1, r);
+check('a mite does not bite the hero 3 m above it', r.above === r.hp0, r);
+check('... but bites him level with it', r.level === r.hp0 - 1, r);
+
 // 5. the ball at 15 fps does not pass through the wall; it comes back and is ready again
 r = await ev(() => {
   const { G } = C; C.only([], [6198, 7], Math.PI); G.hero.combat.equip('ball', true);
