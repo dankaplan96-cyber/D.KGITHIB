@@ -5,7 +5,7 @@
 // behave exactly as on the web. Saves (the game's localStorage) live in the user's app-data folder:
 //   Windows  %APPDATA%\LBA3 The Awakening        macOS  ~/Library/Application Support/LBA3 The Awakening
 //   Linux    ~/.config/LBA3 The Awakening
-const { app, BrowserWindow, protocol, ipcMain, Menu, shell } = require('electron');
+const { app, BrowserWindow, protocol, ipcMain, Menu, shell, powerMonitor } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
@@ -71,12 +71,25 @@ function createWindow() {
   // links out of the game (none today) open in the user's browser, never inside the game window
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' }; });
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app://')) e.preventDefault(); });
+  // PERF-BATTERY: the game draws less while the window can't be seen or isn't the one in use (backgroundThrottling is
+  // off so the music keeps playing; the user saw 91 % GPU with the game behind another window): its state, as it changes
+  const state = () => { if (!win.isDestroyed()) win.webContents.send('lba3:window', { focused: win.isFocused(), minimized: win.isMinimized(), visible: win.isVisible() }); };
+  for (const ev of ['focus', 'blur', 'minimize', 'restore', 'show', 'hide']) win.on(ev, state);
   win.loadURL('app://game/index.html');
   return win;
 }
 
+// PERF-BATTERY: battery or mains, for the game's battery profile (src/engine/power.js): asked once synchronously by
+// preload.js (so the first shaders are compiled for the right profile), then every change
+function onBattery() {
+  try { return typeof powerMonitor.isOnBatteryPowered === 'function' ? !!powerMonitor.isOnBatteryPowered() : !!powerMonitor.onBatteryPower; } catch { return null; }
+}
 app.whenReady().then(() => {
   protocol.handle('app', serve);
+  ipcMain.on('lba3:power-now', (e) => { e.returnValue = onBattery(); });
+  const power = (v) => { for (const w of BrowserWindow.getAllWindows()) w.webContents.send('lba3:power', v); };
+  powerMonitor.on('on-battery', () => power(true));
+  powerMonitor.on('on-ac', () => power(false));
   ipcMain.on('lba3:quit', () => app.quit());
   ipcMain.on('lba3:fullscreen', (e, on) => { const w = BrowserWindow.fromWebContents(e.sender); w?.setFullScreen(on ?? !w.isFullScreen()); });
   createWindow();

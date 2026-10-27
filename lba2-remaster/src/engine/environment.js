@@ -65,6 +65,31 @@ void main(){
   #include <fog_fragment>
 }`;
 
+// PERF-BATTERY: the sea. It was a fixed 1400 m plane of 220 × 220 squares (6.36 m: 96 800 triangles drawn every frame
+// outdoors on Citadel, the largest single mesh on the street), of which only the part within ~300 m of the camera can
+// be anything but fog. Now the same 6.36 m squares, on the same lattice (x and z multiples of SEA_STEP: the waves are
+// computed at the very same points), cover ±SEA_NEAR steps around the camera, and one ring of long quads carries the
+// sea on to ±SEA_FAR m, where everything is fog anyway (Environment.update moves the grid in whole steps). A point the
+// view can show unfogged is at most fog end (190 m) / cos(the screen corner's angle) ≈ 300 m away. 21.6k triangles.
+const SEA_STEP = 1400 / 220, SEA_NEAR = 51, SEA_FAR = 1000;
+function seaGeometry() {
+  const L = [-SEA_FAR];
+  for (let i = -SEA_NEAR; i <= SEA_NEAR; i++) L.push(i * SEA_STEP);
+  L.push(SEA_FAR);
+  const n = L.length, pos = new Float32Array(n * n * 3), idx = new Uint32Array((n - 1) * (n - 1) * 6);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const k = (j * n + i) * 3; pos[k] = L[i]; pos[k + 1] = 0; pos[k + 2] = L[j]; }
+  let o = 0;
+  for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) {
+    const a = j * n + i, b = a + 1, c = a + n, d = c + 1;   // (counter-clockwise seen from above, as the rotated plane was)
+    idx[o++] = a; idx[o++] = c; idx[o++] = b; idx[o++] = c; idx[o++] = d; idx[o++] = b;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setIndex(new THREE.BufferAttribute(idx, 1));
+  g.computeBoundingSphere();
+  return g;
+}
+
 const C = (c) => new THREE.Color(c);
 const PAL = {
   clear: { fog: C('#a8d2f2'), clouds: C('#ffffff'), sun: C('#fff1d6'), hemiSky: C('#d8ecff'), hemiGround: C('#6a7a4a'), deep: C('#1f6fae'), shallow: C('#3fc6c8'), sky: C('#bfe0ff') },
@@ -118,8 +143,7 @@ export class Environment {
       uSea: { value: null },
     }]);
     this.waterU.uSea.value = TX.sea;
-    const wgeo = new THREE.PlaneGeometry(1400, 1400, 220, 220);
-    wgeo.rotateX(-Math.PI / 2);
+    const wgeo = seaGeometry();
     this.water = new THREE.Mesh(wgeo, new THREE.ShaderMaterial({
       uniforms: this.waterU, vertexShader: WATER_VS, fragmentShader: WATER_FS, transparent: true, fog: true, depthWrite: false,
     }));
@@ -214,6 +238,8 @@ export class Environment {
     this.hemi.color.copy(mix('hemiSky'));
     this.hemi.groundColor.copy(mix('hemiGround'));
 
+    // PERF-BATTERY: the sea's grid follows the camera in whole grid steps (see seaGeometry)
+    this.water.position.set(Math.round(camera.position.x / SEA_STEP) * SEA_STEP, 0, Math.round(camera.position.z / SEA_STEP) * SEA_STEP);
     // the shadow camera follows the focus in whole shadow-map texels, so shadow edges don't crawl as he walks
     const sf = this.snapShadow(focus);
     this.sun.position.copy(sf).addScaledVector(this.sunDir, 80);

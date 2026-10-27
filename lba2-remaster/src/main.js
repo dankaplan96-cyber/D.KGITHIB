@@ -32,7 +32,9 @@ import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './
 import { enterArena } from './game/arena.js';
 import { Regions, CITADEL_REF, CHAPTER_AREAS } from './game/regions.js';
 import { travelRegion } from './game/travel.js';
-import { updateKitLod, enableBatching } from './game/kit.js';
+import { updateKitLod, enableBatching, LOD_BATCHES } from './game/kit.js';
+import { ShadowCache } from './engine/shadowcache.js';
+import { Power } from './engine/power.js';
 import { Hero, NPC, MagicBall, Bolts, Pickups, Particles, BEHAVIOURS, HERO_LOOK, PICK_TYPES } from './game/actors.js';
 import { Targeting, CombatDirector, WEAPONS } from './game/combat.js';
 import { Weapons, freshArms } from './game/weapons.js';
@@ -172,6 +174,10 @@ class Game {
     setLang(this.settings.lang);
 
     this.renderer = new Renderer($('#game'));
+    // PERF-BATTERY: on battery, the battery profile within the preset (engine/power.js, renderer.js setBattery); known
+    // before the first shader is compiled in the desktop app
+    this.power = new Power((on) => this.setBattery(on));
+    this.renderer.battery = this.power.onBattery === true;
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 2500);
     this.loadTimes = {};
@@ -233,6 +239,8 @@ class Game {
     this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
     this.renderer.setup(this.scene, this.camera);
     this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
+    // (PERF-BATTERY: the static casters drawn into a cached shadow map only when needed: engine/shadowcache.js)
+    this.shadowCache = new ShadowCache(this.renderer.renderer, this.env.sun, () => this.shadowCull.area, () => LOD_BATCHES.map((b) => b.mesh));
     this.renderer.setIntegrated(integratedGpu(this.perf.gpu || ''));   // (AUTO-FIT: the presets' pixel ratio on a high-density screen)
     // the graphics preset follows the GPU on a first start (integrated GPUs: Low or Medium, see perf.js); settings
     // saved before the presets were reworked (qv < 1) are re-picked too, unless they hold something other than the
@@ -408,6 +416,7 @@ class Game {
     { const T = (BootBar.timeline || []).concat([[Math.round(performance.now()), 'title']]); this.loadTimes.timeline = T; this.loadTimes.longestStep = Math.max(0, ...T.slice(1).map((x, i) => x[0] - T[i][0])); }
     this.perf.load = this.loadTimes;
     this.preparing = false;
+    if (this._powerWarm) { this._powerWarm = false; this.warmGraphics(); }   // (PERF-BATTERY: the power source changed while loading)
     this.last = performance.now();
     const boot = sessionStorage.getItem(BOOT_KEY);
     sessionStorage.removeItem(BOOT_KEY);
@@ -581,7 +590,11 @@ class Game {
     const f = $('#fade');
     f.style.transition = 'none';
     // (a freshly built area's shaders may take longer than a known one's: up to 20 s behind its card)
-    if (T.hold) { f.style.opacity = 1; if (!T.building && performance.now() - T.holdT > (T.long ? 20000 : 4000)) T.hold = false; return; }
+    if (T.hold) { f.style.opacity = 1; T.held = true; if (!T.building && performance.now() - T.holdT > (T.long ? 20000 : 4000)) T.hold = false; return; }
+    // PERF-BATTERY: the first frame drawn after a hold stays fully black too. It is the new scene's first real frame
+    // (its geometry's first draw, the static shadow cache, pieces that started moving leaving their batches): on the
+    // user's arrival route the frames after the black came at 90 % fade and counted, and showed, as stalls in view
+    if (T.held) { T.held = false; f.style.opacity = 1; this._fadeOp = 1; return; }
     if (T.card && T.called) { T.card.hide(); T.card = null; }
     if (this._transBudget != null) { dt = Math.min(dt, this._transBudget); this._transBudget -= dt; }
     T.t += dt;
@@ -688,10 +701,20 @@ class Game {
     try { R.setRenderTarget(null); R.compile(B.scene, B.cam); } catch (e) { console.warn('menu warm-up', e); } finally { R.setRenderTarget(prev); }
   }
 
+  // PERF-BATTERY: battery (true) or mains (false): the battery profile on or off within the preset, its shader variants
+  // prepared before the next frame is drawn (as a preset change; the last frame stays up meanwhile). Returns whether
+  // anything changed. (Also the benchmark's comparison and the tests: game.setBattery(true).)
+  setBattery(on) {
+    if (!this.renderer.setBattery(!!on)) return false;
+    if (this.preparing || !this.lightPool) this._powerWarm = true; else this.warmGraphics();
+    this.fit?.reset();
+    if (this.screen === 'settings') this.syncSettingsUI();
+    return true;
+  }
   // what the current preset does, for the benchmark's report
   graphicsConfig() {
     const R = this.renderer, W = this.world;
-    return { pr: R.pixelRatio(), msaa: R.composer?.renderTarget1?.samples ?? 0, fxaa: !!R.fxaa?.enabled, shadows: R.renderer.shadowMap.enabled, shadowMap: this.env?.sun?.shadow?.mapSize?.x ?? 0,
+    return { battery: R.batteryProfile(), shadowFilter: ['5 reads (battery)', 'PCF', 'PCF soft', 'VSM'][R.renderer.shadowMap.type] ?? '?', minScale: R.minDyn(), pr: R.pixelRatio(), msaa: R.composer?.renderTarget1?.samples ?? 0, fxaa: !!R.fxaa?.enabled, shadows: R.renderer.shadowMap.enabled, shadowMap: this.env?.sun?.shadow?.mapSize?.x ?? 0,
       bloom: !!R.bloom?.enabled, lamps: this.lightPool?.lights.length ?? 0, smallFar: W?.detail?.smallFar ?? '?', treeNear: W?.detail?.treeNear ?? '?' };
   }
   // after a graphics change (preset: lamp count, shadows): the new shader variants compile before the next frame
@@ -1116,11 +1139,23 @@ class Game {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && this.state === 'cinematic') this.pause();
       if (!document.hidden) this.last = performance.now(); // back from another tab: no catch-up for the time away
+      this.setBackground();
     });
+    // PERF-BATTERY: while the window can't be seen or is not the one in use, the game is drawn at BG_FPS (the user saw
+    // 91 % GPU with it behind another window: the desktop app keeps running in the background for its music). The game
+    // goes on as before (it keeps real time in steps of at most 1/30 s); back in focus, the next frame is at full rate.
+    addEventListener('focus', () => { this._blurred = false; this.setBackground(); });
+    window.desktop?.onWindow?.((st) => { this._win = st; this.setBackground(); });
     // F9 / ?perf: frame-time overlay (its own key: F1–F4 pick behaviours; a held key toggles once)
     addEventListener('keydown', (e) => { if (e.code === 'F9') { e.preventDefault(); if (!e.repeat) this.perf.overlay(); } });
     if (new URLSearchParams(location.search).has('perf')) this.perf.overlay(true);
-    addEventListener('blur', () => { if (this.state === 'cinematic') this.pause(); });
+    addEventListener('blur', () => { if (this.state === 'cinematic') this.pause(); this._blurred = true; this.setBackground(); });
+  }
+  setBackground() {
+    const W = this._win, bg = !!(document.hidden || this._blurred || (W && (!W.focused || W.minimized || !W.visible)));
+    if (bg === !!this.background) return;
+    this.background = bg; this._due = 0;
+    this.renderer._fb.length = 0;   // (the automatic resolution starts its count again)
   }
   // the label of the key bound to an action ("E", "Space"...), for prompts
   keyName(action) { return keyLabel(keyFor(action)); }
@@ -1353,6 +1388,7 @@ class Game {
       camDist: () => t('set_h_cd'),
       res: () => t('set_h_res_' + s.res),
       aa: () => t(s.quality === 'low' ? 'set_h_aa_low' : 'set_h_aa_' + s.aa),
+      quality: () => (this.renderer.batteryProfile() ? t('set_h_q_battery') : ''),   // (PERF-BATTERY)
       minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
     };
     document.querySelectorAll('#settings [data-hint]').forEach((row) => { row.querySelector('.set-hint').textContent = hint[row.dataset.hint]?.() ?? ''; });
@@ -1867,7 +1903,7 @@ class Game {
     // is due is skipped: nothing is simulated or drawn, the last frame stays on screen, and keys tapped meanwhile
     // wait in Input for the next frame. Due times step by the limit (a frame late by more than one interval
     // starts the count again), so at 30 on a 60 Hz screen every other refresh is drawn: an even 33 ms.
-    const cap = this.benching ? 0 : this.frameCapMs;
+    const cap = this.benching ? 0 : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
     if (cap && !this.testFreeze && !this.preparing) {
       if (now < (this._due || 0) - (this._vsync || 16.7) / 2) { requestAnimationFrame((t2) => this.loop(t2)); return; }
       this._due = now - (this._due || 0) > cap ? now + cap : this._due + cap;
@@ -1901,7 +1937,7 @@ class Game {
     let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
     this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps });
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark)
-    if (this.state === 'play' && !this.trans && !this.benching) this.renderer.adapt(real * 1000);
+    if (this.state === 'play' && !this.trans && !this.benching && !this.background) this.renderer.adapt(real * 1000);
   }
 
   // Deterministic stepping for automated tests: game.step(seconds).
@@ -2117,6 +2153,7 @@ class Game {
 }
 
 const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
+const BG_FPS = 8;   // (PERF-BATTERY: frames a second drawn while the window is in the background)
 const TEX_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap'];
 const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e) e.textContent = text; };
 // the loading screen's bar (#27): real steps, and across the long synchronous builds an estimated pace (this
