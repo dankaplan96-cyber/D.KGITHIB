@@ -23,6 +23,7 @@ import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import '../text/ch3.js';
 import { FinaleFx, COIL_Y, COIL_R } from './finale-fx.js';
+import { revealBeat, twoShot, solidAt } from './revealcam.js';
 
 const ROOMS = { 'c3-shaft': 'c3shaft', 'c3-deep': 'c3deep', 'c3-gallery': 'c3gallery', 'c3-sendell': 'c3sendell', 'c3-core': 'c3core' };
 const CIRCUIT = { A: true, B: false, C: true }; // the diagram: A and C to the exchanger, B to the drain
@@ -305,15 +306,35 @@ export class Chapter3 extends ChapterBase {
     if (id === 'c3sendell' && !f.c3_sendell) {
       const S = this.R.c3sendell;
       S.presence?.setVisible?.(true); S.presence?.setIntensity?.(1);
+      const beat = this.sendellBeat(S);   // (REVEAL-CAMS: the camera closes on Twinsen and her light; null with ?nocine and in the tests)
       this.chain([['sendell', 'c3_sendell_1'], ['hero', 'c3_tw_sendell1'], ['sendell', 'c3_sendell_2'], ['hero', 'c3_tw_sendell2'], ['sendell', 'c3_sendell_3'],
         ['hero', 'c3_tw_sendell3'], ['sendell', 'c3_sendell_4'], ...(f.crystalsAll ? [['sendell', 'c3_sendell_crystals']] : []), ['balradio', 'c3_bal_radio2'], ['balradio', 'c3_bal_radio3']], () => {
+        beat?.release();
         f.c3_sendell = true; S.presence?.setIntensity?.(0.45); g.updateObjective(); g.save(false);
-      });
+      }, (i, id) => { if (id === 'balradio') beat?.release(); });   // (her words done: the view eases back as Baldino's radio comes in)
     }
     if (id === 'c3core' && !f.c3_fight && !this.resumeFight) {
       this.chain([['vesk', 'c3_core_vesk1'], ['hero', 'c3_core_tw1'], ['vesk', 'c3_core_vesk2'], ['vesk', 'c3_core_vesk3']], () => this.startFight());
     }
     if (id === 'c3core' && f.c3_fight && !f.c3_turned) g.audio.setMood?.('boss');
+  }
+  // REVEAL-CAMS: Twinsen stands at the pool's rim, a few metres from her light and not across the room at the door, and the
+  // camera comes in to a medium two-shot of the two of them; it holds through her words and eases back to the play view
+  // as the radio comes in. The position is the same whether the beat plays, is cut short, or is off.
+  sendellBeat(S) {
+    const g = this.game, h = g.hero, sp = S.sendellSpot, from = S.spawn;
+    if (!sp || !from) return null;
+    const ux = from.x - sp.x, uz = from.z - sp.z, l = Math.hypot(ux, uz) || 1, r = 3.75;
+    const x = sp.x + (ux / l) * r, z = sp.z + (uz / l) * r;
+    h.pos.set(x, g.physics.groundAt(x, z), z);
+    h.angle = Math.atan2(sp.x - x, sp.z - z);
+    g.lastSafe = { x, z };
+    const beat = revealBeat(g, { room: 'c3sendell' });
+    if (!beat) return null;
+    const bounds = { round: { x: sp.x, z: sp.z, r: 6.2 } };    // (the room's inside is 7.4 m; the wall stays well behind the lens)
+    const memo = {};
+    beat.show(({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.15, z: h.pos.z }, { x: sp.x, y: sp.y, z: sp.z }, { bounds, ok: (x, y, z) => !solidAt(g, x, y, z, 0.45), height: 1.05, drop: 0.7, fov: 44, dist: 5.8, memo, t }));
+    return beat;
   }
   plates() {
     const C = this.R.c3core;

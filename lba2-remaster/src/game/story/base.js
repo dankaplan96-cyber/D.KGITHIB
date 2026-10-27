@@ -81,12 +81,14 @@ export class ChapterBase {
     if (N[id] >= after) { N[id] = -1; g.hud.toast(key, vars); }
   }
 
-  // Run a conversation between several speakers: [[speakerId, textKey], ...]
-  chain(lines, done) {
+  // Run a conversation between several speakers: [[speakerId, textKey], ...]. `onLine(i, speakerId, textKey)` is called
+  // as each line is about to be said (a camera beat letting go before the radio's lines, say); it changes nothing else.
+  chain(lines, done, onLine) {
     const g = this.game;
     const next = (i) => {
       if (i >= lines.length) { done?.(); return; }
       const [id, key] = lines[i];
+      onLine?.(i, id, key);
       const sp = this.speaker(id);
       const name = id === 'narrator' ? '' : 'n_' + (id === 'hero' ? 'hero' : id);
       const text = Array.isArray(t(key)) ? t(key) : [t(key)];

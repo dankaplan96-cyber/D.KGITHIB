@@ -11,8 +11,10 @@
 // at the Citadel lighthouse (playable): she tunes the old transmitter (sun, wave, star) and warns the
 // whole island. Back on Zeelich the key opens the shield; Vesk refuses to listen and goes down the drill
 // shaft. Twinsen follows him — chapter 3.
+import * as THREE from 'three';
 import { ChapterBase } from './base.js';
 import '../text/ch2.js';
+import { revealBeat, twoShot, solidAt } from './revealcam.js';
 
 const DIAL = ['sun', 'wave', 'star'];
 // Zeelich's street folk and where they stand
@@ -228,7 +230,8 @@ export class Chapter2 extends ChapterBase {
           const lines = [['vesk', 'c2_vesk_1'], ['hero', 'c2_tw_vesk1'], ['vesk', 'c2_vesk_2']];
           if (this.npc('baldino')?.present) lines.push(['baldino', 'c2_bal_vesk']);
           lines.push(['vesk', 'c2_vesk_3'], ['hero', 'c2_tw_vesk2'], ['vesk', 'c2_vesk_4']);
-          return c(lines, () => this.veskDescends());
+          const beat = this.veskBeat();   // (REVEAL-CAMS: a close two-shot while he speaks, then the low view of the descent; null with ?nocine and in the tests)
+          return c(lines, () => this.veskDescends(beat));
         }
         return false;
     }
@@ -326,10 +329,43 @@ export class Chapter2 extends ChapterBase {
     g.camRig.shake(0.4);
     this.chain([['hero', 'c2_shield_down']], () => { g.updateObjective(); g.save(false); });
   }
-  veskDescends() {
+  // REVEAL-CAMS: Vesk's last words in a medium two-shot with Twinsen, then (veskDescends) the low view of him on the lift
+  veskBeat() {
+    const g = this.game, h = g.hero, vesk = this.npc('vesk');
+    const beat = revealBeat(g);
+    if (!beat || !vesk) return null;
+    const ok = (x, y, z) => !solidAt(g, x, y, z, 0.45);
+    const memo = {};
+    beat.show(({ t }) => twoShot({ x: h.pos.x, y: h.pos.y + 1.2, z: h.pos.z }, { x: vesk.pos.x, y: vesk.pos.y + 1.3, z: vesk.pos.z }, { ok, memo, prefer: { x: -1, z: -1 }, height: 1.25, drop: 0.5, fov: 40, dist: 5.4, t }), 2.2);
+    return beat;
+  }
+  // the camera for the descent: down at the lift's lip, a few metres ahead of him and to one side as he walks onto
+  // the pad, looking up at him and following him down as the pad sinks
+  veskDescentFrame(pad, vesk) {
+    const g = this.game, ok = (x, y, z) => !solidAt(g, x, y, z, 0.45);
+    const y0 = pad.y ?? g.physics.groundAt(pad.x, pad.z), base = Math.atan2(pad.x - vesk.pos.x, pad.z - vesk.pos.z);
+    let at = null;
+    for (const r of [4.4, 3.8, 3.2]) for (const da of [0.55, -0.55, 0.9, -0.9, 0.2, -0.2, 1.3, -1.3]) {
+      if (at) break;
+      const a = base + da, x = pad.x + Math.sin(a) * r, z = pad.z + Math.cos(a) * r;
+      let good = true;
+      for (let k = 0.2; k <= 1.0001; k += 0.2) if (!ok(pad.x + (x - pad.x) * k, y0 + 0.4, pad.z + (z - pad.z) * k)) { good = false; break; }
+      if (good) at = { x, z };
+    }
+    at ??= { x: pad.x - Math.sin(base) * 3.2, z: pad.z - Math.cos(base) * 3.2 };
+    const pos = new THREE.Vector3(at.x, y0 + 0.4, at.z), look = new THREE.Vector3();
+    return () => {
+      // (as the pad sinks the aim follows him down only to the deck: then it rests on the open shaft, not the floor)
+      look.set(vesk.pos.x * 0.7 + pad.x * 0.3, Math.max(y0 + 0.35, vesk.pos.y + 1.25), vesk.pos.z * 0.7 + pad.z * 0.3);
+      return { pos, look, fov: 44 };
+    };
+  }
+  veskDescends(beat = null) {
     const g = this.game, f = this.f, Z = this.Z, vesk = this.npc('vesk'), pad = Z.platform.pad;
     g.setState('cutscene');
     g.audio.cue('revelation');
+    beat ??= this.veskBeat();
+    beat?.show(this.veskDescentFrame({ x: pad.x, z: pad.z, y: Z.platform.y }, vesk), 2.4);
     let tt = 0, lowering = false;
     g.cutscene = (dt) => {
       tt += dt;
@@ -347,6 +383,7 @@ export class Chapter2 extends ChapterBase {
           g.cutscene = null;
           vesk.controlled = false;
           f.c2_veskDown = true;
+          beat?.release(2.6);   // (a long hand-back: the low view and the isometric one are far apart)
           this.story.refreshCast();
           g.setState('play');
           const lines = [['hero', 'c2_after_tw']];
