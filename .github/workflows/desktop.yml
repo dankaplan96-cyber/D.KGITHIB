@@ -55,7 +55,7 @@ jobs:
             lba2-remaster/desktop/release/*.dmg
             lba2-remaster/desktop/release/*.AppImage
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 5
 
   release:
     needs: build
