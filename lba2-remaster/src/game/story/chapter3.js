@@ -60,6 +60,10 @@ export class Chapter3 extends ChapterBase {
     const g = this.game;
     if (this.part === 2) {   // The Core: in through the door from Sendell's chamber; Vesk's scene starts as the room is entered
       if (!this.R.c3core) return;
+      // Sendell's light renews him on his way out of her chamber: the chapter's save (and every Retry of the final
+      // fight from it) starts at full life, not at whatever the galleries left him with (2 of 3 bot runs had died at
+      // 6 HP and come back at 6 HP each time)
+      g.hero.hp = g.hero.maxHp;
       const to = this.exitTo('c3-core');
       g.enterRoom('c3core', to?.x != null ? to : null, true);
       return;
