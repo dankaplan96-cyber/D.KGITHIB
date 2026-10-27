@@ -28,6 +28,7 @@ export class Epilogue extends ChapterBase {
     const g = this.game, h = g.hero;
     h.swapBody?.('twinsen');
     h.hasBall = true; h.noBehaviours = false;
+    this.sheathe();   // (at the family table he is unarmed; the weapon he chose is still equipped for free play)
     g.world.bunting?.setVisible(true);
     g.enterRoom('house', null, true);
     g.audio.setMood?.('home');
@@ -38,6 +39,11 @@ export class Epilogue extends ChapterBase {
       this.showEnd();
     });
   }
+  // The sword in his hand is only drawn (Hero.showSword); the equipped weapon is left alone, so free play has it back
+  // as the player chose. Hero.update shows it again each play frame, so until the dinner is over it is hidden again
+  // after that (update() below).
+  sheathe() { const m = this.game.hero.swordMesh; if (m) m.visible = false; }
+  update() { if (this.on() && !this.f.ep_dinner) this.sheathe(); }
   showEnd() {
     const g = this.game;
     g.setState('ending');
