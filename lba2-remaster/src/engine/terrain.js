@@ -127,6 +127,11 @@ export class Terrain {
         g.boundingSphere = g.boundingBox.getBoundingSphere(new THREE.Sphere());
         const m = new THREE.Mesh(g, mat);
         m.receiveShadow = true; m.name = 'terrain';
+        // PERF-BATTERY: drawn after the other opaque things (three sorts opaque draws by renderOrder first), so the
+        // ground under houses, walls, trees and people is rejected by the depth test before its splat shader runs:
+        // on Citadel's street at Medium the terrain's shaded fragments 1.08M → 0.72M (all opaque ones 1.70M → 1.42M,
+        // for 1.04M pixels); 22–72 of 1.05M pixels differ, where something lies exactly on the ground
+        m.renderOrder = 1;
         group.add(m);
       }
     }

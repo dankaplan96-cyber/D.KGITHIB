@@ -17,7 +17,7 @@ export class FitWatch {
   reset() { this.settle = 0; this.t = 0; this.n = 0; this.slow = 0; }
   frame(real) {
     const G = this.g, R = G.renderer;
-    if (G.state !== 'play' || G.trans || G.benching || G.testFreeze || G.cutscene || G.preparing || (typeof document !== 'undefined' && document.hidden)) { this.reset(); return; }
+    if (G.state !== 'play' || G.trans || G.benching || G.testFreeze || G.cutscene || G.preparing || G.background || (typeof document !== 'undefined' && document.hidden)) { this.reset(); return; }
     if (!(real > 0) || real > 0.5) return;   // (a stall: not counted either way)
     if ((this.settle += real) < SETTLE) return;
     this.t += real; this.n++;

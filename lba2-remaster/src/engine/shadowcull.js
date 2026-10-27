@@ -9,6 +9,12 @@
 //    where its pieces were dozens; the shadows are the same geometry, so they look the same.
 //    Pieces are watched (a quarter of them each frame): one that moves, or is hidden or shown, leaves its batch
 //    (the cell is rebuilt) and casts on its own again from then on (doors, boats, rising stones, story toggles).
+//    PERF-BATTERY: a piece larger than half a cell goes into the cells its TRIANGLES are in (each triangle by its
+//    centre), not whole into the cell of its own centre; cells are 16 m (were 24). Citadel's builders merge whole quarters into single meshes (up to 74 m across, 34k
+//    triangles), so a cell holding one drew it all whenever any part of it reached the ±36 m shadow box: 352k
+//    triangles a frame in the shadow pass on the street at Medium. Now each cell's batch is about one cell across and
+//    the shadow camera's own culling and the view test leave out the parts it cannot see. The same triangles are drawn
+//    wherever they can reach the map, so the shadows are the same.
 // 2. View test. A caster (a batch, or a piece casting on its own) casts only while the shadow it can throw (its
 //    bounding sphere grown by its size / tan(sun elevation), moved half that down-sun) touches the view frustum.
 // 3. Small props (under 2 m) casting on their own: no shadow beyond SMALL_FAR[preset] from the focus.
@@ -22,8 +28,15 @@ import * as THREE from 'three';
 
 export const SMALL_FAR = { high: 24, medium: 18, low: 18 };
 export const MIN_PX = { high: 0, medium: 4, low: 7 };
-const SMALL_R = 2, CELL = 24, KEEP_NEAR = 16;
+const SMALL_R = 2, CELL = 16, KEEP_NEAR = 16, FRESH = 60;
 const _f = new THREE.Frustum(), _m = new THREE.Matrix4(), _s = new THREE.Sphere(), _c = new THREE.Vector3(), _v = new THREE.Vector3();
+const _b = new THREE.Box3(), _pts = Array.from({ length: 16 }, () => new THREE.Vector3()), _sf = new THREE.Frustum(), _sm = new THREE.Matrix4();
+const SWEEP_DROP = 8;
+// all of pts[0..n) outside one plane of the frustum: the hull of the points is outside it
+function outside(F, pts, n) {
+  for (const P of F.planes) { let i = 0; while (i < n && P.distanceToPoint(pts[i]) < -0.05) i++; if (i === n) return true; }
+  return false;
+}
 
 // may this mesh's shadow be drawn by a merged, material-less batch?
 const batchable = (o) => {
@@ -36,8 +49,8 @@ const batchable = (o) => {
 const shownIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
 
 class Area {
-  constructor(root) {
-    this.root = root; this.cells = new Map(); this.members = []; this.solo = []; this.proxies = []; this.tick = 0; this.quiet = [];
+  constructor(root, cell = CELL) {
+    this.root = root; this.cell = cell; this.cells = new Map(); this.members = []; this.solo = []; this.proxies = []; this.tick = 0; this.quiet = []; this.ids = 0;
     root.updateMatrixWorld(true);
     const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
     this.inv = inv;
@@ -50,59 +63,111 @@ class Area {
       const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true };
       if (!o.castShadow) { quiet(o, C); return; }
       if (!batchable(o) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } return; }
-      _c.copy(C.c).applyMatrix4(o.matrixWorld);
-      const m = o.material, side = m.side + '|' + m.shadowSide;
-      const key = Math.floor(_c.x / CELL) + ',' + Math.floor(_c.z / CELL) + '|' + side;
-      let cell = this.cells.get(key);
-      if (!cell) { cell = { key, side: m.side, shadowSide: m.shadowSide, list: [], mesh: null, dirty: true }; this.cells.set(key, cell); }
-      C.cell = cell; C.mat = o.matrixWorld.clone();
-      cell.list.push(C); this.members.push(C);
+      const m = o.material;
+      C.side = m.side; C.shadowSide = m.shadowSide; C.mat = o.matrixWorld.clone();
+      this.assign(C);
+      this.members.push(C);
       o.castShadow = false;
     });
     for (const cell of this.cells.values()) this.build(cell);
+  }
+  // PERF-BATTERY: the cells a piece's triangles go to. A piece up to half a cell across goes whole into the cell of its
+  // centre (as before); a larger one triangle by triangle, each to the cell of its own centre. C.parts: cell id →
+  // the piece's triangles there (null: all of them); C.cells: those cells.
+  assign(C) {
+    const o = C.o, g = o.geometry, I = g.index, P = g.attributes.position, nt = Math.floor((I ? I.count : P.count) / 3), side = C.side + '|' + C.shadowSide;
+    const W = o.matrixWorld, cellAt = (x, z) => {
+      const key = Math.floor(x / this.cell) + ',' + Math.floor(z / this.cell) + '|' + side;
+      let cell = this.cells.get(key);
+      if (!cell) { cell = { key, id: this.ids++, side: C.side, shadowSide: C.shadowSide, list: [], mesh: null, dirty: true }; this.cells.set(key, cell); }
+      return cell;
+    };
+    C.cells = []; C.parts = new Map();
+    _c.copy(C.c).applyMatrix4(W);
+    if (C.r * W.getMaxScaleOnAxis() <= this.cell * 0.5 || !Number.isFinite(_c.x + _c.z)) {
+      const cell = cellAt(Number.isFinite(_c.x) ? _c.x : 0, Number.isFinite(_c.z) ? _c.z : 0);
+      C.parts.set(cell.id, null); C.cells.push(cell); cell.list.push(C);
+      return;
+    }
+    const lists = new Map(), cx = _c.x, cz = _c.z;
+    for (let t = 0; t < nt; t++) {
+      let x = 0, z = 0;
+      for (let j = 0; j < 3; j++) { _v.fromBufferAttribute(P, I ? I.getX(t * 3 + j) : t * 3 + j).applyMatrix4(W); x += _v.x; z += _v.z; }
+      x /= 3; z /= 3;
+      if (!Number.isFinite(x + z)) { x = cx; z = cz; }
+      const cell = cellAt(x, z);
+      let L = lists.get(cell); if (!L) { L = []; lists.set(cell, L); }
+      L.push(t);
+    }
+    for (const [cell, L] of lists) { C.parts.set(cell.id, Int32Array.from(L)); C.cells.push(cell); cell.list.push(C); }
   }
   build(cell) {
     if (cell.mesh) { cell.mesh.geometry.dispose(); this.root.remove(cell.mesh); this.proxies.splice(this.proxies.indexOf(cell.mesh), 1); cell.mesh = null; }
     cell.dirty = false;
     if (!cell.list.length) return;
+    // this cell's triangles of each piece, their vertices renumbered (a whole piece: as they are)
+    const parts = [];
     let nv = 0, ni = 0;
-    for (const C of cell.list) { const g = C.o.geometry; nv += g.attributes.position.count; ni += g.index ? g.index.count : g.attributes.position.count; }
-    const pos = new Float32Array(nv * 3), idx = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
-    let vo = 0, io = 0;
     for (const C of cell.list) {
-      const g = C.o.geometry, P = g.attributes.position;
+      const g = C.o.geometry, I = g.index, T = C.parts.get(cell.id), cnt = g.attributes.position.count;
+      if (T === undefined) continue;
+      if (T === null) { parts.push({ C, T, map: null, from: null, vo: nv }); nv += cnt; ni += I ? I.count - (I.count % 3) : cnt - (cnt % 3); continue; }
+      const map = new Int32Array(cnt).fill(-1), from = [];
+      for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = I ? I.getX(T[k] * 3 + j) : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
+      parts.push({ C, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
+    }
+    if (!ni) return;
+    const pos = new Float32Array(nv * 3), idx = nv > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
+    let io = 0;
+    // (a few builder vertices are NaN: degenerate there, harmless in the original, not in a merged bound: at the origin)
+    const put = (P, i, k) => {
+      _v.fromBufferAttribute(P, i);
+      if (!(Number.isFinite(_v.x) && Number.isFinite(_v.y) && Number.isFinite(_v.z))) _v.set(0, 0, 0);
+      _v.applyMatrix4(_m); if (!Number.isFinite(_v.x + _v.y + _v.z)) _v.set(0, 0, 0);
+      pos[k * 3] = _v.x; pos[k * 3 + 1] = _v.y; pos[k * 3 + 2] = _v.z;
+    };
+    for (const { C, T, map, from, vo } of parts) {
+      const g = C.o.geometry, I = g.index, P = g.attributes.position;
       _m.multiplyMatrices(this.inv, C.o.matrixWorld);
       const flip = _m.determinant() < 0;
-      for (let i = 0; i < P.count; i++) {
-        _v.fromBufferAttribute(P, i);
-        if (!(Number.isFinite(_v.x) && Number.isFinite(_v.y) && Number.isFinite(_v.z))) _v.set(0, 0, 0); // (a few builder vertices are NaN: degenerate there, harmless in the original, not in a merged bound)
-        _v.applyMatrix4(_m); if (!Number.isFinite(_v.x + _v.y + _v.z)) _v.set(0, 0, 0);
-        pos[(vo + i) * 3] = _v.x; pos[(vo + i) * 3 + 1] = _v.y; pos[(vo + i) * 3 + 2] = _v.z;
+      if (!T) {
+        for (let i = 0; i < P.count; i++) put(P, i, vo + i);
+        const n = I ? I.count - (I.count % 3) : P.count - (P.count % 3);
+        for (let i = 0; i < n; i += 3) {
+          const a = I ? I.getX(i) : i, b = I ? I.getX(i + 1) : i + 1, c = I ? I.getX(i + 2) : i + 2;
+          idx[io] = a + vo; idx[io + 1] = (flip ? c : b) + vo; idx[io + 2] = (flip ? b : c) + vo; io += 3;
+        }
+        continue;
       }
-      if (g.index) { const I = g.index; for (let i = 0; i < I.count; i += 3) { idx[io + i] = I.getX(i) + vo; idx[io + i + 1] = I.getX(flip ? i + 2 : i + 1) + vo; idx[io + i + 2] = I.getX(flip ? i + 1 : i + 2) + vo; } io += I.count; }
-      else { for (let i = 0; i < P.count; i += 3) { idx[io + i] = vo + i; idx[io + i + 1] = vo + (flip ? i + 2 : i + 1); idx[io + i + 2] = vo + (flip ? i + 1 : i + 2); } io += P.count; }
-      vo += P.count;
+      for (let k = 0; k < from.length; k++) put(P, from[k], vo + k);
+      for (let k = 0; k < T.length; k++) {
+        const t = T[k], a = I ? I.getX(t * 3) : t * 3, b = I ? I.getX(t * 3 + 1) : t * 3 + 1, c = I ? I.getX(t * 3 + 2) : t * 3 + 2;
+        idx[io] = map[a] + vo; idx[io + 1] = map[flip ? c : b] + vo; idx[io + 2] = map[flip ? b : c] + vo; io += 3;
+      }
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setIndex(new THREE.BufferAttribute(idx, 1));
-    geo.computeBoundingSphere();
+    geo.computeBoundingSphere(); geo.computeBoundingBox();
     const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ side: cell.side, shadowSide: cell.shadowSide, colorWrite: false, depthWrite: false }));
     mesh.castShadow = true; mesh.receiveShadow = false; mesh.visible = false; mesh.name = 'shadowBatch';
     mesh.userData.shadowProxy = true; mesh.matrixAutoUpdate = false;
     this.root.add(mesh); mesh.updateMatrixWorld(true);
     cell.mesh = mesh; this.proxies.push(mesh);
-    cell.c = geo.boundingSphere.center; cell.r = geo.boundingSphere.radius;
+    cell.c = geo.boundingSphere.center; cell.r = geo.boundingSphere.radius; cell.box = geo.boundingBox;
   }
   // a quarter of the batched pieces per frame: moved, hidden or shown → out of its batch, casting on its own
+  // (PERF-BATTERY: all of them on each of an area's first FRESH updates: a piece that starts moving on arrival — a
+  //  mill, a lift — leaves on the first frame, still behind the scene change's black, not a few frames into the fade)
   watch() {
     const n = this.members.length; if (!n) return;
-    const q = Math.ceil(n / 4), from = (this.tick++ % 4) * q;
+    const all = this.tick < FRESH, q = all ? n : Math.ceil(n / 4), from = all ? 0 : (this.tick % 4) * q;
+    this.tick++;
     for (let i = from; i < Math.min(n, from + q); i++) {
       const C = this.members[i]; if (!C || C.solo) continue;
       if (C.o.matrixWorld.equals(C.mat) && shownIn(C.o, this.root) && C.o.parent) continue;
-      C.solo = true; C.o.castShadow = true; C.cell.dirty = true;
-      C.cell.list.splice(C.cell.list.indexOf(C), 1);
+      C.solo = true; C.o.castShadow = true;
+      for (const cell of C.cells) { cell.dirty = true; cell.list.splice(cell.list.indexOf(C), 1); }
       this.solo.push(C);
     }
     for (const cell of this.cells.values()) if (cell.dirty) this.build(cell);
@@ -118,7 +183,7 @@ class Area {
 
 export class ShadowCull {
   constructor(sunDir, sun = null, scene = null) {
-    this.sunDir = sunDir; this.areas = new Map(); this.area = null; this.quality = 'high'; this.enabled = true; this.batching = true;
+    this.sunDir = sunDir; this.areas = new Map(); this.area = null; this.quality = 'high'; this.enabled = true; this.batching = true; this.sun = sun; this.cell = CELL;
     // the batches show for the shadow pass only (see the header)
     if (sun) {
       const sh = sun.shadow, base = sh.updateMatrices.bind(sh);
@@ -130,12 +195,21 @@ export class ShadowCull {
     }
   }
   hide() { if (this.area) for (const p of this.area.proxies) p.visible = false; }
+  // the sun's shadow box for this frame, worked out as three will (DirectionalLightShadow.updateMatrices: the camera at
+  // the light, looking at its target), from the positions Environment.update has just set
+  shadowBox(S) {
+    const L = this.sun, cam = (this._sc ??= S.camera.clone());
+    cam.left = S.camera.left; cam.right = S.camera.right; cam.top = S.camera.top; cam.bottom = S.camera.bottom; cam.near = S.camera.near; cam.far = S.camera.far;
+    if (L.parent && L.parent.parent) return null;   // (placed under a group: left to three's own test)
+    cam.position.copy(L.position); cam.lookAt(L.target.position); cam.updateMatrixWorld(true); cam.updateProjectionMatrix();
+    return _sf.setFromProjectionMatrix(_sm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+  }
   // (all pieces cast on their own again; batches removed: the benchmark's comparisons, or switching it off)
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); this.area = null; }
   update(root, camera, focus) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return; }
     let A = this.areas.get(root);
-    if (!A) { A = new Area(root); this.areas.set(root, A); }
+    if (!A) { A = new Area(root, this.cell); this.areas.set(root, A); }
     this.area = A;
     this.hide();
     A.watch();
@@ -151,11 +225,21 @@ export class ShadowCull {
       _s.radius = r + len * 0.5 + 0.5;
       return _f.intersectsSphere(_s);
     };
-    // the batches
+    // the batches (PERF-BATTERY): a batch casts while its box is in the shadow camera's box and the volume its shadow
+    // can fill (the box swept away from the sun and down by its own height + SWEEP_DROP m: a shadow falling down a
+    // slope) touches the view. Exact convex tests (a hull outside one plane of a frustum is outside it); the sphere
+    // test before them let in every batch within a cell's size of the view.
+    const S = this.sun?.shadow, sb = S && this.shadowBox(S);
     for (const cell of A.cells.values()) {
       const p = cell.mesh; if (!p) continue;
-      _c.copy(cell.c).applyMatrix4(p.matrixWorld);
-      p.castShadow = reaches(_c, cell.r);
+      if (!cell.box) { _c.copy(cell.c).applyMatrix4(p.matrixWorld); p.castShadow = reaches(_c, cell.r); continue; }
+      _b.copy(cell.box).applyMatrix4(p.matrixWorld);
+      const H = _b.max.y - _b.min.y + SWEEP_DROP, ox = -(d.x / horiz) * H * slope, oz = -(d.z / horiz) * H * slope;
+      for (let i = 0; i < 8; i++) {
+        _pts[i].set(i & 1 ? _b.max.x : _b.min.x, i & 2 ? _b.max.y : _b.min.y, i & 4 ? _b.max.z : _b.min.z);
+        _pts[i + 8].set(_pts[i].x + ox, _pts[i].y - H, _pts[i].z + oz);
+      }
+      p.castShadow = !(sb && outside(sb, _pts, 8)) && !outside(_f, _pts, 16);
     }
     // pieces casting on their own
     for (const C of A.solo) {

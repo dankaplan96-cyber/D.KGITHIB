@@ -174,6 +174,29 @@ function poodle() {
 // A dog's "rig": the model on a root group with the same small interface the enemies' rigs have
 // (root, play(anim), update(dt, speed), hitFlash()), so a guard dog is an ordinary Actor (src/game/guarddog.js).
 // anims: idle, walk, run, sniff, warn (barking), windup (crouched, jaw wide), lunge, hurt, dead (knocked out)
+// PERF-BATTERY: the parts hung on one pivot (body, head, jaw, tail, a leg) move together, so each pivot's parts are
+// one mesh: the poodle on Citadel's street was 25 draw calls in the view and 8 in the shadow map for ~900 triangles.
+// Same triangles, colours and normals (the parts were all this dog's one vertex-coloured material).
+function mergeParts(root, material) {
+  const nodes = []; root.traverse((o) => { if (!o.isMesh) nodes.push(o); });
+  for (const P of nodes) {
+    const parts = P.children.filter((o) => o.isMesh && !o.children.length && o.material === material && o.geometry.attributes.color && o.geometry.attributes.normal && (o.updateMatrix(), o.matrix.determinant() > 0));
+    if (parts.length < 2) continue;
+    const geos = parts.map((o) => { o.updateMatrix(); const g = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()); g.applyMatrix4(o.matrix); return g; });
+    const n = geos.reduce((a, g) => a + g.attributes.position.count, 0), out = {};
+    for (const k of ['position', 'normal', 'color']) {
+      const d = new Float32Array(n * 3); let o = 0;
+      for (const g of geos) { const a = g.attributes[k]; for (let i = 0; i < a.count; i++, o += 3) { d[o] = a.getX(i); d[o + 1] = a.getY(i); d[o + 2] = a.getZ(i); } }
+      out[k] = new THREE.BufferAttribute(d, 3);
+    }
+    const g = new THREE.BufferGeometry(); for (const k in out) g.setAttribute(k, out[k]);
+    g.computeBoundingSphere();
+    const m = new THREE.Mesh(g, material); m.castShadow = true; m.name = 'dogParts';
+    for (const o of parts) { P.remove(o); o.geometry.dispose(); }
+    for (const x of geos) x.dispose();
+    P.add(m);
+  }
+}
 export function dogRig(coat = 'grey') {
   const M = coat === 'poodle' ? poodle() : zeelichDog(COATS[coat] || COATS.grey);
   const root = new THREE.Group(); root.name = 'dog-' + coat;
@@ -181,6 +204,7 @@ export function dogRig(coat = 'grey') {
   root.add(M.body);
   const own = new LbaMaterial();   // (its own material: the hit flash is this dog's alone)
   M.body.traverse((o) => { if (o.isMesh && o.material === mat) o.material = own; });
+  mergeParts(M.body, own);
   const S = { anim: 'idle', gait: 0, lookP: 0, jawT: 0, flash: 0, t: Math.random() * 9, wag: 0.3 };
   const rig = {
     root, M, poodle: coat === 'poodle',

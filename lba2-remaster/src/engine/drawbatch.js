@@ -29,6 +29,7 @@ import * as THREE from 'three';
 import { plain, texOnly, twinOf } from './merge.js';
 
 export const CELL = 48;
+const SPLIT = 0.5, SPLIT_TRIS = 3000;   // (PERF-BATTERY: a piece of 3000 triangles or more whose bounding radius is over half a cell is cut by triangle)
 const _m = new THREE.Matrix4(), _nm = new THREE.Matrix3(), _v = new THREE.Vector3(), _c = new THREE.Vector3();
 const BASE_OBR = THREE.Object3D.prototype.onBeforeRender;
 
@@ -65,11 +66,12 @@ const lookOf = (m) => { const t = m.map; return [m.color.r, m.color.g, m.color.b
 
 class Area {
   constructor(root, cell, fold = true) {
-    this.root = root; this.cells = new Map(); this.members = []; this.ms = 0;
+    this.root = root; this.cells = new Map(); this.members = []; this.ms = 0; this.cell = cell; this.ids = 0;
     const t0 = performance.now();
     root.updateMatrixWorld(true);
     this.inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
     const rootFlip = root.matrixWorld.determinant() < 0;
+    const pieces = [];
     root.traverse((o) => {
       if (!eligible(o, root)) return;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
@@ -77,47 +79,100 @@ class Area {
       if (!Number.isFinite(_c.x + _c.z)) return;
       const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F = fold ? recipe(o) : null;
       const mat = F ? F.twin : o.material, sig = F ? (F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
-      const key = [mat.uuid, sig, o.receiveShadow, o.renderOrder, flip, Math.floor(_c.x / cell) + ',' + Math.floor(_c.z / cell)].join('|');
-      let C = this.cells.get(key);
-      if (!C) { C = { key, material: mat, fold: F ? { tex: F.tex } : null, list: [], mesh: null, dirty: true, flip, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder }; this.cells.set(key, C); }
-      C.list.push({ o, cell: C, fold: F, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow });
+      const M = { o, fold: F, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow,
+        kind: { key: [mat.uuid, sig, o.receiveShadow, o.renderOrder, flip].join('|'), material: mat, fold: F ? { tex: F.tex } : null, flip, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder } };
+      this.assign(M);
+      pieces.push(M);
     });
-    // a cell with one piece stays as it was (nothing to save)
-    for (const [k, C] of this.cells) if (C.list.length < 2) this.cells.delete(k);
-    for (const C of this.cells.values()) { for (const M of C.list) { this.members.push(M); M.o.layers.disable(0); M.o.userData.drawBatched = true; } this.build(C); }
+    // a cell with one piece that lies wholly in it stays as it was (nothing to save); a piece cut over several cells
+    // is batched in all of them (PERF-BATTERY: so the parts out of view are culled)
+    for (const [k, C] of this.cells) if (C.list.length < 2 && !(C.list.length === 1 && C.list[0].cells.length > 1)) { for (const M of C.list) M.cells = []; this.cells.delete(k); }
+    for (const M of pieces) if (M.cells.length) { this.members.push(M); M.o.layers.disable(0); M.o.userData.drawBatched = true; }
+    for (const C of this.cells.values()) this.build(C);
     this.ms = performance.now() - t0;
+  }
+  // PERF-BATTERY: a large, detailed piece is cut: each of its triangles goes to the cell of its own centre (M.parts:
+  // cell id → its triangles there, null for a whole piece; M.cells: its cells). Citadel's builders merge whole
+  // quarters into single meshes (the city dressing: 34k triangles, 74 m across), and a batch was as big as the pieces
+  // in it: on the street at Medium three drew 487k triangles of plain meshes a frame, 84k of them in view. Cut into
+  // cells, the parts out of the view are culled by three's own frustum test. Other pieces are batched as before.
+  assign(M) {
+    const g = M.geo, I = g.index, P = g.attributes.position, nt = Math.floor((I ? I.count : P.count) / 3);
+    const W = M.o.matrixWorld, kind = M.kind.key;
+    const cellAt = (x, z) => {
+      const key = kind + '|' + Math.floor(x / this.cell) + ',' + Math.floor(z / this.cell);
+      let C = this.cells.get(key);
+      if (!C) { C = { key, id: this.ids++, ...M.kind, list: [], mesh: null, dirty: true }; this.cells.set(key, C); }
+      return C;
+    };
+    M.cells = []; M.parts = new Map();
+    // (only a large and detailed piece is cut: a small one across a cell line, or a plain slab, would only cost a
+    //  draw on each side)
+    _c.copy(g.boundingSphere.center).applyMatrix4(W);
+    const cx = _c.x, cz = _c.z;
+    if (!(nt >= SPLIT_TRIS && g.boundingSphere.radius * W.getMaxScaleOnAxis() > this.cell * SPLIT)) {
+      const C = cellAt(cx, cz); M.parts.set(C.id, null); M.cells.push(C); C.list.push(M);
+      return;
+    }
+    const lists = new Map();
+    for (let t = 0; t < nt; t++) {
+      let x = 0, z = 0;
+      for (let j = 0; j < 3; j++) { _v.fromBufferAttribute(P, I ? I.getX(t * 3 + j) : t * 3 + j).applyMatrix4(W); x += _v.x; z += _v.z; }
+      x /= 3; z /= 3;
+      if (!Number.isFinite(x + z)) { x = cx; z = cz; }
+      const C = cellAt(x, z);
+      let L = lists.get(C); if (!L) { L = []; lists.set(C, L); }
+      L.push(t);
+    }
+    for (const [C, L] of lists) { M.parts.set(C.id, Int32Array.from(L)); M.cells.push(C); C.list.push(M); }
   }
   build(C) {
     if (C.mesh) { C.mesh.geometry.dispose(); this.root.remove(C.mesh); C.mesh = null; }
     C.dirty = false;
-    if (C.list.length < 2) { for (const M of C.list) this.release(M); C.list.length = 0; return; }
+    if (!C.list.length || (C.list.length === 1 && C.list[0].cells.length < 2)) { for (const M of [...C.list]) this.release(M); C.list.length = 0; C.dirty = false; return; }
     const fold = C.fold, g0 = C.list[0].geo;
     const names = fold ? ['position', 'normal', ...(fold.tex ? ['uv'] : []), 'color', 'rm'] : Object.keys(g0.attributes);
     const spec = (n) => (fold ? { size: n === 'rm' || n === 'uv' ? 2 : 3, norm: false, Arr: Float32Array } : { size: g0.attributes[n].itemSize, norm: g0.attributes[n].normalized, Arr: g0.attributes[n].array.constructor });
+    // this cell's triangles of each piece, their vertices renumbered (a whole piece: all of them, as they are)
+    const parts = [];
     let nv = 0, ni = 0;
-    for (const M of C.list) { const g = M.geo; nv += g.attributes.position.count; ni += g.index ? g.index.count : g.attributes.position.count; }
+    for (const M of C.list) {
+      const g = M.geo, I = g.index, T = M.parts.get(C.id), cnt = g.attributes.position.count;
+      if (T === undefined) continue;
+      if (T === null) { parts.push({ M, T, map: null, from: null, vo: nv }); nv += cnt; ni += I ? I.count - (I.count % 3) : cnt - (cnt % 3); continue; }
+      const map = new Int32Array(cnt).fill(-1), from = [];
+      for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = I ? I.getX(T[k] * 3 + j) : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
+      parts.push({ M, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
+    }
     const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; }
     const index = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
-    let vo = 0, io = 0;
-    for (const M of C.list) {
-      const g = M.geo, cnt = g.attributes.position.count, m = M.o.material;
+    let io = 0;
+    for (const { M, T, map, from, vo } of parts) {
+      const g = M.geo, I = g.index, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
       _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
       for (const n of names) {
         const d = out[n].data, a = g.attributes[n];
-        if (n === 'position') for (let i = 0; i < cnt; i++) { _v.fromBufferAttribute(a, i).applyMatrix4(_m); d[(vo + i) * 3] = _v.x; d[(vo + i) * 3 + 1] = _v.y; d[(vo + i) * 3 + 2] = _v.z; }
-        else if (n === 'normal') for (let i = 0; i < cnt; i++) { _v.fromBufferAttribute(a, i).applyMatrix3(_nm).normalize(); d[(vo + i) * 3] = _v.x; d[(vo + i) * 3 + 1] = _v.y; d[(vo + i) * 3 + 2] = _v.z; }
-        else if (fold && n === 'uv') { const U = m.map.matrix; for (let i = 0; i < cnt; i++) { _v.set(a.getX(i), a.getY(i), 1).applyMatrix3(U); d[(vo + i) * 2] = _v.x; d[(vo + i) * 2 + 1] = _v.y; } }
-        else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let i = 0; i < cnt; i++) { d[(vo + i) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + i) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + i) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
-        else if (fold && n === 'rm') for (let i = 0; i < cnt; i++) { d[(vo + i) * 2] = m.roughness; d[(vo + i) * 2 + 1] = m.metalness; }
-        else d.set(a.array.subarray(0, cnt * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
+        if (n === 'position') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(_m); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        else if (n === 'normal') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(_nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        else if (fold && n === 'uv') { const U = m.map.matrix; for (let k = 0; k < nf; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
+        else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + k) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + k) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
+        else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
+        else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
+        else { const sz = a.itemSize, A = a.array; for (let k = 0; k < nf; k++) for (let q = 0; q < sz; q++) d[(vo + k) * sz + q] = A[from[k] * sz + q]; }
       }
-      if (g.index) { const I = g.index.array, n = g.index.count; for (let i = 0; i < n; i += 3) { index[io + i] = I[i] + vo; index[io + i + 1] = I[C.flip ? i + 2 : i + 1] + vo; index[io + i + 2] = I[C.flip ? i + 1 : i + 2] + vo; } io += n; }
-      else { for (let i = 0; i + 2 < cnt; i += 3) { index[io + i] = vo + i; index[io + i + 1] = vo + (C.flip ? i + 2 : i + 1); index[io + i + 2] = vo + (C.flip ? i + 1 : i + 2); } io += cnt - (cnt % 3); }
-      vo += cnt;
+      if (!T) {
+        if (I) { const X = I.array, n = I.count - (I.count % 3); for (let i = 0; i < n; i += 3) { index[io + i] = X[i] + vo; index[io + i + 1] = X[C.flip ? i + 2 : i + 1] + vo; index[io + i + 2] = X[C.flip ? i + 1 : i + 2] + vo; } io += n; }
+        else { const n = nf - (nf % 3); for (let i = 0; i < n; i += 3) { index[io + i] = vo + i; index[io + i + 1] = vo + (C.flip ? i + 2 : i + 1); index[io + i + 2] = vo + (C.flip ? i + 1 : i + 2); } io += n; }
+        continue;
+      }
+      for (let k = 0; k < T.length; k++) {
+        const t = T[k], a = I ? I.getX(t * 3) : t * 3, b = I ? I.getX(t * 3 + 1) : t * 3 + 1, c = I ? I.getX(t * 3 + 2) : t * 3 + 2;
+        index[io] = map[a] + vo; index[io + 1] = map[C.flip ? c : b] + vo; index[io + 2] = map[C.flip ? b : c] + vo; io += 3;
+      }
     }
     const geo = new THREE.BufferGeometry();
     for (const n of names) geo.setAttribute(n, new THREE.BufferAttribute(out[n].data, out[n].size, out[n].norm));
-    geo.setIndex(new THREE.BufferAttribute(io < ni ? index.subarray(0, io) : index, 1));
+    geo.setIndex(new THREE.BufferAttribute(index, 1));
     geo.computeBoundingSphere();
     const mesh = new THREE.Mesh(geo, C.material);
     mesh.castShadow = false; mesh.receiveShadow = C.receiveShadow; mesh.renderOrder = C.renderOrder;
@@ -125,7 +180,12 @@ class Area {
     this.root.add(mesh); mesh.updateMatrixWorld(true);
     C.mesh = mesh;
   }
-  release(M) { M.out = true; M.o.layers.enable(0); delete M.o.userData.drawBatched; }
+  // (a piece leaves every cell it is in; the caller rebuilds the cells made dirty)
+  release(M) {
+    if (M.out) return;
+    M.out = true; M.o.layers.enable(0); delete M.o.userData.drawBatched;
+    for (const C of M.cells) { const i = C.list.indexOf(M); if (i >= 0) { C.list.splice(i, 1); C.dirty = true; } }
+  }
   // every batched piece, every frame (after the world matrices): anything changed leaves, its cell is rebuilt now
   watch() {
     let left = 0;
@@ -135,9 +195,9 @@ class Area {
       if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
         && o.matrixWorld.equals(M.mat) && shownIn(o, this.root) && (!M.look || lookOf(o.material) === M.look)) continue;
       this.release(M); left++;
-      const L = M.cell.list; L.splice(L.indexOf(M), 1); M.cell.dirty = true;
     }
-    if (left) { for (const C of this.cells.values()) if (C.dirty) this.build(C); this.members = this.members.filter((M) => !M.out); }
+    // (a rebuild may release a piece left alone in a cell, which makes its other cells dirty: until none is)
+    if (left) { for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; } if (!any) break; } this.members = this.members.filter((M) => !M.out); }
     return left;
   }
   restore() {
@@ -149,10 +209,12 @@ class Area {
 }
 
 export class DrawBatch {
-  // fold: off. Folded batches change a few pixels (0.003–0.3 % of a frame: where two surfaces of different materials
-  // coincide, the draw order decides which shows) and the look must stay identical; folding would save another ~20–40
-  // calls on Citadel (RENDER-INV audit, F8). Without it the batches are pixel-exact.
-  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.fold = false; this.left = 0; }
+  // fold: on since PERF-BATTERY (off before). Folded batches change a few pixels (0.003–0.3 % of a frame: where two
+  // surfaces of different materials coincide, the draw order decides which shows). On the user's Vega 8 on battery the
+  // CPU's render submission (~12 ms on the street at Medium) is the next limit after the GPU, and folding is what
+  // merges the regions' one-colour pieces: the arrival route 321 → 252 draw calls, the street 250 → 227 (Medium,
+  // SwiftShader counts, docs/lba3-performance/PERF_BATTERY.md). `fold = false` + reset() brings back the exact batches.
+  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.fold = true; this.left = 0; }
   // build the area's batches (once) and check its pieces; call after the world matrices are up to date
   update(root) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return null; }

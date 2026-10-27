@@ -28,6 +28,23 @@ import { warmPassPrograms } from './warmup.js';
   else console.warn('lamp skip: three.js lights chunk not as expected; left as it is');
 }
 
+// PERF-BATTERY: the battery profile's shadow filter. three's PCF (Medium) reads the shadow map 17 times a pixel over
+// ±radius texels: on the user's Vega 8 on battery that filter is ~4.4 ms of the street's 37 (its "shadow filter basic"
+// line). The battery profile switches the map to three's BasicShadowMap, which nothing else in the game uses, and its
+// one-read branch is replaced here by 5 reads (the centre and four at half the radius on the diagonals): close to
+// PCF's soft, light-edged shadows (one read alone draws them hard and dark) for under a third of its reads. Patched
+// before any shader is compiled; the Basic programs exist only while the battery profile is on (renderer.setBattery).
+{
+  const C = THREE.ShaderChunk, src = C.shadowmap_pars_fragment;
+  const one = '#else\n\t\t\tshadow = texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z );\n\t\t#endif';
+  const five = '#else\n\t\t\tvec2 hs = 0.5 * shadowRadius / shadowMapSize;\n\t\t\tshadow = ( texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z ) +\n'
+    + '\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( -hs.x, -hs.y ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( hs.x, -hs.y ), shadowCoord.z ) +\n'
+    + '\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( -hs.x, hs.y ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( hs.x, hs.y ), shadowCoord.z ) ) * 0.2;\n\t\t#endif';
+  const i = src.indexOf(one);
+  if (i > 0 && src.indexOf(one, i + 1) < 0 && src.lastIndexOf('float getShadow(', i) > 0 && src.indexOf('float getPointShadow', 0) > i) C.shadowmap_pars_fragment = src.slice(0, i) + five + src.slice(i + one.length);
+  else console.warn('battery shadow filter: three.js shadow chunk not as expected; left as it is');
+}
+
 const RetroShader = {
   uniforms: { tDiffuse: { value: null }, levels: { value: 9.0 }, resolution: { value: new THREE.Vector2(1, 1) } },
   vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
@@ -102,7 +119,15 @@ export class Renderer {
     // edges (Settings → Edges): 'msaa' (multisampling, Medium 2× / High 4×) or 'fxaa' (one cheap full-screen pass, as
     // Low has). RENDER-INV: on the user's Vega 8 (Direct3D 11) MSAA 2× measured ~10 ms of GPU a frame on the street
     this.aa = 'msaa';
+    // PERF-BATTERY: the battery profile (Game.setBattery, engine/power.js), within the player's preset: a 5-read shadow
+    // filter instead of PCF's 17 (three's Basic type, patched above), no MSAA, and the automatic resolution may go down to
+    // 0.5 (Medium/High; 0.6 otherwise). The user's Vega 8 on battery measured these on Medium's street: shadow filter
+    // basic −4.4 ms, no MSAA −5.3 ms of 37 (laptop-build206-battery.txt). Low is unchanged (none of them is on there).
+    this.battery = false;
   }
+  setBattery(on) { on = !!on; if (on === this.battery) return false; this.battery = on; this.applyDerived(); this.resize(); return true; }
+  // what the battery profile changes now (for the benchmark's report and Settings' note)
+  batteryProfile() { return this.battery && this.quality !== 'low' && !this.retro ? { shadowFilter: '5 reads', msaa: 0, minScale: this.minDyn() } : null; }
 
   setup(scene, camera) {
     this.scene = scene;
@@ -160,7 +185,7 @@ export class Renderer {
     const on = !this.retro && this.quality !== 'low';
     this.renderer.shadowMap.enabled = on;
     // soft (PCFSoft) shadow edges on High; plain PCF elsewhere (fewer samples per pixel)
-    const type = this.quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    const type = this.battery && this.quality !== 'low' && !this.retro ? THREE.BasicShadowMap : this.quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     if (this.renderer.shadowMap.type !== type) { this.renderer.shadowMap.type = type; this.renderer.shadowMap.needsUpdate = true; }
     if (this.bloom) this.bloom.enabled = on && this.quality === 'high' && this.bloomOn !== false;
     if (this.fxaa) this.fxaa.enabled = !this.retro && (this.quality === 'low' || this.aa === 'fxaa');
@@ -194,7 +219,7 @@ export class Renderer {
   }
   setIntegrated(on) { this.integrated = !!on; this.resize(); }
   // the lowest automatic-resolution factor per preset (Low never below a 0.7 pixel ratio: text and faces blur)
-  minDyn() { return this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : 0.6; }
+  minDyn() { return this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : this.battery ? 0.5 : 0.6; }
   // the factor the scene is drawn at now, and the pixel ratio that makes
   effScale() { return this.autoRes && !this.retro ? this.dyn : 1; }
   pixelRatio() { return +(this.renderer.getPixelRatio() * this.effScale()).toFixed(3); }
@@ -207,9 +232,9 @@ export class Renderer {
     // low (FXAA instead) / retro (the retro look wants hard pixels)
     // (Medium on a high-density screen: none, the pixel ratio smooths the edges and the GPU is spared the resolve)
     // (AUTO-FIT: High on an integrated GPU on a high-density screen: 2×, its pixel ratio smooths the rest)
-    const ms = this.retro || this.quality === 'low' || this.aa === 'fxaa' ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 || (this.integrated && devicePixelRatio > 1 && pr > 1.05) ? 2 : 4;
+    const ms = this.retro || this.quality === 'low' || this.aa === 'fxaa' || this.battery ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 || (this.integrated && devicePixelRatio > 1 && pr > 1.05) ? 2 : 4;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
-    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${!!this.composer}`;
+    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${this.battery}/${!!this.composer}`;
     if (key !== this._size) { this._size = key; this._want = { w, h, pr, ms }; }
     if (this.dyn < this.minDyn()) this.dyn = this.minDyn();
     this.applyScale();
