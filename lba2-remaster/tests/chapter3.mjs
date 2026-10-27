@@ -105,14 +105,20 @@ is('the guardian is there and alive', await ev(() => { const g = game.story.cur.
 is("the core can't be left during the fight", await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); return game.room?.id; }), (v) => v === 'c3core');
 await shot('C3-06-core.png');
 // bank shots: walk onto each pylon's glowing plate (it lines Twinsen up), throw in normal behaviour
-is('the three pylons converted', await ev(() => game.story.cur.plates().map((p) => {
+// (each plate's own spot: a real throw from its centre, in the plate's heading, must reach its pylon the first time — the third
+//  plate once sat 0.5 m too far left, and its shot struck the bay's shield wall, so the final fight could not be won from the plates)
+const plateShots = await ev(() => game.story.cur.plates().map((p) => {
   const G = game, h = G.hero, tg = G.room.ballTargets.find((x) => x.pylon === p.i);
+  let first = null;
   for (let k = 0; k < 3 && !tg.done; k++) {
-    T.tp(p.x + 0.3, p.z - 0.2, 0); h.hp = h.maxHp; G.step(0.6); // stand still: the plate centres and turns him
+    T.tp(k === 0 ? p.x : p.x + 0.3, k === 0 ? p.z : p.z - 0.2, 0); h.hp = h.maxHp; G.step(0.6); // stand still: the plate centres and turns him
     G.ball.state = 'idle'; T.tap('Digit1'); T.tap('KeyF'); G.step(1.6); T.talkAll();
+    if (k === 0) first = !!tg.done;
   }
-  return tg.done ? 'bank shot' : T.hit(tg);
-})), (v) => v.length === 3 && v.every((x) => x !== 'FAILED'));
+  return { first, last: tg.done ? 'bank shot' : T.hit(tg) };
+}));
+is('the three pylons converted', plateShots.map((x) => x.last), (v) => v.length === 3 && v.every((x) => x !== 'FAILED'));
+is("each plate's first bank shot, thrown from its centre, hits its pylon", plateShots.map((x) => x.first), (v) => v.length === 3 && v.every((x) => x === true));
 is('the overload: the coil appears, an objective set', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); const tg = game.room.ballTargets.find((x) => x.coil); return [game.flags.c3_overload, !!tg, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);
 // Vesk's coil: three hits (real throws first, T.hit forces a hit only if the throws miss)
 is("Vesk's coil broken", await ev(() => { const tg = game.room.ballTargets.find((x) => x.coil); const r = []; for (let k = 0; tg && k < 3 && !tg.done; k++) r.push(T.hit(tg)); T.talkAll(); return [tg ? r : 'no coil', game.flags.c3_coil, tg?.done]; }), (v) => v[1] && v[2] === true);
