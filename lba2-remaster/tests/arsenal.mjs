@@ -91,7 +91,8 @@ const c3 = await ev(() => { const G = game, n = P.npc('pippa'); P.go(n.pos.x + 3
 check('the conch in the street: people within earshot turn to look', c3.r === 'used' && c3.looks.length >= 1 && c3.last.folk >= 1, c3);
 
 // ---- the house cellar: the gap in the old foundations (the lantern), the coal chute's boards (they need the glove)
-const w1 = await ev(() => { const G = game, N = G.story.arsenal.nooks.find((n) => n.id === 'cellar'); P.enter('house'); P.enter('cellar'); const r = P.use(N.x, N.z, { kind: 'a_nook', near: 1.0 }); P.settle(); return { r: r.r, room: G.room?.id, taken: !!G.flags.a_nook_cellar, dark: !!G.flags.a_dark_cellar, journal: G.story.journal().find((j) => j.title === 'Odd jobs and gear')?.lines?.map((l) => l.key) }; });
+// LAZY-REGIONS: the nook is decorated when the cellar's area is built (first entry), so build it before looking the nook up
+const w1 = await ev(() => { const G = game; G.regions.ensure('cellar', 'test'); const N = G.story.arsenal.nooks.find((n) => n.id === 'cellar'); P.enter('house'); P.enter('cellar'); const r = P.use(N.x, N.z, { kind: 'a_nook', near: 1.0 }); P.settle(); return { r: r.r, room: G.room?.id, taken: !!G.flags.a_nook_cellar, dark: !!G.flags.a_dark_cellar, journal: G.story.journal().find((j) => j.title === 'Odd jobs and gear')?.lines?.map((l) => l.key) }; });
 const w1l = await said();
 check('the cellar\'s gap in the foundations without a light (WALK, E): too dark, something glints; the journal remembers', w1.room === 'cellar' && !w1.taken && w1.dark && w1l.some((l) => /Too dark/.test(l)) && w1.journal?.includes('a_j_dark'), { w1, w1l });
 const w2 = await ev(() => { const G = game, N = G.story.arsenal.nooks.find((n) => n.id === 'cellar'); const d0 = G.hero.arms.darts, c0 = G.hero.coins;
@@ -108,8 +109,10 @@ const w4 = await ev(() => { const G = game, B = G.story.arsenal.boards; G.hero.c
 check('fists (K) at the boards: a thud, no break', !w4.broken, w4);
 
 // ---- Bersimon asks for the pearl
+// LAZY-REGIONS: an NPC whose room is not built yet stays hidden (absent) until the area builds on first entry; a player walking to the tent or
+// the school builds it at the door, so these steps build the area first (G.regions.ensure) instead of talking to a person who is not there yet
 iso('to the plateau by the room switch (the long walk is the island\'s own tests)');
-const b1 = await ev(() => { const G = game; G.exitRoom({ x: -96, z: -66, a: 0 }, true); P.settle(); G.hero.mp = 1; const r = P.talk('bersimon'); return { r: r.r, ask: !!G.flags.a_berAsk, mp: G.hero.mp === G.hero.mpMax }; });
+const b1 = await ev(() => { const G = game; G.exitRoom({ x: -96, z: -66, a: 0 }, true); P.settle(); G.hero.mp = 1; G.regions.ensure('wtent', 'test'); const r = P.talk('bersimon'); return { r: r.r, ask: !!G.flags.a_berAsk, mp: G.hero.mp === G.hero.mpMax }; });
 const b1l = await said();
 check('Bersimon (TALK): one pearl of incandescence short of a lightning spell; he still tops up the magic', b1.ask && b1.mp && b1l.some((l) => /pearl of incandescence/.test(l)), { b1, b1l });
 
@@ -125,7 +128,7 @@ check('bought: the laser pistol (5 shots of charge with it) and a cell (+5 = 10)
 // ---- chapter 4: the School of Magic (the pearl, the ward), Under Celebration's old mine (the glove)
 iso('chapter 3 finished by flags (as tests/chapter4.mjs): chapter 4 starts on Desert Island');
 await ev(() => { const G = game; Object.assign(G.flags, { c2_shield: true, c2_done: true }); G.story.nextChapter(); P.settle(); });
-const s1 = await ev(() => { const G = game; const r = P.talk('magus'); return { room: G.room?.id, r: r.r, pearl: !!G.flags.a_pearl, items: G.story.items().map((i) => i.id) }; });
+const s1 = await ev(() => { const G = game; G.regions.ensure('school', 'test'); const r = P.talk('magus'); return { room: G.room?.id, r: r.r, pearl: !!G.flags.a_pearl, items: G.story.items().map((i) => i.id) }; });
 const s1l = await said();
 check('Rector Hougo (TALK, School of Magic): a pearl of incandescence for Bersimon', s1.pearl && s1.items.includes('pearl') && s1l.some((l) => /jar's empty/.test(l)), { s1, s1l });
 const s2 = await ev(() => { const G = game, h = G.hero, n = P.npc('keraooc'); const c0 = h.coins; P.go(n.pos.x, n.pos.z, { tol: 1.4 }); P.face(n.pos.x, n.pos.z); P.tap('KeyE', 0.1);
