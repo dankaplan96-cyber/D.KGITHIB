@@ -1383,8 +1383,8 @@ function buildControl(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'control', 1400, 0);
   const R = B.room, k = B.k;
   const W = 12, D = 9, H = 3.6, t = 0.5;
-  R.view = 13.6;
-  R.follow = 0.3;
+  R.view = 11.8;   // (G1-QUEST #21: 13.6 showed the whole room small in the middle of the screen; closer, the camera follows him more)
+  R.follow = 0.5;
   const doorX = 4.3, winX = -1.6, winW = 3.8, winY = 0.8, winH = 2.2;
   const brass = MAT.brass(), teal = '#3f8a86';
   B.shell({

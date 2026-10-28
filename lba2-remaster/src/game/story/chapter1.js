@@ -636,7 +636,7 @@ export class Chapter1 extends ChapterBase {
     if (!f.c1_home) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_arrived) m.push({ x: W.pierStart.x, z: W.pierStart.z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_task) npcAt('vesk', 'n_vesk');
-    else if (!f.c1_water && (f.c1_map || f.c1_task)) for (const v of W.valves || []) if (!v.open) m.push({ x: v.x, z: v.z, kind: 'star', color: gold, r: 6, edge: true, label: t('c1_valve_' + v.id) });
+    else if (!f.c1_water && (f.c1_map || f.c1_task)) for (const v of W.valves || []) if (!v.open) m.push({ x: v.x, z: v.z, kind: 'star', color: gold, r: 6, edge: true, label: t('c1_mk_' + v.id) });   // (G1-QUEST #21: a short name on the map; the objective keeps the hint)
     if (f.c1_water && !f.c1_tour) npcAt('vesk', 'n_vesk');
     if (f.c1_needZoe && !f.c1_zoeStart) npcAt('zoe', 'n_zoe');
     if (f.c1_veskGone && !f.c1_radio) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });

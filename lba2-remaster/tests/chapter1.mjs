@@ -54,6 +54,8 @@ if (hasOffice) {
 // valves
 const valves = await ev(() => (game.world.valves || []).map((v) => ({ id: v.id, kind: v.kind, x: v.x, y: v.y, z: v.z })));
 is('three bypass valves to open', valves, (v) => v.length === 3);
+// (G1-QUEST #4: count the scripted shots from here on — the water's return cuts to the square)
+await ev(() => { const cr = game.camRig; let ov = cr.override; window.__shots = []; Object.defineProperty(cr, 'override', { configurable: true, get: () => ov, set: (v) => { if (v) window.__shots.push([+v.pos.x.toFixed(1), +v.pos.z.toFixed(1)]); ov = v; } }); window.__upd = game.world.updaters.length; });
 for (const v of valves) {
   if (v.kind === 'use') {
     await ev((v) => T.useAt(v.x, v.z), v);
@@ -63,6 +65,22 @@ for (const v of valves) {
   }
   is(`valve ${v.id} (${v.kind}) opened`, await ev((id) => game.world.valves.find((w) => w.id === id).open, v.id), (o) => o === true);
 }
+await ev(() => { for (let i = 0; i < 120 && !game.flags.c1_water; i++) game.step(0.05); T.talkAll(); });
+is("the water's return is shown at the square (a shot near the well), then handed back with nothing left running",
+  await ev(() => { const W = game.world, s = window.__shots; return { water: game.flags.c1_water, shots: s, nearWell: s.some(([x, z]) => Math.hypot(x - W.well.x, z - W.well.z) < 12), back: game.camRig.override == null, updaters: W.updaters.length - window.__upd, state: game.state }; }),
+  (v) => v.water && v.nearWell && v.back && v.updaters === 0 && v.state === 'play');
+await ev(() => { delete game.camRig.override; game.camRig.override = null; });
+// G1-QUEST #3: the journal keeps what has happened, never the step ahead
+is('the journal lists only steps that happened (no open line in the past tense)',
+  await ev(() => game.story.journal().find((c) => c.lines.some((l) => l.key.startsWith('c1_')))?.lines.map((l) => l.key + (l.done ? '+' : ''))),
+  (j) => j && j.every((k) => k.endsWith('+')) && j.includes('c1_j_valves+') && !j.some((k) => k.startsWith('c1_j_station')));
+// G1-QUEST #19: Mira and the pipe map once the water is back (no more "open those valves")
+is('after the water: Mira talks about the water, the pipe map says the valves are open',
+  await ev(async () => { const { t } = await import(new URL('src/game/i18n.js', location.href).href);
+    const said = [], own = game.say; game.say = function (n, l, d, s, c) { said.push(l.join(' ')); return own.call(this, n, l, d, s, c); };
+    try { game.story.cur.talk(T.npc('mira')); T.talkAll(); game.story.cur.interact({ kind: 'pipemap' }); T.talkAll(); } finally { delete game.say; }
+    return { said, want: [t('c1_mira_water'), t('c1_map_after')] }; }),
+  (r) => r.said.length === 2 && r.said[0] === r.want[0] && r.said[1] === r.want[1]);
 // mid-chapter save/load
 await ev(() => game.save(false));
 const before = await ev(() => JSON.stringify(Object.keys(game.flags).filter((k) => k.startsWith('c1')).sort()));
@@ -78,6 +96,22 @@ is("Vesk's tour done; Zoé is needed", await ev(() => [game.flags.c1_tour, game.
 await ev(() => { T.talk('zoe'); for (let i = 0; i < 300 && game.room?.id !== 'projoffice'; i++) game.step(1 / 30); T.talkAll(); });
 is("Zoé's segment starts: playing Zoé in the project office", await ev(() => [game.flags.c1_zoeStart, game.hero.body, game.room?.id]), (v) => v[0] === true && v[1] === 'zoe' && v[2] === 'projoffice');
 await shot('C1-03-zoe.png');
+// G1-QUEST #7, #21: the guard's sight is drawn the way he looks and stays inside the office; no weapon pill over Zoé
+is("the guard's drawn sight points where he looks and stays in the office; no weapon pill as Zoé goes in",
+  await ev(() => {
+    const ch = game.story.cur, w = ch.watcher, n = w.npc, cone = w.cone, B = game.room.bounds, out = { dirs: [], outside: 0, pill: document.querySelector('#weapon')?.classList.contains('show') };
+    const v = new cone.position.constructor();
+    for (let k = 0; k < 8; k++) {
+      for (let i = 0; i < 20; i++) { game.step(1 / 30); w.suspicion = 0; }   // (a measurement: Zoé is not to be caught meanwhile)
+      if (!w.active) continue;
+      cone.updateMatrixWorld(true);
+      const p = cone.geometry.attributes.position; let fx = 0, fz = 0;
+      for (let j = 1; j < p.count; j++) { v.fromBufferAttribute(p, j).applyMatrix4(cone.matrixWorld); fx += v.x - n.pos.x; fz += v.z - n.pos.z; if (v.x < B.x0 - 0.02 || v.x > B.x1 + 0.02 || v.z < B.z0 - 0.02 || v.z > B.z1 + 0.02) out.outside++; }
+      const l = Math.hypot(fx, fz) || 1; out.dirs.push(+((fx / l) * Math.sin(n.angle) + (fz / l) * Math.cos(n.angle)).toFixed(2));
+    }
+    return out;
+  }),
+  (r) => r.dirs.length >= 4 && r.dirs.every((d) => d > 0.8) && r.outside === 0 && !r.pill);
 // Zoe: search the lockers (watcher may spot her; retry)
 await ev(() => { const G = game; for (const id of ['locker1', 'locker2', 'locker3']) { const s = G.room?.searches?.find((x) => x.id === id); if (!s) continue; T.tp(s.x, s.z); G.hero.behaviour = 'discreet'; T.tap('KeyE'); G.step(1.4); T.talkAll(); if (G.flags.c1_plan) break; } });
 is('Zoé finds the plan in the lockers', await ev(() => game.flags.c1_plan), (v) => v === true);

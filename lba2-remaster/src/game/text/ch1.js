@@ -250,6 +250,7 @@ Object.assign(STR.en, {
   c1_valve_orchard: 'The orchard (behind bars)',
   c1_valve_depot: 'The depot at the old camp (drones)',
   c1_valve_cliff: 'The Whispering Cliffs (the old target)',
+  c1_mk_orchard: 'Orchard valve', c1_mk_depot: 'Depot valve', c1_mk_cliff: 'Cliff valve',
   c1_obj_station: 'Visit Vesk at the old fortress',
   c1_obj_meetzoe: 'Meet Zoé at the station gate',
   c1_obj_zoe: 'Zoé: find the plan without being seen',
