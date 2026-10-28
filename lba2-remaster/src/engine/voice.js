@@ -107,6 +107,23 @@ export const VOICES = {
   hesk: { race: 'grobo', seed: 207, f0: 150, k: 0.86, rate: 0.95, legato: 0.75 },
   dtrader: { race: 'grobo', seed: 208, f0: 115, k: 0.8, rate: 1.0, contour: 'arc' },                                // Brosk
   bram: { race: 'grobo', seed: 209, f0: 104, k: 0.79, rate: 0.85 },
+  // --- WORLD-LIFE: the people who walk round Citadel (src/game/walkrounds.js)
+  oda: { race: 'quetch', seed: 131, f0: 218, k: 1.1, rate: 1.05, contour: 'arc', range: 5 },
+  garrick: { race: 'quetch', seed: 132, f0: 124, k: 0.96, rate: 0.9, contour: 'fall' },
+  pico: { race: 'quetch', seed: 133, kid: true, f0: 330, k: 1.3, rate: 1.2, contour: 'bounce', range: 7, legato: 0.55 },
+  brix: { race: 'grobo', seed: 231, f0: 100, k: 0.8, rate: 0.7, vib: [4.8, 22], legato: 0.75 },
+  dot: { race: 'grobo', seed: 232, kid: true, f0: 292, k: 1.05, rate: 1.1, contour: 'zigzag', range: 6 },
+  marda: { race: 'grobo', seed: 233, f0: 184, k: 0.9, rate: 0.95, contour: 'arc', range: 4 },
+  tobb: { race: 'grobo', seed: 234, f0: 108, k: 0.82, rate: 0.85, contour: 'fall', legato: 0.7 },
+  maro: { race: 'bunny', seed: 331, f0: 212, k: 1.2, rate: 1.0, contour: 'bounce', legato: 0.55 },
+  tilde: { race: 'bunny', seed: 332, f0: 188, k: 1.14, rate: 1.1, contour: 'zigzag', range: 4, legato: 0.5 },
+  ilo: { race: 'esmer', seed: 531, f0: 252, k: 1.14, rate: 1.0, legato: 0.7 },
+  aven: { race: 'esmer', seed: 532, f0: 148, k: 0.96, rate: 0.9, legato: 0.8, contour: 'flat' },
+  kira: { race: 'quetch', seed: 134, f0: 198, k: 1.08, rate: 1.0, contour: 'arc', range: 5 },
+  safi: { race: 'quetch', seed: 135, kid: true, f0: 300, k: 1.22, rate: 1.1, contour: 'sing', range: 6, breath: 0.1 },
+  tamu: { race: 'quetch', seed: 136, kid: true, f0: 322, k: 1.28, rate: 1.2, contour: 'zigzag', range: 7, legato: 0.55 },
+  bashir: { race: 'quetch', seed: 137, f0: 118, k: 0.94, rate: 0.78, contour: 'fall', vib: [5, 20], tilt: 2.0 },
+  ume: { race: 'bunny', seed: 333, f0: 158, k: 1.06, rate: 0.75, vib: [5.2, 26], contour: 'fall', legato: 0.8 },
   // --- Rabbibunnies
   mira: { race: 'bunny', seed: 301, f0: 205, k: 1.25, rate: 0.92, contour: 'bounce', legato: 0.6, bright: 5600 },
   pippa: { race: 'bunny', seed: 302, f0: 230, k: 1.22, rate: 1.2, contour: 'zigzag', range: 5, legato: 0.45 },                     // the merchant: quick patter

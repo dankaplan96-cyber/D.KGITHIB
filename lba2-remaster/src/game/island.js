@@ -1118,6 +1118,7 @@ function bench(W, parent, x, z, ry) {
     mesh(g, bbox(0.06, 0.06, 0.5, 0.01, 1), iron, sx, 0.44, -0.06);
   }
   W.physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: y + 0.5, noStand: true, seeThrough: true });
+  (W.seats ||= []).push({ x, z, ry });   // WORLD-LIFE: a resident may sit here
 }
 
 // ================================================================== more geometry helpers

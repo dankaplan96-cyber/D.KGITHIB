@@ -416,6 +416,7 @@ export function buildTown(scene, W) {
   const { physics, H } = W;
   const r = rng(77);
   W.houses = [];
+  W.seats = [];   // WORLD-LIFE: every bench a resident may sit on {x, z, ry}: the sitter faces (sin ry, cos ry)
   const houseInfo = {};
   const built = [];
   for (const [i, hd] of HOUSES.entries()) {
@@ -478,6 +479,7 @@ export function buildTown(scene, W) {
     const ry = Math.atan2(V.x - x, V.z - z);
     bench(dress, x, H(x, z), z, ry);
     physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: H(x, z) + 0.5, noStand: true, seeThrough: true });
+    W.seats.push({ x, z, ry });
   }
   // Twinsen's front garden: picket fence, a bench under the window, laundry, tools, a radio on the sill, pots
   const tw = houseInfo.twinsen;
@@ -487,6 +489,7 @@ export function buildTown(scene, W) {
   const bp = at('twinsen', -2.3, 4.3);
   bench(dress, bp[0], gy(bp), bp[1], tw.ry);
   physics.add({ type: 'box', x: bp[0], z: bp[1], hw: 0.85, hd: 0.3, rot: tw.ry, top: gy(bp) + 0.5, noStand: true, seeThrough: true });
+  W.seats.push({ x: bp[0], z: bp[1], ry: tw.ry, own: 'twinsen' });   // (Twinsen's own bench by his house: left to the family)
   W.laundry = laundry(scene, H, at('twinsen', -6.0, 4.6), at('twinsen', -6.0, -1.0), r);
   const tl = at('twinsen', -5.3, 0.3);
   tools(dress, tl[0], gy(tl), tl[1], tw.ry + Math.PI / 2);

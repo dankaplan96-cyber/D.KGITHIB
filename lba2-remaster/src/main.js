@@ -28,6 +28,7 @@ import { preloadLba1Rooms } from './game/lba1room.js';
 import { preloadIslands } from './game/zislands.js';
 import { buildSpaceport } from './game/spaceport.js';
 import { buildTownLife } from './game/townlife.js';
+import { Resident } from './game/walkers.js';
 import { buildCityDressing } from './game/citydress.js';
 import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './game/containers.js';
 import { enterArena } from './game/arena.js';
@@ -445,7 +446,7 @@ class Game {
     this.hero = new Hero(this, POI.start.x, POI.start.z);
     this.hero.arms = freshArms();
     // (LAZY-REGIONS: an NPC whose spot is in an area not built yet waits hidden for it: addActors)
-    this.npcs = this.story.npcDefs().map((d) => { const n = new NPC(this, d); if (d.pending) n.setPresent(false); return n; });
+    this.npcs = this.story.npcDefs().map((d) => { const n = d.ambient ? new Resident(this, d) : new NPC(this, d); if (d.pending) n.setPresent(false); return n; });
     this.enemies = this.story.enemyDefs().map((d) => createEnemy(this, d));
     this.story.decorate();
     // reward on top of the Whispering Cliffs (optional ball + jumping puzzle); kashes come from the givers
@@ -518,7 +519,7 @@ class Game {
   addActors() {
     for (const d of this.story.npcDefs()) {
       const n = this.npcs.find((x) => x.def.id === d.id);
-      if (!n) { const m = new NPC(this, d); if (d.pending) m.setPresent(false); this.npcs.push(m); continue; }
+      if (!n) { const m = d.ambient ? new Resident(this, d) : new NPC(this, d); if (d.pending) m.setPresent(false); this.npcs.push(m); continue; }
       if (n.def.pending && !d.pending) { n.def = d; n.placeAt({ x: d.x, z: d.z, a: d.angle ?? 0, anim: d.anim ?? null }); n.setPresent(true); }
     }
     for (const d of this.story.enemyDefs()) {
@@ -1527,7 +1528,7 @@ class Game {
       const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z), a = aim(n.pos.x, n.pos.z);
       // (behind: in the half-plane at his back, not right on top of him)
       const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk', behind: d >= 0.5 && a < 0 };
-      consider(dist(n.pos.x, n.pos.z), 2.6, o);
+      consider(dist(n.pos.x, n.pos.z) + (n.ambient ? 0.45 : 0), 2.6, o);   // (a walking resident gives way to the story's people on a tie: WORLD-LIFE)
       if (d < 2.2 && d < fd && a > 0.7) { fd = d; fa = a; faced = o; }
     }
     if (!this.room) {

@@ -111,7 +111,7 @@ export function buildCityDressing(root, physics, W) {
   const bin = (x, z, ry = 0) => place('bin', (k) => P.litterBin(k, { color: BIN_COLORS[binN++ % 3] }), x, z, ry, FP.bin);
   const tub = (x, z, seed = 1, color) => place('tub', (k) => P.flowerTub(k, { seed, r: 0.32, color: color || '#b8623a' }), x, z, seed, FP.tubS);
   const post = (x, z, boards) => place('signpost', (k) => P.signPost(k, boards), x, z, 0, FP.post, { pad: 0.15 });
-  const bench = (x, z, ry, color = '#2f6a9a') => place('bench', (k) => P.waitingBench(k, { w: 1.7, color }), x, z, ry, FP.bench);
+  const bench = (x, z, ry, color = '#2f6a9a') => { const at = place('bench', (k) => P.waitingBench(k, { w: 1.7, color }), x, z, ry, FP.bench); if (at) (W.seats ||= []).push({ x: at[0], z: at[1], ry }); return at; };   // (WORLD-LIFE: a resident may sit on it)
   const board = (x, z, ry, kind = 'notices') => place('board-' + kind, (k) => P.streetNoticeBoard(k, { kind, w: 1.3, h: 0.9 }), x, z, ry, FP.board, { pad: 0.2 });
   const planter = (x, z, ry, seed = 1) => place('planter', (k) => P.planterBox(k, { w: 1.4, d: 0.55, seed }), x, z, ry, FP.planter);
   // a bin at one end of an existing bench (collider {x,z,rot,hw}), along its length
