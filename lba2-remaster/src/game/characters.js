@@ -1153,7 +1153,8 @@ function polyCharacter(L, def, P) {
   const m = P.mouths?.[0];
   if (m) {
     const g = new THREE.Group();
-    g.position.set(m.pivot[0] - hp[0], m.pivot[1] - hp[1], m.pivot[2] - hp[2]);
+    const mb = def.bones[m.bone]?.pos || hp;   // (CAST-POLISH: the mouth's own bone: a Sphero's face is on its torso)
+    g.position.set(m.pivot[0] - mb[0], m.pivot[1] - mb[1], m.pivot[2] - mb[2]);
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.Float32BufferAttribute(m.pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(polyColors(m.col), 3));
