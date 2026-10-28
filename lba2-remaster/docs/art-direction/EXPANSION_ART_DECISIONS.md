@@ -16,9 +16,11 @@ more than face detail.
 Performance context: Medium ~60 on the Vega 8 plugged in; High 54.5 street / 45 arrival (CPU-bound, being fixed);
 battery Medium street ~47.5 as played. Any richer direction has to be paid for, not assumed.
 
-## D1 — Overall style (Proposed, waiting for the user)
+## D1 — Overall style (Selected 28.10)
 Options shown 28.10: A faithful refined LBA · B handcrafted adventure · C rich animated-film presentation.
 Recommendation: B for environments, A's restraint and silhouettes for characters.
-Selected: — (pending). 28.10: the user deferred the art direction ("not for now"); resume D1 when the expansion work is opened. No silent approval.
-Undecided: everything after D1 (Twinsun degree of change, Nera identity, inhabitants, underground mood).
+Selected: A+B as recommended (the user, 28.10: "A+B, what you recommended"): B (handcrafted) for environments — tactile stone, painted wood, cloth, ceramic, repairs, slight asymmetry; A (faithful, refined LBA) for characters — soft forms, restrained texture, clear colour, silhouettes first, geometry (faces, necks, hands) before effects.
+Implemented: no · Visually checked: no · Performance verified: no.
+Next: an in-engine comparison (same view of Twinsen's house, same camera and light: today vs the A+B treatment) before applying it widely; it may be built as an isolated preview, not in the campaign.
+Undecided: everything after D1 — next round D2 (Twinsun twelve years later: gentle evolution / old town + new infrastructure / growing trading town), when the user wants it (Twinsun degree of change, Nera identity, inhabitants, underground mood).
 Concept images: none (no free image-generation tool authorised); comparisons will be in-engine previews.
