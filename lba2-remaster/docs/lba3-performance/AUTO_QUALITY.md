@@ -286,6 +286,11 @@ comparison. In the Auto run, look for:
   - Medium: 200 calls (p95 224, shadow 36), 446k. PASS. The base commit b1b0dff measured in the same session gave
     196 (p95 228, shadow 36), 455k: the same preset, within the route's run-to-run spread.
 - `tests/drawcalls.mjs`: PASS.
+- `tests/autofit.mjs`, `audit.mjs`, `timing.mjs`, `crosssystem.mjs`: PASS.
+  - `timing.mjs` first failed because the renderer's size key named Auto differently from High. The key now uses the
+    renderer's base quality, which is 'high' under Auto, so Auto at High and High chosen by hand share it.
+- `tests/dynres.mjs`: PASS. It now sets its preset by hand, because it tests the automatic resolution of a preset
+  chosen by hand; under Auto the governor sets the factor.
 
 ## 11. Open issues (ranked)
 
