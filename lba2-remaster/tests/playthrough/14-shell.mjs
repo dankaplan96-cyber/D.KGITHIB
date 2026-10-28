@@ -37,7 +37,9 @@ export const steps = [
   }],
   // (straight to the way on, not stopping for the mites: a fight from the far shelf chased one off its edge, 3 m down,
   // with no way back up but the stones again)
-  ['the supply crates (far shelf)', () => { const h = game.hero; return h.hp <= h.maxHp - 3 ? P.rummage('crates_far') : { r: 'not hurt', hp: h.hp }; }],
+  // (not taken by the bot: from where the stones end, at the chasm's lip, its walk to the far crates slid back into the chasm
+  //  in one night run and the way on to Sendell was lost; the crates are optional, the near ones are still tried)
+  ['the supply crates (far shelf)', () => ({ r: 'skipped (optional)', hp: game.hero.hp })],
   ['Sendell', () => { const e = game.room?.exits?.find((x) => x.to === 'c3-sendell'); if (e) P.through(e.x, e.z, { fight: false }); P.settle(); return { sendell: game.flags.c3_sendell, fail: game.flags.c3_sendell ? null : 'sendell' }; }],
   // (the door from Sendell's chamber ends chapter 11: chapter 12's card, then Vesk's scene and the fight)
   ['the core → chapter 12', () => { P.exitTo('c3-core'); P.settle(); return { chapter: game.flags.chapterKey, fight: game.flags.c3_fight, room: game.room?.id, fail: game.flags.chapterKey === 'core' ? null : 'no chapter 12' }; }],
