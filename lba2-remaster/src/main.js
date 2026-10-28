@@ -7,6 +7,7 @@ import { loadBake } from './engine/sculpt.js';
 import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
+import { driveMouth } from './engine/voice.js';
 import { Perf, gpuQuality, oldGpuQuality, integratedGpu } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
@@ -1972,6 +1973,7 @@ class Game {
     input.update();
 
     this.updateTransition(dt);
+    driveMouth(this);   // (FACES-HANDS: the speaker's mouth follows the voice's syllables)
 
     if (this.trans && this.state === 'play') {
       // frozen while the screen fades (through a door, the hero walks on)

@@ -16,11 +16,20 @@
 
 // vowel formants F1–F3 (Hz, an adult voice; scaled by k)
 const VOWELS = { a: [730, 1100, 2450], e: [530, 1840, 2480], i: [310, 2200, 2950], o: [540, 880, 2400], u: [340, 870, 2250], y: [330, 1900, 2500] };
-const VOWEL_LIST = Object.values(VOWELS);
 const HISS = new Set('szcxfjšžh'), STOP = new Set('tkpdbgq'), NASAL = new Set('mn');
 const PUNCT = new Set('.,;:!?…'), BREAK = new Set(' \t\n.,;:!?…—-"\'()');
 const PENTA = [0, 2, 4, 7, 9];
 const BW = [90, 120, 170]; // formant bandwidths (Hz)
+// FACES-HANDS: how far each vowel opens a talking mouth (0-1) and how round it holds the lips (+ rounded o/u, - spread i/e)
+const MOUTH_OPEN = { a: 1, e: 0.72, i: 0.46, o: 0.86, u: 0.56, y: 0.46 };
+const MOUTH_ROUND = { a: 0, e: -0.35, i: -0.8, o: 1, u: 0.8, y: -0.5 };
+const LIPS = new Set('mbpw');   // lips together on these: a shallower opening
+const VOWEL_KEYS = Object.keys(VOWELS);
+// the vowel a syllable at text[i] is sung on: the next vowel letter within four, else by the character (scripts without written vowels)
+function vowelKey(text, i) {
+  for (let k = i; k < Math.min(text.length, i + 4); k++) { const l = text[k].normalize('NFD')[0].toLowerCase(); if (VOWELS[l]) return l; }
+  return VOWEL_KEYS[(text.charCodeAt(i) + i) % VOWEL_KEYS.length];
+}
 
 const LEVEL = 0.21;      // a syllable's peak gain into the voice bus (before the voice volume)
 const LEAD = 0.03;       // schedule this far ahead of the audio clock (never in the past: no clicks)
@@ -31,9 +40,9 @@ const CHANNELS = 2;      // pooled filter chains
 // weight, tilt (source roll-off exponent), breath, bright (lowpass Hz), nasal (0–1: hum + anti-formant), rate
 // (syllables), legato (voiced share of a syllable), swing (long-short alternation), foot (stress every n),
 // contour, range (semitones), jit (melodic randomness), quant (snap the melody to a scale), vib [Hz, cents],
-// trem [Hz, depth], glide (portamento s), atk / rel (s), level.
+// trem [Hz, depth], glide (portamento s), atk / rel (s), level, mouth (how wide the talking mouth opens, 0-1: FACES-HANDS).
 const BASE = { k: 1, vowel: [1, 1], f3: 1, tilt: 1.75, breath: 0.07, bright: 3800, nasal: 0.15, rate: 1, legato: 0.72, swing: 0.12, foot: 2,
-  contour: 'arc', range: 4, jit: 0.45, quant: null, vib: [5.2, 12], trem: null, glide: 0.035, atk: 0.028, rel: 0.045, level: 1 };
+  contour: 'arc', range: 4, jit: 0.45, quant: null, vib: [5.2, 12], trem: null, glide: 0.035, atk: 0.028, rel: 0.045, level: 1, mouth: 1 };
 export const RACES = {
   // Quetch (Twinsen's people): the plain, warm speaking voice everyone else is heard against
   quetch: {},
@@ -48,7 +57,7 @@ export const RACES = {
   // Mosquibees: high and fast with a soft wing flutter (tremolo), not a square-wave buzz
   bee: { k: 1.38, tilt: 1.5, breath: 0.09, bright: 5200, nasal: 0.1, rate: 1.4, legato: 0.62, swing: 0.15, contour: 'bounce', range: 4, jit: 0.5, vib: [7, 16], trem: [26, 0.35], glide: 0.015, level: 1.15 },
   // the moles: a closed-mouth, snuffly hum, dark, a sniff at the start of a phrase
-  mole: { k: 0.95, vowel: [0.8, 0.78], tilt: 2.3, breath: 0.1, bright: 1700, nasal: 0.85, rate: 0.85, legato: 0.82, swing: 0.2, foot: 3, contour: 'fall', range: 3, jit: 0.4, vib: [4.5, 12], glide: 0.05, snuffle: true, level: 0.6 },
+  mole: { k: 0.95, vowel: [0.8, 0.78], tilt: 2.3, breath: 0.1, bright: 1700, nasal: 0.85, rate: 0.85, legato: 0.82, swing: 0.2, foot: 3, contour: 'fall', range: 3, jit: 0.4, vib: [4.5, 12], glide: 0.05, snuffle: true, level: 0.6, mouth: 0.4 },
   // elves and gnomes: small, quick, sharp up-and-down jumps
   elf: { k: 1.3, tilt: 1.6, breath: 0.08, bright: 4800, nasal: 0.25, rate: 1.25, legato: 0.55, swing: 0.2, contour: 'zigzag', range: 6, jit: 0.4, vib: [6, 14], glide: 0.02, level: 0.95 },
   // Zeelich's triangle-heads: clipped, even, stepping between whole tones
@@ -56,7 +65,7 @@ export const RACES = {
   // machines: a pure, dark tone in exact steps, no vibrato
   robot: { k: 1, tilt: 2.6, breath: 0, bright: 3000, nasal: 0, rate: 1.3, legato: 0.45, swing: 0, foot: 4, contour: 'step', quant: 'whole', range: 5, jit: 0.6, vib: [0, 0], glide: 0.004, level: 0.8 },
   // Sendell: not quite of this world: slow, breathy, sung, long soft edges
-  spirit: { k: 1.3, tilt: 2.6, breath: 0.28, bright: 4200, nasal: 0, rate: 0.6, legato: 1.3, swing: 0, foot: 4, contour: 'sing', quant: 'penta', range: 7, jit: 0.3, vib: [4.5, 25], glide: 0.12, atk: 0.06, rel: 0.12, level: 0.5 },
+  spirit: { mouth: 0.6, k: 1.3, tilt: 2.6, breath: 0.28, bright: 4200, nasal: 0, rate: 0.6, legato: 1.3, swing: 0, foot: 4, contour: 'sing', quant: 'penta', range: 7, jit: 0.3, vib: [4.5, 25], glide: 0.12, atk: 0.06, rel: 0.12, level: 0.5 },
   // a big, sleepy creature's rumble
   beast: { k: 0.7, tilt: 2.4, breath: 0.08, bright: 1300, nasal: 0.6, rate: 0.55, legato: 0.95, swing: 0.2, contour: 'fall', range: 4, jit: 0.3, vib: [3.5, 30], glide: 0.1, level: 1.2 },
 };
@@ -199,11 +208,13 @@ export class Babble {
     this.v = null; this.acc = 0; this.count = 0;
     this.ctx = null; this.chans = null; this.ci = 0; this.cur = null;
     this.text = null; this.lineHash = 0; this.syl = 0; this.tNext = 0;
+    this.mev = []; this.clk = null; this.key = null; this.mt = 0;   // (FACES-HANDS: the talking mouth syllables; the clock tNext is on; the speaker name key; the game clock, set each frame by driveMouth)
   }
 
   // a new speaker: the previous one (if any) is released softly
   start(nameKey) {
     this.hush();
+    this.key = nameKey;
     this.v = voiceFor(nameKey);
     this.cur = null; this.acc = 0; this.text = null; this.tNext = 0;
     this.audio.duck?.(!!this.v);
@@ -214,13 +225,33 @@ export class Babble {
   // syllables it gets ahead by wait here and are spoken at the voice's own pace, after the text has finished
   // typing too, until the line is closed (stop) or skipped (hush). Called every frame while a line is up.
   pump() {
-    const ctx = this.audio.ctx;
-    if (!this.v || !this.text || !this.pend?.length || !ctx) return;
-    while (this.pend.length && Math.max(ctx.currentTime + LEAD, this.tNext) <= ctx.currentTime + MAXQ) this.syllable(this.text, this.pend.shift());
+    if (!this.v || !this.text || !this.pend?.length) return;
+    const now = this._clock();
+    while (this.pend.length && Math.max(now + LEAD, this.tNext) <= now + MAXQ) this.syllable(this.text, this.pend.shift());
   }
+  // FACES-HANDS: the clock the syllables are scheduled on: the audio clock while the voice can be heard, the game clock (mt)
+  // when it can't (muted, a suspended or missing audio context), so the mouth moves in time with the line either way
+  _live() { const A = this.audio, c = A.ctx; return !!(c && c.state === 'running' && A.vol.voice > 0 && A.voiceBus); }
+  _clock() { return this._live() ? this.audio.ctx.currentTime : this.mt; }
+  // the talking mouth now: {o: how open (0-1), r: how round}; the visible syllables are the audible ones, same timing
+  mouth(now = this.mt) {
+    const L = this.mev;
+    while (L.length && L[0].a + L[0].d < now - 0.2) L.shift();
+    let o = 0, r = 0;
+    for (const e of L) {
+      if (e.a > now) break;
+      const u = (now - e.a) / e.d;
+      if (u >= 1) continue;
+      const k = Math.pow(Math.sin(Math.PI * u), 0.75) * e.o;
+      if (k > o) { o = k; r = e.r; }
+    }
+    return { o, r };
+  }
+  // is a line being spoken: syllables due or still waiting
+  get speaking() { return !!this.v && (this.mev.length > 0 || !!this.pend?.length); }
   // stop the sound but keep the speaker (the text was skipped to its end, the game paused)
   hush() {
-    this.pend = [];
+    this.pend = []; this.mev.length = 0;
     const ctx = this.ctx;
     if (!ctx || !this.chans) return;
     const now = ctx.currentTime;
@@ -322,13 +353,14 @@ export class Babble {
   }
 
   syllable(text, i) {
-    const A = this.audio, ctx = A.ctx, v = this.v;
-    if (!ctx || ctx.state !== 'running' || !(A.vol.voice > 0) || !A.voiceBus) return;
-    if (ctx !== this.ctx) this._build(ctx);
-    const now = ctx.currentTime;
+    const A = this.audio, v = this.v, live = this._live(), ctx = A.ctx;
+    if (live && ctx !== this.ctx) this._build(ctx);
+    // (FACES-HANDS: a voice nobody can hear is still timed, on the game clock, so its speaker's mouth moves)
+    const now = live ? ctx.currentTime : this.mt;
+    if (this.clk !== live) { this.clk = live; this.tNext = 0; }
     const ts = Math.max(now + LEAD, this.tNext);
     if (ts > now + MAXQ) { (this.pend ||= []).push(i); return; } // (VOICE-LEN: queued, spoken once the voice catches up)
-    this.count++;
+    if (live) this.count++;
     const n = this.syl++;
     const r = rng(v.seed ^ this.lineHash ^ Math.imul(i + 1, 0x9e3779b1));
 
@@ -365,6 +397,16 @@ export class Babble {
     // the next syllable waits for this one's release (a clear dip between syllables), at most for its length
     this.tNext = ts + Math.min(dur, dur * v.legato + v.rel * 0.8);
 
+    // ---- the mouth (FACES-HANDS): one open-and-close per syllable, as far as its vowel opens it, shut lips on m/b/p/w
+    {
+      const vk = vowelKey(text, i), cm = (text[i] || '').toLowerCase();
+      const wall = this.mt + (ts - now);
+      this.mev.push({ a: wall + (HISS.has(cm) ? 0.03 : 0.012), d: Math.max(0.07, Math.min(dur, dur * v.legato + 0.04)),
+        o: MOUTH_OPEN[vk] * (LIPS.has(cm) ? 0.55 : 1) * (stress ? 1 : 0.88) * v.mouth, r: MOUTH_ROUND[vk] });
+      if (this.mev.length > 24) this.mev.shift();
+    }
+    if (!live) return;
+
     // ---- the channel and its sources for this utterance
     let ch = this.cur;
     if (!ch) { this.ci = (this.ci + 1) % CHANNELS; ch = this.cur = this.chans[this.ci]; this._configure(ch, v, now); }
@@ -400,9 +442,7 @@ export class Babble {
     vg.setTargetAtTime(v.vib[1], tv + Math.min(0.05, dur * 0.4), 0.04);
 
     // ---- the vowel: formants glide (coarticulation), from the next vowel letter in the text
-    let vow = null;
-    for (let k = i; k < Math.min(text.length, i + 4); k++) { const l = text[k].normalize('NFD')[0].toLowerCase(); if (VOWELS[l]) { vow = VOWELS[l]; break; } }
-    if (!vow) vow = VOWEL_LIST[(text.charCodeAt(i) + i) % VOWEL_LIST.length]; // (scripts without written vowels)
+    const vow = VOWELS[vowelKey(text, i)];
     for (let j = 0; j < 3; j++) {
       const F = vow[j] * v.k * (j < 2 ? v.vowel[j] : 1) * (nas && j === 0 ? 0.85 : 1);
       const fp = ch.F[j].f.frequency, q = ch.F[j].f.Q;
@@ -418,4 +458,21 @@ export class Babble {
     g.setTargetAtTime(peak * 0.78, tv + v.atk, dur * 0.5);
     g.setTargetAtTime(0, tv + Math.max(v.atk, dur * v.legato), v.rel / 3);
   }
+}
+
+// FACES-HANDS: whoever is speaking opens and closes their mouth with the voice's syllables (rig.speakMouth; the rig eases it
+// and closes it the moment nothing drives it). Called once a frame. The speaker is the actor a dialogue line was given
+// (game.say), else the one the voice's name key names ('n_zoe' -> the NPC with id 'zoe', 'n_hero' -> Twinsen): a cinematic's
+// subtitles speak by key only. A radio voice has no mouth in the room.
+export function driveMouth(game) {
+  const B = game.audio?.babble, v = B?.v;
+  if (B) B.mt = game.time;
+  if (!v || v.radio || !(B.mev.length || B.pend?.length)) return;
+  const { o, r } = B.mouth();
+  let a = game.state === 'dialog' ? game.speaker : null;
+  if (!a && B.key?.startsWith('n_')) {
+    const id = B.key.slice(2);
+    a = id === 'hero' ? game.hero : game.npcs?.find((n) => n.def?.id === id && n.present);
+  }
+  a?.rig?.speakMouth?.(o, r);
 }

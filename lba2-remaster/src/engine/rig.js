@@ -289,7 +289,13 @@ export class Rig {
     this.guard = false;       // the player is engaged: the idle becomes his combat stance (GUARD[guardKind])
     this.guardKind = 'ball';
     this.combatLook = null;   // the player's locked target: the head and chest turn to it (when nothing else is looked at)
+    this.mouth = null;        // (FACES-HANDS) a poly model's talking mouth: a small mesh on the head (characters.js polyCharacter)
+    this.mOpen = 0; this.mRound = 0; this.mTarget = 0; this.mTargetRound = 0;
   }
+
+  // FACES-HANDS: ask for the talking mouth this open (0 shut .. 1 wide) and this round (+ pursed, - spread) for this frame;
+  // the voice's syllables drive it (voice.js driveMouth). A frame nobody asks, it eases shut.
+  speakMouth(open, round = 0) { this.mTarget = open; this.mTargetRound = round; }
 
   play(anim) {
     if (this.anim !== anim) {
@@ -1020,6 +1026,19 @@ export class Rig {
     const blink = this.blinkT < 0.12;
     if (this.blinkT < 0) this.blinkT = 2 + Math.random() * 4;
     for (const e of j.eyes) e.scale.y = blink ? 0.12 : 1;
+
+    // the talking mouth (FACES-HANDS): a thin closed line at rest; open, it is taller, a touch narrower when pursed (o, u) and
+    // wider when spread (i, e), and drops a little with the jaw. Eased, so a syllable is a soft open-and-close, not a flicker.
+    const mo = this.mouth;
+    if (mo && (this.mOpen > 0 || this.mTarget > 0)) {
+      const k = Math.min(1, dt * (this.mTarget > this.mOpen ? 42 : 26));
+      this.mOpen += (this.mTarget - this.mOpen) * k; this.mRound += (this.mTargetRound - this.mRound) * k;
+      if (this.mTarget === 0 && this.mOpen < 0.01) this.mOpen = 0;
+      const u = mo.userData, o = this.mOpen;
+      mo.scale.set(1 - 0.2 * this.mRound * o, u.rest + (1 - u.rest) * o, 1);
+      mo.position.y = u.y0 + u.drop * o; mo.rotation.x = u.tilt * o;
+    }
+    this.mTarget = 0; this.mTargetRound = 0;
 
     // a Grobo's ears and trunk (Baldino; his clips 715/717/718 swing both): the ears turn on their roots — a slow
     // waft at rest (1.6 s), two flaps in each talk loop, a swing with every step — and the trunk sways from side to

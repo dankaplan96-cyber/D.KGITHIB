@@ -1147,7 +1147,24 @@ function polyCharacter(L, def, P) {
     bones[e.bone].add(g);
     return g;
   });
-  return finishRig(L, def, root, mesh, bones, eyes);
+  const rig = finishRig(L, def, root, mesh, bones, eyes);
+  // FACES-HANDS: the talking mouth, drawn open and scaled down to a thin closed line (rest); the rig opens it with the voice
+  // (rig.speakMouth). One more small mesh on the head with the eyes' shared material: no new program.
+  const m = P.mouths?.[0];
+  if (m) {
+    const g = new THREE.Group();
+    g.position.set(m.pivot[0] - hp[0], m.pivot[1] - hp[1], m.pivot[2] - hp[2]);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(m.pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(polyColors(m.col), 3));
+    geo.computeVertexNormals();
+    g.add(new THREE.Mesh(geo, polyEyeMat));
+    g.scale.y = m.rest;
+    g.userData = { rest: m.rest, drop: m.drop, tilt: m.tilt || 0, y0: g.position.y };
+    bones[m.bone].add(g);
+    rig.mouth = g;
+  }
+  return rig;
 }
 // The player's character stays readable behind trees, walls and hills: where something hides the body, a faint
 // flat silhouette shows through. The body writes 1 into the stencil where it is visible; the silhouette is drawn
@@ -1172,7 +1189,7 @@ export function addSilhouette(rig, color = '#40c8ff') {
   const mesh = rig?.mesh;
   if (!mesh?.isSkinnedMesh || rig.silhouette) return;
   // the eyes share one material with every character: the hero's get their own copy before it writes the stencil
-  for (const e of rig.j?.eyes || []) e.traverse((o) => { if (o.isMesh) o.material = o.material.clone(); });
+  for (const e of [...(rig.j?.eyes || []), ...(rig.mouth ? [rig.mouth] : [])]) e.traverse((o) => { if (o.isMesh) o.material = o.material.clone(); });
   writeBodyStencil(rig.root);
   silMat ??= new THREE.MeshBasicMaterial({
     color, transparent: true, opacity: 0.5, depthWrite: false, depthFunc: THREE.GreaterDepth, fog: false,

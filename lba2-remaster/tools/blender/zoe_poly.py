@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
 from mathutils import Vector  # noqa: E402
 from mathutils.bvhtree import BVHTree  # noqa: E402
-from lbapoly import Builder, lerp, loft, ring, smooth, sphere, tube  # noqa: E402
+from lbapoly import Builder, lerp, lip_band, loft, mouth_lens, ring, smooth, sphere, tube  # noqa: E402
 
 args = [a for a in sys.argv[1:] if not a.endswith('.py')]
 SKEL, OUT = args[0], args[1]
@@ -51,6 +51,7 @@ COL = {
     'blue': '#1b4b67',      # byte 197: the necklace and earrings (lines in the original)
     'hair': '#cc8f00',      # renders #e3af6b with HAIR_UP (palette 106 #e3af53)
     # ZOE-OPEN (ours): the eyes' white (warm, not paper), iris and pupil, and the line between the lips
+    'skinLine': '#a8744c',  # FACES-HANDS: the lines between the fingers (the skin, a quarter darker)
     'white': '#e9ded2', 'iris': '#3f7480', 'pupil': '#16272b', 'mouth': '#6a1a16',
 }
 # A constant shade for the hair: with every normal straight up LbaMaterial gives t = n·L = 0.8 from any side
@@ -325,7 +326,7 @@ ARM = [   # (u along the arm: 0 the shoulder, 0.5 the elbow, 1 the wrist; half-w
 ARM_N = 12
 
 
-def build_hand(part, el, hd, sx):
+def build_hand(part, el, hd, sx, lines=None):
     """ZOE-OPEN: a hand that reads at the opening's tap close-up, in place of the flat paddle (the original's forearm
     narrows to a long point; SRC-1 made it a short flattened mitten, which read as a stick's end). A palm a little
     wider than the wrist, the four fingers as one mitten curling gently toward the palm, and a thumb of its own on the
@@ -356,13 +357,14 @@ def build_hand(part, el, hd, sx):
     STA = [(-0.010, 0, 0.0235, 0.0175, 0.0), (0.012, 0, 0.0275, 0.015, 0.001), (0.040, 0, 0.030, 0.0125, 0.002),
            (0.064, 4, 0.0295, 0.0112, 0.002), (0.085, 16, 0.027, 0.0098, 0.0), (0.103, 30, 0.0235, 0.0088, 0.0),
            (0.116, 44, 0.018, 0.0078, 0.0), (0.123, 56, 0.011, 0.0062, 0.0)]
-    rings, p, prev_s, ax = [], hd + d * STA[0][0], STA[0][0], d
+    rings, p, prev_s, ax, fr = [], hd + d * STA[0][0], STA[0][0], d, []
     for s, curl, hw, ht, off in STA:
         a = math.radians(curl)
         ax = (d * math.cos(a) + palm * math.sin(a)).normalized()
         p = p + ax * (s - prev_s)
         prev_s = s
         rings.append(sec(p + palm * off, ax, hw, ht))
+        fr.append((p + palm * off, ax, hw, ht))
     # winding: outward
     loft(part, rings, cap_bottom=False, cap_top=True)
     f0 = part.f[NH]
@@ -372,6 +374,29 @@ def build_hand(part, el, hd, sx):
     axis_pt = Vector(tuple(sum(Vector(q)[k] for q in rings[1]) / NH for k in range(3)))
     if (b_ - a_).cross(c_ - a_).dot(cen - axis_pt) < 0:
         part.f = [list(reversed(f)) for f in part.f]
+    # FACES-HANDS: the four fingers told apart. Three thin darker lines run along the mitten from the knuckles to the tips
+    # on the palm side and on the back of the hand (laid 0.8 mm off the skin, a ribbon 1.8 mm wide), so in a close-up the
+    # curl reads as fingers and not one blob; they add 36 triangles to a hand and cost no silhouette.
+    if lines is not None:
+        def lpt(k, f, side):
+            c_, ax_, hw_, ht_ = fr[k]
+            nrm_ = (palm - ax_ * palm.dot(ax_)).normalized()
+            w2_ = nrm_.cross(ax_).normalized()
+            if w2_.dot(wv) < 0:
+                w2_ = -w2_
+            cc_ = math.copysign(abs(f) ** (1 / 0.7), f)
+            ss_ = side * math.sqrt(max(0.0, 1 - cc_ * cc_))
+            return c_ + w2_ * (f * hw_) + nrm_ * (math.copysign(abs(ss_) ** 0.7, ss_) * ht_ + side * 0.0008)
+        for side in (1, -1):
+            for f in (-0.5, 0.0, 0.5):
+                for k in range(3, 6):
+                    q = [lpt(k, f - 0.04, side), lpt(k, f + 0.04, side), lpt(k + 1, f + 0.04, side), lpt(k + 1, f - 0.04, side)]
+                    ctr = sum(q, Vector()) / 4
+                    c_, ax_, hw_, ht_ = fr[k]
+                    v0, v1, v2 = q[0], q[1], q[2]
+                    if (v1 - v0).cross(v2 - v0).dot(ctr - c_) < 0:
+                        q.reverse()
+                    lines.add([tuple(x) for x in q], [[0, 1, 2, 3]])
     # the thumb: from the palm's front edge near the wrist, out and forward, its tip turned toward the palm
     t0 = hd + d * 0.010 + wv * 0.017 + palm * 0.004
     dir1 = (d * 0.80 + wv * 0.42 + palm * 0.28).normalized()
@@ -429,7 +454,7 @@ for s_, sx in (('L', 1), ('R', -1)):
     if (b_ - a_).cross(c_ - a_).dot(cen - along(ARM[1][0])) < 0:
         arm.f = [list(reversed(f)) for f in arm.f]
     el, hd = tuple(E0), tuple(H0)
-    build_hand(b.P('hand' + s_, COL['skin'], 'hand' + s_, 55), Vector(el), Vector(hd), sx)
+    build_hand(b.P('hand' + s_, COL['skin'], 'hand' + s_, 55), Vector(el), Vector(hd), sx, b.P('fingers' + s_, COL['skinLine'], 'hand' + s_, 30))
 
 # ------------------------------------------------------------------ neck and head
 neckY, headY = bp('neck')[1], bp('head')[1]
@@ -532,9 +557,13 @@ else:
             q = [p for i, p in enumerate(q) if p not in q[:i]]
             if len(q) >= 3:
                 face_poly(lips, q, 0.003, 2)
-    ml = feat('mouthLine', COL['mouth'])
-    ml.normal = (0.0, 0.15, 1.0)
-    strip(ml, M, 0.0011, 0.0034, (0.0, -1.0))
+    # the line between the lips (FACES-HANDS: now her talking mouth). Its own small mesh on the head bone, drawn at its open
+    # size, a dark lens set between the two lips (the lips stay on the face, red above and below it), and scaled in y by the
+    # game to the same hair-thin line when she is silent (rest 0.16) and up while she speaks (rig.js, voice.js).
+    # The lens is taller below the line than above (a jaw dropping under a still upper lip), and a red lower lip hangs from
+    # it, so the open mouth keeps its red lips: when closed, the band is squashed flat inside the lower lip on the face.
+    mouth_pivot, lens, mouth_tilt = mouth_lens(0.0, LIPS2_MID[0][1] * ZH, 0.0205 * ZH, 0.0072, 0.004, lambda x, y: on_face(x / ZH, y / ZH, 0.0)[2], 9, 0.0052, 0.5, 1.6)
+    b.mouth(mouth_pivot, [(lens, COL['mouth']), (lip_band(lens, 0.0062), COL['red'])], rest=0.17, drop=-0.0012, tilt=mouth_tilt)
     # the nose (skin, on the head): its base points sunk a little into the face, the tip and the underside out of it
     # rows from the bridge down over the tip to the underside: each an arc across the nose from its left foot (sunk
     # into the face) over the ridge to the right foot, so the nose is rounded, not a cut-out wedge
