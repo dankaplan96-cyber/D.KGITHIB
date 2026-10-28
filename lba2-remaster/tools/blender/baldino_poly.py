@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
 from mathutils import Vector  # noqa: E402
 from mathutils.bvhtree import BVHTree  # noqa: E402
-from lbapoly import Builder, loft, ring, smooth, sphere, tube  # noqa: E402
+from lbapoly import Builder, hand_detail, loft, mouth_lens, ring, smooth, sphere, tube  # noqa: E402
 
 args = [a for a in sys.argv[1:] if not a.endswith('.py')]
 SKEL, OUT = args[0], args[1]
@@ -229,7 +229,9 @@ for s_, sx in (('L', 1), ('R', -1)):
     sphere(up, tuple(top), SLEEVE_R[0] * BH * 0.98, 9, 5)
     d = (hd - el).normalized()
     tube(b.P('fore' + s_, COL['skin'], 'el' + s_, 50), tuple(el - d * 0.03), tuple(hd), FORE_R[0] * BH, FORE_R[1] * BH, 8)
-    sphere(b.P('hand' + s_, COL['skin'], 'hand' + s_, 60), tuple(hd + d * 0.035), HAND_R * BH, 10, 7)
+    _hp = b.P('hand' + s_, COL['skin'], 'hand' + s_, 60)
+    sphere(_hp, tuple(hd + d * 0.035), HAND_R * BH, 10, 7)
+    hand_detail(_hp, tuple(hd + d * 0.035), HAND_R * BH, sx, grobo=True)   # (CAST-POLISH: a thumb and knuckle lobes on the ball)
 
 # ------------------------------------------------------------------ the head
 head = b.P('head', COL['skin'], 'head', 55)
@@ -277,6 +279,16 @@ mo = b.P('mouth', COL['mouth'], 'head', 20)
 mv = [on_face(x, y, 0.004) for x, y in MOUTH]
 front_facing = (Vector(mv[1]) - Vector(mv[0])).cross(Vector(mv[2]) - Vector(mv[0])).z > 0
 mo.add(mv, [[0, 1, 2] if front_facing else [0, 2, 1]])
+# CAST-POLISH (part 3): the triangle lies behind the trunk's root and is hidden at almost every angle, so he talked without a
+# visible mouth. His talking mouth (rig.speakMouth / voice.js) is a lens either side of the trunk's root on the jowls, a smile
+# in the same teal as the original's mouth colour, shut to a thin line at rest and opening with the voice
+_fz = lambda xg, yg: on_face(xg / BH, yg / BH, 0.0)[2]
+_mhh = 0.018 * BH
+_lens = []
+for _sx in (1, -1):
+    _mp, _ml, _mt = mouth_lens(_sx * 0.112 * BH, 0.585 * BH, 0.046 * BH, _mhh, 0.01 * BH, _fz, 9, 0.004)
+    _lens.append(_ml)
+b.mouth((0.0, 0.585 * BH, _mp[2]), [(_lens[0], COL['mouth']), (_lens[1], COL['mouth'])], rest=0.3, drop=-0.35 * _mhh, tilt=_mt)
 
 # the ears: flat kites with a little thickness, turned back on their root edge
 for s_, sx in (('L', 1), ('R', -1)):

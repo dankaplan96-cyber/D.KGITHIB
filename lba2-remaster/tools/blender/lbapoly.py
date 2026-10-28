@@ -190,6 +190,24 @@ def lip_band(lens, thick, lift=0.0004):
     return band + [(x, y, z + lift) for x, y, z in reversed(top)]
 
 
+def hand_detail(part, hc, r, sx, bunny=False, grobo=False):
+    """CAST-POLISH: a hand on the ball (as Twinsen's, twinsen_poly.py: the ball stays the gameplay silhouette): a thumb
+    standing forward off the inner front, and the fingers as three knuckle lobes curled along the inner underside (the
+    palm faces the thigh at rest). A paw (bunny) has two fat toe-lobes and a short thumb; a Grobo's hand a stout thumb."""
+    k = r / 0.036
+    if bunny:
+        tube(part, (hc[0] - sx * 0.013 * k, hc[1] + 0.010 * k, hc[2] + 0.022 * k), (hc[0] - sx * 0.019 * k, hc[1] + 0.002 * k, hc[2] + 0.044 * k), 0.0100 * k, 0.0075 * k, 6)
+        lobes = ((-0.014, -0.019, 0.0125), (0.010, -0.021, 0.0125))
+    elif grobo:
+        tube(part, (hc[0] - sx * 0.013 * k, hc[1] + 0.012 * k, hc[2] + 0.022 * k), (hc[0] - sx * 0.022 * k, hc[1] + 0.0 * k, hc[2] + 0.052 * k), 0.0125 * k, 0.0085 * k, 6)
+        lobes = ((-0.020, -0.017, 0.0135), (-0.002, -0.022, 0.0145), (0.017, -0.019, 0.0125))
+    else:
+        tube(part, (hc[0] - sx * 0.013 * k, hc[1] + 0.012 * k, hc[2] + 0.022 * k), (hc[0] - sx * 0.021 * k, hc[1] + 0.001 * k, hc[2] + 0.050 * k), 0.0098 * k, 0.0068 * k, 6)
+        lobes = ((-0.020, -0.017, 0.0118), (-0.002, -0.021, 0.0128), (0.017, -0.019, 0.0108))
+    for dz_, dy_, rr_ in lobes:
+        sphere(part, (hc[0] - sx * 0.026 * k, hc[1] + dy_ * k, hc[2] + dz_ * k), rr_ * k, 6, 4)
+
+
 # ------------------------------------------------------------------ export
 def corner_normals(verts, tris, angle):
     fn = []

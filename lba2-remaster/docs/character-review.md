@@ -1100,3 +1100,57 @@ FACES-HANDS' mouths) now has what the three leads have, race by race. Looks in `
   design; hats and ears do not move. No audio lip-sync: the mouth follows the babble's syllables, as for the leads.
 - **Rebuilt with** `python3 tools/blender/cast_poly.py art/characters/skeletons.json assets/poly` (whole cast; Zoé and Baldino
   are skipped unless named) and `... assets/poly arthur` (his own blend).
+
+### CAST-POLISH part 3 (WORKLIST #39, finished): Zeelich's races, the Esmers, Vesk and Baldino
+
+The same pass for everyone left; every model that has a `poly` JSON now has a talking mouth except FunFrock's troopers
+(`fclone`, enemies that never speak, a helmet over a face the size of a fist: left as they were; Joe, Ker'aooc and the
+Spheros were part 1). `zislands.js`, `zplaces.js` and travel have no inhabitants of their own (the islands are scenery;
+their people are the ones above), so there was nothing to add there. Looks in `characters.js`, skeletons, bone names,
+colours and heights are unchanged; the `CAST` table in `cast_poly.py` (and a few lines in `baldino_poly.py`) carries the
+rest. `lbapoly.py` gained `hand_detail` (moved from `cast_poly.py`; Baldino's script uses it too).
+
+- **Mosquibees (zbee1 Bzizz, zbee2 Madam Zuzzara):** compound eyes of seven raised hexagonal facets each (a lighter
+  centre cell), a brow ridge (heavy on the porter, thin on the matron, who also has lashes), a face plate, mandibles, a
+  proboscis with a bulb and a pale tip, a ruff of fuzz round the thorax, a stinger, wings with veins plus a shorter hind
+  pair, jointed legs and elbows, forelegs ending in a hand with three claws and a thumb, three toes on each foot. The
+  **talking mouth** is a lens either side of the proboscis's root (dark wine for Bzizz, crimson for the matron), one mesh.
+  Compound eyes do not blink (no eye group, as before).
+- **Moles (zmole1 Old Grumm, zmole2 Mother Snuff):** a rounded skull the snout grows from, round ears with pink centres,
+  a dark nose, whiskers, a tuft or two; small bead eyes with glints under a lid and brow (Grumm: heavy lid, bushy grey
+  brows; Snuff: lighter lid, bigger eyes). The **talking mouth** is a long lens down each side of the snout (a dark line
+  at rest, a gape in profile when it speaks; there is no mouth to see from straight ahead on a snout this narrow).
+  Spade hands with three digging claws and a thumb, toe claws on the big feet. The robe: a hem band, a collar band
+  and (Grumm) a belt with a brass buckle; (Snuff) an apron with a bib, two straps and a pocket laid on the robe's own surface.
+- **Triangle-heads (ztri1 Mr Pelleck, ztri2 Tavo):** a face at last: big lidded almond eyes under brows, a nose, a mouth
+  on the chin that talks, ears with an inner shade, a swept fringe (Pelleck) or sideburns (Tavo). Pelleck's jacket has
+  lapels, a breast pocket with a handkerchief, three buttons, a belt and shirt cuffs; Tavo in shirtsleeves has a collar,
+  a button placket, a chest pocket, braces, rolled cuffs. Hands with three fingers and a thumb. (The first attempt put the
+  eyes on a guessed face surface and they sank into the cheeks: `ring_z` now gives the loft's true surface.)
+- **Esmers (nara, oku, xil, keeper, clerk, councilChair):** the lidded almond eye (white, iris, pupil, lash flick on Nara)
+  in place of the flat dots, brows by temperament (Oku's white and bushy, the chair's stern), a small nose, ear nubs, a
+  cuff at the wrist, and hands of three fingers and a thumb (the cone's point kept as the middle finger). Their mouth is
+  the part-2 lens, a little taller when open.
+- **Vesk:** his mouth was a static slash laid at the head's surface, which his long chin stands in front of, so it was never
+  seen. It is now the talking lens on the chin's own surface under the nose. Also: both brows (frowning), a lidded
+  open eye beside the monocle, swept-back pointed ears, a thumb and knuckle lobes on the left hand, a brass cuff, a violet
+  placket and brass buttons down the coat front.
+- **Baldino:** his triangle of a mouth (the measured original's) hides behind the trunk and was never seen from the front. It
+  stays, and a talking lens on each jowl either side of the trunk's root (the original's teal, a smile) opens when he speaks;
+  a thumb and knuckle lobes on his round hands. His ears and trunk keep their bones and swings.
+- **Counts** (triangles incl. eye and mouth meshes, before to after): zbee1 1212 to 2238, zbee2 1292 to 2354, zmole1 924 to
+  1786, zmole2 924 to 1778, ztri1 817 to 1353, ztri2 813 to 1318, Vesk 1258 to 1522, nara 952 to 1370, oku 1116 to 1532, xil 952 to
+  1368, keeper 952 to 1368, clerk 984 to 1400, councilChair 1116 to 1532, Baldino 4805 to 5101 (he was already over 3k: his
+  ears and trunk are sculpted; +296 is the thumbs and the mouth). Every other character is unchanged (JSON identical but for
+  `-0.0`). Draw calls: +1 each (the mouth mesh; the Esmers and Pelleck/Tavo/Vesk/Baldino already had their eye meshes; the
+  bees and moles have none, as before: the moles' eyes are parts of the body mesh). Materials and shaders: none new (the mesh,
+  eyes and mouth share the same two materials as every poly character). Vertex colours per model went up (facets, lids, claws).
+- **Skeleton and animations:** unchanged: the same 20 bones (the Esmers' and the bees' use only the bones they used; Vesk's coat
+  placket reads the hips bone through the coat's own weights), every new part weighted to the bone of the cloth or skin it sits on.
+  Checked in idle, walk, run, talk, throw (3/4 view, same light): no stretched faces, claws or fuzz; the fuzz and bib move with the body.
+- **Limits:** the bees' and the moles' eyes do not blink; the moles' mouth is seen from the side only; the bee's mouth
+  lies partly behind the proboscis and mandibles from straight ahead; FunFrock's troopers have none; no audio lip-sync (the mouth
+  follows the babble's syllables).
+- **Rebuilt with** `python3 tools/blender/cast_poly.py art/characters/skeletons.json assets/poly` (whole cast, `cast_poly.blend`), the
+  Esmers also into `cast_poly_esmers.blend` (`CAST_BLEND=... cast_poly.py ... nara oku xil keeper clerk councilChair`), and
+  `python3 tools/blender/baldino_poly.py art/characters/skeletons.json assets/poly art/characters/baldino/baldino_poly.blend`.
