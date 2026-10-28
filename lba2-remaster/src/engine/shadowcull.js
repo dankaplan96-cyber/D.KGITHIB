@@ -216,13 +216,15 @@ export class ShadowCull {
   setCell(c) { if (c === this.cell) return false; this.cell = c; if (this.areas.size) this.reset(); return true; }
   // (PERF-HIGH) an area's batches built now rather than on its next visit (the benchmark, after a preset change: its
   // routes then measure the areas as a player who keeps one preset finds them)
-  prepare(root) { if (this.enabled && root && !this.areas.has(root)) this.areas.set(root, new Area(root, this.cell)); }
+  prepare(root) { if (this.enabled && root && !this.areas.has(root)) this.areas.set(root, this.build(root)); }
+  // (I-11: an area's batches, timed and counted for the benchmark's hitch notes)
+  build(root) { const t0 = performance.now(), A = new Area(root, this.cell); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + performance.now() - t0; return A; }
   // (all pieces cast on their own again; batches removed: the benchmark's comparisons, or switching it off)
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); this.area = null; }
   update(root, camera, focus) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return; }
     let A = this.areas.get(root);
-    if (!A) { A = new Area(root, this.cell); this.areas.set(root, A); }
+    if (!A) { A = this.build(root); this.areas.set(root, A); }
     this.area = A;
     this.hide();
     A.watch();

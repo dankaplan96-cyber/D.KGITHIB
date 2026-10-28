@@ -226,7 +226,7 @@ export class DrawBatch {
   update(root) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return null; }
     let A = this.areas.get(root);
-    if (!A) { A = new Area(root, this.cell, this.fold); this.areas.set(root, A); }
+    if (!A) { A = new Area(root, this.cell, this.fold); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
     this.left += A.watch();
     return A;
   }

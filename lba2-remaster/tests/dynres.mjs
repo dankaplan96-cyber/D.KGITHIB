@@ -21,6 +21,9 @@ await ev(() => {
   const G = game, R = G.renderer, gl = R.renderer.getContext();
   // (run against the renderer before PERF-IGPU, which had no setDyn: the same step as its adapt() took)
   if (!R.setDyn) R.setDyn = (k) => { R.dyn = k; R.resize(); };
+  // (AUTO-QUALITY: this is the automatic resolution of a preset chosen by hand; under Quality Auto the governor sets
+  //  the factor itself: tests/autoquality*.mjs)
+  if (G.settings.qualityAuto) { G.settings.qualityAuto = false; G.applySettings(); }
   G.exitRoom({ x: -42, z: 2, a: 0 }, true, true); G.state = 'play'; G.step(0.5);
   // pixels of the canvas's drawing buffer (what the browser would show for this frame)
   window.D = {

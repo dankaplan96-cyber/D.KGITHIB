@@ -172,7 +172,12 @@ export class Environment {
   setStorm(s) { this.storm = s; }
   // High: a 4096 map over ±48 m (2.3 cm texels); Medium/Low: 2048 over ±40 m
   setShadowQuality(q) {
-    const sh = this.sun.shadow, big = q === 'high', size = big ? 4096 : 1024, half = big ? 48 : 36; // (Medium: a quarter of the texels to fill and filter)
+    const big = q === 'high';
+    this.setShadowMap(big ? 4096 : 1024, big ? 48 : 36); // (Medium: a quarter of the texels to fill and filter)
+  }
+  // AUTO-QUALITY: the map's size on its own (4096 and 2048 over High's ±48 m box, 1024 over Medium's ±36 m)
+  setShadowMap(size, half = size > 1024 ? 48 : 36) {
+    const sh = this.sun.shadow;
     if (sh.mapSize.x !== size) { sh.mapSize.set(size, size); sh.map?.dispose(); sh.map = null; }
     const c = sh.camera; c.left = -half; c.right = half; c.top = half; c.bottom = -half; c.updateProjectionMatrix();
   }
