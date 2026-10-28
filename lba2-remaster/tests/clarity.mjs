@@ -67,10 +67,14 @@ await route('prologue', async () => {
   await step('to the well', () => { const w = game.world.well; P.go(w.x - 2.2, w.z, { run: true, tol: 0.8 }); P.face(w.x, w.z); game.step(0.3); });
   await moment('prologue', '04-at-well');
   await step('well', () => { const w = game.world.well; return P.use(w.x, w.z, { near: 2.0, run: true }); });
+  // (CH1-LONGER: Mira wants proof first, Zoé has it next door; the lid is rusted and wants a kick; Doran wakes to the bell)
   await step('gilbert', () => P.talk('gilbert', { run: true }));
+  await step('zoe', () => P.talk('zoe', { run: true }));
+  await step('mira', () => P.talk('mira', { run: true }));
   const key = await moment('prologue', '05-key');
+  await step('lid', () => { const w = game.world.well; P.use(w.x, w.z, { near: 2.0, kind: 'well' }); P.tap('F3'); const r = P.use(w.x, w.z, { near: 2.0, kind: 'well' }); game.step(1); P.settle(); P.tap('F1'); return { ...r, fail: game.flags.pr_lidOpen ? null : 'lid' }; });
   await step('xil', () => P.talk('xil', { run: true }));
-  await step('doran', () => P.talk('doran', { run: true }));
+  await step('bell', () => { const B = game.story.chapters[0].bell; for (let k = 0; k < 5 && !game.flags.pr_bell; k++) { const a = -Math.PI / 2 + (k - 2) * 0.35; P.go(B.x - Math.sin(a) * 5, B.z - Math.cos(a) * 5, { tol: 0.6 }); P.throwAt(B.x, B.z); } P.wait(1.2); P.settle(); return { fail: game.flags.stamp ? null : 'stamp' }; });
   await step('xil rope', () => P.talk('xil', { run: true }));
   await moment('prologue', '06-rope');
   results.prologue.handoff = h0; results.prologue.cupboard = cup; results.prologue.outside = out; results.prologue.key = key;

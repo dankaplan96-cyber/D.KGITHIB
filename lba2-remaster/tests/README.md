@@ -7,6 +7,7 @@ Headless Chromium (Playwright) playthroughs that drive the real game with determ
 ```bash
 cd lba2-remaster && python3 -m http.server 8123 &
 node tests/prologue.mjs        # new game → prologue end → save
+node tests/well-town.mjs       # CH1-LONGER: chapter 1's town steps (Mira's proof, the rusted lid, the harbour bell, the bay rocks), Save → Continue at each, an old save
 node tests/chapter1.mjs        # chapter 1 end to end, with save → reload in the middle
 node tests/chapter2.mjs        # chapter 2 end to end, incl. the confiscated-plan setback
 node tests/save-migration.mjs  # v1 save upgrade + backup, missing room, corrupt save recovery

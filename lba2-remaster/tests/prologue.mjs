@@ -2,9 +2,10 @@ import { launch, checker } from './lib/boot.mjs';
 const { browser, page, errs } = await launch({ width: 1280, height: 720, locale: process.argv[2] || 'he-IL' });
 const { check, done } = checker({ info: 'always' });
 await page.goto((process.env.GAME_URL || 'http://localhost:8123/') + '?nocine', { waitUntil: 'load', timeout: 180000 });
-await page.waitForTimeout(2500);
+// (the title is up once the loading card is gone: a fixed wait was too short on a loaded machine)
+await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: +process.env.BOOT_TIMEOUT || 300000 });
 await page.screenshot({ path: 'P0-title.png', timeout: 180000 });
-await page.click('[data-act="new"]');
+await page.click('[data-act="new"]', { timeout: 120000 });
 const ev = (f, a) => page.evaluate(f, a);
 const log = (...a) => console.log(...a);
 // a story step's end state, judged (R7-VERDICTS): PASS/FAIL with the values it read
@@ -22,6 +23,8 @@ await ev(() => {
     near(id, d = 1.6) { const n = T.npc(id); const h = G.hero; const a = n.angle; h.pos.set(n.pos.x + Math.sin(a) * d, n.pos.y, n.pos.z + Math.cos(a) * d); h.onGround = true; T.face(n.pos); G.step(0.05); },
     talk(id) { T.near(id); T.tap('KeyE'); G.step(0.05); T.talkAll(); },
     p() { return G.hero.pos.toArray().map((v) => +v.toFixed(1)); },
+    // by the well, its prompt up (a resident walking by can take it for a moment: WORLD-LIFE)
+    atWell() { const w = G.world.well; for (let i = 0; i < 30; i++) { T.tp(w.x - 2.2, w.z, Math.PI / 2); if (/^(well)$/.test(G.findInteractable()?.kind)) break; G.step(0.5); } },
   };
 });
 await shot('P1-intro.png');
@@ -39,13 +42,27 @@ is('the cupboard gives the ball', await ev(() => [game.hero.hasBall, game.state]
 await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z + 1.6, Math.PI); game.step(1.6); T.tp(e.x, e.z, Math.PI); game.step(1.2); });
 is('out of the house, in play', await ev(() => [game.state, game.room?.id ?? 'outdoor', T.p()]), (v) => v[0] === 'play' && v[1] === 'outdoor');
 await shot('P3-outside.png');
+// Zoé next door first (CH1-LONGER: this order; tests/playthrough/01 meets Mira first): the kettle crystals
+// (from the lane behind her: she faces her neighbours' door, whose own prompt is at her front)
+await ev(() => { const z = T.npc('zoe'), a = z.angle + Math.PI; T.tp(z.pos.x + Math.sin(a) * 1.4, z.pos.z + Math.cos(a) * 1.4, a + Math.PI); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
+is("Zoé next door gives the kettle crystals (Mira's proof)", await ev(() => [game.flags.pr_kettle, game.flags.key]), (v) => v[0] === true && !v[1]);
 // the well
-await ev(() => { const w = game.world.well; T.tp(w.x - 2.2, w.z, Math.PI / 2); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
+await ev(() => { T.atWell(); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
 is('the well looked at', await ev(() => [game.flags.wellSeen, game.flags.key]), (v) => v[0] === true);
 await ev(() => { T.near('gilbert', 1.8); game.step(0.2); });
 await shot('P4-argument.png');
 await ev(() => T.talk('gilbert'));
-is('Gilbert gives the lid key', await ev(() => [game.flags.key, game.hero.hasKey]), (v) => v[0] === true && v[1] === true);
+is('Gilbert and Mira: with the crystals, Mira gives the lid key', await ev(() => [game.flags.key, game.hero.hasKey, !!game.flags.pr_miraNo]), (v) => v[0] === true && v[1] === true && v[2] === false);
+// the lid: rusted; the ball bounces off; a kick in Aggressive (E) opens it
+await ev(() => { T.atWell(); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
+is('the lid: unlocked but rusted to the rim', await ev(() => [game.flags.pr_lidStuck, game.flags.pr_lidOpen, game.story.chapters[0].lid.lock.visible]), (v) => v[0] === true && !v[1] && v[2] === false);
+await ev(() => { T.tap('Digit3'); game.step(0.1); });
+is('Aggressive: the well\'s prompt is a kick', await ev(() => game.findInteractable()?.label), (v) => v === 'p_kick');
+await ev(() => { T.tap('KeyE'); game.step(1.2); T.talkAll(); T.tap('Digit1'); });
+is('the kick opens the lid (it swings up)', await ev(() => [game.flags.pr_lidOpen, +game.story.chapters[0].lid.pivot.rotation.x.toFixed(2)]), (v) => v[0] === true && v[1] > 1.5);
+// the harbour bell before Xil: Doran wakes, grumbles, no stamp yet
+await ev(() => { const B = game.story.chapters[0].bell; T.tp(B.x + 5, B.z, -Math.PI / 2); T.face(B); game.ball.state = 'idle'; T.tap('KeyF'); game.step(2.5); T.talkAll(); });
+is('the ball rings the bell: Doran awake, no stamp without Xil\'s errand', await ev(() => [game.flags.pr_bell, game.flags.stamp, T.npc('doran').forceAnim]), (v) => v[0] === true && !v[1] && v[2] == null);
 await ev(() => T.talk('xil'));
 is('Xil met at the pier', await ev(() => [game.flags.metXil, game.flags.rope]), (v) => v[0] === true);
 await shot('P5-pier.png');
@@ -62,8 +79,11 @@ await shot('P6-overhear.png');
 await ev(() => { T.talkAll(); T.tap('Digit1'); T.talk('tim'); game.step(1.5); const c = game.pickups.list.find((p) => p.type === 'clover' && !p.id); if (c) { game.hero.pos.set(c.pos.x, game.hero.pos.y, c.pos.z); game.step(0.3); } });
 is('Tim confesses, his clover picked up', await ev(() => [game.flags.timConfessed, game.hero.clovers]), (v) => v[0] === true && v[1] > 0);
 is('an objective is set (the well)', await ev(() => document.querySelector('#pause-objective').textContent), (v) => v.length > 0);
+// the warm stones on top of the bay rocks (put on the top rock: the jumps are tests/playthrough/01's)
+await ev(() => { const S = game.story.chapters[0].stones; T.tp(S.x + 0.6, S.z - 0.4, Math.atan2(-0.6, 0.4)); game.hero.pos.y = S.top; game.step(0.3); T.tap('KeyE'); game.step(0.05); T.talkAll(); });
+is('the warm stones taken: kashes, the Warm Stone', await ev(() => [game.flags.pr_stones, game.hero.coins, game.story.items().some((i) => i.id === 'warmstone')]), (v) => v[0] === true && v[1] >= 10 && v[2] === true);
 // down the well
-await ev(() => { const w = game.world.well; T.tp(w.x - 2.2, w.z, Math.PI / 2); T.tap('KeyE'); game.step(0.05); T.talkAll(); game.step(1); T.talkAll(); });
+await ev(() => { T.atWell(); T.tap('KeyE'); game.step(0.05); T.talkAll(); game.step(1); T.talkAll(); });
 is('down the well', await ev(() => [game.state, game.room?.id, game.flags.inWell]), (v) => v[0] === 'play' && v[1] === 'well' && v[2] === true);
 await shot('P7-cave.png');
 // fight a mite with the ball
