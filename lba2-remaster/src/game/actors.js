@@ -274,7 +274,9 @@ export class Hero extends Actor {
     }
     const fwd = this.vel.x * Math.sin(this.angle) + this.vel.y * Math.cos(this.angle);
     if (!classicGround || cs.drive) this.fwdSpeed = fwd;   // (Classic picks up from what the body is really doing)
-    this.rig.lean = clamp(((fwd - prevFwd) / Math.max(dt, 1e-3)) * 0.012, -0.18, 0.22);
+    // (ANIM-POLISH: the rig springs its lean and its braking dip from the acceleration along the facing; a dodge's or a strike's own
+    // drive is not a start or a stop of walking)
+    this.rig.accel = cs.drive ? 0 : clamp((fwd - prevFwd) / Math.max(dt, 1e-3), -45, 45);
     this.rig.roll = clamp(turning * Math.min(1, Math.hypot(this.vel.x, this.vel.y) / 4) * 0.12, -0.15, 0.15);
     this.rig.turn = turning;
 
@@ -288,6 +290,9 @@ export class Hero extends Actor {
     // the jump's own gravity ends once he is back down at his take-off height, or the hop-pack has him (JUMP)
     if (this.gravity && (this.onGround || this.vy < -JUMP.vy || jet?.firing)) this.gravity = null;
     const landed = P.fall(this, dt);
+    // (ANIM-POLISH: how far he came down, for the landing's depth; and how far the ground still is, for the legs to reach it)
+    if (!wasAir) this.airPeak = this.pos.y; else this.airPeak = Math.max(this.airPeak ?? this.pos.y, this.pos.y);
+    this.rig.groundGap = this.onGround ? 0 : Math.max(0, this.pos.y - (this.groundY ?? this.pos.y));
     // too steep to stand on: slide down (and no jumping from here)
     const steep = this.onGround ? P.steepAt(this.pos.x, this.pos.z, this.pos.y) : null;
     this.sliding = !!steep;
@@ -304,8 +309,14 @@ export class Hero extends Actor {
       const v = -landed, vf = this.gravity ? v * (JUMP.feel / JUMP.vy) : v;
       this.gravity = null;
       if (v > 13) { this.damage(2, null); this.act('knockdown', 0.45, null, 0, ['getup', 0.8]); }
-      else if (vf > 6) { this.rig.land(Math.min(1.2, vf / 10)); g.audio.play('land'); g.particles.burst(this.pos.x, this.pos.y + 0.1, this.pos.z, '#cbb994', 8, 2); }
-      else if (wasAir) this.rig.land(0.4);
+      else {
+        // the knees take the landing by how far he fell (a jump's apex 1.14 m ≈ 0.97, the 0.96 it always had; a step off a ledge 0.3 m, a light touch; a long
+        // drop, the full bend); a hard one lifts a small puff of dust (the soft smoke of Particles, not sparks)
+        const fall = Math.max(0, (this.airPeak ?? this.pos.y) - this.pos.y), s = clamp(0.3 + 0.8 * (fall - 0.3), 0.3, 1.2);
+        if (fall > 0.2 || vf > 6) this.rig.land(s);
+        if (vf > 6) g.audio.play('land');
+        if (fall > 0.9 || vf > 6) g.particles.burst(this.pos.x, this.pos.y + 0.05, this.pos.z, '#b8a888', 8 + Math.round(6 * s), 1.2);
+      }
       if (this.jumpBuf > 0 && beh === 'athletic' && !this.sliding) this.jump();
     }
     if (this.pos.y < -3) this.respawnFromFall();
