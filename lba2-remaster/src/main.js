@@ -295,6 +295,13 @@ class Game {
     this.camRig.relative = () => this.settings.controls !== 'classic';   // (CAM-2: camera-relative controls: the free orbit never turns by itself)
     // (CAM-FOLLOW: with a lock-on the Follow camera stands behind his shoulder on the line from the target, framing both)
     this.camRig.lockOn = () => { const e = this.targeting?.lock; return e && e.alive !== false && e.present !== false && e.pos ? e.pos : null; };
+    // (CAM-CLEAR-2: a dialogue outdoors under Follow frames him and whoever has spoken in it, within 9 m: AUDIT-CH12 #13)
+    this.camRig.talk = () => {
+      if (this.state !== 'dialog' || this.room || !this.talkers?.size) return null;
+      const h = this.hero.pos, out = [];
+      for (const a of this.talkers) if (a.pos && a.present !== false && Math.hypot(a.pos.x - h.x, a.pos.z - h.z) < 9) out.push(a.pos);
+      return out.length ? out : null;
+    };
     this.particles = new Particles(this.scene);
     this.world.particles = this.particles;
     this.pickups = new Pickups(this);
@@ -1648,6 +1655,8 @@ class Game {
     this.setState('dialog');
     this.hud.prompt(null);
     this.speaker = speaker;
+    // (who has spoken in this dialogue, him aside: the Follow camera's two-shot; let go on the next frame of play)
+    if (speaker && speaker !== this.hero && speaker.pos) (this.talkers ??= new Set()).add(speaker);
     color ??= speaker?.def?.color || (speaker === this.hero ? '#8fc2ff' : '#ffffff');
     this.bubbleSide = !this.bubbleSide;
     this.audio.duck(true);
@@ -2081,6 +2090,7 @@ class Game {
   }
 
   updatePlay(dt) {
+    this.talkers?.clear();
     const input = this.input, h = this.hero;
     this.dirty = true;
     if (input.pressed('pause')) { this.pause(); return; }
