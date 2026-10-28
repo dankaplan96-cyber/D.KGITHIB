@@ -1110,17 +1110,35 @@ export class CameraRig {
     // (closer than CH_MIN, to CH_CLOSE: pressed into a corner it stands over his shoulder rather than lifted over the eaves;
     // only within CH_INSIDE of a surface — the arm search keeps CH_NEAR, so grazing an eave's rim by an inch as he walks
     // along a house doesn't cut it in by metres)
-    if (so === 0 && this._solidAt(cam.position, CH_INSIDE)) {
+    // (G1-CAM: on the way over his head too — so > 0 —, in along its own tilt; it used to be lifted out over what it was
+    // in instead: walking into the station's gate passage, onto the gatehouse roof, 4.7 m up in a frame and 5.7 m back
+    // down two frames later)
+    if (this._solidAt(cam.position, CH_INSIDE)) {
       // (G1-CAM: at the lift it has where that stands clear — it used to drop to the ground's least as well, up to 0.8 m
       // in the frame the arm came in by, which turned the tilt back against the arm's own: a jolt and a jitter on the
       // Modern street route; under eaves that spot is not clear and it drops as before)
-      for (let a = C.arm - 0.1; a >= CH_CLOSE - 1e-6; a -= 0.1) {
-        at(_b, yaw, a); const n = this._groundNeed(_b.x, _b.y, _b.z, T, true), y0 = _b.y;
+      for (let a = (so === 0 ? C.arm : arm) - 0.1; a >= CH_CLOSE - 1e-6; a -= 0.1) {
+        if (so === 0) at(_b, yaw, a); else at(_b, yaw, a, T, pitch);
+        const n = this._groundNeed(_b.x, _b.y, _b.z, T, true), y0 = _b.y;
         let l = Math.max(n, C.lift);
         for (_b.y = y0 + l; l > n && this._solidAt(_b, CH_INSIDE); _b.y = y0 + l) l = Math.max(n, l - 0.1);
         if (this._solidAt(_b, CH_INSIDE)) continue;
-        cam.position.copy(_b); C.arm = this.dist = a; C.armV = 0; this.pitch = pq(a); if (l === n) { C.lift = n; C.vlift = 0; } W.keep = 1;
+        cam.position.copy(_b); this.dist = a; W.keep = 1;
+        if (so === 0) { C.arm = a; C.armV = 0; this.pitch = pq(a); if (l === n) { C.lift = n; C.vlift = 0; } }
         break;
+      }
+      // (G1-CAM: nothing clear along its tilt — under the gate arch's springing, 2.2 m up, walking out of the fort yard —:
+      // the least lower tilt that is, behind him under the arch, before the last resort below, which lifted it out over
+      // the arch onto the gatehouse roof, 5 m up in a frame)
+      if (!W.keep) {
+        const q0 = so === 0 ? pq(C.arm) : pitch;
+        dip: for (let q = q0 - 0.1; q >= CH_DIP_MIN - 1e-6; q -= 0.1) for (let a = Math.min(C.arm, CH_SHORT); a >= CH_CLOSE - 1e-6; a -= 0.1) {
+          at(_b, yaw, a, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true);
+          if (this._solidAt(_b, CH_INSIDE)) continue;
+          cam.position.copy(_b); this.dist = a; this.pitch = q; W.keep = 1;
+          if (so === 0) { C.arm = a; C.armV = 0; }
+          break dip;
+        }
       }
     }
     // (nowhere clear at all — pressed into a corner under a roof: BUG-WALL's least margins, as the other views)
