@@ -143,6 +143,9 @@ const CH_SW_STEP = (10 * Math.PI) / 180, CH_SW_MAX = (70 * Math.PI) / 180, CH_SW
 const CH_K_SW = 1 / CH_SW_MAX, CH_K_RISE = 0.5 / 0.36, CH_K_ARM = 4.4, CH_K_PIPE = 0.6, CH_K_KEEP = 0.2, CH_K_CLUT = 0.15, CH_SEARCH_T = 0.15, CH_SEARCH_N = 24, CH_SW_HOLD = 1.2, CH_SW_DELAY = 0.4, CH_SW_COOL = 3, CH_COOL_ARM = 0.5;
 const CH_SIDE = [0.17, 0.35, 0.52], CH_STUCK_T = 0.3, CH_SIDE_HOLD = 4, CH_SIDE_OUT = 5, CH_FRESH_HOLD = 1.5, CH_SW_STILL = 0.3;
 const CH_CLUT = [[1.1, 1.0], [-1.1, 1.0], [2.6, 0.7], [-2.6, 0.7], [0, 2.4]];
+// G1-CAM: after the arm is cut in out of something (the camera dropped under an eave with it) the view's tilt eases for
+// CH_KEEP_EASE s instead of flattening in the frame, its look-at point drawn no nearer than CH_KEEP_K of the way
+const CH_KEEP_EASE = 0.3, CH_KEEP_K = 0.4;
 const CH_SW_V = (70 * Math.PI) / 180, CH_SW_A = (160 * Math.PI) / 180, CH_RISE_V = 0.35, CH_RIM_EL = 0.96;
 // the candidates, cheapest first: [swing, rise, cost]; at the full arm and 0.8 of it every swing to CH_SW_MAX; shorter, a
 // coarser set to CH_SW_FAR (every other swing, a rise and the dips)
@@ -156,6 +159,10 @@ const CH_CANDS = (() => {
 // beside his shoulder CH_TALK_ANG off the line between them (the side nearer the view first), CH_TALK_P up, far enough
 // back that everyone stands inside CH_TALK_FIT of the frame, nobody in front of him (CH_TALK_SEP apart across it); into it and back out to the chase eased (CH_TALK_W, CH_TALK_IN s)
 const CH_TALK_ANG = [0.75, 1.0, 0.55, 1.25, 0.35, 1.5], CH_TALK_P = 0.32, CH_TALK_FIT = 0.72, CH_TALK_W = 2.6, CH_TALK_IN = 1.1, CH_TALK_SEP = 0.22;
+// G1-CAM: where none of those is clear, the search all round them: the arm's lengths (of the first one's), its tilts, and
+// what a flaw costs (someone in front of him; a face behind a post, a rail or an arch's leg; a face hidden; the view
+// crossing the line between him and them, which swaps who stands left and right)
+const CH_TALK_K = [1, 1.3, 0.8, 1.65], CH_TALK_PS = [CH_TALK_P, 0.5], CH_TALK_K_SEP = 3, CH_TALK_K_PART = 4, CH_TALK_K_HID = 8, CH_TALK_K_LINE = 1.5, CH_TALK_CUT = (60 * Math.PI) / 180;
 // critically damped spring, exact for a target held over the step (so it reads the same at any frame rate)
 function spring(o, k, target, w, dt) {
   const e = o[k] - target, t1 = o['v' + k] + w * e, ex = Math.exp(-w * dt);
@@ -193,7 +200,38 @@ function outside(c, x, z) {
   const lx = dx * c.cos - dz * c.sin, lz = dx * c.sin + dz * c.cos;
   return Math.hypot(Math.max(0, Math.abs(lx) - c.hw), Math.max(0, Math.abs(lz) - c.hd));
 }
-const _seen = new Set(), _cells = [], NO_SKIP = new Set();
+const _seen = new Set(), _cells = [], NO_SKIP = new Set(), NONE_V = [];
+// G1-CAM (cost): the scenery volumes by camera.js's own grid of VG m cells (numeric keys; occlude.js's near() builds a
+// string key at every call, ~70 ns, and the Follow camera's sight lines read it at hundreds of samples a frame). Volumes
+// are added once and never move, so the grid is built again only when the list grows. Any volume whose footprint holds
+// a point is filed under that point's cell here as in occlude.js's grid: a test that needs the point inside the footprint
+// reads the same answer from either.
+const VG = 4, _vgrids = new WeakMap(), vkey = (i, j) => (i * 73856093) ^ (j * 19349663);
+function vgrid(occ) {
+  let G = _vgrids.get(occ);
+  if (!G || G.n !== occ.list.length) {
+    G = { n: occ.list.length, map: new Map() };
+    for (const v of occ.list) {
+      const R = v.kind === 'rev' ? v.R : Math.hypot(v.hw, v.hd);
+      for (let i = Math.floor((v.x - R) / VG); i <= Math.floor((v.x + R) / VG); i++) for (let j = Math.floor((v.z - R) / VG); j <= Math.floor((v.z + R) / VG); j++) {
+        const k = vkey(i, j);
+        let a = G.map.get(k);
+        if (!a) G.map.set(k, (a = []));
+        if (!a.includes(v)) a.push(v);
+      }
+    }
+    _vgrids.set(occ, G);
+  }
+  return G.map;
+}
+const vnear = (occ, x, z) => vgrid(occ).get(vkey(Math.floor(x / VG), Math.floor(z / VG))) || NONE_V;
+// (how far (x, z) lies from the segment a → b, across the ground)
+function segDist(x, z, ax, az, bx, bz) {
+  const ux = bx - ax, uz = bz - az, L2 = ux * ux + uz * uz, t = L2 > 0 ? clamp(((x - ax) * ux + (z - az) * uz) / L2, 0, 1) : 0;
+  return Math.hypot(x - ax - ux * t, z - az - uz * t);
+}
+const _segCols = [], _segVols = [], _segSeen = new Set();
+const _pass = [[0, false], [0, true]], SOLID_PASS = (gap) => { _pass[0][0] = gap; _pass[1][0] = gap + CH_PIPE; return _pass; };
 const RIM5 = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]], GAP4 = [[-1, -1], [1, -1], [-1, 1], [1, 1]], GAP11 = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, 0.7], [-0.7, 0, -0.7]];
 
 const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _cd = new THREE.Vector3(), _e = new THREE.Vector3(), _t = new THREE.Vector3();
@@ -322,6 +360,11 @@ export class CameraRig {
 
   update(dt, focus, heroAngle, moving, input) {
     const cam = this.cam;
+    this._fid = (this._fid || 0) + 1; this._busy = true;   // (G1-CAM: a frame's own answers, see _sees)
+    try { this._update(dt, focus, heroAngle, moving, input, cam); } finally { this._busy = false; }
+  }
+
+  _update(dt, focus, heroAngle, moving, input, cam) {
     if (this._focus && focus.distanceToSquared(this._focus) > 16) this.snap();
     (this._focus ??= new THREE.Vector3()).copy(focus);
     // (CAM-2: a drag of the mouse or a finger with no free orbit to turn is let go, not kept for later: it used to pile
@@ -553,9 +596,20 @@ export class CameraRig {
     }
     // (the volumes; the pipeline's tube too, with CH_PIPE more for its stays and saddles — the sight line passes through
     // that one, the camera never stands in it)
-    if (occ) for (const [g, pipe] of [[gap, false], [gap + CH_PIPE, true]]) for (const [dx, dy, dz] of GAP11) {
-      const x = p.x + dx * g, y = p.y + dy * g, z = p.z + dz * g;
-      for (const v of occ.near(x, z)) if ((!pipe || v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return true;
+    // (G1-CAM, cost: the volumes that could hold any of those points gathered once — from the cells of the square round
+    // them —, each point's own test as before)
+    if (occ) {
+      const g2 = gap + CH_PIPE, vs = _segVols;
+      vs.length = 0; _segSeen.clear();
+      for (const [dx, dz] of GAP4) for (const v of vnear(occ, p.x + dx * g2, p.z + dz * g2)) {
+        if (_segSeen.has(v)) continue;
+        _segSeen.add(v);
+        if (v.y0 <= p.y + g2 && v.top >= p.y - g2) vs.push(v);
+      }
+      if (vs.length) for (const [g, pipe] of SOLID_PASS(gap)) for (const [dx, dy, dz] of GAP11) {
+        const x = p.x + dx * g, y = p.y + dy * g, z = p.z + dz * g;
+        for (const v of vs) if ((!pipe || v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return true;
+      }
     }
     return false;
   }
@@ -579,23 +633,75 @@ export class CameraRig {
   // (CAM-CLEAR-2, `strict`: a dialogue's two-shot — his head and his chest both, and the posts and the see-through
   // things count too: a face half behind the beam pad's arch is not framed)
   _sees(p, hero, strict = false) {
-    if (strict) return this._line(p, hero.x, hero.y + 1.5, hero.z, true) && this._line(p, hero.x, hero.y + 1.0, hero.z, true);
-    return this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z);
+    // (G1-CAM, cost: the same spot asked about the same target again within a frame — the clear view's own test, the
+    // arm's two tiers, the lead — reads the answer it already has: nothing it looks at moves within a frame. About half
+    // the questions in a walk through the town are repeats.)
+    const M = (this._seesM ??= { fid: -1, a: [] });
+    if (this._busy) {
+      if (M.fid !== this._fid) { M.fid = this._fid; M.a.length = 0; }
+      for (const e of M.a) if (e[0] === p.x && e[1] === p.y && e[2] === p.z && e[3] === hero.x && e[4] === hero.y && e[5] === hero.z && e[6] === strict) return e[7];
+    }
+    const r = strict ? this._line(p, hero.x, hero.y + 1.5, hero.z, true) && this._line(p, hero.x, hero.y + 1.0, hero.z, true)
+      : this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z);
+    if (this._busy && M.a.length < 48) M.a.push([p.x, p.y, p.z, hero.x, hero.y, hero.z, strict, r]);
+    return r;
+  }
+
+  // G1-CAM (cost): the colliders and the scenery volumes that could hold one of the samples i0 ≤ i < i1 of the line
+  // from p (p + d·i/n, as the callers place them) — those filed in the samples' own grid cells, near enough the line
+  // across, and up and down — into _segCols / _segVols. Gathered once a line instead of looked up at every 0.25 m
+  // sample; each caller's own test on each sample is unchanged, so its answer is too.
+  _segCands(p, dx, dy, dz, n, i0, i1, P, occ) {
+    _segCols.length = 0; _segVols.length = 0;
+    if (i1 <= i0) return;
+    const ka = i0 / n, kb = (i1 - 1) / n, ya = p.y + dy * ka, yb = p.y + dy * kb, ylo = Math.min(ya, yb), yhi = Math.max(ya, yb);
+    const ax = p.x + dx * ka, az = p.z + dz * ka, bx = p.x + dx * kb, bz = p.z + dz * kb;
+    _segSeen.clear();
+    let pi = NaN, pj = NaN, vi = NaN, vj = NaN;
+    for (let i = i0; i < i1; i++) {
+      const k = i / n, x = p.x + dx * k, z = p.z + dz * k;
+      if (P) {
+        const ci = Math.floor(x / P.cell), cj = Math.floor(z / P.cell);
+        if (ci !== pi || cj !== pj) {
+          pi = ci; pj = cj;
+          for (const c of P.near(x, z)) {
+            if (_segSeen.has(c)) continue;
+            _segSeen.add(c);
+            if (c.top > ylo && c.bottom < yhi && segDist(c.x, c.z, ax, az, bx, bz) <= (c.type === 'cyl' ? c.r : Math.hypot(c.hw, c.hd)) + 1e-6) _segCols.push(c);
+          }
+        }
+      }
+      if (occ) {
+        const ci = Math.floor(x / VG), cj = Math.floor(z / VG);
+        if (ci !== vi || cj !== vj) {
+          vi = ci; vj = cj;
+          for (const v of vnear(occ, x, z)) {
+            if (_segSeen.has(v)) continue;
+            _segSeen.add(v);
+            if (v.top >= ylo && v.y0 <= yhi && segDist(v.x, v.z, ax, az, bx, bz) <= (v.kind === 'rev' ? v.R : Math.hypot(v.hw, v.hd)) + 1e-6) _segVols.push(v);
+          }
+        }
+      }
+    }
   }
 
   // (is the line from p to (tx, ty, tz) clear? the end left out: what is right there)
   _line(p, tx, ty, tz, strict = false, ground = true) {
     const P = this.physics, occ = this.occ?.(), T = ground ? this.terrain : null;
     const dx = tx - p.x, dy = ty - p.y, dz = tz - p.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
+    this._segCands(p, dx, dy, dz, n, 1, n - 1, P, occ);
+    const cols = _segCols, vols = _segVols;
     for (let i = 1; i < n - 1; i++) {
       const k = i / n, x = p.x + dx * k, y = p.y + dy * k, z = p.z + dz * k;
       if (T && T.heightAt(x, z) > y + 0.05) return false;
-      if (P) for (const c of P.near(x, z)) {
+      for (const c of cols) {
         if (!c.enabled || c.fades || (c.camSkip && occ) || y >= c.top || y <= c.bottom) continue;
         if (strict ? c.type === 'cyl' && c.r < 0.15 : c.seeThrough || (c.type === 'cyl' && c.r < 1.5)) continue;
         if (P._inside(c, x, z, 0)) return false;
       }
-      if (occ && occ.hit(x, y, z, NO_SKIP) > -Infinity) return false;
+      // (occlude.js hit(), every volume: none skipped, the camera's own ones — camOnly — left out; G1-CAM: but they count
+      // for a dialogue's two-shot, `strict`: a face is not framed through the pipeline or the beam pad's arch)
+      for (const v of vols) if ((strict || !v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return false;
     }
     return true;
   }
@@ -644,9 +750,10 @@ export class CameraRig {
     if (!occ) return false;
     for (const hy of [0.3, 1.0]) {
       const dx = hero.x - p.x, dy = hero.y + hy - p.y, dz = hero.z - p.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
+      this._segCands(p, dx, dy, dz, n, 1, n - 2, null, occ);   // (G1-CAM, cost: see _segCands)
       for (let i = 1; i < n - 2; i++) {
         const k = i / n, x = p.x + dx * k, y = p.y + dy * k, z = p.z + dz * k;
-        for (const v of occ.near(x, z)) if (v.camOnly && y >= v.y0 && y <= occ.topAt(v, x, z)) return true;
+        for (const v of _segVols) if (v.camOnly && y >= v.y0 && y <= occ.topAt(v, x, z)) return true;
       }
     }
     return false;
@@ -1003,12 +1110,35 @@ export class CameraRig {
     // (closer than CH_MIN, to CH_CLOSE: pressed into a corner it stands over his shoulder rather than lifted over the eaves;
     // only within CH_INSIDE of a surface — the arm search keeps CH_NEAR, so grazing an eave's rim by an inch as he walks
     // along a house doesn't cut it in by metres)
-    if (so === 0 && this._solidAt(cam.position, CH_INSIDE)) {
-      for (let a = C.arm - 0.1; a >= CH_CLOSE - 1e-6; a -= 0.1) {
-        at(_b, yaw, a); const n = this._groundNeed(_b.x, _b.y, _b.z, T, true); _b.y += n;
+    // (G1-CAM: on the way over his head too — so > 0 —, in along its own tilt; it used to be lifted out over what it was
+    // in instead: walking into the station's gate passage, onto the gatehouse roof, 4.7 m up in a frame and 5.7 m back
+    // down two frames later)
+    if (this._solidAt(cam.position, CH_INSIDE)) {
+      // (G1-CAM: at the lift it has where that stands clear — it used to drop to the ground's least as well, up to 0.8 m
+      // in the frame the arm came in by, which turned the tilt back against the arm's own: a jolt and a jitter on the
+      // Modern street route; under eaves that spot is not clear and it drops as before)
+      for (let a = (so === 0 ? C.arm : arm) - 0.1; a >= CH_CLOSE - 1e-6; a -= 0.1) {
+        if (so === 0) at(_b, yaw, a); else at(_b, yaw, a, T, pitch);
+        const n = this._groundNeed(_b.x, _b.y, _b.z, T, true), y0 = _b.y;
+        let l = Math.max(n, C.lift);
+        for (_b.y = y0 + l; l > n && this._solidAt(_b, CH_INSIDE); _b.y = y0 + l) l = Math.max(n, l - 0.1);
         if (this._solidAt(_b, CH_INSIDE)) continue;
-        cam.position.copy(_b); C.arm = this.dist = a; C.armV = 0; this.pitch = pq(a); C.lift = n; C.vlift = 0; W.keep = 1;
+        cam.position.copy(_b); this.dist = a; W.keep = 1;
+        if (so === 0) { C.arm = a; C.armV = 0; this.pitch = pq(a); if (l === n) { C.lift = n; C.vlift = 0; } }
         break;
+      }
+      // (G1-CAM: nothing clear along its tilt — under the gate arch's springing, 2.2 m up, walking out of the fort yard —:
+      // the least lower tilt that is, behind him under the arch, before the last resort below, which lifted it out over
+      // the arch onto the gatehouse roof, 5 m up in a frame)
+      if (!W.keep) {
+        const q0 = so === 0 ? pq(C.arm) : pitch;
+        dip: for (let q = q0 - 0.1; q >= CH_DIP_MIN - 1e-6; q -= 0.1) for (let a = Math.min(C.arm, CH_SHORT); a >= CH_CLOSE - 1e-6; a -= 0.1) {
+          at(_b, yaw, a, T, q); _b.y += this._groundNeed(_b.x, _b.y, _b.z, T, true);
+          if (this._solidAt(_b, CH_INSIDE)) continue;
+          cam.position.copy(_b); this.dist = a; this.pitch = q; W.keep = 1;
+          if (so === 0) { C.arm = a; C.armV = 0; }
+          break dip;
+        }
       }
     }
     // (nowhere clear at all — pressed into a corner under a roof: BUG-WALL's least margins, as the other views)
@@ -1023,7 +1153,11 @@ export class CameraRig {
       // (the cap itself eased: the camera passing close over him moves it, never the view in a frame)
       const want = Math.min(el, elMax);
       C.el = fresh || C.el == null ? want : damp(C.el, want, CH_EL_W, dt);
-      if (dv > 0 && el > C.el && dh > 1e-3) { const k = dv / Math.tan(C.el) / dh; this.look.x = c.x + (this.look.x - c.x) * k; this.look.z = c.z + (this.look.z - c.z) * k; }   // (further along the same way)
+      // (G1-CAM: and for CH_KEEP_EASE s after the arm was cut in out of something — the camera dropped under an eave
+      // with it — the tilt eases that way too, nearer along the same way, instead of flattening in the frame and steepening
+      // again as the arm comes on in: a nod, and the jitter on the Modern street route)
+      C.keepT = W.keep ? CH_KEEP_EASE : Math.max(0, (C.keepT || 0) - dt);
+      if (dv > 0 && dh > 1e-3 && (el > C.el || (C.keepT > 0 && el < C.el - 1e-4))) { const k = Math.max(CH_KEEP_K, dv / Math.tan(C.el) / dh); this.look.x = c.x + (this.look.x - c.x) * k; this.look.z = c.z + (this.look.z - c.z) * k; }   // (further, or nearer, along the same way)
     } else C.el = null;
     // CAM-CLEAR-2: a dialogue: him and whoever talks with him framed together, eased in and back out to the chase
     this._talkShot(dt, hero, fresh);
@@ -1063,16 +1197,38 @@ export class CameraRig {
     const spread = Math.max(...all.map((p) => Math.hypot(p.x - look.x, p.z - look.z)));
     const cam = this.cam.position, s1 = angleDiff(back, Math.atan2(cam.x - hero.x, cam.z - hero.z)) < 0 ? -1 : 1;
     const piv = _t.set(hero.x, hero.y, hero.z), d0 = clamp(2.2 + spread * 2.2, 4, 9);
-    for (const strict of [true, false]) for (const k of [1, 1.3, 1.65, 0.8]) for (const ang of CH_TALK_ANG) for (const sg of [s1, -s1]) {
-      const yw = back + sg * ang, D = d0 * k, h = Math.cos(CH_TALK_P) * D;
-      // (from his shoulder's side of the pair: the camera hangs off the look-at point, swung toward him)
-      const p = _e.set(look.x + Math.sin(yw) * h, look.y + Math.sin(CH_TALK_P) * D, look.z + Math.cos(yw) * h);
+    // (from his shoulder's side of the pair: the camera hangs off the look-at point, swung toward him)
+    const place = (yw, D, q) => {
+      const h = Math.cos(q) * D, p = _e.set(look.x + Math.sin(yw) * h, look.y + Math.sin(q) * D, look.z + Math.cos(yw) * h);
       p.y += this._chaseLift(p, _c.set(piv.x, piv.y, piv.z), false);
+      return p;
+    };
+    for (const k of [1, 1.3, 1.65, 0.8]) for (const ang of CH_TALK_ANG) for (const sg of [s1, -s1]) {
+      const p = place(back + sg * ang, d0 * k, CH_TALK_P);
       if (!this._fits(p, look, pts, all) || this._solidAt(p, CH_GAP)) continue;
-      if (!all.every((q) => this._sees(p, q, strict))) continue;
-      return { pos: p.clone(), look };
+      if (all.every((q) => this._sees(p, q, true))) return { pos: p.clone(), look };
     }
-    return null;
+    // G1-CAM (AUDIT-CH12 #13: Vesk at the beam pad): none clear there — three of them round the arch, Twinsen standing in
+    // its ring — it looks all round them (every 15°, the arm's lengths, also from higher up: CH_TALK_PS), the nearest to the
+    // view it has and to his shoulder first; failing a clear one, the one with the fewest faces behind something and
+    // nobody in front of him. (It used to fall back to the first view merely clear of walls — a post, a rail or the
+    // arch's leg not counted — and framed his face through the arch's side; when even that failed it kept the shot of
+    // the first speaker alone, with Vesk standing in front of him.)
+    // (the side of the line between him and them the view stands on now: crossing it turns who stands left and right)
+    const camYaw = Math.atan2(cam.x - look.x, cam.z - look.z), side = (x, z) => Math.sign(dx * (z - hero.z) - dz * (x - hero.x)), s0 = side(cam.x, cam.z);
+    let best = null, bc = Infinity;
+    for (const k of CH_TALK_K) for (const q of CH_TALK_PS) for (let i = 0; i < 24; i++) {
+      const yw = back + (i * Math.PI) / 12;
+      const c1 = Math.abs(Math.abs(angleDiff(back, yw)) - CH_TALK_ANG[0]) * 0.5 + Math.abs(angleDiff(camYaw, yw)) * 0.35 + Math.abs(Math.log(k)) * 0.6 + (q - CH_TALK_P) * 1.5;
+      if (c1 >= bc) continue;
+      const p = place(yw, d0 * k, q), c0 = c1 + (s0 && side(p.x, p.z) === -s0 ? CH_TALK_K_LINE : 0);
+      if (c0 >= bc) continue;
+      if (!this._fits(p, look, pts) || this._solidAt(p, CH_GAP)) continue;
+      let c = c0 + (this._fits(p, look, pts, all) ? 0 : CH_TALK_K_SEP);
+      for (const o of all) { if (c >= bc) break; if (!this._sees(p, o, true)) c += this._sees(p, o) ? CH_TALK_K_PART : CH_TALK_K_HID; }
+      if (c < bc) { bc = c; best = p.clone(); }
+    }
+    return best ? { pos: best, look } : null;
   }
 
   // CAM-CLEAR-2: into the dialogue's two-shot (this.talk) and back out to the chase, eased (CH_TALK_IN s, the shot's own
@@ -1083,18 +1239,33 @@ export class CameraRig {
     if (fresh) { S.k = 0; S.init = false; S.shot = null; S.n = 0; }
     if (who && who.length) {
       // (worked out when the dialogue starts and whenever someone joins it)
-      if (!S.shot || who.length !== S.n) { S.n = who.length; S.shot = this._talkPose(hero, who) || S.shot; S.miss = !S.shot; }
+      // (G1-CAM: a new shot more than CH_TALK_CUT round from the one it has is cut to, as a film cuts to the wider shot when
+      // someone joins in: gliding half round the group took a second at speed, and its way can pass a mast or a roof)
+      if (!S.shot || who.length !== S.n) {
+        S.n = who.length;
+        const ns = this._talkPose(hero, who);
+        if (ns && S.shot && S.init && Math.abs(angleDiff(Math.atan2(S.pos.x - S.look.x, S.pos.z - S.look.z), Math.atan2(ns.pos.x - ns.look.x, ns.pos.z - ns.look.z))) > CH_TALK_CUT) S.init = false;
+        S.shot = ns || S.shot; S.miss = !S.shot;
+      }
     } else { S.n = 0; if (S.k <= 0) S.shot = null; }
     const on = !!(who && who.length && S.shot);
     S.k = clamp(S.k + (on ? dt : -dt) / CH_TALK_IN, 0, 1);
     if (S.k <= 0 || !S.shot) { S.init = false; return; }
     if (!S.init) { S.pos.copy(S.shot.pos); S.look.copy(S.shot.look); S.init = true; }
-    else if (on) { const w = 1 - Math.exp(-CH_TALK_W * dt); S.pos.lerp(S.shot.pos, w); S.look.lerp(S.shot.look, w); }
+    else if (on) {
+      // (G1-CAM: round the look-at point, not straight across it: a new shot on the far side of them glides round the
+      // group at the distances between, never through their heads or the arch they stand round)
+      const w = 1 - Math.exp(-CH_TALK_W * dt), ox = S.pos.x - S.look.x, oz = S.pos.z - S.look.z, oy = S.pos.y - S.look.y;
+      const nx = S.shot.pos.x - S.shot.look.x, nz = S.shot.pos.z - S.shot.look.z, ny = S.shot.pos.y - S.shot.look.y;
+      const a0 = Math.atan2(ox, oz), a = a0 + angleDiff(a0, Math.atan2(nx, nz)) * w, r = lerp(Math.hypot(ox, oz), Math.hypot(nx, nz), w);
+      S.look.lerp(S.shot.look, w);
+      S.pos.set(S.look.x + Math.sin(a) * r, S.look.y + lerp(oy, ny, w), S.look.z + Math.cos(a) * r);
+    }
     const e = smoothstep(0, 1, S.k);
     cam.position.lerp(S.pos, e);
     this.look.lerp(S.look, e);
-    // (on the way between the two, never in anything)
-    if (e < 1 && this._solidAt(cam.position, 0)) this._keepOut(cam.position, this.look, 0, 0.4, HARD);
+    // (on the way between the two, or round to a new shot, never in anything)
+    if (this._solidAt(cam.position, 0)) this._keepOut(cam.position, this.look, 0, 0.4, HARD);
     this.why.talk = e;
   }
 
