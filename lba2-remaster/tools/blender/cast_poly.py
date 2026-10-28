@@ -12,7 +12,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
-from lbapoly import Builder, Part, box, disc, loft, lerp, mouth_lens, ring, smooth, sphere, strip, tube  # noqa: E402
+from mathutils import Vector  # noqa: E402
+from lbapoly import Builder, Part, box, disc, hand_detail, loft, lerp, mouth_lens, ring, smooth, sphere, strip, strip_tris, tube  # noqa: E402
 
 args = [a for a in sys.argv[1:] if not a.endswith('.py')]
 SKEL, OUTDIR = args[0], args[1]
@@ -83,6 +84,20 @@ CAST = {
     'lharElder': dict(earBend=(0.9, 0.9), earLen=0.95, mouthLift=0.6, browTilt=0.3, cheekS=1.1),
     'sphero1': dict(mouthLift=0.6),
     'sphero2': dict(mouthLift=-0.8, lidDrop=6, mouthW=1.0),
+    # ---- part 3: Zeelich's races and the Esmers (build_esmer / build_bee / build_mole / build_tri / build_vesk)
+    'nara': dict(lashes=True, browS=0.9, browTilt=0.3, mouthLift=1.0, noseS=0.9),
+    'oku': dict(browS=2.0, browTilt=-0.2, browCol='#e8e0d0', mouthLift=-0.6, noseS=1.15),
+    'xil': dict(browS=0.9, browTilt=0.4, mouthLift=1.2, noseS=0.95),
+    'keeper': dict(browS=1.1, browTilt=0.2, mouthLift=0.6),
+    'clerk': dict(browS=1.2, browTilt=-0.15, mouthLift=-0.5, noseS=1.05),
+    'councilChair': dict(browS=1.7, browTilt=-0.3, mouthLift=-0.3, noseS=1.1),
+    'zbee1': dict(browS=1.5, lip='#7a2a30'),
+    'zbee2': dict(browS=0.8, lashes=True, lip='#a02840'),
+    'zmole1': dict(browS=1.9, lidT=0.9, lidShade=0.4, eyeW=0.015, tufts=2),
+    'zmole2': dict(lidT=0.45, eyeW=0.021, earIn='#f0b0b8', lipIn='#5a1a2a', tufts=2),
+    'ztri1': dict(fringe=True, browS=0.9, browTilt=0.2, mouthLift=1.0, noseS=1.0),
+    'ztri2': dict(rolled=True, browS=1.5, browTilt=-0.1, mouthLift=0.5, noseS=1.1),
+    'vesk': dict(browS=1.6, browTilt=-0.55, mouthLift=0.9),
 }
 
 
@@ -98,24 +113,6 @@ def resample(half, k):
         t = min(1, d / seg[i]) if seg[i] else 0
         out.append((half[i][0] + (half[i + 1][0] - half[i][0]) * t, half[i][1] + (half[i + 1][1] - half[i][1]) * t))
     return out
-
-
-def hand_detail(part, hc, r, sx, bunny=False, grobo=False):
-    """CAST-POLISH: a hand on the ball (as Twinsen's, twinsen_poly.py: the ball stays the gameplay silhouette): a thumb
-    standing forward off the inner front, and the fingers as three knuckle lobes curled along the inner underside (the
-    palm faces the thigh at rest). A paw (bunny) has two fat toe-lobes and a short thumb; a Grobo's hand a stout thumb."""
-    k = r / 0.036
-    if bunny:
-        tube(part, (hc[0] - sx * 0.013 * k, hc[1] + 0.010 * k, hc[2] + 0.022 * k), (hc[0] - sx * 0.019 * k, hc[1] + 0.002 * k, hc[2] + 0.044 * k), 0.0100 * k, 0.0075 * k, 6)
-        lobes = ((-0.014, -0.019, 0.0125), (0.010, -0.021, 0.0125))
-    elif grobo:
-        tube(part, (hc[0] - sx * 0.013 * k, hc[1] + 0.012 * k, hc[2] + 0.022 * k), (hc[0] - sx * 0.022 * k, hc[1] + 0.0 * k, hc[2] + 0.052 * k), 0.0125 * k, 0.0085 * k, 6)
-        lobes = ((-0.020, -0.017, 0.0135), (-0.002, -0.022, 0.0145), (0.017, -0.019, 0.0125))
-    else:
-        tube(part, (hc[0] - sx * 0.013 * k, hc[1] + 0.012 * k, hc[2] + 0.022 * k), (hc[0] - sx * 0.021 * k, hc[1] + 0.001 * k, hc[2] + 0.050 * k), 0.0098 * k, 0.0068 * k, 6)
-        lobes = ((-0.020, -0.017, 0.0118), (-0.002, -0.021, 0.0128), (0.017, -0.019, 0.0108))
-    for dz_, dy_, rr_ in lobes:
-        sphere(part, (hc[0] - sx * 0.026 * k, hc[1] + dy_ * k, hc[2] + dz_ * k), rr_ * k, 6, 4)
 
 
 def brow_strips(part, front, ey, ex, ew, eh, bs=1.0, tilt=0.0, arch=0.0, lift=0.005, drop=0.0):
@@ -1126,12 +1123,112 @@ def face_dots(b, front, ey, ex, w, h, white, iris):
         b.eye(on(0, 0), quads)
 
 
+# ---------------------------------------------------------------- CAST-POLISH part 3: Zeelich's races and the Esmers
+# Helpers: a flat polygon wound to face a normal, a hexagonal facet on a surface, the lidded almond eye of the Quetch on any
+# face (white, iris, pupil, a lid line that blinks with the group), the z of a ring() loft's surface, a hand with fingers.
+def flat_poly(part, pts, normal):
+    a, b_, c = (Vector(p) for p in pts[:3])
+    if (b_ - a).cross(c - a).dot(Vector(normal)) < 0:
+        pts = list(reversed(pts))
+    part.add(pts, [list(range(len(pts)))])
+    return part
+
+
+def facet(part, c, nrm, r, sides=6, rot=0.0):
+    n = Vector(nrm).normalized()
+    up = Vector((0, 1, 0)) if abs(n.y) < 0.9 else Vector((1, 0, 0))
+    u = n.cross(up).normalized()
+    v = n.cross(u).normalized()
+    pts = [tuple(Vector(c) + (u * math.cos(rot + 2 * math.pi * k / sides) + v * math.sin(rot + 2 * math.pi * k / sides)) * r) for k in range(sides)]
+    return flat_poly(part, pts, n)
+
+
+def eye_set(b, front, ey, ex, w, h, iris, white='#f0ece0', lidc='#2a1a10', lashes=False, sides=(1, -1), pupil='#141820', tilt=0.12, lift=0.004):
+    """The lidded almond eye (as eyes_on() in build(): white, iris, pupil, a flick of lash, the upper lid line as a strip that
+    blinks with the group), on a face whose surface z is front(x, y); w, h the half width and height of the white."""
+    ts = [2 * math.pi * k / 10 for k in range(10)]
+    for sx in sides:
+        cx = sx * ex
+        on = lambda dx, dy, l=0.0, cx=cx: (cx + dx, ey + dy, front(cx + dx, ey + dy) + lift + l)
+        wq = [on(w * math.cos(t), h * math.sin(t) + sx * h * tilt * math.cos(t)) for t in ts]
+        ic, ir = -sx * w * 0.08, h * 0.78
+        iq = [on(ic + ir * math.cos(t), ir * math.sin(t), 0.0012) for t in ts]
+        pq = [on(ic + ir * 0.45 * math.cos(t), ir * 0.45 * math.sin(t), 0.0022) for t in ts]
+        lid = [on(-w * 1.05, h * 0.15, 0.0028), on(-w * 0.5, h * 1.02, 0.0028), on(0, h * 1.18, 0.0028), on(w * 0.5, h * 1.08, 0.0028), on(w * 1.08, h * 0.45, 0.0028),
+               on(w * 1.0, h * 0.75, 0.0028), on(w * 0.5, h * 1.4, 0.0028), on(0, h * 1.5, 0.0028), on(-w * 0.5, h * 1.34, 0.0028), on(-w * 1.0, h * 0.42, 0.0028)]
+        quads = [(wq, white), (iq, iris), (pq, pupil)]
+        if lashes:
+            fl_ = [on(sx * w * 0.9, h * 0.55, 0.003), on(sx * w * 1.32, h * 1.15, 0.003), on(sx * w * 0.62, h * 0.95, 0.003)]
+            if (fl_[1][0] - fl_[0][0]) * (fl_[2][1] - fl_[0][1]) - (fl_[1][1] - fl_[0][1]) * (fl_[2][0] - fl_[0][0]) < 0:
+                fl_ = fl_[::-1]
+            quads.append((fl_, lidc))
+        quads.append((lid, lidc, 'strip'))
+        b.eye(on(0, 0), quads)
+
+
+def ring_z(secs, p, x, y, front=True):
+    """The z of the surface of a loft of ring(y, hw, zf, zb, n, p) sections (absolute units, ascending y) at (x, y)."""
+    if y <= secs[0][0]:
+        hw, zf, zb = secs[0][1:]
+    elif y >= secs[-1][0]:
+        hw, zf, zb = secs[-1][1:]
+    else:
+        for a, c in zip(secs, secs[1:]):
+            if a[0] <= y <= c[0]:
+                t = (y - a[0]) / (c[0] - a[0])
+                hw, zf, zb = (a[k] + (c[k] - a[k]) * t for k in (1, 2, 3))
+                break
+    s = min(0.999, (abs(x) / hw) ** (1 / p))
+    cc = (1 - s * s) ** 0.5
+    return (zf if front else zb) * cc ** p
+
+
+def surf_grid(part, xs_by_row, ys, z_at, lift):
+    """A grid of quads laid on a surface: row j at height ys[j] with the x stations xs_by_row[j] (same count per row)."""
+    vv, ff = [], []
+    for y, xs in zip(ys, xs_by_row):
+        vv += [(x, y, z_at(x, y) + lift) for x in xs]
+    m = len(xs_by_row[0])
+    for j in range(len(ys) - 1):
+        for i in range(m - 1):
+            ff.append([j * m + i, j * m + i + 1, (j + 1) * m + i + 1, (j + 1) * m + i])
+    # (counter-clockwise seen from the front: increasing x, then up, faces +z)
+    part.add(vv, ff)
+    return part
+
+
+def finger_hand(b, side, sx, hd, ax, skin, palm_r, finger_len, finger_r, n_f=3, thumb=True, glove=None, claw=None, bone=None):
+    """A hand with definition: a flat palm, fingers fanned out along the forearm's axis, a thumb forward off the inner side."""
+    bone = bone or ('hand' + side)
+    col = glove or skin
+    ax = Vector(ax).normalized()
+    p1 = (Vector((1, 0, 0)) - ax * ax.x).normalized()
+    p2 = ax.cross(p1).normalized()
+    if p2.z < 0:
+        p2 = -p2
+    hp_ = b.P('hand' + side, col, bone, 50)
+    c0 = Vector(hd) + ax * palm_r * 0.5
+    sphere(hp_, tuple(c0), palm_r, 8, 5, (1.0, 1.0, 0.7))
+    fp = b.P('finger' + side, claw or col, bone, 40)
+    ks = [(i - (n_f - 1) / 2) for i in range(n_f)]
+    for k in ks:
+        base = c0 + p1 * (k * palm_r * 0.62) + ax * palm_r * 0.5
+        tip = Vector(hd) + ax * (finger_len * (1 - 0.1 * abs(k))) + p1 * (k * palm_r * 0.85) + p2 * (palm_r * 0.15)
+        tube(hp_ if claw is None else fp, tuple(base), tuple(tip), finger_r, finger_r * 0.4, 5)
+    if thumb:
+        base = c0 + p1 * (-sx * palm_r * 0.7) + ax * palm_r * 0.2 + p2 * palm_r * 0.3
+        tip = Vector(hd) + ax * finger_len * 0.5 + p1 * (-sx * palm_r * 1.5) + p2 * (palm_r * 1.0)
+        tube(hp_, tuple(base), tuple(tip), finger_r * 1.2, finger_r * 0.5, 5)
+
+
 def build_esmer(name):
     # LBA2's Esmer: one capsule for body and head (the original's: ±0.1 H round, from 0.19 H to the top), the face
     # high on it, trousers below, thin arms hanging out from the capsule with cone hands, thin legs, long boots
+    # CAST-POLISH (part 3): lidded eyes, brows, a nose, ear nubs, a hand with three fingers and a thumb, cuffs
     S = ALL[name]
     L, B = S['look'], S['bones']
     bp = lambda n: tuple(B[n]['p'])
+    cp = CAST.get(name, {})
     H = S['height'] * 0.98
     skin, cloth, pants, shoes = L.get('skin', '#f0a080'), L.get('tunic', '#c84a3a'), L.get('pants', '#3a3a4a'), L.get('shoes', '#e8e0c8')
     trim = L.get('tunicTrim') or cloth
@@ -1153,12 +1250,19 @@ def build_esmer(name):
     bands = [(0.33 * H - 1e-4, pants), (0.36 * H - 1e-4, trim), (0.66 * H - 1e-4, cloth), (0.685 * H - 1e-4, trim), (9e9, skin)]
     banded(b, 'capsule', rings, bands, w_cap)
     front = lambda x, y: zc(y) + math.sqrt(max(0.0, R * R - x * x))
-    face_dots(b, front, faceY, R * 0.38, R * 0.27, R * 0.16, '#f0ece0', L.get('eyes', '#2a2a2a'))
+    ew_, eh_ = R * 0.27, R * 0.16
+    # the eyes: lidded almonds (white, iris, pupil, the lid line that blinks), a brow over each, a nose, ear nubs
+    eye_set(b, front, faceY, R * 0.38, ew_, eh_, L.get('eyes', '#2a2a2a'), lidc=shade(skin, 0.4), lashes=bool(cp.get('lashes')))
+    brow_strips(b.P('brows', cp.get('browCol') or shade(skin, 0.5), 'head', 30), front, faceY, R * 0.38, ew_, eh_, bs=cp.get('browS', 1.0), tilt=cp.get('browTilt', 0.0), lift=0.004)
+    ny_ = faceY - R * 0.3
+    sphere(b.P('nose', shade(skin, 0.94), 'head', 60), (0, ny_, front(0, ny_) + 0.002), R * 0.1 * cp.get('noseS', 1.0), 8, 6, (0.9, 1.1, 1.1))
+    for sxx in (1, -1):
+        sphere(b.P('ear', skin, 'head', 60), (sxx * R * 0.98, faceY - R * 0.12, zc(faceY) - R * 0.04), R * 0.24, 7, 5, (0.32, 1.0, 0.8))
     # (FACES-HANDS) the mouth is the face's talking mouth: a pinched lens on its own small mesh, scaled by the game to the thin
     # line the old quad was (rest 0.29 x 0.014 = 4 mm) and taller while this Esmer speaks (rig.js, voice.js)
     mw = R * 0.28
-    mp_, mlens, mt_ = mouth_lens(0.0, faceY - R * 0.62 + 0.004, mw, 0.014, 0.0, front, 9, 0.003)
-    b.mouth(mp_, [(mlens, '#6a2a2a')], rest=0.29, drop=-0.005, tilt=mt_)
+    mp_, mlens, mt_ = mouth_lens(0.0, faceY - R * 0.62 + 0.004, mw, 0.018, 0.004 * cp.get('mouthLift', 0.0), front, 9, 0.003)
+    b.mouth(mp_, [(mlens, '#6a2a2a')], rest=0.226, drop=-0.006, tilt=mt_)
     if L.get('hat'):   # a round cap over the top of the capsule
         ht = b.P('hat', L['hat'], 'head', 40)
         sphere(ht, (0, 0.955 * H, zc(H)), R * 1.12, 12, 6, (1.0, 0.62, 1.05))
@@ -1168,7 +1272,8 @@ def build_esmer(name):
         for sxx in (1, -1):
             c = (sxx * R * 0.36, faceY, front(sxx * R * 0.36, faceY) + 0.008)
             strip(gl, [(c[0] + math.cos(2 * math.pi * k / 8) * R * 0.25, c[1] + math.sin(2 * math.pi * k / 8) * R * 0.2, c[2]) for k in range(9)], 0.004, (0, 0, 0))
-    # arms: thin, out from the capsule's side at the shoulder; a cone hand pointing down
+    # arms: thin, out from the capsule's side at the shoulder; a hand of three fingers and a thumb (the cone's point kept, as
+    # the middle finger), a cuff in the trim colour above it
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
         a0 = (sx * R * 0.85, sh[1] + 0.02, sh[2])
@@ -1176,9 +1281,16 @@ def build_esmer(name):
         tube(up, a0, el, 0.034, 0.028, 7)
         wrist = lerp(el, hd, 0.95)
         tube(b.P('fore' + s, skin, 'el' + s, 50), el, wrist, 0.028, 0.024, 7)
+        tube(b.P('cuff' + s, trim, 'el' + s, 40), lerp(el, hd, 0.62), lerp(el, hd, 0.8), 0.031, 0.029, 8)
         ax = [hd[i] - el[i] for i in range(3)]; al = math.sqrt(sum(c * c for c in ax)) or 1
-        tip = tuple(hd[i] + ax[i] / al * 0.17 for i in range(3))
-        tube(b.P('hand' + s, L.get('gloves') or skin, 'hand' + s, 40), tuple(hd[i] - ax[i] / al * 0.01 for i in range(3)), tip, 0.045, 0.006, 7)
+        ax = [c / al for c in ax]
+        hnd = b.P('hand' + s, L.get('gloves') or skin, 'hand' + s, 40)
+        tube(hnd, tuple(hd[i] - ax[i] * 0.01 for i in range(3)), tuple(hd[i] + ax[i] * 0.17 for i in range(3)), 0.04, 0.006, 7)   # (the long middle finger, as the old cone)
+        p1 = Vector((1, 0, 0)) - Vector(ax) * ax[0]
+        p1 = p1.normalized()
+        for k in (-1, 1):   # the two shorter fingers beside it
+            tube(hnd, tuple(Vector(hd) + Vector(ax) * 0.03 + p1 * (k * 0.026)), tuple(Vector(hd) + Vector(ax) * 0.125 + p1 * (k * 0.042)), 0.02, 0.005, 5)
+        tube(hnd, tuple(Vector(hd) + Vector(ax) * 0.03 + Vector((-sx * 0.03, 0, 0.03))), tuple(Vector(hd) + Vector(ax) * 0.08 + Vector((-sx * 0.045, 0, 0.07))), 0.017, 0.007, 5)   # the thumb
     limb_legs(b, bp, pants, shoes, 0.045, 0.04, 0.13 * H * 0.9, 0.04, ZH=H)   # (from the hip joint, inside the capsule: a stride never shows a gap)
     os.makedirs(OUTDIR, exist_ok=True)
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
@@ -1189,9 +1301,13 @@ def build_esmer(name):
 def build_bee(name):
     # LBA2's Mosquibee: a big upright oval abdomen (the original's ±0.11 H, 0.29–0.71 H), a small head forward on
     # top with two great eyes, a long proboscis and curled antennae, two long wings on the back, thin dark legs
+    # CAST-POLISH (part 3): compound eyes of facets with a brow ridge (lashes on the matron), a face plate, mandibles and a
+    # proboscis with a bulb and a lip; the talking mouth is a pair of lenses either side of the proboscis's root; a collar of
+    # fuzz; wings with veins and a hind pair; a stinger; jointed legs; foreleg hands with claws and a thumb
     S = ALL[name]
     L, B = S['look'], S['bones']
     bp = lambda n: tuple(B[n]['p'])
+    cp = CAST.get(name, {})
     H = S['height'] * 0.98
     body, stripe, dark, eyec, wing = L.get('tunic', '#d8a040'), L.get('tunicTrim', '#5a3a1a'), L.get('skin', '#5a4a4a'), L.get('eyes', '#3a8a3a'), L.get('wing', '#7ac0a8')
     b = Builder(name, B)
@@ -1209,40 +1325,99 @@ def build_bee(name):
     else:
         bands += [(9e9, body)]
     banded(b, 'abdomen', rings, bands, w_abd)
+    tube(b.P('stinger', shade(dark, 0.8), w_abd, 40), (0, 0.34 * H, -0.07 * H), (0, 0.27 * H, -0.135 * H), 0.024 * H, 0.004 * H, 6)
     # thorax collar and neck
     tube(b.P('neck', dark, lambda p: {'torso': 1 - smooth(neckY, headY, p[1]), 'head': smooth(neckY, headY, p[1])}, 50), (0, 0.69 * H, 0.0), (0, 0.76 * H, 0.03 * H), 0.05 * H, 0.04 * H, 8)
-    # head: a flattened oval forward of the neck, two great eyes on its sides, the proboscis forward
+    fuzz = b.P('fuzz', cp.get('fuzz') or shade(body, 0.82), 'torso', 60)
+    for k in range(10):   # a ruff of fuzz round the thorax
+        a = 2 * math.pi * k / 10
+        tube(fuzz, (math.sin(a) * 0.05 * H, 0.685 * H, 0.0 + math.cos(a) * 0.045 * H), (math.sin(a) * 0.088 * H, 0.705 * H + 0.012 * H * (k % 2), 0.0 + math.cos(a) * 0.08 * H), 0.014 * H, 0.0015 * H, 4, cap=False)
+    # head: a flattened oval forward of the neck, the compound eyes on its upper sides, the face plate and mandibles, the proboscis
     hc = (0, 0.79 * H, 0.07 * H)
     hp_ = b.P('head', dark, 'head', 60)
     sphere(hp_, hc, 0.075 * H, 10, 7, (1.25, 0.8, 1.35))
+    hfront = lambda x, y: hc[2] + 0.101 * H * math.sqrt(max(0.05, 1 - (x / (0.094 * H)) ** 2 - ((y - hc[1]) / (0.06 * H)) ** 2)) - 0.002 * H
     for sxx in (1, -1):
-        sphere(b.P('eyeBall', eyec, 'head', 70), (sxx * 0.06 * H, 0.83 * H, 0.15 * H), 0.045 * H, 9, 6, (0.85, 1.0, 0.9))
+        E = Vector((sxx * 0.062 * H, 0.828 * H, 0.148 * H))
+        semi = (0.045 * H, 0.0525 * H, 0.0475 * H)
+        sphere(b.P('eyeBall', eyec, 'head', 70), tuple(E), 0.05 * H, 10, 7, (0.9, 1.05, 0.95))
+        fd = b.P('facet', shade(eyec, 0.62), 'head', 70)
+        fh = b.P('facetHi', shade(eyec, 1.3), 'head', 70)
+        o = Vector((sxx * 0.5, 0.3, 0.8)).normalized()
+        t1 = o.cross(Vector((0, 1, 0))).normalized()
+        t2 = o.cross(t1).normalized()
+        dirs = [(o, fh, 0.0)] + [((o * math.cos(0.64) + (t1 * math.cos(2 * math.pi * k / 6) + t2 * math.sin(2 * math.pi * k / 6)) * math.sin(0.64)).normalized(), fd, 0.0) for k in range(6)]
+        for d, part, rot in dirs:
+            P_ = Vector((E.x + semi[0] * d.x, E.y + semi[1] * d.y, E.z + semi[2] * d.z))
+            nrm = Vector((d.x / semi[0], d.y / semi[1], d.z / semi[2])).normalized()
+            facet(part, tuple(P_ + nrm * 0.0016 * H), tuple(nrm), 0.0125 * H, 6, rot)
         sphere(b.P('glint', '#e8fff0', 'head', 70), (sxx * 0.066 * H, 0.85 * H, 0.185 * H), 0.009 * H, 5, 4)
+        bs_ = cp.get('browS', 1.0)
+        tube(b.P('brow', shade(dark, 0.7), 'head', 40), (sxx * 0.012 * H, 0.874 * H, 0.172 * H), (sxx * 0.072 * H, 0.9 * H, 0.152 * H), 0.0105 * H * bs_, 0.007 * H * bs_, 5)
+        if cp.get('lashes'):   # the matron's lashes: three fine curls off the outer upper eye
+            for j in range(3):
+                dd = Vector((sxx * (0.6 + 0.12 * j), 0.62 - 0.14 * j, 0.5)).normalized()
+                P_ = Vector((E.x + semi[0] * dd.x, E.y + semi[1] * dd.y, E.z + semi[2] * dd.z))
+                tube(b.P('lash', shade(dark, 0.55), 'head', 30), tuple(P_), tuple(P_ + dd * 0.022 * H + Vector((sxx * 0.003 * H, 0.008 * H, 0))), 0.0035 * H, 0.001 * H, 3, cap=False)
         ant = b.P('antenna', dark, 'head', 40)
         pts = [(sxx * 0.02 * H, 0.86 * H, 0.12 * H), (sxx * 0.025 * H, 0.97 * H, 0.15 * H), (sxx * 0.03 * H, 1.0 * H, 0.21 * H), (sxx * 0.03 * H, 0.985 * H, 0.27 * H)]
         for i in range(3):
             tube(ant, pts[i], pts[i + 1], 0.008 * H, 0.006 * H, 5)
         sphere(ant, pts[-1], 0.012 * H, 5, 4)
-    tube(b.P('proboscis', L.get('proboscis', '#2a2020'), 'head', 40), (0, 0.79 * H, 0.17 * H), (0, 0.78 * H, 0.5 * H), 0.016 * H, 0.004 * H, 6)
-    # wings: two long flat leaves on the back, angled up and out
+        tube(b.P('mandible', shade(dark, 0.7), 'head', 40), (sxx * 0.084 * H, 0.775 * H, 0.108 * H), (sxx * 0.064 * H, 0.73 * H, 0.185 * H), 0.012 * H, 0.002 * H, 5)
+    sphere(b.P('facePlate', shade(dark, 1.4), 'head', 60), (0, 0.8 * H, 0.168 * H), 0.03 * H, 7, 5, (1.0, 0.85, 0.55))
+    # the proboscis: a bulb at the root, a straw curving a little down, a pale lip at the tip
+    pr = L.get('proboscis', '#2a2020')
+    pb = b.P('proboscis', pr, 'head', 40)
+    sphere(pb, (0, 0.785 * H, 0.172 * H), 0.024 * H, 7, 5, (1.0, 0.95, 0.8))
+    tube(pb, (0, 0.785 * H, 0.172 * H), (0, 0.778 * H, 0.3 * H), 0.016 * H, 0.011 * H, 6)
+    tube(pb, (0, 0.778 * H, 0.3 * H), (0, 0.765 * H, 0.42 * H), 0.011 * H, 0.007 * H, 6)
+    tube(pb, (0, 0.765 * H, 0.42 * H), (0, 0.752 * H, 0.5 * H), 0.007 * H, 0.0035 * H, 6)
+    sphere(b.P('proboscisTip', shade(pr, 3.2), 'head', 40), (0, 0.75 * H, 0.505 * H), 0.007 * H, 5, 4)
+    # the talking mouth: a lens either side of the proboscis's root, on the face plate's level
+    hh_ = 0.015 * H
+    lens_ = []
     for sxx in (1, -1):
-        w = b.P('wing', wing, 'torso', 30)
-        base = (sxx * 0.03 * H, 0.66 * H, -0.09 * H)
+        mp_, ml_, mt_ = mouth_lens(sxx * 0.046 * H, 0.762 * H, 0.026 * H, hh_, 0.008 * H * cp.get('mouthLift', 1.0), hfront, 9, 0.003)
+        lens_.append(ml_)
+    b.mouth((0.0, 0.762 * H, mp_[2]), [(lens_[0], cp.get('lip', '#7a2a30')), (lens_[1], cp.get('lip', '#7a2a30'))], rest=0.3, drop=-0.35 * hh_, tilt=mt_)
+    # wings: two long flat leaves on the back, angled up and out, and a shorter hind pair below, with veins
+    def leaf(sxx, base, span, rise, back, vamp, col, nm, vein):
+        w = b.P(nm, col, 'torso', 30)
         pts = []
-        for k in range(10):
-            t = 2 * math.pi * k / 10
+        K = 14
+        for k in range(K):
+            t = 2 * math.pi * k / K
             u = 0.5 + 0.5 * math.cos(t)               # 0 at the base, 1 at the tip
-            v = math.sin(t) * 0.07 * H * (0.4 + 0.6 * math.sin(math.pi * min(1, u * 1.1)))
-            pts.append((base[0] + sxx * (u * 0.16 * H), base[1] + u * 0.1 * H + v, base[2] - u * 0.32 * H))
-        disc_pts = pts
-        w.add(disc_pts + [tuple(q + (0.004 if i == 2 else 0) for i, q in enumerate(p)) for p in disc_pts], [list(range(10)), list(reversed(range(10, 20)))])
-    # thin legs and arms (forelegs)
+            v = math.sin(t) * vamp * (0.4 + 0.6 * math.sin(math.pi * min(1, u * 1.1)))
+            pts.append((base[0] + sxx * (u * span), base[1] + u * rise + v, base[2] - u * back))
+        w.add(pts + [(x, y, z + 0.004) for x, y, z in pts], [list(range(K)), list(reversed(range(K, 2 * K)))])
+        vn = b.P(nm + 'Vein', vein, 'torso', 30)
+        at = lambda u, v=0.0: (base[0] + sxx * u * span, base[1] + u * rise + v, base[2] - u * back + 0.002)
+        tube(vn, at(0.02), at(0.86), 0.0032 * H, 0.0015 * H, 3, cap=False)
+        tube(vn, at(0.35), at(0.78, vamp * 0.55), 0.002 * H, 0.001 * H, 3, cap=False)
+        tube(vn, at(0.35), at(0.78, -vamp * 0.55), 0.002 * H, 0.001 * H, 3, cap=False)
+    for sxx in (1, -1):
+        leaf(sxx, (sxx * 0.03 * H, 0.66 * H, -0.09 * H), 0.16 * H, 0.1 * H, 0.32 * H, 0.07 * H, wing, 'wing', shade(wing, 0.55))
+        leaf(sxx, (sxx * 0.03 * H, 0.63 * H, -0.09 * H), 0.12 * H, 0.035 * H, 0.22 * H, 0.05 * H, shade(wing, 0.88), 'wingHind', shade(wing, 0.5))
+    # thin legs, with a knee joint; the forelegs as arms with an elbow, a hand with three claws and a thumb
     limb_legs(b, bp, dark, dark, 0.03, 0.02, 0.1 * H * 0.8, 0.03, ZH=H)
+    jt = shade(dark, 1.6)
     for s, sx in (('L', 1), ('R', -1)):
+        kn, ft = bp('knee' + s), bp('foot' + s)
+        sphere(b.P('knee' + s, jt, 'knee' + s, 50), kn, 0.028, 6, 4)
+        for k in (-1, 0, 1):   # three toes on each flat foot
+            tube(b.P('toe' + s, shade(dark, 0.7), 'foot' + s, 30), (ft[0] + k * 0.014, 0.014, ft[2] + 0.1 * H * 0.6), (ft[0] + k * 0.02, 0.006, ft[2] + 0.1 * H * 0.8 + 0.05), 0.011, 0.002, 4)
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
         tube(b.P('upper' + s, dark, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), (sx * R * 0.8, sh[1], sh[2] + 0.02), el, 0.022, 0.018, 6)
         tube(b.P('fore' + s, dark, 'el' + s, 50), el, hd, 0.018, 0.014, 6)
-        sphere(b.P('hand' + s, dark, 'hand' + s, 50), hd, 0.025, 6, 4)
+        sphere(b.P('elbow' + s, jt, 'el' + s, 50), el, 0.021, 6, 4)
+        hnd = b.P('hand' + s, dark, 'hand' + s, 50)
+        sphere(hnd, hd, 0.026, 6, 4)
+        cl = b.P('claw' + s, shade(dark, 0.6), 'hand' + s, 30)
+        for k in (-1, 0, 1):
+            tube(cl, (hd[0] + k * 0.009, hd[1] - 0.01, hd[2] + 0.006), (hd[0] + k * 0.017, hd[1] - 0.058, hd[2] + 0.03), 0.0095, 0.0015, 4)
+        tube(hnd, (hd[0] - sx * 0.014, hd[1] + 0.002, hd[2] + 0.012), (hd[0] - sx * 0.032, hd[1] - 0.02, hd[2] + 0.038), 0.009, 0.0035, 4)
     if L.get('crown'):
         cr = b.P('crown', L['crown'], 'head', 30)
         for k in range(5):
@@ -1259,9 +1434,13 @@ def build_mole(name):
     # ±0.16, from 0.24 H to the rounded top at 0.92 H), no neck: the head is a long pale snout reaching forward
     # from the top of the robe to +0.5 H, small dark eyes on it, a yellow lip under it; long pale arms hanging well
     # out from the sides (±0.31–0.37 H), pale legs and big pale feet pointing forward
+    # CAST-POLISH (part 3): a rounded skull the snout grows from, ears, a dark nose and whiskers; the small eyes are beads under
+    # a heavy lid; the talking mouth a long line down each side of the snout, opening as it speaks; digging claws
+    # on the hands and feet and a thumb; the robe with a hem band, a collar and a belt (the homemaker's apron with a bib, straps and a pocket)
     S = ALL[name]
     L, B = S['look'], S['bones']
     bp = lambda n: tuple(B[n]['p'])
+    cp = CAST.get(name, {})
     H = S['height'] * 0.98
     robe, pale, lip, apron = L.get('tunic', '#5a5068'), L.get('skin', '#e8e0d8'), L.get('lip', '#f0c060'), L.get('apron')
     b = Builder(name, B)
@@ -1271,28 +1450,133 @@ def build_mole(name):
         hd = smooth(neckY, headY + 0.1, y)
         k = smooth(hipsY - 0.1, hipsY + 0.25, y)
         return {kk: v for kk, v in (('hips', 1 - k), ('torso', k * (1 - hd)), ('head', k * hd)) if v > 0}
-    secs = [(0.24, 0.17, 0.14), (0.26, 0.19, 0.16), (0.4, 0.19, 0.16), (0.56, 0.185, 0.155), (0.65, 0.172, 0.15), (0.74, 0.15, 0.14), (0.82, 0.12, 0.12), (0.88, 0.08, 0.09), (0.92, 0.03, 0.04)]
+    secs = [(0.24, 0.17, 0.14), (0.26, 0.19, 0.16), (0.30, 0.19, 0.16), (0.4, 0.19, 0.16), (0.56, 0.185, 0.155), (0.65, 0.172, 0.15), (0.74, 0.15, 0.14), (0.82, 0.12, 0.12), (0.88, 0.08, 0.09), (0.92, 0.03, 0.04)]
     rings = [ring(y * H, hw * H, zf * H, -zf * H, 14, 0.8) for y, hw, zf in secs]
-    bands = [(0.4 * H, apron), (9e9, robe)] if apron else [(9e9, robe)]
+    trimc = cp.get('trim') or (shade(apron, 0.78) if apron else shade(robe, 1.7))
+    bands = [(0.30 * H, trimc), (0.4 * H, apron), (9e9, robe)] if apron else [(0.30 * H, trimc), (9e9, robe)]
     banded(b, 'robe', rings, bands, w_b, cap0=True, cap1=True)
-    # the snout: from the front of the robe's top, forward and a little down, pale; the lip under it
+    sec4 = [(y * H, hw * H, zf * H, -zf * H) for y, hw, zf in secs]
+    rz = lambda x, y: ring_z(sec4, 0.8, x, y)
+    def band(nm, col, y0, y1, k=1.04):
+        rr = []
+        for yy in (y0, y1):
+            for (ya, wa, za), (yb, wb, zb_) in zip(secs, secs[1:]):
+                if ya <= yy / H <= yb:
+                    t = (yy / H - ya) / (yb - ya)
+                    hw, zf = wa + (wb - wa) * t, za + (zb_ - za) * t
+                    break
+            rr.append(ring(yy, hw * H * k, zf * H * k, -zf * H * k, 14, 0.8))
+        loft(b.P(nm, col, w_b, 50), rr)
+    band('collar', trimc, 0.79 * H, 0.83 * H, 1.05)
+    if not apron:   # a belt with a brass buckle
+        band('belt', shade(robe, 0.62), 0.5 * H, 0.535 * H, 1.035)
+        box(b.P('buckle', '#c8a050', w_b, 30), -0.022 * H, 0.022 * H, 0.5 * H, 0.535 * H, 0.163 * H, 0.172 * H)
+    else:   # the apron: a bib to the chest on straps, a pocket
+        ys_b = [0.40 * H, 0.49 * H, 0.58 * H]
+        xs_b = [[w * H * (i / 3 * 2 - 1) for i in range(4)] for w in (0.12, 0.10, 0.075)]
+        surf_grid(b.P('bib', apron, w_b, 30), xs_b, ys_b, rz, 0.006 * H)
+        for sxx in (1, -1):
+            surf_grid(b.P('strap', shade(apron, 0.85), w_b, 30), [[sxx * (0.055 - 0.014 * j * 0.0) * H + dx * H for dx in (-0.007, 0.007)] for j in range(4)], [0.58 * H, 0.64 * H, 0.70 * H, 0.77 * H], rz, 0.007 * H)
+        surf_grid(b.P('pocket', shade(apron, 0.8), w_b, 30), [[-0.055 * H, 0.0, 0.055 * H]] * 3, [0.315 * H, 0.345 * H, 0.375 * H], rz, 0.006 * H)
+    # the skull: a rounded cranium the snout grows from, ears on it
+    sk = b.P('skull', pale, 'head', 60)
+    sphere(sk, (0, 0.885 * H, 0.06 * H), 0.1 * H, 10, 7, (0.95, 0.93, 1.0))
+    for sxx in (1, -1):
+        sphere(b.P('ear', pale, 'head', 60), (sxx * 0.088 * H, 0.95 * H, 0.035 * H), 0.034 * H, 7, 5, (0.45, 1.0, 0.9))
+        sphere(b.P('earIn', cp.get('earIn', '#e0a8a0'), 'head', 60), (sxx * 0.095 * H, 0.95 * H, 0.04 * H), 0.022 * H, 6, 4, (0.35, 0.95, 0.85))
+    tf = b.P('tuft', shade(pale, 0.8), 'head', 40)
+    for k in range(cp.get('tufts', 3)):
+        a = (k - (cp.get('tufts', 3) - 1) / 2) * 0.55
+        tube(tf, (math.sin(a) * 0.02 * H, 0.962 * H, 0.04 * H), (math.sin(a) * 0.045 * H, 0.99 * H + 0.008 * H * (k % 2), 0.01 * H), 0.014 * H, 0.002 * H, 4, cap=False)
+    # the snout: from the front of the skull, forward and a little down, pale; the lip under it, a dark nose at its tip
     sp = [(0, 0.86 * H, 0.08 * H), (0, 0.875 * H, 0.22 * H), (0, 0.87 * H, 0.38 * H), (0, 0.855 * H, 0.5 * H)]
-    sr = [0.085 * H, 0.06 * H, 0.04 * H, 0.012 * H]
+    sr = [0.085 * H, 0.06 * H, 0.04 * H, 0.014 * H]
     sn = b.P('snout', pale, 'head', 50)
     for i in range(3):
         tube(sn, sp[i], sp[i + 1], sr[i], sr[i + 1], 9, squash=0.8)
     tube(b.P('lip', lip, 'head', 50), (0, 0.83 * H, 0.12 * H), (0, 0.835 * H, 0.42 * H), 0.04 * H, 0.008 * H, 7, squash=0.5)
+    sphere(b.P('nose', '#3a2a30', 'head', 60), (0, 0.855 * H, 0.505 * H), 0.019 * H, 7, 5, (1.0, 0.9, 1.0))
+    for sxx in (1, -1):   # whiskers
+        for k in (-1, 0, 1):
+            tube(b.P('whisker', shade(pale, 0.5), 'head', 20), (sxx * 0.034 * H, 0.858 * H + k * 0.008 * H, 0.33 * H), (sxx * 0.13 * H, 0.858 * H + k * 0.03 * H, 0.345 * H), 0.0032 * H, 0.0008 * H, 3, cap=False)
+    # the snout's side surface at (z, y): its centre line and radius by z, the tube squashed to 0.8 across
+    def snout_at(zz):
+        for i in range(3):
+            if sp[i][2] <= zz <= sp[i + 1][2]:
+                t = (zz - sp[i][2]) / (sp[i + 1][2] - sp[i][2])
+                return sp[i][1] + (sp[i + 1][1] - sp[i][1]) * t, sr[i] + (sr[i + 1] - sr[i]) * t
+        return sp[-1][1], sr[-1]
+    def snout_x(zz, yy):
+        yc, r = snout_at(zz)
+        return 0.8 * r * math.sqrt(max(0.02, 1 - ((yy - yc) / r) ** 2)) * 0.97 + 0.005 * H
+    # the eyes: a bead on each side of the snout, a heavy lid and a brow; mole1's are small, mole2's a little larger
+    ew = cp.get('eyeW', 0.018) * H
     for sxx in (1, -1):
-        sphere(b.P('eyeBall', L.get('eyes', '#2a1a1a'), 'head', 70), (sxx * 0.05 * H, 0.905 * H, 0.2 * H), 0.016 * H, 6, 4)
-    # arms: long and pale, hanging well out from the sides
+        ec = Vector((sxx * snout_x(0.2 * H, 0.895 * H), 0.895 * H, 0.2 * H))
+        nrm = Vector((sxx * 0.9, 0.35, 0.12)).normalized()
+        a2 = (Vector((0, 1, 0)) - nrm * nrm.y).normalized()   # up along the snout's side
+        a1 = a2.cross(nrm).normalized()                       # (a1 x a2 = nrm: the polygons face outward; a1 points back on the left side, forward on the right)
+        fw = 1 if a1.z > 0 else -1
+        pt = lambda cx, cy, off=0.0: tuple(ec + nrm * (0.003 * H + off) + a1 * cx + a2 * cy)
+        ts = [2 * math.pi * k / 10 for k in range(10)]
+        bead = [pt(ew * math.cos(t), ew * 0.92 * math.sin(t)) for t in ts]
+        pupil = [pt(ew * 0.55 * math.cos(t) + ew * 0.12 * fw, ew * 0.55 * math.sin(t), 0.003 * H) for t in ts]
+        glint = [pt(ew * 0.22 * math.cos(t) + ew * 0.38 * fw, ew * 0.22 * math.sin(t) + ew * 0.34, 0.006 * H) for t in ts[::2]]
+        k = 6
+        lo = [pt(1.08 * ew * math.cos(math.radians(170 - 140 * i / (k - 1))), 0.92 * ew * math.sin(math.radians(170 - 140 * i / (k - 1))) * 0.95 - ew * 0.04, 0.004 * H) for i in range(k)]
+        up = [pt(1.16 * ew * math.cos(math.radians(170 - 140 * i / (k - 1))), (1.0 + cp.get('lidT', 0.55)) * ew * math.sin(math.radians(170 - 140 * i / (k - 1))) + ew * 0.05, 0.004 * H) for i in range(k)]
+        lid = lo + list(reversed(up))
+        if (Vector(lid[1]) - Vector(lid[0])).cross(Vector(lid[k * 2 - 2]) - Vector(lid[0])).dot(nrm) < 0:
+            lid = lid[::-1]
+        # (static parts of the body mesh, not blinking eye groups: the moles had no eye meshes, and the budget is one more call, the mouth)
+        flat_poly(b.P('eye', L.get('eyes', '#2a1a1a'), 'head', 30), bead, nrm)
+        flat_poly(b.P('pupil', '#0a0808', 'head', 30), pupil, nrm)
+        flat_poly(b.P('glint', '#f4f0ee', 'head', 30), glint, nrm)
+        b.P('lid', shade(pale, cp.get('lidShade', 0.5)), 'head', 30).add(lid, [list(t) for t in strip_tris(len(lid))])
+        bw = cp.get('browS', 1.0)
+        tube(b.P('brow', cp.get('browCol') or shade(pale, 0.78), 'head', 40), (sxx * 0.04 * H, 0.93 * H, 0.125 * H), (sxx * 0.056 * H, 0.918 * H, 0.268 * H), 0.012 * H * bw, 0.007 * H * bw, 5)
+        if cp.get('lashes'):
+            for j in range(3):
+                tube(b.P('lash', shade(pale, 0.4), 'head', 30), tuple(ec + nrm * 0.004 * H + a1 * (fw * ew * (0.7 + 0.35 * j)) + a2 * ew * 0.4), tuple(ec + nrm * 0.016 * H + a1 * (fw * ew * (1.0 + 0.5 * j)) + a2 * ew * 1.5), 0.003 * H, 0.001 * H, 3, cap=False)
+    # the talking mouth: a long lens down each side of the snout (facing outward), shut to a dark line, opening as it speaks
+    zc_, hwz, cy, hhm = 0.275 * H, 0.125 * H, 0.855 * H, 0.016 * H
+    lens_ = []
+    for sxx in (1, -1):
+        lo, up = [], []
+        for i in range(9):
+            u = i / 8 * 2 - 1
+            zz = zc_ + u * hwz
+            t = max(0.0, 1.0 - abs(u) ** 2.2) ** 0.62
+            xs_ = sxx * snout_x(zz, cy)
+            lo.append((xs_, cy - hhm * t, zz))
+            up.append((xs_, cy + hhm * t, zz))
+        # (a lens facing +x runs its lower edge from the front to the back; facing -x from the back to the front)
+        poly = lo + list(reversed(up))
+        if sxx > 0:
+            poly = list(reversed(lo)) + up
+        lens_.append(poly)
+    b.mouth((0.0, cy, zc_), [(lens_[0], cp.get('lipIn', '#4a1a22')), (lens_[1], cp.get('lipIn', '#4a1a22'))], rest=0.3, drop=-0.4 * hhm, tilt=0.0)
+    # arms: long and pale, hanging well out from the sides; a cuff, a spade of a hand with digging claws and a thumb
+    claw = shade(pale, 0.45)
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
         out = lambda p, k: (p[0] + sx * k * H, p[1], p[2] + 0.06 * H)
         a0, e2, h2 = (sx * 0.16 * H, 0.74 * H, 0.06 * H), out(el, 0.12), out(hd, 0.14)
         tube(b.P('upper' + s, robe, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), a0, e2, 0.055, 0.045, 8)
         tube(b.P('fore' + s, pale, 'el' + s, 50), e2, h2, 0.045, 0.04, 8)
-        sphere(b.P('hand' + s, pale, 'hand' + s, 50), (h2[0], h2[1] - 0.03, h2[2]), 0.045, 7, 5, (0.8, 1.2, 1.0))
+        tube(b.P('cuff' + s, trimc, 'el' + s, 40), lerp(e2, h2, -0.02), lerp(e2, h2, 0.14), 0.05, 0.048, 8)
+        pc = (h2[0], h2[1] - 0.03, h2[2])
+        hnd = b.P('hand' + s, pale, 'hand' + s, 50)
+        sphere(hnd, pc, 0.045, 7, 5, (0.8, 1.2, 1.0))
+        cl = b.P('claw' + s, claw, 'hand' + s, 30)
+        for k in (-1, 0, 1):
+            tube(cl, (pc[0] + k * 0.026, pc[1] - 0.04, pc[2] + 0.02), (pc[0] + k * 0.036, pc[1] - 0.105, pc[2] + 0.055), 0.017, 0.002, 4)
+        tube(hnd, (pc[0] - sx * 0.032, pc[1] + 0.01, pc[2] + 0.018), (pc[0] - sx * 0.05, pc[1] - 0.02, pc[2] + 0.07), 0.015, 0.006, 5)
     limb_legs(b, bp, pale, pale, 0.075, 0.065, 0.22 * H, 0.085, ZH=H)
+    for s, sx in (('L', 1), ('R', -1)):
+        ft = bp('foot' + s)
+        for k in (-1, 0, 1):   # three toe claws at the tip of each big foot
+            tube(b.P('toe' + s, claw, 'foot' + s, 30), (ft[0] + k * 0.03, 0.03, ft[2] + 0.22 * H * 0.78), (ft[0] + k * 0.036, 0.012, ft[2] + 0.22 * H + 0.05), 0.017, 0.003, 4)
     os.makedirs(OUTDIR, exist_ok=True)
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
     print(name, 'tris', tris)
@@ -1303,9 +1587,13 @@ def build_tri(name):
     # LBA2's triangle-headed Zeelichians (bodies 84, 430; 1.13 of Twinsen's height): a thin body in a suit (shoulders
     # ±0.13 H, the waist ±0.06), thin arms with pointed hands, thin legs; the head a big inverted triangle from a
     # pointed chin (0.70 H) to the cheekbones (±0.108 H with the ears' points), a flat top (±0.079), the face forward
+    # CAST-POLISH (part 3): lidded eyes under brows, a proper nose, a talking mouth on the chin, ears with an inner shade, a
+    # fringe or sideburns; the jacket with lapels, buttons, a pocket, a belt (the shirtsleeves' braces, collar and rolled cuffs);
+    # hands of fingers and a thumb
     S = ALL[name]
     L, B = S['look'], S['bones']
     bp = lambda n: tuple(B[n]['p'])
+    cp = CAST.get(name, {})
     H = S['height'] * 0.98
     skin, suit, shirt, pants, shoes, hair = L.get('skin', '#c08a68'), L.get('tunic', '#2f6a3a'), L.get('shirt', '#e8e0c8'), L.get('pants', '#9a7a3a'), L.get('shoes', '#4a8a5a'), L.get('hair', '#e0c890')
     b = Builder(name, B)
@@ -1316,12 +1604,43 @@ def build_tri(name):
     secs = [(0.40, 0.065, 0.04, -0.04), (0.47, 0.062, 0.045, -0.04), (0.52, 0.065, 0.05, -0.042), (0.58, 0.1, 0.06, -0.05), (0.65, 0.128, 0.064, -0.05), (0.71, 0.13, 0.06, -0.045), (0.735, 0.08, 0.04, -0.03)]
     rings = [ring(y * H, hw * H, zf * H, zb * H, 12, 0.7) for y, hw, zf, zb in secs]
     banded(b, 'suit', rings, [(0.45 * H, pants), (9e9, suit)], w_t)
+    sec4 = [(y * H, hw * H, zf * H, zb * H) for y, hw, zf, zb in secs]
+    sz = lambda x, y: ring_z(sec4, 0.7, x, y)
+    jacket = bool(L.get('tie'))   # (the clerk wears a jacket, a tie over a shirt; the other is in shirtsleeves)
     if L.get('tie'):   # shirt front and a tie
         sf = b.P('shirt', shirt, 'torso', 30)
         z = lambda y: 0.062 * H + 0.002
         sf.add([(-0.035 * H, 0.735 * H, z(0)), (0.035 * H, 0.735 * H, z(0)), (0.0, 0.6 * H, z(0))], [[0, 2, 1][::-1]])
         tie = b.P('tie', L['tie'], 'torso', 30)
         tie.add([(-0.01 * H, 0.725 * H, z(0) + 0.003), (0.01 * H, 0.725 * H, z(0) + 0.003), (0.014 * H, 0.62 * H, z(0) + 0.003), (0.0, 0.6 * H, z(0) + 0.003), (-0.014 * H, 0.62 * H, z(0) + 0.003)], [[0, 4, 3, 2, 1]])
+        sphere(b.P('knot', L['tie'], 'torso', 40), (0, 0.722 * H, z(0) + 0.004), 0.012 * H, 6, 4, (1.0, 0.9, 0.7))
+        lap = b.P('lapel', shade(suit, 0.7), w_t, 30)   # lapels either side of the shirt front, a breast pocket with its handkerchief
+        for sxx in (1, -1):
+            flat_poly(lap, [(sxx * 0.035 * H, 0.735 * H, sz(sxx * 0.035 * H, 0.735 * H) + 0.004 * H), (sxx * 0.085 * H, 0.725 * H, sz(sxx * 0.085 * H, 0.725 * H) + 0.004 * H),
+                            (sxx * 0.05 * H, 0.62 * H, sz(sxx * 0.05 * H, 0.62 * H) + 0.004 * H), (0.0, 0.6 * H, sz(0, 0.6 * H) + 0.004 * H)], (0, 0, 1))
+        pk = b.P('pocket', shade(suit, 0.82), w_t, 30)
+        surf_grid(pk, [[0.045 * H, 0.07 * H, 0.095 * H]] * 3, [0.625 * H, 0.645 * H, 0.665 * H], sz, 0.004 * H)
+        flat_poly(b.P('hanky', L['tie'], w_t, 30), [(0.06 * H, 0.665 * H, sz(0.06 * H, 0.665 * H) + 0.006 * H), (0.075 * H, 0.665 * H, sz(0.075 * H, 0.665 * H) + 0.006 * H), (0.068 * H, 0.682 * H, sz(0.068 * H, 0.682 * H) + 0.006 * H)], (0, 0, 1))
+        for y_ in (0.57, 0.52, 0.47):
+            facet(b.P('button', '#c8a050', w_t, 30), (0, y_ * H, sz(0, y_ * H) + 0.004 * H), (0, 0, 1), 0.0065 * H, 6)
+    else:   # shirtsleeves: collar flaps, a placket of buttons, a chest pocket, braces over the shoulders
+        cl_ = b.P('collar', shade(suit, 0.9), w_t, 30)
+        for sxx in (1, -1):
+            flat_poly(cl_, [(sxx * 0.01 * H, 0.742 * H, sz(sxx * 0.01 * H, 0.735 * H) + 0.004 * H), (sxx * 0.062 * H, 0.724 * H, sz(sxx * 0.062 * H, 0.724 * H) + 0.004 * H), (sxx * 0.03 * H, 0.688 * H, sz(sxx * 0.03 * H, 0.688 * H) + 0.004 * H)], (0, 0, 1))
+        for y_ in (0.68, 0.62, 0.56, 0.5):
+            facet(b.P('button', shade(suit, 0.6), w_t, 30), (0, y_ * H, sz(0, y_ * H) + 0.003 * H), (0, 0, 1), 0.0055 * H, 6)
+        surf_grid(b.P('pocket', shade(suit, 0.85), w_t, 30), [[0.045 * H, 0.07 * H, 0.095 * H]] * 3, [0.62 * H, 0.64 * H, 0.66 * H], sz, 0.004 * H)
+        for sxx in (1, -1):
+            surf_grid(b.P('brace', pants, w_t, 30), [[sxx * (0.04 + 0.012 * j / 3) * H + dx * H for dx in (-0.008, 0.008)] for j in range(4)], [0.455 * H, 0.54 * H, 0.64 * H, 0.728 * H], sz, 0.004 * H)
+    # a belt where the trousers begin
+    def at4(yy):
+        for a, c in zip(secs, secs[1:]):
+            if a[0] <= yy / H <= c[0]:
+                t = (yy / H - a[0]) / (c[0] - a[0])
+                return tuple((a[k] + (c[k] - a[k]) * t) * H for k in (1, 2, 3))
+    bl = [ring(y_, *(v * 1.035 for v in at4(y_)), 12, 0.7) for y_ in (0.443 * H, 0.462 * H)]
+    loft(b.P('belt', shade(pants, 0.55), w_t, 50), bl)
+    box(b.P('buckle', '#c8a050', w_t, 30), -0.012 * H, 0.012 * H, 0.443 * H, 0.462 * H, sz(0, 0.45 * H) + 0.003 * H, sz(0, 0.45 * H) + 0.009 * H)
     tube(b.P('neck', skin, lambda p: {'neck': 1 - smooth(neckY, headY + 0.05, p[1]), 'head': smooth(neckY, headY + 0.05, p[1])}, 50), (0, 0.72 * H, 0), (0, 0.79 * H, 0.01 * H), 0.03 * H, 0.028 * H, 8)
     # the head: sections from the chin up (y, half-width, front, back), the ears' points at the widest
     hs = [(0.70, 0.004, 0.13, 0.11), (0.74, 0.04, 0.135, 0.0), (0.79, 0.07, 0.135, -0.02), (0.84, 0.092, 0.14, -0.035), (0.885, 0.1, 0.125, -0.05), (0.93, 0.08, 0.105, -0.058), (0.975, 0.078, 0.09, -0.05)]
@@ -1329,27 +1648,53 @@ def build_tri(name):
     hp_ = b.P('head', skin, 'head', 40)
     loft(hp_, hr, cap_bottom=True)
     loft(b.P('hair', hair, 'head', 40), [ring(0.972 * H, 0.08 * H, 0.092 * H, -0.052 * H, 12, 0.55), ring(1.0 * H, 0.078 * H, 0.088 * H, -0.05 * H, 12, 0.55)], cap_top=True)
-    for sxx in (1, -1):   # the ears: flat points out of the cheekbones
+    for sxx in (1, -1):   # the ears: flat points out of the cheekbones, an inner shade
         ear = b.P('ear', skin, 'head', 30)
         ear.add([(sxx * 0.09 * H, 0.86 * H, 0.03 * H), (sxx * 0.09 * H, 0.91 * H, 0.0), (sxx * 0.15 * H, 0.93 * H, -0.01 * H)], [[0, 1, 2] if sxx > 0 else [2, 1, 0]])
         ear.add([(sxx * 0.09 * H, 0.86 * H, 0.03 * H), (sxx * 0.15 * H, 0.93 * H, -0.01 * H), (sxx * 0.09 * H, 0.91 * H, 0.0)], [[0, 1, 2] if sxx > 0 else [2, 1, 0]])
-    def front(x, y):
-        yy = y / H
-        for (ya, wa, fa, _), (yb, wb, fb, _) in zip(hs, hs[1:]):
-            if ya <= yy <= yb:
-                t = (yy - ya) / (yb - ya); w = (wa + (wb - wa) * t) * H; f = (fa + (fb - fa) * t) * H
-                return f * max(0.2, 1 - (abs(x) / max(w, 1e-3)) ** 1.8) ** 0.55
-        return 0.1 * H
-    face_dots(b, front, 0.87 * H, 0.035 * H, 0.016 * H, 0.008 * H, '#f0ece0', L.get('eyes', '#2a2a2a'))
-    nose = b.P('nose', skin, 'head', 30)
-    nz = front(0, 0.82 * H)
-    nose.add([(-0.012 * H, 0.835 * H, nz), (0.012 * H, 0.835 * H, nz), (0.0, 0.8 * H, nz + 0.03 * H)], [[0, 2, 1][::-1]])
+        ei = b.P('earIn', shade(skin, 0.78), 'head', 30)
+        ei.add([(sxx * 0.098 * H, 0.872 * H, 0.0305 * H), (sxx * 0.098 * H, 0.9 * H, 0.0015 * H), (sxx * 0.136 * H, 0.918 * H, -0.006 * H)], [[0, 1, 2] if sxx > 0 else [2, 1, 0]])
+        ei.add([(sxx * 0.098 * H, 0.872 * H, 0.0285 * H), (sxx * 0.136 * H, 0.918 * H, -0.008 * H), (sxx * 0.098 * H, 0.9 * H, -0.0005 * H)], [[0, 1, 2] if sxx > 0 else [2, 1, 0]])
+    # (the face surface as the loft really is, ring_z; the first sketch's guess sank the eyes into the cheeks)
+    hsec4 = [(y * H, hw * H, zf * H, zb * H) for y, hw, zf, zb in hs]
+    front = lambda x, y: ring_z(hsec4, 0.55, x, y)
+    ey_, ex_, ew_, eh_ = 0.87 * H, 0.04 * H, 0.027 * H, 0.0155 * H
+    eye_set(b, front, ey_, ex_, ew_, eh_, L.get('eyes', '#2a2a2a'), lidc=shade(skin, 0.4), tilt=0.1, lift=0.008)
+    brow_strips(b.P('brows', cp.get('browCol') or shade(hair, 0.55), 'head', 30), front, ey_, ex_, ew_, eh_, bs=cp.get('browS', 1.0), tilt=cp.get('browTilt', 0.0), lift=0.011)
+    # the nose: a wedge down the face to a blunt tip
+    nz = front(0, 0.83 * H)
+    nsk = b.P('nose', shade(skin, 0.96), 'head', 40)
+    tube(nsk, (0, 0.85 * H, front(0, 0.85 * H) - 0.004 * H), (0, 0.815 * H, front(0, 0.815 * H) + 0.014 * H * cp.get('noseS', 1.0)), 0.012 * H, 0.012 * H, 6, squash=0.9)
+    sphere(nsk, (0, 0.812 * H, front(0, 0.812 * H) + 0.016 * H * cp.get('noseS', 1.0)), 0.0125 * H, 6, 4, (1.3, 0.9, 1.0))
+    # the talking mouth on the lower face
+    mhh = 0.0075 * H
+    mp_, mlens, mt_ = mouth_lens(0.0, 0.765 * H, 0.028 * H * cp.get('mouthW', 1.0), mhh, 0.003 * H * cp.get('mouthLift', 1.0), front, 9, 0.008)
+    b.mouth(mp_, [(mlens, cp.get('lip', '#7a3a3a'))], rest=0.34, drop=-0.35 * mhh, tilt=mt_)
+    if cp.get('fringe'):   # a swept fringe over the forehead
+        fr = b.P('fringe', hair, 'head', 40)
+        xs = [-0.072, -0.036, 0.0, 0.036, 0.072]
+        bots = [0.895, 0.925, 0.9, 0.922, 0.9]
+        vv = [(x * H, 0.972 * H, front(x * H, 0.972 * H) + 0.006 * H) for x in xs] + [(x * H, yb * H, front(x * H, yb * H) + 0.007 * H) for x, yb in zip(xs, bots)]
+        fr.add(vv, [[i + 5, i + 6, i + 1, i] for i in range(4)])
+    hz = front
+    for sxx in (1, -1):   # sideburns, on the head's side
+        sb = b.P('sideburn', hair, 'head', 40)
+        pts = [(sxx * xx * H, y_ * H) for xx, y_ in ((0.07, 0.966), (0.084, 0.9), (0.087, 0.86))]
+        vv = [(x, y, hz(x, y) + 0.003 * H) for x, y in pts] + [(x - sxx * 0.016 * H, y, hz(x - sxx * 0.016 * H, y) + 0.004 * H) for x, y in pts]
+        sb.add(vv, [[3, 4, 1, 0], [4, 5, 2, 1]] if sxx > 0 else [[0, 1, 4, 3], [1, 2, 5, 4]])
+    # arms: sleeves (cuffs, or the shirtsleeves rolled), a hand of fingers and a thumb
+    rolled = bool(cp.get('rolled'))
     for s, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s), bp('el' + s), bp('hand' + s)
         tube(b.P('upper' + s, suit, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.05, e - 0.03, p[1]), 'el' + s: smooth(e + 0.05, e - 0.03, p[1])}, 50), (sx * 0.135 * H, 0.71 * H, 0), el, 0.03, 0.026, 7)
-        tube(b.P('fore' + s, suit, 'el' + s, 50), el, hd, 0.026, 0.022, 7)
-        ax = [hd[i] - el[i] for i in range(3)]; al = math.sqrt(sum(c * c for c in ax)) or 1
-        tube(b.P('hand' + s, skin, 'hand' + s, 40), hd, tuple(hd[i] + ax[i] / al * 0.13 for i in range(3)), 0.03, 0.004, 6)
+        if rolled:
+            tube(b.P('fore' + s, skin, 'el' + s, 50), lerp(el, hd, 0.12), hd, 0.022, 0.019, 7)
+            tube(b.P('cuff' + s, shade(suit, 0.82), 'el' + s, 40), lerp(el, hd, -0.02), lerp(el, hd, 0.2), 0.034, 0.033, 8)
+        else:
+            tube(b.P('fore' + s, suit, 'el' + s, 50), el, hd, 0.026, 0.022, 7)
+            tube(b.P('cuff' + s, shirt, 'el' + s, 40), lerp(el, hd, 0.8), lerp(el, hd, 0.96), 0.0285, 0.0285, 8)
+        ax = [hd[i] - el[i] for i in range(3)]
+        finger_hand(b, s, sx, hd, ax, skin, 0.024, 0.115, 0.0085)
     limb_legs(b, bp, pants, shoes, 0.04, 0.034, 0.1 * H * 0.8, 0.032, ZH=H)
     os.makedirs(OUTDIR, exist_ok=True)
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
@@ -1424,7 +1769,9 @@ def build_vesk(name):
             sphere(b.P('gauntletLight', glow, 'el' + s_, 60), lerp(el, hd, 0.5)[:2] + (lerp(el, hd, 0.5)[2] + 0.08,), 0.022, 6, 4)
         else:
             tube(b.P('fore' + s_, coat, 'el' + s_, 50), el, lerp(el, hd, 0.85), 0.058, 0.064, 8)
-            sphere(b.P('hand' + s_, skin, 'hand' + s_, 60), lerp(el, hd, 1.05), 0.048, 8, 6)
+            hh_ = b.P('hand' + s_, skin, 'hand' + s_, 60)
+            sphere(hh_, lerp(el, hd, 1.05), 0.048, 8, 6)
+            hand_detail(hh_, lerp(el, hd, 1.05), 0.048, sx)   # (CAST-POLISH: a thumb and knuckle lobes, as every ball hand)
     # boots under the coat
     for s_, sx in (('L', 1), ('R', -1)):
         ft = bp('foot' + s_)
@@ -1443,19 +1790,34 @@ def build_vesk(name):
            [[i, i + 1, 5 + i, 4 + i] for i in range(3)] + [[4 + i, 5 + i, 9 + i, 8 + i] for i in range(3)])
     front = lambda x, y: c[2] + 0.1 * math.sqrt(max(0.05, 1 - (x / 0.085) ** 2 - ((y - c[1]) / 0.145) ** 2))
     ey = c[1] + 0.035
+    cp = CAST.get(name, {})
+    # CAST-POLISH (part 3): the open eye is a lidded almond (white, iris, pupil, the lid line that blinks); the other is under the
+    # monocle; a frowning brow over each; sharp ears swept back
+    eye_set(b, front, ey, 0.038, 0.021, 0.0095, L.get('eyes', '#e0a020'), white='#f0e8d0', lidc='#3a2a4a', sides=(1,), tilt=0.1, pupil='#141018')
+    ts = [2 * math.pi * k / 10 for k in range(10)]
+    on = lambda dx, dy, lift=0.0, cx=-0.038: (cx + dx, ey + dy, front(cx + dx, ey + dy) + 0.004 + lift)
+    b.eye(on(0, 0), [([on(0.026 * math.cos(t), 0.026 * math.sin(t), 0.004) for t in ts], brass), ([on(0.019 * math.cos(t), 0.019 * math.sin(t), 0.006) for t in ts], glow)])   # the monocle: a brass ring, violet glass
+    brow_strips(b.P('brow', '#3a2a4a', 'head', 30), front, ey, 0.038, 0.021, 0.0095, bs=cp.get('browS', 1.0), tilt=cp.get('browTilt', 0.0), lift=0.006, drop=-0.012)
     for sxx in (1, -1):
-        on = lambda dx, dy, lift=0.0, cx=sxx * 0.038: (cx + dx, ey + dy, front(cx + dx, ey + dy) + 0.004 + lift)
-        ts = [2 * math.pi * k / 10 for k in range(10)]
-        if sxx < 0:   # the monocle: a brass ring, violet glass
-            b.eye(on(0, 0), [([on(0.026 * math.cos(t), 0.026 * math.sin(t), 0.004) for t in ts], brass), ([on(0.019 * math.cos(t), 0.019 * math.sin(t), 0.006) for t in ts], glow)])
-        else:
-            b.eye(on(0, 0), [([on(0.02 * math.cos(t), 0.008 * math.sin(t) - 0.002 * math.cos(t)) for t in ts], '#f0e8d0'), ([on(0.007 * math.cos(t), 0.007 * math.sin(t), 0.0012) for t in ts], L.get('eyes', '#e0a020'))])
-    brow = b.P('brow', '#3a2a4a', 'head', 30)
-    brow.add([(0.012, ey + 0.012, front(0.012, ey + 0.012) + 0.006), (0.062, ey + 0.03, front(0.062, ey + 0.03) + 0.006), (0.062, ey + 0.042, front(0.062, ey + 0.042) + 0.006), (0.012, ey + 0.02, front(0.012, ey + 0.02) + 0.006)], [[0, 1, 2, 3]])
-    my = c[1] - 0.075
-    # (FACES-HANDS: Vesk's mouth stays this static slash. It lies under his beak, in the shadow of the dark violet face, where
-    # a talking mouth could not be seen at any camera; he is not given the animated one.)
-    b.P('mouth', '#3a1a2a', 'head', 30).add([(-0.03, my, front(-0.03, my) + 0.004), (0.03, my - 0.008, front(0.03, my) + 0.004), (0.03, my - 0.002, front(0.03, my) + 0.004), (-0.03, my + 0.006, front(-0.03, my) + 0.004)], [[0, 1, 2, 3]])
+        tube(b.P('ear', skin, 'head', 40), (sxx * 0.07, c[1] + 0.01, c[2] - 0.005), (sxx * 0.14, c[1] + 0.075, c[2] - 0.05), 0.02, 0.003, 5)
+    # (FACES-HANDS left his mouth a static slash laid at the face's z, which the long chin stands in front of: it was never
+    # seen. CAST-POLISH part 3: the talking mouth is a lens on the chin's own surface, under the nose, a thin dark line at rest)
+    my = c[1] - 0.088
+    def chin_front(x, y):
+        t = max(0.0, min(1.0, (c[1] - 0.06 - y) / 0.14))
+        r = 0.07 - 0.062 * t
+        return c[2] + 0.04 + 0.03 * t + math.sqrt(max(0.0, r * r - x * x))
+    mhh = 0.015
+    mp_, mlens, mt_ = mouth_lens(0.0, my, 0.03, mhh, 0.004 * cp.get('mouthLift', 1.0), chin_front, 9, 0.003)
+    b.mouth(mp_, [(mlens, '#2a0f1c')], rest=0.3, drop=-0.4 * mhh, tilt=mt_)
+    # the coat's front: a placket of violet lining down it and brass buttons, so the long black coat has a centre line
+    csec = [(y, hw, zf + st * smooth(hipsY, neckY, y), zb) for y, hw, zf, zb in secs]
+    cz = lambda x, y: ring_z(csec, 0.7, x, y)
+    surf_grid(b.P('placket', lining, w_coat, 40), [[-0.012, 0.012]] * 5, [0.1, 0.3, 0.55, 0.78, hipsY - 0.04], cz, 0.004)
+    for y_ in (0.18, 0.4, 0.62, 0.84):
+        facet(b.P('button', brass, w_coat, 30), (0, y_, cz(0, y_) + 0.007), (0, 0, 1), 0.016, 6)
+    hl_ = bp('handL'); el_ = bp('elL')
+    tube(b.P('cuffL', brass, 'elL', 30), lerp(el_, hl_, 0.74), lerp(el_, hl_, 0.88), 0.07, 0.068, 8)
     os.makedirs(OUTDIR, exist_ok=True)
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
     print(name, 'tris', tris)
