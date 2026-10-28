@@ -31,6 +31,15 @@ Selected: B as the primary direction (the user, 28.10: "an old town with new inf
 geography stay recognisable; project pipes, cargo lifts and imported equipment visibly attach to older homes and public buildings
 (a pipe routed round a window, a guard post turned workshop, an old sign under a new one, a cargo mechanism residents depend on),
 each with a purpose, plus one small repair problem that can matter in the evacuation. A/C only as small accents (repairs, a few Zeelich goods).
+Addition (the user, 28.10): here and there a newer building on the promenade/waterfront that looks more like Zeelich (Zeelich's
+building language as imported architecture: a few, on the harbour front, not in the old core), as a sign of trade and the years.
 Implemented: no · Visually checked: no · Performance verified: no.
 Next: the street near Twinsen's house as the first isolated preview (three silhouettes, recessed windows and doors, thick roofs,
 one shop interior, old/new junction, the repair problem), built in the A+B treatment of D1.
+
+## D3 — Nera's identity (Proposed 28.10, waiting for the user)
+Options: A archipelago of arches · B floating towns · C ceramic water cities.
+Recommendation: B as the base (moving platforms, counterweights, boat lifts: the balancing mechanisms the story needs), a few of A's
+great arches as the skyline anchor, one C element (the old House of Balances in glazed ceramic and stone).
+Naming: existing NPC "Nara" (Zeelich, story/arsenal.js) — "Nera" is too close; decide a name later.
+Selected: — (pending)
