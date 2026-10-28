@@ -9,6 +9,7 @@
 import { Music } from './music.js';
 import { Babble } from './voice.js';
 const VOICE_BOOST = 2.2, MUSIC_DUCK = 0.5; // VOICE-MIX
+const VOICE_MAKEUP = 2.2; // VOICE-MIX-2: after the voice compressor (see the voice chain below)
 
 export class AudioEngine {
   constructor() {
@@ -48,7 +49,16 @@ export class AudioEngine {
     this.voiceComp = ctx.createDynamicsCompressor();
     this.voiceComp.threshold.value = -20; this.voiceComp.knee.value = 12; this.voiceComp.ratio.value = 3.5;
     this.voiceComp.attack.value = 0.004; this.voiceComp.release.value = 0.18;
-    this.voiceBus.connect(this.voiceComp).connect(this.master);
+    // VOICE-MIX-2 (the user, 28.10: "the voices are still too quiet"): measured, the compressor squashed VOICE-MIX's
+    // boost back down (lines at about -27 dBFS RMS). The gain now comes after it, with a little presence for laptop
+    // speakers and a limiter so peaks stay under -3 dBFS: about +8 dB, lines at about -17 to -19 dBFS RMS
+    this.voicePres = ctx.createBiquadFilter(); this.voicePres.type = 'peaking';
+    this.voicePres.frequency.value = 2500; this.voicePres.Q.value = 0.8; this.voicePres.gain.value = 3;
+    this.voiceMakeup = ctx.createGain(); this.voiceMakeup.gain.value = VOICE_MAKEUP;
+    this.voiceLim = ctx.createDynamicsCompressor();
+    this.voiceLim.threshold.value = -4; this.voiceLim.knee.value = 0; this.voiceLim.ratio.value = 20;
+    this.voiceLim.attack.value = 0.001; this.voiceLim.release.value = 0.1;
+    this.voiceBus.connect(this.voiceComp).connect(this.voicePres).connect(this.voiceMakeup).connect(this.voiceLim).connect(this.master);
     this.ducked = false;
     this.sfxBus.connect(this.reverb); // the music files carry their own room
     this.noiseBuf = this._noise(2);
