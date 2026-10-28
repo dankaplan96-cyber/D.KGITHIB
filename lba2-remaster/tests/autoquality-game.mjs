@@ -19,16 +19,18 @@ const st = () => ev(() => ({ q: game.settings.quality, auto: game.settings.quali
 // ---------------------------------------------------------------- 1. a new player: Auto
 await open(page, '?nocine');
 const s1 = await st();
-check('a new player: Quality Auto (not chosen by hand), running High here (software renderer under the tests: the governor is off)', s1.auto === true && s1.hand === false && s1.qv === 2 && s1.q === 'high' && s1.label === 'High' && !!s1.knobs && s1.src === 'test', s1);
+check('a new player: Quality Auto (not chosen by hand), running High here (software renderer under the tests: the governor is off)', s1.auto === true && s1.hand === false && s1.qv === 3 && s1.q === 'high' && s1.label === 'High' && !!s1.knobs && s1.src === 'test', s1);
 
 // ---------------------------------------------------------------- 2. migration of stored settings
 const mig = [];
 for (const [name, set, want] of [
   ['the preset the game picked by GPU name (qv 1, never picked)', { quality: 'high', qv: 1, v: 2 }, { auto: true, hand: false }],
-  ['a preset picked in Settings (qPicked)', { quality: 'medium', qPicked: true, qv: 1, v: 2 }, { auto: false, hand: true, q: 'medium' }],
-  ['a preset from before 0.30 that is neither automatic pick (chosen by hand then)', { quality: 'low' }, { auto: false, hand: true, q: 'low' }],
+  // (settings v3, the user 28.10 — no manual tuning: one time, every older setting moves to Auto, a hand-picked one included)
+  ['a preset picked in Settings (qPicked), before v3: Auto once', { quality: 'medium', qPicked: true, qv: 1, v: 2 }, { auto: true, hand: false }],
+  ['a preset from before 0.30 that is neither automatic pick, before v3: Auto once', { quality: 'low' }, { auto: true, hand: false }],
   ['the old automatic pick from before 0.30', { quality: 'high' }, { auto: true, hand: false }],
-  ['settings already on v2, Auto off by hand', { quality: 'medium', qv: 2, qualityAuto: false, qualityChosenByHand: true, v: 2 }, { auto: false, hand: true, q: 'medium' }],
+  ['settings on v2, Auto off by hand, before v3: Auto once', { quality: 'medium', qv: 2, qualityAuto: false, qualityChosenByHand: true, v: 2 }, { auto: true, hand: false }],
+  ['settings on v3, a preset picked by hand after the switch: kept', { quality: 'medium', qv: 3, qualityAuto: false, qualityChosenByHand: true, v: 2 }, { auto: false, hand: true, q: 'medium' }],
   ['settings already on v2, Auto on', { quality: 'low', qv: 2, qualityAuto: true, qualityChosenByHand: false, v: 2 }, { auto: true, hand: false, q: 'high' }],
 ]) {
   await reopen('?nocine', set);
