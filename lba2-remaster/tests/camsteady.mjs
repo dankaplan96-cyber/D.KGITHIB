@@ -34,7 +34,7 @@ await page.evaluate(() => {
   for (let i = 0; i < 80 && G.state !== 'play'; i++) { I.taps.add('KeyE'); G.step(0.05); }
   Object.assign(G.flags, { prologueDone: true, intro: true }); h.hasBall = true;
   window.R = {
-    mode(m) { G.settings.camera = m === 'free' || m === 'follow' ? m : 'lba'; rig.setMode(G.settings.camera); rig.cut = false; },
+    mode(m, d = 'far') { G.settings.camera = m === 'free' || m === 'follow' ? m : 'lba'; rig.setMode(G.settings.camera); rig.cut = false; G.settings.camDist = d; G.applySettings(); },
     // a scene start at a spot (as a load or a door would): the camera's fresh shot, then a second to settle
     place(x, z, a) { G.exitRoom({ x, z, a }, true, true); G.step(0.3); h.angle = a; h.vel.set(0, 0); h.resetMotion?.(); rig.lba.init = false; rig.snap(); G.step(1.0); },
     walk(pts, o = {}) { const res = []; for (const [x, z] of pts) res.push(P.go(x, z, { tol: 0.8, maxT: 40, fight: false, ...o }).r); P.release(); return res; },
@@ -124,7 +124,8 @@ function BUDGET(mode, name, s, notes) {
     b(`it turns only as he turns (heading reversals ${s.revYaw}/min ≤ his own ${s.revHero}/min)`, s.revYaw <= s.revHero + 1);
     // (a jitter is a shudder, several bobs a second; walking the town past houses the arm draws in at a corner and the
     // ground under it rises and falls as it swings round him, now and then a rise and fall in under 0.5 s: with the
-    // Medium arm (8.75 m, CAM-FOLLOW's distance setting) about one every 30 s on the town routes — allowed, at least 3)
+    // Medium arm (8.75 m, CAM-FOLLOW's distance setting) about one every 30 s on the town routes — allowed, at least 3; CAM-FAR: the
+    // same budget at the default Far arm (10.75 m), its lift held 0.5 s before it is let down)
     { const j = Math.max(3, Math.ceil(s.dur / 30)); b(`no jitter on steps, slopes or walls (tilt and height reversals within 0.5 s of the last: ${s.jitterPitch}, ${s.jitterY} ≤ ${j}; a minute: ${s.revPitch}, ${s.revY})`, s.jitterPitch <= j && s.jitterY <= j); }
     // (standing, its arm may still let out slowly along its line to him after a wall: up to a metre)
     // (standing, its arm may still let out slowly along its line to him after a wall: up to a metre; with a lock-on the
@@ -149,19 +150,22 @@ function BUDGET(mode, name, s, notes) {
   return out;
 }
 
+// CAM-FAR: Follow runs every route at the default distance (Far, since the user chose it) and, to keep the Medium arm
+// guarded too, the street routes at Medium as well (DIST=near,medium,far runs every route at those instead)
+const MEDIUM_ROUTES = ['street and square', 'street, Modern controls'];
 const results = [];
-for (const mode of MODES) for (const [name, body] of ROUTES) {
+for (const mode of MODES) for (const [name, body] of ROUTES) for (const dist of mode !== 'follow' ? [null] : process.env.DIST ? process.env.DIST.split(',') : ['far', ...(MEDIUM_ROUTES.includes(name) ? ['medium'] : [])]) {
   if (ONLY && !name.includes(ONLY)) continue;
   for (const rate of (process.env.RATES || '60').split(',')) {
-    const label = `${mode} · ${name}${rate !== '60' ? ' · ' + rate : ''}`;
-    const r = await page.evaluate(({ mode, body, label, rate }) => {
-      const G = game; R.mode(mode); if (rate === 'jank') CR.jank(15); else CR.fps(+rate);
+    const label = `${mode}${dist && dist !== 'far' ? ' (' + dist + ')' : ''} · ${name}${rate !== '60' ? ' · ' + rate : ''}`;
+    const r = await page.evaluate(({ mode, body, label, rate, dist }) => {
+      const G = game; R.mode(mode, dist || 'far'); if (rate === 'jank') CR.jank(15); else CR.fps(+rate);
       CR.start(label);
       let notes;
       try { notes = new Function('R', 'P', 'G', body)(R, P, G); } catch (e) { notes = ['error: ' + e.message]; }
-      const out = CR.stop(); CR.fps(60); P.release();
+      const out = CR.stop(); CR.fps(60); P.release(); G.settings.camDist = 'far'; G.applySettings();
       return { ...out, notes, end: P.state() };
-    }, { mode, body, label, rate });
+    }, { mode, body, label, rate, dist });
     results.push(r);
     console.log(`MEASURE ${label}:`, JSON.stringify({ ...r.stats, rules: undefined, worst: undefined }), 'notes', JSON.stringify(r.notes).slice(0, 160));
     console.log("   rules", JSON.stringify(r.stats.rules), "\n   worst", JSON.stringify(r.stats.worst));

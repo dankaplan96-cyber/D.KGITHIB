@@ -87,7 +87,7 @@ const STEEP = (48 * Math.PI) / 180, STEEP_OK = (40 * Math.PI) / 180, STEEP_T = 0
 const AUTO_V = (24 * Math.PI) / 180, AUTO_A = (45 * Math.PI) / 180, AUTO_MIN = (25 * Math.PI) / 180, AUTO_OFF = (4 * Math.PI) / 180, AUTO_MAX = (115 * Math.PI) / 180, AUTO_IDLE = 2, STEADY = 0.6;
 const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, OCC_DELAY = 0.2, TALL_FREE = 1.0;
 // CAM-FOLLOW, the chase camera (_chase): the arm from his pivot (CH_PIVOT m over the ground under him) is CH_DIST's arm
-// long at its pitch (Settings → Camera distance; the user: "too close and too low" → Medium, a step out and up, the default), with a CH_FOV° lens; it looks CH_AHEAD m ahead of him, CH_LOOK m up (eased at CH_LOOK_W 1/s). The heading
+// long at its pitch (Settings → Camera distance; the user: "too close and too low" → Medium, a step out and up, then Far fits best: the default), with a CH_FOV° lens; it looks CH_AHEAD m ahead of him, CH_LOOK m up (eased at CH_LOOK_W 1/s). The heading
 // follows his facing (a steering correction within CH_DEAD_YAW moves nothing until his facing has held CH_STEADY s)
 // through a spring (CH_W 1/s: within 15° of a 90° turn in 0.25 s, settled in ~0.45 s) that never turns faster than
 // CH_VMAX (4°/frame at 60 fps, 8° at 30). The pivot's height keeps a dead band of CH_DEAD m, then its own spring (CH_HW).
@@ -106,7 +106,7 @@ const OCC_IN_V = 8, OCC_OUT_V = 2.5, OCC_HOLD = 0.7, OCC_A = 30, OCC_A_OUT = 5, 
 const CH_DIST = { near: { arm: 7.0, pitch: 0.34 }, medium: { arm: 8.75, pitch: 0.42 }, far: { arm: 10.75, pitch: 0.5 } };
 const CH_PIVOT = 1.4, CH_AHEAD = 1.2, CH_LOOK = 0.8, CH_FOV = 50, CH_W = 11, CH_VMAX = (240 * Math.PI) / 180, CH_DEAD_YAW = (3 * Math.PI) / 180, CH_STEADY = 0.3;
 const CH_DEAD = 0.25, CH_HW = 4, CH_BACK = (110 * Math.PI) / 180, CH_HOLD_OUT = (95 * Math.PI) / 180;
-const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_W = 6, CH_GAP = 0.4, CH_NEAR = 0.15, CH_INSIDE = 0.05, CH_RIM = 0.5, CH_FLICK = 0.3, CH_CONFIRM = 0.06, CH_TIER_PREF = 1.5, CH_PIPE = 0.35, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_OVER_T = 0.3, CH_LIFT_AHEAD = 0.5, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_LOOK_W = 8;
+const CH_EL_MAX = (46 * Math.PI) / 180, CH_EL_KEEP = (4 * Math.PI) / 180, CH_EL_W = 6, CH_GAP = 0.4, CH_NEAR = 0.15, CH_INSIDE = 0.05, CH_RIM = 0.5, CH_FLICK = 0.3, CH_CONFIRM = 0.06, CH_TIER_PREF = 1.5, CH_PIPE = 0.35, CH_MIN = 1.6, CH_CLOSE = 0.7, CH_OVER_ARM = 2.4, CH_OVER_P = [0.8, 0.9, 1.0, 1.15, 1.3, 1.45], CH_OVER_RATE = 4, CH_OVER_T = 0.3, CH_LIFT_AHEAD = 0.5, CH_LEAD = [0.2, 0.45], CH_LAG = 4, CH_IN_V = 25, CH_IN_A = 200, CH_HOLD = 0.6, CH_OUT_V = 2.5, CH_OUT_A = 5, CH_UP = 0.3, CH_SHORT = 2.5, CH_UP2 = 0.1, CH_PITCH_SHORT = 0.82, CH_LIFT_HOLD = 0.5, CH_LOOK_W = 8;
 // A lock-on: behind his shoulder (CH_SHOULDER rad round from the line target → him), looking at a point CH_LOCK_K of the
 // way to the target (at most CH_LOCK_MAX m), the arm longer by CH_LOCK_ARM of the distance (at most CH_LOCK_ARM_MAX m).
 const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, CH_LOCK_ARM_MAX = 3;
@@ -618,7 +618,11 @@ export class CameraRig {
     const full = CH_ARM + (lock ? Math.min(CH_LOCK_ARM_MAX, lockD * CH_LOCK_ARM) : 0), a0 = C.arm ?? full;
     // (the tilt as it comes in keeps the camera's height about level near the full arm: an arm drawn in a little by a
     // passing house neither bobs nor nods the view much)
-    const pitchAt = (arm) => CH_PITCH + CH_UP * clamp((CH_ARM - arm) / (CH_ARM - CH_SHORT), 0, 1) + CH_UP2 * clamp((CH_SHORT - arm) / (CH_SHORT - CH_MIN), 0, 1);
+    // (CAM-FAR: the tilt drawn in adds to the base pitch only up to CH_PITCH_SHORT in all — a higher base (Far) tilts up
+    // less, so the view looks no steeper at a wall or a door than Medium's does: out of the house door, steeper than 45°
+    // for 1.8 s at Far's 0.5 + 0.4 against 0.15 s at Medium's 0.42 + 0.4)
+    const upK = Math.min(1, (CH_PITCH_SHORT - CH_PITCH) / (CH_UP + CH_UP2));
+    const pitchAt = (arm) => CH_PITCH + upK * (CH_UP * clamp((CH_ARM - arm) / (CH_ARM - CH_SHORT), 0, 1) + CH_UP2 * clamp((CH_SHORT - arm) / (CH_SHORT - CH_MIN), 0, 1));
     const at = (out, yw, a, O = T, q = pitchAt(a)) => { const h = Math.cos(q) * a; return out.set(O.x + Math.sin(yw) * h, O.y + CH_PIVOT + Math.sin(q) * a, O.z + Math.cos(yw) * h); };
     // the longest arm along heading yw whose camera — over the ground as it will be — keeps CH_GAP from everything
     // solid and sees him; none keeps clear: a tight spot, the least margins (CH_NEAR, the ground's least); none there
@@ -721,7 +725,11 @@ export class CameraRig {
     }
     C.pv = { x, y, z };
     const l0 = C.lift;
-    this._ease(C, need, dt);
+    // (CAM-FAR: a lift over the ground it swings across is let down only after the need has stayed lower CH_LIFT_HOLD s —
+    // the long arm cut in at a wall, lifted over rising ground, lowered and let out again came to reversals of the height
+    // within half a second; held, the height only rises in that while)
+    C.lowN = !fresh && need < C.lift - 0.02 ? (C.lowN || 0) + dt : 0;
+    this._ease(C, C.lowN > 0 && C.lowN < CH_LIFT_HOLD ? Math.max(need, C.lift) : need, dt);
     if (fresh) { C.lift = need; C.vlift = 0; }
     { const hard = this._groundNeed(x, y, z, T, true); if (hard > C.lift) { C.lift = hard; C.vlift = Math.max(0, C.vlift); } }   // (the least, at once)
     W.ground = C.lift - l0;
