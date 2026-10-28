@@ -29,6 +29,12 @@ import * as THREE from 'three';
 export const SMALL_FAR = { high: 24, medium: 18, low: 18 };
 export const MIN_PX = { high: 0, medium: 4, low: 7 };
 const SMALL_R = 2, CELL = 16, KEEP_NEAR = 16, FRESH = 60;
+// PERF-HIGH: High draws its 4096 map live every frame (shadowcache.js leaves maps over 2048 out), and on the user's
+// Vega 8 plugged in that preset is bound by the processor on the street (laptop-build228-plugged.txt: submit 14.9 ms,
+// 79 of 238 calls in the shadow pass). With 32 m cells its ±48 m box holds about half as many batches: on the street
+// route 38 → 19 shadow-batch calls for +77k depth-only triangles (854k → 931k a frame). The same casters into the same
+// map: the shadows look the same. Medium and Low (their static casters are cached: shadowcache.js) keep 16 m.
+export const cellFor = (quality) => (quality === 'high' ? 32 : CELL);
 const _f = new THREE.Frustum(), _m = new THREE.Matrix4(), _s = new THREE.Sphere(), _c = new THREE.Vector3(), _v = new THREE.Vector3();
 const _b = new THREE.Box3(), _pts = Array.from({ length: 16 }, () => new THREE.Vector3()), _sf = new THREE.Frustum(), _sm = new THREE.Matrix4();
 const SWEEP_DROP = 8;
@@ -204,6 +210,13 @@ export class ShadowCull {
     cam.position.copy(L.position); cam.lookAt(L.target.position); cam.updateMatrixWorld(true); cam.updateProjectionMatrix();
     return _sf.setFromProjectionMatrix(_sm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
   }
+  // (PERF-HIGH) the cell size; a change rebuilds every area's batches on its next update. The pieces cast on their own
+  // only until then: the update that rebuilds the area on show comes before the frame's render, where the draw batches
+  // check their pieces (drawbatch.js: one that casts leaves its batch), so they find them as they were.
+  setCell(c) { if (c === this.cell) return false; this.cell = c; if (this.areas.size) this.reset(); return true; }
+  // (PERF-HIGH) an area's batches built now rather than on its next visit (the benchmark, after a preset change: its
+  // routes then measure the areas as a player who keeps one preset finds them)
+  prepare(root) { if (this.enabled && root && !this.areas.has(root)) this.areas.set(root, new Area(root, this.cell)); }
   // (all pieces cast on their own again; batches removed: the benchmark's comparisons, or switching it off)
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); this.area = null; }
   update(root, camera, focus) {

@@ -5,7 +5,7 @@
 // behave exactly as on the web. Saves (the game's localStorage) live in the user's app-data folder:
 //   Windows  %APPDATA%\LBA3 The Awakening        macOS  ~/Library/Application Support/LBA3 The Awakening
 //   Linux    ~/.config/LBA3 The Awakening
-const { app, BrowserWindow, protocol, ipcMain, Menu, shell, powerMonitor } = require('electron');
+const { app, BrowserWindow, protocol, ipcMain, Menu, shell, powerMonitor, screen } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
@@ -90,6 +90,14 @@ app.whenReady().then(() => {
   const power = (v) => { for (const w of BrowserWindow.getAllWindows()) w.webContents.send('lba3:power', v); };
   powerMonitor.on('on-battery', () => power(true));
   powerMonitor.on('on-ac', () => power(false));
+  // PERF-HIGH: for the benchmark's report: the refresh rate the OS gives the window's display, the window's state,
+  // and Chromium's own GPU feature status (is WebGL / compositing / rasterisation on the GPU: 'enabled' or a fallback)
+  ipcMain.on('lba3:display', (e) => {
+    try {
+      const w = BrowserWindow.fromWebContents(e.sender), d = w ? screen.getDisplayMatching(w.getBounds()) : screen.getPrimaryDisplay();
+      e.returnValue = { hz: d.displayFrequency, size: `${d.size.width}x${d.size.height}`, scale: d.scaleFactor, fullscreen: !!w?.isFullScreen(), focused: !!w?.isFocused(), gpu: app.getGPUFeatureStatus() };
+    } catch (err) { e.returnValue = { error: String(err) }; }
+  });
   ipcMain.on('lba3:quit', () => app.quit());
   ipcMain.on('lba3:fullscreen', (e, on) => { const w = BrowserWindow.fromWebContents(e.sender); w?.setFullScreen(on ?? !w.isFullScreen()); });
   createWindow();

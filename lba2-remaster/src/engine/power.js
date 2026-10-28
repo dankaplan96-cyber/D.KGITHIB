@@ -28,7 +28,7 @@ export class Power {
   set(v, now = false) {
     clearTimeout(this._t);
     if (v === this.state) return;
-    const go = () => { this.state = v; this.onChange?.(v); };
+    const go = () => { this.changes = (this.changes || 0) + 1; this.state = v; this.onChange?.(v); };   // (changes: counted for the benchmark's report)
     if (now || this.state === null) go(); else this._t = setTimeout(go, SETTLE);
   }
   describe() { return this.state === null ? 'unknown (no battery information: treated as plugged in)' : this.state ? 'on battery' : 'plugged in'; }

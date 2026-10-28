@@ -78,7 +78,13 @@ export class Perf {
       // (the calls' 95th percentile: a turning camera's heavy views; GPU-level draws; the shadow pass's share)
       callsP95: pct('calls', 0.95), draws: pct('draws', 0.5), shadowCalls: pct('shadowCalls', 0.5),
       gpuMs: this.gpuTimer?.stats() ?? null,   // (null: no timer query in this browser)
-      lamps: b[0]?.lamps != null ? pct('lamps', 0.5) : null,   // (lamps lit by the light pool: each one is lighting math on the pixels it reaches)
+      lamps: b[0]?.lamps != null ? pct('lamps', 0.5) : null,
+      // (PERF-HIGH: frame pacing) intervals by how they relate to a 60 Hz refresh (16.7 ms): on it (≤ 17.2), a little
+      // slower (17.2–20: neither on the refresh nor a missed one), longer; how late the frame callback ran; the game's
+      // own CPU work (simulation + render submission) per frame; frames drawn while the window was in the background
+      pace: { on: b.filter((f) => f.ms <= 17.2).length, slow: b.filter((f) => f.ms > 17.2 && f.ms <= 20).length, long: b.filter((f) => f.ms > 20).length,
+        lag: b[0]?.lag != null ? pct('lag', 0.5) : null, work: +[...b.map((f) => f.sim + f.render)].sort((x, y) => x - y)[Math.floor(b.length / 2)].toFixed(2),
+        workP95: +[...b.map((f) => f.sim + f.render)].sort((x, y) => x - y)[Math.min(b.length - 1, Math.floor(b.length * 0.95))].toFixed(2), bg: b.filter((f) => f.bg).length },   // (lamps lit by the light pool: each one is lighting math on the pixels it reaches)
     };
   }
   overlay(on = !this.el) {
@@ -134,15 +140,15 @@ export class GpuTimer {
       const F = this.frames.shift(), by = {};
       let tot = 0;
       for (const [label, q] of F.q) { const ms = gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6; by[label] = (by[label] || 0) + ms; tot += ms; this.free.push(q); }
-      if (disjoint) continue;
+      if (disjoint) { this.disjoint = (this.disjoint || 0) + 1; continue; }   // (PERF-HIGH: counted: a GPU power-state change)
       this.ms.push(tot); if (this.ms.length > 1200) this.ms.shift();
       for (const [label, ms] of Object.entries(by)) { let a = this.pass.get(label); if (!a) this.pass.set(label, (a = [])); a.push(ms); if (a.length > 1200) a.shift(); }
     }
   }
-  reset() { this.ms.length = 0; this.pass.clear(); }
+  reset() { this.ms.length = 0; this.pass.clear(); this.disjoint = 0; }
   stats() {
     if (!this.ms.length) return null;
     const pc = (a, k) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(k * v.length))].toFixed(2); };
-    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
+    return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, disjoint: this.disjoint || 0, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
   }
 }

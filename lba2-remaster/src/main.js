@@ -14,7 +14,7 @@ import { FitWatch } from './engine/autofit.js';
 import { FarCull, BlobBatch, BoxCull } from './engine/drawcull.js';
 import { BLOBS } from './engine/rig.js';
 import { LightPool, poolSize } from './engine/lightpool.js';
-import { ShadowCull } from './engine/shadowcull.js';
+import { ShadowCull, cellFor } from './engine/shadowcull.js';
 import { DrawBatch } from './engine/drawbatch.js';
 import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
@@ -239,6 +239,7 @@ class Game {
     L.citadel = Math.round(performance.now() - tm);
     this.env = new Environment(this.scene, this.terrain);
     this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
+    this.syncShadowCells();   // (PERF-HIGH: the cell size for the preset; before any area is built)
     this.renderer.setup(this.scene, this.camera);
     this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
     // (PERF-BATTERY: the static casters drawn into a cached shadow map only when needed: engine/shadowcache.js)
@@ -730,6 +731,10 @@ class Game {
     if (this.screen === 'settings') this.syncSettingsUI();
     return true;
   }
+  // PERF-HIGH: the shadow batches' cell size for the preset (engine/shadowcull.js cellFor). A change rebuilds the shadow
+  // batches of the area on show on its next frame (inside the preset change's shader hold), other areas' on their next
+  // visit. Only on a preset change.
+  syncShadowCells() { this.shadowCull?.setCell(cellFor(this.settings.quality)); }
   // the light pool for the preset and the power state (engine/lightpool.js poolSize: on battery at Medium/High, the 2
   // lamps nearest the hero, faded; otherwise the preset's 2/4/8)
   syncLamps() {
@@ -1467,6 +1472,7 @@ class Game {
       this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.syncLamps();
       this.world?.setDetail?.(s.quality);
       if (this.shadowCull) this.shadowCull.quality = s.quality;
+      this.syncShadowCells();
       if (was.quality) this.warmGraphics();
     }
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
@@ -1928,6 +1934,13 @@ class Game {
     // the display's refresh interval (ms, smoothed), from the rAF timestamps
     const d = now - (this._rafT ?? now); this._rafT = now;
     if (d > 0) this._vsync = this._vsync ? this._vsync + (Math.min(50, d) - this._vsync) * 0.1 : Math.min(50, d);
+    // PERF-HIGH (benchmark only): how late this callback runs after the frame's timestamp (the main thread busy with
+    // something else), and the benchmark's "nothing drawn" probe: a few refreshes with no simulation and no render, to
+    // tell the display's own pace from the game's (engine/bench.js idleProbe). The time is not simulated.
+    if (this.benching) {
+      this._lag = performance.now() - now;
+      if (this.benchIdle) { this.benchIdle(now); this.last = now; requestAnimationFrame((t2) => this.loop(t2)); return; }
+    }
     // FRAME-1: frame-rate limit (Settings; off by default, off while benchmarking). A refresh before the next frame
     // is due is skipped: nothing is simulated or drawn, the last frame stays on screen, and keys tapped meanwhile
     // wait in Input for the next frame. Due times step by the limit (a frame late by more than one interval
@@ -1959,15 +1972,25 @@ class Game {
     // (RENDER-INV: `_inner`: a catch-up step before the drawn one; what only serves the picture runs on the drawn one)
     try { for (let i = 0; i < n; i++) { this._inner = i < n - 1; this.frame(sub, i === n - 1); } } finally { this._inner = false; }
     const ms = performance.now() - t0;
+    // (PERF-HIGH: the frame's own work without the background slices, for spareMs)
+    this._workMs = ms - (this._bgMs || 0); this._bgMs = 0;
     // (FRAME-1: `black`: this interval was spent with a fully black screen on show (a scene change's fade or shader
     // hold), so a long one is a pause behind the fade, not a hitch in view)
     const black = !!this._shownBlack;
     this._shownBlack = !!this.trans && (this.trans.hold || this._fadeOp >= 0.999);
     let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
-    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps });
+    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps, lag: this._lag ?? 0, bg: !!this.background });
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark's fixed runs; its
     // "as played" runs keep it: PERF-BATTERY-2)
     if (this.state === 'play' && !this.trans && (!this.benching || this.benchAuto) && !this.background) this.renderer.adapt(real * 1000);
+  }
+
+  // PERF-HIGH: the CPU time a background job (the map built after an arrival) may take in this frame: what the last
+  // frame's own work (simulation + render submission, without such jobs) left of three quarters of the frame interval
+  // (the display's, or the frame-rate limit's), between 0.5 ms (it always gets on) and max
+  spareMs(max) {
+    const frame = Math.max(this.frameCapMs || 0, this._vsync || 1000 / 60);
+    return Math.max(0.5, Math.min(max, 0.75 * frame - (this._workMs ?? 0)));
   }
 
   // Deterministic stepping for automated tests: game.step(seconds).

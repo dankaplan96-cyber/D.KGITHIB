@@ -464,7 +464,10 @@ export class HUD {
     if (!R || R.outdoor) this._out = { region, x: g.hero.pos.x, z: g.hero.pos.z };
     else if (!this._in && this._out && R.id !== 'arena') (g.flags.mapDoors ||= {})[R.id] = [this._out.region, +this._out.x.toFixed(1), +this._out.z.toFixed(1)];
     this._in = R && !R.outdoor ? R.id : null;
-    if (!this._in) this._base(region).step(2.5);
+    // (PERF-HIGH: the slice is what the last frame's own work left of the frame (Game.spareMs, 0.5–2.5 ms): a map built
+    //  after an arrival took a fixed 2.5 ms of every frame for 1–4 s (5.5 ms with the minimap's own 3 ms slice on top), which a
+    //  frame already bound by the processor (the laptop on battery) paid in full; it now takes longer to finish there)
+    if (!this._in) { const B = this._base(region); if (!B.done) { const t0 = performance.now(); B.step(g.spareMs ? g.spareMs(2.5) : 2.5); g._bgMs = (g._bgMs || 0) + performance.now() - t0; } }
     if (!this.lba && !this.el.classList.contains('hidden')) this.drawMinimap();
   }
 
@@ -512,7 +515,7 @@ export class HUD {
     if (!this._miniSized) { const css = this.mini.clientWidth || 170, w = Math.max(190, Math.round(css * Math.min(2, devicePixelRatio || 1))); if (this.mini.width !== w) this.mini.width = this.mini.height = w; this._miniSized = true; }
     const W = this.mini.width, indoor = R && !R.outdoor, region = indoor ? null : regionOf(g);
     const B = indoor ? this.mapBase(null, R) : this._base(region);
-    if (!indoor && !B.done) B.step(3);
+    // (outdoors its base map is built by mapTick, which runs right before: PERF-HIGH)
     this.miniRoom = indoor ? R.id : null;
     const mode = this.miniMode = g.settings?.minimap === 'camera' ? 'camera' : 'north';
     const y = g.camRig?.yaw ?? 0, phi = mode === 'camera' ? -Math.PI / 2 - Math.atan2(-Math.cos(y), -Math.sin(y)) : 0;
