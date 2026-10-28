@@ -1060,3 +1060,43 @@ docs/lba3-production/reviews/ARTHUR-12/ (before and after under the same light a
   (his NPC entry no longer names it; Doran's still does, unchanged). If a playful twelve-year-old's hide is wanted
   later (a peek round the bed, one knee down), it is a new clip for the animator, not a model change.
 - **Face:** the lid strips are in the eye groups (blink unchanged). The brows are static on the head mesh. No mouth.
+
+## CAST-POLISH (WORKLIST #39): the town's people brought up to Twinsen's, Zoé's and Arthur's standard
+
+The cast built by `tools/blender/cast_poly.py` (everyone but Twinsen, Zoé, Baldino and Vesk; the Esmers already had
+FACES-HANDS' mouths) now has what the three leads have, race by race. Looks in `src/game/characters.js` are unchanged
+(race, colours, outfit, height); what makes each person their own beyond them is the `CAST` table at the top of
+`cast_poly.py` (face, clothing, hat, ears), so `art/characters/skeletons.json` did not need a new dump.
+
+- **Faces:** every Quetch, Rabbibunny and Grobo has eyes with the lid line over them (blinking with the eye group), brows
+  (thickness and tilt per person), a nose where the look names one (`ball`, `long`, `button`) and a **mouth as its own mesh**
+  (`mouths` in the JSON; rig.speakMouth / voice.js driveMouth open it with the voice's syllables, closed at rest). The Quetch
+  mouth is Arthur's lens; the Rabbibunny's is under its nose on the snout tip with a chin and two buck teeth; the Grobo's is
+  a pair of smiles either side of the trunk's root (one mesh); the Spheros' the same either side of the beak (on their torso
+  bone: `polyCharacter` now places a mouth relative to its own bone); the elves' a dark opening in the beard. The mouth's
+  corners (smile / flat / down) and width are the person's temper: Bram's down, Tim's wide grin, Gilbert's under his moustache.
+- **Hands:** a thumb and knuckle lobes on every ball hand (Twinsen's, scaled to each hand; a paw has two toe lobes), the ball
+  unchanged in size and place. Arthur's hands got the thumb too.
+- **Clothes:** a hem band in the trim colour on every tunic and robe, a neck binding, patch pockets (Gilbert, Nell, the
+  farmer, Dallan, the foreman...), rolled sleeves and leather gloves (Nell), a sash bow (Lulu), buckles, a real apron
+  (bib, straps, pocket, hem: it follows the skirt, the old one was a flat panel the flare cut through), Vesk's guards'
+  epaulettes, cross-strap, stand collar, boots and gloves. Tim's tunic no longer folds into a tray (its hem ring sat above
+  the ring before it) and hangs to the thigh.
+- **Heads:** Gilbert's white hair is a horseshoe round the back, not two ear muffs; buns (Tarra, Sela) sit on hair; straw hat
+  (farmer), flat cap (Bram), straw/fur/bobble hats for the other Grobos, Odile's cap with its peak and band, the Rabbibunny
+  wizards' beard and hat with a brim and a folded point, spectacles for the Quetch (Sela, the archivist) and a proper pair for
+  Mira; each bunny's ears their own (a kinked ear for Pippa, floppy for the elder), Grobo ears as shaped flaps, not discs.
+- **Counts** (skinned triangles, before to after; eyes and mouth meshes extra): Gilbert 1812 to 2368, Tim 1920 to 2296,
+  Lulu 1928 to 2492, Mira 1468 to 1926, Pippa 1454 to 1978, Bram 1646 to 2190, Nell 2042 to 2484, Odile 1516 to 2032,
+  farmers 1840/1454/1646 to 2316/1978/2214, Bersimon 1440 to 2264, Vesk's guards 1906/1728 to 2490/2360; the highest is
+  Dallan's 2760 (under 4000). One more small mesh per character (the mouth, on the eyes' shared material): +1 draw call;
+  no new material or shader.
+- **Not changed:** the 20 bones, their names, parents and bind positions; every part is weighted to the same bones as the
+  cloth it sits on (hem and pockets on the skirt bones, the neck binding on the torso), so every clip plays unchanged.
+- **Why the committed bram / nell / odile / vguard JSON looked "out of step" with the script:** they were not; regenerating
+  them from the old script gave identical geometry, colours and weights. Only `-0.0` against `0.0` differs in the text (a
+  newer bpy writes the sign of a zero), which makes `git diff` noisy.
+- **Limits:** the Spheros' eyes are still part of their body mesh (no blink); the Grobo guard's visor hides its eyes by
+  design; hats and ears do not move. No audio lip-sync: the mouth follows the babble's syllables, as for the leads.
+- **Rebuilt with** `python3 tools/blender/cast_poly.py art/characters/skeletons.json assets/poly` (whole cast; Zoé and Baldino
+  are skipped unless named) and `... assets/poly arthur` (his own blend).

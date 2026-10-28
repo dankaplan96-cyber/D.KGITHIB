@@ -15,6 +15,7 @@
 //   &anim=walk&t=0.4  clip + freeze time in seconds (deterministic: random timers are reset); &speed= ground speed
 //   &light=neutral|outdoor|indoor   &mat=color|grey|sil   &props=0 hides door/step/chair  &grid=0
 //   &dist, &cy, &ly, &fov, &gap, &labels=0, &bg=#hex
+//   &focus=head|armL.hand  &fd= distance  &fy= lift the focus (m)  &cyaw= &cpitch=  &mouth=0..1 &round=
 //   &baked=1          load baked geometry (assets/characters) via preloadCharacters first
 //   &ov={json}        design overrides applied to every character (proportion variants)
 import * as THREE from 'three';
@@ -78,7 +79,7 @@ const rigs = slots.map(([n, v], i) => {
   scene.add(rig.root);
   return rig;
 });
-document.getElementById('info').textContent = `${slots.length} rigs, ${(performance.now() - t0).toFixed(0)} ms — ${[...new Set(times)].join(', ')}`;
+if (q.get('labels') !== '0') document.getElementById('info').textContent = `${slots.length} rigs, ${(performance.now() - t0).toFixed(0)} ms — ${[...new Set(times)].join(', ')}`;
 const span = slots.length * gap;
 if (q.get('props') !== '0') {
   // door 2.15 m (frame + panel), a 0.25 m step and a chair (seat 0.45 m) for scale
@@ -125,12 +126,12 @@ const step = (dt) => rigs.forEach((g) => {
 const tFreeze = q.get('t') != null ? +q.get('t') : null;
 if (tFreeze != null) { const n = Math.round(tFreeze * 60); for (let i = 0; i < n; i++) step(1 / 60); }
 // (FACES-HANDS) focus=armL.hand | armR.hand | head: the camera follows that bone at fd metres, seen from cyaw (radians) and cpitch
-const focusQ = q.get('focus'), fd = +(q.get('fd') || 0.6), cyaw = +(q.get('cyaw') || 0), cpitch = +(q.get('cpitch') || 0.15), _fp = new THREE.Vector3();
+const focusQ = q.get('focus'), fd = +(q.get('fd') || 0.6), cyaw = +(q.get('cyaw') || 0), cpitch = +(q.get('cpitch') || 0.15), fy = +(q.get('fy') || 0), _fp = new THREE.Vector3();
 const aim = () => {
   if (!focusQ) return;
   const bone = focusQ.split('.').reduce((o, k) => o?.[k], rigs[0].j);
   if (!bone) return;
-  bone.updateWorldMatrix(true, false); bone.getWorldPosition(_fp);
+  bone.updateWorldMatrix(true, false); bone.getWorldPosition(_fp); _fp.y += fy;
   cam.position.set(_fp.x + Math.sin(cyaw) * Math.cos(cpitch) * fd, _fp.y + Math.sin(cpitch) * fd, _fp.z + Math.cos(cyaw) * Math.cos(cpitch) * fd);
   cam.lookAt(_fp); cam.updateMatrixWorld();
 };
