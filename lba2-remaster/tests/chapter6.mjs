@@ -64,7 +64,15 @@ is('Yorna: the lift ready', await ev(() => { T.talk('yorna'); return [game.flags
 await shot('C6-02-lift.png');
 is('the sword cuts the mooring rope', await ev(() => { const G = game, h = G.hero, R = G.story.cur.rope; const before = [h.hasSword, h.combat.weapon]; T.tp(R.x - 1.2, R.z); h.angle = Math.atan2(R.x - h.pos.x, R.z - h.pos.z); G.step(0.2); T.tap('KeyK'); G.step(0.8); T.talkAll(); return [before, G.flags.c6_rope, T.obj()]; }), (v) => v[0][0] === true && v[1] === true && v[2].length > 0);
 is('the first trip up', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip1; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip1, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
-is('the ice mites driven off', await ev(() => { const G = game, h = G.hero; const ms = G.enemies.filter((e) => e.def?.id?.startsWith('imite')); for (const m of ms) for (let i = 0; i < 30 && m.alive; i++) { h.pos.set(m.pos.x - 3, G.physics.groundAt(m.pos.x - 3, m.pos.z), m.pos.z); h.angle = h.angleTo(m); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('KeyF'); G.step(1.0); } return [ms.length, ms.filter((m) => m.alive).length, T.obj()]; }), (v) => v[0] > 0 && v[1] === 0);
+// (the hero stands 3 m from the mite, west of it when that is open. A mite chases him, so by the third one it may
+//  stand against the heat shed's east wall, and "3 m west" is then inside the shed or behind it: the shed is a wall
+//  to the ball and to the lock-on, so no throw from there could ever reach it. As in play, he steps to a spot with
+//  clear ground and a clear line to the mite: the same 3 m, the next bearing round the mite that is open)
+is('the ice mites driven off', await ev(() => { const G = game, h = G.hero, P = G.physics; const ms = G.enemies.filter((e) => e.def?.id?.startsWith('imite'));
+  const spot = (m) => { for (const a of [0, 0.8, -0.8, 1.6, -1.6, 2.4, -2.4, 3.14]) { const x = m.pos.x - 3 * Math.cos(a), z = m.pos.z + 3 * Math.sin(a), y = P.groundAt(x, z, m.pos.y + 1);
+      if (Math.abs(y - m.pos.y) < 0.6 && !P.solidAt(x, z, y + 0.5, 0.4) && P.lineOfSight(x, y + 1.2, z, m.pos.x, m.pos.y + 0.6, m.pos.z)) return { x, y, z }; }
+    return { x: m.pos.x - 3, y: P.groundAt(m.pos.x - 3, m.pos.z), z: m.pos.z }; };
+  for (const m of ms) for (let i = 0; i < 30 && m.alive; i++) { const s = spot(m); h.pos.set(s.x, s.y, s.z); h.angle = h.angleTo(m); h.hp = h.maxHp; G.ball.state = 'idle'; T.tap('KeyF'); G.step(1.0); } return [ms.length, ms.filter((m) => m.alive).length, T.obj()]; }), (v) => v[0] > 0 && v[1] === 0);
 is('the second trip up', await ev(() => { const G = game, w = G.rooms.hamalayi.lift.winch; T.useAt(w.x, w.z, G.rooms.hamalayi.lift.y0); for (let i = 0; i < 600 && !G.flags.c6_trip2; i++) { G.step(0.05); if (G.state === 'dialog') T.talkAll(); } T.talkAll(); return [G.flags.c6_trip2, T.obj()]; }), (v) => v[0] === true && v[1].length > 0);
 is('Twinsen rides the platform up', await ev(() => { const G = game, p = G.rooms.hamalayi.lift.pad; T.tp(p.x, p.z); for (let i = 0; i < 400 && !G.flags.c6_up; i++) G.step(0.05); return [G.flags.c6_up, G.hero.pos.y.toFixed(1), T.obj()]; }), (v) => v[0] === true && v[2].length > 0);
 await shot('C6-03-top.png');
