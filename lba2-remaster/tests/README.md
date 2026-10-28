@@ -14,6 +14,8 @@ node tests/save-migration.mjs  # v1 save upgrade + backup, missing room, corrupt
 node tests/saveslots.mjs       # SAVE-SLOTS: Save Game / Load Game / Continue = newest / Delete / New Game keeps slots / full storage
 node tests/walkers.mjs        # WORLD-LIFE: the residents who walk round Citadel, Zeelich's street and Kesh: routes, benches, chats, avoidance, stuck fallback, talk, LOD cost
 node tests/anim-combat.mjs     # Twinsen's combat animation: release/contact timing at 30/60/120 fps, planted feet, interruptions
+node tests/autoquality.mjs     # AUTO-QUALITY: the governor and calibration fed synthetic CPU/GPU/display-paced traces (Node only, no browser)
+node tests/autoquality-game.mjs # AUTO-QUALITY in the game: Auto setting, migration, Settings line, knobs, commit points, power, calibration cache, Auto benchmark
 ```
 
 Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);

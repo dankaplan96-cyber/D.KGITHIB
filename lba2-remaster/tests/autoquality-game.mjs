@@ -55,7 +55,7 @@ await menu(page, 'new');
 const cmp = await ev(() => {
   const G = game, A = G.autoQ, out = {};
   const route = G.bench.routes().find((r) => r.id === 'street');
-  const look = () => { G.state = 'play'; route.setup(); G.state = 'play'; G.frame(1 / 30, true); G.frame(1 / 30, true); const c = G.graphicsConfig(); return { ...c, calls: G.renderer.renderer.info.render.calls, lampsPool: G.lightPool.lights.length, cell: G.shadowCull.cell, casters: G.shadowCull.quality, samples: G.renderer.composer.renderTarget1.samples }; };
+  const look = () => { G.state = 'play'; route.setup(); G.state = 'play'; G.frame(1 / 30, true); G.frame(1 / 30, true); G.frame(1 / 30, true); G.perf.beginFrame(); G.frame(1 / 30, true); const c = G.graphicsConfig(); return { ...c, calls: G.renderer.renderer.info.render.calls, lampsPool: G.lightPool.lights.length, cell: G.shadowCull.cell, casters: G.shadowCull.quality, samples: G.renderer.composer.renderTarget1.samples }; };
   G.settings.quality = 'high'; G.settings.qualityAuto = false; G.applySettings(); out.high = look();
   G.settings.qualityAuto = true; G.settings.quality = A.tier(); A.gov.setLevels(0, 0, 'test', true); G.applySettings(); A.applyAll(); out.autoHigh = look();
   G.settings.quality = 'medium'; G.settings.qualityAuto = false; G.applySettings(); out.medium = look();
@@ -98,6 +98,7 @@ const tr = await ev(() => {
   // one GPU step that queues the lamps (a commit knob) and takes MSAA 2× now
   let t = performance.now() + 500000; gov.lastChange = -1e9; gov.hist = []; gov.quietUntil = 0;
   for (let s = 0; s < 4000; s += 25) { t += 25; gov.gpu(t, 23); gov.frame({ t, ms: 25, cpu: 6, play: true }); }
+  G.renderer.applyResize();   // (a new sample count is applied just before the next frame is drawn)
   const mid = { pending: gov.pending(), lamps: G.lightPool.lights.length, samples: G.renderer.composer.renderTarget1.samples };
   G.enterRoom('house', null, false, true);
   for (let i = 0; i < 60 && G.trans; i++) G.frame(1 / 30, true);
@@ -140,7 +141,8 @@ const cal = await ev(() => {
   return { before, r, pending: A.pendingStart, cached: JSON.parse(localStorage.getItem('lba3_autoq_v1') || '{}')[A.key] || null };
 });
 check('a first start with the governor on: the GPU name\'s guess, then the title measured (~2 s): a start position below High for 13 ms GPU / 9 ms CPU, cached for this machine', cal.before.src === 'guess' && cal.before.cal && cal.r && cal.r.gpuMs === 13 && (cal.r.g > 0 || cal.r.c > 0) && cal.cached?.src === 'calib' && cal.cached.g === cal.r.g, cal);
-await menu(page, 'new');
+// (startNew directly: the title's New Game reloads the page once the session is "dirty", as the probes above made it)
+await ev(() => { game.hideScreens(); game.startNew(); game.step(0.2); });
 const started = await ev(() => ({ g: game.autoQ.gov.g, c: game.autoQ.gov.c, label: game.autoQ.label(), pending: game.autoQ.gov.pending() }));
 check('... play starts at the calibrated position, its commit knobs in force', started.g === cal.r.g && started.c === cal.r.c && !started.pending.length, started);
 await open(page, '?nocine&autoq');
