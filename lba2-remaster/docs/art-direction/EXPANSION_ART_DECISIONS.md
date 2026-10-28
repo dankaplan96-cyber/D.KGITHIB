@@ -19,6 +19,6 @@ battery Medium street ~47.5 as played. Any richer direction has to be paid for, 
 ## D1 — Overall style (Proposed, waiting for the user)
 Options shown 28.10: A faithful refined LBA · B handcrafted adventure · C rich animated-film presentation.
 Recommendation: B for environments, A's restraint and silhouettes for characters.
-Selected: — (pending)
+Selected: — (pending). 28.10: the user deferred the art direction ("not for now"); resume D1 when the expansion work is opened. No silent approval.
 Undecided: everything after D1 (Twinsun degree of change, Nera identity, inhabitants, underground mood).
 Concept images: none (no free image-generation tool authorised); comparisons will be in-engine previews.
