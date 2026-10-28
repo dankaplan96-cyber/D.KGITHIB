@@ -360,7 +360,23 @@ function buildHouse(scene, physics) {
   }
   k.add(rbox(1.3, 0.06, 0.46, 0.02), MAT.stone('sand', 1.0), doorX, 0.02, HZ1 + 0.2);
   k.add(rbox(1.5, 0.1, 0.5, 0.03), MAT.stone('sand', 1.0), doorX, -0.06, HZ1 + 0.68);
-  k.add(new THREE.PlaneGeometry(1.2, 1.6), new THREE.MeshBasicMaterial({ color: '#fff4d8', transparent: true, opacity: 0.18, depthWrite: false }), doorX, 0.015, HZ1 - 0.75, 0, { rx: -Math.PI / 2 });
+  // (G1-QUEST #17: the way out was hard to find — a faint patch under the rug and a gap in the low wall onto black. Now
+  //  the low sun through the open door lies on the hall floor, brightest at the threshold and out over the step, and a
+  //  haze of daylight stands in the doorway, so the door reads from the family room across the house)
+  const sunTex = (soft) => M('doorSunTex' + soft, () => canvasTex(64, 128, (x, w, h) => {
+    const g = x.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, 'rgba(255,232,184,0)'); g.addColorStop(0.45, 'rgba(255,232,184,0.42)'); g.addColorStop(1, 'rgba(255,240,206,1)');
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = 'destination-in';   // (soft sides)
+    const s = x.createLinearGradient(0, 0, w, 0);
+    s.addColorStop(0, 'rgba(0,0,0,0)'); s.addColorStop(soft, 'rgba(0,0,0,1)'); s.addColorStop(1 - soft, 'rgba(0,0,0,1)'); s.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = s; x.fillRect(0, 0, w, h);
+  }));
+  const sunM = (soft, opacity) => M('doorSun' + soft + opacity, () => new THREE.MeshBasicMaterial({ map: sunTex(soft), transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+  k.add(plane(1.25, 2.6), sunM(0.18, 0.8), doorX, 0.03, HZ1 - 1.25, 0, { rx: -Math.PI / 2 });          // on the floor (over the rug)
+  k.add(plane(1.4, 0.5), sunM(0.12, 0.8), doorX, 0.06, HZ1 + 0.2, 0, { rx: -Math.PI / 2 });           // the threshold
+  k.add(plane(1.6, 0.6), sunM(0.12, 0.85), doorX, 0.0, HZ1 + 0.68, 0, { rx: -Math.PI / 2 });            // the step outside
+  k.add(plane(1.3, 1.5), sunM(0.25, 0.45), doorX, 0.75, HZ1 + 0.22);                                    // daylight in the doorway
   R.exits.push({ ...B.world(doorX, HZ1 - 0.15), r: 0.75, to: 'outdoor' });
   R.spawn = { ...B.world(doorX, HZ1 - 1.6), a: Math.PI };
   k.at(doorX, 0, HZ1 - 0.75, 0, () => P.rug(k, 1.3, 0.8, ['#8a3a2a', '#5a2418', '#d8a040', '#e8d0a0', '#2a140c'], 4));
@@ -881,21 +897,33 @@ function buildWell(scene, physics) {
     const n = Math.round(pr * 9);
     for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + px; k.add(sphere(0.13 + (i % 3) * 0.04, 7, 5), slate1, px + Math.cos(a) * (pr + 0.06), 0.02, pz + Math.sin(a) * (pr + 0.06), a, { sy: 0.45 }); }
   }
-  const NS = 90;
-  const sp = new Float32Array(NS * 3), sd = [];
+  // steam off the warm puddles: soft round wisps that fade in over the water and out as they rise (G1-QUEST #8: these
+  // were 90 hard white squares — untextured points — popping back to the floor at full strength)
+  const NS = 44, TOP = 2.6;
+  const sp = new Float32Array(NS * 3), sc = new Float32Array(NS * 4), sd = [];
   for (let i = 0; i < NS; i++) {
     const p = puddles[i % puddles.length];
-    sd.push({ x: p[0] + (Math.random() - 0.5) * p[2], z: p[1] + (Math.random() - 0.5) * p[2], y: Math.random() * 3, v: 0.4 + Math.random() * 0.5 });
+    sd.push({ x: p[0] + (Math.random() - 0.5) * p[2] * 1.1, z: p[1] + (Math.random() - 0.5) * p[2] * 1.1, y: Math.random() * TOP, v: 0.22 + Math.random() * 0.22, ph: Math.random() * 6.28 });
+    sc[i * 4] = 0.91; sc[i * 4 + 1] = 0.96; sc[i * 4 + 2] = 1;
   }
-  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
-  const steam = new THREE.Points(sg, new THREE.PointsMaterial({ color: '#e8f4ff', size: 0.35, transparent: true, opacity: 0.35, depthWrite: false }));
+  const sg = new THREE.BufferGeometry();
+  sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+  sg.setAttribute('color', new THREE.BufferAttribute(sc, 4));
+  const wispTex = M('steamWispTex', () => canvasTex(64, 64, (x, w) => { const g = x.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,0.85)'); g.addColorStop(0.45, 'rgba(255,255,255,0.35)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, w, w); }));
+  const steam = new THREE.Points(sg, new THREE.PointsMaterial({ map: wispTex, vertexColors: true, size: 13, transparent: true, opacity: 0.3, depthWrite: false }));
+  steam.frustumCulled = false;
+  // (a point's size is in pixels at 1 m: this sets it so a wisp is ~1.1 m across in whatever lens the room is seen through)
+  steam.onBeforeRender = (r, s, cam) => { steam.material.size = 1.1 / Math.tan(((cam.fov || 45) * Math.PI) / 360); };
   B.group.add(steam);
   R.updaters.push((dt) => {
     for (let i = 0; i < NS; i++) {
-      const s = sd[i]; s.y += s.v * dt; if (s.y > 3.2) s.y = 0;
-      sp[i * 3] = s.x + Math.sin(s.y * 2 + i) * 0.15; sp[i * 3 + 1] = s.y; sp[i * 3 + 2] = s.z;
+      const s = sd[i]; s.y += s.v * dt; if (s.y > TOP) s.y = 0;
+      const k = s.y / TOP;
+      sp[i * 3] = s.x + Math.sin(s.y * 1.6 + s.ph) * 0.12 * (0.4 + k); sp[i * 3 + 1] = s.y; sp[i * 3 + 2] = s.z + Math.cos(s.y * 1.3 + s.ph) * 0.08 * (0.4 + k);
+      sc[i * 4 + 3] = Math.min(1, s.y / 0.35) * (1 - k) * (1 - k);   // (in over the water, thinning out as it rises)
     }
     sg.attributes.position.needsUpdate = true;
+    sg.attributes.color.needsUpdate = true;
   });
 
   // crystals that "weren't there before" (WELL-POLISH: faceted six-sided prisms with pointed caps in clusters, a translucent

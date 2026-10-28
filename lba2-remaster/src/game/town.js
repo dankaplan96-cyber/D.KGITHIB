@@ -452,8 +452,24 @@ export function buildTown(scene, W) {
     const cp = cloth.attributes.position;
     for (let i = 0; i < cp.count; i++) cp.setZ(i, Math.sin((cp.getX(i) / 3.4 + 0.5) * Math.PI * 6) * 0.03 - Math.abs(cp.getY(i)) * 0.0);
     cloth.computeVertexNormals();
-    const cl = put(st, cloth, new THREE.MeshStandardMaterial({ color: '#e9c43a', side: THREE.DoubleSide, roughness: 0.9 }), 0, 2.3, 0.05);
+    // (G1-QUEST #11: it was one flat yellow — the comment above always meant stripes: yellow and cream, one per fold,
+    //  with a scalloped valance along the front edge like the shop's)
+    const stripes = (() => {
+      const c = document.createElement('canvas'); c.width = 96; c.height = 8;
+      const x = c.getContext('2d');
+      for (let i = 0; i < 6; i++) { x.fillStyle = i % 2 ? '#fbf3dc' : '#e9b62a'; x.fillRect(i * 16, 0, 16, 8); }
+      const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.magFilter = THREE.NearestFilter; tx.anisotropy = 4;
+      return tx;
+    })();
+    const cl = put(st, cloth, new THREE.MeshStandardMaterial({ map: stripes, side: THREE.DoubleSide, roughness: 0.9 }), 0, 2.3, 0.05);
     cl.rotation.x = -Math.PI / 2 + 0.3;
+    // the valance: half-discs hanging from the low (front) edge, the stripes' colours in turn
+    {
+      const fy = 2.3 - Math.sin(0.3) * 0.75 - 0.005, fz = 0.05 + Math.cos(0.3) * 0.75 + 0.01;
+      const halfDisc = new THREE.CircleGeometry(0.15, 10, Math.PI, Math.PI);
+      const vm = [new THREE.MeshStandardMaterial({ color: '#e9b62a', side: THREE.DoubleSide, roughness: 0.9 }), new THREE.MeshStandardMaterial({ color: '#fbf3dc', side: THREE.DoubleSide, roughness: 0.9 })];
+      for (let i = 0; i < 11; i++) put(st, halfDisc, vm[i % 2], -1.5 + i * 0.3, fy, fz, 0, false);
+    }
     const fruit = ['#e03a3a', '#f0a030', '#7ac943', '#ffd84a'];
     for (let i = 0; i < 4; i++) {
       put(st, new THREE.BoxGeometry(0.6, 0.12, 0.45), wood, -1.05 + i * 0.7, 1.06, 0.1);
