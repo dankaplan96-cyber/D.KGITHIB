@@ -23,9 +23,11 @@ const SCALE = 1.12;   // a little over life size (the original's figures stand ~
 
 // bronze with verdigris: dark bronze in the hollows and on the sides, green-blue patina where rain runs down from
 // the tops, a little paler on the edges that hands have polished (his raised hand, the ball)
+// (G1-ART: a shade lighter and less metallic than before, so the cast forms read in the square's shade as well as in sun;
+// the eyes and mouth are cast in relief and their irises, pupils, lids and lips darkened like incised lines: `carve`)
 function bronzeColors(geo, seed) {
-  const pos = geo.attributes.position, nrm = geo.attributes.normal, n = pos.count, col = new Float32Array(n * 3);
-  const dark = new THREE.Color('#5a3f22'), bronze = new THREE.Color('#8a6334'), patina = new THREE.Color('#5f9c86'), c = new THREE.Color();
+  const pos = geo.attributes.position, nrm = geo.attributes.normal, carve = geo.attributes.carve, n = pos.count, col = new Float32Array(n * 3);
+  const dark = new THREE.Color('#654628'), bronze = new THREE.Color('#9a7040'), patina = new THREE.Color('#62a48c'), deep = new THREE.Color('#2a1c10'), c = new THREE.Color();
   for (let i = 0; i < n; i++) {
     const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), ny = nrm.getY(i);
     const nz = fbm(x * 3.1 + seed, z * 3.1 + y * 1.7, 3);
@@ -33,6 +35,7 @@ function bronzeColors(geo, seed) {
     const up = THREE.MathUtils.smoothstep(ny + nz * 0.35, 0.05, 0.75);
     const streak = THREE.MathUtils.smoothstep(Math.sin(x * 9 + z * 7 + seed) * 0.5 + nz, 0.35, 0.9) * 0.35;
     c.lerp(patina, Math.min(0.85, up * 0.8 + streak));
+    if (carve) c.lerp(deep, carve.getX(i) * 0.85);
     col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
   }
   geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
@@ -42,15 +45,16 @@ function bronzeColors(geo, seed) {
 function bake(rig, frame) {
   rig.root.updateMatrixWorld(true);
   const inv = new THREE.Matrix4().copy(frame.matrixWorld).invert();
-  const parts = [];
-  const v = new THREE.Vector3();
+  const parts = [], carves = [];
+  const v = new THREE.Vector3(), cc = new THREE.Color();
   rig.root.traverse((o) => {
     if (!o.isMesh || !o.geometry?.attributes?.position) return;
+    let face = false;   // (the eyes and the mouth: small rigid parts on the head)
     if (o.parent && !o.isSkinnedMesh && o.geometry.attributes.position.count < 400 && !o.userData.statueKeep) {
-      // (the eyes and other small rigid parts of the face: a statue's eyes are its bronze)
-      let p = o.parent; while (p && !p.isBone) p = p.parent; if (p && /head/i.test(p.name)) return;
+      let p = o.parent; while (p && !p.isBone) p = p.parent; face = !!(p && /head/i.test(p.name));
     }
-    const g = o.geometry, P = g.attributes.position, n = g.index ? g.index.count : P.count, out = new Float32Array(n * 3);
+    const g = o.geometry, P = g.attributes.position, C = face ? g.attributes.color : null, n = g.index ? g.index.count : P.count;
+    const out = new Float32Array(n * 3), cv = new Float32Array(n);
     const m = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld);
     if (o.isSkinnedMesh) o.skeleton.update();
     for (let k = 0; k < n; k++) {
@@ -59,15 +63,54 @@ function bake(rig, frame) {
       if (o.isSkinnedMesh) o.applyBoneTransform(i, v);
       v.applyMatrix4(m);
       out[k * 3] = v.x; out[k * 3 + 1] = v.y; out[k * 3 + 2] = v.z;
+      // G1-ART (AUDIT-CH12 #16): the eyes and mouth stay, cast in the bronze (they were left out, and the heads read as
+      // blank lumps): the whites as a low relief, the irises, pupils, lids and lips darkened like incised lines
+      if (C) { cc.fromBufferAttribute(C, i); cv[k] = 1 - THREE.MathUtils.smoothstep(0.2126 * cc.r + 0.7152 * cc.g + 0.0722 * cc.b, 0.15, 0.7); }
     }
-    parts.push(out);
+    parts.push(out); carves.push(cv);
   });
-  const total = parts.reduce((a, p) => a + p.length, 0), all = new Float32Array(total);
+  const total = parts.reduce((a, p) => a + p.length, 0), all = new Float32Array(total), carve = new Float32Array(total / 3);
   let o = 0; for (const p of parts) { all.set(p, o); o += p.length; }
+  o = 0; for (const c of carves) { carve.set(c, o); o += c.length; }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(all, 3));
-  geo.computeVertexNormals();
+  geo.setAttribute('carve', new THREE.BufferAttribute(carve, 1));
+  creasedNormals(geo, CREASE);
   return geo;
+}
+
+// G1-ART (AUDIT-CH12 #16): the baked figures are unindexed triangles, and computeVertexNormals() on those gives every
+// triangle its own flat normal, so the heads, hands and robes read as faceted lumps. Cast bronze is smooth: a corner's
+// normal is the area-weighted mean of the triangles that meet at its position and lie within CREASE degrees of its own,
+// as the character models' exporter shades them (tools/blender: smooth below a crease angle, crisp beyond), so round
+// forms turn smoothly and the real edges (the robe's hem, the cape's rim, the shoes' soles) stay crisp.
+const CREASE = 60;
+function creasedNormals(geo, angle) {
+  const P = geo.attributes.position.array, nt = P.length / 9, fn = new Float32Array(nt * 3);
+  const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+  for (let t = 0; t < nt; t++) {   // (each triangle's normal, its length twice its area)
+    a.fromArray(P, t * 9); b.fromArray(P, t * 9 + 3).sub(a); c.fromArray(P, t * 9 + 6).sub(a); b.cross(c);
+    fn[t * 3] = b.x; fn[t * 3 + 1] = b.y; fn[t * 3 + 2] = b.z;
+  }
+  // the corners at each position (the skinned corners of one model vertex come out bit-identical; 0.1 mm grid)
+  // (a hash table of the cells, chained through `next`; corners compared exactly when gathered)
+  const nc = nt * 3, Q = new Int32Array(nc * 3), size = 1 << Math.ceil(Math.log2(nc * 2)), head = new Int32Array(size).fill(-1), next = new Int32Array(nc);
+  for (let i = 0; i < nc * 3; i++) Q[i] = Math.round(P[i] * 1e4);
+  const same = (i, j) => Q[i * 3] === Q[j * 3] && Q[i * 3 + 1] === Q[j * 3 + 1] && Q[i * 3 + 2] === Q[j * 3 + 2];
+  const slot = (i) => (Math.imul(Q[i * 3], 73856093) ^ Math.imul(Q[i * 3 + 1], 19349663) ^ Math.imul(Q[i * 3 + 2], 83492791)) & (size - 1);
+  for (let i = 0; i < nc; i++) { const h = slot(i); next[i] = head[h]; head[h] = i; }
+  const cosL = Math.cos((angle * Math.PI) / 180), out = new Float32Array(nt * 9), u = new THREE.Vector3(), s = new THREE.Vector3();
+  for (let i = 0; i < nc; i++) {
+    const t = (i / 3) | 0; u.fromArray(fn, t * 3).normalize(); s.set(0, 0, 0);
+    for (let j = head[slot(i)]; j >= 0; j = next[j]) {
+      if (!same(i, j)) continue;
+      const g = ((j / 3) | 0) * 3, x = fn[g], y = fn[g + 1], z = fn[g + 2], len = Math.hypot(x, y, z);
+      if (len > 1e-12 && (x * u.x + y * u.y + z * u.z) / len >= cosL) { s.x += x; s.y += y; s.z += z; }
+    }
+    if (s.lengthSq() < 1e-20) s.copy(u);
+    s.normalize(); out[i * 3] = s.x; out[i * 3 + 1] = s.y; out[i * 3 + 2] = s.z;
+  }
+  geo.setAttribute('normal', new THREE.BufferAttribute(out, 3));
 }
 
 function pose(rig, set) {
@@ -129,7 +172,7 @@ export function buildStatue(scene, W, x, z, ry) {
   const ball = new THREE.Mesh(new THREE.SphereGeometry(0.17, 14, 10)); tw.j.armR.hand.add(ball); ball.position.set(0, -0.12, 0); ball.userData.statueKeep = true;
   const parts = [bake(tw, fig), bake(zo, fig)];
   fig.remove(tw.root, zo.root);
-  const bronzeM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.35 });
+  const bronzeM = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.2 });
   // (the two figures as one mesh: one draw)
   parts.forEach((pg, i) => bronzeColors(pg, i * 7.3));
   const both = new THREE.BufferGeometry();
