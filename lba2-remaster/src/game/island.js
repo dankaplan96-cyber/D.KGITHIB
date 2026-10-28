@@ -1828,6 +1828,15 @@ function buildStation(W0, root, r) {
     void arch;
     B.add(cached('archInner', () => new THREE.TorusGeometry(1.48, 0.06, 8, 48).rotateY(Math.PI / 2)), tm('brass', { rough: 0.3, metal: 0.8, color: '#d06040' }), BP.x, padTop - 0.12 + 1.62, BP.z);
     for (const s of [-1, 1]) P.add({ type: 'cyl', x: BP.x, z: BP.z + s * 1.5, r: 0.5, top: padTop + 5, seeThrough: true });
+    // (G1-CAM: the ring and its horns as the camera's own volumes — occlude.js camOnly —: the Follow camera keeps out of
+    // them, a dialogue's two-shot frames no face through them, and a view through them to his feet counts against it as
+    // the pipeline's does; the ring's opening stays open. Boxes round the ring (Rc 1.75, tube 0.27, centre padTop + 1.5):
+    // its sides with the horns over them, its shoulders, its top)
+    for (const s of [-1, 1]) {
+      addOccluder(W, { kind: 'box', camOnly: true, x: BP.x, z: BP.z + s * 1.735, hw: 0.34, hd: 0.515, y0: padTop - 0.5, y1: padTop + 5.4, name: 'beam pad arch side' });
+      addOccluder(W, { kind: 'box', camOnly: true, x: BP.x, z: BP.z + s * 1.125, hw: 0.34, hd: 0.175, y0: padTop + 2.35, y1: padTop + 3.4, name: 'beam pad arch shoulder' });
+    }
+    addOccluder(W, { kind: 'box', camOnly: true, x: BP.x, z: BP.z, hw: 0.34, hd: 0.95, y0: padTop + 2.75, y1: padTop + 3.6, name: 'beam pad arch top' });
     // light column
     const colM = new THREE.MeshBasicMaterial({ map: beamTex(), color: '#9ff4ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false });
     const col1 = mesh(grp, new THREE.CylinderGeometry(1.15, 1.25, 26, 28, 1, true).translate(0, 13, 0), colM, BP.x, padTop, BP.z, 0, { cast: false });

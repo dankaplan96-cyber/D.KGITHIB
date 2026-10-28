@@ -1559,7 +1559,7 @@ class Game {
   tryInteract() {
     const it = this.findInteractable();
     if (!it) return false;
-    if (it.kind === 'npc') this.story.talk(it.npc);
+    if (it.kind === 'npc') { (this.talkers ??= new Set()).add(it.npc); this.story.talk(it.npc); }   // (G1-CAM: the one he spoke to is in the two-shot from the first line)
     else if (it.kind === 'sign') this.say('', [t(it.sign.key)]);
     else if (it.kind === 'pet') it.pet.talk(this);
     else this.story.interact(it);
