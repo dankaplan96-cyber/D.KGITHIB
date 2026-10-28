@@ -29,13 +29,9 @@ export const steps = [
       // from a stone: step to its middle first, then the hop (a run-up spot off the stone's rim, or into the cliff's
       // rim behind the top ones, had him walk off it); from the street, the usual run-up
       const pv = i > 0 && on(W.stones[i - 1]) ? W.stones[i - 1].c : null;
-      // (the last stone: the plateau's own level, 1 m under the cliff's rim on the second-last stone's far half — the rim
-      // stands over that stone's top as a step, and a long run-up ran him into it or off the cliff beside it: jump as soon
-      // as he faces it, and landing anywhere on the plateau's level beside the stone is the top reached, not a fall)
-      const last = i === W.stones.length - 1;
-      if (pv) { P.go(pv.x, pv.z, { tol: 0.25, maxT: 4, fight: false }); P.hopTo(s.c.x, s.c.z, s.c.top, { walk: false, pre: last ? 0.12 : 0.25 }); }
+      if (pv) { P.go(pv.x, pv.z, { tol: 0.25, maxT: 4, fight: false }); P.hopTo(s.c.x, s.c.z, s.c.top, { walk: false, pre: 0.25 }); }
       else P.hopTo(s.c.x, s.c.z, s.c.top);
-      if (on(s) || (last && h.onGround && Math.abs(h.pos.y - s.c.top) < 0.3 && Math.hypot(h.pos.x - s.c.x, h.pos.z - s.c.z) < 3.5)) i++;
+      if (on(s)) i++;
       else i = W.stones.findIndex(on) + 1;
     }
     return { reached: i, of: W.stones.length, tries, y: +h.pos.y.toFixed(2), fail: i >= W.stones.length ? null : 'stones' };

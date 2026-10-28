@@ -927,7 +927,11 @@ export function* buildWorldSteps(parentScene) {
     const mossMat = mat('#5d8a3a', { roughness: 0.95 });
     for (let i = 0; i < n; i++) {
       const k = i / (n - 1);
-      const { x, z } = at(n, i);
+      // (SMALL-FIXES: the last-but-one stone was cut into the cliff's rim: its far half had the rim 0.3-1.0 m over its top
+      // and its near half hung over the drop, so the last hop to the plateau was fussy. It stands 1.65 m out from the rim
+      // now (the whole top clear of it, 2.6 m centre to centre from the last stone), the one under it 0.2 m with it)
+      const nudge = i === n - 3 ? [0, 0.2] : i === n - 2 ? [0.4, 1.6] : [0, 0];
+      const p0 = at(n, i), x = p0.x + nudge[0], z = p0.z + nudge[1];
       const top = base + 1.0 + (endTop - base - 1.0) * k;
       const r = 1.15;
       const grp = new THREE.Group();
