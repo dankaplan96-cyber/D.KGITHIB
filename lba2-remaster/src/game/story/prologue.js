@@ -1,20 +1,37 @@
-// LBA3 – "The Awakening", prologue (fan continuation, original story).
+// LBA3 – "The Awakening", chapter 1 "The Well" (key 'well'; the code still calls it the prologue).
 //
 // Twelve years after LBA2. The square's well has stopped giving water.
-// Zoe sends Twinsen to look; on the way: a water-bill quarrel (the key),
-// an Esmer trader who can't get a permit (the rope) and a kid who threw
-// something into the well (optional, overheard in Discreet mode).
-// At the bottom: warm water, crystals that weren't there before, and the
-// magic ball pulled toward the wall. Then Sendell speaks.
+// Zoe sends Twinsen to look. On the way (CH1-LONGER: each step a person's want and one of Twinsen's tools):
+//  - the lid key: Mira won't unlock the town well for what she calls a pipe fault in Gilbert's street. Zoé, gone
+//    next door, brings the proof: their kettle furred with warm crystals overnight ("pipes don't grow those").
+//  - the lid: unlocked, it is rusted to the rim. Gilbert swears by a kick (Aggressive); the ball only bounces off.
+//  - the rope: Xil's rope ladder for Doran's stamp on his unloading permit. Doran sleeps through anything but the
+//    harbour bell, which hangs out of reach (the magic ball rings it). Arthur knows the trick too.
+//  - optional: overheard in Discreet mode, Tim confesses the warm stone; more lie on top of the bay rocks, three
+//    rocks a jump apart (Athletic): a warm stone and a few kashes.
+// At the bottom: warm water, crystals that weren't there before, and the magic ball pulled toward the wall. Then
+// Sendell speaks. Every step is a flag (saved); a save from before CH1-LONGER plays the steps it hasn't passed.
 import * as THREE from 'three';
 import { POI } from '../world.js';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import { playOpening } from './opening.js';
 import { lba1EnemyDefs } from '../lba1places.js';
+import { mergeStatic } from '../../engine/merge.js';
+import '../text/well.js';
 
 const V = POI.village;
 const _pullTmp = new THREE.Vector3(), _handTmp = new THREE.Vector3(); // (Sendell's pull, no per-frame allocation)
+// the well's lid: on the rim (local y), how far it swings up when kicked open (about its far edge, on the +z side,
+// clear of the roof's posts at ±x)
+const LID_Y = 0.92, LID_R = 0.97, LID_OPEN = 1.78;
+// the harbour bell: its post on the quay at the pier's mouth, the bell hanging over the way onto the pier (Doran naps by it)
+const BELL = { x: -119.2, z: 41.4, arm: 0.8, h: 2.95 };
+// the bay rocks (the bay south-west of Twinsen's house, by the path to the lighthouse): three boulders stepping out
+// into the shallows, each about a jump (1.0 m) higher than the last — too high to walk up (0.55 m), never a gap
+// over the sea between them (a jump over the sea would be refused mid-air: physics.js WATER_FLOOR)
+const BAY = [{ x: -67.4, z: 96.2, r: 1.15 }, { x: -68.9, z: 97.36, r: 1.05 }, { x: -70.36, z: 98.49, r: 1.0 }];
+const BAY_RISE = [0.95, 1.95, 2.95];   // over the highest sand round the first rock
 
 export class Prologue extends ChapterBase {
   constructor(story) {
@@ -78,6 +95,99 @@ export class Prologue extends ChapterBase {
     const roof = new THREE.Mesh(new THREE.BoxGeometry(3, 0.15, 2.4), new THREE.MeshStandardMaterial({ color: '#2f6fb0' }));
     roof.position.set(s.x, g + 2.5, s.z + 4.4); roof.rotation.x = 0.12; scene.add(roof);
     W.physics.add({ type: 'box', x: s.x, z: s.z + 4.4, hw: 1.3, hd: 1, rot: 0, top: g + 3 });
+    this.buildLid(); this.buildBell(); this.buildBay();
+  }
+
+  // CH1-LONGER: the well's lid (padlocked, then rusted to the rim, then kicked open: it stays open in later chapters)
+  buildLid() {
+    const W = this.game.world, wx = W.well.x, wz = W.well.z, y = W.H(wx, wz) + LID_Y;
+    const wood = new THREE.MeshStandardMaterial({ color: '#7a5634', roughness: 0.92 });
+    const rust = new THREE.MeshStandardMaterial({ color: '#8a4f2c', roughness: 0.75, metalness: 0.35 });
+    const iron = new THREE.MeshStandardMaterial({ color: '#4a4c52', roughness: 0.45, metalness: 0.6 });
+    // a pivot on the lid's far edge (+z); the lid hangs off it toward −z
+    const pivot = new THREE.Group(); pivot.position.set(wx, y, wz + LID_R - 0.04); W.root.add(pivot);
+    const lid = new THREE.Group(); lid.position.z = -(LID_R - 0.04); pivot.add(lid);
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(LID_R, LID_R, 0.07, 22), wood); lid.add(disc);
+    for (const dx of [-0.42, 0.42]) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.085, LID_R * 1.95), rust); b.position.set(dx, 0.01, 0); lid.add(b); }
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.022, 6, 14), rust); ring.position.set(0, 0.06, 0); ring.rotation.x = Math.PI / 2; lid.add(ring);
+    // the hasp and padlock at the near edge (gone once the key has opened it)
+    const lock = new THREE.Group(); lock.position.set(0, -0.02, -LID_R + 0.02); lid.add(lock);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.14, 0.06), iron); body.position.set(0, -0.06, -0.05); lock.add(body);
+    const shackle = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.013, 5, 10, Math.PI), iron); shackle.position.set(0, 0.01, -0.05); lock.add(shackle);
+    const hasp = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.16, 0.025), rust); hasp.position.set(0, -0.02, -0.01); lock.add(hasp);
+    // (each part is one draw: the lid's planks and bands merged, the padlock apart since it goes; the pivot still turns them)
+    lock.userData.keep = true; mergeStatic(lid, { recolor: true }); mergeStatic(lock, { recolor: true });
+    this.lid = { pivot, lock, x: wx, z: wz, y, t: null };
+  }
+  // the lid's look for its state: 'locked' (padlock on), 'stuck' (padlock off, still down), 'open' (swung up, leaning)
+  setLid(state, animate = false) {
+    const L = this.lid; if (!L) return;
+    L.lock.visible = state === 'locked';
+    if (state === 'open') { if (animate) L.t = 0; else { L.t = null; L.pivot.rotation.x = LID_OPEN; } }
+    else { L.t = null; L.pivot.rotation.x = 0; }
+  }
+  lidState(f = this.f) { return f.pr_lidOpen || f.inWell || f.prologueDone ? 'open' : f.pr_lidStuck ? 'stuck' : 'locked'; }
+
+  // CH1-LONGER: the harbour bell on its post at the pier head. Its rope is long gone; the magic ball rings it.
+  buildBell() {
+    const W = this.game.world, PH = W.physics, gy = PH.groundAt(BELL.x, BELL.z, 4);
+    const wood = new THREE.MeshStandardMaterial({ color: '#6b4a2e', roughness: 0.9 });
+    const brass = new THREE.MeshStandardMaterial({ color: '#c9a040', roughness: 0.3, metalness: 0.8, emissive: '#6a4a10', emissiveIntensity: 0.45 });
+    const post = new THREE.Group(); post.position.set(BELL.x, gy, BELL.z); W.root.add(post);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.1, BELL.h + 0.1, 8), wood); pole.position.y = (BELL.h + 0.1) / 2; pole.castShadow = true; post.add(pole);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, Math.abs(BELL.arm) + 0.2), wood); arm.position.set(0, BELL.h, BELL.arm / 2); post.add(arm);
+    const brace = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 0.6), wood); brace.position.set(0, BELL.h - 0.25, BELL.arm * 0.32); brace.rotation.x = BELL.arm < 0 ? -0.75 : 0.75; post.add(brace);
+    mergeStatic(post, { recolor: true });
+    // the bell swings from the arm's end (kept apart from the merge: it moves)
+    const swing = new THREE.Group(); swing.position.set(BELL.x, gy + BELL.h - 0.05, BELL.z + BELL.arm); swing.scale.setScalar(1.5); W.root.add(swing);
+    const prof = [[0.001, 0.02], [0.05, 0.02], [0.085, -0.03], [0.11, -0.16], [0.17, -0.28], [0.21, -0.33], [0.2, -0.345], [0.001, -0.345]].map(([a, b]) => new THREE.Vector2(a, b));
+    const bell = new THREE.Mesh(new THREE.LatheGeometry(prof, 16), brass); swing.add(bell);
+    const clap = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), brass); clap.position.y = -0.33; swing.add(clap);
+    // what is left of the rope: a short frayed stub
+    const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.02, 0.2, 5), new THREE.MeshStandardMaterial({ color: '#b89a68', roughness: 1 })); stub.position.y = -0.46; swing.add(stub);
+    mergeStatic(swing, { recolor: true });
+    PH.add({ type: 'cyl', x: BELL.x, z: BELL.z, r: 0.14, top: gy + BELL.h + 0.1, noStand: true, seeThrough: true });
+    this.bell = { swing, x: BELL.x, y: gy + BELL.h - 0.35, z: BELL.z + BELL.arm, t: null, dings: 0 };
+  }
+
+  // CH1-LONGER: the bay rocks and the warm stones on the top one
+  buildBay() {
+    const W = this.game.world, PH = W.physics;
+    let base = -9;
+    const r0 = BAY[0];
+    for (let a = 0; a < 16; a++) base = Math.max(base, PH.groundAt(r0.x + Math.sin(a * Math.PI / 8) * (r0.r + 0.6), r0.z + Math.cos(a * Math.PI / 8) * (r0.r + 0.6), 3));
+    const rock = new THREE.MeshStandardMaterial({ color: '#958c7e', roughness: 0.95 });
+    const top = new THREE.MeshStandardMaterial({ color: '#a8a090', roughness: 0.95 });
+    const grp = new THREE.Group(); W.root.add(grp);
+    this.bay = BAY.map((b, i) => {
+      const t = base + BAY_RISE[i], bottom = -3;
+      // a boulder: a ball of radius rs cut flat where it is as wide as the collider (the top he stands on), its lower
+      // half drawn down to the sea floor; the sides pushed in and out a little (weathered), the flat top left flat
+      const rs = b.r * 1.3, yc = Math.sqrt(rs * rs - b.r * b.r), cy = t - yc, down = (cy - bottom) / rs;
+      const geo = new THREE.IcosahedronGeometry(1, 3), P0 = geo.attributes.position;
+      for (let k = 0; k < P0.count; k++) {
+        const ux = P0.getX(k), uy = P0.getY(k), uz = P0.getZ(k);
+        const n = 1 + Math.sin(ux * 4.1 + i * 2.3) * Math.cos(uz * 3.7 - i) * 0.08 + Math.sin(uy * 5.3 + ux * 2 + i) * 0.05;
+        let x = ux * rs, y = uy * rs, z = uz * rs;
+        if (y >= yc) { y = yc; } else { x *= n; z *= n; if (y < 0) y *= down; }
+        P0.setXYZ(k, x, y, z);
+      }
+      geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, rock); m.position.set(b.x, cy, b.z); m.rotation.y = i * 1.3; m.castShadow = m.receiveShadow = true; grp.add(m);
+      const cap = new THREE.Mesh(new THREE.CircleGeometry(b.r * 0.98, 14), top); cap.rotation.x = -Math.PI / 2; cap.position.set(b.x, t + 0.005, b.z); cap.receiveShadow = true; grp.add(cap);
+      PH.add({ type: 'cyl', x: b.x, z: b.z, r: b.r, top: t });
+      return { ...b, top: t };
+    });
+    mergeStatic(grp, { recolor: true });
+    // the warm stones: three small crystals wedged on the top rock, the near one the one he takes
+    const R = this.bay[2], glow = new THREE.MeshStandardMaterial({ color: '#d8fbff', emissive: '#56d8ff', emissiveIntensity: 1.2, roughness: 0.25 });
+    const stones = new THREE.Group(); W.root.add(stones);
+    const take = new THREE.Group(); W.root.add(take);
+    const crystal = (parent, dx, dz, s, rx, rz) => { const c = new THREE.Mesh(new THREE.OctahedronGeometry(s, 0), glow); c.scale.y = 1.7; c.position.set(R.x + dx, R.top + s * 0.9, R.z + dz); c.rotation.set(rx, dx * 3, rz); parent.add(c); };
+    crystal(stones, -0.32, 0.18, 0.11, 0.2, -0.3); crystal(stones, -0.18, 0.36, 0.08, -0.25, 0.35);
+    crystal(take, 0.05, -0.05, 0.14, 0.1, 0.15);
+    mergeStatic(stones, { recolor: false });
+    this.stones = { rest: stones, take, mat: glow, x: R.x, z: R.z, top: R.top };
   }
 
   // ---------------------------------------------------------------- flow
@@ -117,6 +227,8 @@ export class Prologue extends ChapterBase {
   // (for later chapters this is the family's default: at home; a chapter that wants them elsewhere says so)
   place(id) {
     const f = this.f, g = this.game;
+    // Doran naps by his shed until the bell (or, in a save from before CH1-LONGER, his stamp) wakes him
+    if (id === 'doran') { if (!this.isCur()) return undefined; const s = g.world.pierStart; return { x: s.x, z: s.z + 2.2, a: Math.PI, anim: f.pr_bell || f.stamp ? null : 'hide' }; }
     if (id !== 'zoe' && id !== 'arthur') return undefined;
     const home = g.rooms.house.npcSpots[id];
     if (id === 'arthur') return { x: home.x, z: home.z, a: home.a, anim: 'kneelWork' };
@@ -129,20 +241,31 @@ export class Prologue extends ChapterBase {
 
   items() {
     const f = this.f, out = [];
+    if (f.pr_kettle && !f.key) out.push({ id: 'kettle', icon: 'crystal' });
     if (f.key && !f.prologueDone) out.push({ id: 'lidkey', icon: 'key' });
     if (f.stamp && !f.rope) out.push({ id: 'stamp', icon: 'stamp' });
     if (f.rope && !f.inWell) out.push({ id: 'rope', icon: 'rope' });
+    if (f.pr_stones && !f.prologueDone) out.push({ id: 'warmstone', icon: 'pearl' });
     return out;
   }
+  // what Twinsen has found out: each line shows once it is true (an open line reads as a need, never as done yet)
   journal() {
     const f = this.f;
     return [
-      { key: 'pr_j_well', done: !!f.wellSeen },
-      { key: 'pr_j_key', done: !!f.key },
-      { key: 'pr_j_rope', done: !!f.rope },
-      { key: 'pr_j_cave', done: !!f.inWell },
-      { key: 'pr_j_sendell', done: !!f.sendellHeard },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done || l.done);
+      { key: 'pr_j_well', done: !!f.wellSeen, show: true },
+      { key: 'pr_j_lock', done: !!f.key, show: f.wellSeen && !f.key },
+      { key: 'pr_j_mira', done: !!f.key, show: f.pr_miraNo && !f.key },
+      { key: 'pr_j_kettle', done: !!f.key, show: f.pr_kettle },
+      { key: 'pr_j_key', done: true, show: f.key },
+      { key: 'pr_j_lid', done: !!f.pr_lidOpen, show: f.pr_lidStuck && !f.inWell },
+      { key: 'pr_j_deep', done: !!f.rope, show: (f.pr_deep || f.metXil) && !f.rope },
+      { key: 'pr_j_doran', done: !!f.stamp, show: f.metXil && !f.rope },
+      { key: 'pr_j_rope', done: true, show: f.rope },
+      { key: 'pr_j_tim', done: !!f.pr_stones, show: f.timConfessed },
+      { key: 'pr_j_stones', done: true, show: f.pr_stones },
+      { key: 'pr_j_cave', done: true, show: f.inWell },
+      { key: 'pr_j_sendell', done: true, show: f.sendellHeard },
+    ].filter((l) => l.show).map(({ key, done }) => ({ key, done }));
   }
   objective() {
     const f = this.f, h = this.game.hero;
@@ -151,7 +274,10 @@ export class Prologue extends ChapterBase {
     if (!h.hasBall) return `<b>${t('pr_obj_well')}</b>` + (f.ballHint ? s(false, 'pr_obj_ball') : '');
     if (f.inWell) return `<b>${t('pr_obj_cave')}</b>` + (f.nodes >= 3 ? '' : s(false, 'pr_obj_nodes'));
     if (!f.wellSeen) return `<b>${t('pr_obj_well')}</b>`;
-    return `<b>${t('pr_obj_descend')}</b>` + s(f.key, 'pr_obj_key') + s(f.rope, 'pr_obj_rope') + s(f.timConfessed, 'pr_obj_tim');
+    // the lid: its key (Mira wants proof first), then the rust; the rope (Xil, for Doran's stamp); Tim and his stones
+    const lid = f.key ? 'pr_obj_lid' : f.pr_miraNo && !f.pr_kettle ? 'pr_obj_proof' : 'pr_obj_key';
+    const rope = f.metXil && !f.stamp ? 'pr_obj_doran' : 'pr_obj_rope';
+    return `<b>${t('pr_obj_descend')}</b>` + s(!!f.pr_lidOpen, lid) + s(f.rope, rope) + s(f.timConfessed, 'pr_obj_tim') + (f.timConfessed ? s(!!f.pr_stones, 'pr_obj_stones') : '');
   }
 
   markers() {
@@ -160,8 +286,10 @@ export class Prologue extends ChapterBase {
     const npc = (id) => g.npcs.find((n) => n.def.id === id);
     if (!g.hero.hasBall) return m;
     if (!f.inWell && !f.prologueDone) m.push({ x: g.world.well.x, z: g.world.well.z, kind: 'star', color: gold, r: 8, edge: true, label: t('pr_map_well') });
-    if (f.wellSeen && !f.key) { const n = npc('mira'); m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 6, edge: true }); }
+    // (Mira wants proof first: Zoé has it, next door)
+    if (f.wellSeen && !f.key) { const n = npc(f.pr_miraNo && !f.pr_kettle ? 'zoe' : 'mira'); if (n?.present) m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 6, edge: true, ...(n.def.id === 'zoe' ? { label: t('n_zoe') } : {}) }); }
     if (f.wellSeen && !f.rope) { const n = npc(f.metXil && !f.stamp ? 'doran' : 'xil'); m.push({ x: n.pos.x, z: n.pos.z, kind: 'star', color: gold, r: 6, edge: true, label: t(f.metXil && !f.stamp ? 'n_doran' : 'n_xil') }); }
+    if (f.timConfessed && !f.pr_stones && !f.inWell && this.bay) { const b = this.bay[0]; m.push({ x: b.x, z: b.z, kind: 'star', color: gold, r: 5, edge: true, label: t('pr_map_rocks') }); }
     return m;
   }
 
@@ -195,6 +323,8 @@ export class Prologue extends ChapterBase {
     const g = this.game, W = g.world;
     if (!g.room) {
       const open = new Set(cur.doors().map((d) => d.house));
+      // (while Zoé stands at the neighbours' door, its "Open" prompt would take hers: she is the one to talk to there)
+      if (this.f.opening && !this.f.prologueDone && this.isCur()) open.add('nbr');
       W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', label: 'p_door' }); });
       // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
       // from the door's own level, not from the slope above it)
@@ -207,10 +337,17 @@ export class Prologue extends ChapterBase {
     }
   }
   interactables(consider, dist) {
-    const g = this.game, W = g.world;
+    const g = this.game, W = g.world, f = this.f, h = g.hero;
     if (!g.room) {
-      consider(dist(W.well.x, W.well.z), 2.6, { kind: 'well', label: 'p_well' });
+      // (the rusted lid: in Aggressive the prompt is a kick, as LBA's behaviours change what Twinsen does to the world)
+      const kick = f.key && !f.pr_lidOpen && !f.inWell && !f.prologueDone && h.behaviour === 'aggressive';
+      consider(dist(W.well.x, W.well.z), 2.6, { kind: 'well', label: kick ? 'p_kick' : 'p_well', kick });
       consider(dist(W.gate.x, W.gate.z), 3.0, { kind: 'fortgate', label: 'p_gate' });
+      // CH1-LONGER: the harbour bell (until it has rung), the bay rocks from the sand, the warm stones from the top
+      const B = this.bell, S = this.stones;
+      if (B && !f.pr_bell && !f.prologueDone) consider(dist(B.x, B.z), 2.3, { kind: 'bell', label: 'p_look' });
+      if (this.bay && !f.pr_stones && h.pos.y < this.bay[0].top - 0.4) consider(dist(this.bay[0].x, this.bay[0].z), this.bay[0].r + 1.6, { kind: 'rocks', label: 'p_look' });
+      if (S && !f.pr_stones && Math.abs(h.pos.y - S.top) < 0.5) consider(dist(S.x, S.z), 1.4, { kind: 'stones', label: 'p_take' });
     }
   }
 
@@ -233,8 +370,38 @@ export class Prologue extends ChapterBase {
         if (f.prologueDone) { g.say('n_hero', t('pr_well_after'), null, h); return true; }
         if (!f.wellSeen) { f.wellSeen = true; g.updateObjective(); }
         if (!f.key) { g.say('n_hero', t('pr_well_locked'), () => g.updateObjective(), h); return true; }
-        if (!f.rope) { g.say('n_hero', t('pr_well_rope'), () => g.updateObjective(), h); return true; }
+        // the padlock opens; the lid is rusted to the rim (Gilbert, if he is by the well, has advice)
+        if (!f.pr_lidOpen) {
+          if (it.kick) { h.angle = Math.atan2(g.world.well.x - h.pos.x, g.world.well.z - h.pos.z); h.act('kick', 0.55, () => this.kickLid(), 0.2); return true; }
+          if (!f.pr_lidStuck) {
+            f.pr_lidStuck = true; this.setLid('stuck'); g.audio.play('clunk');
+            const near = (id) => { const n = this.speaker(id); return n?.present && n.distTo(h) < 9; };
+            const lines = [['hero', 'pr_well_stuck'], ...(near('gilbert') ? [['gilbert', 'pr_gil_kick']] : []), ...(near('gilbert') && near('mira') ? [['mira', 'pr_mira_kick']] : [])];
+            this.chain(lines, () => { g.updateObjective(); g.save(false); });
+            return true;
+          }
+          this.chain([['hero', 'pr_well_stuck2']]);
+          return true;
+        }
+        if (!f.rope) { f.pr_deep = true; g.say('n_hero', t('pr_well_rope'), () => g.updateObjective(), h); return true; }
         g.say('n_hero', t('pr_well_go'), () => { g.audio.play('door'); g.enterRoom('well'); }, h);
+        return true;
+      case 'bell':
+        f.pr_bellSeen = true;
+        this.chain([['hero', 'pr_bell_look']], () => g.updateObjective());
+        return true;
+      case 'rocks':
+        // (the jump's keys, as at the Whispering Cliffs' stones: main.js hitTarget)
+        this.chain([['hero', 'pr_rocks_look']], () => g.hud.toast('hint_jump', { b: g.hud.key('b2'), k: g.hud.key('action') }));
+        return true;
+      case 'stones':
+        f.pr_stones = true;
+        this.stones.take.visible = false;
+        g.audio.play('chest');
+        this.chain([['hero', f.timConfessed ? 'pr_stones_take' : 'pr_stones_take0']], () => {
+          h.coins += 10; g.audio.play('coin'); g.hud.float('+10', { x: h.pos.x, y: h.pos.y + 1.6, z: h.pos.z });
+          g.hud.toast('pr_toast_stone'); g.updateObjective(); g.save(false);
+        });
         return true;
       case 'fortgate':
         g.audio.play('deny');
@@ -290,16 +457,34 @@ export class Prologue extends ChapterBase {
     switch (id) {
       case 'zoe':
         if (f.prologueDone) return c([['zoe', 'pr_zoe_after']]);
-        if (f.opening && !f.zoeNext && !g.room) return c([['zoe', 'pr_zoe_next']], () => { f.zoeNext = true; });
+        // next door: she has been round the neighbours' taps, and brings the proof Mira wants (CH1-LONGER)
+        if (f.opening && !g.room && !f.key) {
+          if (!f.pr_kettle) {
+            return c([...(f.pr_miraNo ? [['hero', 'pr_tw_miraNo']] : []), ['zoe', 'pr_zoe_kettle'], ['hero', 'pr_tw_kettle'], ['zoe', 'pr_zoe_kettle2']], () => {
+              f.pr_kettle = true; f.zoeNext = true; g.hud.toast('pr_toast_kettle'); g.audio.play('chest'); g.updateObjective(); g.save(false);
+            });
+          }
+          return c([['zoe', 'pr_zoe_kettle_wait']]);
+        }
         return c([['zoe', h.hasBall ? 'pr_zoe_go' : 'pr_zoe_ball']]);
       case 'arthur':
-        return c([['arthur', f.prologueDone ? 'pr_ar_after' : 'pr_ar_hint']]);
+        if (f.prologueDone) return c([['arthur', 'pr_ar_after']]);
+        // (asked again while Doran sleeps on Xil's permit, he knows how to wake him: he and Tim tried it)
+        return c([['arthur', f.metXil && !f.pr_bell && !f.stamp ? 'pr_ar_bell' : 'pr_ar_hint']]);
       case 'gilbert': case 'mira':
         if (!f.key) {
-          return c([['gilbert', 'pr_gil_1'], ['mira', 'pr_mira_1'], ['gilbert', 'pr_gil_2'], ['hero', 'pr_tw_well'], ['mira', 'pr_mira_2'], ['gilbert', 'pr_gil_3']], () => {
-            f.key = true; f.wellSeen = true; h.hasKey = true; g.hud.toast('pr_toast_key'); g.audio.play('chest'); g.updateObjective(); g.save(false);
-          });
+          // Mira opens the town well only for a fault at the spring: the kettle crystals show it is one
+          const give = () => { f.key = true; f.wellSeen = true; h.hasKey = true; g.hud.toast('pr_toast_key'); g.audio.play('chest'); g.updateObjective(); g.save(false); };
+          const show = [['hero', 'pr_tw_kettle2'], ['mira', 'pr_mira_kettle'], ['mira', 'pr_mira_2b'], ['gilbert', 'pr_gil_3']];
+          if (!f.pr_row) {
+            const row = [['gilbert', 'pr_gil_1'], ['mira', 'pr_mira_1'], ['gilbert', 'pr_gil_2']];
+            if (f.pr_kettle) return c([...row, ...show], () => { f.pr_row = true; give(); });
+            return c([...row, ['hero', 'pr_tw_well'], ['mira', 'pr_mira_no'], ['gilbert', 'pr_gil_no']], () => { f.pr_row = true; f.pr_miraNo = true; f.wellSeen = true; g.updateObjective(); g.save(false); });
+          }
+          if (f.pr_kettle) return c(show, give);
+          return c([['mira', 'pr_mira_wait0']]);
         }
+        if (f.pr_lidStuck && !f.pr_lidOpen) return c([['gilbert', 'pr_gil_kick'], ['mira', 'pr_mira_kick']]);
         return c([[id, id === 'gilbert' ? 'pr_gil_wait' : 'pr_mira_wait']]);
       case 'xil':
         if (f.rope) return c([['xil', 'pr_xil_after']]);
@@ -308,14 +493,15 @@ export class Prologue extends ChapterBase {
             f.rope = true; f.wellSeen = true; g.hud.toast('pr_toast_rope'); g.audio.play('chest'); g.updateObjective(); g.save(false);
           });
         }
-        return c([['xil', 'pr_xil_1'], ['xil', 'pr_xil_2'], ['hero', 'pr_tw_xil']], () => { f.metXil = true; g.updateObjective(); });
+        // (only the bell wakes Doran: Xil saw it when the barge came in; once it has rung, that is moot)
+        if (f.metXil) return c([['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']])]);
+        return c([['xil', 'pr_xil_1'], ['xil', 'pr_xil_2'], ...(f.pr_bell ? [] : [['xil', 'pr_xil_bell']]), ['hero', 'pr_tw_xil']], () => { f.metXil = true; g.updateObjective(); g.save(false); });
       case 'doran':
         if (f.stamp) return c([['doran', 'pr_doran_after']]);
-        if (!f.metXil) return c([['doran', 'pr_doran_snore'], ['hero', 'pr_tw_snore']]);
-        npc.forceAnim = null;
-        return c([['doran', 'pr_doran_1'], ['hero', 'pr_tw_doran'], ['doran', 'pr_doran_2'], ['doran', 'pr_doran_3']], () => {
-          f.stamp = true; g.hud.toast('pr_toast_stamp'); g.audio.play('select'); g.updateObjective();
-        });
+        // asleep: nothing but the harbour bell wakes him (CH1-LONGER)
+        if (!f.pr_bell) return c([['doran', 'pr_doran_snore'], ['hero', f.metXil ? 'pr_tw_snore2' : 'pr_tw_snore']]);
+        if (!f.metXil) return c([['doran', 'pr_doran_awake']]);
+        return c([['hero', 'pr_tw_doran'], ['doran', 'pr_doran_2'], ['doran', 'pr_doran_3']], () => this.giveStamp());
       case 'tim': case 'lulu':
         if (f.timConfessed) return c([[id, id === 'tim' ? 'pr_tim_after' : 'pr_lulu_after']]);
         if (f.overheard) {
@@ -342,11 +528,59 @@ export class Prologue extends ChapterBase {
         f.inWell = true;
         f.nodes = 0;
         g.updateObjective();
-        this.chain([['hero', 'pr_cave_1'], ['hero', 'pr_cave_2']], () => g.save(false));
+        this.chain([['hero', 'pr_cave_1'], ...(f.pr_stones ? [['hero', 'pr_cave_stones']] : []), ['hero', 'pr_cave_2']], () => g.save(false));
       }
     }
   }
   onExitRoom(id) {
+  }
+
+  // ---------------------------------------------------------------- CH1-LONGER: the lid, the bell, Doran's stamp
+  giveStamp() {
+    const g = this.game, f = this.f;
+    f.stamp = true; f.pr_bell = true;
+    const d = this.npc('doran'); if (d) d.forceAnim = null;
+    g.hud.toast('pr_toast_stamp'); g.audio.play('select'); g.updateObjective(); g.save(false);
+  }
+  // the ball rings the bell: it swings and tolls; Doran jumps up. With Xil's errand in hand Twinsen asks for the stamp
+  // straight away; without it, Doran is awake and grumpy (the stamp waits for Xil's word)
+  ringBell() {
+    const g = this.game, f = this.f, B = this.bell;
+    f.pr_bell = true; B.t = 0; B.dings = 0;
+    g.particles.burst(B.x, B.y, B.z, '#ffe08a', 12, 2.5);
+    const d = this.npc('doran'); if (d) d.forceAnim = null;
+    g.updateObjective();
+    // (the words a moment later, once the bell has been heard)
+    this.pending = { t: 0.9, fn: () => {
+      if (f.stamp) return;
+      if (f.metXil) this.chain([['doran', 'pr_doran_bell'], ['hero', 'pr_tw_bell'], ['doran', 'pr_doran_2'], ['doran', 'pr_doran_3']], () => this.giveStamp());
+      else this.chain([['doran', 'pr_doran_bell'], ['hero', 'pr_tw_bell0'], ['doran', 'pr_doran_bell0']], () => g.save(false));
+    } };
+  }
+  // the rusted lid gives to a kick: the well's prompt in Aggressive (E), or the fists / the glove when they are the
+  // weapon in hand (Aggressive's action strikes with what is equipped: the ball by default, which only bounces off)
+  meleeHit(o) {
+    const g = this.game, f = this.f, L = this.lid, h = g.hero;
+    if (g.room || !L || f.prologueDone || f.inWell || f.pr_lidOpen || o.hitSet.has(L)) return false;
+    if (Math.abs(h.pos.y - g.physics.groundAt(L.x, L.z)) > 1.2 || !o.inArc(L.x, L.z, 1.1)) return false;
+    o.hitSet.add(L);
+    if (!f.key) {
+      g.impact(L.x, L.y, L.z, 'wood', 'blocked');
+      if (!this._padlockSaid) { this._padlockSaid = true; this.pending = { t: 0.3, fn: () => this.chain([['hero', 'pr_lid_padlock']]) }; }
+      return true;
+    }
+    this.kickLid();
+    return true;
+  }
+  kickLid() {
+    const g = this.game, f = this.f, L = this.lid, h = g.hero;
+    if (!L || f.pr_lidOpen) return;
+    f.pr_lidOpen = true; f.pr_lidStuck = true;
+    this.setLid('open', true);
+    g.audio.play('break'); g.audio.play('clang'); g.camRig.shake(0.3);
+    g.particles.burst(L.x, L.y + 0.1, L.z, '#9a5a32', 22, 3);
+    const gil = this.speaker('gilbert');
+    this.pending = { t: 0.5, fn: () => this.chain([['hero', 'pr_lid_kicked'], ...(gil?.present && gil.distTo(h) < 9 ? [['gilbert', 'pr_gil_told']] : [])], () => { g.updateObjective(); g.save(false); }) };
   }
 
   // restore world state from saved flags
@@ -354,6 +588,10 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f;
     if (f.chest) { g.world.chest.open = true; g.world.chest.openT = 1; }
     g.hero.hasKey = !!f.key;
+    this.setLid(this.lidState());
+    if (this.bell) { this.bell.t = null; this.bell.swing.rotation.set(0, 0, 0); }
+    if (this.stones) this.stones.take.visible = !f.pr_stones;
+    this.pending = null;
     const R = g.rooms.well;
     if (f.nodes) R.nodes.slice(0, f.nodes).forEach((n) => this.lightNode(n, true));
     if (f.nodes >= 3) this.openBarrier(true);
@@ -388,12 +626,29 @@ export class Prologue extends ChapterBase {
   }
 
   ballHit(p) {
-    const g = this.game;
+    const g = this.game, f = this.f;
+    if (!g.room) {
+      // the harbour bell rings; the rusted lid only shrugs the ball off (it wants a kick)
+      const B = this.bell, L = this.lid;
+      if (B && !f.pr_bell && !f.prologueDone && Math.hypot(p.x - B.x, p.y - B.y, p.z - B.z) < 0.6) { this.ringBell(); return true; }
+      // (anywhere over the lid under the roof's beam: a throw at it from the square flies about 0.6 m over the rim)
+      if (L && f.pr_lidStuck && !f.pr_lidOpen && Math.hypot(p.x - L.x, p.z - L.z) < LID_R && p.y > L.y - 0.3 && p.y < L.y + 0.8) {
+        if (!this._lidBall) { this._lidBall = true; this.pending = { t: 0.4, fn: () => this.chain([['hero', 'pr_lid_ball']]) }; }
+        return true;
+      }
+      return false;
+    }
     if (g.room !== g.rooms.well) return false;
     for (const tg of g.room.ballTargets) {
       if (!tg.node.lit && Math.hypot(p.x - tg.x, p.y - tg.y, p.z - tg.z) < tg.r) { this.lightNode(tg.node); return true; }
     }
     return false;
+  }
+  // the bell is a target the ball's aim curves toward, from the quay (it hangs out of reach)
+  ballTargets() {
+    const g = this.game, f = this.f, B = this.bell;
+    if (g.room || !B || f.pr_bell || f.prologueDone || Math.hypot(g.hero.pos.x - B.x, g.hero.pos.z - B.z) > 16) return [];
+    return [{ x: B.x, y: B.y, z: B.z }];
   }
 
   // Sendell's call: the ball is pulled into the crystal vein.
@@ -491,6 +746,21 @@ export class Prologue extends ChapterBase {
   update(dt) {
     const g = this.game, f = this.f, h = g.hero;
     if (this.barrierT > 0 && (this.barrierT -= dt) <= 0) this.openBarrier();
+    // CH1-LONGER: the lid swinging up, the bell's swing and tolls, the stones' glow, a line held back a moment
+    const L = this.lid, B = this.bell, S = this.stones;
+    if (L && L.t != null) { L.t += dt; const k = Math.min(1, L.t / 0.5), e = 1 + 2.2 * Math.pow(k - 1, 3) + 1.2 * Math.pow(k - 1, 2); L.pivot.rotation.x = LID_OPEN * Math.min(1.06, e); if (k >= 1) { L.t = null; L.pivot.rotation.x = LID_OPEN; } }
+    if (B && B.t != null) {
+      B.t += dt;
+      B.swing.rotation.x = 0.6 * Math.sin(B.t * 7.5) * Math.exp(-B.t * 0.8);
+      if (B.dings < 3 && B.t >= B.dings * 0.42) { B.dings++; g.audio.play('clang'); }
+      if (B.t > 6) { B.t = null; B.swing.rotation.x = 0; }
+    }
+    if (S && !g.room && !f.pr_stones) S.mat.emissiveIntensity = 1.1 + 0.45 * Math.sin(g.time * 2.6);
+    if (this.pending && g.state === 'play' && (this.pending.t -= dt) <= 0) { const fn = this.pending.fn; this.pending = null; fn(); }
+    // a nudge for a player stuck at the lid or at Doran's nap (HINTS-LESS: once, after a while, never for one who gets it)
+    const W = g.world, near = (x, z, r) => !g.room && Math.hypot(h.pos.x - x, h.pos.z - z) < r;
+    this.nudge(dt, 'lid', f.pr_lidStuck && !f.pr_lidOpen && !f.inWell && near(W.well.x, W.well.z, 10), 30, 'pr_nudge_kick', { b: g.hud.key('b3'), k: g.hud.key('interact') });
+    if (B) this.nudge(dt, 'bell', f.metXil && !f.pr_bell && !f.stamp && near(B.x, B.z, 14), 35, 'pr_nudge_bell', { ball: g.hud.key('ball') });
     // overhearing the kids (Discreet mode, close and quiet)
     if (!g.room && !f.overheard && h.behaviour === 'discreet') {
       const tim = this.speaker('tim');

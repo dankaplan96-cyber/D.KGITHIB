@@ -158,3 +158,62 @@ fresh player.
 
 **Next useful adaptation:** the research post (the storm wait of up to ~45 s, still teleport-tested): let the storm's
 approach be read (Hesk's flags stream harder, the drones' lamps dim) and give the player something to do while it comes.
+
+## ADV-3 (CH1-LONGER): chapter 1, The Well, made longer
+
+The user (our only player): "chapter 1 is too fast, it feels like 5 minutes of play". Goal: about 15–20 minutes for a
+first-time player, with play rather than walks or text. Same sources and limits as ADV-1/2 (text banks only; no scene
+scripts decoded, no footage, no playable original). Added samples, all from LBA2's Citadel bank (L2 b6):
+
+| # | Evidence (O) | Interpretation (I) and confidence |
+|---|---|---|
+| 12 | The opening errand: "rush to the downtown pharmacy and find a cure for the Dino-Fly!" (#153, id 0); the pharmacist: "I have nothing for your Dino-Fly, but the client said she could help you" (#212, id 253); the client: "Here's the deal. I will tell you how to treat your Dino-Fly, if you would bring back my umbrella" (#283, id 254) | One ordinary problem passes from person to person; each wants something small and believable before helping. High. |
+| 13 | Zoé brings news herself: "I met that nice lady who works for Ker'aooc ... You should go see him" (#162, id 951) | The family takes part in the errand, not only sends him. Medium (one line). |
+| 14 | Residents teach verbs in passing: "it's possible to search the garbage cans, the vases and the closets" (#208, id 65); "did you notice that you could jump while you are running?" (#271, id 426); "you can jump over the rocks if you are trapped" (#286, id 249) | A rule is taught by a person, then the world uses it. High for the pattern. |
+| 15 | Access through a person: the Weather Wizard can't get up the lighthouse because "the lighthouse was closed and I can't find the keeper anywhere" (#143, id 26); "You need a ticket to board the ferry" (#219, id 413) | A shut place opens through someone's situation, not a switch. High. |
+
+**Before (O, tests/playthrough/01–02 at a53cfe5, served from a clean export):** the chapter's play was two talk chains
+(Gilbert/Mira → key; Xil → Doran → Xil → rope), one optional Discreet overhear, then the cave (mites, three crystals with
+the ball). The first ball use was in the cave; Aggressive and Athletic were never asked for. Bot game time: surface
+143 s, cave 124 s; about 33 lines of dialogue on the surface. Human estimate: 9–10 min with the 85 s opening.
+The journal showed the next unfinished step in the past tense ("Mira gave me the key" before she had: the chapter-1
+twin of AUDIT-CH12 #3).
+
+**Evidence → principle → gap → adaptation → acceptance** (acceptance: tests/well-town.mjs, tests/prologue.mjs,
+tests/playthrough/01, by INPUT)
+
+- 12, 13 → P3, P5 → the key was handed over on the first line → **Mira refuses** to unlock the town well "for a pipe
+  fault" in Gilbert's street. **Zoé**, who went next door in the opening, has been round the neighbours' taps: their
+  kettle "furred with these overnight", warm crystals. Shown them, Mira: "Pipes don't grow those. That comes up from the
+  spring." Either order works (Zoé first: one conversation; Mira first: her refusal, then Zoé's marker). → the key only
+  with the crystals; the objective "Lid key: Mira wants proof"; Zoé hears of the refusal.
+- 14, P1 → Aggressive was never used before the mites → **the lid is rusted to the rim**. Gilbert: "Give it a good kick.
+  That's how I fix everything" (Mira: "That explains his pipes"). In Aggressive the well's prompt becomes **Kick** (E), as
+  LBA's behaviours change what Twinsen does to the world; the ball "just bounces off. It needs weight behind it". A nudge
+  after ~30 s near it names Aggressive and the key. (Aggressive's own action strikes with the equipped weapon, the ball by
+  default, so the kick is the prompt; the fists or the glove also open it.)
+- 15, P1 → the first ball use was the cave → **Doran sleeps through anything but the harbour bell**, which hangs out of
+  reach on a post at the pier's mouth, its rope long gone. Xil: "Only the bell on that post wakes him." Arthur, asked at
+  home: "Ring the harbour bell. He jumps up every time. Tim and I checked. Twice." The ball rings it (the aim curves to
+  it); Doran: "Boat in! Ropes! Fenders! ...There is no boat." Before Xil's errand he only grumbles; after it, the stamp
+  at once. The safe first use of the ball on a raised target; the cave's crystals vary it.
+- 14 + Tim's existing confession → P1 (the jump taught before chapter 2's cliff stones) → Tim's "more on the beach" led
+  nowhere → **three rocks at the bay** (by the path to the lighthouse), each about a jump higher than the last; looking at
+  the first: "Too high to climb. Not too high to jump." and the jump's keys. On top: warm stones that "hum like a bee in
+  a jar" and 10 kashes (two of Pippa's flasks: magic for the cave's crystals). Optional; the cave remembers it ("Like the
+  stones on the bay rocks. Only here they grow out of the walls.").
+- The journal shows each line once it is true; an open line reads as a need.
+
+Recovery: every step is a flag (pr_kettle, pr_row, pr_miraNo, pr_lidStuck, pr_lidOpen, pr_bellSeen, pr_bell, pr_deep,
+pr_stones), saved at once; Save → Continue restores the lid (padlocked / rusted / open), Doran asleep or awake, the bell's
+target and the stones. No save format change: a save from before CH1-LONGER plays the steps it has not passed (holding
+the key it still finds the lid rusted; with Doran's stamp, Doran is awake and the bell no target; in the cave or later,
+the lid is open).
+
+**After (O):** bot game time: surface 411 s, cave 82 s (the cave is unchanged; the bot's crystal throws vary run to run);
+about 58 lines on the surface. **Human estimate (a design judgment, not measured):** opening 1.5 min, house 0.7, Zoé and
+Mira 2.5, the lid 1.5, the harbour (Xil, Doran, the bell) 3, Tim 2, the bay rocks 3 (optional), the cave 3: about 16–19
+minutes, 13–16 without the opening.
+
+**Not tested:** a first-time player. Whether the kick is found without the nudge, whether the bell reads as something to
+throw at, and whether the bay rocks are noticed from Tim's line are judgments awaiting the user's play.
