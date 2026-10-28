@@ -5,6 +5,7 @@
 // (game.autoQ.gov.frame), as tests/autoquality.mjs does for its logic.
 //   GAME_URL=http://localhost:8123/ node tests/autoquality-game.mjs
 import { launch, open, menu, checker } from './lib/boot.mjs';
+import fs from 'node:fs';
 const { check, done } = checker();
 const { browser, page } = await launch({ width: 1366, height: 768 });
 const ev = (f, a) => page.evaluate(f, a);
@@ -157,6 +158,7 @@ const rep = await ev(async () => {
   const text = await G.bench.runAuto({ routes: ['street'], measure: 3 });
   return { text, auto: G.settings.qualityAuto, benching: G.benching };
 });
+{ const out = new URL('./out/', import.meta.url).pathname; fs.mkdirSync(out, { recursive: true }); fs.writeFileSync(out + 'autoquality-bench-auto.txt', rep.text); }   // (a SwiftShader sample of the report)
 check('the benchmark\'s Auto run (pause menu → Benchmark: Auto as played): a row per route, the states it ran, decisions, hitches with what ran in them; Auto still on afterwards',
   /Quality Auto as played/.test(rep.text) && /\n  street /.test(rep.text) && /frames at each state: High/.test(rep.text) && /decisions during the run/.test(rep.text) && /\[frame before: work \d+ ms/.test(rep.text) && rep.auto === true && rep.benching === false, rep.text.slice(0, 2500));
 const fixed = await ev(async () => {
