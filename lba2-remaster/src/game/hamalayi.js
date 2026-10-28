@@ -451,7 +451,7 @@ export function buildHamalayi(scene, physics) {
     B.add(bbox(2.4, 2.2, 1.8, 0.06, 2), teal, HP.x - 2.4, gy + 1.1, HP.z + 0.6);
     B.add(cyl(0.12, 0.12, 2.2, 8, 0), pm('#c8a050', 0.4, { metalness: 0.6 }), HP.x, gy + 1.1, HP.z);
     B.add(tube([[HP.x - 1.2, gy + 1.6, HP.z + 0.4], [HP.x - 0.4, gy + 1.8, HP.z + 0.2], [HP.x, gy + 2.2, HP.z]], 0.08, 6, 1), iron, 0, 0, 0);
-    col({ type: 'box', x: HP.x - 2.4, z: HP.z + 0.6, hw: 1.2, hd: 0.9, top: gy + 2.2 });
+    col({ type: 'box', x: HP.x - 2.4, z: HP.z + 0.6, hw: 1.2, hd: 0.9, top: gy + 2.2, noStand: true });   // (a wall, not a step: like the winch beside it, nobody stands on the shed's roof)
     col({ type: 'cyl', x: HP.x, z: HP.z, r: 0.25, top: gy + 2.4, noStand: true });
     put('lift', 'heatCabinet', HP.x - 2.4, HP.z + 0.6, 0, (k) => heatCabinetDress(k), { y: gy, col: false, nocheck: true });
   }
