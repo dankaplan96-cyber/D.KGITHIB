@@ -193,7 +193,38 @@ function outside(c, x, z) {
   const lx = dx * c.cos - dz * c.sin, lz = dx * c.sin + dz * c.cos;
   return Math.hypot(Math.max(0, Math.abs(lx) - c.hw), Math.max(0, Math.abs(lz) - c.hd));
 }
-const _seen = new Set(), _cells = [], NO_SKIP = new Set();
+const _seen = new Set(), _cells = [], NO_SKIP = new Set(), NONE_V = [];
+// G1-CAM (cost): the scenery volumes by camera.js's own grid of VG m cells (numeric keys; occlude.js's near() builds a
+// string key at every call, ~70 ns, and the Follow camera's sight lines read it at hundreds of samples a frame). Volumes
+// are added once and never move, so the grid is built again only when the list grows. Any volume whose footprint holds
+// a point is filed under that point's cell here as in occlude.js's grid: a test that needs the point inside the footprint
+// reads the same answer from either.
+const VG = 4, _vgrids = new WeakMap(), vkey = (i, j) => (i * 73856093) ^ (j * 19349663);
+function vgrid(occ) {
+  let G = _vgrids.get(occ);
+  if (!G || G.n !== occ.list.length) {
+    G = { n: occ.list.length, map: new Map() };
+    for (const v of occ.list) {
+      const R = v.kind === 'rev' ? v.R : Math.hypot(v.hw, v.hd);
+      for (let i = Math.floor((v.x - R) / VG); i <= Math.floor((v.x + R) / VG); i++) for (let j = Math.floor((v.z - R) / VG); j <= Math.floor((v.z + R) / VG); j++) {
+        const k = vkey(i, j);
+        let a = G.map.get(k);
+        if (!a) G.map.set(k, (a = []));
+        if (!a.includes(v)) a.push(v);
+      }
+    }
+    _vgrids.set(occ, G);
+  }
+  return G.map;
+}
+const vnear = (occ, x, z) => vgrid(occ).get(vkey(Math.floor(x / VG), Math.floor(z / VG))) || NONE_V;
+// (how far (x, z) lies from the segment a → b, across the ground)
+function segDist(x, z, ax, az, bx, bz) {
+  const ux = bx - ax, uz = bz - az, L2 = ux * ux + uz * uz, t = L2 > 0 ? clamp(((x - ax) * ux + (z - az) * uz) / L2, 0, 1) : 0;
+  return Math.hypot(x - ax - ux * t, z - az - uz * t);
+}
+const _segCols = [], _segVols = [], _segSeen = new Set();
+const _pass = [[0, false], [0, true]], SOLID_PASS = (gap) => { _pass[0][0] = gap; _pass[1][0] = gap + CH_PIPE; return _pass; };
 const RIM5 = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]], GAP4 = [[-1, -1], [1, -1], [-1, 1], [1, 1]], GAP11 = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, 0.7], [-0.7, 0, -0.7]];
 
 const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3(), _c = new THREE.Vector3(), _cd = new THREE.Vector3(), _e = new THREE.Vector3(), _t = new THREE.Vector3();
@@ -322,6 +353,11 @@ export class CameraRig {
 
   update(dt, focus, heroAngle, moving, input) {
     const cam = this.cam;
+    this._fid = (this._fid || 0) + 1; this._busy = true;   // (G1-CAM: a frame's own answers, see _sees)
+    try { this._update(dt, focus, heroAngle, moving, input, cam); } finally { this._busy = false; }
+  }
+
+  _update(dt, focus, heroAngle, moving, input, cam) {
     if (this._focus && focus.distanceToSquared(this._focus) > 16) this.snap();
     (this._focus ??= new THREE.Vector3()).copy(focus);
     // (CAM-2: a drag of the mouse or a finger with no free orbit to turn is let go, not kept for later: it used to pile
@@ -553,9 +589,20 @@ export class CameraRig {
     }
     // (the volumes; the pipeline's tube too, with CH_PIPE more for its stays and saddles — the sight line passes through
     // that one, the camera never stands in it)
-    if (occ) for (const [g, pipe] of [[gap, false], [gap + CH_PIPE, true]]) for (const [dx, dy, dz] of GAP11) {
-      const x = p.x + dx * g, y = p.y + dy * g, z = p.z + dz * g;
-      for (const v of occ.near(x, z)) if ((!pipe || v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return true;
+    // (G1-CAM, cost: the volumes that could hold any of those points gathered once — from the cells of the square round
+    // them —, each point's own test as before)
+    if (occ) {
+      const g2 = gap + CH_PIPE, vs = _segVols;
+      vs.length = 0; _segSeen.clear();
+      for (const [dx, dz] of GAP4) for (const v of vnear(occ, p.x + dx * g2, p.z + dz * g2)) {
+        if (_segSeen.has(v)) continue;
+        _segSeen.add(v);
+        if (v.y0 <= p.y + g2 && v.top >= p.y - g2) vs.push(v);
+      }
+      if (vs.length) for (const [g, pipe] of SOLID_PASS(gap)) for (const [dx, dy, dz] of GAP11) {
+        const x = p.x + dx * g, y = p.y + dy * g, z = p.z + dz * g;
+        for (const v of vs) if ((!pipe || v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return true;
+      }
     }
     return false;
   }
@@ -579,23 +626,74 @@ export class CameraRig {
   // (CAM-CLEAR-2, `strict`: a dialogue's two-shot — his head and his chest both, and the posts and the see-through
   // things count too: a face half behind the beam pad's arch is not framed)
   _sees(p, hero, strict = false) {
-    if (strict) return this._line(p, hero.x, hero.y + 1.5, hero.z, true) && this._line(p, hero.x, hero.y + 1.0, hero.z, true);
-    return this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z);
+    // (G1-CAM, cost: the same spot asked about the same target again within a frame — the clear view's own test, the
+    // arm's two tiers, the lead — reads the answer it already has: nothing it looks at moves within a frame. About half
+    // the questions in a walk through the town are repeats.)
+    const M = (this._seesM ??= { fid: -1, a: [] });
+    if (this._busy) {
+      if (M.fid !== this._fid) { M.fid = this._fid; M.a.length = 0; }
+      for (const e of M.a) if (e[0] === p.x && e[1] === p.y && e[2] === p.z && e[3] === hero.x && e[4] === hero.y && e[5] === hero.z && e[6] === strict) return e[7];
+    }
+    const r = strict ? this._line(p, hero.x, hero.y + 1.5, hero.z, true) && this._line(p, hero.x, hero.y + 1.0, hero.z, true)
+      : this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z);
+    if (this._busy && M.a.length < 48) M.a.push([p.x, p.y, p.z, hero.x, hero.y, hero.z, strict, r]);
+    return r;
+  }
+
+  // G1-CAM (cost): the colliders and the scenery volumes that could hold one of the samples i0 ≤ i < i1 of the line
+  // from p (p + d·i/n, as the callers place them) — those filed in the samples' own grid cells, near enough the line
+  // across, and up and down — into _segCols / _segVols. Gathered once a line instead of looked up at every 0.25 m
+  // sample; each caller's own test on each sample is unchanged, so its answer is too.
+  _segCands(p, dx, dy, dz, n, i0, i1, P, occ) {
+    _segCols.length = 0; _segVols.length = 0;
+    if (i1 <= i0) return;
+    const ka = i0 / n, kb = (i1 - 1) / n, ya = p.y + dy * ka, yb = p.y + dy * kb, ylo = Math.min(ya, yb), yhi = Math.max(ya, yb);
+    const ax = p.x + dx * ka, az = p.z + dz * ka, bx = p.x + dx * kb, bz = p.z + dz * kb;
+    _segSeen.clear();
+    let pi = NaN, pj = NaN, vi = NaN, vj = NaN;
+    for (let i = i0; i < i1; i++) {
+      const k = i / n, x = p.x + dx * k, z = p.z + dz * k;
+      if (P) {
+        const ci = Math.floor(x / P.cell), cj = Math.floor(z / P.cell);
+        if (ci !== pi || cj !== pj) {
+          pi = ci; pj = cj;
+          for (const c of P.near(x, z)) {
+            if (_segSeen.has(c)) continue;
+            _segSeen.add(c);
+            if (c.top > ylo && c.bottom < yhi && segDist(c.x, c.z, ax, az, bx, bz) <= (c.type === 'cyl' ? c.r : Math.hypot(c.hw, c.hd)) + 1e-6) _segCols.push(c);
+          }
+        }
+      }
+      if (occ) {
+        const ci = Math.floor(x / VG), cj = Math.floor(z / VG);
+        if (ci !== vi || cj !== vj) {
+          vi = ci; vj = cj;
+          for (const v of vnear(occ, x, z)) {
+            if (_segSeen.has(v)) continue;
+            _segSeen.add(v);
+            if (v.top >= ylo && v.y0 <= yhi && segDist(v.x, v.z, ax, az, bx, bz) <= (v.kind === 'rev' ? v.R : Math.hypot(v.hw, v.hd)) + 1e-6) _segVols.push(v);
+          }
+        }
+      }
+    }
   }
 
   // (is the line from p to (tx, ty, tz) clear? the end left out: what is right there)
   _line(p, tx, ty, tz, strict = false, ground = true) {
     const P = this.physics, occ = this.occ?.(), T = ground ? this.terrain : null;
     const dx = tx - p.x, dy = ty - p.y, dz = tz - p.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
+    this._segCands(p, dx, dy, dz, n, 1, n - 1, P, occ);
+    const cols = _segCols, vols = _segVols;
     for (let i = 1; i < n - 1; i++) {
       const k = i / n, x = p.x + dx * k, y = p.y + dy * k, z = p.z + dz * k;
       if (T && T.heightAt(x, z) > y + 0.05) return false;
-      if (P) for (const c of P.near(x, z)) {
+      for (const c of cols) {
         if (!c.enabled || c.fades || (c.camSkip && occ) || y >= c.top || y <= c.bottom) continue;
         if (strict ? c.type === 'cyl' && c.r < 0.15 : c.seeThrough || (c.type === 'cyl' && c.r < 1.5)) continue;
         if (P._inside(c, x, z, 0)) return false;
       }
-      if (occ && occ.hit(x, y, z, NO_SKIP) > -Infinity) return false;
+      // (occlude.js hit(), every volume: none skipped, the camera's own ones — camOnly — left out)
+      for (const v of vols) if (!v.camOnly && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return false;
     }
     return true;
   }
@@ -644,9 +742,10 @@ export class CameraRig {
     if (!occ) return false;
     for (const hy of [0.3, 1.0]) {
       const dx = hero.x - p.x, dy = hero.y + hy - p.y, dz = hero.z - p.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
+      this._segCands(p, dx, dy, dz, n, 1, n - 2, null, occ);   // (G1-CAM, cost: see _segCands)
       for (let i = 1; i < n - 2; i++) {
         const k = i / n, x = p.x + dx * k, y = p.y + dy * k, z = p.z + dz * k;
-        for (const v of occ.near(x, z)) if (v.camOnly && y >= v.y0 && y <= occ.topAt(v, x, z)) return true;
+        for (const v of _segVols) if (v.camOnly && y >= v.y0 && y <= occ.topAt(v, x, z)) return true;
       }
     }
     return false;
