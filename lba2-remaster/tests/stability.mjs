@@ -123,7 +123,7 @@ const d13 = await ev(() => {
   const r = P.go(lv.x, lv.z, { tol: 1.2, maxT: 30 });
   return { lever: [lv.x, lv.z], yard, leverGround: at, r: r.r, pos: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) };
 });
-check('D13: the fortress lever is on the yard floor and reached by input', Math.abs(d13.leverGround - d13.pos[1]) < 0.3 && d13.leverGround < 15 && d13.r === 'arrived', d13);
+check('D13: the fortress lever is on the yard floor and reached by input', Math.abs(d13.leverGround - d13.pos[1]) < 0.3 && d13.leverGround < d13.yard + 0.5 && d13.r === 'arrived', d13);
 
 // D14: Zoé's run in chapter 8 starts outside the square's barrier ring (out of the front door): she can walk to the
 // first hill farm (ISO: chapter 8 state set, at home with Zoé; the walk is input)
