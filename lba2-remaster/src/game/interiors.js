@@ -1245,6 +1245,7 @@ function buildProjOffice(scene, physics) {
   const BZ = -D / 2, LX = -W / 2;
   R.exits.push({ ...B.world(doorX, BZ + 0.45), r: 0.75, to: 'outdoor-projoffice' });
   R.spawn = { ...B.world(doorX, BZ + 1.3), a: 0 };
+  R.bounds = { x0: B.cx - W / 2, x1: B.cx + W / 2, z0: B.cz - D / 2, z1: B.cz + D / 2 };   // (the floor's inside: the guard's sight stops there, chapter1.js updateCone)
   R.cover = [];
   const cover = (x, z, r) => R.cover.push({ ...B.world(x, z), r });
   const glowC = MAT.glow('#9ff4ff', '#22d4ff', 1.8);

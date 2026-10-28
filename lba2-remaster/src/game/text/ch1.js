@@ -213,8 +213,11 @@ Object.assign(STR.en, {
   c1_mira_office: "Welcome to the water office, Twinsen. Yes, we know there's no water. Yes, we complain about it too.",
   c1_mira_idle: 'The map on the wall shows every pipe on the island. Take a look.',
   c1_mira_after: 'Open those valves and my report will say "the water office solved the crisis". Deal?',
+  c1_mira_water: 'The well runs again! My report already says "the water office solved the crisis". Nobody asked for it boiling, so I left that bit out.',
+  c1_mira_gone: 'People keep coming in about an "evacuation". This is the water office! I\'m filing them under leaks.',
+  c1_map_after: "FunFrock's pipeline map. All three bypass valves are open now, and the town has its water.",
   c1_toast_valve: 'Valve opened ({n}/3)',
-  c1_water_1: 'A low rumble runs through the ground. In the square, the well gurgles and the water comes back, steaming. Across town, the project\'s heat posts light up one by one.',
+  c1_water_1: 'A low rumble runs through the ground. The well gurgles and fills, steaming, and the project\'s heat posts light up across town.',
   c1_tw_water: "The water's back, and the station gate is open. Time to visit Vesk.",
   c1_tw_control: 'The control room. The needles jump every time the ground shakes.',
 
@@ -256,7 +259,8 @@ Object.assign(STR.en, {
   c1_obj_ferry: 'Talk to Doran at the harbour',
   c1_obj_ship: 'Meet Doran at the spaceport',
 
-  c1_j_vesk: "Vesk, the Joint Project's chief engineer, asked me to open FunFrock's three bypass valves.",
+  c1_j_morning: "The next morning the well was still dry, and the Joint Project's chief engineer was due at the harbour.",
+  c1_j_vesk:"Vesk, the Joint Project's chief engineer, asked me to open FunFrock's three bypass valves.",
   c1_j_valves: 'The water is back in the well, but it is scalding hot. Across town, the project\'s heat posts lit up.',
   c1_j_station: 'The station has the same crystals as the well. Vesk talks about a "shell" and calls the readings "calibration noise".',
   c1_j_plan: 'Zoé found the evacuation plan. It covers only 30% of the people.',
