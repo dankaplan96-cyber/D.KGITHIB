@@ -37,7 +37,12 @@ const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 // the actions in which the player's character keeps his feet planted (Rig._plant)
 const PLANT = new Set(['idle', 'talk', 'listen', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search']);
-const newFoot = () => ({ on: false, w: 0, P: new THREE.Vector3(), from: new THREE.Vector3(), stepping: false, u: 0, dur: 0.1, lift: 0 });
+// the gaits and stances the hero's starts, stops and switches between them are blended across (Rig.play, Rig._xfade)
+const LOCO = new Set(['walk', 'run', 'sneak', 'idle', 'talk', 'listen', 'turnL', 'turnR']);
+const MOVING = new Set(['walk', 'run', 'sneak']);
+const XF_KEYS = ['legL', 'kneeL', 'footL', 'legR', 'kneeR', 'footR', 'sideL', 'sideR', 'armL', 'elL', 'outL', 'twL', 'armR', 'elR', 'outR', 'twR'];
+const XF_VARS = ['hipsY', 'torsoX', 'torsoY', 'torsoZ', 'headX', 'headY', 'headZ', 'armOut', 'hipsZ', 'bodyRotX'];
+const newFoot = () => ({ on: false, w: 0, yaw0: 0, dwell: 0, P: new THREE.Vector3(), from: new THREE.Vector3(), stepping: false, u: 0, dur: 0.1, lift: 0 });
 const wrap = (x) => Math.atan2(Math.sin(x), Math.cos(x));
 const _fp = new THREE.Vector3(), _v3 = new THREE.Vector3(), _m4 = new THREE.Matrix4();
 // the legs' animated pose, kept apart from the bones for foot planting
@@ -277,7 +282,10 @@ export class Rig {
     this.fidgetT = 4 + Math.random() * 6;
     this.fidget = 0;
     this.gesture = 0;
-    this.landT = 0;
+    this._xf = { t: 0, rate: 14, k: {} };
+    this.landT = 0; this.landS = 0; this.landD = 0.2;
+    this.accel = undefined;   // (ANIM-POLISH: the player's body acceleration along its facing, m/s²: the lean and the braking dip spring from it)
+    this.groundGap = 0;       // (the height above the ground in the air: the legs reach for it as he comes down)
     this.hipsRest = j.hips.position.y;
     this.armSpread = j.skirt ? 0.03 : 0.1;
     this.skirtLag = 0;
@@ -303,7 +311,20 @@ export class Rig {
       // over a moment instead of snapping into the new pose in a frame
       const prev = this.anim;
       if (FAST.has(prev) && !FAST.has(anim)) this.blendT = 0.3;
-      else if ((prev === 'walk' || prev === 'run' || prev === 'sneak') && (anim === 'idle' || anim === 'talk' || anim === 'listen')) this.blendT = 0.22;
+      else if (!this.footPlant && (prev === 'walk' || prev === 'run' || prev === 'sneak') && (anim === 'idle' || anim === 'talk' || anim === 'listen')) this.blendT = 0.22;
+      // (ANIM-POLISH, the player's body only) starts, stops and gait switches are blended on the targets themselves (Rig._xfade),
+      // not left to the joints' own easing, which makes the first frame the biggest step
+      if (this.footPlant && LOCO.has(prev) && LOCO.has(anim)) {
+        const go = MOVING.has(anim), was = MOVING.has(prev);
+        if (go && !was) {
+          // a start: the first step is taken by one foot, the other planted under him (the weight on one leg), and the next start
+          // by the other; the cycle begins at that pose instead of wherever the last walk stopped
+          this._startFoot = !this._startFoot; this.phase = (this._startFoot ? 0.25 : 0.75) * Math.PI * 2;
+          this._xf.t = 0.14; this._xf.rate = 24;
+        } else if (was && !go) { this._xf.t = 0.22; this._xf.rate = 15; this._settleT = 0.7; this._settleAge = 0; this._settleId = (this._settleId || 0) + 1; }
+        else if (was && go) { this._xf.t = 0.3; this._xf.rate = 12; }
+        else { this._xf.t = 0.18; this._xf.rate = 16; }
+      }
       this.anim = anim;
       this.actionT = 0;
       // (a throw or a charge keeps the back foot where it stood: its keys are taken relative to the leg as it was)
@@ -339,7 +360,9 @@ export class Rig {
     const K = STRIKES[a], G = GUARD[K.guard], A = this.atk?.s ? (this._atkT = this.atk) : this._atkT || K.time, t = this.actionT;
     const u = !A ? 0 : t < A.s ? t / A.s : t < A.s + A.a ? 1 + (t - A.s) / A.a : 2 + Math.min(1, (t - A.s - A.a) / Math.max(0.05, A.r));
     const P = {};
-    for (const k of POSE_CH) P[k] = K[k] ? keyH(K.u, K[k], u) : G[k] ?? 0;
+    // (ANIM-POLISH: the arms, chest and head are keyed on `u`; the legs and the pelvis, whose planted feet the drive of the step
+    // carries, keep their own earlier `uLeg` where a move's `u` was retimed to put the blow on the hit)
+    for (const k of POSE_CH) P[k] = K[k] ? keyH(K.uLeg && STANCE.has(k) ? K.uLeg : K.u, K[k], u) : G[k] ?? 0;
     if (a === 'heavyCharge') { const w = this.chargeFull ? Math.sin(this.t * 40) * 0.03 : Math.sin(this.t * 2.6) * 0.02; P.armR += w; P.torsoX += w * 0.5; }
     return P;
   }
@@ -447,28 +470,35 @@ export class Rig {
     const sc = this.root.scale.y;
     this._ankle ??= this.hipsRest + j.legL.hip.position.y + j.legL.knee.position.y + j.legL.foot.position.y;
     const groundY = this.root.position.y + this._ankle * sc, settle = a === 'idle' || a === 'talk' || a === 'listen';
+    // (ANIM-POLISH) a stop brings the feet together at once (settle: in the 0.7 s after stopping each foot 4 cm off its stance steps
+    // in once, one at a time, instead of waiting 0.4 s and shuffling); turning on the spot, a foot steps each time the body has
+    // turned 35° past the way it was put down, and until then stays pointing where it was (the hip counter-turns)
+    this._settleAge = (this._settleAge || 0) + dt; this._settleT = Math.max(0, (this._settleT || 0) - dt);
+    const yaw = this.root.rotation.y, pivot = a === 'turnL' || a === 'turnR', settling = this._settleT > 0 && this._settleAge > 0.1 && settle;
     for (const s of ['L', 'R']) {
       const leg = s === 'L' ? j.legL : j.legR, st = F[s], other = F[s === 'L' ? 'R' : 'L'];
       leg.foot.getWorldPosition(_fp);
       if (on) {
         const up = _fp.y - groundY;
         if (up > (st.on ? 0.05 : 0.02) * sc) { st.on = false; st.stepping = false; }   // the pose lifts it
-        else if (!st.on) { st.on = true; st.w = 0; st.P.set(_fp.x, groundY, _fp.z); } // put down where the pose lands it
-        else if (st.w < 1 && !st.stepping) st.P.set(_fp.x, groundY, _fp.z);            // (still settling as it lands)
+        else if (!st.on) { st.on = true; st.w = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; st.dwell = 0; } // put down where the pose lands it
+        else if (st.w < 1 && !st.stepping) { st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; }   // (still settling as it lands)
         else if (st.stepping) {
           st.u = Math.min(1, st.u + dt / st.dur);
           const e = st.u * st.u * (3 - 2 * st.u);
           st.P.set(st.from.x + (_fp.x - st.from.x) * e, groundY + Math.sin(Math.PI * st.u) * st.lift, st.from.z + (_fp.z - st.from.z) * e);
-          if (st.u >= 1) st.stepping = false;
+          if (st.u >= 1) { st.stepping = false; st.yaw0 = yaw; st.dwell = 0; }
         } else {
+          st.dwell += dt;
           const d = Math.hypot(_fp.x - st.P.x, _fp.z - st.P.z);
+          const turned = pivot && st.dwell > 0.09 && Math.abs(wrap(yaw - st.yaw0)) > 0.6 && d > 0.03 * sc;
           // (a foot the leg can no longer reach — the body carried on past it — steps up too)
-          const far = (st.reach || 0) > 1.01;   // (a straight back leg in a lunge is fine; past its length it drags)
+          const far = (st.reach || 0) > 1.01 && d > 0.03 * sc;   // (a straight back leg in a lunge is fine; past its length it drags; ANIM-POLISH: a step that would not move the foot is no step: a standing fidget used to tap one foot every 0.13 s)
           // (standing about, a foot left more than 5 cm off its stance for 0.4 s shuffles back into it)
           st.off = settle && d > 0.05 * sc ? (st.off || 0) + dt : 0;
           if (d > 1.2 * sc) st.P.set(_fp.x, groundY, _fp.z);                         // (placed somewhere else)
-          else if ((d > 0.12 * sc || far || st.off > 0.4) && (!other.stepping || d > 0.3 * sc || st.reach > 1.04)) {
-            st.stepping = true; st.u = 0; st.from.copy(st.P);
+          else if ((d > 0.12 * sc || far || st.off > 0.4 || turned || (settling && st.settleId !== this._settleId && d > 0.04 * sc) || (settle && st.dwell > 0.15 && Math.abs(wrap(yaw - st.yaw0)) > 0.35)) && (!other.stepping || d > 0.3 * sc || st.reach > 1.04)) {
+            st.stepping = true; st.u = 0; st.from.copy(st.P); st.yawFrom = st.yaw0; if (settling) st.settleId = this._settleId;
             st.dur = clamp(0.09 + d * 0.3, 0.1, 0.2); st.lift = Math.min(0.09, 0.03 + d * 0.15) * sc;
           } else st.P.y = groundY;
         }
@@ -493,13 +523,22 @@ export class Rig {
       const swing = wrap(Math.atan2(_v3.z, _v3.y) - Math.atan2(Lz, uy));
       const flat = -(j.body.rotation.x + swing + phi);
       hip.rotation.x += (swing - hip.rotation.x) * w; hip.rotation.z += (side - hip.rotation.z) * w;
+      {
+        // the foot keeps pointing the way it was put down while the body turns on the spot (a step turns it with the body)
+        const e = st.stepping ? st.u * st.u * (3 - 2 * st.u) : 0, fy = st.stepping ? st.yawFrom + wrap(yaw - st.yawFrom) * e : st.yaw0;
+        st.tw = damp(st.tw || 0, pivot || settle ? clamp(wrap(fy - yaw), -0.8, 0.8) : 0, 14, dt);
+        hip.rotation.y = st.tw * w;
+      }
       knee.rotation.x += (phi - knee.rotation.x) * w;
       foot.rotation.x += (flat - foot.rotation.x) * w;
     }
   }
 
   hitFlash() { this.flash = 1; }
-  land(strength = 1) { this.landT = 0.22 * strength; }
+  // a landing: `strength` 0.3 (a hop down a step) .. 1.2 (a long drop) sets how deep the knees take it and how long it lasts (0.22 s × strength, as before)
+  // (Hero: from the height he fell, not only the speed). A quick compression, a hold and a rebound that rises a little past
+  // standing, the arms out for balance. Kept as `landT` (the time left) for what read it before.
+  land(strength = 1) { this.landS = strength; this.landD = Math.max(0.1, 0.22 * strength); this.landT = this.landD; }
 
   _collectMats() {
     this._mats = [];
@@ -513,6 +552,34 @@ export class Rig {
     this._baseIntensity = this._mats.map((m) => m.emissiveIntensity);
   }
 
+  // (ANIM-POLISH) the body's weight, from the acceleration the controller gives (`accel`, m/s² along the facing): a lean that
+  // builds with a start (a run's more than a walk's) and tips back with a stop, ringing out in about a third of a second
+  // (ω 12 rad/s, ζ 0.55: one small overshoot), and a dip that takes the braking in the knees and rebounds a little past
+  // standing. The impulse is Δv, so the same lean at 30, 60 and 120 fps; sub-stepped so a long frame stays stable.
+  _leanSpring(dt) {
+    const S = this._ls ??= { x: 0, v: 0, d: 0, dv: 0 }, a = this.accel, n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, brake = Math.max(0, -a);
+    for (let i = 0; i < n; i++) {
+      S.v += (1.6 * a - 13.2 * S.v - 144 * S.x) * h; S.x += S.v * h;
+      S.dv += (6 * brake - 16 * S.dv - 256 * S.d) * h; S.d += S.dv * h;
+    }
+    this.lean = clamp(S.x, -0.3, 0.3); this.dip = clamp(S.d, -0.35, 1);
+  }
+
+  // (ANIM-POLISH) the player's body only. While a start, a stop or a gait switch is being blended (play), every target runs
+  // through a first filter before the joints' own easing: the two together start from rest, with no first-frame jump.
+  // Outside a blend the filter just follows the targets. `v` holds the scalar poses.
+  _xfade(dt, T, v) {
+    const X = this._xf;
+    if (X.t > 0) {
+      X.t -= dt; const k = 1 - Math.exp(-X.rate * dt);
+      for (const n of XF_KEYS) { const c = X.k[n] ?? T[n] ?? 0; T[n] = X.k[n] = c + ((T[n] ?? 0) - c) * k; }
+      for (const n of XF_VARS) { const c = X.k[n] ?? v[n]; v[n] = X.k[n] = c + (v[n] - c) * k; }
+    } else {
+      for (const n of XF_KEYS) X.k[n] = T[n] ?? 0;
+      for (const n of XF_VARS) X.k[n] = v[n];
+    }
+  }
+
   // speed is the real ground speed in m/s so the feet don't slide
   update(dt, speed = 0) {
     if (!(dt > 0)) return; // a negative step would make every damped joint diverge
@@ -521,6 +588,7 @@ export class Rig {
     this.actionT += dt;
     const a = this.anim;
     const T = {};
+    if (this.accel !== undefined) this._leanSpring(dt);
     let armOut = 0, hipsY = 0.95, bodyRotX = 0, torsoX = 0, torsoY = 0, torsoZ = 0, headX = 0, headY = 0, headZ = 0;
     // (ANIM-COMBAT: hipsZ carries the pelvis forward/back (× pelvis height / 0.95), hipsYaw turns it; T.outL / T.outR
     // spread one arm away from the body on top of armOut)
@@ -678,6 +746,18 @@ export class Rig {
         // arms out to the sides for balance rather than both straight up
         T.legL = up ? -0.55 : -0.3; T.legR = up ? -0.4 : -0.2; T.kneeL = up ? 1.0 : 0.5; T.kneeR = up ? 0.85 : 0.45;
         T.armL = up ? -1.3 : -0.9; T.armR = up ? -1.1 : -1.0; T.elL = -0.5; T.elR = -0.5; armOut = 0.7;
+      }
+      if (this.footPlant && up) {
+        // the push-off: the legs drive straight and the toes point for the first 0.12 s (the crouch's spring), then tuck
+        const x = Math.max(0, 1 - this.actionT / 0.12), e = x * x * (3 - 2 * x), m = (v, t) => v + (t - v) * e;
+        T.legL = m(T.legL, 0.05); T.legR = m(T.legR, -0.1); T.kneeL = m(T.kneeL, 0.08); T.kneeR = m(T.kneeR, 0.06);
+        T.footL = 0.6 * e; T.footR = 0.6 * e; hipsY = 0.95 + 0.025 * e; torsoX = m(torsoX, -0.04);
+      } else if (this.footPlant) {
+        // the ground is coming: the arms come down and out, the legs straighten and reach (a foot ahead, the toes down) to meet it
+        const r = clamp(1 - this.groundGap / 0.7, 0, 1), e = r * r * (3 - 2 * r), m = (v, t) => v + (t - v) * e;
+        T.armL = m(T.armL, -0.6); T.armR = m(T.armR, -0.6); armOut = m(armOut, 0.75);
+        T.legL = m(T.legL, -0.32); T.legR = m(T.legR, -0.12); T.kneeL = m(T.kneeL, 0.16); T.kneeR = m(T.kneeR, 0.12);
+        T.footL = 0.4 * e; T.footR = 0.4 * e; torsoX = m(torsoX, 0.06);
       }
     } else if (a === 'jet') {
       // riding Baldino's hop-pack (src/game/jetpack.js): legs together and a little bent, toes down, hands on the
@@ -844,11 +924,19 @@ export class Rig {
       T.legL = -1.4 * (1 - up); T.legR = -0.5 * (1 - up); T.kneeL = 2.0 * (1 - up); T.kneeR = 1.1 * (1 - up);
       T.armL = -0.6 * (1 - up); T.armR = 0.5 * (1 - up); torsoX = 0.6 * Math.sin(up * Math.PI);
     } else if (a === 'turnL' || a === 'turnR') {
-      // turning on the spot: a small step with the inside foot
+      // turning on the spot (the player: his feet stay where they stand and take a step each time the body is a third of a
+      // quarter-turn past them, Rig._plant; the head leads and the chest follows, see `turn` below). Others: a small shuffle
       const sgn = a === 'turnL' ? 1 : -1, w = Math.sin(this.actionT * 14);
-      T.legL = Math.max(0, w) * -0.35; T.legR = Math.max(0, -w) * -0.35;
-      T.kneeL = Math.max(0, w) * 0.6; T.kneeR = Math.max(0, -w) * 0.6;
-      torsoY = sgn * 0.15; headY = sgn * 0.3; T.armL = 0.05; T.armR = 0.05; T.elL = -0.2; T.elR = -0.2;
+      if (!this.footPlant) {
+        T.legL = Math.max(0, w) * -0.35; T.legR = Math.max(0, -w) * -0.35;
+        T.kneeL = Math.max(0, w) * 0.6; T.kneeR = Math.max(0, -w) * 0.6;
+        torsoY = sgn * 0.15; headY = sgn * 0.3;
+      } else {
+        const b = Math.sin(this.t * (Math.PI * 2 / (this.idlePeriod || 2.4)));
+        hipsY = 0.95 - 0.008 + b * 0.004; torsoX = 0.03; T.legL = 0.02; T.legR = -0.02; T.kneeL = 0.1; T.kneeR = 0.1;
+        T.armL = 0.1; T.armR = 0.1; T.elL = -0.3; T.elR = -0.3; armOut = 0.04;
+      }
+      T.armL ??= 0.05; T.armR ??= 0.05; T.elL ??= -0.2; T.elR ??= -0.2;
     } else if (a === 'hurt') {
       // recoil away from where the hit came from (hitDir: 0 = front, ±π/2 = sides, π = back)
       const hd = this.hitDir || 0, fx = Math.cos(hd), sx2 = Math.sin(hd);
@@ -905,11 +993,25 @@ export class Rig {
       if (g === 'start') { torsoX -= 0.08 * s; headX -= 0.1 * s; } // a small surprised straightening
     }
 
-    // landing squash
+    // landing: the compression is quick, held a moment, and comes back with a small rebound past standing (landS: how deep, from
+    // the height of the fall; landD: how long). Legs take it first, the chest folds over them, the arms spread for balance.
     if (this.landT > 0) {
-      this.landT -= dt;
-      const k = Math.max(0, this.landT / 0.22);
-      hipsY -= 0.16 * k; T.kneeL = (T.kneeL || 0) + 0.7 * k; T.kneeR = (T.kneeR || 0) + 0.7 * k; T.legL = (T.legL || 0) - 0.35 * k; T.legR = (T.legR || 0) - 0.35 * k; torsoX += 0.2 * k;
+      this.landT = Math.max(0, this.landT - dt);
+      const u = 1 - this.landT / this.landD, ts = 0.3, k = u < ts ? Math.sin((u / ts) * Math.PI / 2) : (1 - smooth((u - ts) / (1 - ts))) - 0.12 * Math.sin(Math.PI * (u - ts) / (1 - ts)) * (1 - u), L = this.landS;
+      hipsY -= 0.15 * L * k; T.kneeL = (T.kneeL || 0) + 0.65 * L * k; T.kneeR = (T.kneeR || 0) + 0.65 * L * k;
+      T.legL = (T.legL || 0) - 0.3 * L * k; T.legR = (T.legR || 0) - 0.3 * L * k; T.footL = (T.footL || 0) + 0.25 * L * k; T.footR = (T.footR || 0) + 0.25 * L * k;
+      torsoX += 0.2 * L * k; headX -= 0.08 * L * k; armOut += 0.3 * L * Math.max(0, k);
+      T.armL = (T.armL || 0) - 0.35 * L * k; T.armR = (T.armR || 0) - 0.35 * L * k;
+    }
+    // braking: the weight goes down into the knees (and a little back over them), then rebounds
+    if (this.dip && LOCO.has(a)) {
+      const d = this.dip;
+      hipsY -= 0.04 * d; T.kneeL = (T.kneeL || 0) + 0.3 * d; T.kneeR = (T.kneeR || 0) + 0.3 * d; T.legL = (T.legL || 0) - 0.12 * d; T.legR = (T.legR || 0) - 0.12 * d; torsoX += 0.05 * d;
+    }
+    if (this.footPlant && LOCO.has(a)) {
+      const v = { hipsY, torsoX, torsoY, torsoZ, headX, headY, headZ, armOut, hipsZ, bodyRotX };
+      this._xfade(dt, T, v);
+      ({ hipsY, torsoX, torsoY, torsoZ, headX, headY, headZ, armOut, hipsZ, bodyRotX } = v);
     }
     // the upper-body layer (see overlay)
     const O = this.over, walkTwist = torsoY;
@@ -938,7 +1040,7 @@ export class Rig {
     torsoX += this.lean;
     torsoZ += this.roll;
     // turning: the head leads, the chest follows, the pelvis comes last
-    if (this.turn) { headY += this.turn * 0.35; torsoY += this.turn * 0.12; }
+    if (this.turn) { const sp = a === 'turnL' || a === 'turnR' ? 1.6 : 1; headY += this.turn * 0.35 * sp; torsoY += this.turn * 0.12 * sp; }
 
     // head looks toward a point of interest (in body space)
     const look = this.lookAt || (a !== 'talk' && a !== 'listen' ? this.combatLook : null);   // (in a conversation he faces the speaker)
@@ -957,10 +1059,10 @@ export class Rig {
     // strikes track their poses tightly (lag ≈ 18 ms) so the blade crosses the target in the active frames
     this.blendT = Math.max(0, (this.blendT || 0) - dt);
     const ko = a === 'ko';
-    const R = ko ? 24 : STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : PUMP.has(a) ? 26 : this.blendT > 0 ? 8 : 16;
+    const R = ko ? 24 : STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : PUMP.has(a) ? 26 : a === 'jumpPrep' || (a === 'jump' && this.actionT < 0.15) || (this.landT > 0 && this.footPlant) ? 28 : this.blendT > 0 ? 8 : 16;
     // (a throw or a charge on the upper-body layer: the arms and the chest follow its keys as closely as a planted throw,
     // so the hand is where the keys put it when the ball leaves; the legs keep the walk's own rate)
-    const Ru = this.over ? Math.max(R, 55) : R;
+    const Ru = this.over ? Math.max(R, 55) : a === 'jumpPrep' || a === 'jump' ? Math.min(R, 18) : R;
     // (a knock-out follows its keys closely, but no joint ever turns faster than KO_HUMAN.maxRate: no pop from
     // whatever pose the blow interrupted)
     const lim = ko ? KO_HUMAN.maxRate * dt : Infinity;
@@ -1085,6 +1187,7 @@ const _white = new THREE.Color(1, 1, 1);
 // 0.5: push-off behind; 0.75: passing), in radians, measured on LBA2's walk (both legs averaged).
 // Arms are keyed on their own side's leg (forward while that leg is behind); bob and lean repeat every step.
 const D = Math.PI / 180;
+const STANCE = new Set(['legL', 'kneeL', 'footL', 'legR', 'kneeR', 'footR', 'hipsY', 'hipsZ']);
 // LBA2's action hop (ANIM.HQR 17, the hero's generic anim 11 in every behaviour): key times 0/160/320/440/520 ms,
 // over at 580 ms. Body height +369/-134/-148 units of 1238 (hipsY: 0.484 H per unit); angles in radians.
 const ACTION_KEYS = {
@@ -1255,7 +1358,7 @@ GUARD.glove = GUARD.fists;
 const STRIKES = {
   // sword 1: backhand, the blade from his left across to his right (MOVES.slash1 arc 1.25 → -1.15): it cocks over the
   // left shoulder with the chest turned left, then the chest unwinds and the elbow opens through the sweep
-  slash1: { guard: 'sword', u: [0, 0.7, 1, 1.5, 2, 2.4, 3],
+  slash1: { guard: 'sword', u: [0, 0.55, 0.76, 1.26, 1.76, 2.2, 3], uLeg: [0, 0.7, 1, 1.5, 2, 2.4, 3],
     armR: [-0.75, -1.45, -1.5, -1.5, -1.45, -1.25, -0.8], elR: [-0.85, -1.7, -1.55, -0.45, -0.15, -0.2, -0.8],
     outR: [0, -0.9, -0.85, -0.1, 0.6, 0.95, 0.1], twR: [0.2, 1.3, 1.3, 0.9, 0.5, 0.3, 0.2],
     armL: [-0.35, -0.5, -0.5, -0.45, -0.4, -0.4, -0.35], elL: [-1.2, -1.2, -1.2, -1.0, -0.9, -1.0, -1.2], outL: [0.3, 0.15, 0.2, 0.45, 0.6, 0.55, 0.3],
@@ -1263,7 +1366,7 @@ const STRIKES = {
     legL: [-0.2, -0.4, -0.42, -0.45, -0.45, -0.42, -0.3], kneeL: [0.12, 0.35, 0.3, 0.25, 0.28, 0.25, 0.15],
     legR: [0.16, 0.25, 0.28, 0.3, 0.32, 0.3, 0.22], hipsY: [0.925, 0.91, 0.9, 0.87, 0.87, 0.88, 0.91], hipsZ: [0, 0.04, 0.06, 0.12, 0.13, 0.11, 0.05] },
   // sword 2: forehand back the other way (arc -1.2 → 1.2): cocked out to the right behind the shoulder
-  slash2: { guard: 'sword', u: [0, 0.7, 1, 1.5, 2, 2.4, 3],
+  slash2: { guard: 'sword', u: [0, 0.55, 0.76, 1.26, 1.76, 2.2, 3], uLeg: [0, 0.7, 1, 1.5, 2, 2.4, 3],
     armR: [-0.8, -1.35, -1.4, -1.5, -1.45, -1.3, -0.8], elR: [-0.8, -1.4, -1.3, -0.35, -0.15, -0.3, -0.8],
     outR: [0.1, 0.95, 0.9, -0.05, -0.85, -1.0, 0], twR: [0.2, -0.9, -0.8, -0.2, 0.1, 0.3, 0.2],
     armL: [-0.4, -0.45, -0.45, -0.4, -0.45, -0.45, -0.35], elL: [-1.0, -1.1, -1.1, -1.1, -1.2, -1.2, -1.2], outL: [0.45, 0.55, 0.5, 0.3, 0.15, 0.15, 0.3],
@@ -1273,7 +1376,7 @@ const STRIKES = {
   // sword 3: overhead (arc ±0.3): both hands take the blade up behind the head, the front foot steps in, the chest bows
   // the blade down through the target and holds the weight of the blow a moment before it rises back (its arc is narrow,
   // so a target in front is hit early in the active frames: the blade comes through at u 1.25)
-  slash3: { guard: 'sword', u: [0, 0.75, 1, 1.25, 2, 2.35, 3],
+  slash3: { guard: 'sword', u: [0, 0.42, 0.62, 0.8, 2, 2.35, 3], uLeg: [0, 0.75, 1, 1.25, 2, 2.35, 3],
     armR: [-0.8, -2.85, -3.0, -1.75, -0.95, -0.7, -0.75], elR: [-0.8, -1.5, -1.6, -0.35, -0.15, -0.25, -0.85],
     outR: [0, 0.1, 0.1, 0, -0.1, -0.1, 0], twR: [0.2, 0, 0, 0.1, 0.2, 0.2, 0.2],
     armL: [-0.4, -2.4, -2.5, -1.5, -0.9, -0.7, -0.35], elL: [-1.2, -1.4, -1.45, -0.5, -0.3, -0.5, -1.2], outL: [0.3, -0.3, -0.3, -0.25, -0.15, 0, 0.3], twL: [0, 0, 0, 0, 0, 0, 0],
@@ -1282,7 +1385,7 @@ const STRIKES = {
     legL: [-0.3, -0.45, -0.5, -0.55, -0.55, -0.52, -0.3], kneeL: [0.15, 0.55, 0.45, 0.4, 0.5, 0.5, 0.15],
     legR: [0.22, 0.12, 0.12, 0.3, 0.35, 0.35, 0.22], hipsY: [0.91, 0.94, 0.94, 0.86, 0.82, 0.83, 0.91], hipsZ: [0.05, -0.03, -0.03, 0.13, 0.17, 0.16, 0.05] },
   // the heavy blow, released from heavyCharge's raised blade: a last hitch back, then down with the whole body
-  heavy: { guard: 'sword', u: [0, 1, 1.25, 2, 2.5, 3],
+  heavy: { guard: 'sword', u: [0, 0.55, 0.82, 2, 2.5, 3], uLeg: [0, 1, 1.25, 2, 2.5, 3],
     armR: [-2.95, -3.1, -1.6, -0.7, -0.6, -0.75], elR: [-1.55, -1.6, -0.3, -0.1, -0.2, -0.85], outR: [0.1, 0.1, 0, -0.1, -0.1, 0], twR: [0, 0, 0.1, 0.2, 0.2, 0.2],
     armL: [-2.4, -2.5, -1.4, -0.75, -0.6, -0.35], elL: [-1.4, -1.45, -0.45, -0.3, -0.45, -1.2], outL: [-0.25, -0.3, -0.25, -0.1, 0, 0.3], twL: [0, 0, 0, 0, 0, 0],
     torsoX: [-0.2, -0.25, 0.45, 0.7, 0.62, 0.1], torsoY: [-0.25, -0.28, -0.05, 0.05, 0.05, -0.15],
@@ -1293,14 +1396,14 @@ const STRIKES = {
   heavyCharge: { guard: 'sword', u: [0], armR: [-2.95], elR: [-1.55], outR: [0.1], twR: [0], armL: [-2.4], elL: [-1.4], outL: [-0.25], twL: [0],
     torsoX: [-0.2], torsoY: [-0.25], headX: [0.12], headY: [0.22], legL: [-0.35], kneeL: [0.1], legR: [0.25], hipsY: [0.9], hipsZ: [-0.06] },
   // fists 1: the right jab (the shoulder drives forward into it: the chest turns the right shoulder toward the target)
-  punch: { guard: 'fists', u: [0, 0.8, 1, 1.35, 2, 3], time: { s: 0.07, a: 0.08, r: 0.17 },
+  punch: { guard: 'fists', u: [0, 0.65, 0.85, 1.12, 2, 3], uLeg: [0, 0.8, 1, 1.35, 2, 3], time: { s: 0.07, a: 0.08, r: 0.17 },
     armR: [-0.55, -0.4, -0.45, -1.55, -1.5, -0.55], elR: [-1.75, -1.95, -1.9, -0.1, -0.15, -1.75], outR: [-0.08, -0.05, -0.05, -0.2, -0.2, -0.08], twR: [0.3, 0.4, 0.4, 0.1, 0.1, 0.3],
     armL: [-0.65, -0.7, -0.7, -0.7, -0.7, -0.65], elL: [-1.85, -1.9, -1.9, -1.95, -1.95, -1.85],
     torsoX: [0.1, 0.1, 0.1, 0.16, 0.15, 0.1], torsoY: [-0.15, -0.3, -0.3, 0.4, 0.35, -0.15], headY: [0.13, 0.25, 0.25, -0.33, -0.3, 0.13],
     legL: [-0.2, -0.35, -0.38, -0.4, -0.4, -0.25], kneeL: [0.12, 0.3, 0.25, 0.2, 0.2, 0.12], legR: [0.16, 0.2, 0.22, 0.28, 0.28, 0.2],
     hipsY: [0.925, 0.92, 0.915, 0.9, 0.9, 0.92], hipsZ: [0, 0.02, 0.03, 0.09, 0.09, 0.02] },
   // fists 2: the left (the leading) hand, the chest turning the other way
-  punch2: { guard: 'fists', u: [0, 0.8, 1, 1.35, 2, 3], time: { s: 0.07, a: 0.08, r: 0.18 },
+  punch2: { guard: 'fists', u: [0, 0.65, 0.85, 1.12, 2, 3], uLeg: [0, 0.8, 1, 1.35, 2, 3], time: { s: 0.07, a: 0.08, r: 0.18 },
     armL: [-0.65, -0.5, -0.55, -1.55, -1.5, -0.65], elL: [-1.85, -1.95, -1.9, -0.1, -0.15, -1.85], outL: [-0.08, -0.05, -0.05, -0.2, -0.2, -0.08], twL: [0.3, 0.4, 0.4, 0.1, 0.1, 0.3],
     armR: [-0.55, -0.6, -0.6, -0.6, -0.6, -0.55], elR: [-1.75, -1.9, -1.9, -1.95, -1.95, -1.75],
     torsoX: [0.1, 0.1, 0.1, 0.16, 0.15, 0.1], torsoY: [-0.15, 0.05, 0.05, -0.55, -0.5, -0.15], headY: [0.13, -0.05, -0.05, 0.45, 0.42, 0.13],
@@ -1309,7 +1412,7 @@ const STRIKES = {
   // fists 3: a front kick with the right leg: the knee comes up (chamber), the foot snaps out, the knee comes back and
   // the foot is put down; the body leans back over the standing leg and the arms balance. Kept low: the robe goes with
   // the leg (a higher kick would stretch it through).
-  kick: { guard: 'fists', u: [0, 0.85, 1, 1.5, 2, 2.45, 3], time: { s: 0.13, a: 0.1, r: 0.3 },
+  kick: { guard: 'fists', u: [0, 0.45, 0.62, 1.0, 1.7, 2.4, 3], time: { s: 0.13, a: 0.1, r: 0.3 },
     legR: [0.16, -0.7, -0.75, -1.1, -1.05, -0.55, 0.15], kneeR: [0.08, 1.15, 1.1, 0.12, 0.15, 0.85, 0.08], footR: [0, 0.35, 0.35, -0.15, -0.1, 0.3, 0],
     legL: [-0.2, -0.2, -0.2, -0.18, -0.18, -0.2, -0.2], kneeL: [0.12, 0.2, 0.2, 0.15, 0.15, 0.2, 0.12],
     torsoX: [0.1, -0.05, -0.1, -0.32, -0.3, -0.12, 0.1], torsoY: [-0.15, -0.1, -0.1, 0.1, 0.1, 0, -0.15],
