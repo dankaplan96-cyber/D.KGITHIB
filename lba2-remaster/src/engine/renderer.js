@@ -259,7 +259,7 @@ export class Renderer {
     const hiMs = pr >= 1.5 || (this.integrated && devicePixelRatio > 1 && pr > 1.05) ? 2 : 4;
     const ms = this.retro || (!this.knobs && this.quality === 'low') || this.aa === 'fxaa' || this.battery ? 0 : this.knobs ? Math.min(this.knobs.msaa, hiMs) : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : hiMs;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
-    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.knobs ? 'auto' : this.quality}/${this.aa}/${this.battery}/${!!this.composer}`;
+    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${this.battery}/${!!this.composer}`;
     if (key !== this._size) { this._size = key; this._want = { w, h, pr, ms }; }
     if (this.knobs) this.dyn = this.knobs.scale; else if (this.dyn < this.minDyn()) this.dyn = this.minDyn();
     this.applyScale();

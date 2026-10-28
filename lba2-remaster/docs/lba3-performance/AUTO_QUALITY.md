@@ -246,7 +246,48 @@ comparison. In the Auto run, look for:
 - At 2048 and 1024 the static shadow cache is used, as in Medium.
 - Arrivals can stay black for up to 3 extra frames (I-11, all qualities).
 
-## 10. Open issues (ranked)
+## 10. Tests (SwiftShader in this container; the logic only, not frame rates)
+
+- `node tests/autoquality.mjs` checks the governor on synthetic traces. Each simulated machine has its own "truth"
+  costs, deliberately different from the governor's model. **PASS 30/30.** It covers:
+  - ladder and label checks;
+  - room to spare: no step in 3 min;
+  - display plateaus at 17.7 and 19.2 ms with light work: no step down, with or without a timer query;
+  - GPU-bound: GPU ladder only, resolution first, ≥ 3 s apart, ends ≥ 55 fps and stable for 2 min;
+  - CPU-bound: CPU ladder, bloom first, resolution untouched;
+  - stalls of 550 and 160 ms plus heavy scene changes: no step;
+  - a 1.2 s burst: no step;
+  - heavy area then light: back to High, steps up ≥ 6 s apart and ≥ 20 s after the last step down;
+  - a marginal GPU over 15 min: ≤ 4 changes and none in the last 5 min;
+  - a step up that always fails: ≤ 6 tries in 20 min (backoff);
+  - commit queuing and commit;
+  - battery no-op steps;
+  - a 30 fps limit;
+  - no timer query;
+  - calibration estimates.
+- `tests/autoquality-game.mjs` checks the same in the game. **PASS 22/22.** It covers:
+  - a new player gets Auto;
+  - six migration cases;
+  - the Settings chips and line;
+  - Medium by hand is unchanged;
+  - Auto at its top is High exactly: every render setting and the street frame's draw calls;
+  - Auto at its Medium marks renders as Medium;
+  - steps reach the renderer;
+  - pause and scene-change commits;
+  - plug and unplug;
+  - battery no-ops;
+  - title calibration, start and cache;
+  - both benchmark modes.
+  A SwiftShader sample of the Auto report is written to `tests/out/autoquality-bench-auto.txt`.
+- `tests/menus.mjs`: PASS.
+- `tests/perfbudget.mjs ROUTES=street`:
+  - High: 233 calls (p95 257, shadow 56), 891k triangles, no new programs. PASS. PERF-HIGH's candidate was 228
+    (p95 254, shadow 56), 889k.
+  - Medium: 200 calls (p95 224, shadow 36), 446k. PASS. The base commit b1b0dff measured in the same session gave
+    196 (p95 228, shadow 36), 455k: the same preset, within the route's run-to-run spread.
+- `tests/drawcalls.mjs`: PASS.
+
+## 11. Open issues (ranked)
 
 1. **Hardware acceptance is pending.** Thresholds, cost factors and calibration margins are starting values. No GPU
    time or frame pacing was measured here.
