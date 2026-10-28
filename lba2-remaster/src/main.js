@@ -1989,7 +1989,7 @@ class Game {
           // Twinsen gestures when he speaks and turns to whoever else is talking
           const h = this.hero, sp = this.speaker;
           if (sp && sp !== h && sp.pos && h.distTo(sp) < 6) h.angle = dampAngle(h.angle, h.angleTo(sp), 5, dt);
-          h.rig.play(sp === h ? 'talk' : sp ? 'listen' : 'idle'); h.rig.update(dt, 0); h.sync();
+          h.syncSword(); h.rig.play(sp === h ? 'talk' : sp ? 'listen' : 'idle'); h.rig.update(dt, 0); h.sync();
         }
         for (const n of this.npcs) n.update(dt);
         for (const e of this.enemies) if (e.ko && !e.ko.done) e.ko.update(dt);   // (a fall in progress lands; nothing else moves)

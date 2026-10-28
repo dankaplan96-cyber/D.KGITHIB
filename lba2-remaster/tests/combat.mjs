@@ -499,6 +499,39 @@ check('fence: with a reachable enemy in the cone the aim takes it and the throw 
 check('fence: a drone just behind it is offered as the throw target only where the throw gets to it', r.drone.every((o) => o.throwT !== 'a_drone' || o.hurt), r.drone.map((o) => `${o.at[0] - 6189},${o.at[1]}: ${o.throwT}${o.hurt ? ' hurt' : ''}`).join(' | '));
 check('fence: the same drone in the open is the throw target, and the throw hits it', r.droneOpen.reaches && r.droneOpen.throwT === 'a_drone' && r.droneOpen.hurt, r.droneOpen);
 
+// 24. the sword is sheathed while he talks (a conversation, an NPC's chit-chat, a story reveal camera beat) and is
+// back in his hand when play resumes — also when the talk starts in the middle of a fight; the equipped weapon is
+// never changed (SMALL-FIXES, FINDINGS row 17)
+r = await ev(async () => {
+  const { G, E } = C; const h = G.hero, out = {};
+  C.only(['a_dummy'], [6194, 8], 0); h.hasSword = true; h.combat.equip('sword', true); C.step(0.2);
+  out.drawn = h.swordMesh?.visible;
+  // a talk in the middle of a fight: a swing is on, the dummy is at him
+  const d = C.put('a_dummy', 6194, 9.2, Math.PI); d.hp = d.maxHp;
+  C.press('KeyF'); C.step(0.1); out.fight = !!h.combat.busy;
+  let ended = 0; G.say('n_hero', ['one', 'two'], () => { ended++; });
+  C.step(0.3); out.talkState = G.state; out.talkVisible = h.swordMesh.visible; out.talkWeapon = h.weapon;
+  G.hud.advance(); C.step(0.2); out.line2 = G.state === 'dialog' && h.swordMesh.visible === false;
+  G.hud.advance(); C.step(0.05); out.after = G.state; out.endedCb = ended;
+  C.step(0.3); out.back = h.swordMesh.visible; out.weaponAfter = h.weapon;
+  // a reveal beat in play state: sheathed while it holds, drawn again once it is handed back
+  G.revealForce = true;
+  const { revealBeat } = await import('/src/game/story/revealcam.js');
+  const beat = revealBeat(G, { room: G.room?.id ?? null });
+  out.beat = !!beat;
+  if (beat) {
+    beat.room = G.room?.id;   // (the arena has no room: a beat made for 'none' would count as having lost its scene)
+    C.step(0.3); out.beatHidden = h.swordMesh.visible === false;
+    beat.release(0.3); C.step(0.1); out.releasedVisible = h.swordMesh.visible;
+    beat.end();
+  }
+  G.revealForce = false; C.step(0.2); out.final = h.swordMesh.visible;
+  return out;
+});
+check('sword: drawn in free play', r.drawn === true, r);
+check('sword: sheathed through a talk begun mid-swing (the weapon stays equipped), back the frame it ends', r.fight && r.talkState === 'dialog' && r.talkVisible === false && r.talkWeapon === 'sword' && r.line2 && r.endedCb === 1 && r.after === 'play' && r.back === true && r.weaponAfter === 'sword', r);
+check('sword: sheathed while a reveal camera beat holds, drawn again from its hand-back', r.beat && r.beatHidden && r.releasedVisible === true && r.final === true, r);
+
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);
