@@ -13,7 +13,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
 from mathutils import Vector  # noqa: E402
-from lbapoly import Builder, Part, box, disc, hand_detail, loft, lerp, mouth_lens, ring, smooth, sphere, strip, strip_tris, tube  # noqa: E402
+from lbapoly import Builder, Part, box, disc, hand_detail, loft, lerp, mouth_lens, refine, ring, smooth, sphere, strip, strip_tris, tube  # noqa: E402
 
 args = [a for a in sys.argv[1:] if not a.endswith('.py')]
 SKEL, OUTDIR = args[0], args[1]
@@ -31,6 +31,10 @@ TW_HEAD = [
     (0.950, [(0, 0.08), (0.04, 0.072), (0.054, 0.05), (0.05, 0.02), (0.02, 0.0), (0, -0.005)]),
 ]
 TW_Y0, TW_Y1, TW_W, TW_Z0, TW_Z1 = 0.799, 0.956, 0.077, -0.026, 0.153
+# CAST-UNIFORM (WORKLIST #40): the sections round the big round masses (the finish standard, docs/character-review.md):
+# a robe or coat that is round (a mole's, an elf's, a trooper's: Twinsen's cape and robe have 24), a Grobo's body (a metre
+# across) and its ear flaps
+BODY_N, BLOB_N, EAR_N = 20, 20, 24
 
 
 def shade(hexc, k):
@@ -177,7 +181,7 @@ def build(name):
     waistY = hipsY + 0.05
     chestY = shY - 0.11
     zc = lambda y: stoop * 0.5 * smooth(waistY, neckY, y)  # the stoop leans the chest forward
-    N = 12
+    N = 12   # (the tunic's rounded box, LBA2's townsfolk's: its flat front and corners are the design; finer, the apron and pockets laid on it sink in)
 
     def w_torso(p):
         x, y, z = p
@@ -196,14 +200,22 @@ def build(name):
         bodyR = [(kn_ + 0.02, 0.26, 0.2, -0.17), (kn_ + 0.1, 0.4, 0.34, -0.28), (hipsY - 0.12, 0.48, 0.44, -0.36), (hipsY + 0.05, 0.5, 0.48, -0.38),
                  (hipsY + 0.3, 0.46, 0.45, -0.34), (shY - 0.08, 0.4, 0.38, -0.28), (shY + 0.06, 0.3, 0.29, -0.21), (neckY + 0.04, 0.16, 0.18, -0.12)]
         bl = b.P('_blob', tunic, w_blob, 50)
-        loft(bl, [ring(y, hw * slim, zf + belly, zb, 16, 0.7) for y, hw, zf, zb in bodyR], cap_bottom=True, cap_top=True)
+        bodyR = refine(bodyR, (0, 1, 2, 5, 6))   # (CAST-UNIFORM: the round bottom and shoulders, a section between each)
+        loft(bl, [ring(y, hw * slim, zf + belly, zb, BLOB_N, 0.7) for y, hw, zf, zb in bodyR], cap_bottom=True, cap_top=True)
         b.parts.remove(bl)
         cut = hipsY - 0.06 - (0.06 if hemY < 0.5 else 0)   # (the coat's hem; the trousers below)
         sel = [sum(bl.v[i][1] for i in f) / len(f) < cut for f in bl.f]
         b.P('coat', tunic, w_blob, 50).add(bl.v, [f for f, v in zip(bl.f, sel) if not v])
         b.P('trousers', L.get('pants', '#555555'), w_blob, 50).add(bl.v, [f for f, v in zip(bl.f, sel) if v])
         if L.get('belt'):
-            loft(b.P('belt', L['belt'], w_blob, 50), [ring(cut - 0.004, 0.495 * slim, 0.475 + belly, -0.376, 16, 0.7), ring(cut + 0.05, 0.5 * slim, 0.481 + belly, -0.381, 16, 0.7)])
+            def blob_at(y):   # (CAST-UNIFORM: the body's section at y as the loft draws it, so the belt sits just proud of it)
+                for (ya, *sa), (yb, *sb) in zip(bodyR, bodyR[1:]):
+                    if ya <= y <= yb:
+                        t = (y - ya) / (yb - ya)
+                        return [u + (v - u) * t for u, v in zip(sa, sb)]
+                return bodyR[-1][1:]
+            loft(b.P('belt', L['belt'], w_blob, 50), [ring(y_, max(hw_ * 1.012, hw0) * slim, max(zf_ * 1.012, zf0) + belly, min(zb_ * 1.012, zb0), BLOB_N, 0.7)
+                                                      for y_, hw0, zf0, zb0 in ((cut - 0.004, 0.495, 0.475, -0.376), (cut + 0.05, 0.5, 0.481, -0.381)) for hw_, zf_, zb_ in [blob_at(y_)]])
     else:
         gown = outfit == 'gown'  # (LBA2's Zoé: a fitted red outfit, deep V neckline, bare arms, the legs separate)
         torso = b.P('torso', skin if gown else tunic, w_torso, 50)
@@ -303,7 +315,7 @@ def build(name):
                 for ra, rb in zip(rings, rings[1:]):
                     if ra[0][1] >= y >= rb[0][1]:
                         t = (ra[0][1] - y) / ((ra[0][1] - rb[0][1]) or 1)
-                        zf, hw_ = ra[0][2] + (rb[0][2] - ra[0][2]) * t, ra[3][0] + (rb[3][0] - ra[3][0]) * t
+                        zf, hw_ = ra[0][2] + (rb[0][2] - ra[0][2]) * t, ra[N // 4][0] + (rb[N // 4][0] - ra[N // 4][0]) * t
                         s_ = min(0.98, (abs(x) / (hw_ or 1)) ** (1 / 0.72))
                         return zf * (1 - s_ * s_) ** (0.5 * 0.72)
                 return rings[0][0][2]
@@ -414,7 +426,7 @@ def build(name):
         if cp.get('boots') and not grobo:   # (CAST-POLISH: boots to the calf over the trousers)
             tube(b.P('boot' + s, shoes, 'knee' + s, 40), (kn[0], ft[1] + cp['boots'], kn[2] + (ft[2] - kn[2]) * (1 - cp['boots'] / max(0.05, kn[1] - ft[1]))), (ft[0], ft[1] + 0.02, ft[2]), r2 * 1.25, r2 * 1.12, 8)
         fx, fl, fh = (0.07 if grobo else 0.05) * slim, (0.2 if bunny else 0.15 if grobo else 0.13), (0.09 if grobo else 0.07)
-        shoe = b.P('shoe' + s, shoes, 'foot' + s, 35)
+        shoe = b.P('shoe' + s, shoes, 'foot' + s, 45)   # (CAST-UNIFORM: Twinsen's slipper's crease angle, was 35)
         if grobo:
             sphere(shoe, (ft[0], 0.06, ft[2] + 0.03), 0.12, 8, 5, (1, 0.6, 1.2))
         else:
@@ -461,9 +473,9 @@ def build(name):
         sphere(hp_, hc_, hr, 9, 6)
         hand_detail(hp_, hc_, hr, sx, bunny=bunny, grobo=grobo)
         # the shoulder: flush with the sleeve, where it meets the body
-        sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.015, sh[1] + 0.01, sh[2]), ra * 1.06, 9, 6, (1.0, 0.8, 1.0))
+        sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.015, sh[1] + 0.01, sh[2]), ra * 1.06, 9, 6, (1.0, 0.8, 1.0), exact=True)   # (its cap shows)
         if cp.get('epaulette'):   # (CAST-POLISH: a shoulder piece on the guards' coats)
-            sphere(b.P('epaulette', cp['epaulette'], 'sh' + s, 40), (sh[0] - sx * 0.012, sh[1] + 0.036, sh[2]), ra * 1.3, 9, 5, (1.3, 0.42, 1.2))
+            sphere(b.P('epaulette', cp['epaulette'], 'sh' + s, 40), (sh[0] - sx * 0.012, sh[1] + 0.036, sh[2]), ra * 1.3, 9, 5, (1.3, 0.42, 1.2), exact=True)   # (a flat cushion on the shoulder ball)
         if L.get('brace') and s == 'R':
             tube(b.P('brace', '#c89a48', 'el' + s, 30), lerp(el, hd, 0.35), lerp(el, hd, 0.6), ra * 1.18, ra * 1.12, 8)
 
@@ -833,8 +845,8 @@ def build(name):
         # shallower dish in the inner colour (CAST-POLISH: the flat discs read as loudspeakers); CAST earTurn / earS
         eturn, eS = cp.get('earTurn', 0.3), cp.get('earS', 1.0)
         outline = []
-        for k in range(14):
-            t = 2 * math.pi * k / 14
+        for k in range(EAR_N):
+            t = 2 * math.pi * k / EAR_N
             px = math.cos(t) * R * 0.98 * eS * (1.0 + 0.1 * math.sin(t))
             py = math.sin(t) * R * (1.12 if math.sin(t) < 0 else 0.92) * eS
             outline.append((px, py))
@@ -867,7 +879,7 @@ def build(name):
         b.mouth((0.0, gcy, mp_[2]), [(lens_[0], cp.get('lip', '#5a2a30')), (lens_[1], cp.get('lip', '#5a2a30'))], rest=0.34, drop=-0.35 * mhh, tilt=mt_)
         sphere(tr, (0, pts[-1][1] - 0.012, pts[-1][2] + 0.012), 0.047, 7, 5, (1.0, 1.0, 1.25))
         for i in (2, 3):
-            sphere(tr, pts[i], rad[i] * 1.12, 8, 5, (1.0, 0.45, 1.0))
+            sphere(tr, pts[i], rad[i] * 1.12, 8, 5, (1.0, 0.45, 1.0), exact=True)   # (rings round the trunk: their rim shows)
         if L.get('hat'):
             hs_ = cp.get('hatStyle', 'brim')
             ht = b.P('hat', L['hat'], head_w, 40)
@@ -903,7 +915,7 @@ def build(name):
         if L.get('helmet'):
             hm = b.P('helmet', L['helmet'], head_w, 45)
             # (CAST-POLISH: the dome stops above the mouth, the dark visor across the eyes, the face's lower half and its smile show)
-            sphere(hm, (0, c[1] + R * 0.22, c[2] - 0.01), R * 1.06, 12, 7, (1.0, 0.8, 1.1))
+            sphere(hm, (0, c[1] + R * 0.22, c[2] - 0.01), R * 1.06, 12, 7, (1.0, 0.8, 1.1), exact=True)   # (its cut edge sits over the visor and rim as drawn)
             hm.f = [f for f in hm.f if sum(hm.v[i][1] for i in f) / len(f) > c[1] + R * 0.08]
             rim_r = R * 1.06 * math.sqrt(max(0.05, 1 - ((R * 0.08 - R * 0.22) / (R * 1.06 * 0.8)) ** 2))
             tube(b.P('helmRim', cp.get('trim') or '#c8a050', head_w, 30), (0, c[1] + R * 0.06, c[2] - 0.01), (0, c[1] + R * 0.14, c[2] - 0.01), rim_r * 1.0, rim_r * 1.0, 14, cap=False)
@@ -1109,7 +1121,7 @@ def limb_legs(b, bp, color, shoe, r1, r2, foot_len, foot_w, top=None, ZH=2.0):
         ff = [[j * 8 + i, j * 8 + (i + 1) % 8, (j + 1) * 8 + (i + 1) % 8, (j + 1) * 8 + i] for j in range(len(rr) - 1) for i in range(8)]
         vv.append(tuple(sum(q[k] for q in rr[0]) / 8 for k in range(3)))
         ff += [[(i + 1) % 8, i, len(vv) - 1] for i in range(8)]
-        b.P('foot' + s, shoe, 'foot' + s, 40).add(vv, ff)
+        b.P('foot' + s, shoe, 'foot' + s, 50).add(vv, ff)   # (CAST-UNIFORM: smooth like Twinsen's slipper, was 40)
 
 
 def face_dots(b, front, ey, ex, w, h, white, iris):
@@ -1318,7 +1330,7 @@ def build_bee(name):
     R = 0.115 * H * (L.get('belly', 0) * 2 + 1)
     ys = [0.29, 0.31, 0.36, 0.45, 0.55, 0.64, 0.69, 0.71]
     ks = [0.25, 0.6, 0.88, 1.0, 0.97, 0.75, 0.42, 0.12]
-    rings = [ell(y * H, R * k, R * k * 0.95, 12, cz=-0.01 * H) for y, k in zip(ys, ks)]
+    rings = [ell(y * H, R * k, R * k * 0.95, 16, cz=-0.01 * H) for y, k in zip(ys, ks)]
     bands = [(0.35 * H, body)]
     if L.get('stripes', True):
         bands += [(0.41 * H, stripe), (0.47 * H, body), (0.53 * H, stripe), (9e9, body)]
@@ -1451,7 +1463,7 @@ def build_mole(name):
         k = smooth(hipsY - 0.1, hipsY + 0.25, y)
         return {kk: v for kk, v in (('hips', 1 - k), ('torso', k * (1 - hd)), ('head', k * hd)) if v > 0}
     secs = [(0.24, 0.17, 0.14), (0.26, 0.19, 0.16), (0.30, 0.19, 0.16), (0.4, 0.19, 0.16), (0.56, 0.185, 0.155), (0.65, 0.172, 0.15), (0.74, 0.15, 0.14), (0.82, 0.12, 0.12), (0.88, 0.08, 0.09), (0.92, 0.03, 0.04)]
-    rings = [ring(y * H, hw * H, zf * H, -zf * H, 14, 0.8) for y, hw, zf in secs]
+    rings = [ring(y * H, hw * H, zf * H, -zf * H, BODY_N, 0.8) for y, hw, zf in secs]
     trimc = cp.get('trim') or (shade(apron, 0.78) if apron else shade(robe, 1.7))
     bands = [(0.30 * H, trimc), (0.4 * H, apron), (9e9, robe)] if apron else [(0.30 * H, trimc), (9e9, robe)]
     banded(b, 'robe', rings, bands, w_b, cap0=True, cap1=True)
@@ -1465,7 +1477,7 @@ def build_mole(name):
                     t = (yy / H - ya) / (yb - ya)
                     hw, zf = wa + (wb - wa) * t, za + (zb_ - za) * t
                     break
-            rr.append(ring(yy, hw * H * k, zf * H * k, -zf * H * k, 14, 0.8))
+            rr.append(ring(yy, hw * H * k, zf * H * k, -zf * H * k, BODY_N, 0.8))
         loft(b.P(nm, col, w_b, 50), rr)
     band('collar', trimc, 0.79 * H, 0.83 * H, 1.05)
     if not apron:   # a belt with a brass buckle
@@ -1602,7 +1614,7 @@ def build_tri(name):
         k = smooth(hipsY - 0.05, hipsY + 0.15, p[1])
         return {'hips': 1 - k, 'torso': k}
     secs = [(0.40, 0.065, 0.04, -0.04), (0.47, 0.062, 0.045, -0.04), (0.52, 0.065, 0.05, -0.042), (0.58, 0.1, 0.06, -0.05), (0.65, 0.128, 0.064, -0.05), (0.71, 0.13, 0.06, -0.045), (0.735, 0.08, 0.04, -0.03)]
-    rings = [ring(y * H, hw * H, zf * H, zb * H, 12, 0.7) for y, hw, zf, zb in secs]
+    rings = [ring(y * H, hw * H, zf * H, zb * H, 16, 0.7) for y, hw, zf, zb in secs]
     banded(b, 'suit', rings, [(0.45 * H, pants), (9e9, suit)], w_t)
     sec4 = [(y * H, hw * H, zf * H, zb * H) for y, hw, zf, zb in secs]
     sz = lambda x, y: ring_z(sec4, 0.7, x, y)
@@ -1638,16 +1650,16 @@ def build_tri(name):
             if a[0] <= yy / H <= c[0]:
                 t = (yy / H - a[0]) / (c[0] - a[0])
                 return tuple((a[k] + (c[k] - a[k]) * t) * H for k in (1, 2, 3))
-    bl = [ring(y_, *(v * 1.035 for v in at4(y_)), 12, 0.7) for y_ in (0.443 * H, 0.462 * H)]
+    bl = [ring(y_, *(v * 1.035 for v in at4(y_)), 16, 0.7) for y_ in (0.443 * H, 0.462 * H)]
     loft(b.P('belt', shade(pants, 0.55), w_t, 50), bl)
     box(b.P('buckle', '#c8a050', w_t, 30), -0.012 * H, 0.012 * H, 0.443 * H, 0.462 * H, sz(0, 0.45 * H) + 0.003 * H, sz(0, 0.45 * H) + 0.009 * H)
     tube(b.P('neck', skin, lambda p: {'neck': 1 - smooth(neckY, headY + 0.05, p[1]), 'head': smooth(neckY, headY + 0.05, p[1])}, 50), (0, 0.72 * H, 0), (0, 0.79 * H, 0.01 * H), 0.03 * H, 0.028 * H, 8)
     # the head: sections from the chin up (y, half-width, front, back), the ears' points at the widest
     hs = [(0.70, 0.004, 0.13, 0.11), (0.74, 0.04, 0.135, 0.0), (0.79, 0.07, 0.135, -0.02), (0.84, 0.092, 0.14, -0.035), (0.885, 0.1, 0.125, -0.05), (0.93, 0.08, 0.105, -0.058), (0.975, 0.078, 0.09, -0.05)]
-    hr = [ring(y * H, hw * H, zf * H, zb * H, 12, 0.55) for y, hw, zf, zb in hs]
+    hr = [ring(y * H, hw * H, zf * H, zb * H, 16, 0.55) for y, hw, zf, zb in hs]
     hp_ = b.P('head', skin, 'head', 40)
     loft(hp_, hr, cap_bottom=True)
-    loft(b.P('hair', hair, 'head', 40), [ring(0.972 * H, 0.08 * H, 0.092 * H, -0.052 * H, 12, 0.55), ring(1.0 * H, 0.078 * H, 0.088 * H, -0.05 * H, 12, 0.55)], cap_top=True)
+    loft(b.P('hair', hair, 'head', 40), [ring(0.972 * H, 0.08 * H, 0.092 * H, -0.052 * H, 16, 0.55), ring(1.0 * H, 0.078 * H, 0.088 * H, -0.05 * H, 16, 0.55)], cap_top=True)
     for sxx in (1, -1):   # the ears: flat points out of the cheekbones, an inner shade
         ear = b.P('ear', skin, 'head', 30)
         ear.add([(sxx * 0.09 * H, 0.86 * H, 0.03 * H), (sxx * 0.09 * H, 0.91 * H, 0.0), (sxx * 0.15 * H, 0.93 * H, -0.01 * H)], [[0, 1, 2] if sxx > 0 else [2, 1, 0]])
@@ -1757,13 +1769,13 @@ def build_vesk(name):
     # pauldrons: angular brass plates on the shoulders
     for s_, sx in (('L', 1), ('R', -1)):
         sh = bp('sh' + s_)
-        sphere(b.P('pauldron' + s_, brass, 'sh' + s_, 25), (sh[0] + sx * 0.02, sh[1] + 0.03, sh[2]), 0.11, 6, 4, (1.15, 0.55, 1.05))
+        sphere(b.P('pauldron' + s_, brass, 'sh' + s_, 25), (sh[0] + sx * 0.02, sh[1] + 0.03, sh[2]), 0.11, 6, 4, (1.15, 0.55, 1.05), hard=True)   # (CAST-UNIFORM: brass armour, faceted on purpose)
     # arms: coat sleeves; the left hand a grey-violet ball, the right forearm a brass gauntlet with claws
     for s_, sx in (('L', 1), ('R', -1)):
         sh, el, hd = bp('sh' + s_), bp('el' + s_), bp('hand' + s_)
         tube(b.P('upper' + s_, coat, lambda p, s_=s_, e=el[1]: {'sh' + s_: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s_: smooth(e + 0.06, e - 0.04, p[1])}, 50), (sh[0], sh[1] + 0.02, sh[2]), el, 0.065, 0.058, 8)
         if s_ == 'R':
-            tube(b.P('gauntlet', brass, 'el' + s_, 30), el, lerp(el, hd, 0.95), 0.085, 0.075, 7)
+            tube(b.P('gauntlet', brass, 'el' + s_, 30), el, lerp(el, hd, 0.95), 0.085, 0.075, 7, hard=True)
             for k in (-1, 0, 1):
                 tube(b.P('claw', '#8a6a3a', 'hand' + s_, 30), (hd[0] + k * 0.03, hd[1], hd[2] + 0.02), (hd[0] + k * 0.035, hd[1] - 0.13, hd[2] + 0.07), 0.018, 0.004, 5)
             sphere(b.P('gauntletLight', glow, 'el' + s_, 60), lerp(el, hd, 0.5)[:2] + (lerp(el, hd, 0.5)[2] + 0.08,), 0.022, 6, 4)
@@ -1817,7 +1829,7 @@ def build_vesk(name):
     for y_ in (0.18, 0.4, 0.62, 0.84):
         facet(b.P('button', brass, w_coat, 30), (0, y_, cz(0, y_) + 0.007), (0, 0, 1), 0.016, 6)
     hl_ = bp('handL'); el_ = bp('elL')
-    tube(b.P('cuffL', brass, 'elL', 30), lerp(el_, hl_, 0.74), lerp(el_, hl_, 0.88), 0.07, 0.068, 8)
+    tube(b.P('cuffL', brass, 'elL', 30), lerp(el_, hl_, 0.74), lerp(el_, hl_, 0.88), 0.07, 0.068, 8, hard=True)
     os.makedirs(OUTDIR, exist_ok=True)
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
     print(name, 'tris', tris)
@@ -1847,9 +1859,9 @@ def build_elf(name):
     st = L.get('stout', 1.0)   # (Ker'aooc, after body 188: a broad round body)
     if st != 1.0:
         secs = [(y, hw * (st if i < len(secs) - 1 else 1), zf * (st if i < len(secs) - 1 else 1), zb * (st if i < len(secs) - 1 else 1)) for i, (y, hw, zf, zb) in enumerate(secs)]
-    loft(b.P('tunic', green, w_t, 50), [ring(y, hw, zf, zb, 14, 0.75) for y, hw, zf, zb in secs], cap_top=True)
-    loft(b.P('belt', L.get('belt', '#3a2a1a'), 'torso', 50), [ring(hipsY + 0.02, 0.155 * st, 0.135 * st, -0.125 * st, 14, 0.75), ring(hipsY + 0.07, 0.155 * st, 0.135 * st, -0.125 * st, 14, 0.75)])
-    loft(b.P('hem', dark, w_t, 50), [ring(kn + 0.05, 0.253 * st, 0.203 * st, -0.193 * st, 14, 0.75), ring(kn + 0.1, 0.24 * st, 0.19 * st, -0.18 * st, 14, 0.75)])
+    loft(b.P('tunic', green, w_t, 50), [ring(y, hw, zf, zb, BODY_N, 0.75) for y, hw, zf, zb in secs], cap_top=True)
+    loft(b.P('belt', L.get('belt', '#3a2a1a'), 'torso', 50), [ring(hipsY + 0.02, 0.155 * st, 0.135 * st, -0.125 * st, BODY_N, 0.75), ring(hipsY + 0.07, 0.155 * st, 0.135 * st, -0.125 * st, BODY_N, 0.75)])
+    loft(b.P('hem', dark, w_t, 50), [ring(kn + 0.05, 0.253 * st, 0.203 * st, -0.193 * st, BODY_N, 0.75), ring(kn + 0.1, 0.24 * st, 0.19 * st, -0.18 * st, BODY_N, 0.75)])
     for s_, sx in (('L', 1), ('R', -1)):
         hp, k_, ft = bp('hip' + s_), bp('knee' + s_), bp('foot' + s_)
         tube(b.P('thigh' + s_, legs, lambda p, s_=s_, k=k_[1]: {'hip' + s_: 1 - smooth(k + 0.06, k - 0.04, p[1]), 'knee' + s_: smooth(k + 0.06, k - 0.04, p[1])}, 50), hp, k_, 0.055, 0.05, 8)
@@ -1932,9 +1944,9 @@ def build_fclone(name):
             return {kk: v for kk, v in (('hips', 1 - leg), ('hipL', leg * l), ('hipR', leg * (1 - l))) if v > 1e-4}
         return {kk: v for kk, v in (('hips', 1 - k), ('torso', k)) if v > 0}
     secs = [(75, 262, 240), (190, 285, 262), (330, 290, 268), (480, 278, 258), (620, 250, 232), (760, 205, 190), (860, 158, 145), (930, 105, 98), (958, 70, 70)]
-    loft(b.P('coat', coat, w_coat, 40), [ell(y * u, rx * u, rz * u, 16, cz=10 * u) for y, rx, rz in secs], cap_top=True, cap_bottom=True)
+    loft(b.P('coat', coat, w_coat, 40), [ell(y * u, rx * u, rz * u, BODY_N, cz=10 * u) for y, rx, rz in secs], cap_top=True, cap_bottom=True)
     # the belt and buckle, two straps crossing the chest
-    loft(b.P('belt', red, 'torso', 40), [ell(530 * u, 281 * u, 261 * u, 16, cz=10 * u), ell(585 * u, 280 * u, 260 * u, 16, cz=10 * u)])
+    loft(b.P('belt', red, 'torso', 40), [ell(530 * u, 281 * u, 261 * u, BODY_N, cz=10 * u), ell(585 * u, 280 * u, 260 * u, BODY_N, cz=10 * u)])
     box(b.P('buckle', '#070b17', 'torso', 40), -56 * u, 56 * u, 520 * u, 595 * u, 268 * u, 285 * u)
     for sx in (1, -1):
         tube(b.P('strap', red, 'torso', 40), (sx * 110 * u, 900 * u, 125 * u), (sx * 165 * u, 590 * u, 250 * u), 18 * u, 18 * u, 5, squash=0.4)
