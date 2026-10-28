@@ -115,8 +115,11 @@ export class GpuTimer {
   constructor(gl, ext) { this.gl = gl; this.ext = ext; this.free = []; this.frames = []; this.f = null; this.cur = null; this.ms = []; this.pass = new Map(); }
   // a frame's time is measured pass by pass (queries can't nest): mark(label) closes the running query and opens one
   // for `label`; the frame's total is their sum. Labels: shadow map, scene (main view), bloom, output, fxaa, retro.
+  // (AUTO-QUALITY: in play the governor reads every `stride`-th frame (onFrame(ms) as each result comes in); the
+  //  benchmark measures every frame)
   begin(label = 'scene') {
     if (this.f || this.frames.length > 6) return;
+    if (this.stride > 1 && ((this.k = (this.k || 0) + 1) % this.stride)) return;
     this.f = { q: [] }; this.mark(label);
   }
   mark(label) {
@@ -141,6 +144,7 @@ export class GpuTimer {
       let tot = 0;
       for (const [label, q] of F.q) { const ms = gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6; by[label] = (by[label] || 0) + ms; tot += ms; this.free.push(q); }
       if (disjoint) { this.disjoint = (this.disjoint || 0) + 1; continue; }   // (PERF-HIGH: counted: a GPU power-state change)
+      this.onFrame?.(tot);
       this.ms.push(tot); if (this.ms.length > 1200) this.ms.shift();
       for (const [label, ms] of Object.entries(by)) { let a = this.pass.get(label); if (!a) this.pass.set(label, (a = [])); a.push(ms); if (a.length > 1200) a.shift(); }
     }

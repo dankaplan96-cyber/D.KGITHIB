@@ -11,4 +11,6 @@ contextBridge.exposeInMainWorld('desktop', {
   onWindow: (cb) => { ipcRenderer.on('lba3:window', (e, st) => cb(st)); },
   // PERF-HIGH: the display's refresh rate as the OS reports it, the window's state, Chromium's GPU feature status (benchmark)
   display: () => { try { return ipcRenderer.sendSync('lba3:display'); } catch { return null; } },
+  // AUTO-QUALITY: the processor's name, its logical cores and the memory (the quality cache's key, the benchmark's report)
+  sysinfo: () => { try { return ipcRenderer.sendSync('lba3:sysinfo'); } catch { return null; } },
 });

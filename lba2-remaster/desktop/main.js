@@ -7,6 +7,7 @@
 //   Linux    ~/.config/LBA3 The Awakening
 const { app, BrowserWindow, protocol, ipcMain, Menu, shell, powerMonitor, screen } = require('electron');
 const path = require('node:path');
+const os = require('node:os');
 const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
 
@@ -97,6 +98,10 @@ app.whenReady().then(() => {
       const w = BrowserWindow.fromWebContents(e.sender), d = w ? screen.getDisplayMatching(w.getBounds()) : screen.getPrimaryDisplay();
       e.returnValue = { hz: d.displayFrequency, size: `${d.size.width}x${d.size.height}`, scale: d.scaleFactor, fullscreen: !!w?.isFullScreen(), focused: !!w?.isFocused(), gpu: app.getGPUFeatureStatus() };
     } catch (err) { e.returnValue = { error: String(err) }; }
+  });
+  // AUTO-QUALITY: the processor and memory, for Quality Auto's per-machine cache and the benchmark's report
+  ipcMain.on('lba3:sysinfo', (e) => {
+    try { const c = os.cpus(); e.returnValue = { cpu: (c[0]?.model || '?').trim().replace(/\s+/g, ' '), cores: c.length, memGB: +(os.totalmem() / 1073741824).toFixed(1) }; } catch (err) { e.returnValue = null; }
   });
   ipcMain.on('lba3:quit', () => app.quit());
   ipcMain.on('lba3:fullscreen', (e, on) => { const w = BrowserWindow.fromWebContents(e.sender); w?.setFullScreen(on ?? !w.isFullScreen()); });

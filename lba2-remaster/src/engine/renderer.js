@@ -130,10 +130,25 @@ export class Renderer {
     // 0.5 (Medium/High; 0.6 otherwise). The user's Vega 8 on battery measured these on Medium's street: shadow filter
     // basic −4.4 ms, no MSAA −5.3 ms of 37 (laptop-build206-battery.txt). Low is unchanged (none of them is on there).
     this.battery = false;
+    // AUTO-QUALITY (engine/autoquality.js): Quality Auto sets the picture knob by knob: { scale, bloom, filter: 'soft' |
+    // 'pcf', msaa: 4 | 2 | 0, shadows: 1 | 0 } here (the shadow map's size, the lamps, the vegetation and the small
+    // casters are set where they live). null: a preset chosen by hand, exactly as before. With knobs, the pixel ratio is
+    // High's and the automatic resolution's factor is the governor's `scale` (adapt() stands aside).
+    this.knobs = null;
   }
   setBattery(on) { on = !!on; if (on === this.battery) return false; this.battery = on; this.applyDerived(); this.resize(); return true; }
+  // AUTO-QUALITY: the governor's knobs (null: back to the preset)
+  setKnobs(K) {
+    const k = K ? { scale: K.scale, bloom: K.bloom, filter: K.filter, msaa: K.msaa, shadows: K.shadows } : null;
+    if (JSON.stringify(k) === JSON.stringify(this.knobs)) return false;
+    this.knobs = k;
+    if (k) this.dyn = k.scale;
+    this.applyDerived(); this.resize();
+    return true;
+  }
+  shadowsOn() { return !this.retro && (this.knobs ? !!this.knobs.shadows : this.quality !== 'low'); }
   // what the battery profile changes now (for the benchmark's report and Settings' note)
-  batteryProfile() { return this.battery && this.quality !== 'low' && !this.retro ? { shadowFilter: '5 reads', msaa: 0, minScale: this.minDyn() } : null; }
+  batteryProfile() { return this.battery && this.shadowsOn() ? { shadowFilter: '5 reads', msaa: 0, minScale: this.minDyn() } : null; }
 
   setup(scene, camera) {
     this.scene = scene;
@@ -188,13 +203,15 @@ export class Renderer {
   // dynamic shadows off Low and outside the 1997 look; bloom (several full-screen blur passes) on High only;
   // FXAA on Low (no MSAA there)
   applyDerived() {
-    const on = !this.retro && this.quality !== 'low';
+    const K = this.knobs, on = this.shadowsOn();
     this.renderer.shadowMap.enabled = on;
     // soft (PCFSoft) shadow edges on High; plain PCF elsewhere (fewer samples per pixel)
-    const type = this.battery && this.quality !== 'low' && !this.retro ? THREE.BasicShadowMap : this.quality === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    const soft = K ? K.filter === 'soft' : this.quality === 'high';
+    const type = this.battery && on ? THREE.BasicShadowMap : soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     if (this.renderer.shadowMap.type !== type) { this.renderer.shadowMap.type = type; this.renderer.shadowMap.needsUpdate = true; }
-    if (this.bloom) this.bloom.enabled = on && this.quality === 'high' && this.bloomOn !== false;
-    if (this.fxaa) this.fxaa.enabled = !this.retro && (this.quality === 'low' || this.aa === 'fxaa');
+    // (bloom: High only — or the knob; off in the 1997 look; with knobs it does not depend on the shadows)
+    if (this.bloom) this.bloom.enabled = (K ? !this.retro && !!K.bloom : on && this.quality === 'high') && this.bloomOn !== false;
+    if (this.fxaa) this.fxaa.enabled = !this.retro && (K ? K.msaa === 0 : this.quality === 'low') || (!this.retro && this.aa === 'fxaa');
   }
 
   // (PERF-ARRIVAL: the FXAA pass's program is made now, not on the first frame drawn with it)
@@ -221,13 +238,14 @@ export class Renderer {
   basePixelRatio() {
     const dpr = Math.min(devicePixelRatio, 2), igpu = this.integrated && dpr > 1;
     if (this.retro) return Math.min(1, 560 / innerWidth); // ~640x480-era internal resolution
-    return this.quality === 'high' ? Math.min(dpr, igpu ? 1.25 : 2) : this.quality === 'medium' ? Math.min(dpr, igpu ? 1 : 1.25) : Math.min(dpr, 0.85);
+    return this.knobs || this.quality === 'high' ? Math.min(dpr, igpu ? 1.25 : 2) : this.quality === 'medium' ? Math.min(dpr, igpu ? 1 : 1.25) : Math.min(dpr, 0.85);
   }
   setIntegrated(on) { this.integrated = !!on; this.resize(); }
   // the lowest automatic-resolution factor per preset (Low never below a 0.7 pixel ratio: text and faces blur)
-  minDyn() { return this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : this.battery ? 0.5 : 0.6; }
+  // (AUTO-QUALITY: with knobs, the governor's factor; never under a 0.6 pixel ratio)
+  minDyn() { return this.knobs ? Math.min(this.knobs.scale, Math.max(0.3, 0.6 / this.basePixelRatio())) : this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : this.battery ? 0.5 : 0.6; }
   // the factor the scene is drawn at now, and the pixel ratio that makes
-  effScale() { return this.autoRes && !this.retro ? this.dyn : 1; }
+  effScale() { return this.retro ? 1 : this.knobs ? (this.autoRes ? this.knobs.scale : 1) : this.autoRes ? this.dyn : 1; }
   pixelRatio() { return +(this.renderer.getPixelRatio() * this.effScale()).toFixed(3); }
 
   // Works out the canvas size, pixel ratio and MSAA wanted. They are applied just before the next frame is drawn
@@ -238,11 +256,12 @@ export class Renderer {
     // low (FXAA instead) / retro (the retro look wants hard pixels)
     // (Medium on a high-density screen: none, the pixel ratio smooths the edges and the GPU is spared the resolve)
     // (AUTO-FIT: High on an integrated GPU on a high-density screen: 2×, its pixel ratio smooths the rest)
-    const ms = this.retro || this.quality === 'low' || this.aa === 'fxaa' || this.battery ? 0 : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : pr >= 1.5 || (this.integrated && devicePixelRatio > 1 && pr > 1.05) ? 2 : 4;
+    const hiMs = pr >= 1.5 || (this.integrated && devicePixelRatio > 1 && pr > 1.05) ? 2 : 4;
+    const ms = this.retro || (!this.knobs && this.quality === 'low') || this.aa === 'fxaa' || this.battery ? 0 : this.knobs ? Math.min(this.knobs.msaa, hiMs) : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : hiMs;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
-    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${this.battery}/${!!this.composer}`;
+    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.knobs ? 'auto' : this.quality}/${this.aa}/${this.battery}/${!!this.composer}`;
     if (key !== this._size) { this._size = key; this._want = { w, h, pr, ms }; }
-    if (this.dyn < this.minDyn()) this.dyn = this.minDyn();
+    if (this.knobs) this.dyn = this.knobs.scale; else if (this.dyn < this.minDyn()) this.dyn = this.minDyn();
     this.applyScale();
   }
   applyResize() {
@@ -312,7 +331,7 @@ export class Renderer {
   // at a 30 fps limit every frame is ~33 ms by design, which must not read as missing 60). A step up that fails at once is not tried again for 30 s, then 60, 120… so it settles
   // at the highest level that holds instead of see-sawing. No allocation and no canvas resize: see applyScale.
   adapt(ms, now = performance.now()) {
-    if (!this.autoRes || this.retro) return;
+    if (!this.autoRes || this.retro || this.knobs) return;   // (AUTO-QUALITY: the governor sets the factor)
     const b = this._fb; b.push(ms);
     if (b.length < 90) return;
     const p90 = b.slice().sort((x, y) => x - y)[Math.floor(b.length * 0.9)]; b.length = 0;
@@ -332,7 +351,7 @@ export class Renderer {
       this.applyScale();
     }
   }
-  setAutoRes(on) { this.autoRes = on; this.dyn = 1; this._fb.length = 0; this._good = 0; this._back = 0; this._blockUntil = 0; this.applyScale(); }
+  setAutoRes(on) { this.autoRes = on; this.dyn = this.knobs ? this.knobs.scale : 1; this._fb.length = 0; this._good = 0; this._back = 0; this._blockUntil = 0; this.applyScale(); }
   // a fixed factor (the benchmark's "res x0.6"; tests)
-  setDyn(s) { this.dyn = s; this.applyScale(); }
+  setDyn(s) { this.dyn = s; if (this.knobs) this.knobs.scale = s; this.applyScale(); }
 }

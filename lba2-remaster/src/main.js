@@ -11,9 +11,10 @@ import { driveMouth } from './engine/voice.js';
 import { Perf, gpuQuality, oldGpuQuality, integratedGpu } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
+import { AutoApply } from './engine/autoapply.js';
 import { FarCull, BlobBatch, BoxCull } from './engine/drawcull.js';
 import { BLOBS } from './engine/rig.js';
-import { LightPool, poolSize } from './engine/lightpool.js';
+import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
 import { DrawBatch } from './engine/drawbatch.js';
 import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
@@ -247,21 +248,29 @@ class Game {
     // (PERF-BATTERY-2: still instanced casters join the cache, but not the vegetation tiles that switch detail with distance)
     this.shadowCache.quiet = (o) => { for (const L of [this.world.lodTiles || [], KIT_LOD.tiles]) for (const T of L) if (T.hi === o || T.lo === o) return false; return true; };
     this.renderer.setIntegrated(integratedGpu(this.perf.gpu || ''));   // (AUTO-FIT: the presets' pixel ratio on a high-density screen)
-    // the graphics preset follows the GPU on a first start (integrated GPUs: Low or Medium, see perf.js); settings
-    // saved before the presets were reworked (qv < 1) are re-picked too, unless they hold something other than the
-    // old automatic choice (then the player chose it). A choice in Settings sticks (qPicked).
+    // AUTO-QUALITY (I-13): Quality is Auto (engine/autoapply.js) for a new player and for everyone whose stored preset
+    // was never chosen by hand: the one the game picked from the GPU's name (perf.js gpuQuality; before 0.30 the old
+    // rule, oldGpuQuality). A preset picked in Settings (qPicked, from 0.30) — or one that is neither of the automatic
+    // picks (chosen before qPicked was recorded) — stays, as chosen by hand.
     {
       const saved = store.get(SET_KEY), gpu = this.perf.gpu || '';
-      if (!saved?.quality || (!(saved.qv >= 1) && !saved.qPicked && saved.quality === oldGpuQuality(gpu))) this.settings.quality = gpuQuality(gpu);
-      this.settings.qv = 1;
+      if (!(saved?.qv >= 2)) {
+        const hand = !!saved?.qPicked || (!!saved?.quality && saved.quality !== gpuQuality(gpu) && saved.quality !== oldGpuQuality(gpu));
+        this.settings.qualityAuto = !hand; this.settings.qualityChosenByHand = hand;
+        if (!saved?.quality) this.settings.quality = gpuQuality(gpu);
+        this.settings.qv = 2;
+      }
+      this.autoQ = new AutoApply(this);
+      if (this.settings.qualityAuto) this.settings.quality = this.autoQ.tier();
     }
     // Startup overlap: the Citadel's shaders are sent to the driver now, with the final lights, shadows and preset,
     // so the GPU process compiles them while the rest is built below (prepare() then waits for whatever is left).
     // The light pool's size is fixed per preset; lamps placed later join it (collect, below and on each area's build).
-    this.lightPool = new LightPool(this.scene, poolSize(this.settings.quality, this.renderer.battery));
-    this.lightPool.setFade(this.renderer.battery && this.settings.quality !== 'low');   // (PERF-BATTERY-2: on battery, the nearest lamps, faded)
+    this.lightPool = new LightPool(this.scene, this.lampCount());
+    this.lightPool.setFade(this.lampFade());   // (PERF-BATTERY-2: on battery, the nearest lamps, faded)
     if (this.settings.visual !== '1997' && !/[?&]noearly/.test(location.search)) { // (?noearly: for A/B timing)
-      this.renderer.setQuality(this.settings.quality); this.env.setShadowQuality(this.settings.quality);
+      if (this.autoQ.on()) this.autoQ.applyAll();
+      else { this.renderer.setQuality(this.settings.quality); this.env.setShadowQuality(this.settings.quality); }
       this.earlyCompile = this.renderer.precompile().catch(() => {});
     }
     // the areas (src/game/regions.js): this computer's pace on Citadel sets the loading card's estimates
@@ -395,6 +404,7 @@ class Game {
     { let at = 0.74; const creep = setInterval(() => { at += (0.8 - at) * 0.12; loadBar(at, 900); }, 1000);
       try { await this.renderer.precompile(); } catch (e) { console.warn('shader precompile', e); } finally { clearInterval(creep); } }
     this.warmMenus();
+    if (this.autoQ?.on()) this.autoQ.prewarm();   // (AUTO-QUALITY: bloom and FXAA can switch on in play: their pass programs now)
     lap('programs');
     // upload every texture now too, and draw the title's first view (shadow and post-processing passes)
     await step('Preparing graphics…', 0.84, 'textures', 1500);
@@ -636,6 +646,9 @@ class Game {
   // since (anything new compiled anywhere starts it over), needs nothing.
   warmScene(T) {
     const R = this.renderer.renderer;
+    // AUTO-QUALITY: the governor's commit knobs (shadow filter, lamps, shadows on/off) take effect here, behind the black:
+    // their programs are made by the precompile below (its key changes with them), the depth and pass programs now
+    if (this.state === 'play' && this.autoQ?.commit('scene change')) { this._shadowWarm = true; warmPassPrograms(R, this.renderer.composer); }
     if (this.testFreeze || !R.compileAsync || this.state !== 'play') return;
     this.lightPool.update(this.hero.pos);
     const lights = {};
@@ -725,6 +738,7 @@ class Game {
   // anything changed. (Also the benchmark's comparison and the tests: game.setBattery(true).)
   setBattery(on) {
     if (!this.renderer.setBattery(!!on)) return false;
+    this.autoQ?.onPower(!!on);   // (AUTO-QUALITY: this machine's state for the new power source, or one tier)
     this.syncLamps();   // (PERF-BATTERY-2: the light pool's size and fades; its programs are prepared with the rest below)
     if (this.preparing || !this.lightPool) this._powerWarm = true; else this.warmGraphics();
     this.fit?.reset();
@@ -734,14 +748,22 @@ class Game {
   // PERF-HIGH: the shadow batches' cell size for the preset (engine/shadowcull.js cellFor). A change rebuilds the shadow
   // batches of the area on show on its next frame (inside the preset change's shader hold), other areas' on their next
   // visit. Only on a preset change.
-  syncShadowCells() { this.shadowCull?.setCell(cellFor(this.settings.quality)); }
+  syncShadowCells() { this.shadowCull?.setCell(cellFor(this.settings.qualityAuto ? 'high' : this.settings.quality)); }   // (AUTO-QUALITY: Auto keeps High's cells: no rebuild when its knobs move)
   // the light pool for the preset and the power state (engine/lightpool.js poolSize: on battery at Medium/High, the 2
   // lamps nearest the hero, faded; otherwise the preset's 2/4/8)
   syncLamps() {
     const L = this.lightPool; if (!L) return;
-    const q = this.settings.quality, bat = this.renderer.battery && !this.renderer.retro;
-    L.setSize(poolSize(q, bat)); L.setFade(bat && q !== 'low');
+    L.setSize(this.lampCount());
+    L.setFade(this.lampFade());
   }
+  // (AUTO-QUALITY: under Auto the governor's lamp count — as last committed — with the battery profile's cap; a preset's
+  //  2 / 4 / 8 otherwise)
+  lampCount() {
+    const bat = this.renderer.battery && !this.renderer.retro;
+    if (this.autoQ?.on()) { const n = this.autoQ.gov.knobs().lamps; return bat && this.autoQ.gov.knobs().shadows ? Math.min(n, BATTERY_LAMPS) : n; }
+    return poolSize(this.settings.quality, bat);
+  }
+  lampFade() { return this.renderer.battery && !this.renderer.retro && (this.autoQ?.on() ? !!this.autoQ.gov.knobs().shadows : this.settings.quality !== 'low'); }
   // what the current preset does, for the benchmark's report
   graphicsConfig() {
     const R = this.renderer, W = this.world;
@@ -988,6 +1010,9 @@ class Game {
     if (this.state !== 'dialog' && this.state !== 'cutscene') this.setState('play');
   }
   beginPlay() {
+    // AUTO-QUALITY: the title's calibration and any commit knobs take effect as play starts (the first frames wait for
+    // their programs: warmGraphics)
+    if (this.autoQ?.start()) this.warmGraphics();
     this.audio.init();
     this.hideScreens();
     this.hud.show(true);
@@ -1136,7 +1161,15 @@ class Game {
       if (b.closest('.screen')) { b.blur(); const k = this.menuButtons().indexOf(b); if (k >= 0) this.menuSel = k; } // (a clicked entry is the selected one, also for Back's return)
       if (b.dataset.act) { this.audio.play('select'); this.act(b.dataset.act, b); }
       const seg = b.closest('.seg');
-      if (seg && b.dataset.v) { this.settings[seg.dataset.setting] = b.dataset.v; if (seg.dataset.setting === 'quality') this.settings.qPicked = true; this.applySettings(); this.syncSettingsUI(); }
+      if (seg && b.dataset.v) {
+        // (AUTO-QUALITY: the Auto chip turns the governor on; Low / Medium / High are a choice by hand, kept as such)
+        if (seg.dataset.setting === 'quality') {
+          if (b.dataset.v === 'auto') this.settings.qualityAuto = true;
+          else { this.settings.quality = b.dataset.v; this.settings.qualityAuto = false; this.settings.qualityChosenByHand = true; this.settings.qPicked = true; }
+          if (this.settings.qualityAuto) this.settings.quality = this.autoQ.tier();
+        } else this.settings[seg.dataset.setting] = b.dataset.v;
+        this.applySettings(); this.syncSettingsUI();
+      }
       if (b.dataset.tab) { this.setTabTo(b.dataset.tab); this.audio.play('blip'); }
       if (b.classList.contains('set-fold')) { this.toggleAdvanced(); this.audio.play('blip'); }
     });
@@ -1241,6 +1274,12 @@ class Game {
         if (this.cine) break;
         this.hideScreens();
         this.bench.run().then((text) => { if (!text) return; $('#bench-out').value = text; this.showScreen('benchres'); this.setState('pause'); });
+        break;
+      // AUTO-QUALITY: the routes as the player plays them, Quality Auto on (engine/bench.js runAuto)
+      case 'benchauto':
+        if (this.cine) break;
+        this.hideScreens();
+        this.bench.runAuto().then((text) => { if (!text) return; $('#bench-out').value = text; this.showScreen('benchres'); this.setState('pause'); });
         break;
       case 'benchcopy': navigator.clipboard?.writeText($('#bench-out').value).then(() => this.hud.toast('bench_copied'), () => {}); break;
       case 'retry': this.reloadInto(store.get(SAVE_KEY) ? 'continue' : 'new'); break;
@@ -1410,7 +1449,8 @@ class Game {
 
   syncSettingsUI() {
     const s = this.settings, L = (a) => keyLabel(keyFor(a));
-    document.querySelectorAll('.seg').forEach((g) => g.querySelectorAll('button').forEach((b) => { const on = String(s[g.dataset.setting]) === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
+    const segVal = (k) => (k === 'quality' && s.qualityAuto ? 'auto' : String(s[k]));
+    document.querySelectorAll('.seg').forEach((g) => g.querySelectorAll('button').forEach((b) => { const on = segVal(g.dataset.setting) === b.dataset.v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }));
     document.querySelectorAll('[data-range]').forEach((r) => { r.value = s[r.dataset.range]; this.syncRange(r); });
     // one line under a few rows, only where the choice isn't obvious (or depends on another setting)
     const hint = {
@@ -1418,8 +1458,9 @@ class Game {
       camera: () => t('set_h_cam_' + s.camera, { l: L('camL'), r: L('camR') }),
       camDist: () => t('set_h_cd'),
       res: () => t('set_h_res_' + s.res),
-      aa: () => t(s.quality === 'low' ? 'set_h_aa_low' : 'set_h_aa_' + s.aa),
-      quality: () => (this.renderer.batteryProfile() ? t('set_h_q_battery') : ''),   // (PERF-BATTERY)
+      aa: () => t(s.quality === 'low' && !s.qualityAuto ? 'set_h_aa_low' : 'set_h_aa_' + s.aa),
+      // (AUTO-QUALITY: what Auto runs now, in words; PERF-BATTERY: the battery profile's note)
+      quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.label() }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
       minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
     };
     document.querySelectorAll('#settings [data-hint]').forEach((row) => { row.querySelector('.set-hint').textContent = hint[row.dataset.hint]?.() ?? ''; });
@@ -1456,6 +1497,9 @@ class Game {
   // Applies the settings. Only what changed since the last call is redone: a volume slider sends an event per
   // step, and must not rebuild text, render targets, the shadow map or reset the camera.
   applySettings() {
+    // AUTO-QUALITY: a preset set directly while Auto is on (the benchmark's fixed runs, a test, a probe) is a preset by
+    // hand from then on; Settings' Auto chip sets qualityAuto and the governor's tier
+    if (this.settings.qualityAuto && this.autoQ && this.settings.quality !== this.autoQ.tier()) this.settings.qualityAuto = false;
     const s = this.settings, was = this._applied || {}, now = { ...s, keys: JSON.stringify(s.keys || {}) };
     const changed = (k) => now[k] !== was[k];
     if (changed('keys') || changed('controls')) { setKeyScheme(s.controls); applyBindings(s.keys || {}); }
@@ -1468,11 +1512,8 @@ class Game {
       this.hud.refreshText();
       if (this.hero) this.updateObjective();
     }
-    if (changed('quality')) {
-      this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.syncLamps();
-      this.world?.setDetail?.(s.quality);
-      if (this.shadowCull) this.shadowCull.quality = s.quality;
-      this.syncShadowCells();
+    if (changed('quality') || changed('qualityAuto')) {
+      this.applyGraphics();
       if (was.quality) this.warmGraphics();
     }
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
@@ -1498,11 +1539,28 @@ class Game {
     this.audio.vol.sfx = s.sfx;
     this.audio.vol.voice = s.voice;
     this.audio.applyVolumes();
-    this._applied = now;
+    this._applied = { ...now, quality: s.quality, qualityAuto: s.qualityAuto };   // (Auto names its tier in applyGraphics)
     store.set(SET_KEY, s);
   }
 
   saveSettings() { store.set(SET_KEY, this.settings); }
+  // the graphics of the preset chosen by hand, or Auto's knobs (engine/autoapply.js)
+  applyGraphics() {
+    const s = this.settings;
+    if (s.qualityAuto && this.autoQ) {
+      this.autoQ.gov.commit('quality set to Auto');   // (the programs are made by the caller's warm-up)
+      this.autoQ.applyAll();
+      s.quality = this.autoQ.tier();
+      this.renderer.timer = this.benching ? this.renderer.timer : this.autoQ.timer();
+      return;
+    }
+    this.renderer.setKnobs(null);
+    if (!this.benching) this.renderer.timer = null;
+    this.renderer.setQuality(s.quality); this.env?.setShadowQuality(s.quality); this.syncLamps();
+    this.world?.setDetail?.(s.quality);
+    if (this.shadowCull) this.shadowCull.quality = s.quality;
+    this.syncShadowCells();
+  }
   updateObjective() { this.hud.objective(this.story.objective()); }
 
   mapMarkers() {
@@ -1953,7 +2011,7 @@ class Game {
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
-    if (!this.testFreeze && !this.preparing) { this.advance(real); this.fit?.frame(real); }
+    if (!this.testFreeze && !this.preparing) { this.advance(real); if (!this.settings.qualityAuto) this.fit?.frame(real); }   // (AUTO-QUALITY: Auto adjusts itself: no suggestion)
     requestAnimationFrame((t2) => this.loop(t2));
   }
 
@@ -1961,8 +2019,28 @@ class Game {
   // time down to MAX_STEP / MAX_SUB ≈ 7.5 fps instead of turning into slow motion below 20 fps); a longer gap
   // (a stall, a GC, a dragged window) is dropped rather than caught up, so a hitch can't snowball. Input is
   // read once per step: a press is an edge in the first step only, a held key stays held.
+  // (I-11 / AUTO-QUALITY) counters of the jobs that can make a frame long, read before and after each frame: what ran in
+  // the frame before a long interval is noted on it for the benchmark's hitch list (bench.js hitchList)
+  jobCounters() {
+    const R = this.renderer.renderer, M = R.info.memory;
+    return { p: R.info.programs?.length ?? 0, g: M.geometries, x: M.textures, sc: this.shadowCache?.stats.full ?? 0, db: this.drawBatch?.buildMs ?? 0, dbn: this.drawBatch?.builds ?? 0,
+      sb: this.shadowCull?.buildMs ?? 0, sbn: this.shadowCull?.builds ?? 0, up: this.uploadLog?.length ?? 0, aq: this.autoQ?.log.length ?? 0, h: performance.memory?.usedJSHeapSize ?? 0 };
+  }
+  jobsBetween(a, b) {
+    const o = [];
+    if (b.dbn > a.dbn) o.push(`draw batches built ${(b.db - a.db).toFixed(0)} ms`);
+    if (b.sbn > a.sbn) o.push(`shadow batches built ${(b.sb - a.sb).toFixed(0)} ms`);
+    if (b.sc > a.sc) o.push('shadow cache rebuilt');
+    if (b.p > a.p) o.push(`${b.p - a.p} shader program${b.p - a.p > 1 ? 's' : ''} compiled`);
+    if (b.g > a.g + 2 || b.x > a.x) o.push(`+${b.g - a.g} geometries, +${b.x - a.x} textures on the GPU`);
+    if (b.up > a.up) o.push('geometry upload');
+    if (b.aq > a.aq) o.push('Auto quality step');
+    return o.join(', ');
+  }
   advance(real) {
-    const t0 = performance.now();
+    const t0 = performance.now(), jc = this.jobCounters();
+    // (a heap that shrank since the last frame: a garbage collection ran in the interval)
+    const gc = this._jc && this._jc.h && jc.h && this._jc.h - jc.h > 8e6 ? `GC −${((this._jc.h - jc.h) / 1048576).toFixed(0)} MB` : '';
     const dt = Math.min(real, MAX_STEP * MAX_SUB);
     const n = Math.max(1, Math.ceil(dt / MAX_STEP - 1e-6)), sub = dt / n;
     this.perf.beginFrame();
@@ -1979,10 +2057,14 @@ class Game {
     const black = !!this._shownBlack;
     this._shownBlack = !!this.trans && (this.trans.hold || this._fadeOp >= 0.999);
     let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
-    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps, lag: this._lag ?? 0, bg: !!this.background });
+    const why = real * 1000 > 33.4 ? [this._jobsPrev, gc].filter(Boolean).join(', ') : '';
+    this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps, lag: this._lag ?? 0, bg: !!this.background, why: why || undefined });
+    { const jc1 = this.jobCounters(), j = this.jobsBetween(jc, jc1); this._jobsPrev = `frame before: work ${ms.toFixed(0)} ms${j ? ', ' + j : ''}`; this._jc = jc1; }
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark's fixed runs; its
     // "as played" runs keep it: PERF-BATTERY-2)
     if (this.state === 'play' && !this.trans && (!this.benching || this.benchAuto) && !this.background) this.renderer.adapt(real * 1000);
+    // AUTO-QUALITY: the governor (play) and the first start's calibration (title), with the frame's own CPU work
+    this.autoQ?.frame(real, this._workMs);
   }
 
   // PERF-HIGH: the CPU time a background job (the map built after an arrival) may take in this frame: what the last
