@@ -1981,26 +1981,49 @@ def build_sphero(name):
     u = 2.1 / 1240
     coat, coatD, skin = L.get('tunic', '#5b9f63'), L.get('tunicTrim', '#4f8f57'), L.get('skin', '#d3af87')
     b = Builder(name, B)
-    # the star: 5 outer points and 5 inner ones (front view), a front and a back face, thicker inside than at the tips
+    # the star: 5 outer points and 5 inner ones (front view), thicker inside than at the tips. ROUND-SPHERO: the 10 points
+    # are only the control points of a closed curve (Catmull-Rom), and the body is a soft cushion over it: an elliptic
+    # edge all round and a dome that rises to the middle, smooth-shaded, so it reads as a round body, not facets
     cy = 600
     outer = [(0, 828), (399, 640), (232, 352), (-232, 352), (-399, 640)]
     inner = [(190, 742), (238, 472), (0, 380), (-238, 472), (-190, 742)]
-    ring_ = []
+    ctrl = []
     for k in range(5):
-        ring_ += [(outer[k], 55), (inner[k], 170)]
-    V, F = [], []
-    for (x, y), t in ring_:
-        V.append((x * u, y * u, t * u)); V.append((x * u, y * u, -t * u))
-    n = len(ring_)
-    V.append((0, cy * u, 228 * u)); V.append((0, cy * u, -228 * u))
-    cf, cb = len(V) - 2, len(V) - 1
-    for k in range(n):
-        a, c = 2 * k, 2 * ((k + 1) % n)
-        F.append([cf, a, c]); F.append([cb, c + 1, a + 1]); F.append([a, a + 1, c + 1, c])
+        ctrl += [(outer[k][0], outer[k][1], 55), (inner[k][0], inner[k][1], 170)]
+    nc, SEG, NT = len(ctrl), 8, 7
+
+    def cr(a, b_, c, d, t):
+        return tuple(0.5 * (2 * b_[i] + (c[i] - a[i]) * t + (2 * a[i] - 5 * b_[i] + 4 * c[i] - d[i]) * t * t
+                            + (3 * b_[i] - a[i] - 3 * c[i] + d[i]) * t ** 3) for i in range(3))
+    rim = []
+    for k in range(nc):
+        for j in range(SEG):
+            rim.append(cr(ctrl[k - 1], ctrl[k], ctrl[(k + 1) % nc], ctrl[(k + 2) % nc], j / SEG))
+    # sections from the back pole to the front pole: th in (-90°, 90°), a point = centre + (rim - centre)·cos th,
+    # z = sin th · (the rim's half-thickness, swelling to the 228 of the middle)
+    V, F, rings = [], [], []
+    for j in range(1, 2 * NT):
+        th = -math.pi / 2 + math.pi * j / (2 * NT)
+        c_, s_ = math.cos(th), math.sin(th)
+        rr = []
+        for x, y, t in rim:
+            zz = s_ * (t + (228 - t) * abs(s_) ** 1.5)
+            rr.append((x * c_ * u, (cy + (y - cy) * c_) * u, zz * u))
+        rings.append(rr)
+    n = len(rim)
+    for r in rings:
+        V += r
+    for j in range(len(rings) - 1):
+        for i in range(n):
+            a, c = j * n + i, j * n + (i + 1) % n
+            F.append([a, c, c + n, a + n])
+    V.append((0, cy * u, -228 * u)); V.append((0, cy * u, 228 * u))
+    pb, pf, o = len(V) - 2, len(V) - 1, (len(rings) - 1) * n
+    F += [[pb, (i + 1) % n, i] for i in range(n)] + [[o + i, o + (i + 1) % n, pf] for i in range(n)]
     def w_star(p):
         k = smooth(cy * u - 0.1, cy * u + 0.05, p[1])
         return {'torso': 0.4 + 0.6 * k, 'hips': 0.6 - 0.6 * k}
-    b.P('star', coat, w_star, 25).add(V, F)
+    b.P('star', coat, w_star, 80).add(V, F)
     # the crest at the top point, the face
     tube(b.P('crest', L.get('hair', '#ef7b53'), 'torso', 30), (0, 790 * u, 0), (0, 870 * u, -20 * u), 70 * u, 4 * u, 6)
     fc = (0, 600 * u, 150 * u)
