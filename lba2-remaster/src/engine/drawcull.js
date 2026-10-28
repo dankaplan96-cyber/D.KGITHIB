@@ -13,6 +13,13 @@
 //    camera than the fog's end (where it is drawn in the fog's colour only) and 250 m is left out of that frame's
 //    render, its own `visible` flag restored right after. Its simulation is untouched.
 //    (FarCull)
+//    PERF-HIGH: also an actor wholly outside the view. The characters' skinned bodies are never frustum-culled by three
+//    (assemble() in sculpt.js: a skinned body's bind-pose bounds don't follow its animation), so everyone within 250 m
+//    was drawn wherever the camera looked: behind it, off to the side. An actor whose bounds (its rig's box at first
+//    sight, grown by a quarter and 0.5 m: arms out, a carried basket) are outside the camera's frustum is left out of
+//    that frame's render like a far one. Actors whose rig casts a sun shadow (a dog, the hero is not in these lists) are
+//    left to three: their shadow may fall into the view. The same pixels; one draw fewer per body (and its face parts'
+//    tests) for each person out of view.
 // 3. Blob shadows. Every actor, the magic ball and a few enemies lay a soft round shadow on the ground: one
 //    transparent draw each, all with the same geometry and material. BlobBatch draws the shown ones in a single
 //    instanced call for the frame (same matrices, same material, same render order: blobs are black, so their
@@ -42,10 +49,28 @@ export function updateShownWorld(scene, state) {
 // An actor's small rigid parts (eyes, buttons, a brooch: one draw each) are also left out of a frame while they are
 // under SUB_PX pixels in radius on screen (an eye 3 cm across beyond ~30 m): the same specks either way.
 const SUB_PX = 0.75, PART_R = 0.2;
-const _pv = new THREE.Vector3();
+const _pv = new THREE.Vector3(), _fb = new THREE.Box3(), _fs = new THREE.Sphere(), _ff = new THREE.Frustum(), _fm = new THREE.Matrix4();
 export class FarCull {
   // actors(): lists of the actors that may be drawn; fog: the scene's THREE.Fog
-  constructor(actors, camera, fog) { this.actors = actors; this.camera = camera; this.fog = fog; this.off = []; this.enabled = true; this.n = 0; this.parts = new WeakMap(); }
+  constructor(actors, camera, fog) { this.actors = actors; this.camera = camera; this.fog = fog; this.off = []; this.enabled = true; this.view = true; this.n = 0; this.nView = 0; this.parts = new WeakMap(); this.bounds = new WeakMap(); this.tick = 0; }
+  // (PERF-HIGH) a rig's bounds about its root's position (where the game or a story scene has put it this frame): the
+  // height of their centre and a radius, from its box at first sight (with a margin); and whether any of it casts a
+  // sun shadow (looked at again every 120 frames: a part may be added or start casting)
+  boundsOf(r) {
+    let B = this.bounds.get(r);
+    if (!B || (B.casts !== null && this.tick - B.t > 120)) {
+      if (!B) {
+        r.updateMatrixWorld(true); _fb.setFromObject(r);
+        // (s: the root's scale then; a rig scaled later (grown, shrunk) scales its bounds with it)
+        const s = Math.max(r.scale.x, r.scale.y, r.scale.z) || 1;
+        if (_fb.isEmpty()) B = { dy: 1, rad: 3, s };
+        else { const o = r.getWorldPosition(_pv); _fb.getBoundingSphere(_fs); B = { dy: _fs.center.y - o.y, rad: (Math.hypot(_fs.center.x - o.x, _fs.center.z - o.z) + _fs.radius) * 1.25 + 0.5, s }; }
+      }
+      let casts = false; r.traverse((o) => { if (o.isMesh && o.castShadow) casts = true; });
+      B.casts = casts; B.t = this.tick; this.bounds.set(r, B);
+    }
+    return B;
+  }
   partsOf(root) {
     let L = this.parts.get(root);
     if (!L) {
@@ -64,6 +89,9 @@ export class FarCull {
     if (!this.enabled) return;
     const far = Math.max(this.fog?.far ?? 0, 250) + 10, cam = this.camera, p = cam.position;
     const pxK = (typeof innerHeight === 'number' ? innerHeight : 720) / (2 * Math.tan(((cam.fov || 55) * Math.PI) / 360));
+    const view = this.view && cam.isPerspectiveCamera;
+    if (view) { cam.updateMatrixWorld(); _ff.setFromProjectionMatrix(_fm.multiplyMatrices(cam.projectionMatrix, _fm.copy(cam.matrixWorld).invert())); }
+    this.tick++; this.nView = 0;
     for (const list of this.actors()) for (const a of list || NONE) {
       const r = a?.rig?.root; if (!r || !r.visible || !a.pos) continue;
       const dx = a.pos.x - p.x, dy = a.pos.y - p.y, dz = a.pos.z - p.z, d2 = dx * dx + dy * dy + dz * dz;
@@ -71,6 +99,12 @@ export class FarCull {
         r.visible = false; this.off.push(r);
         if (a.shadow?.visible) { a.shadow.visible = false; this.off.push(a.shadow); }
         continue;
+      }
+      if (view && (!r.parent || r.parent.isScene)) {   // (a rig placed in the scene itself: its position is its world position)
+        const B = this.boundsOf(r);
+        const k = Math.max(r.scale.x, r.scale.y, r.scale.z) / B.s;
+        _fs.center.set(r.position.x, r.position.y + B.dy * k, r.position.z); _fs.radius = B.rad * Math.max(1, k);
+        if (!B.casts && !_ff.intersectsSphere(_fs)) { r.visible = false; this.off.push(r); (this.offView ??= []).push(r); this.nView++; continue; }
       }
       // (within 30 m of the camera every part stays: an eye there is still about a pixel)
       if (d2 < 900) continue;
@@ -83,7 +117,14 @@ export class FarCull {
     }
     this.n = this.off.length;
   }
-  restore() { for (const o of this.off) o.visible = true; this.off.length = 0; }
+  // (PERF-HIGH: an actor left out for being outside the view is near, and the game reads its parts' world matrices (a
+  //  hand, the head, what it carries) before the next frame's render: they are brought up to date as the render would
+  //  have done — the matrix work stays, only the draws go. A far one's are left as before.)
+  restore() {
+    for (const o of this.off) o.visible = true;
+    this.off.length = 0;
+    if (this.offView?.length) { for (const r of this.offView) r.updateMatrixWorld(true); this.offView.length = 0; }
+  }
 }
 
 export class BlobBatch {

@@ -9,4 +9,6 @@ contextBridge.exposeInMainWorld('desktop', {
   onBattery: (() => { try { const v = ipcRenderer.sendSync('lba3:power-now'); return typeof v === 'boolean' ? v : null; } catch { return null; } })(),
   onPower: (cb) => { ipcRenderer.on('lba3:power', (e, v) => cb(!!v)); },
   onWindow: (cb) => { ipcRenderer.on('lba3:window', (e, st) => cb(st)); },
+  // PERF-HIGH: the display's refresh rate as the OS reports it, the window's state, Chromium's GPU feature status (benchmark)
+  display: () => { try { return ipcRenderer.sendSync('lba3:display'); } catch { return null; } },
 });
