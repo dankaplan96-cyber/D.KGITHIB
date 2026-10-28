@@ -340,7 +340,7 @@ export class Hero extends Actor {
     // (the interact key also searches a container in any behaviour, as LBA2's action key does: OBJECT.CPP ActionNormal)
     if (!wheel && input.pressed('interact') && this.actT <= 0 && !this.combat.busy && !jet?.air && !g.tryInteract() && (beh === 'normal' || g.giverInReach()) && this.onGround) this.hop();
 
-    if (this.hasSword || this.swordMesh) this.showSword(this.combat.weapon === 'sword');
+    this.syncSword();
     // animation state
     let anim = 'idle';
     // a throw or a charge on the move: the legs keep walking and the arms throw on the rig's upper-body layer;
@@ -526,13 +526,18 @@ export class Hero extends Actor {
     if (this.refYaw == null || Math.abs(angleDiff(this.refStick, a)) > Math.PI / 9) { this.refYaw = yaw; this.refStick = a; }
     return this.refYaw;
   }
+  // Sheathed (drawn nowhere) while he talks: a story or NPC conversation (game.say: state 'dialog') or a story
+  // reveal camera beat before its hand-back. Only the drawn mesh is hidden; the equipped weapon and the wheel are
+  // untouched, and the first play frame after the talk draws it again (SMALL-FIXES, FINDINGS row 17).
+  get sheathed() { const g = this.game, r = g.reveal; return g.state === 'dialog' || !!(r && r.on && !r.rel); }
+  syncSword() { if (this.hasSword || this.swordMesh) this.showSword(this.combat.weapon === 'sword'); }
   // the sword in the hand (only while it is the equipped weapon)
   showSword(on) {
     const hand = this.rig.j?.armR?.hand;
     if (!hand) return;
     if (!this.swordMesh) this.swordMesh = buildSword();
     if (on && this.swordMesh.parent !== hand) hand.add(this.swordMesh);
-    this.swordMesh.visible = !!on && this.body !== 'zoe' && this.body !== 'worker';
+    this.swordMesh.visible = !!on && this.body !== 'zoe' && this.body !== 'worker' && !this.sheathed;
   }
 
   damage(n, from, heavy = false) {

@@ -270,11 +270,15 @@ function pebbles(k, W, D, n, seed, mat, avoid = []) {
   }
 }
 // rising steam / dust motes as a Points cloud around sources [[x,z,r],…]
-function motes(B, sources, { n = 60, color = '#e8f4ff', size = 0.3, op = 0.3, hmax = 3, speed = 0.5, y0 = 0 } = {}) {
+// `soft`: round soft-edged dots (a white radial falloff as the points' map, light added) instead of hard squares; a
+// PointsMaterial with a map is the program interiors.js's pool motes and halos already use, so nothing compiles
+// after loading (SMALL-FIXES, FINDINGS row 18)
+const softDot = () => M('ugsoftdot', () => canvasTex(64, 64, (x, W) => { const g = x.createRadialGradient(W / 2, W / 2, 0, W / 2, W / 2, W / 2); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.3, 'rgba(255,255,255,0.55)'); g.addColorStop(0.65, 'rgba(255,255,255,0.12)'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(0, 0, W, W); }));
+function motes(B, sources, { n = 60, color = '#e8f4ff', size = 0.3, op = 0.3, hmax = 3, speed = 0.5, y0 = 0, soft = false } = {}) {
   const sp = new Float32Array(n * 3), sd = [];
   for (let i = 0; i < n; i++) { const s = sources[i % sources.length]; sd.push({ x: s[0] + (Math.random() - 0.5) * s[2], z: s[1] + (Math.random() - 0.5) * s[2], y: Math.random() * hmax, v: speed * (0.6 + Math.random() * 0.8) }); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(sp, 3));
-  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color, size, transparent: true, opacity: op, depthWrite: false }));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial(soft ? { map: softDot(), color, size, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false } : { color, size, transparent: true, opacity: op, depthWrite: false }));
   B.group.add(pts);
   B.room.updaters.push((dt) => {
     for (let i = 0; i < n; i++) { const s = sd[i]; s.y += s.v * dt; if (s.y > hmax) s.y = 0; else if (s.y < 0) s.y = hmax; sp[i * 3] = s.x + Math.sin(s.y * 2 + i) * 0.15; sp[i * 3 + 1] = y0 + s.y; sp[i * 3 + 2] = s.z; }
@@ -1360,7 +1364,7 @@ function buildSendell(scene, physics) {
   B.ccol(0, 0, PR + 0.5, 0.9, { noStand: true, seeThrough: true });
   const column = lightShaft(B, 0, 3.2, 0, 1.0, 2.0, 6.4, '#9fd8ff', 0.05);
   const poolLight = B.light('#8ac8ff', 6, 9, 0, 0.8, 0);
-  motes(B, [[0, 0, 3.6]], { n: 50, color: '#cfeaff', size: 0.22, op: 0.5, hmax: 4.5, speed: 0.3, y0: -0.1 });
+  motes(B, [[0, 0, 3.6]], { n: 50, color: '#cfeaff', size: 0.34, op: 0.55, hmax: 4.5, speed: 0.3, y0: -0.1, soft: true });
 
   // --- the presence: a soft orb of light over the pool, a thin column under it
   const SP = { x: 0, y: 1.9, z: 0 };
