@@ -31,7 +31,12 @@ export class AudioEngine {
     if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    const ctx = (this.ctx = new AC());
+    // AUDIO-BUFFER (the user, 28.10: "the music has become a bit crackly on every computer"): the default
+    // ('interactive') buffer is ~10 ms, and when the game keeps the CPU busy (battery, the street) the audio thread
+    // misses it and the output crackles. ~50 ms of buffer is still well under what a sound effect can be heard late by
+    let ctx;
+    try { ctx = new AC({ latencyHint: 0.05 }); } catch { ctx = new AC(); }
+    this.ctx = ctx;
     this.master = ctx.createGain();
     this.master.connect(ctx.destination);
     this.musicBus = ctx.createGain();
@@ -56,8 +61,8 @@ export class AudioEngine {
     this.voicePres.frequency.value = 2500; this.voicePres.Q.value = 0.8; this.voicePres.gain.value = 3;
     this.voiceMakeup = ctx.createGain(); this.voiceMakeup.gain.value = VOICE_MAKEUP;
     this.voiceLim = ctx.createDynamicsCompressor();
-    this.voiceLim.threshold.value = -4; this.voiceLim.knee.value = 0; this.voiceLim.ratio.value = 20;
-    this.voiceLim.attack.value = 0.001; this.voiceLim.release.value = 0.1;
+    this.voiceLim.threshold.value = -4; this.voiceLim.knee.value = 4; this.voiceLim.ratio.value = 12;
+    this.voiceLim.attack.value = 0.003; this.voiceLim.release.value = 0.15; // (soft: a hard 1 ms limiter rasps)
     this.voiceBus.connect(this.voiceComp).connect(this.voicePres).connect(this.voiceMakeup).connect(this.voiceLim).connect(this.master);
     this.ducked = false;
     this.sfxBus.connect(this.reverb); // the music files carry their own room
