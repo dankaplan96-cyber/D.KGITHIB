@@ -19,6 +19,7 @@ import { Network } from './network.js';
 import { Epilogue } from './epilogue.js';
 import { IslandShuttle } from './islands.js';
 import { TownLife } from './life.js';
+import { Citizens } from './citizens.js';
 import { WorkshopLife } from './workshop.js';
 import { KeshLife } from './kesh.js';
 import { ZeelichLife } from './zeelife.js';
@@ -41,6 +42,7 @@ export class Story {
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
     this.isles = new IslandShuttle(this);
     this.life = new TownLife(this);   // Citadel twelve years on: its people and small stories (life.js)
+    this.citizens = new Citizens(this);   // WORLD-LIFE: the residents who walk round Citadel (citizens.js)
     this.workshop = new WorkshopLife(this);   // Baldino's workshop years on: the test pair and the looks (workshop.js)
     this.kesh = new KeshLife(this);   // Kesh on Desert Island twelve years on: the cool room's wind-catcher (kesh.js)
     this.zlife = new ZeelichLife(this);   // Zeelich's street twelve years on: the watch house bakery (zeelife.js)
@@ -62,7 +64,7 @@ export class Story {
   // ---- construction
   npcDefs() {
     const seen = new Map();
-    for (const c of [...this.chapters, this.life]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
+    for (const c of [...this.chapters, this.life, this.citizens]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
     return [...seen.values()];
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
@@ -146,6 +148,7 @@ export class Story {
       if (wait) { n.setPresent(false); continue; }
       if (n.def.pending && p === undefined) continue;   // (his own area not built yet: he stays hidden: Game.addActors)
       if (p === undefined) p = this.life.place(n.def.id);
+      if (p === undefined) p = this.citizens.place(n.def.id);   // (WORLD-LIFE: a resident the story takes off the streets, or gives them back)
       if (p === undefined) continue;
       n.setPresent(!!p);
       if (p) n.placeAt(p);
@@ -186,7 +189,7 @@ export class Story {
   canExit(room, to) { return this.cur.canExit(room, to); }
   interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); }
   interact(it) { return this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.chapters[0].baseInteract(it); }
-  talk(npc) { if (this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
+  talk(npc) { if (this.citizens.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
