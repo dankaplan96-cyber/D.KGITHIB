@@ -1,5 +1,14 @@
 # LBA3: The Awakening — 60-second trailer brief (the user, 26.10.2026; NOT NOW)
 
+**Status 28.10.2026 (TRAILER, WORKLIST #36): produced, outside the repository.** A spoiler-free cut for the email asking the rights holders'
+permission (chapters 1-2 only; Desert Island, the Hamalayi and Zeelich as scenic travel shots; "stakes" kept to a hum, a turning derrick, the project's gate
+and a glow under the well). 60.000 s, 1920x1080 / H.264 / AAC 48 kHz / constant 30 fps, plus a 720p email copy, shot list, production
+folder and README, kept out of the repo because of its size (the session's scratchpad: `.../scratchpad/trailer/`). Footage is the real engine captured
+frame by frame (Chromium/SwiftShader, `game.frame` stepping, the game's AudioEngine on an `OfflineAudioContext` so the game's own sounds are
+sample-synchronous); no change to `src/` was needed, so there is no capture mode in the game. Music: an original 60 s cue from the project's score tool
+(`tools/music`), rendered offline with FluidSynth and the system FluidR3_GM soundfont (the MuseScore one could not be fetched there); unverified by ear.
+Not done / not claimed: a listening pass, a real-GPU capture, Nera and anything of chapters 3+ (not shown on purpose).
+
 Deferred by the user ("לא לעכשיו"): do after the current game is verified end to end. The full brief is kept
 verbatim below so a future session can execute it unchanged.
 
