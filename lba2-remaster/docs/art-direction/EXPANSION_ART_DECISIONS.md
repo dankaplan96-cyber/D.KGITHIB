@@ -48,3 +48,19 @@ functions and moods; not one gimmick for the whole planet.
 Implemented: no · Visually checked: no · Performance verified: no.
 Undecided next: D4 Nera's inhabitants (compact canal dwellers / tall arch dwellers / mixed trading population), then Tessa and Oren;
 D5 Sendell's underground mood; the planet's final name.
+
+## D4 — Nera's inhabitants (Selected 28.10, the user: "going with your direction")
+Options: A compact canal dwellers · B tall arch dwellers · C mixed trading population.
+Selected: C with A's compact canal dwellers as the one local species (shoulder-high to Twinsen, round faces, broad feet, fan ears,
+stable working poses on moving platforms), plus visitors from established worlds (Esmers, Twinsun traders) told apart by silhouette,
+clothing and behaviour, not tiny facial detail. Proposals, not canon. Implemented: no.
+
+## D5 — Sendell's underground mood (Selected 28.10)
+Options: A quiet wonder · B a living interior · C fragile grandeur.
+Selected: A as the emotional base (warm lakes, translucent mineral layers, reflected light, slow motion), chosen elements of B
+(root-like forms, pressure channels, a slow rhythm; no body horror), C only at key story places (e.g. "The Wound in the Shell").
+Must not read as another crystal cave. Implemented: no.
+
+## D6 — The planet's name (Selected 28.10)
+Options: A Noria · B Ballastra · C Lissune. Selected: B "Ballastra" (from ballast/balance; no confusion with the NPC Nara).
+Docs that say "Nera" (EXPANSION_BRIEF.md etc.) mean Ballastra from now on; rename in code when the expansion is implemented.
