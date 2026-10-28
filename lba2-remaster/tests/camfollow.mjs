@@ -40,7 +40,7 @@ const he = await ev(() => { game.settings.lang = 'he'; game.applySettings(); con
 check('the Hebrew label is "עוקבת"', he === 'עוקבת', he);
 // CAM-FOLLOW (the user: "works well but feels too close and too low"): Settings → Camera distance, Medium by default
 const cd = await ev(() => { const o = [...document.querySelectorAll('[data-setting="camDist"] button')].map((b) => [b.dataset.v, b.textContent.trim()]); game.settings.lang = 'he'; game.applySettings(); const heL = document.querySelector('#settings [data-i18n="cam_dist"]')?.textContent.trim(); game.settings.lang = 'en'; game.applySettings(); return { d: game.settings.camDist, opts: o, heL }; });
-check('Settings → Camera distance offers Near, Medium, Far; Medium for a new player (Hebrew "מרחק מצלמה")', cd.d === 'medium' && cd.opts.map((o) => o[0]).join() === 'near,medium,far' && cd.opts[1][1] === 'Medium' && cd.heL === 'מרחק מצלמה', cd);
+check('Settings → Camera distance offers Near, Medium, Far; Far for a new player (the user, 28.10) (Hebrew "מרחק מצלמה")', cd.d === 'far' && cd.opts.map((o) => o[0]).join() === 'near,medium,far' && cd.opts[1][1] === 'Medium' && cd.heL === 'מרחק מצלמה', cd);
 
 await menu(page, 'new');
 await ev(async () => {

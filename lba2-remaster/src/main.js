@@ -157,9 +157,9 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', camDist: 'medium', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', camDist: 'far', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
-    if (!['near', 'medium', 'far'].includes(this.settings.camDist)) this.settings.camDist = 'medium';
+    if (!['near', 'medium', 'far'].includes(this.settings.camDist)) this.settings.camDist = 'far';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
     // (R1-MIGRATE: an update keeps the player's choices; only a missing or unknown scheme falls back to Classic,
     //  and only key bindings that aren't valid key codes are dropped)
