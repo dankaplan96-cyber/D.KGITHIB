@@ -127,7 +127,7 @@ original's old places", `src/game/town.js` HOUSES, `src/game/world.js`):
   face is taken out afterwards: the collider and tree lists of before and after differ only inside the six changed
   places (checked on the scorer's dumps).
 
-Not done: fix 6 (the coast, +1.6) and fix 7 (the terraces): both touch the whole island's ground. Fix 9 (the
+Not done in that step: fix 6 (the coast, +1.6) and fix 7 (the terraces): both touch the whole island's ground. (Fix 7 was done afterwards, CITADEL-TERRACES, below.) Fix 9 (the
 museum's annexes) and 10 (railings) are left for a later pass. The S2 door's 10 m is the plateau's own shape (its
 original place is 9.4 m up a cliff that is our depot yard).
 
@@ -148,7 +148,7 @@ Ranked differences:
 | 4 | Missing: the plateau's door (S2) at (−80.7, −73.1), 9.4 m up the cliff, in the depot's area. | A shut door in the cliff behind the depot. | +1.1 | S |
 | 5 | Missing: the passage through the plateau (S51). Its south door is on top at (−24.5, −63.2), inside the fort; its north door is in the north face at (−25.9, −82.0). | The fort's cellar stair (south) and a barred tunnel mouth in the north face. | +1.2 | S |
 | 6 | The coast stands about one grid step (1.7 m) further out almost all round: 1,070 m² is ours only (815 m² of it a ring on the original's shore, median 2.1 m high), and 273 m² is the original's only (the sand bay by the south-west islet). | Pull the shore in by ~1.7 m in world.js's coast distance, keeping the quay. IoU 0.910 → 0.962. | +1.6 | M |
-| 7 | The terraces are too even: our shelves stand 2.8 / 5.8 / 8.7 / 11.6 m above the town against the original's 3.8 / 7.3 / 11.1 / 13.6 m (the plateau 2 m low). | The WORLD-SHAPE plan (AUDIT.md). Two input tests failed with it in block 3: travel ch. 10's walk to Hesk and occluders (b). The height part goes 75.2 → 80.2. | +1.0 | M–L |
+| 7 | The terraces are too even: our shelves stand 2.8 / 5.8 / 8.7 / 11.6 m above the town against the original's 3.8 / 7.3 / 11.1 / 13.6 m (the plateau 2 m low). | **Done** (CITADEL-TERRACES, below). The WORLD-SHAPE plan (AUDIT.md); the two input tests that failed with it in block 3 (travel ch. 10's walk to Hesk, occluders (b)) pass. | +0.6 measured | M–L |
 | 8 | The stone house's upper door (S17): our nearest door is 11.4 m south of it, at (−25.1, −31.5), 6.2 m up. | A door on the stone house's north side, upper level. | +0.3 | S |
 | 9 | The museum is one building; the original's is a group of four (bodies 59–63) at (−78.7, 40.7). | Its annexes beside it. | +0.4 | M |
 | 10 | Railings and bollard runs: 3–5 per cell in the original, few counted in ours (several of our railings have their collider off). | Mostly measurement. Check the placed PROPS rails by eye before changing anything. | ≤ +0.8 | S |
@@ -161,6 +161,14 @@ twelve years of trade explain it.
 Street's pair) and 4 + 5 + 8 (the plateau's doors and the stone house's upper door). Expected gain is +7.3 to
 +7.6, giving about 85. Sizes: one M (the islet), one M (Bug Street, with the occluder test), three S. Optional
 after: 6 (the coast, +1.6, M) and 7 (the terraces, +1.0, M–L, with the two tests).
+
+**Fix 7, the terraces (CITADEL-TERRACES), measured on game 0.33.0 (the Citadel was 84.5 that day, other work since step 2):**
+Citadel 84.5 → 85.1 (coast 90.9 → 90.8, height 76.6 → 80.0, landmarks 98.9, objects 61.1 → 60.9); height MAE after the lift
+1.06 → 0.91 m. The shelves above the town (median of each traced band) 2.84 / 6.06 / 10.89 / 11.59 m → 3.71 / 7.68 / 10.89 /
+13.57 m against the original's 3.76 / 7.31 / 11.28 / 13.58 m (the third band's median is the west islet, kept at its 13.2 m
+top). Built as `SHELVES` in citadel-layout.js and world.js `level()` / `terraces()`; the west islet's top, the west street's
+ramp to the first stepping stone, the stone count (14) and the stability D13 check changed with it (AUDIT.md "Citadel
+terraces: done"). Before/after shots (from above and from the play camera on the main streets) were kept in the session scratchpad, not committed.
 
 ## Desert Island: 39.4 → 85.0
 

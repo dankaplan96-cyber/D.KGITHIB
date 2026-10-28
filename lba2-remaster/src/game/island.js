@@ -16,7 +16,7 @@ import { mergeStatic } from '../engine/merge.js';
 import { occOf } from '../engine/occlude.js';
 import { fitAdd } from './worldfit.js';
 import { t } from './i18n.js';
-import { PROPS } from './citadel-layout.js';
+import { PROPS, CLIFFS_TOP } from './citadel-layout.js';
 import { streetDist } from './town.js';
 import './text/world.js';
 
@@ -66,7 +66,7 @@ const METER = { x: -72.0, z: -17.0, ry: Math.PI / 2 };
 // to the reservoir under the Whispering Cliffs (the rock stack on the plateau's rim)
 export const BRANCH = [[-33.0, -50.0], [-35.5, -44.5], [-43.5, -37.0], [-51.0, -32.5], [-55.2, -31.9]];
 const CLIFF_VALVE = { z: -36.6 };
-const POI_PLATEAU = { h: 16.8 };
+const POI_PLATEAU = { h: CLIFFS_TOP };
 // the old stump where a clover hides (a giver, see world.js)
 export const STUMP = { x: -30, z: -33 };
 

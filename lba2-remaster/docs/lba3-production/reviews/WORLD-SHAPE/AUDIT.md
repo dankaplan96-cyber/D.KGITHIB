@@ -26,7 +26,7 @@ overlay images are in the session scratchpad (`worldshape/`, listed at the end) 
 | 1 | Desert Island | Our island was an invented round blob: wrong outline, too small, no inlets, lagoon, round hill or south-east arm; boxy rounded-rectangle mesas up to 20 m where the original tops out at 11.4 m | land IoU 0.52 in the frame now used (0.60 at the best of every 90° turn and shift); area 24,399 m² vs 34,394 (71 %); 187 × 176 m vs 217 × 264 m | **Fixed** (this pass) |
 | 2 | The Hamalayi | A square box: the wall of peaks a 200 m square, the terraces cut along straight lines (z = 31, z = −26, x = 0, x = 46), a ruler-straight gorge | 93 % of all cliff edge axis-aligned (a natural outline ≈ 11 %; the original Citadel 47 %, the original Desert 28 %) | **Fixed** (organic edges; levels kept) |
 | 3 | Walking speed | Every crossing 20 % shorter in time than LBA2's | 1.93 vs 2.4 m/s | **Fixed** by CTRL-1 (2.0 m/s) |
-| 4 | Citadel terraces | Our four steps are uniform 2.9 m; the original's shelves stand 3.8 / 7.3 / 11.1 / 13.6 m above the town (ours 2.8 / 5.8 / 8.7 / 11.6): the plateau 2 m low, the second step 1.5 m low | plateau-top (> 12.5 m) IoU 0.21; height error on common land 1.45 m (mean) | **Tried and reverted** (block 3): it measured 3.69 / 7.31 / 11.01 / 13.57 m, plateau-top IoU 0.71, error 1.11 m, but broke two input tests (below); plan ready |
+| 4 | Citadel terraces | Our four steps are uniform 2.9 m; the original's shelves stand 3.8 / 7.3 / 11.1 / 13.6 m above the town (ours 2.8 / 5.8 / 8.7 / 11.6): the plateau 2 m low, the second step 1.5 m low | plateau-top (> 12.5 m) IoU 0.21; height error on common land 1.45 m (mean) | **Fixed** (CITADEL-TERRACES, below): the shelves at 3.76 / 7.31 / 11.08 / 13.58 m, a ramp up to the first stone; the two tests that failed in block 3 pass |
 | 5 | Citadel harbour | A rectangular basin cut from x −400 into the quay (world.js `BAY`), a square quay, the square fort pad and depot yard | 1,147 m² of land the original doesn't have (mostly the quay and the coast's 1–2 m fringe) | סגור (HARBOUR-CUT): basin an ellipse 14 × 9 m semi-axes at (−121, 44), quay corners rounded 2 m (below) |
 | 6 | Zeelich terminal island | Ours (no original counterpart): 124 × 79 m, 5,353 m² | — | Leave (story place) |
 
@@ -41,7 +41,7 @@ The original map sits at (−76, +16) in our frame (world.js `LAYOUT`).
 |---|---|---|
 | Land (h > 0) | 16,662 m²; x −180…16, z −93…125 | 17,504 m² in the same frame (17,527 in all); x −180…17, z −94…125 |
 | Coast | — | IoU **0.918** (no better shift exists); original-only 305 m² (the sand bay joining the south-west islet: ours sinks below the sea there, (−83…−68, 86…103)); ours-only 1,147 m² (the harbour quay x −120…−107, z 34…54, and a 1–2 m fringe) |
-| Terrace shelves above the town (median of each traced band) | 3.76 / 7.31 / 11.08 / 13.58 m | 2.84 / 5.77 / 8.69 / 11.59 m (with the reverted plan: 3.69 / 7.31 / 11.01 / 13.57) |
+| Terrace shelves above the town (median of each traced band) | 3.76 / 7.31 / 11.08 / 13.58 m | 2.84 / 6.06 / 10.89 / 11.59 m by the same band medians (the 6.06 and 10.89 carry the west islet's raised top and the ramps) → **3.71 / 7.68 / 10.89 / 13.57 m** with CITADEL-TERRACES (the shelves themselves 3.76 / 7.31 / 11.08 / 13.58; the third band's median is the west islet, kept at its 13.2 m top) |
 | Terrace masks (IoU at the original's thresholds, ours scaled to its top) | — | 0.88 / 0.86 / 0.74 / **0.21** (the plateau top: 3,423 m² above 12.5 m in the original, 1,283 in ours; with the plan 0.88 / 0.87 / 0.82 / 0.71) |
 | Cliff share (slope > 1.1) | 19.7 % | 17.2 % (plan: 18.9 %) |
 | Height error on common land (mean, above each town) | — | 1.45 m (plan: 1.11 m) |
@@ -155,27 +155,32 @@ joins the existing instanced/batched meshes (no new draw calls). Region build ti
 (other agents running): Desert 857 ms before, 540–1,411 ms after across runs (the coast grid, the flood fill; noisy); the Hamalayi
 unchanged within noise.
 
-## Citadel terraces: tried in block 3, reverted
+## Citadel terraces: done (CITADEL-TERRACES)
 
-The plan below was built and measured (shelves 3.69 / 7.31 / 11.01 / 13.57 m, plateau-top IoU 0.21 → 0.71, height
-error 1.45 → 1.11 m; prologue, chapters 1–10, stability, wizards, arsenal, holomap, opening, spaceport, desert-life
-passed), but two input tests failed with it in two runs (r3, r4), so it is not shipped (the same tests without it: "Tests" below):
-- tests/travel.mjs, chapter 10: from Citadel Spaceport the harness's walk to Hesk at the glider landing (−58, −60)
-  ends "stuck" (the spot is still reachable on the slope graph: 120.7 m vs 120.1 m before; the harness's planner or a
-  ramp edge, not diagnosed).
-- tests/occluders.mjs (b): behind the Bug Street house one frame shows his feet hidden by the west street's bank,
-  now 0.4–0.9 m higher, with no silhouette (terrain is not a registered occluder).
+Block 3 built the plan and reverted it (travel chapter 10's walk to Hesk and occluders (b) failed in two runs). Built
+again from the same numbers, both pass (the two failures did not come back: travel's walk to Hesk at (−58, −60) arrives in
+30 s of game time before and after; occluders (b) 36 of 36), and four other things the new heights broke were fixed:
 
-The change, for whoever takes it up (with those two tests): `citadel-layout.js` `SHELVES = [3.76, 7.31, 11.08,
-13.58]`, `TOWN_Y = 2.3`, `CLIFFS_TOP = TOWN_Y + SHELVES[3] + 2.9` (18.78); `world.js` `level(k) = LEVEL0 + (k ?
-SHELVES[k-1] : 0)`, `terraces()` adding `SHELVES[k-1] - SHELVES[k-2]` per level, `POI.plateau.h = CLIFFS_TOP`,
-`PIT_FILLS[0].h = level(4)`; `island.js` `POI_PLATEAU.h = CLIFFS_TOP`; tests/stability.mjs D13's `leverGround < 15`
-→ `leverGround < terrain + 0.3` (the plateau no longer at 13.9). Raising only the plateau (levels 3–4) and keeping
-the first shelf would leave the west street's bank as it is and may avoid the occluder frame.
+- `citadel-layout.js` `SHELVES = [3.76, 7.31, 11.08, 13.58]`, `TOWN_Y = 2.3`, `CLIFFS_TOP` (18.78 = TOWN_Y + top shelf + 2.9);
+  `world.js` `level(k)` and `terraces()` take the steps from them (3.76, 3.55, 3.77, 2.50 m, not four of 2.9),
+  `POI.plateau.h` and island.js `POI_PLATEAU.h` are `CLIFFS_TOP`, `PIT_FILLS[0].h = level(4)`.
+- The west islet's top stays at 13.2 m (`ISLET_TOP`; it was `LEVEL0 + 3 × 2.9 + 2.2`): left to follow level 3 it would have
+  stood 2.4 m too high.
+- The west street (PATHS[4]) goes on 3.4 m to the first stone's foot, and the ramps now come from PATHS, not
+  PATHS_SCATTER (only the scatter keeps the old line): the first shelf is 3.76 m up and the street's end had been 2.1 m
+  under it, the first stone out of a jump's reach (tests/jumpreach.mjs, the Whispering Cliffs: 0 of 14).
+- The stepping stones: 14 now (the climb is 12.6 m, was 12.0), the sideways wobble counted from the top stone so the last
+  two stones (and their rim nudges) stand as with 13 (with the old count the last hop was 3.4 m, a gap of 1.2 m, and
+  failed). Stone tops 5.9 (1 m over the ramp's foot) … 18.9 m, 0.97–1.0 m a step.
+- tests/stability.mjs D13: `leverGround < 15` → `< yard + 0.5` (the fort's yard floor is now 15.9 m).
+
+Measured (tools/worldscore.mjs, game 0.33.0): Citadel 84.5 → 85.1 (height 76.6 → 80.0, objects 61.1 → 60.9 from the
+scatter re-rolling on the new ground, coast and landmarks as before; MAE after the lift 1.06 → 0.91 m). Ground
+above 12.5 m, lift taken out: 3,881 → 4,395 m² against the original's 3,688, IoU 0.72 → 0.77.
 
 ## Still open
 
-**Citadel terraces**: above.
+**Citadel terraces — done (CITADEL-TERRACES)**: above.
 
 **Citadel harbour — done (HARBOUR-CUT)**: world.js `BAY` is now an ellipse (semi-axes 14 × 9 m, centre (−121, 44), the quay
 face 1 m east of it) that only digs (`min(h, −3.2)`: the old straight cut also lifted the sea floor to 3.2 m all the
@@ -206,6 +211,9 @@ new outline (300 m patch) and the raised terraces by itself (tests/holomap.mjs b
 - r5–r7 (terraces reverted, merged a1ff730): stability, travel, occluders, townlife, desert-life passed; chapter4
   failed with the 280-segment Desert grid (ADV-1's disc throws; the same test passes on a1ff730 itself) and passed
   with 300 segments (r6); r7 on the final code: stability, chapter5, desert-life, travel all passed.
+
+- CITADEL-TERRACES (on game 0.33.0, SwiftShader): travel, occluders, stability, worldfit, jumpreach, house, chapter1,
+  chapter8, camclear, perfbudget and the playthrough segments 01–04 chained (KEEP/LOAD; the stones step 14 of 14): all VERDICT PASS.
 
 ## Evidence (session scratchpad, not committed)
 

@@ -16,7 +16,7 @@ import { buildDinoFly } from './dinofly.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
-import { COAST, LEVELS, PROPS } from './citadel-layout.js';
+import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
@@ -39,7 +39,7 @@ export const POI = {
   lighthouse: { x: -107.5, z: 90.5 },   // "at the end of the island": the south-west headland, as in the original
   sage: { x: -105.5, z: 97.5 },
   // the Whispering Cliffs: a rock stack on the plateau's southern rim, reached only by the stepping stones
-  plateau: { x: -56, z: -44, r: 11, h: 16.8 },
+  plateau: { x: -56, z: -44, r: 11, h: CLIFFS_TOP },
   stonesStart: { x: -68, z: -22 },
   target: { x: -69, z: -29 },
   camp: { x: -76, z: -70 },
@@ -48,8 +48,13 @@ export const POI = {
 };
 
 // LBA2-style terraces: levels separated by steep rock cliffs
-export const LEVEL0 = 2.3, LEVEL_STEP = 2.9;
-export const level = (k) => LEVEL0 + LEVEL_STEP * k;
+// (CITADEL-TERRACES: the four shelves stand at the original's heights above the town — 3.76 / 7.31 / 11.08 / 13.58 m, from
+// tools/worldscore/ref/citadel.json — so the steps run 3.76, 3.55, 3.77, 2.50 m instead of four of 2.9; the rock stack
+// on the rim stands 2.9 m over the top shelf)
+export const LEVEL0 = 2.3, LEVEL_STEP = 2.9;   // (LEVEL_STEP: the rock stack's height over its shelf)
+export const level = (k) => LEVEL0 + (k ? SHELVES[k - 1] : 0);
+const stepOf = (k) => SHELVES[k - 1] - (k > 1 ? SHELVES[k - 2] : 0);
+
 
 // the town core keeps exactly the heights it was built on
 const FLATS = [{ ...POI.village, r: 20, h: 2.2 }];
@@ -67,7 +72,8 @@ export const PATHS = [
   [[-48, -56], [-58, -66], [-64, -75], [-86, -76], [-94, -70]],                         // through the depot to the Wizard's lane
   [[-58, -66], [-70, -60], [-75, -57]],                                                 // to the orchard
   // the west street to the stepping stones (WORLD-80: from Bug Street's end round the north house of its pair)
-  [[-55.6, -12.6], [-55.4, -18.8], [-58.5, -19.6], [-66.5, -20.6]],
+  // (CITADEL-TERRACES: on up onto the first shelf, now 3.76 m over the town, by its own ramp to the first stone's foot)
+  [[-55.6, -12.6], [-55.4, -18.8], [-58.5, -19.6], [-66.5, -20.6], [-69.4, -22.8]],
   [[-60, -4.5], [-73, -4.5]],                                                           // up onto the original's promenade above the shore
   [[-46, 31], [-60, 33], [-74, 35.5], [-90, 38], [-107.5, 39]],                        // west past the baggage-claim building to the harbour
   [[-44, 10], [-46, 40], [-45, 74], [-44.5, 79.5]],                                     // south through the fields to Twinsen's door
@@ -189,7 +195,7 @@ function beachMask(x, z) {
 
 // WORLD-80: the west islet's top stands 2.2 m higher (the original's 12.1 m, our lift +1.1): its last step (level 3,
 // west of ISLET_X) is a taller rock face; the great dome stands on a level floor at that height (baseHeight)
-const ISLET_X = -132, ISLET_LIFT = 2.2, ISLET_TOP = LEVEL0 + 3 * LEVEL_STEP + ISLET_LIFT;
+const ISLET_X = -132, ISLET_TOP = 13.2, ISLET_LIFT = ISLET_TOP - level(3);   // (13.2 m: its top as WORLD-80 set it, 2.3 + 3 × 2.9 + 2.2, whatever the shelves are)
 // the layout's terraces: each level polygon adds one LBA2 step (2.9 m) with a craggy rock face at its edge
 let PRE80 = false;   // (true while the scatter's copy of the ground before WORLD-80 step 2 is computed: scatterGround)
 function terraces(x, z) {
@@ -198,7 +204,7 @@ function terraces(x, z) {
     const d = sd(k, x, z) + jag(x, z, k * 3.1);
     if (d < -1.2) continue;
     const s = smoothstep(-1.1, 1.1, d);
-    h += (k === 3 && x < ISLET_X && !PRE80 ? LEVEL_STEP + ISLET_LIFT : LEVEL_STEP) * s;
+    h += (k === 3 && x < ISLET_X && !PRE80 ? stepOf(k) + ISLET_LIFT : stepOf(k)) * s;
     cliff = Math.max(cliff, s * (1 - s) * 4);
   }
   h += cliff * fbm(x * 0.5, z * 0.5, 2) * 0.7;                        // craggy faces
@@ -287,7 +293,7 @@ function buildProfiles(paths) {
   });
 }
 function pathRamp(x, z, h) {
-  if (!profiles) { const was = PRE80; PRE80 = true; profiles = buildProfiles(PATHS_SCATTER); PRE80 = was; }
+  if (!profiles) { const was = PRE80; PRE80 = true; profiles = buildProfiles(PATHS); PRE80 = was; }
   let wsum = 0, hsum = 0, wmax = 0;
   for (const P of profiles) {
     let best = 1e9, bs = 0;
@@ -459,7 +465,7 @@ export function buildHeightGrid(size, segs) {
 
 // the gully at the plateau's edge below the orchard: a dead end 8 m deep whose banks can't be climbed (a dodge at the
 // orchard's edge dropped Twinsen into it for good)
-const PIT_FILLS = [{ x0: -70.5, x1: -65.5, z0: -55.5, z1: -46.5, h: 13.9 }];
+const PIT_FILLS = [{ x0: -70.5, x1: -65.5, z0: -55.5, z1: -46.5, h: level(4) }];
 
 // Every walkable cell must be able to walk back to the town (cliffs can be
 // dropped down, never climbed). Cells that cannot are pits: fill them with
@@ -918,7 +924,9 @@ export function* buildWorldSteps(parentScene) {
     // PLAY-7-14: the last stone's top is the plateau's own ground round it (WORLD-80's Citadel stands it 16.8-16.9 m,
     // above POI.plateau.h): a top under it left a 1.15 m step from the last-but-one stone onto the plateau, past LBA2's
     // 1.14 m apex, with the cliff's rim poking through that stone. The stones stand where they did (13 of them).
-    const at = (cnt, i) => { const wob = Math.sin(i * 1.7) * 1.2, k = i / (cnt - 1); return { x: S.x + ux * edge * k - uz * wob, z: S.z + uz * edge * k + ux * wob }; };
+    // (CITADEL-TERRACES: the sideways wobble counts from the top stone, so the last stones (and their nudges, below) stand as they did
+    // when the climb was 13 stones, whatever their number is now)
+    const at = (cnt, i) => { const wob = Math.sin((i + 13 - cnt) * 1.7) * 1.2, k = i / (cnt - 1); return { x: S.x + ux * edge * k - uz * wob, z: S.z + uz * edge * k + ux * wob }; };
     const rimTop = (q) => { let m = H(q.x, q.z); for (let a = 0; a < 12; a++) m = Math.max(m, H(q.x + Math.sin(a * Math.PI / 6) * 0.9, q.z + Math.cos(a * Math.PI / 6) * 0.9)); return m; };
     let n = Math.ceil((P.h - base) / 1.05), endTop = P.h - 0.15;
     for (let pass = 0; pass < 2; pass++) { endTop = Math.max(P.h - 0.15, rimTop(at(n, n - 1))); n = Math.ceil((endTop + 0.15 - base) / 1.05); }
