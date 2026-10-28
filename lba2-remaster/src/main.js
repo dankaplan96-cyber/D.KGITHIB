@@ -619,11 +619,20 @@ class Game {
     const f = $('#fade');
     f.style.transition = 'none';
     // (a freshly built area's shaders may take longer than a known one's: up to 20 s behind its card)
-    if (T.hold) { f.style.opacity = 1; T.held = true; if (!T.building && performance.now() - T.holdT > (T.long ? 20000 : 4000)) T.hold = false; return; }
+    if (T.hold) { f.style.opacity = 1; T.held = true; T.heldAt = undefined; if (!T.building && performance.now() - T.holdT > (T.long ? 20000 : 4000)) T.hold = false; return; }
     // PERF-BATTERY: the first frame drawn after a hold stays fully black too. It is the new scene's first real frame
     // (its geometry's first draw, the static shadow cache, pieces that started moving leaving their batches): on the
     // user's arrival route the frames after the black came at 90 % fade and counted, and showed, as stalls in view
-    if (T.held) { T.held = false; f.style.opacity = 1; this._fadeOp = 1; return; }
+    // I-11: and the frames after it stay black while the GPU catches up with that first frame (its shadow cache build,
+    // uploads, first draws: on the user's arrival route the frame AFTER the black one came at 150–200 ms, half in view):
+    // while the last interval was over 50 ms, at most 3 more frames. (Under the tests' fixed stepping: one, as before.)
+    if (T.held) {
+      if (this.testFreeze || this._frameNo == null) { T.held = false; f.style.opacity = 1; this._fadeOp = 1; return; }
+      T.heldAt ??= this._frameNo;
+      const k = this._frameNo - T.heldAt;
+      if (k === 0 || (k <= 3 && this._lastRealMs > 50)) { f.style.opacity = 1; this._fadeOp = 1; T.settled = k; return; }
+      T.held = false;
+    }
     if (T.card && T.called) { T.card.hide(); T.card = null; }
     if (this._transBudget != null) { dt = Math.min(dt, this._transBudget); this._transBudget -= dt; }
     T.t += dt;
@@ -2039,6 +2048,7 @@ class Game {
   }
   advance(real) {
     const t0 = performance.now(), jc = this.jobCounters();
+    this._frameNo = (this._frameNo || 0) + 1; this._lastRealMs = real * 1000;   // (I-11: updateTransition's settle frames)
     // (a heap that shrank since the last frame: a garbage collection ran in the interval)
     const gc = this._jc && this._jc.h && jc.h && this._jc.h - jc.h > 8e6 ? `GC −${((this._jc.h - jc.h) / 1048576).toFixed(0)} MB` : '';
     const dt = Math.min(real, MAX_STEP * MAX_SUB);
