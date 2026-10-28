@@ -27,5 +27,5 @@ Known, not re-listed: the Hamalayi rebels' camp, the ch11 galleries' difficulty 
 Not tested: frame rate, audio, human-style fights, the opening cinematic.
 
 ## Found while fixing (27.10)
-| 17 | Story talks (Sendell ×2, Vesk) | Twinsen keeps his sword drawn while he talks (seen in the reveal-camera close-ups) | story scenes / hero weapon | S | |
-| 18 | 11 Sendell's chamber | Hard additive-square motes, very visible in the new close-up (not the Particles FX-SOFT redid) | chapter3.js / underground.js room dressing | S | |
+| 17 | Story talks (Sendell ×2, Vesk) | Twinsen keeps his sword drawn while he talks (seen in the reveal-camera close-ups) | story scenes / hero weapon | S | done (SMALL-FIXES): Hero.sheathed (actors.js) hides the drawn sword mesh while game.state is 'dialog' (every game.say: story chains, NPC chit-chat, talks begun mid-fight) or a reveal beat holds before its hand-back; Hero.update draws it again on the first play frame. The equipped weapon and the wheel are untouched. tests/combat.mjs 24 |
+| 18 | 11 Sendell's chamber | Hard additive-square motes, very visible in the new close-up (not the Particles FX-SOFT redid) | chapter3.js / underground.js room dressing | S | done (SMALL-FIXES): underground.js motes() takes `soft`; Sendell's cloud uses a white radial falloff as the PointsMaterial map with added light (the map-Points program interiors.js already compiles, so nothing compiles after loading). The other motes() clouds (the steam, the sparks) stay hard squares for now |
