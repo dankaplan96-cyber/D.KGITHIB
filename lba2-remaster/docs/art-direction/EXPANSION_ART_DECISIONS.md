@@ -24,3 +24,13 @@ Implemented: no · Visually checked: no · Performance verified: no.
 Next: an in-engine comparison (same view of Twinsen's house, same camera and light: today vs the A+B treatment) before applying it widely; it may be built as an isolated preview, not in the campaign.
 Undecided: everything after D1 — next round D2 (Twinsun twelve years later: gentle evolution / old town + new infrastructure / growing trading town), when the user wants it (Twinsun degree of change, Nera identity, inhabitants, underground mood).
 Concept images: none (no free image-generation tool authorised); comparisons will be in-engine previews.
+
+## D2 — Twinsun twelve years later (Selected 28.10)
+Options: A gentle evolution · B old town, new infrastructure · C a growing trading town.
+Selected: B as the primary direction (the user, 28.10: "an old town with new infrastructure laid over it"). Familiar buildings and
+geography stay recognisable; project pipes, cargo lifts and imported equipment visibly attach to older homes and public buildings
+(a pipe routed round a window, a guard post turned workshop, an old sign under a new one, a cargo mechanism residents depend on),
+each with a purpose, plus one small repair problem that can matter in the evacuation. A/C only as small accents (repairs, a few Zeelich goods).
+Implemented: no · Visually checked: no · Performance verified: no.
+Next: the street near Twinsen's house as the first isolated preview (three silhouettes, recessed windows and doors, thick roofs,
+one shop interior, old/new junction, the repair problem), built in the A+B treatment of D1.
