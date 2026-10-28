@@ -155,6 +155,41 @@ def strip(part, pts, width, lift=(0, 0, 0.002)):
     return part.add(vv, ff)
 
 
+def mouth_lens(cx, cy, hw, hh, lift, front, n=9, dz=0.004, a_up=1.0, a_lo=1.0):
+    """FACES-HANDS: a talking mouth drawn at its fully OPEN size: a lens (the corners pinched to a point, the middle
+    `hh` tall above and below the centre line, times a_up / a_lo for a jaw that drops more than the lip lifts, the
+    corners `lift` higher than the middle) laid on the face surface. The game scales it down in y to a thin closed
+    line at rest (`rest` in the JSON) and back up while the character speaks (rig.js), so the corner lift and the
+    thickness shrink together with it. `front(x, y)` is the face's z at a point; the lens lies flat on the face at the
+    centre line (dz proud of it) and the game tilts it back about x by `tilt` as it opens, so its lower edge follows the
+    face receding toward the chin. Returns (pivot, polygon, tilt): a strip (lower edge left to right, then the upper
+    edge back) of n stations about the pivot (cx, cy)."""
+    lo, up = [], []
+    for i in range(n):
+        u = i / (n - 1) * 2 - 1
+        x = cx + u * hw
+        t = max(0.0, 1.0 - abs(u) ** 2.2) ** 0.62            # the pinched lens profile
+        yc = cy + lift * u * u
+        z = front(x, cy) + dz                                 # (flat: the game tilts it with the jaw, see tilt)
+        lo.append((x, yc - hh * a_lo * t, z))
+        up.append((x, yc + hh * a_up * t, z))
+    pz = max(p[2] for p in lo)
+    tilt = math.atan2(front(cx, cy + hh * a_up) - front(cx, cy - hh * a_lo), hh * (a_up + a_lo))   # (the face slope over the lens: how far back its lower edge goes)
+    return (cx, cy, pz), lo + list(reversed(up)), tilt
+
+
+def lip_band(lens, thick, lift=0.0004):
+    """A band hanging from the lens's lower edge (a lower lip that drops with the open mouth), `thick` tall in the middle
+    and pinched at the corners like the lens; a hair in front of it."""
+    n = len(lens) // 2
+    top = lens[:n]
+    band = []
+    for i, (x, y, z) in enumerate(top):
+        u = i / (n - 1) * 2 - 1
+        band.append((x, y - thick * max(0.0, 1.0 - abs(u) ** 2.2) ** 0.62, z + lift))
+    return band + [(x, y, z + lift) for x, y, z in reversed(top)]
+
+
 # ------------------------------------------------------------------ export
 def corner_normals(verts, tris, angle):
     fn = []
@@ -180,6 +215,24 @@ def corner_normals(verts, tris, angle):
     return res
 
 
+def strip_tris(n):
+    """Triangles of a strip polygon: its lower edge left to right, then its upper edge back (stations 0..n/2-1)."""
+    h = n // 2
+    return [t for i in range(h - 1) for t in ((i, i + 1, n - 2 - i), (i, n - 2 - i, n - 1 - i))]
+
+
+def strip_mesh(piv, polys, bone, rest, drop, tilt=0.0):
+    """The JSON entry of a mouth: triangles relative to its pivot, on a bone (same layout as an eye's), with its
+    closed scale in y (`rest`), how far it drops (game units) and how far it tilts back (radians) at full open. `polys` = [(strip polygon, colour)]."""
+    ed = {'bone': bone, 'pivot': [round(c, 5) for c in piv], 'pos': [], 'col': [], 'rest': rest, 'drop': drop, 'tilt': round(tilt, 4)}
+    for poly, color in polys:
+        for t in strip_tris(len(poly)):
+            for i in t:
+                ed['pos'] += [round(poly[i][k] - piv[k], 5) for k in range(3)]
+                ed['col'] += hexrgb(color)
+    return ed
+
+
 def gb(p):  # game → Blender axes (z up, facing −y)
     return Vector((p[0], -p[2], p[1]))
 
@@ -188,7 +241,7 @@ class Builder:
     def __init__(self, name, bones, collection=None, rest=None):
         self.name, self.B = name, bones
         self.rest = rest  # optional fn(p, weights) -> rest-pose point
-        self.parts, self.eyes = [], []
+        self.parts, self.eyes, self.mouths = [], [], []
         coll = collection or bpy.context.scene.collection
         self.coll = bpy.data.collections.new(name)
         coll.children.link(self.coll)
@@ -205,6 +258,10 @@ class Builder:
 
     def eye(self, pivot, quads, bone='head'):
         self.eyes.append({'bone': bone, 'pivot': pivot, 'quads': quads})
+
+    def mouth(self, pivot, polys, rest=0.3, drop=0.0, tilt=0.0, bone='head'):
+        """The talking mouth (see mouth_lens): its own small mesh on the bone, scaled by the game. polys = [(polygon, colour)]."""
+        self.mouths.append({'bone': bone, 'pivot': pivot, 'polys': polys, 'rest': rest, 'drop': drop, 'tilt': tilt})
 
     def _armature(self):
         B = self.B
@@ -312,5 +369,17 @@ class Builder:
                 ob.parent = self.arm
             out['eyes'].append(ed)
             out['tris'] += ntri
+        if self.mouths:
+            out['mouths'] = []
+        for m in self.mouths:
+            out['mouths'].append(strip_mesh(m['pivot'], m['polys'], m['bone'], m['rest'], m['drop'], m['tilt']))
+            for poly, color in m['polys']:
+                out['tris'] += len(strip_tris(len(poly)))
+                me = bpy.data.meshes.new(self.name + '_mouth')
+                me.from_pydata([gb(p) for p in poly], [], [list(range(len(poly)))])
+                me.materials.append(self._mat(color))
+                ob = bpy.data.objects.new(self.name + '_mouth', me)
+                self.coll.objects.link(ob)
+                ob.parent = self.arm
         json.dump(out, open(path, 'w'), separators=(',', ':'))
         return out['tris']

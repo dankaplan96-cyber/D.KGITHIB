@@ -115,14 +115,26 @@ if (q.get('labels') !== '0') {
 }
 const yaw = q.get('yaw') != null ? +q.get('yaw') : null;
 const speed = q.get('speed') != null ? +q.get('speed') : anim === 'walk' ? 1.4 : anim === 'run' ? 6.5 : anim === 'sneak' ? 1.0 : 0;
+const mouthQ = q.get('mouth') != null ? +q.get('mouth') : null, roundQ = +(q.get('round') || 0);   // (FACES-HANDS: hold the talking mouth this open / round)
 const step = (dt) => rigs.forEach((g) => {
+  if (mouthQ != null) g.speakMouth(mouthQ, roundQ);
   g.play(anim); g.update(dt, speed);
   g.root.rotation.y = g.fixedYaw != null ? g.fixedYaw : yaw != null ? yaw : g.root.rotation.y;
 });
 // freeze at time t: advance the clip deterministically, then keep rendering that frame
 const tFreeze = q.get('t') != null ? +q.get('t') : null;
 if (tFreeze != null) { const n = Math.round(tFreeze * 60); for (let i = 0; i < n; i++) step(1 / 60); }
-window.lookdev = { rigs, render: (dt = 1 / 60) => { if (tFreeze == null) step(dt); r.render(scene, cam); } };
+// (FACES-HANDS) focus=armL.hand | armR.hand | head: the camera follows that bone at fd metres, seen from cyaw (radians) and cpitch
+const focusQ = q.get('focus'), fd = +(q.get('fd') || 0.6), cyaw = +(q.get('cyaw') || 0), cpitch = +(q.get('cpitch') || 0.15), _fp = new THREE.Vector3();
+const aim = () => {
+  if (!focusQ) return;
+  const bone = focusQ.split('.').reduce((o, k) => o?.[k], rigs[0].j);
+  if (!bone) return;
+  bone.updateWorldMatrix(true, false); bone.getWorldPosition(_fp);
+  cam.position.set(_fp.x + Math.sin(cyaw) * Math.cos(cpitch) * fd, _fp.y + Math.sin(cpitch) * fd, _fp.z + Math.cos(cyaw) * Math.cos(cpitch) * fd);
+  cam.lookAt(_fp); cam.updateMatrixWorld();
+};
+window.lookdev = { rigs, render: (dt = 1 / 60) => { if (tFreeze == null) step(dt); aim(); r.render(scene, cam); } };
 const still = camMode !== 'free' || views != null || tFreeze != null;
 let last = performance.now();
 function loop(t) { const dt = Math.min(0.05, (t - last) / 1000); last = t; if (!still) rigs.forEach((g) => (g.root.rotation.y += dt * 0.4)); window.lookdev.render(dt); if (!still) requestAnimationFrame(loop); }

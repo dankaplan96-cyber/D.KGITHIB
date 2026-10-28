@@ -11,9 +11,11 @@
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
 import json, math, os, sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy
 import bmesh
 from mathutils import Matrix, Vector
+from lbapoly import mouth_lens, strip_mesh, strip_tris
 
 SKEL, OUT = sys.argv[-2], sys.argv[-1]
 BLEND = None
@@ -322,6 +324,13 @@ for sx in (1, -1):
     # the hand: LBA2's ball (the original's: r 0.036 H, centred 0.376 H, just under the cuff)
     hand = Part('hand' + s, 'skin', hb, angle=60)
     sphere(hand, (sx * 0.19, 0.378, 0.02), 0.036, 10, 7)
+    # FACES-HANDS: the ball stays LBA2's ball (same size, same place: the gameplay silhouette is unchanged), with a hint of a
+    # hand on it for the close-ups: a thumb standing forward off the inner front of the ball, and the fingers as three
+    # knuckle lobes curled along its inner underside (the palm faces his thigh at rest). 8 mm proud of the ball at most.
+    hc = (sx * 0.19, 0.378, 0.02)
+    tube(hand, (hc[0] - sx * 0.013, hc[1] + 0.012, hc[2] + 0.022), (hc[0] - sx * 0.021, hc[1] + 0.001, hc[2] + 0.050), 0.0098, 0.0068, 6)
+    for dz_, dy_, rr_ in ((-0.020, -0.017, 0.0118), (-0.002, -0.021, 0.0128), (0.017, -0.019, 0.0108)):
+        sphere(hand, (hc[0] - sx * 0.026, hc[1] + dy_, hc[2] + dz_), rr_, 6, 4)
     PARTS.append(hand)
 
 # NECK-TW: LBA2's long thin neck (±0.027 H), but a neck and not a pipe: round sections (the old ring()s creased the
@@ -542,25 +551,12 @@ for sx in (1, -1):
     cord.add(vv, ff)
 # (the original shows no cord: not exported)
 
-# the mouth (FACE-MOUTH): he had none. A short, calm, slightly upturned line on the lower face (a thin tapered
-# crescent, the corners a touch higher than the middle: a gentle friendly rest, not a gape), laid 4 mm off the skin
-# on the head bone. A strip of 7 stations on the face surface, so it follows the snout's slope; 12 triangles.
-MOUTH = Part('mouth', 'mouth', lambda p: {'head': 1.0}, angle=85, big=True)
-MOUTH_Y, MOUTH_HW, MOUTH_T = 0.842, 0.0215, 0.0030      # centre height (fraction of H), half-width, half-thickness
-_mv, _mf = [], []
-for _i in range(7):
-    _u = _i / 6 * 2 - 1                                  # -1 … 1 across the mouth
-    _x = _u * MOUTH_HW
-    _lift = 0.0045 * _u * _u                             # the corners rise
-    _t = MOUTH_T * (1.0 - 0.55 * _u * _u)                # tapered towards the corners
-    for _dy in (_t, -_t):
-        _y = MOUTH_Y + _lift + _dy
-        _mv.append((_x, _y, head_front(_x, _y) + 0.004))
-for _i in range(6):
-    _a = 2 * _i
-    _mf.append([_a, _a + 1, _a + 3, _a + 2])             # (counter-clockwise seen from the front, +z)
-MOUTH.add(_mv, _mf)
-PARTS.append(MOUTH)
+# the mouth (FACE-MOUTH, then FACES-HANDS): he had none. A short, calm, slightly upturned line on the lower face. It is
+# its own small mesh on the head bone (lbapoly.mouth_lens), drawn at its OPEN size, a pinched lens; the game scales it
+# down in y to the thin closed line at rest (rest 0.28: the same 6 mm line as FACE-MOUTH's crescent) and up while he
+# speaks, in time with the voice's syllables (rig.js, voice.js). 16 triangles, one draw call.
+MOUTH_Y, MOUTH_HW, MOUTH_HH, MOUTH_LIFT, MOUTH_REST = 0.842, 0.0215, 0.0110, 0.0075, 0.28
+MOUTHS = [mouth_lens(0.0, MOUTH_Y, MOUTH_HW, MOUTH_HH, MOUTH_LIFT, head_front, 9, 0.004)]   # (pivot, polygon, tilt)
 
 # eyes (separate, so they can blink): a flat diamond on the face, the iris a smaller one on top of it
 EYES = []
@@ -749,6 +745,22 @@ for e in EYES:
         ob.parent_bone = 'head'
         ob.matrix_world = Matrix.Identity(4)
     out['eyes'].append(ed)
+
+out['mouths'] = []
+for piv, poly, mtilt in MOUTHS:
+    ps = tuple(c * S for c in piv)
+    poly = [tuple(c * S for c in p) for p in poly]
+    out['mouths'].append(strip_mesh(ps, [(poly, COL['mouth'])], 'head', MOUTH_REST, -0.35 * MOUTH_HH * S, mtilt))
+    out['tris'] += len(strip_tris(len(poly)))
+    me = bpy.data.meshes.new('mouth')
+    me.from_pydata([gb(tuple(c / S for c in p)) for p in poly], [], [list(range(len(poly)))])
+    me.materials.append(mats['mouth'])
+    ob = bpy.data.objects.new('mouth', me)
+    bpy.context.scene.collection.objects.link(ob)
+    ob.parent = arm_obj
+    ob.parent_type = 'BONE'
+    ob.parent_bone = 'head'
+    ob.matrix_world = Matrix.Identity(4)
 
 json.dump(out, open(OUT, 'w'), separators=(',', ':'))
 print('tris', out['tris'], 'verts', len(out['pos']) // 3, 'bones', out['bones'])

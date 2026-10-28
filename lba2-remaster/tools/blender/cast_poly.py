@@ -12,7 +12,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import bpy  # noqa: E402
-from lbapoly import Builder, Part, box, disc, loft, lerp, ring, smooth, sphere, strip, tube  # noqa: E402
+from lbapoly import Builder, Part, box, disc, loft, lerp, mouth_lens, ring, smooth, sphere, strip, tube  # noqa: E402
 
 args = [a for a in sys.argv[1:] if not a.endswith('.py')]
 SKEL, OUTDIR = args[0], args[1]
@@ -395,16 +395,10 @@ def build(name):
         if name in QUETCH_MOUTH:
             # (FACE-MOUTH) the mouth, as his father's (twinsen_poly.py): a short tapered crescent on the lower face on
             # the head bone, a touch smaller and with the corners lifted more (a younger, readier smile)
-            mo = b.P('mouth', '#6a2a2a', head_w, 30)
-            mw, mt, ml = 0.019 * sx_, 0.0031, 0.0065
-            mv, mf = [], []
-            for i in range(7):
-                u = i / 6 * 2 - 1
-                for dy in (mt * (1.0 - 0.55 * u * u), -mt * (1.0 - 0.55 * u * u)):
-                    yy = my(0.846) + ml * u * u + dy
-                    mv.append((u * mw, yy, front(u * mw, yy) + 0.004))
-            mf = [[2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2] for i in range(6)]   # (counter-clockwise seen from the front)
-            mo.add(mv, mf)
+            # (FACES-HANDS) now his talking mouth: its own small mesh drawn open (a pinched lens) and scaled by the game to the
+            # same thin line at rest (0.34 x 0.0092 = the 3 mm half-thickness it had), taller while he speaks (rig.js, voice.js)
+            mp_, mlens, mt_ = mouth_lens(0.0, my(0.846), 0.019 * sx_, 0.0092, 0.0065, front, 9, 0.004)
+            b.mouth(mp_, [(mlens, '#6a2a2a')], rest=0.34, drop=-0.35 * 0.0092, tilt=mt_)
         top_y, back_z = my(0.95), mz(-0.05)
         style = L.get('hairStyle', 'cap')
         if style not in ('bald', 'bun'):
@@ -809,9 +803,11 @@ def build_esmer(name):
     banded(b, 'capsule', rings, bands, w_cap)
     front = lambda x, y: zc(y) + math.sqrt(max(0.0, R * R - x * x))
     face_dots(b, front, faceY, R * 0.38, R * 0.27, R * 0.16, '#f0ece0', L.get('eyes', '#2a2a2a'))
-    mouth = b.P('mouth', '#6a2a2a', 'head', 30)
+    # (FACES-HANDS) the mouth is the face's talking mouth: a pinched lens on its own small mesh, scaled by the game to the thin
+    # line the old quad was (rest 0.29 x 0.014 = 4 mm) and taller while this Esmer speaks (rig.js, voice.js)
     mw = R * 0.28
-    mouth.add([(x, faceY - R * 0.62 + yy, front(x, faceY - R * 0.62) + 0.003) for x, yy in ((-mw, 0), (mw, 0), (mw, 0.008), (-mw, 0.008))], [[0, 1, 2, 3]])
+    mp_, mlens, mt_ = mouth_lens(0.0, faceY - R * 0.62 + 0.004, mw, 0.014, 0.0, front, 9, 0.003)
+    b.mouth(mp_, [(mlens, '#6a2a2a')], rest=0.29, drop=-0.005, tilt=mt_)
     if L.get('hat'):   # a round cap over the top of the capsule
         ht = b.P('hat', L['hat'], 'head', 40)
         sphere(ht, (0, 0.955 * H, zc(H)), R * 1.12, 12, 6, (1.0, 0.62, 1.05))
@@ -1106,6 +1102,8 @@ def build_vesk(name):
     brow = b.P('brow', '#3a2a4a', 'head', 30)
     brow.add([(0.012, ey + 0.012, front(0.012, ey + 0.012) + 0.006), (0.062, ey + 0.03, front(0.062, ey + 0.03) + 0.006), (0.062, ey + 0.042, front(0.062, ey + 0.042) + 0.006), (0.012, ey + 0.02, front(0.012, ey + 0.02) + 0.006)], [[0, 1, 2, 3]])
     my = c[1] - 0.075
+    # (FACES-HANDS: Vesk's mouth stays this static slash. It lies under his beak, in the shadow of the dark violet face, where
+    # a talking mouth could not be seen at any camera; he is not given the animated one.)
     b.P('mouth', '#3a1a2a', 'head', 30).add([(-0.03, my, front(-0.03, my) + 0.004), (0.03, my - 0.008, front(0.03, my) + 0.004), (0.03, my - 0.002, front(0.03, my) + 0.004), (-0.03, my + 0.006, front(-0.03, my) + 0.004)], [[0, 1, 2, 3]])
     os.makedirs(OUTDIR, exist_ok=True)
     tris = b.export(os.path.join(OUTDIR, name + '.json'))
