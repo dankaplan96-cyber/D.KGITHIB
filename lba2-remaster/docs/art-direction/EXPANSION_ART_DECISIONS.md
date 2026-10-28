@@ -64,3 +64,20 @@ Must not read as another crystal cave. Implemented: no.
 ## D6 — The planet's name (Selected 28.10)
 Options: A Noria · B Ballastra · C Lissune. Selected: B "Ballastra" (from ballast/balance; no confusion with the NPC Nara).
 Docs that say "Nera" (EXPANSION_BRIEF.md etc.) mean Ballastra from now on; rename in code when the expansion is implemented.
+
+## D7 — How Sendell is present underground (Selected 28.10, the user: "by your recommendations")
+Today (verified in code): a voice and light rising from a still pool in her chamber (underground.js c3sendell), no body.
+Options: A as today only · B her light responds in the environment · C a partial figure / reflection.
+Selected: B — mineral layers light as she nears, reflections guide the player, her light weakens as the damage grows; it extends
+the existing light-and-voice representation, never a body. Few dynamic lights (baked/emissive where possible).
+
+## D8 — How mysterious the protected entity stays (Selected 28.10)
+Options: A never seen · B glimpses · C revealed at the end.
+Selected: B — rare glimpses of a vast slow shape behind thick translucent layers, never whole; never a boss (EXPANSION_BRIEF §10).
+
+## D9 — Tessa and Oren (Selected 28.10)
+Tessa (from the brief): a compact local mechanic — rolled sleeves, short apron, a few readable tools, forward working posture.
+Options for Oren: A older local · B a local from the upper districts · C a settled outsider.
+Selected: B — a little taller and narrower than his people (not spindly), a worn formal coat from the central-network years, keeps
+away from the water's edge; his silhouette carries the planet's history without text. Needs a slightly adapted rig (publish the
+contract before building). Supporting population derived after Tessa/Oren (ages, jobs, shapes), routine — no further question.
