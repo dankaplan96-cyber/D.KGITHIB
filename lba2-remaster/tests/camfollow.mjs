@@ -13,6 +13,8 @@
 //   5. walls: with a wall behind him the arm is drawn in (the camera between him and the wall), let out slowly as he
 //      walks away (≤ 2.6 m/s), drawn in as he backs up to it, and through a full turn beside it: every frame the camera
 //      outside every collider, scenery volume and the terrain, and nothing solid between it and him
+//      (CAM-CLEAR-2, AUDIT-CH12 #1/#2: where a view round him is clear, 2 m out from the wall, the camera swings round to
+//      it at the full arm instead of drawing in; the start takes either, every other limit stands as it was)
 //   6. a lock-on: the view stands behind his shoulder on the line from the target (within 15°), both on screen every
 //      frame while he moves locked; let go, it comes back behind him
 //   7. comfort: the camera-shake setting is respected (Off: no tremor); indoors (the iso rooms) nothing changes
@@ -312,9 +314,9 @@ if (wall.spots > 0) {
     for (const s of window.__wallSpots.slice(0, 12)) {
       const r = { spot: s };
       // (a) placed against the wall, facing away: the arm drawn in at once, the camera between him and the wall
-      F.place({ x: s.x, z: s.z }, s.a); const a0 = C.dist;
-      if (a0 > 6) { out.tried.push({ spot: s, arm: +a0.toFixed(2), why: 'not in the way' }); continue; }
-      r.start = { arm: +a0.toFixed(2), inside: F.inside(), seen: F.seen(), toHero: +Math.hypot(G.camera.position.x - h.pos.x, G.camera.position.z - h.pos.z).toFixed(2) };
+      F.place({ x: s.x, z: s.z }, s.a); const a0 = C.dist, swung = Math.abs(C.ch?.sw || 0) > 0.05;
+      if (a0 > 6 && !swung) { out.tried.push({ spot: s, arm: +a0.toFixed(2), why: 'not in the way' }); continue; }
+      r.start = { arm: +a0.toFixed(2), swung, off: F.off(), inside: F.inside(), seen: F.seen(), toHero: +Math.hypot(G.camera.position.x - h.pos.x, G.camera.position.z - h.pos.z).toFixed(2) };
       // (b) walking away 3 s: it lets out slowly
       let o = { frames: 0, inside: 0, unseen: 0, arm: [] }; F.hold(['ArrowUp'], 3, watch(o)); F.hold([], 2.5, watch(o));
       let vOut = 0; for (let i = 1; i < o.arm.length; i++) vOut = Math.max(vOut, (o.arm[i] - o.arm[i - 1]) * 60);
@@ -333,20 +335,22 @@ if (wall.spots > 0) {
   if (!r) check('a wall spot where the full arm would stand behind the wall', false, W.tried.slice(0, 4));
   else {
     console.log('INFO wall spot', JSON.stringify(r.spot), 'skipped', W.tried.length - 1);
-    check('Follow, a wall behind him: the arm drawn in (camera between him and the wall), outside everything, he is seen', r.start.arm <= 5 && !r.start.inside && r.start.seen && r.start.toHero < 4.5, r.start);
+    // (CAM-CLEAR-2: or swung round him, ≤ 90° off his back, to a clear view at the full arm)
+    const drawnOrSwung = (st, fullArm) => (st.arm <= 5 && (st.toHero ?? 0) < 4.5) || (st.swung && st.arm >= fullArm - 0.5 && Math.abs(st.off) <= 90);
+    check('Follow, a wall behind him: the arm drawn in (camera between him and the wall), or swung round him to a clear view at the full arm (CAM-CLEAR-2); outside everything, he is seen', drawnOrSwung(r.start, 8.75) && !r.start.inside && r.start.seen, r.start);
     check('Follow, walking away from the wall: let out slowly (≤ 2.6 m/s) to the full arm; never inside anything, he is always seen', r.away.inside === 0 && r.away.unseen === 0 && r.away.vOut <= 2.6 && r.away.armEnd >= 6.5, r.away);
     check('Follow, backing up to the wall: drawn in as he goes; never inside anything, he is always seen', r.backUp.inside === 0 && r.backUp.unseen === 0 && r.backUp.armEnd <= 5, r.backUp);
     check('Follow, a full turn on the spot by the wall: never inside anything, he is always seen, smooth (≤ 4.1° a frame)', r.turn.inside === 0 && r.turn.unseen === 0 && r.turn.maxStep <= 4.1, r.turn);
     // (and at Far: the arm drawn in the same, never inside anything, he is seen while he backs up to the wall)
     const far = await ev((s) => {
       const G = game, C = G.camRig; G.settings.camDist = 'far'; G.applySettings();
-      F.place({ x: s.x, z: s.z }, s.a); const o = { start: { arm: +C.dist.toFixed(2), inside: F.inside(), seen: F.seen() }, inside: 0, unseen: 0, full: 0 };
+      F.place({ x: s.x, z: s.z }, s.a); const h = G.hero, o = { start: { arm: +C.dist.toFixed(2), swung: Math.abs(C.ch?.sw || 0) > 0.05, off: F.off(), inside: F.inside(), seen: F.seen(), toHero: +Math.hypot(G.camera.position.x - h.pos.x, G.camera.position.z - h.pos.z).toFixed(2) }, inside: 0, unseen: 0, full: 0 };
       F.hold(['ArrowUp'], 3); F.hold([], 3); o.full = +C.dist.toFixed(2);
       F.hold(['ArrowDown'], 4, () => { if (F.inside()) o.inside++; if (!F.seen()) o.unseen++; }); o.end = +C.dist.toFixed(2);
       G.settings.camDist = 'medium'; G.applySettings();
       return o;
     }, r.spot);
-    check('Follow at Far by the wall: drawn in at the wall, out to its longer arm away from it, never inside anything, he is always seen backing up', far.start.arm <= 5 && !far.start.inside && far.start.seen && far.full >= 9 && far.inside === 0 && far.unseen === 0 && far.end <= 5, far);
+    check('Follow at Far by the wall: drawn in at the wall (or swung round him to a clear view at the full arm, CAM-CLEAR-2), out to its longer arm away from it, never inside anything, he is always seen backing up', drawnOrSwung(far.start, 10.75) && !far.start.inside && far.start.seen && far.full >= 9 && far.inside === 0 && far.unseen === 0 && far.end <= 5, far);
     if (SHOTS) {
       await ev((s) => { F.place({ x: s.x, z: s.z }, s.a); F.hold(['ArrowUp'], 3); F.hold([], 2.5); }, r.spot);
       for (let i = 0; i < 6; i++) { await shot(`wall-${i}`); await ev(() => F.hold(['ArrowDown'], 0.7)); }
