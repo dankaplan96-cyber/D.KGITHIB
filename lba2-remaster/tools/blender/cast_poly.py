@@ -55,7 +55,8 @@ def lum(hexc):
 # colour; clothing: hem band, neck binding, patch pockets, sleeve cuffs...; hat shapes. Read by build() below.
 CAST = {
     # ---- the people of Citadel
-    'gilbert': dict(browS=1.7, browTilt=-0.25, mouthY=0.834, mouthW=1.15, mouthLift=0.6, noseS=1.1, pockets=True, pocketY=0.12),
+    'gilbert': dict(browS=1.7, browTilt=-0.25, mouthY=0.834, mouthW=1.15, mouthLift=0.6, noseS=1.1, pockets=True, pocketY=0.12,
+                    dome=0.016, fluff=0.046, shoulderDrop=0.022),   # (G1-ART: a rounded bald crown, a fringe of white tufts, round shoulders)
     'tim': dict(hem=0.5, browS=0.8, browTilt=0.5, mouthW=1.25, mouthLift=1.8, mouthH=1.1, noseS=1.0, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], lip='#8a3a3a'),
     'lulu': dict(browS=0.7, browTilt=0.2, mouthW=1.0, mouthLift=1.6, lip='#b04058', lashes=True, bow=True, hairCuts=[0.0, 0.035, 0.072, 0.092, 0.11], hemH=0.06),
     'nell': dict(browS=1.3, browTilt=-0.2, mouthW=1.1, mouthLift=0.9, rolled=True, glove='#8a5a3a', pockets=True, pocketCol='#7a3a1a', hairCuts=[0.0, 0.03, 0.06, 0.085, 0.1], lip='#8a3a3a'),
@@ -451,7 +452,8 @@ def build(name):
         sleeve = skin if gown else tunic
         rolled = bool(L.get('rolled') or cp.get('rolled')) and not gown   # (sleeves rolled to the elbow: the bare forearm, a roll of cloth)
         up = b.P('upper' + s, sleeve, lambda p, s=s, e=el[1]: {'sh' + s: 1 - smooth(e + 0.06, e - 0.04, p[1]), 'el' + s: smooth(e + 0.06, e - 0.04, p[1])}, 50)
-        tube(up, (sh[0] - sx * 0.02, sh[1] + 0.03, sh[2]), el, ra * 1.05, ra, 8)
+        sdrop = cp.get('shoulderDrop', 0.0)   # (G1-ART: the sleeve's top and the shoulder ball lowered onto the tunic's slope: a round shoulder, not a post at the corner)
+        tube(up, (sh[0] - sx * 0.02, sh[1] + 0.03 - sdrop * 0.7, sh[2]), el, ra * 1.05, ra, 8)
         wrist = lerp(el, hd, 0.82)
         if rolled:
             # the forearm bare and slim to the wrist; the sleeve rolled up in a band just below the elbow (it keeps
@@ -473,7 +475,7 @@ def build(name):
         sphere(hp_, hc_, hr, 9, 6)
         hand_detail(hp_, hc_, hr, sx, bunny=bunny, grobo=grobo)
         # the shoulder: flush with the sleeve, where it meets the body
-        sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.015, sh[1] + 0.01, sh[2]), ra * 1.06, 9, 6, (1.0, 0.8, 1.0), exact=True)   # (its cap shows)
+        sphere(b.P('shoulder' + s, sleeve, 'sh' + s, 50), (sh[0] - sx * 0.015, sh[1] + 0.01 - sdrop, sh[2]), ra * 1.06, 9, 6, (1.0, 0.8, 1.0), exact=True)   # (its cap shows)
         if cp.get('epaulette'):   # (CAST-POLISH: a shoulder piece on the guards' coats)
             sphere(b.P('epaulette', cp['epaulette'], 'sh' + s, 40), (sh[0] - sx * 0.012, sh[1] + 0.036, sh[2]), ra * 1.3, 9, 5, (1.3, 0.42, 1.2), exact=True)   # (a flat cushion on the shoulder ball)
         if L.get('brace') and s == 'R':
@@ -540,13 +542,24 @@ def build(name):
             h = resample(half, K)
             pts = [(x * sx_, my(y), mz(z)) for x, z in h] + [(-x * sx_, my(y), mz(z)) for x, z in reversed(h[1:-1])]
             rr.append(pts)
+        top_ = (0.956, 0.035)
+        if cp.get('dome'):
+            # G1-ART: a bald crown rounded over (the skull's top section closed on a point leaves a flat lid, which a bald
+            # head shows from every side): three rings on a quarter-round over the top section, about its middle
+            y_t, half_t = TW_HEAD[-1]
+            h_t = resample(half_t, K)
+            for th in (30, 55, 75):
+                s_, dy_ = math.cos(math.radians(th)), cp['dome'] * math.sin(math.radians(th))
+                ring_ = [(x * s_, z_ * s_ + top_[1] * (1 - s_)) for x, z_ in h_t]
+                rr.append([(x * sx_, my(y_t + dy_), mz(z)) for x, z in ring_] + [(-x * sx_, my(y_t + dy_), mz(z)) for x, z in reversed(ring_[1:-1])])
+            top_ = (y_t + cp['dome'], top_[1])
         hp = b.P('head', skin, head_w, 80)
         loft(hp, rr)
         n = len(rr[0])
         o = len(hp.v)
         hp.add([(0, my(0.799), mz(0.095))], [])
         hp.f += [[(i + 1) % n, i, o] for i in range(n)]
-        hp.add([(0, my(0.956), mz(0.035))], [])
+        hp.add([(0, my(top_[0]), mz(top_[1]))], [])
         t0 = (len(rr) - 1) * n
         hp.f += [[t0 + i, t0 + (i + 1) % n, o + 1] for i in range(n)]
 
@@ -708,6 +721,26 @@ def build(name):
                     row.append((x * sx_ + x / r * off_, my(y), mz(z) + (z - 0.06) / r * off_))
                 rows.append(row)
             fr.add([p for r in rows for p in r], [[(j + 1) * M_ + i, (j + 1) * M_ + i + 1, j * M_ + i + 1, j * M_ + i] for j in range(len(rows) - 1) for i in range(M_ - 1)])
+            if cp.get('fluff'):
+                # G1-ART: an old man's white fringe, not a band: soft tufts along it from ear to ear (bigger over the
+                # ears, where it is thickest), the same round lobes as his moustache, so the two read as one white
+                y_f, half_f = TW_HEAD[3]
+                full = resample(half_f, 25)
+                pts = [(x, z) for x, z in full if z <= 0.058]
+                arc = pts + [(-x, z) for x, z in reversed(pts[:-1])]   # (+x, round the back, to −x)
+                seg = [math.dist(arc[i], arc[i + 1]) for i in range(len(arc) - 1)]
+                tot = sum(seg)
+                fl = b.P('hairTufts', hair, head_w, 70)
+                for k, (tt, dy_, rk) in enumerate(((0.03, -0.018, 1.12), (0.18, -0.008, 0.98), (0.33, 0.01, 0.84), (0.43, -0.006, 0.9), (0.57, 0.008, 0.88),
+                                                   (0.67, -0.008, 0.86), (0.82, 0.002, 1.0), (0.97, -0.018, 1.12))):
+                    d, i = tot * tt, 0
+                    while i < len(seg) - 1 and d > seg[i]:
+                        d -= seg[i]; i += 1
+                    t = min(1, d / seg[i]) if seg[i] else 0
+                    x = arc[i][0] + (arc[i + 1][0] - arc[i][0]) * t; z = arc[i][1] + (arc[i + 1][1] - arc[i][1]) * t
+                    r = math.hypot(x, z - 0.06) or 1
+                    off = cp['fluff'] * 0.3   # (sunk into the band: the tufts overlap and hug the head)
+                    sphere(fl, (x * sx_ + x / r * off, my(y_f + 0.006 + dy_), mz(z) + (z - 0.06) / r * off), cp['fluff'] * rk, 8, 6, (1.0, 0.9, 0.8))   # (over the band's top edge)
         if L.get('helmetQ'):   # Vesk's guards: a round helmet, a violet visor across the eyes
             hq = b.P('helmetQ', L['helmetQ'], head_w, 40)
             sphere(hq, (0, my(0.925), mz(0.055)), 0.088 * sx_, 12, 7, (1.05, 0.85, 1.12))

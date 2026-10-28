@@ -526,6 +526,67 @@ for p, u in zip(hair.v[start:], us):
     HAIR_U[tuple(round(c, 6) for c in p)] = u
 PARTS.append(hair)
 
+# ---- G1-ART (AUDIT-CH12 #6): the hair combed back over the crown
+# Under the Follow camera at Far (10.75 m, looking down from behind) the skin round the knot read as a bald scalp ring:
+# from there the original's flat discs cover the top of the head, our round tuft does not. A thin shell of hair now lies
+# over the crown and the back of the skull and runs into the knot: the hairline at the top of the forehead in front
+# (the front still shows LBA2's dark dome over the crown and a tall bare forehead), down past the temples, behind where
+# the ears would be, to the nape at 0.87 H. The same flat dark shade as the knot (every normal down), so the two read as
+# one mass. On the head bone only; nothing else of the model changes.
+CAP_CUT = ((0.870, -0.004), (0.880, 0.008), (0.890, 0.02), (0.899, 0.03), (0.908, 0.04), (0.9215, 0.05), (0.935, 0.06),
+           (0.9425, 0.062), (0.950, 0.058))  # (section height → the hairline's z there: hair behind it)
+CAP_OFF, CAP_M = 0.004, 15                     # (how far the shell stands off the skull, H; points along each row)
+
+
+def cap_row(y, half, zc_):
+    full = resample(half, 25)
+    pts = [(x, z) for x, z in full if z <= zc_]
+    # (the row ends exactly on the hairline: the section's edge cut at zc_)
+    for (xa, za), (xb, zb) in zip(full, full[1:]):
+        if za > zc_ >= zb and za != zb:
+            t = (za - zc_) / (za - zb)
+            pts.insert(0, (xa + (xb - xa) * t, zc_))
+            break
+    arc = pts + [(-x, z) for x, z in reversed(pts[:-1])]   # (+x hairline → round the back → −x hairline)
+    seg = [math.dist(arc[i], arc[i + 1]) for i in range(len(arc) - 1)]
+    tot = sum(seg) or 1
+    row = []
+    for j in range(CAP_M):
+        d, i = tot * j / (CAP_M - 1), 0
+        while i < len(seg) - 1 and d > seg[i]:
+            d -= seg[i]
+            i += 1
+        t = min(1, d / seg[i]) if seg[i] else 0
+        x = arc[i][0] + (arc[i + 1][0] - arc[i][0]) * t
+        z = arc[i][1] + (arc[i + 1][1] - arc[i][1]) * t
+        # (the shell thins to the hairline, so its edge lies on the skin instead of standing off it like a brim)
+        u = j / (CAP_M - 1)
+        row.append(cap_off((x, y, z), (0.3 + 0.7 * smooth(0.0, 0.15, min(u, 1 - u))) * (0.5 if y == CAP_CUT[0][0] else 1.0)))
+    return row
+
+
+def cap_off(p, k=1.0):
+    # out from the skull's middle (so the shell clears its shallow top as well as its sides and back)
+    d = (p[0] - CAP_C[0], p[1] - CAP_C[1], p[2] - CAP_C[2])
+    r = math.sqrt(sum(c * c for c in d)) or 1
+    return tuple(p[i] + d[i] / r * CAP_OFF * k for i in range(3))
+
+
+CAP_C = (0.0, 0.885, 0.045)
+
+
+hcap = Part('hairCap', 'hair', lambda p: {'head': 1.0}, big=True, normal=HAIR_DOWN)
+cut_at = lambda y: next((c for yy, c in CAP_CUT if abs(yy - y) < 1e-6), None)
+cap_rows = [cap_row(y, hh, cut_at(y)) for y, hh in FINE if cut_at(y) is not None]
+assert len(cap_rows) == len(CAP_CUT)
+cv = [p for r in cap_rows for p in r]
+cf = [[j * CAP_M + i, j * CAP_M + i + 1, (j + 1) * CAP_M + i + 1, (j + 1) * CAP_M + i] for j in range(len(cap_rows) - 1) for i in range(CAP_M - 1)]   # (facing out)
+cv.append(cap_off((0.0, 0.9527, 0.06)))   # (the hairline's middle on top of the skull: the crown is covered, the forehead is not)
+o_ = (len(cap_rows) - 1) * CAP_M
+cf += [[o_ + i, o_ + i + 1, len(cv) - 1] for i in range(CAP_M - 1)]
+hcap.add(cv, cf)
+PARTS.append(hcap)
+
 # medallion: an octagonal gold plate on the chest, a lighter face, the cord running up to the collar
 med = Part('medal', 'medal', lambda p: {'torso': 1.0}, angle=40)
 mc, mr, mz = (0.0, 0.625), 0.045, 0.141
