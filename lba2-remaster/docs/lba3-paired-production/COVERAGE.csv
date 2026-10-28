@@ -1,6 +1,6 @@
 group,region,chapter,entity_or_quest,dimension,task_id,owner,status,candidate_commit,evidence,remaining_issue
-G1,"Citadel: house, well, street, harbour, office, control, projoffice, cellar, lighthouse, cliffs",1-2,all,art/camera,G1-R1,,in_progress,8141e42,CAST-UNIFORM 9445f07; CAM-CLEAR-2 367cf19 (camera batch of AUDIT-CH12),I-1 I-2 I-3 I-4 I-5 I-6
-G1,"Citadel: house, well, street, harbour, office, control, projoffice, cellar, lighthouse, cliffs",1-2,all,puzzle/story,G1-R2,,in_progress,8141e42,CH1-LONGER running,I-7
+G1,"Citadel: house, well, street, harbour, office, control, projoffice, cellar, lighthouse, cliffs",1-2,all,art/camera,G1-R1,,implemented_unverified,"G1 R1 merged (27f8e98 art, d6ac4e1 cam + island/main patches)","G1-ART: voices, walkers, perfbudget PASS; G1-CAM: camsteady 110/110, camfollow, camclear, chapter2, occluders, chapter1 PASS (automated; no human play yet)",I-3 lighthouse/shed env art (later repair pair); user verdict on Twinsen hair
+G1,"Citadel: house, well, street, harbour, office, control, projoffice, cellar, lighthouse, cliffs",1-2,all,puzzle/story,G1-R2,,in_progress,8141e42,"CH1-LONGER merged b1b0dff: well-town, prologue, seg01→02 PASS on merged tree","I-7 STORY batch (audit 3,4,5,17,19…) for G1 R2"
 G1,"Citadel: house, well, street, harbour, office, control, projoffice, cellar, lighthouse, cliffs",1-2,all,life/action,G1-R3,,pending,8141e42,,
 G1,"Citadel: house, well, street, harbour, office, control, projoffice, cellar, lighthouse, cliffs",1-2,all,save/player-experience,G1-R4,,pending,8141e42,,
 G2,"Zeelich: zeelich, workshop, lighttop, upper","3,9",all,art/camera,G2-R1,,pending,8141e42,,

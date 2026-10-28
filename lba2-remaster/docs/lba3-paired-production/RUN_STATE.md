@@ -19,7 +19,9 @@ Order of work (each group runs Round 1 → 4, with an integration gate after eac
   G6 ch.11 shell (c3shaft) + ch.12 core (c3core) + epilogue (home)
   G7 optional places: 11 shuttle islands, asylum, Bù maze, spaceport, arena, underground
 
-Next exact action: when PERF-HIGH and CH1-LONGER have both returned and been integrated, start G1 Round 1 (lba3-character-art + lba3-camera-director) with the ownership in OWNERSHIP.md.
+Completed gates: G1 Round 1 (art + camera) merged 29.10 night, tests above PASS. CH1-LONGER merged (counts toward G1 Round 2). PERF-HIGH merged.
+Active now: AUTO-QUALITY (lba3-60fps-engineer; engine/settings/desktop) — one slot.
+Next exact action: when AUTO-QUALITY returns → merge → full suite at night → [build] for the user. Then G1 Round 2 (quest-designer + narrative-editor) on the AUDIT-CH12 STORY batch (I-7), ownership: quest → story/prologue.js + chapter1.js mechanics; narrative → text files only.
 
 User rules that bind every worker: no spoilers to the user (they play only ch.1–2; agents verify ch.3–12; only ch.1–2 images go to the user);
 story rules (Twinsen protagonist, Zoé active, Arthur has agency, no Earth-style night, no sequel promise, FunFrock dead, Vesk villain,
