@@ -24,17 +24,49 @@ def lerp(a, b, t):
     return tuple(x + (y - x) * t for x, y in zip(a, b))
 
 
+# CAST-UNIFORM (WORKLIST #40): one finish standard for every character's round parts (docs/character-review.md,
+# "The finish standard"). A ball (hand, knee, head, nose, bun...) or a tube (arm, leg, trunk, cuff...) gets at least
+# the segments its size needs to keep a round outline up close, and is smooth-shaded whatever its part's crease
+# angle (a ball has no edge to keep; a tube keeps its end caps crisp). Parts meant to be crisp (brass armour) pass
+# hard=True and keep what they asked for. Tiny details (knuckles, glints, lashes) keep their counts.
+SPHERE_MIN = ((0.2, 16, 10), (0.07, 12, 8), (0.035, 10, 7), (0.02, 8, 6), (0.012, 8, 5))   # (its largest radius at least → segments around, down)
+TUBE_MIN = ((0.05, 10), (0.02, 8))                            # (its larger end's radius at least → sides)
+DISC_MIN = ((0.15, 24), (0.08, 16))                           # (a flat round: hat brims)
+TUBE_ANGLE = 75                                               # (a tube's sides: smooth; its caps keep the part's angle)
+UNIFORM = True                                                # (False: these helpers as before #40, for comparisons)
+
+
+def _min_segments(table, size, *asked):
+    if UNIFORM:
+        for lim, *seg in table:
+            if size >= lim:
+                return tuple(max(a, s) for a, s in zip(asked, seg))
+    return asked
+
+
+class Face(list):
+    """A face's vertex indices, with its own smoothing angle (CAST-UNIFORM; None = its part's)."""
+    angle = None
+
+
 class Part:
     def __init__(self, name, color, weights, angle=45):
         self.name, self.color, self.weights, self.angle = name, color, weights, angle
         self.normal = None   # (optional: one normal for every corner, e.g. a flat-shaded hair mass)
         self.v, self.f = [], []
 
-    def add(self, verts, faces):
+    def add(self, verts, faces, angle=None):
         o = len(self.v)
         self.v += [tuple(p) for p in verts]
-        self.f += [[i + o for i in f] for f in faces]
+        for f in faces:
+            ff = Face(i + o for i in f)
+            ff.angle = angle
+            self.f.append(ff)
         return self
+
+    def face_angles(self):
+        """Each face's smoothing angle (faces put in .f by hand take the part's)."""
+        return [a if a is not None else self.angle for a in (getattr(f, 'angle', None) for f in self.f)]
 
 
 def ring(y, hw, zf, zb, n, p=0.75, cx=0.0, cz=0.0):
@@ -74,8 +106,25 @@ def loft(part, rings, cap_bottom=False, cap_top=False):
     return part.add(verts, faces)
 
 
-def tube(part, a, b, ra, rb, n=8, cap=True, squash=1.0):
-    """A tapered tube from point a to point b (radii ra → rb); `squash` flattens it along z."""
+def refine(secs, where=None):
+    """CAST-UNIFORM: a profile of sections (tuples of numbers: y, then the section's sizes) with a section added midway in
+    each interval listed in `where` (all by default), on the Catmull-Rom curve through them: a body's outline that
+    bends sharply between two sections (a Grobo's round bottom) gets a rounder silhouette, not a kink."""
+    out, n = [], len(secs)
+    for i in range(n - 1):
+        out.append(secs[i])
+        if where is None or i in where:
+            a, b, c, d = secs[max(0, i - 1)], secs[i], secs[i + 1], secs[min(n - 1, i + 2)]
+            out.append(tuple((-a[k] + 9 * b[k] + 9 * c[k] - d[k]) / 16 for k in range(len(b))))
+    out.append(secs[-1])
+    return out
+
+
+def tube(part, a, b, ra, rb, n=8, cap=True, squash=1.0, hard=False):
+    """A tapered tube from point a to point b (radii ra → rb); `squash` flattens it along z. CAST-UNIFORM: at least the
+    sides TUBE_MIN asks for its size, the sides smooth-shaded (TUBE_ANGLE), unless hard."""
+    if not hard:
+        n, = _min_segments(TUBE_MIN, max(ra, rb), n)
     a, b = Vector(a), Vector(b)
     d = (b - a).normalized()
     up = Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))
@@ -92,11 +141,21 @@ def tube(part, a, b, ra, rb, n=8, cap=True, squash=1.0):
     # orient faces outward: the ring order must run counter-clockwise seen from b
     if (Vector(rings[0][1]) - a).cross(Vector(rings[0][0]) - a).dot(d) > 0:
         rings = [list(reversed(r)) for r in rings]
-    return loft(part, rings, cap_bottom=cap, cap_top=cap)
+    f0 = len(part.f)
+    loft(part, rings, cap_bottom=cap, cap_top=cap)
+    if not hard and UNIFORM:
+        for k in range(f0, f0 + n):   # (the sides come first in loft's faces; the caps after them)
+            part.f[k].angle = max(part.angle, TUBE_ANGLE)
+    return part
 
 
-def sphere(part, c, r, nu=10, nv=7, s=(1.0, 1.0, 1.0)):
+def sphere(part, c, r, nu=10, nv=7, s=(1.0, 1.0, 1.0), hard=False, exact=False):
+    """A ball (an ellipsoid with the scales s). CAST-UNIFORM: at least the segments SPHERE_MIN asks for its size, and
+    smooth-shaded all over (a ball has no edge to keep), unless hard. `exact` keeps the segments asked (a ball mostly
+    buried in another part: a shoulder in its sleeve, a knuckle in the hand), still smooth."""
     rx, ry, rz = r * s[0], r * s[1], r * s[2]
+    if not hard and not exact:
+        nu, nv = _min_segments(SPHERE_MIN, max(abs(rx), abs(ry), abs(rz)), nu, nv)
     verts = [(c[0], c[1] - ry, c[2])]
     for j in range(1, nv):
         ph = math.pi * j / nv
@@ -112,7 +171,7 @@ def sphere(part, c, r, nu=10, nv=7, s=(1.0, 1.0, 1.0)):
             faces.append([a, b, b + nu, a + nu])
     o = 1 + (nv - 2) * nu
     faces += [[o + i, o + (i + 1) % nu, top] for i in range(nu)]
-    return part.add(verts, faces)
+    return part.add(verts, faces, None if hard or not UNIFORM else 180)
 
 
 def box(part, x0, x1, y0, y1, z0, z1, top_front=None):
@@ -123,8 +182,11 @@ def box(part, x0, x1, y0, y1, z0, z1, top_front=None):
     return part.add(v, f)
 
 
-def disc(part, c, r, n, normal_axis='z', thick=0.0):
-    """A flat polygon (optionally a thin prism) facing +axis."""
+def disc(part, c, r, n, normal_axis='z', thick=0.0, hard=False):
+    """A flat polygon (optionally a thin prism) facing +axis. CAST-UNIFORM: a big one (a hat's brim) gets the sides
+    DISC_MIN asks for, so its outline stays round."""
+    if not hard:
+        n, = _min_segments(DISC_MIN, r, n)
     pts = []
     for k in range(n):
         t = 2 * math.pi * (k + 0.5) / n
@@ -204,12 +266,14 @@ def hand_detail(part, hc, r, sx, bunny=False, grobo=False):
     else:
         tube(part, (hc[0] - sx * 0.013 * k, hc[1] + 0.012 * k, hc[2] + 0.022 * k), (hc[0] - sx * 0.021 * k, hc[1] + 0.001 * k, hc[2] + 0.050 * k), 0.0098 * k, 0.0068 * k, 6)
         lobes = ((-0.020, -0.017, 0.0118), (-0.002, -0.021, 0.0128), (0.017, -0.019, 0.0108))
-    for dz_, dy_, rr_ in lobes:
-        sphere(part, (hc[0] - sx * 0.026 * k, hc[1] + dy_ * k, hc[2] + dz_ * k), rr_ * k, 6, 4)
+    for dz_, dy_, rr_ in lobes:   # (CAST-UNIFORM: half sunk in the ball; smooth, with the segments asked)
+        sphere(part, (hc[0] - sx * 0.026 * k, hc[1] + dy_ * k, hc[2] + dz_ * k), rr_ * k, 6, 4, exact=True)
 
 
 # ------------------------------------------------------------------ export
 def corner_normals(verts, tris, angle):
+    """Each corner's normal: the faces round the vertex within the crease angle of this face, averaged. `angle` is one
+    angle for all, or one per triangle (CAST-UNIFORM: two faces are smoothed together within the smaller of theirs)."""
     fn = []
     for t in tris:
         a, b, c = (Vector(verts[i]) for i in t)
@@ -219,14 +283,15 @@ def corner_normals(verts, tris, angle):
     for fi, t in enumerate(tris):
         for i in t:
             around.setdefault(i, []).append(fi)
-    lim = math.cos(math.radians(angle))
+    lims = [math.cos(math.radians(a)) for a in angle] if isinstance(angle, (list, tuple)) else None
+    lim = None if lims else math.cos(math.radians(angle))
     res = []
     for fi, t in enumerate(tris):
         cn = []
         for i in t:
             acc = Vector((0, 0, 0))
             for g in around[i]:
-                if fn[g].dot(fn[fi]) >= lim:
+                if fn[g].dot(fn[fi]) >= (lim if lims is None else max(lims[fi], lims[g])):
                     acc += fn[g]
             cn.append(acc.normalized() if acc.length > 1e-9 else fn[fi])
         res.append(cn)
@@ -336,6 +401,8 @@ class Builder:
                 W.append(w or {'torso': 1.0})
             rest = [self.rest(p, w) if self.rest else p for p, w in zip(part.v, W)]
             tris = [(f[0], f[k], f[k + 1]) for f in part.f for k in range(1, len(f) - 1)]
+            fa = part.face_angles()
+            ang = [a for f, a in zip(part.f, fa) for k in range(1, len(f) - 1)] if any(a != part.angle for a in fa) else part.angle
             me = bpy.data.meshes.new(self.name + '_' + part.name)
             me.from_pydata([gb(p) for p in rest], [], part.f)
             me.materials.append(self._mat(part.color))
@@ -349,7 +416,7 @@ class Builder:
                     if b not in groups:
                         groups[b] = ob.vertex_groups.new(name=b)
                     groups[b].add([vi], x, 'REPLACE')
-            cn = [[Vector(part.normal).normalized()] * 3 for _ in tris] if part.normal else corner_normals(rest, tris, part.angle)
+            cn = [[Vector(part.normal).normalized()] * 3 for _ in tris] if part.normal else corner_normals(rest, tris, ang)
             rgb = hexrgb(part.color)
             for t, ns in zip(tris, cn):
                 for i, n in zip(t, ns):

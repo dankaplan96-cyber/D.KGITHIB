@@ -1154,3 +1154,68 @@ rest. `lbapoly.py` gained `hand_detail` (moved from `cast_poly.py`; Baldino's sc
 - **Rebuilt with** `python3 tools/blender/cast_poly.py art/characters/skeletons.json assets/poly` (whole cast, `cast_poly.blend`), the
   Esmers also into `cast_poly_esmers.blend` (`CAST_BLEND=... cast_poly.py ... nara oku xil keeper clerk councilChair`), and
   `python3 tools/blender/baldino_poly.py art/characters/skeletons.json assets/poly art/characters/baldino/baldino_poly.blend`.
+
+## CAST-UNIFORM (WORKLIST #40): one finish standard for every character
+
+The user, of the Spheros: "the small round characters look like a sequence of squares"; then "for all characters, let there
+be consistency". ROUND-SPHERO made the Sphero's body a smooth cushion; this pass makes that the bar for the whole cast and
+applies it centrally, in `tools/blender/lbapoly.py`, so every builder that uses its `sphere` / `tube` / `disc` gets it.
+
+### The finish standard
+
+- **Balls** (hands, knees, joints, heads, noses, buns, ball shoes) are smooth-shaded all over and have at least, by their
+  largest radius: ≥ 0.20 m → 16 × 10 segments; ≥ 0.07 → 12 × 8; ≥ 0.035 → 10 × 7 (Twinsen's hand, the reference);
+  ≥ 0.02 → 8 × 6; ≥ 0.012 → 8 × 5. Smaller ones (glints, pupils) keep their counts but are smooth too.
+- **Tubes** (arms, legs, sleeves, cuffs, trunks, ears, beards) have smooth sides (crease angle ≥ 75) and keep their end caps
+  crisp; at least 10 sides from 0.05 m radius, 8 from 0.02. Fingers, lashes, claws and whiskers keep theirs.
+- **Big round masses**: a round robe or coat (moles, elves, troopers) 20 sections round, the bees' abdomen and the
+  triangle-heads' suit 16; a Grobo's body 20 round with a section added where its outline bends hard (its round bottom and
+  shoulders: `lbapoly.refine`, Catmull-Rom), its belt fitted to that surface; Grobo ear flaps 24 round; flat hat brims
+  ≥ 16 / 24 sides from 0.08 / 0.15 m.
+- **Shoes**: Twinsen's slipper's crease angle (45; the cast's shoes were 35, the thin races' feet 40 → 50), so they shade
+  as his.
+- **Crisp on purpose** (`hard=True`: the counts and angle asked): armour and brass (Vesk's pauldrons, gauntlet, cuff);
+  boxes (buckles, buttons, visors, soles, pouches), flat panels (pockets, aprons, lapels) and flat-shaded hair masses are
+  not balls or tubes and keep their angles. A ball half buried in another part keeps its count but is smooth
+  (`exact=True`: shoulder balls in the sleeve, knuckle lobes, the Grobo trunk's rings, epaulettes, the guard's helmet, whose
+  cut edge must sit over the visor and rim as drawn).
+- **Design shapes kept**: the townsfolk's tunic is LBA2's rounded box (12 sections, flat front and corners; finer, the apron
+  and pockets laid on it sink in); the triangle-heads' head is angular by design; Baldino's measured square legs.
+
+Measured on the exported parts (interior edges shaded hard although the two faces are under 72° apart, i.e. facets on a
+surface meant to be round): 6,294 before, 973 after; most of the rest are the shoes' toe-up profile (as Twinsen's) and the
+tunic's designed corners.
+
+### Counts (triangles incl. eyes and mouth, before → after)
+
+| | | | |
+|---|---|---|---|
+| arthur 2538 → 2836 | gilbert 2448 → 2792 | tim 2376 → 2604 | lulu 2574 → 3118 |
+| mira 2006 → 2330 | pippa 2058 → 2476 | doran 2262 → 3404 | bram 2286 → 3548 |
+| nell 2564 → 2768 | odile 2112 → 2436 | farmerA 2396 → 2688 | farmerB 2058 → 2396 |
+| farmerC 2310 → 3532 | worker 2308 → 2572 | guard 2422 → 3516 | sphero1/2 3656 → 4920 |
+| vesk 1522 → 1722 | baldino 5101 → 5341 | vguard 2570 → 2842 | vguardG 2456 → 3550 |
+| bersimon 2344 → 2820 | magus 2280 → 2740 | keraooc 1726 → 2112 | joe 1660 → 2080 |
+| fclone 1256 → 1820 | councilChair 1532 → 1964 | councilB 2418 → 2744 | councilC 2262 → 3404 |
+| clerk 1400 → 1616 | archivist 2342 → 2494 | yorna 2334 → 3520 | pim 2334 → 3584 |
+| lharMan 2612 → 2988 | lharWoman 2314 → 2518 | lharElder 1930 → 2234 | keeper 1368 → 1584 |
+| ilka 2048 → 2370 | hesk 2250 → 3344 | tarra 2338 → 2644 | dallan 2840 → 3332 |
+| desertkid 2296 → 2524 | desertTrader 2310 → 3532 | weaver 2058 → 2396 | nara 1370 → 1586 |
+| oku 1532 → 1964 | xil 1368 → 1584 | zbee1 2238 → 3232 | zbee2 2354 → 3324 |
+| ztri1 1353 → 1649 | ztri2 1318 → 1570 | zmole1 1786 → 2610 | zmole2 1778 → 2590 |
+
+Whole cast 126,734 → 156,490 (+23%); the most, the Grobos, +45–55% (ball hands, shoes, head, muzzle and the round body).
+Twinsen (2992), Zoé (5474) and the Dino-Fly (1240) are unchanged: their own scripts already meet the standard (Twinsen's
+hand 10 × 7 at 60°, his cape and robe 24 round; Zoé's lofts; the Dino-Fly's legs at 78°). No new material, mesh or draw
+call: the same one skinned mesh per character and the same eyes and mouth meshes.
+
+### Not changed
+
+Skeletons, bone names, hierarchy and bind positions; every vertex is weighted by its part's weight function as before
+(the same bones per part); the `eyes` and `mouths` JSON entries are identical; colours, heights and outlines. Checked in
+idle, walk, run, throw and with the mouth open (3/4 view, same light): no new clipping or stretching.
+
+Rebuilt with `python3 tools/blender/cast_poly.py art/characters/skeletons.json assets/poly` (with `CAST_BLEND` outside the
+repository: the committed `.blend` files are the previous pass's) and `python3 tools/blender/baldino_poly.py
+art/characters/skeletons.json assets/poly`. `lbapoly.UNIFORM = False` switches off the helper part of the standard
+(segments and smoothing of balls, tubes and discs) for comparisons.
