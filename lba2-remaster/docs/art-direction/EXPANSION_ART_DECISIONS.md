@@ -37,9 +37,14 @@ Implemented: no · Visually checked: no · Performance verified: no.
 Next: the street near Twinsen's house as the first isolated preview (three silhouettes, recessed windows and doors, thick roofs,
 one shop interior, old/new junction, the repair problem), built in the A+B treatment of D1.
 
-## D3 — Nera's identity (Proposed 28.10, waiting for the user)
+## D3 — Nera's identity (Selected 28.10)
 Options: A archipelago of arches · B floating towns · C ceramic water cities.
 Recommendation: B as the base (moving platforms, counterweights, boat lifts: the balancing mechanisms the story needs), a few of A's
 great arches as the skyline anchor, one C element (the old House of Balances in glazed ceramic and stone).
 Naming: existing NPC "Nara" (Zeelich, story/arsenal.js) — "Nera" is too close; decide a name later.
-Selected: — (pending)
+Selected: the recommendation (the user, 28.10: "I'll go with your recommendation"): floating towns as the base, a few great stone arches
+as the skyline anchor, the House of Balances in glazed ceramic and stone. Harbour, homes, gardens and the old facility keep distinct
+functions and moods; not one gimmick for the whole planet.
+Implemented: no · Visually checked: no · Performance verified: no.
+Undecided next: D4 Nera's inhabitants (compact canal dwellers / tall arch dwellers / mixed trading population), then Tessa and Oren;
+D5 Sendell's underground mood; the planet's final name.
