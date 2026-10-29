@@ -8,7 +8,11 @@
 // A stop is { id, x, z, a?, act, dur: [min, max], when?: [from, to] of the day, carry?: item taken from here on (null: put
 // down), pair?/mate? (a meeting: both wait for each other and chat), seat? / door? (a bench it sits on / its own front door) }.
 //   act: stand (idle) · tend (kneel to a flower bed) · water (pour from a can) · draw (reach to the well) · browse (look
-//        over a stall's goods) · rest (wipe a brow) · put (set a load down or take it up) · knock (at a door)
+//        over a stall's goods) · rest (wipe a brow) · put (set a load down or take it up) · knock (at a door) · dip (fingers
+//        in the water) · warm (a hand held out to a heat post)
+// The town's two states (G1 world-life: walkers.js stage): `stage: 0` is a stop of the dry well (chapter 1, and chapter 2 until
+// the valves are open), `stage: 1` of the water back, hot, with the heat posts lit; a stop without `stage` is for both.
+// `gest: ['shrug', 'sigh']` is what it does now and then while it stands there; `carryDry` is `carry` while the well is dry.
 // Nothing here stands where a chapter puts someone: the stops keep off the well's rim where Gilbert and Mira stand, the
 // stall's counter (Pippa), the lane's pump (Bram), the harbour's customs (Odile) and Nell's shop, and every front door
 // used is a house the story never sends Twinsen into (tests/walkers.mjs checks the stops against the doors and the cast).
@@ -42,7 +46,7 @@ function doorAt(W, x, z, list = W.houses) {
 export function citadelRoster(game) {
   const W = game.world;
   const bench = (id, x, z, dur, o = {}) => { const b = seatAt(W, x, z); if (!b) return null; return { id, x: b.slot.x, z: b.slot.z, a: b.ry + Math.PI, act: 'stand', seat: b.seat, dur, ...o }; };
-  const home = (id, x, z, dur) => { const d = doorAt(W, x, z); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur }; };
+  const home = (id, x, z, dur, o = {}) => { const d = doorAt(W, x, z); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur, ...o }; };
   const look = (id, x, z, tx, tz, dur, o = {}) => D(id, x, z, { a: A(x, z, tx, tz), dur, ...o });
   const ok = (a) => a.filter(Boolean);
   const WELL = { x: -42, z: -4 };
@@ -51,15 +55,17 @@ export function citadelRoster(game) {
   const R = [
     // the market-goer: from her door to the well, the stall (a basket from there), a seat in the square, home
     { id: 'oda', char: 'lharWoman', tint: '#fff0e0', speed: 1.15, start: 2, color: '#f0b080', stops: ok([
-      home('oda_home', -65.5, 11, [14, 22]),
-      look('oda_well', -44.9, -6.4, WELL.x, WELL.z, [5, 8]),
+      home('oda_home', -65.5, 11, [14, 22], { carryDry: 'can' }),   // (dry: she comes out with her can, and finds the well as it was)
+      look('oda_dry', -44.0, -6.0, WELL.x, WELL.z, [6, 9], { stage: 0, gest: ['shrug', 'sigh'] }),
+      look('oda_well', -44.9, -6.4, WELL.x, WELL.z, [5, 8], { stage: 1 }),
       look('oda_stall', -46.2, -2.2, -47.4, -0.4, [6, 9], { act: 'browse', when: [0, 0.75], carry: 'basket' }),
       bench('oda_bench', -49, -7.4, [18, 28]),
     ]) },
     // the old man: benches along the lane, the well, a long look at the pump
     { id: 'brix', char: 'desertTrader', tint: '#d8f0d0', speed: 0.8, start: 0, color: '#b8d8a0', stops: ok([
       bench('brix_benchE', -35.8, 2.6, [28, 44]),
-      look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10]),
+      look('brix_warm', -34.0, -3.85, -33.87, -2.83, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit)
+      look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10], { gest: ['sigh', 'shrug'] }),
       bench('brix_lane', -42.3, 19.5, [28, 44]),
       look('brix_pump', -45.6, 58.6, -42, 65, [8, 12]),
       bench('brix_lane2', -48.2, 50.8, [24, 36]),
@@ -79,7 +85,9 @@ export function citadelRoster(game) {
     // the gardener: tends the square's bed from the lane side, draws water at the well, pours it on the other side
     { id: 'garrick', char: 'farmerA', tint: '#ffffff', speed: 1.0, start: 0, color: '#d0a070', stops: ok([
       look('gar_tend', -39.3, 10.3, -39.3, 8.7, [16, 22], { act: 'tend', carry: null }),
-      look('gar_draw', -39.9, -6.3, WELL.x, WELL.z, [5, 7], { act: 'draw', carry: 'can' }),
+      look('gar_dry', -39.9, -6.3, WELL.x, WELL.z, [5, 7], { stage: 0, gest: ['shrug', 'sigh'] }),   // (dry: a look into the well, then the drinking fountain on the lane for his water)
+      look('gar_tap', -44.6, 37.4, -43.4, 37.4, [6, 9], { stage: 0, act: 'draw', carry: 'can' }),
+      look('gar_draw', -39.9, -6.3, WELL.x, WELL.z, [5, 7], { stage: 1, act: 'draw', carry: 'can' }),
       look('gar_water', -39.3, 7.1, -39.3, 8.7, [9, 13], { act: 'water' }),
       look('gar_rest', -36.2, 8.4, -39.3, 8.7, [6, 9], { act: 'rest', carry: null }),
     ]) },
@@ -94,7 +102,9 @@ export function citadelRoster(game) {
     { id: 'dot', char: 'pim', tint: '#fff8f0', speed: 1.3, start: 2, color: '#ff9ad0', stops: ok([
       D('dot_a', -37.6, -8.8, { a: 2, dur: [2, 4] }),
       D('dot_b', -46.6, -9.0, { a: 0, dur: [2, 4] }),
-      look('dot_stall', -48.4, -3.6, -47.4, -1.2, [3, 5]),
+      look('dot_peer', -42.0, -6.0, WELL.x, WELL.z, [4, 6], { stage: 0, act: 'dip' }),   // (dry: leaning toward the well to see for herself)
+      look('dot_stall', -48.4, -3.6, -47.4, -1.2, [3, 5], { stage: 0 }),
+      look('dot_warm', -47.6, -4.1, -47.56, -2.8, [6, 9], { stage: 1, act: 'warm' }),   // (the stall's heat post)
       D('dot_c', -36.2, -3.0, { a: 1.2, dur: [2, 4] }),
       D('dot_d', -41.0, 4.6, { a: 3, dur: [2, 4] }),
     ]) },
@@ -104,6 +114,7 @@ export function citadelRoster(game) {
       bench('marda_b1', -67.9, 28.4, [18, 26]),
       look('marda_mid', -82.0, 36.0, -90, 33, [5, 8], { act: 'rest' }),
       look('marda_gate', -95.8, 37.4, -102, 36, [6, 9]),
+      look('marda_warm', -100.2, 34.0, -100.16, 32.95, [8, 12], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the quay house's heat post)
       bench('marda_b2', -94.4, 30.3, [18, 26]),
     ]) },
     // the porter: a crate from the quay to the stall and back empty
