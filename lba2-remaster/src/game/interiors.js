@@ -373,7 +373,7 @@ function buildHouse(scene, physics) {
     x.fillStyle = s; x.fillRect(0, 0, w, h);
   }));
   const sunM = (soft, opacity) => M('doorSun' + soft + opacity, () => new THREE.MeshBasicMaterial({ map: sunTex(soft), transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
-  k.add(plane(1.25, 2.6), sunM(0.18, 0.8), doorX, 0.03, HZ1 - 1.25, 0, { rx: -Math.PI / 2 });          // on the floor (over the rug)
+  k.add(plane(1.25, 4.0), sunM(0.18, 0.8), doorX, 0.03, HZ1 - 1.95, 0, { rx: -Math.PI / 2 });          // on the floor (over the rug), far into the hall
   k.add(plane(1.4, 0.5), sunM(0.12, 0.8), doorX, 0.06, HZ1 + 0.2, 0, { rx: -Math.PI / 2 });           // the threshold
   k.add(plane(1.6, 0.6), sunM(0.12, 0.85), doorX, 0.0, HZ1 + 0.68, 0, { rx: -Math.PI / 2 });            // the step outside
   k.add(plane(1.3, 1.5), sunM(0.25, 0.45), doorX, 0.75, HZ1 + 0.22);                                    // daylight in the doorway
