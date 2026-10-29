@@ -10,7 +10,7 @@ import fs from 'node:fs';
 const { check, done } = checker();
 const { browser, page } = await launch({ width: 1366, height: 768 });
 const ev = (f, a) => page.evaluate(f, a);
-const KEY = 'sunshard_settings_v1', CACHE = 'lba3_autoq_v2';
+const KEY = 'sunshard_settings_v1', CACHE = 'lba3_autoq_v3';
 const reopen = async (q = '?nocine', set = undefined) => {
   await ev(([k, v, c]) => { localStorage.removeItem(c); if (v === null) localStorage.removeItem(k); else if (v !== undefined) localStorage.setItem(k, JSON.stringify(v)); }, [KEY, set, CACHE]);
   await open(page, q);   // (open() navigates afresh)
@@ -67,9 +67,9 @@ const cmp = await ev(() => {
   at(0); out.autoHigh = look();
   G.settings.quality = 'medium'; G.settings.qualityAuto = false; G.applySettings(); out.medium = look();
   at(1); out.autoMed = look(); out.autoMedLabel = A.label();
-  G.settings.quality = 'low'; G.settings.qualityAuto = false; G.applySettings(); out.low = look();
-  at(3); out.autoLow = look(); out.autoLowLabel = A.label();
-  at(4); out.lite = look(); out.liteLabel = A.label();
+  at(2); out.eco = look(); out.ecoLabel = A.label();
+  // (LOOK-FIRST: on battery the picture stays the profile's: no battery cuts)
+  G.setBattery(true); G.frame(1 / 30, true); out.ecoBat = look(); G.setBattery(false);
   at(0);
   return out;
 });
@@ -77,8 +77,8 @@ const same = (a, b, keys) => keys.every((k) => a[k] === b[k]);
 const K = ['shadowFilter', 'pr', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'bloom', 'lamps', 'smallFar', 'treeNear', 'samples', 'cell', 'lampsPool'];
 check('Auto\'s High profile is High exactly: same pixel ratio, MSAA, shadow map / filter, bloom, lamps, vegetation, shadow cells, and the same draw calls', same(cmp.high, cmp.autoHigh, [...K, 'calls']) && !cmp.autoHigh.eco, { high: cmp.high, auto: cmp.autoHigh });
 check('Auto\'s Medium profile renders as Medium (filter, MSAA, map, bloom, lamps, vegetation, small casters; only the shadow cells stay High\'s 32 m)', same(cmp.medium, cmp.autoMed, ['shadowFilter', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'bloom', 'lamps', 'smallFar', 'treeNear', 'samples', 'lampsPool']) && cmp.autoMed.casters === 'medium' && cmp.autoMed.cell === 32 && cmp.autoMedLabel === 'Medium', { medium: cmp.medium, auto: cmp.autoMed, label: cmp.autoMedLabel });
-check('Auto\'s Low profile renders as Low', same(cmp.low, cmp.autoLow, ['shadowFilter', 'msaa', 'fxaa', 'shadows', 'bloom', 'lamps', 'smallFar', 'treeNear', 'samples', 'lampsPool', 'pr']) && cmp.autoLowLabel === 'Low', { low: cmp.low, auto: cmp.autoLow });
-check('Low-lite: Low plus 75 % resolution, far people animated at half rate, far small parts dropped; fewer or equal draw calls than Low', cmp.liteLabel === 'Low-lite' && cmp.lite.eco === true && cmp.lite.partPx === 2.5 && cmp.lite.calls <= cmp.autoLow.calls, { lite: cmp.lite, low: cmp.autoLow.calls });
+check('Auto\'s floor, Medium-eco, looks like Medium (LOOK-FIRST: full resolution, MSAA, shadow map / filter, lamps, vegetation; only far people animated at half rate)', same(cmp.medium, cmp.eco, ['shadowFilter', 'pr', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'bloom', 'lamps', 'smallFar', 'treeNear', 'samples', 'lampsPool']) && cmp.eco.eco && cmp.ecoLabel === 'Medium-eco', { medium: cmp.medium, eco: cmp.eco, label: cmp.ecoLabel });
+check('... and on battery it looks the same (no blocky 5-read shadows, MSAA kept, the lamps kept)', same(cmp.eco, cmp.ecoBat, ['shadowFilter', 'pr', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'lamps', 'samples', 'lampsPool']), { eco: cmp.eco, bat: cmp.ecoBat });
 
 // ---------------------------------------------------------------- 5. a decision waits for a commit point (nothing changes in play)
 const live = await ev(() => {
@@ -117,7 +117,7 @@ check('a step to Medium-lite queued in play (lamps stay 4); the next scene chang
 const pw = await ev(() => {
   const G = game, A = G.autoQ, gov = A.gov;
   gov.setProfile(0, 'test', { phase: 'hold', commitNow: true }); A.applyAll();
-  localStorage.removeItem('lba3_autoq_v2'); A.cache = {};
+  localStorage.removeItem('lba3_autoq_v3'); A.cache = {};
   G.setBattery(true); const bat = { p: gov.applied, phase: gov.phase, label: A.label(), key: A.key, msaa: G.renderer.composer.renderTarget1.samples };
   G.setBattery(false); const ac = { p: gov.applied, phase: gov.phase, label: A.label(), key: A.key };
   return { bat, ac, log: A.log.slice(-3).map((e) => e.why) };
@@ -125,12 +125,12 @@ const pw = await ev(() => {
 check('unplugged with nothing settled on battery: one profile lower (Medium), evaluated, the battery key; plugged in again: one higher (High)', pw.bat.p === 1 && pw.bat.phase === 'evaluate' && /battery/.test(pw.bat.key) && pw.ac.p === 0 && /mains/.test(pw.ac.key), pw);
 const pw2 = await ev(() => {
   const G = game, A = G.autoQ, gov = A.gov, k = A.machineKey(true);
-  A.cache[k] = { p: 3, src: 'settled', margin: false, at: 'test' }; localStorage.setItem('lba3_autoq_v2', JSON.stringify(A.cache));
+  A.cache[k] = { p: 2, src: 'settled', margin: false, at: 'test' }; localStorage.setItem('lba3_autoq_v3', JSON.stringify(A.cache));
   G.setBattery(true); const bat = { p: gov.applied, phase: gov.phase, label: A.label() };
   G.setBattery(false);
   return bat;
 });
-check('unplugged with Low settled on battery: straight to Low, held (no evaluation)', pw2.p === 3 && pw2.phase === 'hold' && pw2.label === 'Low', pw2);
+check('unplugged with Medium-eco settled on battery: straight to Medium-eco, held (no evaluation)', pw2.p === 2 && pw2.phase === 'hold' && pw2.label === 'Medium-eco', pw2);
 
 // ---------------------------------------------------------------- 7. the title calibration, the evaluation and the cache (?autoq: the governor on under the tests)
 await reopen('?nocine&autoq', null);
@@ -141,7 +141,7 @@ const cal = await ev(() => {
   G.state = 'title'; G.testFreeze = false;
   try { for (let i = 0; i < 400 && !A.calResult; i++) { A.cal.gpu(13); A.frame(1 / 60, 9); const t = performance.now(); while (performance.now() - t < 6); } }
   finally { G.testFreeze = true; }
-  return { before, r: A.calResult, pending: A.pendingStart, cached: JSON.parse(localStorage.getItem('lba3_autoq_v2') || '{}')[A.key] || null };
+  return { before, r: A.calResult, pending: A.pendingStart, cached: JSON.parse(localStorage.getItem('lba3_autoq_v3') || '{}')[A.key] || null };
 });
 check('a first start with the governor on: the GPU name\'s guess, then the title measured (~2 s): a start below High for 13 ms GPU / 9 ms CPU, cached as a calibration', cal.before.src === 'guess' && cal.before.cal && cal.r && cal.r.gpuMs === 13 && cal.r.p > 0 && cal.cached?.src === 'calib' && cal.cached.p === cal.r.p, cal);
 await ev(() => { game.hideScreens(); game.startNew(); game.step(0.2); });
@@ -159,15 +159,15 @@ const ev1 = await ev(() => {
     if (r?.kind === 'up') ups++;
     if (r?.kind === 'settled') { A.settled(); done = Math.round(s / 1000); }
   }
-  return { phase: gov.phase, p: gov.applied, pending: gov.pending(), ups, settledAt: done, cached: JSON.parse(localStorage.getItem('lba3_autoq_v2') || '{}')[A.key] || null, log: A.log.slice(-4).map((e) => e.kind + ': ' + (e.what || '') + ' — ' + e.why) };
+  return { phase: gov.phase, p: gov.applied, pending: gov.pending(), ups, settledAt: done, cached: JSON.parse(localStorage.getItem('lba3_autoq_v3') || '{}')[A.key] || null, log: A.log.slice(-4).map((e) => e.kind + ': ' + (e.what || '') + ' — ' + e.why) };
 });
 check('... light play across scene changes: it went up at most once (applied at a scene change), then settled within ~2.5 min and cached the profile as settled', ev1.phase === 'hold' && ev1.ups <= 1 && ev1.settledAt != null && ev1.settledAt <= 150 && !ev1.pending.length && ev1.cached?.src === 'settled' && ev1.cached.p === ev1.p, ev1);
 await open(page, '?nocine&autoq');
 const again = await ev(() => ({ src: game.autoQ.source, cal: !!game.autoQ.cal, p: game.autoQ.gov.applied, phase: game.autoQ.gov.phase }));
 check('... the next start goes straight to the settled profile: no calibration, no evaluation (held)', /settled/.test(again.src) && !again.cal && again.p === ev1.cached.p && again.phase === 'hold', again);
 const tryUp = await ev(() => {
-  const A = game.autoQ, k = A.key, c = JSON.parse(localStorage.getItem('lba3_autoq_v2'));
-  c[k] = { p: 2, src: 'settled', margin: true, noTry: 0, at: 'test' }; localStorage.setItem('lba3_autoq_v2', JSON.stringify(c));
+  const A = game.autoQ, k = A.key, c = JSON.parse(localStorage.getItem('lba3_autoq_v3'));
+  c[k] = { p: 2, src: 'settled', margin: true, noTry: 0, at: 'test' }; localStorage.setItem('lba3_autoq_v3', JSON.stringify(c));
   return true;
 });
 await open(page, '?nocine&autoq');

@@ -140,6 +140,11 @@ export class Renderer {
     // 0.5 (Medium/High; 0.6 otherwise). The user's Vega 8 on battery measured these on Medium's street: shadow filter
     // basic −4.4 ms, no MSAA −5.3 ms of 37 (laptop-build206-battery.txt). Low is unchanged (none of them is on there).
     this.battery = false;
+    // LOOK-FIRST (the user, 29.10: "I want a game that looks good — 50–55 that looks good"): the battery profile's cuts
+    // (the blocky 5-read shadow filter, no MSAA, the resolution down to 0.5, 2 lamps) made the game look worse and bought
+    // almost nothing on his Vega 8 on battery (CPU-bound: build 263's Low-lite was not faster than build 255's Medium).
+    // They stay in the code for the benchmark's comparison only: `battery` still tells what the power source is.
+    this.batteryCuts = false;
     // AUTO-QUALITY (engine/autoquality.js): Quality Auto sets the picture knob by knob: { scale, bloom, filter: 'soft' |
     // 'pcf', msaa: 4 | 2 | 0, shadows: 1 | 0 } here (the shadow map's size, the lamps, the vegetation and the small
     // casters are set where they live). null: a preset chosen by hand, exactly as before. With knobs, the pixel ratio is
@@ -158,7 +163,7 @@ export class Renderer {
   }
   shadowsOn() { return !this.retro && (this.knobs ? !!this.knobs.shadows : this.quality !== 'low'); }
   // what the battery profile changes now (for the benchmark's report and Settings' note)
-  batteryProfile() { return this.battery && this.shadowsOn() ? { shadowFilter: '5 reads', msaa: 0, minScale: this.minDyn() } : null; }
+  batteryProfile() { return this.battery && this.batteryCuts && this.shadowsOn() ? { shadowFilter: '5 reads', msaa: 0, minScale: this.minDyn() } : null; }
 
   setup(scene, camera) {
     this.scene = scene;
@@ -217,7 +222,7 @@ export class Renderer {
     this.renderer.shadowMap.enabled = on;
     // soft (PCFSoft) shadow edges on High; plain PCF elsewhere (fewer samples per pixel)
     const soft = K ? K.filter === 'soft' : this.quality === 'high';
-    const type = this.battery && on ? THREE.BasicShadowMap : soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    const type = this.battery && this.batteryCuts && on ? THREE.BasicShadowMap : soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     if (this.renderer.shadowMap.type !== type) { this.renderer.shadowMap.type = type; this.renderer.shadowMap.needsUpdate = true; }
     // (bloom: High only — or the knob; off in the 1997 look; with knobs it does not depend on the shadows)
     if (this.bloom) this.bloom.enabled = (K ? !this.retro && !!K.bloom : on && this.quality === 'high') && this.bloomOn !== false;
@@ -253,7 +258,7 @@ export class Renderer {
   setIntegrated(on) { this.integrated = !!on; this.resize(); }
   // the lowest automatic-resolution factor per preset (Low never below a 0.7 pixel ratio: text and faces blur)
   // (AUTO-QUALITY: with knobs, the governor's factor; never under a 0.6 pixel ratio)
-  minDyn() { return this.knobs ? Math.min(this.knobs.scale, Math.max(0.3, 0.6 / this.basePixelRatio())) : this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : this.battery ? 0.5 : 0.6; }
+  minDyn() { return this.knobs ? Math.min(this.knobs.scale, Math.max(0.3, 0.6 / this.basePixelRatio())) : this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : this.battery && this.batteryCuts ? 0.5 : 0.6; }
   // the factor the scene is drawn at now, and the pixel ratio that makes
   effScale() { return this.retro ? 1 : this.knobs ? (this.autoRes ? this.knobs.scale : 1) : this.autoRes ? this.dyn : 1; }
   pixelRatio() { return +(this.renderer.getPixelRatio() * this.effScale()).toFixed(3); }
@@ -267,7 +272,7 @@ export class Renderer {
     // (Medium on a high-density screen: none, the pixel ratio smooths the edges and the GPU is spared the resolve)
     // (AUTO-FIT: High on an integrated GPU on a high-density screen: 2×, its pixel ratio smooths the rest)
     const hiMs = pr >= 1.5 || (this.integrated && devicePixelRatio > 1 && pr > 1.05) ? 2 : 4;
-    const ms = this.retro || (!this.knobs && this.quality === 'low') || this.aa === 'fxaa' || this.battery ? 0 : this.knobs ? Math.min(this.knobs.msaa, hiMs) : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : hiMs;
+    const ms = this.retro || (!this.knobs && this.quality === 'low') || this.aa === 'fxaa' || (this.battery && this.batteryCuts) ? 0 : this.knobs ? Math.min(this.knobs.msaa, hiMs) : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : hiMs;
     // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
     const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${this.battery}/${!!this.composer}`;
     if (key !== this._size) { this._size = key; this._want = { w, h, pr, ms }; }

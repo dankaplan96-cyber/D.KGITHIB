@@ -779,11 +779,11 @@ class Game {
   // (AUTO-QUALITY: under Auto the governor's lamp count — as last committed — with the battery profile's cap; a preset's
   //  2 / 4 / 8 otherwise)
   lampCount() {
-    const bat = this.renderer.battery && !this.renderer.retro;
+    const bat = this.renderer.battery && this.renderer.batteryCuts && !this.renderer.retro;   // (LOOK-FIRST: no battery cut)
     if (this.autoQ?.on()) { const n = this.autoQ.gov.knobs().lamps; return bat && this.autoQ.gov.knobs().shadows ? Math.min(n, BATTERY_LAMPS) : n; }
     return poolSize(this.settings.quality, bat);
   }
-  lampFade() { return this.renderer.battery && !this.renderer.retro && (this.autoQ?.on() ? !!this.autoQ.gov.knobs().shadows : this.settings.quality !== 'low'); }
+  lampFade() { return this.renderer.battery && this.renderer.batteryCuts && !this.renderer.retro && (this.autoQ?.on() ? !!this.autoQ.gov.knobs().shadows : this.settings.quality !== 'low'); }
   // what the current preset does, for the benchmark's report
   graphicsConfig() {
     const R = this.renderer, W = this.world;
