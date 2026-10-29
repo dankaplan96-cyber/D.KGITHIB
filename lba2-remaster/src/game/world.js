@@ -13,6 +13,7 @@ import { buildTown, townHeight, streetDist, HOUSE_PADS, HOUSE_KEEP, HOUSE_FLATS,
 import { treeGeometry, rockGeometry, grassClumpGeometry, flowerGeometry, tulipGeometry, palmGeometry } from './vegetation.js';
 import { buildIsland, keepClear, keepClearNew, STUMP, SHIFT, ISLET, QUAY_R } from './island.js';
 import { buildDinoFly } from './dinofly.js';
+import { buildLighthouse } from './lighthouse.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
@@ -866,30 +867,18 @@ export function* buildWorldSteps(parentScene) {
   {
     const L = POI.lighthouse, g = H(L.x, L.z);
     const grp = new THREE.Group(); grp.position.set(L.x, g, L.z); scene.add(grp);
-    const segH = 3.2;
-    for (let i = 0; i < 5; i++) {
-      const r0 = 3.0 - i * 0.3, r1 = 3.0 - (i + 1) * 0.3;
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, segH, 24), mat(i % 2 ? '#d23b2f' : '#f4f1ea', { roughness: 0.6 }));
-      m.position.y = segH * i + segH / 2; m.castShadow = m.receiveShadow = true; grp.add(m);
-    }
-    const topY = segH * 5;
-    const balcony = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.3, 24), mat('#333', { metalness: 0.6 }));
-    balcony.position.y = topY; grp.add(balcony);
+    // (I-3: the tower is src/game/lighthouse.js: tapered bands, a door with its surround and step, windows, a gallery
+    // with a railing, the glazed lamp room and a cap; merged, one mesh per material, only the plaster casts)
     const lampMat = new THREE.MeshStandardMaterial({ color: '#444', emissive: '#ffefb0', emissiveIntensity: 0.05, transparent: true, opacity: 0.85 });
-    const lamp = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 2, 16), lampMat);
-    lamp.position.y = topY + 1.1; grp.add(lamp);
-    const cap = new THREE.Mesh(new THREE.ConeGeometry(1.7, 1.4, 16), mat('#d23b2f'));
-    cap.position.y = topY + 2.8; cap.castShadow = true; grp.add(cap);
-    const door = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 0.2), mat('#5a3a20'));
-    door.position.set(0, 1.1, 2.95); grp.add(door);
+    const { lampY } = buildLighthouse(grp, lampMat);
     // the beam (visible once the Sun Lens is restored)
     const beamGeo = new THREE.ConeGeometry(4, 60, 24, 1, true);
     beamGeo.translate(0, -30, 0); beamGeo.rotateZ(Math.PI / 2);
     const beam = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({ color: '#fff2c0', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
-    beam.position.y = topY + 1.1;
+    beam.position.y = lampY;
     grp.add(beam);
     const light = new THREE.PointLight('#ffe9b0', 0, 40, 1.5);
-    light.position.y = topY + 1.1; grp.add(light);
+    light.position.y = lampY; grp.add(light);
     physics.add({ type: 'cyl', x: L.x, z: L.z, r: 3.1, top: g + 20 });
     W.lighthouse = { lampMat, beam, light, power: 0 };
     W.updaters.push((dt, t) => {

@@ -87,14 +87,7 @@ export class Prologue extends ChapterBase {
       em.position.set(e.x + dx, e.y + s / 2, e.z + dz + s / 2 + 0.01); scene.add(em);
       W.physics.add({ type: 'box', x: e.x + dx, z: e.z + dz, hw: s / 2, hd: s / 2, rot: 0, top: e.y + s, seeThrough: true });
     }
-    // harbour master's shed
-    const s = W.pierStart;
-    const g = W.H(s.x, s.z + 4);
-    const shed = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.4, 2), new THREE.MeshStandardMaterial({ color: '#c9b48a', roughness: 0.9 }));
-    shed.position.set(s.x, g + 1.2, s.z + 4.4); shed.castShadow = true; scene.add(shed);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(3, 0.15, 2.4), new THREE.MeshStandardMaterial({ color: '#2f6fb0' }));
-    roof.position.set(s.x, g + 2.5, s.z + 4.4); roof.rotation.x = 0.12; scene.add(roof);
-    W.physics.add({ type: 'box', x: s.x, z: s.z + 4.4, hw: 1.3, hd: 1, rot: 0, top: g + 3 });
+    // (the harbour master's shed that stood here, a box and a slab, is built with the harbour: island.js, I-3)
     this.buildLid(); this.buildBell(); this.buildBay();
   }
 

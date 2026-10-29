@@ -12,6 +12,7 @@ import { sculptRigid } from '../engine/sculpt.js';
 import { rng, smoothstep, lerp, fbm, noise2, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
 import { buildHouse } from './architecture.js';
+import { buildHarbourShed } from './harbourshed.js';
 import { mergeStatic } from '../engine/merge.js';
 import { occOf } from '../engine/occlude.js';
 import { fitAdd } from './worldfit.js';
@@ -610,6 +611,21 @@ function buildHarbour(W0, root, r) {
     mesh(rack, cyl(0.04, 0.04, 2.3, 8).rotateZ(Math.PI / 2), wood, 0, 1.85, 0);
     mesh(rack, netGeo(2.0, 1.6), netMat(), 0, 1.83, 0.02, 0, { cast: false });
     physics.add({ type: 'box', x: ox, z: oz, hw: 1.1, hd: 0.25, rot: ry, top: H(ox, oz) + 1.9, seeThrough: true });
+  }
+
+  // --- the harbour master's shed at the pier's foot (I-3: planks, a framed door, windows, a roof with an overhang, a
+  // barrel and crates; src/game/harbourshed.js. It was a box and a slab drawn by the prologue after the area's batches
+  // were made: built here, with the quay, it is merged with it below. Same footprint and collider as that box: 2.6 m
+  // east-west by 2.0 north-south, the door facing east, to the quay's open side)
+  {
+    const sx = W.pierStart.x, sz = W.pierStart.z + 4.4, sry = Math.PI / 2, y = H(sx, sz);
+    const shed = buildHarbourShed(g, sry);
+    shed.group.position.set(sx, y, sz);
+    physics.add({ type: 'box', x: sx, z: sz, hw: 1.3, hd: 1, rot: 0, top: y + 3 });
+    // the barrel and the crates against the front: solid, low enough to see over
+    const at = frame(sx, sz, sry);
+    { const [bx, bz] = at(shed.barrel.x, shed.barrel.z); physics.add({ type: 'cyl', x: bx, z: bz, r: shed.barrel.r, top: y + 0.8, seeThrough: true }); }
+    for (const c of shed.crates) if (!c.y) { const [cx, cz] = at(c.x, c.z); physics.add({ type: 'box', x: cx, z: cz, hw: c.s / 2, hd: c.s / 2, rot: 0, top: y + (c.s > 0.6 ? 1.12 : c.s), seeThrough: true }); }
   }
 
   // --- Doran's fishing boat and the project ferry
