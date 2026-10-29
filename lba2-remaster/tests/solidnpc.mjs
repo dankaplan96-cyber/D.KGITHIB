@@ -390,6 +390,7 @@ check(`Citadel: every resident seated at each of its ${benchC.length} bench stop
 const share = await ev(() => { const G = game, W = G.walkers, ume = W.res.find((r) => r.def.id === 'ume'), brix = W.res.find((r) => r.def.id === 'brix');
   const iu = ume.stops.findIndex((s) => s.id === 'ume_b2'), ib = brix.stops.findIndex((s) => s.id === 'brix_lane2');
   for (const q of W.res) if (q !== ume && q !== brix) q.away = 'test';
+  brix.ri = ib; brix.slotAt(brix.stops[ib]); brix.st = 'dwell'; brix.tmr = 999;   // (Brix up from any bench first)
   ume.ri = iu; ume.slotAt(ume.stops[iu]); ume.arrived(ume.stops[iu], true); ume.tmr = 999; G.step(1.0, 1 / 30); ume.tmr = 999;
   brix.ri = ib; brix.slotAt(brix.stops[ib]); brix.arrived(brix.stops[ib], true); brix.tmr = 999; G.step(1.0, 1 / 30);
   const d = Math.hypot(ume.pos.x - brix.pos.x, ume.pos.z - brix.pos.z), out = { ume: ume.st, brix: brix.st, d: +d.toFixed(2), R: +(ume.bodyR + brix.bodyR).toFixed(2) };

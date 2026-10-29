@@ -1,0 +1,38 @@
+PASS the well looked at: padlocked (INPUT) {"r":{"r":"used","target":{"kind":"well","id":"p_well","label":"p_well"},"state":"play","lines":4},"s":["The magic ball, the holomap... and a lot of dust.","Hello again, old friend.","The lid is padlocked. It's the water office's lock.","Mira from the water office is by the well, arguing with Gilbert."]}
+PASS before the key, Aggressive gives the well no kick prompt {"label":"p_well"}
+PASS Mira refuses: "I don't unlock the town well for a pipe fault" (INPUT) {"r":{"r":"talked","to":"gilbert","state":"play","lines":12},"s":["I paid my water bill! So where is my water?","Mr Gilbert, the bill covers the connection, not the water.","So I'm paying for an empty pipe?","How about we find out what's wrong with the well instead?","It isn't the well, Twinsen. It's the old pipes on his street. I don't unlock the town well for a pipe fault.","My pipes are fine! I kick them every morning."]}
+PASS the objective asks for proof, the journal says what Mira said (no "gave me the key" yet) {"o1":"Climb down the well◆ Lid key: Mira wants proof◆ A rope (harbour)◆ Optional: what did Tim throw in the well?","j1":["pr_j_well+","pr_j_lock","pr_j_mira"]}
+PASS the map marks Zoé (she has the proof) 
+PASS Zoé hears of the refusal and gives the kettle crystals (INPUT) {"r":{"r":"talked","to":"zoe","state":"play","lines":10},"s":["Mira won't open the well. She says it's the pipes.","Same next door. Their tap ran warm, then stopped.","And look at their kettle. Furred with these overnight.","(Tiny crystals. Still warm.)","Mira's telling everyone it's Gilbert's old pipes. Show her these. Then the well."]}
+PASS Mira, shown the crystals: "pipes don't grow those", the key (INPUT) {"s":["Next door's kettle furred up with these overnight. Pipes don't do that.","Crystals? No, pipes don't grow those. That comes up from the spring.","Fine. Find the fault and I'll waive his bill this month. Here's the key to the lid.","And last month too."],"items":["lidkey"]}
+PASS the lid: the padlock off, rusted to the rim; Gilbert says kick it (INPUT) {"s":["The padlock's off. But the lid's rusted to the rim.","It won't lift.","Stuck? Give it a good kick. That's how I fix everything.","That explains his pipes."],"L":{"lock":false,"rot":0,"stuck":true,"open":false}}
+PASS the objective: open the rusted lid "Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?"
+PASS Save → Continue: the lid still rusted (padlock off, down) {"lock":false,"rot":0,"stuck":true,"open":false}
+PASS the ball at the rusted lid: it bounces off, "it needs weight behind it" (INPUT) {"r":{"open":false},"s":["(The ball just bounces off. It needs weight behind it.)"]}
+PASS the nudge after ~30 s at the lid names Aggressive and the key ["Aggressive (F3), then W by the lid"]
+PASS Aggressive: the prompt is a kick, the kick opens the lid (INPUT) {"r":{"label":"p_kick"},"s":["There. Twelve years of rust, one kick.","Told you."],"L":{"lock":false,"rot":1.78,"stuck":true,"open":true}}
+PASS Save → Continue: the lid open {"lock":false,"rot":1.78,"stuck":true,"open":true}
+PASS Doran asleep: talk does not wake him (INPUT) ["Zzzz... hrrnk... zzzz...","(Better not wake him without a good reason.)"]
+PASS the bell: its rope long gone, out of reach (INPUT) ["The harbour bell. It rings when a boat comes in.","The bell rope is long gone, and it hangs out of reach."]
+PASS the ball rings the bell before Xil: Doran up and grumbling, no stamp yet (INPUT) {"r":{"bell":true,"stamp":false,"anim":null},"s":["Boat in! Ropes! Fenders! ...There is no boat.","Sorry, Doran. Just testing the bell.","Test it on someone younger."]}
+PASS Save → Continue: Doran stays awake, the bell is no longer a target {"bell":true,"anim":null,"targets":0}
+PASS Doran awake, no errand yet: "No boat, no business" (INPUT) ["No boat, no business. Let an old man sit."]
+PASS Xil: the permit (no bell line once it has rung) (INPUT) ["Greetings, child of Twinsun. I am Xil, a trader from Zeelich. My cargo came over on a project ship, and now it's stuck on the barge because the harbour master won't sign my unloading permit.","I asked him three times. The third time, he snored.","I'll talk to him."]
+PASS Doran stamps (INPUT) ["The trader from Zeelich is waiting for his stamp.","The Zeelichian? He's only been waiting three days. Waiting is what harbours are for.","Fine, fine. For you. *Stamp.* Tell him there's no need to thank me. Again."]
+PASS Xil: the rope ladder (INPUT) 
+PASS the first bay rock is too high to walk up, low enough to jump (INPUT for the walk) {"rimHigh":0.98,"top":2.08,"rise":1.1,"walkedUp":false}
+PASS looked at: "too high to climb, not too high to jump", the jump's keys (INPUT) {"s":["The stamp! At last. This cargo is for the joint Twinsun–Zeelich energy project: drills, pipes, sensors.","Please take this rope ladder, Twinsen. You look like someone who climbs down a lot of holes.","Too high to climb. Not too high to jump."],"tl":["Rope Ladder","Athletic (F2), then Space to jump"]}
+PASS the warm stones: "hum like a bee in a jar", +10 kashes, the Warm Stone (INPUT) {"s":["Warm stones, wedged in the rock. They hum like a bee in a jar.","And a few kashes someone dropped."],"items":["lidkey","rope","warmstone"]}
+PASS Save → Continue: the stone taken, the kashes kept, the journal has the stones {"taken":true,"flag":true,"coins":10,"j":["pr_j_well","pr_j_kettle","pr_j_key","pr_j_lid","pr_j_rope","pr_j_stones"]}
+PASS the journal lists only what is true (no open line in the past tense) ["pr_j_well+","pr_j_kettle+","pr_j_key+","pr_j_lid+","pr_j_rope+","pr_j_stones+"]
+PASS an old save (key, stamp, rope; no new flags) continues: Doran awake, the bell no target, the lid still to open {"lock":true,"obj":"Climb down the well◆ Open the rusted lid◆ A rope (harbour)◆ Optional: what did Tim throw in the well?","doran":null,"targets":0}
+PASS the old save goes on: the lid kicked open, down the well (INPUT) {"room":"well","open":true}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 29 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional, 1 note
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8212/assets/music/island_b.mp3
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+EXIT 0
