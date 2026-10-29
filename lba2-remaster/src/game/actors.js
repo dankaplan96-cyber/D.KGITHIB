@@ -91,6 +91,19 @@ export class Actor {
   }
 }
 
+// SOLID-NPC: how wide a person is to walk into (the circle Twinsen's own 0.4 m is kept out of: Hero.keepApart). By
+// race, from the bodies' measured girth at the belly (a Grobo's and a Sphero's round bodies are wide, a Rabbibunny is
+// narrow), times the model's scale (a child is smaller); a look may give its own (`radius`: Baldino). It is not the
+// physics radius an NPC walks with (`radius`, 0.45: the residents' routes are planned for that).
+const RACE_R = { grobo: 0.62, sphero: 0.6, bunny: 0.4, quetch: 0.45, esmer: 0.42, elf: 0.42, fclone: 0.5 };
+export function contactRadius(char, scale = 1) {
+  const L = LOOKS[char];
+  return +((L?.radius ?? RACE_R[L?.race] ?? 0.45) * scale).toFixed(3);
+}
+const EASE = 1.2;          // m/s: out of an overlap he did not walk into (a scene put him there, or they stepped into him)
+const PRESS_PASS = 1.2;    // s: pressing on a story person in a gap too narrow to go round before he squeezes past
+const _bodies = [], _bodyPool = [];
+
 // ------------------------------------------------------------------ hero
 export class Hero extends Actor {
   constructor(game, x, z) {
@@ -385,59 +398,117 @@ export class Hero extends Actor {
     this.sync();
   }
 
-  // People are solid (VP-2): Twinsen no longer walks through the townsfolk. NPCs have no physics collider (they
-  // are not bricks: the ball, the camera, sight lines and the NPCs' own paths ignore them as before); instead, each
-  // frame of his own movement in play, the hero is kept out of the circle of every present NPC (his radius + theirs,
-  // 0.85 m) — a soft contact, never a wall:
-  //  - the push-out runs through physics.move, so it never puts him into a brick, the sea or up a cliff, and it is
-  //    refused at a ledge (no drop of more than 0.6 m), and it is rate-limited (a spawn on top of someone eases out
-  //    in a fraction of a second rather than jumping);
-  //  - head on, he side-steps round the person instead of stopping dead (the way past is always open in the open);
-  //  - where he can't get round (a doorway, a narrow path, a spot right where they stand: 0.8 s pressing on with
-  //    less than 0.35 m gained) he squeezes past that person as before, until clear of them — an NPC can never
-  //    trap him or block a door;
-  //  - only his own movement in play: cut-scenes, dialogue placement, door walks and scripted NPCs (`controlled`:
-  //    watchers, escorts) are untouched.
+  // People are solid (VP-2, SOLID-NPC): Twinsen never walks into anyone's body. People and pets have no physics
+  // collider (they are not bricks: the ball, the camera, sight lines and the NPCs' own paths ignore them as before);
+  // instead, each frame, after his own move, his circle is kept out of the circle of everyone near him (his radius +
+  // theirs: `bodyR`, the body's own girth, contactRadius) the way a cylinder brick stops him:
+  //  - walking in, he is put back on the rim along the line between the centres: the part of his move along the rim
+  //    is kept, so he slides round the circle smoothly; nothing is added, so he is never launched;
+  //  - the correction runs through physics.move (never into a brick, the sea or up a cliff); pinned between a brick
+  //    and someone, he stays where he was the frame before (no jitter);
+  //  - head on (walking straight at the centre), he side-steps round them, on the side he leans to or the side that
+  //    is free, instead of stopping dead (the way past is always open in the open);
+  //  - already inside a circle when the frame starts (put there by a scene, a load, or someone stepped into him): never
+  //    deeper, and out at EASE m/s — a scene that places him next to someone is not fought;
+  //  - a walking resident he presses against gives way (walkers.js giveWay); a story person stays put. Only in a gap
+  //    too narrow to go round (bricks on both sides of the person) does he squeeze past a story person after
+  //    PRESS_PASS s of pressing, until clear of them, so a person in a doorway can never trap him;
+  //  - not while the game walks him (walkTo steps, cut-scenes, dialogue: Hero.update does not run) and not for
+  //    scripted people (`controlled`: watchers, escorts).
   keepApart(dt) {
-    const g = this.game, P = g.physics, p = this.pos;
-    if (!g.npcs || !this.onGround || this.sliding || dt <= 0) return;
+    const g = this.game, P = g.physics, p = this.pos, q = this.prevPos;
+    if (dt <= 0 || this.steer || this.dead) return;
+    const list = this.contacts(_bodies);
     const pass = this.passing;
-    if (pass && (!pass.present || Math.hypot(p.x - pass.pos.x, p.z - pass.pos.z) > this.radius + pass.radius + 0.1)) this.passing = null;
+    if (pass && (!pass.present || Math.hypot(p.x - pass.pos.x, p.z - pass.pos.z) > this.radius + (pass.bodyR ?? pass.radius) + 0.1)) this.passing = null;
+    if (!list.length) { this.pressT = 0; return; }
     const vx = this.vel.x, vz = this.vel.y, v = Math.hypot(vx, vz);
     let pressing = null;
-    for (const n of g.npcs) {
-      if (!n.present || n.controlled || n === this.passing || !n.rig.root.visible) continue;
-      const R = this.radius + n.radius, dx = p.x - n.pos.x, dz = p.z - n.pos.z;
-      if (Math.abs(dx) >= R || Math.abs(dz) >= R || Math.abs(n.pos.y - p.y) > 1.2) continue;
-      const d = Math.hypot(dx, dz);
-      if (d >= R) continue;
-      // out along the line between the centres (straight back from his facing when exactly on top)
-      const nx = d > 1e-3 ? dx / d : -Math.sin(this.angle), nz = d > 1e-3 ? dz / d : -Math.cos(this.angle);
-      const push = Math.min(R - d, (v + 3) * dt);
-      let sx = nx * push, sz = nz * push;
-      const into = v > 0.3 ? -(vx * nx + vz * nz) / v : 0;   // 1 = walking straight at them
-      if (into > 0) pressing = n;
-      if (into > 0.94 && this.wantsMove) {
-        // head on: step round them, on the side he is already leaning to (or the side that is free)
-        let side = Math.sign(vx * nz - vz * nx);
-        if (!side) side = P.blockedAt(n.pos.x + nz * R, n.pos.z - nx * R, p.y) ? -1 : 1;
-        const k = v * 0.6 * dt;
-        sx += nz * side * k; sz += -nx * side * k;
+    for (let it = 0; it < 2; it++) {
+      for (const b of list) {
+        if (b.ref === this.passing) continue;
+        const R = this.radius + b.r, dx = p.x - b.x, dz = p.z - b.z;
+        if (Math.abs(dx) >= R || Math.abs(dz) >= R) continue;
+        const d = Math.hypot(dx, dz);
+        if (d >= R - 1e-4) continue;
+        const d0 = Math.hypot(q.x - b.x, q.z - b.z);
+        const clear = d0 >= R - 0.02;
+        // was clear: back to the rim; was inside already: never deeper, out at EASE m/s
+        const need = clear ? R : Math.min(R, Math.max(d, d0) + EASE * dt);
+        if (d >= need - 1e-4) continue;
+        // out along the line between the centres (where he came from when exactly on top; else straight back)
+        let nx, nz;
+        if (d > 1e-4) { nx = dx / d; nz = dz / d; } else if (d0 > 1e-4) { nx = (q.x - b.x) / d0; nz = (q.z - b.z) / d0; } else { nx = -Math.sin(this.angle); nz = -Math.cos(this.angle); }
+        let tx = b.x + nx * need, tz = b.z + nz * need;
+        const into = v > 0.3 ? -(vx * nx + vz * nz) / v : 0;   // 1 = walking straight at the centre
+        if (into > 0.2 && this.wantsMove && it === 0) pressing = b;
+        if (it === 0 && clear && into > 0.94 && this.wantsMove && b.solid !== 'pet') {
+          // head on: round them on the side he leans to (or the free side), along the rim, at a walk's pace
+          // (kept while he stays on them: the side never flips back and forth as he crosses their centre line)
+          const mem = this.rounding;
+          let side = mem && mem.ref === b.ref && g.time - mem.t < 0.4 ? mem.side : 0;
+          if (!side) {
+            side = Math.sign(vx * nz - vz * nx) || 1;
+            const free = (sd) => !P.blockedAt(b.x + nz * R * sd, b.z - nx * R * sd, p.y, 0.1);
+            if (!free(side) && free(-side)) side = -side;
+          }
+          this.rounding = { ref: b.ref, side, t: g.time };
+          const k = Math.min(v * 0.6 * dt, 0.5 * R), ang = (k / R) * side;
+          const c = Math.cos(ang), s = Math.sin(ang), rx = nx * c + nz * s, rz = -nx * s + nz * c;
+          tx = b.x + rx * need; tz = b.z + rz * need;
+        }
+        // (eased out of an overlap he did not walk into: never off a ledge)
+        if (!clear && P.groundAt(tx, tz, p.y + 0.6) < p.y - 0.6) continue;
+        P.move(this, tx - p.x, tz - p.z);
+        // pinned (a brick on the far side): where he stood the frame before, if that was clear of this body
+        const d1 = Math.hypot(p.x - b.x, p.z - b.z);
+        if (d1 < need - 0.03 && clear) { p.x = q.x; p.z = q.z; }
       }
-      // never off a ledge
-      if (P.groundAt(p.x + sx * 2, p.z + sz * 2, p.y + 0.6) < p.y - 0.6) continue;
-      P.move(this, sx, sz);
     }
-    // can't get round (a gap too narrow, or the place he wants is right where they stand): pressing on against the
-    // same person for 0.8 s while getting less than 0.35 m anywhere, he squeezes past them
+    // pinched between two people (out of one, into the other): where he stood the frame before, so he stands still in
+    // the gap instead of shuttling between them
+    for (const b of list) {
+      if (b.ref === this.passing) continue;
+      const R = this.radius + b.r;
+      if (Math.hypot(p.x - b.x, p.z - b.z) < R - 0.03 && Math.hypot(q.x - b.x, q.z - b.z) >= R - 0.02) { p.x = q.x; p.z = q.z; break; }
+    }
+    // a walking resident he presses on makes way for him (walkers.js); a story person in a gap too narrow to go round
+    // (bricks on both sides of them) is squeezed past after PRESS_PASS s of pressing with less than 0.35 m gained
     if (pressing && this.wantsMove) {
-      if (!this.pressT || this.pressNpc !== pressing) { this.pressT = 0; this.pressNpc = pressing; this.pressFrom = { x: p.x, z: p.z }; }
+      const n = pressing.ref;
+      if (!this.pressT || this.pressNpc !== n) { this.pressT = 0; this.pressNpc = n; this.pressFrom = { x: p.x, z: p.z }; }
       this.pressT += dt;
-      if (this.pressT >= 0.8) {
-        if (Math.hypot(p.x - this.pressFrom.x, p.z - this.pressFrom.z) < 0.35) this.passing = pressing;
+      if (n.giveWay && this.pressT > 0.3) n.giveWay(p.x, p.z, vx, vz);
+      if (this.pressT >= PRESS_PASS) {
+        if (pressing.solid === 'story' && Math.hypot(p.x - this.pressFrom.x, p.z - this.pressFrom.z) < 0.35 && this.narrowAt(pressing)) this.passing = n;
         this.pressT = 0;
       }
     } else this.pressT = 0;
+  }
+  // is the person b standing in a gap he cannot go round (a brick within reach on both sides of the line he comes in on)?
+  narrowAt(b) {
+    const P = this.game.physics, p = this.pos, dx = b.x - p.x, dz = b.z - p.z, d = Math.hypot(dx, dz) || 1;
+    const sx = dz / d, sz = -dx / d, w = b.r + 2 * this.radius + 0.1;
+    const hit = (k) => P.blockedAt(b.x + sx * w * k, b.z + sz * w * k, p.y, 0.05) || P.blockedAt(b.x + sx * w * k * 0.6, b.z + sz * w * k * 0.6, p.y, 0.05);
+    return hit(1) && hit(-1);
+  }
+  // the bodies near him he can't walk into: present people (their girth: bodyR) and pets, within a few metres
+  contacts(out) {
+    const g = this.game, p = this.pos;
+    out.length = 0;
+    const near = (x, z, y) => Math.abs(x - p.x) < 3 && Math.abs(z - p.z) < 3 && Math.abs(y - p.y) < 1.2;
+    let k = 0;
+    const put = (x, z, r, ref, solid) => { const o = _bodyPool[k] || (_bodyPool[k] = {}); k++; o.x = x; o.z = z; o.r = r; o.ref = ref; o.solid = solid; out.push(o); };
+    for (const n of g.npcs || []) {
+      if (!n.present || n.controlled || n.away || !n.rig.root.visible) continue;
+      if (!near(n.pos.x, n.pos.z, n.pos.y)) continue;
+      put(n.pos.x, n.pos.z, n.bodyR ?? n.radius, n, n.ambient ? 'resident' : 'story');
+    }
+    for (const list of [g.world?.dogs, g.regions?.built?.('zeelich')?.dogs]) for (const d of list || []) {
+      if (d.root && !d.root.visible) continue;
+      if (near(d.pos.x, d.pos.z, d.pos.y)) put(d.pos.x, d.pos.z, d.bodyR ?? d.radius, d, 'pet');
+    }
+    return out;
   }
 
   // LBA2's action in Normal mode: a little hop on the spot (0.58 s). Next to a giver (a bin, a cupboard, a barrel)
@@ -601,6 +672,7 @@ export class NPC extends Actor {
     super(game, def.char ? createCharacter(def.char) : createHumanoid(def.look), def.x, def.z, (def.char && LOOKS[def.char]?.radius) || 0.45);
     this.def = def;
     this.name = def.name;
+    this.bodyR = def.char ? contactRadius(def.char, this.rig.root.scale.x) : 0.45;   // (SOLID-NPC: Hero.keepApart)
     this.track = def.track ? new TrackRunner(def.track) : null;
     this.angle = def.angle ?? 0;
     this.talking = false;

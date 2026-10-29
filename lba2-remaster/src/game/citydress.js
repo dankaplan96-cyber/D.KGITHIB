@@ -22,6 +22,9 @@ import { lifeClear } from './townlife.js';
 const CUSTOMS = { x0: -114.5, x1: -104.5, z0: 30.5, z1: 38.6 };   // Odile's booth, the barrier, the held crate
 const CELL = 40;
 const heading = (x, z, tx, tz) => Math.atan2(tx - x, tz - z);
+// the waiting bench (props.js waitingBench, set 0.02 m into the ground): the seat's top over the ground, the back's front face
+// and the seat's front edge, the way the sitter faces (walkers.js seatPose: a resident sits on the seat, not inside it)
+const WAITING_BENCH = { seatY: 0.47, back: -0.24, front: 0.235 };
 // destinations as the walker goes from each junction (first leg of the real route)
 const TO = { square: [-42, -4], lane: [-44.6, 12], harbour: [-60, 33], spaceport: [-31, 40], lighthouse: [-58, 73], laneS: [-45.6, 60] };
 
@@ -92,8 +95,10 @@ export function buildCityDressing(root, physics, W) {
       const got = k.at(cx, y, cz, ry, () => fn(k)) || fp;
       for (const [px, pz, r] of pts) placed.push({ x: px, z: pz, r: r + 0.05 });
       const tall = got.top > 1.3;
-      if (got.r != null) physics.add({ type: 'cyl', x: cx, z: cz, r: got.r, top: y + got.top, noStand: true, seeThrough: !tall });
-      else physics.add({ type: 'box', x: cx, z: cz, hw: got.hw, hd: got.hd, rot: ry, top: y + got.top, noStand: true, seeThrough: !tall });
+      // (block: a low one — a planter box, a flower tub, 0.5 m — stops Twinsen as a taller one does, SOLID-NPC; it was neither
+      //  stood on nor in the way, so he walked through it)
+      if (got.r != null) physics.add({ type: 'cyl', x: cx, z: cz, r: got.r, top: y + got.top, noStand: true, block: true, seeThrough: !tall });
+      else physics.add({ type: 'box', x: cx, z: cz, hw: got.hw, hd: got.hd, rot: ry, top: y + got.top, noStand: true, block: true, seeThrough: !tall });
       count++; kinds[name] = (kinds[name] || 0) + 1;
       return [cx, cz];
     }
@@ -111,7 +116,7 @@ export function buildCityDressing(root, physics, W) {
   const bin = (x, z, ry = 0) => place('bin', (k) => P.litterBin(k, { color: BIN_COLORS[binN++ % 3] }), x, z, ry, FP.bin);
   const tub = (x, z, seed = 1, color) => place('tub', (k) => P.flowerTub(k, { seed, r: 0.32, color: color || '#b8623a' }), x, z, seed, FP.tubS);
   const post = (x, z, boards) => place('signpost', (k) => P.signPost(k, boards), x, z, 0, FP.post, { pad: 0.15 });
-  const bench = (x, z, ry, color = '#2f6a9a') => { const at = place('bench', (k) => P.waitingBench(k, { w: 1.7, color }), x, z, ry, FP.bench); if (at) (W.seats ||= []).push({ x: at[0], z: at[1], ry }); return at; };   // (WORLD-LIFE: a resident may sit on it)
+  const bench = (x, z, ry, color = '#2f6a9a') => { const at = place('bench', (k) => P.waitingBench(k, { w: 1.7, color }), x, z, ry, FP.bench); if (at) (W.seats ||= []).push({ x: at[0], z: at[1], ry, spec: WAITING_BENCH }); return at; };   // (WORLD-LIFE: a resident may sit on it; its seat's shape, props.js waitingBench, for walkers.js seatPose)
   const board = (x, z, ry, kind = 'notices') => place('board-' + kind, (k) => P.streetNoticeBoard(k, { kind, w: 1.3, h: 0.9 }), x, z, ry, FP.board, { pad: 0.2 });
   const planter = (x, z, ry, seed = 1) => place('planter', (k) => P.planterBox(k, { w: 1.4, d: 0.55, seed }), x, z, ry, FP.planter);
   // a bin at one end of an existing bench (collider {x,z,rot,hw}), along its length

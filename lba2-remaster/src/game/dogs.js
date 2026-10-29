@@ -280,6 +280,7 @@ export class Dog {
     this.area = area; this.path = path;
     this.pos = new THREE.Vector3(x, physics.groundAt(x, z), z);
     this.radius = 0.35; this.onGround = true;
+    this.bodyR = this.friendly ? 0.35 : 0.5;   // (SOLID-NPC: its body, 0.42 H wide and 0.6 H long, that Twinsen can't walk into: Hero.keepApart)
     this.a = Math.random() * Math.PI * 2;
     this.state = 'idle'; this.timer = 1 + Math.random() * 2; this.target = null;
     this.speed = 0; this.barkCool = 3 + Math.random() * 5;
@@ -349,6 +350,9 @@ export class Dog {
     const x0 = this.pos.x, z0 = this.pos.z;
     this.physics.move(this, sx * v * dt, sz * v * dt);
     if (!this.inArea(this.pos.x, this.pos.z, 0.5)) { this.pos.x = x0; this.pos.z = z0; }
+    // (never into Twinsen: a step that comes closer than his body and its own is not taken)
+    const h = this.hero();
+    if (h) { const R = h.radius + this.bodyR, d1 = Math.hypot(h.pos.x - this.pos.x, h.pos.z - this.pos.z); if (d1 < R && d1 < Math.hypot(h.pos.x - x0, h.pos.z - z0)) { this.pos.x = x0; this.pos.z = z0; } }
     return Math.hypot(this.pos.x - x0, this.pos.z - z0) / Math.max(dt, 1e-4);
   }
 

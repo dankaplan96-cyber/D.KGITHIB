@@ -1,0 +1,27 @@
+PASS chapter 2 (zeelich) starts on Zeelich, in play, an objective set [2,true,"zeelich","play","Find Baldino's workshop"]
+PASS Baldino in his workshop: the plan for the override key, an objective set ["workshop",true,"Collect the parts for the override key◆ The cog (the old mill)◆ The code cylinder (the depot)◆ Brake the three mills (0/3)"]
+PASS back out on Zeelich ["zeelich","2387.4","7.1"]
+PASS the setback: the plan is taken [true,""]
+PASS the cog can't be taken before Oku agrees 
+PASS the code cylinder from the depot locker [true,"Collect the parts for the override key◆ The cog (the old mill)◆ The code cylinder (the depot)◆ Brake the three mills (0/3)"]
+PASS the plan back [true,"evacplan,cyl"]
+PASS Oku is there and the talk prompt is his [true,"2376.0","7.0","npc","oku","p_talk"]
+PASS Oku agrees ["dialog","TwinsenTh▼","play",true,true,2]
+PASS Oku agreed; Nara saw [true,true]
+PASS the cog from the old mill true
+PASS the three mills braked by the ball [["north",true,false],["east",true,false],["south",true,false]]
+PASS the override key made; Zoé's segment in the lighthouse top [true,true,"lighttop","zoe"]
+PASS the broadcast sent; back to Twinsen, an objective set [true,"workshop","twinsen","Open the platform shield"]
+PASS save → Continue: the chapter-2 flags survive, the mills stay braked [true,"zeelich","false,false,false"]
+PASS the platform shield opened (switched off) at the console [true,false,"Stop Vesk on the platform"]
+PASS Vesk confronted and down [true,false,"Go down the drill shaft","play",[2450,-1.6,0],[2445.1,6.4,-4.5],null]
+PASS chapter 2 done: the next chapter (dig) in play, an objective set ["play",true,"dig","desert","Find the professor who found the crystals"]
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 18 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional, 1 note
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8212/assets/music/manifest.json
+visual:     5 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+EXIT 0
