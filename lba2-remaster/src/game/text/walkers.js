@@ -85,7 +85,7 @@ Object.assign(STR.en, {
 Object.assign(STR.en, {
   rs_oda_hot: "The well's running again! Hot, mind. I made tea straight from the bucket and burned my tongue. Worth it.",
   rs_brix_hot: "That post by the shop is wonderful for the knees. The well can keep its steam, though.",
-  rs_maro_hot: "Hot water in the well. Tilde says it's progress. I say it's soup.",
+  rs_maro_hot: "Hot water straight from the well! I call it progress. Tilde has other words for it.",
   rs_tilde_hot: "Too hot to drink, too hot to wash in. Maro calls it progress. I call it tea without the tea.",
   rs_garrick_hot: "I'm letting the can cool before the tulips get it. Patience is a gardener's virtue. Mine's nearly gone.",
   rs_pico_hot: "The well's steaming! Dot says it's a dragon. It's not a dragon. Probably.",
