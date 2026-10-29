@@ -535,7 +535,7 @@ export function buildTown(scene, W) {
   { const p = at('shop', -3.2, 3.0); W.givers.push({ id: 'shop-barrels', x: p[0], z: p[1], r: 1.6, top: 1.1, kinds: ['money'], n: 3 }); }
   stoneWall(dress, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
   stoneWall(dress, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));
-  for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.2, top: gy(p) + 0.7 });   // (0.2: the south house's stands by its door) pot(dress, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }
+  for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.2, top: gy(p) + 0.7 }); pot(dress, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }   // (pots r 0.2: the south house's stands by its door)
   curbs(dress, H);
   // all of the above is static: one mesh per material (lights stay as they are)
   mergeStatic(dress);

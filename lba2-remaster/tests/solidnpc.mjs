@@ -288,6 +288,52 @@ console.log('town', JSON.stringify(town));
 check('over two minutes of the town no resident walks into another (deeper than a fifth of their girths) or into a story person', town.rr === 0 && town.rs === 0, town);
 
 
+// ---- props (the user, 29.10: Twinsen stood inside a planter box by the sign post south of the square): the small things he
+// could walk into are solid: he walks at each (head on and glancing) and never gets inside its collider; low ones are not a
+// step he climbs. The list of solid small props is printed.
+iso('Twinsen is put 3 m from each prop, facing it (Classic keys held)');
+const props = await ev(() => { const G = game, Pk = G.physics, T = Pk.terrain;
+  const list = Pk.colliders.filter((c) => c.enabled && c.block && Math.abs(c.x) < 300);
+  const kinds = {};
+  for (const c of list) { const h = c.top - T.heightAt(c.x, c.z), k = `${c.type} ${c.type === 'cyl' ? 'r' + c.r.toFixed(2) : c.hw.toFixed(2) + 'x' + c.hd.toFixed(2)} h${h.toFixed(1)}`; kinds[k] = (kinds[k] || 0) + 1; }
+  return { n: list.length, kinds }; });
+console.log('solid small props on Citadel (block colliders):', props.n, JSON.stringify(props.kinds));
+const propWalk = await ev(() => { const G = game, Pk = G.physics, h = G.hero, keys = G.input.keys, out = [];
+  const pick = (x, z) => Pk.colliders.filter((c) => c.enabled && c.block).sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z))[0];
+  const twin = (lx, lz) => { const H = G.world.houses.find((q) => q.id === 'twinsen'); return [H.x + Math.cos(H.ry) * lx + Math.sin(H.ry) * lz, H.z - Math.sin(H.ry) * lx + Math.cos(H.ry) * lz]; };
+  const targets = [['planter box (the spaceport bridge\'s foot)', -36.0, 36.6], ['planter box (the lane)', -48.3, 47.9], ['flower tub (the lane\'s resting spot)', -42.3, 18.0], ['flower tub (yellow, the bridge\'s foot)', -33.6, 36.2],
+    ['red bench (a red slatted one)', 'redbench'], ['flower pot (Twinsen\'s garden)', ...twin(1.6, 4.3)], ['flower pot (Twinsen\'s garden, by the fence)', ...twin(-0.6, 5.0)], ['Bug St. sign', ...twin(4.6, 6.0)], ['garden fence', ...twin(-3.0, 5.6)]];
+  for (const [name, tx, tz] of targets) {
+    const cands = tx === 'redbench' ? Pk.colliders.filter((q) => q.enabled && q.block && q.type === 'box' && Math.abs(q.hw - 0.85) < 0.01 && Math.abs(q.hd - 0.3) < 0.01 && Math.abs(q.x) < 300) : [pick(tx, tz)];
+    let res = null;
+    for (const c of cands) {
+    if (res) break;
+    if (!c || (tx !== 'redbench' && Math.hypot(c.x - tx, c.z - tz) > 1.5)) { out.push({ name, err: 'no block collider near ' + tx.toFixed(1) + ',' + tz.toFixed(1) }); continue; }
+    // a free side to come from (12 directions, the 3 m before it clear, away from house doors)
+    for (let i = 0; i < 24 && !res; i++) {
+      const a = ((i % 12) / 12) * Math.PI * 2, ux = Math.sin(a), uz = Math.cos(a), gy = Pk.terrain.heightAt(c.x, c.z), from = i < 12 ? 3 : 1.6;   // (3 m off; in a cramped corner 1.6 m)
+      let ok = true; for (let s = 1.0; s <= from + 0.2; s += 0.2) { if ((G.world.houses || []).some((q) => q.door && Math.hypot(q.door.x - (c.x - ux * s), q.door.z - (c.z - uz * s)) < 1.3)) ok = false; const x = c.x - ux * s, z = c.z - uz * s; if (Pk.blockedAt(x, z, Pk.groundAt(x, z, gy + 0.5), 0.45) || Math.abs(Pk.groundAt(x, z, gy + 0.5) - gy) > 0.4) ok = false; for (const n of G.npcs) if (n.present && Math.hypot(n.pos.x - x, n.pos.z - z) < 1.3) ok = false; }
+      if (!ok) continue;
+      const r1 = [];
+      for (const off of [0, 0.25]) {
+        if (from < 3 && off) continue;
+        const sx = c.x - ux * from + uz * off, sz = c.z - uz * from - ux * off;
+        SN.put(sx, sz, a);
+        let pen = 0, maxStep = 0, px = h.pos.x, pz = h.pos.z, onIt = 0; const room0 = G.room?.id;
+        for (let t = 0; t < 3; t += 1 / 60) { keys.add('ArrowUp'); G.step(1 / 60, 1 / 60); const p = Pk._push(c, h.pos.x, h.pos.z, h.radius); if (p) pen = Math.max(pen, Math.hypot(p.x, p.z)); maxStep = Math.max(maxStep, Math.hypot(h.pos.x - px, h.pos.z - pz) * 60); px = h.pos.x; pz = h.pos.z; if (h.pos.y >= c.top - 0.08 && Pk._inside(c, h.pos.x, h.pos.z, 0.05)) onIt++; }
+        P.release();
+        r1.push({ off, pen: +pen.toFixed(3), maxStep: +maxStep.toFixed(2), onIt, room: G.room?.id === room0, along: +(((h.pos.x - c.x) * ux + (h.pos.z - c.z) * uz)).toFixed(2) });
+      }
+      res = { name, a: +a.toFixed(2), runs: r1 };
+    }
+    }
+    out.push(res || { name, err: 'no free side' });
+  }
+  return out; });
+for (const m of propWalk) console.log('prop', JSON.stringify(m));
+check('Twinsen walking into each small prop (planter boxes, flower tubs, a red bench, garden pots, the street sign, the garden fence) never gets inside it, never climbs it, never jumps',
+  propWalk.every((m) => !m.err && m.runs.every((q) => q.pen < 0.03 && q.maxStep < 3.2 && q.onIt === 0 && q.room)), propWalk);
+
 // ---- the residents' bench sit (the user, 29.10: a Rabbibunny sat inside a bench, through the backrest and the seat):
 // every bench stop of every round, the resident seated there; its posed body checked against the bench's own parts:
 // nothing under the seat's top over the seat (legs through the seat), nothing behind the backrest's face (body through
@@ -337,6 +383,15 @@ const benchCheck = async (filter, shotsOK) => {
 const benchC = await benchCheck('citadel', true);
 check(`Citadel: every resident seated at each of its ${benchC.length} bench stops sits ON the seat: no part of the body under the seat's top or behind the backrest, the bottom resting on the seat`,
   benchC.length >= 10 && benchC.every((m) => m.st === 'seated' && m.under === 0 && m.behind === 0 && m.rest > -0.015 && m.rest < 0.06), benchC.map((m) => [m.sid, m.char, m.under, m.behind, m.rest]));
+
+// Zeelich's street (built for this check; its benches are of their own shape) — numbers only, no captures (not a chapter 1–2 place)
+const zb = await ev(async () => { const G = game; await G.regions.buildAsync(['zeelich'], 'test', async () => {}); G.enterRoom('zeelich', null, true, true); G.step(1.0);
+  return G.walkers.res.filter((r) => ['ilo', 'aven', 'kira'].includes(r.def.id)).map((r) => r.stops.length); });
+console.log('zeelich rounds', JSON.stringify(zb));
+const benchZ = await benchCheck('zeelich', false);
+check(`Zeelich: every resident seated at each of its ${benchZ.length} bench stops sits on the seat (nothing under it or behind the back, resting on it)`,
+  benchZ.length >= 3 && benchZ.every((m) => m.st === 'seated' && m.under === 0 && m.behind === 0 && m.rest > -0.015 && m.rest < 0.06), benchZ.map((m) => [m.sid, m.char, m.under, m.behind, m.rest]));
+console.log('Kesh: its residents\' rounds have no bench stop (walkrounds.js desertRoster), nothing to sit on there');
 
 await shot('solidnpc-end');
 const fails = done();
