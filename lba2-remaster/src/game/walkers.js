@@ -13,6 +13,10 @@
 //   - Cost: only residents near the hero (or in view) are simulated every frame; the rest are stepped twice a second along
 //     their route with no physics and no animation (a stand-in for "where they would be"), and a resident out of sight
 //     is not drawn at all (the camera culls it, FarCull hides it far off).
+//   - The town's state (G1 world-life): a stop may belong to one of two states of the town, `stage: 0` (the well is dry:
+//     chapter 1, and chapter 2 until the valves are open) or `stage: 1` (the water is back, hot, the project's heat
+//     posts lit). A resident skips the other state's stops, and when the state changes the ones standing at the wrong
+//     stops move on within a few seconds. Nothing is saved: the state is read from the story's own flags each frame.
 // A resident's state is not saved: after a load every resident starts its round again at its first stop.
 import * as THREE from 'three';
 import { NPC, contactRadius } from './actors.js';
@@ -79,6 +83,7 @@ export class Walkers {
     this.frustum = new THREE.Frustum(); this._m = new THREE.Matrix4(); this._v = new THREE.Vector3();
     this.hero = { x: 0, z: 0, inside: false };
     this.dayT = 0;
+    this.stage = 0; this.pippa = null;
     this.stats = { full: 0, reduced: 0, abstract: 0, ms: 0, frames: 0 };
     this.measure = false;         // (tests / the perf probe: time every resident's update)
     this.doors = (game.world.houses || []).filter((h) => h.door).map((h) => ({ x: h.door.x, z: h.door.z, r: 1.0 }));
@@ -101,6 +106,9 @@ export class Walkers {
     this.dayT = ((g.time / DAY) % 1 + 1) % 1;
     const h = g.hero, R = g.room;
     this.hero.x = h.pos.x; this.hero.z = h.pos.z; this.hero.inside = !!R && !R.outdoor;
+    // the town's state: 0 the well is dry, 1 the water is back (hot)
+    const stage = this.stageNow();
+    if (stage !== this.stage) { this.stage = stage; this.stageChanged(); }
     this.frozen = g.state === 'cutscene' || g.state === 'cinematic' || g.state === 'cinematicEnd' || !!g.reveal?.on;
     // the camera's frustum (matrices as of the last drawn frame: a frame behind is fine for this)
     const cam = g.camera;
@@ -118,10 +126,26 @@ export class Walkers {
     if (g.time - (this._castT ?? -9) > 0.5) {   // (twice a second is plenty: they stand where they are put)
       this._castT = g.time;
       const soft = this.nav.soft; soft.length = 0; let sig = '';
-      for (const n of g.npcs) if (!n.ambient && n.present && Math.abs(n.pos.x) < 300) { soft.push(n.pos); sig += Math.round(n.pos.x) + ',' + Math.round(n.pos.z) + ';'; }
+      this.pippa = null;
+      for (const n of g.npcs) if (!n.ambient && n.present && Math.abs(n.pos.x) < 300) { soft.push(n.pos); sig += Math.round(n.pos.x) + ',' + Math.round(n.pos.z) + ';'; if (n.def.id === 'pippa') this.pippa = n; }
       if (sig !== this.nav.sig) { this.nav.sig = sig; if (this.nav.cache.size > 300) this.nav.cache.clear(); }
     }
     this.nav.step(120);
+    // the stall keeper sorts her fruit while no one is by (a story person: only her pose is set here, nothing else of hers)
+    const pi = this.pippa;
+    if (pi) {
+      const far = !g.room && Math.hypot(pi.pos.x - h.pos.x, pi.pos.z - h.pos.z) > 5.5;
+      if (far && !pi.forceAnim && !pi.talking) { pi.forceAnim = 'tinker'; pi.baseA = pi.targetAngle; pi.targetAngle = (pi.targetAngle ?? pi.angle) + Math.PI; }   // (she stands before her counter, facing the well: she turns to it)
+      else if (!far && pi.forceAnim === 'tinker') { pi.forceAnim = null; pi.targetAngle = pi.baseA; }
+    }
+  }
+  stageNow() { const g = this.game, ix = g.story.index; return (ix === 0 || (ix === 1 && !g.flags.c1_water)) ? 0 : 1; }
+  // the town's state changed (the valves opened): whoever stands at a stop of the other state moves on soon, one after another
+  stageChanged() {
+    for (const r of this.res) {
+      const s = r.stops[r.ri];
+      if (s && s.stage != null && s.stage !== this.stage && r.st === 'dwell') r.tmr = Math.min(r.tmr, 1.5 + r.rnd() * 5);
+    }
   }
   inView(x, y, z, r = 1.6) { this._v.set(x, y + 0.9, z); return this.frustum.containsPoint(this._v) || this._sphere(r); }
   _sphere(r) { const s = _sph; s.center.copy(this._v); s.radius = r; return this.frustum.intersectsSphere(s); }
@@ -182,6 +206,8 @@ export class Resident extends NPC {
   // the story gave the streets back: it starts its round again at the stop it was on
   reset() {
     this.engaged = false; this.inside = false; this.hold = 0; this.sit = null; this.path = null; this.job = null; this.insideT = 0;
+    const stage = this.W.stageNow();
+    for (let k = 0; k < this.stops.length && this.stops[this.ri].stage != null && this.stops[this.ri].stage !== stage; k++) this.ri = (this.ri + 1) % this.stops.length;
     const s = this.stops[this.ri];
     this.slotAt(s); this.arrived(s, true);
     return { x: s.x, z: s.z, a: s.a ?? this.angle };
@@ -190,6 +216,8 @@ export class Resident extends NPC {
   setRound(stops, start = 0) {
     this.stops = stops;
     this.ri = start % stops.length;
+    const stage = this.W.stageNow();
+    for (let k = 0; k < stops.length && stops[this.ri].stage != null && stops[this.ri].stage !== stage; k++) this.ri = (this.ri + 1) % stops.length;   // (it starts at a stop of the town's state)
     const s = this.stops[this.ri];
     for (let i = 0; i <= this.ri; i++) if (stops[i].carry !== undefined) this.carrySet(stops[i].carry);   // (what it holds at this point of its round)
     this.slotAt(s);
@@ -217,10 +245,11 @@ export class Resident extends NPC {
   // the height to look for the ground from: the terrain's, or the level of a world whose ground is floor bricks (Zeelich)
   groundHint(x, z) { const L = this.W.nav.levelAt(x); return (L != null ? L : this.game.physics.terrain.heightAt(x, z)) + 0.3; }
   nextIndex(from) {
-    const n = this.stops.length, day = this.W.dayT;
+    const n = this.stops.length, day = this.W.dayT, stage = this.W.stage;
     for (let k = 1; k <= n; k++) {
       const i = (from + k) % n, s = this.stops[i];
       if (s.when && (day < s.when[0] || day > s.when[1])) continue;
+      if (s.stage != null && s.stage !== stage) continue;   // (a stop of the other state of the town)
       return i;
     }
     return (from + 1) % n;
@@ -229,6 +258,8 @@ export class Resident extends NPC {
   arrived(s, instant = false) {
     this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
     this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
+    this.gestT = 1 + this.rnd() * 2;
+    if (s.stage != null && s.stage !== this.W.stage) this.tmr = Math.min(this.tmr, 0.5 + this.rnd() * 3);   // (it walked here before the town changed: no point staying)
     if (s.pair) { this.st = 'pairwait'; this.waitT = 0; this.W.pair(s.pair).ready.add(this.def.id); this.note('wait for ' + s.pair); return; }
     if (s.seat && this.canSit() && !this.benchTaken(s.seat)) { this.sitDown(s, instant); return; }
     if (s.door) { this.st = 'knock'; this.tmr = instant ? 0.2 : 0.9; this.angle = this.targetAngle = s.a; return; }
@@ -239,8 +270,9 @@ export class Resident extends NPC {
   }
   leave() {
     const s = this.stop;
-    // what it picks up here it carries on from here
-    if (s.carry !== undefined) this.carrySet(s.carry);
+    // what it picks up here it carries on from here (carryDry: what it carries on from here while the well is dry, if that differs)
+    const carry = this.W.stage === 0 && s.carryDry !== undefined ? s.carryDry : s.carry;
+    if (carry !== undefined) this.carrySet(carry);
     const i = this.nextIndex(this.ri), nxt = this.stops[i];
     this.ri = i;
     // (a leg from the stop's own slot is planned once for the whole session; from anywhere else it is planned afresh)
@@ -444,6 +476,7 @@ export class Resident extends NPC {
       case 'put': return 'setDown';
       case 'knock': return 'tapTurn';
       case 'dip': return 'touchWater';
+      case 'warm': return 'reach';   // (a hand held out to a heat post)
       default: return 'idle';
     }
   }
@@ -471,11 +504,13 @@ export class Resident extends NPC {
     const h = this.game.hero;
     // it turns to whoever comes close (as the story's own people do), else to what the stop looks at
     const dh = this.distTo(h);
-    if (dh < 3.0 && !s.act?.match(/tend|water|draw/)) this.angle = dampAngle(this.angle, this.angleTo(h), 4, dt);
+    if (dh < 3.0 && !s.act?.match(/tend|water|draw|warm/)) this.angle = dampAngle(this.angle, this.angleTo(h), 4, dt);
     else if (this.targetAngle != null) this.angle = dampAngle(this.angle, this.targetAngle, 4, dt);
     // in the way of a door or of someone the story put here: move on soon
     this.tmr -= dt;
     this.keepClear(dt, s);
+    // (a stop with `gest`: now and then a shrug or a sigh over the dry well, a breath out at the warm post)
+    if (s.gest && (this.gestT -= dt) <= 0) { this.rig.doGesture(s.gest[Math.floor(this.rnd() * s.gest.length)]); this.gestT = 3 + this.rnd() * 4; }
     if (this.tmr <= 0) this.leave();
     this.animate(this.actAnim(s), dt, 0);
   }
