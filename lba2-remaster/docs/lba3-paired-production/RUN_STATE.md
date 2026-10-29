@@ -19,7 +19,7 @@ Order of work (each group runs Round 1 → 4, with an integration gate after eac
   G6 ch.11 shell (c3shaft) + ch.12 core (c3core) + epilogue (home)
   G7 optional places: 11 shuttle islands, asylum, Bù maze, spaceport, arena, underground
 
-Completed gates: G1 Round 1 (art + camera) merged 29.10 night, tests above PASS. CH1-LONGER merged (counts toward G1 Round 2). SOLID-NPC merged 29.10 (solidnpc 53/53). G1-NARR (Round 2 narrative) merged 29.10. G1 Round 2 complete (quest pass b9ace10). Next: G1 Round 3 (world-life + action-feel). PERF-HIGH merged.
+Completed gates: G1 Round 1 (art + camera) merged 29.10 night, tests above PASS. CH1-LONGER merged (counts toward G1 Round 2). SOLID-NPC merged 29.10 (solidnpc 53/53). G1-NARR (Round 2 narrative) merged 29.10. G1 Round 2 complete (quest pass b9ace10). G1 Round 3 world-life merged 29.10 (townlife, solidnpc, walkers, chapter1, well-town PASS; +0 draw calls). Next: G1 Round 3 action-feel after PERF-CPU merges (it touches rig.js). PERF-HIGH merged.
 Active now: AUTO-QUALITY (lba3-60fps-engineer; engine/settings/desktop) — one slot.
 Next exact action: when AUTO-QUALITY returns → merge → full suite at night → [build] for the user. Then G1 Round 2 (quest-designer + narrative-editor) on the AUDIT-CH12 STORY batch (I-7), ownership: quest → story/prologue.js + chapter1.js mechanics; narrative → text files only.
 
