@@ -13,6 +13,18 @@ import { angleDiff, dampAngle, clamp, damp } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
 import { createGuardianRig, createHaulerRig, createFan } from './bossmodels.js';
 
+// SOLID-ENEMY (the user, 29.10: "what LBA2 did"): how wide each enemy's body is to Twinsen, who stops at it and slides
+// (Hero.keepApart; the enemy itself stops at him: Actor.keepOffHero). LBA2 makes every actor with a body solid to him
+// (OBJECT.CPP CheckObjCol: his box against every body's box; 533 of the 557 killable actors in its scenes also carry
+// CHECK_OBJ_COL themselves) and sizes the box from the body's own extents (FICHE.CPP InitBodyZV: the mean of its half
+// width and half depth): its soldiers 0.33–0.43 m, its dog 0.40 m, Twinsen 0.42 m. Ours from our models the same way,
+// trimmed of what sticks out (legs splayed, a shield arm, a rotor, the guardian's orbiting rings); the people's girth is
+// SOLID-NPC's (actors.js contactRadius). A flyer's hull also has a height: lo / hi from its hover point.
+export const BODY_R = {
+  mite: 0.5, crawler: 1.05, sentry: 0.6,
+  drone: { r: 0.5, lo: -0.49, hi: 0.65 }, hauler: { r: 0.9, lo: -0.61, hi: 0.5 }, guardian: { r: 1.4, lo: -1.5, hi: 1.75 },
+};
+
 const vmat = (rough = 0.6, metal = 0) => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: rough, metalness: metal });
 
 // ------------------------------------------------------------------ crystal mite
@@ -128,6 +140,7 @@ export class Mite extends Actor {
     this.circle = Math.random() < 0.5 ? 1 : -1;
     this.present = true;
     this.material = 'crystal'; this.aimY = 0.4; this.markY = 0.9; this.hitH = 1.0; this.recentHitT = 0;
+    this.bodyR = BODY_R.mite;   // (SOLID-ENEMY: Actor.keepOffHero, Hero.keepApart)
   }
   get alive() { return this.state !== 'dead'; }
   setPresent(on) { this.present = on; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
@@ -199,6 +212,7 @@ export class Mite extends Actor {
       P.move(this, (fx * sp + fz * side) * dt, (fz * sp - fx * side) * dt);
     }
     this.applyKnockback(dt);
+    this.keepOffHero(dt);
     g.physics.fall(this, dt);
     this.rig.update(dt, Math.abs(sp) + Math.abs(side) * 0.6);
     this.sync();
@@ -315,11 +329,16 @@ export class Drone extends Actor {
     this.present = true;
     this.shadow.scale.multiplyScalar(0.8);
     this.material = 'machine'; this.recentHitT = 0; this.staggers = []; this.steadyT = 0; this.stunT = 0;
+    // (SOLID-ENEMY: its hull, round and from under the rotor to the antenna, at its hover height: Actor.bodySpan)
+    const B = def.kind === 'guardian' ? BODY_R.guardian : def.model === 'hauler' ? BODY_R.hauler : BODY_R.drone;
+    this.bodyR = B.r; this.hullLo = B.lo; this.hullHi = B.hi;
     // the firing tell: a thin line toward Twinsen that brightens through the wind-up
     this.aimLine = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 4, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5), new THREE.MeshBasicMaterial({ color: '#ff5a3a', transparent: true, opacity: 0, depthWrite: false }));
     this.aimLine.visible = false; game.scene.add(this.aimLine);
   }
   get aimY() { return this.hover; }
+  get bodyLo() { return this.hover + this.hullLo; }
+  get bodyHi() { return this.hover + this.hullHi; }
   get markY() { return this.hover + 0.7; }
   melee(D) { this.damage(D.dmg, this.game.hero.pos, D.poise); return 'hit'; }
   ballHit(ball, p) { this.damage(ball.damage, p, ball.charged ? 3 : 1); return 'hit'; }
@@ -385,7 +404,7 @@ export class Drone extends Actor {
       this.rig.play('hurt'); this.rig.mood = 'search';
       if (Math.random() < dt * 8) g.particles.burst(this.pos.x, this.pos.y + this.hover + 0.3, this.pos.z, '#bff4ff', 2, 2);
       if (this.stateT > this.stunT) { this.state = 'chase'; this.stateT = 0; this.coolT = 0.6; }
-      this.applyKnockback(dt); this.rig.update(dt); this.syncHover(); return;
+      this.applyKnockback(dt); this.keepOffHero(dt); this.rig.update(dt); this.syncHover(); return;
     }
     // back up to its working height after a stun (whatever height the story gave it)
     if (this.alive && !(this instanceof Guardian)) { if (!this.sagged) this.baseHover = this.hover; else { this.hover = Math.min(this.baseHover, this.hover + dt * 1.5); if (this.hover >= this.baseHover) this.sagged = false; } }
@@ -450,6 +469,7 @@ export class Drone extends Actor {
     else if (this.state !== 'windup' && this.rig.anim !== 'fire') this.rig.play('idle');
     if (this.rig.anim === 'fire' && this.rig.actionT > 0.3) this.rig.play('idle');
     this.applyKnockback(dt);
+    this.keepOffHero(dt);
     this.rig.update(dt);
     this.syncHover();
   }
@@ -568,6 +588,7 @@ export class Guardian extends Drone {
       this.pos.z = Math.min(A.z1 - 1, Math.max(A.z0 + 1, this.pos.z));
     }
     this.applyKnockback(dt);
+    this.keepOffHero(dt);
     this.rig.update(dt);
     this.syncHover();
   }
@@ -660,6 +681,7 @@ export class Sentry extends Actor {
     this.angle = def.angle ?? 0;
     this.present = true;
     this.material = 'armor'; this.aimY = 1.0; this.markY = 1.75; this.hitR = 0.85; this.hitH = 1.9; this.recentHitT = 0;
+    this.bodyR = BODY_R.sentry;   // (SOLID-ENEMY)
   }
   get alive() { return this.state !== 'dead'; }
   setPresent(on) { this.present = on; if ((this.ko && this.state === 'dead') || this.gone) return; this.rig.root.visible = on && this.alive; this.shadow.visible = on && this.alive; }
@@ -752,6 +774,7 @@ export class Sentry extends Actor {
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'bash' ? 1 : 3.5, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     this.applyKnockback(dt);
+    this.keepOffHero(dt);
     P.fall(this, dt);
     this.rig.update(dt, sp);
     this.sync();
@@ -771,6 +794,7 @@ export class Crawler extends Mite {
     this.shadow.scale.multiplyScalar(2.2);
     this.hp = this.maxHp = def.hp || 12;
     this.material = 'stone'; this.aimY = 0.9; this.markY = 2.0; this.hitR = 1.2; this.hitH = 2.0;
+    this.bodyR = BODY_R.crawler;   // (SOLID-ENEMY)
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 48).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#ff8a5a', transparent: true, opacity: 0, depthWrite: false }));
     ring.visible = false; game.scene.add(ring); this.ring = ring;
     this.slamR = 3.0;
@@ -824,6 +848,7 @@ export class Crawler extends Mite {
     } else this.state = 'chase';
     if (sp && this.hurtT <= 0) g.physics.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     this.applyKnockback(dt);
+    this.keepOffHero(dt);
     g.physics.fall(this, dt);
     this.rig.update(dt, sp * 0.5);
     this.sync();

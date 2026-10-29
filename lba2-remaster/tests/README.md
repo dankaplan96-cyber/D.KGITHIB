@@ -13,6 +13,7 @@ node tests/chapter2.mjs        # chapter 2 end to end, incl. the confiscated-pla
 node tests/save-migration.mjs  # v1 save upgrade + backup, missing room, corrupt save recovery
 node tests/saveslots.mjs       # SAVE-SLOTS: Save Game / Load Game / Continue = newest / Delete / New Game keeps slots / full storage
 node tests/solidnpc.mjs       # SOLID-NPC: Twinsen never walks into people (Grobo, Sphero, story people, walking residents), pets or the small props; residents sit on a bench's seat; SHOTS=dir for the bench captures
+node tests/solidenemy.mjs     # SOLID-ENEMY: enemies are solid as in LBA2: every kind stops him (head on) and slides him (off centre), every attack still connects from there, a drone over his head is walked under, a beaten enemy is not solid, lunges never push him into a wall
 node tests/walkers.mjs        # WORLD-LIFE: the residents who walk round Citadel, Zeelich's street and Kesh: routes, benches, chats, avoidance, stuck fallback, talk, LOD cost
 node tests/anim-combat.mjs     # Twinsen's combat animation: release/contact timing at 30/60/120 fps, planted feet, interruptions
 node tests/autoquality.mjs     # AUTO-QUALITY: the governor and calibration fed synthetic CPU/GPU/display-paced traces (Node only, no browser)

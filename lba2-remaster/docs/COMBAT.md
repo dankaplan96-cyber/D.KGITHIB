@@ -231,6 +231,46 @@ punches (87–89), the sword attack (42), the hit reactions (7–9).
 - `tests/anim-combat.mjs` checks all of this at 30, 60 and 120 fps; frame strips and capture tools:
   docs/lba3-production/reviews/ANIM-COMBAT/.
 
+## Enemies are solid (SOLID-ENEMY)
+The user (29.10): "what LBA2 did". From LBA2 itself (the engine source released by its rights holder, and the user's
+SCENE.HQR / RESS.HQR / BODY.HQR read with a study script in the session's scratch space; numbers only):
+- Twinsen always tests collisions with actors (OBJECT.CPP `RestartPerso`: CHECK_OBJ_COL), and `CheckObjCol` tests his box
+  against the box of every actor that has a body, whatever that actor's own flags; he is set back out along the shorter
+  overlap (he slides along it). An actor whose life reaches 0 loses its body (PERSO.CPP: `Body.Num = -1`): it is no longer
+  solid. The killable actors of its scenes (armour < 50, a finite life: 557) carry CHECK_OBJ_COL themselves in 533 cases
+  (96 %), so they stop at him too.
+- The box (FICHE.CPP `InitBodyZV`) is square, its half side the mean of the body's half width and half depth, or the
+  File3D's own ZV: Twinsen 250 units (0.42 m); its soldiers 200–256 (0.33–0.43 m), its dog 240 (0.40 m), its height y too.
+- A punch, kick or blade (an anim's F_HIT) hits what his box meets once pushed 200 units (0.33 m) ahead: blows land from
+  where he stops.
+
+Here (src/game/actors.js `Hero.keepApart`, SOLID-NPC's contact, extended): each living enemy has a body radius
+(`bodyR`, enemies.js `BODY_R`; the guards the girth of their race as SOLID-NPC's residents), measured from our models the
+way LBA2 measures its boxes and trimmed of what sticks out; a flyer's hull has a height and blocks only where it overlaps
+him (his feet + 0.1 to 1.95 m: a drone over his head is walked under). He stops at it head on (no side-step round a foe,
+as with pets) and slides round it off centre, with no jitter and never launched; the correction goes through physics, so a
+lunge or a bash never puts him into a wall. The enemy's own moves (chase, lunge, bash, knock-back) stop at his body
+(`Actor.keepOffHero`). A beaten enemy (alive is false from the blow) is not solid. Only bodies within 3 m of him are tested.
+
+| Enemy | Body radius | He stops at (his 0.4 + it) | LBA2's nearest |
+|---|---|---|---|
+| Vesk's Quetch guard | 0.46 | 0.86 m | soldiers 0.33–0.43 m |
+| Vesk's Grobo guard | 0.65 | 1.05 m | |
+| FunFrock's trooper | 0.50 | 0.90 m | |
+| Guard dog | 0.50 | 0.90 m | its dog 0.40 m |
+| Crystal mite | 0.50 | 0.90 m | |
+| Crystal crawler | 1.05 | 1.45 m | |
+| Sentry | 0.60 | 1.00 m | |
+| Warden drone (hull 0.81–1.95 m up) | 0.50 | 0.90 m | |
+| Heavy drone (hauler) | 0.90 | 1.30 m | |
+| The guardian (out of melee's height) | 1.40 | 1.80 m | |
+
+Every attack still lands from there: a blow reaches `reach` + the target's radius, which is 0.80 m (a jab on the
+crawler) to 2.15 m past the stop distance; played for every kind and every move in tests/solidenemy.mjs (each contact in
+the move's active frames, never inside the body during the forward step). The enemies' own blows reach from their stop
+too (the mite's bite 1.0 m, the dog's 1.4, the guards' baton 1.6, the sentry's bash 1.5). Not changed: any reach, timing or
+damage.
+
 ## Enemy roles
 | Enemy | Role | Tell | Opening | Hit reaction |
 |---|---|---|---|---|

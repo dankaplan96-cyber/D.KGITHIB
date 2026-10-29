@@ -44,6 +44,7 @@ export class Dummy extends Actor {
     super(game, rig, def.x, def.z, 0.45);
     this.def = def; this.id = def.id; this.hp = this.maxHp = 99; this.hits = 0; this.present = true; this.state = 'idle';
     this.material = 'wood'; this.aimY = 1.2; this.markY = 1.9; this.recentHitT = 0; this.body = body;
+    this.bodyR = 0.35; this.hitH = 2.0;   // (SOLID-ENEMY: a post with a straw body, solid like the enemies)
   }
   get alive() { return true; }
   setPresent(on) { this.present = on; this.rig.root.visible = on; this.shadow.visible = on; }

@@ -12,7 +12,7 @@
 //  it swings its baton instead (arm raised high, then the strike). It gives up beyond its pursuit limit.
 // Baldino's pulse jams the rifle (no shots for a while) but does not stun a person.
 import * as THREE from 'three';
-import { Actor } from './actors.js';
+import { Actor, contactRadius } from './actors.js';
 import { createCharacter } from './characters.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
@@ -47,6 +47,7 @@ export class Guard extends Actor {
     this.state = 'patrol'; this.stateT = 0; this.coolT = 0; this.deadT = 0; this.hurtT = 0; this.jamT = 0; this.waitT = 0;
     this.present = true; this.material = 'flesh'; this.recentHitT = 0;
     this.hitR = grobo ? 0.8 : 0.5; this.hitH = grobo ? 2.2 : 1.9;
+    this.bodyR = contactRadius(fat ? 'fclone' : grobo ? 'vguardG' : 'vguard', this.rig.root.scale.x);   // (SOLID-ENEMY: the race's girth, as a resident's)
     this.rifle = rifleProp();
     const hand = this.rig.j?.armR?.hand;
     // (the hand bone's axis runs down the arm: the rifle lies along it, pointing down at rest and forward when aimed)
@@ -198,6 +199,7 @@ export class Guard extends Actor {
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'strike' ? 1.5 : 4, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     this.applyKnockback(dt);
+    this.keepOffHero(dt);
     P.fall?.(this, dt);
     this.rig.play(anim);
     this.rig.update(dt, sp);

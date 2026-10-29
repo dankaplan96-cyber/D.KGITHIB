@@ -89,6 +89,33 @@ export class Actor {
       this.kb.multiplyScalar(Math.exp(-dt * 8));
     }
   }
+  // SOLID-ENEMY: the height a solid body takes up (absolute y, feet to top; a flyer's hull: Drone.bodyLo / bodyHi)
+  bodySpan(out) { out[0] = this.pos.y + (this.bodyLo ?? 0); out[1] = this.pos.y + (this.bodyHi ?? this.hitH ?? 1.6); return out; }
+  // SOLID-ENEMY: an enemy's own move (a chase, a lunge, a bash, a knock-back) never takes it into Twinsen's body: LBA2
+  // sets every actor with CHECK_OBJ_COL back out of the box it walked into (OBJECT.CPP CheckObjCol). Called after the
+  // enemy's moves each frame: one distance test, and nothing at all unless he is within reach of its body. Out to the
+  // rim along the line between the centres, through physics (never into a wall); an overlap it did not make (a scene
+  // put them there) eases out over a few frames instead of jumping.
+  keepOffHero(dt) {
+    const h = this.game.hero, R = h ? h.radius + (this.bodyR || 0) : 0;
+    if (!h || !this.bodyR || h.dead || !this.alive) return;
+    const dx = this.pos.x - h.pos.x, dz = this.pos.z - h.pos.z;
+    if (Math.abs(dx) >= R || Math.abs(dz) >= R || !levelWithHero(this, h)) return;
+    const d = Math.hypot(dx, dz);
+    if (d >= R) return;
+    let nx, nz;
+    if (d > 1e-4) { nx = dx / d; nz = dz / d; } else { nx = Math.sin(this.angle + Math.PI); nz = Math.cos(this.angle + Math.PI); }
+    const k = Math.min(R - d, Math.max(0.12, 8 * dt));
+    this.game.physics.move(this, nx * k, nz * k);
+  }
+}
+// SOLID-ENEMY: does a solid body overlap Twinsen's height (his feet + 0.1 to 1.95 m)? A drone hovering over his head, or
+// anything on another level, is passed under or over (LBA2's CheckObjCol tests the boxes' y too).
+const _spanE = [0, 0];
+export function levelWithHero(e, h) {
+  const s = e.bodySpan ? e.bodySpan(_spanE) : null;
+  if (!s) return Math.abs(e.pos.y - h.pos.y) < 1.2;
+  return s[0] < h.pos.y + 1.95 && s[1] > h.pos.y + 0.1;
 }
 
 // SOLID-NPC: how wide a person is to walk into (the circle Twinsen's own 0.4 m is kept out of: Hero.keepApart). By
@@ -415,6 +442,9 @@ export class Hero extends Actor {
   //    PRESS_PASS s of pressing, until clear of them, so a person in a doorway can never trap him;
   //  - not while the game walks him (walkTo steps, cut-scenes, dialogue: Hero.update does not run) and not for
   //    scripted people (`controlled`: watchers, escorts).
+  //  - SOLID-ENEMY: living enemies too (their body per kind: enemies.js BODY_R; a flyer only at his height), as in LBA2.
+  //    Head on he stops at them (no side-step round a foe, as with pets); off centre he slides. Their own moves stop at
+  //    him (Actor.keepOffHero); a beaten one is not solid.
   keepApart(dt) {
     const g = this.game, P = g.physics, p = this.pos, q = this.prevPos;
     if (dt <= 0 || this.steer || this.dead) return;
@@ -442,7 +472,7 @@ export class Hero extends Actor {
         let tx = b.x + nx * need, tz = b.z + nz * need;
         const into = v > 0.3 ? -(vx * nx + vz * nz) / v : 0;   // 1 = walking straight at the centre
         if (into > 0.2 && this.wantsMove && it === 0) pressing = b;
-        if (it === 0 && clear && into > 0.94 && this.wantsMove && b.solid !== 'pet') {
+        if (it === 0 && clear && into > 0.94 && this.wantsMove && b.solid !== 'pet' && b.solid !== 'enemy') {
           // head on: round them on the side he leans to (or the free side), along the rim, at a walk's pace
           // (kept while he stays on them: the side never flips back and forth as he crosses their centre line)
           const mem = this.rounding;
@@ -507,6 +537,12 @@ export class Hero extends Actor {
     for (const list of [g.world?.dogs, g.regions?.built?.('zeelich')?.dogs]) for (const d of list || []) {
       if (d.root && !d.root.visible) continue;
       if (near(d.pos.x, d.pos.z, d.pos.y)) put(d.pos.x, d.pos.z, d.bodyR ?? d.radius, d, 'pet');
+    }
+    // SOLID-ENEMY: living enemies (their body: bodyR, per kind) at his height; a beaten one (alive is false from the
+    // blow: death.js) is not solid
+    for (const e of g.enemies || []) {
+      if (!e.bodyR || !e.present || !e.alive || e.gone || !e.rig.root.visible) continue;
+      if (Math.abs(e.pos.x - p.x) < 3 && Math.abs(e.pos.z - p.z) < 3 && levelWithHero(e, this)) put(e.pos.x, e.pos.z, e.bodyR, e, 'enemy');
     }
     return out;
   }
