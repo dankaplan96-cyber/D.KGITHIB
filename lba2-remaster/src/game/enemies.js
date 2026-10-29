@@ -857,7 +857,7 @@ export class Watcher {
     this.suspicion = 0;
     this.active = false;
     const geo = new THREE.CircleGeometry(this.range, 24, -this.fov, this.fov * 2);
-    geo.rotateX(-Math.PI / 2); geo.rotateY(Math.PI / 2);
+    geo.rotateX(-Math.PI / 2); geo.rotateY(-Math.PI / 2);   // (G1-QUEST: the arc's middle on local +z, where the guard faces once turned by his angle; it was drawn behind him)
     this.cone = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: '#ffe080', transparent: true, opacity: 0.16, depthWrite: false }));
     this.cone.visible = false;
     game.scene.add(this.cone);

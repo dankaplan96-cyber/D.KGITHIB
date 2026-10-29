@@ -281,8 +281,10 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.88); border:
 #chapter { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   pointer-events: none; opacity: 0; transition: opacity 0.9s ease; z-index: 40; text-shadow: 0 3px 12px rgba(0,0,0,0.8); color: #fff; }
 #chapter.show { opacity: 1; }
-#chapter small { font-size: 1.1rem; letter-spacing: 0.3em; color: #ffd890; text-transform: uppercase; }
-#chapter h2 { font-size: clamp(2rem, 5vw, 3.6rem); margin: 0.3em 0 0; font-weight: 700; }
+#chapter::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 16em; transform: translateY(-50%); z-index: -1;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(4, 10, 18, 0.82) 0%, rgba(4, 10, 18, 0.6) 50%, rgba(4, 10, 18, 0) 100%); }   /* (G1-QUEST #18: the card readable over any scene) */
+#chapter small { font-size: clamp(1.15rem, 2.2vw, 1.6rem); font-weight: 700; letter-spacing: 0.3em; color: #ffe2a6; text-transform: uppercase; text-shadow: 0 2px 4px #000, 0 0 14px rgba(0, 0, 0, 0.9); }
+#chapter h2 { font-size: clamp(2.6rem, 6vw, 4.4rem); margin: 0.3em 0 0; font-weight: 700; text-shadow: 0 2px 4px #000, 0 4px 18px rgba(0, 0, 0, 0.9); }
 
 /* inventory + journal (I / J) */
 #inventory { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(5, 12, 20, 0.55); }

@@ -1611,7 +1611,9 @@ class Game {
       const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z), a = aim(n.pos.x, n.pos.z);
       // (behind: in the half-plane at his back, not right on top of him)
       const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk', behind: d >= 0.5 && a < 0 };
-      consider(dist(n.pos.x, n.pos.z) + (n.ambient ? 0.45 : 0), 2.6, o);   // (a walking resident gives way to the story's people on a tie: WORLD-LIFE)
+      // (G1-QUEST #17: someone at his back gets the prompt only at arm's length: 1.5 m behind him, "Talk" showed with
+      //  nobody in front of him)
+      consider(dist(n.pos.x, n.pos.z) + (n.ambient ? 0.45 : 0) + (o.behind ? 0.6 : 0), 2.6, o);   // (a walking resident gives way to the story's people on a tie: WORLD-LIFE)
       if (d < 2.2 && d < fd && a > 0.7) { fd = d; fa = a; faced = o; }
     }
     if (!this.room) {
@@ -1884,7 +1886,7 @@ class Game {
       this.audio.play('rumble');
       this.camRig.shake(0.8);
       // (the stones are seen and heard rising; the hint says how to climb them, with the player's keys)
-      setTimeout(() => this.hud.toast('hint_jump', { b: this.hud.key('b2'), k: this.hud.key('action') }), 1200);
+      this._jumpHintT = 1.2;   // (game time: a pause holds it, updatePlay shows it — G1-QUEST #21)
       this.save(false);
     }
   }
@@ -2261,6 +2263,7 @@ class Game {
     if (!this.room) this.world.zones.update(h.pos, { enter: (z) => this.onZoneEnter(z) });
     this.checkDoors();
     this.story.update(dt);
+    if (this._jumpHintT > 0 && (this._jumpHintT -= dt) <= 0) this.hud.toast('hint_jump', { b: this.hud.key('b2'), k: this.hud.key('action') });
     if (this.state !== 'play') return;
 
     // remember a safe spot to return to after a fall
