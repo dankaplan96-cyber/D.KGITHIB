@@ -83,7 +83,7 @@ export class Walkers {
     this.frustum = new THREE.Frustum(); this._m = new THREE.Matrix4(); this._v = new THREE.Vector3();
     this.hero = { x: 0, z: 0, inside: false };
     this.dayT = 0;
-    this.stage = 0; this.pippa = null;
+    this.stage = this.stageNow(); this.pippa = null;
     this.stats = { full: 0, reduced: 0, abstract: 0, ms: 0, frames: 0 };
     this.measure = false;         // (tests / the perf probe: time every resident's update)
     this.doors = (game.world.houses || []).filter((h) => h.door).map((h) => ({ x: h.door.x, z: h.door.z, r: 1.0 }));
@@ -149,10 +149,13 @@ export class Walkers {
   }
   stageNow() { const g = this.game, ix = g.story.index; return (ix === 0 || (ix === 1 && !g.flags.c1_water)) ? 0 : 1; }
   // the town's state changed (the valves opened): whoever stands at a stop of the other state moves on soon, one after another
+  // (one nobody sees is put on its way at once, as after a load: the rounds were made before the save's flags were in)
   stageChanged() {
     for (const r of this.res) {
       const s = r.stops[r.ri];
-      if (s && s.stage != null && s.stage !== this.stage && r.st === 'dwell') r.tmr = Math.min(r.tmr, 1.5 + r.rnd() * 5);
+      if (!s || s.stage == null || s.stage === this.stage || r.st !== 'dwell') continue;
+      if (this.unseen(r.pos.x, r.pos.z, r.pos.y)) r.reset();
+      else r.tmr = Math.min(r.tmr, 1.5 + r.rnd() * 5);
     }
   }
   inView(x, y, z, r = 1.6) { this._v.set(x, y + 0.9, z); return this.frustum.containsPoint(this._v) || this._sphere(r); }
@@ -655,7 +658,7 @@ export class Resident extends NPC {
     const last = this.wi >= path.length - 1;
     const bx = last ? s.x : path[this.wi].x, bz = last ? s.z : path[this.wi].z;
     const gx = bx - this.pos.x, gz = bz - this.pos.z, d = Math.hypot(gx, gz);
-    if (last && d < 0.35) { this.arrived(s); return; }
+    if (last && (d < 0.35 || (d < 0.6 && this.stuckT > 0.7))) { this.arrived(s); return; }   // (held up a step short of its slot by a bench's edge or a bin: that is the stop)
     // it steers for a point a little way ahead on the route's own line (not for the corner itself): after a sidestep round
     // someone it comes back to the line the route was checked along, instead of cutting across whatever lies between
     const ax0 = this.wi > 0 ? path[this.wi - 1].x : this.walkFrom.x, az0 = this.wi > 0 ? path[this.wi - 1].z : this.walkFrom.z;
