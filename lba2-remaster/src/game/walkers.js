@@ -275,7 +275,8 @@ export class Resident extends NPC {
   seatPose(s) {
     const seat = s.seat, sp = seat.spec || BENCH_RED, sh = this.sitShape(), sx = Math.sin(seat.a), sz = Math.cos(seat.a);
     // along the way it faces from the bench's middle: back clear of the backrest, shins clear of the seat's edge
-    const zl = Math.max(sp.back + 0.02 - sh.back, sp.front + 0.015 - sh.shin);
+    // (0.07 m clear of the backrest: hair hanging down the back swings with the head as it dozes and looks about)
+    const zl = Math.max(sp.back + 0.07 - sh.back, sp.front + 0.015 - sh.shin);
     const y0 = this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z));   // (the ground in front of the bench: the bench's own collider must not count)
     return { x: seat.x + sx * zl, z: seat.z + sz * zl, y0, y1: y0 + sp.seatY + 0.008 - sh.bottom };
   }
