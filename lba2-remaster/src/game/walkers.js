@@ -15,7 +15,7 @@
 //     is not drawn at all (the camera culls it, FarCull hides it far off).
 // A resident's state is not saved: after a load every resident starts its round again at its first stop.
 import * as THREE from 'three';
-import { NPC } from './actors.js';
+import { NPC, contactRadius } from './actors.js';
 import { WalkNav } from './walknav.js';
 import { mat } from '../engine/rig.js';
 import { dampAngle, rng, clamp } from '../engine/math.js';
@@ -164,13 +164,14 @@ export class Resident extends NPC {
     const mesh = this.rig.mesh;
     if (def.tint && mesh?.material?.color) mesh.material.color.set(def.tint);
     if (def.scale) this.rig.root.scale.multiplyScalar(def.scale);
+    this.bodyR = contactRadius(def.char, this.rig.root.scale.x);   // (its girth: the hero and the others keep out of it)
     this.rnd = rng(hashId(def.id));
     this.stops = [];
     this.ri = 0; this.st = 'dwell'; this.tmr = 0;
     this.path = null; this.wi = 0; this.job = null;
     this.carrying = null; this.carryMesh = null; this.walkFrom = { x: 0, z: 0 };
     this.vel = 0; this.gait = 0;
-    this.engaged = false; this.hold = 0;
+    this.engaged = false; this.hold = 0; this.yieldT = 0; this.yieldV = null;
     this.stuckT = 0; this.replans = 0; this.lastRescue = -99; this.rescues = 0;
     this.accA = 0; this.accB = 0; this.skipN = 0; this.tier = 2; this.noGate = 0;
     this.sit = null; this.inside = false; this.insideT = 0; this.away = null;
@@ -274,8 +275,31 @@ export class Resident extends NPC {
     this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: s.x, z: s.z }, t: 0, dur: 0.8, a: s.a != null ? s.a : null, y: this.pos.y };
   }
   // ---------------------------------------------------------------- talking with the player (src/game/story/citizens.js)
-  engage() { this.engaged = true; this.hold = 0; this.stuckT = 0; this.vel = 0; this.gait = 0; this.note('talk'); }
+  engage() { this.engaged = true; this.hold = 0; this.stuckT = 0; this.vel = 0; this.gait = 0; this.yieldT = 0; this.note('talk'); }
   release() { this.engaged = false; this.hold = 0.7; }
+  // SOLID-NPC: the hero walks on into it (Hero.keepApart): it steps out of his way, to the side of his line it already
+  // stands on and a little back, at a walk, through the physics (never into a wall or off its ground); seated, talking,
+  // at its door or indoors it stays where it is
+  giveWay(hx, hz, vx, vz) {
+    if (this.engaged || this.sit || this.inside || this.away || this.st === 'knock' || this.st === 'seated') return;
+    if (this.yieldT > 0.2) return;
+    const dx = this.pos.x - hx, dz = this.pos.z - hz, d = Math.hypot(dx, dz) || 1, v = Math.hypot(vx, vz) || 1;
+    const ux = vx / v, uz = vz / v, side = Math.sign(ux * dz - uz * dx) || (this.rnd() < 0.5 ? -1 : 1);
+    let yx = -uz * side * 0.85 + (dx / d) * 0.35, yz = ux * side * 0.85 + (dz / d) * 0.35;
+    const l = Math.hypot(yx, yz) || 1; yx /= l; yz /= l;
+    this.yieldV = { x: yx, z: yz }; this.yieldT = 0.8;
+    this.note('gives way');
+  }
+  yieldTick(dt) {
+    this.yieldT -= dt;
+    const P = this.game.physics, x0 = this.pos.x, z0 = this.pos.z, sp = Math.max(0.9, this.speed);
+    this.moveClear(this.yieldV.x * sp * dt, this.yieldV.z * sp * dt, this.W.others(this, _others));
+    P.fall(this, dt);
+    this.angle = dampAngle(this.angle, Math.atan2(this.yieldV.x, this.yieldV.z), 6, dt);
+    const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
+    this.gait += (v - this.gait) * Math.min(1, dt * 8);
+    this.animate(this.gait > 0.12 ? 'walk' : 'idle', dt, this.gait > 0.12 ? this.gait : 0);
+  }
 
   // ---------------------------------------------------------------- the frame
   update(dt) {
@@ -326,7 +350,9 @@ export class Resident extends NPC {
   // ---------------------------------------------------------------- the simulation (tier 0 and 1)
   tick(dt, tier) {
     const g = this.game, P = g.physics, W = this.W, s = this.stop;
+    if (this.yieldT > 0 && !this.sit) { this.yieldTick(dt); return; }
     if (this.hold > 0) { this.hold -= dt; this.animate('idle', dt, 0); return; }
+    if (this.st !== 'walk') this.separate(dt);
     switch (this.st) {
       case 'dwell': return this.dwellTick(dt, s);
       case 'pairwait': return this.pairTick(dt, s);
@@ -520,7 +546,7 @@ export class Resident extends NPC {
     let ax = 0, az = 0, slow = 1, blocked = false;
     for (const b of W.others(this, _others)) {
       const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, dd = Math.hypot(rx, rz);
-      const rr = (this.radius || 0.45) + (b.radius || 0.45) + (b.isHero ? 0.75 : b.ambient ? 0.35 : 0.8), reachD = rr + 1.1;
+      const rr = (this.bodyR || 0.45) + (b.bodyR ?? b.radius ?? 0.45) + (b.isHero ? 0.75 : b.ambient ? 0.35 : 0.8), reachD = rr + 1.1;
       if (dd > reachD || dd < 1e-3) continue;
       const w = (reachD - dd) / reachD, ahead = (-rx * ux - rz * uz) / dd;   // > 0: in front of it
       if (ahead > 0.1) {
@@ -533,11 +559,10 @@ export class Resident extends NPC {
     }
     let vx = ux + ax, vz = uz + az;
     const vl = Math.hypot(vx, vz) || 1; vx /= vl; vz /= vl;
-    // never into someone's reach: the hero's and the story's people (they stand where they are put); no component of the
+    // never into someone's reach: the hero's and the story's people (they stand where they are put), and never into another resident (SOLID-NPC); no component of the
     // move goes toward them inside 1.15 m, and inside 0.95 m it steps back
     for (const b of _others) {
-      if (b.ambient) continue;
-      const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, dd = Math.hypot(rx, rz), hard = (this.radius || 0.45) + (b.radius || 0.45) + 0.3;
+      const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, dd = Math.hypot(rx, rz), hard = (this.bodyR || 0.45) + (b.bodyR ?? b.radius ?? 0.45) + (b.ambient ? 0.05 : 0.3);
       if (dd >= hard || dd < 1e-3) continue;
       const nx = rx / dd, nz = rz / dd, into = -(vx * nx + vz * nz);
       if (into > 0) { vx += nx * into; vz += nz * into; }
@@ -553,7 +578,7 @@ export class Resident extends NPC {
     const dAng = Math.abs(Math.atan2(Math.sin(want - this.angle), Math.cos(want - this.angle)));
     const align = Math.max(0.15, Math.cos(Math.min(1.4, dAng)));
     const step = this.vel * dt * align;
-    if (step > 1e-4) P.move(this, Math.sin(this.angle) * step, Math.cos(this.angle) * step);
+    if (step > 1e-4) this.moveClear(Math.sin(this.angle) * step, Math.cos(this.angle) * step, _others);
     P.fall(this, dt);
     const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
     this.gait += (v - this.gait) * Math.min(1, dt * 8);
@@ -562,6 +587,45 @@ export class Resident extends NPC {
     // ------------------------------------------------ stuck: it wants to go and does not get anywhere
     if (sp > 0.3 * this.speed && v < 0.25 * sp && !blocked) this.stuckT += dt; else this.stuckT = Math.max(0, this.stuckT - dt * 0.5);
     if (this.stuckT > 1.4) this.unstick();
+  }
+  // SOLID-NPC: a step by the physics that never takes it into anyone's body (the hero's, the story's people's, another
+  // resident's: the two girths, bodyR): the part of the step toward someone it touches is dropped (it slides round
+  // them), and a step that still ends inside someone, closer than it was, is not taken
+  moveClear(dx, dz, others) {
+    const P = this.game.physics, x0 = this.pos.x, z0 = this.pos.z, me = this.bodyR || 0.45;
+    for (const b of others) {
+      const R = me + (b.isHero ? b.radius : (b.bodyR ?? b.radius ?? 0.45)), rx = x0 - b.pos.x, rz = z0 - b.pos.z, d = Math.hypot(rx, rz);
+      if (d >= R + Math.hypot(dx, dz) + 0.02 || d < 1e-4) continue;
+      const nx = rx / d, nz = rz / d, into = -(dx * nx + dz * nz);
+      if (into > 0 && d < R + into + 0.02) { dx += nx * into; dz += nz * into; }
+    }
+    P.move(this, dx, dz);
+    for (const b of others) {
+      const R = me + (b.isHero ? b.radius : (b.bodyR ?? b.radius ?? 0.45));
+      const d1 = Math.hypot(this.pos.x - b.pos.x, this.pos.z - b.pos.z), d0 = Math.hypot(x0 - b.pos.x, z0 - b.pos.z);
+      if (d1 < R - 0.01 && d1 < d0 - 1e-4) { this.pos.x = x0; this.pos.z = z0; return; }
+    }
+  }
+  // standing about (not seated, not walking: a stop, a chat, a wait), it steps out of another resident it overlaps, at a
+  // shuffle (two whose stops lie close stand side by side, not inside each other); through the physics
+  separate(dt) {
+    if (this.sit || this.inside || this.engaged) return;
+    const me = this.bodyR || 0.45;
+    let px = 0, pz = 0;
+    for (const r of this.W.res) {
+      if (r === this || !r.present || r.inside) continue;
+      const R = me + (r.bodyR || 0.45), rx = this.pos.x - r.pos.x, rz = this.pos.z - r.pos.z;
+      if (Math.abs(rx) >= R || Math.abs(rz) >= R) continue;
+      const d = Math.hypot(rx, rz);
+      if (d >= R) continue;
+      // (both step apart, half each; from one who is seated it steps the whole way)
+      const k = r.sit ? 1 : 0.5;
+      if (d < 1e-3) { const a = this.rnd() * 6.283; px += Math.sin(a) * R * k; pz += Math.cos(a) * R * k; } else { px += (rx / d) * (R - d) * k; pz += (rz / d) * (R - d) * k; }
+    }
+    const l = Math.hypot(px, pz);
+    if (l < 1e-3) return;
+    const m = Math.min(l, 0.8 * dt);
+    this.game.physics.move(this, (px / l) * m, (pz / l) * m);
   }
   unstick() {
     const g = this.game, W = this.W;
