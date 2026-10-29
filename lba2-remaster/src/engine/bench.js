@@ -176,6 +176,7 @@ export class Bench {
       // (GFX-LOOK: the output pass's own edge smoothing in place of MSAA (renderer.js OUTPUT_EDGES: what the battery profile
       //  draws), and 90 % resolution with and without its sharpening: compare each with 'as is' and 'no MSAA')
       { id: 'edges in output, no MSAA', apply() { this._ms = R.composer.renderTarget1.samples; for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = 0; T.dispose(); } R.applyScale(); }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = this._ms; T.dispose(); } R.applyScale(); } },
+      { id: 'shadow pass writes colour (as before)', apply() { R.shadowDepthOnly = false; }, undo() { R.shadowDepthOnly = true; } },
       { id: 'res x0.9 sharpened', apply() { R.autoRes = true; R.setDyn(0.9); }, undo() { R.autoRes = false; R.setDyn(1); } },
       { id: 'res x0.9 not sharpened', apply() { R.sharpenOn = false; R.autoRes = true; R.setDyn(0.9); }, undo() { R.sharpenOn = true; R.autoRes = false; R.setDyn(1); } },
       { id: 'draw batches off', apply() { if (G.drawBatch) G.drawBatch.enabled = false; }, undo() { if (G.drawBatch) G.drawBatch.enabled = true; } },

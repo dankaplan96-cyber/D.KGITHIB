@@ -344,7 +344,14 @@ export class Renderer {
     //  nothing happens while no timer is set)
     const sm = this.renderer.shadowMap, smr = sm.render.bind(sm);
     // (GFX-LOOK: the sun's map made with its depth texture; three draws into its colour and depth: HW.raw)
-    sm.render = (...a) => { const T = this.timer; T?.mark('shadow map'); HW.raw++; try { if (sm.enabled) makeHwMaps(this.renderer, a[0]); return smr(...a); } finally { HW.raw--; T?.mark('scene'); } };
+    // (and, as the shaders read the depth texture only, the shadow pass writes depth only: the packed colour three would
+    //  also write — a 32-bit write per texel per caster, and its clear — is masked off: a depth-only pass)
+    const cm = this.renderer.state.buffers.color, depthOnly = () => HW_SHADOWS && sm.enabled && sm.type !== THREE.VSMShadowMap && this.shadowDepthOnly !== false;
+    sm.render = (...a) => {
+      const T = this.timer, d = depthOnly(); T?.mark('shadow map'); HW.raw++;
+      if (d) { cm.setMask(false); cm.setLocked(true); }
+      try { if (sm.enabled) makeHwMaps(this.renderer, a[0]); return smr(...a); } finally { if (d) { cm.setLocked(false); cm.setMask(true); } HW.raw--; T?.mark('scene'); }
+    };
     for (const [p, label] of [[this.scenePass, 'scene'], [this.bloom, 'bloom'], [this.output, 'output'], [this.fxaa, 'fxaa'], [this.retroPass, 'retro']]) {
       const r = p.render.bind(p);
       p.render = (...a) => { this.timer?.mark(label); return r(...a); };
