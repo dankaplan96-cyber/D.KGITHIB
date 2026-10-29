@@ -243,6 +243,10 @@ class Area {
   // it is (anything not in a texture array, by its material's id and its twin's) with an id from the run's start up to
   // the piece's, or a piece already placed in another run that is drawn at or after this run's start. Pieces are
   // placed in `ord` order, so every touching pair keeps its order; the same check as PERF-CPU's wherever boxes touch.
+  // Two draws of the same `ord` (the same material before) were ordered by distance, frame by frame: either order is
+  // theirs. Placed pieces count only where they share a plane (coplanar(), below): only there can faces coincide. A
+  // placed piece of the same kind in a neighbouring cell's run is not counted, as PERF-CPU's gaps did not (one run
+  // across cells): its batch sorts at its own first `ord` — pieces of one kind meet across a cell line edge to edge.
   // A large piece's parts (cut per cell, as assign() does) are placed part by part with each part's own box. Draws
   // with another renderOrder never interleave (three sorts by it first); see-through draws come after all of them.
   overlapRuns(found, root, kindKey) {
@@ -256,7 +260,8 @@ class Area {
     const span = (b) => Math.floor(b.max.x / G) - Math.floor(b.min.x / G) >= BIG || Math.floor(b.max.z / G) - Math.floor(b.min.z / G) >= BIG;
     const put = (E) => { const b = E.box; if (span(b)) { big.push(E); return; } for (let i = Math.floor(b.min.x / G); i <= Math.floor(b.max.x / G); i++) for (let k = Math.floor(b.min.z / G); k <= Math.floor(b.max.z / G); k++) { const key = i * 100003 + k; let L = grid.get(key); if (!L) grid.set(key, (L = [])); L.push(E); } };
     let stamp = 0;
-    const D = this.dbg = { parts: 0, joined: 0, fresh: 0, byFixed: 0, byPlaced: 0, big: 0 };
+    const D = this.dbg = { parts: 0, joined: 0, fresh: 0, byFixed: 0, byPlaced: 0, big: 0, planeMs: 0, planeTris: 0, fixedMs: 0, partsMs: 0, placeMs: 0 };
+    let tp = performance.now();
     const touching = (b, ro, fn) => { stamp++;
       for (const E of big) { if (E.ro !== ro) continue; E.seen = stamp; if (E.box.intersectsBox(b) && fn(E)) return true; }
       const i1 = Math.min(Math.floor(b.max.x / G), Math.floor(b.min.x / G) + BIG), k1 = Math.min(Math.floor(b.max.z / G), Math.floor(b.min.z / G) + BIG);
@@ -275,6 +280,7 @@ class Area {
       if (twinIds.has(o)) ids.push(twinIds.get(o));
       for (const id of ids) put({ fixed: true, ord: id, box, ro: o.renderOrder, seen: 0 });
     });
+    D.fixedMs = performance.now() - tp; tp = performance.now();
     // the texture-array pieces, part by part (a part: the piece in one cell, or its triangles there when it is cut)
     const parts = [];
     for (const e of found) {
@@ -286,18 +292,51 @@ class Area {
         parts.push({ e, key, cc: Math.floor(e.cx / cell) + ',' + Math.floor(e.cz / cell), T: null, box, ord: e.F.ord, ro: o.renderOrder, run: null, seen: 0 });
         continue;
       }
+      // (the same rule and cells as assign(); the vertices in world space once, without allocations)
+      const n = Pp.count, X = new Float64Array(n * 3), el = W.elements, Ia = I?.array;
+      const raw = !Pp.normalized && Pp.itemSize === 3 ? Pp.array : null;
+      for (let i = 0; i < n; i++) { const x = raw ? raw[i * 3] : Pp.getX(i), y = raw ? raw[i * 3 + 1] : Pp.getY(i), z = raw ? raw[i * 3 + 2] : Pp.getZ(i); X[i * 3] = el[0] * x + el[4] * y + el[8] * z + el[12]; X[i * 3 + 1] = el[1] * x + el[5] * y + el[9] * z + el[13]; X[i * 3 + 2] = el[2] * x + el[6] * y + el[10] * z + el[14]; }
       const lists = new Map();
       for (let t = 0; t < nt; t++) {
-        let x = 0, z = 0; const vs = [];
-        for (let j = 0; j < 3; j++) { const v = new THREE.Vector3().fromBufferAttribute(Pp, I ? I.getX(t * 3 + j) : t * 3 + j).applyMatrix4(W); x += v.x; z += v.z; vs.push(v); }
-        x /= 3; z /= 3;
+        const a = Ia ? Ia[t * 3] : t * 3, b = Ia ? Ia[t * 3 + 1] : t * 3 + 1, c = Ia ? Ia[t * 3 + 2] : t * 3 + 2;
+        let x = (X[a * 3] + X[b * 3] + X[c * 3]) / 3, z = (X[a * 3 + 2] + X[b * 3 + 2] + X[c * 3 + 2]) / 3;
         if (!Number.isFinite(x + z)) { x = e.cx; z = e.cz; }
-        const cc = Math.floor(x / cell) + ',' + Math.floor(z / cell);
-        let L = lists.get(cc); if (!L) lists.set(cc, (L = { T: [], box: new THREE.Box3() }));
-        L.T.push(t); for (const v of vs) if (Number.isFinite(v.x + v.y + v.z)) L.box.expandByPoint(v);
+        const ix = Math.floor(x / cell), iz = Math.floor(z / cell), ck = (ix + 50000) * 100000 + (iz + 50000);
+        let L = lists.get(ck); if (!L) lists.set(ck, (L = { cc: ix + ',' + iz, T: [], b: [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity] }));
+        L.T.push(t);
+        const B = L.b;
+        for (let j = 0; j < 3; j++) { const v = j === 0 ? a : j === 1 ? b : c, vx = X[v * 3], vy = X[v * 3 + 1], vz = X[v * 3 + 2]; if (!Number.isFinite(vx + vy + vz)) continue; if (vx < B[0]) B[0] = vx; if (vy < B[1]) B[1] = vy; if (vz < B[2]) B[2] = vz; if (vx > B[3]) B[3] = vx; if (vy > B[4]) B[4] = vy; if (vz > B[5]) B[5] = vz; }
       }
-      for (const [cc, L] of lists) { L.box.expandByScalar(EPS); parts.push({ e, key, cc, T: Int32Array.from(L.T), box: L.box, ord: e.F.ord, ro: o.renderOrder, run: null, seen: 0 }); }
+      for (const L of lists.values()) { const cc = L.cc; const box = new THREE.Box3(new THREE.Vector3(L.b[0], L.b[1], L.b[2]), new THREE.Vector3(L.b[3], L.b[4], L.b[5])).expandByScalar(EPS); parts.push({ e, key, cc, T: Int32Array.from(L.T), box, ord: e.F.ord, ro: o.renderOrder, run: null, seen: 0 }); }
     }
+    // Two placed pieces can only show coincident faces where they share a plane: each part's planes (its triangles' in
+    // world space, the normal's sign made canonical, quantized: 1/64 per component, 2 cm in distance — and the
+    // neighbouring distance bin, so two faces a rounding error apart always share a key), worked out when first needed.
+    const planesOf = (pt) => {
+      if (pt.planes) return pt.planes;
+      const t0 = performance.now();
+      const o = pt.e.o, g = o.geometry, e = o.matrixWorld.elements, I = g.index?.array, P = g.attributes.position, A = P.array, st = P.isInterleavedBufferAttribute ? P.data.stride : 3, off = P.offset || 0, S = (pt.planes = new Set());
+      const nt = pt.T ? pt.T.length : Math.floor((I ? g.index.count : P.count) / 3);
+      const W = new Float64Array(9);
+      const vx = (i, j) => { const b = i * st + off, x = A[b], y = A[b + 1], z = A[b + 2]; W[j] = e[0] * x + e[4] * y + e[8] * z + e[12]; W[j + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]; W[j + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]; };
+      for (let k = 0; k < nt; k++) {
+        const t = pt.T ? pt.T[k] : k;
+        vx(I ? I[t * 3] : t * 3, 0); vx(I ? I[t * 3 + 1] : t * 3 + 1, 3); vx(I ? I[t * 3 + 2] : t * 3 + 2, 6);
+        const ux = W[3] - W[0], uy = W[4] - W[1], uz = W[5] - W[2], wx = W[6] - W[0], wy = W[7] - W[1], wz = W[8] - W[2];
+        let nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+        const L = Math.sqrt(nx * nx + ny * ny + nz * nz); if (!(L > 1e-12)) continue;
+        nx /= L; ny /= L; nz /= L;
+        if (nx < -1e-6 || (nx <= 1e-6 && (ny < -1e-6 || (ny <= 1e-6 && nz < 0)))) { nx = -nx; ny = -ny; nz = -nz; }
+        const db = Math.floor((nx * W[0] + ny * W[1] + nz * W[2]) / 0.02);
+        const kn = ((Math.round(nx * 64) + 64) * 129 + (Math.round(ny * 64) + 64)) * 129 + (Math.round(nz * 64) + 64);
+        if (!Number.isFinite(kn + db)) continue;
+        S.add(kn + 2.2e6 * db); S.add(kn + 2.2e6 * (db + 1));
+      }
+      D.planeMs += performance.now() - t0; D.planeTris += nt;
+      return S;
+    };
+    const coplanar = (x, y) => { let A = planesOf(x), B = planesOf(y); if (A.size > B.size) [A, B] = [B, A]; for (const k of A) if (B.has(k)) return true; return false; };
+    D.partsMs = performance.now() - tp; tp = performance.now();
     parts.sort((a, b) => a.ord - b.ord);
     const open = new Map(); let runs = 0;
     for (const p of parts) {
@@ -307,14 +346,14 @@ class Area {
       if (R) {
         const m = R.m;
         let why = 0;
-        const blocked = touching(p.box, p.ro, (E) => { const b = E.fixed ? E.ord >= m && E.ord <= p.ord : E.e !== p.e && E.run !== R && E.run.m >= m; if (b) why = E.fixed ? 1 : 2; return b; });
+        const blocked = touching(p.box, p.ro, (E) => { const b = E.fixed ? E.ord >= m && E.ord < p.ord : E.e !== p.e && E.run !== R && E.key !== p.key && E.ord < p.ord && E.run.m >= m && coplanar(p, E); if (b) why = E.fixed ? 1 : 2; return b; });
         if (blocked) { R = null; if (why === 1) D.byFixed++; else D.byPlaced++; } else D.joined++;
       } else D.fresh++;
       if (!R) { R = { id: runs++, m: p.ord }; open.set(gk, R); }
       p.run = R; put(p);
       p.e.F.pre.push({ cc: p.cc, T: p.T, run: R });
     }
-    this.runs = runs; D.big = big.length;
+    this.runs = runs; D.big = big.length; D.placeMs = performance.now() - tp;
   }
   // PERF-BATTERY: a large, detailed piece is cut: each of its triangles goes to the cell of its own centre (M.parts:
   // cell id → its triangles there, null for a whole piece; M.cells: its cells). Citadel's builders merge whole
@@ -391,7 +430,27 @@ class Area {
       _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
       for (const n of names) {
         const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
-        if (n === 'position') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(_m); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        // (PERF-CALLS: positions and normals without a call per vertex — three's own arithmetic, in its order, so the
+        //  same floats: the first build on an arrival was ~300 ms on the user's laptop, most of it here)
+        if ((n === 'position' || n === 'normal') && !a.normalized && a.itemSize === 3) {
+          const A = a.array, e = n === 'position' ? _m.elements : _nm.elements;
+          if (n === 'position') {
+            const w = e[3] === 0 && e[7] === 0 && e[11] === 0 && e[15] === 1;
+            for (let k = 0; k < nf; k++) {
+              const i = (from ? from[k] : k) * 3, x = A[i], y = A[i + 1], z = A[i + 2], o3 = (vo + k) * 3;
+              if (w) { d[o3] = e[0] * x + e[4] * y + e[8] * z + e[12]; d[o3 + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]; d[o3 + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]; }
+              else { const ww = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]); d[o3] = (e[0] * x + e[4] * y + e[8] * z + e[12]) * ww; d[o3 + 1] = (e[1] * x + e[5] * y + e[9] * z + e[13]) * ww; d[o3 + 2] = (e[2] * x + e[6] * y + e[10] * z + e[14]) * ww; }
+            }
+          } else {
+            for (let k = 0; k < nf; k++) {
+              const i = (from ? from[k] : k) * 3, x0 = A[i], y0 = A[i + 1], z0 = A[i + 2], o3 = (vo + k) * 3;
+              let x = e[0] * x0 + e[3] * y0 + e[6] * z0, y = e[1] * x0 + e[4] * y0 + e[7] * z0, z = e[2] * x0 + e[5] * y0 + e[8] * z0;
+              const sc = 1 / (Math.sqrt(x * x + y * y + z * z) || 1); x *= sc; y *= sc; z *= sc;
+              d[o3] = x; d[o3 + 1] = y; d[o3 + 2] = z;
+            }
+          }
+        }
+        else if (n === 'position') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(_m); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
         else if (n === 'normal') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(_nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
         else if (fold && n === 'auv' && !M.fold.tex) d.fill(0, vo * 2, (vo + nf) * 2);   // (a plain piece: the white layer, anywhere)
         else if (fold && n === 'layer') d.fill(M.fold.layer, vo, vo + nf);
