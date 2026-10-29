@@ -77,7 +77,7 @@ const SLOT_SCREENS = new Set(['savegame', 'loadgame', 'slotconfirm']);
 const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
 const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn']);
-export const VERSION = '0.38.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.39.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
