@@ -183,7 +183,7 @@ export function buildHamalayi(scene, physics) {
   const updaters = [];
   const TX = textures();
   GRID = gridCapture(heightFn, SIZE, SEGS);
-  const terrain = new Terrain({ size: SIZE, segs: SEGS, heightFn: GRID.fn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, sand: snowTex(), cobble: TX.cobble } });
+  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), heightFn: GRID.fn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, sand: snowTex(), cobble: TX.cobble } });
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   GRID = null;   // (the finish below reads the terrain itself)

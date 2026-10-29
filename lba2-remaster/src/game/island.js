@@ -784,6 +784,12 @@ function cargoLift(W, parent, r) {
     shake(k) { this.shakeK = k; },
   };
   void r;
+  // PERF-CALLS: each rigid part's pieces in one mesh per material, in that part's own space (the column on its base,
+  // the turret, the barge with the crate aboard, the hanging crate): 51 → 23 draws in each pass where the lift shows,
+  // the same materials, the same triangles where they were. What moves on its own stays a group (the lantern, the
+  // turret, the hook, the cable, the barge, the crate, the puddle's rings).
+  for (const o of [lantern, turret, barge, crate, pud, hook, cable]) o.userData.keep = true;
+  mergeStatic(g); mergeStatic(turret); mergeStatic(barge); mergeStatic(crate);
   L.pose(1);
   let ripT = 0;
   W.updaters.push((dt, tt) => {

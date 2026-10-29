@@ -3,7 +3,8 @@
 import * as THREE from 'three';
 
 export class Terrain {
-  constructor({ size, segs, heightFn, colorFn, splatFn, textures, cx = 0, cz = 0 }) {
+  constructor({ size, segs, heightFn, colorFn, splatFn, textures, cx = 0, cz = 0, tile = 70 }) {
+    this.tile = tile;
     this.splatFn = splatFn;
     this.tex = textures;
     this.size = size;
@@ -106,7 +107,9 @@ export class Terrain {
     const group = new THREE.Group(); group.name = 'terrain';
     // (PERF-2: 70 cells ≈ 65 m on Citadel, 16 tiles instead of 49: a turning camera drew 15–20 of them, one call each;
     // the island's whole terrain is ~160k triangles, so the few more drawn off-screen cost the GPU little)
-    const TILE = 70;
+    // (PERF-CALLS: an outdoor region passes bigger tiles: the desert's 300 m drew 21 of its 25 tiles from the arrival
+    //  point, the Hamalayi's 9 of 16 — one call each, for ground nearly all in view; in quarters, 4 calls at most)
+    const TILE = this.tile;
     for (let tj = 0; tj < this.segs; tj += TILE) {
       for (let ti = 0; ti < this.segs; ti += TILE) {
         const j1 = Math.min(this.segs, tj + TILE), i1 = Math.min(this.segs, ti + TILE);

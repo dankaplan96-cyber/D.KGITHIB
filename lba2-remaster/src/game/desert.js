@@ -39,7 +39,7 @@ import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
 import {
-  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq,
+  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq, mergeGeos,
 } from './kit.js';
 
 export const DESERT = { x: 3400, z: 0 };
@@ -473,7 +473,7 @@ export function buildDesert(scene, physics) {
   // --- ground
   const R0 = {};
   const ground = groundGrid();
-  const terrain = new Terrain({ size: SIZE, segs: SEGS, heightFn: ground.at, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: TX.concrete } });
+  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), heightFn: ground.at, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: TX.concrete } });
   R0.trapFixes = ground.fixed;
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
@@ -636,7 +636,11 @@ export function buildDesert(scene, physics) {
       PB.build();
       const crown = new THREE.Group(); crown.position.set(0.55, 5.6, 0); g.add(crown);
       const leafMat = pm('#5a8a3a', 0.8, { side: THREE.DoubleSide });
-      for (let k = 0; k < 8; k++) { const f = new THREE.Mesh(frond, leafMat); f.rotation.y = k / 8 * Math.PI * 2 + rr() * 0.3; f.rotation.z = 0.15; f.castShadow = true; crown.add(f); }
+      // (PERF-CALLS: the crown's 8 fronds in one mesh in the crown's space — they only ever move with the crown (its sway
+      //  below): 8 draws → 1 per palm, the same triangles where they were; the crown is a moving part (keep))
+      const fl = [];
+      for (let k = 0; k < 8; k++) fl.push([frond, new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0, k / 8 * Math.PI * 2 + rr() * 0.3, 0.15))]);
+      const f = new THREE.Mesh(mergeGeos(fl, false), leafMat); f.castShadow = true; crown.add(f); crown.userData.keep = true;
       palms.push({ g, crown, leafMat, ph: rr() * 6 });
       // (ADV-2: the one palm in front of the pump's gearbox is left out, so the ball and the eye reach the gears from
       // the village side; its random draws still happen, so everything placed after it stays where it was)
@@ -898,15 +902,17 @@ export function buildDesert(scene, physics) {
     // chain-link fence on concrete posts
     const fenceMat = new THREE.MeshStandardMaterial({ map: ctex('chain', 64, 64, (x, S) => { x.clearRect(0, 0, S, S); x.strokeStyle = '#9aa4aa'; x.lineWidth = 3; for (let i = -S; i < S * 2; i += 16) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + S, S); x.stroke(); x.beginPath(); x.moveTo(i + S, 0); x.lineTo(i, S); x.stroke(); } }), transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.6, metalness: 0.4 });
     const fH = 2.6;
+    // (PERF-CALLS: the chain-link panels in one mesh — 36 see-through two-sided panels were 72 draws a frame; they never
+    //  move (the gate's two leaves, which slide, stay on their own). Same material, same place, no shadow as before)
+    const FB = new Batch(group, { cast: false, receive: false });
     const fence = (ax, az, bx, bz, gap) => {
       const L = Math.hypot(bx - ax, bz - az), n = Math.ceil(L / 3);
       for (let i = 0; i <= n; i++) { const t = i / n, x = ax + (bx - ax) * t, z = az + (bz - az) * t; PB.add(bbox(0.16, fH + 0.3, 0.16, 0.02, 1), concrete, x, postY + (fH + 0.3) / 2, z); }
       for (let i = 0; i < n; i++) {
         const t0 = i / n, t1 = (i + 1) / n, mx = ax + (bx - ax) * (t0 + t1) / 2, mz = az + (bz - az) * (t0 + t1) / 2;
         if (gap && Math.abs(mz - gap[1]) < 2.2 && Math.abs(mx - gap[0]) < 2.2) continue;
-        const panel = new THREE.Mesh(new THREE.PlaneGeometry(L / n, fH), fenceMat);
         fenceMat.map.repeat.set(L / n / 0.5, fH / 0.5);
-        panel.position.set(mx, postY + fH / 2 + 0.1, mz); panel.rotation.y = -Math.atan2(bz - az, bx - ax); group.add(panel);
+        FB.add(new THREE.PlaneGeometry(L / n, fH), fenceMat, mx, postY + fH / 2 + 0.1, mz, 0, -Math.atan2(bz - az, bx - ax));
         col({ type: 'box', x: mx, z: mz, hw: L / n / 2, hd: 0.08, rot: -Math.atan2(bz - az, bx - ax), top: postY + fH, noStand: true, seeThrough: true });
       }
     };
@@ -914,6 +920,7 @@ export function buildDesert(scene, physics) {
     fence(POST.x1, POST.z0, POST.x1, POST.z1);
     fence(POST.x1, POST.z1, POST.x0, POST.z1);
     fence(POST.x0, POST.z1, POST.x0, POST.z0, [POST.x0, POST.gateZ]);
+    FB.build();
     // the gate: two leaves that slide aside
     for (const s of [-1, 1]) {
       const leaf = new THREE.Mesh(new THREE.PlaneGeometry(2.0, fH), fenceMat);

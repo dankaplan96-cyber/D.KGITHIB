@@ -502,6 +502,7 @@ export function buildZeelich(scene, physics) {
   const isClear = (x, z, pad = 0) => !clear.some(([a, b, c, d]) => x > a - pad && x < c + pad && z > b - pad && z < d + pad);
 
   const B = new Batch(group);
+  const crateSet = { C: null, items: [], em: [] };
   const R = {
     id: 'zeelich', outdoor: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
     music: 'zeelich', cloudY: CLOUD_Y,
@@ -617,6 +618,7 @@ export function buildZeelich(scene, physics) {
 
   buildIslets();
   scatter();
+  crateFlush();
   B.build();
 
   // ---------------------------------------------------------------- contract
@@ -841,13 +843,20 @@ export function buildZeelich(scene, physics) {
       for (const yy of [0.33, 0.66]) corners.push([bbox(s + 0.03, 0.05, s + 0.03, 0.015, 1), 0, yy, 0]);
       return { body: bbox(s - 0.02, s - 0.02, s - 0.02, 0.05, 1.1).clone().translate(0, h, 0), brass: compose(corners) };
     });
-    const items = [], em = [];
+    // (PERF-CALLS: every stack of the island in the same three instanced meshes, made once at the end of the build
+    //  (crateFlush): the pier's, the workshop's and the depot's were three sets — 9 draws, the emblems' two-sided
+    //  see-through ones twice each; the same crates where they were)
+    const items = crateSet.items, em = crateSet.em; crateSet.C = C;
     for (const [x, z, n = 1, s = 1] of list) {
       const ry = (r() - 0.5) * 0.6;
       for (let k = 0; k < n; k++) items.push({ x, y: Y0 + k * s, z, ry: ry + (r() - 0.5) * 0.15, s });
       em.push({ x: x + Math.sin(ry) * (s / 2 + 0.012), y: Y0 + s * 0.55, z: z + Math.cos(ry) * (s / 2 + 0.012), ry, s: s * 0.62 });
       col({ type: 'box', x, z, hw: s / 2, hd: s / 2, rot: ry, top: Y0 + n * s, seeThrough: n * s < 1.6 });
     }
+  }
+  function crateFlush() {
+    const { C, items, em } = crateSet;
+    if (!items.length) return;
     instances(group, C.body, tealM(), items);
     instances(group, C.brass, brassM(), items);
     instances(group, emq(), emblemMaterial(), em, { cast: false });
