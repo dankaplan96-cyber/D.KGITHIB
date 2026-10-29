@@ -142,6 +142,8 @@ body.big-text #holomap .foot, body.big-text #holomap .objective { font-size: 16p
 .menu button:disabled { opacity: 0.35; pointer-events: none; }
 /* short windows (a phone held sideways): menus stay within the screen */
 @media (max-height: 440px) { .screen { gap: 10px; padding: 10px 16px; } .menu { gap: 6px; } .menu button { padding: 7px 18px; font-size: 16px; } }
+/* (very short windows, 640×360: the pause menu has seven entries since AUTO-QUALITY's benchmark button) */
+@media (max-height: 380px) { .screen { gap: 6px; padding: 6px 14px; } .menu { gap: 4px; } .menu button { padding: 4px 16px; font-size: 14px; } #pause h1 { font-size: 22px; margin: 0; } #pause-objective { font-size: 12px; padding: 5px 10px; line-height: 1.35; } }
 .langs { display: flex; gap: 8px; }
 .langs button { padding: 8px 14px; font-size: 14px; }
 .disclaimer { max-width: 620px; font-size: 12px; color: var(--ink-dim); opacity: 0.8; line-height: 1.5; }
