@@ -79,3 +79,18 @@ Object.assign(STR.en, {
 
   rs_ume_work: "Sit if you like. This bench has room for two and a half.",
 });
+
+// G1 world-life: what the residents say once the water is back (hot) and the project's heat posts are lit (chapter 2). `_hot`
+// is said first, then the numbered lines.
+Object.assign(STR.en, {
+  rs_oda_hot: "The well's running again! Hot, mind. I made tea straight from the bucket and burned my tongue. Worth it.",
+  rs_brix_hot: "That post by the shop is wonderful for the knees. The well can keep its steam, though.",
+  rs_maro_hot: "Hot water in the well. Tilde says it's progress. I say it's soup.",
+  rs_tilde_hot: "Too hot to drink, too hot to wash in. Maro calls it progress. I call it tea without the tea.",
+  rs_garrick_hot: "I'm letting the can cool before the tulips get it. Patience is a gardener's virtue. Mine's nearly gone.",
+  rs_pico_hot: "The well's steaming! Dot says it's a dragon. It's not a dragon. Probably.",
+  rs_dot_hot: "The posts are warm! Look, my hand's warm! Pico says don't touch. I'm touching.",
+  rs_marda_hot: "A warm post at every door. I walk past them twice as slowly now. Doctor's orders.",
+  rs_tobb_hot: "Heavy crates and a warm post at every corner. I take longer breaks. Don't tell the project.",
+  rs_ume_hot: "A warm post and a bench. At my age, that's all the project I need. The tea, though, I'll let cool.",
+});

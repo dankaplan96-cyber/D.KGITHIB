@@ -89,7 +89,7 @@ export class Chapter1 extends ChapterBase {
         return this.isCur() ? { x: ps.x, z: ps.z + 2.2, a: Math.PI } : undefined;   // (at his harbour, as the prologue left him)
       }
       case 'gilbert':
-        return f.c1_water ? { x: W.well.x + 2.2, z: W.well.z + 1.4, a: Math.atan2(-1, 1.4), anim: 'idle' } : R.office?.npcSpots?.gilbert ?? undefined;
+        return f.c1_water ? { x: W.well.x + 2.2, z: W.well.z + 1.4, a: Math.atan2(-1, 1.4), anim: 'wipe' } : R.office?.npcSpots?.gilbert ?? undefined;
       case 'mira':
         return R.office?.npcSpots?.mira ?? undefined;
     }
