@@ -144,7 +144,7 @@ export class Walkers {
     const h = this.game.hero;
     out.push(h);
     for (const n of this.statics) out.push(n);
-    for (const r of this.res) if (r !== self && r.present) out.push(r);
+    for (const r of this.res) if (r !== self && r.present && !r.away && !r.inside) out.push(r);   // (one the story or a test took off the streets is not there)
     return out;
   }
   // a resident's pair mate meets it: both leave together
@@ -264,15 +264,72 @@ export class Resident extends NPC {
     this.carryMesh = m;
   }
   // ---------------------------------------------------------------- sitting
+  // SOLID-NPC (the user, 29.10: a resident sat inside a bench, the body through the backrest, the legs through the seat).
+  // The sitter is put on the bench's own seat: its bottom on the seat's top, its back in front of the backrest, its shins
+  // in front of the seat's edge, facing away from the backrest. Where the bottom and the back of THIS body are in the sit
+  // pose (a Grobo's hips are low and its belly wide, a Rabbibunny's legs long, a child small) is measured once per body
+  // from the posed mesh (sitShape); the bench's shape is the seat's (walkrounds.js seatAt: BENCHES in town.js, island.js,
+  // citydress.js, zeelich's). Its coat's back panel folds under it on the seat instead of hanging down through it.
+  seatPose(s) {
+    const seat = s.seat, sp = seat.spec || BENCH_RED, sh = this.sitShape(), sx = Math.sin(seat.a), sz = Math.cos(seat.a);
+    // along the way it faces from the bench's middle: back clear of the backrest, shins clear of the seat's edge
+    const zl = Math.max(sp.back + 0.02 - sh.back, sp.front + 0.015 - sh.shin);
+    const y0 = this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z));   // (the ground in front of the bench: the bench's own collider must not count)
+    return { x: seat.x + sx * zl, z: seat.z + sz * zl, y0, y1: y0 + sp.seatY + 0.008 - sh.bottom };
+  }
   sitDown(s, instant) {
     this.st = 'sitin';
-    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: s.seat.x, z: s.seat.z }, t: 0, dur: instant ? 0.001 : 0.8, a: s.seat.a, y: this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)) };   // (the ground in front of the bench: a bench the physics counts as a brick must not lift the sitter onto its top)
+    const p = this.seatPose(s);
+    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: p.x, z: p.z }, t: 0, dur: instant ? 0.001 : 0.8, a: s.seat.a, ya: p.y0, yb: p.y1, y: p.y1, down: true };
     if (instant) this.angle = this.targetAngle = s.seat.a;
     this.note('sit');
   }
   standUp(s) {
     this.st = 'sitout';
-    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: s.x, z: s.z }, t: 0, dur: 0.8, a: s.a != null ? s.a : null, y: this.pos.y };
+    const y0 = this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z));
+    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: s.x, z: s.z }, t: 0, dur: 0.8, a: s.a != null ? s.a : null, ya: this.pos.y, yb: y0, y: this.pos.y, down: false };
+  }
+  // the coat's back and side panels lie on the seat under it (the rig's sit pose leaves the back panel hanging straight
+  // down from the waist, through the seat): after the rig's own pose, every frame it sits
+  foldCoat() {
+    const S = this.rig.j?.skirt;
+    if (!S) return;
+    S.B.rotation.x = -1.4; S.L.rotation.x = Math.min(S.L.rotation.x, -1.25); S.R.rotation.x = Math.min(S.R.rotation.x, -1.25);
+  }
+  // where this body's bottom, back and shins are in the sit pose, relative to its feet's point (metres, the way it faces
+  // +z): measured once per body and size from the posed mesh, the rig put back as it was
+  sitShape() {
+    const key = this.def.char + '@' + this.rig.root.scale.x.toFixed(3);
+    let sh = SIT_SHAPES.get(key);
+    if (sh) return sh;
+    const rig = this.rig, root = rig.root, j = rig.j, anim = rig.anim ?? 'idle';
+    rig.play('sit'); for (let i = 0; i < 8; i++) rig.update(0.5, 0);
+    this.foldCoat();
+    root.updateMatrixWorld(true);
+    const inv = _m4.copy(root.matrixWorld).invert(), sc = root.scale.x;
+    const loc = (o) => o.getWorldPosition(_v1).applyMatrix4(inv).clone();
+    const hip = loc(j.legL.hip), hip2 = loc(j.legR.hip), knee = loc(j.legL.knee);
+    const legX = Math.max(Math.abs(hip.x), Math.abs(hip2.x));
+    const pts = [];
+    root.traverse((o) => {
+      if (!o.isMesh || !o.visible || !o.geometry?.attributes?.position || o === this.carryMesh) return;
+      let c = o; while (c && c !== root) { if (c === this.carryMesh) return; c = c.parent; }
+      const pa = o.geometry.attributes.position, step = Math.max(1, Math.floor(pa.count / 2500));
+      for (let i = 0; i < pa.count; i += step) { _v1.fromBufferAttribute(pa, i); if (o.isSkinnedMesh) o.applyBoneTransform(i, _v1); _v1.applyMatrix4(o.matrixWorld).applyMatrix4(inv); pts.push(_v1.x, _v1.y, _v1.z); }
+    });
+    // the bottom: the underside of the thighs (between the hips and the knees, over the legs)
+    let bottom = 9;
+    for (let i = 0; i < pts.length; i += 3) { const x = pts[i], y = pts[i + 1], z = pts[i + 2]; if (z > hip.z + 0.03 && z < knee.z - 0.1 && Math.abs(x) < legX + 0.12 && y > hip.y - 0.4) bottom = Math.min(bottom, y); }
+    if (bottom > 8) bottom = hip.y - 0.1;
+    // the back: the rearmost point from the seat up to the backrest's top (0.55 m over the seat)
+    let back = 9, shin = 9, foot = 9;
+    for (let i = 0; i < pts.length; i += 3) { const y = pts[i + 1], z = pts[i + 2]; if (y > bottom + 0.03 && y < bottom + 0.55 / sc) back = Math.min(back, z); if (y < bottom - 0.02 && z > hip.z) shin = Math.min(shin, z); foot = Math.min(foot, y); }
+    if (back > 8) back = hip.z - 0.15;
+    if (shin > 8) shin = knee.z - 0.08;
+    sh = { bottom: bottom * sc, back: back * sc, shin: shin * sc, foot: foot * sc, knee: knee.z * sc };
+    SIT_SHAPES.set(key, sh);
+    rig.play(anim); for (let i = 0; i < 8; i++) rig.update(0.5, 0);
+    return sh;
   }
   // ---------------------------------------------------------------- talking with the player (src/game/story/citizens.js)
   engage() { this.engaged = true; this.hold = 0; this.stuckT = 0; this.vel = 0; this.gait = 0; this.yieldT = 0; this.note('talk'); }
@@ -332,7 +389,7 @@ export class Resident extends NPC {
   }
   // leaving the abstract state: stand on the ground it is over
   wake() {
-    if (this.sit) this.pos.y = this.sit.y;   // (seated: at the height it sat down from)
+    if (this.sit) this.pos.y = this.st === 'sitout' ? this.sit.yb : this.sit.y;   // (seated: on the seat)
     else if (!this.inside) this.pos.y = this.game.physics.groundAt(this.pos.x, this.pos.z, this.groundHint(this.pos.x, this.pos.z));
     this.vy = 0; this.onGround = true;
     this.sync();
@@ -344,6 +401,8 @@ export class Resident extends NPC {
     const seated = this.st === 'seated' || this.st === 'sitin';
     this.rig.play(seated ? 'sit' : this.talking ? 'talk' : 'idle');
     this.rig.update(dt, 0);
+    if (seated) this.foldCoat();
+    this.placeCarry(seated);
     this.sync();
   }
 
@@ -383,7 +442,22 @@ export class Resident extends NPC {
   animate(anim, dt, speed) {
     this.rig.play(anim);
     this.rig.update(dt, speed);
+    if (anim === 'sit') this.foldCoat();
+    this.placeCarry(anim === 'sit');
     this.sync();
+  }
+  // what it carries is set down on the seat beside it while it sits (held, it would hang through the bench), and taken up
+  // again as it stands
+  placeCarry(seated) {
+    const m = this.carryMesh;
+    if (!m) return;
+    const root = this.rig.root, hand = this.rig.j?.armR?.hand;
+    if (seated && m.parent !== root) {
+      const sh = this.sitShape(), sc = root.scale.x, drop = CARRY_DROP[this.carrying] ?? 0.25;
+      root.add(m); m.position.set(-Math.max(0.45, (this.bodyR || 0.45) + 0.1) / sc, sh.bottom / sc + drop, (sh.back + 0.22) / sc); m.rotation.set(0, 0, 0);
+    } else if (!seated && hand && m.parent !== hand) {
+      hand.add(m); m.position.set(0, this.carrying === 'sack' ? 0.1 : 0, this.carrying === 'sack' ? -0.02 : 0);
+    }
   }
   dwellTick(dt, s) {
     const h = this.game.hero;
@@ -465,10 +539,11 @@ export class Resident extends NPC {
     const k = clamp(S.t / S.dur, 0, 1), e = k * k * (3 - 2 * k);
     const st = this.st;
     if (S.a != null) this.angle = dampAngle(this.angle, S.a, 7, dt);
-    // (the seat's own height is the bench's: the rig's sit pose puts the hips there)
-    const a = st === 'sitin' ? S.from : S.from, b = S.to;
+    // onto the seat (its height, SOLID-NPC: seatPose) as the sit pose comes in, off it as the stand comes
+    const a = S.from, b = S.to;
     this.pos.x = a.x + (b.x - a.x) * e; this.pos.z = a.z + (b.z - a.z) * e;
-    this.pos.y = S.y;
+    const ky = S.down ? clamp((k - 0.3) / 0.7, 0, 1) : clamp(k / 0.6, 0, 1), ey = ky * ky * (3 - 2 * ky);
+    this.pos.y = S.ya + (S.yb - S.ya) * ey;
     if (st === 'sitin') this.animate(k > 0.35 ? 'sit' : 'idle', dt, 0);
     else this.animate(k < 0.55 ? 'sit' : 'idle', dt, 0);
     if (k >= 1) {
@@ -613,7 +688,7 @@ export class Resident extends NPC {
     const me = this.bodyR || 0.45;
     let px = 0, pz = 0;
     for (const r of this.W.res) {
-      if (r === this || !r.present || r.inside) continue;
+      if (r === this || !r.present || r.inside || r.away) continue;
       const R = me + (r.bodyR || 0.45), rx = this.pos.x - r.pos.x, rz = this.pos.z - r.pos.z;
       if (Math.abs(rx) >= R || Math.abs(rz) >= R) continue;
       const d = Math.hypot(rx, rz);
@@ -678,7 +753,7 @@ export class Resident extends NPC {
         if (this.wi >= path.length) {
           this.pos.x = s.x; this.pos.z = s.z;
           this.arrived(s, true);
-          if (this.st === 'sitin') { this.pos.x = s.seat.x; this.pos.z = s.seat.z; this.st = 'seated'; }
+          if (this.st === 'sitin') { this.pos.x = this.sit.to.x; this.pos.z = this.sit.to.z; this.pos.y = this.sit.y; this.st = 'seated'; }
           if (this.st === 'knock') this.goInside(s);
         }
         return;
@@ -702,3 +777,8 @@ export class Resident extends NPC {
   }
 }
 const _others = [];
+const CARRY_DROP = { basket: 0.235, crate: 0.335, can: 0.25, sack: 0.37 };   // (from the item's hand point down to its base)
+const SIT_SHAPES = new Map(), _m4 = new THREE.Matrix4(), _v1 = new THREE.Vector3();
+// the red slatted bench (town.js, island.js): the seat's top over its feet, the backrest's front face and the seat's
+// front edge along the way the sitter faces (m, from the bench's middle); other benches give their own (seat.spec)
+export const BENCH_RED = { seatY: 0.485, back: -0.25, front: 0.225 };

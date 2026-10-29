@@ -647,7 +647,7 @@ function buildHarbour(W0, root, r) {
     const x = QX + 1.0, y = QH;
     for (const s of [-0.22, 0.22]) B.add(lathe([[0, 0], [0.13, 0], [0.11, 0.08], [0.09, 0.32], [0.14, 0.38], [0.14, 0.44], [0, 0.46]], 12), pm('#2e3238', 0.45, { metalness: 0.6 }), x, y, z + s);
     B.add(bbox(0.42, 0.06, 0.82, 0.02, 1), pm('#2e3238', 0.45, { metalness: 0.6 }), x, y + 0.03, z);
-    physics.add({ type: 'box', x, z, hw: 0.2, hd: 0.4, rot: 0, top: y + 0.46, seeThrough: true, noStand: true });
+    physics.add({ type: 'box', x, z, hw: 0.2, hd: 0.4, rot: 0, top: y + 0.46, seeThrough: true, noStand: true, block: true });
   }
   // Esmer cargo stack waiting for the ferry (toggled by the story)
   {
@@ -1074,7 +1074,7 @@ function netHeapGeo(s = 1) {
 }
 function netHeap(W, parent, x, z, r) {
   mesh(parent, netHeapGeo(1), VC(), x, W.H(x, z), z, r() * 6);
-  W.physics.add({ type: 'cyl', x, z, r: 0.6, top: W.H(x, z) + 0.45, seeThrough: true, noStand: true });
+  W.physics.add({ type: 'cyl', x, z, r: 0.6, top: W.H(x, z) + 0.45, seeThrough: true, noStand: true, block: true });
 }
 
 // tulip: stem, two leaves and a cup (instanced; colour per instance)
@@ -1117,7 +1117,7 @@ function bench(W, parent, x, z, ry) {
     mesh(g, bbox(0.06, 0.95, 0.06, 0.01, 1), iron, sx, 0.47, -0.27, 0, { rx: -0.18 });
     mesh(g, bbox(0.06, 0.06, 0.5, 0.01, 1), iron, sx, 0.44, -0.06);
   }
-  W.physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: y + 0.5, noStand: true, seeThrough: true });
+  W.physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: y + 0.5, noStand: true, block: true, seeThrough: true });   // (block: SOLID-NPC, not walked through)
   (W.seats ||= []).push({ x, z, ry });   // WORLD-LIFE: a resident may sit here
 }
 

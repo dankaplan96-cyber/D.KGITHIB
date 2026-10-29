@@ -287,6 +287,57 @@ const town = await ev(() => { const G = game, W = G.walkers; W.force = 0;
 console.log('town', JSON.stringify(town));
 check('over two minutes of the town no resident walks into another (deeper than a fifth of their girths) or into a story person', town.rr === 0 && town.rs === 0, town);
 
+
+// ---- the residents' bench sit (the user, 29.10: a Rabbibunny sat inside a bench, through the backrest and the seat):
+// every bench stop of every round, the resident seated there; its posed body checked against the bench's own parts:
+// nothing under the seat's top over the seat (legs through the seat), nothing behind the backrest's face (body through
+// the back), and the bottom resting on the seat (within 6 cm over it). Citadel's and Zeelich's (Kesh's round has no bench).
+iso('each resident is seated at each of its benches in turn (its stop given at once); the others are off the streets meanwhile');
+const benchCheck = async (filter, shotsOK) => {
+  const list = await ev((filter) => { const out = []; for (const r of game.walkers.res) r.stops.forEach((s, i) => { if (s.seat && (filter === 'citadel' ? Math.abs(s.x) < 300 : Math.abs(s.x - 2400) < 300)) out.push([r.def.id, i, s.id]); }); return out; }, filter);
+  const res = [];
+  for (const [id, i, sid] of list) {
+    const m = await ev(async ({ id, i }) => { const THREE = await import('three');
+      const G = game, W = G.walkers, r = W.res.find((q) => q.def.id === id), s = r.stops[i];
+      W.force = 0; for (const q of W.res) if (q !== r) q.away = 'test';
+      r.engaged = false; r.hold = 0; r.yieldT = 0;
+      // (what it carries as it comes to this bench in its round: the basket from the stall, say)
+      let carry = null; for (let k = 1; k <= r.stops.length; k++) { const q = r.stops[(i - k + r.stops.length) % r.stops.length]; if (q.carry !== undefined) { carry = q.carry; break; } }
+      r.carrySet(carry);
+      r.ri = i; r.slotAt(s); r.arrived(s, true); r.tmr = 999;
+      const h = G.hero; h.pos.set(s.x + 6, G.physics.groundAt(s.x + 6, s.z + 6, h.pos.y + 5), s.z + 6); h.prevPos.copy(h.pos); h.sync();
+      G.step(1.5, 1 / 30); r.tmr = 999;
+      const seat = s.seat, sp = seat.spec || { seatY: 0.485, back: -0.25, front: 0.225 }, base = r.sit?.ya ?? r.pos.y, top = base + sp.seatY;
+      const ca = Math.cos(seat.a), sa = Math.sin(seat.a);
+      // into the bench's frame: x along the bench, z the way the sitter faces
+      const root = r.rig.root; root.updateMatrixWorld(true);
+      let n = 0, under = 0, behind = 0, lowest = 9, deep = 0, dy = 0; const v = new THREE.Vector3();
+      root.traverse((o) => { if (!o.isMesh || !o.visible || !o.geometry?.attributes?.position) return; const pa = o.geometry.attributes.position, st = Math.max(1, Math.floor(pa.count / 3000));
+        for (let k = 0; k < pa.count; k += st) { v.fromBufferAttribute(pa, k); if (o.isSkinnedMesh) o.applyBoneTransform(k, v); v.applyMatrix4(o.matrixWorld);
+          const dx = v.x - seat.x, dz = v.z - seat.z, bx = dx * ca - dz * sa, bz = dx * sa + dz * ca, y = v.y; n++;
+          if (Math.abs(bx) > 0.85) continue;
+          if (bz > sp.back && bz < sp.front && y > base + 0.02 && y < top - 0.012) under++;
+          if (bz < sp.back - 0.012 && y > top + 0.02 && y < top + 0.5) { behind++; deep = Math.max(deep, sp.back - bz); dy = y - top; }
+          if (bz > sp.back && bz < sp.front) lowest = Math.min(lowest, y - top); } });
+      const st = r.st;
+      for (const q of W.res) q.away = null;
+      return { id, sid: s.id, char: r.def.char, carry, st, n, under, behind, deep: +deep.toFixed(3), dy: +dy.toFixed(2), rest: +lowest.toFixed(3), pos: [r.pos.x, r.pos.y, r.pos.z], a: r.angle };
+    }, { id, i });
+    res.push(m);
+    console.log('bench', JSON.stringify(m));
+    if (SHOTS && shotsOK) for (const [view, ang, dist, hgt] of [['front', 0.6, 2.6, 1.3], ['side', 1.5, 2.4, 1.0]]) {
+      await ev(({ m, ang, dist, hgt }) => { const G = game, c = G.camera, a = m.a + ang;
+        c.position.set(m.pos[0] + Math.sin(a) * dist, m.pos[1] + hgt, m.pos[2] + Math.cos(a) * dist); c.lookAt(m.pos[0], m.pos[1] + 0.5, m.pos[2]); c.updateMatrixWorld();
+        G.hero.rig.root.visible = false; G.renderer.render(); G.hero.rig.root.visible = true; }, { m, ang, dist, hgt });
+      await page.screenshot({ path: path.join(SHOTS, `bench-${m.sid}-${m.id}-${view}.png`) });
+    }
+  }
+  return res;
+};
+const benchC = await benchCheck('citadel', true);
+check(`Citadel: every resident seated at each of its ${benchC.length} bench stops sits ON the seat: no part of the body under the seat's top or behind the backrest, the bottom resting on the seat`,
+  benchC.length >= 10 && benchC.every((m) => m.st === 'seated' && m.under === 0 && m.behind === 0 && m.rest > -0.015 && m.rest < 0.06), benchC.map((m) => [m.sid, m.char, m.under, m.behind, m.rest]));
+
 await shot('solidnpc-end');
 const fails = done();
 await browser.close();
