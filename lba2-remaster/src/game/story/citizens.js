@@ -27,10 +27,12 @@ export class Citizens extends ChapterBase {
   linesFor(npc) {
     const id = npc.def.id, f = this.f, has = (k) => t(k) !== k;
     const dry = this.story.index === 0 || (this.story.index === 1 && !f.c1_water);
+    const hot = !dry && this.story.index === 1;   // (chapter 2, the water back: the town's talk is the heat)
     const busy = ['seated', 'sitin', 'chat'].includes(npc.st) || !!npc.carrying || /tend|water|draw|put/.test(npc.stop?.act || '');
     const keys = [];
     if (busy && has(`rs_${id}_work`)) keys.push(`rs_${id}_work`);
     if (dry && has(`rs_${id}_dry`)) keys.push(`rs_${id}_dry`);
+    if (hot && has(`rs_${id}_hot`)) keys.push(`rs_${id}_hot`);
     for (let i = 0; i < 6 && has(`rs_${id}_${i}`); i++) keys.push(`rs_${id}_${i}`);
     return keys;
   }
