@@ -27,6 +27,9 @@ const r = await ev(({ ID, FR, P, Q }) => {
     G.frame(1 / 30, true);
     const p = R.info.programs.length, sc = G.shadowCache?.stats.full ?? 0, db = G.drawBatch.builds || 0, sb = G.shadowCull.builds || 0;
     const note = [];
+    const SA = G.shadowCull.area, ns = SA?.solo.length ?? 0;
+    if (SA && SA === window.__sa && ns > window.__ns) note.push(`${ns - window.__ns} piece(s) left their shadow batch (moved or hidden): ${SA.solo.slice(window.__ns, window.__ns + 4).map((C) => names(C.o)).join('; ')}`);
+    window.__sa = SA; window.__ns = ns;
     if (p > p0) note.push(`${p - p0} program(s): ${R.info.programs.slice(p0).map((x) => x.name).join(', ')} · last drawn ${cur?.pass} ${cur?.m?.type}${cur?.m?.name ? '/' + cur.m.name : ''} on ${cur ? names(cur.o) : '?'} (${cur?.o?.type})`);
     if (sc > sc0) { const k = G.shadowCache.key; note.push(`shadow cache full rebuild${key0 && k !== key0 ? ` (key: ${diffKey(key0, k)})` : ''}`); key0 = k; }
     if (db > db0) note.push(`draw batches built (${(G.drawBatch.buildMs || 0).toFixed(0)} ms total)`);
@@ -35,7 +38,16 @@ const r = await ev(({ ID, FR, P, Q }) => {
     p0 = p; sc0 = sc; db0 = db; sb0 = sb;
   }
   R.renderBufferDirect = rbd;
-  function diffKey(a, b) { const A = a.split('|'), B = b.split('|'); const d = []; for (let i = 0; i < Math.max(A.length, B.length); i++) if (A[i] !== B[i]) d.push(`#${i}: ${String(A[i]).slice(0, 40)} → ${String(B[i]).slice(0, 40)}`); return d.join('; '); }
+  function diffKey(a, b) {
+    const A = a.split('|'), B = b.split('|'); const d = [];
+    // (the static casters' ids, field 2: which left or joined, and what they are)
+    if (A[2] !== B[2]) {
+      const ia = new Set(A[2].split(',')), ib = new Set(B[2].split(','));
+      const what = (id) => { const o = G.scene.getObjectById(+id); return o ? `${o.name || o.type}<${names(o.parent)}${o.userData.shadowProxy ? ' (shadow batch)' : ''}` : `#${id} (gone)`; };
+      const gone = [...ia].filter((x) => !ib.has(x)), added = [...ib].filter((x) => !ia.has(x));
+      d.push(`static casters: −${gone.length} [${gone.slice(0, 4).map(what).join('; ')}] +${added.length} [${added.slice(0, 4).map(what).join('; ')}]`);
+      A[2] = B[2];
+    } for (let i = 0; i < Math.max(A.length, B.length); i++) if (A[i] !== B[i]) d.push(`#${i}: ${String(A[i]).slice(0, 40)} → ${String(B[i]).slice(0, 40)}`); return d.join('; '); }
   return { out, label: A.label(), programs: R.info.programs.length };
 }, { ID, FR, P: process.env.PROFILE ?? '1', Q: process.env.Q || '' });
 console.log(`PERF-CPU late work · ${process.env.Q ? process.env.Q + ' by hand' : 'Auto ' + r.label}${process.env.BATTERY ? ' · battery' : ''} · ${ID} · ${FR} frames at 30 fps steps · programs now ${r.programs}`);

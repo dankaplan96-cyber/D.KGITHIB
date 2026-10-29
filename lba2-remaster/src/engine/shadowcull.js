@@ -52,6 +52,7 @@ const batchable = (o) => {
   if (!m || m.alphaTest > 0 || m.alphaHash || m.displacementMap || (g.morphAttributes && Object.keys(g.morphAttributes).length)) return false;
   return !!g.attributes.position;
 };
+const keptIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (p.userData.keep) return true; return false; };
 // shown (this and every parent up to the root), and on layer 0
 const shownIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
 
@@ -69,7 +70,9 @@ class Area {
       if (!g.boundingSphere || !Number.isFinite(g.boundingSphere.radius)) return;
       const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true, next: -0.5, mwF: -1 };   // (next / mwF: PERF-CPU's distance detail; numbers from the start, so V8 keeps them unboxed)
       if (!o.castShadow) { quiet(o, C); return; }
-      if (!batchable(o) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } return; }
+      // (PERF-CPU: a builder's moving or toggling part — userData.keep, as drawbatch.js reads it: a dog, a boat, the cargo
+      //  lift, crates that break — casts on its own: in a batch, its first move rebuilt the batch and the static shadow cache)
+      if (!batchable(o) || keptIn(o, root) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } return; }
       const m = o.material;
       C.side = m.side; C.shadowSide = m.shadowSide; C.mat = o.matrixWorld.clone();
       this.assign(C);
@@ -173,7 +176,7 @@ class Area {
     for (let i = from; i < Math.min(n, from + q); i++) {
       const C = this.members[i]; if (!C || C.solo) continue;
       if (C.o.matrixWorld.equals(C.mat) && shownIn(C.o, this.root) && C.o.parent) continue;
-      C.solo = true; C.o.castShadow = true;
+      C.solo = true; C.o.castShadow = true; this.left = (this.left || 0) + 1;
       for (const cell of C.cells) { cell.dirty = true; cell.list.splice(cell.list.indexOf(C), 1); }
       this.solo.push(C);
     }
@@ -222,6 +225,8 @@ export class ShadowCull {
   build(root) { const t0 = performance.now(), A = new Area(root, this.cell); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + performance.now() - t0; return A; }
   // (all pieces cast on their own again; batches removed: the benchmark's comparisons, or switching it off)
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); this.area = null; }
+  // (PERF-CPU: pieces that left a shadow batch so far, for the scene change's settle frames: Game.updateTransition)
+  get left() { let n = 0; for (const A of this.areas.values()) n += A.left || 0; return n; }
   update(root, camera, focus) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return; }
     let A = this.areas.get(root);

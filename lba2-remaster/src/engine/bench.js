@@ -413,7 +413,7 @@ export class Bench {
       const s = x.s; if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
       lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)}   ${s.frameMs.p50} / ${s.frameMs.p95} / ${s.frameMs.p99} / ${s.frameMs.max}   ${x.over33} / ${x.over50} / ${x.over100} (${x.black})   ${s.gpuMs ? `${s.gpuMs.p50} / ${s.gpuMs.p95}` : 'n/a'}   ${s.pace?.work ?? '?'} / ${s.pace?.workP95 ?? '?'}   ${x.state0} -> ${x.state1}`);
       lines.push(`      frames at each state: ${Object.entries(x.share).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${Math.round((100 * n) / x.n)} %`).join(' · ')} · calls ${s.calls} (shadow ${s.shadowCalls}) · triangles ${(s.tris / 1000).toFixed(0)}k · CPU probe ${x.cpu} ms`
-        + (s.pace ? ` · pacing: on the refresh ${Math.round((100 * s.pace.on) / s.frames)} % · 17.2–20 ms ${Math.round((100 * s.pace.slow) / s.frames)} % · longer ${Math.round((100 * s.pace.long) / s.frames)} %` : ''));
+        + (s.pace ? ` · pacing: on the refresh ${Math.round((100 * s.pace.on) / s.frames)} % · 17.2–20 ms ${Math.round((100 * s.pace.slow) / s.frames)} % · longer ${Math.round((100 * s.pace.long) / s.frames)} % · callback late p50 ${s.pace.lag ?? '?'} (p95 ${s.pace.lagP95 ?? '?'}) ms · uploads a frame p50 ${s.pace.up ?? '?'} (${s.pace.upKB != null ? s.pace.upKB.toFixed(0) : '?'} KB)` : ''));
       if (x.hitches.length) lines.push(`      every frame over 33 ms: ${x.hitches.slice(0, 12).join(' ')}${x.hitches.length > 12 ? ` … +${x.hitches.length - 12}` : ''}`);
     }
     const D = this.decisions(t0 - 1);
@@ -480,7 +480,7 @@ export class Bench {
       const s = x.s, P = s?.pace; if (!P) return '';
       const n = s.frames || 1, pc = (k) => Math.round((100 * P[k]) / n);
       const extra = [x.limit ? `frame-rate limit ${(1000 / x.limit).toFixed(0)} fps active` : '', P.bg ? `${P.bg} frames in the background` : '', x.power ? `power source changed ${x.power}×` : '', s.gpuMs?.disjoint ? `GPU timer disjoint ${s.gpuMs.disjoint}× (GPU clock/power change)` : ''].filter(Boolean).join(', ');
-      return ` · pacing: on the refresh ${pc('on')} % · 17.2–20 ms ${pc('slow')} % · longer ${pc('long')} % · game CPU work p50 ${P.work} ms · callback late p50 ${P.lag ?? '?'} ms`
+      return ` · pacing: on the refresh ${pc('on')} % · 17.2–20 ms ${pc('slow')} % · longer ${pc('long')} % · game CPU work p50 ${P.work} ms · callback late p50 ${P.lag ?? '?'} (p95 ${P.lagP95 ?? '?'}) ms · uploads a frame p50 ${P.up ?? '?'} (${P.upKB != null ? P.upKB.toFixed(0) : '?'} KB, p95 ${P.upKBp95 != null ? P.upKBp95.toFixed(0) : '?'} KB)`
         + `${x.idle ? ` · nothing drawn: ${x.idle.p50} ms (${x.idle.min}–${x.idle.max})` : ''} · CPU probe ${x.cpu ?? '?'} ms${extra ? ' · ' + extra : ''}`;
     };
     for (const x of fixed) {

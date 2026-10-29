@@ -200,6 +200,7 @@ function mergeParts(root, material) {
 export function dogRig(coat = 'grey') {
   const M = coat === 'poodle' ? poodle() : zeelichDog(COATS[coat] || COATS.grey);
   const root = new THREE.Group(); root.name = 'dog-' + coat;
+  root.userData.keep = true;   // (PERF-CPU: it moves: never in a static shadow or draw batch — a batch it left was rebuilt, and the static shadow cache with it, ~1 s after an arrival)
   M.body.scale.setScalar(U);
   root.add(M.body);
   const own = new LbaMaterial();   // (its own material: the hit flash is this dog's alone)

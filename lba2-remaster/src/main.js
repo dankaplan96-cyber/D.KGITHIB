@@ -636,7 +636,10 @@ class Game {
       if (this.testFreeze || this._frameNo == null) { T.held = false; f.style.opacity = 1; this._fadeOp = 1; return; }
       T.heldAt ??= this._frameNo;
       const k = this._frameNo - T.heldAt;
-      if (k === 0 || (k <= 3 && this._lastRealMs > 50)) { f.style.opacity = 1; this._fadeOp = 1; T.settled = k; return; }
+      // PERF-CPU: also while the last frame still rebuilt the static shadow cache, built batches or compiled a program (a
+      // first visit: pieces that toggle on the area's first frames leave their shadow batch, the cache is redrawn: the
+      // user's arrival showed that frame, 133 ms, in view), at most 6 frames in all
+      if (k === 0 || (k <= 3 && this._lastRealMs > 50) || (k <= 6 && this._settleBusy)) { f.style.opacity = 1; this._fadeOp = 1; T.settled = k; return; }
       T.held = false;
     }
     if (T.card && T.called) { T.card.hide(); T.card = null; }
@@ -2085,7 +2088,8 @@ class Game {
     let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
     const why = real * 1000 > 33.4 ? [this._jobsPrev, gc].filter(Boolean).join(', ') : '';
     this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps, lag: this._lag ?? 0, bg: !!this.background, why: why || undefined });
-    { const jc1 = this.jobCounters(), j = this.jobsBetween(jc, jc1); this._jobsPrev = `frame before: work ${ms.toFixed(0)} ms${j ? ', ' + j : ''}`; this._jc = jc1; }
+    { const jc1 = this.jobCounters(), j = this.jobsBetween(jc, jc1); this._jobsPrev = `frame before: work ${ms.toFixed(0)} ms${j ? ', ' + j : ''}`; this._jc = jc1;
+      this._settleBusy = jc1.sc > jc.sc || jc1.dbn > jc.dbn || jc1.sbn > jc.sbn || jc1.p > jc.p || this._lastLeft !== (this.shadowCull?.left ?? 0); this._lastLeft = this.shadowCull?.left ?? 0; }
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark's fixed runs; its
     // "as played" runs keep it: PERF-BATTERY-2)
     if (this.state === 'play' && !this.trans && (!this.benching || this.benchAuto) && !this.background) this.renderer.adapt(real * 1000);
