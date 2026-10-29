@@ -57,7 +57,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 - **Wants:** fix the well and be home for dinner. **Knows:** the tap stopped and ran warm; nothing about the
   project.
 - **Does:** magic ball from the cupboard; Gilbert and Mira's row: Mira won't unlock the town well for what she calls a
-  pipe fault, until Zoé's proof from next door (their kettle furred with warm crystals overnight: "pipes don't grow
+  pipe fault, until Zoé's proof from next door (their kettle furred with warm crystals since breakfast: "pipes don't grow
   those") gets him the lid key; the lid is rusted to the rim (Gilbert: "give it a good kick": Aggressive); Doran stamps
   Xil's permit for a rope ladder once the harbour bell wakes him (out of reach: the magic ball; Arthur knows the trick);
   (optional) overhears Tim and Lulu about the warm stone, and finds more on top of the bay rocks (Athletic jumps); wakes

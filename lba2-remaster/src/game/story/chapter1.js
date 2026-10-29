@@ -89,7 +89,7 @@ export class Chapter1 extends ChapterBase {
         return this.isCur() ? { x: ps.x, z: ps.z + 2.2, a: Math.PI } : undefined;   // (at his harbour, as the prologue left him)
       }
       case 'gilbert':
-        return f.c1_water ? { x: W.well.x + 2.2, z: W.well.z + 1.4, a: Math.atan2(-1, 1.4), anim: 'idle' } : R.office?.npcSpots?.gilbert ?? undefined;
+        return f.c1_water ? { x: W.well.x + 2.2, z: W.well.z + 1.4, a: Math.atan2(-1, 1.4), anim: 'wipe' } : R.office?.npcSpots?.gilbert ?? undefined;
       case 'mira':
         return R.office?.npcSpots?.mira ?? undefined;
     }
@@ -232,7 +232,7 @@ export class Chapter1 extends ChapterBase {
         // at the harbour he agrees and goes ahead to the spaceport; there, by the ship, he takes Twinsen aboard
         if (f.c1_ship) return c([['doran', 'c1_doran_board']], () => this.toZeelich());
         if (f.c1_radio) return c([['doran', 'c1_doran_ferry1'], ['hero', 'c1_tw_ferry'], ['doran', 'c1_doran_ferry2']], () => { f.c1_ship = true; this.story.refreshCast(); g.updateObjective(); g.save(false); });
-        return c([['doran', f.c1_task ? 'c1_doran_drones' : 'c1_doran_idle']]);
+        return c([['doran', f.c1_valve_depot ? 'c1_doran_depot' : f.c1_task ? 'c1_doran_drones' : 'c1_doran_idle']]);
       case 'xil': return c([['xil', f.c1_water ? 'c1_xil_2' : 'c1_xil_1']]);
       case 'pippa':
         this.chain([['pippa', f.c1_veskGone ? 'c1_pippa_2' : f.c1_water ? 'c1_pippa_heat' : 'c1_pippa_1']], () => g.openShop());
