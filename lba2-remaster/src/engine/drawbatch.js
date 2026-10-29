@@ -27,6 +27,7 @@
 // proxies. Mirrored pieces get their own batches (winding flipped).
 import * as THREE from 'three';
 import { plain, texOnly, twinOf } from './merge.js';
+import { MW } from './drawcull.js';
 
 export const CELL = 48;
 const SPLIT = 0.5, SPLIT_TRIS = 3000;   // (PERF-BATTERY: a piece of 3000 triangles or more whose bounding radius is over half a cell is cut by triangle)
@@ -63,6 +64,29 @@ function recipe(o) {
 }
 // what a folded piece's look depends on, to notice a change (the material object stays the same)
 const lookOf = (m) => { const t = m.map; return [m.color.r, m.color.g, m.color.b, m.roughness, m.metalness, m.visible, m.opacity, m.emissive.r + m.emissive.g + m.emissive.b, m.transparent, t ? t.offset.x + ',' + t.offset.y + ',' + t.repeat.x + ',' + t.repeat.y + ',' + t.rotation : ''].join('|'); };
+// PERF-CPU: the same look as numbers, kept on the material with a version that moves when any of them changes (worked out
+// once a frame per material; no string built each frame). NaN equals NaN here, as the strings did.
+const LOOK_N = 15;
+function lookVals(m, out) {
+  const t = m.map;
+  out[0] = m.color.r; out[1] = m.color.g; out[2] = m.color.b; out[3] = m.roughness; out[4] = m.metalness; out[5] = m.visible ? 1 : 0; out[6] = m.opacity;
+  out[7] = m.emissive.r + m.emissive.g + m.emissive.b; out[8] = m.transparent ? 1 : 0;
+  if (t) { out[9] = 1; out[10] = t.offset.x; out[11] = t.offset.y; out[12] = t.repeat.x; out[13] = t.repeat.y; out[14] = t.rotation; } else { out[9] = 0; out[10] = out[11] = out[12] = out[13] = out[14] = 0; }
+  return out;
+}
+const _lv = new Float64Array(LOOK_N);
+function lookVer(m, F) {
+  if (m.__lookF === F && F !== -1) return m.__lookV;
+  m.__lookF = F;
+  const a = (m.__look ??= new Float64Array(LOOK_N).fill(NaN)), b = lookVals(m, _lv);
+  let same = m.__lookV !== undefined;
+  for (let i = 0; i < LOOK_N && same; i++) if (a[i] !== b[i] && !(a[i] !== a[i] && b[i] !== b[i])) same = false;
+  if (!same) { a.set(b); m.__lookV = (m.__lookV ?? 0) + 1; }
+  return m.__lookV;
+}
+// (a piece under an object with its own updateMatrixWorld (a camera, a skinned mesh): its matrices are three's, not
+//  drawcull.js's, so it is always compared in full)
+const ownUpdate = (o, root) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.updateMatrixWorld !== THREE.Object3D.prototype.updateMatrixWorld) return true; return false; };
 
 class Area {
   constructor(root, cell, fold = true) {
@@ -79,7 +103,7 @@ class Area {
       if (!Number.isFinite(_c.x + _c.z)) return;
       const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F = fold ? recipe(o) : null;
       const mat = F ? F.twin : o.material, sig = F ? (F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
-      const M = { o, fold: F, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow,
+      const M = { o, fold: F, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, lv: F ? lookVer(o.material, -1) : 0, okF: -1, own: ownUpdate(o, root), geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow,
         kind: { key: [mat.uuid, sig, o.receiveShadow, o.renderOrder, flip].join('|'), material: mat, fold: F ? { tex: F.tex } : null, flip, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder } };
       this.assign(M);
       pieces.push(M);
@@ -196,11 +220,20 @@ class Area {
     const looks = this._looks ??= new Map(), shown = this._shown ??= new Map(); looks.clear(); shown.clear();
     const lookNow = (m) => { let k = looks.get(m); if (k === undefined) looks.set(m, (k = lookOf(m))); return k; };
     const root = this.root, up = (p) => { if (!p || p === root) return true; let v = shown.get(p); if (v === undefined) shown.set(p, (v = p.visible && up(p.parent))); return v; };
+    // PERF-CPU (the same checks, cheaper when this frame's matrices came from drawcull.js's update, MW.ok): a parent
+    // chain is shown when that update reached the parent through shown objects in this frame (`__visF`); a world matrix
+    // is compared in full only when that update recomputed it since it was last found equal (`__mwF`); a folded
+    // material's look by its version (lookVer). Otherwise (A/B, or the area's root not reached) as before.
+    const F = MW.frame, fast = this.fast !== false && MW.ok && root.__visF === F;
     for (const M of this.members) {
       if (M.out) continue;
       const o = M.o, g = o.geometry;
-      if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
-        && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookNow(o.material) === M.look)) continue;
+      if (fast) {
+        const p = o.parent;
+        if (p && o.visible && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
+          && (p === root || p.__visF === F) && ((o.__mwF <= M.okF && !M.own) || (o.matrixWorld.equals(M.mat) && (M.okF = F) >= 0)) && (!M.look || lookVer(o.material, F) === M.lv)) continue;
+      } else if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
+        && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookNow(o.material) === M.look)) { M.okF = -1; continue; }
       this.release(M); left++;
     }
     // (a rebuild may release a piece left alone in a cell, which makes its other cells dirty: until none is)

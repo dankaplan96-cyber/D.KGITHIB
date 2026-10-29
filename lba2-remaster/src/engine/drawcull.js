@@ -27,7 +27,96 @@
 import * as THREE from 'three';
 const NONE = Object.freeze([]);
 
+// PERF-CPU: the same update without recomputing what has not changed. three recomposes every shown object's local matrix
+// from its position, rotation and scale and multiplies it into its parent's world matrix every frame (scene's own
+// matrixAutoUpdate forces the whole tree), ~2 200 objects on Citadel's street of which a few hundred move (people,
+// their limbs, the ball, a mill). The game moves objects only through position / rotation (quaternion) / scale (no
+// code of ours writes .matrix or .matrixWorld: PERF_CPU.md §2), so an object whose ten numbers, parent and parent's
+// world matrix are what they were at its last update has the world matrix it had: it is left as it is. One that
+// changed is recomposed and multiplied exactly as three does, and its subtree is forced, as three forces it. Objects
+// with their own updateMatrixWorld (cameras, skinned meshes, audio) go through it, as before. The hidden subtrees are
+// skipped as before; one shown again is recomputed in full on its first frame. `o.__mwF` is the frame number of the
+// object's last recompute here (drawbatch.js uses it to know which pieces may have moved). Same matrices, same pixels.
+const BASE_UMW = THREE.Object3D.prototype.updateMatrixWorld, SKIN_UMW = THREE.SkinnedMesh.prototype.updateMatrixWorld;
+// (a skinned body's own step after its world matrix — three's SkinnedMesh.updateMatrixWorld — is done here too, so its
+//  bones, its children, take the cached path: the bind matrix's inverse follows the world matrix when attached)
+const ownUMW = (o) => o.updateMatrixWorld !== BASE_UMW && o.updateMatrixWorld !== SKIN_UMW;
+// (MW.cached false: three's own update of the shown objects, as before — the A/B switch; MW.ok: this frame's matrices
+//  came from the update below, so `__mwF` and `__visF` are this frame's)
+export const MW = { cached: true, frame: 0, ok: false };
+const _mwT = new THREE.Matrix4();
+function shownTree(o, force, F, S, all = false) {
+  if (ownUMW(o)) { o.updateMatrixWorld(force); o.__mwF = F; S.own++; return; }
+  // changed: recompute and force the subtree (as three); check: recompute, force only if the value differs (a matrix
+  // recomposed meanwhile by three's updateWorldMatrix — getWorldPosition and the like flag every parent up to the scene)
+  let changed = force, check = false;
+  const changedIn = force;
+  if (o.matrixAutoUpdate) {
+    const p = o.position, q = o.quaternion, s = o.scale;
+    let c = o.__trs;
+    if (c === undefined || c[0] !== p.x || c[1] !== p.y || c[2] !== p.z || c[3] !== q._x || c[4] !== q._y || c[5] !== q._z || c[6] !== q._w || c[7] !== s.x || c[8] !== s.y || c[9] !== s.z) {
+      if (c === undefined) c = o.__trs = new Float64Array(10);
+      c[0] = p.x; c[1] = p.y; c[2] = p.z; c[3] = q._x; c[4] = q._y; c[5] = q._z; c[6] = q._w; c[7] = s.x; c[8] = s.y; c[9] = s.z;
+      o.matrix.compose(p, q, s); changed = true; S.composed++;
+    } else if (o.matrixWorldNeedsUpdate) { o.matrix.compose(p, q, s); check = true; }
+  } else if (o.matrixWorldNeedsUpdate) changed = true;
+  const par = o.parent;
+  if (o.__mwP !== par) { o.__mwP = par; changed = true; }
+  if (changed || check) {
+    if (o.matrixWorldAutoUpdate === true) {
+      const W = changed ? o.matrixWorld : _mwT;
+      if (par === null) W.copy(o.matrix); else W.multiplyMatrices(par.matrixWorld, o.matrix);
+      if (changed || !W.equals(o.matrixWorld)) { if (!changed) o.matrixWorld.copy(W); force = true; o.__mwF = F; S.world++; if (S.why && !changedIn) S.why.push(o); }
+    } else force = true;
+    o.matrixWorldNeedsUpdate = false;
+  }
+  if (o.isSkinnedMesh) {
+    if (o.bindMode === 'attached') { if (o.__mwF === F || o.__bm !== o.matrixWorld) { o.__bm = o.matrixWorld; o.bindMatrixInverse.copy(o.matrixWorld).invert(); } }
+    else { o.__bm = null; if (o.bindMode === 'detached') o.bindMatrixInverse.copy(o.bindMatrix).invert(); else console.warn('THREE.SkinnedMesh: Unrecognized bindMode: ' + o.bindMode); }
+  }
+  S.visited++;
+  const c = o.children;
+  for (let i = 0, n = c.length; i < n; i++) {
+    const k = c[i];
+    if (k.visible || all) {
+      if (k.visible) k.__visF = F;   // (reached through shown parents in this frame's update: drawbatch.js)
+      // (shown again since its last frame here: everything under it is recomputed, as before)
+      if (k.__hid === true) { k.__hid = false; shownTree(k, true, F, S, all); } else shownTree(k, force, F, S, all);
+    } else {
+      // (hidden: itself kept up to date, its subtree left until it is shown again)
+      if (k.children.length) k.__hid = true;
+      const kids = k.children; k.children = NONE;
+      try { if (ownUMW(k)) k.updateMatrixWorld(force); else shownTree(k, force, F, S); } finally { k.children = kids; }
+    }
+  }
+}
+
+// (an actor's rig brought up to date after a frame that left it out of the render: FarCull.restore; every part, shown
+//  or not, as updateMatrixWorld(true) did, but only what changed is recomputed)
+// (force: its parts may be stale — it was hidden before, or its own matrix changed this frame — so all are recomputed)
+const _S0 = { visited: 0, composed: 0, world: 0, own: 0 };
+export function updateTree(o, force = true) {
+  if (!MW.cached) { o.updateMatrixWorld(true); return; }
+  o.__hid = false;
+  shownTree(o, force, MW.frame, _S0, true);
+}
+
 export function updateShownWorld(scene, state) {
+  if (MW.cached) {
+    const F = (MW.frame = ++state.frame), S = (state.stats ??= { visited: 0, composed: 0, world: 0, own: 0 });
+    S.visited = S.composed = S.world = S.own = 0;
+    // (switched from the old path: its hidden list's subtrees are recomputed when shown, as there)
+    for (const o of state.prev) o.__hid = true;
+    state.prev.length = 0;
+    scene.__visF = F;
+    shownTree(scene, false, F, S);
+    MW.ok = true;
+    return;
+  }
+  updateShownWorldOld(scene, state);
+}
+function updateShownWorldOld(scene, state) {
+  MW.ok = false;
   const hidden = state.hidden, prev = state.prev, stamp = ++state.frame;
   hidden.length = 0;
   const walk = (o) => {
@@ -104,7 +193,7 @@ export class FarCull {
         const B = this.boundsOf(r);
         const k = Math.max(r.scale.x, r.scale.y, r.scale.z) / B.s;
         _fs.center.set(r.position.x, r.position.y + B.dy * k, r.position.z); _fs.radius = B.rad * Math.max(1, k);
-        if (!B.casts && !_ff.intersectsSphere(_fs)) { r.visible = false; this.off.push(r); (this.offView ??= []).push(r); this.nView++; continue; }
+        if (!B.casts && !_ff.intersectsSphere(_fs)) { r.__hidBefore = r.__hid === true; r.visible = false; this.off.push(r); (this.offView ??= []).push(r); this.nView++; continue; }
       }
       // (within 30 m of the camera every part stays: an eye there is still about a pixel)
       if (d2 < 900) continue;
@@ -123,7 +212,9 @@ export class FarCull {
   restore() {
     for (const o of this.off) o.visible = true;
     this.off.length = 0;
-    if (this.offView?.length) { for (const r of this.offView) r.updateMatrixWorld(true); this.offView.length = 0; }
+    // (PERF-CPU: only what changed; all of it when its parts may be stale: hidden before this frame, or its own matrix
+    //  recomputed in this frame's update, where its parts were set aside)
+    if (this.offView?.length) { for (const r of this.offView) updateTree(r, r.__hidBefore || r.__mwF === MW.frame || !r.parent?.isScene); this.offView.length = 0; }
   }
 }
 

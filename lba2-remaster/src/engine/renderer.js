@@ -8,7 +8,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { updateShownWorld } from './drawcull.js';
+import { updateShownWorld, MW } from './drawcull.js';
 import { warmPassPrograms } from './warmup.js';
 
 // RENDER-INV: lamps cost nothing where they don't reach. three evaluates the whole lighting model (RE_Direct: the
@@ -302,6 +302,7 @@ export class Renderer {
     this.applyResize();
     this.pre?.();
     const S = this.scene, auto = S.matrixWorldAutoUpdate;
+    MW.ok = false;   // (PERF-CPU: set again by the shown-world update when it runs)
     try {
       if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
       else if (this.mid) S.updateMatrixWorld();
