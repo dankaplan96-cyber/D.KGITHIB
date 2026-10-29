@@ -28,6 +28,7 @@
 import * as THREE from 'three';
 import { plain, texOnly, twinOf } from './merge.js';
 import { MW } from './drawcull.js';
+import { TEXARRAY, arrayable, layerOf, arrayTwinOf, WHITE } from './texarray.js';
 
 export const CELL = 48;
 const SPLIT = 0.5, SPLIT_TRIS = 3000;   // (PERF-BATTERY: a piece of 3000 triangles or more whose bounding radius is over half a cell is cut by triangle)
@@ -52,7 +53,9 @@ function eligible(o, root) {
   return true;
 }
 // how a piece is drawn in a batch: folded into a twin (colour, rm and the map's transform into the vertices), or as is
-function recipe(o) {
+// (PERF-CPU, arrays: a piece whose map is one of the world's painted textures, or a plain-colour piece, folds into the
+//  texture-array twin (texarray.js) — pieces of every such texture in a cell share one batch; other maps as before)
+function recipe(o, arrays = false) {
   const m = o.material, g = o.geometry, A = g.attributes;
   if (!A.normal || A.normal.itemSize !== 3) return null;
   const vc = !!A.color && A.color.itemSize === 3 && m.vertexColors;
@@ -60,18 +63,21 @@ function recipe(o) {
   const tex = !!A.uv && texOnly(m, vc), flat = !tex && plain(m, false, vc);
   if (!tex && !flat) return null;
   const t = m.map; if (tex && t.matrixAutoUpdate) t.updateMatrix();
+  if (arrays && TEXARRAY.on && (flat || arrayable(t))) { const layer = flat ? WHITE : layerOf(t); if (layer >= 0) return { twin: arrayTwinOf(m), tex, vc, arr: true, layer }; }
   return { twin: twinOf(m, true), tex, vc };
 }
 // what a folded piece's look depends on, to notice a change (the material object stays the same)
 const lookOf = (m) => { const t = m.map; return [m.color.r, m.color.g, m.color.b, m.roughness, m.metalness, m.visible, m.opacity, m.emissive.r + m.emissive.g + m.emissive.b, m.transparent, t ? t.offset.x + ',' + t.offset.y + ',' + t.repeat.x + ',' + t.repeat.y + ',' + t.rotation : ''].join('|'); };
 // PERF-CPU: the same look as numbers, kept on the material with a version that moves when any of them changes (worked out
 // once a frame per material; no string built each frame). NaN equals NaN here, as the strings did.
-const LOOK_N = 15;
+const LOOK_N = 16;
+const _srcId = new WeakMap(); let _srcN = 0;
+const srcId = (src) => { let i = _srcId.get(src); if (i === undefined) _srcId.set(src, (i = ++_srcN)); return i; };
 function lookVals(m, out) {
   const t = m.map;
   out[0] = m.color.r; out[1] = m.color.g; out[2] = m.color.b; out[3] = m.roughness; out[4] = m.metalness; out[5] = m.visible ? 1 : 0; out[6] = m.opacity;
   out[7] = m.emissive.r + m.emissive.g + m.emissive.b; out[8] = m.transparent ? 1 : 0;
-  if (t) { out[9] = 1; out[10] = t.offset.x; out[11] = t.offset.y; out[12] = t.repeat.x; out[13] = t.repeat.y; out[14] = t.rotation; } else { out[9] = 0; out[10] = out[11] = out[12] = out[13] = out[14] = 0; }
+  if (t) { out[9] = 1; out[10] = t.offset.x; out[11] = t.offset.y; out[12] = t.repeat.x; out[13] = t.repeat.y; out[14] = t.rotation; out[15] = srcId(t.source); } else { out[9] = 0; out[10] = out[11] = out[12] = out[13] = out[14] = 0; out[15] = 0; }
   return out;
 }
 const _lv = new Float64Array(LOOK_N);
@@ -89,7 +95,7 @@ function lookVer(m, F) {
 const ownUpdate = (o, root) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.updateMatrixWorld !== THREE.Object3D.prototype.updateMatrixWorld) return true; return false; };
 
 class Area {
-  constructor(root, cell, fold = true) {
+  constructor(root, cell, fold = true, arrays = false) {
     this.root = root; this.cells = new Map(); this.members = []; this.ms = 0; this.cell = cell; this.ids = 0;
     const t0 = performance.now();
     root.updateMatrixWorld(true);
@@ -101,10 +107,10 @@ class Area {
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       _c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
       if (!Number.isFinite(_c.x + _c.z)) return;
-      const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F = fold ? recipe(o) : null;
-      const mat = F ? F.twin : o.material, sig = F ? (F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
+      const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F = fold ? recipe(o, arrays) : null;
+      const mat = F ? F.twin : o.material, sig = F ? (F.arr ? 'fold:arr' : F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
       const M = { o, fold: F, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, lv: F ? lookVer(o.material, -1) : 0, okF: -1, own: ownUpdate(o, root), geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow,
-        kind: { key: [mat.uuid, sig, o.receiveShadow, o.renderOrder, flip].join('|'), material: mat, fold: F ? { tex: F.tex } : null, flip, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder } };
+        kind: { key: [mat.uuid, sig, o.receiveShadow, o.renderOrder, flip].join('|'), material: mat, fold: F ? { tex: F.tex, arr: !!F.arr } : null, flip, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder } };
       this.assign(M);
       pieces.push(M);
     });
@@ -155,8 +161,8 @@ class Area {
     C.dirty = false; this._meshes = null;
     if (!C.list.length || (C.list.length === 1 && C.list[0].cells.length < 2)) { for (const M of [...C.list]) this.release(M); C.list.length = 0; C.dirty = false; return; }
     const fold = C.fold, g0 = C.list[0].geo;
-    const names = fold ? ['position', 'normal', ...(fold.tex ? ['uv'] : []), 'color', 'rm'] : Object.keys(g0.attributes);
-    const spec = (n) => (fold ? { size: n === 'rm' || n === 'uv' ? 2 : 3, norm: false, Arr: Float32Array } : { size: g0.attributes[n].itemSize, norm: g0.attributes[n].normalized, Arr: g0.attributes[n].array.constructor });
+    const names = fold ? ['position', 'normal', ...(fold.arr ? ['auv', 'layer'] : fold.tex ? ['uv'] : []), 'color', 'rm'] : Object.keys(g0.attributes);
+    const spec = (n) => (fold ? { size: n === 'rm' || n === 'uv' || n === 'auv' ? 2 : n === 'layer' ? 1 : 3, norm: false, Arr: Float32Array } : { size: g0.attributes[n].itemSize, norm: g0.attributes[n].normalized, Arr: g0.attributes[n].array.constructor });
     // this cell's triangles of each piece, their vertices renumbered (a whole piece: all of them, as they are)
     const parts = [];
     let nv = 0, ni = 0;
@@ -175,10 +181,12 @@ class Area {
       const g = M.geo, I = g.index, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
       _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
       for (const n of names) {
-        const d = out[n].data, a = g.attributes[n];
+        const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
         if (n === 'position') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(_m); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
         else if (n === 'normal') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(_nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
-        else if (fold && n === 'uv') { const U = m.map.matrix; for (let k = 0; k < nf; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
+        else if (fold && n === 'auv' && !M.fold.tex) d.fill(0, vo * 2, (vo + nf) * 2);   // (a plain piece: the white layer, anywhere)
+        else if (fold && n === 'layer') d.fill(M.fold.layer, vo, vo + nf);
+        else if (fold && (n === 'uv' || n === 'auv')) { const U = m.map.matrix; for (let k = 0; k < nf; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
         else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + k) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + k) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
         else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
         else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
@@ -254,12 +262,13 @@ export class DrawBatch {
   // CPU's render submission (~12 ms on the street at Medium) is the next limit after the GPU, and folding is what
   // merges the regions' one-colour pieces: the arrival route 321 → 252 draw calls, the street 250 → 227 (Medium,
   // SwiftShader counts, docs/lba3-performance/PERF_BATTERY.md). `fold = false` + reset() brings back the exact batches.
-  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.fold = true; this.left = 0; }
+  // arrays (PERF-CPU): the world's painted textures from one texture array (texarray.js): one batch per cell for all of them
+  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.fold = true; this.arrays = true; this.left = 0; }
   // build the area's batches (once) and check its pieces; call after the world matrices are up to date
   update(root) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return null; }
     let A = this.areas.get(root);
-    if (!A) { A = new Area(root, this.cell, this.fold); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
+    if (!A) { A = new Area(root, this.cell, this.fold, this.arrays); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
     this.left += A.watch();
     return A;
   }

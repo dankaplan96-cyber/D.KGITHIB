@@ -29,6 +29,7 @@ await ev(({ id, cam }) => {
   const wrap = (obj, name, key) => { if (!obj || typeof obj[name] !== 'function') return; const f = obj[name]; obj[name] = function (...a) { const t0 = performance.now(); try { return f.apply(this, a); } finally { add(key, performance.now() - t0); } }; };
   wrap(G, 'updatePlay', 'sim.updatePlay');
   wrap(G.hero, 'update', 'sim.hero');
+  wrap(G.hero, 'keepApart', 'sim.hero.keepApart(SOLID-NPC)');
   const rigP = Object.getPrototypeOf(G.hero.rig); wrap(rigP, 'update', 'anim.rig.update');
   wrap(G.gadgets, 'updateEnemies', 'sim.enemies');
   wrap(G.camRig, 'update', 'sim.camera');

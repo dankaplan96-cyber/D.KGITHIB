@@ -288,7 +288,7 @@ export class ShadowCull {
       const fast = this.fast !== false && MW.cached && !!minPx;
       const key = minPx + '|' + pxK + '|' + KEEP_NEAR + '|' + !!focus;
       const O = (A.odo ??= { d: 0, cx: cam.x, cy: cam.y, cz: cam.z, fx: focus?.x ?? 0, fz: focus?.z ?? 0, key: '' });
-      O.d += Math.hypot(cam.x - O.cx, cam.y - O.cy, cam.z - O.cz) + (focus ? Math.hypot(focus.x - O.fx, focus.z - O.fz) : 0);
+      { const ax = cam.x - O.cx, ay = cam.y - O.cy, az = cam.z - O.cz, fx = focus ? focus.x - O.fx : 0, fz = focus ? focus.z - O.fz : 0; O.d += Math.sqrt(ax * ax + ay * ay + az * az) + Math.sqrt(fx * fx + fz * fz) + 1e-9; }   // (sqrt: Math.hypot allocated here; the tiny epsilon keeps the odometer conservative)
       O.cx = cam.x; O.cy = cam.y; O.cz = cam.z; if (focus) { O.fx = focus.x; O.fz = focus.z; }
       const again = !fast || O.key !== key; O.key = key;
       A.pxOn = !!minPx;
@@ -298,7 +298,7 @@ export class ShadowCull {
         if (minPx) {
           _c.copy(C.c).applyMatrix4(o.matrixWorld);
           const R = C.r * o.matrixWorld.getMaxScaleOnAxis(), dist = _c.distanceTo(cam), px = (R * pxK) / Math.max(0.1, dist);
-          const fd = focus ? Math.hypot(focus.x - _c.x, focus.z - _c.z) : Infinity;
+          const fd = focus ? Math.hypot(focus.x - _c.x, focus.z - _c.z) : Infinity;   // (the same test as before, to the last bit)
           // (bounds that aren't finite — a builder's stray NaN vertex — can't be judged: drawn as before)
           shown = !(px >= 0) || fd < KEEP_NEAR || (C.shown ? px > minPx * 0.85 : px > minPx);
           if (px >= 0) {

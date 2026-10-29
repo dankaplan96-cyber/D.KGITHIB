@@ -17,6 +17,7 @@ import { BLOBS } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
 import { DrawBatch } from './engine/drawbatch.js';
+import { TEXARRAY } from './engine/texarray.js';
 import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
@@ -360,6 +361,7 @@ class Game {
     this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); };
     // (RENDER-INV: an area's static pieces drawn in one call per material and 48 m cell: engine/drawbatch.js)
     this.drawBatch = new DrawBatch();
+    TEXARRAY.init = (t) => this.renderer.renderer.initTexture(t);   // (PERF-CPU: the world's texture array, sent to the GPU when made)
     // (PERF-BATTERY-2: then the draw batches, terrain tiles and instanced tiles wholly outside the view by their boxes)
     this.boxCull = new BoxCull();
     this.renderer.mid = () => {
