@@ -256,7 +256,18 @@ street (Citadel's views end before the fog), a visible change for nothing; lone 
 Run one at a time on this container's SwiftShader (`probes/runtests.sh`, `GAME_URL` on this worktree), after the last
 code change and the merge of `origin/ccr-adf00ea7-37ebl3` (0.37.0):
 
-TESTS_TABLE
+| test | verdict | time |
+|---|---|---:|
+| `autoquality.mjs` (the governor, synthetic 15-minute noisy sessions) | PASS 39/39 | 5 s |
+| `autoquality-game.mjs` (profiles in the game, commit points, cache, calibration, evaluation, benchmark lines) | PASS | 3 102 s |
+| `drawcalls.mjs` | PASS (street Medium: 159 main + 93 shadow) | 204 s |
+| `perfbudget.mjs ROUTES=street` Low / Medium / High | PASS / PASS / PASS (calls 128 / 174 / 217 p50; 0 new programs) | 269 / 126 / 207 s |
+| `timing.mjs` | PASS | 86 s |
+| `walkers.mjs`, `solidnpc.mjs` | PASS, PASS | 101, 89 s |
+| `well-town.mjs` (merged with 0.37.0) | PASS | 561 s |
+| `transitions.mjs`, `lazyregions.mjs`, `menus.mjs` | PASS, PASS, PASS | 103, 416, 353 s |
+| `merge.mjs`, `holomap.mjs`, `opening.mjs` | PASS, PASS, PASS | 4, 405, 968 s |
+| `occluders.mjs` | FAIL (1 functional, not PERF-CPU: below) | 1 358 s |
 
 `occluders.mjs` fails one functional check — "(b) the rise over a house is eased" — **identically on the base this branch
 merged** (`b1eedc4`, SOLID-NPC, served unchanged on its own port: the same 930 frames, pitch 26.4° → 26.4°: the hero
