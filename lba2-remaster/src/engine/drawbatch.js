@@ -28,7 +28,7 @@
 import * as THREE from 'three';
 import { plain, texOnly, twinOf } from './merge.js';
 import { MW } from './drawcull.js';
-import { TEXARRAY, arrayable, layerOf, arrayTwinOf, WHITE } from './texarray.js';
+import { TEXARRAY, arrayable, layerOf, arrayTwinOf, keyOf, flushArrays } from './texarray.js';
 
 export const CELL = 48;
 const SPLIT = 0.5, SPLIT_TRIS = 3000;   // (PERF-BATTERY: a piece of 3000 triangles or more whose bounding radius is over half a cell is cut by triangle)
@@ -60,24 +60,30 @@ function recipe(o, arrays = false) {
   if (!A.normal || A.normal.itemSize !== 3) return null;
   const vc = !!A.color && A.color.itemSize === 3 && m.vertexColors;
   if (A.color && !vc) return null;                                   // (colours the material doesn't use: as is)
+  // (PERF-CPU: a builder's own merged piece — merge.js's twin, its roughness / metalness already in its vertices — joins
+  //  the arrays too, its `rm` copied)
+  if (arrays && TEXARRAY.on && m.userData?.twin && m.userData.rm && !m.userData.arr && vc && A.rm?.itemSize === 2 && !m.transparent && (!m.map || (A.uv && arrayable(m.map)))) {
+    const t = m.map; if (t?.matrixAutoUpdate) t.updateMatrix();
+    const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc: true, arr: true, layer, preRM: true };
+  }
   const tex = !!A.uv && texOnly(m, vc), flat = !tex && plain(m, false, vc);
   if (!tex && !flat) return null;
   const t = m.map; if (tex && t.matrixAutoUpdate) t.updateMatrix();
-  if (arrays && TEXARRAY.on && (flat || arrayable(t))) { const layer = flat ? WHITE : layerOf(t); if (layer >= 0) return { twin: arrayTwinOf(m), tex, vc, arr: true, layer }; }
+  if (arrays && TEXARRAY.on && (flat || arrayable(t))) { const layer = layerOf(flat ? null : t); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(flat ? null : t)), tex, vc, arr: true, layer }; }
   return { twin: twinOf(m, true), tex, vc };
 }
 // what a folded piece's look depends on, to notice a change (the material object stays the same)
 const lookOf = (m) => { const t = m.map; return [m.color.r, m.color.g, m.color.b, m.roughness, m.metalness, m.visible, m.opacity, m.emissive.r + m.emissive.g + m.emissive.b, m.transparent, t ? t.offset.x + ',' + t.offset.y + ',' + t.repeat.x + ',' + t.repeat.y + ',' + t.rotation : ''].join('|'); };
 // PERF-CPU: the same look as numbers, kept on the material with a version that moves when any of them changes (worked out
 // once a frame per material; no string built each frame). NaN equals NaN here, as the strings did.
-const LOOK_N = 16;
+const LOOK_N = 18;
 const _srcId = new WeakMap(); let _srcN = 0;
 const srcId = (src) => { let i = _srcId.get(src); if (i === undefined) _srcId.set(src, (i = ++_srcN)); return i; };
 function lookVals(m, out) {
   const t = m.map;
   out[0] = m.color.r; out[1] = m.color.g; out[2] = m.color.b; out[3] = m.roughness; out[4] = m.metalness; out[5] = m.visible ? 1 : 0; out[6] = m.opacity;
   out[7] = m.emissive.r + m.emissive.g + m.emissive.b; out[8] = m.transparent ? 1 : 0;
-  if (t) { out[9] = 1; out[10] = t.offset.x; out[11] = t.offset.y; out[12] = t.repeat.x; out[13] = t.repeat.y; out[14] = t.rotation; out[15] = srcId(t.source); } else { out[9] = 0; out[10] = out[11] = out[12] = out[13] = out[14] = 0; out[15] = 0; }
+  if (t) { out[9] = 1; out[10] = t.offset.x; out[11] = t.offset.y; out[12] = t.repeat.x; out[13] = t.repeat.y; out[14] = t.rotation; out[15] = srcId(t.source); out[16] = t.version; out[17] = t.source.version; } else { out[9] = 0; out[10] = out[11] = out[12] = out[13] = out[14] = 0; out[15] = out[16] = out[17] = 0; }
   return out;
 }
 const _lv = new Float64Array(LOOK_N);
@@ -118,6 +124,7 @@ class Area {
     // is batched in all of them (PERF-BATTERY: so the parts out of view are culled)
     for (const [k, C] of this.cells) if (C.list.length < 2 && !(C.list.length === 1 && C.list[0].cells.length > 1)) { for (const M of C.list) M.cells = []; this.cells.delete(k); }
     for (const M of pieces) if (M.cells.length) { this.members.push(M); M.o.layers.disable(0); M.o.userData.drawBatched = true; }
+    flushArrays();   // (PERF-CPU: an array that took this area's new textures, before its batches are drawn)
     for (const C of this.cells.values()) this.build(C);
     this.ms = performance.now() - t0;
   }
@@ -188,6 +195,7 @@ class Area {
         else if (fold && n === 'layer') d.fill(M.fold.layer, vo, vo + nf);
         else if (fold && (n === 'uv' || n === 'auv')) { const U = m.map.matrix; for (let k = 0; k < nf; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
         else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + k) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + k) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
+        else if (fold && n === 'rm' && M.fold.preRM) for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 2] = a.getX(i); d[(vo + k) * 2 + 1] = a.getY(i); }
         else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
         else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
         else { const sz = a.itemSize, A = a.array; for (let k = 0; k < nf; k++) for (let q = 0; q < sz; q++) d[(vo + k) * sz + q] = A[from[k] * sz + q]; }
