@@ -106,12 +106,12 @@ const tr = await ev(() => {
   gov.setProfile(1, 'test', { commitNow: true }); A.applyAll();
   let t = performance.now() + 500000; gov.resetWin(0); gov.quietUntil = 0;
   for (let s = 0; s < 6000; s += 25) { t += 25; gov.gpu(t, 23); gov.frame({ t, ms: 25, cpu: 6, play: true, scene: 'citadel' }); }
-  const mid = { pending: gov.pending(), lamps: G.lightPool.lights.length, label: A.label() };
+  const mid = { pending: gov.pending(), lamps: G.lightPool.lights.length, pr: G.renderer.pixelRatio(), label: A.label() };
   G.enterRoom('house', null, false, true);
   for (let i = 0; i < 60 && G.trans; i++) G.frame(1 / 30, true);
-  return { mid, after: { pending: gov.pending(), lamps: G.lightPool.lights.length, room: G.room?.id, label: A.label() } };
+  return { mid, after: { pending: gov.pending(), lamps: G.lightPool.lights.length, pr: G.renderer.pixelRatio(), room: G.room?.id, label: A.label() } };
 });
-check('a step to Medium-lite queued in play (lamps stay 4); the next scene change (the house door) applies it (2 lamps)', tr.mid.pending.length === 1 && tr.mid.lamps === 4 && tr.mid.label === 'Medium' && !tr.after.pending.length && tr.after.lamps === 2 && tr.after.room === 'house' && tr.after.label === 'Medium-lite', tr);
+check('a step to Medium-eco queued in play (resolution stays 100 %); the next scene change (the house door) applies it (90 %)', tr.mid.pending.length === 1 && tr.mid.pr === 1 && tr.mid.label === 'Medium' && !tr.after.pending.length && Math.abs(tr.after.pr - 0.9) < 0.01 && tr.after.lamps === tr.mid.lamps && tr.after.room === 'house' && tr.after.label === 'Medium-eco', tr);
 
 // ---------------------------------------------------------------- 6. plug / unplug
 const pw = await ev(() => {
