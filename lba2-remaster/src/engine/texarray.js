@@ -81,8 +81,9 @@ export function arrayTwinOf(m, key = '256x256|4') {
     t.name = 'merged-arr ' + key; t.userData.twin = true; t.userData.rm = true; t.userData.arr = key;
     t.onBeforeCompile = (sh) => {
       const u = { value: A.tex }; A.users.add(u); sh.uniforms.mapArr = u;
-      sh.vertexShader = 'attribute vec2 rm;\nattribute vec2 auv;\nattribute float layer;\nvarying vec2 vRM;\nvarying vec3 vArr;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvRM = rm;\n\tvArr = vec3( auv, layer );');
-      sh.fragmentShader = 'uniform highp sampler2DArray mapArr;\nvarying vec2 vRM;\nvarying vec3 vArr;\n' + sh.fragmentShader
+      sh.vertexShader = 'attribute vec2 rm;\nattribute vec2 auv;\nattribute float layer;\nattribute vec3 em;\nvarying vec2 vRM;\nvarying vec3 vArr;\nvarying vec3 vEm;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvRM = rm;\n\tvArr = vec3( auv, layer );\n\tvEm = em;');
+      sh.fragmentShader = 'uniform highp sampler2DArray mapArr;\nvarying vec2 vRM;\nvarying vec3 vArr;\nvarying vec3 vEm;\n' + sh.fragmentShader
+        .replace('vec3 totalEmissiveRadiance = emissive;', 'vec3 totalEmissiveRadiance = vEm;')
         .replace('#include <map_fragment>', '#include <map_fragment>\n\tdiffuseColor *= texture( mapArr, vArr );')
         .replace('#include <roughnessmap_fragment>', 'float roughnessFactor = vRM.x;')
         .replace('#include <metalnessmap_fragment>', 'float metalnessFactor = vRM.y;');

@@ -41,18 +41,20 @@ for (const [name, set, want] of [
 }
 
 // ---------------------------------------------------------------- 3. the Settings screen
+// (a preset's click makes its shader programs at once, synchronously: on a loaded software renderer that can take
+//  minutes, so the clicks wait long — PERF-CPU)
 await reopen('?nocine', null);
-await page.click('#title [data-act="settings"]'); await ev(() => game.step(0.05));
-await page.click('#settings [data-tab="display"]');
+await page.click('#title [data-act="settings"]', { timeout: 600000 }); await ev(() => game.step(0.05));
+await page.click('#settings [data-tab="display"]', { timeout: 600000 });
 const ui0 = await ev(() => ({ chips: [...document.querySelectorAll('#settings .seg[data-setting="quality"] button')].map((b) => b.textContent + (b.classList.contains('on') ? '*' : '')), hint: document.querySelector('#settings [data-hint="quality"] .set-hint').textContent }));
 check('Settings → Display → Graphics offers Auto / Low / Medium / High, Auto on, and says what it runs now', ui0.chips.join() === 'Auto*,Low,Medium,High' && /^Auto \(High\)/.test(ui0.hint) && /55–60 fps/.test(ui0.hint), ui0);
-await page.click('#settings .seg[data-setting="quality"] button[data-v="medium"]');
+await page.click('#settings .seg[data-setting="quality"] button[data-v="medium"]', { timeout: 600000 });
 const ui1 = await ev(() => ({ q: game.settings.quality, auto: game.settings.qualityAuto, hand: game.settings.qualityChosenByHand, knobs: game.renderer.knobs, on: document.querySelector('#settings .seg[data-setting="quality"] button.on')?.dataset.v, map: game.env.sun.shadow.mapSize.x, bloom: game.renderer.bloom.enabled, hint: document.querySelector('#settings [data-hint="quality"] .set-hint').textContent }));
 check('Medium by hand: the preset as it always was (no knobs, 1024 map, no bloom), recorded as chosen by hand, no Auto line', ui1.q === 'medium' && ui1.auto === false && ui1.hand === true && ui1.knobs === null && ui1.on === 'medium' && ui1.map === 1024 && !ui1.bloom && !/Auto/.test(ui1.hint), ui1);
-await page.click('#settings .seg[data-setting="quality"] button[data-v="auto"]');
+await page.click('#settings .seg[data-setting="quality"] button[data-v="auto"]', { timeout: 600000 });
 const ui2 = await ev(() => ({ q: game.settings.quality, auto: game.settings.qualityAuto, knobs: game.renderer.knobs, on: document.querySelector('#settings .seg[data-setting="quality"] button.on')?.dataset.v, map: game.env.sun.shadow.mapSize.x, stored: JSON.parse(localStorage.getItem('sunshard_settings_v1')).qualityAuto }));
 check('Auto again: the knobs back (High here), stored', ui2.auto === true && !!ui2.knobs && ui2.on === 'auto' && ui2.map === 4096 && ui2.stored === true, ui2);
-await page.click('#settings [data-act="back"]');
+await page.click('#settings [data-act="back"]', { timeout: 600000 });
 
 // ---------------------------------------------------------------- 4. Auto's profiles vs the presets by hand
 await menu(page, 'new');

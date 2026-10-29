@@ -52,6 +52,32 @@ function eligible(o, root) {
   if (!shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) return false;
   return true;
 }
+// (PERF-CPU probes: why a mesh is not in a batch — the first failing test of eligible(), or how it would be drawn)
+export function explain(o, root) {
+  if (!o.isMesh) return 'not a mesh';
+  if (o.userData.drawBatched) return 'batched';
+  if (!eligible(o, root)) {
+    const m = o.material, g = o.geometry;
+    if (o.castShadow) return 'casts its own shadow';
+    if (Array.isArray(m)) return 'material array';
+    if (m?.transparent || m?.depthWrite === false) return 'see-through';
+    if (m?.isShaderMaterial) return 'shader material';
+    if (m && (m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile || m.customProgramCacheKey !== THREE.Material.prototype.customProgramCacheKey) && !m.userData?.twin) return 'own shader code (' + (m.name || m.type) + ')';
+    if (g?.attributes?.tangent) return 'tangents';
+    if (g?.drawRange && (g.drawRange.start !== 0 || g.drawRange.count !== Infinity)) return 'draw range';
+    if (g && Object.values(g.attributes).some((a) => a.isInterleavedBufferAttribute)) return 'interleaved';
+    for (let p = o; p && p !== root; p = p.parent) if (p.userData.keep) return 'keep';
+    if (!shownIn(o, root)) return 'hidden';
+    return 'other (skinned, instanced, not culled, onBeforeRender, NaN matrix)';
+  }
+  const F = recipe(o, true);
+  if (!F) { const m = o.material, A = o.geometry.attributes; return `not foldable (${m.type}${m.map ? ' map' : ''}${m.vertexColors ? ' vc' : ''}${A.color ? ' colorAttr' : ''}${m.emissive && m.emissive.r + m.emissive.g + m.emissive.b ? ' emissive' : ''}${m.normalMap ? ' normalMap' : ''}${m.map && m.map.wrapS !== THREE.RepeatWrapping ? ' clamp' : ''}): alone in its cell`; }
+  return 'foldable but alone in its cell';
+}
+// merge.js plain() without its no-emissive rule (an emissive colour folds into the arrays' vertices; an emissive map does not)
+const plainE = (m, withMap, vc) => m.isMeshStandardMaterial && !m.isMeshPhysicalMaterial && (vc || !m.vertexColors) && !m.transparent && m.opacity === 1 && !m.alphaTest
+  && (withMap || !m.map) && !m.emissiveMap && !m.normalMap && !m.roughnessMap && !m.metalnessMap && !m.aoMap && !m.bumpMap && !m.alphaMap && !m.lightMap && !m.envMap && !m.displacementMap
+  && m.onBeforeCompile === THREE.Material.prototype.onBeforeCompile && m.customProgramCacheKey === THREE.Material.prototype.customProgramCacheKey;
 // how a piece is drawn in a batch: folded into a twin (colour, rm and the map's transform into the vertices), or as is
 // (PERF-CPU, arrays: a piece whose map is one of the world's painted textures, or a plain-colour piece, folds into the
 //  texture-array twin (texarray.js) — pieces of every such texture in a cell share one batch; other maps as before)
@@ -66,6 +92,12 @@ function recipe(o, arrays = false) {
     const t = m.map; if (t?.matrixAutoUpdate) t.updateMatrix();
     const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc: true, arr: true, layer, preRM: true };
   }
+  // (PERF-CPU, arrays: a glowing piece — a lit window, a lamp's glass — folds too, its emissive colour × intensity in
+  //  its vertices: the twin adds it where three adds the uniform)
+  if (arrays && TEXARRAY.on && m.emissive && m.emissive.r + m.emissive.g + m.emissive.b > 0 && plainE(m, !!A.uv && !!m.map, vc) && (!m.map || (A.uv && arrayable(m.map)))) {
+    const t = m.map; if (t?.matrixAutoUpdate) t.updateMatrix();
+    const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc, arr: true, layer };
+  }
   const tex = !!A.uv && texOnly(m, vc), flat = !tex && plain(m, false, vc);
   if (!tex && !flat) return null;
   const t = m.map; if (tex && t.matrixAutoUpdate) t.updateMatrix();
@@ -76,13 +108,13 @@ function recipe(o, arrays = false) {
 const lookOf = (m) => { const t = m.map; return [m.color.r, m.color.g, m.color.b, m.roughness, m.metalness, m.visible, m.opacity, m.emissive.r + m.emissive.g + m.emissive.b, m.transparent, t ? t.offset.x + ',' + t.offset.y + ',' + t.repeat.x + ',' + t.repeat.y + ',' + t.rotation : ''].join('|'); };
 // PERF-CPU: the same look as numbers, kept on the material with a version that moves when any of them changes (worked out
 // once a frame per material; no string built each frame). NaN equals NaN here, as the strings did.
-const LOOK_N = 18;
+const LOOK_N = 21;
 const _srcId = new WeakMap(); let _srcN = 0;
 const srcId = (src) => { let i = _srcId.get(src); if (i === undefined) _srcId.set(src, (i = ++_srcN)); return i; };
 function lookVals(m, out) {
   const t = m.map;
   out[0] = m.color.r; out[1] = m.color.g; out[2] = m.color.b; out[3] = m.roughness; out[4] = m.metalness; out[5] = m.visible ? 1 : 0; out[6] = m.opacity;
-  out[7] = m.emissive.r + m.emissive.g + m.emissive.b; out[8] = m.transparent ? 1 : 0;
+  out[7] = m.emissive.r; out[18] = m.emissive.g; out[19] = m.emissive.b; out[20] = m.emissiveIntensity; out[8] = m.transparent ? 1 : 0;
   if (t) { out[9] = 1; out[10] = t.offset.x; out[11] = t.offset.y; out[12] = t.repeat.x; out[13] = t.repeat.y; out[14] = t.rotation; out[15] = srcId(t.source); out[16] = t.version; out[17] = t.source.version; } else { out[9] = 0; out[10] = out[11] = out[12] = out[13] = out[14] = 0; out[15] = out[16] = out[17] = 0; }
   return out;
 }
@@ -168,7 +200,7 @@ class Area {
     C.dirty = false; this._meshes = null;
     if (!C.list.length || (C.list.length === 1 && C.list[0].cells.length < 2)) { for (const M of [...C.list]) this.release(M); C.list.length = 0; C.dirty = false; return; }
     const fold = C.fold, g0 = C.list[0].geo;
-    const names = fold ? ['position', 'normal', ...(fold.arr ? ['auv', 'layer'] : fold.tex ? ['uv'] : []), 'color', 'rm'] : Object.keys(g0.attributes);
+    const names = fold ? ['position', 'normal', ...(fold.arr ? ['auv', 'layer'] : fold.tex ? ['uv'] : []), 'color', 'rm', ...(fold.arr ? ['em'] : [])] : Object.keys(g0.attributes);
     const spec = (n) => (fold ? { size: n === 'rm' || n === 'uv' || n === 'auv' ? 2 : n === 'layer' ? 1 : 3, norm: false, Arr: Float32Array } : { size: g0.attributes[n].itemSize, norm: g0.attributes[n].normalized, Arr: g0.attributes[n].array.constructor });
     // this cell's triangles of each piece, their vertices renumbered (a whole piece: all of them, as they are)
     const parts = [];
@@ -193,6 +225,7 @@ class Area {
         else if (n === 'normal') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(_nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
         else if (fold && n === 'auv' && !M.fold.tex) d.fill(0, vo * 2, (vo + nf) * 2);   // (a plain piece: the white layer, anywhere)
         else if (fold && n === 'layer') d.fill(M.fold.layer, vo, vo + nf);
+        else if (fold && n === 'em') { const e = m.emissive, k = m.emissiveIntensity ?? 1, r = e ? e.r * k : 0, gg = e ? e.g * k : 0, b = e ? e.b * k : 0; for (let q = 0; q < nf; q++) { d[(vo + q) * 3] = r; d[(vo + q) * 3 + 1] = gg; d[(vo + q) * 3 + 2] = b; } }
         else if (fold && (n === 'uv' || n === 'auv')) { const U = m.map.matrix; for (let k = 0; k < nf; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
         else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + k) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + k) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
         else if (fold && n === 'rm' && M.fold.preRM) for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 2] = a.getX(i); d[(vo + k) * 2 + 1] = a.getY(i); }

@@ -3,119 +3,219 @@
 Input: the user's battery runs on the Vega 8 laptop (Ryzen 5 3500U, 1366×768, 60 Hz): `results/laptop-build251-auto-battery.txt`
 (Auto as played: street 51.8, combat 53.5, arrival 48.7 fps at Low, Auto's CPU ladder exhausted; CPU work p50 14.7 ms,
 p95 21 ms) and `results/laptop-build255-battery-full.txt` (full benchmark: game CPU work 16–22 ms at battery clocks, a
-3.5 s first-entry stall, "callback late" 6–13 ms, combat 13–14 % of frames at 33 ms with light work). Plugged in, build
-251 already met 55–60 on most routes. The user (29.10): battery is the reference.
+3.5 s first-entry stall, "callback late" 6–13 ms, combat 13–14 % of frames at 33 ms with light work, street 129–177 and
+arrival 214–379 draw calls). Plugged in, build 251 already met 55–60 on most routes. The user (29.10): battery is the
+reference; Auto should choose among a few named profiles, settle, and hold.
 
-**Everything here was measured on SwiftShader (a software renderer) in this container, which was shared with other
-agents' test runs (load average 8–19 on 4 cores).** Draw calls, triangles, uploads, allocations, matrices and which
-objects are drawn are exact. Milliseconds are this machine's main-thread JavaScript (SwiftShader's GL work runs in its
-GPU process and is drained before each timed frame) and are only compared side by side, A/B in the same browser (frames
-alternated, or 16-frame blocks), never across runs. **No laptop frame rate, GPU time or battery figure is claimed.**
+**Everything here was measured on SwiftShader (a software renderer) in this container, shared with other agents' test
+runs (load average 8–31 on 4 cores).** Draw calls, triangles, uploads, allocations, matrices and which objects are drawn
+are exact. Milliseconds are this machine's main-thread JavaScript (SwiftShader's GL work runs in its GPU process and is
+drained before each timed frame) and are only compared side by side, A/B in the same browser (16-frame blocks alternated
+along the same route), never across runs. **No laptop frame rate, GPU time or battery figure is claimed.** Hardware
+acceptance is the user's next battery benchmark (§9).
 
-Probes: `PERF-CPU/probes/` (run from that folder with the game served; `isoserve.py` serves it cross-origin isolated so
-`performance.now()` resolves 5 µs instead of 100 µs):
+## 1. Results at a glance (before → after, this machine)
 
-| probe | what it measures |
-|---|---|
-| `cpu.mjs` | per-frame CPU by section (simulation, people, camera, culling, matrices, batches, three's render), calls, uploads; `AB_A`/`AB_B`(/`AB_BLOCK`) interleave two states in one browser |
-| `ab-all.sh` | every runtime switch of PERF-CPU off vs on, three views |
-| `mwcheck.mjs` | every shown object's world matrix (and a skinned body's bind inverse) against three's formula from scratch, each drawn frame |
-| `ddcheck.mjs` | the distance detail's decisions against the rule, each drawn frame |
-| `alloc.mjs` | bytes allocated per frame by function (V8's sampling heap profiler, minor-GC garbage included) |
-| `lateprog.mjs` | what happens after a scene change's black: programs compiled, shadow-cache full rebuilds (and why: which casters left or joined), batch builds |
-| `sizes.mjs`, `why.mjs`, `unbatched.mjs`, `firstentry.mjs` | counts behind the numbers |
-| `shot.mjs` + `diff.py` | the same view with a change on and off, pixels compared |
+Battery profile, Low preset, Citadel street with the Follow camera at Far (the user's way of playing), p50 per drawn
+frame, every runtime switch of PERF-CPU off vs on in one browser (`ab-all.sh`; the changes without a switch — less
+garbage, the HUD, the grid keys — are in both columns):
 
-## 1. Results (before → after, this machine)
+| section (ms, p50) | off | on |
+|---|---:|---:|
+| **the frame's whole main-thread work** | **16.6** | **14.6** |
+| world matrices (2.1) | 1.50 | 1.23 |
+| draw-batch checks (2.2) | 0.47 | 0.22 |
+| shadow culling (2.3) | 1.05 | 0.31 |
+| people's animation (2.4: rig.update) | 0.85 | 0.61 |
+| people's update in all (sim.npcs) | 1.09 | 0.86 |
+| SOLID-NPC's contact checks (Hero.keepApart, 2.7) | 0.07 | 0.07 |
 
-(filled in §8)
+The same, Medium preset, Follow camera: matrices 1.66 → 1.26, batch checks 0.48 → 0.25, shadow culling 0.93 → 0.64,
+animation 0.85 → 0.58, people 1.17 → 0.80 (the whole frame: 19.1 → 18.9, within this machine's noise). Combat route,
+Low, battery: the whole frame 8.2 → 6.9, people 0.62 → 0.28, animation 0.68 → 0.38.
+
+Draw calls (exact), the texture arrays off vs on (2.6), same browser, 16-frame blocks:
+
+| view | calls | triangles |
+|---|---:|---:|
+| street, Low, battery, Follow | 133 → **106** | 315k → 362k |
+| street, Medium, Follow | 166 → **138** | 414k → 460k |
+| arrival route, Low, battery | 318 → **260** | 386k → 388k |
+
+Low-lite (Auto's lowest profile) also leaves people's small parts out beyond 12 m: street, Low, Follow, 133 → 124 on
+its own (measured before the arrays; the two add up, by different objects).
+
+Garbage per drawn frame (`alloc.mjs`, Low, battery; V8's sampling heap profiler, minor-collection garbage included):
+street 1 170 → 943 KB (of which the map built after an arrival: 151–155 KB, one-time arrays), combat 509 → 434 KB.
 
 ## 2. Engine-side per-frame CPU
 
 ### 2.1 World matrices: only what changed (`drawcull.js` shownTree)
 
 three recomposes every shown object's matrix from position / rotation / scale and multiplies it into its parent's world
-matrix every frame; the scene's own matrixAutoUpdate forces the whole tree. On the Low street view ~2 200 objects are
-shown and ~150 change in a frame (people's limbs, the ball, the mill). The game moves objects only through position,
-rotation (quaternion) and scale — no code of ours writes `.matrix` or `.matrixWorld` (grep: only the batches, created
-with matrixAutoUpdate off). So an object whose ten numbers, parent and parent's world are unchanged keeps its world
-matrix. Changed ones are recomposed exactly as three does; their subtree is forced as three forces it. A matrix
-recomposed meanwhile by three's `updateWorldMatrix` (every `getWorldPosition` flags each parent up to the scene) is
-recomputed and compared: only a different value forces the subtree. A skinned body's bind-matrix inverse follows its
-world matrix (three's SkinnedMesh step, done here so its bones take the cached path); cameras and audio keep their own
-update. Hidden subtrees are skipped as before; shown again, recomputed in full. `MW.cached = false` is three's own path.
+matrix every frame; the scene's own matrixAutoUpdate forces the whole tree. On the Low street ~2 200 objects are shown
+and ~150 change in a frame (people's limbs and bodies, the ball, the mill). The game moves objects only through
+position, rotation (quaternion) and scale — no code writes `.matrix` or `.matrixWorld` (searched: only the batches,
+made with matrixAutoUpdate off). So an object whose ten numbers, parent and parent's world are unchanged keeps its
+world matrix. A changed one is recomposed exactly as three does and its subtree forced as three forces it. A matrix
+recomposed meanwhile by three's `updateWorldMatrix` (each `getWorldPosition` flags every parent up to the scene — that
+alone forced the whole tree every frame) is recomputed and compared: only a different value forces the subtree. A
+skinned body's bind-matrix inverse follows its world matrix (three's SkinnedMesh step, done here, so its bones take the
+cached path); cameras and audio keep their own update. Hidden subtrees are skipped as before; shown again, recomputed in
+full. `MW.cached = false` gives three's own path (the A/B switch).
 
-- Exactness: `mwcheck.mjs`, street, combat, interior, transition, 30 drawn frames each: **84 633 world matrices and
-  every attached skinned body's inverse compared, 0 different** (the same check on three's own path: 0 — the check is
-  valid).
-- The FarCull's post-render update of people left out of the view (PERF-HIGH) takes the same cached path.
+**Exactness** (`mwcheck.mjs`): in every drawn frame, right after the update, each shown object's world matrix (and each
+attached skinned body's inverse) against three's formula from scratch: street, combat, interior, transition and arrival,
+30 drawn frames each, **113 962 matrices, 0 different** (three's own path through the same check: 0 — the check is valid).
+FarCull's post-render update of the people left out of the view takes the same cached path.
 
 ### 2.2 Draw-batch checks (`drawbatch.js` watch)
 
-Each frame every batched piece (~350–1 500) is checked for anything that would make its batch wrong. With this frame's
-matrices from 2.1, a piece's parent chain is shown when the update reached the parent through shown objects
-(`__visF`), its world matrix is compared in full only when the update recomputed it since it was last found equal
-(`__mwF`), and a folded material's look is a version number per material (worked out once a frame, no string). The same
-releases. The old path (`drawBatch.fast = false`) is kept for the A/B.
+Each frame every batched piece (350–1 500) is checked for anything that would make its batch wrong. With this frame's
+matrices from 2.1: a parent chain is shown when the update reached the parent through shown objects; a world matrix is
+compared in full only when the update recomputed it since it was last found equal; a folded material's look is a version
+number kept on the material, worked out once a frame (no string built each frame, as before). The same releases.
 
 ### 2.3 Shadow culling (`shadowcull.js`)
 
-- Without the shadow pass (Low, Low-lite, the battery's no-shadow states) the caster work — pieces leaving their batches,
-  the batches' and solo casters' view tests — is skipped; the first update with shadows checks every piece at once.
-- The distance detail (Medium/Low: a static piece under 4/7 px is left out) is decided per piece only when the camera's
-  and the focus's travel since its last decision could have flipped it (an odometer per area against each piece's
-  margin to its nearest threshold), or its world matrix was recomputed. `ddcheck.mjs`: street and house, every drawn
-  frame, **53 855 piece-frames, 0 wrong**.
+- Without the shadow pass (Low, Low-lite, Auto's no-shadow profiles) the caster work — pieces leaving their batches, the
+  batches' and solo casters' view tests — is skipped; the first update with shadows again checks every piece at once.
+- The distance detail (Medium / Low: a static piece under 4 / 7 px is left out) is decided per piece only when the camera's
+  and the focus's travel since its last decision could have flipped it (an odometer per area against each piece's margin
+  to its nearest threshold, with the hysteresis), when its world matrix was recomputed, or when the threshold changes.
+  **Exactness** (`ddcheck.mjs`): every drawn frame, every judged piece against the rule (§8).
 
-### 2.4 People nobody sees are posed less often (`rig.js`, `drawcull.js` FarCull.anim)
+### 2.4 People nobody sees are posed less often (`rig.js` update, `drawcull.js` FarCull.anim)
 
-A person outside the view is posed every 4th frame (beyond the fog every 8th) with the time of the frames between
-(the joints' easing is exponential, so it arrives where it would have); the body still moves every frame. Never the
-hero, an enemy, anyone during dialogue, a story scene or a door's fade; a person in view within 25 m always every frame.
-In Auto's Medium-lite and Low-lite, a person in view beyond 25 m is posed every other frame.
+A person outside the view is posed every 4th frame (beyond the fog every 8th) with the time of the frames between (the
+joints' easing is exponential, so the pose arrives where it would have been); the body still moves every frame. Never the
+hero, an enemy, anyone during dialogue, a story scene or a door's fade; anyone in view within 25 m always every frame.
+In Auto's Medium-lite and Low-lite a person in view beyond 25 m is posed every other frame (a visible-in-principle
+choice, named in the profile).
 
 ### 2.5 Garbage per frame
 
-V8's sampling heap profiler (`alloc.mjs`), Low street on battery, 100 drawn frames: **~1 020–1 120 KB allocated a frame**
-before (≈ 60 MB/s at 60 fps: a minor collection every few dozen frames, each one or a few ms on a battery-clocked
-processor). The largest: the Follow camera's clearance tests (175 KB + 35 KB in iterators: destructuring loops over
-its sample ring and corners, a new empty array per empty physics cell), the occlusion grid's string keys, the walk
-planner's heap swaps, physics and terrain loops. After: those loops indexed, numeric grid keys, one shared empty list
-(see §8 for the numbers). The map built after an arrival allocates its 15 MB of arrays once (not churn).
+60 MB/s of garbage at 60 fps (street, before) means a minor collection every few dozen frames, each one to a few ms on
+a battery-clocked processor: a regular miss when the frame is already tight. The largest sources fixed: the Follow
+camera's clearance tests (162 KB + 42 KB in iterators a frame: destructuring loops over its sample ring and corners, a new
+empty array per empty physics cell) → 47 KB; the draw batches' per-frame look strings (24 KB) → 0; the occlusion grid's
+string keys (numeric now); terrain heights and the walk planner's heap swaps (indexed loops, no destructuring); one
+shared empty list for empty physics cells. Left (not ours or not worth the risk): three's own internals, the walk
+planner's open-list entries, physics `_inside` (now called more by SOLID-NPC's contact checks: 17 → 47 KB a frame on the
+street; `Math.hypot` there allocates in some tiers — a squared-distance comparison would not), the per-call pose object
+in `Rig.update`.
 
-### 2.6 The HUD and the minimap
+### 2.6 The world's textures as texture arrays: one draw per cell (`texarray.js`, `drawbatch.js`)
 
-The stats panel wrote its texts every frame, even unchanged — a DOM mutation that makes the browser recompute the HUD's
-style and layout every frame. It now writes only what changed. The modern HUD's minimap (a 2D canvas, drawn by the
-GPU process) was redrawn every frame; now when he moved or turned, the map turned, or at most 4× a second.
+The draw batches merge an area's static pieces per 48 m cell and material; folded pieces (a colour, roughness,
+metalness and the map's transform in the vertices) shared a twin per texture — so a cell drew once per texture used in
+it. Citadel had 112 batches, 67 of them one texture's pieces in one cell. Now every repeat-wrapped canvas texture is a
+layer of a texture array (one array per canvas size and anisotropy: 64², 128², 256², 512² on Citadel), and a plain
+colour is a white layer: a cell draws once per array. Citadel 112 → 63 batches; draws in §1.
+
+Same texels: the layer is the canvas read back (opaque painted canvases), rows flipped as the canvas upload flips them;
+the same format (sRGB 8-bit), wrapping, filters, mipmaps (the driver's, per layer) and anisotropy; the twin samples
+`texture(mapArr, vec3(uv, layer))` where it sampled `texture2D(map, uv)`. A canvas updated later (its version or its
+source's moves) makes its pieces leave their batches. Builders' own merged pieces (merge.js twins with per-vertex
+roughness) join too. Arrays grow when an area brings new textures (built in its batch build, behind the scene change's
+black) and are sent to the GPU then. Pixels (`shots-ab.sh` + `diff.py`, `&notexarray` vs default): Medium street 15 of
+1 049 088 pixels differ (0.001 %), Low street Follow 296 (0.028 %, scattered single pixels plus a sparkle sprite's
+twinkle), Medium arrival 18 (0.002 %) — the same order as folding's own (PERF-BATTERY: coincident faces of two materials,
+whose draw order decides which shows). The cost: +15 % triangles drawn on the street (a cell's batch is bigger, its box
+less often wholly outside the view), a texture fetch on surfaces that had none (the white layer), and the arrays' memory
+next to the original textures (Citadel: 5 arrays).
 
 ### 2.7 SOLID-NPC's contact checks
 
-Merged from `ccr-adf00ea7-37ebl3` (Hero.keepApart: circle checks within 3 m; residents' giveWay/moveClear/separate).
-Measured in `cpu.mjs` as `sim.hero.keepApart` (§8).
+Merged from `ccr-adf00ea7-37ebl3` (no conflict): Hero.keepApart (circle checks within 3 m) measured 0.05–0.075 ms a frame
+(p50; street and combat); the residents' giveWay / moveClear / separate are inside their updates (sim.npcs, §1). Physics
+`_inside` allocates more since (2.5).
+
+### 2.8 Smaller things
+
+- The HUD's stats panel wrote its texts every frame, even unchanged — a DOM mutation that makes the browser recompute the
+  HUD's style and layout every frame. It writes only what changed. The modern HUD's minimap (a 2D canvas, drawn in the
+  GPU process) is redrawn only when he moved or turned, the map turned, or 4× a second.
+- A procedural body (`createHumanoid`: Sentinels, people dressed by look) merges each joint's plain-colour parts into one
+  mesh in the joint's space (an eye still blinks, a ponytail segment swings). No route here shows one (every person on
+  them is a polygon model); combat's enemies are other rigs (enemies.js), whose parts move on their own: left as they are.
+- The benchmark reports per route "callback late" p50 / p95 and buffer / texture uploads per frame (calls and KB).
 
 ## 3. Auto: five profiles, evaluate then hold
 
-See `AUTO_QUALITY.md` §3–§5. In short: five named profiles (High · Medium · Medium-lite · Low · Low-lite), one step at a
-time; the first minute or so of play across two scenes is the evaluation; then the profile is held and cached per
-machine and power source; a change is applied only at a scene change or in a menu; never up during a session.
+`AUTO_QUALITY.md` §3–§5 (rewritten). Five named profiles, best first: **High · Medium · Medium-lite · Low · Low-lite**;
+High, Medium and Low are the presets exactly; one profile at a time. The first minute or so of play across two scenes is
+the evaluation (pressure 3 windows in a row → one down; room in every window over 30 s and two scenes → one up, once);
+then the profile is **held** and cached per machine and power source. Afterwards only a power change or a sustained
+problem (≥ 80 % of the windows under pressure and > 10 % missed refreshes over 30 s, in two scenes, or 60 s in one) moves
+it — one step down; never up in a session (a session with lots of room marks the cache: the next start tries one
+higher, evaluated, and does not retry for 3 starts if it fails). **Every change is applied only at a scene change or in
+a menu.** Display-paced windows never count as pressure.
 
-## 4. The combat route on battery
+The CPU knobs for Auto, in the order the profiles add them (least visible first): Medium's small casters and grass
+(Medium) → no MSAA, 2 lamps, Low's grass and small casters, 90 % resolution, **far people posed at half rate** (Medium-lite)
+→ no shadows (Low) → **75 %, far people's small parts dropped** (Low-lite). Out-of-view people at a quarter rate and every
+§2 saving apply to every profile and preset.
 
-(§8)
+The governor's "step back up before a heavier area" (build 251's battery run: shadows raised on light combat and house
+windows, the arrival then suffered) cannot happen any more: no step up after the evaluation, and the evaluation's single
+step up needs room in every window across two scenes, by the model, at the profile above.
+
+## 4. The combat route on battery (12–14 % of frames at 33 ms with light work)
+
+What this machine shows on the combat route (Low, battery profile): **101–104 draw calls** (the arena's 7 meshes, the
+enemies' rigs — Mites, Drones, Sentry, Crawler, Guards, a dog: 3–15 meshes each, enemies.js — sprites, blobs,
+particles), **9 buffer / texture uploads a frame (52 KB)**, game CPU work 6.9 ms p50 here, **434 KB of garbage a frame**
+(was 509), no shader compiled, no batch built, no cache rebuilt in play. Nothing in the game runs on a period that would
+cost a frame: no timer, no readback (`readPixels`, `getError`, `finish` appear nowhere in play code; the GPU timer reads
+results without waiting: `QUERY_RESULT_AVAILABLE` and the disjoint flag are answered on the browser's side).
+
+The user's numbers say the same: CPU 6.6–8 ms, GPU 5.9–7.9 ms, "nothing drawn" 16.7 ms (the display is not slow) — and
+on battery the frame callback starts 6–13 ms late. A frame of ~7 ms of work that starts 10 ms late misses the refresh: the
+late start is the browser's GPU process (and the compositor) still busy with the previous frame at battery clocks —
+translating that frame's draw calls and uploads for Direct3D 11 — which the GPU timer does not see. **So the misses are
+outside the game's own work; what the game controls is how much it hands that process per frame**: draw calls (§1: the
+arrays cut street and arrival by 17–20 %; combat's enemies are separate rigs: their parts would have to be merged by
+enemies.js, which moves them on their own), uploads, and garbage (a minor collection on the main thread lands inside a
+tight frame). The next battery report shows "callback late" and uploads per route to confirm or refute it.
 
 ## 5. Cold first-visit stalls
 
-(§8)
+1. **Street, ~1.3 s after arriving (plugged: a 1 333 ms frame, "shadow cache rebuilt + 1 shader compiled")**:
+   reproduced here (`lateprog.mjs`, Auto Medium): at 0.97–1.27 s the static shadow cache was rebuilt in full because the
+   poodle — a dog that stood still through the area's first frames — had been merged into a static shadow batch; when
+   it walked, its parts left the batch, the batch was rebuilt and every static caster redrawn into the cache. **Dogs
+   (`dogs.js`: `userData.keep` on the rig) and every builder's moving part (`userData.keep`: boats, the cargo lift,
+   crates) now cast on their own and never go into static shadow batches** (`shadowcull.js`, as drawbatch.js already
+   did). After: §8.
+2. **Arrival, 133 ms in view after the black**: on a first visit the area's shadow batches are built at its first
+   update, and pieces that toggle on the area's first frames (84 on Zeelich, 104 on the desert, `lateprog.mjs`) leave them
+   at once — the batches and the cache are rebuilt again in the next frames. The settle frames now keep the screen black
+   while the last frame still rebuilt the cache, built batches, compiled a program or let pieces out of their shadow
+   batches (at most 6 frames in all; before: up to 3, only while the last interval was over 50 ms).
+3. **The full benchmark's first route (3 484 ms + 1 667 ms frames at 3.5 / 5.2 s into Low street)**: not reproduced
+   here — on SwiftShader every frame of that run takes seconds. What runs then: the switch from Auto to the Low preset
+   changes the shadow cells (32 → 16 m) and rebuilds the shadow and draw batches of the benchmark's areas (prepared at
+   the switch for the shadow batches), right after `prepareAreas()` built five regions (a heap of several hundred MB:
+   a major collection is as likely). The report names it next time (every frame over 33 ms lists its jobs and a GC);
+   in normal play an area's builds are behind its black.
 
 ## 6. Draw calls for the battery
 
-(§8)
+The coordinator's target for a battery-reference lowest profile: street ≲ 90 calls, arrival ≲ 120. Here (Low, battery,
+Follow camera): street 133 → 106 with the arrays, ~97 with Low-lite's small parts; arrival 318 → 260. **The street
+is close; the arrival is not.** Tried and dropped: a shorter view (the fog at 60 % and nothing drawn beyond it): −0 to −1
+call on the street (Citadel's views end before the fog), a visible change for nothing. What is left on the arrival
+(`unbatched.mjs`, §8): the regions' pieces that the draw batches cannot take (§8).
 
 ## 7. Tests
 
 (§8)
 
-## 8. Numbers
+## 8. Numbers and verdicts
+
+(in progress)
+
+## 9. What the user's next battery benchmark should show
 
 (in progress)
