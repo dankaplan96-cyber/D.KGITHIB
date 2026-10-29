@@ -1,6 +1,7 @@
 # PERF-CPU: the game served cross-origin isolated (COOP/COEP headers), so performance.now() has ~5 µs resolution
 # instead of 100 µs: the probes' per-section milliseconds are then exact enough to compare. The game is unchanged.
-#   cd lba2-remaster && python3 docs/lba3-performance/PERF-CPU/probes/isoserve.py 8214
+#   cd lba2-remaster && python3 docs/lba3-performance/PERF-CPU/probes/isoserve.py 8214 [directory to serve]
+import functools
 import sys
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
@@ -17,4 +18,5 @@ class Iso(SimpleHTTPRequestHandler):
         pass
 
 
-ThreadingHTTPServer(('', int(sys.argv[1]) if len(sys.argv) > 1 else 8214), Iso).serve_forever()
+handler = functools.partial(Iso, directory=sys.argv[2]) if len(sys.argv) > 2 else Iso
+ThreadingHTTPServer(('', int(sys.argv[1]) if len(sys.argv) > 1 else 8214), handler).serve_forever()
