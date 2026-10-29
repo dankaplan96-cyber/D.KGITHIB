@@ -440,6 +440,10 @@ export class Bench {
     { const D = typeof window !== 'undefined' ? window.desktop?.display?.() : null;
       if (D && !D.error) lines.push(`display (as the OS reports it): ${D.hz ?? '?'} Hz · ${D.size} at scale ${D.scale} · window ${D.fullscreen ? 'fullscreen' : 'windowed'}${D.focused ? '' : ' (not focused)'} · GPU features: ${D.gpu ? Object.entries(D.gpu).filter(([k]) => /webgl2?$|gpu_compositing|rasterization|video_decode/.test(k)).map(([k, v]) => `${k} ${v}`).join(', ') : '?'}`);
       else lines.push('display: refresh rate not known (a browser does not report it; the desktop app does)'); }
+    // (FRAME-2: the refresh as requestAnimationFrame shows it: the rolling median at the report, and the median of the
+    //  "nothing drawn" probes, where neither the game's work nor its GPU time can hold a frame back)
+    { const r = G.refreshMs?.(), idle = med(results.map((x) => x.idle?.p50).filter((v) => v != null)), hz = (ms) => (ms ? (1000 / ms).toFixed(1) : '?');
+      lines.push(`display refresh measured from requestAnimationFrame: ${r ? `${hz(r)} Hz (median interval ${r.toFixed(2)} ms over the last 32 frames)` : '?'} · with nothing drawn: ${idle != null ? `${hz(idle)} Hz (median ${idle} ms over the routes' probes)` : '?'} · frame-rate limit at or above the refresh: no limiting, requestAnimationFrame sets the pace`); }
     lines.push(`camera: free orbit from a fixed heading for every route (your camera setting: ${G.settings.camera}) · WEBGL_multi_draw ${G.perf.multiDraw ? 'yes' : 'no'}`);
     // (AUTO-QUALITY: the quality setting, Auto's state before this run and its decisions in this session; the processor)
     if (G.autoQ) { lines.push(...(this.autoBefore || G.autoQ.report())); const D = this.decisions(); if (D.length) lines.push(`  Auto's decisions this session (s since the page opened · what · why → state after):`, ...D.slice(-25)); }

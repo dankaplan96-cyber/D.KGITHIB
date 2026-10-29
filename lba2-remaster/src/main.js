@@ -76,7 +76,7 @@ const SLOT_SCREENS = new Set(['savegame', 'loadgame', 'slotconfirm']);
 const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
 const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn']);
-export const VERSION = '0.36.0'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.36.1'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
@@ -1531,7 +1531,7 @@ class Game {
     if (changed('res')) this.renderer.setAutoRes(s.res !== 'full');
     if (changed('aa')) this.renderer.setAA(s.aa);   // (RENDER-INV: Settings → Edges; Low always uses FXAA)
     // FRAME-1: frame-rate limit ('auto': the screen's own rate); the automatic resolution's budget follows it
-    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._due = 0; }
+    if (changed('fps')) { this.frameCapMs = s.fps === '30' ? 1000 / 30 : s.fps === '60' ? 1000 / 60 : 0; this.renderer.budgetMs = this.frameCapMs || 1000 / 60; this._acc = 0; }
     const retro = s.visual === '1997';
     if (changed('visual')) {
       this.renderer.setRetro(retro);
@@ -2006,6 +2006,10 @@ class Game {
     // the display's refresh interval (ms, smoothed), from the rAF timestamps
     const d = now - (this._rafT ?? now); this._rafT = now;
     if (d > 0) this._vsync = this._vsync ? this._vsync + (Math.min(50, d) - this._vsync) * 0.1 : Math.min(50, d);
+    // FRAME-2: the display's refresh measured from requestAnimationFrame: the median of the last 32 intervals
+    // (recomputed every 8 frames: it follows a move to another screen within half a second), for the frame-rate limit
+    // and the benchmark's report. (A skipped refresh still calls back, so the limit itself never skews it.)
+    if (d > 0 && d < 100) { const B = (this._rafBuf ??= { a: new Float32Array(32), n: 0, k: 0 }); B.a[B.k] = d; B.k = (B.k + 1) % 32; B.n = Math.min(32, B.n + 1); if (B.k % 8 === 0 || B.n < 8) this._refresh = medianOf(B.a, B.n); }
     // PERF-HIGH (benchmark only): how late this callback runs after the frame's timestamp (the main thread busy with
     // something else), and the benchmark's "nothing drawn" probe: a few refreshes with no simulation and no render, to
     // tell the display's own pace from the game's (engine/bench.js idleProbe). The time is not simulated.
@@ -2013,15 +2017,19 @@ class Game {
       this._lag = performance.now() - now;
       if (this.benchIdle) { this.benchIdle(now); this.last = now; requestAnimationFrame((t2) => this.loop(t2)); return; }
     }
-    // FRAME-1: frame-rate limit (Settings; off by default, off while benchmarking). A refresh before the next frame
-    // is due is skipped: nothing is simulated or drawn, the last frame stays on screen, and keys tapped meanwhile
-    // wait in Input for the next frame. Due times step by the limit (a frame late by more than one interval
-    // starts the count again), so at 30 on a 60 Hz screen every other refresh is drawn: an even 33 ms.
+    // FRAME-1 / FRAME-2: frame-rate limit (Settings; off by default, off while benchmarking). A limit at or above the
+    // display's measured refresh does nothing: requestAnimationFrame sets the pace, so its jitter can never drop a
+    // frame (the user, 29.10). Below it, a time accumulator: each refresh adds its real interval, a frame is drawn once
+    // the sum reaches the limit less 1.5 ms of tolerance, and the limit is taken off; a remainder of more than half
+    // the limit (a stall) is dropped, so a stall can't cause a burst. A skipped refresh simulates and draws nothing (keys wait in Input): at 30 on a 60 Hz
+    // screen every other refresh is drawn, an even 33 ms.
     const cap = this.benching ? 0 : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
-    if (cap && !this.testFreeze && !this.preparing) {
-      if (now < (this._due || 0) - (this._vsync || 16.7) / 2) { requestAnimationFrame((t2) => this.loop(t2)); return; }
-      this._due = now - (this._due || 0) > cap ? now + cap : this._due + cap;
-    }
+    const refresh = this._refresh || this._vsync || 1000 / 60;
+    if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
+      this._acc = (this._acc ?? cap) + Math.max(0, d);
+      if (this._acc + LIMIT_TOL_MS < cap) { requestAnimationFrame((t2) => this.loop(t2)); return; }
+      const rem = this._acc - cap; this._acc = rem > cap / 2 ? 0 : rem;   // (signed: a frame drawn up to 1.5 ms early is paid back, so the average is the limit; a stall's late time is dropped: no burst)
+    } else this._acc = cap;   // (unlimited: the next limited frame is due at once)
     // rAF timestamps can be slightly older than performance.now() on the first frame: never step backwards
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
@@ -2085,6 +2093,9 @@ class Game {
   // PERF-HIGH: the CPU time a background job (the map built after an arrival) may take in this frame: what the last
   // frame's own work (simulation + render submission, without such jobs) left of three quarters of the frame interval
   // (the display's, or the frame-rate limit's), between 0.5 ms (it always gets on) and max
+  // FRAME-2: the display's refresh as requestAnimationFrame shows it (ms, median of the last 32 intervals)
+  refreshMs() { return this._refresh || this._vsync || null; }
+
   spareMs(max) {
     const frame = Math.max(this.frameCapMs || 0, this._vsync || 1000 / 60);
     return Math.max(0.5, Math.min(max, 0.75 * frame - (this._workMs ?? 0)));
@@ -2307,6 +2318,8 @@ class Game {
 
 const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
 const BG_FPS = 8;   // (PERF-BATTERY: frames a second drawn while the window is in the background)
+const LIMIT_TOL_MS = 1.5;   // (FRAME-2: the frame-rate limit's tolerance for requestAnimationFrame's jitter)
+function medianOf(a, n) { const b = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return n ? b[n >> 1] : 0; }
 const TEX_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap'];
 const loadingStep = (text) => { const e = document.querySelector('#loading-step'); if (e) e.textContent = text; };
 // the loading screen's bar (#27): real steps, and across the long synchronous builds an estimated pace (this
