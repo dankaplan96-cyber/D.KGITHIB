@@ -3,7 +3,7 @@
 // Twelve years after LBA2. The square's well has stopped giving water.
 // Zoe sends Twinsen to look. On the way (CH1-LONGER: each step a person's want and one of Twinsen's tools):
 //  - the lid key: Mira won't unlock the town well for what she calls a pipe fault in Gilbert's street. Zoé, gone
-//    next door, brings the proof: their kettle furred with warm crystals overnight ("pipes don't grow those").
+//    next door, brings the proof: their kettle furred with warm crystals since breakfast ("pipes don't grow those").
 //  - the lid: unlocked, it is rusted to the rim. Gilbert swears by a kick (Aggressive); the ball only bounces off.
 //  - the rope: Xil's rope ladder for Doran's stamp on his unloading permit. Doran sleeps through anything but the
 //    harbour bell, which hangs out of reach (the magic ball rings it). Arthur knows the trick too.

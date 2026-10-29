@@ -230,6 +230,7 @@ Object.assign(STR.en, {
   c1_gil_water: 'Water! Steaming hot. You could boil an egg in it. Better than nothing.',
   c1_doran_idle: 'Saw the project ferry come in. No sails, no oars, and no respect for the sea.',
   c1_doran_drones: "The depot at the old camp? It has drones. Move slowly and they won't spot you. I should know. I'm always slow.",
+  c1_doran_depot: "The depot's drones have gone quiet. Slow and steady, like I said.",
   c1_doran_ferry1: "Baldino? The mad inventor? He radioed me the start code for the project's ship. The passenger flights are grounded, but a project ship still flies.",
   c1_tw_ferry: 'Can you fly it to Zeelich?',
   c1_doran_ferry2: 'Doran can sail anything that floats, and up there everything floats. Meet me at the spaceport, Twinsen.',
