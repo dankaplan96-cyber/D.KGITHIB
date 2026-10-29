@@ -461,6 +461,6 @@ export class Network extends ChapterBase {
       { key: 'c10_j_plan', done: !!f.c10_started },
       { key: 'c10_j_fly', done: !!f.c10_started },
       { key: 'c10_j_all', done: !!f.c10_done },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }

@@ -242,6 +242,6 @@ export class Pass extends ChapterBase {
       { key: 'c6_j_lhar', done: !!f.c6_yorna },
       { key: 'c6_j_heat', done: !!f.c6_thawed },
       { key: 'c6_j_up', done: !!f.c6_up },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }

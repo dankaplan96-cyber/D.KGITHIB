@@ -447,7 +447,7 @@ export class Chapter3 extends ChapterBase {
       { key: 'c3_j_gallery', done: !!(f.c3_pillar0 && f.c3_pillar1 && f.c3_pillar2) },
       { key: 'c3_j_sendell', done: !!f.c3_sendell },
     ];
-    return lines.filter((l, i, a) => i === 0 || a[i - 1].done);
+    return lines.filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }
 

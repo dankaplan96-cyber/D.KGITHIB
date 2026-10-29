@@ -457,7 +457,8 @@ export class Dig extends ChapterBase {
       { key: 'c4_j_dallan', done: !!f.c4_done },
     ];
     const out = [];
-    steps.forEach((l, i) => { if (i === 0 || steps[i - 1].done) out.push({ key: l.key, done: l.done }, ...(l.facts || [])); });
+    // (G1-NARR: a step is listed once it has happened, in the past tense; the facts of the step in progress show as they are found)
+    steps.forEach((l, i) => { if (i === 0 || steps[i - 1].done) out.push(...(l.done ? [{ key: l.key, done: true }] : []), ...(l.facts || [])); });
     return out;
   }
 }
