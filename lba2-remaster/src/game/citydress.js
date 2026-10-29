@@ -161,7 +161,7 @@ export function buildCityDressing(root, physics, W) {
   bench(-109.8, 53.1, 0, '#2a8a7a'); bin(-108.3, 53.2); tub(-111.3, 53.2, 31, '#2f6a9a');   // a bench looking out to sea
   // mooring bollards along the quay's east edge (where it drops to the basin)
   for (const z of [46.6, 49.4, 52.2]) place('bollard', (k) => P.bollard(k), -107.4, z, 0, FP.bollard, { minH: 1.5 });
-  place('handcart-quay', (k) => P.handCart(k, { load: 'crates', seed: 9 }), -116.4, 48.8, 1.2, FP.cart);
+  place('handcart-quay', (k) => P.handCart(k, { load: 'crates', seed: 9 }), -113.4, 46.0, 1.2, FP.cart);   // (I-3: it stood on the harbour master's shed's east side, now the shed's door side: parked by its north-east corner)
   // ---------------------------------------------------------------- the foot of the spaceport's bridge
   bench(-34.6, 43.6, Math.PI / 2 + 0.3, '#7a52b0'); bin(-34.0, 45.1); tub(-33.6, 36.2, 41, '#e8c040'); planter(-36.0, 36.6, 0.1, 12);
 
