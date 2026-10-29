@@ -494,7 +494,7 @@ export function buildTown(scene, W) {
   for (const [x, z] of [[-49, -7.4], [-35.8, 2.6]]) {
     const ry = Math.atan2(V.x - x, V.z - z);
     bench(dress, x, H(x, z), z, ry);
-    physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: H(x, z) + 0.5, noStand: true, seeThrough: true });
+    physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: H(x, z) + 0.5, noStand: true, block: true, seeThrough: true });   // (block: SOLID-NPC, not walked through)
     W.seats.push({ x, z, ry });
   }
   // Twinsen's front garden: picket fence, a bench under the window, laundry, tools, a radio on the sill, pots
@@ -502,20 +502,31 @@ export function buildTown(scene, W) {
   const gy = (p) => H(p[0], p[1]);
   fence(scene, H, at('twinsen', -7.0, -1.8), at('twinsen', -7.0, 5.6), r);
   fence(scene, H, at('twinsen', -7.0, 5.6), at('twinsen', 0.6, 5.6), r);
+  // SOLID-NPC: the small things of the garden and the town are solid (they had no collider, Twinsen walked through them):
+  // the picket fence (a thin wall per run, its open end the garden's gate), the laundry posts, the tools and the bucket
+  // against the wall, the flower pots, the street sign. Static colliders, `block` (never stepped onto: a pot is not a step)
+  const solid = (c) => physics.add({ noStand: true, block: true, seeThrough: true, ...c });
+  for (const [a, b] of [[at('twinsen', -7.0, -1.8), at('twinsen', -7.0, 5.6)], [at('twinsen', -7.0, 5.6), at('twinsen', 0.6, 5.6)]]) {
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]), y = Math.min(H(a[0], a[1]), H(b[0], b[1]));
+    solid({ type: 'box', x: (a[0] + b[0]) / 2, z: (a[1] + b[1]) / 2, hw: len / 2 + 0.05, hd: 0.08, rot: Math.atan2(b[0] - a[0], b[1] - a[1]) + Math.PI / 2, top: y + 0.95 });
+  }
+  for (const [lx, lz] of [[-6.0, 4.6], [-6.0, -1.0]]) { const p = at('twinsen', lx, lz); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.1, top: gy(p) + 2.2 }); }
+  { const p = at('twinsen', -5.3, 0.3); solid({ type: 'box', x: p[0], z: p[1], hw: 0.62, hd: 0.2, rot: tw.ry + Math.PI / 2, top: gy(p) + 1.5 }); }
   const bp = at('twinsen', -2.3, 4.3);
   bench(dress, bp[0], gy(bp), bp[1], tw.ry);
-  physics.add({ type: 'box', x: bp[0], z: bp[1], hw: 0.85, hd: 0.3, rot: tw.ry, top: gy(bp) + 0.5, noStand: true, seeThrough: true });
+  physics.add({ type: 'box', x: bp[0], z: bp[1], hw: 0.85, hd: 0.3, rot: tw.ry, top: gy(bp) + 0.5, noStand: true, block: true, seeThrough: true });
   W.seats.push({ x: bp[0], z: bp[1], ry: tw.ry, own: 'twinsen' });   // (Twinsen's own bench by his house: left to the family)
   W.laundry = laundry(scene, H, at('twinsen', -6.0, 4.6), at('twinsen', -6.0, -1.0), r);
   const tl = at('twinsen', -5.3, 0.3);
   tools(dress, tl[0], gy(tl), tl[1], tw.ry + Math.PI / 2);
   const rd = at('twinsen', -0.2, 3.78);
   radio(dress, rd[0], tw.g + 1.2, rd[1], tw.ry);
-  for (const [lx, lz, f] of [[1.6, 4.3, '#ff5a7a'], [3.65, 4.3, '#ffd84a'], [-4.2, 4.5, null], [-0.6, 5.0, '#d06aff']]) { const p = at('twinsen', lx, lz); pot(dress, p[0], gy(p), p[1], f, r); }
+  for (const [lx, lz, f] of [[1.6, 4.3, '#ff5a7a'], [3.65, 4.3, '#ffd84a'], [-4.2, 4.5, null], [-0.6, 5.0, '#d06aff']]) { const p = at('twinsen', lx, lz); pot(dress, p[0], gy(p), p[1], f, r); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.24, top: gy(p) + 0.7 }); }
   for (const [lx, lz] of [[5.3, 2.4], [5.4, 1.5]]) { const p = at('twinsen', lx, lz); barrel(dress, p[0], gy(p), p[1], r); physics.add({ type: 'cyl', x: p[0], z: p[1], r: 0.4, top: gy(p) + 1, noStand: true, seeThrough: true }); }
   { const p = at('twinsen', 5.35, 1.95); W.givers.push({ id: 'home-barrels', x: p[0], z: p[1], r: 1.6, top: 1.1, kinds: ['money', 'life', 'magic'], n: 2 }); }
   const sg = at('twinsen', 4.6, 6.0);
   sign(dress, sg[0], gy(sg), sg[1], tw.ry + 0.3, 'Bug St.');
+  solid({ type: 'cyl', x: sg[0], z: sg[1], r: 0.12, top: gy(sg) + 2.1 });
   // shop: globe sign and barrels; low stone walls by the water office and the stone house
   const sh = at('shop', 3.9, 3.3);
   globeSign(dress, sh[0], gy(sh), sh[1]);
@@ -524,7 +535,7 @@ export function buildTown(scene, W) {
   { const p = at('shop', -3.2, 3.0); W.givers.push({ id: 'shop-barrels', x: p[0], z: p[1], r: 1.6, top: 1.1, kinds: ['money'], n: 3 }); }
   stoneWall(dress, H, physics, at('water', -3.4, 3.0), at('water', -3.4, 6.6));
   stoneWall(dress, H, physics, at('stone', 3.4, 0.6), at('stone', 3.4, 4.2));
-  for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); pot(dress, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }
+  for (const [id, lx, lz] of [['pink', -2.2, 3.4], ['south', 2.6, 3.3], ['stone', -2.4, 3.2]]) { const p = at(id, lx, lz); solid({ type: 'cyl', x: p[0], z: p[1], r: 0.2, top: gy(p) + 0.7 }); pot(dress, p[0], gy(p), p[1], ['#ff8a3d', '#d06aff', '#ffffff'][Math.floor(r() * 3)], r); }   // (pots r 0.2: the south house's stands by its door)
   curbs(dress, H);
   // all of the above is static: one mesh per material (lights stay as they are)
   mergeStatic(dress);

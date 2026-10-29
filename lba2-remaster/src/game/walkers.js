@@ -15,7 +15,8 @@
 //     is not drawn at all (the camera culls it, FarCull hides it far off).
 // A resident's state is not saved: after a load every resident starts its round again at its first stop.
 import * as THREE from 'three';
-import { NPC } from './actors.js';
+import { NPC, contactRadius } from './actors.js';
+import { LOOKS } from './characters.js';
 import { WalkNav } from './walknav.js';
 import { mat } from '../engine/rig.js';
 import { dampAngle, rng, clamp } from '../engine/math.js';
@@ -144,7 +145,7 @@ export class Walkers {
     const h = this.game.hero;
     out.push(h);
     for (const n of this.statics) out.push(n);
-    for (const r of this.res) if (r !== self && r.present) out.push(r);
+    for (const r of this.res) if (r !== self && r.present && !r.away && !r.inside) out.push(r);   // (one the story or a test took off the streets is not there)
     return out;
   }
   // a resident's pair mate meets it: both leave together
@@ -164,13 +165,14 @@ export class Resident extends NPC {
     const mesh = this.rig.mesh;
     if (def.tint && mesh?.material?.color) mesh.material.color.set(def.tint);
     if (def.scale) this.rig.root.scale.multiplyScalar(def.scale);
+    this.bodyR = contactRadius(def.char, this.rig.root.scale.x);   // (its girth: the hero and the others keep out of it)
     this.rnd = rng(hashId(def.id));
     this.stops = [];
     this.ri = 0; this.st = 'dwell'; this.tmr = 0;
     this.path = null; this.wi = 0; this.job = null;
     this.carrying = null; this.carryMesh = null; this.walkFrom = { x: 0, z: 0 };
     this.vel = 0; this.gait = 0;
-    this.engaged = false; this.hold = 0;
+    this.engaged = false; this.hold = 0; this.yieldT = 0; this.yieldV = null;
     this.stuckT = 0; this.replans = 0; this.lastRescue = -99; this.rescues = 0;
     this.accA = 0; this.accB = 0; this.skipN = 0; this.tier = 2; this.noGate = 0;
     this.sit = null; this.inside = false; this.insideT = 0; this.away = null;
@@ -228,10 +230,11 @@ export class Resident extends NPC {
     this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
     this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
     if (s.pair) { this.st = 'pairwait'; this.waitT = 0; this.W.pair(s.pair).ready.add(this.def.id); this.note('wait for ' + s.pair); return; }
-    if (s.seat) { this.sitDown(s, instant); return; }
+    if (s.seat && this.canSit() && !this.benchTaken(s.seat)) { this.sitDown(s, instant); return; }
     if (s.door) { this.st = 'knock'; this.tmr = instant ? 0.2 : 0.9; this.angle = this.targetAngle = s.a; return; }
     this.st = 'dwell';
-    if (s.a != null) this.targetAngle = s.a;
+    if (s.seat) this.targetAngle = s.seat.a;   // (one who cannot sit stands by the bench, looking where a sitter would)
+    else if (s.a != null) this.targetAngle = s.a;
     this.note('at ' + (s.id || s.act));
   }
   leave() {
@@ -263,19 +266,105 @@ export class Resident extends NPC {
     this.carryMesh = m;
   }
   // ---------------------------------------------------------------- sitting
+  // SOLID-NPC (the user, 29.10: a resident sat inside a bench, the body through the backrest, the legs through the seat).
+  // The sitter is put on the bench's own seat: its bottom on the seat's top, its back in front of the backrest, its shins
+  // in front of the seat's edge, facing away from the backrest. Where the bottom and the back of THIS body are in the sit
+  // pose (a Grobo's hips are low and its belly wide, a Rabbibunny's legs long, a child small) is measured once per body
+  // from the posed mesh (sitShape); the bench's shape is the seat's (walkrounds.js seatAt: BENCHES in town.js, island.js,
+  // citydress.js, zeelich's). Its coat's back panel folds under it on the seat instead of hanging down through it.
+  seatPose(s) {
+    const seat = s.seat, sp = seat.spec || BENCH_RED, sh = this.sitShape(), sx = Math.sin(seat.a), sz = Math.cos(seat.a);
+    // along the way it faces from the bench's middle: back clear of the backrest, shins clear of the seat's edge
+    // (0.07 m clear of the backrest: hair hanging down the back swings with the head as it dozes and looks about)
+    const zl = Math.max(sp.back + 0.07 - sh.back, sp.front + 0.015 - sh.shin);
+    const y0 = this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z));   // (the ground in front of the bench: the bench's own collider must not count)
+    return { x: seat.x + sx * zl, z: seat.z + sz * zl, y0, y1: y0 + sp.seatY + 0.008 - sh.bottom };
+  }
+  // an Esmer's body is one robe from the shoulders to the ground (rig.robeLegs, no hips to bend): it cannot sit on a
+  // bench without the robe going through the seat, so at a bench stop it stands by the bench instead
+  canSit() { return LOOKS[this.def.char]?.race !== 'esmer'; }
+  // two rounds may share a bench (Brix's and Ume's by the lane's planter): one seat to a bench, the second stands by it
+  benchTaken(seat) { return this.W.res.some((r) => r !== this && !r.away && r.sit?.seat && Math.hypot(r.sit.seat.x - seat.x, r.sit.seat.z - seat.z) < 0.3 && r.st !== 'sitout'); }
   sitDown(s, instant) {
     this.st = 'sitin';
-    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: s.seat.x, z: s.seat.z }, t: 0, dur: instant ? 0.001 : 0.8, a: s.seat.a, y: this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z)) };   // (the ground in front of the bench: a bench the physics counts as a brick must not lift the sitter onto its top)
+    const p = this.seatPose(s);
+    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: p.x, z: p.z }, t: 0, dur: instant ? 0.001 : 0.8, a: s.seat.a, ya: p.y0, yb: p.y1, y: p.y1, down: true, seat: s.seat };
     if (instant) this.angle = this.targetAngle = s.seat.a;
     this.note('sit');
   }
   standUp(s) {
     this.st = 'sitout';
-    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: s.x, z: s.z }, t: 0, dur: 0.8, a: s.a != null ? s.a : null, y: this.pos.y };
+    const y0 = this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z));
+    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: s.x, z: s.z }, t: 0, dur: 0.8, a: s.a != null ? s.a : null, ya: this.pos.y, yb: y0, y: this.pos.y, down: false };
+  }
+  // the coat's back and side panels lie on the seat under it (the rig's sit pose leaves the back panel hanging straight
+  // down from the waist, through the seat): after the rig's own pose, every frame it sits
+  foldCoat() {
+    const S = this.rig.j?.skirt;
+    if (!S) return;
+    S.B.rotation.x = -1.4; S.L.rotation.x = Math.min(S.L.rotation.x, -1.25); S.R.rotation.x = Math.min(S.R.rotation.x, -1.25);
+  }
+  // where this body's bottom, back and shins are in the sit pose, relative to its feet's point (metres, the way it faces
+  // +z): measured once per body and size from the posed mesh, the rig put back as it was
+  sitShape() {
+    const key = this.def.char + '@' + this.rig.root.scale.x.toFixed(3);
+    let sh = SIT_SHAPES.get(key);
+    if (sh) return sh;
+    const rig = this.rig, root = rig.root, j = rig.j, anim = rig.anim ?? 'idle';
+    rig.play('sit'); for (let i = 0; i < 8; i++) rig.update(0.5, 0);
+    this.foldCoat();
+    root.updateMatrixWorld(true);
+    const inv = _m4.copy(root.matrixWorld).invert(), sc = root.scale.x;
+    const loc = (o) => o.getWorldPosition(_v1).applyMatrix4(inv).clone();
+    const hip = loc(j.legL.hip), hip2 = loc(j.legR.hip), knee = loc(j.legL.knee);
+    const legX = Math.max(Math.abs(hip.x), Math.abs(hip2.x));
+    const pts = [];
+    root.traverse((o) => {
+      if (!o.isMesh || !o.visible || !o.geometry?.attributes?.position || o === this.carryMesh) return;
+      let c = o; while (c && c !== root) { if (c === this.carryMesh) return; c = c.parent; }
+      const pa = o.geometry.attributes.position, step = Math.max(1, Math.floor(pa.count / 2500));
+      for (let i = 0; i < pa.count; i += step) { _v1.fromBufferAttribute(pa, i); if (o.isSkinnedMesh) o.applyBoneTransform(i, _v1); _v1.applyMatrix4(o.matrixWorld).applyMatrix4(inv); pts.push(_v1.x, _v1.y, _v1.z); }
+    });
+    // the bottom: the underside of the thighs (between the hips and the knees, over the legs)
+    let bottom = 9;
+    for (let i = 0; i < pts.length; i += 3) { const x = pts[i], y = pts[i + 1], z = pts[i + 2]; if (z > hip.z + 0.03 && z < knee.z - 0.1 && Math.abs(x) < legX + 0.12 && y > hip.y - 0.4) bottom = Math.min(bottom, y); }
+    if (bottom > 8) bottom = hip.y - 0.1;
+    // the back: the rearmost point from the seat up to the backrest's top (0.55 m over the seat)
+    let back = 9, shin = 9, foot = 9;
+    for (let i = 0; i < pts.length; i += 3) { const y = pts[i + 1], z = pts[i + 2]; if (y > bottom + 0.03 && y < bottom + 0.55 / sc) back = Math.min(back, z); if (y < bottom - 0.02 && z > hip.z) shin = Math.min(shin, z); foot = Math.min(foot, y); }
+    if (back > 8) back = hip.z - 0.15;
+    if (shin > 8) shin = knee.z - 0.08;
+    sh = { bottom: bottom * sc, back: back * sc, shin: shin * sc, foot: foot * sc, knee: knee.z * sc };
+    SIT_SHAPES.set(key, sh);
+    rig.play(anim); for (let i = 0; i < 8; i++) rig.update(0.5, 0);
+    return sh;
   }
   // ---------------------------------------------------------------- talking with the player (src/game/story/citizens.js)
-  engage() { this.engaged = true; this.hold = 0; this.stuckT = 0; this.vel = 0; this.gait = 0; this.note('talk'); }
+  engage() { this.engaged = true; this.hold = 0; this.stuckT = 0; this.vel = 0; this.gait = 0; this.yieldT = 0; this.note('talk'); }
   release() { this.engaged = false; this.hold = 0.7; }
+  // SOLID-NPC: the hero walks on into it (Hero.keepApart): it steps out of his way, to the side of his line it already
+  // stands on and a little back, at a walk, through the physics (never into a wall or off its ground); seated, talking,
+  // at its door or indoors it stays where it is
+  giveWay(hx, hz, vx, vz) {
+    if (this.engaged || this.sit || this.inside || this.away || this.st === 'knock' || this.st === 'seated') return;
+    if (this.yieldT > 0.2) return;
+    const dx = this.pos.x - hx, dz = this.pos.z - hz, d = Math.hypot(dx, dz) || 1, v = Math.hypot(vx, vz) || 1;
+    const ux = vx / v, uz = vz / v, side = Math.sign(ux * dz - uz * dx) || (this.rnd() < 0.5 ? -1 : 1);
+    let yx = -uz * side * 0.85 + (dx / d) * 0.35, yz = ux * side * 0.85 + (dz / d) * 0.35;
+    const l = Math.hypot(yx, yz) || 1; yx /= l; yz /= l;
+    this.yieldV = { x: yx, z: yz }; this.yieldT = 0.8;
+    this.note('gives way');
+  }
+  yieldTick(dt) {
+    this.yieldT -= dt;
+    const P = this.game.physics, x0 = this.pos.x, z0 = this.pos.z, sp = Math.max(0.9, this.speed);
+    this.moveClear(this.yieldV.x * sp * dt, this.yieldV.z * sp * dt, this.W.others(this, _others));
+    P.fall(this, dt);
+    this.angle = dampAngle(this.angle, Math.atan2(this.yieldV.x, this.yieldV.z), 6, dt);
+    const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
+    this.gait += (v - this.gait) * Math.min(1, dt * 8);
+    this.animate(this.gait > 0.12 ? 'walk' : 'idle', dt, this.gait > 0.12 ? this.gait : 0);
+  }
 
   // ---------------------------------------------------------------- the frame
   update(dt) {
@@ -308,7 +397,7 @@ export class Resident extends NPC {
   }
   // leaving the abstract state: stand on the ground it is over
   wake() {
-    if (this.sit) this.pos.y = this.sit.y;   // (seated: at the height it sat down from)
+    if (this.sit) this.pos.y = this.st === 'sitout' ? this.sit.yb : this.sit.y;   // (seated: on the seat)
     else if (!this.inside) this.pos.y = this.game.physics.groundAt(this.pos.x, this.pos.z, this.groundHint(this.pos.x, this.pos.z));
     this.vy = 0; this.onGround = true;
     this.sync();
@@ -320,13 +409,17 @@ export class Resident extends NPC {
     const seated = this.st === 'seated' || this.st === 'sitin';
     this.rig.play(seated ? 'sit' : this.talking ? 'talk' : 'idle');
     this.rig.update(dt, 0);
+    if (seated) this.foldCoat();
+    this.placeCarry(seated);
     this.sync();
   }
 
   // ---------------------------------------------------------------- the simulation (tier 0 and 1)
   tick(dt, tier) {
     const g = this.game, P = g.physics, W = this.W, s = this.stop;
+    if (this.yieldT > 0 && !this.sit) { this.yieldTick(dt); return; }
     if (this.hold > 0) { this.hold -= dt; this.animate('idle', dt, 0); return; }
+    if (this.st !== 'walk') this.separate(dt);
     switch (this.st) {
       case 'dwell': return this.dwellTick(dt, s);
       case 'pairwait': return this.pairTick(dt, s);
@@ -357,7 +450,22 @@ export class Resident extends NPC {
   animate(anim, dt, speed) {
     this.rig.play(anim);
     this.rig.update(dt, speed);
+    if (anim === 'sit') this.foldCoat();
+    this.placeCarry(anim === 'sit');
     this.sync();
+  }
+  // what it carries is set down on the seat beside it while it sits (held, it would hang through the bench), and taken up
+  // again as it stands
+  placeCarry(seated) {
+    const m = this.carryMesh;
+    if (!m) return;
+    const root = this.rig.root, hand = this.rig.j?.armR?.hand;
+    if (seated && m.parent !== root) {
+      const sh = this.sitShape(), sc = root.scale.x, drop = CARRY_DROP[this.carrying] ?? 0.25;
+      root.add(m); m.position.set(-Math.max(0.45, (this.bodyR || 0.45) + 0.1) / sc, sh.bottom / sc + drop, (sh.back + 0.22) / sc); m.rotation.set(0, 0, 0);
+    } else if (!seated && hand && m.parent !== hand) {
+      hand.add(m); m.position.set(0, this.carrying === 'sack' ? 0.1 : 0, this.carrying === 'sack' ? -0.02 : 0);
+    }
   }
   dwellTick(dt, s) {
     const h = this.game.hero;
@@ -439,10 +547,11 @@ export class Resident extends NPC {
     const k = clamp(S.t / S.dur, 0, 1), e = k * k * (3 - 2 * k);
     const st = this.st;
     if (S.a != null) this.angle = dampAngle(this.angle, S.a, 7, dt);
-    // (the seat's own height is the bench's: the rig's sit pose puts the hips there)
-    const a = st === 'sitin' ? S.from : S.from, b = S.to;
+    // onto the seat (its height, SOLID-NPC: seatPose) as the sit pose comes in, off it as the stand comes
+    const a = S.from, b = S.to;
     this.pos.x = a.x + (b.x - a.x) * e; this.pos.z = a.z + (b.z - a.z) * e;
-    this.pos.y = S.y;
+    const ky = S.down ? clamp((k - 0.3) / 0.7, 0, 1) : clamp(k / 0.6, 0, 1), ey = ky * ky * (3 - 2 * ky);
+    this.pos.y = S.ya + (S.yb - S.ya) * ey;
     if (st === 'sitin') this.animate(k > 0.35 ? 'sit' : 'idle', dt, 0);
     else this.animate(k < 0.55 ? 'sit' : 'idle', dt, 0);
     if (k >= 1) {
@@ -520,7 +629,7 @@ export class Resident extends NPC {
     let ax = 0, az = 0, slow = 1, blocked = false;
     for (const b of W.others(this, _others)) {
       const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, dd = Math.hypot(rx, rz);
-      const rr = (this.radius || 0.45) + (b.radius || 0.45) + (b.isHero ? 0.75 : b.ambient ? 0.35 : 0.8), reachD = rr + 1.1;
+      const rr = (this.bodyR || 0.45) + (b.bodyR ?? b.radius ?? 0.45) + (b.isHero ? 0.75 : b.ambient ? 0.35 : 0.8), reachD = rr + 1.1;
       if (dd > reachD || dd < 1e-3) continue;
       const w = (reachD - dd) / reachD, ahead = (-rx * ux - rz * uz) / dd;   // > 0: in front of it
       if (ahead > 0.1) {
@@ -533,11 +642,10 @@ export class Resident extends NPC {
     }
     let vx = ux + ax, vz = uz + az;
     const vl = Math.hypot(vx, vz) || 1; vx /= vl; vz /= vl;
-    // never into someone's reach: the hero's and the story's people (they stand where they are put); no component of the
+    // never into someone's reach: the hero's and the story's people (they stand where they are put), and never into another resident (SOLID-NPC); no component of the
     // move goes toward them inside 1.15 m, and inside 0.95 m it steps back
     for (const b of _others) {
-      if (b.ambient) continue;
-      const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, dd = Math.hypot(rx, rz), hard = (this.radius || 0.45) + (b.radius || 0.45) + 0.3;
+      const rx = this.pos.x - b.pos.x, rz = this.pos.z - b.pos.z, dd = Math.hypot(rx, rz), hard = (this.bodyR || 0.45) + (b.bodyR ?? b.radius ?? 0.45) + (b.ambient ? 0.05 : 0.3);
       if (dd >= hard || dd < 1e-3) continue;
       const nx = rx / dd, nz = rz / dd, into = -(vx * nx + vz * nz);
       if (into > 0) { vx += nx * into; vz += nz * into; }
@@ -553,7 +661,7 @@ export class Resident extends NPC {
     const dAng = Math.abs(Math.atan2(Math.sin(want - this.angle), Math.cos(want - this.angle)));
     const align = Math.max(0.15, Math.cos(Math.min(1.4, dAng)));
     const step = this.vel * dt * align;
-    if (step > 1e-4) P.move(this, Math.sin(this.angle) * step, Math.cos(this.angle) * step);
+    if (step > 1e-4) this.moveClear(Math.sin(this.angle) * step, Math.cos(this.angle) * step, _others);
     P.fall(this, dt);
     const v = dt > 0 ? Math.hypot(this.pos.x - x0, this.pos.z - z0) / dt : 0;
     this.gait += (v - this.gait) * Math.min(1, dt * 8);
@@ -562,6 +670,45 @@ export class Resident extends NPC {
     // ------------------------------------------------ stuck: it wants to go and does not get anywhere
     if (sp > 0.3 * this.speed && v < 0.25 * sp && !blocked) this.stuckT += dt; else this.stuckT = Math.max(0, this.stuckT - dt * 0.5);
     if (this.stuckT > 1.4) this.unstick();
+  }
+  // SOLID-NPC: a step by the physics that never takes it into anyone's body (the hero's, the story's people's, another
+  // resident's: the two girths, bodyR): the part of the step toward someone it touches is dropped (it slides round
+  // them), and a step that still ends inside someone, closer than it was, is not taken
+  moveClear(dx, dz, others) {
+    const P = this.game.physics, x0 = this.pos.x, z0 = this.pos.z, me = this.bodyR || 0.45;
+    for (const b of others) {
+      const R = me + (b.isHero ? b.radius : (b.bodyR ?? b.radius ?? 0.45)), rx = x0 - b.pos.x, rz = z0 - b.pos.z, d = Math.hypot(rx, rz);
+      if (d >= R + Math.hypot(dx, dz) + 0.02 || d < 1e-4) continue;
+      const nx = rx / d, nz = rz / d, into = -(dx * nx + dz * nz);
+      if (into > 0 && d < R + into + 0.02) { dx += nx * into; dz += nz * into; }
+    }
+    P.move(this, dx, dz);
+    for (const b of others) {
+      const R = me + (b.isHero ? b.radius : (b.bodyR ?? b.radius ?? 0.45));
+      const d1 = Math.hypot(this.pos.x - b.pos.x, this.pos.z - b.pos.z), d0 = Math.hypot(x0 - b.pos.x, z0 - b.pos.z);
+      if (d1 < R - 0.01 && d1 < d0 - 1e-4) { this.pos.x = x0; this.pos.z = z0; return; }
+    }
+  }
+  // standing about (not seated, not walking: a stop, a chat, a wait), it steps out of another resident it overlaps, at a
+  // shuffle (two whose stops lie close stand side by side, not inside each other); through the physics
+  separate(dt) {
+    if (this.sit || this.inside || this.engaged) return;
+    const me = this.bodyR || 0.45;
+    let px = 0, pz = 0;
+    for (const r of this.W.res) {
+      if (r === this || !r.present || r.inside || r.away) continue;
+      const R = me + (r.bodyR || 0.45), rx = this.pos.x - r.pos.x, rz = this.pos.z - r.pos.z;
+      if (Math.abs(rx) >= R || Math.abs(rz) >= R) continue;
+      const d = Math.hypot(rx, rz);
+      if (d >= R) continue;
+      // (both step apart, half each; from one who is seated it steps the whole way)
+      const k = r.sit ? 1 : 0.5;
+      if (d < 1e-3) { const a = this.rnd() * 6.283; px += Math.sin(a) * R * k; pz += Math.cos(a) * R * k; } else { px += (rx / d) * (R - d) * k; pz += (rz / d) * (R - d) * k; }
+    }
+    const l = Math.hypot(px, pz);
+    if (l < 1e-3) return;
+    const m = Math.min(l, 0.8 * dt);
+    this.game.physics.move(this, (px / l) * m, (pz / l) * m);
   }
   unstick() {
     const g = this.game, W = this.W;
@@ -614,7 +761,7 @@ export class Resident extends NPC {
         if (this.wi >= path.length) {
           this.pos.x = s.x; this.pos.z = s.z;
           this.arrived(s, true);
-          if (this.st === 'sitin') { this.pos.x = s.seat.x; this.pos.z = s.seat.z; this.st = 'seated'; }
+          if (this.st === 'sitin') { this.pos.x = this.sit.to.x; this.pos.z = this.sit.to.z; this.pos.y = this.sit.y; this.st = 'seated'; }
           if (this.st === 'knock') this.goInside(s);
         }
         return;
@@ -638,3 +785,8 @@ export class Resident extends NPC {
   }
 }
 const _others = [];
+const CARRY_DROP = { basket: 0.235, crate: 0.335, can: 0.25, sack: 0.37 };   // (from the item's hand point down to its base)
+const SIT_SHAPES = new Map(), _m4 = new THREE.Matrix4(), _v1 = new THREE.Vector3();
+// the red slatted bench (town.js, island.js): the seat's top over its feet, the backrest's front face and the seat's
+// front edge along the way the sitter faces (m, from the bench's middle); other benches give their own (seat.spec)
+export const BENCH_RED = { seatY: 0.485, back: -0.25, front: 0.225 };

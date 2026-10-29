@@ -7,6 +7,7 @@ export const GRAVITY = 26;
 export const STEP_UP = 0.55;     // max height you can walk onto
 export const WATER_FLOOR = -0.35; // deeper than this counts as sea (blocked)
 export const MAX_SLOPE = 1.1;     // steepest walkable terrain (rise / run)
+export const BLOCK_LOW = 0.12;   // a `block` collider lower than this over the feet is stepped over (it is under them)
 
 const NONE = Object.freeze([]);   // (PERF-CPU: near()'s answer for an empty cell)
 
@@ -22,7 +23,10 @@ export class Physics {
 
   add(c) {
     // c: {type:'cyl', x,z,r, top, bottom?} | {type:'box', x,z,hw,hd,rot, top, bottom?}
+    // block: a low solid that is not a step (a bench, a planter box, a flower tub, a pot: SOLID-NPC props): never stepped
+    // onto, it stops an actor like a wall once it stands above the ankle (BLOCK_LOW); never stood on either (noStand)
     c.bottom ??= -50;
+    if (c.block) c.noStand = true;
     c.enabled ??= true;
     if (c.type === 'box') {
       c.cos = Math.cos(c.rot || 0);
@@ -140,7 +144,7 @@ export class Physics {
   blockedAt(x, z, y, r = 0) {
     for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
       if (!c.enabled) continue;
-      if (c.top > y + STEP_UP && c.bottom < y + 1.6 && this._inside(c, x, z, r)) return true;
+      if ((c.top > y + STEP_UP || (c.block && c.top > y + BLOCK_LOW)) && c.bottom < y + 1.6 && this._inside(c, x, z, r)) return true;
     }
     return false;
   }
@@ -200,7 +204,7 @@ export class Physics {
     for (let it = 0; it < 2; it++) {
       for (const c of this.near(nx, nz)) {
         if (!c.enabled || c.stair) continue; // (stairs: the height under the feet decides, step by step)
-        if (c.top <= p.y + STEP_UP || c.bottom > p.y + 1.7) continue;
+        if ((c.top <= p.y + STEP_UP && !(c.block && c.top > p.y + BLOCK_LOW)) || c.bottom > p.y + 1.7) continue;
         const push = this._push(c, nx, nz, r);
         if (push) { nx += push.x; nz += push.z; }
       }

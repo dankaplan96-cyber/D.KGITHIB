@@ -1,0 +1,31 @@
+PASS chapter 1 starts: chapter 1, started, in play [1,true,"play","out"]
+PASS home: Zoé met in the house, the next objective set ["house",true,"Meet Vesk at the harbour"]
+PASS the ferry docks: Vesk arrives and is on the pier [true,true,"play"]
+PASS Vesk's task given, the valves objective set [true,"Open the three bypass valves◆ The depot at the old camp (drones)◆ The orchard (behind bars)◆ The Whispering Cliffs (the old target)"]
+PASS the Water Office: the pipe map found, back outside [true,"out"]
+PASS three bypass valves to open [{"id":"depot","kind":"use","x":-68,"y":17.419999542236326,"z":-71.4},{"id":"orchard","kind":"ball","x":-79.60000000000001,"y":18.95006369810838,"z":-54.9},{"id":"cliff","kind":"use","x":-55.2,"y":20.33,"z":-36.6}]
+PASS valve depot (use) opened true
+PASS valve orchard (ball) opened true
+PASS valve cliff (use) opened true
+PASS the water's return is shown at the square (a shot near the well), then handed back with nothing left running {"water":true,"shots":[[-37.4,-9.9]],"nearWell":true,"back":true,"updaters":0,"state":"play"}
+PASS the journal lists only steps that happened (no open line in the past tense) ["c1_j_morning+","c1_j_vesk+","c1_j_valves+"]
+PASS after the water: Mira talks about the water, the pipe map says the valves are open {"said":["The well runs again! My report already says \"the water office solved the crisis\". Nobody asked for it boiling, so I left that bit out.","FunFrock's pipeline map. All three bypass valves are open now, and the town has its water."],"want":["The well runs again! My report already says \"the water office solved the crisis\". Nobody asked for it boiling, so I left that bit out.","FunFrock's pipeline map. All three bypass valves are open now, and the town has its water."]}
+PASS save → Continue: the chapter-1 flags and the open valves survive [true,"true,true,true"]
+PASS after Continue: the water flows, the station gate opens, an objective set [true,true,"Visit Vesk at the old fortress"]
+PASS Vesk's tour done; Zoé is needed [true,true]
+PASS Zoé's segment starts: playing Zoé in the project office [true,"zoe","projoffice"]
+PASS the guard's drawn sight points where he looks and stays in the office; no weapon pill as Zoé goes in {"dirs":[1,1,1,1,1,1,0.99,0.98],"outside":0,"pill":false}
+PASS Zoé finds the plan in the lockers true
+PASS Zoé's segment ends: back to Twinsen [true,"twinsen","out"]
+PASS the confrontation: Vesk leaves [true,false]
+PASS Arthur's radio heard, an objective set [true,"Talk to Doran at the harbour"]
+PASS Doran sends him to the spaceport, an objective set [true,"Meet Doran at the spaceport","-2.7","42.1"]
+PASS chapter 1 ends: the ship lands on Zeelich, chapter 2 (zeelich) in play ["play","zeelich","zeelich"]
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 23 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     6 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+EXIT 0

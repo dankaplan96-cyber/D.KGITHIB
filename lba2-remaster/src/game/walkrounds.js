@@ -15,6 +15,9 @@
 import { WalkNav } from './walknav.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
+// Zeelich's benches (zeelich.js: stone ends, a plank seat at 0.5 m, a tiled back): the seat's top, the back's front face
+// and the seat's front edge, as walkers.js BENCH_RED
+const ZEELICH_BENCH = { seatY: 0.53, back: -0.25, front: 0.245 };
 const D = (id, x, z, o) => ({ id, x, z, act: 'stand', ...o });
 
 // the bench nearest a point, as { slot (where it stands to sit down), seat (where it sits), a (the way it faces seated) }
@@ -23,7 +26,8 @@ function seatAt(W, x, z, list = W.seats) {
   for (const s of list || []) { if (s.own) continue; const d = Math.hypot(s.x - x, s.z - z); if (d < bd) { bd = d; best = s; } }
   if (!best || bd > 3) return null;
   const sx = Math.sin(best.ry), sz = Math.cos(best.ry);
-  return { slot: { x: best.x + sx * 1.15, z: best.z + sz * 1.15 }, seat: { x: best.x - sx * 0.06, z: best.z - sz * 0.06, a: best.ry }, ry: best.ry };
+  // (seat: the bench's middle and its shape, spec; the sitter's own place on it is walkers.js seatPose)
+  return { slot: { x: best.x + sx * 1.15, z: best.z + sz * 1.15 }, seat: { x: best.x, z: best.z, a: best.ry, spec: best.spec }, ry: best.ry };
 }
 // a resident's own front door: the house whose door is nearest the hint
 function doorAt(W, x, z, list = W.houses) {
@@ -129,7 +133,7 @@ export function zeelichRoster(game) {
   if (!R) return null;
   const ox = R.group?.position.x ?? 2400, Y0 = R.group?.position.y ?? 0;
   game.walkers?.nav.addLevel(ox - 62, ox + 66, 6.0);
-  const Wz = { seats: [[-31, -4.6, 0], [-17, 4.6, Math.PI], [3, -4.6, 0], [14, 4.6, Math.PI], [-31, 2.2, Math.PI / 2 + 0.25], [26, -4.6, 0]].map(([x, z, ry]) => ({ x: ox + x, z, ry })),
+  const Wz = { seats: [[-31, -4.6, 0], [-17, 4.6, Math.PI], [3, -4.6, 0], [14, 4.6, Math.PI], [-31, 2.2, Math.PI / 2 + 0.25], [26, -4.6, 0]].map(([x, z, ry]) => ({ x: ox + x, z, ry, spec: ZEELICH_BENCH })),
     houses: (R.houseDoors || []).map((d, i) => ({ door: d, ry: d.z < 0 ? 0 : Math.PI, x: d.x, z: d.z + (d.z < 0 ? -2.6 : 2.6), skip: i === 1 || i === 4 })).filter((h) => !h.skip) };
   const bench = (id, x, z, dur, o = {}) => { const b = seatAt(Wz, ox + x, z); if (!b) return null; return { id, x: b.slot.x, z: b.slot.z, a: b.ry + Math.PI, act: 'stand', seat: b.seat, dur, ...o }; };
   const home = (id, x, z, dur) => { const d = doorAt(Wz, ox + x, z); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur }; };
