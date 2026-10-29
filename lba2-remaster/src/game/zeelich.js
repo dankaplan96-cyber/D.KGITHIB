@@ -370,7 +370,7 @@ function emblemMaterial() {
       for (const s of [-1, 1]) { x.beginPath(); x.moveTo(64 + s * 26, 46); x.quadraticCurveTo(64 + s * 46, 30, 64 + s * 44, 8); x.quadraticCurveTo(64 + s * 36, 30, 64 + s * 16, 40); x.fill(); }
       x.beginPath(); x.moveTo(64, 50); x.quadraticCurveTo(80, 74, 64, 86); x.quadraticCurveTo(48, 74, 64, 50); x.fill();
     }, false);
-    return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: '#3fe6ff', emissiveIntensity: 2.2, color: '#9ff0ff', transparent: true, alphaTest: 0.3, depthWrite: false, roughness: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
+    return new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: '#3fe6ff', emissiveIntensity: 2.2, color: '#9ff0ff', transparent: true, alphaTest: 0.3, depthWrite: false, roughness: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, forceSinglePass: true });   // (PERF-CALLS: flat decals on solid things — never a front and a back face on one pixel: both sides in one draw, the same pixels)
   });
 }
 const emq = () => cached('emq', () => new THREE.PlaneGeometry(1, 1));

@@ -416,6 +416,8 @@ export class Bench {
         + (s.pace ? ` · pacing: on the refresh ${Math.round((100 * s.pace.on) / s.frames)} % · 17.2–20 ms ${Math.round((100 * s.pace.slow) / s.frames)} % · longer ${Math.round((100 * s.pace.long) / s.frames)} % · callback late p50 ${s.pace.lag ?? '?'} (p95 ${s.pace.lagP95 ?? '?'}) ms · uploads a frame p50 ${s.pace.up ?? '?'} (${s.pace.upKB != null ? s.pace.upKB.toFixed(0) : '?'} KB)` : ''));
       if (x.hitches.length) lines.push(`      every frame over 33 ms: ${x.hitches.slice(0, 12).join(' ')}${x.hitches.length > 12 ? ` … +${x.hitches.length - 12}` : ''}`);
     }
+    { const DB = G.drawBatch, SC = G.shadowCull; let left = 0, members = 0; for (const A of DB?.areas?.values?.() || []) { left += A.outs?.length || 0; members += A.members.length; }
+      lines.push('', `draw batches: ${DB?.builds ?? 0} area builds, ${(DB?.buildMs ?? 0).toFixed(0)} ms in all · pieces in batches now ${members}, left and drawn on their own ${left}, rejoined at scene changes ${DB?.readmitted ?? 0} · shadow batches: ${SC?.builds ?? 0} area builds, ${(SC?.buildMs ?? 0).toFixed(0)} ms`); }
     const D = this.decisions(t0 - 1);
     lines.push('', `Auto's decisions during the run (s since the page opened · what · why -> the state after):`, ...(D.length ? D : ['    none (it held its state)']));
     lines.push('', `Auto now: ${A.label()}`, ...A.report().slice(1));
@@ -463,6 +465,10 @@ export class Bench {
     }
     { const M = G.renderer.renderer.info.memory, heap = performance.memory?.usedJSHeapSize;
       lines.push(`memory: ${M.geometries} geometries and ${M.textures} textures on the GPU · ${G.renderer.renderer.info.programs?.length ?? '?'} shader programs (every preset and breakdown variant run has its own)${heap ? ` · JavaScript heap ${(heap / 1048576).toFixed(0)} MB` : ''} · GPU timer: ${G.perf.gpuTimer ? 'yes' : 'not offered by this browser'} · parallel shader compile (KHR_parallel_shader_compile): ${G.renderer.renderer.extensions?.has?.('KHR_parallel_shader_compile') ? 'yes' : 'no'}`); }
+    // (PERF-CALLS: the draw batches' work — first builds, pieces that left a batch (drawn on their own since) and
+    //  pieces that rejoined behind a scene change's black — and the shadow batches' first builds)
+    { const DB = G.drawBatch, SC = G.shadowCull; let left = 0, members = 0; for (const A of DB?.areas?.values?.() || []) { left += A.outs?.length || 0; members += A.members.length; }
+      lines.push(`draw batches: ${DB?.builds ?? 0} area builds, ${(DB?.buildMs ?? 0).toFixed(0)} ms in all · pieces in batches now ${members}, left and drawn on their own ${left}, rejoined at scene changes ${DB?.readmitted ?? 0} (${(DB?.readmitMs ?? 0).toFixed(0)} ms) · shadow batches: ${SC?.builds ?? 0} area builds, ${(SC?.buildMs ?? 0).toFixed(0)} ms`); }
     let q = null;
     const brk = results.filter((x) => x.v);
     const fixed = results.filter((r) => !r.v && !r.played), played = results.filter((r) => r.played);

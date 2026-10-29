@@ -136,12 +136,25 @@ class Area {
       _v.applyMatrix4(_m); if (!Number.isFinite(_v.x + _v.y + _v.z)) _v.set(0, 0, 0);
       pos[k * 3] = _v.x; pos[k * 3 + 1] = _v.y; pos[k * 3 + 2] = _v.z;
     };
+    // (PERF-CALLS: the positions without a call per vertex where the attribute is a plain float triple — three's own
+    //  arithmetic in its order, the same floats; a first visit's shadow batches were ~140 ms on the user's laptop)
+    const e = _m.elements;
+    const putN = (A, i, k) => {
+      let x = A[i * 3], y = A[i * 3 + 1], z = A[i * 3 + 2];
+      if (!(Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(z))) { x = 0; y = 0; z = 0; }
+      const w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]);
+      let X = (e[0] * x + e[4] * y + e[8] * z + e[12]) * w, Y = (e[1] * x + e[5] * y + e[9] * z + e[13]) * w, Z = (e[2] * x + e[6] * y + e[10] * z + e[14]) * w;
+      if (!Number.isFinite(X + Y + Z)) { X = 0; Y = 0; Z = 0; }
+      pos[k * 3] = X; pos[k * 3 + 1] = Y; pos[k * 3 + 2] = Z;
+    };
     for (const { C, T, map, from, vo } of parts) {
       const g = C.o.geometry, I = g.index, P = g.attributes.position;
       _m.multiplyMatrices(this.inv, C.o.matrixWorld);
       const flip = _m.determinant() < 0;
+      const raw = !P.normalized && !P.isInterleavedBufferAttribute && P.itemSize === 3 ? P.array : null;
       if (!T) {
-        for (let i = 0; i < P.count; i++) put(P, i, vo + i);
+        if (raw) for (let i = 0; i < P.count; i++) putN(raw, i, vo + i);
+        else for (let i = 0; i < P.count; i++) put(P, i, vo + i);
         const n = I ? I.count - (I.count % 3) : P.count - (P.count % 3);
         for (let i = 0; i < n; i += 3) {
           const a = I ? I.getX(i) : i, b = I ? I.getX(i + 1) : i + 1, c = I ? I.getX(i + 2) : i + 2;
@@ -149,7 +162,8 @@ class Area {
         }
         continue;
       }
-      for (let k = 0; k < from.length; k++) put(P, from[k], vo + k);
+      if (raw) for (let k = 0; k < from.length; k++) putN(raw, from[k], vo + k);
+      else for (let k = 0; k < from.length; k++) put(P, from[k], vo + k);
       for (let k = 0; k < T.length; k++) {
         const t = T[k], a = I ? I.getX(t * 3) : t * 3, b = I ? I.getX(t * 3 + 1) : t * 3 + 1, c = I ? I.getX(t * 3 + 2) : t * 3 + 2;
         idx[io] = map[a] + vo; idx[io + 1] = map[flip ? c : b] + vo; idx[io + 2] = map[flip ? b : c] + vo; io += 3;

@@ -11,7 +11,7 @@ await ev(() => { document.querySelector('[data-act="new"]').click(); game.testFr
 await ev((q) => { game.settings.quality = q; game.settings.qualityAuto = false; game.applySettings(); }, Q);
 if (process.env.BATTERY) await ev(() => game.setBattery(true));
 await page.waitForFunction(() => !game.gfxHold, null, { timeout: 600000 }).catch(() => {});
-const info = await ev(({ area, route, T, cam, yaw }) => {
+const info = await ev(({ area, route, T, cam, yaw, hide }) => {
   const G = game, R = G.renderer.renderer;
   G.state = 'play';
   let rt = null;
@@ -20,9 +20,12 @@ const info = await ev(({ area, route, T, cam, yaw }) => {
   if (cam) { G.settings.camera = cam; G.camRig.setMode(cam); G.settings.camDist = 'far'; G.applySettings(); G.camRig.cut = false; }
   G.state = 'play';
   for (let t = 0; t < T; t += 1 / 30) { rt?.drive(t, 1 / 30); G.frame(1 / 30, false); }
+  // (HIDEACTORS: people, the hero and particles out of the picture — their poses follow Math.random, whose sequence any
+  //  change in the number of objects made shifts (three's ids draw from it): the world alone is compared)
+  if (hide) { const off = (o) => { if (o) o.visible = false; }; off(G.hero?.rig?.root); off(G.hero?.mesh); off(G.hero?.root); for (const n of G.npcs || []) { off(n.rig?.root); off(n.mesh); off(n.root); } for (const e of G.enemies || []) { off(e.rig?.root); off(e.mesh); off(e.root); } off(G.particles?.mesh); off(G.particles?.points); G.scene.traverse((o) => { if (o.isSkinnedMesh || o.name === 'softParticles' || o.name === 'blobBatch') o.visible = false; }); }
   G.frame(1 / 60, true); G.perf.beginFrame(); G.frame(0, true);
   return { room: G.room?.id || 'citadel', calls: R.info.render.calls, shadow: G.perf.shadow, tris: R.info.render.triangles, hero: [G.hero.pos.x.toFixed(2), G.hero.pos.z.toFixed(2)], runs: G.drawBatch.areas.get(G.room?.group || G.world.root)?.runs ?? null };
-}, { area: AREA, route: ROUTE, T, cam: process.env.CAM || '', yaw: process.env.YAW != null ? +process.env.YAW : null });
+}, { area: AREA, route: ROUTE, T, cam: process.env.CAM || '', yaw: process.env.YAW != null ? +process.env.YAW : null, hide: !!process.env.HIDEACTORS });
 console.log(JSON.stringify(info));
 await page.screenshot({ path: process.env.OUT || 'shot.png', timeout: 300000 });
 await browser.close();
