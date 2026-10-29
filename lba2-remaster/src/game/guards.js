@@ -87,6 +87,13 @@ export class Guard extends Actor {
     const g = this.game;
     this.hp -= n; this.rig.hitFlash?.(); this.hurtT = 0.45;
     this.react = Math.random() < 0.5 ? 'hurt' : 'turn';   // CHOC or CHOC2
+    // (ACTION-FEEL: CHOC2 is a half-turn away from the blow. It only shuffled the feet on the spot — the head moved 1–3 cm,
+    // the body not at all — so half the hits showed nothing but the push. Now the body is spun 0.9 rad away from the side
+    // the blow came from, quickly, and the chase turns it back)
+    if (this.react === 'turn') {
+      const side = from ? Math.sign(angleDiff(this.angle, Math.atan2(from.x - this.pos.x, from.z - this.pos.z))) || (Math.random() < 0.5 ? 1 : -1) : 1;
+      this.spinTo = this.angle - side * 0.9;
+    }
     if (this.state === 'aim') g.combatDir?.done(this);
     this.aimLine.visible = false;
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z), k = this.grobo ? 2.5 : 5; this.kb.set(Math.sin(a) * k, Math.cos(a) * k); }
@@ -176,6 +183,7 @@ export class Guard extends Actor {
         break;
       case 'hurt':
         anim = this.react === 'turn' ? 'turnL' : 'hurt';
+        if (this.react === 'turn' && this.stateT < 0.3) face = this.spinTo;
         if (this.stateT > 0.5) { this.state = 'chase'; this.stateT = 0; }
         break;
       case 'search': {
@@ -196,7 +204,7 @@ export class Guard extends Actor {
       }
     }
     if (this.hurtT > 0 && this.state !== 'hurt') sp = 0;
-    if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'strike' ? 1.5 : 4, dt);
+    if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'strike' ? 1.5 : this.state === 'hurt' ? 16 : 4, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     this.applyKnockback(dt);
     this.keepOffHero(dt);

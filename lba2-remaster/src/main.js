@@ -2262,7 +2262,8 @@ class Game {
     if (input.pressed('tswitch') && T.lock) T.cycle(input.wheelSteps < 0 ? -1 : 1);
     if (input.pressed('recenterPad') && !T.lock) this.camRig.recenter();
     // hit-stop: a few frames of near-stillness on a solid sword hit (input is still read)
-    if (this.hitStop > 0) { this.hitStop -= dt; dt *= 0.1; }
+    const stopped = this.hitStop > 0;
+    if (stopped) { this.hitStop -= dt; dt *= 0.1; }
     this.combatDir.update(dt);
     if (input.pressed('recenter')) this.camRig.recenter();
     if (input.pressed('view')) this.camRig.toggleView();
@@ -2271,6 +2272,9 @@ class Game {
 
     h.update(dt, input);
     if (this.state !== 'play') return;
+    // (ACTION-FEEL: a blow that lands in this frame holds the rest of it too, so the struck enemy's reaction starts after
+    // the held impact: it jumped 8 cm on the contact frame, stood 3 frames, then went on. The hold's length is unchanged)
+    if (!stopped && this.hitStop > 0) { this.hitStop -= dt; dt *= 0.1; }
     for (const n of this.npcs) n.update(dt);
     this.gadgets.updateEnemies(dt);   // (each enemy's update; a meca-penguin may stand in for Twinsen)
     this.ball.update(dt);

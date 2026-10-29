@@ -307,7 +307,12 @@ export class Hero extends Actor {
     // comes from the animation, not a push; in the air, in a dodge or while an action holds him: as before)
     const classic = g.settings.controls === 'classic';
     if (classicGround && !cs.drive) this.vel.set(wx, wz);
-    else {
+    else if (!classic && !locked && !cs.drive && this.onGround && !wx && !wz && !this.steer) {
+      // (ACTION-FEEL) Modern, let go on the ground: he brakes at his gait's own rate (`down`, as Classic's tank stops),
+      // not on an exponential tail: that took 15 frames to stop a walk (Classic 3) and slid the last 7 in the idle pose
+      const sp = Math.hypot(this.vel.x, this.vel.y), ns = Math.max(0, sp - gait.down * dt);
+      if (sp > 1e-6) this.vel.multiplyScalar(ns / sp);
+    } else {
       const accel = cs.drive ? 40 : !this.onGround ? 3 : classic ? 26 : (wx || wz) ? (beh === 'athletic' ? 9 : 12) : 14;
       const k = 1 - Math.exp(-accel * dt);
       this.vel.x += (wx - this.vel.x) * k; this.vel.y += (wz - this.vel.y) * k;
@@ -562,6 +567,10 @@ export class Hero extends Actor {
     this.prevRunSpeed = Math.hypot(this.vel.x, this.vel.y);
     this.coyote = 0; this.jumpBuf = 0;
     if (!this.onGround) { this.takeOff(); return; }
+    // (ACTION-FEEL: on the move he takes off on the frame of the press, from the same spot: the crouch held him dead still
+    // for 0.09 s first, 4.96 → 0 → 4.24 m/s, a hitch in every running jump and 5 frames of lag. The jump itself, its
+    // arc and length, is unchanged. Standing, the crouch stays: it carries no speed to lose)
+    if (this.prevRunSpeed > 1.5) { this.takeOff(); return; }
     this.act('jumpPrep', 0.09, () => this.takeOff(), 0.001);
   }
   takeOff() {
