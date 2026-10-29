@@ -25,6 +25,7 @@
 //    window panes, bolts: the stragglers a merge leaves alone), half of them tested per frame (its size on screen
 //    only changes with distance, so a turning camera never sees one late).
 import * as THREE from 'three';
+import { MW } from './drawcull.js';
 
 export const SMALL_FAR = { high: 24, medium: 18, low: 18 };
 export const MIN_PX = { high: 0, medium: 4, low: 7 };
@@ -51,6 +52,7 @@ const batchable = (o) => {
   if (!m || m.alphaTest > 0 || m.alphaHash || m.displacementMap || (g.morphAttributes && Object.keys(g.morphAttributes).length)) return false;
   return !!g.attributes.position;
 };
+const keptIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (p.userData.keep) return true; return false; };
 // shown (this and every parent up to the root), and on layer 0
 const shownIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
 
@@ -66,9 +68,11 @@ class Area {
       if (!o.isMesh || o.userData.shadowProxy) return;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       if (!g.boundingSphere || !Number.isFinite(g.boundingSphere.radius)) return;
-      const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true };
+      const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true, next: -0.5, mwF: -1 };   // (next / mwF: PERF-CPU's distance detail; numbers from the start, so V8 keeps them unboxed)
       if (!o.castShadow) { quiet(o, C); return; }
-      if (!batchable(o) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } return; }
+      // (PERF-CPU: a builder's moving or toggling part — userData.keep, as drawbatch.js reads it: a dog, a boat, the cargo
+      //  lift, crates that break — casts on its own: in a batch, its first move rebuilt the batch and the static shadow cache)
+      if (!batchable(o) || keptIn(o, root) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } return; }
       const m = o.material;
       C.side = m.side; C.shadowSide = m.shadowSide; C.mat = o.matrixWorld.clone();
       this.assign(C);
@@ -165,14 +169,14 @@ class Area {
   // a quarter of the batched pieces per frame: moved, hidden or shown → out of its batch, casting on its own
   // (PERF-BATTERY: all of them on each of an area's first FRESH updates: a piece that starts moving on arrival — a
   //  mill, a lift — leaves on the first frame, still behind the scene change's black, not a few frames into the fade)
-  watch() {
+  watch(full = false) {
     const n = this.members.length; if (!n) return;
-    const all = this.tick < FRESH, q = all ? n : Math.ceil(n / 4), from = all ? 0 : (this.tick % 4) * q;
+    const all = full || this.tick < FRESH, q = all ? n : Math.ceil(n / 4), from = all ? 0 : (this.tick % 4) * q;
     this.tick++;
     for (let i = from; i < Math.min(n, from + q); i++) {
       const C = this.members[i]; if (!C || C.solo) continue;
       if (C.o.matrixWorld.equals(C.mat) && shownIn(C.o, this.root) && C.o.parent) continue;
-      C.solo = true; C.o.castShadow = true;
+      C.solo = true; C.o.castShadow = true; this.left = (this.left || 0) + 1;
       for (const cell of C.cells) { cell.dirty = true; cell.list.splice(cell.list.indexOf(C), 1); }
       this.solo.push(C);
     }
@@ -221,13 +225,20 @@ export class ShadowCull {
   build(root) { const t0 = performance.now(), A = new Area(root, this.cell); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + performance.now() - t0; return A; }
   // (all pieces cast on their own again; batches removed: the benchmark's comparisons, or switching it off)
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); this.area = null; }
+  // (PERF-CPU: pieces that left a shadow batch so far, for the scene change's settle frames: Game.updateTransition)
+  get left() { let n = 0; for (const A of this.areas.values()) n += A.left || 0; return n; }
   update(root, camera, focus) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return; }
     let A = this.areas.get(root);
     if (!A) { A = this.build(root); this.areas.set(root, A); }
     this.area = A;
     this.hide();
-    A.watch();
+    // PERF-CPU: without the sun's shadow pass (Low, Auto's no-shadow profiles) what only decides who casts — the pieces
+    // leaving their batches, the batches' and solo casters' view tests — is skipped; the first update with shadows again
+    // checks every piece at once. (castShadow is read by the shadow pass only, and a moved piece that is also in a draw
+    // batch leaves that batch by drawbatch.js's own check.)
+    const shadows = this.shadowsOn ? this.shadowsOn() : true;
+    if (shadows) { A.watch(A.stale === true); A.stale = false; } else A.stale = true;
     camera.updateMatrixWorld();
     _f.setFromProjectionMatrix(_m.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse.copy(camera.matrixWorld).invert()));
     const d = this.sunDir, horiz = Math.hypot(d.x, d.z) || 1, slope = d.y > 0.05 ? horiz / d.y : 4;
@@ -240,57 +251,82 @@ export class ShadowCull {
       _s.radius = r + len * 0.5 + 0.5;
       return _f.intersectsSphere(_s);
     };
-    // the batches (PERF-BATTERY): a batch casts while its box is in the shadow camera's box and the volume its shadow
-    // can fill (the box swept away from the sun and down by its own height + SWEEP_DROP m: a shadow falling down a
-    // slope) touches the view. Exact convex tests (a hull outside one plane of a frustum is outside it); the sphere
-    // test before them let in every batch within a cell's size of the view.
-    const S = this.sun?.shadow, sb = S && this.shadowBox(S);
-    for (const cell of A.cells.values()) {
-      const p = cell.mesh; if (!p) continue;
-      if (!cell.box) { _c.copy(cell.c).applyMatrix4(p.matrixWorld); p.castShadow = reaches(_c, cell.r); continue; }
-      _b.copy(cell.box).applyMatrix4(p.matrixWorld);
-      const H = _b.max.y - _b.min.y + SWEEP_DROP, ox = -(d.x / horiz) * H * slope, oz = -(d.z / horiz) * H * slope;
-      for (let i = 0; i < 8; i++) {
-        _pts[i].set(i & 1 ? _b.max.x : _b.min.x, i & 2 ? _b.max.y : _b.min.y, i & 4 ? _b.max.z : _b.min.z);
-        _pts[i + 8].set(_pts[i].x + ox, _pts[i].y - H, _pts[i].z + oz);
+    if (shadows) {
+      // the batches (PERF-BATTERY): a batch casts while its box is in the shadow camera's box and the volume its shadow
+      // can fill (the box swept away from the sun and down by its own height + SWEEP_DROP m: a shadow falling down a
+      // slope) touches the view. Exact convex tests (a hull outside one plane of a frustum is outside it); the sphere
+      // test before them let in every batch within a cell's size of the view.
+      const S = this.sun?.shadow, sb = S && this.shadowBox(S);
+      for (const cell of A.cells.values()) {
+        const p = cell.mesh; if (!p) continue;
+        if (!cell.box) { _c.copy(cell.c).applyMatrix4(p.matrixWorld); p.castShadow = reaches(_c, cell.r); continue; }
+        _b.copy(cell.box).applyMatrix4(p.matrixWorld);
+        const H = _b.max.y - _b.min.y + SWEEP_DROP, ox = -(d.x / horiz) * H * slope, oz = -(d.z / horiz) * H * slope;
+        for (let i = 0; i < 8; i++) {
+          _pts[i].set(i & 1 ? _b.max.x : _b.min.x, i & 2 ? _b.max.y : _b.min.y, i & 4 ? _b.max.z : _b.min.z);
+          _pts[i + 8].set(_pts[i].x + ox, _pts[i].y - H, _pts[i].z + oz);
+        }
+        p.castShadow = !(sb && outside(sb, _pts, 8)) && !outside(_f, _pts, 16);
       }
-      p.castShadow = !(sb && outside(sb, _pts, 8)) && !outside(_f, _pts, 16);
-    }
-    // pieces casting on their own
-    for (const C of A.solo) {
-      const o = C.o;
-      _c.copy(C.c).applyMatrix4(o.matrixWorld);
-      const r = C.r * o.matrixWorld.getMaxScaleOnAxis();
-      let on = reaches(_c, r);
-      if (on && r < SMALL_R && focus) { const dist = Math.hypot(focus.x - _c.x, focus.z - _c.z); on = C.on ? dist < far + 2 : dist < far - 2; }
-      C.on = on; o.castShadow = on;
+      // pieces casting on their own
+      for (const C of A.solo) {
+        const o = C.o;
+        _c.copy(C.c).applyMatrix4(o.matrixWorld);
+        const r = C.r * o.matrixWorld.getMaxScaleOnAxis();
+        let on = reaches(_c, r);
+        if (on && r < SMALL_R && focus) { const dist = Math.hypot(focus.x - _c.x, focus.z - _c.z); on = C.on ? dist < far + 2 : dist < far - 2; }
+        C.on = on; o.castShadow = on;
+      }
     }
     // distance detail (both passes) for the static pieces
+    // PERF-CPU: a piece's decision depends on its distance from the camera and (KEEP_NEAR) from the focus only, so it
+    // cannot change until the camera and the focus together have moved as far as the piece is from its nearest
+    // threshold: each piece is looked at again once the area's odometer (the camera's travel + the focus's) has run that
+    // far, or when its own world matrix was recomputed (drawcull.js `__mwF`), or when the threshold itself changes
+    // (quality, screen height, field of view). The same decisions as testing every piece every frame, without the work.
     if (minPx || A.pxOn) {
+      const fast = this.fast !== false && MW.cached && !!minPx;
+      const key = minPx + '|' + pxK + '|' + KEEP_NEAR + '|' + !!focus;
+      const O = (A.odo ??= { d: 0, cx: cam.x, cy: cam.y, cz: cam.z, fx: focus?.x ?? 0, fz: focus?.z ?? 0, key: '' });
+      { const ax = cam.x - O.cx, ay = cam.y - O.cy, az = cam.z - O.cz, fx = focus ? focus.x - O.fx : 0, fz = focus ? focus.z - O.fz : 0; O.d += Math.sqrt(ax * ax + ay * ay + az * az) + Math.sqrt(fx * fx + fz * fz) + 1e-9; }   // (sqrt: Math.hypot allocated here; the tiny epsilon keeps the odometer conservative)
+      O.cx = cam.x; O.cy = cam.y; O.cz = cam.z; if (focus) { O.fx = focus.x; O.fz = focus.z; }
+      const again = !fast || O.key !== key; O.key = key;
       A.pxOn = !!minPx;
-      for (const C of A.members) {
+      const judge = (C) => {
         const o = C.o;
-        if (o.userData.drawBatched) { C.shown = true; continue; }   // (RENDER-INV: drawn by a draw batch: engine/drawbatch.js)
-        let shown = true;
+        let shown = true, margin = Infinity;
         if (minPx) {
           _c.copy(C.c).applyMatrix4(o.matrixWorld);
-          const px = (C.r * o.matrixWorld.getMaxScaleOnAxis() * pxK) / Math.max(0.1, _c.distanceTo(cam));
-          shown = !(px >= 0) || (focus && Math.hypot(focus.x - _c.x, focus.z - _c.z) < KEEP_NEAR) || (C.shown ? px > minPx * 0.85 : px > minPx);
-        }
-        if (shown !== C.shown) { C.shown = shown; if (shown) o.layers.enable(0); else o.layers.disable(0); }
-      }
-      const Q = A.quiet, step = minPx ? 2 : 1;   // (all at once when the detail is switched off: everything shows again)
-      for (let i = minPx ? A.tick & 1 : 0; i < Q.length; i += step) {
-        const C = Q[i], o = C.o;
-        if (o.userData.drawBatched) { C.shown = true; continue; }
-        let shown = true;
-        if (minPx) {
-          _c.copy(C.c).applyMatrix4(o.matrixWorld);
-          const px = (C.r * o.matrixWorld.getMaxScaleOnAxis() * pxK) / Math.max(0.1, _c.distanceTo(cam));
+          const R = C.r * o.matrixWorld.getMaxScaleOnAxis(), dist = _c.distanceTo(cam), px = (R * pxK) / Math.max(0.1, dist);
+          const fd = focus ? Math.hypot(focus.x - _c.x, focus.z - _c.z) : Infinity;   // (the same test as before, to the last bit)
           // (bounds that aren't finite — a builder's stray NaN vertex — can't be judged: drawn as before)
-          shown = !(px >= 0) || (focus && Math.hypot(focus.x - _c.x, focus.z - _c.z) < KEEP_NEAR) || (C.shown ? px > minPx * 0.85 : px > minPx);
+          shown = !(px >= 0) || fd < KEEP_NEAR || (C.shown ? px > minPx * 0.85 : px > minPx);
+          if (px >= 0) {
+            // how far the camera / focus must move before the decision can flip (after it is taken, with its hysteresis)
+            const thr = (shown ? 0.85 : 1) * minPx, dFlip = (R * pxK) / thr;
+            margin = Math.min(Math.abs(Math.max(0.1, dist) - dFlip), focus ? Math.abs(fd - KEEP_NEAR) : Infinity);
+            if (dist < 0.1 && dFlip > 0.1) margin = Math.min(margin, 0.1 - dist + (dFlip - 0.1));
+          }
         }
+        C.next = O.d + margin * 0.999 - 1e-6; C.mwF = o.__mwF ?? -1;
         if (shown !== C.shown) { C.shown = shown; if (shown) o.layers.enable(0); else o.layers.disable(0); }
+      };
+      for (const C of A.members) {
+        if (C.o.userData.drawBatched) { C.shown = true; continue; }   // (RENDER-INV: drawn by a draw batch: engine/drawbatch.js)
+        if (!again && O.d < C.next && (C.o.__mwF ?? -1) === C.mwF) continue;
+        judge(C);
+      }
+      const Q = A.quiet;
+      if (fast) {
+        for (let i = 0; i < Q.length; i++) {
+          const C = Q[i];
+          if (C.o.userData.drawBatched) { C.shown = true; continue; }
+          if (!again && O.d < C.next && (C.o.__mwF ?? -1) === C.mwF) continue;
+          judge(C);
+        }
+      } else {
+        const step = minPx ? 2 : 1;   // (all at once when the detail is switched off: everything shows again)
+        for (let i = minPx ? A.tick & 1 : 0; i < Q.length; i += step) { const C = Q[i]; if (C.o.userData.drawBatched) { C.shown = true; continue; } judge(C); }
       }
     }
   }

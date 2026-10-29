@@ -130,8 +130,9 @@ export class WalkNav {
     this._push(job.open, [this._h(s, g), k0]);
   }
   _h(a, b) { return Math.hypot(a.x - b.x, a.z - b.z) * 1.15; }
-  _push(h, it) { h.push(it); let i = h.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (h[p][0] <= h[i][0]) break; [h[p], h[i]] = [h[i], h[p]]; i = p; } }
-  _pop(h) { const top = h[0], last = h.pop(); if (h.length) { h[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < h.length && h[l][0] < h[m][0]) m = l; if (r < h.length && h[r][0] < h[m][0]) m = r; if (m === i) break; [h[m], h[i]] = [h[i], h[m]]; i = m; } } return top; }
+  // (PERF-CPU: swaps through a temporary, not a destructuring array: the planner runs ~120 expansions every frame)
+  _push(h, it) { h.push(it); let i = h.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (h[p][0] <= h[i][0]) break; const t = h[p]; h[p] = h[i]; h[i] = t; i = p; } }
+  _pop(h) { const top = h[0], last = h.pop(); if (h.length) { h[0] = last; let i = 0; for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < h.length && h[l][0] < h[m][0]) m = l; if (r < h.length && h[r][0] < h[m][0]) m = r; if (m === i) break; const t = h[m]; h[m] = h[i]; h[i] = t; i = m; } } return top; }
   // run a job for up to `n` expansions; true when it finished
   _run(job, n) {
     if (job.done) return true;
@@ -141,7 +142,7 @@ export class WalkNav {
     const gk = K(Math.round(g.x / CELL), Math.round(g.z / CELL));
     for (let it = 0; it < n; it++) {
       if (!open.length) { job.done = true; job.ok = false; this._finish(job, job.closestK); return true; }
-      const [, k] = this._pop(open);
+      const k = this._pop(open)[1];
       if (closed.has(k)) continue;
       closed.add(k);
       const c = node.get(k);
@@ -159,7 +160,7 @@ export class WalkNav {
         const nk = K(cx + dx, cz + dz);
         if (closed.has(nk)) continue;
         let sm = 0;
-        for (const s of this.soft) { const sd = Math.hypot(nb.x - s.x, nb.z - s.z); if (sd < 2.4) sm += (2.4 - sd) * 1.5; }
+        for (let si = 0, S = this.soft; si < S.length; si++) { const s = S[si], sd = Math.hypot(nb.x - s.x, nb.z - s.z); if (sd < 2.4) sm += (2.4 - sd) * 1.5; }
         const ng = gc + Math.hypot(dx, dz) * CELL * (c.c + nb.c + sm) * 0.5;
         if (ng >= (best.get(nk) ?? 1e18)) continue;
         best.set(nk, ng); prev.set(nk, k); node.set(nk, nb);

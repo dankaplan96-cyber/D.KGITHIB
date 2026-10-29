@@ -93,6 +93,12 @@ export class HUD {
   stats(h) {
     this._incrust(h);
     this._objTick();
+    // (PERF-CPU: the panel is written only when a value it shows changed: a text set every frame, even to the same
+    //  value, made the browser recompute the HUD's style and layout every frame)
+    const L = (this._sv ??= {}), sh = h.shards;
+    let shards = 0; for (let i = 0; i < sh.length; i++) if (sh[i]) shards |= 1 << i;
+    if (L.hp === h.hp && L.maxHp === h.maxHp && L.mp === h.mp && L.mpMax === h.mpMax && L.lv === h.magicLevel && L.cl === h.clovers && L.co === h.coins && L.key === h.hasKey && L.sh === shards) return;
+    L.hp = h.hp; L.maxHp = h.maxHp; L.mp = h.mp; L.mpMax = h.mpMax; L.lv = h.magicLevel; L.cl = h.clovers; L.co = h.coins; L.key = h.hasKey; L.sh = shards;
     $('#lifebar i').style.width = (100 * h.hp) / h.maxHp + '%';
     $('#magicbar i').style.width = (100 * h.mp) / h.mpMax + '%';
     $('#magicbar').dataset.level = h.magicLevel;
@@ -520,6 +526,11 @@ export class HUD {
     const mode = this.miniMode = g.settings?.minimap === 'camera' ? 'camera' : 'north';
     const y = g.camRig?.yaw ?? 0, phi = mode === 'camera' ? -Math.PI / 2 - Math.atan2(-Math.cos(y), -Math.sin(y)) : 0;
     const view = indoor ? 24 : 70, k = W / view, sc = W / 190;
+    // (PERF-CPU: the same picture is not drawn again: unless he moved, turned, the map turned, the base map or the room
+    //  changed, it is redrawn 4 times a second at most — for the markers. A canvas drawn every frame is GPU-process work.)
+    const now = performance.now(), Q = (this._miniQ ??= {});
+    if (Q.x === h.pos.x && Q.z === h.pos.z && Q.a === h.angle && Q.phi === phi && Q.done === B.done && Q.B === B && Q.room === this.miniRoom && Q.W === W && now - Q.t < 250) return;
+    Q.x = h.pos.x; Q.z = h.pos.z; Q.a = h.angle; Q.phi = phi; Q.done = B.done; Q.B = B; Q.room = this.miniRoom; Q.W = W; Q.t = now;
     this._mini = { cx: h.pos.x, cz: h.pos.z, k, phi, W };
     ctx.save();
     ctx.clearRect(0, 0, W, W);

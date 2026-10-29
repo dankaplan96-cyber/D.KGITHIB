@@ -35,7 +35,7 @@ export class Terrain {
   addPatch(t, cx, cz) { (this.patches ||= []).push({ t, cx, cz }); }
 
   heightAt(x, z) {
-    if (this.patches) for (const p of this.patches) {
+    if (this.patches) for (let k = 0, L = this.patches; k < L.length; k++) { const p = L[k];   // (PERF-CPU: no iterator: called thousands of times a frame)
       const lx = x - p.cx, lz = z - p.cz;
       if (lx > -p.t.half && lx < p.t.half && lz > -p.t.half && lz < p.t.half) return p.t.heightAt(lx, lz);
     }

@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { damp, angleDiff, clamp } from './math.js';
 import { textures } from './textures.js';
+import { plain, twinOf } from './merge.js';
 
 // ------------------------------------------------------------------ blob shadow
 // LBA2 draws a shaded quad under every actor (AfficheShadow / DrawShadow).
@@ -105,6 +106,59 @@ function joint(parent, x, y, z) {
   g.position.set(x, y, z);
   parent.add(g);
   return g;
+}
+
+// PERF-CPU: a procedural body (createHumanoid: the Sentinels, the people the story dresses by look) was ~45 small meshes,
+// one draw each: every joint's rigid parts (a head's skull, nose, ears, brows, mouth, hair cap and fringe; a shoulder's
+// ball and sleeve) drawn apart although they never move against their joint. Each joint's plain-colour parts are merged
+// into ONE mesh in the joint's own space, the colours, roughness and metalness in its vertices (merge.js twinOf: the
+// draw batches' vertex-coloured material, the same lighting), so the joint still carries them as before: the eye's
+// joint still scales for the blink, a ponytail segment still swings. Parts of other kinds (emissive, textured, mirrored)
+// stay as they were. On the combat route at Low: 104 draws, 72 of them the Sentinels' parts. The same pixels.
+export const RIG_MERGE = { on: !(typeof location !== 'undefined' && /[?&]norigmerge/.test(location.search)) };   // (?norigmerge: the parts drawn apart, for A/B)
+function mergeJointParts(root) {
+  if (!RIG_MERGE.on) return;
+  const joints = []; root.traverse((x) => { if (!x.isMesh) joints.push(x); });
+  const _m = new THREE.Matrix4(), _n = new THREE.Matrix3(), _v = new THREE.Vector3();
+  for (const J of joints) {
+    const groups = new Map();
+    for (const m of J.children) {
+      if (!m.isMesh || m.isSkinnedMesh || m.children.length || Array.isArray(m.material) || !plain(m.material)) continue;
+      const g = m.geometry; if (!g.attributes.position || !g.attributes.normal || g.attributes.color || (g.morphAttributes && Object.keys(g.morphAttributes).length)) continue;
+      m.updateMatrix(); if (m.matrix.determinant() <= 0) continue;
+      const tw = twinOf(m.material, true), key = [tw.uuid, m.castShadow, m.receiveShadow, m.renderOrder, m.visible, m.frustumCulled].join('|');
+      let L = groups.get(key); if (!L) groups.set(key, (L = { tw, list: [] }));
+      L.list.push(m);
+    }
+    for (const { tw, list } of groups.values()) {
+      if (list.length < 2) continue;
+      let nv = 0, ni = 0;
+      for (const m of list) { const g = m.geometry, c = g.attributes.position.count; nv += c; ni += g.index ? g.index.count : c; }
+      const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), col = new Float32Array(nv * 3), rm = new Float32Array(nv * 2), idx = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
+      let vo = 0, io = 0;
+      for (const m of list) {
+        const g = m.geometry, P = g.attributes.position, N = g.attributes.normal, I = g.index, c = P.count, M = m.material;
+        _m.copy(m.matrix); _n.getNormalMatrix(_m);
+        for (let i = 0; i < c; i++) {
+          _v.fromBufferAttribute(P, i).applyMatrix4(_m); pos[(vo + i) * 3] = _v.x; pos[(vo + i) * 3 + 1] = _v.y; pos[(vo + i) * 3 + 2] = _v.z;
+          _v.fromBufferAttribute(N, i).applyMatrix3(_n).normalize(); nor[(vo + i) * 3] = _v.x; nor[(vo + i) * 3 + 1] = _v.y; nor[(vo + i) * 3 + 2] = _v.z;
+          col[(vo + i) * 3] = M.color.r; col[(vo + i) * 3 + 1] = M.color.g; col[(vo + i) * 3 + 2] = M.color.b;
+          rm[(vo + i) * 2] = M.roughness; rm[(vo + i) * 2 + 1] = M.metalness;
+        }
+        if (I) for (let i = 0; i < I.count; i++) idx[io + i] = I.getX(i) + vo; else for (let i = 0; i < c; i++) idx[io + i] = vo + i;
+        io += I ? I.count : c; vo += c;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setAttribute('rm', new THREE.BufferAttribute(rm, 2));
+      geo.setIndex(new THREE.BufferAttribute(idx, 1)); geo.computeBoundingSphere();
+      const out = new THREE.Mesh(geo, tw), m0 = list[0];
+      out.castShadow = m0.castShadow; out.receiveShadow = m0.receiveShadow; out.renderOrder = m0.renderOrder; out.visible = m0.visible; out.frustumCulled = m0.frustumCulled;
+      out.name = 'rigParts'; out.userData.rigMerged = list.length;
+      for (const m of list) J.remove(m);
+      J.add(out);
+    }
+  }
 }
 
 /**
@@ -261,6 +315,7 @@ export function createHumanoid(opts = {}) {
   if (o.robe) { legL.hip.visible = legR.hip.visible = false; }
 
   root.scale.setScalar(o.scale);
+  mergeJointParts(root);
   return new Rig(root, { body, hips, torso, neck, head, tail, armL, armR, legL, legR, eyes });
 }
 
@@ -544,7 +599,10 @@ export class Rig {
     this._mats = [];
     this.root.traverse((m) => {
       if (m.isMesh && m.material && !this._mats.includes(m.material)) {
-        m.material = m.material.clone();
+        const src = m.material;
+        m.material = src.clone();
+        // (PERF-CPU: a merged twin's per-vertex roughness / metalness lives in its onBeforeCompile, which clone() drops)
+        if (src.userData?.twin) { m.material.onBeforeCompile = src.onBeforeCompile; m.material.customProgramCacheKey = src.customProgramCacheKey; }
         this._mats.push(m.material);
       }
     });
@@ -583,6 +641,13 @@ export class Rig {
   // speed is the real ground speed in m/s so the feet don't slide
   update(dt, speed = 0) {
     if (!(dt > 0)) return; // a negative step would make every damped joint diverge
+    // PERF-CPU: a character nobody can see (out of the view, or far) is posed every lodN-th frame with the time of the
+    // frames between (drawcull.js FarCull sets lodN from the last frame's view; never the hero, nobody in view within
+    // ANIM_NEAR m, nobody during dialogue or a story scene, no enemy). Its joints ease toward the same targets
+    // (exponential damping), so it arrives where it would have been; its root still moves every frame (the actor's own sync).
+    const n = this.lodN | 0;
+    if (n > 1) { this._lodDt = (this._lodDt || 0) + dt; if ((this._lodK = ((this._lodK ?? (this.root.id % n)) + 1) % n) !== 0) return; dt = this._lodDt; this._lodDt = 0; }
+    else if (this._lodDt) { dt += this._lodDt; this._lodDt = 0; }
     const j = this.j;
     this.t += dt;
     this.actionT += dt;

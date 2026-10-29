@@ -3,6 +3,7 @@
 // palette; these imitate that look without using any original artwork.
 import * as THREE from 'three';
 import { rng } from './math.js';
+import { registerStatic } from './texarray.js';
 
 function canvas(size) {
   const c = document.createElement('canvas');
@@ -20,6 +21,7 @@ function toTex(c, repeat = true) {
   t.colorSpace = THREE.SRGBColorSpace;
   if (repeat) t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.anisotropy = 4;
+  registerStatic(t);   // (PERF-CPU: a layer of the world's texture array, for the draw batches: texarray.js)
   return t;
 }
 

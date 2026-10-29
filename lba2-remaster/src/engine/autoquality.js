@@ -1,226 +1,191 @@
-// AUTO-QUALITY (I-13). The user (28.10): "the game must detect the computer's capabilities automatically and run the
-// quality and the optimal settings accordingly, without manual changes. 55–60 fps is the requirement."
+// AUTO-QUALITY (I-13), settle-then-hold (PERF-CPU, the user 29.10). The user (28.10): "the game must detect the
+// computer's capabilities automatically and run the quality and the optimal settings accordingly, without manual
+// changes. 55–60 fps is the requirement." And (29.10): "there are too many settings"; "Auto should settle on the best
+// settings after thinking a little, and then NOT change every few seconds — it jumps"; "if the game runs well on battery
+// there's no reason it won't on mains".
 //
-// Quality: Auto (the default) describes the picture as a set of KNOBS rather than one preset. The three presets are
-// points in that space (PRESET_KNOBS); Auto moves between and around them one knob at a time. Low / Medium / High as
-// chosen by hand are exactly the presets they always were (renderer.knobs stays null for them).
+// Quality: Auto chooses among FIVE complete, named profiles (PROFILES, best first): High · Medium · Medium-lite · Low ·
+// Low-lite. A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
+// and small-caster distances, the people's animation rate, the far detail); Auto moves one profile at a time, never a
+// single knob. Low / Medium / High chosen by hand are exactly the presets they always were (renderer.knobs stays null).
 //
-// Two ladders, each in order of least visible first, one step a knob value:
-//   GPU_LADDER  for frames that wait on the graphics processor (pixels, shadow maps, MSAA, lamps, bloom)
-//   CPU_LADDER  for frames whose own main-thread work (simulation + render submission) is the long part
-// The state is a position on each ladder (g, c); the knobs are High's with every step above both positions applied
-// (a knob two steps share takes the lower value). A step marked `commit` needs new shader programs (the shadow
-// filter, the lamp count, shadows on/off): it is decided like the others but takes effect only at the next scene
-// change, pause or power change, where the game compiles programs anyway behind black or a menu — never as a freeze in
-// play. The live steps (resolution, bloom, MSAA, shadow map size, vegetation and small-caster distances) apply at once.
+// The Governor:
+//   evaluate  a short evaluation: the first ~60–90 s of real play, across at least two different scenes (or 120 s in
+//             one). Each 1.5 s window of counted play is classified (ok / paced / cpu / gpu, below). Sustained pressure
+//             queues one profile down; a profile that holds 55–60 with room on both sides (by the cost model) may queue
+//             ONE step up, once. At the end, the profile in force is LOCKED (`hold`) and cached for this machine and
+//             power source as `settled`.
+//   hold      no change, except (a) a power-source change (that source's cached profile, or one profile lower on
+//             battery / higher on mains, evaluated again), and (b) a sustained real problem: pressure in 80 % of the
+//             windows and > 10 % missed refreshes over 30 s of play, seen in two scenes (or 60 s in one scene): one
+//             profile down. Never up during a session: a session that had lots of room marks the cache, and the next
+//             start tries one profile higher (evaluated; if it can't hold, it goes back and that try is not repeated
+//             for a while).
+// Every change is visible, so every change is QUEUED and takes effect only at a commit point: a scene change (behind its
+// black and shader hold), an open pause / inventory / map, a power change, the start of play. Never mid-play.
 //
-// The Governor watches displayed frames in play: the interval, the game's CPU work and, where the browser has a timer
-// query, the GPU's own time. Over WINDOW-long windows it classifies each window:
-//   ok      ≥ 55 fps (at a 60 Hz budget; 27.5 under a 30 fps limit) and few missed refreshes
-//   paced   slower, but neither CPU nor GPU is busy: the display / OS sets the pace (the user's Vega 8 laptop sometimes
-//           runs at ~56.5 Hz with nothing drawn at all: PERF-HIGH §3, laptop-build244). Never a reason to degrade.
-//   gpu/cpu slower, and that side's p90 is the long one
-// A step down needs the same pressure in DOWN_WINDOWS windows in a row (≥ 3 s) and STEP_GAP since the last change; a
-// step up needs room on that side (p90 well under the budget, and the model's prediction for the step up still under
-// it) for UP_WINDOWS windows in a row, UP_AFTER_DOWN since the last step down, and no recent failure at that level
-// (a step up that has to be taken back within FAIL_WINDOW blocks the next try for 60 s, then 2, 4 … 16 min).
-// Frames that are not play (menus, scene changes and QUIET_AFTER after them, cinematics, a hidden window, the
-// benchmark's fixed runs, a shader hold) are not counted; a single long frame (a loading hitch, a GC) is left out of
-// the percentiles, and one over BREAK_MS starts the window again: no stall ever moves a knob.
+// Windows: frames that are not play (menus, cinematics and cutscenes, scene changes plus QUIET_AFTER after them,
+// shader holds, the loading screen, a hidden window, the benchmark's fixed runs, the tests' fixed stepping) are not
+// counted; a frame over STALL_MS is left out of the percentiles and one over BREAK_MS restarts the window: no stall
+// ever moves a profile. Each window is
+//   ok      ≥ 55 fps (27.5 under a 30 fps limit) with < 6 % of intervals over 1.2 B (B = the frame budget)
+//   paced   slower, but CPU p90 and GPU p90 are both ≤ 0.75 B: the display / OS sets the pace. Never a reason to degrade.
+//   gpu/cpu slower, and that side's p90 is the longer one (no timer query: CPU if its p90 > 0.75 B)
 //
-// Calibration (first start, or a GPU / power source / screen not seen before): the game starts on the name-based guess
-// (perf.js gpuQuality), measures the title screen's own frames for CAL_MS (GPU time, CPU work) and picks the starting
-// position with estimate() from those numbers and the cost model (the steps' `gpu` / `cpu` factors, from the user's
-// Vega 8 breakdowns, build 244). The choice takes effect when play starts (behind its fade). Once play has held a
-// state for SETTLE_MS, that state is what the next start uses for this machine (`settled` in the cache).
-//
-// Nothing here touches the player's face / hands detail, animation rate, the simulation step or physics: the knobs
-// are all rendering-side.
+// Calibration (a machine, power source or screen not seen before): the start is the GPU name's guess, refined by the
+// title screen's own frames (CAL_MS: GPU time, CPU work) with estimate() and the profiles' cost factors. The evaluation
+// in play decides; the calibration only picks where it starts.
 
-export const KNOBS = ['scale', 'bloom', 'filter', 'map', 'lamps', 'msaa', 'shadows', 'veg', 'casters'];
-const RANK = {
-  bloom: { 1: 1, 0: 0 }, filter: { soft: 1, pcf: 0 }, map: { 4096: 2, 2048: 1, 1024: 0 }, lamps: { 8: 2, 4: 1, 2: 0 },
-  msaa: { 4: 2, 2: 1, 0: 0 }, shadows: { 1: 1, 0: 0 }, veg: { high: 2, medium: 1, low: 0 }, casters: { high: 2, medium: 1, low: 0 },
-};
-export const rank = (k, v) => (k === 'scale' ? +v : RANK[k][v]);
-// the presets as knobs (scale: of High's pixel ratio; Low draws at 0.85 of it on a 1× screen)
+// ---------------------------------------------------------------- knobs and profiles
+// anim: the people's animation rate in view beyond 25 m ('eco': every other frame; out of the view it is always lower:
+// drawcull.js FarCull.anim). detail: far detail ('near': people's small parts — eyes, buttons, a brooch — dropped under
+// 2.5 px instead of 0.75; drawcull.js FarCull.partPx).
+export const KNOBS = ['scale', 'bloom', 'filter', 'map', 'lamps', 'msaa', 'shadows', 'veg', 'casters', 'anim', 'detail'];
 export const PRESET_KNOBS = {
-  high: { scale: 1, bloom: 1, filter: 'soft', map: 4096, lamps: 8, msaa: 4, shadows: 1, veg: 'high', casters: 'high' },
-  medium: { scale: 1, bloom: 0, filter: 'pcf', map: 1024, lamps: 4, msaa: 2, shadows: 1, veg: 'medium', casters: 'medium' },
-  low: { scale: 0.85, bloom: 0, filter: 'pcf', map: 1024, lamps: 2, msaa: 0, shadows: 0, veg: 'low', casters: 'low' },
+  high: { scale: 1, bloom: 1, filter: 'soft', map: 4096, lamps: 8, msaa: 4, shadows: 1, veg: 'high', casters: 'high', anim: 'full', detail: 'normal' },
+  medium: { scale: 1, bloom: 0, filter: 'pcf', map: 1024, lamps: 4, msaa: 2, shadows: 1, veg: 'medium', casters: 'medium', anim: 'full', detail: 'normal' },
+  low: { scale: 0.85, bloom: 0, filter: 'pcf', map: 1024, lamps: 2, msaa: 0, shadows: 0, veg: 'low', casters: 'low', anim: 'full', detail: 'normal' },
 };
 export const TOP = PRESET_KNOBS.high;
-// knobs whose change needs new shader programs (taken at a scene change, a pause or a power change)
-export const COMMIT = new Set(['filter', 'lamps', 'shadows']);
-
-// The ladders. gpu / cpu: the share of that side's time left after the step (the cost model). Measured on the user's
-// Vega 8 at 1366×768, High street, plugged in (laptop-build244-plugged.txt breakdown: GPU 12.69 ms, game CPU 15.4 ms):
-// no bloom 9.33 / 13.7, shadow map 2048 12.31 / 15.4, MSAA 2× 11.88 / 15.5, no lamps 11.24 / 15.4, res ×0.6 9.57 / 14.5,
-// no shadows 9.58 / 12.9, Medium's vegetation 12.66 / 15.7. Resolution: GPU ≈ 7.8 + 4.9·s² ms (fit to as-is and ×0.6).
-// Factors marked (est.) were not measured in isolation (PCF vs PCF soft, 1024 vs 2048, lamps 4→2, the small casters'
-// distance detail, MSAA off on a plugged-in GPU): the next benchmark's breakdown and the governor's log refine them.
-const res = (a, b) => (0.62 + 0.38 * b * b) / (0.62 + 0.38 * a * a);
-export const GPU_LADDER = [
-  { k: 'scale', v: 0.9, gpu: res(1, 0.9), cpu: 0.99 },
-  { k: 'bloom', v: 0, gpu: 0.735, cpu: 0.89 },
-  { k: 'filter', v: 'pcf', gpu: 0.97, cpu: 1 },                 // (est.)
-  { k: 'map', v: 2048, gpu: 0.97, cpu: 0.95 },                  // (its static casters go into the cached map: shadowcache.js; CPU est.)
-  { k: 'lamps', v: 4, gpu: 0.95, cpu: 0.98 },                   // (est.: all 8 off saved 1.45 ms GPU)
-  { k: 'msaa', v: 2, gpu: 0.936, cpu: 0.99 },
-  { k: 'map', v: 1024, gpu: 0.97, cpu: 1, tier: 'medium' },     // (est.) ≈ Medium from here (at 90 % resolution)
-  { k: 'scale', v: 0.8, gpu: res(0.9, 0.8), cpu: 0.99 },
-  { k: 'msaa', v: 0, gpu: 0.9, cpu: 1 },                        // (est.; FXAA instead; battery: MSAA off −5.3 of 37 ms)
-  { k: 'lamps', v: 2, gpu: 0.97, cpu: 1 },                      // (est.)
-  { k: 'scale', v: 0.7, gpu: res(0.8, 0.7), cpu: 0.99 },
-  { k: 'shadows', v: 0, gpu: 0.85, cpu: 0.84, tier: 'low' },    // ≈ Low from here
+// gpu / cpu: each profile's share of High's time on that side (the cost model: from the user's Vega 8 breakdowns, build
+// 244 plugged in, the old ladders' measured steps multiplied out; used to pick a start and to judge a step up's room,
+// never to step down — that is measured pressure only)
+export const PROFILES = [
+  { id: 'high', name: 'High', tier: 'high', K: { ...PRESET_KNOBS.high }, gpu: 1, cpu: 1 },
+  { id: 'medium', name: 'Medium', tier: 'medium', K: { ...PRESET_KNOBS.medium }, gpu: 0.56, cpu: 0.8 },
+  { id: 'medium-lite', name: 'Medium-lite', tier: 'medium', K: { ...PRESET_KNOBS.medium, msaa: 0, lamps: 2, veg: 'low', casters: 'low', scale: 0.9, anim: 'eco' }, gpu: 0.46, cpu: 0.72 },
+  { id: 'low', name: 'Low', tier: 'low', K: { ...PRESET_KNOBS.low }, gpu: 0.36, cpu: 0.62 },
+  { id: 'low-lite', name: 'Low-lite', tier: 'low', K: { ...PRESET_KNOBS.low, scale: 0.75, anim: 'eco', detail: 'near' }, gpu: 0.31, cpu: 0.54 },
 ];
-export const CPU_LADDER = [
-  { k: 'bloom', v: 0, gpu: 0.735, cpu: 0.89 },
-  { k: 'map', v: 2048, gpu: 0.97, cpu: 0.95 },
-  { k: 'casters', v: 'medium', gpu: 0.99, cpu: 0.96 },          // (est.: small props' shadows to 18 m, specks under 4 px left out)
-  { k: 'veg', v: 'medium', gpu: 1, cpu: 0.99, tier: 'medium' }, // (Medium's grass / tree distances: measured ≈ 0 on the street)
-  { k: 'casters', v: 'low', gpu: 0.99, cpu: 0.97 },             // (est.)
-  { k: 'veg', v: 'low', gpu: 0.98, cpu: 0.98 },                 // (est.)
-  { k: 'shadows', v: 0, gpu: 0.85, cpu: 0.84, tier: 'low' },
-];
-const tierIndex = (L, t) => { if (t === 'high') return 0; const i = L.findIndex((s) => s.tier === t); return i < 0 ? L.length : i + 1; };
-export const TIER_AT = {
-  gpu: { high: 0, medium: tierIndex(GPU_LADDER, 'medium'), low: tierIndex(GPU_LADDER, 'low') },
-  cpu: { high: 0, medium: tierIndex(CPU_LADDER, 'medium'), low: tierIndex(CPU_LADDER, 'low') },
-};
+export const N_PROFILES = PROFILES.length;
+export const TIER_AT = { high: 0, medium: 1, low: 3 };
+export const profileOf = (p) => PROFILES[Math.max(0, Math.min(N_PROFILES - 1, p | 0))];
+export const knobsAt = (p) => ({ ...profileOf(p).K });
+export const costAt = (p, side) => profileOf(p)[side];
 
-// the knobs at ladder positions g, c (steps [0, g) and [0, c) applied)
-export function compose(g, c) {
-  const K = { ...TOP };
-  const take = (s) => { if (rank(s.k, s.v) < rank(s.k, K[s.k])) K[s.k] = s.v; };
-  for (let i = 0; i < Math.min(g, GPU_LADDER.length); i++) take(GPU_LADDER[i]);
-  for (let i = 0; i < Math.min(c, CPU_LADDER.length); i++) take(CPU_LADDER[i]);
-  return K;
-}
-// the cost model: that side's time at (g, c) as a share of High's
-export function costAt(g, c, side) {
-  let f = 1;
-  const K = { ...TOP };
-  const take = (s) => { if (rank(s.k, s.v) < rank(s.k, K[s.k])) { K[s.k] = s.v; f *= s[side]; } };
-  for (let i = 0; i < Math.min(g, GPU_LADDER.length); i++) take(GPU_LADDER[i]);
-  for (let i = 0; i < Math.min(c, CPU_LADDER.length); i++) take(CPU_LADDER[i]);
-  return f;
-}
-
-// in words, for Settings and the benchmark: the nearest preset and what differs from it
+// in words, for Settings and the benchmark: the profile's name (and, in the benchmark, what it runs)
 const WORD = {
   bloom: { 1: 'bloom', 0: 'no bloom' }, filter: { soft: 'soft shadows', pcf: 'plain shadow edges' },
   map: { 4096: 'shadow map 4096', 2048: 'shadow map 2048', 1024: 'shadow map 1024' }, lamps: { 8: '8 lamps', 4: '4 lamps', 2: '2 lamps' },
   msaa: { 4: 'MSAA 4×', 2: 'MSAA 2×', 0: 'FXAA' }, shadows: { 1: 'shadows', 0: 'no shadows' },
   veg: { high: "High's grass distance", medium: "Medium's grass distance", low: "Low's grass" },
   casters: { high: "High's small shadows", medium: "Medium's small shadows", low: "Low's small shadows" },
+  anim: { full: 'full-rate animation', eco: 'far people animated at half rate' }, detail: { normal: 'full far detail', near: 'far small parts dropped' },
 };
-const TIER_NAME = { high: 'High', medium: 'Medium', low: 'Low' };
 export function describe(K) {
+  const P = PROFILES.find((x) => KNOBS.every((k) => x.K[k] === K[k]));
+  if (P) return { tier: P.tier, id: P.id, diffs: [], text: P.name };
+  // (not a profile — the benchmark's fixed knobs: the nearest profile and what differs)
   let best = null;
-  for (const t of ['low', 'medium', 'high']) {   // (a tie goes to the higher preset: listed last)
-    const P = PRESET_KNOBS[t];
-    let n = 0; for (const k of KNOBS) if (k !== 'scale' && P[k] !== K[k]) n++;
-    if (!best || n <= best.n) best = { t, n };
-  }
-  const P = PRESET_KNOBS[best.t], diffs = [];
-  for (const k of KNOBS) if (k !== 'scale' && K[k] !== P[k]) {
-    if (!K.shadows && (k === 'filter' || k === 'map' || k === 'casters')) continue;   // (no shadows: their details don't show)
-    diffs.push(WORD[k][K[k]]);
-  }
-  if (K.scale < 0.995) diffs.push(`resolution ${Math.round(K.scale * 100)} %`);
-  return { tier: best.t, diffs, text: `${TIER_NAME[best.t]}${diffs.length ? ', ' + diffs.join(', ') : ''}` };
+  for (const X of PROFILES) { let n = 0; for (const k of KNOBS) if (X.K[k] !== K[k]) n++; if (!best || n < best.n) best = { X, n }; }
+  const diffs = KNOBS.filter((k) => k !== 'scale' && best.X.K[k] !== K[k]).map((k) => WORD[k]?.[K[k]] ?? `${k} ${K[k]}`);
+  if (K.scale !== best.X.K.scale) diffs.push(`resolution ${Math.round(K.scale * 100)} %`);
+  return { tier: best.X.tier, id: best.X.id, diffs, text: `${best.X.name}${diffs.length ? ', ' + diffs.join(', ') : ''}` };
 }
-export const stepWords = (s, down = true) => `${s.k} ${down ? '→' : '←'} ${WORD[s.k]?.[s.v] ?? s.v}`;
+// what a profile runs, in words (the benchmark's report and AUTO_QUALITY.md)
+export const spell = (p) => { const K = profileOf(p).K; return `${profileOf(p).name}: resolution ${Math.round(K.scale * 100)} %, ${WORD.msaa[K.msaa]}, ${WORD.bloom[K.bloom]}, ${K.shadows ? `${WORD.filter[K.filter]}, ${WORD.map[K.map]}, ${WORD.casters[K.casters]}` : 'no shadows'}, ${WORD.lamps[K.lamps]}, ${WORD.veg[K.veg]}, ${WORD.anim[K.anim]}, ${WORD.detail[K.detail]}`; };
 
-// Start position from measurements at a known position (calibration). gpuMs / cpuMs: p90 of the title's frames at
-// position (g0, c0); null when not measured (no timer query: the GPU side stays at g0). MARGIN: the title's view is
-// lighter than play (fewer people, no combat): its numbers are scaled up before they are compared with the budget.
+// Start position from measurements at a known profile (calibration). gpuMs / cpuMs: p90 of the title's frames at
+// profile p0; null when not measured (no timer query: the GPU side is not limited). MARGIN: the title's view is lighter
+// than play (fewer people, no combat): its numbers are scaled up before they are compared with the budget.
 export const CAL = { budgetShare: 0.7, marginGpu: 1.15, marginCpu: 1.3 };
-export function estimate({ gpuMs = null, cpuMs = null, g0 = 0, c0 = 0, budget = 1000 / 60 }) {
+export function estimate({ gpuMs = null, cpuMs = null, p0 = 0, budget = 1000 / 60 }) {
   const lim = CAL.budgetShare * budget;
-  // each side's time at High, from the measurement at (g0, c0) and the model; a side not measured is not limited
-  const hiG = gpuMs > 0 ? (gpuMs * CAL.marginGpu) / costAt(g0, c0, 'gpu') : null, hiC = cpuMs > 0 ? (cpuMs * CAL.marginCpu) / costAt(g0, c0, 'cpu') : null;
-  // the best (g, c) whose predicted GPU and CPU times both fit; without a GPU measurement the GPU side stays at g0
-  let best = null;
-  for (let g = hiG == null ? g0 : 0; g <= (hiG == null ? g0 : GPU_LADDER.length); g++) for (let c = 0; c <= CPU_LADDER.length; c++) {
-    const okG = hiG == null || hiG * costAt(g, c, 'gpu') <= lim, okC = hiC == null || hiC * costAt(g, c, 'cpu') <= lim;
-    const score = g / GPU_LADDER.length + c / CPU_LADDER.length;
-    if (okG && okC && (!best || score < best.score)) best = { g, c, score };
-  }
-  return best ? { g: best.g, c: best.c } : { g: hiG == null ? g0 : GPU_LADDER.length, c: CPU_LADDER.length };
+  const hiG = gpuMs > 0 ? (gpuMs * CAL.marginGpu) / costAt(p0, 'gpu') : null, hiC = cpuMs > 0 ? (cpuMs * CAL.marginCpu) / costAt(p0, 'cpu') : null;
+  for (let p = 0; p < N_PROFILES; p++) if ((hiG == null || hiG * costAt(p, 'gpu') <= lim) && (hiC == null || hiC * costAt(p, 'cpu') <= lim)) return { p };
+  return { p: N_PROFILES - 1 };
 }
 
-// the cache of calibrations / settled states: per GPU, power source and screen
-export const CACHE_KEY = 'lba3_autoq_v1';
+// the cache of calibrations / settled profiles: per GPU, power source and screen (and processor in the desktop app)
+export const CACHE_KEY = 'lba3_autoq_v2';
 export const machineKey = ({ gpu = '?', battery = false, screen = '?', cpu = '' }) => `${gpu}|${battery ? 'battery' : 'mains'}|${screen}${cpu ? '|' + cpu : ''}`;
 
-export const WINDOW = 1500, DOWN_WINDOWS = 2, UP_WINDOWS = 6, STEP_GAP = 3000, UP_GAP = 6000, UP_AFTER_DOWN = 20000;
-export const QUIET_AFTER = 1500, STALL_MS = 100, BREAK_MS = 250, FAIL_WINDOW = 20000, BLOCK_BASE = 60000, BLOCK_MAX = 16 * 60000;
+export const WINDOW = 1500, QUIET_AFTER = 1500, STALL_MS = 100, BREAK_MS = 250;
+// the evaluation: at least EVAL_MS of counted play across EVAL_SCENES scenes (or EVAL_MAX in one); a step down after
+// DOWN_RUN pressure windows in a row (or DOWN_OF of the last DOWN_IN); it passes with ≤ PASS_PRESSURE of its windows
+// under pressure and ≤ PASS_MISS of all intervals missed; a step up needs UP_MIN of counted play over 2 scenes, every
+// window ok or paced, and the model's prediction for the profile above ≤ UP_SHARE·B on both sides in every window
+export const EVAL_MS = 60000, EVAL_SCENES = 2, EVAL_MAX = 120000, DOWN_RUN = 3, DOWN_OF = 4, DOWN_IN = 6;
+export const PASS_PRESSURE = 0.1, PASS_MISS = 0.05, UP_MIN = 30000, UP_SHARE = 0.72;
+// hold: a sustained real problem = over the last HOLD_SPAN of counted play, ≥ HOLD_PRESSURE of the windows under
+// pressure and > HOLD_MISS of the intervals missed, the pressure seen in two scenes (or HOLD_ONE_SCENE in one scene);
+// after a step, HOLD_COOL before another
+export const HOLD_SPAN = 30000, HOLD_PRESSURE = 0.8, HOLD_MISS = 0.1, HOLD_ONE_SCENE = 60000, HOLD_COOL = 60000;
+// the next start's try one profile up: when the held session had room for it in ≥ MARGIN_SHARE of ≥ MARGIN_MIN of play
+export const MARGIN_MIN = 180000, MARGIN_SHARE = 0.9, UP_TRY_BLOCK = 3;
 export const SETTLE_MS = 60000, CAL_MS = 1500, CAL_WAIT = 600;
 
 const pct = (a, p) => { if (!a.length) return null; const v = a.slice().sort((x, y) => x - y); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
 
 export class Governor {
-  // opts: budget() → the frame budget in ms (16.7, or 33.3 under a 30 fps limit); noop(step, knobs) → true when a
-  // step would change nothing now (the battery profile already has it, Resolution: Full); onChange(info) → the game
-  // applies the knobs; log: an array the decisions are pushed to
+  // opts: budget() → the frame budget in ms (16.7, or 33.3 under a 30 fps limit); onChange(info) → a queued step
+  // (the game shows nothing yet); log: an array the decisions are pushed to
   constructor(opts = {}) {
     this.budget = opts.budget || (() => 1000 / 60);
-    this.noop = opts.noop || (() => false);
     this.onChange = opts.onChange || (() => {});
     this.log = opts.log || [];
-    this.g = 0; this.c = 0;
-    this.committed = {}; for (const k of COMMIT) this.committed[k] = TOP[k];
-    this.enabled = true;
-    this.reset(0);
-    this.lad = { gpu: { fails: 0, blockUntil: 0, blockAt: -1, upAt: -1e9, upFrom: -1 }, cpu: { fails: 0, blockUntil: 0, blockAt: -1, upAt: -1e9, upFrom: -1 } };
-    this.lastChange = -1e9; this.lastDown = -1e9; this.since = 0; this.gpuSeen = false; this.windows = 0;
+    this.p = 0; this.applied = 0; this.phase = 'evaluate'; this.enabled = true;
+    this.win = null; this.quietUntil = 0; this.since = 0; this.windows = 0; this.gpuSeen = false;
+    this.ev = null; this.hold = null; this.upUsed = false; this.lastStep = -1e9; this.room = { n: 0, ok: 0 };
+    this.startEval(0, 'start');
   }
-  // (a fresh window; nothing counted before `until`)
-  reset(until = 0) { this.win = { f: [], cpu: [], dur: 0, stalls: 0, t0: null }; this.hist = []; this.quietUntil = Math.max(this.quietUntil || 0, until); }
-  // where the knobs stand: wanted (the ladders' positions) and in force (commit knobs as last committed)
-  wanted() { return compose(this.g, this.c); }
-  knobs() { const K = this.wanted(); for (const k of COMMIT) K[k] = this.committed[k]; return K; }
-  pending() { const W = this.wanted(), out = []; for (const k of COMMIT) if (W[k] !== this.committed[k]) out.push(k); return out; }
-  // the commit knobs take their wanted values (the game compiles their programs now); returns the knobs that changed
+  // ---- where it stands: wanted (queued) and in force (applied at the last commit point)
+  wanted() { return knobsAt(this.p); }
+  knobs() { return knobsAt(this.applied); }
+  pending() { return this.p !== this.applied ? ['profile'] : []; }
+  label() { return describe(this.knobs()); }
+  // the queued profile takes effect (the game compiles its programs now): returns what changed
   commit(why = 'scene change') {
-    const W = this.wanted(), ch = [];
-    for (const k of COMMIT) if (W[k] !== this.committed[k]) { ch.push(`${k} ${WORD[k][this.committed[k]]} → ${WORD[k][W[k]]}`); this.committed[k] = W[k]; }
-    if (ch.length) this.note({ kind: 'commit', why, what: ch.join(', ') });
+    if (this.p === this.applied) return [];
+    const from = this.applied; this.applied = this.p;
+    const ch = [`${profileOf(from).name} → ${profileOf(this.p).name}`];
+    this.note({ kind: 'commit', why, what: ch[0] });
+    // (a fresh look at the profile now in force)
+    if (this.phase === 'evaluate') this.resetEval();
+    this.resetWin(this.since + QUIET_AFTER);
     return ch;
   }
-  // put the ladders somewhere (calibration, cache, power change); commitNow: the commit knobs too
-  setLevels(g, c, why, commitNow = false, t = this.since) {
-    this.g = Math.max(0, Math.min(GPU_LADDER.length, g | 0)); this.c = Math.max(0, Math.min(CPU_LADDER.length, c | 0));
-    if (commitNow) { const W = this.wanted(); for (const k of COMMIT) this.committed[k] = W[k]; }
-    this.lastChange = t; this.hist = [];
-    this.note({ kind: 'set', why, what: `gpu ${this.g} · cpu ${this.c}` });
+  // put it somewhere (calibration, cache, power change, the benchmark); commitNow: in force at once (a commit point)
+  setProfile(p, why, { phase = 'evaluate', commitNow = false, t = this.since, trial = false } = {}) {
+    this.p = Math.max(0, Math.min(N_PROFILES - 1, p | 0));
+    if (commitNow) this.applied = this.p;
+    this.note({ kind: 'set', why, what: `${profileOf(this.p).name}${phase === 'hold' ? ' (held)' : ' (evaluating)'}` });
+    if (phase === 'hold') this.lock('set', t); else this.startEval(t, why, trial);
   }
-  label() { return describe(this.knobs()); }
-  note(e) { e.t = Math.round(this.since); e.state = describe(this.knobs()).text; if (this.pending().length) e.pending = this.pending().join(', '); this.log.push(e); if (this.log.length > 400) this.log.splice(0, this.log.length - 400); }
+  startEval(t, why, trial = false) { this.phase = 'evaluate'; this.upUsed = trial; this.trial = trial ? { from: this.p } : null; this.ev = { t0: t, scenes: new Set(), ms: 0, w: [], why }; this.hold = null; this.resetWin(t); }
+  resetEval() { if (this.ev) { this.ev.ms = 0; this.ev.w = []; } }
+  lock(why, t = this.since) {
+    this.phase = 'hold'; this.hold = { w: [], cool: t, since: t }; this.ev = null; this.room = { n: 0, ok: 0, ms: 0 };
+    this.note({ kind: 'settled', why, what: `${profileOf(this.p).name} held` });
+  }
+  note(e) { e.t = Math.round(this.since); e.state = profileOf(this.applied).name; if (this.p !== this.applied) e.pending = profileOf(this.p).name; this.log.push(e); if (this.log.length > 400) this.log.splice(0, this.log.length - 400); }
+  resetWin(until = 0) { this.win = { f: [], cpu: [], dur: 0, stalls: 0, miss: 0, t0: null }; this.quietUntil = Math.max(this.quietUntil || 0, until); }
 
-  // one displayed frame. f: { t: ms (a clock), ms: interval, cpu: the game's CPU work (ms), play: counted }
+  // one displayed frame. f: { t: ms (a clock), ms: interval, cpu: the game's CPU work (ms), play: counted, scene: id }
   frame(f) {
     this.since = f.t;
     if (!this.enabled) return null;
-    if (!f.play) { this.win = { f: [], cpu: [], dur: 0, stalls: 0, t0: null }; this.quietUntil = Math.max(this.quietUntil, f.t + QUIET_AFTER); return null; }
+    if (!f.play) { this.win = { f: [], cpu: [], dur: 0, stalls: 0, miss: 0, t0: null }; this.quietUntil = Math.max(this.quietUntil, f.t + QUIET_AFTER); return null; }
+    if (f.scene != null && f.scene !== this.scene) { this.scene = f.scene; this.sceneAt = f.t; }
     if (f.t < this.quietUntil) return null;
-    if (f.ms > BREAK_MS) { this.win = { f: [], cpu: [], dur: 0, stalls: 0, t0: null }; this.quietUntil = f.t + QUIET_AFTER; return null; }
+    if (f.ms > BREAK_MS) { this.win = { f: [], cpu: [], dur: 0, stalls: 0, miss: 0, t0: null }; this.quietUntil = f.t + QUIET_AFTER; return null; }
     const W = this.win;
     if (W.t0 == null) W.t0 = f.t - f.ms;
     W.dur += f.ms;
     if (f.ms > STALL_MS) W.stalls++; else { W.f.push(f.ms); if (f.cpu != null) W.cpu.push(f.cpu); }
     if (W.dur < WINDOW) return null;
-    this.win = { f: [], cpu: [], dur: 0, stalls: 0, t0: null };
-    return this.window(W, f.t);
+    this.win = { f: [], cpu: [], dur: 0, stalls: 0, miss: 0, t0: null };
+    const w = this.classify(W, f.t);
+    w.scene = this.scene;
+    this.windows++; this.lastWindow = w;
+    return this.phase === 'evaluate' ? this.evaluate(w, f.t) : this.held(w, f.t);
   }
   // the GPU's own time for a frame drawn at about time t (arrives a few frames late)
   gpu(t, ms) { (this.gpuBuf ??= []).push([t, ms]); this.gpuSeen = true; if (this.gpuBuf.length > 600) this.gpuBuf.splice(0, 300); }
 
   classify(W, t) {
     const B = this.budget(), n = W.f.length + W.stalls;
-    const fps = (n * 1000) / Math.max(1, W.dur), p90 = pct(W.f, 0.9) ?? B, miss = W.f.filter((x) => x > 1.2 * B).length / Math.max(1, n);
+    const fps = (n * 1000) / Math.max(1, W.dur), p90 = pct(W.f, 0.9) ?? B, missN = W.f.filter((x) => x > 1.2 * B).length + W.stalls, miss = missN / Math.max(1, n);
     const cpu = pct(W.cpu, 0.9);
     const g = (this.gpuBuf || []).filter(([ts]) => ts >= W.t0 - 100 && ts <= t + 100).map((x) => x[1]);
     const gpu = g.length >= 8 ? pct(g, 0.9) : null;
@@ -229,104 +194,88 @@ export class Governor {
     if (fps >= want && miss < 0.06) kind = 'ok';
     else if (gpu != null) kind = cpu <= heavy && gpu <= heavy ? 'paced' : gpu >= cpu ? 'gpu' : 'cpu';
     else kind = cpu > heavy ? 'cpu' : miss < 0.08 && p90 <= 1.17 * B ? 'paced' : 'gpu';
-    // room for a step up: that side's p90 well under the budget (the step's own cost is checked in decide)
-    const roomCpu = cpu != null && cpu <= 0.63 * B && kind !== 'cpu' && kind !== 'gpu';
-    const roomGpu = (gpu != null ? gpu <= 0.6 * B : fps >= (1000 / B) * 0.975 && miss < 0.02 && p90 <= 1.06 * B) && kind !== 'cpu' && kind !== 'gpu';
-    return { t: Math.round(t), kind, fps: +fps.toFixed(1), p90: +p90.toFixed(1), miss: +miss.toFixed(3), cpu: cpu == null ? null : +cpu.toFixed(1), gpu: gpu == null ? null : +gpu.toFixed(1), stalls: W.stalls, roomCpu, roomGpu };
-  }
-  window(W, t) {
-    const w = this.classify(W, t);
-    this.windows++;
-    this.hist.push(w); if (this.hist.length > 12) this.hist.shift();
-    this.lastWindow = w;
-    return this.decide(t);
+    return { t: Math.round(t), dur: W.dur, n, kind, fps: +fps.toFixed(1), p90: +p90.toFixed(1), miss: +miss.toFixed(3), missN, cpu: cpu == null ? null : +cpu.toFixed(1), gpu: gpu == null ? null : +gpu.toFixed(1), stalls: W.stalls };
   }
   why(ws) {
-    const a = ws[ws.length - 1], f = (k) => (ws.every((x) => x[k] != null) ? Math.max(...ws.map((x) => x[k])) : null);
-    return `${(ws.reduce((s, x) => s + x.fps, 0) / ws.length).toFixed(1)} fps over ${(ws.length * WINDOW / 1000).toFixed(1)} s · frame p90 ${f('p90')} ms · CPU p90 ${f('cpu') ?? '?'} ms · GPU p90 ${f('gpu') ?? 'n/a'} ms · missed ${Math.round(100 * a.miss)} %`;
+    if (!ws.length) return '';
+    const f = (k) => (ws.every((x) => x[k] != null) ? Math.max(...ws.map((x) => x[k])) : null), n = ws.reduce((s, x) => s + x.n, 0), m = ws.reduce((s, x) => s + x.missN, 0);
+    return `${(ws.reduce((s, x) => s + x.fps, 0) / ws.length).toFixed(1)} fps over ${(ws.reduce((s, x) => s + x.dur, 0) / 1000).toFixed(0)} s · frame p90 ≤ ${f('p90')} ms · CPU p90 ≤ ${f('cpu') ?? '?'} ms · GPU p90 ≤ ${f('gpu') ?? 'n/a'} ms · missed ${Math.round((100 * m) / Math.max(1, n))} %`;
   }
-  decide(t) {
-    const H = this.hist, B = this.budget();
-    if (t - this.lastChange < STEP_GAP) return null;
-    // ---- down: the same pressure in the last DOWN_WINDOWS windows
-    const last = H.slice(-DOWN_WINDOWS);
-    if (last.length === DOWN_WINDOWS && last.every((w) => w.kind === 'gpu' || w.kind === 'cpu')) {
-      const side = last[last.length - 1].kind;
-      const r = this.step(side, -1, t, `${side.toUpperCase()} pressure: ${this.why(last)}`);
-      if (r) return r;
-      const other = side === 'gpu' ? 'cpu' : 'gpu';   // (that ladder at its floor: the other side's steps help both a little)
-      if (!this._floorNoted || t - this._floorNoted > 30000) { this._floorNoted = t; this.note({ kind: 'floor', why: `${side.toUpperCase()} pressure with the ${side} ladder at its lowest: ${this.why(last)}` }); }
-      return last.every((w) => w.kind === side) ? this.step(other, -1, t, `${side.toUpperCase()} pressure, ${side} ladder at its lowest: ${this.why(last)}`) : null;
-    }
-    // ---- up: room in the last UP_WINDOWS windows, nothing pressing
-    if (t - this.lastChange < UP_GAP || t - this.lastDown < UP_AFTER_DOWN) return null;
-    const ups = H.slice(-UP_WINDOWS);
-    if (ups.length < UP_WINDOWS || ups.some((w) => w.kind === 'gpu' || w.kind === 'cpu')) return null;
-    const cands = [];
-    for (const side of ['cpu', 'gpu']) {
-      const L = this.lad[side], at = side === 'gpu' ? this.g : this.c;
-      if (at <= 0 || !ups.every((w) => (side === 'gpu' ? w.roomGpu : w.roomCpu))) continue;
-      const to = this.upTarget(side);
-      if (to === at || (t < L.blockUntil && to <= L.blockAt)) continue;   // (the level that failed: not again yet)
-      // the model's prediction for both sides after the step up must stay under 0.72 of the budget
-      const g1 = side === 'gpu' ? to : this.g, c1 = side === 'cpu' ? to : this.c;
-      const gNow = Math.max(...ups.map((w) => w.gpu ?? 0)), cNow = Math.max(...ups.map((w) => w.cpu ?? 0));
-      const gPred = gNow * costAt(g1, c1, 'gpu') / costAt(this.g, this.c, 'gpu'), cPred = cNow * costAt(g1, c1, 'cpu') / costAt(this.g, this.c, 'cpu');
-      if (gPred > 0.72 * B || cPred > 0.72 * B) continue;
-      cands.push({ side, at, gPred, cPred });
-    }
-    if (!cands.length) return null;
-    // (the side further down its ladder first)
-    cands.sort((a, b) => b.at / (b.side === 'gpu' ? GPU_LADDER.length : CPU_LADDER.length) - a.at / (a.side === 'gpu' ? GPU_LADDER.length : CPU_LADDER.length));
-    const C = cands[0];
-    return this.step(C.side, +1, t, `room: ${this.why(ups)} · predicted after the step: GPU ${C.gPred ? C.gPred.toFixed(1) : '?'} ms, CPU ${C.cPred.toFixed(1)} ms`);
+  // would the profile above fit? (the model, from every window given: both sides ≤ UP_SHARE·B)
+  roomAbove(ws) {
+    if (this.applied <= 0 || !ws.length) return false;
+    const B = this.budget(), up = this.applied - 1;
+    return ws.every((w) => (w.kind === 'ok' || w.kind === 'paced') && w.cpu != null && (w.cpu * costAt(up, 'cpu')) / costAt(this.applied, 'cpu') <= UP_SHARE * B
+      && (w.gpu == null ? w.p90 <= 1.03 * B && w.miss < 0.02 : (w.gpu * costAt(up, 'gpu')) / costAt(this.applied, 'gpu') <= UP_SHARE * B));
   }
-  // the position one step up on a ladder, past steps that change nothing now
-  upTarget(side) {
-    const L = side === 'gpu' ? GPU_LADDER : CPU_LADDER, at = side === 'gpu' ? this.g : this.c, K0 = this.wanted();
-    for (let i = at - 1; i >= 0; i--) { const K = side === 'gpu' ? compose(i, this.c) : compose(this.g, i); if (KNOBS.some((k) => K[k] !== K0[k]) && !this.noop(L[i], K)) return i; }
-    return at;
-  }
-  // one step on a ladder (dir −1 down, +1 up), skipping steps that change nothing now (a knob the other ladder has
-  // already lowered, the battery profile's MSAA / filter / lamps, the resolution under Resolution: Full); a step
-  // down that only queues a commit knob goes on to the next live step in the same move, so the frame rate gains now
-  step(side, dir, t, why) {
-    const L = side === 'gpu' ? GPU_LADDER : CPU_LADDER, A = this.lad[side];
-    let at = side === 'gpu' ? this.g : this.c;
-    const from = at, before = this.knobs(), taken = [];
-    for (;;) {
-      if (dir < 0 ? at >= L.length : at <= 0) break;
-      const s = dir < 0 ? L[at] : L[at - 1];
-      at += dir < 0 ? 1 : -1;
-      const g = side === 'gpu' ? at : this.g, c = side === 'cpu' ? at : this.c;
-      const K = compose(g, c), K0 = side === 'gpu' ? compose(dir < 0 ? at - 1 : at + 1, this.c) : compose(this.g, dir < 0 ? at - 1 : at + 1);
-      if (!KNOBS.some((k) => K[k] !== K0[k]) || this.noop(s, K)) continue;
-      taken.push(stepWords(s, dir < 0));
-      if (dir > 0 || !COMMIT.has(s.k)) break;   // (down: past a commit step to a live one)
-    }
-    if (!taken.length) return null;
-    if (side === 'gpu') this.g = at; else this.c = at;
-    if (dir < 0) {
-      // a level reached by a step up that could not be held: back off before trying it again
-      if (A.upAt > this.lastDown && t - A.upAt < FAIL_WINDOW && A.upFrom === from) { A.fails = Math.min(5, A.fails + 1); A.blockUntil = t + Math.min(BLOCK_MAX, BLOCK_BASE * 2 ** (A.fails - 1)); A.blockAt = from; }
-      this.lastDown = t;
-    } else { A.upAt = t; A.upFrom = at; if (t - (A.okAt || 0) > 5 * 60000 && A.fails) { A.fails--; A.okAt = t; } }
-    this.lastChange = t; this.hist = []; this.quietUntil = t + QUIET_AFTER;
-    const after = this.knobs(), live = KNOBS.filter((k) => after[k] !== before[k]);
-    const info = { kind: dir < 0 ? 'down' : 'up', side, what: taken.join('; '), why, live, from, to: at };
-    this.note(info);
-    this.onChange(info);
+  // a step (queued: in force at the next commit point)
+  step(dir, t, why) {
+    const to = this.applied + dir;
+    if (to < 0 || to >= N_PROFILES || this.p !== this.applied) return null;
+    this.p = to; this.lastStep = t;
+    const info = { kind: dir > 0 ? 'down' : 'up', what: `${profileOf(this.applied).name} → ${profileOf(to).name} (at the next scene change or menu)`, why, from: this.applied, to };
+    this.note(info); this.onChange(info);
     return info;
   }
+  evaluate(w, t) {
+    const E = this.ev;
+    if (this.p !== this.applied) return null;   // (a step is queued: the windows wait for the profile it brings)
+    E.w.push(w); E.ms += w.dur; if (w.scene != null) E.scenes.add(w.scene);
+    const pressure = (x) => x.kind === 'cpu' || x.kind === 'gpu';
+    const L = E.w, last = L.slice(-DOWN_IN);
+    // sustained pressure: one profile down (queued)
+    if ((L.length >= DOWN_RUN && L.slice(-DOWN_RUN).every(pressure)) || last.filter(pressure).length >= DOWN_OF) {
+      if (this.applied >= N_PROFILES - 1) { this.lock(`evaluation: pressure at the lowest profile (${this.why(last)})`, t); return null; }
+      if (this.trial && this.applied === this.trial.from) { this.trial.failed = true; }
+      return this.step(+1, t, `evaluation: ${last.filter(pressure)[0].kind.toUpperCase()} pressure: ${this.why(last)}`);
+    }
+    // room for the profile above: once per evaluation, never in a trial that is already one up
+    if (!this.upUsed && E.ms >= UP_MIN && E.scenes.size >= EVAL_SCENES && this.roomAbove(L)) {
+      this.upUsed = true;
+      return this.step(-1, t, `evaluation: room for the profile above in every window: ${this.why(L)}`);
+    }
+    // the end of the evaluation
+    if ((E.ms >= EVAL_MS && E.scenes.size >= EVAL_SCENES) || E.ms >= EVAL_MAX) {
+      const pr = L.filter(pressure).length / L.length, n = L.reduce((s, x) => s + x.n, 0), m = L.reduce((s, x) => s + x.missN, 0);
+      if (pr <= PASS_PRESSURE && m / Math.max(1, n) <= PASS_MISS) { this.lock(`evaluation passed: ${this.why(L)}`, t); return { kind: 'settled', p: this.p }; }
+      if (this.applied >= N_PROFILES - 1) { this.lock(`evaluation: the lowest profile (${this.why(L)})`, t); return { kind: 'settled', p: this.p }; }
+      return this.step(+1, t, `evaluation failed (${Math.round(pr * 100)} % of windows under pressure): ${this.why(L)}`);
+    }
+    return null;
+  }
+  held(w, t) {
+    const H = this.hold;
+    // the session's margin for the next start: room for the profile above in this window?
+    this.room.ms += w.dur; this.room.n++; if (this.roomAbove([w])) this.room.ok++;
+    if (this.p !== this.applied) return null;
+    H.w.push(w);
+    let ms = 0, k = H.w.length;
+    while (k > 0 && ms < Math.max(HOLD_SPAN, HOLD_ONE_SCENE)) ms += H.w[--k].dur;
+    H.w.splice(0, k);
+    if (t - H.cool < HOLD_COOL) return null;
+    // the last HOLD_SPAN (spanning a scene change) or HOLD_ONE_SCENE of play
+    const span = (lim) => { const out = []; let s = 0; for (let i = H.w.length - 1; i >= 0 && s < lim; i--) { out.unshift(H.w[i]); s += H.w[i].dur; } return s >= lim ? out : null; };
+    const bad = (ws) => { if (!ws) return false; const n = ws.reduce((s, x) => s + x.n, 0), m = ws.reduce((s, x) => s + x.missN, 0); return ws.filter((x) => x.kind === 'cpu' || x.kind === 'gpu').length / ws.length >= HOLD_PRESSURE && m / Math.max(1, n) > HOLD_MISS; };
+    const a = span(HOLD_SPAN), b = span(HOLD_ONE_SCENE);
+    const scenes = (ws) => new Set(ws.filter((x) => x.kind === 'cpu' || x.kind === 'gpu').map((x) => x.scene)).size;
+    if ((bad(a) && scenes(a) >= 2) || bad(b)) {
+      if (this.applied >= N_PROFILES - 1) { if (t - (this._floorNoted || -1e9) > 120000) { this._floorNoted = t; this.note({ kind: 'floor', why: `a sustained problem at the lowest profile: ${this.why(a || b)}` }); } return null; }
+      H.cool = t; H.w = [];
+      return this.step(+1, t, `held, but a sustained problem${bad(a) && scenes(a) >= 2 ? ' across scene changes' : ' for 60 s'}: ${this.why(a && bad(a) ? a : b)}`);
+    }
+    return null;
+  }
+  // the held session's room for the profile above (for the cache: the next start tries it)
+  margin() { return this.phase === 'hold' && this.room.ms >= MARGIN_MIN && this.room.ok / Math.max(1, this.room.n) >= MARGIN_SHARE && this.applied > 0; }
   state() {
-    return { g: this.g, c: this.c, knobs: this.knobs(), wanted: this.wanted(), pending: this.pending(), label: describe(this.knobs()).text, last: this.lastWindow || null, windows: this.windows, gpuTimer: this.gpuSeen,
-      blocked: Object.fromEntries(Object.entries(this.lad).map(([k, A]) => [k, A.blockUntil > this.since ? { until: Math.round(A.blockUntil), at: A.blockAt } : null])) };
+    return { p: this.p, applied: this.applied, phase: this.phase, knobs: this.knobs(), wanted: this.wanted(), pending: this.pending(), label: describe(this.knobs()).text, last: this.lastWindow || null, windows: this.windows, gpuTimer: this.gpuSeen,
+      eval: this.ev ? { s: Math.round(this.ev.ms / 1000), scenes: this.ev.scenes.size, windows: this.ev.w.length } : null, margin: this.margin(), trial: this.trial || null };
   }
 }
 
 // Calibration on the title screen: frames measured for CAL_MS after CAL_WAIT; then estimate()
 export class Calibration {
-  constructor({ g0 = 0, c0 = 0, budget = () => 1000 / 60 } = {}) { this.g0 = g0; this.c0 = c0; this.budget = budget; this.t0 = null; this.f = []; this.cpu = []; this.g = []; this.done = false; this.result = null; }
+  constructor({ p0 = 0, budget = () => 1000 / 60 } = {}) { this.p0 = p0; this.budget = budget; this.t0 = null; this.f = []; this.cpu = []; this.g = []; this.done = false; this.result = null; }
   frame(t, ms, cpu) {
     if (this.done) return null;
     if (this.t0 == null) this.t0 = t;
@@ -339,16 +288,12 @@ export class Calibration {
   finish() {
     this.done = true;
     const gpuMs = this.g.length >= 8 ? pct(this.g, 0.9) : null, cpuMs = pct(this.cpu, 0.9), fMs = pct(this.f, 0.5);
-    // (no GPU timer: a title already missing refreshes with light CPU work is GPU-bound at the guess — one tier down)
-    let est = estimate({ gpuMs, cpuMs, g0: this.g0, c0: this.c0, budget: this.budget() });
-    if (gpuMs == null && fMs > 1.2 * this.budget() && cpuMs < 0.75 * this.budget()) est = { ...est, g: Math.max(est.g, nextTier('gpu', this.g0)) };
-    this.result = { ...est, gpuMs: gpuMs == null ? null : +gpuMs.toFixed(2), cpuMs: cpuMs == null ? null : +cpuMs.toFixed(2), frameMs: fMs == null ? null : +fMs.toFixed(2), frames: this.f.length, gpuFrames: this.g.length, g0: this.g0, c0: this.c0 };
+    let est = estimate({ gpuMs, cpuMs, p0: this.p0, budget: this.budget() });
+    // (no GPU timer: a title already missing refreshes with light CPU work is GPU-bound at the guess — one profile down)
+    if (gpuMs == null && fMs > 1.2 * this.budget() && cpuMs < 0.75 * this.budget()) est = { p: Math.max(est.p, Math.min(N_PROFILES - 1, this.p0 + 1)) };
+    this.result = { ...est, gpuMs: gpuMs == null ? null : +gpuMs.toFixed(2), cpuMs: cpuMs == null ? null : +cpuMs.toFixed(2), frameMs: fMs == null ? null : +fMs.toFixed(2), frames: this.f.length, gpuFrames: this.g.length, p0: this.p0 };
     return this.result;
   }
 }
-// the next tier boundary below / above a position (power changes without a calibration for the new source)
-export function nextTier(side, at, dir = -1) {
-  const T = Object.values(TIER_AT[side]).sort((a, b) => a - b);
-  if (dir < 0) return T.find((x) => x > at) ?? T[T.length - 1];
-  return [...T].reverse().find((x) => x < at) ?? 0;
-}
+// one profile lower (dir −1: battery) or higher (+1: mains) — a power change without a cached profile for the new source
+export const nextProfile = (p, dir = -1) => Math.max(0, Math.min(N_PROFILES - 1, p - dir));

@@ -43,6 +43,17 @@ export class Perf {
         return orig(camera, scene, geometry, material, object, group);
       };
     }
+    // (PERF-CPU) what the frame sends to the GPU besides draws: buffer and texture uploads (calls and bytes). In Chrome
+    // each is copied through the GPU process; on the user's battery runs the frame callback starts 6–13 ms late
+    // ("callback late": the GPU process still busy with the last frame), so its work per frame is reported per route.
+    this.up = 0; this.upB = 0;
+    try {
+      const gl = renderer.getContext(), self = this;
+      for (const fn of ['bufferData', 'bufferSubData', 'texImage2D', 'texSubImage2D', 'texImage3D', 'texSubImage3D', 'compressedTexImage2D']) {
+        const f = gl[fn]; if (typeof f !== 'function') continue;
+        gl[fn] = function (...a) { self.up++; for (const x of a) if (x && typeof x === 'object' && 'byteLength' in x) { self.upB += x.byteLength; break; } else if (x && x.width && x.height && !('byteLength' in x)) { self.upB += x.width * x.height * 4; break; } return f.apply(this, a); };
+      }
+    } catch { /* (no context: tests) */ }
     // which GPU is drawing (a software renderer here explains a slow game)
     try {
       const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
@@ -51,10 +62,10 @@ export class Perf {
     // (RENDER-INV) the GPU's own time per frame, where the browser offers a timer query (see GpuTimer)
     try { this.gpuTimer = renderer ? GpuTimer.make(renderer.getContext()) : null; } catch { this.gpuTimer = null; }
   }
-  beginFrame() { if (this.r) this.r.info.reset(); this.shadow = 0; this.sub = 0; }
+  beginFrame() { if (this.r) this.r.info.reset(); this.shadow = 0; this.sub = 0; this.up = 0; this.upB = 0; }
   record(f) {
     const info = this.r?.info.render;
-    f.calls = info?.calls ?? 0; f.tris = info?.triangles ?? 0; f.shadowCalls = this.shadow; f.draws = f.calls + this.sub;
+    f.calls = info?.calls ?? 0; f.tris = info?.triangles ?? 0; f.shadowCalls = this.shadow; f.draws = f.calls + this.sub; f.up = this.up; f.upKB = this.upB / 1024;
     if (this.buf.length < N) this.buf.push(f); else this.buf[this.i] = f;
     this.i = (this.i + 1) % N;
     if (this.el && (this.uiT += f.real) > 0.25) { this.uiT = 0; this.draw(); }
@@ -84,7 +95,8 @@ export class Perf {
       // own CPU work (simulation + render submission) per frame; frames drawn while the window was in the background
       pace: { on: b.filter((f) => f.ms <= 17.2).length, slow: b.filter((f) => f.ms > 17.2 && f.ms <= 20).length, long: b.filter((f) => f.ms > 20).length,
         lag: b[0]?.lag != null ? pct('lag', 0.5) : null, work: +[...b.map((f) => f.sim + f.render)].sort((x, y) => x - y)[Math.floor(b.length / 2)].toFixed(2),
-        workP95: +[...b.map((f) => f.sim + f.render)].sort((x, y) => x - y)[Math.min(b.length - 1, Math.floor(b.length * 0.95))].toFixed(2), bg: b.filter((f) => f.bg).length },   // (lamps lit by the light pool: each one is lighting math on the pixels it reaches)
+        workP95: +[...b.map((f) => f.sim + f.render)].sort((x, y) => x - y)[Math.min(b.length - 1, Math.floor(b.length * 0.95))].toFixed(2), bg: b.filter((f) => f.bg).length,
+        lagP95: b[0]?.lag != null ? pct('lag', 0.95) : null, up: b[0]?.up != null ? pct('up', 0.5) : null, upKB: b[0]?.upKB != null ? pct('upKB', 0.5) : null, upKBp95: b[0]?.upKB != null ? pct('upKB', 0.95) : null },   // (lamps lit by the light pool: each one is lighting math on the pixels it reaches)
     };
   }
   overlay(on = !this.el) {

@@ -8,7 +8,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { updateShownWorld } from './drawcull.js';
+import { updateShownWorld, MW } from './drawcull.js';
 import { warmPassPrograms } from './warmup.js';
 
 // RENDER-INV: lamps cost nothing where they don't reach. three evaluates the whole lighting model (RE_Direct: the
@@ -111,6 +111,16 @@ export class Renderer {
     r.setSize(innerWidth, innerHeight);
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFSoftShadowMap;
+    // PERF-CPU: three's own opaque order, except that a texture-array batch (drawbatch.js) sorts where its pieces' twins
+    // did (`__sortId`), so coincident faces show as before
+    r.setOpaqueSort((a, b) => {
+      if (a.groupOrder !== b.groupOrder) return a.groupOrder - b.groupOrder;
+      if (a.renderOrder !== b.renderOrder) return a.renderOrder - b.renderOrder;
+      const ia = a.object.__sortId ?? a.material.id, ib = b.object.__sortId ?? b.material.id;
+      if (ia !== ib) return ia - ib;
+      if (a.material.id !== b.material.id) return a.material.id - b.material.id;
+      return a.z !== b.z ? a.z - b.z : a.id - b.id;
+    });
     r.toneMapping = THREE.NeutralToneMapping; // keeps LBA2's saturated palette (ACES washes it out)
     r.toneMappingExposure = 1.0;
     container.appendChild(r.domElement);
@@ -302,6 +312,7 @@ export class Renderer {
     this.applyResize();
     this.pre?.();
     const S = this.scene, auto = S.matrixWorldAutoUpdate;
+    MW.ok = false;   // (PERF-CPU: set again by the shown-world update when it runs)
     try {
       if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
       else if (this.mid) S.updateMatrixWorld();

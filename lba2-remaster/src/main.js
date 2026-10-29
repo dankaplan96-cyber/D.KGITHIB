@@ -17,6 +17,7 @@ import { BLOBS } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
 import { DrawBatch } from './engine/drawbatch.js';
+import { TEXARRAY } from './engine/texarray.js';
 import { warmShadowPrograms, warmPassPrograms } from './engine/warmup.js';
 import { Input, applyBindings, setKeyScheme, keyFor, keyLabel, REBINDABLE } from './engine/input.js';
 import { CameraRig } from './engine/camera.js';
@@ -240,6 +241,7 @@ class Game {
     L.citadel = Math.round(performance.now() - tm);
     this.env = new Environment(this.scene, this.terrain);
     this.shadowCull = new ShadowCull(this.env.sunDir, this.env.sun, this.scene); // (static shadow batches, view test: engine/shadowcull.js)
+    this.shadowCull.shadowsOn = () => this.renderer.renderer.shadowMap.enabled;   // (PERF-CPU: no caster tests without the shadow pass)
     this.syncShadowCells();   // (PERF-HIGH: the cell size for the preset; before any area is built)
     this.renderer.setup(this.scene, this.camera);
     this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
@@ -353,10 +355,13 @@ class Game {
     timed('actors', () => this.regions.peek(() => this.spawnActors()));
     // (PERF-2: actors of other areas are left out of the render; engine/drawcull.js)
     this.farCull = new FarCull(() => [this.npcs, this.enemies], this.camera, this.scene.fog);
+    // (PERF-CPU: people out of the view are posed at a lower rate; never in dialogue, a story scene or a door's fade)
+    this.farCull.anim.hold = () => this.state !== 'play' || !!this.trans || !!this.cutscene;
     this.blobBatch = new BlobBatch(this.scene, BLOBS);
     this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); };
     // (RENDER-INV: an area's static pieces drawn in one call per material and 48 m cell: engine/drawbatch.js)
     this.drawBatch = new DrawBatch();
+    TEXARRAY.init = (t) => this.renderer.renderer.initTexture(t);   // (PERF-CPU: the world's texture array, sent to the GPU when made)
     // (PERF-BATTERY-2: then the draw batches, terrain tiles and instanced tiles wholly outside the view by their boxes)
     this.boxCull = new BoxCull();
     this.renderer.mid = () => {
@@ -633,7 +638,10 @@ class Game {
       if (this.testFreeze || this._frameNo == null) { T.held = false; f.style.opacity = 1; this._fadeOp = 1; return; }
       T.heldAt ??= this._frameNo;
       const k = this._frameNo - T.heldAt;
-      if (k === 0 || (k <= 3 && this._lastRealMs > 50)) { f.style.opacity = 1; this._fadeOp = 1; T.settled = k; return; }
+      // PERF-CPU: also while the last frame still rebuilt the static shadow cache, built batches or compiled a program (a
+      // first visit: pieces that toggle on the area's first frames leave their shadow batch, the cache is redrawn: the
+      // user's arrival showed that frame, 133 ms, in view), at most 6 frames in all
+      if (k === 0 || (k <= 3 && this._lastRealMs > 50) || (k <= 6 && this._settleBusy)) { f.style.opacity = 1; this._fadeOp = 1; T.settled = k; return; }
       T.held = false;
     }
     if (T.card && T.called) { T.card.hide(); T.card = null; }
@@ -1472,7 +1480,7 @@ class Game {
       res: () => t('set_h_res_' + s.res),
       aa: () => t(s.quality === 'low' && !s.qualityAuto ? 'set_h_aa_low' : 'set_h_aa_' + s.aa),
       // (AUTO-QUALITY: what Auto runs now, in words; PERF-BATTERY: the battery profile's note)
-      quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.label() }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
+      quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.label() + (this.autoQ.gov.phase === 'evaluate' && !this.autoQ.test ? ', settling' : '') }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
       minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
     };
     document.querySelectorAll('#settings [data-hint]').forEach((row) => { row.querySelector('.set-hint').textContent = hint[row.dataset.hint]?.() ?? ''; });
@@ -2082,7 +2090,8 @@ class Game {
     let lamps = 0; for (const l of this.lightPool.lights) if (l.intensity > 0) lamps++;
     const why = real * 1000 > 33.4 ? [this._jobsPrev, gc].filter(Boolean).join(', ') : '';
     this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps, lag: this._lag ?? 0, bg: !!this.background, why: why || undefined });
-    { const jc1 = this.jobCounters(), j = this.jobsBetween(jc, jc1); this._jobsPrev = `frame before: work ${ms.toFixed(0)} ms${j ? ', ' + j : ''}`; this._jc = jc1; }
+    { const jc1 = this.jobCounters(), j = this.jobsBetween(jc, jc1); this._jobsPrev = `frame before: work ${ms.toFixed(0)} ms${j ? ', ' + j : ''}`; this._jc = jc1;
+      this._settleBusy = jc1.sc > jc.sc || jc1.dbn > jc.dbn || jc1.sbn > jc.sbn || jc1.p > jc.p || this._lastLeft !== (this.shadowCull?.left ?? 0); this._lastLeft = this.shadowCull?.left ?? 0; }
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark's fixed runs; its
     // "as played" runs keep it: PERF-BATTERY-2)
     if (this.state === 'play' && !this.trans && (!this.benching || this.benchAuto) && !this.background) this.renderer.adapt(real * 1000);

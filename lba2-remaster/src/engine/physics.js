@@ -9,6 +9,8 @@ export const WATER_FLOOR = -0.35; // deeper than this counts as sea (blocked)
 export const MAX_SLOPE = 1.1;     // steepest walkable terrain (rise / run)
 export const BLOCK_LOW = 0.12;   // a `block` collider lower than this over the feet is stepped over (it is under them)
 
+const NONE = Object.freeze([]);   // (PERF-CPU: near()'s answer for an empty cell)
+
 export class Physics {
   constructor(terrain) {
     this.terrain = terrain;
@@ -62,7 +64,7 @@ export class Physics {
 
   near(x, z) {
     const k = this._key(Math.floor(x / this.cell), Math.floor(z / this.cell));
-    return this.grid.get(k) || [];
+    return this.grid.get(k) || NONE;   // (PERF-CPU: a shared empty list, not a new one per call)
   }
 
   // Signed penetration test of a circle (x,z,r) against a collider.
@@ -111,7 +113,7 @@ export class Physics {
 
   groundInfo(x, z, y = Infinity) {
     let g = this.terrain.heightAt(x, z), brick = false;
-    for (const c of this.near(x, z)) {
+    for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
       if (!c.enabled || c.noStand) continue;
       if (c.top <= y + STEP_UP && c.top > g && this._inside(c, x, z, -0.05)) { g = c.top; brick = true; }
     }
@@ -120,7 +122,7 @@ export class Physics {
     // couldn't walk out of his own house): there, a brick within 6 cm still holds him. The same over a drop (the
     // Hamalayi lift's platform docked beside its ramp at the top of the cliff: the seam read as the cliff foot).
     if (!brick && (g < WATER_FLOOR || (Number.isFinite(y) && g < y - 0.6))) {
-      for (const c of this.near(x, z)) {
+      for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
         if (!c.enabled || c.noStand) continue;
         if (c.top <= y + STEP_UP && c.top > g && this._inside(c, x, z, 0.06)) { g = c.top; brick = true; }
       }
@@ -140,7 +142,7 @@ export class Physics {
 
   // Is there a solid brick at this point above height y?
   blockedAt(x, z, y, r = 0) {
-    for (const c of this.near(x, z)) {
+    for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
       if (!c.enabled) continue;
       if ((c.top > y + STEP_UP || (c.block && c.top > y + BLOCK_LOW)) && c.bottom < y + 1.6 && this._inside(c, x, z, r)) return true;
     }
@@ -149,7 +151,7 @@ export class Physics {
 
   // Is the point (x, y, z) inside a solid brick, within r? (projectiles: no step-up allowance)
   solidAt(x, z, y, r = 0) {
-    for (const c of this.near(x, z)) {
+    for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
       if (!c.enabled || c.seeThrough && c.noBall) continue;
       if (c.top > y - r && c.bottom < y + r && this._inside(c, x, z, r)) return true;
     }
@@ -159,7 +161,7 @@ export class Physics {
   // Is the point inside a collider that is seen through but stops the ball (a chain-link fence, a railing; not one
   // marked noBall)? Line of sight passes these, solidAt does not: the aim uses this to leave out what the ball can't reach.
   ballFenceAt(x, z, y, r = 0) {
-    for (const c of this.near(x, z)) {
+    for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
       if (c.enabled && c.seeThrough && !c.noBall && c.top > y - r && c.bottom < y + r && this._inside(c, x, z, r)) return true;
     }
     return false;
@@ -250,7 +252,7 @@ export class Physics {
       const t = i / n;
       const x = ax + (bx - ax) * t, z = az + (bz - az) * t, y = ay + (by - ay) * t;
       if (this.terrain.heightAt(x, z) > y) return false;
-      for (const c of this.near(x, z)) {
+      for (let ni = 0, NL = this.near(x, z); ni < NL.length; ni++) { const c = NL[ni];
         if (c.enabled && !c.seeThrough && c.top > y && c.bottom < y && this._inside(c, x, z)) return false;
       }
     }

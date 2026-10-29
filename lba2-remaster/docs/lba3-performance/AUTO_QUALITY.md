@@ -1,33 +1,37 @@
-# AUTO-QUALITY (I-13, with I-11 and I-12): Quality Auto, a calibration and a runtime governor
+# AUTO-QUALITY (I-13, with I-11 and I-12): Quality Auto — five profiles, settle then hold
 
 The user (28.10): "the game must detect the computer's capabilities automatically and run the quality and the optimal
-settings accordingly, without manual changes. 55–60 fps is the requirement."
+settings accordingly, without manual changes. 55–60 fps is the requirement." And (29.10): "if the game runs well on
+battery there's no reason it won't on mains"; "there are too many settings"; "Auto should settle on the best settings
+after thinking a little, and then NOT change every few seconds — it jumps".
 
 **Status: implemented and checked with automated tests on SwiftShader, which is a software renderer. It has not been
 accepted on the target hardware.** No frame rate, GPU time or pacing figure in this document was measured on the
-user's Vega 8. Every decision threshold is a starting value derived from the user's own Vega 8 reports (build 241,
-build 244 plugged and on battery). The next benchmark on the laptop is the acceptance run (§8).
+user's Vega 8. Every decision threshold is a starting value derived from the user's own Vega 8 reports (builds 241,
+244, 251 and 255, plugged in and on battery). The next benchmark on the laptop is the acceptance run (§8).
 
-Code: `src/engine/autoquality.js` holds the knobs, ladders, cost model, governor, calibration and labels. It has no
-DOM or three.js and is tested in Node. `src/engine/autoapply.js` connects it to the game: renderer, shadow map, light
-pool, vegetation, shadow culling, cache, title calibration and power. Changes to existing files are in
-`src/engine/renderer.js` (`knobs`), `environment.js` (`setShadowMap`), `perf.js` (the GPU timer's `stride` and
-`onFrame`), `bench.js` (the report and `runAuto`), `drawbatch.js` and `shadowcull.js` (build counters), `src/main.js`
-(settings, migration, the Settings screen, commit points, hitch attribution, settle frames), `index.html` (the Auto
-chip and the pause-menu entry), the text tables, and `desktop/` (processor information).
+**PERF-CPU (29.10) replaced the build-251 governor.** Build 251 moved one knob at a time on two ladders (GPU, CPU),
+stepped every few seconds and stepped back up between areas; on battery it raised shadows on a light window and the
+next area (the arrival) paid for it. Now Auto chooses one of **five complete, named profiles**, evaluates the first
+minute or so of play, then **holds** the profile; every change is applied only at a scene change or in a menu. §3–§5
+describe the new design; §6–§7 are unchanged from build 251 unless marked.
+
+Code: `src/engine/autoquality.js` holds the profiles, the cost model, the governor, the calibration and the labels. It
+has no DOM or three.js and is tested in Node. `src/engine/autoapply.js` connects it to the game: renderer, shadow map,
+light pool, vegetation, shadow culling, the people's animation rate and far detail (`drawcull.js` FarCull), title
+calibration, cache and power. Other changes: `src/engine/renderer.js` (`knobs`), `environment.js` (`setShadowMap`),
+`perf.js` (the GPU timer's `stride` and `onFrame`), `bench.js` (the report and `runAuto`), `src/main.js` (settings,
+migration, the Settings line, commit points, hitch attribution, settle frames), the text tables, and `desktop/`.
 
 ## 1. What the player sees
 
 - **Settings → Display → Graphics: Auto / Low / Medium / High.** Auto is the default.
-- The line under the row reports what Auto is running now, with the nearest preset and every difference from it.
-  Examples: `Auto (High): set from this computer, adjusted in play to hold 55–60 fps.`,
-  `Auto (High, no bloom, resolution 90 %)` and `Auto (Medium, soft shadows, shadow map 2048)`. Labels are honest:
-  a state that is lower than High is never called High, and the resolution is named whenever it is below 100 %. On
-  battery, the existing battery note is added.
-- Low, Medium and High chosen by hand are the presets exactly as before. `renderer.knobs` stays `null`, so the
-  code path is unchanged. The test compares every render setting and the draw calls of a street frame.
-- Auto makes no toasts or pop-ups. The AUTO-FIT "try a lower preset" suggestion is off under Auto and unchanged for a
-  preset chosen by hand.
+- The line under the row names the profile Auto runs: `Auto (Medium-lite): chosen for this computer and power source
+  in the first minute or so of play to hold 55–60 fps, then kept.` While it is still evaluating: `Auto (Medium,
+  settling): …`. On battery, the existing battery note is added.
+- Low, Medium and High chosen by hand are the presets exactly as before (`renderer.knobs` stays `null`).
+- Auto makes no toasts or pop-ups. A change of profile is never applied in the middle of play: it waits for the next
+  scene change (behind its black) or a menu (pause, inventory, map).
 - Pause menu: **Benchmark: Auto as played** (§7).
 
 ## 2. Migration of stored settings (settings `qv` 2)
@@ -49,115 +53,93 @@ back when it finishes.
 **The user picked High by hand, so their High stays after this update.** To get Auto they select it once. The
 coordinator may prefer a one-time switch; that decision is left to them.
 
-## 3. Knobs and ladders (least visible first)
+## 3. The five profiles (PERF-CPU)
 
-All knobs are rendering-side. None of them touches the player's face or hands detail, the animation rate, the
-simulation step or physics.
+A profile is a complete set of knobs. High, Medium and Low are the presets exactly; Medium-lite and Low-lite are the two
+steps the user's battery runs asked for: below Medium with shadows kept, and below Low for a processor at battery clocks.
 
-| knob | values (best → cheapest) | where it acts | takes effect |
-|---|---|---|---|
-| scale | 1 · 0.9 · 0.8 · 0.7 of High's pixel ratio | the scene pass's viewport (the existing automatic resolution, which allocates nothing) | at once |
-| bloom | on · off | `UnrealBloomPass.enabled` | at once (programs made at startup) |
-| filter | PCF soft · PCF | `shadowMap.type` | at the next commit point |
-| map | 4096 · 2048 · 1024 | the sun's map: 4096 and 2048 over High's ±48 m box, 1024 over Medium's ±36 m; 2048 and below go into the static shadow cache | at once (one cache rebuild) |
-| lamps | 8 · 4 · 2 | the light pool's size | at the next commit point |
-| msaa | 4× · 2× · off with FXAA | the composer targets' samples | at once (one target reallocation) |
-| shadows | on · off | `shadowMap.enabled` | at the next commit point |
-| veg | High · Medium · Low grass and tree distances | `world.setDetail` (kit.js `LOD_PRESETS`) | at once |
-| casters | High · Medium · Low small-shadow distance and distance detail | `shadowCull.quality` (`SMALL_FAR`, `MIN_PX`) | at once |
+| profile | resolution | edges | bloom | shadows | lamps | grass / small casters | people out of view | people in view beyond 25 m | far small parts |
+|---|---:|---|---|---|---:|---|---|---|---|
+| High | 100 % | MSAA 4× | on | PCF soft, 4096 | 8 | High's | ¼ rate | full rate | under 0.75 px beyond 30 m |
+| Medium | 100 % | MSAA 2× | off | PCF, 1024 (cached) | 4 | Medium's | ¼ rate | full rate | under 0.75 px beyond 30 m |
+| Medium-lite | 90 % | FXAA | off | PCF, 1024 (cached) | 2 | Low's | ¼ rate | **half rate** | under 0.75 px beyond 30 m |
+| Low | 85 % | FXAA | off | none | 2 | Low's | ¼ rate | full rate | under 0.75 px beyond 30 m |
+| Low-lite | 75 % | FXAA | off | none | 2 | Low's | ¼ rate | **half rate** | **under 2.5 px beyond 12 m** |
 
-The **commit points** are a scene change (inside its black frame and shader hold, `warmScene`), an open
-pause, inventory or map, a plug or unplug, and the start of play. The game already compiles shader programs at these
-moments. A commit knob never freezes play. Auto also keeps High's 32 m shadow cells at every tier, so a governor step
-never rebuilds the shadow batches (PERF-HIGH `cellFor`).
+- "People out of view ¼ rate" is the same in every profile and every preset (PERF-CPU §3: nobody sees it): a person
+  outside the view is posed every 4th frame (every 8th beyond the fog) with the time of the frames between. Never the
+  hero, an enemy, anyone in dialogue or a story scene.
+- "Half rate in view beyond 25 m" (Medium-lite, Low-lite): such a person's limbs are posed every other frame; the body
+  still moves every frame. Within 25 m of the camera everyone is posed every frame.
+- "Far small parts" (Low-lite): a person's eyes, buttons and other parts under 0.2 m are left out of a frame while
+  under 2.5 px on screen beyond 12 m (else 0.75 px beyond 30 m).
+- On battery the battery profile still applies on top (no MSAA, the 5-read shadow filter, 2 lamps, lamps without the
+  specular term).
+- The cost model (each profile's share of High's GPU and CPU time; from the user's build-244 breakdown, the old ladders'
+  measured steps multiplied out): Medium 0.56 / 0.80, Medium-lite 0.46 / 0.72, Low 0.36 / 0.62, Low-lite 0.31 / 0.54.
+  It picks the start (calibration) and judges whether a step up would fit; steps down are measured pressure only.
 
-**GPU ladder**, used when the GPU's own time is the long side:
-scale 0.9 → no bloom → PCF filter* → map 2048 → 4 lamps* → MSAA 2× → map 1024 *(≈ Medium at 90 %)* → scale 0.8 →
-FXAA → 2 lamps* → scale 0.7 → no shadows* *(≈ Low at 70 %)*
-
-**CPU ladder**, used when the game's main-thread work is the long side:
-no bloom → map 2048 → Medium's small casters → Medium's grass *(≈ Medium)* → Low's small casters → Low's grass →
-no shadows* *(≈ Low)*
-
-\* commit knob. When a step down lands on a commit knob, the same move also takes the next live step, so the frame
-rate gains immediately.
-
-The knobs at a given position are High's, with every step above both positions applied. A knob shared by the two
-ladders takes the lower value.
-
-**Cost model** (each step's share of that side's time). It comes from the user's Vega 8 High-street breakdown, build
-244 plugged in: GPU 12.69 ms and game CPU 15.4 ms as is.
-
-| change | GPU | CPU | source |
-|---|---:|---:|---|
-| no bloom | ×0.735 | ×0.89 | measured (9.33 GPU, 13.7 CPU) |
-| map 2048 | ×0.97 | ×0.95 | GPU measured (12.31); CPU estimated (the breakdown showed no CPU change) |
-| MSAA 2× | ×0.936 | ×0.99 | GPU measured (11.88) |
-| no shadows | ×0.85 | ×0.84 | CPU measured (12.9); GPU measured ×0.755 at 4096, ×0.85 assumed for the cached 1024 map |
-| resolution s | (0.62+0.38s²) relative | — | fit to as-is and ×0.6 (9.57) |
-| PCF filter, 4 and 2 lamps, map 1024, FXAA, small casters, Low's grass | 0.95–0.99 | 0.96–1 | estimated |
-
-The governor uses the model only to predict whether a step **up** still fits, and the calibration uses it to pick a
-start. Steps down are driven by measured pressure only.
-
-## 4. The governor (thresholds)
+## 4. The governor: evaluate, then hold
 
 Inputs for every displayed frame in play: the frame interval, the game's own CPU work for that frame (simulation plus
-render submission, without background slices), and the GPU's own time from the existing timer query on every other
-frame, where the browser offers it.
+render submission, without background slices), the GPU's own time (timer query, every other frame, where the browser
+offers it) and the scene (the room or region on show).
 
-These frames are **not counted**: menus, cinematics and cutscenes, scene changes plus 1.5 s after them, shader holds,
-the loading screen, a hidden or background window, the benchmark's fixed runs, the tests' fixed stepping, and 1.5 s
-after the governor's own step. A frame over 100 ms is left out of the percentiles. A frame over 250 ms restarts the
-window and adds 1.5 s of quiet. **No stall or transition ever moves a knob.**
+Frames that are **not counted**: menus, cinematics and cutscenes, scene changes plus 1.5 s after them, shader holds,
+the loading screen, a hidden or background window, the benchmark's fixed runs, the tests' fixed stepping. A frame over
+100 ms is left out of the percentiles and counted as a missed refresh; one over 250 ms restarts the window and adds
+1.5 s of quiet. **No stall or transition ever moves the profile.**
 
-Each 1.5 s window is classified as follows. B is the frame budget: 16.7 ms, or 33.3 ms under a 30 fps limit.
+Each 1.5 s window of counted play is classified (B is the frame budget: 16.7 ms, or 33.3 ms under a 30 fps limit):
 
 - **ok**: at least 55 fps (27.5 under a 30 fps limit), with fewer than 6 % of intervals over 1.2 B.
-- **paced** (display or OS): slower, but the CPU p90 and the GPU p90 are both at or below 0.75 B, about 12.5 ms.
-  Without a timer query: the CPU is light, under 8 % of intervals are missed, and p90 is at or below 1.17 B.
-  **Never a reason to degrade.** This covers the laptop's ~56.5 Hz plateau, where "nothing drawn" also measures
-  17.7 ms. That plateau is already "ok" (56.5 fps). A slower plateau with light work stays "paced".
-- **gpu** or **cpu**: slower, and that side's p90 is the longer one. Without a timer query: CPU if its p90 is over
-  0.75 B, otherwise GPU.
+- **paced** (display or OS): slower, but the CPU p90 and the GPU p90 are both at or below 0.75 B. Without a timer
+  query: the CPU is light, under 8 % missed, p90 ≤ 1.17 B. **Never a reason to change.**
+- **gpu** / **cpu**: slower, and that side's p90 is the longer one (no timer query: CPU if its p90 > 0.75 B).
 
-Rules:
+**Evaluate** (the first minute or so of play; again after a power change without a settled profile):
 
-- **Down:** the same pressure in 2 windows in a row (3 s of counted play) and at least 3 s since the last change.
-  One step on that side's ladder. If that ladder is at its floor, the other ladder takes the step.
-- **Up:** room on that side in 6 windows in a row (9 s), with no pressure. Room means CPU p90 ≤ 0.63 B (10.5 ms) or
-  GPU p90 ≤ 0.6 B (10 ms); without a timer query, ≥ 58.5 fps with fewer than 2 % missed. The step also needs ≥ 6 s
-  since the last change, ≥ 20 s since the last step down, and the model's prediction for both sides after the step
-  at or below 0.72 B. The side further down its ladder goes first.
-- **Backoff:** a step up that has to be taken back within 20 s blocks that level for 60 s, then 2, 4, 8 and 16
-  minutes.
-- At most one step per 3 s. Steps that change nothing now are skipped. On battery, the profile already sets MSAA off,
-  the 5-read filter and 2 lamps. With Resolution: Full, the resolution is not used.
-- A state held for 60 s of play is stored for this machine as `settled` and used at the next start.
+- Pressure in 3 windows in a row, or in 4 of the last 6: **one profile down**, queued.
+- Room for the profile above in every window so far (≥ 30 s of play over two scenes, every window ok or paced, the
+  model's prediction for the profile above ≤ 0.72 B on both sides in each window): **one profile up**, queued — at
+  most once per evaluation (never in a try one up from the cache, below).
+- After ≥ 60 s of counted play across ≥ 2 scenes (or 120 s in one): if ≤ 10 % of the windows were under pressure
+  and ≤ 5 % of the intervals missed the refresh, the profile is **settled**: held, and cached for this machine and
+  power source. Otherwise one profile down and the evaluation goes on. At Low-lite it settles in any case.
+- A queued step takes effect at the next commit point; the windows in between are not counted, and the evaluation
+  restarts its count for the new profile (the scenes already seen still count).
+
+**Hold** (the rest of the session):
+
+- No change, except:
+  - **a power-source change**: that source's settled profile (held), or one profile lower on battery / higher on
+    mains, evaluated;
+  - **a sustained real problem**: over the last 30 s of counted play ≥ 80 % of the windows under pressure and
+    > 10 % of the intervals missed, with the pressure seen in two scenes (or 60 s of it in one scene): one profile
+    down, queued; then at least 60 s before another.
+- **Never up during a session.** A held session that had room for the profile above in ≥ 90 % of ≥ 3 min of windows
+  marks its cache entry (`margin`). The next start then tries one profile higher, evaluated: if that cannot hold, it
+  goes back to the settled profile (held), and the try is not repeated for the next 3 starts.
+
+**Commit points** (where a queued profile takes effect and the game makes its programs): a scene change (inside its black
+and shader hold, `warmScene`), an open pause / inventory / map, a power change, the start of play. Auto keeps High's
+32 m shadow cells in every profile, so no profile change rebuilds the shadow batches.
 
 ## 5. Calibration and cache
 
-The cache key is the GPU string, the power source (mains or battery), the screen (`width × height @ devicePixelRatio`),
-and, in the desktop app, the processor's name. It is stored in `localStorage['lba3_autoq_v1']`. A new GPU, power
-source, screen or processor gives a new key, which triggers a new calibration.
+The cache key is the GPU string, the power source, the screen and, in the desktop app, the processor's name. It is
+stored in `localStorage['lba3_autoq_v2']` (the build-251 `v1` entries described ladder positions and are not read).
+Each entry: `{ p: the profile, src: 'settled' | 'calib', margin, noTry, at }`.
 
-- **Known key:** the stored position, either `calib` or `settled`. Nothing is measured.
-- **Unknown key:**
-  1. Start from the GPU name's guess (`gpuQuality`), so the loading screen compiles programs for something plausible.
-     If the other power source is known, start from its state, one tier lower on battery or one tier higher
-     plugged in.
-  2. On the title screen, after 0.6 s, measure 1.5 s of the title's frames: GPU p90 (timer query), CPU-work p90 and
-     frame p50. This adds no wait: the title is already showing.
-  3. `estimate()` predicts both sides at every position from the measurement and the model. The title's view is
-     lighter than play, so the margins are ×1.15 for GPU and ×1.3 for CPU. It picks the best position whose GPU
-     and CPU both fit 0.7 B.
-  4. The result is cached as `calib` and takes effect when play starts. New Game, Continue and Load hold the first
-     frames for any new programs, as a preset change does.
-  5. If the player starts before the measurement ends, the governor continues from the guess in play.
-- **Plug or unplug:** the new source's cached state, or one tier lower (battery) or higher (mains) when nothing is
-  cached. This is applied together with the existing battery-profile switch and its warm-up.
+- **Settled entry**: the next start goes straight to that profile and holds it (no evaluation, no jumps), or tries one
+  higher when `margin` is set (above).
+- **Calibration entry, or nothing cached**: the GPU name's guess (one profile lower on battery; if the other power source
+  is settled, its profile one lower / higher), the title screen's 1.5 s measured (`estimate()`: the best profile whose
+  predicted GPU and CPU both fit 0.7 B, with margins ×1.15 GPU and ×1.3 CPU for the title's lighter view), and the
+  evaluation in play decides. If play starts before the title was measured (the user's build-255 run), the evaluation
+  starts from the guess.
 - **Automated tests on a software renderer:** Auto is High and the governor is off, as the tests always ran. `?autoq`
-  turns the governor on.
+  turns it on there too.
 
 ## 6. I-11 (cold first-visit stalls) and I-12 (cheap CPU wins)
 
@@ -182,6 +164,9 @@ heap of more than 500 MB is as plausible as a build.
    up to 3 more frames while the last interval was over 50 ms. That is at most about 0.2 s of extra black, only on
    heavy arrivals, and the time is counted as a black frame in the report.
 3. **Auto keeps High's 32 m shadow cells.** No governor step rebuilds batches.
+4. (PERF-CPU) The settle frames also hold while the last frame still rebuilt the static shadow cache, built batches,
+   compiled a program or let pieces out of their shadow batches (at most 6 frames in all); dogs and builders' moving
+   parts never go into static shadow batches. See PERF_CPU.md §5.
 
 **Not changed (I-12), with the reason and the next step.** A larger CPU win needs an owner other than me.
 
@@ -200,108 +185,68 @@ heap of more than 500 MB is as plausible as a build.
 
 ## 7. The benchmark
 
-- **Every report** now shows the quality setting (Auto with its running state, or the preset chosen by hand), the
-  ladders' positions, the start source and cache entry, the title calibration's numbers, the last window, and Auto's
-  decisions in this session (time, step, reason, state after). In the desktop app it also shows the processor and
-  memory. The fixed runs set presets by hand and give Auto back at the end.
-- **Benchmark: Auto as played** (pause menu, or `game.bench.runAuto({ routes, measure, fromTop })`). It runs every
-  route once in a row, 1.5 s warm and 20 s measured, with Auto on and the governor running. Nothing is reset between
-  routes. For each route it reports fps; frame p50, p95, p99 and max; frames over 33, 50 and 100 ms, and how many were
-  behind black; GPU p50 and p95; CPU-work p50 and p95; the state at the start and end; the share of frames at each
-  state; pacing; and every hitch with what ran in it. It ends with every decision of the run and its reason.
-  `fromTop: true` starts from High to show the descent.
+- **Every report** shows the quality setting (Auto with its profile, phase — evaluating or held — and what it runs, or
+  the preset chosen by hand), the start source and cache entry, the title calibration's numbers, the last window, and
+  Auto's decisions in this session (time, decision, reason, profile after; a queued one as "→ X at the next scene
+  change or menu"). The fixed runs set presets by hand and give Auto back at the end.
+- **Benchmark: Auto as played** (pause menu, or `game.bench.runAuto({ routes, measure, fromTop })`): every route once in
+  a row, 1.5 s warm and 20 s measured, Auto on and the governor running, nothing reset between routes. Each route's
+  scene change is a commit point, so the evaluation's decisions take effect between routes. Per route: fps; frame p50,
+  p95, p99, max; frames over 33, 50, 100 ms (behind black); GPU and CPU-work p50 / p95; the profile at the start and
+  end and the share of frames at each; pacing, **"callback late" p50 / p95** and **uploads per frame** (PERF-CPU); every
+  hitch with what ran in it. `fromTop: true` starts from High, evaluated.
 
-## 8. What the next Vega 8 benchmark should show
+## 8. What the next Vega 8 benchmark should show (battery first)
 
-Run **Benchmark: Auto as played** plugged in, then on battery. Then run the full Benchmark once for the fixed-preset
-comparison. In the Auto run, look for:
+Run **Benchmark: Auto as played** on battery, then plugged in, then the full Benchmark once on battery. Look for:
 
-1. **Start:** with no cache yet, the title calibration's GPU and CPU numbers and the start it chose. Expected: between
-   Medium and High plugged in, lower on battery. Compare the title's numbers with the street's to tune the margins
-   (×1.15 GPU, ×1.3 CPU).
-2. **Plugged:** street, interior, combat and hamalayi at ≥ 55 fps.
-   - The High street, at the edge with game CPU about 15.4 ms, should take **no bloom** from the CPU ladder if it
-     misses.
-   - The High arrival (CPU-bound: 16.5 ms, 379 calls) should step down the CPU ladder and stop. The arrival route
-     changes area every 3 s, so most of its windows are not counted. The governor acts on the time between arrivals
-     only.
-3. **The plateau:** in the stretches where the display paces at ~56.5 Hz (the full benchmark's "nothing drawn"
-   column), the decisions list should show **no step down**.
-4. **Battery:** a start one tier lower if nothing is cached, then GPU and CPU ladder steps toward ≥ 55. The battery
-   profile's knobs are not stepped.
-5. **Stability:** no up and down pairs within a minute in the decisions list. At most one change per 3 s. Steps up
-   only after about 20 s at ≥ 55 with room.
-6. **Hitches:** every frame over 33 ms with its reason. The Low street's 2.75 s stall, if it recurs, is either a
-   batch build or a GC, and the report will say which. The arrival's in-view 150–200 ms frames should move behind
-   black (settle frames).
+1. **Start:** without a cache, the guess (battery: one profile lower than the name's), the title's numbers if it was
+   measured, then the evaluation: decisions only at the route changes (scene changes), each "evaluation: … pressure"
+   or "room …", then **"settled"** within the first minute or two of play. With a cache (a second run): straight to the
+   settled profile, **no decision at all** during the run (or one "settled" after a try one up).
+2. **Battery:** a settled profile among Medium-lite, Low or Low-lite that holds ≥ 55 on street, combat and arrival.
+3. **No jumps:** after "settled", at most one decision in the whole run, and only "held, but a sustained problem…";
+   never an "up"; nothing applied except at a route change.
+4. **The plateau:** where the display paces slower (the full benchmark's "nothing drawn" column), no decision.
+5. **Hitches:** every frame over 33 ms with its reason (PERF_CPU.md §5 for what changed).
 
 ## 9. Visible trade-offs (Auto only; the presets chosen by hand are unchanged)
 
-- Below High, Auto's states are the listed knob values. Each one is named in the Settings label.
-- At its Medium mark, Auto draws at 90 % resolution: the GPU ladder's first step. Its Low mark is 70 % rather than
-  Low's 85 %.
-- A live step shows once, at most every 3 s. Examples: grass beyond 46 m thinning, bloom going off, the shadow map's
-  texels getting coarser. Steps up take at least 20 s.
-- The shadow filter, the lamp count and shadows on or off change only at a scene change, a pause or a power change.
-- At 2048 and 1024 the static shadow cache is used, as in Medium.
-- Arrivals can stay black for up to 3 extra frames (I-11, all qualities).
+- Each profile is named in the Settings line; High, Medium and Low are the presets exactly.
+- Medium-lite: Medium's shadows at 90 % resolution, FXAA instead of MSAA, 2 lamps, Low's grass and small casters, far
+  people (beyond 25 m in view) posed every other frame.
+- Low-lite: Low at 75 % resolution, far people posed every other frame, a person's small parts (eyes, buttons) left out
+  under 2.5 px beyond 12 m.
+- A change of profile shows only at a scene change (behind its black) or when a menu closes; never in play.
+- In every profile and preset (PERF-CPU, not a knob): people outside the view are posed every 4th frame.
 
 ## 10. Tests (SwiftShader in this container; the logic only, not frame rates)
 
-- `node tests/autoquality.mjs` checks the governor on synthetic traces. Each simulated machine has its own "truth"
-  costs, deliberately different from the governor's model. **PASS 30/30.** It covers:
-  - ladder and label checks;
-  - room to spare: no step in 3 min;
-  - display plateaus at 17.7 and 19.2 ms with light work: no step down, with or without a timer query;
-  - GPU-bound: GPU ladder only, resolution first, ≥ 3 s apart, ends ≥ 55 fps and stable for 2 min;
-  - CPU-bound: CPU ladder, bloom first, resolution untouched;
-  - stalls of 550 and 160 ms plus heavy scene changes: no step;
-  - a 1.2 s burst: no step;
-  - heavy area then light: back to High, steps up ≥ 6 s apart and ≥ 20 s after the last step down;
-  - a marginal GPU over 15 min: ≤ 4 changes and none in the last 5 min;
-  - a step up that always fails: ≤ 6 tries in 20 min (backoff);
-  - commit queuing and commit;
-  - battery no-op steps;
-  - a 30 fps limit;
-  - no timer query;
-  - calibration estimates.
-- `tests/autoquality-game.mjs` checks the same in the game. **PASS 22/22.** It covers:
-  - a new player gets Auto;
-  - six migration cases;
-  - the Settings chips and line;
-  - Medium by hand is unchanged;
-  - Auto at its top is High exactly: every render setting and the street frame's draw calls;
-  - Auto at its Medium marks renders as Medium;
-  - steps reach the renderer;
-  - pause and scene-change commits;
-  - plug and unplug;
-  - battery no-ops;
-  - title calibration, start and cache;
-  - both benchmark modes.
-  A SwiftShader sample of the Auto report is written to `tests/out/autoquality-bench-auto.txt`.
-- `tests/menus.mjs`: PASS.
-- `tests/perfbudget.mjs ROUTES=street`:
-  - High: 233 calls (p95 257, shadow 56), 891k triangles, no new programs. PASS. PERF-HIGH's candidate was 228
-    (p95 254, shadow 56), 889k.
-  - Medium: 200 calls (p95 224, shadow 36), 446k. PASS. The base commit b1b0dff measured in the same session gave
-    196 (p95 228, shadow 36), 455k: the same preset, within the route's run-to-run spread.
-- `tests/drawcalls.mjs`: PASS.
-- `tests/autofit.mjs`, `audit.mjs`, `timing.mjs`, `crosssystem.mjs`: PASS.
-  - `timing.mjs` first failed because the renderer's size key named Auto differently from High. The key now uses the
-    renderer's base quality, which is 'high' under Auto, so Auto at High and High chosen by hand share it.
-- `tests/dynres.mjs`: PASS. It now sets its preset by hand, because it tests the automatic resolution of a preset
-  chosen by hand; under Auto the governor sets the factor.
+- `node tests/autoquality.mjs`: the governor on synthetic noisy traces (each simulated machine with its own "truth"
+  costs, deliberately not the governor's model; scene changes every 25–45 s as commit points). **PASS 39/39.** It
+  covers: the five profiles and their labels; room to spare (High, settled within 90 s, no step in 15 min); display
+  plateaus at 17.7 and 19.2 ms with light work, with and without a timer query (no step in 15 min); GPU-bound, CPU-bound
+  (a battery-clocked processor) and heavily CPU-bound machines: settle within 4 min at a profile holding ≥ 55 fps, **at
+  most one change after settling in 15 noisy minutes, never up, every change applied at a scene change or menu**; a
+  noisy machine near the edge with bursts and stalls (± 30 % timings): at most one change after settling, none in play;
+  stalls of 550 and 160 ms and heavy transitions: no step; a 20 s heavier stretch after settling: no change, a
+  sustained one across scene changes: exactly one step down, at the next scene change; started too low: one step up in
+  the evaluation, then held; held with lots of room: never up, margin noted; a try one up from the cache that cannot
+  hold: back down, held, marked; below Low-lite: settles there; a 30 fps limit; no timer query; one scene only (the
+  evaluation still ends); calibration estimates.
+- `tests/autoquality-game.mjs` checks it in the game: a new player gets Auto; migration; the Settings chips and line;
+  Medium by hand unchanged; Auto's High, Medium and Low profiles render as the presets (High: the same draw calls);
+  Low-lite's knobs; a decision queued in play changes nothing until the pause menu commits it; a queued step applied by
+  the next scene change (the house door); plug / unplug without and with a settled battery profile; the title
+  calibration; the evaluation settling and caching; the next start straight to the settled profile; the try one up;
+  both benchmark modes. (See PERF_CPU.md §7 for the run's verdict.)
 
 ## 11. Open issues (ranked)
 
-1. **Hardware acceptance is pending.** Thresholds, cost factors and calibration margins are starting values. No GPU
-   time or frame pacing was measured here.
-2. The calibration's title-to-play margins are guesses until one laptop run compares the title with the street.
-3. Distant resident update rate is not a knob. walkers.js is not mine. Residents already step at 1/3 rate between
-   60 and 110 m. A `scale` hook on `FULL_R` and `REDUCED_R` would add a CPU step for the owner.
-4. I-12 merges (cargo lift, small grass tiles): §6, owners of island.js and world.js/kit.js.
-5. A commit knob waits for a scene change or menu. In a very long stretch of play without one, the governor works
-   with the live knobs only.
-6. The GPU timer query now runs in play on every other frame under Auto. If a driver showed a cost, `stride` can be
-   raised. The full benchmark's "GPU timer off" line measures it.
-7. The user's own High chosen by hand is kept (§2).
+1. **Hardware acceptance is pending.** Thresholds, the profiles' cost factors and the calibration's margins are starting
+   values. No GPU time or frame pacing was measured here.
+2. A queued step waits for a scene change or a menu. A player who stays in one area for minutes with a sustained
+   problem keeps it until then (by the user's rule: never a visible change mid-play).
+3. The evaluation's verdict is taken at the clocks of its minute; a processor that slows later (heat) is the hold's
+   "sustained problem" rule's job (one step down, at the next scene change).
+4. The user's own High chosen by hand is kept (§2); Auto is one choice away.

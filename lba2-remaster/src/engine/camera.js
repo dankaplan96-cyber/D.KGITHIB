@@ -1341,10 +1341,12 @@ export class CameraRig {
     // (`rock`, the LBA view's comfortable lift: a face beside it is for the swing up over him, see CLIFF_CAP; the lift asks no
     // more than CLIFF_CAP over what the ground under it asks)
     const lim = rock ? need + CLIFF_CAP : Infinity;
-    for (const [r, dx, dz] of RING) { if (k < 1 && r > HARD_R) break; const n = Math.min(lim, T.heightAt(x + dx, z + dz) + lerp(base, 0.3 * k, r / CLEAR_R) - y); if (n > need) need = n; }
+    // (PERF-CPU: indexed loops, no destructuring iterators: this runs for ~a dozen camera candidates a frame and was the
+    //  largest single source of garbage in a frame, ~175 KB)
+    for (let i = 0; i < RING.length; i++) { const e = RING[i], r = e[0]; if (k < 1 && r > HARD_R) break; const n = Math.min(lim, T.heightAt(x + e[1], z + e[2]) + lerp(base, 0.3 * k, r / CLEAR_R) - y); if (n > need) need = n; }
     if (P) {
       _seen.clear();
-      for (const [dx, dz] of CORNERS) for (const c of P.near(x + dx, z + dz)) {
+      for (let q = 0; q < 4; q++) { const L = P.near(x + CORNERS[q][0], z + CORNERS[q][1]); for (let ci = 0; ci < L.length; ci++) { const c = L[ci];
         if (_seen.has(c)) continue;
         _seen.add(c);
         // (camSkip: a house or a dome, whose scenery volume below stands for its taller box; bottom: overhead)
@@ -1355,18 +1357,18 @@ export class CameraRig {
         if (s >= CLEAR_R) continue;
         if (up > LIFT_MAX) { if (s < CLEAR_IN) tall?.push(c); continue; }
         need = Math.max(need, up * W(s));
-      }
+      } }
     }
     if (occ) {
       _seen.clear();
-      for (const [dx, dz] of CORNERS) for (const v of occ.near(x + dx, z + dz)) {
+      for (let q = 0; q < 4; q++) { const L = occ.near(x + CORNERS[q][0], z + CORNERS[q][1]); for (let vi = 0; vi < L.length; vi++) { const v = L[vi];
         if (_seen.has(v)) continue;
         _seen.add(v);
         if (v.y0 > y + 1 || v.top + top <= y) continue;
         let t = occ.topAt(v, x, z), n = t > -Infinity ? t + top - y : 0;
-        for (const [r, dx2, dz2] of RING) { if (k < 1 && r > HARD_R) break; t = occ.topAt(v, x + dx2, z + dz2); if (t > -Infinity) n = Math.max(n, (t + top - y) * W(r)); }
+        for (let i = 0; i < RING.length; i++) { const e = RING[i], r = e[0]; if (k < 1 && r > HARD_R) break; t = occ.topAt(v, x + e[1], z + e[2]); if (t > -Infinity) n = Math.max(n, (t + top - y) * W(r)); }
         need = Math.max(need, n);
-      }
+      } }
     }
     return Math.max(0, need);
   }

@@ -29,6 +29,7 @@ export const EYE = 0.65;        // LBA2: 512 units above the feet (Twinsen ≈ 1
 export const LIFT = 0.25;       // LBA2: 200 units above the top of what is in the way
 const STEP = 0.25, START = 1.0;
 const CELL = 12;
+const cellKey = (i, j) => (i + 32768) * 65536 + (j + 32768);   // (unique for |i|, |j| < 32768 cells: ±393 km)
 
 export class Occluders {
   constructor(terrain) { this.terrain = terrain; this.list = []; this.grid = new Map(); this.under = new Set(); }
@@ -41,7 +42,7 @@ export class Occluders {
     v.top = v.kind === 'rev' ? v.base + Math.max(...v.profile.map((p) => p[1])) : v.y1;
     for (let i = Math.floor((v.x - R) / CELL); i <= Math.floor((v.x + R) / CELL); i++) {
       for (let j = Math.floor((v.z - R) / CELL); j <= Math.floor((v.z + R) / CELL); j++) {
-        const k = i + ',' + j;
+        const k = cellKey(i, j);
         if (!this.grid.has(k)) this.grid.set(k, []);
         this.grid.get(k).push(v);
       }
@@ -50,7 +51,8 @@ export class Occluders {
     return v;
   }
 
-  near(x, z) { return this.grid.get(Math.floor(x / CELL) + ',' + Math.floor(z / CELL)) || NONE; }
+  // (PERF-CPU: a number for the cell, not a string built at every call: the camera asks ~200 times a frame)
+  near(x, z) { return this.grid.get(cellKey(Math.floor(x / CELL), Math.floor(z / CELL))) || NONE; }
 
   // the top of v above (x, z), or -Infinity off its footprint
   topAt(v, x, z) {
@@ -59,7 +61,7 @@ export class Occluders {
       const r = Math.hypot(dx, dz), P = v.profile;
       if (r > v.R) return -Infinity;
       if (r <= P[0][0]) return v.base + P[0][1];
-      for (let i = 1; i < P.length; i++) if (r <= P[i][0]) { const [r0, h0] = P[i - 1], [r1, h1] = P[i]; return v.base + h0 + (h1 - h0) * (r - r0) / (r1 - r0); }
+      for (let i = 1; i < P.length; i++) if (r <= P[i][0]) { const r0 = P[i - 1][0], h0 = P[i - 1][1], r1 = P[i][0], h1 = P[i][1]; return v.base + h0 + (h1 - h0) * (r - r0) / (r1 - r0); }
       return v.base + P[P.length - 1][1];
     }
     const lx = dx * v.cos - dz * v.sin, lz = dx * v.sin + dz * v.cos;
