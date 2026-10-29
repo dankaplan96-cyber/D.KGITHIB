@@ -131,12 +131,20 @@ export class Walkers {
       if (sig !== this.nav.sig) { this.nav.sig = sig; if (this.nav.cache.size > 300) this.nav.cache.clear(); }
     }
     this.nav.step(120);
-    // the stall keeper sorts her fruit while no one is by (a story person: only her pose is set here, nothing else of hers)
-    const pi = this.pippa;
-    if (pi) {
-      const far = !g.room && Math.hypot(pi.pos.x - h.pos.x, pi.pos.z - h.pos.z) > 5.5;
-      if (far && !pi.forceAnim && !pi.talking) { pi.forceAnim = 'tinker'; pi.baseA = pi.targetAngle; pi.targetAngle = (pi.targetAngle ?? pi.angle) + Math.PI; }   // (she stands before her counter, facing the well: she turns to it)
-      else if (!far && pi.forceAnim === 'tinker') { pi.forceAnim = null; pi.targetAngle = pi.baseA; }
+    // the stall keeper sorts her fruit while no one is by (a story person: only her pose and which way she faces are set here,
+    // nothing else of hers; with Twinsen near she is hers again and turns to him as every story person does)
+    const pi = this.pippa, st = g.world.stall;
+    if (pi && st && !pi.controlled && !pi.listenTo && Math.hypot(pi.pos.x - st.x, pi.pos.z - st.z) < 0.6) {   // (only at her own place: a later chapter may stand her elsewhere)
+      const d = Math.hypot(pi.pos.x - h.pos.x, pi.pos.z - h.pos.z), far = !g.room && d > 5.5;
+      if (far && !pi.forceAnim && !pi.talking) pi.forceAnim = 'tinker';
+      else if (!far && pi.forceAnim === 'tinker') pi.forceAnim = null;
+      // (she stands in front of her counter, facing the well: sorting, she turns to the counter, and back; within 3.4 m of
+      //  Twinsen she is her own again and turns to him, as every story person does)
+      if (pi.forceAnim === 'tinker' || (!pi.forceAnim && !pi.talking && d > 3.4)) {
+        const want = st.a + (pi.forceAnim === 'tinker' ? Math.PI : 0), dt = Math.min(0.1, Math.max(0, g.time - (this._pt ?? g.time)));
+        pi.angle = dampAngle(pi.angle, want, 4, dt);
+      }
+      this._pt = g.time;
     }
   }
   stageNow() { const g = this.game, ix = g.story.index; return (ix === 0 || (ix === 1 && !g.flags.c1_water)) ? 0 : 1; }
