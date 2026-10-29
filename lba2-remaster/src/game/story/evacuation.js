@@ -358,6 +358,6 @@ export class Evacuation extends ChapterBase {
       { key: 'c8_j_farms', done: !!f.c8_zoeDone },
       { key: 'c8_j_relay', done: !!f.c8_relay },
       { key: 'c8_j_vesk', done: !!f.c8_vesk },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }

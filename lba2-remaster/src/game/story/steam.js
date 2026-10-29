@@ -359,7 +359,7 @@ export class Steam extends ChapterBase {
       { key: 'c5_j_routed', done: !!f.c5_routed },
       { key: 'c5_j_vent', done: !!f.c5_vent },
       { key: 'c5_j_north', done: !!f.c5_glider },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }
 

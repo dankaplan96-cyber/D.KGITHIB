@@ -8,7 +8,7 @@ Object.assign(STR.en, {
   fly_citadel: 'Citadel Island', fly_desert: 'Desert Island', fly_hamalayi: 'The Hamalayi',
   fly_done: '(done)', fly_here: '(you are here)',
 
-  c10_narr: "Baldino's workshop, late into the night. Every bench is covered in wire.",
+  c10_narr: "Baldino's workshop, hours later. Every bench is covered in wire.",
   c10_bal_1: "Five stations. Five places where the project's old machines can still be made to talk: the mains under Citadel, the lighthouse transmitter, my mill on Zeelich, the bore on Desert Island, and Sefa's dome on the Hamalayi.",
   c10_bal_2: "My relays: the test pair from my table, grown up. Each one hooks into a station's old machine and talks through it. When all five hear each other at once, the shaft's blast doors will hear them too.",
   c10_bal_3: "Now the limits. Each relay runs on power from where it stands: water, wind, steam, light. And together they hold the signal only a minute, so every station needs a friend standing by.",
@@ -51,7 +51,7 @@ Object.assign(STR.en, {
   c10_zoe_after: "Arthur hasn't taken his eyes off that needle. Neither will I.",
 
   // Desert Island: the bore
-  c10_ilka_1: "Twinsen! Dallan said you'd come. The bore vent is still breathing since you opened it. Steam, all day, all night. If your relay wants power, there's plenty.",
+  c10_ilka_1: "Twinsen! Dallan said you'd come. The bore vent is still breathing since you opened it. Steam without a pause. If your relay wants power, there's plenty.",
   c10_ilka_2: "Set it on the bore's frame. And keep your ball handy: the project's drones don't like anything they didn't build.",
   c10_relay_bore: 'The relay clicks onto the bore\'s frame. Steam rattles through its little pipe, and the lamp lights up.',
   c10_drones: 'Drones! Three of them, coming in low over the post.',
@@ -94,8 +94,8 @@ Object.assign(STR.en, {
   c10_sub_dome: 'The Hamalayi: the dome (Yorna, Pim and Sefa)',
   c10_sub_fly: "(the spaceship to Citadel, then Hesk's glider)",
   c10_obj_platform: 'Go to the drill platform on Zeelich',
-  c10_j_plan: "Baldino's network: five relays at five stations, each powered by what's there, each held by a friend.",
-  c10_j_fly: 'Between the planets I take the spaceship. On Twinsun, Hesk flies me about in his glider.',
-  c10_j_all: 'All five stations held at once. The shaft is open.',
+  c10_j_plan: "Baldino's plan: five relays at five stations, each powered by what is there (water, wind, steam, light) and each held by a friend, to send one signal at once.",
+  c10_j_fly: "Hesk offered to fly me anywhere on Twinsun in his glider. Between the planets I take the spaceship.",
+  c10_j_all: "Oku, Mira, Zoé and Arthur, Ilka and Dallan, and Pim and Sefa held their stations for a minute, and the shaft's blast doors ground open. Vesk is at the bottom with the only console that can turn the bore around.",
   it_relay: 'Relay', itd_relay: "Baldino's relays: a box, a mast, a bit of genius.",
 });

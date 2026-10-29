@@ -457,18 +457,19 @@ export class Chapter2 extends ChapterBase {
     if (f.c2_key && !f.c2_shield) out.push({ id: 'okey', icon: 'key' });
     return out;
   }
+  // (G1-NARR: only what has happened is listed, in the past tense; the step ahead is the objective at the top of the same screen)
   journal() {
     const f = this.f;
     return [
       { key: 'c2_j_arrive', done: !!f.c2_started },
-      ...(f.c2_planTaken ? [{ key: 'c2_j_taken', done: true }] : []),
-      ...(f.c2_okuOK ? [{ key: 'c2_j_back', done: true }] : []),
+      { key: 'c2_j_taken', done: !!f.c2_planTaken },
       { key: 'c2_j_bal', done: !!f.c2_plan },
+      { key: 'c2_j_back', done: !!f.c2_okuOK },
       { key: 'c2_j_parts', done: !!(f.c2_cog && f.c2_cyl) },
       { key: 'c2_j_key', done: !!f.c2_key },
       { key: 'c2_j_zoe', done: !!f.c2_broadcast },
       { key: 'c2_j_shield', done: !!f.c2_shield },
       { key: 'c2_j_vesk', done: !!f.c2_veskDown },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ].filter((l) => l.done);
   }
 }
