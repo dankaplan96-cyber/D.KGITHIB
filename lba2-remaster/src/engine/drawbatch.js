@@ -251,10 +251,16 @@ class Area {
       if (o.isInstancedMesh) { if (!o.boundingBox) o.computeBoundingBox(); b = o.boundingBox?.clone(); }
       else { if (!g.boundingBox) g.computeBoundingBox(); b = g.boundingBox?.clone(); }
       if (!b || b.isEmpty()) return null; b.applyMatrix4(o.matrixWorld); b.expandByScalar(EPS); return Number.isFinite(b.min.x + b.max.x + b.min.y + b.max.y + b.min.z + b.max.z) ? b : null; };
-    const put = (E) => { const b = E.box; for (let i = Math.floor(b.min.x / G); i <= Math.floor(b.max.x / G); i++) for (let k = Math.floor(b.min.z / G); k <= Math.floor(b.max.z / G); k++) { const key = i * 100003 + k; let L = grid.get(key); if (!L) grid.set(key, (L = [])); L.push(E); } };
+    // (a grid of 8 m squares; a box over 64 squares a side — the sea, the sky, the terrain — goes into one list tested always)
+    const big = [], BIG = 64;
+    const span = (b) => Math.floor(b.max.x / G) - Math.floor(b.min.x / G) >= BIG || Math.floor(b.max.z / G) - Math.floor(b.min.z / G) >= BIG;
+    const put = (E) => { const b = E.box; if (span(b)) { big.push(E); return; } for (let i = Math.floor(b.min.x / G); i <= Math.floor(b.max.x / G); i++) for (let k = Math.floor(b.min.z / G); k <= Math.floor(b.max.z / G); k++) { const key = i * 100003 + k; let L = grid.get(key); if (!L) grid.set(key, (L = [])); L.push(E); } };
     let stamp = 0;
+    const D = this.dbg = { parts: 0, joined: 0, fresh: 0, byFixed: 0, byPlaced: 0, big: 0 };
     const touching = (b, ro, fn) => { stamp++;
-      for (let i = Math.floor(b.min.x / G); i <= Math.floor(b.max.x / G); i++) for (let k = Math.floor(b.min.z / G); k <= Math.floor(b.max.z / G); k++) {
+      for (const E of big) { if (E.ro !== ro) continue; E.seen = stamp; if (E.box.intersectsBox(b) && fn(E)) return true; }
+      const i1 = Math.min(Math.floor(b.max.x / G), Math.floor(b.min.x / G) + BIG), k1 = Math.min(Math.floor(b.max.z / G), Math.floor(b.min.z / G) + BIG);
+      for (let i = Math.floor(b.min.x / G); i <= i1; i++) for (let k = Math.floor(b.min.z / G); k <= k1; k++) {
         const L = grid.get(i * 100003 + k); if (!L) continue;
         for (const E of L) { if (E.seen === stamp || E.ro !== ro) continue; E.seen = stamp; if (E.box.intersectsBox(b) && fn(E)) return true; }
       }
@@ -297,16 +303,18 @@ class Area {
     for (const p of parts) {
       const gk = p.key + '|' + p.cc;
       let R = open.get(gk);
+      D.parts++;
       if (R) {
         const m = R.m;
-        const blocked = touching(p.box, p.ro, (E) => E.fixed ? E.ord >= m && E.ord <= p.ord : E.e !== p.e && E.run !== R && E.run.m >= m);
-        if (blocked) R = null;
-      }
+        let why = 0;
+        const blocked = touching(p.box, p.ro, (E) => { const b = E.fixed ? E.ord >= m && E.ord <= p.ord : E.e !== p.e && E.run !== R && E.run.m >= m; if (b) why = E.fixed ? 1 : 2; return b; });
+        if (blocked) { R = null; if (why === 1) D.byFixed++; else D.byPlaced++; } else D.joined++;
+      } else D.fresh++;
       if (!R) { R = { id: runs++, m: p.ord }; open.set(gk, R); }
       p.run = R; put(p);
       p.e.F.pre.push({ cc: p.cc, T: p.T, run: R });
     }
-    this.runs = runs;
+    this.runs = runs; D.big = big.length;
   }
   // PERF-BATTERY: a large, detailed piece is cut: each of its triangles goes to the cell of its own centre (M.parts:
   // cell id → its triangles there, null for a whole piece; M.cells: its cells). Citadel's builders merge whole
