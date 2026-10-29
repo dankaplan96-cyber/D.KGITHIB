@@ -5,18 +5,18 @@ import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
   // ---- Zoé, at the neighbours' door: their kettle
-  pr_zoe_kettle: ['Same next door. Their tap ran warm, then stopped.', 'And look at their kettle. Furred with these overnight.'],
+  pr_zoe_kettle: ['Same next door. Their tap ran warm, then stopped.', 'And look at their kettle. Furred with these since breakfast.'],
   pr_tw_kettle: '(Tiny crystals. Still warm.)',
   pr_zoe_kettle2: "Mira's telling everyone it's Gilbert's old pipes. Show her these. Then the well.",
   pr_tw_miraNo: "Mira won't open the well. She says it's the pipes.",
   pr_zoe_kettle_wait: "Show Mira the crystals. Pipes don't grow those.",
   pr_toast_kettle: 'Kettle Crystals',
-  it_kettle: 'Kettle Crystals', itd_kettle: "From next door's kettle, furred overnight. Still warm.",
+  it_kettle: 'Kettle Crystals', itd_kettle: "From next door's kettle, furred since breakfast. Still warm.",
 
   // ---- Mira and Gilbert: the key only for a fault at the spring
   pr_mira_no: "It isn't the well, Twinsen. It's the old pipes on his street. I don't unlock the town well for a pipe fault.",
   pr_gil_no: 'My pipes are fine! I kick them every morning.',
-  pr_tw_kettle2: "Next door's kettle furred up with these overnight. Pipes don't do that.",
+  pr_tw_kettle2: "Next door's kettle furred up with these since breakfast. Pipes don't do that.",
   pr_mira_kettle: "Crystals? No, pipes don't grow those. That comes up from the spring.",
   pr_mira_2b: "Fine. Find the fault and I'll waive his bill this month. Here's the key to the lid.",
   pr_mira_wait0: "Show me it's the spring and not his pipes, and the lid is yours.",
@@ -61,7 +61,7 @@ Object.assign(STR.en, {
   pr_obj_stones: 'Optional: the warm stones on the bay rocks',
   pr_j_lock: 'The lid is padlocked. Mira from the water office has the key.',
   pr_j_mira: "Mira won't unlock the well for what she calls a pipe fault.",
-  pr_j_kettle: "Next door's kettle furred up with warm crystals overnight. Zoé gave me some.",
+  pr_j_kettle: "Next door's kettle was furred with warm crystals. Zoé gave me some.",
   pr_j_lid: 'The lid is rusted to the rim. Gilbert swears by a kick.',
   pr_j_deep: 'The well is too deep to jump. The harbour might have a rope.',
   pr_j_doran: "Xil needs Doran's stamp. Doran sleeps through anything but the harbour bell.",
