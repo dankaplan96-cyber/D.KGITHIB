@@ -374,7 +374,9 @@ const benchCheck = async (filter, shotsOK) => {
     if (SHOTS && shotsOK) for (const [view, ang, dist, hgt] of [['front', 0.6, 2.6, 1.3], ['side', 1.5, 2.4, 1.0]]) {
       await ev(({ m, ang, dist, hgt }) => { const G = game, c = G.camera, a = m.a + ang;
         c.position.set(m.pos[0] + Math.sin(a) * dist, m.pos[1] + hgt, m.pos[2] + Math.cos(a) * dist); c.lookAt(m.pos[0], m.pos[1] + 0.5, m.pos[2]); c.updateMatrixWorld();
-        G.hero.rig.root.visible = false; G.renderer.render(); G.hero.rig.root.visible = true; }, { m, ang, dist, hgt });
+        // (the others off the streets meanwhile are not drawn: one sitter per capture)
+        const hid = G.walkers.res.filter((r) => r.def.id !== m.id && r.rig.root.visible); for (const r of hid) r.rig.root.visible = false;
+        G.hero.rig.root.visible = false; G.renderer.render(); G.hero.rig.root.visible = true; for (const r of hid) r.rig.root.visible = true; }, { m, ang, dist, hgt });
       await page.screenshot({ path: path.join(SHOTS, `bench-${m.sid}-${m.id}-${view}.png`) });
     }
   }
@@ -383,6 +385,18 @@ const benchCheck = async (filter, shotsOK) => {
 const benchC = await benchCheck('citadel', true);
 check(`Citadel: every resident seated at each of its ${benchC.length} bench stops sits ON the seat: no part of the body under the seat's top or behind the backrest, the bottom resting on the seat`,
   benchC.length >= 10 && benchC.every((m) => m.st === 'seated' && m.under === 0 && m.behind === 0 && m.rest > -0.015 && m.rest < 0.06), benchC.map((m) => [m.sid, m.char, m.under, m.behind, m.rest]));
+
+// two rounds share a bench (Brix's lane2 and Ume's b2): one sits, the other comes and stands by it (never two on one seat)
+const share = await ev(() => { const G = game, W = G.walkers, ume = W.res.find((r) => r.def.id === 'ume'), brix = W.res.find((r) => r.def.id === 'brix');
+  const iu = ume.stops.findIndex((s) => s.id === 'ume_b2'), ib = brix.stops.findIndex((s) => s.id === 'brix_lane2');
+  for (const q of W.res) if (q !== ume && q !== brix) q.away = 'test';
+  ume.ri = iu; ume.slotAt(ume.stops[iu]); ume.arrived(ume.stops[iu], true); ume.tmr = 999; G.step(1.0, 1 / 30); ume.tmr = 999;
+  brix.ri = ib; brix.slotAt(brix.stops[ib]); brix.arrived(brix.stops[ib], true); brix.tmr = 999; G.step(1.0, 1 / 30);
+  const d = Math.hypot(ume.pos.x - brix.pos.x, ume.pos.z - brix.pos.z), out = { ume: ume.st, brix: brix.st, d: +d.toFixed(2), R: +(ume.bodyR + brix.bodyR).toFixed(2) };
+  for (const q of W.res) q.away = null; brix.tmr = 0; ume.tmr = 0;
+  return out; });
+console.log('shared bench', JSON.stringify(share));
+check('a bench two rounds share holds one sitter: the second stands by it, clear of the first', share.ume === 'seated' && share.brix === 'dwell' && share.d >= share.R - 0.05, share);
 
 // Zeelich's street (built for this check; its benches are of their own shape) — numbers only, no captures (not a chapter 1–2 place)
 const zb = await ev(async () => { const G = game; await G.regions.buildAsync(['zeelich'], 'test', async () => {}); G.enterRoom('zeelich', null, true, true); G.step(1.0);

@@ -230,7 +230,7 @@ export class Resident extends NPC {
     this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
     this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
     if (s.pair) { this.st = 'pairwait'; this.waitT = 0; this.W.pair(s.pair).ready.add(this.def.id); this.note('wait for ' + s.pair); return; }
-    if (s.seat && this.canSit()) { this.sitDown(s, instant); return; }
+    if (s.seat && this.canSit() && !this.benchTaken(s.seat)) { this.sitDown(s, instant); return; }
     if (s.door) { this.st = 'knock'; this.tmr = instant ? 0.2 : 0.9; this.angle = this.targetAngle = s.a; return; }
     this.st = 'dwell';
     if (s.seat) this.targetAngle = s.seat.a;   // (one who cannot sit stands by the bench, looking where a sitter would)
@@ -283,10 +283,12 @@ export class Resident extends NPC {
   // an Esmer's body is one robe from the shoulders to the ground (rig.robeLegs, no hips to bend): it cannot sit on a
   // bench without the robe going through the seat, so at a bench stop it stands by the bench instead
   canSit() { return LOOKS[this.def.char]?.race !== 'esmer'; }
+  // two rounds may share a bench (Brix's and Ume's by the lane's planter): one seat to a bench, the second stands by it
+  benchTaken(seat) { return this.W.res.some((r) => r !== this && !r.away && r.sit?.seat && Math.hypot(r.sit.seat.x - seat.x, r.sit.seat.z - seat.z) < 0.3 && r.st !== 'sitout'); }
   sitDown(s, instant) {
     this.st = 'sitin';
     const p = this.seatPose(s);
-    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: p.x, z: p.z }, t: 0, dur: instant ? 0.001 : 0.8, a: s.seat.a, ya: p.y0, yb: p.y1, y: p.y1, down: true };
+    this.sit = { from: { x: this.pos.x, z: this.pos.z }, to: { x: p.x, z: p.z }, t: 0, dur: instant ? 0.001 : 0.8, a: s.seat.a, ya: p.y0, yb: p.y1, y: p.y1, down: true, seat: s.seat };
     if (instant) this.angle = this.targetAngle = s.seat.a;
     this.note('sit');
   }
