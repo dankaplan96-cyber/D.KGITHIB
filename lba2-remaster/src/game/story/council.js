@@ -304,6 +304,6 @@ export class Council extends ChapterBase {
       { key: 'c9_j_heard', done: !!f.c9_heard },
       { key: 'c9_j_plans', done: !!f.c9_plans },
       { key: 'c9_j_vote', done: !!f.c9_vote },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }

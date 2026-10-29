@@ -187,6 +187,6 @@ export class Observatory extends ChapterBase {
       { key: 'c7_j_sendell', done: !!f.c7_sendell },
       { key: 'c7_j_vent', done: !!f.c7_vent },
       { key: 'c7_j_home', done: !!f.c7_vent },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
 }

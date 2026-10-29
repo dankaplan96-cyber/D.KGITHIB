@@ -39,8 +39,8 @@ Object.assign(STR.en, {
   c7_obj_drone: 'Destroy the heavy drone at the vent',
   c7_obj_vent: 'Open the vent in the glacier',
   c7_obj_home: 'Meet Hesk at the monastery',
-  c7_j_keeper: 'The observatory was Sendell\'s shrine. Sefa keeps it.',
-  c7_j_sendell: 'Sendell has been holding the shell alone, and is fading. She cannot do it alone any more.',
-  c7_j_vent: 'With the dome\'s mirror and a fight with a heavy drone, the ice vent is open.',
-  c7_j_home: "Arthur called: the project is evacuating Citadel, and only the list. I'm going home.",
+  c7_j_keeper: "Sefa, the keeper, said the dome was Sendell's shrine and that she listens when light reaches her crystal. His mirrors were all turned wrong, and his back is too old to fix them.",
+  c7_j_sendell: "I carried the light to her crystal with the dome's mirrors. Sendell said she is fading from holding the shell together alone, and asked us to open the vent under the mountain.",
+  c7_j_vent: "With Sefa's telescope I melted the ice over the vent and smashed a project drone. The seal turned, the vent is open, and the ground stopped shaking.",
+  c7_j_home: "Arthur called on the radio: the project is evacuating Citadel by its list, and Gilbert, Mira and our family are not on it. I told him I'm coming home, and Hesk waits at the monastery.",
 });
