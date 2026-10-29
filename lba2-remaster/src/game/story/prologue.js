@@ -257,9 +257,9 @@ export class Prologue extends ChapterBase {
       { key: 'pr_j_mira', done: !!f.key, show: f.pr_miraNo && !f.key },
       { key: 'pr_j_kettle', done: !!f.key, show: f.pr_kettle },
       { key: 'pr_j_key', done: true, show: f.key },
-      { key: 'pr_j_lid', done: !!f.pr_lidOpen, show: f.pr_lidStuck && !f.inWell },
+      { key: 'pr_j_lid', done: !!f.pr_lidOpen, show: f.pr_lidStuck && !f.pr_lidOpen && !f.inWell },   // (an open line: gone once the lid is open)
       { key: 'pr_j_deep', done: !!f.rope, show: (f.pr_deep || f.metXil) && !f.rope },
-      { key: 'pr_j_doran', done: !!f.stamp, show: f.metXil && !f.rope },
+      { key: 'pr_j_doran', done: !!f.stamp, show: f.metXil && !f.stamp && !f.rope },   // (gone once Doran has stamped)
       { key: 'pr_j_rope', done: true, show: f.rope },
       { key: 'pr_j_tim', done: !!f.pr_stones, show: f.timConfessed },
       { key: 'pr_j_stones', done: true, show: f.pr_stones },
