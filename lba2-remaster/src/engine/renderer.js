@@ -10,6 +10,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { updateShownWorld, MW } from './drawcull.js';
 import { warmPassPrograms } from './warmup.js';
+// LOOK-FIRST-2: on battery the automatic resolution stops here (was 0.5: pixelated)
+export const BATTERY_MIN_SCALE = 0.85;
 
 // RENDER-INV: lamps cost nothing where they don't reach. three evaluates the whole lighting model (RE_Direct: the
 // standard material's GGX specular + diffuse) for every point light on every lit pixel, also where the lamp's light
@@ -140,11 +142,12 @@ export class Renderer {
     // 0.5 (Medium/High; 0.6 otherwise). The user's Vega 8 on battery measured these on Medium's street: shadow filter
     // basic −4.4 ms, no MSAA −5.3 ms of 37 (laptop-build206-battery.txt). Low is unchanged (none of them is on there).
     this.battery = false;
-    // LOOK-FIRST (the user, 29.10: "I want a game that looks good — 50–55 that looks good"): the battery profile's cuts
-    // (the blocky 5-read shadow filter, no MSAA, the resolution down to 0.5, 2 lamps) made the game look worse and bought
-    // almost nothing on his Vega 8 on battery (CPU-bound: build 263's Low-lite was not faster than build 255's Medium).
-    // They stay in the code for the benchmark's comparison only: `battery` still tells what the power source is.
-    this.batteryCuts = false;
+    // LOOK-FIRST-2 (the user, 29.10: "a game that looks good — 50–55 that looks good"; "less resolution is fine, but not
+    // excessively"). His full battery benchmark (build 263) showed the battery profile's cuts DO buy GPU time on battery:
+    // Medium street 45.5 fps with them, 32.1 without (GPU 17.3 vs 25.8 ms); interior 53.2 vs 42.8. So on battery the
+    // nearly invisible cuts stay (no MSAA, the 5-read shadow filter, 2 lamps) and the ugly one is bounded: the automatic
+    // resolution never goes below BATTERY_MIN_SCALE (it went down to 0.5). Shadows are never turned off by Auto.
+    this.batteryCuts = true;
     // AUTO-QUALITY (engine/autoquality.js): Quality Auto sets the picture knob by knob: { scale, bloom, filter: 'soft' |
     // 'pcf', msaa: 4 | 2 | 0, shadows: 1 | 0 } here (the shadow map's size, the lamps, the vegetation and the small
     // casters are set where they live). null: a preset chosen by hand, exactly as before. With knobs, the pixel ratio is
@@ -258,7 +261,7 @@ export class Renderer {
   setIntegrated(on) { this.integrated = !!on; this.resize(); }
   // the lowest automatic-resolution factor per preset (Low never below a 0.7 pixel ratio: text and faces blur)
   // (AUTO-QUALITY: with knobs, the governor's factor; never under a 0.6 pixel ratio)
-  minDyn() { return this.knobs ? Math.min(this.knobs.scale, Math.max(0.3, 0.6 / this.basePixelRatio())) : this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : this.battery && this.batteryCuts ? 0.5 : 0.6; }
+  minDyn() { return this.knobs ? Math.min(this.knobs.scale, Math.max(0.3, 0.6 / this.basePixelRatio())) : this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : this.battery && this.batteryCuts ? BATTERY_MIN_SCALE : 0.6; }
   // the factor the scene is drawn at now, and the pixel ratio that makes
   effScale() { return this.retro ? 1 : this.knobs ? (this.autoRes ? this.knobs.scale : 1) : this.autoRes ? this.dyn : 1; }
   pixelRatio() { return +(this.renderer.getPixelRatio() * this.effScale()).toFixed(3); }

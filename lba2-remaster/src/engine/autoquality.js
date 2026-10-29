@@ -52,14 +52,15 @@ export const TOP = PRESET_KNOBS.high;
 // never to step down — that is measured pressure only)
 // LOOK-FIRST (the user, 29.10, after build 263 held Low-lite on battery: "the game looks uglier — rendering, shadows,
 // in general … I want the world to look good and sharp, not pixelated … 50–55 that looks good!"): Auto never goes below
-// Medium's look. Full resolution, shadows, MSAA and Medium's lamps always; the floor, Medium-eco, only animates far
-// people at half rate and drops their tiny parts (eyes, buttons) far away — nothing the eye follows. Low / Medium-lite /
+// Medium's look: shadows, MSAA and Medium's lamps always; the floor, Medium-eco, draws at 90 % resolution ("less
+// resolution is fine, but not excessively"), animates far people at half rate and drops their tiny far parts. (On
+// battery the renderer's nearly invisible battery cuts apply on top: renderer.js LOOK-FIRST-2.) Low / Medium-lite /
 // Low-lite are gone from Auto (Low stays a preset to pick by hand); on a weak machine on battery the game runs ~50–55
 // fps in the busiest places rather than look worse (it was not faster there anyway: CPU-bound).
 export const PROFILES = [
   { id: 'high', name: 'High', tier: 'high', K: { ...PRESET_KNOBS.high }, gpu: 1, cpu: 1 },
   { id: 'medium', name: 'Medium', tier: 'medium', K: { ...PRESET_KNOBS.medium }, gpu: 0.56, cpu: 0.8 },
-  { id: 'medium-eco', name: 'Medium-eco', tier: 'medium', K: { ...PRESET_KNOBS.medium, anim: 'eco', detail: 'near' }, gpu: 0.55, cpu: 0.74 },
+  { id: 'medium-eco', name: 'Medium-eco', tier: 'medium', K: { ...PRESET_KNOBS.medium, scale: 0.9, anim: 'eco', detail: 'near' }, gpu: 0.5, cpu: 0.74 },
 ];
 export const N_PROFILES = PROFILES.length;
 export const TIER_AT = { high: 0, medium: 1, low: 1 };   // (LOOK-FIRST: a weak GPU starts at Medium; on battery one lower, the floor Medium-eco)

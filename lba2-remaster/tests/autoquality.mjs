@@ -55,11 +55,11 @@ const name = (p) => PROFILES[p].name;
 {
   check('three named profiles, best first: High · Medium · Medium-eco (LOOK-FIRST)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium · Medium-eco', PROFILES.map((x) => x.name));
   const eq = (a, b) => KNOBS.every((k) => a[k] === b[k]);
-  check('High and Medium are the presets exactly; the floor keeps Medium\'s look (full resolution, MSAA, shadows, lamps, grass)', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && ['scale', 'bloom', 'filter', 'map', 'lamps', 'msaa', 'shadows', 'veg', 'casters'].every((k) => knobsAt(2)[k] === PRESET_KNOBS.medium[k]), knobsAt(2));
+  check('High and Medium are the presets exactly; the floor keeps Medium\'s look (MSAA, shadows, lamps, grass; resolution ≥ 85 %)', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && ['bloom', 'filter', 'map', 'lamps', 'msaa', 'shadows', 'veg', 'casters'].every((k) => knobsAt(2)[k] === PRESET_KNOBS.medium[k]) && knobsAt(2).scale >= 0.85, knobsAt(2));
   check('the labels are the profile names; a state that is not a profile names its nearest and every difference', describe(knobsAt(2)).text === 'Medium-eco'
     && describe({ ...PRESET_KNOBS.high, bloom: 0 }).text === 'High, no bloom' && describe(knobsAt(2)).tier === 'medium', [describe({ ...PRESET_KNOBS.high, bloom: 0 }).text]);
   check('each profile is no more costly than the one above it, on both sides, by the model', PROFILES.every((x, i) => !i || (x.gpu <= PROFILES[i - 1].gpu && x.cpu <= PROFILES[i - 1].cpu)), PROFILES.map((x) => [x.gpu, x.cpu]));
-  check('spell(): what a profile runs, in words', /Medium-eco: resolution 100 %, MSAA 2×, .*far people animated at half rate, far small parts dropped/.test(spell(2)), spell(2));
+  check('spell(): what a profile runs, in words', /Medium-eco: resolution 90 %, MSAA 2×, .*far people animated at half rate, far small parts dropped/.test(spell(2)), spell(2));
 }
 
 // ---------------------------------------------------------------- 1. a machine with room: High, settled, no change
