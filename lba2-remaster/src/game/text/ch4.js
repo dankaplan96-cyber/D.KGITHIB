@@ -106,7 +106,7 @@ Object.assign(STR.en, {
   c4_dallan_1: "That's enough. This site is closed by order of the Joint Project.",
   c4_ilka_d1: 'Dallan. Look at this wall before you throw us out again.',
   c4_dallan_2: 'I looked at your reports, Professor. I follow the plan. The test bore stays capped and the pressure stays where it is.',
-  c4_tw_d1: "You took Zoé's plan on Zeelich. You know what it says.",
+  c4_tw_d1: "Your guards took Vesk's evacuation plan from me on Zeelich. You know what it says.",
   c4_dallan_3: '...Thirty percent. I know. Leave the dig. Both of you. Now.',
   c4_ilka_end: 'The vent under this island is the test bore, Twinsen. He has capped it. We have to open it, without boiling Kesh.',
 
