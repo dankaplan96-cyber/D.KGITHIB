@@ -787,7 +787,7 @@ class Game {
   // what the current preset does, for the benchmark's report
   graphicsConfig() {
     const R = this.renderer, W = this.world;
-    return { battery: R.batteryProfile(), shadowFilter: ['5 reads (battery)', 'PCF', 'PCF soft', 'VSM'][R.renderer.shadowMap.type] ?? '?', minScale: R.minDyn(), pr: R.pixelRatio(), msaa: R.composer?.renderTarget1?.samples ?? 0, fxaa: !!R.fxaa?.enabled, shadows: R.renderer.shadowMap.enabled, shadowMap: this.env?.sun?.shadow?.mapSize?.x ?? 0,
+    return { battery: R.batteryProfile(), shadowFilter: (R.hwShadows ? ['4 hardware reads (battery)', 'PCF 9 hardware reads', 'PCF soft 9 hardware reads', 'VSM'] : ['5 reads (battery)', 'PCF', 'PCF soft', 'VSM'])[R.renderer.shadowMap.type] ?? '?', minScale: R.minDyn(), pr: R.pixelRatio(), msaa: R.composer?.renderTarget1?.samples ?? 0, fxaa: !!R.fxaa?.enabled, edgeAA: (R.output?.uniforms.edgeAA?.value || 0) > 0, sharpen: +(R.output?.uniforms.sharpen?.value || 0).toFixed(2), shadows: R.renderer.shadowMap.enabled, shadowMap: this.env?.sun?.shadow?.mapSize?.x ?? 0,
       bloom: !!R.bloom?.enabled, lamps: this.lightPool?.lights.length ?? 0, smallFar: W?.detail?.smallFar ?? '?', treeNear: W?.detail?.treeNear ?? '?' };
   }
   // after a graphics change (preset: lamp count, shadows): the new shader variants compile before the next frame
