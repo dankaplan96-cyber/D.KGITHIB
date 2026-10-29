@@ -67,7 +67,7 @@ class Area {
       if (!o.isMesh || o.userData.shadowProxy) return;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       if (!g.boundingSphere || !Number.isFinite(g.boundingSphere.radius)) return;
-      const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true };
+      const C = { o, c: g.boundingSphere.center, r: g.boundingSphere.radius, on: true, shown: true, next: -0.5, mwF: -1 };   // (next / mwF: PERF-CPU's distance detail; numbers from the start, so V8 keeps them unboxed)
       if (!o.castShadow) { quiet(o, C); return; }
       if (!batchable(o) || !shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) { if (!o.isSkinnedMesh && !o.isInstancedMesh && !o.isBatchedMesh) { this.solo.push(C); quiet(o, C); } return; }
       const m = o.material;
@@ -303,12 +303,12 @@ export class ShadowCull {
             if (dist < 0.1 && dFlip > 0.1) margin = Math.min(margin, 0.1 - dist + (dFlip - 0.1));
           }
         }
-        C.next = O.d + margin * 0.999 - 1e-6; C.mwF = o.__mwF;
+        C.next = O.d + margin * 0.999 - 1e-6; C.mwF = o.__mwF ?? -1;
         if (shown !== C.shown) { C.shown = shown; if (shown) o.layers.enable(0); else o.layers.disable(0); }
       };
       for (const C of A.members) {
         if (C.o.userData.drawBatched) { C.shown = true; continue; }   // (RENDER-INV: drawn by a draw batch: engine/drawbatch.js)
-        if (!again && O.d < C.next && C.o.__mwF === C.mwF) continue;
+        if (!again && O.d < C.next && (C.o.__mwF ?? -1) === C.mwF) continue;
         judge(C);
       }
       const Q = A.quiet;
@@ -316,7 +316,7 @@ export class ShadowCull {
         for (let i = 0; i < Q.length; i++) {
           const C = Q[i];
           if (C.o.userData.drawBatched) { C.shown = true; continue; }
-          if (!again && O.d < C.next && C.o.__mwF === C.mwF) continue;
+          if (!again && O.d < C.next && (C.o.__mwF ?? -1) === C.mwF) continue;
           judge(C);
         }
       } else {

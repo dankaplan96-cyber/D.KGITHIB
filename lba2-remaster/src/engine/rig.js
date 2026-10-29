@@ -583,6 +583,13 @@ export class Rig {
   // speed is the real ground speed in m/s so the feet don't slide
   update(dt, speed = 0) {
     if (!(dt > 0)) return; // a negative step would make every damped joint diverge
+    // PERF-CPU: a character nobody can see (out of the view, or far) is posed every lodN-th frame with the time of the
+    // frames between (drawcull.js FarCull sets lodN from the last frame's view; never the hero, nobody in view within
+    // ANIM_NEAR m, nobody during dialogue or a story scene, no enemy). Its joints ease toward the same targets
+    // (exponential damping), so it arrives where it would have been; its root still moves every frame (the actor's own sync).
+    const n = this.lodN | 0;
+    if (n > 1) { this._lodDt = (this._lodDt || 0) + dt; if ((this._lodK = ((this._lodK ?? (this.root.id % n)) + 1) % n) !== 0) return; dt = this._lodDt; this._lodDt = 0; }
+    else if (this._lodDt) { dt += this._lodDt; this._lodDt = 0; }
     const j = this.j;
     this.t += dt;
     this.actionT += dt;

@@ -141,7 +141,9 @@ const SUB_PX = 0.75, PART_R = 0.2;
 const _pv = new THREE.Vector3(), _fb = new THREE.Box3(), _fs = new THREE.Sphere(), _ff = new THREE.Frustum(), _fm = new THREE.Matrix4();
 export class FarCull {
   // actors(): lists of the actors that may be drawn; fog: the scene's THREE.Fog
-  constructor(actors, camera, fog) { this.actors = actors; this.camera = camera; this.fog = fog; this.off = []; this.enabled = true; this.view = true; this.n = 0; this.nView = 0; this.parts = new WeakMap(); this.bounds = new WeakMap(); this.tick = 0; }
+  // anim (PERF-CPU): the people's animation rate — every `off`-th frame out of the view, every `far`-th beyond the fog,
+  // and with `eco` (Auto's lowest profiles) every `inView`-th frame in the view beyond `near` m
+  constructor(actors, camera, fog) { this.partPx = SUB_PX; this.partNear = 30; this.anim = { on: true, off: 4, far: 8, eco: false, inView: 2, near: 25, hold: null }; this.actors = actors; this.camera = camera; this.fog = fog; this.off = []; this.enabled = true; this.view = true; this.n = 0; this.nView = 0; this.parts = new WeakMap(); this.bounds = new WeakMap(); this.tick = 0; }
   // (PERF-HIGH) a rig's bounds about its root's position (where the game or a story scene has put it this frame): the
   // height of their centre and a radius, from its box at first sight (with a margin); and whether any of it casts a
   // sun shadow (looked at again every 120 frames: a part may be added or start casting)
@@ -181,10 +183,17 @@ export class FarCull {
     const view = this.view && cam.isPerspectiveCamera;
     if (view) { cam.updateMatrixWorld(); _ff.setFromProjectionMatrix(_fm.multiplyMatrices(cam.projectionMatrix, _fm.copy(cam.matrixWorld).invert())); }
     this.tick++; this.nView = 0;
-    for (const list of this.actors()) for (const a of list || NONE) {
-      const r = a?.rig?.root; if (!r || !r.visible || !a.pos) continue;
+    // (PERF-CPU: the animation rate of the first list's actors — the people, never the enemies — from what this frame
+    //  shows: Rig.update's lodN. Full rate while anim.hold() (dialogue, story scenes, a door's fade) or anim.on is off)
+    const AN = this.anim, animOn = AN.on && !(AN.hold && AN.hold());
+    let li = -1;
+    for (const list of this.actors()) { li++; const lod = animOn && li === 0; for (const a of list || NONE) {
+      const rig = a?.rig, r = rig?.root; if (!r || !a.pos) continue;
+      if (!r.visible) { rig.lodN = 0; continue; }
       const dx = a.pos.x - p.x, dy = a.pos.y - p.y, dz = a.pos.z - p.z, d2 = dx * dx + dy * dy + dz * dz;
+      rig.lodN = lod && AN.eco && d2 > AN.near * AN.near ? AN.inView : 0;
       if (d2 >= far * far) {
+        if (lod) rig.lodN = AN.far;
         r.visible = false; this.off.push(r);
         if (a.shadow?.visible) { a.shadow.visible = false; this.off.push(a.shadow); }
         continue;
@@ -193,17 +202,18 @@ export class FarCull {
         const B = this.boundsOf(r);
         const k = Math.max(r.scale.x, r.scale.y, r.scale.z) / B.s;
         _fs.center.set(r.position.x, r.position.y + B.dy * k, r.position.z); _fs.radius = B.rad * Math.max(1, k);
-        if (!B.casts && !_ff.intersectsSphere(_fs)) { r.__hidBefore = r.__hid === true; r.visible = false; this.off.push(r); (this.offView ??= []).push(r); this.nView++; continue; }
+        if (!B.casts && !_ff.intersectsSphere(_fs)) { if (lod) rig.lodN = AN.off; r.__hidBefore = r.__hid === true; r.visible = false; this.off.push(r); (this.offView ??= []).push(r); this.nView++; continue; }
       }
-      // (within 30 m of the camera every part stays: an eye there is still about a pixel)
-      if (d2 < 900) continue;
+      // (within 30 m of the camera every part stays: an eye there is still about a pixel; PERF-CPU, Auto's Low-lite:
+      //  partPx 2.5 within partNear 12 m)
+      if (d2 < this.partNear * this.partNear) continue;
       for (const o of this.partsOf(r)) {
         if (!o.visible) continue;
         _pv.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld);
         const px = (o.geometry.boundingSphere.radius * o.matrixWorld.getMaxScaleOnAxis() * pxK) / Math.max(0.1, _pv.distanceTo(p));
-        if (px < SUB_PX) { o.visible = false; this.off.push(o); }
+        if (px < this.partPx) { o.visible = false; this.off.push(o); }
       }
-    }
+    } }
     this.n = this.off.length;
   }
   // (PERF-HIGH: an actor left out for being outside the view is near, and the game reads its parts' world matrices (a

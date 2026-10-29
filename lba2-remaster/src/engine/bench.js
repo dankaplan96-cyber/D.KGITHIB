@@ -338,7 +338,7 @@ export class Bench {
   // (AUTO-QUALITY) the governor's log in lines
   decisions(from = 0) {
     const L = this.g.autoQ?.log || [];
-    return L.filter((e) => e.t >= from).map((e) => `    ${(e.t / 1000).toFixed(1).padStart(7)} s · ${e.kind}${e.side ? ' ' + e.side : ''}${e.what ? ': ' + e.what : ''}${e.why ? ' — ' + e.why : ''} → ${e.state}${e.pending ? ` (waiting for a scene change: ${e.pending})` : ''}`);
+    return L.filter((e) => e.t >= from).map((e) => `    ${(e.t / 1000).toFixed(1).padStart(7)} s · ${e.kind}${e.side ? ' ' + e.side : ''}${e.what ? ': ' + e.what : ''}${e.why ? ' — ' + e.why : ''} → ${e.state}${e.pending ? ` (→ ${e.pending} at the next scene change or menu)` : ''}`);
   }
 
   // AUTO-QUALITY: "as the player plays" — Quality Auto on, the governor running as in play, every route once in a row,
@@ -355,7 +355,7 @@ export class Bench {
     const C = G.camRig, cam0 = { view: C.view, yaw: C.yaw, pitch: C.pitch }, t0 = performance.now();
     if (!G.settings.qualityAuto) { G.settings.qualityAuto = true; G.settings.quality = A.tier(); G.applySettings(); }
     const gov0 = A.gov.enabled; if (opts.force) A.gov.enabled = true;   // (probes on a software renderer)
-    if (opts.fromTop) { A.gov.setLevels(0, 0, 'benchmark: from High', true, performance.now()); A.applyAll(); G.warmGraphics(); }
+    if (opts.fromTop) { A.gov.setProfile(0, 'benchmark: from High, evaluated', { commitNow: true, t: performance.now() }); A.applyAll(); G.warmGraphics(); }
     const start = A.state();
     G.benching = true; G.benchAutoQ = true;
     G.renderer.timer = G.perf.gpuTimer; if (G.perf.gpuTimer) G.perf.gpuTimer.stride = 2;

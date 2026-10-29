@@ -74,7 +74,7 @@ Object.assign(STR.en, {
   set_h_classic: 'Left and right turn Twinsen, as in LBA2.', set_h_modern: 'Twinsen walks the way you push.',
   set_h_cam_lba: 'Set shots follow Twinsen, as in LBA2.', set_h_cam_follow: 'Behind Twinsen\'s back; it turns with him.', set_h_cd: 'For the Follow camera: how far behind him and how high.', set_h_cam_free: 'Turn it with a right-drag, the right stick or {l} / {r}.',
   set_h_q_battery: 'On battery: power-saving rendering.',
-  set_h_q_auto: 'Auto ({s}): set from this computer, adjusted in play to hold 55–60 fps.',
+  set_h_q_auto: 'Auto ({s}): chosen for this computer and power source in the first minute or so of play to hold 55–60 fps, then kept.',
   set_h_res_auto: 'Lowers the resolution to hold the frame rate.', set_h_res_full: 'Always the full resolution.',
   set_h_aa_msaa: 'Cleaner edges, more work for the GPU.', set_h_aa_fxaa: 'A light filter, easier on the GPU.', set_h_aa_low: 'Low graphics always use Fast.',
   set_h_mm_hud: 'Shown when HUD is Always on.',

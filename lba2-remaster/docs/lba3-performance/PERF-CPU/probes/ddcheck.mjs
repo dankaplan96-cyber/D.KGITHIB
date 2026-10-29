@@ -25,7 +25,7 @@ for (const id of ROUTES) {
       const A = G.shadowCull.area, cam = G.camera, focus = G.cine?.focus || G.hero.pos;
       const pxK = innerHeight / (2 * Math.tan(((cam.fov || 55) * Math.PI) / 360));
       for (const C of [...A.members, ...(A.quiet || [])]) {
-        const o = C.o; if (o.userData.drawBatched || C.mwF !== o.__mwF) continue;
+        const o = C.o; if (o.userData.drawBatched || C.mwF !== (o.__mwF ?? -1)) continue;
         c.copy(C.c).applyMatrix4(o.matrixWorld);
         const px = (C.r * o.matrixWorld.getMaxScaleOnAxis() * pxK) / Math.max(0.1, c.distanceTo(cam.position));
         const near = Math.hypot(focus.x - c.x, focus.z - c.z) < KEEP;

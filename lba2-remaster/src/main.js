@@ -354,6 +354,8 @@ class Game {
     timed('actors', () => this.regions.peek(() => this.spawnActors()));
     // (PERF-2: actors of other areas are left out of the render; engine/drawcull.js)
     this.farCull = new FarCull(() => [this.npcs, this.enemies], this.camera, this.scene.fog);
+    // (PERF-CPU: people out of the view are posed at a lower rate; never in dialogue, a story scene or a door's fade)
+    this.farCull.anim.hold = () => this.state !== 'play' || !!this.trans || !!this.cutscene;
     this.blobBatch = new BlobBatch(this.scene, BLOBS);
     this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); };
     // (RENDER-INV: an area's static pieces drawn in one call per material and 48 m cell: engine/drawbatch.js)
@@ -1473,7 +1475,7 @@ class Game {
       res: () => t('set_h_res_' + s.res),
       aa: () => t(s.quality === 'low' && !s.qualityAuto ? 'set_h_aa_low' : 'set_h_aa_' + s.aa),
       // (AUTO-QUALITY: what Auto runs now, in words; PERF-BATTERY: the battery profile's note)
-      quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.label() }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
+      quality: () => [s.qualityAuto && this.autoQ ? t('set_h_q_auto', { s: this.autoQ.label() + (this.autoQ.gov.phase === 'evaluate' && !this.autoQ.test ? ', settling' : '') }) : '', this.renderer.batteryProfile() ? t('set_h_q_battery') : ''].filter(Boolean).join(' '),
       minimap: () => (s.hud === 'lba' ? t('set_h_mm_hud') : ''),
     };
     document.querySelectorAll('#settings [data-hint]').forEach((row) => { row.querySelector('.set-hint').textContent = hint[row.dataset.hint]?.() ?? ''; });
