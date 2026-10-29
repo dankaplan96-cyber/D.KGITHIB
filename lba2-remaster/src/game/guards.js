@@ -12,7 +12,7 @@
 //  it swings its baton instead (arm raised high, then the strike). It gives up beyond its pursuit limit.
 // Baldino's pulse jams the rifle (no shots for a while) but does not stun a person.
 import * as THREE from 'three';
-import { Actor } from './actors.js';
+import { Actor, contactRadius } from './actors.js';
 import { createCharacter } from './characters.js';
 import { angleDiff, dampAngle } from '../engine/math.js';
 import { KnockOut, koActive } from './death.js';
@@ -47,6 +47,7 @@ export class Guard extends Actor {
     this.state = 'patrol'; this.stateT = 0; this.coolT = 0; this.deadT = 0; this.hurtT = 0; this.jamT = 0; this.waitT = 0;
     this.present = true; this.material = 'flesh'; this.recentHitT = 0;
     this.hitR = grobo ? 0.8 : 0.5; this.hitH = grobo ? 2.2 : 1.9;
+    this.bodyR = contactRadius(fat ? 'fclone' : grobo ? 'vguardG' : 'vguard', this.rig.root.scale.x);   // (SOLID-ENEMY: the race's girth, as a resident's)
     this.rifle = rifleProp();
     const hand = this.rig.j?.armR?.hand;
     // (the hand bone's axis runs down the arm: the rifle lies along it, pointing down at rest and forward when aimed)
@@ -86,6 +87,13 @@ export class Guard extends Actor {
     const g = this.game;
     this.hp -= n; this.rig.hitFlash?.(); this.hurtT = 0.45;
     this.react = Math.random() < 0.5 ? 'hurt' : 'turn';   // CHOC or CHOC2
+    // (ACTION-FEEL: CHOC2 is a half-turn away from the blow. It only shuffled the feet on the spot — the head moved 1–3 cm,
+    // the body not at all — so half the hits showed nothing but the push. Now the body is spun 0.9 rad away from the side
+    // the blow came from, quickly, and the chase turns it back)
+    if (this.react === 'turn') {
+      const side = from ? Math.sign(angleDiff(this.angle, Math.atan2(from.x - this.pos.x, from.z - this.pos.z))) || (Math.random() < 0.5 ? 1 : -1) : 1;
+      this.spinTo = this.angle - side * 0.9;
+    }
     if (this.state === 'aim') g.combatDir?.done(this);
     this.aimLine.visible = false;
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z), k = this.grobo ? 2.5 : 5; this.kb.set(Math.sin(a) * k, Math.cos(a) * k); }
@@ -175,6 +183,7 @@ export class Guard extends Actor {
         break;
       case 'hurt':
         anim = this.react === 'turn' ? 'turnL' : 'hurt';
+        if (this.react === 'turn' && this.stateT < 0.3) face = this.spinTo;
         if (this.stateT > 0.5) { this.state = 'chase'; this.stateT = 0; }
         break;
       case 'search': {
@@ -195,9 +204,10 @@ export class Guard extends Actor {
       }
     }
     if (this.hurtT > 0 && this.state !== 'hurt') sp = 0;
-    if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'strike' ? 1.5 : 4, dt);
+    if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'strike' ? 1.5 : this.state === 'hurt' ? 16 : 4, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     this.applyKnockback(dt);
+    this.keepOffHero(dt);
     P.fall?.(this, dt);
     this.rig.play(anim);
     this.rig.update(dt, sp);

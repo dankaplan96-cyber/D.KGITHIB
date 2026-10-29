@@ -25,6 +25,7 @@ export class GuardDog extends Actor {
     this.state = 'guard'; this.stateT = 0; this.coolT = 0; this.deadT = 0; this.hurtT = 0; this.stunT = 0; this.waitT = 0;
     this.present = true; this.material = 'flesh'; this.recentHitT = 0;
     this.aimY = 0.55; this.markY = 1.3; this.hitR = 0.75; this.hitH = 1.0;
+    this.bodyR = 0.5;   // (SOLID-ENEMY: as a loose dog's, dogs.js; LBA2's own dog is 0.40 m)
     this.shadow.scale.multiplyScalar(1.4);
     this.sync();
   }
@@ -130,6 +131,7 @@ export class GuardDog extends Actor {
     if (face != null) this.angle = dampAngle(this.angle, face, this.state === 'lunge' ? 1.5 : 6, dt);
     if (sp) P.move(this, Math.sin(this.angle) * sp * dt, Math.cos(this.angle) * sp * dt);
     this.applyKnockback(dt);
+    this.keepOffHero(dt);
     P.fall?.(this, dt);
     this.rig.play(anim);
     this.rig.update(dt, sp);

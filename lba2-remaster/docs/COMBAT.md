@@ -81,8 +81,8 @@ fight; Aggressive mode's Space still attacks with the same moves.
   can't start an attack for 1.2 s after a scene change (0.6 s after dialogue).
 - **Difficulty** changes damage taken (×0.5 / 1 / 1.5), wind-up length (×1.3 / 1 / 0.85) and cooldowns,
   never enemy health.
-- **Hit-stop:** 45 ms on a hit, 85 ms on a heavy hit (actors only; input is still read). Camera shake follows
-  the existing Shake setting.
+- **Hit-stop:** 45 ms on a hit, 85 ms on a heavy hit (actors only; input is still read), from the frame the blow lands
+  (ACTION-FEEL: the struck enemy no longer moves on before the hold). Camera shake follows the existing Shake setting.
 
 ## Movement and camera (CTRL-1)
 The user: "the camera doesn't follow Twinsen comfortably, the tank control doesn't feel right like in the second game,
@@ -154,8 +154,8 @@ point `DISTANCE_VISEE` (2500 units, ~2 H) ahead of his facing, keeping the angle
 LBA2's jump (ANIM.HQR 71) rises 0.577 H and carries him 1.55 H: here 1.19 m up and 3.2 m along (it was 1.77 m up and
 3.6 m at a run; the user: "the jump is too high"). The time in the air stays 0.72 s, so the jump has its own gravity
 (18.4 m/s²) from the take-off until he is back down at its height; anything further, and the ball, enemies and pickups,
-fall at 26 m/s². A run is trimmed to 4.44 m/s at the take-off and in the air. The crouch (0.09 s), coyote time
-(0.12 s), the press buffer (0.15 s) and the landing's squash and dust are as before. In the air his feet catch a
+fall at 26 m/s². A run is trimmed to 4.44 m/s at the take-off and in the air. The crouch (0.09 s; standing only since
+ACTION-FEEL: on the move he takes off on the press), coyote time (0.12 s), the press buffer (0.15 s) and the landing's squash and dust are as before. In the air his feet catch a
 ledge up to 0.25 m above them: he takes a ledge about 1.4 m up (1.33 m at 30 fps), 2.0 m before. Measured (60 fps):
 apex 1.14 m, 0.72 s, 3.1 m at a run (tests/controls.mjs 6b).
 - Places built for the jump, crossed by jumps in tests/jumpreach.mjs (at the harness' 30 fps): the Whispering Cliffs'
@@ -231,6 +231,66 @@ punches (87–89), the sword attack (42), the hit reactions (7–9).
 - `tests/anim-combat.mjs` checks all of this at 30, 60 and 120 fps; frame strips and capture tools:
   docs/lba3-production/reviews/ANIM-COMBAT/.
 
+## Enemies are solid (SOLID-ENEMY)
+The user (29.10): "what LBA2 did". From LBA2 itself (the engine source released by its rights holder, and the user's
+SCENE.HQR / RESS.HQR / BODY.HQR read with a study script in the session's scratch space; numbers only):
+- Twinsen always tests collisions with actors (OBJECT.CPP `RestartPerso`: CHECK_OBJ_COL), and `CheckObjCol` tests his box
+  against the box of every actor that has a body, whatever that actor's own flags; he is set back out along the shorter
+  overlap (he slides along it). An actor whose life reaches 0 loses its body (PERSO.CPP: `Body.Num = -1`): it is no longer
+  solid. The killable actors of its scenes (armour < 50, a finite life: 557) carry CHECK_OBJ_COL themselves in 533 cases
+  (96 %), so they stop at him too.
+- The box (FICHE.CPP `InitBodyZV`) is square, its half side the mean of the body's half width and half depth, or the
+  File3D's own ZV: Twinsen 250 units (0.42 m); its soldiers 200–256 (0.33–0.43 m), its dog 240 (0.40 m), its height y too.
+- A punch, kick or blade (an anim's F_HIT) hits what his box meets once pushed 200 units (0.33 m) ahead: blows land from
+  where he stops.
+
+Here (src/game/actors.js `Hero.keepApart`, SOLID-NPC's contact, extended): each living enemy has a body radius
+(`bodyR`, enemies.js `BODY_R`; the guards the girth of their race as SOLID-NPC's residents), measured from our models the
+way LBA2 measures its boxes and trimmed of what sticks out; a flyer's hull has a height and blocks only where it overlaps
+him (his feet + 0.1 to 1.95 m: a drone over his head is walked under). He stops at it head on (no side-step round a foe,
+as with pets) and slides round it off centre, with no jitter and never launched; the correction goes through physics, so a
+lunge or a bash never puts him into a wall. The enemy's own moves (chase, lunge, bash, knock-back) stop at his body
+(`Actor.keepOffHero`). A beaten enemy (alive is false from the blow) is not solid. Only bodies within 3 m of him are tested.
+
+| Enemy | Body radius | He stops at (his 0.4 + it) | LBA2's nearest |
+|---|---|---|---|
+| Vesk's Quetch guard | 0.46 | 0.86 m | soldiers 0.33–0.43 m |
+| Vesk's Grobo guard | 0.65 | 1.05 m | |
+| FunFrock's trooper | 0.50 | 0.90 m | |
+| Guard dog | 0.50 | 0.90 m | its dog 0.40 m |
+| Crystal mite | 0.50 | 0.90 m | |
+| Crystal crawler | 1.05 | 1.45 m | |
+| Sentry | 0.60 | 1.00 m | |
+| Warden drone (hull 0.81–1.95 m up) | 0.50 | 0.90 m | |
+| Heavy drone (hauler) | 0.90 | 1.30 m | |
+| The guardian (out of melee's height) | 1.40 | 1.80 m | |
+
+Every attack still lands from there: a blow reaches `reach` + the target's radius, which is 0.80 m (a jab on the
+crawler) to 2.15 m past the stop distance; played for every kind and every move in tests/solidenemy.mjs (each contact in
+the move's active frames, never inside the body during the forward step). The enemies' own blows reach from their stop
+too (the mite's bite 1.0 m, the dog's 1.4, the guards' baton 1.6, the sentry's bash 1.5). Not changed: any reach, timing or
+damage.
+
+## Action feel, chapters 1–2 (ACTION-FEEL, G1 round 3)
+Measured by input in the developer arena's flat floor (scratch probes probe-feel.mjs / probe-b.mjs / probe-melee.mjs:
+frames counted from the press or the release, at 30 / 60 / 144 fps). What was already right and is unchanged: Classic
+starts move on the frame of the key (90 % of a walk in 5 frames at 60 fps), stops in 3 frames (0.05 m), the turn on the
+spot starts and stops on the frame of the key with no drift, a landing with Up held runs straight on. Four changes (the third, when a blow lands, in two rows):
+
+| | Before (30 / 60 / 144 fps) | After | Where |
+|---|---|---|---|
+| Running jump (Athletic): from the press to the take-off | 2 / 5 / 12 frames stood dead still (4.96 → 0 → 4.2 m/s), take-off 3 / 6 / 13 frames after the press | takes off on the press, from the same spot; standing jumps keep their crouch | actors.js `Hero.jump` |
+| ... its length (LBA2: 1.55 H = 3.20 m) | 2.99 / 3.12 / 3.15 m (its take-off frame lost speed under the crouch's lock) | 3.28 / 3.27 / 3.21 m; height and time in the air unchanged | |
+| Modern, letting go: frames to a standstill (Normal / Athletic) | 7 / 15 / 37 and 9 / 19 / 47, of which 3 / 7 / 18 slid in the idle pose | 1 / 3 / 9 and 4 / 9 / 23 (as Classic), none sliding in the idle pose; overshoot Normal 0.13 → 0.05 m, Athletic 0.32 → 0.37 m (Classic's) | actors.js `Hero.update` |
+| A punch or kick on a guard at his stop distance: where the fist or foot is when the blow lands (+ short of the body's front, − at or in it) | jab +0.13, jab 2 +0.04, kick +0.06, glove +0.33 / +0.23 m: the arc took the body from its edge at the first active frame, 2–3 frames before the limb arrived, and the guard was already pushed away | −0.16, −0.12, −0.08, −0.17 / −0.09 m: struck in the middle of the active frames, where the pose has the limb furthest out (`MOVES` `land`). The sword's sweeps reach the body as the arc does and are unchanged | combat.js `HeroCombat.land` |
+| Hit-stop: the struck guard's move on the contact frame | 8.3 cm (full speed), then 3 held frames, then on: a jerk, a stop, a go | 0.8 cm, held, then the push: the hold starts with the contact; its length is unchanged | main.js `Game.update` |
+| A guard's half-turn reaction (LBA1's CHOC2, half the hits) | the feet shuffled on the spot: the head moved 1–3 cm, the body turned 0.05 rad: nothing showed but the push | the body spins 0.9 rad away from the blow in 0.3 s (the chase turns it back) | guards.js |
+
+Not changed: walk/run speeds, turn rates, the jump's height and air time, the dodge, every strike's timing window, reach,
+arc and damage (which enemies a blow takes is decided as before; a punch's blow is only dealt 1–3 frames later, inside its
+active frames). Not done: how the start of a walk reads by eye (its stance foot slides 0.4 m/s on average over the first
+0.5 s against 0.16 m/s in a steady walk): a rig matter left for an animation pass.
+
 ## Enemy roles
 | Enemy | Role | Tell | Opening | Hit reaction |
 |---|---|---|---|---|
@@ -240,7 +300,7 @@ punches (87–89), the sword attack (42), the hit reactions (7–9).
 | Crystal crawler | heavy, controls space | rears, a ring spreads on the ground (1 s) | 1.3 s after the slam | only heavy hits stagger it; dodge or leave the ring (being airborne also avoids it) |
 | FunFrock's old trooper (LBA1's fat clone soldier, bodies 18–20; kind `fclone`) | ranged + close, reactivated by the project | as Vesk's guards: the rifle comes up with the violet aim line (0.8 s); close in, the arm goes up | as the guards | the Grobo guard's rules: armour 2 (a magic-level-1 ball needs a charge, or a heavy strike), 5 HP, two hit reactions; beaten: falls, leaves one bonus |
 | Guard dog (LBA2's Zeelich guard dog, bodies 51–53) | fast melee, works with the guards | stops and barks (the jaw drops; its group is alerted), then close in: crouches with the jaw wide open and growls (0.5 s) | stands panting for 0.9 s after the bite | 3 HP, no armour; notices a running Twinsen close by even out of sight; a hit makes it yelp and skid back; knocked out: rolls over, leaves one bonus; the pulse stuns it; gives up beyond its leash |
-| Vesk's guard (Quetch / Grobo) | ranged + close, people in his uniform | the stun rifle comes up and a violet aim line brightens (0.8 s); close in, the baton goes up (0.55 s) | rifle lowered for 0.9 s after a shot or a swing | LBA1's rules: armour (Quetch 1, Grobo 2) — a hit weaker than the armour is braced against, no harm; two hit reactions at random (stagger, half-turn); beaten: falls, leaves one bonus. The pulse jams the rifle, not the guard |
+| Vesk's guard (Quetch / Grobo) | ranged + close, people in his uniform | the stun rifle comes up and a violet aim line brightens (0.8 s); close in, the baton goes up (0.55 s) | rifle lowered for 0.9 s after a shot or a swing | LBA1's rules: armour (Quetch 1, Grobo 2) — a hit weaker than the armour is braced against, no harm; two hit reactions at random (stagger, half-turn: the body spun 0.9 rad away from the blow, ACTION-FEEL); beaten: falls, leaves one bonus. The pulse jams the rifle, not the guard |
 | Heavy drone (ch. 7), Guardian (ch. 12) | mechanical bosses | existing | existing | existing |
 
 All enemies give up and go home beyond a pursuit limit.

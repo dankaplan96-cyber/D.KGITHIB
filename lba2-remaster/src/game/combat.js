@@ -49,19 +49,20 @@ export function dodgeDist(rel) {
 }
 
 // Melee moves. s/a/r = startup, active, recovery (s). arc = blade sweep from → to (rad, relative to the
-// facing; + is to Twinsen's left). reach = from his centre. poise = stagger power. step = forward step (m).
+// facing; + is to Twinsen's left). reach = from his centre. poise = stagger power. step = forward step (m). land = when
+// an enemy the sweep took is struck, as a fraction of the active frames (ACTION-FEEL: a punch or kick at its furthest out; none: as swept).
 export const MOVES = {
-  jab: { anim: 'punch', s: 0.07, a: 0.08, r: 0.17, reach: 1.35, arc: [0.5, -0.5], dmg: 1, poise: 1, step: 0.3, sound: 'punch', mat: 'flesh' },
-  jab2: { anim: 'punch2', s: 0.07, a: 0.08, r: 0.18, reach: 1.35, arc: [-0.5, 0.5], dmg: 1, poise: 1, step: 0.3, sound: 'punch', mat: 'flesh' },
-  kick: { anim: 'kick', s: 0.13, a: 0.1, r: 0.3, reach: 1.7, arc: [0.35, -0.35], dmg: 2, poise: 2, step: 0.45, sound: 'punch', mat: 'flesh' },
+  jab: { anim: 'punch', s: 0.07, a: 0.08, r: 0.17, reach: 1.35, arc: [0.5, -0.5], dmg: 1, poise: 1, step: 0.3, land: 0.5, sound: 'punch', mat: 'flesh' },
+  jab2: { anim: 'punch2', s: 0.07, a: 0.08, r: 0.18, reach: 1.35, arc: [-0.5, 0.5], dmg: 1, poise: 1, step: 0.3, land: 0.5, sound: 'punch', mat: 'flesh' },
+  kick: { anim: 'kick', s: 0.13, a: 0.1, r: 0.3, reach: 1.7, arc: [0.35, -0.35], dmg: 2, poise: 2, step: 0.45, land: 0.5, sound: 'punch', mat: 'flesh' },
   slash1: { anim: 'slash1', s: 0.11, a: 0.1, r: 0.22, reach: 2.05, arc: [1.25, -1.15], dmg: 2, poise: 1, step: 0.45, sound: 'swing' },
   slash2: { anim: 'slash2', s: 0.1, a: 0.1, r: 0.24, reach: 2.05, arc: [-1.2, 1.2], dmg: 2, poise: 1, step: 0.4, sound: 'swing' },
   slash3: { anim: 'slash3', s: 0.19, a: 0.09, r: 0.4, reach: 2.25, arc: [0.3, -0.3], dmg: 3, poise: 3, step: 0.6, sound: 'swingHeavy', heavy: true },
   heavy: { anim: 'heavy', s: 0.1, a: 0.1, r: 0.5, reach: 2.35, arc: [0.35, -0.35], dmg: 4, poise: 4, step: 0.7, sound: 'swingHeavy', heavy: true, guardBreak: true },
   // the Wannie glove (weapons.js): two slower, heavy punches; knock: how hard an enemy is thrown back (m/s);
   // deflect: an enemy bolt in front goes back the way it came; glove: it breaks weak boards (story/arsenal.js)
-  glove1: { anim: 'punch', s: 0.13, a: 0.1, r: 0.28, reach: 1.6, arc: [0.5, -0.5], dmg: 2, poise: 3, step: 0.4, sound: 'punch', mat: 'flesh', knock: 11, deflect: true, glove: true },
-  glove2: { anim: 'punch2', s: 0.16, a: 0.1, r: 0.42, reach: 1.7, arc: [-0.5, 0.5], dmg: 2, poise: 4, step: 0.5, sound: 'swingHeavy', mat: 'flesh', knock: 14, deflect: true, glove: true, heavy: true, guardBreak: true },
+  glove1: { anim: 'punch', s: 0.13, a: 0.1, r: 0.28, reach: 1.6, arc: [0.5, -0.5], dmg: 2, poise: 3, step: 0.4, land: 0.5, sound: 'punch', mat: 'flesh', knock: 11, deflect: true, glove: true },
+  glove2: { anim: 'punch2', s: 0.16, a: 0.1, r: 0.42, reach: 1.7, arc: [-0.5, 0.5], dmg: 2, poise: 4, step: 0.5, land: 0.5, sound: 'swingHeavy', mat: 'flesh', knock: 14, deflect: true, glove: true, heavy: true, guardBreak: true },
 };
 export const COMBOS = { fists: ['jab', 'jab2', 'kick'], sword: ['slash1', 'slash2', 'slash3'], glove: ['glove1', 'glove2'] };
 export const HEAVY_HOLD = 0.72; // s from the press, holding attack with the sword through the first strike → a heavy strike on release
@@ -514,6 +515,11 @@ export class HeroCombat {
       m.prevArc = arcNow;
       if (!m.swung) { m.swung = true; g.audio.play(D.sound); }
     }
+    // (ACTION-FEEL) a punch or a kick lands with the visible contact: the fist or foot is furthest out in the middle of
+    // the active frames (`land`, ANIM-COMBAT's keying), and an enemy the sweep has already taken (the arc picks up a body
+    // near him from its edge as soon as the active frames begin) is struck then, not 2–3 frames before the fist arrives.
+    // A blade's sweep reaches a body when the arc does: it lands as it is swept
+    if (m.pending?.length && m.t >= D.s + D.a * (D.land ?? 0) - 1e-6) this.land(m);
     // recovery: the next press continues the combo once recovery is half done
     const end = D.s + D.a + D.r;
     if (m.t >= D.s + D.a + D.r * 0.45 && this.buf.peek('attack', this.now) && MELEE.has(this.weapon) && !D.heavy) {
@@ -538,10 +544,11 @@ export class HeroCombat {
       this.holding = 'heavy'; this.holdT = this.now - (this.pressT ?? this.now); this.heavyReady = false; this.comboT = 0;
     }
   }
-  // hit everything inside the swept sector [a0, a1] (relative to the facing) within reach
+  // hit everything inside the swept sector [a0, a1] (relative to the facing) within reach: each enemy found is struck
+  // when the strike reaches it (land)
   sweep(m, a0, a1) {
     const g = this.g, h = this.hero, D = m.def, P = g.physics;
-    let any = false, heavyHit = false;
+    let any = false;
     for (const e of g.enemies) {
       if (!e.alive || !e.present || m.hit.has(e)) continue;
       const d = h.distTo(e);
@@ -553,18 +560,30 @@ export class HeroCombat {
       if (rel < a0 - pad || rel > a1 + pad) continue;
       if (!P.lineOfSight(h.pos.x, h.pos.y + 1.1, h.pos.z, e.pos.x, ey + 0.5, e.pos.z)) continue;
       m.hit.add(e);
-      const res = e.melee ? e.melee(D, h) : (e.damage(D.dmg, h.pos), 'hit');
-      any = true; if (D.heavy) heavyHit = true;
-      g.impact(e.pos.x, ey + 0.6, e.pos.z, res === 'blocked' ? 'armor' : (e.material || 'flesh'), res);
-      // the glove throws them back (after their own reaction, which set a softer knock-back)
-      if (D.knock && res !== 'blocked' && e.kb) { const ka = h.angleTo(e); e.kb.set(Math.sin(ka) * D.knock, Math.cos(ka) * D.knock); }
-      if (res === 'blocked') { h.kb.set(-Math.sin(h.angle) * 4, -Math.cos(h.angle) * 4); this.move.t = Math.max(this.move.t, D.s + D.a); }
+      (m.pending ??= []).push(e);
     }
     // crates, ropes, and anything else a chapter wants cut
     if (g.meleeWorld?.(h, D, a0, a1, m.hit)) any = true;
     // the glove's punch sends an enemy bolt in front of it back (once per move)
     if (D.deflect && !m.deflected && g.weapons?.deflect(D.reach + 0.8)) { m.deflected = true; any = true; }
-    if (any) g.hitStop = Math.max(g.hitStop || 0, heavyHit ? COMBAT.hitStop.heavy : COMBAT.hitStop.light);
+    if (any) g.hitStop = Math.max(g.hitStop || 0, COMBAT.hitStop.light);
+  }
+  // the enemies the sweep took are struck: damage, their reaction, the impact, the hit-stop
+  land(m) {
+    const g = this.g, h = this.hero, D = m.def;
+    let any = false;
+    for (const e of m.pending) {
+      if (!e.alive || !e.present) continue;
+      const ey = e.pos.y + (e.hover ?? 0);
+      const res = e.melee ? e.melee(D, h) : (e.damage(D.dmg, h.pos), 'hit');
+      any = true;
+      g.impact(e.pos.x, ey + 0.6, e.pos.z, res === 'blocked' ? 'armor' : (e.material || 'flesh'), res);
+      // the glove throws them back (after their own reaction, which set a softer knock-back)
+      if (D.knock && res !== 'blocked' && e.kb) { const ka = h.angleTo(e); e.kb.set(Math.sin(ka) * D.knock, Math.cos(ka) * D.knock); }
+      if (res === 'blocked') { h.kb.set(-Math.sin(h.angle) * 4, -Math.cos(h.angle) * 4); m.t = Math.max(m.t, D.s + D.a); }
+    }
+    m.pending.length = 0;
+    if (any) g.hitStop = Math.max(g.hitStop || 0, D.heavy ? COMBAT.hitStop.heavy : COMBAT.hitStop.light);
   }
 
   // ---- the ball
