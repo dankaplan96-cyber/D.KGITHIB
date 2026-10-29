@@ -147,10 +147,23 @@ Listed, not done (not my files, or not reproduced):
 - Baseline (`d5eb091`): chapter1 19/19, clarity 10/10, voices 24/24, well-town 29/29 — all PASS.
 - After (commit `7eb4f39` + the new test checks): chapter1 **23/23**, prologue 26/26, well-town 29/29, chapter2 18/18,
   clarity 10/10, voices 24/24 — all PASS, no console errors, no missing files.
-- Bot chain 01→05 (player input, `seg.mjs`, KEEP/LOAD) on the final tree: see the checkpoint below for the result.
-- Final re-run of chapter1 / clarity after the last two small changes (control-room framing, Holomap names, hall light):
-  see the checkpoint below.
+- Bot chain 01→05 (player input, `seg.mjs`, KEEP/LOAD) on the final source tree: **all five segments PASS**, 0 deaths,
+  0 ISO assists. Segment 04 opened the cliff valve by input and the water scene ran through (`water: true`, back in play,
+  objective "Visit Vesk at the old fortress"); segment 05 played Zoé's office by input (plan found, out, Vesk gone, to
+  Zeelich).
+- Final re-run after the last small changes (control-room framing, Holomap names, hall light): chapter1 23/23, clarity
+  10/10, well-town 29/29 — PASS.
 Logs: `g1-quest/baseline/`, `g1-quest/after1/`, `g1-quest/chain1/`, `g1-quest/final/`.
+Performance: not measured (SwiftShader container). Cost added: the guard's 21-ray fan (only during Zoé's segment), 44
+points instead of 90 in the cave, one textured material at the stall; nine fewer stone draws on the cliff street until
+the target is hit.
+Saves: no new flags, no schema change; `R.bounds` is build-time data.
+
+## Checkpoint
+
+Done and committed in the worktree (not pushed): all items above; report included. Next for the coordinator: review /
+merge `e59b5ee..HEAD`; hand P1–P3 to the main.js / css owner (AUTO-QUALITY's area) and P4 to the enemies.js owner;
+narrative partner reviews the new lines listed below. Nothing left running from this task (servers stopped).
 
 ## Patches for files I do not own (each applied to a scratch copy by `g1-quest/patch_others.py` and checked there)
 
