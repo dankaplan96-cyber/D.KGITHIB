@@ -286,7 +286,8 @@ for (const A of AREAS) {
     const S = {}; for (const r of res) S[r.def.id] = { dist: 0, lx: r.pos.x, lz: r.pos.z, inCol: 0, stops: new Set(), seated: 0, yMin: 99, yMax: -99, carried: new Set(), inside: 0 };
     for (let t = 0; t < 200; t += 0.5) { G.step(0.5, 1 / 30);
       for (const r of res) { const q = S[r.def.id]; q.dist += Math.hypot(r.pos.x - q.lx, r.pos.z - q.lz); q.lx = r.pos.x; q.lz = r.pos.z; q.stops.add(r.stop.id); if (r.st === 'seated') q.seated++; if (r.st === 'inside') q.inside++; if (r.carrying) q.carried.add(r.carrying);
-        if (r.present && r.st !== 'inside') { q.yMin = Math.min(q.yMin, r.pos.y); q.yMax = Math.max(q.yMax, r.pos.y); }
+        if (r.present && r.st !== 'inside' && !r.sit) {   // (seated: on the bench's seat, above the floor: SOLID-NPC)
+          q.yMin = Math.min(q.yMin, r.pos.y); q.yMax = Math.max(q.yMax, r.pos.y); }
         if (r.present && ['walk', 'dwell', 'plan'].includes(r.st)) for (const c of P.near(r.pos.x, r.pos.z)) if (c.enabled && c.top > r.pos.y + 0.55 && c.bottom < r.pos.y + 1.6 && P._inside(c, r.pos.x, r.pos.z, 0.05)) { q.inCol++; break; } } }
     out.sim = Object.fromEntries(Object.entries(S).map(([id, q]) => [id, { dist: Math.round(q.dist), stops: q.stops.size, inCol: q.inCol, seated: q.seated, inside: q.inside, y: [+q.yMin.toFixed(2), +q.yMax.toFixed(2)], carried: [...q.carried] }]));
     out.gave = res.map((r) => r.log.filter((l) => /gave|no route|timed/.test(l)).length);

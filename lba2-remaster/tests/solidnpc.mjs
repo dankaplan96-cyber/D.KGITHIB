@@ -389,8 +389,8 @@ const zb = await ev(async () => { const G = game; await G.regions.buildAsync(['z
   return G.walkers.res.filter((r) => ['ilo', 'aven', 'kira'].includes(r.def.id)).map((r) => r.stops.length); });
 console.log('zeelich rounds', JSON.stringify(zb));
 const benchZ = await benchCheck('zeelich', false);
-check(`Zeelich: every resident seated at each of its ${benchZ.length} bench stops sits on the seat (nothing under it or behind the back, resting on it)`,
-  benchZ.length >= 3 && benchZ.every((m) => m.st === 'seated' && m.under === 0 && m.behind === 0 && m.rest > -0.015 && m.rest < 0.06), benchZ.map((m) => [m.sid, m.char, m.under, m.behind, m.rest]));
+check(`Zeelich: at each of its ${benchZ.length} bench stops a resident sits on the seat (nothing under it or behind the back, resting on it), or, an Esmer (one robe to the ground, no hips to bend), stands by the bench`,
+  benchZ.length >= 3 && benchZ.every((m) => m.st === 'seated' ? m.under === 0 && m.behind === 0 && m.rest > -0.015 && m.rest < 0.06 : m.st === 'dwell' && /keeper|clerk/.test(m.char) && m.under === 0 && m.behind === 0), benchZ.map((m) => [m.sid, m.char, m.under, m.behind, m.rest]));
 console.log('Kesh: its residents\' rounds have no bench stop (walkrounds.js desertRoster), nothing to sit on there');
 
 await shot('solidnpc-end');

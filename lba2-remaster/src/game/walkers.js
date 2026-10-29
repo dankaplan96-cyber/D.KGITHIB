@@ -16,6 +16,7 @@
 // A resident's state is not saved: after a load every resident starts its round again at its first stop.
 import * as THREE from 'three';
 import { NPC, contactRadius } from './actors.js';
+import { LOOKS } from './characters.js';
 import { WalkNav } from './walknav.js';
 import { mat } from '../engine/rig.js';
 import { dampAngle, rng, clamp } from '../engine/math.js';
@@ -229,10 +230,11 @@ export class Resident extends NPC {
     this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
     this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
     if (s.pair) { this.st = 'pairwait'; this.waitT = 0; this.W.pair(s.pair).ready.add(this.def.id); this.note('wait for ' + s.pair); return; }
-    if (s.seat) { this.sitDown(s, instant); return; }
+    if (s.seat && this.canSit()) { this.sitDown(s, instant); return; }
     if (s.door) { this.st = 'knock'; this.tmr = instant ? 0.2 : 0.9; this.angle = this.targetAngle = s.a; return; }
     this.st = 'dwell';
-    if (s.a != null) this.targetAngle = s.a;
+    if (s.seat) this.targetAngle = s.seat.a;   // (one who cannot sit stands by the bench, looking where a sitter would)
+    else if (s.a != null) this.targetAngle = s.a;
     this.note('at ' + (s.id || s.act));
   }
   leave() {
@@ -277,6 +279,9 @@ export class Resident extends NPC {
     const y0 = this.game.physics.groundAt(s.x, s.z, this.groundHint(s.x, s.z));   // (the ground in front of the bench: the bench's own collider must not count)
     return { x: seat.x + sx * zl, z: seat.z + sz * zl, y0, y1: y0 + sp.seatY + 0.008 - sh.bottom };
   }
+  // an Esmer's body is one robe from the shoulders to the ground (rig.robeLegs, no hips to bend): it cannot sit on a
+  // bench without the robe going through the seat, so at a bench stop it stands by the bench instead
+  canSit() { return LOOKS[this.def.char]?.race !== 'esmer'; }
   sitDown(s, instant) {
     this.st = 'sitin';
     const p = this.seatPose(s);
