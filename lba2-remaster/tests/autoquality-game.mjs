@@ -147,14 +147,21 @@ check('a first start with the governor on: the GPU name\'s guess, then the title
 await ev(() => { game.hideScreens(); game.startNew(); game.step(0.2); });
 const started = await ev(() => ({ p: game.autoQ.gov.applied, phase: game.autoQ.gov.phase, pending: game.autoQ.gov.pending() }));
 check('... play starts at the calibrated profile, evaluating', started.p === cal.r.p && started.phase === 'evaluate' && !started.pending.length, started);
-// the evaluation: 70 s of light play over two scenes → settled (held) and cached as settled
+// the evaluation: light play, a scene change every 35 s (each a commit point, as the game's scene changes are) →
+// one step up at most (room above, applied at the next scene change), then settled (held) and cached as settled
 const ev1 = await ev(() => {
-  const G = game, A = G.autoQ, gov = A.gov;
-  let t = performance.now() + 2e6; gov.quietUntil = 0;
-  for (let s = 0; s < 75000; s += 16.7) { t += 16.7; gov.gpu(t, 5); const r = gov.frame({ t, ms: 16.7, cpu: 5, play: true, scene: s < 35000 ? 'citadel' : 'house' }); if (r?.kind === 'settled') A.settled(); }
-  return { phase: gov.phase, p: gov.applied, pending: gov.pending(), cached: JSON.parse(localStorage.getItem('lba3_autoq_v2') || '{}')[A.key] || null, log: A.log.slice(-3).map((e) => e.kind + ': ' + (e.what || '') + ' — ' + e.why) };
+  const G = game, A = G.autoQ, gov = A.gov, S = ['citadel', 'house', 'citadel', 'well', 'citadel', 'house'];
+  let t = performance.now() + 2e6, scene = S[0], ups = 0, done = null; gov.quietUntil = 0;
+  for (let s = 0; s < 200000 && !done; s += 16.7) {
+    t += 16.7; const now = S[Math.floor(s / 35000) % S.length];
+    if (now !== scene) { scene = now; A.commit('scene change'); }
+    gov.gpu(t, 5); const r = gov.frame({ t, ms: 16.7, cpu: 5, play: true, scene });
+    if (r?.kind === 'up') ups++;
+    if (r?.kind === 'settled') { A.settled(); done = Math.round(s / 1000); }
+  }
+  return { phase: gov.phase, p: gov.applied, pending: gov.pending(), ups, settledAt: done, cached: JSON.parse(localStorage.getItem('lba3_autoq_v2') || '{}')[A.key] || null, log: A.log.slice(-4).map((e) => e.kind + ': ' + (e.what || '') + ' — ' + e.why) };
 });
-check('... about a minute of light play across two scenes: it went up at most once (queued), then settled and cached the profile as settled', ev1.phase === 'hold' && ev1.cached?.src === 'settled' && ev1.cached.p === (ev1.pending.length ? ev1.p - 1 : ev1.p), ev1);
+check('... light play across scene changes: it went up at most once (applied at a scene change), then settled within ~2.5 min and cached the profile as settled', ev1.phase === 'hold' && ev1.ups <= 1 && ev1.settledAt != null && ev1.settledAt <= 150 && !ev1.pending.length && ev1.cached?.src === 'settled' && ev1.cached.p === ev1.p, ev1);
 await open(page, '?nocine&autoq');
 const again = await ev(() => ({ src: game.autoQ.source, cal: !!game.autoQ.cal, p: game.autoQ.gov.applied, phase: game.autoQ.gov.phase }));
 check('... the next start goes straight to the settled profile: no calibration, no evaluation (held)', /settled/.test(again.src) && !again.cal && again.p === ev1.cached.p && again.phase === 'hold', again);
@@ -183,7 +190,7 @@ const fixed = await ev(async () => {
   const text = await G.bench.run(['low'], { routes: ['street'], breakdown: false, played: false });
   return { text: text.split('\n').filter((l) => /quality:|Auto|street/.test(l)).join('\n'), auto: G.settings.qualityAuto, q: G.settings.quality, knobs: !!G.renderer.knobs };
 });
-check('the full benchmark\'s fixed runs use the presets by hand and give Auto back at the end; its report says what Auto ran', fixed.auto === true && fixed.knobs && fixed.q === 'high' && /quality: Auto — running High/.test(fixed.text), fixed);
+check('the full benchmark\'s fixed runs use the presets by hand and give Auto back at the end; its report says what Auto ran', fixed.auto === true && fixed.knobs && fixed.q === 'high' && /quality: Auto — High · held/.test(fixed.text), fixed);
 await ev(() => { game.testFreeze = true; });
 
 const fails = done();
