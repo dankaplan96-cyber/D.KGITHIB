@@ -62,6 +62,7 @@ r = await ev(() => { const w = game.world.well; return P.use(w.x, w.z, { near: 2
 let L = await lidState();
 check('the lid: the padlock off, rusted to the rim; Gilbert says kick it (INPUT)', has(s, /rusted to the rim/) && has(s, /good kick/) && !L.lock && L.rot === 0 && L.stuck && !L.open, { s, L });
 check('the objective: open the rusted lid', (await obj()).includes('Open the rusted lid'), await obj());
+{ const j = await journal(); check('the journal lists the rusted lid while it is a need', j.includes('pr_j_lid'), j); }
 await view('w1-lid-stuck');
 await saveAndContinue();
 L = await lidState();
@@ -81,6 +82,7 @@ await view('w2-lid-open');
 await saveAndContinue();
 L = await lidState();
 check('Save → Continue: the lid open', L.open && L.rot > 1.5, L);
+{ const j = await journal(); check('the journal drops the rusted-lid line once the lid is open', !j.some((k) => k.startsWith('pr_j_lid')), j); }
 
 // ---------------------------------------------------------------- 3. the harbour: Doran, the bell, Xil
 r = await ev(() => P.talk('doran', { run: true })); s = await said();
@@ -100,6 +102,7 @@ r = await ev(() => P.talk('xil', { run: true })); s = await said();
 check('Xil: the permit (no bell line once it has rung) (INPUT)', (await ev(() => game.flags.metXil)) && !has(s, /bell/), s);
 r = await ev(() => P.talk('doran', { run: true })); s = await said();
 check('Doran stamps (INPUT)', (await ev(() => game.flags.stamp)) && has(s, /Stamp/), s);
+{ const j = await journal(); check('the journal drops the stamp line once Doran has stamped', !j.some((k) => k.startsWith('pr_j_doran')), j); }
 r = await ev(() => P.talk('xil', { run: true }));
 check('Xil: the rope ladder (INPUT)', await ev(() => !!game.flags.rope));
 
