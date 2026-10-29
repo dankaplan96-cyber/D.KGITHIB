@@ -278,9 +278,8 @@ export class Resident extends NPC {
   }
   leave() {
     const s = this.stop;
-    // what it picks up here it carries on from here (carryDry: what it carries on from here while the well is dry, if that differs)
-    const carry = this.W.stage === 0 && s.carryDry !== undefined ? s.carryDry : s.carry;
-    if (carry !== undefined) this.carrySet(carry);
+    // what it picks up here it carries on from here
+    if (s.carry !== undefined) this.carrySet(s.carry);
     const i = this.nextIndex(this.ri), nxt = this.stops[i];
     this.ri = i;
     // (a leg from the stop's own slot is planned once for the whole session; from anywhere else it is planned afresh)

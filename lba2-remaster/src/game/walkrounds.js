@@ -12,7 +12,7 @@
 //        in the water) · warm (a hand held out to a heat post)
 // The town's two states (G1 world-life: walkers.js stage): `stage: 0` is a stop of the dry well (chapter 1, and chapter 2 until
 // the valves are open), `stage: 1` of the water back, hot, with the heat posts lit; a stop without `stage` is for both.
-// `gest: ['shrug', 'sigh']` is what it does now and then while it stands there; `carryDry` is `carry` while the well is dry.
+// `gest: ['shrug', 'sigh']` is what it does now and then while it stands there.
 // Nothing here stands where a chapter puts someone: the stops keep off the well's rim where Gilbert and Mira stand, the
 // stall's counter (Pippa), the lane's pump (Bram), the harbour's customs (Odile) and Nell's shop, and every front door
 // used is a house the story never sends Twinsen into (tests/walkers.mjs checks the stops against the doors and the cast).
@@ -46,7 +46,7 @@ function doorAt(W, x, z, list = W.houses) {
 export function citadelRoster(game) {
   const W = game.world;
   const bench = (id, x, z, dur, o = {}) => { const b = seatAt(W, x, z); if (!b) return null; return { id, x: b.slot.x, z: b.slot.z, a: b.ry + Math.PI, act: 'stand', seat: b.seat, dur, ...o }; };
-  const home = (id, x, z, dur, o = {}) => { const d = doorAt(W, x, z); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur, ...o }; };
+  const home = (id, x, z, dur) => { const d = doorAt(W, x, z); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur }; };
   const look = (id, x, z, tx, tz, dur, o = {}) => D(id, x, z, { a: A(x, z, tx, tz), dur, ...o });
   const ok = (a) => a.filter(Boolean);
   const WELL = { x: -42, z: -4 };
@@ -55,7 +55,7 @@ export function citadelRoster(game) {
   const R = [
     // the market-goer: from her door to the well, the stall (a basket from there), a seat in the square, home
     { id: 'oda', char: 'lharWoman', tint: '#fff0e0', speed: 1.15, start: 2, color: '#f0b080', stops: ok([
-      home('oda_home', -65.5, 11, [14, 22], { carryDry: 'can' }),   // (dry: she comes out with her can, and finds the well as it was)
+      home('oda_home', -65.5, 11, [14, 22]),
       look('oda_dry', -44.0, -6.0, WELL.x, WELL.z, [6, 9], { stage: 0, gest: ['shrug', 'sigh'] }),
       look('oda_well', -44.9, -6.4, WELL.x, WELL.z, [5, 8], { stage: 1 }),
       look('oda_stall', -46.2, -2.2, -47.4, -0.4, [6, 9], { act: 'browse', when: [0, 0.75], carry: 'basket' }),
