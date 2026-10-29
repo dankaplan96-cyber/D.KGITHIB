@@ -165,7 +165,7 @@ export class Chapter1 extends ChapterBase {
         const v = it.valve;
         if (v.kind === 'ball') { this.chain([['hero', 'c1_valve_bars']]); return true; }
         h.actAt(v.x, v.z, 'use', 1.4, () => this.openValve(v), 0.25);
-        g.audio.play('door');
+        g.audio.play('grind');   // (the stiff old wheel; the valve's own hiss when it gives: openValve)
         return true;
       }
       case 'c1gate':
@@ -173,8 +173,10 @@ export class Chapter1 extends ChapterBase {
         this.chain([['hero', f.c1_task ? 'c1_gate_task' : 'c1_gate']]);
         return true;
       case 'pipemap':
-        f.c1_map = true;
         g.audio.play('select');
+        // (G1-QUEST #19: once the water is back the map is only a map: Mira no longer marks valves that are open)
+        if (f.c1_water) { this.chain([['hero', 'c1_map_after']]); return true; }
+        f.c1_map = true;
         this.chain([['hero', 'c1_map_1'], ['mira', 'c1_mira_map']], () => { g.updateObjective(); });   // (Mira says she marked them)
         return true;
       case 'locker':
@@ -224,7 +226,8 @@ export class Chapter1 extends ChapterBase {
       case 'worker': return c([['worker', f.c1_water ? 'c1_worker_2' : 'c1_worker_1']]);
       case 'guard': return c([['guard', f.c1_water ? 'c1_guard_2' : 'c1_guard_1']]);
       case 'gilbert': return c([['gilbert', f.c1_water ? 'c1_gil_water' : f.c1_task ? 'c1_gil_task' : 'c1_gil_idle']]);
-      case 'mira': return c([['mira', f.c1_map ? 'c1_mira_after' : 'c1_mira_idle']]);
+      // (G1-QUEST #19: she asked for the valves even after they were open)
+      case 'mira': return c([['mira', f.c1_veskGone ? 'c1_mira_gone' : f.c1_water ? 'c1_mira_water' : f.c1_map ? 'c1_mira_after' : 'c1_mira_idle']]);
       case 'doran':
         // at the harbour he agrees and goes ahead to the spaceport; there, by the ship, he takes Twinsen aboard
         if (f.c1_ship) return c([['doran', 'c1_doran_board']], () => this.toZeelich());
@@ -261,7 +264,7 @@ export class Chapter1 extends ChapterBase {
     const n = (g.world.valves || []).filter((x) => x.open).length;
     g.world.setWaterFlow?.(n / 3);
     if (silent) return;
-    g.audio.play('chest');
+    this.valveCue();
     g.particles.burst(v.x, v.y + 0.3, v.z, '#cfefff', 20, 3);
     g.hud.toast('c1_toast_valve', { n });
     g.updateObjective();
@@ -270,16 +273,100 @@ export class Chapter1 extends ChapterBase {
     if (n >= 3) this.waterT = 0.9; // (game time: pauses with the game, see update)
   }
 
-  // all three valves open: the water comes back to the well — hot
+  // the valve gives (G1-QUEST #5: it played the treasure chest's chime): a clunk and a knock in the pipe, the hiss of
+  // the pressure let go and water rushing on down the line (audio.js's synth: its noise bursts and tones)
+  valveCue() {
+    const A = this.game.audio;
+    if (!A.ctx || A.ctx.state !== 'running') return;
+    A.play('clunk');
+    A.play('pipeKnock');
+    A._burst({ dur: 1.25, vol: 0.13, type: 'highpass', f: 5200, f1: 2400, at: 0.08 });          // hiss
+    A._burst({ dur: 1.0, vol: 0.12, type: 'bandpass', f: 1500, f1: 900, q: 0.9, at: 0.45 });     // the rush down the pipe
+    [300, 380, 340, 470].forEach((fq, i) => A._tone({ f0: fq, f1: fq * 1.3, dur: 0.06, vol: 0.035, at: 0.7 + i * 0.07 }));   // a gurgle
+  }
+
+  // the stepping stones on the Whispering Cliffs, heard as they rise after the old target is hit (G1-QUEST #5: the hit
+  // only rumbled): a grind as every other one starts and a knock as they settle (main.js hitTarget raises them)
+  stonesCue() {
+    const W = this.game.world, A = this.game.audio;
+    if (!W.stonesRisen || this._stonesHeard || !W.stones?.length) return;
+    if (!this._stonesSeen && W.stones.every((s) => s.t > 2)) { this._stonesHeard = true; return; }   // (risen before: silent)
+    this._stonesSeen = true;
+    const last = W.stones.length - 1;
+    for (const [i, s] of W.stones.entries()) {
+      if (s.t >= 0 && !s.heard) { s.heard = true; if (i % 2 === 0) A.play('grind'); }
+      if (s.t >= 1.4 && !s.settled) { s.settled = true; if (i % 2 === 1 || i === last) A.play('thump'); }
+    }
+    if (W.stones.every((s) => s.settled)) this._stonesHeard = true;
+  }
+
+  // all three valves open: the water comes back to the well — hot. G1-QUEST #4: a short cut to the square shows it (it
+  // was only told, over the last valve's view): the pipes knock, the well gurgles and steams, the heat posts light up;
+  // the narration comes over that shot, then back to Twinsen for his line. E cuts the shot short; the narration waits.
   waterReturns() {
     const g = this.game, f = this.f, W = g.world;
     f.c1_water = true;
     W.gate.open = true;
-    W.station?.setActive?.(true);
     g.audio.play('rumble');
     g.camRig.shake(0.5);
     this.story.refreshCast();
-    this.chain([['narrator', 'c1_water_1'], ['hero', 'c1_tw_water']], () => { g.updateObjective(); g.save(false); });
+    const done = () => { g.updateObjective(); g.save(false); };
+    const shot = g.room ? null : this.waterShotFraming();
+    if (!shot) { W.station?.setActive?.(true); this.chain([['narrator', 'c1_water_1'], ['hero', 'c1_tw_water']], done); return; }
+    const A = g.audio, wl = W.well, gy = g.physics.groundAt(wl.x, wl.z), h = g.hero;
+    let tt = 0, puffT = 0, lit = false;
+    const light = () => { if (!lit) { lit = true; W.station?.setActive?.(true); } };   // (the posts warm up over the next seconds)
+    const cues = [[0.15, () => A.play('pipeKnock')], [0.45, () => A.play('pipeKnock')], [0.8, () => { A.play('gurgle'); g.particles.burst(wl.x, gy + 1.1, wl.z, '#cfefff', 14, 2.4); }], [1.0, () => A.play('waterRun')], [1.1, light]];
+    // the well's steam goes on while the shot holds, under the narration's box too (world updaters run in every state)
+    const steam = (dt) => { if ((puffT -= dt) <= 0) { puffT = 0.08; g.particles.burst(wl.x + (Math.random() - 0.5) * 0.8, gy + 1.0, wl.z + (Math.random() - 0.5) * 0.8, '#e8f4ff', 2, 1.4); } };
+    W.updaters.push(steam);
+    const back = () => {
+      const i = W.updaters.indexOf(steam); if (i >= 0) W.updaters.splice(i, 1);
+      if (g.camRig.override === shot) { g.camRig.override = null; g.camRig.snap(); }
+    };
+    g.setState('cutscene');
+    g.camRig.override = shot;
+    g.camRig.snap();
+    g.cutscene = (dt) => {
+      tt += dt;
+      while (cues.length && tt >= cues[0][0]) cues.shift()[1]();
+      h.rig.play('idle'); h.rig.update(dt, 0); h.sync();
+      const I = g.input;
+      if (tt >= 2.6 || (tt >= 0.9 && (I.pressed('interact') || I.pressed('action') || I.pressed('click')))) {
+        light();
+        g.cutscene = null;
+        g.setState('play');
+        this.chain([['narrator', 'c1_water_1'], ['hero', 'c1_tw_water']], () => { back(); done(); }, (i) => { if (i === 1) back(); });
+      }
+    };
+  }
+  // the square seen past the well toward Pippa's stall and its heat post (the town's houses behind)
+  waterShotFraming() {
+    const W = this.game.world, P = this.game.physics, wl = W.well;
+    const post = W.heatPosts?.posts?.[W.heatPosts.posts.length - 1] || W.stall;
+    if (!wl || !post) return null;
+    let ux = wl.x - post.x, uz = wl.z - post.z; const l = Math.hypot(ux, uz) || 1; ux /= l; uz /= l;
+    // (turned off that line, to the side away from Gilbert — he stands by the well once the water is back: at the frame's
+    //  edge, not in front of the lens — so the well's roof does not hide the post either; the first turn and distance with
+    //  nothing standing up into the near part of the view (the square's lamps). The aim is low, so the well sits above
+    //  the middle of the picture: the narration's box takes the bottom)
+    const gy = P.groundAt(wl.x, wl.z), ty = gy + 1.0;
+    const clear = (px, py, pz) => {
+      for (let k = 0.04; k <= 0.75; k += 0.04) {
+        const x = px + (wl.x - px) * k, y = py + (ty - py) * k, z = pz + (wl.z - pz) * k;
+        for (const c of P.near(x, z)) if (c.enabled && c.top > y - 1.3 && c.bottom < y && P._inside(c, x, z, 0.5)) return false;
+      }
+      return true;
+    };
+    let pos = null;
+    for (const d of [7.5, 6.5, 8.5]) for (const a of [-0.45, -0.7, -0.25, -0.95]) {
+      if (pos) break;
+      const rx = ux * Math.cos(a) - uz * Math.sin(a), rz = ux * Math.sin(a) + uz * Math.cos(a);
+      const x = wl.x + rx * d, z = wl.z + rz * d, y = Math.max(gy, P.groundAt(x, z)) + 3.8;
+      if (clear(x, y, z)) pos = new THREE.Vector3(x, y, z);
+    }
+    if (!pos) return null;   // (nowhere clear: the narration plays over the play camera, as before)
+    return { pos, look: new THREE.Vector3(wl.x + (post.x - wl.x) * 0.5, gy - 1.4, wl.z + (post.z - wl.z) * 0.5) };
   }
 
   // ---------------------------------------------------------------- Vesk arrives
@@ -347,6 +434,7 @@ export class Chapter1 extends ChapterBase {
     h.swapBody('zoe');
     h.hasBall = false; h.noBehaviours = true; h.behaviour = 'discreet';
     g.hud.behaviour('discreet');
+    g.hud.weapon(h); g.hud.weaponShowT = 0;   // (G1-QUEST #21: Zoé carries nothing: no "Fists" pill flashing up as she goes in)
     // (the objective panel says it as the room comes up: "Zoé: find the evacuation plan without getting caught")
     const guard = this.npc('guard');
     if (R && guard) {
@@ -367,6 +455,44 @@ export class Chapter1 extends ChapterBase {
         this.watcher.start();
       });
     });
+  }
+  // G1-QUEST #7: the guard's sight, drawn the way he looks and only as far as he can see. enemies.js's sector lay turned
+  // half round (behind him: through the office wall and out of the room) and ran on through walls and lockers. Here it
+  // is a fan of rays at his eye height, each stopped by the room's walls (and its door) and by anything taller than that
+  // (desks are lower: he sees over them, as his check does), redrawn as he turns.
+  updateCone() {
+    const w = this.watcher, g = this.game, P = g.physics, R = g.room;
+    if (!w?.active || !w.cone) return;
+    const N = 20;
+    if (!this._cone || w.cone.geometry !== this._cone.geo) {
+      const pos = new Float32Array((N + 2) * 3), idx = [];
+      for (let i = 1; i <= N; i++) idx.push(0, i, i + 1);
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setIndex(idx);
+      w.cone.geometry.dispose(); w.cone.geometry = geo; w.cone.frustumCulled = false;
+      this._cone = { geo, pos };
+    }
+    const n = w.npc, y = n.pos.y + 1.2, C = this._cone, b = R?.bounds;
+    const blocked = (x, z) => {
+      if (b && (x < b.x0 || x > b.x1 || z < b.z0 || z > b.z1)) return true;
+      for (const c of P.near(x, z)) if (c.enabled && !c.seeThrough && c.top > y && c.bottom < y && P._inside(c, x, z)) return true;
+      return false;
+    };
+    for (let i = 0; i <= N; i++) {
+      const th = -w.fov + (2 * w.fov * i) / N, a = n.angle + th, dx = Math.sin(a), dz = Math.cos(a);
+      let d = 0.35;
+      while (d < w.range && !blocked(n.pos.x + dx * d, n.pos.z + dz * d)) d += 0.2;
+      d = d >= w.range ? w.range : Math.max(0.35, d - 0.1);   // (half a step back: to the edge of what stopped it)
+      if (b) {   // (and never past the room's inside: exactly, not to the nearest step)
+        if (dx > 1e-6) d = Math.min(d, (b.x1 - n.pos.x) / dx); else if (dx < -1e-6) d = Math.min(d, (b.x0 - n.pos.x) / dx);
+        if (dz > 1e-6) d = Math.min(d, (b.z1 - n.pos.z) / dz); else if (dz < -1e-6) d = Math.min(d, (b.z0 - n.pos.z) / dz);
+        d = Math.max(0, d);
+      }
+      C.pos[(i + 1) * 3] = Math.sin(th) * d; C.pos[(i + 1) * 3 + 1] = 0; C.pos[(i + 1) * 3 + 2] = Math.cos(th) * d;
+    }
+    C.geo.attributes.position.needsUpdate = true;
+    w.cone.material.opacity = 0.26 + w.suspicion * 0.24;   // (Watcher's 0.14 hardly showed on the office's pale tiles)
   }
   foundPlan() {
     const g = this.game, f = this.f;
@@ -455,7 +581,8 @@ export class Chapter1 extends ChapterBase {
     }
     // resumed from a save made in Zoe's segment: Twinsen was put back in the project office; out to the gate
     if (g.room?.id === 'projoffice' && !f.c1_zoeStart && g.state === 'play' && !g.trans) { g.exitRoom(this.exitTo('outdoor-projoffice'), true); g.updateObjective(); }
-    if (this.watcher?.active) this.watcher.update(dt);
+    if (this.watcher?.active) { this.watcher.update(dt); this.updateCone(); }
+    this.stonesCue();
     // Zoe slips out with the plan
     if (g.room?.id === 'projoffice' && f.c1_zoeStart && !this.watcher?.active && !f.c1_plan && g.state === 'play') this.watcher?.start();
   }
@@ -509,7 +636,7 @@ export class Chapter1 extends ChapterBase {
     if (!f.c1_home) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_arrived) m.push({ x: W.pierStart.x, z: W.pierStart.z, kind: 'star', color: gold, r: 7, edge: true });
     else if (!f.c1_task) npcAt('vesk', 'n_vesk');
-    else if (!f.c1_water && (f.c1_map || f.c1_task)) for (const v of W.valves || []) if (!v.open) m.push({ x: v.x, z: v.z, kind: 'star', color: gold, r: 6, edge: true, label: t('c1_valve_' + v.id) });
+    else if (!f.c1_water && (f.c1_map || f.c1_task)) for (const v of W.valves || []) if (!v.open) m.push({ x: v.x, z: v.z, kind: 'star', color: gold, r: 6, edge: true, label: t('c1_mk_' + v.id) });   // (G1-QUEST #21: a short name on the map; the objective keeps the hint)
     if (f.c1_water && !f.c1_tour) npcAt('vesk', 'n_vesk');
     if (f.c1_needZoe && !f.c1_zoeStart) npcAt('zoe', 'n_zoe');
     if (f.c1_veskGone && !f.c1_radio) m.push({ x: W.houses[0].x, z: W.houses[0].z, kind: 'star', color: gold, r: 7, edge: true });
@@ -524,15 +651,18 @@ export class Chapter1 extends ChapterBase {
     if (f.c1_plan && (!f.c2_planTaken || f.c2_planBack)) out.push({ id: 'evacplan', icon: 'plan' }); // (confiscated on Zeelich until recovered)
     return out;
   }
+  // (G1-QUEST #3: the next, unfinished step was listed too, written as done, in the past tense. The journal keeps what
+  // has happened; the step ahead is the objective, at the top of the same screen)
   journal() {
     const f = this.f;
     return [
+      { key: 'c1_j_morning', done: !!f.c1_started },
       { key: 'c1_j_vesk', done: !!f.c1_task },
       { key: 'c1_j_valves', done: !!f.c1_water },
       { key: 'c1_j_station', done: !!f.c1_tour },
       { key: 'c1_j_plan', done: !!f.c1_plan },
       { key: 'c1_j_vesk_gone', done: !!f.c1_veskGone },
       { key: 'c1_j_radio', done: !!f.c1_radio },
-    ].filter((l, i, a) => i === 0 || a[i - 1].done);
+    ].filter((l) => l.done);
   }
 }

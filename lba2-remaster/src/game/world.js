@@ -953,9 +953,9 @@ export function* buildWorldSteps(parentScene) {
       const c = physics.add({ type: 'cyl', x, z, r, top: ground - 0.3, enabled: false });
       // (PERF-2: until they rise, a stone wholly under the drawn ground — its top, the moss at ground − 0.29, below the
       // terrain all round its rim — is not drawn at all; ~10 draw calls a frame for nothing on the street)
-      let buried = true;
-      for (let a = 0; a < 12 && buried; a++) { const ax = x + Math.cos(a * 0.5236) * r * 1.1, az = z + Math.sin(a * 0.5236) * r * 1.1; if (H(ax, az) < ground - 0.27) buried = false; }
-      if (buried) grp.visible = false;
+      // (G1-QUEST #20: the ones on sloping ground were drawn, and their moss caps showed through the dirt as flat green
+      //  plates along the path. None is drawn until they rise: raiseStones shows them, from just under the ground)
+      grp.visible = false;
       W.stones.push({ grp, c, top, ground: ground - 0.3, delay: i * 0.25 });
     }
     W.stonesRisen = false;
