@@ -111,6 +111,16 @@ export class Renderer {
     r.setSize(innerWidth, innerHeight);
     r.shadowMap.enabled = true;
     r.shadowMap.type = THREE.PCFSoftShadowMap;
+    // PERF-CPU: three's own opaque order, except that a texture-array batch (drawbatch.js) sorts where its pieces' twins
+    // did (`__sortId`), so coincident faces show as before
+    r.setOpaqueSort((a, b) => {
+      if (a.groupOrder !== b.groupOrder) return a.groupOrder - b.groupOrder;
+      if (a.renderOrder !== b.renderOrder) return a.renderOrder - b.renderOrder;
+      const ia = a.object.__sortId ?? a.material.id, ib = b.object.__sortId ?? b.material.id;
+      if (ia !== ib) return ia - ib;
+      if (a.material.id !== b.material.id) return a.material.id - b.material.id;
+      return a.z !== b.z ? a.z - b.z : a.id - b.id;
+    });
     r.toneMapping = THREE.NeutralToneMapping; // keeps LBA2's saturated palette (ACES washes it out)
     r.toneMappingExposure = 1.0;
     container.appendChild(r.domElement);

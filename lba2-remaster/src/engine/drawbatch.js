@@ -31,6 +31,10 @@ import { MW } from './drawcull.js';
 import { TEXARRAY, arrayable, layerOf, arrayTwinOf, keyOf, flushArrays } from './texarray.js';
 
 export const CELL = 48;
+// PERF-CPU, tried: lone pieces gathered per LOOSE.n × CELL
+//  (off: lone pieces were drawn on their own, each at its material's point of three's order; in a batch they move — the
+//   same coincident-face change as above, 0.36 % of the Medium interior's pixels. `?loose` turns it on for probes)
+export const LOOSE = { n: typeof location !== 'undefined' && /[?&]loose/.test(location.search) ? 3 : 1 };
 const SPLIT = 0.5, SPLIT_TRIS = 3000;   // (PERF-BATTERY: a piece of 3000 triangles or more whose bounding radius is over half a cell is cut by triangle)
 const _m = new THREE.Matrix4(), _nm = new THREE.Matrix3(), _v = new THREE.Vector3(), _c = new THREE.Vector3();
 const BASE_OBR = THREE.Object3D.prototype.onBeforeRender;
@@ -90,18 +94,18 @@ function recipe(o, arrays = false) {
   //  the arrays too, its `rm` copied)
   if (arrays && TEXARRAY.on && m.userData?.twin && m.userData.rm && !m.userData.arr && vc && A.rm?.itemSize === 2 && !m.transparent && (!m.map || (A.uv && arrayable(m.map)))) {
     const t = m.map; if (t?.matrixAutoUpdate) t.updateMatrix();
-    const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc: true, arr: true, layer, preRM: true };
+    const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc: true, arr: true, layer, preRM: true, ord: m.id };
   }
   // (PERF-CPU, arrays: a glowing piece — a lit window, a lamp's glass — folds too, its emissive colour × intensity in
   //  its vertices: the twin adds it where three adds the uniform)
   if (arrays && TEXARRAY.on && m.emissive && m.emissive.r + m.emissive.g + m.emissive.b > 0 && plainE(m, !!A.uv && !!m.map, vc) && (!m.map || (A.uv && arrayable(m.map)))) {
     const t = m.map; if (t?.matrixAutoUpdate) t.updateMatrix();
-    const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc, arr: true, layer };
+    const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc, arr: true, layer, ord: m.id };
   }
   const tex = !!A.uv && texOnly(m, vc), flat = !tex && plain(m, false, vc);
   if (!tex && !flat) return null;
   const t = m.map; if (tex && t.matrixAutoUpdate) t.updateMatrix();
-  if (arrays && TEXARRAY.on && (flat || arrayable(t))) { const layer = layerOf(flat ? null : t); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(flat ? null : t)), tex, vc, arr: true, layer }; }
+  if (arrays && TEXARRAY.on && (flat || arrayable(t))) { const layer = layerOf(flat ? null : t); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(flat ? null : t)), tex, vc, arr: true, layer, ord: twinOf(m, true).id }; }
   return { twin: twinOf(m, true), tex, vc };
 }
 // what a folded piece's look depends on, to notice a change (the material object stays the same)
@@ -133,25 +137,81 @@ function lookVer(m, F) {
 const ownUpdate = (o, root) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.updateMatrixWorld !== THREE.Object3D.prototype.updateMatrixWorld) return true; return false; };
 
 class Area {
-  constructor(root, cell, fold = true, arrays = false) {
-    this.root = root; this.cells = new Map(); this.members = []; this.ms = 0; this.cell = cell; this.ids = 0;
+  constructor(root, cell, fold = true, arrays = false, loose = LOOSE.n, exactArr = true) {
+    this.root = root; this.cells = new Map(); this.members = []; this.ms = 0; this.cell = cell; this.ids = 0; this.loose = loose;
     const t0 = performance.now();
     root.updateMatrixWorld(true);
     this.inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
     const rootFlip = root.matrixWorld.determinant() < 0;
-    const pieces = [];
+    const pieces = [], found = [];
+    const kindKey = (o, F, flip) => [(F ? F.twin : o.material).uuid, F ? (F.arr ? 'fold:arr' : F.tex ? 'fold:uv' : 'fold') : attrSig(o.geometry) + (o.geometry.index ? '|i' : ''), o.receiveShadow, o.renderOrder, flip].join('|');
     root.traverse((o) => {
       if (!eligible(o, root)) return;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       _c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
       if (!Number.isFinite(_c.x + _c.z)) return;
-      const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F = fold ? recipe(o, arrays) : null;
-      const mat = F ? F.twin : o.material, sig = F ? (F.arr ? 'fold:arr' : F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
+      const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F0 = fold ? recipe(o, false) : null;
+      found.push({ o, flip, F0, cx: _c.x, cz: _c.z });
+    });
+    // PERF-CPU, arrays: where two pieces' faces coincide, the one drawn later shows, and three orders opaque draws by
+    // material: a piece moved into a batch drawn at another point of that order changes which face shows (Medium
+    // interior, every foldable piece in its cell's array batch: the stove's tiles and a wicker panel, a wall's tiles and
+    // stone, 0.5 % of the pixels; `?arrall` for that version). So each piece keeps its place: `ord`, the id of the
+    // material it was drawn with before (its texture's twin when it was in a folded batch — at least one more such
+    // piece in its cell, or cut over several cells — its own when it was drawn alone or in a batch of its own material).
+    const exact = this.exact = exactArr;
+    if (arrays && TEXARRAY.on && exact) {
+      const n = new Map(), keyOf0 = (e) => kindKey(e.o, e.F0, e.flip) + '|' + Math.floor(e.cx / this.cell) + ',' + Math.floor(e.cz / this.cell);
+      for (const e of found) { const k = keyOf0(e); n.set(k, (n.get(k) || 0) + 1); }
+      for (const e of found) {
+        const g = e.o.geometry, nt = Math.floor((g.index ? g.index.count : g.attributes.position.count) / 3);
+        const cut = nt >= SPLIT_TRIS && g.boundingSphere.radius * e.o.matrixWorld.getMaxScaleOnAxis() > this.cell * SPLIT;
+        const F = recipe(e.o, true);
+        if (F?.arr) { F.ord = e.F0 && (cut || n.get(keyOf0(e)) > 1) ? e.F0.twin.id : e.o.material.id; e.F = F; }
+      }
+      // The ids of every material this area still draws with (its other pieces' own materials and twins) cut the order
+      // into gaps; pieces whose `ord` falls in one gap share a batch, drawn at that place (`__sortId`, renderer.js's
+      // opaque sort); pieces of different gaps do not. In a batch, its pieces in `ord` order (build()).
+      const other = new Set(), arr = new Set();
+      for (const e of found) if (e.F?.arr) arr.add(e.o);
+      root.traverse((o) => {
+        if (arr.has(o) || !(o.isMesh || o.isLine || o.isPoints || o.isSprite) || !o.material) return;
+        for (const m of Array.isArray(o.material) ? o.material : [o.material]) other.add(m.id);
+      });
+      for (const e of found) if (!e.F?.arr && e.F0) other.add(e.F0.twin.id);
+      // Arrays of different sizes are different batches: within a gap, pieces in `ord` order go into one batch only
+      // while their array stays the same (a run); a piece of another size between them starts a new run.
+      const ids = Float64Array.from(other).sort(), A = found.filter((e) => e.F?.arr).sort((x, y) => x.F.ord - y.F.ord);
+      let run = 0, gap0 = -1, twin0 = null, ord0 = -1;
+      for (const e of A) {
+        let lo = 0, hi = ids.length; while (lo < hi) { const mid = (lo + hi) >> 1; if (ids[mid] < e.F.ord) lo = mid + 1; else hi = mid; }
+        if (lo !== gap0 || (e.F.twin !== twin0 && e.F.ord !== ord0)) run++;
+        gap0 = lo; twin0 = e.F.twin; ord0 = e.F.ord; e.F.gap = run;
+      }
+    }
+    for (const { o, flip, F0, F: F1 } of found) {
+      const g = o.geometry, F = arrays && TEXARRAY.on && fold ? (exact ? F1 || F0 : recipe(o, true)) : F0;
+      const mat = F ? F.twin : o.material, sig = F ? (F.arr ? 'fold:arr' + (F.gap !== undefined ? ':' + F.gap : '') : F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
       const M = { o, fold: F, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, lv: F ? lookVer(o.material, -1) : 0, okF: -1, own: ownUpdate(o, root), geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow,
         kind: { key: [mat.uuid, sig, o.receiveShadow, o.renderOrder, flip].join('|'), material: mat, fold: F ? { tex: F.tex, arr: !!F.arr } : null, flip, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder } };
       this.assign(M);
       pieces.push(M);
-    });
+    }
+    // PERF-CPU: a whole piece alone in its cell (of its kind: on the arrivals, 81 of Zeelich's pieces — a crate, a sign, a
+    // lamp post with its own texture size) joins the other lone pieces of its kind in a coarser cell (LOOSE × the cell)
+    // instead of drawing on its own. Only what was alone moves; a cell with two or more pieces keeps its size.
+    if (this.loose > 1) {
+      const lone = [];
+      for (const [k, C] of this.cells) if (C.list.length === 1 && C.list[0].cells.length === 1 && C.list[0].parts.get(C.id) === null) { lone.push(C.list[0]); this.cells.delete(k); }
+      const L = this.cell * this.loose;
+      for (const M of lone) {
+        _c.copy(M.geo.boundingSphere.center).applyMatrix4(M.o.matrixWorld);
+        const key = M.kind.key + '|loose|' + Math.floor(_c.x / L) + ',' + Math.floor(_c.z / L);
+        let C = this.cells.get(key);
+        if (!C) { C = { key, id: this.ids++, ...M.kind, list: [], mesh: null, dirty: true }; this.cells.set(key, C); }
+        M.cells = [C]; M.parts = new Map([[C.id, null]]); C.list.push(M);
+      }
+    }
     // a cell with one piece that lies wholly in it stays as it was (nothing to save); a piece cut over several cells
     // is batched in all of them (PERF-BATTERY: so the parts out of view are culled)
     for (const [k, C] of this.cells) if (C.list.length < 2 && !(C.list.length === 1 && C.list[0].cells.length > 1)) { for (const M of C.list) M.cells = []; this.cells.delete(k); }
@@ -205,7 +265,11 @@ class Area {
     // this cell's triangles of each piece, their vertices renumbered (a whole piece: all of them, as they are)
     const parts = [];
     let nv = 0, ni = 0;
-    for (const M of C.list) {
+    // (PERF-CPU, arrays: the pieces in the order they were drawn before — three draws opaque materials by material id, and
+    //  where two pieces' faces coincide exactly the later one shows: a batch's triangles keep that order. `ord`: the
+    //  id of the material the piece was drawn with before: its 2D twin, or its own)
+    const LIST = fold?.arr ? [...C.list].sort((a, b) => a.fold.ord - b.fold.ord) : C.list;
+    for (const M of LIST) {
       const g = M.geo, I = g.index, T = M.parts.get(C.id), cnt = g.attributes.position.count;
       if (T === undefined) continue;
       if (T === null) { parts.push({ M, T, map: null, from: null, vo: nv }); nv += cnt; ni += I ? I.count - (I.count % 3) : cnt - (cnt % 3); continue; }
@@ -250,6 +314,7 @@ class Area {
     const mesh = new THREE.Mesh(geo, C.material);
     mesh.castShadow = false; mesh.receiveShadow = C.receiveShadow; mesh.renderOrder = C.renderOrder;
     mesh.matrixAutoUpdate = false; mesh.name = 'drawBatch'; mesh.userData.drawBatch = true;
+    if (fold?.arr && LIST.length && LIST[0].fold.gap !== undefined) mesh.__sortId = LIST[0].fold.ord;   // (its pieces' place in the order, above)
     this.root.add(mesh); mesh.updateMatrixWorld(true);
     C.mesh = mesh; this._meshes = null;
   }
@@ -304,12 +369,12 @@ export class DrawBatch {
   // merges the regions' one-colour pieces: the arrival route 321 → 252 draw calls, the street 250 → 227 (Medium,
   // SwiftShader counts, docs/lba3-performance/PERF_BATTERY.md). `fold = false` + reset() brings back the exact batches.
   // arrays (PERF-CPU): the world's painted textures from one texture array (texarray.js): one batch per cell for all of them
-  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.fold = true; this.arrays = true; this.left = 0; }
+  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.fold = true; this.arrays = true; this.loose = LOOSE.n; this.exact = !(typeof location !== 'undefined' && /[?&]arrall/.test(location.search)); this.left = 0; }
   // build the area's batches (once) and check its pieces; call after the world matrices are up to date
   update(root) {
     if (!this.enabled || !root) { if (this.areas.size) this.reset(); return null; }
     let A = this.areas.get(root);
-    if (!A) { A = new Area(root, this.cell, this.fold, this.arrays); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
+    if (!A) { A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
     this.left += A.watch();
     return A;
   }
