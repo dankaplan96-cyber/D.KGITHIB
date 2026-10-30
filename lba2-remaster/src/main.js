@@ -1626,7 +1626,9 @@ class Game {
     let faced = null, fd = 1e9, fa = 0;
     for (const n of this.npcs) {
       if (!n.present || n.def.noTalk || h.pos.y - n.pos.y > TALK_ABOVE) continue;
-      const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z), a = aim(n.pos.x, n.pos.z);
+      const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z);
+      if (!(d < 2.6)) continue;   // (STABILIZATION: out of reach either way — consider() takes 2.6 m at most, faced 2.2 —: no prompt object a frame for each of the ~70 people)
+      const a = aim(n.pos.x, n.pos.z);
       // (behind: in the half-plane at his back, not right on top of him)
       const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk', behind: d >= 0.5 && a < 0 };
       // (G1-QUEST #17: someone at his back gets the prompt only at arm's length: 1.5 m behind him, "Talk" showed with
