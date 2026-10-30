@@ -53,13 +53,13 @@ const name = (p) => PROFILES[p].name;
 
 // ---------------------------------------------------------------- the profiles and the labels
 {
-  check('three named profiles, best first: High · Medium · Medium-eco (LOOK-FIRST)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium · Medium-eco', PROFILES.map((x) => x.name));
+  check('two named profiles, best first: High · Medium (AUTO-2)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium', PROFILES.map((x) => x.name));
   const eq = (a, b) => KNOBS.every((k) => a[k] === b[k]);
-  check('High and Medium are the presets exactly; the floor keeps Medium\'s look (MSAA, shadows, lamps; resolution ≥ 85 %; LOOK-FIRST-3: Low\'s grass distance and small casters)', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && ['bloom', 'filter', 'map', 'lamps', 'msaa', 'shadows'].every((k) => knobsAt(2)[k] === PRESET_KNOBS.medium[k]) && knobsAt(2).scale >= 0.85 && knobsAt(2).veg === 'low' && knobsAt(2).casters === 'low', knobsAt(2));
-  check('the labels are the profile names; a state that is not a profile names its nearest and every difference', describe(knobsAt(2)).text === 'Medium-eco'
-    && describe({ ...PRESET_KNOBS.high, bloom: 0 }).text === 'High, no bloom' && describe(knobsAt(2)).tier === 'medium', [describe({ ...PRESET_KNOBS.high, bloom: 0 }).text]);
+  check('High and Medium are the presets exactly (every knob); nothing below Medium', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && PROFILES.length === 2, {});
+  check('the labels are the profile names; a state that is not a profile names its nearest and every difference', describe(knobsAt(1)).text === 'Medium'
+    && describe({ ...PRESET_KNOBS.high, bloom: 0 }).text === 'High, no bloom' && describe(knobsAt(1)).tier === 'medium', [describe({ ...PRESET_KNOBS.high, bloom: 0 }).text]);
   check('each profile is no more costly than the one above it, on both sides, by the model', PROFILES.every((x, i) => !i || (x.gpu <= PROFILES[i - 1].gpu && x.cpu <= PROFILES[i - 1].cpu)), PROFILES.map((x) => [x.gpu, x.cpu]));
-  check('spell(): what a profile runs, in words', /Medium-eco: resolution 90 %, MSAA 2×, .*far people animated at half rate, far small parts dropped/.test(spell(2)), spell(2));
+  check('spell(): what a profile runs, in words', /Medium: resolution 100 %, MSAA 2×/.test(spell(1)), spell(1));
 }
 
 // ---------------------------------------------------------------- 1. a machine with room: High, settled, no change
@@ -126,13 +126,13 @@ for (const [label, M] of [['GPU-bound (GPU 24 ms at High, CPU 8)', { cpu: 8, gpu
 {
   // starts (calibration's guess) at Low on a machine that could run Medium: the evaluation goes up once, then holds
   const G = new Governor();
-  G.setProfile(2, 'test: calibration guess', { commitNow: true, t: 0 });
+  G.setProfile(1, 'test: calibration guess', { commitNow: true, t: 0 });
   const { applied } = run(G, { cpu: 9, gpu: 9, display: 16.67, scene: 30000 }, 600);
   const ups = steps(G).filter((e) => e.kind === 'up');
-  check('started too low (Medium-eco) with lots of room: the evaluation steps up once (applied at a scene change) and then holds', ups.length === 1 && G.phase === 'hold' && G.applied === 1 && applied.every((a) => a.at !== 'IN PLAY'), { ups: ups.map((e) => `${e.t} ${e.what}`), p: name(G.applied), applied });
-  const G2 = new Governor(); G2.setProfile(2, 'test: held', { phase: 'hold', commitNow: true, t: 0 });
+  check('started too low (Medium) with lots of room: the evaluation steps up once (applied at a scene change) and then holds', ups.length === 1 && G.phase === 'hold' && G.applied === 0 && applied.every((a) => a.at !== 'IN PLAY'), { ups: ups.map((e) => `${e.t} ${e.what}`), p: name(G.applied), applied });
+  const G2 = new Governor(); G2.setProfile(1, 'test: held', { phase: 'hold', commitNow: true, t: 0 });
   run(G2, { cpu: 5, gpu: 5, display: 16.67, scene: 30000 }, 600);
-  check('held (from the cache) with lots of room: never steps up in the session; the margin is noted for the next start', steps(G2).length === 0 && G2.applied === 2 && G2.margin() === true, G2.state());
+  check('held (from the cache) with lots of room: never steps up in the session; the margin is noted for the next start', steps(G2).length === 0 && G2.applied === 1 && G2.margin() === true, G2.state());
 }
 // ---------------------------------------------------------------- 8. the next start's try one up (from the cache)
 {
@@ -176,7 +176,7 @@ for (const [label, M] of [['GPU-bound (GPU 24 ms at High, CPU 8)', { cpu: 8, gpu
   let r = null, t = 0;
   for (let i = 0; i < 400 && !r; i++) { t += 16.7; cal.gpu(4); r = cal.frame(t, 16.7, 5); }
   check('the title calibration finishes after ~2 s of frames and reports what it measured', r && r.p === 0 && r.gpuMs === 4 && r.cpuMs === 5 && t < 2600, { r, t });
-  check('nextProfile: a power change without a cached profile moves one profile', nextProfile(0, -1) === 1 && nextProfile(2, -1) === 2 && nextProfile(2, +1) === 1 && nextProfile(0, +1) === 0, {});
+  check('nextProfile: a power change without a cached profile moves one profile', nextProfile(0, -1) === 1 && nextProfile(1, -1) === 1 && nextProfile(1, +1) === 0 && nextProfile(0, +1) === 0, {});
 }
 // ---------------------------------------------------------------- 14. what the profiles never touch
 check('the knobs are rendering and far-detail only (resolution, bloom, shadows, lamps, MSAA, grass, small casters, far people\'s animation rate, far small parts): no simulation, physics or hero knob',

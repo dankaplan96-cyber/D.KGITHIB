@@ -4,8 +4,7 @@
 // settings after thinking a little, and then NOT change every few seconds — it jumps"; "if the game runs well on battery
 // there's no reason it won't on mains".
 //
-// Quality: Auto chooses among THREE complete, named profiles (PROFILES, best first): High · Medium · Medium-eco
-// (LOOK-FIRST, below). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
+// Quality: Auto chooses between TWO complete, named profiles (PROFILES, best first): High · Medium (AUTO-2, below). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
 // and small-caster distances, the people's animation rate, the far detail); Auto moves one profile at a time, never a
 // single knob. Low / Medium / High chosen by hand are exactly the presets they always were (renderer.knobs stays null).
 //
@@ -60,13 +59,16 @@ export const TOP = PRESET_KNOBS.high;
 // and far small shadows are what goes, never the shadows, the edges or the resolution under 90 %. Low / Medium-lite /
 // Low-lite are gone from Auto (Low stays a preset to pick by hand); on a weak machine on battery the game runs ~50–55
 // fps in the busiest places rather than look worse (it was not faster there anyway: CPU-bound).
+// AUTO-2 (the user, 30.10, after 0.41.0 on his laptop: "Auto works but it is less nice than Medium; Medium runs quite well
+// on battery … I want Auto to sense the game by itself and decide the graphics by itself"): Medium-eco is gone — on his
+// street it bought ~1 fps and looked worse. Auto is High or Medium, never below Medium's look; plugged in it starts at
+// High (his street holds a flat 60 there) and steps down to Medium only on measured pressure; on battery it is Medium.
 export const PROFILES = [
   { id: 'high', name: 'High', tier: 'high', K: { ...PRESET_KNOBS.high }, gpu: 1, cpu: 1 },
   { id: 'medium', name: 'Medium', tier: 'medium', K: { ...PRESET_KNOBS.medium }, gpu: 0.56, cpu: 0.8 },
-  { id: 'medium-eco', name: 'Medium-eco', tier: 'medium', K: { ...PRESET_KNOBS.medium, scale: 0.9, veg: 'low', casters: 'low', anim: 'eco', detail: 'near' }, gpu: 0.44, cpu: 0.68 },
 ];
 export const N_PROFILES = PROFILES.length;
-export const TIER_AT = { high: 0, medium: 1, low: 1 };   // (LOOK-FIRST: a weak GPU starts at Medium; on battery one lower, the floor Medium-eco)
+export const TIER_AT = { high: 0, medium: 1, low: 1 };   // (AUTO-2: Medium is the floor)
 export const profileOf = (p) => PROFILES[Math.max(0, Math.min(N_PROFILES - 1, p | 0))];
 export const knobsAt = (p) => ({ ...profileOf(p).K });
 export const costAt = (p, side) => profileOf(p)[side];
@@ -105,7 +107,7 @@ export function estimate({ gpuMs = null, cpuMs = null, p0 = 0, budget = 1000 / 6
 }
 
 // the cache of calibrations / settled profiles: per GPU, power source and screen (and processor in the desktop app)
-export const CACHE_KEY = 'lba3_autoq_v3';   // (v3, LOOK-FIRST: three profiles; v2's settled entries pointed at profiles that are gone)
+export const CACHE_KEY = 'lba3_autoq_v4';   // (v3, LOOK-FIRST: three profiles; v2's settled entries pointed at profiles that are gone)
 export const machineKey = ({ gpu = '?', battery = false, screen = '?', cpu = '' }) => `${gpu}|${battery ? 'battery' : 'mains'}|${screen}${cpu ? '|' + cpu : ''}`;
 
 export const WINDOW = 1500, QUIET_AFTER = 1500, STALL_MS = 100, BREAK_MS = 250;

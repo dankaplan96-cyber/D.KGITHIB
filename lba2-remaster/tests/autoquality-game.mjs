@@ -10,7 +10,7 @@ import fs from 'node:fs';
 const { check, done } = checker();
 const { browser, page } = await launch({ width: 1366, height: 768 });
 const ev = (f, a) => page.evaluate(f, a);
-const KEY = 'sunshard_settings_v1', CACHE = 'lba3_autoq_v3';
+const KEY = 'sunshard_settings_v1', CACHE = 'lba3_autoq_v4';
 const reopen = async (q = '?nocine', set = undefined) => {
   await ev(([k, v, c]) => { localStorage.removeItem(c); if (v === null) localStorage.removeItem(k); else if (v !== undefined) localStorage.setItem(k, JSON.stringify(v)); }, [KEY, set, CACHE]);
   await open(page, q);   // (open() navigates afresh)
@@ -67,7 +67,7 @@ const cmp = await ev(() => {
   at(0); out.autoHigh = look();
   G.settings.quality = 'medium'; G.settings.qualityAuto = false; G.applySettings(); out.medium = look();
   at(1); out.autoMed = look(); out.autoMedLabel = A.label();
-  at(2); out.eco = look(); out.ecoLabel = A.label();
+  at(1); out.eco = look(); out.ecoLabel = A.label();   // (AUTO-2: Medium is Auto's floor)
   // (LOOK-FIRST: on battery the picture stays the profile's: no battery cuts)
   G.setBattery(true); G.frame(1 / 30, true); out.ecoBat = look(); G.setBattery(false);
   at(0);
@@ -77,8 +77,8 @@ const same = (a, b, keys) => keys.every((k) => a[k] === b[k]);
 const K = ['shadowFilter', 'pr', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'bloom', 'lamps', 'smallFar', 'treeNear', 'samples', 'cell', 'lampsPool'];
 check('Auto\'s High profile is High exactly: same pixel ratio, MSAA, shadow map / filter, bloom, lamps, vegetation, shadow cells, and the same draw calls', same(cmp.high, cmp.autoHigh, [...K, 'calls']) && !cmp.autoHigh.eco, { high: cmp.high, auto: cmp.autoHigh });
 check('Auto\'s Medium profile renders as Medium (filter, MSAA, map, bloom, lamps, vegetation, small casters; only the shadow cells stay High\'s 32 m)', same(cmp.medium, cmp.autoMed, ['shadowFilter', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'bloom', 'lamps', 'smallFar', 'treeNear', 'samples', 'lampsPool']) && cmp.autoMed.casters === 'medium' && cmp.autoMed.cell === 32 && cmp.autoMedLabel === 'Medium', { medium: cmp.medium, auto: cmp.autoMed, label: cmp.autoMedLabel });
-check('Auto\'s floor, Medium-eco, keeps Medium\'s look (LOOK-FIRST-2/3: MSAA, shadow map / filter, lamps; 90 % resolution, Low\'s grass distance and small casters, far people animated at half rate)', same(cmp.medium, cmp.eco, ['shadowFilter', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'bloom', 'lamps', 'samples', 'lampsPool']) && cmp.eco.casters === 'low' && cmp.eco.eco && cmp.ecoLabel === 'Medium-eco', { medium: cmp.medium, eco: cmp.eco, label: cmp.ecoLabel });
-check('... and on battery: shadows stay on and the resolution stays ≥ 85 % (LOOK-FIRST-2: only the nearly invisible battery cuts)', cmp.ecoBat.shadows && cmp.ecoBat.pr >= 0.85, { eco: cmp.eco, bat: cmp.ecoBat });
+check('Auto\'s floor is Medium itself (AUTO-2: no profile below Medium\'s look)', cmp.ecoLabel === 'Medium', { label: cmp.ecoLabel });
+check('... and on battery: shadows stay on and the resolution stays ≥ 85 % (only the nearly invisible battery cuts)', cmp.ecoBat.shadows && cmp.ecoBat.pr >= 0.85, { eco: cmp.eco, bat: cmp.ecoBat });
 
 // ---------------------------------------------------------------- 5. a decision waits for a commit point (nothing changes in play)
 const live = await ev(() => {
@@ -103,7 +103,7 @@ const commit = await ev(() => {
 check('... the pause menu commits it (Medium: no bloom, map 1024), programs made behind the menu', commit.afterPause.label === 'Medium' && !commit.afterPause.bloom && commit.afterPause.map === 1024 && !commit.afterPause.pending.length && commit.afterPause.quality === 'medium', commit);
 const tr = await ev(() => {
   const G = game, A = G.autoQ, gov = A.gov;
-  gov.setProfile(1, 'test', { commitNow: true }); A.applyAll();
+  gov.setProfile(0, 'test', { commitNow: true }); A.applyAll();   // (AUTO-2: from High, pressure queues Medium)
   let t = performance.now() + 500000; gov.resetWin(0); gov.quietUntil = 0;
   for (let s = 0; s < 6000; s += 25) { t += 25; gov.gpu(t, 23); gov.frame({ t, ms: 25, cpu: 6, play: true, scene: 'citadel' }); }
   const mid = { pending: gov.pending(), lamps: G.lightPool.lights.length, pr: G.renderer.pixelRatio(), label: A.label() };
@@ -111,13 +111,13 @@ const tr = await ev(() => {
   for (let i = 0; i < 60 && G.trans; i++) G.frame(1 / 30, true);
   return { mid, after: { pending: gov.pending(), lamps: G.lightPool.lights.length, pr: G.renderer.pixelRatio(), room: G.room?.id, label: A.label() } };
 });
-check('a step to Medium-eco queued in play (resolution stays 100 %); the next scene change (the house door) applies it (90 %)', tr.mid.pending.length === 1 && tr.mid.pr === 1 && tr.mid.label === 'Medium' && !tr.after.pending.length && Math.abs(tr.after.pr - 0.9) < 0.01 && tr.after.lamps === tr.mid.lamps && tr.after.room === 'house' && tr.after.label === 'Medium-eco', tr);
+check('a step to Medium queued in play (High stays on screen); the next scene change (the house door) applies it', tr.mid.pending.length === 1 && tr.mid.label === 'High' && !tr.after.pending.length && tr.after.room === 'house' && tr.after.label === 'Medium', tr);
 
 // ---------------------------------------------------------------- 6. plug / unplug
 const pw = await ev(() => {
   const G = game, A = G.autoQ, gov = A.gov;
   gov.setProfile(0, 'test', { phase: 'hold', commitNow: true }); A.applyAll();
-  localStorage.removeItem('lba3_autoq_v3'); A.cache = {};
+  localStorage.removeItem('lba3_autoq_v4'); A.cache = {};
   G.setBattery(true); const bat = { p: gov.applied, phase: gov.phase, label: A.label(), key: A.key, msaa: G.renderer.composer.renderTarget1.samples };
   G.setBattery(false); const ac = { p: gov.applied, phase: gov.phase, label: A.label(), key: A.key };
   return { bat, ac, log: A.log.slice(-3).map((e) => e.why) };
@@ -125,12 +125,12 @@ const pw = await ev(() => {
 check('unplugged with nothing settled on battery: one profile lower (Medium), evaluated, the battery key; plugged in again: one higher (High)', pw.bat.p === 1 && pw.bat.phase === 'evaluate' && /battery/.test(pw.bat.key) && pw.ac.p === 0 && /mains/.test(pw.ac.key), pw);
 const pw2 = await ev(() => {
   const G = game, A = G.autoQ, gov = A.gov, k = A.machineKey(true);
-  A.cache[k] = { p: 2, src: 'settled', margin: false, at: 'test' }; localStorage.setItem('lba3_autoq_v3', JSON.stringify(A.cache));
+  A.cache[k] = { p: 1, src: 'settled', margin: false, at: 'test' }; localStorage.setItem('lba3_autoq_v4', JSON.stringify(A.cache));
   G.setBattery(true); const bat = { p: gov.applied, phase: gov.phase, label: A.label() };
   G.setBattery(false);
   return bat;
 });
-check('unplugged with Medium-eco settled on battery: straight to Medium-eco, held (no evaluation)', pw2.p === 2 && pw2.phase === 'hold' && pw2.label === 'Medium-eco', pw2);
+check('unplugged with Medium settled on battery: straight to Medium, held (no evaluation)', pw2.p === 1 && pw2.phase === 'hold' && pw2.label === 'Medium', pw2);
 
 // ---------------------------------------------------------------- 7. the title calibration, the evaluation and the cache (?autoq: the governor on under the tests)
 await reopen('?nocine&autoq', null);
@@ -141,7 +141,7 @@ const cal = await ev(() => {
   G.state = 'title'; G.testFreeze = false;
   try { for (let i = 0; i < 400 && !A.calResult; i++) { A.cal.gpu(13); A.frame(1 / 60, 9); const t = performance.now(); while (performance.now() - t < 6); } }
   finally { G.testFreeze = true; }
-  return { before, r: A.calResult, pending: A.pendingStart, cached: JSON.parse(localStorage.getItem('lba3_autoq_v3') || '{}')[A.key] || null };
+  return { before, r: A.calResult, pending: A.pendingStart, cached: JSON.parse(localStorage.getItem('lba3_autoq_v4') || '{}')[A.key] || null };
 });
 check('a first start with the governor on: the GPU name\'s guess, then the title measured (~2 s): a start below High for 13 ms GPU / 9 ms CPU, cached as a calibration', cal.before.src === 'guess' && cal.before.cal && cal.r && cal.r.gpuMs === 13 && cal.r.p > 0 && cal.cached?.src === 'calib' && cal.cached.p === cal.r.p, cal);
 await ev(() => { game.hideScreens(); game.startNew(); game.step(0.2); });
@@ -159,20 +159,20 @@ const ev1 = await ev(() => {
     if (r?.kind === 'up') ups++;
     if (r?.kind === 'settled') { A.settled(); done = Math.round(s / 1000); }
   }
-  return { phase: gov.phase, p: gov.applied, pending: gov.pending(), ups, settledAt: done, cached: JSON.parse(localStorage.getItem('lba3_autoq_v3') || '{}')[A.key] || null, log: A.log.slice(-4).map((e) => e.kind + ': ' + (e.what || '') + ' — ' + e.why) };
+  return { phase: gov.phase, p: gov.applied, pending: gov.pending(), ups, settledAt: done, cached: JSON.parse(localStorage.getItem('lba3_autoq_v4') || '{}')[A.key] || null, log: A.log.slice(-4).map((e) => e.kind + ': ' + (e.what || '') + ' — ' + e.why) };
 });
 check('... light play across scene changes: it went up at most once (applied at a scene change), then settled within ~2.5 min and cached the profile as settled', ev1.phase === 'hold' && ev1.ups <= 1 && ev1.settledAt != null && ev1.settledAt <= 150 && !ev1.pending.length && ev1.cached?.src === 'settled' && ev1.cached.p === ev1.p, ev1);
 await open(page, '?nocine&autoq');
 const again = await ev(() => ({ src: game.autoQ.source, cal: !!game.autoQ.cal, p: game.autoQ.gov.applied, phase: game.autoQ.gov.phase }));
 check('... the next start goes straight to the settled profile: no calibration, no evaluation (held)', /settled/.test(again.src) && !again.cal && again.p === ev1.cached.p && again.phase === 'hold', again);
 const tryUp = await ev(() => {
-  const A = game.autoQ, k = A.key, c = JSON.parse(localStorage.getItem('lba3_autoq_v3'));
-  c[k] = { p: 2, src: 'settled', margin: true, noTry: 0, at: 'test' }; localStorage.setItem('lba3_autoq_v3', JSON.stringify(c));
+  const A = game.autoQ, k = A.key, c = JSON.parse(localStorage.getItem('lba3_autoq_v4'));
+  c[k] = { p: 1, src: 'settled', margin: true, noTry: 0, at: 'test' }; localStorage.setItem('lba3_autoq_v4', JSON.stringify(c));
   return true;
 });
 await open(page, '?nocine&autoq');
 const up = await ev(() => ({ src: game.autoQ.source, p: game.autoQ.gov.applied, phase: game.autoQ.gov.phase, trial: game.autoQ.gov.trial }));
-check('... a settled profile whose session had room to spare: the next start tries one higher, evaluated', tryUp && /one higher/.test(up.src) && up.p === 1 && up.phase === 'evaluate' && !!up.trial, up);
+check('... a settled profile whose session had room to spare: the next start tries one higher, evaluated', tryUp && /one higher/.test(up.src) && up.p === 0 && up.phase === 'evaluate' && !!up.trial, up);
 
 // ---------------------------------------------------------------- 8. the benchmark: Auto's lines and the Auto run
 await reopen('?nocine', null);

@@ -39,8 +39,8 @@ const layout = await ev(() => {
   for (const p of S.querySelectorAll('.set-page')) pages[p.dataset.page] = { shown: p.querySelectorAll(':scope > .set-row').length, advanced: p.querySelectorAll('.set-adv .set-row').length };
   return { keys: keys.sort(), pages, tabs: [...S.querySelectorAll('.set-tabs [data-tab]')].map((b) => b.textContent), open: game.setTab, sel: S.querySelector('.sel')?.className };
 });
-const KEYS = ['aa', 'aimAssist', 'camDist', 'camera', 'controls', 'difficulty', 'fps', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'res', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice'];
-check('settings: every stored setting has its control (same keys as before)', JSON.stringify(layout.keys) === JSON.stringify(KEYS), layout.keys);
+const KEYS = ['aimAssist', 'camDist', 'camera', 'controls', 'difficulty', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice'];
+check('settings: every stored setting has its control (SETTINGS-FEW: Edges, Resolution and the frame-rate limit removed)', JSON.stringify(layout.keys) === JSON.stringify(KEYS), layout.keys);
 check('settings: four pages (Game, Controls, Display, Sound), at most 4 rows each before Advanced; opens on Game with the tabs selected', layout.tabs.join() === 'Game,Controls,Display,Sound' && Object.values(layout.pages).every((p) => p.shown <= 4) && layout.open === 'game' && /set-tabs/.test(layout.sel), layout);
 // keyboard: → on the tabs turns the page, ↓ to Movement, → picks Modern (applied: Modern's keys), ← Classic again
 await page.keyboard.press('ArrowRight'); await step(0.05);
@@ -78,20 +78,19 @@ await page.click('#settings [data-tab="display"]');
 await page.click('#settings .seg[data-setting="quality"] button[data-v="medium"]');
 await page.click('#settings [data-tab="game"]');
 await page.click('#settings .seg[data-setting="textSpeed"] button[data-v="fast"]');
-await page.click('#settings [data-tab="display"]'); await page.click('#settings .set-page.on .set-fold');
-await page.click('#settings .seg[data-setting="fps"] button[data-v="30"]');   // (FRAME-1: the frame-rate limit)
+// (SETTINGS-FEW: the frame-rate limit, Edges and Resolution are no longer in Settings; FRAME-1's limit is set as code would)
+await ev(() => { game.settings.fps = '30'; game.applySettings(); game.saveSettings?.(); });
 const q1 = await ev(() => [game.settings.quality, game.settings.textSpeed, game.hud.textRate, game.settings.fps, Math.round(game.frameCapMs * 10) / 10, Math.round(game.renderer.budgetMs * 10) / 10]);
 await page.click('#settings [data-act="back"]');
 await page.reload(); await open(page, '?nocine');
 await page.click('#title [data-act="settings"]'); await step(0.05);
 const q2 = await ev(() => [game.settings.quality, game.settings.textSpeed, document.querySelector('#settings .seg[data-setting="quality"] button.on')?.dataset.v, game.settings.fps, document.querySelector('#settings .seg[data-setting="fps"] button.on')?.dataset.v, Math.round(game.frameCapMs * 10) / 10]);
-await page.click('#settings [data-tab="display"]'); await page.click('#settings .set-page.on .set-fold');
-await page.click('#settings .seg[data-setting="fps"] button[data-v="auto"]');   // (back to no limit for the rest)
+await ev(() => { game.settings.fps = 'auto'; game.applySettings(); game.saveSettings?.(); });   // (back to no limit for the rest)
 const q3 = await ev(() => [game.settings.fps, game.frameCapMs, Math.round(game.renderer.budgetMs * 10) / 10]);
 await page.click('#settings [data-act="back"]'); await step(0.05);
 check('settings: quality and text speed apply at once', q1[0] === 'medium' && q1[1] === 'fast' && q1[2] === 95, q1);
 check('settings: kept after relaunch, and the menu shows them', q2[0] === 'medium' && q2[1] === 'fast' && q2[2] === 'medium', q2);
-check('settings: the frame-rate limit applies at once (30: 33.3 ms, the automatic resolution\'s budget too), is kept after relaunch, and Off clears it', q1[3] === '30' && q1[4] === 33.3 && q1[5] === 33.3 && q2[3] === '30' && q2[4] === '30' && q2[5] === 33.3 && q3[0] === 'auto' && q3[1] === 0 && q3[2] === 16.7, { q1, q2, q3 });
+check('settings: the frame-rate limit applies at once (30: 33.3 ms, the automatic resolution\'s budget too), is kept after relaunch, and Off clears it', q1[3] === '30' && q1[4] === 33.3 && q1[5] === 33.3 && q2[3] === '30' && q2[5] === 33.3 && q3[0] === 'auto' && q3[1] === 0 && q3[2] === 16.7, { q1, q2, q3 });
 
 // ---- new game
 await page.click('#title [data-act="new"]');
