@@ -138,6 +138,10 @@ export class ShadowCache {
       while (!c.done) this.draw(c, lights, scene, S, c.slice, d, right, up);
       this.cache = c; this.stats.full++;
       for (const t of old) if (t !== c.target) { if (!this.spare) this.spare = t; else t.dispose(); }
+      // PERF-GPU: the target the next cache will be drawn into is made now, with this one (a full build: normally a
+      // scene change, behind its black), not later on a frame in view when the window reaches half way (laptop 0.40.x:
+      // the first street route's ~1.35 s hitch was a frame with "shadow cache rebuilt, +1 textures on the GPU")
+      if (!this.spare) this.spare = this.make(0, 0, 0, size, texel).target;
     }
     this.live(lights, scene, camera, S, d, u, v);
   }
