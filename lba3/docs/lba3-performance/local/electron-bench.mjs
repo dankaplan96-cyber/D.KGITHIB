@@ -1,11 +1,13 @@
 // LBA3 in-game benchmark, run automatically in the INSTALLED desktop app (Electron) on the laptop.
 // Run it from a folder outside the repo where Playwright is installed (npm init -y && npm i playwright):
-//   node electron-bench.mjs <auto|full|visits|startup|pacing|smoke> <out.txt> [battery|plugged] [follow|orbit] [-- app switches]
+//   node electron-bench.mjs <auto|full|visits|sweep|startup|pacing|smoke> <out.txt> [battery|plugged] [follow|orbit] [-- app switches]
 // STABILIZATION phase 1 (on battery, then plugged in; each with Follow and with the orbit):
 //   node electron-bench.mjs visits laptop-<version>-visits-follow-battery.txt battery follow
 //   node electron-bench.mjs visits laptop-<version>-visits-orbit-battery.txt battery orbit
 //   node electron-bench.mjs auto laptop-<version>-auto-follow-battery.txt battery follow
 //   node electron-bench.mjs full laptop-<version>-full-orbit-battery.txt battery orbit
+// ROTATE-STALL (the camera turning with Twinsen, Follow at Far, on battery):
+//   node electron-bench.mjs sweep laptop-<version>-sweep-follow-battery.txt battery follow
 // visits: street and arrival — the first visit after the start, 5 region round trips, 3 minutes of play, with a
 // resource snapshot before and after (game.bench.visits); camera: follow = the player's follow camera at Far
 // The app is launched with its own profile (--user-data-dir=<this folder>\electron-profile), never the player's
@@ -110,6 +112,9 @@ const tb = Date.now();
 if (mode === 'pacing') text = await pacing(page);
 else if (mode === 'auto') text = await page.evaluate((camera) => game.bench.runAuto({ camera }), camera);
 else if (mode === 'full') text = await page.evaluate((camera) => game.bench.run({ camera }), camera);
+// ROTATE-STALL: the street with Twinsen turning on the spot (the camera sweeps 360° every 3 s): the first 6 s cold, then
+// 4 × 6 s, by view heading (frame and GPU time, calls, triangles); then Auto as played on the same route (20 s)
+else if (mode === 'sweep') text = await page.evaluate(async (camera) => (await game.bench.visits({ routes: ['sweep'], cycles: 4, sustainS: 0, coldS: 6, repeatS: 6, camera })) + '\n\n' + (await game.bench.runAuto({ routes: ['sweep'], camera })), camera);
 else if (mode === 'visits') text = await page.evaluate((camera) => game.bench.visits({ routes: ['street', 'arrival'], cycles: 5, sustainS: 180, camera }), camera);
 else text = 'smoke: ' + await page.evaluate(() => `bench.run ${typeof game.bench?.run}, bench.runAuto ${typeof game.bench?.runAuto}, bench.visits ${typeof game.bench?.visits}, state ${game.state}`);
 const mins = ((Date.now() - tb) / 60000).toFixed(1);

@@ -51,6 +51,20 @@ export function hitchList(buf) {
 const SEC_ORDER = ['people', 'hero', 'enemies', 'physics', 'interact', 'camera', 'other sim', 'submit other', 'submit main', 'submit shadow', 'submit post'];
 function secLine(c) { const keys = [...SEC_ORDER.filter((k) => c[k]), ...Object.keys(c).filter((k) => !SEC_ORDER.includes(k))]; return keys.map((k) => `${k} ${c[k].p50} / ${c[k].mean} (${c[k].calls})`).join(' · '); }
 export const BENCH_AREAS = ['house', 'arena', 'zeelich', 'desert', 'hamalayi'];
+// ROTATE-STALL: the sweep route's turn (s per 360°), and a route's frames by their label (the sweep: the view's compass
+// heading): frame p50 / p95, the share over 20 ms (a 60 Hz refresh missed), draw calls, triangles, and the GPU's own
+// time where the browser has a timer query
+const SWEEP_S = 3, HEADING = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+let _dir = null;
+export function sectorLine(F, T) {
+  const by = new Map(); for (const f of F) if (f.tag != null) { let a = by.get(f.tag); if (!a) by.set(f.tag, (a = [])); a.push(f); }
+  if (!by.size) return '';
+  const pc = (a, p) => { if (!a.length) return '?'; const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(p * v.length))].toFixed(1); };
+  return [...by.keys()].sort((a, b) => a - b).map((k) => {
+    const A = by.get(k), ms = A.map((f) => f.ms), g = T?.tags?.get(k) || [];
+    return `${HEADING[k] ?? k} ${A.length} fr p50 ${pc(ms, 0.5)} p95 ${pc(ms, 0.95)} ms >20 ${Math.round((100 * ms.filter((x) => x > 20).length) / A.length)}% calls ${pc(A.map((f) => f.calls || 0), 0.5)} tris ${Math.round(pc(A.map((f) => f.tris || 0), 0.5) / 1000)}k${g.length ? ` GPU p50 ${pc(g, 0.5)} p95 ${pc(g, 0.95)}` : ''}`;
+  }).join(' · ');
+}
 
 export class Bench {
   constructor(game) { this.g = game; this.running = false; }
@@ -83,6 +97,26 @@ export class Bench {
           id: 'street', label: 'Populated street (the square, the shop, NPCs), camera turning',
           setup: () => { outdoor(-42, 2); w(0); G.camRig.yaw = Math.PI / 4; },
           drive: (t, dt) => { G.doorCool = Math.max(G.doorCool || 0, 0.5); w(t); G.camRig.yaw += dt * 0.35; },
+        };
+      })(),
+      // ROTATE-STALL (the user, 30.10: "most of the stutters happen during the camera's turn when Twinsen turns", "the most
+      // stutters are when the camera looks at the additional objects"): Twinsen turning on the spot in the square, one
+      // full turn every SWEEP_S s; the Follow camera swings round behind him (camera 'follow'), the orbit turns with him.
+      // Each frame is labelled with the view's compass heading (eighths: perf.js tag), and the report gives frame time,
+      // GPU time, calls and triangles per heading: which views miss the refresh, and whether a turn costs more than its
+      // views (the first turn is cold). Run only when asked: game.bench.run({ routes: ['sweep'], camera: 'follow' }).
+      (() => {
+        let a0 = 0;
+        return {
+          id: 'sweep', optIn: true, label: 'Street, Twinsen turning on the spot: the camera sweeps 360° every 3 s',
+          setup: () => { outdoor(-42, 2); a0 = h.angle = 0; h.vel.set(0, 0); if (this.camMode !== 'follow') G.camRig.yaw = Math.PI / 4; },
+          drive: (t, dt) => {
+            G.doorCool = Math.max(G.doorCool || 0, 0.5);
+            h.angle = a0 + (t * 2 * Math.PI) / SWEEP_S; h.vel.set(0, 0);
+            if (this.camMode !== 'follow') G.camRig.yaw += (dt * 2 * Math.PI) / SWEEP_S;
+            const d = G.camera.getWorldDirection((_dir ??= G.camera.position.clone())), k = Math.floor((((Math.atan2(d.x, d.z) + 2 * Math.PI) % (2 * Math.PI)) + Math.PI / 8) / (Math.PI / 4)) % 8;
+            G.perf.tag = k; if (G.perf.gpuTimer) G.perf.gpuTimer.tag = k;
+          },
         };
       })(),
       {
@@ -145,7 +179,25 @@ export class Bench {
 
   // LAZY-REGIONS: the areas the routes go to (the house, the arena, the arrival's three regions), built before the
   // first route under the loading screen, so no route measures an area's first build
-  prepareAreas() { return this.g.buildAreas(BENCH_AREAS, 'Preparing the benchmark…').then(() => { if (this.g._shadowWarm) { this.g._shadowWarm = false; this.g.warmShadows(); } }); }
+  // ROTATE-STALL: each step its own task, with a painted frame between: every area's build (regions.buildAsync, one
+  // after a paint each), then the shadow programs, then two painted frames before the first route starts. The last
+  // area's build, the shadow programs and the first route's setup used to run in ONE task (the last build is resumed by
+  // nextPaint's setTimeout): the laptop's cold street (visits, 0.42.0) opened with a 1 200 ms frame whose main thread was
+  // in a "TimerHandler:setTimeout" callback for 1 084 ms — that task. It is the benchmark's own preparation (a player
+  // builds an area behind its arrival card): kept out of the measured frames, and each step's ms reported (prepLine).
+  prepareAreas() {
+    const G = this.g, n0 = G.regions.log.length;
+    if (this.prepSplit === false) return G.buildAreas(BENCH_AREAS, 'Preparing the benchmark…').then(() => { if (G._shadowWarm) { G._shadowWarm = false; G.warmShadows(); } });   // (as before: the A/B switch)
+    const paint = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+    const P = (this.prep = { t0: performance.now(), steps: [] });
+    return G.buildAreas(BENCH_AREAS, 'Preparing the benchmark…')
+      .then(() => { for (const e of G.regions.log.slice(n0)) P.steps.push(`${e.group} ${e.ms}`); })
+      .then(paint)
+      .then(() => { if (G._shadowWarm) { const t = performance.now(); G._shadowWarm = false; G.warmShadows(); P.steps.push(`shadow programs ${Math.round(performance.now() - t)}`); } })
+      .then(paint).then(paint)
+      .then(() => { P.ms = Math.round(performance.now() - P.t0); });
+  }
+  prepLine() { const P = this.prep; return P ? `benchmark preparation before the first route (not measured; each step its own task, ms): ${P.steps.join(' · ') || 'nothing to build'} · ${P.ms ?? '?'} ms in all` : 'benchmark preparation: none (the areas were built already)'; }
   // runs every route at each quality; resolves with the report text
   // (opts, for probes and tests: routes: route ids to run; breakdown: false leaves the breakdowns out (breakdownMedium /
   //  breakdownHigh: false, one of them); played: false the "as played" runs)
@@ -155,7 +207,7 @@ export class Bench {
     const G = this.g;
     if (this.running) return Promise.resolve(null);
     if (G.regions.missing(BENCH_AREAS).length) return this.prepareAreas().then(() => this.run(qualities, opts));
-    const pick = (list) => (opts.routes ? list.filter((r) => opts.routes.includes(r.id)) : list);
+    const pick = (list) => (opts.routes ? list.filter((r) => opts.routes.includes(r.id)) : list.filter((r) => !r.optIn));
     this.running = true;
     this.setCamera(opts.camera); this.secOn();
     const snap = G.snapshot(), quality0 = G.settings.quality, state0 = G.state, qAuto0 = !!G.settings.qualityAuto;
@@ -252,7 +304,7 @@ export class Bench {
         G.benchAuto = !!cur.played;
         cur.res = []; cur.held = 0; cur.dyn = G.renderer.effScale();
         cur.cpu = cpuProbe(); cur.pw0 = G.power?.changes || 0;   // (PERF-HIGH: the processor's speed now; power changes so far)
-        G.state = 'play'; cur.r.setup(); cur.v?.apply(); t = 0; warm = 0; maxWarm = 0;
+        this.untag(); G.state = 'play'; cur.r.setup(); cur.v?.apply(); t = 0; warm = 0; maxWarm = 0;
         cur.p0 = G.renderer.renderer.info.programs.length; cur.pw = cur.p0;   // (PERF-ARRIVAL: programs compiled in the warm-up / the measured window)
         G.hud?.toast?.('bench_route', { n: i + 1, of: plan.length });
       };
@@ -294,7 +346,7 @@ export class Bench {
             // (PERF-HIGH: the factor of every measured frame, as shares)
             hist: Object.entries(rs.reduce((m, x) => ((m[x] = (m[x] || 0) + 1), m), {})).sort((a, b) => b[0] - a[0]).map(([k, n]) => `×${k} ${Math.round((100 * n) / rs.length)}%`).join(' ') } : null;
           const row = { q: cur.q, id: cur.r.id, label: cur.r.label, s, stalls, pacing, warmMaxMs: +maxWarm.toFixed(0), cfg, v: cur.v?.id, played: !!cur.played, res, prog: { warm: cur.pw - cur.p0, measured: np - cur.pw },
-            cpu: cur.cpu, power: (G.power?.changes || 0) - cur.pw0, limit: G.frameCapMs || 0 };
+            cpu: cur.cpu, power: (G.power?.changes || 0) - cur.pw0, limit: G.frameCapMs || 0, sectors: sectorLine(buf, G.perf.gpuTimer) };
           results.push(row);
           // (PERF-HIGH) the "nothing drawn" probe, then the next route
           const iv = []; let last = null;
@@ -306,7 +358,7 @@ export class Bench {
       };
       const finish = () => {
         cur?.v?.undo();
-        G.benchTick = null; G.benchIdle = null; cur = null; G.benchAuto = false;
+        G.benchTick = null; G.benchIdle = null; cur = null; G.benchAuto = false; this.untag();
         // (AUTO-QUALITY: the fixed runs set presets by hand; Auto, if it was on, comes back with its own state)
         if (qAuto0) { G.settings.qualityAuto = true; G.settings.quality = G.autoQ.tier(); G.applySettings(); }
         else if (G.settings.quality !== quality0) { G.settings.quality = quality0; G.applySettings(); }
@@ -324,6 +376,8 @@ export class Bench {
     });
   }
 
+  // (ROTATE-STALL: no route's frame label carried into the next route or into play)
+  untag() { const P = this.g.perf; P.tag = null; if (P.gpuTimer) P.gpuTimer.tag = null; }
   // STABILIZATION, phase 1: the benchmark's CPU sections (perf.js Sections) on while a run measures, off after
   secOn() { const G = this.g; if (G.perf.sec) return; const S = new Sections(); S.install(G); G.perf.sec = S; }
   secOff() { const G = this.g; G.perf.sec?.off(); G.perf.sec = null; }
@@ -376,7 +430,7 @@ export class Bench {
           const P = plan[i];
           if (P.snap) { snaps.push({ at: P.snap, res: resources(G) }); continue; }
           cur = { ...P, frames: [], cpu: cpuProbe(), state0: G.autoQ?.on?.() ? G.autoQ.label() : G.settings.quality };
-          G.state = 'play'; P.r.setup(); t = 0;
+          this.untag(); G.perf.gpuTimer?.tags?.clear(); G.state = 'play'; P.r.setup(); t = 0;
           G.hud?.toast?.('bench_route', { n: segs.length + 1, of: plan.filter((x) => !x.snap).length });
           return;
         }
@@ -385,10 +439,15 @@ export class Bench {
         if (!cur) return;
         t += real; G.state = 'play';
         cur.r.drive(t, real);
-        if (t >= cur.s) { cur.state1 = G.autoQ?.on?.() ? G.autoQ.label() : G.settings.quality; segs.push(cur); cur = null; next(); }
+        if (t >= cur.s) {
+          cur.state1 = G.autoQ?.on?.() ? G.autoQ.label() : G.settings.quality;
+          // (ROTATE-STALL: the GPU times of this phase's labelled frames, the sweep's headings)
+          const T = G.perf.gpuTimer?.tags; cur.gpu = T?.size ? new Map([...T].map(([k, a]) => [k, a.slice()])) : null;
+          segs.push(cur); cur = null; next();
+        }
       };
       const finish = () => {
-        G.benchTick = null; G.perf.onRecord = null; cur = null; this.secOff();
+        G.benchTick = null; G.perf.onRecord = null; cur = null; this.secOff(); this.untag();
         G.benchAuto = false; G.benchAutoQ = false;
         G.resetCombat('drop'); G.applySave(snap);
         G.benching = false; G.renderer.setAutoRes(auto0); G.renderer.timer = G.autoQ?.timer?.() ?? null;
@@ -403,7 +462,7 @@ export class Bench {
     });
   }
   // (frame records → the numbers of a phase: perf.js's record fields)
-  phaseStats(F) {
+  phaseStats(F, T = null) {
     if (!F.length) return null;
     const G = this.g, ref = G.refreshMs?.() || 1000 / 60;
     const pc = (a, p) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(p * v.length))].toFixed(1); };
@@ -414,7 +473,7 @@ export class Bench {
     return { frames: F.length, fps: +(F.length / Math.max(real, 1e-6)).toFixed(1), p50: pc(ms, 0.5), p95: pc(ms, 0.95), p99: pc(ms, 0.99), max: pc(ms, 1),
       overRefresh: +((100 * F.filter((f) => f.ms > ref * 1.25).length) / F.length).toFixed(1), o33: over(33.4).length, o50: over(50).length, o100: over(100).length,
       black: over(33.4).filter((f) => f.black).length, workP50: pc(work, 0.5), workP95: pc(work, 0.95), calls: pc(F.map((f) => f.calls || 0), 0.5),
-      lag: F[0].lag != null ? pc(F.map((f) => f.lag || 0), 0.5) : null, rafMax: Math.max(...F.map((f) => f.raf || 0)), sec, hitches: hitchList(F) };
+      lag: F[0].lag != null ? pc(F.map((f) => f.lag || 0), 0.5) : null, rafMax: Math.max(...F.map((f) => f.raf || 0)), sec, hitches: hitchList(F), sectors: sectorLine(F, T) };
   }
   reportVisits(segs, snaps, o) {
     const G = this.g, L = [];
@@ -422,11 +481,13 @@ export class Bench {
     L.push(`GPU (as reported by the browser): ${G.perf.gpu} · power: ${G.power ? G.power.describe() : '?'} · window ${innerWidth}×${innerHeight} · devicePixelRatio ${devicePixelRatio} · display refresh as measured ${(G.refreshMs?.() || 0).toFixed(1)} ms`);
     if (/SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(G.perf.gpu || '')) L.push('NOTE: software rendering: every number below is CPU-drawn');
     L.push(`camera: ${o.camera === 'follow' ? 'Follow (the player\'s follow camera at Far, along the route)' : 'orbit (the benchmark\'s free orbit)'} · quality ${G.settings.qualityAuto ? 'Auto' : G.settings.quality} · routes ${o.ids.join(', ')} · cold ${o.coldS} s each · ${o.cycles} cycles × ${o.repeatS} s · sustained ${o.sustainS} s`);
+    L.push(this.prepLine());
     L.push('', 'phase    route      frames   fps   frame p50 / p95 / p99 / max ms   > refresh   >33 / >50 / >100 (behind black)   CPU work p50 / p95   calls   late p50   state');
     const groups = [];
     for (const sg of segs) { const key = sg.phase + ' ' + sg.r.id; let g = groups.find((x) => x.key === key); if (!g) groups.push((g = { key, phase: sg.phase, id: sg.r.id, F: [], segs: [] })); g.F.push(...sg.frames); g.segs.push(sg); }
     for (const g of groups) {
-      const s = this.phaseStats(g.F); if (!s) { L.push(`  ${g.phase.padEnd(8)} ${g.id.padEnd(9)} no frames`); continue; }
+      const T = { tags: new Map() }; for (const sg of g.segs) for (const [k, a] of sg.gpu || []) T.tags.set(k, [...(T.tags.get(k) || []), ...a]);
+      const s = this.phaseStats(g.F, T); if (!s) { L.push(`  ${g.phase.padEnd(8)} ${g.id.padEnd(9)} no frames`); continue; }
       const st = [...new Set(g.segs.flatMap((x) => [x.state0, x.state1]))].join(' / ');
       L.push(`  ${g.phase.padEnd(8)} ${g.id.padEnd(9)} ${String(s.frames).padStart(6)} ${String(s.fps).padStart(5)}   ${s.p50} / ${s.p95} / ${s.p99} / ${s.max}   ${String(s.overRefresh).padStart(5)} %   ${s.o33} / ${s.o50} / ${s.o100} (${s.black})   ${s.workP50} / ${s.workP95}   ${s.calls}   ${s.lag ?? '?'}   ${st}`);
       const order = ['people', 'hero', 'enemies', 'physics', 'interact', 'camera', 'other sim', 'submit other', 'submit main', 'submit shadow', 'submit post'];
@@ -434,6 +495,7 @@ export class Bench {
       if (keys.length) L.push(`      CPU by section, p50 / mean ms (calls a frame): ${keys.map((k) => `${k} ${s.sec[k].p50} / ${s.sec[k].mean} (${s.sec[k].calls})`).join(' · ')}`);
       if (s.rafMax > 1) L.push(`      rAF callbacks requested in one frame: up to ${s.rafMax} (1 is the game's loop)`);
       if (s.hitches.length) L.push(`      every frame over 33 ms: ${s.hitches.slice(0, 14).join(' ')}${s.hitches.length > 14 ? ` … +${s.hitches.length - 14}` : ''}`);
+      if (s.sectors) L.push(`      by view heading: ${s.sectors}`);
     }
     L.push('', 'resources (GPU: geometries / textures / programs / render targets · JS heap MB · scene objects (meshes, shown) · people / enemies / room updaters · rAF callbacks asked in all / timeouts set in all / intervals alive / listeners alive):');
     for (const x of snaps) { const r = x.res; L.push(`  ${x.at.padEnd(22)} ${r.geometries} / ${r.textures} / ${r.programs} / ${r.renderTargets} · ${r.heapMB ?? '?'} MB (of ${r.heapTotalMB ?? '?'}) · ${r.objects} (${r.meshes}, ${r.shown}) · ${r.npcs} / ${r.enemies} / ${r.roomUpdaters} · ${r.rafRequested} / ${r.timeouts} / ${r.intervals} / ${r.listeners}`); }
@@ -503,7 +565,7 @@ export class Bench {
     const G = this.g, A = G.autoQ;
     if (this.running || !A) return Promise.resolve(null);
     if (G.regions.missing(BENCH_AREAS).length) return this.prepareAreas().then(() => this.runAuto(opts));
-    const pick = (list) => (opts.routes ? list.filter((r) => opts.routes.includes(r.id)) : list);
+    const pick = (list) => (opts.routes ? list.filter((r) => opts.routes.includes(r.id)) : list.filter((r) => !r.optIn));
     this.running = true;
     this.setCamera(opts.camera); this.secOn();
     const snap = G.snapshot(), state0 = G.state, set0 = { auto: !!G.settings.qualityAuto, q: G.settings.quality };
@@ -522,7 +584,7 @@ export class Bench {
         i++;
         if (i >= plan.length) return finish();
         cur = { r: plan[i], frames: [], cpu: cpuProbe(), state0: A.label() };
-        G.state = 'play'; cur.r.setup(); t = 0; warm = 0;
+        this.untag(); G.state = 'play'; cur.r.setup(); t = 0; warm = 0;
         G.hud?.toast?.('bench_route', { n: i + 1, of: plan.length });
       };
       G.benchTick = (real) => {
@@ -536,12 +598,12 @@ export class Bench {
           for (const l of cur.frames) share[l] = (share[l] || 0) + 1;
           results.push({ id: cur.r.id, s, cpu: cur.cpu, state0: cur.state0, state1: A.label(), share, n: cur.frames.length,
             over33: buf.filter((f) => f.ms > 33.4).length, over50: buf.filter((f) => f.ms > 50).length, over100: buf.filter((f) => f.ms > 100).length, black: buf.filter((f) => f.ms > 33.4 && f.black).length,
-            hitches: hitchList(buf) });
+            hitches: hitchList(buf), sectors: sectorLine(buf, G.perf.gpuTimer) });
           next();
         }
       };
       const finish = () => {
-        G.benchTick = null; cur = null; G.benchAutoQ = false; A.gov.enabled = gov0;
+        G.benchTick = null; cur = null; G.benchAutoQ = false; A.gov.enabled = gov0; this.untag();
         G.resetCombat('drop'); G.applySave(snap);
         G.benching = false; G.renderer.timer = A.timer() ?? null;
         if (!set0.auto) { G.settings.quality = set0.q; G.settings.qualityAuto = false; G.applySettings(); }
@@ -563,6 +625,7 @@ export class Bench {
     if (A.sys) lines.push(`processor (as the OS reports it): ${A.sys.cpu} · ${A.sys.cores} logical cores · ${A.sys.memGB} GB memory`);
     if (/SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(G.perf.gpu || '')) lines.push('NOTE: software rendering: every number below is CPU-drawn');
     lines.push(`camera: ${camMode === 'follow' ? "Follow (the player's follow camera at Far)" : "orbit (the benchmark's free orbit)"}`);
+    lines.push(this.prepLine());
     lines.push(`Auto at the start: ${start.label} (gpu ${start.g} · cpu ${start.c}; ${A.source}${start.cached ? `, cached ${start.cached.src} ${start.cached.at}` : ''}) · GPU timer: ${G.perf.gpuTimer ? 'yes' : 'no'}`);
     lines.push('', 'route        fps   frame p50 / p95 / p99 / max ms   >33 / >50 / >100 (behind black)   GPU p50 / p95   CPU work p50 / p95   state at start -> end');
     for (const x of results) {
@@ -571,6 +634,7 @@ export class Bench {
       lines.push(`      frames at each state: ${Object.entries(x.share).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${Math.round((100 * n) / x.n)} %`).join(' · ')} · calls ${s.calls} (shadow ${s.shadowCalls}) · triangles ${(s.tris / 1000).toFixed(0)}k · CPU probe ${x.cpu} ms`
         + (s.pace ? ` · pacing: on the refresh ${Math.round((100 * s.pace.on) / s.frames)} % · 17.2–20 ms ${Math.round((100 * s.pace.slow) / s.frames)} % · longer ${Math.round((100 * s.pace.long) / s.frames)} % · callback late p50 ${s.pace.lag ?? '?'} (p95 ${s.pace.lagP95 ?? '?'}) ms · uploads a frame p50 ${s.pace.up ?? '?'} (${s.pace.upKB != null ? s.pace.upKB.toFixed(0) : '?'} KB)` : ''));
       if (x.hitches.length) lines.push(`      every frame over 33 ms: ${x.hitches.slice(0, 12).join(' ')}${x.hitches.length > 12 ? ` … +${x.hitches.length - 12}` : ''}`);
+      if (x.sectors) lines.push(`      by view heading: ${x.sectors}`);
       if (s.cpu) lines.push(`      CPU by section, p50 / mean ms (calls a frame): ${secLine(s.cpu)}`);
     }
     { const DB = G.drawBatch, SC = G.shadowCull; let left = 0, members = 0; for (const A of DB?.areas?.values?.() || []) { left += A.outs?.length || 0; members += A.members.length; }
@@ -588,6 +652,7 @@ export class Bench {
     const lines = [];
     lines.push(`LBA3: The Awakening benchmark · build ${v} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')}`);
     lines.push(`camera: ${camMode === 'follow' ? "Follow (the player's follow camera at Far)" : "orbit (the benchmark's free orbit)"}`);
+    lines.push(this.prepLine());
     lines.push(`GPU (as reported by the browser): ${G.perf.gpu} · preset picked for it on a first start: ${gpuQuality(G.perf.gpu)} · playing on: ${G.settings.quality} · automatic resolution: ${G.settings.res !== 'full' ? 'on' : 'off'} (off in the fixed runs, on in the "as played" runs)`);
     // (FRAME-1: the GPU string is the acceleration diagnostic: a software rasteriser here means no GPU at all)
     if (/SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(G.perf.gpu || '')) lines.push('NOTE: software rendering (no GPU acceleration in this browser/app): every number below is CPU-drawn');
@@ -658,10 +723,11 @@ export class Bench {
       lines.push(`  ${x.id.padEnd(10)} ${String(s.fps).padStart(5)} fps · frame p50 ${s.frameMs.p50} p95 ${s.frameMs.p95} p99 ${s.frameMs.p99} max ${s.frameMs.max} ms · stalls>50ms ${x.stalls}${P ? ` (${P.stallsBlack} behind black) · >33ms ${P.over33} >100ms ${P.over100 ?? 0} of ${s.frames} · longest ${P.worst} ms${P.hitches?.length ? ` · every frame over 33 ms (length@time): ${P.hitches.slice(0, 16).join(' ')}${P.hitches.length > 16 ? ` … +${P.hitches.length - 16}` : ''}` : ''}` : ''}`
         + ` · sim CPU p50 ${s.simMs.p50} (p95 ${s.simMs.p95}) ms · render submit CPU p50 ${s.renderMs.p50} ms${s.gpuMs ? ` · GPU time p50 ${s.gpuMs.p50} (p95 ${s.gpuMs.p95}) ms [${Object.entries(s.gpuMs.passes || {}).map(([k, v]) => `${k} ${v || 'n/r'}`).join(' · ')}]` : ''} · lamps lit ${s.lamps ?? '?'} · draw calls ${s.calls} (p95 ${s.callsP95}, shadow ${s.shadowCalls}) · GPU draws ${s.draws} · triangles ${(s.tris / 1000).toFixed(0)}k · warm-up max ${x.warmMaxMs} ms${x.prog ? ` · shader programs compiled while measured ${x.prog.measured} (in the warm-up ${x.prog.warm})` : ''}`
         + ` · limited by (estimate): ${this.bound(s)}` + paceOf(x));
+      if (x.sectors) lines.push(`      by view heading: ${x.sectors}`);
       // (PERF-BATTERY-2: after the preset's last fixed route, the same routes as played)
       if (x === fixed.filter((y) => y.q === x.q).pop()) {
         const P = played.filter((y) => y.q === x.q);
-        if (P.length) { lines.push(`  as played (automatic resolution on, down to ×${P[0].cfg.minScale}; it carries over from route to route as in play):`); for (const y of P) lines.push(playedLine(y)); }
+        if (P.length) { lines.push(`  as played (automatic resolution on, down to ×${P[0].cfg.minScale}; it carries over from route to route as in play):`); for (const y of P) { lines.push(playedLine(y)); if (y.sectors) lines.push(`      by view heading: ${y.sectors}`); } }
       }
     }
     // (PERF-BATTERY-2) the answer in one table: fps at the fixed resolution and as played, with the factor it settled at

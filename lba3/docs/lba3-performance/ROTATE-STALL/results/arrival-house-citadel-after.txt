@@ -1,0 +1,118 @@
+ROTATE-STALL arrival · medium · battery true · camera free · house → citadel × 2
+house (cold): 103 frames, 49464 ms in all, 49136 ms of it with the screen black
+    0     8 ms view  op 0.10 calls 160 uploads 18 (39 KB)
+    1     6 ms view  op 0.19 calls 160 uploads 18 (39 KB)
+    2     7 ms view  op 0.29 calls 160 uploads 18 (39 KB)
+    3     7 ms view  op 0.38 calls 160 uploads 18 (39 KB)
+    4     6 ms view  op 0.48 calls 160 uploads 18 (39 KB)
+    5     7 ms view  op 0.57 calls 160 uploads 18 (39 KB)
+    6    12 ms view  op 0.67 calls 160 uploads 18 (39 KB)
+    7     7 ms view  op 0.76 calls 160 uploads 18 (39 KB)
+    8     5 ms view  op 0.86 calls 160 uploads 18 (39 KB)
+    9     5 ms view  op 0.95 calls 160 uploads 18 (39 KB)
+   10 49090 ms BLACK op 1.00 calls 0 hold draw batches built 48882 ms, shadow batches built 94 ms, +67 geometries, +4 textures, uploads 268 (41194 KB), 7 first uploads by draws behind black: tex 512x512 outside a draw · tex 256x256 outside a draw · tex 128x128 outside a draw · 4× tex 12x12 outside a draw
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12     0 ms BLACK op 1.00 calls 0 hold 
+   13     0 ms BLACK op 1.00 calls 0 hold 
+   14     0 ms BLACK op 1.00 calls 0 hold 
+   15     0 ms BLACK op 1.00 calls 0 hold 
+   16     0 ms BLACK op 1.00 calls 0 hold 
+   17     0 ms BLACK op 1.00 calls 0 hold 
+   18     0 ms BLACK op 1.00 calls 0 hold 
+   19     0 ms BLACK op 1.00 calls 0 hold 
+   20     1 ms BLACK op 1.00 calls 0 hold 
+   21     0 ms BLACK op 1.00 calls 0 hold 
+   22     0 ms BLACK op 1.00 calls 0 hold 
+   23     0 ms BLACK op 1.00 calls 0 hold 
+   24     0 ms BLACK op 1.00 calls 0 hold 
+   25     1 ms BLACK op 1.00 calls 0 hold 
+   26     1 ms BLACK op 1.00 calls 0 hold 
+   27     0 ms BLACK op 1.00 calls 0 hold 
+   28     1 ms BLACK op 1.00 calls 0 hold 
+   29     0 ms BLACK op 1.00 calls 0 hold 
+   30    36 ms BLACK op 1.00 calls 50 cache full build, uploads 44 (3741 KB)
+   31     2 ms BLACK op 1.00 calls 46 uploads 3 (9 KB)
+   32     2 ms view  op 0.90 calls 46 uploads 3 (9 KB)
+   33     2 ms view  op 0.81 calls 46 uploads 3 (9 KB)
+   34     2 ms view  op 0.71 calls 46 uploads 3 (9 KB)
+   35     2 ms view  op 0.62 calls 46 uploads 3 (9 KB)
+   36     2 ms view  op 0.52 calls 46 uploads 3 (9 KB)
+   37     2 ms view  op 0.43 calls 46 uploads 3 (9 KB)
+   38     2 ms view  op 0.33 calls 46 uploads 3 (9 KB)
+   39     2 ms view  op 0.24 calls 46 uploads 3 (9 KB)
+   40     2 ms view  op 0.14 calls 46 uploads 3 (9 KB)
+citadel (cold): 92 frames, 77224 ms in all, 26873 ms of it with the screen black
+    0     2 ms view  op 0.10 calls 48 uploads 3 (9 KB)
+    1     2 ms view  op 0.19 calls 48 uploads 3 (9 KB)
+    2     1 ms view  op 0.29 calls 48 uploads 3 (9 KB)
+    3     2 ms view  op 0.38 calls 48 uploads 3 (9 KB)
+    4     2 ms view  op 0.48 calls 48 uploads 3 (9 KB)
+    5     1 ms view  op 0.57 calls 48 uploads 3 (9 KB)
+    6     2 ms view  op 0.67 calls 48 uploads 3 (9 KB)
+    7     2 ms view  op 0.76 calls 48 uploads 3 (9 KB)
+    8     1 ms view  op 0.86 calls 48 uploads 3 (9 KB)
+    9     2 ms view  op 0.95 calls 48 uploads 3 (9 KB)
+   10    64 ms BLACK op 1.00 calls 0 hold -1 geometries, 1 first uploads by draws behind black: left draw batch: Mesh:pipeline at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color d8d4cc emissive 000000
+   11     1 ms BLACK op 1.00 calls 0 hold 
+   12     2 ms BLACK op 1.00 calls 0 hold 
+   13     1 ms BLACK op 1.00 calls 0 hold 
+   14     1 ms BLACK op 1.00 calls 0 hold 
+   15     1 ms BLACK op 1.00 calls 0 hold 
+   16     1 ms BLACK op 1.00 calls 0 hold 
+   17     1 ms BLACK op 1.00 calls 0 hold 
+   18     1 ms BLACK op 1.00 calls 0 hold 
+   19     1 ms BLACK op 1.00 calls 0 hold 
+   20 26802 ms BLACK op 1.00 calls 208 cache full build, +1 geometries, uploads 55 (386 KB)
+   21     8 ms view  op 0.90 calls 174 uploads 20 (43 KB)
+   22     7 ms view  op 0.81 calls 174 uploads 20 (43 KB)
+   23     7 ms view  op 0.71 calls 174 uploads 20 (43 KB)
+   24     6 ms view  op 0.62 calls 174 uploads 20 (43 KB)
+   25     5 ms view  op 0.52 calls 174 uploads 20 (43 KB)
+   26     5 ms view  op 0.43 calls 174 uploads 20 (43 KB)
+   27     4 ms view  op 0.33 calls 174 uploads 20 (43 KB)
+   28     4 ms view  op 0.24 calls 174 uploads 20 (43 KB)
+   29     6 ms view  op 0.14 calls 174 uploads 20 (43 KB)
+house (repeat): 83 frames, 23872 ms in all, 79 ms of it with the screen black
+    0  2380 ms view  op 0.10 calls 176 uploads 20 (43 KB)
+    1  1275 ms view  op 0.19 calls 176 uploads 20 (43 KB)
+    2  1256 ms view  op 0.29 calls 176 uploads 20 (43 KB)
+    3  1270 ms view  op 0.38 calls 176 uploads 20 (43 KB)
+    4  1213 ms view  op 0.48 calls 176 uploads 20 (43 KB)
+    5    43 ms view  op 0.57 calls 176 uploads 20 (43 KB)
+    6   252 ms view  op 0.67 calls 176 uploads 20 (43 KB)
+    7   961 ms view  op 0.76 calls 176 uploads 20 (43 KB)
+    8   155 ms view  op 0.86 calls 176 uploads 20 (43 KB)
+    9   278 ms view  op 0.95 calls 176 uploads 20 (43 KB)
+   10     6 ms BLACK op 1.00 calls 50 cache full build, uploads 3 (9 KB)
+   11    73 ms BLACK op 1.00 calls 46 uploads 3 (9 KB)
+   12     3 ms view  op 0.90 calls 46 uploads 3 (9 KB)
+   13     1 ms view  op 0.81 calls 46 uploads 3 (9 KB)
+   14     2 ms view  op 0.71 calls 46 uploads 3 (9 KB)
+   15   832 ms view  op 0.62 calls 46 uploads 3 (9 KB)
+   16    13 ms view  op 0.52 calls 46 uploads 3 (9 KB)
+   17     2 ms view  op 0.43 calls 46 uploads 3 (9 KB)
+   18     2 ms view  op 0.33 calls 46 uploads 3 (9 KB)
+   19     2 ms view  op 0.24 calls 46 uploads 3 (9 KB)
+   20    58 ms view  op 0.14 calls 46 uploads 3 (9 KB)
+citadel (repeat): 83 frames, 110274 ms in all, 10004 ms of it with the screen black
+    0     2 ms view  op 0.10 calls 48 uploads 3 (9 KB)
+    1  2452 ms view  op 0.19 calls 48 uploads 3 (9 KB)
+    2     5 ms view  op 0.29 calls 48 uploads 3 (9 KB)
+    3     2 ms view  op 0.38 calls 48 uploads 3 (9 KB)
+    4     3 ms view  op 0.48 calls 48 uploads 3 (9 KB)
+    5  1247 ms view  op 0.57 calls 48 uploads 3 (9 KB)
+    6  1115 ms view  op 0.67 calls 48 uploads 3 (9 KB)
+    7     4 ms view  op 0.76 calls 48 uploads 3 (9 KB)
+    8     2 ms view  op 0.86 calls 48 uploads 3 (9 KB)
+    9     1 ms view  op 0.95 calls 48 uploads 3 (9 KB)
+   10  7484 ms BLACK op 1.00 calls 208 cache full build, uploads 22 (45 KB), 1 first uploads by draws behind black: left draw batch: Mesh:pipeline at 0.0,0.0,0.0 [look (colour / roughness / map) changed] mat MeshStandardMaterial opacity 1 transparent false color d8d4cc emissive 000000
+   11  2521 ms BLACK op 1.00 calls 174 uploads 20 (43 KB)
+   12  1291 ms view  op 0.90 calls 174 uploads 20 (43 KB)
+   13  1175 ms view  op 0.81 calls 174 uploads 20 (43 KB)
+   14  1255 ms view  op 0.71 calls 174 uploads 20 (43 KB)
+   15  1157 ms view  op 0.62 calls 174 uploads 20 (43 KB)
+   16  1249 ms view  op 0.52 calls 174 uploads 20 (43 KB)
+   17    31 ms view  op 0.43 calls 174 uploads 20 (43 KB)
+   18    11 ms view  op 0.33 calls 174 uploads 20 (43 KB)
+   19  1239 ms view  op 0.24 calls 174 uploads 20 (43 KB)
+   20  1572 ms view  op 0.14 calls 174 uploads 20 (43 KB)

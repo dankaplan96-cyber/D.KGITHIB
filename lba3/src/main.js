@@ -454,6 +454,7 @@ class Game {
     this._uploaded?.delete(this.world.root); this.uploadGeometry(this.world.root);
     { const tex = new Set(); this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) { for (const k in m) if (m[k]?.isTexture && !m[k].isRenderTargetTexture) tex.add(m[k]); if (m.uniforms) for (const k in m.uniforms) { const v = m.uniforms[k]?.value; if (v?.isTexture && !v.isRenderTargetTexture) tex.add(v); } } });
       for (const t of tex) R.initTexture(t); }
+    this.uploadSkeletons();
     lap('batchUpload');
     await step('Almost there…', 0.96, 'shadowPrograms', 1000);
     if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
@@ -658,12 +659,23 @@ class Game {
     // while the last interval was over 50 ms, at most 3 more frames. (Under the tests' fixed stepping: one, as before.)
     if (T.held) {
       if (this.testFreeze || this._frameNo == null) { T.held = false; f.style.opacity = 1; this._fadeOp = 1; return; }
-      T.heldAt ??= this._frameNo;
+      if (T.heldAt == null) { T.heldAt = this._frameNo; T.heldT0 = performance.now(); }
       const k = this._frameNo - T.heldAt;
       // PERF-CPU: also while the last frame still rebuilt the static shadow cache, built batches or compiled a program (a
       // first visit: pieces that toggle on the area's first frames leave their shadow batch, the cache is redrawn: the
       // user's arrival showed that frame, 133 ms, in view), at most 6 frames in all
-      if (k === 0 || (k <= 3 && this._lastRealMs > 50) || (k <= 6 && this._settleBusy)) { f.style.opacity = 1; this._fadeOp = 1; T.settled = k; return; }
+      // ROTATE-STALL: the reveal waits for the scene to be READY: the last frame drawn did none of that and sent nothing new
+      // to the GPU (no geometry or texture made: _settleBusy), the GPU caught up (its interval ≤ 50 ms, as before for the
+      // first 3 frames). The laptop's arrivals (0.42.0) still showed a frame in view of 117–250 ms right after the
+      // black, the frame before it having rebuilt the shadow cache and made 7–29 geometries and 12–13 textures: the 6-frame
+      // limit was reached, or those uploads were not counted as busy. A failsafe only, not a delay: revealed anyway after
+      // REVEAL_MAX frames or REVEAL_MS (a scene that keeps uploading must not stay black). `revealReady = false`: as before.
+      // (and the frame right after a busy one waits for its interval too: that frame's GPU work lands in the next interval)
+      if (this._settleBusy) T.busyK = k;
+      const busy = this.revealReady === false ? k <= 6 && this._settleBusy
+        : (this._settleBusy || (this._lastRealMs > 50 && k - (T.busyK ?? -9) <= 2)) && k <= REVEAL_MAX && performance.now() - T.heldT0 < REVEAL_MS;
+      if (k === 0 || (k <= 3 && this._lastRealMs > 50) || busy) { f.style.opacity = 1; this._fadeOp = 1; T.settled = k; return; }
+      this._revealed = { k, ms: Math.round(performance.now() - T.heldT0), ready: !this._settleBusy };   // (the benchmark's and probes' record of the last reveal)
       T.held = false;
     }
     if (T.card && T.called) { T.card.hide(); T.card = null; }
@@ -711,12 +723,17 @@ class Game {
     if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);
     if (!this.drawBatch.has(root)) this.drawBatch.update(root);   // (RENDER-INV: the area's draw batches, before the upload)
     else this.drawBatch.readmit(root);   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
+    // (ROTATE-STALL: Citadel once more on its first entry in play — it was sent at startup, and what was made since (a
+    //  harbour piece, a draw-batch cell rebuilt during the title or the opening) went up on the first street frames that
+    //  looked at it: the Follow camera's first sweep, 126 and 26 vertices)
+    if (root === this.world.root && this.state === 'play' && !this._citadelAgain && this.skelUp !== false) { this._citadelAgain = true; this._uploaded?.delete(root); }
     this.uploadGeometry(root);
     this.uploadTextures(root);
+    this.uploadExtras(root);   // (ROTATE-STALL: what the area's first frame still made: below)
     if (this._shadowWarm) { this._shadowWarm = false; this.warmShadows(); }   // (LAZY-REGIONS: an area built since the last warm-up)
     if (warmed.get(key) === R.info.programs.length) return;
     T.hold = true; T.holdT = performance.now();
-    this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); T.hold = false; });
+    this.renderer.precompile().catch(() => {}).finally(() => { warmed.set(key, R.info.programs.length); this.uploadExtras(root, true); T.hold = false; });
   }
   // FRAME-1: every geometry under `root` (hidden parts too) and everything shown is sent to the GPU now, instead of on
   // the first frame that shows it. Left to that frame, the street at Medium uploaded 17 MB mid-play as the camera
@@ -753,6 +770,42 @@ class Game {
     }
     (this.uploadLog ??= []).push({ root: this.room?.id || 'citadel', ms: Math.round(performance.now() - t0), newGeometries: R.info.memory.geometries - g0 });
     return R.info.memory.geometries - g0;
+  }
+  // ROTATE-STALL: the textures an area's first frame still made in that frame (the arrival route, SwiftShader counts: the
+  // Hamalayi's first frame made 13: its tree batches' data textures — BatchedMesh's matrices / indirect / colours, 6–20
+  // texels square, one set per batch, made on its first draw — and the terrain's painted tiles, held in its shader's own
+  // uniforms, which uploadTextures (material slots) does not see), the people's bone textures (uploadSkeletons). Sent now,
+  // in the scene change's black frame; `compiled`: again once its programs exist (the uniforms of a material whose
+  // shader is made by onBeforeCompile are known to three only then). The same textures; nothing drawn.
+  uploadExtras(root, compiled = false) {
+    if (!root || this.testFreeze || this.skelUp === false) return 0;
+    const R = this.renderer.renderer, P = R.properties, tex = new Set(), add = (t) => { if (t?.isTexture && !t.isRenderTargetTexture) tex.add(t); };
+    root.traverse((o) => {
+      if (o.isBatchedMesh) { add(o._matricesTexture); add(o._indirectTexture); add(o._colorsTexture); }
+      for (const m of [].concat(o.material || [])) {
+        for (const k in m) add(m[k]);
+        const U = m.uniforms || (compiled ? P.get(m).uniforms : null);
+        if (U) for (const k in U) add(U[k]?.value);
+      }
+    });
+    for (const t of tex) { try { R.initTexture(t); } catch (e) { console.warn('texture upload', e); } }
+    return tex.size + this.uploadSkeletons();
+  }
+  // ROTATE-STALL: every skinned body's bone texture (three makes it, and the GPU its storage, on the body's first draw:
+  // the street's Follow-camera sweep allocated six 12×12 float textures in frames in view, one per person first looked
+  // at) made and sent now: at the end of the loading and in a scene change's black frame. Hidden people included (their
+  // bodies are under the scene, not under an area). The same texture three would make; it is refreshed every frame anyway.
+  uploadSkeletons() {
+    const R = this.renderer.renderer, done = (this._boneUp ??= new WeakSet());
+    if (this.testFreeze || this.skelUp === false) return 0;   // (skelUp false: as before, the A/B switch)
+    let n = 0;
+    this.scene.traverse((o) => {
+      const S = o.isSkinnedMesh ? o.skeleton : null;
+      if (!S || done.has(S)) return;
+      done.add(S);
+      try { if (S.boneTexture === null) S.computeBoneTexture(); R.initTexture(S.boneTexture); n++; } catch (e) { console.warn('bone texture', e); }
+    });
+    return n;
   }
   // LAZY-REGIONS: an area built after startup sends its textures to the GPU in its black frame too (startup does
   // Citadel's in prepare), not on the first frames shown
@@ -2088,7 +2141,7 @@ class Game {
   // the frame before a long interval is noted on it for the benchmark's hitch list (bench.js hitchList)
   jobCounters() {
     const R = this.renderer.renderer, M = R.info.memory;
-    return { p: R.info.programs?.length ?? 0, g: M.geometries, x: M.textures, sc: this.shadowCache?.stats.full ?? 0, db: this.drawBatch?.buildMs ?? 0, dbn: this.drawBatch?.builds ?? 0,
+    return { p: R.info.programs?.length ?? 0, g: M.geometries, x: M.textures, sc: this.shadowCache?.stats.full ?? 0, scd: this.shadowCache?.stats.drops ?? 0, db: this.drawBatch?.buildMs ?? 0, dbn: this.drawBatch?.builds ?? 0,
       sb: this.shadowCull?.buildMs ?? 0, sbn: this.shadowCull?.builds ?? 0, up: this.uploadLog?.length ?? 0, aq: this.autoQ?.log.length ?? 0, h: performance.memory?.usedJSHeapSize ?? 0,
       rt: this.perf.targets?.size ?? 0 };
   }
@@ -2096,7 +2149,7 @@ class Game {
     const o = [];
     if (b.dbn > a.dbn) o.push(`draw batches built ${(b.db - a.db).toFixed(0)} ms`);
     if (b.sbn > a.sbn) o.push(`shadow batches built ${(b.sb - a.sb).toFixed(0)} ms`);
-    if (b.sc > a.sc) o.push('shadow cache rebuilt');
+    if (b.sc > a.sc) o.push(`shadow cache rebuilt${b.scd > a.scd ? ` (dropped: ${this.shadowCache?.dropWhy || '?'})` : ''}`);   // (ROTATE-STALL: and why it was dropped)
     if (b.p > a.p) o.push(`${b.p - a.p} shader program${b.p - a.p > 1 ? 's' : ''} compiled`);
     if (b.g > a.g + 2 || b.x > a.x) o.push(`+${b.g - a.g} geometries, +${b.x - a.x} textures on the GPU${b.rt > a.rt ? ` (${b.rt - a.rt} of them render targets)` : ''}`);
     if (b.up > a.up) o.push('geometry upload');
@@ -2127,7 +2180,10 @@ class Game {
     const why = real * 1000 > 33.4 ? [this._jobsPrev, gc].filter(Boolean).join(', ') : '';
     this.perf.record({ real, ms: real * 1000, steps: n, lost: real - dt, sim: ms - this._renderMs, render: this._renderMs, black, lamps, lag: this._lag ?? 0, bg: !!this.background, why: why || undefined });
     { const jc1 = this.jobCounters(), j = this.jobsBetween(jc, jc1); this._jobsPrev = `frame before: work ${ms.toFixed(0)} ms${j ? ', ' + j : ''}`; this._jc = jc1;
-      this._settleBusy = jc1.sc > jc.sc || jc1.dbn > jc.dbn || jc1.sbn > jc.sbn || jc1.p > jc.p || this._lastLeft !== (this.shadowCull?.left ?? 0); this._lastLeft = this.shadowCull?.left ?? 0; }
+      // (ROTATE-STALL: and anything new on the GPU — a geometry or texture made in the frame — or pieces leaving draw batches
+      //  (their cells rebuilt and sent again): the scene is not ready to show while its first draws still upload)
+      const up = this.revealReady !== false && (jc1.g > jc.g || jc1.x > jc.x || (this.drawBatch?.left ?? 0) !== (this._lastDbLeft ?? 0));
+      this._settleBusy = up || jc1.sc > jc.sc || jc1.dbn > jc.dbn || jc1.sbn > jc.sbn || jc1.p > jc.p || this._lastLeft !== (this.shadowCull?.left ?? 0); this._lastLeft = this.shadowCull?.left ?? 0; this._lastDbLeft = this.drawBatch?.left ?? 0; }
     // automatic resolution follows the frame time in play (not through fades, menus or a benchmark's fixed runs; its
     // "as played" runs keep it: PERF-BATTERY-2)
     if (this.state === 'play' && !this.trans && (!this.benching || this.benchAuto) && !this.background) this.renderer.adapt(real * 1000);
@@ -2366,6 +2422,8 @@ class Game {
 }
 
 const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
+// ROTATE-STALL: a scene change's reveal waits for readiness (Game.updateTransition) at most this many frames / ms
+const REVEAL_MAX = 12, REVEAL_MS = 1500;
 const BG_FPS = 8;   // (PERF-BATTERY: frames a second drawn while the window is in the background)
 const LIMIT_TOL_MS = 1.5;   // (FRAME-2: the frame-rate limit's tolerance for requestAnimationFrame's jitter)
 function medianOf(a, n) { const b = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return n ? b[n >> 1] : 0; }
