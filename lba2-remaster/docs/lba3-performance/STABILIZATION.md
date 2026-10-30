@@ -70,4 +70,30 @@ with the installed exe).
   - Only the minimum was measured; the recommended spec is an estimate.
 
 ## Results
-(to be filled per pair: confirmed costs, fixes with before/after, remaining scenes, visual trade-offs, next step)
+### CPU/runtime investigator, round 2 (merged e06085f, 30.10)
+All numbers are exact counts or relative SwiftShader times; none is a laptop measurement.
+- **Start-screen stutter: cause found and fixed.**
+  - Cause: Citadel's draw batches are built after the loading step that uploads geometry, so the live title uploaded
+    the rest of the world as its camera circled.
+  - Before: the first title frame uploaded 19 geometries plus the first shadow draws (13,087 ms here), then 28 more
+    geometries and 9 textures arrived in title frames over 58 s.
+  - Fix: a new loading step, `batchUpload`, does an upload pass over all of Citadel and every material texture. The
+    title's first frame now runs under the loading screen. The live world behind the menu stays at full rate.
+  - After: the first title frame is 250 ms here, and 2 geometries arrive in the next 58 s. The 9 small town and harbour
+    textures still arrive in title frames; not chased.
+  - Pending: title frame times and time-to-menu on the laptop (`electron-bench.mjs startup`, cold and warm).
+- **The woman inside the bench: fixed.** An unseen person who sits down is now placed on the seat (solidnpc.mjs).
+- **First-street ~2.2 s stall and the heavy frame after the black: not reproduced here.**
+  - After the preset change nothing is left to upload, and in 8 s of the route nothing is uploaded in view.
+  - On arrival every upload happens in black frames.
+  - The hitch notes now say, for every frame over 100 ms, whether the main thread was busy (and which script) or the
+    time went to the GPU process or driver. They also say how many new textures are render targets.
+  - The next laptop full run decides between those causes.
+- **The title is the heaviest view in the game** (Medium 281–398 calls / 1.1–1.7 M triangles; High 372–589 /
+  1.7–2.0 M). If the laptop shows steady missed frames there rather than one-off spikes, that is GPU cost: the GPU
+  investigator's area.
+- **Also kept:**
+  - Follow-camera clearance allocations: 103 → 33 KB per frame.
+  - The interaction lookup skips people out of reach.
+  - The start trace.
+- **Logged:** I-20, Auto's title calibration never runs (kept on purpose under AUTO-2).
