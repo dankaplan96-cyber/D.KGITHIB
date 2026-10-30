@@ -95,6 +95,8 @@ export const GPU_VARIANTS = [
   // triangles; the coarse one 0.4–1.3k) to 22 m instead of Medium's 34, the grass and flowers to 30 m instead of 46
   { id: 'GPU: trees detailed to 22 m', apply() { this._n = LOD_DETAIL.near; LOD_DETAIL.near = 22; }, undo() { LOD_DETAIL.near = this._n; } },
   { id: 'GPU: grass/flowers to 30 m', apply() { this._f = LOD_DETAIL.smallFar; LOD_DETAIL.smallFar = 30; }, undo() { LOD_DETAIL.smallFar = this._f; } },
+  // the static shadow cache's depth into the live map by a framebuffer blit, as before (shadowcache.js copyDepth)
+  { id: 'GPU: shadow cache copy by blit (as before)', apply(G) { const C = G.shadowCache; if (C) { C.depthCopy = 'blit'; C.drop(); } }, undo(G) { const C = G.shadowCache; if (C) { C.depthCopy = 'draw'; C.drop(); } } },
   // the post passes
   { id: 'GPU: no output pass (scene to screen)', apply(G) { G.renderer.output.enabled = false; }, undo(G) { G.renderer.output.enabled = true; } },
   { id: 'GPU: output edges as before (implicit LOD)', apply(G) { G.renderer.setOldEdges(true); warmPassPrograms(G.renderer.renderer, G.renderer.composer); }, undo(G) { G.renderer.setOldEdges(false); } },

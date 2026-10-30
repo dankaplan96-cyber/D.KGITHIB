@@ -59,6 +59,7 @@ export class ShadowCache {
     const sm = R.shadowMap, base = sm.render.bind(sm);
     this.base = base;
     sm.render = (lights, scene, camera) => this.render(lights, scene, camera);
+    try { this.primeCopy(); } catch (e) { console.warn('shadow cache: depth copy by draw unavailable', e); this.depthCopy = 'blit'; }
   }
   // (PERF-SUBMIT: a dropped cache's render target is kept for the next build — or freed — instead of left behind: each
   //  drop used to leave its (map + 2 × 64)² colour and depth target on the GPU, never disposed, and the next full build
@@ -147,11 +148,19 @@ export class ShadowCache {
   }
 
   make(u, v, w, size, texel, reuse = null) {
-    const n = size + 2 * MARGIN;
-    let target = reuse && reuse.width === n ? reuse : null;
-    if (!target) { reuse?.dispose(); target = new THREE.WebGLRenderTarget(n, n, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }); target.texture.name = 'sun.shadowCache'; }
+    const n = size + 2 * MARGIN, hw = this.copyByDraw();
+    let target = reuse && reuse.width === n && !!reuse.depthTexture === hw ? reuse : null;
+    if (!target) {
+      reuse?.dispose();
+      // (PERF-GPU: with a depth texture when its depth is copied into the live map by a draw: copyDepth)
+      target = new THREE.WebGLRenderTarget(n, n, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthTexture: hw ? new THREE.DepthTexture(n, n, THREE.UnsignedIntType) : null });
+      target.texture.name = 'sun.shadowCache';
+    }
     return { u, v, w, size, texel, n, target, slice: 0, done: false, K: SLICES };
   }
+  // (PERF-GPU) the live map gets the cache's depth by a draw (copyDepth) when the map is the renderer's hardware-compared
+  // one (renderer.js HwShadowTarget: its depth is a texture, its colour unused); `depthCopy = 'blit'`: the blit, as before
+  copyByDraw() { const m = this.sun.shadow.map; return this.depthCopy !== 'blit' && !!this._copy && (!m || !!m.isHwShadow); }
 
   // one slice of the static casters into cache c (slice 0 clears it), drawn by three's own shadow pass with the box
   // grown by the margin and centred on the cache's lattice point; only the static casters (layer LAYER) are drawn
@@ -200,8 +209,10 @@ export class ShadowCache {
       const shift = c.w - sun.target.position.dot(d);
       sun.position.addScaledVector(d, shift); sun.target.position.addScaledVector(d, shift);
       sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
+      const byDraw = !!(sh.map.isHwShadow && c.target.depthTexture && this.copyByDraw()), self = this;
       R.clear = function () {
         if (this.getRenderTarget() !== sh.map) return clear.apply(this, arguments);
+        if (byDraw) return self.copyDepth(c, sx, sy, n);
         const src = P.get(c.target).__webglFramebuffer, dst = P.get(sh.map).__webglFramebuffer;
         if (!src || !dst) return clear.apply(this, arguments);
         // (through three's state, as its own MSAA resolve does, so its record of the bindings stays true; the draw
@@ -219,5 +230,33 @@ export class ShadowCache {
     }
   }
 }
+// PERF-GPU: the cache's window copied into the live map's depth by one draw over the map that writes the depth it
+// reads (colour off, depth test always), instead of a framebuffer blit of a depth sub-rectangle: Direct3D 11 copies a
+// depth resource whole or not at all, so ANGLE emulates that blit (the laptop's "shadow map kept" −1.6 ms and the
+// first build's ~1.3 s stall point at it; neither is proven yet: benchgpu.js 'shadow cache copy by blit (as before)').
+// Same depth (a 24-bit depth read as a float and written back); the moving casters are then drawn over it with the depth
+// test, as before. It runs inside three's shadow pass (its clear of the live map: the map bound, its viewport set,
+// colour masked), drawn with three's own renderBufferDirect as the pass draws its casters, so three's state stays true.
+const COPY_VS = `varying vec2 vUv; void main() { vUv = position.xy * 0.5 + 0.5; gl_Position = vec4( position.xy, 0.0, 1.0 ); }`;
+const COPY_FS = `uniform sampler2D tDepth; uniform vec2 uOff; uniform vec2 uScale; varying vec2 vUv; void main() { gl_FragDepth = texture2D( tDepth, uOff + vUv * uScale ).r; }`;
+// the copy's material and triangle, and one ordinary render of it into a 1×1 target at startup: three uploads a
+// geometry's buffers in its render walk, which renderBufferDirect alone skips (without this the copy drew nothing)
+ShadowCache.prototype.primeCopy = function () {
+  const mat = new THREE.ShaderMaterial({ uniforms: { tDepth: { value: null }, uOff: { value: new THREE.Vector2() }, uScale: { value: new THREE.Vector2(1, 1) } }, vertexShader: COPY_VS, fragmentShader: COPY_FS,
+    depthTest: true, depthWrite: true, depthFunc: THREE.AlwaysDepth, colorWrite: false, blending: THREE.NoBlending, side: THREE.DoubleSide, fog: false, lights: false });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3));   // (one triangle over the map)
+  const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false;
+  const R = this.R, rt = new THREE.WebGLRenderTarget(1, 1, { depthTexture: new THREE.DepthTexture(1, 1, THREE.UnsignedIntType) }), sc = new THREE.Scene(), prev = R.getRenderTarget();
+  sc.add(mesh);
+  try { R.setRenderTarget(rt); R.render(sc, new THREE.Camera()); } finally { R.setRenderTarget(prev); sc.remove(mesh); rt.depthTexture.dispose(); rt.dispose(); }
+  this._copy = { mat, geo, mesh };
+};
+ShadowCache.prototype.copyDepth = function (c, sx, sy, n) {
+  const { mat, geo, mesh } = this._copy, U = mat.uniforms;
+  U.tDepth.value = c.target.depthTexture; U.uOff.value.set(sx / c.n, sy / c.n); U.uScale.value.set(n / c.n, n / c.n);
+  this.R.renderBufferDirect(this.sun.shadow.camera, null, geo, mat, mesh, null);
+  this.stats.copies = (this.stats.copies || 0) + 1;
+};
 function isUnder(o, root) { for (let p = o; p; p = p.parent) if (p === root) return true; return false; }
 function onShow(o) { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; }
