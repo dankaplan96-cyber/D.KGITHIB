@@ -399,6 +399,25 @@ const share = await ev(() => { const G = game, W = G.walkers, ume = W.res.find((
 console.log('shared bench', JSON.stringify(share));
 check('a bench two rounds share holds one sitter: the second stands by it, clear of the first', share.ume === 'seated' && share.brix === 'dwell' && share.d >= share.R - 0.05, share);
 
+// a resident that sits down while nobody sees it (the abstract tier: far or out of the view) is on its seat when it comes
+// into view, not where it stood at the stop's slot, on the ground in the bench (the user, 30.10: "near the statue a woman
+// sits INSIDE the bench" — walkers.js abstract 'sitin')
+const absSit = await ev(() => {
+  const G = game, W = G.walkers, out = [];
+  for (const r of W.res) {
+    const i = r.stops.findIndex((s) => s.seat && Math.abs(s.x) < 300); if (i < 0 || !r.canSit()) continue;
+    for (const q of W.res) if (q !== r) q.away = 'test';
+    const s = r.stops[i]; r.ri = i; r.slotAt(s); r.arrived(s, false); r.tmr = 999;
+    W.force = 2; r.accA = 0.6; G.step(0.1, 1 / 30); W.force = null; G.step(0.2, 1 / 30); r.tmr = 999;
+    const P = r.seatPose(s);
+    out.push({ id: r.def.id, st: r.st, xz: +Math.hypot(r.pos.x - P.x, r.pos.z - P.z).toFixed(3), y: +(r.pos.y - P.y1).toFixed(3) });
+    for (const q of W.res) q.away = null; r.tmr = 0;
+  }
+  return out; });
+console.log('abstract sit', JSON.stringify(absSit));
+check('a resident who sat down unseen (the abstract tier) is on its seat when seen, not in the bench at the stop\'s slot',
+  absSit.length >= 5 && absSit.every((m) => m.st === 'seated' && m.xz < 0.05 && Math.abs(m.y) < 0.05), absSit);
+
 // Zeelich's street (built for this check; its benches are of their own shape) — numbers only, no captures (not a chapter 1–2 place)
 const zb = await ev(async () => { const G = game; await G.regions.buildAsync(['zeelich'], 'test', async () => {}); G.enterRoom('zeelich', null, true, true); G.step(1.0);
   return G.walkers.res.filter((r) => ['ilo', 'aven', 'kira'].includes(r.def.id)).map((r) => r.stops.length); });

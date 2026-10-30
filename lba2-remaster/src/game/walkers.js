@@ -817,7 +817,10 @@ export class Resident extends NPC {
       }
       case 'dwell': this.tmr -= dt; if (this.tmr <= 0) this.leave(); return;
       case 'seated': this.tmr -= dt; if (this.tmr <= 0) { this.sit = null; this.pos.x = s.x; this.pos.z = s.z; this.st = 'dwell'; this.tmr = 0; this.leave(); } return;
-      case 'sitin': this.st = 'seated'; return;
+      // (seated in the abstract state: put on its seat as the walk's end above does — it went 'seated' where it stood, at
+      //  the stop's slot on the ground in front of the bench, and showed sitting inside the bench when it came into view:
+      //  the user's "a woman sits INSIDE the bench" by the statue)
+      case 'sitin': if (this.sit) { this.pos.x = this.sit.to.x; this.pos.z = this.sit.to.z; this.pos.y = this.sit.y; if (this.sit.a != null) this.angle = this.targetAngle = this.sit.a; this.sit.t = this.sit.dur; } this.st = 'seated'; return;
       case 'sitout': this.sit = null; this.st = 'dwell'; this.tmr = 0; this.leave(); return;
       case 'knock': this.goInside(s); return;
       case 'inside': this.insideTick(dt, s); return;
