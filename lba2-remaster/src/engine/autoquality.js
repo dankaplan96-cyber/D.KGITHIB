@@ -54,13 +54,16 @@ export const TOP = PRESET_KNOBS.high;
 // in general … I want the world to look good and sharp, not pixelated … 50–55 that looks good!"): Auto never goes below
 // Medium's look: shadows, MSAA and Medium's lamps always; the floor, Medium-eco, draws at 90 % resolution ("less
 // resolution is fine, but not excessively"), animates far people at half rate and drops their tiny far parts. (On
-// battery the renderer's nearly invisible battery cuts apply on top: renderer.js LOOK-FIRST-2.) Low / Medium-lite /
+// battery the renderer's nearly invisible battery cuts apply on top: renderer.js LOOK-FIRST-2.) LOOK-FIRST-3 (the user's full
+// battery benchmark, 0.40.0): Medium-eco also takes Low's grass/flower distance and small casters — on his street that was the
+// biggest GPU lever left (Low street GPU 12.9 ms vs Medium without shadows 17.1) and the casters ~2.8 ms of CPU; the far grass
+// and far small shadows are what goes, never the shadows, the edges or the resolution under 90 %. Low / Medium-lite /
 // Low-lite are gone from Auto (Low stays a preset to pick by hand); on a weak machine on battery the game runs ~50–55
 // fps in the busiest places rather than look worse (it was not faster there anyway: CPU-bound).
 export const PROFILES = [
   { id: 'high', name: 'High', tier: 'high', K: { ...PRESET_KNOBS.high }, gpu: 1, cpu: 1 },
   { id: 'medium', name: 'Medium', tier: 'medium', K: { ...PRESET_KNOBS.medium }, gpu: 0.56, cpu: 0.8 },
-  { id: 'medium-eco', name: 'Medium-eco', tier: 'medium', K: { ...PRESET_KNOBS.medium, scale: 0.9, anim: 'eco', detail: 'near' }, gpu: 0.5, cpu: 0.74 },
+  { id: 'medium-eco', name: 'Medium-eco', tier: 'medium', K: { ...PRESET_KNOBS.medium, scale: 0.9, veg: 'low', casters: 'low', anim: 'eco', detail: 'near' }, gpu: 0.44, cpu: 0.68 },
 ];
 export const N_PROFILES = PROFILES.length;
 export const TIER_AT = { high: 0, medium: 1, low: 1 };   // (LOOK-FIRST: a weak GPU starts at Medium; on battery one lower, the floor Medium-eco)
