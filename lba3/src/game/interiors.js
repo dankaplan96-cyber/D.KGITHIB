@@ -314,9 +314,16 @@ const HOUSE_STAIRS = { sx0: -4.15, sx1: -2.75, sz0: 7.6, sz1: 10.4 };
 function buildHouse(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'house', 1000, 0);
   const R = B.room, k = B.k;
-  // The plan follows the original's (LBA2 scene 0, measured): the family room in the north-east (this room,
-  // 9 × 7 m, its own frame), Arthur's room (the original's nursery) and the reading room to the west, a hall with
-  // the front door and the stairs down to the cellar to the south; low dividers with rounded wooden caps.
+  // The plan follows the original's (LBA2 scene 0, measured from its grid; 1 brick ≈ 0.75 m here): the family room
+  // in the north-east (the original's living room, bricks x 16–28 × z 1–11; this room, 9 × 7 m, its own frame), the
+  // parents' bedroom in the north-west (the original's, x 5–14 × z 1–11, the double bed against the north wall, a
+  // doorway to the living room in the middle of the divider), Arthur's room in the south-west (the original's
+  // nursery, x 5–14 × z 13–20, its only door into the bedroom; on the left of the view, as in the original), and a
+  // hall with the front door to the south-east (the original's lower hall with the door in its south wall, the
+  // reading corner and the stairs). One long low divider across the house between the north and south rooms, as in
+  // the original (its z 12). Low dividers with rounded wooden caps.
+  // Twelve years on (HOUSE-LBA2): a kitchen corner in the living room; Arthur's room has its own door to the hall
+  // too; the reading room's bookcases and Zoé's work corner are in the bedroom.
   const W = 9, D = 7, H = 3.0;
   const HX0 = -13.5, HX1 = 4.5, HZ0 = -3.5, HZ1 = 11.5; // the whole house
   R.view = 10.8;
@@ -336,7 +343,8 @@ function buildHouse(scene, physics) {
       //  and the island picture between the two windows sat behind a curtain)
       { kind: 'window', at: 0.6 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('garden') },
       { kind: 'window', at: 2.8 - hcx, w: 1.0, h: 1.15, y0: 1.1, curtain: '#c8452f', view: outsideView('village') },
-      { kind: 'window', at: -9.5 - hcx, w: 1.1, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('orchard') },
+      // (HOUSE-LBA2: -9.5 → -10.8, west of the parents' bed as the original's window is; the headboard stood under it)
+      { kind: 'window', at: -10.8 - hcx, w: 1.1, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('orchard') },
     ],
     left: [
       { kind: 'window', at: 0.6 - hcz, w: 1.0, h: 1.15, y0: 1.1, curtain: '#e9d8a6', view: outsideView('sea') },
@@ -346,11 +354,13 @@ function buildHouse(scene, physics) {
   const BZ = -D / 2, LX = -W / 2;
   // inside walls: low dividers (the camera sees over them, as in LBA2's interiors)
   const divider = (x0, z0, x1, z1, doors = []) => B.partition(x0, z0, x1, z1, { h: 1.15, body: bodyM, cap: capM, rail, low: MAT.wainscot('honey'), dado: 0.9, doors });
-  // family room and hall | Arthur's room, reading room. (HOUSE-FIX: the reading room's doorway was at 13.1, z 9.6,
-  //  opening straight onto the stairwell — through it Twinsen dropped 0.65 m onto the stairs against the railing; now
-  //  at the south end, between the stairwell's railing and the front wall)
-  divider(LX, BZ, LX, HZ1, [{ at: 8.5, w: 1.3 }, { at: 14.4, w: 1.0 }]);
-  divider(HX0, 7.0, LX, 7.0, [{ at: 4.4, w: 1.2 }]);                        // Arthur's room | reading room
+  // family room and hall | the bedroom and Arthur's room: the bedroom's doorway in the middle of the family room's
+  // side (the original's, its z 6–7), Arthur's own door to the hall north of the stairwell (HOUSE-LBA2: the reading
+  // room's doorway at the hall's south end, at 14.4, went with the reading room)
+  divider(LX, BZ, LX, HZ1, [{ at: 4.5, w: 1.2 }, { at: 8.5, w: 1.3 }]);
+  // the bedroom | Arthur's room, on the family room | hall line (the original's one divider across the house), the
+  // doorway in its middle (the original's, its x 10–11)
+  divider(HX0, -BZ, LX, -BZ, [{ at: 4.5, w: 1.2 }]);
   divider(LX, -BZ, 0.2, -BZ);                                               // family room | hall
   // the front door, cut away like the rest of the near wall (as LBA2 draws a door in a near wall): the low wall
   // opens, a jamb with a rounded cap on each side, a stone threshold and a step outside, daylight on the floor
@@ -477,20 +487,14 @@ function buildHouse(scene, physics) {
   B.put(LX + 0.34, cupZ, Math.PI / 2, P.wardrobe, { w: 1.4, d: 0.62, h: 2.15 });
   R.searches.push({ id: 'cupboard', ...B.world(LX + 1.3, cupZ), r: 1.4 });
 
-  // --- bed, nightstand, Dino-Fly painting
-  const bedZ = 2.2;
-  // (HOUSE-FIX: the headboard against the divider, by the nightstand; it stood at the foot, out in the room)
-  B.put(LX + 1.1, bedZ, Math.PI / 2, P.bed, { w: 1.45, l: 2.15 });
   // the Dino-Fly painting over the sink, between the stove's shelf and the dresser (it hung behind the shelf's jars)
   k.at(-2.05, 1.97, BZ + 0.02, 0, () => P.frame(k, 0.78, 0.58, P.painting('dinofly')));
-  B.put(LX + 0.3, 0.95 + 0.0, Math.PI / 2, P.nightstand, {});
-  B.giver('nightstand', LX + 0.3, 0.95, ['life', 'magic'], 1, { r: 1.0, top: 0.7 });
-  P.candle(k, LX + 0.3, 0.62, 0.9);
-  P.bookStack(k, LX + 0.28, 0.62, 1.12, 2, 5);
-  // under the side window: a low chest with a plant
-  B.put(LX + 0.32, 0.1, Math.PI / 2, P.chest, { w: 0.8, d: 0.46, h: 0.44, pal: 'honey' });
-  B.giver('chest', LX + 0.32, 0.1, ['money', 'life', 'magic'], 3, { r: 1.1, top: 0.6 });
-  k.at(LX + 0.32, 0.6, -0.05, 0, () => P.pottedPlant(k, { s: 0.6 }));
+  // (HOUSE-LBA2: the parents' bed, its nightstand and the floor lamp at its foot stood here, by the kitchen; they are
+  //  in the bedroom now, through the doorway at z 1.0 — buildHouseWings)
+  // by the bedroom's doorway: a low chest with a plant
+  B.put(LX + 0.32, 2.65, Math.PI / 2, P.chest, { w: 0.8, d: 0.46, h: 0.44, pal: 'honey' });
+  B.giver('chest', LX + 0.32, 2.65, ['money', 'life', 'magic'], 3, { r: 1.1, top: 0.6 });
+  k.at(LX + 0.32, 0.6, 2.5, 0, () => P.pottedPlant(k, { s: 0.6 }));
 
   // --- table, chairs, rug, lamp
   const tX = -0.45, tZ = 0.55;
@@ -555,9 +559,6 @@ function buildHouse(scene, physics) {
   k.add(sphere(0.1, 12, 8), MAT.paint('#e03a3a', 0.4), 1.75, 0.1, 1.75);
   B.put(3.9, 1.35, 0, P.sideTable, {});
   k.at(3.9, 0.62, 1.35, -0.7, () => P.radio(k, { s: 0.8 }));
-  // floor lamp at the bed's foot
-  B.put(LX + 2.55, 3.05, 0, P.floorLamp, {});
-  B.light('#ffcf90', 2.5, 4, LX + 2.55, 1.4, 3.05);
   // daylight through door and windows
   B.light('#e8f4ff', 3, 5, doorX, 1.6, BZ + 1.0);
   B.light('#e8f4ff', 2.5, 4.5, LX + 1.0, 1.8, 0.1);
@@ -570,13 +571,13 @@ function buildHouse(scene, physics) {
   return B.finish();
 }
 
-// The rest of the house after the original's plan: Arthur's room (the nursery in LBA2, with its blue wallpaper of
-// gold stars), the reading room with its bookcases and armchair, the hall with armchairs, the family portrait and
-// the stairs down to the cellar. The original's six givers: Arthur's toy chest (15 kashes), the reading room's
-// bookcase (magic) and armchair, the hall's armchair, the family room's dresser, the bed.
+// The rest of the house after the original's plan: the parents' bedroom (north-west; with the reading room's bookcases
+// and armchair and Zoé's work corner now), Arthur's room (south-west: the nursery in LBA2, with its blue wallpaper of
+// gold stars), the hall with armchairs, the family portrait and the stairs down to the cellar. The original's six
+// givers: Arthur's toy chest (15 kashes), the bookcase (magic) and armchair, the hall's armchair, the family room's
+// dresser, the bed.
 function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
   const k = B.k, H = 3.0;
-  // Arthur's room: x HX0..LX, z HZ0..7
   const paper = MAT.paper('#2e6f88', '#e8c86a', 'star');
   // (HOUSE-WINDOWS: the paper stopped at the windows' edges — it hung across the glass and hid the view; the pieces
   //  keep the wall's one-sheet mapping, so the pattern is the same as before)
@@ -595,40 +596,53 @@ function buildHouseWings(B, R, { HX0, HX1, HZ0, HZ1, LX, BZ, doorX }) {
     }
     piece(x, len, y0, H);
   };
-  // the north wall's run (x from HX0, window at x = -9.5) and the west wall's (it runs from z = 7 back to HZ0, window at z = 0.6)
-  k.at((HX0 + LX) / 2, 0, HZ0 + 0.012, 0, () => paperRun(LX - HX0 - 0.05, [{ at: -9.5 - HX0 - 0.025, w: 1.1, y0: 1.1, h: 1.15 }]));
-  k.at(HX0 + 0.012, 0, (HZ0 + 7) / 2, Math.PI / 2, () => paperRun(7 - HZ0 - 0.05, [{ at: 7 - 0.025 - 0.6, w: 1.0, y0: 1.1, h: 1.15 }]));
-  B.put(HX0 + 1.0, 4.9, Math.PI / 2, P.bed, { w: 1.05, l: 1.95, quilt: ['#3b78d8', '#e9c46a', '#e0503a', '#f2ead6', '#3a8a5a'], key: 'arthur' });
-  B.put(HX0 + 0.3, 3.55, Math.PI / 2, P.nightstand, {});
-  P.candle(k, HX0 + 0.3, 0.62, 3.5);
-  // (HOUSE-FIX: his bed's headboard to the wall; the desk east of the window: it stood half under the curtain)
-  const adX = -7.75;
-  B.put(adX, HZ0 + 0.42, 0, P.desk, { w: 1.4, d: 0.65, pal: 'honey', leather: '#3b6fc4' });
-  B.put(adX, HZ0 + 1.2, Math.PI, P.chair, { cushion: '#3b78d8' }, { noStand: true, seeThrough: true });
-  k.at(adX - 0.5, 0.78, HZ0 + 0.35, 0.3, () => P.deskLamp(k, { shade: '#e0503a' }));
-  k.at(adX + 0.5, 0.78, HZ0 + 0.4, -0.4, () => P.toyBoat(k));
-  k.at(-11.2, 1.75, HZ0 + 0.15, 0, () => P.wallShelf(k, { w: 1.4, d: 0.24 }));
-  for (const [x, c] of [[-11.7, '#e0503a'], [-11.25, '#3b78d8'], [-10.75, '#e9c46a']]) k.at(x, 1.77, HZ0 + 0.17, 0.2, () => P.spinningTop(k, 0, 0, c));
-  B.put(HX0 + 0.42, -1.6, Math.PI / 2, P.chest, { w: 0.85, d: 0.5, h: 0.46, pal: 'red', band: MAT.paint('#e9c46a', 0.5) });
-  B.giver('arthurchest', HX0 + 0.42, -1.6, ['money'], 15, { r: 1.2, top: 0.6 });
-  k.at(-10.0, 0, 1.0, 0.1, () => P.rug(k, 2.6, 1.9, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));
-  k.at(-9.6, 0, 1.3, 0.4, () => P.toyBlocks(k));
-  k.at(-6.0, 0, -2.6, 0, () => P.pottedPlant(k, { s: 0.9 }));
-  B.giver('arthurbed', HX0 + 1.0, 4.9, ['life'], 1, { r: 1.4, top: 0.6 });
-  B.light('#ffe0b0', 6, 9, -9.0, 2.3, 1.0);
-  // the reading room: x HX0..LX, z 7..HZ1
-  // (HOUSE-FIX: the three bookcases stood in a row across the west window; now two flank it, the reading chair sits
-  //  under it facing the room — it faced the shelves from a metre away — with the lamp and a side table beside it)
-  for (const [z, sd] of [[7.85, 2], [10.75, 5]]) B.put(HX0 + 0.22, z, Math.PI / 2, P.bookcase, { w: 1.1, h: 2.1, pal: 'dark', seed: sd });
-  B.giver('bookcase', HX0 + 0.22, 10.75, ['magic'], 10, { r: 1.3, top: 1.8 });
-  B.put(HX0 + 0.85, 9.3, Math.PI / 2, P.armchair, {});
-  B.put(HX0 + 0.75, 8.35, 0, P.floorLamp, {});
-  B.light('#ffcf90', 3, 5, HX0 + 0.75, 1.5, 8.35);
-  B.put(HX0 + 0.9, 10.2, 0, P.sideTable, {});
-  P.bookStack(k, HX0 + 0.9, 0.62, 10.2, 1, 4);
-  B.giver('readchair', HX0 + 0.85, 9.3, ['money', 'life', 'magic'], 5, { r: 1.2, top: 0.7 });
-  k.at(-11.2, 0, 9.3, 0, () => P.rug(k, 2.4, 2.0, ['#a8382a', '#2a4a7a', '#e0b050', '#f0e0b8', '#3a1a12'], 3));
-  B.light('#ffe0b0', 4, 7, -9.0, 2.3, 9.3);
+  // Arthur's room (the original's nursery, on the left of the view): x HX0..LX, z -BZ..HZ1. The star paper on its
+  // far (west) wall, from the divider to the front corner (the window at z 9.3); the bedroom's walls are plaster
+  const az0 = -BZ, aTop = HZ1 - 0.025, aLen = aTop - az0;
+  k.at(HX0 + 0.012, 0, (az0 + aTop) / 2, Math.PI / 2, () => paperRun(aLen, [{ at: aTop - 9.3, w: 1.0, y0: 1.1, h: 1.15 }]));
+  // his bed's headboard to the west wall by the divider, the nightstand at its foot side, his workbench next
+  // (homelife.js), the toy chest under the window; the desk against the divider west of the doorway
+  const abZ = 4.75;
+  B.put(HX0 + 1.0, abZ, Math.PI / 2, P.bed, { w: 1.05, l: 1.95, quilt: ['#3b78d8', '#e9c46a', '#e0503a', '#f2ead6', '#3a8a5a'], key: 'arthur' });
+  B.put(HX0 + 0.3, abZ + 1.2, Math.PI / 2, P.nightstand, {});
+  P.candle(k, HX0 + 0.3, 0.62, abZ + 1.15);
+  k.at(HX0 + 0.15, 1.75, abZ, Math.PI / 2, () => P.wallShelf(k, { w: 1.4, d: 0.24 }));
+  for (const [dz, c] of [[0.45, '#e0503a'], [0, '#3b78d8'], [-0.5, '#e9c46a']]) k.at(HX0 + 0.17, 1.77, abZ + dz, Math.PI / 2 + 0.2, () => P.spinningTop(k, 0, 0, c));
+  const adX = -10.55, adZ = -BZ + 0.45;
+  B.put(adX, adZ, 0, P.desk, { w: 1.4, d: 0.65, pal: 'honey', leather: '#3b6fc4' });
+  B.put(adX, adZ + 0.78, Math.PI, P.chair, { cushion: '#3b78d8' }, { noStand: true, seeThrough: true });
+  k.at(adX - 0.5, 0.78, adZ - 0.07, 0.3, () => P.deskLamp(k, { shade: '#e0503a' }));
+  k.at(adX + 0.5, 0.78, adZ - 0.02, -0.4, () => P.toyBoat(k));
+  B.put(HX0 + 0.42, 9.3, Math.PI / 2, P.chest, { w: 0.85, d: 0.5, h: 0.46, pal: 'red', band: MAT.paint('#e9c46a', 0.5) });
+  B.giver('arthurchest', HX0 + 0.42, 9.3, ['money'], 15, { r: 1.2, top: 0.6 });
+  k.at(-8.8, 0, 8.1, 0.1, () => P.rug(k, 2.6, 1.9, ['#3b78d8', '#e9c46a', '#e0503a', '#f8f0d8', '#1a3a6a'], 9));
+  k.at(-8.4, 0, 8.4, 0.4, () => P.toyBlocks(k));
+  k.at(-5.1, 0, HZ1 - 0.6, 0, () => P.pottedPlant(k, { s: 0.9 }));
+  B.giver('arthurbed', HX0 + 1.0, abZ, ['life'], 1, { r: 1.4, top: 0.6 });
+  B.light('#ffe0b0', 6, 9, -9.0, 2.3, 7.5);
+  // the parents' bedroom (the original's, north-west): x HX0..LX, z HZ0..-BZ. The double bed's headboard against the
+  // north wall east of the window (the original's bed, its x 9–11), the nightstand on its east side, the floor lamp
+  // on its west; the reading corner moved in from the old reading room against the west wall round the sea window
+  // (two bookcases flank it, the reading chair under it facing the room, its lamp and a side table beside it);
+  // Zoé's work corner in the north-west corner (homelife.js)
+  const pbX = -8.4, pbZ = HZ0 + 1.155;
+  B.put(pbX, pbZ, 0, P.bed, { w: 1.45, l: 2.15 });
+  B.put(pbX + 1.0, HZ0 + 0.3, 0, P.nightstand, {});
+  B.giver('nightstand', pbX + 1.0, HZ0 + 0.3, ['life', 'magic'], 1, { r: 1.0, top: 0.7 });
+  P.candle(k, pbX + 1.05, 0.62, HZ0 + 0.25);
+  P.bookStack(k, pbX + 0.88, 0.62, HZ0 + 0.35, 2, 5);
+  B.put(pbX - 1.2, HZ0 + 0.35, 0, P.floorLamp, {});
+  B.light('#ffcf90', 2.5, 4, pbX - 1.2, 1.4, HZ0 + 0.35);
+  for (const [z, sd] of [[-0.85, 2], [2.05, 5]]) B.put(HX0 + 0.22, z, Math.PI / 2, P.bookcase, { w: 1.1, h: 2.1, pal: 'dark', seed: sd });
+  B.giver('bookcase', HX0 + 0.22, 2.05, ['magic'], 10, { r: 1.3, top: 1.8 });
+  B.put(HX0 + 0.85, 0.6, Math.PI / 2, P.armchair, {});
+  B.put(HX0 + 0.75, -0.35, 0, P.floorLamp, {});
+  B.light('#ffcf90', 3, 5, HX0 + 0.75, 1.5, -0.35);
+  B.put(HX0 + 0.9, 1.5, 0, P.sideTable, {});
+  P.bookStack(k, HX0 + 0.9, 0.62, 1.5, 1, 4);
+  B.giver('readchair', HX0 + 0.85, 0.6, ['money', 'life', 'magic'], 5, { r: 1.2, top: 0.7 });
+  k.at(-11.2, 0, 0.6, 0, () => P.rug(k, 2.4, 2.0, ['#a8382a', '#2a4a7a', '#e0b050', '#f0e0b8', '#3a1a12'], 3));
+  B.light('#ffe0b0', 4, 7, -9.0, 2.3, 0.0);
   // the hall: x LX..HX1, z -BZ..HZ1 — armchairs round a rug, the family portrait, the stairs down
   k.at(-0.8, 0, 6.3, 0, () => P.rug(k, 3.2, 2.4, ['#2a4a7a', '#a8382a', '#e9c46a', '#f2ead6', '#1a2a3a'], 5));
   B.put(-1.9, 5.6, Math.PI / 2 + 0.35, P.armchair, {});

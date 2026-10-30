@@ -1,5 +1,5 @@
 // Twelve years of family life in Twinsen's house (called from interiors.js buildHouse). A few things a family adds
-// to a house over the years, each where it would be: Zoé's work corner in the reading room (she keeps the Water
+// to a house over the years, each where it would be: Zoé's work corner in the bedroom (she keeps the Water
 // Office's connection register: which houses the project hooks up to its heat network next), Arthur's workbench
 // with his paddle boat, the old travel trunk that now holds seed packets, a box of neighbours' things Twinsen has
 // mended by the front door, and the heat line's meter where it comes into the hall (Zoé's note on it). One
@@ -60,32 +60,37 @@ export function dressHomeLife(B, R) {
   L.stage = -1;
   L.setStage = (st) => { if (st === L.stage) return; L.stage = st; for (const fn of stageFns) fn(st); };
 
-  // --- Zoé's corner in the reading room, against the divider to Arthur's room (z 7)
+  // --- Zoé's corner in the parents' bedroom (HOUSE-LBA2: it was in the reading room, gone into the bedroom): her desk
+  //     against the west wall in the north-west corner, its front to the room, the board on its easel at the back
+  //     facing the house's camera
   {
-    const x = -6.4, z = 7.42;
-    B.put(x, z, 0, P.desk, { w: 1.3, d: 0.6, pal: 'honey', leather: '#3f8a6a' });
-    B.put(x, z + 0.8, Math.PI, P.chair, { cushion: '#3f9a6a' }, { noStand: true, seeThrough: true });
+    const x = -13.18, z = -2.45, ry = Math.PI / 2, cs = Math.cos(ry), sn = Math.sin(ry);
+    const wx = (dx, dz) => x + dx * cs + dz * sn, wz = (dx, dz) => z - dx * sn + dz * cs;   // desk-local → house
+    B.put(x, z, ry, P.desk, { w: 1.3, d: 0.6, pal: 'honey', leather: '#3f8a6a' });
+    B.put(wx(0, 0.8), wz(0, 0.8), ry + Math.PI, P.chair, { cushion: '#3f9a6a' }, { noStand: true, seeThrough: true });
     // the board on its little easel at the back of the desk
-    k.add(rbox(0.86, 0.6, 0.03, 0.01), MAT.wood('dark'), x, 0.78 + 0.38, z - 0.2, 0, { rx: -0.12 });
     const boardM = [0, 1, 2].map((st) => MAT.map(boardTex(st), 0.8));
-    const board = new THREE.Mesh(plane(0.8, 0.54), boardM[0]); board.position.set(x, 0.78 + 0.38, z - 0.18); board.rotation.x = -0.12; B.group.add(board);
+    const board = new THREE.Mesh(plane(0.8, 0.54), boardM[0]);
+    board.position.set(wx(0, -0.18), 0.78 + 0.38, wz(0, -0.18)); board.rotation.order = 'YXZ'; board.rotation.set(-0.12, ry, 0); B.group.add(board);
     stageFns.push((st) => { board.material = boardM[Math.min(2, st)]; });
-    // the register: two ledgers, one open; a pen; a cup of seed packets; a little brass bell from the office
-    k.add(rbox(0.3, 0.06, 0.22, 0.01), MAT.paint('#2f5a8a', 0.6), x - 0.42, 0.81, z + 0.08, 0.1);
-    k.add(rbox(0.3, 0.05, 0.22, 0.01), MAT.paint('#8a3a2a', 0.6), x - 0.42, 0.865, z + 0.08, 0.15);
-    k.add(rbox(0.42, 0.012, 0.28, 0.004), MAT.flat('#f4ecd4', 0.9), x + 0.05, 0.786, z + 0.12, -0.08);
-    k.add(cyl(0.006, 0.006, 0.16, 5), MAT.paint('#2a2a3a', 0.4), x + 0.12, 0.8, z + 0.12, 0.6, { rz: Math.PI / 2 });
-    k.add(lathe([[0.001, 0], [0.05, 0], [0.055, 0.1], [0.001, 0.1]], 10), MAT.flat('#d8b070', 0.6), x + 0.45, 0.78, z - 0.02);
-    for (let i = 0; i < 4; i++) k.add(rbox(0.05, 0.08, 0.004, 0.002), MAT.flat(['#e0503a', '#e8c040', '#3f9a6a', '#3b78d8'][i], 0.8), x + 0.42 + (i % 2) * 0.03, 0.9, z - 0.04 + i * 0.01, i * 0.3);
-    P.deskBell(k, x + 0.5, 0.78, z + 0.18);
-    L.zoeDesk = B.world(x, z + 0.75);
+    k.at(x, 0, z, ry, () => {
+      k.add(rbox(0.86, 0.6, 0.03, 0.01), MAT.wood('dark'), 0, 0.78 + 0.38, -0.2, 0, { rx: -0.12 });
+      // the register: two ledgers, one open; a pen; a cup of seed packets; a little brass bell from the office
+      k.add(rbox(0.3, 0.06, 0.22, 0.01), MAT.paint('#2f5a8a', 0.6), -0.42, 0.81, 0.08, 0.1);
+      k.add(rbox(0.3, 0.05, 0.22, 0.01), MAT.paint('#8a3a2a', 0.6), -0.42, 0.865, 0.08, 0.15);
+      k.add(rbox(0.42, 0.012, 0.28, 0.004), MAT.flat('#f4ecd4', 0.9), 0.05, 0.786, 0.12, -0.08);
+      k.add(cyl(0.006, 0.006, 0.16, 5), MAT.paint('#2a2a3a', 0.4), 0.12, 0.8, 0.12, 0.6, { rz: Math.PI / 2 });
+      k.add(lathe([[0.001, 0], [0.05, 0], [0.055, 0.1], [0.001, 0.1]], 10), MAT.flat('#d8b070', 0.6), 0.45, 0.78, -0.02);
+      for (let i = 0; i < 4; i++) k.add(rbox(0.05, 0.08, 0.004, 0.002), MAT.flat(['#e0503a', '#e8c040', '#3f9a6a', '#3b78d8'][i], 0.8), 0.42 + (i % 2) * 0.03, 0.9, -0.04 + i * 0.01, i * 0.3);
+      P.deskBell(k, 0.5, 0.78, 0.18);
+    });
+    L.zoeDesk = B.world(wx(0, 0.75), wz(0, 0.75));
   }
 
-  // --- Arthur's workbench in his room, against the west wall between his toy chest and his bed (in full view of
-  //     the house's camera: the north wall behind the family room's wardrobe was hidden): the paddle boat he is
-  //     building to beat Lulu's, plans pinned up
+  // --- Arthur's workbench in his room, against the west wall between his bed and his toy chest (in full view of
+  //     the house's camera): the paddle boat he is building to beat Lulu's, plans pinned up
   {
-    const x = -13.18, z = 2.2, ry = Math.PI / 2;   // (its front faces east, into the room)
+    const x = -13.18, z = 7.4, ry = Math.PI / 2;   // (its front faces east, into the room; HOUSE-LBA2: z 2.2 → 7.4)
     B.put(x, z, ry, P.workbench, { w: 1.4, d: 0.6, h: 0.78 });
     k.at(x, 0, z, ry, () => {
       // the boat: a hull, a paddle wheel on the bench (one paddle missing), a pot of glue, a rudder blade

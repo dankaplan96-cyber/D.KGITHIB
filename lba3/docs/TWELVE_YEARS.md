@@ -36,7 +36,7 @@ player can do · what stays different afterwards.
   sleeves rolled to the elbow and a tool pouch on his belt. He was the small-child template at 0.62 (eyes at 0.67 of
   his father's), which read as six or seven. His lines, his boats, his radio and the pliers are unchanged.
   docs/character-review.md §19; evidence docs/lba3-production/reviews/ARTHUR-12/.
-- **Zoé's work corner** (reading room). She keeps the Water Office's connection register: which houses get
+- **Zoé's work corner** (the parents' bedroom, its north-west corner; the reading room's bookcases moved in there too). She keeps the Water Office's connection register: which houses get
   the project's heat next. Why: the project arrived, and somebody had to decide the order. Bug Street gains;
   the harbour row waits. Sees: a desk with ledgers and a board of the island with green and red pins. Does:
   looks (one short line). After: the board reads differently once the heat is on, and again after Zoé finds
