@@ -8,6 +8,7 @@ import { angleDiff, dampAngle, clamp } from '../engine/math.js';
 import { HeroCombat } from './combat.js';
 import { WATER_FLOOR } from '../engine/physics.js';
 import { SoftParticles } from '../engine/softfx.js';
+import { offScene } from './offscene.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // The jump (CONTROL-FEEL, WORKLIST #31; the user: "the jump is too high"). LBA2's jump (ANIM.HQR 71, the hero's File3D
@@ -741,6 +742,9 @@ export class NPC extends Actor {
   }
   update(dt) {
     if (!this.present || this.controlled) return;
+    // PACE-SIM: standing in another scene than the one on screen, with no walk of the story's to follow and in no
+    // conversation: nothing of him changes and nobody sees him — he waits as he is (offscene.js)
+    if (!this.talking && !this.listenTo && !(this.track && this.track.cmds[this.track.pc]) && offScene(this.game, this)) return;
     const hero = this.game.hero;
     const near = this.distTo(hero) < 3.2;
     let moving = false;

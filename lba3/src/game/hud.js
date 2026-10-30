@@ -302,8 +302,11 @@ export class HUD {
     setTimeout(() => d.remove(), ms + 500);
   }
 
+  // the red edge of a blow: a fade of its opacity only (css #vignette), run on the compositor; restarted by a new blow
+  // without the forced layout the class toggle needed (PACE-SIM)
   hurt() {
-    const v = $('#vignette');
+    const v = $('#vignette'); if (!v) return;
+    if (v.animate) { this._hurtA?.cancel(); this._hurtA = v.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 600, easing: 'ease-out' }); return; }
     v.classList.remove('hit'); void v.offsetWidth; v.classList.add('hit');
   }
 

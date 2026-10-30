@@ -374,6 +374,7 @@ export class Dog {
 
 // a few dogs in a region: updaters gets one function that steps them all
 export function addDogs(list, updaters) {
-  updaters.push((dt) => { for (const d of list) d.update(dt); });
+  // (PACE-SIM: a dog whose area is not on screen — Citadel's poodle while Twinsen is indoors or away — waits as it is)
+  updaters.push((dt) => { for (const d of list) if (d.root.parent?.visible !== false) d.update(dt); });
   return list;
 }
