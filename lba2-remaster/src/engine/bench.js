@@ -181,6 +181,9 @@ export class Bench {
       { id: 'shadow pass writes colour (as before)', apply() { R.shadowDepthOnly = false; }, undo() { R.shadowDepthOnly = true; } },
       { id: 'res x0.9 sharpened', apply() { R.autoRes = true; R.setDyn(0.9); }, undo() { R.autoRes = false; R.setDyn(1); } },
       { id: 'res x0.9 not sharpened', apply() { R.sharpenOn = false; R.autoRes = true; R.setDyn(0.9); }, undo() { R.sharpenOn = true; R.autoRes = false; R.setDyn(1); } },
+      // (GFX-LOOK-2: round 1's whole output-pass work in one line, at the 90 % Auto runs on battery: no edge smoothing and
+      //  no sharpening — the pass reads one texel a pixel, as before GFX-LOOK; compare with 'res x0.9 sharpened')
+      { id: 'res x0.9, output plain (no edges, no sharpen)', apply() { R.edgeAA = false; R.sharpenOn = false; R.autoRes = true; R.setDyn(0.9); }, undo() { R.edgeAA = true; R.sharpenOn = true; R.autoRes = false; R.setDyn(1); } },
       { id: 'draw batches off', apply() { if (G.drawBatch) G.drawBatch.enabled = false; }, undo() { if (G.drawBatch) G.drawBatch.enabled = true; } },
       // (PERF-BATTERY: the static shadow cache off (every caster drawn every frame, as before), and the battery profile
       //  the other way round from how this run is powered: on when plugged in, off on battery)

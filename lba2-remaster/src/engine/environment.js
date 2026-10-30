@@ -91,8 +91,21 @@ function seaGeometry() {
 }
 
 const C = (c) => new THREE.Color(c);
+// GFX-LOOK-2: the sun over Citadel. It shone from the north-west (−x, −z), and the chapters' walks go north (the house
+// to the square) and west (the square to the harbour), the play camera behind Twinsen: into the sun nearly all the way,
+// so every wall and prop turned its shaded side to the camera and the shadows ran at it — the flat, muddy look of the
+// street. Now from the south-west (−x, +z, the same height): from the left and behind on the way to the square, from the
+// left across the harbour, and the same side as the people's own fixed ramp light (characters.js LBA_LIGHT, from −x, +z),
+// so a person and the house beside him are lit from one side. Interiors and the other regions keep the old direction
+// (their rooms and views were composed under it); a region may give its own (env.sunDir). `?oldsun`: as before (A/B).
+const OLD_SUN = typeof location !== 'undefined' && /[?&]oldsun\b/.test(location.search);
+const SUN_BASE = new THREE.Vector3(-0.5, 0.8, -0.35).normalize(), SUN_CITADEL = OLD_SUN ? SUN_BASE : new THREE.Vector3(-0.5, 0.8, 0.35).normalize();
 const PAL = {
-  clear: { fog: C('#a8d2f2'), clouds: C('#ffffff'), sun: C('#fff1d6'), hemiSky: C('#d8ecff'), hemiGround: C('#6a7a4a'), deep: C('#1f6fae'), shallow: C('#3fc6c8'), sky: C('#bfe0ff') },
+  // GFX-LOOK-2: the fill a cooler sky blue (#d8ecff → #c8dcff, 1.25 → 1.42: about as bright in red and green, +14 % blue) and its bounce warmer, less olive (#6a7a4a → #77745a):
+  // what lies in the sun's shadow is lit by these alone, and read warm grey-brown (the soil in a house's shadow was a
+  // dark orange); LBA2's shadows are cool. The sun a shade warmer so the sunlit side keeps its colour. The sea a little
+  // more cyan (LBA2's saturated cyan-blue rather than royal blue).
+  clear: { fog: C('#a8d2f2'), clouds: C('#ffffff'), sun: C('#fff0d2'), hemiSky: C('#c8dcff'), hemiGround: C('#77745a'), deep: C('#1a76b0'), shallow: C('#3fc8c6'), sky: C('#bfe0ff') },
   storm: { fog: C('#6f8094'), clouds: C('#59667a'), sun: C('#b3c2dc'), hemiSky: C('#a9b8d0'), hemiGround: C('#4c5a46'), deep: C('#1a3f5c'), shallow: C('#2f7c86'), sky: C('#7d8ea2') },
 };
 
@@ -105,7 +118,7 @@ export class Environment {
     this.nextLightning = 6;
     this.onThunder = null;
     this.fogRange = [45, 190];
-    this.sunDir = new THREE.Vector3(-0.5, 0.8, -0.35).normalize();
+    this.sunDir = new THREE.Vector3(-0.5, 0.8, -0.35).normalize();   // (one vector, shared: the sea's glint, shadowcull)
     const TX = textures();
 
     // Lights: a strong directional "island light" (LBA2 stores AlphaLight/BetaLight per island) + sky fill
@@ -239,13 +252,16 @@ export class Environment {
 
     this.sun.intensity = lerp(2.6, 0.7, s) + f * 3;
     this.sun.color.copy(mix('sun'));
-    this.hemi.intensity = lerp(1.25, 1.05, s) + f * 2;
+    this.hemi.intensity = lerp(1.42, 1.05, s) + f * 2;   // (GFX-LOOK-2: 1.25 → 1.42 with the bluer fill, see PAL)
     this.hemi.color.copy(mix('hemiSky'));
     this.hemi.groundColor.copy(mix('hemiGround'));
 
     // PERF-BATTERY: the sea's grid follows the camera in whole grid steps (see seaGeometry)
     this.water.position.set(Math.round(camera.position.x / SEA_STEP) * SEA_STEP, 0, Math.round(camera.position.z / SEA_STEP) * SEA_STEP);
     // the shadow camera follows the focus in whole shadow-map texels, so shadow edges don't crawl as he walks
+    // GFX-LOOK-2: Citadel's own sun direction (see SUN_CITADEL)
+    const sd = this.region || this.interior ? (this.region?.sunDir ? (this._rsd ??= new THREE.Vector3()).fromArray(this.region.sunDir).normalize() : SUN_BASE) : SUN_CITADEL;
+    if (!this.sunDir.equals(sd)) this.sunDir.copy(sd);
     const sf = this.snapShadow(focus);
     this.sun.position.copy(sf).addScaledVector(this.sunDir, 80);
     this.sun.target.position.copy(sf);

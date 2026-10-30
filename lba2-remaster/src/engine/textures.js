@@ -79,6 +79,38 @@ export function makeTextures() {
       x.globalAlpha = 1;
     }
     speckle(x, S, r, 25, ['#6a9440', '#5f8a3a', '#78a04a'], 0.5, 0.8);
+    // GFX-LOOK-2 (the user: "the world should look good and sharp"): close up the lawns read as one flat green — the
+    // strokes above are a few percent off the base, under what the eye resolves once mipmapped. LBA2's lawns are painted
+    // tufts: a darker foot, blades fanning up to a lighter tip. 90 tufts, each a soft dark patch under 9–16 blades;
+    // mid-frequency (a tuft ~15–30 texels: 25–50 cm on the ground), moderate contrast, no bright dots (R6's glitter).
+    // Its own random stream: the draws above are unchanged.
+    {
+      const q = rng(111);
+      for (let i = 0; i < 90; i++) {
+        const cx = q() * S, cy = q() * S, rad = 6 + q() * 9, n = 9 + Math.floor(q() * 8), lush = q();
+        wrap(S, (ox, oy) => {
+          if (cx + ox < -30 || cx + ox > S + 30 || cy + oy < -30 || cy + oy > S + 30) return;
+          const g = x.createRadialGradient(cx + ox, cy + oy + rad * 0.3, 0, cx + ox, cy + oy + rad * 0.3, rad * 1.3);
+          g.addColorStop(0, 'rgba(52,86,30,0.42)'); g.addColorStop(1, 'rgba(52,86,30,0)');
+          x.fillStyle = g; x.fillRect(cx + ox - rad * 1.4, cy + oy - rad, rad * 2.8, rad * 2.8);
+        });
+        const q2 = rng(1000 + i);
+        for (let k = 0; k < n; k++) {
+          const a = -Math.PI / 2 + (q2() - 0.5) * 1.5, l = rad * (0.7 + q2() * 0.7), bx = cx + (q2() - 0.5) * rad * 0.9, by = cy + rad * 0.35 + (q2() - 0.5) * rad * 0.3;
+          const tip = lush < 0.5 ? (k % 3 ? '#80aa4e' : '#8db556') : (k % 3 ? '#76a247' : '#6a9a42');
+          const lw = 1.3 + q2() * 0.9, bend = (q2() - 0.5) * 3;   // (drawn before the copies: each copy the same blade)
+          wrap(S, (ox, oy) => {
+            if (bx + ox < -30 || bx + ox > S + 30 || by + oy < -30 || by + oy > S + 30) return;
+            const g = x.createLinearGradient(bx + ox, by + oy, bx + ox + Math.cos(a) * l, by + oy + Math.sin(a) * l);
+            g.addColorStop(0, '#43702a'); g.addColorStop(1, tip);
+            x.strokeStyle = g; x.lineWidth = lw; x.globalAlpha = 0.8;
+            x.beginPath(); x.moveTo(bx + ox, by + oy);
+            x.quadraticCurveTo(bx + ox + Math.cos(a) * l * 0.5 + bend, by + oy + Math.sin(a) * l * 0.5, bx + ox + Math.cos(a) * l, by + oy + Math.sin(a) * l);
+            x.stroke(); x.globalAlpha = 1;
+          });
+        }
+      }
+    }
     T.grass = toTex(c);
   }
   // sand
@@ -132,13 +164,17 @@ export function makeTextures() {
   // dirt path
   {
     const [c, x] = canvas(S); const r = rng(14);
-    x.fillStyle = '#9c6c44'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#8a5c38', '#ab7b52', '#80543a'], 15, 40, 0.6);
+    // (GFX-LOOK-2: a shade less saturated, #9c6c44 → #9a6e4c: on screen the soil read orange, and dark orange in shade)
+    x.fillStyle = '#9a6e4c'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#895e3f', '#a97c58', '#7f5741'], 15, 40, 0.6);
     for (let i = 0; i < 120; i++) {
       const px = r() * S, py = r() * S, rr = 1.5 + r() * 3.5;
       wrap(S, (ox, oy) => {
         x.fillStyle = 'rgba(80,58,36,0.5)'; x.beginPath(); x.ellipse(px + ox + 0.8, py + oy + 0.8, rr, rr * 0.7, 0, 0, 7); x.fill();
-        x.fillStyle = ['#b08c66', '#957a60', '#b89a76'][i % 3]; x.beginPath();   // (R6: the pebbles a little less bright) x.ellipse(px + ox, py + oy, rr, rr * 0.7, 0, 0, 7); x.fill();
+        // (GFX-LOOK-2: this pebble was never drawn — its ellipse and fill had slipped into R6's comment, so the path showed
+        //  only the pebbles' dark shadows: dark holes in the soil)
+        x.fillStyle = ['#b08c66', '#957a60', '#b89a76'][i % 3]; x.beginPath();   // (R6: the pebbles a little less bright)
+        x.ellipse(px + ox, py + oy, rr, rr * 0.7, 0, 0, 7); x.fill();
       });
     }
     T.dirt = toTex(c);
@@ -283,8 +319,9 @@ export function makeTextures() {
   // sea: painted wave crests
   {
     const [c, x] = canvas(S); const r = rng(19);
-    x.fillStyle = '#2f86c4'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#2676b4', '#3a96d2', '#2a80c0'], 20, 60, 0.6);
+    // (GFX-LOOK-2: a little more green, #2f86c4 → #2b8fc6: LBA2's sea is a saturated cyan-blue; on screen it read royal blue)
+    x.fillStyle = '#2b8fc6'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#237fb6', '#379fd2', '#2889c2'], 20, 60, 0.6);
     x.lineCap = 'round';
     for (let i = 0; i < 60; i++) {
       const px = r() * S, py = r() * S, l = 8 + r() * 14;
@@ -384,7 +421,10 @@ function islandTextures(T) {
   {
     const N = 256;
     const [c, x] = canvas(N); const r = rng(102);
-    x.fillStyle = '#3e3a3a'; x.fillRect(0, 0, N, N);
+    // (GFX-LOOK-2: the mortar #3e3a3a → #5c5550: with ~40 % of the tile mortar the wall averaged a dark grey, so the
+    //  lighthouse's cream footing and the harbour's embankments read as a black heap from the play camera; LBA2's
+    //  rubble walls are mid-grey stones in a darker but not black bed)
+    x.fillStyle = '#5c5550'; x.fillRect(0, 0, N, N);
     const stones = [];
     for (let i = 0; i < 900 && stones.length < 90; i++) {
       const px = r() * N, py = r() * N, rx = 9 + r() * 13, ry = 7 + r() * 8;
@@ -397,7 +437,7 @@ function islandTextures(T) {
       if (ok) stones.push([px, py, rx, ry, r() * 0.6 - 0.3, r()]);
     }
     for (const [px, py, rx, ry, rot, tone] of stones) {
-      const base = 120 + tone * 70;
+      const base = 136 + tone * 60;   // (GFX-LOOK-2: was 120 + 70: with the darker mortar, a black heap from afar)
       wrap(N, (ox, oy) => {
         x.save(); x.translate(px + ox, py + oy); x.rotate(rot);
         x.fillStyle = 'rgba(20,16,16,0.5)'; x.beginPath(); x.ellipse(1.5, 2, rx, ry, 0, 0, 7); x.fill();

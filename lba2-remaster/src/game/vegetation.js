@@ -98,8 +98,13 @@ export function treeGeometry(kind, seed = 1, lod = 0) {
     paint: (p, m, col) => {
       if (m.startsWith('leaf') || m === 'needle') {
         // sunlit top, cooler shaded underside, a little hue variation
+        // (GFX-LOOK-2: the gradient is a factor now. It was a lightness offset of −0.07…+0.05 on the colour, which is
+        // linear here: the dark needle green's lightness is ~0.07, so a pine's lowest tier came out pure black and every
+        // crown's lower half at about half its colour — dark blobs under the trees. ×0.72 at the foot to ×1.12 at the top,
+        // the underside a touch cooler, as the offset meant.)
         const k = Math.max(0, Math.min(1, (p.y - 1.4) / (t.h - 1.4)));
-        col.offsetHSL((Math.sin(p.x * 3 + p.z * 2) * 0.012), 0.02, -0.07 + k * 0.12);
+        col.offsetHSL((Math.sin(p.x * 3 + p.z * 2) * 0.012) + (1 - k) * 0.012, 0.02, 0);
+        col.multiplyScalar(0.72 + k * 0.4);
       }
       if (m === 'bark' && p.y < 0.2) col.multiplyScalar(0.8);
     },
@@ -264,7 +269,9 @@ export function palmGeometry(seed = 1, lod = 0) {
   const trunk = sculptRigid({
     key: 'palm-' + key, prims: P, groups: { wood: 0.05, nut: 0.04 }, joinK: 0.04,
     colors: { bark: '#8a6a44', nut: '#6a4a2a', frond: '#4a8a34' },
-    paint: (p, m, col) => { if (m === 'bark') col.offsetHSL(0, 0, Math.sin(p.y * 11) * 0.06 - (p.y < 0.3 ? 0.08 : 0)); },
+    // (GFX-LOOK-2: the trunk's rings as a factor; a lightness offset on this linear colour turned the darker rings and
+    //  the foot nearly black)
+    paint: (p, m, col) => { if (m === 'bark') col.multiplyScalar((1 + Math.sin(p.y * 11) * 0.3) * (p.y < 0.3 ? 0.78 : 1)); },
     bounds: { min: [-0.6, -0.25, -0.6], max: [lean + 0.6, H + 0.4, 0.6] }, cell: 0.07 * (lod ? 2.2 : 1),
   });
   // fronds: a spine that arcs up and droops, leaflets folded down from it in a shallow V
