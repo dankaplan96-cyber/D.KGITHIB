@@ -12,7 +12,7 @@ import { Perf, gpuQuality, oldGpuQuality, integratedGpu } from './engine/perf.js
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
 import { AutoApply } from './engine/autoapply.js';
-import { FarCull, BlobBatch, BoxCull } from './engine/drawcull.js';
+import { FarCull, BlobBatch, BoxCull, MatShare, MW } from './engine/drawcull.js';
 import { BLOBS } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
@@ -358,7 +358,10 @@ class Game {
     // (PERF-CPU: people out of the view are posed at a lower rate; never in dialogue, a story scene or a door's fade)
     this.farCull.anim.hold = () => this.state !== 'play' || !!this.trans || !!this.cutscene;
     this.blobBatch = new BlobBatch(this.scene, BLOBS);
-    this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); };
+    // (PERF-SUBMIT: people's bodies of the same look drawn with one material for the frame: engine/drawcull.js MatShare)
+    const bodies = [];
+    this.matShare = new MatShare(() => { bodies.length = 0; for (const L of [this.npcs, this.enemies]) for (const a of L || []) { const r = a?.rig; if (r?.mesh && r.root?.visible) bodies.push(r.mesh); } return bodies; });
+    this.renderer.pre = () => { this.farCull.hide(); this.blobBatch.hide(); this.matShare.hide(); };
     // (RENDER-INV: an area's static pieces drawn in one call per material and 48 m cell: engine/drawbatch.js)
     this.drawBatch = new DrawBatch();
     TEXARRAY.init = (t) => this.renderer.renderer.initTexture(t);   // (PERF-CPU: the world's texture array, sent to the GPU when made)
@@ -369,7 +372,8 @@ class Game {
       if (this.shadowCull.areas.has(root)) this.drawBatch.update(root);
       this.boxCull.hide(root, this.renderer.camera, this.drawBatch.enabled ? this.drawBatch.meshes(root) : undefined, this.renderer.renderer.shadowMap.enabled);
     };
-    this.renderer.post = () => { this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };
+    // (PERF-SUBMIT: the frame's caster list serves this render only: a later render in the frame (a warm-up) walks the scene)
+    this.renderer.post = () => { MW.castersF = -1; this.matShare.restore(); this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };
     this.lightPool.collect(); // (after every builder has placed its lamps)
     this.regionsLive = true;  // (from here on an area's build brings its part of the story, the cast and travel: regionBuilt)
     L.story = Math.round(performance.now() - ts);

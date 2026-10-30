@@ -23,8 +23,29 @@
 // Off with Variance shadow maps (not used), for maps over 2048 texels (High's 4096: twice its memory for a copy;
 // left as it was), and while anything else renders the shadow map (warm-ups: the area is not on show then).
 import * as THREE from 'three';
+import { MW } from './drawcull.js';
 
 const MARGIN = 64, SLICES = 3, LAYER = 31, MAX_MAP = 2048, MAX_DEPTH_SHIFT = 20;
+
+// PERF-SUBMIT: what three's shadow pass walks. It visits every object under shown parents (~1 300 on Citadel's street:
+// batched pieces, bones, groups) to find the few dozen that cast. drawcull.js's shown-world update lists, in the same
+// walk order, the shown casters not under another one (and the subtrees it leaves to three), so the pass starts from
+// a stand-in root holding only those subtrees: every object three would draw is in them, in the same order, and three
+// still applies all of its own tests to each. A subtree whose parent chain was hidden after that update (the render's
+// own culling hides non-casters only) is left out, as three's walk would; the area's shadow batches, shown only for the
+// shadow pass (shadowcull.js), are added where the pass may draw them. Without this frame's list: the whole scene.
+const _up = new Map();
+const NO_LAYERS = { test: () => false };
+function walkRoot(scene, extra) {
+  if (!MW.walk || !MW.ok || MW.castersF !== MW.frame || scene.__visF !== MW.frame) return scene;
+  const up = (p) => { if (p === null) return false; if (p === scene) return true; let v = _up.get(p); if (v === undefined) _up.set(p, (v = p.visible === true && up(p.parent))); return v; };
+  _up.clear();
+  const R = (MW._root ??= { visible: true, layers: NO_LAYERS, children: [] }), L = R.children; L.length = 0;
+  for (const o of MW.casters) if (up(o.parent)) L.push(o);
+  if (extra) for (const o of extra) if (up(o.parent)) L.push(o);
+  _up.clear();
+  return R;
+}
 
 export class ShadowCache {
   // R: three's WebGLRenderer; sun: the DirectionalLight; area(): shadowcull's current Area (its root and proxies);
@@ -74,9 +95,9 @@ export class ShadowCache {
     const A = this.area();
     const ok = this.enabled && A && sh.map && sun.castShadow && lights.includes(sun) && sm.type !== THREE.VSMShadowMap
       && sh.mapSize.x <= MAX_MAP && sh.mapSize.x === sh.mapSize.y && sh.map.width === sh.mapSize.x && onShow(A.root) && !sun.parent?.parent && !sun.target.parent?.parent;
-    if (!ok) { this.stats.bypass++; this.drop(); return this.base(lights, scene, camera); }
+    if (!ok) { this.stats.bypass++; this.drop(); return this.base(lights, walkRoot(scene, A?.proxies), camera); }
     const S = this.statics(A);
-    if (!S.length) { this.stats.bypass++; this.drop(); return this.base(lights, scene, camera); }
+    if (!S.length) { this.stats.bypass++; this.drop(); return this.base(lights, walkRoot(scene, A.proxies), camera); }
     const d = this._t.copy(sun.position).sub(sun.target.position).normalize();
     const cam = sh.camera, size = sh.mapSize.x, texel = (cam.right - cam.left) / size;
     const key = [A.root.uuid, S.length, S.map((o) => o.id).join(','), d.x.toFixed(5), d.y.toFixed(5), d.z.toFixed(5), size, cam.left, cam.right, cam.top, cam.bottom, cam.near, cam.far, sm.type, sh.map.texture.uuid].join('|');
@@ -158,7 +179,7 @@ export class ShadowCache {
         gl.blitFramebuffer(sx, sy, sx + n, sy + n, 0, 0, n, n, (sh.map.isHwShadow ? 0 : gl.COLOR_BUFFER_BIT) | gl.DEPTH_BUFFER_BIT, gl.NEAREST);   // (GFX-LOOK: a hardware-compared map (renderer.js HwShadowTarget) is read from its depth only: its colour is not copied)
         R.state.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
       };
-      this.base(lights, scene, camera);
+      this.base(lights, walkRoot(scene, null), camera);   // (the static casters are in the cache: not drawn here)
       this.stats.live++;
     } finally {
       R.clear = clear;

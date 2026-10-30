@@ -43,9 +43,17 @@ const BASE_UMW = THREE.Object3D.prototype.updateMatrixWorld, SKIN_UMW = THREE.Sk
 const ownUMW = (o) => o.updateMatrixWorld !== BASE_UMW && o.updateMatrixWorld !== SKIN_UMW;
 // (MW.cached false: three's own update of the shown objects, as before — the A/B switch; MW.ok: this frame's matrices
 //  came from the update below, so `__mwF` and `__visF` are this frame's)
-export const MW = { cached: true, frame: 0, ok: false };
+// (PERF-SUBMIT: `casters`, the frame's shown casters' subtrees (above), valid while `castersF` is this frame's; `walk`:
+//  off gives three's whole-scene walk in the live shadow pass, the A/B switch)
+export const MW = { cached: true, frame: 0, ok: false, casters: [], castersF: -1, walk: true };
 const _mwT = new THREE.Matrix4();
-function shownTree(o, force, F, S, all = false) {
+// PERF-SUBMIT: `col` (the shown-world update only): the frame's shadow casters are listed on the way — each shown object
+// that may cast (a mesh, line or points with castShadow) and is not under one already listed, in three's own walk order;
+// and every object with its own matrix update (whose subtree this walk leaves to three). shadowcache.js's live shadow
+// pass walks these subtrees instead of the whole scene (~1 300 objects on the street, ~60 of them casters): the same
+// objects, the same tests, the same draws in the same order.
+const mayCast = (k) => k.castShadow === true && (k.isMesh === true || k.isLine === true || k.isPoints === true);
+function shownTree(o, force, F, S, all = false, col = null) {
   if (ownUMW(o)) { o.updateMatrixWorld(force); o.__mwF = F; S.own++; return; }
   // changed: recompute and force the subtree (as three); check: recompute, force only if the value differs (a matrix
   // recomposed meanwhile by three's updateWorldMatrix — getWorldPosition and the like flag every parent up to the scene)
@@ -81,7 +89,9 @@ function shownTree(o, force, F, S, all = false) {
     if (k.visible || all) {
       if (k.visible) k.__visF = F;   // (reached through shown parents in this frame's update: drawbatch.js)
       // (shown again since its last frame here: everything under it is recomputed, as before)
-      if (k.__hid === true) { k.__hid = false; shownTree(k, true, F, S, all); } else shownTree(k, force, F, S, all);
+      let kc = col;
+      if (col !== null && (mayCast(k) || ownUMW(k))) { col.push(k); kc = null; }
+      if (k.__hid === true) { k.__hid = false; shownTree(k, true, F, S, all, kc); } else shownTree(k, force, F, S, all, kc);
     } else {
       // (hidden: itself kept up to date, its subtree left until it is shown again)
       if (k.children.length) k.__hid = true;
@@ -109,7 +119,9 @@ export function updateShownWorld(scene, state) {
     for (const o of state.prev) o.__hid = true;
     state.prev.length = 0;
     scene.__visF = F;
-    shownTree(scene, false, F, S);
+    const col = MW.casters; col.length = 0;
+    shownTree(scene, false, F, S, false, MW.walk ? col : null);
+    MW.castersF = MW.walk ? F : -1;
     MW.ok = true;
     return;
   }
@@ -313,4 +325,50 @@ export class BoxCull {
     this.n = this.off.length;
   }
   restore() { for (const o of this.off) o.visible = true; this.off.length = 0; }
+}
+
+// 5. Shared look for people's bodies (PERF-SUBMIT). Every person's skinned body has a material of its own (characters.js
+//    polyCharacter: the hurt flash and a resident's tint are that person's alone), all alike unless flashed or tinted:
+//    on Citadel's street 7–11 separate materials with the same type, parameters and program, each drawn once. three
+//    sorts the opaque draws by material and, at each change of material, uploads all its uniforms again (its colour,
+//    roughness … and the walk over the program's whole uniform list): ~20 µs a body on this machine's main thread.
+//    For the frame's render, a body whose material is alike in everything three reads from it (lookKey) is drawn with
+//    the first such material of the frame; its own is put back right after (Renderer.post), so the game only ever sees
+//    its own. Same program, same uniform values, same draw state: the same pixels, one material change for them all.
+const MAPS = ['map', 'lightMap', 'aoMap', 'emissiveMap', 'bumpMap', 'normalMap', 'displacementMap', 'roughnessMap', 'metalnessMap', 'alphaMap', 'envMap', 'specularMap', 'gradientMap'];
+const _code = new WeakMap();
+const codeOf = (m) => { let c = _code.get(m.onBeforeCompile); if (c === undefined) _code.set(m.onBeforeCompile, (c = m.onBeforeCompile.toString())); return c; };
+// (a key equal for materials three would draw exactly alike — or null when that can't be told: textures, clipping,
+//  a physical or shader material…: drawn with its own then)
+export function lookKey(m) {
+  if (!m || Array.isArray(m) || !m.isMeshStandardMaterial || m.isMeshPhysicalMaterial || m.clippingPlanes || m.userData?.noShare) return null;
+  const D = m.defines; let dk = '';
+  if (D) for (const k in D) dk += k + '=' + D[k] + ';';
+  for (const k of MAPS) if (m[k]) return null;
+  const c = m.color, e = m.emissive, r = m.envMapRotation;
+  return [m.constructor.name, m.side, m.shadowSide, m.vertexColors, m.transparent, m.opacity, m.alphaTest, m.alphaHash, m.alphaToCoverage, m.depthTest, m.depthWrite, m.depthFunc,
+    m.colorWrite, m.blending, m.blendSrc, m.blendDst, m.blendEquation, m.blendSrcAlpha, m.blendDstAlpha, m.blendEquationAlpha, m.premultipliedAlpha, m.polygonOffset, m.polygonOffsetFactor,
+    m.polygonOffsetUnits, m.dithering, m.toneMapped, m.fog, m.flatShading, m.wireframe, m.visible, m.stencilWrite, m.stencilFunc, m.stencilRef, m.stencilFuncMask, m.stencilFail, m.stencilZFail,
+    m.stencilZPass, m.stencilWriteMask, m.forceSinglePass, m.precision, m.version, c.r, c.g, c.b, e.r, e.g, e.b, m.emissiveIntensity, m.roughness, m.metalness,
+    m.envMapIntensity, r ? r.x + ',' + r.y + ',' + r.z : '', m.customProgramCacheKey(), dk, codeOf(m)].join('|');
+}
+export class MatShare {
+  // meshes(): the bodies that may be drawn this frame (each person's skinned body)
+  constructor(meshes) { this.meshes = meshes; this.enabled = true; this.swapped = []; this.canon = new Map(); this.n = 0; }
+  hide() {
+    this.n = 0;
+    if (!this.enabled) return;
+    const C = this.canon, S = this.swapped;
+    for (const o of this.meshes()) {
+      if (!o || o.visible !== true || !o.isMesh) continue;
+      const m = o.material, k = lookKey(m);
+      if (k === null) continue;
+      const c = C.get(k);
+      if (c === undefined) C.set(k, m);
+      else if (c !== m) { o.material = c; S.push(o, m); }
+    }
+    C.clear();
+    this.n = S.length >> 1;
+  }
+  restore() { const S = this.swapped; for (let i = 0; i < S.length; i += 2) S[i].material = S[i + 1]; S.length = 0; }
 }
