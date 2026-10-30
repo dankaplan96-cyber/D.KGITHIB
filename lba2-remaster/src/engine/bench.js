@@ -13,6 +13,7 @@
 // issues one by one) and "shadow" is the shadow pass's share of the calls.
 import { gpuQuality } from './perf.js';
 import { poolSize } from './lightpool.js';
+import { MW } from './drawcull.js';
 const WARM = 1.5, MEASURE = 6;
 // PERF-BATTERY-2: "as played": every route again with the automatic resolution ON, as the game runs it in play (the
 // fixed runs above keep it off, for comparison between machines and builds). Each preset's played routes run in a row
@@ -187,6 +188,9 @@ export class Bench {
       { id: R.battery ? 'battery profile off' : 'battery profile on', apply() { this._bat = R.battery; G.setBattery(!this._bat); }, undo() { G.setBattery(this._bat); } },
       // (PERF-HIGH: the benchmark's own GPU timer queries off (no GPU time for this line): do they change the pace?)
       { id: 'GPU timer off', apply() { R.timer = null; }, undo() { R.timer = G.perf.gpuTimer; } },
+      // (PERF-SUBMIT: this round's render-path savings undone — the live shadow pass walking the whole scene, each body
+      //  drawn with its own material, every shadow batch through the 16-point test: compare its submit / sim CPU with 'as is')
+      { id: 'PERF-SUBMIT off (as before)', apply() { MW.walk = false; if (G.matShare) G.matShare.enabled = false; if (G.shadowCull) G.shadowCull.prefilter = false; }, undo() { MW.walk = true; if (G.matShare) G.matShare.enabled = true; if (G.shadowCull) G.shadowCull.prefilter = true; } },
     ];
     const brk = this.routes().filter((r) => r.id === 'street' || r.id === 'interior');
     if (opts.breakdown !== false && opts.breakdownMedium !== false) for (const r of brk) for (const v of variants) plan.push({ q: 'medium', r, v, short: true });
