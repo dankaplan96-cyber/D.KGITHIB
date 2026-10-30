@@ -40,7 +40,9 @@ https://github.com/dankaplan96-cyber/D.KGITHIB/releases
    - פעם אחת בלי למחוק.
 
 ## בדיקות כאן (SwiftShader, בלי מדידת GPU אמיתית)
-(יתעדכן בסוף סבב הבדיקות)
+- 0.42.0 (העץ הממוזג): 14 בדיקות עברו, בלי כישלונות ובלי שגיאות: menus, display, opening, transitions, timing, chapter1, autofit, solidnpc, drawcalls, perfbudget, autoquality, autoquality-game, well-town, worldfit.
+- 20 השורות החדשות של סוכן ה-GPU רצות על הרחוב בלי שגיאות, וכל אחת מורידה את החלק שלה מהתמונה (למשל: בלי הבתים 61 פקודות ציור במקום כ-130, רק דמויות 41).
+- זה לא אומר כלום על מהירות במחשב שלך: אין כאן כרטיס מסך אמיתי.
 
 ## ממצא שנשאר בכוונה
 - **Auto לא מודד את המחשב במסך הפתיחה (I-20):** המדידה הזו אף פעם לא רצה במשחק עצמו.
