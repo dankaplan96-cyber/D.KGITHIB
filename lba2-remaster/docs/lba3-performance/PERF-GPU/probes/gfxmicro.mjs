@@ -1,4 +1,7 @@
-// node gfxmicro.mjs <page-script.js>  — 1366x768, new game, runs the script's async body in the page, prints JSON
+// PERF-GPU probe runner: node docs/lba3-performance/PERF-GPU/probes/gfxmicro.mjs <page-script.js>
+// A new game at 1366x768 (W, H), the script's body run in the page (async; `game` is the game), its JSON printed.
+// env: GAME_URL (as the tests), Q (extra query, e.g. &oldedges), SHOT (a jpeg of the page after), OUTDIR (where a
+// result's __images { name: dataURL } are written as PNG). SwiftShader: counts and pixels only, never GPU ms.
 import { launch, open, menu, done } from '../../../../tests/lib/boot.mjs';
 import fs from 'node:fs';
 const { browser, page } = await launch({ width: +(process.env.W || 1366), height: +(process.env.H || 768) });
