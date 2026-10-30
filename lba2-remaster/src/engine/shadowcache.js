@@ -155,7 +155,7 @@ export class ShadowCache {
         // (through three's state, as its own MSAA resolve does, so its record of the bindings stays true; the draw
         //  framebuffer is the map's already: setRenderTarget)
         R.state.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
-        gl.blitFramebuffer(sx, sy, sx + n, sy + n, 0, 0, n, n, gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT, gl.NEAREST);
+        gl.blitFramebuffer(sx, sy, sx + n, sy + n, 0, 0, n, n, (sh.map.isHwShadow ? 0 : gl.COLOR_BUFFER_BIT) | gl.DEPTH_BUFFER_BIT, gl.NEAREST);   // (GFX-LOOK: a hardware-compared map (renderer.js HwShadowTarget) is read from its depth only: its colour is not copied)
         R.state.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
       };
       this.base(lights, scene, camera);

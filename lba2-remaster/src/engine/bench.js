@@ -170,9 +170,16 @@ export class Bench {
       { id: 'depth resolve on', apply() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.resolveDepthBuffer = true; T.resolveStencilBuffer = true; } }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.resolveDepthBuffer = false; T.resolveStencilBuffer = false; } } },
       // (choices that change the look a little, priced for the user: the battery profile's 5-read shadow filter (three's
       //  Basic type, patched in renderer.js: it was one read, hard-edged), a coarser shadow map, FXAA)
-      { id: 'shadow filter 5 reads', apply() { this._t = R.renderer.shadowMap.type; R.renderer.shadowMap.type = 0; R.renderer.shadowMap.needsUpdate = true; G.warmGraphics(); }, undo() { R.renderer.shadowMap.type = this._t; R.renderer.shadowMap.needsUpdate = true; G.warmGraphics(); } },
+      { id: R.hwShadows ? 'shadow filter battery (4 reads)' : 'shadow filter 5 reads', apply() { this._t = R.renderer.shadowMap.type; R.renderer.shadowMap.type = 0; R.renderer.shadowMap.needsUpdate = true; G.warmGraphics(); }, undo() { R.renderer.shadowMap.type = this._t; R.renderer.shadowMap.needsUpdate = true; G.warmGraphics(); } },
       { id: 'shadow map 512', apply() { const sh = G.env.sun.shadow; sh.mapSize.set(512, 512); sh.map?.dispose(); sh.map = null; }, undo() { const sh = G.env.sun.shadow; sh.mapSize.set(1, 1); G.env.setShadowQuality(G.settings.quality); } },
-      { id: 'FXAA instead of MSAA', apply() { this._ms = R.composer.renderTarget1.samples; for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = 0; T.dispose(); } R.fxaa.enabled = true; }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = this._ms; T.dispose(); } R.applyDerived(); } },
+      { id: 'FXAA instead of MSAA', apply() { this._ms = R.composer.renderTarget1.samples; for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = 0; T.dispose(); } R.fxaa.enabled = true; R.applyScale(); }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = this._ms; T.dispose(); } R.applyDerived(); } },
+      // (GFX-LOOK: the output pass's own edge smoothing in place of MSAA (renderer.js OUTPUT_EDGES: what the battery profile
+      //  draws), and 90 % resolution with and without its sharpening: compare each with 'as is' and 'no MSAA')
+      { id: 'edges in output, no MSAA', apply() { this._ms = R.composer.renderTarget1.samples; for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = 0; T.dispose(); } R.applyScale(); }, undo() { for (const T of [R.composer.renderTarget1, R.composer.renderTarget2]) { T.samples = this._ms; T.dispose(); } R.applyScale(); } },
+      { id: 'no edge smoothing', apply() { R.edgeAA = false; R.applyScale(); }, undo() { R.edgeAA = true; R.applyScale(); } },
+      { id: 'shadow pass writes colour (as before)', apply() { R.shadowDepthOnly = false; }, undo() { R.shadowDepthOnly = true; } },
+      { id: 'res x0.9 sharpened', apply() { R.autoRes = true; R.setDyn(0.9); }, undo() { R.autoRes = false; R.setDyn(1); } },
+      { id: 'res x0.9 not sharpened', apply() { R.sharpenOn = false; R.autoRes = true; R.setDyn(0.9); }, undo() { R.sharpenOn = true; R.autoRes = false; R.setDyn(1); } },
       { id: 'draw batches off', apply() { if (G.drawBatch) G.drawBatch.enabled = false; }, undo() { if (G.drawBatch) G.drawBatch.enabled = true; } },
       // (PERF-BATTERY: the static shadow cache off (every caster drawn every frame, as before), and the battery profile
       //  the other way round from how this run is powered: on when plugged in, off on battery)
@@ -435,7 +442,7 @@ export class Bench {
     if (/SwiftShader|llvmpipe|softpipe|Software|Basic Render/i.test(G.perf.gpu || '')) lines.push('NOTE: software rendering (no GPU acceleration in this browser/app): every number below is CPU-drawn');
     // (PERF-BATTERY: how this run was powered, and what the battery profile did to the presets)
     { const P = G.power, B = G.renderer.batteryProfile?.();
-      lines.push(`power: ${P ? P.describe() : '?'} (source: ${P?.source === 'electron' ? 'the desktop app (Electron powerMonitor)' : P?.source === 'browser' ? 'the browser (navigator.getBattery)' : 'none'}) · battery profile: ${G.renderer.battery ? `applied (Medium/High: shadow filter of 5 reads instead of PCF's 17, MSAA off, automatic resolution down to ×${B?.minScale ?? 0.5}; Low unchanged)` : 'not applied (the presets as they are)'}`); }
+      lines.push(`power: ${P ? P.describe() : '?'} (source: ${P?.source === 'electron' ? 'the desktop app (Electron powerMonitor)' : P?.source === 'browser' ? 'the browser (navigator.getBattery)' : 'none'}) · battery profile: ${G.renderer.battery ? `applied (Medium/High: shadow filter of ${G.renderer.hwShadows ? "4 hardware-filtered reads instead of Medium's 9" : "5 reads instead of PCF's 17"}, MSAA off${G.renderer.hwShadows ? ' (edges smoothed in the output pass)' : ''}, automatic resolution down to ×${B?.minScale ?? 0.5}; Low unchanged)` : 'not applied (the presets as they are)'}`); }
     { const C = G.shadowCache; if (C) lines.push(`static shadow cache: ${C.enabled ? 'on' : 'off'} · since start: ${C.stats.full} full builds, ${C.stats.sliced} slices, ${C.stats.swaps} swaps, ${C.stats.live} frames from the cache, ${C.stats.bypass} without (High's 4096 map, Low, warm-ups)`); }
     lines.push(`window ${innerWidth}×${innerHeight} · devicePixelRatio ${devicePixelRatio} · user agent ${navigator.userAgent.match(/(Electron|Chrome)\/[\d.]+/g)?.join(' ') || navigator.userAgent}`);
     // (PERF-HIGH) the display as the OS reports it, and Chromium's GPU feature status (desktop app only)
@@ -492,7 +499,7 @@ export class Bench {
     for (const x of fixed) {
       if (x.q !== q) {
         q = x.q; const c = x.cfg;
-        lines.push('', `quality ${q}: render pixel ratio ${c.pr} · MSAA ${c.msaa}× · FXAA ${c.fxaa ? 'on' : 'off'} · shadows ${c.shadows ? `on (${c.shadowMap} px, filter ${c.shadowFilter})` : 'off'} · battery profile ${c.battery ? 'on' : 'off'} · automatic resolution floor ×${c.minScale} · bloom ${c.bloom ? 'on' : 'off'} · lamp lights ${c.lamps} · grass/flowers to ${c.smallFar} m · trees detailed to ${c.treeNear} m`);
+        lines.push('', `quality ${q}: render pixel ratio ${c.pr} · MSAA ${c.msaa}× · FXAA ${c.fxaa ? 'on' : 'off'}${c.edgeAA ? ' · edges smoothed in the output pass' : ''}${c.sharpen ? ` · sharpening ${c.sharpen}` : ''} · shadows ${c.shadows ? `on (${c.shadowMap} px, filter ${c.shadowFilter})` : 'off'} · battery profile ${c.battery ? 'on' : 'off'} · automatic resolution floor ×${c.minScale} · bloom ${c.bloom ? 'on' : 'off'} · lamp lights ${c.lamps} · grass/flowers to ${c.smallFar} m · trees detailed to ${c.treeNear} m`);
       }
       const s = x.s;
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
