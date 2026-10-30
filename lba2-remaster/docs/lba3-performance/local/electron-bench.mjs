@@ -1,6 +1,6 @@
 // LBA3 in-game benchmark, run automatically in the INSTALLED desktop app (Electron) on the laptop.
 // Run it from a folder outside the repo where Playwright is installed (npm init -y && npm i playwright):
-//   node electron-bench.mjs <auto|full|visits|pacing|smoke> <out.txt> [battery|plugged] [follow|orbit] [-- app switches]
+//   node electron-bench.mjs <auto|full|visits|startup|pacing|smoke> <out.txt> [battery|plugged] [follow|orbit] [-- app switches]
 // STABILIZATION phase 1 (on battery, then plugged in; each with Follow and with the orbit):
 //   node electron-bench.mjs visits laptop-<version>-visits-follow-battery.txt battery follow
 //   node electron-bench.mjs visits laptop-<version>-visits-orbit-battery.txt battery orbit
@@ -53,6 +53,27 @@ page.on('console', (m) => { if (m.type() === 'error') errs.push('console error: 
 
 const ready = () => page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
 await page.waitForLoadState('load');
+// STABILIZATION (the user: "stutters on the game's start screen"): the app's own first start as the player has it — no
+// reload, no ?nocine — STARTUP_TITLE_S s on the title menu (the live world behind it), New Game, STARTUP_PLAY_S s of what
+// follows (the opening cinematic), then the start trace: every display frame from the page's start, every long frame
+// with what ran in it (game.startupReport()). Run it twice: a fresh profile (delete electron-profile) and a kept one.
+//   node electron-bench.mjs startup laptop-<version>-startup-battery.txt battery
+if (mode === 'startup') {
+  const T = +(process.env.STARTUP_TITLE_S || 15), P = +(process.env.STARTUP_PLAY_S || 25), t1 = Date.now();
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing && window.game.screen === 'title', null, { timeout: 600000 });
+  const toTitle = ((Date.now() - t1) / 1000).toFixed(1);
+  await page.waitForTimeout(T * 1000);
+  await page.click('[data-act="new"]', { timeout: 60000 });
+  await page.waitForTimeout(1000);
+  if (await page.evaluate(() => game.screen === 'confirmnew')) await page.click('[data-act="newyes"]', { timeout: 60000 });
+  await page.waitForTimeout(P * 1000);
+  const rep = await page.evaluate(() => game.startupReport());
+  const body = `ran in: desktop app ${info.version} (installed, ${EXE}; bench profile ${firstUse ? 'NEW this run (cold shader cache)' : 'kept from earlier runs'}) · power: ${power0} · title reached ${toTitle} s after the window opened · ${T} s on the title, New Game, ${P} s after\n\n${rep}\n\n${errs.length ? 'page errors:\n' + errs.slice(0, 10).join('\n') : 'no page errors'}\n`;
+  if (out) fs.writeFileSync(out, body);
+  console.log(body);
+  await app.close();
+  process.exit(0);
+}
 await page.goto('app://game/index.html?nocine', { waitUntil: 'load', timeout: 180000 });
 await ready();
 await page.click('[data-act="new"]', { timeout: 60000 });

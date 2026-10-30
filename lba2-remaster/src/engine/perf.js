@@ -195,6 +195,7 @@ const kindOf = (t) => { try { if (typeof window !== 'undefined' && t === window)
   if (typeof window === 'undefined' || window.__lbaRegHooks) return;
   window.__lbaRegHooks = true;
   const W = window, raf = W.requestAnimationFrame?.bind(W), caf = W.cancelAnimationFrame?.bind(W);
+  W.__lbaRaf = raf;   // (the browser's own, for the start trace below: not counted as the game's)
   if (raf) {
     W.requestAnimationFrame = (cb) => { let id = 0; REG.raf.req++; REG.raf.perFrame++; id = raf((t) => { REG.raf.pending.delete(id); cb(t); }); REG.raf.pending.add(id); return id; };
     if (caf) W.cancelAnimationFrame = (id) => { REG.raf.pending.delete(id); return caf(id); };
@@ -299,4 +300,61 @@ export function resources(G) {
     drawBatchAreas: G.drawBatch?.areas?.size ?? null, shadowAreas: G.shadowCull?.areas?.size ?? null,
     ...registrations(),
   };
+}
+
+// 4. The start (the user, 30.10: "there are stutters again on the game's start screen"). From the moment this module loads
+//    until STARTUP_MAX s, or until the first STARTUP_PLAY s of play: every display frame's interval (a callback of its
+//    own on the browser's frame clock, the loading screen included, when the game's loop isn't running yet), the
+//    browser's long animation frames (PerformanceObserver 'long-animation-frame': what ran in them — the script, the
+//    function, its file and line — and style/layout), and marks (the loading steps, the title, New Game, the cinematic,
+//    play). startupReport(game) gives every phase's frames and every long frame with what ran in it.
+const STARTUP_MAX = 600e3, STARTUP_PLAY = 30e3;
+export const STARTUP = { iv: [], marks: [], loaf: [], lt: [], on: true, playAt: null };
+export function startupMark(label) { if (STARTUP.on) STARTUP.marks.push([performance.now(), label]); if (label === 'play' && STARTUP.playAt == null) STARTUP.playAt = performance.now(); }
+(function startupTrace() {
+  if (typeof window === 'undefined' || !window.__lbaRaf) return;
+  const raf = window.__lbaRaf; let last = null;
+  const tick = (t) => {
+    if (last != null) STARTUP.iv.push(t, t - last);
+    last = t;
+    if (t > STARTUP_MAX || (STARTUP.playAt != null && t - STARTUP.playAt > STARTUP_PLAY)) { STARTUP.on = false; return; }
+    if (STARTUP.on) raf(tick);
+  };
+  raf(tick);
+  const keep = (e) => {
+    const scripts = (e.scripts || []).slice().sort((a, b) => b.duration - a.duration).slice(0, 3).map((s) => `${s.invokerType || ''} ${s.sourceFunctionName || s.invoker || '?'} ${String(s.sourceURL || '').replace(/^.*\/(src|vendor|css)\//, '$1/')}${s.sourceCharPosition >= 0 ? ':' + s.sourceCharPosition : ''} ${Math.round(s.duration)} ms${s.forcedStyleAndLayoutDuration ? ` (forced layout ${Math.round(s.forcedStyleAndLayoutDuration)})` : ''}`.trim());
+    return { t: e.startTime, d: e.duration, block: e.blockingDuration ?? null, style: e.styleAndLayoutStart ? Math.round(e.startTime + e.duration - e.styleAndLayoutStart) : null, render: e.renderStart ? Math.round(e.startTime + e.duration - e.renderStart) : null, scripts };
+  };
+  try { new PerformanceObserver((L) => { if (STARTUP.on) for (const e of L.getEntries()) STARTUP.loaf.push(keep(e)); }).observe({ type: 'long-animation-frame', buffered: true }); } catch { /* not in this browser */ }
+  try { new PerformanceObserver((L) => { if (STARTUP.on) for (const e of L.getEntries()) STARTUP.lt.push({ t: e.startTime, d: e.duration }); }).observe({ type: 'longtask', buffered: true }); } catch { /* not in this browser */ }
+})();
+// (G: the Game, for its loading steps and the frames its loop recorded with their jobs)
+export function startupReport(G) {
+  const S = STARTUP, iv = S.iv, marks = [...(G?.loadTimes?.timeline || []).map(([t, l]) => [t, 'loading: ' + l]), ...S.marks].sort((a, b) => a[0] - b[0]);
+  const phases = [['page start', 0], ...marks.map(([t, l]) => [l, t])].filter((p, i, A) => i === 0 || p[1] > A[i - 1][1] || p[0] !== A[i - 1][0]);
+  const pc = (a, p) => { const v = a.slice().sort((x, y) => x - y); return v.length ? +v[Math.min(v.length - 1, Math.floor(p * v.length))].toFixed(1) : null; };
+  const L = [];
+  L.push(`LBA3 start trace · build ${G?.version || '?'} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')} · ${G?.perf?.gpu ?? '?'}`);
+  L.push(`display frames recorded ${iv.length / 2} over ${((iv[iv.length - 2] || 0) / 1000).toFixed(1)} s · long animation frames ${S.loaf.length}${S.loaf.length ? '' : ' (none reported: the browser may not support them)'} · long tasks ${S.lt.length}`);
+  L.push(`startup steps (ms): ${G?.loadTimes ? `build ${G.loadTimes.total ?? '?'} · shaders ${G.loadTimes.shaders ?? '?'} · prep ${JSON.stringify(G.loadTimes.prep || {})}` : '?'}`);
+  L.push('', 'phase (from its mark to the next)            frames  interval p50 / p95 / max ms   >20 / >33 / >50 / >100');
+  // group the "loading: …" steps into one phase per label run
+  for (let i = 0; i < phases.length; i++) {
+    const [label, a] = phases[i], b = i + 1 < phases.length ? phases[i + 1][1] : Infinity, v = [];
+    for (let k = 0; k < iv.length; k += 2) if (iv[k] > a && iv[k] <= b) v.push(iv[k + 1]);
+    if (!v.length) continue;
+    L.push(`  ${(label + ' @' + (a / 1000).toFixed(1) + 's').slice(0, 44).padEnd(44)} ${String(v.length).padStart(5)}   ${pc(v, 0.5)} / ${pc(v, 0.95)} / ${pc(v, 1)}   ${v.filter((x) => x > 20).length} / ${v.filter((x) => x > 33.4).length} / ${v.filter((x) => x > 50).length} / ${v.filter((x) => x > 100).length}`);
+  }
+  const phaseAt = (t) => { let p = 'page start'; for (const [l, a] of phases) if (a <= t) p = l; return p; };
+  const long = []; for (let k = 0; k < iv.length; k += 2) if (iv[k + 1] > 50) long.push([iv[k], iv[k + 1]]);
+  L.push('', `every display frame over 50 ms (${long.length}): when · how long · phase · what ran (the browser's long animation frame overlapping it: its scripts, style/layout; else the game's own jobs)`);
+  const jobs = (G?.perf?.buf || []).filter((f) => f.why);
+  for (const [t, d] of long.slice(0, 60)) {
+    const lf = S.loaf.filter((e) => e.t < t && e.t + e.d > t - d);
+    const what = lf.length ? lf.map((e) => `[${Math.round(e.d)} ms${e.style != null ? `, style/layout ${e.style}` : ''}${e.render != null ? `, render ${e.render}` : ''}: ${e.scripts.join(' | ') || 'no script (rendering / GPU / compositor)'}]`).join(' ') : 'no long animation frame: the main thread was free (GPU process, compositor or display)';
+    L.push(`  ${(t / 1000).toFixed(2).padStart(7)} s  ${String(Math.round(d)).padStart(5)} ms  ${phaseAt(t).slice(0, 28).padEnd(28)} ${what}`);
+  }
+  if (long.length > 60) L.push(`  … +${long.length - 60} more`);
+  if (jobs.length) { L.push('', 'the game loop\'s own long frames with their jobs (title and play):'); for (const f of jobs.slice(-30)) L.push(`  ${Math.round(f.ms)} ms${f.black ? ' black' : ''} · ${f.why}`); }
+  return L.join('\n');
 }

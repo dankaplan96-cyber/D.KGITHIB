@@ -8,7 +8,7 @@ import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { driveMouth } from './engine/voice.js';
-import { Perf, gpuQuality, oldGpuQuality, integratedGpu } from './engine/perf.js';
+import { Perf, gpuQuality, oldGpuQuality, integratedGpu, startupMark, startupReport } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
 import { AutoApply } from './engine/autoapply.js';
@@ -466,7 +466,11 @@ class Game {
     if (boot === 'new') this.startNew();
     else if (boot === 'continue' && store.get(SAVE_KEY)) this.startContinue();
     else this.showScreen('title');
+    startupMark('title');
   }
+  // STABILIZATION: the start trace (perf.js STARTUP): the loading screen, the title, New Game and the first play — every
+  // display frame's interval and every long frame with what ran in it. game.startupReport() → text
+  startupReport() { return startupReport(this); }
 
   // ------------------------------------------------ spawning
   spawnActors() {
@@ -1000,6 +1004,7 @@ class Game {
 
   // ------------------------------------------------ flow
   startNew() {
+    startupMark('new game');
     store.del(SAVE_KEY);   // (the autosave only: the manual slots are never touched by a new game)
     this.played = 0;
     this.beginPlay();
@@ -1059,6 +1064,7 @@ class Game {
   setState(s) {
     const was = this.state;
     this.state = s;
+    if (s !== was) startupMark(s === 'play' ? 'play' : 'state ' + s);   // (STABILIZATION: the start trace's phases: perf.js)
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
     if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene') this.combatDir?.calm(0.6); }
     if (s !== 'play') this.targeting?.hide();
