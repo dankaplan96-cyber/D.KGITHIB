@@ -1067,7 +1067,6 @@ class Game {
   setState(s) {
     const was = this.state;
     this.state = s;
-    if (s !== 'title' && s !== 'loading') { this._titleCap = false; this._tp = null; }   // (the title's even pace: for that visit only)
     if (s !== was) startupMark(s === 'play' ? 'play' : 'state ' + s);   // (STABILIZATION: the start trace's phases: perf.js)
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
     if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene') this.combatDir?.calm(0.6); }
@@ -2053,17 +2052,8 @@ class Game {
     // the sum reaches the limit less 1.5 ms of tolerance, and the limit is taken off; a remainder of more than half
     // the limit (a stall) is dropped, so a stall can't cause a burst. A skipped refresh simulates and draws nothing (keys wait in Input): at 30 on a 60 Hz
     // screen every other refresh is drawn, an even 33 ms.
+    const cap = this.benching ? 0 : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : this.frameCapMs;
     const refresh = this._refresh || this._vsync || 1000 / 60;
-    // STABILIZATION (the user, 0.41.0: "stutters on the start screen"): the title's live view — the whole island from
-    // 110 m — is the heaviest view in the game (SwiftShader counts: Medium 281–398 draw calls and 1.1–1.7 M triangles
-    // round its circle, High 372–589 and 1.7–2.0 M; the street in play 151 / 0.9 M and 223 / 1.3 M). Where it can't keep
-    // the display's refresh it came at an uneven 35–55 fps. Once that is seen (titlePace), the title is drawn every
-    // other refresh: an even 33 ms, the same picture. Not before the first start's calibration has measured the title
-    // (autoapply.js), never in play; ?titlefull keeps every refresh (A/B).
-    // (the title screen and its menus run in state 'loading' (the title camera, main.js frame), once preparing is over)
-    const onTitle = (this.state === 'title' || this.state === 'loading') && !this.preparing;
-    const titleCap = onTitle && this._titleCap ? 2 * refresh : 0;
-    const cap = this.benching ? 0 : this.background && !this.testFreeze ? Math.max(this.frameCapMs || 0, 1000 / BG_FPS) : Math.max(this.frameCapMs || 0, titleCap);
     if (cap && cap > refresh + 1 && !this.testFreeze && !this.preparing) {
       this._acc = (this._acc ?? cap) + Math.max(0, d);
       if (this._acc + LIMIT_TOL_MS < cap) { requestAnimationFrame((t2) => this.loop(t2)); return; }
@@ -2073,20 +2063,7 @@ class Game {
     const real = Math.max(0, (now - this.last) / 1000);
     this.last = now;
     if (!this.testFreeze && !this.preparing) { this.advance(real); if (!this.settings.qualityAuto) this.fit?.frame(real); }   // (AUTO-QUALITY: Auto adjusts itself: no suggestion)
-    if (onTitle && !this._titleCap && !this.testFreeze && !this.benching) this.titlePace(real * 1000, refresh);
     requestAnimationFrame((t2) => this.loop(t2));
-  }
-  // (the title's pace: 1.5 s after the title shows — past its first frames' one-off work — windows of 2 s; one in which
-  //  over a fifth of the frames came later than 1.25 refreshes turns on the even pace for this visit to the title)
-  titlePace(ms, refresh) {
-    if (TITLE_FULL || (this.autoQ?.cal && !this.autoQ.cal.done) || this.background) { this._tp = null; return; }
-    const P = (this._tp ??= { t: 0, n: 0, late: 0 });
-    P.t += ms;
-    if (P.t < 1500) return;
-    P.n++; if (ms > 1.25 * refresh) P.late++;
-    if (P.t < 3500) return;
-    if (P.n >= 30 && P.late / P.n > 0.2) { this._titleCap = true; this.titlePaced = { late: P.late, of: P.n, refresh: +refresh.toFixed(2) }; startupMark(`title: every other refresh (${P.late} of ${P.n} frames late)`); }
-    P.t = 1500; P.n = 0; P.late = 0;
   }
 
   // Real time → simulation. A slow frame is simulated in steps of at most MAX_STEP (so the game keeps real
@@ -2375,7 +2352,6 @@ class Game {
 
 const MAX_STEP = 1 / 30, MAX_SUB = 4; // (see Game.advance)
 const BG_FPS = 8;   // (PERF-BATTERY: frames a second drawn while the window is in the background)
-const TITLE_FULL = typeof location !== 'undefined' && /[?&]titlefull/.test(location.search);   // (A/B: the title at every refresh)
 const LIMIT_TOL_MS = 1.5;   // (FRAME-2: the frame-rate limit's tolerance for requestAnimationFrame's jitter)
 function medianOf(a, n) { const b = Array.from(a.subarray(0, n)).sort((x, y) => x - y); return n ? b[n >> 1] : 0; }
 const TEX_SLOTS = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'bumpMap', 'alphaMap'];
