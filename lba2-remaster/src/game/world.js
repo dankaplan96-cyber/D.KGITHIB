@@ -655,6 +655,42 @@ export function* buildWorldSteps(parentScene) {
   W.batches = [];
   const batchFor = (m) => { let b = W.batches.find((x) => x.mat === m); if (!b) { b = new LodBatch(scene, m); W.batches.push(b); } return b; };
   const _bm = new THREE.Matrix4(), _bq = new THREE.Quaternion(), _be = new THREE.Euler(), _bp = new THREE.Vector3(), _bs = new THREE.Vector3();
+  // PERF-CALLS: grass, flowers and tulips: the tiles near Twinsen in ONE InstancedMesh per kind (geometry and
+  // material), refilled from the tiles' own instances whenever a tile comes within or goes beyond the small-detail
+  // distance (or the preset's share of them changes). On the street at Medium 27 tile draws were 5–10 kinds × the
+  // 4–6 tiles in reach; now one per kind. The same instances (matrices, colours, the preset's even thinning), the
+  // same material and its sway; tiles in reach but out of the view now go to the GPU too (60–100 vertices a tuft).
+  W.smallPools = [];
+  const smallPool = (g, m) => {
+    let P = W.smallPools.find((x) => x.g === g && x.m === m);
+    if (!P) { P = { g, m, tiles: [], im: null, dirty: true }; W.smallPools.push(P); }
+    return P;
+  };
+  const fillPools = () => {
+    for (const P of W.smallPools) {
+      if (!P.im) {
+        const cap = P.tiles.reduce((a, t) => a + t.instanceMatrix.count, 0);
+        P.im = new THREE.InstancedMesh(P.g, P.m, Math.max(1, cap)); P.im.castShadow = false; P.im.receiveShadow = true; P.im.count = 0; P.im.name = 'smallPool';
+        if (P.tiles.some((t) => t.instanceColor)) P.im.setColorAt(0, new THREE.Color(1, 1, 1));
+        scene.add(P.im);
+      }
+      if (!P.dirty) continue;
+      P.dirty = false;
+      const M = P.im.instanceMatrix.array, C = P.im.instanceColor?.array;
+      let k = 0;
+      for (const t of P.tiles) {
+        if (!t.visible) continue;
+        const n = t.count;
+        M.set(t.instanceMatrix.array.subarray(0, n * 16), k * 16);
+        if (C && t.instanceColor) C.set(t.instanceColor.array.subarray(0, n * 3), k * 3);
+        k += n;
+      }
+      P.im.count = k; P.im.visible = k > 0;
+      P.im.instanceMatrix.needsUpdate = true; if (P.im.instanceColor) P.im.instanceColor.needsUpdate = true;
+      if (k) { P.im.computeBoundingSphere(); P.im.computeBoundingBox(); }
+    }
+  };
+  W.fillPools = fillPools;
   const mkInst = (geo, m, list, shadow = true, colorFn = null, geoLo = null, small = false) => {
     const tiles = new Map();
     if (BATCH.on && geoLo && shadow && !small) {
@@ -689,7 +725,7 @@ export function* buildWorldSteps(parentScene) {
           if (cols) im.setColorAt(j, cols[j]);
         });
         im.computeBoundingSphere();
-        scene.add(im);
+        if (small) smallPool(g, m).tiles.push(im); else scene.add(im);   // (PERF-CALLS: a small tile is drawn through its pool)
         out.push(im);
         return im;
       };
@@ -710,6 +746,8 @@ export function* buildWorldSteps(parentScene) {
     W.detail = { treeNear: LOD_DETAIL.near, smallFar: LOD_DETAIL.smallFar, small: LOD_DETAIL.small };
     // fewer grass tufts and flowers: the instances are in random order, so the first part is an even thinning
     for (const T of W.lodTiles) if (T.small) T.hi.count = Math.max(1, Math.round(T.n * LOD_DETAIL.small));
+    for (const P of W.smallPools) P.dirty = true;
+    fillPools();
     for (const T of W.lodTiles) if (!T.small) setLod(T, T.near);
   };
   W.updateLod = (focus) => {
@@ -717,11 +755,12 @@ export function* buildWorldSteps(parentScene) {
     for (const B of W.batches) B.update(focus, near);
     for (const T of W.lodTiles) {
       const d = Math.hypot(focus.x - T.cx, focus.z - T.cz);
-      if (T.small) { T.hi.visible = d < far; continue; }
+      if (T.small) { const v = d < far; if (T.hi.visible !== v) { T.hi.visible = v; T.pool ??= W.smallPools.find((P) => P.tiles.includes(T.hi)); if (T.pool) T.pool.dirty = true; } continue; }
       const was = T.near;
       if (T.near && d > near + 4) T.near = false; else if (!T.near && d < near - 4) T.near = true;
       if (T.near !== was) setLod(T, T.near);
     }
+    fillPools();
     // (the small props' shadow distance now lives in engine/shadowcull.js, with the view-frustum test)
   };
   const shadeVar = (c) => c.setRGB(1, 1, 1).multiplyScalar(0.88 + rand() * 0.2).offsetHSL((rand() - 0.5) * 0.03, 0, 0);
@@ -839,6 +878,7 @@ export function* buildWorldSteps(parentScene) {
   const lifeBeds = new Set(); for (const list of beds) for (const t of list) if (lifeClear(t.x, t.z) || inNewHouse(t.x, t.z, 0.6) || newPathDist(t.x, t.z) < 1.7) lifeBeds.add(t.bed);
   for (let k = 0; k < beds.length; k++) beds[k] = beds[k].filter((t) => !lifeBeds.has(t.bed));
   beds.forEach((list, k) => { if (list.length) mkInst(tulipGeometry(BED_COLS[k]), flowerMat, list, false, null, null, true); });
+  fillPools();   // (PERF-CALLS: the small kinds' pools made now, with the rest of the island: uploaded behind the loading screen)
   W.flowerBeds = { beds: bedN, tulips: beds.reduce((a, l) => a + l.length, 0) };
 
   const rocks = [];

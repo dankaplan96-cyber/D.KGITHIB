@@ -680,6 +680,7 @@ class Game {
     const root = this.room?.group || this.world.root;
     if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos);
     if (!this.drawBatch.has(root)) this.drawBatch.update(root);   // (RENDER-INV: the area's draw batches, before the upload)
+    else this.drawBatch.readmit(root);   // (PERF-CALLS: pieces that left on the last visit and are back as they were)
     this.uploadGeometry(root);
     this.uploadTextures(root);
     if (this._shadowWarm) { this._shadowWarm = false; this.warmShadows(); }   // (LAZY-REGIONS: an area built since the last warm-up)

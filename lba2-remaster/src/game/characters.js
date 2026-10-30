@@ -1138,7 +1138,23 @@ function polyCharacter(L, def, P) {
   const root = new THREE.Group();
   root.add(mesh);
   const hp = def.bones.head.pos;
-  const eyes = P.eyes.map((e) => {
+  // PERF-CALLS: both eyes in one mesh when they sit at the same height and depth on the same bone (every model but the
+  // dinofly): the blink scales y about that height for both together, exactly as each one about its own centre; one
+  // draw a person instead of two (the street at Medium: 16 people in view)
+  const E2 = P.eyes;
+  if (E2.length === 2 && E2[0].bone === E2[1].bone && E2[0].pivot[1] === E2[1].pivot[1] && E2[0].pivot[2] === E2[1].pivot[2]) {
+    const cx = (E2[0].pivot[0] + E2[1].pivot[0]) / 2, pos = [], col = [];
+    for (const e of E2) { const dx = e.pivot[0] - cx; for (let i = 0; i < e.pos.length; i += 3) pos.push(e.pos[i] + dx, e.pos[i + 1], e.pos[i + 2]); col.push(...e.col); }
+    const g = new THREE.Group();
+    g.position.set(cx - hp[0], E2[0].pivot[1] - hp[1], E2[0].pivot[2] - hp[2]);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('color', new THREE.BufferAttribute(polyColors(col), 3));
+    geo.computeVertexNormals();
+    g.add(new THREE.Mesh(geo, polyEyeMat));
+    bones[E2[0].bone].add(g);
+    var eyes = [g];
+  } else var eyes = P.eyes.map((e) => {
     const g = new THREE.Group();
     g.position.set(e.pivot[0] - hp[0], e.pivot[1] - hp[1], e.pivot[2] - hp[2]);
     const geo = new THREE.BufferGeometry();

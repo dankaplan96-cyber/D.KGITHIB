@@ -284,7 +284,7 @@ function emblem() {
 }
 let emblemMat = null;
 function emblemMaterial() {
-  emblemMat ??= new THREE.MeshStandardMaterial({ map: emblem(), emissiveMap: emblem(), emissive: '#3fe6ff', emissiveIntensity: 2.2, color: '#9ff0ff', transparent: true, alphaTest: 0.3, depthWrite: false, roughness: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 });
+  emblemMat ??= new THREE.MeshStandardMaterial({ map: emblem(), emissiveMap: emblem(), emissive: '#3fe6ff', emissiveIntensity: 2.2, color: '#9ff0ff', transparent: true, alphaTest: 0.3, depthWrite: false, roughness: 0.4, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, forceSinglePass: true });   // (PERF-CALLS: flat decals on solid things — never a front and a back face on one pixel: both sides in one draw, the same pixels)
   return emblemMat;
 }
 const glowCyan = () => pm('#9ff4ff', 0.3, { emissive: '#35d8ff', emissiveIntensity: 2.4 });
@@ -651,8 +651,7 @@ function buildHarbour(W0, root, r) {
   lamp(W, g, -70.5, -9.6, true);
   lamp(W, g, -70.5, 1.8);
   lamp(W, g, -63.2, -11.2);
-  tulipBed(W, g, -64.8, -9.0, 4.2, 1.4, 0, r);
-  tulipBed(W, g, -63.6, 1.2, 1.4, 3.4, 0, r);
+  { const tacc = { list: [], cups: [], parent: g }; tulipBed(W, g, -64.8, -9.0, 4.2, 1.4, 0, r, tacc); tulipBed(W, g, -63.6, 1.2, 1.4, 3.4, 0, r, tacc); tulipFlush(tacc); }
   bench(W, g, -65.0, -7.0, Math.PI, r);
   barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-69.8, 6.2, true]], r);
   W.givers.push({ id: 'quay-barrels', x: -72.6 + d.x, z: 5.4 + d.z, r: 1.8, top: 1.1, kinds: ['money', 'life'], n: 2 });
@@ -784,6 +783,12 @@ function cargoLift(W, parent, r) {
     shake(k) { this.shakeK = k; },
   };
   void r;
+  // PERF-CALLS: each rigid part's pieces in one mesh per material, in that part's own space (the column on its base,
+  // the turret, the barge with the crate aboard, the hanging crate): 51 → 23 draws in each pass where the lift shows,
+  // the same materials, the same triangles where they were. What moves on its own stays a group (the lantern, the
+  // turret, the hook, the cable, the barge, the crate, the puddle's rings).
+  for (const o of [lantern, turret, barge, crate, pud, hook, cable]) o.userData.keep = true;
+  mergeStatic(g); mergeStatic(turret); mergeStatic(barge); mergeStatic(crate);
   L.pose(1);
   let ripT = 0;
   W.updaters.push((dt, tt) => {
@@ -1103,7 +1108,7 @@ function tulipGeo() {
     return { green: compose([[stem], [leafA], [leafB]]), cup };
   });
 }
-function tulipBed(W, parent, x, z, w, d, ry, r) {
+function tulipBed(W, parent, x, z, w, d, ry, r, acc = null) {
   const y = W.H(x, z);
   const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; parent.add(g);
   // dressed stone curb around dark soil
@@ -1117,9 +1122,24 @@ function tulipBed(W, parent, x, z, w, d, ry, r) {
     const it = { x: lx, y: 0.14, z: lz, ry: r() * 6, s: 0.9 + r() * 0.4 };
     list.push(it); cups.push({ ...it, color: cols[Math.floor((lx + w) * 1.3) % cols.length] });
   }
-  instances(g, T.green, pm('#4f8f3a', 0.8), list, { cast: false });
-  instances(g, T.cup, pm('#ffffff', 0.6), cups, { cast: false });
+  // (PERF-CALLS: with an accumulator, the beds of one place share two instanced meshes, made by tulipFlush: the same
+  //  tulips, placed in the parent's space — 2 draws for all of them instead of 2 a bed)
+  if (acc) {
+    const c = Math.cos(ry), sn = Math.sin(ry), to = (it) => ({ ...it, x: x + c * it.x + sn * it.z, y: y + it.y, z: z - sn * it.x + c * it.z, ry: it.ry + ry });
+    for (const it of list) acc.list.push(to(it));
+    for (const it of cups) acc.cups.push(to(it));
+    acc.parent = parent;
+  } else {
+    instances(g, T.green, pm('#4f8f3a', 0.8), list, { cast: false });
+    instances(g, T.cup, pm('#ffffff', 0.6), cups, { cast: false });
+  }
   W.physics.add({ type: 'box', x, z, hw: w / 2 + 0.15, hd: d / 2 + 0.15, rot: ry, top: y + 0.24, seeThrough: true });
+}
+function tulipFlush(acc) {
+  if (!acc.list.length) return;
+  const T = tulipGeo();
+  instances(acc.parent, T.green, pm('#4f8f3a', 0.8), acc.list, { cast: false });
+  instances(acc.parent, T.cup, pm('#ffffff', 0.6), acc.cups, { cast: false });
 }
 function bench(W, parent, x, z, ry) {
   const y = W.H(x, z);
@@ -2801,10 +2821,12 @@ function buildOriginalProps(W, root, r) {
     instances(grp, picket, pm('#f2eadc', 0.8), pickets);
   }
   // tulip rows: a bed under each row
+  const tacc = { list: [], cups: [], parent: grp };
   for (const [x0, x1, z] of PROPS.tulips) {
     const w = x1 - x0 + 0.7, x = (x0 + x1) / 2, at = fit(x, z, 0, w, 0.55, -9);
-    if (at) { tulipBed(W, grp, at[0], at[1], w, 1.1, 0, r); n++; }
+    if (at) { tulipBed(W, grp, at[0], at[1], w, 1.1, 0, r, tacc); n++; }
   }
+  tulipFlush(tacc);
   W.propsPlaced = n;
   mergeStatic(grp, { recolor: true, retex: true, cell: 24 });   // (all static; instanced lamps/posts are left as they are. PERF-IGPU; retex PERF-2)
 }
