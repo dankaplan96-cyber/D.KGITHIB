@@ -11,7 +11,7 @@
 // same heading, pitch and distance, and the player's camera is put back afterwards. "draw calls" stays three.js's count (one per WebGL call, the CPU
 // cost); "GPU draws" adds the draws inside a multi-draw (one call for many trees, which ANGLE on D3D11 still
 // issues one by one) and "shadow" is the shadow pass's share of the calls.
-import { gpuQuality, Sections, resources } from './perf.js';
+import { gpuQuality, Sections, resources, loafIn } from './perf.js';
 // (STABILIZATION: the GPU investigator's own variants for the Medium breakdown, one per group of GPU work)
 import { gpuVariants } from './benchgpu.js';
 import { poolSize } from './lightpool.js';
@@ -42,7 +42,9 @@ const med = (a) => { if (!a.length) return null; const v = a.slice().sort((x, y)
 // textures uploaded, a governor step, a likely garbage collection) or else the frame's own CPU work
 export function hitchList(buf) {
   let at = 0; const h = [];
-  for (const f of buf) { at += f.ms; if (f.ms > 33.4) h.push(`${f.ms.toFixed(0)}@${(at / 1000).toFixed(1)}s${f.black ? ' black' : ''}${f.why ? ` [${f.why}]` : ` [work ${((f.sim || 0) + (f.render || 0)).toFixed(0)} ms]`}`); }
+  // (STABILIZATION: a frame over 100 ms also says what the main thread did through it — the browser's long animation
+  //  frames, perf.js loafIn — or that it was free: then the time went to the GPU process, the driver or the compositor)
+  for (const f of buf) { at += f.ms; if (f.ms > 33.4) { const lo = f.ms > 100 ? loafIn(f.end, f.ms) : ''; h.push(`${f.ms.toFixed(0)}@${(at / 1000).toFixed(1)}s${f.black ? ' black' : ''}${f.why ? ` [${f.why}]` : ` [work ${((f.sim || 0) + (f.render || 0)).toFixed(0)} ms]`}${lo ? ` {${lo}}` : ''}`); } }
   return h;
 }
 // (STABILIZATION: a CPU-by-section summary on one line, in a fixed order)

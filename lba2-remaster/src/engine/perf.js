@@ -68,10 +68,11 @@ export class Perf {
     // (RENDER-INV) the GPU's own time per frame, where the browser offers a timer query (see GpuTimer)
     try { this.gpuTimer = renderer ? GpuTimer.make(renderer.getContext()) : null; } catch { this.gpuTimer = null; }
   }
-  beginFrame() { if (this.r) this.r.info.reset(); this.shadow = 0; this.sub = 0; this.up = 0; this.upB = 0; this.sec?.begin(); }
+  beginFrame() { this.t0 = performance.now(); if (this.r) this.r.info.reset(); this.shadow = 0; this.sub = 0; this.up = 0; this.upB = 0; this.sec?.begin(); }
   record(f) {
     const info = this.r?.info.render;
     f.calls = info?.calls ?? 0; f.tris = info?.triangles ?? 0; f.shadowCalls = this.shadow; f.draws = f.calls + this.sub; f.up = this.up; f.upKB = this.upB / 1024;
+    f.end = this.t0;   // (the frame's interval ended as this frame began: loafIn(f.end, f.ms))
     if (this.sec) f.sec = this.sec.take(f);   // (STABILIZATION: the frame's CPU by section, while the benchmark measures)
     f.raf = REG.raf.perFrame; REG.raf.perFrame = 0;   // (rAF callbacks requested since the last frame: 1 is the game's loop)
     this.onRecord?.(f);   // (STABILIZATION: the benchmark's visits keep every frame of a phase, past the ring's 1200)
@@ -312,6 +313,16 @@ export function resources(G) {
 //    play). startupReport(game) gives every phase's frames and every long frame with what ran in it.
 const STARTUP_MAX = 600e3, STARTUP_PLAY = 30e3;
 export const STARTUP = { iv: [], marks: [], loaf: [], lt: [], on: true, playAt: null };
+const LOAF_N = 200;
+export const LOAF = { ok: false, list: [] };
+// what the main thread did in the interval [end − ms, end] (performance.now() times): the long animation frames that
+// overlap it, longest script first — or, where the browser reports them and none overlaps, that it was free
+export function loafIn(end, ms) {
+  if (!LOAF.ok || end == null) return '';
+  const lf = LOAF.list.filter((e) => e.t < end && e.t + e.d > end - ms);
+  if (!lf.length) return 'main thread free (GPU process, driver or compositor)';
+  return lf.map((e) => `main thread ${Math.round(e.d)} ms${e.style ? `, style/layout ${e.style}` : ''}${e.scripts[0] ? ': ' + e.scripts[0] : ''}`).join(' | ');
+}
 export function startupMark(label) { if (STARTUP.on) STARTUP.marks.push([performance.now(), label]); if (label === 'play' && STARTUP.playAt == null) STARTUP.playAt = performance.now(); }
 (function startupTrace() {
   if (typeof window === 'undefined' || !window.__lbaRaf) return;
@@ -327,7 +338,10 @@ export function startupMark(label) { if (STARTUP.on) STARTUP.marks.push([perform
     const scripts = (e.scripts || []).slice().sort((a, b) => b.duration - a.duration).slice(0, 3).map((s) => `${s.invokerType || ''} ${s.sourceFunctionName || s.invoker || '?'} ${String(s.sourceURL || '').replace(/^.*\/(src|vendor|css)\//, '$1/')}${s.sourceCharPosition >= 0 ? ':' + s.sourceCharPosition : ''} ${Math.round(s.duration)} ms${s.forcedStyleAndLayoutDuration ? ` (forced layout ${Math.round(s.forcedStyleAndLayoutDuration)})` : ''}`.trim());
     return { t: e.startTime, d: e.duration, block: e.blockingDuration ?? null, style: e.styleAndLayoutStart ? Math.round(e.startTime + e.duration - e.styleAndLayoutStart) : null, render: e.renderStart ? Math.round(e.startTime + e.duration - e.renderStart) : null, scripts };
   };
-  try { new PerformanceObserver((L) => { if (STARTUP.on) for (const e of L.getEntries()) STARTUP.loaf.push(keep(e)); }).observe({ type: 'long-animation-frame', buffered: true }); } catch { /* not in this browser */ }
+  // (also after the start trace: the last LOAF_N long animation frames, for the benchmark's hitch list: was the main
+  //  thread busy through a long frame — with what — or free, the time spent in the GPU process / driver / compositor)
+  try { LOAF.ok = PerformanceObserver.supportedEntryTypes?.includes('long-animation-frame') ?? false; } catch { /* */ }
+  try { new PerformanceObserver((L) => { for (const e of L.getEntries()) { const k = keep(e); if (STARTUP.on) STARTUP.loaf.push(k); LOAF.list.push(k); if (LOAF.list.length > LOAF_N) LOAF.list.shift(); } }).observe({ type: 'long-animation-frame', buffered: true }); } catch { /* not in this browser */ }
   try { new PerformanceObserver((L) => { if (STARTUP.on) for (const e of L.getEntries()) STARTUP.lt.push({ t: e.startTime, d: e.duration }); }).observe({ type: 'longtask', buffered: true }); } catch { /* not in this browser */ }
 })();
 // (G: the Game, for its loading steps and the frames its loop recorded with their jobs)
