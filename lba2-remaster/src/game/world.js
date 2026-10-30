@@ -935,9 +935,18 @@ export function* buildWorldSteps(parentScene) {
       beam.rotation.y = t * 0.8;
     });
     // sage's hut barrels (hidden flask)
+    // (GFX-LOOK-2: staved, bulging barrels with a lid and two iron hoops, as the town's, instead of two plain brown
+    //  cylinders; the same size, place and collider; only the body casts a shadow, as the cylinder did)
+    const bWood = TX.wood.clone(); bWood.needsUpdate = true; bWood.repeat.set(2, 1);
+    const bMat = new THREE.MeshStandardMaterial({ map: bWood, color: '#b07a4c', roughness: 0.9 }), bLid = new THREE.MeshStandardMaterial({ map: TX.wood, color: '#946038', roughness: 0.9 });
+    const bIron = mat('#3a3a3a', 0.5, { metalness: 0.5 });
+    const bPts = []; for (let i = 0; i <= 12; i++) { const t = i / 12; bPts.push(new THREE.Vector2(0.38 + Math.sin(t * Math.PI) * 0.07, t * 1.1)); }
+    const bBody = new THREE.LatheGeometry(bPts, 16), bTop = new THREE.CircleGeometry(0.39, 16).rotateX(-Math.PI / 2), bHoop = new THREE.TorusGeometry(0.405, 0.02, 6, 20).rotateX(Math.PI / 2);
     for (const [ox, oz] of [[4.5, 2.5], [5.3, 1.6]]) {
-      const bx = L.x + ox, bz = L.z + oz;
-      add(scene, new THREE.CylinderGeometry(0.45, 0.4, 1.1, 12), mat('#7b5532'), bx, H(bx, bz) + 0.55, bz);
+      const bx = L.x + ox, bz = L.z + oz, by = H(bx, bz);
+      add(scene, bBody, bMat, bx, by, bz, { ry: ox * 2.1 });
+      add(scene, bTop, bLid, bx, by + 1.09, bz, { cast: false });
+      for (const hy of [0.14, 0.96]) add(scene, bHoop, bIron, bx, by + hy, bz, { cast: false });
       physics.add({ type: 'cyl', x: bx, z: bz, r: 0.45, top: H(bx, bz) + 1.1, noStand: true, seeThrough: true });
     }
     W.barrels = { x: L.x + 4.9, z: L.z + 2.1 };
