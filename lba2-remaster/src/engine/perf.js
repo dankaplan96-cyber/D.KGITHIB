@@ -197,12 +197,14 @@ const kindOf = (t) => { try { if (typeof window !== 'undefined' && t === window)
   const W = window, raf = W.requestAnimationFrame?.bind(W), caf = W.cancelAnimationFrame?.bind(W);
   W.__lbaRaf = raf;   // (the browser's own, for the start trace below: not counted as the game's)
   if (raf) {
-    W.requestAnimationFrame = (cb) => { let id = 0; REG.raf.req++; REG.raf.perFrame++; id = raf((t) => { REG.raf.pending.delete(id); cb(t); }); REG.raf.pending.add(id); return id; };
-    if (caf) W.cancelAnimationFrame = (id) => { REG.raf.pending.delete(id); return caf(id); };
+    // (callbacks are passed to the browser as they are, never wrapped: the browser's long-animation-frame entries name the
+    //  game's own function, not a wrapper; so pending rAF callbacks and timeouts are not tracked, only how many are asked)
+    W.requestAnimationFrame = (cb) => { REG.raf.req++; REG.raf.perFrame++; return raf(cb); };
+    if (caf) W.cancelAnimationFrame = (id) => caf(id);
   }
   const st = W.setTimeout.bind(W), ct = W.clearTimeout.bind(W), si = W.setInterval.bind(W), ci = W.clearInterval.bind(W);
-  W.setTimeout = (fn, ms, ...a) => { let id = 0; id = st(typeof fn === 'function' ? (...b) => { REG.timeouts.delete(id); fn(...b); } : fn, ms, ...a); REG.timeouts.add(id); return id; };
-  W.clearTimeout = (id) => { REG.timeouts.delete(id); return ct(id); };
+  W.setTimeout = (fn, ms, ...a) => { REG.timeoutsSet = (REG.timeoutsSet || 0) + 1; return st(fn, ms, ...a); };
+  W.clearTimeout = (id) => ct(id);
   W.setInterval = (fn, ms, ...a) => { const id = si(fn, ms, ...a); REG.intervals.add(id); return id; };
   W.clearInterval = (id) => { REG.intervals.delete(id); return ci(id); };
   const ET = W.EventTarget?.prototype; if (!ET) return;
@@ -230,7 +232,7 @@ const kindOf = (t) => { try { if (typeof window !== 'undefined' && t === window)
 })();
 export function registrations() {
   const L = [...REG.live].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
-  return { rafPending: REG.raf.pending.size, rafRequested: REG.raf.req, timeouts: REG.timeouts.size, intervals: REG.intervals.size, listeners: L.reduce((s, [, n]) => s + n, 0), listenersByKind: Object.fromEntries(L) };
+  return { rafPending: '-', rafRequested: REG.raf.req, timeouts: REG.timeoutsSet || 0, intervals: REG.intervals.size, listeners: L.reduce((s, [, n]) => s + n, 0), listenersByKind: Object.fromEntries(L) };
 }
 
 // 2. CPU by section. While on (the benchmark), the game's main entry points are timed EXCLUSIVELY (a section nested in

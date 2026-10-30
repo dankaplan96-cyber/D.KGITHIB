@@ -431,14 +431,14 @@ export class Bench {
       if (s.rafMax > 1) L.push(`      rAF callbacks requested in one frame: up to ${s.rafMax} (1 is the game's loop)`);
       if (s.hitches.length) L.push(`      every frame over 33 ms: ${s.hitches.slice(0, 14).join(' ')}${s.hitches.length > 14 ? ` … +${s.hitches.length - 14}` : ''}`);
     }
-    L.push('', 'resources (GPU: geometries / textures / programs / render targets · JS heap MB · scene objects (meshes, shown) · people / enemies / room updaters · rAF pending / timeouts / intervals / listeners):');
-    for (const x of snaps) { const r = x.res; L.push(`  ${x.at.padEnd(22)} ${r.geometries} / ${r.textures} / ${r.programs} / ${r.renderTargets} · ${r.heapMB ?? '?'} MB (of ${r.heapTotalMB ?? '?'}) · ${r.objects} (${r.meshes}, ${r.shown}) · ${r.npcs} / ${r.enemies} / ${r.roomUpdaters} · ${r.rafPending} / ${r.timeouts} / ${r.intervals} / ${r.listeners}`); }
+    L.push('', 'resources (GPU: geometries / textures / programs / render targets · JS heap MB · scene objects (meshes, shown) · people / enemies / room updaters · rAF callbacks asked in all / timeouts set in all / intervals alive / listeners alive):');
+    for (const x of snaps) { const r = x.res; L.push(`  ${x.at.padEnd(22)} ${r.geometries} / ${r.textures} / ${r.programs} / ${r.renderTargets} · ${r.heapMB ?? '?'} MB (of ${r.heapTotalMB ?? '?'}) · ${r.objects} (${r.meshes}, ${r.shown}) · ${r.npcs} / ${r.enemies} / ${r.roomUpdaters} · ${r.rafRequested} / ${r.timeouts} / ${r.intervals} / ${r.listeners}`); }
     // listeners that grew between the first snapshot after the cold visits and the last: what transitions left behind
     const a = snaps.find((x) => x.at === 'before the cycles')?.res, b = snaps[snaps.length - 1]?.res;
     if (a && b) {
       const grew = Object.keys({ ...a.listenersByKind, ...b.listenersByKind }).map((k) => [k, (b.listenersByKind[k] || 0) - (a.listenersByKind[k] || 0)]).filter(([, d]) => d !== 0);
       L.push(`  listeners that changed over the cycles and the sustained play: ${grew.length ? grew.map(([k, d]) => `${k} ${d > 0 ? '+' : ''}${d}`).join(' · ') : 'none'}`);
-      L.push(`  growth over the cycles and the sustained play: geometries ${b.geometries - a.geometries} · textures ${b.textures - a.textures} · programs ${b.programs - a.programs} · render targets ${b.renderTargets - a.renderTargets} · heap ${a.heapMB != null ? (b.heapMB - a.heapMB).toFixed(1) + ' MB' : '?'} · scene objects ${b.objects - a.objects} · timeouts ${b.timeouts - a.timeouts} · intervals ${b.intervals - a.intervals} · rAF pending ${b.rafPending - a.rafPending}`);
+      L.push(`  growth over the cycles and the sustained play: geometries ${b.geometries - a.geometries} · textures ${b.textures - a.textures} · programs ${b.programs - a.programs} · render targets ${b.renderTargets - a.renderTargets} · heap ${a.heapMB != null ? (b.heapMB - a.heapMB).toFixed(1) + ' MB' : '?'} · scene objects ${b.objects - a.objects} · intervals ${b.intervals - a.intervals} (timeouts set meanwhile ${b.timeouts - a.timeouts}, rAF callbacks asked ${b.rafRequested - a.rafRequested})`);
     }
     L.push('', `Frame time includes the GPU (the browser waits for it); "> refresh": frames longer than 1.25 refresh intervals; "CPU work" is the game's simulation + render submission; sections are exclusive (a nested one counts only in the inner); "late": how late the frame callback ran. Took ${((performance.now() - o.t0) / 60000).toFixed(1)} min.`);
     return L.join('\n');
