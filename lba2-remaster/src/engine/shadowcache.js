@@ -167,8 +167,10 @@ export class ShadowCache {
       sun.position.copy(sun.target.position).addScaledVector(d, dist);
       sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
       if (k > 0) R.clear = function () { if (this.getRenderTarget() === c.target) return; return clear.apply(this, arguments); };
-      // (PERF-SUBMIT: the pass walks the static casters themselves, not the whole scene to find them on their layer)
-      const root = this.sliceWalk === false ? scene : (this._sroot ??= { visible: true, layers: NO_LAYERS, children: null });
+      // (PERF-SUBMIT, tried and left off — `sliceWalk = true`: the pass walking the static casters themselves instead of
+      //  the whole scene changed the arrival's pixels (samepix.mjs: the scene walk also draws other objects on the
+      //  cache's layer; under investigation, cachedraws.mjs): the scene walk, as before)
+      const root = this.sliceWalk !== true ? scene : (this._sroot ??= { visible: true, layers: NO_LAYERS, children: null });
       if (root !== scene) root.children = S;
       sh.needsUpdate = true; this.base([sun], root, this.layerCam);
       if (root !== scene) root.children = null;
