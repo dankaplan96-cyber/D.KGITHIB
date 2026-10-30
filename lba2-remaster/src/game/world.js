@@ -349,7 +349,10 @@ let tintGrid = null;
 function islandColor(x, z, h, slope, c) {
   const n = fbm(x * 0.09, z * 0.09, 3);
   const v = 0.92 + n * 0.16;
-  c.setRGB(v, v, v * 0.97);
+  // GFX-LOOK-2: the lawns read as one flat green from the street. Broad patches (~25 m) now lean a little warm and dry
+  // or cool and lush, as LBA2's painted ground varies: ±5 % per channel, free (the vertex tint is there anyway)
+  const d = Math.max(-1, Math.min(1, fbm(x * 0.04 + 7.3, z * 0.04 - 2.1, 2) * 1.8));
+  c.setRGB(v * (1 + d * 0.05), v * (1 + d * 0.01), v * 0.97 * (1 - d * 0.06));
   if (h < -0.2) c.multiplyScalar(0.8);
   if (tintGrid) {
     // concave spots (cliff feet) darker, convex rims lighter

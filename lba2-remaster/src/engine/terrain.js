@@ -168,6 +168,14 @@ export class Terrain {
           // crisp soil edges too (paths and town soil): the grass/soil share is re-split per pixel with a
           // short ramp, wobbled by the grass texture so the edge looks painted, not ruled
           vec3 gtex = texture2D(tGrass, tuv).rgb;
+          // GFX-LOOK-2: the paving's edge as crisp (it faded into the grass and soil over the ~1 m grid: a green smear
+          // round every street and the quay): its share re-split per pixel on the same kind of ramp, no extra read
+          float ns = sp.x + sp.y + sp.w + sp2;
+          if (sp2 > 0.001 && ns - sp2 > 0.001) {
+            float pk = smoothstep(0.4, 0.6, sp2 / ns + (dot(gtex, vec3(0.333)) - 0.42) * 0.25);
+            float ok = ns * (1.0 - pk) / (ns - sp2);
+            sp.x *= ok; sp.y *= ok; sp.w *= ok; sp2 = ns * pk;
+          }
           float gs = sp.x + sp.w;
           if (gs > 0.001) {
             float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;
