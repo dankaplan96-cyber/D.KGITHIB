@@ -17,6 +17,7 @@ import * as THREE from 'three';
 import { writeBodyStencil } from './characters.js';
 import { hitEnemy } from './weapons.js';
 import { Jetpack } from './jetpack.js';
+import { offScene, CALM } from './offscene.js';
 
 export const GADGET = {
   penguin: { life: 7, speed: 1.3, lureR: 11, hp: 2, popR: 2.2, popDmg: 2 },
@@ -154,6 +155,8 @@ export class Gadgets {
   updateEnemies(dt) {
     const g = this.game;
     for (const e of g.enemies) {
+      // (PACE-SIM: a calm enemy in another scene than the one on screen waits as it is: offscene.js)
+      if (e.alive && e.present && CALM.has(e.state) && offScene(g, e)) continue;
       if (this.penguin && this.lures(e)) {
         const h = g.hero; g.hero = this.penguin.proxy;
         if (!e._lured) { e._lured = true; this.stats.lured++; }

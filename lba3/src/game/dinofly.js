@@ -195,6 +195,9 @@ export function buildDinoFly(scene, W, x, z, ry0, opts = {}) {
   const S = { t: 0, stretchT: 0, nextStretch: 9, nuzzleT: 0, yaw: 0, pitch: 0, alert: 0, lid: 0.3, blinkT: 3, talks: 0, eye: 0, side: 1 };
   root.userData.state = S;
   W.updaters.push((dt, tt, hero) => {
+    // (PACE-SIM: Citadel not on screen — Twinsen indoors or in another area — he naps on as he is: his breath, his look
+    //  and his stretches are all he does)
+    if (W.root && !W.root.visible) return;
     S.t += dt;
     if (!M || opts.rest) return;
     const br = Math.sin(S.t * 1.6);
