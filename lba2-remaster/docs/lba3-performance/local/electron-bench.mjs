@@ -1,6 +1,13 @@
 // LBA3 in-game benchmark, run automatically in the INSTALLED desktop app (Electron) on the laptop.
 // Run it from a folder outside the repo where Playwright is installed (npm init -y && npm i playwright):
-//   node electron-bench.mjs <auto|full|smoke> <out.txt> [battery|plugged]
+//   node electron-bench.mjs <auto|full|visits|startup|pacing|smoke> <out.txt> [battery|plugged] [follow|orbit] [-- app switches]
+// STABILIZATION phase 1 (on battery, then plugged in; each with Follow and with the orbit):
+//   node electron-bench.mjs visits laptop-<version>-visits-follow-battery.txt battery follow
+//   node electron-bench.mjs visits laptop-<version>-visits-orbit-battery.txt battery orbit
+//   node electron-bench.mjs auto laptop-<version>-auto-follow-battery.txt battery follow
+//   node electron-bench.mjs full laptop-<version>-full-orbit-battery.txt battery orbit
+// visits: street and arrival — the first visit after the start, 5 region round trips, 3 minutes of play, with a
+// resource snapshot before and after (game.bench.visits); camera: follow = the player's follow camera at Far
 // The app is launched with its own profile (--user-data-dir=<this folder>\electron-profile), never the player's
 // %APPDATA%\LBA3 The Awakening: New Game here must not touch the real saves. The run stops before New Game if the
 // app reports any other data folder. The profile is kept between runs (shader cache warm, like a player's).
@@ -15,7 +22,7 @@ import { pacing } from './pacing.mjs';
 // extra switches for the app after '--' (e.g. -- --windowed --disable-direct-composition); '--maximize' is ours:
 // the window is maximized after start (with --windowed: a maximized window instead of fullscreen)
 const argv = process.argv.slice(2), dd = argv.indexOf('--');
-const [mode = 'smoke', out, power = '?'] = dd < 0 ? argv : argv.slice(0, dd);
+const [mode = 'smoke', out, power = '?', camera = 'orbit'] = dd < 0 ? argv : argv.slice(0, dd);
 const extra = dd < 0 ? [] : argv.slice(dd + 1);
 const maximize = extra.includes('--maximize'), appArgs = extra.filter((a) => a !== '--maximize');
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -46,6 +53,27 @@ page.on('console', (m) => { if (m.type() === 'error') errs.push('console error: 
 
 const ready = () => page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
 await page.waitForLoadState('load');
+// STABILIZATION (the user: "stutters on the game's start screen"): the app's own first start as the player has it — no
+// reload, no ?nocine — STARTUP_TITLE_S s on the title menu (the live world behind it), New Game, STARTUP_PLAY_S s of what
+// follows (the opening cinematic), then the start trace: every display frame from the page's start, every long frame
+// with what ran in it (game.startupReport()). Run it twice: a fresh profile (delete electron-profile) and a kept one.
+//   node electron-bench.mjs startup laptop-<version>-startup-battery.txt battery
+if (mode === 'startup') {
+  const T = +(process.env.STARTUP_TITLE_S || 15), P = +(process.env.STARTUP_PLAY_S || 25), t1 = Date.now();
+  await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing && window.game.screen === 'title', null, { timeout: 600000 });
+  const toTitle = ((Date.now() - t1) / 1000).toFixed(1);
+  await page.waitForTimeout(T * 1000);
+  await page.click('[data-act="new"]', { timeout: 60000 });
+  await page.waitForTimeout(1000);
+  if (await page.evaluate(() => game.screen === 'confirmnew')) await page.click('[data-act="newyes"]', { timeout: 60000 });
+  await page.waitForTimeout(P * 1000);
+  const rep = await page.evaluate(() => game.startupReport());
+  const body = `ran in: desktop app ${info.version} (installed, ${EXE}; bench profile ${firstUse ? 'NEW this run (cold shader cache)' : 'kept from earlier runs'}) · power: ${power0} · title reached ${toTitle} s after the window opened · ${T} s on the title, New Game, ${P} s after\n\n${rep}\n\n${errs.length ? 'page errors:\n' + errs.slice(0, 10).join('\n') : 'no page errors'}\n`;
+  if (out) fs.writeFileSync(out, body);
+  console.log(body);
+  await app.close();
+  process.exit(0);
+}
 await page.goto('app://game/index.html?nocine', { waitUntil: 'load', timeout: 180000 });
 await ready();
 await page.click('[data-act="new"]', { timeout: 60000 });
@@ -80,9 +108,10 @@ const env = await page.evaluate(() => {
 let text;
 const tb = Date.now();
 if (mode === 'pacing') text = await pacing(page);
-else if (mode === 'auto') text = await page.evaluate(() => game.bench.runAuto());
-else if (mode === 'full') text = await page.evaluate(() => game.bench.run());
-else text = 'smoke: ' + await page.evaluate(() => `bench.run ${typeof game.bench?.run}, bench.runAuto ${typeof game.bench?.runAuto}, state ${game.state}`);
+else if (mode === 'auto') text = await page.evaluate((camera) => game.bench.runAuto({ camera }), camera);
+else if (mode === 'full') text = await page.evaluate((camera) => game.bench.run({ camera }), camera);
+else if (mode === 'visits') text = await page.evaluate((camera) => game.bench.visits({ routes: ['street', 'arrival'], cycles: 5, sustainS: 180, camera }), camera);
+else text = 'smoke: ' + await page.evaluate(() => `bench.run ${typeof game.bench?.run}, bench.runAuto ${typeof game.bench?.runAuto}, bench.visits ${typeof game.bench?.visits}, state ${game.state}`);
 const mins = ((Date.now() - tb) / 60000).toFixed(1);
 const power1 = winPower();
 
@@ -92,7 +121,7 @@ const head = [
   `GPU: ${env.gpu}`,
   `power: Windows says ${power0} at start, ${power1} at end`,
   `settings at start: quality ${env.quality}, Quality Auto ${env.auto ? 'on' : 'off'} (bench profile)`,
-  `started ${t0.toISOString()}, benchmark took ${mins} min`,
+  `mode ${mode} · camera ${camera} · started ${t0.toISOString()}, benchmark took ${mins} min`,
 ].join('\n');
 const body = `${head}\n\n${text ?? '(the benchmark returned nothing: it was already running or refused)'}\n\n${errs.length ? 'page errors:\n' + errs.slice(0, 10).join('\n') : 'no page errors'}\n`;
 if (out) fs.writeFileSync(out, body);

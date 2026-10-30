@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import { execSync } from 'node:child_process';
 import { pacing } from './pacing.mjs';
 
-const [mode = 'smoke', out, power = '?'] = process.argv.slice(2);
+const [mode = 'smoke', out, power = '?', camera = 'orbit'] = process.argv.slice(2);
 const URL0 = process.env.GAME_URL || 'http://localhost:8161/';
 
 const winPower = () => {
@@ -40,6 +40,9 @@ page.on('response', (r) => { if (r.status() >= 400) errs.push(`HTTP ${r.status()
 await page.goto(URL0 + '?nocine', { waitUntil: 'load', timeout: 180000 });
 await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 300000 });
 await page.click('[data-act="new"]', { timeout: 60000 });
+// (a profile with a save asks first: "start a new game?")
+await page.waitForTimeout(1000);
+if (await page.evaluate(() => game.screen === 'confirmnew')) await page.click('[data-act="newyes"]', { timeout: 60000 });
 await page.waitForFunction(() => game.state === 'play' && !game.cine && !game.preparing, null, { timeout: 300000 });
 await page.waitForTimeout(5000);
 
@@ -58,8 +61,9 @@ const env = await page.evaluate(async () => {
 let text;
 const tb = Date.now();
 if (mode === 'pacing') text = await pacing(page);
-else if (mode === 'auto') text = await page.evaluate(() => game.bench.runAuto());
-else if (mode === 'full') text = await page.evaluate(() => game.bench.run());
+else if (mode === 'auto') text = await page.evaluate((camera) => game.bench.runAuto({ camera }), camera);
+else if (mode === 'full') text = await page.evaluate((camera) => game.bench.run({ camera }), camera);
+else if (mode === 'visits') text = await page.evaluate((camera) => game.bench.visits({ routes: ['street', 'arrival'], cycles: 5, sustainS: 180, camera }), camera);
 else text = 'smoke: ' + await page.evaluate(() => `bench.run ${typeof game.bench?.run}, bench.runAuto ${typeof game.bench?.runAuto}, state ${game.state}`);
 const mins = ((Date.now() - tb) / 60000).toFixed(1);
 const power1 = winPower();
@@ -69,7 +73,7 @@ const head = [
   `GPU: ${env.gpu}`,
   `power: Windows says ${power0} at start, ${power1} at end; Chrome battery API: ${env.bat ?? 'n/a'}`,
   `settings at start: quality ${env.quality}, Quality Auto ${env.auto ? 'on' : 'off'} (fresh profile defaults)`,
-  `started ${t0.toISOString()}, benchmark took ${mins} min`,
+  `mode ${mode} · camera ${camera} · started ${t0.toISOString()}, benchmark took ${mins} min`,
 ].join('\n');
 const body = `${head}\n\n${text ?? '(the benchmark returned nothing: it was already running or refused)'}\n\n${errs.length ? 'page errors:\n' + errs.slice(0, 10).join('\n') : 'no page errors'}\n`;
 if (out) fs.writeFileSync(out, body);

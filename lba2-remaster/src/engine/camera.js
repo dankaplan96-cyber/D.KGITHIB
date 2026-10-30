@@ -292,7 +292,9 @@ export class CameraRig {
       const x = t.x + Math.sin(yaw) * cp * d;
       const z = t.z + Math.cos(yaw) * cp * d;
       const y = t.y + 1.4 + sp * d;
-      for (const c of P.near(x, z)) {
+      const L = P.near(x, z);
+      for (let ci = 0; ci < L.length; ci++) {
+        const c = L[ci];
         if (!c.enabled || c.fades || c.camSkip || c.top < y || c.bottom > y) continue; // (fades: Zeelich's faded houses)
         if (sight && (c.seeThrough || (c.type === 'cyl' && c.r < 1.5))) continue; // (a tree's crown, a post, a rail)
         if (c.type === 'cyl') {
@@ -588,10 +590,14 @@ export class CameraRig {
     if (T && T.heightAt(p.x, p.z) > p.y - 0.3 - gap) return true;
     if (P) {
       _seen.clear();
-      for (const [dx, dz] of GAP4) for (const c of P.near(p.x + dx * gap, p.z + dz * gap)) {
-        if (_seen.has(c)) continue;
-        _seen.add(c);
-        if (c.enabled && !(c.camSkip && occ) && p.y < c.top + gap && p.y > c.bottom - gap && P._inside(c, p.x, p.z, gap)) return true;
+      for (let gi = 0; gi < 4; gi++) {
+        const L = P.near(p.x + GAP4[gi][0] * gap, p.z + GAP4[gi][1] * gap);
+        for (let ci = 0; ci < L.length; ci++) {
+          const c = L[ci];
+          if (_seen.has(c)) continue;
+          _seen.add(c);
+          if (c.enabled && !(c.camSkip && occ) && p.y < c.top + gap && p.y > c.bottom - gap && P._inside(c, p.x, p.z, gap)) return true;
+        }
       }
     }
     // (the volumes; the pipeline's tube too, with CH_PIPE more for its stays and saddles — the sight line passes through
@@ -601,14 +607,24 @@ export class CameraRig {
     if (occ) {
       const g2 = gap + CH_PIPE, vs = _segVols;
       vs.length = 0; _segSeen.clear();
-      for (const [dx, dz] of GAP4) for (const v of vnear(occ, p.x + dx * g2, p.z + dz * g2)) {
-        if (_segSeen.has(v)) continue;
-        _segSeen.add(v);
-        if (v.y0 <= p.y + g2 && v.top >= p.y - g2) vs.push(v);
+      for (let gi = 0; gi < 4; gi++) {
+        const L = vnear(occ, p.x + GAP4[gi][0] * g2, p.z + GAP4[gi][1] * g2);
+        for (let vi = 0; vi < L.length; vi++) {
+          const v = L[vi];
+          if (_segSeen.has(v)) continue;
+          _segSeen.add(v);
+          if (v.y0 <= p.y + g2 && v.top >= p.y - g2) vs.push(v);
+        }
       }
-      if (vs.length) for (const [g, pipe] of SOLID_PASS(gap)) for (const [dx, dy, dz] of GAP11) {
-        const x = p.x + dx * g, y = p.y + dy * g, z = p.z + dz * g;
-        for (const v of vs) if ((!pipe || v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return true;
+      if (vs.length) {
+        const SP = SOLID_PASS(gap);
+        for (let pi = 0; pi < SP.length; pi++) {
+          const g = SP[pi][0], pipe = SP[pi][1];
+          for (let ki = 0; ki < GAP11.length; ki++) {
+            const K = GAP11[ki], x = p.x + K[0] * g, y = p.y + K[1] * g, z = p.z + K[2] * g;
+            for (let vi = 0; vi < vs.length; vi++) { const v = vs[vi]; if ((!pipe || v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return true; }
+          }
+        }
       }
     }
     return false;
@@ -619,12 +635,13 @@ export class CameraRig {
   // stays down by him rather than up over the roof
   _overRoof(p) {
     const occ = this.occ?.();
-    if (occ) for (const v of occ.near(p.x, p.z)) {
+    if (occ) { const L = occ.near(p.x, p.z); for (let vi = 0; vi < L.length; vi++) {
+      const v = L[vi];
       if (v.camOnly) continue;
       let over = true;
-      for (const [dx, dz] of RIM5) { const t = occ.topAt(v, p.x + dx * CH_RIM, p.z + dz * CH_RIM); if (!(t > -Infinity && p.y > t)) { over = false; break; } }
+      for (let ri = 0; ri < RIM5.length; ri++) { const t = occ.topAt(v, p.x + RIM5[ri][0] * CH_RIM, p.z + RIM5[ri][1] * CH_RIM); if (!(t > -Infinity && p.y > t)) { over = false; break; } }
       if (over) return true;
-    }
+    } }
     return false;
   }
 
@@ -636,14 +653,15 @@ export class CameraRig {
     // (G1-CAM, cost: the same spot asked about the same target again within a frame — the clear view's own test, the
     // arm's two tiers, the lead — reads the answer it already has: nothing it looks at moves within a frame. About half
     // the questions in a walk through the town are repeats.)
-    const M = (this._seesM ??= { fid: -1, a: [] });
+    // (STABILIZATION: the answers kept as numbers in one array, 8 a question — not a new array each: ~48 a frame)
+    const M = (this._seesM ??= { fid: -1, n: 0, a: new Float64Array(48 * 8) }), A = M.a, st = strict ? 1 : 0;
     if (this._busy) {
-      if (M.fid !== this._fid) { M.fid = this._fid; M.a.length = 0; }
-      for (const e of M.a) if (e[0] === p.x && e[1] === p.y && e[2] === p.z && e[3] === hero.x && e[4] === hero.y && e[5] === hero.z && e[6] === strict) return e[7];
+      if (M.fid !== this._fid) { M.fid = this._fid; M.n = 0; }
+      for (let i = 0, j = 0; i < M.n; i++, j += 8) if (A[j] === p.x && A[j + 1] === p.y && A[j + 2] === p.z && A[j + 3] === hero.x && A[j + 4] === hero.y && A[j + 5] === hero.z && A[j + 6] === st) return A[j + 7] === 1;
     }
     const r = strict ? this._line(p, hero.x, hero.y + 1.5, hero.z, true) && this._line(p, hero.x, hero.y + 1.0, hero.z, true)
       : this._line(p, hero.x, hero.y + 1.5, hero.z) || this._line(p, hero.x, hero.y + 1.0, hero.z);
-    if (this._busy && M.a.length < 48) M.a.push([p.x, p.y, p.z, hero.x, hero.y, hero.z, strict, r]);
+    if (this._busy && M.n < 48) { const j = M.n++ * 8; A[j] = p.x; A[j + 1] = p.y; A[j + 2] = p.z; A[j + 3] = hero.x; A[j + 4] = hero.y; A[j + 5] = hero.z; A[j + 6] = st; A[j + 7] = r ? 1 : 0; }
     return r;
   }
 
@@ -664,7 +682,9 @@ export class CameraRig {
         const ci = Math.floor(x / P.cell), cj = Math.floor(z / P.cell);
         if (ci !== pi || cj !== pj) {
           pi = ci; pj = cj;
-          for (const c of P.near(x, z)) {
+          const L = P.near(x, z);
+          for (let li = 0; li < L.length; li++) {
+            const c = L[li];
             if (_segSeen.has(c)) continue;
             _segSeen.add(c);
             if (c.top > ylo && c.bottom < yhi && segDist(c.x, c.z, ax, az, bx, bz) <= (c.type === 'cyl' ? c.r : Math.hypot(c.hw, c.hd)) + 1e-6) _segCols.push(c);
@@ -675,7 +695,9 @@ export class CameraRig {
         const ci = Math.floor(x / VG), cj = Math.floor(z / VG);
         if (ci !== vi || cj !== vj) {
           vi = ci; vj = cj;
-          for (const v of vnear(occ, x, z)) {
+          const L = vnear(occ, x, z);
+          for (let li = 0; li < L.length; li++) {
+            const v = L[li];
             if (_segSeen.has(v)) continue;
             _segSeen.add(v);
             if (v.top >= ylo && v.y0 <= yhi && segDist(v.x, v.z, ax, az, bx, bz) <= (v.kind === 'rev' ? v.R : Math.hypot(v.hw, v.hd)) + 1e-6) _segVols.push(v);
@@ -694,14 +716,15 @@ export class CameraRig {
     for (let i = 1; i < n - 1; i++) {
       const k = i / n, x = p.x + dx * k, y = p.y + dy * k, z = p.z + dz * k;
       if (T && T.heightAt(x, z) > y + 0.05) return false;
-      for (const c of cols) {
+      for (let ci = 0; ci < cols.length; ci++) {
+        const c = cols[ci];
         if (!c.enabled || c.fades || (c.camSkip && occ) || y >= c.top || y <= c.bottom) continue;
         if (strict ? c.type === 'cyl' && c.r < 0.15 : c.seeThrough || (c.type === 'cyl' && c.r < 1.5)) continue;
         if (P._inside(c, x, z, 0)) return false;
       }
       // (occlude.js hit(), every volume: none skipped, the camera's own ones — camOnly — left out; G1-CAM: but they count
       // for a dialogue's two-shot, `strict`: a face is not framed through the pipeline or the beam pad's arch)
-      for (const v of vols) if ((strict || !v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return false;
+      for (let vi = 0; vi < vols.length; vi++) { const v = vols[vi]; if ((strict || !v.camOnly) && y >= v.y0 && y <= v.top && y <= occ.topAt(v, x, z)) return false; }
     }
     return true;
   }
@@ -711,7 +734,7 @@ export class CameraRig {
   _clutter(p, hero) {
     const dx = hero.x - p.x, dz = hero.z - p.z, L = Math.hypot(dx, dz) || 1, rx = -dz / L, rz = dx / L;
     let n = 0;
-    for (const [s, up] of CH_CLUT) if (!this._line(p, hero.x + rx * s, hero.y + up, hero.z + rz * s, false, false)) n++;   // (the ground beside him on a slope is no clutter)
+    for (let i = 0; i < CH_CLUT.length; i++) { const s = CH_CLUT[i][0], up = CH_CLUT[i][1]; if (!this._line(p, hero.x + rx * s, hero.y + up, hero.z + rz * s, false, false)) n++; }   // (the ground beside him on a slope is no clutter)
     return n;
   }
 
@@ -722,7 +745,7 @@ export class CameraRig {
     const H = this.terrain;
     if (!H) return 0;
     let need = H.heightAt(x, z) + (hard ? 0.45 : 1.3) - y;
-    for (const [r, dx, dz] of RING) { if (hard && r > HARD_R) break; const n = H.heightAt(x + dx, z + dz) + (hard ? lerp(0.45, 0.35, r / HARD_R) : lerp(1.3, 0.8, r / CLEAR_R)) - y; if (n > need) need = n; }
+    for (let i = 0; i < RING.length; i++) { const E = RING[i], r = E[0]; if (hard && r > HARD_R) break; const n = H.heightAt(x + E[1], z + E[2]) + (hard ? lerp(0.45, 0.35, r / HARD_R) : lerp(1.3, 0.8, r / CLEAR_R)) - y; if (n > need) need = n; }
     if (hard) return Math.max(0, need);
     for (let k = 0.3; k <= 1.0001; k += 0.35) {
       const n = (H.heightAt(T.x + (x - T.x) * k, T.z + (z - T.z) * k) + 0.8 - (T.y + CH_PIVOT + (y - T.y - CH_PIVOT) * k)) / k;
@@ -748,12 +771,13 @@ export class CameraRig {
   _pipeCut(p, hero) {
     const occ = this.occ?.();
     if (!occ) return false;
-    for (const hy of [0.3, 1.0]) {
+    for (let hi = 0; hi < 2; hi++) {
+      const hy = hi === 0 ? 0.3 : 1.0;
       const dx = hero.x - p.x, dy = hero.y + hy - p.y, dz = hero.z - p.z, n = Math.ceil(Math.hypot(dx, dy, dz) / 0.25);
       this._segCands(p, dx, dy, dz, n, 1, n - 2, null, occ);   // (G1-CAM, cost: see _segCands)
       for (let i = 1; i < n - 2; i++) {
         const k = i / n, x = p.x + dx * k, y = p.y + dy * k, z = p.z + dz * k;
-        for (const v of _segVols) if (v.camOnly && y >= v.y0 && y <= occ.topAt(v, x, z)) return true;
+        for (let vi = 0; vi < _segVols.length; vi++) { const v = _segVols[vi]; if (v.camOnly && y >= v.y0 && y <= occ.topAt(v, x, z)) return true; }
       }
     }
     return false;
@@ -777,8 +801,8 @@ export class CameraRig {
     const dx = hero.x - p.x, dz = hero.z - p.z, n = Math.ceil(Math.hypot(dx, dz) / 0.5);
     for (let i = 1; i < n; i++) {
       const k = i / n, x = p.x + dx * k, z = p.z + dz * k;
-      if (P) for (const c of P.near(x, z)) if (c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 0.6) && c.top > lim && P._inside(c, x, z, 0)) return true;
-      if (occ) for (const v of occ.near(x, z)) if (!v.camOnly && occ.topAt(v, x, z) > lim) return true;
+      if (P) { const L = P.near(x, z); for (let ci = 0; ci < L.length; ci++) { const c = L[ci]; if (c.enabled && !c.fades && !c.seeThrough && !(c.type === 'cyl' && c.r < 0.6) && c.top > lim && P._inside(c, x, z, 0)) return true; } }
+      if (occ) { const L = occ.near(x, z); for (let vi = 0; vi < L.length; vi++) { const v = L[vi]; if (!v.camOnly && occ.topAt(v, x, z) > lim) return true; } }
     }
     return false;
   }
@@ -794,7 +818,7 @@ export class CameraRig {
       const x = p.x + dx * k, z = p.z + dz * k, y = p.y + dy * k - CH_SIGHT_G;
       if (H.heightAt(x, z) > y) return false;
       // (and no face within CH_SIGHT_R beside it: a steep face's rocks stand out of it sideways by that much)
-      for (const [ox, oz] of RIM5) if ((ox || oz) && H.heightAt(x + ox * CH_SIGHT_R, z + oz * CH_SIGHT_R) > y + CH_SIGHT_G) return false;
+      for (let ri = 1; ri < RIM5.length; ri++) { const ox = RIM5[ri][0], oz = RIM5[ri][1]; if ((ox || oz) && H.heightAt(x + ox * CH_SIGHT_R, z + oz * CH_SIGHT_R) > y + CH_SIGHT_G) return false; }
     }
     return true;
   }

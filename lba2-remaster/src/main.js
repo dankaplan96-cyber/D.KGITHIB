@@ -8,7 +8,7 @@ import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
 import { AudioEngine } from './engine/audio.js';
 import { driveMouth } from './engine/voice.js';
-import { Perf, gpuQuality, oldGpuQuality, integratedGpu } from './engine/perf.js';
+import { Perf, gpuQuality, oldGpuQuality, integratedGpu, startupMark, startupReport } from './engine/perf.js';
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
 import { AutoApply } from './engine/autoapply.js';
@@ -442,13 +442,27 @@ class Game {
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
-    this.drawBatch.update(this.world.root);   // (and its draw batches, uploaded by the render below)
+    this.drawBatch.update(this.world.root);   // (and its draw batches)
     lap('batches');
+    // STABILIZATION (the user, 0.41.0: stutters on the start screen): the batches just made — and anything made since the
+    // geometry step — go to the GPU here, everything under Citadel whether in the title's first view or not, with every
+    // texture any material holds. The render below only sent what its one view drew: the rest went up in the title's
+    // frames as its camera came round to it (probes/firstdraw.mjs TITLE=1, SwiftShader counts over the first 58 s of the
+    // circle: 28 geometries — draw-batch cells of 0.1–19 k vertices, the harbour's and the town's props
+    // uploaded in title frames, besides the first frame's 19)
+    await step('Almost there…', 0.955, 'batchUpload', 600);
+    this._uploaded?.delete(this.world.root); this.uploadGeometry(this.world.root);
+    { const tex = new Set(); this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) { for (const k in m) if (m[k]?.isTexture && !m[k].isRenderTargetTexture) tex.add(m[k]); if (m.uniforms) for (const k in m.uniforms) { const v = m.uniforms[k]?.value; if (v?.isTexture && !v.isRenderTargetTexture) tex.add(v); } } });
+      for (const t of tex) R.initTexture(t); }
+    lap('batchUpload');
     await step('Almost there…', 0.96, 'shadowPrograms', 1000);
     if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
     lap('shadowPrograms');
     await step('Almost there…', 0.99, 'firstFrame', 3000);
-    this.renderer.render();
+    // (STABILIZATION: the title's first frame itself, under the loading screen — its people, its detail tiles, its shadow
+    //  batches for the title's focus and the static shadow cache's first build, its first draws — not only a render of
+    //  its view: that first frame was the title's longest, 19 geometries up and every shadow caster's first draw)
+    this.frame(0, true);
     lap('firstFrame');
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.loadTimes.programs = R.info.programs.length;
@@ -469,7 +483,11 @@ class Game {
     if (boot === 'new') this.startNew();
     else if (boot === 'continue' && store.get(SAVE_KEY)) this.startContinue();
     else this.showScreen('title');
+    startupMark('title');
   }
+  // STABILIZATION: the start trace (perf.js STARTUP): the loading screen, the title, New Game and the first play — every
+  // display frame's interval and every long frame with what ran in it. game.startupReport() → text
+  startupReport() { return startupReport(this); }
 
   // ------------------------------------------------ spawning
   spawnActors() {
@@ -1003,6 +1021,7 @@ class Game {
 
   // ------------------------------------------------ flow
   startNew() {
+    startupMark('new game');
     store.del(SAVE_KEY);   // (the autosave only: the manual slots are never touched by a new game)
     this.played = 0;
     this.beginPlay();
@@ -1062,6 +1081,7 @@ class Game {
   setState(s) {
     const was = this.state;
     this.state = s;
+    if (s !== was) startupMark(s === 'play' ? 'play' : 'state ' + s);   // (STABILIZATION: the start trace's phases: perf.js)
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
     if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene') this.combatDir?.calm(0.6); }
     if (s !== 'play') this.targeting?.hide();
@@ -1629,7 +1649,9 @@ class Game {
     let faced = null, fd = 1e9, fa = 0;
     for (const n of this.npcs) {
       if (!n.present || n.def.noTalk || h.pos.y - n.pos.y > TALK_ABOVE) continue;
-      const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z), a = aim(n.pos.x, n.pos.z);
+      const d = Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z);
+      if (!(d < 2.6)) continue;   // (STABILIZATION: out of reach either way — consider() takes 2.6 m at most, faced 2.2 —: no prompt object a frame for each of the ~70 people)
+      const a = aim(n.pos.x, n.pos.z);
       // (behind: in the half-plane at his back, not right on top of him)
       const o = { kind: 'npc', npc: n, label: n.def.id === 'pippa' ? 'p_shop' : 'p_talk', behind: d >= 0.5 && a < 0 };
       // (G1-QUEST #17: someone at his back gets the prompt only at arm's length: 1.5 m behind him, "Talk" showed with
@@ -2067,7 +2089,8 @@ class Game {
   jobCounters() {
     const R = this.renderer.renderer, M = R.info.memory;
     return { p: R.info.programs?.length ?? 0, g: M.geometries, x: M.textures, sc: this.shadowCache?.stats.full ?? 0, db: this.drawBatch?.buildMs ?? 0, dbn: this.drawBatch?.builds ?? 0,
-      sb: this.shadowCull?.buildMs ?? 0, sbn: this.shadowCull?.builds ?? 0, up: this.uploadLog?.length ?? 0, aq: this.autoQ?.log.length ?? 0, h: performance.memory?.usedJSHeapSize ?? 0 };
+      sb: this.shadowCull?.buildMs ?? 0, sbn: this.shadowCull?.builds ?? 0, up: this.uploadLog?.length ?? 0, aq: this.autoQ?.log.length ?? 0, h: performance.memory?.usedJSHeapSize ?? 0,
+      rt: this.perf.targets?.size ?? 0 };
   }
   jobsBetween(a, b) {
     const o = [];
@@ -2075,7 +2098,7 @@ class Game {
     if (b.sbn > a.sbn) o.push(`shadow batches built ${(b.sb - a.sb).toFixed(0)} ms`);
     if (b.sc > a.sc) o.push('shadow cache rebuilt');
     if (b.p > a.p) o.push(`${b.p - a.p} shader program${b.p - a.p > 1 ? 's' : ''} compiled`);
-    if (b.g > a.g + 2 || b.x > a.x) o.push(`+${b.g - a.g} geometries, +${b.x - a.x} textures on the GPU`);
+    if (b.g > a.g + 2 || b.x > a.x) o.push(`+${b.g - a.g} geometries, +${b.x - a.x} textures on the GPU${b.rt > a.rt ? ` (${b.rt - a.rt} of them render targets)` : ''}`);
     if (b.up > a.up) o.push('geometry upload');
     if (b.aq > a.aq) o.push('Auto quality step');
     return o.join(', ');
