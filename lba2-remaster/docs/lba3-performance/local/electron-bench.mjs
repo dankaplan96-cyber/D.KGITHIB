@@ -1,6 +1,10 @@
 // LBA3 in-game benchmark, run automatically in the INSTALLED desktop app (Electron) on the laptop.
 // Run it from a folder outside the repo where Playwright is installed (npm init -y && npm i playwright):
-//   node electron-bench.mjs <auto|full|smoke> <out.txt> [battery|plugged]
+//   node electron-bench.mjs <auto|full|visits|smoke> <out.txt> [battery|plugged] [follow|orbit]
+// STABILIZATION phase 1, e.g. (on battery, then plugged in, each with Follow and with the orbit):
+//   node electron-bench.mjs visits laptop-<version>-visits-follow-battery.txt battery follow
+//   node electron-bench.mjs visits laptop-<version>-visits-orbit-battery.txt battery orbit
+//   node electron-bench.mjs auto laptop-<version>-auto-follow-battery.txt battery follow
 // The app is launched with its own profile (--user-data-dir=<this folder>\electron-profile), never the player's
 // %APPDATA%\LBA3 The Awakening: New Game here must not touch the real saves. The run stops before New Game if the
 // app reports any other data folder. The profile is kept between runs (shader cache warm, like a player's).
@@ -11,7 +15,7 @@ import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const [mode = 'smoke', out, power = '?'] = process.argv.slice(2);
+const [mode = 'smoke', out, power = '?', camera = 'orbit'] = process.argv.slice(2);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const EXE = process.env.LBA3_EXE || path.join(process.env.LOCALAPPDATA, 'Programs', 'LBA3 The Awakening', 'LBA3 The Awakening.exe');
 const PROFILE = path.join(HERE, 'electron-profile');
@@ -58,9 +62,11 @@ const env = await page.evaluate(() => {
 
 let text;
 const tb = Date.now();
-if (mode === 'auto') text = await page.evaluate(() => game.bench.runAuto());
-else if (mode === 'full') text = await page.evaluate(() => game.bench.run());
-else text = 'smoke: ' + await page.evaluate(() => `bench.run ${typeof game.bench?.run}, bench.runAuto ${typeof game.bench?.runAuto}, state ${game.state}`);
+if (mode === 'auto') text = await page.evaluate((camera) => game.bench.runAuto({ camera }), camera);
+else if (mode === 'full') text = await page.evaluate((camera) => game.bench.run({ camera }), camera);
+// (STABILIZATION phase 1: street and arrival — the first visit after the start, 5 region round trips, 3 minutes of play)
+else if (mode === 'visits') text = await page.evaluate((camera) => game.bench.visits({ routes: ['street', 'arrival'], cycles: 5, sustainS: 180, camera }), camera);
+else text = 'smoke: ' + await page.evaluate(() => `bench.run ${typeof game.bench?.run}, bench.runAuto ${typeof game.bench?.runAuto}, bench.visits ${typeof game.bench?.visits}, state ${game.state}`);
 const mins = ((Date.now() - tb) / 60000).toFixed(1);
 const power1 = winPower();
 
@@ -69,7 +75,7 @@ const head = [
   `GPU: ${env.gpu}`,
   `power: Windows says ${power0} at start, ${power1} at end`,
   `settings at start: quality ${env.quality}, Quality Auto ${env.auto ? 'on' : 'off'} (bench profile)`,
-  `started ${t0.toISOString()}, benchmark took ${mins} min`,
+  `mode ${mode} · camera ${camera} · started ${t0.toISOString()}, benchmark took ${mins} min`,
 ].join('\n');
 const body = `${head}\n\n${text ?? '(the benchmark returned nothing: it was already running or refused)'}\n\n${errs.length ? 'page errors:\n' + errs.slice(0, 10).join('\n') : 'no page errors'}\n`;
 if (out) fs.writeFileSync(out, body);

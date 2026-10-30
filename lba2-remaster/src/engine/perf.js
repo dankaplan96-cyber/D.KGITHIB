@@ -54,6 +54,12 @@ export class Perf {
         gl[fn] = function (...a) { self.up++; for (const x of a) if (x && typeof x === 'object' && 'byteLength' in x) { self.upB += x.byteLength; break; } else if (x && x.width && x.height && !('byteLength' in x)) { self.upB += x.width * x.height * 4; break; } return f.apply(this, a); };
       }
     } catch { /* (no context: tests) */ }
+    // (STABILIZATION: render targets alive — every target the renderer has drawn into, until it is disposed)
+    this.targets = new Set();
+    if (renderer?.setRenderTarget) {
+      const srt = renderer.setRenderTarget.bind(renderer), T = this.targets;
+      renderer.setRenderTarget = (t, ...a) => { if (t && !T.has(t) && t.addEventListener) { T.add(t); t.addEventListener('dispose', function gone() { T.delete(t); t.removeEventListener('dispose', gone); }); } return srt(t, ...a); };
+    }
     // which GPU is drawing (a software renderer here explains a slow game)
     try {
       const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info');
@@ -62,10 +68,13 @@ export class Perf {
     // (RENDER-INV) the GPU's own time per frame, where the browser offers a timer query (see GpuTimer)
     try { this.gpuTimer = renderer ? GpuTimer.make(renderer.getContext()) : null; } catch { this.gpuTimer = null; }
   }
-  beginFrame() { if (this.r) this.r.info.reset(); this.shadow = 0; this.sub = 0; this.up = 0; this.upB = 0; }
+  beginFrame() { if (this.r) this.r.info.reset(); this.shadow = 0; this.sub = 0; this.up = 0; this.upB = 0; this.sec?.begin(); }
   record(f) {
     const info = this.r?.info.render;
     f.calls = info?.calls ?? 0; f.tris = info?.triangles ?? 0; f.shadowCalls = this.shadow; f.draws = f.calls + this.sub; f.up = this.up; f.upKB = this.upB / 1024;
+    if (this.sec) f.sec = this.sec.take(f);   // (STABILIZATION: the frame's CPU by section, while the benchmark measures)
+    f.raf = REG.raf.perFrame; REG.raf.perFrame = 0;   // (rAF callbacks requested since the last frame: 1 is the game's loop)
+    this.onRecord?.(f);   // (STABILIZATION: the benchmark's visits keep every frame of a phase, past the ring's 1200)
     if (this.buf.length < N) this.buf.push(f); else this.buf[this.i] = f;
     this.i = (this.i + 1) % N;
     if (this.el && (this.uiT += f.real) > 0.25) { this.uiT = 0; this.draw(); }
@@ -89,6 +98,8 @@ export class Perf {
       // (the calls' 95th percentile: a turning camera's heavy views; GPU-level draws; the shadow pass's share)
       callsP95: pct('calls', 0.95), draws: pct('draws', 0.5), shadowCalls: pct('shadowCalls', 0.5),
       gpuMs: this.gpuTimer?.stats() ?? null,   // (null: no timer query in this browser)
+      cpu: sectionStats(b),   // (STABILIZATION: CPU per frame by section, when the benchmark measured them; else null)
+      rafPerFrame: b[0]?.raf != null ? pct('raf', 0.5) : null,
       lamps: b[0]?.lamps != null ? pct('lamps', 0.5) : null,
       // (PERF-HIGH: frame pacing) intervals by how they relate to a 60 Hz refresh (16.7 ms): on it (≤ 17.2), a little
       // slower (17.2–20: neither on the refresh nor a missed one), longer; how late the frame callback ran; the game's
@@ -167,4 +178,125 @@ export class GpuTimer {
     const pc = (a, k) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(k * v.length))].toFixed(2); };
     return { p50: pc(this.ms, 0.5), p95: pc(this.ms, 0.95), n: this.ms.length, disjoint: this.disjoint || 0, passes: Object.fromEntries([...this.pass].map(([l, a]) => [l, pc(a, 0.5)])) };
   }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// STABILIZATION, phase 1 (docs/lba3-performance/STABILIZATION.md): what the game registers with the browser, the frame's
+// CPU by section, and a resource snapshot. Exact counts here; milliseconds are the machine's.
+//
+// 1. Registrations. requestAnimationFrame, setTimeout / setInterval and addEventListener are counted from the moment
+//    this module loads (it is imported near the top of main.js, before the game is built): callbacks pending, timers
+//    and intervals alive, listeners alive per target kind and event type (a listener added twice to the same target is
+//    one, as the browser counts it). A transition that leaves a listener, a timer or a second loop behind shows as
+//    growth between two snapshots. The wrappers pass everything through unchanged.
+export const REG = { raf: { pending: new Set(), req: 0, perFrame: 0 }, timeouts: new Set(), intervals: new Set(), listeners: new WeakMap(), live: new Map(), added: 0, removed: 0 };
+const kindOf = (t) => { try { if (typeof window !== 'undefined' && t === window) return 'window'; if (typeof document !== 'undefined' && t === document) return 'document'; if (t?.tagName) return t.tagName.toLowerCase() + (t.id ? '#' + t.id : ''); return t?.constructor?.name || '?'; } catch { return '?'; } };
+(function hooks() {
+  if (typeof window === 'undefined' || window.__lbaRegHooks) return;
+  window.__lbaRegHooks = true;
+  const W = window, raf = W.requestAnimationFrame?.bind(W), caf = W.cancelAnimationFrame?.bind(W);
+  if (raf) {
+    W.requestAnimationFrame = (cb) => { let id = 0; REG.raf.req++; REG.raf.perFrame++; id = raf((t) => { REG.raf.pending.delete(id); cb(t); }); REG.raf.pending.add(id); return id; };
+    if (caf) W.cancelAnimationFrame = (id) => { REG.raf.pending.delete(id); return caf(id); };
+  }
+  const st = W.setTimeout.bind(W), ct = W.clearTimeout.bind(W), si = W.setInterval.bind(W), ci = W.clearInterval.bind(W);
+  W.setTimeout = (fn, ms, ...a) => { let id = 0; id = st(typeof fn === 'function' ? (...b) => { REG.timeouts.delete(id); fn(...b); } : fn, ms, ...a); REG.timeouts.add(id); return id; };
+  W.clearTimeout = (id) => { REG.timeouts.delete(id); return ct(id); };
+  W.setInterval = (fn, ms, ...a) => { const id = si(fn, ms, ...a); REG.intervals.add(id); return id; };
+  W.clearInterval = (id) => { REG.intervals.delete(id); return ci(id); };
+  const ET = W.EventTarget?.prototype; if (!ET) return;
+  const add = ET.addEventListener, rem = ET.removeEventListener;
+  const cap = (o) => (typeof o === 'boolean' ? o : !!o?.capture);
+  const drop = (t, k, fn, type) => { const S = REG.listeners.get(t)?.get(k); if (S?.delete(fn)) { REG.removed++; const lk = kindOf(t) + ' ' + type; REG.live.set(lk, (REG.live.get(lk) || 1) - 1); } };
+  ET.addEventListener = function (type, fn, opts) {
+    try {
+      if (fn) {
+        let M = REG.listeners.get(this); if (!M) REG.listeners.set(this, (M = new Map()));
+        const k = type + (cap(opts) ? '|c' : ''); let S = M.get(k); if (!S) M.set(k, (S = new Set()));
+        if (!S.has(fn)) {
+          S.add(fn); REG.added++; const lk = kindOf(this) + ' ' + type; REG.live.set(lk, (REG.live.get(lk) || 0) + 1);
+          // (a { once } listener leaves by itself after its call)
+          if (opts?.once) { const self = this; add.call(this, type, () => drop(self, k, fn, type), { once: true, capture: cap(opts) }); }
+        }
+      }
+    } catch { /* counting only */ }
+    return add.call(this, type, fn, opts);
+  };
+  ET.removeEventListener = function (type, fn, opts) {
+    try { drop(this, type + (cap(opts) ? '|c' : ''), fn, type); } catch { /* counting only */ }
+    return rem.call(this, type, fn, opts);
+  };
+})();
+export function registrations() {
+  const L = [...REG.live].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  return { rafPending: REG.raf.pending.size, rafRequested: REG.raf.req, timeouts: REG.timeouts.size, intervals: REG.intervals.size, listeners: L.reduce((s, [, n]) => s + n, 0), listenersByKind: Object.fromEntries(L) };
+}
+
+// 2. CPU by section. While on (the benchmark), the game's main entry points are timed EXCLUSIVELY (a section nested in
+//    another — physics inside a person's update, the shadow pass inside the scene pass — counts only in the inner one),
+//    with their call counts. Sections: people/AI, hero, enemies, physics, interaction lookup, camera, other sim; submit:
+//    culls and world matrices ("submit other"), main pass, shadow pass, post. "other sim" is the frame's simulation
+//    without the named sim sections. Each timer costs two clock reads: a few hundred a frame.
+const now = () => performance.now();
+const SIM_KEYS = ['people', 'hero', 'enemies', 'physics', 'interact', 'camera'];
+export class Sections {
+  constructor() { this.acc = {}; this.n = {}; this.stack = []; this.t = 0; this.undo = []; }
+  begin() { this.acc = {}; this.n = {}; this.stack.length = 0; }
+  enter(k) { const t = now(), S = this.stack; if (S.length) { const p = S[S.length - 1]; this.acc[p] = (this.acc[p] || 0) + t - this.t; } S.push(k); this.t = t; this.n[k] = (this.n[k] || 0) + 1; }
+  exit() { const t = now(), S = this.stack, k = S.pop(); this.acc[k] = (this.acc[k] || 0) + t - this.t; this.t = t; }
+  wrap(obj, name, key) {
+    if (!obj || typeof obj[name] !== 'function' || obj[name].__sec) return;
+    const f = obj[name], self = this, had = Object.prototype.hasOwnProperty.call(obj, name);
+    const w = function (...a) { self.enter(key); try { return f.apply(this, a); } finally { self.exit(); } };
+    w.__sec = true; obj[name] = w;
+    this.undo.push(() => { if (had) obj[name] = f; else delete obj[name]; });
+  }
+  off() { for (const u of this.undo.reverse()) u(); this.undo = []; }
+  take(f) {
+    const ms = this.acc, named = SIM_KEYS.reduce((s, k) => s + (ms[k] || 0), 0);
+    ms['other sim'] = Math.max(0, (f.sim ?? 0) - named);
+    const o = { ms, n: this.n }; this.acc = {}; this.n = {}; return o;
+  }
+  // the game's entry points (G: the Game)
+  install(G) {
+    const R = G.renderer, own = (p) => Object.prototype.hasOwnProperty.call(p, 'update');
+    const protos = new Map();
+    for (const [L, key] of [[G.npcs, 'people'], [G.enemies, 'enemies']]) for (const a of L || []) { let p = Object.getPrototypeOf(a); while (p && p !== Object.prototype) { if (own(p) && !protos.has(p)) protos.set(p, key); p = Object.getPrototypeOf(p); } }
+    for (const [p, key] of protos) this.wrap(p, 'update', key);
+    if (G.gadgets) this.wrap(G.gadgets, 'updateEnemies', 'enemies');
+    if (G.hero) this.wrap(G.hero, 'update', 'hero');
+    for (const m of ['move', 'fall', 'groundInfo', 'steepAt', 'blockedAt', 'solidAt', 'clearTo', 'lineOfSight', 'near', 'ballFenceAt', 'ballFenceBetween']) this.wrap(G.physics, m, 'physics');
+    this.wrap(G, 'findInteractable', 'interact');
+    if (G.camRig) this.wrap(G.camRig, 'update', 'camera');
+    this.wrap(G, 'occluders', 'camera');
+    this.wrap(R, 'render', 'submit other');
+    if (R.composer) this.wrap(R.composer, 'render', 'submit post');
+    if (R.scenePass) this.wrap(R.scenePass, 'render', 'submit main');
+    if (R.renderer?.shadowMap) this.wrap(R.renderer.shadowMap, 'render', 'submit shadow');
+  }
+}
+function sectionStats(b) {
+  const F = b.filter((f) => f.sec); if (!F.length) return null;
+  const keys = [...new Set(F.flatMap((f) => Object.keys(f.sec.ms)))];
+  const pc = (a, p) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(p * v.length))].toFixed(2); };
+  const out = {};
+  for (const k of keys) { const v = F.map((f) => f.sec.ms[k] || 0), n = F.map((f) => f.sec.n[k] || 0); out[k] = { p50: pc(v, 0.5), p95: pc(v, 0.95), mean: +(v.reduce((s, x) => s + x, 0) / v.length).toFixed(2), calls: +(n.reduce((s, x) => s + x, 0) / n.length).toFixed(1) }; }
+  return out;
+}
+
+// 3. A resource snapshot (G: the Game): what is on the GPU, the JS heap, the scene, what is simulated, what is registered.
+export function resources(G) {
+  const R = G.renderer?.renderer, M = R?.info.memory, mem = typeof performance !== 'undefined' ? performance.memory : null;
+  let objects = 0, meshes = 0, shown = 0;
+  G.scene?.traverse((o) => { objects++; if (o.isMesh || o.isPoints || o.isLine || o.isSprite) meshes++; });
+  G.scene?.traverseVisible(() => shown++);
+  const rooms = Object.values(G.rooms || {});
+  return {
+    geometries: M?.geometries ?? null, textures: M?.textures ?? null, programs: R?.info.programs?.length ?? null, renderTargets: G.perf?.targets?.size ?? null,
+    heapMB: mem ? +(mem.usedJSHeapSize / 1048576).toFixed(1) : null, heapTotalMB: mem ? +(mem.totalJSHeapSize / 1048576).toFixed(1) : null,
+    objects, meshes, shown,
+    npcs: G.npcs?.length ?? 0, enemies: G.enemies?.length ?? 0, roomUpdaters: rooms.reduce((s, r) => s + (r.updaters?.length || 0), 0),
+    drawBatchAreas: G.drawBatch?.areas?.size ?? null, shadowAreas: G.shadowCull?.areas?.size ?? null,
+    ...registrations(),
+  };
 }
