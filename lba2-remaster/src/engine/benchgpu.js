@@ -12,6 +12,9 @@
 //   particles (soft particles, blob shadows, points) · transparent (other blended surfaces) · scenery (the rest)
 import * as THREE from 'three';
 import { warmPassPrograms } from './warmup.js';
+import { arrayTextures } from './texarray.js';
+import { textures } from './textures.js';
+import { LOD_DETAIL } from '../game/kit.js';
 
 export function gpuGroupOf(G, o, m) {
   const E = G.env;
@@ -83,7 +86,31 @@ export const GPU_VARIANTS = [
   plainFor('GPU: flat materials (all)', '*'),
   plainFor('GPU: flat terrain material', ['terrain']),
   plainFor('GPU: flat scenery material', ['scenery']),
+  // texture filtering: every world texture (the materials' maps and uniforms, the draw batches' texture arrays) without
+  // anisotropic filtering (trilinear only): what the anisotropy costs (each texture is sent to the GPU again on apply
+  // and undo: in the variant's warm-up)
+  { id: 'GPU: anisotropic filtering off', apply(G) { this._t = new Map(); for (const t of worldTextures(G)) if (t.anisotropy > 1) { this._t.set(t, t.anisotropy); t.anisotropy = 1; t.needsUpdate = true; } },
+    undo() { for (const [t, a] of this._t || []) { t.anisotropy = a; t.needsUpdate = true; } this._t = null; } },
+  // far-view levers, priced before any is chosen (kit.js LOD_DETAIL, from the hero): the trees' detailed sculpt (3–9k
+  // triangles; the coarse one 0.4–1.3k) to 22 m instead of Medium's 34, the grass and flowers to 30 m instead of 46
+  { id: 'GPU: trees detailed to 22 m', apply() { this._n = LOD_DETAIL.near; LOD_DETAIL.near = 22; }, undo() { LOD_DETAIL.near = this._n; } },
+  { id: 'GPU: grass/flowers to 30 m', apply() { this._f = LOD_DETAIL.smallFar; LOD_DETAIL.smallFar = 30; }, undo() { LOD_DETAIL.smallFar = this._f; } },
   // the post passes
   { id: 'GPU: no output pass (scene to screen)', apply(G) { G.renderer.output.enabled = false; }, undo(G) { G.renderer.output.enabled = true; } },
   { id: 'GPU: output edges as before (implicit LOD)', apply(G) { G.renderer.setOldEdges(true); warmPassPrograms(G.renderer.renderer, G.renderer.composer); }, undo(G) { G.renderer.setOldEdges(false); } },
 ];
+
+// every texture the world's materials read (maps, uniforms) and the texture arrays
+function worldTextures(G) {
+  const out = new Set(arrayTextures());
+  for (const t of Object.values(textures() || {})) if (t?.isTexture) out.add(t);   // (the terrain's tiles: its uniforms live in its shader hook)
+  G.scene.traverse((o) => {
+    for (const m of [o.material].flat()) {
+      if (!m) continue;
+      for (const v of Object.values(m)) if (v && v.isTexture) out.add(v);
+      if (m.uniforms) for (const u of Object.values(m.uniforms)) if (u?.value?.isTexture) out.add(u.value);
+    }
+  });
+  for (const t of [...out]) if (t.isRenderTargetTexture || t.isDepthTexture) out.delete(t);
+  return out;
+}
