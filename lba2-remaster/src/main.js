@@ -450,7 +450,7 @@ class Game {
     // frames as its camera came round to it (probes/firstdraw.mjs TITLE=1, SwiftShader counts over the first 58 s of the
     // circle: 28 geometries — draw-batch cells of 0.1–19 k vertices, the harbour's and the town's props
     // uploaded in title frames, besides the first frame's 19)
-    await step('Almost there…', 0.97, 'batchUpload', 600);
+    await step('Almost there…', 0.955, 'batchUpload', 600);
     this._uploaded?.delete(this.world.root); this.uploadGeometry(this.world.root);
     { const tex = new Set(); this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) { for (const k in m) if (m[k]?.isTexture && !m[k].isRenderTargetTexture) tex.add(m[k]); if (m.uniforms) for (const k in m.uniforms) { const v = m.uniforms[k]?.value; if (v?.isTexture && !v.isRenderTargetTexture) tex.add(v); } } });
       for (const t of tex) R.initTexture(t); }
