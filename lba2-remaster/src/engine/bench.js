@@ -492,7 +492,7 @@ export class Bench {
     for (const x of fixed) {
       if (x.q !== q) {
         q = x.q; const c = x.cfg;
-        lines.push('', `quality ${q}: render pixel ratio ${c.pr} · MSAA ${c.msaa}× · FXAA ${c.fxaa ? 'on' : 'off'} · shadows ${c.shadows ? `on (${c.shadowMap} px, filter ${c.shadowFilter})` : 'off'} · battery profile ${c.battery ? 'on' : 'off'} · automatic resolution floor ×${c.minScale} · bloom ${c.bloom ? 'on' : 'off'} · lamp lights ${c.lamps} · grass/flowers to ${c.smallFar} m · trees detailed to ${c.treeNear} m`);
+        lines.push('', `quality ${q}: render pixel ratio ${c.pr} · MSAA ${c.msaa}× · FXAA ${c.fxaa ? 'on' : 'off'}${c.edgeAA ? ' · edges smoothed in the output pass' : ''}${c.sharpen ? ` · sharpening ${c.sharpen}` : ''} · shadows ${c.shadows ? `on (${c.shadowMap} px, filter ${c.shadowFilter})` : 'off'} · battery profile ${c.battery ? 'on' : 'off'} · automatic resolution floor ×${c.minScale} · bloom ${c.bloom ? 'on' : 'off'} · lamp lights ${c.lamps} · grass/flowers to ${c.smallFar} m · trees detailed to ${c.treeNear} m`);
       }
       const s = x.s;
       if (!s) { lines.push(`  ${x.id}: no frames`); continue; }
