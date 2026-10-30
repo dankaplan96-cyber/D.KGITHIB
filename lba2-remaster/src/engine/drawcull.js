@@ -43,9 +43,17 @@ const BASE_UMW = THREE.Object3D.prototype.updateMatrixWorld, SKIN_UMW = THREE.Sk
 const ownUMW = (o) => o.updateMatrixWorld !== BASE_UMW && o.updateMatrixWorld !== SKIN_UMW;
 // (MW.cached false: three's own update of the shown objects, as before — the A/B switch; MW.ok: this frame's matrices
 //  came from the update below, so `__mwF` and `__visF` are this frame's)
-export const MW = { cached: true, frame: 0, ok: false };
+// (PERF-SUBMIT: `casters`, the frame's shown casters' subtrees (above), valid while `castersF` is this frame's; `walk`:
+//  off gives three's whole-scene walk in the live shadow pass, the A/B switch)
+export const MW = { cached: true, frame: 0, ok: false, casters: [], castersF: -1, walk: true };
 const _mwT = new THREE.Matrix4();
-function shownTree(o, force, F, S, all = false) {
+// PERF-SUBMIT: `col` (the shown-world update only): the frame's shadow casters are listed on the way — each shown object
+// that may cast (a mesh, line or points with castShadow) and is not under one already listed, in three's own walk order;
+// and every object with its own matrix update (whose subtree this walk leaves to three). shadowcache.js's live shadow
+// pass walks these subtrees instead of the whole scene (~1 300 objects on the street, ~60 of them casters): the same
+// objects, the same tests, the same draws in the same order.
+const mayCast = (k) => k.castShadow === true && (k.isMesh === true || k.isLine === true || k.isPoints === true);
+function shownTree(o, force, F, S, all = false, col = null) {
   if (ownUMW(o)) { o.updateMatrixWorld(force); o.__mwF = F; S.own++; return; }
   // changed: recompute and force the subtree (as three); check: recompute, force only if the value differs (a matrix
   // recomposed meanwhile by three's updateWorldMatrix — getWorldPosition and the like flag every parent up to the scene)
@@ -81,7 +89,9 @@ function shownTree(o, force, F, S, all = false) {
     if (k.visible || all) {
       if (k.visible) k.__visF = F;   // (reached through shown parents in this frame's update: drawbatch.js)
       // (shown again since its last frame here: everything under it is recomputed, as before)
-      if (k.__hid === true) { k.__hid = false; shownTree(k, true, F, S, all); } else shownTree(k, force, F, S, all);
+      let kc = col;
+      if (col !== null && (mayCast(k) || ownUMW(k))) { col.push(k); kc = null; }
+      if (k.__hid === true) { k.__hid = false; shownTree(k, true, F, S, all, kc); } else shownTree(k, force, F, S, all, kc);
     } else {
       // (hidden: itself kept up to date, its subtree left until it is shown again)
       if (k.children.length) k.__hid = true;
@@ -109,7 +119,9 @@ export function updateShownWorld(scene, state) {
     for (const o of state.prev) o.__hid = true;
     state.prev.length = 0;
     scene.__visF = F;
-    shownTree(scene, false, F, S);
+    const col = MW.casters; col.length = 0;
+    shownTree(scene, false, F, S, false, MW.walk ? col : null);
+    MW.castersF = MW.walk ? F : -1;
     MW.ok = true;
     return;
   }
@@ -158,7 +170,9 @@ export class FarCull {
         else { const o = r.getWorldPosition(_pv); _fb.getBoundingSphere(_fs); B = { dy: _fs.center.y - o.y, rad: (Math.hypot(_fs.center.x - o.x, _fs.center.z - o.z) + _fs.radius) * 1.25 + 0.5, s }; }
       }
       let casts = false; r.traverse((o) => { if (o.isMesh && o.castShadow) casts = true; });
-      B.casts = casts; B.t = this.tick; this.bounds.set(r, B);
+      // (PERF-SUBMIT, smoothness: the next look at it phased by the rig, so the people first seen together on an arrival
+      //  are not all walked again in the same frame every 120 frames)
+      B.casts = casts; B.t = B.t === undefined ? this.tick - (r.id % 120) : this.tick; this.bounds.set(r, B);
     }
     return B;
   }
@@ -314,3 +328,4 @@ export class BoxCull {
   }
   restore() { for (const o of this.off) o.visible = true; this.off.length = 0; }
 }
+

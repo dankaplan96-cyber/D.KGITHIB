@@ -12,7 +12,7 @@ import { Perf, gpuQuality, oldGpuQuality, integratedGpu } from './engine/perf.js
 import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
 import { AutoApply } from './engine/autoapply.js';
-import { FarCull, BlobBatch, BoxCull } from './engine/drawcull.js';
+import { FarCull, BlobBatch, BoxCull, MW } from './engine/drawcull.js';
 import { BLOBS } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
@@ -369,7 +369,8 @@ class Game {
       if (this.shadowCull.areas.has(root)) this.drawBatch.update(root);
       this.boxCull.hide(root, this.renderer.camera, this.drawBatch.enabled ? this.drawBatch.meshes(root) : undefined, this.renderer.renderer.shadowMap.enabled);
     };
-    this.renderer.post = () => { this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };
+    // (PERF-SUBMIT: the frame's caster list serves this render only: a later render in the frame (a warm-up) walks the scene)
+    this.renderer.post = () => { MW.castersF = -1; this.boxCull.restore(); this.blobBatch.restore(); this.farCull.restore(); };
     this.lightPool.collect(); // (after every builder has placed its lamps)
     this.regionsLive = true;  // (from here on an area's build brings its part of the story, the cast and travel: regionBuilt)
     L.story = Math.round(performance.now() - ts);
@@ -653,7 +654,15 @@ class Game {
       if (T.need && this.testFreeze) for (const id of T.need) this.regions.ensure(id, 'enter');   // (tests' fixed stepping: at once)
       T.called = true;
       if (T.failed) { T.card?.hide(); T.card = null; }   // (stays where he was)
-      else { T.mid(); this.warmScene(T); }
+      else {
+        T.mid(); this.warmScene(T);
+        // PERF-SUBMIT: the settle frames below for every scene change, not only after a shader hold. Without a hold (a
+        // place visited before: nothing left to compile) the new scene's first frame — its static shadow cache, its
+        // geometry's first draw — came in the fade's first visible frames: the swap happens inside a catch-up step
+        // when frames run long (30 fps: two steps a frame), so the drawn step was already part-transparent, and the
+        // GPU's catch-up landed on screen (the user's arrivals, plugged in: 117–133 ms in view right after the black)
+        if (!T.hold && !this.testFreeze) { T.held = true; T.heldAt = undefined; f.style.opacity = 1; this._fadeOp = 1; return; }
+      }
     }
     const op = T.t < 0.35 ? T.t / 0.35 : Math.max(0, 1 - (T.t - 0.35) / 0.35);
     f.style.opacity = op; this._fadeOp = op;
