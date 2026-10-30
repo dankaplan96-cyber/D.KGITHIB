@@ -442,13 +442,27 @@ class Game {
     this.titleCamera(0);
     this.lightPool.update(this.camera.position);
     this.shadowCull.update(this.world.root, this.camera, this.camera.position); // (the Citadel's shadow batches, built while loading)
-    this.drawBatch.update(this.world.root);   // (and its draw batches, uploaded by the render below)
+    this.drawBatch.update(this.world.root);   // (and its draw batches)
     lap('batches');
+    // STABILIZATION (the user, 0.41.0: stutters on the start screen): the batches just made — and anything made since the
+    // geometry step — go to the GPU here, everything under Citadel whether in the title's first view or not, with every
+    // texture any material holds. The render below only sent what its one view drew: the rest went up in the title's
+    // frames as its camera came round to it (probes/firstdraw.mjs TITLE=1, SwiftShader counts over the first 58 s of the
+    // circle: 37 geometries — draw-batch cells of 0.1–19 k vertices, the harbour's and the town's props — and 11 textures
+    // uploaded in title frames, besides the first frame's 19)
+    await step('Almost there…', 0.97, 'batchUpload', 600);
+    this._uploaded?.delete(this.world.root); this.uploadGeometry(this.world.root);
+    { const tex = new Set(); this.scene.traverse((o) => { for (const m of [].concat(o.material || [])) { for (const k in m) if (m[k]?.isTexture && !m[k].isRenderTargetTexture) tex.add(m[k]); if (m.uniforms) for (const k in m.uniforms) { const v = m.uniforms[k]?.value; if (v?.isTexture && !v.isRenderTargetTexture) tex.add(v); } } });
+      for (const t of tex) R.initTexture(t); }
+    lap('batchUpload');
     await step('Almost there…', 0.96, 'shadowPrograms', 1000);
     if (!/[?&]nowarm/.test(location.search)) this.warmShadows(); // (?nowarm: for A/B timing)
     lap('shadowPrograms');
     await step('Almost there…', 0.99, 'firstFrame', 3000);
-    this.renderer.render();
+    // (STABILIZATION: the title's first frame itself, under the loading screen — its people, its detail tiles, its shadow
+    //  batches for the title's focus and the static shadow cache's first build, its first draws — not only a render of
+    //  its view: that first frame was the title's longest, 19 geometries up and every shadow caster's first draw)
+    this.frame(0, true);
     lap('firstFrame');
     this.loadTimes.shaders = Math.round(performance.now() - t0);
     this.loadTimes.programs = R.info.programs.length;

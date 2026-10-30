@@ -5,12 +5,14 @@
 // pass too); the first draw of each geometry and of each texture is noted with the route's time, the object (its path
 // of names), its size and kind. Exact here (what is drawn when does not depend on this machine's speed).
 //   GAME_URL=http://localhost:8351/ BATTERY=1 Q=low ROUTE=street CAM=orbit SECS=8 node firstdraw.mjs
-//   GAME_URL=… TITLE=1 SECS=60 node firstdraw.mjs   (the title screen from its first frame)
+//   GAME_URL=… TITLE=1 SECS=126 RENDER_EVERY=120 node firstdraw.mjs   (the title screen from its first frame, its whole circle, drawn every 2 s)
 import { launch, open } from '../../../../tests/lib/boot.mjs';
 const E = process.env, Q = E.Q || 'low', ROUTE = E.ROUTE || 'street', SECS = +(E.SECS || 8), CAM = E.CAM || 'orbit';
 const { browser, page } = await launch({ width: 1366, height: 768 });
 const ev = (f, a) => page.evaluate(f, a);
-await open(page, '?nocine');
+// (TITLE=1: the game is held at its first title frame — the loop's first advance after loading — so the probe sees it)
+if (E.TITLE) await page.addInitScript(() => { let g; Object.defineProperty(window, 'game', { configurable: true, get() { return g; }, set(v) { g = v; const adv = v.advance.bind(v); v.advance = (r) => { if (!v.preparing && !window.__titleHeld) { window.__titleHeld = true; v.testFreeze = true; return; } return adv(r); }; } }); });
+await open(page, E.TITLE ? '' : '?nocine');
 if (E.BATTERY) await ev(() => game.setBattery(true));
 if (E.TITLE) {
   // (TITLE=1: the title screen instead — the world behind the menu, its camera going round Citadel — from its first frame)
@@ -45,21 +47,21 @@ await ev(() => {
   };
   window.__mark = () => ({ g: R.info.memory.geometries, x: R.info.memory.textures, p: R.info.programs.length });
 });
-const FR = Math.round(SECS * 60), CH = 30;
+const FR = Math.round(SECS * 60), RE = +(E.RENDER_EVERY || 1), CH = 30 * RE;
 for (let i = 0; i < FR; i += CH) {
-  const out = await ev(({ CH }) => {
+  const out = await ev(({ CH, RE }) => {
     const G = game, route = window.__route, o = [];
     for (let k = 0; k < CH; k++) {
       window.__new = []; const a = window.__mark(); const t0 = performance.now();
       const lod0 = G.world.lodTiles?.reduce((n, T) => n + (T.near ? 1 : 0) + (T.hi?.visible ? 2 : 0), 0);
-      window.__t += 1 / 60; route?.drive(window.__t, 1 / 60); G.frame(1 / 60, true); window.__i++;
+      window.__t += 1 / 60; route?.drive(window.__t, 1 / 60); G.frame(1 / 60, window.__i % RE === 0); window.__i++;
       const lod1 = G.world.lodTiles?.reduce((n, T) => n + (T.near ? 1 : 0) + (T.hi?.visible ? 2 : 0), 0);
       if (lod1 !== lod0) window.__new.push({ k: 'LOD switch', pass: '-', what: 'world lodTiles', kind: `${lod0}→${lod1}` });
       const b = window.__mark();
       if (window.__new.length || b.g !== a.g || b.x !== a.x || b.p !== a.p) o.push({ i: window.__i, t: +window.__t.toFixed(2), ms: +(performance.now() - t0).toFixed(0), dg: b.g - a.g, dx: b.x - a.x, dp: b.p - a.p, n: window.__new });
     }
     return o;
-  }, { CH });
+  }, { CH, RE });
   for (const f of out) {
     console.log(`frame ${f.i} t ${f.t}s (${f.ms} ms here) · GPU counts: geometries ${f.dg >= 0 ? '+' : ''}${f.dg}, textures ${f.dx >= 0 ? '+' : ''}${f.dx}, programs +${f.dp} · first drawn: ${f.n.length}`);
     const byWhat = new Map(); for (const n of f.n) { const k = `${n.k} [${n.pass}] ${n.kind}${n.verts ? ' ' + n.verts + ' verts' : ''} · ${n.what}`; byWhat.set(k, (byWhat.get(k) || 0) + 1); }
