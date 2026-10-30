@@ -100,8 +100,12 @@ export class ShadowCache {
     if (!S.length) { this.stats.bypass++; this.drop(); return this.base(lights, walkRoot(scene, A.proxies), camera); }
     const d = this._t.copy(sun.position).sub(sun.target.position).normalize();
     const cam = sh.camera, size = sh.mapSize.x, texel = (cam.right - cam.left) / size;
-    const key = [A.root.uuid, S.length, S.map((o) => o.id).join(','), d.x.toFixed(5), d.y.toFixed(5), d.z.toFixed(5), size, cam.left, cam.right, cam.top, cam.bottom, cam.near, cam.far, sm.type, sh.map.texture.uuid].join('|');
-    if (key !== this.key) { this.key = key; this.drop(); }
+    // (PERF-SUBMIT: the casters' ids compared one by one with the last frame's, not joined into a string every frame)
+    const ids = (this._ids ??= []); let same = ids.length === S.length;
+    for (let i = 0; same && i < S.length; i++) if (ids[i] !== S[i].id) same = false;
+    if (!same) { ids.length = S.length; for (let i = 0; i < S.length; i++) ids[i] = S[i].id; }
+    const key = [A.root.uuid, d.x.toFixed(5), d.y.toFixed(5), d.z.toFixed(5), size, cam.left, cam.right, cam.top, cam.bottom, cam.near, cam.far, sm.type, sh.map.texture.uuid].join('|');
+    if (!same || key !== this.key) { this.key = key; this.drop(); }
     // the live box's place on the texel lattice: u, v across the light, w along it
     const right = this._r.set(0, 1, 0).cross(d).normalize(), up = this._u.copy(d).cross(right).normalize();
     const T = sun.target.position, u = Math.round(T.dot(right) / texel), v = Math.round(T.dot(up) / texel), w = T.dot(d);

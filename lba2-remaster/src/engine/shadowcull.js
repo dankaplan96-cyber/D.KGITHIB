@@ -271,9 +271,31 @@ export class ShadowCull {
       // slope) touches the view. Exact convex tests (a hull outside one plane of a frustum is outside it); the sphere
       // test before them let in every batch within a cell's size of the view.
       const S = this.sun?.shadow, sb = S && this.shadowBox(S);
+      // (PERF-SUBMIT: first a sphere round everything the exact test looks at — the box's corners, and the same moved
+      //  down-sun by up to the box's full height + SWEEP_DROP — tested against each plane with the exact test's 0.05 m
+      //  margin: wholly beyond one plane, every point is, so the exact test would say "outside" too. Only the batches
+      //  near the view (or the shadow box's edge) go on to the 16-point test: the same decisions, ~a third of the work)
+      const ux = -(d.x / horiz) * slope, uz = -(d.z / horiz) * slope, ul = Math.sqrt(ux * ux + 1 + uz * uz), pre = this.prefilter !== false;
       for (const cell of A.cells.values()) {
         const p = cell.mesh; if (!p) continue;
         if (!cell.box) { _c.copy(cell.c).applyMatrix4(p.matrixWorld); p.castShadow = reaches(_c, cell.r); continue; }
+        if (pre) {
+          // (the world box exactly as Box3.applyMatrix4 makes it, for an affine matrix: the centre moved, the half
+          //  extents through the matrix's absolute values; R0 its half diagonal, H the exact test's own drop)
+          const B = cell.box, e = p.matrixWorld.elements;
+          const hx = (B.max.x - B.min.x) / 2, hy = (B.max.y - B.min.y) / 2, hz = (B.max.z - B.min.z) / 2;
+          _c.set((B.min.x + B.max.x) / 2, (B.min.y + B.max.y) / 2, (B.min.z + B.max.z) / 2).applyMatrix4(p.matrixWorld);
+          const Wx = Math.abs(e[0]) * hx + Math.abs(e[4]) * hy + Math.abs(e[8]) * hz, Wy = Math.abs(e[1]) * hx + Math.abs(e[5]) * hy + Math.abs(e[9]) * hz, Wz = Math.abs(e[2]) * hx + Math.abs(e[6]) * hy + Math.abs(e[10]) * hz;
+          const R0 = Math.sqrt(Wx * Wx + Wy * Wy + Wz * Wz), H = 2 * Wy + SWEEP_DROP, M = 0.05 + 1e-3 * (1 + R0);
+          let off = false;
+          if (sb) for (const P of sb.planes) if (P.distanceToPoint(_c) < -(R0 + M)) { off = true; break; }
+          if (!off) {
+            _v.set(_c.x + (ux * H) / 2, _c.y - H / 2, _c.z + (uz * H) / 2);
+            const R1 = R0 + (H * ul) / 2 + M;
+            for (const P of _f.planes) if (P.distanceToPoint(_v) < -R1) { off = true; break; }
+          }
+          if (off) { p.castShadow = false; continue; }
+        }
         _b.copy(cell.box).applyMatrix4(p.matrixWorld);
         const H = _b.max.y - _b.min.y + SWEEP_DROP, ox = -(d.x / horiz) * H * slope, oz = -(d.z / horiz) * H * slope;
         for (let i = 0; i < 8; i++) {
