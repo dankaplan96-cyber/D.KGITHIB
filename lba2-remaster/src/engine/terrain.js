@@ -161,13 +161,23 @@ export class Terrain {
                     + texture2D(tRock, vWPos.xz * 0.14).rgb * bw.y;
           // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
           vec4 sp = vSplat; float sp2 = vSplat2;
-          float rk = smoothstep(0.28, 0.62, sp.z);
+          // (GFX-LOOK-2: a shorter ramp, wobbled by the rock's own strata: on a steep slope one ~1 m grid cell spans
+          //  metres of screen, and 0.28–0.62 drew a soft green veil over the foot of every cliff)
+          float rk = smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3);
           float rest = 1.0 - sp.z;
           float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
           sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
           // crisp soil edges too (paths and town soil): the grass/soil share is re-split per pixel with a
           // short ramp, wobbled by the grass texture so the edge looks painted, not ruled
           vec3 gtex = texture2D(tGrass, tuv).rgb;
+          // GFX-LOOK-2: the paving's edge as crisp (it faded into the grass and soil over the ~1 m grid: a green smear
+          // round every street and the quay): its share re-split per pixel on the same kind of ramp, no extra read
+          float ns = sp.x + sp.y + sp.w + sp2;
+          if (sp2 > 0.001 && ns - sp2 > 0.001) {
+            float pk = smoothstep(0.4, 0.6, sp2 / ns + (dot(gtex, vec3(0.333)) - 0.42) * 0.25);
+            float ok = ns * (1.0 - pk) / (ns - sp2);
+            sp.x *= ok; sp.y *= ok; sp.w *= ok; sp2 = ns * pk;
+          }
           float gs = sp.x + sp.w;
           if (gs > 0.001) {
             float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;

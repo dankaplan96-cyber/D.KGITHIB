@@ -349,7 +349,10 @@ let tintGrid = null;
 function islandColor(x, z, h, slope, c) {
   const n = fbm(x * 0.09, z * 0.09, 3);
   const v = 0.92 + n * 0.16;
-  c.setRGB(v, v, v * 0.97);
+  // GFX-LOOK-2: the lawns read as one flat green from the street. Broad patches (~25 m) now lean a little warm and dry
+  // or cool and lush, as LBA2's painted ground varies: ±5 % per channel, free (the vertex tint is there anyway)
+  const d = Math.max(-1, Math.min(1, fbm(x * 0.04 + 7.3, z * 0.04 - 2.1, 2) * 1.8));
+  c.setRGB(v * (1 + d * 0.05), v * (1 + d * 0.01), v * 0.97 * (1 - d * 0.06));
   if (h < -0.2) c.multiplyScalar(0.8);
   if (tintGrid) {
     // concave spots (cliff feet) darker, convex rims lighter
@@ -368,7 +371,10 @@ function islandSplat(x, z, h, slope, w) {
   const beach = beachMask(x, z) * smoothstep(12, 7, coastDist(x, z));
   // rock only where the ground is really steep: the cliff meshes carry the rock look, and a wider band of
   // rock-tinted terrain around them read as a blurred purple smear on the ~1 m grid
-  w[2] = smoothstep(1.05, 1.4, slope + n * 0.08) * (1.6 - beach * 1.6);
+  // (GFX-LOOK-2: from slope 0.9, was 1.05: the cliff blocks (cliffs.js) stand from slope 1.05, where this weight was
+  //  still 0, so the grass ran down over their feet as a green veil; the terrain's rock edge is crisp now, so the
+  //  wider band no longer reads as a smear)
+  w[2] = smoothstep(0.9, 1.25, slope + n * 0.08) * (1.6 - beach * 1.6);
   w[3] = 0; w[4] = 0;
   if (h > 0.8) {
     const pd = pathDist(x, z);
@@ -929,9 +935,18 @@ export function* buildWorldSteps(parentScene) {
       beam.rotation.y = t * 0.8;
     });
     // sage's hut barrels (hidden flask)
+    // (GFX-LOOK-2: staved, bulging barrels with a lid and two iron hoops, as the town's, instead of two plain brown
+    //  cylinders; the same size, place and collider; only the body casts a shadow, as the cylinder did)
+    const bWood = TX.wood.clone(); bWood.needsUpdate = true; bWood.repeat.set(2, 1);
+    const bMat = new THREE.MeshStandardMaterial({ map: bWood, color: '#b07a4c', roughness: 0.9 }), bLid = new THREE.MeshStandardMaterial({ map: TX.wood, color: '#946038', roughness: 0.9 });
+    const bIron = mat('#3a3a3a', 0.5, { metalness: 0.5 });
+    const bPts = []; for (let i = 0; i <= 12; i++) { const t = i / 12; bPts.push(new THREE.Vector2(0.38 + Math.sin(t * Math.PI) * 0.07, t * 1.1)); }
+    const bBody = new THREE.LatheGeometry(bPts, 16), bTop = new THREE.CircleGeometry(0.39, 16).rotateX(-Math.PI / 2), bHoop = new THREE.TorusGeometry(0.405, 0.02, 6, 20).rotateX(Math.PI / 2);
     for (const [ox, oz] of [[4.5, 2.5], [5.3, 1.6]]) {
-      const bx = L.x + ox, bz = L.z + oz;
-      add(scene, new THREE.CylinderGeometry(0.45, 0.4, 1.1, 12), mat('#7b5532'), bx, H(bx, bz) + 0.55, bz);
+      const bx = L.x + ox, bz = L.z + oz, by = H(bx, bz);
+      add(scene, bBody, bMat, bx, by, bz, { ry: ox * 2.1 });
+      add(scene, bTop, bLid, bx, by + 1.09, bz, { cast: false });
+      for (const hy of [0.14, 0.96]) add(scene, bHoop, bIron, bx, by + hy, bz, { cast: false });
       physics.add({ type: 'cyl', x: bx, z: bz, r: 0.45, top: H(bx, bz) + 1.1, noStand: true, seeThrough: true });
     }
     W.barrels = { x: L.x + 4.9, z: L.z + 2.1 };
