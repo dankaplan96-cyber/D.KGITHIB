@@ -191,7 +191,8 @@ const FxaaShader = {
 // Luma is taken on the linear HDR colour with a square root (close to the display's response); the colour itself is
 // then tone-mapped and encoded by three's code, unchanged. Both are uniforms (a branch the whole screen takes alike): one
 // program for every state, so a power or resolution change never compiles a shader.
-const EDGE_REL = 0.2;   // (an edge: the 2×2 diagonal neighbourhood's luma range over 20 % of its brightest; FXAA's own default is 12.5 %)
+const EDGE_REL = 0.25;   // (an edge: the diagonal neighbourhood's luma range over 25 % of its brightest — FXAA's default is 12.5–16.6 %: here
+//  painted texture lines (planks, tiles) stay crisp and only silhouettes and creases are smoothed; 0.2 and 0.33 compared)
 const OUTPUT_EDGES = `
 vec3 tapE( vec2 uv ) { return texture2D( tDiffuse, clamp( uv, vec2( 0.0 ), uvMax ) ).rgb; }
 float lumE( vec3 c ) { return sqrt( max( dot( c, vec3( 0.299, 0.587, 0.114 ) ), 0.0 ) ); }
