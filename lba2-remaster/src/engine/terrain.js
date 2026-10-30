@@ -161,7 +161,9 @@ export class Terrain {
                     + texture2D(tRock, vWPos.xz * 0.14).rgb * bw.y;
           // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
           vec4 sp = vSplat; float sp2 = vSplat2;
-          float rk = smoothstep(0.28, 0.62, sp.z);
+          // (GFX-LOOK-2: a shorter ramp, wobbled by the rock's own strata: on a steep slope one ~1 m grid cell spans
+          //  metres of screen, and 0.28–0.62 drew a soft green veil over the foot of every cliff)
+          float rk = smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3);
           float rest = 1.0 - sp.z;
           float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
           sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;

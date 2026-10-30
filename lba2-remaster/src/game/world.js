@@ -371,7 +371,10 @@ function islandSplat(x, z, h, slope, w) {
   const beach = beachMask(x, z) * smoothstep(12, 7, coastDist(x, z));
   // rock only where the ground is really steep: the cliff meshes carry the rock look, and a wider band of
   // rock-tinted terrain around them read as a blurred purple smear on the ~1 m grid
-  w[2] = smoothstep(1.05, 1.4, slope + n * 0.08) * (1.6 - beach * 1.6);
+  // (GFX-LOOK-2: from slope 0.9, was 1.05: the cliff blocks (cliffs.js) stand from slope 1.05, where this weight was
+  //  still 0, so the grass ran down over their feet as a green veil; the terrain's rock edge is crisp now, so the
+  //  wider band no longer reads as a smear)
+  w[2] = smoothstep(0.9, 1.25, slope + n * 0.08) * (1.6 - beach * 1.6);
   w[3] = 0; w[4] = 0;
   if (h > 0.8) {
     const pd = pathDist(x, z);

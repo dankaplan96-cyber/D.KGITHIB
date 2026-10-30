@@ -164,8 +164,9 @@ export function makeTextures() {
   // dirt path
   {
     const [c, x] = canvas(S); const r = rng(14);
-    x.fillStyle = '#9c6c44'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#8a5c38', '#ab7b52', '#80543a'], 15, 40, 0.6);
+    // (GFX-LOOK-2: a shade less saturated, #9c6c44 → #9a6e4c: on screen the soil read orange, and dark orange in shade)
+    x.fillStyle = '#9a6e4c'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#895e3f', '#a97c58', '#7f5741'], 15, 40, 0.6);
     for (let i = 0; i < 120; i++) {
       const px = r() * S, py = r() * S, rr = 1.5 + r() * 3.5;
       wrap(S, (ox, oy) => {
@@ -318,8 +319,9 @@ export function makeTextures() {
   // sea: painted wave crests
   {
     const [c, x] = canvas(S); const r = rng(19);
-    x.fillStyle = '#2f86c4'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#2676b4', '#3a96d2', '#2a80c0'], 20, 60, 0.6);
+    // (GFX-LOOK-2: a little more green, #2f86c4 → #2b8fc6: LBA2's sea is a saturated cyan-blue; on screen it read royal blue)
+    x.fillStyle = '#2b8fc6'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#237fb6', '#379fd2', '#2889c2'], 20, 60, 0.6);
     x.lineCap = 'round';
     for (let i = 0; i < 60; i++) {
       const px = r() * S, py = r() * S, l = 8 + r() * 14;
@@ -419,7 +421,10 @@ function islandTextures(T) {
   {
     const N = 256;
     const [c, x] = canvas(N); const r = rng(102);
-    x.fillStyle = '#3e3a3a'; x.fillRect(0, 0, N, N);
+    // (GFX-LOOK-2: the mortar #3e3a3a → #5c5550: with ~40 % of the tile mortar the wall averaged a dark grey, so the
+    //  lighthouse's cream footing and the harbour's embankments read as a black heap from the play camera; LBA2's
+    //  rubble walls are mid-grey stones in a darker but not black bed)
+    x.fillStyle = '#5c5550'; x.fillRect(0, 0, N, N);
     const stones = [];
     for (let i = 0; i < 900 && stones.length < 90; i++) {
       const px = r() * N, py = r() * N, rx = 9 + r() * 13, ry = 7 + r() * 8;
@@ -432,7 +437,7 @@ function islandTextures(T) {
       if (ok) stones.push([px, py, rx, ry, r() * 0.6 - 0.3, r()]);
     }
     for (const [px, py, rx, ry, rot, tone] of stones) {
-      const base = 120 + tone * 70;
+      const base = 136 + tone * 60;   // (GFX-LOOK-2: was 120 + 70: with the darker mortar, a black heap from afar)
       wrap(N, (ox, oy) => {
         x.save(); x.translate(px + ox, py + oy); x.rotate(rot);
         x.fillStyle = 'rgba(20,16,16,0.5)'; x.beginPath(); x.ellipse(1.5, 2, rx, ry, 0, 0, 7); x.fill();
