@@ -10,6 +10,7 @@ import { Music } from './music.js';
 import { Babble } from './voice.js';
 const VOICE_BOOST = 2.2, MUSIC_DUCK = 0.5; // VOICE-MIX
 const VOICE_MAKEUP = 2.2; // VOICE-MIX-2: after the voice compressor (see the voice chain below)
+const REVERB_SEC = 0.25; // AUDIO-CRACKLE-2: the effects' room (see init)
 
 export class AudioEngine {
   constructor() {
@@ -34,8 +35,10 @@ export class AudioEngine {
     // AUDIO-BUFFER (the user, 28.10: "the music has become a bit crackly on every computer"): the default
     // ('interactive') buffer is ~10 ms, and when the game keeps the CPU busy (battery, the street) the audio thread
     // misses it and the output crackles. ~50 ms of buffer is still well under what a sound effect can be heard late by
+    // AUDIO-CRACKLE-2 (the user, 30.10: "the music crackles again; other music on the computer doesn't"; the files are
+    // clean: peaks -1.6 to -5.6 dBFS, nothing clipped): 50 → 80 ms of buffer, more room for a busy battery CPU
     let ctx;
-    try { ctx = new AC({ latencyHint: 0.05 }); } catch { ctx = new AC(); }
+    try { ctx = new AC({ latencyHint: 0.08 }); } catch { ctx = new AC(); }
     this.ctx = ctx;
     this.master = ctx.createGain();
     this.master.connect(ctx.destination);
@@ -44,7 +47,10 @@ export class AudioEngine {
     this.ambBus = ctx.createGain();
     this.voiceBus = ctx.createGain();
     this.reverb = ctx.createConvolver();
-    this.reverb.buffer = this._impulse(2.8);
+    // AUDIO-CRACKLE-2: Chromium's ConvolverNode runs an impulse longer than ~12k frames (~0.25 s) partly on a
+    // background thread of normal priority; on a busy CPU that thread falls behind and the whole mix crackles. 2.8 s
+    // → 0.25 s keeps the effects' room entirely on the audio thread (a shorter tail on the effects; the music has none)
+    this.reverb.buffer = this._impulse(REVERB_SEC);
     const revGain = ctx.createGain();
     revGain.gain.value = 0.35;
     this.reverb.connect(revGain).connect(this.master);
