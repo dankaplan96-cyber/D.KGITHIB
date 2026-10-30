@@ -193,16 +193,42 @@ const FxaaShader = {
 // program for every state, so a power or resolution change never compiles a shader.
 const EDGE_REL = 0.25;   // (an edge: the diagonal neighbourhood's luma range over 25 % of its brightest — FXAA's default is 12.5–16.6 %: here
 //  painted texture lines (planks, tiles) stay crisp and only silhouettes and creases are smoothed; 0.2 and 0.33 compared)
+// PERF-GPU (laptop 0.40.1, Vega 8 on battery: this smoothing measured 2.5 ms of a 19.4 ms street, 1.5 of 11.6 in the
+// house — ten times its estimate). Its taps were texture2D() with implicit LOD inside per-pixel branches: Direct3D's
+// compiler cannot keep a branch that holds gradient (implicit-LOD) samples, so ANGLE's HLSL ran every tap of every
+// branch on every pixel — the 4 direction taps of the edge blend too, ~9 filtered half-float reads a pixel instead of
+// 5 — and every read went through bilinear filtering of a 64-bit texel (half rate). Now: at full resolution (`exact`)
+// the pixel and its four diagonal neighbours are read by index (texelFetch: no filtering, no LOD), the edge's direction
+// taps with an explicit LOD (textureLod), so the edge branch stays a real branch and runs on the edge pixels only
+// (~5–10 %). Same pixels (the same texels are read; 1:1 bilinear at texel centres is the texel itself).
+// `?oldedges` in the URL: the shader as it was (EDGE_OLD), for the laptop's A/B.
 const OUTPUT_EDGES = `
-vec3 tapE( vec2 uv ) { return texture2D( tDiffuse, clamp( uv, vec2( 0.0 ), uvMax ) ).rgb; }
 float lumE( vec3 c ) { return sqrt( max( dot( c, vec3( 0.299, 0.587, 0.114 ) ), 0.0 ) ); }
+#ifdef EDGE_OLD
+vec3 tapE( vec2 uv ) { return texture2D( tDiffuse, clamp( uv, vec2( 0.0 ), uvMax ) ).rgb; }
+#else
+vec3 tapE( vec2 uv ) { return textureLod( tDiffuse, clamp( uv, vec2( 0.0 ), uvMax ), 0.0 ).rgb; }
+vec3 tapI( ivec2 p, ivec2 q ) { return texelFetch( tDiffuse, clamp( p, ivec2( 0 ), q ), 0 ).rgb; }
+#endif
 void main() {
   vec2 uv = min( vUv * uvScale, uvMax );
+#ifdef EDGE_OLD
   gl_FragColor = texture2D( tDiffuse, uv );
+#else
+  gl_FragColor = textureLod( tDiffuse, uv, 0.0 );
+#endif
   if ( edgeAA > 0.0 || sharpen > 0.0 ) {
-    vec3 cM = gl_FragColor.rgb;
-    vec3 cNW = tapE( uv + vec2( -texel.x, -texel.y ) ), cNE = tapE( uv + vec2( texel.x, -texel.y ) );
-    vec3 cSW = tapE( uv + vec2( -texel.x, texel.y ) ), cSE = tapE( uv + vec2( texel.x, texel.y ) );
+    vec3 cM = gl_FragColor.rgb, cNW, cNE, cSW, cSE;
+#ifndef EDGE_OLD
+    if ( exact > 0.0 ) {
+      ivec2 p = ivec2( gl_FragCoord.xy ), q = ivec2( 1.0 / texel + 0.5 ) - 1;
+      cNW = tapI( p + ivec2( -1, -1 ), q ); cNE = tapI( p + ivec2( 1, -1 ), q ); cSW = tapI( p + ivec2( -1, 1 ), q ); cSE = tapI( p + ivec2( 1, 1 ), q );
+    } else
+#endif
+    {
+      cNW = tapE( uv + vec2( -texel.x, -texel.y ) ); cNE = tapE( uv + vec2( texel.x, -texel.y ) );
+      cSW = tapE( uv + vec2( -texel.x, texel.y ) ); cSE = tapE( uv + vec2( texel.x, texel.y ) );
+    }
     float lNW = lumE( cNW ), lNE = lumE( cNE ), lSW = lumE( cSW ), lSE = lumE( cSE ), lM = lumE( cM );
     float lMin = min( lM, min( min( lNW, lNE ), min( lSW, lSE ) ) ), lMax = max( lM, max( max( lNW, lNE ), max( lSW, lSE ) ) );
     if ( edgeAA > 0.0 && lMax - lMin >= max( 0.05, lMax * edgeAA ) ) {
@@ -321,16 +347,28 @@ export class Renderer {
     this.output.uniforms.texel = { value: new THREE.Vector2(1, 1) };
     this.output.uniforms.sharpen = { value: 0 };
     this.output.uniforms.edgeAA = { value: 0 };
+    this.output.uniforms.exact = { value: 1 };
     const fs0 = this.output.material.fragmentShader, main = fs0.indexOf('void main() {'), tone = fs0.indexOf('// tone mapping');
     if (main > 0 && tone > main && fs0.includes('gl_FragColor = texture2D( tDiffuse, vUv );')) {
-      this.output.material.fragmentShader = fs0.slice(0, main).replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax; uniform vec2 texel; uniform float sharpen; uniform float edgeAA;')
+      this.output.material.fragmentShader = fs0.slice(0, main).replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax; uniform vec2 texel; uniform float sharpen; uniform float edgeAA; uniform float exact;')
         + OUTPUT_EDGES + fs0.slice(tone);
+      // (PERF-GPU: compiled as GLSL ES 3.00 — three's OutputShader is written in ES 1.00, which has no textureLod or
+      //  texelFetch in a fragment shader; same code otherwise: three adds only the version line to a raw shader)
+      const M = this.output.material, fsx = M.fragmentShader;
+      if (fsx.includes('precision highp float;') && fsx.includes('varying vec2 vUv;') && M.vertexShader.includes('attribute vec2 uv;')) {
+        M.glslVersion = THREE.GLSL3;
+        M.vertexShader = M.vertexShader.replace(/\battribute\b/g, 'in').replace(/\bvarying\b/g, 'out');
+        M.fragmentShader = fsx.replace('precision highp float;', 'precision highp float;\nlayout(location = 0) out highp vec4 pc_fragColor;\n#define gl_FragColor pc_fragColor\n#define texture2D texture')
+          .replace('varying vec2 vUv;', 'in vec2 vUv;');
+      } else { console.warn('output pass: three.js OutputShader not as expected; edge smoothing in the output pass off'); M.fragmentShader = fs0.replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax;').replace('texture2D( tDiffuse, vUv )', 'texture2D( tDiffuse, min( vUv * uvScale, uvMax ) )'); this.noOutputEdges = true; }
     } else {
       console.warn('output pass: three.js OutputShader not as expected; edge smoothing in the output pass off');
       this.output.material.fragmentShader = fs0.replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax;')
         .replace('texture2D( tDiffuse, vUv )', 'texture2D( tDiffuse, min( vUv * uvScale, uvMax ) )');
       this.noOutputEdges = true;
     }
+    this._outFS = this.output.material.fragmentShader;
+    if (typeof location !== 'undefined' && /[?&]oldedges\b/.test(location.search)) this.setOldEdges(true);
     c.addPass(this.output);
     this.fxaa = new ShaderPass(FxaaShader);
     this.fxaa.enabled = false;
@@ -357,6 +395,14 @@ export class Renderer {
       const r = p.render.bind(p);
       p.render = (...a) => { this.timer?.mark(label); return r(...a); };
     }
+  }
+
+  // PERF-GPU: the output pass's edge smoothing as it was before (implicit-LOD taps in branches), for the laptop's A/B
+  // (benchgpu.js; ?oldedges). Another program: the caller prepares it (warmPassPrograms).
+  setOldEdges(on) {
+    const m = this.output?.material; if (!m || !this._outFS) return;
+    const fs = on ? this._outFS.replace('float lumE(', '#define EDGE_OLD\nfloat lumE(') : this._outFS;
+    if (m.fragmentShader !== fs) { m.fragmentShader = fs; m.needsUpdate = true; }
   }
 
   setQuality(q) {
@@ -467,6 +513,7 @@ export class Renderer {
     // when the scene is drawn below full resolution, the more the lower (90 %: 0.35)
     const U = this.output.uniforms, ms = W ? W.ms : this.composer.renderTarget1.samples, on = !this.retro && !this.noOutputEdges;
     U.texel.value.set(1 / tw, 1 / th);
+    U.exact.value = s >= 0.999 ? 1 : 0;   // (the scene fills the target 1:1: the output reads its pixels by index)
     U.edgeAA.value = on && ms === 0 && !this.fxaa?.enabled && this.edgeAA !== false ? EDGE_REL : 0;
     U.sharpen.value = on && s < 0.999 && this.sharpenOn !== false ? Math.min(0.6, 0.25 + (1 - s)) : 0;
   }
