@@ -1109,6 +1109,10 @@ function polyGeometry(def, P) {
 // (a MeshStandardMaterial subclass so clones keep the shader and the hurt flash still works through emissive)
 export const LBA_LIGHT = { value: new THREE.Vector3(-0.45, 1, 0.6).normalize() };
 export const LBA_LEVEL = { value: 1 };
+// GFX-LOOK: a person standing in the sun's shadow (a house's, a stall's) is darkened like the ground round them (×0.62)
+// instead of staying fully lit by the fixed ramp light; it reads the sun's hardware-filtered shadow map (renderer.js
+// getShadowHW), so it is off with `?oldshadow`
+const LBA_SUN_SHADOW = typeof location === 'undefined' || !/[?&]oldshadow\b/.test(location.search);
 export class LbaMaterial extends THREE.MeshStandardMaterial {
   constructor(params) {
     super({ vertexColors: true, roughness: 1, metalness: 0, ...params });
@@ -1126,9 +1130,13 @@ vec3 lbaRamp(vec3 base, vec3 n) {
   return (t < 0.6 ? mix(lo, base, t / 0.6) : mix(base, hi, (t - 0.6) / 0.4)) * uLbaLevel;
 }`)
         .replace('vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
-          'vec3 outgoingLight = lbaRamp(diffuseColor.rgb, inverseTransformDirection(normal, viewMatrix)) + totalEmissiveRadiance;');
+          (LBA_SUN_SHADOW ? `float lbaSun = 1.0;
+#if defined( USE_SHADOWMAP ) && NUM_DIR_LIGHT_SHADOWS > 0 && !defined( SHADOWMAP_TYPE_VSM )
+lbaSun = getShadowHW( directionalShadowMap[ 0 ], directionalLightShadows[ 0 ].shadowMapSize, directionalLightShadows[ 0 ].shadowIntensity, directionalLightShadows[ 0 ].shadowBias, directionalLightShadows[ 0 ].shadowRadius, vDirectionalShadowCoord[ 0 ] );
+#endif
+vec3 outgoingLight = mix( 0.62, 1.0, lbaSun ) * lbaRamp(diffuseColor.rgb, inverseTransformDirection(normal, viewMatrix)) + totalEmissiveRadiance;` : 'vec3 outgoingLight = lbaRamp(diffuseColor.rgb, inverseTransformDirection(normal, viewMatrix)) + totalEmissiveRadiance;'));
     };
-    this.customProgramCacheKey = () => 'lba-ramp';
+    this.customProgramCacheKey = () => (LBA_SUN_SHADOW ? 'lba-ramp-sun' : 'lba-ramp');
   }
 }
 const polyEyeMat = new LbaMaterial();
