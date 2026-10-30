@@ -37,9 +37,9 @@ export class AutoApply {
     else {
       // first start here (or a GPU / power source / screen not seen before): the name's guess, measured on the title
       const pick = gpuQuality(gpu), bat = G.power?.onBattery === true, other = this.cache[this.machineKey(!bat)];
-      let p0 = TIER_AT[pick] ?? 1, why = `first start: the GPU's name suggests ${pick}`;
+      // (AUTO-2: plugged in High, on battery Medium; the evaluation in play steps down only on measured pressure)
+      let p0 = bat ? 1 : 0, why = `first start ${bat ? 'on battery: Medium' : 'plugged in: High'} (the GPU's name suggests ${pick})`;
       if (other) { p0 = nextProfile(other.p, bat ? -1 : +1); why = `first start ${bat ? 'on battery' : 'plugged in'}: this machine's ${bat ? 'plugged-in' : 'battery'} profile, one ${bat ? 'lower' : 'higher'}`; }
-      else if (bat) { p0 = nextProfile(p0, -1); why += ', one profile lower on battery'; }
       this.gov.setProfile(p0, why + '; measured on the title screen, then evaluated in play', { commitNow: true, t: 0 });
       this.cal = new Calibration({ p0, budget: () => Math.max(1000 / 60, G.frameCapMs || 0) });
       this.source = 'guess';

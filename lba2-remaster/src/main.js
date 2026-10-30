@@ -77,7 +77,7 @@ const SLOT_SCREENS = new Set(['savegame', 'loadgame', 'slotconfirm']);
 const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
 const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn']);
-export const VERSION = '0.40.1'; // (the desktop build's version: desktop/package.json)
+export const VERSION = '0.41.0'; // (the desktop build's version: desktop/package.json)
 const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below Twinsen (he is on a roof or a ledge)
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
@@ -265,6 +265,9 @@ class Game {
       // (the user, 28.10: "the game detects the machine and sets quality itself, without manual changes": one time,
       // everyone moves to Auto, a hand-picked preset included; a preset picked in Settings from now on stays)
       if (!(this.settings.qv >= 3)) { this.settings.qualityAuto = true; this.settings.qualityChosenByHand = false; this.settings.qv = 3; }
+      // (SETTINGS-FEW, the user 30.10: "too many settings, and that can cause problems": Edges, Resolution and the frame-rate
+      //  limit left Settings; one time, everyone's go back to the tested values, and they stay there)
+      if (!(this.settings.qv >= 4)) { Object.assign(this.settings, { res: 'auto', aa: 'msaa', fps: 'auto' }); this.settings.qv = 4; }
       this.autoQ = new AutoApply(this);
       if (this.settings.qualityAuto) this.settings.quality = this.autoQ.tier();
     }
