@@ -1,5 +1,5 @@
-# Builds the LBA3 desktop app (lba2-remaster/desktop) for Windows, macOS and Linux on their own runners and
-# publishes the installers as a GitHub pre-release (and as run artifacts). See lba2-remaster/docs/DESKTOP.md.
+# Builds the LBA3 desktop app (lba3/desktop) for Windows, macOS and Linux on their own runners and
+# publishes the installers as a GitHub pre-release (and as run artifacts). See lba3/docs/DESKTOP.md.
 name: Desktop builds
 
 on:
@@ -7,13 +7,13 @@ on:
   push:
     branches: [ccr-adf00ea7-37ebl3, main]
     paths:
-      - 'lba2-remaster/**'
+      - 'lba3/**'
       - '.github/workflows/desktop.yml'
       # (a change to the docs or the tests alone builds nothing: the game shipped is the same)
-      - '!lba2-remaster/docs/**'
-      - '!lba2-remaster/tests/**'
-      - '!lba2-remaster/**/*.md'
-      - '!lba2-remaster/*.png'
+      - '!lba3/docs/**'
+      - '!lba3/tests/**'
+      - '!lba3/**/*.md'
+      - '!lba3/*.png'
 
 permissions:
   contents: write
@@ -41,14 +41,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: lba2-remaster/desktop
+        working-directory: lba3/desktop
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: lba2-remaster/desktop/package-lock.json
+          cache-dependency-path: lba3/desktop/package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm run dist:${{ matrix.target }}
         env:
@@ -59,10 +59,10 @@ jobs:
         with:
           name: LBA3-${{ matrix.target }}
           path: |
-            lba2-remaster/desktop/release/*.exe
-            lba2-remaster/desktop/release/*.zip
-            lba2-remaster/desktop/release/*.dmg
-            lba2-remaster/desktop/release/*.AppImage
+            lba3/desktop/release/*.exe
+            lba3/desktop/release/*.zip
+            lba3/desktop/release/*.dmg
+            lba3/desktop/release/*.AppImage
           if-no-files-found: error
           retention-days: 5
 
