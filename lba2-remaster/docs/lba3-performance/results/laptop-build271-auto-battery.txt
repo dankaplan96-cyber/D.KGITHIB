@@ -1,0 +1,17 @@
+LBA3 benchmark — Quality Auto as played · build 0.40.0 (build 271) · 2026-10-30 08:30 · the user's Vega 8 laptop, ON BATTERY
+Auto: Medium-eco (power change) → settled Medium-eco at 258.5 s ("pressure at the lowest profile": 43.4 fps, CPU p90 21.6, GPU p90 22.9)
+
+route       fps   p50/p95/max     GPU p50/p95   CPU work p50/p95  calls  callback late p50/p95
+street      43.1  16.8/33.5/66.8  18.34/23.33   14.9/23.2         142    8.3/15.6   (122 frames > 33 ms; no long stall)
+interior    60    16.7/16.8/17.8  10.91/11.6    6.5/8.9           49     0.5/0.7
+combat      56.7  16.7/33.1/50    8.81/11.02    6.6/9.1           115    0.6/11.3
+transition  55.3  16.7/33.3/66.7  12.46/15.51   7.6/13.4          47     1/14.4
+arrival     44.5  16.8/33.4/166.7 16.46/20.98   12.2/21.9         123    7.9/15.5   (167 ms behind black, then 50 ms: shadow cache rebuilt)
+hamalayi    55.1  16.7/33.3/34    14.39/17.19   6.4/8.4           35     4.9/15.5
+
+COMPARED WITH 0.38.0 ON BATTERY (laptop-build263-battery-full.txt, Medium with the battery cuts, 100 % resolution):
+  street fixed 47.1 (GPU 17.2, CPU 15.1) → now 43.1 at 90 % (GPU 18.3, CPU 14.9); interior 60 → 60; combat 54.8 → 56.7; arrival 44.8 → 44.5
+  → the GPU on the street did NOT get cheaper with 90 % resolution: GFX-LOOK's output-pass edge smoothing + sharpen (and/or the new shadow
+    path) cost about what the 10 % resolution saved, or thermal variance. The full benchmark's new Medium breakdown variants
+    ('no edge smoothing', 'shadow pass writes colour', 'res x0.9 sharpened / not sharpened') will price each.
+  Street and arrival are limited by BOTH: GPU ~16–18 ms and CPU ~12–15 ms, plus the browser's late frame start (8 ms).
