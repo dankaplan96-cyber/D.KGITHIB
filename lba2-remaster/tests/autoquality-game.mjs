@@ -20,7 +20,7 @@ const st = () => ev(() => ({ q: game.settings.quality, auto: game.settings.quali
 // ---------------------------------------------------------------- 1. a new player: Auto
 await open(page, '?nocine');
 const s1 = await st();
-check('a new player: Quality Auto (not chosen by hand), running High here (software renderer under the tests: the governor is off)', s1.auto === true && s1.hand === false && s1.qv === 3 && s1.q === 'high' && s1.label === 'High' && !!s1.knobs && s1.src === 'test', s1);
+check('a new player: Quality Auto (not chosen by hand), running High here (software renderer under the tests: the governor is off)', s1.auto === true && s1.hand === false && s1.qv === 4 && s1.q === 'high' && s1.label === 'High' && !!s1.knobs && s1.src === 'test', s1);
 
 // ---------------------------------------------------------------- 2. migration of stored settings
 const mig = [];

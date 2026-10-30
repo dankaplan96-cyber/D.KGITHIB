@@ -55,5 +55,19 @@ with the installed exe).
 - **GPU by group** (GPU investigator's list in benchgpu.js): no vegetation, no water, no particles, no characters, no
   terrain detail, shadow casters only, and so on. Each is one variant on the same frozen state.
 
+## Decision (the user, 30.10)
+- **Target hardware.** The Vega 8 laptop is the minimum spec.
+- **Plugged in.** High holds a flat 60 on the street; done.
+- **On battery.** Medium at 45–55 fps on the street and arrival is accepted. We stop chasing 60 there.
+- **Still in scope:**
+  - the stalls a player sees in view: the first-street ~2 s stall, the frame after the black, and the start-screen
+    stutter (CPU investigator);
+  - whatever the GPU investigator's current round finds (edge-smoothing cost, the Follow camera's far view).
+  The milestone closes after those. Content work then resumes.
+- **System requirements.**
+  - Minimum: Vega 8 / Iris Xe class integrated GPU, 4-core CPU, 8 GB, 1366×768.
+  - Recommended: GTX 1050 / RX 560 or newer, 6 cores, 16 GB, 1080p.
+  - Only the minimum was measured; the recommended spec is an estimate.
+
 ## Results
 (to be filled per pair: confirmed costs, fixes with before/after, remaining scenes, visual trade-offs, next step)
