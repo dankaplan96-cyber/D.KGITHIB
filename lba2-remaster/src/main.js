@@ -448,7 +448,7 @@ class Game {
     // geometry step — go to the GPU here, everything under Citadel whether in the title's first view or not, with every
     // texture any material holds. The render below only sent what its one view drew: the rest went up in the title's
     // frames as its camera came round to it (probes/firstdraw.mjs TITLE=1, SwiftShader counts over the first 58 s of the
-    // circle: 37 geometries — draw-batch cells of 0.1–19 k vertices, the harbour's and the town's props — and 11 textures
+    // circle: 28 geometries — draw-batch cells of 0.1–19 k vertices, the harbour's and the town's props
     // uploaded in title frames, besides the first frame's 19)
     await step('Almost there…', 0.97, 'batchUpload', 600);
     this._uploaded?.delete(this.world.root); this.uploadGeometry(this.world.root);
@@ -2089,7 +2089,8 @@ class Game {
   jobCounters() {
     const R = this.renderer.renderer, M = R.info.memory;
     return { p: R.info.programs?.length ?? 0, g: M.geometries, x: M.textures, sc: this.shadowCache?.stats.full ?? 0, db: this.drawBatch?.buildMs ?? 0, dbn: this.drawBatch?.builds ?? 0,
-      sb: this.shadowCull?.buildMs ?? 0, sbn: this.shadowCull?.builds ?? 0, up: this.uploadLog?.length ?? 0, aq: this.autoQ?.log.length ?? 0, h: performance.memory?.usedJSHeapSize ?? 0 };
+      sb: this.shadowCull?.buildMs ?? 0, sbn: this.shadowCull?.builds ?? 0, up: this.uploadLog?.length ?? 0, aq: this.autoQ?.log.length ?? 0, h: performance.memory?.usedJSHeapSize ?? 0,
+      rt: this.perf.targets?.size ?? 0 };
   }
   jobsBetween(a, b) {
     const o = [];
@@ -2097,7 +2098,7 @@ class Game {
     if (b.sbn > a.sbn) o.push(`shadow batches built ${(b.sb - a.sb).toFixed(0)} ms`);
     if (b.sc > a.sc) o.push('shadow cache rebuilt');
     if (b.p > a.p) o.push(`${b.p - a.p} shader program${b.p - a.p > 1 ? 's' : ''} compiled`);
-    if (b.g > a.g + 2 || b.x > a.x) o.push(`+${b.g - a.g} geometries, +${b.x - a.x} textures on the GPU`);
+    if (b.g > a.g + 2 || b.x > a.x) o.push(`+${b.g - a.g} geometries, +${b.x - a.x} textures on the GPU${b.rt > a.rt ? ` (${b.rt - a.rt} of them render targets)` : ''}`);
     if (b.up > a.up) o.push('geometry upload');
     if (b.aq > a.aq) o.push('Auto quality step');
     return o.join(', ');
