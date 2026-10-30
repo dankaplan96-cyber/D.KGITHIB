@@ -51,8 +51,10 @@ for (let r = 0; r < ROUNDS; r++) {
   diffs.push(med(got.B.map((x) => x[0])) - med(got.A.map((x) => x[0])));
   rdiffs.push(med(got.B.map((x) => x[1])) - med(got.A.map((x) => x[1])));
 }
+const pc = (a, p) => { const v = a.slice().sort((x, y) => x - y); return v[Math.min(v.length - 1, Math.floor(p * v.length))]; };
+const spread = (s) => { const f = rows[s].map((x) => x[0]), m = med(f); return `frame p95 ${pc(f, 0.95).toFixed(2)} p99 ${pc(f, 0.99).toFixed(2)} max ${Math.max(...f).toFixed(1)} · frames over 1.5× the median ${(100 * f.filter((x) => x > 1.5 * m).length / f.length).toFixed(1)} % · over 2× ${(100 * f.filter((x) => x > 2 * m).length / f.length).toFixed(1)} %`; };
 const line = (s) => `${s} ${URLS[s]}${process.env['OPT_' + s] ? ' opt ' + process.env['OPT_' + s] : ''}: frame p50 ${med(rows[s].map((x) => x[0])).toFixed(2)} · render p50 ${med(rows[s].map((x) => x[1])).toFixed(2)} · sim (frame − render) p50 ${med(rows[s].map((x) => x[0] - x[1])).toFixed(2)} ms · calls p50 ${med(rows[s].map((x) => x[2]))}`;
 console.log(`PERF-SUBMIT A/B pages · ${Q}${process.env.BATTERY ? ' battery' : ''}${process.env.CAM ? ' cam ' + process.env.CAM : ''} · ${ID} · ${ROUNDS} rounds × ${BLOCK} frames`);
-console.log(line('A')); console.log(line('B'));
+console.log(line('A')); console.log('   ' + spread('A')); console.log(line('B')); console.log('   ' + spread('B'));
 console.log(`paired B − A per round: frame median ${med(diffs).toFixed(3)} ms (B faster in ${diffs.filter((d) => d < 0).length}/${diffs.length}) · render median ${med(rdiffs).toFixed(3)} ms (B faster in ${rdiffs.filter((d) => d < 0).length}/${rdiffs.length})`);
 await browser.close();

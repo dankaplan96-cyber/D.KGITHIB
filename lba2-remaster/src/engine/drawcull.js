@@ -170,7 +170,9 @@ export class FarCull {
         else { const o = r.getWorldPosition(_pv); _fb.getBoundingSphere(_fs); B = { dy: _fs.center.y - o.y, rad: (Math.hypot(_fs.center.x - o.x, _fs.center.z - o.z) + _fs.radius) * 1.25 + 0.5, s }; }
       }
       let casts = false; r.traverse((o) => { if (o.isMesh && o.castShadow) casts = true; });
-      B.casts = casts; B.t = this.tick; this.bounds.set(r, B);
+      // (PERF-SUBMIT, smoothness: the next look at it phased by the rig, so the people first seen together on an arrival
+      //  are not all walked again in the same frame every 120 frames)
+      B.casts = casts; B.t = B.t === undefined ? this.tick - (r.id % 120) : this.tick; this.bounds.set(r, B);
     }
     return B;
   }
