@@ -265,6 +265,9 @@ class Game {
       // (the user, 28.10: "the game detects the machine and sets quality itself, without manual changes": one time,
       // everyone moves to Auto, a hand-picked preset included; a preset picked in Settings from now on stays)
       if (!(this.settings.qv >= 3)) { this.settings.qualityAuto = true; this.settings.qualityChosenByHand = false; this.settings.qv = 3; }
+      // (SETTINGS-FEW, the user 30.10: "too many settings, and that can cause problems": Edges, Resolution and the frame-rate
+      //  limit left Settings; one time, everyone's go back to the tested values, and they stay there)
+      if (!(this.settings.qv >= 4)) { Object.assign(this.settings, { res: 'auto', aa: 'msaa', fps: 'auto' }); this.settings.qv = 4; }
       this.autoQ = new AutoApply(this);
       if (this.settings.qualityAuto) this.settings.quality = this.autoQ.tier();
     }
