@@ -14,6 +14,7 @@ const REVERB_SEC = 0.25; // AUDIO-CRACKLE-2: the effects' room (see init)
 
 export class AudioEngine {
   constructor() {
+    this._targets = new Map();   // (AUDIO-CRACKLE-2: _glide's last target per parameter)
     this.ctx = null;
     this.storm = 1;
     this.mood = 'title';
@@ -171,7 +172,7 @@ export class AudioEngine {
     this.surfPlace.gain.setTargetAtTime(kind === 'island' ? 1 : 0, t, 0.6);
     this.music.placeChanged(); // (indoors a silence between two pieces ends)
     this.placeWind = kind === 'sky' ? 0.12 : 0;
-    this.windGain.gain.setTargetAtTime(0.25 * this.storm + 0.03 + this.placeWind, t, 0.6);
+    this._glide(this.windGain.gain, 0.25 * this.storm + 0.03 + this.placeWind, t, 0.6);
   }
   // sources: [{kind: 'water'|'machine', x, z, r, vol}] near the listener; louder as it gets closer
   updateSources(sources, pos) {
@@ -181,16 +182,25 @@ export class AudioEngine {
       const d = Math.hypot(pos.x - s.x, pos.z - s.z);
       if (d < s.r) lvl[s.kind] = Math.max(lvl[s.kind], (1 - d / s.r) ** 2 * (s.vol ?? 1));
     }
-    this.loops.water.gain.setTargetAtTime(lvl.water * 0.16, t, 0.3);
-    this.loops.machine.gain.setTargetAtTime(lvl.machine * 0.22, t, 0.3);
+    this._glide(this.loops.water.gain, lvl.water * 0.16, t, 0.3);
+    this._glide(this.loops.machine.gain, lvl.machine * 0.22, t, 0.3);
+  }
+  // AUDIO-CRACKLE-2: a new target only when it has really changed. These run every frame; each call adds an event to
+  // the parameter's timeline under a lock the audio thread only tries to take, and a block that can't take it plays
+  // without the automation (a click). Steady values now add nothing; a change still glides as before.
+  _glide(param, v, t, tc) {
+    const last = this._targets.get(param);
+    if (last !== undefined && Math.abs(last - v) < 0.002) return;
+    this._targets.set(param, v);
+    param.setTargetAtTime(v, t, tc);
   }
 
   setStorm(f) {
     this.storm = f;
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
-    this.rainGain.gain.setTargetAtTime(0.22 * f, t, 0.5);
-    this.windGain.gain.setTargetAtTime(0.25 * f + 0.03 + (this.placeWind || 0), t, 0.5);
+    this._glide(this.rainGain.gain, 0.22 * f, t, 0.5);
+    this._glide(this.windGain.gain, 0.25 * f + 0.03 + (this.placeWind || 0), t, 0.5);
   }
 
   // ---- music (see music.js) ----
