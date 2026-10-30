@@ -154,22 +154,33 @@ export class Terrain {
       sh.fragmentShader = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec3 vWNrm;\n' +
         sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
           vec2 tuv = vWPos.xz * 0.22;
-          // cliffs: triplanar rock so steep faces show undistorted strata
-          vec3 bw = pow(abs(normalize(vWNrm)), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
-          vec3 rock = texture2D(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14).rgb * bw.x
-                    + texture2D(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14).rgb * bw.z
-                    + texture2D(tRock, vWPos.xz * 0.14).rgb * bw.y;
-          // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
+          // PERF-GPU: each tile is read only where its share is not zero, with explicit gradients (textureGrad, from the
+          // world position's screen derivatives taken before any branch: the same mip level and anisotropy as before).
+          // Before, the three triplanar rock reads, the dirt and the cobbles were read on every terrain pixel (on
+          // Citadel's street ~half the screen) with their weight 0 on most of them; and Direct3D cannot keep a branch
+          // around implicit-gradient reads (texture2D), so the sand's branch ran everywhere too. Same pixels.
+          vec3 dPx = dFdx(vWPos), dPy = dFdy(vWPos);
+          vec2 gx = dPx.xz * 0.22, gy = dPy.xz * 0.22;
           vec4 sp = vSplat; float sp2 = vSplat2;
+          // cliffs: triplanar rock so steep faces show undistorted strata
+          // (the rock's share below is 0 wherever the splat's rock weight is under 0.23: 0.38 minus the wobble's 0.15)
+          vec3 rock = vec3(0.0);
+          if (sp.z > 0.229) {
+            vec3 bw = pow(abs(normalize(vWNrm)), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
+            rock = textureGrad(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14, vec2(dPx.z, dPx.y * 1.25) * 0.14, vec2(dPy.z, dPy.y * 1.25) * 0.14).rgb * bw.x
+                 + textureGrad(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14, vec2(dPx.x, dPx.y * 1.25) * 0.14, vec2(dPy.x, dPy.y * 1.25) * 0.14).rgb * bw.z
+                 + textureGrad(tRock, vWPos.xz * 0.14, dPx.xz * 0.14, dPy.xz * 0.14).rgb * bw.y;
+          }
+          // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
           // (GFX-LOOK-2: a shorter ramp, wobbled by the rock's own strata: on a steep slope one ~1 m grid cell spans
           //  metres of screen, and 0.28–0.62 drew a soft green veil over the foot of every cliff)
-          float rk = smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3);
+          float rk = sp.z > 0.229 ? smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3) : 0.0;
           float rest = 1.0 - sp.z;
           float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
           sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
           // crisp soil edges too (paths and town soil): the grass/soil share is re-split per pixel with a
           // short ramp, wobbled by the grass texture so the edge looks painted, not ruled
-          vec3 gtex = texture2D(tGrass, tuv).rgb;
+          vec3 gtex = textureGrad(tGrass, tuv, gx, gy).rgb;
           // GFX-LOOK-2: the paving's edge as crisp (it faded into the grass and soil over the ~1 m grid: a green smear
           // round every street and the quay): its share re-split per pixel on the same kind of ramp, no extra read
           float ns = sp.x + sp.y + sp.w + sp2;
@@ -190,15 +201,14 @@ export class Terrain {
           //  is near 0 at the borders, so the branch's edge never shows)
           vec3 sandT = vec3(0.0);
           if (sp.y > 0.003) {
-            vec3 sand1 = texture2D(tSand, tuv * 1.2).rgb;
-            vec3 sand2 = texture2D(tSand, mat2(0.8, 0.6, -0.6, 0.8) * tuv * 0.47 + vec2(0.37, 0.11)).rgb;
+            vec3 sand1 = textureGrad(tSand, tuv * 1.2, gx * 1.2, gy * 1.2).rgb;
+            mat2 sr = mat2(0.8, 0.6, -0.6, 0.8);
+            vec3 sand2 = textureGrad(tSand, sr * tuv * 0.47 + vec2(0.37, 0.11), sr * gx * 0.47, sr * gy * 0.47).rgb;
             sandT = sand1 * (0.62 + 0.46 * sand2);
           }
-          vec3 tex = gtex * sp.x
-                   + sandT * sp.y
-                   + rock * sp.z
-                   + texture2D(tDirt, tuv * 1.3).rgb * sp.w
-                   + texture2D(tCobble, vWPos.xz * 0.25).rgb * sp2;
+          vec3 tex = gtex * sp.x + sandT * sp.y + rock * sp.z;
+          if (sp.w > 0.0) tex += textureGrad(tDirt, tuv * 1.3, gx * 1.3, gy * 1.3).rgb * sp.w;
+          if (sp2 > 0.0) tex += textureGrad(tCobble, vWPos.xz * 0.25, dPx.xz * 0.25, dPy.xz * 0.25).rgb * sp2;
           diffuseColor.rgb *= tex;`);
     };
     mat.customProgramCacheKey = () => 'terrain-splat';

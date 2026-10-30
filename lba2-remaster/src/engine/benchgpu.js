@@ -40,6 +40,8 @@ function filterDraws(G, keep) {
   const r = G.renderer.renderer, prev = r.renderBufferDirect;
   ROOTS = null;
   r.renderBufferDirect = function (camera, scene, geometry, material, object, group) {
+    // (only the world's draws: the post passes' full-screen quads and the menus' own scenes always go through)
+    if (scene !== null && scene !== G.scene) return prev.call(this, camera, scene, geometry, material, object, group);
     const k = keep(scene === null ? 'shadow' : 'main', gpuGroupOf(G, object, material), object, material);
     if (!k) return;
     return prev.call(this, camera, scene, geometry, k === true ? material : k, object, group);
