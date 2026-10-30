@@ -209,7 +209,11 @@ export class Resident extends NPC {
     this.vel = 0; this.gait = 0;
     this.engaged = false; this.hold = 0; this.yieldT = 0; this.yieldV = null;
     this.stuckT = 0; this.replans = 0; this.lastRescue = -99; this.rescues = 0;
-    this.accA = 0; this.accB = 0; this.skipN = 0; this.tier = 2; this.noGate = 0;
+    // (PERF-SUBMIT, smoothness: the reduced tier's every-3rd-frame step and the abstract tier's half-second tick start at a
+    //  phase of the resident's own, so the street's residents don't all take theirs in the same frame — a regular bump
+    //  in the frame time every 3rd frame and every 30th; each one's own rate is unchanged)
+    { const h0 = hashId(def.id) >>> 0; this.accA = ((h0 % 30) / 60); this.accB = 0; this.skipN = (h0 >>> 5) % 3; }
+    this.tier = 2; this.noGate = 0;
     this.sit = null; this.inside = false; this.insideT = 0; this.away = null;
     this.log = [];               // the last few things it did (tests and debugging)
     if (def.round) this.setRound(def.round.map((s) => ({ ...s })), def.start || 0);

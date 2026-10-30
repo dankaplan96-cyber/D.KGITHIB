@@ -25,7 +25,7 @@
 import * as THREE from 'three';
 import { MW } from './drawcull.js';
 
-const MARGIN = 64, SLICES = 3, LAYER = 31, MAX_MAP = 2048, MAX_DEPTH_SHIFT = 20;
+const MARGIN = 64, SLICES = 3, SLICES_MAX = 8, LAYER = 31, MAX_MAP = 2048, MAX_DEPTH_SHIFT = 20;
 
 // PERF-SUBMIT: what three's shadow pass walks. It visits every object under shown parents (~1 300 on Citadel's street:
 // batched pieces, bones, groups) to find the few dozen that cast. drawcull.js's shown-world update lists, in the same
@@ -60,8 +60,14 @@ export class ShadowCache {
     this.base = base;
     sm.render = (lights, scene, camera) => this.render(lights, scene, camera);
   }
-  drop() { this.cache = null; this.next = null; }
-  dispose() { for (const c of [this.cache, this.next]) c?.target.dispose(); this.cache = this.next = null; }
+  // (PERF-SUBMIT: a dropped cache's render target is kept for the next build — or freed — instead of left behind: each
+  //  drop used to leave its (map + 2 × 64)² colour and depth target on the GPU, never disposed, and the next full build
+  //  made a new one: a texture more and ~20–40 MB of GPU memory at each scene change, uploaded in that frame)
+  drop() {
+    for (const c of [this.cache, this.next]) { const t = c?.target; if (!t || t === this.spare) continue; if (!this.spare) this.spare = t; else t.dispose(); }
+    this.cache = null; this.next = null;
+  }
+  dispose() { for (const c of [this.cache, this.next]) c?.target.dispose(); this.spare?.dispose(); this.cache = this.next = this.spare = null; }
 
   // the static casters on show now: the area's shadow batches and the extra (tree) batches under its root
   statics(A) {
@@ -111,16 +117,27 @@ export class ShadowCache {
     const T = sun.target.position, u = Math.round(T.dot(right) / texel), v = Math.round(T.dot(up) / texel), w = T.dot(d);
     const fits = (c) => c && Math.abs(u - c.u) <= MARGIN && Math.abs(v - c.v) <= MARGIN && Math.abs(w - c.w) < MAX_DEPTH_SHIFT;
     // the next cache: started once the window is half way to the edge, a slice a frame, swapped in when complete
-    if (this.cache && !this.next && (Math.abs(u - this.cache.u) > MARGIN / 2 || Math.abs(v - this.cache.v) > MARGIN / 2 || Math.abs(w - this.cache.w) > MAX_DEPTH_SHIFT / 2)) { this.next = this.make(u, v, w, size, texel, this.spare); this.spare = null; }
+    // (PERF-SUBMIT, smoothness: the next cache in as many slices as the window's speed allows — up to SLICES_MAX, each
+    //  frame's share of the static casters smaller: at walking pace a slice frame drew a third of them, a regular bump
+    //  in the frame time; a fast mover (glider, jetpack) still gets it done in time with fewer, as before)
+    const du = this._lu === undefined ? 0 : Math.max(Math.abs(u - this._lu), Math.abs(v - this._lv)); this._lu = u; this._lv = v;
+    this._rate = du > MARGIN ? this._rate || 0 : 0.8 * (this._rate || 0) + 0.2 * du;
+    if (this.cache && !this.next && (Math.abs(u - this.cache.u) > MARGIN / 2 || Math.abs(v - this.cache.v) > MARGIN / 2 || Math.abs(w - this.cache.w) > MAX_DEPTH_SHIFT / 2)) {
+      this.next = this.make(u, v, w, size, texel, this.spare); this.spare = null;
+      this.next.K = Math.max(SLICES, Math.min(this.maxSlices ?? SLICES_MAX, Math.floor(MARGIN / 4 / Math.max(this._rate, 0.5))));
+    }
     if (this.next && !this.next.done) { this.draw(this.next, lights, scene, S, this.next.slice, d, right, up); this.stats.sliced++; }
     if (this.next?.done && fits(this.next)) { const old = this.cache; this.cache = this.next; this.next = null; this.stats.swaps++; this.spare = old?.target; }
     if (!fits(this.cache)) {
       // (first frame in an area, or moved past the cache before the next was ready: all of it now)
+      // (PERF-SUBMIT: the unfinished next cache's and the old cache's targets are reused or freed, not left behind)
+      const old = [this.next?.target, this.cache?.target].filter((t) => t && t !== this.spare);
       this.next = null;
-      const c = this.make(u, v, w, size, texel, this.spare);
-      this.spare = null;
+      const c = this.make(u, v, w, size, texel, this.spare ?? old.shift() ?? null);
+      this.spare = null; c.K = 1;   // (PERF-SUBMIT: all in one pass — it was drawn in SLICES passes within this frame)
       while (!c.done) this.draw(c, lights, scene, S, c.slice, d, right, up);
       this.cache = c; this.stats.full++;
+      for (const t of old) if (t !== c.target) { if (!this.spare) this.spare = t; else t.dispose(); }
     }
     this.live(lights, scene, camera, S, d, u, v);
   }
@@ -129,7 +146,7 @@ export class ShadowCache {
     const n = size + 2 * MARGIN;
     let target = reuse && reuse.width === n ? reuse : null;
     if (!target) { reuse?.dispose(); target = new THREE.WebGLRenderTarget(n, n, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }); target.texture.name = 'sun.shadowCache'; }
-    return { u, v, w, size, texel, n, target, slice: 0, done: false };
+    return { u, v, w, size, texel, n, target, slice: 0, done: false, K: SLICES };
   }
 
   // one slice of the static casters into cache c (slice 0 clears it), drawn by three's own shadow pass with the box
@@ -139,7 +156,7 @@ export class ShadowCache {
     const map0 = sh.map, size0 = sh.mapSize.clone(), box0 = [cam.left, cam.right, cam.top, cam.bottom];
     const p0 = sun.position.clone(), t0 = sun.target.position.clone(), dist = p0.distanceTo(t0);
     const half = (c.n / 2) * c.texel;
-    const K = Math.min(SLICES, S.length), from = Math.floor((S.length * k) / K), to = Math.floor((S.length * (k + 1)) / K);
+    const K = Math.max(1, Math.min(c.K, S.length)), from = Math.floor((S.length * k) / K), to = Math.floor((S.length * (k + 1)) / K);
     const cast = S.map((o) => o.castShadow);
     const clear = R.clear;
     try {
@@ -150,7 +167,11 @@ export class ShadowCache {
       sun.position.copy(sun.target.position).addScaledVector(d, dist);
       sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
       if (k > 0) R.clear = function () { if (this.getRenderTarget() === c.target) return; return clear.apply(this, arguments); };
-      sh.needsUpdate = true; this.base([sun], scene, this.layerCam);
+      // (PERF-SUBMIT: the pass walks the static casters themselves, not the whole scene to find them on their layer)
+      const root = this.sliceWalk === false ? scene : (this._sroot ??= { visible: true, layers: NO_LAYERS, children: null });
+      if (root !== scene) root.children = S;
+      sh.needsUpdate = true; this.base([sun], root, this.layerCam);
+      if (root !== scene) root.children = null;
     } finally {
       R.clear = clear;
       S.forEach((o, i) => { o.castShadow = cast[i]; });
