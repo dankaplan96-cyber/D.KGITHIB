@@ -1,0 +1,137 @@
+PROBE frame 59/126
+PROBE frame 119/126
+ROTATE-STALL sweep · turn rate 3 · medium · battery true · camera follow far · 126 frames of 33.3 ms · sweep 2.09 s
+sweep 0: 63 fr · cpu p50 19.1 p95 35.1 max 92.9 ms · calls p50 154 max 242 · tris p50 610k max 968k · cache full 0 sliced 0 swaps 0 drops 0 · drawbatch left 0 areaBuilds 0 · shadowbatch left 0 areaBuilds 0 · +prog 0 +geo 1 +tex 6 · uploads 1226 (3239 KB)
+sweep 1: 63 fr · cpu p50 16.8 p95 28.5 max 39.8 ms · calls p50 149 max 241 · tris p50 627k max 961k · cache full 0 sliced 0 swaps 0 drops 0 · drawbatch left 0 areaBuilds 0 · shadowbatch left 0 areaBuilds 0 · +prog 0 +geo 0 +tex 0 · uploads 1151 (2488 KB)
+-- frames with events (i sweep ms calls/shadow tris up | deltas | drops) --
+0 s0 22.8ms 154/18 611k up 18/39KB | {"live":1,"copies":1} |  | {"submit other":3.4,"submit main":5.5,"submit shadow":0.8,"other sim":10.1}
+1 s0 17.4ms 154/18 605k up 18/39KB | {"live":1,"copies":1} |  | {"people":1.6,"submit other":1.8,"submit main":6.5,"submit shadow":0.6,"other sim":5.7}
+2 s0 17.5ms 155/18 601k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.8,"interact":0.6,"submit other":1.9,"submit main":5.4,"submit shadow":0.7,"other sim":6.3}
+3 s0 14.4ms 155/18 602k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.8,"submit other":2.6,"submit main":2.9,"submit shadow":0.7,"other sim":5.7}
+4 s0 26.7ms 156/18 592k up 18/39KB | {"live":1,"copies":1} |  | {"hero":0.9,"people":1,"camera":0.6,"submit other":3.6,"submit main":8.9,"submit shadow":2.1,"other sim":8.2}
+5 s0 35.1ms 152/18 589k up 18/39KB | {"live":1,"copies":1} |  | {"people":3.5,"camera":0.9,"submit other":9,"submit main":8.1,"submit shadow":5,"other sim":7.3}
+6 s0 36.1ms 154/18 599k up 18/39KB | {"live":1,"copies":1} |  | {"hero":8.8,"physics":2.2,"people":3,"camera":1.4,"submit other":2.6,"submit main":4.2,"submit shadow":0.6,"other sim":11.3}
+7 s0 32.5ms 154/18 615k up 18/39KB | {"live":1,"copies":1} |  | {"hero":0.7,"people":0.9,"camera":1.7,"submit other":1.9,"submit main":5.9,"submit shadow":1.1,"other sim":18.8}
+8 s0 36.7ms 152/18 601k up 18/39KB | {"live":1,"copies":1} |  | {"people":1.5,"submit other":2,"submit main":3.3,"submit shadow":4.8,"other sim":22.1}
+9 s0 17.7ms 145/18 571k up 18/39KB | {"live":1,"copies":1} |  | {"physics":1.4,"people":0.8,"submit other":1.8,"submit main":7.6,"submit shadow":2,"other sim":2.7}
+10 s0 18.4ms 144/18 569k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.6,"submit other":1.8,"submit main":8.7,"submit shadow":0.7,"other sim":4.5}
+11 s0 18.7ms 142/18 545k up 18/39KB | {"live":1,"copies":1} |  | {"hero":0.6,"physics":0.6,"people":0.8,"interact":0.9,"camera":1.1,"submit other":2.2,"submit main":6.9,"submit shadow":0.9,"other sim":4.4}
+12 s0 14.3ms 140/18 562k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.7,"camera":1.1,"submit other":1.7,"submit main":3.3,"submit shadow":1.2,"other sim":5.4}
+13 s0 18.1ms 144/18 579k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.8,"camera":0.7,"submit other":1.5,"submit post":1.6,"submit main":3.1,"submit shadow":2.2,"other sim":7.3}
+14 s0 23.4ms 143/18 571k up 17/37KB | {"live":1,"copies":1} |  | {"physics":0.5,"people":2.3,"submit other":1.8,"submit main":12.6,"submit shadow":0.6,"other sim":4.5}
+15 s0 19ms 143/18 571k up 17/37KB | {"live":1,"copies":1} |  | {"hero":0.7,"people":2.3,"submit other":1.9,"submit main":7.3,"submit shadow":0.6,"other sim":4.8}
+16 s0 14.9ms 145/18 573k up 18/44KB | {"live":1,"copies":1} |  | {"people":0.7,"submit other":1.5,"submit main":5.5,"submit shadow":0.9,"other sim":4.7}
+17 s0 17.9ms 148/18 586k up 17/37KB | {"live":1,"copies":1} |  | {"people":0.7,"submit other":2.2,"submit main":7.8,"submit shadow":0.7,"other sim":4.7}
+18 s0 21.4ms 149/18 593k up 17/37KB | {"live":1,"copies":1} |  | {"people":1.5,"camera":0.5,"submit other":4.8,"submit main":6.5,"other sim":6.4}
+19 s0 13.9ms 146/18 593k up 17/37KB | {"live":1,"copies":1} |  | {"people":0.6,"camera":0.7,"submit other":1.8,"submit main":3.1,"submit shadow":0.7,"other sim":5.7}
+20 s0 19.7ms 141/14 565k up 18/42KB | {"live":1,"copies":1} |  | {"hero":0.6,"people":1.7,"camera":1.8,"submit other":2.3,"submit main":5.6,"other sim":6.4}
+21 s0 16.6ms 136/14 571k up 17/37KB | {"live":1,"copies":1} |  | {"camera":2.5,"submit other":1.8,"submit main":4.9,"submit shadow":0.9,"other sim":4.9}
+22 s0 15ms 138/14 588k up 17/37KB | {"live":1,"copies":1} |  | {"physics":0.7,"people":0.7,"camera":0.8,"submit other":1.8,"submit main":5.5,"submit shadow":0.6,"other sim":4.2}
+23 s0 21.7ms 142/14 599k up 18/37KB | {"live":1,"copies":1} |  | {"people":0.8,"submit other":2.4,"submit main":10.6,"submit shadow":0.6,"other sim":5.8}
+24 s0 15.8ms 142/14 599k up 17/37KB | {"live":1,"copies":1} |  | {"submit other":2,"submit main":5.6,"submit shadow":0.7,"other sim":5.2}
+25 s0 24ms 138/14 607k up 18/152KB | {"live":1,"copies":1} |  | {"hero":0.5,"people":1.4,"submit other":2.4,"submit post":2.4,"submit main":3.8,"submit shadow":0.7,"other sim":9.9}
+26 s0 16.7ms 133/14 591k up 16/34KB | {"live":1,"copies":1} |  | {"people":0.7,"enemies":1.3,"camera":0.7,"submit other":1.8,"submit main":5.7,"submit shadow":0.6,"other sim":4.9}
+27 s0 13.4ms 134/14 591k up 17/41KB | {"live":1,"copies":1} |  | {"people":0.5,"submit other":1.7,"submit main":4.6,"submit shadow":0.6,"other sim":4.5}
+28 s0 26.6ms 124/12 581k up 15/32KB | {"live":1,"copies":1} |  | {"physics":0.6,"people":1.7,"submit other":2,"submit main":5.5,"submit shadow":1.3,"other sim":13}
+29 s0 15.3ms 117/7 580k up 15/32KB | {"live":1,"copies":1} |  | {"submit other":2.2,"submit main":4.9,"other sim":5.8}
+30 s0 19ms 118/7 582k up 15/32KB | {"live":1,"copies":1} |  | {"submit other":1.8,"submit main":3.7,"submit shadow":0.6,"other sim":5.1}
+31 s0 19.1ms 113/7 555k up 14/30KB | {"live":1,"copies":1} |  | {"people":1,"interact":0.8,"submit other":3.1,"submit main":7,"submit shadow":0.6,"other sim":5.1}
+32 s0 18.5ms 116/7 591k up 15/145KB | {"live":1,"copies":1} |  | {"physics":0.6,"camera":1.3,"submit other":3.2,"submit main":2.9,"other sim":8.8}
+33 s0 18.1ms 115/7 610k up 15/37KB | {"live":1,"copies":1} |  | {"hero":0.6,"physics":0.6,"people":2.8,"submit other":4.1,"submit main":3.1,"submit shadow":0.6,"other sim":5.6}
+34 s0 24.7ms 135/7 669k up 25/100KB | {"live":1,"copies":1} |  | {"physics":0.7,"people":1.6,"camera":0.8,"submit other":1.7,"submit main":13.5,"submit shadow":0.8,"other sim":4.7}
+35 s0 32ms 177/7 735k up 33/162KB | {"live":1,"copies":1,"x":3} |  | {"hero":0.6,"physics":1,"people":0.7,"camera":0.5,"submit other":2.9,"submit main":20.8,"submit shadow":0.7,"other sim":4.3}
+      first on the GPU: geo Mesh:shadowBatch (453 v) · geo Mesh:shadowBatch (156 v) · geo Mesh:shadowBatch (495 v) · geo Mesh:shadowBatch (819 v) · geo Mesh:shadowBatch (39 v) · geo Mesh:shadowBatch (648 v) · geo Mesh:shadowBatch (195 v) · geo Mesh:shadowBatch (696 v) · geo Mesh:shadowBatch (471 v) · geo Mesh:shadowBatch (307 v) · geo Mesh:shadowBatch (276 v) · geo Mesh:shadowBatch (408 v) · geo Mesh:shadowBatch (96 v) · geo Mesh:shadowBatch (300 v) · geo Mesh:shadowBatch (660 v) · geo Mesh:shadowBatch (34685 v) · geo Mesh:shadowBatch (34 v) · geo Mesh:shadowBatch (6063 v) · geo Mesh:shadowBatch (12813 v) · geo Mesh:shadowBatch (7077 v) · geo Mesh:shadowBatch (13824 v) · geo Mesh:shadowBatch (8198 v) · geo Mesh:shadowBatch (28 v) · geo Mesh:shadowBatch (5469 v) · geo Mesh:shadowBatch (11382 v) · geo Mesh:shadowBatch (15355 v) · geo Mesh:shadowBatch (8009 v) · geo Mesh:shadowBatch (2122 v) · geo Mesh:shadowBatch (1149 v) · geo Mesh:shadowBatch (18132 v) · geo Mesh:shadowBatch (7981 v) · geo Mesh:shadowBatch (5912 v) · geo Mesh:shadowBatch (9521 v) · geo Mesh:shadowBatch (5974 v) · geo Mesh:shadowBatch (1333 v) · geo Mesh:shadowBatch (20 v) · geo Mesh:shadowBatch (23457 v) · geo Mesh:shadowBatch (47606 v) · geo Mesh:shadowBatch (37160 v) · geo Mesh:shadowBatch (39232 v) · geo Mesh:shadowBatch (10090 v) · geo Mesh:shadowBatch (13350 v) · geo Mesh:shadowBatch (3522 v) · geo Mesh:shadowBatch (8939 v) · geo Mesh:shadowBatch (18222 v) · geo Mesh:shadowBatch (12228 v) · geo Mesh:shadowBatch (5084 v) · geo Mesh:shadowBatch (33717 v) · geo Mesh:shadowBatch (9210 v) · geo Mesh:shadowBatch (41621 v) · geo Mesh:shadowBatch (45589 v) · geo Mesh:shadowBatch (2536 v) · geo Mesh:shadowBatch (12639 v)
+36 s0 35.1ms 190/7 771k up 27/143KB | {"live":1,"copies":1,"g":1,"x":2} |  | {"physics":3.8,"people":1,"camera":0.7,"submit other":6.6,"submit main":15.5,"submit shadow":0.9,"other sim":5.7}
+      first on the GPU: geo Mesh:harbour (126 v)
+37 s0 28ms 195/7 794k up 24/177KB | {"live":1,"copies":1} |  | {"hero":0.6,"physics":1.6,"people":2.3,"submit other":2.3,"submit main":18,"submit shadow":0.6,"other sim":2}
+38 s0 13.5ms 197/7 820k up 19/41KB | {"live":1,"copies":1} |  | {"physics":1.2,"people":0.9,"camera":1.3,"submit other":1.9,"submit main":4.5,"other sim":2.3}
+39 s0 23.4ms 198/7 835k up 20/43KB | {"live":1,"copies":1} |  | {"physics":2.3,"people":0.9,"interact":0.8,"camera":1.4,"submit other":2.6,"submit main":8.1,"submit shadow":1,"other sim":5.2}
+40 s0 22ms 194/7 830k up 21/52KB | {"live":1,"copies":1} |  | {"people":0.6,"submit other":2.1,"submit main":11.5,"other sim":5.7}
+41 s0 24.4ms 193/7 819k up 20/43KB | {"live":1,"copies":1} |  | {"people":0.8,"submit other":3,"submit main":7.8,"submit shadow":0.9,"other sim":9.9}
+42 s0 23.4ms 193/7 835k up 19/41KB | {"live":1,"copies":1} |  | {"physics":0.7,"people":0.7,"submit other":4.8,"submit main":10.2,"submit shadow":1,"other sim":4.8}
+43 s0 25.8ms 199/7 851k up 21/49KB | {"live":1,"copies":1} |  | {"physics":0.8,"people":1.7,"camera":2.3,"submit other":2.5,"submit main":7.8,"submit shadow":0.9,"other sim":5.6}
+44 s0 19.4ms 210/7 875k up 27/55KB | {"live":1,"copies":1} |  | {"hero":3.5,"people":1,"submit other":2.4,"submit main":4.7,"submit shadow":1.3,"other sim":5.1}
+45 s0 28.8ms 215/7 920k up 23/53KB | {"live":1,"copies":1} |  | {"hero":0.6,"people":2.9,"interact":2.2,"submit other":2.3,"submit main":9.1,"submit shadow":0.6,"other sim":9.8}
+46 s0 21.4ms 231/7 930k up 28/53KB | {"live":1,"copies":1} |  | {"hero":0.6,"physics":1.1,"people":1.5,"submit other":1.8,"submit main":9.9,"submit shadow":0.6,"other sim":5.1}
+47 s0 19.1ms 238/7 932k up 27/58KB | {"live":1,"copies":1} |  | {"hero":0.6,"people":1.7,"submit other":1.8,"submit main":5.6,"other sim":7.6}
+48 s0 24.1ms 242/7 961k up 25/55KB | {"live":1,"copies":1,"x":1} |  | {"people":2.9,"submit other":2,"submit main":11.9,"submit shadow":0.8,"other sim":4.3}
+49 s0 25.5ms 227/7 968k up 24/52KB | {"live":1,"copies":1} |  | {"physics":0.7,"people":1.7,"camera":1.1,"submit other":2.7,"submit main":12.5,"other sim":5.2}
+50 s0 17.9ms 190/7 924k up 23/50KB | {"live":1,"copies":1} |  | {"people":0.9,"submit other":1.6,"submit main":7.9,"other sim":5.3}
+51 s0 21.7ms 173/7 912k up 21/46KB | {"live":1,"copies":1} |  | {"physics":1.2,"people":0.9,"submit other":2.3,"submit main":10.3,"submit shadow":0.6,"other sim":5.1}
+52 s0 24.8ms 163/7 864k up 20/43KB | {"live":1,"copies":1} |  | {"physics":4.7,"people":0.9,"camera":0.6,"submit other":2.3,"submit main":10.5,"submit shadow":0.6,"other sim":4.2}
+53 s0 17.3ms 165/7 856k up 20/43KB | {"live":1,"copies":1} |  | {"people":1,"camera":1.9,"submit other":1.8,"submit main":5.5,"other sim":5.3}
+54 s0 16.2ms 164/7 852k up 21/46KB | {"live":1,"copies":1} |  | {"physics":1.5,"submit other":3.9,"submit main":4.4,"submit shadow":0.9,"other sim":3.9}
+55 s0 15.6ms 161/7 797k up 21/46KB | {"live":1,"copies":1} |  | {"people":0.7,"submit other":2,"submit main":6.4,"other sim":4.8}
+56 s0 27.3ms 167/7 796k up 20/43KB | {"live":1,"copies":1} |  | {"hero":0.8,"physics":0.5,"people":0.9,"camera":0.6,"submit other":2.4,"submit main":4.8,"submit shadow":0.9,"other sim":8.2}
+57 s0 18.2ms 170/9 778k up 20/43KB | {"live":1,"copies":1} |  | {"people":0.5,"submit other":1.8,"submit main":9.1,"other sim":4.5}
+58 s0 16.8ms 171/9 762k up 20/43KB | {"live":1,"copies":1} |  | {"people":0.7,"submit other":2.2,"submit main":8,"other sim":4.2}
+59 s0 92.9ms 166/9 744k up 20/43KB | {"live":1,"copies":1} |  | {"physics":75.4,"people":0.6,"submit other":1.9,"submit main":8,"submit shadow":1.1,"other sim":4.9}
+60 s0 12.3ms 163/9 719k up 20/43KB | {"live":1,"copies":1} |  | {"people":0.8,"submit other":1.9,"submit main":3.6,"submit shadow":1.4,"other sim":2.9}
+61 s0 15.2ms 147/9 705k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.6,"submit other":1.7,"submit main":3.3,"other sim":5.5}
+62 s0 14.6ms 140/9 687k up 17/37KB | {"live":1,"copies":1} |  | {"submit other":1.7,"submit main":5.2,"other sim":5.3}
+63 s1 13.2ms 138/9 677k up 17/37KB | {"live":1,"copies":1} |  | {"submit other":1.8,"submit main":2.9,"other sim":5.1}
+64 s1 14.1ms 138/9 667k up 17/37KB | {"live":1,"copies":1} |  | {"people":0.7,"submit other":1.7,"submit main":3,"other sim":4.4}
+65 s1 13.1ms 146/16 627k up 16/34KB | {"live":1,"copies":1} |  | {"physics":1.2,"people":0.6,"submit other":1.6,"submit main":3.3,"submit shadow":0.6,"other sim":4.6}
+66 s1 12.1ms 149/16 627k up 18/39KB | {"live":1,"copies":1} |  | {"hero":0.9,"physics":0.5,"submit other":1.6,"submit main":3.1,"other sim":4.5}
+67 s1 14.8ms 153/16 627k up 18/39KB | {"live":1,"copies":1} |  | {"people":2.6,"submit other":1.9,"submit main":3.1,"submit shadow":0.6,"other sim":5.1}
+68 s1 11.2ms 154/16 624k up 18/39KB | {"live":1,"copies":1} |  | {"physics":0.6,"people":0.5,"submit other":1.8,"submit main":3.5,"submit shadow":0.6,"other sim":3.2}
+69 s1 11.4ms 155/16 606k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.6,"camera":1.1,"submit other":1.8,"submit main":4.3,"other sim":2}
+70 s1 14ms 152/16 595k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.8,"submit other":1.7,"submit main":6.6,"other sim":2.6}
+71 s1 11ms 152/16 612k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.8,"submit other":1.6,"submit main":4.1,"submit shadow":0.6,"other sim":2.9}
+72 s1 14.7ms 146/16 596k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.7,"submit other":1.7,"submit main":6.4,"submit shadow":0.8,"other sim":3.5}
+73 s1 15.3ms 142/16 566k up 18/39KB | {"live":1,"copies":1} |  | {"people":0.8,"camera":0.6,"submit other":1.8,"submit main":3.5,"submit shadow":0.7,"other sim":3.3}
+74 s1 10.5ms 142/16 567k up 18/39KB | {"live":1,"copies":1} |  | {"physics":0.6,"people":1.1,"submit other":1.7,"submit main":2.7,"submit shadow":0.6,"other sim":2.7}
+75 s1 19.8ms 138/16 560k up 18/39KB | {"live":1,"copies":1} |  | {"physics":1.5,"people":6,"submit other":1.8,"submit main":2.8,"submit shadow":0.9,"other sim":3.3}
+76 s1 16.4ms 142/16 577k up 18/39KB | {"live":1,"copies":1} |  | {"hero":0.5,"physics":1.4,"people":2.4,"submit other":1.6,"submit main":6.2,"submit shadow":1.1,"other sim":2.5}
+77 s1 38.6ms 141/16 569k up 17/37KB | {"live":1,"copies":1} |  | {"people":5.4,"submit other":1.6,"submit main":24.9,"submit shadow":0.8,"other sim":3.4}
+78 s1 20ms 141/16 569k up 17/37KB | {"live":1,"copies":1} |  | {"physics":0.6,"people":3.3,"submit other":1.9,"submit main":3,"submit shadow":0.6,"other sim":3.3}
+79 s1 20.9ms 143/16 571k up 17/37KB | {"live":1,"copies":1} |  | {"people":2,"submit other":3.7,"submit main":10.6,"submit shadow":0.6,"other sim":2.3}
+80 s1 12.8ms 146/16 583k up 17/37KB | {"live":1,"copies":1} |  | {"hero":0.9,"physics":0.8,"people":0.6,"enemies":0.9,"submit other":1.8,"submit main":3.4,"submit shadow":1.8,"other sim":1.9}
+81 s1 14ms 146/16 585k up 17/37KB | {"live":1,"copies":1} |  | {"people":0.7,"camera":1.4,"submit other":1.9,"submit main":5.3,"other sim":3.3}
+82 s1 20.3ms 145/16 592k up 17/37KB | {"live":1,"copies":1} |  | {"hero":0.7,"people":1.2,"submit other":3.5,"submit main":5.2,"submit shadow":4.1,"other sim":4.4}
+83 s1 12.4ms 141/14 565k up 17/37KB | {"live":1,"copies":1} |  | {"people":0.6,"submit other":1.8,"submit main":4.7,"submit shadow":0.8,"other sim":2.6}
+84 s1 18.4ms 136/14 571k up 17/37KB | {"live":1,"copies":1} |  | {"people":0.7,"enemies":0.9,"submit other":2,"submit main":5.9,"submit shadow":0.6,"other sim":2.9}
+85 s1 17.2ms 139/14 588k up 17/37KB | {"live":1,"copies":1} |  | {"submit other":1.8,"submit post":1.4,"submit main":7.3,"submit shadow":1,"other sim":3.6}
+86 s1 25.1ms 142/14 599k up 17/37KB | {"live":1,"copies":1} |  | {"people":1.8,"camera":0.7,"submit other":4.9,"submit main":9.8,"submit shadow":0.9,"other sim":5.5}
+87 s1 14.6ms 142/14 603k up 17/37KB | {"live":1,"copies":1} |  | {"hero":0.6,"people":1.3,"submit other":2.3,"submit main":5.9,"submit shadow":0.6,"other sim":2.4}
+88 s1 9.9ms 137/14 607k up 17/37KB | {"live":1,"copies":1} |  | {"submit other":1.8,"submit main":3.5,"other sim":2.2}
+89 s1 21ms 124/12 589k up 16/34KB | {"live":1,"copies":1} |  | {"physics":0.7,"people":0.8,"enemies":4.3,"submit other":1.9,"submit main":8.1,"submit shadow":1.2,"other sim":3.2}
+90 s1 17.7ms 121/7 585k up 16/34KB | {"live":1,"copies":1} |  | {"people":1,"camera":3.5,"submit other":2.5,"submit main":3.1,"submit shadow":3.6,"other sim":1.9}
+91 s1 19.7ms 119/7 587k up 15/32KB | {"live":1,"copies":1} |  | {"physics":1.3,"people":3.7,"submit other":1.9,"submit main":4.7,"submit shadow":1.2,"other sim":5.5}
+92 s1 16.6ms 118/7 580k up 15/32KB | {"live":1,"copies":1} |  | {"physics":1.9,"people":1.8,"submit other":2.7,"submit main":5.9,"submit shadow":0.7,"other sim":2.3}
+93 s1 17.6ms 116/7 558k up 14/30KB | {"live":1,"copies":1} |  | {"physics":1.3,"people":3,"submit other":2.2,"submit main":6.5,"submit shadow":0.6,"other sim":2.8}
+94 s1 16.3ms 114/7 564k up 14/30KB | {"live":1,"copies":1} |  | {"physics":0.7,"people":3,"submit other":1.8,"submit main":6.4,"submit shadow":1.1,"other sim":1.7}
+95 s1 14.1ms 117/7 604k up 14/30KB | {"live":1,"copies":1} |  | {"physics":0.9,"people":2.4,"submit other":1.9,"submit main":4.5,"submit shadow":1.2,"other sim":2.2}
+96 s1 23.3ms 116/7 617k up 14/30KB | {"live":1,"copies":1} |  | {"hero":1,"physics":1.6,"people":6.2,"submit other":2.4,"submit main":3.7,"submit shadow":0.8,"other sim":3.8}
+97 s1 17.8ms 141/7 687k up 13/28KB | {"live":1,"copies":1} |  | {"physics":0.9,"people":1.4,"enemies":3.3,"camera":0.6,"submit other":2.4,"submit main":4.4,"submit shadow":0.7,"other sim":2.8}
+98 s1 20ms 182/7 746k up 19/40KB | {"live":1,"copies":1} |  | {"physics":1.5,"people":3.7,"submit other":2.2,"submit main":5.8,"submit shadow":0.7,"other sim":2.7}
+99 s1 18.9ms 191/7 772k up 18/39KB | {"live":1,"copies":1} |  | {"physics":0.6,"people":2.2,"submit other":1.9,"submit main":6.6,"other sim":4.8}
+100 s1 16.9ms 194/7 798k up 19/41KB | {"live":1,"copies":1} |  | {"physics":1.9,"people":1.4,"submit other":2.1,"submit main":6.9,"submit shadow":0.9,"other sim":2.8}
+101 s1 16.5ms 196/7 822k up 19/41KB | {"live":1,"copies":1} |  | {"physics":1.7,"people":1.5,"submit other":1.9,"submit main":6.1,"submit shadow":0.7,"other sim":1.8}
+102 s1 17.9ms 194/7 837k up 19/41KB | {"live":1,"copies":1} |  | {"physics":0.9,"people":2.1,"submit other":2.6,"submit main":8.8,"other sim":1.7}
+103 s1 18.3ms 193/7 830k up 19/41KB | {"live":1,"copies":1} |  | {"people":2.8,"camera":2.5,"submit other":2.7,"submit main":5.5,"submit shadow":0.6,"other sim":2.8}
+104 s1 19.4ms 192/7 823k up 20/43KB | {"live":1,"copies":1} |  | {"hero":0.6,"physics":1.2,"people":1.7,"submit other":2,"submit main":8.8,"submit shadow":0.7,"other sim":3.2}
+105 s1 20.9ms 195/7 843k up 19/41KB | {"live":1,"copies":1} |  | {"physics":1.1,"people":3.5,"camera":0.6,"submit other":2.6,"submit main":8.8,"submit shadow":0.7,"other sim":2.7}
+106 s1 15.7ms 200/7 855k up 20/43KB | {"live":1,"copies":1} |  | {"people":2.5,"submit other":2,"submit main":6.7,"other sim":2.4}
+107 s1 29ms 211/7 888k up 21/46KB | {"live":1,"copies":1} |  | {"physics":4.1,"people":2.2,"camera":0.6,"submit other":2.7,"submit main":10.8,"submit shadow":0.6,"other sim":6.6}
+108 s1 22.7ms 213/7 920k up 22/48KB | {"live":1,"copies":1} |  | {"physics":0.9,"people":2,"submit other":2.4,"submit main":9.3,"submit shadow":0.7,"other sim":3.7}
+109 s1 16.5ms 236/7 922k up 23/50KB | {"live":1,"copies":1} |  | {"people":2.7,"submit other":1.7,"submit main":8.3,"other sim":2}
+110 s1 16.8ms 236/7 940k up 23/50KB | {"live":1,"copies":1} |  | {"physics":0.6,"people":2.7,"submit other":1.7,"submit main":8.3,"submit shadow":0.6,"other sim":1.8}
+111 s1 28ms 241/7 961k up 25/55KB | {"live":1,"copies":1} |  | {"physics":1.6,"people":2.1,"submit other":3.7,"submit main":14.6,"submit shadow":1.3,"other sim":3.1}
+112 s1 28.5ms 215/7 961k up 24/52KB | {"live":1,"copies":1} |  | {"hero":0.6,"physics":0.9,"people":1.9,"camera":1.6,"submit other":2.9,"submit main":13.1,"submit shadow":1.9,"other sim":5.2}
+113 s1 18.4ms 187/7 917k up 21/46KB | {"live":1,"copies":1} |  | {"people":2.6,"submit other":1.7,"submit main":8.6,"submit shadow":0.6,"other sim":3.2}
+114 s1 18.1ms 173/7 929k up 21/46KB | {"live":1,"copies":1} |  | {"people":4.5,"submit other":1.8,"submit main":7.6,"submit shadow":0.7,"other sim":1.9}
+115 s1 19.4ms 163/7 864k up 20/43KB | {"live":1,"copies":1} |  | {"physics":1.4,"people":2.4,"submit other":2,"submit main":10.2,"submit shadow":0.7,"other sim":1.7}
+116 s1 13.4ms 165/7 856k up 20/43KB | {"live":1,"copies":1} |  | {"people":0.9,"submit other":1.7,"submit main":6.4,"other sim":2.3}
+117 s1 16.8ms 170/7 852k up 21/46KB | {"live":1,"copies":1} |  | {"physics":0.7,"people":1.4,"submit other":1.8,"submit main":7.5,"other sim":3.3}
+118 s1 16.6ms 163/7 795k up 21/46KB | {"live":1,"copies":1} |  | {"people":1,"submit other":1.7,"submit main":5.7,"submit shadow":0.9,"other sim":5.5}
+119 s1 39.8ms 168/7 795k up 20/43KB | {"live":1,"copies":1} |  | {"physics":23.3,"people":1.1,"submit other":1.8,"submit main":6.7,"submit shadow":0.6,"other sim":4.8}
+120 s1 21.2ms 173/9 780k up 20/43KB | {"live":1,"copies":1} |  | {"hero":0.6,"physics":1,"people":1.4,"camera":0.7,"submit other":2.7,"submit main":8.7,"submit shadow":0.6,"other sim":5}
+121 s1 13.7ms 172/9 761k up 20/43KB | {"live":1,"copies":1} |  | {"people":0.7,"submit other":1.8,"submit main":3.6,"other sim":3.8}
+122 s1 14ms 167/9 730k up 20/43KB | {"live":1,"copies":1} |  | {"people":0.6,"submit other":1.9,"submit main":6.4,"other sim":3.3}
+123 s1 16.2ms 160/9 716k up 19/41KB | {"live":1,"copies":1} |  | {"physics":1.3,"people":1.2,"submit other":4.4,"submit main":4.8,"other sim":1.9}
+124 s1 20.2ms 144/9 704k up 18/39KB | {"live":1,"copies":1} |  | {"people":1.5,"enemies":0.6,"submit other":1.7,"submit main":10,"submit shadow":0.7,"other sim":4}
+125 s1 11.3ms 140/9 683k up 17/37KB | {"live":1,"copies":1} |  | {"physics":0.5,"people":1.2,"interact":0.7,"submit other":1.7,"submit main":2.8,"submit shadow":0.6,"other sim":3}
+-- CPU by section per sweep (p50 / p95 / max ms) --
+sweep 0: submit other 2/4.8/9 · submit main 6.4/13.5/20.8 · submit shadow 0.7/2.1/5 · other sim 5.2/11.3/22.1 · people 0.8/2.9/3.5 · interact 0/0.8/2.2 · hero 0/0.8/8.8 · camera 0/1.8/2.5 · physics 0/2.3/75.4 · submit post 0/0/2.4 · enemies 0/0/1.3
+sweep 1: submit other 1.9/3.7/4.9 · submit main 6.1/10.8/24.9 · submit shadow 0.6/1.8/4.1 · other sim 3.1/5.5/6.6 · people 1.4/4.5/6.2 · interact 0/0/0.7 · hero 0/0.7/1 · camera 0/1.4/3.5 · physics 0.6/1.9/23.3 · submit post 0/0/1.4 · enemies 0/0.9/4.3

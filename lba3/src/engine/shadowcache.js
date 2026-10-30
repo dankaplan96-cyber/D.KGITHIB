@@ -64,11 +64,16 @@ export class ShadowCache {
   // (PERF-SUBMIT: a dropped cache's render target is kept for the next build — or freed — instead of left behind: each
   //  drop used to leave its (map + 2 × 64)² colour and depth target on the GPU, never disposed, and the next full build
   //  made a new one: a texture more and ~20–40 MB of GPU memory at each scene change, uploaded in that frame)
+  // ROTATE-STALL: and kept, not freed, when a spare is already there (a second spare, `spare2`): the cache never needs more
+  // than two targets (the cache and the next one), and at every scene change the dropped cache's target was freed while
+  // the full build took the spare and made a new spare — a (map + 128)² colour and depth target freed and made again
+  // at each door (the arrival route: "2 × 1152² render target" textures on the new area's first frame)
   drop() {
-    for (const c of [this.cache, this.next]) { const t = c?.target; if (!t || t === this.spare) continue; if (!this.spare) this.spare = t; else t.dispose(); }
+    for (const c of [this.cache, this.next]) { const t = c?.target; if (!t || t === this.spare || t === this.spare2) continue; this.keep(t); }
     this.cache = null; this.next = null;
   }
-  dispose() { for (const c of [this.cache, this.next]) c?.target.dispose(); this.spare?.dispose(); this.cache = this.next = this.spare = null; }
+  keep(t) { if (!this.spare) this.spare = t; else if (!this.spare2 && this.pool2 !== false) this.spare2 = t; else t.dispose(); }   // (pool2 false: one spare, as before)
+  dispose() { for (const c of [this.cache, this.next]) c?.target.dispose(); this.spare?.dispose(); this.spare2?.dispose(); this.cache = this.next = this.spare = this.spare2 = null; }
 
   // the static casters on show now: the area's shadow batches and the extra (tree) batches under its root
   statics(A) {
@@ -112,7 +117,9 @@ export class ShadowCache {
     for (let i = 0; same && i < S.length; i++) if (ids[i] !== S[i].id) same = false;
     if (!same) { ids.length = S.length; for (let i = 0; i < S.length; i++) ids[i] = S[i].id; }
     const key = [A.root.uuid, d.x.toFixed(5), d.y.toFixed(5), d.z.toFixed(5), size, cam.left, cam.right, cam.top, cam.bottom, cam.near, cam.far, sm.type, sh.map.texture.uuid].join('|');
-    if (!same || key !== this.key) { this.key = key; this.drop(); }
+    // (ROTATE-STALL: a drop of a built cache counted with its cause — the static casters' list, or the key: area, sun,
+    //  box, map — for the benchmark's hitch notes)
+    if (!same || key !== this.key) { if (this.cache || this.next) { this.stats.drops = (this.stats.drops || 0) + 1; this.dropWhy = !same ? 'casters changed' : key.split('|')[0] !== this.key.split('|')[0] ? 'area' : 'sun / box / map'; } this.key = key; this.drop(); }
     // the live box's place on the texel lattice: u, v across the light, w along it
     const right = this._r.set(0, 1, 0).cross(d).normalize(), up = this._u.copy(d).cross(right).normalize();
     const T = sun.target.position, u = Math.round(T.dot(right) / texel), v = Math.round(T.dot(up) / texel), w = T.dot(d);
@@ -138,11 +145,16 @@ export class ShadowCache {
       this.spare = null; c.K = 1;   // (PERF-SUBMIT: all in one pass — it was drawn in SLICES passes within this frame)
       while (!c.done) this.draw(c, lights, scene, S, c.slice, d, right, up);
       this.cache = c; this.stats.full++;
-      for (const t of old) if (t !== c.target) { if (!this.spare) this.spare = t; else t.dispose(); }
+      for (const t of old) if (t !== c.target) this.keep(t);
+      if (!this.spare && this.spare2) { this.spare = this.spare2; this.spare2 = null; }
       // PERF-GPU: the target the next cache will be drawn into is made now, with this one (a full build: normally a
       // scene change, behind its black), not later on a frame in view when the window reaches half way (laptop 0.40.x:
       // the first street route's ~1.35 s hitch was a frame with "shadow cache rebuilt, +1 textures on the GPU")
-      if (!this.spare) this.spare = this.make(0, 0, 0, size, texel).target;
+      // ROTATE-STALL: and its GPU storage made now too. A render target's textures are allocated when it is first bound,
+      // so the spare made here got its (map + 2 × 64)² colour and depth on the first slice of the next cache: a frame in
+      // view, as soon as Twinsen had walked half the margin (the street's circle walk: "+2 textures, 1 render target" on
+      // that frame, the first time only)
+      if (!this.spare) { this.spare = this.make(0, 0, 0, size, texel).target; if (this.initSpare !== false) this.initTarget(this.spare); }   // (initSpare false: as before, the A/B switch)
     }
     this.live(lights, scene, camera, S, d, u, v);
   }
@@ -158,6 +170,8 @@ export class ShadowCache {
     }
     return { u, v, w, size, texel, n, target, slice: 0, done: false, K: SLICES };
   }
+  // (ROTATE-STALL) a target's GPU storage made now (three's initRenderTarget: its framebuffer and textures, nothing drawn)
+  initTarget(t) { try { this.R.initRenderTarget?.(t); } catch (e) { console.warn('shadow cache: target init', e); } }
   // (PERF-GPU) the live map gets the cache's depth by a draw (copyDepth) when the map is the renderer's hardware-compared
   // one (renderer.js HwShadowTarget: its depth is a texture, its colour unused); `depthCopy = 'blit'`: the blit, as before
   copyByDraw() { const m = this.sun.shadow.map; return this.depthCopy !== 'blit' && !!this._copy && (!m || !!m.isHwShadow); }

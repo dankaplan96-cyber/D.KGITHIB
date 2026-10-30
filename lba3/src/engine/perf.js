@@ -73,6 +73,7 @@ export class Perf {
     const info = this.r?.info.render;
     f.calls = info?.calls ?? 0; f.tris = info?.triangles ?? 0; f.shadowCalls = this.shadow; f.draws = f.calls + this.sub; f.up = this.up; f.upKB = this.upB / 1024;
     f.end = this.t0;   // (the frame's interval ended as this frame began: loafIn(f.end, f.ms))
+    if (this.tag != null) f.tag = this.tag;   // (ROTATE-STALL: a benchmark route's label for the frame — the sweep's view heading)
     if (this.sec) f.sec = this.sec.take(f);   // (STABILIZATION: the frame's CPU by section, while the benchmark measures)
     f.raf = REG.raf.perFrame; REG.raf.perFrame = 0;   // (rAF callbacks requested since the last frame: 1 is the game's loop)
     this.onRecord?.(f);   // (STABILIZATION: the benchmark's visits keep every frame of a phase, past the ring's 1200)
@@ -144,7 +145,7 @@ export class GpuTimer {
   begin(label = 'scene') {
     if (this.f || this.frames.length > 6) return;
     if (this.stride > 1 && ((this.k = (this.k || 0) + 1) % this.stride)) return;
-    this.f = { q: [] }; this.mark(label);
+    this.f = { q: [], tag: this.tag ?? null }; this.mark(label);   // (ROTATE-STALL: tag, the frame's label, set by a benchmark route)
   }
   mark(label) {
     const gl = this.gl; if (!this.f) return;
@@ -170,10 +171,11 @@ export class GpuTimer {
       if (disjoint) { this.disjoint = (this.disjoint || 0) + 1; continue; }   // (PERF-HIGH: counted: a GPU power-state change)
       this.onFrame?.(tot);
       this.ms.push(tot); if (this.ms.length > 1200) this.ms.shift();
+      if (F.tag != null) { const T = (this.tags ??= new Map()); let a = T.get(F.tag); if (!a) T.set(F.tag, (a = [])); a.push(tot); if (a.length > 600) a.shift(); }
       for (const [label, ms] of Object.entries(by)) { let a = this.pass.get(label); if (!a) this.pass.set(label, (a = [])); a.push(ms); if (a.length > 1200) a.shift(); }
     }
   }
-  reset() { this.ms.length = 0; this.pass.clear(); this.disjoint = 0; }
+  reset() { this.ms.length = 0; this.pass.clear(); this.disjoint = 0; this.tags?.clear(); }
   stats() {
     if (!this.ms.length) return null;
     const pc = (a, k) => { const v = a.slice().sort((x, y) => x - y); return +v[Math.min(v.length - 1, Math.floor(k * v.length))].toFixed(2); };
