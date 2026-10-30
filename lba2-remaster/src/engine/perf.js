@@ -314,13 +314,18 @@ export function resources(G) {
 const STARTUP_MAX = 600e3, STARTUP_PLAY = 30e3;
 export const STARTUP = { iv: [], marks: [], loaf: [], lt: [], on: true, playAt: null };
 const LOAF_N = 200;
-export const LOAF = { ok: false, list: [] };
+export const LOAF = { ok: false, list: [], lt: [] };
 // what the main thread did in the interval [end − ms, end] (performance.now() times): the long animation frames that
 // overlap it, longest script first — or, where the browser reports them and none overlaps, that it was free
 export function loafIn(end, ms) {
   if (!LOAF.ok || end == null) return '';
   const lf = LOAF.list.filter((e) => e.t < end && e.t + e.d > end - ms);
-  if (!lf.length) return 'main thread free (GPU process, driver or compositor)';
+  if (!lf.length) {
+    // (a long task with no frame of its own — nothing drawn meanwhile — is reported as a long task only)
+    const lt = LOAF.lt.filter((e) => e.t < end && e.t + e.d > end - ms);
+    if (lt.length) return lt.map((e) => `main thread ${Math.round(e.d)} ms (a long task; no script named)`).join(' | ');
+    return 'no long animation frame reported over it: the main thread likely free (GPU process, driver or compositor)';
+  }
   return lf.map((e) => `main thread ${Math.round(e.d)} ms${e.style ? `, style/layout ${e.style}` : ''}${e.scripts[0] ? ': ' + e.scripts[0] : ''}`).join(' | ');
 }
 export function startupMark(label) { if (STARTUP.on) STARTUP.marks.push([performance.now(), label]); if (label === 'play' && STARTUP.playAt == null) STARTUP.playAt = performance.now(); }
@@ -342,7 +347,7 @@ export function startupMark(label) { if (STARTUP.on) STARTUP.marks.push([perform
   //  thread busy through a long frame — with what — or free, the time spent in the GPU process / driver / compositor)
   try { LOAF.ok = PerformanceObserver.supportedEntryTypes?.includes('long-animation-frame') ?? false; } catch { /* */ }
   try { new PerformanceObserver((L) => { for (const e of L.getEntries()) { const k = keep(e); if (STARTUP.on) STARTUP.loaf.push(k); LOAF.list.push(k); if (LOAF.list.length > LOAF_N) LOAF.list.shift(); } }).observe({ type: 'long-animation-frame', buffered: true }); } catch { /* not in this browser */ }
-  try { new PerformanceObserver((L) => { if (STARTUP.on) for (const e of L.getEntries()) STARTUP.lt.push({ t: e.startTime, d: e.duration }); }).observe({ type: 'longtask', buffered: true }); } catch { /* not in this browser */ }
+  try { new PerformanceObserver((L) => { for (const e of L.getEntries()) { const k = { t: e.startTime, d: e.duration }; if (STARTUP.on) STARTUP.lt.push(k); LOAF.lt.push(k); if (LOAF.lt.length > LOAF_N) LOAF.lt.shift(); } }).observe({ type: 'longtask', buffered: true }); } catch { /* not in this browser */ }
 })();
 // (G: the Game, for its loading steps and the frames its loop recorded with their jobs)
 export function startupReport(G) {
