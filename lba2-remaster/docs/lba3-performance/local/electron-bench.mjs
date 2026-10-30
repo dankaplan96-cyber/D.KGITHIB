@@ -10,8 +10,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { pacing } from './pacing.mjs';
 
-const [mode = 'smoke', out, power = '?'] = process.argv.slice(2);
+// extra switches for the app after '--' (e.g. -- --windowed --disable-direct-composition); '--maximize' is ours:
+// the window is maximized after start (with --windowed: a maximized window instead of fullscreen)
+const argv = process.argv.slice(2), dd = argv.indexOf('--');
+const [mode = 'smoke', out, power = '?'] = dd < 0 ? argv : argv.slice(0, dd);
+const extra = dd < 0 ? [] : argv.slice(dd + 1);
+const maximize = extra.includes('--maximize'), appArgs = extra.filter((a) => a !== '--maximize');
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const EXE = process.env.LBA3_EXE || path.join(process.env.LOCALAPPDATA, 'Programs', 'LBA3 The Awakening', 'LBA3 The Awakening.exe');
 const PROFILE = path.join(HERE, 'electron-profile');
@@ -27,7 +33,7 @@ const winPower = () => {
 
 const t0 = new Date();
 const power0 = winPower();
-const app = await electron.launch({ executablePath: EXE, args: [`--user-data-dir=${PROFILE}`] });
+const app = await electron.launch({ executablePath: EXE, args: [`--user-data-dir=${PROFILE}`, ...appArgs] });
 const info = await app.evaluate(({ app }) => ({ data: app.getPath('userData'), version: app.getVersion() }));
 if (path.resolve(info.data).toLowerCase() !== path.resolve(PROFILE).toLowerCase()) {
   await app.close();
@@ -43,8 +49,23 @@ await page.waitForLoadState('load');
 await page.goto('app://game/index.html?nocine', { waitUntil: 'load', timeout: 180000 });
 await ready();
 await page.click('[data-act="new"]', { timeout: 60000 });
-await page.waitForFunction(() => game.state === 'play' && !game.cine && !game.preparing, null, { timeout: 300000 });
+// the bench profile keeps a save from its earlier runs: New Game then asks first ("confirmnew")
+await page.waitForTimeout(1000);
+if (await page.evaluate(() => game.screen === 'confirmnew')) await page.click('[data-act="newyes"]', { timeout: 60000 });
+await page.waitForFunction(() => game.state === 'play' && !game.cine && !game.preparing, null, { timeout: +process.env.PLAY_TIMEOUT || 300000 }).catch(async (e) => {
+  // say where it stopped: the game's state and screen, and the buttons a player would see
+  const st = await page.evaluate(() => ({ state: game.state, screen: game.screen, cine: !!game.cine, preparing: game.preparing, focus: document.hasFocus(), vis: document.visibilityState,
+    buttons: [...document.querySelectorAll('button, [data-act]')].filter((b) => b.offsetParent).map((b) => (b.dataset.act || '') + ':' + b.textContent.trim().slice(0, 30)).slice(0, 15) })).catch((x) => String(x));
+  await app.close(); throw new Error('New Game did not reach play: ' + JSON.stringify(st));
+});
+// the app remembers leaving fullscreen in the profile (window.json): set the wanted state every run
+if (maximize) await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; w.setFullScreen(false); w.maximize(); });
+else if (!appArgs.includes('--windowed')) await app.evaluate(({ BrowserWindow }) => { const w = BrowserWindow.getAllWindows()[0]; if (!w.isFullScreen()) w.setFullScreen(true); });
 await page.waitForTimeout(5000);
+const win = await app.evaluate(({ BrowserWindow, screen }) => {
+  const w = BrowserWindow.getAllWindows()[0], d = screen.getDisplayMatching(w.getBounds());
+  return { hz: d.displayFrequency, fullscreen: w.isFullScreen(), maximized: w.isMaximized(), bounds: w.getBounds(), focused: w.isFocused() };
+});
 
 const env = await page.evaluate(() => {
   const gl = document.createElement('canvas').getContext('webgl2');
@@ -58,7 +79,8 @@ const env = await page.evaluate(() => {
 
 let text;
 const tb = Date.now();
-if (mode === 'auto') text = await page.evaluate(() => game.bench.runAuto());
+if (mode === 'pacing') text = await pacing(page);
+else if (mode === 'auto') text = await page.evaluate(() => game.bench.runAuto());
 else if (mode === 'full') text = await page.evaluate(() => game.bench.run());
 else text = 'smoke: ' + await page.evaluate(() => `bench.run ${typeof game.bench?.run}, bench.runAuto ${typeof game.bench?.runAuto}, state ${game.state}`);
 const mins = ((Date.now() - tb) / 60000).toFixed(1);
@@ -66,6 +88,7 @@ const power1 = winPower();
 
 const head = [
   `ran in: desktop app ${info.version} (installed, ${EXE}; Playwright _electron, bench profile ${firstUse ? 'NEW this run (cold shader cache)' : 'kept from earlier runs'}, ${env.view}, ?nocine, New Game)`,
+  `app switches: ${appArgs.join(' ') || '(none)'}${maximize ? ' + maximized after start' : ''} · window: ${win.fullscreen ? 'fullscreen' : win.maximized ? 'maximized' : 'windowed'} ${win.bounds.width}×${win.bounds.height}, focused ${win.focused} · display refresh (Electron screen): ${win.hz} Hz`,
   `GPU: ${env.gpu}`,
   `power: Windows says ${power0} at start, ${power1} at end`,
   `settings at start: quality ${env.quality}, Quality Auto ${env.auto ? 'on' : 'off'} (bench profile)`,

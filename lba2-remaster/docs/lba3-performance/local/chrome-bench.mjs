@@ -1,12 +1,13 @@
 // LBA3 in-game benchmark, run automatically in the user's installed Chrome (real GPU) on the laptop.
-// Run it from a folder outside the repo where Playwright is installed (npm init -y && npm i playwright):
-//   node chrome-bench.mjs <auto|full|smoke> <out.txt> [battery|plugged]
+// Run it from a folder outside the repo where Playwright is installed (npm init -y && npm i playwright), with pacing.mjs:
+//   node chrome-bench.mjs <auto|full|pacing|smoke> <out.txt> [battery|plugged]    (GAME_URL=… for another server)
 // Needs the game served: cd lba2-remaster && python -m http.server 8161 --bind 127.0.0.1
 // A fresh Chrome profile each run (no saved settings or saves), fullscreen like the desktop app, '?nocine' (the
 // opening cinematic skipped; the benchmark refuses to run during one). New Game is clicked on the title menu.
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { execSync } from 'node:child_process';
+import { pacing } from './pacing.mjs';
 
 const [mode = 'smoke', out, power = '?'] = process.argv.slice(2);
 const URL0 = process.env.GAME_URL || 'http://localhost:8161/';
@@ -56,14 +57,15 @@ const env = await page.evaluate(async () => {
 
 let text;
 const tb = Date.now();
-if (mode === 'auto') text = await page.evaluate(() => game.bench.runAuto());
+if (mode === 'pacing') text = await pacing(page);
+else if (mode === 'auto') text = await page.evaluate(() => game.bench.runAuto());
 else if (mode === 'full') text = await page.evaluate(() => game.bench.run());
 else text = 'smoke: ' + await page.evaluate(() => `bench.run ${typeof game.bench?.run}, bench.runAuto ${typeof game.bench?.runAuto}, state ${game.state}`);
 const mins = ((Date.now() - tb) / 60000).toFixed(1);
 const power1 = winPower();
 
 const head = [
-  `ran in: Chrome (${env.ua}, Playwright, fresh profile, fullscreen ${env.view}, ?nocine, New Game), NOT the desktop app`,
+  `ran in: Chrome (${env.ua}, Playwright, fresh profile, fullscreen ${env.view}, ?nocine, New Game), NOT the desktop app · game served from ${URL0}`,
   `GPU: ${env.gpu}`,
   `power: Windows says ${power0} at start, ${power1} at end; Chrome battery API: ${env.bat ?? 'n/a'}`,
   `settings at start: quality ${env.quality}, Quality Auto ${env.auto ? 'on' : 'off'} (fresh profile defaults)`,
