@@ -208,9 +208,11 @@ export class Bench {
       { id: 'PERF-SUBMIT off (as before)', apply() { MW.walk = false; if (G.shadowCull) G.shadowCull.prefilter = false; }, undo() { MW.walk = true; if (G.shadowCull) G.shadowCull.prefilter = true; } },
     ];
     // (STABILIZATION: the GPU investigator's groups — benchgpu.js — in the same Medium breakdown)
-    try { for (const v of gpuVariants(G, R) || []) variants.push({ ...v, id: 'GPU group: ' + v.id }); } catch (e) { console.warn('benchgpu variants', e); }
+    //  on the street only: the street is where the GPU time goes, and 18 lines on the house too would lengthen the run)
+    const gpuV = [];
+    try { for (const v of gpuVariants(G, R) || []) gpuV.push({ ...v, id: 'GPU group: ' + v.id }); } catch (e) { console.warn('benchgpu variants', e); }
     const brk = this.routes().filter((r) => r.id === 'street' || r.id === 'interior');
-    if (opts.breakdown !== false && opts.breakdownMedium !== false) for (const r of brk) for (const v of variants) plan.push({ q: 'medium', r, v, short: true });
+    if (opts.breakdown !== false && opts.breakdownMedium !== false) for (const r of brk) for (const v of r.id === 'street' ? [...variants, ...gpuV] : variants) plan.push({ q: 'medium', r, v, short: true });
     // PERF-HIGH: the street at HIGH, one of its costs changed at a time (Medium's breakdown is capped by the display at
     // 60 and can't show what High pays for). Compare the milliseconds (GPU, submit), not the fps. Each line is a
     // candidate, not a setting: a 2048 map is coarser (and goes into the static shadow cache, shadowcache.js), MSAA 2×

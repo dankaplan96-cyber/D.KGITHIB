@@ -69,6 +69,8 @@ export function flushArrays() {
   }
 }
 export const arrays = () => [...ARR.values()].map((A) => ({ key: A.key, layers: A.n }));
+// (PERF-GPU: the arrays' textures themselves, for the benchmark's filtering variant: benchgpu.js)
+export const arrayTextures = () => [...ARR.values()].map((A) => A.tex).filter(Boolean);
 
 // the twin: vertex colours (× the layer), roughness / metalness per vertex; one per array and side / shading / fog / depth state
 const TWINS = new Map();
