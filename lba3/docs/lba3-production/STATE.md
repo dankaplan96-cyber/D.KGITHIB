@@ -582,6 +582,22 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Evidence: docs/lba3-performance/STABILIZATION.md "HEADING-LOAD", docs/lba3-performance/HEADING-LOAD/,
   QA.md "HEADING-LOAD".
 
+## Done after (HEADING-LOAD-2; status REVIEW; the laptop's GPU ms NOT VERIFIED)
+- What it does: Zeelich, Desert Island, the Hamalayi and the Zeelich islands draw only what the view can show.
+  - The islands' trees, bushes, plants and rocks, Zeelich's puff trees, rocks and crates, and the desert's shrubs are
+    culled per instance in each pass (`kit.js cullInstances`). Zeelich's grass and flowers and the Hamalayi's
+    backdrop peaks are culled per square (`viewinst.js`).
+  - A region's terrain is drawn in 25-cell squares culled to the view (`terrain.js squares`). Citadel is unchanged.
+- Mean main-pass triangles over a Follow-camera turn: Otringal 1201.5k → 480.1k, Knartas 466.1k → 283.0k,
+  the desert 213.6k → 142.6k, Zeelich 310.5k → 247.9k, the Hamalayi 234.5k → 200.6k.
+- Pixel A/B: 0 px on the same frame and over a turn in all five areas. Base vs build: inside the base's own
+  run-to-run noise.
+- Tests: 12 of the 13 listed PASS. zeelich-life fails 2 dialogue checks (Pelleck), on the base too.
+- Trade-offs priced in benchgpu and not applied: the islands' trees coarse beyond 34 m; the Hamalayi's pines to 22 m.
+  They need the user's decision.
+- Evidence: docs/lba3-performance/STABILIZATION.md "HEADING-LOAD-2", docs/lba3-performance/HEADING-LOAD-2/,
+  QA.md "HEADING-LOAD-2".
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

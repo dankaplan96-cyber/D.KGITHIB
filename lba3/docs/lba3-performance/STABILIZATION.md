@@ -131,3 +131,80 @@ No laptop GPU time yet. Data and probes: `HEADING-LOAD/results/summary.json`, `H
 - **Laptop:**
   - `electron-bench.mjs full … battery follow`: the new GPU group lines.
   - `electron-bench.mjs sweep … battery follow`: per heading, this build vs 0.43.0.
+
+### GPU/rendering investigator, HEADING-LOAD-2 (31.10): the other outdoor areas
+HEADING-LOAD's method in Zeelich (the arrival area), Desert Island, the Hamalayi and the two heaviest Zeelich islands
+(Otringal and Knartas, ranked by `q_rank.js`: mean 1222k and 471k triangles a frame; the Platform 347k, Mosquibee 237k,
+the rest 24–139k). Exact counts and pixel A/Bs from SwiftShader: each area entered at its arrival point, Follow camera
+at Far, Auto held at Medium, battery profile, 1366×768, Twinsen turned to 8 headings. No laptop GPU time.
+Data and probes: `HEADING-LOAD-2/results/` (`per-heading-before-after.txt`, `tradeoffs.txt`), `HEADING-LOAD-2/probes/`.
+- **What these areas drew that the view could not show (before).**
+  - The Zeelich islands' sculpted trees, bushes, plants and rocks were island-wide InstancedMeshes (zislands.js), so
+    three culls each only as a whole. Otringal drew 884k tree triangles at every heading, 55–300k of them in view;
+    Knartas 264–270k for 26–196k.
+  - Zeelich's puff trees, rocks, crates, grass and flowers: the same. 87–117k drawn, 11–117k in view.
+  - The desert's and the Hamalayi's terrain is drawn in quarters (PERF-CALLS: few calls). The desert drew 124k
+    triangles a frame on average for 43k in view; the Hamalayi 53k for 13k.
+  - Already culled before this round: the desert's rocks and the Hamalayi's pines (kit.js LodBatch). Neither area
+    has `keep` on static parts (the desert's palm crowns sway: rightly `keep`).
+- **Image-preserving changes (kept):**
+  - `kit.js cullInstances`: a region's static casting instances in one BatchedMesh per kind (LodBatch with no coarse
+    version). three tests each instance against the frustum of each pass (the view's camera, the sun's). The shadow
+    cache keeps them as static casters, as it does Citadel's trees. Used by the islands' trees, bushes, plants and
+    rocks, Zeelich's puff trees, rocks and crate bodies and brass, and the desert's shrubs.
+  - Zeelich's grass and flowers and the Hamalayi's backdrop peaks (no shadow) are culled per square by `viewinst.js`.
+    The see-through crate emblems stay as they were (a refill would move them in the blended order).
+  - `terrain.js squares`: a region's terrain tiles cut into 25-cell squares in one BatchedMesh. Each square is culled
+    on its own; one multi-draw replaces 2–4 calls. Same vertices, triangles, material and renderOrder. Citadel keeps
+    its 70-cell tiles.
+  - `benchgpu.js`: a region's own vegetation is named by its builder (`userData.gpuGroup`), so it counts as trees or
+    grass, not scenery. New variant: 'region instances not culled per instance (as before)'.
+- **Result: mean main-pass triangles over the 8 headings (calls).**
+
+  | Area | Triangles before → after | Calls before → after |
+  |---|---|---|
+  | Otringal | 1201.5k → 480.1k (−60 %) | 43.9 → 39.8 |
+  | Knartas | 466.1k → 283.0k (−39 %) | 42.5 → 41.1 |
+  | Desert | 213.6k → 142.6k (−33 %) | 34.6 → 31.6 |
+  | Zeelich | 310.5k → 247.9k (−20 %) | 79.5 → 76.6 |
+  | Hamalayi | 234.5k → 200.6k (−14 %) | 38.0 → 37.0 |
+
+  Heaviest heading per area: Otringal 225° 47/1266k → 42/538k; Knartas 45° 46/547k → 42/469k; desert 0°
+  61/319k → 55/261k; Zeelich 0° 141/409k → 136/409k (all in view) and 135° 53/259k → 49/169k; Hamalayi 45°
+  50/339k → 49/320k. Per heading and group: `results/per-heading-before-after.txt`. The shadow pass did not change
+  (1–14 calls, ≤ 8k triangles: the static casters are in the cache).
+  The other islands take the same builder (4 headings, `results/rank-islands-before-after.txt`): the Platform
+  347k → 219k, Mosquibee 236k → 189k, Celebration 106k → 69k, the rest −0 to −17 %.
+- **Pixel A/B.**
+  - Same frame, this build's batches against the InstancedMeshes rebuilt from them (`q_repr.js`): 0 px at every
+    heading in Zeelich, Otringal, Knartas and the desert.
+  - Same frame, the terrain's squares against its old tiles (`q_repr.js W_TERRAIN=1`): 0 px at every heading in the
+    desert, the Hamalayi, Otringal and Knartas.
+  - A 32-frame turn, each game frame against the same frame with the culls undone (`q_aturn.js`): 0 px in all five
+    areas.
+  - Base against this build, people and particles left out: the desert and the Hamalayi 0 px. Zeelich 0–250 px and
+    Knartas 0–35 px: inside the base's own run-to-run noise (two base runs differ by 0–2122 and 0–44 px). Otringal
+    0–27 px at one level (one pixel at 4). The base moves by 54–445 px there when its static shadow cache is redrawn;
+    this build moves 0 px (`results/cache-timing-otringal.txt`). The residue is acne on shallow ground under the base's
+    cache state (INFERRED from those runs).
+- **Trade-offs priced, not applied** (`results/tradeoffs.txt`; screenshots in the session scratchpad, chapter 3–12
+  areas, for the record only):
+  - the islands' trees coarse beyond 34 m, as Citadel's: Otringal −59k triangles a frame on average (0 to −111k by
+    heading), Knartas −19k. With the shadows as now, 0–6.7k px differ (≤ 0.64 %); with Citadel's coarse shadows too,
+    7.7–22k px (0.7–2.1 %);
+  - the Hamalayi's pines detailed to 22 m (an existing switch): −30k on average (0 to −56k), 0–18k px (≤ 1.7 %; the
+    pines on the ridge against the sky).
+- **Tests** (one at a time, this branch): drawcalls, perfbudget, display, chapter1, transitions, camfollow, worldfit,
+  travel, zislands, desert-life, solidnpc, opening PASS. zeelich-life fails 2 checks (Pelleck's lines in chapters 4–9).
+  The base fails the same 2 (`results/tests-summary.txt`), so they are not this round's.
+- **Files.** kit.js, terrain.js, zislands.js, zeelich.js, desert.js, hamalayi.js and benchgpu.js. None of bench.js,
+  perf.js, main.js, shadowcache.js or drawcull.js was edited.
+- **What remains.** What these areas still draw is in view:
+  - Zeelich's and the islands' towns (scenery 142–345k by heading, drawn in 48 m draw-batch cells);
+  - the Hamalayi's pines (32–169k);
+  - the desert's ground in view (11–120k).
+  Going further means simpler distant buildings or terrain, which is a visible trade-off. The laptop reference
+  (0.42.0, battery, Medium: arrival p50 GPU 16.5–17.4 ms; the Hamalayi 19.4 or 8.3 ms by view) predates this round.
+- **Laptop:**
+  - `electron-bench.mjs full … battery follow`: the arrival route and its GPU group lines.
+  - the hamalayi route, against 0.43.2.

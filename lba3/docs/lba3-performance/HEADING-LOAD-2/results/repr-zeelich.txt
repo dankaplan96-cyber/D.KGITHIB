@@ -1,0 +1,10 @@
+zeelich: 7 batches (trees 4, trees 4, trees 5, trees 2, trees 4, scenery 10, scenery 10)
+heading 0°: pixels differ 0 · main 136 calls 409k tris (batches, culled) vs 136 calls 409k (InstancedMeshes, as before)
+heading 45°: pixels differ 0 · main 102 calls 344k tris (batches, culled) vs 102 calls 366k (InstancedMeshes, as before)
+heading 90°: pixels differ 0 · main 58 calls 191k tris (batches, culled) vs 58 calls 245k (InstancedMeshes, as before)
+heading 135°: pixels differ 0 · main 49 calls 169k tris (batches, culled) vs 49 calls 236k (InstancedMeshes, as before)
+heading 180°: pixels differ 0 · main 48 calls 170k tris (batches, culled) vs 48 calls 236k (InstancedMeshes, as before)
+heading 225°: pixels differ 0 · main 53 calls 180k tris (batches, culled) vs 53 calls 253k (InstancedMeshes, as before)
+heading 270°: pixels differ 0 · main 60 calls 207k tris (batches, culled) vs 60 calls 260k (InstancedMeshes, as before)
+heading 315°: pixels differ 0 · main 107 calls 313k tris (batches, culled) vs 107 calls 352k (InstancedMeshes, as before)
+worst 0 pixels differ

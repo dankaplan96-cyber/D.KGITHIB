@@ -1588,6 +1588,32 @@ Not verified: the laptop's GPU ms for each change. Run `electron-bench.mjs full 
 lines and `sweep … battery follow` to compare per heading with 0.43.0. Also not verified: the trade-offs' look on the
 user's screen.
 
+### HEADING-LOAD-2: the other outdoor areas (docs/lba3-performance/STABILIZATION.md "HEADING-LOAD-2")
+
+The base is 63b7e84 (0.43.2 plus the GPU groups' names), served from a git archive on port 8932. The candidate is this
+branch on port 8931. SwiftShader, 1366×768, Auto held at Medium, battery profile, Follow camera at Far. Each area is
+entered at its arrival point and Twinsen is turned to 8 headings. Probes: docs/lba3-performance/HEADING-LOAD-2/probes.
+They give exact counts and pixels only, never GPU time.
+
+| Check | How | Result |
+|---|---|---|
+| Which islands are heaviest | q_rank.js, every Zeelich island, 4 headings | Otringal 1222k, Knartas 471k mean triangles; then the Platform 347k, Mosquibee 236k. After: 495k, 289k, 219k, 189k (results/rank-islands-before-after.txt) |
+| Per-heading main pass, mean over 8 headings | q_area.js, base vs candidate | Otringal 1201.5k → 480.1k; Knartas 466.1k → 283.0k; desert 213.6k → 142.6k; Zeelich 310.5k → 247.9k; Hamalayi 234.5k → 200.6k; calls never higher on the mean (results/per-heading-before-after.txt) |
+| Batches are image-preserving | q_repr.js: the same frame with the island-wide InstancedMeshes rebuilt in place of the batches | 0 px at every heading: Zeelich, Otringal, Knartas, desert |
+| Terrain squares are image-preserving | q_repr.js W_TERRAIN=1: the same frame with the old tiles in place of the squares | 0 px at every heading: desert, Hamalayi, Otringal, Knartas |
+| Culls are image-preserving while turning | q_aturn.js, 32 frames of a turn, each vs the same frame unculled | 0 px in every frame, all five areas |
+| Build A/B | q_area.js, base (two runs) vs candidate, people and particles left out | desert and Hamalayi 0 px; Zeelich ≤ 250 px and Knartas ≤ 35 px, inside two base runs' own difference (≤ 2122 / ≤ 44 px); Otringal ≤ 27 px at 1 level, the base's shadow-cache state (results/cache-timing-otringal.txt) |
+| Trade-offs, priced and not applied | q_area.js with benchgpu variants, 8 headings | islands' trees coarse beyond 34 m: Otringal −59k mean, ≤ 6.7k px (≤ 22k px with coarse shadows); Knartas −19k, ≤ 759 px (≤ 5.7k); Hamalayi pines to 22 m: −30k, ≤ 18k px (results/tradeoffs.txt) |
+
+| Test | Verdict |
+|---|---|
+| drawcalls, perfbudget, display, chapter1, transitions, camfollow, worldfit | PASS ×7 |
+| travel, zislands, desert-life, solidnpc, opening | PASS ×5 |
+| zeelich-life | FAIL (2 functional): Pelleck's lines in chapters 4–8 and 9. The base fails the same 2 checks (results/tests-summary.txt), so not this round's |
+
+Not verified: the laptop's GPU ms for any change (run `electron-bench.mjs full … battery follow` for the arrival
+route and the hamalayi route against 0.43.2). Also not verified: the trade-offs' look on the user's screen.
+
 ### Not tested / blocked
 - HOUSE-FIX on a real GPU and by the user's eye: NOT DONE (SwiftShader captures; self-reviewed, no independent review).
 - LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).
