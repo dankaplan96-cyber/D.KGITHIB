@@ -49,7 +49,7 @@ const padA = await ev(() => {
   r.ball = G.hero.hasBall; G.hero.behaviour = 'normal';
   return r;
 });
-check('pad A searches the cupboard in Athletic instead of jumping', padA.state === 'dialog' && padA.dy < 0.05 && padA.ball, padA);
+check('pad A searches the cupboard in Athletic instead of jumping', (padA.state === 'dialog' || padA.state === 'found') && padA.dy < 0.05 && padA.ball, padA);   // (found: the ball's found-object box comes first, I-24)
 // away from anything, A in Athletic still jumps
 const jump = await ev(() => {
   const G = game; G.hero.behaviour = 'athletic'; const h = G.hero, c = G.rooms.house.center; h.pos.set(c.x, 0, c.z); h.onGround = true; G.step(0.3);

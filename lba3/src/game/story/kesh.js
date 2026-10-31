@@ -167,7 +167,7 @@ export class KeshLife extends ChapterBase {
         if (ph === 'dry') return c([['weaver', 'c4_weaver_1'], f.k_sand ? ['weaver', 'k_lumi_drysand'] : null]);
         if (!f.k_screen) {
           return c([dig ? ['weaver', 'c4_weaver_2'] : null, ['weaver', f.k_sand ? 'k_lumi_1s' : 'k_lumi_1'], ['weaver', 'k_lumi_2']], () => {
-            f.k_screen = true; f.k_ask = true; g.audio.play('chest'); g.hud.toast('k_toast_screen'); g.save(false);
+            f.k_screen = true; f.k_ask = true; g.found('kscreen', 'k_toast_screen'); g.save(false);
           });
         }
         return c([['weaver', f.k_fit ? 'k_lumi_fit' : 'k_lumi_wait']]);

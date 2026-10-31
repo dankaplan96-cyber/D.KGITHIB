@@ -92,6 +92,8 @@ Object.assign(STR.en, {
   it_ball: 'Magic Ball', itd_ball: 'Throw it with the ball key (Alt in Classic, F in Modern); hold to aim, release to throw. Each throw costs a magic point: with magic it bounces four times, without it comes straight back. It brings back bonuses it touches and activates mechanisms. Your behaviour changes how it flies.',
   it_holomap: 'Holomap', itd_holomap: 'A 3D map of the island. Stars mark important places.',
   it_kashes: 'Kashes', itd_kashes: "Twinsun's currency. Pippa sells potions, magic flasks and clover leaves.",
+  it_sword: 'Sword', it_pulse: 'Pulse Tool',
+  shop_need: 'You need {n} more kashes.', shop_buy_key: '{k}: buy',
   it_clovers: 'Clover Leaves', itd_clovers: 'When your health runs out, a clover leaf puts you back on your feet.',
   it_lidkey: 'Lid Key', itd_lidkey: 'From the water office. Opens the well in the square.',
   it_stamp: 'Unloading Permit', itd_stamp: 'Signed by Doran, for Xil.',

@@ -137,11 +137,11 @@ export class Dig extends ChapterBase {
     const g = this.game, f = this.f, D = g.regions?.built('desert');   // (LAZY-REGIONS: its things exist only once built)
     switch (it.kind) {
       case 'c4rope':
-        f.c4_rope = true; D.rope.setVisible(false); g.audio.play('chest'); g.hud.toast('c4_toast_rope');
+        f.c4_rope = true; D.rope.setVisible(false); g.found('rope', 'c4_toast_rope');
         this.chain([['hero', 'c4_rope_got']], () => { g.updateObjective(); g.save(false); });
         return true;
       case 'c4desk':
-        f.c4_notebook = true; g.audio.play('chest'); g.hud.toast('c4_toast_notebook');
+        f.c4_notebook = true; g.found('notebook', 'c4_toast_notebook');
         this.story.refreshCast();   // (Ilka goes to wait at the dig)
         this.chain([['hero', 'c4_desk_1'], ['hero', 'c4_dallan_note']], () => { g.updateObjective(); g.save(false); });
         return true;

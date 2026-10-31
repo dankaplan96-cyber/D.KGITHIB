@@ -133,7 +133,7 @@ export class Council extends ChapterBase {
           if (c.label !== 'BORE') { this.chain([['hero', c.label === 'TUNNELS' ? 'c9_cab_tunnels' : 'c9_cab_ferries']]); return; }
           f.c9_plans = true; this.watcher?.stop();
           g.audio.play('shard');
-          this.chain([['hero', 'c9_cab_bore']], () => { g.hud.toast('c9_toast_plans'); g.updateObjective(); g.save(false); });
+          this.chain([['hero', 'c9_cab_bore']], () => { g.updateObjective(); g.save(false); g.found('plans', 'c9_toast_plans'); });
         }, 0.4);
         return true;
       }
@@ -176,7 +176,7 @@ export class Council extends ChapterBase {
     const ok = () => { g.updateObjective(); g.save(false); };
     switch (id) {
       case 'baldino':
-        if (!f.c9_form) return c([['baldino', 'c9_bal_1'], ['hero', 'c9_tw_b1'], ['baldino', 'c9_bal_2'], ['baldino', 'c9_bal_3']], () => { f.c9_form = true; g.hud.toast('c9_toast_form'); ok(); });
+        if (!f.c9_form) return c([['baldino', 'c9_bal_1'], ['hero', 'c9_tw_b1'], ['baldino', 'c9_bal_2'], ['baldino', 'c9_bal_3']], () => { f.c9_form = true; g.found('petition', 'c9_toast_form'); ok(); });
         if (f.c9_heard && !f.c9_plans) return c([['baldino', 'c9_bal_c1']]);
         return c([['baldino', 'c9_bal_after']]);
       case 'nara':

@@ -177,7 +177,7 @@ export class Chapter1 extends ChapterBase {
         // (G1-QUEST #19: once the water is back the map is only a map: Mira no longer marks valves that are open)
         if (f.c1_water) { this.chain([['hero', 'c1_map_after']]); return true; }
         f.c1_map = true;
-        this.chain([['hero', 'c1_map_1'], ['mira', 'c1_mira_map']], () => { g.updateObjective(); });   // (Mira says she marked them)
+        this.chain([['hero', 'c1_map_1'], ['mira', 'c1_mira_map']], () => { g.updateObjective(); g.found('pipemap', 'it_pipemap'); });   // (Mira says she marked them)
         return true;
       case 'locker':
         g.searched.push(it.spot.id);
@@ -499,7 +499,7 @@ export class Chapter1 extends ChapterBase {
     f.c1_plan = true;
     g.audio.cue('revelation');
     g.audio.play('shard');
-    this.chain([['zoe', 'c1_zoe_plan1'], ['zoe', 'c1_zoe_plan2'], ['zoe', 'c1_zoe_plan3']], () => { g.audio.endCue(); g.updateObjective(); g.save(false); });
+    this.chain([['zoe', 'c1_zoe_plan1'], ['zoe', 'c1_zoe_plan2'], ['zoe', 'c1_zoe_plan3']], () => { g.audio.endCue(); g.updateObjective(); g.save(false); g.found('evacplan', 'it_evacplan'); });
   }
   endZoe() {
     const g = this.game, f = this.f, h = g.hero;

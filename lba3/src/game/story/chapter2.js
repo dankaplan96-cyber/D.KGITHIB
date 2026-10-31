@@ -159,7 +159,7 @@ export class Chapter2 extends ChapterBase {
         if (f.c2_planTaken && !f.c2_okuOK) { this.chain([['hero', 'c2_cog_ask']]); return true; }
         h.act('pickup', 0.9, () => {
           f.c2_cog = true; g.audio.play('shard');
-          this.chain([['hero', 'c2_got_cog']], () => { g.hud.toast('c2_toast_cog'); g.updateObjective(); g.save(false); });
+          this.chain([['hero', 'c2_got_cog']], () => { g.updateObjective(); g.save(false); g.found('cog', 'c2_toast_cog'); });
         }, 0.45);
         return true;
       case 'c2locker':
@@ -168,7 +168,7 @@ export class Chapter2 extends ChapterBase {
           const back = f.c2_planTaken && !f.c2_planBack;
           if (back) f.c2_planBack = true;
           this.chain([['hero', 'c2_got_cyl'], ...(back ? [['hero', 'c2_got_plan']] : [])], () => {
-            g.hud.toast('c2_toast_cyl');
+            g.found('cyl', 'c2_toast_cyl');
             g.updateObjective(); g.save(false);
           });
         }, 0.5);
@@ -274,7 +274,7 @@ export class Chapter2 extends ChapterBase {
       g.camRig.shake(0.2);
       const p = g.hero.pos;
       g.particles.burst(p.x, p.y + 1.2, p.z, '#ffe8a0', 24, 3);
-      g.hud.toast('c2_toast_key');
+      g.found('okey', 'c2_toast_key');   // (shown once his line is said)
       this.chain([['baldino', 'c2_bal_built']], () => { g.save(false); this.startZoe(); });
     });
   }

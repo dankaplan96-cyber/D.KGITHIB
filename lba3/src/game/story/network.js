@@ -141,8 +141,8 @@ export class Network extends ChapterBase {
     this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ['baldino', 'c10_bal_4'], ['heskradio', 'c10_hesk_1']], () => {
       f.c10_started = true; f.c10_pulse = true;
       g.hero.hasPulse = true;
-      g.hud.toast('c10_toast_pulse', { k: g.hud.key('weapons') });   // (the relays: the objective panel names them)
       this.story.refreshCast(); g.updateObjective(); g.save(false);
+      g.found('pulse', 'it_pulse', () => g.hud.toast('c10_toast_pulse', { k: g.hud.key('weapons') }));   // (the relays: the objective panel names them)
     });
   }
 

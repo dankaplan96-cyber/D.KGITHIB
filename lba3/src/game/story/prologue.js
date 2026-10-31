@@ -359,9 +359,9 @@ export class Prologue extends ChapterBase {
         }
         if (it.spot.id !== 'cupboard') return false;
         g.searched.push(it.spot.id);
-        g.audio.play('chest');
         h.hasBall = true;
-        g.say('n_hero', t('pr_cupboard'), () => { g.hud.toast('pr_toast_ball', { ball: g.hud.key('ball'), map: g.hud.key('map') }); g.updateObjective(); g.save(false); }, h);
+        // (I-24: the found-object box and dance first, as LBA2 shows the ball when it is taken; then his line and the keys)
+        g.found('ball', 'it_ball', () => g.say('n_hero', t('pr_cupboard'), () => { g.hud.toast('pr_toast_ball', { ball: g.hud.key('ball'), map: g.hud.key('map') }); g.updateObjective(); g.save(false); }, h));
         return true;
       case 'well':
         if (f.prologueDone) { g.say('n_hero', t('pr_well_after'), null, h); return true; }
@@ -397,7 +397,7 @@ export class Prologue extends ChapterBase {
         g.audio.play('chest');
         this.chain([['hero', f.timConfessed ? 'pr_stones_take' : 'pr_stones_take0']], () => {
           h.coins += 10; g.audio.play('coin'); g.hud.float('+10', { x: h.pos.x, y: h.pos.y + 1.6, z: h.pos.z });
-          g.hud.toast('pr_toast_stone'); g.updateObjective(); g.save(false);
+          g.updateObjective(); g.save(false); g.found('warmstone', 'pr_toast_stone');
         });
         return true;
       case 'fortgate':
@@ -458,7 +458,7 @@ export class Prologue extends ChapterBase {
         if (f.opening && !g.room && !f.key) {
           if (!f.pr_kettle) {
             return c([...(f.pr_miraNo ? [['hero', 'pr_tw_miraNo']] : []), ['zoe', 'pr_zoe_kettle'], ['hero', 'pr_tw_kettle'], ['zoe', 'pr_zoe_kettle2']], () => {
-              f.pr_kettle = true; f.zoeNext = true; g.hud.toast('pr_toast_kettle'); g.audio.play('chest'); g.updateObjective(); g.save(false);
+              f.pr_kettle = true; f.zoeNext = true; g.updateObjective(); g.save(false); g.found('kettle', 'pr_toast_kettle');
             });
           }
           return c([['zoe', 'pr_zoe_kettle_wait']]);
@@ -471,7 +471,7 @@ export class Prologue extends ChapterBase {
       case 'gilbert': case 'mira':
         if (!f.key) {
           // Mira opens the town well only for a fault at the spring: the kettle crystals show it is one
-          const give = () => { f.key = true; f.wellSeen = true; h.hasKey = true; g.hud.toast('pr_toast_key'); g.audio.play('chest'); g.updateObjective(); g.save(false); };
+          const give = () => { f.key = true; f.wellSeen = true; h.hasKey = true; g.updateObjective(); g.save(false); g.found('lidkey', 'pr_toast_key'); };
           const show = [['hero', 'pr_tw_kettle2'], ['mira', 'pr_mira_kettle'], ['mira', 'pr_mira_2b'], ['gilbert', 'pr_gil_3']];
           if (!f.pr_row) {
             const row = [['gilbert', 'pr_gil_1'], ['mira', 'pr_mira_1'], ['gilbert', 'pr_gil_2']];
@@ -487,7 +487,7 @@ export class Prologue extends ChapterBase {
         if (f.rope) return c([['xil', 'pr_xil_after']]);
         if (f.stamp) {
           return c([['xil', 'pr_xil_3'], ['xil', 'pr_xil_4']], () => {
-            f.rope = true; f.wellSeen = true; g.hud.toast('pr_toast_rope'); g.audio.play('chest'); g.updateObjective(); g.save(false);
+            f.rope = true; f.wellSeen = true; g.updateObjective(); g.save(false); g.found('rope', 'pr_toast_rope');
           });
         }
         // (only the bell wakes Doran: Xil saw it when the barge came in; once it has rung, that is moot)
@@ -537,7 +537,7 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f;
     f.stamp = true; f.pr_bell = true;
     const d = this.npc('doran'); if (d) d.forceAnim = null;
-    g.hud.toast('pr_toast_stamp'); g.audio.play('select'); g.updateObjective(); g.save(false);
+    g.updateObjective(); g.save(false); g.found('stamp', 'pr_toast_stamp');
   }
   // the ball rings the bell: it swings and tolls; Doran jumps up. With Xil's errand in hand Twinsen asks for the stamp
   // straight away; without it, Doran is awake and grumpy (the stamp waits for Xil's word)

@@ -186,6 +186,7 @@ export class Input {
     this.prev = this.now;
     this.now = new Set();
     for (const [a, codes] of Object.entries(KEYMAP)) if (codes.some((c) => this.keys.has(c) || this.taps.has(c))) this.now.add(a);
+    this.rawTap = this.taps.size > 0;   // (any key at all this frame, bound or not: anyPressed)
     this.taps.clear();
     for (const b of this.touch.buttons) this.now.add(b);
     const M = this.mouse;
@@ -234,6 +235,8 @@ export class Input {
   }
   down(a) { return this.now.has(a); }
   pressed(a) { return this.now.has(a) && !this.prev.has(a); }
+  // any key, button, click or tap pressed this frame ("press any key": the found-object box, found.js)
+  anyPressed() { if (this.rawTap) return true; for (const a of this.now) if (!this.prev.has(a)) return true; return false; }
 
   // Movement vector: x = right, y = forward. Magnitude 0..1.
   move() {

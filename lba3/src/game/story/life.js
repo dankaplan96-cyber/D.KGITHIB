@@ -147,12 +147,12 @@ export class TownLife extends ChapterBase {
       case 'lbox':
         if (f.l_pliers) return say(['l_box_after']);
         if (!this.open) return say(['l_box_pro']);   // (the prologue: nothing is missing yet)
-        h.act('use', 0.6, () => { f.l_pliers = true; g.audio.play('chest'); say([f.l_needPliers || f.l_benchSeen ? 'l_box_pliers' : 'l_box_pliers0'], () => { g.hud.toast('l_toast_pliers'); g.save(false); }); }, 0.3);
+        h.act('use', 0.6, () => { f.l_pliers = true; say([f.l_needPliers || f.l_benchSeen ? 'l_box_pliers' : 'l_box_pliers0'], () => { g.save(false); g.found('pliers', 'l_toast_pliers'); }); }, 0.3);
         return true;
       case 'lcrate':
         if (f.l_crateOpen) return say([f.l_cleared ? 'l_crate_cleared' : 'l_crate_open2']);
         if (!f.l_crateAsk) return say(['l_crate_look', 'l_crate_ask']);
-        h.act('use', 0.8, () => { f.l_crateOpen = true; this.cs = 'hand'; L.crate.setState('open'); g.audio.play('chest'); say(['l_crate_open'], () => { g.hud.toast('l_toast_coupler'); g.save(false); }); }, 0.4);
+        h.act('use', 0.8, () => { f.l_crateOpen = true; this.cs = 'hand'; L.crate.setState('open'); say(['l_crate_open'], () => { g.save(false); g.found('coupler', 'l_toast_coupler'); }); }, 0.4);
         return true;
       case 'lbench': return this.bench();
       case 'lbarrel':

@@ -37,7 +37,7 @@ const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach',
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 // the actions in which the player's character keeps his feet planted (Rig._plant)
-const PLANT = new Set(['idle', 'talk', 'listen', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search']);
+const PLANT = new Set(['idle', 'talk', 'listen', 'found', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search']);
 // the gaits and stances the hero's starts, stops and switches between them are blended across (Rig.play, Rig._xfade)
 const LOCO = new Set(['walk', 'run', 'sneak', 'idle', 'talk', 'listen', 'turnL', 'turnR']);
 const MOVING = new Set(['walk', 'run', 'sneak']);
@@ -1026,6 +1026,12 @@ export class Rig {
       this._koOut = [L('outL'), L('outR')];
       bodyRotX = K.mode === 'slump' ? 0 : -K.dir * koFall(t) * (Math.PI / 2);
       if (this.robeLegs) { T.kneeL = Math.min(T.kneeL, 1.2); T.kneeR = Math.min(T.kneeR, 1.2); }
+    } else if (a === 'found') {
+      // LBA2's found-object dance (FOUND below): a dip, then an arm thrown up on each side in turn, every 0.3 s
+      const P = foundPose(this.actionT);
+      hipsY = P.hipsY; torsoX = P.torsoX; torsoY = P.torsoY; torsoZ = P.torsoZ;
+      T.armL = P.armL; T.armR = P.armR; T.elL = P.elL; T.elR = P.elR; T.outL = P.outL; T.outR = P.outR; T.twL = P.twL; T.twR = P.twR;
+      T.legL = P.legL; T.legR = P.legR; T.kneeL = P.kneeL; T.kneeR = P.kneeR;
     } else if (a === 'cheer') {
       const b = Math.abs(Math.sin(this.t * 6));
       hipsY = 0.95 + b * 0.15;
@@ -1124,7 +1130,7 @@ export class Rig {
     // strikes track their poses tightly (lag ≈ 18 ms) so the blade crosses the target in the active frames
     this.blendT = Math.max(0, (this.blendT || 0) - dt);
     const ko = a === 'ko';
-    const R = ko ? 24 : STRIKE.has(a) ? 55 : FAST.has(a) ? 30 : PUMP.has(a) ? 26 : a === 'jumpPrep' || (a === 'jump' && this.actionT < 0.15) || (this.landT > 0 && this.footPlant) ? 28 : this.blendT > 0 ? 8 : 16;
+    const R = ko ? 24 : STRIKE.has(a) ? 55 : FAST.has(a) || a === 'found' ? 30 : PUMP.has(a) ? 26 : a === 'jumpPrep' || (a === 'jump' && this.actionT < 0.15) || (this.landT > 0 && this.footPlant) ? 28 : this.blendT > 0 ? 8 : 16;
     // (a throw or a charge on the upper-body layer: the arms and the chest follow its keys as closely as a planted throw,
     // so the hand is where the keys put it when the ball leaves; the legs keep the walk's own rate)
     const Ru = this.over ? Math.max(R, 55) : a === 'jumpPrep' || a === 'jump' ? Math.min(R, 18) : R;
@@ -1269,6 +1275,32 @@ const ACTION_KEYS = {
 // raises forward, out spreads both arms sideways, el < 0 bends): keys 0-3 fists on the hips (the upper arm back
 // 29° and out 41°, the forearm folded 91°), key 4 down, key 5 both arms wide (out 69°, forward 53°), keys 6-7 forward
 // (47°) with the head nodding 12° then -18°; the loop closes back to the hips
+// I-24: LBA2's found-object animation (ANIM.HQR 23: generic anim 20, TROUVE, in each of Twinsen's behaviours' File3D,
+// RESS.HQR entry 44), read on our joints. Three keys of 300 ms; the clip loops keys 1-2 until the box is dismissed.
+//   key 0  a dip: the chest bowed 32° forward (twist -6°), the arms hanging
+//   key 1  the chest 13° back, twisted -25°, tipped 17° to his right; the left arm thrown up sideways 129° (turned 76°
+//          along its length), the right arm down
+//   key 2  the mirror: the chest twisted +23°, tipped 15° to his left; the right arm up 110° (turned -38°), the left
+//          down, the thighs 6-8° back
+// (LBA2 group rotations: alpha about x = our torsoX / arm, beta about y = torsoY / tw, gamma about z = torsoZ / out;
+// the same signs: both have +x on the model's left. Out is the angle above the rest spread, armSpread 0.1.)
+const FOUND = {
+  key: 0.3,
+  dip: { hipsY: 0.93, torsoX: 0.56, torsoY: -0.1, torsoZ: 0, armL: 0.05, armR: -0.1, elL: -0.2, elR: -0.2, outL: 0, outR: 0, twL: 0, twR: 0, legL: 0, legR: 0, kneeL: 0.15, kneeR: 0.15 },
+  left: { hipsY: 0.95, torsoX: -0.23, torsoY: -0.44, torsoZ: 0.3, armL: 0, armR: 0.05, elL: -0.1, elR: -0.2, outL: 2.15, outR: 0, twL: -1.33, twR: 0, legL: 0, legR: 0, kneeL: 0.05, kneeR: 0.05 },
+  right: { hipsY: 0.94, torsoX: -0.23, torsoY: 0.4, torsoZ: -0.26, armL: 0.05, armR: -0.1, elL: -0.2, elR: -0.1, outL: 0, outR: 1.82, twL: 0, twR: -0.66, legL: 0.14, legR: 0.1, kneeL: 0.1, kneeR: 0.1 },
+};
+const _foundP = {};
+// the pose t seconds into the dance (linear between keys, as LBA2; the rig's own easing rounds it)
+export function foundPose(t) {
+  const K = FOUND.key;
+  let A, B, u;
+  if (t < K) { A = B = FOUND.dip; u = 0; }
+  else if (t < 2 * K) { A = FOUND.dip; B = FOUND.left; u = (t - K) / K; }
+  else { const c = (t - 2 * K) % (2 * K); if (c < K) { A = FOUND.left; B = FOUND.right; u = c / K; } else { A = FOUND.right; B = FOUND.left; u = (c - K) / K; } }
+  for (const k in A) _foundP[k] = A[k] + (B[k] - A[k]) * u;
+  return _foundP;
+}
 const BALDINO_TALK = {
   t: [0, 0.3, 1.6, 1.85, 2.0, 2.15, 2.45, 2.75, 3.05, 3.2],
   arm: [0.45, 0.5, 0.5, 0.05, -0.92, -0.92, -0.82, -0.82, 0.3, 0.45],

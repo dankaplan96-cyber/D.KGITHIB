@@ -325,12 +325,11 @@ export class Arsenal extends ChapterBase {
     }
     g.audio.play('coin');
   }
-  // something new for good: owned, a toast, the chest's jingle
-  gain(key, nameKey) {
+  // something new for good: owned, and shown in the found-object box (I-24: found.js; it plays the chest's jingle)
+  gain(key, nameKey, then = null) {
     const g = this.game;
     this.A[key] = true;
-    g.audio.play('chest');
-    g.hud.toast('a_toast_got', { n: t(nameKey) });
+    g.found(key, nameKey, then);
     g.hud.stats?.(g.hero);
   }
   giveCache(darts, kashes) {
@@ -400,9 +399,8 @@ export class Arsenal extends ChapterBase {
         const take = () => {
           if (A.jetpack) return;
           A.jetpackOn = true; f.a_jetHint = true;
-          this.gain('jetpack', 'it_jetpack');
+          this.gain('jetpack', 'it_jetpack', () => g.hud.toast('a_toast_jethow', { k: g.input.label('action') }));
           this.jetPeg.pack.visible = false;
-          setTimeout(() => g.hud.toast('a_toast_jethow', { k: g.input.label('action') }), 1800);
           g.save(false);
         };
         if (there) { this.chain([['hero', 'a_jet_look'], ['baldino', 'a_jet_b1'], ['baldino', 'a_jet_b2'], ['hero', 'a_jet_tw'], ['baldino', 'a_jet_b3']], take); return true; }
@@ -450,7 +448,7 @@ export class Arsenal extends ChapterBase {
       case 'magus':
         if (!this.at('dig') || f.a_pearl || A.lightning) return false;
         return c(f.a_berAsk ? [['magus', 'a_hougo_pearl_asked']] : [['magus', 'a_hougo_pearl'], ['magus', 'a_hougo_pearl2']], () => {
-          f.a_pearl = true; g.audio.play('chest'); g.hud.toast('a_toast_got', { n: t('it_pearl') }); g.save(false);
+          f.a_pearl = true; g.found('pearl', 'it_pearl'); g.save(false);
         });
       case 'bersimon': {
         if (A.lightning || (f.a_berAsk && !f.a_pearl)) return false;
