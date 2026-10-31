@@ -13,7 +13,8 @@ import { writeScenario } from './scenarios/common.mjs';
 
 export const emit = (type, data = {}) => process.stdout.write(JSON.stringify({ type, t: Date.now(), ...data }) + '\n');
 let stopRequested = false, current = null;
-export function requestStop() { stopRequested = true; emit('status', { text: 'Stopping…' }); current?.close?.().catch(() => {}); }
+// soft: the current test finishes its step and writes what it has (a battery threshold); hard: Stop, the game closes now
+export function requestStop(soft = false) { stopRequested = true; emit('status', { text: soft ? 'Stopping after this step…' : 'Stopping…' }); if (!soft) current?.close?.().catch(() => {}); }
 
 // cfg: { suite, target, game, project, runsDir, only: [ids], repro: scenario object, appArgs, timeouts }
 export async function runSuite(cfg) {
@@ -32,6 +33,8 @@ export async function runSuite(cfg) {
   const plan = cfg.scenarios ? cfg.scenarios : SCENARIOS.filter((s) => (cfg.only ? cfg.only.includes(s.id) : s.suites.includes(cfg.suite)));
   emit('start', { runId, dir, total: plan.length });
   const t0 = Date.now();
+  // --stop-at-battery N: on battery at N % or less, a soft stop (battery readings kept apart from the plugged-in run that follows)
+  const watch = cfg.stopAtBattery ? setInterval(() => { const p = powerSource(); if (p.source === 'battery' && typeof p.charge === 'number' && p.charge <= cfg.stopAtBattery && !stopRequested) { manifest.conditions.push(`stopped at ${p.charge} % battery (threshold ${cfg.stopAtBattery} %)`); emit('finding', { text: `battery at ${p.charge} %: stopping after this step` }); requestStop(true); } }, 60000) : null;
   // tests that need the same kind of session share one launch: a fresh profile for the cold ones, the warm profile otherwise
   let H = null, sessionKey = null;
   const profileRoot = path.join(cfg.runsDir, '_profiles');
@@ -78,6 +81,7 @@ export async function runSuite(cfg) {
     emit('done', { id: S.id, status: rec.status, note: rec.note });
   }
   if (H) await H.close().catch(() => {});
+  if (watch) clearInterval(watch);
   current = null;
   const power1 = powerSource();
   manifest.finished = new Date().toISOString(); manifest.stopped = stopRequested; manifest.powerEnd = power1;

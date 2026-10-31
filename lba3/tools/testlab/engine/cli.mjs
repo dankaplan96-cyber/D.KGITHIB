@@ -25,9 +25,9 @@ process.on('SIGINT', requestStop);
 process.on('unhandledRejection', (e) => emit('finding', { text: 'tool: unhandled ' + String(e?.message || e).split(/\r?\n/)[0] }));
 process.on('SIGTERM', requestStop);
 
-const only = opt('only'); const base = { runsDir, game, project, target, ...(only ? { only: only.split(',') } : {}) };
+const only = opt('only'), stopAt = opt('stop-at-battery'); const base = { runsDir, game, project, target, ...(only ? { only: only.split(',') } : {}), ...(stopAt ? { stopAtBattery: +stopAt } : {}) };
 try {
-  if (['quick', 'full', 'visual', 'diagnose', 'npcs'].includes(cmd)) await runSuite({ ...base, suite: cmd });
+  if (['quick', 'full', 'visual', 'diagnose', 'npcs', 'sweep'].includes(cmd)) await runSuite({ ...base, suite: cmd });
   else if (cmd === 'reproduce') {
     const file = argv[1];
     if (!file || !fs.existsSync(file)) throw new Error(`no reproduction scenario at ${file || '(none given)'}`);

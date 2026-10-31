@@ -9,3 +9,5 @@ export const SCENARIOS = [coldLaunch, titleToPlay, openingCinematic, regionEntry
 import { DIAGNOSE } from './diagnose.mjs';
 import { NPC_SURVEY } from './npcs.mjs';
 SCENARIOS.push(...DIAGNOSE, ...NPC_SURVEY);
+import { SWEEP } from './sweep.mjs';
+SCENARIOS.push(...SWEEP);
