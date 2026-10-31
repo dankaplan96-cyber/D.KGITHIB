@@ -373,8 +373,12 @@ laptop. Frames are stepped as 60 Hz frames (one simulation step each, the game's
     the trip, in small steps during play or on the travel card — which is the region builders' files (zeelich.js,
     desert.js, hamalayi.js) and a prefetch policy: not attempted here. This round takes the draw-batch time saved out of
     the black and, on the laptop, overlaps the compiles with the rest.
-- **Tests** (this branch, against a snapshot of it; `BOOT_TIMEOUT` / `BOOT_MS` raised for the loaded machine; `FIRST-BUILD/results/tests.txt`): transitions,
-  travel, zislands, drawcalls, perfbudget, house, display, combat PASS; the others: see tests.txt.
+- **Tests** (this branch, against a snapshot of it; `BOOT_TIMEOUT` / `BOOT_MS` raised for the loaded machine; `FIRST-BUILD/results/tests.txt`): opening, chapter1,
+  house, transitions, travel, zislands, drawcalls, perfbudget, display, menus, combat, containers, camfollow, timing:
+  all PASS. chapter1 and menus each needed a second run: chapter1's fixed 240 s wait for its second boot ran out on this
+  loaded machine, and one menus click waited over 30 s for the pause menu; both passed on the next run, unchanged. The
+  loading screen is longer here now (the house's texture layers are read there), so a suite with a fixed boot limit has
+  less margin on a slow software renderer.
 - **Laptop (pending),** baseline → candidate → baseline, 3 runs each, battery, then plugged in:
   - `node engine/cli.mjs compare …` with `title-to-play`: no visible frame over 100 ms from New Game until playable, the
     click on New Game included; and `cold-launch`: how much longer the loading screen now takes (the house's preparation
