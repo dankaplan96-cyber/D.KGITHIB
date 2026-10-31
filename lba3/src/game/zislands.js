@@ -22,7 +22,7 @@ import { rng, smoothstep } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { MAX_SLOPE } from '../engine/physics.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
-import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances, brassM, panelGeo, frameGeo, fillGeo } from './kit.js';
+import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances, brassM, panelGeo, frameGeo, fillGeo, BATCH } from './kit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
@@ -1191,7 +1191,7 @@ function buildIsland(scene, physics, name, L, at) {
     if (rk < 0.5 && paved(x, z)) { wt[4] = 1.6; wt[0] *= 0.2; }
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
   };
-  const terrain = new Terrain({ size, segs, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });
+  const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   const tgy = (x, z) => terrain.heightAt(x, z);

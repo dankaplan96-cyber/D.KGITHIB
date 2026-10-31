@@ -24,6 +24,13 @@
     im.castShadow = bm.castShadow; im.receiveShadow = bm.receiveShadow; im.userData.gpuGroup = bm.userData.gpuGroup;
     return { bm, im, n };
   });
+  // (W_TERRAIN=1: the terrain's squares batch, terrain.js, against the tiles it had before — rebuilt with its _tileMesh —
+  //  instead of the instance batches; the region's Terrain is R.terrain)
+  if (window.TERRAIN) {
+    pairs.length = 0;
+    const T = G.room.terrain; let bm = null; room.traverse((o) => { if (o.isBatchedMesh && o.name === 'terrain') bm = o; });
+    if (T && bm) { const g = new THREE.Group(); for (const t of bm.userData.tiles) g.add(T._tileMesh(bm.parent.userData.full, bm.material, ...t)); g.name = 'terrain-tiles'; pairs.push({ bm, im: g, n: bm.userData.tiles.length }); }
+  }
   const gl = R.getContext(), W = gl.drawingBufferWidth, H = gl.drawingBufferHeight;
   const A = new Uint8Array(W * H * 4), Bf = new Uint8Array(W * H * 4);
   const read = (buf) => { R.setRenderTarget(null); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf); };
@@ -36,7 +43,7 @@
   // (the static shadow cache dropped before each frame: the swap below drops it, and a cache drawn round another focus
   //  moves the depth of shallow ground by a fraction of a texel — speckles of acne differ, whatever the casters)
   const frame = (buf) => { G.shadowCache?.drop?.(); RR.render(); RR.render(); calls = 0; tris = 0; RR.render(); read(buf); return [calls, Math.round(tris / 1000)]; };
-  const out = [`${AREA}: ${pairs.length} batches (${pairs.map((p) => p.bm.userData.gpuGroup + ' ' + p.n).join(', ')})`];
+  const out = [`${AREA}: ${pairs.length} batches (${pairs.map((p) => (p.bm.userData.gpuGroup || p.bm.name) + ' ' + p.n).join(', ')})${window.TERRAIN ? ' — the terrain: squares vs its tiles' : ''}`];
   let worst = 0;
   for (const k of only) {
     G.benchTick = () => { G.doorCool = Math.max(G.doorCool || 0, 0.5); h.angle = a0 + (k * 2 * Math.PI) / 8; h.vel.set(0, 0); };
@@ -48,7 +55,7 @@
     for (const { bm, im } of pairs) { im.removeFromParent(); bm.visible = true; }
     let d = 0; for (let i = 0; i < A.length; i += 4) if (A[i] !== Bf[i] || A[i + 1] !== Bf[i + 1] || A[i + 2] !== Bf[i + 2]) d++;
     worst = Math.max(worst, d);
-    out.push(`heading ${k * 45}°: pixels differ ${d} · main ${fa[0]} calls ${fa[1]}k tris (batches, culled) vs ${fb[0]} calls ${fb[1]}k (InstancedMeshes, as before)`);
+    out.push(`heading ${k * 45}°: pixels differ ${d} · main ${fa[0]} calls ${fa[1]}k tris (this build: batches culled per instance or square) vs ${fb[0]} calls ${fb[1]}k (as before: InstancedMeshes, or the terrain's tiles)`);
     await new Promise((r) => setTimeout(r, 0));
   }
   R.renderBufferDirect = rbd;

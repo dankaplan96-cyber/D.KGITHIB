@@ -106,9 +106,10 @@ export const GPU_VARIANTS = [
   { id: 'GPU: instanced decoration not culled to the view (as before)', apply() { setViewInst(false); }, undo() { setViewInst(true); } },
   // HEADING-LOAD-2: the regions' casting instances (kit.js cullInstances) drawn in full in every pass, as their InstancedMeshes were
   { id: 'GPU: region instances not culled per instance (as before)', apply() { for (const b of CULL_INST.list) b.perObjectFrustumCulled = false; }, undo() { for (const b of CULL_INST.list) b.perObjectFrustumCulled = true; } },
-  // (trade-off, not in play: the islands' trees, bushes and rocks coarse beyond the preset's distance, as Citadel's are; only
-  //  where a probe had the coarse versions built, kit.js CULL_INST.lo)
-  { id: 'GPU: island trees coarse beyond the preset distance (trade-off)', apply(G) { setCullInstFar(true); updateKitLod(G.hero.pos); }, undo(G) { setCullInstFar(false); updateKitLod(G.hero.pos); } },
+  // (trade-off, not in play: the islands' trees, bushes and rocks coarse beyond the preset's distance and casting with
+  //  their coarse version, as Citadel's are; only where a probe had the coarse versions built, kit.js CULL_INST.lo; the
+  //  static shadow cache redrawn, so the shadows are priced too)
+  { id: 'GPU: island trees coarse beyond the preset distance (trade-off)', apply(G) { setCullInstFar(true); updateKitLod(G.hero.pos); G.shadowCache?.drop?.(); }, undo(G) { setCullInstFar(false); updateKitLod(G.hero.pos); G.shadowCache?.drop?.(); } },
   // (trade-offs, not in play: grass and flowers half as dense beyond 28 m from Twinsen, in 9 m squares)
   { id: 'GPU: grass/flowers half beyond 28 m (trade-off)', apply(G) { G.world?.setSmallThin?.({ from: 28, keep: 0.5 }); }, undo(G) { G.world?.setSmallThin?.(null); } },
   // the static shadow cache's depth into the live map by a framebuffer blit, as before (shadowcache.js copyDepth)

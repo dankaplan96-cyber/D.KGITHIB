@@ -8,6 +8,7 @@
   const G = game, R = G.renderer.renderer, DT = 1 / 30, N = +(window.HEADINGS || 8);
   const THREE = await import('three');
   const { gpuGroupOf, GPU_VARIANTS } = await import('/src/engine/benchgpu.js');
+  const KIT = await import('/src/game/kit.js');
   const only = window.ONLY ? String(window.ONLY).split(',').map(Number) : null;
   const VARS = window.VARS ? String(window.VARS).split('|').filter(Boolean).map((v) => v.replace(/_/g, ' ')) : [];   // ('_' for a space)   // (benchgpu variant ids or parts of them, '|'-separated)
   G.bench.setCamera('follow');
@@ -85,6 +86,7 @@
     //  the last 6 are drawn, as before, so the draw batches, the shadow cache and the culls settle on the view)
     { const rr = G.renderer.render; try { for (let i = 0; i < 40; i++) { G.renderer.render = window.FAST && i < 34 ? () => {} : rr; step(); if (i % 10 === 9) await new Promise((r) => setTimeout(r, 0)); } } finally { G.renderer.render = rr; } }
     G.benchTick = null;
+    if (window.DROP) G.shadowCache?.drop?.();   // (W_DROP=1: the static shadow cache redrawn round this view first, as a variant that redraws it will: the same acne either way)
     RR.render();   // (a first frame of this view: the cache and LOD settle)
     const base = frame(!!window.SHOTS), F = fmt(base.T);
     out.lines.push(`heading ${k} (${((k * 360) / N).toFixed(0)}°, camera yaw ${G.camRig.yaw?.toFixed(2)}): ${F.line}`);
@@ -110,9 +112,14 @@
       const parts = v.split('+').map((p) => GPU_VARIANTS.find((x) => x.id.includes(p)));
       if (parts.some((p) => !p)) { out.lines.push(`   (no variant ${v})`); continue; }
       const sw = { apply(G) { for (const p of parts) p.apply(G); }, undo(G) { for (const p of [...parts].reverse()) p.undo(G); } };
-      sw.apply(G); G.world?.updateLod?.(G.hero.pos); RR.render();
+      // (the LOD batches' near/far states kept and put back after the variant: their switch has hysteresis, so a variant
+      //  that moved the distance would leave some instances coarse in the next heading's as-is frame)
+      const lodWas = KIT.LOD_BATCHES.map((B) => B.inst?.map((I) => I.near));
+      sw.apply(G); G.world?.updateLod?.(G.hero.pos); if (G.room?.outdoor) KIT.updateKitLod(G.hero.pos); RR.render();   // (a region: its LOD batches switched now, as the loop would)
       const r2 = frame(!!window.SHOTS), F2 = fmt(r2.T);
-      sw.undo(G); G.world?.updateLod?.(G.hero.pos); RR.render();
+      sw.undo(G); G.world?.updateLod?.(G.hero.pos); if (G.room?.outdoor) KIT.updateKitLod(G.hero.pos);
+      KIT.LOD_BATCHES.forEach((B, b) => B.inst?.forEach((I, i) => { const was = lodWas[b]?.[i]; if (was !== undefined && I.near !== was) { I.near = was; if (I.lo >= 0) B.mesh.setGeometryIdAt(I.k, was ? I.hi : I.lo); } }));
+      RR.render();
       out.lines.push(`   [${v}] ${F2.line}  (Δ main ${F2.M[0] - F.M[0]} calls ${((F2.M[1] - F.M[1]) / 1000).toFixed(1)}k tris)`);
       out.lines.push('      ' + F2.groups);
       if (r2.img) out.__images[`h${k}-${v.replace(/[^a-z0-9]+/gi, '_')}`] = r2.img;

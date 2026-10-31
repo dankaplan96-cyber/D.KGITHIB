@@ -39,7 +39,7 @@ import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
 import {
-  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, cullInstances, lodInstances, emblemMaterial, emq, mergeGeos,
+  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, cullInstances, lodInstances, emblemMaterial, emq, mergeGeos, BATCH,
 } from './kit.js';
 
 export const DESERT = { x: 3400, z: 0 };
@@ -473,7 +473,7 @@ export function buildDesert(scene, physics) {
   // --- ground
   const R0 = {};
   const ground = groundGrid();
-  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), heightFn: ground.at, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: TX.concrete } });
+  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), squares: BATCH.on ? 25 : 0, heightFn: ground.at, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: TX.concrete } });
   R0.trapFixes = ground.fixed;
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);

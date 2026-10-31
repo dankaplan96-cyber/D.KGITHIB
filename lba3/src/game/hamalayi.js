@@ -23,7 +23,7 @@ import { Terrain } from '../engine/terrain.js';
 import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
-import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances } from './kit.js';
+import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, BATCH } from './kit.js';
 import { viewCull } from '../engine/viewinst.js';
 import { Plume } from '../engine/softfx.js';
 import { Kit, MAT, barrel, crate, handCart } from './props.js';
@@ -184,7 +184,7 @@ export function buildHamalayi(scene, physics) {
   const updaters = [];
   const TX = textures();
   GRID = gridCapture(heightFn, SIZE, SEGS);
-  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), heightFn: GRID.fn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, sand: snowTex(), cobble: TX.cobble } });
+  const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), squares: BATCH.on ? 25 : 0, heightFn: GRID.fn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, sand: snowTex(), cobble: TX.cobble } });
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
   GRID = null;   // (the finish below reads the terrain itself)

@@ -21,10 +21,10 @@
     const block = (B) => { const out = []; for (let bj = 0; bj < rows; bj += B) for (let bi = 0; bi < w; bi += B) {
       const box = new THREE.Box3(); let n = 0;
       for (let j = bj; j < Math.min(rows, bj + B); j++) for (let i = bi; i < Math.min(w, bi + B); i++) { const c = (j * w + i) * 6; for (const q of [0, 1, 2, 3]) box.expandByPoint(v.fromBufferAttribute(P, ix[c + q])); n += 2; }
-      box.applyMatrix4(m.matrixWorld); out.push({ box, n }); } return out; };
+      out.push({ box, n }); } return out; };   // (local bounds: the world matrix applied at the test)
     return { m, tris: nc * 2, blocks: Object.fromEntries(BLOCKS.map((B) => [B, block(B)])) };
   });
-  const fr = new THREE.Frustum(), pm = new THREE.Matrix4();
+  const fr = new THREE.Frustum(), pm = new THREE.Matrix4(), _b = new THREE.Box3();
   const out = [`${AREA}: ${tiles.length} terrain tiles (${pre.map((p) => (p.tris / 1000).toFixed(0) + 'k').join(', ')})`];
   let drawn = 0, sums = Object.fromEntries(BLOCKS.map((B) => [B, [0, 0]]));
   for (let k = 0; k < 8; k++) {
@@ -34,7 +34,7 @@
     const cam = G.camera; cam.updateMatrixWorld(); fr.setFromProjectionMatrix(pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
     const vis = pre.filter((p) => p.m.visible && fr.intersectsBox(p.m.geometry.boundingBox.clone().applyMatrix4(p.m.matrixWorld)));
     const d = vis.reduce((a, p) => a + p.tris, 0); drawn += d;
-    const per = BLOCKS.map((B) => { let c = 0, t = 0; for (const p of vis) for (const b of p.blocks[B]) if (fr.intersectsBox(b.box)) { c++; t += b.n; } sums[B][0] += c; sums[B][1] += t; return `${B}-cell squares ${c} / ${(t / 1000).toFixed(0)}k`; });
+    const per = BLOCKS.map((B) => { let c = 0, t = 0; for (const p of vis) for (const b of p.blocks[B]) if (fr.intersectsBox(_b.copy(b.box).applyMatrix4(p.m.matrixWorld))) { c++; t += b.n; } sums[B][0] += c; sums[B][1] += t; return `${B}-cell squares ${c} / ${(t / 1000).toFixed(0)}k`; });
     out.push(`heading ${k * 45}°: tiles drawn ${vis.length} / ${(d / 1000).toFixed(0)}k tris · in view: ${per.join(' · ')}`);
   }
   out.push(`mean: drawn ${(drawn / 8000).toFixed(1)}k · ` + BLOCKS.map((B) => `${B}-cell squares ${(sums[B][0] / 8).toFixed(1)} / ${(sums[B][1] / 8000).toFixed(1)}k`).join(' · '));
