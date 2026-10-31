@@ -20,6 +20,12 @@ the first line of the schedule below.
   The cheat codes refill magic points only (CHEATCOD.CPP:143, 160). No shop code touches the level.
 - Scripts can test the level with `LF_MAGIC_LEVEL` (23; GERELIFE.CPP:230), so characters and scenes can react to
   it.
+- Magic *points* (not levels) come from several places:
+  - `LM_SUB_MAGIC_POINT` (60) takes points away.
+  - `LM_FULL_POINT` (79) fills life and magic (GERELIFE.CPP:1925).
+  - Using a clover fills both (OBJECT.CPP:705).
+  - Flasks from bonus givers and enemies give magic, but not when the magic is already full (EXTRA.CPP:2503).
+  Our flasks, givers and Bersimon's top-up already follow this.
 - What each level does:
   - Ball damage is 10, 10, 20, 30, 40 for levels 0–4 (COMMON.H:330–333; FICHE.CPP:24).
   - Hand damage is 5, 8, 18, 28, 38 (COMMON.H:325–329).
@@ -32,8 +38,9 @@ the first line of the schedule below.
 
 ### The scene scripts: the user's SCENE.HQR and TEXT.HQR (numbers only)
 
-The original files sit in the session's scratch space. Following SOURCE_INVENTORY.md's rule, no original text,
-model or script leaves them. The table comes from a byte search for opcode 59. Each hit was checked against the
+The files read are the user's GOG copies in the session's scratch space: SCENE.HQR SHA-256 d5ac2728…, TEXT.HQR
+a66785c5…. These are byte-identical to the uploads (`*-SCENE.HQR`, `*-TEXT.HQR`) and were read, not modified.
+Following SOURCE_INVENTORY.md's rule, no original text, model or script leaves them. The table comes from a byte search for opcode 59. Each hit was checked against the
 commands next to it: `FOUND_OBJECT` (46), `SET_VAR_GAME` (36) and `MESSAGE` (25). This is **not a full
 disassembly**. Many lone 59 bytes are arguments of other commands, so only hits that sit inside a clear block are
 listed. The messages are paraphrased, with their TEXT bank and id.

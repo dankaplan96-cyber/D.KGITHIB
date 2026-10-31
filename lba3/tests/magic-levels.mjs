@@ -19,7 +19,11 @@ const URL0 = (process.env.GAME_URL || 'http://localhost:8123/') + '?nocine';
 
 // load the page; mode 'new' (a new game) or 'continue' (the autosave); the helpers and the recorders
 const boot = async (mode) => {
-  await page.goto(URL0, { waitUntil: 'load', timeout: 180000 });
+  // (a navigation the game started itself can abort ours: let it land and try again, as boot.mjs open() does)
+  for (let i = 0; ; i++) {
+    try { await page.goto(URL0, { waitUntil: 'load', timeout: 180000 }); break; }
+    catch (e) { if (i >= 2 || !/ERR_ABORTED|frame was detached/.test(e.message)) throw e; await page.waitForLoadState('load').catch(() => {}); await page.waitForTimeout(1500); }
+  }
   await page.waitForFunction(() => window.game && document.querySelector('#loading').classList.contains('hidden') && !window.game.preparing, null, { timeout: 480000 });
   await ev((mode) => {
     const G = window.game; G.testFreeze = true;
@@ -145,6 +149,8 @@ const loadSave = async (s) => { await ev((s) => localStorage.setItem('lba3_save_
 // the user's case: a green ball bought in chapter 1
 const b1 = await loadSave(oldSave({ chapter: 0, chapterKey: 'well' }, { magicLevel: 2 }));
 check('an old save with level 2 bought in chapter 1 keeps level 2 (never taken away)', b1.lv === 2 && b1.ch === 'well' && b1.ml.length === 0, b1);
+const b5 = await loadSave(oldSave({ chapter: 1, chapterKey: 'project' }, { magicLevel: undefined }));
+check('a save without a level (broken) loads at level 1, not NaN', b5.lv === 1 && Number.isFinite(b5.max), b5);
 const b2 = await loadSave(oldSave({ chapter: 1, chapterKey: 'project', c1_started: true }, { magicLevel: 3, mp: 5 }));
 check('an old save with level 3 bought in chapter 2 keeps level 3', b2.lv === 3 && b2.ch === 'project', b2);
 await toasts(); await said();
@@ -155,8 +161,6 @@ const b3 = await loadSave(oldSave({ chapter: 7, chapterKey: 'evacuation' }, { ma
 check('an old save in chapter 8 at level 1 gets the levels its chapter has given (3), with one toast', b3.lv === 3 && b3.mp === b3.max && b3.ml.includes('ml_2') && b3.ml.includes('ml_3') && !b3.ml.includes('ml_4') && ups(b3.toasts) === 1, b3);
 const b4 = await loadSave(oldSave({ chapter: 6, chapterKey: 'observatory', c7_sendell: true }, { magicLevel: 2 }));
 check('an old save in chapter 7 past Sendell\'s words gets level 3', b4.lv === 3 && b4.ml.includes('ml_3'), b4);
-const b5 = await loadSave(oldSave({ chapter: 1, chapterKey: 'project' }, { magicLevel: undefined }));
-check('a save without a level (broken) loads at level 1, not NaN', b5.lv === 1 && Number.isFinite(b5.max), b5);
 
 const fails = done();
 await browser.close();
