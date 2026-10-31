@@ -6,3 +6,6 @@ import { VISUALS } from './visual.mjs';
 
 export const SCENARIOS = [coldLaunch, titleToPlay, openingCinematic, regionEntry, streetTraversal, cupboardQuest, houseDoor, magicBall, swordSwitch, combatArena,
   pauseFocus, saveRestartLoad, deathRespawn, longWalk, repeatedVisits, ...VISUALS];
+import { DIAGNOSE } from './diagnose.mjs';
+import { NPC_SURVEY } from './npcs.mjs';
+SCENARIOS.push(...DIAGNOSE, ...NPC_SURVEY);

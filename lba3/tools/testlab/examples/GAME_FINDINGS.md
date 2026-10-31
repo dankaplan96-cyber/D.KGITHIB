@@ -85,6 +85,74 @@ To reproduce, from `lba3/tools/testlab` (README.md):
   (ship, card). Rebuild the shadow cache once per arrival, not twice.
 - **Acceptance:** `region-entry` first visits under 1.5 s of black in total each, and no visible frame over 100 ms.
 
+## Where the street's CPU and GPU time goes (diagnose-2026-10-31, battery, Auto Medium, the follow camera)
+
+All numbers come from the game's own instruments. `node engine/cli.mjs diagnose` runs them again.
+
+**GPU: 15.9 ms a frame on the street, 51 fps.** Source: `game.bench.run` breakdown, one cost removed at a time
+(evidence/gpu-breakdown.txt). The biggest cost is **material shading**, not shadows or vegetation:
+
+| Removed (diagnostic) | GPU ms | Saved |
+|---|---|---|
+| all materials flat | 9.1 | **−6.8** |
+| terrain material flat | 12.3 | **−3.6** (the ground and paving shader) |
+| no static scenery | 13.0 | −3.0 |
+| scenery material flat | 13.6 | −2.3 |
+| no edge smoothing (output pass) | 14.0 | −1.9 |
+| no lamps | 14.3 | −1.6 |
+| no characters | 14.5 | −1.4 |
+| no shadows | 15.1 | −0.8 |
+| no grass/flowers, no trees/rocks | 15.7–15.8 | −0.1 to −0.2 |
+| battery profile off | 34.6 | +18.7 (the battery cuts are essential) |
+
+- **Direction:** a cheaper terrain and paving shader, and cheaper scenery materials, are worth up to 3.6 + 2.3 ms
+  without removing anything. Edge smoothing, lamps and characters come after.
+- **Not the cause:** vegetation and shadows.
+
+**CPU: 14.1 ms of game work a frame.** Source: `game.bench.visits`, CPU by section, exclusive times
+(evidence/cpu-sections.txt).
+- **Render submission is about 9 ms:** submit main 5.2 · submit other 2.8 · shadow 0.9 · post 0.1.
+- **Simulation is about 4.5 ms:** other sim 1.7 · people 1.2 (74 calls) · camera 0.6 · physics 0.5 (347 calls a
+  frame) · hero 0.4.
+
+The V8 profiler on a real 15 s walk (evidence/js-hotspots.txt) names the heaviest functions:
+- **`drawcull.js shownTree` (line 56): about 2 ms a frame.** Every frame it walks the whole shown scene, about 1,300
+  objects on the street, compares each one's position, rotation and scale with a cache, and recomposes matrices.
+  Most of the street is static.
+- **`drawbatch.js watch` (line 496): about 0.6 ms a frame.** Every frame it re-checks about 1,500 batched pieces for
+  changes.
+- Three.js's own projection and matrix code: about 1–1.5 ms. `shadowcull.update` and `rig.update`: about 0.3 ms each.
+- **Direction:** freeze the static scenery's matrices once it is placed and skip those subtrees in the walk. Make
+  `watch` event-driven (a piece that can change marks itself) instead of polling all 1,500. Expected: around
+  2–2.5 ms less CPU a frame on the street. It changes nothing on screen.
+
+## Residents: does what they do look right? (npcs-2026-10-31)
+
+Every resident of the Citadel was checked at every activity stop of its round:
+- **Gap:** a ray at hand height, plus a slanting one for ground work, measures the gap to the real surface it faces.
+- **Picture:** a side-view close-up, with Twinsen hidden.
+
+Sheet: `npcs-2026-10-31/contact-sheet.jpg`; all stops: `evidence/npcs/index.html` and `survey.json`.
+
+1. **The gardener with the sun hat (resident `garrick`) waters air** (likely). Stop `gar_water`, src/game/walkrounds.js:91,
+   at (−39.3, 7.1), looking at (−39.3, 8.7).
+   - In the picture the gardener stands on the grass **beside** the flower bed, facing along it, not into it. The
+     measured gap is 1.81 m.
+   - At `gar_tend` (line 87) the gardener kneels at the bed's corner, which looks right. Both stops look at the same
+     point (−39.3, 8.7), which does not seem to be the bed's middle.
+   - **Fix:** put `gar_water`'s position and look point at the bed's long side, within about 0.7 m, facing it.
+     Check `gar_rest` (line 92, same look point) too.
+2. **A second resident, the green one, stands within arm's reach of the gardener at the same bed** while watering,
+   and they overlap. Worth a look: give one of them another spot or a different time.
+3. **`dot_warm` (line 107, the stall's heat post): the stop is inside an object** (likely). A surface sits 0.25 m above
+   the feet, so the resident stands in the stall or its post. That stop belongs to a later stage of the town, so it
+   was not photographed. **Fix:** move it about 0.4 m out from the post.
+4. **Knocking at doors (`oda_home`, `maro_home`, `tilde_home`): not judged.** A resident placed at the stop goes
+   inside at once, so nothing could be photographed. The ray found no door leaf within 2.5 m at knocking height:
+   look whether a door is drawn there at all.
+5. **Fine:** the gardener kneeling at the bed and at the water tap; dot at the well; oda at the stall; brix and marda
+   warming or resting; tobb setting a crate down on the ground or by the stall.
+
 ## Works (asserted, not only "no crash")
 
 - Cold launch to title in 17.9 s, empty profile.

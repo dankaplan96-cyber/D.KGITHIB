@@ -27,7 +27,7 @@ process.on('SIGTERM', requestStop);
 
 const only = opt('only'); const base = { runsDir, game, project, target, ...(only ? { only: only.split(',') } : {}) };
 try {
-  if (cmd === 'quick' || cmd === 'full' || cmd === 'visual') await runSuite({ ...base, suite: cmd });
+  if (['quick', 'full', 'visual', 'diagnose', 'npcs'].includes(cmd)) await runSuite({ ...base, suite: cmd });
   else if (cmd === 'reproduce') {
     const file = argv[1];
     if (!file || !fs.existsSync(file)) throw new Error(`no reproduction scenario at ${file || '(none given)'}`);
