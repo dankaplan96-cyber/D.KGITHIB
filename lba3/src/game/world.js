@@ -17,6 +17,7 @@ import { buildLighthouse } from './lighthouse.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
+import { culledToo } from '../engine/viewinst.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 
@@ -31,6 +32,17 @@ const clearLife = (list) => { for (const t of list) if (lifeClear(t.x, t.z) || i
 // the original's quay wall along the west of its town lands on our quay. The terrain grid is centred on it.
 export const LAYOUT = { dx: -76, dz: 16 };
 export const ISLAND = { cx: -76, cz: 16 };
+// HEADING-LOAD: grass, flowers and tulips drawn only where the view can show them. A small kind's pool (PERF-CALLS: one
+// InstancedMesh per kind for the tiles within the small-detail distance) took every tile in reach, in view or not: on
+// Citadel's street 13 draws of 91–113k triangles whatever the camera faced. Now each tile's instances are grouped in
+// SUB × SUB m squares (each with a sphere round its tufts, grown by more than the sway can move them) and, before each
+// frame's main render, the pool holds only the instances of the squares that touch the camera's frustum, in their old
+// order (the same instances, matrices, colours and thinning; nothing that can reach the view is left out: the same
+// pixels). A pool is refilled only when its set of squares changes. `on` false: every tile in reach, as before (the
+// benchmark's A/B line, benchgpu.js).
+// `thin` (a trade-off, OFF unless chosen: HEADING-LOAD's report): the squares further than thin.from m from Twinsen keep
+// only the first thin.keep of each tile's instances (the tiles' own random order: an even thinning, as Low's).
+export const SMALL_VIEW = { on: true, sub: 9, margin: 0.6, thin: null };
 export const POI = {
   start: { x: -38, z: 4 },
   village: { x: -42, z: -4 },
@@ -677,6 +689,10 @@ export function* buildWorldSteps(parentScene) {
       if (!P.im) {
         const cap = P.tiles.reduce((a, t) => a + t.instanceMatrix.count, 0);
         P.im = new THREE.InstancedMesh(P.g, P.m, Math.max(1, cap)); P.im.castShadow = false; P.im.receiveShadow = true; P.im.count = 0; P.im.name = 'smallPool';
+        // (HEADING-LOAD: the pool holds only what is in view (viewPools, below), refilled at the render itself; three's own
+        //  sphere test and drawcull.js's BoxCull — which runs before the refill, with the last frame's content — are left
+        //  out: either could hide a pool for a frame just as squares that came into view were put into it)
+        P.im.frustumCulled = !SMALL_VIEW.on; culledToo(P.im);
         if (P.tiles.some((t) => t.instanceColor)) P.im.setColorAt(0, new THREE.Color(1, 1, 1));
         scene.add(P.im);
       }
@@ -686,10 +702,22 @@ export function* buildWorldSteps(parentScene) {
       let k = 0;
       for (const t of P.tiles) {
         if (!t.visible) continue;
-        const n = t.count;
-        M.set(t.instanceMatrix.array.subarray(0, n * 16), k * 16);
-        if (C && t.instanceColor) C.set(t.instanceColor.array.subarray(0, n * 3), k * 3);
-        k += n;
+        const n = t.count, V = t.userData.view, mask = SMALL_VIEW.on && V ? V.mask : -1, far = mask !== -1 && SMALL_VIEW.thin ? V.far & mask : 0;
+        if (mask === 0) continue;
+        if ((mask === -1 || mask === V.all) && !far) {
+          M.set(t.instanceMatrix.array.subarray(0, n * 16), k * 16);
+          if (C && t.instanceColor) C.set(t.instanceColor.array.subarray(0, n * 3), k * 3);
+          k += n; continue;
+        }
+        // (HEADING-LOAD: the instances of the squares in view, in their order)
+        const TM = t.instanceMatrix.array, TC = t.instanceColor?.array, sub = V.sub, nk = far ? Math.round(n * SMALL_VIEW.thin.keep) : n;
+        for (let i = 0; i < n; i++) {
+          const b = 1 << sub[i];
+          if (!(mask & b) || (i >= nk && far & b)) continue;
+          M.set(TM.subarray(i * 16, i * 16 + 16), k * 16);
+          if (C && TC) C.set(TC.subarray(i * 3, i * 3 + 3), k * 3);
+          k++;
+        }
       }
       P.im.count = k; P.im.visible = k > 0;
       P.im.instanceMatrix.needsUpdate = true; if (P.im.instanceColor) P.im.instanceColor.needsUpdate = true;
@@ -697,6 +725,47 @@ export function* buildWorldSteps(parentScene) {
     }
   };
   W.fillPools = fillPools;
+  // HEADING-LOAD (SMALL_VIEW, above): a tile's squares — for each instance the square it is in, and per square a sphere
+  // round its instances (each instance's bounding sphere at its scale, plus the sway's reach)
+  const viewSquares = (part, g) => {
+    if (!g.boundingSphere) g.computeBoundingSphere();
+    const S = SMALL_VIEW.sub, gs = g.boundingSphere, sub = new Uint8Array(part.length), box = new Map();
+    let x0 = Infinity, z0 = Infinity;
+    for (const [t] of part) { x0 = Math.min(x0, t.x); z0 = Math.min(z0, t.z); }
+    part.forEach(([t], j) => {
+      const i = Math.min(3, Math.floor((t.x - x0) / S)), k = Math.min(3, Math.floor((t.z - z0) / S)), q = i * 4 + k;   // (a tile is 36 m: 4 × 4 squares; the last row takes any rest)
+      sub[j] = q;
+      const r = (gs.radius + gs.center.length()) * t.s + SMALL_VIEW.margin, y = t.h - 0.08;
+      let b = box.get(q); if (!b) box.set(q, (b = [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity]));
+      b[0] = Math.min(b[0], t.x - r); b[1] = Math.min(b[1], y - r); b[2] = Math.min(b[2], t.z - r); b[3] = Math.max(b[3], t.x + r); b[4] = Math.max(b[4], y + r); b[5] = Math.max(b[5], t.z + r);
+    });
+    const spheres = [];
+    let all = 0;
+    for (const [q, b] of box) { all |= 1 << q; spheres.push({ q, s: new THREE.Sphere(new THREE.Vector3((b[0] + b[3]) / 2, (b[1] + b[4]) / 2, (b[2] + b[5]) / 2), Math.hypot(b[3] - b[0], b[4] - b[1], b[5] - b[2]) / 2) }); }
+    return { sub, spheres, all, mask: all, far: 0 };
+  };
+  // before each render of the scene with a perspective camera (three calls the scene's onBeforeRender with this frame's
+  // camera matrices, before it builds the render list and uploads the instances): each tile in reach, its squares in view
+  const _vf = new THREE.Frustum(), _vm = new THREE.Matrix4();
+  W.viewPools = (camera) => {
+    if (!SMALL_VIEW.on || !scene.visible || !camera?.isPerspectiveCamera) return;
+    _vf.setFromProjectionMatrix(_vm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+    let any = false;
+    const TH = SMALL_VIEW.thin, F = W.lodFocus;
+    for (const P of W.smallPools) {
+      for (const t of P.tiles) {
+        const V = t.userData.view; if (!V || !t.visible) continue;
+        let mask = 0, far = 0;
+        for (const { q, s } of V.spheres) if (_vf.intersectsSphere(s)) mask |= 1 << q;
+        // (the thinning's squares by their centre's distance from Twinsen, 2 m either way before one changes)
+        if (TH && F) for (const { q, s } of V.spheres) { const d = Math.hypot(s.center.x - F.x, s.center.z - F.z), was = V.far & (1 << q); if (was ? d > TH.from - 2 : d > TH.from + 2) far |= 1 << q; }
+        if (mask !== V.mask || far !== V.far) { V.mask = mask; V.far = far; P.dirty = true; any = true; }
+      }
+    }
+    if (any) fillPools();
+  };
+  W.setSmallView = (on) => { SMALL_VIEW.on = !!on; for (const P of W.smallPools) { if (P.im) P.im.frustumCulled = !SMALL_VIEW.on; P.dirty = true; for (const t of P.tiles) if (t.userData.view) t.userData.view.mask = t.userData.view.all; } fillPools(); };
+  { const before = parentScene.onBeforeRender; parentScene.onBeforeRender = function (r, sc, camera, ...a) { before.call(this, r, sc, camera, ...a); W.viewPools(camera); }; }
   const mkInst = (geo, m, list, shadow = true, colorFn = null, geoLo = null, small = false) => {
     const tiles = new Map();
     if (BATCH.on && geoLo && shadow && !small) {
@@ -731,7 +800,7 @@ export function* buildWorldSteps(parentScene) {
           if (cols) im.setColorAt(j, cols[j]);
         });
         im.computeBoundingSphere();
-        if (small) smallPool(g, m).tiles.push(im); else scene.add(im);   // (PERF-CALLS: a small tile is drawn through its pool)
+        if (small) { smallPool(g, m).tiles.push(im); im.userData.view = viewSquares(part, g); } else scene.add(im);   // (PERF-CALLS: a small tile is drawn through its pool)
         out.push(im);
         return im;
       };
@@ -756,7 +825,10 @@ export function* buildWorldSteps(parentScene) {
     fillPools();
     for (const T of W.lodTiles) if (!T.small) setLod(T, T.near);
   };
+  W.lodFocus = null;
+  W.setSmallThin = (thin) => { SMALL_VIEW.thin = thin || null; for (const P of W.smallPools) { P.dirty = true; for (const t of P.tiles) if (t.userData.view) t.userData.view.far = 0; } fillPools(); };
   W.updateLod = (focus) => {
+    W.lodFocus = focus;
     const near = LOD_DETAIL.near, far = LOD_DETAIL.smallFar;
     for (const B of W.batches) B.update(focus, near);
     for (const T of W.lodTiles) {

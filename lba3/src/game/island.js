@@ -14,6 +14,7 @@ import { rockGeometry, treeGeometry } from './vegetation.js';
 import { buildHouse } from './architecture.js';
 import { buildHarbourShed } from './harbourshed.js';
 import { mergeStatic } from '../engine/merge.js';
+import { viewCull } from '../engine/viewinst.js';
 import { occOf } from '../engine/occlude.js';
 import { fitAdd } from './worldfit.js';
 import { t } from './i18n.js';
@@ -239,7 +240,28 @@ function tint(geo, color) {
   g.setAttribute('color', new THREE.BufferAttribute(a, 3));
   return g;
 }
-function instances(parent, geo, mat, list, { cast = true, receive = true } = {}) {
+// HEADING-LOAD: while PIECES is on (the quay and the original props, whose builders merge their group just after), the
+// static repeated props are placed as ordinary meshes instead of one InstancedMesh per kind: the group's merge
+// (mergeStatic, recolor/retex) then takes them with the rest of the quarter — the static shadow batches and the draw
+// batches cut them per cell — where each kind was a draw of its own in the view (casters drawn on their own in the
+// main pass; the island-wide ones in full wherever the camera looked). The same geometry, matrices and colours (an
+// instance's colour times its material's: the merge folds it into the vertices, as three multiplies the instance colour).
+let PIECES = 0;
+const _pc = new Map();
+const piecesOf = (parent, geo, mat, list, cast, receive) => {
+  for (const it of list) {
+    let m = mat;
+    if (it.color) { const c = new THREE.Color(it.color), k = mat.uuid + c.getHexString(); m = _pc.get(k); if (!m) { m = mat.clone(); m.color.multiply(c); _pc.set(k, m); } }
+    const o = new THREE.Mesh(geo, m);
+    o.position.set(it.x, it.y, it.z); o.rotation.set(it.rx || 0, it.ry || 0, it.rz || 0, 'YXZ');
+    if (it.s != null) o.scale.setScalar(it.s); else o.scale.set(it.sx ?? 1, it.sy ?? 1, it.sz ?? 1);
+    o.castShadow = cast; o.receiveShadow = receive;
+    parent.add(o);
+  }
+  return null;
+};
+function instances(parent, geo, mat, list, { cast = true, receive = true, keep = false } = {}) {
+  if (PIECES > 0 && !keep && list.length) return piecesOf(parent, geo, mat, list, cast, receive);
   const im = new THREE.InstancedMesh(geo, mat, Math.max(1, list.length));
   const o = new THREE.Object3D();
   list.forEach((it, i) => {
@@ -498,6 +520,7 @@ function buildHarbour(W0, root, r) {
   const d = SHIFT.harbour, W = siteW(W0, d);
   const { physics, H } = W;
   const g = new THREE.Group(); g.name = 'harbour'; g.position.set(d.x, 0, d.z); root.add(g);
+  PIECES++;   // (HEADING-LOAD: the quay's repeated props as pieces of its merge, below)
   const B = new Batch(g);
   const QX = HARBOUR0.quayX, QH = 1.8, Z0 = -13, Z1 = 7;
   const pz = HARBOUR0.z, pw = HARBOUR0.pierW, deck = HARBOUR0.deck, plen = HARBOUR0.pierLen;
@@ -667,7 +690,7 @@ function buildHarbour(W0, root, r) {
   // Esmer cargo stack waiting for the ferry (toggled by the story)
   {
     const cargoCols = [];
-    const cargo = techCrates(W, g, [[-71.4, -7.6, 2, 0.9], [-72.4, -8.4, 1, 0.9], [-70.4, -8.3, 1, 0.8]], r, cargoCols);
+    PIECES--; const cargo = techCrates(W, g, [[-71.4, -7.6, 2, 0.9], [-72.4, -8.4, 1, 0.9], [-70.4, -8.3, 1, 0.8]], r, cargoCols); PIECES++;   // (keep: instanced, as before)
     W.harbour = { cargo, setCargo(on) { cargo.visible = on; cargoCols.forEach((c) => (c.enabled = on)); } };
     cargo.userData.keep = true;
   }
@@ -679,7 +702,11 @@ function buildHarbour(W0, root, r) {
   W.fishingBoat.userData.keep = true; W.ferry.group.userData.keep = true;
   // (PERF-2: plain and simply textured materials folded by colour, per 64 m cell — see merge.js recolor/retex; none of
   // the quay's static materials changes at runtime, the animated and toggled parts above are `keep`)
-  mergeStatic(g, { recolor: true, retex: true, cell: 64 }); mergeStatic(W.fishingBoat); mergeStatic(W.ferry.group);
+  PIECES--;
+  // (HEADING-LOAD: the boat and the ferry bob, so each is drawn on its own, as a whole — now with its pieces folded by
+  //  texture as the quay's are (recolor/retex: colour, roughness and metalness into the vertices; the glowing and
+  //  see-through materials, whose look is animated, stay as they are): 3 draws fewer on the street facing the quay)
+  mergeStatic(g, { recolor: true, retex: true, cell: 64 }); mergeStatic(W.fishingBoat, { recolor: true, retex: true }); mergeStatic(W.ferry.group, { recolor: true, retex: true });
   // to world coordinates: what the story and the tests read (the ferry's group stays in the harbour's frame)
   movePt(d, W.pierEnd, W.pierStart, W.harbourShed, W.harbourShed.door, W.ferry, W.ferry.gangway);
   const L = W.cargoLift; L.cratePierW = L.cratePier.clone().add(new THREE.Vector3(d.x, 0, d.z));
@@ -691,7 +718,9 @@ function buildHarbour(W0, root, r) {
 // (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
 // vibration the opening shows (the hook and the lantern tremble, the puddle on the deck ripples).
 function cargoLift(W, parent, r) {
-  const g = new THREE.Group(); g.name = 'cargoLift'; g.userData.keep = true; parent.add(g);
+  // (HEADING-LOAD: the lift's own group is no longer `keep`: its column, base and bracket never move, so they join the
+  //  quay's static shadow and draw batches; what moves stays `keep`, below)
+  const g = new THREE.Group(); g.name = 'cargoLift'; parent.add(g);
   const deck = HARBOUR0.deck, mx = -85.0, mz = -2.75, ARM = 2.0;
   const teal = pm('#2f7a86', 0.45, { metalness: 0.5 }), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2a3038', 0.55, { metalness: 0.5 });
   // column on a bolted base
@@ -788,7 +817,7 @@ function cargoLift(W, parent, r) {
   // the same materials, the same triangles where they were. What moves on its own stays a group (the lantern, the
   // turret, the hook, the cable, the barge, the crate, the puddle's rings).
   for (const o of [lantern, turret, barge, crate, pud, hook, cable]) o.userData.keep = true;
-  mergeStatic(g); mergeStatic(turret); mergeStatic(barge); mergeStatic(crate);
+  mergeStatic(g); for (const o of [turret, barge, crate]) mergeStatic(o, { recolor: true, retex: true });   // (HEADING-LOAD: folded by texture)
   L.pose(1);
   let ripT = 0;
   W.updaters.push((dt, tt) => {
@@ -1135,11 +1164,14 @@ function tulipBed(W, parent, x, z, w, d, ry, r, acc = null) {
   }
   W.physics.add({ type: 'box', x, z, hw: w / 2 + 0.15, hd: d / 2 + 0.15, rot: ry, top: y + 0.24, seeThrough: true });
 }
+// (HEADING-LOAD: the rows of a whole quarter in two instanced meshes, drawn in full wherever the camera looked — the
+//  original props' rows 56k triangles on the street, none of them in view facing east: drawn only where the view can
+//  show them, engine/viewinst.js; they cast no shadow)
 function tulipFlush(acc) {
   if (!acc.list.length) return;
   const T = tulipGeo();
-  instances(acc.parent, T.green, pm('#4f8f3a', 0.8), acc.list, { cast: false });
-  instances(acc.parent, T.cup, pm('#ffffff', 0.6), acc.cups, { cast: false });
+  viewCull(instances(acc.parent, T.green, pm('#4f8f3a', 0.8), acc.list, { cast: false, keep: true }));
+  viewCull(instances(acc.parent, T.cup, pm('#ffffff', 0.6), acc.cups, { cast: false, keep: true }));
 }
 function bench(W, parent, x, z, ry) {
   const y = W.H(x, z);
@@ -2723,6 +2755,7 @@ function buildOldPlaces(W, root) {
 // everything already built; a piece that is blocked may shift up to a metre, else it is left out.
 function buildOriginalProps(W, root, r) {
   const grp = new THREE.Group(); grp.name = 'original-props'; root.add(grp);
+  PIECES++;   // (HEADING-LOAD: the lanterns, bollards, rails and pickets as pieces of the merge at the end)
   const { physics: P, terrain: T } = W;
   const doors = (W.houses || []).map((h) => h.door).filter(Boolean);
   const placed = [];
@@ -2828,7 +2861,8 @@ function buildOriginalProps(W, root, r) {
   }
   tulipFlush(tacc);
   W.propsPlaced = n;
-  mergeStatic(grp, { recolor: true, retex: true, cell: 24 });   // (all static; instanced lamps/posts are left as they are. PERF-IGPU; retex PERF-2)
+  PIECES--;
+  mergeStatic(grp, { recolor: true, retex: true, cell: 24 });   // (all static. PERF-IGPU; retex PERF-2; HEADING-LOAD: the lanterns, bollards, rails and pickets too)
 }
 
 // ================================================================== entry
