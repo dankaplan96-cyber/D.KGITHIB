@@ -53,3 +53,42 @@ Before a battery run, unplug and wait a minute; keep the laptop's power settings
 - **כשאני אומר "תמדוד":** את הבקשה שולחים לשיחה המקומית. היא מריצה, שומרת ודוחפת.
 - **אחר כך כאן:** לכתוב "יש תוצאות". אני מושך אותן מהענף, מנתח ומתקן.
 - **גרסה לשחק בה:** כמו קודם, מדף הגרסאות ב-GitHub.
+
+## בנצ'מרק אוטומטי (31.10): כל גרסה חדשה נמדדת לבד ונדחפת לענף
+**מה זה עושה:**
+- כל 30 דקות סקריפט בודק אם יש גרסה חדשה בדף הגרסאות.
+- אם יש, והמחשב מחובר לחשמל ולא נגעו בו 10 דקות, הוא:
+  - מוריד את ה-zip של הגרסה (המשחק המותקן שלך לא משתנה);
+  - מריץ בנצ'מרק מלא (כ-20–30 דקות);
+  - דוחף את הדוח לענף. אני רואה אותו לבד, בלי שתדביק כלום.
+- הוא לא מתחיל אם המשחק פתוח, ולא מודד את אותה גרסה פעמיים.
+- על סוללה הוא לא רץ, אלא אם תבקש (בהמשך).
+
+**התקנה, פעם אחת: להדביק בשיחה המקומית של Claude Code במחשב:**
+```
+Set up the automatic laptop benchmark for LBA3 (instructions: lba3/docs/LOCAL_SESSION.he.md, section "בנצ'מרק אוטומטי").
+1. git pull on branch ccr-adf00ea7-37ebl3 in my D.KGITHIB clone. If the clone is not at %USERPROFILE%\D.KGITHIB, fix the
+   $REPO line at the top of lba3/docs/lba3-performance/local/autobench.ps1 in a local copy, not in the repo.
+2. Check that git can push without asking for a password (a credential helper is set), and that
+   https://api.github.com/repos/dankaplan96-cyber/D.KGITHIB/releases answers without a login. If the repo is private,
+   change the script to use `gh release list/download` with my gh login instead, and tell me.
+3. Run it once by hand to prove it works:
+   powershell -ExecutionPolicy Bypass -File lba3\docs\lba3-performance\local\autobench.ps1 -Force
+   It should download the newest build's -win.zip into %LOCALAPPDATA%\LBA3-bench, run the full benchmark, and push
+   lba3/docs/lba3-performance/results/laptop-<version>-full-orbit-plugged-auto.txt. Show me the last lines of
+   %LOCALAPPDATA%\LBA3-bench\autobench.log.
+4. Create a Windows Task Scheduler task "LBA3 autobench" that runs every 30 minutes, only when I'm logged on, with that
+   command but without -Force. The script itself skips unless the laptop is plugged in, idle for 10 minutes, and the
+   game is closed.
+5. Tell me in Hebrew, in 3 lines, what was set up and how to turn it off (Task Scheduler → disable "LBA3 autobench").
+Rules: change no game code; commit only result files. Commit messages end with:
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**שימוש:**
+- **לא צריך לעשות כלום.** משאירים את המחשב מחובר ולא נוגעים בו, וכל גרסה חדשה נמדדת לבד.
+- **מדידה על סוללה (רק כשאתה רוצה):** לנתק, ובשיחה המקומית לכתוב:
+  `תריץ autobench על סוללה`
+  היא מריצה את הסקריפט עם `-Force -AllowBattery`.
+- **לכבות:** ב-Task Scheduler, להשבית את "LBA3 autobench".
+- **אם משהו לא עובד:** הקובץ `%LOCALAPPDATA%\LBA3-bench\autobench.log`.
