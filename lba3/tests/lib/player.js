@@ -85,9 +85,21 @@
     if (!G.room || G.room.outdoor) for (const d of G.story.doors()) if ((d.region || undefined) === G.room?.id) out.push(d);
     return out.filter((d) => Math.hypot(d.x - tx, d.z - tz) > 1.2).map((d) => ({ x: d.x, z: d.z, r: d.r + 0.35 }));
   };
-  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5, raw = false } = {}) => {
+  // the people he can't walk through (SOLID-NPC: Hero.contacts, his radius + theirs), as circles to keep out of;
+  // not the one he is walking to
+  const bodies = (tx, tz) => {
+    const h = hero(), out = [];
+    for (const n of G.npcs || []) {
+      if (!n.present || n.controlled || n.away || !n.rig?.root.visible || Math.abs(n.pos.y - h.pos.y) > 1.2) continue;
+      if (Math.hypot(n.pos.x - tx, n.pos.z - tz) < 0.3) continue;
+      out.push({ x: n.pos.x, z: n.pos.z, r: h.radius + (n.bodyR ?? n.radius) + 0.05 });
+    }
+    return out;
+  };
+  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5, raw = false, people = false } = {}) => {
     const h = hero(), sx = h.pos.x, sz = h.pos.z;
     const avoid = triggers(tx, tz);   // door/exit triggers: kept out of, except to walk out of one he stands in
+    if (people) avoid.push(...bodies(tx, tz));   // (after he got stuck: round the people, I-19/I-21)
     const key = (ix, iz, y) => ix + ',' + iz + ',' + Math.round(y * 2);
     // binary heap of [f, key]
     const heap = [];
@@ -180,9 +192,12 @@
           P.note(`stuck at (${h.pos.x.toFixed(1)}, ${h.pos.z.toFixed(1)}): replan`);
           // back off a little, then plan again; stuck twice: follow the planned cells one by one instead of the
           // smoothed corners (a straight line between two corners can graze a slope too steep to walk, and cutting
-          // a corner by the 0.45 m a waypoint counts as reached puts him on it), as a player picks his way round
+          // a corner by the 0.45 m a waypoint counts as reached puts him on it), as a player picks his way round.
+          // The new plan goes round the people standing there: they are solid (SOLID-NPC) and the first plan does
+          // not see them, so a line through someone beside a brick (Nara between her case and a street lamp on
+          // Zeelich) pinned him there for good (I-19, I-21)
           P.release(); P.holdFor(['ArrowDown'], 0.4);
-          plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6), raw: replans >= 2 }); wi = 1;
+          plan = P.plan(tx, tz, { tol: planTol ?? Math.max(0.3, tol * 0.6), raw: replans >= 2, people: true }); wi = 1;
         }
         lastP = { x: h.pos.x, z: h.pos.z, t };
       }
