@@ -178,6 +178,10 @@ class Game {
     setLang(this.settings.lang);
 
     this.renderer = new Renderer($('#game'));
+    // (TITLE-LOAD: three asks the driver for the largest anisotropy (a call that waits for the GPU process) on the first
+    //  texture that uses it, the loading screen's texture step, by then behind every shader sent early: the step's first
+    //  texture waited for all of them (13 s here). Asked now, with nothing queued; three keeps the answer)
+    try { this.renderer.renderer.capabilities.getMaxAnisotropy(); } catch { /* (no context: tests) */ }
     // PERF-BATTERY: on battery, the battery profile within the preset (engine/power.js, renderer.js setBattery); known
     // before the first shader is compiled in the desktop app
     this.power = new Power((on) => this.setBattery(on));
@@ -480,6 +484,15 @@ class Game {
     //  own task — the whole warm-up was one task of 1.2–6.8 s here)
     if (!/[?&]nowarm/.test(location.search)) { for (let k = 0, n = 1; k < n; k += SHADOW_KINDS) { n = this.warmShadows([k, k + SHADOW_KINDS]); this.loadTimes.slices.shadowPrograms = (this.loadTimes.slices.shadowPrograms || []).concat(Math.round(performance.now() - tp)); lap('shadowPrograms'); if (k + SHADOW_KINDS < n) { await nextPaint(); lap('paint'); } } } // (?nowarm: for A/B timing)
     lap('shadowPrograms');
+    // (TITLE-LOAD: the title view's first draws in parts, a painted frame between: each part of Citadel drawn once into a
+    //  scratch target, shadows not redrawn — the driver's first-draw work per program and geometry (Direct3D 11 makes a
+    //  shader's input-layout variant on its first draw) spread over several tasks instead of all in the first frame)
+    { const kids = [...this.world.root.children], K = FIRST_DRAW_PARTS;
+      for (let c = 0; c < K; c++) {
+        await step('Almost there…', 0.96 + (0.03 * (c + 1)) / K, 'firstDrawsPart', 600);
+        this.drawPart(this.world.root, new Set(kids.slice(Math.floor((c * kids.length) / K), Math.floor(((c + 1) * kids.length) / K))));
+        lap('firstDraws');
+      } }
     await step('Almost there…', 0.99, 'firstFrame', 3000);
     // (STABILIZATION: the title's first frame itself, under the loading screen — its people, its detail tiles, its shadow
     //  batches for the title's focus and the static shadow cache's first build, its first draws — not only a render of
@@ -772,7 +785,11 @@ class Game {
     // (ROTATE-STALL: Citadel once more on its first entry in play — it was sent at startup, and what was made since (a
     //  harbour piece, a draw-batch cell rebuilt during the title or the opening) went up on the first street frames that
     //  looked at it: the Follow camera's first sweep, 126 and 26 vertices)
-    stepT('geometry', () => { if (root === this.world.root && this.state === 'play' && !this._citadelAgain && this.skelUp !== false) { this._citadelAgain = true; this._uploaded?.delete(root); } this.uploadGeometry(root); });
+    // (in GEO_PARTS parts of the area's children, a black frame each, then whatever is left: startup's way for Citadel)
+    stepT('geometry', () => { if (root === this.world.root && this.state === 'play' && !this._citadelAgain && this.skelUp !== false) { this._citadelAgain = true; this._uploaded?.delete(root); } });
+    { let kids = null;
+      for (let c = 0; c < GEO_PARTS; c++) stepT('geometry', () => { if (this._uploaded?.has(root)) return; kids ??= [...root.children]; this.uploadGeometry(root, new Set(kids.slice(Math.floor((c * kids.length) / GEO_PARTS), Math.floor(((c + 1) * kids.length) / GEO_PARTS)))); });
+      stepT('geometry', () => this.uploadGeometry(root)); }
     // (TITLE-LOAD: every visit, the batch meshes made or remade since the area's geometry was sent)
     stepT('batch meshes', () => this.uploadBatches(root));
     stepT('textures', () => { this.uploadTextures(root); this.uploadExtras(root); });   // (ROTATE-STALL: what the area's first frame still made)
@@ -800,6 +817,17 @@ class Game {
     T.prep = null;
     const p = T.prepWait; T.prepWait = null;
     if (p) p.finally(() => { if (this.trans === T) T.hold = false; }); else T.hold = false;
+  }
+  // TITLE-LOAD: one render of the title's view with only `part` of root's children shown, into a scratch target, the
+  // shadow map not redrawn (prepare's first draws in parts). Everything else is as the frame has it; put back after.
+  drawPart(root, part) {
+    const R = this.renderer.renderer, C = this.renderer.composer;
+    if (!C || this.testFreeze) return;
+    const out = [], prevT = R.getRenderTarget(), au = R.shadowMap.autoUpdate;
+    for (const k of root.children) if (!part.has(k) && k.visible) { k.visible = false; out.push(k); }
+    try { R.shadowMap.autoUpdate = false; R.setRenderTarget(C.renderTarget2); R.render(this.scene, this.camera); }
+    catch (e) { console.warn('first draws', e); }
+    finally { R.setRenderTarget(prevT); R.shadowMap.autoUpdate = au; for (const k of out) k.visible = true; }
   }
   // TITLE-LOAD: the area's draw-batch meshes three has not uploaded yet (made or remade since its geometry was sent:
   // cells rebuilt for pieces that left or came back), sent now — in a black frame, not on the first frame that looks at
@@ -2531,7 +2559,7 @@ const TITLE_VIEW = (() => {
 // TITLE-LOAD: the loading screen's work in slices: items handled until SLICE_MS has passed, then a painted frame, so its
 // picture and animation keep moving (the last item of a slice may run past it: one texture, one piece). `list` null:
 // fn() is called until it returns false. Each slice's ms goes to game.loadTimes.slices[name]
-const SLICE_MS = 30, SHADOW_KINDS = 3;
+const SLICE_MS = 30, SHADOW_KINDS = 3, GEO_PARTS = 4, FIRST_DRAW_PARTS = 4;
 async function sliced(list, fn, name) {
   const S = (window.game?.loadTimes?.slices ?? (sliced.out ??= {})), rec = (S[name] ??= []);
   let i = 0, more = true;

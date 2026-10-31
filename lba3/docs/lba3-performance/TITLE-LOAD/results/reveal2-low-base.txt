@@ -1,0 +1,11 @@
+reveal (stepped 60 Hz frames) · low · battery false · parallel-style warm-up true · stale keys true · staged true
+zeelich (cold): 72 frames, 66419 ms in all, 65361 ms black; preparation steps (ms): -
+   20  65361 ms BLACK fade 0.33  op 1.00 draw batches built 65050 ms, shadow batches built 156 ms, +1 programs, +132 geometries, +52 textures
+   21    230 ms view  fade 0.35  op 0.95 +48 geometries, 87 pieces left batches  << UPLOAD IN VIEW
+   22     10 ms view  fade 0.37  op 0.90 +1 geometries  << UPLOAD IN VIEW
+citadel (cold): 72 frames, 66735 ms in all, 24669 ms black; preparation steps (ms): -
+   20  24669 ms BLACK fade 0.33  op 1.00 +143 geometries
+   21  34698 ms view  fade 0.35  op 0.95 -20 geometries, 12 pieces left batches
+zeelich (repeat): 72 frames, 93262 ms in all, 66 ms black; preparation steps (ms): -
+   20     66 ms BLACK fade 0.33  op 1.00 
+frames in view that made geometries: 2 · longest black frame 65361 ms · longest frame in view (fade and 30 after) 34698 ms

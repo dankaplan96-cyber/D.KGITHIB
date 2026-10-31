@@ -19,6 +19,8 @@
     fogOff: { apply: () => { DC.FOGCULL.on = false; }, undo: () => { DC.FOGCULL.on = true; } },
     // the hero and the enemies whose bodies have never been placed (their rig still at the world's origin) hidden
     originOff: { apply: (G) => { G._oh = []; for (const a of [G.hero, ...G.enemies]) { const r = a.rig?.root || a.group; if (r && r.visible && r.position.lengthSq() === 0) { r.visible = false; G._oh.push(r); } } }, undo: (G) => { for (const r of G._oh) r.visible = true; } },
+    // (TITLE-LOAD: the bodies never placed shown again, as before: drawcull.js hideUnplaced off)
+    unplacedShown: { apply: (G) => { G.farCull.unplaced = false; }, undo: (G) => { G.farCull.unplaced = true; } },
     castersOff: { apply: (G) => { G.boxCull.casters = false; }, undo: (G) => { G.boxCull.casters = true; } },
     // the camera's far plane at the fog's end (+1 m): everything beyond is the fog's colour anyway
     farFog: { apply: (G) => { G._f0 = G.camera.far; G.camera.far = G.scene.fog.far + 1; G.camera.updateProjectionMatrix(); }, undo: (G) => { G.camera.far = G._f0; G.camera.updateProjectionMatrix(); } },

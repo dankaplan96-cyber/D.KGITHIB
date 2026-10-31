@@ -1,0 +1,43 @@
+reveal (stepped 60 Hz frames) · low · battery false · parallel-style warm-up true · stale keys true · staged true
+zeelich (cold): 86 frames, 68754 ms in all, 68002 ms black; preparation steps (ms): shadow batches 0 · texture layers 65839 · texture layers 986 · texture layers 35 · texture layers 8 · draw batches 464 · geometry 78 · batch meshes 0 · textures 6 · shadow programs 0 · shader warm-up 52
+   20    145 ms BLACK fade 0.33  op 1.00 shadow batches built 134 ms
+   21      1 ms BLACK prep 0     op 1.00 
+   22  65841 ms BLACK prep 1     op 1.00 
+   23   1028 ms BLACK prep 1     op 1.00 
+   24     39 ms BLACK prep 1     op 1.00 
+   25     10 ms BLACK prep 1     op 1.00 
+   26    465 ms BLACK prep 2     op 1.00 draw batches built 463 ms, +1 textures
+   27     81 ms BLACK prep 3     op 1.00 +172 geometries
+   28      1 ms BLACK prep 4     op 1.00 
+   29      7 ms BLACK prep 5     op 1.00 +51 textures
+   30      1 ms BLACK prep 6     op 1.00 
+   31     53 ms BLACK prep 7     op 1.00 +1 programs
+   32      1 ms BLACK prep 8     op 1.00 
+   33    315 ms BLACK held       op 1.00 +26 geometries, 87 pieces left batches
+   34     14 ms BLACK held       op 1.00 
+   35     12 ms view  held       op 0.95 
+citadel (cold): 81 frames, 76568 ms in all, 65275 ms black; preparation steps (ms): shadow batches 0 · draw batches back 47 · geometry 31106 · batch meshes 1585 · textures 30 · shadow programs 0 · shader warm-up 83
+   20      2 ms BLACK fade 0.33  op 1.00 
+   21      1 ms BLACK prep 0     op 1.00 
+   22     51 ms BLACK prep 1     op 1.00 -1 geometries
+   23  31108 ms BLACK prep 2     op 1.00 +144 geometries
+   24   1587 ms BLACK prep 3     op 1.00 
+   25     32 ms BLACK prep 4     op 1.00 
+   26      1 ms BLACK prep 5     op 1.00 
+   27     84 ms BLACK prep 6     op 1.00 
+   28      1 ms BLACK prep 7     op 1.00 
+   29  32409 ms BLACK held       op 1.00 -16 geometries, 12 pieces left batches
+   30     14 ms view  held       op 0.95 
+zeelich (repeat): 81 frames, 117940 ms in all, 1885 ms black; preparation steps (ms): shadow batches 0 · draw batches back 1 · geometry 0 · batch meshes 0 · textures 9 · shadow programs 0 · shader warm-up 76
+   20      2 ms BLACK fade 0.33  op 1.00 
+   21      1 ms BLACK prep 0     op 1.00 
+   22      2 ms BLACK prep 1     op 1.00 
+   23      1 ms BLACK prep 2     op 1.00 
+   24      1 ms BLACK prep 3     op 1.00 
+   25     10 ms BLACK prep 4     op 1.00 
+   26      1 ms BLACK prep 5     op 1.00 
+   27     77 ms BLACK prep 6     op 1.00 
+   28      1 ms BLACK prep 7     op 1.00 
+   29   1790 ms BLACK held       op 1.00 
+   30     76 ms view  held       op 0.95 
+frames in view that made geometries: 0 · longest black frame 65841 ms · longest frame in view (fade and 30 after) 9197 ms
