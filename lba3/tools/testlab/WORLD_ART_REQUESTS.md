@@ -104,7 +104,7 @@ hall, the gardens), shown to the user and approved (`tools/testlab/runs/ba-roofs
 
 ---
 
-## WA-3 · Citadel: rubble walls on the two thatched cottages, the old shop's striped awning · AWAITING USER APPROVAL (do not apply yet)
+## WA-3 · Citadel: rubble walls on the two thatched cottages, the old shop's striped awning · Approved (user, 31.10.2026: standing approval)
 
 Prototyped on the laptop on top of WA-1 and WA-2. The pictures wait for the user (`tools/testlab/runs/ba-walls.jpg`
 on the laptop).
@@ -127,7 +127,7 @@ on the laptop).
 
 ---
 
-## WA-4 · Carved double doors on the two thatched cottages · AWAITING USER APPROVAL (do not apply yet)
+## WA-4 · Carved double doors on the two thatched cottages · Approved (user, 31.10.2026: standing approval)
 
 Prototyped on the laptop on top of WA-1 to WA-3 (pictures: `tools/testlab/runs/doors.jpg` on the laptop).
 
