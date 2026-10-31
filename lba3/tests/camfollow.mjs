@@ -33,7 +33,7 @@ await open(page, '?nocine');
 
 // ---------------------------------------------------------------- 1. the setting
 const set0 = await ev(() => ({ cam: game.settings.camera, opts: [...document.querySelectorAll('[data-setting="camera"] button')].map((b) => [b.dataset.v, b.textContent.trim()]) }));
-check('Settings → Camera offers three choices: Fixed (LBA2), Follow, Free; a new player starts on LBA2', set0.cam === 'lba' && set0.opts.map((o) => o[0]).join() === 'lba,follow,free' && set0.opts[1][1] === 'Follow', set0);
+check('Settings → Camera offers three choices: Fixed (LBA2), Follow, Free; a new player starts on Follow (behind Twinsen: the user 31.10)', set0.cam === 'follow' && set0.opts.map((o) => o[0]).join() === 'lba,follow,free' && set0.opts[1][1] === 'Follow', set0);
 await ev(() => document.querySelector('[data-setting="camera"] [data-v="follow"]').click());
 const set1 = await ev(() => ({ cam: game.settings.camera, rig: game.camRig.mode, on: document.querySelector('[data-setting="camera"] [data-v="follow"]').classList.contains('on'),
   stored: Object.keys(localStorage).filter((k) => /"camera":"follow"/.test(localStorage.getItem(k) || '')) }));

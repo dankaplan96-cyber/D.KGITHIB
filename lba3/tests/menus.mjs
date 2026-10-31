@@ -13,7 +13,7 @@ await open(page, '?nocine');
 check('first launch: the title menu is up, nothing else', JSON.stringify(await shown()) === '["title"]', await shown());
 const cont = await ev(() => { const b = document.querySelector('#btn-continue'); return { disabled: b.disabled, hidden: b.classList.contains('hidden') || getComputedStyle(b).display === 'none' }; });
 check('first launch: Continue is unavailable without a save', cont.disabled || cont.hidden, cont);
-check('first launch: settings are the defaults (Classic controls, LBA camera)', await ev(() => game.settings.controls === 'classic' && game.settings.camera === 'lba'), await ev(() => game.settings));
+check('first launch: settings are the defaults (Classic controls, the Follow camera behind Twinsen, controls by device on: the user 31.10)', await ev(() => game.settings.controls === 'classic' && game.settings.camera === 'follow' && game.settings.autoControls === 'on'), await ev(() => game.settings));
 
 // ---- settings and controls screens: open and close repeatedly
 for (let i = 0; i < 5; i++) {
@@ -39,7 +39,7 @@ const layout = await ev(() => {
   for (const p of S.querySelectorAll('.set-page')) pages[p.dataset.page] = { shown: p.querySelectorAll(':scope > .set-row').length, advanced: p.querySelectorAll('.set-adv .set-row').length };
   return { keys: keys.sort(), pages, tabs: [...S.querySelectorAll('.set-tabs [data-tab]')].map((b) => b.textContent), open: game.setTab, sel: S.querySelector('.sel')?.className };
 });
-const KEYS = ['aimAssist', 'camDist', 'camera', 'controls', 'difficulty', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice'];
+const KEYS = ['aimAssist', 'autoControls', 'camDist', 'camera', 'controls', 'difficulty', 'hud', 'lockMode', 'minimap', 'music', 'quality', 'sfx', 'shake', 'textSize', 'textSpeed', 'visual', 'voice'];
 check('settings: every stored setting has its control (SETTINGS-FEW: Edges, Resolution and the frame-rate limit removed)', JSON.stringify(layout.keys) === JSON.stringify(KEYS), layout.keys);
 check('settings: four pages (Game, Controls, Display, Sound), at most 4 rows each before Advanced; opens on Game with the tabs selected', layout.tabs.join() === 'Game,Controls,Display,Sound' && Object.values(layout.pages).every((p) => p.shown <= 4) && layout.open === 'game' && /set-tabs/.test(layout.sel), layout);
 // keyboard: → on the tabs turns the page, ↓ to Movement, → picks Modern (applied: Modern's keys), ← Classic again
