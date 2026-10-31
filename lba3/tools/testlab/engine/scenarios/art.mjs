@@ -29,6 +29,8 @@ export const houseWalk = {
 export const VIEWS = [
   ['street-square', null, -46, 2, Math.PI / 2], ['street-well', null, -38, -8, -2.4], ['street-shop', null, -36, 4, 0.2],
   ['street-gardens', null, -42, 12, Math.PI], ['harbour', null, -60, 6, -Math.PI / 2],
+  ['twinsen-house', null, -41.5, 79.8, -Math.PI / 2], ['nbr-house', null, -25, 75.3, -Math.PI / 2], ['south-house', null, -48.2, 31.5, Math.PI],
+  ['stone-house', null, -28.6, -15, Math.PI], ['baggage-hall', null, -84.2, 36, Math.PI],
   ['house-main', 'house', 0, 0, 0], ['house-back', 'house', 0, 0, Math.PI],
 ];
 export const artShots = {

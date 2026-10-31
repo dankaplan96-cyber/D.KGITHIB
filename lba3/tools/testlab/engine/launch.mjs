@@ -18,7 +18,7 @@ const READY = () => window.game && document.querySelector('#loading')?.classList
 
 // opts: { target: 'packaged'|'dev', game, project, profileDir, fresh, query, appArgs, timeoutMs, onEvent }
 export async function launch(opts) {
-  const { target, profileDir, fresh = false, query = '?nocine', appArgs = [], timeoutMs = 300000, onEvent = () => {} } = opts;
+  let { target, profileDir, fresh = false, query = '?nocine', appArgs = [], timeoutMs = 300000, onEvent = () => {} } = opts;
   if (fresh) fs.rmSync(profileDir, { recursive: true, force: true });
   const coldProfile = !fs.existsSync(profileDir);
   fs.mkdirSync(profileDir, { recursive: true });
@@ -67,6 +67,8 @@ export async function launch(opts) {
 
   // fullscreen as the desktop app opens (the app remembers leaving fullscreen in its profile: set it every run)
   await setFullscreen(H, true);
+  // LBA3_SEED: the game's own seed for Math.random (?seed=N, builds after 0.43.3): the same people, the same choices every run
+  if (process.env.LBA3_SEED) query = (query || '?') + (query && query !== '?' ? '&' : '') + 'seed=' + process.env.LBA3_SEED;
   await page.goto(H.base + query, { waitUntil: 'load', timeout: 180000 });
   H.timing = { launchMs: Date.now() - t0 };
   await page.waitForFunction(READY, null, { timeout: timeoutMs }).catch(() => { throw new LaunchError('the title screen did not finish loading in time', 'timeout'); });
