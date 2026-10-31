@@ -208,3 +208,16 @@ Data and probes: `HEADING-LOAD-2/results/` (`per-heading-before-after.txt`, `tra
 - **Laptop:**
   - `electron-bench.mjs full … battery follow`: the arrival route and its GPU group lines.
   - the hamalayi route, against 0.43.2.
+
+## Closing (the user, 31.10)
+"Let's stop with the benchmarks and get back to the game itself, once the relevant agents finish."
+- **Still finishing:** the two running agents, SHADE-COST (terrain and material shading on battery) and TITLE-LOAD (the title view, the loading screen freeze, arrival uploads after the black). They are merged after their tests.
+- **Then the milestone closes.** The laptop's last full runs (0.43.3):
+  - Plugged in: 60 everywhere at Medium; High 56–60, held by a ~56 Hz display pace, not by the game.
+  - Battery Medium: street 55, everything else 58–60 as played.
+- **No more benchmark requests to the user.** If the automatic laptop benchmark (`local/autobench.ps1`) is set up, it measures new builds silently; its reports are read only to catch regressions.
+- **Content resumes** in the order of `lba3-production/WORKLIST.he.md`:
+  1. magic levels as in LBA2;
+  2. visual shops, inventory and coins;
+  3. faces, hands and the tunic (I-22);
+  4. Citadel's looks.
