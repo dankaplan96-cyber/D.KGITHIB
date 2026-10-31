@@ -189,3 +189,57 @@ full frame.
   `compare` does.
 - `Math.random` is not seeded, so two runs of the same input timeline are not the same game.
   `NEEDS_FROM_GAME.md` lists that and what else would make the tests exact.
+
+## The whole game: 42 rooms and regions × 3 story points (sweep-2026-10-31)
+
+- **How:** `node engine/cli.mjs sweep`. Every room and region was entered through the game's own door (enterRoom
+  with its fade), at the start of the story, chapter 7 (observatory) and chapter 12 (core). The story was moved on
+  with `story.nextChapter()`.
+- **Runs:** on battery until the run was stopped by hand (start and middle complete), then plugged in (all three).
+- **Per area:** entry stalls, 8 s looking around (the free camera turning), a second entry, every character's checks
+  and close-up, one overview.
+- **Data:** `areas.csv` (battery against plugged, per area) and `start|mid|end/areas-*.json`.
+- **Pictures:** `overviews.jpg` and `flagged-characters.jpg` (developer evidence; the user plays only chapters 1–2).
+
+**Speed:** every interior runs at 60 fps on battery (GPU 7–13 ms). Seven outdoor areas fall below 58 fps on battery.
+All are GPU-bound, and all reach 60 plugged in except the Citadel.
+
+| area | battery fps · GPU ms | plugged fps · GPU ms |
+|---|---|---|
+| citadel | **44.5** · 18.1 | 55.5 · 11.8 (plugged, Auto is High) |
+| isle_otringal | **46.5** · 17.6 | 60 · 9.6 |
+| hamalayi | 51.5 · 16.1 | 60 · 9.4 |
+| isle_knartas | 53.8 · 15.6 | 60 · 9.5 |
+| zeelich | 54.3 · 14.0 | 60 · 9.4 |
+| desert | 55.7 · 12.3 | 60 · 9.8 |
+| isle_platform | 56.0 · 15.0 | 60 · 9.6 |
+
+The street diagnosis above (material shading, the terrain shader) is the lever for all of them. Otringal is the
+second heaviest after the Citadel.
+
+**Entry, battery / plugged:**
+- The first entry is mostly behind the fade, but long: zeelich 1.8 / 2.0 s, isle_otringal 1.8 / 1.3 s, desert
+  1.8 / 1.0 s, hamalayi 1.3 / 1.1 s, c3shaft 1.3 / 1.7 s, isle_knartas 1.0 / 0.6 s, workshop 1.0 / 0.7 s.
+- A second entry still costs about 0.15–0.27 s in the rooms and regions (a shadow-cache rebuild each time), and
+  about 0.02–0.03 s on the islands.
+- **Direction:** the same as finding 4. Don't rebuild the shadow cache on every re-entry of an area already built.
+
+**Characters (154 checks over the three story points), from the measurements and the pictures:**
+- **Real, out of reach (the gardener pattern):**
+  - citadel `garrick` (gar_water 1.8 m, gar_draw 1.9 m, gar_tend 1.2 m);
+  - zeelich `kira` (tend and water 1.14 m, draw 2.54 m);
+  - zeelich `ilo` (browse 2.99 m, dip 2.06 m).
+  These stops sit about 1.1–3 m from what they work on. The fix is the same in src/game/walkrounds.js: put the stop
+  at about 0.7 m, facing the object.
+- **To check by eye:**
+  - desert `tamu` walks 0.4–0.8 m below the physics ground (through a sand mound?);
+  - lighttop `arthur` (chapter 12) stands where a surface is 0.6 m above the feet (the console?);
+  - citadel `dot` warm 1.2 m from the heat post.
+- **False alarms of the tool** (seated characters are recognised by their animation name, which is missed on these):
+  oda and maro on benches, the three council members on their chairs, citadel `tilde` (end); desert `safi` dip at the
+  oasis (the ray must go down to the water).
+
+**The look, for the World Art pass** (`overviews.jpg`): the Citadel, the house, the office, the workshop and the
+lighthouse top are warm and detailed. About a dozen interiors share one look: dark blue-grey walls, a grey floor,
+sparse props, little separation between floor and walls. They are archive, asylum, buhalls, bumaze, school, valves,
+wtent, condA/B, control, projoffice and butemple.
