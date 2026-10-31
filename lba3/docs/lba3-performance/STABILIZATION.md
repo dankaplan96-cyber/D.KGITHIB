@@ -215,7 +215,7 @@ Data and probes: `HEADING-LOAD-2/results/` (`per-heading-before-after.txt`, `tra
 - **Then the milestone closes.** The laptop's last full runs (0.43.3):
   - Plugged in: 60 everywhere at Medium; High 56–60, held by a ~56 Hz display pace, not by the game.
   - Battery Medium: street 55, everything else 58–60 as played.
-- **No more benchmark requests to the user.** If the automatic laptop benchmark (`local/autobench.ps1`) is set up, it measures new builds silently; its reports are read only to catch regressions.
+- **One last benchmark** (the user, 31.10): once SHADE-COST and TITLE-LOAD are merged and built, the user runs one full benchmark on that build. After that, benchmarks only at later milestones. If the automatic laptop benchmark (`local/autobench.ps1`) is set up, its reports are read only to catch regressions.
 - **Content resumes** in the order of `lba3-production/WORKLIST.he.md`:
   1. magic levels as in LBA2;
   2. visual shops, inventory and coins;
