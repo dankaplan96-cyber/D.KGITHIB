@@ -242,7 +242,7 @@ the user).
 
 ---
 
-## WA-7 · Twelve interiors: palettes and materials instead of one dark blue-grey look · Approved (user, 31.10.2026: standing approval)
+## WA-7 · Twelve interiors: palettes and materials instead of one dark blue-grey look · Applied (the cloud, 31.10.2026; in the build after 0.44.0; the archive plaster #e6d0a4, as suggested)
 
 - **Why:** the whole-game sweep found about a dozen rooms sharing one look: dark blue-grey walls, a grey floor and
   little floor/wall separation, so they read empty and alike. They are:

@@ -21,7 +21,8 @@ export function buildValveRoom(scene, physics) {
   const R = B.room, k = B.k;
   const W = 12, D = 9, H = 4.4;
   R.view = 12.5; R.follow = 0.3; R.music = 'facility';
-  B.shell({ floor: MAT.tread('#7d7a8c'), slab: MAT.stone('slate'), body: MAT.plates('#5a6a72', 2), low: MAT.plates('#3a4a52', 1), rail: MAT.iron(), cap: MAT.stone('slate'), W, D, H, t: 0.45, dado: 1.0, rimH: 0.5, left: [{ at: 2.5, w: 1.6, h: 2.6, y0: 0, kind: 'door' }] });
+  // (WORLD-ART-7: FunFrock's waterworks — teal-painted plates, red steel rails, a pale lavender deck, hazard-striped rims)
+  B.shell({ floor: MAT.tread('#8d8a9c'), slab: MAT.stone('slate'), body: MAT.plates('#3f8a86', 2), low: MAT.plates('#2a5a5a', 1), rail: MAT.paint('#a8382a', 0.5), cap: MAT.stone('slate'), rimMat: MAT.hazard(), W, D, H, t: 0.45, dado: 1.0, rimH: 0.5, left: [{ at: 2.5, w: 1.6, h: 2.6, y0: 0, kind: 'door' }] });
   R.exits.push({ x: B.cx - W / 2 + 0.5, z: B.cz + 2.5, r: 0.75, to: 'valves-out' });
   R.spawn = { x: B.cx - W / 2 + 1.8, z: B.cz + 2.5, a: Math.PI / 2 };
   const BZ = -D / 2;

@@ -97,7 +97,9 @@ export function buildLba1Room(scene, physics, id, name, cx, cz, opts = {}) {
     top: new THREE.MeshStandardMaterial({ map: TEX.plaster('#f4f0ea'), vertexColors: true, roughness: 0.85, side: THREE.DoubleSide }),
   };
   // (the stone texture is darker than white: lift the side colours a little)
-  mats.side.color.setScalar(1.6);
+  mats.side.color.set(opts.sideCol || '#ffffff').multiplyScalar(1.6);
+  // (WORLD-ART-7: opts.topCol / opts.sideCol tint floors and walls apart; the measured brick colours alone make both the same grey)
+  if (opts.topCol) mats.top.color.set(opts.topCol);
   for (const kind of ['side', 'top']) {
     if (!pos[kind].length) continue;
     const g = new THREE.BufferGeometry();

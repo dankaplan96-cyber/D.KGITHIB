@@ -40,7 +40,8 @@ const gaugeFace = () => canvasTex(128, 128, (x, W) => {
   void W;
 });
 
-function plateWall(H) { return { floor: MAT.stone('grey', 2), slab: MAT.rubble('grey'), body: MAT.plates('#7a7464', 2), low: MAT.plates('#5a564a', 1), rail: MAT.iron(), cap: MAT.iron(), H, t: 0.45, dado: 1.1, rimH: 0.5, rimMat: MAT.plates('#5a564a', 1) }; }
+// (WORLD-ART-7: the desert works — sandstone floor under green-teal plates, a rust-brown dado, red rails, hazard rims)
+function plateWall(H) { return { floor: MAT.stone('sand', 2), slab: MAT.rubble('grey'), body: MAT.plates('#2f8a86', 2), low: MAT.plates('#6a5a48', 1), rail: MAT.paint('#a8382a', 0.5), cap: MAT.iron(), H, t: 0.45, dado: 1.1, rimH: 0.5, rimMat: MAT.hazard() }; }
 
 // ================================================================== the valve hall
 function buildValveHall(scene, physics) {

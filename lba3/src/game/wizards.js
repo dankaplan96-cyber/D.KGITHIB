@@ -49,10 +49,10 @@ const signTex = (text) => canvasTex(512, 128, (x, W, H) => {
   x.fillStyle = '#f4e2b0'; x.font = 'bold 44px serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, W / 2, H / 2 + 2);
 });
 const pentaTex = () => canvasTex(256, 256, (x, W) => {
-  x.fillStyle = '#6a6a70'; x.fillRect(0, 0, W, W);
+  x.fillStyle = '#a8957a'; x.fillRect(0, 0, W, W);   // (WORLD-ART-7: warm sandstone slabs, lighter than the grey walls)
   for (let i = 0; i < 400; i++) { x.fillStyle = `rgba(${Math.random() < 0.5 ? '0,0,0' : '255,255,255'},${Math.random() * 0.06})`; x.fillRect(Math.random() * W, Math.random() * W, 6, 6); }
-  x.strokeStyle = '#2e2e34'; x.lineWidth = 8; x.strokeRect(4, 4, W - 8, W - 8);
-  x.strokeStyle = '#3a3a42'; x.lineWidth = 5;
+  x.strokeStyle = '#4a3a2a'; x.lineWidth = 8; x.strokeRect(4, 4, W - 8, W - 8);
+  x.strokeStyle = '#6a4a2e'; x.lineWidth = 5;
   x.beginPath(); x.arc(W / 2, W / 2, 92, 0, 7); x.stroke();
   x.beginPath(); for (let k = 0; k <= 5; k++) { const a = -Math.PI / 2 + k * Math.PI * 4 / 5; x.lineTo(W / 2 + Math.cos(a) * 92, W / 2 + Math.sin(a) * 92); } x.stroke();
 });
@@ -95,7 +95,8 @@ function buildTentRoom(scene, physics) {
   const W = 13, D = 9.5, H = 4.6;
   R.view = 15; R.follow = 0.3; R.music = 'home';
   const stone = MAT.stone('grey', 2), rough = MAT.rubble('grey');
-  B.shell({ floor: MAT.stone('grey', 3), slab: rough, body: stone, low: rough, rail: MAT.iron(), cap: MAT.iron(), H, t: 0.55, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
+  // (WORLD-ART-7: a lived-in wizard's den — warm boards under the stone walls, brass rails like the tent's gold stars)
+  B.shell({ floor: MAT.planks('honey'), slab: rough, body: stone, low: rough, rail: MAT.brass(), cap: MAT.iron(), H, t: 0.55, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
     back: [{ at: -5.0, w: 1.8, h: 2.6, y0: 0, kind: 'door' }] });
   const BZ = -D / 2;
   R.exits.push({ x: B.cx - 5.0, z: B.cz + BZ + 0.5, r: 0.85, to: 'wtent-out' });
@@ -151,7 +152,8 @@ function buildSchoolRoom(scene, physics) {
   R.view = 19; R.follow = 0.3; R.music = 'home';
   const stone = MAT.stone('grey', 2), rough = MAT.rubble('grey');
   const penta = pentaTex(); penta.wrapS = penta.wrapT = THREE.RepeatWrapping; penta.repeat.set(W / 1.5, D / 1.5);   // (a pentagram on every 1.5 m slab)
-  B.shell({ floor: MAT.map(penta, 0.85), slab: rough, body: stone, low: rough, rail: MAT.iron(), cap: MAT.iron(), H, t: 0.6, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
+  // (WORLD-ART-7: a school hall — dark wood panelling below the stone and a brass rail, over warm slabs)
+  B.shell({ floor: MAT.map(penta, 0.85), slab: rough, body: stone, low: MAT.wainscot('dark'), rail: MAT.brass(), cap: MAT.iron(), H, t: 0.6, dado: 1.0, rimH: 0.5, rimMat: rough, W, D,
     back: [{ at: -7.4, w: 2.0, h: 2.8, y0: 0, kind: 'door' }] });
   const BZ = -D / 2;
   R.exits.push({ x: B.cx - 7.4, z: B.cz + BZ + 0.5, r: 0.9, to: 'school-out' });

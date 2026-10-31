@@ -1251,7 +1251,8 @@ function buildProjOffice(scene, physics) {
   const L = W + 2 * t, LL = D + t;
   B.shell({
     W, D, H, t, slabH: 0.8,
-    floor: MAT.tiles('#8e8aa0', '#b4b0c2', '#4a4858', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
+    // (WORLD-ART-7: an office floor in terracotta and cream checker, warm against the old blue fort stone)
+    floor: MAT.tiles('#b0684a', '#d8c09a', '#5a3a2a', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
     body: MAT.stone('blue', 2), low: MAT.plates(teal, 1), dado: 1.15, rail: brass, cap: MAT.stone('slate', 1.4), beam: MAT.iron(),
     posts: MAT.iron(), postsAt: (len) => (len === L ? [-4.75, -1.92, 0.58, 3.2, 6.42].map((x) => x + W / 2 + t) : [-4.92, -1.2, 0.55, 3.0].map((z) => D / 2 + t - z)),
     back: [{ kind: 'door', at: doorX, w: 1.3, h: 2.4, y0: 0, view: outsideView('fort'), sill: MAT.stone('slate', 1) }],
@@ -1403,7 +1404,8 @@ function buildControl(scene, physics) {
   const brass = MAT.brass(), teal = '#3f8a86';
   B.shell({
     W, D, H, t, slabH: 0.8,
-    floor: MAT.tiles('#7a7890', '#9c9aae', '#46445a', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
+    // (WORLD-ART-7: a pale sand-and-umber checker floor, so the lavender plate walls and teal dado stand off it)
+    floor: MAT.tiles('#c8bca0', '#8a7a60', '#4a4234', true, 4), slab: MAT.rubble('slate'), rimMat: MAT.stone('blue', 1.4),
     body: MAT.plates('#8d8a9c', 1), low: MAT.plates(teal, 1), dado: 1.1, rail: brass, cap: MAT.iron(), beam: brass,
     posts: MAT.iron(), postsAt: (len) => (len === W + 2 * t ? [-5.9, 1.15, 3.3, 5.92].map((x) => x + W / 2 + t) : [-4.42, -1.9, 1.2, 3.0].map((z) => D / 2 + t - z)),
     back: [

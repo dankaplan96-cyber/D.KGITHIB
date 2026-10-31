@@ -124,7 +124,9 @@ function buildArchive(scene, physics) {
   const R = B.room, k = B.k;
   const W = 16, D = 12, H = 5.0;
   R.view = 16.5; R.follow = 0.3; R.music = 'stealth';
-  B.shell({ floor: MAT.plates('#5a6a6a', 1), slab: MAT.stone('slate'), body: MAT.plates('#3f8a86', 2), low: MAT.plates('#2a5a5a', 1), rail: MAT.brass(), cap: MAT.stone('slate'), W, D, H, t: 0.45, dado: 1.0, rimH: 0.5, left: [{ at: 4.0, w: 1.8, h: 2.8, y0: 0, kind: 'door' }] });
+  // (WORLD-ART-7: a records room, not a machine room — honey boards, parchment plaster over dark panelling, sandstone;
+  //  the plaster #e6d0a4, warmer than the request's #f0e4c8, which read pale grey under the room's cool lights)
+  B.shell({ floor: MAT.planks('honey'), slab: MAT.stone('sand'), body: MAT.plaster('#e6d0a4'), low: MAT.wainscot('dark'), rail: MAT.brass(), cap: MAT.stone('sand'), W, D, H, t: 0.45, dado: 1.0, rimH: 0.5, left: [{ at: 4.0, w: 1.8, h: 2.8, y0: 0, kind: 'door' }] });
   R.exits.push({ x: B.cx - W / 2 + 0.5, z: B.cz + 4.0, r: 0.8, to: 'archive-out' });
   R.spawn = { x: B.cx - W / 2 + 2, z: B.cz + 4.0, a: Math.PI / 2 };
   // shelf rows (cover), each a long bookcase with ledgers

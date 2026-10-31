@@ -64,7 +64,8 @@ function buildTempleRoom(scene, physics) {
   const W = 22, D = 14, H = 6.5;
   R.view = 19.5; R.follow = 0.3; R.music = 'cave'; R.cave = true;
   const slate = MAT.stone('slate', 2), rough = MAT.rubble('slate');
-  B.shell({ floor: MAT.stone('slate', 3), slab: rough, body: slate, low: rough, rail: MAT.iron(), cap: MAT.iron(), H, t: 0.6, dado: 1.2, rimH: 0.55, rimMat: rough, W, D,
+  // (WORLD-ART-7: slate halls kept; a paler, warmer grey floor parts it from the walls, carved sandstone bands as the one warm accent)
+  B.shell({ floor: MAT.stone('grey', 3), slab: rough, body: slate, low: rough, rail: MAT.stone('sand', 1), cap: MAT.iron(), H, t: 0.6, dado: 1.2, rimH: 0.55, rimMat: rough, W, D,
     back: [{ at: -8.5, w: 2.2, h: 3.0, y0: 0, kind: 'door' }] });
   const BZ = -D / 2;
   // the way in: steps down from the project's cut (back left)
