@@ -360,6 +360,10 @@ export function startupReport(G) {
   L.push(`LBA3 start trace · build ${G?.version || '?'} · ${new Date().toISOString().slice(0, 16).replace('T', ' ')} · ${G?.perf?.gpu ?? '?'}`);
   L.push(`display frames recorded ${iv.length / 2} over ${((iv[iv.length - 2] || 0) / 1000).toFixed(1)} s · long animation frames ${S.loaf.length}${S.loaf.length ? '' : ' (none reported: the browser may not support them)'} · long tasks ${S.lt.length}`);
   L.push(`startup steps (ms): ${G?.loadTimes ? `build ${G.loadTimes.total ?? '?'} · shaders ${G.loadTimes.shaders ?? '?'} · prep ${JSON.stringify(G.loadTimes.prep || {})}` : '?'}`);
+  // (TITLE-LOAD: the loading screen's sliced steps — each slice its own task, a painted frame between: count and longest
+  //  ms per step — and the areas built in steps)
+  { const S = G?.loadTimes?.slices; if (S && Object.keys(S).length) L.push(`loading slices (count / longest ms): ${Object.entries(S).map(([k, v]) => `${k} ${v.length} / ${Math.max(...v)}`).join(' · ')}`); }
+  { const R = (G?.regions?.log || []).filter((e) => e.steps); if (R.length) L.push(`areas built in steps (ms, longest step): ${R.map((e) => `${e.group} ${e.ms} (${e.steps.length} steps, longest ${e.longest})`).join(' · ')}`); }
   L.push('', 'phase (from its mark to the next)            frames  interval p50 / p95 / max ms   >20 / >33 / >50 / >100');
   // group the "loading: …" steps into one phase per label run
   for (let i = 0; i < phases.length; i++) {

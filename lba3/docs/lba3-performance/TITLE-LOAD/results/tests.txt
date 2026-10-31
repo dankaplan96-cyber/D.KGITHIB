@@ -1,0 +1,3 @@
+opening: VERDICT: PASS (564 s)
+display: VERDICT: PASS (98 s)
+menus: VERDICT: PASS (107 s)

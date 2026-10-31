@@ -1,0 +1,1135 @@
+{
+ "machine": "SwiftShader in the development container: exact counts, relative ms only; no laptop GPU time or fps",
+ "title": {
+  "base": {
+   "perAngle": [
+    {
+     "angleDeg": 126,
+     "t": 0,
+     "main": {
+      "calls": 306,
+      "tris": 1070958
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 156,
+     "t": 10.47,
+     "main": {
+      "calls": 277,
+      "tris": 972841
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 186,
+     "t": 20.94,
+     "main": {
+      "calls": 265,
+      "tris": 1005334
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 216,
+     "t": 31.42,
+     "main": {
+      "calls": 295,
+      "tris": 1069111
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 246,
+     "t": 41.89,
+     "main": {
+      "calls": 302,
+      "tris": 1177952
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 5850
+    },
+    {
+     "angleDeg": 276,
+     "t": 52.36,
+     "main": {
+      "calls": 339,
+      "tris": 1247662
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 65800
+    },
+    {
+     "angleDeg": 306,
+     "t": 62.83,
+     "main": {
+      "calls": 342,
+      "tris": 1304418
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 239921
+    },
+    {
+     "angleDeg": 336,
+     "t": 73.3,
+     "main": {
+      "calls": 372,
+      "tris": 1363194
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 295217
+    },
+    {
+     "angleDeg": 6,
+     "t": 83.78,
+     "main": {
+      "calls": 372,
+      "tris": 1360808
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 272818
+    },
+    {
+     "angleDeg": 36,
+     "t": 94.25,
+     "main": {
+      "calls": 363,
+      "tris": 1334644
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 139819
+    },
+    {
+     "angleDeg": 66,
+     "t": 104.72,
+     "main": {
+      "calls": 311,
+      "tris": 1220737
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 78888
+    },
+    {
+     "angleDeg": 96,
+     "t": 115.19,
+     "main": {
+      "calls": 297,
+      "tris": 1054330
+     },
+     "shadow": {
+      "calls": 33,
+      "tris": 102701
+     },
+     "beyondFogTris": 828
+    }
+   ],
+   "meanMain": {
+    "calls": 320.1,
+    "tris": 1181832
+   },
+   "meanShadow": {
+    "calls": 33.0,
+    "tris": 102701
+   }
+  },
+  "after": {
+   "perAngle": [
+    {
+     "angleDeg": 126,
+     "t": 0,
+     "main": {
+      "calls": 274,
+      "tris": 972166
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 156,
+     "t": 10.47,
+     "main": {
+      "calls": 245,
+      "tris": 874049
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 186,
+     "t": 20.94,
+     "main": {
+      "calls": 233,
+      "tris": 906542
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 216,
+     "t": 31.42,
+     "main": {
+      "calls": 260,
+      "tris": 967927
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 246,
+     "t": 41.89,
+     "main": {
+      "calls": 270,
+      "tris": 1073310
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 5850
+    },
+    {
+     "angleDeg": 276,
+     "t": 52.36,
+     "main": {
+      "calls": 294,
+      "tris": 1086670
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 40720
+    },
+    {
+     "angleDeg": 306,
+     "t": 62.83,
+     "main": {
+      "calls": 264,
+      "tris": 1024327
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 122848
+    },
+    {
+     "angleDeg": 336,
+     "t": 73.3,
+     "main": {
+      "calls": 292,
+      "tris": 1008557
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 103436
+    },
+    {
+     "angleDeg": 6,
+     "t": 83.78,
+     "main": {
+      "calls": 294,
+      "tris": 1046850
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 107962
+    },
+    {
+     "angleDeg": 36,
+     "t": 94.25,
+     "main": {
+      "calls": 303,
+      "tris": 1109065
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 50266
+    },
+    {
+     "angleDeg": 66,
+     "t": 104.72,
+     "main": {
+      "calls": 269,
+      "tris": 1059331
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 46488
+    },
+    {
+     "angleDeg": 96,
+     "t": 115.19,
+     "main": {
+      "calls": 265,
+      "tris": 954710
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 828
+    }
+   ],
+   "meanMain": {
+    "calls": 271.9,
+    "tris": 1006959
+   },
+   "meanShadow": {
+    "calls": 21.0,
+    "tris": 10125
+   }
+  },
+  "far150": {
+   "perAngle": [
+    {
+     "angleDeg": 126,
+     "t": 0,
+     "main": {
+      "calls": 271,
+      "tris": 954467
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 19454
+    },
+    {
+     "angleDeg": 156,
+     "t": 10.47,
+     "main": {
+      "calls": 245,
+      "tris": 874049
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 186,
+     "t": 20.94,
+     "main": {
+      "calls": 233,
+      "tris": 906542
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 364
+    },
+    {
+     "angleDeg": 216,
+     "t": 31.42,
+     "main": {
+      "calls": 260,
+      "tris": 964307
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 5404
+    },
+    {
+     "angleDeg": 246,
+     "t": 41.89,
+     "main": {
+      "calls": 256,
+      "tris": 1014925
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 79458
+    },
+    {
+     "angleDeg": 276,
+     "t": 52.36,
+     "main": {
+      "calls": 245,
+      "tris": 847997
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 183120
+    },
+    {
+     "angleDeg": 306,
+     "t": 62.83,
+     "main": {
+      "calls": 236,
+      "tris": 786695
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 229920
+    },
+    {
+     "angleDeg": 336,
+     "t": 73.3,
+     "main": {
+      "calls": 248,
+      "tris": 745505
+     },
+     "shadow": {
+      "calls": 20,
+      "tris": 7885
+     },
+     "beyondFogTris": 273596
+    },
+    {
+     "angleDeg": 6,
+     "t": 83.78,
+     "main": {
+      "calls": 227,
+      "tris": 671076
+     },
+     "shadow": {
+      "calls": 19,
+      "tris": 7449
+     },
+     "beyondFogTris": 227977
+    },
+    {
+     "angleDeg": 36,
+     "t": 94.25,
+     "main": {
+      "calls": 244,
+      "tris": 813796
+     },
+     "shadow": {
+      "calls": 20,
+      "tris": 7885
+     },
+     "beyondFogTris": 185316
+    },
+    {
+     "angleDeg": 66,
+     "t": 104.72,
+     "main": {
+      "calls": 226,
+      "tris": 770301
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 84300
+    },
+    {
+     "angleDeg": 96,
+     "t": 115.19,
+     "main": {
+      "calls": 231,
+      "tris": 821169
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 59627
+    }
+   ],
+   "meanMain": {
+    "calls": 243.5,
+    "tris": 847569
+   },
+   "meanShadow": {
+    "calls": 20.7,
+    "tris": 9529
+   }
+  },
+  "lod40": {
+   "perAngle": [
+    {
+     "angleDeg": 126,
+     "t": 0,
+     "main": {
+      "calls": 262,
+      "tris": 925802
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 156,
+     "t": 10.47,
+     "main": {
+      "calls": 238,
+      "tris": 853052
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 186,
+     "t": 20.94,
+     "main": {
+      "calls": 228,
+      "tris": 898346
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 216,
+     "t": 31.42,
+     "main": {
+      "calls": 252,
+      "tris": 911930
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 246,
+     "t": 41.89,
+     "main": {
+      "calls": 264,
+      "tris": 1042479
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 5850
+    },
+    {
+     "angleDeg": 276,
+     "t": 52.36,
+     "main": {
+      "calls": 288,
+      "tris": 1073270
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 40720
+    },
+    {
+     "angleDeg": 306,
+     "t": 62.83,
+     "main": {
+      "calls": 264,
+      "tris": 1024327
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 122848
+    },
+    {
+     "angleDeg": 336,
+     "t": 73.3,
+     "main": {
+      "calls": 292,
+      "tris": 1008557
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 103436
+    },
+    {
+     "angleDeg": 6,
+     "t": 83.78,
+     "main": {
+      "calls": 294,
+      "tris": 1046850
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 107962
+    },
+    {
+     "angleDeg": 36,
+     "t": 94.25,
+     "main": {
+      "calls": 303,
+      "tris": 1109065
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 50266
+    },
+    {
+     "angleDeg": 66,
+     "t": 104.72,
+     "main": {
+      "calls": 269,
+      "tris": 1059331
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 46488
+    },
+    {
+     "angleDeg": 96,
+     "t": 115.19,
+     "main": {
+      "calls": 262,
+      "tris": 952238
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 828
+    }
+   ],
+   "meanMain": {
+    "calls": 268.0,
+    "tris": 992104
+   },
+   "meanShadow": {
+    "calls": 21.0,
+    "tris": 10125
+   }
+  },
+  "frame95": {
+   "perAngle": [
+    {
+     "angleDeg": 126,
+     "t": 0,
+     "main": {
+      "calls": 259,
+      "tris": 913556
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 156,
+     "t": 10.47,
+     "main": {
+      "calls": 230,
+      "tris": 848136
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 186,
+     "t": 20.94,
+     "main": {
+      "calls": 195,
+      "tris": 801435
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 216,
+     "t": 31.42,
+     "main": {
+      "calls": 218,
+      "tris": 902674
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    },
+    {
+     "angleDeg": 246,
+     "t": 41.89,
+     "main": {
+      "calls": 244,
+      "tris": 972286
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 828
+    },
+    {
+     "angleDeg": 276,
+     "t": 52.36,
+     "main": {
+      "calls": 278,
+      "tris": 1082438
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 20822
+    },
+    {
+     "angleDeg": 306,
+     "t": 62.83,
+     "main": {
+      "calls": 246,
+      "tris": 1060559
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 62571
+    },
+    {
+     "angleDeg": 336,
+     "t": 73.3,
+     "main": {
+      "calls": 313,
+      "tris": 1102304
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 97836
+    },
+    {
+     "angleDeg": 6,
+     "t": 83.78,
+     "main": {
+      "calls": 301,
+      "tris": 1138369
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 81899
+    },
+    {
+     "angleDeg": 36,
+     "t": 94.25,
+     "main": {
+      "calls": 309,
+      "tris": 1142284
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 44524
+    },
+    {
+     "angleDeg": 66,
+     "t": 104.72,
+     "main": {
+      "calls": 260,
+      "tris": 1006691
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 30842
+    },
+    {
+     "angleDeg": 96,
+     "t": 115.19,
+     "main": {
+      "calls": 262,
+      "tris": 906150
+     },
+     "shadow": {
+      "calls": 21,
+      "tris": 10125
+     },
+     "beyondFogTris": 0
+    }
+   ],
+   "meanMain": {
+    "calls": 259.6,
+    "tris": 989740
+   },
+   "meanShadow": {
+    "calls": 21.0,
+    "tris": 10125
+   }
+  },
+  "sameFrameAB": {
+   "fogOff": {
+    "pxMax": 0,
+    "pxMin": 0
+   },
+   "unplacedShown": {
+    "pxMax": 110,
+    "pxMin": 66
+   }
+  }
+ },
+ "startup": {
+  "before": {
+   "wallToTitleS": 66.775,
+   "buildMs": 8863,
+   "prepareMs": 55002,
+   "prep": {
+    "paint": 1271,
+    "programs": 157,
+    "textures": 11781,
+    "geometry": 234,
+    "geometryPart": 37,
+    "batches": 15121,
+    "batchUpload": 159,
+    "shadowPrograms": 300,
+    "firstFrame": 25980
+   },
+   "slices": null,
+   "programs": 83,
+   "programKinds": {
+    "ShaderMaterial": 12,
+    "MeshStandardMaterial": 31,
+    "merged-vctrm": 1,
+    "merged-vcrm": 2,
+    "MeshBasicMaterial": 14,
+    "SpriteMaterial": 2,
+    "LineBasicMaterial": 1,
+    "PointsMaterial": 2,
+    "unspecified": 1,
+    "MeshDepthMaterial": 14,
+    "merged-arr 256x256|4": 1,
+    "merged-arr 512x512|4": 1,
+    "OutputShader": 1
+   },
+   "parallelCompile": false,
+   "longTasks": {
+    "count": 22,
+    "sumMs": 60379,
+    "over100": 18,
+    "over200": 11,
+    "top": [
+     {
+      "t": 40674,
+      "d": 25981,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 25084,
+      "d": 15121,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 13020,
+      "d": 11781,
+      "step": "Preparing graphics\u2026"
+     },
+     {
+      "t": 8546,
+      "d": 1859,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 7452,
+      "d": 1006,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 2905,
+      "d": 911,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 2145,
+      "d": 639,
+      "step": "before the game"
+     },
+     {
+      "t": 10424,
+      "d": 557,
+      "step": "Building Twinsen's house\u2026"
+     },
+     {
+      "t": 11119,
+      "d": 532,
+      "step": "Preparing the story\u2026"
+     },
+     {
+      "t": 4667,
+      "d": 418,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 40373,
+      "d": 299,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 3819,
+      "d": 197,
+      "step": "Building Citadel\u2026"
+     }
+    ]
+   }
+  },
+  "after": {
+   "wallToTitleS": 77.42,
+   "buildMs": 11143,
+   "prepareMs": 62759,
+   "prep": {
+    "paint": 1277,
+    "programs": 63,
+    "textures": 8,
+    "geometry": 11197,
+    "geometryPart": 1865,
+    "shadowBatches": 306,
+    "layers": 11432,
+    "batches": 938,
+    "batchUpload": 157,
+    "shadowPrograms": 11421,
+    "firstDraws": 20569,
+    "firstFrame": 5392
+   },
+   "slices": {
+    "textures": [
+     4
+    ],
+    "layers": [
+     3392,
+     358,
+     273,
+     232,
+     272,
+     232,
+     389,
+     146,
+     268,
+     236,
+     268,
+     360,
+     312,
+     214,
+     199,
+     110,
+     197,
+     226,
+     185,
+     194,
+     224,
+     260,
+     276,
+     227,
+     324,
+     223,
+     171,
+     319,
+     342,
+     273,
+     235,
+     197,
+     248,
+     1
+    ],
+    "shadowPrograms": [
+     69,
+     97,
+     81,
+     110,
+     8519,
+     705,
+     552,
+     757,
+     531
+    ]
+   },
+   "programs": 83,
+   "programKinds": {
+    "ShaderMaterial": 12,
+    "MeshStandardMaterial": 31,
+    "merged-vctrm": 1,
+    "merged-vcrm": 2,
+    "MeshBasicMaterial": 14,
+    "SpriteMaterial": 2,
+    "LineBasicMaterial": 1,
+    "PointsMaterial": 2,
+    "unspecified": 1,
+    "MeshDepthMaterial": 14,
+    "merged-arr 512x512|4": 1,
+    "merged-arr 256x256|4": 1,
+    "OutputShader": 1
+   },
+   "parallelCompile": false,
+   "longTasks": {
+    "count": 69,
+    "sumMs": 70267,
+    "over100": 62,
+    "over200": 48,
+    "top": [
+     {
+      "t": 51336,
+      "d": 13637,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 15908,
+      "d": 10998,
+      "step": "Preparing Citadel\u2026"
+     },
+     {
+      "t": 40204,
+      "d": 8519,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 71923,
+      "d": 5398,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 64977,
+      "d": 4418,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 27002,
+      "d": 3698,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 11351,
+      "d": 2053,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 1739,
+      "d": 1764,
+      "step": "before the game"
+     },
+     {
+      "t": 70392,
+      "d": 1528,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 3765,
+      "d": 1050,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 69403,
+      "d": 986,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 38741,
+      "d": 938,
+      "step": "Almost there\u2026"
+     }
+    ]
+   }
+  }
+ },
+ "reveal": {
+  "before": {
+   "framesInViewWithNewGeometry": 2,
+   "longestBlackFrameMs": 65361,
+   "visits": [
+    "zeelich (cold)",
+    "citadel (cold)",
+    "zeelich (repeat)"
+   ]
+  },
+  "after": {
+   "framesInViewWithNewGeometry": 0,
+   "longestBlackFrameMs": 65841,
+   "visits": [
+    "zeelich (cold)",
+    "citadel (cold)",
+    "zeelich (repeat)"
+   ]
+  }
+ }
+}
