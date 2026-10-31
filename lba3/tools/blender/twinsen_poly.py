@@ -7,7 +7,8 @@
 # Built from the measurements of LBA2's in-game model (docs/character-review.md §11): every ring below is a
 # horizontal section of the original (height, half-width, front and back extent, fractions of the height H).
 # Skinned like LBA2 skins its models: each part follows one bone, with blends only where cloth spans two
-# (the cape's sides follow the arms, each half of the robe follows its leg as in the original, the hair's tuft swings).
+# (each half of the robe follows its leg as in the original, the hair's tuft swings; the cape's sides followed the arms as
+# in the original until HERO-LOOK (I-22): now the cape stays on the body and the arms come out of it in sleeves of their own).
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
 import json, math, os, sys
 
@@ -32,7 +33,7 @@ S = 2.1  # the game's height for H (top of the hair)
 COL = {
     'tunic': '#2a86ad', 'belt': '#e2805c', 'shoe': '#e98c6c', 'skin': '#e2bc90', 'hair': '#553916', 'hairTuft': '#6a4722',
     'white': '#f2f2f6', 'iris': '#7fb8e0', 'pupil': '#1c3a5a', 'lid': '#5a3a28', 'medal': '#d8bc68', 'medalFace': '#f2e2a0',
-    'cord': '#c8502a', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414', 'mouth': '#6a2a2a',
+    'cord': '#e8b04c', 'lidSkin': '#c29068', 'brow': '#4a3014', 'sole': '#9a4a32', 'inner': '#123f58', 'tie': '#3a2414', 'mouth': '#5c2622',
 }
 HEAD_K = 1.0                      # the head at the original's measured size (≈0.156 H wide; it was drawn ×1.24 before)
 CHIN = (0.0, 0.80, 0.09)          # …scaled about the chin, so the neck joint stays where it was
@@ -55,9 +56,12 @@ def tilt(p):
 
 
 class Part:
-    def __init__(self, name, mat, weights, angle=40, rigid=None, tilted=False, big=False, normal=None, color=None):
+    def __init__(self, name, mat, weights, angle=40, rigid=None, tilted=False, big=False, normal=None, color=None, reweight=None, game=False):
         self.name, self.mat, self.weights, self.angle, self.rigid, self.tilted, self.big = name, mat, weights, angle, rigid, tilted, big
         self.normal, self.color = normal, color   # (one normal for every corner; a colour name per vertex)
+        # HERO-LOOK (I-22): `reweight` gives a part new weights, taken where the game shows its vertices at rest (the arms at
+        # the look's armSpread, GAME_SPREAD), so the idle shape is kept exactly; `game`: the part is drawn in that pose
+        self.reweight, self.game = reweight, game
         self.v, self.f = [], []
 
     def add(self, verts, faces):
@@ -210,6 +214,7 @@ def side(x):
 
 
 def w_cape(p):
+    # LBA2's weights (the original's cape sides follow the arms): the shape below is drawn with them at SPREAD
     x, y, z = p
     arm = smooth(0.095, 0.165, abs(x)) * (1 - smooth(0.70, 0.745, y))
     el = arm * (1 - smooth(0.49, 0.6, y))
@@ -217,7 +222,25 @@ def w_cape(p):
     return {'torso': 1 - arm, 'sh' + s: arm - el, 'el' + s: el}
 
 
-cape = Part('cape', 'tunic', w_cape, angle=55)
+# HERO-LOOK (I-22, the user 31.10: "when Twinsen raises his arms the tunic becomes a sleeved shirt"). With LBA2's weights
+# the cape's whole side, from the shoulder to the hem, rode the upper arm and the forearm: an arm raised overhead pulled
+# the side up with it into a long sleeve and left the body a narrow column. Now the cape is the tunic's body and stays on
+# the torso; only the cloth right over the arm follows it a little (CAPE_ARM of the way, the outer side below the
+# shoulder), so a swing still moves the side, and a raised arm comes out of the cape in a sleeve of its own (`sleeve*`
+# below, hidden inside the cape at rest). The weights are taken where the game shows the cape at rest (its arms at
+# GAME_SPREAD), so the idle silhouette is the one it had.
+CAPE_ARM = float(os.environ.get('TW_CAPE_ARM', '0.15'))
+
+
+def w_cape_game(p):
+    x, y, z = p
+    arm = CAPE_ARM * smooth(0.135, 0.215, abs(x)) * (1 - smooth(0.6, 0.7, y))
+    el = arm * (1 - smooth(0.49, 0.6, y))
+    s = side(x)
+    return {'torso': 1 - arm, 'sh' + s: arm - el, 'el' + s: el}
+
+
+cape = Part('cape', 'tunic', w_cape, angle=55, reweight=w_cape_game)
 hem = lambda t: 0.448 - 0.04 * abs(math.sin(t)) ** 1.6   # the hem rises over the belt in front and behind
 N = 24
 # NECK-TW: the cape's top. It was flat (0.765 → 0.772 H while narrowing from ±0.052 to ±0.03) and, being ring()s,
@@ -232,7 +255,7 @@ CAPE_TOP = [
     oring(0.7785, 0.0365, 0.0875, 0.0145, N, 1.0),  # its inner edge (the dark inside goes down from here)
 ]
 # the cloth has thickness: an inner lip turns up under the cape's edge (darker, in its own shadow)
-lip = Part('capeLip', 'inner', w_cape, angle=70)
+lip = Part('capeLip', 'inner', w_cape, angle=70, reweight=w_cape_game)
 loft(lip, [ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62)])
 PARTS.append(lip)
 loft(cape, [
@@ -301,6 +324,62 @@ tube(knot, (0.04, 0.43, 0.126), (0.03, 0.37, 0.14), 0.008, 0.007, 6, squash=0.5)
 tube(knot, (0.052, 0.43, 0.126), (0.068, 0.375, 0.136), 0.008, 0.007, 6, squash=0.5)
 PARTS.append(knot)
 
+def fist(part, sx):
+    """HERO-LOOK (hands in close-up, WORKLIST #8): a loose fist in the ball's place and size. FACES-HANDS' ball with a stick
+    thumb and three knuckle lobes read as a mitten in the dialogue close-ups. Now the hand is built as a hand: the back
+    of the hand, a rounded block from the wrist (inside the cuff) to the knuckles, flatter across than deep; the four
+    fingers, each its own short bent tube from its knuckle round the bottom of the fist into the palm, side by side so a
+    groove shows between each; and the thumb on the front, short and thick, laid across the index finger with its tip
+    toward the palm. The palm faces his thigh at rest as before, the whole fist fills the ball's space (7 cm down from
+    the wrist, 6 cm front to back), so the gameplay silhouette and whatever he holds stay where they were. Same bone,
+    fewer triangles (220, was 246)."""
+    w0 = Vector((sx * 0.19, 0.411, 0.02))
+    d = Vector((sx * 0.08, -1.0, 0.0)).normalized()          # (down the hand, as the cuff hangs)
+    pv = Vector((-sx, 0.0, 0.0)); pv = (pv - d * pv.dot(d)).normalized()   # (toward the palm: his thigh at rest)
+    wv = Vector((0.0, 0.0, 1.0))                              # (the thumb's side: forward)
+    NB = 10
+    # the back of the hand: (distance down the hand, half-width front-back, half-thickness across, offset toward the back)
+    BACK = [(0.000, 0.020, 0.0165, 0.000), (0.020, 0.0285, 0.0185, -0.002), (0.040, 0.0305, 0.0175, -0.004), (0.050, 0.029, 0.0125, -0.005)]
+    rings = []
+    for dist, hw, ht, off in BACK:
+        c = w0 + d * dist + pv * off
+        ring = []
+        for i in range(NB):
+            t = 2 * math.pi * i / NB
+            cw, sn = math.cos(t), math.sin(t)
+            ring.append(tuple(c + wv * (math.copysign(abs(cw) ** 0.6, cw) * hw) + pv * (math.copysign(abs(sn) ** 0.75, sn) * ht)))
+        rings.append(ring)
+    loft(part, rings, cap_bottom=False, cap_top=False)
+    o = len(part.v) - len(rings) * NB
+    cb = w0 + d * 0.053 + pv * -0.005
+    part.add([tuple(cb)], [])
+    ci = len(part.v) - 1
+    last = o + (len(rings) - 1) * NB
+    part.f += [[last + i, last + (i + 1) % NB, ci] for i in range(NB)]
+
+    def bent(pts, radii, n=6, cap=True):
+        rs = []
+        for k, (cn, r) in enumerate(zip(pts, radii)):
+            ax = (pts[min(k + 1, len(pts) - 1)] - pts[max(k - 1, 0)]).normalized()
+            u = ax.cross(wv if abs(ax.dot(wv)) < 0.9 else pv).normalized()
+            v = ax.cross(u).normalized()
+            rs.append(ell_ring(tuple(cn), u, v, r, r, n))
+        loft_along(part, rs, cap0=False, cap1=cap)
+    # the fingers: index (front) to little finger (back), each from its knuckle on the back of the hand, round the bottom
+    # of the fist, the tip tucked toward the palm; the little finger a touch shorter and higher
+    for i, (z, r, lift) in enumerate(((0.0215, 0.0083, 0.0), (0.0068, 0.0086, 0.0), (-0.0078, 0.0082, 0.001), (-0.0215, 0.0072, 0.004))):
+        k0 = w0 + d * (0.043 - lift) + pv * -0.011 + wv * z
+        k1 = w0 + d * (0.062 - lift) + pv * -0.002 + wv * (z * 0.97)
+        k2 = w0 + d * (0.056 - lift) + pv * 0.014 + wv * (z * 0.93)
+        bent([k0, k1, k2], [r, r * 0.98, r * 0.86])
+    # the thumb: out of the palm's front edge below the wrist, down and in across the index finger, the tip toward the palm
+    t0 = w0 + d * 0.016 + wv * 0.022 + pv * 0.004
+    t1 = t0 + (d * 0.75 + wv * 0.32 + pv * 0.45).normalized() * 0.021
+    t2 = t1 + (d * 0.58 + wv * -0.08 + pv * 0.80).normalized() * 0.015
+    bent([t0, t1, t2], [0.0108, 0.0098, 0.0080], 6)
+
+
+SLEEVE_W = {}   # (HERO-LOOK: the sleeves' weights by vertex)
 for sx in (1, -1):
     s = side(sx)
     fb = (lambda b: (lambda p: {b: 1.0}))('foot' + s)
@@ -318,19 +397,43 @@ for sx in (1, -1):
     cuff = Part('cuff' + s, 'tunic', lambda p, s=s: {'el' + s: 1.0}, angle=50)
     tube(cuff, (sx * 0.19, 0.455, 0.012), (sx * 0.192, 0.392, 0.014), 0.03, 0.043, 12, cap1=False)
     PARTS.append(cuff)
+    # HERO-LOOK (I-22): the sleeve, a wide tube from the shoulder joint to the cuff along the arm as the game shows it at
+    # rest (GAME_SPREAD), inside the cape there (clear of its walls by 2–6 cm), on the upper arm and the forearm. Raised,
+    # the arm comes out of the cape in it, the cape staying on the body. 8 sides, open at both ends (in the body / the cuff).
+    SLEEVE = [   # centre (x out, y, z), radius, u (0 the shoulder, 1 the elbow, 2 the cuff)
+        ((0.084, 0.703, 0.0), 0.030, 0.0),
+        ((0.124, 0.632, 0.002), 0.041, 0.5),
+        ((0.159, 0.558, 0.005), 0.040, 1.0),
+        ((0.188, 0.508, 0.009), 0.035, 1.5),
+        ((0.213, 0.468, 0.012), 0.029, 2.0),
+    ]
+    slv = Part('sleeve' + s, 'tunic', lambda p: SLEEVE_W[tuple(round(c, 6) for c in p)], angle=70, game=True)
+    rings = []
+    for k, (c, r, u) in enumerate(SLEEVE):
+        a = Vector(SLEEVE[max(0, k - 1)][0]); b = Vector(SLEEVE[min(len(SLEEVE) - 1, k + 1)][0])
+        d = (b - a); d.x *= sx; d.normalize()
+        ax1 = Vector((0, 0, 1)).cross(d).normalized()   # (across the arm in the body's plane)
+        ax2 = Vector((0, 0, 1))
+        ring = ell_ring((sx * c[0], c[1], c[2]), ax1, ax2, r, r * 1.05, 8)
+        w = {'sh' + s: 1.0} if u <= 0.5 else {'sh' + s: 1.5 - u, 'el' + s: u - 0.5} if u < 1.5 else {'el' + s: 1.0}
+        for q in ring:
+            SLEEVE_W[tuple(round(cc, 6) for cc in q)] = w
+        rings.append(ring)
+    loft_along(slv, rings, cap0=False, cap1=False)
+    PARTS.append(slv)
     cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
     cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
     PARTS.append(cin)
     # the hand: LBA2's ball (the original's: r 0.036 H, centred 0.376 H, just under the cuff)
-    hand = Part('hand' + s, 'skin', hb, angle=60)
-    sphere(hand, (sx * 0.19, 0.378, 0.02), 0.036, 10, 7)
-    # FACES-HANDS: the ball stays LBA2's ball (same size, same place: the gameplay silhouette is unchanged), with a hint of a
-    # hand on it for the close-ups: a thumb standing forward off the inner front of the ball, and the fingers as three
-    # knuckle lobes curled along its inner underside (the palm faces his thigh at rest). 8 mm proud of the ball at most.
-    hc = (sx * 0.19, 0.378, 0.02)
-    tube(hand, (hc[0] - sx * 0.013, hc[1] + 0.012, hc[2] + 0.022), (hc[0] - sx * 0.021, hc[1] + 0.001, hc[2] + 0.050), 0.0098, 0.0068, 6)
-    for dz_, dy_, rr_ in ((-0.020, -0.017, 0.0118), (-0.002, -0.021, 0.0128), (0.017, -0.019, 0.0108)):
-        sphere(hand, (hc[0] - sx * 0.026, hc[1] + dy_, hc[2] + dz_), rr_, 6, 4)
+    hand = Part('hand' + s, 'skin', hb, angle=60 if os.environ.get('TW_BALL_HAND') else 82)
+    if os.environ.get('TW_BALL_HAND'):   # (the ball with FACES-HANDS' thumb and knuckle lobes, for comparison)
+        sphere(hand, (sx * 0.19, 0.378, 0.02), 0.036, 10, 7)
+        hc = (sx * 0.19, 0.378, 0.02)
+        tube(hand, (hc[0] - sx * 0.013, hc[1] + 0.012, hc[2] + 0.022), (hc[0] - sx * 0.021, hc[1] + 0.001, hc[2] + 0.050), 0.0098, 0.0068, 6)
+        for dz_, dy_, rr_ in ((-0.020, -0.017, 0.0118), (-0.002, -0.021, 0.0128), (0.017, -0.019, 0.0108)):
+            sphere(hand, (hc[0] - sx * 0.026, hc[1] + dy_, hc[2] + dz_), rr_, 6, 4)
+    else:
+        fist(hand, sx)
     PARTS.append(hand)
 
 # NECK-TW: LBA2's long thin neck (±0.027 H), but a neck and not a pipe: round sections (the old ring()s creased the
@@ -526,42 +629,141 @@ for p, u in zip(hair.v[start:], us):
     HAIR_U[tuple(round(c, 6) for c in p)] = u
 PARTS.append(hair)
 
-# medallion: an octagonal gold plate on the chest, a lighter face, the cord running up to the collar
+# HERO-LOOK (I-23, the user 31.10: "the medallion is just a plain disc, not on a necklace as in the original"). LBA2's
+# Twinsen (BODY.HQR body 1) does wear it on a necklace: besides its polygons the body has 15 line primitives, which the
+# earlier measurements (polygons only) had missed. Measured there (units of 1238, converted to this frame's H by
+# 1238/1296; numbers only):
+#   the medallion  an octagon of 8 triangles on a group of its own (it hangs from the cord's group), 0.082 H wide and
+#                  0.072 H tall, centred 0.632 H, its lower edge leaning out from the chest (z 0.122 at the top,
+#                  0.138 at the bottom); its outline is drawn in gold lines (palette 107), the face a paler shade
+#   the cord       gold lines (palette 107): from behind the neck at the collar (±0.026, 0.771 H, its back segment
+#                  in the skin's colour, hidden) forward round the neck (±0.046, 0.744, 0.076), in over the chest
+#                  (±0.031, 0.693, 0.107) to a point on the medallion's top (0, 0.668, 0.122): a V on the chest
+# Ours follows those points on our own cape and neck (laid on their surfaces by ray casts, 3.5 mm proud): a flat gold
+# cord all the way round the neck, on the neck bone above the collar (so a nod or a look aside carries it) and on the
+# chest below, through a small gold bead on the medallion's top. The medallion is the measured octagon: a gold rim and
+# a paler raised face, tilted with the chest. 40 + 24 + 80 triangles (the 16-sided disc was 80), one material as before.
+from mathutils.bvhtree import BVHTree
+
+CORD_W = 0.0034    # half-width of the cord (H): ~1.4 cm in the game, a pixel or two at the play camera like LBA2's line
+CORD_LIFT = 0.0035
+MED_C, MED_HW, MED_HH = (0.0, 0.632), 0.041, 0.036
+
+
+def bvh_of(*parts):
+    vs, fs = [], []
+    for pt in parts:
+        o = len(vs)
+        vs += [Vector(p) for p in pt.v]
+        fs += [[i + o for i in f] for f in pt.f]
+    return BVHTree.FromPolygons(vs, fs)
+
+
+CHEST = bvh_of(cape)
+NECKS = bvh_of(cape, neck)
+
+
+def on_surface(tree, p, toward, lift):
+    # cast from outside toward `toward` (a point inside) through p; the first surface met, `lift` off it, and its normal
+    p, c = Vector(p), Vector(toward)
+    d = (c - p).normalized()
+    hit, n, _, _ = tree.ray_cast(p - d * 0.4, d, 1.0)
+    if hit is None:
+        return p, -d
+    n = n.normalized()
+    if n.dot(d) > 0:
+        n = -n
+    return hit + n * lift, n
+
+
+# the medallion: on the chest, square to it
+mc3, mn = on_surface(CHEST, (MED_C[0], MED_C[1], 0.2), (MED_C[0], MED_C[1], 0.0), 0.0)
+mu = Vector((1, 0, 0)); mu = (mu - mn * mu.dot(mn)).normalized()
+mv = mn.cross(mu).normalized()
+if mv.y < 0:
+    mv = -mv
+oct8 = lambda k, d: [tuple(mc3 + mn * d + mu * (math.sin(2 * math.pi * i / 8) * MED_HW * k) + mv * (math.cos(2 * math.pi * i / 8) * MED_HH * k)) for i in range(8)]
 med = Part('medal', 'medal', lambda p: {'torso': 1.0}, angle=40)
-mc, mr, mz = (0.0, 0.625), 0.045, 0.141
-NM = 16
-circ = lambda r: [(mc[0] - r * math.sin(2 * math.pi * k / NM), mc[1] + r * math.cos(2 * math.pi * k / NM)) for k in range(NM)]
-rim, inn = circ(mr), circ(mr * 0.78)
-v = [(x, y, mz - 0.006) for x, y in rim] + [(x, y, mz + 0.005) for x, y in rim] + [(x, y, mz + 0.006) for x, y in inn]
-f = [[i, (i + 1) % NM, NM + (i + 1) % NM, NM + i] for i in range(NM)] + [[NM + i, NM + (i + 1) % NM, 2 * NM + (i + 1) % NM, 2 * NM + i] for i in range(NM)]
+v = oct8(1.0, 0.001) + oct8(1.0, 0.0075) + oct8(0.74, 0.0085)
+f = [[i, (i + 1) % 8, 8 + (i + 1) % 8, 8 + i] for i in range(8)] + [[8 + i, 8 + (i + 1) % 8, 16 + (i + 1) % 8, 16 + i] for i in range(8)]
 med.add(v, f)
+# the bead on its top the cord runs through: a short gold tube across the chest
+top = mc3 + mn * 0.006 + mv * (MED_HH + 0.004)
+tube(med, tuple(top - mu * 0.0075), tuple(top + mu * 0.0075), 0.0052, 0.0052, 6, cap0=True, cap1=True)
 PARTS.append(med)
 medf = Part('medalFace', 'medalFace', lambda p: {'torso': 1.0}, angle=40)
-fc = circ(mr * 0.78)
-medf.add([(x, y, mz + 0.0045) for x, y in fc] + [(mc[0], mc[1], mz + 0.009)], [[i, (i + 1) % NM, NM] for i in range(NM)][::1])
+medf.add(oct8(0.74, 0.0085) + [tuple(mc3 + mn * 0.0105)], [[i, (i + 1) % 8, 8] for i in range(8)])
 PARTS.append(medf)
-cord = Part('cord', 'cord', lambda p: {'torso': 1.0}, angle=180)
-for sx in (1, -1):
-    pts = [(sx * 0.032, 0.768, 0.072), (sx * 0.024, 0.72, 0.112), (sx * 0.012, 0.675, 0.136), (sx * 0.004, 0.664, 0.142)]
-    w = 0.0036
-    vv = []
-    for x, y, z in pts:
-        vv += [(x - w, y, z + 0.002), (x + w, y, z + 0.002)]
-    ff = [[2 * i + 1, 2 * i, 2 * i + 2, 2 * i + 3] for i in range(len(pts) - 1)]
-    cord.add(vv, ff)
-# (the original shows no cord: not exported)
+
+# the cord: one path from the bead up the right of the chest, round the back of the neck and down the left to the bead
+CORD_LEG = [(0.0035, 0.0), (0.016, 0.009), (0.031, 0.024), (0.040, 0.050), (0.046, 0.076), (0.043, 0.098)]  # (x, y above the bead)
+CORD_NECK_Y = 0.784
+leg_pts = [(x, top.y + dy) for x, dy in CORD_LEG]
+loop = [(0.040 * math.sin(math.radians(a)), 0.05 + 0.04 * math.cos(math.radians(a))) for a in (70, 95, 120, 150, 180)]   # (x, z) round the neck
+half = [(x, y, None) for x, y in leg_pts] + [(x, CORD_NECK_Y, z) for x, z in loop]
+right = [(-x, y, z) for x, y, z in half]          # bead → neck back, right side
+left = [(x, y, z) for x, y, z in half]            # bead → neck back, left side
+path = right + list(reversed(left[:-1]))          # bead (right) → back of the neck → bead (left)
+
+
+def cr_sub(pts, k=2):
+    # Catmull-Rom: k points per segment
+    out = []
+    P = [pts[0]] + pts + [pts[-1]]
+    for i in range(len(pts) - 1):
+        p0, p1, p2, p3 = (Vector(q) for q in P[i:i + 4])
+        for j in range(k):
+            t = j / k
+            out.append(0.5 * ((2 * p1) + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t ** 3))
+    out.append(Vector(pts[-1]))
+    return out
+
+
+placed = []
+for x, y, z in path:
+    if z is None:   # on the chest: cast toward the body's axis from in front
+        q, n = on_surface(NECKS, (x, y, 0.2), (x * 0.3, y, 0.0), CORD_LIFT)
+    else:           # round the neck: cast in toward the neck's axis
+        q, n = on_surface(NECKS, (x, y, z), (0.0, y, 0.05), CORD_LIFT)
+    placed.append((tuple(q), tuple(n)))
+pts = cr_sub([q for q, _ in placed], 2)
+nrm = cr_sub([n for _, n in placed], 2)
+# re-seat the smoothed points on the surface along their own normals (the curve may cut a corner of the collar)
+seated = []
+for q, n in zip(pts, nrm):
+    n = n.normalized()
+    hit, hn, _, _ = NECKS.ray_cast(q + n * 0.05, -n, 0.2)
+    seated.append((hit + hn.normalized() * (CORD_LIFT if hn.dot(n) > 0 else -CORD_LIFT), n) if hit is not None else (q, n))
+CORD_W_OF = {}
+cord = Part('cord', 'cord', lambda p: CORD_W_OF[tuple(round(c, 6) for c in p)], angle=180)
+cv, cf = [], []
+for i, (q, n) in enumerate(seated):
+    t = (seated[min(i + 1, len(seated) - 1)][0] - seated[max(i - 1, 0)][0]).normalized()
+    side_ = t.cross(n).normalized() * CORD_W
+    cv += [tuple(q - side_), tuple(q + side_)]
+for i in range(len(seated) - 1):
+    a, b, c, d = 2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2
+    fn = (Vector(cv[b]) - Vector(cv[a])).cross(Vector(cv[c]) - Vector(cv[a]))
+    cf.append([a, b, c, d] if fn.dot(seated[i][1]) > 0 else [d, c, b, a])
+for p in cv:
+    w = smooth(0.756, 0.778, p[1])   # (above the collar on the neck bone, as the neck there; on the chest the torso)
+    CORD_W_OF[tuple(round(c, 6) for c in p)] = {k: v for k, v in (('neck', w), ('torso', 1 - w)) if v > 1e-4}
+cord.add(cv, cf)
+PARTS.append(cord)
 
 # the mouth (FACE-MOUTH, then FACES-HANDS): he had none. A short, calm, slightly upturned line on the lower face. It is
 # its own small mesh on the head bone (lbapoly.mouth_lens), drawn at its OPEN size, a pinched lens; the game scales it
-# down in y to the thin closed line at rest (rest 0.28: the same 6 mm line as FACE-MOUTH's crescent) and up while he
+# down in y to the thin closed line at rest (rest 0.22, HERO-LOOK: a 5 mm line in a darker red-brown, was 0.28: in the
+# close-ups the fuller red lens read as lipstick) and up while he
 # speaks, in time with the voice's syllables (rig.js, voice.js). 16 triangles, one draw call.
-MOUTH_Y, MOUTH_HW, MOUTH_HH, MOUTH_LIFT, MOUTH_REST = 0.842, 0.0215, 0.0110, 0.0075, 0.28
+MOUTH_Y, MOUTH_HW, MOUTH_HH, MOUTH_LIFT, MOUTH_REST = 0.842, 0.0215, 0.0110, 0.0075, 0.22
 MOUTHS = [mouth_lens(0.0, MOUTH_Y, MOUTH_HW, MOUTH_HH, MOUTH_LIFT, head_front, 9, 0.004)]   # (pivot, polygon, tilt)
 
 # eyes (separate, so they can blink): a flat diamond on the face, the iris a smaller one on top of it
 EYES = []
+EYE_Y, EYE_LID = 0.896, 0.0036   # (HERO-LOOK: the eyes' height; how far above the eye's middle line the upper lid's edge comes)
 for sx in (1, -1):
-    cx, cy = sx * 0.037, 0.896
+    cx, cy = sx * 0.037, EYE_Y
     cz = head_front(cx, cy) + 0.003
     def on_face(dx, dy, lift=0.0):
         p = (cx + dx, cy + dy, head_front(cx + dx, cy + dy) + 0.003 + lift)
@@ -572,7 +774,54 @@ for sx in (1, -1):
     iris = [on_face(ic[0] + 0.0068 * math.cos(t), ic[1] + 0.0068 * math.sin(t), 0.0012) for t in [2 * math.pi * k / 10 for k in range(10)]]
     pupil = [on_face(ic[0] + 0.003 * math.cos(t), ic[1] + 0.003 * math.sin(t), 0.0022) for t in [2 * math.pi * k / 8 for k in range(8)]]
     piv = scale_about((cx, cy, cz), CHIN, HEAD_K)
-    EYES.append({'pivot': piv, 'tris': [(white, 'white'), (iris, 'iris'), (pupil, 'pupil')]})
+    # HERO-LOOK (faces in close-up, WORKLIST #8): an upper lid. Without one the iris sat in a full ring of white, a stare
+    # that read as startled (uncanny) in the dialogue close-ups. The lid (the skin a shade darker) comes down over the top
+    # of the white and the top of the iris, a dark lash line along its edge that thickens to a small flick at the outer
+    # corner: a calm, friendly look. In the eye group, so the blink closes it with the eye. 2 × 24 triangles.
+    LID = 7
+    us = [i / (LID - 1) * 2 - 1 for i in range(LID)]
+    outer = lambda u: max(0.0, u * sx)
+    edge = [(u * 0.0168, EYE_LID * (1 - u * u) ** 0.7 + 0.0007 * outer(u)) for u in us]
+    top = [(u * 0.0176, 0.0085 * 1.07 * math.sqrt(max(0.0, 1 - u * u)) + 0.0006) for u in us]
+    lid = [on_face(dx, dy, 0.0026) for dx, dy in edge] + [on_face(dx, dy, 0.0026) for dx, dy in reversed(top)]
+    lash_lo = [(dx, dy - 0.0004) for dx, dy in edge]
+    lash_hi = [(dx + 0.0016 * outer(u) * sx, dy + 0.0010 + 0.0010 * outer(u)) for (dx, dy), u in zip(edge, us)]
+    lash = [on_face(dx, dy, 0.003) for dx, dy in lash_lo] + [on_face(dx, dy, 0.003) for dx, dy in reversed(lash_hi)]
+    EYES.append({'pivot': piv, 'tris': [(white, 'white'), (iris, 'iris'), (pupil, 'pupil'), (lid, 'lidSkin'), (lash, 'lid')]})
+
+# HERO-LOOK: brows. He had none (LBA2's in-game model has none at its 30 px head height); in the close-ups a face with no
+# brows reads blank and childlike, and he is a grown man now. Short, a little arched, thicker at the inner end, in his
+# hair's dark brown, laid on the brow over each eye (head bone). 2 × 8 triangles.
+brow = Part('brow', 'brow', lambda p: {'head': 1.0}, angle=180, big=True)
+for sx in (1, -1):
+    st = []
+    for i in range(5):
+        u = i / 4
+        x = sx * (0.0205 + 0.034 * u)
+        yc = EYE_Y + 0.0172 + 0.0042 * math.sin(math.pi * min(1.0, u * 1.15)) - 0.0012 * u
+        h = 0.0031 * (1 - u) + 0.0013 * u
+        st.append((x, yc, h))
+    lo = [(x, y - h, head_front(x, y - h) + 0.0024) for x, y, h in st]
+    hi = [(x, y + h, head_front(x, y + h) + 0.0024) for x, y, h in st]
+    o = len(brow.v)
+    brow.add(lo + hi, [])
+    brow.f += [[o + i, o + i + 1, o + 5 + i + 1, o + 5 + i] for i in range(4)]
+PARTS.append(brow)
+
+# HERO-LOOK: a small nose. The face came to a point only through the head's sections (LBA2's short snout), so from the
+# front the middle of the face was one empty plane between the eyes and the mouth. A small rounded nose on the snout,
+# 8 mm proud at the tip, its bridge fading into the face below the eyes: the face gets a centre, and the profile keeps
+# LBA2's line. 10 triangles, head bone.
+nose = Part('nose', 'skin', lambda p: {'head': 1.0}, angle=80, big=True)
+hf = lambda x, y, d: (x, y, head_front(x, y) + d)
+NOSE = [hf(0, 0.8785, -0.0012),                                   # 0 the bridge, in the face
+        hf(0.0058, 0.8715, -0.0004), hf(-0.0058, 0.8715, -0.0004),   # 1, 2 its sides
+        hf(0.0098, 0.8608, 0.0008), hf(-0.0098, 0.8608, 0.0008),   # 3, 4 the wings
+        hf(0, 0.8555, 0.0022),                                    # 5 under the tip
+        hf(0, 0.8648, 0.0082),                                    # 6 the tip
+        hf(0.0047, 0.8628, 0.0062), hf(-0.0047, 0.8628, 0.0062)]   # 7, 8 the tip's sides
+nose.add(NOSE, [[0, 1, 7], [0, 7, 6], [0, 6, 8], [0, 8, 2], [1, 3, 7], [2, 8, 4], [7, 3, 5], [7, 5, 6], [6, 5, 8], [8, 5, 4]])
+PARTS.append(nose)
 
 
 # ------------------------------------------------------------------ arms: model in the display pose, store the rest pose
@@ -581,20 +830,35 @@ def rot_z(a, pivot):
     return T @ Matrix.Rotation(a, 4, 'Z') @ T.inverted()
 
 
-ARM_M = {}
-for s, sg in (('L', 1), ('R', -1)):
-    piv = [c / S for c in B['sh' + s]['p']]
-    m = rot_z(sg * SPREAD, piv)
-    for b in ('sh' + s, 'el' + s, 'hand' + s):
-        ARM_M[b] = m
+def arm_mats(spread):
+    M = {}
+    for s, sg in (('L', 1), ('R', -1)):
+        piv = [c / S for c in B['sh' + s]['p']]
+        m = rot_z(sg * spread, piv)
+        for b in ('sh' + s, 'el' + s, 'hand' + s):
+            M[b] = m
+    return M
 
 
-def to_rest(p, w):
-    # the game spreads the arms by SPREAD at the shoulder: un-spread the vertex by its own blend of bones
+GAME_SPREAD = 0.3   # (the look's armSpread, characters.js LOOKS.twinsen: where the game holds the arms at rest)
+ARM_M, ARM_G = arm_mats(SPREAD), arm_mats(GAME_SPREAD)
+
+
+def blend_m(Ms, w):
     M = Matrix(((0, 0, 0, 0),) * 4)
     for b, wt in w.items():
-        M = M + (ARM_M.get(b, Matrix.Identity(4)) * wt)
-    return tuple(M.inverted() @ Vector(p))
+        M = M + (Ms.get(b, Matrix.Identity(4)) * wt)
+    return M
+
+
+def to_rest(p, w, Ms=ARM_M):
+    # the game spreads the arms by SPREAD at the shoulder: un-spread the vertex by its own blend of bones
+    return tuple(blend_m(Ms, w).inverted() @ Vector(p))
+
+
+def to_game(p, w):
+    # where the game shows a vertex drawn at SPREAD with weights w, at rest (its arms at GAME_SPREAD)
+    return tuple(blend_m(ARM_G, w) @ blend_m(ARM_M, w).inverted() @ Vector(p))
 
 
 # ------------------------------------------------------------------ build Blender objects (source file) + export
@@ -676,9 +940,17 @@ def corner_normals(verts, tris, angle):
     return res
 
 
+PART_TRIS = {}
 for part in PARTS:
     W = [part.weights(p) for p in part.v]
-    rest = [to_rest(p, w) for p, w in zip(part.v, W)]
+    if part.reweight:   # (HERO-LOOK: new weights where the game shows it at rest; the same rest shape on screen)
+        shown = [to_game(p, w) for p, w in zip(part.v, W)]
+        W = [part.reweight(p) for p in shown]
+        rest = [to_rest(p, w, ARM_G) for p, w in zip(shown, W)]
+    elif part.game:
+        rest = [to_rest(p, w, ARM_G) for p, w in zip(part.v, W)]
+    else:
+        rest = [to_rest(p, w) for p, w in zip(part.v, W)]
     tris = []
     for f in part.f:
         for k in range(1, len(f) - 1):
@@ -716,13 +988,14 @@ for part in PARTS:
             out['si'] += [bix(b) if b else 0 for b, _ in ws]
             out['sw'] += [round(wt / tot, 4) for _, wt in ws]
     out['tris'] += len(tris)
+    PART_TRIS[part.name] = PART_TRIS.get(part.name, 0) + len(tris)
 
 for e in EYES:
     piv = e['pivot']
     ed = {'bone': 'head', 'pivot': [round(c * S, 5) for c in piv], 'pos': [], 'col': []}
     for quad, mat in e['tris']:
         nq = len(quad)
-        if mat == 'lid':   # a strip: the lower edge forward, the upper edge back
+        if mat in ('lid', 'lidSkin'):   # a strip: the lower edge forward, the upper edge back
             h = nq // 2
             tl = []
             for i in range(h - 1):
@@ -763,6 +1036,7 @@ for piv, poly, mtilt in MOUTHS:
     ob.matrix_world = Matrix.Identity(4)
 
 json.dump(out, open(OUT, 'w'), separators=(',', ':'))
+print('parts', PART_TRIS)
 print('tris', out['tris'], 'verts', len(out['pos']) // 3, 'bones', out['bones'])
 if BLEND:
     bpy.ops.wm.save_as_mainfile(filepath=BLEND)
