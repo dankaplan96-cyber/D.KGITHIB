@@ -1902,7 +1902,7 @@ export function buildZeelich(scene, physics) {
       items[v].push(it);
       col({ type: 'cyl', x, z, r: 0.3, top: Y0 + 2.6 * s, seeThrough: true });
     }
-    items.forEach((list, v) => instances(group, puffTreeGeo(v), VC(), list));
+    items.forEach((list, v) => { instances(group, puffTreeGeo(v), VC(), list).userData.gpuGroup = 'trees'; });   // (gpuGroup: benchgpu.js)
     // rocks along the rim and in the grass
     const rocks = [[], [], []];
     for (const it of rimRocks) rocks[Math.floor(r() * 3)].push(it);
@@ -1915,7 +1915,7 @@ export function buildZeelich(scene, physics) {
       if (s > 0.45) col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true });
     }
     const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#3a2030', emissiveIntensity: 0.4 });
-    rocks.forEach((list, v) => { if (list.length) instances(group, rockGeometry(v + 1), rockMat, list); });
+    rocks.forEach((list, v) => { if (list.length) instances(group, rockGeometry(v + 1), rockMat, list).userData.gpuGroup = 'trees'; });
     // grass clumps and flowers
     const grass = [], flowers = [[], [], [], []];
     for (let i = 0; i < 900; i++) {
@@ -1929,8 +1929,8 @@ export function buildZeelich(scene, physics) {
       grass.push(gr);
       if (fl) flowers[fl[0]].push(fl[1]);
     }
-    instances(group, grassClumpGeometry(5, 9), pm('#ffffff', 0.9, { vertexColors: true, side: THREE.DoubleSide }), grass, { cast: false });
-    ['#ff8ac0', '#ffffff', '#c89cff', '#ffd84a'].forEach((c, k) => instances(group, flowerGeometry(c), pm('#ffffff', 0.7, { vertexColors: true }), flowers[k], { cast: false }));
+    instances(group, grassClumpGeometry(5, 9), pm('#ffffff', 0.9, { vertexColors: true, side: THREE.DoubleSide }), grass, { cast: false }).userData.gpuGroup = 'grass';
+    ['#ff8ac0', '#ffffff', '#c89cff', '#ffd84a'].forEach((c, k) => { instances(group, flowerGeometry(c), pm('#ffffff', 0.7, { vertexColors: true }), flowers[k], { cast: false }).userData.gpuGroup = 'grass'; });
     // flower beds around the plaza and along the house fronts
     for (let i = 0; i < 26; i++) {
       const a = (i / 26) * Math.PI * 2, x = PLAZA.x + Math.sin(a) * (PLAZA.r + 0.8), z = PLAZA.z + Math.cos(a) * (PLAZA.r + 0.8);

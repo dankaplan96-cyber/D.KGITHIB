@@ -1579,7 +1579,7 @@ function buildIsland(scene, physics, name, L, at) {
   const fit = (geo, list, mat, ys = 1) => {
     if (!list.length) return;
     geo.computeBoundingBox(); const b = geo.boundingBox, gw = b.max.x - b.min.x, gh = b.max.y - b.min.y, gd = b.max.z - b.min.z;
-    instances(group, geo, mat, list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })));
+    instances(group, geo, mat, list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) }))).userData.gpuGroup = 'trees';   // (benchgpu.js)
   };
   const vc = pm('#ffffff', 0.85, { vertexColors: true });
   fit(treeGeometry('round', 3), trees[0], vc); fit(treeGeometry('tall', 2), trees[1], vc); fit(treeGeometry('bush', 1), bushes, vc);

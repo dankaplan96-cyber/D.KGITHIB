@@ -8,7 +8,8 @@
 //   main  the view; shadow  the sun's shadow map (three passes scene === null there)
 // Groups (same rules as the audit probes, docs/lba3-performance/gpu/):
 //   terrain · water · sky (cloud ceiling, rain) · characters (every actor's rig: hero, people, enemies, pets) ·
-//   trees (trees, bushes, rocks: kit.js LodBatch) · grass (grass, flowers, tulips: world.js smallPool) ·
+//   trees (trees, bushes, rocks: kit.js LodBatch; a region's own: userData.gpuGroup) · grass (grass, flowers, tulips:
+//   world.js smallPool; a region's own: userData.gpuGroup) ·
 //   particles (soft particles, blob shadows, points) · transparent (other blended surfaces) · scenery (the rest)
 import * as THREE from 'three';
 import { warmPassPrograms } from './warmup.js';
@@ -20,6 +21,9 @@ import { setViewInst } from './viewinst.js';
 export function gpuGroupOf(G, o, m) {
   const E = G.env;
   if (o.name === 'terrain') return 'terrain';
+  // (HEADING-LOAD-2: the regions' own vegetation — Zeelich's and the islands' instanced trees, rocks, grass and
+  //  flowers, the desert's shrubs — named by their builders: they were counted as scenery)
+  const own = o.userData.gpuGroup; if (own) return own;
   if (E && o === E.water) return 'water';
   if (E && (o === E.clouds || o === E.rain)) return 'sky';
   if (o.isSkinnedMesh || isCharacter(G, o)) return 'characters';

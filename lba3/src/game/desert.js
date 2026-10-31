@@ -858,7 +858,7 @@ export function buildDesert(scene, physics) {
       const h = H(x, z); if (h > BASE + 4) continue;
       list.push({ x, y: h + 0.1, z, ry, s: 0.5 + sz * 0.8, color: c < 0.5 ? '#9a8a4a' : '#7a7a3a' });
     }
-    instances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list, { cast: true });
+    instances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list, { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js)
     const cactM = pm('#5a8a4a', 0.75);
     const CB = new Batch(group);
     for (let i = 0; i < 26; i++) {
