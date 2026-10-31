@@ -11,7 +11,7 @@ for k in ['base', 'after', 'far150', 'lod40', 'frame95']:
                        'meanShadow': {'calls': round(sum(p['shadow']['calls'] for p in P) / len(P), 1), 'tris': round(sum(p['shadow']['tris'] for p in P) / len(P))}}
 A = J('title-after.json')['per']
 out['title']['sameFrameAB'] = {v: {'pxMax': max(p['vars'][v]['px'] for p in A), 'pxMin': min(p['vars'][v]['px'] for p in A)} for v in A[0]['vars']}
-for k, f in [('before', 'startup-base-run1.json'), ('after', 'startup-after.json')]:
+for k, f in [('before', 'startup-base-run1.json'), ('before2', 'startup-base-run2.json'), ('after', 'startup-after.json'), ('after2', 'startup-after-run2.json')]:
     d = J(f)
     out['startup'][k] = {'wallToTitleS': d['wallToTitle'], 'buildMs': d['loadTimes']['total'], 'prepareMs': d['loadTimes']['shaders'], 'prep': d['loadTimes']['prep'],
                          'slices': d['loadTimes'].get('slices'), 'programs': d['programs'], 'programKinds': d['programKinds'], 'parallelCompile': d['parallel'],

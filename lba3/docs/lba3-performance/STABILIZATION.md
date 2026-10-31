@@ -279,8 +279,14 @@ circle. Data and probes: `TITLE-LOAD/results/`, `TITLE-LOAD/probes/` (`run.mjs` 
     the GPU takes the whole compile: 11.0 s (geometry), 13.6 s (first draws, part 1), 8.5 s (one shadow-program
     chunk). On the laptop the 'programs' step waits for the parallel compile without blocking. Whether anything there
     still blocks for long is for its start trace.
-  - Time to the title here 66.8 → 77.4 s (one run each; the unchanged build steps alone went 8.9 → 11.1 s with the
-    container's load). NOT VERIFIED as a gain or loss.
+  - Two runs each (the container's load changed between them: unchanged build steps went 8.9 → 15.1 s):
+    time to the title 66.8 / 156.4 s → 77.4 / 121.3 s, so no claim either way (NOT VERIFIED); the longest task
+    26.0 / 43.7 s → 13.6 / 19.3 s; painted frames on the loading screen 45 / 43 → 91 / 102; long tasks over 1 s
+    5 / 7 → 10 / 13 (more, shorter tasks: the slices).
+- **Tests** (here, this branch, one at a time): opening, display, menus, perfbudget (0 new programs on every route),
+  drawcalls, transitions, timing, chapter1, travel, zislands, autoquality-game, camfollow: all PASS
+  (`results/tests.txt`). The staged scene preparation runs only on the game's own loop: the tests' fixed stepping
+  keeps the old one-frame path, so it is covered by `q_reveal2.js`, not by these suites.
   - Programs at the title: 83 both (31 standard, 14 depth, 14 basic, 12 shader, 5 merged, 7 other). Not cut: Auto's
     bloom/FXAA pass programs stay (Auto can switch them on in play); a per-variant audit of the rest was not made.
 - **Not done:** Citadel's own build steps (world.js, 0.7–1.0 s each here) are not split (not this round's files).

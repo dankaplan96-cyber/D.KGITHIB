@@ -955,6 +955,108 @@
     ]
    }
   },
+  "before2": {
+   "wallToTitleS": 156.422,
+   "buildMs": 15147,
+   "prepareMs": 134540,
+   "prep": {
+    "paint": 279,
+    "programs": 81,
+    "textures": 17082,
+    "geometry": 265,
+    "geometryPart": 43,
+    "batches": 30552,
+    "batchUpload": 988,
+    "shadowPrograms": 43661,
+    "firstFrame": 41633
+   },
+   "slices": null,
+   "programs": 83,
+   "programKinds": {
+    "ShaderMaterial": 12,
+    "MeshStandardMaterial": 31,
+    "merged-vctrm": 1,
+    "merged-vcrm": 2,
+    "MeshBasicMaterial": 14,
+    "SpriteMaterial": 2,
+    "LineBasicMaterial": 1,
+    "PointsMaterial": 2,
+    "unspecified": 1,
+    "MeshDepthMaterial": 14,
+    "merged-arr 256x256|4": 1,
+    "merged-arr 512x512|4": 1,
+    "OutputShader": 1
+   },
+   "parallelCompile": false,
+   "longTasks": {
+    "count": 23,
+    "sumMs": 147017,
+    "over100": 19,
+    "over200": 16,
+    "top": [
+     {
+      "t": 71031,
+      "d": 43661,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 114694,
+      "d": 41634,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 39482,
+      "d": 30552,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 21959,
+      "d": 17083,
+      "step": "Preparing graphics\u2026"
+     },
+     {
+      "t": 3627,
+      "d": 3367,
+      "step": "before the game"
+     },
+     {
+      "t": 17425,
+      "d": 2343,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 7387,
+      "d": 1396,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 9951,
+      "d": 1065,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 20736,
+      "d": 1051,
+      "step": "Preparing the story\u2026"
+     },
+     {
+      "t": 70037,
+      "d": 988,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 15566,
+      "d": 902,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 19787,
+      "d": 763,
+      "step": "Building Twinsen's house\u2026"
+     }
+    ]
+   }
+  },
   "after": {
    "wallToTitleS": 77.42,
    "buildMs": 11143,
@@ -1106,6 +1208,162 @@
      {
       "t": 38741,
       "d": 938,
+      "step": "Almost there\u2026"
+     }
+    ]
+   }
+  },
+  "after2": {
+   "wallToTitleS": 121.312,
+   "buildMs": 13331,
+   "prepareMs": 100973,
+   "prep": {
+    "paint": 2585,
+    "programs": 69,
+    "textures": 8,
+    "geometry": 14718,
+    "geometryPart": 2452,
+    "shadowBatches": 332,
+    "layers": 20917,
+    "batches": 1340,
+    "batchUpload": 218,
+    "shadowPrograms": 22473,
+    "firstDraws": 30520,
+    "firstFrame": 7795
+   },
+   "slices": {
+    "textures": [
+     6
+    ],
+    "layers": [
+     6387,
+     482,
+     606,
+     296,
+     234,
+     366,
+     217,
+     217,
+     399,
+     412,
+     436,
+     438,
+     252,
+     323,
+     501,
+     320,
+     200,
+     122,
+     473,
+     705,
+     730,
+     1415,
+     825,
+     574,
+     680,
+     503,
+     312,
+     238,
+     548,
+     681,
+     389,
+     209,
+     354,
+     1
+    ],
+    "shadowPrograms": [
+     76,
+     56,
+     50,
+     16571,
+     2132,
+     883,
+     1008,
+     692,
+     1005
+    ]
+   },
+   "programs": 83,
+   "programKinds": {
+    "ShaderMaterial": 12,
+    "MeshStandardMaterial": 31,
+    "merged-vctrm": 1,
+    "merged-vcrm": 2,
+    "MeshBasicMaterial": 14,
+    "SpriteMaterial": 2,
+    "LineBasicMaterial": 1,
+    "PointsMaterial": 2,
+    "unspecified": 1,
+    "MeshDepthMaterial": 14,
+    "merged-arr 512x512|4": 1,
+    "merged-arr 256x256|4": 1,
+    "OutputShader": 1
+   },
+   "parallelCompile": false,
+   "longTasks": {
+    "count": 72,
+    "sumMs": 108566,
+    "over100": 64,
+    "over200": 57,
+    "top": [
+     {
+      "t": 82823,
+      "d": 19310,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 60471,
+      "d": 16570,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 22808,
+      "d": 14564,
+      "step": "Preparing Citadel\u2026"
+     },
+     {
+      "t": 113357,
+      "d": 7800,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 37473,
+      "d": 6719,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 102137,
+      "d": 5912,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 108053,
+      "d": 2921,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 16162,
+      "d": 2766,
+      "step": "Building Citadel\u2026"
+     },
+     {
+      "t": 110978,
+      "d": 2375,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 77042,
+      "d": 2132,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 51960,
+      "d": 1415,
+      "step": "Almost there\u2026"
+     },
+     {
+      "t": 58723,
+      "d": 1340,
       "step": "Almost there\u2026"
      }
     ]
