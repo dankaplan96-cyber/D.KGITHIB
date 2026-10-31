@@ -398,8 +398,10 @@ export function buildRegionContainers(rooms, physics) {
 
 // ---------------------------------------------------------------- the glint
 // A small four-pointed twinkle over the nearest unsearched containers (at most POOL, within NEAR m): a flash of
-// ~0.4 s every few seconds, each on its own beat. Gone once a container is searched. No text.
-const POOL = 4, NEAR = 11;
+// ~0.3 s every few seconds, each on its own beat. Gone once a container is searched. No text.
+// GLINT-SOFT (the user, 31.10: "too prominent; much subtler, almost invisible"): closer (11 → 7 m), fewer (4 → 3),
+// a third of the size (0.42 → 0.14 at the peak), dimmer (×0.4), shorter (0.45 → 0.3 s) and rarer (every 4.5–6.5 s).
+const POOL = 3, NEAR = 7, FLASH = 0.3, PEAK = 0.14, DIM = 0.4;
 let starTex = null;
 function star() {
   if (starTex) return starTex;
@@ -416,7 +418,7 @@ function star() {
 export class ContainerCues {
   constructor(scene) {
     this.sprites = [];
-    const m = new THREE.SpriteMaterial({ map: star(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
+    const m = new THREE.SpriteMaterial({ map: star(), transparent: true, opacity: DIM, depthWrite: false, blending: THREE.AdditiveBlending, fog: false });
     for (let i = 0; i < POOL; i++) { const s = new THREE.Sprite(m); s.visible = false; s.renderOrder = 5; scene.add(s); this.sprites.push(s); }
     this.list = []; this.t = 0; this.pick = 0;
   }
@@ -433,13 +435,13 @@ export class ContainerCues {
     this.sprites.forEach((s, i) => {
       const gv = this.list[i];
       if (!gv) { s.visible = false; return; }
-      // its own beat: a 0.45 s twinkle every 2.4–3.4 s
-      const seed = Math.abs(Math.sin(gv.x * 12.9898 + gv.z * 78.233)) , period = 2.4 + seed, ph = (this.t + seed * period) % period;
-      if (ph > 0.45) { s.visible = false; return; }
-      const k = Math.sin((ph / 0.45) * Math.PI);
+      // its own beat: a short twinkle every 4.5–6.5 s
+      const seed = Math.abs(Math.sin(gv.x * 12.9898 + gv.z * 78.233)) , period = 4.5 + 2 * seed, ph = (this.t + seed * period) % period;
+      if (ph > FLASH) { s.visible = false; return; }
+      const k = Math.sin((ph / FLASH) * Math.PI);
       const y = (gv.y ?? game.physics.groundAt(gv.x, gv.z, h.pos.y + 1)) + (gv.top ?? 1) + 0.08;
       s.position.set(gv.x + (seed - 0.5) * 0.25, y, gv.z);
-      s.scale.setScalar(0.12 + 0.3 * k);
+      s.scale.setScalar(PEAK * (0.3 + 0.7 * k));
       s.material.rotation = ph * 2;
       s.visible = true;
     });

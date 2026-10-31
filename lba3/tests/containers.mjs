@@ -263,8 +263,8 @@ const quest = await ev(() => {
   return { owed, inLoot: inLoot === G.lootSnapshot().length, gained: h.coins - c0, left: G.flags.t_owe || 0 };
 });
 check('a quest reward (owed pickups) is not container loot and still settles its debt', quest.owed === 2 && quest.inLoot && quest.gained === 2 && quest.left === 0, quest);
-// (frames of 120 in which a glint shows over giver `id` of this area, Twinsen 3 m off it)
-await ev(() => { C.seen = (id) => { const G = game, gv = G.givers().find((g) => g.id === id); C.standBy(id); G.hero.pos.x += 3; G.step(0.6); let v = 0; for (let i = 0; i < 120; i++) { G.step(1 / 30); if (G.cues.sprites.some((s) => s.visible && Math.hypot(s.position.x - gv.x, s.position.z - gv.z) < 0.5)) v++; } return v; }; });
+// (frames of 240 in which a glint shows over giver `id` of this area, Twinsen 3 m off it; GLINT-SOFT: a twinkle every 4.5–6.5 s)
+await ev(() => { C.seen = (id) => { const G = game, gv = G.givers().find((g) => g.id === id); C.standBy(id); G.hero.pos.x += 3; G.step(0.6); let v = 0; for (let i = 0; i < 240; i++) { G.step(1 / 30); if (G.cues.sprites.some((s) => s.visible && Math.hypot(s.position.x - gv.x, s.position.z - gv.z) < 0.5)) v++; } return v; }; });
 const glint = await ev(() => {
   const G = game;
   G.exitRoom({ x: -42, z: -4 }, true); P.settle();
