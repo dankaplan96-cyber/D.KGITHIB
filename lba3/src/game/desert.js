@@ -458,7 +458,7 @@ const frondG = () => cached('frond', () => {
 });
 
 // ================================================================== build
-export function buildDesert(scene, physics) {
+export function* buildDesertSteps(scene, physics) {
   const ox = DESERT.x, oz = DESERT.z;
   const group = new THREE.Group();
   group.name = 'desert';
@@ -477,6 +477,7 @@ export function buildDesert(scene, physics) {
   R0.trapFixes = ground.fixed;
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const H = (x, z) => terrain.heightAt(x, z);
 
   const R = {
@@ -662,6 +663,7 @@ export function buildDesert(scene, physics) {
 
   // ================================================================ the wind-pump (three seized gears)
   const pumpGy = H(PUMP.x, PUMP.z);
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const wheel = new THREE.Group();
   const gears = [];
   {
@@ -891,6 +893,7 @@ export function buildDesert(scene, physics) {
 
   // ================================================================ Ilka's camp (POLISH-AUDIT #15: desertdress.js)
   dressCamp({ group, H, col, ox, oz, updaters }, CAMP);
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   R.camp = W(CAMP.x, CAMP.z);
 
   // ================================================================ the project's research post
@@ -1235,6 +1238,7 @@ export function buildDesert(scene, physics) {
 
   // the Esmers' shuttles come and go through Bald Mountain (LBA2): two circling over Temple-Park
   shuttleTraffic(group, updaters, { cx: DIG.x, cz: DIG.z, y: 30, r: 60, n: 2, speed: 0.05 });
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
 
   // ================================================================ FunFrock's buried condenser hall
   {
@@ -1365,6 +1369,7 @@ export function buildDesert(scene, physics) {
   const YACHT = { x: -24, z: 11, a: 0 };
   yacht.position.set(YACHT.x, H(YACHT.x, YACHT.z), YACHT.z); group.add(yacht);
   const yachtCol = col({ type: 'box', x: YACHT.x, z: YACHT.z, hw: 1.8, hd: 0.7, top: H(YACHT.x, YACHT.z) + 0.8, noStand: true });
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const YPATHS = YACHT_ROUTES;   // (keshlife.js: Hesk's poles keep clear of them)
   const ENDS = { village: [YACHT.x, YACHT.z, YPATHS.toVillage], camp: [-8, -40, YPATHS.toCamp], dig: [44, 25, YPATHS.toDig] };
   R.yacht = {
@@ -1456,6 +1461,7 @@ export function buildDesert(scene, physics) {
     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
   };
   buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt });
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
 
   B.build();
 
@@ -1477,3 +1483,5 @@ export function buildDesert(scene, physics) {
   R.digTerraceY = [BASE, BASE - 1.6, BASE - 3.2, BASE - 4.8];
   return R;
 }
+// (the whole build at once: a step at a time, without pauses)
+export function buildDesert(scene, physics) { const it = buildDesertSteps(scene, physics); let r = it.next(); while (!r.done) r = it.next(); return r.value; }

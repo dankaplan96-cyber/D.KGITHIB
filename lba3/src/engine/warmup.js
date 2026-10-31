@@ -27,7 +27,9 @@ const matKind = (m) => [m.side, m.shadowSide, !!m.map, !!m.alphaMap, m.alphaTest
 // Casts one tiny copy of every kind of caster into a throwaway frame (the real scene's lights, the sun's shadow
 // map), so every depth program is ready. mayCast(o): a mesh not casting now that may cast later. Returns the number
 // of kinds. Draws a few triangles; nothing reaches the screen.
-export function warmShadowPrograms(R, target, scene, camera, at, mayCast = () => false) {
+// TITLE-LOAD: `range` [from, to): only those of the copies (the kinds in the order found, then the shadow batches' 12
+// side pairs), so a caller can spread the compiles over several tasks; returns the number of copies in all
+export function warmShadowPrograms(R, target, scene, camera, at, mayCast = () => false, range = null) {
   if (!R.shadowMap.enabled) return 0;
   const kinds = new Map(), made = [];
   const add = (o, m) => {
@@ -55,7 +57,10 @@ export function warmShadowPrograms(R, target, scene, camera, at, mayCast = () =>
     t.setIndex([0, 1, 2]); made.push(t); return t;
   };
   const g = new THREE.Group(), white = new THREE.Color(1, 1, 1), I = new THREE.Matrix4();
+  let idx = -1;
+  const inRange = () => { idx++; return !range || (idx >= range[0] && idx < range[1]); };
   for (const [o, m] of kinds.values()) {
+    if (!inRange()) continue;
     let c;
     if (o.isSkinnedMesh) { c = new THREE.SkinnedMesh(o.geometry, m); c.bind(o.skeleton, o.bindMatrix); }
     else if (o.isBatchedMesh) { c = new THREE.BatchedMesh(1, 3, 3, m); c.addInstance(c.addGeometry(like(o.geometry))); if (o._colorsTexture) c.setColorAt(0, white); made.push(c); }
@@ -67,6 +72,7 @@ export function warmShadowPrograms(R, target, scene, camera, at, mayCast = () =>
   const posOnly = new THREE.BufferGeometry(); posOnly.setAttribute('position', new THREE.BufferAttribute(new Float32Array([0, 0, 0, 0.05, 0, 0, 0, 0.05, 0]), 3)); posOnly.setIndex([0, 1, 2]); made.push(posOnly);
   const sides = [THREE.FrontSide, THREE.BackSide, THREE.DoubleSide];
   for (const side of sides) for (const shadowSide of [null, ...sides]) {
+    if (!inRange()) continue;
     const mm = new THREE.MeshBasicMaterial({ side, shadowSide, colorWrite: false, depthWrite: false }); made.push(mm);
     const c = new THREE.Mesh(posOnly, mm); c.castShadow = true; c.frustumCulled = false; fresh(c); g.add(c);
   }
@@ -92,7 +98,7 @@ export function warmShadowPrograms(R, target, scene, camera, at, mayCast = () =>
     scene.remove(g); for (const c of hidden) c.visible = true;
     for (const t of made) t.dispose?.();
   }
-  return kinds.size;
+  return range ? idx + 1 : kinds.size;
 }
 // three draws every caster with ONE shared depth material, setting its side and map per caster without marking it
 // changed, and only picks a program again when the caster's kind changes (instanced / batched / skinned …). Which

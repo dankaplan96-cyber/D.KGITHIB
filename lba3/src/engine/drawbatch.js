@@ -578,3 +578,16 @@ export class DrawBatch {
   reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); }
   stats() { const s = {}; for (const [r, A] of this.areas) s[r.name || r.uuid.slice(0, 6)] = A.stats(); return s; }
 }
+
+// TITLE-LOAD: the texture layers an area's batches will read (texarray.js layerOf: a painted canvas read back each, the
+// largest part of a first build here), read ahead piece by piece: a generator, so a caller spreads it over frames
+// (main.js: at most LAYER_SLICE_MS a frame, behind the black or the loading screen). The same pieces, in the same order,
+// through the same recipe as the area's build (Area: recipe(o, true) for every eligible piece), which then finds every
+// layer there already: the same arrays, layer for layer. `arrays`: the DrawBatch's own switch.
+export function* warmLayers(root, arrays = true) {
+  if (!arrays || !TEXARRAY.on || !root) return;
+  root.updateMatrixWorld(true);
+  const list = [];
+  root.traverse((o) => { if (eligible(o, root)) list.push(o); });
+  for (const o of list) { if (o.parent && eligible(o, root)) recipe(o, true); yield; }
+}

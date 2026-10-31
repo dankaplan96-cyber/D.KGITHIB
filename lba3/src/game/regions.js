@@ -22,14 +22,14 @@
 //   regions.whenBuilt(id, fn)  fn(room) now if built, else right after its group is built (cleared by clearWaits)
 //   regions.summary()          which groups were built at startup, which later (and why), which are not built
 import { INTERIOR_BUILDERS } from './interiors.js';
-import { buildZeelich } from './zeelich.js';
+import { buildZeelichSteps } from './zeelich.js';
 import { buildUnderground } from './underground.js';
-import { buildDesert } from './desert.js';
+import { buildDesertSteps } from './desert.js';
 import { buildCondenser } from './condenser.js';
 import { buildTemple } from './temple.js';
 import { WIZARD_ROOMS } from './wizards.js';
 import { buildLba1Asylum, buildLba1Temple, hasLba1Room } from './lba1places.js';
-import { buildHamalayi } from './hamalayi.js';
+import { buildHamalayiSteps } from './hamalayi.js';
 import { buildObsRoom } from './obsroom.js';
 import { buildUpper3 } from './upper.js';
 import { buildValveRoom } from './valveroom.js';
@@ -77,18 +77,22 @@ export const CHAPTER_AREAS = {
 
 function groupDefs() {
   const G = [];
-  const add = (id, rooms, build) => G.push({ id, rooms, build, ref: REF[id] ?? (id.startsWith('isle_') ? REF.isle : 200) });
+  // (TITLE-LOAD: `steps`, a builder in steps — a generator whose return value is the rooms — that buildAsync runs a step
+  //  per task with a painted frame between; `build` runs it all at once)
+  const add = (id, rooms, build, steps = null) => G.push({ id, rooms, build, steps, ref: REF[id] ?? (id.startsWith('isle_') ? REF.isle : 200) });
+  const whole = (gen) => (S, P) => { const it = gen(S, P); let r = it.next(); while (!r.done) r = it.next(); return r.value; };
+  const one = (id, gen) => function* (S, P) { return { [id]: yield* gen(S, P) }; };
   for (const [id, fn] of Object.entries(INTERIOR_BUILDERS)) add(id, [id], (S, P) => ({ [id]: fn(S, P) }));
-  add('zeelich', ['zeelich'], (S, P) => ({ zeelich: buildZeelich(S, P) }));
+  { const st = one('zeelich', buildZeelichSteps); add('zeelich', ['zeelich'], whole(st), st); }
   add('underground', ['c3shaft', 'c3deep', 'c3gallery', 'c3sendell', 'c3core'], buildUnderground);
-  add('desert', ['desert'], (S, P) => ({ desert: buildDesert(S, P) }));
+  { const st = one('desert', buildDesertSteps); add('desert', ['desert'], whole(st), st); }
   add('condenser', ['condA', 'condB'], buildCondenser);
   add('butemple', ['butemple'], buildTemple);
   for (const [id, fn] of Object.entries(WIZARD_ROOMS)) add(id, [id], (S, P) => ({ [id]: fn(S, P) }));
   if (hasLba1Room('asylum')) add('asylum', ['asylum'], buildLba1Asylum);
   const bu = ['bumaze', 'buhalls'].filter(hasLba1Room);
   if (bu.length) add('bumaze', bu, buildLba1Temple);
-  add('hamalayi', ['hamalayi'], (S, P) => ({ hamalayi: buildHamalayi(S, P) }));
+  { const st = one('hamalayi', buildHamalayiSteps); add('hamalayi', ['hamalayi'], whole(st), st); }
   add('obsv', ['obsv'], buildObsRoom);
   add('upper', ['upper', 'council', 'archive'], buildUpper3);
   add('valves', ['valves'], (S, P) => ({ valves: buildValveRoom(S, P) }));
@@ -146,7 +150,8 @@ export class Regions {
   ensure(id, why = 'ensure') {
     if (id in this.rooms_) return this.rooms_[id];
     const g = this.of.get(id);
-    if (g) this.buildGroup(g, why);
+    if (g && this.groups.get(g).it) this.finishSteps(g);   // (TITLE-LOAD: a build in steps in progress: the rest of it now)
+    else if (g) this.buildGroup(g, why);
     return this.rooms_[id];
   }
   ensureAll(why = 'all') { for (const g of this.groups.keys()) this.buildGroup(g, why); }
@@ -155,10 +160,34 @@ export class Regions {
     for (let i = 0; i < list.length; i++) {
       if (this.groups.get(list[i]).state !== 'unloaded') continue;   // (built meanwhile)
       await step?.(i, list.length, list[i], this.estimate(list[i]));
-      this.buildGroup(list[i], why);
+      const G = this.groups.get(list[i]);
+      if (G.state !== 'unloaded') continue;
+      if (!G.steps || this.stepped === false) { this.buildGroup(list[i], why); continue; }
+      // TITLE-LOAD: an area built in steps, one task each with a painted frame between (the loading card's bar and art
+      // keep moving): Zeelich, the desert and the Hamalayi were one task each of 554–1 107 ms here, 810–1 471 ms on the
+      // laptop. Each step's ms is kept (G.steps_ms). Something that needs the area meanwhile gets the rest at once (ensure)
+      this.startSteps(list[i], why);
+      while (G.it) { await (this.paint ? this.paint() : Promise.resolve()); if (G.it) this.stepOnce(list[i]); }
     }
     return list;
   }
+  startSteps(gid, why) {
+    const G = this.groups.get(gid);
+    G.state = 'loading'; G.it = G.steps(this.S, this.P); G.stepsMs = []; G.t0 = performance.now(); G.n0 = this.S.children.length; G.whyS = why; G.busy = 0;
+    this.stepOnce(gid);
+  }
+  // one step of an area's build in steps (and its end: the same as buildGroup's)
+  stepOnce(gid) {
+    const G = this.groups.get(gid), m = this.mode, t = performance.now();
+    this.mode = 'peek';
+    let r;
+    try { r = G.it.next(); }
+    catch (e) { G.it = null; G.state = 'failed'; G.error = String(e?.message || e); this.mode = m; console.warn('region build failed', gid, e); throw e; }
+    finally { this.mode = m; }
+    const ms = performance.now() - t; G.stepsMs.push(Math.round(ms)); G.busy += ms;
+    if (r.done) { G.it = null; this.finish(G, gid, r.value || {}, G.whyS, G.t0, G.n0, G.busy); }
+  }
+  finishSteps(gid) { const G = this.groups.get(gid); while (G.it) this.stepOnce(gid); }
   buildGroup(gid, why) {
     const G = this.groups.get(gid);
     if (!G || G.state !== 'unloaded') return false;
@@ -169,16 +198,23 @@ export class Regions {
     try { rooms = G.build(S, this.P) || {}; }
     catch (e) { G.state = 'failed'; G.error = String(e?.message || e); this.mode = m; console.warn('region build failed', gid, e); throw e; }
     this.mode = m;
+    G.stepsMs = null;
+    return this.finish(G, gid, rooms, why, t0, n0, performance.now() - t0);
+  }
+  // (an area's build done: its rooms in, its time logged — `busy`, the build's own time; a build in steps also waited
+  //  for paints between — the story's part, the waits)
+  finish(G, gid, rooms, why, t0, n0, busy) {
+    const S = this.S;
     for (let i = n0; i < S.children.length; i++) S.children[i].userData.src ??= gid;   // (tests/drawcalls.mjs: what each builder added)
     Object.assign(this.rooms_, rooms);
     for (const [id, R] of Object.entries(rooms)) { const c = this.centreOf(id), r = R.center || R.group?.position; if (c && r && Math.hypot(c.x - r.x, c.z - r.z) > 0.5) console.warn('regions.js AT is out of date for', id, [r.x, r.z]); }
-    G.ms = Math.round(performance.now() - t0); G.state = 'ready'; G.why = why; G.phase = this.phase;
+    G.ms = Math.round(busy); G.state = 'ready'; G.why = why; G.phase = this.phase;
     if (why === 'access' && this.phase === 'play') {
       // (built where something read it, not ahead: correct, but the build ran wherever that was — listed for the tests)
       G.stack = (new Error().stack || '').split('\n').slice(3, 9).map((l) => l.trim().replace(/^at /, '').replace(/\(?https?:\/\/[^/]+\//, '').replace(/\)$/, '')).join(' < ');
       console.info('[regions] built on first access:', gid, G.ms + ' ms', G.stack);
     }
-    this.log.push({ group: gid, ms: G.ms, why, phase: this.phase, at: Math.round(t0) });
+    this.log.push({ group: gid, ms: G.ms, why, phase: this.phase, at: Math.round(t0), ...(G.stepsMs ? { steps: G.stepsMs.slice(), longest: Math.max(...G.stepsMs) } : {}) });
     this.onBuilt?.(gid, rooms, why);
     for (const id of Object.keys(rooms)) {
       const q = this.waits.get(id);
