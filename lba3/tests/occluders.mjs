@@ -14,6 +14,8 @@ const { browser, page, errs } = await launch({ width: 960, height: 540 });
 const { check, checkVisual, done } = checker();
 const ev = (f, a) => page.evaluate(f, a);
 await open(page, '?nocine');
+// (this test checks LBA2's fixed camera and its rise over scenery: since 31.10 a new player starts on the Follow camera)
+await page.evaluate(() => { game.settings.camera = 'lba'; game.settings.autoControls = 'off'; game.applySettings(); });
 await menu(page, 'new');
 const SHOTS = process.env.SHOTS;
 const snap = async (name) => { if (!SHOTS) return; fs.mkdirSync(SHOTS, { recursive: true }); await ev(() => game.renderer.render()); await page.screenshot({ path: path.join(SHOTS, name + '.jpg'), type: 'jpeg', quality: 78 }); };
