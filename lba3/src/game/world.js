@@ -766,6 +766,9 @@ export function* buildWorldSteps(parentScene) {
   };
   W.setSmallView = (on) => { SMALL_VIEW.on = !!on; for (const P of W.smallPools) { if (P.im) P.im.frustumCulled = !SMALL_VIEW.on; P.dirty = true; for (const t of P.tiles) if (t.userData.view) t.userData.view.mask = t.userData.view.all; } fillPools(); };
   { const before = parentScene.onBeforeRender; parentScene.onBeforeRender = function (r, sc, camera, ...a) { before.call(this, r, sc, camera, ...a); W.viewPools(camera); }; }
+  // (WORLD-ART-6: LBA2's Citadel trees have broad, chunky crowns: round 3.2 m wide against our 2.7, tall 3.0 against 2.2,
+  //  measured from the original's models; the crown (and trunk) widened across, the height kept)
+  const CROWN = { round: 1.18, tall: 1.3, fruit: 1.15 };
   const mkInst = (geo, m, list, shadow = true, colorFn = null, geoLo = null, small = false) => {
     const tiles = new Map();
     if (BATCH.on && geoLo && shadow && !small) {
@@ -776,7 +779,7 @@ export function* buildWorldSteps(parentScene) {
         const cols = colorFn ? part.map((t, i) => colorFn(tint, t, i).clone?.() ?? tint.clone()) : null;
         part.forEach((t, j) => {
           if (t.gone) return;
-          _bm.compose(_bp.set(t.x, t.h - 0.08, t.z), _bq.setFromEuler(_be.set(0, t.ry, 0)), _bs.setScalar(t.s));
+          _bm.compose(_bp.set(t.x, t.h - 0.08, t.z), _bq.setFromEuler(_be.set(0, t.ry, 0)), _bs.set(t.s * (CROWN[t.kind] ?? 1), t.s, t.s * (CROWN[t.kind] ?? 1)));
           B.add(geo, geoLo, _bm, cols ? cols[j] : null);
         });
       }
@@ -795,7 +798,7 @@ export function* buildWorldSteps(parentScene) {
         const im = new THREE.InstancedMesh(g, m, part.length);
         im.castShadow = shadow; im.receiveShadow = true;
         part.forEach(([t], j) => {
-          o.position.set(t.x, t.h - 0.08, t.z); o.rotation.set(0, t.ry, 0); o.scale.setScalar(t.s); o.updateMatrix();
+          o.position.set(t.x, t.h - 0.08, t.z); o.rotation.set(0, t.ry, 0); o.scale.set(t.s * (CROWN[t.kind] ?? 1), t.s, t.s * (CROWN[t.kind] ?? 1)); o.updateMatrix();
           im.setMatrixAt(j, o.matrix);
           if (cols) im.setColorAt(j, cols[j]);
         });

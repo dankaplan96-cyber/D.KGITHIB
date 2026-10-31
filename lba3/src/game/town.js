@@ -46,7 +46,7 @@ const HOUSES = [
   // Twinsen's house: matches the interior (9 × 7 m room), door to the right, blue shutters
   // Twinsen's house stands where the original's does, south of the village by the path to the lighthouse
   // (LBA2 scene 0's door), its front to the east; a neighbour's house has its old place in Bug Street
-  { id: 'twinsen', x: -50.6, z: 79.8, ry: Math.PI / 2, pad: 9, w: 9.4, d: 7.4, h: 3.3, door: { x: 2.6 }, wall: 'plaster', tint: '#fff8ea', roof: 'thatch', shutters: '#3b78d8', beams: true, chimneyX: -0.3, lit: true,
+  { id: 'twinsen', x: -50.6, z: 79.8, ry: Math.PI / 2, pad: 9, w: 9.4, d: 7.4, h: 3.3, door: { x: 2.6, w: 1.7, h: 2.5, arch: false, carved: true }, doorColor: '#7c4f2c', wall: 'rubble', tint: '#f2eee8', roof: 'thatch', shutters: '#3b78d8', beams: true, chimneyX: -0.3, lit: true,
     windows: [{ side: 'front', x: -2.3 }, { side: 'front', x: -0.2, w: 0.7 }, { side: 'left', x: -1.2 }, { side: 'right', x: 1.2 }, { side: 'back', x: 0 }] },
   // the others stand by the original's doors (LBA2's scenes 5, 37, 15, 3, 17, 9, 7, 8, 14), in our own styles
   // WORLD-80: Bug Street's pair, as the original's (LBA2's scenes 5 and 22): two houses side by side at the street's
@@ -63,20 +63,20 @@ const HOUSES = [
     windows: [{ side: 'front', x: -1.3 }, { side: 'left', x: 0 }, { side: 'right', x: -0.6, y: 1.4, w: 0.6, h: 0.7 }] },
   { id: 'shop', x: -30, z: 0.5, ry: -Math.PI / 2, w: 7, d: 5.6, h: 3.4, door: { x: -1.6, arch: false }, wall: 'stone', tint: '#f4f0ea', roof: 'roof', shutters: '#c8452f', awning: '#c8452f', awningW: 3.4, awningX: 0.6, beams: true,
     windows: [{ side: 'front', x: 0.9, y: 0.9, w: 1.6, h: 1.2, noShutters: true }, { side: 'right', x: 0.4 }, { side: 'left', x: 0.8 }] },
-  { id: 'water', x: -68.7, z: 11.0, ry: Math.PI / 2, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#dfe8f2', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: -0.25,
+  { id: 'water', x: -68.7, z: 11.0, ry: Math.PI / 2, w: 6.2, d: 4.8, h: 3.0, door: { x: 0.0 }, wall: 'stone', tint: '#eef0f2', roof: 'roofBlue', shutters: '#3b5bb8', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'right', x: 0 }] },
   { id: 'pink', x: -28.5, z: 24.6, ry: 0, w: 6.0, d: 5, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#f8dcd2', roof: 'roof', shutters: '#8f4fc1', beams: true,
     windows: [{ side: 'front', x: -1.65 }, { side: 'left', x: 0.3 }] },   // (WORLD-FIX: the window's open shutter lay on the door's surround at −1.2)
-  { id: 'south', x: -48.2, z: 23.3, ry: 0, w: 9.0, d: 6.2, h: 3.2, door: { x: 2.1 }, wall: 'stone', roof: 'planks', pitch: 0.38, shutters: '#d8a13b', chimney: false,
+  { id: 'south', x: -48.2, z: 23.3, ry: 0, w: 9.0, d: 6.2, h: 3.2, door: { x: 2.1 }, wall: 'stone', awning: '#e58aa0', awningW: 6.6, awningX: 0, roof: 'planks', pitch: 0.38, shutters: '#d8a13b', chimney: false,
     windows: [{ side: 'front', x: -0.6 }, { side: 'front', x: -2.8, w: 0.6 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: at 1.2 the window ran under the door's surround)
-  { id: 'nbr', x: -33.6, z: 75.3, ry: Math.PI / 2, w: 5.6, d: 5.0, h: 3.0, door: { x: 0.0 }, wall: 'plaster', tint: '#e8f0d8', roof: 'thatch', shutters: '#3f9a6a', chimney: false,
+  { id: 'nbr', x: -33.6, z: 75.3, ry: Math.PI / 2, w: 5.6, d: 5.0, h: 3.0, door: { x: 0.0, w: 1.6, h: 2.4, arch: false, carved: true }, doorColor: '#7c4f2c', wall: 'rubble', tint: '#ece8e2', roof: 'thatch', shutters: '#3f9a6a', chimney: false,
     windows: [{ side: 'front', x: -1.5 }, { side: 'left', x: 0 }] },
   // the harbour wing: the baggage claim building and its neighbour (LBA2's holomap), and the big house by the field
   { id: 'baggage', x: -84.2, z: 25.4, ry: 0, w: 15, d: 8.8, h: 3.6, door: { x: -4.6 }, wall: 'stone', tint: '#ece4d4', roof: 'slate', pitch: 0.5, shutters: '#3b5bb8', chimney: false,
     windows: [{ side: 'front', x: 1.0 }, { side: 'front', x: 4.6 }, { side: 'front', x: -1.8, w: 0.7 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },
-  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'plaster', tint: '#f4ead8', roof: 'planks', pitch: 0.4, shutters: '#c8452f', chimneyX: -0.25,
+  { id: 'wing2', x: -100.8, z: 26.4, ry: 0, w: 7.5, d: 8.8, h: 3.2, door: { x: 1.7 }, wall: 'stone', tint: '#f4f0e8', roof: 'planks', pitch: 0.4, shutters: '#c8452f', chimneyX: -0.25,
     windows: [{ side: 'front', x: -1.6 }, { side: 'left', x: 0 }, { side: 'right', x: 1.0 }] },
-  { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'plaster', tint: '#f0e0f0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
+  { id: 'museum', x: -71.0, z: 42.5, ry: Math.PI / 2, w: 9.0, d: 8.0, h: 3.4, door: { x: 1.4 }, wall: 'stone', tint: '#f2eef0', roof: 'roof', shutters: '#8f4fc1', beams: true, chimneyX: 0.3,
     windows: [{ side: 'front', x: -1.8 }, { side: 'front', x: 3.2 }, { side: 'left', x: 0 }, { side: 'right', x: 0 }] },   // (WORLD-FIX: 3.4 put its shutter on the corner quoins)
   // WORLD-80 (appended, so the houses above keep their seeds and places in W.houses):
   // Bug Street's south house (the original's scene 22, 6.9 × 5.2 m), beside the north one, which shares its floor

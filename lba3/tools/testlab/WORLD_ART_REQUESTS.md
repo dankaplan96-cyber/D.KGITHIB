@@ -104,7 +104,7 @@ hall, the gardens), shown to the user and approved (`tools/testlab/runs/ba-roofs
 
 ---
 
-## WA-3 · Citadel: rubble walls on the two thatched cottages, the old shop's striped awning · Approved (user, 31.10.2026: standing approval)
+## WA-3 · Citadel: rubble walls on the two thatched cottages, the old shop's striped awning · Applied (the cloud, 31.10.2026; in the build after 0.44.0)
 
 Prototyped on the laptop on top of WA-1 and WA-2. The pictures wait for the user (`tools/testlab/runs/ba-walls.jpg`
 on the laptop).
@@ -127,7 +127,7 @@ on the laptop).
 
 ---
 
-## WA-4 · Carved double doors on the two thatched cottages · Approved (user, 31.10.2026: standing approval)
+## WA-4 · Carved double doors on the two thatched cottages · Applied (the cloud, 31.10.2026; in the build after 0.44.0)
 
 Prototyped on the laptop on top of WA-1 to WA-3 (pictures: `tools/testlab/runs/doors.jpg` on the laptop).
 
@@ -195,7 +195,7 @@ index b08741e..02ee77d 100644
 
 ---
 
-## WA-5 · Citadel: grey stone on three pastel houses · Approved (user, 31.10.2026: standing approval)
+## WA-5 · Citadel: grey stone on three pastel houses · Applied (the cloud, 31.10.2026; in the build after 0.44.0)
 
 Prototyped on the laptop on top of WA-1 to WA-4 (pictures: `tools/testlab/runs/ba-walls2.jpg` on the laptop, sent
 to the user).
@@ -216,7 +216,7 @@ to the user).
 
 ---
 
-## WA-6 · Citadel trees: broader crowns · Approved (user, 31.10.2026: standing approval)
+## WA-6 · Citadel trees: broader crowns · Applied (the cloud, 31.10.2026; in the build after 0.44.0)
 
 Prototyped on the laptop on top of WA-1 to WA-5 (pictures: `tools/testlab/runs/ba-trees.jpg` on the laptop, sent to
 the user).
