@@ -33,7 +33,8 @@ Status values: **Approved** (apply it) · **Applied** (the cloud) · **Verified*
 street-traversal, plugged in.
 - Seven runs: baseline → candidate, ×3, then baseline.
 - **No clear difference:** fps 59.98 → 60; GPU p50 9.97 → 9.88 ms (baseline spread 1.2 %); p95 16.8 → 16.8 ms.
-- **On battery:** pending; the laptop measures it before the build is checked.
+- **On battery** (90 → 86 %, Auto Medium), the same seven runs: **no clear difference**. fps 46.85 → 47.17; GPU p50
+  17.27 → 17.25 ms (baseline spread 0.3 %); p95 33.4 → 33.4 ms.
 
 **Pictures:** before/after at the same views, shown to the user and approved
 (`tools/testlab/runs/ba-soil.jpg` on the laptop).
