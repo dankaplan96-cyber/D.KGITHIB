@@ -1,8 +1,9 @@
 (async () => {
   // SHADE-COST: pixel A/B of each shader change on the same frozen frame. For each view (views.js) the final image
   // with this build's shaders (A) against the same frame with ONE change undone (B), and A against A drawn again
-  // (noise). Changes: the terrain's grass skip and world normal (terrain.js TERRAIN_SHADE), the lamps' reach test and
-  // the indirect specular (renderer.js SC_LAMP_OLD / SC_IBL_OLD), all four together (the shaders as before this round),
+  // (noise). Changes: the terrain's grass skip and world normal (terrain.js TERRAIN_SHADE), the lamps' reach test,
+  // the indirect specular and the sun's shadow on surfaces turned away (renderer.js SC_LAMP_OLD / SC_IBL_OLD /
+  // SC_SUN_OLD), the output pass's own pixel and luma roots (setOldCentre / setOldLuma), all together (the shaders as before this round),
   // and the trade-offs (the terrain's sun without specular, opaque front to back). window.SHOTS=1: the trade-offs'
   // images and diff masks (__images).
   const G = game, RR = G.renderer, r = RR.renderer, gl = r.getContext();
@@ -18,9 +19,11 @@
     ['terrain world normal varying', () => setTerrainShade('nrmVarying', true), () => setTerrainShade('nrmVarying', false)],
     ['lamps set up everywhere', () => define('SC_LAMP_OLD', true), () => define('SC_LAMP_OLD', false)],
     ['indirect specular always', () => define('SC_IBL_OLD', true), () => define('SC_IBL_OLD', false)],
+    ['sun shadow read when turned away', () => define('SC_SUN_OLD', true), () => define('SC_SUN_OLD', false)],
     ['output own pixel filtered', () => RR.setOldCentre(true), () => RR.setOldCentre(false)],
-    ['all five as before', () => { setTerrainShade('grassSkip', false); setTerrainShade('nrmVarying', true); define('SC_LAMP_OLD', true); define('SC_IBL_OLD', true); RR.setOldCentre(true); },
-      () => { RR.setOldCentre(false); setTerrainShade('grassSkip', true); setTerrainShade('nrmVarying', false); define('SC_LAMP_OLD', false); define('SC_IBL_OLD', false); }],
+    ['output lumas rooted everywhere', () => RR.setOldLuma(true), () => RR.setOldLuma(false)],
+    ['all seven as before', () => { setTerrainShade('grassSkip', false); setTerrainShade('nrmVarying', true); define('SC_LAMP_OLD', true); define('SC_IBL_OLD', true); define('SC_SUN_OLD', true); RR.setOldCentre(true); RR.setOldLuma(true); },
+      () => { RR.setOldCentre(false); RR.setOldLuma(false); setTerrainShade('grassSkip', true); setTerrainShade('nrmVarying', false); define('SC_LAMP_OLD', false); define('SC_IBL_OLD', false); define('SC_SUN_OLD', false); }],
     ['TRADE terrain sun without specular', () => setTerrainShade('sunLambert', true), () => setTerrainShade('sunLambert', false)],
     ['TRADE opaque front to back', () => sortF2B(true), () => sortF2B(false)],
   ];
@@ -31,6 +34,7 @@
       else { im.data[d] = px[s]; im.data[d + 1] = px[s + 1]; im.data[d + 2] = px[s + 2]; }
       im.data[d + 3] = 255; }
     cx.putImageData(im, 0, 0); return cv.toDataURL('image/png'); };
+  RR.setAutoRes(false);   // (full resolution held: the automatic resolution would follow SwiftShader's slow frames)
   const out = { W, H, shade: { ...TERRAIN_SHADE }, views: {} }, imgs = {};
   for (const [name, set, tick] of SC_VIEWS(G)) {
     if (only && !only.includes(name)) continue;

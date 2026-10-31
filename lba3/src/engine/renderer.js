@@ -37,7 +37,8 @@ export const BATTERY_MIN_SCALE = 0.85;
   else console.warn('lamp skip: three.js lights chunk not as expected; left as it is');
 }
 
-// SHADE-COST: two pieces of three's lighting that every lit pixel ran for nothing, removed with the same result.
+// SHADE-COST: pieces of three's lighting that every lit pixel ran for nothing, removed with the same result (a third,
+// the sun's shadow on surfaces turned from the sun, after the hardware-shadow patch below).
 // 1. Lamps out of reach. three sets up each point light in full (direction, distance, the decay's pow, the cut-off's
 //    pow4) on every lit pixel before it finds the light's colour zero there (beyond its `distance`, or an unused slot of
 //    the light pool: intensity 0). Now a squared-distance test comes first and the set-up runs only where the lamp can
@@ -130,6 +131,22 @@ if (HW_SHADOWS) {
       .replace('\tvec2 cubeToUV(', fn + '\tvec2 cubeToUV(');
     for (const [k, s] of calls) C[k] = C[k].replace(s, '\n\t\t#ifdef SHADOWMAP_TYPE_VSM\n\t\tgetShadow( directionalShadowMap[ i ]\n\t\t#else\n\t\tgetShadowHW( directionalShadowMap[ i ]\n\t\t#endif\n\t\t');
   } else console.warn('hardware shadows: three.js shadow chunks not as expected; left as they are');
+}
+// SHADE-COST (3; after GFX-LOOK's patch above, which it keeps): the sun's shadow where the surface faces away from
+// the sun. The shadow factor multiplies the sun's colour, and every lighting model then multiplies that by
+// saturate(dot(N, L)), which is 0 there: the 4–9 shadow-map reads and their set-up changed nothing on those pixels
+// (walls and slopes turned from the sun). Now the shadow is read only where dot(N, L) > 0 (an if, not a select, so the
+// GPU can skip it); elsewhere the colour is kept, then multiplied by 0 as before. Not for toon shading (its ramp lights
+// back faces) or a clearcoat (its own normal). `SC_SUN_OLD` (a material define): as before.
+{
+  const C = THREE.ShaderChunk, B = C.lights_fragment_begin, d = B.indexOf('getDirectionalLightInfo('), pre = '\t\tdirectLight.color *= ( directLight.visible && receiveShadow ) ?';
+  const a = d > 0 ? B.indexOf(pre, d) : -1, e = a > 0 ? B.indexOf(' : 1.0;', a) : -1, rect = B.indexOf('RectAreaLight', d);
+  if (a > 0 && e > a && (rect < 0 || e < rect) && B.indexOf(pre, a + 1) < 0) {
+    const stmt = B.slice(a, e + 7), call = B.slice(a + pre.length, e);
+    C.lights_fragment_begin = B.slice(0, a) + '\t\t#if !defined( SC_SUN_OLD ) && !defined( TOON ) && !defined( USE_CLEARCOAT )\n'
+      + '\t\tif ( directLight.visible && receiveShadow && dot( geometryNormal, directLight.direction ) > 0.0 ) directLight.color *=' + call + ';\n'
+      + '\t\t#else\n' + stmt + '\n\t\t#endif' + B.slice(e + 7);
+  } else console.warn('sun shadow facing: three.js lights chunk not as expected; left as it is');
 }
 // the sun's shadow map: three's packed colour target plus a depth texture with comparison. While three draws into it
 // (HW.raw) `texture` is the colour, as three expects; everywhere else — the lights' uniforms read `shadow.map.texture` —
@@ -230,7 +247,8 @@ const EDGE_REL = 0.25;   // (an edge: the diagonal neighbourhood's luma range ov
 // (~5–10 %). Same pixels (the same texels are read; 1:1 bilinear at texel centres is the texel itself).
 // `?oldedges` in the URL: the shader as it was (EDGE_OLD), for the laptop's A/B.
 const OUTPUT_EDGES = `
-float lumE( vec3 c ) { return sqrt( max( dot( c, vec3( 0.299, 0.587, 0.114 ) ), 0.0 ) ); }
+float lumQ( vec3 c ) { return max( dot( c, vec3( 0.299, 0.587, 0.114 ) ), 0.0 ); }
+float lumE( vec3 c ) { return sqrt( lumQ( c ) ); }
 #ifdef EDGE_OLD
 vec3 tapE( vec2 uv ) { return texture2D( tDiffuse, clamp( uv, vec2( 0.0 ), uvMax ) ).rgb; }
 #else
@@ -262,9 +280,20 @@ void main() {
       cNW = tapE( uv + vec2( -texel.x, -texel.y ) ); cNE = tapE( uv + vec2( texel.x, -texel.y ) );
       cSW = tapE( uv + vec2( -texel.x, texel.y ) ); cSE = tapE( uv + vec2( texel.x, texel.y ) );
     }
+#if defined( EDGE_OLD ) || defined( EDGE_LUMA_OLD )
     float lNW = lumE( cNW ), lNE = lumE( cNE ), lSW = lumE( cSW ), lSE = lumE( cSE ), lM = lumE( cM );
     float lMin = min( lM, min( min( lNW, lNE ), min( lSW, lSE ) ) ), lMax = max( lM, max( max( lNW, lNE ), max( lSW, lSE ) ) );
     if ( edgeAA > 0.0 && lMax - lMin >= max( 0.05, lMax * edgeAA ) ) {
+#else
+    // SHADE-COST: the edge test needs only the darkest and brightest of the five lumas, and the square root keeps their
+    // order: the five are compared before their roots (lumQ), two roots are taken, and the four neighbours' own roots
+    // only on an edge pixel (their direction), not on every pixel. The same values (sqrt(min) = min(sqrt)).
+    // EDGE_LUMA_OLD: as before (setOldLuma)
+    float qNW = lumQ( cNW ), qNE = lumQ( cNE ), qSW = lumQ( cSW ), qSE = lumQ( cSE ), qM = lumQ( cM );
+    float lMin = sqrt( min( qM, min( min( qNW, qNE ), min( qSW, qSE ) ) ) ), lMax = sqrt( max( qM, max( max( qNW, qNE ), max( qSW, qSE ) ) ) );
+    if ( edgeAA > 0.0 && lMax - lMin >= max( 0.05, lMax * edgeAA ) ) {
+      float lNW = sqrt( qNW ), lNE = sqrt( qNE ), lSW = sqrt( qSW ), lSE = sqrt( qSE );
+#endif
       vec2 dir = vec2( -( ( lNW + lNE ) - ( lSW + lSE ) ), ( lNW + lSW ) - ( lNE + lSE ) );
       float red = max( ( lNW + lNE + lSW + lSE ) * 0.03125, 0.0078125 );
       dir = clamp( dir / ( min( abs( dir.x ), abs( dir.y ) ) + red ), -8.0, 8.0 ) * texel;
@@ -436,12 +465,14 @@ export class Renderer {
   // PERF-GPU: the output pass's edge smoothing as it was before (implicit-LOD taps in branches), for the laptop's A/B
   // (benchgpu.js; ?oldedges). Another program: the caller prepares it (warmPassPrograms).
   setOldEdges(on) { this._edgeOld = !!on; this._outDefs(); }
-  // SHADE-COST: the output pass's own pixel read through the filter as before (EDGE_CENTRE_OLD), for the laptop's A/B
+  // SHADE-COST: the output pass's own pixel read through the filter as before (EDGE_CENTRE_OLD), and the five lumas'
+  // roots taken on every pixel as before (EDGE_LUMA_OLD), for the laptop's A/B (benchgpu.js)
   setOldCentre(on) { this._centreOld = !!on; this._outDefs(); }
+  setOldLuma(on) { this._lumaOld = !!on; this._outDefs(); }
   _outDefs() {
     const m = this.output?.material; if (!m || !this._outFS) return;
-    const d = (this._edgeOld ? '#define EDGE_OLD\n' : '') + (this._centreOld ? '#define EDGE_CENTRE_OLD\n' : '');
-    const fs = d ? this._outFS.replace('float lumE(', d + 'float lumE(') : this._outFS;
+    const d = (this._edgeOld ? '#define EDGE_OLD\n' : '') + (this._centreOld ? '#define EDGE_CENTRE_OLD\n' : '') + (this._lumaOld ? '#define EDGE_LUMA_OLD\n' : '');
+    const fs = d ? this._outFS.replace('float lumQ(', d + 'float lumQ(') : this._outFS;
     if (m.fragmentShader !== fs) { m.fragmentShader = fs; m.needsUpdate = true; }
   }
 

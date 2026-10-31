@@ -137,7 +137,9 @@ export const GPU_VARIANTS = [
   terrainLine('GPU: terrain world normal as its own varying (as before)', 'nrmVarying', true),
   defineLine('GPU: lamps set up on every lit pixel (as before)', 'SC_LAMP_OLD'),
   defineLine('GPU: indirect specular without env map (as before)', 'SC_IBL_OLD'),
+  defineLine('GPU: sun shadow read on surfaces turned from the sun (as before)', 'SC_SUN_OLD'),
   { id: 'GPU: output pass own pixel filtered (as before)', apply(G) { G.renderer.setOldCentre(true); warmPassPrograms(G.renderer.renderer, G.renderer.composer); }, undo(G) { G.renderer.setOldCentre(false); } },
+  { id: 'GPU: output pass lumas rooted on every pixel (as before)', apply(G) { G.renderer.setOldLuma(true); warmPassPrograms(G.renderer.renderer, G.renderer.composer); }, undo(G) { G.renderer.setOldLuma(false); } },
   // what the terrain's 3.4 ms (the laptop's 'flat terrain material') is made of (diagnostics: never in play; compare
   // with 'as is'): the reads as before PERF-GPU 3 (every tile, implicit gradients: is textureGrad dearer there?), one
   // grass read and no splat (the splat's cost), the splat without lighting or shadow (the lighting's cost)
