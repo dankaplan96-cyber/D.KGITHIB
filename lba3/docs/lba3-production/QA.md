@@ -1565,6 +1565,29 @@ stability, transitions, holomap, drawcalls and the rest are left to the nightly 
 - Not verified: a real GPU (frame time, the look on the user's screen: the mask's grey in the shade of its east face,
   the pool's water), an independent visual review; Kesh's village was not moved (said so in WORLD_SIMILARITY.md).
 
+### HEADING-LOAD: the Follow camera's heavy street headings (docs/lba3-performance/STABILIZATION.md "HEADING-LOAD")
+
+Base df26b4d served from a git archive on port 8844; the candidate is this branch on port 8843. SwiftShader, 1366×768,
+Auto at Medium, battery profile, Follow camera at Far, the street route. Probes are in
+docs/lba3-performance/HEADING-LOAD/probes. They give exact counts and pixels only, never GPU time.
+
+| Check | How | Result |
+|---|---|---|
+| Per-heading main pass (calls / triangles) | q_hl.js, 8 headings | 225° 213/921k → 189/854k; 180° 192/810k → 166/675k; 270° 162/865k → 156/815k; 135° 117/584k → 103/430k; 0° 136/601k → 132/464k |
+| View culls are image-preserving while turning | q_turn.js, 32 frames of a 360° turn; each game frame vs the same frame unculled | 0 px differ in every frame; mean 590.6k → 482.8k triangles, 141.3 → 139.5 calls |
+| Build changes (props merged, lift, folds) | q_hl.js, base vs candidate, people and particles left out of both frames | 180° 8 px, 225° 1 px, 270° 58 px (42 over 2 levels); at 45° and 135° the statue and the flower dots, which also differ between two base runs |
+| No program compiled in play | perfbudget.mjs | PASS (new programs 0 on every route) |
+| Trade-offs, priced and not applied | q_hl.js with benchgpu variants, 135/180/225° | grass and flowers half beyond 28 m: −2/−5/−16k triangles, ≤ 933 px; to 30 m: −1/−6/−31k, ≤ 940 px; trees detailed to 22 m: −8/−11/−11k, ≤ 1953 px |
+
+| Test | Verdict |
+|---|---|
+| drawcalls, perfbudget, display, chapter1, transitions | PASS ×5 |
+| camfollow, worldfit, well-town, solidnpc, opening | PASS ×5 |
+
+Not verified: the laptop's GPU ms for each change. Run `electron-bench.mjs full … battery follow` for the benchgpu
+lines and `sweep … battery follow` to compare per heading with 0.43.0. Also not verified: the trade-offs' look on the
+user's screen.
+
 ### Not tested / blocked
 - HOUSE-FIX on a real GPU and by the user's eye: NOT DONE (SwiftShader captures; self-reviewed, no independent review).
 - LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).

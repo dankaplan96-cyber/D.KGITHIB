@@ -568,6 +568,20 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
   QA.md "WORLD-80 step 3". Not verified: a real GPU and the look on the user's screen. Next for WORLD-80: the scorer's
   two steps for Zeelich's islands and the Lift Dock; the Hamalayi's 3–4 LBA1 spots (the user's decision).
 
+## Done after (HEADING-LOAD; status REVIEW; the laptop's GPU ms NOT VERIFIED)
+- What it does: the street's heavy Follow-camera headings draw less hidden work.
+  - The grass, flower and tulip pools, and the tulip rows (`engine/viewinst.js`), are culled to the view in 8–9 m
+    squares at the render.
+  - The quay's and the original props' repeated props are merged with their quarter.
+  - The cargo lift's static group is no longer `keep`. The boat, the ferry and the lift's parts are folded by texture.
+- Counts at 225°: 213/921k → 189/854k. At 135°: 117/584k → 103/430k. Pixel A/B: 0 px in a turn; 1–58 px for the
+  build changes.
+- Tests: the 10 listed tests PASS.
+- Trade-offs (far grass thinning, grass distance, tree detail distance) are priced in benchgpu and not applied: they
+  need the user's decision.
+- Evidence: docs/lba3-performance/STABILIZATION.md "HEADING-LOAD", docs/lba3-performance/HEADING-LOAD/,
+  QA.md "HEADING-LOAD".
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

@@ -97,3 +97,37 @@ All numbers are exact counts or relative SwiftShader times; none is a laptop mea
   - The interaction lookup skips people out of reach.
   - The start trace.
 - **Logged:** I-20, Auto's title calibration never runs (kept on purpose under AUTO-2).
+
+### GPU/rendering investigator, HEADING-LOAD (31.10): the Follow camera's heavy street headings
+Exact counts and pixel A/Bs from SwiftShader (street route, Follow camera at Far, Auto at Medium, battery profile).
+No laptop GPU time yet. Data and probes: `HEADING-LOAD/results/summary.json`, `HEADING-LOAD/probes/`.
+- **What the heavy headings draw (225°, before).** 213 calls, 921k triangles in the main pass. Scenery 476k
+  (draw batches 295k), trees 169k, grass 113k, terrain 78k, people 61k. Grass covered 0.6 % of the pixels with
+  18 triangles per shown pixel. The tulip rows were island-wide instanced meshes: 56k triangles drawn at every heading,
+  none of them in view at 135°.
+- **Image-preserving changes (kept):**
+  - The grass, flower and tulip pools hold only the 9 m squares in the camera's frustum, refilled at the render.
+  - Static non-casting instanced decoration (the tulip rows) is culled the same way (`engine/viewinst.js`).
+  - The quay's and the original props' repeated props are merged with their quarter instead of one instanced mesh per
+    kind, so the draw and shadow batches cut them per cell.
+  - The cargo lift's static group is no longer `keep`. The boat, the ferry and the lift's moving parts are folded by
+    texture.
+  - Meshes hidden by the culls are shown for every shader compile, so no program waits for a first frame.
+- **Result, per heading (calls / triangles):** 225° 213/921k → 189/854k; 180° 192/810k → 166/675k;
+  270° 162/865k → 156/815k; 135° 117/584k → 103/430k; 0° 136/601k → 132/464k. Over a full Follow-camera turn the mean
+  is 590.6k → 482.8k triangles.
+- **Pixel A/B.**
+  - A 32-frame turn compares each game frame with the same frame unculled: 0 pixels differ.
+  - Base vs final build, without people or particles: 1–58 pixels differ at the harbour headings.
+  - At 45° and 135° only the statue and the flower dots differ, and they also differ between two runs of the base.
+- **Trade-offs priced, not applied** (screenshots and diffs in `HEADING-LOAD/results/tradeoffs.txt`):
+  - grass and flowers half as dense beyond 28 m (new switch): −16k triangles at 225°;
+  - grass and flowers to 30 m: −31k;
+  - trees detailed to 22 m: −11k.
+  Each changes 0.1–0.2 % of the pixels. They need the user's approval and the laptop's GPU ms.
+- **What remains at 225°.** Everything still drawn is in view: scenery 451k (the town and the quay 30–100 m away,
+  merged into large pieces), trees 169k, grass 71k. The gap to the light headings is content in view, not hidden work.
+  Closing it further means simpler distant geometry (far-prop and building LOD), which is a visible trade-off.
+- **Laptop:**
+  - `electron-bench.mjs full … battery follow`: the new GPU group lines.
+  - `electron-bench.mjs sweep … battery follow`: per heading, this build vs 0.43.0.
