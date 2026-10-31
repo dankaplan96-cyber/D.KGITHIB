@@ -253,12 +253,15 @@ house's surroundings at 2 with the Follow camera; Medium, battery profile, full 
   7. *Output pass: two square roots for the edge test instead of five*. Root cause: only the darkest and brightest luma
      matter for the test; the root keeps their order, so the five are compared squared and the four neighbours' roots
      are taken on edge pixels only. 0 px. benchgpu 'output pass lumas rooted on every pixel (as before)'.
-  All seven together against all undone: the same frame 15–40 px at 1 level (the output pass's own pixel); in motion
-  see below. None adds a shader program in play; the "as before" programs exist only inside a benchmark line's warm-up.
+  All seven together against all undone: the same frame 15–40 px at 1 level (the output pass's own pixel). In motion
+  (the benchmark's street, interior and combat routes, 24 frames each, every frame A/B in the same state): 8–36 px a
+  frame, max 5 / 2 / 1 levels, all from change 6 (an edge decision at the threshold flips); with change 6 left in, the
+  other six differ by 0 px in all 72 frames. None adds a shader program in play (the 1997 look and every switch compile
+  without errors: results/programs-retro.txt); the "as before" programs exist only inside a benchmark line's warm-up.
 - **Diagnostics for the laptop (never in play):** 'terrain reads as before PERF-GPU 3' (every tile, implicit
   gradients: whether textureGrad is dearer than the reads it skips), 'terrain one grass read, no splat' (the splat's
   share of the 3.4 ms), 'terrain unlit' (the lighting's share).
-- **Trade-offs priced, OFF** (screenshots: the session scratchpad `shade/r4/img-q_ab/`, Citadel, chapter 1):
+- **Trade-offs priced, OFF** (screenshots: `SHADE-COST/results/tradeoffs/`, Citadel, chapter 1):
   - terrain sun without specular: 25–65 % of the pixels change, max 97–125 levels (the paving and lawns duller);
   - opaque front to back (the scenery's overdraw): 0–64 px change, max 48–200 levels (coincident faces).
 - **Candidates measured and not built:** top-2 layer blending (already ≤ 2 tiles on 99 % of the street's terrain
@@ -267,6 +270,10 @@ house's surroundings at 2 with the Follow camera; Medium, battery profile, full 
   per layer (a visible change; the existing 'anisotropic filtering off' line prices the upper bound); per-vertex splat
   ramps (they depend on a per-pixel texture wobble: not the same image). SwiftShader frame timing was tried as a
   relative check and dropped: its run-to-run spread (1.4–2.1 ms for the same frame) is larger than any change.
+- **Tests** (one at a time, this branch): drawcalls, perfbudget (0 new programs on every route), display, chapter1,
+  transitions, camfollow, worldfit, well-town, travel, zislands, desert-life, opening, house and combat PASS.
+- **Files.** terrain.js, renderer.js, benchgpu.js. None of bench.js, perf.js, main.js, warmup.js, drawcull.js,
+  shadowcache.js, regions.js or drawbatch.js was edited.
 - **Laptop:** `electron-bench.mjs full … battery`: the street breakdown's new lines. Each "as before" line minus
   'as is' is what that change saved. Whether D3D11's compiler keeps the new `if`s as branches decides changes 1, 3 and
   5; the lines answer it.

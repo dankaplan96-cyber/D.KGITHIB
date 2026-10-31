@@ -598,6 +598,20 @@ Update before a handoff or a session limit. Do not mark a task done twice after 
 - Evidence: docs/lba3-performance/STABILIZATION.md "HEADING-LOAD-2", docs/lba3-performance/HEADING-LOAD-2/,
   QA.md "HEADING-LOAD-2".
 
+## Done after (SHADE-COST; status REVIEW; the laptop's GPU ms NOT VERIFIED)
+- What it does: the street's per-pixel material work, with the same image.
+  - Terrain: the grass tile read only where its colour is used (58–60 % of the street's terrain pixels are paving
+    alone); the rock's world normal from three's view-space normal (3 fewer interpolated values).
+  - Every lit material: a lamp is set up only where it can light the pixel; no indirect specular without an env map;
+    the sun's shadow read only on faces toward the sun.
+  - Output pass: the pixel itself read by index at full resolution; 2 square roots for the edge test instead of 5.
+- Pixel A/B: 0 px for six of them on the same frame and over 72 frames of motion; the output pass's own pixel 15–40 px
+  at 1 level (still), 8–36 px a frame, max 5 levels (motion).
+- benchgpu: an "as before" line per change, 3 terrain diagnostics, 2 trade-offs (terrain sun without specular, opaque
+  front to back) priced and off.
+- Tests: drawcalls, perfbudget, display, chapter1, transitions, camfollow, worldfit, well-town, travel, zislands, desert-life, opening, house and combat all PASS (one at a time, this branch); perfbudget 0 new programs on every route.
+- Evidence: docs/lba3-performance/STABILIZATION.md "SHADE-COST", docs/lba3-performance/SHADE-COST/, QA.md "SHADE-COST".
+
 ## Next exact task
 Independent review of EQ-1 (tests/jetpack.mjs, the feel by hand with a pad and touch); then: Independent reviews of TY-3 (Desert Island) and TY-4 (Zeelich's street); then twelve years on for the Hamalayi.
 

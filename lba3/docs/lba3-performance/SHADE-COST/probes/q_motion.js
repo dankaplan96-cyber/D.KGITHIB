@@ -21,7 +21,7 @@
   const routes = G.bench.routes(), want = String(window.ROUTES || 'street,interior,combat').split(',');
   const lines = [];
   // (the resolution held: full (exact: the output pass reads by index) or window.SCALE, e.g. 0.9 (filtered taps, sharpening))
-  RR.setAutoRes(false); if (window.SCALE) RR.setDyn(+window.SCALE);
+  if (window.SCALE) { RR.adapt = () => {}; RR.setAutoRes(true); RR.setDyn(+window.SCALE); } else RR.setAutoRes(false);
   // (compile both sets once before the frames, so no frame waits)
   old(true); RR.render(); old(false); RR.render();
   for (const id of want) {
