@@ -171,6 +171,23 @@ Root motion of the hero's anims (each key's step x/y/z is the move over that key
   (X − centre of the island's cubes) × 1.7122/1024 m), on our own spots by Citadel's houses, market and harbour, on
   Zeelich's street and on Desert Island (our layout); tests/containers.mjs.
 
+## Found object and inventory (I-24, SHOPS-ITEMS)
+- The found-object animation: ANIM.HQR 23, generic anim 20 (TROUVE) in every behaviour's File3D (RESS.HQR entry 44,
+  records 0-4). Three keys of 300 ms, the loop from key 1: key 0 a dip (the chest bowed 32°, twisted -6°, the arms
+  hanging); key 1 the chest 13° back, twisted -25°, tipped 17° to his right, the left upper arm thrown up sideways 129°
+  (turned 76° along its length), the right arm down; key 2 the mirror (twist +23°, tip -15°, the right arm up 110°,
+  turned -38°; the thighs 6-8° back). So: a dip, then an arm up on each side in turn every 0.3 s until dismissed.
+- The ceremony (INVENT.CPP DoFoundObj, the GPL source): the box x 256-384, y 48-178 of 640 x 480 (centred, top at 10 %
+  of the height, 27 % tall, nearly square), the inside shaded (ShadeBoxBlk level 8), a thin frame (DrawCadre); it grows
+  from its centre in 400 ms and shrinks in 300 ms; the object turns 2 units of 4096 a ms (a turn in 2.05 s), seen from
+  21° above (camera alpha 60 x MUL_ANGLE 4); Twinsen first turns to face the camera in 500 ms (with the turn
+  animation), dances until a key, then turns back in 400 ms. The original waits for a key (4 s after the text in a demo).
+- The inventory (INVENT.CPP / INVENT.H): 7 x 5 slots with 8 px gaps over the screen's width, the name/description line
+  below (y 429-471); only the selected object turns, 1 unit a ms (a turn in 4.1 s), the others keep the angle where they
+  stopped; after 1 s on a slot it zooms into a 240 x 240 box in the middle (500 ms).
+- Used: `src/engine/rig.js` FOUND / foundPose, `src/game/found.js`, `src/game/itemlook.js` (TURN, PITCH),
+  `src/game/inventory.js`, css `#found`.
+
 ## Used in the game
 - `src/engine/rig.js` WALK_KEYS: the walk above (Catmull-Rom through the key poses, stride 0.78 H per cycle).
 - `tools/blender/twinsen_poly.py`: the robe below the belt follows the legs; ball hands r 0.036 H at ±0.19,

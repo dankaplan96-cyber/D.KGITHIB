@@ -157,7 +157,7 @@ const i2 = await ev(() => {
   P.tap('KeyI', 0.1); r.closed = G.state;
   // the pad: View opens, B closes; View again opens and View closes
   navigator.getGamepads = () => [PAD];
-  padTap(8); r.padOpen = G.state; padTap(1); r.padB = G.state; padTap(8); padTap(8); r.padView = G.state;
+  padTap(8); r.padOpen = G.state; r.padHint = document.querySelector('#inventory .inv-hint')?.textContent; padTap(1); r.padB = G.state; padTap(8); padTap(8); r.padView = G.state;
   navigator.getGamepads = () => []; G.input.lastDevice = 'kbd'; G.step(0.1);
   // rapid open/close: an even number of presses ends shut, nothing turning
   for (let k = 0; k < 6; k++) P.tap('KeyI', 1 / 60);
@@ -166,8 +166,22 @@ const i2 = await ev(() => {
 });
 check('I opens the inventory: a rendered model per slot, the selected turning in its slot and large, with its name', i1.state === 'inventory' && i1.n === i1.items.length && i1.rendered && i1.spin && i1.big > 0.05 && i1.turned && i1.name === 'Medallion', i1);
 check('the arrows move the selection (the name follows); the Kashes slot shows the count', i1.sel2 === 1 && i1.name2 !== i1.name && i1.coin === '12', i1);
-check('I closes it; the pad\'s View opens it, B closes it, View closes it', i2.closed === 'play' && i2.padOpen === 'inventory' && i2.padB === 'play' && i2.padView === 'play', i2);
+check('I closes it; the pad\'s View opens it (its line says View / B), B closes it, View closes it', i2.closed === 'play' && i2.padOpen === 'inventory' && /View \/ B: close/.test(i2.padHint) && i2.padB === 'play' && i2.padView === 'play', i2);
 check('rapid open/close ends shut and in play', i2.rapid === 'play' && i2.rapidHidden, i2);
+
+// ---------------------------------------------------------------- 4b. the world waits under the box (an enemy beside him)
+const w1 = await ev(() => {
+  const G = game, h = G.hero, e = G.enemies.find((x) => !x.ko && !x.dead && x.pos);
+  if (!e) return { none: true };
+  const home = e.pos.clone(); e.pos.set(h.pos.x + 1.0, h.pos.y, h.pos.z); e.alerted = true;
+  const p0 = e.pos.clone(), hp0 = h.hp;
+  G.found('lidkey', 'pr_toast_key', () => {});
+  const st = G.state; G.step(2.0);
+  const r = { st, hp: h.hp === hp0, still: +e.pos.distanceTo(p0).toFixed(3), during: G.state };
+  G.step(1.5); r.after = G.state; e.pos.copy(home); G.step(0.2);
+  return r;
+});
+check('the world waits under the box: an enemy beside him neither moves nor hurts him', w1.none || (w1.st === 'found' && w1.hp && w1.still < 0.01 && w1.after === 'play'), w1);
 
 // ---------------------------------------------------------------- 5. nothing drawn for the interface during play
 const p1 = await ev(async () => {

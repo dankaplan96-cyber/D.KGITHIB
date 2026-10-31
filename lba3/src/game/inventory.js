@@ -3,7 +3,7 @@
 // painted icons below stay as the fallback where WebGL is unavailable (and paint the paper items' faces). The journal
 // lists what happened so far, chapter by chapter. One panel, the game paused behind it.
 import { t } from './i18n.js';
-import { keyFor, keyLabel } from '../engine/input.js';
+import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
 import { stage, lookOf, TURN } from './itemlook.js';
 
 const ICON = 72;
@@ -127,7 +127,7 @@ export class Inventory {
   }
   // the controls line, in the keys the player uses (rebound keys by name) or the pad's buttons (CLAR-2)
   hint(K) {
-    if (this.game.input?.lastDevice === 'pad') return t('inv_hint_keys', { move: 'D-pad', close: K('pause') });
+    if (this.game.input?.lastDevice === 'pad') return t('inv_hint_keys', { move: 'D-pad', close: `${PAD_LABELS.inventory} / ${PAD_LABELS.dodge}` });   // (View, or B as the menus' Back)
     const mv = ['up', 'left', 'down', 'right'].map(K), move = mv.every((s) => s.length === 1) ? mv.join('') : mv.join(' ');
     const close = [...new Set([K('inventory'), keyLabel(keyFor('pause'))])].join(' / ');
     return t('inv_hint_keys', { move, close });
