@@ -801,6 +801,15 @@ class Game {
     // (FRAME-1: its geometry too, in the black, the shadow batches included: they are built on the area's first update,
     //  which used to come later, so a house's 4.5 MB of batches went up on the first frame shown)
     stepT('shadow batches', () => { this.lightPool.update(this.hero.pos); if (!this.shadowCull.areas.has(root)) this.shadowCull.update(root, this.camera, this.hero.pos); });
+    // FIRST-BUILD (Test Lab finding 4, region-entry: a first visit's 6–11 new programs were compiled at the end of the
+    // preparation, the hold waiting for them): on a first visit the area's programs are started now, right after its
+    // lamps are chosen, so where the driver compiles in parallel (KHR_parallel_shader_compile: the laptop) they compile
+    // while the steps below run. The warm-up step at the end stays: it compiles what the draw batches added (their
+    // materials) and waits for all of it, as before. Without that extension three compiles them when first used: the
+    // same work as before, at the end. (earlyWarm: true always, false never — A/B and probes; unset: where the extension is)
+    if (!this.drawBatch.has(root) && R.compileAsync && (this.earlyWarm === true || (this.earlyWarm !== false && R.extensions?.has?.('KHR_parallel_shader_compile')))) {
+      stepT('shader warm-up (early)', () => { this.renderer.precompile().catch(() => {}); });
+    }
     if (!this.drawBatch.has(root) && this.drawBatch.enabled) {
       // (the texture layers the batches will read — a canvas read back each — at most LAYER_SLICE_MS a frame)
       const it = warmLayers(root, this.drawBatch.arrays && this.drawBatch.fold); let more = true;
