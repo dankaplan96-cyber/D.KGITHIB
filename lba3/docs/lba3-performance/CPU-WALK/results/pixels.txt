@@ -1,0 +1,9 @@
+pixel A/B · medium · 1366x768 · per shot: pixels differing, frozen walk vs PERF-CPU walk (even shots) / three's full update (odd shots) (objects in frozen ranges)
+street: cpu 0 (1344) · three 0 (1304) · cpu 0 (1347) · three 0 (1307) · cpu 0 (1324) · three 0 (1285) · cpu 0 (1289) · three 0 (1287)
+interior: cpu 0 (525) · three 0 (528) · cpu 0 (526) · three 0 (528) · cpu 0 (527) · three 0 (528) · cpu 0 (526) · three 0 (528)
+combat: cpu 0 (337) · three 0 (335) · cpu 0 (340) · three 0 (336) · cpu 0 (331) · three 0 (335) · cpu 0 (337) · three 0 (332)
+arrival: cpu 0 (882) · three 0 (886) · cpu 0 (892) · three 0 (892) · cpu 0 (772) · three 0 (774) · cpu 0 (783) · three 0 (785)
+sweep: cpu 0 (624) · three 0 (624) · cpu 0 (624) · three 0 (624) · cpu 0 (624) · three 0 (624) · cpu 0 (624) · three 0 (624)
+frozen walk vs PERF-CPU walk: 0 pixels differ over 20 shots · vs three's full update: 0 over 20 shots
+{"sum":{"cpu":0,"three":0,"nCpu":20,"nThree":20}}
+(244.5 s)

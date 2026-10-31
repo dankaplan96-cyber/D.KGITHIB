@@ -456,3 +456,109 @@ laptop. Frames are stepped as 60 Hz frames (one simulation step each, the game's
   - `region-entry`: black per first visit (expected still over 1.5 s, see above) and the frames after it; one shadow
     cache build per arrival.
   - Continue from a save in the house and from one outdoors: the first frame after the loading screen.
+
+### CPU-WALK (31.10): the shown-world update and the draw batches' check on the street (Test Lab I-29)
+Branch `cpu-walk` from 50f6208 (FIRST-BUILD merged). SwiftShader in this container under a heavy shared load (load
+average 14–28 on 4 cores): exact counts, pixel comparisons and relative CPU ms only — no GPU ms, no fps, nothing about
+the laptop's feel. Street = the benchmark's street route, Follow camera at Far, Auto on battery (= Medium), 1366×768.
+Probes and data: `CPU-WALK/probes/` (`repl.mjs` keeps one booted page for many probe scripts; `run.mjs`), `CPU-WALK/results/`.
+
+- **What the laptop's profile pointed at (diagnose-2026-10-31):** `drawcull.js shownTree` ~2 ms a frame, `drawbatch.js
+  watch` ~0.6 ms. What they do here, MEASURED on HEAD (`q_census.js`, 240 frames): the update visits **1 829 objects a
+  frame** (189 recomposed, 467 world matrices recomputed: people's limbs and bodies); of the rest ~1 300 never change
+  (428 draw-batched pieces, 234 shadow-batch members, ~500 groups and meshes). The check reads **416 batched pieces** a
+  frame, each through geometry → attributes → position → version (none changed on the route).
+- **Change 1, frozen subtrees (`drawcull.js` shownTreeF, `Frozen`).** A child subtree in which nothing changed for 30
+  updates (no position / rotation / scale, parent, visibility or world matrix; no camera, audio or skinned body in it) is
+  frozen: its parent keeps a flat record of it (the objects in walk order, their vectors and a copy of their ten numbers,
+  their visibility, the drawables with where their subtrees end) and the walk no longer goes into it. Each update the
+  record is **checked**, not skipped: one flat loop compares every frozen object's visibility and ten numbers with the
+  copy and looks at three's `matrixWorldNeedsUpdate` (a `getWorldPosition` elsewhere recomposes every parent: that
+  matrix is recomputed and compared, as the walk's own check does). Anything different ends that child's range and the
+  walk goes into it in the same update, exactly as before; it freezes again after 30 quiet updates. Adding, removing or
+  attaching a child anywhere in a range ends it (Object3D.add / remove / attach wrapped: the only ways the game changes
+  the tree; three's `attach` bypasses `add`). The record also yields what the walk produced on the way: PERF-SUBMIT's
+  caster list (same objects, same order) and, for the draw batches, whether a piece's matrix and parents were checked
+  unchanged in this update (`__frzBy.okF`).
+  - **Why checked and not "marked dirty by its writers":** a `Vector3` has no change hook, 40k lines of game code move
+    things, and 73 call sites pass `.position` objects around (a held vector written later would mark nothing). A
+    missed writer would mean a stale matrix on screen. The flat check costs about half of a visit per frozen object (no
+    recursion, no stores, the vectors held directly) and depends on nobody's discipline: the visit is skipped, the
+    compare stays. This is why the saving is smaller than the Test Lab's estimate (below).
+  - **What stays dynamic, and why:** everything that changed in the last 30 updates — people, enemies, the hero
+    (animated every frame; skinned bodies and bones; FarCull's catch-up update of people left out of the view), doors,
+    lifts, boats, the mill, carried items, pickups, cinematic props (a range ends on the first change; nobody has to say
+    so); cameras and audio (their own matrix update); hidden subtrees (skipped as before, recomputed in full when shown);
+    anything under a parent whose own world matrix changed (forced, as before). `?nofreeze` / `MW.frozen = false` is
+    PERF-CPU's walk (the A/B switch); `MW.cached = false` is three's own update, as before.
+- **Change 2, the draw batches' check (`drawbatch.js` watch).** (a) A piece in a frozen range checked unchanged in this
+  update skips its parent-stamp and matrix tests (its matrix and its parents' visibility are as when last checked in
+  full); its material, geometry, shadow flags and look are still tested every frame. (b) Geometry versions are read only
+  after a batched piece's geometry or its position / index attribute was edited (`GEO.n`: BufferAttribute's `needsUpdate`
+  setter — the only way three moves a version — and BufferGeometry's setAttribute / deleteAttribute / setIndex, wrapped;
+  WeakSets of the batched geometries and attributes; no code of ours assigns `attributes` or `index` directly: searched).
+  (c) An area root that is itself frozen (a room with nobody under its group) keeps the fast path (without (c) the house
+  fell back to the slow check: 0.03 → 0.087 ms; with it 0.023 ms).
+- **Counts (MEASURED, `q_walkcheck.js`, 360 updates per route):** objects walked a frame / checked in frozen ranges:
+  street (Follow) 1 829 → **643 / 1 187** (once settled: 557 / 1 307), street (orbit) 1 816 → 521 / 1 296, house 596 →
+  115 / 481, combat 573 → 253 / 320, the Hamalayi 723 → 128 / 594, an arrival every 3 s 1 129 → 427 / 702, the house
+  door in and out every 2 s 994 → 337 / 657. Pieces looked at by the check: the same 416 on the street; their geometry
+  chains only after an edit.
+- **CPU (MEASURED here, relative; `q_cpu.js`: the game's own frames with the draws left out, old and new alternating in
+  blocks of 60 frames in one page, 10–12 blocks each; minimum of the block means — the medians swing up to 2× with the
+  machine's load; old = PERF-CPU's walk and every piece's versions read):**
+
+  | route | update old → new ms | check old → new ms | both |
+  |---|---|---|---|
+  | street, Follow | 0.53 → 0.373 | 0.17 → 0.117 | 0.70 → 0.49 (−30 %) |
+  | street, orbit | 0.627 → 0.465 | 0.225 → 0.108 | 0.85 → 0.57 (−33 %) |
+  | house | 0.157 → 0.092 | 0.032 → 0.023 | 0.19 → 0.115 (−39 %) |
+  | an arrival every 3 s | 0.303 → 0.300 | 0.107 → 0.07 | 0.41 → 0.37 (−10 %: each arrival ends the records) |
+
+  An update that finds nothing changed (`q_static.js`: the update run 20 more times inside a frame; three runs, minimum
+  of the block means): 286 / 308 / 407 µs with PERF-CPU's walk, 195 / 186 / 349 µs with the frozen one (1 760–1 890
+  objects visited → ~440–570 visited and ~1 340 checked). The update time left on the street is mostly the people:
+  ~560 objects that do change, recomposed as before. The records stay bounded: over 6 cycles of street, door, arrivals
+  and combat (`q_mem.js`) 17–31 records holding 870–1 900 entries, no growth (`results/records-plateau.txt`).
+- **Exactness (MEASURED):** `?walkcheck` (drawcull.js walkCheck; `WALKCHECK=1` does it for any suite through
+  tests/lib/boot.mjs, a mismatch being a console error that fails the suite) compares after every update every world
+  matrix reached through shown parents (and every attached skinned body's bind-matrix inverse) with three's formula from
+  scratch, the caster list with the walk's rule applied to the whole tree, and every piece still in a draw batch with the
+  slow check's full tests. Street (Follow; orbit; Medium → Low half way), house, combat, door in and out, arrivals in
+  every region, the Hamalayi, the 360° sweep, 360 updates each, first run in a fresh page: **2 857 816 world matrices,
+  3 240 caster lists (247 338 casters), 902 521 batched pieces — 0 different** (`results/walkcheck-new.txt`; PERF-CPU's walk
+  through the same check: 0, `results/walkcheck-old.txt`). The opening, transitions and travel suites ran with
+  WALKCHECK=1 and passed. Edits on frozen batched pieces (`q_geoedit.js`: position / index `needsUpdate`, position replaced
+  by setAttribute, moved 1 cm, hidden): each piece left its batch on the next frame; an untouched one stayed.
+- **Pixels (MEASURED, `q_pixels.js`):** the same game state drawn first with the frozen walk, then with PERF-CPU's walk
+  (even shots) or with three's own full update of every shown object (odd shots), the canvas compared: street, house,
+  combat, arrivals, the sweep, 8 shots each with the scenery frozen (331–1 347 objects in ranges): **0 pixels differ in
+  all 40** (`results/pixels.txt`). Only the first two draws of a state are compared: a third draw of the same state
+  differs from the first by itself in some views (5–244 px in the house and on the street, whichever walk draws it:
+  `results/pixels-thirddraw-control.txt`; per-draw state elsewhere, not attributed here — an earlier five-draw version
+  of the probe showed it as a difference, `results/pixels-five-draws.txt`).
+- **Found on the way, fixed (pre-existing, MEASURED):** the walk check's first run in a fresh page found 100 wrong world
+  matrices on the arrival route — one resident's left arm and hat, up to 0.8 m off, for 10+ frames — **with PERF-CPU's
+  walk as well** (`results/walkcheck-old-before-sitfix.txt`). `walkers.js sitShape()` measures a body's sit pose once per
+  body and size (root.updateMatrixWorld(true) in the sit pose, then the pose put back); the pose put back has the same
+  numbers as before, so the update, which recomputes only what changed, kept the parts' seated matrices until they next
+  moved. The rig's matrices are now recomposed after it is put back (one line). After it: 0 mismatches with either walk.
+- **Not done:** skipping frozen subtrees without checking them. It needs every writer of position / rotation / scale /
+  visibility on static scenery to report itself (or accessors on those vectors, which changes their shapes for all of
+  three's math); the walk check would catch a missed one only on the routes it runs. The frozen check left costs ~0.13
+  µs a frozen object here (INFERRED from the totals above).
+- **Laptop (pending), what to re-measure:** `node engine/cli.mjs diagnose` on battery, street, Follow camera, Auto: the
+  street's CPU sections (`submit other`: perf.js counts the culls, the world-matrix update and the draw batches' check
+  there, ~2.8–3 ms in the 0.43.3 run) and the JS hotspots
+  (`shownTreeF` and `poll` in drawcull.js, `watch` in drawbatch.js, self time; were ~2 ms and ~0.6 ms a frame in
+  `shownTree` / `watch`). Expected from the ratios here: the update ~−30 % and the check ~−35 %, i.e. **~0.6–0.9 ms a
+  frame less on the street, not the 2–2.5 ms the Test Lab estimated** (INFERRED: assumes the laptop's split between frozen
+  and moving objects matches this container's; NOT VERIFIED). A/B on the laptop: the benchmark's breakdown line
+  "CPU-WALK off (as before)" (bench.js), or `?nofreeze` (a suite: `NOFREEZE=1`).
+- **Tests** (this branch; `BOOT_TIMEOUT=900000`; `results/tests.txt`): opening (WALKCHECK=1), chapter1, house, transitions
+  (WALKCHECK=1), travel (WALKCHECK=1), zislands, drawcalls, perfbudget, combat, containers, camfollow, doorcull: **all
+  PASS**. travel's first run lost its page to the container's memory-cgroup OOM killer (dmesg; several agents' browsers
+  at ~1 GB each) and passed on the rerun. **occluders: FAIL, 1 check, not from this round:** "(b) the rise over a house is
+  eased …" finds no rise at all (pitch 26.4° → 26.4°); the same with the upstream version of the test (0dcec9a, LBA2's
+  camera pinned) and the same, number for number, with `NOFREEZE=1` (the walk and the check as before CPU-WALK). Its 36
+  visual checks pass. Left to the camera's owner.

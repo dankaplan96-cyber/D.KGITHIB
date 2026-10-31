@@ -140,7 +140,7 @@ function lookVer(m, F) {
 // through setAttribute / deleteAttribute / setIndex (no code of ours assigns them directly: searched). Those on a batched
 // piece's geometry or its position / index attribute move GEO.n; watch() compares the versions only when it moved.
 const WATCH_G = new WeakSet(), WATCH_A = new WeakSet();
-export const GEO = { n: 0, off: false };
+export const GEO = { n: 0, off: typeof location !== 'undefined' && (/[?&]nofreeze/.test(location.search) || !!globalThis.__nofreeze) };   // (?nofreeze: as before, with drawcull.js's MW.frozen)
 {
   const BA = THREE.BufferAttribute.prototype, d = Object.getOwnPropertyDescriptor(BA, 'needsUpdate');
   if (d?.set) Object.defineProperty(BA, 'needsUpdate', { get: d.get, set(v) { if (v === true && WATCH_A.has(this)) GEO.n++; d.set.call(this, v); }, configurable: true, enumerable: d.enumerable });

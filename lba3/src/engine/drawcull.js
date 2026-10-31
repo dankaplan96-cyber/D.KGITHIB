@@ -48,7 +48,7 @@ const ownUMW = (o) => o.updateMatrixWorld !== BASE_UMW && o.updateMatrixWorld !=
 // (CPU-WALK: `frozen` off gives PERF-CPU's walk of every shown object, the A/B switch (`?nofreeze`); `epoch` moves when
 //  an update ran without the frozen subtrees' checks, which then are dropped; `check`: `?walkcheck`'s counts, below)
 const QS = typeof location !== 'undefined' ? location.search : '';
-export const MW = { cached: true, frame: 0, ok: false, casters: [], castersF: -1, walk: true, frozen: !/[?&]nofreeze/.test(QS), epoch: 0,
+export const MW = { cached: true, frame: 0, ok: false, casters: [], castersF: -1, walk: true, frozen: !(/[?&]nofreeze/.test(QS) || globalThis.__nofreeze), epoch: 0,
   check: /[?&]walkcheck/.test(QS) || globalThis.__walkcheck ? { frames: 0, compared: 0, bad: 0, casters: 0, castersBad: 0, pieces: 0, piecesBad: 0, samples: [] } : null };
 const _mwT = new THREE.Matrix4();
 // PERF-SUBMIT: `col` (the shown-world update only): the frame's shadow casters are listed on the way — each shown object
@@ -164,7 +164,8 @@ class Frozen {
     // (a hidden child shown again: its subtree recomputed in full, as the walk does — its hidden frames set this)
     if (!R.vis && R.k.children.length) R.k.__hid = true;
     _stats.thaw++;
-    if (this.alive === 0) { if (this.owner.__frz === this) this.owner.__frz = undefined; this.ranges.length = 0; }
+    // (the last range ended: the record is dropped, and lets go of what it held — a removed object is not kept alive)
+    if (this.alive === 0) { if (this.owner.__frz === this) this.owner.__frz = undefined; this.ranges.length = 0; this.O.length = this.P.length = this.Q.length = this.S.length = this.V.length = this.D.length = this.DE.length = 0; this.dead = 0; }
   }
   killAll() { for (const R of this.ranges) this.kill(R); if (this.owner.__frz === this) this.owner.__frz = undefined; }
   // every live range checked against its copy; one that differs ends (its child is walked in this update)

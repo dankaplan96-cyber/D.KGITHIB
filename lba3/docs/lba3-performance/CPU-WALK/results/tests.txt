@@ -1,0 +1,54 @@
+CPU-WALK suite verdicts (branch cpu-walk; BOOT_TIMEOUT=900000). -wc: run with WALKCHECK=1. occluders-pinned: the upstream
+test of 0dcec9a (LBA2's camera pinned) run against this branch; -nofreeze: with NOFREEZE=1 (the walk and the draw-batch
+check as before CPU-WALK). travel-wc-crash1: the first travel run, its page killed by the container's memory-cgroup OOM
+killer (dmesg), rerun as travel-wc.
+camfollow.txt:functional: 31 passed, 0 failed
+camfollow.txt:visual:    0 capture(s) written for review, not judged here
+camfollow.txt:VERDICT: PASS
+chapter1.txt:functional: 23 passed, 0 failed
+chapter1.txt:visual:     6 capture(s) written for review, not judged here
+chapter1.txt:VERDICT: PASS
+combat.txt:functional: 76 passed, 0 failed
+combat.txt:visual:     0 capture(s) written for review, not judged here
+combat.txt:VERDICT: PASS
+containers.txt:functional: 41 passed, 0 failed
+containers.txt:visual:     0 capture(s) written for review, not judged here
+containers.txt:VERDICT: PASS
+doorcull.txt:functional: 0 passed, 0 failed
+doorcull.txt:visual:     2 passed, 0 failed; 0 capture(s) written for review, not judged here
+doorcull.txt:VERDICT: PASS
+drawcalls.txt:functional: 1 passed, 0 failed
+drawcalls.txt:visual:     0 capture(s) written for review, not judged here
+drawcalls.txt:VERDICT: PASS
+house.txt:functional: 2 passed, 0 failed
+house.txt:visual:     0 capture(s) written for review, not judged here
+house.txt:VERDICT: PASS
+occluders-pinned-nofreeze.txt:FAIL (b) the rise over a house is eased like the swing behind a wall: camera acceleration ≤ 40 m/s², the view turning ≤ 61°/s {"frames":930,"mode":"2026","accMax":4.1,"accP95":3.3,"yawRateMax":0,"pitchDeg":[26.4,26.4]}
+occluders-pinned-nofreeze.txt:functional: 0 passed, 1 failed
+occluders-pinned-nofreeze.txt:visual:     36 passed, 0 failed; 0 capture(s) written for review, not judged here
+occluders-pinned-nofreeze.txt:VERDICT: FAIL (1 functional)
+occluders-pinned.txt:FAIL (b) the rise over a house is eased like the swing behind a wall: camera acceleration ≤ 40 m/s², the view turning ≤ 61°/s {"frames":930,"mode":"2026","accMax":4.1,"accP95":3.3,"yawRateMax":0,"pitchDeg":[26.4,26.4]}
+occluders-pinned.txt:functional: 0 passed, 1 failed
+occluders-pinned.txt:visual:     36 passed, 0 failed; 0 capture(s) written for review, not judged here
+occluders-pinned.txt:VERDICT: FAIL (1 functional)
+occluders.txt:FAIL (b) the rise over a house is eased like the swing behind a wall: camera acceleration ≤ 40 m/s², the view turning ≤ 61°/s {"frames":930,"mode":"2026","accMax":4.1,"accP95":3.3,"yawRateMax":0,"pitchDeg":[26.4,26.4]}
+occluders.txt:functional: 0 passed, 1 failed
+occluders.txt:visual:     36 passed, 0 failed; 0 capture(s) written for review, not judged here
+occluders.txt:VERDICT: FAIL (1 functional)
+opening-wc.txt:functional: 27 passed, 0 failed
+opening-wc.txt:visual:     0 capture(s) written for review, not judged here
+opening-wc.txt:VERDICT: PASS
+perfbudget.txt:functional: 8 passed, 0 failed
+perfbudget.txt:visual:     0 capture(s) written for review, not judged here
+perfbudget.txt:VERDICT: PASS
+transitions-wc.txt:functional: 6 passed, 0 failed
+transitions-wc.txt:visual:     0 capture(s) written for review, not judged here
+transitions-wc.txt:VERDICT: PASS
+travel-wc-crash1.txt:VERDICT: FAIL (no verdict printed; 1 FAIL captured)
+travel-wc-crash1.txt:  FAIL page crashed: http://localhost:8731/?nocine
+travel-wc.txt:functional: 17 passed, 0 failed
+travel-wc.txt:visual:     0 capture(s) written for review, not judged here
+travel-wc.txt:VERDICT: PASS
+zislands.txt:functional: 13 passed, 0 failed
+zislands.txt:visual:     0 capture(s) written for review, not judged here
+zislands.txt:VERDICT: PASS
