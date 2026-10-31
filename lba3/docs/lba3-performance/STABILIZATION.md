@@ -307,3 +307,72 @@ circle. Data and probes: `TITLE-LOAD/results/`, `TITLE-LOAD/probes/` (`run.mjs` 
     (cold shader cache) and once kept (warm): the loading steps, the slices, the long frames.
   - `node electron-bench.mjs full laptop-<version>-full-battery.txt battery follow`: the arrival route's frames after
     the black and the scene changes' preparation line.
+
+### GPU/rendering investigator, SHADE-COST (31.10): the street's per-pixel material cost
+The laptop's full benchmark (0.43.3, Vega 8, Direct3D 11, battery, Medium, 1366×768, street breakdown, GPU p50):
+as is 16.51 ms; flat terrain material −3.4 ms (the largest single item); flat scenery material −2.3; no lamps −1.5;
+no edge smoothing −1.7. Everything below is SwiftShader: exact counts and pixels, never GPU ms. Data and probes:
+`SHADE-COST/results/`, `SHADE-COST/probes/` (views.js: the street at 3 headings with the benchmark's camera, Twinsen's
+house's surroundings at 2 with the Follow camera; Medium, battery profile, full resolution held).
+- **What the street's pixels run (MEASURED, counts).**
+  - The terrain covers 46–67 % of the street's pixels, each shaded once (it is drawn after the other opaque things).
+    Scenery: 0.53 shaded fragments a pixel for 0.37 covered (overdraw 1.45).
+  - Per fragment the terrain cost the laptop ~1.7× the scenery (3.4 ms / 497k fragments against 2.3 ms / 560k:
+    INFERRED from the laptop's lines and these counts). Both run three's full standard lighting (the sun's GGX and its
+    4-read hardware shadow, 2 lamps, the hemisphere light, fog); the terrain adds the splat.
+  - The splat's tile reads per terrain pixel: street 1.97–2.08, house surroundings 1.24–1.32. 58–60 % of the street's
+    terrain pixels are paving alone, where the grass was read and multiplied by 0. At most 2 tiles on 99 % of them.
+  - The 2 lamps (reach 11 m) reach nothing on 23–45 % of the street's lit pixels and one lamp on 28–59 %. At the house
+    neither lamp reaches 96–100 % of them.
+  - 2.7–26.8 % of the lit pixels face away from the sun (their shadow is multiplied by 0).
+  - Only 2.5–5.5 % of the street's terrain pixels are beyond 40 m (10.7 % at one house heading).
+- **Per terrain pixel, before → after** (street, paving pixel; hand count from the compiled battery program, INFERRED
+  estimate of scalar ALU): interpolated values 25 → 22; tile reads 2 → 1 (street mean 1.97–2.08 → 1.31–1.42); shadow
+  reads 4 (0 where turned from the sun); lamp set-ups 2 → 0.78–0.95 (street mean), 0–0.04 (house); branches 10 → 13;
+  ~300 → ~235 ALU (indirect specular −30, lamps −28, varyings −6).
+- **Changes kept (pixel A/B on the same frozen frame, `results/pixel-ab-still.txt`; in motion `results/pixel-ab-motion*.txt`):**
+  1. *Terrain: the grass read only where its colour is used* (terrain.js `grassSkip`). Root cause: the grass tile is
+     also the wobble of the paving's and soil's edges, so it was read on every pixel, also on paving alone. Now read
+     where its share is > 0 or an edge needs it. Still 0 px at all 5 views. benchgpu 'terrain grass read on every pixel
+     (as before)'.
+  2. *Terrain: the world normal from the view-space normal* (`nrmVarying` off). Root cause: a second normal varying
+     for the rock's triplanar weights only. Now rotated back from three's own `vNormal` (the 1997 look keeps the
+     varying). 0 px at 4 views, 1 px at 1 level at one. benchgpu 'terrain world normal as its own varying (as before)'.
+  3. *Lamps set up only where they can light* (renderer.js `scLampReaches`). Root cause: three computes every point
+     light's direction, distance, decay pow and cut-off on every lit pixel before finding its colour 0 beyond its
+     reach. A squared-distance test comes first. 0 px. benchgpu 'lamps set up on every lit pixel (as before)'.
+  4. *No indirect specular without an env map* (`lights_fragment_end`). Root cause: three runs the multiscattering
+     fit with three zero inputs. 0 px. benchgpu 'indirect specular without env map (as before)'.
+  5. *The sun's shadow read only where the surface faces the sun* (after GFX-LOOK's hardware-shadow patch). Root cause:
+     the shadow factor is multiplied by dot(N, L) = 0 on faces turned away; now an `if` skips its reads. 0 px.
+     benchgpu 'sun shadow read on surfaces turned from the sun (as before)'.
+  6. *Output pass: the pixel itself read by index at full resolution*. Root cause: after PERF-GPU 1 the one filtered
+     read left on every pixel was the pixel's own (a bilinear read of a 64-bit texel at its centre). 15–40 px at
+     1 level (still). benchgpu 'output pass own pixel filtered (as before)'.
+  7. *Output pass: two square roots for the edge test instead of five*. Root cause: only the darkest and brightest luma
+     matter for the test; the root keeps their order, so the five are compared squared and the four neighbours' roots
+     are taken on edge pixels only. 0 px. benchgpu 'output pass lumas rooted on every pixel (as before)'.
+  All seven together against all undone: the same frame 15–40 px at 1 level (the output pass's own pixel). In motion
+  (the benchmark's street, interior and combat routes, 24 frames each, every frame A/B in the same state): 8–36 px a
+  frame, max 5 / 2 / 1 levels, all from change 6 (an edge decision at the threshold flips); with change 6 left in, the
+  other six differ by 0 px in all 72 frames. None adds a shader program in play (the 1997 look and every switch compile
+  without errors: results/programs-retro.txt); the "as before" programs exist only inside a benchmark line's warm-up.
+- **Diagnostics for the laptop (never in play):** 'terrain reads as before PERF-GPU 3' (every tile, implicit
+  gradients: whether textureGrad is dearer than the reads it skips), 'terrain one grass read, no splat' (the splat's
+  share of the 3.4 ms), 'terrain unlit' (the lighting's share).
+- **Trade-offs priced, OFF** (screenshots: `SHADE-COST/results/tradeoffs/`, Citadel, chapter 1):
+  - terrain sun without specular: 25–65 % of the pixels change, max 97–125 levels (the paving and lawns duller);
+  - opaque front to back (the scenery's overdraw): 0–64 px change, max 48–200 levels (coincident faces).
+- **Candidates measured and not built:** top-2 layer blending (already ≤ 2 tiles on 99 % of the street's terrain
+  pixels); triplanar rock only on slopes (rock read on 1–9 % of terrain pixels, already gated); a far-distance baked
+  colour (2.5–5.5 % of terrain pixels beyond 40 m); packed detail/macro maps (the terrain has none); lower anisotropy
+  per layer (a visible change; the existing 'anisotropic filtering off' line prices the upper bound); per-vertex splat
+  ramps (they depend on a per-pixel texture wobble: not the same image). SwiftShader frame timing was tried as a
+  relative check and dropped: its run-to-run spread (1.4–2.1 ms for the same frame) is larger than any change.
+- **Tests** (one at a time, this branch): drawcalls, perfbudget (0 new programs on every route), display, chapter1,
+  transitions, camfollow, worldfit, well-town, travel, zislands, desert-life, opening, house and combat PASS.
+- **Files.** terrain.js, renderer.js, benchgpu.js. None of bench.js, perf.js, main.js, warmup.js, drawcull.js,
+  shadowcache.js, regions.js or drawbatch.js was edited.
+- **Laptop:** `electron-bench.mjs full … battery`: the street breakdown's new lines. Each "as before" line minus
+  'as is' is what that change saved. Whether D3D11's compiler keeps the new `if`s as branches decides changes 1, 3 and
+  5; the lines answer it.

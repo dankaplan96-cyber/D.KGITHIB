@@ -2,6 +2,150 @@
 // triangles that are rendered, so feet never float or sink.
 import * as THREE from 'three';
 
+// SHADE-COST: the terrain shader's switches. The game runs with the defaults; the others exist for the benchmark's GPU
+// lines (benchgpu.js: each prices one of them on the laptop) and the probes' pixel A/B. A change compiles another program
+// (customProgramCacheKey): the caller prepares it (warmGraphics) before the frame that draws it.
+//   grassSkip  the grass tile is read only where its colour is used (true; false: on every terrain pixel, as before)
+//   nrmVarying the world normal for the rock's triplanar weights as its own varying (false: from the view-space normal)
+//   diag       'implicit' the reads as before PERF-GPU 3 (every tile read on every pixel, implicit-gradient texture2D);
+//              'grass'    one grass read and no splat (what the splat costs); 'unlit' the splat without lighting or
+//              shadow (what the lighting costs on the terrain) — diagnostics, never in play
+//   sunLambert (trade-off, off) the sun lights the terrain without its specular term (GGX): diffuse only
+export const TERRAIN_SHADE = { grassSkip: true, nrmVarying: false, diag: null, sunLambert: false };
+const MATS = new Set();   // (the terrains' splat materials: a switch marks them for a new program)
+export function setTerrainShade(k, v) { if (TERRAIN_SHADE[k] === v) return false; TERRAIN_SHADE[k] = v; for (const m of MATS) m.needsUpdate = true; return true; }
+const shadeKey = (S) => 'terrain-splat' + (S.grassSkip ? '' : '-g') + (S.nrmVarying ? '-n' : '') + (S.diag ? '-' + S.diag : '') + (S.sunLambert ? '-sl' : '');
+
+// The splat's shader text for the switches above: { vpre, vert, fpre, frag, light?, out? }.
+// Per terrain pixel (SHADE-COST, measured on Citadel's street at Medium on battery, SwiftShader counts: 1.91 reads of
+// the five tiles a pixel before, 1.28 after): the rock's 3 triplanar reads where its weight can be > 0, the grass where
+// its colour is used (it is also the wobble of the soil's and the paving's edges), the sand's 2, the dirt and the
+// cobbles where theirs is > 0, every read with explicit gradients so Direct3D keeps the branches (PERF-GPU 3).
+function splatShader(S) {
+  const nv = S.nrmVarying;
+  const vpre = 'attribute vec4 splat; attribute float splat2; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos;\n'
+    + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
+  const vert = 'vSplat = splat; vSplat2 = splat2; vWPos = (modelMatrix * vec4(position, 1.0)).xyz;\n'
+    + (nv ? 'vWNrm = normalize(mat3(modelMatrix) * normal);\n' : '#ifdef FLAT_SHADED\nvWNrm = normalize(mat3(modelMatrix) * normal);\n#endif\n');
+  const fpre = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos;\n'
+    + (nv ? 'varying vec3 vWNrm;\n' : '#ifdef FLAT_SHADED\nvarying vec3 vWNrm;\n#endif\n');
+  // SHADE-COST: the world normal from the view-space one three interpolates anyway (vNormal), turned back by the view's
+  // rotation: the same direction (a rotation commutes with the interpolation), and the weights below do not depend on
+  // its length. Three fewer interpolated values on every terrain pixel. (FLAT_SHADED, the 1997 look, has no vNormal.)
+  const wn = nv ? 'normalize(vWNrm)' : '\n#ifdef FLAT_SHADED\nnormalize(vWNrm)\n#else\n(vec4(vNormal, 0.0) * viewMatrix).xyz\n#endif\n';
+  let frag;
+  if (S.diag === 'implicit') frag = `
+          vec2 tuv = vWPos.xz * 0.22;
+          vec3 bw = pow(abs(${wn}), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
+          vec3 rock = texture2D(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14).rgb * bw.x
+                    + texture2D(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14).rgb * bw.z
+                    + texture2D(tRock, vWPos.xz * 0.14).rgb * bw.y;
+          vec4 sp = vSplat; float sp2 = vSplat2;
+          float rk = smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3);
+          float rest = 1.0 - sp.z;
+          float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
+          sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
+          vec3 gtex = texture2D(tGrass, tuv).rgb;
+          float ns = sp.x + sp.y + sp.w + sp2;
+          if (sp2 > 0.001 && ns - sp2 > 0.001) {
+            float pk = smoothstep(0.4, 0.6, sp2 / ns + (dot(gtex, vec3(0.333)) - 0.42) * 0.25);
+            float ok = ns * (1.0 - pk) / (ns - sp2);
+            sp.x *= ok; sp.y *= ok; sp.w *= ok; sp2 = ns * pk;
+          }
+          float gs = sp.x + sp.w;
+          if (gs > 0.001) {
+            float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;
+            float dk = smoothstep(0.42, 0.58, d);
+            sp.x = gs * (1.0 - dk); sp.w = gs * dk;
+          }
+          vec3 sandT = vec3(0.0);
+          if (sp.y > 0.003) {
+            vec3 sand1 = texture2D(tSand, tuv * 1.2).rgb;
+            vec3 sand2 = texture2D(tSand, mat2(0.8, 0.6, -0.6, 0.8) * tuv * 0.47 + vec2(0.37, 0.11)).rgb;
+            sandT = sand1 * (0.62 + 0.46 * sand2);
+          }
+          vec3 tex = gtex * sp.x + sandT * sp.y + rock * sp.z + texture2D(tDirt, tuv * 1.3).rgb * sp.w + texture2D(tCobble, vWPos.xz * 0.25).rgb * sp2;
+          diffuseColor.rgb *= tex;`;
+  else if (S.diag === 'grass') frag = 'diffuseColor.rgb *= texture2D(tGrass, vWPos.xz * 0.22).rgb;';
+  else frag = `
+          vec2 tuv = vWPos.xz * 0.22;
+          // PERF-GPU: each tile is read only where its share is not zero, with explicit gradients (textureGrad, from the
+          // world position's screen derivatives taken before any branch: the same mip level and anisotropy as before).
+          // Before, the three triplanar rock reads, the dirt and the cobbles were read on every terrain pixel (on
+          // Citadel's street ~half the screen) with their weight 0 on most of them; and Direct3D cannot keep a branch
+          // around implicit-gradient reads (texture2D), so the sand's branch ran everywhere too. Same pixels.
+          vec3 dPx = dFdx(vWPos), dPy = dFdy(vWPos);
+          vec2 gx = dPx.xz * 0.22, gy = dPy.xz * 0.22;
+          vec4 sp = vSplat; float sp2 = vSplat2;
+          // cliffs: triplanar rock so steep faces show undistorted strata
+          // (the rock's share below is 0 wherever the splat's rock weight is under 0.23: 0.38 minus the wobble's 0.15)
+          vec3 rock = vec3(0.0);
+          if (sp.z > 0.229) {
+            vec3 bw = pow(abs(${wn}), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
+            rock = textureGrad(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14, vec2(dPx.z, dPx.y * 1.25) * 0.14, vec2(dPy.z, dPy.y * 1.25) * 0.14).rgb * bw.x
+                 + textureGrad(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14, vec2(dPx.x, dPx.y * 1.25) * 0.14, vec2(dPy.x, dPy.y * 1.25) * 0.14).rgb * bw.z
+                 + textureGrad(tRock, vWPos.xz * 0.14, dPx.xz * 0.14, dPy.xz * 0.14).rgb * bw.y;
+          }
+          // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
+          // (GFX-LOOK-2: a shorter ramp, wobbled by the rock's own strata: on a steep slope one ~1 m grid cell spans
+          //  metres of screen, and 0.28–0.62 drew a soft green veil over the foot of every cliff)
+          float rk = sp.z > 0.229 ? smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3) : 0.0;
+          float rest = 1.0 - sp.z;
+          float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
+          sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
+          // crisp soil edges too (paths and town soil): the grass/soil share is re-split per pixel with a
+          // short ramp, wobbled by the grass texture so the edge looks painted, not ruled
+          float ns = sp.x + sp.y + sp.w + sp2;
+          ${S.grassSkip ? `// SHADE-COST: the grass is read only where its colour is used: its own share (sp.x > 0), or the wobble of the
+          // paving's edge or the soil's (both need a share other than the paving's: ns - sp2 > 0.001; without one, gs below
+          // is under 0.001 too). On the paving alone (62 % of the street's terrain pixels) it was read for nothing.
+          vec3 gtex = vec3(0.0);
+          if (ns - sp2 > 0.001 || sp.x > 0.0) gtex = textureGrad(tGrass, tuv, gx, gy).rgb;` : 'vec3 gtex = textureGrad(tGrass, tuv, gx, gy).rgb;'}
+          // GFX-LOOK-2: the paving's edge as crisp (it faded into the grass and soil over the ~1 m grid: a green smear
+          // round every street and the quay): its share re-split per pixel on the same kind of ramp, no extra read
+          if (sp2 > 0.001 && ns - sp2 > 0.001) {
+            float pk = smoothstep(0.4, 0.6, sp2 / ns + (dot(gtex, vec3(0.333)) - 0.42) * 0.25);
+            float ok = ns * (1.0 - pk) / (ns - sp2);
+            sp.x *= ok; sp.y *= ok; sp.w *= ok; sp2 = ns * pk;
+          }
+          float gs = sp.x + sp.w;
+          if (gs > 0.001) {
+            float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;
+            float dk = smoothstep(0.42, 0.58, d);
+            sp.x = gs * (1.0 - dk); sp.w = gs * dk;
+          }
+          // sand: a second, turned and coarser sample modulates the first so the tile's ripples never line up
+          // into rows or repeat at one visible interval (POLISH-AUDIT #16)
+          // (only where there is sand: elsewhere, Citadel's grass for one, it costs no texture reads at all; the weight
+          //  is near 0 at the borders, so the branch's edge never shows)
+          vec3 sandT = vec3(0.0);
+          if (sp.y > 0.003) {
+            vec3 sand1 = textureGrad(tSand, tuv * 1.2, gx * 1.2, gy * 1.2).rgb;
+            mat2 sr = mat2(0.8, 0.6, -0.6, 0.8);
+            vec3 sand2 = textureGrad(tSand, sr * tuv * 0.47 + vec2(0.37, 0.11), sr * gx * 0.47, sr * gy * 0.47).rgb;
+            sandT = sand1 * (0.62 + 0.46 * sand2);
+          }
+          vec3 tex = gtex * sp.x + sandT * sp.y + rock * sp.z;
+          if (sp.w > 0.0) tex += textureGrad(tDirt, tuv * 1.3, gx * 1.3, gy * 1.3).rgb * sp.w;
+          if (sp2 > 0.0) tex += textureGrad(tCobble, vWPos.xz * 0.25, dPx.xz * 0.25, dPy.xz * 0.25).rgb * sp2;
+          diffuseColor.rgb *= tex;`;
+  const R = { vpre, vert, fpre, frag };
+  // (diagnostic: the splat's colour as it is, tinted by the vertex colour, without any light or shadow)
+  if (S.diag === 'unlit') R.out = 'vec3 outgoingLight = diffuseColor.rgb;';
+  // (trade-off: the sun's light on the terrain without its specular highlight — the ground's roughness is 0.95, so the
+  //  highlight is a faint broad sheen; the sun's diffuse light and shadow as before)
+  if (S.sunLambert) {
+    const L = THREE.ShaderChunk.lights_fragment_begin, call = 'RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );';
+    const d = L.indexOf('getDirectionalLightInfo('), c = d > 0 ? L.indexOf(call, d) : -1;
+    // (three's order: point, spot, directional, then area and hemisphere lights: the first call after the directional
+    //  light's set-up is the sun's)
+    if (c > 0 && L.indexOf('getSpotLightInfo(', c) < 0 && L.indexOf('getPointLightInfo(', c) < 0) {
+      R.light =L.slice(0, c) + 'if ( directLight.visible ) reflectedLight.directDiffuse += saturate( dot( geometryNormal, directLight.direction ) ) * directLight.color * BRDF_Lambert( material.diffuseColor );' + L.slice(c + call.length);
+    }
+  }
+  return R;
+}
+
 export class Terrain {
   // squares (HEADING-LOAD-2): > 0 draws the tiles' cells in squares of that many cells a side, all in one BatchedMesh
   // whose squares three culls one by one against the view (the caller passes it only with WEBGL_multi_draw)
@@ -187,75 +331,20 @@ export class Terrain {
   }
 
   // Texture splatting: five painted tiles blended per vertex
-  // (grass, sand, rock, dirt, cobbles), tinted by the vertex colour.
+  // (grass, sand, rock, dirt, cobbles), tinted by the vertex colour. The shader's text: splatShader() below.
   _splatMaterial(mat) {
     const T = this.tex;
     const uniforms = { tGrass: { value: T.grass }, tSand: { value: T.sand }, tRock: { value: T.rock }, tDirt: { value: T.dirt }, tCobble: { value: T.cobble } };
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, uniforms);
-      sh.vertexShader = 'attribute vec4 splat; attribute float splat2; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec3 vWNrm;\n' +
-        sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vSplat = splat; vSplat2 = splat2; vWPos = (modelMatrix * vec4(position, 1.0)).xyz; vWNrm = normalize(mat3(modelMatrix) * normal);');
-      sh.fragmentShader = 'uniform sampler2D tGrass, tSand, tRock, tDirt, tCobble; varying vec4 vSplat; varying float vSplat2; varying vec3 vWPos; varying vec3 vWNrm;\n' +
-        sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-          vec2 tuv = vWPos.xz * 0.22;
-          // PERF-GPU: each tile is read only where its share is not zero, with explicit gradients (textureGrad, from the
-          // world position's screen derivatives taken before any branch: the same mip level and anisotropy as before).
-          // Before, the three triplanar rock reads, the dirt and the cobbles were read on every terrain pixel (on
-          // Citadel's street ~half the screen) with their weight 0 on most of them; and Direct3D cannot keep a branch
-          // around implicit-gradient reads (texture2D), so the sand's branch ran everywhere too. Same pixels.
-          vec3 dPx = dFdx(vWPos), dPy = dFdy(vWPos);
-          vec2 gx = dPx.xz * 0.22, gy = dPy.xz * 0.22;
-          vec4 sp = vSplat; float sp2 = vSplat2;
-          // cliffs: triplanar rock so steep faces show undistorted strata
-          // (the rock's share below is 0 wherever the splat's rock weight is under 0.23: 0.38 minus the wobble's 0.15)
-          vec3 rock = vec3(0.0);
-          if (sp.z > 0.229) {
-            vec3 bw = pow(abs(normalize(vWNrm)), vec3(4.0)); bw /= (bw.x + bw.y + bw.z);
-            rock = textureGrad(tRock, vec2(vWPos.z, vWPos.y * 1.25) * 0.14, vec2(dPx.z, dPx.y * 1.25) * 0.14, vec2(dPy.z, dPy.y * 1.25) * 0.14).rgb * bw.x
-                 + textureGrad(tRock, vec2(vWPos.x, vWPos.y * 1.25) * 0.14, vec2(dPx.x, dPx.y * 1.25) * 0.14, vec2(dPy.x, dPy.y * 1.25) * 0.14).rgb * bw.z
-                 + textureGrad(tRock, vWPos.xz * 0.14, dPx.xz * 0.14, dPy.xz * 0.14).rgb * bw.y;
-          }
-          // crisp rock edges (the cliff rim is a hard line in LBA2, not a fade)
-          // (GFX-LOOK-2: a shorter ramp, wobbled by the rock's own strata: on a steep slope one ~1 m grid cell spans
-          //  metres of screen, and 0.28–0.62 drew a soft green veil over the foot of every cliff)
-          float rk = sp.z > 0.229 ? smoothstep(0.38, 0.52, sp.z + (dot(rock, vec3(0.333)) - 0.5) * 0.3) : 0.0;
-          float rest = 1.0 - sp.z;
-          float kk = rest > 0.001 ? (1.0 - rk) / rest : 0.0;
-          sp = vec4(sp.x * kk, sp.y * kk, rk, sp.w * kk); sp2 *= kk;
-          // crisp soil edges too (paths and town soil): the grass/soil share is re-split per pixel with a
-          // short ramp, wobbled by the grass texture so the edge looks painted, not ruled
-          vec3 gtex = textureGrad(tGrass, tuv, gx, gy).rgb;
-          // GFX-LOOK-2: the paving's edge as crisp (it faded into the grass and soil over the ~1 m grid: a green smear
-          // round every street and the quay): its share re-split per pixel on the same kind of ramp, no extra read
-          float ns = sp.x + sp.y + sp.w + sp2;
-          if (sp2 > 0.001 && ns - sp2 > 0.001) {
-            float pk = smoothstep(0.4, 0.6, sp2 / ns + (dot(gtex, vec3(0.333)) - 0.42) * 0.25);
-            float ok = ns * (1.0 - pk) / (ns - sp2);
-            sp.x *= ok; sp.y *= ok; sp.w *= ok; sp2 = ns * pk;
-          }
-          float gs = sp.x + sp.w;
-          if (gs > 0.001) {
-            float d = sp.w / gs + (dot(gtex, vec3(0.333)) - 0.42) * 0.35;
-            float dk = smoothstep(0.42, 0.58, d);
-            sp.x = gs * (1.0 - dk); sp.w = gs * dk;
-          }
-          // sand: a second, turned and coarser sample modulates the first so the tile's ripples never line up
-          // into rows or repeat at one visible interval (POLISH-AUDIT #16)
-          // (only where there is sand: elsewhere, Citadel's grass for one, it costs no texture reads at all; the weight
-          //  is near 0 at the borders, so the branch's edge never shows)
-          vec3 sandT = vec3(0.0);
-          if (sp.y > 0.003) {
-            vec3 sand1 = textureGrad(tSand, tuv * 1.2, gx * 1.2, gy * 1.2).rgb;
-            mat2 sr = mat2(0.8, 0.6, -0.6, 0.8);
-            vec3 sand2 = textureGrad(tSand, sr * tuv * 0.47 + vec2(0.37, 0.11), sr * gx * 0.47, sr * gy * 0.47).rgb;
-            sandT = sand1 * (0.62 + 0.46 * sand2);
-          }
-          vec3 tex = gtex * sp.x + sandT * sp.y + rock * sp.z;
-          if (sp.w > 0.0) tex += textureGrad(tDirt, tuv * 1.3, gx * 1.3, gy * 1.3).rgb * sp.w;
-          if (sp2 > 0.0) tex += textureGrad(tCobble, vWPos.xz * 0.25, dPx.xz * 0.25, dPy.xz * 0.25).rgb * sp2;
-          diffuseColor.rgb *= tex;`);
+      const S = splatShader(TERRAIN_SHADE);
+      sh.vertexShader = S.vpre + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n' + S.vert);
+      sh.fragmentShader = S.fpre + sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n' + S.frag);
+      if (S.light) sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_begin>', S.light);
+      if (S.out) sh.fragmentShader = sh.fragmentShader.replace('vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;', S.out);
     };
-    mat.customProgramCacheKey = () => 'terrain-splat';
+    mat.customProgramCacheKey = () => shadeKey(TERRAIN_SHADE);
+    MATS.add(mat); mat.addEventListener('dispose', () => MATS.delete(mat));
   }
 
   // Heights packed into an 8-bit texture (range -10..20m) for the water shader's shore foam.

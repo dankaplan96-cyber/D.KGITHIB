@@ -1614,6 +1614,33 @@ They give exact counts and pixels only, never GPU time.
 Not verified: the laptop's GPU ms for any change (run `electron-bench.mjs full … battery follow` for the arrival
 route and the hamalayi route against 0.43.2). Also not verified: the trade-offs' look on the user's screen.
 
+### SHADE-COST: the street's per-pixel material cost (docs/lba3-performance/STABILIZATION.md "SHADE-COST")
+
+This branch (shade-cost) on port 8742, SwiftShader, 1366×768, Medium, battery profile, full resolution held. Views
+(SHADE-COST/probes/views.js): the street at 3 headings with the benchmark's orbit camera, Twinsen's house's
+surroundings at 2 with the Follow camera. Each change is undone on the SAME frozen frame (q_ab.js) and along the
+benchmark's routes frame by frame (q_motion.js). Exact counts and pixels only, never GPU time.
+
+| Check | How | Result |
+|---|---|---|
+| What the terrain reads | q_class.js: the terrain shader's branches per pixel | street 1.97–2.08 tile reads a terrain pixel, 58–60 % of them paving alone (grass read for nothing); house 1.24–1.32 (results/class-reads-per-pixel.json) |
+| Lamps and sun | q_reach.js | the 2 lamps reach nothing on 23–45 % of the street's lit pixels, one on 28–59 %; house 96–100 % nothing; 2.7–26.8 % of lit pixels face away from the sun (results/lamp-reach.json) |
+| Terrain distance | q_far.js | 2.5–5.5 % of the street's terrain pixels beyond 40 m (results/terrain-distance.json) |
+| 7 changes, same frame | q_ab.js, each undone alone | grass skip, lamps, indirect specular, sun facing, luma roots: 0 px at all 5 views; world normal 0 px (1 px at 1 level at one view); output pass own pixel 15–40 px at 1 level (results/pixel-ab-still.txt) |
+| In motion, full resolution | q_motion.js, 24 frames each of the street, interior and combat routes | all undone: 8–36 px a frame, max 5 / 2 / 1 levels; all but the output pass's own pixel undone: 0 px in all 72 frames (results/pixel-ab-motion.txt) |
+| In motion, resolution ×0.9 | q_motion.js W_SCALE=0.9 (filtered taps, sharpening) | all undone: 0 px in all 72 frames |
+| Programs | q_retro.js | the 1997 look and every switch compile without errors (results/programs-retro.txt); no new program in play (perfbudget below) |
+| Trade-offs (OFF) | q_ab.js with images | terrain sun without specular 25–65 % of pixels, max 97–125 levels; opaque front to back 0–64 px, max 48–200 levels (results/tradeoffs/) |
+
+| Test | Verdict |
+|---|---|
+| drawcalls, perfbudget (0 new programs on every route at Low, Medium and High), display, chapter1, transitions, camfollow, worldfit | PASS ×7 |
+| well-town, travel, zislands, desert-life, opening, house | PASS ×6 |
+| combat (regression check: Medium combat) | PASS |
+
+Not verified: the laptop's GPU ms for every change (`electron-bench.mjs full … battery`: the street breakdown's
+SHADE-COST lines against 'as is'), and whether Direct3D 11's compiler keeps the new branches.
+
 ### Not tested / blocked
 - HOUSE-FIX on a real GPU and by the user's eye: NOT DONE (SwiftShader captures; self-reviewed, no independent review).
 - LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).
