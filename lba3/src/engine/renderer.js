@@ -37,6 +37,32 @@ export const BATTERY_MIN_SCALE = 0.85;
   else console.warn('lamp skip: three.js lights chunk not as expected; left as it is');
 }
 
+// SHADE-COST: two pieces of three's lighting that every lit pixel ran for nothing, removed with the same result.
+// 1. Lamps out of reach. three sets up each point light in full (direction, distance, the decay's pow, the cut-off's
+//    pow4) on every lit pixel before it finds the light's colour zero there (beyond its `distance`, or an unused slot of
+//    the light pool: intensity 0). Now a squared-distance test comes first and the set-up runs only where the lamp can
+//    light the pixel: where it cannot, three's own code gives exactly zero (beyond the cut-off its falloff is
+//    clamp(1 - (d/c)^4) = 0; the test keeps a 0.01 % margin of the reach), so every pixel is the same. On the street at
+//    Medium the 2–4 lamps reach a small part of the screen. `SC_LAMP_OLD` (a material define): as before.
+// 2. Indirect specular without an environment map. three always runs RE_IndirectSpecular_Physical (the multiscattering
+//    fit and its divisions); without an env map its three inputs are zero vectors (the hemisphere light goes into the
+//    diffuse irradiance, not the IBL one), so it adds exactly zero to every pixel. Now it runs only with an env map
+//    (the game has none). `SC_IBL_OLD`: as before.
+{
+  const C = THREE.ShaderChunk, beg = C.lights_fragment_begin, pars = C.lights_pars_begin, end = C.lights_fragment_end;
+  const info = '\t\tgetPointLightInfo( pointLight, geometryPosition, directLight );', decl = 'uniform PointLight pointLights[ NUM_POINT_LIGHTS ];';
+  const i = beg.indexOf(info), j = i > 0 ? beg.indexOf('\n\t}\n\t#pragma unroll_loop_end', i) : -1, sp = beg.indexOf('getSpotLightInfo(');
+  if (i > 0 && j > i && (sp < 0 || j < sp) && beg.indexOf(info, i + 1) < 0 && pars.split(decl).length === 2) {
+    C.lights_pars_begin = pars.replace(decl, decl + '\n\tbool scLampReaches( const in PointLight L, const in vec3 p ) {\n\t\tvec3 v = L.position - p;\n'
+      + '\t\treturn L.color != vec3( 0.0 ) && ( L.distance <= 0.0 || dot( v, v ) < L.distance * L.distance * 1.0002 );\n\t}');
+    C.lights_fragment_begin = beg.slice(0, i) + '\t\t#ifndef SC_LAMP_OLD\n\t\tif ( scLampReaches( pointLight, geometryPosition ) ) {\n\t\t#endif\n' + beg.slice(i, j)
+      + '\n\t\t#ifndef SC_LAMP_OLD\n\t\t}\n\t\t#endif' + beg.slice(j);
+  } else console.warn('lamp reach: three.js lights chunks not as expected; left as they are');
+  const ind = '#if defined( RE_IndirectSpecular )\n\tRE_IndirectSpecular(';
+  if (end.split(ind).length === 2) C.lights_fragment_end = end.replace(ind, '#if defined( RE_IndirectSpecular ) && ( defined( USE_ENVMAP ) || defined( SC_IBL_OLD ) )\n\tRE_IndirectSpecular(');
+  else console.warn('indirect specular: three.js lights chunk not as expected; left as it is');
+}
+
 // PERF-BATTERY: the battery profile's shadow filter. three's PCF (Medium) reads the shadow map 17 times a pixel over
 // ±radius texels: on the user's Vega 8 on battery that filter is ~4.4 ms of the street's 37 (its "shadow filter basic"
 // line). The battery profile switches the map to three's BasicShadowMap, which nothing else in the game uses, and its
@@ -216,6 +242,12 @@ void main() {
 #ifdef EDGE_OLD
   gl_FragColor = texture2D( tDiffuse, uv );
 #else
+  // SHADE-COST: at full resolution (exact) the pixel itself is read by index too, as its neighbours are (PERF-GPU):
+  // the one filtered read left on every pixel was this one, a bilinear read of a 64-bit half-float texel at its own
+  // centre (the texel itself). EDGE_CENTRE_OLD: as before (setOldCentre)
+#ifndef EDGE_CENTRE_OLD
+  if ( exact > 0.0 ) gl_FragColor = texelFetch( tDiffuse, ivec2( gl_FragCoord.xy ), 0 ); else
+#endif
   gl_FragColor = textureLod( tDiffuse, uv, 0.0 );
 #endif
   if ( edgeAA > 0.0 || sharpen > 0.0 ) {
@@ -268,7 +300,8 @@ export class Renderer {
     r.shadowMap.type = THREE.PCFSoftShadowMap;
     // PERF-CPU: three's own opaque order, except that a texture-array batch (drawbatch.js) sorts where its pieces' twins
     // did (`__sortId`), so coincident faces show as before
-    r.setOpaqueSort((a, b) => {
+    // (SHADE-COST: kept as `opaqueSort`, for the benchmark's front-to-back price line: benchgpu.js)
+    r.setOpaqueSort(this.opaqueSort = (a, b) => {
       if (a.groupOrder !== b.groupOrder) return a.groupOrder - b.groupOrder;
       if (a.renderOrder !== b.renderOrder) return a.renderOrder - b.renderOrder;
       const ia = a.object.__sortId ?? a.material.id, ib = b.object.__sortId ?? b.material.id;
@@ -402,9 +435,13 @@ export class Renderer {
 
   // PERF-GPU: the output pass's edge smoothing as it was before (implicit-LOD taps in branches), for the laptop's A/B
   // (benchgpu.js; ?oldedges). Another program: the caller prepares it (warmPassPrograms).
-  setOldEdges(on) {
+  setOldEdges(on) { this._edgeOld = !!on; this._outDefs(); }
+  // SHADE-COST: the output pass's own pixel read through the filter as before (EDGE_CENTRE_OLD), for the laptop's A/B
+  setOldCentre(on) { this._centreOld = !!on; this._outDefs(); }
+  _outDefs() {
     const m = this.output?.material; if (!m || !this._outFS) return;
-    const fs = on ? this._outFS.replace('float lumE(', '#define EDGE_OLD\nfloat lumE(') : this._outFS;
+    const d = (this._edgeOld ? '#define EDGE_OLD\n' : '') + (this._centreOld ? '#define EDGE_CENTRE_OLD\n' : '');
+    const fs = d ? this._outFS.replace('float lumE(', d + 'float lumE(') : this._outFS;
     if (m.fragmentShader !== fs) { m.fragmentShader = fs; m.needsUpdate = true; }
   }
 

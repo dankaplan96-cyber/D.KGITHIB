@@ -17,6 +17,7 @@ import { arrayTextures } from './texarray.js';
 import { textures } from './textures.js';
 import { LOD_DETAIL, CULL_INST, setCullInstFar, updateKitLod } from '../game/kit.js';
 import { setViewInst } from './viewinst.js';
+import { TERRAIN_SHADE, setTerrainShade } from './terrain.js';
 
 export function gpuGroupOf(G, o, m) {
   const E = G.env;
@@ -72,6 +73,23 @@ const plainFor = (id, groups) => ({
   id, apply(G) { this._undo = filterDraws(G, (pass, g, o, m) => (pass === 'main' && (groups === '*' || groups.includes(g)) && !m.isShaderMaterial ? plain(m) : true)); }, undo() { this._undo?.(); this._undo = null; },
 });
 
+// SHADE-COST: a terrain shader switch (terrain.js TERRAIN_SHADE) for the variant, its program prepared in the warm-up
+const terrainLine = (id, k, v) => ({
+  id, apply(G) { this._v = TERRAIN_SHADE[k]; setTerrainShade(k, v); G.warmGraphics?.(); }, undo(G) { setTerrainShade(k, this._v); G.warmGraphics?.(); },
+});
+// a define on every lit material in the scene (renderer.js SC_LAMP_OLD / SC_IBL_OLD: three's code as before); each
+// material's program is made again with it in the variant's warm-up, and the old ones are taken back on undo
+function sceneMaterials(G) {
+  const out = new Set();
+  G.scene.traverse((o) => { for (const m of [o.material].flat()) if (m && !m.isShaderMaterial && !m.isRawShaderMaterial) out.add(m); });
+  return out;
+}
+const defineLine = (id, name) => ({
+  id,
+  apply(G) { this._m = sceneMaterials(G); for (const m of this._m) { m.defines = { ...(m.defines || {}), [name]: '' }; m.needsUpdate = true; } G.warmGraphics?.(); },
+  undo(G) { for (const m of this._m || []) { if (m.defines) { delete m.defines[name]; m.needsUpdate = true; } } this._m = null; G.warmGraphics?.(); },
+});
+
 export const GPU_VARIANTS = [
   skip('GPU: no trees/bushes/rocks', ['trees']),
   skip('GPU: no grass/flowers', ['grass']),
@@ -114,6 +132,24 @@ export const GPU_VARIANTS = [
   { id: 'GPU: grass/flowers half beyond 28 m (trade-off)', apply(G) { G.world?.setSmallThin?.({ from: 28, keep: 0.5 }); }, undo(G) { G.world?.setSmallThin?.(null); } },
   // the static shadow cache's depth into the live map by a framebuffer blit, as before (shadowcache.js copyDepth)
   { id: 'GPU: shadow cache copy by blit (as before)', apply(G) { const C = G.shadowCache; if (C) { C.depthCopy = 'blit'; C.drop(); } }, undo(G) { const C = G.shadowCache; if (C) { C.depthCopy = 'draw'; C.drop(); } } },
+  // SHADE-COST: this round's image-preserving changes undone one at a time (compare each with 'as is': what it saved)
+  terrainLine('GPU: terrain grass read on every pixel (as before)', 'grassSkip', false),
+  terrainLine('GPU: terrain world normal as its own varying (as before)', 'nrmVarying', true),
+  defineLine('GPU: lamps set up on every lit pixel (as before)', 'SC_LAMP_OLD'),
+  defineLine('GPU: indirect specular without env map (as before)', 'SC_IBL_OLD'),
+  { id: 'GPU: output pass own pixel filtered (as before)', apply(G) { G.renderer.setOldCentre(true); warmPassPrograms(G.renderer.renderer, G.renderer.composer); }, undo(G) { G.renderer.setOldCentre(false); } },
+  // what the terrain's 3.4 ms (the laptop's 'flat terrain material') is made of (diagnostics: never in play; compare
+  // with 'as is'): the reads as before PERF-GPU 3 (every tile, implicit gradients: is textureGrad dearer there?), one
+  // grass read and no splat (the splat's cost), the splat without lighting or shadow (the lighting's cost)
+  terrainLine('GPU: terrain reads as before PERF-GPU 3 (diagnostic)', 'diag', 'implicit'),
+  terrainLine('GPU: terrain one grass read, no splat (diagnostic)', 'diag', 'grass'),
+  terrainLine('GPU: terrain unlit (diagnostic)', 'diag', 'unlit'),
+  // (trade-offs, not in play: the sun's specular sheen off the terrain (roughness 0.95); every opaque draw front to
+  //  back, ignoring the material grouping and the draw batches' kept order (scenery overdraw: 0.53 fragments a pixel for
+  //  0.37 covered on the street; coincident faces may change))
+  terrainLine('GPU: terrain sun without specular (trade-off)', 'sunLambert', true),
+  { id: 'GPU: opaque front to back (trade-off)', apply(G) { const r = G.renderer.renderer; r.setOpaqueSort((a, b) => a.groupOrder - b.groupOrder || a.renderOrder - b.renderOrder || a.z - b.z || a.id - b.id); },
+    undo(G) { G.renderer.renderer.setOpaqueSort(G.renderer.opaqueSort); } },
   // the post passes
   { id: 'GPU: no output pass (scene to screen)', apply(G) { G.renderer.output.enabled = false; }, undo(G) { G.renderer.output.enabled = true; } },
   { id: 'GPU: output edges as before (implicit LOD)', apply(G) { G.renderer.setOldEdges(true); warmPassPrograms(G.renderer.renderer, G.renderer.composer); }, undo(G) { G.renderer.setOldEdges(false); } },
