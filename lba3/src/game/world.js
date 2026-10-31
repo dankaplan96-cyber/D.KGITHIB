@@ -686,6 +686,10 @@ export function* buildWorldSteps(parentScene) {
       if (!P.im) {
         const cap = P.tiles.reduce((a, t) => a + t.instanceMatrix.count, 0);
         P.im = new THREE.InstancedMesh(P.g, P.m, Math.max(1, cap)); P.im.castShadow = false; P.im.receiveShadow = true; P.im.count = 0; P.im.name = 'smallPool';
+        // (HEADING-LOAD: the pool holds only what is in view (viewPools, below), refilled at the render itself; three's own
+        //  sphere test and drawcull.js's BoxCull — which runs before the refill, with the last frame's content — are left
+        //  out: either could hide a pool for a frame just as squares that came into view were put into it)
+        P.im.frustumCulled = !SMALL_VIEW.on;
         if (P.tiles.some((t) => t.instanceColor)) P.im.setColorAt(0, new THREE.Color(1, 1, 1));
         scene.add(P.im);
       }
@@ -753,7 +757,7 @@ export function* buildWorldSteps(parentScene) {
     }
     if (any) fillPools();
   };
-  W.setSmallView = (on) => { SMALL_VIEW.on = !!on; for (const P of W.smallPools) { P.dirty = true; for (const t of P.tiles) if (t.userData.view) t.userData.view.mask = t.userData.view.all; } fillPools(); };
+  W.setSmallView = (on) => { SMALL_VIEW.on = !!on; for (const P of W.smallPools) { if (P.im) P.im.frustumCulled = !SMALL_VIEW.on; P.dirty = true; for (const t of P.tiles) if (t.userData.view) t.userData.view.mask = t.userData.view.all; } fillPools(); };
   { const before = parentScene.onBeforeRender; parentScene.onBeforeRender = function (r, sc, camera, ...a) { before.call(this, r, sc, camera, ...a); W.viewPools(camera); }; }
   const mkInst = (geo, m, list, shadow = true, colorFn = null, geoLo = null, small = false) => {
     const tiles = new Map();

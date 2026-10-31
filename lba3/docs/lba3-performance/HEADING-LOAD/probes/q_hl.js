@@ -28,7 +28,7 @@
       const o2 = (tally.o[pass + ' ' + own(obj)] ??= [0, 0]); o2[0]++; o2[1] += t1 * n;
       if (pass === 'M') {
         const cp = cam.getWorldPosition(new THREE.Vector3()), B = (tally.bins[g] ??= [0, 0, 0, 0, 0]);
-        if (obj.isInstancedMesh) { if (!geo.boundingSphere) geo.computeBoundingSphere(); _fr.setFromProjectionMatrix(_pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)); const IV = (tally.iv[g] ??= [0, 0]);
+        if (obj.isInstancedMesh) { if (!geo.boundingSphere) geo.computeBoundingSphere(); _fr.setFromProjectionMatrix(_pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse)); const IV = (tally.iv[window.IVBY ? `${own(obj)} #${mat.color?.getHexString?.() ?? mat.type}${obj.castShadow ? ' cast' : ''}` : g] ??= [0, 0]);
           for (let i = 0; i < obj.count; i++) { obj.getMatrixAt(i, _m); _m.premultiply(obj.matrixWorld); _v.copy(geo.boundingSphere.center).applyMatrix4(_m); B[binOf(_v.distanceTo(cp))] += t1; _sp.set(_v, geo.boundingSphere.radius * _m.getMaxScaleOnAxis()); IV[0] += t1; if (_fr.intersectsSphere(_sp)) IV[1] += t1; } }
         else { if (!geo.boundingSphere) geo.computeBoundingSphere(); _v.copy(geo.boundingSphere.center).applyMatrix4(obj.matrixWorld); B[binOf(_v.distanceTo(cp))] += t1; }
       }
