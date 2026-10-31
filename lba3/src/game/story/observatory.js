@@ -102,9 +102,10 @@ export class Observatory extends ChapterBase {
     if (silent) return;
     g.audio.play('shard'); g.audio.cue?.('revelation');
     const beat = this.crystalBeat();   // (REVEAL-CAMS: the camera closes on Twinsen and the lit crystal; null with ?nocine and in the tests)
-    this.chain([['narrator', 'c7_lit'], ['sendell', 'c7_sendell_1'], ['hero', 'c7_tw_s1'], ['sendell', 'c7_sendell_2'], ['sendell', 'c7_sendell_3'], ['hero', 'c7_tw_s2'], ['sendell', 'c7_sendell_4'], ['keeper', 'c7_keeper_4']], () => {
+    this.chain([['narrator', 'c7_lit'], ['sendell', 'c7_sendell_1'], ['hero', 'c7_tw_s1'], ['sendell', 'c7_sendell_2'], ['sendell', 'c7_sendell_3'], ['sendell', 'ml_c7_gift'], ['hero', 'c7_tw_s2'], ['sendell', 'c7_sendell_4'], ['keeper', 'c7_keeper_4']], () => {
       beat?.release();
       g.audio.endCue?.(); f.c7_sendell = true; g.updateObjective(); g.save(false);
+      this.story.magic.grant(3);   // MAGIC-LEVELS (story/magic.js): Sendell's light in the ball: level 3, the red ball
     }, (i, id) => { if (id === 'keeper') beat?.release(); });   // (her words done: the view eases back as Sefa answers)
   }
   // REVEAL-CAMS: a medium two-shot of Twinsen (wherever the last mirror left him) and Sendell's crystal, held through her

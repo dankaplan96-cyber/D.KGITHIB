@@ -45,7 +45,8 @@ fight; Aggressive mode's Space still attacks with the same moves.
     returns at about 10 m/s, speeding up (+22 m/s²) so a far miss comes back quickly.
   - How far and how high: "The ball's throw" below (each behaviour its own LBA2 arc; Modern aims at a point; the
     automatic aim at enemies kept).
-  - Its colour shows the magic level: yellow, green, red, and at level 4 the fire ball.
+  - Its colour shows the magic level: yellow, green, red, and at level 4 the fire ball. Only the story raises the
+    level (never a shop): 1 from the ball, then three story moments (docs/lba3-production/MAGIC_LEVELS.md).
   - It brings back a bonus it touches (coins, hearts, flasks, clovers, keys, crystals), except a heart while life
     is full or a flask while magic is full (CONTAINERS: those stay on the ground).
   - Damage: the magic level (at least 1), +1 when charged (LBA2: 10/20/30/40 by level).

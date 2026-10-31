@@ -24,6 +24,7 @@ import { WorkshopLife } from './workshop.js';
 import { KeshLife } from './kesh.js';
 import { ZeelichLife } from './zeelife.js';
 import { Arsenal } from './arsenal.js';
+import { MagicLevels } from './magic.js';
 import '../text/common.js';
 
 // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
@@ -47,6 +48,7 @@ export class Story {
     this.kesh = new KeshLife(this);   // Kesh on Desert Island twelve years on: the cool room's wind-catcher (kesh.js)
     this.zlife = new ZeelichLife(this);   // Zeelich's street twelve years on: the watch house bakery (zeelife.js)
     this.arsenal = new Arsenal(this);   // weapons and gadgets in the world: stalls, gifts, dark places (arsenal.js)
+    this.magic = new MagicLevels(this);   // MAGIC-LEVELS: the story's magic levels, never sold (magic.js)
   }
   // position of the chapter in progress for a set of flags (by key when the save has one)
   indexOf(f = this.f) {
@@ -86,6 +88,7 @@ export class Story {
     this.f.chapter = i; this.f.chapterKey = ORDER[i];
     const c = this.cur;
     for (const id of CHAPTER_AREAS[c.key] || []) g.regions?.ensure(id, 'chapter');   // (built already when a scene change led here)
+    this.magic.catchUp();   // (MAGIC-LEVELS: a step behind him that he hasn't had — normally none)
     this.refreshCast();
     // (the epilogue's card shows only its title)
     const n = NUMBER[c.key];
@@ -189,7 +192,7 @@ export class Story {
   canExit(room, to) { return this.cur.canExit(room, to); }
   interactables(consider, dist) { this.cur.interactables(consider, dist); this.isles.interactables(consider, dist); this.life.interactables(consider, dist); this.workshop.interactables(consider, dist); this.kesh.interactables(consider, dist); this.zlife.interactables(consider, dist); this.arsenal.interactables(consider, dist); }
   interact(it) { return this.cur.interact(it) || this.isles.interact(it) || this.life.interact(it) || this.workshop.interact(it) || this.kesh.interact(it) || this.zlife.interact(it) || this.arsenal.interact(it) || this.chapters[0].baseInteract(it); }
-  talk(npc) { if (this.citizens.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
+  talk(npc) { if (this.citizens.talkFirst(npc) || this.life.talkFirst(npc) || this.workshop.talkFirst(npc) || this.kesh.talkFirst(npc) || this.zlife.talkFirst(npc) || this.arsenal.talkFirst(npc) || this.magic.talkFirst(npc)) return; if (!this.cur.talk(npc) && !this.life.talk(npc)) this.chapters[0].baseTalk(npc); }
   ballHit(p) { return this.cur.ballHit(p); }
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
@@ -204,6 +207,7 @@ export class Story {
     this.kesh.applyFlags();
     this.zlife.applyFlags();
     this.arsenal.applyFlags();
+    this.magic.catchUp();   // (MAGIC-LEVELS: a save from before: the levels its chapter has given; never lowered)
     this.refreshCast();
   }
   afterEnding() { this.cur.afterEnding?.(); }
