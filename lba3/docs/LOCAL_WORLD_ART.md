@@ -81,6 +81,19 @@ cannot time the GPU), you can measure real GPU and frame times here. Use the LBA
 **Collisions and walk routes:** don't change them. If a moved prop changes collision, say so, and run the cloud's
 tests listed in `lba3/tests` that cover that area (chapter1, house, transitions, camfollow, occluders).
 
+## The LBA1/LBA2 references (the user supplied them for inspiration: the characters and the world itself)
+The user gave the cloud session their own GOG game files: BODY/ANIM/FILE3D (characters), the islands' ILE/OBL
+(CITADEL, DESERT, OTRINGAL, KNARTAS, …), SCENE, INVOBJ, SPRITES, RESS, HOLOMAP, LBA1's LBA_*.HQR, plus their
+`LBA2_Visual_Reference.pdf`. The same files are on this laptop (the GOG install of LBA2 and LBA1, and wherever the user
+keeps the PDF): ask the user for the folders. Read them in place, extract only into a scratch folder outside the repo.
+What the project already measured from them (numbers and descriptions only):
+- `tools/lba-source/` (lbadata.py: HQR/BODY/ANIM/ILE/OBL readers; measure.py, contours.py, inventory.py, studyrender.py)
+  and `tools/lba2-islands.py` (the islands' heights and decor → `assets/lba2/islands/*.json`)
+- `docs/LBA2_SOURCE_NOTES.md`, `docs/LBA2_MEASUREMENTS.md`, `docs/LBA2_VISUAL_NOTES.md`, `docs/LBA1_CATALOGUE.md`,
+  `docs/WORLD_SIMILARITY.md`, `src/game/citadel-layout.js` (the Citadel's original layout: houses, doors, props)
+Judge composition at the original's gameplay camera with renders of these original scenes (studyrender.py), kept out
+of the repo; the pictures shown to the user are Citadel only.
+
 ## Start
 
 1. Read the brief, `docs/LBA2_VISUAL_NOTES.md`, `docs/VISUAL_REMASTER.md`, `docs/WORLD_SIMILARITY.md`,
