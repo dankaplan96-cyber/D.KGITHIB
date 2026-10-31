@@ -213,3 +213,29 @@ to the user).
 | wing2 | `wall: 'plaster', tint: '#f4ead8'` | `wall: 'stone', tint: '#f4f0e8'` |
 
 - **Cost:** none expected (the same texture other houses already use).
+
+---
+
+## WA-6 · Citadel trees: broader crowns · Approved (user, 31.10.2026: standing approval)
+
+Prototyped on the laptop on top of WA-1 to WA-5 (pictures: `tools/testlab/runs/ba-trees.jpg` on the laptop, sent to
+the user).
+
+- **Why:** the original LBA2 Citadel's trees have broad, chunky crowns. Measured from the original's models: round
+  3.2 m wide against our 2.7, tall 3.0 against 2.2, palm 3.9 against 3.1. Ours read thin at the gameplay camera.
+- **File:** `src/game/world.js`. The tree instances are widened across, with their height kept. It is the same
+  geometry and the same instances: only their scale changes.
+  1. Just above `const mkInst = (geo, m, list, shadow = true, colorFn = null, geoLo = null, small = false) => {` add:
+     ```js
+       // (WORLD-ART-6: LBA2's Citadel trees have broad, chunky crowns: round 3.2 m wide against our 2.7, tall 3.0 against 2.2,
+       //  measured from the original's models; the crown (and trunk) widened across, the height kept)
+       const CROWN = { round: 1.18, tall: 1.3, fruit: 1.15 };
+     ```
+  2. In the batched path:
+     - before: `_bs.setScalar(t.s)`
+     - after: `_bs.set(t.s * (CROWN[t.kind] ?? 1), t.s, t.s * (CROWN[t.kind] ?? 1))`
+  3. In the instanced path:
+     - before: `o.scale.setScalar(t.s)`
+     - after: `o.scale.set(t.s * (CROWN[t.kind] ?? 1), t.s, t.s * (CROWN[t.kind] ?? 1))`
+- **Unchanged:** bushes and pines (no `kind` in the table, so factor 1), tree colliders and positions.
+- **Check:** wider crowns hide a little more from the camera. Run the camfollow and occluders tests.
