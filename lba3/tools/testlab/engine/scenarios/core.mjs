@@ -43,7 +43,7 @@ export const STREET_START = { x: -46, z: 2, a: Math.PI / 2 };
 const LOOP = [...hold('ArrowUp', 0, 3), ...hold('ArrowRight', 3, 4), ...hold('ArrowUp', 4, 7), ...hold('ArrowRight', 7, 8), ...hold('ArrowUp', 8, 11),
   ...hold('ArrowRight', 11, 12), ...hold('ArrowUp', 12, 15), ...hold('ArrowRight', 15, 16), ...hold('ArrowUp', 16, 20)];
 export const streetTraversal = {
-  id: 'street-traversal', title: 'Street traversal (Citadel square)', group: 'performance', suites: ['quick', 'full'], session: 'warm', timeoutS: 300,
+  id: 'street-traversal', title: 'Street traversal (Citadel square)', group: 'performance', suites: ['quick', 'full', 'art'], session: 'warm', timeoutS: 300,
   // set up through the game's API (a teleport to the start, as the benchmark does); the walk itself is real input
   method: { realInput: true, testApi: true, injectedState: true, preloadedAssets: false },
   async run(ctx) {

@@ -11,3 +11,5 @@ import { NPC_SURVEY } from './npcs.mjs';
 SCENARIOS.push(...DIAGNOSE, ...NPC_SURVEY);
 import { SWEEP } from './sweep.mjs';
 SCENARIOS.push(...SWEEP);
+import { ART } from './art.mjs';
+SCENARIOS.push(...ART);
