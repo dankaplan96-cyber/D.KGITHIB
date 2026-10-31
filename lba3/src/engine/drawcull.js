@@ -45,7 +45,11 @@ const ownUMW = (o) => o.updateMatrixWorld !== BASE_UMW && o.updateMatrixWorld !=
 //  came from the update below, so `__mwF` and `__visF` are this frame's)
 // (PERF-SUBMIT: `casters`, the frame's shown casters' subtrees (above), valid while `castersF` is this frame's; `walk`:
 //  off gives three's whole-scene walk in the live shadow pass, the A/B switch)
-export const MW = { cached: true, frame: 0, ok: false, casters: [], castersF: -1, walk: true };
+// (CPU-WALK: `frozen` off gives PERF-CPU's walk of every shown object, the A/B switch (`?nofreeze`); `epoch` moves when
+//  an update ran without the frozen subtrees' checks, which then are dropped; `check`: `?walkcheck`'s counts, below)
+const QS = typeof location !== 'undefined' ? location.search : '';
+export const MW = { cached: true, frame: 0, ok: false, casters: [], castersF: -1, walk: true, frozen: !/[?&]nofreeze/.test(QS), epoch: 0,
+  check: /[?&]walkcheck/.test(QS) || globalThis.__walkcheck ? { frames: 0, compared: 0, bad: 0, casters: 0, castersBad: 0, pieces: 0, piecesBad: 0, samples: [] } : null };
 const _mwT = new THREE.Matrix4();
 // PERF-SUBMIT: `col` (the shown-world update only): the frame's shadow casters are listed on the way — each shown object
 // that may cast (a mesh, line or points with castShadow) and is not under one already listed, in three's own walk order;
@@ -101,32 +105,305 @@ function shownTree(o, force, F, S, all = false, col = null) {
   }
 }
 
+// CPU-WALK: frozen subtrees. The update above still visits every shown object every frame to find the few that changed:
+// on Citadel's street ~1 800 (Follow camera, Medium), ~1 300 of them scenery that never moves (the laptop's profile:
+// ~2 ms a frame in shownTree, diagnose-2026-10-31). A subtree in which nothing has changed for FREEZE_N updates — no
+// position, rotation or scale, no parent, no visibility, no recomputed world matrix, no object with its own matrix
+// update (a camera, audio) or a skinned body — is FROZEN: its parent keeps a record of it (`Frozen`, one per parent, a
+// "range" per frozen child: the child and everything under it through shown objects, in walk order), and from then on
+// the walk does not go into it. Instead the record is checked each update in one flat loop: each object's visibility
+// and its ten numbers against a copy (the vectors held directly: no recursion, no stores), and three's own
+// `matrixWorldNeedsUpdate` flag (getWorldPosition and the like recompose the matrices of every parent up to the scene:
+// such a world matrix is recomputed and compared, exactly as the walk's check does; one that differs ends the range).
+// Anything that differs ends that child's range at once and the walk goes into it in the same update, as before;
+// adding or removing a child anywhere in a range ends it too (Object3D.add / remove / attach, wrapped below: the only
+// ways the game changes the tree — no code of ours writes `children` or `parent` itself). So nothing relies on the
+// writers marking what they move: the same tests as the walk's, without the walk. The ranges also give what the walk
+// gave on the way: the shown casters in walk order (PERF-SUBMIT's list: each range keeps its shown drawables with where
+// their subtrees end, and lists those casting now) and, for drawbatch.js, `__frzBy`: the range an object is in, whose
+// `okF` is this update's frame when it was checked unchanged (the piece's world matrix and its parents' visibility as
+// they were when it was last checked in full). Same matrices, same lists, same pixels: `?walkcheck` compares every
+// update's world matrices, caster list and draw-batch pieces with a from-scratch reference. `?nofreeze` (MW.frozen =
+// false) is PERF-CPU's walk, the A/B switch.
+const FREEZE_N = 30;
+const P3 = THREE.Object3D.prototype;
+P3.__frz = undefined; P3.__frzIn = undefined; P3.__frzBy = undefined;   // (absent until set: the same lookups everywhere)
+const _cand = [];
+class Frozen {
+  constructor(owner) {
+    this.owner = owner; this.epoch = MW.epoch; this.ranges = []; this.alive = 0; this.dead = 0;
+    this.O = []; this.P = []; this.Q = []; this.S = []; this.V = []; this.C = new Float64Array(160); this.D = []; this.DE = [];
+  }
+  // k (a child of the owner, quiet for FREEZE_N updates) and everything under it through shown objects, as one range
+  add(k, F) {
+    const R = { Z: this, k, i0: this.O.length, i1: 0, d0: this.D.length, d1: 0, okF: F, alive: true, vis: k.visible === true, n: 0 };
+    const O = this.O, P = this.P, Q = this.Q, S = this.S, V = this.V, D = this.D, DE = this.DE;
+    const put = (x) => {
+      const Zx = x.__frz; if (Zx !== undefined) Zx.killAll();   // (a record under it: taken into this range)
+      x.__frzBy = R; if (MW.check) x.__frzF = MW.frame;
+      const i = O.length; O.push(x); P.push(x.position); Q.push(x.quaternion); S.push(x.scale); V.push(x.visible === true);
+      if (this.C.length < (i + 1) * 10) { const C = new Float64Array(this.C.length * 2); C.set(this.C); this.C = C; }
+      const C = this.C, j = i * 10, p = x.position, q = x.quaternion, s = x.scale;
+      C[j] = p.x; C[j + 1] = p.y; C[j + 2] = p.z; C[j + 3] = q._x; C[j + 4] = q._y; C[j + 5] = q._z; C[j + 6] = q._w; C[j + 7] = s.x; C[j + 8] = s.y; C[j + 9] = s.z;
+      if (x.visible !== true) return;   // (hidden: itself only, as the walk keeps it)
+      let di = -1;
+      if (x.isMesh === true || x.isLine === true || x.isPoints === true) { di = D.length; D.push(x); DE.push(0); }
+      const c = x.children; for (let m = 0; m < c.length; m++) put(c[m]);
+      if (di >= 0) DE[di] = D.length;
+    };
+    put(k);
+    k.__frzIn = R; R.i1 = O.length; R.d1 = D.length; R.n = R.i1 - R.i0;
+    this.ranges.push(R); this.alive++;
+    return R;
+  }
+  kill(R) {
+    if (!R.alive) return;
+    R.alive = false; this.alive--; this.dead += R.n;
+    if (R.k.__frzIn === R) R.k.__frzIn = undefined;
+    const O = this.O; for (let i = R.i0; i < R.i1; i++) if (O[i].__frzBy === R) { O[i].__frzBy = undefined; if (MW.check) O[i].__thawF = MW.frame; }
+    // (a hidden child shown again: its subtree recomputed in full, as the walk does — its hidden frames set this)
+    if (!R.vis && R.k.children.length) R.k.__hid = true;
+    _stats.thaw++;
+    if (this.alive === 0) { if (this.owner.__frz === this) this.owner.__frz = undefined; this.ranges.length = 0; }
+  }
+  killAll() { for (const R of this.ranges) this.kill(R); if (this.owner.__frz === this) this.owner.__frz = undefined; }
+  // every live range checked against its copy; one that differs ends (its child is walked in this update)
+  poll(F, S) {
+    if (this.epoch !== MW.epoch) { this.killAll(); return; }
+    const O = this.O, P = this.P, Q = this.Q, Sc = this.S, V = this.V, C = this.C, L = this.ranges;
+    for (let r = 0; r < L.length; r++) {
+      const R = L[r];
+      if (!R.alive) continue;
+      let ok = true;
+      for (let i = R.i0, j = R.i0 * 10; i < R.i1; i++, j += 10) {
+        const o = O[i];
+        if (o.visible !== V[i]) { ok = false; break; }
+        const p = P[i], q = Q[i], s = Sc[i];
+        if (p.x !== C[j] || p.y !== C[j + 1] || p.z !== C[j + 2] || q._x !== C[j + 3] || q._y !== C[j + 4] || q._z !== C[j + 5] || q._w !== C[j + 6] || s.x !== C[j + 7] || s.y !== C[j + 8] || s.z !== C[j + 9]) { ok = false; break; }
+        if (o.matrixWorldNeedsUpdate === true) {
+          // (the walk's check: recomposed by three meanwhile — recomputed, kept only if it is the same)
+          if (o.matrixAutoUpdate !== true || o.parent === null) { ok = false; break; }
+          o.matrix.compose(p, q, s); _mwT.multiplyMatrices(o.parent.matrixWorld, o.matrix);
+          if (!_mwT.equals(o.matrixWorld)) { ok = false; break; }
+          o.matrixWorldNeedsUpdate = false;
+        }
+      }
+      S.polled += R.n;
+      if (ok) R.okF = F; else this.kill(R);
+    }
+    if (this.dead > 512 && this.dead > 2 * (O.length - this.dead)) this.compact();
+  }
+  // a range's shown casters, in walk order: as the walk lists them (a caster's own subtree is three's to walk)
+  casters(R, col) {
+    const D = this.D, DE = this.DE;
+    for (let i = R.d0; i < R.d1;) { const x = D[i]; if (x.castShadow === true) { col.push(x); i = DE[i]; } else i++; }
+  }
+  // the live ranges' entries packed again (after many ended)
+  compact() {
+    const O = [], P = [], Q = [], S = [], V = [], D = [], DE = [], C = new Float64Array(Math.max(160, (this.O.length - this.dead) * 10));
+    const live = [];
+    for (const R of this.ranges) {
+      if (!R.alive) continue;
+      const i0 = O.length, d0 = D.length;
+      for (let i = R.i0; i < R.i1; i++) { O.push(this.O[i]); P.push(this.P[i]); Q.push(this.Q[i]); S.push(this.S[i]); V.push(this.V[i]); C.set(this.C.subarray(i * 10, i * 10 + 10), (O.length - 1) * 10); }
+      for (let d = R.d0; d < R.d1; d++) { D.push(this.D[d]); DE.push(this.DE[d] - R.d0 + d0); }
+      R.i0 = i0; R.i1 = O.length; R.d0 = d0; R.d1 = D.length;
+      live.push(R);
+    }
+    Object.assign(this, { O, P, Q, S, V, C, D, DE, ranges: live, dead: 0 });
+  }
+}
+// (the tree changed in or under a range — a child added or removed there, or the range's own child taken away: it ends)
+function frzTouch(x) {
+  for (let y = x; y !== null && y !== undefined; y = y.parent) { const R = y.__frzBy; if (R !== undefined) { R.Z.kill(R); return; } }
+}
+{
+  const ADD = P3.add, REM = P3.remove;
+  P3.add = function (object) {
+    if (arguments.length > 1) return ADD.apply(this, arguments);
+    const r = ADD.call(this, object);
+    frzTouch(this); if (object && object.__frzBy !== undefined) frzTouch(object);
+    return r;
+  };
+  P3.remove = function (object) {
+    if (arguments.length > 1) return REM.apply(this, arguments);
+    if (object && object.__frzBy !== undefined) frzTouch(object);
+    const r = REM.call(this, object);
+    frzTouch(this);
+    return r;
+  };
+  // (three's attach() puts the child in `children` itself, without add(); it leaves its old parent through remove())
+  const ATT = P3.attach;
+  P3.attach = function (object) { const r = ATT.call(this, object); frzTouch(this); return r; };
+}
+const _stats = { thaw: 0, freeze: 0 };
+// the update with frozen subtrees (MW.frozen): shownTree's work for each object it visits, in the same order, and it
+// returns whether nothing about the object or under it changed in this update (its parent counts the quiet updates)
+function shownTreeF(o, force, F, S, all = false, col = null) {
+  if (ownUMW(o)) { o.updateMatrixWorld(force); o.__mwF = F; S.own++; return false; }
+  let changed = force, check = false, still = !force;
+  const changedIn = force;
+  if (o.matrixAutoUpdate) {
+    const p = o.position, q = o.quaternion, s = o.scale;
+    let c = o.__trs;
+    if (c === undefined || c[0] !== p.x || c[1] !== p.y || c[2] !== p.z || c[3] !== q._x || c[4] !== q._y || c[5] !== q._z || c[6] !== q._w || c[7] !== s.x || c[8] !== s.y || c[9] !== s.z) {
+      if (c === undefined) c = o.__trs = new Float64Array(10);
+      c[0] = p.x; c[1] = p.y; c[2] = p.z; c[3] = q._x; c[4] = q._y; c[5] = q._z; c[6] = q._w; c[7] = s.x; c[8] = s.y; c[9] = s.z;
+      o.matrix.compose(p, q, s); changed = true; still = false; S.composed++;
+    } else if (o.matrixWorldNeedsUpdate) { o.matrix.compose(p, q, s); check = true; }
+  } else if (o.matrixWorldNeedsUpdate) { changed = true; still = false; }
+  const par = o.parent;
+  if (o.__mwP !== par) { o.__mwP = par; changed = true; still = false; }
+  if (changed || check) {
+    if (o.matrixWorldAutoUpdate === true) {
+      const W = changed ? o.matrixWorld : _mwT;
+      if (par === null) W.copy(o.matrix); else W.multiplyMatrices(par.matrixWorld, o.matrix);
+      if (changed || !W.equals(o.matrixWorld)) { if (!changed) o.matrixWorld.copy(W); force = true; still = false; o.__mwF = F; S.world++; if (S.why && !changedIn) S.why.push(o); }
+    } else force = true;
+    o.matrixWorldNeedsUpdate = false;
+  }
+  if (o.matrixWorldAutoUpdate !== true) still = false;
+  if (o.isSkinnedMesh) {
+    still = false;
+    if (o.bindMode === 'attached') { if (o.__mwF === F || o.__bm !== o.matrixWorld) { o.__bm = o.matrixWorld; o.bindMatrixInverse.copy(o.matrixWorld).invert(); } }
+    else { o.__bm = null; if (o.bindMode === 'detached') o.bindMatrixInverse.copy(o.bindMatrix).invert(); else console.warn('THREE.SkinnedMesh: Unrecognized bindMode: ' + o.bindMode); }
+  }
+  S.visited++;
+  const c = o.children;
+  if (c === NONE) return still;   // (hidden: its subtree set aside, as in shownTree; a record under it is not checked)
+  let Z = o.__frz;
+  if (Z !== undefined) {
+    // (its own world matrix changed, or everything is asked for: what is frozen under it is walked again, forced)
+    if (force || all || !MW.frozen) { Z.killAll(); Z = undefined; }
+    else { Z.poll(F, S); if (o.__frz !== Z) Z = undefined; }
+  }
+  let quiet = true;
+  const c0 = _cand.length;
+  for (let i = 0, n = c.length; i < n; i++) {
+    const k = c[i];
+    if (Z !== undefined) {
+      const R = k.__frzIn;
+      if (R !== undefined && R.Z === Z && R.okF === F) { if (R.vis && col !== null) Z.casters(R, col); S.frozen += R.n; continue; }
+    }
+    let kq;
+    if (k.visible || all) {
+      const was = k.__visF === F - 1;
+      if (k.visible) k.__visF = F;   // (reached through shown parents in this frame's update: drawbatch.js)
+      let kc = col;
+      if (col !== null && (mayCast(k) || ownUMW(k))) { col.push(k); kc = null; }
+      if (k.__hid === true) { k.__hid = false; shownTreeF(k, true, F, S, all, kc); kq = false; } else kq = shownTreeF(k, force, F, S, all, kc) && was && k.visible;
+    } else {
+      // (hidden: itself kept up to date, its subtree left until it is shown again)
+      if (k.children.length) k.__hid = true;
+      const kids = k.children; k.children = NONE;
+      try { if (ownUMW(k)) { k.updateMatrixWorld(force); kq = false; } else kq = shownTreeF(k, force, F, S) && k.__visF !== F - 1; } finally { k.children = kids; }
+    }
+    if (kq) { const q = (k.__q = (k.__q || 0) + 1); if (q >= FREEZE_N && MW.frozen && !all) _cand.push(k); }
+    else { if (k.__q !== 0) k.__q = 0; quiet = false; }
+  }
+  quiet = quiet && still;
+  if (_cand.length > c0) {
+    // (frozen here unless this object is about to be frozen whole by its own parent)
+    if (!(quiet && o.parent !== null && (o.__q || 0) + 1 >= FREEZE_N)) {
+      if (Z === undefined) Z = o.__frz = new Frozen(o);
+      for (let j = c0; j < _cand.length; j++) { Z.add(_cand[j], F); _stats.freeze++; }
+    }
+    _cand.length = c0;
+  }
+  return quiet;
+}
+
 // (an actor's rig brought up to date after a frame that left it out of the render: FarCull.restore; every part, shown
 //  or not, as updateMatrixWorld(true) did, but only what changed is recomputed)
 // (force: its parts may be stale — it was hidden before, or its own matrix changed this frame — so all are recomputed)
-const _S0 = { visited: 0, composed: 0, world: 0, own: 0 };
+const _S0 = { visited: 0, composed: 0, world: 0, own: 0, frozen: 0, polled: 0 };
 export function updateTree(o, force = true) {
   if (!MW.cached) { o.updateMatrixWorld(true); return; }
   o.__hid = false;
-  shownTree(o, force, MW.frame, _S0, true);
+  if (MW.frozen) shownTreeF(o, force, MW.frame, _S0, true); else shownTree(o, force, MW.frame, _S0, true);
 }
 
 export function updateShownWorld(scene, state) {
   if (MW.cached) {
-    const F = (MW.frame = ++state.frame), S = (state.stats ??= { visited: 0, composed: 0, world: 0, own: 0 });
-    S.visited = S.composed = S.world = S.own = 0;
+    const F = (MW.frame = ++state.frame), S = (state.stats ??= { visited: 0, composed: 0, world: 0, own: 0, frozen: 0, polled: 0, ranges: 0, freeze: 0, thaw: 0 });
+    S.visited = S.composed = S.world = S.own = S.frozen = S.polled = 0;
     // (switched from the old path: its hidden list's subtrees are recomputed when shown, as there)
     for (const o of state.prev) o.__hid = true;
     state.prev.length = 0;
     scene.__visF = F;
     const col = MW.casters; col.length = 0;
-    shownTree(scene, false, F, S, false, MW.walk ? col : null);
+    // (CPU-WALK: an update without the frozen subtrees' checks ends them all)
+    if (!MW.frozen || state.fz !== F - 1) MW.epoch++;
+    if (MW.frozen) {
+      state.fz = F; _stats.thaw = _stats.freeze = 0;
+      shownTreeF(scene, false, F, S, false, MW.walk ? col : null);
+      S.thaw = _stats.thaw; S.freeze = _stats.freeze;
+    } else shownTree(scene, false, F, S, false, MW.walk ? col : null);
     MW.castersF = MW.walk ? F : -1;
     MW.ok = true;
+    if (MW.check) walkCheck(scene, MW.check, F);
     return;
   }
+  MW.epoch++;
   updateShownWorldOld(scene, state);
 }
+
+// CPU-WALK `?walkcheck` (or MW.check = { … } set by a probe): after each update, every object reached through shown
+// parents against three's formula from scratch (the parent's expected world × compose(position, quaternion, scale), or
+// × .matrix where matrixAutoUpdate is off; an attached skinned body's bind-matrix inverse too), and the caster list
+// against the walk's rule applied to the whole tree from scratch. Mismatches are counted and the first few printed
+// (console.error, "WALKCHECK": a regression suite run with WALKCHECK=1 fails on one). drawbatch.js adds its pieces
+// (DrawBatch.update). A debugging aid: it costs a whole walk a frame. `?walkcheck`, or window.__walkcheck before load.
+const _wc = [], _wcM = new THREE.Matrix4();
+function walkCheck(scene, K, F) {
+  K.frames++;
+  let pi = 0; const tmp = () => (_wc[pi] ??= new THREE.Matrix4(), _wc[pi++]);
+  const path = (o) => { const p = []; for (let x = o; x; x = x.parent) p.push(x.name || x.type); return p.slice(0, 5).join('<'); };
+  const bad = (what) => { if (K.samples.length < 20) { K.samples.push(what + ' @' + F); console.error('WALKCHECK ' + what + ' @' + F); } };
+  const ref = [];
+  const walk = (o, W, cast) => {
+    const c = o.children;
+    for (let i = 0; i < c.length; i++) {
+      const k = c[i];
+      if (!k.visible) continue;
+      let kc = cast;
+      if (cast && (mayCast(k) || ownUMW(k))) { ref.push(k); kc = false; }
+      const mark = pi;
+      const L = k.matrixAutoUpdate ? tmp().compose(k.position, k.quaternion, k.scale) : k.matrix;
+      const E = tmp().multiplyMatrices(W, L);
+      if (k.matrixWorldAutoUpdate) {
+        K.compared++;
+        const e = E.elements, f = k.matrixWorld.elements;
+        let d = 0; for (let j = 0; j < 16; j++) if (e[j] !== f[j] && !(e[j] !== e[j] && f[j] !== f[j])) { d = Math.max(d, Math.abs(e[j] - f[j]) || 1); }
+        if (d) {
+        K.bad++;
+        const c = k.__trs, p = k.position, q = k.quaternion, sc = k.scale, same = !!c && c[0] === p.x && c[1] === p.y && c[2] === p.z && c[3] === q._x && c[4] === q._y && c[5] === q._z && c[6] === q._w && c[7] === sc.x && c[8] === sc.y && c[9] === sc.z;
+        bad(`matrix ${path(k)} \u0394${d.toExponential(2)}${k.__frzBy ? ' (frozen)' : ''} [walked ${k.__visF === F} mwF ${k.__mwF} parent mwF ${k.parent?.__mwF} trs cached ${same} q ${k.__q} hid ${k.__hid} parent rec ${!!k.parent?.__frz} matrix=compose ${_wcM.compose(k.position, k.quaternion, k.scale).equals(k.matrix)} frozen ${k.__frzF}-${k.__thawF} parent frozen ${k.parent?.__frzF}-${k.parent?.__thawF} mwnu ${k.matrixWorldNeedsUpdate}]`);
+      }
+        if (k.isSkinnedMesh && k.bindMode === 'attached') {
+          const I = tmp().copy(E).invert(), a = I.elements, b = k.bindMatrixInverse.elements;
+          let di = 0; for (let j = 0; j < 16; j++) if (a[j] !== b[j] && !(a[j] !== a[j] && b[j] !== b[j])) di = Math.max(di, Math.abs(a[j] - b[j]) || 1);
+          if (di) { K.bad++; bad(`bindMatrixInverse ${path(k)} Δ${di.toExponential(2)}`); }
+        }
+        walk(k, E, kc);
+      } else walk(k, k.matrixWorld, kc);
+      pi = mark;
+    }
+  };
+  const S = scene.matrixAutoUpdate ? tmp().compose(scene.position, scene.quaternion, scene.scale) : scene.matrix;
+  walk(scene, S, MW.walk);
+  if (MW.walk) {
+    const L = MW.casters; K.casters += ref.length;
+    let same = L.length === ref.length; for (let i = 0; same && i < L.length; i++) if (L[i] !== ref[i]) same = false;
+    if (!same) {
+      K.castersBad++;
+      let i = 0; while (i < L.length && i < ref.length && L[i] === ref[i]) i++;
+      bad(`casters ${L.length} listed, ${ref.length} by the rule; first difference at ${i}: ${L[i] ? path(L[i]) : '-'} / ${ref[i] ? path(ref[i]) : '-'}`);
+    }
+  }
+}
+export function walkCheckNote(what) { const K = MW.check; if (K && K.samples.length < 20) { K.samples.push(what + ' @' + MW.frame); console.error('WALKCHECK ' + what + ' @' + MW.frame); } }
+
 function updateShownWorldOld(scene, state) {
   MW.ok = false;
   const hidden = state.hidden, prev = state.prev, stamp = ++state.frame;
