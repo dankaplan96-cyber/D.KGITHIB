@@ -10,6 +10,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { updateShownWorld, MW } from './drawcull.js';
 import { warmPassPrograms } from './warmup.js';
+import { withCulledShown } from './viewinst.js';
 // LOOK-FIRST-2: on battery the automatic resolution stops here (was 0.5: pixelated)
 export const BATTERY_MIN_SCALE = 0.85;
 
@@ -275,6 +276,8 @@ export class Renderer {
       if (a.material.id !== b.material.id) return a.material.id - b.material.id;
       return a.z !== b.z ? a.z - b.z : a.id - b.id;
     });
+    // (HEADING-LOAD: the meshes the view culls hid — viewinst.js, the grass pools — are compiled with the rest)
+    { const compile = r.compile.bind(r); r.compile = (...a) => withCulledShown(() => compile(...a)); }
     r.toneMapping = THREE.NeutralToneMapping; // keeps LBA2's saturated palette (ACES washes it out)
     r.toneMappingExposure = 1.0;
     container.appendChild(r.domElement);

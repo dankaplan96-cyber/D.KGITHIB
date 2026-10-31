@@ -95,6 +95,18 @@ function fill(E, all) {
   VIEW_INST.refills++;
 }
 
+// Shader programs: three's compile / compileAsync (the warm-ups behind the black and the precompile) walk only what is
+// visible, so a mesh hidden because none of its squares was in view at that moment would compile its program on the
+// first frame that shows it. Renderer (renderer.js) runs every compile through withCulledShown: the meshes this module
+// (and world.js's grass pools, registered with culledToo) hid are shown for the compile and hidden again at once.
+const EXTRA = new Set();
+export const culledToo = (o) => { EXTRA.add(o); return o; };
+export function withCulledShown(fn) {
+  const shown = [];
+  for (const E of LIST) if (!E.im.visible) { E.im.visible = true; shown.push(E.im); }
+  for (const o of EXTRA) if (!o.visible) { o.visible = true; shown.push(o); }
+  try { return fn(); } finally { for (const o of shown) o.visible = false; }
+}
 // every registered mesh with all its instances (VIEW_INST.on false) or back to the view's (true)
 export function setViewInst(on) { VIEW_INST.on = !!on; for (const E of LIST) { E.im.frustumCulled = !VIEW_INST.on; fill(E, true); } }
 export const viewInstStats = () => ({ meshes: LIST.length, culled: LIST.filter((E) => !E.all).length, refills: VIEW_INST.refills });

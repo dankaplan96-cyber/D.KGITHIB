@@ -17,6 +17,7 @@ import { buildLighthouse } from './lighthouse.js';
 import { buildStatue } from './statue.js';
 import { buildCliffRocks } from './cliffs.js';
 import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
+import { culledToo } from '../engine/viewinst.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
 
@@ -691,7 +692,7 @@ export function* buildWorldSteps(parentScene) {
         // (HEADING-LOAD: the pool holds only what is in view (viewPools, below), refilled at the render itself; three's own
         //  sphere test and drawcull.js's BoxCull — which runs before the refill, with the last frame's content — are left
         //  out: either could hide a pool for a frame just as squares that came into view were put into it)
-        P.im.frustumCulled = !SMALL_VIEW.on;
+        P.im.frustumCulled = !SMALL_VIEW.on; culledToo(P.im);
         if (P.tiles.some((t) => t.instanceColor)) P.im.setColorAt(0, new THREE.Color(1, 1, 1));
         scene.add(P.im);
       }

@@ -703,7 +703,10 @@ function buildHarbour(W0, root, r) {
   // (PERF-2: plain and simply textured materials folded by colour, per 64 m cell — see merge.js recolor/retex; none of
   // the quay's static materials changes at runtime, the animated and toggled parts above are `keep`)
   PIECES--;
-  mergeStatic(g, { recolor: true, retex: true, cell: 64 }); mergeStatic(W.fishingBoat); mergeStatic(W.ferry.group);
+  // (HEADING-LOAD: the boat and the ferry bob, so each is drawn on its own, as a whole — now with its pieces folded by
+  //  texture as the quay's are (recolor/retex: colour, roughness and metalness into the vertices; the glowing and
+  //  see-through materials, whose look is animated, stay as they are): 3 draws fewer on the street facing the quay)
+  mergeStatic(g, { recolor: true, retex: true, cell: 64 }); mergeStatic(W.fishingBoat, { recolor: true, retex: true }); mergeStatic(W.ferry.group, { recolor: true, retex: true });
   // to world coordinates: what the story and the tests read (the ferry's group stays in the harbour's frame)
   movePt(d, W.pierEnd, W.pierStart, W.harbourShed, W.harbourShed.door, W.ferry, W.ferry.gangway);
   const L = W.cargoLift; L.cratePierW = L.cratePier.clone().add(new THREE.Vector3(d.x, 0, d.z));
@@ -814,7 +817,7 @@ function cargoLift(W, parent, r) {
   // the same materials, the same triangles where they were. What moves on its own stays a group (the lantern, the
   // turret, the hook, the cable, the barge, the crate, the puddle's rings).
   for (const o of [lantern, turret, barge, crate, pud, hook, cable]) o.userData.keep = true;
-  mergeStatic(g); mergeStatic(turret); mergeStatic(barge); mergeStatic(crate);
+  mergeStatic(g); for (const o of [turret, barge, crate]) mergeStatic(o, { recolor: true, retex: true });   // (HEADING-LOAD: folded by texture)
   L.pose(1);
   let ripT = 0;
   W.updaters.push((dt, tt) => {
