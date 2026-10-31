@@ -29,3 +29,14 @@ value, each with what it would let the tool do. Everything else it uses already 
    them or remove them from the comments. The tool uses `game.devArena()` and `game.bench.*` meanwhile.
 9. **The debugging connection.** The production EXE accepts Playwright's connection today (0.43.3). If the build ever
    turns that off (Electron fuses), keep a "test build" variant that allows it, named as such in its version string.
+
+## Done in the game (the cloud session)
+
+- **1. Seed:** `?seed=N` in the URL seeds `Math.random` from the first module on (`src/engine/seed.js`, mulberry32);
+  `game.seed(n)` re-seeds at any time (e.g. before New Game), `game.seed(null)` puts the browser's generator back,
+  `game.seed()` returns the current seed (or null). In builds after 0.43.3.
+- **8. URL parameters:** the comments no longer name `?arena` / `?bench`; `game.devArena()` and `game.bench.*` are the
+  ways in.
+- **2–5:** planned after the two performance tasks now changing `perf.js` / `bench.js` / `regions.js` land.
+- **6. Animation checks:** the rig is procedural (named poses computed in `rig.js`, not stored clips), so there is no
+  clip list to miss. To be designed: a list of the names `rig.play()` knows, and a warning for an unknown name.

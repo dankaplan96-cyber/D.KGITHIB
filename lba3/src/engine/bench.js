@@ -1,4 +1,4 @@
-// In-game benchmark: the same routes, timed on the machine that plays. Runs from the pause menu (or ?bench once
+// In-game benchmark: the same routes, timed on the machine that plays. Runs from the pause menu (or game.bench.run() once
 // a game is going) and never touches the save: the game is snapshotted first, saving is off while it runs, and
 // the snapshot is put back at the end.
 // Each route warms up (scene change, shaders: a preset change or a breakdown variant first waits for its shader

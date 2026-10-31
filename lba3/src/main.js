@@ -1,6 +1,7 @@
 // LBA3 – The Awakening (fan project): game orchestration.
 // Generic glue lives here (states, rooms, saves, UI, combat hooks);
 // the story itself is in src/game/prologue.js.
+import { seedRandom, randomSeed } from './engine/seed.js';   // (first: ?seed=N seeds Math.random before anything uses it)
 import * as THREE from 'three';
 import { Renderer } from './engine/renderer.js';
 import { loadBake } from './engine/sculpt.js';
@@ -1130,8 +1131,10 @@ class Game {
       this.pickups.spawn(L.t, L.x, L.y, L.z, { loot: L.k, where: L.w, value: L.v || 1, life: Infinity, ...(L.f ? { fly: { vx: 0, vy: 0, vz: 0 } } : {}) });
     }
   }
-  // the developer combat yard (?arena): never saved, never part of the story
+  // the developer combat yard (game.devArena()): never saved, never part of the story
   devArena() { return enterArena(this); }
+  // Test Lab: seed gameplay randomness (n) or put the browser's back (null); seed() alone tells the current seed
+  seed(n) { return arguments.length ? seedRandom(n) : randomSeed(); }
   // the autosave (SAVE-SLOTS: slot 0). Returns 'ok', 'skip' (not a moment to save), 'quota' or 'fail'; a full
   // storage is told once per session (a toast), and Save & Quit asks before quitting without the save
   save(toast = true) {

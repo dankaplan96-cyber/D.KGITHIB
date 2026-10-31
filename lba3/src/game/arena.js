@@ -1,4 +1,4 @@
-// Developer combat test area (not part of the adventure): open with ?arena in the URL, or game.devArena()
+// Developer combat test area (not part of the adventure): open with game.devArena()
 // from the console. A walled yard at x = 6200 with: a stationary dummy, a slow moving target, one of each
 // enemy role (mite, drone, sentry, crawler), a wall corner, a raised platform with steps, and a ball switch
 // that opens a gate. Used by tests/combat.mjs; the real encounters live in the chapters.
