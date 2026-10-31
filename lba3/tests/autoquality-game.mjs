@@ -61,11 +61,11 @@ await menu(page, 'new');
 const cmp = await ev(() => {
   const G = game, A = G.autoQ, out = {};
   const route = G.bench.routes().find((r) => r.id === 'street');
-  const look = () => { G.state = 'play'; route.setup(); G.state = 'play'; G.frame(1 / 30, true); G.frame(1 / 30, true); G.frame(1 / 30, true); G.perf.beginFrame(); const RR = G.renderer.renderer, rbd = RR.renderBufferDirect; let main = 0; RR.renderBufferDirect = function (cam, scene, ...a) { if (scene) main++; return rbd.call(this, cam, scene, ...a); }; try { G.frame(1 / 30, true); } finally { RR.renderBufferDirect = rbd; } const c = G.graphicsConfig(); return { ...c, calls: main, lampsPool: G.lightPool.lights.length, cell: G.shadowCull.cell, casters: G.shadowCull.quality, samples: G.renderer.composer.renderTarget1.samples, eco: G.farCull.anim.eco, partPx: G.farCull.partPx }; };
+  const look = () => { G.state = 'play'; route.setup(); G.state = 'play'; G.frame(1 / 30, true); G.frame(1 / 30, true); G.frame(1 / 30, true); G.perf.beginFrame(); const RR = G.renderer.renderer, rbd = RR.renderBufferDirect; let main = 0; RR.renderBufferDirect = function (cam, scene, geo, mat, obj, ...a) { if (scene && !obj.isSprite) main++; return rbd.call(this, cam, scene, geo, mat, obj, ...a); }; try { G.frame(1 / 30, true); } finally { RR.renderBufferDirect = rbd; } const c = G.graphicsConfig(); return { ...c, calls: main, lampsPool: G.lightPool.lights.length, cell: G.shadowCull.cell, casters: G.shadowCull.quality, samples: G.renderer.composer.renderTarget1.samples, eco: G.farCull.anim.eco, partPx: G.farCull.partPx }; };
   const at = (p) => { G.settings.qualityAuto = true; A.gov.setProfile(p, 'test', { phase: 'hold', commitNow: true }); G.settings.quality = A.tier(); G.applySettings(); A.applyAll(); };
   // (ROTATE-STALL: `calls` counts the main pass only — the shadow pass's count depends on where the static shadow
-  //  cache's sliced build is in a given frame, not on the profile — and the first look, the street's cold entry, is
-  //  thrown away: it also draws 3 short-lived sprites a warm look doesn't)
+  //  cache's sliced build is in a given frame, not on the profile — without sprites (short-lived glows whose number
+  //  follows the time since the new game, 0–3 here), and the first look, the street's cold entry, is thrown away)
   G.settings.quality = 'high'; G.settings.qualityAuto = false; G.applySettings(); look(); out.high = look();
   at(0); out.autoHigh = look();
   G.settings.quality = 'medium'; G.settings.qualityAuto = false; G.applySettings(); out.medium = look();
