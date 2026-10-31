@@ -239,3 +239,38 @@ the user).
      - after: `o.scale.set(t.s * (CROWN[t.kind] ?? 1), t.s, t.s * (CROWN[t.kind] ?? 1))`
 - **Unchanged:** bushes and pines (no `kind` in the table, so factor 1), tree colliders and positions.
 - **Check:** wider crowns hide a little more from the camera. Run the camfollow and occluders tests.
+
+---
+
+## WA-7 · Twelve interiors: palettes and materials instead of one dark blue-grey look · Approved (user, 31.10.2026: standing approval)
+
+- **Why:** the whole-game sweep found about a dozen rooms sharing one look: dark blue-grey walls, a grey floor and
+  little floor/wall separation, so they read empty and alike. They are:
+  - school, wtent, archive;
+  - valves, condA, condB, butemple;
+  - control, projoffice;
+  - asylum, bumaze, buhalls.
+
+  Each now gets a palette that fits its purpose, after docs/LBA2_VISUAL_NOTES.md ("Interiors", "Industrial",
+  "Underground"):
+  - **warm wood:** honey boards or warm floors (school, wtent, archive);
+  - **industrial:** teal-painted plates, red steel rails and hazard rims (valves, condA, condB);
+  - **checker floors:** sand/umber or terracotta/cream (control, projoffice);
+  - **warm floors** against the walls (asylum, bumaze, buhalls).
+- **What it does not add:** no lights, shaders, geometry, props or texture generators, and no change to room sizes,
+  collisions or doors.
+  - A few new palette keys make one small canvas texture each, once, at build time: the tiles of control and
+    projoffice, the archive's plaster, and plates `'#2f8a86'`.
+  - `lba1room.js` gains two optional options, `topCol` and `sideCol`. Rooms that don't pass them are exactly as before.
+- **Files:**
+  - wizards.js, upper.js, valveroom.js, condenser.js, temple.js, interiors.js (control, projoffice only);
+  - lba1room.js and lba1places.js.
+  - **The exact diff:** `tools/testlab/requests/WA-7-interiors.diff`. Apply it as is.
+- **Checked on the laptop:** before/after frames of all twelve rooms (`tools/testlab/runs/ba-rooms.jpg` on the laptop;
+  later chapters, so not shown to the user).
+- **One thing to look at:**
+  - The archive's new parchment plaster (`MAT.plaster('#f0e4c8')`) reads a little pale grey under the room's cool
+    lights. A warmer `'#e6d0a4'` would hold better; it is the cloud's call.
+  - In buhalls `topCol` also warms the tops of the walls (by design of the option); the floor and the wall faces
+    still separate.
+- **Untouched:** obsv already had warm stone walls and a light checker floor.

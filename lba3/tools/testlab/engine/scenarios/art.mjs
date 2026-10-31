@@ -36,11 +36,14 @@ export const VIEWS = [
 export const artShots = {
   id: 'art-shots', title: 'World art: fixed views (Citadel street, house)', group: 'visual', suites: ['art', 'artshots'], session: 'warm', timeoutS: 300,
   method: M(false, true, true),
-  async run(ctx) {
+  async run(ctx) { return shootViews(ctx, VIEWS, 'views'); },
+};
+// one full frame per view, the player's own camera settled; evidence/<folder>/<name>.jpg
+async function shootViews(ctx, views, folder) {
     const { page, rec, dir } = ctx;
-    const out = path.join(dir, 'evidence', 'views'); fs.mkdirSync(out, { recursive: true });
+    const out = path.join(dir, 'evidence', folder); fs.mkdirSync(out, { recursive: true });
     if ((await gameState(page)).state !== 'play') await newGame(page);
-    for (const [name, room, x, z, a] of VIEWS) {
+    for (const [name, room, x, z, a] of views) {
       await page.evaluate(({ room, x, z, a }) => {
         game.resetCombat?.('drop');
         if (room) { game.enterRoom(room, null, true, true); const c = game.room.center; x += c.x; z += c.z; } else game.exitRoom({ x, z, a }, true, true);
@@ -50,10 +53,15 @@ export const artShots = {
       }, { room, x, z, a });
       await sleep(2500);
       await page.screenshot({ path: path.join(out, `${name}.jpg`), type: 'jpeg', quality: 88 });
-      rec.evidence.push(`evidence/views/${name}.jpg`);
+      rec.evidence.push(`evidence/${folder}/${name}.jpg`);
     }
-    assert(rec, 'views taken', true, VIEWS.length, VIEWS.length);
-  },
-};
+    assert(rec, 'views taken', true, views.length, views.length);
+}
 
 export const ART = [houseWalk, artShots];
+
+// the interiors of WA-7 (later chapters: these pictures are for the developers, not shown to the player)
+export const ROOM_VIEWS = ['school', 'wtent', 'archive', 'valves', 'condA', 'condB', 'butemple', 'control', 'projoffice', 'asylum', 'bumaze', 'buhalls'].map((r) => [r, r, 0, 0, 0]);
+export const artRooms = { ...artShots, id: 'art-rooms', title: 'World art: interiors (WA-7)', suites: ['artrooms'], timeoutS: 900,
+  async run(ctx) { return shootViews(ctx, ROOM_VIEWS, 'rooms'); } };
+ART.push(artRooms);
