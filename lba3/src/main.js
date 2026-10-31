@@ -153,8 +153,8 @@ const playedText = (sec) => { const m = Math.max(1, Math.floor(sec / 60)), h = M
 // what counts as having enough kashes when a giver chooses (LBA2: NecessaryChapterMoney)
 const MONEY_NEED = 20;
 
+// (no magic levels for sale: as in LBA2, only the story raises the level, src/game/story/magic.js)
 const SHOP = [
-  { id: 'magic', key: 'shop_magic' },
   { id: 'potion', key: 'shop_potion', price: 6 },
   { id: 'flask', key: 'shop_flask', price: 5 },
   { id: 'clover', key: 'shop_clover', price: 22 },
@@ -2044,7 +2044,6 @@ class Game {
     const own = where === 'citadel' ? SHOP : [];
     const items = () => [...own.map((s) => {
       const it = { ...s };
-      if (s.id === 'magic') { it.price = [0, 15, 30, 50][h.magicLevel] ?? 0; it.disabled = h.magicLevel >= 4; }
       if (s.id === 'clover') it.disabled = h.clovers >= 9;
       return it;
     }), ...(this.story.arsenal?.shopItems(where) || [])];
@@ -2053,7 +2052,6 @@ class Game {
       if (h.coins < it.price) { this.hud.toast('shop_poor'); this.audio.play('deny'); return; }
       h.coins -= it.price;
       if (it.arsenal) { this.story.arsenal.buy(it); this.save(false); return; }
-      if (it.id === 'magic') { h.magicLevel++; h.mp = h.mpMax; this.hud.toast('toast_magic', { n: h.magicLevel }); }
       if (it.id === 'potion') h.hp = h.maxHp;
       if (it.id === 'flask') h.mp = h.mpMax;
       if (it.id === 'clover') h.clovers++;

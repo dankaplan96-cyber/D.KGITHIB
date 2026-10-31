@@ -135,7 +135,7 @@ export class Inventory {
     const sel = items[this.sel ?? 0];
     const journal = g.story.journal().map((c) => c.lines.length ? `<h3>${c.title}</h3><ul>${c.lines.map((l) => `<li class="${l.done ? 'done' : ''}">${t(l.key)}</li>`).join('')}</ul>` : '').join('');
     this.el.innerHTML = `<div class="inv-panel lba-frame">
-      <section class="inv-items"><h2>${t('inv_title')}</h2><div class="inv-grid">${grid}</div><p class="inv-desc">${sel ? t('itd_' + sel.id) + (USE.has(sel.id) ? ' <b>' + t('inv_use', { k: K('interact') }) + '</b>' : '') : ''}</p></section>
+      <section class="inv-items"><h2>${t('inv_title')}</h2><div class="inv-grid">${grid}</div><p class="inv-desc">${sel ? t('itd_' + sel.id) + (sel.id === 'ball' && g.story.magic ? ' ' + g.story.magic.ballNote() : '') + (USE.has(sel.id) ? ' <b>' + t('inv_use', { k: K('interact') }) + '</b>' : '') : ''}</p></section>
       <section class="inv-journal"><h2>${t('journal_title')}</h2><div class="inv-obj">${g.story.objective()}</div>${journal}</section>
       <div class="inv-hint">${this.hint(K)}</div></div>`;
     this.el.querySelectorAll('.inv-item').forEach((b) => b.addEventListener('click', () => { this.sel = +b.dataset.i; this.render(); }));

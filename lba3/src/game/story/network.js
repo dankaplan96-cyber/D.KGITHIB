@@ -358,11 +358,13 @@ export class Network extends ChapterBase {
     g.audio.cue?.('revelation');
     this.chain([['baldino', 'c10_bal_p1'], ['hero', 'c10_tw_p1'], ['miraradio', 'c10_radio_mira'], ['zoeradio', 'c10_radio_zoe'], ['okuradio', 'c10_radio_oku'], ['ilkaradio', 'c10_radio_ilka'], ['pimradio', 'c10_radio_pim'], ['baldino', 'c10_bal_p2']], () => {
       g.camRig.shake(0.8); g.audio.play('horn');
-      this.chain([['narrator', 'c10_shaft'], ['baldino', 'c10_bal_p3'], ['hero', 'c10_tw_p2']], () => {
+      // MAGIC-LEVELS (story/magic.js): the five stations' heat comes up the open shaft: level 4, the fire ball
+      const rest = () => this.chain([['baldino', 'c10_bal_p3'], ['hero', 'c10_tw_p2']], () => {
         g.audio.endCue?.(); this.sending = false;
         f.c10_done = true; g.save(false);
         g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
       });
+      this.chain([['narrator', 'c10_shaft']], () => this.story.magic.grant(4, { lines: [['narrator', 'ml_c10_heat'], ['hero', 'ml_c10']], same: [['narrator', 'ml_c10_same']], done: rest }));
     });
   }
 

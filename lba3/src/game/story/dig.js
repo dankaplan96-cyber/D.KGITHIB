@@ -329,7 +329,8 @@ export class Dig extends ChapterBase {
       f.c4_seals3 = true; D.dig.reveal();
       g.audio.play('rumble'); g.camRig.shake(0.3);
       this.story.refreshCast();
-      this.chain([['narrator', 'c4_seals_all']], () => { g.updateObjective(); g.save(false); });
+      // MAGIC-LEVELS (story/magic.js): the heat that opened the door stays in the ball: level 2, the green ball
+      this.chain([['narrator', 'c4_seals_all']], () => this.story.magic.grant(2, { lines: [['hero', 'ml_c4']], same: [['hero', 'ml_c4_same']], done: () => { g.updateObjective(); g.save(false); } }));
     } else { g.updateObjective(); g.save(false); }   // (the count on the HUD follows each disc)
   }
   // a cold disc: a dull thud, and any warm disc already open grinds shut again (the door wants live heat only)
