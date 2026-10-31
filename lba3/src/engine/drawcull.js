@@ -150,7 +150,7 @@ function updateShownWorldOld(scene, state) {
 // An actor's small rigid parts (eyes, buttons, a brooch: one draw each) are also left out of a frame while they are
 // under SUB_PX pixels in radius on screen (an eye 3 cm across beyond ~30 m): the same specks either way.
 const SUB_PX = 0.75, PART_R = 0.2;
-const _pv = new THREE.Vector3(), _fb = new THREE.Box3(), _fs = new THREE.Sphere(), _ff = new THREE.Frustum(), _fm = new THREE.Matrix4();
+const _pv = new THREE.Vector3(), _fb = new THREE.Box3(), _fs = new THREE.Sphere(), _ff = new THREE.Frustum(), _fm = new THREE.Matrix4(), _fw = new THREE.Vector3();
 export class FarCull {
   // actors(): lists of the actors that may be drawn; fog: the scene's THREE.Fog
   // anim (PERF-CPU): the people's animation rate — every `off`-th frame out of the view, every `far`-th beyond the fog,
@@ -196,7 +196,10 @@ export class FarCull {
     const pxK = (typeof innerHeight === 'number' ? innerHeight : 720) / (2 * Math.tan(((cam.fov || 55) * Math.PI) / 360));
     const view = this.view && cam.isPerspectiveCamera;
     if (view) { cam.updateMatrixWorld(); _ff.setFromProjectionMatrix(_fm.multiplyMatrices(cam.projectionMatrix, _fm.copy(cam.matrixWorld).invert())); }
-    this.tick++; this.nView = 0;
+    // (TITLE-LOAD: the frame's fog limit, set for this camera before this runs: setFogCull)
+    const fogLim = view && FOGCULL.cam === cam ? FOGCULL.far : Infinity;
+    if (fogLim < Infinity) _fw.set(0, 0, -1).transformDirection(cam.matrixWorld);
+    this.tick++; this.nView = 0; this.nFog = 0;
     // (PERF-CPU: the animation rate of the first list's actors — the people, never the enemies — from what this frame
     //  shows: Rig.update's lodN. Full rate while anim.hold() (dialogue, story scenes, a door's fade) or anim.on is off)
     const AN = this.anim, animOn = AN.on && !(AN.hold && AN.hold());
@@ -217,6 +220,9 @@ export class FarCull {
         const k = Math.max(r.scale.x, r.scale.y, r.scale.z) / B.s;
         _fs.center.set(r.position.x, r.position.y + B.dy * k, r.position.z); _fs.radius = B.rad * Math.max(1, k);
         if (!B.casts && !_ff.intersectsSphere(_fs)) { if (lod) rig.lodN = AN.off; r.__hidBefore = r.__hid === true; r.visible = false; this.off.push(r); (this.offView ??= []).push(r); this.nView++; continue; }
+        // (TITLE-LOAD: wholly beyond the fog's end in view depth: drawn in the background's colour only; posed as one
+        //  beyond the fog)
+        if (!B.casts && fogLim < Infinity && (_fs.center.x - p.x) * _fw.x + (_fs.center.y - p.y) * _fw.y + (_fs.center.z - p.z) * _fw.z - _fs.radius > fogLim) { if (lod) rig.lodN = AN.far; r.__hidBefore = r.__hid === true; r.visible = false; this.off.push(r); (this.offView ??= []).push(r); this.nView++; this.nFog++; continue; }
       }
       // (within 30 m of the camera every part stays: an eye there is still about a pixel; PERF-CPU, Auto's Low-lite:
       //  partPx 2.5 within partNear 12 m)
@@ -228,6 +234,22 @@ export class FarCull {
         if (px < this.partPx) { o.visible = false; this.off.push(o); }
       }
     } }
+    this.n = this.off.length;
+  }
+  // TITLE-LOAD: bodies never placed — on the title screen the hero and most enemies have not been posed yet (the game
+  // places them from play on), so their rigs stand at the world's origin: the middle of the title's view, on the sea
+  // behind the menu (Twinsen a speck there, 80 px; four drones and the mites under him; 32 calls, 99k triangles and
+  // 93k in the shadow pass). Left out of the frame like a far actor; nothing else changes. `one`, `list`: actors
+  hideUnplaced(one, list = NONE) {
+    if (!this.enabled || this.unplaced === false) return;
+    for (let i = -1; i < list.length; i++) {
+      const a = i < 0 ? one : list[i];
+      const r = a?.rig?.root || a?.group;
+      if (!r || !r.visible || !a.pos || (!r.parent?.isScene) || r.position.x !== 0 || r.position.y !== 0 || r.position.z !== 0) continue;
+      if (a.pos.x === 0 && a.pos.y === 0 && a.pos.z === 0) continue;   // (one that really stands there)
+      r.visible = false; this.off.push(r);
+      if (a.shadow?.visible) { a.shadow.visible = false; this.off.push(a.shadow); }
+    }
     this.n = this.off.length;
   }
   // (PERF-HIGH: an actor left out for being outside the view is near, and the game reads its parts' world matrices (a
@@ -281,19 +303,73 @@ export class BlobBatch {
 //    their `visible` flag is restored right after it (Renderer.post), so nothing else (warm-ups, shader preparation,
 //    uploads) sees a difference. Casters are left alone (three's shadow pass skips a hidden object, and one out of the
 //    view may throw its shadow into it). Nothing in view is left out: the same pixels, fewer draws and triangles.
-const MARGIN = 0.5;
+//    TITLE-LOAD: also what lies wholly beyond the fog's end. three's linear fog is a blend by view depth (the distance
+//    along the view's axis) that reaches the fog's colour exactly at fog.far, and outdoors the background is that same
+//    colour (environment.js: scene.background = fog.color): a draw whose box lies wholly beyond fog.far in view depth
+//    paints only pixels of the background's colour (its edges included). The title's camera, 42 m up, sees across the
+//    island and the sea: at its heaviest angles a fifth of its triangles were there. Such a draw is left out of the frame
+//    like one outside the view; only for a perspective camera, a linear fog that is the background's colour, and
+//    materials that take the fog (fogFar below). A caster is left out of the main pass only (CASTER_ONLY, below): its
+//    shadow is drawn as before. Also the actors (FarCull) and the batched meshes' instances (BatchedMesh's own culling,
+//    given a far plane at fog.far for the main pass: fogBatched below).
+//    PERF (TITLE-LOAD): plain meshes of over BIG_TRIS triangles that the draw batches did not take are tested too.
+const MARGIN = 0.5, BIG_TRIS = 400;
+// TITLE-LOAD: a caster out of the main pass only — its layers moved from 0 (the scene camera's) to CASTER_ONLY, which
+// the sun's shadow camera also sees (main.js enables it there), for the frame; ShadowCache's own layer (31) is kept
+export const CASTER_ONLY = 30;
+const MAIN_BIT = 1, CO_BIT = 1 << CASTER_ONLY;
+// (FOGCULL.on false: as before, the A/B switch; .far: this frame's limit, Infinity when the rule does not apply; .cam:
+//  the camera it was worked out for; .pm: that camera's projection with its far plane at the limit)
+export const FOGCULL = { on: true, far: Infinity, cam: null, pm: new THREE.Matrix4(), n: 0, nb: 0 };
+const FOG_MARGIN = 1;
+const _pc = new THREE.PerspectiveCamera();
+// the view depth beyond which everything the scene draws with fog is the background's colour, or Infinity
+export function fogFar(scene, camera) {
+  if (!FOGCULL.on || !camera?.isPerspectiveCamera || !scene) return Infinity;
+  const f = scene.fog, bg = scene.background;
+  if (!f?.isFog || !bg?.isColor || !(bg === f.color || bg.equals(f.color)) || !(f.far > f.near) || f.far + FOG_MARGIN >= camera.far) return Infinity;
+  return f.far + FOG_MARGIN;
+}
+// the frame's limit for this camera (and the projection BatchedMesh's per-instance test uses: its far plane there)
+export function setFogCull(scene, camera) {
+  const far = fogFar(scene, camera);
+  FOGCULL.far = far; FOGCULL.cam = far < Infinity ? camera : null; FOGCULL.n = 0; FOGCULL.nb = 0;
+  if (far === Infinity) return far;
+  _pc.copy(camera, false); _pc.far = far; _pc.updateProjectionMatrix(); FOGCULL.pm.copy(_pc.projectionMatrix);
+  return far;
+}
+const takesFog = (m) => { if (Array.isArray(m)) { for (const x of m) if (!x || x.fog === false || (x.isShaderMaterial && !x.fog)) return false; return m.length > 0; } return !!m && m.fog !== false && !(m.isShaderMaterial && !m.fog); };
+// BatchedMesh tests each instance against the camera's frustum in its onBeforeRender (main pass only; the shadow pass
+// has its own): for the scene camera under the fog rule, the frustum's far plane is the fog's end there
+{
+  const OBR = THREE.BatchedMesh.prototype.onBeforeRender;
+  THREE.BatchedMesh.prototype.onBeforeRender = function (renderer, scene, camera, geometry, material, group) {
+    if (camera !== FOGCULL.cam || !this.perObjectFrustumCulled || !takesFog(material)) return OBR.call(this, renderer, scene, camera, geometry, material, group);
+    const pm = camera.projectionMatrix;
+    camera.projectionMatrix = FOGCULL.pm; FOGCULL.nb++;
+    try { return OBR.call(this, renderer, scene, camera, geometry, material, group); } finally { camera.projectionMatrix = pm; }
+  };
+}
+const _cv = new THREE.Vector3();
+// the nearest view depth of a world box (its 8 corners; v: the camera's matrixWorldInverse)
+function boxDepth(b, v) {
+  let d = Infinity;
+  for (let c = 0; c < 8; c++) { _cv.set(c & 1 ? b.max.x : b.min.x, c & 2 ? b.max.y : b.min.y, c & 4 ? b.max.z : b.min.z).applyMatrix4(v); if (-_cv.z < d) d = -_cv.z; }
+  return d;
+}
 const _box = new THREE.Box3(), _fr = new THREE.Frustum(), _pm = new THREE.Matrix4(), _iv = new THREE.Matrix4();
 export class BoxCull {
-  constructor() { this.lists = new WeakMap(); this.off = []; this.enabled = true; this.n = 0; this.tested = 0; }
+  constructor() { this.lists = new WeakMap(); this.off = []; this.layered = []; this.enabled = true; this.n = 0; this.tested = 0; this.nFog = 0; this.nCast = 0; }
   // the area's terrain tiles and instanced tiles (found once per area root; a tile's box is recomputed when its
-  // instances or count change)
+  // instances or count change); TITLE-LOAD: and its big plain meshes
   listFor(root) {
     let L = this.lists.get(root);
     if (!L) {
       L = [];
       root.traverse((o) => {
         if (!o.frustumCulled || o.isSkinnedMesh || o.isBatchedMesh || o.userData.drawBatch) return;
-        if (o.isInstancedMesh || (o.isMesh && o.name === 'terrain')) L.push({ o, v: -1, n: -1, g: null, box: null, changes: 0 });
+        const g = o.geometry, big = o.isMesh && !o.isInstancedMesh && g && (g.index ? g.index.count : g.attributes.position?.count ?? 0) > BIG_TRIS * 3;
+        if (o.isInstancedMesh || (o.isMesh && o.name === 'terrain') || big) L.push({ o, v: -1, n: -1, g: null, box: null, changes: 0 });
       });
       this.lists.set(root, L);
     }
@@ -311,21 +387,34 @@ export class BoxCull {
   }
   // root: the area on show; camera: the scene pass's; batches: the draw batch meshes drawn now (DrawBatch.meshes)
   // (shadows: whether the sun's shadow pass runs: without it, casters are culled like the rest)
-  hide(root, camera, batches = NONE, shadows = true) {
-    this.n = 0; this.tested = 0;
+  // (TITLE-LOAD — far: the view depth beyond which a fogged draw shows nothing, drawcull.js fogFar; Infinity: no such
+  //  test. A caster wholly outside the view or beyond it leaves the main pass only, through its layers: its shadow stays)
+  hide(root, camera, batches = NONE, shadows = true, far = Infinity) {
+    this.n = 0; this.tested = 0; this.nFog = 0; this.nCast = 0;
     if (!this.enabled || !root || !camera) return;
     camera.updateMatrixWorld();
-    _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, _iv.copy(camera.matrixWorld).invert()));
+    _iv.copy(camera.matrixWorld).invert();
+    _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, _iv));
     const test = (o, box) => {
-      if (!o.visible || (o.castShadow && shadows) || !box || box.isEmpty()) return;   // (a caster out of view may still throw a shadow into it)
+      if (!o.visible || !box || box.isEmpty()) return;
+      const cast = o.castShadow && shadows;
+      // (a caster out of view may still throw a shadow into it: only one the scene camera alone would draw is moved)
+      if (cast && (this.casters === false || (o.layers.mask & (MAIN_BIT | CO_BIT)) !== MAIN_BIT)) return;
       this.tested++;
       _box.copy(box).applyMatrix4(o.matrixWorld).expandByScalar(MARGIN);
-      if (!_fr.intersectsBox(_box)) { o.visible = false; this.off.push(o); }
+      let out = !_fr.intersectsBox(_box);
+      if (!out && far < Infinity && takesFog(o.material) && boxDepth(_box, _iv) > far) { out = true; this.nFog++; }
+      if (!out) return;
+      if (cast) { o.layers.mask = (o.layers.mask & ~MAIN_BIT) | CO_BIT; this.layered.push(o); this.nCast++; }
+      else { o.visible = false; this.off.push(o); }
     };
     for (const m of batches) { const g = m.geometry; if (!g.boundingBox) g.computeBoundingBox(); test(m, g.boundingBox); }
     for (const E of this.listFor(root)) if (E.o.visible) test(E.o, this.boxOf(E));
-    this.n = this.off.length;
+    this.n = this.off.length + this.layered.length;
   }
-  restore() { for (const o of this.off) o.visible = true; this.off.length = 0; }
+  restore() {
+    for (const o of this.off) o.visible = true; this.off.length = 0;
+    for (const o of this.layered) o.layers.mask = (o.layers.mask & ~CO_BIT) | MAIN_BIT; this.layered.length = 0;
+  }
 }
 

@@ -176,7 +176,7 @@ const snowTex = () => ctex('hsnow', 256, 256, (x, S) => {
 const flagTex = () => ctex('hflags', 128, 32, (x, W, H) => { const cols = ['#d8302a', '#e8c030', '#2f8a3a', '#2a6ad8', '#f4f4f4']; for (let i = 0; i < 5; i++) { x.fillStyle = cols[i]; x.fillRect(i * W / 5 + 2, 0, W / 5 - 4, H); } }, true);
 
 // ================================================================== build
-export function buildHamalayi(scene, physics) {
+export function* buildHamalayiSteps(scene, physics) {
   const ox = HAMALAYI.x, oz = HAMALAYI.z;
   const group = new THREE.Group(); group.name = 'hamalayi'; group.visible = false; group.position.set(ox, 0, oz); scene.add(group);
   const W = (x, z) => ({ x: ox + x, z: oz + z });
@@ -187,6 +187,7 @@ export function buildHamalayi(scene, physics) {
   const terrain = new Terrain({ size: SIZE, segs: SEGS, tile: Math.ceil(SEGS / 2), squares: BATCH.on ? 25 : 0, heightFn: GRID.fn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, sand: snowTex(), cobble: TX.cobble } });
   group.add(terrain.mesh);
   physics.terrain.addPatch(terrain, ox, oz);
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   GRID = null;   // (the finish below reads the terrain itself)
   const lips = snowLips(terrain, group, { levels: [L0, L1, LB, L3, 24, 26, L4],
     // (no lip where a trail or a walk crosses the rim)
@@ -324,6 +325,7 @@ export function buildHamalayi(scene, physics) {
   // ---- the gorge: a river of meltwater between stone and ice banks (hamalayi-finish.js), a dead tree on the north bank
   // (hamalayi-tree.js: bark, a root plate, three broken stubs; it falls on a pendulum, lands with a thud, a bounce and a snow puff)
   gorgeRiver({ group, H, GM, GORGE, updaters, col, burn: (n) => { for (let i = 0; i < n; i++) r0(); } });
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const TREE = { x: GORGE.bridgeX, z: GORGE.z0 - 1.5 };
   const T = makeTree({ group, ox, oz, TREE, H, L0, updaters, snowM });
   const treeCol = col({ type: 'cyl', x: TREE.x, z: TREE.z, r: 0.45, top: H(TREE.x, TREE.z) + 11 });
@@ -374,6 +376,7 @@ export function buildHamalayi(scene, physics) {
   ];
   const doors = [];
   HOUSES.forEach(([x, z, ry, w, d, h], i) => { const o = HOPT[i]; doors.push(stoneHouse('lhar', x, z, ry, w, d, o.h ?? h, o).door); });
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   R.lharDoors = doors;
   const LH = houses.slice(1);   // (houses[0] is the hut)
   {
@@ -503,6 +506,7 @@ export function buildHamalayi(scene, physics) {
     ropeLine.position.set(LIFT.x, (platY + L3 + 3.7) / 2, LIFT.z); ropeLine.scale.y = Math.max(0.1, L3 + 3.7 - platY);
   };
   placePlat();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   R.lift = {
     bottom: W(LIFT.x, LIFT.z + 2.2), top: W(LIFT.top.x, LIFT.top.z - 1.0), y0: liftY0, y1: liftY1, frozen: true, up: false,
     thaw() { this.frozen = false; winchIce.visible = false; },
@@ -543,6 +547,7 @@ export function buildHamalayi(scene, physics) {
   put('lift', 'signTop', 20.5, -32.5, 0, (k) => mountainSign(k, [{ text: 'MONASTERY', a: 1.61 }, { text: 'OBSERVATORY', a: -2.82 }, { text: 'LIFT', a: 0.86 }]));
   put('lift', 'woodTop', 29.0, -27.2, Math.PI, (k) => woodpile(k, { w: 1.6, h: 0.9 }));
   put('lift', 'driftTop', 19.5, -27.8, 0.2, (k) => drift(k, 0, -0.1, 0, 3, 0.6, 1.6, 0, 2), { col: false, nocheck: true });
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
 
   // ---- the monastery: a whitewashed hall on a stone plinth under two tiers of flared golden roofs, a pillared
   // porch with steps, prayer wheels under lean-to roofs either side, a gate with a little golden roof, dry-stone
@@ -602,6 +607,7 @@ export function buildHamalayi(scene, physics) {
   for (let i = 0; i < 112; i++) r0();
   const ventCap = ventDress({ group, H, VENT, ventMat: pm('#ffffff', 0.32, { vertexColors: true, metalness: 0.08 }) }).cap;
   basinDress({ group, H, col, BASIN, VENT, descent: DESCENT[DESCENT.length - 1], kitOf });
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   // (FX-SOFT: the vent's steam was a hard white open cone: now a billowing column of soft puffs, from the game's particle
   //  system, which the room's updaters get as their third argument)
   const steamPl = new Plume({ rate: 15, rise: 3.2, h: 15, w0: 1.4, w1: 6.4, a: 0.5, add: 0.08, drift: 1.6, spread: 0.6, color: '#eef6ff' });
@@ -725,3 +731,5 @@ export function buildHamalayi(scene, physics) {
   R.levels = { L0, L1, L3, L4, LB };
   return R;
 }
+// (the whole build at once: a step at a time, without pauses)
+export function buildHamalayi(scene, physics) { const it = buildHamalayiSteps(scene, physics); let r = it.next(); while (!r.done) r = it.next(); return r.value; }

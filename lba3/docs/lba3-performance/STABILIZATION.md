@@ -221,3 +221,89 @@ Data and probes: `HEADING-LOAD-2/results/` (`per-heading-before-after.txt`, `tra
   2. visual shops, inventory and coins;
   3. faces, hands and the tunic (I-22);
   4. Citadel's looks.
+### TITLE-LOAD (31.10): the title view's draws, the loading screen's long tasks, the frames after an arrival's black
+Exact counts and pixel A/Bs, relative ms, all from SwiftShader in this container (no GPU ms, no fps for the laptop).
+Title runs: the laptop's start (desktop app on battery, Auto's first start: Medium, 1366×768), 12 angles of the title's
+circle. Data and probes: `TITLE-LOAD/results/`, `TITLE-LOAD/probes/` (`run.mjs` + `q_title.js`, `startup.mjs`,
+`q_reveal2.js`, `titleruns.sh`, `runtests.sh`).
+- **The title view (main pass calls / triangles; per angle in `results/title-per-angle.txt`).**
+  - Mean over the circle 320.1 / 1182k → 271.9 / 1007k; the shadow pass 33 / 103k → 21 / 10k.
+  - Heaviest angles: 336° 372 / 1363k → 292 / 1009k; 6° 372 / 1361k → 294 / 1047k; 36° 363 / 1335k → 303 / 1109k.
+- **Image-preserving (kept):**
+  - *Fog-depth cull* (`drawcull.js` FOGCULL). Outdoors the background is the fog's colour, and three's linear fog
+    reaches it exactly at fog.far in view depth, so a draw wholly beyond it paints background pixels only. Left out
+    of the main pass for a perspective camera: draw batches, terrain tiles, instanced tiles and big plain meshes (box
+    test), the actors (FarCull), each instance of a BatchedMesh (its own culling given a far plane at fog.far). A
+    caster leaves the main pass only, through its layers (bit 30, which the sun's shadow camera also sees). Off for a
+    fog that is not the background's colour (interiors) and for no-fog materials. Same-frame A/B, 12 angles: 0 px.
+    Mean −16 calls / −76k; at the heavy angles −45 to −48 calls, −179k to −256k. (Setting camera.far to the fog's
+    end instead changed 600–2,900 px through depth precision: not used.)
+  - *Bodies never placed.* On the title the hero and 8 enemies have not been posed by play yet: their rigs stand at
+    the world's origin, on the sea in the middle of the view, behind the menu (Twinsen a 15 px speck between "Load
+    Game" and "New Game"; four drones of 23k triangles each under him, casting into the shadow map). Left out of
+    title frames (`FarCull.hideUnplaced`): −32 calls / −99k main, −12 / −93k shadow, at every angle. It removes that
+    speck: 66–110 px per angle (same-frame A/B). A stray figure fixed, not a trade-off.
+  - Checked, nothing to gain: the menu's buttons and the overlay gradient are see-through (0.6 black), so nothing
+    behind them can be dropped; the grass/flower pools and the per-instance culls already test the title camera's
+    frustum; nothing is drawn below the sea (the bodies above were on it).
+  - Base build against this one: 0.01–0.36 % of pixels per angle (the speck, plus people and particles whose state
+    differs between runs; a second base run to separate the two was not made).
+- **Visible options for the title only, all OFF** (URL switches for A/B; screenshots this build | option in
+  `results/shots/title-<option>-vs-after-t00000.jpg` and `-t073.3.jpg`; pixels in `results/title-options-pixels.txt`):
+
+  | option | mean calls / triangles (12 angles) | pixels changed |
+  |---|---|---|
+  | as now | 271.9 / 1007k | – |
+  | `?titlefar=150`: fog end 150 m on the title | 243.5 / 848k (angles 276°–66°: −40 to −67 calls, −160k to −376k) | 30–66 % (the island's far side fades) |
+  | `?titlelod=40`: trees/grass detail measured 40 m further out | 259.6 / 990k | 0.01–1.1 % |
+  | `?titler=95&titleh=36`: a closer, lower circle | 268.0 / 992k | 64–70 % (another framing; little saved) |
+
+  Only the fog end saves much, and it is a clear look change. The rest of the title's load is in view: the town and
+  the harbour 30–150 m away (draw batches ~480–600k), the trees, and 40 people 5–11 px tall (2–6k triangles each).
+- **Scene changes: the frames after the black** (the coordinator's laptop evidence: Low arrival, +40 / +31 geometries
+  in the first frames in view).
+  - Cause (reproduced, `results/reveal2-low-base.txt`): a scene change whose shader warm-up has nothing left to compile.
+    With KHR_parallel_shader_compile (the laptop) three's compileAsync resolves in the same task, so the hold was over
+    before the next frame: no settle frame, no readiness check. The first frame in view drew the area's first update:
+    Zeelich +48 geometries and 87 pieces leaving their draw batches; Citadel's first frame (its shadow cache) in view
+    too. Emulated here: the warm-up resolved at once, frames stepped as 60 Hz frames.
+  - Fix: the settle frames and their readiness check follow every swap, hold or not (no fixed delay); batch cells
+    remade in a black frame are uploaded in it (`uploadBatches`). After: 0 frames in view made a geometry
+    (`results/reveal2-low-after.txt`). Zeelich's pieces leave their batches in a black settle frame, the next frame
+    is quiet, then the fade.
+  - The swap's frame is split: the area's preparation runs a step per black frame (`prepSteps`, each timed in
+    `game.prepLog`, reported by the benchmark's preparation line): shadow batches, the texture layers the draw
+    batches read (≤ 30 ms slices), the draw batches, geometry in 4 parts, batch meshes, textures, shadow programs,
+    the shader warm-up. Draw batching stays. Zeelich cold here: one black frame of 65.4 s (draw batches 65.1 s) →
+    steps of 0–465 ms, except one texture-layer read of 65.8 s: SwiftShader rasterizes the area's painted canvases in
+    the GPU process and the first read-back waits for all of it (a GPU-process cost here, INFERRED).
+  - Zeelich, the desert and the Hamalayi are built in steps: their builders are generators, `regions.js` runs a step
+    per task with a painted frame between and logs each step's ms (15, 7 and 7 steps). Code that needs the area
+    meanwhile gets the rest at once. Not measured per step on the laptop yet.
+- **Loading screen** (the start; `results/startup-*.txt`). The loading art is a compositor animation: it stops when
+  the main thread or the GPU process is busy for long.
+  - Before, the long tasks here: the first frame 26.0 s, the batches step 15.1 s, the texture step 11.8 s, Citadel's
+    build steps 0.4–1.9 s; 45 painted frames from the first byte to the title.
+  - Now: textures in 30 ms slices; Citadel's texture layers in slices (≤ 0.4 s each: one canvas read-back); shadow
+    batches, draw batches (0.9 s) and the shadow programs (3 kinds a task) each their own task; the title's first
+    draws in 4 parts before its first frame; the largest anisotropy asked before any shader is sent. 91 painted frames.
+  - What remains long here is the GPU process. SwiftShader has no parallel compile, so the first call that waits for
+    the GPU takes the whole compile: 11.0 s (geometry), 13.6 s (first draws, part 1), 8.5 s (one shadow-program
+    chunk). On the laptop the 'programs' step waits for the parallel compile without blocking. Whether anything there
+    still blocks for long is for its start trace.
+  - Two runs each (the container's load changed between them: unchanged build steps went 8.9 → 15.1 s):
+    time to the title 66.8 / 156.4 s → 77.4 / 121.3 s, so no claim either way (NOT VERIFIED); the longest task
+    26.0 / 43.7 s → 13.6 / 19.3 s; painted frames on the loading screen 45 / 43 → 91 / 102; long tasks over 1 s
+    5 / 7 → 10 / 13 (more, shorter tasks: the slices).
+- **Tests** (here, this branch, one at a time): opening, display, menus, perfbudget (0 new programs on every route),
+  drawcalls, transitions, timing, chapter1, travel, zislands, autoquality-game, camfollow: all PASS
+  (`results/tests.txt`). The staged scene preparation runs only on the game's own loop: the tests' fixed stepping
+  keeps the old one-frame path, so it is covered by `q_reveal2.js`, not by these suites.
+  - Programs at the title: 83 both (31 standard, 14 depth, 14 basic, 12 shader, 5 merged, 7 other). Not cut: Auto's
+    bloom/FXAA pass programs stay (Auto can switch them on in play); a per-variant audit of the rest was not made.
+- **Not done:** Citadel's own build steps (world.js, 0.7–1.0 s each here) are not split (not this round's files).
+- **Laptop (pending):**
+  - `node electron-bench.mjs startup laptop-<version>-startup-battery.txt battery`, once with the bench profile deleted
+    (cold shader cache) and once kept (warm): the loading steps, the slices, the long frames.
+  - `node electron-bench.mjs full laptop-<version>-full-battery.txt battery follow`: the arrival route's frames after
+    the black and the scene changes' preparation line.

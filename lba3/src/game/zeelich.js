@@ -485,7 +485,7 @@ function slabGeo(P, depth, tile, holes = []) {
 }
 
 // ================================================================== the region
-export function buildZeelich(scene, physics) {
+export function* buildZeelichSteps(scene, physics) {
   const ox = ZEELICH.x, oz = ZEELICH.z;
   const group = new THREE.Group();
   group.name = 'zeelich';
@@ -512,17 +512,27 @@ export function buildZeelich(scene, physics) {
   };
 
   buildGround();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   buildPaths();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   buildPier();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const ferry = buildFerry();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   buildGateway();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const houses = HOUSES.map((h) => esmerHouse(h));
   buildPlaza();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   buildStreetFurniture();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const mills = MILLS.map((m) => buildMill(m));
   const depot = buildDepot();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   const platform = buildPlatform();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   buildClouds();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   // ---------------------------------------------------------------- the Esmers' shuttles (src/game/shuttle.js)
   // (placed before the scatter, so no tree grows through the pad)
   // one landed on a pad by the dock (the first clear spot on the island), two more circling over the clouds
@@ -617,10 +627,14 @@ export function buildZeelich(scene, physics) {
 
   // ---------------------------------------------------------------- the street twelve years on (src/game/zeelife.js)
   const life = buildZeelichLife({ group, col, W, updaters, domeTex, pelleck: houses[0].dome });
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
 
   buildIslets();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   scatter();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   crateFlush();
+  yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
   B.build();
 
   // ---------------------------------------------------------------- contract
@@ -1946,5 +1960,7 @@ export function buildZeelich(scene, physics) {
     }
   }
 }
+// (the whole build at once: a step at a time, without pauses)
+export function buildZeelich(scene, physics) { const it = buildZeelichSteps(scene, physics); let r = it.next(); while (!r.done) r = it.next(); return r.value; }
 const lamps = [];
 const rimRocks = [];

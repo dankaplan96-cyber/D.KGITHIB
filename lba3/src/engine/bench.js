@@ -191,13 +191,20 @@ export class Bench {
     const paint = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
     const P = (this.prep = { t0: performance.now(), steps: [] });
     return G.buildAreas(BENCH_AREAS, 'Preparing the benchmark…')
-      .then(() => { for (const e of G.regions.log.slice(n0)) P.steps.push(`${e.group} ${e.ms}`); })
+      .then(() => { for (const e of G.regions.log.slice(n0)) P.steps.push(`${e.group} ${e.ms}${e.longest != null ? ` (${e.steps.length} steps, longest ${e.longest})` : ''}`); })
       .then(paint)
       .then(() => { if (G._shadowWarm) { const t = performance.now(); G._shadowWarm = false; G.warmShadows(); P.steps.push(`shadow programs ${Math.round(performance.now() - t)}`); } })
       .then(paint).then(paint)
       .then(() => { P.ms = Math.round(performance.now() - P.t0); });
   }
-  prepLine() { const P = this.prep; return P ? `benchmark preparation before the first route (not measured; each step its own task, ms): ${P.steps.join(' · ') || 'nothing to build'} · ${P.ms ?? '?'} ms in all` : 'benchmark preparation: none (the areas were built already)'; }
+  prepLine() { const P = this.prep; return (P ? `benchmark preparation before the first route (not measured; each step its own task, ms): ${P.steps.join(' · ') || 'nothing to build'} · ${P.ms ?? '?'} ms in all` : 'benchmark preparation: none (the areas were built already)') + this.scenePrepLine(); }
+  // TITLE-LOAD: the scene changes' preparation behind the black (main.js prepSteps: a step per black frame), each kind of
+  // step's count and longest ms, from the start of the run
+  scenePrepLine() {
+    const L = this.g.prepLog || []; if (!L.length) return '';
+    const by = new Map(); for (const e of L) { const k = e.k; const v = by.get(k) || [0, 0, 0]; v[0]++; v[1] = Math.max(v[1], e.ms); v[2] += e.ms; by.set(k, v); }
+    return `\n  scene changes' preparation behind the black (a step per black frame; count / longest / total ms): ${[...by].map(([k, v]) => `${k} ${v[0]} / ${v[1]} / ${v[2]}`).join(' · ')}`;
+  }
   // runs every route at each quality; resolves with the report text
   // (opts, for probes and tests: routes: route ids to run; breakdown: false leaves the breakdowns out (breakdownMedium /
   //  breakdownHigh: false, one of them); played: false the "as played" runs)
