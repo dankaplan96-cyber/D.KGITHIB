@@ -1641,6 +1641,29 @@ benchmark's routes frame by frame (q_motion.js). Exact counts and pixels only, n
 Not verified: the laptop's GPU ms for every change (`electron-bench.mjs full … battery`: the street breakdown's
 SHADE-COST lines against 'as is'), and whether Direct3D 11's compiler keeps the new branches.
 
+### MAGIC-LEVELS: magic levels from the story, never a shop (docs/lba3-production/MAGIC_LEVELS.md)
+
+Branch magic-levels, own server on port 8647, SwiftShader, on a shared machine (load average 20–30).
+
+| Check | Result |
+|---|---|
+| No stall sells a level | Pippa (chapters 1 and 2) and Nara's case (chapter 3): every item bought, the level does not change; a flask still fills the magic |
+| Level 1 through chapters 1–3 | 1 at a new game, with the cupboard ball, and at the ends of chapters 1, 2 and 3 |
+| Each step fires once | Chapter 4's third warm disc → 2; Sendell → 3; the chapter 10 code → 4. Each hook called twice: one toast, the magic filled once |
+| Save → Continue | The level and the `ml_*` flags kept |
+| Old saves | Bought levels 2 and 3 kept; chapter 4 then shows "Magic refilled" and no level toast; chapter 8 at level 1 → 3; chapter 7 past Sendell → 3; a missing level → 1 |
+
+| Test | Verdict |
+|---|---|
+| magic-levels (new, 26 checks), chapter1 (23), menus (38), combat (76), house, containers (41) | PASS ×6 |
+| chapter4 (54; the warm discs played by input, with the new step), chapter7, chapter10 (23), save-migration, arsenal (34) | PASS ×5 |
+
+On the loaded machine, chapter4 first ran out of its outer 2400 s timeout at its last old-save boots, with 50 PASS
+and 0 FAIL. Re-run with 4000 s: PASS. chapter1 twice timed out on a page load (its own 240 s wait) before it passed.
+
+Not verified: whether a first-time player notices the three moments and feels they earned them. Those are design
+judgements until a fresh player tries them.
+
 ### Not tested / blocked
 - HOUSE-FIX on a real GPU and by the user's eye: NOT DONE (SwiftShader captures; self-reviewed, no independent review).
 - LAZY-REGIONS + AUTO-FIT on the user's two computers (Intel UHD startup, the bar, first entries, Medium/High with the caps, the suggestion; the Vega laptop unchanged): NOT VERIFIED (LAZY_REGIONS.md §8).
