@@ -100,6 +100,8 @@ export const GPU_VARIANTS = [
   // trade-offs it prepared (off in play; compare with 'as is': what each would save)
   { id: 'GPU: grass/flowers not culled to the view (as before)', apply(G) { G.world?.setSmallView?.(false); }, undo(G) { G.world?.setSmallView?.(true); } },
   { id: 'GPU: instanced decoration not culled to the view (as before)', apply() { setViewInst(false); }, undo() { setViewInst(true); } },
+  // (trade-offs, not in play: grass and flowers half as dense beyond 28 m from Twinsen, in 9 m squares)
+  { id: 'GPU: grass/flowers half beyond 28 m (trade-off)', apply(G) { G.world?.setSmallThin?.({ from: 28, keep: 0.5 }); }, undo(G) { G.world?.setSmallThin?.(null); } },
   // the static shadow cache's depth into the live map by a framebuffer blit, as before (shadowcache.js copyDepth)
   { id: 'GPU: shadow cache copy by blit (as before)', apply(G) { const C = G.shadowCache; if (C) { C.depthCopy = 'blit'; C.drop(); } }, undo(G) { const C = G.shadowCache; if (C) { C.depthCopy = 'draw'; C.drop(); } } },
   // the post passes

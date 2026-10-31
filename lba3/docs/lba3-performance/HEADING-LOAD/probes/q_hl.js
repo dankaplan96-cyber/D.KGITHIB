@@ -93,8 +93,13 @@
     }
     if (base.img) out.__images[`h${k}-base`] = base.img;
     const rec = { k, base: { calls: F.M[0], tris: Math.round(F.M[1]), shadowCalls: F.S[0], shadowTris: Math.round(F.S[1]), groups: base.T.g } };
-    for (const v of VARS) {
-      const sw = GPU_VARIANTS.find((x) => x.id.includes(v)); if (!sw) { out.lines.push(`   (no variant ${v})`); continue; }
+    // (W_COMBO=1: all of VARS applied together, as one variant: e.g. 'no characters|no particles' for a build A/B of the
+    //  static world, the people's own animation differing from run to run)
+    const LIST = window.COMBO ? [VARS.join('+')] : VARS;
+    for (const v of LIST) {
+      const parts = v.split('+').map((p) => GPU_VARIANTS.find((x) => x.id.includes(p)));
+      if (parts.some((p) => !p)) { out.lines.push(`   (no variant ${v})`); continue; }
+      const sw = { apply(G) { for (const p of parts) p.apply(G); }, undo(G) { for (const p of [...parts].reverse()) p.undo(G); } };
       sw.apply(G); G.world?.updateLod?.(G.hero.pos); RR.render();
       const r2 = frame(!!window.SHOTS), F2 = fmt(r2.T);
       sw.undo(G); G.world?.updateLod?.(G.hero.pos); RR.render();

@@ -39,7 +39,9 @@ export const ISLAND = { cx: -76, cz: 16 };
 // order (the same instances, matrices, colours and thinning; nothing that can reach the view is left out: the same
 // pixels). A pool is refilled only when its set of squares changes. `on` false: every tile in reach, as before (the
 // benchmark's A/B line, benchgpu.js).
-export const SMALL_VIEW = { on: true, sub: 9, margin: 0.6 };
+// `thin` (a trade-off, OFF unless chosen: HEADING-LOAD's report): the squares further than thin.from m from Twinsen keep
+// only the first thin.keep of each tile's instances (the tiles' own random order: an even thinning, as Low's).
+export const SMALL_VIEW = { on: true, sub: 9, margin: 0.6, thin: null };
 export const POI = {
   start: { x: -38, z: 4 },
   village: { x: -42, z: -4 },
@@ -699,17 +701,18 @@ export function* buildWorldSteps(parentScene) {
       let k = 0;
       for (const t of P.tiles) {
         if (!t.visible) continue;
-        const n = t.count, V = t.userData.view, mask = SMALL_VIEW.on && V ? V.mask : -1;
+        const n = t.count, V = t.userData.view, mask = SMALL_VIEW.on && V ? V.mask : -1, far = mask !== -1 && SMALL_VIEW.thin ? V.far & mask : 0;
         if (mask === 0) continue;
-        if (mask === -1 || mask === V.all) {
+        if ((mask === -1 || mask === V.all) && !far) {
           M.set(t.instanceMatrix.array.subarray(0, n * 16), k * 16);
           if (C && t.instanceColor) C.set(t.instanceColor.array.subarray(0, n * 3), k * 3);
           k += n; continue;
         }
         // (HEADING-LOAD: the instances of the squares in view, in their order)
-        const TM = t.instanceMatrix.array, TC = t.instanceColor?.array, sub = V.sub;
+        const TM = t.instanceMatrix.array, TC = t.instanceColor?.array, sub = V.sub, nk = far ? Math.round(n * SMALL_VIEW.thin.keep) : n;
         for (let i = 0; i < n; i++) {
-          if (!(mask & (1 << sub[i]))) continue;
+          const b = 1 << sub[i];
+          if (!(mask & b) || (i >= nk && far & b)) continue;
           M.set(TM.subarray(i * 16, i * 16 + 16), k * 16);
           if (C && TC) C.set(TC.subarray(i * 3, i * 3 + 3), k * 3);
           k++;
@@ -738,7 +741,7 @@ export function* buildWorldSteps(parentScene) {
     const spheres = [];
     let all = 0;
     for (const [q, b] of box) { all |= 1 << q; spheres.push({ q, s: new THREE.Sphere(new THREE.Vector3((b[0] + b[3]) / 2, (b[1] + b[4]) / 2, (b[2] + b[5]) / 2), Math.hypot(b[3] - b[0], b[4] - b[1], b[5] - b[2]) / 2) }); }
-    return { sub, spheres, all, mask: all };
+    return { sub, spheres, all, mask: all, far: 0 };
   };
   // before each render of the scene with a perspective camera (three calls the scene's onBeforeRender with this frame's
   // camera matrices, before it builds the render list and uploads the instances): each tile in reach, its squares in view
@@ -747,12 +750,15 @@ export function* buildWorldSteps(parentScene) {
     if (!SMALL_VIEW.on || !scene.visible || !camera?.isPerspectiveCamera) return;
     _vf.setFromProjectionMatrix(_vm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
     let any = false;
+    const TH = SMALL_VIEW.thin, F = W.lodFocus;
     for (const P of W.smallPools) {
       for (const t of P.tiles) {
         const V = t.userData.view; if (!V || !t.visible) continue;
-        let mask = 0;
+        let mask = 0, far = 0;
         for (const { q, s } of V.spheres) if (_vf.intersectsSphere(s)) mask |= 1 << q;
-        if (mask !== V.mask) { V.mask = mask; P.dirty = true; any = true; }
+        // (the thinning's squares by their centre's distance from Twinsen, 2 m either way before one changes)
+        if (TH && F) for (const { q, s } of V.spheres) { const d = Math.hypot(s.center.x - F.x, s.center.z - F.z), was = V.far & (1 << q); if (was ? d > TH.from - 2 : d > TH.from + 2) far |= 1 << q; }
+        if (mask !== V.mask || far !== V.far) { V.mask = mask; V.far = far; P.dirty = true; any = true; }
       }
     }
     if (any) fillPools();
@@ -818,7 +824,10 @@ export function* buildWorldSteps(parentScene) {
     fillPools();
     for (const T of W.lodTiles) if (!T.small) setLod(T, T.near);
   };
+  W.lodFocus = null;
+  W.setSmallThin = (thin) => { SMALL_VIEW.thin = thin || null; for (const P of W.smallPools) { P.dirty = true; for (const t of P.tiles) if (t.userData.view) t.userData.view.far = 0; } fillPools(); };
   W.updateLod = (focus) => {
+    W.lodFocus = focus;
     const near = LOD_DETAIL.near, far = LOD_DETAIL.smallFar;
     for (const B of W.batches) B.update(focus, near);
     for (const T of W.lodTiles) {
