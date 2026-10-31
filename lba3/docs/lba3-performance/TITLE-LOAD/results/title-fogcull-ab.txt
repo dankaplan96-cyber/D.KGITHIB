@@ -1,0 +1,52 @@
+title view: 1366×768, pixel ratio 1, Auto Medium, battery true, fog 45–190 m, camera far 2500 m, shadows true
+t 0 s (camera at 126°): main 306 calls 1071k · shadow 33 calls 103k · main triangles wholly beyond the fog 0k (0.0 %)
+   groups: scenery 166/636k · characters 98/172k · trees 2/105k · terrain 9/88k · grass 12/46k · water 1/22k · particles 2/1k · transparent 15/1k · sky 1/0k
+   [fogOff] main 306 calls 1071k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 306 calls 1071k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 10.47 s (camera at 156°): main 277 calls 973k · shadow 33 calls 103k · main triangles wholly beyond the fog 0k (0.0 %)
+   groups: scenery 153/586k · characters 95/175k · trees 2/100k · terrain 7/69k · water 1/22k · grass 7/21k · particles 2/1k · transparent 9/0k · sky 1/0k
+   [fogOff] main 277 calls 973k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 277 calls 973k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 20.94 s (camera at 186°): main 265 calls 1005k · shadow 33 calls 103k · main triangles wholly beyond the fog 0k (0.0 %)
+   groups: scenery 147/604k · characters 89/175k · trees 2/107k · terrain 9/88k · water 1/22k · grass 5/8k · particles 2/1k · transparent 9/0k · sky 1/0k
+   [fogOff] main 265 calls 1005k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 265 calls 1005k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 31.42 s (camera at 216°): main 294 calls 1067k · shadow 33 calls 103k · main triangles wholly beyond the fog 0k (0.0 %)
+   groups: scenery 160/594k · characters 93/175k · trees 2/163k · terrain 8/78k · grass 11/33k · water 1/22k · particles 2/1k · transparent 16/1k · sky 1/0k
+   [fogOff] main 294 calls 1067k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 295 calls 1069k (1 / 2k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 41.89 s (camera at 246°): main 302 calls 1172k · shadow 33 calls 103k · main triangles wholly beyond the fog 6k (0.5 %)
+   groups: scenery 171/691k · trees 2/180k · characters 93/178k · terrain 9/88k · water 1/22k · grass 6/12k · particles 2/1k · transparent 17/1k · sky 1/0k
+   [fogOff] main 302 calls 1178k (0 / 6k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 302 calls 1172k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 52.36 s (camera at 276°): main 326 calls 1185k · shadow 33 calls 103k · main triangles wholly beyond the fog 41k (3.4 %)
+   groups: scenery 192/745k · characters 92/195k · trees 2/140k · terrain 8/78k · water 1/22k · grass 6/3k · transparent 22/1k · particles 2/1k · sky 1/0k
+   [fogOff] main 339 calls 1248k (13 / 62k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 326 calls 1185k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 62.83 s (camera at 306°): main 296 calls 1123k · shadow 33 calls 103k · main triangles wholly beyond the fog 123k (10.9 %)
+   groups: scenery 186/702k · characters 75/174k · trees 2/126k · terrain 10/98k · water 1/22k · transparent 19/1k · particles 2/1k · sky 1/0k
+   [fogOff] main 341 calls 1302k (45 / 179k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 301 calls 1136k (5 / 13k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 73.3 s (camera at 336°): main 324 calls 1107k · shadow 33 calls 103k · main triangles wholly beyond the fog 103k (9.3 %)
+   groups: scenery 209/677k · characters 86/175k · trees 2/144k · terrain 9/88k · water 1/22k · transparent 14/1k · particles 2/1k · sky 1/0k
+   [fogOff] main 372 calls 1363k (48 / 256k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 328 calls 1118k (4 / 11k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 83.78 s (camera at 6°): main 326 calls 1146k · shadow 33 calls 103k · main triangles wholly beyond the fog 108k (9.4 %)
+   groups: scenery 209/689k · characters 87/175k · trees 2/160k · terrain 10/98k · water 1/22k · transparent 14/1k · particles 2/1k · sky 1/0k
+   [fogOff] main 372 calls 1361k (46 / 215k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 330 calls 1156k (4 / 11k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 94.25 s (camera at 36°): main 335 calls 1208k · shadow 33 calls 103k · main triangles wholly beyond the fog 50k (4.2 %)
+   groups: scenery 213/742k · characters 92/190k · trees 2/154k · terrain 10/98k · water 1/22k · transparent 14/1k · particles 2/1k · sky 1/0k
+   [fogOff] main 363 calls 1335k (28 / 127k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 344 calls 1246k (9 / 38k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 104.72 s (camera at 66°): main 301 calls 1158k · shadow 33 calls 103k · main triangles wholly beyond the fog 46k (4.0 %)
+   groups: scenery 181/708k · characters 95/184k · trees 2/135k · terrain 11/108k · water 1/22k · transparent 8/1k · particles 2/1k · sky 1/0k
+   [fogOff] main 311 calls 1221k (10 / 63k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 307 calls 1186k (6 / 28k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+t 115.19 s (camera at 96°): main 297 calls 1054k · shadow 33 calls 103k · main triangles wholly beyond the fog 1k (0.1 %)
+   groups: scenery 179/639k · characters 93/175k · trees 2/135k · terrain 8/78k · water 1/22k · grass 3/2k · particles 2/1k · transparent 8/0k · sky 1/0k
+   [fogOff] main 297 calls 1054k (0 / 1k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+   [castersOff] main 297 calls 1054k (0 / 0k) · shadow 33 calls 103k · 0 px differ (max 0 levels)
+mean over 12 angles: main 304.1 calls 1106k · shadow 33.0 calls 103k · beyond fog 40k
+   [fogOff] main 319.9 calls 1182k · px differ max 0
+   [castersOff] main 306.5 calls 1114k · px differ max 0

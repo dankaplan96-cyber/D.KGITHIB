@@ -1,0 +1,18 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://127.0.0.1:8148",
+      "localStorage": [
+        {
+          "name": "sunshard_settings_v1",
+          "value": "{\"lang\":\"en\",\"controls\":\"classic\",\"camera\":\"lba\",\"hud\":\"lba\",\"visual\":\"2026\",\"quality\":\"high\",\"res\":\"auto\",\"music\":0.55,\"sfx\":0.8,\"voice\":0.8,\"textSpeed\":\"normal\",\"textSize\":\"normal\",\"shake\":\"on\",\"difficulty\":\"normal\",\"aimAssist\":\"normal\",\"lockMode\":\"toggle\",\"keys\":{},\"v\":2}"
+        },
+        {
+          "name": "lba3_save_v1",
+          "value": "{\"v\":3,\"room\":\"zeelich\",\"hero\":{\"x\":2342.4,\"z\":1.3,\"hp\":4,\"mp\":8,\"magicLevel\":1,\"clovers\":1,\"coins\":7,\"hasBall\":true,\"behaviour\":\"athletic\",\"hasSword\":false,\"hasPulse\":false,\"weapon\":\"ball\",\"prevWeapon\":\"fists\"},\"flags\":{\"chapter\":2,\"chapterKey\":\"zeelich\",\"intro\":true,\"opening\":true,\"tremorSeen\":true,\"wellSeen\":true,\"key\":true,\"metXil\":true,\"stamp\":true,\"rope\":true,\"kidsAsked\":true,\"overheard\":true,\"timConfessed\":true,\"inWell\":true,\"nodes\":3,\"sendellHeard\":true,\"prologueDone\":true,\"c1_started\":true,\"c1_home\":true,\"c1_arrived\":true,\"c1_task\":true,\"c1_officeSeen\":true,\"c1_map\":true,\"c1_valve_orchard\":true,\"c1_valve_depot\":true,\"target\":true,\"c1_valve_cliff\":true,\"c1_water\":true,\"c1_control\":true,\"c1_tour\":true,\"c1_needZoe\":true,\"c1_zoeStart\":true,\"c1_zoeIntro\":true,\"c1_plan\":true,\"c1_zoeDone\":true,\"c1_veskGone\":true,\"c1_radio\":true,\"c2_started\":true,\"c2_planTaken\":true},\"killed\":[\"mite2\",\"mite0\",\"mite3\",\"mite1\",\"gdog1\",\"drone1\",\"drone2\",\"guard1\"],\"collected\":[],\"searched\":[\"cupboard\",\"locker2\"],\"crates\":[4,5]}"
+        }
+      ]
+    }
+  ]
+}

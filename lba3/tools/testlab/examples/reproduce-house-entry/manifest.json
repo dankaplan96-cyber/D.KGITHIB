@@ -1,0 +1,50 @@
+{
+  "runId": "2026-10-31T14-29-36-reproduce",
+  "suite": "reproduce",
+  "toolVersion": "0.1.0",
+  "started": "2026-10-31T14:29:38.157Z",
+  "power": {
+    "source": "battery",
+    "charge": 99
+  },
+  "hardware": {
+    "cores": 8,
+    "ramGB": 13.9,
+    "display": [
+      "1366x768 @ 60 Hz"
+    ],
+    "os": "Microsoft Windows 11 Enterprise 10.0.26300",
+    "gpus": [
+      "AMD Radeon(TM) Vega 8 Graphics (driver 31.0.21925.1001)"
+    ],
+    "cpu": "AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx  ",
+    "clocks": "Unavailable",
+    "temperatures": "Unavailable"
+  },
+  "game": {
+    "target": "packaged",
+    "path": "C:/Users/dan/lba3-games/0.43.3/LBA3 The Awakening.exe",
+    "version": "0.43.3 (build 292)",
+    "commit": "n/a (packaged build)",
+    "specialBuild": "no: the unmodified game",
+    "display": {
+      "window": "1366×768",
+      "dpr": 1,
+      "focused": true,
+      "refreshHz": 60,
+      "size": "1366x768",
+      "scale": 1,
+      "fullscreen": true
+    },
+    "debug": "Playwright: --remote-debugging-port=0 and --inspect=0 (127.0.0.1, ephemeral)"
+  },
+  "conditions": [
+    "power battery → battery"
+  ],
+  "stopped": false,
+  "finished": "2026-10-31T14:30:11.317Z",
+  "powerEnd": {
+    "source": "battery",
+    "charge": 98
+  }
+}

@@ -1,0 +1,19 @@
+PASS D2: a refused exit says its line once while he stands in the door (6 s) 
+PASS D1: Up from the hallway walks out of the front door at 30 fps 
+PASS D1: ... and at 60 fps 
+PASS D3: held at the waterline by a slide, he is put back on safe ground within 1.5 s 
+PASS D6: the cliff brink is not kept as a safe spot 
+PASS D6: out of the slide trap below, he stands somewhere stable (no fall loop) 
+PASS D10: off the Desert Island pier onto the sand and to Mother Tarra by input 
+PASS D10: no slide-steep banks around the pier's land end 
+PASS D11: a story exit naming only the room puts him at its spawn (no NaN position) 
+  (story exits naming only the room, now sent to its spawn: ["zeelich:outdoor-lighthouse","shell:c3-deep","shell:c3-gallery","shell:c3-shaft","shell:c3-sendell","shell:c3-core"])
+PASS D12: off the Hamalayi lift at the top onto the ramp and the terrace by input 
+PASS D13: the fortress lever is on the yard floor and reached by input 
+PASS D14: Zoé starts her chapter-8 run outside the barrier ring and walks to the first farm 
+PASS D15: the control-room door is there in chapter 8 after a real chapter 2, and he walks in 
+PASS D18: no pit below the orchard; he walks up to the orchard plateau by input 
+PASS D4: a pause during the death fall holds the game-over screen 
+PASS D4: the game-over screen comes after the fall, in game time 
+no errors
+ALL PASSED

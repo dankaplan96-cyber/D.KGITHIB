@@ -1,0 +1,34 @@
+# ASSET MANIFEST
+
+No original LBA1/LBA2 game assets (models, textures, sprites, animations, audio, text) are included or
+loaded. The LBA2 engine source (GPL-2.0, github.com/2point21/lba2-classic) was **read** for behaviour
+and numeric values (camera angles and distances, behaviours, ball rules); no source code was copied.
+Original game data used for visual comparison during development stays outside the repository.
+
+| Asset | Source | Licence | Status |
+|---|---|---|---|
+| three.js r180 (`vendor/three`) | three.js project | MIT | final |
+| Rubik font (Google Fonts, loaded at runtime) | Google Fonts | OFL | final |
+| Character meshes: Twinsen, Zoé, Arthur, Baldino, Vesk, townsfolk, Zeelich residents (`assets/poly/*.json`) | Built in Blender from Python (`tools/blender/twinsen_poly.py`, `zoe_poly.py` (SRC-1), `baldino_poly.py` (SRC-2), `dinofly_poly.py`, `cast_poly.py`, `lbapoly.py`; run with `pip install bpy`), shaped after measurements of the original models (numbers only, docs/LBA2_MEASUREMENTS.md, docs/lba3-team/SOURCE_INVENTORY.md); editable sources `art/characters/twinsen/twinsen_poly.blend`, `art/characters/{zoe,baldino,dinofly}/*.blend`, `art/characters/cast_poly.blend` | project | in use; rebuilt from the scripts |
+| Dogs, the Esmers' shuttles (`src/game/dogs.js`, `src/game/shuttle.js`) | Generated in code, shaped after measurements of the original models (numbers only, docs/LBA2_MEASUREMENTS.md) | project code | in use |
+| LBA1 room layouts (`assets/lba1/*.json`) | Reduced from the user's LBA1 grid and scene data in the scratchpad to numbers only: per column the runs of cells (height, collision shape, an index into the room's averaged brick colours), the hero start, actor spots with their body number, zone boxes. No brick sprites or other graphics; the rooms are built in code (`src/game/lba1room.js`) | measurements of the original layout | in use (asylum, the Temple of Bù's maze and halls) |
+| Zeelich's island layouts (`assets/lba2/islands/*.json`: otringal, knartas, mosquibee, celebration (+ `risen`: the objects of its later state CELEBRA2), undergas, cxislet, platform, liftdock (ASCENCE)) | Reduced from the user's LBA2 island files in the scratchpad to numbers only: the ground heights (cm, every second point of the original's height grids) and each object's place and bounding box with a size class; converter `tools/lba2-islands.py` (reads the user's own files; it writes numbers only and carries no original data). Our own places (Tralu Rock, the Nectar Orchard, the Old Watch) are generated in code (`src/game/zplaces.js`), not assets. No graphics, textures or meshes; everything drawn is ours (`src/game/zislands.js`) | numbers measured from the user's own copy of LBA2 | in use |
+| Desert Island's ground (`src/game/desert-layout.js`, WORLD-SHAPE) | Reduced from the user's DESERT.ILE to numbers only: every second height of the original grid (≈ 1.71 m apart) in 0.05 m steps, one byte each, base64 (28 KB); converter `tools/lba2-islands.py --desert`. desert.js turns it into its own frame for the coast and the high ground; dunes, colours, places and everything drawn are ours | numbers measured from the user's own copy of LBA2 | in use |
+| World-similarity references (`tools/worldscore/ref/citadel.json`, `desert.json`, `hamalayi-lba1.json`; WORLD-80) | Numbers only, for the measuring tool `tools/worldscore.mjs` (never loaded by the game): Citadel's and Desert Island's heights (cm, every second point) and object boxes as the Zeelich files above, plus each exterior door zone's place and the scene it leads to (SCENE.HQR); LBA1's Hamalayi scenes as counts of walkable cells per 0.43 m layer (LBA_GRI/LBA_BLL). Converter `tools/lba2-islands.py --ref` / `--hamalayi` | numbers measured from the user's own copies of LBA2 and LBA1 | tool data |
+| Citadel Spaceport (`src/game/spaceport.js`) | Generated in code | project code | in use |
+| Bram, Officer Odile, Nell (`assets/poly/{bram,odile,nell}.json`) | Built in Blender from Python (`tools/blender/cast_poly.py`) from their looks in `src/game/characters.js` | project code | in use |
+| Citadel twelve years on: the house's family corners, the pump, the garden, customs, cargo, Nell's shop (`src/game/homelife.js`, `src/game/townlife.js`) | Generated in code | project code | in use |
+| Baldino's workshop years on: the relay table, the hoist, the fan, the tea experiment, the thunder box, Ilo's perch (`src/game/workshoplife.js`) | Generated in code (the relays reuse `buildRelay` from `src/game/valveroom.js`) | project code | in use |
+| Workshop evidence images (`captures/workshop/*.png`) | Screenshots of the game (software renderer), composed with PIL | project captures | evidence |
+| Skeletons (`art/characters/skeletons.json`) | Dumped from the game's rig definitions (`tools/dump-skeletons.mjs`) | project code | in use |
+| Character animation | Procedural pose animation (`src/engine/rig.js`) | project code | in progress |
+| Buildings, props, street furniture, cliffs, heat posts | Generated in code (`architecture.js`, `town.js`, `island.js`, `props.js`, `cliffs.js`, `zeelich.js`) | project code | Citadel and Zeelich in use; underground in progress |
+| Trees, bushes, rocks, grass, tulips | Generated in code (`src/game/vegetation.js`) | project code | in use |
+| Textures (grass, soil, paving, plaster, stone, brick, roof tiles, wood, cliff rock, sea, clouds) | Painted on canvas in code (`src/engine/textures.js`) | project code | in use |
+| Baked lighting data (`assets/bake.bin`) | Generated by `tools/bake.mjs` from the project's own scenes | project | in use |
+| Sound effects | Synthesised with WebAudio at runtime (`src/engine/audio.js`) | project code | in use |
+| Music | See `docs/MUSIC.md` once the orchestral score is merged; until then generated with WebAudio (`src/engine/music.js`) | project | draft |
+| Story and dialogue (English) | Written for this project (`src/game/text/`, `src/game/i18n.js`) | project | in progress |
+
+Reference images supplied by the user (LBA2 screenshots and renders) are used only as visual reference
+and are not shipped. Comparison images in `captures/` and `docs/` show only this project's renders.

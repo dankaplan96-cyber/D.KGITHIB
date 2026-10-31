@@ -1,0 +1,137 @@
+{
+ "task": "SRC-1",
+ "character": "Zoé",
+ "look": "zoe",
+ "identified_as": {
+  "game": "LBA2",
+  "body": 26,
+  "file3d": 15,
+  "gen_body": 0,
+  "variant_bodies": {
+   "27": "File3D 15 generic body 18 (holding an object; 25 groups)"
+  },
+  "evidence": [
+   "scene 0 (Twinsen's house) object 4 talks through LM_MESSAGE_ZOE (opcode 78) with talk colour 4 = COUL_ZOE (lba2-classic SOURCES/COMMON.H)",
+   "it speaks the game's first line (TEXT.HQR bank 6, id 0: Zoé sends Twinsen to the pharmacy for the Dino-Fly)",
+   "body 26 in scenes 0, 2, 65, 193, 196, 199 and body 27 in 49, 195, all with talk colour 4",
+   "render: blonde three-ball bun, red outfit"
+  ]
+ },
+ "lba1_counterpart": {
+  "body": 48,
+  "confidence": "probable (scene 5, the house; end scenes 111-117); not used"
+ },
+ "sources_read_sha256": {
+  "lba2/BODY.HQR": "73efe61b51506e2b64ab88cf9c4846549056bb6435e40e5876587907afad2b77",
+  "lba2/ANIM.HQR": "8ca1872f72b15edb838e4c04f643e4097c0235171c8604b1993762ce2b9a2fbf",
+  "lba2/RESS.HQR": "09d18f76383461c480dbe7a93fff204ecebfc009ab7d9c1d8bfc3c66dc7a9f21",
+  "lba2/SCENE.HQR": "d5ac27280c284f5b403287a6f58621bd82636176310e6d23698c26e92ae01c22",
+  "lba2/TEXT.HQR": "a66785c5811e7f43f1a13dd7d1954968c516b09ce91d31ab10a2138f5ae45bdd",
+  "lba2/SCREEN.HQR (palette, entry 5)": "789d46b2918d9bf9cd058d13dd76f635945e48f1bebae58d702cf32da860cfd4"
+ },
+ "sources_location": "the user's files in the session scratch space (never committed)",
+ "outputs_sha256": {
+  "assets/poly/zoe.json": "597ec3f178886b993340ff72aeeacbda329d2e246a22a55d6c5985f5d5af3102"
+ },
+ "outputs_other": [
+  "art/characters/zoe/zoe_poly.blend (editable; rewritten by the script)"
+ ],
+ "built_by": "python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly art/characters/zoe/zoe_poly.blend (bpy 5.2.2); measurements: tools/lba-source/measure.py, contours.py",
+ "contains_original_data": false,
+ "scale": {
+  "H_units": 1238,
+  "metres_per_H": 1.95,
+  "note": "the game's Zoé skeleton (unchanged); Twinsen is 2.006 m per H to the skull top; both originals are equally tall"
+ },
+ "axes": "+y up, +z front, +x her left (as LBA2; no flip)",
+ "skeleton": "the game's zoe skeleton (art/characters/skeletons.json), unchanged",
+ "materials": {
+  "skin": [
+   "byte 32 ramp 2",
+   "#d9a679 (warmer than Twinsen's #e2bc90: artistic)"
+  ],
+  "outfit, lips": [
+   "byte 64 ramp 4",
+   "#b32b27"
+  ],
+  "shoes": [
+   "byte 128 ramp 8",
+   "#3f7b47"
+  ],
+  "lids": [
+   "byte 30 ramp 1 shade 14",
+   "#8f634b"
+  ],
+  "eyes": [
+   "byte 181",
+   "#2f474b"
+  ],
+  "necklace, earrings": [
+   "byte 197 (lines)",
+   "#1b4b67"
+  ],
+  "hair": [
+   "palette 106 #e3af53, flat spheres",
+   "#cc8f00 with straight-up normals, #e3af6b on screen"
+  ],
+  "eyes (ZOE-OPEN)": [
+   "ours",
+   "white #e9ded2, iris #3f7480, pupil #16272b"
+  ],
+  "mouth line (ZOE-OPEN)": [
+   "ours",
+   "#6a1a16"
+  ]
+ },
+ "animations_imported": [],
+ "animations_measured": {
+  "207": "idle (left hand on hip), 3.0 s",
+  "208": "walk, 1.2 s cycle, 0.52 H per cycle",
+  "209": "hit",
+  "212": "fall",
+  "213": "land",
+  "210": "walk in, hands on hips, head shake",
+  "211": "talk gesture, arm raised",
+  "214": "point (body 27)",
+  "215": "bent over working",
+  "216": "arm out, head shake (body 27)",
+  "217": "walk holding (body 27)",
+  "218": "hands on hips sway, 7.2 s",
+  "219": "arms up"
+ },
+ "artistic_changes": [
+  "warmer skin",
+  "short round mittens instead of the original's long pointed hands (~0.14 m)",
+  "flatter lids that stop at the eye (the original's slant read as a frown)",
+  "no brown under the nose",
+  "lips: one even normal; face normals bent up",
+  "twelve years on: not pregnant (see twelve_years_later)",
+  "ZOE-OPEN (CHAR-2): a designed head at the measured size and place (a broad, gently curved face front, brow, cheekbones, a rounded chin) instead of the measured wedge cuts; a small rounded nose of its own",
+  "ZOE-OPEN: smaller lips with a mouth line (the measured crescent spanned the jaw); white almond eyes with iris and pupil, a lid line with a flick and thin brows (the original's dark slits read as closed)",
+  "ZOE-OPEN: blue teardrop hoop earrings instead of the original's line triangles",
+  "ZOE-OPEN: a curled mitten hand with a thumb and a flatter wrist instead of the round paddle; 12-sided arms with an elbow and a forearm swell"
+ ],
+ "twelve_years_later": "SRC-2 (the user: 'she isn't pregnant any more'): the measured body 26 is pregnant (belly +0.144 at 0.555, waist ±0.072, bust ±0.103/+0.078, top flaring to ±0.134); the build now has no belly (front 0.064-0.09 from the bust to the hem), a natural waist ±0.068 at 0.620, hips ±0.103, the bust a touch smaller, the top's hem flare ±0.122, thighs slimmed to stay inside it; outfit layout, colours, head, hair, limbs, height and skeleton unchanged. The measured sections stay in zoe_poly.py as ZOE_BODY_LBA2 (ZOE_LBA2=1 builds them).",
+ "rollback": [
+  "restore assets/poly/zoe.json from commit c0264c8",
+  "or: python tools/blender/cast_poly.py art/characters/skeletons.json assets/poly zoe (the earlier build_zoe)",
+  "SRC-2's slimming: ZOE_LBA2=1 python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly (SRC-1's figure), or git checkout 292a775 -- lba2-remaster/assets/poly/zoe.json",
+  "CHAR-OPEN: restore lba2-remaster/assets/poly/zoe.json from commit 40946f8",
+  "ZOE-OPEN: ZOE_HEAD_LBA2=1 python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly (the measured head and SRC-1's face features; the new arms and hands stay), or restore lba2-remaster/assets/poly/zoe.json from the commit before ZOE-OPEN"
+ ],
+ "limitations": [
+  "the skeleton's pivots differ from the original's (docs/character-review.md §15)",
+  "her own clips are not used; the rig.js procedural set drives her",
+  "the strap ends on the shoulder at the side seam (a small red patch)",
+  "CHAR-OPEN: the arms are an artistic choice (fuller than the original's thin arms, which read as rods in our light); still slim, as SRC-2's slimmer figure",
+  "ZOE-OPEN: no mouth poses or gaze control (the rig has none for poly faces; see docs/character-review.md §18, the animator handoff)"
+ ],
+ "built_by_src2": "python tools/blender/zoe_poly.py art/characters/skeletons.json assets/poly art/characters/zoe/zoe_poly.blend (SRC-2: ZOE_BODY without the pregnancy; ZOE_LBA2=1 for the measured figure)",
+ "char_open": {
+  "bun (OPEN-3 #11)": "the three bun balls keep their measured sizes and their downward-backward run but are seated on the skull (ZOE_BUN; the measured ones are ZOE_BUN_LBA2), and the bun is weighted to the head bone only (it was passed along tail0..2, whose follow-through swung it off the head)",
+  "arms (OPEN-3 #28)": "the two straight tubes (r 3.1 -> 2.6 -> 2.0 cm) are now a slim adult arm in nine sections along the bones (ARM: a shoulder cap in the body's edge, upper arm 9-10 cm across, the elbow, a small forearm swell, a 5 cm wrist), same bones and weights (sh / el blended at the elbow); the look's armSpread 0.3 -> 0.08 (characters.js), so they hang at her sides; triangles 4434 -> 4646"
+ },
+ "char_2": {
+  "ZOE-OPEN": "the user on the opening (reviews/USER-111/zoe-opening.jpg) and BUILD109_REVIEW §4: angular face planes, a triangle earring, a stick-thin forearm, a flat profile. Head from designed sections (ZOE_HEAD_DESIGN; the measured ones kept as ZOE_HEAD_LBA2), a nose loft (NOSE_ROWS), lips and mouth line (LIPS2_*), eyes (EYE2: white, iris, pupil in the blink group), lid lines and brows, teardrop hoops (EAR2), arms in 11 sections x 12 sides, build_hand (palm, curled mitten, thumb). Skeleton, the weights' bones, bind and armSpread unchanged; one material; triangles 4646 -> 5382 (+15.8 %)"
+ }
+}

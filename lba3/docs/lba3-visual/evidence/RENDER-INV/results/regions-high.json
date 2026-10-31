@@ -1,0 +1,485 @@
+{
+ "quality": "high",
+ "N": 5,
+ "load": 3.06,
+ "rows": {
+  "citadel street": {
+   "batchesOff": {
+    "calls": 461,
+    "shadow": 42,
+    "submitMs": 13.6,
+    "rasterMs": 3315.6
+   },
+   "batchesOn": {
+    "calls": 425,
+    "shadow": 42,
+    "submitMs": 13.5,
+    "rasterMs": 3465.7
+   },
+   "batchStats": {
+    "batches": 68,
+    "pieces": 222,
+    "folded": 0,
+    "verts": 356587,
+    "buildMs": 63.6
+   },
+   "lampSkipOff": {
+    "calls": 425,
+    "shadow": 42,
+    "submitMs": 10.4,
+    "rasterMs": 3457.6
+   },
+   "lampSkipOn": {
+    "calls": 425,
+    "shadow": 42,
+    "submitMs": 9.9,
+    "rasterMs": 3429.8
+   },
+   "lampsLit": "2 of 8"
+  },
+  "citadel harbour": {
+   "batchesOff": {
+    "calls": 331,
+    "shadow": 44,
+    "submitMs": 10.8,
+    "rasterMs": 2640.6
+   },
+   "batchesOn": {
+    "calls": 306,
+    "shadow": 44,
+    "submitMs": 10,
+    "rasterMs": 2671.4
+   },
+   "batchStats": {
+    "batches": 68,
+    "pieces": 222,
+    "folded": 0,
+    "verts": 356587,
+    "buildMs": 93.7
+   },
+   "lampSkipOff": {
+    "calls": 306,
+    "shadow": 44,
+    "submitMs": 8.9,
+    "rasterMs": 2514.7
+   },
+   "lampSkipOn": {
+    "calls": 306,
+    "shadow": 44,
+    "submitMs": 8.3,
+    "rasterMs": 2657.1
+   },
+   "lampsLit": "2 of 8"
+  },
+  "citadel house door": {
+   "batchesOff": {
+    "calls": 545,
+    "shadow": 38,
+    "submitMs": 10.9,
+    "rasterMs": 3834.5
+   },
+   "batchesOn": {
+    "calls": 489,
+    "shadow": 38,
+    "submitMs": 12.9,
+    "rasterMs": 3843.8
+   },
+   "batchStats": {
+    "batches": 68,
+    "pieces": 222,
+    "folded": 0,
+    "verts": 356587,
+    "buildMs": 44
+   },
+   "lampSkipOff": {
+    "calls": 489,
+    "shadow": 38,
+    "submitMs": 11.3,
+    "rasterMs": 3855.5
+   },
+   "lampSkipOn": {
+    "calls": 489,
+    "shadow": 38,
+    "submitMs": 14.4,
+    "rasterMs": 3822.5
+   },
+   "lampsLit": "1 of 8"
+  },
+  "house": {
+   "batchesOff": {
+    "calls": 112,
+    "shadow": 3,
+    "submitMs": 3.2,
+    "rasterMs": 1432.8
+   },
+   "batchesOn": {
+    "calls": 109,
+    "shadow": 3,
+    "submitMs": 3.3,
+    "rasterMs": 1299.8
+   },
+   "batchStats": {
+    "batches": 5,
+    "pieces": 16,
+    "folded": 0,
+    "verts": 2806,
+    "buildMs": 2
+   },
+   "lampSkipOff": {
+    "calls": 109,
+    "shadow": 3,
+    "submitMs": 3.1,
+    "rasterMs": 1336
+   },
+   "lampSkipOn": {
+    "calls": 109,
+    "shadow": 3,
+    "submitMs": 3.1,
+    "rasterMs": 1262.8
+   },
+   "lampsLit": "8 of 8"
+  },
+  "workshop": {
+   "batchesOff": {
+    "calls": 181,
+    "shadow": 3,
+    "submitMs": 5.9,
+    "rasterMs": 1076.9
+   },
+   "batchesOn": {
+    "calls": 154,
+    "shadow": 3,
+    "submitMs": 4.7,
+    "rasterMs": 1039.1
+   },
+   "batchStats": {
+    "batches": 14,
+    "pieces": 41,
+    "folded": 0,
+    "verts": 129973,
+    "buildMs": 13.1
+   },
+   "lampSkipOff": {
+    "calls": 154,
+    "shadow": 3,
+    "submitMs": 4.3,
+    "rasterMs": 1009.3
+   },
+   "lampSkipOn": {
+    "calls": 154,
+    "shadow": 3,
+    "submitMs": 4.6,
+    "rasterMs": 1047.6
+   },
+   "lampsLit": "8 of 8"
+  },
+  "well": {
+   "batchesOff": {
+    "calls": 177,
+    "shadow": 34,
+    "submitMs": 2.9,
+    "rasterMs": 1126.1
+   },
+   "batchesOn": {
+    "calls": 177,
+    "shadow": 34,
+    "submitMs": 2.8,
+    "rasterMs": 1179.2
+   },
+   "batchStats": {
+    "batches": 0,
+    "pieces": 0,
+    "folded": 0,
+    "verts": 0,
+    "buildMs": 0.3
+   },
+   "lampSkipOff": {
+    "calls": 177,
+    "shadow": 34,
+    "submitMs": 3.1,
+    "rasterMs": 1102.3
+   },
+   "lampSkipOn": {
+    "calls": 177,
+    "shadow": 34,
+    "submitMs": 3.2,
+    "rasterMs": 1167.7
+   },
+   "lampsLit": "5 of 8"
+  },
+  "office": {
+   "batchesOff": {
+    "calls": 89,
+    "shadow": 5,
+    "submitMs": 2.6,
+    "rasterMs": 896.2
+   },
+   "batchesOn": {
+    "calls": 89,
+    "shadow": 5,
+    "submitMs": 2.6,
+    "rasterMs": 879.9
+   },
+   "batchStats": {
+    "batches": 0,
+    "pieces": 0,
+    "folded": 0,
+    "verts": 0,
+    "buildMs": 1.2
+   },
+   "lampSkipOff": {
+    "calls": 89,
+    "shadow": 5,
+    "submitMs": 2.6,
+    "rasterMs": 858.4
+   },
+   "lampSkipOn": {
+    "calls": 89,
+    "shadow": 5,
+    "submitMs": 2.6,
+    "rasterMs": 875.7
+   },
+   "lampsLit": "5 of 8"
+  },
+  "zeelich": {
+   "batchesOff": {
+    "calls": 145,
+    "shadow": 20,
+    "submitMs": 4,
+    "rasterMs": 1408
+   },
+   "batchesOn": {
+    "calls": 139,
+    "shadow": 20,
+    "submitMs": 4.2,
+    "rasterMs": 1466.5
+   },
+   "batchStats": {
+    "batches": 48,
+    "pieces": 252,
+    "folded": 0,
+    "verts": 105192,
+    "buildMs": 13.9
+   },
+   "lampSkipOff": {
+    "calls": 139,
+    "shadow": 20,
+    "submitMs": 5.2,
+    "rasterMs": 1429.9
+   },
+   "lampSkipOn": {
+    "calls": 139,
+    "shadow": 20,
+    "submitMs": 4,
+    "rasterMs": 1383.2
+   },
+   "lampsLit": "0 of 8"
+  },
+  "desert": {
+   "batchesOff": {
+    "calls": 47,
+    "shadow": 8,
+    "submitMs": 2.8,
+    "rasterMs": 1408.2
+   },
+   "batchesOn": {
+    "calls": 47,
+    "shadow": 8,
+    "submitMs": 2.9,
+    "rasterMs": 1490
+   },
+   "batchStats": {
+    "batches": 50,
+    "pieces": 198,
+    "folded": 0,
+    "verts": 65072,
+    "buildMs": 8
+   },
+   "lampSkipOff": {
+    "calls": 47,
+    "shadow": 8,
+    "submitMs": 2.9,
+    "rasterMs": 1471.7
+   },
+   "lampSkipOn": {
+    "calls": 47,
+    "shadow": 8,
+    "submitMs": 2.7,
+    "rasterMs": 1465.3
+   },
+   "lampsLit": "0 of 8"
+  },
+  "hamalayi": {
+   "batchesOff": {
+    "calls": 60,
+    "shadow": 9,
+    "submitMs": 2.7,
+    "rasterMs": 1525.6
+   },
+   "batchesOn": {
+    "calls": 59,
+    "shadow": 9,
+    "submitMs": 2.8,
+    "rasterMs": 1489.7
+   },
+   "batchStats": {
+    "batches": 14,
+    "pieces": 30,
+    "folded": 0,
+    "verts": 92723,
+    "buildMs": 8.6
+   },
+   "lampSkipOff": {
+    "calls": 59,
+    "shadow": 9,
+    "submitMs": 2.7,
+    "rasterMs": 1531.7
+   },
+   "lampSkipOn": {
+    "calls": 59,
+    "shadow": 9,
+    "submitMs": 2.9,
+    "rasterMs": 1550.4
+   },
+   "lampsLit": "0 of 8"
+  },
+  "isle otringal": {
+   "batchesOff": {
+    "calls": 146,
+    "shadow": 18,
+    "submitMs": 3.3,
+    "rasterMs": 3229.1
+   },
+   "batchesOn": {
+    "calls": 146,
+    "shadow": 18,
+    "submitMs": 3.9,
+    "rasterMs": 3245.8
+   },
+   "batchStats": {
+    "batches": 7,
+    "pieces": 40,
+    "folded": 0,
+    "verts": 2344,
+    "buildMs": 0.9
+   },
+   "lampSkipOff": {
+    "calls": 146,
+    "shadow": 18,
+    "submitMs": 3.7,
+    "rasterMs": 3366.9
+   },
+   "lampSkipOn": {
+    "calls": 146,
+    "shadow": 18,
+    "submitMs": 4,
+    "rasterMs": 3152
+   },
+   "lampsLit": "0 of 8"
+  },
+  "isle tralu": {
+   "batchesOff": {
+    "calls": 79,
+    "shadow": 6,
+    "submitMs": 2.5,
+    "rasterMs": 1917
+   },
+   "batchesOn": {
+    "calls": 68,
+    "shadow": 6,
+    "submitMs": 3.1,
+    "rasterMs": 2041.7
+   },
+   "batchStats": {
+    "batches": 13,
+    "pieces": 58,
+    "folded": 0,
+    "verts": 4989,
+    "buildMs": 1.4
+   },
+   "lampSkipOff": {
+    "calls": 68,
+    "shadow": 6,
+    "submitMs": 2.8,
+    "rasterMs": 1927
+   },
+   "lampSkipOn": {
+    "calls": 68,
+    "shadow": 6,
+    "submitMs": 2.7,
+    "rasterMs": 1949.1
+   },
+   "lampsLit": "0 of 8"
+  },
+  "isle liftdock": {
+   "batchesOff": {
+    "calls": 66,
+    "shadow": 2,
+    "submitMs": 2.4,
+    "rasterMs": 1150.3
+   },
+   "batchesOn": {
+    "calls": 60,
+    "shadow": 2,
+    "submitMs": 2.3,
+    "rasterMs": 1091.7
+   },
+   "batchStats": {
+    "batches": 13,
+    "pieces": 52,
+    "folded": 0,
+    "verts": 5002,
+    "buildMs": 1.1
+   },
+   "lampSkipOff": {
+    "calls": 60,
+    "shadow": 2,
+    "submitMs": 2.1,
+    "rasterMs": 1082.9
+   },
+   "lampSkipOn": {
+    "calls": 60,
+    "shadow": 2,
+    "submitMs": 2.4,
+    "rasterMs": 1131
+   },
+   "lampsLit": "0 of 8"
+  },
+  "underground c3deep": {
+   "batchesOff": {
+    "calls": 116,
+    "shadow": 5,
+    "submitMs": 3.1,
+    "rasterMs": 1226
+   },
+   "batchesOn": {
+    "calls": 99,
+    "shadow": 5,
+    "submitMs": 3.1,
+    "rasterMs": 1230.7
+   },
+   "batchStats": {
+    "batches": 10,
+    "pieces": 27,
+    "folded": 0,
+    "verts": 141092,
+    "buildMs": 12.1
+   },
+   "lampSkipOff": {
+    "calls": 99,
+    "shadow": 5,
+    "submitMs": 3.3,
+    "rasterMs": 1243.2
+   },
+   "lampSkipOn": {
+    "calls": 99,
+    "shadow": 5,
+    "submitMs": 2.8,
+    "rasterMs": 1248.7
+   },
+   "lampsLit": "8 of 8"
+  }
+ },
+ "loadAfter": 3.6,
+ "errors": []
+}

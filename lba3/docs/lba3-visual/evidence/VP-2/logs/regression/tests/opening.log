@@ -1,0 +1,18 @@
+PASS opening starts as a cinematic with the HUD hidden and nothing saved {"state":"cinematic","hud":false,"prompt":false,"saved":false}
+PASS the scene moves to the house; still nothing saved mid-scene {"room":"house","saved":false,"sub":""}
+PASS subtitles with the speaker "Zoé Twinsen. The tap's stopped again."
+PASS played through: control in the house, objective, save, cast placed {"state":"play","room":"house","cine":false,"camCine":false,"hud":true,"cineUI":false,"fade":false,"intro":true,"opening":true,"ball":false,"objective":"Check the well","zoeOut":true,"zoeControlled":false,"arthur":["kneelWork",false],"hero":[1.55,-1.75],"lift":1,"stream":false,"sd":true,"saved":true,"savedRoom":"house","sceneKids":357}
+PASS skip at 3s ends in the same state {"state":"play","room":"house","cine":false,"camCine":false,"hud":true,"cineUI":false,"fade":false,"intro":true,"opening":true,"ball":false,"objective":"Check the well","zoeOut":true,"zoeControlled":false,"arthur":["kneelWork",false],"hero":[1.55,-1.75],"lift":1,"stream":false,"sd":true,"saved":true,"savedRoom":"house","sceneKids":357}
+PASS skip at 50s ends in the same state {"state":"play","room":"house","cine":false,"camCine":false,"hud":true,"cineUI":false,"fade":false,"intro":true,"opening":true,"ball":false,"objective":"Check the well","zoeOut":true,"zoeControlled":false,"arthur":["kneelWork",false],"hero":[1.55,-1.75],"lift":1,"stream":false,"sd":true,"saved":true,"savedRoom":"house","sceneKids":357}
+PASS skip at 81s ends in the same state {"state":"play","room":"house","cine":false,"camCine":false,"hud":true,"cineUI":false,"fade":false,"intro":true,"opening":true,"ball":false,"objective":"Check the well","zoeOut":true,"zoeControlled":false,"arthur":["kneelWork",false],"hero":[1.55,-1.75],"lift":1,"stream":false,"sd":true,"saved":true,"savedRoom":"house","sceneKids":357}
+PASS a short press does not skip
+PASS pause stops the scene clock and shows the pause menu {"p0":{"state":"pause","paused":true,"t":20.000000000000153,"screen":true},"p1":20.000000000000153}
+PASS resume continues the scene {"state":"cinematic","paused":false,"t":21.000000000000203}
+PASS losing window focus pauses the scene
+PASS ...and it still ends cleanly
+PASS continue: no replay, in the house with the objective {"state":"play","room":"house","cine":false,"camCine":false,"hud":true,"cineUI":false,"fade":false,"intro":true,"opening":true,"ball":false,"objective":"Check the well","zoeOut":true,"zoeControlled":false,"arthur":["kneelWork",false],"hero":[1.55,-1.75],"lift":1,"stream":false,"sd":true,"saved":true,"savedRoom":"house","sceneKids":357}
+PASS a second new game: same end state, nothing duplicated {"again":{"state":"play","room":"house","cine":false,"camCine":false,"hud":true,"cineUI":false,"fade":false,"intro":true,"opening":true,"ball":false,"objective":"Check the well","zoeOut":true,"zoeControlled":false,"arthur":["kneelWork",false],"hero":[1.55,-1.75],"lift":1,"stream":false,"sd":true,"saved":true,"savedRoom":"house","sceneKids":357},"dup":{"zoes":1,"lifts":1}}
+PASS without the ball the door holds him, with a hint {"st":"dialog","room":"house","hint":true,"obj":"Check the well◆ Take the magic ball from the cupboard"}
+PASS the cupboard gives the ball and the door lets him out {"ball":true,"room":"outdoors","obj":"Check the well"}
+no errors
+ALL PASSED

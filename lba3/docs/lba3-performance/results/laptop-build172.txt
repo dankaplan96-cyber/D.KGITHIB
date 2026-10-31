@@ -1,0 +1,12 @@
+LBA3: The Awakening benchmark · build 0.31.0 (build 172) · 2026-10-26 16:48 (the user's main laptop, Vega 8, pasted in chat)
+startup: build 8.5 s (Citadel 6.5; house 0.9, well 0.1) · shader preparation 2.2 s · 74 programs at the title  (build 145 plugged in: 13.6 + 5.9 s)
+first visits (s): zeelich 0.6, desert 0.7, hamalayi 0.6 · 26 areas never built this session · JS heap 366 MB
+shader programs compiled while measured: 0 on every route and preset
+
+fps (GPU p50 ms):     low              medium            high
+  street            60   (9.0)       59.8 (9.6)        57   (14.7)
+  interior          59   (8.2)       59.7 (9.0)        59.2 (10.2)
+  combat            58.5 (7.3)       60   (8.5)        60   (8.1)
+  transition        59.5 (8.3)       59   (8.9)        58.7 (12.4)
+  arrival           54.7 (8.7)       57.8 (9.1)        52.9 (12.5)
+Against build 150: Medium unchanged (58-60 everywhere); High street 56.5 → 57, arrival 49.4 → 52.9. Startup 19.5 → 10.7 s.

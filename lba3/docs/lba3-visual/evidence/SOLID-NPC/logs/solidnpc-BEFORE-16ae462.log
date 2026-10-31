@@ -1,0 +1,112 @@
+contact radii (m): {"zoe":["zoe",0.45],"gilbert":["gilbert",0.45],"mira":["mira",0.45],"pippa":["pippa",0.45],"doran":["doran",0.45],"xil":["xil",0.45],"tim":["tim",0.45],"lulu":["lulu",0.45],"joe":["joe",0.45],"sphero1":["sphero1",0.45],"sphero2":["sphero2",0.45],"bram":["bram",0.45],"odile":["odile",0.45],"nell":["nell",0.45],"oda":["lharWoman",0.45],"brix":["desertTrader",0.45],"maro":["farmerB",0.45],"tilde":["ilka",0.45],"garrick":["farmerA",0.45],"pico":["desertkid",0.45],"dot":["pim",0.45],"marda":["yorna",0.45],"tobb":["farmerC",0.45],"ume":["lharElder",0.45]}
+FAIL the girth follows the body: a Grobo and a Sphero are wide (≥ 0.58 m), a Rabbibunny narrow (≤ 0.42 m), a child smaller than an adult of its race {"zoe":["zoe",0.45],"gilbert":["gilbert",0.45],"mira":["mira",0.45],"pippa":["pippa",0.45],"doran":["doran",0.45],"xil":["xil",0.45],"tim":["tim",0.45],"lulu":["lulu",0.45],"joe":["joe",0.45],"sphero1":["sphero1",0.45],"sphero2":["sphero2",0.45],"bram":["bram",0.45],"odile":["odile",0.45],"nell":["nell",0.45],"oda":["lharWoman",0.45],"brix":["desertTrader",0.45],"maro":["farmerB",0.45],"tilde":["ilka",0.45],"garrick":["farmerA",0.45],"pico":["desertkid",0.45],"dot":["pim",0.45],"marda":["yorna",0.45],"tobb":["farmerC",0.45],"ume":["lharElder",0.45]}
+ISO  Twinsen is put 3.5 m from each body, facing it; the residents are held at their stop for these walks
+Grobo resident, head on (Classic, 60 fps) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2.002,"flips":0,"contactT":1.383,"frames":361,"along0":0,"along":6.86,"passed":true,"overlapFrames":77,"bMoved":0,"lat0":0,"R":1.04}
+FAIL Grobo resident, head on (Classic, 60 fps): never inside the body (min gap -0.195 m, overlapping frames 77) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2.002,"flips":0,"contactT":1.383,"frames":361,"along0":0,"along":6.86,"passed":true,"overlapFrames":77,"bMoved":0,"lat0":0,"R":1.04}
+PASS Grobo resident, head on (Classic, 60 fps): never launched (fastest frame 2.002 m/s) 2.002
+PASS Grobo resident, head on (Classic, 60 fps): no jitter along the body (side changes in contact: 0) 0
+PASS Grobo resident, head on (Classic, 60 fps): slides round and gets past (6.86 m beyond the centre) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2.002,"flips":0,"contactT":1.383,"frames":361,"along0":0,"along":6.86,"passed":true,"overlapFrames":77,"bMoved":0,"lat0":0,"R":1.04}
+Grobo resident, 0.4 m off centre (Classic, 30 fps) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2.001,"flips":0,"contactT":1.067,"frames":151,"along0":0,"along":5.705,"passed":true,"overlapFrames":29,"bMoved":0,"lat0":0.4,"R":1.04}
+FAIL Grobo resident, 0.4 m off centre (Classic, 30 fps): never inside the body (min gap -0.195 m, overlapping frames 29) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2.001,"flips":0,"contactT":1.067,"frames":151,"along0":0,"along":5.705,"passed":true,"overlapFrames":29,"bMoved":0,"lat0":0.4,"R":1.04}
+PASS Grobo resident, 0.4 m off centre (Classic, 30 fps): never launched (fastest frame 2.001 m/s) 2.001
+PASS Grobo resident, 0.4 m off centre (Classic, 30 fps): no jitter along the body (side changes in contact: 0) 0
+PASS Grobo resident, 0.4 m off centre (Classic, 30 fps): slides round and gets past (5.705 m beyond the centre) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2.001,"flips":0,"contactT":1.067,"frames":151,"along0":0,"along":5.705,"passed":true,"overlapFrames":29,"bMoved":0,"lat0":0.4,"R":1.04}
+Grobo resident, 0.8 m off centre (Modern, 144 fps) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2,"flips":0,"contactT":0.729,"frames":720,"along0":0,"along":5.93,"passed":true,"overlapFrames":88,"bMoved":0,"lat0":0.8,"R":1.04}
+FAIL Grobo resident, 0.8 m off centre (Modern, 144 fps): never inside the body (min gap -0.195 m, overlapping frames 88) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2,"flips":0,"contactT":0.729,"frames":720,"along0":0,"along":5.93,"passed":true,"overlapFrames":88,"bMoved":0,"lat0":0.8,"R":1.04}
+PASS Grobo resident, 0.8 m off centre (Modern, 144 fps): never launched (fastest frame 2 m/s) 2
+PASS Grobo resident, 0.8 m off centre (Modern, 144 fps): no jitter along the body (side changes in contact: 0) 0
+PASS Grobo resident, 0.8 m off centre (Modern, 144 fps): slides round and gets past (5.93 m beyond the centre) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":2,"flips":0,"contactT":0.729,"frames":720,"along0":0,"along":5.93,"passed":true,"overlapFrames":88,"bMoved":0,"lat0":0.8,"R":1.04}
+Grobo resident, running (Athletic), long frames {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":5.039,"flips":0,"contactT":0.483,"frames":205,"along0":0,"along":14.69,"passed":true,"overlapFrames":21,"bMoved":0,"lat0":0.3,"R":1.04}
+FAIL Grobo resident, running (Athletic), long frames: never inside the body (min gap -0.195 m, overlapping frames 21) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":5.039,"flips":0,"contactT":0.483,"frames":205,"along0":0,"along":14.69,"passed":true,"overlapFrames":21,"bMoved":0,"lat0":0.3,"R":1.04}
+PASS Grobo resident, running (Athletic), long frames: never launched (fastest frame 5.039 m/s) 5.039
+PASS Grobo resident, running (Athletic), long frames: no jitter along the body (side changes in contact: 0) 0
+PASS Grobo resident, running (Athletic), long frames: slides round and gets past (14.69 m beyond the centre) {"id":"tobb","a":1.18,"minGap":-0.195,"maxStep":5.039,"flips":0,"contactT":0.483,"frames":205,"along0":0,"along":14.69,"passed":true,"overlapFrames":21,"bMoved":0,"lat0":0.3,"R":1.04}
+Sphero, head on (Classic, 60 fps) {"id":"sphero1","a":2.75,"minGap":-0.15,"maxStep":2,"flips":0,"contactT":1.317,"frames":361,"along0":0,"along":7.456,"passed":true,"overlapFrames":73,"bMoved":0,"lat0":0,"R":1}
+FAIL Sphero, head on (Classic, 60 fps): never inside the body (min gap -0.15 m, overlapping frames 73) {"id":"sphero1","a":2.75,"minGap":-0.15,"maxStep":2,"flips":0,"contactT":1.317,"frames":361,"along0":0,"along":7.456,"passed":true,"overlapFrames":73,"bMoved":0,"lat0":0,"R":1}
+PASS Sphero, head on (Classic, 60 fps): never launched (fastest frame 2 m/s) 2
+PASS Sphero, head on (Classic, 60 fps): no jitter along the body (side changes in contact: 0) 0
+PASS Sphero, head on (Classic, 60 fps): slides round and gets past (7.456 m beyond the centre) {"id":"sphero1","a":2.75,"minGap":-0.15,"maxStep":2,"flips":0,"contactT":1.317,"frames":361,"along0":0,"along":7.456,"passed":true,"overlapFrames":73,"bMoved":0,"lat0":0,"R":1}
+Sphero, 0.5 m off centre (Modern, 60 fps) {"id":"sphero2","a":4.71,"minGap":-0.15,"maxStep":2,"flips":0,"contactT":0.9,"frames":301,"along0":0,"along":4.405,"passed":true,"overlapFrames":47,"bMoved":0,"lat0":0.5,"R":1}
+FAIL Sphero, 0.5 m off centre (Modern, 60 fps): never inside the body (min gap -0.15 m, overlapping frames 47) {"id":"sphero2","a":4.71,"minGap":-0.15,"maxStep":2,"flips":0,"contactT":0.9,"frames":301,"along0":0,"along":4.405,"passed":true,"overlapFrames":47,"bMoved":0,"lat0":0.5,"R":1}
+PASS Sphero, 0.5 m off centre (Modern, 60 fps): never launched (fastest frame 2 m/s) 2
+PASS Sphero, 0.5 m off centre (Modern, 60 fps): no jitter along the body (side changes in contact: 0) 0
+PASS Sphero, 0.5 m off centre (Modern, 60 fps): slides round and gets past (4.405 m beyond the centre) {"id":"sphero2","a":4.71,"minGap":-0.15,"maxStep":2,"flips":0,"contactT":0.9,"frames":301,"along0":0,"along":4.405,"passed":true,"overlapFrames":47,"bMoved":0,"lat0":0.5,"R":1}
+story person (Gilbert), head on {"id":"joe","a":0.79,"minGap":0.052,"maxStep":2,"flips":0,"contactT":0,"frames":361,"along0":0,"along":7.456,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0,"R":0.8}
+PASS story person (Gilbert), head on: never inside the body (min gap 0.052 m, overlapping frames 0) {"id":"joe","a":0.79,"minGap":0.052,"maxStep":2,"flips":0,"contactT":0,"frames":361,"along0":0,"along":7.456,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0,"R":0.8}
+PASS story person (Gilbert), head on: never launched (fastest frame 2 m/s) 2
+PASS story person (Gilbert), head on: no jitter along the body (side changes in contact: 0) 0
+PASS story person (Gilbert), head on: slides round and gets past (7.456 m beyond the centre) {"id":"joe","a":0.79,"minGap":0.052,"maxStep":2,"flips":0,"contactT":0,"frames":361,"along0":0,"along":7.456,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0,"R":0.8}
+story person (Mira), 0.3 m off centre, 30 fps with long frames {"id":"zoe","a":4.32,"minGap":0,"maxStep":2.018,"flips":0,"contactT":0.887,"frames":140,"along0":0,"along":1.873,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0.3,"R":0.85}
+PASS story person (Mira), 0.3 m off centre, 30 fps with long frames: never inside the body (min gap 0 m, overlapping frames 0) {"id":"zoe","a":4.32,"minGap":0,"maxStep":2.018,"flips":0,"contactT":0.887,"frames":140,"along0":0,"along":1.873,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0.3,"R":0.85}
+PASS story person (Mira), 0.3 m off centre, 30 fps with long frames: never launched (fastest frame 2.018 m/s) 2.018
+PASS story person (Mira), 0.3 m off centre, 30 fps with long frames: no jitter along the body (side changes in contact: 0) 0
+PASS story person (Mira), 0.3 m off centre, 30 fps with long frames: slides round and gets past (1.873 m beyond the centre) {"id":"zoe","a":4.32,"minGap":0,"maxStep":2.018,"flips":0,"contactT":0.887,"frames":140,"along0":0,"along":1.873,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0.3,"R":0.85}
+Rabbibunny resident (Tilde), head on {"id":"tilde","a":2.36,"minGap":0.09,"maxStep":2,"flips":0,"contactT":0,"frames":361,"along0":0,"along":4.886,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0,"R":0.76}
+PASS Rabbibunny resident (Tilde), head on: never inside the body (min gap 0.09 m, overlapping frames 0) {"id":"tilde","a":2.36,"minGap":0.09,"maxStep":2,"flips":0,"contactT":0,"frames":361,"along0":0,"along":4.886,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0,"R":0.76}
+PASS Rabbibunny resident (Tilde), head on: never launched (fastest frame 2 m/s) 2
+PASS Rabbibunny resident (Tilde), head on: no jitter along the body (side changes in contact: 0) 0
+PASS Rabbibunny resident (Tilde), head on: slides round and gets past (4.886 m beyond the centre) {"id":"tilde","a":2.36,"minGap":0.09,"maxStep":2,"flips":0,"contactT":0,"frames":361,"along0":0,"along":4.886,"passed":true,"overlapFrames":0,"bMoved":0,"lat0":0,"R":0.76}
+pinch {"err":"no two people close together"}
+FAIL two people standing closer than his width: he never gets into either, never shuttles between them (side changes undefined) {"err":"no two people close together"}
+PASS the story's people stay where the story put them (never moved by him) [0,0,0,0]
+talk {"tobb":{"st":"dialog","who":"tobb","d":0.85},"sphero1":{"st":"dialog","who":"sphero1","d":0.85},"joe":{"st":"dialog","who":"joe","d":0.85},"tilde":{"st":"dialog","who":"tilde","d":0.85}}
+PASS walking up to each (Grobo, Sphero, story person, Rabbibunny) and pressing E starts the talk with them {"tobb":{"st":"dialog","who":"tobb","d":0.85},"sphero1":{"st":"dialog","who":"sphero1","d":0.85},"joe":{"st":"dialog","who":"joe","d":0.85},"tilde":{"st":"dialog","who":"tilde","d":0.85}}
+walker {"kind":"head on","id":"pico","minGap":0.093,"overlap":0,"heroMoved":11.29,"maxStep":2,"rMoved":7.56,"ri0":4,"wi0":1,"st":"walk","past":true,"on":true}
+walker {"kind":"from the side","id":"brix","minGap":0.099,"overlap":0,"heroMoved":11.94,"maxStep":2,"rMoved":3,"ri0":2,"wi0":1,"st":"walk","past":true,"on":true}
+walker {"kind":"standing in its way","id":"brix","minGap":0.973,"overlap":0,"heroMoved":0,"maxStep":0.08,"rMoved":6.52,"ri0":2,"wi0":1,"st":"walk","past":true,"on":true}
+PASS walking resident head on (pico): never overlapping (min gap 0.093 m) {"kind":"head on","id":"pico","minGap":0.093,"overlap":0,"heroMoved":11.29,"maxStep":2,"rMoved":7.56,"ri0":4,"wi0":1,"st":"walk","past":true,"on":true}
+PASS walking resident head on: never launched (2 m/s) 2
+PASS walking resident from the side (brix): never overlapping (min gap 0.099 m) {"kind":"from the side","id":"brix","minGap":0.099,"overlap":0,"heroMoved":11.94,"maxStep":2,"rMoved":3,"ri0":2,"wi0":1,"st":"walk","past":true,"on":true}
+PASS walking resident from the side: never launched (2 m/s) 2
+PASS walking resident standing in its way (brix): never overlapping (min gap 0.973 m) {"kind":"standing in its way","id":"brix","minGap":0.973,"overlap":0,"heroMoved":0,"maxStep":0.08,"rMoved":6.52,"ri0":2,"wi0":1,"st":"walk","past":true,"on":true}
+PASS walking resident standing in its way: never launched (0.08 m/s) 0.08
+PASS a resident walking at Twinsen standing still goes round him: he is not moved (more than an ease of 0.1 m) and it carries on {"kind":"standing in its way","id":"brix","minGap":0.973,"overlap":0,"heroMoved":0,"maxStep":0.08,"rMoved":6.52,"ri0":2,"wi0":1,"st":"walk","past":true,"on":true}
+give way {"st":"dwell","gave":false,"moved":0,"inBrick":false,"minGap":0.013,"passed":true}
+FAIL a resident standing at its stop that Twinsen walks on into steps out of his way (not into a wall), and he never overlaps it {"st":"dwell","gave":false,"moved":0,"inBrick":false,"minGap":0.013,"passed":true}
+town {"frames":3601,"rr":79,"rs":0,"worstRR":-0.56,"worstRS":0.04,"pairs":["dot/tobb","garrick/dot"]}
+FAIL over two minutes of the town no resident walks into another (deeper than a fifth of their girths) or into a story person {"frames":3601,"rr":79,"rs":0,"worstRR":-0.56,"worstRS":0.04,"pairs":["dot/tobb","garrick/dot"]}
+ISO  Twinsen is put 3 m from each prop, facing it (Classic keys held)
+solid small props on Citadel (block colliders): 0 {}
+prop {"name":"planter box (the spaceport bridge's foot)","err":"no block collider near -36.0,36.6"}
+prop {"name":"planter box (the spaceport bridge's foot)","err":"no free side"}
+prop {"name":"planter box (the lane)","err":"no block collider near -48.3,47.9"}
+prop {"name":"planter box (the lane)","err":"no free side"}
+prop {"name":"flower tub (the lane's resting spot)","err":"no block collider near -42.3,18.0"}
+prop {"name":"flower tub (the lane's resting spot)","err":"no free side"}
+prop {"name":"flower tub (yellow, the bridge's foot)","err":"no block collider near -33.6,36.2"}
+prop {"name":"flower tub (yellow, the bridge's foot)","err":"no free side"}
+prop {"name":"red bench (a red slatted one)","err":"no free side"}
+prop {"name":"flower pot (Twinsen's garden)","err":"no block collider near -46.3,78.2"}
+prop {"name":"flower pot (Twinsen's garden)","err":"no free side"}
+prop {"name":"flower pot (Twinsen's garden, by the fence)","err":"no block collider near -45.6,80.4"}
+prop {"name":"flower pot (Twinsen's garden, by the fence)","err":"no free side"}
+prop {"name":"Bug St. sign","err":"no block collider near -44.6,75.2"}
+prop {"name":"Bug St. sign","err":"no free side"}
+prop {"name":"garden fence","err":"no block collider near -45.0,82.8"}
+prop {"name":"garden fence","err":"no free side"}
+FAIL Twinsen walking into each small prop (planter boxes, flower tubs, a red bench, garden pots, the street sign, the garden fence) never gets inside it, never climbs it, never jumps [{"name":"planter box (the spaceport bridge's foot)","err":"no block collider near -36.0,36.6"},{"name":"planter box (the spaceport bridge's foot)","err":"no free side"},{"name":"planter box (the lane)","err":"no block collider near -48.3,47.9"},{"name":"planter box (the lane)","err":"no free side"},{"name":"flower tub (the lane's resting spot)","err":"no block collider near -42.3,18.0"},{"name":"flower tub (the lane's resting spot)","err":"no free side"},{"name":"flower tub (yellow, the bridge's foot)","err":"no block collider near -33.6,36.2"},{"name":"flower tub (yellow, the bridge's foot)"
+ISO  each resident is seated at each of its benches in turn (its stop given at once); the others are off the streets meanwhile
+bench {"id":"oda","sid":"oda_bench","char":"lharWoman","carry":"basket","st":"seated","n":4127,"under":87,"behind":0,"deep":0,"dy":0,"rest":-0.8,"pos":[-49.05397048951456,2.468461408553049,-7.426214237764215],"a":1.1186424645091209}
+bench {"id":"brix","sid":"brix_benchE","char":"desertTrader","carry":null,"st":"seated","n":3724,"under":129,"behind":12,"deep":0.084,"dy":0.39,"rest":-0.471,"pos":[-35.75891947230016,2.200000047683716,2.6437308843256395],"a":-2.387434323622613}
+bench {"id":"brix","sid":"brix_lane","char":"desertTrader","carry":null,"st":"seated","n":3724,"under":129,"behind":12,"deep":0.084,"dy":0.39,"rest":-0.471,"pos":[-42.239999999999995,2.3129570044004,19.5],"a":-1.5707963267948966}
+bench {"id":"brix","sid":"brix_lane2","char":"desertTrader","carry":null,"st":"seated","n":3724,"under":129,"behind":12,"deep":0.084,"dy":0.39,"rest":-0.471,"pos":[-48.260000000000005,2.348088700954731,50.8],"a":1.5707963267948966}
+bench {"id":"maro","sid":"maro_bench","char":"farmerB","carry":null,"st":"seated","n":3714,"under":143,"behind":0,"deep":0,"dy":0,"rest":-0.459,"pos":[-53.3,2.3661399474510785,34.46],"a":3.141592653589793}
+bench {"id":"tilde","sid":"tilde_bench","char":"ilka","carry":null,"st":"seated","n":3675,"under":141,"behind":0,"deep":0,"dy":0,"rest":-0.458,"pos":[-48.3,2.206348813497103,34.46],"a":3.141592653589793}
+bench {"id":"marda","sid":"marda_b1","char":"yorna","carry":null,"st":"seated","n":3712,"under":143,"behind":10,"deep":0.077,"dy":0.21,"rest":-0.471,"pos":[-67.96000000000001,2.23560280249669,28.4],"a":1.5707963267948966}
+bench {"id":"marda","sid":"marda_b2","char":"yorna","carry":null,"st":"seated","n":3712,"under":143,"behind":10,"deep":0.077,"dy":0.21,"rest":-0.471,"pos":[-94.4,2.2926869850892295,30.240000000000002],"a":0}
+bench {"id":"ume","sid":"ume_b1","char":"lharElder","carry":null,"st":"seated","n":3471,"under":124,"behind":0,"deep":0,"dy":0,"rest":-0.788,"pos":[-34.65732018934754,2.418914191444441,43.61773121239968],"a":1.8707963267948966}
+bench {"id":"ume","sid":"ume_b2","char":"lharElder","carry":null,"st":"seated","n":3471,"under":124,"behind":0,"deep":0,"dy":0,"rest":-0.788,"pos":[-48.260000000000005,2.348088700954731,50.8],"a":1.5707963267948966}
+FAIL Citadel: every resident seated at each of its 10 bench stops sits ON the seat: no part of the body under the seat's top or behind the backrest, the bottom resting on the seat [["oda_bench","lharWoman",87,0,-0.8],["brix_benchE","desertTrader",129,12,-0.471],["brix_lane","desertTrader",129,12,-0.471],["brix_lane2","desertTrader",129,12,-0.471],["maro_bench","farmerB",143,0,-0.459],["tilde_bench","ilka",141,0,-0.458],["marda_b1","yorna",143,10,-0.471],["marda_b2","yorna",143,10,-0.471],["ume_b1","lharElder",124,0,-0.788],["ume_b2","lharElder",124,0,-0.788]]
+zeelich rounds [4,4,4]
+bench {"id":"ilo","sid":"ilo_bench","char":"keeper","carry":"basket","st":"seated","n":4979,"under":384,"behind":0,"deep":0,"dy":0,"rest":-0.622,"pos":[2368.9418652546974,6,2.2148442375552717],"a":1.8207963267948966}
+bench {"id":"aven","sid":"aven_b1","char":"clerk","carry":null,"st":"seated","n":4848,"under":414,"behind":0,"deep":0,"dy":0,"rest":-0.612,"pos":[2369,6,-4.659999999999999],"a":0}
+bench {"id":"aven","sid":"aven_b3","char":"clerk","carry":null,"st":"seated","n":4848,"under":414,"behind":0,"deep":0,"dy":0,"rest":-0.612,"pos":[2403,6,-4.659999999999999],"a":0}
+FAIL Zeelich: at each of its 3 bench stops a resident sits on the seat (nothing under it or behind the back, resting on it), or, an Esmer (one robe to the ground, no hips to bend), stands by the bench [["ilo_bench","keeper",384,0,-0.622],["aven_b1","clerk",414,0,-0.612],["aven_b3","clerk",414,0,-0.612]]
+Kesh: its residents' rounds have no bench stop (walkrounds.js desertRoster), nothing to sit on there
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 39 passed, 13 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     21 capture(s) written for review, not judged here
+VERDICT: FAIL (13 functional)
+13 FAILED

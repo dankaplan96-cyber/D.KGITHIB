@@ -1,0 +1,331 @@
+{
+ "gpu": "Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver",
+ "parallel": false,
+ "quality": "Auto Medium",
+ "battery": true,
+ "loadTimes": {
+  "total": 13331,
+  "citadel": 10218,
+  "shaders": 100973,
+  "programs": 83,
+  "longestStep": 22615,
+  "worldSteps": {
+   "textures": 342,
+   "heights": 981,
+   "ground": 450,
+   "terrain": 342,
+   "town": 773,
+   "statue": 417,
+   "tree spots": 7,
+   "tree round": 13,
+   "tree fruit": 5,
+   "tree tall": 3,
+   "tree pine": 3,
+   "trees": 109,
+   "plants": 141,
+   "island": 1085,
+   "landmarks": 87,
+   "end": 55
+  },
+  "world": 4813,
+  "spaceport": 289,
+  "townlife": 359,
+  "containers": 19,
+  "citydress": 128,
+  "actors": 337,
+  "story": 408,
+  "house": 563,
+  "well": 50,
+  "prep": {
+   "paint": 2585,
+   "programs": 69,
+   "textures": 8,
+   "geometry": 14718,
+   "geometryPart": 2452,
+   "shadowBatches": 332,
+   "layers": 20917,
+   "batches": 1340,
+   "batchUpload": 218,
+   "shadowPrograms": 22473,
+   "firstDraws": 30520,
+   "firstFrame": 7795
+  },
+  "slices": {
+   "textures": [
+    6
+   ],
+   "layers": [
+    6387,
+    482,
+    606,
+    296,
+    234,
+    366,
+    217,
+    217,
+    399,
+    412,
+    436,
+    438,
+    252,
+    323,
+    501,
+    320,
+    200,
+    122,
+    473,
+    705,
+    730,
+    1415,
+    825,
+    574,
+    680,
+    503,
+    312,
+    238,
+    548,
+    681,
+    389,
+    209,
+    354,
+    1
+   ],
+   "shadowPrograms": [
+    76,
+    56,
+    50,
+    16571,
+    2132,
+    883,
+    1008,
+    692,
+    1005
+   ]
+  }
+ },
+ "titleAt": 121152,
+ "longTasks": [
+  {
+   "t": 82823,
+   "d": 19310,
+   "step": "Almost there…"
+  },
+  {
+   "t": 60471,
+   "d": 16570,
+   "step": "Almost there…"
+  },
+  {
+   "t": 22808,
+   "d": 14564,
+   "step": "Preparing Citadel…"
+  },
+  {
+   "t": 113357,
+   "d": 7800,
+   "step": "Almost there…"
+  },
+  {
+   "t": 37473,
+   "d": 6719,
+   "step": "Almost there…"
+  },
+  {
+   "t": 102137,
+   "d": 5912,
+   "step": "Almost there…"
+  },
+  {
+   "t": 108053,
+   "d": 2921,
+   "step": "Almost there…"
+  },
+  {
+   "t": 16162,
+   "d": 2766,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 110978,
+   "d": 2375,
+   "step": "Almost there…"
+  },
+  {
+   "t": 77042,
+   "d": 2132,
+   "step": "Almost there…"
+  },
+  {
+   "t": 51960,
+   "d": 1415,
+   "step": "Almost there…"
+  },
+  {
+   "t": 58723,
+   "d": 1340,
+   "step": "Almost there…"
+  },
+  {
+   "t": 14726,
+   "d": 1085,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 80111,
+   "d": 1008,
+   "step": "Almost there…"
+  },
+  {
+   "t": 81814,
+   "d": 1005,
+   "step": "Almost there…"
+  },
+  {
+   "t": 7232,
+   "d": 981,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 5946,
+   "d": 930,
+   "step": "before the game"
+  },
+  {
+   "t": 79182,
+   "d": 883,
+   "step": "Almost there…"
+  },
+  {
+   "t": 53377,
+   "d": 824,
+   "step": "Almost there…"
+  },
+  {
+   "t": 9136,
+   "d": 773,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 51229,
+   "d": 730,
+   "step": "Almost there…"
+  },
+  {
+   "t": 50523,
+   "d": 704,
+   "step": "Almost there…"
+  },
+  {
+   "t": 81121,
+   "d": 692,
+   "step": "Almost there…"
+  },
+  {
+   "t": 57085,
+   "d": 681,
+   "step": "Almost there…"
+  },
+  {
+   "t": 54778,
+   "d": 680,
+   "step": "Almost there…"
+  },
+  {
+   "t": 44687,
+   "d": 606,
+   "step": "Almost there…"
+  },
+  {
+   "t": 54203,
+   "d": 574,
+   "step": "Almost there…"
+  },
+  {
+   "t": 18942,
+   "d": 563,
+   "step": "Building Twinsen's house…"
+  },
+  {
+   "t": 56518,
+   "d": 548,
+   "step": "Almost there…"
+  },
+  {
+   "t": 55459,
+   "d": 502,
+   "step": "Almost there…"
+  },
+  {
+   "t": 48903,
+   "d": 501,
+   "step": "Almost there…"
+  },
+  {
+   "t": 44203,
+   "d": 482,
+   "step": "Almost there…"
+  },
+  {
+   "t": 50049,
+   "d": 473,
+   "step": "Almost there…"
+  },
+  {
+   "t": 3321,
+   "d": 469,
+   "step": "before the game"
+  },
+  {
+   "t": 8215,
+   "d": 451,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 47882,
+   "d": 438,
+   "step": "Almost there…"
+  },
+  {
+   "t": 47445,
+   "d": 436,
+   "step": "Almost there…"
+  },
+  {
+   "t": 9912,
+   "d": 422,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 19759,
+   "d": 419,
+   "step": "Preparing the story…"
+  },
+  {
+   "t": 47031,
+   "d": 412,
+   "step": "Almost there…"
+  }
+ ],
+ "longTaskCount": 72,
+ "longTaskSum": 108566,
+ "over200": 57,
+ "over100": 64,
+ "programs": 83,
+ "programKinds": {
+  "ShaderMaterial": 12,
+  "MeshStandardMaterial": 31,
+  "merged-vctrm": 1,
+  "merged-vcrm": 2,
+  "MeshBasicMaterial": 14,
+  "SpriteMaterial": 2,
+  "LineBasicMaterial": 1,
+  "PointsMaterial": 2,
+  "unspecified": 1,
+  "MeshDepthMaterial": 14,
+  "merged-arr 512x512|4": 1,
+  "merged-arr 256x256|4": 1,
+  "OutputShader": 1
+ },
+ "report": "LBA3 start trace · build 0.43.3 · 2026-10-31 14:09 · Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver\ndisplay frames recorded 102 over 121.3 s · long animation frames 111 · long tasks 72\nstartup steps (ms): build 13331 · shaders 100973 · prep {\"paint\":2585,\"programs\":69,\"textures\":8,\"geometry\":14718,\"geometryPart\":2452,\"shadowBatches\":332,\"layers\":20917,\"batches\":1340,\"batchUpload\":218,\"shadowPrograms\":22473,\"firstDraws\":30520,\"firstFrame\":7795}\nloading slices (count / longest ms): textures 1 / 6 · layers 34 / 6387 · shadowPrograms 9 / 16571\n\nphase (from its mark to the next)            frames  interval p50 / p95 / max ms   >20 / >33 / >50 / >100\n  page start @0.0s                                18   116.6 / 616.7 / 616.7   16 / 16 / 13 / 9\n  loading: Building Citadel… @7.2s                 1   516.7 / 516.7 / 516.7   1 / 1 / 1 / 1\n  loading: Building Citadel… @8.7s                 2   1399.9 / 1399.9 / 1399.9   2 / 1 / 1 / 1\n  loading: Building Citadel… @9.1s                 1   400 / 400 / 400   1 / 1 / 1 / 1\n  loading: Building Citadel… @10.3s                2   1233.3 / 1233.3 / 1233.3   1 / 1 / 1 / 1\n  loading: Building Citadel… @10.5s                1   100 / 100 / 100   1 / 1 / 1 / 0\n  loading: Building Citadel… @10.6s                2   233.3 / 233.3 / 233.3   1 / 1 / 1 / 1\n  loading: Building Citadel… @10.8s                1   383.2 / 383.2 / 383.2   1 / 1 / 1 / 1\n  loading: Building Citadel… @11.2s                1   266.7 / 266.7 / 266.7   1 / 1 / 1 / 1\n  loading: Building Citadel… @11.5s                1   216.6 / 216.6 / 216.6   1 / 1 / 1 / 1\n  loading: Building Citadel… @11.7s                1   166.7 / 166.7 / 166.7   1 / 1 / 1 / 1\n  loading: Building Citadel… @11.9s                1   1333.3 / 1333.3 / 1333.3   1 / 1 / 1 / 1\n  loading: Building Citadel… @13.2s                1   133.3 / 133.3 / 133.3   1 / 1 / 1 / 1\n  loading: Building Citadel… @13.4s                1   683.3 / 683.3 / 683.3   1 / 1 / 1 / 1\n  loading: Building Citadel… @14.2s                2   733.3 / 733.3 / 733.3   2 / 2 / 2 / 2\n  loading: Building Citadel… @15.8s                1   416.6 / 416.6 / 416.6   1 / 1 / 1 / 1\n  loading: Building Citadel… @16.0s                2   266.6 / 266.6 / 266.6   1 / 1 / 1 / 1\n  loading: Building Twinsen's house… @18.9s        1   2783.3 / 2783.3 / 2783.3   1 / 1 / 1 / 1\n  loading: Preparing the story… @19.6s             2   816.7 / 816.7 / 816.7   1 / 1 / 1 / 1\n  loading: Preparing graphics… @20.2s              1   566.7 / 566.7 / 566.7   1 / 1 / 1 / 1\n  loading: Preparing graphics… @20.4s              1   216.7 / 216.7 / 216.7   1 / 1 / 1 / 1\n  loading: Preparing Citadel… @20.6s               1   2116.6 / 2116.6 / 2116.6   1 / 1 / 1 / 1\n  loading: Preparing Citadel… @22.8s               3   133.3 / 14532.7 / 14532.7   3 / 3 / 2 / 2\n  loading: Preparing Citadel… @37.4s               1   33.3 / 33.3 / 33.3   1 / 0 / 0 / 0\n  loading: Preparing Citadel… @37.4s               1   16.7 / 16.7 / 16.7   0 / 0 / 0 / 0\n  loading: Preparing Citadel… @37.4s               1   16.6 / 16.6 / 16.6   0 / 0 / 0 / 0\n  loading: Almost there… @37.4s                   36   416.6 / 1416.6 / 6716.4   35 / 35 / 34 / 34\n  loading: Almost there… @60.3s                   10   883.3 / 16566.1 / 16566.1   10 / 10 / 9 / 7\n  loading: Almost there… @82.8s                    1   19316 / 19316 / 19316   1 / 1 / 1 / 1\n  loading: Almost there… @108.0s                   2   5916.4 / 5916.4 / 5916.4   2 / 2 / 2 / 2\n  loading: Almost there… @111.0s                   1   2383.3 / 2383.3 / 2383.3   1 / 1 / 1 / 1\n  title @121.2s                                    1   7966.3 / 7966.3 / 7966.3   1 / 1 / 1 / 1\n\nevery display frame over 50 ms (85): when · how long · phase · what ran (the browser's long animation frame overlapping it: its scripts, style/layout; else the game's own jobs)",
+ "wallToTitle": 121.312
+}

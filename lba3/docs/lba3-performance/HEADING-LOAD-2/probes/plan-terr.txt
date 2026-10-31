@@ -1,0 +1,3 @@
+terr-desert q_terr.js W_AREA=desert
+terr-hamalayi q_terr.js W_AREA=hamalayi
+terr-otringal q_terr.js W_AREA=isle_otringal

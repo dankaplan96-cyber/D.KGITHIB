@@ -1,0 +1,344 @@
+{
+ "quality": "medium",
+ "load": 2.07,
+ "loadAfter": 4.47,
+ "out": {
+  "arsenal": {
+   "ball": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      912.4,
+      627.8,
+      530.7
+     ],
+     "newPrograms": 0,
+     "newGeometries": 2
+    },
+    "second": {
+     "ok": true,
+     "frameMs": [
+      634.2,
+      562.6,
+      589.4
+     ],
+     "newPrograms": 0,
+     "newGeometries": 1
+    }
+   },
+   "blowgun": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      576.2,
+      525.8,
+      600.1
+     ],
+     "newPrograms": 0,
+     "newGeometries": 3
+    },
+    "second": {
+     "ok": true,
+     "frameMs": [
+      572.1,
+      577.6,
+      498.7
+     ],
+     "newPrograms": 0,
+     "newGeometries": 0
+    }
+   },
+   "laser": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      624.9,
+      534.5,
+      546.9
+     ],
+     "newPrograms": 0,
+     "newGeometries": 1
+    },
+    "second": {
+     "ok": true,
+     "frameMs": [
+      506,
+      529.4,
+      545.8
+     ],
+     "newPrograms": 0,
+     "newGeometries": 0
+    }
+   },
+   "lightning": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      518.6,
+      544.1,
+      588
+     ],
+     "newPrograms": 0,
+     "newGeometries": 1
+    },
+    "second": {
+     "ok": true,
+     "frameMs": [
+      541.6,
+      556.7,
+      515
+     ],
+     "newPrograms": 0,
+     "newGeometries": 0
+    }
+   },
+   "penguin": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      470.9,
+      530.3,
+      555.7
+     ],
+     "newPrograms": 0,
+     "newGeometries": 14
+    },
+    "second": {
+     "ok": false,
+     "frameMs": [
+      502,
+      477.6,
+      509.6
+     ],
+     "newPrograms": 0,
+     "newGeometries": 0
+    }
+   },
+   "protect": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      499.6,
+      516.7,
+      555.8
+     ],
+     "newPrograms": 0,
+     "newGeometries": 1
+    },
+    "second": {
+     "ok": true,
+     "frameMs": [
+      522.4,
+      479.6,
+      524.2
+     ],
+     "newPrograms": 0,
+     "newGeometries": 0
+    }
+   },
+   "conch": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      593.2,
+      522.8,
+      535.5
+     ],
+     "newPrograms": 0,
+     "newGeometries": 1
+    },
+    "second": {
+     "ok": false,
+     "frameMs": [
+      548,
+      510.2,
+      533.9
+     ],
+     "newPrograms": 0,
+     "newGeometries": 0
+    }
+   },
+   "lantern": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      475.5,
+      477.4,
+      533.3
+     ],
+     "newPrograms": 0,
+     "newGeometries": 8
+    },
+    "second": {
+     "ok": true,
+     "frameMs": [
+      593.8,
+      596.2,
+      560.3
+     ],
+     "newPrograms": 0,
+     "newGeometries": 0
+    }
+   },
+   "jetpack": {
+    "first": {
+     "ok": true,
+     "frameMs": [
+      654,
+      516.1,
+      605.1
+     ],
+     "newPrograms": 0,
+     "newGeometries": 8
+    },
+    "second": {
+     "ok": true,
+     "frameMs": [
+      566.7,
+      560.3,
+      592.6
+     ],
+     "newPrograms": 0,
+     "newGeometries": 0
+    }
+   }
+  },
+  "areas": {
+   "zeelich": {
+    "first": {
+     "totalMs": 585,
+     "frames": 22,
+     "longestFrameMs": 192.9,
+     "heldForShadersMs": 49,
+     "newPrograms": 1,
+     "shadowCull.update": 216.7,
+     "uploadGeometry": 31.2,
+     "precompile (sync part)": 104.4
+    },
+    "second": {
+     "totalMs": 35359,
+     "frames": 22,
+     "longestFrameMs": 4372.5,
+     "heldForShadersMs": 28,
+     "newPrograms": 0,
+     "shadowCull.update": 10.8,
+     "uploadGeometry": 0,
+     "precompile (sync part)": 105.3
+    }
+   },
+   "desert": {
+    "first": {
+     "totalMs": 56539,
+     "frames": 22,
+     "longestFrameMs": 28256.4,
+     "heldForShadersMs": 56,
+     "newPrograms": 0,
+     "shadowCull.update": 133.6,
+     "uploadGeometry": 16.8,
+     "precompile (sync part)": 91.5
+    },
+    "second": {
+     "totalMs": 40597,
+     "frames": 22,
+     "longestFrameMs": 18356.5,
+     "heldForShadersMs": 0,
+     "newPrograms": 0,
+     "shadowCull.update": 6.7,
+     "uploadGeometry": 0
+    }
+   },
+   "hamalayi": {
+    "first": {
+     "totalMs": 75783,
+     "frames": 22,
+     "longestFrameMs": 20440,
+     "heldForShadersMs": 24018,
+     "newPrograms": 0,
+     "shadowCull.update": 52.9,
+     "uploadGeometry": 22.1,
+     "precompile (sync part)": 96.3
+    },
+    "second": {
+     "totalMs": 39601,
+     "frames": 22,
+     "longestFrameMs": 7930,
+     "heldForShadersMs": 0,
+     "newPrograms": 0,
+     "shadowCull.update": 4.6,
+     "uploadGeometry": 0
+    }
+   },
+   "isle_otringal": {
+    "first": {
+     "totalMs": 84644,
+     "frames": 22,
+     "longestFrameMs": 30270.9,
+     "heldForShadersMs": 157,
+     "newPrograms": 0,
+     "shadowCull.update": 389.8,
+     "uploadGeometry": 29990.6,
+     "precompile (sync part)": 119.4
+    },
+    "second": {
+     "totalMs": 46669,
+     "frames": 22,
+     "longestFrameMs": 7006.4,
+     "heldForShadersMs": 0,
+     "newPrograms": 0,
+     "shadowCull.update": 9,
+     "uploadGeometry": 0
+    }
+   },
+   "house": {
+    "first": {
+     "totalMs": 81924,
+     "frames": 21,
+     "longestFrameMs": 37367.8,
+     "heldForShadersMs": 28,
+     "newPrograms": 0,
+     "shadowCull.update": 26.8,
+     "uploadGeometry": 37242.4,
+     "precompile (sync part)": 98.8
+    },
+    "second": {
+     "totalMs": 27381,
+     "frames": 22,
+     "longestFrameMs": 7719.5,
+     "heldForShadersMs": 0,
+     "newPrograms": 0,
+     "shadowCull.update": 12.7,
+     "uploadGeometry": 0
+    }
+   },
+   "workshop": {
+    "first": {
+     "totalMs": 49030,
+     "frames": 22,
+     "longestFrameMs": 7975.9,
+     "heldForShadersMs": 64,
+     "newPrograms": 0,
+     "shadowCull.update": 31.7,
+     "uploadGeometry": 17.8,
+     "precompile (sync part)": 100.6
+    },
+    "second": {
+     "totalMs": 17396,
+     "frames": 22,
+     "longestFrameMs": 3849.3,
+     "heldForShadersMs": 0,
+     "newPrograms": 0,
+     "shadowCull.update": 5.3,
+     "uploadGeometry": 0
+    }
+   }
+  },
+  "save": {
+   "medianMs": 0,
+   "maxMs": 0.6,
+   "bytes": 630
+  },
+  "loadSaveMs": 3.5,
+  "programs": 86
+ },
+ "errors": []
+}

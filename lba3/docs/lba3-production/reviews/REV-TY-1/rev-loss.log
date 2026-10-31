@@ -1,0 +1,6 @@
+to done + cleared: {"cs":"done","cleared":true,"coins":4}
+nell pays, then quit at once: {"c0":4,"c1":4,"loose":3,"paid":true}
+after continue: {"coins":4,"loose":0,"paid":true}
+nell again: {"coins":4}
+errors: []
+[2.3] go → (-104.8, 36.0) plan ok=true pts=2 left=0.61

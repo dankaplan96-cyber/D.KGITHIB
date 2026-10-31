@@ -1,0 +1,27 @@
+[0s +0s] continue in the cave: {"room":"well","fail":null} | well [1093.4,0,3.3] hp 10 | Find the source of the heat◆ Wake the three dark crystals
+[9s +9s] wake the crystals: {"nodes":3,"barrier":false,"fail":null} | well [1097.23,0,4.13] hp 10 | Find the source of the heat
+[12s +2s] to the vein: Sendell: {"r":"state:cutscene","done":true,"chapter":"project","fail":null} | citadel [-40.2,2.2,-5.6] hp 10 | Go home and tell Zoé
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[37.6] stuck at (1091.9, -4.1): replan
+[45.3] go → (1096.5, -5.2) plan ok=true pts=3 left=0.38
+[49.3] go → (1097.0, 4.8) plan ok=true pts=3 left=0.31
+[50.8] threat: fight
+[52.7] fight mite3 d=5.1 st=chase aim=it e@1099.1,0.0,-3.8 me@1096.6,0.0,-3.4 ball=idle hp 2→1 me 10 mp 7.344166666666668
+[53.9] fight mite3 d=2.6 st=dead aim=it e@1099.4,0.0,-3.4 me@1096.6,0.0,-3.4 ball=idle hp 1→0 me 10 mp 6.752500000000003
+[53.9] fight → {"left":0,"dead":false,"hp":10,"t":2.4}
+[55.0] threat: fight
+[56.4] fight mite1 d=5.3 st=chase aim=it e@1099.7,0.0,-0.0 me@1096.9,0.0,-2.6 ball=idle hp 2→1 me 10 mp 6.61583333333334
+[57.5] fight mite1 d=3.7 st=dead aim=it e@1099.3,0.0,-0.4 me@1096.9,0.0,-2.6 ball=idle hp 1→0 me 10 mp 6.024166666666675
+[57.5] fight → {"left":0,"dead":false,"hp":10,"t":2.4}
+[66.1] go → (1107.2, -5.1) plan ok=true pts=3 left=0.43
+kept /dev/shm/seg02.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+EXIT 0

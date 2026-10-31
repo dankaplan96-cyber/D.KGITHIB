@@ -1,0 +1,26 @@
+title view: 1366×768, pixel ratio 1, Auto Medium, battery true, fog 45–190 m, camera far 2500 m, shadows true
+t 0 s (camera at 126°): main 262 calls 926k · shadow 21 calls 10k · main triangles wholly beyond the fog 0k (0.0 %)
+   groups: scenery 166/636k · trees 2/105k · terrain 9/88k · characters 66/73k · water 1/22k · particles 2/1k · transparent 15/1k · sky 1/0k
+t 10.47 s (camera at 156°): main 238 calls 853k · shadow 21 calls 10k · main triangles wholly beyond the fog 0k (0.0 %)
+   groups: scenery 153/586k · trees 2/100k · characters 63/76k · terrain 7/69k · water 1/22k · particles 2/1k · transparent 9/0k · sky 1/0k
+t 20.94 s (camera at 186°): main 228 calls 898k · shadow 21 calls 10k · main triangles wholly beyond the fog 0k (0.0 %)
+   groups: scenery 147/604k · trees 2/107k · terrain 9/88k · characters 57/76k · water 1/22k · particles 2/1k · transparent 9/0k · sky 1/0k
+t 31.42 s (camera at 216°): main 252 calls 912k · shadow 21 calls 10k · main triangles wholly beyond the fog 0k (0.0 %)
+   groups: scenery 160/594k · trees 2/139k · terrain 8/78k · characters 59/76k · water 1/22k · grass 3/1k · particles 2/1k · transparent 16/1k · sky 1/0k
+t 41.89 s (camera at 246°): main 264 calls 1042k · shadow 21 calls 10k · main triangles wholly beyond the fog 6k (0.6 %)
+   groups: scenery 171/691k · trees 2/161k · terrain 9/88k · characters 61/79k · water 1/22k · particles 2/1k · transparent 17/1k · sky 1/0k
+t 52.36 s (camera at 276°): main 288 calls 1073k · shadow 21 calls 10k · main triangles wholly beyond the fog 41k (3.8 %)
+   groups: scenery 192/745k · trees 2/129k · characters 60/97k · terrain 8/78k · water 1/22k · transparent 22/1k · particles 2/1k · sky 1/0k
+t 62.83 s (camera at 306°): main 264 calls 1024k · shadow 21 calls 10k · main triangles wholly beyond the fog 123k (12.0 %)
+   groups: scenery 186/702k · trees 2/126k · terrain 10/98k · characters 43/75k · water 1/22k · transparent 19/1k · particles 2/1k · sky 1/0k
+t 73.3 s (camera at 336°): main 292 calls 1009k · shadow 21 calls 10k · main triangles wholly beyond the fog 103k (10.3 %)
+   groups: scenery 209/677k · trees 2/144k · terrain 9/88k · characters 54/76k · water 1/22k · transparent 14/1k · particles 2/1k · sky 1/0k
+t 83.78 s (camera at 6°): main 294 calls 1047k · shadow 21 calls 10k · main triangles wholly beyond the fog 108k (10.3 %)
+   groups: scenery 209/689k · trees 2/160k · terrain 10/98k · characters 55/76k · water 1/22k · transparent 14/1k · particles 2/1k · sky 1/0k
+t 94.25 s (camera at 36°): main 303 calls 1109k · shadow 21 calls 10k · main triangles wholly beyond the fog 50k (4.5 %)
+   groups: scenery 213/742k · trees 2/154k · terrain 10/98k · characters 60/91k · water 1/22k · transparent 14/1k · particles 2/1k · sky 1/0k
+t 104.72 s (camera at 66°): main 269 calls 1059k · shadow 21 calls 10k · main triangles wholly beyond the fog 46k (4.4 %)
+   groups: scenery 181/708k · trees 2/135k · terrain 11/108k · characters 63/85k · water 1/22k · transparent 8/1k · particles 2/1k · sky 1/0k
+t 115.19 s (camera at 96°): main 262 calls 952k · shadow 21 calls 10k · main triangles wholly beyond the fog 1k (0.1 %)
+   groups: scenery 179/639k · trees 2/135k · terrain 8/78k · characters 61/77k · water 1/22k · particles 2/1k · transparent 8/0k · sky 1/0k
+mean over 12 angles: main 268.0 calls 992k · shadow 21.0 calls 10k · beyond fog 40k

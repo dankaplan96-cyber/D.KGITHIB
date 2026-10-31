@@ -1,0 +1,25 @@
+LBA3 benchmark (full) · build 0.36.1 (desktop build 254/255) · 2026-10-29 07:53 · the user's Vega 8 / Ryzen 5 3500U, ON BATTERY
+display: OS 60 Hz · measured from requestAnimationFrame 59.9 Hz, with nothing drawn 59.9 Hz (median over the routes)
+
+summary · fps fixed / as played (auto resolution: mean factor)
+             low                 medium              high
+  street     8.1 / 54.5 (×0.8)   49.4 / 51.3 (×0.5)  33.7 / 41.4 (×0.5)
+  interior   57.3 / 60           60 / 60             52.5 / 58.7
+  combat     47.7 / 52.7         52.2 / 53.3         53 / 49.8
+  transition 58.7 / 59.5         54 / 54.5           45 / 49.5
+  arrival    32 / 48.7           41.4 / 54.5         35.8 / 38.7
+  hamalayi   57.2 / 60           55.7 / 60           44.7 / 53.1
+
+KEY FINDINGS
+1. First entry stall: Low street (the run's first route) 3484 ms + 1667 ms frames at 3.5 / 5.2 s, then 30–50 ms frames for ~1 s
+   (game CPU work p50 32 ms in that run vs 16 ms as played later) — a cold first visit is seconds long on battery.
+2. On battery the CPU clock swings ~3× (CPU probe 8.7–28.8 ms; plugged 5.7–10). Game CPU work as played: street 16 ms (Low),
+   18 ms (Medium), arrival 16.6–22 ms — above the 16.7 ms frame. Lower resolution does NOT help (CPU-bound): Medium street
+   breakdown res ×0.6 → 25 fps with game CPU 37.6 ms (the clock dropped mid-breakdown).
+3. "callback late" p50 6–13 ms on most battery routes (plugged 0.2–0.4): the frame's callback starts late — the GPU/compositor
+   is still finishing the previous frame at battery clocks, which leaves ~8 ms for the game's own work.
+4. Combat as played: light work (CPU 8 ms, GPU 5.9 ms) yet 13–14 % of frames at 33 ms; nothing drawn 16.7 → not the display.
+5. Draw calls are the CPU lever: street 129–177, arrival 214–379; render submit 11–17 ms of the frame.
+6. Auto: "play started before the title had been measured" (no calibration); stepped down 4× in 75 s, hit its floor.
+→ To hold 55–60 on battery: game CPU work ≤ ~8 ms at battery clocks (≈ half of today) and GPU ≤ ~10 ms; first visits
+  behind the loading card. Plugged-in is already 59–60.

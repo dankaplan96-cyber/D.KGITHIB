@@ -1,0 +1,56 @@
+// Chapters 11 (The Shell) and 12 (The Core) to the end: the bore's machinery (the cooling diagram, valves A and C, the ball switch for
+// the ladder), the crystal galleries (three pillars: ball), Sendell, the core (the guardian, three pylons from
+// their plates, Vesk's overload coil), the epilogue: dinner, the end screen, Keep Exploring.
+export const steps = [
+  ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
+  ['down to the machinery', () => P.exitTo('c3-deep')],
+  ['the cooling diagram', () => { const D = game.room; const r = P.use(D.diagram.x, D.diagram.z); return { ...r, diagram: game.flags.c3_diagram, fail: game.flags.c3_diagram ? null : 'diagram' }; }],
+  ['valve A', () => { const v = game.room.valves.find((x) => x.id === 'A'); P.use(v.x, v.z); P.settle(); return { open: v.open }; }],
+  ['the ball switch (ladder)', () => { const tg = game.room.ballTargets.find((x) => x.ballSwitch); return { done: P.hitTarget(tg, 3.5, { run: false, maxT: 40 }), ladder: game.flags.c3_ladder, fail: game.flags.c3_ladder ? null : 'ladder' }; }],
+  // (valve C is up on the catwalk, right above the floor: up the lowered stair first, then along the catwalk)
+  ['valve C on the catwalk', () => { const v = game.room.valves.find((x) => x.id === 'C'), L = game.room.ladder; P.go(L.x, L.z - 0.2, { tol: 0.4 }); P.go(L.x, L.z - 5.4, { tol: 0.4 }); P.use(v.x, v.z, { near: 1.0 }); P.wait(1); P.settle(); return { open: v.open, y: +game.hero.pos.y.toFixed(2), cooled: game.flags.c3_cooled, fail: game.flags.c3_cooled ? null : 'cooling' }; }],
+  ['the galleries', () => P.exitTo('c3-gallery')],
+  // (the crew's supply crates: a hop beside one, the heart that comes out; a player who is hurt rummages them — the bot only when
+  // it has lost 3 HP or more)
+  ['the supply crates (near shelf)', () => { const h = game.hero; return h.hp <= h.maxHp - 3 ? P.rummage('crates_near') : { r: 'not hurt', hp: h.hp }; }],
+  ['three pillars (ball)', () => { const out = game.room.ballTargets.filter((x) => x.pillar != null).map((tg) => P.hitTarget(tg, 3.5, { run: false, maxT: 40 })); return { out, fail: out.every(Boolean) ? null : 'pillars' }; }],
+  // across the chasm on the raised stepping stones (flush with the shelves, 0.9 m gaps: Athletic hops from the brink);
+  // fallen in, he first walks back up the rough ledges against the start cliff
+  ['across the stepping stones', () => {
+    const G = game, h = G.hero, R = G.room, st = R.stones.sets.flat(), c0 = st[2].c, top = st[0].top, tries = [];
+    for (let attempt = 0; attempt < 3 && !(h.pos.x > c0.x + 5 && Math.abs(h.pos.y - top) < 0.3); attempt++) {
+      const out = [];
+      if (h.pos.y < top - 1) { for (let i = 1; i <= 7; i++) P.go(c0.x - 5 + 0.65, c0.z + 9.3 - (i - 1) * 0.72, { tol: 0.35, maxT: 20 }); P.go(c0.x - 6.2, c0.z + 4.6, { tol: 0.5 }); }   // up the ledges, one by one
+      P.go(st[0].c.x - 1.9, st[0].c.z + 1.0, { tol: 0.4 });                                                      // the start shelf's edge
+      if (Math.abs(h.pos.y - top) > 0.3) { tries.push({ shelf: false, y: +h.pos.y.toFixed(2) }); continue; }
+      // (CONTROL-FEEL: each hop from the brink — Normal, short steps until 1.85 m short of the next stone's centre — then a
+      // short hop; as tests/jumpreach.mjs, which crosses in one attempt)
+      const brink = (x, z) => { if (h.behaviour !== 'normal') P.tap('F1'); P.face(x, z); for (let i = 0; i < 40 && Math.hypot(x - h.pos.x, z - h.pos.z) > 1.85; i++) { game.input.keys.add('ArrowUp'); game.step(1 / 30); game.input.keys.delete('ArrowUp'); game.step(1 / 30); } game.step(0.2); };
+      for (const s of st) { let y = 0; for (let k = 0; k < 2; k++) { brink(s.c.x, s.c.z); y = P.hopTo(s.c.x, s.c.z, top, { walk: false, brake: 0.9 }); if (Math.abs(y - top) < 0.3 || h.pos.y < top - 1) break; } out.push(+y.toFixed(2)); if (h.pos.y < top - 1) break; P.go(s.c.x, s.c.z, { tol: 0.2, maxT: 3, fight: false }); }
+      if (h.pos.y > top - 1) { brink(c0.x + 5 + 1.2, c0.z - 1.9); out.push(P.hopTo(c0.x + 5 + 1.2, c0.z - 1.9, top, { walk: false, brake: 0.9 })); }
+      tries.push(out);
+    }
+    // (the bot's hops are unreliable; the crossing was made by input in an earlier run — QA.md. Under ASSIST, after three
+    // failed attempts it is placed on the far shelf: logged as ISO, never counted as input)
+    let iso = false; if (P.assist && !(h.pos.x > c0.x + 5 && Math.abs(h.pos.y - top) < 0.3)) { h.pos.set(c0.x + 6.2, top, c0.z - 1.9); h.vel.set(0, 0); h.vy = 0; h.onGround = true; G.step(0.3); iso = true; P.note('ISO assist: placed on the far shelf of the stepping stones'); }
+    return { tries, iso, x: +h.pos.x.toFixed(1), fail: h.pos.x > c0.x + 5 && Math.abs(h.pos.y - top) < 0.3 ? null : 'stones' };
+  }],
+  // (straight to the way on, not stopping for the mites: a fight from the far shelf chased one off its edge, 3 m down,
+  // with no way back up but the stones again)
+  // (not taken by the bot: from where the stones end, at the chasm's lip, its walk to the far crates slid back into the chasm
+  //  in one night run and the way on to Sendell was lost; the crates are optional, the near ones are still tried)
+  ['the supply crates (far shelf)', () => ({ r: 'skipped (optional)', hp: game.hero.hp })],
+  ['Sendell', () => { const e = game.room?.exits?.find((x) => x.to === 'c3-sendell'); if (e) P.through(e.x, e.z, { fight: false }); P.settle(); return { sendell: game.flags.c3_sendell, fail: game.flags.c3_sendell ? null : 'sendell' }; }],
+  // (the door from Sendell's chamber ends chapter 11: chapter 12's card, then Vesk's scene and the fight)
+  ['the core → chapter 12', () => { P.exitTo('c3-core'); P.settle(); return { chapter: game.flags.chapterKey, fight: game.flags.c3_fight, room: game.room?.id, fail: game.flags.chapterKey === 'core' ? null : 'no chapter 12' }; }],
+  // (the guardian's fight as a player plays it: stun it with the ball, then the plate's bank shot in the 2.6 s it
+  // sags — P.coreFight; walking plate to plate under its bolt fans killed the bot)
+  ['the pylons from their plates', () => { const G = game; P.settle(); const r = P.coreFight('pylons'); P.settle(); const n = G.story.cur.pylons(); return { ...r, pylons: n, fail: n >= 3 ? null : 'pylons' }; }],
+  // the coil: three ball hits while the overloaded guardian fights (input: stun it, then the coil in the window)
+  ['Vesk\'s overload coil', () => { const G = game; P.settle(); const tg = G.room.ballTargets.find((x) => x.coil); const r = tg && !tg.done ? P.coreFight('coil') : null;
+    // (under ASSIST, after the bot's own tries: the remaining coil hits through the story's own hit — logged ISO)
+    if (P.assist && tg && !tg.done && !G.hero.dead) { for (let n = 0; n < 3 && !tg.done; n++) { G.story.cur.hitCoil(tg); P.settle(); } P.note('ISO assist: the overload coil broken'); }
+    P.settle(60); return { ...r, coil: G.flags.c3_coil, turned: G.flags.c3_turned, fail: G.flags.c3_turned ? null : 'coil' }; }, null, { retryFrom: 'the core → chapter 12' }],
+  ['the epilogue', () => { const G = game; let t = 0; while (G.state !== 'ending' && t < 120) { G.step(0.25); t += 0.25; if (G.state === 'dialog' || G.state === 'cutscene') P.settle(); } return { state: G.state, title: document.querySelector('#ending h1')?.textContent, fail: G.state === 'ending' ? null : 'no ending' }; }],
+  ['Keep Exploring', () => { const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5); P.settle(); return { state: game.state, free: game.flags.ep_free, obj: P.state().obj }; }],
+];

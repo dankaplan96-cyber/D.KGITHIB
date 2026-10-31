@@ -1,0 +1,8 @@
+(the user's laptop, build 127 = interim 2: draw batches + lamp skip + per-pass GPU timing; 2026-10-24 18:41; 1366x768; plugged in)
+Medium GPU p50: street 18.75 [scene 17.92, shadow map 0.79] · interior 14.2 · combat 13.2 · transition 15.55 · arrival 15.1
+High GPU p50: street 35.44 [scene 33.08, shadow 2.3] · interior 28.4 · combat 24.9 · transition 29.85 · arrival 29.45
+Low GPU p50 ~8-9 ms everywhere (59-60 fps)
+Medium breakdown, GPU p50:
+  street: as is 19.16 · no shadows 16.03 · no lamps 17.95 · res x0.6 15.78 · shadow map kept 17.56 · NO MSAA 9.29 · batches off 17.87
+  interior: as is 14.1 · no shadows 13.16 · no lamps 13.58 · res x0.6 12.42 · shadow map kept 14.01 · NO MSAA 8.78 · batches off 14.26
+=> MSAA 2x costs ~10 ms of GPU on the street (~5 ms indoors) on Vega 8 / D3D11 (ANGLE); shadows ~1-3 ms; lamps ~1 ms.

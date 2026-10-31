@@ -1,0 +1,133 @@
+{
+ "results": {
+  "landing": {
+   "pos": [
+    4,
+    2.82,
+    86
+   ],
+   "calls": 233,
+   "callsMin": 233,
+   "tris": 629066,
+   "submit50": 7.6,
+   "submit90": 27.9,
+   "total50": 7.6,
+   "total90": 27.9,
+   "geos": 1031,
+   "texs": 485,
+   "progs": 124,
+   "regionMeshes": 415,
+   "regionInstanced": 192,
+   "regionTris": 1854668,
+   "quality": "high"
+  },
+  "lhar": {
+   "pos": [
+    -8,
+    11.9,
+    18
+   ],
+   "calls": 266,
+   "callsMin": 266,
+   "tris": 467998,
+   "submit50": 8.6,
+   "submit90": 12.7,
+   "total50": 8.6,
+   "total90": 12.7,
+   "geos": 1086,
+   "texs": 485,
+   "progs": 124,
+   "regionMeshes": 415,
+   "regionInstanced": 192,
+   "regionTris": 1854668,
+   "quality": "high"
+  },
+  "lift": {
+   "pos": [
+    24,
+    12.17,
+    -18.5
+   ],
+   "calls": 260,
+   "callsMin": 260,
+   "tris": 463167,
+   "submit50": 11.2,
+   "submit90": 168.4,
+   "total50": 11.2,
+   "total90": 168.4,
+   "geos": 1132,
+   "texs": 485,
+   "progs": 124,
+   "regionMeshes": 415,
+   "regionInstanced": 192,
+   "regionTris": 1854668,
+   "quality": "high"
+  },
+  "monastery": {
+   "pos": [
+    34,
+    21.82,
+    -36
+   ],
+   "calls": 234,
+   "callsMin": 234,
+   "tris": 497484,
+   "submit50": 8.5,
+   "submit90": 13.3,
+   "total50": 8.5,
+   "total90": 13.3,
+   "geos": 1139,
+   "texs": 485,
+   "progs": 124,
+   "regionMeshes": 415,
+   "regionInstanced": 192,
+   "regionTris": 1854668,
+   "quality": "high"
+  },
+  "observatory": {
+   "pos": [
+    -14,
+    30.19,
+    -65
+   ],
+   "calls": 211,
+   "callsMin": 211,
+   "tris": 348990,
+   "submit50": 5.7,
+   "submit90": 6.6,
+   "total50": 5.7,
+   "total90": 6.6,
+   "geos": 1143,
+   "texs": 485,
+   "progs": 124,
+   "regionMeshes": 415,
+   "regionInstanced": 192,
+   "regionTris": 1854668,
+   "quality": "high"
+  }
+ },
+ "loadTimes": {
+  "world": 2781,
+  "spaceport": 413,
+  "townlife": 92,
+  "citydress": 56,
+  "interiors": 1367,
+  "zeelich": 1620,
+  "underground": 692,
+  "desert": 562,
+  "condenser": 32,
+  "temple": 26,
+  "wizards": 38,
+  "lba1": 340,
+  "hamalayi": 728,
+  "obsroom": 14,
+  "upper": 552,
+  "valves": 12,
+  "arena": 4,
+  "islands": 2025,
+  "actors": 191,
+  "total": 11646,
+  "shaders": 57966
+ },
+ "ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36"
+}

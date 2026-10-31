@@ -1,0 +1,593 @@
+// Draw batches (RENDER-INV): the main pass's twin of shadowcull.js's shadow batches, one mechanism for every area.
+//
+// Measured on Citadel's street at Medium (1366×768): ~300 draw calls a frame, most of them static pieces from
+// different builders (the town, the harbour, the props, the city dressing: each merged only within its own group,
+// often one draw per colour). Each draw costs ~30–50 µs of the game's CPU in three.js before the GPU sees it, and on
+// the user's laptop that submission is most of the frame.
+//
+// When an area (Citadel's root, a room or a region group) is first drawn, its static pieces are merged per CELL (m)
+// into one mesh per material + attribute layout + flags. Plain-colour and colour-map-only standard materials are
+// FOLDED first, with merge.js's own rules (the same as PERF-2's town): the piece's colour goes into the vertices, its
+// roughness/metalness into an `rm` attribute and its map's repeat/offset into the UVs, so pieces of any colour drawn
+// with the same texture (or none) share one vertex-coloured "twin" material and one draw. Other materials are drawn
+// with the very same material object (a change to it still reaches the batch).
+// The originals stay where they are, out of the main pass through layer 0 (the camera's layer; nothing else in the
+// game uses layers but shadowcull.js, which leaves batched pieces alone). Batches replace main-pass draws only: a
+// piece qualifies only if it does not cast its own shadow (shadowcull's members cast through its shadow batches).
+//
+// Every frame, after the world matrices are updated (Renderer.mid), every batched piece is checked: moved, hidden
+// (itself or a parent), removed, another material or geometry, its geometry edited, casting a shadow, receiving
+// differently, and for a folded piece its material's colour, roughness, metalness, visibility and map transform.
+// Such a piece leaves its batch at once (layer 0 back on, drawn on its own from then on) and the cell is rebuilt in
+// the same frame, so a door that opens, a lamp that changes colour or a prop that appears is never drawn stale.
+//
+// Left out: skinned / instanced / batched meshes, see-through or non-depth-writing materials (their draw order is per
+// object), custom onBeforeRender, objects not frustum-culled, drawRange-limited or morphed geometry, tangents,
+// interleaved attributes, anything under userData.keep (builders' marker for parts that move or toggle) and shadow
+// proxies. Mirrored pieces get their own batches (winding flipped).
+import * as THREE from 'three';
+import { plain, texOnly, twinOf } from './merge.js';
+import { MW } from './drawcull.js';
+import { TEXARRAY, arrayable, layerOf, arrayTwinOf, keyOf, flushArrays } from './texarray.js';
+
+export const CELL = 48;
+// PERF-CPU, tried: lone pieces gathered per LOOSE.n × CELL
+//  (off: lone pieces were drawn on their own, each at its material's point of three's order; in a batch they move — the
+//   same coincident-face change as above, 0.36 % of the Medium interior's pixels. `?loose` turns it on for probes)
+export const LOOSE = { n: typeof location !== 'undefined' && /[?&]loose/.test(location.search) ? 3 : 1 };
+// PERF-CALLS: the draw order kept only where it can show (`?nooverlap`: the gaps of PERF-CPU, for A/B and probes)
+export const OVERLAP = { on: !(typeof location !== 'undefined' && /[?&]nooverlap/.test(location.search)) };
+const SPLIT = 0.5, SPLIT_TRIS = 3000;   // (PERF-BATTERY: a piece of 3000 triangles or more whose bounding radius is over half a cell is cut by triangle)
+const _m = new THREE.Matrix4(), _nm = new THREE.Matrix3(), _v = new THREE.Vector3(), _c = new THREE.Vector3();
+const BASE_OBR = THREE.Object3D.prototype.onBeforeRender;
+
+const shownIn = (o, root) => { for (let p = o; p && p !== root; p = p.parent) if (!p.visible) return false; return true; };
+const attrSig = (g) => Object.keys(g.attributes).sort().map((n) => { const a = g.attributes[n]; return `${n}:${a.itemSize}:${a.normalized ? 1 : 0}:${a.array.constructor.name}`; }).join(',');
+
+function eligible(o, root) {
+  if (!o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || o.isBatchedMesh || o.userData.shadowProxy || o.userData.drawBatch) return false;
+  if (o.castShadow || !o.frustumCulled || o.onBeforeRender !== BASE_OBR || Array.isArray(o.material)) return false;
+  const m = o.material, g = o.geometry;
+  if (!m || !g?.attributes?.position || m.transparent || m.depthWrite === false || m.userData?.noBatch) return false;
+  // (a shader of the game's own may read the object-space position — the foliage sway does: a batch's vertices are in
+  //  the area's space; merge.js's twins only move roughness/metalness into the vertices, so they may)
+  if (m.isShaderMaterial || ((m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile || m.customProgramCacheKey !== THREE.Material.prototype.customProgramCacheKey) && !m.userData?.twin)) return false;
+  if (g.attributes.tangent || (g.morphAttributes && Object.keys(g.morphAttributes).length) || g.drawRange.start !== 0 || g.drawRange.count !== Infinity) return false;
+  for (const a of Object.values(g.attributes)) if (a.isInterleavedBufferAttribute) return false;
+  for (let p = o; p && p !== root; p = p.parent) if (p.userData.keep) return false;
+  if (!shownIn(o, root) || !o.matrixWorld.elements.every(Number.isFinite)) return false;
+  return true;
+}
+// (PERF-CPU probes: why a mesh is not in a batch — the first failing test of eligible(), or how it would be drawn)
+export function explain(o, root) {
+  if (!o.isMesh) return 'not a mesh';
+  if (o.userData.drawBatched) return 'batched';
+  if (!eligible(o, root)) {
+    const m = o.material, g = o.geometry;
+    if (o.castShadow) return 'casts its own shadow';
+    if (Array.isArray(m)) return 'material array';
+    if (m?.transparent || m?.depthWrite === false) return 'see-through';
+    if (m?.isShaderMaterial) return 'shader material';
+    if (m && (m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile || m.customProgramCacheKey !== THREE.Material.prototype.customProgramCacheKey) && !m.userData?.twin) return 'own shader code (' + (m.name || m.type) + ')';
+    if (g?.attributes?.tangent) return 'tangents';
+    if (g?.drawRange && (g.drawRange.start !== 0 || g.drawRange.count !== Infinity)) return 'draw range';
+    if (g && Object.values(g.attributes).some((a) => a.isInterleavedBufferAttribute)) return 'interleaved';
+    for (let p = o; p && p !== root; p = p.parent) if (p.userData.keep) return 'keep';
+    if (!shownIn(o, root)) return 'hidden';
+    return 'other (skinned, instanced, not culled, onBeforeRender, NaN matrix)';
+  }
+  const F = recipe(o, true);
+  if (!F) { const m = o.material, A = o.geometry.attributes; return `not foldable (${m.type}${m.map ? ' map' : ''}${m.vertexColors ? ' vc' : ''}${A.color ? ' colorAttr' : ''}${m.emissive && m.emissive.r + m.emissive.g + m.emissive.b ? ' emissive' : ''}${m.normalMap ? ' normalMap' : ''}${m.map && m.map.wrapS !== THREE.RepeatWrapping ? ' clamp' : ''}): alone in its cell`; }
+  return 'foldable but alone in its cell';
+}
+// merge.js plain() without its no-emissive rule (an emissive colour folds into the arrays' vertices; an emissive map does not)
+const plainE = (m, withMap, vc) => m.isMeshStandardMaterial && !m.isMeshPhysicalMaterial && (vc || !m.vertexColors) && !m.transparent && m.opacity === 1 && !m.alphaTest
+  && (withMap || !m.map) && !m.emissiveMap && !m.normalMap && !m.roughnessMap && !m.metalnessMap && !m.aoMap && !m.bumpMap && !m.alphaMap && !m.lightMap && !m.envMap && !m.displacementMap
+  && m.onBeforeCompile === THREE.Material.prototype.onBeforeCompile && m.customProgramCacheKey === THREE.Material.prototype.customProgramCacheKey;
+// how a piece is drawn in a batch: folded into a twin (colour, rm and the map's transform into the vertices), or as is
+// (PERF-CPU, arrays: a piece whose map is one of the world's painted textures, or a plain-colour piece, folds into the
+//  texture-array twin (texarray.js) — pieces of every such texture in a cell share one batch; other maps as before)
+function recipe(o, arrays = false) {
+  const m = o.material, g = o.geometry, A = g.attributes;
+  if (!A.normal || A.normal.itemSize !== 3) return null;
+  const vc = !!A.color && A.color.itemSize === 3 && m.vertexColors;
+  if (A.color && !vc) return null;                                   // (colours the material doesn't use: as is)
+  // (PERF-CPU: a builder's own merged piece — merge.js's twin, its roughness / metalness already in its vertices — joins
+  //  the arrays too, its `rm` copied)
+  if (arrays && TEXARRAY.on && m.userData?.twin && m.userData.rm && !m.userData.arr && vc && A.rm?.itemSize === 2 && !m.transparent && (!m.map || (A.uv && arrayable(m.map)))) {
+    const t = m.map; if (t?.matrixAutoUpdate) t.updateMatrix();
+    const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc: true, arr: true, layer, preRM: true, ord: m.id };
+  }
+  // (PERF-CPU, arrays: a glowing piece — a lit window, a lamp's glass — folds too, its emissive colour × intensity in
+  //  its vertices: the twin adds it where three adds the uniform)
+  if (arrays && TEXARRAY.on && m.emissive && m.emissive.r + m.emissive.g + m.emissive.b > 0 && plainE(m, !!A.uv && !!m.map, vc) && (!m.map || (A.uv && arrayable(m.map)))) {
+    const t = m.map; if (t?.matrixAutoUpdate) t.updateMatrix();
+    const layer = layerOf(t || null); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(t || null)), tex: !!t, vc, arr: true, layer, ord: m.id };
+  }
+  const tex = !!A.uv && texOnly(m, vc), flat = !tex && plain(m, false, vc);
+  if (!tex && !flat) return null;
+  const t = m.map; if (tex && t.matrixAutoUpdate) t.updateMatrix();
+  if (arrays && TEXARRAY.on && (flat || arrayable(t))) { const layer = layerOf(flat ? null : t); if (layer >= 0) return { twin: arrayTwinOf(m, keyOf(flat ? null : t)), tex, vc, arr: true, layer, ord: twinOf(m, true).id }; }
+  return { twin: twinOf(m, true), tex, vc };
+}
+// what a folded piece's look depends on, to notice a change (the material object stays the same)
+const lookOf = (m) => { const t = m.map; return [m.color.r, m.color.g, m.color.b, m.roughness, m.metalness, m.visible, m.opacity, m.emissive.r + m.emissive.g + m.emissive.b, m.transparent, t ? t.offset.x + ',' + t.offset.y + ',' + t.repeat.x + ',' + t.repeat.y + ',' + t.rotation : ''].join('|'); };
+// PERF-CPU: the same look as numbers, kept on the material with a version that moves when any of them changes (worked out
+// once a frame per material; no string built each frame). NaN equals NaN here, as the strings did.
+const LOOK_N = 21;
+const _srcId = new WeakMap(); let _srcN = 0;
+const srcId = (src) => { let i = _srcId.get(src); if (i === undefined) _srcId.set(src, (i = ++_srcN)); return i; };
+function lookVals(m, out) {
+  const t = m.map;
+  out[0] = m.color.r; out[1] = m.color.g; out[2] = m.color.b; out[3] = m.roughness; out[4] = m.metalness; out[5] = m.visible ? 1 : 0; out[6] = m.opacity;
+  out[7] = m.emissive.r; out[18] = m.emissive.g; out[19] = m.emissive.b; out[20] = m.emissiveIntensity; out[8] = m.transparent ? 1 : 0;
+  if (t) { out[9] = 1; out[10] = t.offset.x; out[11] = t.offset.y; out[12] = t.repeat.x; out[13] = t.repeat.y; out[14] = t.rotation; out[15] = srcId(t.source); out[16] = t.version; out[17] = t.source.version; } else { out[9] = 0; out[10] = out[11] = out[12] = out[13] = out[14] = 0; out[15] = out[16] = out[17] = 0; }
+  return out;
+}
+const _lv = new Float64Array(LOOK_N);
+function lookVer(m, F) {
+  if (m.__lookF === F && F !== -1) return m.__lookV;
+  m.__lookF = F;
+  const a = (m.__look ??= new Float64Array(LOOK_N).fill(NaN)), b = lookVals(m, _lv);
+  let same = m.__lookV !== undefined;
+  for (let i = 0; i < LOOK_N && same; i++) if (a[i] !== b[i] && !(a[i] !== a[i] && b[i] !== b[i])) same = false;
+  if (!same) { a.set(b); m.__lookV = (m.__lookV ?? 0) + 1; }
+  return m.__lookV;
+}
+// (a piece under an object with its own updateMatrixWorld (a camera, a skinned mesh): its matrices are three's, not
+//  drawcull.js's, so it is always compared in full)
+const ownUpdate = (o, root) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.updateMatrixWorld !== THREE.Object3D.prototype.updateMatrixWorld) return true; return false; };
+
+const keepOne = (C) => C.sortId !== undefined && C.list[0].fold?.ord !== C.list[0].o.material.id;
+class Area {
+  constructor(root, cell, fold = true, arrays = false, loose = LOOSE.n, exactArr = true) {
+    this.root = root; this.cells = new Map(); this.members = []; this.ms = 0; this.cell = cell; this.ids = 0; this.loose = loose;
+    const t0 = performance.now();
+    root.updateMatrixWorld(true);
+    this.inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
+    const rootFlip = root.matrixWorld.determinant() < 0;
+    const pieces = [], found = [];
+    const kindKey = (o, F, flip) => [(F ? F.twin : o.material).uuid, F ? (F.arr ? 'fold:arr' : F.tex ? 'fold:uv' : 'fold') : attrSig(o.geometry) + (o.geometry.index ? '|i' : ''), o.receiveShadow, o.renderOrder, flip].join('|');
+    root.traverse((o) => {
+      if (!eligible(o, root)) return;
+      const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
+      _c.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
+      if (!Number.isFinite(_c.x + _c.z)) return;
+      const flip = (o.matrixWorld.determinant() < 0) !== rootFlip, F0 = fold ? recipe(o, false) : null;
+      found.push({ o, flip, F0, cx: _c.x, cz: _c.z });
+    });
+    const P = this.prof = { scan: performance.now() - t0, order: 0, assign: 0, arrays: 0, build: 0, pieces: found.length };   // (PERF-CALLS: where an area's first build goes)
+    let tq = performance.now();
+    // PERF-CPU, arrays: where two pieces' faces coincide, the one drawn later shows, and three orders opaque draws by
+    // material: a piece moved into a batch drawn at another point of that order changes which face shows (Medium
+    // interior, every foldable piece in its cell's array batch: the stove's tiles and a wicker panel, a wall's tiles and
+    // stone, 0.5 % of the pixels; `?arrall` for that version). So each piece keeps its place: `ord`, the id of the
+    // material it was drawn with before (its texture's twin when it was in a folded batch — at least one more such
+    // piece in its cell, or cut over several cells — its own when it was drawn alone or in a batch of its own material).
+    const exact = this.exact = exactArr;
+    if (arrays && TEXARRAY.on && exact) {
+      const n = new Map(), keyOf0 = (e) => kindKey(e.o, e.F0, e.flip) + '|' + Math.floor(e.cx / this.cell) + ',' + Math.floor(e.cz / this.cell);
+      for (const e of found) { const k = keyOf0(e); n.set(k, (n.get(k) || 0) + 1); }
+      for (const e of found) {
+        const g = e.o.geometry, nt = Math.floor((g.index ? g.index.count : g.attributes.position.count) / 3);
+        const cut = nt >= SPLIT_TRIS && g.boundingSphere.radius * e.o.matrixWorld.getMaxScaleOnAxis() > this.cell * SPLIT;
+        const F = recipe(e.o, true);
+        if (F?.arr) { F.ord = e.F0 && (cut || n.get(keyOf0(e)) > 1) ? e.F0.twin.id : e.o.material.id; e.F = F; }
+      }
+      if (OVERLAP.on) this.overlapRuns(found, root, kindKey);
+      else {
+      // The ids of every material this area still draws with (its other pieces' own materials and twins) cut the order
+      // into gaps; pieces whose `ord` falls in one gap share a batch, drawn at that place (`__sortId`, renderer.js's
+      // opaque sort); pieces of different gaps do not. In a batch, its pieces in `ord` order (build()).
+      const other = new Set(), arr = new Set();
+      for (const e of found) if (e.F?.arr) arr.add(e.o);
+      root.traverse((o) => {
+        if (arr.has(o) || !(o.isMesh || o.isLine || o.isPoints || o.isSprite) || !o.material) return;
+        for (const m of Array.isArray(o.material) ? o.material : [o.material]) other.add(m.id);
+      });
+      for (const e of found) if (!e.F?.arr && e.F0) other.add(e.F0.twin.id);
+      // Arrays of different sizes are different batches: within a gap, pieces in `ord` order go into one batch only
+      // while their array stays the same (a run); a piece of another size between them starts a new run.
+      const ids = Float64Array.from(other).sort(), A = found.filter((e) => e.F?.arr).sort((x, y) => x.F.ord - y.F.ord);
+      let run = 0, gap0 = -1, twin0 = null, ord0 = -1;
+      for (const e of A) {
+        let lo = 0, hi = ids.length; while (lo < hi) { const mid = (lo + hi) >> 1; if (ids[mid] < e.F.ord) lo = mid + 1; else hi = mid; }
+        if (lo !== gap0 || (e.F.twin !== twin0 && e.F.ord !== ord0)) run++;
+        gap0 = lo; twin0 = e.F.twin; ord0 = e.F.ord; e.F.gap = run;
+      }
+      }
+    }
+    P.order = performance.now() - tq; tq = performance.now();
+    for (const { o, flip, F0, F: F1 } of found) {
+      const g = o.geometry, F = arrays && TEXARRAY.on && fold ? (exact ? F1 || F0 : recipe(o, true)) : F0;
+      const mat = F ? F.twin : o.material, sig = F ? (F.arr ? 'fold:arr' + (F.gap !== undefined ? ':' + F.gap : '') : F.tex ? 'fold:uv' : 'fold') : attrSig(g) + (g.index ? '|i' : '');
+      const M = { o, fold: F, pre: F?.pre || null, mat: o.matrixWorld.clone(), material: o.material, look: F ? lookOf(o.material) : null, lv: F ? lookVer(o.material, -1) : 0, okF: -1, own: ownUpdate(o, root), geo: g, ver: g.attributes.position.version, iver: g.index ? g.index.version : -1, rs: o.receiveShadow,
+        kind: { key: [mat.uuid, sig, o.receiveShadow, o.renderOrder, flip].join('|'), material: mat, fold: F ? { tex: F.tex, arr: !!F.arr } : null, flip, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder } };
+      this.assign(M);
+      pieces.push(M);
+    }
+    // PERF-CPU: a whole piece alone in its cell (of its kind: on the arrivals, 81 of Zeelich's pieces — a crate, a sign, a
+    // lamp post with its own texture size) joins the other lone pieces of its kind in a coarser cell (LOOSE × the cell)
+    // instead of drawing on its own. Only what was alone moves; a cell with two or more pieces keeps its size.
+    if (this.loose > 1) {
+      const lone = [];
+      for (const [k, C] of this.cells) if (C.list.length === 1 && C.list[0].cells.length === 1 && C.list[0].parts.get(C.id) === null) { lone.push(C.list[0]); this.cells.delete(k); }
+      const L = this.cell * this.loose;
+      for (const M of lone) {
+        _c.copy(M.geo.boundingSphere.center).applyMatrix4(M.o.matrixWorld);
+        const key = M.kind.key + '|loose|' + Math.floor(_c.x / L) + ',' + Math.floor(_c.z / L);
+        let C = this.cells.get(key);
+        if (!C) { C = { key, id: this.ids++, ...M.kind, list: [], mesh: null, dirty: true }; this.cells.set(key, C); }
+        M.cells = [C]; M.parts = new Map([[C.id, null]]); C.list.push(M);
+      }
+    }
+    // a cell with one piece that lies wholly in it stays as it was (nothing to save); a piece cut over several cells
+    // is batched in all of them (PERF-BATTERY: so the parts out of view are culled)
+    // (PERF-CALLS: or a piece whose place in the order is another material's — its texture's twin, shared with pieces
+    //  now in other runs: drawn alone it would sort at its own material's id; as a batch of one, at its run's place)
+    for (const [k, C] of this.cells) if (C.list.length < 2 && !(C.list.length === 1 && (C.list[0].cells.length > 1 || keepOne(C)))) { for (const M of C.list) M.cells = []; this.cells.delete(k); }
+    for (const M of pieces) if (M.cells.length) { this.members.push(M); M.o.layers.disable(0); M.o.userData.drawBatched = true; }
+    P.assign = performance.now() - tq; tq = performance.now();
+    flushArrays();   // (PERF-CPU: an array that took this area's new textures, before its batches are drawn)
+    P.arrays = performance.now() - tq; tq = performance.now();
+    for (const C of this.cells.values()) this.build(C);
+    P.build = performance.now() - tq;
+    this.ms = performance.now() - t0;
+  }
+  // PERF-CALLS: the order kept only where it can show. Opaque draws are depth-tested, so the order of two draws changes
+  // a pixel only where their surfaces lie at exactly the same depth (coincident faces), which needs their boxes to
+  // touch. PERF-CPU's gaps kept every texture-array piece in its place against EVERY material the area draws with —
+  // anywhere on the island — so most pieces with a texture or a colour of their own stayed alone (Zeelich: 38 lone
+  // draws, the desert 44). Here a piece joins the run of its kind in its cell (one batch, drawn at the run's first
+  // `ord`, its pieces in `ord` order) unless a draw whose box touches it would change sides: a draw that stays where
+  // it is (anything not in a texture array, by its material's id and its twin's) with an id from the run's start up to
+  // the piece's, or a piece already placed in another run that is drawn at or after this run's start. Pieces are
+  // placed in `ord` order, so every touching pair keeps its order; the same check as PERF-CPU's wherever boxes touch.
+  // Two draws of the same `ord` (the same material before) were ordered by distance, frame by frame: either order is
+  // theirs. Placed pieces count only where they share a plane (coplanar(), below): only there can faces coincide. A
+  // placed piece of the same kind in a neighbouring cell's run is not counted, as PERF-CPU's gaps did not (one run
+  // across cells): its batch sorts at its own first `ord` — pieces of one kind meet across a cell line edge to edge.
+  // A large piece's parts (cut per cell, as assign() does) are placed part by part with each part's own box. Draws
+  // with another renderOrder never interleave (three sorts by it first); see-through draws come after all of them.
+  overlapRuns(found, root, kindKey) {
+    const cell = this.cell, G = 8, grid = new Map(), EPS = 1e-3;
+    const boxOf = (o) => { const g = o.geometry; if (!g) return null; let b;
+      if (o.isInstancedMesh) { if (!o.boundingBox) o.computeBoundingBox(); b = o.boundingBox?.clone(); }
+      else { if (!g.boundingBox) g.computeBoundingBox(); b = g.boundingBox?.clone(); }
+      if (!b || b.isEmpty()) return null; b.applyMatrix4(o.matrixWorld); b.expandByScalar(EPS); return Number.isFinite(b.min.x + b.max.x + b.min.y + b.max.y + b.min.z + b.max.z) ? b : null; };
+    // (a grid of 8 m squares; a box over 64 squares a side — the sea, the sky, the terrain — goes into one list tested always)
+    const big = [], BIG = 64;
+    const span = (b) => Math.floor(b.max.x / G) - Math.floor(b.min.x / G) >= BIG || Math.floor(b.max.z / G) - Math.floor(b.min.z / G) >= BIG;
+    const put = (E) => { const b = E.box; if (span(b)) { big.push(E); return; } for (let i = Math.floor(b.min.x / G); i <= Math.floor(b.max.x / G); i++) for (let k = Math.floor(b.min.z / G); k <= Math.floor(b.max.z / G); k++) { const key = i * 100003 + k; let L = grid.get(key); if (!L) grid.set(key, (L = [])); L.push(E); } };
+    let stamp = 0;
+    const D = this.dbg = { parts: 0, joined: 0, fresh: 0, byFixed: 0, byPlaced: 0, big: 0, planeMs: 0, planeTris: 0, fixedMs: 0, partsMs: 0, placeMs: 0 };
+    let tp = performance.now();
+    const touching = (b, ro, fn) => { stamp++;
+      for (const E of big) { if (E.ro !== ro) continue; E.seen = stamp; if (E.box.intersectsBox(b) && fn(E)) return true; }
+      const i1 = Math.min(Math.floor(b.max.x / G), Math.floor(b.min.x / G) + BIG), k1 = Math.min(Math.floor(b.max.z / G), Math.floor(b.min.z / G) + BIG);
+      for (let i = Math.floor(b.min.x / G); i <= i1; i++) for (let k = Math.floor(b.min.z / G); k <= k1; k++) {
+        const L = grid.get(i * 100003 + k); if (!L) continue;
+        for (const E of L) { if (E.seen === stamp || E.ro !== ro) continue; E.seen = stamp; if (E.box.intersectsBox(b) && fn(E)) return true; }
+      }
+      return false; };
+    // the draws that stay where they are
+    const arr = new Set(); for (const e of found) if (e.F?.arr) arr.add(e.o);
+    const twinIds = new Map(); for (const e of found) if (!e.F?.arr && e.F0) twinIds.set(e.o, e.F0.twin.id);
+    root.traverse((o) => {
+      if (arr.has(o) || !(o.isMesh || o.isLine || o.isPoints) || !o.material) return;
+      const box = boxOf(o); if (!box) return;
+      const ids = []; for (const m of Array.isArray(o.material) ? o.material : [o.material]) if (!m.transparent) ids.push(m.id);
+      if (twinIds.has(o)) ids.push(twinIds.get(o));
+      for (const id of ids) put({ fixed: true, ord: id, box, ro: o.renderOrder, seen: 0 });
+    });
+    D.fixedMs = performance.now() - tp; tp = performance.now();
+    // the texture-array pieces, part by part (a part: the piece in one cell, or its triangles there when it is cut)
+    const parts = [];
+    for (const e of found) {
+      if (!e.F?.arr) continue;
+      const o = e.o, g = o.geometry, W = o.matrixWorld, I = g.index, Pp = g.attributes.position, nt = Math.floor((I ? I.count : Pp.count) / 3);
+      const key = kindKey(o, e.F, e.flip); e.F.pre = [];
+      if (!(nt >= SPLIT_TRIS && g.boundingSphere.radius * W.getMaxScaleOnAxis() > cell * SPLIT)) {
+        const box = boxOf(o); if (!box) { e.F.pre = null; continue; }
+        parts.push({ e, key, cc: Math.floor(e.cx / cell) + ',' + Math.floor(e.cz / cell), T: null, box, ord: e.F.ord, ro: o.renderOrder, run: null, seen: 0 });
+        continue;
+      }
+      // (the same rule and cells as assign(); the vertices in world space once, without allocations)
+      const n = Pp.count, X = new Float64Array(n * 3), el = W.elements, Ia = I?.array;
+      const raw = !Pp.normalized && Pp.itemSize === 3 ? Pp.array : null;
+      for (let i = 0; i < n; i++) { const x = raw ? raw[i * 3] : Pp.getX(i), y = raw ? raw[i * 3 + 1] : Pp.getY(i), z = raw ? raw[i * 3 + 2] : Pp.getZ(i); X[i * 3] = el[0] * x + el[4] * y + el[8] * z + el[12]; X[i * 3 + 1] = el[1] * x + el[5] * y + el[9] * z + el[13]; X[i * 3 + 2] = el[2] * x + el[6] * y + el[10] * z + el[14]; }
+      const lists = new Map();
+      for (let t = 0; t < nt; t++) {
+        const a = Ia ? Ia[t * 3] : t * 3, b = Ia ? Ia[t * 3 + 1] : t * 3 + 1, c = Ia ? Ia[t * 3 + 2] : t * 3 + 2;
+        let x = (X[a * 3] + X[b * 3] + X[c * 3]) / 3, z = (X[a * 3 + 2] + X[b * 3 + 2] + X[c * 3 + 2]) / 3;
+        if (!Number.isFinite(x + z)) { x = e.cx; z = e.cz; }
+        const ix = Math.floor(x / cell), iz = Math.floor(z / cell), ck = (ix + 50000) * 100000 + (iz + 50000);
+        let L = lists.get(ck); if (!L) lists.set(ck, (L = { cc: ix + ',' + iz, T: [], b: [Infinity, Infinity, Infinity, -Infinity, -Infinity, -Infinity] }));
+        L.T.push(t);
+        const B = L.b;
+        for (let j = 0; j < 3; j++) { const v = j === 0 ? a : j === 1 ? b : c, vx = X[v * 3], vy = X[v * 3 + 1], vz = X[v * 3 + 2]; if (!Number.isFinite(vx + vy + vz)) continue; if (vx < B[0]) B[0] = vx; if (vy < B[1]) B[1] = vy; if (vz < B[2]) B[2] = vz; if (vx > B[3]) B[3] = vx; if (vy > B[4]) B[4] = vy; if (vz > B[5]) B[5] = vz; }
+      }
+      for (const L of lists.values()) { const cc = L.cc; const box = new THREE.Box3(new THREE.Vector3(L.b[0], L.b[1], L.b[2]), new THREE.Vector3(L.b[3], L.b[4], L.b[5])).expandByScalar(EPS); parts.push({ e, key, cc, T: Int32Array.from(L.T), box, ord: e.F.ord, ro: o.renderOrder, run: null, seen: 0 }); }
+    }
+    // Two placed pieces can only show coincident faces where they share a plane: each part's planes (its triangles' in
+    // world space, the normal's sign made canonical, quantized: 1/64 per component, 2 cm in distance — and the
+    // neighbouring distance bin, so two faces a rounding error apart always share a key), worked out when first needed.
+    const planesOf = (pt) => {
+      if (pt.planes) return pt.planes;
+      const t0 = performance.now();
+      const o = pt.e.o, g = o.geometry, e = o.matrixWorld.elements, I = g.index?.array, P = g.attributes.position, A = P.array, st = P.isInterleavedBufferAttribute ? P.data.stride : 3, off = P.offset || 0, S = (pt.planes = new Set());
+      const nt = pt.T ? pt.T.length : Math.floor((I ? g.index.count : P.count) / 3);
+      const W = new Float64Array(9);
+      const vx = (i, j) => { const b = i * st + off, x = A[b], y = A[b + 1], z = A[b + 2]; W[j] = e[0] * x + e[4] * y + e[8] * z + e[12]; W[j + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]; W[j + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]; };
+      for (let k = 0; k < nt; k++) {
+        const t = pt.T ? pt.T[k] : k;
+        vx(I ? I[t * 3] : t * 3, 0); vx(I ? I[t * 3 + 1] : t * 3 + 1, 3); vx(I ? I[t * 3 + 2] : t * 3 + 2, 6);
+        const ux = W[3] - W[0], uy = W[4] - W[1], uz = W[5] - W[2], wx = W[6] - W[0], wy = W[7] - W[1], wz = W[8] - W[2];
+        let nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+        const L = Math.sqrt(nx * nx + ny * ny + nz * nz); if (!(L > 1e-12)) continue;
+        nx /= L; ny /= L; nz /= L;
+        if (nx < -1e-6 || (nx <= 1e-6 && (ny < -1e-6 || (ny <= 1e-6 && nz < 0)))) { nx = -nx; ny = -ny; nz = -nz; }
+        const db = Math.floor((nx * W[0] + ny * W[1] + nz * W[2]) / 0.02);
+        const kn = ((Math.round(nx * 64) + 64) * 129 + (Math.round(ny * 64) + 64)) * 129 + (Math.round(nz * 64) + 64);
+        if (!Number.isFinite(kn + db)) continue;
+        S.add(kn + 2.2e6 * db); S.add(kn + 2.2e6 * (db + 1));
+      }
+      D.planeMs += performance.now() - t0; D.planeTris += nt;
+      return S;
+    };
+    const coplanar = (x, y) => { let A = planesOf(x), B = planesOf(y); if (A.size > B.size) [A, B] = [B, A]; for (const k of A) if (B.has(k)) return true; return false; };
+    D.partsMs = performance.now() - tp; tp = performance.now();
+    parts.sort((a, b) => a.ord - b.ord);
+    const open = new Map(); let runs = 0;
+    for (const p of parts) {
+      const gk = p.key + '|' + p.cc;
+      let R = open.get(gk);
+      D.parts++;
+      if (R) {
+        const m = R.m;
+        let why = 0;
+        const blocked = touching(p.box, p.ro, (E) => { const b = E.fixed ? E.ord >= m && E.ord < p.ord : E.e !== p.e && E.run !== R && E.key !== p.key && E.ord < p.ord && E.run.m >= m && coplanar(p, E); if (b) why = E.fixed ? 1 : 2; return b; });
+        if (blocked) { R = null; if (why === 1) D.byFixed++; else D.byPlaced++; } else D.joined++;
+      } else D.fresh++;
+      if (!R) { R = { id: runs++, m: p.ord }; open.set(gk, R); }
+      p.run = R; put(p);
+      p.e.F.pre.push({ cc: p.cc, T: p.T, run: R });
+    }
+    this.runs = runs; D.big = big.length; D.placeMs = performance.now() - tp;
+  }
+  // PERF-BATTERY: a large, detailed piece is cut: each of its triangles goes to the cell of its own centre (M.parts:
+  // cell id → its triangles there, null for a whole piece; M.cells: its cells). Citadel's builders merge whole
+  // quarters into single meshes (the city dressing: 34k triangles, 74 m across), and a batch was as big as the pieces
+  // in it: on the street at Medium three drew 487k triangles of plain meshes a frame, 84k of them in view. Cut into
+  // cells, the parts out of the view are culled by three's own frustum test. Other pieces are batched as before.
+  assign(M) {
+    const g = M.geo, I = g.index, P = g.attributes.position, nt = Math.floor((I ? I.count : P.count) / 3);
+    const W = M.o.matrixWorld, kind = M.kind.key;
+    const cellAt = (x, z) => {
+      const key = kind + '|' + Math.floor(x / this.cell) + ',' + Math.floor(z / this.cell);
+      let C = this.cells.get(key);
+      if (!C) { C = { key, id: this.ids++, ...M.kind, list: [], mesh: null, dirty: true }; this.cells.set(key, C); }
+      return C;
+    };
+    M.cells = []; M.parts = new Map();
+    // (PERF-CALLS: a texture-array piece's cells, triangles and run were worked out by overlapRuns)
+    if (M.pre) {
+      for (const q of M.pre) {
+        const key = kind + '|run' + q.run.id + '|' + q.cc;
+        let C = this.cells.get(key);
+        if (!C) { C = { key, id: this.ids++, ...M.kind, list: [], mesh: null, dirty: true, sortId: q.run.m }; this.cells.set(key, C); }
+        M.parts.set(C.id, q.T); M.cells.push(C); C.list.push(M);
+      }
+      return;
+    }
+    // (only a large and detailed piece is cut: a small one across a cell line, or a plain slab, would only cost a
+    //  draw on each side)
+    _c.copy(g.boundingSphere.center).applyMatrix4(W);
+    const cx = _c.x, cz = _c.z;
+    if (!(nt >= SPLIT_TRIS && g.boundingSphere.radius * W.getMaxScaleOnAxis() > this.cell * SPLIT)) {
+      const C = cellAt(cx, cz); M.parts.set(C.id, null); M.cells.push(C); C.list.push(M);
+      return;
+    }
+    const lists = new Map();
+    for (let t = 0; t < nt; t++) {
+      let x = 0, z = 0;
+      for (let j = 0; j < 3; j++) { _v.fromBufferAttribute(P, I ? I.getX(t * 3 + j) : t * 3 + j).applyMatrix4(W); x += _v.x; z += _v.z; }
+      x /= 3; z /= 3;
+      if (!Number.isFinite(x + z)) { x = cx; z = cz; }
+      const C = cellAt(x, z);
+      let L = lists.get(C); if (!L) { L = []; lists.set(C, L); }
+      L.push(t);
+    }
+    for (const [C, L] of lists) { M.parts.set(C.id, Int32Array.from(L)); M.cells.push(C); C.list.push(M); }
+  }
+  build(C) {
+    if (C.mesh) { C.mesh.geometry.dispose(); this.root.remove(C.mesh); C.mesh = null; }
+    C.dirty = false; this._meshes = null;
+    if (!C.list.length || (C.list.length === 1 && C.list[0].cells.length < 2 && !keepOne(C))) { for (const M of [...C.list]) this.release(M); C.list.length = 0; C.dirty = false; return; }
+    const fold = C.fold, g0 = C.list[0].geo;
+    const names = fold ? ['position', 'normal', ...(fold.arr ? ['auv', 'layer'] : fold.tex ? ['uv'] : []), 'color', 'rm', ...(fold.arr ? ['em'] : [])] : Object.keys(g0.attributes);
+    const spec = (n) => (fold ? { size: n === 'rm' || n === 'uv' || n === 'auv' ? 2 : n === 'layer' ? 1 : 3, norm: false, Arr: Float32Array } : { size: g0.attributes[n].itemSize, norm: g0.attributes[n].normalized, Arr: g0.attributes[n].array.constructor });
+    // this cell's triangles of each piece, their vertices renumbered (a whole piece: all of them, as they are)
+    const parts = [];
+    let nv = 0, ni = 0;
+    // (PERF-CPU, arrays: the pieces in the order they were drawn before — three draws opaque materials by material id, and
+    //  where two pieces' faces coincide exactly the later one shows: a batch's triangles keep that order. `ord`: the
+    //  id of the material the piece was drawn with before: its 2D twin, or its own)
+    const LIST = fold?.arr ? [...C.list].sort((a, b) => a.fold.ord - b.fold.ord) : C.list;
+    for (const M of LIST) {
+      const g = M.geo, I = g.index, T = M.parts.get(C.id), cnt = g.attributes.position.count;
+      if (T === undefined) continue;
+      if (T === null) { parts.push({ M, T, map: null, from: null, vo: nv }); nv += cnt; ni += I ? I.count - (I.count % 3) : cnt - (cnt % 3); continue; }
+      const map = new Int32Array(cnt).fill(-1), from = [];
+      for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = I ? I.getX(T[k] * 3 + j) : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
+      parts.push({ M, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
+    }
+    const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; }
+    const index = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
+    let io = 0;
+    for (const { M, T, map, from, vo } of parts) {
+      const g = M.geo, I = g.index, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
+      _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
+      for (const n of names) {
+        const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
+        // (PERF-CALLS: positions and normals without a call per vertex — three's own arithmetic, in its order, so the
+        //  same floats: the first build on an arrival was ~300 ms on the user's laptop, most of it here)
+        if ((n === 'position' || n === 'normal') && !a.normalized && a.itemSize === 3) {
+          const A = a.array, e = n === 'position' ? _m.elements : _nm.elements;
+          if (n === 'position') {
+            const w = e[3] === 0 && e[7] === 0 && e[11] === 0 && e[15] === 1;
+            for (let k = 0; k < nf; k++) {
+              const i = (from ? from[k] : k) * 3, x = A[i], y = A[i + 1], z = A[i + 2], o3 = (vo + k) * 3;
+              if (w) { d[o3] = e[0] * x + e[4] * y + e[8] * z + e[12]; d[o3 + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]; d[o3 + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]; }
+              else { const ww = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]); d[o3] = (e[0] * x + e[4] * y + e[8] * z + e[12]) * ww; d[o3 + 1] = (e[1] * x + e[5] * y + e[9] * z + e[13]) * ww; d[o3 + 2] = (e[2] * x + e[6] * y + e[10] * z + e[14]) * ww; }
+            }
+          } else {
+            for (let k = 0; k < nf; k++) {
+              const i = (from ? from[k] : k) * 3, x0 = A[i], y0 = A[i + 1], z0 = A[i + 2], o3 = (vo + k) * 3;
+              let x = e[0] * x0 + e[3] * y0 + e[6] * z0, y = e[1] * x0 + e[4] * y0 + e[7] * z0, z = e[2] * x0 + e[5] * y0 + e[8] * z0;
+              const sc = 1 / (Math.sqrt(x * x + y * y + z * z) || 1); x *= sc; y *= sc; z *= sc;
+              d[o3] = x; d[o3 + 1] = y; d[o3 + 2] = z;
+            }
+          }
+        }
+        else if (n === 'position') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix4(_m); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        else if (n === 'normal') for (let k = 0; k < nf; k++) { _v.fromBufferAttribute(a, src(k)).applyMatrix3(_nm).normalize(); d[(vo + k) * 3] = _v.x; d[(vo + k) * 3 + 1] = _v.y; d[(vo + k) * 3 + 2] = _v.z; }
+        else if (fold && n === 'auv' && !M.fold.tex) d.fill(0, vo * 2, (vo + nf) * 2);   // (a plain piece: the white layer, anywhere)
+        else if (fold && n === 'layer') d.fill(M.fold.layer, vo, vo + nf);
+        else if (fold && n === 'em') { const e = m.emissive, k = m.emissiveIntensity ?? 1, r = e ? e.r * k : 0, gg = e ? e.g * k : 0, b = e ? e.b * k : 0; for (let q = 0; q < nf; q++) { d[(vo + q) * 3] = r; d[(vo + q) * 3 + 1] = gg; d[(vo + q) * 3 + 2] = b; } }
+        else if (fold && (n === 'uv' || n === 'auv')) { const U = m.map.matrix; for (let k = 0; k < nf; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
+        else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + k) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + k) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
+        else if (fold && n === 'rm' && M.fold.preRM) for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 2] = a.getX(i); d[(vo + k) * 2 + 1] = a.getY(i); }
+        else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
+        else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
+        else { const sz = a.itemSize, A = a.array; for (let k = 0; k < nf; k++) for (let q = 0; q < sz; q++) d[(vo + k) * sz + q] = A[from[k] * sz + q]; }
+      }
+      if (!T) {
+        if (I) { const X = I.array, n = I.count - (I.count % 3); for (let i = 0; i < n; i += 3) { index[io + i] = X[i] + vo; index[io + i + 1] = X[C.flip ? i + 2 : i + 1] + vo; index[io + i + 2] = X[C.flip ? i + 1 : i + 2] + vo; } io += n; }
+        else { const n = nf - (nf % 3); for (let i = 0; i < n; i += 3) { index[io + i] = vo + i; index[io + i + 1] = vo + (C.flip ? i + 2 : i + 1); index[io + i + 2] = vo + (C.flip ? i + 1 : i + 2); } io += n; }
+        continue;
+      }
+      for (let k = 0; k < T.length; k++) {
+        const t = T[k], a = I ? I.getX(t * 3) : t * 3, b = I ? I.getX(t * 3 + 1) : t * 3 + 1, c = I ? I.getX(t * 3 + 2) : t * 3 + 2;
+        index[io] = map[a] + vo; index[io + 1] = map[C.flip ? c : b] + vo; index[io + 2] = map[C.flip ? b : c] + vo; io += 3;
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    for (const n of names) geo.setAttribute(n, new THREE.BufferAttribute(out[n].data, out[n].size, out[n].norm));
+    geo.setIndex(new THREE.BufferAttribute(index, 1));
+    geo.computeBoundingSphere();
+    const mesh = new THREE.Mesh(geo, C.material);
+    mesh.castShadow = false; mesh.receiveShadow = C.receiveShadow; mesh.renderOrder = C.renderOrder;
+    mesh.matrixAutoUpdate = false; mesh.name = 'drawBatch'; mesh.userData.drawBatch = true;
+    if (C.sortId !== undefined) mesh.__sortId = C.sortId;   // (PERF-CALLS: its run's place in the order, kept when pieces leave)
+    else if (fold?.arr && LIST.length && LIST[0].fold.gap !== undefined) mesh.__sortId = LIST[0].fold.ord;   // (its pieces' place in the order, above)
+    this.root.add(mesh); mesh.updateMatrixWorld(true);
+    C.mesh = mesh; this._meshes = null;
+  }
+  // (PERF-BATTERY-2: the batch meshes, for drawcull.js BoxCull)
+  meshes() { if (!this._meshes) { this._meshes = []; for (const C of this.cells.values()) if (C.mesh) this._meshes.push(C.mesh); } return this._meshes; }
+  // (a piece leaves every cell it is in; the caller rebuilds the cells made dirty)
+  release(M) {
+    if (M.out) return;
+    M.out = true; M.o.layers.enable(0); delete M.o.userData.drawBatched;
+    for (const C of M.cells) { const i = C.list.indexOf(M); if (i >= 0) { C.list.splice(i, 1); C.dirty = true; } }
+  }
+  // every batched piece, every frame (after the world matrices): anything changed leaves, its cell is rebuilt now
+  watch() {
+    let left = 0;
+    // (PERF-BATTERY-2: a folded material's look and a parent's visibility are worked out once a frame, not once per piece:
+    //  ~1 500 pieces share a few dozen materials and parents; the same checks, the same result)
+    const looks = this._looks ??= new Map(), shown = this._shown ??= new Map(); looks.clear(); shown.clear();
+    const lookNow = (m) => { let k = looks.get(m); if (k === undefined) looks.set(m, (k = lookOf(m))); return k; };
+    const root = this.root, up = (p) => { if (!p || p === root) return true; let v = shown.get(p); if (v === undefined) shown.set(p, (v = p.visible && up(p.parent))); return v; };
+    // PERF-CPU (the same checks, cheaper when this frame's matrices came from drawcull.js's update, MW.ok): a parent
+    // chain is shown when that update reached the parent through shown objects in this frame (`__visF`); a world matrix
+    // is compared in full only when that update recomputed it since it was last found equal (`__mwF`); a folded
+    // material's look by its version (lookVer). Otherwise (A/B, or the area's root not reached) as before.
+    const F = MW.frame, fast = this.fast !== false && MW.ok && root.__visF === F;
+    for (const M of this.members) {
+      if (M.out) continue;
+      const o = M.o, g = o.geometry;
+      if (fast) {
+        const p = o.parent;
+        if (p && o.visible && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
+          && (p === root || p.__visF === F) && ((o.__mwF <= M.okF && !M.own) || (o.matrixWorld.equals(M.mat) && (M.okF = F) >= 0)) && (!M.look || lookVer(o.material, F) === M.lv)) continue;
+      } else if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
+        && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookNow(o.material) === M.look)) { M.okF = -1; continue; }
+      this.release(M); left++;
+    }
+    // (a rebuild may release a piece left alone in a cell, which makes its other cells dirty: until none is)
+    if (left) { for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; } if (!any) break; } (this.outs ??= []).push(...this.members.filter((M) => M.out)); this.members = this.members.filter((M) => !M.out); }
+    return left;
+  }
+  // PERF-CALLS: pieces that left (a house faded while the camera was behind it, a prop hidden for a scene, a lamp's
+  // colour changed and back) were drawn on their own for good: a long visit kept collecting draws. At a scene change
+  // into the area (behind its black), a piece that is back exactly as it was batched — same place, same material and
+  // look, same geometry, shown, not casting its own shadow — goes back into its cells, which are rebuilt then.
+  readmit() {
+    if (!this.outs?.length) return 0;
+    const root = this.root, back = [];
+    root.updateMatrixWorld(true);
+    this.outs = this.outs.filter((M) => {
+      const o = M.o, g = o.geometry;
+      if (o.material !== M.material || g !== M.geo || g.attributes.position.version !== M.ver || (g.index ? g.index.version : -1) !== M.iver || o.receiveShadow !== M.rs) return true;
+      if (!M.cells.length || !eligible(o, root) || !o.matrixWorld.equals(M.mat) || (M.look && lookOf(o.material) !== M.look)) return true;
+      back.push(M); return false;
+    });
+    for (const M of back) {
+      M.out = false; M.okF = -1; M.lv = M.look ? lookVer(M.material, -1) : 0;
+      M.o.layers.disable(0); M.o.userData.drawBatched = true;
+      for (const C of M.cells) if (!C.list.includes(M)) { C.list.push(M); C.dirty = true; }
+      this.members.push(M);
+    }
+    for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; } if (!any) break; }
+    // (a piece whose cell is still too empty without the others is drawn on its own again, kept for the next time)
+    for (const M of this.members) if (M.out) this.outs.push(M);
+    this.members = this.members.filter((M) => !M.out);
+    return back.filter((M) => !M.out).length;
+  }
+  restore() {
+    for (const M of this.members) if (!M.out) this.release(M);
+    for (const C of this.cells.values()) if (C.mesh) { C.mesh.geometry.dispose(); this.root.remove(C.mesh); C.mesh = null; }
+    this.members = []; this.cells.clear(); this._meshes = null;
+  }
+  stats() { let batches = 0, pieces = 0, verts = 0, folded = 0; for (const C of this.cells.values()) if (C.mesh) { batches++; pieces += C.list.length; verts += C.mesh.geometry.attributes.position.count; if (C.fold) folded += C.list.length; } return { batches, pieces, folded, verts, buildMs: +this.ms.toFixed(1), prof: this.prof ? Object.fromEntries(Object.entries(this.prof).map(([k, v]) => [k, +v.toFixed(1)])) : null }; }
+}
+
+export class DrawBatch {
+  // fold: on since PERF-BATTERY (off before). Folded batches change a few pixels (0.003–0.3 % of a frame: where two
+  // surfaces of different materials coincide, the draw order decides which shows). On the user's Vega 8 on battery the
+  // CPU's render submission (~12 ms on the street at Medium) is the next limit after the GPU, and folding is what
+  // merges the regions' one-colour pieces: the arrival route 321 → 252 draw calls, the street 250 → 227 (Medium,
+  // SwiftShader counts, docs/lba3-performance/PERF_BATTERY.md). `fold = false` + reset() brings back the exact batches.
+  // arrays (PERF-CPU): the world's painted textures from one texture array (texarray.js): one batch per cell for all of them
+  constructor() { this.areas = new Map(); this.enabled = true; this.cell = CELL; this.fold = true; this.arrays = true; this.loose = LOOSE.n; this.exact = !(typeof location !== 'undefined' && /[?&]arrall/.test(location.search)); this.left = 0; }
+  // build the area's batches (once) and check its pieces; call after the world matrices are up to date
+  update(root) {
+    if (!this.enabled || !root) { if (this.areas.size) this.reset(); return null; }
+    let A = this.areas.get(root);
+    if (!A) { A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
+    this.left += A.watch();
+    return A;
+  }
+  has(root) { return this.areas.has(root); }
+  // (PERF-CALLS: behind a scene change's black, the pieces that are back as they were rejoin their batches)
+  readmit(root) { const A = this.areas.get(root); if (!A || !this.enabled) return 0; const t0 = performance.now(), n = A.readmit(); if (n) { this.readmitted = (this.readmitted || 0) + n; this.readmitMs = (this.readmitMs || 0) + performance.now() - t0; } return n; }
+  meshes(root) { return this.areas.get(root)?.meshes() ?? []; }
+  // every piece drawn on its own again, batches removed (A/B comparisons, or switching it off)
+  reset() { for (const A of this.areas.values()) A.restore(); this.areas.clear(); }
+  stats() { const s = {}; for (const [r, A] of this.areas) s[r.name || r.uuid.slice(0, 6)] = A.stats(); return s; }
+}
+
+// TITLE-LOAD: the texture layers an area's batches will read (texarray.js layerOf: a painted canvas read back each, the
+// largest part of a first build here), read ahead piece by piece: a generator, so a caller spreads it over frames
+// (main.js: at most LAYER_SLICE_MS a frame, behind the black or the loading screen). The same pieces, in the same order,
+// through the same recipe as the area's build (Area: recipe(o, true) for every eligible piece), which then finds every
+// layer there already: the same arrays, layer for layer. `arrays`: the DrawBatch's own switch.
+export function* warmLayers(root, arrays = true) {
+  if (!arrays || !TEXARRAY.on || !root) return;
+  root.updateMatrixWorld(true);
+  const list = [];
+  root.traverse((o) => { if (eligible(o, root)) list.push(o); });
+  for (const o of list) { if (o.parent && eligible(o, root)) recipe(o, true); yield; }
+}

@@ -1,0 +1,85 @@
+start: {"state":"play","room":"citadel","pos":[-40.2,2.2,-5.6],"hp":10,"chapter":"project","obj":"Tell Zoé what happened in the well (home, Bug Street)","items":[],"coins":4,"clovers":3,"l":{}}
+  customs → 0/2.5
+  customs → 1/2.5
+  customs → 2/2.5
+  customs → 5/2.5
+  customs → 6/2.5
+  customs → 7/2.5
+  customs → 0/4
+  customs → 1/4
+  customs → 2/4
+  customs → 3/4
+  customs → 5/4
+  customs → 6/4
+  customs → 7/4
+ring customs: {"tried":13,"ok":12,"bad":[{"i":3,"R":4,"out":"stuck","back":"arrived","st":"play","hp":10,"at":[-110,1.8,36.5]}]}
+  crate → 0/2.5
+  crate → 1/2.5
+  crate → 3/2.5
+  crate → 4/2.5
+  crate → 5/2.5
+  crate → 7/2.5
+  crate → 0/4
+  crate → 2/4
+  crate → 3/4
+  crate → 6/4
+  crate → 7/4
+ring crate: {"tried":11,"ok":11,"bad":[]}
+  shop → 2/2.5
+  shop → 4/2.5
+  shop → 5/2.5
+  shop → 6/2.5
+  shop → 1/4
+  shop → 2/4
+  shop → 3/4
+  shop → 4/4
+  shop → 6/4
+ring shop: {"tried":9,"ok":9,"bad":[]}
+  barrel → 0/2.5
+  barrel → 1/2.5
+  barrel → 3/2.5
+  barrel → 4/2.5
+  barrel → 5/2.5
+  barrel → 6/2.5
+  barrel → 7/2.5
+  barrel → 0/4
+  barrel → 1/4
+  barrel → 2/4
+  barrel → 3/4
+  barrel → 4/4
+  barrel → 5/4
+  barrel → 6/4
+  barrel → 7/4
+ring barrel: {"tried":15,"ok":15,"bad":[]}
+  engine → 0/2.5
+  engine → 4/2.5
+  engine → 5/2.5
+  engine → 6/2.5
+  engine → 7/2.5
+  engine → 0/4
+  engine → 1/4
+  engine → 2/4
+  engine → 4/4
+  engine → 6/4
+  engine → 7/4
+ring engine: {"tried":11,"ok":11,"bad":[]}
+path past garden beds: {"a":"arrived","b":"arrived","t":7.1}
+path through shop: {"a":"arrived","b":"arrived","t":6.3}
+walk-through props: {"pipe":{"blocked":false},"pumpSign":{"blocked":false},"barrierPost":{"blocked":false},"ropePostSW":{"blocked":false},"shopRoofPole":{"blocked":true},"benchTop":{"blocked":true}}
+errors: []
+[405.3] go → (-105.9, 38.6) plan ok=true pts=2 left=0.11
+[408.4] go → (-103.1, 41.5) plan ok=true pts=3 left=0.26
+[411.5] go → (-105.9, 38.6) plan ok=false pts=4 left=0.43
+[416.9] go → (-101.9, 38.6) plan ok=true pts=3 left=0.24
+[419.7] go → (-105.9, 38.6) plan ok=true pts=4 left=0.29
+[423.6] go → (-105.9, 34.6) plan ok=true pts=4 left=0.23
+[425.6] go → (-105.9, 38.6) plan ok=true pts=3 left=0.15
+[428.7] go → (-109.9, 38.6) plan ok=true pts=2 left=0.02
+[431.0] go → (-105.9, 38.6) plan ok=true pts=3 left=0.36
+[434.3] go → (-108.7, 41.5) plan ok=true pts=3 left=0.16
+[437.7] go → (-105.9, 38.6) plan ok=true pts=4 left=0.34
+[441.1] go → (-60.8, 75.8) plan ok=true pts=9 left=0.27
+[469.1] go → (-60.8, 87.8) plan ok=true pts=7 left=0.01
+[476.2] go → (-103.7, 30.8) plan ok=false pts=9 left=0.52
+[510.6] go → (-103.7, 41.8) plan ok=true pts=4 left=0.15
+BROWSER DISCONNECTED 2026-10-14T09:30:56.687Z

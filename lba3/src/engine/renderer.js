@@ -1,0 +1,583 @@
+// Renderer + post-processing. Two looks:
+//   "2026": full resolution, 4× MSAA, soft shadows, neutral tone mapping, restrained bloom.
+//   "1997": low internal resolution, nearest upscaling, flat shading,
+//           posterised + dithered colour - a nod to the original.
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { updateShownWorld, MW } from './drawcull.js';
+import { warmPassPrograms } from './warmup.js';
+import { withCulledShown } from './viewinst.js';
+// LOOK-FIRST-2: on battery the automatic resolution stops here (was 0.5: pixelated)
+export const BATTERY_MIN_SCALE = 0.85;
+
+// RENDER-INV: lamps cost nothing where they don't reach. three evaluates the whole lighting model (RE_Direct: the
+// standard material's GGX specular + diffuse) for every point light on every lit pixel, also where the lamp's light
+// is exactly zero: beyond its range (three's distance falloff is 0 there) and for the light pool's unused slots
+// (intensity 0). three already computes `directLight.visible` (its colour is not zero); the model now runs only for
+// a visible lamp. A zero colour added exactly nothing, so every pixel is the same; the GPU skips the work for most of
+// the screen outdoors. (Toon materials, whose gradient map is sampled in RE_Direct, keep the plain loop; the game has
+// none.) Must run before any shader is compiled: this module is imported before the scene is built.
+{
+  const C = THREE.ShaderChunk, src = C.lights_fragment_begin;
+  const call = '\t\tRE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );';
+  const gated = '\t\t#ifndef TOON\n\t\tif ( directLight.visible )\n\t\t#endif\n' + call;
+  // PERF-BATTERY-2: the lamps (point lights) in the battery profile light the diffuse term only (Lambert: what three's
+  // model adds as directDiffuse), without the GGX specular highlight, which is most of the model's work per lamp and
+  // per pixel and, on the game's rough surfaces, a faint sheen at most. The battery profile is the only state with
+  // three's Basic shadow type (SHADOWMAP_TYPE_BASIC, patched below to a 5-read filter), so its programs carry the
+  // switch: no new program, nothing changes plugged in. The sun and the spot lights keep the full model.
+  const lamp = '\t\t#if defined( SHADOWMAP_TYPE_BASIC ) && !defined( TOON )\n\t\tif ( directLight.visible ) reflectedLight.directDiffuse += saturate( dot( geometryNormal, directLight.direction ) ) * directLight.color * BRDF_Lambert( material.diffuseColor );\n\t\t#else\n' + gated + '\n\t\t#endif';
+  const pt = src.indexOf('getPointLightInfo( pointLight'), sp = src.indexOf('getSpotLightInfo( spotLight'), dir = src.indexOf('getDirectionalLightInfo(');
+  const a = src.indexOf(call, pt), b = src.indexOf(call, sp);
+  if (pt > 0 && sp > pt && dir > sp && a > pt && a < sp && b > sp && b < dir) C.lights_fragment_begin = src.slice(0, a) + lamp + src.slice(a + call.length, b) + gated + src.slice(b + call.length);
+  else console.warn('lamp skip: three.js lights chunk not as expected; left as it is');
+}
+
+// PERF-BATTERY: the battery profile's shadow filter. three's PCF (Medium) reads the shadow map 17 times a pixel over
+// ±radius texels: on the user's Vega 8 on battery that filter is ~4.4 ms of the street's 37 (its "shadow filter basic"
+// line). The battery profile switches the map to three's BasicShadowMap, which nothing else in the game uses, and its
+// one-read branch is replaced here by 5 reads (the centre and four at half the radius on the diagonals): close to
+// PCF's soft, light-edged shadows (one read alone draws them hard and dark) for under a third of its reads. Patched
+// before any shader is compiled; the Basic programs exist only while the battery profile is on (renderer.setBattery).
+{
+  const C = THREE.ShaderChunk, src = C.shadowmap_pars_fragment;
+  const one = '#else\n\t\t\tshadow = texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z );\n\t\t#endif';
+  const five = '#else\n\t\t\tvec2 hs = 0.5 * shadowRadius / shadowMapSize;\n\t\t\tshadow = ( texture2DCompare( shadowMap, shadowCoord.xy, shadowCoord.z ) +\n'
+    + '\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( -hs.x, -hs.y ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( hs.x, -hs.y ), shadowCoord.z ) +\n'
+    + '\t\t\t\ttexture2DCompare( shadowMap, shadowCoord.xy + vec2( -hs.x, hs.y ), shadowCoord.z ) + texture2DCompare( shadowMap, shadowCoord.xy + vec2( hs.x, hs.y ), shadowCoord.z ) ) * 0.2;\n\t\t#endif';
+  const i = src.indexOf(one);
+  if (i > 0 && src.indexOf(one, i + 1) < 0 && src.lastIndexOf('float getShadow(', i) > 0 && src.indexOf('float getPointShadow', 0) > i) C.shadowmap_pars_fragment = src.slice(0, i) + five + src.slice(i + one.length);
+  else console.warn('battery shadow filter: three.js shadow chunk not as expected; left as it is');
+}
+
+// GFX-LOOK (the user, 29.10: "the game looks uglier — rendering, shadows … I want it sharp, not pixelated"): the sun's
+// shadow is read with the GPU's own shadow filter. three r180 stores the shadow map as depth packed into an RGBA8 colour
+// texture, read with nearest filtering: every read is one texel, so its 5-read (battery) and 17-read (Medium) filters
+// draw stepped, blocky edges. Now the map also keeps its depth in a depth texture with hardware comparison
+// (sampler2DShadow, linear): each read compares the four nearest texels and blends them — a smooth edge from one read
+// (bilinear PCF, the standard technique) at the price of one texture read on any GPU of the last 15 years. The filters
+// on top (getShadowHW below): battery 4 reads (was 5), Medium 9 (was 17), High 9 (was 16); every one is smoother than
+// before. Only the directional light (the sun: the game's only shadow caster) is affected; spot and point shadows keep
+// three's path. `?oldshadow` in the URL: three's packed path as before (A/B).
+export const HW_SHADOWS = typeof location === 'undefined' || !/[?&]oldshadow\b/.test(location.search);
+const HW = { raw: 0 };   // (>0 while three draws a shadow map or disposes one: the map's `texture` is its colour then)
+if (HW_SHADOWS) {
+  const C = THREE.ShaderChunk, pars = C.shadowmap_pars_fragment, decl = 'uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHT_SHADOWS ];';
+  // the filter: taps of the hardware 2×2 comparison at texel offsets. Battery: a 2×2 group 1.5 texels apart (a smooth
+  // ~3.5-texel edge); Medium: 3×3, spacing 0.4 × radius (1.2 texels at the sun's radius 3: a ~4.5-texel edge, as soft
+  // as the old 17 reads' but without their steps); High (4096 map, fine texels): 3×3, 1 texel apart
+  const fn = `
+  float shadowTapHW( sampler2DShadow m, vec2 uv, float z ) { return textureLod( m, vec3( uv, z ), 0.0 ); }
+  float getShadowHW( sampler2DShadow shadowMap, vec2 shadowMapSize, float shadowIntensity, float shadowBias, float shadowRadius, vec4 shadowCoord ) {
+    float shadow = 1.0;
+    shadowCoord.xyz /= shadowCoord.w;
+    shadowCoord.z += shadowBias;
+    bool inFrustum = shadowCoord.x >= 0.0 && shadowCoord.x <= 1.0 && shadowCoord.y >= 0.0 && shadowCoord.y <= 1.0;
+    if ( inFrustum && shadowCoord.z <= 1.0 ) {
+      vec2 uv = shadowCoord.xy, t = 1.0 / shadowMapSize; float z = shadowCoord.z;
+    #if defined( SHADOWMAP_TYPE_PCF ) || defined( SHADOWMAP_TYPE_PCF_SOFT )
+      #if defined( SHADOWMAP_TYPE_PCF )
+      vec2 d = t * max( 0.5, 0.4 * shadowRadius );
+      #else
+      vec2 d = t;
+      #endif
+      shadow = ( shadowTapHW( shadowMap, uv + vec2( -d.x, -d.y ), z ) + shadowTapHW( shadowMap, uv + vec2( 0.0, -d.y ), z ) + shadowTapHW( shadowMap, uv + vec2( d.x, -d.y ), z )
+        + shadowTapHW( shadowMap, uv + vec2( -d.x, 0.0 ), z ) + shadowTapHW( shadowMap, uv, z ) + shadowTapHW( shadowMap, uv + vec2( d.x, 0.0 ), z )
+        + shadowTapHW( shadowMap, uv + vec2( -d.x, d.y ), z ) + shadowTapHW( shadowMap, uv + vec2( 0.0, d.y ), z ) + shadowTapHW( shadowMap, uv + vec2( d.x, d.y ), z ) ) * ( 1.0 / 9.0 );
+    #else
+      vec2 d = 0.75 * t;
+      shadow = ( shadowTapHW( shadowMap, uv + vec2( -d.x, -d.y ), z ) + shadowTapHW( shadowMap, uv + vec2( d.x, -d.y ), z )
+        + shadowTapHW( shadowMap, uv + vec2( -d.x, d.y ), z ) + shadowTapHW( shadowMap, uv + vec2( d.x, d.y ), z ) ) * 0.25;
+    #endif
+    }
+    return mix( 1.0, shadow, shadowIntensity );
+  }
+`;
+  const at = pars.indexOf('\tvec2 cubeToUV(');
+  const calls = [['lights_fragment_begin', 'getShadow( directionalShadowMap[ i ]'], ['shadowmask_pars_fragment', 'getShadow( directionalShadowMap[ i ]']];
+  if (pars.split(decl).length === 2 && at > pars.indexOf(decl) && calls.every(([k, s]) => C[k].split(s).length === 2)) {
+    C.shadowmap_pars_fragment = pars.replace(decl, '#ifdef SHADOWMAP_TYPE_VSM\n\t\t' + decl + '\n\t\t#else\n\t\tuniform sampler2DShadow directionalShadowMap[ NUM_DIR_LIGHT_SHADOWS ];\n\t\t#endif')
+      .replace('\tvec2 cubeToUV(', fn + '\tvec2 cubeToUV(');
+    for (const [k, s] of calls) C[k] = C[k].replace(s, '\n\t\t#ifdef SHADOWMAP_TYPE_VSM\n\t\tgetShadow( directionalShadowMap[ i ]\n\t\t#else\n\t\tgetShadowHW( directionalShadowMap[ i ]\n\t\t#endif\n\t\t');
+  } else console.warn('hardware shadows: three.js shadow chunks not as expected; left as they are');
+}
+// the sun's shadow map: three's packed colour target plus a depth texture with comparison. While three draws into it
+// (HW.raw) `texture` is the colour, as three expects; everywhere else — the lights' uniforms read `shadow.map.texture` —
+// it is the depth texture the shaders sample.
+class HwShadowTarget extends THREE.WebGLRenderTarget {
+  constructor(w, h, reversed) {
+    super(w, h, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter });
+    const d = new THREE.DepthTexture(w, h, THREE.UnsignedIntType);
+    d.compareFunction = reversed ? THREE.GreaterEqualCompare : THREE.LessEqualCompare;
+    d.minFilter = d.magFilter = THREE.LinearFilter;
+    d.name = 'sun.shadowDepth';
+    this.depthTexture = d;
+    this.isHwShadow = true;
+  }
+  get texture() { return HW.raw || !this.depthTexture ? this.textures[0] : this.depthTexture; }
+  set texture(t) { this.textures[0] = t; }
+  setSize(w, h, d) { super.setSize(w, h, d); this.depthTexture?.image && Object.assign(this.depthTexture.image, { width: w, height: h }); }
+  dispose() { HW.raw++; try { this.depthTexture?.dispose(); super.dispose(); } finally { HW.raw--; } }
+}
+// before three draws the shadow maps: a directional light's map that three would make now is made here, with its depth
+// texture (three makes one only when the light has none: same size, filters and camera update as its own)
+function makeHwMaps(R, lights) {
+  if (!HW_SHADOWS || R.shadowMap.type === THREE.VSMShadowMap) return;
+  for (const L of lights) {
+    const S = L.shadow;
+    if (!L.isDirectionalLight || !L.castShadow || !S || S.map) continue;
+    const max = R.capabilities.maxTextureSize, w = Math.min(S.mapSize.x, max), h = Math.min(S.mapSize.y, max);
+    S.mapSize.set(w, h);
+    S.map = new HwShadowTarget(w, h, !!R.capabilities.reversedDepthBuffer);
+    S.map.textures[0].name = (L.name || 'sun') + '.shadowMap';
+    S.camera.updateProjectionMatrix();
+  }
+}
+
+const RetroShader = {
+  uniforms: { tDiffuse: { value: null }, levels: { value: 9.0 }, resolution: { value: new THREE.Vector2(1, 1) } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse; uniform float levels; uniform vec2 resolution; varying vec2 vUv;
+    float bayer(vec2 p){ ivec2 i = ivec2(mod(p, 4.0));
+      int idx = i.x + i.y*4;
+      float m[16] = float[16](0.,8.,2.,10.,12.,4.,14.,6.,3.,11.,1.,9.,15.,7.,13.,5.);
+      return m[idx]/16.0 - 0.5; }
+    void main(){
+      vec4 c = texture2D(tDiffuse, vUv);
+      float d = bayer(gl_FragCoord.xy) / levels;
+      c.rgb = floor((c.rgb + d) * levels + 0.5) / levels;
+      gl_FragColor = c;
+    }`,
+};
+
+// A light FXAA (edge-directed blend on luma) for Low, which has no MSAA: one cheap full-screen pass after the
+// output pass, on the display-encoded image.
+const FxaaShader = {
+  uniforms: { tDiffuse: { value: null }, texel: { value: new THREE.Vector2(1, 1) } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse; uniform vec2 texel; varying vec2 vUv;
+    float lum(vec3 c){ return dot(c, vec3(0.299, 0.587, 0.114)); }
+    void main(){
+      vec3 rgbM = texture2D(tDiffuse, vUv).rgb;
+      float lNW = lum(texture2D(tDiffuse, vUv + vec2(-1.0, -1.0) * texel).rgb), lNE = lum(texture2D(tDiffuse, vUv + vec2(1.0, -1.0) * texel).rgb);
+      float lSW = lum(texture2D(tDiffuse, vUv + vec2(-1.0, 1.0) * texel).rgb), lSE = lum(texture2D(tDiffuse, vUv + vec2(1.0, 1.0) * texel).rgb);
+      float lM = lum(rgbM), lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE))), lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+      if (lMax - lMin < max(0.0312, lMax * 0.125)) { gl_FragColor = vec4(rgbM, 1.0); return; }
+      vec2 dir = vec2(-((lNW + lNE) - (lSW + lSE)), ((lNW + lSW) - (lNE + lSE)));
+      float red = max((lNW + lNE + lSW + lSE) * 0.03125, 0.0078125);
+      dir = clamp(dir / (min(abs(dir.x), abs(dir.y)) + red), -8.0, 8.0) * texel;
+      vec3 a = 0.5 * (texture2D(tDiffuse, vUv - dir / 6.0).rgb + texture2D(tDiffuse, vUv + dir / 6.0).rgb);
+      vec3 b = a * 0.5 + 0.25 * (texture2D(tDiffuse, vUv - dir * 0.5).rgb + texture2D(tDiffuse, vUv + dir * 0.5).rgb);
+      float lB = lum(b);
+      gl_FragColor = vec4((lB < lMin || lB > lMax) ? a : b, 1.0);
+    }`,
+};
+
+// GFX-LOOK: the output pass's main() up to three's tone mapping. It reads the scene's pixel (the part the scene pass drew:
+// automatic resolution) and, when asked:
+//   edgeAA   (no MSAA: the battery profile, Low, Edges: Fast) the four diagonal neighbours; where their contrast says
+//            "geometry edge" (well above texture contrast: edgeAA × the brightest, at least 0.05) the pixel is
+//            blended along the edge (FXAA's direction search, as the old FXAA pass). Flat-shaded LBA surfaces and
+//            painted textures stay as they are: only silhouettes and creases are smoothed. In the pass that runs anyway:
+//            4 extra reads a pixel (8 on an edge), no extra full-screen write and read.
+//   sharpen  (the scene drawn below full resolution: Medium-eco's 90 %, the automatic resolution) the same neighbours
+//            sharpen what the upscale blurred: the pixel pushed away from their mean, clamped to their range (no halo,
+//            no noise: contrast-adaptive, like AMD's CAS). Off on edges the AA has just smoothed.
+// Luma is taken on the linear HDR colour with a square root (close to the display's response); the colour itself is
+// then tone-mapped and encoded by three's code, unchanged. Both are uniforms (a branch the whole screen takes alike): one
+// program for every state, so a power or resolution change never compiles a shader.
+const EDGE_REL = 0.25;   // (an edge: the diagonal neighbourhood's luma range over 25 % of its brightest — FXAA's default is 12.5–16.6 %: here
+//  painted texture lines (planks, tiles) stay crisp and only silhouettes and creases are smoothed; 0.2 and 0.33 compared)
+// PERF-GPU (laptop 0.40.1, Vega 8 on battery: this smoothing measured 2.5 ms of a 19.4 ms street, 1.5 of 11.6 in the
+// house — ten times its estimate). Its taps were texture2D() with implicit LOD inside per-pixel branches: Direct3D's
+// compiler cannot keep a branch that holds gradient (implicit-LOD) samples, so ANGLE's HLSL ran every tap of every
+// branch on every pixel — the 4 direction taps of the edge blend too, ~9 filtered half-float reads a pixel instead of
+// 5 — and every read went through bilinear filtering of a 64-bit texel (half rate). Now: at full resolution (`exact`)
+// the pixel and its four diagonal neighbours are read by index (texelFetch: no filtering, no LOD), the edge's direction
+// taps with an explicit LOD (textureLod), so the edge branch stays a real branch and runs on the edge pixels only
+// (~5–10 %). Same pixels (the same texels are read; 1:1 bilinear at texel centres is the texel itself).
+// `?oldedges` in the URL: the shader as it was (EDGE_OLD), for the laptop's A/B.
+const OUTPUT_EDGES = `
+float lumE( vec3 c ) { return sqrt( max( dot( c, vec3( 0.299, 0.587, 0.114 ) ), 0.0 ) ); }
+#ifdef EDGE_OLD
+vec3 tapE( vec2 uv ) { return texture2D( tDiffuse, clamp( uv, vec2( 0.0 ), uvMax ) ).rgb; }
+#else
+vec3 tapE( vec2 uv ) { return textureLod( tDiffuse, clamp( uv, vec2( 0.0 ), uvMax ), 0.0 ).rgb; }
+vec3 tapI( ivec2 p, ivec2 q ) { return texelFetch( tDiffuse, clamp( p, ivec2( 0 ), q ), 0 ).rgb; }
+#endif
+void main() {
+  vec2 uv = min( vUv * uvScale, uvMax );
+#ifdef EDGE_OLD
+  gl_FragColor = texture2D( tDiffuse, uv );
+#else
+  gl_FragColor = textureLod( tDiffuse, uv, 0.0 );
+#endif
+  if ( edgeAA > 0.0 || sharpen > 0.0 ) {
+    vec3 cM = gl_FragColor.rgb, cNW, cNE, cSW, cSE;
+#ifndef EDGE_OLD
+    if ( exact > 0.0 ) {
+      ivec2 p = ivec2( gl_FragCoord.xy ), q = ivec2( 1.0 / texel + 0.5 ) - 1;
+      cNW = tapI( p + ivec2( -1, -1 ), q ); cNE = tapI( p + ivec2( 1, -1 ), q ); cSW = tapI( p + ivec2( -1, 1 ), q ); cSE = tapI( p + ivec2( 1, 1 ), q );
+    } else
+#endif
+    {
+      cNW = tapE( uv + vec2( -texel.x, -texel.y ) ); cNE = tapE( uv + vec2( texel.x, -texel.y ) );
+      cSW = tapE( uv + vec2( -texel.x, texel.y ) ); cSE = tapE( uv + vec2( texel.x, texel.y ) );
+    }
+    float lNW = lumE( cNW ), lNE = lumE( cNE ), lSW = lumE( cSW ), lSE = lumE( cSE ), lM = lumE( cM );
+    float lMin = min( lM, min( min( lNW, lNE ), min( lSW, lSE ) ) ), lMax = max( lM, max( max( lNW, lNE ), max( lSW, lSE ) ) );
+    if ( edgeAA > 0.0 && lMax - lMin >= max( 0.05, lMax * edgeAA ) ) {
+      vec2 dir = vec2( -( ( lNW + lNE ) - ( lSW + lSE ) ), ( lNW + lSW ) - ( lNE + lSE ) );
+      float red = max( ( lNW + lNE + lSW + lSE ) * 0.03125, 0.0078125 );
+      dir = clamp( dir / ( min( abs( dir.x ), abs( dir.y ) ) + red ), -8.0, 8.0 ) * texel;
+      vec3 a = 0.5 * ( tapE( uv - dir / 6.0 ) + tapE( uv + dir / 6.0 ) );
+      vec3 b = a * 0.5 + 0.25 * ( tapE( uv - dir * 0.5 ) + tapE( uv + dir * 0.5 ) );
+      float lB = lumE( b );
+      gl_FragColor.rgb = ( lB < lMin || lB > lMax ) ? a : b;
+    } else if ( sharpen > 0.0 ) {
+      vec3 mn = min( cM, min( min( cNW, cNE ), min( cSW, cSE ) ) ), mx = max( cM, max( max( cNW, cNE ), max( cSW, cSE ) ) );
+      gl_FragColor.rgb = clamp( cM + sharpen * ( cM - 0.25 * ( cNW + cNE + cSW + cSE ) ), mn, mx );
+    }
+  }
+`;
+
+// The scene pass, drawn into the lower-left part of the (fixed-size) target when the automatic resolution is
+// below 1; the rest of the chain (bloom, output) keeps the full target and the output pass samples that part.
+class ScaledRenderPass extends RenderPass {
+  constructor(scene, camera) { super(scene, camera); this.scale = 1; }
+  render(renderer, writeBuffer, readBuffer, dt, mask) {
+    const s = this.scale, vp = readBuffer.viewport;
+    if (s < 1) vp.set(0, 0, Math.max(1, Math.round(readBuffer.width * s)), Math.max(1, Math.round(readBuffer.height * s)));
+    super.render(renderer, writeBuffer, readBuffer, dt, mask);
+    if (s < 1) vp.set(0, 0, readBuffer.width, readBuffer.height);
+  }
+}
+
+export class Renderer {
+  constructor(container) {
+    this.container = container;
+    const r = (this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' }));
+    r.setSize(innerWidth, innerHeight);
+    r.shadowMap.enabled = true;
+    r.shadowMap.type = THREE.PCFSoftShadowMap;
+    // PERF-CPU: three's own opaque order, except that a texture-array batch (drawbatch.js) sorts where its pieces' twins
+    // did (`__sortId`), so coincident faces show as before
+    r.setOpaqueSort((a, b) => {
+      if (a.groupOrder !== b.groupOrder) return a.groupOrder - b.groupOrder;
+      if (a.renderOrder !== b.renderOrder) return a.renderOrder - b.renderOrder;
+      const ia = a.object.__sortId ?? a.material.id, ib = b.object.__sortId ?? b.material.id;
+      if (ia !== ib) return ia - ib;
+      if (a.material.id !== b.material.id) return a.material.id - b.material.id;
+      return a.z !== b.z ? a.z - b.z : a.id - b.id;
+    });
+    // (HEADING-LOAD: the meshes the view culls hid — viewinst.js, the grass pools — are compiled with the rest)
+    { const compile = r.compile.bind(r); r.compile = (...a) => withCulledShown(() => compile(...a)); }
+    r.toneMapping = THREE.NeutralToneMapping; // keeps LBA2's saturated palette (ACES washes it out)
+    r.toneMappingExposure = 1.0;
+    container.appendChild(r.domElement);
+    this.canvas = r.domElement;
+    this.retro = false;
+    // automatic resolution: the scene is drawn at a lower internal resolution (down to minDyn() of the preset's)
+    // while frames run long, and back up once they keep the pace (see adapt). Only the part of the render target
+    // the scene pass draws into changes: the canvas, its drawing buffer and the render targets keep their size,
+    // so a change never clears the screen or reallocates anything (each change used to show a black frame).
+    this.autoRes = true; this.dyn = 1; this._fb = [];
+    this.quality = 'high';
+    // edges (Settings → Edges): 'msaa' (multisampling, Medium 2× / High 4×) or 'fxaa' (one cheap full-screen pass, as
+    // Low has). RENDER-INV: on the user's Vega 8 (Direct3D 11) MSAA 2× measured ~10 ms of GPU a frame on the street
+    this.aa = 'msaa';
+    // PERF-BATTERY: the battery profile (Game.setBattery, engine/power.js), within the player's preset: a 5-read shadow
+    // filter instead of PCF's 17 (three's Basic type, patched above), no MSAA, and the automatic resolution may go down to
+    // 0.5 (Medium/High; 0.6 otherwise). The user's Vega 8 on battery measured these on Medium's street: shadow filter
+    // basic −4.4 ms, no MSAA −5.3 ms of 37 (laptop-build206-battery.txt). Low is unchanged (none of them is on there).
+    this.battery = false;
+    // LOOK-FIRST-2 (the user, 29.10: "a game that looks good — 50–55 that looks good"; "less resolution is fine, but not
+    // excessively"). His full battery benchmark (build 263) showed the battery profile's cuts DO buy GPU time on battery:
+    // Medium street 45.5 fps with them, 32.1 without (GPU 17.3 vs 25.8 ms); interior 53.2 vs 42.8. So on battery the
+    // nearly invisible cuts stay (no MSAA, the 5-read shadow filter, 2 lamps) and the ugly one is bounded: the automatic
+    // resolution never goes below BATTERY_MIN_SCALE (it went down to 0.5). Shadows are never turned off by Auto.
+    this.batteryCuts = true;
+    // AUTO-QUALITY (engine/autoquality.js): Quality Auto sets the picture knob by knob: { scale, bloom, filter: 'soft' |
+    // 'pcf', msaa: 4 | 2 | 0, shadows: 1 | 0 } here (the shadow map's size, the lamps, the vegetation and the small
+    // casters are set where they live). null: a preset chosen by hand, exactly as before. With knobs, the pixel ratio is
+    // High's and the automatic resolution's factor is the governor's `scale` (adapt() stands aside).
+    this.knobs = null;
+    this.hwShadows = HW_SHADOWS;   // (GFX-LOOK: the sun's shadow read with hardware comparison; ?oldshadow: three's packed path)
+  }
+  setBattery(on) { on = !!on; if (on === this.battery) return false; this.battery = on; this.applyDerived(); this.resize(); return true; }
+  // AUTO-QUALITY: the governor's knobs (null: back to the preset)
+  setKnobs(K) {
+    const k = K ? { scale: K.scale, bloom: K.bloom, filter: K.filter, msaa: K.msaa, shadows: K.shadows } : null;
+    if (JSON.stringify(k) === JSON.stringify(this.knobs)) return false;
+    this.knobs = k;
+    if (k) this.dyn = k.scale;
+    this.applyDerived(); this.resize();
+    return true;
+  }
+  shadowsOn() { return !this.retro && (this.knobs ? !!this.knobs.shadows : this.quality !== 'low'); }
+  // what the battery profile changes now (for the benchmark's report and Settings' note)
+  batteryProfile() { return this.battery && this.batteryCuts && this.shadowsOn() ? { shadowFilter: HW_SHADOWS ? '4 hardware reads' : '5 reads', msaa: 0, minScale: this.minDyn() } : null; }
+
+  setup(scene, camera) {
+    this.scene = scene;
+    this.camera = camera;
+    // the scene renders into a multisampled half-float target: the canvas's own antialias doesn't reach
+    // the post-processing chain, so without this the "2026" look had no anti-aliasing at all
+    const rt = new THREE.WebGLRenderTarget(innerWidth, innerHeight, { type: THREE.HalfFloatType, samples: 4, stencilBuffer: true }); // (stencil: the hero's silhouette)
+    const c = (this.composer = new EffectComposer(this.renderer, rt));
+    // RENDER-INV: the multisampled targets resolve their colour only. three resolves depth and stencil too by default
+    // (one blit of all three every frame); nothing reads them after the scene pass (the passes after it sample colour;
+    // the hero's stencil silhouette is drawn inside the scene pass), and Direct3D 11 cannot resolve depth/stencil in
+    // hardware, so ANGLE emulates it. Without them three just discards the multisampled depth/stencil. Same pixels.
+    for (const T of [c.renderTarget1, c.renderTarget2]) { T.resolveDepthBuffer = false; T.resolveStencilBuffer = false; }
+    this.scenePass = new ScaledRenderPass(scene, camera);
+    c.addPass(this.scenePass);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.22, 0.35, 0.92);
+    c.addPass(this.bloom);
+    // the output pass reads only the part of the target the scene pass drew (automatic resolution)
+    this.output = new OutputPass();
+    this.output.uniforms.uvScale = { value: new THREE.Vector2(1, 1) };
+    this.output.uniforms.uvMax = { value: new THREE.Vector2(1, 1) };
+    // GFX-LOOK: the edge smoothing without MSAA and the sharpening of a lowered resolution happen inside this pass
+    // (OUTPUT_EDGES), which reads every pixel anyway, instead of a pass of their own (FXAA's own full-screen pass measured
+    // ~4 ms on the user's Vega 8 on battery: more than MSAA)
+    this.output.uniforms.texel = { value: new THREE.Vector2(1, 1) };
+    this.output.uniforms.sharpen = { value: 0 };
+    this.output.uniforms.edgeAA = { value: 0 };
+    this.output.uniforms.exact = { value: 1 };
+    const fs0 = this.output.material.fragmentShader, main = fs0.indexOf('void main() {'), tone = fs0.indexOf('// tone mapping');
+    if (main > 0 && tone > main && fs0.includes('gl_FragColor = texture2D( tDiffuse, vUv );')) {
+      this.output.material.fragmentShader = fs0.slice(0, main).replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax; uniform vec2 texel; uniform float sharpen; uniform float edgeAA; uniform float exact;')
+        + OUTPUT_EDGES + fs0.slice(tone);
+      // (PERF-GPU: compiled as GLSL ES 3.00 — three's OutputShader is written in ES 1.00, which has no textureLod or
+      //  texelFetch in a fragment shader; same code otherwise: three adds only the version line to a raw shader)
+      const M = this.output.material, fsx = M.fragmentShader;
+      if (fsx.includes('precision highp float;') && fsx.includes('varying vec2 vUv;') && M.vertexShader.includes('attribute vec2 uv;')) {
+        M.glslVersion = THREE.GLSL3;
+        M.vertexShader = M.vertexShader.replace(/\battribute\b/g, 'in').replace(/\bvarying\b/g, 'out');
+        M.fragmentShader = fsx.replace('precision highp float;', 'precision highp float;\nlayout(location = 0) out highp vec4 pc_fragColor;\n#define gl_FragColor pc_fragColor\n#define texture2D texture')
+          .replace('varying vec2 vUv;', 'in vec2 vUv;');
+      } else { console.warn('output pass: three.js OutputShader not as expected; edge smoothing in the output pass off'); M.fragmentShader = fs0.replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax;').replace('texture2D( tDiffuse, vUv )', 'texture2D( tDiffuse, min( vUv * uvScale, uvMax ) )'); this.noOutputEdges = true; }
+    } else {
+      console.warn('output pass: three.js OutputShader not as expected; edge smoothing in the output pass off');
+      this.output.material.fragmentShader = fs0.replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform vec2 uvScale; uniform vec2 uvMax;')
+        .replace('texture2D( tDiffuse, vUv )', 'texture2D( tDiffuse, min( vUv * uvScale, uvMax ) )');
+      this.noOutputEdges = true;
+    }
+    this._outFS = this.output.material.fragmentShader;
+    if (typeof location !== 'undefined' && /[?&]oldedges\b/.test(location.search)) this.setOldEdges(true);
+    c.addPass(this.output);
+    this.fxaa = new ShaderPass(FxaaShader);
+    this.fxaa.enabled = false;
+    c.addPass(this.fxaa);
+    this.retroPass = new ShaderPass(RetroShader);
+    this.retroPass.enabled = false;
+    c.addPass(this.retroPass);
+    addEventListener('resize', () => this.resize());
+    this.resize();
+    this.applyResize();
+    // (RENDER-INV: the benchmark's GPU time per pass, perf.js GpuTimer: each pass and the shadow map mark their part;
+    //  nothing happens while no timer is set)
+    const sm = this.renderer.shadowMap, smr = sm.render.bind(sm);
+    // (GFX-LOOK: the sun's map made with its depth texture; three draws into its colour and depth: HW.raw)
+    // (and, as the shaders read the depth texture only, the shadow pass writes depth only: the packed colour three would
+    //  also write — a 32-bit write per texel per caster, and its clear — is masked off: a depth-only pass)
+    const cm = this.renderer.state.buffers.color, depthOnly = () => HW_SHADOWS && sm.enabled && sm.type !== THREE.VSMShadowMap && this.shadowDepthOnly !== false;
+    sm.render = (...a) => {
+      const T = this.timer, d = depthOnly(); T?.mark('shadow map'); HW.raw++;
+      if (d) { cm.setMask(false); cm.setLocked(true); }
+      try { if (sm.enabled) makeHwMaps(this.renderer, a[0]); return smr(...a); } finally { if (d) { cm.setLocked(false); cm.setMask(true); } HW.raw--; T?.mark('scene'); }
+    };
+    for (const [p, label] of [[this.scenePass, 'scene'], [this.bloom, 'bloom'], [this.output, 'output'], [this.fxaa, 'fxaa'], [this.retroPass, 'retro']]) {
+      const r = p.render.bind(p);
+      p.render = (...a) => { this.timer?.mark(label); return r(...a); };
+    }
+  }
+
+  // PERF-GPU: the output pass's edge smoothing as it was before (implicit-LOD taps in branches), for the laptop's A/B
+  // (benchgpu.js; ?oldedges). Another program: the caller prepares it (warmPassPrograms).
+  setOldEdges(on) {
+    const m = this.output?.material; if (!m || !this._outFS) return;
+    const fs = on ? this._outFS.replace('float lumE(', '#define EDGE_OLD\nfloat lumE(') : this._outFS;
+    if (m.fragmentShader !== fs) { m.fragmentShader = fs; m.needsUpdate = true; }
+  }
+
+  setQuality(q) {
+    this.quality = q;
+    this.applyDerived();
+    this.resize(); // (cached: nothing is rebuilt when the size, pixel ratio and samples stay the same)
+  }
+
+  // what follows from quality + visual mode together, applied whenever either changes:
+  // dynamic shadows off Low and outside the 1997 look; bloom (several full-screen blur passes) on High only;
+  // FXAA on Low (no MSAA there)
+  applyDerived() {
+    const K = this.knobs, on = this.shadowsOn();
+    this.renderer.shadowMap.enabled = on;
+    // soft (PCFSoft) shadow edges on High; plain PCF elsewhere (fewer samples per pixel)
+    const soft = K ? K.filter === 'soft' : this.quality === 'high';
+    const type = this.battery && this.batteryCuts && on ? THREE.BasicShadowMap : soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    if (this.renderer.shadowMap.type !== type) { this.renderer.shadowMap.type = type; this.renderer.shadowMap.needsUpdate = true; }
+    // (bloom: High only — or the knob; off in the 1997 look; with knobs it does not depend on the shadows)
+    if (this.bloom) this.bloom.enabled = (K ? !this.retro && !!K.bloom : on && this.quality === 'high') && this.bloomOn !== false;
+    // (GFX-LOOK: without MSAA the edges are smoothed inside the output pass (applyScale: edgeAA), not by the FXAA pass,
+    //  which stays for the benchmark's comparison only: fxaaPass)
+    if (this.fxaa) this.fxaa.enabled = !this.retro && !!this.fxaaPass;
+    this.applyScale();
+  }
+
+  // (PERF-ARRIVAL: the FXAA pass's program is made now, not on the first frame drawn with it)
+  setAA(a) { this.aa = a === 'fxaa' ? 'fxaa' : 'msaa'; this.applyDerived(); this.resize(); warmPassPrograms(this.renderer, this.composer); }
+
+  setRetro(on) {
+    this.retro = on;
+    this.retroPass.enabled = on;
+    this.applyDerived();
+    this.canvas.classList.toggle('pixelated', on);
+    this.scene.traverse((o) => {
+      if (o.isMesh && o.material && 'flatShading' in o.material && !o.material.isShaderMaterial) {
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        for (const m of mats) if (m.flatShading !== on) { m.flatShading = on; m.needsUpdate = true; }
+      }
+    });
+    this.resize();
+  }
+
+  // the preset's pixel ratio (before the automatic resolution): High the screen's (up to 2), Medium up to 1.25,
+  // Low 0.85 (a 1366×768 laptop draws 1161×653; the automatic resolution may take it down to 0.7)
+  // AUTO-FIT: with an integrated GPU (`integrated`, set from perf.js integratedGpu) on a high-density screen, High
+  // stops at 1.25 and Medium at 1.0 (the user's Intel UHD window at 1.475 drew 2.2× the Vega laptop's pixels on High)
+  basePixelRatio() {
+    const dpr = Math.min(devicePixelRatio, 2), igpu = this.integrated && dpr > 1;
+    if (this.retro) return Math.min(1, 560 / innerWidth); // ~640x480-era internal resolution
+    return this.knobs || this.quality === 'high' ? Math.min(dpr, igpu ? 1.25 : 2) : this.quality === 'medium' ? Math.min(dpr, igpu ? 1 : 1.25) : Math.min(dpr, 0.85);
+  }
+  setIntegrated(on) { this.integrated = !!on; this.resize(); }
+  // the lowest automatic-resolution factor per preset (Low never below a 0.7 pixel ratio: text and faces blur)
+  // (AUTO-QUALITY: with knobs, the governor's factor; never under a 0.6 pixel ratio)
+  minDyn() { return this.knobs ? Math.min(this.knobs.scale, Math.max(0.3, 0.6 / this.basePixelRatio())) : this.quality === 'low' ? Math.min(1, 0.7 / this.basePixelRatio()) : this.battery && this.batteryCuts ? BATTERY_MIN_SCALE : 0.6; }
+  // the factor the scene is drawn at now, and the pixel ratio that makes
+  effScale() { return this.retro ? 1 : this.knobs ? (this.autoRes ? this.knobs.scale : 1) : this.autoRes ? this.dyn : 1; }
+  pixelRatio() { return +(this.renderer.getPixelRatio() * this.effScale()).toFixed(3); }
+
+  // Works out the canvas size, pixel ratio and MSAA wanted. They are applied just before the next frame is drawn
+  // (applyResize, from render), never between a drawn frame and its display, so the screen is never shown cleared.
+  resize() {
+    const w = innerWidth, h = innerHeight, pr = +this.basePixelRatio().toFixed(3);
+    // MSAA: 4× on high (2× once the pixel ratio is high enough to smooth edges by itself), 2× on medium, none on
+    // low (FXAA instead) / retro (the retro look wants hard pixels)
+    // (Medium on a high-density screen: none, the pixel ratio smooths the edges and the GPU is spared the resolve)
+    // (AUTO-FIT: High on an integrated GPU on a high-density screen: 2×, its pixel ratio smooths the rest)
+    const hiMs = pr >= 1.5 || (this.integrated && devicePixelRatio > 1 && pr > 1.05) ? 2 : 4;
+    const ms = this.retro || (!this.knobs && this.quality === 'low') || this.aa === 'fxaa' || (this.battery && this.batteryCuts) ? 0 : this.knobs ? Math.min(this.knobs.msaa, hiMs) : this.quality === 'medium' ? (pr > 1.05 ? 0 : 2) : hiMs;
+    // nothing to rebuild when the canvas, pixel ratio and sample count are what they were
+    const key = `${w}x${h}@${pr}/${ms}/${this.retro}/${this.quality}/${this.aa}/${this.battery}/${!!this.composer}`;
+    if (key !== this._size) { this._size = key; this._want = { w, h, pr, ms }; }
+    if (this.knobs) this.dyn = this.knobs.scale; else if (this.dyn < this.minDyn()) this.dyn = this.minDyn();
+    this.applyScale();
+  }
+  applyResize() {
+    const W = this._want;
+    if (!W) return;
+    this._want = null;
+    const { w, h, pr, ms } = W;
+    this.renderer.setPixelRatio(pr);
+    this.renderer.setSize(w, h);
+    if (this.composer) {
+      for (const t of [this.composer.renderTarget1, this.composer.renderTarget2]) if (t.samples !== ms) { t.samples = ms; t.dispose(); }
+      this.composer.setPixelRatio(pr);
+      this.composer.setSize(w, h);
+      this.retroPass.uniforms.resolution.value.set(w * pr, h * pr);
+    }
+    if (this.camera) {
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+    }
+    this.applyScale();
+  }
+  // the automatic resolution: which part of the target the scene pass draws, and what the output pass reads
+  applyScale() {
+    if (!this.composer) return;
+    const W = this._want, pr = W ? W.pr : this.renderer.getPixelRatio();
+    const tw = W ? Math.floor(W.w * pr) : this.composer.renderTarget1.width, th = W ? Math.floor(W.h * pr) : this.composer.renderTarget1.height;
+    const s = this.effScale();
+    this.scenePass.scale = s;
+    const sw = Math.max(1, Math.round(tw * s)), sh = Math.max(1, Math.round(th * s));
+    this.output.uniforms.uvScale.value.set(sw / tw, sh / th);
+    this.output.uniforms.uvMax.value.set((sw - 0.5) / tw, (sh - 0.5) / th);
+    this.fxaa?.uniforms.texel.value.set(1 / tw, 1 / th);
+    // GFX-LOOK (OUTPUT_EDGES): edge smoothing wherever there is no MSAA (battery profile, Low, Edges: Fast); sharpening
+    // when the scene is drawn below full resolution, the more the lower (90 %: 0.35)
+    const U = this.output.uniforms, ms = W ? W.ms : this.composer.renderTarget1.samples, on = !this.retro && !this.noOutputEdges;
+    U.texel.value.set(1 / tw, 1 / th);
+    U.exact.value = s >= 0.999 ? 1 : 0;   // (the scene fills the target 1:1: the output reads its pixels by index)
+    U.edgeAA.value = on && ms === 0 && !this.fxaa?.enabled && this.edgeAA !== false ? EDGE_REL : 0;
+    U.sharpen.value = on && s < 0.999 && this.sharpenOn !== false ? Math.min(0.6, 0.25 + (1 - s)) : 0;
+  }
+
+  // (PERF-2, engine/drawcull.js: `pre` runs first (actors of other areas left out), then the world matrices of the
+  // shown objects only, `mid` (RENDER-INV: the draw batches), the passes, and `post` (what `pre` hid is shown again))
+  render() {
+    this.applyResize();
+    this.pre?.();
+    const S = this.scene, auto = S.matrixWorldAutoUpdate;
+    MW.ok = false;   // (PERF-CPU: set again by the shown-world update when it runs)
+    try {
+      if (auto && this.shownOnly !== false) { updateShownWorld(S, this._mw ??= { hidden: [], prev: [], frame: 0 }); S.matrixWorldAutoUpdate = false; }
+      else if (this.mid) S.updateMatrixWorld();
+      this.mid?.();   // (RENDER-INV: the draw batches check their pieces with this frame's matrices: engine/drawbatch.js)
+      this.timer?.begin();   // (RENDER-INV: the GPU's time for the frame, while the benchmark runs: perf.js GpuTimer)
+      this.composer.render();
+    } finally { this.timer?.end(); S.matrixWorldAutoUpdate = auto; this.post?.(); }
+  }
+
+  // Compiles every material in the scene for the way it is really drawn: into the composer's target (no tone
+  // mapping or sRGB in the material: the output pass does those), with the current lights, fog and shadow
+  // settings. Compiled for the canvas instead (as before), every program was built a second time on the first
+  // frame that used it. Resolves when the driver has finished them (KHR_parallel_shader_compile: off the main
+  // thread where the driver allows).
+  precompile(scene = this.scene, camera = this.camera) {
+    const R = this.renderer, prev = R.getRenderTarget();
+    this.applyResize();
+    R.setRenderTarget(this.composer.renderTarget1);
+    let p;
+    try { p = R.compileAsync(scene, camera); } finally { R.setRenderTarget(prev); }
+    return p;
+  }
+
+  // Automatic resolution, fed the displayed frame time (ms). Every 90 frames: a 90th percentile over 1.2× the frame
+  // budget (20 ms at 60 fps: the budget missed) lowers the internal resolution a step; one under 1.05× (17.5 ms:
+  // holding it) three times in a row raises it a step. The budget is 60 fps's, or the frame-rate limit's (FRAME-1:
+  // at a 30 fps limit every frame is ~33 ms by design, which must not read as missing 60). A step up that fails at once is not tried again for 30 s, then 60, 120… so it settles
+  // at the highest level that holds instead of see-sawing. No allocation and no canvas resize: see applyScale.
+  adapt(ms, now = performance.now()) {
+    if (!this.autoRes || this.retro || this.knobs) return;   // (AUTO-QUALITY: the governor sets the factor)
+    const b = this._fb; b.push(ms);
+    if (b.length < 90) return;
+    const p90 = b.slice().sort((x, y) => x - y)[Math.floor(b.length * 0.9)]; b.length = 0;
+    const lo = this.minDyn(), B = this.budgetMs || 1000 / 60;
+    this._good = p90 < B * 1.05 ? (this._good || 0) + 1 : 0;
+    if (p90 > B * 1.2 && this.dyn > lo + 1e-3) {
+      this.dyn = Math.max(lo, +(this.dyn - 0.1).toFixed(2));
+      // a level just reached by stepping up that could not be held: back off before trying it again
+      if (this._upAt && now - this._upAt < 6000) { this._back = Math.min(6, (this._back || 0) + 1); this._blockUntil = now + 15000 * 2 ** this._back; this._blockAbove = this.dyn; }
+      this._upAt = 0; this._good = 0;
+      this.applyScale();
+      return;
+    }
+    if (this._good >= 3 && this.dyn < 1 && !(this._blockUntil > now && this.dyn >= this._blockAbove - 1e-3)) {
+      this.dyn = Math.min(1, +(this.dyn + 0.1).toFixed(2));
+      this._upAt = now; this._good = 0;
+      this.applyScale();
+    }
+  }
+  setAutoRes(on) { this.autoRes = on; this.dyn = this.knobs ? this.knobs.scale : 1; this._fb.length = 0; this._good = 0; this._back = 0; this._blockUntil = 0; this.applyScale(); }
+  // a fixed factor (the benchmark's "res x0.6"; tests)
+  setDyn(s) { this.dyn = s; if (this.knobs) this.knobs.scale = s; this.applyScale(); }
+}

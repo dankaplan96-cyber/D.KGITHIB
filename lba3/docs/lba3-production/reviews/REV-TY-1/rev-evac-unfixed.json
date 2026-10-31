@@ -1,0 +1,57 @@
+{
+ "ISO": "chapter set to evacuation by flags (c1_water, c1_plan)",
+ "present": [
+  {
+   "id": "bram",
+   "present": true
+  },
+  {
+   "id": "odile",
+   "present": true
+  },
+  {
+   "id": "nell",
+   "present": true
+  }
+ ],
+ "talk bram": {
+  "r": "no-dialog:stuck",
+  "state": "play",
+  "lines": 0
+ },
+ "bram lines": [],
+ "talk odile": {
+  "r": "talked",
+  "to": "pippa",
+  "state": "shop",
+  "lines": 2
+ },
+ "odile lines": [
+  "n_pippa: Everything I had went down the tunnels. Best business I ever didn't make."
+ ],
+ "talk nell": {
+  "r": "talked",
+  "state": "shop",
+  "lines": 0
+ },
+ "nell lines": [],
+ "end": {
+  "state": "shop",
+  "room": "citadel",
+  "pos": [
+   -46.93,
+   2.2,
+   -2.44
+  ],
+  "hp": 10,
+  "chapter": "evacuation",
+  "obj": "Tell Zoé what happened in the well (home, Bug Street)",
+  "items": [
+   "evacplan"
+  ],
+  "coins": 4,
+  "clovers": 3,
+  "l": {}
+ },
+ "errors": []
+}

@@ -1,0 +1,186 @@
+{
+ "gpu": "Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver",
+ "parallel": false,
+ "quality": "Auto Medium",
+ "battery": true,
+ "loadTimes": {
+  "total": 8863,
+  "citadel": 6518,
+  "shaders": 55002,
+  "programs": 83,
+  "longestStep": 25982,
+  "worldSteps": {
+   "textures": 106,
+   "heights": 902,
+   "ground": 197,
+   "terrain": 109,
+   "town": 418,
+   "statue": 131,
+   "tree spots": 9,
+   "tree round": 7,
+   "tree fruit": 4,
+   "tree tall": 7,
+   "tree pine": 3,
+   "trees": 37,
+   "plants": 116,
+   "island": 1007,
+   "landmarks": 27,
+   "end": 19
+  },
+  "world": 3094,
+  "spaceport": 475,
+  "townlife": 127,
+  "containers": 29,
+  "citydress": 109,
+  "actors": 413,
+  "story": 525,
+  "house": 557,
+  "well": 42,
+  "prep": {
+   "paint": 1271,
+   "programs": 157,
+   "textures": 11781,
+   "geometry": 234,
+   "geometryPart": 37,
+   "batches": 15121,
+   "batchUpload": 159,
+   "shadowPrograms": 300,
+   "firstFrame": 25980
+  }
+ },
+ "titleAt": 66654,
+ "longTasks": [
+  {
+   "t": 40674,
+   "d": 25981,
+   "step": "Almost there…"
+  },
+  {
+   "t": 25084,
+   "d": 15121,
+   "step": "Almost there…"
+  },
+  {
+   "t": 13020,
+   "d": 11781,
+   "step": "Preparing graphics…"
+  },
+  {
+   "t": 8546,
+   "d": 1859,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 7452,
+   "d": 1006,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 2905,
+   "d": 911,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 2145,
+   "d": 639,
+   "step": "before the game"
+  },
+  {
+   "t": 10424,
+   "d": 557,
+   "step": "Building Twinsen's house…"
+  },
+  {
+   "t": 11119,
+   "d": 532,
+   "step": "Preparing the story…"
+  },
+  {
+   "t": 4667,
+   "d": 418,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 40373,
+   "d": 299,
+   "step": "Almost there…"
+  },
+  {
+   "t": 3819,
+   "d": 197,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 40212,
+   "d": 159,
+   "step": "Almost there…"
+  },
+  {
+   "t": 5087,
+   "d": 130,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 24805,
+   "d": 130,
+   "step": "Preparing Citadel…"
+  },
+  {
+   "t": 6996,
+   "d": 115,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 4369,
+   "d": 109,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 2789,
+   "d": 105,
+   "step": "Building Citadel…"
+  },
+  {
+   "t": 66655,
+   "d": 95,
+   "step": "title"
+  },
+  {
+   "t": 11653,
+   "d": 88,
+   "step": "Preparing graphics…"
+  },
+  {
+   "t": 11741,
+   "d": 80,
+   "step": "Preparing graphics…"
+  },
+  {
+   "t": 705,
+   "d": 67,
+   "step": "before the game"
+  }
+ ],
+ "longTaskCount": 22,
+ "longTaskSum": 60379,
+ "over200": 11,
+ "over100": 18,
+ "programs": 83,
+ "programKinds": {
+  "ShaderMaterial": 12,
+  "MeshStandardMaterial": 31,
+  "merged-vctrm": 1,
+  "merged-vcrm": 2,
+  "MeshBasicMaterial": 14,
+  "SpriteMaterial": 2,
+  "LineBasicMaterial": 1,
+  "PointsMaterial": 2,
+  "unspecified": 1,
+  "MeshDepthMaterial": 14,
+  "merged-arr 256x256|4": 1,
+  "merged-arr 512x512|4": 1,
+  "OutputShader": 1
+ },
+ "report": "LBA3 start trace · build 0.43.3 · 2026-10-31 10:12 · Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver\ndisplay frames recorded 45 over 67.1 s · long animation frames 32 · long tasks 22\nstartup steps (ms): build 8863 · shaders 55002 · prep {\"paint\":1271,\"programs\":157,\"textures\":11781,\"geometry\":234,\"geometryPart\":37,\"batches\":15121,\"batchUpload\":159,\"shadowPrograms\":300,\"firstFrame\":25980}\n\nphase (from its mark to the next)            frames  interval p50 / p95 / max ms   >20 / >33 / >50 / >100\n  page start @0.0s                                 6   383.4 / 850 / 850   4 / 4 / 4 / 3\n  loading: Building Citadel… @2.9s                 1   433.4 / 433.4 / 433.4   1 / 1 / 1 / 1\n  loading: Building Citadel… @4.0s                 1   1133.2 / 1133.2 / 1133.2   1 / 1 / 1 / 1\n  loading: Building Citadel… @4.5s                 2   333.3 / 333.3 / 333.3   2 / 2 / 2 / 2\n  loading: Building Citadel… @5.2s                 1   750 / 750 / 750   1 / 1 / 1 / 1\n  loading: Building Citadel… @5.8s                 1   100 / 100 / 100   1 / 1 / 1 / 0\n  loading: Building Citadel… @5.8s                 1   33.3 / 33.3 / 33.3   1 / 0 / 0 / 0\n  loading: Building Citadel… @5.9s                 1   33.4 / 33.4 / 33.4   1 / 1 / 0 / 0\n  loading: Building Citadel… @5.9s                 1   16.7 / 16.7 / 16.7   0 / 0 / 0 / 0\n  loading: Building Citadel… @5.9s                 1   33.2 / 33.2 / 33.2   1 / 0 / 0 / 0\n  loading: Building Citadel… @6.0s                 1   16.8 / 16.8 / 16.8   0 / 0 / 0 / 0\n  loading: Building Citadel… @6.0s                 1   16.7 / 16.7 / 16.7   0 / 0 / 0 / 0\n  loading: Building Citadel… @6.0s                 1   16.6 / 16.6 / 16.6   0 / 0 / 0 / 0\n  loading: Building Citadel… @6.0s                 1   16.6 / 16.6 / 16.6   0 / 0 / 0 / 0\n  loading: Building Citadel… @6.0s                 1   783.3 / 783.3 / 783.3   1 / 1 / 1 / 1\n  loading: Building Citadel… @6.8s                 1   183.4 / 183.4 / 183.4   1 / 1 / 1 / 1\n  loading: Building Citadel… @7.1s                 2   616.6 / 616.6 / 616.6   2 / 2 / 2 / 2\n  loading: Building Citadel… @8.5s                 2   466.7 / 466.7 / 466.7   1 / 1 / 1 / 1\n  loading: Building Citadel… @8.5s                 1   1483.3 / 1483.3 / 1483.3   1 / 1 / 1 / 1\n  loading: Building Twinsen's house… @10.4s        1   450 / 450 / 450   1 / 1 / 1 / 1\n  loading: Preparing the story… @11.0s             2   649.9 / 649.9 / 649.9   1 / 1 / 1 / 1\n  loading: Preparing graphics… @11.7s              1   683.4 / 683.4 / 683.4   1 / 1 / 1 / 1\n  loading: Preparing graphics… @11.9s              3   1199.9 / 11766.2 / 11766.2   2 / 2 / 2 / 2\n  loading: Preparing Citadel… @24.8s               1   133.3 / 133.3 / 133.3   1 / 1 / 1 / 1\n  loading: Preparing Citadel… @24.9s               1   16.7 / 16.7 / 16.7   0 / 0 / 0 / 0\n  loading: Preparing Citadel… @25.0s               1   50 / 50 / 50   1 / 1 / 0 / 0\n  loading: Preparing Citadel… @25.0s               1   16.7 / 16.7 / 16.7   0 / 0 / 0 / 0\n  loading: Preparing Citadel… @25.0s               1   33.4 / 33.4 / 33.4   1 / 1 / 0 / 0\n  loading: Almost there… @25.1s                    2   15116.2 / 15116.2 / 15116.2   2 / 1 / 1 / 1\n  loading: Almost there… @40.2s                    1   166.6 / 166.6 / 166.6   1 / 1 / 1 / 1\n  loading: Almost there… @40.4s                    1   299.9 / 299.9 / 299.9   1 / 1 / 1 / 1\n  title @66.7s                                     2   26115.7 / 26115.7 / 26115.7   2 / 2 / 2 / 2\n\nevery display frame over 50 ms (27): when · how long · phase · what ran (the browser's long animation frame overlapping it: its scripts, style/layout; else the game's own jobs)\n     1.27 s    383 ms  page start                   [387 ms, style/layout 0, render 1: resolve-promise Response.arrayBuffer.then src/engine/sculpt.js 5 ms]",
+ "wallToTitle": 66.775
+}

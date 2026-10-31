@@ -1,0 +1,22 @@
+[0s +0s] continue: {"state":"play","lines":0} | citadel [-40.2,2.2,-5.6] hp 10 | Tell Zoé what happened in the well (home, Bug Street)
+[2s +2s] home: Zoé: {"r":"talked","to":"zoe","state":"play","lines":12,"fail":null} | house [998.03,0,-1.14] hp 10 | Meet Vesk at the harbour
+[3s +1s] out: {"r":"transition","from":"house","to":"citadel"} | citadel [-43.99,2.34,77.2] hp 10 | Meet Vesk at the harbour
+[5s +2s] harbour: the ferry docks: {"arrived":true,"fail":null} | citadel [-102.22,2.25,42.52] hp 10 | Meet Vesk at the harbour
+[6s +1s] Vesk: the task: {"r":"talked","to":"vesk","state":"play","lines":12,"fail":null} | citadel [-119.11,1.84,43.7] hp 10 | Open the three bypass valves◆ Depot at the old camp (drones)◆ Orchard (behind bars: use the ball)◆ Whispering Cliffs (ta
+[9s +3s] Water Office: pipe map: {"map":true,"fail":null} | citadel [-63.59,2.35,11] hp 10 | Open the three bypass valves◆ Depot at the old camp (drones)◆ Orchard (behind bars: use the ball)◆ Whispering Cliffs (ta
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[25.5] go → (1001.2, 11.3) plan ok=false pts=5 left=0.49
+[32.0] go: transition (house → house, trans true) at (1001.30, 10.67)
+[32.9] go → (-112.0, 45.0) plan ok=true pts=10 left=0.83
+[63.6] go → (-120.5, 44.2) plan ok=true pts=3 left=0.69
+[72.8] go → (-65.5, 11.0) plan ok=true pts=11 left=0.11
+[89.4] go: transition (citadel → citadel, trans true) at (-64.76, 11.33)
+[90.5] go → (1197.0, -1.1) plan ok=true pts=2 left=0.47
+[92.6] go → (1197.0, -1.1) plan ok=true pts=2 left=0.13
+[93.0] go → (1197.0, -1.1) plan ok=true pts=2 left=0.09
+[93.0] go → (1197.0, -1.1) plan ok=true pts=2 left=0.09
+[93.8] go → (1202.7, -3.0) plan ok=true pts=3 left=0.1
+[96.9] go: transition (office → office, trans true) at (1202.22, -2.50)
+kept docs/lba3-production/reviews/REV-TY-1/save-03.json
+no errors

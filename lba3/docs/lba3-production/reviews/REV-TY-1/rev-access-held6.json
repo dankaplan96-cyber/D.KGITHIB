@@ -1,0 +1,88 @@
+{
+ "start": {
+  "state": "play",
+  "room": "citadel",
+  "pos": [
+   -40.2,
+   2.2,
+   -5.6
+  ],
+  "hp": 10,
+  "chapter": "project",
+  "obj": "Tell Zoé what happened in the well (home, Bug Street)",
+  "items": [],
+  "coins": 4,
+  "clovers": 3,
+  "l": {}
+ },
+ "ring customs": {
+  "tried": 13,
+  "ok": 12,
+  "bad": [
+   {
+    "i": 3,
+    "R": 4,
+    "out": "stuck",
+    "back": "arrived",
+    "st": "play",
+    "hp": 10,
+    "at": [
+     -110,
+     1.8,
+     36.5
+    ]
+   }
+  ]
+ },
+ "ring crate": {
+  "tried": 11,
+  "ok": 11,
+  "bad": []
+ },
+ "ring shop": {
+  "tried": 9,
+  "ok": 9,
+  "bad": []
+ },
+ "ring barrel": {
+  "tried": 15,
+  "ok": 15,
+  "bad": []
+ },
+ "ring engine": {
+  "tried": 11,
+  "ok": 11,
+  "bad": []
+ },
+ "path past garden beds": {
+  "a": "arrived",
+  "b": "arrived",
+  "t": 7.1
+ },
+ "path through shop": {
+  "a": "arrived",
+  "b": "arrived",
+  "t": 6.3
+ },
+ "walk-through props": {
+  "pipe": {
+   "blocked": false
+  },
+  "pumpSign": {
+   "blocked": false
+  },
+  "barrierPost": {
+   "blocked": false
+  },
+  "ropePostSW": {
+   "blocked": false
+  },
+  "shopRoofPole": {
+   "blocked": true
+  },
+  "benchTop": {
+   "blocked": true
+  }
+ },
+ "errors": []
+}

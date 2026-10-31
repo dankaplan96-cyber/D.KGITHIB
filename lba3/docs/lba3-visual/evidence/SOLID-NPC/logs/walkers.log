@@ -1,0 +1,50 @@
+PASS ten residents walk round Citadel (six more wait, hidden, for Zeelich and Kesh to be built), all in the cast, none sharing an id with a story character {"n":10,"all":16,"ids":["oda","brix","maro","tilde","garrick","pico","dot","marda","tobb","ume"],"stops":[4,5,3,4,4,5,5,5,4,4],"allIn":true,"clash":[],"present":10,"waiting":["ilo","aven","kira","safi","tamu","bashir"]}
+PASS each has a round of at least 3 stops [4,5,3,4,4,5,5,5,4,4]
+PASS every resident has a name and lines of their own []
+PASS every stop is walkable, off every doorway and over a metre from every place a chapter puts anyone {"bad":[],"places":27,"doors":9}
+PASS every leg of every round has a planned route {"bad":[],"legs":43,"longest":68,"total":850}
+ISO  every resident simulated in full (walkers.force = 0); the hero stands in the square
+PASS over five minutes every resident covers ground (≥ 40 m) and visits at least 3 different stops {"oda":[166,4],"brix":[127,5],"maro":[81,3],"tilde":[126,4],"garrick":[112,4],"pico":[366,5],"dot":[236,5],"marda":[199,5],"tobb":[98,4],"ume":[97,4]}
+PASS no resident is ever inside a collider, in the water or on a slope the hero would slide down {"oda":[0,0,0],"brix":[0,0,0],"maro":[0,0,0],"tilde":[0,0,0],"garrick":[0,0,0],"pico":[0,0,0],"dot":[0,0,0],"marda":[0,0,0],"tobb":[0,0,0],"ume":[0,0,0]}
+PASS none stands on a doorway (a house door) while it walks or waits {"oda":0,"brix":0,"maro":0,"tilde":0,"garrick":0,"pico":0,"dot":0,"marda":0,"tobb":0,"ume":0}
+PASS they keep to their planned routes (never more than 3 m off the route while avoiding others) {"oda":1,"brix":1.7,"maro":0.5,"tilde":0.4,"garrick":2.2,"pico":1.6,"dot":1.6,"marda":0.6,"tobb":1.3,"ume":1.1}
+PASS no resident gave a stop up or found no route in five minutes [0,0,0,0,0,0,0,0,0,0]
+PASS the hero was never moved by them (nobody pushes him) [0,0]
+PASS the routine: benches are sat on, a load is carried, a bed tended, a door gone in at {"seated":["oda","brix","maro","tilde","marda","ume"],"carried":[["oda",["basket"]],["garrick",["can"]],["tobb",["crate"]]],"tend":108,"inside":["oda","maro","tilde"]}
+PASS a pair meets and chats: both talk for a good while, and a mouth moves {"maro":[169,51],"tilde":[169,56]}
+PASS the story's people have not moved (they stay exactly where the story puts them) []
+NOTE five minutes, ten residents in full: 0.495 ms per frame (CPU, headless Chromium; A* {"cellsMade":9762,"expanded":26151,"jobs":48})
+ISO  the hero stands on Pico's road (the lane) 5 m ahead of him; nothing else near
+PASS Pico walking the lane steps round Twinsen standing in his way: gets past, never closer than 0.6 m {"minD":2.95,"passed":true,"t":6.7,"moved":0,"maxW":0,"log":["308.6 plan → pico_a","320.9 at pico_a","321.1 at pico_b","321.2 plan → pico_c"]}
+PASS …and Twinsen is exactly where he was (never pushed) {"minD":2.95,"passed":true,"t":6.7,"moved":0,"maxW":0,"log":["308.6 plan → pico_a","320.9 at pico_a","321.1 at pico_b","321.2 plan → pico_c"]}
+PASS two residents coming at each other along the path pass each other (a clear side-step, no deadlock) {"minD":1.21,"crossed":true,"t":17.2,"A":"walk","B":"walk","ax":-75.3,"bx":-72.5}
+PASS stuck once, a resident plans again and walks on {"walking":true,"replanned":true,"walkedAgain":true,"inView":{"rescues":0,"gaveUp":true,"jump":0.5},"unseen":{"rescues":1,"jump":14.1,"ok":true}}
+PASS stuck again and again in view of the camera: never moved, the stop is given up in the end {"rescues":0,"gaveUp":true,"jump":0.5}
+PASS stuck out of sight: put back on its way (ahead, on walkable ground) {"rescues":1,"jump":14.1,"ok":true}
+ISO  Twinsen stands 1.5 m ahead of Ume as she walks the lane, facing her, and presses E
+PASS Twinsen's prompt is Ume (a walking resident can be talked to) {"walking":true,"prompt":"ume","state":"dialog","engaged":true,"speaker":true,"stayed":0,"faceDiff":0,"mouth":0.93,"state2":"dialog"}
+PASS spoken to she stops where she is, turns to him and is the speaker {"walking":true,"prompt":"ume","state":"dialog","engaged":true,"speaker":true,"stayed":0,"faceDiff":0,"mouth":0.93,"state2":"dialog"}
+PASS when the talk ends she goes on with her walk {"state":"play","engaged":false,"moved":3.8,"st":"walk","stop":"B0"}
+PASS each resident has several lines to say (cycled, the first by what they are doing) {"oda":4,"brix":3,"maro":3,"tilde":3,"garrick":4,"pico":3,"dot":3,"marda":3,"tobb":2,"ume":3,"ilo":2,"aven":2,"kira":2,"safi":2,"tamu":3,"bashir":2}
+ISO  Twinsen at the quay, far from the lane and the square
+PASS residents far from Twinsen and out of view are in the abstract state (their rigs never animate) and still go about their round [{"id":"oda","abstractFrames":1800,"calls":0,"moved":29},{"id":"brix","abstractFrames":1800,"calls":0,"moved":13},{"id":"maro","abstractFrames":1800,"calls":0,"moved":15},{"id":"tilde","abstractFrames":1800,"calls":0,"moved":17},{"id":"garrick","abstractFrames":1800,"calls":0,"moved":24},{"id":"pico","abstractFrames":1800,"calls":0,"moved":77},{"id":"dot","abstractFrames":1800,"calls":0,"moved":53},{"id":"marda","abstractFrames":410,"calls":1389,"moved":15},{"id":"tobb","abstractFrames":1800,"calls":0,"moved":23},{"id":"ume","abstractFrames":1800,"calls":0,"moved":24}]
+NOTE one minute at the quay, ten residents (most far off or out of view): 0.084 ms per frame; steps full/reduced/abstract: {"full":1390,"reduced":0,"abstract":1043,"ms":150.79999995976686,"frames":0}
+PASS the whole population costs under 1.0 ms a frame while most are far off 0.084
+PASS a resident standing beside a story person, or on a doorway, for more than 5 s makes room and moves on (never blocks them for long) {"besideStoryPerson":4.9,"onDoorway":4.9,"log":["428.5 at gar_tend","433.5 made room","433.5 plan → gar_draw"]}
+PASS in the evacuation the streets are empty; after it the residents are back {"before":10,"during":0,"after":10,"errs":0}
+PASS Zeelich's street: its three residents wait hidden until the area is built, then start their rounds there {"waiting":[[false,0],[false,0],[false,0]],"arrived":[[true,4,false],[true,4,false],[true,4,false]],"bad":[],"places":40,"sim":{"ilo":{"dist":86,"stops":4,"inCol":0,"seated":0,"inside":66,"y":[6,6],"carried":["basket"]},"aven":{"dist":115,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[6,6],"carried":[]},"kira":{"dist":108,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[6,6],"carried":["can"]}},"gave":[0,0,0],"storyMoved":[]}
+PASS Zeelich's street: every stop is walkable and over a metre from every place a chapter puts anyone; every leg has a route {"waiting":[[false,0],[false,0],[false,0]],"arrived":[[true,4,false],[true,4,false],[true,4,false]],"bad":[],"places":40,"sim":{"ilo":{"dist":86,"stops":4,"inCol":0,"seated":0,"inside":66,"y":[6,6],"carried":["basket"]},"aven":{"dist":115,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[6,6],"carried":[]},"kira":{"dist":108,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[6,6],"carried":["can"]}},"gave":[0,0,0],"storyMoved":[]}
+PASS Zeelich's street: in 200 s each walks (≥ 40 m), visits at least 3 stops, never stands inside a collider, and stays at the island's level (y 6) {"ilo":{"dist":86,"stops":4,"inCol":0,"seated":0,"inside":66,"y":[6,6],"carried":["basket"]},"aven":{"dist":115,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[6,6],"carried":[]},"kira":{"dist":108,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[6,6],"carried":["can"]}}
+PASS Zeelich's street: the story's people there have not moved []
+PASS Kesh: its three residents wait hidden until the area is built, then start their rounds there {"waiting":[[false,0],[false,0],[false,0]],"arrived":[[true,3,false],[true,4,false],[true,3,false]],"bad":[],"places":47,"sim":{"safi":{"dist":150,"stops":3,"inCol":0,"seated":0,"inside":0,"y":[4.37,5.05],"carried":["basket"]},"tamu":{"dist":195,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[4.15,5],"carried":[]},"bashir":{"dist":100,"stops":3,"inCol":0,"seated":0,"inside":0,"y":[4.88,5.15],"carried":[]}},"gave":[0,0,0],"storyMoved":[]}
+PASS Kesh: every stop is walkable and over a metre from every place a chapter puts anyone; every leg has a route {"waiting":[[false,0],[false,0],[false,0]],"arrived":[[true,3,false],[true,4,false],[true,3,false]],"bad":[],"places":47,"sim":{"safi":{"dist":150,"stops":3,"inCol":0,"seated":0,"inside":0,"y":[4.37,5.05],"carried":["basket"]},"tamu":{"dist":195,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[4.15,5],"carried":[]},"bashir":{"dist":100,"stops":3,"inCol":0,"seated":0,"inside":0,"y":[4.88,5.15],"carried":[]}},"gave":[0,0,0],"storyMoved":[]}
+PASS Kesh: in 200 s each walks (≥ 40 m), visits at least 3 stops, never stands inside a collider {"safi":{"dist":150,"stops":3,"inCol":0,"seated":0,"inside":0,"y":[4.37,5.05],"carried":["basket"]},"tamu":{"dist":195,"stops":4,"inCol":0,"seated":0,"inside":0,"y":[4.15,5],"carried":[]},"bashir":{"dist":100,"stops":3,"inCol":0,"seated":0,"inside":0,"y":[4.88,5.15],"carried":[]}}
+PASS Kesh: the story's people there have not moved []
+PASS no page errors in the whole run []
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 37 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

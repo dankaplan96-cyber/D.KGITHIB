@@ -1,0 +1,4 @@
+doors near the shop: {"ds":[],"deco":[{"door":{"x":-99.1,"z":31.549999999999997},"x":-100.8,"z":26.4}]}
+walk to them: []
+round the shop: [["west of shop","arrived",[-106.79,1.82,33.59]],["behind shop (north)","arrived",[-103.29,2.35,31.68]],["east of shop","arrived",[-99.75,2.34,33.39]]]
+no errors

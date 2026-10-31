@@ -1,0 +1,40 @@
+{
+ "render counts (old2)": {
+  "pier_track_east": {
+   "calls": 364,
+   "tris": 306705,
+   "geos": 1067,
+   "tex": 430
+  },
+  "cool_door": {
+   "calls": 291,
+   "tris": 184529,
+   "geos": 1074,
+   "tex": 430
+  },
+  "plaza": {
+   "calls": 355,
+   "tris": 235636,
+   "geos": 1090,
+   "tex": 430
+  },
+  "lumi_loom": {
+   "calls": 459,
+   "tris": 253801,
+   "geos": 1117,
+   "tex": 430
+  },
+  "drift": {
+   "calls": 486,
+   "tris": 365439,
+   "geos": 1187,
+   "tex": 430
+  },
+  "board": {
+   "calls": 351,
+   "tris": 284486,
+   "geos": 1188,
+   "tex": 430
+  }
+ }
+}

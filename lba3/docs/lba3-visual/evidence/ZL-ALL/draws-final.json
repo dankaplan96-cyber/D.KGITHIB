@@ -1,0 +1,95 @@
+{
+ "conditions": "headless Chromium, SwiftShader (software GL), 1280x720, default settings; arrival: enterRoom + 2 s; landmark: walked there by input (P.go), 1.5 s; renderer.info of one composed frame after two warm frames. CPU-side draw counts only, no GPU timing.",
+ "rows": [
+  {
+   "id": "isle_liftdock",
+   "arrival": {
+    "calls": 205,
+    "tris": 214074
+   },
+   "walk": {
+    "word": "LIFT",
+    "r": "arrived",
+    "left": 1.24,
+    "y": 6.74,
+    "state": "play"
+   },
+   "landmark": {
+    "calls": 208,
+    "tris": 214478
+   }
+  },
+  {
+   "id": "isle_tralu",
+   "arrival": {
+    "calls": 211,
+    "tris": 308300
+   },
+   "walk": {
+    "word": "WEIGH BEAM",
+    "r": "arrived",
+    "left": 1.1,
+    "y": 12.15,
+    "state": "play"
+   },
+   "landmark": {
+    "calls": 212,
+    "tris": 308440
+   }
+  },
+  {
+   "id": "isle_orchard",
+   "arrival": {
+    "calls": 147,
+    "tris": 314142
+   },
+   "walk": {
+    "word": "CLOUD CATCHER",
+    "r": "arrived",
+    "left": 1.11,
+    "y": 9.95,
+    "state": "play"
+   },
+   "landmark": {
+    "calls": 144,
+    "tris": 315100
+   }
+  },
+  {
+   "id": "isle_oldwatch",
+   "arrival": {
+    "calls": 132,
+    "tris": 112170
+   },
+   "walk": {
+    "word": "OLD WATCH",
+    "r": "arrived",
+    "left": 1.23,
+    "y": 6.6,
+    "state": "play"
+   },
+   "landmark": {
+    "calls": 130,
+    "tris": 111994
+   }
+  },
+  {
+   "id": "isle_celebration",
+   "arrival": {
+    "calls": 199,
+    "tris": 303814
+   },
+   "walk": {
+    "word": "THE FIGURE",
+    "r": "arrived",
+    "left": 1.09,
+    "y": 9.74,
+    "state": "play"
+   },
+   "landmark": {
+    "calls": 204,
+    "tris": 286926
+   }
+  }
+ ]
+}
