@@ -556,8 +556,9 @@ Probes and data: `CPU-WALK/probes/` (`repl.mjs` keeps one booted page for many p
   and moving objects matches this container's; NOT VERIFIED). A/B on the laptop: the benchmark's breakdown line
   "CPU-WALK off (as before)" (bench.js), or `?nofreeze` (a suite: `NOFREEZE=1`).
 - **Tests** (this branch; `BOOT_TIMEOUT=900000`; `results/tests.txt`): opening (WALKCHECK=1), chapter1, house, transitions
-  (WALKCHECK=1), travel (WALKCHECK=1), zislands, drawcalls, perfbudget, combat, containers, camfollow, doorcull: **all
-  PASS**. travel's first run lost its page to the container's memory-cgroup OOM killer (dmesg; several agents' browsers
+  (WALKCHECK=1), travel (WALKCHECK=1), zislands, drawcalls, perfbudget, combat, containers (and again with WALKCHECK=1 on
+  the final commit), camfollow, doorcull: **all PASS**; the walk check on the final commit, fresh page, all nine routes:
+  0 different (`results/walkcheck-final-code.txt`). travel's first run lost its page to the container's memory-cgroup OOM killer (dmesg; several agents' browsers
   at ~1 GB each) and passed on the rerun. **occluders: FAIL, 1 check, not from this round:** "(b) the rise over a house is
   eased …" finds no rise at all (pitch 26.4° → 26.4°); the same with the upstream version of the test (0dcec9a, LBA2's
   camera pinned) and the same, number for number, with `NOFREEZE=1` (the walk and the check as before CPU-WALK). Its 36

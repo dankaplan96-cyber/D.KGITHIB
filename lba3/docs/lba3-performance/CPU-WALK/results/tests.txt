@@ -52,3 +52,6 @@ travel-wc.txt:VERDICT: PASS
 zislands.txt:functional: 13 passed, 0 failed
 zislands.txt:visual:     0 capture(s) written for review, not judged here
 zislands.txt:VERDICT: PASS
+containers-wc.txt:functional: 41 passed, 0 failed
+containers-wc.txt:visual:     0 capture(s) written for review, not judged here
+containers-wc.txt:VERDICT: PASS
