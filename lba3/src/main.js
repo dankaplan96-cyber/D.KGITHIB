@@ -479,6 +479,31 @@ class Game {
       for (const t of tex) R.initTexture(t); }
     this.uploadSkeletons();
     lap('batchUpload');
+    // FIRST-BUILD (Test Lab finding 1, title-to-play: the laptop's first frame of the house after New Game took 0.6 s plugged
+    // in, 1.2 s on battery, in view: that frame built the house's draw batches (372 ms) and shadow batches (104 ms), then
+    // uploaded and first drew them). The room play starts in — the house for New Game, the newest save's room for
+    // Continue — gets the same preparation as Citadel here, each part its own task with a painted frame between: its
+    // shadow batches, its draw batches' texture layers (in slices), its draw batches, then one draw of it into a scratch
+    // target (its geometry's upload and first draws). New Game and Continue swap it in at once (no black): its first
+    // frame now finds it ready.
+    for (const root of this.startRoots()) {
+      await step('Almost there…', 0.955, 'startRoom', 400);
+      this.shadowCull.prepare(root);
+      { const it = warmLayers(root, this.drawBatch.arrays && this.drawBatch.fold); let more = true;
+        await sliced(null, () => { more = !it.next().done; return more; }, 'startLayers'); }
+      lap('startRoom');
+      await nextPaint(); lap('paint');
+      this.drawBatch.prepare(root);
+      lap('startRoom');
+      await nextPaint(); lap('paint');
+      this.drawArea(root);
+      lap('startRoom');
+    }
+    // (FIRST-BUILD: the sound's AudioContext made now, suspended until the first click or key where the browser asks for
+    //  one: making it took 385–446 ms of the main thread on the laptop, on the click on New Game (audio.js init))
+    await nextPaint(); lap('paint');
+    this.audio.prepare?.();
+    lap('audioContext');
     await step('Almost there…', 0.96, 'shadowPrograms', 1000);
     // (TITLE-LOAD: the depth programs a few kinds of caster at a time, a painted frame between: each chunk's compile is its
     //  own task — the whole warm-up was one task of 1.2–6.8 s here)
@@ -828,6 +853,30 @@ class Game {
     try { R.shadowMap.autoUpdate = false; R.setRenderTarget(C.renderTarget2); R.render(this.scene, this.camera); }
     catch (e) { console.warn('first draws', e); }
     finally { R.setRenderTarget(prevT); R.shadowMap.autoUpdate = au; for (const k of out) k.visible = true; }
+  }
+  // FIRST-BUILD: the rooms play may start in, built at startup (bootAreas): the house (New Game) and the newest save's
+  // room (Continue), each once; Citadel is prepared on its own
+  startRoots() {
+    const ids = ['house'];
+    const n = this.newestSlot();
+    try { const s = n == null ? null : migrateSave(store.get(slotKey(n))); if (s?.room && !ids.includes(s.room)) ids.push(s.room); } catch { /* (an unreadable save: the house only) */ }
+    const out = [];
+    for (const id of ids) { const g = this.regions.built(id)?.group; if (g && g !== this.world.root && !out.includes(g)) out.push(g); }
+    return out;
+  }
+  // FIRST-BUILD: one render of an area that is not on show (`root`, a room's group) into a scratch target, the shadow map
+  // not redrawn, nothing culled: its geometry is sent to the GPU and drawn once (the driver's first-draw work), as
+  // drawPart does for Citadel's parts. Citadel is hidden meanwhile; everything is put back.
+  drawArea(root) {
+    const R = this.renderer.renderer, C = this.renderer.composer, W = this.world.root;
+    if (!C || !root || this.testFreeze) return;
+    const vis = root.visible, wvis = W.visible, culled = [], prevT = R.getRenderTarget(), au = R.shadowMap.autoUpdate;
+    try {
+      root.visible = true; W.visible = false;
+      root.traverseVisible((o) => { if (o.frustumCulled && (o.isMesh || o.isPoints || o.isLine || o.isSprite)) { o.frustumCulled = false; culled.push(o); } });
+      R.shadowMap.autoUpdate = false; R.setRenderTarget(C.renderTarget2); R.render(this.scene, this.camera);
+    } catch (e) { console.warn('area first draws', e); }
+    finally { R.setRenderTarget(prevT); R.shadowMap.autoUpdate = au; for (const o of culled) o.frustumCulled = true; root.visible = vis; W.visible = wvis; }
   }
   // TITLE-LOAD: the area's draw-batch meshes three has not uploaded yet (made or remade since its geometry was sent:
   // cells rebuilt for pieces that left or came back), sent now — in a black frame, not on the first frame that looks at

@@ -571,6 +571,15 @@ export class DrawBatch {
     return A;
   }
   has(root) { return this.areas.has(root); }
+  // FIRST-BUILD: an area's batches built now, while it is not on show (the loading screen: the room New Game or the
+  // save starts in), without the frame's check of its pieces — that runs on its first frame drawn, as for any area,
+  // and a piece changed since leaves its batch then. The same build as update()'s first one.
+  prepare(root) {
+    if (!this.enabled || !root || this.areas.has(root)) return null;
+    const A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact);
+    this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms;
+    return A;
+  }
   // (PERF-CALLS: behind a scene change's black, the pieces that are back as they were rejoin their batches)
   readmit(root) { const A = this.areas.get(root); if (!A || !this.enabled) return 0; const t0 = performance.now(), n = A.readmit(); if (n) { this.readmitted = (this.readmitted || 0) + n; this.readmitMs = (this.readmitMs || 0) + performance.now() - t0; } return n; }
   meshes(root) { return this.areas.get(root)?.meshes() ?? []; }
