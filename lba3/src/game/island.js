@@ -14,6 +14,7 @@ import { rockGeometry, treeGeometry } from './vegetation.js';
 import { buildHouse } from './architecture.js';
 import { buildHarbourShed } from './harbourshed.js';
 import { mergeStatic } from '../engine/merge.js';
+import { viewCull } from '../engine/viewinst.js';
 import { occOf } from '../engine/occlude.js';
 import { fitAdd } from './worldfit.js';
 import { t } from './i18n.js';
@@ -691,7 +692,9 @@ function buildHarbour(W0, root, r) {
 // (0: hook up over the barge, crate aboard → 1: crate set down on the pier, hook raised); shake(k) is the faint
 // vibration the opening shows (the hook and the lantern tremble, the puddle on the deck ripples).
 function cargoLift(W, parent, r) {
-  const g = new THREE.Group(); g.name = 'cargoLift'; g.userData.keep = true; parent.add(g);
+  // (HEADING-LOAD: the lift's own group is no longer `keep`: its column, base and bracket never move, so they join the
+  //  quay's static shadow and draw batches; what moves stays `keep`, below)
+  const g = new THREE.Group(); g.name = 'cargoLift'; parent.add(g);
   const deck = HARBOUR0.deck, mx = -85.0, mz = -2.75, ARM = 2.0;
   const teal = pm('#2f7a86', 0.45, { metalness: 0.5 }), brassM = pm('#d8b060', 0.3, { metalness: 0.8 }), dark = pm('#2a3038', 0.55, { metalness: 0.5 });
   // column on a bolted base
@@ -1135,11 +1138,14 @@ function tulipBed(W, parent, x, z, w, d, ry, r, acc = null) {
   }
   W.physics.add({ type: 'box', x, z, hw: w / 2 + 0.15, hd: d / 2 + 0.15, rot: ry, top: y + 0.24, seeThrough: true });
 }
+// (HEADING-LOAD: the rows of a whole quarter in two instanced meshes, drawn in full wherever the camera looked — the
+//  original props' rows 56k triangles on the street, none of them in view facing east: drawn only where the view can
+//  show them, engine/viewinst.js; they cast no shadow)
 function tulipFlush(acc) {
   if (!acc.list.length) return;
   const T = tulipGeo();
-  instances(acc.parent, T.green, pm('#4f8f3a', 0.8), acc.list, { cast: false });
-  instances(acc.parent, T.cup, pm('#ffffff', 0.6), acc.cups, { cast: false });
+  viewCull(instances(acc.parent, T.green, pm('#4f8f3a', 0.8), acc.list, { cast: false }));
+  viewCull(instances(acc.parent, T.cup, pm('#ffffff', 0.6), acc.cups, { cast: false }));
 }
 function bench(W, parent, x, z, ry) {
   const y = W.H(x, z);
