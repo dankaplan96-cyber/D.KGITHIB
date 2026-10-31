@@ -27,7 +27,7 @@
 // proxies. Mirrored pieces get their own batches (winding flipped).
 import * as THREE from 'three';
 import { plain, texOnly, twinOf } from './merge.js';
-import { MW } from './drawcull.js';
+import { MW, walkCheckNote } from './drawcull.js';
 import { TEXARRAY, arrayable, layerOf, arrayTwinOf, keyOf, flushArrays } from './texarray.js';
 
 export const CELL = 48;
@@ -134,6 +134,21 @@ function lookVer(m, F) {
   if (!same) { a.set(b); m.__lookV = (m.__lookV ?? 0) + 1; }
   return m.__lookV;
 }
+// CPU-WALK: whether any batched piece's geometry was edited since an area's last check, without reading every piece's
+// attributes each frame (on the street ~400 pieces, each a chain of geometry → attributes → position → version, cold in
+// the cache). Three moves an attribute's version only through its needsUpdate setter; a geometry's attributes change
+// through setAttribute / deleteAttribute / setIndex (no code of ours assigns them directly: searched). Those on a batched
+// piece's geometry or its position / index attribute move GEO.n; watch() compares the versions only when it moved.
+const WATCH_G = new WeakSet(), WATCH_A = new WeakSet();
+export const GEO = { n: 0, off: typeof location !== 'undefined' && (/[?&]nofreeze/.test(location.search) || !!globalThis.__nofreeze) };   // (?nofreeze: as before, with drawcull.js's MW.frozen)
+{
+  const BA = THREE.BufferAttribute.prototype, d = Object.getOwnPropertyDescriptor(BA, 'needsUpdate');
+  if (d?.set) Object.defineProperty(BA, 'needsUpdate', { get: d.get, set(v) { if (v === true && WATCH_A.has(this)) GEO.n++; d.set.call(this, v); }, configurable: true, enumerable: d.enumerable });
+  else GEO.off = true;   // (another three: the versions are compared every frame, as before)
+  const BG = THREE.BufferGeometry.prototype;
+  for (const k of ['setAttribute', 'deleteAttribute', 'setIndex']) { const f = BG[k]; BG[k] = function (...a) { if (WATCH_G.has(this)) GEO.n++; return f.apply(this, a); }; }
+}
+const watchGeo = (g) => { WATCH_G.add(g); const P = g.attributes.position; if (P) WATCH_A.add(P); if (g.index) WATCH_A.add(g.index); };
 // (a piece under an object with its own updateMatrixWorld (a camera, a skinned mesh): its matrices are three's, not
 //  drawcull.js's, so it is always compared in full)
 const ownUpdate = (o, root) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.updateMatrixWorld !== THREE.Object3D.prototype.updateMatrixWorld) return true; return false; };
@@ -245,7 +260,7 @@ class Area {
     // (PERF-CALLS: or a piece whose place in the order is another material's — its texture's twin, shared with pieces
     //  now in other runs: drawn alone it would sort at its own material's id; as a batch of one, at its run's place)
     for (const [k, C] of this.cells) if (C.list.length < 2 && !(C.list.length === 1 && (C.list[0].cells.length > 1 || keepOne(C)))) { for (const M of C.list) M.cells = []; this.cells.delete(k); }
-    for (const M of pieces) if (M.cells.length) { this.members.push(M); M.o.layers.disable(0); M.o.userData.drawBatched = true; }
+    for (const M of pieces) if (M.cells.length) { this.members.push(M); M.o.layers.disable(0); M.o.userData.drawBatched = true; watchGeo(M.geo); }
     P.assign = performance.now() - tq; tq = performance.now();
     flushArrays();   // (PERF-CPU: an array that took this area's new textures, before its batches are drawn)
     P.arrays = performance.now() - tq; tq = performance.now();
@@ -541,14 +556,21 @@ class Area {
     // chain is shown when that update reached the parent through shown objects in this frame (`__visF`); a world matrix
     // is compared in full only when that update recomputed it since it was last found equal (`__mwF`); a folded
     // material's look by its version (lookVer). Otherwise (A/B, or the area's root not reached) as before.
-    const F = MW.frame, fast = this.fast !== false && MW.ok && root.__visF === F;
+    // CPU-WALK: a piece in a frozen subtree (drawcull.js) whose range was checked unchanged in this frame's update
+    // (`__frzBy.okF`) has the world matrix and the shown parents it had when it was last checked in full here: the rest
+    // of its checks (material, geometry, flags, look) as before.
+    // (CPU-WALK: the area's root itself may be in a frozen range — a room with nobody under its group — and then it is
+    //  shown in this frame when its range was checked unchanged in this update and it is visible: see drawcull.js)
+    const RR = root.__frzBy;
+    const F = MW.frame, fast = this.fast !== false && MW.ok && (root.__visF === F || (RR !== undefined && RR.okF === F && root.visible === true));
+    const geoSame = this.fast !== false && !GEO.off && this._geoN === GEO.n; this._geoN = GEO.n;   // (CPU-WALK: no piece's geometry edited since the last check)
     for (const M of this.members) {
       if (M.out) continue;
       const o = M.o, g = o.geometry;
       if (fast) {
-        const p = o.parent;
-        if (p && o.visible && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
-          && (p === root || p.__visF === F) && ((o.__mwF <= M.okF && !M.own) || (o.matrixWorld.equals(M.mat) && (M.okF = F) >= 0)) && (!M.look || lookVer(o.material, F) === M.lv)) continue;
+        const p = o.parent, R = o.__frzBy;
+        if (p && o.visible && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && (geoSame || (g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver))
+          && ((R !== undefined && R.okF === F) || ((p === root || p.__visF === F) && ((o.__mwF <= M.okF && !M.own) || (o.matrixWorld.equals(M.mat) && (M.okF = F) >= 0)))) && (!M.look || lookVer(o.material, F) === M.lv)) continue;
       } else if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
         && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookNow(o.material) === M.look)) { M.okF = -1; continue; }
       this.release(M); left++;
@@ -556,6 +578,20 @@ class Area {
     // (a rebuild may release a piece left alone in a cell, which makes its other cells dirty: until none is)
     if (left) { for (let k = 0; k < 8; k++) { let any = false; for (const C of this.cells.values()) if (C.dirty) { this.build(C); any = true; } if (!any) break; } (this.outs ??= []).push(...this.members.filter((M) => M.out)); this.members = this.members.filter((M) => !M.out); }
     return left;
+  }
+  // CPU-WALK `?walkcheck`: every piece still in a batch after watch() checked in full, with nothing taken from the
+  // shown-world update (the slow path's tests: its world matrix, every parent shown, its material, geometry, flags and look)
+  verify(K) {
+    const root = this.root, up = (p) => { for (let x = p; x && x !== root; x = x.parent) if (!x.visible) return false; return true; };
+    for (const M of this.members) {
+      if (M.out) continue;
+      K.pieces++;
+      const o = M.o, g = o.geometry;
+      if (o.parent && o.material === M.material && g === M.geo && !o.castShadow && o.receiveShadow === M.rs && g.attributes.position.version === M.ver && (g.index ? g.index.version : -1) === M.iver
+        && o.matrixWorld.equals(M.mat) && o.visible && up(o.parent) && (!M.look || lookOf(o.material) === M.look)) continue;
+      K.piecesBad++;
+      walkCheckNote(`draw-batch piece kept though changed: ${o.name || o.type} under ${o.parent?.name || o.parent?.type}${o.__frzBy ? ' (frozen)' : ''}`);
+    }
   }
   // PERF-CALLS: pieces that left (a house faded while the camera was behind it, a prop hidden for a scene, a lamp's
   // colour changed and back) were drawn on their own for good: a long visit kept collecting draws. At a scene change
@@ -572,7 +608,7 @@ class Area {
       back.push(M); return false;
     });
     for (const M of back) {
-      M.out = false; M.okF = -1; M.lv = M.look ? lookVer(M.material, -1) : 0;
+      M.out = false; M.okF = -1; M.lv = M.look ? lookVer(M.material, -1) : 0; watchGeo(M.geo);
       M.o.layers.disable(0); M.o.userData.drawBatched = true;
       for (const C of M.cells) if (!C.list.includes(M)) { C.list.push(M); C.dirty = true; }
       this.members.push(M);
@@ -605,6 +641,7 @@ export class DrawBatch {
     let A = this.areas.get(root);
     if (!A) { A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact); this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms; }   // (I-11: counted for the benchmark's hitch notes)
     this.left += A.watch();
+    if (MW.check) A.verify(MW.check);
     return A;
   }
   has(root) { return this.areas.has(root); }

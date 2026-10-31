@@ -78,6 +78,10 @@ export function watch(page) {
 export async function launch({ width = 960, height = 540, storageState, locale, scale } = {}) {
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const context = await browser.newContext({ viewport: { width, height }, ...(storageState ? { storageState } : {}), ...(locale ? { locale } : {}), ...(scale ? { deviceScaleFactor: scale } : {}) });
+  // (CPU-WALK: WALKCHECK=1 runs the game's own frozen-walk check, src/engine/drawcull.js walkCheck: a mismatch is a console error)
+  if (process.env.WALKCHECK) await context.addInitScript(() => { window.__walkcheck = 1; });
+  // (CPU-WALK: NOFREEZE=1 runs a suite on the walk and the draw-batch check as they were before CPU-WALK, the A/B)
+  if (process.env.NOFREEZE) await context.addInitScript(() => { window.__nofreeze = 1; });
   const page = await context.newPage();
   const errs = watch(page);
   return { browser, context, page, errs };

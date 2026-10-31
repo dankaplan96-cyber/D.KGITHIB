@@ -383,6 +383,10 @@ export class Resident extends NPC {
     sh = { bottom: bottom * sc, back: back * sc, shin: shin * sc, foot: foot * sc, knee: knee.z * sc };
     SIT_SHAPES.set(key, sh);
     rig.play(anim); for (let i = 0; i < 8; i++) rig.update(0.5, 0);
+    // (CPU-WALK: the matrices put back too. The measure above left every part's matrix in the sit pose; the pose put back
+    //  is often the very numbers it had, and the shown-world update (drawcull.js) recomputes only what changed, so a part
+    //  that did not move afterwards was drawn seated — a resident's arm or hat for several frames: `?walkcheck`)
+    root.updateMatrixWorld(true);
     return sh;
   }
   // ---------------------------------------------------------------- talking with the player (src/game/story/citizens.js)

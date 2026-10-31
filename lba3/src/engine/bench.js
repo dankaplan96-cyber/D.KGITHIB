@@ -265,6 +265,8 @@ export class Bench {
       // (PERF-SUBMIT: this round's render-path savings undone — the live shadow pass walking the whole scene, every
       //  shadow batch through the 16-point test: compare its submit / sim CPU with 'as is')
       { id: 'PERF-SUBMIT off (as before)', apply() { MW.walk = false; if (G.shadowCull) G.shadowCull.prefilter = false; }, undo() { MW.walk = true; if (G.shadowCull) G.shadowCull.prefilter = true; } },
+      // (CPU-WALK: the shown-world update visiting every shown object again, no frozen subtrees: compare its sim CPU)
+      { id: 'CPU-WALK off (as before)', apply() { MW.frozen = false; }, undo() { MW.frozen = true; } },
     ];
     // (STABILIZATION: the GPU investigator's groups — benchgpu.js — in the same Medium breakdown)
     //  on the street only: the street is where the GPU time goes, and 18 lines on the house too would lengthen the run)
