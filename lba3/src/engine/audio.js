@@ -29,17 +29,34 @@ export class AudioEngine {
     }
   }
 
-  init() {
-    if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume(); return; }
+  // FIRST-BUILD: the AudioContext itself, made ahead (the loading screen) and left alone until init(). Making one took
+  // 385–446 ms of the main thread on the user's laptop (Windows' audio device opened in the constructor), on the click
+  // that started New Game. Where the browser wants a click or key first it is made suspended, and init() — called on
+  // that click or key, as before — resumes it. Nothing is connected or played until init(): the same context, the same
+  // buffer size (latencyHint), the same graph built at the same moment as before.
+  prepare() {
+    if (this.ctx || this._pre) return;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
+    try { this._pre = this._make(AC); } catch (e) { this._pre = null; console.warn('audio context', e); }
+  }
+  _make(AC) {
     // AUDIO-BUFFER (the user, 28.10: "the music has become a bit crackly on every computer"): the default
     // ('interactive') buffer is ~10 ms, and when the game keeps the CPU busy (battery, the street) the audio thread
     // misses it and the output crackles. ~50 ms of buffer is still well under what a sound effect can be heard late by
     // AUDIO-CRACKLE-2 (the user, 30.10: "the music crackles again; other music on the computer doesn't"; the files are
     // clean: peaks -1.6 to -5.6 dBFS, nothing clipped): 50 → 80 ms of buffer, more room for a busy battery CPU
-    let ctx;
-    try { ctx = new AC({ latencyHint: 0.08 }); } catch { ctx = new AC(); }
+    try { return new AC({ latencyHint: 0.08 }); } catch { return new AC(); }
+  }
+
+  init() {
+    if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    let ctx = this._pre; this._pre = null;
+    if (ctx && ctx.state === 'closed') ctx = null;
+    if (!ctx) ctx = this._make(AC);
+    else if (ctx.state !== 'running') ctx.resume().catch(() => {});
     this.ctx = ctx;
     this.master = ctx.createGain();
     this.master.connect(ctx.destination);

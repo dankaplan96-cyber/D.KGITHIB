@@ -376,3 +376,83 @@ house's surroundings at 2 with the Follow camera; Medium, battery profile, full 
 - **Laptop:** `electron-bench.mjs full … battery`: the street breakdown's new lines. Each "as before" line minus
   'as is' is what that change saved. Whether D3D11's compiler keeps the new `if`s as branches decides changes 1, 3 and
   5; the lines answer it.
+
+### FIRST-BUILD (31.10): the first frame of the house after New Game, a region's first visit (Test Lab findings 1 and 4)
+Branch `first-build` from 1d0c95d (TITLE-LOAD merged). All numbers are from SwiftShader in this container, under a heavy
+shared load (load average 10–31 on 4 cores): exact counts and relative CPU ms only, no GPU ms, no fps and no feel for the
+laptop. Frames are stepped as 60 Hz frames (one simulation step each, the game's own loop path). Probes and data:
+`FIRST-BUILD/probes/` (`run.mjs`, `q_newgame.js`, `q_regions.js`, `q_dbprof.js`, `q_dbab.js`, `pixdiff.py`, `probes.mjs`,
+`runtests.mjs`), `FIRST-BUILD/results/`.
+
+- **Finding 1, `title-to-play` (New Game → playable, `?nocine` as the Test Lab opens it; 30 title frames, a click on New
+  Game, 60 frames; Auto on battery = Medium, 1366×768).** MEASURED here, two runs each:
+
+  | | baseline (1d0c95d) | after |
+  |---|---|---|
+  | the click (title in view): audio + scene swap | 160 / 169 ms | 47 / 35 ms |
+  | first house frame (in view) | 54,917 / 70,136 ms | 187 / 93 ms |
+  | work recorded in it | draw batches built 54.6 / 69.2 s (their texture layers read inside), shadow batches 179 / 743 ms, shadow cache rebuilt (casters changed), +40 geometries | shadow cache built (the area changed), +5 geometries |
+  | frames 1–7 | 4–15 ms | 3–10 ms |
+
+  - Cause, as the laptop's frame recorded it: New Game swaps the house in at once (no black, `enterRoom(…, instant)`), and
+    its first frame built the house's shadow batches and draw batches, read their texture layers, uploaded and drew them
+    for the first time. Separately the click made the AudioContext (`audio.js init`: 385–446 ms of main thread in the
+    laptop's profile; the constructor opens the audio device).
+  - Change (`main.js prepare`, `drawbatch.js prepare`, `audio.js prepare`): on the loading screen, after Citadel's
+    batches, the room play starts in — the house, and the newest save's room for Continue — gets Citadel's preparation,
+    each part its own task with a painted frame between: shadow batches, texture layers (≤ 30 ms slices), draw batches,
+    one draw of the room into a scratch target (its uploads and first draws, `Game.drawArea`). Then the AudioContext is
+    made (suspended where the browser wants a gesture; `init()` on the first click or key resumes it and builds the graph
+    as before: same latencyHint 0.08, REVERB_SEC 0.25, `_glide` untouched). Nothing is moved behind a black hold.
+  - Image: the settled house frame after 61 frames, seeded: 0 pixels differ outside the two animated people (Twinsen,
+    Zoé), which also differ between two baseline runs (`results/house-pixels.txt`, `results/shots/`).
+  - Moved, not removed: the loading screen pays it. Here `startRoom` took 85.5 s in one run (its texture-layer slices:
+    longest 63.9 s, a canvas read-back waiting for SwiftShader's GPU process, as TITLE-LOAD saw for Zeelich) and the
+    AudioContext 0.4 s. On the laptop the same work was 372 + 104 ms of batches plus the first frame's uploads and the
+    AudioContext: about +0.5–1 s of loading (INFERRED from the laptop's frame record and profile, NOT VERIFIED).
+  - Both builds here also show one frame later in play (frame 23: 15 s base, 129 s after) with no job in it: three's
+    render waiting on SwiftShader's GPU process (render ms only; nothing built, compiled or uploaded). Not seen in the
+    laptop's run (its only long frame there was the 1.2 s one); not attributed here.
+- **Finding 4, `region-entry` (first visits to Zeelich, the desert, the Hamalayi from the street).** What is left on
+  HEAD, MEASURED here (`results/regions-base.txt`; its ms are SwiftShader's, GPU-process waits dominate them):
+  - The shadow cache is built **once** per arrival on HEAD (each first visit: 1 build; each return to Citadel: 1). The
+    0.43.3 laptop run's second rebuild does not occur here: TITLE-LOAD's preparation steps and settle frames run the
+    area's first updates (84 / 40 pieces leaving their shadow batches) before the cache is first drawn.
+  - The rest of a first visit, in order, all behind black: the region's build (2.0 / 2.7 / 1.9 s here, in 15 / 7 / 7
+    steps), its shadow batches (0.1–0.4 s), its texture layers (many slices), its draw batches (1.4 / 1.4 / 0.9 s), its
+    geometry, the shadow programs (+4 / 0 / 0) and the warm-up (+7 / +6 / +1 programs), then a held frame drawing the
+    shadow cache and the first draws.
+  - Change 1 (`drawbatch.js`): the draw batches' first build is cheaper with the same output: plane keys in a flat
+    number table (one key per plane, the neighbouring bin looked up), and the cell build reading plain attribute arrays
+    instead of a call per vertex. Same batches: `q_dbprof.js` hashes every cell's vertices, indices and draw order —
+    identical before and after for the house, Zeelich, the desert and the Hamalayi. Time, the baseline's file and this
+    one built alternately in one page, 8 each (`results/drawbatch-ab-interleaved.txt`), minimum (median) ms:
+    house 126.7 → 74.7 (283 → 210), Zeelich 198.7 → 114.9 (282 → 451: the load), desert 85.5 → 69.1 (183 → 130),
+    Hamalayi 152.2 → 92.8 (390 → 306). MEASURED here (relative CPU); on the laptop NOT VERIFIED (its Zeelich build was
+    1,031 ms on 0.43.3, texture layers included then).
+  - Change 2 (`main.js prepSteps`): on a first visit, where the driver compiles in parallel (KHR_parallel_shader_compile:
+    the laptop), the area's programs are started right after its lamps are chosen, so they compile while the layers,
+    batches and uploads run; the warm-up at the end stays and waits as before. SwiftShader has no such extension, so
+    here it is off; only its code path and program counts are checked (`game.earlyWarm = true`, `q_regions.js
+    W_EARLY=1`, `results/regions-after-earlywarm-forced.txt`): the early step makes 9 of Zeelich's 11 new programs, all 6
+    of the desert's, the Hamalayi's 1 (the other 2 are shadow-depth programs, made by the shadow-programs step as
+    before); the warm-up at the end then makes none; the same totals as the baseline (+11 / +6 / +1); every arrival
+    completes, one shadow cache build each. Its time saving is the laptop's to measure (NOT VERIFIED).
+  - **Not met: under 1.5 s of black per first visit.** The region's own build was 0.9 / 1.55 / 1.63 s on the laptop
+    (0.43.3) before any batch, upload or program: the target needs the region built before the scene change — ahead of
+    the trip, in small steps during play or on the travel card — which is the region builders' files (zeelich.js,
+    desert.js, hamalayi.js) and a prefetch policy: not attempted here. This round takes the draw-batch time saved out of
+    the black and, on the laptop, overlaps the compiles with the rest.
+- **Tests** (this branch, against a snapshot of it; `BOOT_TIMEOUT` / `BOOT_MS` raised for the loaded machine; `FIRST-BUILD/results/tests.txt`): opening, chapter1,
+  house, transitions, travel, zislands, drawcalls, perfbudget, display, menus, combat, containers, camfollow, timing:
+  all PASS. chapter1 and menus each needed a second run: chapter1's fixed 240 s wait for its second boot ran out on this
+  loaded machine, and one menus click waited over 30 s for the pause menu; both passed on the next run, unchanged. The
+  loading screen is longer here now (the house's texture layers are read there), so a suite with a fixed boot limit has
+  less margin on a slow software renderer.
+- **Laptop (pending),** baseline → candidate → baseline, 3 runs each, battery, then plugged in:
+  - `node engine/cli.mjs compare …` with `title-to-play`: no visible frame over 100 ms from New Game until playable, the
+    click on New Game included; and `cold-launch`: how much longer the loading screen now takes (the house's preparation
+    and the AudioContext moved there). Music must start on the title or the first click and must not crackle.
+  - `region-entry`: black per first visit (expected still over 1.5 s, see above) and the frames after it; one shadow
+    cache build per arrival.
+  - Continue from a save in the house and from one outdoors: the first frame after the loading screen.

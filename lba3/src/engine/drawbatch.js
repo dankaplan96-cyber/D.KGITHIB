@@ -138,6 +138,25 @@ function lookVer(m, F) {
 //  drawcull.js's, so it is always compared in full)
 const ownUpdate = (o, root) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.updateMatrixWorld !== THREE.Object3D.prototype.updateMatrixWorld) return true; return false; };
 
+// FIRST-BUILD: a plane key's distance bins are PLANE_D apart (its normal's part is below it: 129³ < 2.2e6), and a part's
+// set of keys is a flat open-addressed table of numbers (integers up to ~1e13: no Set of boxed numbers); `list` holds
+// them in the order added
+const PLANE_D = 2.2e6;
+class PlaneSet {
+  constructor(n) { let c = 16; while (c < Math.min(n, 2048) * 2) c <<= 1; this.mask = c - 1; this.keys = new Float64Array(c).fill(NaN); this.list = new Float64Array(Math.max(4, Math.min(n, c >> 1))); this.n = 0; }
+  slot(k) { const lo = k | 0, hi = (k / 4294967296) | 0; return Math.imul(lo ^ Math.imul(hi, 0x85EBCA6B), 0x9E3779B1) >>> 0 & this.mask; }
+  has(k) { const K = this.keys, m = this.mask; for (let i = this.slot(k); ; i = (i + 1) & m) { const v = K[i]; if (v === k) return true; if (v !== v) return false; } }
+  add(k) {
+    const K = this.keys, m = this.mask;
+    let i = this.slot(k);
+    for (; ; i = (i + 1) & m) { const v = K[i]; if (v === k) return; if (v !== v) break; }
+    K[i] = k;
+    if (this.n === this.list.length) { const L = new Float64Array(this.list.length * 2); L.set(this.list); this.list = L; }
+    this.list[this.n++] = k;
+    if (this.n * 2 > K.length) this.grow();
+  }
+  grow() { const L = this.list, n = this.n; let c = this.keys.length * 2; this.mask = c - 1; this.keys = new Float64Array(c).fill(NaN); const K = this.keys; for (let j = 0; j < n; j++) { let i = this.slot(L[j]); while (K[i] === K[i]) i = (i + 1) & this.mask; K[i] = L[j]; } }
+}
 const keepOne = (C) => C.sortId !== undefined && C.list[0].fold?.ord !== C.list[0].o.material.id;
 class Area {
   constructor(root, cell, fold = true, arrays = false, loose = LOOSE.n, exactArr = true) {
@@ -312,30 +331,42 @@ class Area {
     // Two placed pieces can only show coincident faces where they share a plane: each part's planes (its triangles' in
     // world space, the normal's sign made canonical, quantized: 1/64 per component, 2 cm in distance — and the
     // neighbouring distance bin, so two faces a rounding error apart always share a key), worked out when first needed.
+    // FIRST-BUILD (the laptop's first frame of the house after New Game: planesOf ~144 ms of its 372 ms build): the same
+    // planes and the same answers, cheaper. A part's planes are kept once each — its own distance bin only, the
+    // neighbouring bin looked up when two parts are compared (a key ± PLANE_D: the same pairs as both bins stored) — in
+    // a flat number table (PlaneSet) instead of a Set of numbers too large to be small integers; a run of triangles in
+    // one plane adds its key once. The vertices are worked out with the same arithmetic in the same order.
     const planesOf = (pt) => {
       if (pt.planes) return pt.planes;
       const t0 = performance.now();
-      const o = pt.e.o, g = o.geometry, e = o.matrixWorld.elements, I = g.index?.array, P = g.attributes.position, A = P.array, st = P.isInterleavedBufferAttribute ? P.data.stride : 3, off = P.offset || 0, S = (pt.planes = new Set());
-      const nt = pt.T ? pt.T.length : Math.floor((I ? g.index.count : P.count) / 3);
-      const W = new Float64Array(9);
-      const vx = (i, j) => { const b = i * st + off, x = A[b], y = A[b + 1], z = A[b + 2]; W[j] = e[0] * x + e[4] * y + e[8] * z + e[12]; W[j + 1] = e[1] * x + e[5] * y + e[9] * z + e[13]; W[j + 2] = e[2] * x + e[6] * y + e[10] * z + e[14]; };
+      const o = pt.e.o, g = o.geometry, e = o.matrixWorld.elements, I = g.index?.array, P = g.attributes.position, A = P.array, st = P.isInterleavedBufferAttribute ? P.data.stride : 3, off = P.offset || 0;
+      const nt = pt.T ? pt.T.length : Math.floor((I ? g.index.count : P.count) / 3), T = pt.T;
+      const S = (pt.planes = new PlaneSet(nt));
+      const e0 = e[0], e1 = e[1], e2 = e[2], e4 = e[4], e5 = e[5], e6 = e[6], e8 = e[8], e9 = e[9], e10 = e[10], e12 = e[12], e13 = e[13], e14 = e[14];
+      let last = NaN;
       for (let k = 0; k < nt; k++) {
-        const t = pt.T ? pt.T[k] : k;
-        vx(I ? I[t * 3] : t * 3, 0); vx(I ? I[t * 3 + 1] : t * 3 + 1, 3); vx(I ? I[t * 3 + 2] : t * 3 + 2, 6);
-        const ux = W[3] - W[0], uy = W[4] - W[1], uz = W[5] - W[2], wx = W[6] - W[0], wy = W[7] - W[1], wz = W[8] - W[2];
+        const t = T ? T[k] : k;
+        let b = (I ? I[t * 3] : t * 3) * st + off, x = A[b], y = A[b + 1], z = A[b + 2];
+        const W0 = e0 * x + e4 * y + e8 * z + e12, W1 = e1 * x + e5 * y + e9 * z + e13, W2 = e2 * x + e6 * y + e10 * z + e14;
+        b = (I ? I[t * 3 + 1] : t * 3 + 1) * st + off; x = A[b]; y = A[b + 1]; z = A[b + 2];
+        const W3 = e0 * x + e4 * y + e8 * z + e12, W4 = e1 * x + e5 * y + e9 * z + e13, W5 = e2 * x + e6 * y + e10 * z + e14;
+        b = (I ? I[t * 3 + 2] : t * 3 + 2) * st + off; x = A[b]; y = A[b + 1]; z = A[b + 2];
+        const W6 = e0 * x + e4 * y + e8 * z + e12, W7 = e1 * x + e5 * y + e9 * z + e13, W8 = e2 * x + e6 * y + e10 * z + e14;
+        const ux = W3 - W0, uy = W4 - W1, uz = W5 - W2, wx = W6 - W0, wy = W7 - W1, wz = W8 - W2;
         let nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
         const L = Math.sqrt(nx * nx + ny * ny + nz * nz); if (!(L > 1e-12)) continue;
         nx /= L; ny /= L; nz /= L;
         if (nx < -1e-6 || (nx <= 1e-6 && (ny < -1e-6 || (ny <= 1e-6 && nz < 0)))) { nx = -nx; ny = -ny; nz = -nz; }
-        const db = Math.floor((nx * W[0] + ny * W[1] + nz * W[2]) / 0.02);
+        const db = Math.floor((nx * W0 + ny * W1 + nz * W2) / 0.02);
         const kn = ((Math.round(nx * 64) + 64) * 129 + (Math.round(ny * 64) + 64)) * 129 + (Math.round(nz * 64) + 64);
         if (!Number.isFinite(kn + db)) continue;
-        S.add(kn + 2.2e6 * db); S.add(kn + 2.2e6 * (db + 1));
+        const key = kn + PLANE_D * db;
+        if (key !== last) { S.add(key); last = key; }
       }
       D.planeMs += performance.now() - t0; D.planeTris += nt;
       return S;
     };
-    const coplanar = (x, y) => { let A = planesOf(x), B = planesOf(y); if (A.size > B.size) [A, B] = [B, A]; for (const k of A) if (B.has(k)) return true; return false; };
+    const coplanar = (x, y) => { let A = planesOf(x), B = planesOf(y); if (A.n > B.n) [A, B] = [B, A]; const K = A.list; for (let i = 0; i < A.n; i++) { const k = K[i]; if (B.has(k) || B.has(k + PLANE_D) || B.has(k - PLANE_D)) return true; } return false; };
     D.partsMs = performance.now() - tp; tp = performance.now();
     parts.sort((a, b) => a.ord - b.ord);
     const open = new Map(); let runs = 0;
@@ -418,15 +449,15 @@ class Area {
       const g = M.geo, I = g.index, T = M.parts.get(C.id), cnt = g.attributes.position.count;
       if (T === undefined) continue;
       if (T === null) { parts.push({ M, T, map: null, from: null, vo: nv }); nv += cnt; ni += I ? I.count - (I.count % 3) : cnt - (cnt % 3); continue; }
-      const map = new Int32Array(cnt).fill(-1), from = [];
-      for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = I ? I.getX(T[k] * 3 + j) : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
+      const map = new Int32Array(cnt).fill(-1), from = [], IA = I ? I.array : null;
+      for (let k = 0; k < T.length; k++) for (let j = 0; j < 3; j++) { const v = IA ? IA[T[k] * 3 + j] : T[k] * 3 + j; if (map[v] < 0) { map[v] = from.length; from.push(v); } }
       parts.push({ M, T, map, from, vo: nv }); nv += from.length; ni += T.length * 3;
     }
     const out = {}; for (const n of names) { const s = spec(n); out[n] = { ...s, data: new s.Arr(nv * s.size) }; }
     const index = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
     let io = 0;
     for (const { M, T, map, from, vo } of parts) {
-      const g = M.geo, I = g.index, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
+      const g = M.geo, I = g.index, IA = I ? I.array : null, m = M.o.material, nf = from ? from.length : g.attributes.position.count, src = from ? (k) => from[k] : (k) => k;
       _m.multiplyMatrices(this.inv, M.o.matrixWorld); _nm.getNormalMatrix(_m);
       for (const n of names) {
         const d = out[n].data, a = g.attributes[n === 'auv' ? 'uv' : n];
@@ -455,8 +486,14 @@ class Area {
         else if (fold && n === 'auv' && !M.fold.tex) d.fill(0, vo * 2, (vo + nf) * 2);   // (a plain piece: the white layer, anywhere)
         else if (fold && n === 'layer') d.fill(M.fold.layer, vo, vo + nf);
         else if (fold && n === 'em') { const e = m.emissive, k = m.emissiveIntensity ?? 1, r = e ? e.r * k : 0, gg = e ? e.g * k : 0, b = e ? e.b * k : 0; for (let q = 0; q < nf; q++) { d[(vo + q) * 3] = r; d[(vo + q) * 3 + 1] = gg; d[(vo + q) * 3 + 2] = b; } }
+        // (FIRST-BUILD: the map transform, colours and rm read straight from a plain attribute's array — the same values
+        //  getX/getY return and the same arithmetic as Vector3.applyMatrix3 with z = 1, in its order — without a call per
+        //  vertex: the per-cell build was 200–650 ms of a region's first build here)
+        else if (fold && (n === 'uv' || n === 'auv') && !a.normalized) { const e = m.map.matrix.elements, e0 = e[0], e1 = e[1], e3 = e[3], e4 = e[4], e6 = e[6], e7 = e[7], A = a.array, sz = a.itemSize, z = 1; for (let k = 0; k < nf; k++) { const i = (from ? from[k] : k) * sz, x = A[i], y = A[i + 1], o2 = (vo + k) * 2; d[o2] = e0 * x + e3 * y + e6 * z; d[o2 + 1] = e1 * x + e4 * y + e7 * z; } }
         else if (fold && (n === 'uv' || n === 'auv')) { const U = m.map.matrix; for (let k = 0; k < nf; k++) { _v.set(a.getX(src(k)), a.getY(src(k)), 1).applyMatrix3(U); d[(vo + k) * 2] = _v.x; d[(vo + k) * 2 + 1] = _v.y; } }
+        else if (fold && n === 'color' && (!M.fold.vc || !a.normalized)) { const c = m.color, cr = c.r, cg = c.g, cb = c.b; if (M.fold.vc) { const A = a.array, sz = a.itemSize; for (let k = 0; k < nf; k++) { const i = (from ? from[k] : k) * sz, o3 = (vo + k) * 3; d[o3] = A[i] * cr; d[o3 + 1] = A[i + 1] * cg; d[o3 + 2] = A[i + 2] * cb; } } else for (let k = 0; k < nf; k++) { const o3 = (vo + k) * 3; d[o3] = 1 * cr; d[o3 + 1] = 1 * cg; d[o3 + 2] = 1 * cb; } }
         else if (fold && n === 'color') { const c = m.color, C3 = M.fold.vc ? a : null; for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 3] = (C3 ? C3.getX(i) : 1) * c.r; d[(vo + k) * 3 + 1] = (C3 ? C3.getY(i) : 1) * c.g; d[(vo + k) * 3 + 2] = (C3 ? C3.getZ(i) : 1) * c.b; } }
+        else if (fold && n === 'rm' && M.fold.preRM && !a.normalized) { const A = a.array, sz = a.itemSize; for (let k = 0; k < nf; k++) { const i = (from ? from[k] : k) * sz; d[(vo + k) * 2] = A[i]; d[(vo + k) * 2 + 1] = A[i + 1]; } }
         else if (fold && n === 'rm' && M.fold.preRM) for (let k = 0; k < nf; k++) { const i = src(k); d[(vo + k) * 2] = a.getX(i); d[(vo + k) * 2 + 1] = a.getY(i); }
         else if (fold && n === 'rm') for (let k = 0; k < nf; k++) { d[(vo + k) * 2] = m.roughness; d[(vo + k) * 2 + 1] = m.metalness; }
         else if (!from) d.set(a.array.subarray(0, nf * a.itemSize), vo * a.itemSize);   // (same array type: the cell's key has the layout)
@@ -468,7 +505,7 @@ class Area {
         continue;
       }
       for (let k = 0; k < T.length; k++) {
-        const t = T[k], a = I ? I.getX(t * 3) : t * 3, b = I ? I.getX(t * 3 + 1) : t * 3 + 1, c = I ? I.getX(t * 3 + 2) : t * 3 + 2;
+        const t = T[k], a = IA ? IA[t * 3] : t * 3, b = IA ? IA[t * 3 + 1] : t * 3 + 1, c = IA ? IA[t * 3 + 2] : t * 3 + 2;
         index[io] = map[a] + vo; index[io + 1] = map[C.flip ? c : b] + vo; index[io + 2] = map[C.flip ? b : c] + vo; io += 3;
       }
     }
@@ -571,6 +608,15 @@ export class DrawBatch {
     return A;
   }
   has(root) { return this.areas.has(root); }
+  // FIRST-BUILD: an area's batches built now, while it is not on show (the loading screen: the room New Game or the
+  // save starts in), without the frame's check of its pieces — that runs on its first frame drawn, as for any area,
+  // and a piece changed since leaves its batch then. The same build as update()'s first one.
+  prepare(root) {
+    if (!this.enabled || !root || this.areas.has(root)) return null;
+    const A = new Area(root, this.cell, this.fold, this.arrays, this.loose, this.exact);
+    this.areas.set(root, A); this.builds = (this.builds || 0) + 1; this.buildMs = (this.buildMs || 0) + A.ms;
+    return A;
+  }
   // (PERF-CALLS: behind a scene change's black, the pieces that are back as they were rejoin their batches)
   readmit(root) { const A = this.areas.get(root); if (!A || !this.enabled) return 0; const t0 = performance.now(), n = A.readmit(); if (n) { this.readmitted = (this.readmitted || 0) + n; this.readmitMs = (this.readmitMs || 0) + performance.now() - t0; } return n; }
   meshes(root) { return this.areas.get(root)?.meshes() ?? []; }
