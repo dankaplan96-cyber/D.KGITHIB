@@ -3,8 +3,10 @@
 import * as THREE from 'three';
 
 export class Terrain {
-  constructor({ size, segs, heightFn, colorFn, splatFn, textures, cx = 0, cz = 0, tile = 70 }) {
-    this.tile = tile;
+  // squares (HEADING-LOAD-2): > 0 draws the tiles' cells in squares of that many cells a side, all in one BatchedMesh
+  // whose squares three culls one by one against the view (the caller passes it only with WEBGL_multi_draw)
+  constructor({ size, segs, heightFn, colorFn, splatFn, textures, cx = 0, cz = 0, tile = 70, squares = 0 }) {
+    this.tile = tile; this.squares = squares;
     this.splatFn = splatFn;
     this.tex = textures;
     this.size = size;
@@ -109,37 +111,79 @@ export class Terrain {
     // the island's whole terrain is ~160k triangles, so the few more drawn off-screen cost the GPU little)
     // (PERF-CALLS: an outdoor region passes bigger tiles: the desert's 300 m drew 21 of its 25 tiles from the arrival
     //  point, the Hamalayi's 9 of 16 — one call each, for ground nearly all in view; in quarters, 4 calls at most)
-    const TILE = this.tile;
+    const TILE = this.tile, SQ = [];
     for (let tj = 0; tj < this.segs; tj += TILE) {
       for (let ti = 0; ti < this.segs; ti += TILE) {
         const j1 = Math.min(this.segs, tj + TILE), i1 = Math.min(this.segs, ti + TILE);
         let hi = -1e9, lo = 1e9;
         for (let j = tj; j <= j1; j++) for (let i = ti; i <= i1; i++) { const h = this.heights[j * n + i]; if (h > hi) hi = h; if (h < lo) lo = h; }
         if (hi < -4) continue;
-        const ix = new Uint32Array((j1 - tj) * (i1 - ti) * 6);
-        let q = 0;
-        for (let j = tj; j < j1; j++) for (let i = ti; i < i1; i++) {
-          const a = j * n + i, b = a + 1, d = a + n, e = d + 1;
-          ix[q++] = a; ix[q++] = d; ix[q++] = b; ix[q++] = e; ix[q++] = b; ix[q++] = d;
-        }
-        const g = new THREE.BufferGeometry();
-        for (const [k, at] of Object.entries(geo.attributes)) g.setAttribute(k, at);
-        g.setIndex(new THREE.BufferAttribute(ix, 1));
-        const bx0 = this.x0 + ti * this.step, bx1 = this.x0 + i1 * this.step, bz0 = this.z0 + tj * this.step, bz1 = this.z0 + j1 * this.step;
-        g.boundingBox = new THREE.Box3(new THREE.Vector3(bx0, lo, bz0), new THREE.Vector3(bx1, hi, bz1));
-        g.boundingSphere = g.boundingBox.getBoundingSphere(new THREE.Sphere());
-        const m = new THREE.Mesh(g, mat);
-        m.receiveShadow = true; m.name = 'terrain';
-        // PERF-BATTERY: drawn after the other opaque things (three sorts opaque draws by renderOrder first), so the
-        // ground under houses, walls, trees and people is rejected by the depth test before its splat shader runs:
-        // on Citadel's street at Medium the terrain's shaded fragments 1.08M → 0.72M (all opaque ones 1.70M → 1.42M,
-        // for 1.04M pixels); 22–72 of 1.05M pixels differ, where something lies exactly on the ground
-        m.renderOrder = 1;
-        group.add(m);
+        if (this.squares > 0) { SQ.push([ti, tj, i1, j1, lo, hi]); continue; }
+        group.add(this._tileMesh(geo, mat, ti, tj, i1, j1, lo, hi));
       }
     }
+    if (SQ.length) { const bm = this._squares(geo, mat, SQ); bm.userData.tiles = SQ; group.add(bm); }   // (tiles: the probes rebuild them, _tileMesh)
     group.userData.full = geo; // (the whole grid, for anything that wants it in one piece)
     return group;
+  }
+
+  // one tile of the grid: its own index over the shared vertex data, its own bounds
+  _tileMesh(geo, mat, ti, tj, i1, j1, lo, hi) {
+    const n = this.segs + 1, ix = new Uint32Array((j1 - tj) * (i1 - ti) * 6);
+    let q = 0;
+    for (let j = tj; j < j1; j++) for (let i = ti; i < i1; i++) {
+      const a = j * n + i, b = a + 1, d = a + n, e = d + 1;
+      ix[q++] = a; ix[q++] = d; ix[q++] = b; ix[q++] = e; ix[q++] = b; ix[q++] = d;
+    }
+    const g = new THREE.BufferGeometry();
+    for (const [k, at] of Object.entries(geo.attributes)) g.setAttribute(k, at);
+    g.setIndex(new THREE.BufferAttribute(ix, 1));
+    const bx0 = this.x0 + ti * this.step, bx1 = this.x0 + i1 * this.step, bz0 = this.z0 + tj * this.step, bz1 = this.z0 + j1 * this.step;
+    g.boundingBox = new THREE.Box3(new THREE.Vector3(bx0, lo, bz0), new THREE.Vector3(bx1, hi, bz1));
+    g.boundingSphere = g.boundingBox.getBoundingSphere(new THREE.Sphere());
+    const m = new THREE.Mesh(g, mat);
+    m.receiveShadow = true; m.name = 'terrain';
+    // PERF-BATTERY: drawn after the other opaque things (three sorts opaque draws by renderOrder first), so the
+    // ground under houses, walls, trees and people is rejected by the depth test before its splat shader runs:
+    // on Citadel's street at Medium the terrain's shaded fragments 1.08M → 0.72M (all opaque ones 1.70M → 1.42M,
+    // for 1.04M pixels); 22–72 of 1.05M pixels differ, where something lies exactly on the ground
+    m.renderOrder = 1;
+    return m;
+  }
+
+  // HEADING-LOAD-2: the tiles drawn (those not wholly deep under the sea, as above) in squares of `squares` cells a side,
+  // each its own geometry in ONE BatchedMesh: three tests each square's bounds against the view and draws the ones in
+  // it with one multi-draw. A region's tiles are quarters of its patch (PERF-CALLS: few calls), so the ground behind
+  // the camera went to the GPU with the ground in view: the desert drew 124k triangles a frame on average over a
+  // turn for 43k in view, the Hamalayi 53k for 13k. The same vertices (positions, normals, colours, splats copied
+  // from the whole grid), the same triangles, material and draw order rule (renderOrder 1): the same pixels — two
+  // squares meet on the very same edge, where the rasteriser gives each pixel to one triangle as within a tile.
+  _squares(geo, mat, tiles) {
+    const n = this.segs + 1, S = this.squares, parts = [];
+    let nv = 0, ni = 0;
+    for (const [ti, tj, ti1, tj1] of tiles) {
+      for (let sj = tj; sj < tj1; sj += S) for (let si = ti; si < ti1; si += S) {
+        const i1 = Math.min(ti1, si + S), j1 = Math.min(tj1, sj + S), w = i1 - si + 1, h = j1 - sj + 1;
+        const g = new THREE.BufferGeometry();
+        for (const [k, at] of Object.entries(geo.attributes)) {
+          const c = at.itemSize, src = at.array, a = new src.constructor(w * h * c);
+          for (let j = 0; j < h; j++) a.set(src.subarray(((sj + j) * n + si) * c, ((sj + j) * n + si + w) * c), j * w * c);
+          g.setAttribute(k, new THREE.BufferAttribute(a, c, at.normalized));
+        }
+        const ix = new Uint32Array((w - 1) * (h - 1) * 6);
+        let q = 0;
+        for (let j = 0; j < h - 1; j++) for (let i = 0; i < w - 1; i++) {
+          const a = j * w + i, b = a + 1, d = a + w, e = d + 1;
+          ix[q++] = a; ix[q++] = d; ix[q++] = b; ix[q++] = e; ix[q++] = b; ix[q++] = d;
+        }
+        g.setIndex(new THREE.BufferAttribute(ix, 1));
+        parts.push(g); nv += w * h; ni += ix.length;
+      }
+    }
+    const bm = new THREE.BatchedMesh(parts.length, nv, ni, mat);
+    for (const g of parts) bm.addInstance(bm.addGeometry(g));
+    bm.receiveShadow = true; bm.name = 'terrain'; bm.renderOrder = 1;   // (renderOrder: PERF-BATTERY, above)
+    return bm;
   }
 
   // Texture splatting: five painted tiles blended per vertex

@@ -1,0 +1,10 @@
+desert: 1 batches (trees 144)
+heading 0°: pixels differ 0 · main 58 calls 321k tris (batches, culled) vs 58 calls 323k (InstancedMeshes, as before)
+heading 45°: pixels differ 0 · main 60 calls 287k tris (batches, culled) vs 60 calls 289k (InstancedMeshes, as before)
+heading 90°: pixels differ 0 · main 29 calls 229k tris (batches, culled) vs 29 calls 231k (InstancedMeshes, as before)
+heading 135°: pixels differ 0 · main 22 calls 149k tris (batches, culled) vs 22 calls 151k (InstancedMeshes, as before)
+heading 180°: pixels differ 0 · main 19 calls 115k tris (batches, culled) vs 19 calls 118k (InstancedMeshes, as before)
+heading 225°: pixels differ 0 · main 20 calls 134k tris (batches, culled) vs 20 calls 137k (InstancedMeshes, as before)
+heading 270°: pixels differ 0 · main 24 calls 194k tris (batches, culled) vs 24 calls 197k (InstancedMeshes, as before)
+heading 315°: pixels differ 0 · main 35 calls 274k tris (batches, culled) vs 35 calls 276k (InstancedMeshes, as before)
+worst 0 pixels differ

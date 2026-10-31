@@ -160,6 +160,37 @@ export function instances(parent, geo, mat, list, { cast = true, receive = true 
   parent.add(im);
   return im;
 }
+// HEADING-LOAD-2: a region's static instances that cast a shadow (the Zeelich islands' sculpted trees, bushes and
+// rocks, Zeelich's puff trees and rocks), drawn per instance where each pass can see it. As one InstancedMesh per kind
+// three culls them only as a whole: the sphere covers the island, so every tree went to the GPU in the view whatever
+// the camera faced (Otringal: 1.1–1.3M triangles a frame). Here they go into one BatchedMesh per kind (LodBatch below
+// with no coarse version: the same geometry, matrices, colours and material, no distance detail), whose instances
+// three tests one by one against the frustum of each pass — the view's camera in the main pass, the sun's in the
+// shadow pass, so a tree out of the view still casts into it. The shadow cache takes it as a static caster, as it does
+// Citadel's trees (main.js, LOD_BATCHES). Non-casters are left to the caller (viewinst.js). Without WEBGL_multi_draw
+// (BATCH.on false), or with CULL_INST.on false at build time: an InstancedMesh, as before.
+// CULL_INST.list: the batches made here (benchgpu.js turns their per-instance test off to price it).
+// opts.lo: () => a coarse version, for a TRADE-OFF that is OFF. Only probes build it (CULL_INST.lo true before the area
+// is built; play never makes it); with CULL_INST.far on, these batches then switch to it beyond the preset's distance
+// as Citadel's trees do (and cast with it, LodBatch below); off, it is never drawn (LodBatch.lod false). benchgpu.js
+// prices it ('island trees coarse beyond …').
+export const CULL_INST = { on: true, lo: false, far: false, list: [], batches: [] };
+export function cullInstances(parent, geo, mat, list, opts = {}) {
+  if (!CULL_INST.on || !BATCH.on || list.length < 2 || opts.cast === false) return instances(parent, geo, mat, list, opts);
+  const B = new LodBatch(parent, mat, opts), o = new THREE.Object3D(), c = new THREE.Color(), lo = CULL_INST.lo && opts.lo ? opts.lo() : null;
+  B.lod = lo ? CULL_INST.far : false;
+  for (const it of list) {
+    o.position.set(it.x, it.y, it.z); o.rotation.set(it.rx || 0, it.ry || 0, it.rz || 0, 'YXZ');
+    if (it.s != null) o.scale.setScalar(it.s); else o.scale.set(it.sx ?? 1, it.sy ?? 1, it.sz ?? 1);
+    o.updateMatrix();
+    B.add(geo, lo, o.matrix, it.color ? c.set(it.color) : null);
+  }
+  const bm = B.build(); bm.userData.cullSrc = geo;   // (the probes rebuild it as an InstancedMesh for a same-frame A/B)
+  CULL_INST.list.push(bm); CULL_INST.batches.push(B);
+  return bm;
+}
+// (the trade-off above, for benchgpu.js: the coarse versions beyond the preset's distance, on or off)
+export function setCullInstFar(on) { CULL_INST.far = !!on; for (const B of CULL_INST.batches) if (B.inst?.some((I) => I.lo >= 0)) B.lod = CULL_INST.far; }
 // Instances in ~32 m tiles with a coarse stand-in for distant tiles (the regions' trees and rocks). The tiles
 // switch in updateKitLod(focus) — called every frame for the active region — with 4 m of hysteresis.
 export const KIT_LOD = { tiles: [] };
@@ -408,6 +439,7 @@ export class LodBatch {
     // the shadow pass: every instance with a coarse sculpt casts with it (three culls/sorts in onBeforeShadow)
     const base = bm.onBeforeShadow.bind(bm);
     bm.onBeforeShadow = (...a) => {
+      if (this.lod === false) return base(...a);   // (HEADING-LOAD-2: cullInstances' batches, their coarse version off)
       for (const I of this.inst) if (I.lo >= 0 && I.near) bm.setGeometryIdAt(I.k, I.lo);
       base(...a);
       for (const I of this.inst) if (I.lo >= 0 && I.near) bm.setGeometryIdAt(I.k, I.hi);
@@ -418,6 +450,7 @@ export class LodBatch {
   // focus in world coordinates (the parent is a group placed without rotation or scale)
   update(focus, near = LOD_DETAIL.near) {
     const bm = this.mesh; if (!bm || !bm.visible || !this.parent.visible) return;
+    if (this.lod === false) near = Infinity;   // (cullInstances' batches with their coarse version off: every instance detailed)
     const ox = this.parent.position.x, oz = this.parent.position.z;
     for (const I of this.inst) {
       if (I.lo < 0) continue;

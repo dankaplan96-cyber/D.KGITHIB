@@ -1,0 +1,10 @@
+isle_otringal: 1 batches (terrain 4) — the terrain: squares vs its tiles
+heading 0°: pixels differ 0 · main 35 calls 335k tris (this build: batches culled per instance or square) vs 38 calls 350k (as before: InstancedMeshes, or the terrain's tiles)
+heading 45°: pixels differ 0 · main 38 calls 439k tris (this build: batches culled per instance or square) vs 41 calls 454k (as before: InstancedMeshes, or the terrain's tiles)
+heading 90°: pixels differ 0 · main 42 calls 580k tris (this build: batches culled per instance or square) vs 45 calls 594k (as before: InstancedMeshes, or the terrain's tiles)
+heading 135°: pixels differ 0 · main 43 calls 591k tris (this build: batches culled per instance or square) vs 46 calls 609k (as before: InstancedMeshes, or the terrain's tiles)
+heading 180°: pixels differ 0 · main 44 calls 616k tris (this build: batches culled per instance or square) vs 47 calls 634k (as before: InstancedMeshes, or the terrain's tiles)
+heading 225°: pixels differ 0 · main 42 calls 538k tris (this build: batches culled per instance or square) vs 45 calls 558k (as before: InstancedMeshes, or the terrain's tiles)
+heading 270°: pixels differ 0 · main 38 calls 450k tris (this build: batches culled per instance or square) vs 41 calls 467k (as before: InstancedMeshes, or the terrain's tiles)
+heading 315°: pixels differ 0 · main 36 calls 292k tris (this build: batches culled per instance or square) vs 39 calls 308k (as before: InstancedMeshes, or the terrain's tiles)
+worst 0 pixels differ

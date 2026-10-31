@@ -1,0 +1,6 @@
+# name probe settings — the terrain in squares (terrain.js), same-frame A/B against its old tiles; the Hamalayi's existing tree trade-off
+trepr-desert q_repr.js W_AREA=desert W_TERRAIN=1
+trepr-hamalayi q_repr.js W_AREA=hamalayi W_TERRAIN=1
+trepr-otringal q_repr.js W_AREA=isle_otringal W_TERRAIN=1
+trepr-knartas q_repr.js W_AREA=isle_knartas W_TERRAIN=1
+trade3-hamalayi q_area.js W_AREA=hamalayi W_FAST=1 W_SHOTS=1 W_VARS=trees_detailed_to_22

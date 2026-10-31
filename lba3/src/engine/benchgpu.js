@@ -8,18 +8,22 @@
 //   main  the view; shadow  the sun's shadow map (three passes scene === null there)
 // Groups (same rules as the audit probes, docs/lba3-performance/gpu/):
 //   terrain · water · sky (cloud ceiling, rain) · characters (every actor's rig: hero, people, enemies, pets) ·
-//   trees (trees, bushes, rocks: kit.js LodBatch) · grass (grass, flowers, tulips: world.js smallPool) ·
+//   trees (trees, bushes, rocks: kit.js LodBatch; a region's own: userData.gpuGroup) · grass (grass, flowers, tulips:
+//   world.js smallPool; a region's own: userData.gpuGroup) ·
 //   particles (soft particles, blob shadows, points) · transparent (other blended surfaces) · scenery (the rest)
 import * as THREE from 'three';
 import { warmPassPrograms } from './warmup.js';
 import { arrayTextures } from './texarray.js';
 import { textures } from './textures.js';
-import { LOD_DETAIL } from '../game/kit.js';
+import { LOD_DETAIL, CULL_INST, setCullInstFar, updateKitLod } from '../game/kit.js';
 import { setViewInst } from './viewinst.js';
 
 export function gpuGroupOf(G, o, m) {
   const E = G.env;
   if (o.name === 'terrain') return 'terrain';
+  // (HEADING-LOAD-2: the regions' own vegetation — Zeelich's and the islands' instanced trees, rocks, grass and
+  //  flowers, the desert's shrubs — named by their builders: they were counted as scenery)
+  const own = o.userData.gpuGroup; if (own) return own;
   if (E && o === E.water) return 'water';
   if (E && (o === E.clouds || o === E.rain)) return 'sky';
   if (o.isSkinnedMesh || isCharacter(G, o)) return 'characters';
@@ -100,6 +104,12 @@ export const GPU_VARIANTS = [
   // trade-offs it prepared (off in play; compare with 'as is': what each would save)
   { id: 'GPU: grass/flowers not culled to the view (as before)', apply(G) { G.world?.setSmallView?.(false); }, undo(G) { G.world?.setSmallView?.(true); } },
   { id: 'GPU: instanced decoration not culled to the view (as before)', apply() { setViewInst(false); }, undo() { setViewInst(true); } },
+  // HEADING-LOAD-2: the regions' casting instances (kit.js cullInstances) drawn in full in every pass, as their InstancedMeshes were
+  { id: 'GPU: region instances not culled per instance (as before)', apply() { for (const b of CULL_INST.list) b.perObjectFrustumCulled = false; }, undo() { for (const b of CULL_INST.list) b.perObjectFrustumCulled = true; } },
+  // (trade-off, not in play: the islands' trees, bushes and rocks coarse beyond the preset's distance and casting with
+  //  their coarse version, as Citadel's are; only where a probe had the coarse versions built, kit.js CULL_INST.lo; the
+  //  static shadow cache redrawn, so the shadows are priced too)
+  { id: 'GPU: island trees coarse beyond the preset distance (trade-off)', apply(G) { setCullInstFar(true); updateKitLod(G.hero.pos); G.shadowCache?.drop?.(); }, undo(G) { setCullInstFar(false); updateKitLod(G.hero.pos); G.shadowCache?.drop?.(); } },
   // (trade-offs, not in play: grass and flowers half as dense beyond 28 m from Twinsen, in 9 m squares)
   { id: 'GPU: grass/flowers half beyond 28 m (trade-off)', apply(G) { G.world?.setSmallThin?.({ from: 28, keep: 0.5 }); }, undo(G) { G.world?.setSmallThin?.(null); } },
   // the static shadow cache's depth into the live map by a framebuffer blit, as before (shadowcache.js copyDepth)
