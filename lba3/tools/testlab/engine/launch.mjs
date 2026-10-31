@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { serve } from './server.mjs';
 import { sleep } from './util.mjs';
+import { execFileSync } from 'node:child_process';
 
 export class LaunchError extends Error { constructor(msg, kind = 'launch') { super(msg); this.kind = kind; } }
 
@@ -28,7 +29,9 @@ export async function launch(opts) {
   if (target === 'packaged') {
     if (!opts.game || !fs.existsSync(opts.game)) throw new LaunchError(`game EXE not found: ${opts.game || '(none selected)'}`);
     try {
-      H.app = await electron.launch({ executablePath: opts.game, args: [`--user-data-dir=${profileDir}`, ...appArgs], timeout: 120000 });
+      // (the Test Lab window runs this engine with ELECTRON_RUN_AS_NODE: the game, an Electron app too, must not inherit it)
+      const env = { ...process.env }; delete env.ELECTRON_RUN_AS_NODE;
+      H.app = await electron.launch({ executablePath: opts.game, args: [`--user-data-dir=${profileDir}`, ...appArgs], env, timeout: 120000 });
     } catch (e) {
       throw new LaunchError(`the game did not start under automation (${e.message.split('\n')[0]}). A production EXE may not allow a debugging connection: use the development build, or a test build that allows it.`);
     }
@@ -108,4 +111,15 @@ export async function processMetrics(H) {
     await cdp.detach();
     return processInfo ? { cpuTimeS: +processInfo.reduce((a, p) => a + p.cpuTime, 0).toFixed(1), workingSetMB: 'Unavailable (browser)', processes: processInfo.length } : { cpuPercent: 'Unavailable', workingSetMB: 'Unavailable' };
   } catch { return { cpuPercent: 'Unavailable', workingSetMB: 'Unavailable' }; }
+}
+
+// Cleanup after an interrupted run: game or browser processes still running with a Test Lab profile (their command
+// line names the profile folder). Only those: the player's own game and Chrome windows are never touched.
+export function cleanupStale(profileRoot) {
+  const needle = path.resolve(profileRoot).replace(/'/g, "''");
+  try {
+    const out = execFileSync('powershell', ['-NoProfile', '-NonInteractive', '-Command',
+      `$n = '${needle}'; $p = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($n) -and $_.ProcessId -ne $PID }; $p | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; @($p).Count`], { encoding: 'utf8', timeout: 30000 });
+    return +out.trim() || 0;
+  } catch { return 0; }
 }

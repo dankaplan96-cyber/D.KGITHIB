@@ -1,0 +1,13 @@
+test,window,build,run,status,frames,seconds,fps,p50,p95,p99,max,missedRefreshes,over33,over50,over100,stallsVisible,stallsBehindLoading,cpuWorkP50,gpuP50,callsP50,trianglesP50
+cold-launch,launch,0.43.3 (build 292),1,passed,,,,,,,,,,,,,,,,,
+title-to-play,New Game until playable,0.43.3 (build 292),1,passed,35,1.98,17.6,16.7,50,1216.5,1216.5,84,6,1,1,1,0,8.9,10.72,46,214079
+region-entry,zeelich · first visit (built before: unloaded),0.43.3 (build 292),1,passed,249,9.17,27.2,16.9,33.5,66.7,2116.6,301,17,6,2,4,2,16,17.98,147,403739
+region-entry,desert · first visit (built before: unloaded),0.43.3 (build 292),1,passed,271,7.58,35.7,16.7,33.2,50,1549.7,184,7,2,2,0,2,7.7,14.09,55,242749
+region-entry,hamalayi · first visit (built before: unloaded),0.43.3 (build 292),1,passed,254,7.57,33.6,16.7,33.4,66.7,1633.2,200,9,3,2,0,3,6.3,14.81,41,267441
+region-entry,zeelich · second visit (built before: cached),0.43.3 (build 292),1,passed,259,5.85,44.3,16.8,33.5,33.7,166.5,92,15,1,1,0,1,14.4,17.75,149,403903
+region-entry,desert · second visit (built before: cached),0.43.3 (build 292),1,passed,296,5.8,51,16.7,33.4,49.9,166.3,52,7,2,1,1,1,9.9,14.3,55,242749
+region-entry,hamalayi · second visit (built before: cached),0.43.3 (build 292),1,passed,376,7.02,53.6,16.7,33.4,33.6,34.1,45,7,0,0,0,0,6.9,14.84,41,267441
+street-traversal,street walk 20 s,0.43.3 (build 292),1,passed,922,20.38,45.2,16.8,33.4,33.7,100,301,40,2,0,2,0,13.6,17.37,130,444250
+door-house-exit,walk through the door,0.43.3 (build 292),1,failed,589,9.87,59.7,16.7,16.9,17.2,33.4,3,0,0,0,0,0,5.8,11.3,48,214075
+combat-arena,arena fight 15 s,0.43.3 (build 292),1,passed,838,14.15,59.2,16.7,17,33.3,33.7,11,2,0,0,0,0,6.9,9.82,150,231820
+memory-long-walk,street loop 3 min,0.43.3 (build 292),1,passed,6595,142.93,46.1,16.8,33.4,33.6,100.4,1981,255,3,1,3,0,12.9,17.41,125,466310

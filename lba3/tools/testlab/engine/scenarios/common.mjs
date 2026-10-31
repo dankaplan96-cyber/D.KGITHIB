@@ -3,14 +3,28 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { frameStats, sleep, writeJson } from '../util.mjs';
-import { mark, windowData, gameState, gameSettings, counters, eventsSince, quiet } from '../probe.mjs';
+import { mark, windowData, gameState, gameSettings, counters, eventsSince, quiet, installProbe } from '../probe.mjs';
 import { startProfile, stopProfile } from '../trace.mjs';
 
 export function assert(rec, name, ok, expected, observed) { rec.assertions.push({ name, ok: !!ok, expected: String(expected), observed: String(observed) }); return !!ok; }
 export class Blocked extends Error { constructor(m) { super(m); this.blocked = true; } }
 
-// New Game from the title, as a player does: a real click; the "start a new game?" prompt (a profile with a save) confirmed
+// back to the title as a player does: Esc → Quit to title (the game saves and reloads the page); the probe is installed again
+export async function toTitle(page) {
+  // (on the title the game reports screen 'title' with state 'loading')
+  if (await page.evaluate(() => game.screen === 'title')) return;
+  if (await page.evaluate(() => game.state !== 'pause')) { await page.keyboard.press('Escape'); await sleep(600); }
+  const reloaded = page.waitForEvent('load', { timeout: 120000 }).catch((e) => e);
+  await page.click('#pause [data-act="quit"]', { timeout: 30000 });
+  const r = await reloaded; if (r instanceof Error) throw r;
+  await page.waitForFunction(() => window.game && game.screen === 'title' && !game.preparing && document.querySelector('#loading')?.classList.contains('hidden'), null, { timeout: 300000 });
+  await installProbe(page);
+}
+// New Game from the title, as a player does: a real click once the title menu is really up (without ?nocine a splash
+// shows "Building Citadel…" first); the "start a new game?" prompt (a profile with a save) confirmed
 export async function newGame(page, { timeoutMs = 300000 } = {}) {
+  await toTitle(page);
+  await page.waitForFunction(() => game.screen === 'title' && !game.preparing && !!document.querySelector('[data-act="new"]')?.offsetParent, null, { timeout: timeoutMs });
   await page.click('[data-act="new"]', { timeout: 60000 });
   await sleep(800);
   if (await page.evaluate(() => game.screen === 'confirmnew')) await page.click('[data-act="newyes"]', { timeout: 30000 });
@@ -54,7 +68,7 @@ export async function measure(ctx, label, body, { perf = true, maxShots = 3 } = 
         if (shots < maxShots) {
           shots++;
           await quiet(page, 1500);
-          await page.screenshot({ path: path.join(dir, 'evidence', base + '.png') }).then(() => { item.screenshot = `evidence/${base}.png`; }).catch(() => {});
+          await page.screenshot({ path: path.join(dir, 'evidence', base + '.jpg'), type: 'jpeg', quality: 75 }).then(() => { item.screenshot = `evidence/${base}.jpg`; }).catch(() => {});
         }
         evidence.push(item);
       }
@@ -76,7 +90,9 @@ export async function measure(ctx, label, body, { perf = true, maxShots = 3 } = 
   // the GPU samples resolved inside the window, as a per-window distribution (not matched frame by frame: they resolve later)
   const stats = frameStats(clean);
   if (stats) { const g = data.gpu.map((x) => x.ms).sort((a, b) => a - b); stats.gpuP50 = g.length ? g[Math.floor(g.length / 2)] : data.gpuAvailable ? 'no samples' : 'Unavailable'; stats.gpuP95 = g.length ? g[Math.min(g.length - 1, Math.floor(0.95 * g.length))] : stats.gpuP50; stats.tainted = data.frames.length - clean.length; }
-  const after = { state: await gameState(page), counters: await counters(page) };
+  const after = { state: await gameState(page), counters: await counters(page), settings: await gameSettings(page) };
+  // GPU time by render pass (the game's own timer query keeps a median per pass label): where the GPU's time goes
+  const gpuPasses = await page.evaluate(() => { try { return game.perf.gpuTimer?.stats()?.passes ?? null; } catch { return null; } });
   for (const item of evidence) {
     item.loaf = data.loaf.filter((l) => Math.abs(l.t + l.ms - item.frame.t) < 200);
     writeJson(path.join(dir, item.file), item);
@@ -84,8 +100,8 @@ export async function measure(ctx, label, body, { perf = true, maxShots = 3 } = 
   }
   const s = before.settings;
   rec.windows.push({ label, perf, stats, before, after, frames: data.frames, gpu: data.gpu, loaf: data.loaf, memory: data.memory, stalls: evidence.map((e) => e.file),
-    settings: `${s.auto ? 'Auto ' + (s.autoLabel || '') : s.quality} · pixel ratio ${s.pixelRatio} · scale ${s.effScale} · MSAA ${s.config?.msaa} · shadows ${s.config?.shadows} · lamps ${s.config?.lamps} · battery ${s.battery}`,
-    gpuTimer: data.gpuAvailable ? 'yes' : 'Unavailable', longFrames: data.loafAvailable ? 'yes' : 'Unavailable', toolOverheadMs: data.overheadMs, profile, traced: !!prof });
+    settings: `${s.auto ? 'Auto ' + (s.autoLabel || '') : s.quality} · pixel ratio ${s.pixelRatio} · scale ${s.effScale} → ${after.settings.effScale} · MSAA ${s.config?.msaa} · shadows ${s.config?.shadows} · lamps ${s.config?.lamps} · battery ${s.battery}`,
+    gpuTimer: data.gpuAvailable ? 'yes' : 'Unavailable', longFrames: data.loafAvailable ? 'yes' : 'Unavailable', toolOverheadMs: data.overheadMs, profile, traced: !!prof, gpuPasses });
   if (perf && stats && (stats.over50 || stats.fps < 50)) ctx.finding(`${rec.title}, ${label}: ${stats.fps} fps, ${stats.over50} frames over 50 ms`);
   return { result, stats, before, after, evidence };
 }

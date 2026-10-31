@@ -59,11 +59,12 @@ h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:24px 0 8px;border-bott
 <h2>What failed</h2>${li(by('failed'), (t) => `<b>${esc(t.title)}</b>: ${esc(t.note || '')}${(t.assertions || []).filter((a) => !a.ok).map((a) => `<br><span class="mut">${esc(a.name)} — expected ${esc(a.expected)}, observed ${esc(a.observed)}</span>`).join('')}`)}
 <h2>What is slow</h2>${li(slow, ({ t, w }) => `<b>${esc(t.title)}</b> · ${esc(w.label)}: ${esc(statsCell(w.stats))}`)}
 <h2>What to fix first</h2>${li(run.findings, (f) => `<b>${esc(f.id)}</b> ${esc(f.severity)} · ${esc(f.title)} <span class="mut">(${esc(f.confidence)})</span><br>${esc(f.observed)}${f.evidence?.filter((e) => /\.(png|jpg)$/.test(e)).map((e) => `<br><img src="${esc(e)}" alt="">`).join('') || ''}`)}
+<h2>Needs visual judgment</h2>${li(T.filter((t) => t.needsVisualJudgment), (t) => `${esc(t.title)}: ${t.evidence.filter((e) => /.html$/.test(e)).map((e) => `<a href="${esc(e)}">${esc(e)}</a>`).join(', ')} <span class="mut">— not judged by the tool</span>`)}
 <h2>What was not tested</h2>${li([...by('not_tested'), ...by('blocked')], (t) => `${esc(t.title)} — ${STATUS[t.status]}: ${esc(t.note || '')}`)}
 <h2>Coverage</h2><div class="wrap"><table><tr><th>Test</th><th>Result</th><th>How</th><th>Assertions</th><th>Time</th></tr>
 ${T.map((t) => `<tr><td>${esc(t.title)}</td><td class="${STATUS[t.status]}">${STATUS[t.status]}</td><td>${esc(method(t))}</td><td>${(t.assertions || []).filter((a) => a.ok).length}/${(t.assertions || []).length}</td><td>${t.durationMs != null ? (t.durationMs / 1000).toFixed(0) + ' s' : ''}</td></tr>`).join('')}</table></div>
 <h2>Measurements</h2><div class="wrap"><table><tr><th>Test</th><th>Window</th><th>Frames</th></tr>
-${T.flatMap((t) => (t.windows || []).map((w) => `<tr><td>${esc(t.title)}</td><td>${esc(w.label)}</td><td>${esc(statsCell(w.stats))}${w.settings ? `<br><span class="mut">${esc(w.settings)}</span>` : ''}</td></tr>`)).join('')}</table></div>
+${T.flatMap((t) => (t.windows || []).map((w) => `<tr><td>${esc(t.title)}</td><td>${esc(w.label)}</td><td>${esc(statsCell(w.stats))}${w.settings ? `<br><span class="mut">${esc(w.settings)}</span>` : ''}${w.gpuPasses && Object.keys(w.gpuPasses).length ? `<br><span class="mut">GPU by pass (p50 ms): ${esc(Object.entries(w.gpuPasses).map(([k, v]) => `${k} ${v}`).join(' · '))}</span>` : ''}</td></tr>`)).join('')}</table></div>
 <h2>Run conditions</h2><p class="mut">${esc(m.conditions.join(' · '))}</p>
 <p class="mut">Files: results.json (raw frame records), summary.csv, claude-tasks.md, manifest.json, evidence/. "Unavailable" means the machine or the game does not report it.</p>
 </body></html>`;

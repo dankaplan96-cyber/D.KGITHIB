@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+<title>LBA3 Test Lab</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1d2128;--mut:#5c6470;--line:#dde1e6;--acc:#2f6fd6;--bad:#c62828;--ok:#1a7f37}
+@media (prefers-color-scheme:dark){:root{--bg:#15181d;--card:#1d2128;--fg:#e6e9ee;--mut:#9aa3ae;--line:#2b3038;--acc:#5b9bff;--bad:#ff6b6b;--ok:#4cc26a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 "Segoe UI",system-ui,sans-serif;padding:14px}
+h1{font-size:18px;margin:0 0 10px}.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.path{color:var(--mut);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+button{font:inherit;padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:6px;cursor:pointer}
+button.main{background:var(--acc);border-color:var(--acc);color:#fff}button.stop{border-color:var(--bad);color:var(--bad)}button:disabled{opacity:.45;cursor:default}
+label{display:flex;gap:4px;align-items:center}.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:var(--acc);width:0}
+.k{color:var(--mut);width:110px;flex:none}.v{flex:1;min-width:0}.find{color:var(--bad)}.okc{color:var(--ok)}#msg{white-space:pre-wrap;font-size:12px;color:var(--mut)}
+</style></head><body>
+<h1>LBA3 Test Lab</h1>
+<div class="card">
+  <div class="row"><label><input type="radio" name="t" value="packaged"> Game</label><span class="path" id="game">—</span><button id="bGame">Select Game</button></div>
+  <div class="row" style="margin-top:6px"><label><input type="radio" name="t" value="dev"> Project</label><span class="path" id="project">—</span><button id="bProject">Select Project</button></div>
+</div>
+<div class="card row">
+  <button class="main" id="bQuick">Run Quick Check</button><button class="main" id="bFull">Run Full Test</button>
+  <button id="bRepro">Reproduce Issue</button><button id="bCompare">Compare Builds</button><button id="bReport">Open Report</button>
+  <button id="bFix">Fix and Retest</button><button class="stop" id="bStop" disabled>Stop</button>
+</div>
+<div class="card">
+  <div class="row"><span class="k">Now</span><span class="v" id="now">Idle</span></div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="row"><span class="k">Progress</span><span class="v" id="prog">—</span></div>
+  <div class="row"><span class="k">Elapsed</span><span class="v" id="el">—</span></div>
+  <div class="row"><span class="k">Latest finding</span><span class="v find" id="fi">—</span></div>
+  <div class="row"><span class="k">Last result</span><span class="v" id="res">—</span></div>
+</div>
+<div id="msg"></div>
+<script>
+const $ = (id) => document.getElementById(id);
+let t0 = 0, timer = 0, passed = 0, failed = 0;
+const show = (s) => { $('game').textContent = s.cfg.game || '—'; $('project').textContent = s.cfg.project || '—'; for (const r of document.querySelectorAll('input[name=t]')) r.checked = r.value === s.cfg.target; };
+const busy = (on) => { for (const b of ['bQuick', 'bFull', 'bRepro', 'bCompare', 'bFix', 'bGame', 'bProject']) $(b).disabled = on; $('bStop').disabled = !on; };
+const tick = () => { const s = Math.round((Date.now() - t0) / 1000); $('el').textContent = `${Math.floor(s / 60)} min ${s % 60} s`; };
+lab.state().then((s) => { show(s); busy(s.running); $('bFix').title = s.claude ? 'Claude Code found: ' + s.claude : 'Claude Code command not found: exports the task file and the command instead'; });
+for (const r of document.querySelectorAll('input[name=t]')) r.onchange = () => lab.target(r.value);
+$('bGame').onclick = async () => show({ cfg: await lab.selectGame() });
+$('bProject').onclick = async () => show({ cfg: await lab.selectProject() });
+$('bQuick').onclick = () => lab.run('quick'); $('bFull').onclick = () => lab.run('full');
+$('bRepro').onclick = () => lab.reproduce(); $('bCompare').onclick = () => lab.compare(); $('bReport').onclick = () => lab.openReport();
+$('bStop').onclick = () => { lab.stop(); $('now').textContent = 'Stopping safely…'; };
+$('bFix').onclick = async () => { const r = await lab.fix(); $('msg').textContent = r?.text || ''; };
+lab.on((e) => {
+  if (e.type === 'running') { busy(true); t0 = e.t0; passed = failed = 0; clearInterval(timer); timer = setInterval(tick, 1000); $('fi').textContent = '—'; $('msg').textContent = ''; $('now').textContent = 'Starting…'; $('bar').style.width = '0'; }
+  if (e.type === 'idle') { busy(false); clearInterval(timer); $('now').textContent = e.error ? 'Ended with an error: ' + e.error : 'Idle'; }
+  if (e.type !== 'event') return;
+  const v = e;
+  if (v.type === 'start') $('prog').textContent = `0 of ${v.total}`;
+  if (v.type === 'test') { $('now').textContent = v.title; $('prog').textContent = `${v.index} of ${v.total} · ${passed} passed · ${failed} failed`; $('bar').style.width = `${(100 * (v.index - 1)) / v.total}%`; }
+  if (v.type === 'done') { if (v.status === 'passed') passed++; else if (v.status === 'failed') failed++; }
+  if (v.type === 'status') $('now').textContent = v.text;
+  if (v.type === 'finding') $('fi').textContent = v.text;
+  if (v.type === 'fatal') $('fi').textContent = v.text;
+  if (v.type === 'end') { $('bar').style.width = '100%'; $('res').innerHTML = `${v.stopped ? 'Stopped · ' : ''}<span class="okc">${passed} passed</span> · ${failed} failed · ${v.findings} findings${v.verdict ? ' · ' + v.verdict : ''}`; }
+});
+</script></body></html>

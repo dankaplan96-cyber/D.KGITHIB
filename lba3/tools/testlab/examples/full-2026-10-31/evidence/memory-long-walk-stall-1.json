@@ -1,0 +1,84 @@
+{
+  "file": "evidence/memory-long-walk-stall-1.json",
+  "frame": {
+    "t": 108053.1,
+    "ms": 100.4,
+    "real": 0.10039999999999417,
+    "sim": 13.699999988079071,
+    "render": 9.099999994039536,
+    "black": false,
+    "calls": 138,
+    "tris": 451344,
+    "shadowCalls": 18,
+    "draws": 143,
+    "up": 19,
+    "upKB": 108.3515625,
+    "lag": 0,
+    "why": "frame before: work 17 ms",
+    "lamps": 2
+  },
+  "at": {
+    "t": 108076.1,
+    "state": "play",
+    "screen": null,
+    "room": "citadel",
+    "trans": false,
+    "cine": false,
+    "pos": [
+      -41.38,
+      2.2,
+      3.34
+    ],
+    "angle": -35.779,
+    "hp": 4,
+    "mp": 8,
+    "camera": {
+      "view": 0,
+      "yaw": 4.712,
+      "pitch": 0.46
+    },
+    "chapter": "well",
+    "objective": "<b>Check the well</b>"
+  },
+  "counters": {
+    "geometries": 1008,
+    "textures": 234,
+    "programs": 83,
+    "heapMB": 361.8,
+    "drawBatchBuilds": 1,
+    "drawBatchMs": 1867,
+    "shadowBatchBuilds": 1,
+    "shadowCache": {
+      "full": 3,
+      "sliced": 288,
+      "swaps": 36,
+      "drops": 2
+    },
+    "regionsBuilt": 2,
+    "uploads": 8,
+    "jobs": {
+      "p": 83,
+      "g": 1008,
+      "x": 234,
+      "sc": 3,
+      "scd": 2,
+      "db": 1866.699999988079,
+      "dbn": 1,
+      "sb": 324.80000001192093,
+      "sbn": 1,
+      "up": 8,
+      "aq": 4,
+      "h": 379332819,
+      "rt": 5
+    }
+  },
+  "screenshot": "evidence/memory-long-walk-stall-1.jpg",
+  "loaf": [
+    {
+      "t": 107940.4,
+      "ms": 111.9,
+      "blocking": 0,
+      "scripts": []
+    }
+  ]
+}

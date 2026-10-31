@@ -1,5 +1,5 @@
 // Command line (the window runs this same file as a child process):
-//   node engine/cli.mjs quick|full   [--game <exe> | --project <game folder>] [--runs <dir>]
+//   node engine/cli.mjs quick|full|visual   [--game <exe> | --project <game folder>] [--runs <dir>]
 //   node engine/cli.mjs reproduce <scenario.json>
 //   node engine/cli.mjs compare --game <baseline exe> --candidate <exe> [--test street] [--repeats 3]
 //   node engine/cli.mjs selftest      (the tool's own failure handling)
@@ -19,13 +19,15 @@ const saved = readJson(path.join(runsDir, 'config.json'), {});
 const game = opt('game', saved.game), project = opt('project', saved.project);
 const target = opt('target', argv.includes('--project') ? 'dev' : game ? 'packaged' : 'dev');
 
-process.stdin.on('data', (d) => { if (/stop/.test(String(d))) requestStop(); });
+process.stdin.on("data", (d) => { if (/stop/.test(String(d))) requestStop(); });
 process.on('SIGINT', requestStop);
+// a stray rejection from a test (a page that closed under a pending wait) is reported, never a crash of the whole run
+process.on('unhandledRejection', (e) => emit('finding', { text: 'tool: unhandled ' + String(e?.message || e).split(/\r?\n/)[0] }));
 process.on('SIGTERM', requestStop);
 
-const base = { runsDir, game, project, target };
+const only = opt('only'); const base = { runsDir, game, project, target, ...(only ? { only: only.split(',') } : {}) };
 try {
-  if (cmd === 'quick' || cmd === 'full') await runSuite({ ...base, suite: cmd });
+  if (cmd === 'quick' || cmd === 'full' || cmd === 'visual') await runSuite({ ...base, suite: cmd });
   else if (cmd === 'reproduce') {
     const file = argv[1];
     if (!file || !fs.existsSync(file)) throw new Error(`no reproduction scenario at ${file || '(none given)'}`);
@@ -34,6 +36,9 @@ try {
   } else if (cmd === 'compare') {
     const { compareBuilds } = await import('./compare.mjs');
     await compareBuilds({ runsDir, baseline: { target, game, project }, candidate: { target: opt('candidate-target', 'packaged'), game: opt('candidate'), project: opt('candidate-project') }, test: opt('test', 'street-traversal'), repeats: +opt('repeats', 3) });
+  } else if (cmd === 'repair') {
+    const { repair } = await import('./repair.mjs');
+    await repair({ runDir: argv[1], project, runsDir });
   } else if (cmd === 'selftest') {
     const { selftest } = await import('./selftest.mjs');
     await selftest({ runsDir, game, project });

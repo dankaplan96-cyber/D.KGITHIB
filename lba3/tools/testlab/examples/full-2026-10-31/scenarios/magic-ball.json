@@ -1,0 +1,7 @@
+{
+  "test": "magic-ball",
+  "target": "packaged",
+  "game": "C:/Users/dan/lba3-games/0.43.3/LBA3 The Awakening.exe",
+  "created": "2026-10-31T14:40:48.945Z",
+  "note": "run this test again on its own; detailed tracing on"
+}

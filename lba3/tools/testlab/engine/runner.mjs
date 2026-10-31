@@ -3,7 +3,7 @@
 // stdout (the window shows the current test, progress, elapsed time and the latest finding; nothing else).
 import fs from 'node:fs';
 import path from 'node:path';
-import { launch, LaunchError, display } from './launch.mjs';
+import { launch, LaunchError, display, cleanupStale } from './launch.mjs';
 import { TOOL_VERSION, stamp, powerSource, hardware, gitCommit, sleep } from './util.mjs';
 import { installProbe } from './probe.mjs';
 import { analyse } from './findings.mjs';
@@ -26,7 +26,10 @@ export async function runSuite(cfg) {
     conditions: [], stopped: false,
   };
   const run = { dir, manifest, tests: [], findings: [] };
-  const plan = SCENARIOS.filter((s) => (cfg.only ? cfg.only.includes(s.id) : s.suites.includes(cfg.suite)));
+  // processes a killed run left behind (they hold the test profile): closed before starting
+  const stale = cleanupStale(path.join(cfg.runsDir, '_profiles'));
+  if (stale) manifest.conditions.push(`closed ${stale} process(es) left by an interrupted run`);
+  const plan = cfg.scenarios ? cfg.scenarios : SCENARIOS.filter((s) => (cfg.only ? cfg.only.includes(s.id) : s.suites.includes(cfg.suite)));
   emit('start', { runId, dir, total: plan.length });
   const t0 = Date.now();
   // tests that need the same kind of session share one launch: a fresh profile for the cold ones, the warm profile otherwise
@@ -55,14 +58,16 @@ export async function runSuite(cfg) {
       }
       const ctx = { H, page: H.page, rec, dir, cfg, emit, tracing: !!cfg.repro, finding: (text) => emit('finding', { text }), stopped: () => stopRequested };
       if (cfg.repro) rec.reproduces = cfg.repro.created ? `scenario from ${cfg.repro.created}` : 'scenario';
-      await withTimeout(S.run(ctx), (S.timeoutS ?? 300) * 1000, `timed out after ${S.timeoutS ?? 300} s`);
+      try { await withTimeout(S.run(ctx), (S.timeoutS ?? 300) * 1000, `timed out after ${S.timeoutS ?? 300} s`); }
+      finally { if (H?.replaced) { H = H.replaced; current = H; } }   // (a test that restarted the game hands over its new session)
+      if (H?.crashed) throw new Error('the game crashed during the test');
       if (rec.status === 'not_tested') rec.status = rec.assertions.length && rec.assertions.every((a) => a.ok) ? 'passed' : rec.assertions.some((a) => !a.ok) ? 'failed' : 'passed';
     } catch (e) {
       const blocked = e instanceof LaunchError || e.blocked;
       rec.status = stopRequested ? 'not_tested' : blocked ? 'blocked' : 'failed';
       rec.note = stopRequested ? 'stopped by the user' : e.message.split('\n')[0];
       if (!stopRequested) emit('finding', { text: `${S.title}: ${rec.note}` });
-      if (H && !stopRequested && !H.closed) await H.page.screenshot({ path: path.join(dir, 'evidence', `${S.id}-failure.png`) }).then(() => rec.evidence.push(`evidence/${S.id}-failure.png`)).catch(() => {});
+      if (H && !stopRequested && !H.closed) await H.page.screenshot({ path: path.join(dir, 'evidence', `${S.id}-failure.jpg`), type: 'jpeg', quality: 75 }).then(() => rec.evidence.push(`evidence/${S.id}-failure.jpg`)).catch(() => {});
       // a timeout or a crash leaves the session unusable: the next test starts a new one
       if (H) { await H.close().catch(() => {}); H = null; }
     }
