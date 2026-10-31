@@ -1,0 +1,10 @@
+# name probe settings — the same-frame A/Bs of HEADING-LOAD-2 (bash queue.sh plan-ab.txt)
+repr-zeelich q_repr.js W_AREA=zeelich
+repr-knartas q_repr.js W_AREA=isle_knartas
+repr-otringal q_repr.js W_AREA=isle_otringal
+repr-desert q_repr.js W_AREA=desert
+turn-zeelich q_aturn.js W_AREA=zeelich W_VARS=region_instances|instanced_decoration
+turn-otringal q_aturn.js W_AREA=isle_otringal W_VARS=region_instances|instanced_decoration
+turn-knartas q_aturn.js W_AREA=isle_knartas W_VARS=region_instances|instanced_decoration
+turn-hamalayi q_aturn.js W_AREA=hamalayi W_VARS=region_instances|instanced_decoration
+turn-desert q_aturn.js W_AREA=desert W_VARS=region_instances|instanced_decoration

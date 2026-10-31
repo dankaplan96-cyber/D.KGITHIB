@@ -7,7 +7,7 @@
   const G = game, R = G.renderer.renderer, RR = G.renderer;
   const { GPU_VARIANTS } = await import('/src/engine/benchgpu.js');
   const FR = +(window.FRAMES || 32), DT = +(window.STEP || 1 / 15), RATE = +(window.RATE || 3);
-  const VARS = String(window.VARS || '').split('|').filter(Boolean).map((v) => GPU_VARIANTS.find((x) => x.id.includes(v))).filter(Boolean);
+  const VARS = String(window.VARS || '').split('|').filter(Boolean).map((v) => v.replace(/_/g, ' ')).map((v) => GPU_VARIANTS.find((x) => x.id.includes(v))).filter(Boolean);
   G.bench.setCamera('follow');
   // HEADING-LOAD-2: W_AREA = 'street' (the street route's setup) or an outdoor room id (zeelich, desert, hamalayi,
   // isle_<name>): entered at its own arrival point, the Follow camera at Far; W_AT='x,z' moves Twinsen there first
@@ -28,8 +28,8 @@
   const read = (buf) => { R.setRenderTarget(null); gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf); };
   let calls = 0, tris = 0;
   const rbd = R.renderBufferDirect;
-  R.renderBufferDirect = function (cam, scene, geo, mat, obj, group) { if (scene === G.scene) { calls++; const c = group ? group.count : geo.index ? geo.index.count : geo.attributes.position?.count ?? 0; tris += (obj.isBatchedMesh ? 0 : Math.min(c, geo.drawRange.count) / 3) * (obj.isInstancedMesh ? obj.count : 1); } return rbd.apply(this, arguments); };
-  const out = [];
+  R.renderBufferDirect = function (cam, scene, geo, mat, obj, group) { if (scene === G.scene) { calls++; const c = group ? group.count : geo.index ? geo.index.count : geo.attributes.position?.count ?? 0; if (obj.isBatchedMesh) { let t = 0; const C = obj._multiDrawCounts; for (let i = 0; i < obj._multiDrawCount; i++) t += C[i]; tris += t / 3; } else tris += Math.min(c, geo.drawRange.count) / 3 * (obj.isInstancedMesh ? obj.count : 1); } return rbd.apply(this, arguments); };   // (HEADING-LOAD-2: BatchedMesh draws counted too)
+  const out = [`${AREA}: variants ${VARS.map((v) => v.id).join(' + ') || 'none'}`];
   let worst = 0, sumA = 0, sumB = 0, cA = 0, cB = 0;
   for (let f = 0; f < FR; f++) {
     ang += RATE * DT;
@@ -39,7 +39,7 @@
     for (const v of VARS) v.undo(G);
     let d = 0; for (let i = 0; i < A.length; i += 4) if (A[i] !== B[i] || A[i + 1] !== B[i + 1] || A[i + 2] !== B[i + 2]) d++;
     worst = Math.max(worst, d); sumA += ta; sumB += tb; cA += ca; cB += cb;
-    out.push(`frame ${f} heading ${(((ang - a0) * 180) / Math.PI % 360).toFixed(0)}°: pixels differ ${d} · main calls ${ca} vs ${cb} · triangles ${(ta / 1000).toFixed(0)}k vs ${(tb / 1000).toFixed(0)}k (BatchedMesh not counted)`);
+    out.push(`frame ${f} heading ${(((ang - a0) * 180) / Math.PI % 360).toFixed(0)}°: pixels differ ${d} · main calls ${ca} vs ${cb} · triangles ${(ta / 1000).toFixed(0)}k vs ${(tb / 1000).toFixed(0)}k `);
     if (f % 4 === 3) await new Promise((r) => setTimeout(r, 0));
   }
   R.renderBufferDirect = rbd; G.benchTick = null;

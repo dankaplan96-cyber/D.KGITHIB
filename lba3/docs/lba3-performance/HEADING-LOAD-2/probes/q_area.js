@@ -9,13 +9,14 @@
   const THREE = await import('three');
   const { gpuGroupOf, GPU_VARIANTS } = await import('/src/engine/benchgpu.js');
   const only = window.ONLY ? String(window.ONLY).split(',').map(Number) : null;
-  const VARS = window.VARS ? String(window.VARS).split('|').filter(Boolean) : [];   // (benchgpu variant ids or parts of them, '|'-separated)
+  const VARS = window.VARS ? String(window.VARS).split('|').filter(Boolean).map((v) => v.replace(/_/g, ' ')) : [];   // ('_' for a space)   // (benchgpu variant ids or parts of them, '|'-separated)
   G.bench.setCamera('follow');
   // HEADING-LOAD-2: W_AREA = 'street' (the street route's setup) or an outdoor room id (zeelich, desert, hamalayi,
   // isle_<name>): entered at its own arrival point, the Follow camera at Far; W_AT='x,z' moves Twinsen there first
   const AREA = String(window.AREA || 'street');
   if (AREA === 'street') { const route = G.bench.routes().find((x) => x.id === 'street'); G.state = 'play'; route.setup(); G.state = 'play'; }
   else {
+    if (window.CULLLO) (await import('/src/game/kit.js')).CULL_INST.lo = true;   // (W_CULLLO=1: the coarse versions of kit.js cullInstances built, for its trade-off variant)
     G.regions.ensure(AREA, 'probe'); G.state = 'play'; G.enterRoom(AREA, null, true, true); G.state = 'play';
     if (window.AT) { const [x, z] = String(window.AT).split(',').map(Number); G.hero.pos.set(x, G.physics.groundAt(x, z, G.hero.pos.y + 3), z); }
     G.bench.camera();
@@ -80,7 +81,9 @@
   for (let k = 0; k < N; k++) {
     if (only && !only.includes(k)) continue;
     G.benchTick = () => { G.doorCool = Math.max(G.doorCool || 0, 0.5); h.angle = a0 + (k * 2 * Math.PI) / N; h.vel.set(0, 0); };
-    for (let i = 0; i < 40; i++) { step(); if (i % 10 === 9) await new Promise((r) => setTimeout(r, 0)); }
+    // (W_FAST=1: the first 34 settling frames simulated but not drawn — SwiftShader draws a 1M-triangle frame in seconds;
+    //  the last 6 are drawn, as before, so the draw batches, the shadow cache and the culls settle on the view)
+    { const rr = G.renderer.render; try { for (let i = 0; i < 40; i++) { G.renderer.render = window.FAST && i < 34 ? () => {} : rr; step(); if (i % 10 === 9) await new Promise((r) => setTimeout(r, 0)); } } finally { G.renderer.render = rr; } }
     G.benchTick = null;
     RR.render();   // (a first frame of this view: the cache and LOD settle)
     const base = frame(!!window.SHOTS), F = fmt(base.T);

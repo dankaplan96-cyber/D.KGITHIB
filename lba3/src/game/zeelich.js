@@ -36,6 +36,8 @@ import { rng, lerp, smoothstep } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { rockGeometry, grassClumpGeometry, flowerGeometry } from './vegetation.js';
 import { rugTex } from './props.js';
+import { cullInstances } from './kit.js';
+import { viewCull } from '../engine/viewinst.js';
 import { buildZeelichLife, zlClear } from './zeelife.js';
 
 export const ZEELICH = { x: 2400, z: 0 };
@@ -857,8 +859,10 @@ export function buildZeelich(scene, physics) {
   function crateFlush() {
     const { C, items, em } = crateSet;
     if (!items.length) return;
-    instances(group, C.body, tealM(), items);
-    instances(group, C.brass, brassM(), items);
+    // (HEADING-LOAD-2: the bodies and brass culled per instance in each pass, kit.js cullInstances; the see-through
+    //  emblems stay one InstancedMesh: a refill would move their place in the see-through draws' order)
+    cullInstances(group, C.body, tealM(), items).userData.gpuGroup = 'scenery';   // (benchgpu.js: not the trees' group)
+    cullInstances(group, C.brass, brassM(), items).userData.gpuGroup = 'scenery';
     instances(group, emq(), emblemMaterial(), em, { cast: false });
   }
 
@@ -1902,7 +1906,10 @@ export function buildZeelich(scene, physics) {
       items[v].push(it);
       col({ type: 'cyl', x, z, r: 0.3, top: Y0 + 2.6 * s, seeThrough: true });
     }
-    items.forEach((list, v) => { instances(group, puffTreeGeo(v), VC(), list).userData.gpuGroup = 'trees'; });   // (gpuGroup: benchgpu.js)
+    // (HEADING-LOAD-2: the trees and rocks culled per instance in each pass, kit.js cullInstances; the grass and flowers,
+    //  which cast no shadow, culled to the view per 8 m square, viewinst.js: as island-wide InstancedMeshes all of them went
+    //  to the GPU at every heading. gpuGroup: benchgpu.js)
+    items.forEach((list, v) => { cullInstances(group, puffTreeGeo(v), VC(), list).userData.gpuGroup = 'trees'; });
     // rocks along the rim and in the grass
     const rocks = [[], [], []];
     for (const it of rimRocks) rocks[Math.floor(r() * 3)].push(it);
@@ -1915,7 +1922,7 @@ export function buildZeelich(scene, physics) {
       if (s > 0.45) col({ type: 'cyl', x, z, r: 1.0 * s, top: Y0 + 0.9 * s, seeThrough: true });
     }
     const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#3a2030', emissiveIntensity: 0.4 });
-    rocks.forEach((list, v) => { if (list.length) instances(group, rockGeometry(v + 1), rockMat, list).userData.gpuGroup = 'trees'; });
+    rocks.forEach((list, v) => { if (list.length) cullInstances(group, rockGeometry(v + 1), rockMat, list).userData.gpuGroup = 'trees'; });
     // grass clumps and flowers
     const grass = [], flowers = [[], [], [], []];
     for (let i = 0; i < 900; i++) {
@@ -1929,8 +1936,8 @@ export function buildZeelich(scene, physics) {
       grass.push(gr);
       if (fl) flowers[fl[0]].push(fl[1]);
     }
-    instances(group, grassClumpGeometry(5, 9), pm('#ffffff', 0.9, { vertexColors: true, side: THREE.DoubleSide }), grass, { cast: false }).userData.gpuGroup = 'grass';
-    ['#ff8ac0', '#ffffff', '#c89cff', '#ffd84a'].forEach((c, k) => { instances(group, flowerGeometry(c), pm('#ffffff', 0.7, { vertexColors: true }), flowers[k], { cast: false }).userData.gpuGroup = 'grass'; });
+    viewCull(instances(group, grassClumpGeometry(5, 9), pm('#ffffff', 0.9, { vertexColors: true, side: THREE.DoubleSide }), grass, { cast: false })).userData.gpuGroup = 'grass';
+    ['#ff8ac0', '#ffffff', '#c89cff', '#ffd84a'].forEach((c, k) => { viewCull(instances(group, flowerGeometry(c), pm('#ffffff', 0.7, { vertexColors: true }), flowers[k], { cast: false })).userData.gpuGroup = 'grass'; });
     // flower beds around the plaza and along the house fronts
     for (let i = 0; i < 26; i++) {
       const a = (i / 26) * Math.PI * 2, x = PLAZA.x + Math.sin(a) * (PLAZA.r + 0.8), z = PLAZA.z + Math.cos(a) * (PLAZA.r + 0.8);

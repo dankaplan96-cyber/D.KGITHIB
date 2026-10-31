@@ -22,7 +22,7 @@ import { rng, smoothstep } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { MAX_SLOPE } from '../engine/physics.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
-import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, brassM, panelGeo, frameGeo, fillGeo } from './kit.js';
+import { tm, pm, cached, bbox, cyl, lathe, tint, Batch, instances, cullInstances, brassM, panelGeo, frameGeo, fillGeo } from './kit.js';
 import { esmerShuttle, shuttleTraffic } from './shuttle.js';
 import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
@@ -1576,16 +1576,19 @@ function buildIsland(scene, physics, name, L, at) {
   }
   B.build();
   // instanced pieces, each scaled to its object's box (by the geometry's own size)
-  const fit = (geo, list, mat, ys = 1) => {
+  // (HEADING-LOAD-2: culled per instance in each pass, kit.js cullInstances: the island-wide meshes went to the GPU in
+  //  full at every heading — Otringal's sculpted trees 1.1–1.3M triangles a frame)
+  const fit = (geo, list, mat, lo = null, ys = 1) => {
     if (!list.length) return;
     geo.computeBoundingBox(); const b = geo.boundingBox, gw = b.max.x - b.min.x, gh = b.max.y - b.min.y, gd = b.max.z - b.min.z;
-    instances(group, geo, mat, list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) }))).userData.gpuGroup = 'trees';   // (benchgpu.js)
+    cullInstances(group, geo, mat, list.map((o) => ({ x: o.x, y: o.y - b.min.y * (o.sy / gh) * ys, z: o.z, ry: (o.beta / 4096) * Math.PI * 2, sx: Math.max(0.3, o.sx) / gw, sy: (o.sy / gh) * ys, sz: Math.max(0.3, o.sz) / gd, color: new THREE.Color(S.trees || '#fff0ff').multiplyScalar(0.9 + r() * 0.15) })), { lo }).userData.gpuGroup = 'trees';   // (benchgpu.js)
   };
   const vc = pm('#ffffff', 0.85, { vertexColors: true });
-  fit(treeGeometry('round', 3), trees[0], vc); fit(treeGeometry('tall', 2), trees[1], vc); fit(treeGeometry('bush', 1), bushes, vc);
-  fit(treeGeometry('bush', 2), plants, vc);
+  // (lo: the coarse sculpts of a trade-off that is off, kit.js cullInstances: never built in play)
+  fit(treeGeometry('round', 3), trees[0], vc, () => treeGeometry('round', 3, 1)); fit(treeGeometry('tall', 2), trees[1], vc, () => treeGeometry('tall', 2, 1));
+  fit(treeGeometry('bush', 1), bushes, vc, () => treeGeometry('bush', 1, 1)); fit(treeGeometry('bush', 2), plants, vc, () => treeGeometry('bush', 2, 1));
   const rockMat = pm('#ffffff', 0.9, { vertexColors: true, emissive: '#3a2030', emissiveIntensity: 0.4 });
-  rocks.forEach((list, v) => fit(rockGeometry(v + 1), list, rockMat));
+  rocks.forEach((list, v) => fit(rockGeometry(v + 1), list, rockMat, () => rockGeometry(v + 1, 1)));
 
   // --- the shuttle pad and the shuttle (the way back: src/game/story/islands.js)
   {

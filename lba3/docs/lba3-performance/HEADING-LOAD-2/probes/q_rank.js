@@ -21,7 +21,9 @@
     const h = G.hero, a0 = h.angle, per = [];
     for (const k of only) {
       G.benchTick = () => { G.doorCool = Math.max(G.doorCool || 0, 0.5); h.angle = a0 + (k * 2 * Math.PI) / 8; h.vel.set(0, 0); };
-      for (let i = 0; i < 40; i++) { step(); if (i % 10 === 9) await new Promise((r) => setTimeout(r, 0)); }
+      // (W_FAST=1: the first 34 settling frames simulated but not drawn — SwiftShader draws a 1M-triangle frame in seconds;
+      //  the last 6 are drawn, as before, so the draw batches, the shadow cache and the culls settle on the view)
+      { const rr = RR.render; try { for (let i = 0; i < 40; i++) { RR.render = window.FAST && i < 34 ? () => {} : rr; step(); if (i % 10 === 9) await new Promise((r) => setTimeout(r, 0)); } } finally { RR.render = rr; } }
       G.benchTick = null; RR.render();
       calls = 0; tris = 0; on = true; RR.render(); on = false;
       per.push([k * 45, calls, Math.round(tris / 1000)]);

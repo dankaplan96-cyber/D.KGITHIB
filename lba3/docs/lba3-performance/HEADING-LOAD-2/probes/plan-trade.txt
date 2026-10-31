@@ -1,0 +1,9 @@
+# name probe settings — HEADING-LOAD-2's trade-offs, priced on the same frozen frames (bash queue.sh plan-trade.txt)
+trade-otringal q_area.js W_AREA=isle_otringal W_FAST=1 W_CULLLO=1 W_SHOTS=1 W_VARS=island_trees_coarse
+trade-knartas q_area.js W_AREA=isle_knartas W_FAST=1 W_CULLLO=1 W_SHOTS=1 W_VARS=island_trees_coarse
+trade-hamalayi q_area.js W_AREA=hamalayi W_FAST=1 W_SHOTS=1 W_VARS=trees_detailed_to_22
+terr-desert q_terr.js W_AREA=desert
+terr-hamalayi q_terr.js W_AREA=hamalayi
+terr-otringal q_terr.js W_AREA=isle_otringal
+why-zeelich q_area.js W_AREA=zeelich W_FAST=1 W_ONLY=0 W_WHY=0
+why-otringal q_area.js W_AREA=isle_otringal W_FAST=1 W_ONLY=4 W_WHY=4

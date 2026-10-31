@@ -39,7 +39,7 @@ import { Plume } from '../engine/softfx.js';
 import { dressCamp, dressPost, tinted, tintedBatch, Wd } from './desertdress.js';
 import { buildOldPlaces, pavedAt, rillAt, coveAt, OLD_ROCKS } from './desertold.js';
 import {
-  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances, emblemMaterial, emq, mergeGeos,
+  tm, pm, ctex, cached, bbox, boxUV, cyl, lathe, tube, Batch, member, rod, mesh, instances, cullInstances, lodInstances, emblemMaterial, emq, mergeGeos,
 } from './kit.js';
 
 export const DESERT = { x: 3400, z: 0 };
@@ -858,7 +858,7 @@ export function buildDesert(scene, physics) {
       const h = H(x, z); if (h > BASE + 4) continue;
       list.push({ x, y: h + 0.1, z, ry, s: 0.5 + sz * 0.8, color: c < 0.5 ? '#9a8a4a' : '#7a7a3a' });
     }
-    instances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list, { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js)
+    cullInstances(group, shrubG, pm('#ffffff', 0.95, { flatShading: true }), list, { cast: true }).userData.gpuGroup = 'trees';   // (benchgpu.js; HEADING-LOAD-2: culled per instance in each pass, kit.js)
     const cactM = pm('#5a8a4a', 0.75);
     const CB = new Batch(group);
     for (let i = 0; i < 26; i++) {

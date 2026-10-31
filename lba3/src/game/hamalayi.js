@@ -24,6 +24,7 @@ import { textures } from '../engine/textures.js';
 import { rng, smoothstep, distToSegment } from '../engine/math.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
 import { tm, pm, ctex, cached, bbox, cyl, lathe, tube, Batch, member, rod, mesh, instances, lodInstances } from './kit.js';
+import { viewCull } from '../engine/viewinst.js';
 import { Plume } from '../engine/softfx.js';
 import { Kit, MAT, barrel, crate, handCart } from './props.js';
 import { gantry, oldGate, rebelCamp, waystone } from './props-lba1hamalayi.js';
@@ -259,9 +260,10 @@ export function buildHamalayi(scene, physics) {
       const a = i / 26 * Math.PI * 2, r = 135 + r0() * 40;
       list.push({ x: Math.cos(a) * r, y: -5, z: Math.sin(a) * r, ry: r0() * 6, sx: 28 + r0() * 22, sy: 50 + r0() * 45, sz: 28 + r0() * 22 });
     }
-    instances(group, peakG, pm('#c8d0dc', 0.9, { flatShading: true }), list, { cast: false });
+    // (HEADING-LOAD-2: culled to the view per square, viewinst.js: a ring round the whole area, drawn in full at every heading)
+    viewCull(instances(group, peakG, pm('#c8d0dc', 0.9, { flatShading: true }), list, { cast: false }), { cell: 40 });
     const caps = list.map((p) => ({ ...p, y: p.y + p.sy * 0.55, sx: p.sx * 0.46, sy: p.sy * 0.46, sz: p.sz * 0.46 }));
-    instances(group, peakG, pm('#ffffff', 0.85, { flatShading: true }), caps, { cast: false });
+    viewCull(instances(group, peakG, pm('#ffffff', 0.85, { flatShading: true }), caps, { cast: false }), { cell: 40 });
   }
 
   // ---- the glider's landing and the shepherd's hut
