@@ -44,7 +44,7 @@ The laptop checks the other regions on the next build's sweep.
 
 ---
 
-## WA-2 · Citadel roofs: four kinds instead of one · Approved (user, 31.10.2026)
+## WA-2 · Citadel roofs: four kinds instead of one · Applied (the cloud, 31.10.2026; in the build after 0.44.0)
 
 - **Why:** every Citadel house had the same gable roof (terracotta or bright blue) with a chimney and gutters, so the
   town read uniform. The original LBA2 Citadel (the user's own GOG files, studied on the laptop) varies its roofs.

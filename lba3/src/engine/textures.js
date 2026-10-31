@@ -473,6 +473,22 @@ function islandTextures(T) {
     speckle(x, S, r, 200, ['#5a4430', '#c8b090'], 0.3, 0.3);
     T.planks = toTex(c);
   }
+  // thatch (WORLD-ART-2): LBA2's Citadel cottages (Twinsen's, his neighbour's) wear straw in courses under a dark ridge
+  {
+    const [c, x] = canvas(S); const r = rng(104);
+    x.fillStyle = '#c9a66b'; x.fillRect(0, 0, S, S);
+    const n = 6, h = S / n;
+    for (let j = 0; j < n; j++) {
+      for (let k = 0; k < 260; k++) {
+        const px = r() * S, py = j * h + r() * (h - 4), len = h * 0.45 + r() * h * 0.5;
+        x.strokeStyle = ['#e2c487', '#b8924f', '#d6b274', '#a8834a'][k % 4]; x.lineWidth = 1 + r();
+        x.beginPath(); x.moveTo(px, py); x.lineTo(px + (r() - 0.5) * 3, Math.min(py + len, j * h + h - 3)); x.stroke();
+      }
+      x.fillStyle = 'rgba(70,48,22,0.45)'; x.fillRect(0, j * h + h - 3, S, 3);   // (each course's shadow on the next)
+    }
+    speckle(x, S, r, 160, ['#7a5a30', '#f0d8a0'], 0.3, 0.3);
+    T.thatch = toTex(c);
+  }
   // brushed brass plates with rivet rows at the seams
   {
     const [c, x] = canvas(S); const r = rng(104);
