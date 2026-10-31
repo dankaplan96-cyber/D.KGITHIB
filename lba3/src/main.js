@@ -49,6 +49,8 @@ import { koGone } from './game/death.js';
 import { BehaviourMenu } from './game/behmenu.js';
 import { HUD } from './game/hud.js';
 import { Inventory } from './game/inventory.js';
+import { FoundObject } from './game/found.js';
+import { stage as itemStage } from './game/itemlook.js';
 import { Story, ORDER, OLD_ORDER, NUMBER as CH_NUMBER } from './game/story/index.js';
 import { t, setLang, getLang } from './game/i18n.js';
 import { roomName } from './game/mapdraw.js';
@@ -75,7 +77,7 @@ const THUMB_WORKER = `onmessage = async (e) => {
 };`;
 const SLOT_SCREENS = new Set(['savegame', 'loadgame', 'slotconfirm']);
 // the states that count as play time (not the title, the pause menus, game over or the ending screen)
-const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd']);
+const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd', 'found']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
 const FIGHT = new Set(['chase', 'windup', 'lunge', 'recover', 'alerted', 'stunned', 'hurt', 'strike', 'stagger', 'slam', 'bash', 'aim', 'warn']);
 export const VERSION = '0.44.0'; // (the desktop build's version: desktop/package.json)
@@ -344,6 +346,7 @@ class Game {
     this.hitStop = 0;
     this.hud = new HUD(this);
     this.inventory = new Inventory(this);
+    this.foundObj = new FoundObject(this);   // I-24: the found-object ceremony (found.js)
     this.hud.buildMapImage(this.terrain);
     // (an area not built yet reads as missing while the story, the travel network and the cast are set up; each
     //  area's part of them follows its build: regionBuilt)
@@ -1215,6 +1218,7 @@ class Game {
   applySave(s) {
     const h = this.hero;
     this.regions.clearWaits();   // (a load in the same page: the last load's waiting area states go)
+    this.foundObj?.reset();   // (nor an object box from before it)
     Object.assign(h, { hp: s.hero.hp, mp: s.hero.mp, magicLevel: s.hero.magicLevel, clovers: s.hero.clovers, coins: s.hero.coins, hasBall: !!s.hero.hasBall });
     h.behaviour = s.hero.behaviour || 'normal';
     // weapons: what was owned, what was in hand (never more than one of each; unknown names fall back)
@@ -1307,7 +1311,7 @@ class Game {
     this.state = s;
     if (s !== was) startupMark(s === 'play' ? 'play' : 'state ' + s);   // (STABILIZATION: the start trace's phases: perf.js)
     // back in control: forget presses made during dialogue / menus, and give a beat before enemies attack
-    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene') this.combatDir?.calm(0.6); }
+    if (s === 'play' && was !== 'play' && this.hero) { this.hero.combat?.reset(); this.input?.clearEdges(); if (was === 'dialog' || was === 'cutscene' || was === 'found') this.combatDir?.calm(0.6); }
     if (s !== 'play') this.targeting?.hide();
     this.hud?.busy(s !== 'play');
   }
@@ -2043,6 +2047,9 @@ class Game {
     this.bubble.scale.set(k, k, 1);
   }
 
+  // I-24: Twinsen receives a real inventory object: the found-object box and dance (found.js), then `then`
+  found(id, nameKey, then = null, opts = {}) { this.foundObj.give(id, nameKey, then, opts); }
+
   // where: 'citadel' (Pippa's stall: her stock, then the arsenal's) or another stall the arsenal keeps (story/arsenal.js)
   openShop(where = 'citadel') {
     const h = this.hero;
@@ -2428,12 +2435,13 @@ class Game {
         this.camRig.update(dt, this.hero.pos, this.hero.angle, false, input);
         this.occluders(dt);
         break;
-      case 'shop': this.hud.shopNav(input); this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null); this.occluders(dt); break;
+      case 'shop': this.hud.shopNav(input); itemStage.tick(dt); this.camRig.update(dt, this.hero.pos, this.hero.angle, false, null); this.occluders(dt); break;
+      case 'found': this.foundObj.update(dt, input); break;   // (the world waits; the camera holds: found.js)
       case 'inventory':
-        this.inventory.nav(input);
+        this.inventory.nav(input); itemStage.tick(dt);
         // E on a gadget uses it (LBA2: select it in the inventory); otherwise E closes, as before
         if (input.pressed('interact') && this.inventory.usable()) { const id = this.inventory.usable(); this.inventory.show(false); this.setState('play'); this.gadgets.use(id); this.hud.stats(this.hero); this.save(false); }
-        else if (input.pressed('inventory') || input.pressed('pause') || input.pressed('interact')) { this.inventory.show(false); this.setState('play'); }
+        else if (input.pressed('inventory') || input.pressed('pause') || input.pressed('interact') || (input.lastDevice === 'pad' && input.pressed('dodge'))) { this.inventory.show(false); this.setState('play'); }
         break;
       case 'map':
         if (this.hud.holomapUpdate(input, dt)) { this.hud.closeHolomap(); this.setState('play'); }
@@ -2525,6 +2533,7 @@ class Game {
   updatePlay(dt) {
     this.talkers?.clear();
     const input = this.input, h = this.hero;
+    if (this.foundObj.next()) return;   // (an object received during a dialogue or a scene: its box, now play is back)
     this.dirty = true;
     if (input.pressed('pause')) { this.pause(); return; }
     if (input.pressed('map') && h.hasBall) { this.setState('map'); this.hud.openHolomap(); return; }

@@ -1,8 +1,10 @@
-// Inventory + journal screen (I / J). Items are drawn on small canvases in a
-// painted style (no image files); the journal lists what happened so far,
-// chapter by chapter. Kept compact: one panel, the game paused behind it.
+// Inventory + journal screen (I / J). SHOPS-ITEMS: as LBA2's inventory, a grid of slots, each showing the object's
+// own small 3D model (itemlook.js), the selected one turning, and larger beside its name and description; the
+// painted icons below stay as the fallback where WebGL is unavailable (and paint the paper items' faces). The journal
+// lists what happened so far, chapter by chapter. One panel, the game paused behind it.
 import { t } from './i18n.js';
-import { keyFor, keyLabel } from '../engine/input.js';
+import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
+import { stage, lookOf, TURN } from './itemlook.js';
 
 const ICON = 72;
 
@@ -69,6 +71,8 @@ const DRAW = {
   pearl(x) { x.fillStyle = radial(x, 36, 36, 20, '#ffffff', '#ff9a3a'); x.beginPath(); x.arc(36, 36, 17, 0, 7); x.fill(); x.fillStyle = 'rgba(255,200,80,0.35)'; x.beginPath(); x.arc(36, 36, 26, 0, 7); x.fill(); },
   radio(x) { x.fillStyle = '#8a3a2a'; x.fillRect(10, 24, 52, 34); x.fillStyle = '#e8d8b0'; x.beginPath(); x.arc(28, 41, 11, 0, 7); x.fill(); x.fillStyle = '#d8a020'; x.beginPath(); x.arc(50, 34, 4, 0, 7); x.fill(); x.beginPath(); x.arc(50, 48, 4, 0, 7); x.fill(); x.strokeStyle = '#ccc'; x.lineWidth = 2; x.beginPath(); x.moveTo(52, 24); x.lineTo(60, 6); x.stroke(); },
 };
+// the painting of an icon kind onto a 72 x 72 context (the paper items' faces in itemlook.js)
+export function paintIcon(kind, x) { (DRAW[kind] || DRAW.part)(x); }
 const cache = {};
 const USE = new Set(['penguin', 'protect', 'conch', 'lantern', 'jetpack']);
 export function itemIcon(kind) {
@@ -119,33 +123,48 @@ export class Inventory {
     this.open = on;
     this.el.classList.toggle('hidden', !on);
     if (on) this.render();
+    else stage.spin(null);   // (nothing turns once it is shut)
   }
   // the controls line, in the keys the player uses (rebound keys by name) or the pad's buttons (CLAR-2)
   hint(K) {
-    if (this.game.input?.lastDevice === 'pad') return t('inv_hint_keys', { move: 'D-pad', close: K('pause') });
+    if (this.game.input?.lastDevice === 'pad') return t('inv_hint_keys', { move: 'D-pad', close: `${PAD_LABELS.inventory} / ${PAD_LABELS.dodge}` });   // (View, or B as the menus' Back)
     const mv = ['up', 'left', 'down', 'right'].map(K), move = mv.every((s) => s.length === 1) ? mv.join('') : mv.join(' ');
     const close = [...new Set([K('inventory'), keyLabel(keyFor('pause'))])].join(' / ');
     return t('inv_hint_keys', { move, close });
   }
+  // a slot's picture: the item's own model, a still three-quarter view (painted icon without WebGL)
+  pic(it) { return stage.thumb(lookOf(it.id, it.icon)) || itemIcon(it.icon); }
   render() {
     const g = this.game;
     const K = (a) => g.hud?.key?.(a) ?? keyLabel(keyFor(a));
     const items = this.items();
-    const grid = items.map((it, i) => `<button class="inv-item${i === this.sel ? ' sel' : ''}" data-i="${i}"><img src="${itemIcon(it.icon)}" alt=""><span>${t('it_' + it.id)}</span>${it.n != null ? `<em>${it.id === 'ball' ? t('it_level', { n: it.n }) : it.n}</em>` : ''}</button>`).join('');
-    const sel = items[this.sel ?? 0];
+    this.sel = Math.min(this.sel ?? 0, items.length - 1);
+    const count = (it) => it.n == null ? '' : `<em>${it.id === 'ball' ? t('it_level', { n: it.n }) : it.n}</em>`;
+    const grid = items.map((it, i) => `<button class="inv-item${i === this.sel ? ' sel' + (stage.live ? ' spinning' : '') : ''}" data-i="${i}" aria-label="${t('it_' + it.id)}"><img src="${this.pic(it)}" alt="">${i === this.sel ? '<canvas class="spin" width="128" height="128"></canvas>' : ''}${count(it)}</button>`).join('');
+    const sel = items[this.sel];
+    const desc = sel ? t('itd_' + sel.id) + (sel.id === 'ball' && g.story.magic ? ' ' + g.story.magic.ballNote() : '') : '';
+    const use = sel && USE.has(sel.id) ? `<b class="inv-use">${t('inv_use', { k: K('interact') })}</b>` : '';
     const journal = g.story.journal().map((c) => c.lines.length ? `<h3>${c.title}</h3><ul>${c.lines.map((l) => `<li class="${l.done ? 'done' : ''}">${t(l.key)}</li>`).join('')}</ul>` : '').join('');
     this.el.innerHTML = `<div class="inv-panel lba-frame">
-      <section class="inv-items"><h2>${t('inv_title')}</h2><div class="inv-grid">${grid}</div><p class="inv-desc">${sel ? t('itd_' + sel.id) + (sel.id === 'ball' && g.story.magic ? ' ' + g.story.magic.ballNote() : '') + (USE.has(sel.id) ? ' <b>' + t('inv_use', { k: K('interact') }) + '</b>' : '') : ''}</p></section>
+      <section class="inv-items"><h2>${t('inv_title')}</h2><div class="inv-grid">${grid}</div>
+        <div class="inv-detail">${sel ? `<div class="inv-big lba-frame"><canvas width="320" height="320"></canvas></div><div class="inv-text"><h3 class="inv-name">${t('it_' + sel.id)}${sel.n != null ? ` <span>${sel.id === 'ball' ? t('it_level', { n: sel.n }) : '× ' + sel.n}</span>` : ''}</h3><p class="inv-desc">${desc}</p>${use}</div>` : ''}</div></section>
       <section class="inv-journal"><h2>${t('journal_title')}</h2><div class="inv-obj">${g.story.objective()}</div>${journal}</section>
       <div class="inv-hint">${this.hint(K)}</div></div>`;
     this.el.querySelectorAll('.inv-item').forEach((b) => b.addEventListener('click', () => { this.sel = +b.dataset.i; this.render(); }));
+    // the selected item turns (LBA2: a turn in 4.1 s), in the large view and in its slot
+    if (sel) { const look = lookOf(sel.id, sel.icon); stage.spin([{ look, rate: TURN.inventory, canvas: this.el.querySelector('.inv-big canvas') }, { look, canvas: this.el.querySelector('.inv-item.sel .spin') }]); }
+    else stage.spin(null);
   }
   nav(input) {
     const n = this.items().length;
     this.sel ??= 0;
-    if (input.pressed('right')) { this.sel = (this.sel + 1) % n; this.render(); }
-    if (input.pressed('left')) { this.sel = (this.sel + n - 1) % n; this.render(); }
-    if (input.pressed('down')) { this.sel = Math.min(n - 1, this.sel + 4); this.render(); }
-    if (input.pressed('up')) { this.sel = Math.max(0, this.sel - 4); this.render(); }
+    // (up and down move a row: the grid's own columns, which the screen's width sets: css .inv-grid)
+    const grid = this.el.querySelector('.inv-grid'), COLS = (grid && getComputedStyle(grid).gridTemplateColumns.split(' ').length) || 5;
+    const was = this.sel;
+    if (input.pressed('right')) this.sel = (this.sel + 1) % n;
+    if (input.pressed('left')) this.sel = (this.sel + n - 1) % n;
+    if (input.pressed('down')) this.sel = Math.min(n - 1, this.sel + COLS);
+    if (input.pressed('up')) this.sel = Math.max(0, this.sel - COLS);
+    if (this.sel !== was) { this.render(); this.game.audio?.play('blip'); }
   }
 }

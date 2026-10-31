@@ -7,6 +7,7 @@ import { WEAPON_INFO } from './combat.js';
 import { keyFor, keyLabel, PAD_LABELS } from '../engine/input.js';
 import { regionOf, planetOf, PLANETS } from './travel.js';
 import { mapBuilder, regionPlaces, roomName, palOf } from './mapdraw.js';
+import { stage, lookOf, TURN } from './itemlook.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -365,19 +366,37 @@ export class HUD {
   }
 
   // ---------------- shop ----------------
+  // SHOPS-ITEMS: the goods with their look (itemlook.js): each row shows the item's model, its name and price; the
+  // selected one turns large beside the list with what it does and whether he can have it. The purse shows a Kash.
   openShop(items, onBuy, onClose, titleKey = 'shop_title') {
     const el = $('#shop');
     el.dir = getLang() === 'he' ? 'rtl' : 'ltr';
+    el.classList.add('goods');
+    const coin = (cls = 'kc') => { const u = stage.thumb('coin', 64); return u ? `<img class="${cls}" src="${u}" alt="">` : '◆'; };
     const render = () => {
-      el.innerHTML = `<h2>${t(titleKey)}</h2><div class="coins">◆ ${this.game.hero.coins}</div>` +
-        items().map((it, i) => `<button class="item" data-i="${i}" ${it.disabled ? 'disabled' : ''}><span>${t(it.key)}</span><b>◆ ${it.price}</b></button>`).join('') +
-        `<button class="leave">${t('shop_leave')}</button>`;
-      el.querySelectorAll('.item').forEach((b) => b.addEventListener('click', () => { onBuy(items()[+b.dataset.i]); render(); }));
+      const list = items(), h = this.game.hero;
+      this.shopSel = Math.min(this.shopSel ?? 0, list.length);
+      const sel = list[this.shopSel];
+      const rows = list.map((it, i) => { const u = stage.thumb(lookOf(it.id, it.id)); return `<button class="item${h.coins < it.price && !it.disabled ? ' poor' : ''}" data-i="${i}" ${it.disabled ? 'disabled' : ''}>${u ? `<img class="pic" src="${u}" alt="">` : ''}<span>${t(it.key)}</span><b>${coin()}${it.price}</b></button>`; }).join('');
+      const why = !sel ? '' : sel.disabled ? t('shop_max') : h.coins < sel.price ? t('shop_need', { n: sel.price - h.coins }) : t('shop_buy_key', { k: this.key('interact') });
+      el.innerHTML = `<h2>${t(titleKey)}</h2><div class="coins" aria-label="${t('it_kashes')}">${coin()}${h.coins}</div>` +
+        `<div class="shop-body"><div class="shop-list">${rows}<button class="leave">${t('shop_leave')}</button></div>` +
+        `<div class="shop-look${sel ? '' : ' none'}"><div class="shop-big lba-frame"><canvas width="320" height="320"></canvas></div>` +
+        (sel ? `<div class="shop-name">${t(sel.key)}</div><div class="shop-price">${coin()}${sel.price}</div><div class="shop-why${sel.disabled || h.coins < sel.price ? ' no' : ''}">${why}</div>` : '') + '</div></div>';
+      el.querySelectorAll('.item').forEach((b) => {
+        b.addEventListener('click', () => { this.shopSel = +b.dataset.i; onBuy(items()[+b.dataset.i]); if (this.shopOpen) render(); });
+        b.addEventListener('mousemove', (e) => hover(e, +b.dataset.i));
+      });
       el.querySelector('.leave').addEventListener('click', close);
-      this.shopSel = Math.min(this.shopSel ?? 0, items().length);
+      el.querySelector('.leave').addEventListener('mousemove', (e) => hover(e, list.length));
       this._shopFocus();
+      // (the selected item turns as the inventory's does; the Leave row shows nothing)
+      stage.spin(sel ? [{ look: lookOf(sel.id, sel.id), rate: TURN.inventory, canvas: el.querySelector('.shop-big canvas') }] : null);
     };
-    const close = () => { el.classList.add('hidden'); this.shopOpen = false; onClose(); };
+    const close = () => { el.classList.add('hidden'); el.classList.remove('goods'); this.shopOpen = false; stage.spin(null); onClose(); };
+    // the mouse selects what it is moved onto (a still cursor never takes the selection from the keys: the browser's
+    // own move events after the list is redrawn under it carry no movement)
+    const hover = (e, i) => { if ((e.movementX || e.movementY) && this.shopSel !== i) { this.shopSel = i; render(); } };
     this.shopRender = render;
     this.shopClose = close;
     this.shopSel = 0;
@@ -389,6 +408,7 @@ export class HUD {
   openMenu(titleKey, items, onPick, onClose) {
     const el = $('#shop');
     el.dir = 'ltr';
+    el.classList.remove('goods');
     const close = () => { el.classList.add('hidden'); this.shopOpen = false; onClose(); };
     const render = () => {
       el.innerHTML = `<h2>${t(titleKey)}</h2>` +
@@ -408,13 +428,16 @@ export class HUD {
   _shopFocus() {
     const btns = [...document.querySelectorAll('#shop button')];
     btns.forEach((b, i) => b.classList.toggle('sel', i === this.shopSel));
+    btns[this.shopSel]?.scrollIntoView?.({ block: 'nearest' });   // (a long list on a short screen scrolls to the selection)
   }
   shopNav(input) {
     const btns = [...document.querySelectorAll('#shop button')];
-    if (input.pressed('down')) { this.shopSel = (this.shopSel + 1) % btns.length; this._shopFocus(); this.game.audio.play('blip'); }
-    if (input.pressed('up')) { this.shopSel = (this.shopSel + btns.length - 1) % btns.length; this._shopFocus(); this.game.audio.play('blip'); }
+    const move = (d) => { this.shopSel = (this.shopSel + d + btns.length) % btns.length; if ($('#shop').classList.contains('goods')) this.shopRender(); else this._shopFocus(); this.game.audio.play('blip'); };
+    if (input.pressed('down')) move(1);
+    if (input.pressed('up')) move(-1);
     if (input.pressed('interact') || input.pressed('action') || input.pressed('recenter')) btns[this.shopSel]?.click();
-    if (input.pressed('pause') || input.pressed('ball')) this.shopClose();
+    // Back: Esc (pause), the ball key as before, and B on a pad (as the menus' Back: main.js menuNav)
+    else if (input.pressed('pause') || input.pressed('ball') || (input.lastDevice === 'pad' && input.pressed('dodge'))) this.shopClose();
   }
 
   // ---------------- maps (MAP-1) ----------------

@@ -27,7 +27,7 @@ export const GADGET = {
 };
 
 const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, ...o });
-function penguinModel() {
+export function penguinModel() {
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
   const add = (geo, m, x, y, z, s = null) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); if (s) o.scale.set(...s); o.castShadow = true; body.add(o); return o; };
   const black = M('#22262e', { roughness: 0.4, metalness: 0.3 }), white = M('#f2f0e8', { roughness: 0.5 }), orange = M('#f0902a', { roughness: 0.5 }), brass = M('#e0b25a', { metalness: 0.75, roughness: 0.3 });
@@ -48,7 +48,7 @@ function penguinModel() {
   g.userData.body = body; g.userData.key = key;
   return g;
 }
-function lanternModel() {
+export function lanternModel() {
   const g = new THREE.Group();
   const brass = M('#e0b25a', { metalness: 0.7, roughness: 0.35 });
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.008, 4, 10), brass); ring.position.y = 0.0; g.add(ring);

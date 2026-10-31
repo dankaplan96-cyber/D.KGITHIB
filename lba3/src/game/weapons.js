@@ -47,7 +47,7 @@ export function freshArms(a = {}) {
 const M = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, ...o });
 function part(g, geo, mat, x = 0, y = 0, z = 0, rx = 0, rz = 0) { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.set(rx, 0, rz); m.castShadow = true; g.add(m); return m; }
 // in the hand: the hand bone's -y continues the forearm (as the sword in actors.js); a pointed weapon lies along it
-function blowgunModel(tron) {
+export function blowgunModel(tron) {
   const g = new THREE.Group();
   if (!tron) {
     // a cane tube with brass rings and a bone mouthpiece
@@ -67,7 +67,7 @@ function blowgunModel(tron) {
   writeBodyStencil(g);
   return g;
 }
-function pistolModel() {
+export function pistolModel() {
   // an Esmer pistol: a rounded gold body, a coral grip, a blue crystal at the muzzle
   const g = new THREE.Group();
   const gold = M('#e8b84a', { metalness: 0.7, roughness: 0.3 });
@@ -79,7 +79,7 @@ function pistolModel() {
   writeBodyStencil(g);
   return g;
 }
-function gloveModel() {
+export function gloveModel() {
   // a Wannie's work glove: big, padded, red leather, a brass-studded cuff
   const g = new THREE.Group();
   const red = M('#b8402a', { roughness: 0.75 });

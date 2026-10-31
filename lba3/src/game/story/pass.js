@@ -159,13 +159,13 @@ export class Pass extends ChapterBase {
         if (f.c6_thawed && !f.c6_liftReady) return c([['yorna', 'c6_yorna_lift'], ['yorna', 'c6_yorna_sword1'], ['hero', 'c6_tw_sword'], ['yorna', 'c6_yorna_sword2']], () => {
           f.c6_liftReady = true; f.c6_sword = true;
           const h = g.hero; h.hasSword = true; h.combat.equip('sword');
-          g.audio.play('chest'); g.hud.toast('c6_toast_sword', { k: g.hud.key('attack') });
           g.updateObjective(); g.save(false);
+          g.found('sword', 'it_sword', () => g.hud.toast('c6_toast_sword', { k: g.hud.key('attack') }));
         });
         if (f.c6_up) return c([['yorna', 'c6_yorna_end']]);
         return c([['yorna', f.c6_liftReady ? 'c6_yorna_lift' : 'c6_yorna_3']]);
       case 'pim':
-        if (f.c6_kite && !f.c6_fuse) return c([['pim', 'c6_pim_3']], () => { f.c6_fuse = true; g.hud.toast('c6_toast_fuse'); g.updateObjective(); g.save(false); });
+        if (f.c6_kite && !f.c6_fuse) return c([['pim', 'c6_pim_3']], () => { f.c6_fuse = true; g.found('fuse', 'c6_toast_fuse'); g.updateObjective(); g.save(false); });
         if (f.c6_needFuse && !f.c6_kiteAsk) return c([['pim', 'c6_pim_1'], ['pim', 'c6_pim_2']], () => { f.c6_kiteAsk = true; g.updateObjective(); g.save(false); });
         if (f.c6_up) return c([['pim', 'c6_pim_end']]);
         return c([['pim', f.c6_kiteAsk && !f.c6_kite ? 'c6_pim_wait' : 'c6_pim_1']]);

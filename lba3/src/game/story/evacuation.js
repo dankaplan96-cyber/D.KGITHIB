@@ -227,7 +227,7 @@ export class Evacuation extends ChapterBase {
         if (f.c8_home && !f.c8_gilbert) return c([['gilbert', 'c8_gil_1'], ['hero', 'c8_tw_g1'], ['gilbert', 'c8_gil_2'], ['gilbert', 'c8_gil_3']], () => { f.c8_gilbert = true; this.story.refreshCast(); this.progress(); });
         return c([['gilbert', f.c8_gilbert ? 'c8_gil_after' : 'c8_gil_1']]);
       case 'mira':
-        if (f.c8_home && !f.c8_mira) return c([['mira', 'c8_mira_1'], ['hero', 'c8_tw_m1'], ['mira', 'c8_mira_2']], () => { f.c8_mira = true; g.hud.toast('c8_toast_key'); this.progress(); });
+        if (f.c8_home && !f.c8_mira) return c([['mira', 'c8_mira_1'], ['hero', 'c8_tw_m1'], ['mira', 'c8_mira_2']], () => { f.c8_mira = true; g.found('valvekey', 'c8_toast_key'); this.progress(); });
         return c([['mira', f.c8_mira ? 'c8_mira_after' : 'c8_mira_1']]);
       case 'pippa':
         if (f.c8_home && !f.c8_pippa) { this.chain([['pippa', 'c8_pippa_1']], () => { f.c8_pippa = true; this.story.refreshCast(); this.progress(); }); return true; }

@@ -297,19 +297,76 @@ body.hud-lba .toast { border-radius: 0; background: rgba(0, 0, 0, 0.88); border:
 .inv-panel { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(260px, 1.2fr); gap: 22px; width: min(920px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto; padding: 18px 22px; background: rgba(8, 16, 28, 0.88); color: var(--ink); text-align: start; }
 .inv-panel h2 { margin: 0 0 10px; color: var(--accent); font-size: 20px; }
 .inv-panel h3 { margin: 14px 0 4px; font-size: 15px; color: #ffd890; }
-.inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.inv-item { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; background: rgba(255,255,255,0.04); color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
-.inv-item img { width: 52px; height: 52px; }
-.inv-item em { position: absolute; top: 4px; inset-inline-end: 6px; font-style: normal; font-weight: 800; color: #ffe35a; font-size: 12px; }
-.inv-item.sel { border-color: var(--accent); background: rgba(255, 220, 120, 0.12); }
-.inv-desc { min-height: 3em; margin: 10px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-dim); }
+/* SHOPS-ITEMS: LBA2's inventory: square slots, each the object's model; the selected one turns (in its slot and large
+   beside its name). Selection: a white frame with corner marks and the turning, not the colour alone */
+.inv-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.inv-item { position: relative; display: block; aspect-ratio: 1 / 1; padding: 4px; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 0; background: rgba(0, 0, 0, 0.35); color: var(--ink); font: inherit; cursor: pointer; }
+.inv-item img, .inv-item canvas { position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); }
+.inv-item.spinning img { visibility: hidden; }
+.inv-item em { position: absolute; bottom: 2px; inset-inline-end: 5px; font-style: normal; font-weight: 800; color: #ffe35a; font-size: 13px; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000; }
+.inv-item:hover { border-color: rgba(255, 255, 255, 0.6); }
+.inv-item.sel { border: 2px solid #fff; padding: 3px; background: rgba(255, 220, 120, 0.12); box-shadow: 0 0 0 1px #000, 0 0 12px rgba(255, 207, 74, 0.45); }
+.inv-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.inv-detail { display: flex; gap: 14px; align-items: flex-start; margin-top: 14px; min-height: 120px; }
+.inv-big { flex: none; width: clamp(96px, 16vh, 150px); aspect-ratio: 1 / 1; background: rgba(0, 0, 0, 0.4); }
+.inv-big canvas { width: 100%; height: 100%; display: block; }
+.inv-text { min-width: 0; }
+.inv-panel h3.inv-name { margin: 2px 0 6px; font-size: 17px; color: #fff; }
+.inv-name span { color: #ffe35a; font-weight: 800; font-size: 14px; }
+.inv-desc { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-dim); }
+.inv-use { display: inline-block; margin-top: 6px; font-size: 14px; color: #ffe35a; }
 .inv-journal ul { margin: 0; padding-inline-start: 18px; font-size: 14px; line-height: 1.5; }
 .inv-journal li.done { color: var(--ink-dim); }
 .inv-obj b { display: block; color: #ffe35a; }
 .inv-obj .s { display: block; color: var(--ink-dim); font-size: 14px; }
 .inv-obj .s.ok { text-decoration: line-through; opacity: 0.7; }
 .inv-hint { grid-column: 1 / -1; font-size: 12px; color: var(--ink-dim); text-align: center; }
-@media (max-width: 640px) { .inv-panel { grid-template-columns: 1fr; } .inv-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .inv-panel { grid-template-columns: 1fr; } .inv-grid { grid-template-columns: repeat(4, 1fr); } }
+body.big-text .inv-desc, body.big-text .inv-journal ul, body.big-text .inv-use { font-size: 17px; }
+body.big-text .inv-panel h3.inv-name { font-size: 20px; }
+body.big-text .inv-hint { font-size: 15px; }
+
+/* SHOPS-ITEMS: the shop's goods with their look; the purse shows a Kash */
+#shop.goods { width: min(780px, calc(100vw - 32px)); max-height: calc(100vh - 32px); display: flex; flex-direction: column; }
+#shop .coins { display: flex; align-items: center; gap: 6px; color: #ffe35a; font-size: 18px; font-weight: 800; }
+#shop.goods .coins { position: absolute; top: 18px; inset-inline-end: 20px; margin: 0; }
+#shop .kc { width: 20px; height: 20px; flex: none; }
+#shop.goods .shop-body { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(170px, 1fr); gap: 18px; min-height: 0; margin-top: 10px; }
+#shop.goods .shop-list { overflow-y: auto; min-height: 0; padding: 2px 4px 2px 2px; }
+#shop.goods button.item { align-items: center; padding: 6px 12px 6px 6px; }
+#shop.goods button:hover:not(.sel) { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.85); }
+#shop .item .pic { width: 48px; height: 48px; flex: none; background: rgba(0, 0, 0, 0.35); }
+#shop .item span { flex: 1; }
+#shop .item b { display: flex; align-items: center; gap: 4px; }
+#shop .item b .kc { width: 16px; height: 16px; }
+#shop .item.poor b { color: var(--ink-dim); }
+.shop-look { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding-top: 4px; }
+.shop-big { width: min(210px, 30vh); aspect-ratio: 1 / 1; background: rgba(0, 0, 0, 0.4); }
+.shop-big canvas { width: 100%; height: 100%; display: block; }
+.shop-look.none .shop-big { visibility: hidden; }
+.shop-name { font-weight: 700; font-size: 16px; }
+.shop-price { display: flex; align-items: center; gap: 5px; color: #ffe35a; font-weight: 800; font-size: 18px; }
+.shop-why { font-size: 14px; color: var(--ink-dim); }
+.shop-why.no { color: #ffb4a0; }
+body.big-text #shop button { font-size: 18px; }
+body.big-text .shop-name { font-size: 19px; }
+body.big-text .shop-why { font-size: 17px; }
+@media (max-width: 640px), (max-height: 520px) { #shop.goods .shop-body { grid-template-columns: 1fr; } #shop.goods .shop-look { order: -1; flex-direction: row; justify-content: center; } .shop-big { width: 96px; } }
+
+/* I-24: the found-object box (found.js): LBA2's place and size (centred, top at 10 % of the height, 27 % tall), the
+   inside shaded, the name under it in Twinsen's colour; it grows from its centre in 0.4 s and shrinks in 0.3 s */
+#found { position: fixed; inset: 0; z-index: 7; pointer-events: none; display: flex; flex-direction: column; align-items: center; padding-top: 10vh; }
+#found .found-box { position: relative; width: min(27vh, 40vw); aspect-ratio: 1 / 1; background: rgba(0, 0, 0, 0.45); transform: scale(0.04); }
+#found .found-box canvas { width: 80%; height: 80%; margin: 1% 10% 0; display: block; }
+/* (the name inside the frame, along its foot: the box never reaches down over Twinsen) */
+#found .found-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 6px 5px; background: linear-gradient(0deg, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.55)); color: #8fc2ff; text-align: center; font-weight: 700; font-size: clamp(14px, 2.1vh, 22px); line-height: 1.25; text-shadow: 1px 1px 0 #000; }
+#found.in .found-box { animation: foundGrow 0.4s linear forwards; }
+#found.out .found-box { transform: scale(1); animation: foundShrink 0.3s linear forwards; }
+@keyframes foundGrow { from { transform: scale(0.04); } to { transform: scale(1); } }
+@keyframes foundShrink { from { transform: scale(1); } to { transform: scale(0.04); } }
+@media (prefers-reduced-motion: reduce) { #found.in .found-box, #found.out .found-box { animation: none; transform: none; } }
+body.big-text #found .found-name { font-size: clamp(17px, 2.7vh, 28px); }
+body.found-on #toast { visibility: hidden; }
 
 /* ---------- comfort: large subtitles ---------- */
 body.big-text #dialog .text { font-size: clamp(24px, 3.3vw, 32px) !important; line-height: 1.5; }

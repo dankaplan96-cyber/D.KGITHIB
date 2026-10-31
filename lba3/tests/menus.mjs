@@ -155,6 +155,10 @@ const talk = await ev(() => {
   P.go(s.x, s.z, { tol: 1.0 }); P.face(s.x, s.z); return P.target();
 });
 await page.keyboard.press('KeyE'); await step(0.1);
+// (I-24: the ball's found-object box comes first; a key after its first beat goes on to his line)
+const f0 = await ev(() => game.state);
+if (f0 === 'found') { await step(0.6); await page.keyboard.press('KeyE'); await step(0.6); }
+check('the cupboard: the ball\'s found-object box first, then his line', f0 === 'found' && (await ev(() => game.state)) === 'dialog', f0);
 const d0 = await ev(() => [game.state, game.hero.pos.x, game.hero.pos.z]);
 await page.keyboard.down('ArrowUp'); await step(1.0);
 const d1 = await ev(() => [game.state, game.hero.pos.x, game.hero.pos.z]);

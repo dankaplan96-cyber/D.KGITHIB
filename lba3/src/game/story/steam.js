@@ -198,8 +198,8 @@ export class Steam extends ChapterBase {
     const c = (lines, done) => { this.chain(lines, done); return true; };
     switch (id) {
       case 'dtrader':
-        if (!f.c5_jar && (f.c5_needShovel || f.c5_planned)) return c([['dtrader', 'c5_trader_1']], () => { f.c5_jar = true; g.hud.toast('c5_toast_jar'); g.updateObjective(); g.save(false); });
-        if (f.c5_water && !f.c5_shovel) return c([['dtrader', 'c5_trader_2']], () => { f.c5_shovel = true; g.hud.toast('c5_toast_shovel'); g.updateObjective(); g.save(false); });
+        if (!f.c5_jar && (f.c5_needShovel || f.c5_planned)) return c([['dtrader', 'c5_trader_1']], () => { f.c5_jar = true; g.found('jar', 'c5_toast_jar'); g.updateObjective(); g.save(false); });
+        if (f.c5_water && !f.c5_shovel) return c([['dtrader', 'c5_trader_2']], () => { f.c5_shovel = true; g.found('shovel', 'c5_toast_shovel'); g.updateObjective(); g.save(false); });
         if (!f.c5_shovel) return c([['dtrader', 'c5_trader_wait']]);
         return c([['dtrader', 'c4_trader_2']]);
       case 'dallan':

@@ -43,7 +43,7 @@ export const HERO_LOOK = 'twinsen';
 
 // The sword Yorna gives Twinsen (chapter 6): a short, slightly curved blade with a brass guard. Built along
 // the hand's -y (the continuation of the forearm), so arm swings read as blade swings.
-function buildSword() {
+export function buildSword() {
   const g = new THREE.Group();
   const steel = new THREE.MeshStandardMaterial({ color: '#d8e0e8', metalness: 0.8, roughness: 0.25 });
   const brass = new THREE.MeshStandardMaterial({ color: '#e0b25a', metalness: 0.7, roughness: 0.35 });
@@ -1630,6 +1630,8 @@ const PICK = {
 };
 
 export const PICK_TYPES = new Set(Object.keys(PICK));
+// a bonus's model, apart from the world (the item previews: itemlook.js)
+export const pickupModel = (type) => PICK[type]?.();
 
 export class Pickups {
   constructor(game) { this.game = game; this.list = []; }
