@@ -192,3 +192,24 @@ index b08741e..02ee77d 100644
 - **Check:** the door opening grows. Does the door trigger zone (`door: { x, z }`, unchanged) still sit in front of it?
   Run the house and transitions tests.
 - **Cost:** about 30 small meshes per carved door, two doors in all. A quick plugged-in run when approved.
+
+---
+
+## WA-5 · Citadel: grey stone on three pastel houses · Approved (user, 31.10.2026: standing approval)
+
+Prototyped on the laptop on top of WA-1 to WA-4 (pictures: `tools/testlab/runs/ba-walls2.jpg` on the laptop, sent
+to the user).
+
+- **Why:** the original LBA2 Citadel has no pastel plaster: its houses are grey ashlar or rubble. Ours had seven
+  plaster tints.
+- **Twelve years and the 80 % rule:** three houses go back to stone. The pink house and bug2 keep their plaster, and
+  the shop keeps its own wall, so the art kit's "warm plaster" palette stays.
+- **File:** `src/game/town.js`, `HOUSES`. Only these fields change; it reuses the existing `stone` texture:
+
+| id | before | after |
+|---|---|---|
+| water | `wall: 'plaster', tint: '#dfe8f2'` | `wall: 'stone', tint: '#eef0f2'` |
+| museum | `wall: 'plaster', tint: '#f0e0f0'` | `wall: 'stone', tint: '#f2eef0'` |
+| wing2 | `wall: 'plaster', tint: '#f4ead8'` | `wall: 'stone', tint: '#f4f0e8'` |
+
+- **Cost:** none expected (the same texture other houses already use).
