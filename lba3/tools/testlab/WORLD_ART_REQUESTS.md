@@ -13,7 +13,7 @@ Status values: **Approved** (apply it) · **Applied** (the cloud) · **Verified*
 
 ---
 
-## WA-1 · Citadel soil: less orange, a darker brown earth · Approved (user, 31.10.2026)
+## WA-1 · Citadel soil: less orange, a darker brown earth · Applied (the cloud, 31.10.2026; in the build after 0.44.0)
 
 - **Why:** at the gameplay camera, under the warm sun, the town soil between the paths still read orange.
   LBA2's Citadel soil is a darker, browner earth (docs/LBA2_VISUAL_NOTES.md: "brown soil").

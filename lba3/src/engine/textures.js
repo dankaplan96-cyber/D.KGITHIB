@@ -165,8 +165,10 @@ export function makeTextures() {
   {
     const [c, x] = canvas(S); const r = rng(14);
     // (GFX-LOOK-2: a shade less saturated, #9c6c44 → #9a6e4c: on screen the soil read orange, and dark orange in shade)
-    x.fillStyle = '#9a6e4c'; x.fillRect(0, 0, S, S);
-    blotches(x, S, r, 40, ['#895e3f', '#a97c58', '#7f5741'], 15, 40, 0.6);
+    // (WORLD-ART-1: still read orange at the gameplay camera under the warm sun, laptop 31.10; LBA2's town soil is a
+    //  darker, browner earth: #9a6e4c → #8a6a50, the blotches likewise, a shade less red. Same canvas, same texture.)
+    x.fillStyle = '#8a6a50'; x.fillRect(0, 0, S, S);
+    blotches(x, S, r, 40, ['#7a5d45', '#99785b', '#715542'], 15, 40, 0.6);
     for (let i = 0; i < 120; i++) {
       const px = r() * S, py = r() * S, rr = 1.5 + r() * 3.5;
       wrap(S, (ox, oy) => {

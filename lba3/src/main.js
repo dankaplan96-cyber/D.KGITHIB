@@ -162,7 +162,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'lba', camDist: 'far', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'far', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     if (!['near', 'medium', 'far'].includes(this.settings.camDist)) this.settings.camDist = 'far';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
@@ -174,6 +174,10 @@ class Game {
       this.settings.keys = k && typeof k === 'object' ? Object.fromEntries(Object.entries(k).filter(([, c]) => typeof c === 'string' && c)) : {};
       this.settings.v = 2;
     }
+    // CONTROLS-BY-DEVICE (the user, 31.10): on by default, also for settings saved before — the controls follow the
+    // device in use: a pad gets Modern movement and the Free camera, the keyboard Classic (tank) controls and the
+    // Follow camera behind Twinsen, as in the original. Choosing Movement or Camera in Settings turns it off
+    if (!['on', 'off'].includes(this.settings.autoControls)) this.settings.autoControls = 'on';
     // English only for now: the language choice is hidden (texts stay in the i18n tables for later translations)
     this.settings.lang = 'en';
     setLang(this.settings.lang);
@@ -1440,7 +1444,12 @@ class Game {
           if (b.dataset.v === 'auto') this.settings.qualityAuto = true;
           else { this.settings.quality = b.dataset.v; this.settings.qualityAuto = false; this.settings.qualityChosenByHand = true; this.settings.qPicked = true; }
           if (this.settings.qualityAuto) this.settings.quality = this.autoQ.tier();
-        } else this.settings[seg.dataset.setting] = b.dataset.v;
+        } else {
+          this.settings[seg.dataset.setting] = b.dataset.v;
+          // (CONTROLS-BY-DEVICE: a movement or camera picked by hand is kept: the automatic choice turns off)
+          if (seg.dataset.setting === 'controls' || seg.dataset.setting === 'camera') this.settings.autoControls = 'off';
+          if (seg.dataset.setting === 'autoControls' && b.dataset.v === 'on') this._ctrlDev = null;
+        }
         this.applySettings(); this.syncSettingsUI();
       }
       if (b.dataset.tab) { this.setTabTo(b.dataset.tab); this.audio.play('blip'); }
@@ -1728,6 +1737,7 @@ class Game {
     // one line under a few rows, only where the choice isn't obvious (or depends on another setting)
     const hint = {
       controls: () => t('set_h_' + s.controls),
+      autoControls: () => t('set_h_autoctrl_' + s.autoControls),
       camera: () => t('set_h_cam_' + s.camera, { l: L('camL'), r: L('camR') }),
       camDist: () => t('set_h_cd'),
       res: () => t('set_h_res_' + s.res),
@@ -1999,26 +2009,22 @@ class Game {
     // (who has spoken in this dialogue, him aside: the Follow camera's two-shot; let go on the next frame of play)
     if (speaker && speaker !== this.hero && speaker.pos) (this.talkers ??= new Set()).add(speaker);
     color ??= speaker?.def?.color || (speaker === this.hero ? '#8fc2ff' : '#ffffff');
-    this.bubbleSide = !this.bubbleSide;
+    this.speakerColor = color;
     this.audio.duck(true);
     this.hud.say(name, lines, () => { this.speaker = null; this.audio.duck(false); this.setState('play'); done?.(); }, color);
   }
 
-  // LBA2's speech-bubble sprite above whoever is talking (DrawBulle in INCRUST.CPP)
+  // who is talking: a small triangle pointing down at the speaker's head, in the speaker's colour (the name's colour in
+  // the dialogue box), the same size on screen at any camera distance (the user, 31.10: the big white "…" bubble went)
   makeBubble() {
     const c = document.createElement('canvas');
-    c.width = 96; c.height = 72;
+    c.width = 64; c.height = 64;
     const x = c.getContext('2d');
-    x.fillStyle = '#fff'; x.strokeStyle = '#000'; x.lineWidth = 4;
-    x.beginPath(); x.ellipse(48, 30, 40, 24, 0, 0, Math.PI * 2); x.fill(); x.stroke();
-    x.beginPath(); x.moveTo(30, 48); x.lineTo(20, 68); x.lineTo(44, 52); x.closePath(); x.fill(); x.stroke();
-    x.fillStyle = '#fff'; x.fillRect(28, 44, 18, 8);
-    x.fillStyle = '#000';
-    for (let i = 0; i < 3; i++) { x.beginPath(); x.arc(32 + i * 16, 30, 4, 0, Math.PI * 2); x.fill(); }
+    x.lineJoin = 'round'; x.lineWidth = 7; x.strokeStyle = 'rgba(20,20,28,0.9)'; x.fillStyle = '#fff';
+    x.beginPath(); x.moveTo(10, 14); x.lineTo(54, 14); x.lineTo(32, 52); x.closePath(); x.stroke(); x.fill();
     const tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
-    sp.scale.set(0.9, 0.68, 1);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true, sizeAttenuation: false }));
     sp.renderOrder = 11;
     sp.visible = false;
     this.scene.add(sp);
@@ -2030,11 +2036,11 @@ class Game {
     this.bubble.visible = !!s && this.state === 'dialog';
     if (!this.bubble.visible) return;
     const top = s.pos.y + (s.rig.height || 2.0) * (s.rig.root.scale.y || 1);
-    const right = new THREE.Vector3().setFromMatrixColumn(this.camera.matrixWorld, 0);
-    const side = this.bubbleSide ? 1 : -1;
-    const k = this.room ? 0.6 : 1;
-    this.bubble.position.set(s.pos.x, top + 0.3 * k, s.pos.z).addScaledVector(right, side * 0.7 * k);
-    this.bubble.scale.set(side * 0.9 * k, 0.68 * k, 1);
+    if (this.bubble.__col !== this.speakerColor) { this.bubble.__col = this.speakerColor; this.bubble.material.color.set(this.speakerColor || '#ffffff'); }
+    this.bubble.position.set(s.pos.x, top + (this.room ? 0.22 : 0.32), s.pos.z);
+    // (sizeAttenuation off: 0.06 in clip units is 3 % of the view's height, ~23 px at 768 px)
+    const k = 0.06 / (this.camera.projectionMatrix.elements[5] || 2);
+    this.bubble.scale.set(k, k, 1);
   }
 
   // where: 'citadel' (Pippa's stall: her stock, then the arsenal's) or another stall the arsenal keeps (story/arsenal.js)
@@ -2371,6 +2377,19 @@ class Game {
   }
 
   // Deterministic stepping for automated tests: game.step(seconds).
+  // CONTROLS-BY-DEVICE: when the device in use changes between a pad and the keyboard/mouse, the movement scheme and
+  // the camera follow it (touch keeps whatever was set)
+  controlsByDevice() {
+    const s = this.settings, d = this.input.lastDevice;
+    if (s.autoControls !== 'on' || (d !== 'pad' && d !== 'kbd') || d === this._ctrlDev) return;
+    this._ctrlDev = d;
+    const want = d === 'pad' ? { controls: 'modern', camera: 'free' } : { controls: 'classic', camera: 'follow' };
+    if (s.controls === want.controls && s.camera === want.camera) return;
+    Object.assign(s, want);
+    this.applySettings();
+    if (this.screen === 'settings') this.syncSettingsUI();
+  }
+
   step(seconds, dt = 1 / 60) {
     this._transBudget = null;
     for (let t = 0; t < seconds; t += dt) this.frame(dt, false);
@@ -2381,6 +2400,7 @@ class Game {
     if (this.played != null && PLAYED.has(this.state)) this.played += dt;   // (SAVE-SLOTS: play time, shown in the save slots)
     const input = this.input;
     input.update();
+    this.controlsByDevice();
 
     this.updateTransition(dt);
     driveMouth(this);   // (FACES-HANDS: the speaker's mouth follows the voice's syllables)

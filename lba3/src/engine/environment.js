@@ -100,13 +100,36 @@ const C = (c) => new THREE.Color(c);
 // (their rooms and views were composed under it); a region may give its own (env.sunDir). `?oldsun`: as before (A/B).
 const OLD_SUN = typeof location !== 'undefined' && /[?&]oldsun\b/.test(location.search);
 const SUN_BASE = new THREE.Vector3(-0.5, 0.8, -0.35).normalize(), SUN_CITADEL = OLD_SUN ? SUN_BASE : new THREE.Vector3(-0.5, 0.8, 0.35).normalize();
+// SKY-1: the sky dome (see Environment's constructor)
+const SKY_VS = /* glsl */`
+varying vec3 vDir;
+void main() {
+  vDir = position;   // (the dome is centred on the camera: its own position is the view direction)
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  gl_Position.z = gl_Position.w * 0.99999;   // (at the far end of the depth range: behind everything drawn)
+}`;
+const SKY_FS = /* glsl */`
+uniform vec3 uHorizon, uZenith, uCloud; uniform sampler2D uTex; uniform vec2 uOff;
+varying vec3 vDir;
+void main() {
+  vec3 d = normalize(vDir);
+  float h = max(d.y, 0.0);
+  vec3 col = mix(uHorizon, uZenith, smoothstep(0.03, 0.55, h));
+  // the cloud ceiling, a flat plane overhead seen in perspective, thinning into the haze near the horizon
+  vec2 uv = d.xz / (h + 0.12) * 0.32 + uOff;
+  float c = smoothstep(0.58, 0.95, texture2D(uTex, uv).r) * smoothstep(0.04, 0.3, h);
+  col = mix(col, uCloud, c * 0.85);
+  gl_FragColor = vec4(col, 1.0);
+  #include <colorspace_fragment>
+}`;   // (no tone mapping: as the fog colour and the old flat background, so the horizon meets the fogged world exactly)
+
 const PAL = {
   // GFX-LOOK-2: the fill a cooler sky blue (#d8ecff → #c8dcff, 1.25 → 1.42: about as bright in red and green, +14 % blue) and its bounce warmer, less olive (#6a7a4a → #77745a):
   // what lies in the sun's shadow is lit by these alone, and read warm grey-brown (the soil in a house's shadow was a
   // dark orange); LBA2's shadows are cool. The sun a shade warmer so the sunlit side keeps its colour. The sea a little
   // more cyan (LBA2's saturated cyan-blue rather than royal blue).
-  clear: { fog: C('#a8d2f2'), clouds: C('#ffffff'), sun: C('#fff0d2'), hemiSky: C('#c8dcff'), hemiGround: C('#77745a'), deep: C('#1a76b0'), shallow: C('#3fc8c6'), sky: C('#bfe0ff') },
-  storm: { fog: C('#6f8094'), clouds: C('#59667a'), sun: C('#b3c2dc'), hemiSky: C('#a9b8d0'), hemiGround: C('#4c5a46'), deep: C('#1a3f5c'), shallow: C('#2f7c86'), sky: C('#7d8ea2') },
+  clear: { fog: C('#a8d2f2'), zenith: C('#4f8fd6'), clouds: C('#ffffff'), sun: C('#fff0d2'), hemiSky: C('#c8dcff'), hemiGround: C('#77745a'), deep: C('#1a76b0'), shallow: C('#3fc8c6'), sky: C('#bfe0ff') },
+  storm: { fog: C('#6f8094'), zenith: C('#4a586c'), clouds: C('#59667a'), sun: C('#b3c2dc'), hemiSky: C('#a9b8d0'), hemiGround: C('#4c5a46'), deep: C('#1a3f5c'), shallow: C('#2f7c86'), sky: C('#7d8ea2') },
 };
 
 export class Environment {
@@ -138,13 +161,21 @@ export class Environment {
     scene.fog = this.fog;
     scene.background = this.fog.color;
 
-    // Cloud ceiling
-    const ct = TX.clouds.clone(); ct.needsUpdate = true; ct.repeat.set(5, 5);
+    // Sky (SKY-1, the user 31.10: the sky read as one flat grey-white): a dome around the camera, the fog's colour at
+    // the horizon (so the land and sea still fade into it seamlessly) deepening to blue overhead, with LBA2's cloud
+    // ceiling (DRAWSKY: a flat, scrolling cloud texture) projected on it and thinning towards the horizon. Drawn after
+    // the opaque world with the depth test on, so only the pixels the world leaves empty are shaded: one draw, one
+    // texture read a sky pixel, no new texture (the cloud ceiling's own)
+    const ct = TX.clouds.clone(); ct.needsUpdate = true; ct.wrapS = ct.wrapT = THREE.RepeatWrapping;
     this.cloudTex = ct;
-    this.clouds = new THREE.Mesh(new THREE.PlaneGeometry(3200, 3200), new THREE.MeshBasicMaterial({ map: ct, fog: true, side: THREE.DoubleSide, depthWrite: false }));
-    this.clouds.rotation.x = Math.PI / 2;
-    this.clouds.position.y = 70;
-    this.clouds.renderOrder = -1;
+    this.skyU = { uHorizon: { value: new THREE.Color() }, uZenith: { value: new THREE.Color() }, uCloud: { value: new THREE.Color() }, uTex: { value: ct }, uOff: { value: new THREE.Vector2() } };
+    this.clouds = new THREE.Mesh(new THREE.SphereGeometry(900, 24, 12), new THREE.ShaderMaterial({
+      uniforms: this.skyU, side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false,
+      vertexShader: SKY_VS, fragmentShader: SKY_FS,
+    }));
+    this.clouds.renderOrder = 1e6;      // (after every opaque: the world's depth leaves only the sky's pixels)
+    this.clouds.frustumCulled = false;
+    this.clouds.matrixAutoUpdate = false;
     scene.add(this.clouds);
 
     // Sea
@@ -246,9 +277,12 @@ export class Environment {
     const k = lerp(1, 0.75, s);
     this.fog.near = this.interior ? 400 : this.fogRange[0] * k;
     this.fog.far = this.interior ? 900 : this.fogRange[1] * k;
-    this.clouds.material.color.copy(mix('clouds')).lerp(C('#ffffff'), f * 0.5);
-    this.cloudTex.offset.x = this.time * (0.004 + s * 0.01);
-    this.cloudTex.offset.y = this.time * 0.002;
+    this.skyU.uCloud.value.copy(mix('clouds')).lerp(C('#ffffff'), f * 0.5);
+    this.skyU.uHorizon.value.copy(this.fog.color);
+    this.skyU.uZenith.value.copy(mix('zenith')).lerp(this.fog.color, f * 0.6);
+    this.skyU.uOff.value.set(this.time * (0.004 + s * 0.01), this.time * 0.002);
+    // (the dome stays centred on the camera: its own matrix, set here, never walked)
+    this.clouds.position.copy(camera.position); this.clouds.updateMatrix(); this.clouds.updateMatrixWorld(true);
 
     this.sun.intensity = lerp(2.6, 0.7, s) + f * 3;
     this.sun.color.copy(mix('sun'));

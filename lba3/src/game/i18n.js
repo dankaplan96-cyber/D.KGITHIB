@@ -11,7 +11,7 @@ export const STR = {
     slot_full: 'אין מספיק מקום אחסון. שמרו במקום משבצת ישנה, או מחקו משבצות ב"טעינת משחק" במסך הפתיחה.', slot_fail: 'אי אפשר לשמור: אחסון הדפדפן לא זמין.',
     nosave_scene: 'אי אפשר לשמור באמצע סצנה.', nosave_fight: 'אי אפשר לשמור באמצע קרב.', nosave_dead: 'אי אפשר לשמור עכשיו.', nosave_here: 'אי אפשר לשמור כאן.', nosave_wait: 'רגע, ואז אפשר לשמור.',
     quit_full: 'האחסון מלא: המקום הזה לא נשמר. לחצו שוב על "שמירה ויציאה" כדי לצאת בכל זאת.',
-    language: 'שפה', control_scheme: 'שיטת שליטה', ctrl_modern: 'מודרנית (יחסית למצלמה)', ctrl_classic: 'קלאסית 1997 (טנק)',
+    language: 'שפה', auto_controls: 'שליטה לפי ההתקן', ac_on: 'אוטומטי', ac_off: 'כבוי', control_scheme: 'שיטת שליטה', ctrl_modern: 'מודרנית (יחסית למצלמה)', ctrl_classic: 'קלאסית 1997 (טנק)',
     visual: 'מראה', vis_2026: 'LBA3 – תאורה מודרנית', vis_1997: '1997 – רזולוציה נמוכה, פיקסלים, ערפל קרוב',
     quality: 'איכות גרפית', q_auto: 'אוטומטית', q_high: 'גבוהה', q_medium: 'בינונית', q_low: 'נמוכה',
     camera: 'מצלמה', cam_lba: 'LBA2 – שוט קבוע שמתמרכז מחדש', cam_follow: 'עוקבת', cam_free: 'חופשית (עכבר / סטיק)', cam_dist: 'מרחק מצלמה', cd_near: 'קרוב', cd_medium: 'בינוני', cd_far: 'רחוק',
@@ -35,7 +35,7 @@ export const STR = {
       <tr><td>M</td><td>הולומפה</td></tr>
       <tr><td>I / J</td><td>חפצים ויומן</td></tr>
       <tr><td>Esc / P</td><td>הפסקה</td></tr>
-      <tr><td>גיימפד</td><td>A פעולה · B כדור · X דיבור · Y מפה · LB/RB התנהגות · LT תפריט · R3 מרכוז · Start הפסקה</td></tr>`,
+      <tr><td>גיימפד</td><td>סטיק שמאלי תנועה · סטיק ימני מצלמה · חיצים (D-pad) ארבע ההתנהגויות: ↑ רגיל · → אתלטי · ↓ תוקפני · ← חשאי · A פעולה / דיבור · X התקפה · Y כדור · B התחמקות · View מלאי · LT הולומפ · RT בחירת נשק · LB החלפה · RB נעילה · R3 מטרה הבאה · Menu הפסקה</td></tr>`,
     beh_normal: 'רגיל', beh_athletic: 'אתלטי', beh_aggressive: 'אגרסיבי', beh_discreet: 'דיסקרטי',
     p_talk: 'דבר', p_search: 'חפש', p_rummage: 'חפש', p_read: 'קרא', p_open: 'פתח', p_shop: 'קנה', p_gate: 'שער',
     obj_sage: 'מצא את חכם מזג־האוויר במגדלור שבצפון',
@@ -93,7 +93,7 @@ export const STR = {
     slot_full: 'Not enough storage space. Save over an old slot, or delete slots from Load Game on the title screen.', slot_fail: "Can't save: the browser's storage isn't available.",
     nosave_scene: "You can't save during a story scene.", nosave_fight: "You can't save during a fight.", nosave_dead: "You can't save right now.", nosave_here: "You can't save here.", nosave_wait: 'Wait a moment, then save.',
     quit_full: "Storage is full, so this spot wasn't saved. Press Save & Quit again to quit anyway.",
-    language: 'Language', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',
+    language: 'Language', auto_controls: 'Controls by device', ac_on: 'Auto', ac_off: 'Off', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',
     visual: 'Look', vis_2026: 'LBA3', vis_1997: 'Retro 1997',
     quality: 'Graphics', q_auto: 'Auto', q_high: 'High', q_medium: 'Medium', q_low: 'Low',
     camera: 'Camera', cam_lba: 'Fixed (LBA2)', cam_follow: 'Follow', cam_free: 'Free', cam_dist: 'Camera distance', cd_near: 'Near', cd_medium: 'Medium', cd_far: 'Far',
@@ -124,7 +124,7 @@ export const STR = {
       <tr><td>Right click / L</td><td>Focus on a target · wheel / T: next target</td></tr>
       <tr><td>R · hold G (Classic) / X (Modern)</td><td>Swap to the last weapon · weapon wheel</td></tr>
       <tr><td>Q</td><td>Camera distance</td></tr>
-      <tr><td>Gamepad</td><td>A action / talk · X attack · Y ball · B dodge · RB focus · R3 next target · LB swap · RT weapon wheel · LT behaviour · View holomap · Menu pause</td></tr>`,
+      <tr><td>Gamepad</td><td>Left stick move · right stick camera · D-pad the four behaviours: ↑ Normal · → Athletic · ↓ Aggressive · ← Discreet · A action / talk · X attack · Y ball · B dodge · View inventory · LT holomap · RT weapon wheel · LB swap · RB focus · R3 next target · Menu pause</td></tr>`,
     wp_fists: 'Fists', wp_ball: 'Magic Ball', wp_sword: 'Sword', wp_pulse: 'Pulse Tool',
     difficulty: 'Difficulty', df_gentle: 'Gentle', df_normal: 'Normal', df_hard: 'Hard',
     aim_assist: 'Aim Assist', aa_off: 'Off', aa_low: 'Low', aa_normal: 'Normal', aa_high: 'High',

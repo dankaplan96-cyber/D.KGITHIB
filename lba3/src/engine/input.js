@@ -59,12 +59,15 @@ export function keyLabel(code) {
   return named[code] ?? code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'Num ');
 }
 
-// Standard gamepad mapping. A: behaviour action (talks when something is in reach) · B: dodge · X: attack
-// (hold: charge / heavy) · Y: magic ball (again: recall) · LB: quick weapon swap · RB: focus · LT: behaviour
-// menu · RT: weapon selector · View: holomap · Menu: pause · L3: camera distance · R3: switch target
-// (recenter the camera when nothing is focused) · D-pad: move / menus
-const PADMAP = { action: [0], dodge: [1], attack: [2], ball: [3], swap: [4], focus: [5], wheel: [6], weapons: [7], map: [8], pause: [9], view: [10], r3: [11], up: [12], down: [13], left: [14], right: [15] };
-export const PAD_LABELS = { action: 'A', dodge: 'B', attack: 'X', ball: 'Y', swap: 'LB', focus: 'RB', wheel: 'LT', weapons: 'RT', map: 'View', pause: 'Menu', view: 'L3', tswitch: 'R3', interact: 'A' };
+// Standard gamepad mapping (Xbox names; a PS5 pad: Cross/Circle/Square/Triangle, L1/R1/L2/R2, Create, Options).
+// Sticks: move and camera. D-pad in play: Twinsen's four behaviours, as F1–F4 (the user, 31.10): ↑ Normal ·
+// → Athletic · ↓ Aggressive · ← Discreet; in menus it moves the selection. A: behaviour action (talks when something
+// is in reach) · B: dodge · X: attack (hold: charge / heavy) · Y: magic ball (again: recall) · LB: quick weapon swap ·
+// RB: focus · LT: holomap (before the ball: the behaviour menu; in the holomap: zoom out) · RT: weapon selector ·
+// View: inventory · Menu: pause · L3: camera distance · R3: switch target (recenter when nothing is focused)
+const PADMAP = { action: [0], dodge: [1], attack: [2], ball: [3], swap: [4], focus: [5], map: [6], wheel: [6], weapons: [7], inventory: [8], pause: [9], view: [10], r3: [11], up: [12], down: [13], left: [14], right: [15], b1: [12], b2: [15], b3: [13], b4: [14] };
+export const PAD_LABELS = { action: 'A', dodge: 'B', attack: 'X', ball: 'Y', swap: 'LB', focus: 'RB', wheel: 'LT', weapons: 'RT', map: 'LT', inventory: 'View', pause: 'Menu', view: 'L3', tswitch: 'R3', interact: 'A', b1: 'D-pad ↑', b2: 'D-pad →', b3: 'D-pad ↓', b4: 'D-pad ←' };
+const DIRS = ['up', 'down', 'left', 'right'];
 
 export class Input {
   constructor(canvas) {
@@ -200,6 +203,9 @@ export class Input {
     this.pad = null;
     for (const p of pads) if (p && p.connected) { this.pad = p; break; }
     this.padAxes = [0, 0, 0, 0];
+    // (directions that only the pad gives — its d-pad, or the left stick past its menu threshold — steer menus, not
+    //  Twinsen: he walks with the stick itself; the d-pad picks behaviours in play)
+    const kbd = DIRS.filter((d) => this.now.has(d));
     if (this.pad) {
       const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v);
       this.padAxes = [0, 1, 2, 3].map((i) => dz(this.pad.axes[i] || 0));
@@ -215,6 +221,7 @@ export class Input {
       if (ay < -0.6) this.now.add('up'); if (ay > 0.6) this.now.add('down');
       if (this.padAxes.some((v) => v !== 0)) this.lastDevice = 'pad';
     }
+    this.padDirs = DIRS.filter((d) => this.now.has(d) && !kbd.includes(d));
     if (this.mouse.clicked) { this.now.add('click'); this.mouse.clicked = false; }
   }
 
@@ -233,10 +240,11 @@ export class Input {
     let x = 0, y = 0;
     const stick = this.padAxes[0] !== 0 || this.padAxes[1] !== 0;
     if (!stick) {
-      if (this.down('left')) x -= 1;
-      if (this.down('right')) x += 1;
-      if (this.down('up')) y += 1;
-      if (this.down('down')) y -= 1;
+      const k = (d) => this.down(d) && !this.padDirs?.includes(d);
+      if (k('left')) x -= 1;
+      if (k('right')) x += 1;
+      if (k('up')) y += 1;
+      if (k('down')) y -= 1;
     }
     x += this.padAxes[0] + this.touch.x;
     y += -this.padAxes[1] + this.touch.y;

@@ -216,11 +216,9 @@ export class HUD {
     const on = this.objT > 0;
     if (on !== this.objShown) { this.objShown = on; $('#objective').classList.toggle('show', on); }
   }
-  // the key (or pad button) the player uses for an action, for hints; the behaviour keys (b1–b4) are the
-  // behaviour menu (LT) on a pad
+  // the key (or pad button) the player uses for an action, for hints (the behaviours b1–b4: the d-pad on a pad)
   key(a) {
     const I = this.game.input;
-    if (/^b[1-4]$/.test(a) && I.lastDevice === 'pad') return PAD_LABELS.wheel;
     return I.label(a) || keyLabel(keyFor(a));
   }
 
@@ -619,7 +617,7 @@ export class HUD {
   // input and drawing, each frame the map is open; true when it closes
   holomapUpdate(input, dt) {
     if (this._closeReq) { this._closeReq = false; return true; }
-    if (input.pressed('map') || input.pressed('pause') || (input.lastDevice === 'pad' && input.pressed('dodge'))) return true;
+    if ((input.pressed('map') && input.lastDevice !== 'pad') || input.pressed('pause') || (input.lastDevice === 'pad' && input.pressed('dodge'))) return true;   // (on a pad LT opens it and zooms out in it: B or Menu close)
     const c = this.holo;
     if (Math.abs(c.getBoundingClientRect().width - this._holoCss) > 1) this._holoSize();
     const w = this._where(), region = w.region, B = this.mapBase(region), W = c.width, H = c.height;

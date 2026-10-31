@@ -60,6 +60,27 @@ const jump = await ev(() => {
 });
 check('pad A with nothing in reach still jumps in Athletic', !jump.near && jump.dy > 0.2, jump);
 
+// ---------------------------------------------------------------- 2b. pad layout (the user, 31.10): the d-pad picks the four
+// behaviours and does not walk him (the sticks do), View opens the inventory
+const padMap = await ev(() => {
+  const G = game, h = G.hero, c = G.rooms.house.center; navigator.getGamepads = () => [PAD];
+  h.pos.set(c.x, 0, c.z); h.onGround = true; h.behaviour = 'normal'; G.step(0.3);
+  const tap = (b) => { PAD.buttons[b] = { pressed: true }; G.step(1 / 60); PAD.buttons[b] = { pressed: false }; G.step(1 / 60); };
+  const hold = (b, t) => { PAD.buttons[b] = { pressed: true }; for (let k = 0; k < t * 20; k++) G.step(0.05); PAD.buttons[b] = { pressed: false }; G.step(0.05); };
+  const r = {};
+  const x0 = h.pos.x, z0 = h.pos.z;
+  hold(15, 0.6); r.right = h.behaviour; r.movedDpad = +Math.hypot(h.pos.x - x0, h.pos.z - z0).toFixed(2);
+  tap(13); r.down = h.behaviour; tap(14); r.left = h.behaviour; tap(12); r.up = h.behaviour;
+  const x1 = h.pos.x, z1 = h.pos.z;
+  PAD.axes = [0, -0.9, 0, 0]; for (let k = 0; k < 12; k++) G.step(0.05); PAD.axes = [0, 0, 0, 0]; G.step(0.1);
+  r.movedStick = +Math.hypot(h.pos.x - x1, h.pos.z - z1).toFixed(2);
+  tap(8); r.inv = G.state; tap(8); r.after = G.state;
+  navigator.getGamepads = () => []; G.input.lastDevice = 'kbd'; h.behaviour = 'normal'; G.step(0.1);
+  return r;
+});
+check('pad: d-pad → Athletic, ↓ Aggressive, ← Discreet, ↑ Normal; the d-pad does not walk him, the stick does', padMap.right === 'athletic' && padMap.down === 'aggressive' && padMap.left === 'discreet' && padMap.up === 'normal' && padMap.movedDpad < 0.05 && padMap.movedStick > 0.5, padMap);
+check('pad: View opens the inventory and closes it again', padMap.inv === 'inventory' && padMap.after === 'play', padMap);
+
 // ---------------------------------------------------------------- 3. NPC gait
 const gait = await ev(() => {
   const G = game, n = G.npcs.find((x) => x.def.id === 'arthur'), P = G.physics, out = {};
