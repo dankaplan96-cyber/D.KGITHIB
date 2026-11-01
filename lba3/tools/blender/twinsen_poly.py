@@ -244,6 +244,11 @@ def w_cape(p):
 # GAME_SPREAD), so the idle silhouette is 0.45's. A tunic body under the cape (`tunicBody`) fills the cut when a sleeve
 # swings or rises. TW_CAPE_046=1 builds 0.46.0's HERO-LOOK cape (on the torso, 15 % over the arm, sleeves of its own).
 CAPE_046 = bool(os.environ.get('TW_CAPE_046'))
+# WA-16 (the user 01.11, on 0.48: "it's a shirt, not a tunic; look how LBA2 did it and copy it"; measured on the laptop:
+# LBA2's body 1 has the cape's outer part on the upper arm and the rest on the torso, no sleeve, one closed shell that
+# stretches into a wing from the belt to the hand when the arm rises). The default is that cape again (0.45's: LBA2's
+# weights, no cut, no tunic body, no sleeve walls); TW_CAPE_CUT=1 builds HERO-ARMS' cut sleeves (0.47-0.48).
+CAPE_CUT = bool(os.environ.get('TW_CAPE_CUT')) and not CAPE_046
 CAPE_ARM = 0.15
 SEAM_F, SEAM_B = 2, 10   # (the cut's columns of the 24 round the cape: 30 and 150 degrees, the side between is the sleeve)
 SLEEVE_COLS = set(range(SEAM_F, SEAM_B)) | set(range(24 - SEAM_B, 24 - SEAM_F))
@@ -322,7 +327,7 @@ CAPE_TOP = [
 # the cloth has thickness: an inner lip turns up under the cape's edge (darker, in its own shadow)
 lip = Part('capeLip', 'inner', w_cape, angle=70, reweight=w_cape_game if CAPE_046 else None)
 loft(lip, [ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62)])
-if not CAPE_046:
+if CAPE_CUT:
     cut_sleeves(lip, N, 2)
 PARTS.append(lip)
 loft(cape, [
@@ -332,10 +337,10 @@ loft(cape, [
     ring(0.70, 0.163, 0.118, -0.046, N, 0.72),
     ring(0.74, 0.122, 0.096, -0.028, N, 0.8),
 ] + CAPE_TOP)
-if not CAPE_046:
+if CAPE_CUT:
     cut_sleeves(cape, N, CUT_RINGS)
 PARTS.append(cape)
-if not CAPE_046:
+if CAPE_CUT:
     # HERO-ARMS: the tunic's body under the cape, from the belt's top to the armpits, on the torso: hidden at rest, it
     # is what shows through the cut when a sleeve swings or rises (instead of the cape's inside)
     tbody = Part('tunicBody', 'tunic', lambda p: {'torso': 1.0}, angle=60)
@@ -502,7 +507,7 @@ for sx in (1, -1):
     loft_along(slv, rings, cap0=False, cap1=False)
     if CAPE_046:   # (HERO-ARMS: the cape's side is the sleeve again; this one was inside it)
         PARTS.append(slv)
-    else:
+    elif CAPE_CUT:
         # HERO-ARMS: the sleeve's underside, closing the cape's side into a wide sleeve below the armpit: a wall from the
         # cut's front edge to its back edge on each ring, bowed in a little; hidden inside the cape at rest, it makes
         # a raised or swung sleeve a tube instead of an open shell. Weighted as the sleeve's edges (cut_sleeves).
