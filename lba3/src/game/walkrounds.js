@@ -33,23 +33,31 @@ function seatAt(W, x, z, list = W.seats) {
   // (seat: the bench's middle and its shape, spec; the sitter's own place on it is walkers.js seatPose)
   return { slot: { x: best.x + sx * 1.15, z: best.z + sz * 1.15 }, seat: { x: best.x, z: best.z, a: best.ry, spec: best.spec }, ry: best.ry };
 }
-// a resident's own front door: the house whose door is nearest the hint
-function doorAt(W, x, z, list = W.houses) {
+// a resident's own front door: the house whose door is nearest the hint. It stands `out` m beyond the house's door point
+// (Citadel's houses: architecture.js puts that point 0.75 m before the wall, so 0.25 more is ~1 m from the leaf, within a
+// knock's reach; the step in at the end of the knock then ends on the door's step, not in the open street)
+function doorAt(W, x, z, list = W.houses, out = 1.7) {
   let best = null, bd = 1e9;
   for (const h of list || []) { if (!h.door) continue; const d = Math.hypot(h.door.x - x, h.door.z - z); if (d < bd) { bd = d; best = h; } }
   if (!best || bd > 3) return null;
   const ry = best.ry ?? Math.atan2(best.door.x - best.x, best.door.z - best.z);
-  return { x: best.door.x + Math.sin(ry) * 1.7, z: best.door.z + Math.cos(ry) * 1.7, a: ry + Math.PI, door: { x: best.door.x, z: best.door.z } };
+  return { x: best.door.x + Math.sin(ry) * out, z: best.door.z + Math.cos(ry) * out, a: ry + Math.PI, door: { x: best.door.x, z: best.door.z } };
 }
 
 // ------------------------------------------------------------------ Citadel
 export function citadelRoster(game) {
   const W = game.world;
   const bench = (id, x, z, dur, o = {}) => { const b = seatAt(W, x, z); if (!b) return null; return { id, x: b.slot.x, z: b.slot.z, a: b.ry + Math.PI, act: 'stand', seat: b.seat, dur, ...o }; };
-  const home = (id, x, z, dur) => { const d = doorAt(W, x, z); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur }; };
+  const home = (id, x, z, dur) => { const d = doorAt(W, x, z, W.houses, 0.25); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur }; };
   const look = (id, x, z, tx, tz, dur, o = {}) => D(id, x, z, { a: A(x, z, tx, tz), dur, ...o });
   const ok = (a) => a.filter(Boolean);
   const WELL = { x: -42, z: -4 };
+  // the square's tulip bed (island.js buildOriginalProps, citadel-layout.js tulips[1]): 3.3 × 1.1 m inside its curb, the
+  // long sides along x; the curb's outside from x −40.9 to −37.5, z 8.0 to 9.4. The gardener works it from 0.6 m off a
+  // long side, facing in (TOWN-POLISH / I-30: he stood 0.9 m off and watered the grass)
+  const BED = { x: -39.2, z: 8.7 };
+  // Pippa's stall (town.js): the counter faces the well; its heat post stands past the counter's south end
+  const POST = { x: -47.56, z: -2.8 };
   // the pair's meeting place, between the plaza's benches; each faces the other
   const MEET = [[-52.6, 37.6], [-50.4, 37.6]];
   const R = [
@@ -58,7 +66,7 @@ export function citadelRoster(game) {
       home('oda_home', -65.5, 11, [14, 22]),
       look('oda_dry', -44.0, -6.0, WELL.x, WELL.z, [6, 9], { stage: 0, gest: ['shrug', 'sigh'] }),
       look('oda_well', -44.9, -6.4, WELL.x, WELL.z, [5, 8], { stage: 1 }),
-      look('oda_stall', -46.2, -2.2, -47.4, -0.4, [6, 9], { act: 'browse', when: [0, 0.75], carry: 'basket' }),
+      look('oda_stall', -47.25, -1.61, -47.93, -1.11, [6, 9], { act: 'browse', when: [0, 0.75], carry: 'basket' }),   // (0.6 m before the counter's north half, facing it; 1.2 m from Pippa)
       bench('oda_bench', -49, -7.4, [18, 28]),
     ]) },
     // the old man: benches along the lane, the well, a long look at the pump
@@ -84,12 +92,12 @@ export function citadelRoster(game) {
     ]) },
     // the gardener: tends the square's bed from the lane side, draws water at the well, pours it on the other side
     { id: 'garrick', char: 'farmerA', tint: '#ffffff', speed: 1.0, start: 0, color: '#d0a070', stops: ok([
-      look('gar_tend', -39.3, 10.3, -39.3, 8.7, [16, 22], { act: 'tend', carry: null }),
+      look('gar_tend', BED.x - 0.4, BED.z + 1.3, BED.x, BED.z, [16, 22], { act: 'tend', carry: null }),   // (kneels 0.6 m off the north side)
       look('gar_dry', -39.9, -6.3, WELL.x, WELL.z, [5, 7], { stage: 0, gest: ['shrug', 'sigh'] }),   // (dry: a look into the well, then the drinking fountain on the lane for his water)
       look('gar_tap', -44.6, 37.4, -43.4, 37.4, [6, 9], { stage: 0, act: 'draw', carry: 'can' }),
-      look('gar_draw', -39.9, -6.3, WELL.x, WELL.z, [5, 7], { stage: 1, act: 'draw', carry: 'can' }),
-      look('gar_water', -39.3, 7.1, -39.3, 8.7, [9, 13], { act: 'water' }),
-      look('gar_rest', -36.2, 8.4, -39.3, 8.7, [6, 9], { act: 'rest', carry: null }),
+      look('gar_draw', -40.68, -5.44, WELL.x, WELL.z, [5, 7], { stage: 1, act: 'draw', carry: 'can' }),   // (at the rim: 1.95 m from the well's middle, as Dot peers in)
+      look('gar_water', BED.x + 0.8, BED.z - 1.3, BED.x + 0.8, BED.z, [9, 13], { act: 'water' }),   // (0.6 m off the south side, facing in; 2.1 m from Pom by the square)
+      look('gar_rest', -36.2, 8.4, BED.x, BED.z, [6, 9], { act: 'rest', carry: null }),
     ]) },
     // the children: Pico up and down the lane, Dot round the square
     { id: 'pico', char: 'desertkid', tint: '#ffe8d8', speed: 1.6, start: 0, color: '#ffd080', stops: ok([
@@ -104,7 +112,7 @@ export function citadelRoster(game) {
       D('dot_b', -46.6, -9.0, { a: 0, dur: [2, 4] }),
       look('dot_peer', -42.0, -6.0, WELL.x, WELL.z, [4, 6], { stage: 0, act: 'dip' }),   // (dry: leaning toward the well to see for herself)
       look('dot_stall', -48.4, -3.6, -47.4, -1.2, [3, 5], { stage: 0 }),
-      look('dot_warm', -47.6, -4.1, -47.56, -2.8, [6, 9], { stage: 1, act: 'warm' }),   // (the stall's heat post)
+      look('dot_warm', POST.x + 0.53, POST.z - 0.53, POST.x, POST.z, [6, 9], { stage: 1, act: 'warm' }),   // (the stall's heat post: 0.75 m from it, hands out to it)
       D('dot_c', -36.2, -3.0, { a: 1.2, dur: [2, 4] }),
       D('dot_d', -41.0, 4.6, { a: 3, dur: [2, 4] }),
     ]) },
