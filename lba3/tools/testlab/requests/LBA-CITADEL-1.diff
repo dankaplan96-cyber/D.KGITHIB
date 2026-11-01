@@ -75,7 +75,7 @@ index 531c388..ca86656 100644
        W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', label: 'p_door' }); });
 diff --git a/lba3/src/game/tavern.js b/lba3/src/game/tavern.js
 new file mode 100644
-index 0000000..12d3ecc
+index 0000000..da8fc0b
 --- /dev/null
 +++ b/lba3/src/game/tavern.js
 @@ -0,0 +1,168 @@
@@ -163,10 +163,10 @@ index 0000000..12d3ecc
 +  // the arched door under the gallery (the original's way down to the cellar, scene 4: shut)
 +  const AX = 3.6;
 +  k.add(rbox(1.2, 1.7, 0.08, 0.02), MAT.wood('dark'), AX, 0.85, GZ1 + 0.04);
-+  k.add(cyl(0.6, 0.6, 0.08, 16).rotateX(Math.PI / 2), MAT.wood('dark'), AX, 1.7, GZ1 + 0.04);
++  k.add(cyl(0.6, 0.6, 0.08, 16), MAT.wood('dark'), AX, 1.7, GZ1 + 0.04, 0, { rx: Math.PI / 2 });
 +  k.add(rbox(1.5, 0.16, 0.14, 0.02), cap, AX, 2.38, GZ1 + 0.07);
 +  for (const sx of [-1, 1]) k.add(rbox(0.16, 2.3, 0.14, 0.02), cap, AX + sx * 0.68, 1.15, GZ1 + 0.07);
-+  k.add(cyl(0.04, 0.04, 0.03, 8).rotateX(Math.PI / 2), MAT.iron(), AX + 0.35, 1.0, GZ1 + 0.1);
++  k.add(cyl(0.04, 0.04, 0.03, 8), MAT.iron(), AX + 0.35, 1.0, GZ1 + 0.1, 0, { rx: Math.PI / 2 });
 +  // --- the stair against the gallery's face, climbing toward the left wall, and its landing at the top
 +  const SZ0 = GZ1, SZ1 = GZ1 + 1.3, N = 8, run = 0.5, rise = GH / N, SX0 = 1.6;   // (its foot at x = SX0)
 +  for (let i = 0; i < N; i++) {

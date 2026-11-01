@@ -1041,3 +1041,50 @@ apply").**
     the back shelves, and out.
   - Draw calls: 24 (23 + 1) at Medium.
 - **Picture:** `runs/pharmacy-vs-lba2.jpg`.
+
+---
+
+## LBA-CITADEL-5 · The neighbours' house, inside the `nbr` house · Approved (night mode; pictures sent)
+
+- **Where:** LBA2 scene 9's door is our `nbr` house, next to Twinsen's.
+- **Code:** `requests/LBA-CITADEL-5.diff`, **on top of 1–4**.
+  - New `src/game/nbrhouse.js` (region `nbrhouse` at x 7600).
+  - Hooks after the pharmacy's. Its `doors()` hook passes `this.game.flags`.
+- **The door leads in only once `flags.prologueDone`.** In the prologue Zoé stands at it (prologue.js keeps the house
+  in its open set for her; text/well.js "their kettle").
+- **The original's layout** (study render: 15 × 17 cells, so 7.2 × 8.2 m, 3.0 m), in the style of Twinsen's house:
+  - **Walls and floor:** teal patterned paper over a wooden dado, terracotta tiles, dark wooden caps. These are
+    Twinsen's house's own materials (WA-8).
+  - **The left wall:** a window with cream curtains, a bookcase of old volumes over a sideboard, a lamp in the corner.
+  - **The back wall:** the double bed under a portrait, a wall lamp, a writing desk with its lamp and chair, a framed
+    picture, a basket of rolled papers.
+  - **The middle:** a square table with a candle and two chairs on a rug, and a teal armchair on each side.
+- **Twelve years on (ours), tied to chapter 1's water trouble:** a kitchen corner with the stove and the kettle Zoé
+  asks about, a basin with its tap, and one of the project's heat radiators.
+- **For the story:** `R.npcSpots.neighbour` is by the stove. No people or lines were added.
+- **Measured:**
+  - `artnbrhouse` (with `prologueDone` set and anyone at the door stood aside): PASS. In, past the table to the bed
+    and the desk, to the kitchen corner, and out.
+  - Draw calls: 19 (18 + 1) at Medium.
+- **Picture:** `runs/nbrhouse-vs-lba2.jpg`.
+
+**Two faults found in my own rooms on the way, fixed in every diff:**
+- **The neighbours' house broke the renderer:** `props.frame(k, w, h, picture)` takes the picture's texture fourth, and
+  I had passed a number, so its material had a "map" that was not a texture.
+  - The shader would not compile (`'uvundefined'`), and three.js threw at `refreshMaterialUniforms`.
+- **Shared geometry turned:** `cyl(…).rotateX/Z` rotated `props.cyl`'s cached, shared geometry, which every other user
+  of the same cylinder would see turned. Now the part is turned instead (`{ rx }`, `{ rz }`).
+  - Found in the tavern (the arched door and its knob), the ticket office (the clock) and the neighbours' house (a
+    lamp bracket).
+
+**The whole chain rebuilt and checked (1.11, late evening).**
+- `requests/LBA-CITADEL-1.diff` … `-5.diff` were remade one on top of the other from origin 799cccc. Each applies with
+  `git apply --check` in order on a fresh checkout.
+- On that checkout, the Test Lab `artplaces` passes all five in one run:
+  - each in by its house's door, with no locked prompt, and out;
+  - draw calls 30 / 24 / 24 / 24 / 19 at Medium;
+  - no console errors besides the server's missing favicon.
+- **The game's own tests on the same checkout** (local Chrome/headless shell; the tests' Playwright path pointed at
+  the laptop's for the run only, nothing of that in the diffs):
+  - `prologue.mjs` 26/26, `chapter1.mjs` 23/23, `opening.mjs` 27/27 (rerun alone; the first run, beside a picture shoot, met refused connections from the local server), `transitions.mjs` 6/6 and `house.mjs` 2/2 pass.
+  - Their only resource "fail" is the local server's missing favicon.ico.

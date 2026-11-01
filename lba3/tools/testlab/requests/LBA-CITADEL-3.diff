@@ -60,7 +60,7 @@ index 3a31800..981161b 100644
    townDoors() {
 diff --git a/lba3/src/game/ticket.js b/lba3/src/game/ticket.js
 new file mode 100644
-index 0000000..1087a8d
+index 0000000..696ce7b
 --- /dev/null
 +++ b/lba3/src/game/ticket.js
 @@ -0,0 +1,128 @@
@@ -172,7 +172,7 @@ index 0000000..1087a8d
 +  for (const [x, z] of [[LX + 0.5, 1.15], [-0.6, D / 2 - 0.5]]) B.put(x, z, 0, (kk) => postLamp(kk));
 +  // --- the walls: the Temple poster and the clock on the left, the ship poster between the back windows
 +  k.add(plane(0.75, 1.0), templePoster(), LX + 0.03, 1.75, -1.6, Math.PI / 2);
-+  k.add(cyl(0.24, 0.24, 0.05, 20).rotateZ(Math.PI / 2), DARK(), LX + 0.05, 2.85, -0.4);
++  k.add(cyl(0.24, 0.24, 0.05, 20), DARK(), LX + 0.05, 2.85, -0.4, 0, { rz: Math.PI / 2 });
 +  k.add(new THREE.CircleGeometry(0.21, 20), MAT.map(CANV.clock(), 0.6), LX + 0.085, 2.85, -0.4, Math.PI / 2);
 +  k.add(plane(1.0, 0.72), shipPoster(), 0.4, 1.95, BZ + 0.03);
 +  // twelve years on: the ferry's timetable by the door

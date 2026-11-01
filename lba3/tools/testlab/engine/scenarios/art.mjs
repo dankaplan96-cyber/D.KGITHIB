@@ -268,7 +268,7 @@ ART.push(artBusy);
 // reports a stick toward the next waypoint: the physics, steps and colliders as by hand; the story cancels hero.walkTo
 // indoors), out by its own door — with its frames and draw calls. evidence/<room>/*.jpg, walk.json.
 //   legs: [{ name, pts: [[x, z] room-local], minY? }]; the last leg ends at the room's exit.
-function placeWalk({ id, title, suite, room, house, legs }) {
+function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
   return { ...artShots, id, title, suites: [suite, 'artplaces'], timeoutS: 600,
     async run(ctx) {
       const { page, rec, dir } = ctx;
@@ -322,6 +322,10 @@ function placeWalk({ id, title, suite, room, house, legs }) {
         await sleep(400); return res;
       };
       const log = [];
+      // (a place that opens only from a point of the story on: those flags set first)
+      // (and, as a new game's people still stand where the earlier story put them, anyone within 2.5 m of the door is
+      //  stood aside: the prologue's Zoé at the neighbours' door)
+      if (flags) await page.evaluate(({ flags, house }) => { Object.assign(game.flags, flags); const h = game.world.houses.find((x) => x.id === house); for (const n of game.npcs || []) if (n.present && Math.hypot(n.pos.x - h.door.x, n.pos.z - h.door.z) < 2.5) n.setPresent(false); }, { flags, house });
       // 1. outside, a few steps before the house's door; walk in
       const door = await page.evaluate((house) => { const h = game.world.houses.find((x) => x.id === house); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
       await sleep(2500); await shot('01-outside-door');
@@ -329,7 +333,10 @@ function placeWalk({ id, title, suite, room, house, legs }) {
       const offer = await page.evaluate((house) => { const h = game.world.houses.find((x) => x.id === house), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
       log.push({ offerAtDoor: offer });
       assert(rec, `no "locked" prompt at the ${house} building's open door`, offer?.kind !== 'locked', 'not locked', offer?.kind ?? 'none');
-      await keyTo(door.x, door.z, 10); await sleep(3500);
+      await keyTo(door.x, door.z, 10); await sleep(1500);
+      // (the scene change: a first visit builds the room behind the black first; wait until it has faded in)
+      for (let t = 0; t < 30 && await page.evaluate(() => !!game.trans); t++) await sleep(500);
+      await sleep(1500);
       let s = await st(); log.push({ step: 'in by the door', ...s }); await shot('02-inside');
       if (s.room !== room) log.push({ doorsNear: await page.evaluate(() => game.story.doors().filter((d) => Math.hypot(d.x - game.hero.pos.x, d.z - game.hero.pos.z) < 4).map((d) => ({ room: d.room, house: d.house, x: +d.x.toFixed(2), z: +d.z.toFixed(2), r: d.r, dist: +Math.hypot(d.x - game.hero.pos.x, d.z - game.hero.pos.z).toFixed(2) }))), doorCool: await page.evaluate(() => game.doorCool), regionsHas: await page.evaluate((r) => game.regions.has?.(r), room) });
       log.push({ calls: await page.evaluate(() => new Promise((res) => {
@@ -382,3 +389,11 @@ export const artPharmacy = placeWalk({ id: 'art-pharmacy', title: 'The pharmacy:
   { name: 'out', pts: [[-2.4, -0.9], [-2.4, 1.3], [-2.2, 2.1], [-3.2, 2.1]] },
 ] });
 ART.push(artPharmacy);
+// the neighbours' house (LBA-CITADEL-5, LBA2 scene 9, the 'nbr' house; open once the prologue is done): past the table
+// to the bed and the desk, round to the kitchen corner, and out
+export const artNbrHouse = placeWalk({ id: 'art-nbrhouse', title: "The neighbours' house: in by the door, round the room, out again", suite: 'artnbrhouse', room: 'nbrhouse', house: 'nbr', flags: { prologueDone: true }, legs: [
+  { name: 'by the bed and desk', pts: [[-1.6, 2.6], [-1.8, -0.2], [1.2, -1.6]] },
+  { name: 'the kitchen corner', pts: [[1.6, 0.9], [2.1, 2.6]] },
+  { name: 'out', pts: [[0.2, 2.9], [-2.4, 3.0], [-3.2, 3.0]] },
+] });
+ART.push(artNbrHouse);
