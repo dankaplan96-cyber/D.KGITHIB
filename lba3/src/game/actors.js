@@ -165,6 +165,11 @@ export class Hero extends Actor {
     this.prevPos = this.pos.clone();
   }
   get mpMax() { return 6 + this.magicLevel * 2; }
+  // (ANIM-POLISH-2: the body drawn visY above where he stands while it catches up with a stair tread or a kerb: update)
+  sync() {
+    super.sync();
+    if (this.visY) { this.rig.root.position.y += this.visY; }
+  }
 
   // Play as someone else for a while (Zoe's segments): swap the body, keep the controller.
   swapBody(look) {
@@ -342,6 +347,18 @@ export class Hero extends Actor {
     // (ANIM-POLISH: how far he came down, for the landing's depth; and how far the ground still is, for the legs to reach it)
     if (!wasAir) this.airPeak = this.pos.y; else this.airPeak = Math.max(this.airPeak ?? this.pos.y, this.pos.y);
     this.rig.groundGap = this.onGround ? 0 : Math.max(0, this.pos.y - (this.groundY ?? this.pos.y));
+    {
+      // (ANIM-POLISH-2) a stair tread or a kerb (up to STEP_UP, or a drop under 0.6 m, which the ground takes in one frame) no
+      // longer jerks the whole body 13-55 cm in a frame: the drawn body keeps its height and follows in about a tenth of a second
+      // (up a step quicker than down one), and a drop of more than 0.3 m is taken in the knees. Gameplay height, collisions and
+      // the camera are unchanged: only the model is drawn `visY` above (or below) where he stands (Hero.sync)
+      const dy = this.pos.y - this.prevPos.y, dh = Math.hypot(this.pos.x - this.prevPos.x, this.pos.z - this.prevPos.z);
+      if (!wasAir && this.onGround && !landed && Math.abs(dy) > 0.04 + dh * 0.7 && Math.abs(dy) < 0.7 && dh < 0.5) {
+        this.visY = clamp((this.visY || 0) - dy, -0.6, 0.6);
+        if (dy < -0.3) this.rig.land(clamp(0.3 + 0.8 * (-dy - 0.3), 0.3, 0.6));
+      }
+      if (this.visY) { this.visY *= Math.exp(-dt * (this.visY < 0 ? 24 : 13)); if (Math.abs(this.visY) < 0.002) this.visY = 0; }
+    }
     // too steep to stand on: slide down (and no jumping from here)
     const steep = this.onGround ? P.steepAt(this.pos.x, this.pos.z, this.pos.y) : null;
     this.sliding = !!steep;
@@ -418,7 +435,7 @@ export class Hero extends Actor {
     else if (Math.abs(turning) > 0.5) anim = turning > 0 ? 'turnR' : 'turnL';
     this.rig.play(anim);
     // (the rig plants his feet in world space: it needs this frame's place and facing, and to know he stands on firm ground)
-    this.rig.root.position.copy(this.pos); this.rig.root.rotation.y = this.angle;
+    this.rig.root.position.copy(this.pos); this.rig.root.position.y += this.visY || 0; this.rig.root.rotation.y = this.angle;
     this.rig.plantFrame = this.onGround && !this.sliding;
     // engaged in a fight (a locked target, a move, a held charge or heavy blow, a hit taken, and 2.5 s after): his idle
     // is his combat stance for the weapon in hand; with a lock his head and chest turn to the target
@@ -568,7 +585,7 @@ export class Hero extends Actor {
   }
 
   // stand still now (placed by the game: a scene change, a respawn, a test)
-  resetMotion() { this.vel.set(0, 0); this.fwdSpeed = 0; this.kb.set(0, 0); }
+  resetMotion() { this.vel.set(0, 0); this.fwdSpeed = 0; this.kb.set(0, 0); this.visY = 0; }
 
   // anticipation: a quick crouch, then the take-off (in the air already? jump now)
   jump() {
