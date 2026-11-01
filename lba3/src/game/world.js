@@ -403,6 +403,11 @@ function islandSplat(x, z, h, slope, w) {
     w[3] = Math.max(w[3], soil * 2.5);
     w[0] *= 1 - soil * 0.95;
   }
+  if (h > 1.2) {   // WA-12 (proto)
+    const [soil, rock] = wildGround(x, z, n);
+    w[3] = Math.max(w[3], soil * 2.5); w[0] *= 1 - soil * 0.95;
+    w[2] = Math.max(w[2], rock * 1.2);
+  }
   // the quay is paved
   if (Math.max(roundBoxDist(x, z, QUAY.x0, QUAY.z0, QUAY.x1 + 3, QUAY.z1, QUAY_R), x - (QUAY.x1 - 1)) < 0.2 + n * 0.8 && h > 1.2) w[4] = Math.max(w[4], 3);
   const fd = Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z));
@@ -410,6 +415,18 @@ function islandSplat(x, z, h, slope, w) {
   if (boxDist(x, z, POI.fort.x - POI.fort.half - 5, POI.fort.z - 4.5, POI.fort.x - POI.fort.half + 1, POI.fort.z + 4.5) < n * 1.2) w[4] = 3; // the forecourt
   { const pave = 1 - Math.min(1, w[4] / 1.5); w[3] *= pave; w[0] *= pave; w[1] *= pave; w[2] *= pave; } // paving covers paths, soil and grass
   if (w[2] > 0) { w[0] *= 1 - Math.min(1, w[2]); w[3] *= 1 - Math.min(1, w[2]); w[1] *= 1 - Math.min(1, w[2]); }
+}
+
+// WA-12 (proto): LBA2's Citadel is mostly bare ground outside the town: broad patches (~20 m) of brown soil and of grey
+// rock showing through the grass, kept off the town, the fort and a little way off the paths. Returns [soil, rock] 0..1.
+function wildGround(x, z, n = 0) {
+  if (Math.hypot(x - POI.village.x, z - POI.village.z) < 40) return [0, 0];
+  if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < POI.fort.half + 8) return [0, 0];
+  const away = smoothstep(2.4, 4.5, pathDist(x, z));
+  const a = fbm(x * 0.05 + 11.3, z * 0.05 - 4.2, 3) + n * 0.12, b = fbm(x * 0.045 - 6.1, z * 0.045 + 9.7, 3) + n * 0.12;
+  const rock = smoothstep(0.1, 0.2, b) * away;
+  const soil = smoothstep(0.0, 0.1, a) * (1 - rock) * Math.max(away, 0.6);
+  return [soil, rock];
 }
 
 // how much bare soil (vs lawn) the town ground shows at x,z
@@ -886,6 +903,7 @@ export function* buildWorldSteps(parentScene) {
     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 32 && (streetDist(x, z) < 0.5 || inHouseS(x, z, 0.4))) continue;
     if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < 11) continue;
     if (pathDistScatter(x, z) < 1.4 || townSoil(x, z) > 0.3) continue;
+    { const [soil, rock] = wildGround(x, z); if (soil + rock > 0.4) continue; }   // WA-12 (proto)
     if (keepClear(x, z, -0.6)) continue;
     grass.push({ x, z, h: h + 0.06, s: 0.7 + rand() * 0.8, ry: rand() * 6.28 });
     if (rand() < 0.1) flowers.push({ x: x + 0.3, z: z + 0.2, h: H(x + 0.3, z + 0.2), s: 0.8 + rand() * 0.5, ry: rand() * 6 });

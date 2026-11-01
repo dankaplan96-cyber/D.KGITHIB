@@ -375,7 +375,7 @@ Not prototyped on the laptop: it is design work across several builders. Numbers
 
 ---
 
-## WA-11 and WA-12 now prototyped (1.11.2026)
+## WA-11 and WA-12 now prototyped (1.11.2026) · Applied (the cloud, 1.11.2026; in 0.47.0, the laptop's diff as it is)
 
 The user asked for "more like LBA2" (1.11.2026). WA-11 and WA-12 are no longer only design requests: both were
 prototyped on the laptop, and the exact code is in `tools/testlab/requests/WA-11-13.diff` (against 0aed5b2).
@@ -395,7 +395,7 @@ prototyped on the laptop, and the exact code is in `tools/testlab/requests/WA-11
 
 ---
 
-## WA-13 · The whole game: LBA2's muted palette (chroma × 0.72) · Approved (the user, 1.11.2026: "more like LBA2")
+## WA-13 · The whole game: LBA2's muted palette (chroma × 0.72) · Applied (the cloud, 1.11.2026; in 0.47.0)
 
 - **Why:** ours is about twice as saturated as LBA1/LBA2 everywhere (`examples/WORLD_LOOK_COMPARE.md`).
 - **Change (`src/engine/renderer.js`, prototyped):**

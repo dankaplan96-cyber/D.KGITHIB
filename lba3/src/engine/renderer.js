@@ -320,6 +320,7 @@ class ScaledRenderPass extends RenderPass {
   }
 }
 
+const GRADE = 0.72;   // WA-13 (proto)
 export class Renderer {
   constructor(container) {
     this.container = container;
@@ -432,6 +433,11 @@ export class Renderer {
         .replace('texture2D( tDiffuse, vUv )', 'texture2D( tDiffuse, min( vUv * uvScale, uvMax ) )');
       this.noOutputEdges = true;
     }
+    // WA-13 (proto): LBA2's muted palette: the picture's chroma scaled by `grade` after tone mapping (the luma kept)
+    this.output.uniforms.grade = { value: GRADE };
+    { const M = this.output.material;
+      M.fragmentShader = M.fragmentShader.replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform float grade;')
+        .replace('// color space', 'gl_FragColor.rgb = max( mix( vec3( dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), gl_FragColor.rgb, grade ), 0.0 );\n\t\t\t// color space'); }
     this._outFS = this.output.material.fragmentShader;
     if (typeof location !== 'undefined' && /[?&]oldedges\b/.test(location.search)) this.setOldEdges(true);
     c.addPass(this.output);

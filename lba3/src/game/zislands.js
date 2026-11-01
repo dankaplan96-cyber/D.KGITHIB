@@ -18,7 +18,7 @@
 import * as THREE from 'three';
 import { Terrain } from '../engine/terrain.js';
 import { textures } from '../engine/textures.js';
-import { rng, smoothstep } from '../engine/math.js';
+import { rng, smoothstep, fbm } from '../engine/math.js';
 import { SpriteBatch } from '../engine/spritebatch.js';
 import { MAX_SLOPE } from '../engine/physics.js';
 import { rockGeometry, treeGeometry } from './vegetation.js';
@@ -1125,6 +1125,21 @@ function planIsland(name, L, A, debug = false) {
 // ================================================================== ground colours (Zeelich's palette)
 const C = (c) => new THREE.Color(c);
 const COL0 = { turf: C('#f4ecb8'), turf2: C('#e4e8a8'), rock: C('#d8b4c4'), rockHi: C('#ecd0d4'), dust: C('#e8d4c0'), rim: C('#c8a0b8'), path: C('#f0d8c0'), pave: C('#fff0e8') };
+// WA-11 (proto): each island's own ground, as in LBA2 (the originals' grey share 39–74 %, their grass 0–11 %): broad
+// patches of bare rock and of paving across the flat land, in the island's own stone colour. rock / pave: the share of
+// the flat land; t: the noise level above which a patch lies, for that share (the patch noise is ~N(0, 0.3)).
+const BARE_T = (s) => 0.3 * Math.SQRT2 * erfinv(1 - 2 * s);
+function erfinv(y) { const a = 0.147, l = Math.log(1 - y * y), b = 2 / (Math.PI * a) + l / 2; return Math.sign(y) * Math.sqrt(Math.sqrt(b * b - l / a) - b); }
+const BARE = {
+  otringal: { rock: 0.15, pave: 0.5, stone: '#c4bccc' },     // pale lavender-grey paving and stone
+  cxislet: { rock: 0.2, pave: 0.4, stone: '#c8c0cc' },
+  knartas: { rock: 0.45, pave: 0.1, stone: '#b4b0ac' },      // grey rock, a tiled terrace
+  mosquibee: { rock: 0.4, pave: 0, stone: '#b8b0a4' },
+  celebration: { rock: 0.65, pave: 0.05, stone: '#8c8490' }, // dark rock (and lava)
+  undergas: { rock: 0.65, pave: 0.05, stone: '#7c7880' },
+  platform: { rock: 0.4, pave: 0.35, stone: '#8c8c90' },     // dark rock and paving
+  liftdock: { rock: 0.5, pave: 0.1, stone: '#a0a0a4' },
+};
 
 // ================================================================== one island
 function buildIsland(scene, physics, name, L, at) {
@@ -1180,6 +1195,15 @@ function buildIsland(scene, physics, name, L, at) {
     const k = atData(x, z);
     if (k >= 0 && route[k] < 2.2 && !paved(x, z)) c.lerp(COL.path, smoothstep(2.2, 0.8, route[k]) * 0.5);
     if (slope < 0.7 && paved(x, z)) c.copy(COL.pave).lerp(COL.turf, 0.15);
+    if (BG && h >= 0.8) { const [r, p] = bare(x, z); if (r + p > 0) c.lerp(BG.col, Math.min(1, r + p)); }   // WA-11 (proto)
+  };
+  // WA-11 (proto): [rock, pave] shares of the island's bare patches at x,z (none on the landing pad or the paved squares)
+  const BG = BARE[name] && { ...BARE[name], col: C(BARE[name].stone), tr: BARE[name].rock ? BARE_T(BARE[name].rock) : 9, tp: BARE[name].pave ? BARE_T(BARE[name].pave / (1 - BARE[name].rock)) : 9 };
+  const bare = (x, z) => {
+    if (Math.hypot(x - pad.x, z - pad.z) < 7 || paved(x, z)) return [0, 0];
+    const r = smoothstep(BG.tr - 0.03, BG.tr + 0.03, fbm(x * 0.07 + 5.3, z * 0.07 - 8.1, 3));
+    const p = smoothstep(BG.tp - 0.03, BG.tp + 0.03, fbm(x * 0.06 - 2.7, z * 0.06 + 3.9, 3)) * (1 - r);
+    return [r, p];
   };
   const splatFn = (x, z, h, slope, wt) => {
     wt[0] = 1; wt[1] = 0; wt[2] = 0; wt[3] = 0; wt[4] = 0;
@@ -1190,6 +1214,10 @@ function buildIsland(scene, physics, name, L, at) {
     if (pd < 5.5) { wt[4] = smoothstep(5.5, 4.2, pd) * 2; }
     if (rk < 0.5 && paved(x, z)) { wt[4] = 1.6; wt[0] *= 0.2; }
     else { const k = atData(x, z); if (k >= 0 && rk < 0.5 && route[k] < 1.9) wt[3] = Math.max(wt[3], smoothstep(1.9, 0.9, route[k]) * 1.2); }
+    if (BG && h >= 0.8 && rk < 0.5) {   // WA-11 (proto)
+      const [r, p] = bare(x, z);
+      wt[2] = Math.max(wt[2], r * 1.2); wt[4] = Math.max(wt[4], p * 1.6 * smoothstep(0.45, 0.25, slope)); wt[0] *= 1 - Math.min(1, r + p); wt[3] *= 1 - Math.min(1, r + p);
+    }
   };
   const terrain = new Terrain({ size, segs, squares: BATCH.on ? 25 : 0, heightFn, colorFn, splatFn, textures: { ...TX, rock: TX.cliff, cobble: S.pave === 'cobble' ? TX.cobble : TX.concrete } });
   group.add(terrain.mesh);
