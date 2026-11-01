@@ -56,7 +56,7 @@ const stops = await ev(() => { const G = game, W = G.walkers, nav = W.nav, st = 
   doors.push(...window.storyDoors());
   const places = window.storyPlaces();
   for (const r of CIT()) for (const s of r.stops) {
-    if (!nav.nearest(s.x, s.z, 0.01)) bad.push(`${s.id}: not walkable`);
+    if (!nav.nearest(s.x, s.z, s.door ? 1.5 : 0.01)) bad.push(`${s.id}: not walkable`);   // (a knock stands in its own doorway, which the planner keeps the others out of: its route ends at the doorway's edge)
     const wd = W.doorDist(s.x, s.z); if (wd < 0.8 && !s.door) bad.push(`${s.id}: on a doorway (${wd.toFixed(1)})`);
     for (const d of doors) if (!s.door && Math.hypot(d.x - s.x, d.z - s.z) < d.r + 0.9) bad.push(`${s.id}: on a story door`);
     for (const p of places) if (Math.hypot(p.x - s.x, p.z - s.z) < 1.0 && !s.seat) bad.push(`${s.id}: within 1 m of ${p.id}'s place (${p.x.toFixed(1)}, ${p.z.toFixed(1)})`);
@@ -89,7 +89,7 @@ const run = await ev(() => { const G = game, W = G.walkers, P = G.physics; W.for
         for (const c of P.near(r.pos.x, r.pos.z)) if (c.enabled && c.top > r.pos.y + 0.55 && c.bottom < r.pos.y + 1.6 && P._inside(c, r.pos.x, r.pos.z, 0.05)) { s.inCol++; break; }
         if (P.terrain.heightAt(r.pos.x, r.pos.z) < -0.2 && !P.groundInfo(r.pos.x, r.pos.z, r.pos.y + 0.3).brick) s.water++;
         if (P.steepAt(r.pos.x, r.pos.z, r.pos.y + 0.05, 1.2)) s.steep++;
-        if (W.doorDist(r.pos.x, r.pos.z) < 0.35) s.onDoor++;
+        if (W.doorDist(r.pos.x, r.pos.z) < 0.35 && !r.stops.some((q) => q.door && Math.hypot(q.door.x - r.pos.x, q.door.z - r.pos.z) < 1.5)) s.onDoor++;   // (its own door, where it knocks: allowed)
         // near its planned route (the smoothed path's polyline)
         if (r.st === 'walk' && r.path) { let best = 1e9; for (let i = Math.max(0, r.wi - 1); i < r.path.length - 1; i++) { const a = r.path[i], b = r.path[i + 1], dx = b.x - a.x, dz = b.z - a.z, L = dx * dx + dz * dz || 1, k = Math.max(0, Math.min(1, ((r.pos.x - a.x) * dx + (r.pos.z - a.z) * dz) / L)); best = Math.min(best, Math.hypot(r.pos.x - (a.x + dx * k), r.pos.z - (a.z + dz * k))); } if (best < 1e8) s.maxDev = Math.max(s.maxDev, best); }
       }

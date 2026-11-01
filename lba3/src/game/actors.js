@@ -9,6 +9,7 @@ import { HeroCombat } from './combat.js';
 import { WATER_FLOOR } from '../engine/physics.js';
 import { SoftParticles } from '../engine/softfx.js';
 import { offScene } from './offscene.js';
+import { SlashTrail } from './slashtrail.js';
 
 export const BEHAVIOURS = ['normal', 'athletic', 'aggressive', 'discreet'];
 // The jump (CONTROL-FEEL, WORKLIST #31; the user: "the jump is too high"). LBA2's jump (ANIM.HQR 71, the hero's File3D
@@ -45,7 +46,9 @@ export const HERO_LOOK = 'twinsen';
 // the hand's -y (the continuation of the forearm), so arm swings read as blade swings.
 export function buildSword() {
   const g = new THREE.Group();
-  const steel = new THREE.MeshStandardMaterial({ color: '#d8e0e8', metalness: 0.8, roughness: 0.25 });
+  // (TOWN-POLISH, I-28: a bright, mostly dielectric steel with a faint cool glow. At metalness 0.8 with no environment map
+  //  the blade drew dark grey, lost against the grey paving at the player's distance)
+  const steel = new THREE.MeshStandardMaterial({ color: '#f4f8fc', metalness: 0.35, roughness: 0.3, emissive: '#8fb4d8', emissiveIntensity: 0.35 });
   const brass = new THREE.MeshStandardMaterial({ color: '#e0b25a', metalness: 0.7, roughness: 0.35 });
   const grip = new THREE.MeshStandardMaterial({ color: '#5a3a24', roughness: 0.8 });
   const add = (geo, m, y, rz = 0) => { const o = new THREE.Mesh(geo, m); o.position.y = y; o.rotation.z = rz; o.castShadow = true; g.add(o); return o; };
@@ -429,6 +432,10 @@ export class Hero extends Actor {
     // blink while invulnerable
     this.rig.root.visible = this.invuln <= 0.5 || Math.floor(this.invuln * 20) % 2 === 0;
     this.sync();
+    // (I-28: the sword's slash trail, made on the first swing; nothing per frame before that or between swings)
+    const sm = C.move, swinging = !!sm && C.weapon === 'sword' && !!this.swordMesh?.visible && sm.t >= sm.def.s * 0.5 && sm.t <= sm.def.s + sm.def.a + 0.05;
+    if (swinging && !this.slashTrail) this.slashTrail = new SlashTrail(g, fxTextures().trail);
+    if (this.slashTrail) this.slashTrail.update(dt, this.swordMesh, swinging, (this._shoulderV ??= new THREE.Vector3()).set(this.pos.x, this.pos.y + 1.15, this.pos.z));
   }
 
   // People are solid (VP-2, SOLID-NPC): Twinsen never walks into anyone's body. People and pets have no physics
@@ -666,6 +673,7 @@ export class Hero extends Actor {
     if (!this.swordMesh) this.swordMesh = buildSword();
     if (on && this.swordMesh.parent !== hand) hand.add(this.swordMesh);
     this.swordMesh.visible = !!on && this.body !== 'zoe' && this.body !== 'worker' && !this.sheathed;
+    if (!this.swordMesh.visible) this.slashTrail?.hide();   // (sheathed mid-swing: no trail left hanging)
   }
 
   damage(n, from, heavy = false) {
