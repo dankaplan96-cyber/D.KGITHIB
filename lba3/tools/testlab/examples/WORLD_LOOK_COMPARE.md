@@ -127,3 +127,44 @@ The full numbers are in `WORLD_ART_REQUESTS.md` under WA-13.
 - **Interiors that follow an original:** chroma is now ×1.0–2.6 of it; it was ×1.9–4.
   - The largest gaps left are the LBA1 rooms (WA-7) and the Hamalayi, which now comes out too grey.
 - **The sewers (LBA2 scene 17):** our game has none, so they were added as a design request (WA-14).
+
+## Scoreboard on e999cd7 (1.11.2026: WA-8 … WA-15b in the game)
+
+The same measure on the dev build e999cd7. Chroma C* is shown as LBA1/LBA2 / 0.46.0 / e999cd7; grass and grey shares
+from above as LBA2 / e999cd7.
+
+| Outdoor area | Chroma | Busy (LBA2 / now) | Grass % | Grey % |
+|---|---|---|---|---|
+| citadel | 17.0 / 33.8 / 14.9 | 6.46 / 4.22 | 17 / 26 | 41 / 40 |
+| desert | 21.5 / 51.1 / 22.3 | 5.71 / 7.01 | 4 / 0 | 24 / 12 |
+| isle_otringal | 9.1 / 21.5 / 15.3 | 7.69 / 4.41 | 11 / 29 | 64 / 42 |
+| isle_knartas | 15.7 / 24.5 / 13.9 | 6.96 / 4.83 | 7 / 21 | 47 / 50 |
+| isle_mosquibee | 15.1 / 35.0 / 14.3 | 4.36 / 4.39 | 4 / 14 | 39 / 42 |
+| isle_celebration | 13.5 / 29.8 / 16.3 | 4.44 / 3.61 | 1 / 24 | 71 / 36 |
+| isle_undergas | 15.8 / 30.0 / 13.4 | 3.27 / 3.55 | 0 / 31 | 56 / 44 |
+| isle_cxislet | 11.0 / 32.7 / 13.8 | 5.13 / 3.38 | 10 / 23 | 56 / 40 |
+| isle_platform | 9.2 / 19.9 / 13.1 | 4.53 / 4.67 | 1 / 11 | 74 / 49 |
+| isle_liftdock | 14.0 / 21.2 / 15.2 | 3.53 / 6.47 | 1 / 0 | 59 / 25 |
+
+| Interior | Chroma (original / 0.46.0 / now) |
+|---|---|
+| house | 14.6 / 34.1 / 18.0 |
+| cellar | 13.0 / 27.7 / 21.7 |
+| wtent | 5.7 / 19.4 / 12.1 |
+| school | 5.5 / 10.4 / 7.1 |
+| workshop | 14.8 / 25.9 / 17.4 |
+| asylum | 5.7 / 18.8 / 5.4 |
+| buhalls | 4.9 / 16.0 / 5.9 |
+| bumaze | 3.9 / 15.0 / 4.2 |
+| sewer | 7.1 / – / 12.7 |
+| sewervault | 5.4 / – / 5.7 |
+| archive | 14.4 / 21.4 / 13.9 |
+
+- **Colour:** outdoors the chroma is now ×0.9–1.7 of LBA2's (it was ×1.5–2.8). Interiors that follow an original are
+  now ×0.95–2.1 (they were ×1.9–4); the LBA1 rooms are on the original.
+- **Ground make-up:** the Citadel and the Zeelich isles are close to LBA2 in grey share.
+  - Celebration and Under Celebration still have about 24–31 % grass, where LBA2 has 0–1 %.
+- **What remains:**
+  - Painted texture detail: the originals are 1.2–2× busier on the Citadel and the paved isles.
+  - The wizard's tent and the cellar are still about twice the original's chroma.
+  - The sewer hall has more water in view than scene 17.

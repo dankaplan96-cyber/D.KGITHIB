@@ -786,3 +786,45 @@ clip, ours now, and ours with the cape tied as LBA2 ties it.
   - The lookdev poses jump, fall, cheer, found and idle (front, ¾, back) beside LBA2's clip 5.
   - The play camera on Citadel.
   - Pictures to the user.
+
+---
+
+## Verification of WA-1 … WA-15b in the game (1.11.2026, the laptop, dev build e999cd7)
+
+The laptop's `artall`, `artshots` and `artharbour` runs on e999cd7 were set against the approved prototype pictures.
+- **The code:** every added line of the laptop's diffs is in the game, except where the cloud changed one on
+  purpose:
+  - proto-wa1-7: 54/56 lines;
+  - WA-8-10: 6/6;
+  - WA-11-13: 35/38;
+  - WA-13b-14b: 6/10;
+  - WA-15b: 30/30.
+  - The changed lines: the archive's plaster `#e6d0a4`, as suggested; the output pass's grade grew a tint uniform;
+    WA-12's grass filter runs after the scatter; WA-13b's comments are reworded.
+- **The pictures** (17 fixed views, approved 31.10 | now; `runs/verify-sheet-0..2.jpg` on the laptop):
+  - WA-2 roofs, WA-3 rubble walls and awning, WA-4 carved doors, WA-5 grey stone, WA-6 crowns and WA-8 the house:
+    **Verified**, as approved.
+  - WA-1 soil and WA-9 grass are in, under WA-13's muted palette (as intended).
+- **Measured against the originals** (`examples/WORLD_LOOK_COMPARE.md`, the e999cd7 section): WA-10 to WA-14
+  **Verified** in their numbers.
+  - WA-15b (the trading house and its purpose) is in the code. Its pictures are in the WA-15b section.
+- **One fault: WA-12's bare rock reaches into house yards.**
+  - It is kept 40 m off the village square and off the fort, but not off the outlying houses.
+  - The neighbour's yard (-25, 75) was one grey rock slab up to his door, and a rock patch lay before Twinsen's house
+    (`runs/wa12b-yards.jpg`).
+  - WA-12b below fixes it.
+
+## WA-12b · No bare rock in house yards · Approved (the user's standing approval, 1.11.2026)
+
+- **Change** (`src/game/world.js` `wildGround`; `requests/WA-12b.diff` against e999cd7):
+  - The rock share fades with the distance from the nearest house's walls (`HOUSE_FLATS`, each house's footprint in
+    its own frame): `rock *= smoothstep(7, 11, yardDist)`.
+  - Soil may still come close: LBA2's houses stand in brown earth.
+  - It is filtered after the scatter like WA-12, so the random draws do not move.
+- **Measured** (Citadel from above): grass 26 → 28 %, soil 24 → 25 %, grey 39.5 → 37 %. That is still within WA-12's
+  target of grey ≥ 28 % and grass ≤ 35 % (LBA2: 17 / 36 / 41).
+- **Pictures:** `runs/wa12b-yards.jpg` (the neighbour's house and Twinsen's, now | WA-12b).
+- **Tried and dropped, not requested:** a fine light/shade mottle in the ground's vertex colours, to give it LBA2's
+  per-cell painted variation ("busy": Citadel 4.2 against LBA2's 6.5). At ±10 % and ±25 % it changed nothing that can
+  be measured from above or seen at the play camera (Citadel busy 4.22 → 4.19 / 4.22). The detail gap needs another
+  approach.
