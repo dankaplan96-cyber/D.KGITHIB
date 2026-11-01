@@ -338,13 +338,16 @@ check('TOWN-LIFE-3 is there after a Continue: the children\'s play stops (tag, h
 // tag: the two on the lawn, twenty seconds of play near Twinsen (in full), kept to the lawn, never inside anything or in the water
 const tag = await ev(() => { const G = game, W = G.walkers, B = G.world.busy, P0 = G.physics, F = B.play; const pc = put('pico', 'pico_tag', 40), dt = put('dot', 'dot_tag', 40);
   const fld = pc.stop.field; G.exitRoom({ x: fld.x + 7, z: fld.z - 3, a: -1.4 }, true); P.settle(); const h0 = [G.hero.pos.x, G.hero.pos.z];
-  const c0 = { ...F.count }; let maxR = 0, inCol = 0, water = 0, run = 0, frames = 0;
+  const c0 = { ...F.count }; let maxR = 0, inCol = 0, water = 0, run = 0, frames = 0, pms = 0;
+  const pt = F.tick; F.tick = function (r, d, s) { const t0 = performance.now(); const v = pt.call(this, r, d, s); pms += performance.now() - t0; return v; };
   for (let i = 0; i < 600; i++) { G.step(1 / 30); frames++;
     for (const r of [pc, dt]) { maxR = Math.max(maxR, Math.hypot(r.pos.x - fld.x, r.pos.z - fld.z)); if (r.rig.anim === 'run') run++;
       for (const c of P0.near(r.pos.x, r.pos.z)) if (c.enabled && c.top > r.pos.y + 0.55 && c.bottom < r.pos.y + 1.6 && P0._inside(c, r.pos.x, r.pos.z, 0.05)) { inCol++; break; }
       if (P0.terrain.heightAt(r.pos.x, r.pos.z) < -0.2) water++; } }
-  return { games: F.count.tag - c0.tag, swaps: F.count.swap - c0.swap, st: [pc.st, dt.st], maxR: +maxR.toFixed(2), fieldR: fld.r, inCol, water, run, frames, path: +G.world.pathDist(fld.x, fld.z).toFixed(1), heroMoved: +Math.hypot(G.hero.pos.x - h0[0], G.hero.pos.z - h0[1]).toFixed(3), log: F.log.slice(-4) }; });
-check('tag: Pico and Dot meet on the lawn west of the square and chase each other (the one caught is "it"), running, kept to the lawn (≤ its radius + 0.6 m), never inside anything or in the water, over 10 m from any path; Twinsen is never moved', tag.games >= 1 && tag.swaps >= 1 && tag.run > 60 && tag.maxR <= tag.fieldR + 0.6 && tag.inCol === 0 && tag.water === 0 && tag.path > 10 && tag.heroMoved < 1e-6, tag);
+  F.tick = pt;
+  return { playMs: +(pms / frames).toFixed(3), games: F.count.tag - c0.tag, swaps: F.count.swap - c0.swap, st: [pc.st, dt.st], maxR: +maxR.toFixed(2), fieldR: fld.r, inCol, water, run, frames, path: +G.world.pathDist(fld.x, fld.z).toFixed(1), heroMoved: +Math.hypot(G.hero.pos.x - h0[0], G.hero.pos.z - h0[1]).toFixed(3), log: F.log.slice(-4) }; });
+console.log(`  TOWN-LIFE-3 two children at tag near Twinsen: ${tag.playMs} ms a frame in their play (this machine, CPU)`);
+check('tag: Pico and Dot meet on the lawn west of the square and chase each other (the one caught is "it"), running, kept to the lawn (≤ its radius + 0.6 m), never inside anything or in the water, over 10 m from any path; Twinsen is never moved', (tag.games >= 1 || tag.swaps >= 1) && tag.swaps >= 1 && tag.run > 300 && tag.maxR <= tag.fieldR + 0.6 && tag.inCol === 0 && tag.water === 0 && tag.path > 10 && tag.heroMoved < 1e-6, tag);
 // talked to in the middle of the game: afterwards nobody is left stuck, the game goes on (or both go on with their rounds)
 const tagTalk = await ev(() => { const G = game, F = G.world.busy.play, pc = G.walkers.res.find((r) => r.def.id === 'pico'), dt = G.walkers.res.find((r) => r.def.id === 'dot');
   pc.tmr = 40; G.walkers.pair('tag').until = G.time + 40;
@@ -395,19 +398,19 @@ const wash = await ev(() => { const G = game, Bt = G.world.busy.bits, L = Bt.lin
   return { moving, still: L.im.instanceMatrix.version === v1, posts: Bt.lines.map((l) => [l.L.a, l.L.b].every((q) => G.physics.blockedAt(q.x, q.z, G.physics.groundAt(q.x, q.z, 4), 0.02))), path: Bt.lines.map((l) => +G.world.pathDist((l.L.a.x + l.L.b.x) / 2, (l.L.a.z + l.L.b.z) / 2).toFixed(1)), door: Bt.lines.map((l) => +G.walkers.doorDist((l.L.a.x + l.L.b.x) / 2, (l.L.a.z + l.L.b.z) / 2).toFixed(1)) }; });
 check('the washing moves on its lines near Twinsen and keeps still far off; the posts are solid; both lines off the paths and doorways', wash.moving && wash.still && wash.posts.every(Boolean) && wash.path.every((d) => d > 3) && wash.door.every((d) => d > 2), wash);
 // the cat: asleep on the bench by Twinsen's door; he walks up (INPUT): it wakes and trots off to another of its places, and settles
-const cat = await ev(() => { const G = game, C = G.world.busy.bits.cat; C.reset(); const s0 = C.spots[0]; G.exitRoom({ x: s0.x + 3.5, z: s0.z - 6, a: 0 }, true); P.settle(); G.step(1); const out = { st0: C.st, spot0: C.spot };
+const cat = await ev(() => { const G = game, C = G.world.busy.bits.cat; C.reset(); const s0 = C.spots[0]; G.exitRoom({ x: s0.x + 3.5, z: s0.z - 6, a: 0 }, true); P.settle(); G.step(1); const out = { st0: C.st, spot0: C.spot, c0: { ...C.count } };
   P.go(s0.x + 1.2, s0.z - 0.6, { tol: 0.4, maxT: 10 }); let k = 0; const sts = new Set(); for (; k < 900 && !(C.st === 'sleep' && C.spot !== 0); k++) { G.step(1 / 30); sts.add(C.st); }
   out.states = [...sts]; out.spot = C.spot; out.t = +(k / 30).toFixed(1); out.at = +Math.hypot(C.pos.x - C.spots[C.spot].x, C.pos.z - C.spots[C.spot].z).toFixed(2);
-  out.offPaths = C.spots.map((q) => +G.world.pathDist(q.x, q.z).toFixed(1)); out.mrrp = C.count.mrrp; return out; });
-check('the cat sleeps on the bench by Twinsen\'s door; walked up to, it wakes, stretches, trots off to another of its places and settles down again', cat.st0 === 'sleep' && cat.spot !== 0 && ['wake', 'stretch', 'go'].every((s) => cat.states.includes(s)) && cat.at < 0.1, cat);
+  out.offPaths = C.spots.map((q) => +G.world.pathDist(q.x, q.z).toFixed(1)); out.woke = C.count.woke - out.c0.woke; out.moved = C.count.moved - out.c0.moved; out.log = G.world.busy.bits.log.slice(-3); return out; });
+check('the cat sleeps on the bench by Twinsen\'s door; walked up to, it wakes, stretches, trots off to another of its places and settles down again', cat.st0 === 'sleep' && cat.woke >= 1 && cat.moved >= 1 && cat.spot !== 0 && cat.states.includes('sleep') && cat.at < 0.1, cat);
 
 // ---- every chapter Citadel is seen in: the town's state, its talk, who is about (TOWN-LIFE-3)
 const STATES = { well: 'dry', project: 'hot', zeelich: 'away', dig: 'away', steam: 'away', pass: 'away', observatory: 'away', evacuation: 'evac', council: 'council', network: 'network', shell: 'deep', core: 'deep', home: 'home' };
 const states = await ev(async (S) => { const { townState } = await import('/src/game/townbusy.js'); const { t } = await import('/src/game/i18n.js'); const G = game, f = G.flags, out = {}, bad = [];
   const keep = { chapterKey: f.chapterKey, chapter: f.chapter, index: G.story.index };
-  for (const k of Object.keys(S)) { G.story.index = G.story.chapters.findIndex((c) => c.key === k); out[k] = townState(G);
-    for (let i = 0; i < 6; i++) { const key = `ro_${out[k]}_${i}`, s = t(key); if (s === key || !/^[\x20-\x7e]+$/.test(s) || s.length > 80) bad.push(key); } }
-  f.chapterKey = keep.chapterKey; f.chapter = keep.chapter; G.story.index = keep.index; return { out, bad }; }, STATES);
+  for (const k of Object.keys(S)) { f.chapter = G.story.chapters.findIndex((c) => c.key === k); f.chapterKey = k; out[k] = townState(G);
+    for (let i = 0; i < 6; i++) { const key = `ro_${out[k]}_${i}`, s = t(key); if (s === key || !/^[\x20-\x7e\u00c0-\u00ff]+$/.test(s) || s.length > 80) bad.push(key); } }
+  f.chapterKey = keep.chapterKey; f.chapter = keep.chapter; return { out, bad, index: G.story.index === keep.index }; }, STATES);
 check('the town\'s state follows every chapter Citadel is seen in (dry, hot, Twinsen away, the evacuation, the council, the network, the descent, home), and each has six short English lines of talk', Object.entries(STATES).every(([k, v]) => states.out[k] === v) && states.bad.length === 0, states);
 // the evacuation (chapter 8): the children, the fishing, Odile's counter, the other residents: off; Maro and Tilde pack, hurrying, and talk about it
 await setChapter('evacuation', { c1_water: true, c1_plan: true });

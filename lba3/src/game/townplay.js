@@ -80,10 +80,13 @@ export class TownPlay {
   update() {
     for (const r of this.noPlant) if (!(r.stop?.play === 'hop' && r.st === 'dwell' && !r.engaged && r.present)) { r._hop = null; r.rig.plantIfFits(); this.noPlant.delete(r); }
     if (this.broomBy && !(this.broomBy.stop?.play === 'sweep' && this.broomBy.st === 'dwell' && !this.broomBy.engaged && this.broomBy.present && this.broomBy.tier === 0)) { this.broom.visible = false; this.broomBy = null; }
-    for (const r of this.game.walkers?.res || []) if (r._run && !(r.stop?.play && (r.st === 'dwell' || r.st === 'chat' || r.st === 'pairwait'))) r._run = false;
+    for (const r of this.game.walkers?.res || []) {
+      if (r._run && !(r.stop?.play && (r.st === 'dwell' || r.st === 'chat' || r.st === 'pairwait'))) r._run = false;
+      if (r._gull && !(r.stop?.play === 'gulls' && r.st === 'dwell')) { if (r.rig.lookAt === r._gLook) r.rig.lookAt = null; r._gull = null; }
+    }
   }
   // a step through the game's own rules (physics, never into anyone: walkers.js moveClear), turning and animating as it goes
-  move(r, tx, tz, speed, dt, field) {
+  move(r, tx, tz, speed, dt, field, skip = null) {
     const P = this.game.physics;
     let dx = tx - r.pos.x, dz = tz - r.pos.z; const d = Math.hypot(dx, dz);
     let sp = d < 0.25 ? 0 : speed * clamp(d / 0.8, 0.3, 1);
@@ -95,7 +98,9 @@ export class TownPlay {
     const x0 = r.pos.x, z0 = r.pos.z;
     if (sp > 0) {
       r.angle = dampAngle(r.angle, Math.atan2(dx, dz), 9, dt);
-      r.moveClear(dx / dl * sp * dt, dz / dl * sp * dt, r.W.others(r, _others));
+      const others = r.W.others(r, _others);
+      if (skip) { const i = others.indexOf(skip); if (i >= 0) others.splice(i, 1); }   // (two at play brush past each other)
+      r.moveClear(dx / dl * sp * dt, dz / dl * sp * dt, others);
     }
     P.fall(r, dt);
     const v = dt > 0 ? Math.hypot(r.pos.x - x0, r.pos.z - z0) / dt : 0;
@@ -138,7 +143,7 @@ export class TownPlay {
         const j = r.rig.j; if (j?.armL) { j.armL.sh.rotation.x = -2.2; j.armL.el.rotation.x = -1.3; j.armR.sh.rotation.x = -2.2; j.armR.el.rotation.x = -1.3; }
         return true;
       }
-      this.move(r, mate.pos.x, mate.pos.z, RUN.chaser, dt, F);
+      this.move(r, mate.pos.x, mate.pos.z, RUN.chaser, dt, F, mate);
       const reach = (r.bodyR || 0.4) + (mate.bodyR || 0.4) + 0.25;
       if (Math.hypot(mate.pos.x - r.pos.x, mate.pos.z - r.pos.z) < reach) {
         G.it = mate.def.id; G.pause = 2.2; G.dir = -G.dir; G.n++; this.count.swap++;
@@ -147,12 +152,17 @@ export class TownPlay {
       }
       return true;
     }
-    // the runner: round the lawn, away from the chaser (the other way after each tag)
-    const ang = Math.atan2(r.pos.x - F.x, r.pos.z - F.z), R = F.r * 0.72;
-    let a = ang + G.dir * 0.9;
-    const dm = Math.hypot(mate.pos.x - r.pos.x, mate.pos.z - r.pos.z);
-    if (dm < 1.3) { const away = Math.atan2(r.pos.x - mate.pos.x, r.pos.z - mate.pos.z); a = ang + G.dir * 0.5 + Math.sin(away - ang) * 0.4; }
-    this.move(r, F.x + Math.sin(a) * R, F.z + Math.cos(a) * R, RUN.runner, dt, F);
+    // the runner: round the lawn, the way that leads away from the chaser, straight away from it when it is close, and
+    // back in from the lawn's edge
+    const rx = r.pos.x - F.x, rz = r.pos.z - F.z, rl = Math.hypot(rx, rz) || 1;
+    const ax = r.pos.x - mate.pos.x, az = r.pos.z - mate.pos.z, dm = Math.hypot(ax, az) || 1;
+    let tx = (-rz / rl) * G.dir, tz = (rx / rl) * G.dir;
+    if (dm < 2.5 && tx * ax + tz * az < -0.35 * dm) { tx = -tx; tz = -tz; G.dir = -G.dir; }   // (only when clearly running into it)
+    // (round a ring at seven tenths of the lawn's radius: out to it from the middle, in from the edge)
+    const w = clamp(1.8 - dm, 0, 1.2), ring = clamp((F.r * 0.7 - rl) / (F.r * 0.3), -1.5, 1);
+    const vx = tx + (ax / dm) * w + (rx / rl) * ring * 1.2, vz = tz + (az / dm) * w + (rz / rl) * ring * 1.2;
+    const vl = Math.hypot(vx, vz) || 1;
+    this.move(r, r.pos.x + (vx / vl) * 1.5, r.pos.z + (vz / vl) * 1.5, RUN.runner, dt, F, mate);
     return true;
   }
   bark(r, key) {
@@ -195,6 +205,7 @@ export class TownPlay {
     const h = this.game.hero, blockedBy = [h, ...r.W.statics].find((o) => { const dx = o.pos.x - H.x - ux * 1.3, dz = o.pos.z - H.z - uz * 1.3; return Math.abs(dx * ux + dz * uz) < 1.9 && Math.abs(dx * uz - dz * ux) < 0.8; });
     if (blockedBy && S.t === 0) { r.animate('idle', dt, 0); return true; }
     const step = S.seq[S.i], DUR = 0.42, HOLD = 0.14;
+    if (S.t === 0) S.from = { x: r.pos.x, z: r.pos.z, y: r.pos.y };   // (each hop from where she stands: after a step aside too)
     S.t += dt;
     const k = clamp(S.t / DUR, 0, 1);
     let to, single;
@@ -231,7 +242,9 @@ export class TownPlay {
     const F = this.busy?.flocks?.find((f) => f.body.name === 'gullsSquare');
     r.tmr -= dt;
     let S = r._gull;
-    if (!S || S.at !== s) S = r._gull = { at: s, phase: 'look', t: 0, bird: null };
+    // (a new visit: another stop, or this one again — its timer set afresh)
+    if (!S || S.at !== s || r.tmr > S.tmr + 0.01) S = r._gull = { at: s, phase: 'look', t: 0, bird: null };
+    S.tmr = r.tmr;
     S.t += dt;
     if (S.phase === 'look') {
       // a sitting gull on the ground within reach of the stop: off at it

@@ -41,8 +41,9 @@ export class HarbourLife {
     ]), MATL);
     this.rod.name = 'doranRod'; this.rod.castShadow = true;
     g.add(this.rod);
-    this.lineGeo = new THREE.BufferGeometry(); this.lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
-    this.line = new THREE.Line(this.lineGeo, new THREE.LineBasicMaterial({ color: '#dcdcd4' })); this.line.frustumCulled = false; this.line.name = 'doranLine';
+    // (the line: a thread from the float up to the rod's tip, a unit-long thin cylinder stretched each frame; the town's
+    //  own material, so no new shader program the first time he casts)
+    this.line = new THREE.Mesh(part(new THREE.CylinderGeometry(0.006, 0.006, 1, 4).translate(0, 0.5, 0), '#e4e4dc'), MATL); this.line.name = 'doranLine';
     g.add(this.line);
     this.float = new THREE.Mesh(merge([part(new THREE.SphereGeometry(0.05, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), '#d83a2a'), part(new THREE.SphereGeometry(0.05, 8, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), '#f0f0e8')]), MATL);
     this.float.name = 'doranFloat'; g.add(this.float);
@@ -52,11 +53,11 @@ export class HarbourLife {
     const by = P.groundAt(B.x, B.z, y0 + 1);
     const pail = new THREE.Mesh(merge([
       part(new THREE.CylinderGeometry(0.17, 0.13, 0.28, 10, 1, true), '#7a8a96', M4(0, 0.14, 0)),
+      part(new THREE.CylinderGeometry(0.165, 0.125, 0.27, 10, 1, true).scale(-1, 1, 1), '#5a6a76', M4(0, 0.145, 0)),   // (its inside)
       part(new THREE.CylinderGeometry(0.13, 0.13, 0.02, 10), '#5a6a76', M4(0, 0.01, 0)),
       part(new THREE.CylinderGeometry(0.15, 0.15, 0.01, 10), '#3a5a7a', M4(0, 0.2, 0)),   // (water in it)
       part(new THREE.TorusGeometry(0.17, 0.008, 4, 12, Math.PI), '#4a4a4a', M4(0, 0.28, 0, 0, 0, 0)),
     ]), MATL);
-    pail.material = new THREE.MeshStandardMaterial({ vertexColors: true, side: THREE.DoubleSide, roughness: 0.7, metalness: 0.3 });
     pail.position.set(B.x, by, B.z); pail.name = 'doranBucket'; pail.castShadow = true;
     g.add(pail);
     this.inBucket = new THREE.InstancedMesh(fishGeo(), MATL, 3); this.inBucket.name = 'bucketFish';
@@ -153,9 +154,8 @@ export class HarbourLife {
     }
     this.float.visible = F.st !== 'land';
     this.float.position.set(end.x, end.y, end.z);
-    const L = this.lineGeo.attributes.position.array;
-    L[0] = tip.x; L[1] = tip.y; L[2] = tip.z; L[3] = end.x; L[4] = end.y + 0.04; L[5] = end.z;
-    this.lineGeo.attributes.position.needsUpdate = true;
+    _a.set(end.x, end.y + 0.04, end.z); _b.copy(tip).sub(_a); const len = _b.length();
+    this.place(this.line, _a, _b.normalize()); this.line.scale.set(1, len, 1);
     this.line.visible = F.st !== 'land';
   }
   landed() {

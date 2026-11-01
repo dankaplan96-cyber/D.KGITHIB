@@ -154,13 +154,13 @@ Object.assign(STR.en, {
 });
 
 // TOWN-LIFE-3: Maro and Tilde's talk by the plaza's benches in the town's later states (townbusy.js townState; Maro's are
-// the even ones): chapters 3-7 with Twinsen away; the evacuation; the council; the network; the descent; home again. Nothing
+// the even ones): chapters 3-7, Twinsen mostly away; the evacuation; the council; the network; the descent; home again. Nothing
 // here goes past what the player has seen by then.
 Object.assign(STR.en, {
   ro_away_0: "The cups rattled on the shelf again this morning.",
   ro_away_1: "The project says it's the ground settling.",
   ro_away_2: "It's been settled for a thousand years. Why start now?",
-  ro_away_3: "Twinsen's off with Doran. Zoé says they'll be back soon.",
+  ro_away_3: "Doran's boat hasn't left the quay in days. He flies ships now.",
   ro_away_4: "Warm water every day, and the posts never go cold.",
   ro_away_5: "Then why do I keep my coat by the door?",
   ro_evac_0: "The project's list is up at the spaceport. My name isn't on it.",
@@ -171,8 +171,8 @@ Object.assign(STR.en, {
   ro_evac_5: "Bring a blanket. And the good teapot.",
   ro_council_0: "All that time in FunFrock's old tunnels. My back remembers every step.",
   ro_council_1: "Better a sore back than a seat on Vesk's list.",
-  ro_council_2: "They say Twinsen's gone to talk to Zeelich's council.",
-  ro_council_3: "Esmers love a council. He'll need a lot of stamps.",
+  ro_council_2: "They say Zeelich's council will decide about the drill.",
+  ro_council_3: "Esmers love a council. It'll need a lot of stamps.",
   ro_council_4: "Mira's counting buckets at the water office again.",
   ro_council_5: "Good. That means she thinks we're staying.",
   ro_network_0: "Zeelich's council said yes, they say. Yes to what, nobody knows.",
