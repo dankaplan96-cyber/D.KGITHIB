@@ -903,7 +903,6 @@ export function* buildWorldSteps(parentScene) {
     if (Math.hypot(x - POI.village.x, z - POI.village.z) < 32 && (streetDist(x, z) < 0.5 || inHouseS(x, z, 0.4))) continue;
     if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < 11) continue;
     if (pathDistScatter(x, z) < 1.4 || townSoil(x, z) > 0.3) continue;
-    { const [soil, rock] = wildGround(x, z); if (soil + rock > 0.4) continue; }   // WA-12 (proto)
     if (keepClear(x, z, -0.6)) continue;
     grass.push({ x, z, h: h + 0.06, s: 0.7 + rand() * 0.8, ry: rand() * 6.28 });
     if (rand() < 0.1) flowers.push({ x: x + 0.3, z: z + 0.2, h: H(x + 0.3, z + 0.2), s: 0.8 + rand() * 0.5, ry: rand() * 6 });
@@ -924,6 +923,9 @@ export function* buildWorldSteps(parentScene) {
   const calm = (t, r) => pathDist(t.x, t.z) >= r && !(Math.hypot(t.x - POI.village.x, t.z - POI.village.z) < 36 && streetDist(t.x, t.z) < r - 1.3);
   for (const t of grass) if (!calm(t, 2.2)) { t.s = 1e-4; t.gone = true; }
   for (const t of flowers) if (!calm(t, 3.0)) { t.s = 1e-4; t.gone = true; }
+  // WA-12: no tufts on the wild ground's bare soil and rock (filtered here, after the scatter, like `calm` above: the
+  // random draws and everything placed after them stay as they were — skipping inside the loop moved the town's props)
+  for (const t of grass) if (!t.gone) { const [soil, rock] = wildGround(t.x, t.z); if (soil + rock > 0.4) { t.s = 1e-4; t.gone = true; } }
   clearLife(grass); clearLife(flowers);
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
