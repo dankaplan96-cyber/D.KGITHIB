@@ -94,3 +94,61 @@ Object.assign(STR.en, {
   rs_tobb_hot: "Heavy crates and a warm post at every corner. I take longer breaks. Don't tell the project.",
   rs_ume_hot: "A warm post and a bench. At my age, that's all the project I need. The tea, though, I'll let cool.",
 });
+
+// TOWN-LIFE-2: what the residents say once Vesk has gone (chapter 2, after the beam over the old fortress took him). `_gone`
+// is said first. Nobody in town has seen the plan: they saw a light over the fortress, and hear talk of an "evacuation
+// drill" (as Mira and Pippa say then, text/ch1.js c1_mira_gone, c1_pippa_2).
+Object.assign(STR.en, {
+  rs_oda_gone: "Did you see that light over the fortress? I dropped a whole basket of pears. Pippa wasn't amused.",
+  rs_brix_gone: "Engineers come, engineers go. The benches stay.",
+  rs_maro_gone: "Tilde says the light over the fortress was a signal. Tilde says a lot of things.",
+  rs_tilde_gone: "That light over the fortress wasn't a sun, dear. We have two of those already.",
+  rs_garrick_gone: "The tulips didn't like that light over the fortress. Neither did I.",
+  rs_pico_gone: "I saw the beam! It went whoosh, straight up! Dot missed it. Ha.",
+  rs_dot_gone: "Pico says he saw the beam. I saw it better. I was standing on a bench.",
+  rs_marda_gone: "Everyone on the quay was staring at the sky. I did my two hundred steps round them.",
+  rs_tobb_gone: "No project crates today. A lighter day for me. I don't trust it.",
+  rs_ume_gone: "The engineer left in a hurry, they say. The polite ones always do.",
+});
+
+// TOWN-LIFE-2: a few words over someone's head when Twinsen walks into them (nothing to answer: he walks on). By who they
+// are (the children, the old folk, the others); one carrying something minds its load first.
+Object.assign(STR.en, {
+  rb_kid_0: "Hey! No pushing!",
+  rb_kid_1: "Tag! You're it!",
+  rb_kid_2: "Ow. Not really. But ow.",
+  rb_old_0: "Easy, young man. These knees are older than the lighthouse.",
+  rb_old_1: "In my day, heroes said excuse me.",
+  rb_old_2: "Ooh! A little warning next time.",
+  rb_adult_0: "Oops! After you, Twinsen.",
+  rb_adult_1: "Steady! Where's the fire?",
+  rb_adult_2: "Big feet, small street!",
+  rb_adult_3: "Mind where you're going, hero.",
+  rb_crate: "Mind the crate! It's heavier than it looks.",
+  rb_basket: "Careful! Those are Pippa's pears.",
+  rb_can: "Watch out, it leaks on the left!",
+  rb_sack: "Mind the sack!",
+});
+
+// TOWN-LIFE-2: what Maro and Tilde talk about between the plaza's benches, heard when Twinsen comes close (a line for each
+// turn they take; Maro's are the even ones). The well dry; the water back, hot; after Vesk's departure.
+Object.assign(STR.en, {
+  ro_dry_0: "Not a drop from the well this morning.",
+  ro_dry_1: "Mira says it's the pipes. Gilbert says it's Mira.",
+  ro_dry_2: "And what do you say?",
+  ro_dry_3: "I say I've got a kettle and nothing to put in it.",
+  ro_dry_4: "The project people were digging by the pump again.",
+  ro_dry_5: "They're always digging. One day they'll find the bottom.",
+  ro_hot_0: "Hot water, straight from the well! No more boiling.",
+  ro_hot_1: "No more cold water either. My fish are sulking.",
+  ro_hot_2: "That engineer fixed it in a day.",
+  ro_hot_3: "Twinsen fixed it. The engineer pointed.",
+  ro_hot_4: "A warm post at every door now.",
+  ro_hot_5: "And a child sitting on every one of them.",
+  ro_gone_0: "Did you see the light over the old fortress?",
+  ro_gone_1: "A beam, straight up into the sky. Then nothing.",
+  ro_gone_2: "And now Mira's office is full of people asking about an evacuation drill.",
+  ro_gone_3: "A drill. Of course. Nobody drills that quietly.",
+  ro_gone_4: "The heat's still on, at least.",
+  ro_gone_5: "For now. I've filled every bucket I own.",
+});

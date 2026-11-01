@@ -6,8 +6,16 @@ import { ChapterBase } from './base.js';
 import { t } from '../i18n.js';
 import '../text/walkers.js';
 import { ambientDefs } from '../walkrounds.js';
+import { TownBusy } from '../townbusy.js';
 
 export class Citizens extends ChapterBase {
+  // TOWN-LIFE-2: the town's small business round its people (heads turning, a word when bumped, the plaza's chatter
+  // overheard, Odile's counter, Tobb's crates, gulls, the harbour's sounds): townbusy.js, once per world
+  constructor(story) {
+    super(story);
+    const W = this.game.world;
+    if (W?.updaters && !W.busy) W.busy = new TownBusy(this.game);
+  }
   npcDefs() {
     // (rebuilt when an area its residents live in has just been built; otherwise the same list)
     const key = (this.game.regions?.built('zeelich') ? 1 : 0) + (this.game.regions?.built('desert') ? 2 : 0);
@@ -28,10 +36,12 @@ export class Citizens extends ChapterBase {
     const id = npc.def.id, f = this.f, has = (k) => t(k) !== k;
     const dry = this.story.index === 0 || (this.story.index === 1 && !f.c1_water);
     const hot = !dry && this.story.index === 1;   // (chapter 2, the water back: the town's talk is the heat)
+    const gone = hot && !!f.c1_veskGone;          // (TOWN-LIFE-2: then the light over the fortress that took Vesk away)
     const busy = ['seated', 'sitin', 'chat'].includes(npc.st) || !!npc.carrying || /tend|water|draw|put/.test(npc.stop?.act || '');
     const keys = [];
     if (busy && has(`rs_${id}_work`)) keys.push(`rs_${id}_work`);
     if (dry && has(`rs_${id}_dry`)) keys.push(`rs_${id}_dry`);
+    if (gone && has(`rs_${id}_gone`)) keys.push(`rs_${id}_gone`);
     if (hot && has(`rs_${id}_hot`)) keys.push(`rs_${id}_hot`);
     for (let i = 0; i < 6 && has(`rs_${id}_${i}`); i++) keys.push(`rs_${id}_${i}`);
     return keys;
