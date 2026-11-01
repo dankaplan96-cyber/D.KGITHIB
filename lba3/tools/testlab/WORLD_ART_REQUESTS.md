@@ -274,3 +274,101 @@ the user).
   - In buhalls `topCol` also warms the tops of the walls (by design of the option); the floor and the wall faces
     still separate.
 - **Untouched:** obsv already had warm stone walls and a light checker floor.
+
+---
+
+## WA-8 · Twinsen's house: terracotta tile floor and teal wallpaper, as LBA2's · Approved (the user's standing approval, 1.11.2026)
+
+Prototyped on the laptop on 0aed5b2 (0.46.0). Pictures (before / after / the original's bricks) were sent to the user.
+The whole-game comparison behind it is `tools/testlab/examples/WORLD_LOOK_COMPARE.md`.
+
+- **Why:** LBA2's house (scene 0) has a terracotta tile floor (#ac866a / #895f44) and teal patterned wallpaper
+  (#364649 with a lighter pattern) above the wainscot. Ours has honey planks and cream plaster, and its chroma is
+  34 against the original's 15. These are materials only: no geometry.
+- **File:** `src/game/interiors.js`, `buildHouse` (exact diff: `tools/testlab/requests/WA-8-10.diff`).
+  1. before: `const rail = MAT.wood('dark'), capM = MAT.wood('dark'), bodyM = MAT.plaster('#f0e4c8');`
+     after (with the comment line above it):
+     ```js
+       // (WORLD-ART-8: LBA2's house (scene 0) has teal patterned wallpaper over the wainscot and a terracotta tile floor)
+       const rail = MAT.wood('dark'), capM = MAT.wood('dark'), bodyM = MAT.paper('#4f6b6b', '#9cc4bc', 'diamond');
+     ```
+  2. In the `B.shell({...})` call:
+     - before: `floor: MAT.planks('honey'),`
+     - after: `floor: MAT.tiles('#ac866a', '#9a6e52', '#5e4232', false, 4),`
+- **Unchanged:** the wainscot, rails, caps, furniture, rugs and windows. The inside dividers take `bodyM`, so they get
+  the wallpaper too, as in the original.
+- **Check:** the house test, and the review pictures of the house.
+
+---
+
+## WA-9 · Grass: a softer sage green · Approved (the user's standing approval, 1.11.2026)
+
+- **Why:** seen from above, the original Citadel's grass is #74885c, a soft sage. Ours is #497219, a deep saturated
+  green, which is the largest single colour gap on the island.
+- **Measured** (Citadel from above, before → after): grass #4a731a → #4d692c, chroma 33.7 → 27.4. Zeelich's islands
+  have a grass texture of their own and are unchanged.
+- **File:** `src/engine/textures.js`. Just before `T.grass = toTex(c);` add:
+  ```js
+      // (WORLD-ART-9: LBA2's lawns are a soft sage green (the original Citadel's grass from above, #74885c), ours read a
+      //  deep saturated green (#497219 from above): the drawn tile taken 35 % toward its own grey, the lightness kept)
+      { const d = x.getImageData(0, 0, S, S), p = d.data;
+        for (let i = 0; i < p.length; i += 4) { const l = p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114; for (let k = 0; k < 3; k++) p[i + k] += (l - p[i + k]) * 0.35; }
+        x.putImageData(d, 0, 0); }
+  ```
+- **Not covered:** the 3-D grass blades and the bushes keep their colours. A further step, if wanted, is the same
+  treatment on those materials.
+
+---
+
+## WA-10 · Desert Island: a less orange light · Approved (the user's standing approval, 1.11.2026)
+
+- **Why:** from above, LBA2's sand is #d0aa83 (pale, pinkish beige). Ours reads #e0a646, with chroma 51 against 21.5.
+  The sand's own colours in desert.js are pale already; the orange comes from the light.
+- **Measured** (dev build, the desert from above, before → after): chroma 40.5 → 35.8, sand #c69039 → #c2944a. This is
+  a first step only: it does not reach the original's beige.
+- **File:** `src/game/desert.js`, the area's `env`:
+  - before: `env: { fog: '#f0d2a2', sun: '#fff0d4', hemiSky: '#ffe6bc', hemiGround: '#b4845a', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },`
+  - after: `env: { fog: '#eadcc6', sun: '#fff6ea', hemiSky: '#f2ece2', hemiGround: '#a68a72', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },   // (WORLD-ART-10: a less orange light; LBA2's sand is a pale pinkish beige, #d0aa83 from above)`
+- **Still open for the cloud:** the original has grey rock outcrops over about 24 % of the island; ours has almost
+  none. Rock on the steeper slopes (colorFn's `slope > 0.8` branch, with COL.rock a grey-beige rather than
+  '#e0a080') would close part of that.
+
+---
+
+## WA-11 · Zeelich's islands: each one's own ground, not one green lawn · Approved (design request for the cloud)
+
+Not prototyped on the laptop: it is design work across several builders. Numbers:
+`tools/testlab/examples/WORLD_LOOK_COMPARE.md`.
+
+- **Why:** this is the largest look gap in the game. In LBA2 each island has its own ground. Ours are almost all green
+  lawn (40–60 % of the land) with purple cliffs. The originals' grey share is 39–74 %; ours is 2–11 %.
+- **Each island's original ground, seen from above:**
+
+  | Island | Original ground | Grey % (LBA2 / ours) |
+  |---|---|---|
+  | Otringal | pale lavender-grey paving and stone, white and grey buildings | 64 / 4 |
+  | CX islet | pale grey patterned paving, crenellated stone walls, two round red-and-white emblems | 56 / 3 |
+  | Knartas | grey rock, an orange-tiled terrace, round domed huts, sand edges | 47 / 6 |
+  | Celebration | dark grey rock, red lava channels, the grey figure | 71 / 11 |
+  | Under Celebration | dark rock, an ochre plain, red lava | 56 / 3 |
+  | The Platform | dark rock and dark paving | 74 / 11 |
+  | The Lift Dock | metal decks, hazard stripes, the gas tanks | 59 / 6 |
+  | Mosquibee | ochre-brown rock, pale sand, a grey-white nest | 39 / 2 |
+
+- **Ask:** give each island's terrain its original's main material (paving, rock, lava or deck) in place of lawn.
+  Keep grass to small gardens (at most 15 % of the land; the originals have 0–11 %), so the twelve years still show.
+  Send before/after pictures; they are for the developers, not shown to the player.
+
+---
+
+## WA-12 · Citadel ground: more rock and soil, less lawn · Approved (design request for the cloud)
+
+- **Why:** LBA2's Citadel from above is 17 % grass, 36 % soil and 41 % grey (rock strata on the terrace faces, setts,
+  stone). Ours is 53 % grass, 18 % soil and 18 % grey. The original's rock shows across the island's slopes, not only
+  on its rim.
+- **Ask:**
+  - Rock (the terrain's rock layer) on the terrace slopes inside the island, not only on the coast.
+  - Soil between the paths, where the original has brown earth, round the houses and below the plateau.
+  - A target of grass at most 35 % and grey at least 28 % from above. That is about 80 % of the way to the original;
+    the rest is twelve years of gardens.
+- **Check:** the laptop measures it again with `artall` (citadel-top), and before/after pictures go to the user.
