@@ -53,7 +53,9 @@ export function playOpening(story) {
   const temps = [];                                   // scene-only objects, removed by finish()
   const loops = [];                                   // running sound loops, stopped by finish()
   const unseen = [];                                  // things hidden for a shot: [object, was visible, its shadow]
-  const actor = (a) => { cast.push(a); a._speed = 0; a.rig.noFidget = true; return a; };
+  // (ANIM-POLISH-3: the scene places its people's feet itself — its own planted steps and pose layers on the legs — so the rig's
+  // own foot planting (plantLite) is off for the scene, and back on after it: finish)
+  const actor = (a) => { cast.push(a); a._speed = 0; a.rig.noFidget = true; a._plantLite = a.rig.plantLite; a.rig.plantLite = false; return a; };
   const extra = (name) => {
     const rig = createCharacter(name);               // (the poly cast: assets/poly/<name>.json)
     g.scene.add(rig.root); temps.push(rig.root);
@@ -752,7 +754,7 @@ export function playOpening(story) {
       for (const h of loops) h.stop(skipped ? 0.2 : 0.8);
       for (const o of temps) o.parent?.remove(o);
       for (const g2 of [flats, caveFlat]) g2.traverse((o) => o.geometry?.dispose()); for (const m of setMats) m.dispose();
-      for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; }
+      for (const a of cast) { a.rig.lookAt = null; a._speed = 0; a.rig.noFidget = false; if (a._plantLite != null) a.rig.plantLite = a._plantLite; }
       if (skipped) { g.audio.endCue(); }
       document.querySelector('#fade').classList.remove('quick');
       document.querySelector('#cine-title').classList.remove('show');

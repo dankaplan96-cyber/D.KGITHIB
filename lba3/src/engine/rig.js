@@ -547,6 +547,9 @@ export class Rig {
   _plant(dt, a) {
     const j = this.j, gait = this.plantFrame && a === 'walk', on = this.plantFrame && (this.footPlant ? PLANT : PLANT_LITE).has(a);
     this.plantFrame = false;
+    // (ANIM-POLISH-3: another character moved more than 0.35 m since its last planted frame — posed coarsely while far or out of view,
+    // or put somewhere by the story — starts its planting afresh instead of reaching back for where its feet stood)
+    if (this.plantLite) { const p = this.root.position, q = this._plantAt ??= p.clone(); if (this._feet && (p.x - q.x) ** 2 + (p.z - q.z) ** 2 > 0.1225 * this.root.scale.y ** 2) this._feet = null; q.copy(p); }
     const F = this._feet ??= { w: 0, L: newFoot(), R: newFoot() };
     F.w = on || gait ? Math.min(1, F.w + dt / 0.06) : Math.max(0, F.w - dt / 0.1);
     if (F.w <= 0) { F.L.on = F.R.on = false; F.L.w = F.R.w = 0; F.L.stepping = F.R.stepping = false; F.L.locked = F.R.locked = false; return; }
@@ -1289,6 +1292,10 @@ export class Rig {
     const set = (obj, v, axis = 'x', r = R) => { const o = obj.rotation[axis]; obj.rotation[axis] = o + clamp(damp(o, v ?? 0, ko ? Math.max(r, 24) : r, dt) - o, -lim, lim); };
     // (the player's character keeps the legs' animated pose apart from the bones: foot planting below bends the
     // bones from it each frame, and the animation keeps easing from its own pose, not from the planted one)
+    // (ANIM-POLISH-3: planting switched back on — after a story scene that places its people's feet itself — takes the legs' pose from
+    // the bones as they are, not from where it last left off)
+    if (this.planting && !this._planted) { this._fk = null; this._feet = null; }
+    this._planted = this.planting;
     const fk = this.planting ? (this._fk ??= fkLegs(j)) : null, LL = fk ? fk.L : j.legL, LR = fk ? fk.R : j.legR;
     set(LL.hip, T.legL); set(LR.hip, T.legR);
     set(LL.knee, T.kneeL); set(LR.knee, T.kneeR);

@@ -281,6 +281,8 @@ The user (01.11): "yes, do it for the other characters too". The townsfolk, the 
 guards now plant their feet through the hero's own code (`Rig._plant`), switched on per body by `Rig.plantIfFits()` (`plantLite`;
 the hero keeps `footPlant`, and nothing he does changed: tests/anim-polish.mjs unchanged). Visual only: no speed, route, AI, turn
 rate, hit window, damage or collision changed (tests/npc-feet.mjs plays the depot guard frame for frame with and without it).
+Before / after strips (a walker's body, Zoé, Arthur, a guard; walk, stop, turn by script in Citadel's square, the lowest foot's move
+per 0.05 s printed under each frame): docs/lba3-production/review/npc-feet/ (tools/cap.mjs, tools/strip.py).
 Measured first on 0d045bf, each body alone at its own walking speeds (residents 0.75-1.6 m/s, kids up to 1.6, guards 1.4-2.4):
 - **Walking**: unplanted, the lower foot never came nearer than 1-3 cm to the ground (4-7 cm on average: the walk's keys hang it)
   and skated at 0.4-0.9 m/s (1.3 m/s a guard at its run-up 2.4). Now the stance foot is held where it strikes, as his, the pelvis
