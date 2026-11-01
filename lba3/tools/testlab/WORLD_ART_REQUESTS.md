@@ -856,3 +856,69 @@ only if Twinsen talks to him."
   - `node engine/cli.mjs artbusy` (turnedDeg 0 for the busy ones).
   - A conversation with Arthur still turns him to Twinsen.
   - The game's own talk and townlife tests.
+
+---
+
+## LBA-CITADEL-1 · Chez Luc, the tavern of LBA2's Citadel, inside the house with the pink awning · Approved (the user asked for it; pictures sent 1.11.2026)
+
+The user (1.11): "fixes and additions from the first and second games, and logical additions for twelve years later".
+Then, on the first layout: "the stairs and the upper floor where they were too. Things change in twelve years, but it
+should look about 80 % alike".
+
+### Why this place
+- In LBA2 about ten Citadel places can be entered that ours keeps shut. Mapped through `LAYOUT` onto the original's
+  door zones (`tools/worldscore/ref/citadel.json`):
+
+  | LBA2 place | Our building on that spot |
+  |---|---|
+  | Chez Luc tavern (scene 3) | `south`, the house with the pink awning on the square |
+  | Mr Bazoo's shop (14) | `museum` |
+  | the museum (15) | `water` (now the Water Office) |
+  | the ticket office (8) | `baggage` |
+  | Paul's house (7) | `wing2` (now Nell's repairs) |
+  | the pharmacy (22) and the baggage claim (5) | Bug Street's pair |
+  | the neighbour's house (9) | `nbr` |
+
+- The tavern comes first: it is iconic in LBA2, and twelve years on it is where the harbour's people meet.
+
+### What it is (prototyped on the laptop: `requests/LBA-CITADEL-1.diff`, against da4a75f)
+- **The room:** new `src/game/tavern.js`, `buildTavernRoom` (region `tavern` at x 6600). The original's layout, from
+  the laptop's study render of scene 3 (numbers and descriptions only):
+  - **Size:** a 10 × 15 m hall, 5.6 m high (the original: 21 × 32 cells, about 5.8 m).
+  - **Walls and floor:** pale grey stone blocks, grey square tiles with a dark border.
+  - **As the game's camera sees it:**
+    - The long wall is on the left, with three small high windows.
+    - The gallery (2.4 m up) runs along the short back wall, under two windows with red blinds, with three round
+      tables and red stools on it.
+    - The stair stands against the gallery's face and climbs toward the left wall, to a landing. It has teal iron
+      railings and white globe lamps on the newels.
+    - A shut arched door in the gallery's face leads to the original's cellar, scene 4.
+    - The jukebox stands by the stair's foot, and a red sofa against the stair's side.
+    - The bar is at the front left by the door: a pale counter along the wall turning into the room, a tap barrel
+      and bottles, red stools, and the bottle shelf with a name board behind it.
+    - Square tables with red chairs stand in the front, with teal potted plants and a picture high on the long wall.
+  - **Twelve years on (ours):** a ferry timetable board by the stair's foot, glazed Esmer jars among the bottles, and
+    one of the project's heat radiators under the long wall's windows.
+  - `R.npcSpots.luc` is behind the bar, for the story layer. No people or lines were added: that is the cloud's part.
+- **The way in and out:**
+  - `tavernDoors(W)`: the `south` house's own door (`W.houses`), radius 0.9.
+  - `tavernExit('tavern-out', W)`: 1.2 m before that door, facing away.
+  - **Hooks:** `src/game/regions.js` gets one import and one `add('tavern', …)` line plus its REF/AT entries;
+    `src/game/story/index.js` gets `doors()` and `exitTo()`.
+  - The door opens in every chapter, as an optional place. If a chapter should keep it shut, that is the cloud's call.
+
+### Measured on the laptop (dev, da4a75f + the diff)
+- **Test Lab `arttavern`, real input and the game's own physics: PASS.**
+  - Walking into the `south` house's door enters the tavern.
+  - The route goes past the bar to the stair's foot, up the stair to the landing (y 2.40), and along the gallery
+    (y 2.40).
+  - Coming back down and through the tavern's door returns to Citadel at (-46.1, 29.2), before the house.
+  - Pictures: `evidence/tavern/01…06`.
+- **Draw calls in the room:** 30 (29 main, 1 shadow) at Medium. The interior budget is 150.
+- **A fault found and fixed on the way:** the jukebox stood in the stair's only way up (its foot end); it now stands
+  beside it.
+- **Pictures:** `runs/tavern-vs-lba2.jpg` (the original's study render | ours) and `runs/tavern-gallery.jpg`.
+
+### Next of the same kind (one at a time, after the user's word on this one)
+Mr Bazoo's shop in `museum`, the ticket office in `baggage`, the pharmacy in Bug Street's south house, the neighbour's
+house — each at its original's layout, about 80 % alike.
