@@ -255,10 +255,12 @@ const evac = await ev(() => { const G = game, W = G.walkers, st = G.story; const
   const here = () => CIT().filter((r) => r.present).length;
   const before = here();
   f.chapterKey = 'evacuation'; f.chapter = st.chapters.findIndex((c) => c.key === 'evacuation'); st.refreshCast(); const during = here();
+  const stayed = CIT().filter((r) => r.away !== 'story').map((r) => r.def.id).sort().join();
   f.chapterKey = 'project'; f.chapter = st.chapters.findIndex((c) => c.key === 'project'); st.refreshCast(); const after = here();
   G.step(2, 1 / 30);
-  return { before, during, after, errs: 0 }; });
-check('in the evacuation the streets are empty; after it the residents are back', evac.during === 0 && evac.after >= 9 && evac.before >= 9, evac);
+  return { before, during, stayed, after, errs: 0 }; });
+// (TOWN-LIFE-3: two neighbours, Maro and Tilde, stay to pack — bundles to and from their houses: story/citizens.js EVAC_STAY)
+check('in the evacuation the streets are empty but for Maro and Tilde packing; after it the residents are back', evac.during <= 2 && evac.stayed === 'maro,tilde' && evac.after >= 9 && evac.before >= 9, evac);
 // ---- the other areas: Zeelich's street and Kesh (built when first needed: until then their residents wait, hidden)
 const AREAS = [
   { name: 'Zeelich\'s street', room: 'zeelich', ox: 2400, ids: ['ilo', 'aven', 'kira'], level: 6.0 },
