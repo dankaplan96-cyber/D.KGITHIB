@@ -741,3 +741,48 @@ version (WA-15) is replaced. No house on piles.
   - `node engine/cli.mjs artharbour` (the same views; `LBA3_HARBOUR_VIEWS` for more).
   - `tests/townlife.mjs` and `tests/drawcalls.mjs street`.
   - Before/after pictures to the user.
+
+---
+
+## WA-16 (character) · Twinsen's cape as LBA2 ties it to the arms: a wing, not a shirt · Approved: the user asked for it (1.11.2026)
+
+The user, with a photo of 0.48 (Twinsen with his arms out on Citadel): "It's a shirt, not a tunic. Look at how LBA2 did
+it and copy it." Picture: `runs/twinsen-cape-lba2.jpg` (study renders, not committed). It shows LBA2's own arms-out
+clip, ours now, and ours with the cape tied as LBA2 ties it.
+
+- **How LBA2 does it (body 1, measured on the laptop; points in fractions of the height H, rest pose):**
+  - The body has 19 groups. Group 3 is the torso (the cape's front, back and middle, x within ±0.107 H, y 0.43–0.82 H).
+  - Groups 4 and 6 are the upper arms. Each holds 12 points: the cape's outer part on that side, x 0.107–0.221 H, from
+    the shoulder down to the cape's hem, y 0.538–0.726 H.
+  - Groups 5 and 7 hold only the hand ball (3 points, y 0.38–0.43 H).
+  - There are no weights: each point belongs to one group. There is no sleeve and no forearm cloth.
+  - 15 blue polygons per side join torso points to arm points. When the arm rises, they stretch: the cape opens as a
+    wing from the belt to the hand, and the hand is at its tip. ANIM.HQR clip 5 at 400 ms (both hands out at 0.43 H)
+    shows it.
+- **Ours now (HERO-ARMS, §21 of `docs/character-review.md`):**
+  - `cut_sleeves` cuts the sleeve from the cape's front and back below the armpit.
+  - `tunicBody` fills the cut, and `sleeveIn*` closes each sleeve into a tube.
+  - Raised, that reads as a short boxy shirt ending at the belt, with two tube sleeves: the user's "shirt" (seen in
+    jump, fall, cheer and found).
+- **Checked on the laptop:**
+  - The cape of `assets/poly/twinsen.json` from 9d81ea2^ (0.45, LBA2's weights, no cut) was rendered in the same
+    lookdev poses.
+  - Arms out, it opens as LBA2's wing (the picture's third row).
+  - Re-weighting the current file without removing the cut layers is not enough: `tunicBody` and the sleeve walls
+    show through.
+- **Ask (`tools/blender/twinsen_poly.py`, then rebuild `assets/poly/twinsen.json`):**
+  - The cape as LBA2 ties it:
+    - no `cut_sleeves`, no `tunicBody`, no `sleeveIn*`;
+    - the cape's outer part (beyond about 48 % of its half-width, from the shoulder down to its hem) on the upper arm;
+    - the rest on the torso;
+    - the cape between them one closed shell that stretches.
+    - This is 0.45's cape, the parent of 9d81ea2, as LBA2's numbers above.
+  - Keep everything else HERO-LOOK and HERO-ARMS added: the medallion on its gold cord, the lids, brows, nose and
+    mouth, the fists. The hand comes out at the wing's tip.
+  - Idle unchanged (the laptop's render of the old cape at rest matches the current idle outline).
+- **I-22 (31.10) asked the opposite for the found dance**, where the wing ran from the hip to the hand. Today's
+  request is explicit: LBA2's way. If the found dance's wing is too big, soften that one clip, not the cape.
+- **Check:**
+  - The lookdev poses jump, fall, cheer, found and idle (front, ¾, back) beside LBA2's clip 5.
+  - The play camera on Citadel.
+  - Pictures to the user.
