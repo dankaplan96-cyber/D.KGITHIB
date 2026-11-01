@@ -115,3 +115,15 @@ obsv and arena. LBA2 has no brick room for the lighthouse inside or for a post/w
 
 The approved requests are WA-8 to WA-10 in `tools/testlab/WORLD_ART_REQUESTS.md`. WA-11 and WA-12 are design requests
 for the cloud. The global saturation is left to the user: it changes the whole game's mood.
+
+## After the prototypes WA-11..13 (1.11.2026, the user: "more like LBA2")
+
+The same measure was taken on the laptop's proto worktree: 0aed5b2 with WA-8..13, run 2026-11-01T06-26-21-artall.
+The full numbers are in `WORLD_ART_REQUESTS.md` under WA-13.
+- **Outdoors:** chroma is now within ×0.9–1.8 of LBA2. It was ×1.5–2.8.
+  - Citadel: 15.0 against 17.0. Grass 26 %, grey 39 %; LBA2 has 17 % and 41 %.
+  - Desert: 22.4 against 21.5.
+- **Zeelich isles:** grey is now 26–52 % of the land; LBA2 has 39–74 % and ours had 2–11 %.
+- **Interiors that follow an original:** chroma is now ×1.0–2.6 of it; it was ×1.9–4.
+  - The largest gaps left are the LBA1 rooms (WA-7) and the Hamalayi, which now comes out too grey.
+- **The sewers (LBA2 scene 17):** our game has none, so they were added as a design request (WA-14).
