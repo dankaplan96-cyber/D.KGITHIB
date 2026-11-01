@@ -194,7 +194,8 @@ export function* buildHamalayiSteps(scene, physics) {
     fade: (x, z) => smoothstep(1.4, 3.4, Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z))) * smoothstep(0.4, 2.4, Math.min(...PATHS.map(([P, hw]) => seg(P, x, z) - hw))) });
   const H = (x, z) => terrain.heightAt(x, z);
   const R = {
-    id: 'hamalayi', outdoor: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters, music: 'hamalayi',
+    id: 'hamalayi', outdoor: true, grade: 0.9, gradeTint: [0.95, 1.0, 1.05],   // (WA-13 follow-up: LBA1's icy cyan, not grey)
+    group, lights: [], exits: [], searches: [], ballTargets: [], updaters, music: 'hamalayi',
     env: { fog: '#dfe8f2', sun: '#fff6ec', hemiSky: '#eef2ff', hemiGround: '#c0bccc', sunI: 2.6, hemiI: 1.6, fogRange: [70, 250] },
     terrain,
   };

@@ -1090,6 +1090,7 @@ class Game {
       R.lights.forEach((l) => { l.intensity = l.userData.base; });
       this.world.root.visible = false;
       if (R.outdoor) { this.env.setInterior(false); this.env.setRegion(R.env); } else { this.env.setRegion(null); this.env.setInterior(true); }
+      this.renderer.setGrade?.(R.grade, R.gradeTint);   // (WA-13 follow-up: an area's own palette)
       // (a story exit may name only the room, { room }: then the room's own spawn — never a position without x/z)
       const sp = spawn && Number.isFinite(spawn.x) && Number.isFinite(spawn.z) ? spawn : R.spawn;
       const h = this.hero;
@@ -1119,6 +1120,7 @@ class Game {
       this.world.root.visible = true;
       this.env.setRegion(null);
       this.env.setInterior(false);
+      this.renderer.setGrade?.(null, null);
       const h = this.hero;
       this.resetCombat();
       h.pos.set(to.x, this.physics.groundAt(to.x, to.z), to.z);

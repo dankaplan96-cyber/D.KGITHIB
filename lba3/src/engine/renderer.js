@@ -434,10 +434,13 @@ export class Renderer {
       this.noOutputEdges = true;
     }
     // WA-13 (proto): LBA2's muted palette: the picture's chroma scaled by `grade` after tone mapping (the luma kept)
+    // (WA-13 follow-up: an area may set its own grade and a gentle colour tint — the LBA1 rooms greyer, the Hamalayi's
+    // ice a pale cold cyan — through setGrade(); everywhere else the game's grade and no tint)
     this.output.uniforms.grade = { value: GRADE };
+    this.output.uniforms.gradeTint = { value: new THREE.Vector3(1, 1, 1) };
     { const M = this.output.material;
-      M.fragmentShader = M.fragmentShader.replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform float grade;')
-        .replace('// color space', 'gl_FragColor.rgb = max( mix( vec3( dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), gl_FragColor.rgb, grade ), 0.0 );\n\t\t\t// color space'); }
+      M.fragmentShader = M.fragmentShader.replace('uniform sampler2D tDiffuse;', 'uniform sampler2D tDiffuse; uniform float grade; uniform vec3 gradeTint;')
+        .replace('// color space', 'gl_FragColor.rgb = max( mix( vec3( dot( gl_FragColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ), gl_FragColor.rgb, grade ), 0.0 ) * gradeTint;\n\t\t\t// color space'); }
     this._outFS = this.output.material.fragmentShader;
     if (typeof location !== 'undefined' && /[?&]oldedges\b/.test(location.search)) this.setOldEdges(true);
     c.addPass(this.output);
@@ -470,6 +473,12 @@ export class Renderer {
 
   // PERF-GPU: the output pass's edge smoothing as it was before (implicit-LOD taps in branches), for the laptop's A/B
   // (benchgpu.js; ?oldedges). Another program: the caller prepares it (warmPassPrograms).
+  // an area's own palette (WA-13 follow-up): grade = chroma kept (null: the game's), tint = an RGB multiplier (null: none)
+  setGrade(grade = null, tint = null) {
+    const U = this.output?.uniforms; if (!U?.grade) return;
+    U.grade.value = grade ?? GRADE;
+    if (tint) U.gradeTint.value.set(tint[0], tint[1], tint[2]); else U.gradeTint.value.set(1, 1, 1);
+  }
   setOldEdges(on) { this._edgeOld = !!on; this._outDefs(); }
   // SHADE-COST: the output pass's own pixel read through the filter as before (EDGE_CENTRE_OLD), and the five lumas'
   // roots taken on every pixel as before (EDGE_LUMA_OLD), for the laptop's A/B (benchgpu.js)
