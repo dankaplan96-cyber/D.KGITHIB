@@ -233,3 +233,32 @@ export const artHarbour = { ...artShots, id: 'art-harbour', title: 'World art: t
     assert(rec, 'harbour probed and shot', probe.colliders.length > 0, '> 0 colliders', probe.colliders.length);
   } };
 ART.push(artHarbour);
+
+// GAME-1 (the user: Arthur, busy at home, turns to Twinsen whenever he passes): in the house at a new game, Twinsen
+// placed 2 m from each person there; their heading measured over 2.5 s, and one frame. evidence/busy/<id>.jpg, busy.json
+export const artBusy = { ...artShots, id: 'art-busy', title: 'People busy at something keep at it when Twinsen passes (GAME-1)', suites: ['artbusy'], timeoutS: 300,
+  async run(ctx) {
+    const { page, rec, dir } = ctx;
+    const out = path.join(dir, 'evidence', 'busy'); fs.mkdirSync(out, { recursive: true });
+    await newGame(page);
+    await sleep(2500);
+    const ids = await page.evaluate(() => game.npcs.filter((n) => n.present && n.distTo(game.hero) < 12).map((n) => n.def.id));
+    const res = [];
+    for (const id of ids) {
+      const a0 = await page.evaluate((id) => {
+        const n = game.npcs.find((q) => q.def.id === id), h = game.hero;
+        // Twinsen 2 m off the person's right side, facing him (inside the 3.2 m "near" of NPC.update)
+        const a = n.angle + Math.PI / 2, x = n.pos.x + Math.sin(a) * 2, z = n.pos.z + Math.cos(a) * 2;
+        h.pos.set(x, game.physics.groundAt(x, z), z); h.angle = Math.atan2(n.pos.x - x, n.pos.z - z); game.camRig.recenter?.();
+        return { angle: n.angle, anim: n.forceAnim || 'idle' };
+      }, id);
+      await sleep(2500);
+      const a1 = await page.evaluate((id) => game.npcs.find((q) => q.def.id === id).angle, id);
+      const turned = Math.abs(Math.atan2(Math.sin(a1 - a0.angle), Math.cos(a1 - a0.angle)));
+      await page.screenshot({ path: path.join(out, `${id}.jpg`), type: 'jpeg', quality: 88 }); rec.evidence.push(`evidence/busy/${id}.jpg`);
+      res.push({ id, anim: a0.anim, turnedDeg: Math.round(turned * 180 / Math.PI) });
+    }
+    fs.writeFileSync(path.join(out, 'busy.json'), JSON.stringify(res, null, 1));
+    assert(rec, 'people measured', res.length > 0, '> 0', res.length);
+  } };
+ART.push(artBusy);

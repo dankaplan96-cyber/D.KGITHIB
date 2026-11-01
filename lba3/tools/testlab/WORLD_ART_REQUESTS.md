@@ -786,3 +786,73 @@ clip, ours now, and ours with the cape tied as LBA2 ties it.
   - The lookdev poses jump, fall, cheer, found and idle (front, ¾, back) beside LBA2's clip 5.
   - The play camera on Citadel.
   - Pictures to the user.
+
+---
+
+## Verification of WA-1 … WA-15b in the game (1.11.2026, the laptop, dev build e999cd7)
+
+The laptop's `artall`, `artshots` and `artharbour` runs on e999cd7 were set against the approved prototype pictures.
+- **The code:** every added line of the laptop's diffs is in the game, except where the cloud changed one on
+  purpose:
+  - proto-wa1-7: 54/56 lines;
+  - WA-8-10: 6/6;
+  - WA-11-13: 35/38;
+  - WA-13b-14b: 6/10;
+  - WA-15b: 30/30.
+  - The changed lines: the archive's plaster `#e6d0a4`, as suggested; the output pass's grade grew a tint uniform;
+    WA-12's grass filter runs after the scatter; WA-13b's comments are reworded.
+- **The pictures** (17 fixed views, approved 31.10 | now; `runs/verify-sheet-0..2.jpg` on the laptop):
+  - WA-2 roofs, WA-3 rubble walls and awning, WA-4 carved doors, WA-5 grey stone, WA-6 crowns and WA-8 the house:
+    **Verified**, as approved.
+  - WA-1 soil and WA-9 grass are in, under WA-13's muted palette (as intended).
+- **Measured against the originals** (`examples/WORLD_LOOK_COMPARE.md`, the e999cd7 section): WA-10 to WA-14
+  **Verified** in their numbers.
+  - WA-15b (the trading house and its purpose) is in the code. Its pictures are in the WA-15b section.
+- **One fault: WA-12's bare rock reaches into house yards.**
+  - It is kept 40 m off the village square and off the fort, but not off the outlying houses.
+  - The neighbour's yard (-25, 75) was one grey rock slab up to his door, and a rock patch lay before Twinsen's house
+    (`runs/wa12b-yards.jpg`).
+  - WA-12b below fixes it.
+
+## WA-12b · No bare rock in house yards · Approved (the user's standing approval, 1.11.2026)
+
+- **Change** (`src/game/world.js` `wildGround`; `requests/WA-12b.diff` against e999cd7):
+  - The rock share fades with the distance from the nearest house's walls (`HOUSE_FLATS`, each house's footprint in
+    its own frame): `rock *= smoothstep(7, 11, yardDist)`.
+  - Soil may still come close: LBA2's houses stand in brown earth.
+  - It is filtered after the scatter like WA-12, so the random draws do not move.
+- **Measured** (Citadel from above): grass 26 → 28 %, soil 24 → 25 %, grey 39.5 → 37 %. That is still within WA-12's
+  target of grey ≥ 28 % and grass ≤ 35 % (LBA2: 17 / 36 / 41).
+- **Pictures:** `runs/wa12b-yards.jpg` (the neighbour's house and Twinsen's, now | WA-12b).
+- **Tried and dropped, not requested:** a fine light/shade mottle in the ground's vertex colours, to give it LBA2's
+  per-cell painted variation ("busy": Citadel 4.2 against LBA2's 6.5). At ±10 % and ±25 % it changed nothing that can
+  be measured from above or seen at the play camera (Citadel busy 4.22 → 4.19 / 4.22). The detail gap needs another
+  approach.
+
+---
+
+## GAME-1 (behaviour) · A person busy at something keeps at it when Twinsen walks by · Approved: the user asked for it (1.11.2026)
+
+The user: "Arthur in the house turns to Twinsen while he's sitting. It looks strange. He should keep busy, and turn
+only if Twinsen talks to him."
+
+- **The cause:** `src/game/actors.js` `NPC.update`. Every NPC within 3.2 m of Twinsen (`near`) turns his whole body
+  to him every frame (`dampAngle(… angleTo(hero) …)`), whatever he is doing. That includes a person at a placement's
+  own activity (`forceAnim`). Arthur at a new game kneels at his boat (`kneelWork`, prologue.js).
+- **Measured on the laptop** (Test Lab `artbusy`: a new game, Twinsen placed 2 m off each person's side, the
+  heading over 2.5 s; dev e999cd7):
+  - Now: Arthur turns **90°** to Twinsen and leaves his boat.
+  - With the change: **0°**.
+  - Picture: `runs/game1-arthur.jpg`.
+- **Change** (`requests/GAME-1.diff`, against 8489607):
+  - A new `NPC.busy()`: a placement anim other than `idle` or `listen`.
+  - The turn becomes `this.talking || (near && !this.busy())`.
+  - A person at work (kneeling, wiping, tinkering, potting, pumping, sitting) keeps at it.
+  - He turns to Twinsen once Twinsen talks to him: `talking`, as before. A person standing idle still turns to a
+    passer-by, as before.
+- **Affects:** every NPC placed with an `anim` (Arthur, Gilbert wiping at the well, workers and the like).
+  Residents (`Resident`) and guards have their own update and are unchanged.
+- **Check:**
+  - `node engine/cli.mjs artbusy` (turnedDeg 0 for the busy ones).
+  - A conversation with Arthur still turns him to Twinsen.
+  - The game's own talk and townlife tests.
