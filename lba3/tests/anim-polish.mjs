@@ -5,6 +5,7 @@
 //     first, within 0.12 s), at least one step per ~0.25 s, and a planted foot does not slide (< 4 cm in a half-turn);
 //  2. walking: the foot he stands on stays where it struck the ground (it slid 0.5 m/s while he walked at 2); a stop brings
 //     both feet down and together within 0.45 s, in at most two steps; the move starts on the frame of the key (no latency);
+//     the same stop let go at 16 phases of the gait (STOP-ROBUST: some phases gave a late third step);
 //  3. landings: a jump's landing takes the weight in the knees (the pelvis down > 8 cm within 0.15 s), the soles stay on the
 //     ground from the touchdown frame (sinking < 1.5 cm), a higher drop goes deeper; a stair tread never jerks the drawn body
 //     more than 8 cm in a 60 fps frame (it was 20 cm), and the gameplay height is the ground's at once;
@@ -160,6 +161,45 @@ for (const [fps, controls] of [[30, 'classic'], [60, 'classic'], [120, 'classic'
   check(`walk ${controls} ${fps} fps: he moves on the frame of the key (no added latency)`, moved > 0.001, r);
   check(`walk ${controls} ${fps} fps: the foot he stands on stays where it struck (the lower foot on the ground < 0.15 m/s, the planted one < 6 cm over 1 s)`, ground.meanSpeed != null && ground.meanSpeed < 0.15 && ground.frames > 0.4 / dt && steady.cm < 6 && steady.maxSpeed < 0.25, r);
   check(`walk ${controls} ${fps} fps: the stop: both feet down and planted within 0.45 s, at most two steps, one foot at a time (both off the ground at most 0.05 s), none after 0.6 s; no slide`, r.bothOffAfterStopS <= 0.05 && r.stopSettledAfter != null && r.stopSettledAfter <= 0.45 && after.length <= 2 && !late.length && r.stopSlip.cm < 3 && !r.nan, r);
+}
+
+// ---- 2b. (STOP-ROBUST) the stop at every phase of the gait: the walk above lets go at one phase only (it depends on which foot the
+// start took and the idle clock), and some phases gave a third step at 0.6 s. Here the cycle is turned by k/N on the walk's first frame
+// (its blend from standing hides it), N phases at 30 / 60 / 120 fps, Classic and Modern, the idle clock (the weight shift) alternating;
+// the rules are the stop's above, at each of them
+{
+  const N = 16;
+  const R = await ev((N) => {
+    const G = A.G, h = G.hero, P = G.physics, out = [];
+    const planted = (F) => F && ['L', 'R'].every((s) => F[s].on && !F[s].stepping && F[s].w > 0.99);
+    const footUp = (o) => A.wp(o).y - P.groundAt(h.pos.x, h.pos.z, h.pos.y + 0.5);
+    for (const controls of ['classic', 'modern']) for (const fps of [30, 60, 120]) for (let k = 0; k < N; k++) {
+      const dt = 1 / fps, key = controls === 'modern' ? 'KeyW' : 'ArrowUp';
+      A.reset('normal', controls); if (controls === 'modern') G.camRig.yaw = h.angle + Math.PI;
+      h.rig._startFoot = false; h.rig.t = k % 2 ? 7 : 0.05;
+      for (let i = 0; i < Math.round(0.1 / dt); i++) A.frame([], dt);
+      for (let i = 0; i < Math.round(1.2 / dt); i++) { A.frame([key], dt); if (!i) h.rig.phase += 2 * Math.PI * k / N; }
+      const ph = +(((h.rig.phase / (2 * Math.PI)) % 1 + 1) % 1).toFixed(3), steps = [], last = {};
+      let settled = null, bothOff = 0, slip = 0; const prev = { L: null, R: null };
+      for (let i = 1; i <= Math.round(0.9 / dt); i++) {
+        A.frame([], dt); const t = i * dt, F = h.rig._feet;
+        for (const s of ['L', 'R']) {
+          const f = F[s], o = h.rig.j['leg' + s].foot, p = A.wp(o);
+          if (f.stepping && !last[s]) steps.push([s, +t.toFixed(3)]); last[s] = f.stepping;
+          if (f.on && !f.stepping && f.w > 0.99 && footUp(o) < 0.115 && prev[s]) slip += Math.hypot(p.x - prev[s].x, p.z - prev[s].z);
+          prev[s] = f.on && !f.stepping && f.w > 0.99 ? p : null;
+        }
+        if (['L', 'R'].every((s) => !F[s].on || F[s].stepping)) bothOff += dt;
+        if (settled == null && t > 0.05 && h.speed < 0.01 && planted(F) && footUp(h.rig.j.legL.foot) < 0.115 && footUp(h.rig.j.legR.foot) < 0.115) settled = +t.toFixed(3);
+      }
+      out.push({ controls, fps, k, ph, steps, settled, bothOff: +bothOff.toFixed(3), slipCm: +(slip * 100).toFixed(1) });
+    }
+    return out;
+  }, N);
+  const bad = R.filter((r) => !(r.steps.length <= 2 && !r.steps.some((s) => s[1] >= 0.6) && r.settled != null && r.settled <= 0.45 && r.bothOff <= 0.05 + 1e-6 && r.slipCm < 3));
+  const most = (f) => Math.max(...R.map(f));
+  measure('stop phase sweep', { stops: R.length, bad: bad.length, maxSteps: most((r) => r.steps.length), lastStep: most((r) => r.steps.length ? r.steps[r.steps.length - 1][1] : 0), maxSettled: most((r) => r.settled ?? 9), maxBothOff: most((r) => r.bothOff), maxSlipCm: most((r) => r.slipCm) });
+  check(`the stop at ${N} phases of the gait × 30 / 60 / 120 fps × Classic / Modern: every one in at most two steps, planted within 0.45 s, none after 0.6 s, one foot at a time, no slide`, bad.length === 0, { bad: bad.slice(0, 8) });
 }
 
 // ---- 3. landings: a standing jump, drops of 0.9 and 2.0 m (Athletic), at 30 / 60 / 120 fps; the cellar stairs

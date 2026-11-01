@@ -5,7 +5,8 @@
 //  2. each kind of body, the rig alone at its own walking speeds, at 30 / 60 / 120 fps: the foot it stands on stays where it struck
 //     (the lower foot on the ground < 0.12 m/s; it slid 0.2-0.7 m/s unplanted), the leg reaches it; a stop ends in at most two steps,
 //     planted within 0.45 s, none after 0.6 s; turning where it stands (to face someone) the feet step in turn instead of spinning
-//     round with the body, a planted foot sliding < 3 cm;
+//     round with the body, a planted foot sliding < 3 cm; the stop let go at 16 phases of the gait, the same rules and one foot
+//     at a time (STOP-ROBUST);
 //  3. the residents walking round Citadel in play: the same on the ground (< 0.15 m/s each), their stops at most two steps;
 //  4. the depot guard: planted walk and stops on its patrol, and its gameplay frame for frame the same with or without planting
 //     (position, facing, state, its blows on Twinsen), patrolling and fighting;
@@ -126,6 +127,45 @@ for (const fps of [60, 30, 120]) {
   check(`bodies ${fps} fps: a stop ends in at most two steps, both feet planted within 0.45 s, none after 0.6 s, no slide`, !b2.length, { bad: b2 });
   const b3 = bad((on, off) => on.turn180.steps >= 3 && on.turn180.alternate && on.turn180.slideCm < 3 && on.turn90.steps >= 2 && on.turn90.slideCm < 3 && on.turn180.groundMoveCm < off.turn180.groundMoveCm * 0.25 && !on.nan);
   check(`bodies ${fps} fps: turning where it stands (to face someone) the feet step in turn, a planted foot slides < 3 cm, they no longer spin round with the body`, !b3.length, { bad: b3 });
+}
+
+// ---- 2b. (STOP-ROBUST) the stop at every phase of the gait: each body above stops at one phase only (fixed by its walk's length; its
+// idle clock is random), and some phases gave a late third step or a foot held in the air while the other stepped. Here the cycle is
+// turned by k/N on the walk's first frame, N phases × 30 / 60 / 120 fps, the idle clock (the weight shift) alternating
+{
+  const N = 16;
+  const R = await ev((N) => {
+    const { C, RG, wp, ankle } = NF, out = [];
+    const B = [['arthur', 1.6], ['zoe', 1.1], ['lharWoman', 1.15], ['desertTrader', 0.8], ['farmerA', 1.0], ['tim', 1.6], ['pim', 1.3], ['sphero1', 1.1], ['guard', 1.1], ['vguard', 1.4], ['vguard', 2.4], ['vguardG', 2.4]];
+    const cam = RG.PLANT_VIEW.cam; RG.PLANT_VIEW.cam = null;
+    try {
+      for (const [look, v] of B) for (const fps of [30, 60, 120]) for (let k = 0; k < N; k++) {
+        const dt = 1 / fps, rig = C.createCharacter(look); rig.plantIfFits(); rig.fidgetT = 99; rig.t = k % 2 ? 7 : 0.05;
+        let z = 0; const sc = rig.root.scale.y, ank = ankle(rig);
+        const step = (anim, sp) => { z += sp * dt; rig.root.position.set(0, 0, z); rig.root.rotation.y = 0; rig.play(anim); rig.update(dt, sp); rig.root.updateMatrixWorld(true); };
+        for (let i = 0; i < Math.round(0.3 / dt); i++) step('idle', 0);
+        for (let i = 0; i < Math.round(1.4 / dt); i++) { step('walk', v); if (!i) rig.phase += 2 * Math.PI * k / N; }
+        const steps = [], last = {}, prev = { L: null, R: null }; let settled = null, bothOff = 0, slide = 0;
+        for (let i = 1; i <= Math.round(0.9 / dt); i++) {
+          step('idle', 0); const t = i * dt, F = rig._feet;
+          const up = (s) => wp(rig.j['leg' + s].foot).y - ank;
+          for (const s of ['L', 'R']) {
+            const f = F[s], p = wp(rig.j['leg' + s].foot), held = f.on && !f.stepping && f.w * F.w > 0.99 && up(s) <= 0.02 * sc;
+            if (f.stepping && !last[s]) steps.push([s, +t.toFixed(3)]); last[s] = f.stepping;
+            if (held && prev[s]) slide += Math.hypot(p.x - prev[s].x, p.z - prev[s].z); prev[s] = held ? p : null;
+          }
+          if (['L', 'R'].every((s) => !F[s].on || F[s].stepping)) bothOff += dt;
+          if (settled == null && ['L', 'R'].every((s) => F[s].on && !F[s].stepping && F[s].w * F.w > 0.99 && up(s) < 0.02 * sc)) settled = +t.toFixed(3);
+        }
+        out.push({ body: `${look}@${v}`, fps, k, steps, settled, bothOff: +bothOff.toFixed(3), slideCm: +(slide * 100).toFixed(1) });
+      }
+    } finally { RG.PLANT_VIEW.cam = cam; }
+    return out;
+  }, N);
+  const bad = R.filter((r) => !(r.steps.length <= 2 && !r.steps.some((s) => s[1] > 0.6) && r.settled != null && r.settled <= 0.45 && r.bothOff <= 0.05 + 1e-6 && r.slideCm < 3));
+  const most = (f) => Math.max(...R.map(f));
+  measure('stop phase sweep', { stops: R.length, bad: bad.length, maxSteps: most((r) => r.steps.length), lastStep: most((r) => r.steps.length ? r.steps[r.steps.length - 1][1] : 0), maxSettled: most((r) => r.settled ?? 9), maxBothOff: most((r) => r.bothOff), maxSlideCm: most((r) => r.slideCm) });
+  check(`bodies: the stop at ${N} phases of the gait × 30 / 60 / 120 fps, 12 bodies: every one in at most two steps, planted within 0.45 s, none after 0.6 s, one foot at a time (both off the ground ≤ 0.05 s), no slide`, bad.length === 0, { bad: bad.slice(0, 8) });
 }
 
 // ---- 3. the residents walking round Citadel in play (every resident simulated in full, 60 fps)
