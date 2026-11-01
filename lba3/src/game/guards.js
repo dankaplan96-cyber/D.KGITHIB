@@ -59,6 +59,9 @@ export class Guard extends Actor {
     this.aimLine = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 4, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5),
       new THREE.MeshBasicMaterial({ color: '#d070ff', transparent: true, opacity: 0, depthWrite: false }));
     this.aimLine.visible = false; game.scene.add(this.aimLine);
+    // (ANIM-POLISH-3: the walk's stance foot held, clean stops, stepping turns where they stand; visual only: Rig._plant. The FunFrock
+    // trooper's short legs keep the unplanted walk: Rig.plantIfFits)
+    this.rig.plantIfFits();
     this.sync();
   }
   get alive() { return this.state !== 'dead'; }
@@ -151,6 +154,7 @@ export class Guard extends Actor {
         if (close && this.coolT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'windup'; this.stateT = 0; break; }
         if (!close && d < 8 && sees && this.coolT <= 0 && this.jamT <= 0 && (g.combatDir?.canAttack(this) ?? true)) { this.state = 'aim'; this.stateT = 0; break; }
         sp = d > 4.5 ? 2.4 : d > 2.2 ? 1.6 : 0;
+        if (!sp) anim = 'idle';   // (ANIM-POLISH-3: waiting in reach for its turn it stands, not frozen mid-stride on one foot)
         if (!sees && this.stateT > 4) { this.state = 'search'; this.stateT = 0; this.last = { x: hero.pos.x, z: hero.pos.z }; }
         if (Math.hypot(this.pos.x - this.home.x, this.pos.z - this.home.z) > 16 || d > 18) { this.state = 'home'; this.stateT = 0; g.combatDir?.done(this); }
         break;
@@ -213,6 +217,7 @@ export class Guard extends Actor {
     this.keepOffHero(dt);
     P.fall?.(this, dt);
     this.rig.play(anim);
+    this.placeRig();
     this.rig.update(dt, sp);
     this.sync();
   }

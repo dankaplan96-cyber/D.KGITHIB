@@ -14,7 +14,7 @@ import { Bench } from './engine/bench.js';
 import { FitWatch } from './engine/autofit.js';
 import { AutoApply } from './engine/autoapply.js';
 import { FarCull, BlobBatch, BoxCull, MW, FOGCULL, setFogCull, CASTER_ONLY } from './engine/drawcull.js';
-import { BLOBS } from './engine/rig.js';
+import { BLOBS, PLANT_VIEW } from './engine/rig.js';
 import { LightPool, poolSize, BATTERY_LAMPS } from './engine/lightpool.js';
 import { ShadowCull, cellFor } from './engine/shadowcull.js';
 import { DrawBatch, warmLayers } from './engine/drawbatch.js';
@@ -2406,6 +2406,7 @@ class Game {
 
   frame(dt, render) {
     this.time += dt;
+    PLANT_VIEW.tick++;   // (ANIM-POLISH-3: the frame a character's view mark (FarCull) belongs to)
     if (this.played != null && PLAYED.has(this.state)) this.played += dt;   // (SAVE-SLOTS: play time, shown in the save slots)
     const input = this.input;
     input.update();

@@ -276,6 +276,58 @@ fall height) was in place; what was still wrong, measured in Citadel's square by
   the run's stop brings both feet down together (they are both off the ground in the run's flight); a short start drags
   the first swinging foot ~3 cm before it lifts; NPCs still use the unplanted walk (their feet slide as Twinsen's did).
 
+## The others between the moves (ANIM-POLISH-3) — src/engine/rig.js `plantLite`, drawcull.js, actors.js, walkers.js, guards.js
+The user (01.11): "yes, do it for the other characters too". The townsfolk, the story's people (Zoé, Arthur, Bram ...) and Vesk's
+guards now plant their feet through the hero's own code (`Rig._plant`), switched on per body by `Rig.plantIfFits()` (`plantLite`;
+the hero keeps `footPlant`, and nothing he does changed: tests/anim-polish.mjs unchanged). Visual only: no speed, route, AI, turn
+rate, hit window, damage or collision changed (tests/npc-feet.mjs plays the depot guard frame for frame with and without it).
+Before / after strips (a walker's body, Zoé, Arthur, a guard; walk, stop, turn by script in Citadel's square, the lowest foot's move
+per 0.05 s printed under each frame): docs/lba3-production/review/npc-feet/ (tools/cap.mjs, tools/strip.py).
+Measured first on 0d045bf, each body alone at its own walking speeds (residents 0.75-1.6 m/s, kids up to 1.6, guards 1.4-2.4):
+- **Walking**: unplanted, the lower foot never came nearer than 1-3 cm to the ground (4-7 cm on average: the walk's keys hang it)
+  and skated at 0.4-0.9 m/s (1.3 m/s a guard at its run-up 2.4). Now the stance foot is held where it strikes, as his, the pelvis
+  riding as his planted walk does; on the ground it moves 0.04-0.07 m/s (0.09 a Grobo guard at 2.4 m/s), the leg reaching it
+  (≤ 1.06 leg lengths; the Spheros 1.13). Their walks are slower than his (2.0 m/s), and at those cadences the foot let go at 38 %
+  of the cycle was drawn back to its pose along the ground (0.1-0.15 m/s): the others hold it to 44 % and let it go over 6 %.
+- **Stops**: their walk becomes their stance in one frame (his brakes over a few), so a foot near the ground but off its spot was put
+  down, stepped by the blend and corrected again (three steps), and a foot in the air glided along the blend. Now: a foot more than
+  10 cm off the spot it will stand on steps there at once; one waiting for the other's step is held in the air where it is; the
+  other closes after it. 1-2 steps, both planted within 0.35 s; none later (standing, their feet may sit up to 9 cm off the stance
+  pose before a shuffle, his 5 cm; a leg straight in standing up to 1.03 of its length, his 1.01).
+- **Turning where they stand** (to face Twinsen when he comes near or talks to them, to face each other, a guard turning to him):
+  their controllers only turn them (an exponential turn, up to 6 rad/s at first), so the rig reads the turn from the facing: standing,
+  talking or listening while it turns faster than ~45°/s it is a stepping turn as his turn anims (on until under 20°/s): the lead
+  foot first, alternating, the chest over the standing foot, the pelvis hiked, the head leading. Turning faster than he ever does,
+  their steps lead the body by up to 0.8 rad (his 0.45), and a foot the turn leaves out of reach while the other steps takes its turn
+  step at once (it used to step back under the hip, then again: the same foot twice); a foot whose turn it is not waits for it unless
+  1.15 leg lengths out. A half-turn: 4 steps (a closing fifth on the Spheros), a planted foot slides ~1 cm; unplanted the feet were
+  dragged round 0.5-1.8 m (the statue).
+- **Bodies**: every body shares the skeleton's layout and reaches the ground standing; what decides is the legs (thigh + shin)
+  against the hip's height (`Rig.legReach`): Twinsen, Zoé, the Quetches, Rabbibunnies, the Esmers 0.89-0.90, the Grobos 0.86, the
+  kids 0.85, the Spheros 0.82 — all plant. **Baldino (0.77) and the FunFrock trooper `fclone` (0.78) keep the unplanted walk**: a
+  big boot on a short shin can't reach the held foot (1.2-1.6 leg lengths; planted they still slid 0.4-0.5 m/s). The Grey Sentinels
+  (createHumanoid, later chapters) are not switched on; the dogs have their own four-legged rig.
+- **Guards**: patrol, chase, search and home walks planted, stops at the waypoints, turning where they stand. Waiting in reach for its
+  turn to strike (chase, 1.9-2.2 m from Twinsen) a guard played its walk at speed 0, frozen mid-stride on one foot: it now stands
+  (idle) there. The strikes, hit reactions and the knock-out keep their own legs (the plant lets go over 0.1 s).
+- **Where**: only within 30 m of the camera and in view (`PLANT_VIEW`; drawcull.js FarCull marks the view each drawn frame), beyond
+  that the unplanted walk over 0.1 s. Each planted character is put where it stands this frame before its rig's update
+  (`Actor.placeRig`), as he is.
+- **Cost** (tests/npc-feet.mjs on 5885f20, chapter 1's Citadel, everybody simulated, 23 rigs posed a frame; SwiftShader's CPU, browser
+  timer 0.1 ms; medians): Rig.update over the whole crowd but the hero 0.7 ms with the 7-8 people near and in view planted, 0.3-0.5 ms
+  unplanted (drawn frames); 0.4-0.5 against 0.2 ms with 12 planted (undrawn frames, the distance gate only); all 20 standing or walking
+  ones planted at once 0.7 against 0.3 ms: about 0.02-0.04 ms a planted person. tests/walkers.mjs's own figure for the residents'
+  whole update, run back to back on the same machine: five minutes of all ten in full 0.475 ms a frame on 0d045bf, 0.678 on 5885f20;
+  a minute at the quay (most far off) 0.052 / 0.070 ms. No draw, no material, no program added (perfbudget, drawcalls PASS).
+- Open: the walkers' `gait` (their walk speed for the animation) is smoothed, so the first steps of a start lag the body a little
+  (the stance foot reaches its leg's length a moment, ≤ 1.1); a resident giving way sideways still plays its forward walk (VP-11);
+  story scenes that move a person themselves (a scene's own `rig.update`) solve its feet a frame late (steady while it walks, a
+  frame's move on a start or a stop); not looked at in later chapters' places. As in Twinsen's walk, the heel strikes only once the leg
+  can reach the ground (LBA2's long stride on our legs), so for 30-40 % of a walk's frames neither foot is held (each 1-6 cm up, moving
+  with the step; riding the pelvis 1-3 cm lower shortened that by a few points but drew the held foot along the ground at 0.1-0.5 m/s,
+  so it was left as his). The opening scene places its people's feet itself: their plantLite is off for it (opening.js `actor`).
+  tests/townlife.mjs's FIX-PUMP-N check (between Bram and the pump) fails on 0d045bf as well, with the same numbers.
+
 ## Enemies are solid (SOLID-ENEMY)
 The user (29.10): "what LBA2 did". From LBA2 itself (the engine source released by its rights holder, and the user's
 SCENE.HQR / RESS.HQR / BODY.HQR read with a study script in the session's scratch space; numbers only):

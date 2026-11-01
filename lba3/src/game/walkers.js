@@ -458,6 +458,7 @@ export class Resident extends NPC {
     if (this.st !== 'sitin' && this.st !== 'seated') this.angle = dampAngle(this.angle, this.angleTo(h), 6, dt);
     const seated = this.st === 'seated' || this.st === 'sitin';
     this.rig.play(seated ? 'sit' : this.talking ? 'talk' : 'idle');
+    this.placeRig();
     this.rig.update(dt, 0);
     if (seated) this.foldCoat();
     this.placeCarry(seated);
@@ -500,6 +501,7 @@ export class Resident extends NPC {
   }
   animate(anim, dt, speed) {
     this.rig.play(anim);
+    this.placeRig();
     this.rig.update(dt, speed);
     if (anim === 'sit') this.foldCoat();
     this.placeCarry(anim === 'sit');

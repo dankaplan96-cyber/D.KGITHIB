@@ -80,6 +80,10 @@ export class Actor {
     game.scene.add(this.shadow);
   }
   distTo(o) { return Math.hypot(o.pos.x - this.pos.x, o.pos.z - this.pos.z); }
+  // (ANIM-POLISH-3) a character whose feet the rig plants in the world (plantLite) is put where it stands this frame before its
+  // rig's update, as the hero is (otherwise the planted foot would be solved against last frame's place, and slip by a frame's move
+  // whenever it starts, stops or turns); sync() after it puts the root in the same place
+  placeRig() { if (this.rig.plantLite) { this.rig.root.position.copy(this.pos); this.rig.root.rotation.y = this.angle; this.rig.plantGround = this.onGround !== false; } }
   angleTo(o) { return Math.atan2(o.pos.x - this.pos.x, o.pos.z - this.pos.z); }
   sync() {
     this.rig.root.position.copy(this.pos);
@@ -750,6 +754,7 @@ export class NPC extends Actor {
     this.listenTo = null;
     this.forceAnim = def.anim || null;
     this.present = true;
+    this.rig.plantIfFits();   // (ANIM-POLISH-3: the stance foot held in the walk, two-step stops, stepping turns: Rig._plant)
   }
   setPresent(on) {
     this.present = on;
@@ -792,6 +797,7 @@ export class NPC extends Actor {
     this.gait = (this.gait ?? 0) + (v - (this.gait ?? 0)) * Math.min(1, dt * 10);
     if (moving && this.gait < 0.15) moving = false;
     this.rig.play(this.talking ? 'talk' : moving ? 'walk' : this.listenTo ? 'listen' : this.forceAnim || 'idle');
+    this.placeRig();
     this.rig.update(dt, moving ? this.gait : 0);
     this.sync();
   }
