@@ -136,7 +136,7 @@ function heightFn(x, z) {
 }
 
 const C = (c) => new THREE.Color(c);
-const COL = { snow: C('#ffffff'), snowShade: C('#e4ecf8'), rock: C('#d8c8b8'), rockDark: C('#b8a898'), trail: C('#b8a088'), ice: C('#bcdcf0') };
+const COL = { snow: C('#ffffff'), snowShade: C('#e0ecf3'), rock: C('#d8c8b8'), rockDark: C('#b8a898'), trail: C('#b8a088'), ice: C('#bcdcf0') };
 // (HAMALAYI-POLISH: GRID holds the heights the terrain was built from; its rock weight is the steep vertices grown by a
 // cell and blurred, so the snow/rock split falls on flat ground instead of in a comb of one-cell teeth: hamalayi-finish.js)
 let GRID = null;
@@ -166,12 +166,12 @@ function splatFn(x, z, h, slope, w) {
 // powder snow: soft drifts and a sparkle of blue-white grains
 const snowTex = () => ctex('hsnow', 256, 256, (x, S) => {
   const r = rng(23);
-  x.fillStyle = '#f2f6fc'; x.fillRect(0, 0, S, S);
+  x.fillStyle = '#f0f7fb'; x.fillRect(0, 0, S, S);
   for (let i = 0; i < 60; i++) {
     const cx = r() * S, cy = r() * S, rad = 20 + r() * 50;
-    for (const [ox, oy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) { const g = x.createRadialGradient(cx + ox, cy + oy, 2, cx + ox, cy + oy, rad); g.addColorStop(0, r() < 0.5 ? 'rgba(210,222,240,0.35)' : 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(230,238,250,0)'); x.fillStyle = g; x.fillRect(cx + ox - rad, cy + oy - rad, rad * 2, rad * 2); }
+    for (const [ox, oy] of [[0, 0], [S, 0], [-S, 0], [0, S], [0, -S]]) { const g = x.createRadialGradient(cx + ox, cy + oy, 2, cx + ox, cy + oy, rad); g.addColorStop(0, r() < 0.5 ? 'rgba(205,225,236,0.35)' : 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(228,240,247,0)'); x.fillStyle = g; x.fillRect(cx + ox - rad, cy + oy - rad, rad * 2, rad * 2); }
   }
-  for (let i = 0; i < 900; i++) { x.fillStyle = r() < 0.5 ? 'rgba(170,190,220,0.35)' : 'rgba(255,255,255,0.9)'; x.fillRect(r() * S, r() * S, 1.5, 1.5); }
+  for (let i = 0; i < 900; i++) { x.fillStyle = r() < 0.5 ? 'rgba(165,195,213,0.35)' : 'rgba(255,255,255,0.9)'; x.fillRect(r() * S, r() * S, 1.5, 1.5); }
 });
 const flagTex = () => ctex('hflags', 128, 32, (x, W, H) => { const cols = ['#d8302a', '#e8c030', '#2f8a3a', '#2a6ad8', '#f4f4f4']; for (let i = 0; i < 5; i++) { x.fillStyle = cols[i]; x.fillRect(i * W / 5 + 2, 0, W / 5 - 4, H); } }, true);
 
@@ -194,9 +194,9 @@ export function* buildHamalayiSteps(scene, physics) {
     fade: (x, z) => smoothstep(1.4, 3.4, Math.min(seg(TRAIL, x, z), seg(LEDGE, x, z), seg(RIDGE, x, z), seg(DESCENT, x, z))) * smoothstep(0.4, 2.4, Math.min(...PATHS.map(([P, hw]) => seg(P, x, z) - hw))) });
   const H = (x, z) => terrain.heightAt(x, z);
   const R = {
-    id: 'hamalayi', outdoor: true, grade: 0.9, gradeTint: [0.95, 1.0, 1.05],   // (WA-13 follow-up: LBA1's icy cyan, not grey)
+    id: 'hamalayi', outdoor: true, grade: 1.0, gradeTint: null,   // (WA-13b: no frame grade; the snow and the sky light are cyan at the source, as LBA1's ice)
     group, lights: [], exits: [], searches: [], ballTargets: [], updaters, music: 'hamalayi',
-    env: { fog: '#dfe8f2', sun: '#fff6ec', hemiSky: '#eef2ff', hemiGround: '#c0bccc', sunI: 2.6, hemiI: 1.6, fogRange: [70, 250] },
+    env: { fog: '#dfe8f2', sun: '#fff6ec', hemiSky: '#eef5fd', hemiGround: '#bcc2cb', sunI: 2.6, hemiI: 1.6, fogRange: [70, 250] },
     terrain,
   };
   R.env.fogColor = new THREE.Color(R.env.fog);

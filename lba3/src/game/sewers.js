@@ -50,7 +50,7 @@ const deadM = () => MAT.flat('#4a5458', 0.35);
 const waterM = () => M('sw_water', () => {
   // (the game's sea texture, tinted the original's pale cyan; its own copy so it can drift on its own)
   const t = textures().sea.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  const m = new THREE.MeshStandardMaterial({ map: t, color: '#eaeee4', emissive: '#649494', emissiveIntensity: 0.7, roughness: 0.3, metalness: 0.05 });
+  const m = new THREE.MeshStandardMaterial({ map: t, color: '#e2f6e6', emissive: '#5e9c92', emissiveIntensity: 0.7, roughness: 0.3, metalness: 0.05 });
   m.userData.noShadow = true;
   return m;
 });

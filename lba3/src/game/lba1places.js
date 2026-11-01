@@ -51,7 +51,7 @@ export function buildLba1Asylum(scene, physics) {
   const A = LBA1_AT, out = {};
   if (hasLba1Room('asylum')) {
     const R = out.asylum = buildLba1Room(scene, physics, 'asylum', 'asylum', A.asylum.x, A.asylum.z, { stone: 'grey', lamp: '#e8f0ff', view: 24, topCol: '#ffe8c4', sideCol: '#e4e8f0' });   // (WORLD-ART-7: warm cream floors, cooler walls)
-    R.grade = 0.5;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
+    R.grade = 0.32;   // (WA-13b: LBA1's rooms are grey stone; measured on the laptop against LBA1: chroma 4-6)
     // the low stair-well (the original's exit to the yard) leads out; you come in at its top
     const ex = R.cell(10.5, 1, 42.6), sp = R.cell(10.5, 5, 39.8);
     R.exits.push({ x: ex.x, z: ex.z, r: 1.0, to: 'asylum-out' });
@@ -68,7 +68,7 @@ export function buildLba1Temple(scene, physics) {
   const A = LBA1_AT, out = {};
   if (hasLba1Room('bumaze')) {
     const R = out.bumaze = buildLba1Room(scene, physics, 'bumaze', 'bumaze', A.bumaze.x, A.bumaze.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 9, view: 16, noCut: true, tint: 1.6, topCol: '#f0d0a4' });   // (WORLD-ART-7: sandy worn floors against the slate walls)
-    R.grade = 0.5;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
+    R.grade = 0.32;   // (WA-13b: LBA1's rooms are grey stone; measured on the laptop against LBA1: chroma 4-6)
     R.cave = true; R.music = 'cave';
     const back = R.cell(14, 1, 19.0), goal = R.cell(14, 1, 11);
     R.exits.push({ x: back.x, z: back.z, r: 0.9, room: 'butemple' });
@@ -77,7 +77,7 @@ export function buildLba1Temple(scene, physics) {
   }
   if (hasLba1Room('buhalls')) {
     const R = out.buhalls = buildLba1Room(scene, physics, 'buhalls', 'buhalls', A.buhalls.x, A.buhalls.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 12, view: 24, tint: 1.6, topCol: '#f0d0a4' });   // (WORLD-ART-7: sandy worn floors against the slate walls)
-    R.grade = 0.5;   // (WA-13 follow-up: LBA1's rooms are grey stone; measured ~2x the original's chroma at the game's 0.72)
+    R.grade = 0.32;   // (WA-13b: LBA1's rooms are grey stone; measured on the laptop against LBA1: chroma 4-6)
     R.cave = true; R.music = 'cave';
     const st = R.cell(3, 17, 3.2), far = R.cell(61, 17, 1.4), give = R.cell(61, 17, 4);
     R.spawn = { x: st.x, z: st.z, a: 0 };
