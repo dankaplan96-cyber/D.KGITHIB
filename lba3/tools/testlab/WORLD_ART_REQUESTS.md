@@ -1014,3 +1014,30 @@ apply").**
   - **The test caught one fault before the push:** the room's build threw (`TEX.clock` is `CANV.clock`). When a
     region's build fails, its door does nothing and `game.doorCool` keeps climbing; fixed.
 - **Picture:** `runs/ticket-vs-lba2.jpg`.
+
+---
+
+## LBA-CITADEL-4 · The pharmacy inside Bug Street's `bug2` house · Approved (night mode; pictures sent)
+
+- **Where:** LBA2 scene 22's door. Our `bug2` was placed for it (town.js: "Bug Street's south house, the original's
+  scene 22").
+- **Code:** `requests/LBA-CITADEL-4.diff`, **on top of 1–3** (checked on a fresh checkout).
+  - New `src/game/pharmacy.js` (region `pharmacy` at x 6900).
+  - Hooks after the ticket office's.
+- **The original's layout** (study render: 15 × 14 cells, so 7.2 × 6.6 m, 3.6 m):
+  - **Walls and floor:** pale grey blocks; grey tiles with black ones scattered in them.
+  - **The shelves:** both walls lined with shelves of teal apothecary jars with pale lids, a black library ladder
+    between them on each wall, and a great plant against the back wall.
+  - **The counter:** a long oval pale counter in the middle, with the till, a green flask and glasses, and a tree of
+    blue baubles at one end and of red at the other.
+  - **The rest:** white globe lamps on posts at the left front and the right, two red chairs at the front, a second
+    plant, two teal jars standing on the floor.
+- **Twelve years on (ours):** one shelf holds Zeelich remedies (the Mosquibees' amber honey jars), and a notice board
+  for prescriptions hangs by the door.
+- **For the story:** `R.npcSpots.pharmacist` is behind the counter. It ties in with the LBA2 opening's errand to the
+  pharmacy (docs/lba3-team/ADVENTURE_DESIGN.md #12), if the story wants it.
+- **Measured:**
+  - `artpharmacy`: PASS. In by the `bug2` door (no locked prompt), across the front, round the counter's far end to
+    the back shelves, and out.
+  - Draw calls: 24 (23 + 1) at Medium.
+- **Picture:** `runs/pharmacy-vs-lba2.jpg`.

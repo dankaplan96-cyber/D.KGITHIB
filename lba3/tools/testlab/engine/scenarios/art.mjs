@@ -374,3 +374,11 @@ export const artTicket = placeWalk({ id: 'art-ticket', title: 'The ticket office
   { name: 'out', pts: [[2.7, -0.9], [2.6, 1.2], [-1.5, 1.9], [-2.8, 1.9]] },
 ] });
 ART.push(artTicket);
+// the pharmacy (LBA-CITADEL-4, LBA2 scene 22, the 'bug2' house): past the shelves and the ladder to the counter's far
+// side, along the back shelves, and out
+export const artPharmacy = placeWalk({ id: 'art-pharmacy', title: 'The pharmacy: in by the door, round the counter, out again', suite: 'artpharmacy', room: 'pharmacy', house: 'bug2', legs: [
+  { name: 'the front', pts: [[-1.2, 1.6], [2.3, 1.4]] },
+  { name: 'behind the counter', pts: [[2.6, 0.1], [2.2, -1.2], [0.2, -1.5]] },
+  { name: 'out', pts: [[-2.4, -0.9], [-2.4, 1.3], [-2.2, 2.1], [-3.2, 2.1]] },
+] });
+ART.push(artPharmacy);
