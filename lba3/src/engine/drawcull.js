@@ -25,6 +25,7 @@
 //    instanced call for the frame (same matrices, same material, same render order: blobs are black, so their
 //    overlaps blend the same in any order), the originals hidden for the frame and shown again right after.
 import * as THREE from 'three';
+import { PLANT_VIEW } from './rig.js';
 const NONE = Object.freeze([]);
 
 // PERF-CPU: the same update without recomputing what has not changed. three recomposes every shown object's local matrix
@@ -433,7 +434,7 @@ export class FarCull {
   // actors(): lists of the actors that may be drawn; fog: the scene's THREE.Fog
   // anim (PERF-CPU): the people's animation rate — every `off`-th frame out of the view, every `far`-th beyond the fog,
   // and with `eco` (Auto's lowest profiles) every `inView`-th frame in the view beyond `near` m
-  constructor(actors, camera, fog) { this.partPx = SUB_PX; this.partNear = 30; this.anim = { on: true, off: 4, far: 8, eco: false, inView: 2, near: 25, hold: null }; this.actors = actors; this.camera = camera; this.fog = fog; this.off = []; this.enabled = true; this.view = true; this.n = 0; this.nView = 0; this.parts = new WeakMap(); this.bounds = new WeakMap(); this.tick = 0; }
+  constructor(actors, camera, fog) { PLANT_VIEW.cam = camera.position; this.partPx = SUB_PX; this.partNear = 30; this.anim = { on: true, off: 4, far: 8, eco: false, inView: 2, near: 25, hold: null }; this.actors = actors; this.camera = camera; this.fog = fog; this.off = []; this.enabled = true; this.view = true; this.n = 0; this.nView = 0; this.parts = new WeakMap(); this.bounds = new WeakMap(); this.tick = 0; }
   // (PERF-HIGH) a rig's bounds about its root's position (where the game or a story scene has put it this frame): the
   // height of their centre and a radius, from its box at first sight (with a margin); and whether any of it casts a
   // sun shadow (looked at again every 120 frames: a part may be added or start casting)
@@ -484,6 +485,9 @@ export class FarCull {
     let li = -1;
     for (const list of this.actors()) { li++; const lod = animOn && li === 0; for (const a of list || NONE) {
       const rig = a?.rig, r = rig?.root; if (!r || !a.pos) continue;
+      // (ANIM-POLISH-3: a plantLite character's feet are planted only while it is in view (and near the camera: Rig.update, PLANT_VIEW);
+      //  marked out of view first, in view below once it has passed the view tests)
+      if (rig.plantLite) { rig.inView = false; rig.viewTick = PLANT_VIEW.tick; }
       if (!r.visible) { rig.lodN = 0; continue; }
       const dx = a.pos.x - p.x, dy = a.pos.y - p.y, dz = a.pos.z - p.z, d2 = dx * dx + dy * dy + dz * dz;
       rig.lodN = lod && AN.eco && d2 > AN.near * AN.near ? AN.inView : 0;
@@ -502,6 +506,7 @@ export class FarCull {
         //  beyond the fog)
         if (!B.casts && fogLim < Infinity && (_fs.center.x - p.x) * _fw.x + (_fs.center.y - p.y) * _fw.y + (_fs.center.z - p.z) * _fw.z - _fs.radius > fogLim) { if (lod) rig.lodN = AN.far; r.__hidBefore = r.__hid === true; r.visible = false; this.off.push(r); (this.offView ??= []).push(r); this.nView++; this.nFog++; continue; }
       }
+      if (rig.plantLite) rig.inView = !(rig.lodN > 1);
       // (within 30 m of the camera every part stays: an eye there is still about a pixel; PERF-CPU, Auto's Low-lite:
       //  partPx 2.5 within partNear 12 m)
       if (d2 < this.partNear * this.partNear) continue;
