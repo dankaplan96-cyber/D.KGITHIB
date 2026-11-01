@@ -11,7 +11,7 @@
 // queues it.
 // Under the automated tests on a software renderer the governor is off and Auto is High (as the tests always ran);
 // `?autoq` in the URL turns it on there too.
-import { Governor, Calibration, describe, knobsAt, profileOf, spell, TIER_AT, machineKey, CACHE_KEY, N_PROFILES, nextProfile, UP_TRY_BLOCK } from './autoquality.js';
+import { START_FLOOR, Governor, Calibration, describe, knobsAt, profileOf, spell, TIER_AT, machineKey, CACHE_KEY, N_PROFILES, nextProfile, UP_TRY_BLOCK } from './autoquality.js';
 import { gpuQuality } from './perf.js';
 import { cellFor } from './shadowcull.js';
 import { warmPassPrograms } from './warmup.js';
@@ -43,7 +43,7 @@ export class AutoApply {
       // player's first minutes ran slow; Medium held 59–60 everywhere. A settled session with room still tries High.)
       const low = pick === 'low';
       let p0 = bat || low ? 1 : 0, why = `first start ${bat ? 'on battery: Medium' : low ? 'plugged in: Medium (an integrated GPU)' : 'plugged in: High'} (the GPU's name suggests ${pick})`;
-      if (other) { p0 = nextProfile(other.p, bat ? -1 : +1); why = `first start ${bat ? 'on battery' : 'plugged in'}: this machine's ${bat ? 'plugged-in' : 'battery'} profile, one ${bat ? 'lower' : 'higher'}`; }
+      if (other) { p0 = Math.min(START_FLOOR, nextProfile(other.p, bat ? -1 : +1)); why = `first start ${bat ? 'on battery' : 'plugged in'}: this machine's ${bat ? 'plugged-in' : 'battery'} profile, one ${bat ? 'lower' : 'higher'}`; }
       this.gov.setProfile(p0, why + '; measured on the title screen, then evaluated in play', { commitNow: true, t: 0 });
       this.cal = new Calibration({ p0, budget: () => Math.max(1000 / 60, G.frameCapMs || 0) });
       this.source = 'guess';
@@ -154,7 +154,7 @@ export class AutoApply {
     if (!this.on() || this.test || old === this.key) return;
     const t = performance.now();
     if (!this.fromCache(this.cache[this.key], t)) {
-      const p = nextProfile(this.gov.applied, bat ? -1 : +1);
+      const p = Math.min(Math.max(START_FLOOR, this.gov.applied), nextProfile(this.gov.applied, bat ? -1 : +1));   // (AUTO-FLOOR: a guess never below Medium; already lower stays)
       this.gov.setProfile(p, `${bat ? 'on battery: one profile lower' : 'plugged in: one profile higher'} (nothing settled for this power source yet), evaluated`, { commitNow: true, t });
       this.source = 'power change';
     }

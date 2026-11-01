@@ -4,7 +4,7 @@
 // settings after thinking a little, and then NOT change every few seconds — it jumps"; "if the game runs well on battery
 // there's no reason it won't on mains".
 //
-// Quality: Auto chooses between TWO complete, named profiles (PROFILES, best first): High · Medium (AUTO-2, below). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
+// Quality: Auto chooses between complete, named profiles (PROFILES, best first): High · Medium (AUTO-2) · Low (AUTO-FLOOR, below). A profile is a full set of knobs (resolution, bloom, shadow filter and map, lamps, MSAA, shadows, vegetation
 // and small-caster distances, the people's animation rate, the far detail); Auto moves one profile at a time, never a
 // single knob. Low / Medium / High chosen by hand are exactly the presets they always were (renderer.knobs stays null).
 //
@@ -63,12 +63,19 @@ export const TOP = PRESET_KNOBS.high;
 // on battery … I want Auto to sense the game by itself and decide the graphics by itself"): Medium-eco is gone — on his
 // street it bought ~1 fps and looked worse. Auto is High or Medium, never below Medium's look; plugged in it starts at
 // High (his street holds a flat 60 there) and steps down to Medium only on measured pressure; on battery it is Medium.
+// AUTO-FLOOR (the user, 01.11, after the i5's battery benchmark held ~38-45 fps on Medium with Auto stuck at its floor:
+// "I want Auto to always aim for 55-60 fps according to the computer's ability, that's it"): Low is back as Auto's last
+// profile, reached only by the same measured, sustained pressure as any step down (never a start guess: a first start is
+// at most Medium, autoapply.js). It is the Low preset exactly. Cost factors from the i5's UHD plugged in (0.48.0: street
+// GPU High 24.1, Medium 11.0, Low 7.7 ms; render submit High 14.8, Medium 5.1, Low 5.4 ms with the sim's share).
 export const PROFILES = [
   { id: 'high', name: 'High', tier: 'high', K: { ...PRESET_KNOBS.high }, gpu: 1, cpu: 1 },
   { id: 'medium', name: 'Medium', tier: 'medium', K: { ...PRESET_KNOBS.medium }, gpu: 0.56, cpu: 0.8 },
+  { id: 'low', name: 'Low', tier: 'low', K: { ...PRESET_KNOBS.low }, gpu: 0.32, cpu: 0.7 },
 ];
 export const N_PROFILES = PROFILES.length;
-export const TIER_AT = { high: 0, medium: 1, low: 1 };   // (AUTO-2: Medium is the floor)
+export const TIER_AT = { high: 0, medium: 1, low: 2 };
+export const START_FLOOR = TIER_AT.medium;   // (AUTO-FLOOR: a guess never starts below Medium; only measured pressure goes lower)
 export const profileOf = (p) => PROFILES[Math.max(0, Math.min(N_PROFILES - 1, p | 0))];
 export const knobsAt = (p) => ({ ...profileOf(p).K });
 export const costAt = (p, side) => profileOf(p)[side];
@@ -301,6 +308,7 @@ export class Calibration {
     let est = estimate({ gpuMs, cpuMs, p0: this.p0, budget: this.budget() });
     // (no GPU timer: a title already missing refreshes with light CPU work is GPU-bound at the guess — one profile down)
     if (gpuMs == null && fMs > 1.2 * this.budget() && cpuMs < 0.75 * this.budget()) est = { p: Math.max(est.p, Math.min(N_PROFILES - 1, this.p0 + 1)) };
+    est = { ...est, p: Math.min(est.p, START_FLOOR) };   // (AUTO-FLOOR: the title's frames start no lower than Medium; play decides lower)
     this.result = { ...est, gpuMs: gpuMs == null ? null : +gpuMs.toFixed(2), cpuMs: cpuMs == null ? null : +cpuMs.toFixed(2), frameMs: fMs == null ? null : +fMs.toFixed(2), frames: this.f.length, gpuFrames: this.g.length, p0: this.p0 };
     return this.result;
   }

@@ -53,9 +53,9 @@ const name = (p) => PROFILES[p].name;
 
 // ---------------------------------------------------------------- the profiles and the labels
 {
-  check('two named profiles, best first: High · Medium (AUTO-2)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium', PROFILES.map((x) => x.name));
+  check('three named profiles, best first: High · Medium · Low (AUTO-2, AUTO-FLOOR)', PROFILES.map((x) => x.name).join(' · ') === 'High · Medium · Low', PROFILES.map((x) => x.name));
   const eq = (a, b) => KNOBS.every((k) => a[k] === b[k]);
-  check('High and Medium are the presets exactly (every knob); nothing below Medium', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && PROFILES.length === 2, {});
+  check('High, Medium and Low are the presets exactly (every knob); nothing below Low', eq(knobsAt(0), PRESET_KNOBS.high) && eq(knobsAt(1), PRESET_KNOBS.medium) && eq(knobsAt(2), PRESET_KNOBS.low) && PROFILES.length === 3, {});
   check('the labels are the profile names; a state that is not a profile names its nearest and every difference', describe(knobsAt(1)).text === 'Medium'
     && describe({ ...PRESET_KNOBS.high, bloom: 0 }).text === 'High, no bloom' && describe(knobsAt(1)).tier === 'medium', [describe({ ...PRESET_KNOBS.high, bloom: 0 }).text]);
   check('each profile is no more costly than the one above it, on both sides, by the model', PROFILES.every((x, i) => !i || (x.gpu <= PROFILES[i - 1].gpu && x.cpu <= PROFILES[i - 1].cpu)), PROFILES.map((x) => [x.gpu, x.cpu]));
@@ -170,13 +170,15 @@ for (const [label, M] of [['GPU-bound (GPU 24 ms at High, CPU 8)', { cpu: 8, gpu
 {
   const vega = estimate({ gpuMs: 5, cpuMs: 7, p0: TIER_AT.low });
   const fast = estimate({ gpuMs: 3, cpuMs: 4, p0: 0 }), slow = estimate({ gpuMs: 14, cpuMs: 14, p0: TIER_AT.low }), noTimer = estimate({ gpuMs: null, cpuMs: 4, p0: 1 });
-  check('calibration: a fast machine → High; a slow one → Low-lite; the GPU side unmeasured is not limited', fast.p === 0 && slow.p === N_PROFILES - 1 && noTimer.p <= 1, { fast, slow, noTimer });
+  check('calibration: a fast machine → High; a slow one → the lowest profile; the GPU side unmeasured is not limited', fast.p === 0 && slow.p === N_PROFILES - 1 && noTimer.p <= 1, { fast, slow, noTimer });
+  { const c = new Calibration({ p0: 1 }); c.t0 = 0; for (let i = 0; i < 40; i++) { c.f.push(30); c.cpu.push(28); c.g.push(26); } const r = c.finish();
+    check('AUTO-FLOOR: a slow title starts no lower than Medium (play decides lower)', r.p === TIER_AT.medium, r); }
   check('calibration: the Vega-like numbers start above the name\'s Low', vega.p < TIER_AT.low, { vega, label: name(vega.p) });
   const cal = new Calibration({ p0: 0 });
   let r = null, t = 0;
   for (let i = 0; i < 400 && !r; i++) { t += 16.7; cal.gpu(4); r = cal.frame(t, 16.7, 5); }
   check('the title calibration finishes after ~2 s of frames and reports what it measured', r && r.p === 0 && r.gpuMs === 4 && r.cpuMs === 5 && t < 2600, { r, t });
-  check('nextProfile: a power change without a cached profile moves one profile', nextProfile(0, -1) === 1 && nextProfile(1, -1) === 1 && nextProfile(1, +1) === 0 && nextProfile(0, +1) === 0, {});
+  check('nextProfile: a power change without a cached profile moves one profile', nextProfile(0, -1) === 1 && nextProfile(1, -1) === 2 && nextProfile(2, -1) === 2 && nextProfile(1, +1) === 0 && nextProfile(0, +1) === 0, {});
 }
 // ---------------------------------------------------------------- 14. what the profiles never touch
 check('the knobs are rendering and far-detail only (resolution, bloom, shadows, lamps, MSAA, grass, small casters, far people\'s animation rate, far small parts): no simulation, physics or hero knob',
