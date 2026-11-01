@@ -351,6 +351,8 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
       for (const [n, leg] of legs.entries()) {
         const res = await walk(leg.pts, 30, leg.room || room); if (leg.thenRoom) { await sleep(1500); for (let t = 0; t < 30 && await page.evaluate(() => !!game.trans); t++) await sleep(500); await sleep(1200); }
         s = await st(); log.push({ step: leg.name, result: res, ...s });
+        // (stuck: what the feet stand on there and the bricks around, to tell a missing step from a wall)
+        if (res !== 'done') log.push({ under: await page.evaluate(() => { const h = game.hero, P = game.physics, c = game.room?.center || { x: 0, z: 0 }; return { onGround: h.onGround, groundY: h.groundY, at: +P.groundAt(h.pos.x, h.pos.z, h.pos.y).toFixed(2), near: P.near(h.pos.x, h.pos.z).filter((q) => q.enabled && Math.hypot(q.x - h.pos.x, q.z - h.pos.z) < 2.5).map((q) => ({ x: +(q.x - c.x).toFixed(2), z: +(q.z - c.z).toFixed(2), hw: q.hw && +q.hw.toFixed(2), hd: q.hd && +q.hd.toFixed(2), r: q.r, top: +q.top.toFixed(2), f: ['stair', 'noStand', 'seeThrough', 'block'].filter((f) => q[f]).join(' ') })) }; }) });
         if (leg.thenRoom) assert(rec, `${leg.name}: in ${leg.thenRoom}`, s.room === leg.thenRoom, leg.thenRoom, s.room); await shot(`${String(n + 3).padStart(2, '0')}-${leg.name.replace(/\W+/g, '-')}`);
         if (leg.minY != null) assert(rec, `${leg.name}: y ≥ ${leg.minY}`, s.y >= leg.minY, `>= ${leg.minY}`, s.y);
         if (leg.maxY != null) assert(rec, `${leg.name}: y ≤ ${leg.maxY}`, s.y <= leg.maxY, `<= ${leg.maxY}`, s.y);
@@ -419,3 +421,12 @@ export const artTavCellar = placeWalk({ id: 'art-tavcellar', title: "Chez Luc's 
   { name: 'out', pts: [[1.9, -1.5], [1.9, 0.2], [-1.2, 0.5], [-1.5, 5.0], [-4.6, 6.1]] },
 ] });
 ART.push(artTavCellar);
+// the baggage claim (LBA-CITADEL-8, LBA2 scene 5, the 'bug' house): from the front hall up the stair to the office,
+// through an arch into the claim hall to the belt, back down, and out
+export const artBaggage = placeWalk({ id: 'art-baggage', title: 'The baggage claim: up to the office and the belt, out again', suite: 'artbaggage', room: 'baggage', house: 'bug', legs: [
+  { name: 'stair foot', pts: [[-1.2, 7.4], [-1.0, 4.2], [-3.05, 4.2]] },
+  { name: 'the office', pts: [[-3.05, 1.2], [-3.0, 0.3], [-1.0, -0.4]], minY: 1.4 },
+  { name: 'the claim hall', pts: [[1.4, -2.8], [2.0, -3.9], [2.0, -5.4], [0.2, -7.6]], minY: 1.4 },
+  { name: 'out', pts: [[2.0, -5.4], [2.0, -3.9], [-1.0, -0.4], [-3.0, 0.3], [-3.05, 1.2], [-3.05, 4.2], [-1.0, 4.2], [-1.2, 7.4], [-3.4, 8.6]] },
+] });
+ART.push(artBaggage);
