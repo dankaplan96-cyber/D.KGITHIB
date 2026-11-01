@@ -37,7 +37,7 @@ const CRAFT = new Set(['tinker', 'kneelWork', 'kneelLook', 'kneelShow', 'reach',
 const GESTURE_LEN = { nod: 0.8, shrug: 0.9, sigh: 1.1, start: 0.6 };
 const FAST = new Set(['action', 'throw', 'throwQuick', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'dodge', 'pulse', 'charge', 'heavyCharge']);
 // the actions in which the player's character keeps his feet planted (Rig._plant)
-const PLANT = new Set(['idle', 'talk', 'listen', 'found', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search']);
+const PLANT = new Set(['idle', 'talk', 'listen', 'found', 'turnL', 'turnR', 'throwQuick', 'charge', 'punch', 'punch2', 'kick', 'slash1', 'slash2', 'slash3', 'heavy', 'heavyCharge', 'pulse', 'hurt', 'pickup', 'door', 'use', 'search', 'jumpPrep']);   // (ANIM-POLISH-2: the jump's crouch too: its soles slid and sank 4 cm)
 // the gaits and stances the hero's starts, stops and switches between them are blended across (Rig.play, Rig._xfade)
 const LOCO = new Set(['walk', 'run', 'sneak', 'idle', 'talk', 'listen', 'turnL', 'turnR']);
 const MOVING = new Set(['walk', 'run', 'sneak']);
@@ -45,7 +45,7 @@ const XF_KEYS = ['legL', 'kneeL', 'footL', 'legR', 'kneeR', 'footR', 'sideL', 's
 const XF_VARS = ['hipsY', 'torsoX', 'torsoY', 'torsoZ', 'headX', 'headY', 'headZ', 'armOut', 'hipsZ', 'bodyRotX'];
 const newFoot = () => ({ on: false, w: 0, yaw0: 0, dwell: 0, P: new THREE.Vector3(), from: new THREE.Vector3(), stepping: false, u: 0, dur: 0.1, lift: 0 });
 const wrap = (x) => Math.atan2(Math.sin(x), Math.cos(x));
-const _fp = new THREE.Vector3(), _v3 = new THREE.Vector3(), _m4 = new THREE.Matrix4();
+const _fp = new THREE.Vector3(), _v3 = new THREE.Vector3(), _m4 = new THREE.Matrix4(), _hp = new THREE.Vector3();
 // the legs' animated pose, kept apart from the bones for foot planting
 function fkLegs(j) {
   const h = (b) => ({ rotation: { x: b.rotation.x, y: b.rotation.y, z: b.rotation.z } });
@@ -514,57 +514,127 @@ export class Rig {
   // knee, a kick) it follows the pose and is put down where the pose lands it. The leg is bent to reach the planted
   // point (two bones: the knee from the distance, the hip's swing and spread from the direction; the sole kept flat).
   // Only on frames the hero marks (plantFrame: grounded play) and in the actions of PLANT; elsewhere it lets go over
-  // 0.1 s. Walking, running, jumps and every story pose keep their own legs.
+  // 0.1 s. Running, jumps and every story pose keep their own legs.
+  // (ANIM-POLISH-2) Walking too: each foot is held where it struck the ground from its contact to its push-off (the walk's
+  // stance half, read from the cycle's phase less the joints' easing lag), easing in over its first 5 % and out over its
+  // last 12 %, so the foot under him no longer skates (it slid 0.5 m/s while the body walked at 2) and a stop keeps it where
+  // it stands. Turning on the spot is a stepping turn: from the turn's first frames the feet step in turn, the one on the
+  // side he turns to first, each lifted 7.5 cm and put down a little ahead of the body by the turn it makes meanwhile.
   _plant(dt, a) {
-    const j = this.j, on = this.plantFrame && PLANT.has(a);
+    const j = this.j, gait = this.plantFrame && a === 'walk', on = this.plantFrame && PLANT.has(a);
     this.plantFrame = false;
     const F = this._feet ??= { w: 0, L: newFoot(), R: newFoot() };
-    F.w = on ? Math.min(1, F.w + dt / 0.06) : Math.max(0, F.w - dt / 0.1);
-    if (F.w <= 0) { F.L.on = F.R.on = false; F.L.w = F.R.w = 0; F.L.stepping = F.R.stepping = false; return; }
+    F.w = on || gait ? Math.min(1, F.w + dt / 0.06) : Math.max(0, F.w - dt / 0.1);
+    if (F.w <= 0) { F.L.on = F.R.on = false; F.L.w = F.R.w = 0; F.L.stepping = F.R.stepping = false; F.L.locked = F.R.locked = false; return; }
+    // (the hips turn first about the vertical, then swing and spread: the planted foot's turn no longer drags its ankle round)
+    if (j.legL.hip.rotation.order !== 'YXZ') { j.legL.hip.rotation.order = 'YXZ'; j.legR.hip.rotation.order = 'YXZ'; }
     this.root.updateMatrixWorld(true);
     const sc = this.root.scale.y;
     this._ankle ??= this.hipsRest + j.legL.hip.position.y + j.legL.knee.position.y + j.legL.foot.position.y;
     const groundY = this.root.position.y + this._ankle * sc, settle = a === 'idle' || a === 'talk' || a === 'listen';
     // (ANIM-POLISH) a stop brings the feet together at once (settle: in the 0.7 s after stopping each foot 4 cm off its stance steps
-    // in once, one at a time, instead of waiting 0.4 s and shuffling); turning on the spot, a foot steps each time the body has
-    // turned 35° past the way it was put down, and until then stays pointing where it was (the hip counter-turns)
+    // in once, one at a time, instead of waiting 0.4 s and shuffling)
     this._settleAge = (this._settleAge || 0) + dt; this._settleT = Math.max(0, (this._settleT || 0) - dt);
     const yaw = this.root.rotation.y, pivot = a === 'turnL' || a === 'turnR', settling = this._settleT > 0 && this._settleAge > 0.1 && settle;
+    // the body's turn rate (rad/s, + = to his left), smoothed: the stepping turn's cadence and lead come from it
+    const yr = this._yawPrev == null ? 0 : wrap(yaw - this._yawPrev) / dt; this._yawPrev = yaw;
+    this._yawRate = damp(this._yawRate || 0, clamp(yr, -6, 6), 20, dt);
+    F.pivotAge = pivot ? 0 : (F.pivotAge || 0) + dt; if (F.pivotAge > 0.3) F.next = null;
+    const rate = this._yawRate, cx = this.root.position.x, cz = this.root.position.z;
+    // (ANIM-POLISH-2) landing from a jump or a drop: both feet stand where they touched down on that frame (the knees took the
+    // landing before the plant had come in, and the soles sank 2-3 cm into the ground)
+    const touch = this._landPlant && on; if (touch) F.w = 1;
+    this._landPlant = false;
     for (const s of ['L', 'R']) {
       const leg = s === 'L' ? j.legL : j.legR, st = F[s], other = F[s === 'L' ? 'R' : 'L'];
       leg.foot.getWorldPosition(_fp);
-      if (on) {
+      if (touch) { st.on = true; st.w = 1; st.locked = false; st.stepping = false; st.landing = false; st.lead = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; st.dwell = 0; }
+      if (gait) {
+        // the walk's stance: phase 0 (the heel strikes) .. 0.5 (push-off), on the pose the joints have reached (lagPhase behind)
+        const ph = ((this.phase / (Math.PI * 2) - (this._lagPhase || 0) + (s === 'L' ? 0 : 0.5)) % 1 + 1) % 1;
+        const stance = ph < 0.5;
+        let wgt = stance ? smooth(ph / 0.05) * (1 - smooth((ph - 0.38) / 0.12)) : 0;
+        if (st.on && (this.accel ?? 0) < -4) wgt = Math.max(wgt, st.w);   // (braking to a stop: the foot it stands on is not let go)
+        // (the heel strikes when the leg can reach the ground below the foot: where the pose puts it far ahead of a high hip it
+        // would hang in the air, or be pulled back to the ground in a frame)
+        leg.hip.getWorldPosition(_hp);
+        const Lg = 0.98 * (leg.knee.position.length() + leg.foot.position.length()) * sc, hv = _hp.y - groundY;
+        const reach = Math.hypot(_fp.x - _hp.x, _fp.z - _hp.z, hv) <= Lg || _fp.y - groundY < 0.03 * sc;
+        if (stance && !st.on && reach && ph < 0.3) { st.on = true; st.locked = true; st.stepping = false; st.landing = false; st.lead = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; st.dwell = 0; }
+        else if (!stance && st.on) { st.on = false; st.locked = false; st.stepping = false; }
+        if (st.on && st.stepping) { st.stepping = false; st.landing = false; st.lead = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; }   // (a step left over from standing: the walk takes it)
+        if (st.on) st.locked = true;
+        // (a foot still standing where the walk began keeps its place and eases into the walk's own weight)
+        st.w = st.on ? (st.w >= wgt ? wgt + (st.w - wgt) * Math.exp(-dt / 0.04) : Math.min(wgt, st.w + dt / 0.06)) : Math.max(0, st.w - dt / 0.06);
+      } else if (on) {
         const up = _fp.y - groundY;
-        if (up > (st.on ? 0.05 : 0.02) * sc) { st.on = false; st.stepping = false; }   // the pose lifts it
+        // (ANIM-POLISH-2) stopping from a walk, the foot that was swinging comes down in one step to where he will stand (it was put
+        // down wherever the blend to the stance first brought it near the ground, slid there, then stepped again)
+        if (!st.on && settle && this._settleT > 0 && this._settleAge < 0.3 && up > 0.02 * sc && st.settleId !== this._settleId && !(other.stepping && !other.landing)) {
+          st.on = true; st.w = 1; st.stepping = true; st.landing = true; st.u = 0; st.from.copy(_fp); st.yawFrom = st.yaw0 = yaw; st.lead = 0;
+          st.dur = 0.17; st.lift = 0.015 * sc; st.settleId = this._settleId; st.dwell = 0;
+        }
+        if (st.stepping && st.landing) {
+          st.u = Math.min(1, st.u + dt / st.dur);
+          const e = st.u * st.u * (3 - 2 * st.u);
+          // (to where he will stand: under the hip, not where the blend to the stance has got to)
+          leg.hip.getWorldPosition(_hp);
+          st.P.set(st.from.x + (_hp.x - st.from.x) * e, groundY + (st.from.y - groundY) * (1 - e) + Math.sin(Math.PI * st.u) * st.lift, st.from.z + (_hp.z - st.from.z) * e);
+          if (st.u >= 1) { st.stepping = false; st.landing = false; st.locked = false; st.yaw0 = yaw; st.dwell = 0; }
+        } else if (up > (st.on ? 0.05 : 0.02) * sc && !(st.locked && up < 0.12 * sc)) { st.on = false; st.stepping = false; st.locked = false; }   // the pose lifts it
         else if (!st.on) { st.on = true; st.w = 0; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; st.dwell = 0; } // put down where the pose lands it
-        else if (st.w < 1 && !st.stepping) { st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; }   // (still settling as it lands)
+        else if (st.w < 1 && !st.stepping && !st.locked) { st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; }   // (still settling as it lands; a foot the walk held stays put)
         else if (st.stepping) {
           st.u = Math.min(1, st.u + dt / st.dur);
           const e = st.u * st.u * (3 - 2 * st.u);
-          st.P.set(st.from.x + (_fp.x - st.from.x) * e, groundY + Math.sin(Math.PI * st.u) * st.lift, st.from.z + (_fp.z - st.from.z) * e);
-          if (st.u >= 1) { st.stepping = false; st.yaw0 = yaw; st.dwell = 0; }
+          // (a turning step lands ahead of the body by the turn it makes while the other foot steps)
+          let tx = _fp.x, tz = _fp.z;
+          if (st.lead) { const c = Math.cos(st.lead), sn = Math.sin(st.lead), dx = tx - cx, dz = tz - cz; tx = cx + dx * c + dz * sn; tz = cz - dx * sn + dz * c; }
+          st.P.set(st.from.x + (tx - st.from.x) * e, groundY + Math.sin(Math.PI * st.u) * st.lift, st.from.z + (tz - st.from.z) * e);
+          if (st.u >= 1) { st.stepping = false; st.locked = false; st.yaw0 = yaw + (st.lead || 0); st.dwell = 0; st.lead = 0; }
         } else {
           st.dwell += dt;
           const d = Math.hypot(_fp.x - st.P.x, _fp.z - st.P.z);
-          const turned = pivot && st.dwell > 0.09 && Math.abs(wrap(yaw - st.yaw0)) > 0.6 && d > 0.03 * sc;
+          // turning on the spot: the feet step in turn, the lead foot (the side he turns to) first, from the turn's first frames
+          const mine = F.next ? F.next === s : rate > 0 ? s === 'L' : s === 'R';
+          const turnStep = pivot && Math.abs(rate) > 0.4 && mine && st.dwell > 0.03 && !other.stepping && (other.dwell >= 0.02 || !other.on);
           // (a foot the leg can no longer reach — the body carried on past it — steps up too)
           const far = (st.reach || 0) > 1.01 && d > 0.03 * sc;   // (a straight back leg in a lunge is fine; past its length it drags; ANIM-POLISH: a step that would not move the foot is no step: a standing fidget used to tap one foot every 0.13 s)
           // (standing about, a foot left more than 5 cm off its stance for 0.4 s shuffles back into it)
           st.off = settle && d > 0.05 * sc ? (st.off || 0) + dt : 0;
           if (d > 1.2 * sc) st.P.set(_fp.x, groundY, _fp.z);                         // (placed somewhere else)
-          else if ((d > 0.12 * sc || far || st.off > 0.4 || turned || (settling && st.settleId !== this._settleId && d > 0.04 * sc) || (settle && st.dwell > 0.15 && Math.abs(wrap(yaw - st.yaw0)) > 0.35)) && (!other.stepping || d > 0.3 * sc || st.reach > 1.04)) {
-            st.stepping = true; st.u = 0; st.from.copy(st.P); st.yawFrom = st.yaw0; if (settling) st.settleId = this._settleId;
+          else if (turnStep) {
+            const dur = clamp(0.18 * 1.75 / Math.abs(rate), 0.13, 0.2);
+            st.stepping = true; st.u = 0; st.from.copy(st.P); st.yawFrom = st.yaw0; st.dur = dur; st.lift = 0.075 * sc;
+            st.lead = clamp(rate * dur, -0.45, 0.45); F.next = s === 'L' ? 'R' : 'L';
+          // (turning on the spot only the turn steps them, in turn: a foot also stepping because it fell 12 cm behind made two in a row)
+          } else if ((pivot ? st.reach > 1.04 : d > 0.12 * sc || far || st.off > 0.4 || (settling && st.settleId !== this._settleId && d > 0.04 * sc) || (settle && st.dwell > 0.15 && Math.abs(wrap(yaw - st.yaw0)) > 0.35)) && ((!other.stepping && (other.on || !settle)) || d > 0.3 * sc || st.reach > 1.04)) {   // (not while the other foot is off the ground, standing about)
+            st.stepping = true; st.u = 0; st.from.copy(st.P); st.yawFrom = st.yaw0; st.lead = 0; if (settling) st.settleId = this._settleId;
             st.dur = clamp(0.09 + d * 0.3, 0.1, 0.2); st.lift = Math.min(0.09, 0.03 + d * 0.15) * sc;
           } else st.P.y = groundY;
         }
+        st.w = st.on ? Math.min(1, st.w + dt / 0.05) : Math.max(0, st.w - dt / 0.08);
+      } else {
+        // (neither standing nor walking: the legs go back to their own pose; a foot off its plant for more than a moment is let go,
+        // so a later plant never pulls it back to where it stood before)
+        st.w = Math.max(0, st.w - dt / 0.08);
+        if ((st.offT = (st.offT || 0) + dt) > 0.05) { st.on = false; st.locked = false; st.stepping = false; }
       }
-      st.w = st.on ? Math.min(1, st.w + dt / 0.05) : Math.max(0, st.w - dt / 0.08);
+      if (gait || on) st.offT = 0;
       const w = st.w * F.w;
-      if (w <= 0) continue;
-      // the planted point in the hip's frame → knee bend from its distance, hip spread (z) and swing (x) from its direction
+      if (w <= 0) { st.tw = 0; continue; }
       const hip = leg.hip, knee = leg.knee, foot = leg.foot, A = knee.position, B = foot.position;
+      {
+        // the foot keeps pointing the way it was put down while the body turns (a step turns it with the body, to where it lands)
+        const e = st.stepping ? st.u * st.u * (3 - 2 * st.u) : 0, fy = st.stepping ? st.yawFrom + wrap(yaw + (st.lead || 0) - st.yawFrom) * e : st.yaw0;
+        st.tw = damp(st.tw || 0, pivot || settle || st.locked ? clamp(wrap(fy - yaw), -0.8, 0.8) : 0, 14, dt);
+      }
+      const ty = st.tw * w;
+      // the planted point in the hip's frame (its turn taken off first) → knee bend from its distance, hip spread (z) and swing (x)
+      // from its direction
       _m4.copy(hip.parent.matrixWorld).invert();
       _v3.copy(st.P).applyMatrix4(_m4).sub(hip.position);
+      if (ty) { const c = Math.cos(ty), sn = Math.sin(ty), x = _v3.x, z = _v3.z; _v3.x = x * c - z * sn; _v3.z = x * sn + z * c; }
       const c1 = A.y * B.y + A.z * B.z, c2 = A.z * B.y - A.y * B.z;
       const K = (_v3.lengthSq() - A.lengthSq() - B.lengthSq() - 2 * A.x * B.x) / 2;
       st.reach = _v3.length() / (A.length() + B.length());
@@ -578,12 +648,7 @@ export class Rig {
       const swing = wrap(Math.atan2(_v3.z, _v3.y) - Math.atan2(Lz, uy));
       const flat = -(j.body.rotation.x + swing + phi);
       hip.rotation.x += (swing - hip.rotation.x) * w; hip.rotation.z += (side - hip.rotation.z) * w;
-      {
-        // the foot keeps pointing the way it was put down while the body turns on the spot (a step turns it with the body)
-        const e = st.stepping ? st.u * st.u * (3 - 2 * st.u) : 0, fy = st.stepping ? st.yawFrom + wrap(yaw - st.yawFrom) * e : st.yaw0;
-        st.tw = damp(st.tw || 0, pivot || settle ? clamp(wrap(fy - yaw), -0.8, 0.8) : 0, 14, dt);
-        hip.rotation.y = st.tw * w;
-      }
+      hip.rotation.y = ty;
       knee.rotation.x += (phi - knee.rotation.x) * w;
       foot.rotation.x += (flat - foot.rotation.x) * w;
     }
@@ -593,7 +658,7 @@ export class Rig {
   // a landing: `strength` 0.3 (a hop down a step) .. 1.2 (a long drop) sets how deep the knees take it and how long it lasts (0.22 s × strength, as before)
   // (Hero: from the height he fell, not only the speed). A quick compression, a hold and a rebound that rises a little past
   // standing, the arms out for balance. Kept as `landT` (the time left) for what read it before.
-  land(strength = 1) { this.landS = strength; this.landD = Math.max(0.1, 0.22 * strength); this.landT = this.landD; }
+  land(strength = 1) { this.landS = strength; this.landD = Math.max(0.1, 0.22 * strength); this.landT = this.landD; this._landPlant = true; }
 
   _collectMats() {
     this._mats = [];
@@ -700,13 +765,18 @@ export class Rig {
         const H = this.hipsRest * this.root.scale.y / 0.46; // (LBA2: pelvis at 46% of the height)
         // (a look's own cycle length in metres where its original walk gives one: Baldino's short legs step
         // 800 units per 0.8 s cycle, 1.3 m — his pelvis is far below 46% of his height)
-        this.phase += (speed * dt / (this.walkCycle ? this.walkCycle * this.root.scale.y : 0.78 * H)) * Math.PI * 2 - dph;
+        const cyc = this.walkCycle ? this.walkCycle * this.root.scale.y : 0.78 * H;
+        this.phase += (speed * dt / cyc) * Math.PI * 2 - dph;
+        this._cycHz = speed / cyc;   // (cycles a second: the planted stance reads the pose this far behind the phase, Rig._plant)
         const p = ((this.phase / (Math.PI * 2)) % 1 + 1) % 1, q = (p + 0.5) % 1;
         const W = WALK_KEYS;
         T.legL = key(W.thigh, p); T.kneeL = key(W.knee, p); T.footL = key(W.foot, p);
         T.legR = key(W.thigh, q); T.kneeR = key(W.knee, q); T.footR = key(W.foot, q);
         T.armL = key(W.arm, p); T.elL = key(W.elbow, p); T.armR = key(W.arm, q); T.elR = key(W.elbow, q);
         hipsY = 0.95 + key(W.bob, p * 2 % 1);
+        // (ANIM-POLISH-2, the player's walk, whose feet are held on the ground in their stance: the pelvis rides 3 cm lower, so
+        // the standing leg reaches the ground at mid-stance — it hung 2 cm short — and a little lower again as the heel strikes)
+        if (this.footPlant) hipsY += key(W.bobPlant, p * 2 % 1);
         torsoY = key(W.twist, p); headY = -torsoY;
         torsoX = 0.02 + key(W.lean, p * 2 % 1);
       } else if (a === 'run' && (!this.j.skirt || this.legCloth)) {
@@ -1000,6 +1070,12 @@ export class Rig {
         const b = Math.sin(this.t * (Math.PI * 2 / (this.idlePeriod || 2.4)));
         hipsY = 0.95 - 0.008 + b * 0.004; torsoX = 0.03; T.legL = 0.02; T.legR = -0.02; T.kneeL = 0.1; T.kneeR = 0.1;
         T.armL = 0.1; T.armR = 0.1; T.elL = -0.3; T.elR = -0.3; armOut = 0.04;
+        // (ANIM-POLISH-2) the weight goes over the standing foot while the other steps: the chest leans over it, the pelvis
+        // hikes on the stepping side, the body rises a touch onto the standing leg and settles as the foot comes down, the
+        // arm opposite the stepping leg swings a little forward (read from last frame's steps, Rig._plant)
+        const F = this._feet, up = (f) => (f?.stepping ? Math.sin(Math.PI * f.u) : 0), eL = up(F?.L), eR = up(F?.R);
+        torsoZ = 0.06 * (eL - eR); this._stepTilt = 0.07 * (eL - eR); hipsY += 0.01 * (eL + eR);
+        T.armL -= 0.16 * eR; T.armR -= 0.16 * eL; T.elL -= 0.12 * eR; T.elR -= 0.12 * eL;
       }
       T.armL ??= 0.05; T.armR ??= 0.05; T.elL ??= -0.2; T.elR ??= -0.2;
     } else if (a === 'hurt') {
@@ -1142,6 +1218,7 @@ export class Rig {
     // (a throw or a charge on the upper-body layer: the arms and the chest follow its keys as closely as a planted throw,
     // so the hand is where the keys put it when the ball leaves; the legs keep the walk's own rate)
     const Ru = this.over ? Math.max(R, 55) : a === 'jumpPrep' || a === 'jump' ? Math.min(R, 18) : R;
+    this._lagPhase = a === 'walk' ? (this._cycHz || 0) / R : 0;   // (the legs ease toward their keys at R: their pose lags the phase by 1/R s)
     // (a knock-out follows its keys closely, but no joint ever turns faster than KO_HUMAN.maxRate: no pop from
     // whatever pose the blow interrupted)
     const lim = ko ? KO_HUMAN.maxRate * dt : Infinity;
@@ -1172,7 +1249,9 @@ export class Rig {
     if (walkLike) j.hips.rotation.y = damp(j.hips.rotation.y, -(torsoY - layerTwist - lookTwist) * 0.8 + layerTwist * 0.35, R, dt);
     else j.hips.rotation.y = damp(j.hips.rotation.y, hipsYaw ?? 0, hipsYaw != null ? R : 8, dt);
     // idle weight shift tilts the pelvis toward the standing leg
-    j.hips.rotation.z = damp(j.hips.rotation.z, (a === 'idle' || a === 'talk' || a === 'listen') ? -(this.hipShift || 0) * 0.05 : 0, 4, dt);
+    // (a stepping turn hikes the pelvis on the stepping side, Rig turn branch)
+    const pivotT = this.footPlant && (a === 'turnL' || a === 'turnR');
+    j.hips.rotation.z = damp(j.hips.rotation.z, (a === 'idle' || a === 'talk' || a === 'listen') ? -(this.hipShift || 0) * 0.05 : pivotT ? this._stepTilt || 0 : 0, pivotT ? 14 : 4, dt);
     if (fk) this._plant(dt, a);
 
     // tunic panels follow the legs with a little drag (cloth follow-through)
@@ -1471,7 +1550,8 @@ const STRIKES = {
     legL: [-0.2, -0.4, -0.42, -0.45, -0.45, -0.42, -0.3], kneeL: [0.12, 0.35, 0.3, 0.25, 0.28, 0.25, 0.15],
     legR: [0.16, 0.25, 0.28, 0.3, 0.32, 0.3, 0.22], hipsY: [0.925, 0.91, 0.9, 0.87, 0.87, 0.88, 0.91], hipsZ: [0, 0.04, 0.06, 0.12, 0.13, 0.11, 0.05] },
   // sword 2: forehand back the other way (arc -1.2 → 1.2): cocked out to the right behind the shoulder
-  slash2: { guard: 'sword', u: [0, 0.55, 0.76, 1.26, 1.76, 2.2, 3], uLeg: [0, 0.7, 1, 1.5, 2, 2.4, 3],
+  // (ANIM-POLISH-2: its sweep keyed 0.2 u earlier: the blade crossed ahead of him 20 ms after the sweep had struck a body there)
+  slash2: { guard: 'sword', u: [0, 0.47, 0.64, 1.06, 1.56, 2.05, 3], uLeg: [0, 0.7, 1, 1.5, 2, 2.4, 3],
     armR: [-0.8, -1.35, -1.4, -1.5, -1.45, -1.3, -0.8], elR: [-0.8, -1.4, -1.3, -0.35, -0.15, -0.3, -0.8],
     outR: [0.1, 0.95, 0.9, -0.05, -0.85, -1.0, 0], twR: [0.2, -0.9, -0.8, -0.2, 0.1, 0.3, 0.2],
     armL: [-0.4, -0.45, -0.45, -0.4, -0.45, -0.45, -0.35], elL: [-1.0, -1.1, -1.1, -1.1, -1.2, -1.2, -1.2], outL: [0.45, 0.55, 0.5, 0.3, 0.15, 0.15, 0.3],
@@ -1508,7 +1588,8 @@ const STRIKES = {
     legL: [-0.2, -0.35, -0.38, -0.4, -0.4, -0.25], kneeL: [0.12, 0.3, 0.25, 0.2, 0.2, 0.12], legR: [0.16, 0.2, 0.22, 0.28, 0.28, 0.2],
     hipsY: [0.925, 0.92, 0.915, 0.9, 0.9, 0.92], hipsZ: [0, 0.02, 0.03, 0.09, 0.09, 0.02] },
   // fists 2: the left (the leading) hand, the chest turning the other way
-  punch2: { guard: 'fists', u: [0, 0.65, 0.85, 1.12, 2, 3], uLeg: [0, 0.8, 1, 1.35, 2, 3], time: { s: 0.07, a: 0.08, r: 0.18 },
+  // (ANIM-POLISH-2: the left arm, slower out of its guard than the right, reached 95 % of its reach 23 ms after the hit: keyed earlier)
+  punch2: { guard: 'fists', u: [0, 0.55, 0.72, 0.92, 2, 3], uLeg: [0, 0.8, 1, 1.35, 2, 3], time: { s: 0.07, a: 0.08, r: 0.18 },
     armL: [-0.65, -0.5, -0.55, -1.55, -1.5, -0.65], elL: [-1.85, -1.95, -1.9, -0.1, -0.15, -1.85], outL: [-0.08, -0.05, -0.05, -0.2, -0.2, -0.08], twL: [0.3, 0.4, 0.4, 0.1, 0.1, 0.3],
     armR: [-0.55, -0.6, -0.6, -0.6, -0.6, -0.55], elR: [-1.75, -1.9, -1.9, -1.95, -1.95, -1.75],
     torsoX: [0.1, 0.1, 0.1, 0.16, 0.15, 0.1], torsoY: [-0.15, 0.05, 0.05, -0.55, -0.5, -0.15], headY: [0.13, -0.05, -0.05, 0.45, 0.42, 0.13],
@@ -1543,6 +1624,7 @@ const WALK_KEYS = {
   elbow: [-0.12, -0.15, -22 * D - 0.12, -0.15],
   twist: [-14 * D, 0, 14 * D, 0],
   bob: [-0.02, 0.027],          // contact low, passing high (× pelvis height / 0.95)
+  bobPlant: [-0.022, -0.03],    // (the player, feet held in stance: added to bob, contact -0.042, passing -0.003)
   lean: [0.1, 0.0],             // the torso dips forward a little at each contact
 };
 // The athletic run, six keys per cycle starting at this leg's knee drive (thighs absolute: LBA2 tilts the pelvis
