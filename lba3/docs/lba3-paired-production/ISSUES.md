@@ -8,7 +8,7 @@ docs/lba3-production/WORKLIST.he.md.
 |---|---|---|---|---|
 | I-1 | G1 | Twinsen from behind reads as a mushroom with a bald ring (AUDIT-CH12 #6) | G1-ART | pending |
 | I-2 | G1 | Statue heads are faceted lumps; Gilbert rough at first talk (#16) | G1-ART | pending |
-| I-3 | G1 | Lighthouse: plain cylinders, slab door, no windows (#10); harbour shed a box (#9) | later env-art repair pair | pending |
+| I-3 | G1 | Lighthouse: plain cylinders, slab door, no windows (#10); harbour shed a box (#9) | env-art repair: lighthouse.js (footing, arched door, windows, gallery) and harbourshed.js (plank shed on a plinth) | fixed (status corrected 1.11.2026) |
 | I-4 | G1 | Vesk two-shot at the beam pad: the arch crosses Twinsen (arch has colliders only on legs) | G1-CAM | pending |
 | I-5 | G1 | Modern controls, street: camera jitter 4–5 > 3 (camsteady, since WORLD-LIFE) | G1-CAM | pending |
 | I-6 | G1 | Camera swings to a clear view only when he stands still; walking through tight spots still draws in | G1-CAM | pending |
