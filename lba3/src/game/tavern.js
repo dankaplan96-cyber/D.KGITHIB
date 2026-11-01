@@ -8,7 +8,7 @@
 //   - as the game's camera sees it: the long wall on the left with three small high windows; the gallery (≈ 2.4 m up)
 //     along the short back wall, under two windows with red blinds, round tables with red stools on it; a straight
 //     stair against the gallery's face climbing toward the left wall, teal iron railings, white globe lamps on the
-//     newels; a shut arched door in the gallery's face (the original's cellar, scene 4)
+//     newels; an arched door in the gallery's face down to the cellar (the original's scene 4: tavcellar.js)
 //   - the jukebox at the stair's foot, a red sofa against the stair's side, the bar at the front left by the door (a
 //     pale counter along the wall turning into the room, a tap barrel and bottles on it, red stools), square tables with
 //     red chairs in the front, teal potted plants, a picture high on the long wall
@@ -86,13 +86,16 @@ export function buildTavernRoom(scene, physics) {
   k.add(rbox(1.5, 0.16, 0.14, 0.02), cap, AX, 2.38, GZ1 + 0.07);
   for (const sx of [-1, 1]) k.add(rbox(0.16, 2.3, 0.14, 0.02), cap, AX + sx * 0.68, 1.15, GZ1 + 0.07);
   k.add(cyl(0.04, 0.04, 0.03, 8), MAT.iron(), AX + 0.35, 1.0, GZ1 + 0.1, 0, { rx: Math.PI / 2 });
+  // (LBA-CITADEL-7: the arched door opens on the cellar's stair, as the original's does: tavcellar.js)
+  R.exits.push({ x: B.cx + AX, z: B.cz + GZ1 + 0.45, r: 0.6, room: 'tavcellar' });
+  R.entries = { tavcellar: { x: B.cx + AX, z: B.cz + GZ1 + 1.3, a: 0 } };
   // --- the stair against the gallery's face, climbing toward the left wall, and its landing at the top
   const SZ0 = GZ1, SZ1 = GZ1 + 1.3, N = 8, run = 0.5, rise = GH / N, SX0 = 1.6;   // (its foot at x = SX0)
   for (let i = 0; i < N; i++) {
     const top = rise * (i + 1), x = SX0 - (i + 0.5) * run;
     k.add(rbox(run + 0.02, top, SZ1 - SZ0, 0.015), stone, x, top / 2, (SZ0 + SZ1) / 2);   // (pale stone, as the original's)
     k.add(rbox(run + 0.04, 0.06, SZ1 - SZ0 + 0.04, 0.01), cap, x, top - 0.03, (SZ0 + SZ1) / 2);
-    B.col(x, (SZ0 + SZ1) / 2, run / 2 + 0.04, (SZ1 - SZ0) / 2, top, { stair: true });
+    B.col(x, (SZ0 + SZ1) / 2, run / 2 + 0.08, (SZ1 - SZ0) / 2, top, { stair: true });   // (+0.08: the steps overlap under groundAt's 5 cm shrink; +0.04 left a 2 cm seam that dropped Twinsen through)
   }
   const LX1 = SX0 - N * run;   // (the landing: from the stair's top to the left wall, level with the gallery)
   k.add(rbox(LX1 - GX0, GH, SZ1 - SZ0, 0.02), stone, (GX0 + LX1) / 2, GH / 2, (SZ0 + SZ1) / 2);
