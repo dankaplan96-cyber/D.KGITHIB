@@ -434,6 +434,38 @@ prototyped on the laptop, and the exact code is in `tools/testlab/requests/WA-11
   pale cyan tint (0.95, 1.0, 1.05). Tests lba1rooms, chapter7, chapter1, menus, perfbudget PASS. For the laptop:
   measure the chroma again with `artall` and propose numbers if still off.
 
+### WA-13 follow-up checked on the laptop (1.11.2026, a8e5d37) · proposal WA-13b · Approved (the user's standing approval)
+
+The follow-up (`setGrade`: the LBA1 rooms at 0.5; the Hamalayi at 0.9 with tint 0.95/1/1.05) was measured with
+`artall` on the dev build at a8e5d37. It is compared with LBA1's own scenes: chroma C* (CIE Lab), lightness L*, and
+the hue of the main colour family. The originals are study renders only, not in the repository.
+
+| Area | LBA1 | a8e5d37 (player / iso) | Proposal WA-13b (player / iso) |
+|---|---|---|---|
+| asylum (scene 0) | C 5.7 | 8.7 / 8.2 | **5.4 / 5.2** |
+| buhalls (scene 40) | C 4.9 | 9.8 / 10.8 | **6.0 / 6.6** |
+| bumaze (scene 57) | C 3.9 | 6.8 / 6.9 | **4.2 / 5.3** |
+| hamalayi, snow hue | ice #a8d2d7, hue 209 | hue 261–274 (lavender) | hue 199–250 (blue-cyan) |
+
+- **The LBA1 rooms:** `src/game/lba1places.js`, `R.grade = 0.5` → **0.32** (all three). That brings them inside
+  the target 4–6.
+- **The Hamalayi:**
+  - The frame tint cannot make the snow cyan. Its snow and hemisphere light are lavender, so a tint only shifts it a
+    little: 1.0 with tint 0.9/1.06/1.06 measured hue 251–266.
+  - **Fix the colours at the source instead, and drop the tint:**
+    - `grade: 1.0, gradeTint: null`.
+    - `COL.snowShade` `#e4ecf8` → `#e0ecf3`.
+    - `snowTex`: base `#f2f6fc` → `#f0f7fb`; drift blobs `rgba(210,222,240)` → `rgba(205,225,236)`, edge
+      `rgba(230,238,250)` → `rgba(228,240,247)`; specks `rgba(170,190,220)` → `rgba(165,195,213)`.
+    - `env.hemiSky` `#eef2ff` → `#eef5fd`, `env.hemiGround` `#c0bccc` → `#bcc2cb`.
+  - A stronger step (snow `#dcecee`, hemiGround `#b8c8ca`) overshot into mint (hue 160–187), so the values above are
+    the midpoint.
+  - **What remains is structural, not a colour:** LBA1's Hamalayi is mostly blue ice and frozen water (54 % cool,
+    18 % water; C 14). Ours is white snow on mauve-brown rock walls. More ice surfaces (frozen pools, ice sheets on
+    the slopes) would close it; a frame tint would not.
+  - The top view is not a fair measure here: the mountain walls round the area fill half of it.
+- **The code:** `requests/WA-13b-14b.diff` (against a8e5d37; also the WA-14 water below).
+
 ---
 
 ## WA-14 · The Citadel sewers, as in LBA2 · Applied and approved by the user (the cloud, 1.11.2026)
@@ -501,3 +533,39 @@ group `sewer` (rooms `sewer` and `sewervault`, built the first time they are nee
   `artall` shoots both rooms (they are in the regions list), and `artrooms` lists them too. Pictures:
   `docs/lba3-production/review/sewers/`.
 
+
+### WA-14 checked on the laptop (1.11.2026, a8e5d37) · proposal WA-14b (the water) · Approved (the user's standing approval)
+
+`LBA3_AREAS=sewer,sewervault` with `artall` (dev build, a8e5d37), measured against study renders of LBA2 scenes 17
+and 18 (not in the repository):
+
+| Room | LBA2 | a8e5d37 (player / iso) | WA-14b (player / iso) |
+|---|---|---|---|
+| sewer: chroma | 7.1 | 13.4 / 11.9 | 13.6 / 12.4 |
+| sewer: lightness | 40.1 | 52.0 / 47.4 | 51.9 / 48.1 |
+| sewer: water hue (median) | #70b7c5, hue 217 | #70a0b4 / #7babbf, hue 234–235 | #7ab0bd / #7cb4c2, **hue 220–221** |
+| sewer: stone | #4f4e48, hue 103 | #43413b, hue 96 | unchanged |
+| sewervault: chroma / L* | 5.4 / 30.8 | 5.7 / 23.1 | unchanged |
+
+- **The water reads too blue: yes.** Its hue is 17° bluer than the original's cyan, at a similar chroma (18.8
+  against 23.3).
+  - The fix, `sewers.js` `waterM`: `color: '#eaeee4', emissive: '#649494'` → `color: '#e2f6e6', emissive:
+    '#5e9c92'` (same intensity 0.7). The hue becomes 220–221; the original is 217.
+- **The stone is right:** #43413b against #4f4e48, a little darker.
+- **The treasure room is right:** chroma 5.7 against 5.4. It is darker (L* 23 against 31), which is acceptable for a
+  room lit by two lamps.
+- **The hall's chroma (12–13 against 7.1)** is still higher after the water fix. The cause is the share of water in
+  the view, not its colour: water is 52 % of the room from the iso view against 31 % in scene 17, and the bright
+  pale walkways make it L* 48 against 40. This follows the layout and is left as it is.
+- **The code:** `requests/WA-13b-14b.diff`.
+
+### Twinsen's nose (HERO-LOOK, 0.48.0) checked against LBA2 body 1 (1.11.2026) · no change
+
+The user asked whether Twinsen's new nose is like LBA2's. Measured on the models, in fractions of the height H:
+- **LBA2 body 1 has no nose of its own.** The face itself comes to a wedge (the snout): its apex is at 0.887 H, about
+  0.04 H under the eyes, and stands 0.027 H in front of the face's sides at ±0.043 H.
+- **Ours:** the head's sections already make the same wedge: 0.025 H at ±0.04 H (0.858 H, about 0.04 H under our
+  eyes at 0.896). The new nose (10 triangles) adds a small knob on the wedge: 0.007 H proud, ±0.01 H wide.
+- **Verdict:** similar. The profile and the snout are LBA2's within about 10 %. The knob is a small close-up detail
+  that cannot be seen from the play camera, so it is kept: twelve years and 80 % likeness.
+- The comparison picture (study renders, not committed) was sent to the user.
