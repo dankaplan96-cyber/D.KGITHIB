@@ -1160,3 +1160,39 @@ apply").**
   - `arttavern` and `arttavcellar` also pass after the fix.
   - Draw calls: 21 (20 + 1) at Medium. No console errors.
 - **Picture:** `runs/baggage-vs-lba2.jpg` (local).
+
+## LBA-CITADEL-9 — Tralu's cave (LBA2 scene 2) behind the plateau's door; colliders of props on raised floors
+
+- **Where:** WORLD-80 built the plateau's door in the bank behind the depot (island.js `OLD_DOORS.plateau`) and kept it
+  shut. It now opens on the cave.
+  - story/index.js gets the door `{ house: 'plateau' }`.
+  - story/prologue.js no longer offers a shut door that the director has opened. It is one line, which skips
+    `W.shutDoors` ids in the open set.
+- **Code:** `requests/LBA-CITADEL-9.diff`, **on top of 8**. On a fresh checkout of origin d9178f8, 7, 8 and 9 apply in
+  order.
+  - New `src/game/tralucave.js` (region `tralucave` at x 8400).
+- **The original's layout** (study render), condensed into one 18 × 14 m room. The original is a sprawling cave about
+  three times that size, and that is the main difference: **about 65 % alike**. Kept:
+  - **Back left:** the raised rock terrace with the barred gate in the rock, clutches of blue eggs, and globe posts at
+    its edge.
+  - **The stair** down from the terrace, with rusted railings.
+  - **The lower cave floor:** rough rock with worn paved patches, and clusters of pale stalagmites with dark tips.
+  - **Front right:** the railed pool of pale cyan water, with cyan globe posts at its corners.
+  - **Back right:** the old guard house of squared blocks with barred windows. Inside are barrels, a table with
+    plates and a bottle, a bench, and iron candle stands.
+  - **Not here:** the arcade of arches with the water channel at the original's right end, and its second cave hall.
+- **Twelve years on (ours):**
+  - The eggs are empty shells, broken open long ago.
+  - The gate's bars are rusted.
+  - The guard house is a store again (a crate with a coil of rope and a lantern).
+  - No creature and no lines were added: the story can give the cave a purpose later.
+- **Engine fix (interiors.js `RoomBuilder.put`):** a piece put with `{ y }` on a raised floor now gets its collider's
+  top raised with it (`fp.top + opts.y`).
+  - Before, a bench on the baggage claim's upper level had its top at 0.9, below Twinsen's feet at 1.5, so he walked
+    through it. The same happened to the cellar's crates and drums on the store.
+  - Only the LBA-CITADEL rooms pass `{ y }` with a collider. upper.js's sconces use `noCol`.
+- **Measured:**
+  - `arttralucave`: PASS. In by the plateau's door (no locked or shut prompt), round the pool, into the guard house,
+    up the stair to the terrace by the gate (y 1.6), and back out onto the door's landing.
+  - Draw calls: 20 (19 + 1) at Medium. No console errors.
+- **Picture:** `runs/tralucave-vs-lba2.jpg` (local).

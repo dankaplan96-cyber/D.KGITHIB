@@ -326,14 +326,14 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
       // (a place that opens only from a point of the story on: those flags set first)
       // (and, as a new game's people still stand where the earlier story put them, anyone within 2.5 m of the door is
       //  stood aside: the prologue's Zoé at the neighbours' door)
-      if (flags) await page.evaluate(({ flags, house }) => { Object.assign(game.flags, flags); const h = game.world.houses.find((x) => x.id === house); for (const n of game.npcs || []) if (n.present && Math.hypot(n.pos.x - h.door.x, n.pos.z - h.door.z) < 2.5) n.setPresent(false); }, { flags, house });
+      if (flags) await page.evaluate(({ flags, house }) => { Object.assign(game.flags, flags); const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))); for (const n of game.npcs || []) if (n.present && Math.hypot(n.pos.x - h.door.x, n.pos.z - h.door.z) < 2.5) n.setPresent(false); }, { flags, house });
       // 1. outside, a few steps before the house's door; walk in
-      const door = await page.evaluate((house) => { const h = game.world.houses.find((x) => x.id === house); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
+      const door = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
       await sleep(2500); await shot('01-outside-door');
       // what the game offers at the door, 1.3 m before it and facing it (a "locked" prompt there would contradict the open door)
-      const offer = await page.evaluate((house) => { const h = game.world.houses.find((x) => x.id === house), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
+      const offer = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
       log.push({ offerAtDoor: offer });
-      assert(rec, `no "locked" prompt at the ${house} building's open door`, offer?.kind !== 'locked', 'not locked', offer?.kind ?? 'none');
+      assert(rec, `no "locked" prompt at the ${house} building's open door`, offer?.kind !== 'locked' && offer?.kind !== 'shut', 'not locked or shut', offer?.kind ?? 'none');
       await keyTo(door.x, door.z, 10); await sleep(1500);
       // (the scene change: a first visit builds the room behind the black first; wait until it has faded in)
       for (let t = 0; t < 30 && await page.evaluate(() => !!game.trans); t++) await sleep(500);
@@ -430,3 +430,12 @@ export const artBaggage = placeWalk({ id: 'art-baggage', title: 'The baggage cla
   { name: 'out', pts: [[2.0, -5.4], [2.0, -3.9], [-1.0, -0.4], [-3.0, 0.3], [-3.05, 1.2], [-3.05, 4.2], [-1.0, 4.2], [-1.2, 7.4], [-3.4, 8.6]] },
 ] });
 ART.push(artBaggage);
+// Tralu's cave (LBA-CITADEL-9, LBA2 scene 2, behind the plateau's shut door, WORLD-80): round the pool, into the guard
+// house, up the stair to the terrace by the barred gate, and out
+export const artTraluCave = placeWalk({ id: 'art-tralucave', title: "Tralu's cave: the pool, the guard house, the terrace, out", suite: 'arttralucave', room: 'tralucave', house: 'plateau', legs: [
+  { name: 'by the pool', pts: [[-5.0, 4.4], [-1.0, 3.4], [2.0, 0.9], [6.5, 0.9]], maxY: 0.1 },
+  { name: 'the guard house', pts: [[2.1, 0.4], [2.1, -1.8], [5.4, -2.9]], maxY: 0.1 },
+  { name: 'up to the terrace', pts: [[2.1, -1.8], [2.1, 0.4], [-1.75, 1.6], [-1.75, -1.2], [-1.75, -2.4], [-3.5, -2.6], [-5.0, -3.0]], minY: 1.5 },
+  { name: 'out', pts: [[-3.5, -2.6], [-1.75, -2.4], [-1.75, 1.6], [-5.0, 4.4], [-8.4, 4.8]] },
+] });
+ART.push(artTraluCave);
