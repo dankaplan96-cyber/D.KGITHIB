@@ -434,7 +434,7 @@ prototyped on the laptop, and the exact code is in `tools/testlab/requests/WA-11
   pale cyan tint (0.95, 1.0, 1.05). Tests lba1rooms, chapter7, chapter1, menus, perfbudget PASS. For the laptop:
   measure the chroma again with `artall` and propose numbers if still off.
 
-### WA-13 follow-up checked on the laptop (1.11.2026, a8e5d37) · proposal WA-13b · Approved (the user's standing approval)
+### WA-13 follow-up checked on the laptop (1.11.2026, a8e5d37) · proposal WA-13b · Applied (the cloud, 1.11.2026)
 
 The follow-up (`setGrade`: the LBA1 rooms at 0.5; the Hamalayi at 0.9 with tint 0.95/1/1.05) was measured with
 `artall` on the dev build at a8e5d37. It is compared with LBA1's own scenes: chroma C* (CIE Lab), lightness L*, and
@@ -534,7 +534,7 @@ group `sewer` (rooms `sewer` and `sewervault`, built the first time they are nee
   `docs/lba3-production/review/sewers/`.
 
 
-### WA-14 checked on the laptop (1.11.2026, a8e5d37) · proposal WA-14b (the water) · Approved (the user's standing approval)
+### WA-14 checked on the laptop (1.11.2026, a8e5d37) · proposal WA-14b (the water) · Applied (the cloud, 1.11.2026)
 
 `LBA3_AREAS=sewer,sewervault` with `artall` (dev build, a8e5d37), measured against study renders of LBA2 scenes 17
 and 18 (not in the repository):
