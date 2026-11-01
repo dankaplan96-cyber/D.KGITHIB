@@ -971,3 +971,14 @@ apply").**
     (-64.3, 41.1).
   - Draw calls: 24 (23 main, 1 shadow) at Medium.
 - **Pictures:** `runs/bazoo-vs-lba2.jpg` (the original's study render | ours).
+
+**LBA-CITADEL-1 and -2 diffs rebuilt (1.11, later): a door-prompt fix inside 1.**
+- **The fault:** the doors of these places live in the director's `doors()` (`story/index.js`), not a chapter's. But
+  `story/prologue.js` `baseInteractables` offers every house whose door is not in the chapter's `cur.doors()` as
+  locked.
+  - At the `museum` door, the game offered `{ kind: 'locked', label: 'p_door' }`, although walking in worked
+    (measured: Test Lab `artbazoo`, the offer 1.3 m before the door).
+- **The fix (in `LBA-CITADEL-1.diff`):** `const open = new Set([...cur.doors(), ...(this.story.doors?.() || [])].map((d)
+  => d.house));`. With it there is no prompt at either door.
+- **Checked on a fresh checkout of origin:** `git apply --check` of 1, then 2, passes. `artplaces` passes both
+  places, including the new check "no locked prompt at the open door".

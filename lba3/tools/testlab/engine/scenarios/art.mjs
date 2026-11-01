@@ -325,6 +325,10 @@ function placeWalk({ id, title, suite, room, house, legs }) {
       // 1. outside, a few steps before the house's door; walk in
       const door = await page.evaluate((house) => { const h = game.world.houses.find((x) => x.id === house); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
       await sleep(2500); await shot('01-outside-door');
+      // what the game offers at the door, 1.3 m before it and facing it (a "locked" prompt there would contradict the open door)
+      const offer = await page.evaluate((house) => { const h = game.world.houses.find((x) => x.id === house), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
+      log.push({ offerAtDoor: offer });
+      assert(rec, `no "locked" prompt at the ${house} building's open door`, offer?.kind !== 'locked', 'not locked', offer?.kind ?? 'none');
       await keyTo(door.x, door.z, 10); await sleep(3500);
       let s = await st(); log.push({ step: 'in by the door', ...s }); await shot('02-inside');
       log.push({ calls: await page.evaluate(() => new Promise((res) => {
