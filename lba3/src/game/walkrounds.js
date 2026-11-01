@@ -181,7 +181,7 @@ export function citadelRoster(game) {
     // WA-15b: the Esmer trader at the trading house on the harbour front (harbourzeelich.js): by the jars, by the crates
     { id: 'sefa', char: 'nara', tint: '#e8f4ff', speed: 0.8, start: 0, color: '#5ac8c8', stops: ok([
       look('sefa_jars', -86.5, 42.9, -84.0, 40.0, [14, 20]),
-      look('sefa_quay', -110.5, 37.0, QUAY_PILE.x, QUAY_PILE.z, [8, 12]),   // (the goods landed for the house: a look at the quay's pile)
+      look('sefa_quay', -108.8, 40.2, QUAY_PILE.x, QUAY_PILE.z, [8, 12]),   // (the goods landed for the house: a look at the quay's pile)
       look('sefa_crates', -80.2, 41.0, -80.9, 43.4, [8, 12], { act: 'tinker' }),   // (in front of the crate stacks, clear of their colliders)
     ]) },
     // the old woman: two benches by the lane's middle and what she sees from each
