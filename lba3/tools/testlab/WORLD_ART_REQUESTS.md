@@ -372,3 +372,97 @@ Not prototyped on the laptop: it is design work across several builders. Numbers
   - A target of grass at most 35 % and grey at least 28 % from above. That is about 80 % of the way to the original;
     the rest is twelve years of gardens.
 - **Check:** the laptop measures it again with `artall` (citadel-top), and before/after pictures go to the user.
+
+---
+
+## WA-11 and WA-12 now prototyped (1.11.2026)
+
+The user asked for "more like LBA2" (1.11.2026). WA-11 and WA-12 are no longer only design requests: both were
+prototyped on the laptop, and the exact code is in `tools/testlab/requests/WA-11-13.diff` (against 0aed5b2).
+- **WA-12, `src/game/world.js`:**
+  - A new `wildGround(x, z, n)` returns [soil, rock] patches of about 20 m outside the town (40 m round the village)
+    and the fort, kept about 2.4–4.5 m off the paths.
+  - `islandSplat` takes these on ground above 1.2 m: soil on w[3], rock on w[2].
+  - The grass clumps skip patches where soil + rock > 0.4.
+- **WA-11, `src/game/zislands.js`:**
+  - A `BARE` table gives each island its rock and paving shares and its stone colour.
+  - Its patches go into `splatFn` (rock on wt[2]; paving on wt[4], only where the slope is under 0.45) and into
+    `colorFn` (the stone colour).
+  - The landing pad and the paved squares are left as they are.
+- **Measured from above with WA-13 on:** see the table under WA-13. The grass shares are now Citadel 26 %, Zeelich
+  isles 0–31 %; the targets were ≤35 % and ≤15 %. Celebration and Under Celebration still have more grass than asked;
+  raise their rock share if you agree.
+
+---
+
+## WA-13 · The whole game: LBA2's muted palette (chroma × 0.72) · Approved (the user, 1.11.2026: "more like LBA2")
+
+- **Why:** ours is about twice as saturated as LBA1/LBA2 everywhere (`examples/WORLD_LOOK_COMPARE.md`).
+- **Change (`src/engine/renderer.js`, prototyped):**
+  - Add `const GRADE = 0.72;` and an output-pass uniform `grade`.
+  - Just before three's `// color space` line in the output shader, add:
+    `gl_FragColor.rgb = max(mix(vec3(dot(gl_FragColor.rgb, vec3(0.2126, 0.7152, 0.0722))), gl_FragColor.rgb, grade), 0.0);`
+  - The code is in `requests/WA-11-13.diff`.
+  - It is applied after tone mapping on the pass that already reads every pixel: one dot product and one mix, with no
+    texture reads. Its cost was not measured.
+  - The HUD (HTML) and the item preview's own renderer are not affected.
+  - 0.62 was tried first. The Citadel came out greyer than LBA2 (chroma 12.7 against 17.0), so the value is 0.72.
+- **Measured (Test Lab `artall`; the proto worktree is 0aed5b2 with WA-8..13).** Chroma, LBA2 / 0.46.0 / proto:
+
+  | Area | Chroma (LBA2 / 0.46.0 / proto) | Grass % (LBA2 / proto) | Grey % (LBA2 / proto) |
+  |---|---|---|---|
+  | Citadel | 17.0 / 33.8 / 15.0 | 17 / 26 | 41 / 39 |
+  | Desert (with WA-10) | 21.5 / 51.1 / 22.4 | | |
+  | 8 Zeelich isles | 9–16 / 20–35 / 13–16 | 0–11 / 0–31 | 39–74 / 26–52 |
+
+  | Interior | Chroma (original / 0.46.0 / proto) |
+  |---|---|
+  | house (with WA-8) | 14.6 / 34.1 / 18.0 |
+  | cellar | 13.0 / 27.7 / 21.7 |
+  | workshop | 14.8 / 25.9 / 17.4 |
+  | archive | 14.4 / 21.4 / 13.9 |
+  | condensers | 10.0 / 12–16 / 9–11 |
+
+- **Still off (for the cloud to judge):**
+  - The LBA1 rooms (asylum, the temple's halls and maze) are still about 2× too colourful (10–13 against 4–6).
+    WA-7's warm palettes there could go back toward grey stone.
+  - The Hamalayi becomes greyer than LBA1's icy cyan (5.6 against 14.4). Give its ice and snow a pale cyan tint, or
+    exclude it from the grade.
+- **Check:** before/after pictures were sent to the user. The laptop measures again with `artall` after the build.
+
+---
+
+## WA-14 · The Citadel sewers, as in LBA2 · Approved (design request for the cloud; the user, 1.11.2026)
+
+The user: "What about the sewer that LBA2 has? We need to add that too." The game has no sewer area today. The well
+(`buildWell`) is a crystal cave, not a sewer.
+
+- **The original:** LBA2 scene 17 ("sewers", Citadel) and scene 18 (the sewers' treasure room). Seen in the laptop's
+  own isometric render of scene 17, which is not in the repository:
+  - **Layout:** a square hall flooded with pale cyan water. Narrow stone walkways and stepping slabs run along the
+    walls, with several stairs up to them. Low stone arches and colonnades with barred openings stand at the back.
+  - **Centre:** a raised stone island with a small square well-house (a barred door, an opening on top) and a paved,
+    railed platform.
+  - **Details:**
+    - Iron railings.
+    - Short pillars topped with pale blue glass globe lamps.
+    - Barrels.
+    - Clusters of round blue rocks.
+    - Small dark spiked balls lining the water's edge.
+    - Gargoyle heads on the corner pillars.
+    - Small blue plaques on the walls.
+  - **Palette (measured):**
+    - Stone #4f4e48 (dark grey-brown, rough masonry).
+    - Water #70b7c5.
+    - Cool accents #6b9094.
+    - Soil #604730.
+    - Chroma 7.1, L* 40: a dark, muted place. The only colour is the water and the lamps.
+- **Ask:**
+  - A Citadel sewer area built in our own geometry (no original files) with the layout and palette above, about 80 %
+    alike.
+  - Its small treasure room behind it, as scene 18.
+  - Twelve years later, for example: rust on the railings, a newer pipe or valve, some lamps out.
+  - Where the entrance is and in which chapter it opens is the cloud's call, with the story documents. As in LBA2, a
+    grate or hatch in the Citadel town is natural.
+- **Check:** `artall` shoots it (add it to `regions`). The laptop compares it with scene 17, and before/after pictures
+  go to the user.
