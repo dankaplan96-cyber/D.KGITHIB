@@ -1709,6 +1709,8 @@ export class Pickups {
       if (p.fly) { this.flyStep(p, dt); continue; }
       if (p.vel.lengthSq() > 0.01) {
         p.vel.y -= 20 * dt;
+        // (a popped bonus doesn't drift through a wall: it drops at the wall's foot, as a giver's does in flyStep)
+        if ((p.vel.x || p.vel.z) && g.physics.solidAt(p.pos.x + p.vel.x * dt, p.pos.z + p.vel.z * dt, p.pos.y, 0.12)) { p.vel.x = 0; p.vel.z = 0; }
         p.pos.addScaledVector(p.vel, dt);
         const gy = g.physics.groundAt(p.pos.x, p.pos.z, p.pos.y) + 0.45;
         if (p.pos.y < gy) { p.pos.y = gy; p.vel.y = Math.abs(p.vel.y) * 0.35; p.vel.x *= 0.6; p.vel.z *= 0.6; if (Math.abs(p.vel.y) < 1) p.vel.set(0, 0, 0); }

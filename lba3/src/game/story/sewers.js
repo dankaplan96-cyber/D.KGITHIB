@@ -88,7 +88,8 @@ export class SewerLife extends ChapterBase {
         if (f.sw_chest) return say(['sw_chest_after']);
         h.act('use', 0.7, () => {
           f.sw_chest = true; SEWER.vault.setChest(true); g.audio.play('chest');
-          const c = SEWER.vault.chest.at;
+          // (the clover pops from the chest's front lip, not from inside its collider: it lands in the room)
+          const V = SEWER.vault.chest, c = { x: V.at.x + (V.x - V.at.x) * 0.45, z: V.at.z + (V.z - V.at.z) * 0.45 };
           say(['sw_chest1', 'sw_chest2'], () => {
             g.found('sw_map', 'it_sw_map', () => {
               this.reward('sw_oweClover', 'clover', 1, c.x, SEWER.vault.chest.y + 0.9, c.z, { pop: true });

@@ -375,7 +375,8 @@ function buildHall(scene, physics) {
   }
   B.light('#a8b4c0', 3.0, 30, 0, 9, 2);   // (the dim fill: grey daylight that seeps down the shafts)
   for (const [x, z, r, y] of [[12.7, -9.2, 0.34, 0], [13.35, -8.4, 0.3, 0], [-12.9, 10.6, 0.34, 0], [-4.2, 7.1, 0.3, ISL]]) { B.put(x, z, 0, P.barrel, { r, h: r * 2.6, pal: 'honey', y, noCol: true }); B.ccol(x, z, r, y + r * 2.6); }
-  R.givers.push({ id: 'sw_barrels', ...B.world(13.0, -8.8), y: 0, r: 1.3, top: 0.9, kinds: ['money', 'life'], n: 2 });
+  // (a giver's r is its container's radius + 1.05, as containers.js: the bonus then pops from outside the barrel's collider)
+  R.givers.push({ id: 'sw_barrels', ...B.world(12.7, -9.2), y: 0, r: 0.34 + 1.05, top: 0.9, kinds: ['money', 'life'], n: 2 });
   for (const [x, z, s, y] of [[13.1, -10.8, 1.1, 0], [-12.9, -2.4, 1.0, 0], [4.2, 7.0, 0.9, ISL], [7.9, 10.8, 0.8, 0], [-13.0, -10.6, 0.8, U]]) {
     k.add(blueRocks(), softMat, x, y, z, x, { sx: s, sy: s, sz: s });
     B.ccol(x, z, 0.42 * s, y + 0.6 * s);
@@ -487,7 +488,7 @@ function buildVault(scene, physics) {
   k.at(DA.x0 + 0.35, DA.h, DA.z1 - 0.35, 0.6, () => P.toyBoat(k));
   // a barrel (it gives), blue rocks, spiked rings along the rims and the dais
   B.put(LX + 0.55, D / 2 - 0.65, 0, P.barrel, { r: 0.33, h: 0.86, pal: 'honey' });
-  R.givers.push({ id: 'sw_vbarrel', ...B.world(LX + 0.55, D / 2 - 0.65), y: 0, r: 1.2, top: 0.9, kinds: ['money'], n: 3 });
+  R.givers.push({ id: 'sw_vbarrel', ...B.world(LX + 0.55, D / 2 - 0.65), y: 0, r: 0.33 + 1.05, top: 0.9, kinds: ['money'], n: 3 });
   for (const [x, z, s] of [[LX + 0.6, BZ + 0.7, 1.0], [-1.6, BZ + 0.5, 0.7]]) { k.add(blueRocks(), softMat, x, 0, z, x, { sx: s, sy: s, sz: s }); B.ccol(x, z, 0.42 * s, 0.6 * s); }
   for (let x = LX + 1.2; x < DOOR - 0.6; x += 0.7) spikedRing(k, x, 0, D / 2 - 0.25, x);
   for (let x = DOOR + 1.6; x < W / 2 - 0.3; x += 0.7) spikedRing(k, x, 0, D / 2 - 0.25, x);
