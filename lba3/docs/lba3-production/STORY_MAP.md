@@ -26,7 +26,8 @@ network 10 → shell 11 (with the Core, 12, inside it for now) → home (epilogu
 | Epilogue (`home`, epilogue.js) | Dinner at home; the end screen; Keep Exploring (free roam, new lines everywhere). | 14 |
 
 Optional side trip (any chapter from 1, story/sewers.js, flags `sw_`): Under the Street. A knocking under the grate north of
-Twinsen's house and Arthur's chalk on its frame; the old sewer hall (the project's valve jams the gate winch; easing it
+Twinsen's house and Arthur's chalk on its frame; lifted, the old lift under it ("Go down" on its deck: it lowers him down
+the shaft, and brings him back up the last stretch on the way out; SEWER-LIFT); the old sewer hall (the project's valve jams the gate winch; easing it
 raises the gate); the treasure room (star chest, Arthur's map, one clover); back home, Arthur asks to come next time.
 Test: tests/sewers.mjs.
 

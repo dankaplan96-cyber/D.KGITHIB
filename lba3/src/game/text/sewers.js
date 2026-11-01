@@ -3,7 +3,7 @@ import { STR } from '../i18n.js';
 
 Object.assign(STR.en, {
   sw_title: 'Under the street',
-  p_sw_lift: 'Lift', p_sw_ease: 'Ease',
+  p_sw_lift: 'Lift', p_sw_ease: 'Ease', p_sw_down: 'Go down',
   it_sw_map: "Arthur's map", itd_sw_map: 'Drawn in crayon: the lane, the grate, a ladder, a big X. "A + L. KEEP OUT. (Not you, Lulu.)"',
   sw_toast_owed: 'The clover from the old chest: in your pocket',
 

@@ -19,9 +19,10 @@
 //   SEWER_AT {sewer, sewervault}  where the rooms stand (regions.js)
 //   buildSewerHatch(scene, physics, world)  the grate in Bug Street (Citadel; built with it) → SEWER.hatch
 //   buildSewerRooms(scene, physics) → { sewer, sewervault }   (regions.js group 'sewer')
-//   SEWER.hatch {x, z, a, setOpen(b)}   SEWER.hall (the hall's room) {valve, gate, setValve(b, instant)}
+//   SEWER.hatch {x, z, y, open, deckY, setOpen(b), setDeck(d), setLever(t), deckTop(), lever}   (SEWER-LIFT: the grate and its lift)
+//   SEWER.hall (the hall's room) {valve, gate, setValve(b, instant)}
 //   SEWER.vault (the treasure room) {chest, setChest(b)}
-//   sewerDoors() / sewerExit(to)   the grate (once lifted) leads down; 'sewer-out' leads back up beside it
+//   sewerDoors() / sewerExit(to)   no door (the lift's lever takes him down: story/sewers.js); 'sewer-out' leads back up onto the deck
 import * as THREE from 'three';
 import { RoomBuilder, blueRocks } from './interiors.js';
 import { MAT, M, TEX, rbox, cyl, sphere, torus, lathe, plane, pipe, canvasTex, soft, softMat } from './props.js';
@@ -306,6 +307,13 @@ function buildHall(scene, physics) {
     });
     for (const s of [-1, 1]) k.add(cyl(0.025, 0.025, WH.h + 0.6, 5), MAT.wood('dark'), whx + s * 0.25, y0 + (WH.h + 0.6) / 2, WH.z0 + 0.5);
     for (let y = 0.3; y < WH.h + 0.5; y += 0.32) k.add(cyl(0.02, 0.02, 0.5, 5), MAT.wood('dark'), whx, y0 + y, WH.z0 + 0.5, 0, { rz: Math.PI / 2 });
+    // SEWER-LIFT: the street's lift comes down here: its grated deck on the floor, its chains up the shaft
+    {
+      const lz = whz + 0.15, D = LIFT.S - 0.06;
+      for (const [px, pz, ww, dd] of [[0, -D + 0.035, 2 * D, 0.07], [0, D - 0.035, 2 * D, 0.07], [-D + 0.035, 0, 0.07, 2 * D - 0.14], [D - 0.035, 0, 0.07, 2 * D - 0.14]]) k.add(rbox(ww, 0.09, dd, 0.012), ironM(), whx + px, y0 + 0.045, lz + pz);
+      for (let i = -4; i <= 4; i++) k.add(rbox(0.032, 0.05, 2 * D - 0.1, 0.006), ironM(), whx + i * 0.088, y0 + 0.065, lz);
+      for (const s of [-1, 1]) chain(k, ironM(), whx + s * (LIFT.S - 0.08), y0 + WH.h + 0.5, y0 + 0.1, lz, Math.PI / 2);
+    }
     B.col(whx, WH.z0 + 0.4, w / 2, 0.4, y0 + WH.h + 0.6);
     B.col(WH.x0 + 0.2, whz, 0.2, d / 2, y0 + WH.h + 0.6);
     B.col(WH.x1 - 0.2, whz, 0.2, d / 2, y0 + WH.h + 0.6);
@@ -508,24 +516,122 @@ export function buildSewerRooms(scene, physics) {
 }
 
 // ------------------------------------------------------------------ the grate in Bug Street (Citadel)
-// a square iron grate in a dressed stone frame set in the lane, hinged at its north edge; chalk on the frame (an
-// arrow, "A + L"). Lifted, it stands up on its hinge over the dark of the shaft and the ladder's top rungs: then it is
-// a door down (sewerDoors)
+// SEWER-LIFT (the user on 0.48.0: "the sewer opened but I couldn't go down, and it looks like dirt. I prefer it like in
+// the second game: a platform that goes down"). A square iron grate in a dressed stone frame set in the lane, hinged at
+// its north edge; chalk on the frame (an arrow, "A + L"). Under it, a stone shaft and an iron lift: a grated deck on two
+// chains, a lever post at one corner, pulleys on the frame. Lifted, the grate stands up on its hinge and the deck lies
+// flush with the lane; the lever takes the deck (and whoever stands on it) down the shaft (story/sewers.js).
+//
+// The opening as a hole: the lane is the terrain, drawn after the scenery (renderOrder 1), and the shaft is below it,
+// so the ground would cover it (0.48.0: the "dark" was a flat box under the frame and the terrain drew over it: the
+// open hole read as dirt). Here, after the terrain, the opening's square at the rim marks the stencil where it is
+// seen (CUT, renderOrder 1.4: no colour, no depth); the shaft's inner walls and floor are drawn only there, over
+// whatever depth is there (SHAFT, 1.5: one convex inside, so no face of it covers another); then the deck, the
+// chains and the guide rails with the ordinary depth test (1.6), then the hero (2: characters.js). So through the
+// opening the shaft is seen to its dark bottom, and anywhere else the ground still hides what is under it.
+// (The composer's targets have a stencil: renderer.js; the hero's silhouette writes 1, the opening 2.)
+export const LIFT = { S: 0.45, F: 0.2, DEPTH: 4.2, DECK: 0.01 };
+// the inside of an open-topped square shaft, faces turned inward, darker with depth (vertex colours)
+function shaftGeo(S, top, depth) {
+  const bands = [[0, 0.4], [0.06, 0.3], [0.2, 0.19], [0.45, 0.1], [0.85, 0.05], [1.4, 0.022], [2.2, 0.008], [3.2, 0.002], [depth, 0]];
+  const pos = [], col = [], uv = [], idx = [];
+  const quad = (want, pts, cs, us) => {
+    const n = pos.length / 3, [a, b, c] = pts;
+    pts.forEach((p, i) => { pos.push(...p); col.push(cs[i], cs[i], cs[i]); uv.push(...us[i]); });
+    const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const nx = e1[1] * e2[2] - e1[2] * e2[1], ny = e1[2] * e2[0] - e1[0] * e2[2], nz = e1[0] * e2[1] - e1[1] * e2[0];
+    if (nx * want[0] + ny * want[1] + nz * want[2] > 0) idx.push(n, n + 1, n + 2, n, n + 2, n + 3);
+    else idx.push(n, n + 2, n + 1, n, n + 3, n + 2);
+  };
+  const T = 0.7;   // (the stone texture's metres)
+  for (const [[ax, az], [bx, bz]] of [[[-S, -S], [S, -S]], [[S, -S], [S, S]], [[S, S], [-S, S]], [[-S, S], [-S, -S]]]) {
+    const mx = (ax + bx) / 2, mz = (az + bz) / 2, want = [-mx, 0, -mz];
+    for (let i = 0; i + 1 < bands.length; i++) {
+      const [d0, c0] = bands[i], [d1, c1] = bands[i + 1], y0 = top - d0, y1 = top - d1;
+      quad(want, [[ax, y0, az], [bx, y0, bz], [bx, y1, bz], [ax, y1, az]], [c0, c0, c1, c1], [[0, d0 / T], [2 * S / T, d0 / T], [2 * S / T, d1 / T], [0, d1 / T]]);
+    }
+  }
+  const yb = top - depth;
+  quad([0, 1, 0], [[-S, yb, -S], [S, yb, -S], [S, yb, S], [-S, yb, S]], [0, 0, 0, 0], [[0, 0], [1, 0], [1, 1], [0, 1]]);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx); g.computeVertexNormals(); g.computeBoundingSphere();
+  return g;
+}
+// a hanging chain of alternating links, from y0 down to y1 (into a Kit)
+function chain(k, m, x, y0, y1, z, ry = 0) {
+  for (let y = y0, i = 0; y > y1; y -= 0.05, i++) k.add(torus(0.026, 0.007, 4, 8), m, x, y, z, ry + (i % 2 ? Math.PI / 2 : 0));
+}
 export function buildSewerHatch(scene, physics, world) {
   const { x, z } = HATCH, y = physics.groundAt(x, z);
   const g = new THREE.Group(); g.position.set(x, y, z); g.name = 'sewerhatch';
   (world?.root || scene).add(g);
   const k = new P.Kit(g);
-  const S = 0.45, F = 0.2;   // (the opening's half-size; the frame's width)
-  for (const [px, pz, w, d] of [[0, -S - F / 2, 2 * (S + F), F], [0, S + F / 2, 2 * (S + F), F], [-S - F / 2, 0, F, 2 * S], [S + F / 2, 0, F, 2 * S]]) k.add(rbox(w, 0.26, d, 0.03), capM(), px, -0.08, pz);
-  k.add(new THREE.BoxGeometry(2 * S, 0.02, 2 * S), MAT.flat('#0b0d0e', 1), 0, -0.02, 0);
-  for (const s of [-1, 1]) k.add(rbox(0.04, 0.04, 0.5, 0.01), ironM(), s * 0.18, -0.07, -0.2);
-  for (let i = 0; i < 2; i++) k.add(cyl(0.015, 0.015, 0.36, 5), ironM(), 0, -0.05, -0.38 + i * 0.25, 0, { rz: Math.PI / 2 });
+  const { S, F, DEPTH, DECK } = LIFT;
+  // the frame: dressed stone, its inner edge 3 cm over the opening (it covers the seam with the shaft)
+  const I = S - 0.03, W = F + 0.03;
+  for (const [px, pz, w, d] of [[0, -I - W / 2, 2 * (I + W), W], [0, I + W / 2, 2 * (I + W), W], [-I - W / 2, 0, W, 2 * I], [I + W / 2, 0, W, 2 * I]]) k.add(rbox(w, 0.26, d, 0.03), capM(), px, -0.08, pz);
+  // the lift's pulleys, east and west on the frame: an iron wheel between two cheeks, the chain over it
+  for (const s of [-1, 1]) {
+    for (const zz of [-0.05, 0.05]) k.add(rbox(0.05, 0.17, 0.03, 0.01), ironM(), s * (S - 0.01), 0.12, zz);
+    k.add(torus(0.07, 0.018, 5, 12), ironM(), s * (S - 0.01), 0.15, 0);
+    k.add(cyl(0.014, 0.014, 0.14, 5), ironM(), s * (S - 0.01), 0.15, 0, 0, { rx: Math.PI / 2 });
+  }
   // the chalk mark on the frame's south side
-  k.add(plane(0.5, 0.2), M('sw_rimChalk', () => { const m = new THREE.MeshBasicMaterial({ map: canvasTex(128, 52, (c, W, H) => { c.clearRect(0, 0, W, H); c.strokeStyle = c.fillStyle = 'rgba(240,240,232,0.9)'; c.lineWidth = 4; c.font = 'bold 22px sans-serif'; c.fillText('A+L', 6, 34); c.beginPath(); c.moveTo(70, 26); c.lineTo(118, 26); c.moveTo(118, 26); c.lineTo(104, 16); c.moveTo(118, 26); c.lineTo(104, 36); c.stroke(); }), transparent: true, depthWrite: false }); m.userData.noShadow = true; return m; }), 0, 0.055, S + F / 2, Math.PI, { rx: -Math.PI / 2 });
+  k.add(plane(0.5, 0.2), M('sw_rimChalk', () => { const m = new THREE.MeshBasicMaterial({ map: canvasTex(128, 52, (c, W, H) => { c.clearRect(0, 0, W, H); c.strokeStyle = c.fillStyle = 'rgba(240,240,232,0.9)'; c.lineWidth = 4; c.font = 'bold 22px sans-serif'; c.fillText('A+L', 6, 34); c.beginPath(); c.moveTo(70, 26); c.lineTo(118, 26); c.moveTo(118, 26); c.lineTo(104, 16); c.moveTo(118, 26); c.lineTo(104, 36); c.stroke(); }), transparent: true, depthWrite: false }); m.userData.noShadow = true; return m; }), 0, 0.055, I + W / 2, Math.PI, { rx: -Math.PI / 2 });
   k.flush();
+  // the opening's square at the rim (stencil 2 where it is seen), and the shaft drawn there
+  const cut = new THREE.Mesh(plane(2 * S, 2 * S), M('sw_cut', () => new THREE.MeshBasicMaterial({
+    colorWrite: false, depthWrite: false, fog: false, stencilWrite: true, stencilRef: 2, stencilFunc: THREE.AlwaysStencilFunc,
+    stencilZPass: THREE.ReplaceStencilOp, stencilZFail: THREE.KeepStencilOp, stencilFail: THREE.KeepStencilOp,
+  })));
+  cut.rotation.x = -Math.PI / 2; cut.position.y = 0.045; cut.renderOrder = 1.4; cut.name = 'sewerCut';
+  const shaft = new THREE.Mesh(shaftGeo(S, 0.045, DEPTH), M('sw_shaft', () => new THREE.MeshBasicMaterial({
+    map: TEX.stone('grey'), color: '#b4b2ac', vertexColors: true, depthFunc: THREE.AlwaysDepth,
+    stencilWrite: true, stencilRef: 2, stencilFunc: THREE.EqualStencilFunc,
+    stencilZPass: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilFail: THREE.KeepStencilOp,
+  })));
+  shaft.renderOrder = 1.5; shaft.name = 'sewerShaft';
+  // (moving parts and the draw-order trick: userData.keep, never merged or batched; the frame stays static, its shadow
+  //  in the area's shadow batch)
+  for (const o of [cut, shaft]) { o.castShadow = false; o.receiveShadow = false; o.userData.keep = true; g.add(o); }
+  // in the shaft (drawn after it): the lift's guide rails east and west, its chains down from the pulleys
+  const inner = new THREE.Group(); inner.name = 'sewerShaftIron'; inner.userData.keep = true; g.add(inner);
+  {
+    const ik = new P.Kit(inner), m = M('sw_shaftIron', () => { const q = ironM().clone(); q.color.set('#34363c'); return q; });
+    for (const s of [-1, 1]) {
+      ik.add(rbox(0.05, DEPTH - 0.1, 0.12, 0.01), m, s * (S - 0.025), 0.03 - (DEPTH - 0.1) / 2, 0);
+      chain(ik, m, s * (S - 0.08), 0.12, 0.03 - DEPTH * 0.8, 0, Math.PI / 2);
+    }
+    ik.flush();
+  }
+  // the deck: a grated iron platform in a heavy frame, eyes for the chains, a lever post at the south-east corner
+  const deck = new THREE.Group(); deck.name = 'sewerDeck'; deck.userData.keep = true; g.add(deck);
+  const deckM = M('sw_deckIron', () => { const q = ironM().clone(); q.userData.base = q.color.clone(); return q; });
+  const D = S - 0.06, LP = { x: D - 0.1, z: D - 0.1 };
+  const lever = new THREE.Group();
+  {
+    const dk = new P.Kit(deck);
+    for (const [px, pz, w, d] of [[0, -D + 0.035, 2 * D, 0.07], [0, D - 0.035, 2 * D, 0.07], [-D + 0.035, 0, 0.07, 2 * D - 0.14], [D - 0.035, 0, 0.07, 2 * D - 0.14]]) dk.add(rbox(w, 0.09, d, 0.012), deckM, px, DECK - 0.045, pz);
+    for (let i = -4; i <= 4; i++) dk.add(rbox(0.032, 0.05, 2 * D - 0.1, 0.006), deckM, i * 0.088, DECK - 0.027, 0);
+    for (const zz of [-0.2, 0.2]) dk.add(rbox(2 * D - 0.1, 0.04, 0.035, 0.006), deckM, 0, DECK - 0.065, zz);
+    for (const s of [-1, 1]) dk.add(torus(0.035, 0.01, 4, 8), deckM, s * (S - 0.08), DECK + 0.02, 0, Math.PI / 2);
+    // the post: a square iron column with a cap, a quadrant for the lever
+    dk.add(rbox(0.07, 0.78, 0.07, 0.01), deckM, LP.x, DECK + 0.39, LP.z);
+    dk.add(rbox(0.11, 0.05, 0.11, 0.01), deckM, LP.x, DECK + 0.8, LP.z);
+    dk.at(LP.x, DECK + 0.66, LP.z, -0.75 * Math.PI, () => dk.add(torus(0.12, 0.012, 4, 10, Math.PI), deckM, 0, 0, 0.045, Math.PI / 2));
+    dk.flush();
+    lever.position.set(LP.x, DECK + 0.66, LP.z); lever.rotation.y = -0.75 * Math.PI; deck.add(lever);
+    const arm = new THREE.Group(); arm.position.z = 0.045; lever.add(arm);
+    const rod = new THREE.Mesh(cyl(0.013, 0.013, 0.2, 5), deckM); rod.position.y = 0.1; arm.add(rod);
+    const knob = new THREE.Mesh(sphere(0.03, 8, 6), MAT.brass()); knob.position.y = 0.21; arm.add(knob);
+    lever.userData.arm = arm;
+  }
+  for (const o of [inner, deck]) o.traverse((q) => { if (q.isMesh) { q.renderOrder = 1.6; q.castShadow = false; q.receiveShadow = true; } });
   // the grate itself, on a hinge at its north edge
-  const hinge = new THREE.Group(); hinge.position.set(0, 0.06, -S); g.add(hinge);
+  const hinge = new THREE.Group(); hinge.position.set(0, 0.06, -S); hinge.userData.keep = true; g.add(hinge);
   {
     const hk = new P.Kit(hinge);
     for (const [px, pz, w, d] of [[0, 0.03, 2 * S + 0.04, 0.06], [0, 2 * S - 0.03, 2 * S + 0.04, 0.06], [-S + 0.0, S, 0.06, 2 * S], [S - 0.0, S, 0.06, 2 * S]]) hk.add(rbox(w, 0.05, d, 0.01), ironM(), px, 0, pz);
@@ -534,21 +640,35 @@ export function buildSewerHatch(scene, physics, world) {
     hk.add(torus(0.06, 0.012, 4, 10), ironM(), 0, 0.04, 2 * S - 0.12, 0, { rx: Math.PI / 2 });
     hk.flush();
   }
+  // (shut, only the dark shows between the bars; the deck and the shaft's iron come with the grate lifted)
+  const show = (b) => { deck.visible = b; inner.visible = b; };
+  const base = deckM.userData.base;
   SEWER.hatch = {
     x, z, y,
     open: false,
-    armed: false,   // (lifted with him standing on it, it leads down only once he has stepped off it: story/sewers.js)
-    setOpen(b) { this.open = b; this.armed = false; hinge.rotation.x = b ? -1.7 : 0; },
+    deckY: 0,   // the deck's drop below the lane (m, 0 at the top)
+    setOpen(b) { this.open = b; hinge.rotation.x = b ? -1.7 : 0; this.setDeck(0); this.setLever(0); show(b); },
+    // the deck (and whoever rides it) `d` m down the shaft; the iron darker the deeper it goes
+    setDeck(d) {
+      this.deckY = d; deck.position.y = -d;
+      deckM.color.copy(base).multiplyScalar(Math.max(0.1, 1 - d / 2.4));
+      if (d > 0) show(true);
+    },
+    // the lever: 0 up, 1 pulled
+    setLever(t) { lever.userData.arm.rotation.x = -0.55 + 1.1 * t; },
+    // the height he stands at on the deck
+    deckTop() { return this.y + DECK - this.deckY; },
+    lever: { x: x + LP.x, z: z + LP.z },
   };
+  SEWER.hatch.setOpen(false);
   return SEWER.hatch;
 }
 
-export function sewerDoors() {
-  const h = SEWER.hatch;
-  return h?.open && h.armed ? [{ x: h.x, z: h.z, r: 0.55, room: 'sewer' }] : [];
-}
+// (SEWER-LIFT: the grate is no longer a door: on the deck, the lever takes him down: story/sewers.js)
+export function sewerDoors() { return []; }
 export function sewerExit(to) {
   const h = SEWER.hatch;
-  if (to === 'sewer-out' && h) return { x: h.x + 1.3, z: h.z + 0.4, a: Math.PI / 2 };
+  // back up the shaft: on the deck in the grate (story/sewers.js brings it up the last stretch)
+  if (to === 'sewer-out' && h) return { x: h.x, z: h.z, a: Math.PI / 2 };
   return null;
 }
