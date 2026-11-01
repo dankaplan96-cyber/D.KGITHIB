@@ -570,15 +570,18 @@ export class Rig {
         const up = _fp.y - groundY;
         // (ANIM-POLISH-2) stopping from a walk, the foot that was swinging comes down in one step to where he will stand (it was put
         // down wherever the blend to the stance first brought it near the ground, slid there, then stepped again)
-        if (!st.on && settle && this._settleT > 0 && this._settleAge < 0.3 && up > 0.02 * sc && st.settleId !== this._settleId && !(other.stepping && !other.landing)) {
+        // (one foot at a time: a foot that is nearly down already is put down where it is, the other waits for its turn)
+        const stopping = !st.on && settle && this._settleT > 0 && this._settleAge < 0.3 && st.settleId !== this._settleId;
+        if (stopping && up <= 0.06 * sc) { st.on = true; st.w = Math.max(st.w, 0.5); st.locked = true; st.stepping = false; st.P.set(_fp.x, groundY, _fp.z); st.yaw0 = yaw; st.dwell = 0; }
+        else if (stopping && up > 0.06 * sc && !other.stepping) {
           st.on = true; st.w = 1; st.stepping = true; st.landing = true; st.u = 0; st.from.copy(_fp); st.yawFrom = st.yaw0 = yaw; st.lead = 0;
           st.dur = 0.17; st.lift = 0.015 * sc; st.settleId = this._settleId; st.dwell = 0;
         }
         if (st.stepping && st.landing) {
           st.u = Math.min(1, st.u + dt / st.dur);
           const e = st.u * st.u * (3 - 2 * st.u);
-          // (to where he will stand: under the hip, not where the blend to the stance has got to)
-          leg.hip.getWorldPosition(_hp);
+          // (to where he will stand: under the hip of his standing pose, not where the blend to the stance has got to)
+          const hx = leg.hip.position.x * sc; _hp.set(cx + Math.cos(yaw) * hx, 0, cz - Math.sin(yaw) * hx);
           st.P.set(st.from.x + (_hp.x - st.from.x) * e, groundY + (st.from.y - groundY) * (1 - e) + Math.sin(Math.PI * st.u) * st.lift, st.from.z + (_hp.z - st.from.z) * e);
           if (st.u >= 1) { st.stepping = false; st.landing = false; st.locked = false; st.yaw0 = yaw; st.dwell = 0; }
         } else if (up > (st.on ? 0.05 : 0.02) * sc && !(st.locked && up < 0.12 * sc)) { st.on = false; st.stepping = false; st.locked = false; }   // the pose lifts it
@@ -608,7 +611,7 @@ export class Rig {
             st.stepping = true; st.u = 0; st.from.copy(st.P); st.yawFrom = st.yaw0; st.dur = dur; st.lift = 0.075 * sc;
             st.lead = clamp(rate * dur, -0.45, 0.45); F.next = s === 'L' ? 'R' : 'L';
           // (turning on the spot only the turn steps them, in turn: a foot also stepping because it fell 12 cm behind made two in a row)
-          } else if ((pivot ? st.reach > 1.04 : d > 0.12 * sc || far || st.off > 0.4 || (settling && st.settleId !== this._settleId && d > 0.04 * sc) || (settle && st.dwell > 0.15 && Math.abs(wrap(yaw - st.yaw0)) > 0.35)) && ((!other.stepping && (other.on || !settle)) || d > 0.3 * sc || st.reach > 1.04)) {   // (not while the other foot is off the ground, standing about)
+          } else if ((pivot ? st.reach > 1.04 : d > 0.12 * sc || far || st.off > 0.4 || (settling && st.settleId !== this._settleId && d > 0.04 * sc) || (settle && st.dwell > 0.15 && Math.abs(wrap(yaw - st.yaw0)) > 0.35)) && ((!other.stepping && (other.on || !settle)) || (!settle && (d > 0.3 * sc || st.reach > 1.04)))) {   // (standing about, never while the other foot is off the ground: one foot at a time)
             st.stepping = true; st.u = 0; st.from.copy(st.P); st.yawFrom = st.yaw0; st.lead = 0; if (settling) st.settleId = this._settleId;
             st.dur = clamp(0.09 + d * 0.3, 0.1, 0.2); st.lift = Math.min(0.09, 0.03 + d * 0.15) * sc;
           } else st.P.y = groundY;
@@ -1588,8 +1591,7 @@ const STRIKES = {
     legL: [-0.2, -0.35, -0.38, -0.4, -0.4, -0.25], kneeL: [0.12, 0.3, 0.25, 0.2, 0.2, 0.12], legR: [0.16, 0.2, 0.22, 0.28, 0.28, 0.2],
     hipsY: [0.925, 0.92, 0.915, 0.9, 0.9, 0.92], hipsZ: [0, 0.02, 0.03, 0.09, 0.09, 0.02] },
   // fists 2: the left (the leading) hand, the chest turning the other way
-  // (ANIM-POLISH-2: the left arm, slower out of its guard than the right, reached 95 % of its reach 23 ms after the hit: keyed earlier)
-  punch2: { guard: 'fists', u: [0, 0.55, 0.72, 0.92, 2, 3], uLeg: [0, 0.8, 1, 1.35, 2, 3], time: { s: 0.07, a: 0.08, r: 0.18 },
+  punch2: { guard: 'fists', u: [0, 0.65, 0.85, 1.12, 2, 3], uLeg: [0, 0.8, 1, 1.35, 2, 3], time: { s: 0.07, a: 0.08, r: 0.18 },
     armL: [-0.65, -0.5, -0.55, -1.55, -1.5, -0.65], elL: [-1.85, -1.95, -1.9, -0.1, -0.15, -1.85], outL: [-0.08, -0.05, -0.05, -0.2, -0.2, -0.08], twL: [0.3, 0.4, 0.4, 0.1, 0.1, 0.3],
     armR: [-0.55, -0.6, -0.6, -0.6, -0.6, -0.55], elR: [-1.75, -1.9, -1.9, -1.95, -1.95, -1.75],
     torsoX: [0.1, 0.1, 0.1, 0.16, 0.15, 0.1], torsoY: [-0.15, 0.05, 0.05, -0.55, -0.5, -0.15], headY: [0.13, -0.05, -0.05, 0.45, 0.42, 0.13],

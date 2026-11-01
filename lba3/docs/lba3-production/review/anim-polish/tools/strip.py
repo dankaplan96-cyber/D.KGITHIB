@@ -6,13 +6,13 @@ import json, sys
 from PIL import Image, ImageDraw
 a = sys.argv[1:]
 opt = {}
-for k in ('--t0', '--t1', '--title', '--cols'):
+for k in ('--t0', '--t1', '--title', '--cols', '--tw'):
     if k in a: i = a.index(k); opt[k] = a[i + 1]; del a[i:i + 2]
 out, seq, every, mx = a[0], a[1], int(a[2]), int(a[3])
 sets = [(a[i], a[i + 1]) for i in range(4, len(a) - 1, 2)]
 t0, t1 = float(opt.get('--t0', 0)), float(opt.get('--t1', 99))
 COLS = int(opt.get('--cols', 10))
-TW, TH = 144, 186
+TW = int(opt.get('--tw', 144)); TH = int(TW * 1.125) + 24 if TW == 144 else int(TW * 320 / 600) + 24
 
 def tiles(dd):
     S = json.load(open(f'{dd}/{seq}.json'))['samples']

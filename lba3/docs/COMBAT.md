@@ -220,8 +220,8 @@ punches (87–89), the sword attack (42), the hit reactions (7–9).
   arm can now turn about its length (shoulder order X·Z·Y, as LBA2's): the forearm folds across for a backhand.
 - **Feet** (`Rig._plant`, the hero only): standing, striking, throwing or hurt, a foot on the ground stays where it was put
   down; when the pose wants it more than 12 cm away (a strike's forward step, a turn, a push) it takes a short lifted step;
-  a foot the pose lifts (a throw's front knee, a kick) is put down where the pose lands it. Walking, running, jumps and
-  story poses keep their own legs.
+  a foot the pose lifts (a throw's front knee, a kick) is put down where the pose lands it. Running, jumps and story poses
+  keep their own legs; walking holds the foot he stands on (ANIM-POLISH-2, below).
 - **Hit reaction** (`_hurtPose`, the hero): the chest and head snap away from the blow and the arms fly up, the body sags
   and rebounds into his stance by 0.42 s (`hurtT` 0.4); the feet stumble back with the push. A second blow restarts it.
 - **Stance** (`GUARD`): engaged (a lock, a move, a held charge, a hit, and 2.5 s after) his idle eases into his combat
@@ -231,6 +231,50 @@ punches (87–89), the sword attack (42), the hit reactions (7–9).
   (`HeroCombat.reset` clears the layer); nothing is left in the hand.
 - `tests/anim-combat.mjs` checks all of this at 30, 60 and 120 fps; frame strips and capture tools:
   docs/lba3-production/reviews/ANIM-COMBAT/.
+
+## Twinsen between the moves (ANIM-POLISH-2, task #72) — src/engine/rig.js `_plant`, src/game/actors.js
+Starts, stops, turning on the spot, landings, stairs and melee contact, Twinsen first (the hero's rig only: `footPlant`).
+Visual only: no speed, acceleration, turn rate, jump, collision, hit window, damage or input lock changed; every move
+still begins on the frame of its key (tests/anim-polish.mjs checks it). Before / after strips: docs/lba3-production/review/anim-polish/.
+Rechecked on 0aed5b2 first: the earlier ANIM-POLISH pass (75df846: lean springs, a pivot step every 35°, a knee bend by
+fall height) was in place; what was still wrong, measured in Citadel's square by input at 60 fps:
+- **Turning on the spot** (Classic left/right, 100°/s Normal, 169°/s Athletic): the body turned 0.35 s as a statue, then
+  both feet tapped 4 cm in 0.25 s, and so on; the planted feet slid 21–26 cm over a 120° turn (the hip's turn dragged the
+  ankle round: it was applied after the leg's swing). Now a stepping turn: the foot on the side he turns to lifts within a
+  frame or two of the key, then the feet step in turn (0.13–0.2 s a step by the turn rate, a step every ~0.22 s at 100°/s),
+  each lifted 7.5 cm and put down ahead of the body by the turn it makes meanwhile; the chest leans over the standing foot,
+  the pelvis hikes on the stepping side, the opposite arm swings a little. Planted feet slide 0.2 cm. The hip turns about
+  the vertical first (hip rotation order YXZ, the target taken into the turned frame).
+- **Walking**: the foot under him slid back at ~0.5 m/s while he walked at 2.0 m/s (LBA2's walk keys on our shorter
+  legs) and never quite reached the ground (2 cm short at mid-stance, 13 cm at the heel strike). Now the walk's stance
+  half (phase 0–0.5, read behind the joints' easing lag) holds the foot where it struck, from the moment the leg can reach
+  the ground below it, easing in over 5 % and out over the last 12 % (not let go while braking); his pelvis rides 3 cm
+  lower in the walk so the standing leg reaches. The lower foot on the ground now moves ~0.1 m/s (3–4 cm per metre walked,
+  the heel strike's settle). LBA2's cadence and stride (0.78 H per 0.8 s) are unchanged. The run keeps its own legs.
+- **Stops**: the swinging foot came down wherever the blend to the stance brought it near the ground, slid there, and
+  both feet then shuffled (up to three steps over 0.6 s; the run's stop slid both feet in). Now a foot nearly down is
+  put down where it is, a foot in the air comes down in one 0.17 s step to where he will stand (under his hip), the
+  other closes after it, one foot at a time: two steps, planted within ~0.4 s. The braking dip and lean are as before.
+- **Landings**: the absorb (pelvis down 9–15 cm by fall height, 0.1–0.26 s) was there, but the soles sank 2–3 cm into
+  the ground while the plant came in; both feet now stand where they touched down on that frame. The jump's crouch
+  (`jumpPrep`) plants too (its soles slid and sank 4 cm). A step down of more than 0.3 m that the ground takes in one
+  frame (a kerb) also gets a small absorb.
+- **Stairs** (his cellar stairs, 0.2 m treads; the house's 0.13 m): each tread jerked the whole body 20 cm in one frame.
+  The drawn body now keeps its height and follows in about a tenth of a second (`Hero.visY`, up quicker than down): at
+  most 6.6 cm in a 60 fps frame. The gameplay height, collisions and the camera are the ground's at once, as before.
+- **Melee contact** (combat.js `MOVES` unchanged): measured the frame each pose reads as contact (the fist / foot at 90 %
+  of its reach out, the blade tip crossing straight ahead, the overhead blade coming down through chest height) against
+  when combat.js strikes a body 1.6 m ahead. The jabs, slash1 and slash3 were within a frame (−10 … +9 ms); the
+  forehand (`slash2`) crossed in front of him 20 ms after its strike and is keyed 0.2 u earlier (now −1 ms). The kick's
+  foot is out 30 ms before its land at 0.5 and holds through it (left as is: it reads as contact on the hit frame). The
+  gameplay and the hit windows were not mismatched; nothing in combat.js changed.
+- Interruptions checked: a hit mid-turn / mid-walk / on the stop, the pause in the middle of a step (frozen, finished after),
+  a dialogue mid-walk (planted again on return). Cost: the hero's two-bone leg fit now also runs while he walks (the hero
+  only, nobody else); his Rig.update measured 0.0–0.1 ms median, 0.1–0.2 ms p95 walking / turning / standing, the same as
+  before within the browser timer's 0.1 ms (tools/cost.js, SwiftShader's CPU; no fps claim).
+- Open: during a dialogue the hero's own update does not run, so his feet are not planted while he talks (as before);
+  the run's stop brings both feet down together (they are both off the ground in the run's flight); a short start drags
+  the first swinging foot ~3 cm before it lifts; NPCs still use the unplanted walk (their feet slide as Twinsen's did).
 
 ## Enemies are solid (SOLID-ENEMY)
 The user (29.10): "what LBA2 did". From LBA2 itself (the engine source released by its rights holder, and the user's

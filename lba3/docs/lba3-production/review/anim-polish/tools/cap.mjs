@@ -9,7 +9,7 @@ const OUT = process.env.OUT || '.';
 const FPS = +(process.env.FPS || 60);
 const SHOTS = process.env.SHOTS !== '0';
 const EVERY = +(process.env.SHOT_EVERY || Math.max(1, Math.round(FPS / 20)));
-const VIEW = process.env.VIEW || 'side';
+const VIEW = process.env.VIEW || 'side2';
 const ROOM = process.env.ROOM || 'out';
 const seqs = process.argv.slice(2);
 fs.mkdirSync(OUT, { recursive: true });
@@ -67,6 +67,7 @@ await page.evaluate(([ROOM, HOME, process_HEADING]) => {
       h.hp = h.maxHp; h.invuln = 0; h.dead = false; h.hurtT = 0; h.actT = 0; h.hasBall = true; h.hasSword = true;
       // (the townsfolk who wander within 10 m stand aside for the capture: none walks between the camera and him)
       for (const n of G.npcs || []) if (Math.hypot(n.pos.x - home[0], n.pos.z - home[1]) < 10) n.setPresent?.(false);
+      for (const d of G.world.dogs || []) d.root.visible = false;   // (the square's poodle too: it noses between the camera and him)
       G.resetCombat?.(); G.state = 'play'; G.targeting?.release?.();
       G.input.keys.clear(); G.input.taps?.clear?.();
       for (let i = 0; i < 90; i++) G.frame(1 / 60, false);
@@ -101,11 +102,13 @@ await page.evaluate(([ROOM, HOME, process_HEADING]) => {
       if (this.camA == null) this.camA = h.angle;
       if (view === 'game') { G.camRig.update(0.016, h.pos, h.angle, false, null); }
       else {
-        const a = this.camA + (view === 'front' ? 0 : view === 'back' ? Math.PI : view === 'q' ? -Math.PI / 4 : -Math.PI / 2), d = 9.5;
+        const a = this.camA + (view === 'front' ? 0 : view === 'back' ? Math.PI : view === 'q' ? -Math.PI / 4 : view === 'side2' ? Math.PI / 2 : -Math.PI / 2), d = 9.5;
         c.fov = 34; c.near = d - 2.6; c.updateProjectionMatrix();   // (the near plane past anything between the camera and him)
         const follow = view !== 'fixed';
         const cx = follow ? p.x : this.cx, cz = follow ? p.z : this.cz;
-        c.position.set(cx + Math.sin(a) * d, p.y + 1.5, cz + Math.cos(a) * d); c.lookAt(cx, p.y + 0.9, cz);
+        // ('fixed': the camera stays where it started, height included, a little up and back so the climb stays in view)
+        const cy = follow ? p.y : (this.cy ??= p.y + 0.4);
+        c.position.set(cx + Math.sin(a) * d, cy + 1.5, cz + Math.cos(a) * d); c.lookAt(cx, cy + 0.9, cz);
       }
       c.updateMatrixWorld();
       G.renderer.render();
@@ -189,8 +192,11 @@ for (const name of seqs) {
       samples.push(s);
       if (SHOTS && n % EVERY === 0) {
         const sc = await page.evaluate((v) => CAP.shot(v), VIEW);
-        const cx = Math.max(0, Math.min(900 - 240, sc[0] - 120)), cy = Math.max(0, Math.min(560 - 270, sc[1] - 135));
-        await page.screenshot({ path: `${OUT}/${name}-${String(n).padStart(3, '0')}.png`, ...(process.env.FULL ? {} : { clip: { x: cx, y: cy, width: 240, height: 270 } }) });
+        // (the fixed view keeps one wide window round where he started: the frame does not follow him)
+        const W = VIEW === 'fixed' ? 600 : 240, H = VIEW === 'fixed' ? 320 : 270;
+        if (VIEW !== 'fixed' || n === 0) S.win = [Math.max(0, Math.min(900 - W, sc[0] - W / 2)), Math.max(0, Math.min(560 - H, sc[1] - H / 2))];
+        const [cx, cy] = S.win;
+        await page.screenshot({ path: `${OUT}/${name}-${String(n).padStart(3, '0')}.png`, ...(process.env.FULL ? {} : { clip: { x: cx, y: cy, width: W, height: H } }) });
         s.shot = n;
       }
       n++;

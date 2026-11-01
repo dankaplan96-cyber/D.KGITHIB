@@ -108,6 +108,18 @@ function slip(S, from = 0, to = 99) {
   }
   return { cm: +cm.toFixed(1), maxSpeed: +max.toFixed(2) };
 }
+// whatever the plant says: the lower foot, when within 2.5 cm of standing height, against the ground — how fast it moves (m/s,
+// mean over the frames it is down) while the body walks
+function contactSlip(S, from, to) {
+  let d = 0, n = 0, time = 0, body = 0;
+  for (let i = 1; i < S.length; i++) {
+    const s = S[i], p = S[i - 1]; if (s.t < from || s.t > to) continue;
+    body += Math.hypot(s.pos[0] - p.pos[0], s.pos[2] - p.pos[2]);
+    const k = s.L[1] < s.R[1] ? 'L' : 'R'; if (s[k][1] > 0.125 || p[k][1] > 0.125) continue;
+    d += Math.hypot(s[k][0] - p[k][0], s[k][2] - p[k][2]); time += s.t - p.t; n++;
+  }
+  return { meanSpeed: time ? +(d / time).toFixed(3) : null, cmPerMetre: body ? +(d / body * 100).toFixed(1) : null, frames: n };
+}
 function steps(S, from = 0, to = 99) {
   // step starts: a foot's plant going from standing to stepping
   const out = [];
@@ -140,14 +152,14 @@ for (const [fps, controls] of [[30, 'classic'], [60, 'classic'], [120, 'classic'
   }, [dt, controls]);
   const first = S.find((s) => s.t > 0.2 + 1e-6);
   const moved = Math.hypot(first.pos[0] - S[0].pos[0], first.pos[2] - S[0].pos[2]);
-  const steady = slip(S, 0.7, 1.7), stopAt = 1.7;
+  const steady = slip(S, 0.7, 1.7), ground = contactSlip(S, 0.7, 1.7), stopAt = 1.7;
   const done2 = S.find((s) => s.t > stopAt + 0.05 && s.speed < 0.01 && s.pl.every((p) => p.on && !p.st && p.w > 0.99) && lowFoot(s, 'L') && lowFoot(s, 'R'));
   const after = steps(S, stopAt, 99), late = steps(S, stopAt + 0.6, 99);
-  const r = { fps, controls, startMovedCm: +(moved * 100).toFixed(2), steadySlip: steady, stopSettledAfter: done2 ? +(done2.t - stopAt).toFixed(3) : null, stepsAfterStop: after, stepsLate: late, stopSlip: slip(S, stopAt, 99), nan: S.some((s) => s.nan) };
+  const r = { fps, controls, startMovedCm: +(moved * 100).toFixed(2), steadySlip: steady, groundSlip: ground, stopSettledAfter: done2 ? +(done2.t - stopAt).toFixed(3) : null, stepsAfterStop: after, stepsLate: late, stopSlip: slip(S, stopAt, 99), bothOffAfterStopS: +(S.filter((s) => s.t > stopAt && s.pl.every((p) => !p.on || p.st)).length * dt).toFixed(3), nan: S.some((s) => s.nan) };
   measure(`walk ${controls} ${fps} fps`, r);
   check(`walk ${controls} ${fps} fps: he moves on the frame of the key (no added latency)`, moved > 0.001, r);
-  check(`walk ${controls} ${fps} fps: the foot he stands on stays where it struck (slip < 6 cm over 1 s of walking, < 0.25 m/s)`, steady.cm < 6 && steady.maxSpeed < 0.25, r);
-  check(`walk ${controls} ${fps} fps: the stop: both feet down and planted within 0.45 s, at most two steps, none after 0.6 s; no slide`, r.stopSettledAfter != null && r.stopSettledAfter <= 0.45 && after.length <= 2 && !late.length && r.stopSlip.cm < 3 && !r.nan, r);
+  check(`walk ${controls} ${fps} fps: the foot he stands on stays where it struck (the lower foot on the ground < 0.15 m/s, the planted one < 6 cm over 1 s)`, ground.meanSpeed != null && ground.meanSpeed < 0.15 && ground.frames > 0.4 / dt && steady.cm < 6 && steady.maxSpeed < 0.25, r);
+  check(`walk ${controls} ${fps} fps: the stop: both feet down and planted within 0.45 s, at most two steps, one foot at a time (both off the ground at most 0.05 s), none after 0.6 s; no slide`, r.bothOffAfterStopS <= 0.05 && r.stopSettledAfter != null && r.stopSettledAfter <= 0.45 && after.length <= 2 && !late.length && r.stopSlip.cm < 3 && !r.nan, r);
 }
 
 // ---- 3. landings: a standing jump, drops of 0.9 and 2.0 m (Athletic), at 30 / 60 / 120 fps; the cellar stairs
