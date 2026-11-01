@@ -70,7 +70,8 @@ const cmp = await ev(() => {
   at(0); out.autoHigh = look();
   G.settings.quality = 'medium'; G.settings.qualityAuto = false; G.applySettings(); out.medium = look();
   at(1); out.autoMed = look(); out.autoMedLabel = A.label();
-  at(1); out.eco = look(); out.ecoLabel = A.label();   // (AUTO-2: Medium is Auto's floor)
+  at(2); out.floor = look(); out.floorLabel = A.label();   // (AUTO-FLOOR: Low is Auto's floor, reached only by measured pressure)
+  at(1); out.eco = look(); out.ecoLabel = A.label();
   // (LOOK-FIRST: on battery the picture stays the profile's: no battery cuts)
   G.setBattery(true); G.frame(1 / 30, true); out.ecoBat = look(); G.setBattery(false);
   at(0);
@@ -80,7 +81,7 @@ const same = (a, b, keys) => keys.every((k) => a[k] === b[k]);
 const K = ['shadowFilter', 'pr', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'bloom', 'lamps', 'smallFar', 'treeNear', 'samples', 'cell', 'lampsPool'];
 check('Auto\'s High profile is High exactly: same pixel ratio, MSAA, shadow map / filter, bloom, lamps, vegetation, shadow cells, and the same draw calls', same(cmp.high, cmp.autoHigh, [...K, 'calls']) && !cmp.autoHigh.eco, { high: cmp.high, auto: cmp.autoHigh });
 check('Auto\'s Medium profile renders as Medium (filter, MSAA, map, bloom, lamps, vegetation, small casters; only the shadow cells stay High\'s 32 m)', same(cmp.medium, cmp.autoMed, ['shadowFilter', 'msaa', 'fxaa', 'shadows', 'shadowMap', 'bloom', 'lamps', 'smallFar', 'treeNear', 'samples', 'lampsPool']) && cmp.autoMed.casters === 'medium' && cmp.autoMed.cell === 32 && cmp.autoMedLabel === 'Medium', { medium: cmp.medium, auto: cmp.autoMed, label: cmp.autoMedLabel });
-check('Auto\'s floor is Medium itself (AUTO-2: no profile below Medium\'s look)', cmp.ecoLabel === 'Medium', { label: cmp.ecoLabel });
+check('Auto\'s floor is Low (AUTO-FLOOR: below Medium only when play measures it is needed), and its Medium stays Medium', cmp.floorLabel === 'Low' && cmp.ecoLabel === 'Medium', { floor: cmp.floorLabel, label: cmp.ecoLabel });
 check('... and on battery: shadows stay on and the resolution stays ≥ 85 % (only the nearly invisible battery cuts)', cmp.ecoBat.shadows && cmp.ecoBat.pr >= 0.85, { eco: cmp.eco, bat: cmp.ecoBat });
 
 // ---------------------------------------------------------------- 5. a decision waits for a commit point (nothing changes in play)

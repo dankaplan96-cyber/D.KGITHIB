@@ -9,7 +9,7 @@
 // crystals as at the bottom of the well. Zoe slips into the project office
 // (playable, stealth) and finds the evacuation plan: only part of the
 // population is on it. Confronted, Vesk steps into the transit beam, which
-// lifts him to his ship, and he is gone to Zeelich. That evening Arthur's radio
+// lifts him to his ship, and he is gone to Zeelich. Later Arthur's radio
 // catches Baldino calling from Zeelich: Baldino has radioed Doran the start code
 // of the project's ship at Citadel Spaceport (passenger flights are grounded; a
 // project flight is the exception). Doran meets Twinsen at the spaceport and
