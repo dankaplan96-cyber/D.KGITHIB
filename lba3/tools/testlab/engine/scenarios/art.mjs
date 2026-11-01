@@ -331,6 +331,7 @@ function placeWalk({ id, title, suite, room, house, legs }) {
       assert(rec, `no "locked" prompt at the ${house} building's open door`, offer?.kind !== 'locked', 'not locked', offer?.kind ?? 'none');
       await keyTo(door.x, door.z, 10); await sleep(3500);
       let s = await st(); log.push({ step: 'in by the door', ...s }); await shot('02-inside');
+      if (s.room !== room) log.push({ doorsNear: await page.evaluate(() => game.story.doors().filter((d) => Math.hypot(d.x - game.hero.pos.x, d.z - game.hero.pos.z) < 4).map((d) => ({ room: d.room, house: d.house, x: +d.x.toFixed(2), z: +d.z.toFixed(2), r: d.r, dist: +Math.hypot(d.x - game.hero.pos.x, d.z - game.hero.pos.z).toFixed(2) }))), doorCool: await page.evaluate(() => game.doorCool), regionsHas: await page.evaluate((r) => game.regions.has?.(r), room) });
       log.push({ calls: await page.evaluate(() => new Promise((res) => {
         const R = game.renderer.renderer, orig = R.renderBufferDirect.bind(R), n = { main: 0, shadow: 0 };
         requestAnimationFrame(() => { R.renderBufferDirect = (cam, scene, ...a) => { n[scene ? 'main' : 'shadow']++; return orig(cam, scene, ...a); };
@@ -365,3 +366,11 @@ export const artBazoo = placeWalk({ id: 'art-bazoo', title: "Mr Bazoo's shop: in
   { name: 'out', pts: [[2.8, 1.6], [0.2, 1.7], [-2.6, 1.8], [-3.9, 1.8]] },
 ] });
 ART.push(artBazoo);
+// the ticket office (LBA-CITADEL-3, LBA2 scene 8, the 'baggage' building): along the waiting chairs, round the counter's
+// right end to the staff's side, and out
+export const artTicket = placeWalk({ id: 'art-ticket', title: 'The ticket office: in by the door, behind the counter, out again', suite: 'artticket', room: 'ticket', house: 'baggage', legs: [
+  { name: 'the public side', pts: [[-0.8, 1.6], [2.6, 1.2]] },
+  { name: 'behind the counter', pts: [[2.7, -0.9], [2.0, -2.0]] },
+  { name: 'out', pts: [[2.7, -0.9], [2.6, 1.2], [-1.5, 1.9], [-2.8, 1.9]] },
+] });
+ART.push(artTicket);

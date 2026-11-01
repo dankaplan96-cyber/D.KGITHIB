@@ -982,3 +982,35 @@ apply").**
   => d.house));`. With it there is no prompt at either door.
 - **Checked on a fresh checkout of origin:** `git apply --check` of 1, then 2, passes. `artplaces` passes both
   places, including the new check "no locked prompt at the open door".
+
+---
+
+## LBA-CITADEL-3 · The ticket office inside the `baggage` building · Approved (night mode: "work to the plan"; pictures sent)
+
+- **Where:** LBA2 scene 8's door is where our `baggage` building stands at the harbour.
+- **Code:** `requests/LBA-CITADEL-3.diff`, **on top of 1 and 2** (checked: 1, 2, then `--check` of 3 on a fresh
+  checkout of 0f197c3).
+  - New `src/game/ticket.js` (region `ticket` at x 6800).
+  - Hooks after the shop's.
+- **The original's layout** (study render: 13 × 13 cells, so 6.4 × 6.4 m, 3.6 m; as the camera sees it):
+  - **Walls and floor:** pale grey blocks, a black and white checkered floor.
+  - **The counter:** a long pale counter across the room at half its depth. It has a brown cabinet at its left end,
+    and the till and a pile of tickets on it.
+  - **The staff's side behind it:** red stools and a chair, the great potted plant on a low stand, and a red bench
+    with stacked red luggage.
+  - **The public's side in front:** red chairs along the left wall and the front, two white globe lamps on short
+    posts.
+  - **The left wall:** a Temple of Bù poster (drawn, no words) under a round wall clock, and the arched door.
+  - **The back wall:** two windows with red blinds and a ship poster between them.
+- **Twelve years on (ours):**
+  - The office sells the project's ferry to Zeelich now (the poster's ship is the ferry), with a timetable board by
+    the door.
+  - The Temple poster has faded.
+- **For the story:** `R.npcSpots.clerk` is behind the counter. No people or lines were added.
+- **Measured:**
+  - `artticket`: PASS. In by the `baggage` door (no locked prompt), along the waiting chairs, round the counter's
+    right end to the staff's side, and out.
+  - Draw calls: 24 (23 + 1) at Medium.
+  - **The test caught one fault before the push:** the room's build threw (`TEX.clock` is `CANV.clock`). When a
+    region's build fails, its door does nothing and `game.doorCool` keeps climbing; fixed.
+- **Picture:** `runs/ticket-vs-lba2.jpg`.
