@@ -567,7 +567,6 @@ function chain(k, m, x, y0, y1, z, ry = 0) {
 export function buildSewerHatch(scene, physics, world) {
   const { x, z } = HATCH, y = physics.groundAt(x, z);
   const g = new THREE.Group(); g.position.set(x, y, z); g.name = 'sewerhatch';
-  g.userData.keep = true;   // (moving parts and a draw-order trick: never merged or batched)
   (world?.root || scene).add(g);
   const k = new P.Kit(g);
   const { S, F, DEPTH, DECK } = LIFT;
@@ -595,9 +594,11 @@ export function buildSewerHatch(scene, physics, world) {
     stencilZPass: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilFail: THREE.KeepStencilOp,
   })));
   shaft.renderOrder = 1.5; shaft.name = 'sewerShaft';
-  for (const o of [cut, shaft]) { o.castShadow = false; o.receiveShadow = false; g.add(o); }
+  // (moving parts and the draw-order trick: userData.keep, never merged or batched; the frame stays static, its shadow
+  //  in the area's shadow batch)
+  for (const o of [cut, shaft]) { o.castShadow = false; o.receiveShadow = false; o.userData.keep = true; g.add(o); }
   // in the shaft (drawn after it): the lift's guide rails east and west, its chains down from the pulleys
-  const inner = new THREE.Group(); inner.name = 'sewerShaftIron'; g.add(inner);
+  const inner = new THREE.Group(); inner.name = 'sewerShaftIron'; inner.userData.keep = true; g.add(inner);
   {
     const ik = new P.Kit(inner), m = M('sw_shaftIron', () => { const q = ironM().clone(); q.color.set('#34363c'); return q; });
     for (const s of [-1, 1]) {
@@ -607,7 +608,7 @@ export function buildSewerHatch(scene, physics, world) {
     ik.flush();
   }
   // the deck: a grated iron platform in a heavy frame, eyes for the chains, a lever post at the south-east corner
-  const deck = new THREE.Group(); deck.name = 'sewerDeck'; g.add(deck);
+  const deck = new THREE.Group(); deck.name = 'sewerDeck'; deck.userData.keep = true; g.add(deck);
   const deckM = M('sw_deckIron', () => { const q = ironM().clone(); q.userData.base = q.color.clone(); return q; });
   const D = S - 0.06, LP = { x: D - 0.1, z: D - 0.1 };
   const lever = new THREE.Group();
@@ -630,7 +631,7 @@ export function buildSewerHatch(scene, physics, world) {
   }
   for (const o of [inner, deck]) o.traverse((q) => { if (q.isMesh) { q.renderOrder = 1.6; q.castShadow = false; q.receiveShadow = true; } });
   // the grate itself, on a hinge at its north edge
-  const hinge = new THREE.Group(); hinge.position.set(0, 0.06, -S); g.add(hinge);
+  const hinge = new THREE.Group(); hinge.position.set(0, 0.06, -S); hinge.userData.keep = true; g.add(hinge);
   {
     const hk = new P.Kit(hinge);
     for (const [px, pz, w, d] of [[0, 0.03, 2 * S + 0.04, 0.06], [0, 2 * S - 0.03, 2 * S + 0.04, 0.06], [-S + 0.0, S, 0.06, 2 * S], [S - 0.0, S, 0.06, 2 * S]]) hk.add(rbox(w, 0.05, d, 0.01), ironM(), px, 0, pz);
