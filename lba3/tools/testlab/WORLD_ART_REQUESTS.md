@@ -572,7 +572,27 @@ The user asked whether Twinsen's new nose is like LBA2's. Measured on the models
 
 ---
 
-## WA-15 · Two Zeelich buildings on Citadel's harbour front · Waiting for the user's approval (pictures sent 1.11.2026)
+## WA-15 · Two Zeelich buildings on Citadel's harbour front · ON HOLD: do not apply (the user, 1.11.2026)
+
+**On hold.** The user, on the pictures: "What do these buildings give? They feel disconnected." The laptop agrees:
+- They are set dressing only: no purpose, no door, no one inside, nothing leads to them.
+- B2 cannot be reached at all.
+- They stand at the edge of the bay, apart from the life of the harbour (the quay, Odile's customs booth, Tobb's
+  cargo).
+
+**Where this is in LBA2:** mapped through `LAYOUT` (dx -76, dz 16) onto the original's own layout numbers
+(`tools/worldscore/ref/citadel.json`):
+- B1's place is the open paved harbour square in front of the harbour ticket office (scene 8; in our frame the
+  baggage claim) and Paul's house (scene 7; in our frame the house beside it), by its railings.
+- B2's place is open sea beside the promenade's railings.
+- The original has nothing built on either place.
+
+A new version waits for the user's choice:
+- drop WA-15;
+- or one building with a purpose tied to the harbour (for example, the Esmer traders' office where Tobb's cargo and
+  Odile's customs lead, with a trader to meet). That is design and story work for the cloud with the story documents.
+
+The prototype and its numbers below are kept for reference only.
 
 The user's decision D2 of 28.10 (`docs/art-direction/EXPANSION_ART_DECISIONS.md`): "here and there a newer building on
 the promenade/waterfront that looks more like Zeelich". Zeelich's building language as imported architecture, a few,
