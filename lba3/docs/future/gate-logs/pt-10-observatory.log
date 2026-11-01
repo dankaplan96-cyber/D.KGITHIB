@@ -1,0 +1,34 @@
+=== 10-observatory start 2026-11-01T17:32:29Z LOAD=/dev/shm/gate1/saves/09-pass.json ASSIST= SRC=/dev/shm/gate1/lba3/tests/playthrough/10-observatory.mjs
+[0s +0s] continue: {"chapter":"observatory","room":"hamalayi"} | hamalayi [4334,21.84,-38] hp 11 | Climb the ridge to the observatory
+[3s +3s] into the observatory: {"r":"transition","from":"hamalayi","to":"obsv","fail":null} | obsv [4596.51,0,4.85] hp 11 | Climb the ridge to the observatory
+[3s +0s] the keeper: {"r":"talked","to":"keeper","state":"play","lines":10,"keeper":true,"fail":null} | obsv [4596.51,0,4.85] hp 11 | Carry the light to the crystal
+[5s +2s] the mirrors: {"lit":true,"fail":null} | obsv [4601.23,0,1.43] hp 11 | Turn the telescope
+[6s +1s] the telescope: {"r":"used","target":{"kind":"c7scope","id":"p_scope","label":"p_scope"},"state":"play","lines":4,"scope":true,"fail":null} | obsv [4604.79,0,3.1] hp 11 | Destroy the heavy drone at the vent
+[6s +0s] out: {"r":"transition","from":"obsv","to":"hamalayi"} | hamalayi [4286,30.11,-63.03] hp 11 | Destroy the heavy drone at the vent
+[7s +1s] the heavy drone at the vent: {"left":0,"dead":false,"hp":9,"t":11.6,"drone":false,"fail":null} | hamalayi [4256.81,15.98,-55.46] hp 9 | Open the vent in the glacier
+[18s +11s] the vent: {"r":"used","target":{"kind":"c7vent","id":"p_vent","label":"p_vent"},"state":"play","lines":16,"vent":true,"fail":null} | hamalayi [4253.73,16.05,-47.26] hp 9 | Meet Hesk at the monastery
+[20s +2s] the monastery gate → chapter 8: {"chapter":"evacuation","fail":null} | citadel [-58.08,15.89,-59.48] hp 9 | Go home to Zoé
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[88.6] hurt 11→10 at (4259.3, 16.0, -55.3) near: heavydrone:chase 
+[90.7] hurt 10→9 at (4256.6, 16.0, -55.0) near: heavydrone:chase 
+[92.6] fight heavydrone d=3.5 st=windup aim=it e@4253.1,16.2,-52.9 me@4256.8,16.0,-55.5 ball=idle hp 8→5 me 9 mp 11.344166666666668
+[93.8] fight heavydrone d=4.4 st=windup aim=it e@4252.4,16.2,-52.4 me@4256.8,16.0,-55.5 ball=idle hp 5→2 me 9 mp 10.752500000000003
+[95.0] fight heavydrone d=5.4 st=dead aim=it e@4252.2,16.2,-52.2 me@4256.8,16.0,-55.5 ball=impact hp 2→-1 me 9 mp 9.910000000000004
+[95.2] go → (4252.8, -48.0) plan ok=false pts=2 left=1.22
+[102.2] go → (4252.8, -48.0) plan ok=false pts=1 left=1.22
+[104.7] stuck at (4254.0, -47.8): replan
+[112.4] go → (4334.0, -32.0) plan ok=true pts=11 left=0.28
+[122.5] stuck at (4274.7, -60.0): replan
+[125.4] stuck at (4274.5, -60.0): replan
+[128.4] stuck at (4274.6, -60.1): replan
+kept /dev/shm/gate1/saves/10-observatory.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 10-observatory end rc=0 wall=187s 2026-11-01T17:35:36Z
