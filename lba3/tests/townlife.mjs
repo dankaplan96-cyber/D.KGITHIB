@@ -243,6 +243,90 @@ const paths = await ev(() => { const W = game.world, L = W.life, d = (x, z) => +
   return { bench: d(L.shop.bench.x, L.shop.bench.z), barrel: d(L.shop.barrel.wx, L.shop.barrel.wz), engine: d(L.shop.engine.x, L.shop.engine.z), beds: L.beds.map((b) => d(b.x, b.z)) }; });
 check('Nell\'s shop (bench, engine, barrel) and the garden\'s raised beds are off the dirt paths (> 2.3 m from a path\'s middle) (REV-TY-1 D1)', paths.bench > 2.3 && paths.barrel > 2.3 && paths.engine > 2.3 && paths.beds.every((v) => v > 2.3), paths);
 
+// ---- TOWN-LIFE-2 (src/game/townbusy.js, gulls.js): the town's small business, chapter 2 with the water back (this page is a
+// Continue: nothing of it is saved, it starts over after a load). ISO (logged): placements by exitRoom; town time run with
+// game.step; story flags set for the three states of the town's talk.
+iso('TOWN-LIFE-2: Twinsen placed by exitRoom; town time run with game.step; c1_water / c1_veskGone set for the talk\'s states');
+const tl0 = await ev(() => { const B = game.world.busy; return B && { flocks: B.flocks.map((f) => ({ n: f.n, draws: [f.body, f.wing].filter((m) => m.isInstancedMesh).length, shadow: f.body.castShadow || f.wing.castShadow })), piles: [B.quay, B.stall].map((p) => ({ n: p.n, inst: p.mesh.isInstancedMesh })), flags: Object.keys(game.flags).filter((k) => /^(tl|tb|busy)_/.test(k)) }; });
+check('the town\'s small business is there after a Continue: two gull flocks (two instanced draws each, no shadow), Tobb\'s two crate piles (one instanced draw each); no new saved flag', tl0 && tl0.flocks.length === 2 && tl0.flocks.every((f) => f.draws === 2 && !f.shadow && f.n >= 2) && tl0.piles.every((p) => p.inst && p.n >= 1) && tl0.flags.length === 0, tl0);
+// Tobb's crates: the one he takes comes off the quay's pile and stays on the stall's (town time, Twinsen far off: the abstract tier)
+const tobb = await ev(() => { const G = game, B = G.world.busy, T = G.walkers.res.find((r) => r.def.id === 'tobb');
+  G.exitRoom({ x: G.world.life.boatBox.x, z: G.world.life.boatBox.z + 2, a: 0 }, true); P.settle(); const c0 = { ...B.count }; let min = 9, max = 0;
+  for (let i = 0; i < 420; i++) { G.step(1); min = Math.min(min, B.quay.n); max = Math.max(max, B.stall.n); }
+  const took = B.count.took - c0.took, put = B.count.put - c0.put;
+  const stopAt = (id) => { const s = T.stops.find((q) => q.id === id); return s && { x: s.x, z: s.z }; };
+  const qs = stopAt('tobb_quay'), ss = stopAt('tobb_stall');
+  return { took, put, quayMin: min, stallMax: max, log: B.log.slice(-8), reach: { quay: +Math.hypot(qs.x - B.quay.x, qs.z - B.quay.z).toFixed(2), stall: +Math.hypot(ss.x - B.stall.x, ss.z - B.stall.z).toFixed(2) } }; });
+check('Tobb\'s round: he takes a crate off the quay\'s pile and sets it on the pile at the stall\'s end (each seen in the piles\' counts), standing beside each pile', tobb.took >= 1 && tobb.put >= 1 && tobb.quayMin < 6 && tobb.stallMax >= 2 && tobb.reach.quay < 1.2 && tobb.reach.stall < 1.2, tobb);
+// the piles are solid, and the way from the harbour path to the pier is still open (INPUT)
+const pileWalk = await ev(() => { const G = game, B = G.world.busy, h = G.hero, out = {};
+  G.exitRoom({ x: B.quay.x + 2.2, z: B.quay.z, a: -Math.PI / 2 }, true); P.settle(); P.holdFor(['ArrowUp'], 2.0); out.quayStop = +(h.pos.x - B.quay.x).toFixed(2);
+  G.exitRoom({ x: -100, z: 39.5, a: -Math.PI / 2 }, true); P.settle(); out.pier = P.go(G.world.pierStart.x + 1, G.world.pierStart.z, { tol: 1.0, maxT: 60 });
+  out.square = P.go(B.stall.x - 1.5, B.stall.z - 2.5, { tol: 1.0, run: true, maxT: 120 });
+  return out; });
+check('the quay\'s crate pile stops him (he does not walk through it); the harbour path to the pier and the way to the stall stay open (INPUT)', pileWalk.quayStop > 0.6 && pileWalk.pier.r === 'arrived' && pileWalk.square.r === 'arrived', pileWalk);
+// a word when bumped: walking into a standing resident; a bubble over it, the game goes on (no dialogue)
+const bump = await ev(() => { const G = game, B = G.world.busy, W = G.walkers; let r = null;
+  for (let k = 0; k < 300 && !r; k++) { G.step(0.5); r = W.res.find((x) => x.present && !x.away && x.st === 'dwell' && x.tmr > 4 && !x.sit && !x.stop?.door && Math.abs(x.pos.x) < 200 && !/tend|water/.test(x.stop?.act || '')); }
+  if (!r) return { none: true };
+  const a = r.angle; G.exitRoom({ x: r.pos.x + Math.sin(a) * 1.6, z: r.pos.z + Math.cos(a) * 1.6, a: a + Math.PI }, true); G.step(0.3); B.hide();
+  P.holdFor(['ArrowUp'], 1.0);
+  return { who: r.def.id, key: B.bub?.key, on: B.bub?.n === r, text: B.el?.textContent, shown: B.el?.style.display, state: G.state, logged: B.log.slice(-2) }; });
+check('walked into, a resident steps aside and says a short line over its head (a bubble; no dialogue, play goes on)', bump.key && /^rb_/.test(bump.key) && bump.on && bump.text && bump.text.length < 70 && bump.shown === 'block' && bump.state === 'play', bump);
+// heads turn as he passes; not in Discreet mode
+const heads = await ev(() => { const G = game, B = G.world.busy, h = G.hero; let seen = null;
+  for (let i = 0; i < 600 && !seen; i++) { G.step(0.25); seen = [...B.looks][0] || null; if (!seen) { const r = G.walkers.res.find((x) => x.present && !x.away && x.st === 'walk' && x.tier === 0 && Math.abs(x.pos.x) < 200); if (r && i % 20 === 0) { G.exitRoom({ x: r.pos.x + Math.sin(r.angle) * 2.5, z: r.pos.z + Math.cos(r.angle) * 2.5, a: r.angle + Math.PI }, true); } } }
+  if (!seen) return { none: true };
+  const out = { who: seen.def.id, look: seen.rig.lookAt === seen._tlLook, atHim: Math.hypot(seen.rig.lookAt.x - h.pos.x, seen.rig.lookAt.z - h.pos.z) < 0.01 };
+  h.behaviour = 'discreet'; G.step(0.1); out.discreet = B.looks.size; h.behaviour = 'normal';
+  return out; });
+check('a resident he passes close to turns its head to him; in Discreet mode nobody notices him', heads.look && heads.atHim && heads.discreet === 0, heads);
+// overheard: Maro and Tilde's talk by the plaza's benches, by the town's state (hot; after Vesk; dry)
+const hear = async (flags) => ev((flags) => { const G = game, B = G.world.busy, W = G.walkers; Object.assign(G.flags, flags);
+  const m = W.res.find((r) => r.def.id === 'maro'), t = W.res.find((r) => r.def.id === 'tilde');
+  G.exitRoom({ x: -51.5, z: 41.5, a: Math.PI }, true);
+  let k = 0; for (; k < 900 && !(m.st === 'chat' && t.st === 'chat'); k++) G.step(0.5);
+  B.hide(); const keys = []; for (let i = 0; i < 60 && m.st === 'chat'; i++) { G.step(0.25); if (B.bub && B.bub.prio === 1 && keys[keys.length - 1] !== B.bub.key + '@' + B.bub.n.def.id) keys.push(B.bub.key + '@' + B.bub.n.def.id); }
+  return { waited: k / 2, keys, text: B.el?.textContent }; }, flags);
+const hHot = await hear({ c1_water: true, c1_veskGone: false });
+const hGone = await hear({ c1_water: true, c1_veskGone: true });
+const hDry = await hear({ c1_water: false, c1_veskGone: false });
+await ev(() => { Object.assign(game.flags, { c1_water: true, c1_veskGone: false }); });
+const parity = (L) => L.every((s) => { const [k, who] = s.split('@'); const i = +k.slice(-1); return (i % 2 === 0) === (who === 'maro'); });
+check('overheard by the plaza\'s benches: Maro and Tilde\'s words, a line a turn, Maro\'s and Tilde\'s in turn; the water back: the heat', hHot.keys.length >= 2 && hHot.keys.every((s) => /^ro_hot_/.test(s)) && parity(hHot.keys), hHot);
+check('…after Vesk\'s departure: the light over the fortress; the well dry: the water', hGone.keys.length >= 2 && hGone.keys.every((s) => /^ro_gone_/.test(s)) && parity(hGone.keys) && hDry.keys.length >= 2 && hDry.keys.every((s) => /^ro_dry_/.test(s)), { hGone, hDry });
+// what the residents say after Vesk has gone
+const gone = await ev(() => { const G = game, C = G.story.citizens, f = G.flags, out = {};
+  for (const id of ['oda', 'brix', 'pico', 'ume']) { const n = G.npcs.find((x) => x.def.id === id); f.c1_veskGone = false; const a = C.linesFor(n); f.c1_veskGone = true; const b = C.linesFor(n); out[id] = { before: a.includes(`rs_${id}_gone`), after: b.includes(`rs_${id}_gone`) }; }
+  f.c1_veskGone = false; return out; });
+check('once Vesk has gone, each resident has a line about it (and not before)', Object.values(gone).every((g) => !g.before && g.after), gone);
+// Odile at her counter: stamps forms while nobody is at the window; his again as he comes up, and she talks to him
+const od = await ev(() => { const G = game, n = G.npcs.find((x) => x.def.id === 'odile'), S = G.world.life.spots.odile, r = {};
+  G.exitRoom({ x: S.x + 1.5, z: S.z + 9, a: Math.PI }, true); P.settle(); G.step(2.5); r.far = { anim: n.forceAnim, face: +Math.abs(Math.atan2(Math.sin(n.angle - S.a - Math.PI), Math.cos(n.angle - S.a - Math.PI))).toFixed(2) };
+  r.talk = P.talk('odile'); r.speaking = G.state; P.settle(); r.near = { anim: n.forceAnim }; r.at = +Math.hypot(n.pos.x - S.x, n.pos.z - S.z).toFixed(2); return r; });
+check('Officer Odile works her counter (turned to it) while nobody is at the window; as he comes up she is the story\'s again: she turns and talks, and stays at her place', od.far.anim === 'tinker' && od.far.face < 0.3 && od.talk.r === 'talked' && od.near.anim === null && od.at < 0.05, od);
+// the gulls take off as he walks up and come down again on a perch away from him; out of reach they sit still
+const gl = await ev(() => { const G = game, B = G.world.busy, F = B.flocks[0], h = G.hero;
+  const b = F.birds.find((x) => x.st === 'sit'); G.exitRoom({ x: b.x + 6, z: b.z, a: -Math.PI / 2 }, true); P.settle();
+  P.holdFor(['ArrowUp'], 2.5); const went = F.birds.filter((x) => x.st !== 'sit'), up = went.length, l0 = went.map((x) => x.landed || 0); G.step(30);
+  const down = went.filter((x, i) => (x.landed || 0) <= l0[i]).length, dist = went.map((x) => +Math.hypot(x.p.x - h.pos.x, x.p.z - h.pos.z).toFixed(1));
+  G.exitRoom({ x: G.world.life.boatBox.x, z: G.world.life.boatBox.z + 2, a: 0 }, true); P.settle();
+  const m0 = F.body.instanceMatrix.version; G.step(5); return { up, down, dist, still: F.body.instanceMatrix.version === m0 }; });
+check('the harbour\'s gulls take off as he walks up to them and come down again within half a minute; far off they keep still (no work)', gl.up >= 1 && gl.down === 0 && gl.still, gl);
+// interrupted: a bubble goes as he goes indoors; heads he turned are let go
+const intr = await ev(() => { const G = game, B = G.world.busy; const r = G.walkers.res.find((x) => x.present && !x.away && !x.inside && Math.abs(x.pos.x) < 200);
+  G.exitRoom({ x: r.pos.x + Math.sin(r.angle) * 2.5, z: r.pos.z + Math.cos(r.angle) * 2.5, a: r.angle + Math.PI }, true); G.step(0.2);
+  B.say(r, 'rb_adult_0', 3, 2); G.step(0.1); const shown = B.el.style.display;
+  G.enterRoom('house', G.rooms.house.spawn, true); P.settle(); G.step(0.3);
+  return { shown, after: B.el.style.display, looks: B.looks.size }; });
+check('a word over a head is put away when he goes indoors, and no head is left turned', intr.shown === 'block' && intr.after === 'none' && intr.looks === 0, intr);
+// its cost on the busy street: the layer's own update, timed over 300 frames on the square with the town running
+const cost = await ev(() => { const G = game, B = G.world.busy; G.exitRoom({ x: G.world.well.x + 2, z: G.world.well.z + 4, a: Math.PI }, true); P.settle();
+  const up = B.update.bind(B); let ms = 0, n = 0; B.update = (dt, t) => { const t0 = performance.now(); up(dt, t); ms += performance.now() - t0; n++; };
+  for (let i = 0; i < 300; i++) G.step(1 / 60); B.update = up; return { msPerFrame: +(ms / Math.max(1, n)).toFixed(3), frames: n }; });
+console.log(`  TOWN-LIFE-2 layer cost on the square: ${cost.msPerFrame} ms a frame over ${cost.frames} frames (this machine, CPU)`);
+check('the town\'s small business costs under 0.3 ms a frame on the square (CPU, this machine)', cost.frames >= 290 && cost.msPerFrame < 0.3, cost);
+
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);

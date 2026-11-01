@@ -44,6 +44,20 @@ function doorAt(W, x, z, list = W.houses, out = 1.7) {
   return { x: best.door.x + Math.sin(ry) * out, z: best.door.z + Math.cos(ry) * out, a: ry + Math.PI, door: { x: best.door.x, z: best.door.z } };
 }
 
+// TOWN-LIFE-2: where Tobb's crates come from and go (the piles are townbusy.js's). On the quay: a pile beside the cargo
+// stacks at its north-west corner (the stacks measured: island/harbour colliders at x −116.3…−115.5, z 38.3…39.1; the flower
+// bed east of it to x −112.55), off the way from the harbour path to the pier (z 41–44); he takes a crate from its east side.
+// At Pippa's stall: a pile against the stall's east end (in the stall's own frame: 2.0 m along it from its middle, 0.25 m
+// behind its line), where he sets the crate down standing a metre further along, facing the stall.
+export const QUAY_PILE = { x: -114.95, z: 38.8, ry: 0.06 };
+export const QUAY_PICK = { x: -113.95, z: 38.8, a: -Math.PI / 2 };
+export function stallDrop(W) {
+  const s = W.stall; if (!s) return null;
+  const a = s.a, cx = s.x - Math.sin(a) * 1.6, cz = s.z - Math.cos(a) * 1.6;   // (the stall's middle: W.stall is 1.6 m before it)
+  const at = (lx, lz) => ({ x: cx + lx * Math.cos(a) + lz * Math.sin(a), z: cz - lx * Math.sin(a) + lz * Math.cos(a) });
+  return { pile: { ...at(2.0, -0.25), ry: a }, stop: { ...at(3.05, -0.25), a: Math.atan2(-Math.cos(a), Math.sin(a)) } };
+}
+
 // ------------------------------------------------------------------ Citadel
 export function citadelRoster(game) {
   const W = game.world;
@@ -60,6 +74,7 @@ export function citadelRoster(game) {
   const POST = { x: -47.56, z: -2.8 };
   // the pair's meeting place, between the plaza's benches; each faces the other
   const MEET = [[-52.6, 37.6], [-50.4, 37.6]];
+  const DROP = stallDrop(W);
   const R = [
     // the market-goer: from her door to the well, the stall (a basket from there), a seat in the square, home
     { id: 'oda', char: 'lharWoman', tint: '#fff0e0', speed: 1.15, start: 2, color: '#f0b080', stops: ok([
@@ -125,11 +140,12 @@ export function citadelRoster(game) {
       look('marda_warm', -100.2, 34.0, -100.16, 32.95, [8, 12], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the quay house's heat post)
       bench('marda_b2', -94.4, 30.3, [18, 26]),
     ]) },
-    // the porter: a crate from the quay to the stall and back empty
+    // the porter: a crate from the quay's pile to the pile at the stall's end, and back empty (TOWN-LIFE-2: the crate he takes
+    // comes off the quay's pile and stays on the stall's: townbusy.js; he used to pick it up from the bare harbour path)
     { id: 'tobb', char: 'farmerC', tint: '#ffffff', speed: 1.0, start: 0, color: '#e8a860', stops: ok([
-      D('tobb_quay', -96.6, 40.0, { a: -1.57, act: 'put', dur: [4, 6], carry: 'crate' }),
+      D('tobb_quay', QUAY_PICK.x, QUAY_PICK.z, { a: QUAY_PICK.a, act: 'put', dur: [4, 6], carry: 'crate' }),
       D('tobb_rest', -72.0, 36.2, { a: 0, act: 'rest', dur: [5, 8] }),
-      D('tobb_stall', -49.2, -2.8, { a: 0.4, act: 'put', dur: [5, 7], carry: null }),
+      DROP ? D('tobb_stall', DROP.stop.x, DROP.stop.z, { a: DROP.stop.a, act: 'put', dur: [5, 7], carry: null }) : D('tobb_stall', -49.2, -2.8, { a: 0.4, act: 'put', dur: [5, 7], carry: null }),
       D('tobb_back', -52.5, 31.0, { a: 3, act: 'rest', dur: [4, 6] }),
     ]) },
     // the old woman: two benches by the lane's middle and what she sees from each
