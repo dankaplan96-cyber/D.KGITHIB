@@ -766,7 +766,7 @@ function slateRock(seed, colors = ['#5c626a', '#464b52']) {
     bounds: { min: [-1.3, -0.4, -1.2], max: [1.3, 1.1, 1.2] }, cell: 0.07,
   });
 }
-function blueRocks() {
+export function blueRocks() {
   return soft({
     key: 'bluerocks',
     prims: [[0, 0.2, 0, 0.24], [0.33, 0.15, 0.1, 0.18], [-0.28, 0.16, 0.16, 0.19], [0.1, 0.13, -0.3, 0.16], [-0.12, 0.42, 0.02, 0.15], [0.2, 0.1, 0.36, 0.12]].map(([x, y, z, r], i) => ({ type: 'ell', c: [x, y, z], r: [r, r * 0.9, r], group: 'b' + i, mat: 'b', wobble: (a, b, c) => Math.sin(a * 30 + c * 20) * 0.006 })),

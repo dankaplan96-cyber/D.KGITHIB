@@ -432,7 +432,7 @@ prototyped on the laptop, and the exact code is in `tools/testlab/requests/WA-11
 
 ---
 
-## WA-14 · The Citadel sewers, as in LBA2 · Approved (design request for the cloud; the user, 1.11.2026)
+## WA-14 · The Citadel sewers, as in LBA2 · Applied (the cloud, 1.11.2026; awaiting the user's approval)
 
 The user: "What about the sewer that LBA2 has? We need to add that too." The game has no sewer area today. The well
 (`buildWell`) is a crystal cave, not a sewer.
@@ -466,3 +466,31 @@ The user: "What about the sewer that LBA2 has? We need to add that too." The gam
     grate or hatch in the Citadel town is natural.
 - **Check:** `artall` shoots it (add it to `regions`). The laptop compares it with scene 17, and before/after pictures
   go to the user.
+
+**Applied (the cloud, 1.11.2026; awaiting the user's approval).** `src/game/sewers.js` (the rooms and the grate),
+`src/game/story/sewers.js` and `src/game/text/sewers.js` (the side story), registered in `src/game/regions.js` as the
+group `sewer` (rooms `sewer` and `sewervault`, built the first time they are needed).
+- **The entrance:** a square iron grate in the lane north of Twinsen's house (Citadel, x -45.4, z 56.6), a few steps
+  north of where the project's copper heat pipe dives under the lane by Bram's pump. Open from **chapter 1** on, in
+  every chapter (an optional side trip; nothing on the main path needs it).
+- **The hook:** something knocks under the grate, and Arthur's chalk is on its frame ("A + L" and an arrow).
+  Twinsen lifts the grate and climbs down into the well-house on the island.
+- **The hall (scene 17):** a 28 × 24 m flooded hall (the game's sea texture, tinted pale cyan), a raised north
+  walkway with stairs, a west walkway and a bridge to the island, stepping slabs along the near side, an east pier,
+  a colonnade before three barred arches at the back. The island has the well-house (barred door, stepped open top)
+  and a railed platform. Iron railings with spear tops, globe-lamp pillars, barrels, blue rocks, spiked iron rings at
+  the water's edge, gargoyle heads on the corner pillars and the colonnade, blue plaques.
+- **Twelve years on:** half the railings rust, three of the nine lamps are dead, and the project's new heat pipe comes
+  down the shaft into a blue valve box bolted onto the old gate winch. It knocks every few seconds. Easing the valve
+  stops the knocking, and the winch raises the gate.
+- **The treasure room (scene 18):** a dais with a star chest, two lamp pillars, a star plaque, a bronze disc, a
+  barrel, blue rocks and spiked rings, with Arthur's chalk boat and his toy boat. The chest holds Arthur's map (the
+  found-object ceremony) and a clover. The barrels in both rooms give kashes, as other containers do. Back home,
+  Arthur explains it in a short talk: he and Lulu found the room before the pipe jammed the gate.
+- **Palette (measured on the play camera, SwiftShader):** water about (112, 161, 185), stone (59, 57, 51); the whole
+  frame averages (66, 77, 78), against (70, 78, 76) for a study render of scene 17. These numbers are from before
+  the last small water and stone tune.
+- **Check:** `tests/sewers.mjs` (walk in from the town, the gate, the treasure room, back out, Arthur, saves).
+  `artall` shoots both rooms (they are in the regions list), and `artrooms` lists them too. Pictures:
+  `docs/lba3-production/review/sewers/`.
+

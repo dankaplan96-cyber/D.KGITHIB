@@ -27,6 +27,7 @@ import { buildWorldSteps, POI, QUAY } from './game/world.js';
 import { streetDist } from './game/town.js';
 import { buildWizardTent } from './game/wizards.js';
 import { buildLba1Door } from './game/lba1places.js';
+import { buildSewerHatch, HATCH } from './game/sewers.js';
 import { preloadLba1Rooms } from './game/lba1room.js';
 import { preloadIslands } from './game/zislands.js';
 import { buildSpaceport } from './game/spaceport.js';
@@ -247,6 +248,7 @@ class Game {
       // (the wizard's tent and the asylum's block-house stand on Citadel; their rooms are built when needed)
       timed('wizards', () => buildWizardTent(S, P, this.world));
       timed('lba1', () => buildLba1Door(S, P));
+      timed('sewers', () => buildSewerHatch(S, P, this.world));   // (WA-14: the grate in the lane by the pump)
       bar.measured(BUILD_REF.town, performance.now() - t0);
     }
     L.citadel = Math.round(performance.now() - tm);
@@ -1098,7 +1100,7 @@ class Game {
       this.lastSafe = { x: sp.x, z: sp.z };
       this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
-      this.audio.setPlace?.(R.outdoor ? (id === 'zeelich' || id === 'hamalayi' || R.sky ? 'sky' : 'island') : id.startsWith('c3') || id === 'well' ? 'under' : 'interior');
+      this.audio.setPlace?.(R.outdoor ? (id === 'zeelich' || id === 'hamalayi' || R.sky ? 'sky' : 'island') : id.startsWith('c3') || id === 'well' || id.startsWith('sewer') ? 'under' : 'interior');
       this.refillGivers();   // (CONTAINERS-2: a new visit, the containers here give again)
       if (quiet) return; // (a cinematic changing scenes: its music, its own story, no save mid-scene)
       this.audio.setMood(R.music || ROOM_MUSIC[id] || 'citadel');
@@ -1155,7 +1157,7 @@ class Game {
   // where the hero is on the island map (inside a room: where that room is)
   mapHero() {
     if (!this.room || this.room.outdoor) return this.hero;
-    const pos = this.room.id === 'house' || this.room.id === 'cellar' ? this.world.houses[0] : this.world.well;
+    const pos = this.room.id === 'house' || this.room.id === 'cellar' ? this.world.houses[0] : this.room.id.startsWith('sewer') ? HATCH : this.world.well;
     return { pos: { x: pos.x, z: pos.z }, angle: this.hero.angle };
   }
 
