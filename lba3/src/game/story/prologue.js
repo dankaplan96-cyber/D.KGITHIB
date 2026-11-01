@@ -319,7 +319,9 @@ export class Prologue extends ChapterBase {
   baseInteractables(consider, dist, cur) {
     const g = this.game, W = g.world;
     if (!g.room) {
-      const open = new Set(cur.doors().map((d) => d.house));
+      // (LBA-CITADEL: the director's own doors too — the places of LBA2's Citadel opened inside their buildings, the
+      //  tavern and the rest, open in every chapter — so their houses are not offered as locked)
+      const open = new Set([...cur.doors(), ...(this.story.doors?.() || [])].map((d) => d.house));
       // (while Zoé stands at the neighbours' door, its "Open" prompt would take hers: she is the one to talk to there)
       if (this.f.opening && !this.f.prologueDone && this.isCur()) open.add('nbr');
       W.houses.forEach((h, i) => { if (i > 0 && !open.has(h.id)) consider(dist(h.door.x, h.door.z), 1.6, { kind: 'locked', label: 'p_door' }); });
