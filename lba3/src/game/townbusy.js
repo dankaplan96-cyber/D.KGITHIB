@@ -146,7 +146,9 @@ export class TownBusy {
     for (const r of res) {
       const y = r.yieldT || 0, y0 = this.yieldPrev.get(r) ?? 0;
       this.yieldPrev.set(r, y);
-      if (!(y > 0.75 && y0 < 0.7)) continue;   // (it has just been walked into and steps aside: walkers.js giveWay)
+      // (it has just been walked into and steps aside: walkers.js giveWay sets its timer to 0.8 s, which otherwise only runs
+      //  down — by a frame or, in the reduced tier, three frames before this sees it — so any rise is a new bump)
+      if (!(y > y0 + 0.05)) continue;
       if (this.barkAny > 0 || now < (this.barkAt.get(r) ?? -99)) continue;
       const id = r.def.id, kind = KIDS.has(id) ? 'kid' : OLD.has(id) ? 'old' : 'adult', n = { kid: 3, old: 3, adult: 4 }[kind];
       const key = r.carrying && t('rb_' + r.carrying) !== 'rb_' + r.carrying ? 'rb_' + r.carrying : `rb_${kind}_${(this.barkN++ + (id.length % n)) % n}`;
