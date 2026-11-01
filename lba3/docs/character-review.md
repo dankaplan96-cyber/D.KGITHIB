@@ -1264,7 +1264,7 @@ necklace as in the original (I-23). All in `tools/blender/twinsen_poly.py` → `
   Per part: cape 432, sleeves 2 × 64 (new), hands 2 × 220 (were 246), medallion 56 + 8 (was 64 + 16), cord 80 (new),
   brows 16, nose 10.
 - **Not changed:** the skeleton, bone names, hierarchy, bind transforms, sockets (the hand bones carry the weapons as
-  before), the eye/mouth json contract, rig.js. Checked in idle, walk, run, turn, talk, throw (planted and over a walk),
+  before), the eye/mouth json contract, rig.js. Checked in idle, walk, run, turn, talk, the planted throw (the throw over a walk not separately),
   charge, action, jump, knockdown, cheer (both arms overhead) and the found dance, front / ¾ / side / back; the hands
   in idle, talk and raised; the face in front, ¾ and side; in the house and on Citadel at the play camera.
 - **Remaining.** In a raised-arm pose the cape's lower side corners hang as a squared shelf (the cape's own rest shape,
