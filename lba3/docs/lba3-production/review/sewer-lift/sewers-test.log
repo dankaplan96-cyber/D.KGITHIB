@@ -1,0 +1,37 @@
+PASS a new game: chapter 1, out of the house on Citadel {"room":"citadel","pos":[-43.98,2.34,77.2],"chapter":"well"}
+PASS the grate is there, shut: no way down yet {"doors":0,"hatch":{"x":-45.4,"z":56.6},"open":false}
+PASS the grate looked at: the knocking and Arthur's chalk; lifted (INPUT) {"r":{"r":"used","target":{"kind":"swhatch","id":"p_sw_lift","label":"p_sw_lift"},"state":"play","lines":4},"s":["The magic ball, the holomap... and a lot of dust.","Hello again, old friend.","Something knocks down there. Clank... clank. Like a pipe with hiccups. And chalk on the rim: an arrow, \"A + L\". That's Arthur's writing.","(The old sewers. I haven't been down there since FunFrock's days.)"]}
+PASS lifted: the lift's deck lies flush with the lane; standing on it, the prompt is "Go down" (no door to walk into) {"r":{"t":{"kind":"swdown","id":"p_sw_down","label":"p_sw_down"},"prompt":"W Go down"},"L":{"open":true,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0.09,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS E on the deck: he pulls the lever, the ride begins, the winch clanks (INPUT) {"steps":65,"state":"cutscene","snd":["liftWinch"]}
+PASS mid-ride: the deck down the shaft with him planted on it, in its middle; the camera follows {"open":true,"deck":0.61,"ride":"down","state":"cutscene","room":"citadel","cut":true,"cam":true,"off":0,"dy":-0.6,"onDeck":true,"ground":-0.6,"sil":false}
+PASS down the shaft: in the flooded hall, standing on the island by the well-house, where he always arrived {"r":{"t":1.6},"w":{"room":"sewer","pos":[5797.1,0.45,1.75],"chapter":"well"},"hall0":{"built":"active","onFloor":true,"y":0.45,"atSpawn":0,"local":[-2.9,1.8]}}
+PASS and the ride is over: play, the camera its own, the deck back at the top above {"open":true,"deck":0,"ride":null,"state":"play","room":"sewer","cut":false,"cam":false,"off":5842.76,"dy":-1.83,"onDeck":false,"ground":0,"sil":true}
+PASS the knocking: the valve thumps every few seconds 2
+PASS the gate at the back is shut: walking at it gets nowhere (INPUT) {"r":"timeout","room":"sewer","z":0.5,"x":-0.11}
+PASS the project's valve on the old winch: eased, the knocking stops (INPUT) {"r":{"r":"used","target":{"kind":"swvalve","id":"p_sw_ease","label":"p_sw_ease"},"state":"play","lines":4},"s":["The project's new valve. They bolted it straight onto the old gate winch, and its brace runs through the drum. No wonder it knocks.","Eased shut. Quiet. And the winch turns again."]}
+PASS quiet now, and the gate is up {"knocks":0,"open":true}
+PASS across the hall and through the gate: the treasure room (INPUT) {"r":{"r":"entered","t":13.1},"w":{"room":"sewervault","pos":[5877.8,0,1.08],"chapter":"well"}}
+PASS the star chest: Arthur's map (the found-object ceremony) (INPUT) {"r":{"u":{"r":"used","target":{"kind":"swchest","id":"p_open","label":"p_open"},"state":"play","lines":4},"found":["sw_map"]},"s":["A rolled-up map, a stub of chalk... and under them, a few old kashes nobody came back for.","The map has a big X on this room. And a boat drawn in the corner."],"items":["sw_map"]}
+PASS and a clover, picked up {"n":1,"owed":0,"clovers":3,"cl0":2}
+PASS the barrel gives kashes (a hop by it, as any container) {"n":{"r":"rummaged","id":"sw_vbarrel","taken":0,"hp":10},"coins":3}
+PASS out of the treasure room: back in the hall at the gate (INPUT) {"r":{"r":"entered"},"w":{"room":"sewer","pos":[5810.5,0,-9.63],"chapter":"well"}}
+PASS up the well-house: back on Citadel standing on the deck in the grate as it rises the last stretch (INPUT) {"r":{"g":"transition","k":21},"L":{"open":true,"deck":0.88,"ride":"up","state":"cutscene","room":"citadel","cut":true,"cam":false,"off":0,"dy":-0.87,"onDeck":true,"ground":-0.87,"sil":false}}
+PASS at the top: play again, standing on the lane, the grate still lifted, the deck flush {"r":{"state":"play","lines":0},"L":{"open":true,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS and free to walk off it (INPUT) {"g":"arrived","room":"citadel","d":1.3,"state":"play"}
+PASS home: Arthur asked about the map ("Lulu held the torch"); the map goes back to him (INPUT) {"r":{"r":"talked","to":"arthur","state":"play","lines":12},"s":["I found your map. Under the street.","You went down the drain? Does Mum know?","Does she know you did?","...We went before the new pipe. Lulu held the torch. Then the gate stuck and we couldn't get back in.","It's open again. Next time, take me. I could use someone who knows the way.","Deal. You hold the torch."]}
+PASS Save → Continue: the story kept (the grate shut, as a loaded game finds it) {"r":{"f":{"sw_hatch":true,"sw_valve":true,"sw_chest":true,"sw_arthur":true},"open":false,"items":[]},"before":{"sw_hatch":true,"sw_valve":true,"sw_chest":true,"sw_arthur":true}}
+PASS lifted again without a word, ridden down; below, the gate still up (INPUT) {"r":{"room":"sewer","gate":true},"s":[],"deck2":{"t":{"kind":"swdown","id":"p_sw_down","label":"p_sw_down"},"prompt":"W Go down"},"press2":{"steps":67,"state":"cutscene","snd":["liftWinch"]}}
+PASS back up the well-house onto the deck (INPUT) {"open":true,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}
+PASS a load in the middle of the ride: nothing of it stays (play, on the lane, the camera its own, the grate shut) {"mid":{"open":true,"deck":0.45,"ride":"down","state":"cutscene","room":"citadel","cut":true,"cam":true,"off":0,"dy":-0.44,"onDeck":true,"ground":-0.44,"sil":false},"L":{"open":false,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS a load during the ride's fade: back on the lane at the save, playing (the scene change it began does nothing) {"fade":{"trans":true,"state":"cutscene"},"L":{"open":false,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS and the lift still takes him down (no softlock) (INPUT) {"room":"sewer","state":"play"}
+PASS death on the deck → Retry: playing on the lane, the grate shut, no ride {"died":"gameover","L":{"open":false,"deck":0,"ride":null,"state":"play","room":"citadel","cut":false,"cam":false,"off":0,"dy":0,"onDeck":true,"ground":0,"sil":true}}
+PASS and down again after the Retry (INPUT) {"room":"sewer","state":"play"}
+PASS an old save (no sw_ flags): it loads, the grate shut, the chapter as it was {"room":"citadel","open":false,"doors":false,"chapter":"well","state":"play","prompt":"swhatch"}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 30 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
