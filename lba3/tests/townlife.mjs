@@ -285,9 +285,11 @@ check('a resident he passes close to turns its head to him; in Discreet mode nob
 const hear = async (flags) => ev((flags) => { const G = game, B = G.world.busy, W = G.walkers; Object.assign(G.flags, flags);
   const m = W.res.find((r) => r.def.id === 'maro'), t = W.res.find((r) => r.def.id === 'tilde');
   G.exitRoom({ x: -51.5, z: 41.5, a: Math.PI }, true);
-  let k = 0; for (; k < 900 && !(m.st === 'chat' && t.st === 'chat'); k++) G.step(0.5);
-  B.hide(); const keys = []; for (let i = 0; i < 60 && m.st === 'chat'; i++) { G.step(0.25); if (B.bub && B.bub.prio === 1 && keys[keys.length - 1] !== B.bub.key + '@' + B.bub.n.def.id) keys.push(B.bub.key + '@' + B.bub.n.def.id); }
-  return { waited: k / 2, keys, text: B.el?.textContent }; }, flags);
+  // (he stands by their meeting place and listens through their talks — the one going on, if any, and the next — until he
+  //  has heard three lines; a bubble left over from the town's other state is cleared first)
+  B.hide(); B.chat.speaker = null; const keys = []; let i = 0;
+  for (; i < 2400 && keys.length < 3; i++) { G.step(0.25); if (B.bub && B.bub.prio === 1 && keys[keys.length - 1] !== B.bub.key + '@' + B.bub.n.def.id) keys.push(B.bub.key + '@' + B.bub.n.def.id); }
+  return { waited: i / 4, keys, text: B.el?.textContent, chat: [m.st, t.st] }; }, flags);
 const hHot = await hear({ c1_water: true, c1_veskGone: false });
 const hGone = await hear({ c1_water: true, c1_veskGone: true });
 const hDry = await hear({ c1_water: false, c1_veskGone: false });
