@@ -73,7 +73,7 @@ everything after it, so build it to the final standard: handcrafted, readable, a
 - **The ball target:** `craneLatch`, with `{x, y, z, r}`.
 - **Methods** (pure setters; `instant` for loading):
   - `counterweight.set(pos /* 0 high, 1 middle, 2 low */, instant)` and `counterweight.pos`;
-  - `crane.release(instant)` and `crane.released`;
+  - `crane.release(instant)`, `crane.reset(instant)` (the load swings back: the player can try again) and `crane.released`;
   - `lift.level` (read-only, worked out from the two above);
   - `walkway.blocked` (read-only);
   - `boat.sailOut(instant)`;

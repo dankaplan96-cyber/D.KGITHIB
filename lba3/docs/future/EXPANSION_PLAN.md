@@ -868,3 +868,22 @@ standing order, the band rule) are listed in each card and must survive text cle
   a small, labelled change in the next ch. 1–2 build.
 - **Laptop budget for four Ballastra regions and two underground sets**: lazy groups, measured per W-order.
 - **Water-puzzle saves**: everything flag-driven with instant setters; reload tests at every state family.
+
+
+---
+
+## Coordinator review (1.11.2026, night)
+
+- **Accepted as the working plan.** Coding starts with batch 0, the gate fixes (B-1, T-1; GATE-FIX is running), and
+  waits on W-1.
+- **W-1:** `crane.reset(instant)` is added to its handles. `src/game/expworld/` is the builder's for W-8
+  (LOCAL_EXPANSION_PROMPT.md §4).
+- **Defaults until the user says otherwise:**
+  - Q2: Zoé stays on Twinsun and leads there; Tessa is the partner on Ballastra.
+  - Q3: Oren stays on Ballastra, tolerated but not forgiven.
+- **Q1 (the shaft from Zeelich into Twinsun's shell):** it touches the user's rule that the planets are separate.
+  - It goes to the user, phrased without spoilers.
+  - Until then: no change to chapter 3, and the expansion's underground is reached from Citadel.
+- **Night words in the text** ("at night", "evening"): to fix in the base game (a text pass), keeping the dial riddle's
+  answer.
+- **STORY_BIBLE.md** (chapters 9–10 "to build", five pylons, Dalan/Dallan) is being updated by GATE-FIX.

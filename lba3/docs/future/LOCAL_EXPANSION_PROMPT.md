@@ -118,7 +118,8 @@ label), use the placeholder text the spec gives, or ask in the spec file.
 ## 4. File ownership (so the cloud and you never collide)
 
 - **Yours:**
-  - `src/game/ballastra/*.js` and `src/game/underworld/*.js` (places, props, materials, moving parts, handles);
+  - `src/game/ballastra/*.js`, `src/game/underworld/*.js` and `src/game/expworld/*.js` (the bridge's places in the
+    existing regions, W-8) (places, props, materials, moving parts, handles);
   - new character models (`assets/poly/<name>.json` and their `tools/blender/*.py`) and their entries in
     `characters.js`;
   - `docs/future/world/**`;
