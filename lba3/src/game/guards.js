@@ -52,6 +52,9 @@ export class Guard extends Actor {
     const hand = this.rig.j?.armR?.hand;
     // (the hand bone's axis runs down the arm: the rifle lies along it, pointing down at rest and forward when aimed)
     if (hand) { this.rifle.scale.setScalar(1 / (this.rig.root.scale.x || 1)); this.rifle.rotation.x = Math.PI / 2; hand.add(this.rifle); }
+    // (I-14: the FunFrock trooper's long arms hang the hand 0.47 m off the ground, and a rifle gripped at its stock
+    // stood 0.2 m into the floor: it grips it nearer the middle, the stock up its sleeve, the muzzle clear)
+    if (hand && fat) this.rifle.position.y = 0.26 / (this.rig.root.scale.x || 1);
     // the tell: a thin violet line toward Twinsen that brightens while the rifle comes up
     this.aimLine = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1, 4, 1, true).rotateX(Math.PI / 2).translate(0, 0, 0.5),
       new THREE.MeshBasicMaterial({ color: '#d070ff', transparent: true, opacity: 0, depthWrite: false }));
