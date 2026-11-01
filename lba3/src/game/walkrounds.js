@@ -78,7 +78,9 @@ export function citadelRoster(game) {
   const ok = (a) => a.filter(Boolean);
   // TOWN-LIFE-3: the children's games (townplay.js) and Maro's doorstep
   const TAG = PLAY.tag, HOP = PLAY.hop, GULL = PLAY.gulls;
-  const MARO_STEP = (() => { const d = doorAt(W, -46.1, 27.2, W.houses, 1.95); return d && { x: d.x, z: d.z, a: d.a }; })();
+  // (Maro sweeps along his house's front toward his door, beside the step: 1.9 m west of the door, 2.8 m off the lane's
+  //  line, so nobody passing has to swerve round him into the doorway)
+  const MARO_STEP = { x: -48.0, z: 27.6, a: A(-48.0, 27.6, -46.1, 27.2) };
   const hopStart = { x: HOP.x - Math.sin(HOP.a) * 0.22, z: HOP.z - Math.cos(HOP.a) * 0.22 };
   const WELL = { x: -42, z: -4 };
   // the square's tulip bed (island.js buildOriginalProps, citadel-layout.js tulips[1]): 3.3 × 1.1 m inside its curb, the
@@ -113,8 +115,8 @@ export function citadelRoster(game) {
       home('maro_home', -46.1, 27.2, [10, 16], { stage: [0, 1], carry: null }),
       look('maro_meet', MEET[0][0], MEET[0][1], MEET[1][0], MEET[1][1], [26, 36], { pair: 'plaza', mate: 'tilde', stage: [0, 1] }),
       bench('maro_bench', -53.3, 34.4, [16, 24], { stage: [0, 1] }),
-      // TOWN-LIFE-3: his doorstep swept before he goes in (a step back from the door, facing it)
-      MARO_STEP && D('maro_sweep', MARO_STEP.x, MARO_STEP.z, { a: MARO_STEP.a, dur: [10, 15], play: 'sweep', stage: [0, 1] }),
+      // TOWN-LIFE-3: his doorstep swept before he goes in
+      D('maro_sweep', MARO_STEP.x, MARO_STEP.z, { a: MARO_STEP.a, dur: [10, 15], play: 'sweep', stage: [0, 1] }),
       // TOWN-LIFE-3, the evacuation (chapter 8): in for a bundle, out to the benches to talk it over with Tilde, and back
       home('maro_pack', -46.1, 27.2, [6, 10], { stage: 2, carry: 'sack' }),
       look('maro_evac', MEET[0][0], MEET[0][1], MEET[1][0], MEET[1][1], [14, 20], { pair: 'evac', mate: 'tilde', stage: 2 }),
