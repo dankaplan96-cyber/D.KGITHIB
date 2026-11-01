@@ -1,0 +1,15 @@
+=== zoe-resume start 2026-11-01T19:14:07Z
+PASS setup: Zoé found the plan and the game autosaved it 
+PASS Continue: Twinsen outside at the gate, the objective back to "meet Zoé" 
+PASS Continue: back as Twinsen with his own ball (the save was taken after Zoé's swap) 
+PASS Continue: the lockers can be searched again 
+PASS Continue: Zoé finds the plan again and gets out; the chapter goes on 
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 5 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional, 1 note
+  NOTE aborted (cancelled by the page or a navigation): http://localhost:8750/assets/music/facility_stealth.mp3
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== zoe-resume end rc=0 wall=347s 2026-11-01T19:19:54Z

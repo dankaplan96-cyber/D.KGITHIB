@@ -1,0 +1,41 @@
+=== 09-pass start 2026-11-01T17:27:12Z LOAD=/dev/shm/gate1/saves/08-steam.json ASSIST= SRC=/dev/shm/gate1/lba3/tests/playthrough/09-pass.mjs
+[0s +0s] continue (Hamalayi): {"chapter":"pass","room":"hamalayi"} | hamalayi [4304,2.82,86] hp 12 | Cross the gorge
+[5s +5s] fell the tree over the gorge (ball): {"bridge":true,"fail":null} | hamalayi [4295.35,3.02,33.95] hp 11 | Follow the trail up to the village
+[7s +2s] across to Lhar: {"r":"state:dialog","lhar":true,"fail":null} | hamalayi [4311.85,11.73,10.3] hp 11 | Talk to the people of Lhar
+[8s +0s] Yorna: {"r":"talked","to":"yorna","state":"play","lines":10,"yorna":true,"fail":null} | hamalayi [4295.14,11.94,6.43] hp 11 | Switch on the project's heating station
+[14s +6s] the heating station: {"r":"used","target":{"kind":"c6heat","id":"p_look","label":"p_look"},"state":"play","lines":2,"needFuse":true,"fail":null} | hamalayi [4320.79,12.33,-20.57] hp 11 | Switch on the project's heating station◆ Find a fuse
+[15s +1s] Pim: {"r":"talked","to":"pim","state":"play","lines":4,"kiteAsk":true} | hamalayi [4298.1,12.17,7.05] hp 11 | Switch on the project's heating station◆ Find a fuse◆ Free Pim's kite from the icefall
+[15s +1s] the kite (ball): {"kite":true,"fail":null} | hamalayi [4291.57,11.81,-17.03] hp 11 | Switch on the project's heating station◆ Find a fuse◆ Free Pim's kite from the icefall
+[16s +1s] Pim: the fuse: {"r":"talked","to":"pim","state":"play","lines":2,"fuse":true,"fail":null} | hamalayi [4296.41,12.03,6.43] hp 11 | Switch on the project's heating station◆ Find a fuse◆ Free Pim's kite from the icefall
+[22s +6s] the heat on: {"r":"used","target":{"kind":"c6heat","id":"p_heat","label":"p_heat"},"state":"play","lines":2,"heat":true,"fail":null} | hamalayi [4320.25,12.34,-20.15] hp 11 | Tell Yorna the winch is free
+[22s +1s] Yorna: the lift: {"r":"talked","to":"yorna","state":"play","lines":8,"ready":true,"fail":null} | hamalayi [4323.03,12.25,-19.28] hp 11 | Cut the platform's frozen mooring rope
+[57s +35s] the frozen rope (sword): {"sword":true,"weapon":"sword","rope":true,"fail":null} | hamalayi [4326.47,12.05,-19.95] hp 11 | Winch the first villagers up the cliff
+[58s +1s] winch: trip 1: {"trip1":true,"fail":null} | hamalayi [4326.4,12.04,-19.4] hp 11 | Drive off the ice mites
+[59s +1s] the ice mites: {"left":0,"dead":false,"hp":11,"t":7.1} | hamalayi [4323.03,12.16,-16.84] hp 11 | Winch the rest of the villagers up
+[59s +1s] winch: trip 2: {"trip2":true,"fail":null} | hamalayi [4326.41,12.04,-19.42] hp 11 | Ride the platform up
+[60s +0s] ride up: {"up":true,"y":22.1,"fail":null} | hamalayi [4324.39,22.08,-21.14] hp 11 | Go to the monastery
+[61s +1s] to the monastery → chapter 7: {"chapter":"observatory","fail":null} | hamalayi [4334,21.84,-38] hp 11 | Climb the ridge to the observatory
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[167.4] stuck at (4326.2, -19.9): replan
+[170.4] stuck at (4326.2, -19.8): replan
+[175.6] go → (4326.4, -20.0) plan ok=true pts=1 left=0.09
+[176.7] go → (4326.4, -20.0) plan ok=true pts=1 left=0.09
+[192.3] fight imite1 d=3.1 st=dead aim=it e@4325.7,12.0,-16.6 me@4326.4,12.0,-19.4 ball=idle hp 2→0 me 11 mp 9.344166666666668
+[194.4] fight imite2 d=2.6 st=dead aim=it e@4329.1,11.9,-20.3 me@4326.4,12.0,-19.4 ball=idle hp 2→0 me 11 mp 9.067500000000004
+[194.4] go → (4317.6, -14.6) plan ok=true pts=2 left=3.46
+[199.2] fight imite0 d=4.8 st=dead aim=it e@4319.4,12.3,-16.1 me@4323.0,12.2,-16.8 ball=idle hp 2→0 me 11 mp 9.344166666666668
+[199.2] go → (4326.4, -20.0) plan ok=true pts=2 left=0.4
+[202.4] go → (4326.4, -20.0) plan ok=true pts=2 left=0.06
+[216.1] go → (4324.0, -22.2) plan ok=true pts=4 left=0.02
+[224.9] go → (4334.0, -40.0) plan ok=true pts=5 left=0.95
+kept /dev/shm/gate1/saves/09-pass.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 09-pass end rc=0 wall=317s 2026-11-01T17:32:29Z
