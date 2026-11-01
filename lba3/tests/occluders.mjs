@@ -86,10 +86,21 @@ for (const id of ['bug', 'bug2', 'stone', 'south', 'pink', 'shop', 'twinsen']) {
 }
 
 // (b2) walking round behind a house in a still shot (from in front of it to 2.2 m behind it), checked every 0.3 s
-await ev(`window.__drive = (tx, tz, tol = 0.6) => { const p = P.plan(tx, tz, { tol: 0.4 }); window.__D = { pts: p.pts, wi: 1, tx, tz, tol }; return p.ok; };
+// (I-16: the residents are solid since SOLID-NPC and sit, stand and walk where the clock puts them: the walk plans
+// round the people standing there, and plans again when one of them holds it up — Brix on the lane bench by the
+// south house nudged him off the line onto the house's corner, where he pushed on for the rest of the walk and the
+// rise below was never measured)
+// (a spot that cannot be reached — behind the bug house the planned spot lies against the lane's edge — is
+// replaced by the nearest one the plan reaches, so he stops there instead of pushing on)
+await ev(`window.__drive = (tx, tz, tol = 0.6) => { const p = P.plan(tx, tz, { tol: 0.4, people: true }), e = p.pts[p.pts.length - 1];
+  if (!p.ok && e) { tx = e.x; tz = e.z; } window.__D = { pts: p.pts, wi: 1, tx, tz, tol, held: 0, last: null, replans: 0, ok: p.ok }; return p.ok; };
 window.__driveStep = (dt = 1 / 15) => { const D = window.__D, h = game.hero, k = game.input.keys, norm = (a) => Math.atan2(Math.sin(a), Math.cos(a));
   k.delete('ArrowLeft'); k.delete('ArrowRight'); k.delete('ArrowUp');
   if (D && Math.hypot(h.pos.x - D.tx, h.pos.z - D.tz) > D.tol) {
+    // held up (under 0.1 m in 0.6 s): a new plan from here, cell by cell (a smoothed line cuts back through the pinch)
+    // round whoever is there now — pinned between a person and a corner, it backs out and goes round
+    D.last ??= { x: h.pos.x, z: h.pos.z }; D.held += dt;
+    if (D.held >= 0.6) { if (Math.hypot(h.pos.x - D.last.x, h.pos.z - D.last.z) < 0.1 && D.replans < 6) { const p = P.plan(D.tx, D.tz, { tol: 0.4, people: true, pad: 0.2, raw: true }); if (p.ok) { D.pts = p.pts; D.wi = 1; } D.replans++; (D.log ??= []).push({ at: [h.pos.x, h.pos.z].map((v) => +v.toFixed(2)), ok: p.ok, pts: p.pts.slice(0, 4).map((q) => [+q.x.toFixed(1), +q.z.toFixed(1)]), near: (game.npcs || []).filter((n) => n.present && Math.hypot(n.pos.x - h.pos.x, n.pos.z - h.pos.z) < 2.5).map((n) => (n.id || '?') + '@' + n.pos.x.toFixed(1) + ',' + n.pos.z.toFixed(1)) }); } D.held = 0; D.last = { x: h.pos.x, z: h.pos.z }; }
     while (D.wi < D.pts.length - 1 && Math.hypot(D.pts[D.wi].x - h.pos.x, D.pts[D.wi].z - h.pos.z) < 0.45) D.wi++;
     const w = D.pts[Math.min(D.wi, D.pts.length - 1)]; const diff = norm(Math.atan2(w.x - h.pos.x, w.z - h.pos.z) - h.angle);
     if (diff > 0.1) k.add('ArrowLeft'); else if (diff < -0.1) k.add('ArrowRight');
@@ -102,14 +113,15 @@ for (const id of ['bug', 'stone', 'south']) {
     window.__place({ x: h.x + Math.sin(a) * (h.d / 2 + 6), z: h.z + Math.cos(a) * (h.d / 2 + 6), a: a + Math.PI });
     window.__drive(h.x - Math.sin(a) * (h.d / 2 + 2.2), h.z - Math.cos(a) * (h.d / 2 + 2.2), 0.9);
     const bad = [], frames = []; let direct = 0, silhouette = 0, n = 0;
-    for (let i = 0; i < 40; i++) { window.__driveStep(0.1); window.__driveStep(0.1); window.__driveStep(0.1);
+    for (let i = 0; i < 60; i++) { window.__driveStep(0.1); window.__driveStep(0.1); window.__driveStep(0.1);
       const pts = window.__points(); n++; const st = window.__houseState(h);
       for (const p of pts) { if (!p.ok) bad.push({ i, ...p, pos: [game.hero.pos.x, game.hero.pos.z].map((v) => +v.toFixed(1)) }); else if (p.inView) direct++; else silhouette++; }
       if (st.hidden || st.faded) bad.push({ i, house: st });
       if (pts.some((p) => !p.inView && p.sil)) frames.push(i);
       if (Math.hypot(game.hero.pos.x - window.__D.tx, game.hero.pos.z - window.__D.tz) < 0.9) break; }
     P.release();
-    return { n, direct, silhouette, bad: bad.slice(0, 6), silFrames: frames.slice(0, 8), end: [game.hero.pos.x, game.hero.pos.z].map((v) => +v.toFixed(1)) }; }, id);
+    return { n, direct, silhouette, bad: bad.slice(0, 6), silFrames: frames.slice(0, 8), end: [game.hero.pos.x, game.hero.pos.z].map((v) => +v.toFixed(1)), reached: Math.hypot(game.hero.pos.x - window.__D.tx, game.hero.pos.z - window.__D.tz) < 0.9, replans: window.__D.replans, log: window.__D.log }; }, id);
+  console.log('MEASURE walking round behind the ' + id + ' house', JSON.stringify({ n: r.n, end: r.end, reached: r.reached, replans: r.replans, bad: r.bad.length, log: r.log }));
   checkVisual(`(b) walking round behind the ${id} house in a still shot: every 0.3 s his head, chest and feet in view or under the silhouette (${r.direct} in view, ${r.silhouette} by silhouette)`, r.bad.length === 0 && r.n > 3, r);
   if (!silShot && r.silFrames.length) {
     // replay to the first frame he was drawn by the silhouette, for the evidence
@@ -130,18 +142,20 @@ const rise = await ev(() => {
   window.__place({ x: h.x + Math.sin(a) * (h.d / 2 + 6), z: h.z + Math.cos(a) * (h.d / 2 + 6), a: a + Math.PI });
   window.__drive(h.x - Math.sin(a) * (h.d / 2 + 2.2), h.z - Math.cos(a) * (h.d / 2 + 2.2), 0.9);
   const Q = [], Y = [], dt = 1 / 60; let pMin = 99, pMax = 0;
+  let reached = false;
   for (let i = 0; i < 60 * 14; i++) { window.__driveStep(dt); const c = G.camera.position; Q.push([c.x, c.y, c.z]); Y.push(C.yaw); pMin = Math.min(pMin, C.pitch); pMax = Math.max(pMax, C.pitch);
-    if (Math.hypot(G.hero.pos.x - window.__D.tx, G.hero.pos.z - window.__D.tz) < 0.9 && i > 60) break; }
+    if (Math.hypot(G.hero.pos.x - window.__D.tx, G.hero.pos.z - window.__D.tz) < 0.9 && i > 60) { reached = true; break; } }
+  const end = [G.hero.pos.x, G.hero.pos.z].map((v) => +v.toFixed(1)), replans = window.__D.replans;
   for (let i = 0; i < 90; i++) { window.__driveStep(dt); const c = G.camera.position; Q.push([c.x, c.y, c.z]); Y.push(C.yaw); pMax = Math.max(pMax, C.pitch); }
   window.P.release();
   const acc = [], yr = [];
   for (let i = 2; i < Q.length; i++) acc.push(Math.hypot(...[0, 1, 2].map((k) => (Q[i][k] - 2 * Q[i - 1][k] + Q[i - 2][k]) / (dt * dt))));
   for (let i = 1; i < Y.length; i++) yr.push(Math.abs(Math.atan2(Math.sin(Y[i] - Y[i - 1]), Math.cos(Y[i] - Y[i - 1]))) / dt * 180 / Math.PI);
   const s = [...acc].sort((x, y) => x - y);
-  return { frames: Q.length, mode: G.settings.visual, accMax: +s[s.length - 1].toFixed(1), accP95: +s[Math.floor(0.95 * (s.length - 1))].toFixed(1), yawRateMax: +Math.max(...yr).toFixed(1), pitchDeg: [+(pMin * 57.3).toFixed(1), +(pMax * 57.3).toFixed(1)] };
+  return { frames: Q.length, reached, end, replans, mode: G.settings.visual, accMax: +s[s.length - 1].toFixed(1), accP95: +s[Math.floor(0.95 * (s.length - 1))].toFixed(1), yawRateMax: +Math.max(...yr).toFixed(1), pitchDeg: [+(pMin * 57.3).toFixed(1), +(pMax * 57.3).toFixed(1)] };
 });
 console.log('MEASURE the rise over the south house (1/60 s)', JSON.stringify(rise));
-check('(b) the rise over a house is eased like the swing behind a wall: camera acceleration ≤ 40 m/s², the view turning ≤ 61°/s', rise.accMax <= 40 && rise.yawRateMax <= 61 && rise.pitchDeg[1] > rise.pitchDeg[0] + 5, rise);
+check('(b) the rise over a house is eased like the swing behind a wall: he gets behind it; camera acceleration ≤ 40 m/s², the view turning ≤ 61°/s', rise.reached && rise.accMax <= 40 && rise.yawRateMax <= 61 && rise.pitchDeg[1] > rise.pitchDeg[0] + 5, rise);
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);

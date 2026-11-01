@@ -87,19 +87,19 @@
   };
   // the people he can't walk through (SOLID-NPC: Hero.contacts, his radius + theirs), as circles to keep out of;
   // not the one he is walking to
-  const bodies = (tx, tz) => {
+  const bodies = (tx, tz, pad = 0) => {
     const h = hero(), out = [];
     for (const n of G.npcs || []) {
       if (!n.present || n.controlled || n.away || !n.rig?.root.visible || Math.abs(n.pos.y - h.pos.y) > 1.2) continue;
       if (Math.hypot(n.pos.x - tx, n.pos.z - tz) < 0.3) continue;
-      out.push({ x: n.pos.x, z: n.pos.z, r: h.radius + (n.bodyR ?? n.radius) + 0.05 });
+      out.push({ x: n.pos.x, z: n.pos.z, r: h.radius + (n.bodyR ?? n.radius) + 0.05 + pad });
     }
     return out;
   };
-  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5, raw = false, people = false } = {}) => {
+  P.plan = (tx, tz, { cell = 0.4, maxNodes = 60000, tol = 0.5, raw = false, people = false, pad = 0 } = {}) => {
     const h = hero(), sx = h.pos.x, sz = h.pos.z;
     const avoid = triggers(tx, tz);   // door/exit triggers: kept out of, except to walk out of one he stands in
-    if (people) avoid.push(...bodies(tx, tz));   // (after he got stuck: round the people, I-19/I-21)
+    if (people) avoid.push(...bodies(tx, tz, pad));   // (after he got stuck: round the people, I-19/I-21; pad: a wider berth, I-16)
     const key = (ix, iz, y) => ix + ',' + iz + ',' + Math.round(y * 2);
     // binary heap of [f, key]
     const heap = [];
