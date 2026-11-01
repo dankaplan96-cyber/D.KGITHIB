@@ -881,7 +881,7 @@ should look about 80 % alike".
 
 - The tavern comes first: it is iconic in LBA2, and twelve years on it is where the harbour's people meet.
 
-### What it is (prototyped on the laptop: `requests/LBA-CITADEL-1.diff`, against da4a75f)
+### What it is (prototyped on the laptop: `requests/LBA-CITADEL-1.diff`, regenerated 1.11 evening against origin 9205125: tavern.js as a new file plus the regions.js and story/index.js hooks; `git apply --check` passes on a clean checkout)
 - **The room:** new `src/game/tavern.js`, `buildTavernRoom` (region `tavern` at x 6600). The original's layout, from
   the laptop's study render of scene 3 (numbers and descriptions only):
   - **Size:** a 10 × 15 m hall, 5.6 m high (the original: 21 × 32 cells, about 5.8 m).
@@ -922,3 +922,52 @@ should look about 80 % alike".
 ### Next of the same kind (one at a time, after the user's word on this one)
 Mr Bazoo's shop in `museum`, the ticket office in `baggage`, the pharmacy in Bug Street's south house, the neighbour's
 house — each at its original's layout, about 80 % alike.
+
+**Diff fixed (1.11 evening, the cloud's note: "incremental, tavern.js isn't in the repo and the regions.js hunk doesn't
+apply").**
+- `requests/LBA-CITADEL-1.diff` is now `git diff origin/ccr-adf00ea7-37ebl3`, made on a clean checkout of 9205125.
+  - tavern.js is a new file; the hooks are in regions.js (import, REF, AT, `add`) and story/index.js (import,
+    `doors()`, `exitTo()`).
+- **Checked:** `git apply --check` on a fresh checkout of 9205125 passes, and `node --check` passes on the three
+  files.
+- **The Test Lab `arttavern` on that checkout:** PASS twice running. One earlier run in four failed, and that run is a
+  real finding:
+  - Twinsen walked along the stair at floor level (y 0) through its steps and stopped at the landing's face.
+  - The steps are `stair: true` colliders, which the physics never blocks sideways (`physics.js`: "the height under
+    the feet decides"). So a long frame that misses the 0.3 m step-up leaves him inside them.
+  - It did not happen on my copy in three runs.
+  - If the cloud sees it in play, a solid low kerb along the stair's open side, or a check of the step-up against
+    dt, would hold him.
+
+---
+
+## LBA-CITADEL-2 · Mr Bazoo's shop inside the `museum` building · Approved (the user: "excellent, go on"; night mode, pictures sent)
+
+- **Where:** LBA2 scene 14's door is where our `museum` building stands, by the harbour path (in LBA2 the museum is
+  elsewhere, on our Water Office's spot).
+- **Code:** `requests/LBA-CITADEL-2.diff`. It goes **on top of LBA-CITADEL-1**: apply 1, then 2. Checked: `git apply
+  --check` of 1 then 2 on a fresh checkout of 9205125 passes.
+  - New `src/game/bazoo.js` (region `bazoo` at x 6700).
+  - Hooks after the tavern's: regions.js and story/index.js.
+- **The original's layout** (study render of scene 14: 17 × 12 cells, so 8.4 × 6 m, 3.4 m high; as the camera sees
+  it):
+  - **Walls and floor:** the long wall at the back, the short one on the left; pale grey stone blocks and grey tiles.
+  - **The counter:** a rounded pale-metal U in the middle, with the till and a tree of red baubles at one end and of
+    teal at the other.
+  - **Display tables on two short legs along the walls:**
+    - a terracotta rabbit and a teal figure;
+    - a teal vase, a red pot and a glass;
+    - a bowl of red fruit and a tall candle;
+    - a big green glass bottle, a clay pot and a red box;
+    - a teal bottle and a bowl.
+  - **The rest:** the great potted plant with red flowers by the back wall, two barrels and a crate at the front.
+- **Twelve years on (ours):** a table of Zeelich goods (glazed jars in the Esmers' colours, a little domed lamp), the
+  prices on a board by the door.
+- **For the story:** `R.npcSpots.bazoo` is behind the counter. The door works in every chapter, as an optional place.
+  No people or lines were added.
+- **Measured:**
+  - Test Lab `artbazoo` (or `artplaces`), on the clean checkout with both diffs: PASS. In by the `museum` door, round
+    the counter, past the goods along the back wall to the Zeelich table, and out by the shop's door to Citadel at
+    (-64.3, 41.1).
+  - Draw calls: 24 (23 main, 1 shadow) at Medium.
+- **Pictures:** `runs/bazoo-vs-lba2.jpg` (the original's study render | ours).
