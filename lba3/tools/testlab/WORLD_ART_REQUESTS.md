@@ -429,6 +429,10 @@ prototyped on the laptop, and the exact code is in `tools/testlab/requests/WA-11
   - The Hamalayi becomes greyer than LBA1's icy cyan (5.6 against 14.4). Give its ice and snow a pale cyan tint, or
     exclude it from the grade.
 - **Check:** before/after pictures were sent to the user. The laptop measures again with `artall` after the build.
+- **Follow-up applied (the cloud, 1.11.2026):** `renderer.setGrade(grade, tint)` sets an area's own grade and RGB tint in
+  the output pass (enterRoom/exitRoom). LBA1's rooms (asylum, bumaze, buhalls) grade 0.5; the Hamalayi grade 0.9 with a
+  pale cyan tint (0.95, 1.0, 1.05). Tests lba1rooms, chapter7, chapter1, menus, perfbudget PASS. For the laptop:
+  measure the chroma again with `artall` and propose numbers if still off.
 
 ---
 
