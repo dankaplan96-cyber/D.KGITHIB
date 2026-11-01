@@ -483,7 +483,7 @@ export function* buildDesertSteps(scene, physics) {
   const R = {
     ...R0, id: 'desert', outdoor: true, group, lights: [], exits: [], searches: [], ballTargets: [], updaters,
     music: 'desert',
-    env: { fog: '#f0d2a2', sun: '#fff0d4', hemiSky: '#ffe6bc', hemiGround: '#b4845a', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },
+    env: { fog: '#eadcc6', sun: '#fff6ea', hemiSky: '#f2ece2', hemiGround: '#a68a72', sunI: 2.9, hemiI: 1.25, fogRange: [80, 280] },   // (WORLD-ART-10: a less orange light; LBA2's sand is a pale pinkish beige, #d0aa83 from above)
     terrain, H: (x, z) => H(x - ox, z - oz),
   };
   R.env.fogColor = new THREE.Color(R.env.fog);

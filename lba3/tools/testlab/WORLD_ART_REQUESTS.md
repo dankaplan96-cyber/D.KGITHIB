@@ -277,7 +277,7 @@ the user).
 
 ---
 
-## WA-8 · Twinsen's house: terracotta tile floor and teal wallpaper, as LBA2's · Approved (the user's standing approval, 1.11.2026)
+## WA-8 · Twinsen's house: terracotta tile floor and teal wallpaper, as LBA2's · Applied (the cloud, 1.11.2026; in 0.47.0)
 
 Prototyped on the laptop on 0aed5b2 (0.46.0). Pictures (before / after / the original's bricks) were sent to the user.
 The whole-game comparison behind it is `tools/testlab/examples/WORLD_LOOK_COMPARE.md`.
@@ -301,7 +301,7 @@ The whole-game comparison behind it is `tools/testlab/examples/WORLD_LOOK_COMPAR
 
 ---
 
-## WA-9 · Grass: a softer sage green · Approved (the user's standing approval, 1.11.2026)
+## WA-9 · Grass: a softer sage green · Applied (the cloud, 1.11.2026; in 0.47.0)
 
 - **Why:** seen from above, the original Citadel's grass is #74885c, a soft sage. Ours is #497219, a deep saturated
   green, which is the largest single colour gap on the island.
@@ -320,7 +320,7 @@ The whole-game comparison behind it is `tools/testlab/examples/WORLD_LOOK_COMPAR
 
 ---
 
-## WA-10 · Desert Island: a less orange light · Approved (the user's standing approval, 1.11.2026)
+## WA-10 · Desert Island: a less orange light · Applied (the cloud, 1.11.2026; in 0.47.0)
 
 - **Why:** from above, LBA2's sand is #d0aa83 (pale, pinkish beige). Ours reads #e0a646, with chroma 51 against 21.5.
   The sand's own colours in desert.js are pale already; the orange comes from the light.

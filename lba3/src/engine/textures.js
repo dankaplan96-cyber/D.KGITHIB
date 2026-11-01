@@ -111,6 +111,11 @@ export function makeTextures() {
         }
       }
     }
+    // (WORLD-ART-9: LBA2's lawns are a soft sage green (the original Citadel's grass from above, #74885c), ours read a
+    //  deep saturated green (#497219 from above): the drawn tile taken 35 % toward its own grey, the lightness kept)
+    { const d = x.getImageData(0, 0, S, S), p = d.data;
+      for (let i = 0; i < p.length; i += 4) { const l = p[i] * 0.299 + p[i + 1] * 0.587 + p[i + 2] * 0.114; for (let k = 0; k < 3; k++) p[i + k] += (l - p[i + k]) * 0.35; }
+      x.putImageData(d, 0, 0); }
     T.grass = toTex(c);
   }
   // sand

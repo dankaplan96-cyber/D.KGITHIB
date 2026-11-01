@@ -329,13 +329,14 @@ function buildHouse(scene, physics) {
   R.view = 10.8;
   R.follow = 0.8; // (a big house: the camera keeps Twinsen in the middle)
   const doorX = 1.2; // the front door, in the hall's south wall
-  const rail = MAT.wood('dark'), capM = MAT.wood('dark'), bodyM = MAT.plaster('#f0e4c8');
+  // (WORLD-ART-8: LBA2's house (scene 0) has teal patterned wallpaper over the wainscot and a terracotta tile floor)
+  const rail = MAT.wood('dark'), capM = MAT.wood('dark'), bodyM = MAT.paper('#4f6b6b', '#9cc4bc', 'diamond');
   const hcx = (HX0 + HX1) / 2, hcz = (HZ0 + HZ1) / 2;
   B.shell({
     W: HX1 - HX0, D: HZ1 - HZ0, H, t: 0.4, ox: hcx, oz: hcz,
     hole: [HOUSE_STAIRS.sx0, HOUSE_STAIRS.sz0, HOUSE_STAIRS.sx1, HOUSE_STAIRS.sz1],
     rimGaps: [{ x: 1.2, w: 1.3 }], // (the front door: doorX below)
-    floor: MAT.planks('honey'), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
+    floor: MAT.tiles('#ac866a', '#9a6e52', '#5e4232', false, 4), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
     body: bodyM, low: MAT.wainscot('honey'), dado: 1.05, rail, cap: capM, beam: MAT.wood('dark'),
     posts: MAT.wood('dark'), postsAt: (L) => [0.48, L - 0.48, L / 2],
     back: [
