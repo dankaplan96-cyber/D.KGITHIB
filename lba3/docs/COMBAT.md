@@ -313,13 +313,20 @@ Measured first on 0d045bf, each body alone at its own walking speeds (residents 
 - **Where**: only within 30 m of the camera and in view (`PLANT_VIEW`; drawcull.js FarCull marks the view each drawn frame), beyond
   that the unplanted walk over 0.1 s. Each planted character is put where it stands this frame before its rig's update
   (`Actor.placeRig`), as he is.
-- **Cost** (tests/npc-feet.mjs, chapter 1's Citadel, everybody simulated, ~24 rigs posed a frame, 6-8 of them near enough to plant;
-  SwiftShader's CPU, browser timer 0.1 ms): Rig.update over the whole crowd 0.5-0.9 ms median planted against 0.3-0.6 ms
-  unplanted (+0.2-0.4 ms); all 18 standing ones planted at once (no gate) 0.7 ms. No draw, no material, no program added.
+- **Cost** (tests/npc-feet.mjs on 5885f20, chapter 1's Citadel, everybody simulated, 23 rigs posed a frame; SwiftShader's CPU, browser
+  timer 0.1 ms; medians): Rig.update over the whole crowd but the hero 0.7 ms with the 7-8 people near and in view planted, 0.3-0.5 ms
+  unplanted (drawn frames); 0.4-0.5 against 0.2 ms with 12 planted (undrawn frames, the distance gate only); all 20 standing or walking
+  ones planted at once 0.7 against 0.3 ms: about 0.02-0.04 ms a planted person. tests/walkers.mjs's own figure for the residents'
+  whole update, run back to back on the same machine: five minutes of all ten in full 0.475 ms a frame on 0d045bf, 0.678 on 5885f20;
+  a minute at the quay (most far off) 0.052 / 0.070 ms. No draw, no material, no program added (perfbudget, drawcalls PASS).
 - Open: the walkers' `gait` (their walk speed for the animation) is smoothed, so the first steps of a start lag the body a little
   (the stance foot reaches its leg's length a moment, ≤ 1.1); a resident giving way sideways still plays its forward walk (VP-11);
   story scenes that move a person themselves (a scene's own `rig.update`) solve its feet a frame late (steady while it walks, a
-  frame's move on a start or a stop); not looked at in later chapters' places.
+  frame's move on a start or a stop); not looked at in later chapters' places. As in Twinsen's walk, the heel strikes only once the leg
+  can reach the ground (LBA2's long stride on our legs), so for 30-40 % of a walk's frames neither foot is held (each 1-6 cm up, moving
+  with the step; riding the pelvis 1-3 cm lower shortened that by a few points but drew the held foot along the ground at 0.1-0.5 m/s,
+  so it was left as his). The opening scene places its people's feet itself: their plantLite is off for it (opening.js `actor`).
+  tests/townlife.mjs's FIX-PUMP-N check (between Bram and the pump) fails on 0d045bf as well, with the same numbers.
 
 ## Enemies are solid (SOLID-ENEMY)
 The user (29.10): "what LBA2 did". From LBA2 itself (the engine source released by its rights holder, and the user's
