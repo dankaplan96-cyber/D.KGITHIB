@@ -487,9 +487,12 @@ group `sewer` (rooms `sewer` and `sewervault`, built the first time they are nee
   barrel, blue rocks and spiked rings, with Arthur's chalk boat and his toy boat. The chest holds Arthur's map (the
   found-object ceremony) and a clover. The barrels in both rooms give kashes, as other containers do. Back home,
   Arthur explains it in a short talk: he and Lulu found the room before the pipe jammed the gate.
-- **Palette (measured on the play camera, SwiftShader):** water about (112, 161, 185), stone (59, 57, 51); the whole
-  frame averages (66, 77, 78), against (70, 78, 76) for a study render of scene 17. These numbers are from before
-  the last small water and stone tune.
+- **Palette (measured on the play camera, `03-hall-play.jpg`, SwiftShader):** water about (115, 162, 182), stone
+  (61, 59, 53); the whole frame averages (69, 79, 79), against (70, 78, 76) for a study render of scene 17 (not in
+  the repository).
+- **Cost (one frame at High, SwiftShader counts):** the hall 34 draw calls (30 main, 4 shadow) and about 236k
+  triangles; the treasure room 35 calls and about 57k triangles. Twinsen's house on the benchmark is 68 calls and
+  417k triangles at High. The grate adds about 2 calls in the lane.
 - **Check:** `tests/sewers.mjs` (walk in from the town, the gate, the treasure room, back out, Arthur, saves).
   `artall` shoots both rooms (they are in the regions list), and `artrooms` lists them too. Pictures:
   `docs/lba3-production/review/sewers/`.
