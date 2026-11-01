@@ -572,7 +572,7 @@ The user asked whether Twinsen's new nose is like LBA2's. Measured on the models
 
 ---
 
-## WA-15 · Two Zeelich buildings on Citadel's harbour front · ON HOLD: do not apply (the user, 1.11.2026)
+## WA-15 · Two Zeelich buildings on Citadel's harbour front · REPLACED by WA-15b: do not apply (the user, 1.11.2026)
 
 **On hold.** The user, on the pictures: "What do these buildings give? They feel disconnected." The laptop agrees:
 - They are set dressing only: no purpose, no door, no one inside, nothing leads to them.
@@ -660,3 +660,84 @@ on the harbour front only, not in the old core, as a sign of trade and the twelv
 - **Check after the build:**
   - `node engine/cli.mjs artharbour` (the probe and the same views; `LBA3_HARBOUR_VIEWS` for more).
   - The game's own `tests/townlife.mjs`, `tests/drawcalls.mjs street` and `tests/worldfit.mjs`.
+
+---
+
+## WA-15b · One Esmer trading house on the harbour front, with a purpose · Approved: the user chose it (1.11.2026)
+
+The user, on WA-15's pictures: "What do these buildings give? They feel disconnected". Then, of the two choices
+(drop it, or one building with a purpose tied to the harbour), the user chose the second: "2". The two-building
+version (WA-15) is replaced. No house on piles.
+
+**What it is.** The Esmer trading house: where the Zeelich goods landed on the quay go, after Odile's customs booth
+("CUSTOMS Twinsun - Zeelich"). In twelve years trade with Zeelich has grown, and the Esmers keep a house at the harbour.
+
+**Where.** It stands on the shore south of the harbour path, between the quay and the baggage claim: building centre
+(-83.5, 47.2), front toward the path, door at (-83.5, 44.8).
+- In LBA2 this is the open harbour square in front of the ticket office (scene 8), by its railings; the original has
+  nothing built there.
+- From the quay it stands at the end of the path, past the customs booth and the stall, and Tobb walks toward it
+  carrying his crate (`wa15b-from-the-quay.jpg`).
+
+### The art part (prototyped: `requests/WA-15b.diff` against a8e5d37)
+
+- **New `src/game/harbourzeelich.js`:**
+  - `ZH`, `zhClear` and `buildHarbourZeelich(scene, physics, H)`.
+  - The house is `esmerBuilding` with the islands' own materials (Otringal's plaster `#fbf0f0`, the turquoise dome
+    `domeTex('#2f8a9a', '#a8e8ee')`): 5.6 × 4.8 m, the dome to 6.4 m.
+  - A store's wide arched door under a teal-and-cream awning.
+  - At the door:
+    - a stack of four teal Zeelich cargo crates and two plain crates (the quay's goods);
+    - four glazed jars;
+    - a brass lamp;
+    - a Zeelich flag (teal, gold, cream) on a 5.2 m pole.
+  - The goods' colliders are added the way the islands add them.
+- **`src/game/world.js`:**
+  - The import.
+  - The tree/bush filter before `yield 'tree spots'` and the grass/flower filter after `clearLife`. Both run after
+    the scatter, so the random draws stay put (as in the WA-12 fix).
+  - The build call after `buildIsland`, tagged `harbourzeelich`.
+- **Measured** (laptop, High, one whole frame, main + shadow; now → WA-15b):
+
+  | View | Draw calls |
+  |---|---|
+  | quay north | 142 → 141 |
+  | path west | 184 → 184 |
+  | path east | 256 → 259 |
+  | baggage | 183 → 185 |
+  | at the door | 119 → 123 |
+  | from the quay | 262 → 267 |
+
+  - That is +0 to +5 calls, far under the street budget (High ≤ 450, Medium ≤ 300). No new material or texture.
+- **Clear:**
+  - The museum barrel `c-museum-barrel` is 2.2 m from the house and still open on three sides.
+  - Marda's nearest stop is 8.8 m away and Tobb's rest stop 12.2 m away.
+  - No door, NPC or story spot is near.
+  - The existing cypress on the path's edge (-81.6, 39.5) and the boulder stay as they are.
+- **Pictures for the user (chapters 1–2, the play camera):** `wa15b-from-the-quay.jpg` and `wa15b-at-the-door.jpg`
+  (now / WA-15b).
+
+### The purpose (for the cloud: story, residents and text; not prototyped on the laptop)
+
+1. **Tobb's route goes through it.**
+   - `walkrounds.js` tobb: his rest stop `D('tobb_rest', -72.0, 36.2, { a: 0, act: 'rest', … })` moves to the trading
+     house's door. Proposed at (-83.0, 43.3), facing the door (a: 0, +z), between the cargo crates and the jars.
+   - His day then runs quay pile → the Esmers' door → Pippa's stall: the stall's Zeelich goods visibly come through
+     the trading house.
+   - Check townlife's FIX-PUMP-N and the crate piles (`townbusy.js`) after the change.
+2. **An Esmer trader at the door.** One ambient resident (the Zeelich cast's look: `zeelichRoster` / props-esmer
+   colours), standing by the jars, with 2–3 short lines. Suggested themes, not final text:
+   - the goods from Zeelich since the ferry runs every week;
+   - Odile's paperwork;
+   - Citadel's rain on the dome (the twelve years, trade).
+   No shop, no new mechanic.
+3. **Two existing voices point to it.**
+   - One Odile line ("The Zeelich crates go down to the Esmers' house once I've stamped them").
+   - One Tobb line on his rest stop ("The Esmers pay on time. Their crates are still heavy").
+4. **Optional:** a small sign over the door. The house was built without one, because Citadel does not set the Esmer
+   sign atlas (`setSignWords`). A word like "ESMER TRADERS" would need that atlas on Citadel.
+
+- **Check after the build:**
+  - `node engine/cli.mjs artharbour` (the same views; `LBA3_HARBOUR_VIEWS` for more).
+  - `tests/townlife.mjs` and `tests/drawcalls.mjs street`.
+  - Before/after pictures to the user.
