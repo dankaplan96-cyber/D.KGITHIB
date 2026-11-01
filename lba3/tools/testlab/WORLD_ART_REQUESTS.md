@@ -1088,3 +1088,28 @@ apply").**
   the laptop's for the run only, nothing of that in the diffs):
   - `prologue.mjs` 26/26, `chapter1.mjs` 23/23, `opening.mjs` 27/27 (rerun alone; the first run, beside a picture shoot, met refused connections from the local server), `transitions.mjs` 6/6 and `house.mjs` 2/2 pass.
   - Their only resource "fail" is the local server's missing favicon.ico.
+
+---
+
+## LBA-CITADEL-6 · Paul's house (LBA2 scene 7), now Nell's home and workshop, inside the `wing2` house · Approved (night mode; pictures sent)
+
+- **Where:** LBA2 scene 7's door is our `wing2` house by the harbour, with NELL'S REPAIRS on it.
+- **Twelve years on:** Paul's old house is Nell's. Her stall on the path outside is her counter (townlife.js); the
+  engines she cannot mend there come in here.
+- **Code:** `requests/LBA-CITADEL-6.diff`, **on top of 1–5** (the chain was rebuilt from origin dd19fb3; 1…6 apply in
+  order on a fresh checkout).
+  - New `src/game/nellhouse.js` (region `nellhouse` at x 7800).
+- **The original's layout** (study render: 15 × 17 cells, so 7.2 × 8.2 m, 3.0 m), in Twinsen's house's materials:
+  - **The left wall:** the bed at the front, a wall lamp, a sideboard with a bowl under a big painting, and a window
+    with cream curtains at the back.
+  - **The back wall:** a floor lamp, a teal armchair, a long sideboard with a model sailboat between two candles, and
+    a wall lamp.
+  - **The middle:** a table with a bowl of flowers and two chairs.
+- **Ours on top:** Nell's workbench at the front with an Esmer engine open on it (brass drum, flywheel, pipe) and her
+  tools, and a crate of spare parts.
+- **For the story:** `R.npcSpots.nell` is at the bench. No people or lines were added.
+- **Measured:**
+  - `artnellhouse`: PASS. In by the `wing2` door (no locked prompt), past the bed to the armchair and the sailboat,
+    round the table to the workbench, and out.
+  - Draw calls: 16 (15 + 1) at Medium. No console errors.
+- **Picture:** `runs/nellhouse-vs-lba2.jpg`.

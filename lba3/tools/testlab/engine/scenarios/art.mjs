@@ -397,3 +397,11 @@ export const artNbrHouse = placeWalk({ id: 'art-nbrhouse', title: "The neighbour
   { name: 'out', pts: [[0.2, 2.9], [-2.4, 3.0], [-3.2, 3.0]] },
 ] });
 ART.push(artNbrHouse);
+// Paul's house, now Nell's (LBA-CITADEL-6, LBA2 scene 7, the 'wing2' house): past the bed to the armchair and the
+// sailboat, round the table to her workbench, and out
+export const artNellHouse = placeWalk({ id: 'art-nellhouse', title: "Nell's (Paul's house): in by the door, round the room, out again", suite: 'artnellhouse', room: 'nellhouse', house: 'wing2', legs: [
+  { name: 'by the armchair and sailboat', pts: [[-1.0, 3.0], [-0.9, -1.6], [1.6, -2.6]] },
+  { name: 'at the workbench', pts: [[2.0, -0.8], [1.6, 2.0]] },
+  { name: 'out', pts: [[-1.0, 3.2], [-3.2, 3.3]] },
+] });
+ART.push(artNellHouse);
