@@ -22,16 +22,20 @@
   P.wait = (s) => { G.step(s); };
 
   // until play resumes: advance dialogue with E (Classic: W/E talk and advance), let cut-scenes and fades run
+  // (speakers: who said the lines it advanced — an NPC's id, 'hero', or '?' for a voice with no one behind it, the radio
+  // or a narrator; P.talk uses it to tell a conversation with its person from a remark that opened on the way)
+  const speakerId = () => { const s = G.speaker; return !s ? '?' : s === G.hero ? 'hero' : s.def?.id ?? '?'; };
   P.settle = (maxT = 120) => {
     P.release();
     let t = 0, lines = 0;
+    const speakers = new Set();
     while (t < maxT) {
       if (G.state === 'play' && !G.trans) { G.step(0.1); if (G.state === 'play' && !G.trans) break; }
-      if (G.state === 'dialog') { P.tap('KeyE', 0.12); lines++; t += 0.15; continue; }
+      if (G.state === 'dialog') { speakers.add(speakerId()); P.tap('KeyE', 0.12); lines++; t += 0.15; continue; }
       if (G.state === 'pause' || G.state === 'gameover' || G.state === 'ending' || G.state === 'title') break;
       G.step(0.1); t += 0.1;
     }
-    return { state: G.state, lines };
+    return { state: G.state, lines, speakers: [...speakers] };
   };
 
   // ---- navigation
@@ -276,21 +280,32 @@
     return { r: P.here() === id ? 'entered' : 'failed:' + r.r };
   };
   P.talk = (id, opts = {}) => {
-    const n = P.npc(id);
-    if (!n || !n.present) return { r: 'absent:' + id };
-    const where = P.sceneOf(n.pos.x, n.pos.z);
-    if (where !== P.here()) { const e = P.enter(where, opts); if (P.here() !== where) return { r: 'cannot reach ' + where + ': ' + e.r }; }
-    const r = P.go(n.pos.x, n.pos.z, { tol: 1.6, ...opts });
-    let tg = null;
-    if (G.state === 'play') {
-      P.face(n.pos.x, n.pos.z); tg = P.target();
-      // the prompt must be for this person (not a bench or a sign beside them): step closer
-      for (let k = 0; k < 3 && !(tg?.kind === 'npc' && tg.id === id); k++) { P.go(n.pos.x, n.pos.z, { tol: 1.0 - k * 0.2 }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
-      P.tap('KeyE', 0.1);
+    const skipped = [];
+    for (let tries = 0; ; tries++) {
+      const n = P.npc(id);
+      if (!n || !n.present) return { r: 'absent:' + id, ...(skipped.length ? { skipped } : {}) };
+      const where = P.sceneOf(n.pos.x, n.pos.z);
+      if (where !== P.here()) { const e = P.enter(where, opts); if (P.here() !== where) return { r: 'cannot reach ' + where + ': ' + e.r }; }
+      const r = P.go(n.pos.x, n.pos.z, { tol: 1.6, ...opts });
+      // a dialogue that opened on the way, before he pressed E (a pickup's remark, a passer-by): if everyone heard in it
+      // is someone else (him, another person; no unnamed voice), it was not this conversation. Read it to the end, as a
+      // player would, and walk on to talk to them (twice at most). A conversation they speak in counts, as before.
+      const early = G.state === 'dialog';
+      let tg = null;
+      if (G.state === 'play') {
+        P.face(n.pos.x, n.pos.z); tg = P.target();
+        // the prompt must be for this person (not a bench or a sign beside them): step closer
+        for (let k = 0; k < 3 && !(tg?.kind === 'npc' && tg.id === id); k++) { P.go(n.pos.x, n.pos.z, { tol: 1.0 - k * 0.2 }); P.face(n.pos.x, n.pos.z); tg = P.target(); }
+        P.tap('KeyE', 0.1);
+      }
+      const talked = G.state === 'dialog' || G.state === 'shop' || G.state === 'cutscene';
+      const s = P.settle();
+      if (early && tries < 2 && s.speakers.length && !s.speakers.includes(id) && !s.speakers.includes('?')) {
+        skipped.push({ speakers: s.speakers, lines: s.lines }); P.note(`talk ${id}: a dialogue by ${s.speakers.join(',')} opened on the way (${s.lines} lines); read it, talk again`);
+        continue;
+      }
+      return { r: talked ? 'talked' : 'no-dialog:' + r.r, to: tg?.id, state: s.state, lines: s.lines, ...(skipped.length ? { skipped } : {}) };
     }
-    const talked = G.state === 'dialog' || G.state === 'shop' || G.state === 'cutscene';
-    const s = P.settle();
-    return { r: talked ? 'talked' : 'no-dialog:' + r.r, to: tg?.id, state: s.state, lines: s.lines };
   };
   // walk into a door / exit trigger and wait for the new scene
   P.through = (x, z, opts = {}) => {

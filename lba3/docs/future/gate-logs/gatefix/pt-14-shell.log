@@ -1,0 +1,42 @@
+=== 14-shell start 2026-11-01T23:11:00Z LOAD=/dev/shm/gatefix/saves/f/13.json ASSIST= SRC=/dev/shm/gatefix/c/lba3/tests/playthrough/14-shell.mjs
+[0s +0s] continue: {"chapter":"shell","room":"c3shaft"} | c3shaft [1797.9,0,-1.5] hp 12 | Find the bore's machinery
+[1s +0s] down to the machinery: {"r":"transition","from":"c3shaft","to":"c3deep"} | c3deep [1890.92,0,4.14] hp 12 | Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk
+[1s +0s] the cooling diagram: {"r":"used","target":{"kind":"c3diagram","id":"p_read","label":"p_read"},"state":"play","lines":6,"diagram":true,"fail":null} | c3deep [1890.17,0,2.68] hp 12 | Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk
+[1s +0s] valve A: {"open":true} | c3deep [1890.04,0,-1.96] hp 12 | Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk
+[1s +0s] the ball switch (ladder): {"done":true,"ladder":true,"fail":null} | c3deep [1892.95,0,-4.1] hp 12 | Open the jammed shutter◆ Read the cooling diagram◆ Reach the catwalk
+[2s +1s] valve C on the catwalk: {"open":true,"y":3,"cooled":true,"fail":null} | c3deep [1891.78,3,-7.01] hp 12 | Go deeper
+[3s +1s] the galleries: {"r":"transition","from":"c3deep","to":"c3gallery"} | c3gallery [1988.87,3,4.06] hp 11 | Cross the crystal galleries
+[3s +0s] the supply crates (near shelf): {"r":"not hurt","hp":11} | c3gallery [1988.87,3,4.06] hp 11 | Cross the crystal galleries
+[12s +9s] three pillars (ball): {"out":[true,true,true],"fail":null} | c3gallery [1996.06,-0.3,-8.75] hp 9 | Cross the crystal galleries
+[14s +2s] across the stepping stones: {"tries":[[2.98,2.98,2.98,2.98,2.98,3]],"iso":false,"x":2005.6,"fail":null} | c3gallery [2005.65,3,-1.91] hp 7 | Cross the crystal galleries
+[14s +0s] the supply crates (far shelf): {"r":"skipped (optional)","hp":7} | c3gallery [2005.65,3,-1.91] hp 7 | Cross the crystal galleries
+[14s +0s] Sendell: {"sendell":true,"fail":null} | c3sendell [2096.39,0,1.17] hp 4 | Reach the core
+[15s +1s] the core → chapter 12: {"chapter":"core","fight":true,"room":"c3core","fail":null} | c3core [2205.8,0.3,-7.35] hp 12 | Convert the three pylons (0/3)
+[17s +2s] the pylons from their plates: {"stunThrows":5,"stuns":4,"shots":4,"hurt":2,"t":12.2,"pylons":3,"fail":null} | c3core [2197.35,0.3,3.81] hp 10 | Break Vesk's overload coil (0/3)
+[19s +2s] Vesk's overload coil: {"stunThrows":5,"stuns":3,"shots":3,"hurt":5,"t":9.9,"coil":3,"turned":true,"fail":null} | house [1001.2,0,9.9] hp 5 | Go home. Dinner is waiting
+[19s +0s] the epilogue: {"state":"ending","title":"The End","fail":null} | house [1001.2,0,9.9] hp 5 | Go home. Dinner is waiting
+[19s +0s] Keep Exploring: {"state":"play","free":true,"obj":"Explore Citadel Island"} | house [1001.2,0,9.9] hp 5 | Explore Citadel Island
+PASS the segment ran every step to its end 
+deaths (Retry): 0
+ISO assists: 0 (this page; see the trace)
+[316.8] core fight (pylons): {"stunThrows":5,"stuns":4,"shots":4,"hurt":2,"t":12.2}
+[319.1] dodge a bolt
+[319.1] dodge a bolt
+[322.4] go → (2200.3, 0.9) plan ok=false pts=2 left=0.61
+[322.6] hurt 8→7 at (2194.2, 0.3, 3.5) near: guardian:chase 
+[323.9] hurt 7→6 at (2195.4, 0.3, 2.9) near: guardian:chase 
+[325.3] hurt 6→5 at (2196.9, 0.3, 2.0) near: guardian:chase 
+[326.4] go → (2204.7, -1.5) plan ok=true pts=3 left=0.24
+[332.2] go → (2204.6, -1.9) plan ok=true pts=3 left=0.2
+[337.6] dodge a bolt
+[337.7] go → (2204.5, -2.7) plan ok=true pts=2 left=0.39
+[349.6] core fight (coil): {"stunThrows":5,"stuns":3,"shots":3,"hurt":5,"t":9.9}
+kept /dev/shm/gatefix/saves/f/14.json
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 1 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED
+=== 14-shell end rc=0 wall=239s 2026-11-01T23:14:59Z

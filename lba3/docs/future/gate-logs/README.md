@@ -9,3 +9,4 @@
 - `chain-status.txt`, `test-status.txt`: exit code and wall time of every run.
 - `tools/`: the wrappers, harness workarounds (`seg01-gate.mjs` W-1, `seg13-gate.mjs` W-2) and probes. Their paths
   point at `/dev/shm/gate1`, where the snapshot was served.
+- `gatefix/`: the GATE-FIX re-run on 18c7043, which fixes B-1 and T-1. It has its own README.
