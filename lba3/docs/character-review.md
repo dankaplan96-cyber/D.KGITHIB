@@ -1219,3 +1219,66 @@ Rebuilt with `python3 tools/blender/cast_poly.py art/characters/skeletons.json a
 repository: the committed `.blend` files are the previous pass's) and `python3 tools/blender/baldino_poly.py
 art/characters/skeletons.json assets/poly`. `lbapoly.UNIFORM = False` switches off the helper part of the standard
 (segments and smoothing of balls, tubes and discs) for comparisons.
+
+## 20. Twinsen's tunic, medallion, face and hands (HERO-LOOK: I-22, I-23, WORKLIST #8)
+
+The user, 31.10: faces and hands should read in the dialogue close-ups and the opening (LBA2's simple, readable charm,
+not uncanny); raising his arms turns the tunic into a sleeved shirt (I-22); the medallion is a plain disc, not on a
+necklace as in the original (I-23). All in `tools/blender/twinsen_poly.py` → `assets/poly/twinsen.json` and
+`art/characters/twinsen/twinsen_poly.blend`. Pictures (before | after, the house and Citadel, in-game light):
+`docs/lba3-production/review/hero-look/`.
+
+- **I-22, the tunic.** The cape kept LBA2's weights: from 0.095 H out and below the shoulder its whole side rode the
+  upper arm and the forearm, so an arm raised overhead lifted the side from the shoulder to the hem into a long sleeve
+  and left a narrow column of a body (the "sleeved shirt"; the found dance's arm read as a wing at shoulder height).
+  Now the cape is the tunic's body and stays on the torso: only the cloth right over the arm, from 0.135 H out and below
+  0.6–0.7 H, follows it, and only 15 % of the way (`CAPE_ARM`, `w_cape_game`), so a walk's swing still moves the sides.
+  The arm comes out of the cape in a wide sleeve of its own (`sleeveL/R`: 8 sides, shoulder → elbow → cuff, 64
+  triangles each, on the upper arm / forearm), hidden inside the cape at rest (2–6 cm clear of its walls). The new
+  weights are taken where the game shows the cape at rest (the arms at the look's armSpread 0.3, `GAME_SPREAD`; the
+  shape is still drawn at 0.2, `SPREAD`), so **the idle silhouette is unchanged** (same picture before/after). The CHAR-OPEN
+  #28a sleeved tunic that the user rejected (20.10) changed the rest look; this one does not. The found dance (rig.js
+  FOUND) now reads as LBA2's arm thrown up and out (about 50° above level); its keys were not changed.
+- **I-23, the medallion.** LBA2's body 1 has 15 line primitives besides its polygons, which the earlier measurements had
+  missed: a gold cord (palette 107) from behind the neck at the collar, round the neck, in over the chest in a V to the
+  medallion's top, and the medallion's gold outline; the medallion itself an octagon of 8 triangles (0.082 × 0.072 H,
+  centred 0.632 H in this frame) on a group hanging from the cord's. Ours: the measured octagon with a gold rim and a
+  paler raised face, square to the chest, a small gold bead on its top, and a flat gold cord (1.4 cm, ~1–2 px at the
+  play camera, like the original's line) laid on the cape and the neck by ray casts all the way round the neck; above
+  the collar it is on the neck bone, so a nod or a look aside carries it. The inventory's medallion (itemlook.js) has
+  the same gold cord now (it was red).
+- **Face.** He had no brows and no lids: the iris sat in a full ring of white, a stare that read as startled in the
+  close-ups, and with no brows the face read blank and young. Added (restrained, LBA2-flat): an upper lid in a shade of
+  the skin over the top of the white and of the iris, a dark lash line along it with a small flick at the outer corner
+  (in the eye group, so the blink closes them with the eye); short, slightly arched brows in his hair's dark brown,
+  thicker at the inner end (head bone); a small rounded nose on LBA2's snout, 8 mm proud (10 triangles); the closed
+  mouth a thinner, darker line (rest 0.22, was 0.28; the voice still opens it as before). The head's sections, the
+  skull, the hair and the eye size are LBA2's as before.
+- **Hands.** The ball with a stick thumb and three knuckle lobes (FACES-HANDS) read as a mitten. Now a loose fist in the
+  ball's place and size: the back of the hand from the wrist (in the cuff) to the knuckles, four fingers each its own
+  short bent tube round the bottom of the fist into the palm, a groove between each, and a short thick thumb across the
+  index finger. Palm toward the thigh at rest as before, so the sword, the blowgun, the glove and the pistol sit where
+  they sat (same bone, same place). `TW_BALL_HAND=1` builds the old hand for comparison.
+- **Counts.** 2992 → 3206 triangles (+7.2 %: body 2932 → 3098, eye groups 44 → 92, mouth 16), 8796 → 9294 vertices,
+  the same three draws (body, both eyes in one mesh, mouth) and materials; vertex colours 10 → 12 (lid, brow).
+  Per part: cape 432, sleeves 2 × 64 (new), hands 2 × 220 (were 246), medallion 56 + 8 (was 64 + 16), cord 80 (new),
+  brows 16, nose 10.
+- **Not changed:** the skeleton, bone names, hierarchy, bind transforms, sockets (the hand bones carry the weapons as
+  before), the eye/mouth json contract, rig.js. Checked in idle, walk, run, turn, talk, the planted throw (the throw over a walk not separately),
+  charge, action, jump, knockdown, cheer (both arms overhead) and the found dance, front / ¾ / side / back; the hands
+  in idle, talk and raised; the face in front, ¾ and side; in the house and on Citadel at the play camera.
+- **Remaining.** In a raised-arm pose the cape's lower side corners hang as a squared shelf (the cape's own rest shape,
+  no longer filled by the arm). A sleeve root can show at the top of the shoulder when the arm swings far back (the
+  charge's wind-up): it is the arm. Gaze: the iris and pupil are in the eye group, so they cannot move on their own
+  (a contract change: proposal in the handoff below). Zoé, Arthur and the cast already had lids, brows, noses and
+  fingered hands (CHAR-2, ARTHUR-12, CAST-POLISH); they are unchanged in this pass.
+
+### For the animator (handoff; no contract was changed)
+- Twinsen's two eye groups (json `eyes`, bone `head`) now hold the white, iris, pupil, the upper lid and the lash line;
+  rig.js's blink (scale y 0.12 about the eye's centre) closes them together as before.
+- A gaze would need the iris and pupil in their own groups (four eye entries instead of two, the blink squashing all
+  four, a small x/y offset for the look): a json + polyCharacter + rig.js change, proposed only. Brow raises would
+  need the brows moved from the skinned head into a group of their own the same way.
+- The cape now follows the arms only 15 % (sleeves 100 %): poses that relied on the cape's side lifting with the arm
+  (none found) would now show the sleeve. The weights assume the look's armSpread 0.3 at rest; if it changes,
+  rebuild with the new `GAME_SPREAD`.

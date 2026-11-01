@@ -28,6 +28,16 @@ only the numbers below, used to shape our own models and animations.
 | hair | no hair polygons: three spheres drawn as flat unlit discs, dark brown (palette 17 / 18 / 19). In units of 1238: centres (y, z) (0.995, −0.054) r 0.052 on the head, (0.968, −0.107) r 0.037 and (0.931, −0.124) r 0.026 on the two tail groups; in the frame of our head sections (H = 1296 to the top of the crown ball) (0.951, −0.052) r 0.049, (0.925, −0.103) r 0.036, (0.890, −0.118) r 0.025. The crown ball sits on the back of the skull's top (skull top 0.955) and rises 0.045 above it | the same three balls, blonde, higher |
 | clothes | cape to 0.41 H, ±0.21 wide; the robe below the belt is carried by the legs (thigh panel to the knee, shin panel to the hem ±0.17) | red, fitted, deep V neckline, bare arms; the outfit's legs are separate to the green shoes |
 
+## Twinsen's medallion and its cord (body 1's line primitives; HERO-LOOK, I-23)
+Body 1 has 15 lines besides its 281 polygons and 5 spheres. In units of 1238 (fractions of H): the cord (palette 107,
+#f7bb57 gold) runs from behind the neck (±0.027, 0.807, z 0.027; the back segment between them in the skin's ramp, so
+hidden) round the sides of the neck (±0.048, 0.779, 0.080), in over the chest (±0.032, 0.726, 0.112) to a point on the
+medallion's top (0, 0.699, 0.128): a V. The lower cord points are a group of their own (17, on the torso) and the
+medallion another (18, hanging from 17). The medallion: an octagon of 8 triangles (palette 39 with a ramp flag) with
+the same gold lines round its edge: top 0.699, bottom 0.624, ±0.043 wide, centre (0, 0.661, 0.136), its bottom leaning
+out (z 0.128 at the top, 0.145 at the bottom). In the frame of our head sections (×1238/1296): centre 0.632 H,
+0.082 × 0.072 H.
+
 ## Shading
 The polygons of both models are almost all Gouraud (Twinsen: 253 of 281, Zoé: 145 Gouraud + 128 dithered
 Gouraud), not flat: the faceted look of a flat-shaded study render is not the original's. Our ramp shading with

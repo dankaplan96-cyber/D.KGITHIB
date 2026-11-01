@@ -66,13 +66,13 @@ const LOOKS = {
     for (const y of [-0.05, 0.02, 0.09]) put(g, new THREE.TorusGeometry(Math.sqrt(0.0145 - y * y), 0.0025, 4, 32), M('#ffffff', { emissive: '#bff4ff', emissiveIntensity: 0.8 }), 0, y + 0.02, 0, Math.PI / 2);
     return g;
   },
-  // Sendell's medallion (characters.js: a pale gold medal of eight sides on a red cord)
+  // Sendell's medallion (as he wears it, tools/blender/twinsen_poly.py: a pale gold medal of eight sides on a gold cord, HERO-LOOK I-23)
   medallion: () => {
     const g = new THREE.Group(), gold = M('#f0d27a', { metalness: 0.75, roughness: 0.3 });
     put(g, new THREE.CylinderGeometry(0.1, 0.1, 0.022, 8), gold, 0, 0, 0, Math.PI / 2, Math.PI / 8, 0);
     put(g, new THREE.TorusGeometry(0.055, 0.008, 6, 24), M('#c89a2a', { metalness: 0.8, roughness: 0.35 }), 0, 0, 0.012);
     put(g, new THREE.SphereGeometry(0.02, 10, 8), M('#8fe8ff', { emissive: '#2a9aff', emissiveIntensity: 0.6, roughness: 0.15 }), 0, 0, 0.014).scale.z = 0.5;
-    put(g, new THREE.TorusGeometry(0.045, 0.006, 5, 20), M('#c0302a', { roughness: 0.8 }), 0, 0.135, 0);   // (the loop of its red cord)
+    put(g, new THREE.TorusGeometry(0.045, 0.006, 5, 20), M('#e8b04c', { metalness: 0.6, roughness: 0.45 }), 0, 0.135, 0);   // (the loop of its gold cord)
     return g;
   },
   // a key: a brass bow, a shaft, two teeth
