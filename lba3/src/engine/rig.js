@@ -1026,6 +1026,14 @@ export class Rig {
       this._koOut = [L('outL'), L('outR')];
       bodyRotX = K.mode === 'slump' ? 0 : -K.dir * koFall(t) * (Math.PI / 2);
       if (this.robeLegs) { T.kneeL = Math.min(T.kneeL, 1.2); T.kneeR = Math.min(T.kneeR, 1.2); }
+      // (I-14: while the feet still carry it, the knees buckle over soles kept flat on the ground; the keys' own foot
+      // angles come back as the body goes over. Unflattened, the buckled knee and the backward lean tipped the toes
+      // into the ground — 6 cm on the Grobo guard, 29 cm on the FunFrock trooper's long boots and short shins)
+      if (K.mode !== 'slump') {
+        const w = clamp(1 - (koFall(t) - 0.06) / 0.4, 0, 1);
+        T.footL += (-(bodyRotX + T.legL + T.kneeL) - T.footL) * w;
+        T.footR += (-(bodyRotX + T.legR + T.kneeR) - T.footR) * w;
+      }
     } else if (a === 'found') {
       // LBA2's found-object dance (FOUND below): a dip, then an arm thrown up on each side in turn, every 0.3 s
       const P = foundPose(this.actionT);

@@ -38,8 +38,39 @@ export const KO = {
 
 const _v = new THREE.Vector3(), _q = new THREE.Quaternion(), _qy = new THREE.Quaternion(), _up = new THREE.Vector3(0, 1, 0), _n = new THREE.Vector3();
 
-// a few dozen points of the body's own surface (the extremes of each mesh and an even spread), read every frame
-// in world space to keep the body out of the ground and on it
+// I-14: 26 directions (the axes, the edges' and the corners' diagonals) for the extremes of each rigid part
+const DIRS = [];
+for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) if (x || y || z) { const l = Math.hypot(x, y, z); DIRS.push([x / l, y / l, z / l]); }
+// the extremes of each rigid part of a mesh, by geometry (shared by every enemy of a type, worked out once): a part
+// is the vertices one bone carries most (a skinned body: a foot, a shin, a hand) or the whole mesh (a prop). Whatever
+// way a part turns, its lowest vertex is one of these to within a few per cent of its size. (The skinned bodies are
+// one mesh of 5–10 k vertices since the cast moved to cast_poly.py; an even spread of ~140 points over the whole of
+// it missed the soles and the toes, which a knock-out's stagger tips into the ground: guardG's heel went 6 cm in,
+// fclone's boot 29 cm.)
+const partExtremes = new WeakMap();
+function extremesOf(m) {
+  const geo = m.geometry;
+  let ids = partExtremes.get(geo);
+  if (ids) return ids;
+  const P = geo.attributes.position, cnt = P.count, si = m.isSkinnedMesh ? geo.attributes.skinIndex : null, sw = si ? geo.attributes.skinWeight : null;
+  const best = new Map();   // part → per direction [max dot, vertex]
+  for (let i = 0; i < cnt; i++) {
+    let part = 0;
+    if (si) { let w = -1; for (let k = 0; k < 4; k++) { const wk = sw.getComponent(i, k); if (wk > w) { w = wk; part = si.getComponent(i, k); } } }
+    let b = best.get(part);
+    if (!b) best.set(part, (b = DIRS.map(() => [-Infinity, -1])));
+    const x = P.getX(i), y = P.getY(i), z = P.getZ(i);
+    for (let d = 0; d < DIRS.length; d++) { const D = DIRS[d], v = x * D[0] + y * D[1] + z * D[2]; if (v > b[d][0]) { b[d][0] = v; b[d][1] = i; } }
+  }
+  const out = new Set();
+  for (const b of best.values()) for (const [, i] of b) if (i >= 0) out.add(i);
+  ids = [...out];
+  partExtremes.set(geo, ids);
+  return ids;
+}
+
+// points of the body's own surface (the extremes of each rigid part and an even spread), read every frame in world
+// space to keep the body out of the ground and on it; the spread alone gives the body's middle
 function collectSamples(root, n = 140) {
   root.updateMatrixWorld(true);
   const meshes = [];
@@ -62,7 +93,8 @@ function collectSamples(root, n = 140) {
     }
     const k = Math.max(4, Math.round(n * cnt / total)), step = Math.max(1, Math.floor(cnt / k));
     for (let i = 0; i < cnt; i += step) ids.add(i);
-    for (const i of ids) if (i >= 0) out.push({ m, i });
+    for (const i of ids) if (i >= 0) out.push({ m, i, mid: true });
+    for (const i of extremesOf(m)) if (!ids.has(i)) out.push({ m, i, mid: false });
   }
   return out;
 }
@@ -141,14 +173,14 @@ export class KnockOut {
   measure() {
     const P = this.g.physics, root = this.e.rig.root;
     root.updateMatrixWorld(true);
-    let min = Infinity, cx = 0, cy = 0, cz = 0;
+    let min = Infinity, cx = 0, cy = 0, cz = 0, n = 0;
     for (const s of this.samples) {
       sampleWorld(s, _v);
       const d = _v.y - P.groundAt(_v.x, _v.z, _v.y + 0.6);
       if (d < min) min = d;
-      cx += _v.x; cy += _v.y; cz += _v.z;
+      if (s.mid) { cx += _v.x; cy += _v.y; cz += _v.z; n++; }
     }
-    const n = this.samples.length || 1;
+    n ||= 1;
     return { min: Number.isFinite(min) ? min : 0, cx: cx / n, cy: cy / n, cz: cz / n };
   }
 
