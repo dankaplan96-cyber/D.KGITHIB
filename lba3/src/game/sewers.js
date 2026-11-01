@@ -267,7 +267,6 @@ function buildHall(scene, physics) {
     B.ccol(x, cz, 0.34, ch + 0.3);
   }
   k.add(rbox(14 - 6.4, 0.32, 0.5, 0.05), capM(), (6.4 + 14) / 2, ch + 0.16, cz);
-  for (const x of cols) k.add(rbox(0.3, 0.26, -Z0 + cz - 0.1, 0.04), stoneM(), x, ch + 0.16, (Z0 + cz) / 2 - 0.05);
   for (const [x, f] of [[cols[0], Math.PI * 0.85], [cols[3], Math.PI * 1.15]]) k.add(garg, softMat, x, ch + 0.32, cz + 0.1, f);
 
   // ---- railings: the raised walkway's edge, the platform, the colonnade's water side (twelve years: half rusty)
