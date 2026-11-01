@@ -425,7 +425,11 @@ function wildGround(x, z, n = 0) {
   if (Math.max(Math.abs(x - POI.fort.x), Math.abs(z - POI.fort.z)) < POI.fort.half + 8) return [0, 0];
   const away = smoothstep(2.4, 4.5, pathDist(x, z));
   const a = fbm(x * 0.05 + 11.3, z * 0.05 - 4.2, 3) + n * 0.12, b = fbm(x * 0.045 - 6.1, z * 0.045 + 9.7, 3) + n * 0.12;
-  const rock = smoothstep(0.1, 0.2, b) * away;
+  // WA-12b (proto): no bare rock in a house's yard (the neighbour's yard was one grey slab to its door): rock only
+  // 7–11 m and more from any house's walls; the soil may come closer (LBA2's houses stand in brown earth)
+  let yd = 1e9;
+  for (const hf of HOUSE_FLATS) { const dx = x - hf.x, dz = z - hf.z, lx = hf.c * dx - hf.s * dz, lz = hf.s * dx + hf.c * dz; yd = Math.min(yd, Math.hypot(Math.max(Math.abs(lx) - hf.hw, 0), Math.max(Math.abs(lz) - hf.hd, 0))); }
+  const rock = smoothstep(0.1, 0.2, b) * away * smoothstep(7, 11, yd);
   const soil = smoothstep(0.0, 0.1, a) * (1 - rock) * Math.max(away, 0.6);
   return [soil, rock];
 }
