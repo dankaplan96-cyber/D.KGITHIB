@@ -335,7 +335,7 @@ The whole-game comparison behind it is `tools/testlab/examples/WORLD_LOOK_COMPAR
 
 ---
 
-## WA-11 · Zeelich's islands: each one's own ground, not one green lawn · Approved (design request for the cloud)
+## WA-11 · Zeelich's islands: each one's own ground, not one green lawn · Applied (the cloud, 1.11.2026; in 0.47.0: the laptop's prototype, below)
 
 Not prototyped on the laptop: it is design work across several builders. Numbers:
 `tools/testlab/examples/WORLD_LOOK_COMPARE.md`.
@@ -361,7 +361,7 @@ Not prototyped on the laptop: it is design work across several builders. Numbers
 
 ---
 
-## WA-12 · Citadel ground: more rock and soil, less lawn · Approved (design request for the cloud)
+## WA-12 · Citadel ground: more rock and soil, less lawn · Applied (the cloud, 1.11.2026; in 0.47.0: the laptop's prototype, below)
 
 - **Why:** LBA2's Citadel from above is 17 % grass, 36 % soil and 41 % grey (rock strata on the terrace faces, setts,
   stone). Ours is 53 % grass, 18 % soil and 18 % grey. The original's rock shows across the island's slopes, not only
