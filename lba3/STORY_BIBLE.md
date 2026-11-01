@@ -35,8 +35,8 @@ what the player knows / doesn't know · the turn · what the player does · the 
 | 6 | The Pass | Hamalayi | 55 | ✅ (first version; tests/chapter6.mjs) |
 | 7 | The Observatory | Hamalayi | 50 | ✅ (first version; tests/chapter7.mjs) |
 | 8 | Evacuation | Citadel Island (changed) | 55 | ✅ (first version; tests/chapter8.mjs) |
-| 9 | The Council | Zeelich upper districts | 50 | ⬜ |
-| 10 | Baldino's Network | all regions | 55 | ⬜ |
+| 9 | The Council | Zeelich upper districts | 50 | ✅ (first version; tests/chapter9.mjs) |
+| 10 | Baldino's Network | all regions | 55 | ✅ (first version: five relays, the mill, the valve room, the lighthouse, the bore, the dome; tests/chapter10.mjs) |
 | 11 | The Shell | the shaft, deep installation, galleries, Sendell | 45 | ✅ (ends at the door to the core) |
 | 12 | The Core | the core | 40 | ✅ (own chapter since the split; same class as 11, chapter3.js) |
 | — | Epilogue: Home | Citadel Island | 10 | ✅ |
@@ -140,7 +140,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
   that the lighthouse signal reaches Zeelich's council chamber. Twinsen boards a project ship at Citadel
   Spaceport; it sets him down on Zeelich Spaceport (chapter 9).
 
-### 9 — The Council ⬜ (Zeelich upper districts)
+### 9 — The Council ✅ (Zeelich upper districts; as built: docs/lba3-production/STORY_MAP.md)
 - **Wants:** Zeelich's council to order the bore reversed. **The other world's choice:** the council fears
   the cold if the project stops; Nara and Oku speak for Twinsen; Dallan arrives with Ilka's proof.
 - **Does:** reaches the upper districts (cloud lifts, Esmer bureaucracy as comedy and puzzle); gets into the
@@ -149,7 +149,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
   must come from all the project's stations at once — Baldino's network.
 - **Result:** permission and the plans; Baldino starts building.
 
-### 10 — Baldino's Network ⬜ (all regions)
+### 10 — Baldino's Network ✅ (all regions; as built: docs/lba3-production/STORY_MAP.md)
 - **Wants:** build the network from parts and people the player knows. **Does:** a chapter of five tasks in
   any order, each in a region already visited and each using a mechanic learned there: Citadel (Mira's valves,
   water to cool the emitter), Zeelich (Oku's mills released), the lighthouse (Zoé's sun–wave–star signal),
@@ -164,7 +164,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 
 ### 12 — The Core 🔧
 - **Revelation part 2 (Sendell):** "She" is young and not ready; turning off is not enough; push the other way.
-- **Does:** the core: five pylons (one per station) by bank shots while the guardian fights; the allies answer by
+- **Does:** the core: three pylons by bank shots from their throw plates while the guardian fights; Zoé, Mira and Oku answer by
   radio in turn. **Vesk will not let go:** he overloads the guardian and raises a coil over his console;
   Twinsen breaks it with the ball (three hits), the console bursts, Twinsen switches the bore to shield mode
   himself, and the council's guards come down for Vesk.

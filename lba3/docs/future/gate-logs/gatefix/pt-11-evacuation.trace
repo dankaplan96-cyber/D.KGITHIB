@@ -1,0 +1,66 @@
+[0.3] go → (-46.1, 77.2) plan ok=true pts=20 left=0.29
+[32.9] go: transition (citadel → citadel, trans true) at (-45.71, 76.46)
+[33.8] go → (997.7, -2.6) plan ok=true pts=4 left=0.89
+[42.3] go → (1001.2, 11.3) plan ok=true pts=5 left=0.29
+[46.3] go: transition (house → house, trans true) at (1001.44, 10.72)
+[47.1] go → (-38.5, 4.0) plan ok=true pts=8 left=0.88
+[64.2] go → (-33.0, -70.0) plan ok=true pts=11 left=0.36
+[82.1] threat: fight
+[83.3] dodge a bolt
+[86.3] dodge a bolt
+[86.5] fight ccg2 d=2.5 st=recover aim=it e@-38.0,15.9,-69.2 me@-37.9,15.9,-62.1 ball=fly hp 5→5 me 7 mp 11.326666666666668
+[86.5] go → (-38.0, -69.2) plan ok=true pts=2 left=3.32
+[86.7] hurt 7→6 at (-38.0, 15.9, -61.9) near: cc2:patrol,ccg2:recover 
+[88.9] dodge a bolt
+[91.8] dodge a bolt
+[94.5] fight ccg2 d=5.9 st=chase aim=it e@-38.0,15.9,-69.2 me@-37.7,15.9,-60.1 ball=idle hp 5→5 me 5 mp 11.326666666666668
+[94.5] go → (-38.0, -69.2) plan ok=true pts=3 left=3.35
+[96.8] go → (-38.0, -69.3) plan ok=true pts=3 left=0.38
+[101.0] fight ccg2 d=6.0 st=hurt aim=other:cc2@-37.7,-70.9 d2.2 e@-38.1,15.9,-69.6 me@-37.1,15.9,-68.7 ball=idle hp 5→1 me 5 mp 12
+[102.3] dodge a bolt
+[103.3] fight ccg2 d=1.3 st=chase aim=it e@-37.6,15.9,-69.3 me@-36.4,15.9,-68.1 ball=idle hp 1→1 me 3 mp 12
+[104.2] dodge a bolt
+[106.8] dodge a bolt
+[107.2] dodge a bolt
+[107.5] dodge a bolt
+[110.4] dodge a bolt
+[111.6] fight ccg2 d=1.7 st=aim aim=it e@-33.8,15.9,-65.7 me@-29.0,15.9,-61.6 ball=idle hp 1→1 me 1 mp 12
+[112.6] ISO assist: 5 enemies beaten (cc1,ccg1,ccclone,ccdog,ccg2)
+[112.6] fight → {"left":3,"dead":false,"hp":1,"t":25.7,"assisted":5}
+[116.9] go → (-33.0, -70.0) plan ok=false pts=2 left=0.41
+[120.2] go → (-91.7, -76.0) plan ok=true pts=9 left=0.09
+[137.4] go → (-94.6, -74.8) plan ok=true pts=4 left=0.47
+[142.0] go → (-95.7, -71.9) plan ok=true pts=2 left=0.28
+[146.1] go → (-94.4, -69.1) plan ok=true pts=7 left=0.3
+[154.6] go → (-91.5, -68.0) plan ok=false pts=2 left=0.91
+[159.7] stuck at (-92.4, -67.8): replan
+[163.6] go → (-65.5, 11.0) plan ok=true pts=18 left=0.19
+[191.9] go: transition (citadel → citadel, trans true) at (-64.88, 10.48)
+[192.7] go → (1198.8, 0.9) plan ok=true pts=4 left=0.73
+[199.7] go → (1202.7, -3.0) plan ok=true pts=3 left=0.26
+[203.2] go: transition (office → office, trans true) at (1202.09, -2.64)
+[204.1] go → (-46.2, -0.9) plan ok=false pts=4 left=2.04
+[214.2] stuck at (-45.6, 1.0): replan
+[217.2] stuck at (-45.8, 1.4): replan
+[222.6] stuck at (-45.9, 1.3): replan
+[233.0] stuck at (-48.0, -2.0): replan
+[235.9] stuck at (-48.3, -1.8): replan
+[246.5] stuck at (-45.9, 1.4): replan
+[250.5] go → (-46.1, 77.2) plan ok=true pts=9 left=0.23
+[268.3] go: transition (citadel → citadel, trans true) at (-45.61, 76.50)
+[269.1] go → (997.7, -2.6) plan ok=true pts=5 left=0.91
+[274.8] go → (-50.0, 30.0) plan ok=true pts=6 left=0.8
+[301.1] go → (-30.0, 45.0) plan ok=true pts=3 left=0.84
+[315.5] go → (-60.0, 55.0) plan ok=true pts=4 left=0.62
+[334.7] go → (-66.0, -53.0) plan ok=true pts=25 left=1.06
+[390.1] stuck at (-40.6, -40.1): replan
+[395.6] stuck at (-40.9, -39.9): replan
+[401.1] stuck at (-40.5, -40.2): replan
+[411.7] stuck at (-42.7, -46.0): replan
+[428.7] go → (-25.7, -58.5) plan ok=false pts=3 left=0.95
+[429.3] go: transition (citadel → citadel, trans true) at (-25.70, -57.61)
+[432.3] go → (1404.3, -4.0) plan ok=true pts=2 left=0.25
+[434.1] go: transition (control → control, trans true) at (1404.33, -3.30)
+[435.0] go → (0.3, 41.0) plan ok=true pts=20 left=0.48
+[452.7] stuck at (-33.4, -21.6): replan
+[472.9] go → (0.3, 41.0) plan ok=true pts=2 left=0.33

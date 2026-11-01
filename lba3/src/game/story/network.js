@@ -18,6 +18,15 @@ const STATIONS = ['mill', 'valves', 'light', 'bore', 'dome'];
 const LIGHT_CODE = [2, 0, 1];                 // star, sun, wave (the lighthouse dials: 0 sun · 1 wave · 2 star)
 const CITADEL_LANDING = { x: -58, z: -60 };
 const LIGHTHOUSE_DOOR = { x: -107.5, z: 94.2 };
+// The lamp room's cast (GATE-FIX B-1). People are solid since SOLID-NPC (0.37.0), and the room is a ring round the lens:
+// from the stair top the only way to the dial bank is round the west side, between the lens and the keeper's desk and
+// microphone, a gap one person wide. Zoé (at the microphone) and Arthur (beside her) used to stand in it, so the dials
+// could not be reached. Now they wait on the east side by the stair top, against the low rim, where the hero comes up
+// ("There you are"), and watch the transmitter across the stair well: Arthur has the needle in view past the lens,
+// Zoé holds the frequency beside him, and the relay lights up beside the stairs. All three stand clear of the way
+// round, of the stair top and of the stairs down (tests/chapter10.mjs walks to each dial). Degrees round the room
+// as interiors.js buildLightTop (0 = +z, 90 = +x), metres from the lens.
+const LIGHT_CAST = { zoe: [64, 2.3], arthur: [86, 2.45], relay: [108, 2.6] };
 const REGION_OF = { zeelich: 'zeelich', workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', desert: 'desert', condA: 'desert', condB: 'desert', hamalayi: 'hamalayi', obsv: 'hamalayi' };
 
 export class Network extends ChapterBase {
@@ -45,6 +54,13 @@ export class Network extends ChapterBase {
       default: return { x: CITADEL_LANDING.x, z: CITADEL_LANDING.z, a: Math.PI };
     }
   }
+  // the lamp room's spots (LIGHT_CAST), facing the dial bank's middle (the needle)
+  lightSpot(id) {
+    const L = this.R.lighttop; if (!L) return undefined;
+    const c = L.group.position, [deg, r] = LIGHT_CAST[id], ph = (deg * Math.PI) / 180;
+    const x = c.x + Math.sin(ph) * r, z = c.z + Math.cos(ph) * r, n = L.searches?.find((s) => s.id === 'dial2') ?? c;
+    return { x, z, a: id === 'relay' ? ph : Math.atan2(n.x - x, n.z - z) };
+  }
   heskSpot(r) { if (r === 'zeelich') return null; const l = this.landing(r), x = l.x + Math.cos(l.a) * 1.8, z = l.z - Math.sin(l.a) * 1.8; return { x, z, a: Math.atan2(l.x - x, l.z - z) }; }
 
   // ---------------------------------------------------------------- props: gliders at the landings, relays
@@ -62,7 +78,7 @@ export class Network extends ChapterBase {
     const V = this.R.valves;
     if (V && !this.relays.valves) this.relays.valves = put(buildRelay(), V.group, V.board.x + 2.8, 0, V.board.z - 0.5, 0);
     const L = this.R.lighttop;
-    if (L?.npcSpots?.zoe && !this.relays.light) { const s = L.npcSpots.zoe; this.relays.light = put(buildRelay(), L.group, s.x + (L.group.position.x - s.x) * 0.25, 0, s.z + (L.group.position.z - s.z) * 0.25, 0); }
+    if (L && !this.relays.light) { const s = this.lightSpot('relay'); this.relays.light = put(buildRelay(), L.group, s.x, 0, s.z, s.a); }
     if (D?.bore && !this.relays.bore) this.relays.bore = put(buildRelay(), D.group, D.bore.x + 1.4, (D.bore.y ?? gy(D.bore.x, D.bore.z)), D.bore.z - 1.2, 0);
     const O = this.R.obsv;
     if (O?.telescope && !this.relays.dome) this.relays.dome = put(buildRelay(), O.group, O.telescope.x - 1.3, 0, O.telescope.z - 0.4, 0);
@@ -122,8 +138,7 @@ export class Network extends ChapterBase {
       case 'hesk': return f.c10_started ? this.heskSpot(this.region()) : null;
       case 'oku': return f.c10_okuAsk ? { x: Z.millTop.x + 2.2, z: Z.millTop.z + 3.0, a: Math.PI } : Z.npcSpots.esmer2;
       case 'mira': return f.c10_miraAsk && R.valves ? { x: R.valves.spawn.x + 1.6, z: R.valves.spawn.z - 1.8, a: Math.PI * 0.75 } : undefined;
-      case 'zoe': { const s = R.lighttop?.npcSpots?.zoe; return s ? { ...s } : undefined; }
-      case 'arthur': { const s = R.lighttop?.npcSpots?.zoe, c = R.lighttop?.group.position; return s && c ? { x: s.x + (c.x - s.x) * 0.45 + 0.6, z: s.z + (c.z - s.z) * 0.45, a: Math.atan2(s.x - c.x, s.z - c.z) } : undefined; }
+      case 'zoe': case 'arthur': return this.lightSpot(id);   // (the lamp room, by the stair top: LIGHT_CAST)
       case 'ilka': return D?.bore ? { x: D.bore.x - 2.6, z: D.bore.z + 2.4, a: 0.6 } : undefined;
       case 'dallan': return D?.bore ? { x: D.bore.x + 2.8, z: D.bore.z + 2.6, a: -0.6 } : undefined;
       case 'pim': return f.c10_pim && R.obsv ? { x: R.obsv.telescope.x - 1.0, z: R.obsv.telescope.z + 1.1, a: Math.PI * 0.8 } : undefined;

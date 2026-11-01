@@ -55,8 +55,10 @@ export class RoomBuilder {
   put(x, z, ry, fn, opts = {}, colExtra = { noStand: true }) {
     const fp = this.k.at(x, opts.y || 0, z, ry, () => fn(this.k, opts));
     if (fp && !opts.noCol) {
-      if (fp.r) this.ccol(x, z, fp.r, fp.top, colExtra);
-      else if (fp.hw) this.col(x, z, fp.hw, fp.hd, fp.top, { rot: ry, ...colExtra });
+      // (a piece stood on a raised floor, opts.y: its collider's top is up there with it, else it was walked through)
+      const top = fp.top + (opts.y || 0);
+      if (fp.r) this.ccol(x, z, fp.r, top, colExtra);
+      else if (fp.hw) this.col(x, z, fp.hw, fp.hd, top, { rot: ry, ...colExtra });
     }
     return fp;
   }
