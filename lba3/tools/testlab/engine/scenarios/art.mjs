@@ -263,94 +263,145 @@ export const artBusy = { ...artShots, id: 'art-busy', title: 'People busy at som
   } };
 ART.push(artBusy);
 
-// LBA-CITADEL-1 (Chez Luc, the tavern after LBA2's scene 3, in the 'south' house): walked with real keys — in by the
-// house's door, up the stair to the gallery, out by the tavern's door — and its frames. evidence/tavern/*.jpg, walk.json
-export const artTavern = { ...artShots, id: 'art-tavern', title: 'Chez Luc: in by the door, up to the gallery, out again', suites: ['arttavern'], timeoutS: 600,
-  async run(ctx) {
-    const { page, rec, dir } = ctx;
-    const out = path.join(dir, 'evidence', 'tavern'); fs.mkdirSync(out, { recursive: true });
-    if ((await gameState(page)).state !== 'play') await newGame(page);
-    const shot = async (n) => { await page.screenshot({ path: path.join(out, n + '.jpg'), type: 'jpeg', quality: 88 }); rec.evidence.push(`evidence/tavern/${n}.jpg`); };
-    const st = () => page.evaluate(() => ({ room: game.room?.id ?? 'citadel', x: +game.hero.pos.x.toFixed(2), y: +game.hero.pos.y.toFixed(2), z: +game.hero.pos.z.toFixed(2) }));
-    // walk the hero toward a point (world x, z) with the arrow keys the camera maps: try each key for a beat, keep the one
-    // that brings him nearer, until he is there or the time runs out
-    const walkTo = async (tx, tz, maxS = 12) => {
-      const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
-      const t0 = Date.now();
-      while (Date.now() - t0 < maxS * 1000) {
-        const p0 = await st(); const d0 = Math.hypot(p0.x - tx, p0.z - tz); if (d0 < 0.5) return true;
-        let best = null, bd = d0;
-        for (const k of keys) {
-          await page.keyboard.down(k); await sleep(250); await page.keyboard.up(k); await sleep(80);
-          const p = await st(); if (p.room !== p0.room) return true;
-          const d = Math.hypot(p.x - tx, p.z - tz); if (d < bd - 0.05) { bd = d; best = k; break; }
-        }
-        if (!best) return false;
-        await page.keyboard.down(best); await sleep(Math.min(1200, bd * 260)); await page.keyboard.up(best);
-      }
-      return false;
-    };
-    const log = [];
-    // 1. outside, a few steps before the 'south' house's door; walk in
-    const door = await page.evaluate(() => { const h = game.world.houses.find((x) => x.id === 'south'); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; });
-    await sleep(2500); await shot('01-outside-door');
-    await walkTo(door.x, door.z, 10); await sleep(3500);
-    let s = await st(); log.push({ step: 'in by the door', ...s }); await shot('02-inside');
-    // the frame's draw calls in the room (main and shadow passes, as tests/drawcalls.mjs counts them)
-    log.push({ calls: await page.evaluate(() => new Promise((res) => {
-      const R = game.renderer.renderer, orig = R.renderBufferDirect.bind(R), n = { main: 0, shadow: 0 };
-      requestAnimationFrame(() => { R.renderBufferDirect = (cam, scene, ...a) => { n[scene ? 'main' : 'shadow']++; return orig(cam, scene, ...a); };
-        requestAnimationFrame(() => { R.renderBufferDirect = orig; res({ ...n, total: n.main + n.shadow, quality: game.settings?.quality }); }); });
-    })) });
-    assert(rec, 'the south house door leads into the tavern', s.room === 'tavern', 'tavern', s.room);
-    if (s.room !== 'tavern') { fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify(log, null, 1)); return; }
-    // 2. inside, the hero walks a route with the game's own steering (hero.walkTo: the player's walking physics, so
-    // nothing is walked through and steps are climbed or not as by hand); room-local waypoints, the tavern's layout
-    // 2. inside, the hero is driven along waypoints through the player's own walking (the game's input reports a full
-    // stick and the hero's move direction points at the next waypoint, so the physics, steps and colliders are as by
-    // hand; the story cancels hero.walkTo indoors). Room-local waypoints, the tavern's layout.
-    const walk = async (pts, maxS = 25) => {
-      const res = await page.evaluate(async ({ pts, maxS }) => {
-        const g = game, h = g.hero; if (!g.room) return 'not in a room'; const c = g.room.center, P = pts.map(([x, z]) => ({ x: c.x + x, z: c.z + z }));
-        const om = g.input.move.bind(g.input);
-        let k = 0, stuckT = 0, last = { x: h.pos.x, z: h.pos.z }, out = 'done';
-        // (the stick that walks toward the waypoint under the camera's heading: Hero.moveDir inverted)
-        // (Classic controls: forward along his heading, which is turned to the waypoint each tick)
-        const classic = g.settings.controls === 'classic';
-        g.input.move = () => {
-          const p = P[Math.min(k, P.length - 1)], dx = p.x - h.pos.x, dz = p.z - h.pos.z, d = Math.hypot(dx, dz) || 1, wx = dx / d, wz = dz / d;
-          if (classic) { h.angle = Math.atan2(wx, wz); return { x: 0, y: 1, analog: true }; }
-          const yaw = g.camRig.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
-          return { x: wx * rx + wz * rz, y: wx * fx + wz * fz, analog: true };
-        };
-        const t0 = performance.now();
-        try {
-          while (k < P.length) {
-            await new Promise((r) => setTimeout(r, 50));
-            if (g.room?.id !== 'tavern') { out = 'left the room'; break; }
-            const p = P[k]; if (Math.hypot(p.x - h.pos.x, p.z - h.pos.z) < 0.3) { k++; continue; }
-            const moved = Math.hypot(h.pos.x - last.x, h.pos.z - last.z); last = { x: h.pos.x, z: h.pos.z };
-            stuckT = moved < 0.01 ? stuckT + 0.05 : 0;
-            if (stuckT > 1.5) { out = 'stuck before waypoint ' + k + ' at ' + (h.pos.x - c.x).toFixed(2) + ',' + (h.pos.z - c.z).toFixed(2); break; }
-            if (performance.now() - t0 > maxS * 1000) { out = 'timeout at waypoint ' + k; break; }
+// LBA-CITADEL (LBA2's Citadel places that ours kept shut, each inside the building on its original's spot): each one
+// walked — in by its house's door with real keys, a route inside through the player's own walking (the game's input
+// reports a stick toward the next waypoint: the physics, steps and colliders as by hand; the story cancels hero.walkTo
+// indoors), out by its own door — with its frames and draw calls. evidence/<room>/*.jpg, walk.json.
+//   legs: [{ name, pts: [[x, z] room-local], minY? }]; the last leg ends at the room's exit.
+function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
+  return { ...artShots, id, title, suites: [suite, 'artplaces'], timeoutS: 600,
+    async run(ctx) {
+      const { page, rec, dir } = ctx;
+      const out = path.join(dir, 'evidence', room); fs.mkdirSync(out, { recursive: true });
+      if ((await gameState(page)).state !== 'play') await newGame(page);
+      const shot = async (n) => { await page.screenshot({ path: path.join(out, n + '.jpg'), type: 'jpeg', quality: 88 }); rec.evidence.push(`evidence/${room}/${n}.jpg`); };
+      const st = () => page.evaluate(() => ({ room: game.room?.id ?? 'citadel', x: +game.hero.pos.x.toFixed(2), y: +game.hero.pos.y.toFixed(2), z: +game.hero.pos.z.toFixed(2) }));
+      // outside: the arrow keys the camera maps, each tried for a beat, the one that brings him nearer kept
+      const keyTo = async (tx, tz, maxS = 12) => {
+        const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'], t0 = Date.now();
+        while (Date.now() - t0 < maxS * 1000) {
+          const p0 = await st(); const d0 = Math.hypot(p0.x - tx, p0.z - tz); if (d0 < 0.5) return true;
+          let best = null, bd = d0;
+          for (const k of keys) {
+            await page.keyboard.down(k); await sleep(250); await page.keyboard.up(k); await sleep(80);
+            const p = await st(); if (p.room !== p0.room) return true;
+            const d = Math.hypot(p.x - tx, p.z - tz); if (d < bd - 0.05) { bd = d; best = k; break; }
           }
-        } finally { g.input.move = om; }
-        return out;
-      }, { pts, maxS });
-      await sleep(400); log.push({ result: res });
-    };
-    await walk([[-1.5, 5.0], [-1.2, 0.5], [2.2, -0.2], [2.2, -2.35]]);
-    log.push({ step: 'stair foot', ...(await st()) }); await shot('03-stair-foot');
-    await walk([[1.0, -2.35], [-2.6, -2.35], [-3.8, -2.35]]);
-    s = await st(); log.push({ step: 'top of the stair (landing)', ...s }); await shot('04-landing');
-    await walk([[-3.8, -3.6], [0.3, -3.8]]);
-    s = await st(); log.push({ step: 'on the gallery', ...s }); await shot('05-gallery');
-    assert(rec, 'the gallery is reached by the stair (y ≈ 2.4)', s.y > 2.2, '> 2.2', s.y);
-    // 3. down again and out by the tavern's door
-    await walk([[-3.8, -3.6], [-3.8, -2.35], [1.0, -2.35], [2.2, -2.35], [2.2, -0.2], [-1.2, 0.5], [-1.5, 5.0], [-4.6, 6.1]], 40);
-    await sleep(3500);
-    s = await st(); log.push({ step: 'out by the door', ...s }); await shot('06-out');
-    assert(rec, 'the tavern door leads back to Citadel', s.room === 'citadel', 'citadel', s.room);
-    fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify(log, null, 1));
-  } };
+          if (!best) return false;
+          await page.keyboard.down(best); await sleep(Math.min(1200, bd * 260)); await page.keyboard.up(best);
+        }
+        return false;
+      };
+      const walk = async (pts, maxS = 30) => {
+        const res = await page.evaluate(async ({ pts, maxS, room }) => {
+          const g = game, h = g.hero; if (!g.room) return 'not in a room'; const c = g.room.center, P = pts.map(([x, z]) => ({ x: c.x + x, z: c.z + z }));
+          const om = g.input.move.bind(g.input), classic = g.settings.controls === 'classic';
+          let k = 0, stuckT = 0, last = { x: h.pos.x, z: h.pos.z }, out = 'done';
+          // (Modern: the stick that walks toward the waypoint under the camera's heading, Hero.moveDir inverted;
+          //  Classic: forward along his heading, turned to the waypoint each tick)
+          g.input.move = () => {
+            const p = P[Math.min(k, P.length - 1)], dx = p.x - h.pos.x, dz = p.z - h.pos.z, d = Math.hypot(dx, dz) || 1, wx = dx / d, wz = dz / d;
+            if (classic) { h.angle = Math.atan2(wx, wz); return { x: 0, y: 1, analog: true }; }
+            const yaw = g.camRig.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+            return { x: wx * rx + wz * rz, y: wx * fx + wz * fz, analog: true };
+          };
+          const t0 = performance.now();
+          try {
+            while (k < P.length) {
+              await new Promise((r) => setTimeout(r, 50));
+              if (g.room?.id !== room) { out = 'left the room'; break; }
+              const p = P[k]; if (Math.hypot(p.x - h.pos.x, p.z - h.pos.z) < 0.3) { k++; continue; }
+              const moved = Math.hypot(h.pos.x - last.x, h.pos.z - last.z); last = { x: h.pos.x, z: h.pos.z };
+              stuckT = moved < 0.01 ? stuckT + 0.05 : 0;
+              if (stuckT > 1.5) { out = 'stuck before waypoint ' + k + ' at ' + (h.pos.x - c.x).toFixed(2) + ',' + (h.pos.z - c.z).toFixed(2); break; }
+              if (performance.now() - t0 > maxS * 1000) { out = 'timeout at waypoint ' + k; break; }
+            }
+          } finally { g.input.move = om; }
+          return out;
+        }, { pts, maxS, room });
+        await sleep(400); return res;
+      };
+      const log = [];
+      // (a place that opens only from a point of the story on: those flags set first)
+      // (and, as a new game's people still stand where the earlier story put them, anyone within 2.5 m of the door is
+      //  stood aside: the prologue's Zoé at the neighbours' door)
+      if (flags) await page.evaluate(({ flags, house }) => { Object.assign(game.flags, flags); const h = game.world.houses.find((x) => x.id === house); for (const n of game.npcs || []) if (n.present && Math.hypot(n.pos.x - h.door.x, n.pos.z - h.door.z) < 2.5) n.setPresent(false); }, { flags, house });
+      // 1. outside, a few steps before the house's door; walk in
+      const door = await page.evaluate((house) => { const h = game.world.houses.find((x) => x.id === house); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
+      await sleep(2500); await shot('01-outside-door');
+      // what the game offers at the door, 1.3 m before it and facing it (a "locked" prompt there would contradict the open door)
+      const offer = await page.evaluate((house) => { const h = game.world.houses.find((x) => x.id === house), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
+      log.push({ offerAtDoor: offer });
+      assert(rec, `no "locked" prompt at the ${house} building's open door`, offer?.kind !== 'locked', 'not locked', offer?.kind ?? 'none');
+      await keyTo(door.x, door.z, 10); await sleep(1500);
+      // (the scene change: a first visit builds the room behind the black first; wait until it has faded in)
+      for (let t = 0; t < 30 && await page.evaluate(() => !!game.trans); t++) await sleep(500);
+      await sleep(1500);
+      let s = await st(); log.push({ step: 'in by the door', ...s }); await shot('02-inside');
+      if (s.room !== room) log.push({ doorsNear: await page.evaluate(() => game.story.doors().filter((d) => Math.hypot(d.x - game.hero.pos.x, d.z - game.hero.pos.z) < 4).map((d) => ({ room: d.room, house: d.house, x: +d.x.toFixed(2), z: +d.z.toFixed(2), r: d.r, dist: +Math.hypot(d.x - game.hero.pos.x, d.z - game.hero.pos.z).toFixed(2) }))), doorCool: await page.evaluate(() => game.doorCool), regionsHas: await page.evaluate((r) => game.regions.has?.(r), room) });
+      log.push({ calls: await page.evaluate(() => new Promise((res) => {
+        const R = game.renderer.renderer, orig = R.renderBufferDirect.bind(R), n = { main: 0, shadow: 0 };
+        requestAnimationFrame(() => { R.renderBufferDirect = (cam, scene, ...a) => { n[scene ? 'main' : 'shadow']++; return orig(cam, scene, ...a); };
+          requestAnimationFrame(() => { R.renderBufferDirect = orig; res({ ...n, total: n.main + n.shadow, quality: game.settings?.quality }); }); });
+      })) });
+      assert(rec, `the ${house} building's door leads into ${room}`, s.room === room, room, s.room);
+      if (s.room !== room) { fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify(log, null, 1)); return; }
+      // 2. the route inside, leg by leg; 3. the last leg out by the room's own door
+      for (const [n, leg] of legs.entries()) {
+        const res = await walk(leg.pts); s = await st(); log.push({ step: leg.name, result: res, ...s }); await shot(`${String(n + 3).padStart(2, '0')}-${leg.name.replace(/\W+/g, '-')}`);
+        if (leg.minY != null) assert(rec, `${leg.name}: y ≥ ${leg.minY}`, s.y >= leg.minY, `>= ${leg.minY}`, s.y);
+      }
+      await sleep(3500); s = await st(); log.push({ step: 'out by the door', ...s }); await shot('99-out');
+      assert(rec, `${room}'s door leads back to Citadel`, s.room === 'citadel', 'citadel', s.room);
+      fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify(log, null, 1));
+    } };
+}
+// Chez Luc (LBA-CITADEL-1, LBA2 scene 3, the 'south' house): past the bar to the stair's foot, up to the landing and
+// the gallery, down again and out
+export const artTavern = placeWalk({ id: 'art-tavern', title: 'Chez Luc: in by the door, up to the gallery, out again', suite: 'arttavern', room: 'tavern', house: 'south', legs: [
+  { name: 'stair foot', pts: [[-1.5, 5.0], [-1.2, 0.5], [2.2, -0.2], [2.2, -2.35]] },
+  { name: 'landing', pts: [[1.0, -2.35], [-2.6, -2.35], [-3.8, -2.35]], minY: 2.2 },
+  { name: 'gallery', pts: [[-3.8, -3.6], [0.3, -3.8]], minY: 2.2 },
+  { name: 'out', pts: [[-3.8, -3.6], [-3.8, -2.35], [1.0, -2.35], [2.2, -2.35], [2.2, -0.2], [-1.2, 0.5], [-1.5, 5.0], [-4.6, 6.1]] },
+] });
 ART.push(artTavern);
+// Mr Bazoo's shop (LBA-CITADEL-2, LBA2 scene 14, the 'museum' building): round the counter to the goods along the
+// back wall, past the Zeelich table, and out
+export const artBazoo = placeWalk({ id: 'art-bazoo', title: "Mr Bazoo's shop: in by the door, round the counter, out again", suite: 'artbazoo', room: 'bazoo', house: 'museum', legs: [
+  { name: 'behind the counter', pts: [[-2.2, 1.8], [-2.4, -1.6], [0.2, -1.7]] },
+  { name: 'by the Zeelich goods', pts: [[2.6, -1.4], [3.0, -0.9]] },
+  { name: 'out', pts: [[2.8, 1.6], [0.2, 1.7], [-2.6, 1.8], [-3.9, 1.8]] },
+] });
+ART.push(artBazoo);
+// the ticket office (LBA-CITADEL-3, LBA2 scene 8, the 'baggage' building): along the waiting chairs, round the counter's
+// right end to the staff's side, and out
+export const artTicket = placeWalk({ id: 'art-ticket', title: 'The ticket office: in by the door, behind the counter, out again', suite: 'artticket', room: 'ticket', house: 'baggage', legs: [
+  { name: 'the public side', pts: [[-0.8, 1.6], [2.6, 1.2]] },
+  { name: 'behind the counter', pts: [[2.7, -0.9], [2.0, -2.0]] },
+  { name: 'out', pts: [[2.7, -0.9], [2.6, 1.2], [-1.5, 1.9], [-2.8, 1.9]] },
+] });
+ART.push(artTicket);
+// the pharmacy (LBA-CITADEL-4, LBA2 scene 22, the 'bug2' house): past the shelves and the ladder to the counter's far
+// side, along the back shelves, and out
+export const artPharmacy = placeWalk({ id: 'art-pharmacy', title: 'The pharmacy: in by the door, round the counter, out again', suite: 'artpharmacy', room: 'pharmacy', house: 'bug2', legs: [
+  { name: 'the front', pts: [[-1.2, 1.6], [2.3, 1.4]] },
+  { name: 'behind the counter', pts: [[2.6, 0.1], [2.2, -1.2], [0.2, -1.5]] },
+  { name: 'out', pts: [[-2.4, -0.9], [-2.4, 1.3], [-2.2, 2.1], [-3.2, 2.1]] },
+] });
+ART.push(artPharmacy);
+// the neighbours' house (LBA-CITADEL-5, LBA2 scene 9, the 'nbr' house; open once the prologue is done): past the table
+// to the bed and the desk, round to the kitchen corner, and out
+export const artNbrHouse = placeWalk({ id: 'art-nbrhouse', title: "The neighbours' house: in by the door, round the room, out again", suite: 'artnbrhouse', room: 'nbrhouse', house: 'nbr', flags: { prologueDone: true }, legs: [
+  { name: 'by the bed and desk', pts: [[-1.6, 2.6], [-1.8, -0.2], [1.2, -1.6]] },
+  { name: 'the kitchen corner', pts: [[1.6, 0.9], [2.1, 2.6]] },
+  { name: 'out', pts: [[0.2, 2.9], [-2.4, 3.0], [-3.2, 3.0]] },
+] });
+ART.push(artNbrHouse);
+// Paul's house, now Nell's (LBA-CITADEL-6, LBA2 scene 7, the 'wing2' house): past the bed to the armchair and the
+// sailboat, round the table to her workbench, and out
+export const artNellHouse = placeWalk({ id: 'art-nellhouse', title: "Nell's (Paul's house): in by the door, round the room, out again", suite: 'artnellhouse', room: 'nellhouse', house: 'wing2', legs: [
+  { name: 'by the armchair and sailboat', pts: [[-1.0, 3.0], [-0.9, -1.6], [1.6, -2.6]] },
+  { name: 'at the workbench', pts: [[2.0, -0.8], [1.6, 2.0]] },
+  { name: 'out', pts: [[-1.0, 3.2], [-3.2, 3.3]] },
+] });
+ART.push(artNellHouse);

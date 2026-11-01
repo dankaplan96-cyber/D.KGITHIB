@@ -881,7 +881,7 @@ should look about 80 % alike".
 
 - The tavern comes first: it is iconic in LBA2, and twelve years on it is where the harbour's people meet.
 
-### What it is (prototyped on the laptop: `requests/LBA-CITADEL-1.diff`, against da4a75f)
+### What it is (prototyped on the laptop: `requests/LBA-CITADEL-1.diff`, regenerated 1.11 evening against origin 9205125: tavern.js as a new file plus the regions.js and story/index.js hooks; `git apply --check` passes on a clean checkout)
 - **The room:** new `src/game/tavern.js`, `buildTavernRoom` (region `tavern` at x 6600). The original's layout, from
   the laptop's study render of scene 3 (numbers and descriptions only):
   - **Size:** a 10 × 15 m hall, 5.6 m high (the original: 21 × 32 cells, about 5.8 m).
@@ -922,3 +922,194 @@ should look about 80 % alike".
 ### Next of the same kind (one at a time, after the user's word on this one)
 Mr Bazoo's shop in `museum`, the ticket office in `baggage`, the pharmacy in Bug Street's south house, the neighbour's
 house — each at its original's layout, about 80 % alike.
+
+**Diff fixed (1.11 evening, the cloud's note: "incremental, tavern.js isn't in the repo and the regions.js hunk doesn't
+apply").**
+- `requests/LBA-CITADEL-1.diff` is now `git diff origin/ccr-adf00ea7-37ebl3`, made on a clean checkout of 9205125.
+  - tavern.js is a new file; the hooks are in regions.js (import, REF, AT, `add`) and story/index.js (import,
+    `doors()`, `exitTo()`).
+- **Checked:** `git apply --check` on a fresh checkout of 9205125 passes, and `node --check` passes on the three
+  files.
+- **The Test Lab `arttavern` on that checkout:** PASS twice running. One earlier run in four failed, and that run is a
+  real finding:
+  - Twinsen walked along the stair at floor level (y 0) through its steps and stopped at the landing's face.
+  - The steps are `stair: true` colliders, which the physics never blocks sideways (`physics.js`: "the height under
+    the feet decides"). So a long frame that misses the 0.3 m step-up leaves him inside them.
+  - It did not happen on my copy in three runs.
+  - If the cloud sees it in play, a solid low kerb along the stair's open side, or a check of the step-up against
+    dt, would hold him.
+
+---
+
+## LBA-CITADEL-2 · Mr Bazoo's shop inside the `museum` building · Approved (the user: "excellent, go on"; night mode, pictures sent)
+
+- **Where:** LBA2 scene 14's door is where our `museum` building stands, by the harbour path (in LBA2 the museum is
+  elsewhere, on our Water Office's spot).
+- **Code:** `requests/LBA-CITADEL-2.diff`. It goes **on top of LBA-CITADEL-1**: apply 1, then 2. Checked: `git apply
+  --check` of 1 then 2 on a fresh checkout of 9205125 passes.
+  - New `src/game/bazoo.js` (region `bazoo` at x 6700).
+  - Hooks after the tavern's: regions.js and story/index.js.
+- **The original's layout** (study render of scene 14: 17 × 12 cells, so 8.4 × 6 m, 3.4 m high; as the camera sees
+  it):
+  - **Walls and floor:** the long wall at the back, the short one on the left; pale grey stone blocks and grey tiles.
+  - **The counter:** a rounded pale-metal U in the middle, with the till and a tree of red baubles at one end and of
+    teal at the other.
+  - **Display tables on two short legs along the walls:**
+    - a terracotta rabbit and a teal figure;
+    - a teal vase, a red pot and a glass;
+    - a bowl of red fruit and a tall candle;
+    - a big green glass bottle, a clay pot and a red box;
+    - a teal bottle and a bowl.
+  - **The rest:** the great potted plant with red flowers by the back wall, two barrels and a crate at the front.
+- **Twelve years on (ours):** a table of Zeelich goods (glazed jars in the Esmers' colours, a little domed lamp), the
+  prices on a board by the door.
+- **For the story:** `R.npcSpots.bazoo` is behind the counter. The door works in every chapter, as an optional place.
+  No people or lines were added.
+- **Measured:**
+  - Test Lab `artbazoo` (or `artplaces`), on the clean checkout with both diffs: PASS. In by the `museum` door, round
+    the counter, past the goods along the back wall to the Zeelich table, and out by the shop's door to Citadel at
+    (-64.3, 41.1).
+  - Draw calls: 24 (23 main, 1 shadow) at Medium.
+- **Pictures:** `runs/bazoo-vs-lba2.jpg` (the original's study render | ours).
+
+**LBA-CITADEL-1 and -2 diffs rebuilt (1.11, later): a door-prompt fix inside 1.**
+- **The fault:** the doors of these places live in the director's `doors()` (`story/index.js`), not a chapter's. But
+  `story/prologue.js` `baseInteractables` offers every house whose door is not in the chapter's `cur.doors()` as
+  locked.
+  - At the `museum` door, the game offered `{ kind: 'locked', label: 'p_door' }`, although walking in worked
+    (measured: Test Lab `artbazoo`, the offer 1.3 m before the door).
+- **The fix (in `LBA-CITADEL-1.diff`):** `const open = new Set([...cur.doors(), ...(this.story.doors?.() || [])].map((d)
+  => d.house));`. With it there is no prompt at either door.
+- **Checked on a fresh checkout of origin:** `git apply --check` of 1, then 2, passes. `artplaces` passes both
+  places, including the new check "no locked prompt at the open door".
+
+---
+
+## LBA-CITADEL-3 · The ticket office inside the `baggage` building · Approved (night mode: "work to the plan"; pictures sent)
+
+- **Where:** LBA2 scene 8's door is where our `baggage` building stands at the harbour.
+- **Code:** `requests/LBA-CITADEL-3.diff`, **on top of 1 and 2** (checked: 1, 2, then `--check` of 3 on a fresh
+  checkout of 0f197c3).
+  - New `src/game/ticket.js` (region `ticket` at x 6800).
+  - Hooks after the shop's.
+- **The original's layout** (study render: 13 × 13 cells, so 6.4 × 6.4 m, 3.6 m; as the camera sees it):
+  - **Walls and floor:** pale grey blocks, a black and white checkered floor.
+  - **The counter:** a long pale counter across the room at half its depth. It has a brown cabinet at its left end,
+    and the till and a pile of tickets on it.
+  - **The staff's side behind it:** red stools and a chair, the great potted plant on a low stand, and a red bench
+    with stacked red luggage.
+  - **The public's side in front:** red chairs along the left wall and the front, two white globe lamps on short
+    posts.
+  - **The left wall:** a Temple of Bù poster (drawn, no words) under a round wall clock, and the arched door.
+  - **The back wall:** two windows with red blinds and a ship poster between them.
+- **Twelve years on (ours):**
+  - The office sells the project's ferry to Zeelich now (the poster's ship is the ferry), with a timetable board by
+    the door.
+  - The Temple poster has faded.
+- **For the story:** `R.npcSpots.clerk` is behind the counter. No people or lines were added.
+- **Measured:**
+  - `artticket`: PASS. In by the `baggage` door (no locked prompt), along the waiting chairs, round the counter's
+    right end to the staff's side, and out.
+  - Draw calls: 24 (23 + 1) at Medium.
+  - **The test caught one fault before the push:** the room's build threw (`TEX.clock` is `CANV.clock`). When a
+    region's build fails, its door does nothing and `game.doorCool` keeps climbing; fixed.
+- **Picture:** `runs/ticket-vs-lba2.jpg`.
+
+---
+
+## LBA-CITADEL-4 · The pharmacy inside Bug Street's `bug2` house · Approved (night mode; pictures sent)
+
+- **Where:** LBA2 scene 22's door. Our `bug2` was placed for it (town.js: "Bug Street's south house, the original's
+  scene 22").
+- **Code:** `requests/LBA-CITADEL-4.diff`, **on top of 1–3** (checked on a fresh checkout).
+  - New `src/game/pharmacy.js` (region `pharmacy` at x 6900).
+  - Hooks after the ticket office's.
+- **The original's layout** (study render: 15 × 14 cells, so 7.2 × 6.6 m, 3.6 m):
+  - **Walls and floor:** pale grey blocks; grey tiles with black ones scattered in them.
+  - **The shelves:** both walls lined with shelves of teal apothecary jars with pale lids, a black library ladder
+    between them on each wall, and a great plant against the back wall.
+  - **The counter:** a long oval pale counter in the middle, with the till, a green flask and glasses, and a tree of
+    blue baubles at one end and of red at the other.
+  - **The rest:** white globe lamps on posts at the left front and the right, two red chairs at the front, a second
+    plant, two teal jars standing on the floor.
+- **Twelve years on (ours):** one shelf holds Zeelich remedies (the Mosquibees' amber honey jars), and a notice board
+  for prescriptions hangs by the door.
+- **For the story:** `R.npcSpots.pharmacist` is behind the counter. It ties in with the LBA2 opening's errand to the
+  pharmacy (docs/lba3-team/ADVENTURE_DESIGN.md #12), if the story wants it.
+- **Measured:**
+  - `artpharmacy`: PASS. In by the `bug2` door (no locked prompt), across the front, round the counter's far end to
+    the back shelves, and out.
+  - Draw calls: 24 (23 + 1) at Medium.
+- **Picture:** `runs/pharmacy-vs-lba2.jpg`.
+
+---
+
+## LBA-CITADEL-5 · The neighbours' house, inside the `nbr` house · Approved (night mode; pictures sent)
+
+- **Where:** LBA2 scene 9's door is our `nbr` house, next to Twinsen's.
+- **Code:** `requests/LBA-CITADEL-5.diff`, **on top of 1–4**.
+  - New `src/game/nbrhouse.js` (region `nbrhouse` at x 7600).
+  - Hooks after the pharmacy's. Its `doors()` hook passes `this.game.flags`.
+- **The door leads in only once `flags.prologueDone`.** In the prologue Zoé stands at it (prologue.js keeps the house
+  in its open set for her; text/well.js "their kettle").
+- **The original's layout** (study render: 15 × 17 cells, so 7.2 × 8.2 m, 3.0 m), in the style of Twinsen's house:
+  - **Walls and floor:** teal patterned paper over a wooden dado, terracotta tiles, dark wooden caps. These are
+    Twinsen's house's own materials (WA-8).
+  - **The left wall:** a window with cream curtains, a bookcase of old volumes over a sideboard, a lamp in the corner.
+  - **The back wall:** the double bed under a portrait, a wall lamp, a writing desk with its lamp and chair, a framed
+    picture, a basket of rolled papers.
+  - **The middle:** a square table with a candle and two chairs on a rug, and a teal armchair on each side.
+- **Twelve years on (ours), tied to chapter 1's water trouble:** a kitchen corner with the stove and the kettle Zoé
+  asks about, a basin with its tap, and one of the project's heat radiators.
+- **For the story:** `R.npcSpots.neighbour` is by the stove. No people or lines were added.
+- **Measured:**
+  - `artnbrhouse` (with `prologueDone` set and anyone at the door stood aside): PASS. In, past the table to the bed
+    and the desk, to the kitchen corner, and out.
+  - Draw calls: 19 (18 + 1) at Medium.
+- **Picture:** `runs/nbrhouse-vs-lba2.jpg`.
+
+**Two faults found in my own rooms on the way, fixed in every diff:**
+- **The neighbours' house broke the renderer:** `props.frame(k, w, h, picture)` takes the picture's texture fourth, and
+  I had passed a number, so its material had a "map" that was not a texture.
+  - The shader would not compile (`'uvundefined'`), and three.js threw at `refreshMaterialUniforms`.
+- **Shared geometry turned:** `cyl(…).rotateX/Z` rotated `props.cyl`'s cached, shared geometry, which every other user
+  of the same cylinder would see turned. Now the part is turned instead (`{ rx }`, `{ rz }`).
+  - Found in the tavern (the arched door and its knob), the ticket office (the clock) and the neighbours' house (a
+    lamp bracket).
+
+**The whole chain rebuilt and checked (1.11, late evening).**
+- `requests/LBA-CITADEL-1.diff` … `-5.diff` were remade one on top of the other from origin 799cccc. Each applies with
+  `git apply --check` in order on a fresh checkout.
+- On that checkout, the Test Lab `artplaces` passes all five in one run:
+  - each in by its house's door, with no locked prompt, and out;
+  - draw calls 30 / 24 / 24 / 24 / 19 at Medium;
+  - no console errors besides the server's missing favicon.
+- **The game's own tests on the same checkout** (local Chrome/headless shell; the tests' Playwright path pointed at
+  the laptop's for the run only, nothing of that in the diffs):
+  - `prologue.mjs` 26/26, `chapter1.mjs` 23/23, `opening.mjs` 27/27 (rerun alone; the first run, beside a picture shoot, met refused connections from the local server), `transitions.mjs` 6/6 and `house.mjs` 2/2 pass.
+  - Their only resource "fail" is the local server's missing favicon.ico.
+
+---
+
+## LBA-CITADEL-6 · Paul's house (LBA2 scene 7), now Nell's home and workshop, inside the `wing2` house · Approved (night mode; pictures sent)
+
+- **Where:** LBA2 scene 7's door is our `wing2` house by the harbour, with NELL'S REPAIRS on it.
+- **Twelve years on:** Paul's old house is Nell's. Her stall on the path outside is her counter (townlife.js); the
+  engines she cannot mend there come in here.
+- **Code:** `requests/LBA-CITADEL-6.diff`, **on top of 1–5** (the chain was rebuilt from origin dd19fb3; 1…6 apply in
+  order on a fresh checkout).
+  - New `src/game/nellhouse.js` (region `nellhouse` at x 7800).
+- **The original's layout** (study render: 15 × 17 cells, so 7.2 × 8.2 m, 3.0 m), in Twinsen's house's materials:
+  - **The left wall:** the bed at the front, a wall lamp, a sideboard with a bowl under a big painting, and a window
+    with cream curtains at the back.
+  - **The back wall:** a floor lamp, a teal armchair, a long sideboard with a model sailboat between two candles, and
+    a wall lamp.
+  - **The middle:** a table with a bowl of flowers and two chairs.
+- **Ours on top:** Nell's workbench at the front with an Esmer engine open on it (brass drum, flywheel, pipe) and her
+  tools, and a crate of spare parts.
+- **For the story:** `R.npcSpots.nell` is at the bench. No people or lines were added.
+- **Measured:**
+  - `artnellhouse`: PASS. In by the `wing2` door (no locked prompt), past the bed to the armchair and the sailboat,
+    round the table to the workbench, and out.
+  - Draw calls: 16 (15 + 1) at Medium. No console errors.
+- **Picture:** `runs/nellhouse-vs-lba2.jpg`.
