@@ -322,12 +322,131 @@ const intr = await ev(() => { const G = game, B = G.world.busy; const r = G.walk
   G.enterRoom('house', G.rooms.house.spawn, true); P.settle(); G.step(0.3);
   return { shown, after: B.el.style.display, looks: B.looks.size }; });
 check('a word over a head is put away when he goes indoors, and no head is left turned', intr.shown === 'block' && intr.after === 'none' && intr.looks === 0, intr);
+// ---- TOWN-LIFE-3 (src/game/townplay.js, harbourlife.js, townbits.js; walkers.js `play` stops; townbusy.js townState): the
+// children's games, Doran's rod and Xil's ledger, a broom, the washing, the cat; and the town's life in every chapter Citadel
+// is seen in. ISO (logged): residents put at a stop (slotAt/arrived, as walkers.mjs does); placements by exitRoom; town
+// time run with game.step; chapters set by their flags (setChapter).
+iso('TOWN-LIFE-3: residents put at their play stops (slotAt/arrived); Twinsen placed by exitRoom; town time by game.step; chapters by their flags');
+await setChapter('project', { c1_water: true });
+await ev(() => { window.put = (id, sid, tmr = 60) => { const W = game.walkers, r = W.res.find((q) => q.def.id === id); const i = r.stops.findIndex((s) => s.id === sid); r.ri = i; r.engaged = false; r.inside = false; r.away = null; r.hold = 0; r.yieldT = 0; r.setPresent(true); r.slotAt(r.stops[i]); r.arrived(r.stops[i], true); r.tmr = tmr; return r; }; });
+const t3 = await ev(() => { const B = game.world.busy, out = {};
+  out.parts = { play: !!B.play, hook: game.walkers.play === B.play, chalk: !!B.play.hop?.mesh?.isMesh, lines: B.bits.lines.map((l) => l.im.isInstancedMesh), cat: !!B.bits.cat, rod: !!B.harbour.rod };
+  out.flags = Object.keys(game.flags).filter((k) => /^(tl|tb|busy|tp|play|cat|fish)_/.test(k));
+  out.stops = game.walkers.res.flatMap((r) => r.stops.filter((s) => s.play).map((s) => r.def.id + ':' + s.id + ':' + s.play));
+  return out; });
+check('TOWN-LIFE-3 is there after a Continue: the children\'s play stops (tag, hopscotch, gulls, a bench), Maro\'s broom, the chalk grid, two washing lines, the cat, Doran\'s rod; no new saved flag', t3.parts.play && t3.parts.hook && t3.parts.chalk && t3.parts.lines.length === 2 && t3.parts.lines.every(Boolean) && t3.parts.cat && t3.parts.rod && t3.flags.length === 0 && ['pico:pico_tag:tag', 'dot:dot_tag:tag', 'dot:dot_hop:hop', 'pico:pico_gulls:gulls', 'dot:dot_bench:swing', 'maro:maro_sweep:sweep'].every((k) => t3.stops.includes(k)), t3);
+// tag: the two on the lawn, twenty seconds of play near Twinsen (in full), kept to the lawn, never inside anything or in the water
+const tag = await ev(() => { const G = game, W = G.walkers, B = G.world.busy, P0 = G.physics, F = B.play; const pc = put('pico', 'pico_tag', 40), dt = put('dot', 'dot_tag', 40);
+  const fld = pc.stop.field; G.exitRoom({ x: fld.x + 7, z: fld.z - 3, a: -1.4 }, true); P.settle(); const h0 = [G.hero.pos.x, G.hero.pos.z];
+  const c0 = { ...F.count }; let maxR = 0, inCol = 0, water = 0, run = 0, frames = 0;
+  for (let i = 0; i < 600; i++) { G.step(1 / 30); frames++;
+    for (const r of [pc, dt]) { maxR = Math.max(maxR, Math.hypot(r.pos.x - fld.x, r.pos.z - fld.z)); if (r.rig.anim === 'run') run++;
+      for (const c of P0.near(r.pos.x, r.pos.z)) if (c.enabled && c.top > r.pos.y + 0.55 && c.bottom < r.pos.y + 1.6 && P0._inside(c, r.pos.x, r.pos.z, 0.05)) { inCol++; break; }
+      if (P0.terrain.heightAt(r.pos.x, r.pos.z) < -0.2) water++; } }
+  return { games: F.count.tag - c0.tag, swaps: F.count.swap - c0.swap, st: [pc.st, dt.st], maxR: +maxR.toFixed(2), fieldR: fld.r, inCol, water, run, frames, path: +G.world.pathDist(fld.x, fld.z).toFixed(1), heroMoved: +Math.hypot(G.hero.pos.x - h0[0], G.hero.pos.z - h0[1]).toFixed(3), log: F.log.slice(-4) }; });
+check('tag: Pico and Dot meet on the lawn west of the square and chase each other (the one caught is "it"), running, kept to the lawn (≤ its radius + 0.6 m), never inside anything or in the water, over 10 m from any path; Twinsen is never moved', tag.games >= 1 && tag.swaps >= 1 && tag.run > 60 && tag.maxR <= tag.fieldR + 0.6 && tag.inCol === 0 && tag.water === 0 && tag.path > 10 && tag.heroMoved < 1e-6, tag);
+// talked to in the middle of the game: afterwards nobody is left stuck, the game goes on (or both go on with their rounds)
+const tagTalk = await ev(() => { const G = game, F = G.world.busy.play, pc = G.walkers.res.find((r) => r.def.id === 'pico'), dt = G.walkers.res.find((r) => r.def.id === 'dot');
+  pc.tmr = 40; G.walkers.pair('tag').until = G.time + 40;
+  const t = P.talk('pico'); let dotMax = 0; const d0 = [dt.pos.x, dt.pos.z];
+  for (let i = 0; i < 90; i++) { G.step(1 / 30); dotMax = Math.max(dotMax, Math.hypot(dt.pos.x - d0[0], dt.pos.z - d0[1])); }
+  for (let i = 0; i < 240; i++) G.step(1 / 30);
+  return { talk: t.r, lines: t.lines, st: [pc.st, dt.st], engagedAfter: pc.engaged, swaps: F.count.swap }; });
+check('talked to while playing tag, Pico stops and talks; afterwards nobody is left stuck in a talk and the game goes on (or both go on with their rounds)', tagTalk.talk === 'talked' && !tagTalk.engagedAfter && ['chat', 'pairwait', 'walk', 'plan', 'dwell'].includes(tagTalk.st[0]), tagTalk);
+// hopscotch: up the chalk grid and back; the feet are the rig's again when she stops
+const hop = await ev(() => { const G = game, F = G.world.busy.play, H = F.hop, dt = put('dot', 'dot_hop', 14);
+  G.exitRoom({ x: H.x + 4, z: H.z + 3, a: -2.2 }, true); G.step(0.2); const c0 = F.count.hops; let off = 0, maxLift = 0, onGrid = 0;
+  for (let i = 0; i < 300; i++) { G.step(1 / 30); if (!dt.rig.plantLite) off++; maxLift = Math.max(maxLift, dt.rig.root.position.y - dt.pos.y);
+    const ux = Math.sin(H.a), uz = Math.cos(H.a), dx = dt.pos.x - H.x, dz = dt.pos.z - H.z, al = dx * ux + dz * uz, ac = Math.abs(dx * uz - dz * ux); if (al > -0.5 && al < 3 && ac < 0.6) onGrid++; }
+  dt.tmr = 0; let k = 0; for (; k < 600 && dt.stop.play === 'hop'; k++) G.step(1 / 30); G.step(0.2);
+  return { hops: F.count.hops - c0, off, maxLift: +maxLift.toFixed(2), onGrid, left: dt.stop.id, plantBack: dt.rig.plantLite, noPlant: F.noPlant.size }; });
+check('hopscotch: Dot hops up the chalk grid on the plaza and back (on the grid, off the ground in each hop); when she leaves, her feet are planted by the rig again', hop.hops >= 6 && hop.onGrid > 200 && hop.maxLift > 0.1 && hop.left !== 'dot_hop' && hop.plantBack && hop.noPlant === 0, hop);
+// running at the gulls
+const gul = await ev(() => { const G = game, B = G.world.busy, F = B.play, fl = B.flocks.find((f) => f.body.name === 'gullsSquare');
+  for (const b of fl.birds) if (b.st !== 'sit' || !b.p.ground) { const p = fl.perches.find((q) => q.ground && !q.taken); if (p) { if (b.p) b.p.taken = null; fl.perch(b, p); } }
+  const pc = put('pico', 'pico_gulls', 12); G.exitRoom({ x: pc.pos.x + 6, z: pc.pos.z + 5, a: -2.3 }, true); G.step(0.1); const c0 = F.count.gulls; let up = 0, cheer = 0;
+  for (let i = 0; i < 240; i++) { G.step(1 / 30); up = Math.max(up, fl.birds.filter((b) => b.st !== 'sit').length); if (pc.rig.anim === 'cheer') cheer++; }
+  return { runs: F.count.gulls - c0, up, cheer, log: F.log.slice(-2) }; });
+check('Pico runs at the gulls on the ground by the stall: they take off, and he cheers and watches them', gul.runs >= 1 && gul.up >= 1 && gul.cheer > 10, gul);
+// legs swinging on the plaza's bench; Maro's broom at his doorstep
+const swing = await ev(() => { const G = game, dt = put('dot', 'dot_bench', 20); G.exitRoom({ x: dt.pos.x + 4, z: dt.pos.z - 3, a: 0.5 }, true); const k = []; for (let i = 0; i < 60; i++) { G.step(1 / 30); if (dt.st === 'seated') k.push(dt.rig.j.legL.knee.rotation.x); } return { st: dt.st, n: k.length, range: k.length ? +(Math.max(...k) - Math.min(...k)).toFixed(2) : 0 }; });
+check('Dot sits on the plaza\'s bench and swings her legs', swing.st === 'seated' && swing.n > 20 && swing.range > 0.4, swing);
+const sweep = await ev(() => { const G = game, F = G.world.busy.play, m = put('maro', 'maro_sweep', 4); G.exitRoom({ x: m.pos.x + 4, z: m.pos.z + 3, a: -2.2 }, true); let vis = 0, near = 9; const xs = []; for (let i = 0; i < 90; i++) { G.step(1 / 30); if (F.broom.visible) { vis++; near = Math.min(near, Math.hypot(F.broom.position.x - m.pos.x, F.broom.position.z - m.pos.z)); xs.push(F.broom.position.x + F.broom.position.z); } }
+  for (let i = 0; i < 150 && m.stop.play === 'sweep'; i++) G.step(1 / 30); G.step(0.3);
+  return { vis, near: +near.toFixed(2), swing: xs.length ? +(Math.max(...xs) - Math.min(...xs)).toFixed(2) : 0, after: F.broom.visible, next: m.stop.id }; });
+check('Maro sweeps his doorstep (the broom in his hands, swept side to side before him), and puts it away when he goes in', sweep.vis > 60 && sweep.near < 1.2 && sweep.swing > 0.2 && !sweep.after && sweep.next !== 'maro_sweep', sweep);
+// Doran fishes off the quay while nobody needs him; walk up to him: the rod against the wall, he talks; walk away: out again
+const fish = await ev(() => { const G = game, B = G.world.busy, H = B.harbour, n = G.npcs.find((x) => x.def.id === 'doran'), S = H.spot; const out = { at: +Math.hypot(n.pos.x - S.x, n.pos.z - S.z).toFixed(2) };
+  G.exitRoom({ x: S.x + 9, z: S.z - 6, a: -1 }, true); P.settle(); G.step(2); out.far = { st: H.f.st, line: H.line.visible, face: +Math.abs(Math.atan2(Math.sin(n.angle - S.fish), Math.cos(n.angle - S.fish))).toFixed(2) };
+  H.f.st = 'wait'; H.f.wait = 0; H.f.t = 0; const c0 = H.count.catches + H.count.misses; const b0 = H.bucket.n; for (let i = 0; i < 200; i++) G.step(1 / 30); out.bite = H.count.catches + H.count.misses - c0; out.bucket = [b0, H.bucket.n];
+  const t = P.talk('doran'); out.talk = t.r; out.near = { st: H.f.st, rodRest: Math.hypot(H.rod.position.x - H.rest.x, H.rod.position.z - H.rest.z) < 0.05 };
+  G.exitRoom({ x: S.x + 9, z: S.z - 6, a: -1 }, true); G.step(2); out.again = H.f.st;
+  n.forceAnim = 'hide'; G.step(0.5); out.napping = H.f.st; n.forceAnim = null; G.step(0.5);
+  out.bucketSolid = G.physics.blockedAt(H.bucket.x, H.bucket.z, G.physics.groundAt(H.bucket.x, H.bucket.z, 3), 0.05);
+  return out; });
+check('Doran fishes off the quay by his shed (turned to the water, the line out) while Twinsen is off; a bite comes and is landed (a fish to the bucket, or a shrug)', fish.at < 0.6 && fish.far.st !== 'rest' && fish.far.line && fish.far.face < 0.3 && fish.bite >= 1, fish);
+check('…walking up to him, the rod goes against the shed wall and he talks as before; walked away, he fishes again; napping (the prologue\'s pose) he does not; his bucket is solid', fish.talk === 'talked' && fish.near.st === 'rest' && fish.near.rodRest && fish.again !== 'rest' && fish.napping === 'rest' && fish.bucketSolid, fish);
+const xil = await ev(() => { const G = game, H = G.world.busy.harbour, n = G.npcs.find((x) => x.def.id === 'xil'); G.exitRoom({ x: n.pos.x + 9, z: n.pos.z - 1, a: -1.5 }, true); P.settle(); G.step(1.5);
+  const out = { far: { anim: n.forceAnim, ledger: H.ledger.visible, dl: +H.ledger.position.distanceTo(n.pos).toFixed(2) } }; const t = P.talk('xil'); out.talk = t.r; out.near = { anim: n.forceAnim, ledger: H.ledger.visible }; return out; });
+check('Xil writes in his ledger on the pier (open between his hands); as Twinsen comes up it is put away and he talks', xil.far.anim === 'tinker' && xil.far.ledger && xil.far.dl < 2.5 && xil.talk === 'talked' && xil.near.anim === null && !xil.near.ledger, xil);
+// the washing moves in the breeze near Twinsen, and keeps still far off; the posts are solid
+const wash = await ev(() => { const G = game, Bt = G.world.busy.bits, L = Bt.lines[0]; G.exitRoom({ x: L.L.a.x - 5, z: L.L.a.z + 1.5, a: 1.5 }, true); G.step(0.5); const v0 = L.im.instanceMatrix.version; G.step(1); const moving = L.im.instanceMatrix.version > v0;
+  G.exitRoom({ x: -42, z: -2, a: 0 }, true); G.step(0.5); const v1 = L.im.instanceMatrix.version; G.step(1);
+  return { moving, still: L.im.instanceMatrix.version === v1, posts: Bt.lines.map((l) => [l.L.a, l.L.b].every((q) => G.physics.blockedAt(q.x, q.z, G.physics.groundAt(q.x, q.z, 4), 0.02))), path: Bt.lines.map((l) => +G.world.pathDist((l.L.a.x + l.L.b.x) / 2, (l.L.a.z + l.L.b.z) / 2).toFixed(1)), door: Bt.lines.map((l) => +G.walkers.doorDist((l.L.a.x + l.L.b.x) / 2, (l.L.a.z + l.L.b.z) / 2).toFixed(1)) }; });
+check('the washing moves on its lines near Twinsen and keeps still far off; the posts are solid; both lines off the paths and doorways', wash.moving && wash.still && wash.posts.every(Boolean) && wash.path.every((d) => d > 3) && wash.door.every((d) => d > 2), wash);
+// the cat: asleep on the bench by Twinsen's door; he walks up (INPUT): it wakes and trots off to another of its places, and settles
+const cat = await ev(() => { const G = game, C = G.world.busy.bits.cat; C.reset(); const s0 = C.spots[0]; G.exitRoom({ x: s0.x + 3.5, z: s0.z - 6, a: 0 }, true); P.settle(); G.step(1); const out = { st0: C.st, spot0: C.spot };
+  P.go(s0.x + 1.2, s0.z - 0.6, { tol: 0.4, maxT: 10 }); let k = 0; const sts = new Set(); for (; k < 900 && !(C.st === 'sleep' && C.spot !== 0); k++) { G.step(1 / 30); sts.add(C.st); }
+  out.states = [...sts]; out.spot = C.spot; out.t = +(k / 30).toFixed(1); out.at = +Math.hypot(C.pos.x - C.spots[C.spot].x, C.pos.z - C.spots[C.spot].z).toFixed(2);
+  out.offPaths = C.spots.map((q) => +G.world.pathDist(q.x, q.z).toFixed(1)); out.mrrp = C.count.mrrp; return out; });
+check('the cat sleeps on the bench by Twinsen\'s door; walked up to, it wakes, stretches, trots off to another of its places and settles down again', cat.st0 === 'sleep' && cat.spot !== 0 && ['wake', 'stretch', 'go'].every((s) => cat.states.includes(s)) && cat.at < 0.1, cat);
+
+// ---- every chapter Citadel is seen in: the town's state, its talk, who is about (TOWN-LIFE-3)
+const STATES = { well: 'dry', project: 'hot', zeelich: 'away', dig: 'away', steam: 'away', pass: 'away', observatory: 'away', evacuation: 'evac', council: 'council', network: 'network', shell: 'deep', core: 'deep', home: 'home' };
+const states = await ev(async (S) => { const { townState } = await import('/src/game/townbusy.js'); const { t } = await import('/src/game/i18n.js'); const G = game, f = G.flags, out = {}, bad = [];
+  const keep = { chapterKey: f.chapterKey, chapter: f.chapter, index: G.story.index };
+  for (const k of Object.keys(S)) { G.story.index = G.story.chapters.findIndex((c) => c.key === k); out[k] = townState(G);
+    for (let i = 0; i < 6; i++) { const key = `ro_${out[k]}_${i}`, s = t(key); if (s === key || !/^[\x20-\x7e]+$/.test(s) || s.length > 80) bad.push(key); } }
+  f.chapterKey = keep.chapterKey; f.chapter = keep.chapter; G.story.index = keep.index; return { out, bad }; }, STATES);
+check('the town\'s state follows every chapter Citadel is seen in (dry, hot, Twinsen away, the evacuation, the council, the network, the descent, home), and each has six short English lines of talk', Object.entries(STATES).every(([k, v]) => states.out[k] === v) && states.bad.length === 0, states);
+// the evacuation (chapter 8): the children, the fishing, Odile's counter, the other residents: off; Maro and Tilde pack, hurrying, and talk about it
+await setChapter('evacuation', { c1_water: true, c1_plan: true });
+const evac = await ev(() => { const G = game, W = G.walkers, B = G.world.busy; P.settle(); G.exitRoom({ x: -51.5, z: 41.5, a: Math.PI }, true); G.step(1);
+  const res = W.res.filter((r) => Math.abs(r.stops[0]?.x ?? 999) < 300); const m = res.find((r) => r.def.id === 'maro'), t = res.find((r) => r.def.id === 'tilde');
+  for (const r of [m, t]) { const i = r.stops.findIndex((s) => s.id === r.def.id + '_evac'); r.ri = i; r.away = null; r.setPresent(true); r.slotAt(r.stops[i]); r.arrived(r.stops[i], true); }
+  B.hide(); B.chat.speaker = null; const keys = []; const sacks = new Set(), speed = [m.speed, t.speed];
+  for (let i = 0; i < 1600 && keys.length < 2; i++) { G.step(0.25); if (B.bub && B.bub.prio === 1 && !keys.includes(B.bub.key)) keys.push(B.bub.key); }
+  for (let i = 0; i < 400; i++) { G.step(0.25); for (const r of [m, t]) if (r.carrying) sacks.add(r.def.id + ':' + r.carrying); }
+  const out = { keys, sacks: [...sacks], speed: [m.speed, t.speed].map((v) => +v.toFixed(2)), state: B.state, stage: W.stage };
+  out.away = res.filter((r) => r !== m && r !== t).map((r) => [r.def.id, r.away]).filter(([, a]) => a !== 'story');
+  out.present = [m.present || m.st === 'inside', t.present || t.st === 'inside'];
+  out.play = res.filter((r) => r.stop?.play && !r.away && r.present).map((r) => r.def.id);
+  out.fish = B.harbour.f.st; out.ledger = B.harbour.ledger.visible; out.odile = G.npcs.find((n) => n.def.id === 'odile')?.forceAnim ?? null;
+  out.stops = [m, t].map((r) => r.stop.id); return out; });
+check('evacuation: the other residents are off the streets (as before), no game, no fishing, no ledger, no counter work; Maro and Tilde stay to pack — bundles out of their houses, a hurried word at the benches about the evacuation', evac.state === 'evac' && evac.stage === 2 && evac.away.length === 0 && evac.present.every(Boolean) && evac.play.length === 0 && evac.fish === 'rest' && !evac.ledger && evac.odile !== 'tinker' && evac.keys.length >= 1 && evac.keys.every((k) => /^ro_evac_/.test(k)) && evac.sacks.length >= 1 && evac.speed.every((v) => v > 1.3), evac);
+// home again (the epilogue, Keep Exploring): everyone back, the children play, the talk is festive
+await setChapter('home', { c1_water: true, ep_dinner: true, ep_free: true });
+const homeT = await ev(() => { const G = game, W = G.walkers, B = G.world.busy, F = B.play; P.settle(); if (G.room) G.exitRoom({ x: -42, z: -2, a: 0 }, true); G.step(1);
+  const res = W.res.filter((r) => Math.abs(r.stops[0]?.x ?? 999) < 300); const back = res.filter((r) => r.away === 'story').map((r) => r.def.id);
+  const pc = put('pico', 'pico_tag', 30); put('dot', 'dot_tag', 30); G.exitRoom({ x: pc.stop.field.x + 7, z: pc.stop.field.z - 3, a: -1.4 }, true); const c0 = F.count.tag; for (let i = 0; i < 120; i++) G.step(1 / 30);
+  const lines = G.story.citizens.linesFor(G.npcs.find((n) => n.def.id === 'pico'));
+  return { state: B.state, stage: W.stage, back, tag: F.count.tag - c0, lines: lines.slice(0, 2), maroSpeed: +res.find((r) => r.def.id === 'maro').speed.toFixed(2) }; });
+const hHome = await hear({ c1_water: true });
+check('home again (epilogue): everyone is back on the streets at their usual pace, the children play tag again, and the talk is festive (a resident\'s word, the plaza\'s talk)', homeT.state === 'home' && homeT.stage === 1 && homeT.back.length === 0 && homeT.tag >= 1 && homeT.lines[0] === 'rs_pico_home' && homeT.maroSpeed < 1.2 && hHome.keys.length >= 2 && hHome.keys.every((s) => /^ro_home_/.test(s)), { homeT, hHome });
+// the council and the network (chapters 9, 10): the plaza's talk follows
+await setChapter('council', { c1_water: true });
+const hCouncil = await hear({ c1_water: true });
+await setChapter('network', { c1_water: true });
+const hNet = await hear({ c1_water: true });
+check('chapters 9 and 10 on Citadel: the plaza\'s talk is of the council, then of the network\'s days', hCouncil.keys.length >= 2 && hCouncil.keys.every((s) => /^ro_council_/.test(s)) && hNet.keys.length >= 2 && hNet.keys.every((s) => /^ro_network_/.test(s)), { hCouncil, hNet });
+await setChapter('project', { c1_water: true });
 // its cost on the busy street: the layer's own update, timed over 300 frames on the square with the town running
 const cost = await ev(() => { const G = game, B = G.world.busy; G.exitRoom({ x: G.world.well.x + 2, z: G.world.well.z + 4, a: Math.PI }, true); P.settle();
   const up = B.update.bind(B); let ms = 0, n = 0; B.update = (dt, t) => { const t0 = performance.now(); up(dt, t); ms += performance.now() - t0; n++; };
-  for (let i = 0; i < 300; i++) G.step(1 / 60); B.update = up; return { msPerFrame: +(ms / Math.max(1, n)).toFixed(3), frames: n }; });
-console.log(`  TOWN-LIFE-2 layer cost on the square: ${cost.msPerFrame} ms a frame over ${cost.frames} frames (this machine, CPU)`);
-check('the town\'s small business costs under 0.3 ms a frame on the square (CPU, this machine)', cost.frames >= 290 && cost.msPerFrame < 0.3, cost);
+  const pt = B.play.tick.bind(B.play); let pms = 0; B.play.tick = (r, dt, s) => { const t0 = performance.now(); const v = pt(r, dt, s); pms += performance.now() - t0; return v; };
+  for (let i = 0; i < 300; i++) G.step(1 / 60); B.update = up; B.play.tick = pt; return { msPerFrame: +(ms / Math.max(1, n)).toFixed(3), playMs: +(pms / Math.max(1, n)).toFixed(3), frames: n }; });
+console.log(`  TOWN-LIFE-2/3 layer cost on the square: ${cost.msPerFrame} ms a frame (+ ${cost.playMs} ms in the residents' play) over ${cost.frames} frames (this machine, CPU)`);
+check('the town\'s small business costs under 0.3 ms a frame on the square (CPU, this machine; TOWN-LIFE-3\'s games, rod, washing and cat included)', cost.frames >= 290 && cost.msPerFrame + cost.playMs < 0.3, cost);
 
 const fails = done(errs);
 await browser.close();

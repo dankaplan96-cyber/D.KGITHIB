@@ -8,6 +8,8 @@ import '../text/walkers.js';
 import { ambientDefs } from '../walkrounds.js';
 import { TownBusy } from '../townbusy.js';
 
+export const EVAC_STAY = new Set(['maro', 'tilde']);
+
 export class Citizens extends ChapterBase {
   // TOWN-LIFE-2: the town's small business round its people (heads turning, a word when bumped, the plaza's chatter
   // overheard, Odile's counter, Tobb's crates, gulls, the harbour's sounds): townbusy.js, once per world
@@ -23,11 +25,13 @@ export class Citizens extends ChapterBase {
     return this._defs;
   }
   // the streets are empty while everyone is mustered at the depot (the evacuation); then back where their rounds start
+  // (TOWN-LIFE-3: but two neighbours, Maro and Tilde, are still packing: bundles out of their houses, a word at the plaza's
+  //  benches about it, back for more: walkrounds.js their stops of the town's state 2)
   get gone() { return this.story.cur?.key === 'evacuation'; }
   place(id) {
     const n = this.game.npcs.find((x) => x.def.id === id);
     if (!n?.ambient) return undefined;
-    if (this.gone) { n.away = 'story'; return null; }
+    if (this.gone && !EVAC_STAY.has(id)) { n.away = 'story'; return null; }
     if (n.away === 'story') { n.away = null; return n.reset(); }
     return undefined;
   }
@@ -37,8 +41,11 @@ export class Citizens extends ChapterBase {
     const dry = this.story.index === 0 || (this.story.index === 1 && !f.c1_water);
     const hot = !dry && this.story.index === 1;   // (chapter 2, the water back: the town's talk is the heat)
     const gone = hot && !!f.c1_veskGone;          // (TOWN-LIFE-2: then the light over the fortress that took Vesk away)
+    const evac = this.story.cur?.key === 'evacuation', home = this.story.cur?.key === 'home';   // (TOWN-LIFE-3: packing; the party)
     const busy = ['seated', 'sitin', 'chat'].includes(npc.st) || !!npc.carrying || /tend|water|draw|put/.test(npc.stop?.act || '');
     const keys = [];
+    if (evac && has(`rs_${id}_evac`)) keys.push(`rs_${id}_evac`);
+    if (home && has(`rs_${id}_home`)) keys.push(`rs_${id}_home`);
     if (busy && has(`rs_${id}_work`)) keys.push(`rs_${id}_work`);
     if (dry && has(`rs_${id}_dry`)) keys.push(`rs_${id}_dry`);
     if (gone && has(`rs_${id}_gone`)) keys.push(`rs_${id}_gone`);

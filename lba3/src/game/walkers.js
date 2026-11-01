@@ -30,6 +30,8 @@ const FULL_R = 60, REDUCED_R = 110;    // metres: simulated every frame / a thir
 const NEAR_R = 14;                     // metres: always simulated every frame, in view or not (it may be about to come round)
 const hashId = (s) => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h >>> 0; };
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
+// a stop's state(s) of the town: none (every state), one, or a list (TOWN-LIFE-3)
+export const stageOk = (s, stage) => s.stage == null || (Array.isArray(s.stage) ? s.stage.includes(stage) : s.stage === stage);
 
 // ------------------------------------------------------------------ what a resident may carry
 const CARRY = {
@@ -147,13 +149,15 @@ export class Walkers {
       this._pt = g.time;
     }
   }
-  stageNow() { const g = this.game, ix = g.story.index; return (ix === 0 || (ix === 1 && !g.flags.c1_water)) ? 0 : 1; }
+  // (TOWN-LIFE-3: and 2, the evacuation (chapter 8): the heat posts dark, the town packing; a stop may name several states,
+  //  `stage: [0, 1]`)
+  stageNow() { const g = this.game, ix = g.story.index; return (ix === 0 || (ix === 1 && !g.flags.c1_water)) ? 0 : g.story.cur?.key === 'evacuation' ? 2 : 1; }
   // the town's state changed (the valves opened): whoever stands at a stop of the other state moves on soon, one after another
   // (one nobody sees is put on its way at once, as after a load: the rounds were made before the save's flags were in)
   stageChanged() {
     for (const r of this.res) {
       const s = r.stops[r.ri];
-      if (!s || s.stage == null || s.stage === this.stage || r.st !== 'dwell') continue;
+      if (!s || stageOk(s, this.stage) || r.st !== 'dwell') continue;
       if (this.unseen(r.pos.x, r.pos.z, r.pos.y)) r.reset();
       else r.tmr = Math.min(r.tmr, 1.5 + r.rnd() * 5);
     }
@@ -222,7 +226,7 @@ export class Resident extends NPC {
   reset() {
     this.engaged = false; this.inside = false; this.hold = 0; this.sit = null; this.path = null; this.job = null; this.insideT = 0;
     const stage = this.W.stageNow();
-    for (let k = 0; k < this.stops.length && this.stops[this.ri].stage != null && this.stops[this.ri].stage !== stage; k++) this.ri = (this.ri + 1) % this.stops.length;
+    for (let k = 0; k < this.stops.length && !stageOk(this.stops[this.ri], stage); k++) this.ri = (this.ri + 1) % this.stops.length;
     const s = this.stops[this.ri];
     this.slotAt(s); this.arrived(s, true);
     return { x: s.x, z: s.z, a: s.a ?? this.angle };
@@ -232,7 +236,7 @@ export class Resident extends NPC {
     this.stops = stops;
     this.ri = start % stops.length;
     const stage = this.W.stageNow();
-    for (let k = 0; k < stops.length && stops[this.ri].stage != null && stops[this.ri].stage !== stage; k++) this.ri = (this.ri + 1) % stops.length;   // (it starts at a stop of the town's state)
+    for (let k = 0; k < stops.length && !stageOk(stops[this.ri], stage); k++) this.ri = (this.ri + 1) % stops.length;   // (it starts at a stop of the town's state)
     const s = this.stops[this.ri];
     for (let i = 0; i <= this.ri; i++) if (stops[i].carry !== undefined) this.carrySet(stops[i].carry);   // (what it holds at this point of its round)
     this.slotAt(s);
@@ -264,7 +268,7 @@ export class Resident extends NPC {
     for (let k = 1; k <= n; k++) {
       const i = (from + k) % n, s = this.stops[i];
       if (s.when && (day < s.when[0] || day > s.when[1])) continue;
-      if (s.stage != null && s.stage !== stage) continue;   // (a stop of the other state of the town)
+      if (!stageOk(s, stage)) continue;   // (a stop of another state of the town)
       return i;
     }
     return (from + 1) % n;
@@ -274,7 +278,7 @@ export class Resident extends NPC {
     this.path = null; this.job = null; this.stuckT = 0; this.replans = 0; this.vel = 0;
     this.tmr = s.dur ? s.dur[0] + (s.dur[1] - s.dur[0]) * this.rnd() : 3;
     this.gestT = 1 + this.rnd() * 2;
-    if (s.stage != null && s.stage !== this.W.stage) this.tmr = Math.min(this.tmr, 0.5 + this.rnd() * 3);   // (it walked here before the town changed: no point staying)
+    if (!stageOk(s, this.W.stage)) this.tmr = Math.min(this.tmr, 0.5 + this.rnd() * 3);   // (it walked here before the town changed: no point staying)
     if (s.pair) { this.st = 'pairwait'; this.waitT = 0; this.W.pair(s.pair).ready.add(this.def.id); this.note('wait for ' + s.pair); return; }
     if (s.seat && this.canSit() && !this.benchTaken(s.seat)) { this.sitDown(s, instant); return; }
     if (s.door) { this.st = 'knock'; this.tmr = instant ? 0.2 : 0.9; this.angle = this.targetAngle = s.a; return; }
@@ -471,6 +475,9 @@ export class Resident extends NPC {
     if (this.yieldT > 0 && !this.sit) { this.yieldTick(dt); return; }
     if (this.hold > 0) { this.hold -= dt; this.animate('idle', dt, 0); return; }
     if (this.st !== 'walk') this.separate(dt);
+    // (TOWN-LIFE-3: a stop with `play` — the children's games, a broom at a doorstep — is run by townplay.js while it is
+    //  there: dwelling, chatting with its mate or seated; walking to it and planning are this file's as before)
+    if (s?.play && W.play && W.play.tick(this, dt, s)) return;
     switch (this.st) {
       case 'dwell': return this.dwellTick(dt, s);
       case 'pairwait': return this.pairTick(dt, s);

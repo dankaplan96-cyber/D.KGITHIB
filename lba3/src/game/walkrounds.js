@@ -58,13 +58,28 @@ export function stallDrop(W) {
   return { pile: { ...at(2.0, -0.25), ry: a }, stop: { ...at(3.05, -0.25), a: Math.atan2(-Math.cos(a), Math.sin(a)) } };
 }
 
+// TOWN-LIFE-3: where the children play (src/game/townplay.js). Tag on the open lawn west of the square, east of the water
+// office (measured: its east wall 4.5 m off, the nearest tree trunks 4.2 and 5.2 m, a small stone 2.8 m; the game runs to
+// 2.5 m round the middle, over 10 m from any path); hopscotch chalked on the plaza's paving north of Maro and Tilde's meeting place,
+// up its middle between the trees (start line at z 39.0, the trees' trunks 2.8 m either side of the grid's line); the gulls
+// on the ground before Pippa's stall, run at from 3.5 m north-east of them.
+export const PLAY = {
+  tag: { x: -56.6, z: 11.6, r: 2.5 },
+  hop: { x: -51.2, z: 39.0, a: 0 },
+  gulls: { x: -42.6, z: 2.6, tx: -44.7, tz: -0.6 },
+};
+
 // ------------------------------------------------------------------ Citadel
 export function citadelRoster(game) {
   const W = game.world;
   const bench = (id, x, z, dur, o = {}) => { const b = seatAt(W, x, z); if (!b) return null; return { id, x: b.slot.x, z: b.slot.z, a: b.ry + Math.PI, act: 'stand', seat: b.seat, dur, ...o }; };
-  const home = (id, x, z, dur) => { const d = doorAt(W, x, z, W.houses, 0.25); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur }; };
+  const home = (id, x, z, dur, o = {}) => { const d = doorAt(W, x, z, W.houses, 0.25); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur, ...o }; };
   const look = (id, x, z, tx, tz, dur, o = {}) => D(id, x, z, { a: A(x, z, tx, tz), dur, ...o });
   const ok = (a) => a.filter(Boolean);
+  // TOWN-LIFE-3: the children's games (townplay.js) and Maro's doorstep
+  const TAG = PLAY.tag, HOP = PLAY.hop, GULL = PLAY.gulls;
+  const MARO_STEP = (() => { const d = doorAt(W, -46.1, 27.2, W.houses, 1.95); return d && { x: d.x, z: d.z, a: d.a }; })();
+  const hopStart = { x: HOP.x - Math.sin(HOP.a) * 0.22, z: HOP.z - Math.cos(HOP.a) * 0.22 };
   const WELL = { x: -42, z: -4 };
   // the square's tulip bed (island.js buildOriginalProps, citadel-layout.js tulips[1]): 3.3 × 1.1 m inside its curb, the
   // long sides along x; the curb's outside from x −40.9 to −37.5, z 8.0 to 9.4. The gardener works it from 0.6 m off a
@@ -95,15 +110,22 @@ export function citadelRoster(game) {
     ]) },
     // two neighbours who meet between the plaza's benches and talk
     { id: 'maro', char: 'farmerB', tint: '#ffffff', speed: 1.05, start: 1, color: '#e8a0e0', stops: ok([
-      home('maro_home', -46.1, 27.2, [10, 16]),
-      look('maro_meet', MEET[0][0], MEET[0][1], MEET[1][0], MEET[1][1], [26, 36], { pair: 'plaza', mate: 'tilde' }),
-      bench('maro_bench', -53.3, 34.4, [16, 24]),
+      home('maro_home', -46.1, 27.2, [10, 16], { stage: [0, 1], carry: null }),
+      look('maro_meet', MEET[0][0], MEET[0][1], MEET[1][0], MEET[1][1], [26, 36], { pair: 'plaza', mate: 'tilde', stage: [0, 1] }),
+      bench('maro_bench', -53.3, 34.4, [16, 24], { stage: [0, 1] }),
+      // TOWN-LIFE-3: his doorstep swept before he goes in (a step back from the door, facing it)
+      MARO_STEP && D('maro_sweep', MARO_STEP.x, MARO_STEP.z, { a: MARO_STEP.a, dur: [10, 15], play: 'sweep', stage: [0, 1] }),
+      // TOWN-LIFE-3, the evacuation (chapter 8): in for a bundle, out to the benches to talk it over with Tilde, and back
+      home('maro_pack', -46.1, 27.2, [6, 10], { stage: 2, carry: 'sack' }),
+      look('maro_evac', MEET[0][0], MEET[0][1], MEET[1][0], MEET[1][1], [14, 20], { pair: 'evac', mate: 'tilde', stage: 2 }),
     ]) },
     { id: 'tilde', char: 'ilka', tint: '#fff0d8', speed: 1.05, start: 1, color: '#d8c080', stops: ok([
-      home('tilde_home', -66.3, 41.1, [10, 16]),
-      look('tilde_meet', MEET[1][0], MEET[1][1], MEET[0][0], MEET[0][1], [26, 36], { pair: 'plaza', mate: 'maro' }),
-      look('tilde_sign', -53.0, 28.8, -50.5, 30, [4, 6]),
-      bench('tilde_bench', -48.3, 34.4, [16, 24]),
+      home('tilde_home', -66.3, 41.1, [10, 16], { stage: [0, 1], carry: null }),
+      look('tilde_meet', MEET[1][0], MEET[1][1], MEET[0][0], MEET[0][1], [26, 36], { pair: 'plaza', mate: 'maro', stage: [0, 1] }),
+      look('tilde_sign', -53.0, 28.8, -50.5, 30, [4, 6], { stage: [0, 1] }),
+      bench('tilde_bench', -48.3, 34.4, [16, 24], { stage: [0, 1] }),
+      home('tilde_pack', -66.3, 41.1, [6, 10], { stage: 2, carry: 'sack' }),
+      look('tilde_evac', MEET[1][0], MEET[1][1], MEET[0][0], MEET[0][1], [14, 20], { pair: 'evac', mate: 'maro', stage: 2 }),
     ]) },
     // the gardener: tends the square's bed from the lane side, draws water at the well, pours it on the other side
     { id: 'garrick', char: 'farmerA', tint: '#ffffff', speed: 1.0, start: 0, color: '#d0a070', stops: ok([
@@ -114,13 +136,16 @@ export function citadelRoster(game) {
       look('gar_water', BED.x + 0.8, BED.z - 1.3, BED.x + 0.8, BED.z, [9, 13], { act: 'water' }),   // (0.6 m off the south side, facing in; 2.1 m from Pom by the square)
       look('gar_rest', -36.2, 8.4, BED.x, BED.z, [6, 9], { act: 'rest', carry: null }),
     ]) },
-    // the children: Pico up and down the lane, Dot round the square
+    // the children: Pico up and down the lane, Dot round the square; TOWN-LIFE-3: tag together on the lawn west of the square,
+    // Pico runs at the stall's gulls, Dot plays hopscotch on the plaza and swings her legs on its bench
     { id: 'pico', char: 'desertkid', tint: '#ffe8d8', speed: 1.6, start: 0, color: '#ffd080', stops: ok([
       D('pico_a', -38.8, -9.4, { a: 0, dur: [2, 4] }),
       D('pico_b', -44.0, 12.8, { a: 3, dur: [2, 4] }),
       D('pico_c', -42.4, 30.6, { a: 1.5, dur: [3, 5] }),
       D('pico_d', -44.6, 46.0, { a: 3, dur: [3, 5] }),
       D('pico_e', -45.6, 20.0, { a: 0, dur: [2, 3] }),
+      look('pico_tag', TAG.x - 1.2, TAG.z, TAG.x, TAG.z, [24, 34], { pair: 'tag', mate: 'dot', play: 'tag', field: TAG }),
+      look('pico_gulls', GULL.x, GULL.z, GULL.tx, GULL.tz, [9, 13], { play: 'gulls' }),
     ]) },
     { id: 'dot', char: 'pim', tint: '#fff8f0', speed: 1.3, start: 2, color: '#ff9ad0', stops: ok([
       D('dot_a', -37.6, -8.8, { a: 2, dur: [2, 4] }),
@@ -130,6 +155,9 @@ export function citadelRoster(game) {
       look('dot_warm', POST.x + 0.53, POST.z - 0.53, POST.x, POST.z, [6, 9], { stage: 1, act: 'warm' }),   // (the stall's heat post: 0.75 m from it, hands out to it)
       D('dot_c', -36.2, -3.0, { a: 1.2, dur: [2, 4] }),
       D('dot_d', -41.0, 4.6, { a: 3, dur: [2, 4] }),
+      look('dot_tag', TAG.x + 1.2, TAG.z, TAG.x, TAG.z, [24, 34], { pair: 'tag', mate: 'pico', play: 'tag', field: TAG }),
+      D('dot_hop', hopStart.x, hopStart.z, { a: HOP.a, dur: [16, 24], play: 'hop' }),
+      bench('dot_bench', -48.3, 34.4, [14, 20], { play: 'swing' }),
     ]) },
     // the harbour walker: the plaza's sign, the benches along the harbour path, the quay's gate
     { id: 'marda', char: 'yorna', tint: '#ffffff', speed: 1.1, start: 1, color: '#e08a8a', stops: ok([

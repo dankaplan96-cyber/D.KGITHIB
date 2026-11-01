@@ -3,7 +3,8 @@
 //   - heads turn: a resident Twinsen passes close to follows him with its head (rig.lookAt); not in Discreet mode;
 //   - a word when bumped: a resident he walks into (it steps aside: walkers.js giveWay) says a short line over its head;
 //   - overheard: what Maro and Tilde say between the plaza's benches, a line for each turn they take, when he comes close;
-//     by the town's state (the well dry; the water back, hot; after Vesk's departure). Chapters 1 and 2 only;
+//     by the town's state (the well dry; the water back, hot; after Vesk's departure; TOWN-LIFE-3: and every later chapter
+//     Citadel is seen in: townState below);
 //   - Officer Odile works her counter while nobody is at the window (the rule walkers.js keeps for Pippa's stall: only
 //     her pose and the way she faces, only at her own place, and she is the story's again as soon as Twinsen comes near):
 //     she stamps forms and rings the counter's bell now and then;
@@ -12,6 +13,8 @@
 //   - gulls on the harbour and a pair by the stall (gulls.js);
 //   - sound: water lapping round the quay and the pier, the gulls' cries, the customs stamp and bell (the game's own
 //     audio graph: its context, buses and noise; no sound files).
+// TOWN-LIFE-3 adds the children's games and Maro's broom (townplay.js), Doran's rod and Xil's ledger (harbourlife.js), the
+// washing and the cat (townbits.js), and the evacuation's pace; Odile's counter rests in the evacuation.
 // No flag is added and nothing is saved: everything is read from the story's own flags, and after a load it starts over.
 // Cost: outdoors on Citadel only; residents are looked at only within a few metres of Twinsen, in the full tier; the gulls
 // and the piles are a draw each per group, culled as one; the bubble is one DOM element.
@@ -19,7 +22,28 @@ import * as THREE from 'three';
 import { t } from './i18n.js';
 import { dampAngle, clamp } from '../engine/math.js';
 import { Gulls, part, merge, M4, MATL } from './gulls.js';
-import { QUAY_PILE, stallDrop } from './walkrounds.js';
+import { QUAY_PILE, stallDrop, PLAY } from './walkrounds.js';
+import { TownPlay } from './townplay.js';
+import { HarbourLife } from './harbourlife.js';
+import { TownBits } from './townbits.js';
+
+// TOWN-LIFE-3: the town's state, for every chapter Citadel is seen in (docs/lba3-production/STORY_MAP.md): what its people
+// talk about and what they do. dry: the well dry (chapter 1, and 2 until the valves) · hot: the water back, hot · gone: after
+// Vesk's departure · away: chapters 3-7, Twinsen off the island · evac: chapter 8, the evacuation · council: chapter 9 ·
+// network: chapter 10 · deep: chapters 11-12 · home: the epilogue and Keep Exploring. Read from the story's own flags.
+export function townState(game) {
+  const st = game.story, f = game.flags, key = st?.cur?.key;
+  switch (key) {
+    case 'well': return 'dry';
+    case 'project': return !f.c1_water ? 'dry' : f.c1_veskGone ? 'gone' : 'hot';
+    case 'evacuation': return 'evac';
+    case 'council': return 'council';
+    case 'network': return 'network';
+    case 'shell': case 'core': return 'deep';
+    case 'home': return 'home';
+  }
+  return 'away';
+}
 
 const KIDS = new Set(['pico', 'dot', 'tamu']), OLD = new Set(['brix', 'ume', 'bashir']);
 const LOOK_R = 3.6;                  // m: a resident's head follows Twinsen within this
@@ -94,6 +118,13 @@ export class TownBusy {
       this.flocks.push(new Gulls({ parent: g, physics: P, name: 'gullsSquare', n: 2, seed: 5, perches: [fr(-1.2, 2.6), fr(-0.3, 3.1), fr(-2.1, 2.2), post(-1.5), post(1.5)] }));
     }
     this.snd = null;
+    // TOWN-LIFE-3: the children's games and a broom (townplay.js, run from walkers.js), Doran's rod and Xil's ledger
+    // (harbourlife.js), washing on the lines and the lane's cat (townbits.js)
+    this.play = new TownPlay(game, this, g);
+    if (game.walkers) game.walkers.play = this.play;
+    this.play.chalk(PLAY.hop);
+    this.harbour = new HarbourLife(game, this, g);
+    this.bits = new TownBits(game, this, g);
     W.updaters.push((dt, time) => this.update(dt, time));
   }
   note(s) { this.log.push(`${this.game.time.toFixed(1)} ${s}`); if (this.log.length > 40) this.log.shift(); }
@@ -104,12 +135,18 @@ export class TownBusy {
     if (!h || g.state === 'title' || g.state === 'loading') return;
     const live = (g.state === 'play' || g.state === 'dialog') && !g.room;
     const res = g.walkers?.res || [];
+    if (g.walkers && !g.walkers.play) g.walkers.play = this.play;
+    this.state = townState(g);
+    this.pace(res);
+    this.play.update(dt);
     this.cargo(res, dt);
-    this.counter(dt, live);
+    this.counter(dt, live && this.state !== 'evac');
+    this.harbour.update(dt, live, this.state);
+    this.bits.update(dt, live, this.state);
     // the gulls (they keep still out of play; out of reach they are put back on their perches)
     const near = [];
     for (const d of this.W.dogs || []) near.push({ x: d.pos.x, z: d.pos.z, run: (d.speed || 0) > 1.2 });
-    for (const r of res) if (r.present && !r.away && !r.inside && r.tier === 0 && r.st === 'walk' && r.speed > 1.4) near.push({ x: r.pos.x, z: r.pos.z, run: true });
+    for (const r of res) if (r.present && !r.away && !r.inside && r.tier === 0 && ((r.st === 'walk' && r.speed > 1.4) || r._run)) near.push({ x: r.pos.x, z: r.pos.z, run: true });
     if (g.state === 'play' || !live) {
       const ctx = { outdoors: live, hero: { x: h.pos.x, y: h.pos.y, z: h.pos.z, speed: h.speed || 0 }, near, cry: (x, z, n) => this.cry(x, z, n) };
       for (const f of this.flocks) f.update(g.state === 'play' ? dt : 0, ctx);
@@ -121,12 +158,21 @@ export class TownBusy {
     this.bubble(dt);
   }
 
+  // ---------------------------------------------------------------- the evacuation's pace: the two still packing hurry
+  pace(res) {
+    const evac = this.state === 'evac';
+    for (const r of res) {
+      if (r.def.id !== 'maro' && r.def.id !== 'tilde') continue;
+      r.speed = (r.def.speed || 1.05) * (evac ? 1.35 : 1);
+    }
+  }
+
   // ---------------------------------------------------------------- heads turn
   heads(res, h) {
     const sneak = h.behaviour === 'discreet';
     for (const r of res) {
       let want = false;
-      if (!sneak && r.present && !r.away && !r.inside && !r.engaged && r.tier === 0 && r.st !== 'chat' && r.st !== 'pairwait') {
+      if (!sneak && r.present && !r.away && !r.inside && !r.engaged && r.tier === 0 && r.st !== 'chat' && r.st !== 'pairwait' && !(r.stop?.play && r.st !== 'walk' && r.st !== 'plan')) {
         const dx = h.pos.x - r.pos.x, dz = h.pos.z - r.pos.z, d = Math.hypot(dx, dz);
         if (d < LOOK_R) {
           const rel = Math.abs(Math.atan2(Math.sin(Math.atan2(dx, dz) - r.angle), Math.cos(Math.atan2(dx, dz) - r.angle)));
@@ -159,18 +205,14 @@ export class TownBusy {
   }
 
   // ---------------------------------------------------------------- overheard
-  phase() {
-    const g = this.game, ix = g.story.index, f = g.flags;
-    if (ix === 0 || (ix === 1 && !f.c1_water)) return 'dry';
-    if (ix === 1) return f.c1_veskGone ? 'gone' : 'hot';
-    return null;
-  }
+  // (TOWN-LIFE-3: their talk follows the town in every chapter Citadel is seen in: townState)
+  phase() { return townState(this.game); }
   overhear(res, h) {
     const ph = this.phase();
     const maro = res.find((r) => r.def.id === 'maro'), tilde = res.find((r) => r.def.id === 'tilde');
-    if (!ph || !maro || !tilde || maro.st !== 'chat' || tilde.st !== 'chat') { this.chat.speaker = null; return; }
+    if (!ph || !maro || !tilde || maro.st !== 'chat' || tilde.st !== 'chat' || !maro.stop?.pair) { this.chat.speaker = null; return; }
     if (Math.hypot(h.pos.x - (maro.pos.x + tilde.pos.x) / 2, h.pos.z - (maro.pos.z + tilde.pos.z) / 2) > HEAR_R) { this.chat.speaker = null; return; }
-    const sp = this.game.walkers.pair('plaza').speaker;
+    const sp = this.game.walkers.pair(maro.stop.pair).speaker;
     if (!sp || sp === this.chat.speaker) return;
     this.chat.speaker = sp;
     if (this.bub && this.bub.prio > 1) return;   // (a bump's word is up)
