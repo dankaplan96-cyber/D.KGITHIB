@@ -1,0 +1,26 @@
+PASS a new game: chapter 1, out of the house on Citadel {"room":"citadel","pos":[-43.98,2.34,77.2],"chapter":"well"}
+PASS the grate is there, shut: no way down yet {"doors":0,"hatch":{"x":-45.4,"z":56.6}}
+PASS the grate looked at: the knocking and Arthur's chalk; lifted (INPUT) {"r":{"r":"used","target":{"kind":"swhatch","id":"p_sw_lift","label":"p_sw_lift"},"state":"play","lines":4},"s":["The magic ball, the holomap... and a lot of dust.","Hello again, old friend.","Something knocks down there. Clank... clank. Like a pipe with hiccups. And chalk on the rim: an arrow, \"A + L\". That's Arthur's writing.","(The old sewers. I haven't been down there since FunFrock's days.)"]}
+PASS the lifted grate is a door down, once he has stepped off it (not while he stands on it) {"under":false,"room":"citadel","door":true}
+PASS down the grate: in the flooded hall, standing on the island by the well-house (INPUT) {"r":{"r":"entered"},"w":{"room":"sewer","pos":[5797.1,0.45,2.52],"chapter":"well"},"hall0":{"built":"active","onFloor":true,"y":0.45,"local":[-2.9,2.5]}}
+PASS the knocking: the valve thumps every few seconds 2
+PASS the gate at the back is shut: walking at it gets nowhere (INPUT) {"r":"timeout","room":"sewer","z":0.57,"x":0.01}
+PASS the project's valve on the old winch: eased, the knocking stops (INPUT) {"r":{"r":"used","target":{"kind":"swvalve","id":"p_sw_ease","label":"p_sw_ease"},"state":"play","lines":4},"s":["The project's new valve. They bolted it straight onto the old gate winch, and its brace runs through the drum. No wonder it knocks.","Eased shut. Quiet. And the winch turns again."]}
+PASS quiet now, and the gate is up {"knocks":0,"open":true}
+PASS across the hall and through the gate: the treasure room (INPUT) {"r":{"r":"entered","t":13.3},"w":{"room":"sewervault","pos":[5877.8,0,1.08],"chapter":"well"}}
+PASS the star chest: Arthur's map (the found-object ceremony) (INPUT) {"r":{"u":{"r":"used","target":{"kind":"swchest","id":"p_open","label":"p_open"},"state":"play","lines":4},"found":["sw_map"]},"s":["A rolled-up map, a stub of chalk... and under them, a few old kashes nobody came back for.","The map has a big X on this room. And a boat drawn in the corner."],"items":["sw_map"]}
+PASS and a clover, picked up {"n":1,"owed":0,"clovers":3,"cl0":2}
+PASS the barrel gives kashes (a hop by it, as any container) {"n":{"r":"rummaged","id":"sw_vbarrel","taken":0,"hp":10},"coins":3}
+PASS out of the treasure room: back in the hall at the gate (INPUT) {"r":{"r":"entered"},"w":{"room":"sewer","pos":[5810.5,0,-9.63],"chapter":"well"}}
+PASS across the hall and up the well-house ladder: back on Citadel beside the grate, put back behind him (INPUT) {"w":{"room":"citadel","pos":[-43.33,2.26,57],"chapter":"well"},"open":false}
+PASS home: Arthur asked about the map ("Lulu held the torch"); the map goes back to him (INPUT) {"r":{"r":"talked","to":"arthur","state":"play","lines":12},"s":["I found your map. Under the street.","You went down the drain? Does Mum know?","Does she know you did?","...We went before the new pipe. Lulu held the torch. Then the gate stuck and we couldn't get back in.","It's open again. Next time, take me. I could use someone who knows the way.","Deal. You hold the torch."]}
+PASS Save → Continue: the story kept (the grate shut, as he left it) {"r":{"f":{"sw_hatch":true,"sw_valve":true,"sw_chest":true,"sw_arthur":true},"open":false,"items":[]},"before":{"sw_hatch":true,"sw_valve":true,"sw_chest":true,"sw_arthur":true}}
+PASS lifted again without a word; below, the gate still up (INPUT) {"r":{"u":"used","e":"entered","room":"sewer","gate":true},"s":[]}
+PASS an old save (no sw_ flags): it loads, the grate shut, the chapter as it was {"room":"citadel","open":false,"doors":false,"chapter":"well","state":"play"}
+--- verdict (tests/README.md "Reading a verdict") ---
+functional: 19 passed, 0 failed
+errors:     none
+resources:  no required file missing, 0 optional
+visual:     0 capture(s) written for review, not judged here
+VERDICT: PASS
+ALL PASSED

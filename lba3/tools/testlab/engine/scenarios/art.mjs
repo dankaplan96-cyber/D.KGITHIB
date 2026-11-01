@@ -61,7 +61,7 @@ async function shootViews(ctx, views, folder) {
 export const ART = [houseWalk, artShots];
 
 // the interiors of WA-7 (later chapters: these pictures are for the developers, not shown to the player)
-export const ROOM_VIEWS = ['school', 'wtent', 'archive', 'valves', 'condA', 'condB', 'butemple', 'control', 'projoffice', 'asylum', 'bumaze', 'buhalls'].map((r) => [r, r, 0, 0, 0]);
+export const ROOM_VIEWS = ['school', 'wtent', 'archive', 'valves', 'condA', 'condB', 'butemple', 'control', 'projoffice', 'asylum', 'bumaze', 'buhalls', 'sewer', 'sewervault'].map((r) => [r, r, 0, 0, 0]);
 export const artRooms = { ...artShots, id: 'art-rooms', title: 'World art: interiors (WA-7)', suites: ['artrooms'], timeoutS: 900,
   async run(ctx) { return shootViews(ctx, ROOM_VIEWS, 'rooms'); } };
 ART.push(artRooms);
@@ -71,6 +71,9 @@ ART.push(artRooms);
 // the outdoor ones, straight down over the whole area (to lay beside the original's ground map). The game's camera
 // rig is held while the study views are taken, the fog pushed out, the hero hidden; all restored after each area.
 // evidence/all/<area>-<view>.jpg (later chapters' areas: for the developers, not shown to the player).
+// (WA-14: 'sewer' and 'sewervault', the Citadel sewers and their treasure room after LBA2's scenes 17 and 18, are in
+//  the game's regions list, src/game/regions.js, so artall shoots them with the rest; the laptop compares 'sewer' with
+//  scene 17 and 'sewervault' with scene 18)
 const OUTDOOR = (id) => id === 'citadel' || id === 'desert' || id === 'hamalayi' || id === 'zeelich' || id.startsWith('isle_');
 export const artAll = { ...artShots, id: 'art-all', title: 'World art: every area (player, iso, top-down views)', suites: ['artall'], timeoutS: 3600,
   async run(ctx) {
