@@ -174,9 +174,14 @@ export function citadelRoster(game) {
     // comes off the quay's pile and stays on the stall's: townbusy.js; he used to pick it up from the bare harbour path)
     { id: 'tobb', char: 'farmerC', tint: '#ffffff', speed: 1.0, start: 0, color: '#e8a860', stops: ok([
       D('tobb_quay', QUAY_PICK.x, QUAY_PICK.z, { a: QUAY_PICK.a, act: 'put', dur: [4, 6], carry: 'crate' }),
-      D('tobb_rest', -72.0, 36.2, { a: 0, act: 'rest', dur: [5, 8] }),
+      D('tobb_rest', -83.0, 43.3, { a: 0, act: 'rest', dur: [5, 8] }),   // (WA-15b: a breather at the Esmers' trading house door, facing it: the stall's Zeelich goods come through there)
       DROP ? D('tobb_stall', DROP.stop.x, DROP.stop.z, { a: DROP.stop.a, act: 'put', dur: [5, 7], carry: null }) : D('tobb_stall', -49.2, -2.8, { a: 0.4, act: 'put', dur: [5, 7], carry: null }),
       D('tobb_back', -52.5, 31.0, { a: 3, act: 'rest', dur: [4, 6] }),
+    ]) },
+    // WA-15b: the Esmer trader at the trading house on the harbour front (harbourzeelich.js): by the jars, by the crates
+    { id: 'sefa', char: 'nara', tint: '#e8f4ff', speed: 0.8, start: 0, color: '#5ac8c8', stops: ok([
+      look('sefa_jars', -86.5, 42.9, -84.0, 40.0, [18, 28]),
+      look('sefa_crates', -80.0, 42.4, -80.9, 43.7, [10, 16], { act: 'tinker' }),
     ]) },
     // the old woman: two benches by the lane's middle and what she sees from each
     { id: 'ume', char: 'lharElder', tint: '#ffffff', speed: 0.75, start: 0, color: '#c8a0f0', stops: ok([

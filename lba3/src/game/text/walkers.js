@@ -6,7 +6,7 @@ import { STR } from '../i18n.js';
 Object.assign(STR.en, {
   n_oda: 'Oda', n_brix: 'Old Brix', n_maro: 'Maro', n_tilde: 'Tilde', n_garrick: 'Garrick',
   n_ilo: 'Ilo', n_aven: 'Aven', n_kira: 'Kira', n_safi: 'Safi', n_tamu: 'Tamu', n_bashir: 'Old Bashir',
-  n_pico: 'Pico', n_dot: 'Dot', n_marda: 'Marda', n_tobb: 'Tobb', n_ume: 'Granny Ume',
+  n_pico: 'Pico', n_dot: 'Dot', n_marda: 'Marda', n_tobb: 'Tobb', n_sefa: 'Sefa the trader', n_ume: 'Granny Ume',
 
   rs_oda_dry: "The well's dry again. I fetch my water from the harbour tap now. My arms are very strong.",
   rs_oda_0: "Pippa's pears are the best on the island. Don't tell her I said so. She'd put the price up.",
@@ -48,6 +48,10 @@ Object.assign(STR.en, {
 
   rs_tobb_0: "Crates from the quay to the stall, stall to the quay. They get heavier. I'm sure of it.",
   rs_tobb_1: "Customs kept me half the morning. Ask Officer Odile about her paperwork. Actually, don't.",
+  rs_tobb_2: "The Esmers pay on time. Their crates are still heavy.",
+  rs_sefa_0: "Zeelich glaze, Zeelich spice. The ferry brings a hold of it every week now.",
+  rs_sefa_1: "Officer Odile stamps each crate twice. Once for Twinsun, once for luck, I think.",
+  rs_sefa_2: "Your rain is loud on our dome. We like it. It doesn't rain like this above the clouds.",
   rs_tobb_work: "Mind your toes. It's heavy, and I'm not looking.",
 
   rs_ume_dry: "A well that won't give and a pump that won't pump. Whatever next.",
