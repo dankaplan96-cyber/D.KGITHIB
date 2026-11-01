@@ -828,3 +828,31 @@ The laptop's `artall`, `artshots` and `artharbour` runs on e999cd7 were set agai
   per-cell painted variation ("busy": Citadel 4.2 against LBA2's 6.5). At ±10 % and ±25 % it changed nothing that can
   be measured from above or seen at the play camera (Citadel busy 4.22 → 4.19 / 4.22). The detail gap needs another
   approach.
+
+---
+
+## GAME-1 (behaviour) · A person busy at something keeps at it when Twinsen walks by · Approved: the user asked for it (1.11.2026)
+
+The user: "Arthur in the house turns to Twinsen while he's sitting. It looks strange. He should keep busy, and turn
+only if Twinsen talks to him."
+
+- **The cause:** `src/game/actors.js` `NPC.update`. Every NPC within 3.2 m of Twinsen (`near`) turns his whole body
+  to him every frame (`dampAngle(… angleTo(hero) …)`), whatever he is doing. That includes a person at a placement's
+  own activity (`forceAnim`). Arthur at a new game kneels at his boat (`kneelWork`, prologue.js).
+- **Measured on the laptop** (Test Lab `artbusy`: a new game, Twinsen placed 2 m off each person's side, the
+  heading over 2.5 s; dev e999cd7):
+  - Now: Arthur turns **90°** to Twinsen and leaves his boat.
+  - With the change: **0°**.
+  - Picture: `runs/game1-arthur.jpg`.
+- **Change** (`requests/GAME-1.diff`, against 8489607):
+  - A new `NPC.busy()`: a placement anim other than `idle` or `listen`.
+  - The turn becomes `this.talking || (near && !this.busy())`.
+  - A person at work (kneeling, wiping, tinkering, potting, pumping, sitting) keeps at it.
+  - He turns to Twinsen once Twinsen talks to him: `talking`, as before. A person standing idle still turns to a
+    passer-by, as before.
+- **Affects:** every NPC placed with an `anim` (Arthur, Gilbert wiping at the well, workers and the like).
+  Residents (`Resident`) and guards have their own update and are unchanged.
+- **Check:**
+  - `node engine/cli.mjs artbusy` (turnedDeg 0 for the busy ones).
+  - A conversation with Arthur still turns him to Twinsen.
+  - The game's own talk and townlife tests.
