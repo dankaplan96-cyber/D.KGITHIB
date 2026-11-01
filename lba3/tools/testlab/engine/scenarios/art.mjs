@@ -65,3 +65,89 @@ export const ROOM_VIEWS = ['school', 'wtent', 'archive', 'valves', 'condA', 'con
 export const artRooms = { ...artShots, id: 'art-rooms', title: 'World art: interiors (WA-7)', suites: ['artrooms'], timeoutS: 900,
   async run(ctx) { return shootViews(ctx, ROOM_VIEWS, 'rooms'); } };
 ART.push(artRooms);
+
+// ALL AREAS (the whole-game look against LBA1/LBA2): every area the game has, each from the player's own camera (two
+// headings at its centre), an isometric view like the originals' (yaw 45°, 35° down, narrow lens, far off) and, for
+// the outdoor ones, straight down over the whole area (to lay beside the original's ground map). The game's camera
+// rig is held while the study views are taken, the fog pushed out, the hero hidden; all restored after each area.
+// evidence/all/<area>-<view>.jpg (later chapters' areas: for the developers, not shown to the player).
+const OUTDOOR = (id) => id === 'citadel' || id === 'desert' || id === 'hamalayi' || id === 'zeelich' || id.startsWith('isle_');
+export const artAll = { ...artShots, id: 'art-all', title: 'World art: every area (player, iso, top-down views)', suites: ['artall'], timeoutS: 3600,
+  async run(ctx) {
+    const { page, rec, dir } = ctx;
+    const out = path.join(dir, 'evidence', 'all'); fs.mkdirSync(out, { recursive: true });
+    if ((await gameState(page)).state !== 'play') await newGame(page);
+    const only = process.env.LBA3_AREAS ? process.env.LBA3_AREAS.split(',') : null;
+    const areas = (await page.evaluate(() => ['citadel', ...[...game.regions.of.keys()]])).filter((a) => !only || only.includes(a));
+    const info = [];
+    for (const area of areas) {
+      if (ctx.stopped?.()) break;
+      let A;
+      try {
+        A = await page.evaluate(({ area }) => {
+          game.resetCombat?.('drop');
+          if (area === 'citadel') game.exitRoom({ x: -46, z: 2, a: 0 }, true, true); else game.enterRoom(area, null, true, true);
+          const root = area === 'citadel' ? game.world.root : game.room?.group;
+          if (!root) return { area, error: 'no room' };
+          // the area's extent: its meshes, leaving out sky, sea and other planes far larger than any place
+          const T = root.constructor; const b = { x0: -10, x1: 10, y0: 0, y1: 0, z0: -10, z1: 10 }, P = []; let n = 0;
+          root.updateMatrixWorld(true);
+          root.traverse((o) => {
+            if (!o.isMesh || !o.geometry) return;
+            if (!o.geometry.boundingSphere) o.geometry.computeBoundingSphere();
+            const s = o.geometry.boundingSphere; if (!s) return;
+            const c = s.center.clone().applyMatrix4(o.matrixWorld), r = s.radius * o.matrixWorld.getMaxScaleOnAxis();
+            if (o.isInstancedMesh || r > 120 || !isFinite(r)) return;
+            P.push([c.x, c.y, c.z]); n++;
+          });
+          // (the place itself: the 3rd to 97th percentile of its pieces' centres, 6 m round; one far piece doesn't widen it)
+          const q = (k, f) => { const v = P.map((p) => p[k]).sort((a, b) => a - b); return v[Math.min(v.length - 1, Math.max(0, Math.round(f * (v.length - 1))))] ?? 0; };
+          if (P.length) Object.assign(b, { x0: q(0, 0.03) - 6, x1: q(0, 0.97) + 6, y0: q(1, 0.03), y1: q(1, 0.97), z0: q(2, 0.03) - 6, z1: q(2, 0.97) + 6 });
+          // (an outdoor area without a centre: the hero stays where the area's own arrival put him)
+          const h = game.hero, c = area === 'citadel' ? { x: -46, z: 2 } : game.room.center ?? { x: h.pos.x, z: h.pos.z };
+          if (game.room?.center || area === 'citadel') h.pos.set(c.x, game.physics.groundAt(c.x, c.z), c.z);
+          h.angle = 0; game.camRig.recenter?.();
+          if (game.env?.setTime && game.env.time != null) { window.__tlT ??= game.env.time; game.env.setTime(window.__tlT); }
+          return { area, center: { x: c.x, z: c.z }, box: b, meshes: n };
+        }, { area });
+      } catch (e) { info.push({ area, error: e.message }); continue; }
+      if (A.error) { info.push(A); continue; }
+      await sleep(3000);
+      const shot = async (view) => { const f = `${area}-${view}.jpg`; await page.screenshot({ path: path.join(out, f), type: 'jpeg', quality: 88 }); rec.evidence.push(`evidence/all/${f}`); };
+      for (const [view, a] of [['player-n', 0], ['player-s', Math.PI]]) {
+        await page.evaluate((a) => { game.hero.angle = a; game.camRig.recenter?.(); }, a); await sleep(1800); await shot(view);
+      }
+      const studies = [['iso', 'iso']]; if (OUTDOOR(area)) studies.push(['top', 'top']);
+      for (const [view, kind] of studies) {
+        await page.evaluate(({ kind, A }) => {
+          const G = game, cam = G.camera, b = A.box;
+          window.__tlHeld ??= { update: G.camRig.update, fog: G.scene.fog ? { near: G.scene.fog.near, far: G.scene.fog.far } : null, fov: cam.fov, far: cam.far, layers: G.hero.rig?.root?.layers?.mask };
+          G.camRig.update = () => {};
+          G.hero.rig?.root?.traverse?.((o) => o.layers.set(31));
+          const cx = (b.x0 + b.x1) / 2, cz = (b.z0 + b.z1) / 2, cy = Math.max(0, (b.y0 + b.y1) / 2 * 0.3);
+          const ext = Math.max(b.x1 - b.x0, b.z1 - b.z0, 8);
+          const fov = kind === 'top' ? 30 : 20, dist = (ext * 0.55) / Math.tan((fov / 2) * Math.PI / 180) + ext * 0.2;
+          cam.fov = fov; cam.far = dist * 3 + 500; cam.updateProjectionMatrix();
+          if (kind === 'top') cam.position.set(cx, cy + dist, cz + 0.01);
+          else { const yaw = Math.PI / 4, p = 35 * Math.PI / 180; cam.position.set(cx + Math.sin(yaw) * Math.cos(p) * dist, cy + Math.sin(p) * dist, cz + Math.cos(yaw) * Math.cos(p) * dist); }
+          cam.lookAt(cx, cy, cz); cam.updateMatrixWorld();
+          // (the environment sets the fog every frame: held out of reach while the study views are taken)
+          const f = G.scene.fog; if (f && !f.__tlHeld) { f.__tlHeld = true; for (const k of ['near', 'far']) Object.defineProperty(f, k, { configurable: true, get: () => (k === 'near' ? 1e5 : 2e5), set() {} }); }
+        }, { kind, A });
+        await sleep(2500);
+        await shot(view);
+      }
+      await page.evaluate(() => {
+        const H = window.__tlHeld; if (!H) return; const G = game, cam = G.camera;
+        G.camRig.update = H.update; delete G.camRig.update;   // (the prototype's again)
+        const f = G.scene.fog; if (f?.__tlHeld) { delete f.near; delete f.far; delete f.__tlHeld; if (H.fog) { f.near = H.fog.near; f.far = H.fog.far; } }
+        cam.fov = H.fov; cam.far = H.far; cam.updateProjectionMatrix();
+        G.hero.rig?.root?.traverse?.((o) => o.layers.set(0));
+        window.__tlHeld = null;
+      });
+      info.push(A);
+    }
+    fs.writeFileSync(path.join(out, 'areas.json'), JSON.stringify(info, null, 1));
+    assert(rec, 'areas shot', info.filter((a) => !a.error).length >= areas.length - 2, `>= ${areas.length - 2}`, info.filter((a) => !a.error).length);
+  } };
+ART.push(artAll);

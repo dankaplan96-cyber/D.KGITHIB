@@ -3,6 +3,7 @@
 //   node engine/cli.mjs reproduce <scenario.json>
 //   node engine/cli.mjs compare --game <baseline exe> --candidate <exe> [--test street] [--repeats 3]
 //   node engine/cli.mjs selftest      (the tool's own failure handling)
+//   node engine/cli.mjs artall        (every area: player, iso and top-down views; LBA3_AREAS=a,b to limit)
 // Without --game/--project the paths remembered by the window are used (config.json in the runs folder).
 // "stop" on stdin (or Ctrl+C) stops safely: the game is closed and the partial report written.
 import path from 'node:path';
@@ -27,7 +28,7 @@ process.on('SIGTERM', requestStop);
 
 const only = opt('only'), stopAt = opt('stop-at-battery'); const base = { runsDir, game, project, target, ...(only ? { only: only.split(',') } : {}), ...(stopAt ? { stopAtBattery: +stopAt } : {}) };
 try {
-  if (['quick', 'full', 'visual', 'diagnose', 'npcs', 'sweep', 'art', 'artshots', 'artrooms'].includes(cmd)) await runSuite({ ...base, suite: cmd });
+  if (['quick', 'full', 'visual', 'diagnose', 'npcs', 'sweep', 'art', 'artshots', 'artrooms', 'artall'].includes(cmd)) await runSuite({ ...base, suite: cmd });
   else if (cmd === 'reproduce') {
     const file = argv[1];
     if (!file || !fs.existsSync(file)) throw new Error(`no reproduction scenario at ${file || '(none given)'}`);
