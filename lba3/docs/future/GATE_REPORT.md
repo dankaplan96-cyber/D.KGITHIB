@@ -9,6 +9,11 @@ B-1 names one chapter-10 place and the two people standing there; that is needed
 logs with chapter 3–12 text, so it is marked as spoilers. No screenshots of chapters 3 to 12 were taken into the
 repository.
 
+**Update, GATE-FIX (same day, later):** B-1 and T-1 are fixed on `18c7043`, and the whole chain was run again on it
+without W-1, W-2 or ISO moves. Gate items 1, 2, 3, 4 and 6 now pass in the tested scope. Item 5 is still UNVERIFIED,
+so the gate is still not passed. See "GATE-FIX re-run" below. The rest of this report is the first audit, on
+`0f77b57`.
+
 ## Verdict
 
 **GATE NOT PASSED. The expansion cannot start yet.**
@@ -26,6 +31,149 @@ Test Lab is disconnected.
 | 4 | Movement, ball aiming, combat, cutscenes, transitions, supported inputs | **PASS** (automated scope) | controls, combat, anim-combat, transitions, opening, menus, stability and crosssystem all PASS, plus the movement and fights of the whole chain. Feel by hand, gamepad, touch and audio need a person: UNVERIFIED here. |
 | 5 | Representative visual review and measured performance on the declared target | **UNVERIFIED** | The declared target is the user's AMD Vega 8 laptop at 1366×768, 60 Hz, 55–60 fps (RUN_STATE.md, ISSUES I-13). This container renders with SwiftShader, so no fps or GPU time is claimed. The Test Lab on the laptop is disconnected. perfbudget and drawcalls give counts only (below). No person has done a visual review of this build. |
 | 6 | Recorded base commit/build, known-issues list, reproducible procedure | **PASS** | This file. |
+
+## GATE-FIX re-run
+
+Task GATE-FIX, 2026-11-01, 21:50–23:55 UTC. It fixed B-1 and T-1 and ran the chain again.
+
+### Candidate
+
+| Field | Value |
+|---|---|
+| Commit | `18c7043` on top of `4636bd1` (the branch head when this task started, LBA-CITADEL-1…6 included). `18c7043` holds both fixes; `eb92bbe` holds T-1 alone. The docs commit after it changes no game or test file. |
+| Game version | 0.48.0, save format 5 (unchanged) |
+| Source, server | `git archive 18c7043 lba3` in /dev/shm. The chain was served by `python3 -m http.server` on 8772 and the tests on 8773. Commands: `gate-logs/gatefix/tools/commands.sh`. |
+| Browser, machine | Playwright 1.56.1, headless Chromium, SwiftShader (software). Same 4-core container as GATE-1, shared with other sessions (load average 10–15). Wall times are not performance data. |
+
+### The fixes
+
+**B-1, fixed (`src/game/story/network.js`).** The lamp room is a ring round the lens. From the stair top, the only way
+to the dial bank is the west side, between the lens and the keeper's desk and microphone. That gap is one person
+wide, and Zoé and Arthur stood in it.
+- Their chapter-10 spots, and the relay's, now come from one table (`LIGHT_CAST`). They stand on the east side by the
+  stair top, against the low rim: Arthur at 86° and 2.45 m from the lens, Zoé at 64° and 2.3 m, and the relay at
+  108°, beside the stairs.
+- Both face the transmitter's middle dial. Arthur sees the needle past the lens, and Zoé is beside him. The hero
+  meets them as he comes up.
+- The way round, the stair top and the way down stay free:
+  - The occupancy map (`gatefix/probe-lamproom-map.txt`) has every dial within 0.1 m of a reachable cell, with the
+    people standing as placed.
+  - Their bodies are clear of every collider. The edge of the rope coil on the floor is about 7 cm inside Zoé's body
+    circle, at her feet.
+  - The narrowest gap left for the hero, between Zoé and the lens, is about 0.4 m wider than he is.
+- The relay used to stand in the west gap, where a player walked through it. It now stands beside the stairs.
+- No player text changed. Chapter 2's lamp room is not affected: Zoé is not there while the hero sets the dials.
+- I looked at both moments by eye, from screenshots kept out of the repository: the arrival, and the hero at the
+  dials with the two of them watching from the stair top.
+
+**B-1's check (`tests/chapter10.mjs`).** From the stair top, the test now does the lamp room by input
+(`tests/lib/player.js`: keys, the game's time step, A* over its collision, no teleport):
+- the talk with Zoé;
+- each of the three dials: walk there past the two of them and press E once, and the dial must turn;
+- the code;
+- the way back down the stairs after the cast is put back on its spots.
+
+The old check "at the middle dial, facing Zoé, E is hers" (REV-TY-5 T1) now runs only when a dial is within her talk
+reach. None is now, and the test records that.
+
+The new test was also run on the game before the fix (`gatefix/t-chapter10-newcheck-on-old-spots-FAIL.log`). There
+it fails as B-1 says: no dial is reached, and the prompt stays on Zoé.
+
+**T-1, fixed (`tests/lib/player.js`).**
+- `P.settle` now records who spoke each line.
+- When a dialogue opens before `P.talk` presses E, and nobody heard in it is the person asked for, `P.talk` reads it
+  to the end and talks to them again (at most twice, by input). An unnamed voice such as the radio counts as unknown,
+  so that dialogue counts as before. The result lists what was skipped.
+- In segment 01 it skipped the hero's 2-line crystal remark, and Mira then gave the key.
+- In the rest of the chain it never triggered (the traces have no other "opened on the way").
+- This also closes ISSUES I-18: prologue.mjs now beats the well's mites 4/4.
+
+**Other chapters (the B-1 scan).** `gatefix/tools/scan-cast.mjs` loaded each kept save, 01 to 14, and entered every
+interior. Saves 01–05 came from an earlier run on `eb92bbe`, where chapters 1–3 are the same code. In each scene it placed the cast and set the hero on a 0.15 m grid. At each point it listed every
+interactive thing whose prompt is in reach, and it tested which points the hero can reach from the scene's spawn and
+exits (outdoors: from the edge of a 10 m box round each story person), with and without the people.
+- It covered 88 scenes with story people in them.
+- **No thing was shut off by people (BLOCKED: 0).**
+- Things with a person within 1 m of their use area, all still usable from most of it:
+  - A trader beside her trading case (chapter 3 on): 245 → 200 cells. This is the I-19 case, already fixed.
+  - A craftsman beside his workbench (chapter 3 on): 50 → 33 cells.
+  - A resident at a pump in Citadel.
+  - Zoé and Arthur by the conch at home.
+  - Three people by the ferry (chapter 8).
+  - A pilot by his glider (chapter 6).
+  - Residents of the second region by the notes and hatches there.
+
+  The names are in the scan files (`gatefix/scans/`, spoilers).
+- No change was needed.
+- Limits: the scan sees each chapter as it stands at a segment boundary, not every mid-chapter placement. Outdoors it
+  sees only things within 5 m of a story person.
+- The chain itself is the other half of the evidence: every mandatory interaction of chapters 1–12 was reached by
+  input.
+
+### Per-segment verdicts (`18c7043`, chained through real saves)
+
+| Seg. | Result | ISO | Notes |
+|---|---|---|---|
+| 01 | PASS, unmodified (no W-1) | 0 | the crystal's remark was read, then Mira gave the key (T-1) |
+| 02 – 05 | PASS | 0 | |
+| 06 | PASS | the segment's own fight assist | depot fight, 4 enemies, as in GATE-1 |
+| 07 – 10 | PASS | 0 | |
+| 11 | **FAIL twice**, then PASS with `ASSIST=1` | 1 fight assist (5 enemies) | See below. |
+| 12 | PASS | 0 | |
+| 13 | **PASS, unmodified (no W-2, no ISO move)** | the segment's own fight assists (bore: 1 drone, then 2 guards) | "the dials": the code [2,0,1] set by input on the first passes, the relay lit, then out of the lamp room and on by glider |
+| 14 | PASS | 0 | chapters 11, 12, the epilogue, Keep Exploring |
+| postgame | PASS | — | Continue from the save after Keep Exploring: chapter `home`, "Explore Citadel Island", out of the house into Citadel (`gatefix/probe-postgame.log`) |
+
+Segment 11, the two failed runs:
+- The bot reached the chapter-8 fortress fight with 8 HP, against 9 in GATE-1. Its hit points differ from segment 04
+  on; the GATE-1 report expected the 40 commits since `0f77b57` to change chapter 1–2 routes.
+- It went down in that fight. A clover revived it, and a knock-back carried it through the control-room door, so the
+  lever step stopped.
+- The second run went the same way.
+- It then passed with the harness's declared fight assist (`ASSIST=1`, logged as ISO). This is a bot-skill limit of
+  the same kind as T-2, not a progression blocker.
+- New compared with GATE-1: this fight now needs the assist for the bot.
+- A human playtest of the chapter-8 fortress fight is wanted. A player knocked through a door in mid-fight is a feel
+  issue to look at, not a blocker.
+
+Every segment that ran to its end, the failed runs included, reported no page errors, no console errors and no
+missing files. The saves were handed on 13 times by Save & quit → Continue (01→…→14); save 10 was continued 3 times
+for segment 11. All of them resumed.
+
+### Other tests on `18c7043` (port 8773, one at a time)
+
+| Test | Result |
+|---|---|
+| chapter10 | PASS 25/25, including the three new input checks (B-1) |
+| chapter1 | PASS 23/23 |
+| prologue | PASS 26/26 (the well's mites 4/4: I-18) |
+| controls | PASS 92/92 |
+| transitions | PASS 6/6 |
+| saveslots | PASS 25/25 |
+
+No test reported page errors, console errors or missing files. Logs: `gate-logs/gatefix/t-*.log`. The other GATE-1
+tests (combat, anim-combat, opening, menus, stability, crosssystem, save-migration, zoe-resume, resume, well-town,
+perfbudget, drawcalls) were not rerun. Neither fix touches their code.
+
+### Gate items after GATE-FIX
+
+| # | Gate item | Verdict | Why |
+|---|---|---|---|
+| 1 | Normal new-game route | **PASS** (automated, with declared fight assists) | 01→14 and the postgame on one commit, unmodified segments, no W-1/W-2, no ISO move, no story flag set. Fight assists: 06 and 13 (their own, as before) and 11 (`ASSIST=1`, new). |
+| 2 | Saves and reloads | **PASS** (tested scope) | 13 chain hand-offs plus 2 extra Continues of save 10; the postgame Continue; saveslots PASS 25/25. The other save tests passed on `0f77b57` and were not rerun. |
+| 3 | No known progression blockers | **PASS** (known scope) | B-1 fixed and checked by input, both in chapter10 and in segment 13. The cast scan found no other blocker. No crash or page error. |
+| 4 | Movement, ball, combat, cutscenes, transitions, inputs | **PASS** (automated scope) | controls and transitions rerun and PASS, plus the whole chain. Feel by hand, pad, touch and audio: UNVERIFIED, as before. |
+| 5 | Visual review and measured performance on the declared target | **UNVERIFIED** | Unchanged: SwiftShader only, no fps or GPU-time claim. It needs the Vega 8 laptop (in-game benchmark or Test Lab) and one visual pass by the user. |
+| 6 | Recorded build, known issues, procedure | **PASS** | This section and `gate-logs/gatefix/`. |
+
+**Verdict after GATE-FIX: GATE NOT PASSED. Only item 5 is open.** It cannot be closed from this container.
+
+Known issues changed by GATE-FIX:
+- B-1: fixed.
+- T-1 and I-18: fixed (test bot).
+- STORY_BIBLE's chapter table: corrected. Chapters 9 and 10 are built, and the core has three pylons.
+- New: the bot needs the fight assist for the chapter-8 fortress fight (segment 11). Its balance for a person is
+  untested, like the depot and bore fights (T-2).
 
 ## Candidate
 
