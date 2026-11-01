@@ -44,7 +44,7 @@ await ev(() => { window.CIT = () => game.walkers.res.filter((r) => r.stops.lengt
 // ---- the cast
 const cast = await ev(() => { const G = game, W = G.walkers; const storyIds = new Set(G.npcs.filter((n) => !n.ambient).map((n) => n.def.id));
   return { n: CIT().length, all: W.res.length, ids: CIT().map((r) => r.def.id), stops: CIT().map((r) => r.stops.length), allIn: W.res.every((r) => G.npcs.includes(r)), clash: W.res.filter((r) => storyIds.has(r.def.id)).map((r) => r.def.id), present: CIT().filter((r) => r.present).length, waiting: W.res.filter((r) => r.def.pending).map((r) => r.def.id) }; });
-check('ten residents walk round Citadel (six more wait, hidden, for Zeelich and Kesh to be built), all in the cast, none sharing an id with a story character', cast.n === 10 && cast.all === 16 && cast.waiting.length === 6 && cast.allIn && cast.clash.length === 0 && cast.present >= 9, cast);
+check('eleven residents walk round Citadel (ten, and Sefa the Esmer trader at the trading house: WA-15b; six more wait, hidden, for Zeelich and Kesh to be built), all in the cast, none sharing an id with a story character', cast.n === 11 && cast.all === 17 && cast.waiting.length === 6 && cast.allIn && cast.clash.length === 0 && cast.present >= 10, cast);
 check('each has a round of at least 3 stops', cast.stops.every((n) => n >= 3), cast.stops);
 const texts = await ev(async () => { const { t } = await import('/src/game/i18n.js'); const W = game.walkers; return W.res.map((r) => [r.def.id, t('n_' + r.def.id) !== 'n_' + r.def.id, t('rs_' + r.def.id + '_0') !== 'rs_' + r.def.id + '_0']); });
 check('every resident has a name and lines of their own', texts.every(([, a, b]) => a && b), texts.filter(([, a, b]) => !(a && b)));
