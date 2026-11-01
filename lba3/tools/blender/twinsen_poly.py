@@ -7,8 +7,9 @@
 # Built from the measurements of LBA2's in-game model (docs/character-review.md §11): every ring below is a
 # horizontal section of the original (height, half-width, front and back extent, fractions of the height H).
 # Skinned like LBA2 skins its models: each part follows one bone, with blends only where cloth spans two
-# (each half of the robe follows its leg as in the original, the hair's tuft swings; the cape's sides followed the arms as
-# in the original until HERO-LOOK (I-22): now the cape stays on the body and the arms come out of it in sleeves of their own).
+# (each half of the robe follows its leg as in the original, the hair's tuft swings; the cape's sides follow the arms as
+# in the original: they are his sleeves. HERO-ARMS: below the armpit the sleeves are cut from the tunic's front and back,
+# which stay on the body, so a raised arm lifts a sleeve and not the whole tunic, I-22).
 # The skeleton is the game's own (exported from createCharacter), so every existing animation drives it.
 import json, math, os, sys
 
@@ -62,6 +63,7 @@ class Part:
         # HERO-LOOK (I-22): `reweight` gives a part new weights, taken where the game shows its vertices at rest (the arms at
         # the look's armSpread, GAME_SPREAD), so the idle shape is kept exactly; `game`: the part is drawn in that pose
         self.reweight, self.game = reweight, game
+        self.cls = None   # (HERO-ARMS: per vertex 'sleeve' / 'body' / 'shared', set by cut_sleeves)
         self.v, self.f = [], []
 
     def add(self, verts, faces):
@@ -229,10 +231,33 @@ def w_cape(p):
 # shoulder), so a swing still moves the side, and a raised arm comes out of the cape in a sleeve of its own (`sleeve*`
 # below, hidden inside the cape at rest). The weights are taken where the game shows the cape at rest (its arms at
 # GAME_SPREAD), so the idle silhouette is the one it had.
-CAPE_ARM = float(os.environ.get('TW_CAPE_ARM', '0.15'))
+#
+# HERO-ARMS (the user 01.11, on 0.46.0: "the hands and the tunic don't look good at all, like hands that aren't connected
+# to the tunic"; with the arms raised the cape sat as a poncho over the shoulders and thin sleeves stuck out from under
+# it, while in 0.45 the arm was one blue sleeve from the shoulder to the fist, part of the tunic). Back to LBA2's
+# weights: the cape's side IS the sleeve (it rides the upper arm and the forearm, the hand comes out of its end), so in
+# every pose the sleeve runs straight out of the shoulder and the hand stays in it. Only what I-22 was about is fixed:
+# below the armpit the sleeve is cut from the tunic's front and back (`SLEEVE_COLS`: the cape's faces over the arm,
+# 30-150 degrees round each side, keep LBA2's arm weights; the faces in front of and behind them fade to the torso from
+# the armpit down, `body_f`), so a raised arm no longer drags the front and back of the tunic up into a sheet from the
+# waist to the hand. At rest both halves of every cut vertex sit where the game shows LBA2's cape (its arms at
+# GAME_SPREAD), so the idle silhouette is 0.45's. A tunic body under the cape (`tunicBody`) fills the cut when a sleeve
+# swings or rises. TW_CAPE_046=1 builds 0.46.0's HERO-LOOK cape (on the torso, 15 % over the arm, sleeves of its own).
+CAPE_046 = bool(os.environ.get('TW_CAPE_046'))
+CAPE_ARM = 0.15
+SEAM_F, SEAM_B = 2, 10   # (the cut's columns of the 24 round the cape: 30 and 150 degrees, the side between is the sleeve)
+SLEEVE_COLS = set(range(SEAM_F, SEAM_B)) | set(range(24 - SEAM_B, 24 - SEAM_F))
+CUT_RINGS = 3        # (the cut runs up through the hem, 0.54 and 0.62 rings and closes at the 0.70 ring, the armpit)
+SLEEVE_PROUD = float(os.environ.get("TW_PROUD", "0.007"))   # (H: about 1.5 cm)
 
 
-def w_cape_game(p):
+def sleeve_k(y):
+    # below the armpit the sleeve's own cloth rides the arm all the way (LBA2's weights fade to the torso inward from
+    # 0.165 H out, which left the sleeve's front and back edges behind the arm)
+    return 1 - smooth(0.60, 0.70, y)
+
+
+def w_cape_game(p):   # (0.46.0's, TW_CAPE_046)
     x, y, z = p
     arm = CAPE_ARM * smooth(0.135, 0.215, abs(x)) * (1 - smooth(0.6, 0.7, y))
     el = arm * (1 - smooth(0.49, 0.6, y))
@@ -240,7 +265,47 @@ def w_cape_game(p):
     return {'torso': 1 - arm, 'sh' + s: arm - el, 'el' + s: el}
 
 
-cape = Part('cape', 'tunic', w_cape, angle=55, reweight=w_cape_game)
+def body_f(y):
+    # how much of LBA2's arm weight the tunic's front and back keep beside the cut: all of it at the armpit, none at
+    # the waist (the 0.62 ring keeps about two thirds: the armhole's cloth stretches a little, as a real one does)
+    return smooth(0.50, 0.70, y)
+
+
+def cut_sleeves(part, n, rings):
+    """Cut the part's loft (n points round; its `rings` lowest rings) between the sleeve columns and the body columns:
+    each vertex on the cut gets a copy for the sleeve's faces. Sets part.cls: 'sleeve' / 'body' / 'shared' per vertex."""
+    cls = ['shared' if i // n >= rings else 'body' for i in range(len(part.v))]
+    used = {}
+    for f in part.f:
+        for i in f:
+            used.setdefault(i, set()).add(f[0] % n in SLEEVE_COLS)
+    for i, u in used.items():
+        if cls[i] == 'body' and u == {True}:
+            cls[i] = 'sleeve'
+    copies = {}
+    for f in part.f:
+        if f[0] % n not in SLEEVE_COLS:
+            continue
+        for k, i in enumerate(f):
+            if cls[i] == 'body':
+                if i not in copies:
+                    copies[i] = len(part.v)
+                    part.v.append(part.v[i])
+                    cls.append('sleeve')
+                f[k] = copies[i]
+    part.cls, part.copies = cls, copies
+    # the sleeve stands a little proud of the tunic's front and back (SLEEVE_PROUD out from the body's axis, none at the
+    # armpit), so at rest a fine shadowed edge runs down the cut from the armpit to the cuff: the arm reads as a sleeve
+    for i, c in enumerate(cls):
+        if c == 'sleeve':
+            x, y, z = part.v[i]
+            r = math.hypot(x, z - 0.025)
+            k = SLEEVE_PROUD * sleeve_k(y) / r
+            part.v[i] = (x + x * k, y, z + (z - 0.025) * k)
+    return len(copies)
+
+
+cape = Part('cape', 'tunic', w_cape, angle=55, reweight=w_cape_game if CAPE_046 else None)
 hem = lambda t: 0.448 - 0.04 * abs(math.sin(t)) ** 1.6   # the hem rises over the belt in front and behind
 N = 24
 # NECK-TW: the cape's top. It was flat (0.765 → 0.772 H while narrowing from ±0.052 to ±0.03) and, being ring()s,
@@ -255,8 +320,10 @@ CAPE_TOP = [
     oring(0.7785, 0.0365, 0.0875, 0.0145, N, 1.0),  # its inner edge (the dark inside goes down from here)
 ]
 # the cloth has thickness: an inner lip turns up under the cape's edge (darker, in its own shadow)
-lip = Part('capeLip', 'inner', w_cape, angle=70, reweight=w_cape_game)
+lip = Part('capeLip', 'inner', w_cape, angle=70, reweight=w_cape_game if CAPE_046 else None)
 loft(lip, [ring(lambda t: hem(t) + 0.03, 0.19, 0.112, -0.064, N, 0.62), ring(hem, 0.209, 0.126, -0.075, N, 0.62)])
+if not CAPE_046:
+    cut_sleeves(lip, N, 2)
 PARTS.append(lip)
 loft(cape, [
     ring(hem, 0.212, 0.128, -0.077, N, 0.62),
@@ -265,7 +332,20 @@ loft(cape, [
     ring(0.70, 0.163, 0.118, -0.046, N, 0.72),
     ring(0.74, 0.122, 0.096, -0.028, N, 0.8),
 ] + CAPE_TOP)
+if not CAPE_046:
+    cut_sleeves(cape, N, CUT_RINGS)
 PARTS.append(cape)
+if not CAPE_046:
+    # HERO-ARMS: the tunic's body under the cape, from the belt's top to the armpits, on the torso: hidden at rest, it
+    # is what shows through the cut when a sleeve swings or rises (instead of the cape's inside)
+    tbody = Part('tunicBody', 'tunic', lambda p: {'torso': 1.0}, angle=60)
+    loft(tbody, [
+        ring(0.47, 0.098, 0.116, -0.066, 16, 0.75),
+        ring(0.56, 0.122, 0.121, -0.062, 16, 0.75),
+        ring(0.64, 0.126, 0.118, -0.052, 16, 0.75),
+        ring(0.72, 0.104, 0.094, -0.030, 16, 0.8),
+    ])
+    PARTS.append(tbody)
 # the neckline's inside: from the collar's inner edge down into the cape, dark (the opening seen from above)
 neckIn = Part('neckIn', 'inner', lambda p: {'torso': 1.0}, angle=70)
 loft(neckIn, [oring(0.7785, 0.0365, 0.0875, 0.0145, N, 1.0), oring(0.762, 0.034, 0.085, 0.016, N, 1.0)])
@@ -420,7 +500,27 @@ for sx in (1, -1):
             SLEEVE_W[tuple(round(cc, 6) for cc in q)] = w
         rings.append(ring)
     loft_along(slv, rings, cap0=False, cap1=False)
-    PARTS.append(slv)
+    if CAPE_046:   # (HERO-ARMS: the cape's side is the sleeve again; this one was inside it)
+        PARTS.append(slv)
+    else:
+        # HERO-ARMS: the sleeve's underside, closing the cape's side into a wide sleeve below the armpit: a wall from the
+        # cut's front edge to its back edge on each ring, bowed in a little; hidden inside the cape at rest, it makes
+        # a raised or swung sleeve a tube instead of an open shell. Weighted as the sleeve's edges (cut_sleeves).
+        k0, k1 = (SEAM_F, SEAM_B) if sx > 0 else (24 - SEAM_B, 24 - SEAM_F)
+        wall = Part('sleeveIn' + s, 'tunic', w_cape, angle=70)
+        WM = 3
+        for j in range(CUT_RINGS + 1):
+            a, b = (Vector(cape.v[cape.copies.get(j * N + k, j * N + k)]) for k in (k0, k1))
+            row = []
+            for m in range(WM + 1):
+                u = m / WM
+                q = a.lerp(b, u)
+                q.x -= sx * 0.008 * math.sin(math.pi * u)
+                row.append(tuple(q))
+            wall.add(row, [])
+        wall.f = [[j * (WM + 1) + m, j * (WM + 1) + m + 1, (j + 1) * (WM + 1) + m + 1, (j + 1) * (WM + 1) + m] for j in range(CUT_RINGS) for m in range(WM)]
+        wall.cls = ['sleeve' if j < CUT_RINGS else 'shared' for j in range(CUT_RINGS + 1) for _ in range(WM + 1)]
+        PARTS.append(wall)
     cin = Part('cuffIn' + s, 'inner', lambda p, s=s: {'el' + s: 1.0}, angle=70)
     cin.add(ell_ring((sx * 0.192, 0.394, 0.014), (1, 0, 0), (0, 0, 1), 0.04, 0.04, 12), [list(range(12))])
     PARTS.append(cin)
@@ -943,7 +1043,20 @@ def corner_normals(verts, tris, angle):
 PART_TRIS = {}
 for part in PARTS:
     W = [part.weights(p) for p in part.v]
-    if part.reweight:   # (HERO-LOOK: new weights where the game shows it at rest; the same rest shape on screen)
+    if part.cls is not None:   # (HERO-ARMS: LBA2's weights; beside the cut the body's copies fade to the torso)
+        shown = [to_game(p, w) for p, w in zip(part.v, W)]
+        for i, (q, c) in enumerate(zip(shown, part.cls)):
+            if c == 'body':
+                f = body_f(q[1])
+                W[i] = {b: (1 - (1 - wt) * f if b == 'torso' else wt * f) for b, wt in W[i].items()}
+            elif c == 'sleeve':
+                a = 1 - W[i]['torso']
+                a2 = a + (1 - a) * sleeve_k(q[1])
+                el = a2 * (1 - smooth(0.49, 0.6, q[1]))
+                s = side(q[0])
+                W[i] = {'torso': 1 - a2, 'sh' + s: a2 - el, 'el' + s: el}
+        rest = [to_rest(p, w, ARM_G) for p, w in zip(shown, W)]
+    elif part.reweight:   # (HERO-LOOK: new weights where the game shows it at rest; the same rest shape on screen)
         shown = [to_game(p, w) for p, w in zip(part.v, W)]
         W = [part.reweight(p) for p in shown]
         rest = [to_rest(p, w, ARM_G) for p, w in zip(shown, W)]

@@ -1281,4 +1281,57 @@ necklace as in the original (I-23). All in `tools/blender/twinsen_poly.py` → `
   need the brows moved from the skinned head into a group of their own the same way.
 - The cape now follows the arms only 15 % (sleeves 100 %): poses that relied on the cape's side lifting with the arm
   (none found) would now show the sleeve. The weights assume the look's armSpread 0.3 at rest; if it changes,
-  rebuild with the new `GAME_SPREAD`.
+  rebuild with the new `GAME_SPREAD`. (Superseded by §21: the cape's sides follow the arms again.)
+
+## 21. Twinsen's arms in his sleeves (HERO-ARMS, after 0.46.0)
+
+The user on 0.46.0 (01.11): "the hands and the tunic don't look good at all; it looks like hands that aren't connected to
+the tunic", and on review/hero-look/arms-raised.jpg: raised, the cape sat as a poncho over the shoulders with thin
+sleeves sticking out from under it, while 0.45's arm was one blue sleeve from the shoulder to the fist, part of the
+tunic. HERO-LOOK (§20) had kept the cape on the torso, so in a walk, a gesture or a raised arm the fist moved away under
+a cape that did not follow it, and a separate thin sleeve came out from under its edge. Pictures (0.45 | 0.46 |
+HERO-ARMS, in the game on Citadel in daylight, the same spot, camera and frame): `docs/lba3-production/review/hero-arms/`.
+
+- **Back to LBA2's sleeve.** The cape's sides ride the upper arm and the forearm again with LBA2's weights (`w_cape`),
+  so the side of the tunic IS the sleeve: it runs straight out of the shoulder in every pose and the hand stays at its
+  end. HERO-LOOK's own thin sleeves (`sleeveL/R`) are gone; `TW_CAPE_046=1` still builds 0.46.0's cape.
+- **I-22 fixed where it happened.** With LBA2's weights a raised arm dragged the whole side of the cape, its front and
+  back corners down to the waist, up with it into a sheet (0.45's found dance: a wing from the hip to the hand). Now,
+  below the armpit, the sleeve is cut from the tunic's front and back (`cut_sleeves`; of the cape's 24 columns, 30–150°
+  round each side is the sleeve and the rest the body; the cut runs up through the hem, 0.54 and 0.62 rings and closes
+  at the 0.70 ring). The sleeve's side keeps LBA2's arm weights, brought to the whole arm below the armpit
+  (`sleeve_k`); the body's side of each cut vertex fades to the torso from the armpit (all of LBA2's arm weight there,
+  a little stretch like an armhole) to none at the waist (`body_f`). A raised arm lifts a sleeve and leaves a tunic.
+- **A sleeve, not an open shell.** The sleeve's underside is closed by a short wall from the cut's front edge to its
+  back edge (`sleeveIn*`, 18 triangles each, tunic blue), so a swung or raised sleeve is a wide tube; a tunic body under
+  the cape, from the belt's top to the armpits (`tunicBody`, 96 triangles, on the torso, hidden at rest), fills the cut
+  when a sleeve swings forward or back or rises.
+- **The sleeve reads at rest.** Below the armpit the sleeve stands 0.007 H (1.5 cm) proud of the tunic's front and back
+  (`SLEEVE_PROUD`, nothing at the armpit) and the cut is a hard edge in the normals: a fine shadowed line runs down each
+  side from the armpit to the cuff, so in idle the arm reads as a blue sleeve down to the wrist with the fist coming out
+  of its cuff (the flared cuff on the forearm and its dark inside, unchanged, overlap the back of the hand).
+- **Idle silhouette.** Every vertex is placed where the game shows LBA2's cape at rest (its arms at the look's
+  armSpread 0.3, `GAME_SPREAD`), so the idle outline is 0.45's and 0.46's (plus the 1.5 cm step).
+- **Counts.** 3206 → 3210 triangles (+0.1 %: HERO-LOOK's sleeves −128, tunic body +96, sleeve undersides +36), 9294 →
+  9306 vertices (the cut's copies), the same three draws, materials and 12 vertex colours. Skeleton, bone names and
+  order, hierarchy, bind transforms, sockets (the hand bones carry the sword, the ball, the glove and the blowgun as
+  before), the eye and mouth groups and the json contract unchanged; rig.js and the game code unchanged.
+- **Checked** in the game (Citadel, daylight; `game-shots.mjs`): idle at the play camera, front and ¾, the hands and
+  cuffs close, walk, run, the found dance (dip and arm up), both arms overhead (cheer), the ball throw, the sword
+  (wind-up and slash), talk; in the review scene (`arms-lookdev.html`, coloured and grey; front / ¾ / side / back / play
+  camera): idle, walk, run, turn, talk, found (both arms in turn), cheer, throw, wind-up, slash, overhead slash, charge.
+  Pictures: `citadel-idle.jpg` (before | after, front and ¾), `arms-raised.jpg` and `found-dance.jpg` (0.45 | 0.46 |
+  after), `hand-cuff.jpg` (at rest), `hand-talk.jpg` (the hands up in a talk gesture), `play-camera.jpg`, `poses.jpg` (walk, run, talk, throw, sword wind-up and slash, found:
+  0.46 above, after below), `throw.jpg`, `deform-grey-after.jpg`; scripts `game-shots.mjs`, `arms-lookdev.html` +
+  `lookdev-shot.mjs`, `make-sheets.py`.
+- **Remaining.** Raised, the sleeve is LBA2's wide bell (about 0.2 H front to back): narrow from the front, broad from
+  the side. The armpit's band (0.62–0.70 H) stretches a little in the found dance and the wind-up. A swing far forward
+  (the run, the throw) shows the sleeve's front edge riding over the tunic's front, with a dark sliver of the hem's
+  inner lip at the foot of the cut. The sleeves are rigid with the arm (no drape). At rest, close to the hand, the cuff
+  and fist are as in 0.46 (the cuff was already there); what changed at rest is the sleeve's line down the side. In the
+  ball throw's wind-up the wider sleeve hides more of the ball behind his head than 0.46 did.
+
+### For the animator (no contract change)
+- Below the armpit the cape's sides follow the arms 100 % again (0.46: 15 %), as in 0.45: a lifted arm lifts its sleeve;
+  the tunic's front and back no longer follow below the armpit. Nothing in rig.js needs changing.
+- The weights assume the look's armSpread 0.3 at rest (`GAME_SPREAD`); if it changes, rebuild with the new value.
