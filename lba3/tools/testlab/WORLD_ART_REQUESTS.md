@@ -1113,3 +1113,50 @@ apply").**
     round the table to the workbench, and out.
   - Draw calls: 16 (15 + 1) at Medium. No console errors.
 - **Picture:** `runs/nellhouse-vs-lba2.jpg`.
+
+**LBA-CITADEL-7's diff corrected (1.11, night).**
+- The push 1a9e10f carried the cellar's text with an older `LBA-CITADEL-7.diff`. A chain rebuild had stopped at its
+  step 7, and a pipe hid the stop.
+- The cloud had meanwhile applied 1–6 (4636bd1). So `requests/LBA-CITADEL-7.diff` is now made directly against origin
+  1a9e10f: the raised store (`SH = 1.0`), the 2 m walkway, and the tavern's arched-door exit. `git apply --check`
+  passes on a fresh checkout.
+- **On origin + 7, the Test Lab `artplaces` passes all seven places in one run:** the tavern, Mr Bazoo's, the ticket
+  office, the pharmacy, the neighbours', Nell's, and the cellar route square → tavern → cellar → store → back. There
+  are no console errors besides the server's favicon.
+
+## LBA-CITADEL-8 — the baggage claim (LBA2 scene 5) in the 'bug' house; the stairs' 2 cm seam closed
+
+- **Where:** LBA2 scene 5's door is our `bug` house in Bug Street (WORLD-80 step 2 placed the house for that door). It
+  had no inside until now.
+- **Code:** `requests/LBA-CITADEL-8.diff`, **on top of 7**. On a fresh checkout of origin d9178f8,
+  `git apply LBA-CITADEL-7.diff` and then `git apply LBA-CITADEL-8.diff` both pass.
+  - New `src/game/baggage.js` (region `baggage` at x 8200). The hooks go in regions.js and story/index.js.
+- **The original's layout** (study render: about 16 × 44 cells, so 7.8 × 21 m, on two levels), in the tavern's pale
+  grey stone:
+  - **Back:** the claim hall 1.5 m up, with the luggage belt on the back wall, red benches, cardboard boxes, dark teal
+    crates, and a small window.
+  - **Middle:** a wall with two stone arches, and the office behind it (a table with papers, a red stool, crates).
+  - **The upper level's edge:** a teal balustrade with white globe lamps, and a stair down at the left.
+  - **Front:** the lower hall with barrels, a small railed platform with a lamp, black arrows on the floor, and the
+    door at the front of the left wall.
+- **Twelve years on (ours):**
+  - The belt carries Zeelich parcels (teal crates with brass bands) among the cases.
+  - A notice board by the stair for unclaimed parcels.
+- **About 75 % alike:**
+  - Every element is in its place.
+  - The original's outline is stepped: the hall is offset, and the front block is narrower and stands higher. Ours is
+    one rectangle.
+- **For the story:** `R.npcSpots.clerk` is at the office table. No people or lines were added.
+- **The stair fix (also in this diff):**
+  - Cause: the step colliders were `run / 2 + 0.04` deep. `groundAt` shrinks each one by 5 cm, which left a 2 cm seam
+    of floor between steps. Twinsen dropped into it and from there walked under the stair: measured here, at y 0
+    under the 1.5 m step.
+  - This is the likely cause of the tavern's walk-through, which happened in about 1 run in 4.
+  - Fix: now `run / 2 + 0.08` in baggage.js, tavern.js and tavcellar.js, so the steps overlap. The engine's own stairs
+    already overlap: interiors.js uses `+ 0.06`, and zislands' stairs overlap too.
+- **Measured:**
+  - `artbaggage`: PASS. In by the `bug` door, up the stair to the office (y 1.5), through an arch to the belt (y 1.5),
+    and back out.
+  - `arttavern` and `arttavcellar` also pass after the fix.
+  - Draw calls: 21 (20 + 1) at Medium. No console errors.
+- **Picture:** `runs/baggage-vs-lba2.jpg` (local).

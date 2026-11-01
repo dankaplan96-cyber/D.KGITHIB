@@ -269,6 +269,7 @@ ART.push(artBusy);
 // indoors), out by its own door — with its frames and draw calls. evidence/<room>/*.jpg, walk.json.
 //   legs: [{ name, pts: [[x, z] room-local], minY? }]; the last leg ends at the room's exit.
 function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
+  // (a leg may walk in another room reached from this one: leg.room; leg.thenRoom: the room it must end in)
   return { ...artShots, id, title, suites: [suite, 'artplaces'], timeoutS: 600,
     async run(ctx) {
       const { page, rec, dir } = ctx;
@@ -292,7 +293,7 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
         }
         return false;
       };
-      const walk = async (pts, maxS = 30) => {
+      const walk = async (pts, maxS = 30, room = roomOf) => {
         const res = await page.evaluate(async ({ pts, maxS, room }) => {
           const g = game, h = g.hero; if (!g.room) return 'not in a room'; const c = g.room.center, P = pts.map(([x, z]) => ({ x: c.x + x, z: c.z + z }));
           const om = g.input.move.bind(g.input), classic = g.settings.controls === 'classic';
@@ -321,7 +322,7 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
         }, { pts, maxS, room });
         await sleep(400); return res;
       };
-      const log = [];
+      const log = [], roomOf = room;
       // (a place that opens only from a point of the story on: those flags set first)
       // (and, as a new game's people still stand where the earlier story put them, anyone within 2.5 m of the door is
       //  stood aside: the prologue's Zoé at the neighbours' door)
@@ -348,8 +349,13 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
       if (s.room !== room) { fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify(log, null, 1)); return; }
       // 2. the route inside, leg by leg; 3. the last leg out by the room's own door
       for (const [n, leg] of legs.entries()) {
-        const res = await walk(leg.pts); s = await st(); log.push({ step: leg.name, result: res, ...s }); await shot(`${String(n + 3).padStart(2, '0')}-${leg.name.replace(/\W+/g, '-')}`);
+        const res = await walk(leg.pts, 30, leg.room || room); if (leg.thenRoom) { await sleep(1500); for (let t = 0; t < 30 && await page.evaluate(() => !!game.trans); t++) await sleep(500); await sleep(1200); }
+        s = await st(); log.push({ step: leg.name, result: res, ...s });
+        // (stuck: what the feet stand on there and the bricks around, to tell a missing step from a wall)
+        if (res !== 'done') log.push({ under: await page.evaluate(() => { const h = game.hero, P = game.physics, c = game.room?.center || { x: 0, z: 0 }; return { onGround: h.onGround, groundY: h.groundY, at: +P.groundAt(h.pos.x, h.pos.z, h.pos.y).toFixed(2), near: P.near(h.pos.x, h.pos.z).filter((q) => q.enabled && Math.hypot(q.x - h.pos.x, q.z - h.pos.z) < 2.5).map((q) => ({ x: +(q.x - c.x).toFixed(2), z: +(q.z - c.z).toFixed(2), hw: q.hw && +q.hw.toFixed(2), hd: q.hd && +q.hd.toFixed(2), r: q.r, top: +q.top.toFixed(2), f: ['stair', 'noStand', 'seeThrough', 'block'].filter((f) => q[f]).join(' ') })) }; }) });
+        if (leg.thenRoom) assert(rec, `${leg.name}: in ${leg.thenRoom}`, s.room === leg.thenRoom, leg.thenRoom, s.room); await shot(`${String(n + 3).padStart(2, '0')}-${leg.name.replace(/\W+/g, '-')}`);
         if (leg.minY != null) assert(rec, `${leg.name}: y ≥ ${leg.minY}`, s.y >= leg.minY, `>= ${leg.minY}`, s.y);
+        if (leg.maxY != null) assert(rec, `${leg.name}: y ≤ ${leg.maxY}`, s.y <= leg.maxY, `<= ${leg.maxY}`, s.y);
       }
       await sleep(3500); s = await st(); log.push({ step: 'out by the door', ...s }); await shot('99-out');
       assert(rec, `${room}'s door leads back to Citadel`, s.room === 'citadel', 'citadel', s.room);
@@ -405,3 +411,22 @@ export const artNellHouse = placeWalk({ id: 'art-nellhouse', title: "Nell's (Pau
   { name: 'out', pts: [[-1.0, 3.2], [-3.2, 3.3]] },
 ] });
 ART.push(artNellHouse);
+// Chez Luc's cellar (LBA-CITADEL-7, LBA2 scene 4, under the tavern): from the square into the tavern, through the arched
+// door under the gallery, along the cellar's walkway, down its stair to the store, back up, and out again to Citadel
+export const artTavCellar = placeWalk({ id: 'art-tavcellar', title: "Chez Luc's cellar: down from the tavern and back", suite: 'arttavcellar', room: 'tavern', house: 'south', legs: [
+  { name: 'to the arched door', pts: [[-1.5, 5.0], [-1.2, 0.5], [2.2, -0.2], [2.2, -2.35], [3.6, -2.45]], thenRoom: 'tavcellar' },
+  { name: 'the walkway', room: 'tavcellar', pts: [[-6.75, -3.6], [-1.3, -3.65]], minY: 1.9 },
+  { name: 'down in the store', room: 'tavcellar', pts: [[1.9, -3.65], [2.3, -2.4], [4.4, -2.4]], minY: 0.9, maxY: 1.1 },
+  { name: 'back up to the tavern', room: 'tavcellar', pts: [[2.3, -2.4], [1.9, -3.65], [-1.3, -3.65], [-6.75, -3.6], [-6.75, 3.0], [-7.1, 3.4]], thenRoom: 'tavern' },
+  { name: 'out', pts: [[1.9, -1.5], [1.9, 0.2], [-1.2, 0.5], [-1.5, 5.0], [-4.6, 6.1]] },
+] });
+ART.push(artTavCellar);
+// the baggage claim (LBA-CITADEL-8, LBA2 scene 5, the 'bug' house): from the front hall up the stair to the office,
+// through an arch into the claim hall to the belt, back down, and out
+export const artBaggage = placeWalk({ id: 'art-baggage', title: 'The baggage claim: up to the office and the belt, out again', suite: 'artbaggage', room: 'baggage', house: 'bug', legs: [
+  { name: 'stair foot', pts: [[-1.2, 7.4], [-1.0, 4.2], [-3.05, 4.2]] },
+  { name: 'the office', pts: [[-3.05, 1.2], [-3.0, 0.3], [-1.0, -0.4]], minY: 1.4 },
+  { name: 'the claim hall', pts: [[1.4, -2.8], [2.0, -3.9], [2.0, -5.4], [0.2, -7.6]], minY: 1.4 },
+  { name: 'out', pts: [[2.0, -5.4], [2.0, -3.9], [-1.0, -0.4], [-3.0, 0.3], [-3.05, 1.2], [-3.05, 4.2], [-1.0, 4.2], [-1.2, 7.4], [-3.4, 8.6]] },
+] });
+ART.push(artBaggage);
