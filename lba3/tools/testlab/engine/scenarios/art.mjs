@@ -154,3 +154,82 @@ export const artAll = { ...artShots, id: 'art-all', title: 'World art: every are
     assert(rec, 'areas shot', info.filter((a) => !a.error).length >= areas.length - 2, `>= ${areas.length - 2}`, info.filter((a) => !a.error).length);
   } };
 ART.push(artAll);
+
+// WA-15 (a few Zeelich-style buildings on Citadel's harbour front): what stands on the waterfront, read from the
+// running game, so a new building keeps every route, door, container and story spot clear; and fixed play-camera views
+// of the harbour front (before / after). LBA3_HARBOUR_BOX=x0,z0,x1,z1 (default the harbour front), LBA3_HARBOUR_VIEWS
+// = JSON [[name, x, z, heading], ...]. evidence/harbour/probe.json, top.jpg (straight down over the box), <name>.jpg.
+export const HARBOUR_VIEWS = [
+  ['hb-quay-north', -112, 40, 0], ['hb-quay-south', -112, 40, Math.PI], ['hb-path-west', -95, 38, -Math.PI / 2],
+  ['hb-path-east', -105, 38.5, Math.PI / 2], ['hb-baggage', -86, 36, -Math.PI / 2],
+];
+export const artHarbour = { ...artShots, id: 'art-harbour', title: 'World art: the harbour front (WA-15 probe and views)', suites: ['artharbour'], timeoutS: 900,
+  async run(ctx) {
+    const { page, rec, dir } = ctx;
+    const out = path.join(dir, 'evidence', 'harbour'); fs.mkdirSync(out, { recursive: true });
+    if ((await gameState(page)).state !== 'play') await newGame(page);
+    const box = (process.env.LBA3_HARBOUR_BOX || '-135,10,-60,70').split(',').map(Number);
+    const views = process.env.LBA3_HARBOUR_VIEWS ? JSON.parse(process.env.LBA3_HARBOUR_VIEWS) : HARBOUR_VIEWS;
+    const probe = await page.evaluate(([x0, z0, x1, z1]) => {
+      const G = game; G.resetCombat?.('drop'); G.exitRoom({ x: (x0 + x1) / 2, z: (z0 + z1) / 2, a: 0 }, true, true);
+      const inB = (x, z, m = 0) => x > x0 - m && x < x1 + m && z > z0 - m && z < z1 + m;
+      const r2 = (v) => Math.round(v * 100) / 100;
+      const cols = G.physics.colliders.filter((c) => c.enabled !== false && inB(c.x, c.z, 2)).map((c) => ({ type: c.type, x: r2(c.x), z: r2(c.z), hw: c.hw && r2(c.hw), hd: c.hd && r2(c.hd), r: c.r && r2(c.r), rot: c.rot && r2(c.rot), top: c.top != null ? r2(c.top) : null, noStand: !!c.noStand }));
+      const doors = (G.story.doors?.() || []).filter((d) => !d.region && inB(d.x, d.z, 2)).map((d) => ({ room: d.room, x: r2(d.x), z: r2(d.z), r: d.r }));
+      const containers = (G.world?.containers?.placed || []).filter((c) => inB(c.x, c.z, 2)).map((c) => ({ id: c.id, kind: c.kind, x: r2(c.x), z: r2(c.z) }));
+      // the people: where they stand, and any list of points they walk (whatever the field is called)
+      const npcs = [], routes = [];
+      for (const n of G.npcs || []) {
+        const p = n.pos || n.rig?.root?.position; if (!p) continue;
+        const pts = [];
+        for (const k of Object.keys(n)) { const v = n[k]; if (Array.isArray(v) && v.length > 1 && v.every((q) => q && typeof q.x === 'number' && typeof q.z === 'number')) pts.push({ k, pts: v.map((q) => [r2(q.x), r2(q.z)]) }); }
+        const near = inB(p.x, p.z, 4) || pts.some((r) => r.pts.some(([x, z]) => inB(x, z)));
+        if (!near) continue;
+        npcs.push({ id: n.id || n.def?.id || n.name, x: r2(p.x), z: r2(p.z) });
+        for (const r of pts) routes.push({ id: n.id || n.def?.id, field: r.k, pts: r.pts });
+      }
+      // the ground on a 1 m grid (rows of z, x0 → x1), for the shoreline and the slope under a new footprint
+      const ground = []; for (let z = Math.ceil(z0); z <= z1; z++) { const row = []; for (let x = Math.ceil(x0); x <= x1; x++) row.push(r2(G.physics.groundAt(x, z))); ground.push(row); }
+      return { box: [x0, z0, x1, z1], colliders: cols, doors, containers, npcs, routes, ground, hero: { x: r2(G.hero.pos.x), z: r2(G.hero.pos.z) } };
+    }, box);
+    fs.writeFileSync(path.join(out, 'probe.json'), JSON.stringify(probe, null, 1));
+    rec.evidence.push('evidence/harbour/probe.json');
+    // straight down over the box (the camera rig held, the fog pushed out, the hero hidden), for planning
+    await page.evaluate(([x0, z0, x1, z1]) => {
+      const G = game, cam = G.camera;
+      window.__tlHeld = { fov: cam.fov, far: cam.far };
+      G.camRig.update = () => {}; G.hero.rig?.root?.traverse?.((o) => o.layers.set(31));
+      const ext = Math.max(x1 - x0, z1 - z0), dist = (ext * 0.55) / Math.tan(15 * Math.PI / 180);
+      cam.fov = 30; cam.far = dist * 3; cam.updateProjectionMatrix();
+      cam.position.set((x0 + x1) / 2, dist, (z0 + z1) / 2 + 0.01); cam.lookAt((x0 + x1) / 2, 0, (z0 + z1) / 2); cam.updateMatrixWorld();
+      const f = G.scene.fog; if (f && !f.__tlHeld) { f.__tlHeld = true; for (const k of ['near', 'far']) Object.defineProperty(f, k, { configurable: true, get: () => (k === 'near' ? 1e5 : 2e5), set() {} }); }
+    }, box);
+    await sleep(2500);
+    await page.screenshot({ path: path.join(out, 'top.jpg'), type: 'jpeg', quality: 90 }); rec.evidence.push('evidence/harbour/top.jpg');
+    await page.evaluate(() => {
+      const G = game, cam = G.camera, H = window.__tlHeld; delete G.camRig.update;
+      const f = G.scene.fog; if (f?.__tlHeld) { delete f.near; delete f.far; delete f.__tlHeld; }
+      cam.fov = H.fov; cam.far = H.far; cam.updateProjectionMatrix(); G.hero.rig?.root?.traverse?.((o) => o.layers.set(0)); window.__tlHeld = null;
+    });
+    // the play camera (one full frame per view, its own rig settled) and the frame's draw calls there
+    const calls = {};
+    for (const [name, x, z, a] of views) {
+      await page.evaluate(({ x, z, a }) => {
+        const h = game.hero; h.pos.set(x, game.physics.groundAt(x, z), z); h.angle = a; game.camRig.recenter?.();
+        if (game.env?.setTime && game.env.time != null) { window.__tlT ??= game.env.time; game.env.setTime(window.__tlT); }
+      }, { x, z, a });
+      await sleep(2500);
+      // (every draw of one whole frame, main and shadow passes, as tests/drawcalls.mjs counts them)
+      calls[name] = await page.evaluate(() => new Promise((res) => {
+        const R = game.renderer.renderer, orig = R.renderBufferDirect.bind(R), n = { main: 0, shadow: 0 };
+        requestAnimationFrame(() => {
+          R.renderBufferDirect = (cam, scene, ...a) => { n[scene ? 'main' : 'shadow']++; return orig(cam, scene, ...a); };
+          requestAnimationFrame(() => { R.renderBufferDirect = orig; res({ ...n, total: n.main + n.shadow, quality: game.settings?.quality }); });
+        });
+      }));
+      await page.screenshot({ path: path.join(out, `${name}.jpg`), type: 'jpeg', quality: 88 }); rec.evidence.push(`evidence/harbour/${name}.jpg`);
+    }
+    fs.writeFileSync(path.join(out, 'calls.json'), JSON.stringify(calls, null, 1));
+    assert(rec, 'harbour probed and shot', probe.colliders.length > 0, '> 0 colliders', probe.colliders.length);
+  } };
+ART.push(artHarbour);

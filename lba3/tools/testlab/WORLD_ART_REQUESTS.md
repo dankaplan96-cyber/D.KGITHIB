@@ -565,3 +565,74 @@ The user asked whether Twinsen's new nose is like LBA2's. Measured on the models
 - **Verdict:** similar. The profile and the snout are LBA2's within about 10 %. The knob is a small close-up detail
   that cannot be seen from the play camera, so it is kept: twelve years and 80 % likeness.
 - The comparison picture (study renders, not committed) was sent to the user.
+
+---
+
+## WA-15 · Two Zeelich buildings on Citadel's harbour front · Waiting for the user's approval (pictures sent 1.11.2026)
+
+The user's decision D2 of 28.10 (`docs/art-direction/EXPANSION_ART_DECISIONS.md`): "here and there a newer building on
+the promenade/waterfront that looks more like Zeelich". Zeelich's building language as imported architecture, a few,
+on the harbour front only, not in the old core, as a sign of trade and the twelve years.
+
+- **Zeelich's originals (study renders of LBA2's Otringal and Knartas objects on the laptop; numbers and descriptions
+  only, nothing committed):**
+  - Otringal's houses are 3.3–7.4 m across and 8.2 m high (the Grand Hall 7.7 × 9.3 m).
+  - They stand on eight-sided or rounded plans, with a band of square blue-turquoise tiles round the foot (about a
+    third of the height).
+  - Above it are pale grey-pink plaster walls and pale turquoise roofs and domes. Gold medallion bands and gold cones
+    sit at the eaves, with grey stone columns and tall stone spires.
+  - Knartas: rounded pods, metal huts with porthole windows and pipes, decks on stilts.
+  - Our `props-esmer.js esmerBuilding`, which draws the Zeelich islands' houses, already speaks this language: a tiled
+    frieze, plaster, an onion dome with a gold band and finial, lattice windows, a blue trim. WA-15 uses it as it is,
+    with the islands' own materials.
+- **Where (the Test Lab probe, `artharbour`; the box x -135…-60, z 10…70):**
+  - North of the harbour path, every place is taken: the baggage claim, the house beside it, the shop, Odile's booth
+    and the quay's goods.
+  - The bay south of the path has two places:
+    - **B1, the trading house:** on the shore strip x -86.3…-80.7, z 44.8…49.6. The ground is level at 2.2 m.
+    - **B2, a house on piles:** over the cove x -101.9…-94.1, z 45.7…51.5. The cove is water from z 44; the path's
+      railing at z 42.6 stays.
+  - Both stand between the quay and the baggage claim, about 45 m from the old core's square.
+- **What they are:**
+  - **B1, the trading house** (`zh-trading`): 5.6 × 4.8 m, a dome to 6.4 m, walls 3.7 m.
+    - A store's wide arched door facing the path, under a teal-and-cream striped awning.
+    - Pale plaster with Otringal's tiled frieze, a crenellated parapet, and the turquoise onion dome with its gold
+      band and finial.
+  - **B2, the house on piles** (`zh-pier`): 6.2 × 4.2 m on a 7.8 × 5.8 m plank deck at the path's height (2.35 m).
+    - Eight piles go down into the water; a low rail runs round three sides.
+    - The same house language, with a smaller dome.
+    - There is no way onto it: it is seen from the path.
+- **Clear of everything (measured on the probe, a8e5d37 + WA-15):**
+  - The nearest container is the museum barrel `c-museum-barrel` at (-78.5, 46.0), 2.2 m from B1, still open on
+    three sides.
+  - The nearest resident stop is Marda's at (-95.8, 37.4), 8.3 m away. Nell stands 11.4 m away.
+  - No door, NPC, route point or story spot is within 8 m.
+  - A code search finds no story coordinate on either footprint.
+  - Two bushes at about (-82.3, 48.8) and (-80.1, 49.6) and the grass on the footprints are filtered out after the
+    scatter, so the random draws and every prop placed after them stay put (as the WA-12 fix).
+- **Draw calls** (one whole frame, main + shadow, High, laptop; before → after):
+
+  | View | Calls |
+  |---|---|
+  | quay north | 142 → 146 |
+  | path west | 184 → 188 |
+  | path east | 258 → 260 |
+  | baggage | 185 → 189 |
+  | facing B1 | 122 → 125 |
+  | facing B2 | 126 → 129 |
+
+  - That is +2 to +4 calls in view. The buildings are one batch (a draw call per material), the islands' materials,
+    with no new texture or shader.
+  - The street budget (High ≤ 450, Medium ≤ 300) is untouched. The benchmark's street route does not see the harbour.
+- **The code (`requests/WA-15.diff`, against a8e5d37):**
+  - New `src/game/harbourzeelich.js`: `ZH`, `zhClear` and `buildHarbourZeelich`.
+  - `src/game/world.js`:
+    - The import.
+    - The trees/bushes filter before `yield 'tree spots'`.
+    - The grass/flowers filter after `clearLife`.
+    - The build call after `buildIsland`, tagged `harbourzeelich`.
+- **Pictures for the user (chapters 1–2, the play camera):** `wa15-trading-house.jpg`, `wa15-pier-house.jpg`,
+  `wa15-from-above.jpg` (now / WA-15).
+- **Check after the build:**
+  - `node engine/cli.mjs artharbour` (the probe and the same views; `LBA3_HARBOUR_VIEWS` for more).
+  - The game's own `tests/townlife.mjs`, `tests/drawcalls.mjs street` and `tests/worldfit.mjs`.
