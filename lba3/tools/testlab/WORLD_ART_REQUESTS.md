@@ -1113,3 +1113,13 @@ apply").**
     round the table to the workbench, and out.
   - Draw calls: 16 (15 + 1) at Medium. No console errors.
 - **Picture:** `runs/nellhouse-vs-lba2.jpg`.
+
+**LBA-CITADEL-7's diff corrected (1.11, night).**
+- The push 1a9e10f carried the cellar's text with an older `LBA-CITADEL-7.diff`. A chain rebuild had stopped at its
+  step 7, and a pipe hid the stop.
+- The cloud had meanwhile applied 1–6 (4636bd1). So `requests/LBA-CITADEL-7.diff` is now made directly against origin
+  1a9e10f: the raised store (`SH = 1.0`), the 2 m walkway, and the tavern's arched-door exit. `git apply --check`
+  passes on a fresh checkout.
+- **On origin + 7, the Test Lab `artplaces` passes all seven places in one run:** the tavern, Mr Bazoo's, the ticket
+  office, the pharmacy, the neighbours', Nell's, and the cellar route square → tavern → cellar → store → back. There
+  are no console errors besides the server's favicon.
