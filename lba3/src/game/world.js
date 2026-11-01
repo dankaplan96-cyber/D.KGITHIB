@@ -20,6 +20,7 @@ import { setLod, LOD_DETAIL, setLodDetail, BATCH, LodBatch } from './kit.js';
 import { culledToo } from '../engine/viewinst.js';
 import { COAST, LEVELS, PROPS, SHELVES, CLIFFS_TOP } from './citadel-layout.js';
 import { lifeClear } from './townlife.js';
+import { buildHarbourZeelich, zhClear } from './harbourzeelich.js';
 
 // the town's twelve-years-on places (townlife.js) keep the island's scatter out: an instance there is shrunk to
 // nothing and gets no collider (not removed, so every later random draw, and so the rest of the island, is unchanged)
@@ -877,6 +878,9 @@ export function* buildWorldSteps(parentScene) {
   // islet's raised rock face)
   for (const t of trees) if (!t.gone && (newPathDist(t.x, t.z) < 2.2 || inNewHouse(t.x, t.z, 1.4) || isletSteep(t.x, t.z, 0.55) || keepClearNew(t.x, t.z, 0.5))) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && (newPathDist(b.x, b.z) < 1.9 || inNewHouse(b.x, b.z, 0.9) || isletSteep(b.x, b.z, 0.55) || keepClearNew(b.x, b.z, 0.3))) { b.s = 1e-4; b.gone = true; }
+  // (WA-15: none where the harbour front's Zeelich buildings stand)
+  for (const t of trees) if (!t.gone && zhClear(t.x, t.z, 0.6 + 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && zhClear(b.x, b.z, 0.3 + 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
   yield 'tree spots';
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {
@@ -927,6 +931,7 @@ export function* buildWorldSteps(parentScene) {
   // random draws and everything placed after them stay as they were — skipping inside the loop moved the town's props)
   for (const t of grass) if (!t.gone) { const [soil, rock] = wildGround(t.x, t.z); if (soil + rock > 0.4) { t.s = 1e-4; t.gone = true; } }
   clearLife(grass); clearLife(flowers);
+  for (const t of [...grass, ...flowers]) if (!t.gone && zhClear(t.x, t.z, 0.2)) { t.s = 1e-4; t.gone = true; }   // (WA-15)
   for (const t of [...grass, ...flowers]) if (!t.gone && (inNewHouse(t.x, t.z, 0.4) || isletSteep(t.x, t.z, 0.6) || keepClearNew(t.x, t.z, -0.6))) { t.s = 1e-4; t.gone = true; }   // (WORLD-80)
   for (let v = 0; v < 3; v++) mkInst(grassClumpGeometry(v + 5, 8 + v * 2), grassMat, grass.filter((g, i) => i % 3 === v), false, grassTint, null, true);
   const flowerMat = sway(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }), 0.12);
@@ -1002,6 +1007,7 @@ export function* buildWorldSteps(parentScene) {
   W.signs = [];
   W.pathDist = pathDist;
   { const n0 = scene.children.length; buildIsland(scene, W); tagSrc(scene, n0, 'island'); }
+  { const n0 = scene.children.length; buildHarbourZeelich(scene, physics, H); tagSrc(scene, n0, 'harbourzeelich'); }   // (WA-15)
 
   yield 'island';
   // ---------- lighthouse ----------
