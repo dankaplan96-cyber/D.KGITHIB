@@ -204,7 +204,7 @@ export class Story {
   ballTargets() { return this.cur.ballTargets(); }
   update(dt) { this.cur.update(dt); this.life.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.sewers.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); }
-  onExitRoom(id) { this.cur.onExitRoom(id); }
+  onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {
     for (let i = 0; i < this.chapters.length; i++) this.chapters[i].applyFlags(i < this.index, i === this.index);
     this.life.applyFlags();

@@ -319,6 +319,19 @@ export class AudioEngine {
       case 'yelp': this._tone({ type: 'triangle', f0: 1300, f1: 700, dur: 0.16, vol: 0.06 }); this._burst({ dur: 0.1, vol: 0.06, f: 2400, f1: 1200, type: 'bandpass', q: 3 }); break;
       case 'growl': this._tone({ type: 'sawtooth', f0: 95, f1: 110, dur: 0.5, vol: 0.07 }); this._burst({ dur: 0.5, vol: 0.06, f: 420, f1: 300, type: 'bandpass', q: 4 }); break;
       case 'clunk': this._tone({ f0: 150, f1: 90, dur: 0.12, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.12, f: 1800, f1: 400 }); break;
+      // SEWER-LIFT: the old lift's winch, ~1.6 s: the brake let go (a clunk), the chain clanking link by link over
+      // the pulleys, a low grinding drum under it, a heavier clunk as it stops
+      case 'liftWinch': {
+        this._tone({ f0: 140, f1: 80, dur: 0.14, vol: 0.12 }); this._burst({ dur: 0.1, vol: 0.12, f: 1600, f1: 400 });
+        for (let i = 0; i < 12; i++) {
+          const at = 0.16 + i * 0.12 + (i % 2) * 0.015;
+          this._tone({ type: 'triangle', f0: 720 - (i % 3) * 70, f1: 480, dur: 0.05, vol: 0.045, at });
+          this._burst({ dur: 0.045, vol: 0.07, f: 3200, f1: 1700, type: 'bandpass', q: 5, at });
+        }
+        for (let i = 0; i < 5; i++) { this._tone({ type: 'sawtooth', f0: 60, f1: 54, dur: 0.34, vol: 0.04, at: 0.12 + i * 0.29 }); this._burst({ dur: 0.3, vol: 0.05, f: 650, f1: 520, type: 'bandpass', q: 2.5, at: 0.12 + i * 0.29 }); }
+        this._tone({ f0: 110, f1: 65, dur: 0.2, vol: 0.12, at: 1.6 }); this._burst({ dur: 0.12, vol: 0.1, f: 1200, f1: 300, at: 1.6 });
+        break;
+      }
       // the wind-pump at a gust (chapter 4): two sound gears clack, then the jammed one grinds against its sand
       case 'gearClack': [0, 0.16].forEach((at) => { this._tone({ type: 'triangle', f0: 620, f1: 480, dur: 0.06, vol: 0.06, at }); this._burst({ dur: 0.05, vol: 0.1, f: 2600, f1: 1400, type: 'bandpass', q: 3, at }); }); break;
       case 'grind': this._burst({ dur: 0.55, vol: 0.16, f: 1500, f1: 700, type: 'bandpass', q: 1.6, at: 0.3 }); this._tone({ type: 'sawtooth', f0: 72, f1: 64, dur: 0.5, vol: 0.05, at: 0.3 }); break;
