@@ -3,9 +3,12 @@
 // only) → Mira's valve room (three valves) → the lighthouse (Zoé, Arthur, the dials) → Hesk's glider to Desert Island
 // (Ilka, the relay on the bore, three drones) → the Hamalayi (Pim, Sefa's dome: the relay, the telescope) → the
 // glider to Citadel, the spaceship back to Zeelich → the platform console → chapter 11.
+// Steps move by teleport (a LOGIC test), except the lamp room: from the stair top Zoé, each dial and the way back
+// down are walked to by input (tests/lib/player.js), with Zoé and Arthur standing by (GATE-1 B-1).
 // Verdict: CHAPTER 10 DONE only when every ball target (the mill's brake, the three drones) fell to throws; if any
 // had to be beaten through its own rule (an ISO assist, logged), the run ends CHAPTER 10 ASSISTED with exit code 2.
 import { launch, checker } from './lib/boot.mjs';
+import { fileURLToPath } from 'node:url';
 const { browser, page, errs } = await launch({ width: 960, height: 540 });
 const { check, done } = checker({ info: 'always' });
 const ev = (f, a) => page.evaluate(f, a);
@@ -66,6 +69,9 @@ const boot = async (mode) => {
 };
 
 await boot('new');
+// the player-input harness (window.P: keys, the game's own time step, A* over its collision): the lighthouse's dials
+// are walked to by input (B-1), the rest of the chapter still moves between steps by teleport
+await page.addScriptTag({ path: fileURLToPath(new URL('./lib/player.js', import.meta.url)) });
 await ev(() => { T.useOn = (x, z) => { const G = game; T.tp(x, z); G.step(0.2); T.tap('KeyE'); G.step(1.4); T.talkAll(); };
   T.fly = (i) => { const G = game, n = T.npc('hesk'), h = G.hero; h.pos.set(n.pos.x + Math.sin(n.angle) * 1.4, n.pos.y, n.pos.z + Math.cos(n.angle) * 1.4); h.angle = Math.atan2(n.pos.x - h.pos.x, n.pos.z - h.pos.z); G.step(0.8); T.tap('KeyE'); G.step(0.05);
     for (let k = 0; k < 80 && G.state === 'dialog'; k++) { G.input.taps.add('KeyE'); G.step(0.05); } G.step(0.2); if (G.state !== 'shop') return ['no menu: ' + G.state, n.present, +n.pos.x.toFixed(1), +n.pos.z.toFixed(1), +h.pos.x.toFixed(1), +h.pos.z.toFixed(1), G.npcs.filter((m) => m.present && m.distTo(h) < 4).map((m) => m.def.id), G.story.cur.region(), G.room?.id]; document.querySelector(`#shop .item[data-i="${i}"]`).click(); for (let k = 0; k < 30; k++) { G.step(0.1); T.talkAll(); } return G.room?.id ?? 'out'; };
@@ -88,15 +94,34 @@ is('Mira sends him to the valve room', await ev(() => { const o = game.world.hou
 is("the valve room's relay: the three gauges level", await ev(() => { const V = game.rooms.valves; for (const i of [0, 1, 2]) { const v = V.valves[i]; T.useAt(v.x, v.z); } return [game.story.cur.gaugeLevels(), game.flags.c10_valves]; }), (v) => v[0].every((x) => x === v[0][0]) && v[1] === true);
 await shot('C10-03-valves.png');
 is('out of the valve room and the office', await ev(() => { const a = T.exit('valves-out'); const b = T.out(); return [a, b]; }), (v) => v[1] === 'out');
-// REV-TY-5 T1 (for players): standing at the middle dial (a plain search until Zoé has asked) and facing Zoé, E is hers
-const facedZoe = await ev(() => { const G = game, h = G.hero; T.door({ x: -107.5, z: 94.2 }); const z = T.npc('zoe'), s = G.rooms.lighttop.searches.find((x) => x.id === 'dial2');
-  T.tp(s.x, s.z); h.angle = Math.atan2(z.pos.x - h.pos.x, z.pos.z - h.pos.z); const it = G.findInteractable();
-  return it?.npc?.def.id || it?.spot?.id || it?.kind || null; });
-log('at the dial facing Zoé, E is for', facedZoe);
-is('Zoé at the lighthouse top asks for the dials', await ev(() => { const r = game.room?.id ?? 'out'; const z = T.npc('zoe'); const before = [z.present, +z.pos.x.toFixed(1), +z.pos.z.toFixed(1), game.state]; T.talk('zoe'); return [r, before, game.state, game.flags.c10_zoeAsk, +game.hero.pos.x.toFixed(1), +game.hero.pos.z.toFixed(1)]; }), (v) => v[0] === 'lighttop' && v[1][0] === true && v[2] === 'play' && v[3] === true);
-is('the lighthouse dials set, the relay (3/5)', await ev(() => { const L = game.rooms.lighttop; for (const i of [1, 2, 3]) { const s = L.searches.find((x) => x.id === 'dial' + i); for (let k = 0; k < 2; k++) T.useOn(s.x, s.z); } return [game.flags.c10_dials, game.flags.c10_light, T.obj()]; }), (v) => v[1] === true && v[2].length > 0);
+// REV-TY-5 T1 (for players): at a dial (a plain search until Zoé has asked) within her reach, facing Zoé, E is hers.
+// (B-1: she now waits by the stair top, out of talk reach of every dial, so no dial's search can take her prompt;
+// the check then records that.) Back at the stair top afterwards, where the stairs bring him up.
+const facedZoe = await ev(() => { const G = game, h = G.hero, L = G.rooms.lighttop; T.door({ x: -107.5, z: 94.2 }); const z = T.npc('zoe');
+  const [s, d] = L.searches.filter((x) => /^dial/.test(x.id)).map((x) => [x, Math.hypot(z.pos.x - x.x, z.pos.z - x.z)]).sort((a, b) => a[1] - b[1])[0];
+  let e = 'out of reach';
+  if (d < 2.2) { T.tp(s.x, s.z); h.angle = Math.atan2(z.pos.x - h.pos.x, z.pos.z - h.pos.z); const it = G.findInteractable(); e = it?.npc?.def.id || it?.spot?.id || it?.kind || null; T.tp(L.spawn.x, L.spawn.z, L.spawn.a); }
+  return { nearest: s.id, d: +d.toFixed(2), e, room: G.room?.id, at: [+h.pos.x.toFixed(2), +h.pos.z.toFixed(2)] }; });
+log('at the dial nearest Zoé, facing her, E is for', facedZoe);
+// B-1 (GATE-1): from here on the lamp room is played by input (P: keys and the game's time step, no teleport)
+is('Zoé at the lighthouse top asks for the dials (walked to from the stair top, by input)', await ev(() => { const r = game.room?.id ?? 'out'; const z = T.npc('zoe'); const before = [z.present, +z.pos.x.toFixed(1), +z.pos.z.toFixed(1), game.state]; const t = P.talk('zoe'); return [r, before, game.state, game.flags.c10_zoeAsk, t.r, t.to, +game.hero.pos.x.toFixed(1), +game.hero.pos.z.toFixed(1)]; }), (v) => v[0] === 'lighttop' && v[1][0] === true && v[2] === 'play' && v[3] === true && v[4] === 'talked');
+// each of the three dials, walked to by input past Zoé and Arthur as they stand (both solid: SOLID-NPC) and turned
+// once with E (B-1: they stood between the stairs and the dial bank, no dial was in reach)
+const dialWalk = await ev(() => { const G = game, L = G.rooms.lighttop, h = G.hero, out = [];
+  const people = ['zoe', 'arthur'].map((id) => { const n = T.npc(id); return [id, n.present, +n.pos.x.toFixed(2), +n.pos.z.toFixed(2)]; });
+  for (const i of [1, 2, 3]) {
+    const s = L.searches.find((x) => x.id === 'dial' + i), before = (G.flags.c10_dials || [0, 1, 2])[i - 1];
+    const r = P.use(s.x, s.z, { near: 0.8 });
+    out.push({ dial: i, r: r.r, target: r.target?.kind, from: +Math.hypot(h.pos.x - s.x, h.pos.z - s.z).toFixed(2), turned: (G.flags.c10_dials || [0, 1, 2])[i - 1] !== before });
+  }
+  return { people, out, trace: P.trace.slice(-6) }; });
+check('B-1: every lighthouse dial is walked to from the stairs by input and turns (E), with Zoé and Arthur standing by', dialWalk.out.length === 3 && dialWalk.out.every((d) => d.r === 'used' && d.target === 'c10dial' && d.turned), dialWalk);
+is('the lighthouse dials set by input, the relay (3/5)', await ev(() => { const L = game.rooms.lighttop; for (let pass = 0; pass < 3 && !game.flags.c10_light; pass++) for (const i of [1, 2, 3]) { if (game.flags.c10_light) break; const s = L.searches.find((x) => x.id === 'dial' + i); P.use(s.x, s.z, { near: 0.8 }); P.settle(); } return [game.flags.c10_dials, game.flags.c10_light, T.obj()]; }), (v) => v[1] === true && v[2].length > 0);
 await shot('C10-04-lighthouse.png');
-is("Hesk's glider to Desert Island", await ev(() => { T.exit('outdoor-lighthouse'); const L = game.story.cur.landing('citadel'); T.tp(L.x, L.z); return T.fly(1); }), (v) => v === 'desert');
+// the cast is put back on its spots when the relay is done (Story.refreshCast): he must still get from the dial bank
+// back down the stairs (B-1: it shut him in front of the cabinet)
+is('B-1: after the relay, down the stairs from the dial bank by input', await ev(() => { const h = game.hero, from = [+h.pos.x.toFixed(2), +h.pos.z.toFixed(2)]; const r = P.exitTo('outdoor-lighthouse'); return [from, r.r, game.room?.id ?? 'out']; }), (v) => v[2] === 'out');
+is("Hesk's glider to Desert Island", await ev(() => { if (game.room?.id === 'lighttop') T.exit('outdoor-lighthouse'); const L = game.story.cur.landing('citadel'); T.tp(L.x, L.z); return T.fly(1); }), (v) => v === 'desert');
 await shot('C10-05-desert-landing.png');
 is('Ilka; the bore relay set; the drones come', await ev(() => { T.talk('ilka'); const b = game.rooms.desert.bore; T.useAt(b.x, b.z); return [game.flags.c10_ilka, game.flags.c10_boreRelay, game.story.cur.boreDrones().filter((e) => e.present).length]; }), (v) => v[0] === true && v[1] === true && v[2] > 0);
 // the bore fight, two waves (DIFFICULTY): the three drones first (they come one after another), then Vesk's clone, the Grobo
@@ -141,7 +166,7 @@ const fin = await ev(() => { const c = game.rooms.zeelich.platform.console; T.us
 log('console', fin);
 { const miss = await ev(() => T.miss); if (miss.length) log('talk prompt not theirs from any side:', miss); }
 // the verdict (R7-VERDICTS: was CHAPTER 10 DONE / ASSISTED (exit 2, "not a pass") / NOT DONE, now one policy)
-check('at the dial facing Zoé, E is for Zoé', facedZoe === 'zoe', facedZoe);
+check('at a dial within Zoé\'s reach, facing her, E is for Zoé (none within her reach: no dial takes her prompt)', facedZoe.room === 'lighttop' && (facedZoe.e === 'zoe' || (facedZoe.e === 'out of reach' && facedZoe.d >= 2.2)), facedZoe);
 check('chapter 10 done at the platform console: the next chapter (shell) set', fin[0] === true && fin[1] === 'shell', fin);
 check('every ball target hit by a real throw (an ISO assist is not a pass)', !assists.length, assists);
 const fails = done();
