@@ -432,7 +432,7 @@ prototyped on the laptop, and the exact code is in `tools/testlab/requests/WA-11
 
 ---
 
-## WA-14 · The Citadel sewers, as in LBA2 · Applied (the cloud, 1.11.2026; awaiting the user's approval)
+## WA-14 · The Citadel sewers, as in LBA2 · Applied and approved by the user (the cloud, 1.11.2026)
 
 The user: "What about the sewer that LBA2 has? We need to add that too." The game has no sewer area today. The well
 (`buildWell`) is a crystal cave, not a sewer.
@@ -467,7 +467,7 @@ The user: "What about the sewer that LBA2 has? We need to add that too." The gam
 - **Check:** `artall` shoots it (add it to `regions`). The laptop compares it with scene 17, and before/after pictures
   go to the user.
 
-**Applied (the cloud, 1.11.2026; awaiting the user's approval).** `src/game/sewers.js` (the rooms and the grate),
+**Applied and approved by the user (the cloud, 1.11.2026).** `src/game/sewers.js` (the rooms and the grate),
 `src/game/story/sewers.js` and `src/game/text/sewers.js` (the side story), registered in `src/game/regions.js` as the
 group `sewer` (rooms `sewer` and `sewervault`, built the first time they are needed).
 - **The entrance:** a square iron grate in the lane north of Twinsen's house (Citadel, x -45.4, z 56.6), a few steps

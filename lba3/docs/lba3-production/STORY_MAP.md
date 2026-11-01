@@ -25,6 +25,11 @@ network 10 → shell 11 (with the Core, 12, inside it for now) → home (epilogu
 | 12 The Core (`core`, chapter3.js `ChapterCore`) | Chapter 12's card, Vesk, the guardian, three pylons from their plates, Vesk's overload coil. Saves before format 5 (one chapter 'shell') go to `core` when saved in the core room or with the fight begun. | 14 |
 | Epilogue (`home`, epilogue.js) | Dinner at home; the end screen; Keep Exploring (free roam, new lines everywhere). | 14 |
 
+Optional side trip (any chapter from 1, story/sewers.js, flags `sw_`): Under the Street. A knocking under the grate north of
+Twinsen's house and Arthur's chalk on its frame; the old sewer hall (the project's valve jams the gate winch; easing it
+raises the gate); the treasure room (star chest, Arthur's map, one clover); back home, Arthur asks to come next time.
+Test: tests/sewers.mjs.
+
 Continuity notes kept by the story code: FunFrock stays dead (his old machines and troopers are reactivated by
 Vesk's project); Vesk is the villain; no Earth-style night; no sequel promise in the epilogue. Saves keep the
 chapter key, so a save made inside any chapter resumes in that chapter (save-migration test, tests/zoe-resume.mjs
