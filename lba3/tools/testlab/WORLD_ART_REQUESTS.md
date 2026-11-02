@@ -1124,7 +1124,7 @@ apply").**
   office, the pharmacy, the neighbours', Nell's, and the cellar route square → tavern → cellar → store → back. There
   are no console errors besides the server's favicon.
 
-## LBA-CITADEL-8 — the baggage claim (LBA2 scene 5) in the 'bug' house; the stairs' 2 cm seam closed
+## LBA-CITADEL-8 — the baggage claim (LBA2 scene 5) in the 'bug' house; the stairs' 2 cm seam closed · SET ASIDE: about 75 %, below the 80 % target (the user, 2.11.2026: "everything below 80 % goes aside"; no more work on it now; the stair-seam fix stays)
 
 - **Where:** LBA2 scene 5's door is our `bug` house in Bug Street (WORLD-80 step 2 placed the house for that door). It
   had no inside until now.
@@ -1161,7 +1161,7 @@ apply").**
   - Draw calls: 21 (20 + 1) at Medium. No console errors.
 - **Picture:** `runs/baggage-vs-lba2.jpg` (local).
 
-## LBA-CITADEL-9 — Tralu's cave (LBA2 scene 2) behind the plateau's door; colliders of props on raised floors
+## LBA-CITADEL-9 — Tralu's cave (LBA2 scene 2) behind the plateau's door; colliders of props on raised floors · SET ASIDE: about 65 %, below the 80 % target (the user, 2.11.2026; no more work on it now; the raised-floor collider fix stays)
 
 - **Where:** WORLD-80 built the plateau's door in the bank behind the depot (island.js `OLD_DOORS.plateau`) and kept it
   shut. It now opens on the cave.
@@ -1196,3 +1196,26 @@ apply").**
     up the stair to the terrace by the gate (y 1.6), and back out onto the door's landing.
   - Draw calls: 20 (19 + 1) at Medium. No console errors.
 - **Picture:** `runs/tralucave-vs-lba2.jpg` (local).
+
+## TRAVEL-1 · Every journey between planets is by spaceship, seen from outside and inside; every vehicle works · The user asked for it (2.11.2026)
+
+The user (2.11.2026, in Hebrew, paraphrased): "Every passage from planet to planet is only by spaceship. It needs an
+animation of the ship flying, seen from outside, and the ship from inside with the people who are there. Every kind of
+vehicle in the game must work."
+
+- **This answers MORNING_CHECK question 3** (the expansion's passage between two planets that is not by ship): close it.
+  Between planets, the spaceship only.
+- **Today (checked in `src/game/travel.js` at f08774c):** every journey (`ship`, `shuttle`, `ferry`, `glider`) is
+  `startTransition` → a fade to black → the landing spot. No flight is seen and there is no inside.
+- **Asked of the cloud (travel and cinematics are its code):**
+  1. Ship journeys between planets: a short take-off and flight seen from outside (the ship rising from the pad, the
+     planet falling away, the arrival and landing), skippable, played under the existing transition.
+  2. The inside of the ship: a cabin with seats and windows and a few passengers (travellers, a crew member), where
+     Twinsen is during the flight (a short scene, or a walkable cabin room on longer flights).
+  3. The other vehicles: each journey shows its vehicle (the ferry leaving the quay, the glider taking off, the
+     shuttle), at least as a short outside shot.
+  4. A test that rides every route in `buildTravel`/`travelRegion` both ways and checks that the hero lands on the
+     landing spot, on the ground, with the vehicle's shot played (the user: "every kind of vehicle must work").
+- **The laptop's part (World Art, after the LBA1 places on Citadel):** the ship's outside model if a better one is
+  needed, the cabin room (seats, windows, luggage racks) and the passengers' spots, as a request with a diff and
+  pictures, like LBA-CITADEL-*. Spoilers: pictures only of the Citadel spaceport side.
