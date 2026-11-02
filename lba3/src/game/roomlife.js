@@ -8,11 +8,11 @@
 //    routine: a round of stops, walking over a planned route (walknav.js, the rooms' floors: addFloor) round whoever is in
 //    the way, sitting on a chair, a bar stool or a sofa by the street's bench code (a seat's shape: SEAT below), chatting
 //    in pairs, carrying a crate or a case, talking when spoken to (story/citizens.js: their lines are text/interiors.js).
-//    Every place is the room's own data: the stops are in the room's frame (the numbers its builder uses), turned into
-//    the world by its centre; nothing in the rooms' geometry changes.
+//    Every place is the room's own data: the stops are in the room's frame, read from the layout its builder uses (the
+//    room's *_PLAN, BIGGER-1), turned into the world by its centre; nothing in the rooms' geometry changes.
 //      tavern     Luc (LBA2's keeper, twelve years older) behind the bar, at the taps, serving a table; four harbour
 //                 regulars: Hobb at the bar, Sanna at a table and the lone stool, Old Fenn on the sofa, Kip at the
-//                 jukebox (Fenn and Kip meet in front of it and talk), then at a table
+//                 jukebox (Fenn and Kip meet before the sofa and talk), then at a table
 //      bazoo      Mr Bazoo (LBA2's) at the till, the back shelves, the Zeelich goods; a customer, Mrs Pell, browsing
 //      ticket     Ines at the till and setting out tickets; a traveller, Rollo, waiting on a chair with his case
 //      pharmacy   the pharmacist (LBA2's) at the counter, the honey shelf, the jar shelves
@@ -52,6 +52,13 @@
 import { Walkers } from './walkers.js';
 import { CAST_ROUNDS, CAST_FLOORS } from './castrounds.js';
 import { dampAngle, clamp, rng } from '../engine/math.js';
+import { TAVERN_PLAN } from './tavern.js';
+import { BAZOO_PLAN } from './bazoo.js';
+import { TICKET_PLAN } from './ticket.js';
+import { PHARMACY_PLAN } from './pharmacy.js';
+import { NBRHOUSE_PLAN } from './nbrhouse.js';
+import { NELLHOUSE_PLAN } from './nellhouse.js';
+import { BAGGAGE_PLAN } from './baggage.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // the seats a person sits on, as walkers.js BENCH_RED: the seat's top over the floor, its back's front face and its front
@@ -66,113 +73,136 @@ export const SEAT = {
 
 // ------------------------------------------------------------------ the rooms
 // each room: its walkable floors (its own frame; y the floor's height), and its people. A stop is walkrounds.js's
-// { id, x, z, a, act, dur, seat?, pair?/mate?, carry?, stage?, gest? } in the room's frame.
+// { id, x, z, a, act, dur, seat?, pair?/mate?, carry?, stage?, gest?, spot? } in the room's frame.
+// BIGGER-1 (the user 2.11, "make them bigger": every room 1.5 times the first cut, the furniture its own size): every
+// floor and stop is read from the room's own layout (its *_PLAN, the numbers its builder uses), so a change of the layout
+// carries its people along; the keeper's first stop names the room's spot for them (`spot`: R.npcSpots), and is put on
+// it as the room is built. Each stop keeps its own distance from the thing it is at (a counter's face, a shelf, a seat).
 const S = (id, slot, seat, dur, o = {}) => ({ id, x: slot[0], z: slot[1], a: seat[2], act: 'stand', seat: { x: seat[0], z: seat[1], a: seat[2], spec: seat[3] }, dur, ...o });
 const D = (id, x, z, a, act, dur, o = {}) => ({ id, x, z, a, act, dur, ...o });
 const L = (id, x, z, tx, tz, act, dur, o = {}) => ({ id, x, z, a: A(x, z, tx, tz), act, dur, ...o });
 const NOW = [0, 1];          // (the town's states 0 and 1: everything but the evacuation)
+// a seat of the room's: [x, z, the way its sitter faces, its shape], and the place to stand by it (dx, dz from the seat)
+const seatOf = (c, spec) => [c.x, c.z, c.a, spec];
+const by = (c, dx, dz) => [c.x + dx, c.z + dz];
+const hall = (P, y = 0) => ({ x0: -P.W / 2, x1: P.W / 2, z0: -P.D / 2, z1: P.D / 2, y });   // (a room's whole floor)
+
+const TV = TAVERN_PLAN, BA = BAZOO_PLAN, TK = TICKET_PLAN, PH = PHARMACY_PLAN, NB = NBRHOUSE_PLAN, NL = NELLHOUSE_PLAN, BG = BAGGAGE_PLAN;
+// the tavern: the tables (TV.tables) with their chairs (TV.chairs: in front, behind, left, right of each)
+const tvChair = (t, c) => ({ x: TV.tables[t][0] + TV.chairs[c][0], z: TV.tables[t][1] + TV.chairs[c][1], a: TV.chairs[c][2] });
+const tvStool = TV.stools.reduce((b, s) => (Math.abs(s.z - TV.luc.z) < Math.abs(b.z - TV.luc.z) ? s : b));   // (the bar stool across from Luc)
+const tvSanna = { x: TV.tables[0][0], z: TV.tables[0][1] }, tvJuke = TV.juke, tvSofa = TV.sofa;
+// the shop: before a display table (its middle, d from it into the room), facing it: [x, z, a]
+const bzAt = (k, d) => { const [x, z, ry] = BA.tables[k], ux = Math.sin(ry), uz = Math.cos(ry); return [x + ux * d, z + uz * d, Math.atan2(-ux, -uz)]; };
+// the baggage claim's crates by the office's right wall: their middle
+const bgCrates = { x: BG.crates[0].x, z: (BG.crates[0].z + BG.crates[1].z) / 2 };
 
 export const ROOMS = {
   tavern: {
-    floors: [{ x0: -5, x1: 5, z0: -7.5, z1: 7.5, y: 0 }],
+    floors: [hall(TV)],
     people: [
       { id: 'luc', char: 'lharMan', tint: '#e6e2da', color: '#e8b070', speed: 0.9, start: 0, stays: true, stops: [
-        D('luc_bar', -4.15, 2.7, Math.PI / 2, 'browse', [14, 22]),                       // (his spot: polishing a glass behind the bar)
-        D('luc_tap', -4.15, 1.4, Math.PI / 2, 'reach', [6, 9], { stage: NOW }),          // (the tap barrel on the bar)
-        L('luc_serve', 1.95, 2.5, 0.9, 3.4, 'put', [5, 7], { stage: NOW }),              // (Sanna's table, from its free corner)
-        D('luc_shelf', -4.15, 3.6, -Math.PI / 2, 'reachHigh', [6, 9], { stage: 2, carry: 'crate' }),   // (the evacuation: the good bottles boxed)
-        D('luc_stack', -2.0, 5.6, 0, 'put', [5, 7], { stage: 2, carry: null }),
+        D('luc_bar', TV.luc.x, TV.luc.z, TV.luc.a, 'browse', [14, 22], { spot: 'luc' }),          // (his spot: polishing a glass behind the bar)
+        D('luc_tap', TV.luc.x, TV.tap.z, Math.PI / 2, 'reach', [6, 9], { stage: NOW }),            // (the tap barrel on the bar)
+        L('luc_serve', tvSanna.x + 1.05, tvSanna.z - 0.9, tvSanna.x, tvSanna.z, 'put', [5, 7], { stage: NOW }),   // (Sanna's table, from its free corner)
+        D('luc_shelf', TV.luc.x, TV.luc.z + 0.9, -Math.PI / 2, 'reachHigh', [6, 9], { stage: 2, carry: 'crate' }),   // (the evacuation: the good bottles boxed)
+        D('luc_stack', TV.BARX + 1.5, TV.BZ1 - 0.5, 0, 'put', [5, 7], { stage: 2, carry: null }),   // (stacked by the bar's end, off the way in from the door)
       ] },
       { id: 'hobb', char: 'hesk', tint: '#d6e2f0', color: '#a8c8e8', speed: 0.95, start: 0, stops: [
-        S('hobb_stool', [-1.95, 2.7], [-2.6, 2.7, -Math.PI / 2, SEAT.barStool], [40, 60]),
-        S('hobb_table', [1.75, 4.75], [2.45, 5.4, Math.PI / 2, SEAT.chair], [25, 35]),   // (the table by the front wall)
+        S('hobb_stool', by(tvStool, 0.65, 0), [tvStool.x, tvStool.z, -Math.PI / 2, SEAT.barStool], [40, 60]),
+        S('hobb_table', by(tvChair(1, 2), -0.7, -0.65), seatOf(tvChair(1, 2), SEAT.chair), [25, 35]),   // (the table by the front wall)
       ] },
       { id: 'sanna', char: 'councilB', tint: '#dcefe6', color: '#90d0b0', speed: 1.05, start: 0, stops: [
-        S('sanna_table', [-0.45, 2.75], [0.05, 3.4, Math.PI / 2, SEAT.chair], [30, 45]),
-        S('sanna_stool', [-1.1, -0.5], [-1.8, -0.3, 0, SEAT.barStool], [20, 30]),
+        S('sanna_table', by(tvChair(0, 2), -0.5, -0.65), seatOf(tvChair(0, 2), SEAT.chair), [30, 45]),
+        S('sanna_stool', by(TV.lone, 0.7, -0.2), [TV.lone.x, TV.lone.z, 0, SEAT.barStool], [20, 30]),
       ] },
       { id: 'fenn', char: 'weaver', tint: '#f2e8d6', color: '#d8c0a0', speed: 0.75, start: 0, stops: [
-        S('fenn_sofa', [-0.6, -0.5], [-0.9, -1.28, 0, SEAT.sofa], [40, 60]),
-        L('fenn_chat', 1.0, 0.0, 2.0, 0.0, 'stand', [22, 30], { pair: 'juke', mate: 'kip' }),
+        S('fenn_sofa', by(tvSofa, 0.3, 0.78), [tvSofa.x, tvSofa.z, 0, SEAT.sofa], [40, 60]),
+        // (Fenn and Kip meet before the sofa, off the ways from the door to the stair and the cellar's arched door)
+        L('fenn_chat', tvSofa.x - 0.6, tvSofa.z + 1.6, tvSofa.x + 0.4, tvSofa.z + 1.6, 'stand', [22, 30], { pair: 'juke', mate: 'kip' }),
       ] },
       { id: 'kip', char: 'archivist', tint: '#fff2de', color: '#f0c070', speed: 1.15, start: 0, stops: [
-        D('kip_juke', 2.0, -0.85, Math.PI / 2, 'reach', [8, 12]),                         // (choosing a tune)
-        L('kip_chat', 2.0, 0.0, 1.0, 0.0, 'stand', [22, 30], { pair: 'juke', mate: 'fenn' }),
-        S('kip_table', [2.5, 0.6], [3.4, 0.85, 0, SEAT.chair], [25, 35]),
+        D('kip_juke', tvJuke.x, tvJuke.z + 0.85, Math.PI, 'reach', [8, 12]),                      // (choosing a tune at its glowing front)
+        L('kip_chat', tvSofa.x + 0.4, tvSofa.z + 1.6, tvSofa.x - 0.6, tvSofa.z + 1.6, 'stand', [22, 30], { pair: 'juke', mate: 'fenn' }),
+        S('kip_table', by(tvChair(2, 0), -0.9, -0.25), seatOf(tvChair(2, 0), SEAT.chair), [25, 35]),
       ] },
     ],
   },
   bazoo: {
-    floors: [{ x0: -4.2, x1: 4.2, z0: -3, z1: 3, y: 0 }],
+    floors: [hall(BA)],
     people: [
       { id: 'mrbazoo', char: 'councilC', tint: '#f2eadc', color: '#e0c080', speed: 0.8, start: 0, stays: true, stops: [
-        D('baz_till', 0.2, 0.25, 0, 'browse', [14, 20]),                                  // (his spot, at the till)
-        D('baz_back', 0.2, -1.55, Math.PI, 'reach', [6, 9], { stage: NOW }),             // (the fruit and the candle on the back table)
-        D('baz_goods', 2.75, -1.6, Math.PI / 2, 'put', [5, 7], { stage: NOW, gest: ['nod'] }),   // (the Zeelich goods)
-        D('baz_pack', 2.75, -1.6, Math.PI / 2, 'put', [5, 7], { stage: 2, carry: 'crate' }),
-        D('baz_crates', -2.4, -1.5, Math.PI, 'put', [5, 7], { stage: 2, carry: null }),   // (boxed, by the back corner's table)
+        D('baz_till', BA.till.x, BA.till.z, BA.till.a, 'browse', [14, 20], { spot: 'bazoo' }),   // (his spot, at the till)
+        D('baz_back', ...bzAt('fruit', 1.0), 'reach', [6, 9], { stage: NOW }),                   // (the fruit and the candle on the back table)
+        D('baz_goods', ...bzAt('zeelich', 0.95), 'put', [5, 7], { stage: NOW, gest: ['nod'] }),   // (the Zeelich goods)
+        D('baz_pack', ...bzAt('zeelich', 0.95), 'put', [5, 7], { stage: 2, carry: 'crate' }),
+        D('baz_crates', ...bzAt('corner', 1.05), 'put', [5, 7], { stage: 2, carry: null }),     // (boxed, by the back corner's table)
       ] },
       { id: 'pell', char: 'lharWoman', tint: '#e6eeff', color: '#a8b8f0', speed: 0.9, start: 0, stops: [
-        D('pell_counter', -0.5, 1.75, Math.PI, 'browse', [10, 14]),
-        D('pell_rabbit', -2.75, -0.6, -Math.PI / 2, 'browse', [8, 12], { gest: ['shrug'] }),
-        D('pell_corner', -2.6, -1.5, Math.PI, 'browse', [6, 9]),
-        D('pell_jars', 2.75, 0.1, Math.PI / 2, 'browse', [8, 12]),
+        D('pell_counter', BA.CX - 0.7, BA.front + 0.58, Math.PI, 'browse', [10, 14]),            // (at the counter's front, by the till)
+        D('pell_rabbit', ...bzAt('rabbit', 1.0), 'browse', [8, 12], { gest: ['shrug'] }),
+        D('pell_corner', ...bzAt('corner', 1.05), 'browse', [6, 9]),
+        D('pell_jars', ...bzAt('bowl', 0.95), 'browse', [8, 12]),
       ] },
     ],
   },
   ticket: {
-    floors: [{ x0: -3.2, x1: 3.2, z0: -3.2, z1: 3.2, y: 0 }],
+    floors: [hall(TK)],
     people: [
       { id: 'ines', char: 'tarra', tint: '#e6f2ee', color: '#a0d0c8', speed: 0.85, start: 0, stops: [
         // (the staff's side is a narrow lane between the counter and the two stools: she keeps to it)
-        D('ines_till', 0.55, -1.2, 0, 'browse', [14, 20]),                                // (her spot, at the till)
-        D('ines_tickets', 0.05, -1.2, 0, 'put', [5, 8], { gest: ['nod'] }),              // (a ticket stamped and set out on the counter)
+        D('ines_till', TK.clerk.x, TK.clerk.z, TK.clerk.a, 'browse', [14, 20], { spot: 'clerk' }),   // (her spot, at the till)
+        // (a ticket stamped and set out on the counter, beside the till: the lane past the stool toward the pile of tickets
+        //  is narrower than the room's planner walks)
+        D('ines_tickets', TK.clerk.x - 0.5, TK.clerk.z, 0, 'put', [5, 8], { gest: ['nod'] }),
       ] },
       { id: 'rollo', char: 'desertTrader', tint: '#f2e2d2', color: '#d8b090', speed: 0.85, start: 0, stops: [
-        S('rollo_chair', [1.2, 2.0], [1.2, 2.75, Math.PI, SEAT.chair], [40, 60], { carry: 'case' }),
-        D('rollo_ask', 1.4, 0.35, Math.PI, 'browse', [6, 9]),
-        D('rollo_board', -1.9, 0.45, -Math.PI / 2, 'stand', [6, 9], { gest: ['sigh'] }),  // (the timetable by the door)
+        S('rollo_chair', by(TK.frontChairs[1], 0, -0.75), seatOf(TK.frontChairs[1], SEAT.chair), [40, 60], { carry: 'case' }),
+        D('rollo_ask', TK.till.x + 0.5, TK.CZ + TK.CHD + 0.43, Math.PI, 'browse', [6, 9]),          // (across the counter from Ines)
+        D('rollo_board', TK.LX + 1.3, TK.board.z - 0.3, -Math.PI / 2, 'stand', [6, 9], { gest: ['sigh'] }),   // (the timetable by the door)
       ] },
     ],
   },
   pharmacy: {
-    floors: [{ x0: -3.6, x1: 3.6, z0: -3.3, z1: 3.3, y: 0 }],
+    floors: [hall(PH)],
     people: [
       { id: 'pharmacist', char: 'ilka', tint: '#e6f6f2', color: '#a0e0d0', speed: 0.75, start: 0, stops: [
-        D('ph_counter', 0.15, -0.75, 0, 'browse', [14, 20]),                              // (the spot: mixing at the counter)
-        D('ph_honey', 1.0, -2.5, Math.PI, 'reachHigh', [6, 9]),                           // (the Mosquibees' honey jars)
-        D('ph_jars', -2.7, -2.0, -Math.PI / 2, 'reach', [6, 9], { gest: ['nod'] }),
+        D('ph_counter', PH.spot.x, PH.spot.z, PH.spot.a, 'browse', [14, 20], { spot: 'pharmacist' }),   // (the spot: mixing at the counter)
+        D('ph_honey', PH.honeyShelves[0], PH.backZ + 0.6, Math.PI, 'reachHigh', [6, 9]),        // (the Mosquibees' honey jars)
+        D('ph_jars', PH.wallX + 0.7, PH.wallShelves[1], -Math.PI / 2, 'reach', [6, 9], { gest: ['nod'] }),   // (the left wall's jars)
       ] },
     ],
   },
   nbrhouse: {
-    floors: [{ x0: -3.6, x1: 3.6, z0: -4.1, z1: 4.1, y: 0 }],
+    floors: [hall(NB)],
     people: [
       { id: 'hedda', char: 'farmerB', tint: '#fff2e4', color: '#f0b8a0', speed: 0.9, start: 0, stops: [
-        D('hedda_stove', 2.2, 3.1, Math.PI / 2, 'browse', [12, 18]),                      // (the spot, at the stove with the kettle)
-        D('hedda_tap', 2.55, 1.9, Math.PI / 2, 'touchWater', [5, 8], { gest: ['shrug'] }),
-        S('hedda_table', [-0.75, 2.2], [-0.6, 1.3, Math.PI / 2, SEAT.chair], [16, 24]),
-        S('hedda_desk', [1.5, -2.6], [2.4, -2.85, Math.PI, SEAT.chair], [14, 20]),
+        D('hedda_stove', NB.spot.x, NB.spot.z, NB.spot.a, 'browse', [12, 18], { spot: 'neighbour' }),   // (the spot, at the stove with the kettle)
+        D('hedda_tap', NB.basin.x - 0.6, NB.basin.z, Math.PI / 2, 'touchWater', [5, 8], { gest: ['shrug'] }),
+        S('hedda_table', by(NB.chairs[0], -0.15, 0.9), seatOf(NB.chairs[0], SEAT.chair), [16, 24]),
+        S('hedda_desk', by(NB.deskChair, -0.9, 0.25), seatOf(NB.deskChair, SEAT.chair), [14, 20]),
       ] },
     ],
   },
   nellhouse: {
-    floors: [{ x0: -3.6, x1: 3.6, z0: -4.1, z1: 4.1, y: 0 }],
+    floors: [hall(NL)],
     people: [
       { id: 'wim', char: 'farmerA', tint: '#e6f0de', color: '#b8d890', speed: 1.0, start: 0, stops: [
-        D('wim_bench', 2.3, 2.05, 0, 'browse', [16, 24]),                                 // (the spot: the Esmer engine on the bench)
-        L('wim_parts', 3.1, 0.95, 3.2, 1.7, 'put', [5, 7], { carry: 'crate' }),           // (the crate of spare parts)
-        S('wim_table', [-0.2, 1.4], [-0.1, 0.5, Math.PI / 2, SEAT.chair], [14, 20], { carry: null }),
+        // (the spot is Nell's, before her workbench: Wim works there facing the bench)
+        L('wim_bench', NL.spot.x, NL.spot.z, NL.bench.x, NL.bench.z, 'browse', [16, 24], { spot: 'nell' }),   // (the Esmer engine on the bench)
+        L('wim_parts', NL.parts.x - 0.1, NL.parts.z - 0.75, NL.parts.x, NL.parts.z, 'put', [5, 7], { carry: 'crate' }),   // (the crate of spare parts)
+        S('wim_table', by(NL.chairs[0], -0.1, 0.9), seatOf(NL.chairs[0], SEAT.chair), [14, 20], { carry: null }),
       ] },
     ],
   },
   baggage: {
-    floors: [{ x0: -3.9, x1: 3.9, z0: -10.5, z1: 0.95, y: 1.5 }, { x0: -3.9, x1: 3.9, z0: 1.05, z1: 10.5, y: 0 }],
+    // (the upper level, BG.UY up, from the back wall to its edge; the front hall below it)
+    floors: [{ ...hall(BG, BG.UY), z1: BG.UZ1 - 0.05 }, { ...hall(BG), z0: BG.UZ1 + 0.05 }],
     people: [
       { id: 'osk', char: 'dallan', tint: '#f0eee0', color: '#c8c090', speed: 0.9, start: 0, stops: [
-        D('osk_table', 0.4, -2.5, 0, 'browse', [14, 20]),                                 // (the spot: papers at the office table)
-        D('osk_belt', 1.6, -8.6, Math.PI, 'reach', [6, 9], { carry: 'crate' }),           // (a parcel off the belt)
-        D('osk_crates', 2.4, -2.95, Math.PI / 2, 'put', [5, 7], { carry: null }),
+        D('osk_table', BG.spot.x, BG.spot.z, BG.spot.a, 'browse', [14, 20], { spot: 'clerk' }),   // (the spot: papers at the office table)
+        D('osk_belt', BG.belt.x + 0.2, BG.belt.z + BG.belt.hd + 0.6, Math.PI, 'reach', [6, 9], { carry: 'crate' }),   // (a parcel off the belt)
+        D('osk_crates', bgCrates.x - 0.8, bgCrates.z, Math.PI / 2, 'put', [5, 7], { carry: null }),
       ] },
     ],
   },
@@ -267,8 +297,10 @@ function register(game, key, floors, exits) {
   for (const e of exits || []) W.doors.push({ x: e.x, z: e.z, r: e.r || 0.75 });   // (the trigger's own reach: a room's ways pass close to its door)
   W.nav.cells.clear(); W.nav.cache.clear();
 }
-const toWorld = (s, ox, oz) => {
-  const o = { ...s, x: s.x + ox, z: s.z + oz };
+// (a stop that names the room's spot for its person, `spot`, stands on R.npcSpots[spot] as the room is built)
+const toWorld = (s, ox, oz, spots) => {
+  const m = s.spot && spots?.[s.spot];
+  const o = { ...s, x: m ? m.x : s.x + ox, z: m ? m.z : s.z + oz };
   if (s.seat) o.seat = { ...s.seat, x: s.seat.x + ox, z: s.seat.z + oz };
   return o;
 };
@@ -287,7 +319,7 @@ export function placeDefs(game) {
       const c = room.center;
       register(game, rid, R.floors.map((f) => ({ x0: f.x0 + c.x, x1: f.x1 + c.x, z0: f.z0 + c.z, z1: f.z1 + c.z, y: f.y })), room.exits);
     }
-    for (const p of R.people) add(p, rid, room ? p.stops.map((s) => toWorld(s, room.center.x, room.center.z)) : null);
+    for (const p of R.people) add(p, rid, room ? p.stops.map((s) => toWorld(s, room.center.x, room.center.z, room.npcSpots)) : null);
   }
   const sp = game.world?.spaceport;
   if (sp) {
