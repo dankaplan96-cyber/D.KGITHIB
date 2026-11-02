@@ -681,7 +681,7 @@ function buildHarbour(W0, root, r) {
   lamp(W, g, -70.5, 1.8);
   lamp(W, g, -63.2, -11.2);
   { const tacc = { list: [], cups: [], parent: g }; tulipBed(W, g, -64.8, -9.0, 4.2, 1.4, 0, r, tacc); tulipBed(W, g, -63.6, 1.2, 1.4, 3.4, 0, r, tacc); tulipFlush(tacc); }
-  bench(W, g, -65.0, -7.0, Math.PI, r);
+  bench(W, g, -65.0, -6.6, Math.PI, r);   // (BENCHES-1: 0.4 m back from the tulip bed before it: 1.2 m clear for the sitter's feet)
   barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-69.8, 6.2, true]], r);
   W.givers.push({ id: 'quay-barrels', x: -72.6 + d.x, z: 5.4 + d.z, r: 1.8, top: 1.1, kinds: ['money', 'life'], n: 2 });
   crateStack(W, g, [[-71.6, -11.6, 2], [-70.5, -12.0, 1], [-72.6, -10.6, 1, 0.8]], r);

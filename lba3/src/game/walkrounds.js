@@ -107,7 +107,7 @@ export function citadelRoster(game) {
       bench('brix_benchE', -35.8, 2.6, [28, 44]),
       look('brix_warm', -34.0, -3.85, -33.87, -2.83, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit)
       look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10], { gest: ['sigh', 'shrug'] }),
-      bench('brix_lane', -48.5, 19.5, [28, 44]),
+      bench('brix_lane', -47.8, 19.5, [28, 44]),
       look('brix_pump', -45.6, 58.6, -42, 65, [8, 12]),
       bench('brix_lane2', -43.3, 45.4, [24, 36]),
     ]) },

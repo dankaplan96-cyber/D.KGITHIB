@@ -79,7 +79,7 @@ export function buildCityDressing(root, physics, W) {
     return out;
   };
   const skipped = [];
-  let count = 0;
+  let count = 0, lastWhy = '';
   const kinds = {};
   const items = [];   // (each piece placed: name, where, its footprint; W.cityDress.items)
   // place(name, builder, x, z, ry, fp, opts): fp is the footprint the builder will return (to fit before building)
@@ -105,6 +105,7 @@ export function buildCityDressing(root, physics, W) {
       items.push({ name, x: cx, z: cz, ry, ...(got.r != null ? { r: got.r } : { hw: got.hw, hd: got.hd }) });
       return [cx, cz];
     }
+    lastWhy = first;
     if (!o.quiet) skipped.push(`${name} (${x.toFixed(1)}, ${z.toFixed(1)}): ${first}`);
     return null;
   };
@@ -128,14 +129,16 @@ export function buildCityDressing(root, physics, W) {
   // feet). They are fitted where they are put or not at all (no shift that could bring one before the seat or against
   // another piece). u: along the bench (cos ry, −sin ry); v: the way the sitter faces (sin ry, cos ry).
   const onBench = (bx, bz, ry, u, v = 0) => [bx + Math.cos(ry) * u + Math.sin(ry) * v, bz - Math.sin(ry) * u + Math.cos(ry) * v];
-  // a bin at one end (side ±1 along u) of a bench already built (W.seats: the nearest within 1.5 m of the hint): in line, else a
-  // touch further out or a touch behind the line
+  // a bin at one end (side ±1 along u, else the other end) of a bench already built (W.seats: the nearest within 1.5 m of the
+  // hint): in line 0.2–0.3 m off its end, else a touch further out or a touch behind the line
   const binEnd = (x, z, side) => {
     let s = null, bd = 1.5; for (const q of W.seats || []) { const d = Math.hypot(q.x - x, q.z - z); if (d < bd) { bd = d; s = q; } }
     if (!s) { skipped.push(`bin (${x.toFixed(1)}, ${z.toFixed(1)}): no bench`); return null; }
-    const out = (s.spec ? 0.9 : 0.85) + 0.3 + FP.bin.r;
-    for (const [du, v] of [[0, 0], [0.15, 0], [0, -0.15], [0.15, -0.25]]) { const at = bin(...onBench(s.x, s.z, s.ry, side * (out + du), v), 0, { shift: 0, quiet: true }); if (at) return at; }
-    skipped.push(`bin (${x.toFixed(1)}, ${z.toFixed(1)}): no room at the bench's end`); return null;
+    const out = (s.spec ? 0.9 : 0.85) + 0.3 + FP.bin.r, why = [];
+    for (const sd of [side, -side]) for (const [du, v] of [[0, 0], [-0.08, 0], [0.15, 0], [0, -0.15], [0.15, -0.25]]) {
+      const at = bin(...onBench(s.x, s.z, s.ry, sd * (out + du), v), 0, { shift: 0, quiet: true }); if (at) return at; why.push(lastWhy);
+    }
+    skipped.push(`bin (${x.toFixed(1)}, ${z.toFixed(1)}): no room at the bench's ends (${[...new Set(why)].join(', ')})`); return null;
   };
   // a resting spot of ours: the bench (facing ry), a bin at its `bin` end, a tub past its `tub` end (either may be left out)
   const rest = (x, z, ry, { color, bin: bs, tub: ts, seed = 1, tubColor } = {}) => {
@@ -160,11 +163,11 @@ export function buildCityDressing(root, physics, W) {
     for (const s of [-1, 1]) tub(d.x + nx * 0.5 + ax * s * 1.65, d.z + nz * 0.5 + az * s * 1.65, seed++, s > 0 ? '#b8623a' : '#2f6a9a');
   }
   // ---------------------------------------------------------------- the lane south from the square
-  // a resting spot on the way down: against the south house's blank north wall, looking up the lane to the square; a bin at
-  // its west end (the house's crate 0.6 m beyond), a tub past its east end
+  // a resting spot on the way down: against the south house's blank north wall, looking up the lane to the square, a bin at
+  // its east end (no tub: the searchable crate by the house's corner keeps its room to the west, the lane to the east)
   // (BENCHES-1: it stood at the house's north-east corner, facing the corner 1 m off, a tub against one end, the bin against
   //  the other, the original's tree and a white tulip bed behind: the user's photo of 2.11)
-  rest(-48.5, 19.5, Math.PI, { bin: 1, tub: -1, seed: 21 });
+  rest(-47.8, 19.5, Math.PI, { bin: -1 });
   // where the harbour path leaves the lane: a sign post, a notice board, a bin between the two benches
   { const x = -43.2, z = 30.9;
     post(x, z, [{ text: 'HARBOUR', a: heading(x, z, ...TO.harbour), color: '#2a8a7a' }, { text: 'SPACEPORT', a: heading(x, z, ...TO.spaceport), color: '#7a52b0' }, { text: 'SQUARE', a: heading(x, z, ...TO.lane), color: '#c8452f' }, { text: 'LIGHTHOUSE', a: heading(x, z, ...TO.laneS) }]); }
@@ -186,10 +189,10 @@ export function buildCityDressing(root, physics, W) {
   { const x = -105.6, z = 41.6;
     post(x, z, [{ text: 'PIER', a: -Math.PI / 2, color: '#2a8a7a' }, { text: 'SQUARE', a: heading(x, z, -90, 38), color: '#c8452f' }, { text: 'SPACEPORT', a: heading(x, z, -90, 38), color: '#7a52b0' }]); }
   board(-110.4, 46.6, Math.PI / 2, 'ferry');     // the ferry timetable, in the open quay (read from its east side)
-  binEnd(-110.5, 40.0, -1);   // the quay's bench (island.js): a bin at its east end (BENCHES-1: the west one was against a board)
+  binEnd(-110.5, 40.4, -1);   // the quay's bench (island.js): a bin at its east end (BENCHES-1: the west one was against a board)
   // a bench looking out over the basin, its back to the harbour master's shed, a bin at its south end
   // (BENCHES-1: it faced the sea from the quay's edge squeezed between the shed's corner, its bin, its tub and a bollard)
-  rest(-109.5, 51.5, Math.PI / 2, { color: '#2a8a7a', bin: -1 });
+  rest(-109.5, 51.8, Math.PI / 2, { color: '#2a8a7a', bin: -1 });
   // mooring bollards along the quay's east edge (where it drops to the basin)
   for (const z of [46.6, 49.4, 52.2]) place('bollard', (k) => P.bollard(k), -107.4, z, 0, FP.bollard, { minH: 1.5 });
   place('handcart-quay', (k) => P.handCart(k, { load: 'crates', seed: 9 }), -113.4, 46.0, 1.2, FP.cart);   // (I-3: it stood on the harbour master's shed's east side, now the shed's door side: parked by its north-east corner)
