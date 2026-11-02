@@ -91,8 +91,14 @@ await shot('C2-03-shield.png');
 // Vesk
 await ev(() => { T.talk('vesk'); if (game.state === 'play' && !game.flags.c2_veskDown) { game.input.taps.add('KeyE'); game.step(1 / 60); } for (let i = 0; i < 900 && !game.flags.c2_veskDown; i++) { if (game.state === 'dialog') { game.input.taps.add('KeyE'); } game.step(1 / 30); } T.talkAll(); });
 is('Vesk confronted and down', await ev(() => [game.flags.c2_veskDown, T.npc('vesk').present, T.obj(), game.state, T.npc('vesk').pos.toArray().map((v) => +v.toFixed(1)), game.hero.pos.toArray().map((v) => +v.toFixed(1)), game.findInteractable()?.npc?.def?.id]), (v) => v[0] === true);
-await ev(() => { const G = game, p = G.rooms.zeelich.platform.pad; T.tp(p.x + 1, p.z); T.tap('KeyE'); G.step(1.5); });
-is('chapter 2 done: the next chapter (dig) in play, an objective set', await ev(() => { T.talkAll(); game.step(1.5); T.talkAll(); return [game.state, game.flags.c2_done, game.flags.chapterKey, game.room?.id, T.obj()]; }), (v) => v[1] === true && v[2] === 'dig' && v[0] === 'play' && v[4].length > 0);
+// SHAFT-CITADEL: Vesk does not go down a shaft on Zeelich: the lift takes him to his ship's berth under the deck, the ship
+// climbs away (he flies home to Twinsun), and the shaft he seals is at Citadel's station
+is('Vesk flew home: his ship left the platform, the objective points to the console, the station\'s blast doors still open', await ev(() => {
+  const G = game; for (let i = 0; i < 60 && (G.story.cur.ship || G.state !== 'play'); i++) { G.step(0.2); T.talkAll(); }
+  return [game.flags.c2_veskDown, !game.story.cur.ship, T.obj(), !!game.world.station.sealed]; }), (v) => v[0] === true && v[1] && /console/i.test(v[2]) && v[3] === false);
+is('the lift pad only shows his empty berth: the chapter goes on', await ev(() => { const G = game, p = G.rooms.zeelich.platform.pad; T.tp(p.x + 1, p.z); G.hero.angle = Math.atan2(-1, 0); T.tap('KeyE'); G.step(0.5); const said = document.querySelector('#dialog')?.textContent || ''; T.talkAll(); return [said.slice(0, 80), game.flags.c2_done, game.flags.chapterKey]; }), (v) => !v[1] && v[2] === 'zeelich');
+await ev(() => { const G = game, c = G.rooms.zeelich.platform.console; T.tp(c.x - 1.0, c.z); G.hero.angle = Math.atan2(1, 0); T.tap('KeyE'); G.step(1.5); });
+is('chapter 2 done at the console (the shaft at Citadel\'s station sealed): the next chapter (dig) in play, an objective set, the blast doors shut', await ev(() => { T.talkAll(); game.step(1.5); T.talkAll(); return [game.state, game.flags.c2_done, game.flags.chapterKey, game.room?.id, T.obj(), !!game.world.station.sealed, game.story.journal().find((c) => /Zeelich/.test(c.title))?.lines.length]; }), (v) => v[1] === true && v[2] === 'dig' && v[0] === 'play' && v[4].length > 0 && v[5] === true);
 await shot('C2-04-end.png');
 const fails = done();
 await browser.close();

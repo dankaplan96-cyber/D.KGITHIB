@@ -12,9 +12,9 @@ Object.assign(STR.en, {
   // chapter 7: Sendell, at the observatory's crystal
   ml_c7_gift: 'Take a little of my light with you, for your ball. I can spare less than I would like.',
   // chapter 10: the shaft opens on the five stations' code
-  ml_c10_heat: "Heat rolls up the open shaft and across the platform. The ball in Twinsen's hand catches fire.",
+  ml_c10_heat: "Heat rolls up the open shaft and across the yard. The ball in Twinsen's hand catches fire.",
   ml_c10: "It doesn't burn. It feels like all five of them at once.",
-  ml_c10_same: "Heat rolls up the open shaft and across the platform, and the ball in Twinsen's hand drinks it in.",
+  ml_c10_same: "Heat rolls up the open shaft and across the yard, and the ball in Twinsen's hand drinks it in.",
 
   // Rector Hougo, School of Magic (after chapter 4's step)
   ml_hougo_1: 'Green! Last time that took you three tests and a diploma. What did it this time?',

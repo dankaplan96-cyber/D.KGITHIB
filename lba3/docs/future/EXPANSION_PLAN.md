@@ -123,8 +123,8 @@ Nothing new happens after the core except the human aftermath.
 | Shelter in place, asylum way | `evacuation.js` before `startZoe()`'s farms; alt to `c8_fort` | `c8_sip*`, `c8_asylumWay` |
 | Hearing, heat, SUPPLIERS | `council.js` `hearing()`/`verdict()`; cabinets (`c9cab`) | `c9_ev*`, `c9_grumm`, `c9_ledger` |
 | End of ch. 9 | `council.js` `verdict()` → `nextChapter()` | now leads to `throttle` by ORDER; `c9_bal_c3`, `c9_tw_c3` rewritten |
-| Network start, B-1 | `network.js` `begin()` (`c10_started`); lighthouse npcSpots | Tessa, `vm_3`, bands; Zoé and Arthur moved off the dial bank |
-| Shell start | `chapter3.js` `begin()`; `underground.js` c3shaft exit `'c3-deep'` | blocked until `ur_done`; new exit to `uw_breach` (hook) |
+| Network start, B-1 | `network.js` `begin()` (`c10_started`); lighthouse npcSpots; the code goes out from Baldino's code box at the bore in Citadel's station (`c10console`, SHAFT-CITADEL), not Zeelich's platform | Tessa, `vm_3`, bands; Zoé and Arthur moved off the dial bank |
+| Shell start | `chapter3.js` `begin()`; `underground.js` c3shaft exit `'c3-deep'` (the shaft's top is Citadel's station since SHAFT-CITADEL: `'c3-up'` and `c3down` at the bore's collar, `island.js` `SHAFT_TOP`) | blocked until `ur_done`; new exit to `uw_breach` (hook) |
 | Core | `chapter3.js` ALLIES, pylon hits, overload chain | stress lamps, roll call, central override refused |
 | Epilogue | `epilogue.js` `begin()`, LINES | homecoming walk, new lines |
 | Travel | `travel.js` | Citadel Spaceport ⇄ Ballastra pad, from `ballastra` on, expanded campaign only |

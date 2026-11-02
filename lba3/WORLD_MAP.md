@@ -40,7 +40,7 @@ the original doesn't have is ours:
 | Whispering Cliffs | stepping stones, old target | — | cliff valve (ch1) | stones stay raised |
 | Orchard | barred valve | — | orchard valve (ch1) | — |
 | Old camp / project depot | FunFrock's crates, drones | security drones | depot valve (ch1) | — |
-| Old fortress = project station | crenellated walls, gate, tanks, pipes, beam pad | the station hum | tour, Zoé's infiltration, Vesk leaves | gate opens (ch1); beam pad dead after Vesk leaves |
+| Old fortress = project station | crenellated walls, gate, tanks, pipes, beam pad; the bore's derrick over its collar: the top of the only shaft through Twinsun's shell (SHAFT-CITADEL; `island.js` `SHAFT_TOP`) | the station hum | tour, Zoé's infiltration, Vesk leaves; Vesk flies home and seals the shaft (end of ch3); Baldino's code box at the collar opens it (ch10); the shaft's lift down to the shell and back (ch11–12) | gate opens (ch1); beam pad dead after Vesk leaves; blast doors over the collar, a red lamp, the glow held down (ch4–10); open again from ch11 |
 | The lane north of the house (−42, 65) | the old hand pump on its plinth, the project's new copper pipe beside it | Bram keeps it; Mira's figures say it's pointless | The Old Pump (side story, from ch. 2) | runs again; the lane's water in the evacuation |
 | The bay rocks (−67.4…−70.4, 96.2…98.5; on the bay's sand by the path to the lighthouse) | three boulders stepping out into the shallows, each about a jump (1 m) higher than the last | Tim found his warm stone here | chapter 1, optional: the warm stones on the top rock (Athletic jumps: a Warm Stone, 10 kashes) (CH1-LONGER) | stones taken |
 | The garden west of the house (−60, 83) | Zoé's raised beds, a pond, Arthur's boat box | Arthur tries his boats there | Twinsen's pliers are in the box | — |
@@ -72,7 +72,7 @@ Pink sky, cloud sea, floating isles.
 | Baldino's workshop (interior) | bent antenna, globe, bench; years of work (docs/TWELVE_YEARS.md): the relay table with his test pair, the old hoist by the flying machine, the stove fan with three odd blades, the tea experiment (lid in the vault), the thunder box on the curio shelf, Ilo's perch, a shuttle-yard crate | explosions; Baldino's lines about the hoist, the radio's repairs and Ilo of the shuttle yard (an Esmer engineer, mentioned, not seen) | the shell explained; override key built; The Test Pair (optional, from ch. 3): relays talk by sight (crank the hoist), couplers overheat (open the drip) | the pair keeps talking (beam, SYNC lamps); ch. 10 recalls its rules; finale: Baldino at the radio |
 | Three windmills + the old mill | sails, brakes | Oku's memories | brake with the ball; climb for the cog | released in the finale |
 | Project depot | locker, drones | — | code cylinder + the confiscated plan | — |
-| Drill platform | shield, gate console, lift | Vesk | shield down, Vesk descends | shaft open |
+| Drill platform (the project's command post on Zeelich) | shield, gate console, the derrick, a lift down to the ship berth under the deck | Vesk | its console steers and hears the bore at Citadel's station; shield down, Vesk takes the lift to his ship and flies home to Twinsun; hours later the console reads the shaft SEALED FROM BELOW (end of ch3) | no shaft: the lift goes only to the empty berth |
 | Baldino's test step (the green behind his workshop, south-west toward the shore; EQ-1, story/arsenal.js) | a timber deck on four posts, 2.35 m up (out of a jump's reach), a lilac pennant, a sign at its foot: TEST STEP. NO LADDER. THAT IS THE TEST. - B. | — | the hop-pack's first task (ch. 10 on): a tin on the deck, a clover and 10 kashes, once | tin taken |
 | Baldino's hop-pack on its peg (in the workshop, by the door; EQ-1) | a peg post with the copper-and-brass pack hanging on it | Baldino points it out after his ch. 10 briefing | the hop-pack (src/game/jetpack.js) | the peg empty |
 | Nara's case (beside Nara's place on the street; WPN-1) | a glass-topped trade case on brass legs, a jar for the honest | Nara, or a note: BACK SOON. PAY IN THE JAR | the Esmer laser pistol and crystal cells (ch. 3), darts, penguins, the Blowtron (ch. 6) | — |
@@ -178,12 +178,14 @@ with bays and spurs, the terrace edges and the gorge wander, straight only at th
 | The monastery | stone hall with a golden roof, prayer wheels, courtyard walls | the villagers | refuge; the ridge path starts here |
 | The observatory and the glacier basin | a drum with a verdigris dome on the peak; ice spikes, the vent's ice cap | the keeper | chapter 7 |
 
-## Underground: the shell (chapter 3) ✅ (src/game/underground.js; captures/underground/)
-Reached by the drill shaft lift from the Zeelich platform.
+## Underground: the shell (chapters 11–12) ✅ (src/game/underground.js; captures/underground/)
+Reached by the drill shaft's lift from the bore's collar in Citadel's station (the old fort's yard), and left the same
+way (SHAFT-CITADEL, the user's decision of 2.11.2026: the planets are joined by spaceship only, so the shaft is on
+Twinsun). Its blast doors are shut from the end of chapter 3 until the network's code in chapter 10.
 
 | Place | Identity | Gameplay | Story |
 |---|---|---|---|
-| Shaft and lift | the bore column, cable lights | descent | Vesk's trail |
+| Shaft and lift | the bore column, cable lights; the lift up to Citadel's station | descent | Vesk's trail |
 | Deep installation | project machinery, cooling pipes, maintenance drones | ball switches; water-flow puzzle; stealth past drones | how the drill works (the finale uses it) |
 | Crystal galleries | the crystals from the well, much larger | mites; light puzzles | the cracks |
 | Sendell's chamber | quiet, blue | conversation | the plain truth |

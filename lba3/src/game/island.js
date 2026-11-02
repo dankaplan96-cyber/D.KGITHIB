@@ -40,6 +40,12 @@ const sh = (k, x, z) => ({ x: x + SHIFT[k].x, z: z + SHIFT[k].z });
 export const LIGHTHOUSE = { x: -107.5, z: 90.5, half: 2.35, cottage: { x: -98, z: 99, ry: -Math.PI / 2 - 0.2 } };
 const STATION0 = { x: 48, z: 36, half: 13, wall: 2.0 };
 export const STATION = { ...STATION0, ...sh('station', STATION0.x, STATION0.z) };
+// SHAFT-CITADEL: the bore in the station's yard (design frame) and where it stands. Its collar is the top of the only
+// shaft through Twinsun's shell (the user's decision, 2.11.2026: the planets are joined by spaceship only, so the shaft
+// starts here, not on Zeelich): Vesk seals it at the end of chapter 3, the network opens it in chapter 10, and the
+// underground's lift (c3shaft) comes up beside it.
+const BORE0 = { x: 51.5, z: 31.0 };
+export const SHAFT_TOP = sh('station', BORE0.x, BORE0.z);
 const DEPOT0 = { x0: -1, x1: 19, z0: 44, z1: 60, gateW: [44.0, 48.2], gateE: [45.4, 49.0] };
 export const DEPOT = { x0: DEPOT0.x0 + SHIFT.depot.x, x1: DEPOT0.x1 + SHIFT.depot.x, z0: DEPOT0.z0 + SHIFT.depot.z, z1: DEPOT0.z1 + SHIFT.depot.z,
   gateW: DEPOT0.gateW.map((z) => z + SHIFT.depot.z), gateE: DEPOT0.gateE.map((z) => z + SHIFT.depot.z) };
@@ -1749,7 +1755,7 @@ function buildStation(W0, root, r) {
   const conc = tm('concrete', { color: '#d8d4cc' });
 
   // --- the bore: concrete pad, deck plates with hazard borders, the shaft collar, the derrick
-  const BX = 51.5, BZ = 31.0;
+  const BX = BORE0.x, BZ = BORE0.z;
   {
     B.add(boxUV(bbox(9.6, 0.26, 9.6, 0.06, 1), TILE.concrete), conc, BX, g + 0.11, BZ);
     B.add(boxUV(bbox(8.8, 0.06, 8.8, 0.02, 1), TILE.deck), deck, BX, g + 0.26, BZ);
@@ -1829,6 +1835,22 @@ function buildStation(W0, root, r) {
     mesh(block, boxUV(bbox(0.78, 0.22, 0.53, 0.04, 1), TILE.hazard), haz, 0, -0.42, 0);
     for (const s of [-0.25, 0.25]) mesh(block, cyl(0.02, 0.02, 2.6, 4), darkSteel(), s, 1.8, 0);
     anim.block = block;
+    // SHAFT-CITADEL: the blast doors Vesk shuts at the end of chapter 3 (st.setSealed): two dark steel leaves across the
+    // collar under the rotary table, a hazard band where they meet, a red lamp on the lip. Open (slid apart into the
+    // collar wall, hidden) in every other chapter; they part when the network's code goes out (chapter 10)
+    const lid = new THREE.Group(); lid.position.set(BX, g + 0.28 + 0.98, BZ); lid.visible = false; grp.add(lid);
+    const leafM = darkSteel(), leaves = [];
+    for (const s of [-1, 1]) {
+      const leaf = new THREE.Group(); lid.add(leaf); leaves.push({ leaf, s });
+      const half = new THREE.CylinderGeometry(1.97, 1.97, 0.14, 32, 1, false, s > 0 ? 0 : Math.PI, Math.PI);
+      mesh(leaf, half, leafM, 0, 0, 0, 0, { cast: false });
+      mesh(leaf, boxUV(bbox(0.22, 0.03, 3.9, 0.01, 1), TILE.hazard), haz, s * 0.11, 0.085, 0, 0, { cast: false });
+      for (const z of [-1.1, 0, 1.1]) mesh(leaf, cyl(0.07, 0.07, 0.05, 8), brassM(), s * 0.9, 0.09, z, 0, { cast: false });
+    }
+    const redM = new THREE.MeshBasicMaterial({ color: '#ff3020', toneMapped: false });
+    const red = mesh(lid, cached('sealLamp', () => new THREE.SphereGeometry(0.2, 12, 8)), redM, 0, 1.05, 2.45, 0, { cast: false });
+    mesh(lid, cyl(0.05, 0.05, 0.9, 6), darkSteel(), 0, 0.5, 2.45, 0, { cast: false });
+    anim.lid = { lid, leaves, red, redM, sealed: false, k: 0 };   // (no light of its own: a light more in the scene recompiles every material)
   }
 
   // --- tanks along the north wall, pipes to the bore and across the gate lane to the pump
@@ -1942,8 +1964,10 @@ function buildStation(W0, root, r) {
     x: F.x, z: F.z,
     office: { door: office.door }, control: { door: control.door },
     beamPad: { x: BP.x, y: padTop, z: BP.z }, bore: { x: BX, z: BZ },
-    active: false, beam: false,
+    active: false, beam: false, sealed: false,
     setActive(on) { active = !!on; st.active = active; },
+    // the blast doors over the shaft (SHAFT-CITADEL): instant on a load, sliding apart when opened in play
+    setSealed(on, instant = false) { const L = anim.lid; L.sealed = !!on; st.sealed = L.sealed; if (instant || on) L.k = L.sealed ? 1 : 0; L.lid.visible = L.k > 0.001; },
     setBeam(on) { anim.beam.on = !!on; st.beam = !!on; if (on) { anim.beam.col1.visible = anim.beam.col2.visible = true; } },
   };
   movePt(d, st, st.office.door, st.control.door, st.beamPad, st.bore);
@@ -1956,8 +1980,19 @@ function buildStation(W0, root, r) {
     for (const f of anim.fans) f.rotation.z += dt * (active ? 5 : 0);
     anim.needles.forEach((n, i) => { n.rotation.z = (active ? -0.4 : 1.1) + Math.sin(t * (2 + i) + i) * (active ? 0.12 : 0.02); });
     const pulse = 0.8 + Math.sin(t * (active ? 3.2 : 1.1)) * 0.2;
-    anim.core.coreLight.intensity = (active ? 9 : 4) * pulse;
-    anim.core.halo.material.opacity = (active ? 0.95 : 0.55) * pulse;
+    // (the shut blast doors hold the glow down: a red lamp blinks on the lip; the leaves slide apart when opened)
+    const L = anim.lid;
+    if (!L.sealed && L.k > 0) { L.k = Math.max(0, L.k - dt / 1.6); }
+    L.lid.visible = L.k > 0.001;
+    if (L.lid.visible) {
+      const open = 1 - L.k;
+      for (const { leaf, s } of L.leaves) { leaf.position.x = s * 1.97 * open; leaf.scale.x = Math.max(0.001, 1 - open); }   // (each leaf draws back into the collar wall)
+      const blink = L.sealed ? (Math.sin(t * 4.2) > 0 ? 1 : 0.15) : 0;
+      L.redM.color.setRGB(0.25 + 0.75 * blink, 0.06 + 0.12 * blink, 0.04);
+    }
+    const shut = L.lid.visible ? L.k : 0;
+    anim.core.coreLight.intensity = (active ? 9 : 4) * pulse * (1 - 0.85 * shut);
+    anim.core.halo.material.opacity = (active ? 0.95 : 0.55) * pulse * (1 - 0.85 * shut);
     if (active) {
       emitT -= dt;
       if (emitT <= 0) {

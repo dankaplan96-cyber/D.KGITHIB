@@ -97,6 +97,7 @@ export class Dig extends ChapterBase {
   // ---------------------------------------------------------------- arrival
   begin() {
     const g = this.game, D = this.D;
+    g.world.station?.setSealed?.(true, true);   // (SHAFT-CITADEL: Vesk sealed the shaft at Citadel's station at the end of chapter 3)
     g.enterRoom('desert', D.dock, true);
     g.hero.hasBall = true;
     D.ferry?.setVisible?.(true);

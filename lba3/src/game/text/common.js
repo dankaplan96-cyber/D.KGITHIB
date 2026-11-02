@@ -61,7 +61,7 @@ Object.assign(STR.en, {
   idle_zmole1: ['Hmph. Sixty years of digging, and now a machine digs deeper than all of us moles together.', 'Down in our burrows it\'s warm. Too warm. The old tunnels sweat now.', 'When the soil sings, a mole listens. It\'s singing out of tune, young man.'],
   idle_zmole2: ['Come down to the burrows one day, dear. There\'s always soup on the stove.', 'Up here in the light my snout gets cold. Down below my kettle boils without fire now. That\'s not right.', 'Tea? Root tea. Very earthy. Very good for worry.'],
   idle_ztri1: ['Form 7-B, Twinsen. Everything on Zeelich starts with Form 7-B.', 'The project pays its taxes on time. That is more than I can say for most.', 'I do not panic. I file.'],
-  idle_ztri2: ['Nice day for a walk, if the ground would stop humming.', 'My cousin works on the drill platform. He says the shaft is warm all the way down.', 'You\'re the one from the other planet? You look... rounder than I imagined.'],
+  idle_ztri2: ['Nice day for a walk, if the ground would stop humming.', 'My cousin works on the drill platform. He says the drill itself is on Twinsun. They only steer it from here.', 'You\'re the one from the other planet? You look... rounder than I imagined.'],
   ending_title: 'End of Chapter 1',
   ending_text: 'The project\'s ship lifts off from Citadel Spaceport for Zeelich. Baldino is waiting there. So is Vesk.',
   keep_exploring: 'Keep Exploring',
