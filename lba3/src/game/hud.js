@@ -378,7 +378,7 @@ export class HUD {
       this.shopSel = Math.min(this.shopSel ?? 0, list.length);
       const sel = list[this.shopSel];
       const rows = list.map((it, i) => { const u = stage.thumb(lookOf(it.id, it.id)); return `<button class="item${h.coins < it.price && !it.disabled ? ' poor' : ''}" data-i="${i}" ${it.disabled ? 'disabled' : ''}>${u ? `<img class="pic" src="${u}" alt="">` : ''}<span>${t(it.key)}</span><b>${coin()}${it.price}</b></button>`; }).join('');
-      const why = !sel ? '' : sel.disabled ? t('shop_max') : h.coins < sel.price ? t('shop_need', { n: sel.price - h.coins }) : t('shop_buy_key', { k: this.key('interact') });
+      const why = !sel ? '' : sel.disabled ? t(sel.why || 'shop_max') : h.coins < sel.price ? t('shop_need', { n: sel.price - h.coins }) : t('shop_buy_key', { k: this.key('interact') });
       el.innerHTML = `<h2>${t(titleKey)}</h2><div class="coins" aria-label="${t('it_kashes')}">${coin()}${h.coins}</div>` +
         `<div class="shop-body"><div class="shop-list">${rows}<button class="leave">${t('shop_leave')}</button></div>` +
         `<div class="shop-look${sel ? '' : ' none'}"><div class="shop-big lba-frame"><canvas width="320" height="320"></canvas></div>` +

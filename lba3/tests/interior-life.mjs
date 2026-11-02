@@ -101,7 +101,7 @@ for (const [label, key, extra] of STATES) {
     for (const [id, n] of Object.entries(live.logs)) visits[id] = (visits[id] || 0) + n;
     if (walkIn && key === 'project') await shot(room);   // (the room with its people, the hero by the door)
     if (walkIn) {
-      const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const r = P.talk(id); out[id] = { r: r.r, said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [live.here]);
+      const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const r = P.talk(id); const shop = game.state === 'shop'; if (shop) { P.tap('Escape', 0.1); P.settle(); } out[id] = { r: r.r, said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')), ...(shop ? { shop } : {}) }; } return out; }, [live.here]);   // (SHOPS-1: a keeper's talk ends in their shop: left with Esc before the next talk)
       check(`${label}, ${room}: each answers a talk with a line of their own (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
       if (key === 'project') console.log(`  ${room} lines: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
       if (key === 'evacuation' && live.here.length) await shot(room + '-evacuation');
