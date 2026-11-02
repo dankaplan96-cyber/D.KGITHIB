@@ -30,7 +30,8 @@ const helpers = () => ev(() => {
   window.T = {
     setChapter(key, extra = {}) { const G = game, f = G.flags; P.settle(); if (G.state === 'shop') { P.tap('Escape', 0.1); P.settle(); } Object.assign(f, { prologueDone: key !== 'well', intro: true, chapterKey: key }, extra); f.chapter = G.story.chapters.findIndex((c) => c.key === key); G.hero.hasBall = true; G.story.applyFlags(); G.step(0.2); },
     // outside a room's door (ISO), out of any room first
-    outside(room) { const G = game; if (G.room) { const e = G.room.exits.find((x) => !x.room); if (e) P.through(e.x, e.z); P.settle(); } const o = G.story.exitTo(room + '-out'); G.exitRoom({ ...o, a: o.a + Math.PI }, true, true); G.step(0.3); },
+    // (LAZY-REGIONS: a room's people are placed when the room is built, at its door: walked in first, by input)
+    outside(room, walkIn = true) { const G = game; if (G.room) { const e = G.room.exits.find((x) => !x.room); if (e) P.through(e.x, e.z); P.settle(); } const o = G.story.exitTo(room + '-out'); G.exitRoom({ ...o, a: o.a + Math.PI }, true, true); G.step(0.3); if (walkIn) return P.enter(room).r; },
     // what the shop shows: its title, each row (label, price, greyed), the purse
     shop() {
       if (game.state !== 'shop') return { state: game.state };
@@ -71,7 +72,7 @@ check('Mr Bazoo (TALK by input): a line of his own, then his shop', b1.r === 'ta
 check('Mr Bazoo\'s stock in chapter 1 (no blowgun, prologue not done): magic flask 5, clover leaf 22', JSON.stringify(b1.rows?.map((r) => [r.label, r.price])) === JSON.stringify([['Magic flask: refill magic', 5], ['Clover leaf: extra life', 22]]), b1.rows);
 const b2 = await ev(() => { const G = game, h = G.hero, c0 = h.coins, k0 = h.clovers; const a = T.buyKeys('Magic flask'); const m = h.mp; const b = T.buyKeys('Clover leaf'); const after = T.shop(); P.tap('ArrowUp', 0.05); const flask = T.shop(); return { a, b, spent: c0 - h.coins, mp: m, mpMax: h.mpMax, clovers: h.clovers - k0, after, flask }; });
 check('bought by the keys (arrows, E): the flask (5) fills the magic; the clover (22) adds one; 27 kashes taken', b2.a === 'ok' && b2.b === 'ok' && b2.spent === 27 && b2.mp === b2.mpMax && b2.clovers === 1 && b2.after.coins === 73, b2);
-check('the flask is greyed at full magic, and says why', b2.flask.rows[0].off && /magic is full/.test(b2.flask.why || ''), b2.flask);
+check('the flask is greyed at full magic, and says why', b2.flask.rows?.[0]?.off && /magic is full/.test(b2.flask.why || ''), b2.flask);
 const b3 = await ev(() => { const h = game.hero; h.coins = 10; game.step(0.05); const k0 = h.clovers; const r = T.buyKeys('Clover leaf'); game.step(0.1); return { r, coins: h.coins, clovers: h.clovers - k0, state: game.state, toasts: T.toasts(), why: T.shop().why }; });
 check('not enough kashes (10 for a 22 clover): refused with a toast, nothing taken or given, the shop stays open', b3.coins === 10 && b3.clovers === 0 && b3.state === 'shop' && b3.toasts.some((t) => /Not enough kashes/.test(t)) && /12 more kashes/.test(b3.why || ''), b3);
 await ev(() => { T.leave(); game.hero.coins = 100; });
@@ -83,7 +84,7 @@ check('the Pharmacist (TALK by input): a line, then the pharmacy', p1.r === 'tal
 check('the pharmacy\'s stock: heart potion 6, Mosquibee honey 8', JSON.stringify(p1.rows?.map((r) => [r.label, r.price])) === JSON.stringify([['Heart potion: full health', 6], ['Mosquibee honey', 8]]), p1.rows);
 const p2 = await ev(() => { const G = game, h = G.hero, c0 = h.coins; const a = T.buyKeys('Heart potion'); const hp = h.hp; const b = T.buyClick('Mosquibee honey'); const c = T.buyClick('Mosquibee honey'); const d = T.buyClick('Mosquibee honey'); const e = T.buyClick('Mosquibee honey');
   G.hud.shopSel = 1; G.hud.shopRender(); const s = T.shop(); G.hud.shopSel = 0; G.hud.shopRender(); return { a, b, c, d, e, spent: c0 - h.coins, hp, maxHp: h.maxHp, honey: G.flags.sh_honey, s, s0: T.shop() }; });
-check('bought: the potion (6) fills life; three jars of honey (8 each); a fourth is greyed ("can\'t carry any more"); 30 kashes taken', p2.a === 'ok' && p2.hp === p2.maxHp && p2.honey === 3 && p2.e === 'disabled' && p2.spent === 30 && p2.s.rows[1].off && /carry any more/.test(p2.s.why) && p2.s0.rows[0].off && /good health/.test(p2.s0.why), p2);
+check('bought: the potion (6) fills life; three jars of honey (8 each); a fourth is greyed ("can\'t carry any more"); 30 kashes taken', p2.a === 'ok' && p2.hp === p2.maxHp && p2.honey === 3 && p2.e === 'disabled' && p2.spent === 30 && p2.s.rows?.[1]?.off && /carry any more/.test(p2.s.why) && p2.s0.rows?.[0]?.off && /good health/.test(p2.s0.why), p2);
 await ev(() => T.leave());
 const p3 = await ev(() => { const G = game, h = G.hero; P.settle(); h.hp = 2; const n0 = G.flags.sh_honey; G.step(0.5); return { hp: h.hp, used: n0 - G.flags.sh_honey, toasts: T.toasts() }; });
 check('the honey: with life at 2 a spoonful is taken by itself (+5 life, one jar fewer)', p3.hp === 7 && p3.used === 1 && p3.toasts.some((t) => /spoonful of honey: \+5/.test(t)), p3);
@@ -108,7 +109,7 @@ const e2 = await ev(() => { const G = game, h = G.hero, c0 = h.coins; const a = 
 check('bought: the tea (4) fills the magic', e2.a === 'ok' && e2.mp === e2.mpMax && e2.spent === 4 && e2.honey === 2, e2);
 await ev(() => T.leave());
 // the parcel: Osk at the baggage claim
-const o1 = await ev(() => { const G = game; window.said.length = 0; const r = P.talk('osk'); P.settle(); return { r: r.r, room: G.room?.id, said: T.heardAll(), parcel: !!G.flags.sh_parcel, inv: G.inventory.items().some((i) => i.id === 'parcel'), state: G.state }; });
+const o1 = await ev(() => { const G = game; T.outside('baggage'); window.said.length = 0; const r = P.talk('osk'); P.settle(); return { r: r.r, room: G.room?.id, said: T.heardAll(), parcel: !!G.flags.sh_parcel, inv: G.inventory.items().some((i) => i.id === 'parcel'), state: G.state }; });
 check('Osk at the baggage claim (TALK by input, upstairs): the teal parcel is the Esmers\'; it is handed over (the found box) and carried', o1.r === 'talked' && o1.room === 'baggage' && o1.parcel && o1.inv && o1.said.some((l) => /teal one/.test(l)) && o1.state === 'play', o1);
 const o2 = await ev(() => { const G = game; window.said.length = 0; const r = P.talk('osk'); P.settle(); return { r: r.r, said: T.heardAll(), parcel: !!G.flags.sh_parcel }; });
 check('Osk again before the parcel is delivered: his own lines, no second parcel', o2.r === 'talked' && !o2.said.some((l) => /teal one/.test(l)), o2);
@@ -147,7 +148,7 @@ const v2 = await ev(() => { const G = game, h = G.hero, c0 = h.coins; const a = 
 check('bought in the sale: the flask for 3', v2.a === 'ok' && v2.spent === 3 && v2.mp, v2);
 const v3 = await ev(() => { const G = game, out = {};
   for (const [room, id] of [['pharmacy', 'pharmacist'], ['ticket', 'ines']]) {
-    T.outside(room); const en = P.enter(room); const R = G.regions.built(room), sp = Object.values(R.npcSpots)[0];
+    const en = { r: T.outside(room) }; const R = G.regions.built(room), sp = Object.values(R.npcSpots)[0];
     window.said.length = 0; const r = P.use(sp.x, sp.z, { kind: 'sh_note', near: 1.4 }); P.settle();
     out[room] = { enter: en.r, room: G.room?.id, keeper: !!P.npc(id)?.present, r: r.r, said: T.heardAll() };
   }
