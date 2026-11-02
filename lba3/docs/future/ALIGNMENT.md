@@ -47,12 +47,13 @@ the story."
     - the Wannies' island re-dressed as their mine village under the gas;
     - a sky and grade per island.
 - **Later (phase B, not now):** Otringal's upper city and lifts, the casino and jackpot, newspapers and Zlitos, the
-  Mosquibee cocoon village, CX as a fortress, the police station chain, the astroport interiors (TRAVEL-1's cabin
+  Mosquibee cocoon village, CX as a fortress, the police station chain, the Otringal astroport's other rooms (control tower; SPACEPORT-1 builds the terminals, TRAVEL-1's cabin
   covers the ship).
 
 ## The laptop's queue (in this order)
 1. The School of Magic's great hall (scene 27), already prototyped: push it if ≥ 80 % (PURPOSE-CHECK 1).
 2. TRAVEL-1: the ship's cabin room and, if needed, a better ship model (its hook comes with the cloud's flights).
 3. W-1, the Float Harbor slice, on `expansion/ballastra` (needs the user's approval of its pictures).
-4. ZEELICH-1 (below), item by item.
-5. The Temple of Bù rebuild (PURPOSE-CHECK 2), if time allows.
+4. SPACEPORT-1: the two spaceport terminals you can walk into (the user, 2.11: "you can't go in anywhere"; moved ahead).
+5. ZEELICH-1 (below), item by item.
+6. The Temple of Bù rebuild (PURPOSE-CHECK 2), if time allows.

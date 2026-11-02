@@ -1318,3 +1318,29 @@ pictures unless they ask; put them in `docs/future/world/ZEELICH-1/`.
 The cloud does the island life, names, travel characters, music and OP-7 meanwhile (OP-7 "The Lift Below" is written
 in `docs/future/EXPANSION_PLAN.md` §4.5: it is why these rooms exist). Write **Built** notes here per item,
 as before.
+
+---
+
+## SPACEPORT-1 · The terminals you can walk into · Ordered by the cloud (the user, 2.11.2026)
+
+The user: "the SPACEPORT is empty, no people, you can't go in anywhere." The cloud is putting people outdoors at both
+spaceports (INTERIOR-LIFE). This order is the rooms. **Purpose (PURPOSE-CHECK a, used now):** every planet crossing
+starts here (TRAVEL-1); Doran's flight at the end of chapter 1 leaves from Citadel's. It moves ahead of ZEELICH-1 in your
+queue: after the School's great hall and TRAVEL-1's cabin.
+
+1. **Citadel Spaceport's terminal** (`spaceport.js`: the small terminal, Twinsun stone below, an Esmer dome above).
+   LBA2 had no port on Citadel. Take LBA2's Otringal astroport departure hall (scene 78) as the 80 % model, smaller and
+   in Twinsun stone: a ticket counter, a departures board inside, rows of waiting seats, a luggage weighing scale, a
+   gate to the pad, a small café corner, the Joint Project's GROUNDED notice (chapters 1–3).
+   Handles: `terminal.door` (from the deck), `terminal.gate` (to the pad: leaves to the ship's interactable),
+   `terminal.counter` (the clerk's spot + the travel menu's interactable), `terminal.board` (read spot),
+   `terminal.seats` (8+ sitting spots {x,z,a}), `terminal.npcSpots` (clerk, guard, café keeper), `terminal.notice`
+   (`setVisible(b)`).
+2. **Zeelich Spaceport's terminal** (the hub's spaceport deck): LBA2's departure hall (78) and arrival hall (82), here
+   as one Esmer hall with both sides. Same handles under `zterminal.*`, plus `zterminal.arrivals` (where he steps in
+   from the pad).
+
+Each: its own file under `src/game/`, a region in `regions.js` like the LBA-CITADEL rooms, doors that use the
+existing door transitions, ≥ 80 % likeness to scene 78/82's layout and furniture (numbers and descriptions only), a
+diff and pictures in `docs/future/world/SPACEPORT-1/` (Zeelich's: no pictures to the user — past chapter 2). The cloud
+wires the travel menu, the people and the lines after you push.

@@ -110,6 +110,15 @@ smooth normals is kept.
   normal walk 1, athletic run 67, aggressive walk 83, discreet walk 94; throw (LANCE) 6 in every behaviour;
   jump 71; punches 87–89; dodges 52–55 (78/79 athletic, 100/101 discreet); idle 0 / 66 / 82 / 93.
   Walk footsteps: F_RIGHT_STEP on key 2, F_LEFT_STEP on key 4.
+- 94 discreet walk (DISCREET-WALK, measured 2.11.2026 for the user's "the discreet walk looks odd next to LBA2's"):
+  10 keys, 2 start keys (400 + 400 ms), then a loop of 8 keys = **2.6 s for two steps (1.3 s a step)**; steps per key
+  239, 100, 100, 100 | 200, 100, 100, 100 units (1039 a loop = 0.84 H, 0.32 H/s: our `discreet.fwd` 0.67 m/s already
+  matches). Each step is a **slow high tiptoe**, not a crouch: the stepping leg's thigh and knee both lift to
+  ~102–111° (groups 15/16, keys 3 and 7), held a key, then set down; the body dips 63–106 units (5–9 % of H) on the
+  lift and comes back up (3 to −36) between steps; the torso leans 22–38° forward (group 2) and the arms work in
+  big opposed swings (±60–70°) with the elbows bent. Ours (rig.js `sneak`) is a constant deep crouch (hips 0.74,
+  knees +0.65) with an even shuffle: the original never stays low, it lifts and creeps.
+  (Read with `tools/lba-source/measure.py --body 1 --clips 94`; numbers only.)
 - 67 athletic run: 4 start keys, then 6 keys × 140 ms (cycle 0.84 s, 1.94 H per cycle, 2.3 H/s). The pelvis
   tilts 11–36° forward and the legs with it: absolute thigh (+ = back) −62, −33, +23, +33, −12, −58; knee 8, 2,
   4, 47, 102, 90; arms relative to the torso +69 … −54 with the elbow bent 34–122°; torso twist ±20°; the body
