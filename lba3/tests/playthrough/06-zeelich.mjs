@@ -1,6 +1,6 @@
 // Chapter 3 (Zeelich): the plan confiscated at the dock, Baldino's workshop, the depot locker (the code cylinder,
 // the plan back), Oku agrees, the cog at the top of the old mill, the three mills braked with the ball, the
-// key built, Zoé at the lighthouse (the dials: sun, wave, star), the platform shield, Vesk goes down, the shaft.
+// key built, Zoé at the lighthouse (the dials: sun, wave, star), the platform shield, Vesk flies home, the console (the shaft at Citadel sealed).
 export const steps = [
   ['continue (arrival)', () => { P.settle(); return { started: game.flags.c2_started, taken: game.flags.c2_planTaken }; }],
   ['Baldino\'s workshop', () => {
@@ -65,5 +65,6 @@ export const steps = [
     return { ...r, shield: G.flags.c2_shield, fail: G.flags.c2_shield ? null : 'shield' };
   }],
   ['Vesk goes down', () => { const r = P.talk('vesk', { run: true }); P.settle(60); return { ...r, down: game.flags.c2_veskDown, fail: game.flags.c2_veskDown ? null : 'vesk' }; }],
-  ['the shaft → chapter 4', () => { const p = game.rooms.zeelich.platform.pad; const r = P.use(p.x, p.z, { near: 1.8 }); P.settle(90); P.settle(30); return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'dig' ? null : 'no chapter 4' }; }],
+  // (SHAFT-CITADEL: Vesk flies home; the platform console reads the shaft at Citadel's station sealed from below)
+  ['the console: the shaft sealed → chapter 4', () => { const c = game.rooms.zeelich.platform.console; const r = P.use(c.x, c.z, { near: 1.3, run: true }); P.settle(90); P.settle(30); return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'dig' ? null : 'no chapter 4' }; }],
 ];

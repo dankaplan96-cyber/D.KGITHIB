@@ -75,7 +75,7 @@ Object.assign(STR.en, {
   c3_obj_deeper: 'Go deeper',
   c3_obj_core: 'Reach the core',
   c3_obj_pylons: 'Convert the three pylons ({n}/3)',
-  c3_j_shaft: "I rode Vesk's lift to the bottom of the shaft. It was empty: he had gone on ahead.",
+  c3_j_shaft: "I rode the lift from our station down to the bottom of the shaft. Vesk's lift was empty: he had gone on ahead.",
   c3_j_cool: "I worked the engine-room valves to cool the heat exchanger, and the shutter the heat had jammed let go.",
   c3_j_gallery: "The galleries are full of the well's crystals, grown as big as houses. I woke three pillars, and stones rose into a path.",
   c3_j_sendell: "Sendell said a child of this world sleeps under the shell, not ready to wake, and the drill has cracked it. Stopping the drill won't close the cracks, so she told me to turn the bore into a shield while she holds on.",

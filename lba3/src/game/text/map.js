@@ -51,7 +51,7 @@ Object.assign(STR.en, {
   mp_street: 'Esmer street',
   mp_mills: 'Windmills',
   mp_zdepot: 'Project depot',
-  mp_platform: 'Drill platform',
+  mp_platform: 'Project platform',
   mp_dogyard: 'Dog yard',
   mp_zport: 'Zeelich Spaceport',
   mp_council: 'Council house',

@@ -72,8 +72,8 @@ Object.assign(STR.en, {
 
   // all five
   c10_toast_station: 'Relay lit ({n}/5)',
-  c10_all_1: 'Five lamps! All five! Twinsen, come to the drill platform on Zeelich. Time to call everyone at once.',
-  c10_bal_p1: "Here's the console the project used to send its codes to the shaft. Ours goes out on all five relays at once. Everyone has to hold for one minute.",
+  c10_all_1: "Five lamps! All five! I'm taking the next ship to Citadel. Meet me at the station, by the bore in the old fort.",
+  c10_bal_p1: "This is the project's own code line into the shaft. I've hooked my box onto it. Ours goes out on all five relays at once, and everyone has to hold for one minute.",
   c10_tw_p1: 'Then everyone hold on.',
   c10_radio_mira: 'Mains steady. The fortress gauge hasn\'t moved a hair.',
   c10_radio_zoe: 'Lighthouse holding. Arthur says the needle is perfectly still.',
@@ -81,7 +81,7 @@ Object.assign(STR.en, {
   c10_radio_ilka: 'The steam is pouring. Dallan is guarding the frame like it\'s a crown.',
   c10_radio_pim: "I'm holding the mirror! I'm still holding it!",
   c10_bal_p2: "Sending now. Five voices, one signal...",
-  c10_shaft: 'Far below the platform, something enormous groans. The blast doors of the shaft grind open, one after another, all the way down.',
+  c10_shaft: 'Under the derrick, something enormous groans. The blast doors over the collar draw back, and below them the rest grind open, one after another, all the way down.',
   c10_bal_p3: "It worked. It actually worked! Every one of them held. Twinsen, Vesk is at the bottom of that shaft, with the only console that can turn the bore around. Go and change his mind.",
   c10_tw_p2: "I'll bring him back, and the bore with him.",
 
@@ -93,7 +93,7 @@ Object.assign(STR.en, {
   c10_sub_bore: 'Desert Island: the bore (Ilka and Dallan)',
   c10_sub_dome: 'The Hamalayi: the dome (Yorna, Pim and Sefa)',
   c10_sub_fly: "(the spaceship to Citadel, then Hesk's glider)",
-  c10_obj_platform: 'Go to the drill platform on Zeelich',
+  c10_obj_platform: 'Meet Baldino at the bore in the station on Citadel',
   c10_j_plan: "Baldino's plan: five relays at five stations, each powered by what is there (water, wind, steam, light) and each held by a friend, to send one signal at once.",
   c10_j_fly: "Hesk offered to fly me anywhere on Twinsun in his glider. Between the planets I take the spaceship.",
   c10_j_all: "Oku, Mira, Zoé and Arthur, Ilka and Dallan, and Pim and Sefa held their stations for a minute, and the shaft's blast doors ground open. Vesk is at the bottom with the only console that can turn the bore around.",

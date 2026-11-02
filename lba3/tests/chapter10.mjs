@@ -2,7 +2,7 @@
 // (ball on the brake, climb, the relay) → the spaceship to Citadel (PLANET-1: the planets are joined by spaceship
 // only) → Mira's valve room (three valves) → the lighthouse (Zoé, Arthur, the dials) → Hesk's glider to Desert Island
 // (Ilka, the relay on the bore, three drones) → the Hamalayi (Pim, Sefa's dome: the relay, the telescope) → the
-// glider to Citadel, the spaceship back to Zeelich → the platform console → chapter 11.
+// glider to Citadel, the walk into the station's yard → Baldino's code box at the bore (SHAFT-CITADEL) → chapter 11.
 // Steps move by teleport (a LOGIC test), except the lamp room: from the stair top Zoé, each dial and the way back
 // down are walked to by input (tests/lib/player.js), with Zoé and Arthur standing by (GATE-1 B-1).
 // Verdict: CHAPTER 10 DONE only when every ball target (the mill's brake, the three drones) fell to throws; if any
@@ -161,13 +161,20 @@ await shot('C10-07-monastery.png');
 is('Yorna and Pim', await ev(() => { T.talk('yorna'); return [game.flags.c10_pim]; }), (v) => v[0] === true);
 is("the dome's relay (5/5), an objective set", await ev(() => { const r = T.door(game.rooms.hamalayi.observatory.door); T.talk('keeper'); const t = game.rooms.obsv.telescope; T.useAt(t.x, t.z); T.useAt(t.x, t.z); return [r, game.flags.c10_keeper, game.flags.c10_domeRelay, game.flags.c10_dome, T.obj()]; }), (v) => v[1] === true && v[2] === true && v[3] === true && v[4].length > 0);
 await shot('C10-08-dome.png');
-is('the glider and the spaceship back to Zeelich', await ev(() => { T.out(); const L = game.story.cur.landing('hamalayi'); T.tp(L.x, L.z); return [T.fly(0), T.ship('citadel_port'), T.obj()]; }), (v) => v[1][0] === 'zeelich');
-const fin = await ev(() => { const c = game.rooms.zeelich.platform.console; T.useAt(c.x, c.z); for (let i = 0; i < 30; i++) { game.step(0.2); T.talkAll(); } return [game.flags.c10_done, game.flags.chapterKey, game.room?.id]; });
-log('console', fin);
+// SHAFT-CITADEL: the shaft's top is the bore in Citadel's station (the user's decision, 2.11.2026): the code goes out there,
+// reached by Twinsun's own routes (the glider to Citadel, then on foot up the plateau into the fort's yard)
+is('the glider back to Citadel: Baldino waits at the bore in the station, the blast doors still shut', await ev(() => { T.out(); const L = game.story.cur.landing('hamalayi'); T.tp(L.x, L.z); const r = T.fly(0); const b = T.npc('baldino'), st = game.world.station; return [r, game.room?.id ?? null, b.present, +Math.hypot(b.pos.x - st.bore.x, b.pos.z - st.bore.z).toFixed(1), !!st.sealed, T.obj()]; }), (v) => v[1] === null && v[2] === true && v[3] < 6 && v[4] === true && /station/i.test(v[5]));
+is('from the glider\'s landing on the plateau he walks into the station\'s yard to the bore (INPUT)', await ev(() => { const G = game, b = G.world.station.bore;
+  // (ISO: this test came here by flags, not through chapter 1, whose water opens the station's gate; a load opens it from
+  //  the same flag: chapter1.js applyFlags)
+  if (G.flags.c1_water) G.world.gate.open = true; for (let i = 0; i < 40; i++) G.step(0.1);
+  P.trace.length = 0; const r = P.go(b.x + 0.9, b.z + 4.0, { tol: 0.8, maxT: 120 }); return [r.r, G.findInteractable()?.kind, r.r === 'arrived' ? '' : P.trace.slice(-6), [+G.hero.pos.x.toFixed(1), +G.hero.pos.z.toFixed(1)]]; }), (v) => v[0] === 'arrived' && v[1] === 'c10console');
+const fin = await ev(() => { const st = game.world.station, x = st.bore.x, z = st.bore.z + 3.6; T.useAt(x, z); for (let i = 0; i < 30; i++) { game.step(0.2); T.talkAll(); } return [game.flags.c10_done, game.flags.chapterKey, game.room?.id, !!st.sealed]; });
+log('code box', fin);
 { const miss = await ev(() => T.miss); if (miss.length) log('talk prompt not theirs from any side:', miss); }
 // the verdict (R7-VERDICTS: was CHAPTER 10 DONE / ASSISTED (exit 2, "not a pass") / NOT DONE, now one policy)
 check('at a dial within Zoé\'s reach, facing her, E is for Zoé (none within her reach: no dial takes her prompt)', facedZoe.room === 'lighttop' && (facedZoe.e === 'zoe' || (facedZoe.e === 'out of reach' && facedZoe.d >= 2.2)), facedZoe);
-check('chapter 10 done at the platform console: the next chapter (shell) set', fin[0] === true && fin[1] === 'shell', fin);
+check('chapter 10 done at Baldino\'s code box by the bore in Citadel\'s station: the blast doors open, the next chapter (shell) set, in the shaft', fin[0] === true && fin[1] === 'shell' && fin[3] === false && fin[2] === 'c3shaft', fin);
 check('every ball target hit by a real throw (an ISO assist is not a pass)', !assists.length, assists);
 const fails = done();
 await browser.close();

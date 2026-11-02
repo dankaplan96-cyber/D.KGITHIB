@@ -38,6 +38,8 @@ import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './
 import { enterArena } from './game/arena.js';
 import { Regions, CITADEL_REF, CHAPTER_AREAS } from './game/regions.js';
 import { travelRegion } from './game/travel.js';
+import { SHAFT_TOP } from './game/island.js';
+import { ZEELICH } from './game/zeelich.js';
 import { updateKitLod, enableBatching, LOD_BATCHES, KIT_LOD } from './game/kit.js';
 import { ShadowCache } from './engine/shadowcache.js';
 import { Power } from './engine/power.js';
@@ -114,6 +116,16 @@ export function migrateSave(raw) {
     const i = ORDER.indexOf(f.chapterKey);
     if (i >= 0) f.chapter = i;
     v = 5;
+  }
+  // SHAFT-CITADEL (not a format change, so no version step; idempotent): the shaft through Twinsun's shell starts at
+  // Citadel's station now, not on Zeelich's drill platform, and the underground's lift comes up there. A save made on
+  // the platform during The Shell or The Core (he had come up the old lift) comes out beside the station's bore instead.
+  {
+    const f = s.flags && typeof s.flags === 'object' ? s.flags : null;
+    const lx = (s.hero.x ?? 0) - ZEELICH.x, lz = (s.hero.z ?? 0) - ZEELICH.z;
+    if (f && (f.chapterKey === 'shell' || f.chapterKey === 'core') && s.room === 'zeelich' && lx > 33 && lx < 62 && Math.abs(lz) < 13) {
+      s.room = null; s.hero.x = SHAFT_TOP.x + 1.4; s.hero.z = SHAFT_TOP.z + 4.3;
+    }
   }
   s.v = v;
   return s;

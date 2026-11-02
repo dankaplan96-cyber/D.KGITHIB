@@ -9,10 +9,16 @@
 // code cylinder in the project depot's locker (past two patrol drones) — and the shield's power cut by
 // braking the three wind-mills with the magic ball. When Baldino assembles the key, the story cuts to Zoe
 // at the Citadel lighthouse (playable): she tunes the old transmitter (sun, wave, star) and warns the
-// whole island. Back on Zeelich the key opens the shield; Vesk refuses to listen and goes down the drill
-// shaft. Twinsen follows him — chapter 3.
+// whole island. Back on Zeelich the key opens the shield; Vesk refuses to listen.
+//
+// SHAFT-CITADEL (the user's decision, 2.11.2026: the planets are joined by spaceship only). The platform is the project's
+// command post on Zeelich: its console steers and hears the bore at Citadel's station, where the only shaft through
+// Twinsun's shell starts. Vesk takes the platform's lift down to his ship's berth under the deck and flies home; hours
+// later the console shows the shaft at Citadel's station sealed from below, Arthur (on the project's channel) heard the
+// ship land in the old fort, and Zoé saw it from the lighthouse. Baldino sends Twinsen to Desert Island — chapter 4.
 import * as THREE from 'three';
 import { ChapterBase } from './base.js';
+import { esmerShuttle } from '../shuttle.js';
 import '../text/ch2.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
 
@@ -138,7 +144,10 @@ export class Chapter2 extends ChapterBase {
       if (f.c2_plan && !f.c2_cog && Math.abs(h.pos.y - mt.y) < 1.3) consider(dist(mt.x, mt.z), 1.6, { kind: 'c2cog', label: 'p_climb' });
       if (f.c2_plan && !f.c2_cyl) consider(dist(Z.depot.locker.x, Z.depot.locker.z), 1.6, { kind: 'c2locker', label: 'p_search' });
       if (f.c2_plan && !f.c2_shield) consider(dist(Z.platform.console.x, Z.platform.console.z), 1.7, { kind: 'c2console', label: 'p_console' });
-      if (f.c2_veskDown) consider(dist(Z.platform.pad.x, Z.platform.pad.z), 2.0, { kind: 'c2shaft', label: 'p_shaft' });
+      // (after Vesk has flown: the console hears the bore's channel and ends the chapter; the lift pad only goes down to
+      //  his empty berth)
+      if (f.c2_veskDown) consider(dist(Z.platform.console.x, Z.platform.console.z), 1.7, { kind: 'c2shaft', label: 'p_console' });
+      if (f.c2_veskDown && !this.ship) consider(dist(Z.platform.pad.x, Z.platform.pad.z), 2.0, { kind: 'c2berth', label: 'p_look' });
     } else if (g.room?.id === 'workshop') {
       for (const s of g.room.searches || []) {
         if (s.id === 'bench' && f.c2_cog && f.c2_cyl && !f.c2_key) consider(dist(s.x, s.z), s.r, { kind: 'c2bench', label: 'p_bench' });
@@ -179,6 +188,7 @@ export class Chapter2 extends ChapterBase {
         h.act('use', 1.2, () => this.shieldDown(), 0.6);
         return true;
       case 'c2shaft': this.toShell(); return true;
+      case 'c2berth': this.chain([['hero', 'c2_berth']]); return true;
       case 'c2bench': this.buildKey(); return true;
       case 'c2dial': {
         const d = (this.dials ||= [1, 2, 0]);
@@ -366,7 +376,7 @@ export class Chapter2 extends ChapterBase {
     g.audio.cue('revelation');
     beat ??= this.veskBeat();
     beat?.show(this.veskDescentFrame({ x: pad.x, z: pad.z, y: Z.platform.y }, vesk), 2.4);
-    let tt = 0, lowering = false;
+    let tt = 0, lowering = false, shipT = null;
     g.cutscene = (dt) => {
       tt += dt;
       const d = Math.hypot(pad.x - vesk.pos.x, pad.z - vesk.pos.z);
@@ -380,35 +390,75 @@ export class Chapter2 extends ChapterBase {
         vesk.controlled = true;
         g.audio.play('rumble');
         Z.platform.lift.lower(() => {
-          g.cutscene = null;
           vesk.controlled = false;
           f.c2_veskDown = true;
           beat?.release(2.6);   // (a long hand-back: the low view and the isometric one are far apart)
           this.story.refreshCast();
-          g.setState('play');
-          const lines = [['hero', 'c2_after_tw']];
-          if (this.npc('baldino')?.present) lines.push(['baldino', 'c2_after_bal']);
-          this.chain(lines, () => { g.updateObjective(); g.save(false); });
+          // SHAFT-CITADEL: his ship drops out of the berth under the deck and climbs away east, toward Twinsun
+          this.launchShip();
+          shipT = 0;
         }, [vesk]);
       }
       if (lowering) { vesk.rig.play('idle'); vesk.rig.update(dt, 0); }
+      if (shipT != null && (shipT += dt) >= 3.2) {
+        shipT = null;
+        g.cutscene = null;
+        const s = this.ship, h = g.hero;   // (he turns to watch it go)
+        if (s) { const p = s.getWorldPosition(new THREE.Vector3()); h.angle = Math.atan2(p.x - h.pos.x, p.z - h.pos.z); }
+        g.setState('play');
+        const bal = this.npc('baldino')?.present ? 'baldino' : 'balradio';
+        this.chain([['hero', 'c2_after_tw'], [bal, 'c2_ship_bal'], [bal, 'c2_after_bal'], [bal, 'c2_ship_bal2']], () => { g.updateObjective(); g.save(false); });
+      }
     };
   }
-  // the shaft: Vesk has sealed it from below. Baldino sends Twinsen south to learn what the shell is
-  // (chapter 4, Desert Island): Doran flies him home to Citadel Spaceport and takes the ferry south from there. A save from the old end-of-demo screen gets here again from the lift.
+  // Vesk's ship leaving (a story-side scene: no travel between the planets is shown here, TRAVEL-1 owns that). An Esmer
+  // craft with its legs tucked comes out from under the platform's north rim and climbs away over the clouds; gone after ~8 s.
+  launchShip() {
+    const Z = this.Z;
+    if (!Z?.group || !Z.updaters || this.ship) return;
+    const ship = esmerShuttle({ landed: false, scale: 1 });
+    const o = Z.group.position, pad = Z.platform.pad, y0 = Z.platform.y;
+    // (world points: under the deck, out past the north-east corner, low over the clouds away from the platform (the
+    //  play camera looks down on the deck: that is where it shows), then climbing out of sight)
+    const P = [[pad.x, y0 - 12, pad.z], [pad.x + 7, y0 - 4, pad.z - 13], [pad.x + 22, y0 - 2, pad.z - 28], [pad.x + 75, y0 + 16, pad.z - 75]];
+    const T = [0, 2.2, 4.4, 9.0];
+    const at = (t) => {
+      let i = 0; while (i < T.length - 2 && t > T[i + 1]) i++;
+      const k = Math.min(1, Math.max(0, (t - T[i]) / (T[i + 1] - T[i]))), e = k * k * (3 - 2 * k);
+      return P[i].map((v, j) => v + (P[i + 1][j] - v) * e);
+    };
+    ship.position.set(P[0][0] - o.x, P[0][1] - o.y, P[0][2] - o.z);
+    Z.group.add(ship);
+    this.game.audio.play('rumble');
+    let t = 0;
+    const u = (dt) => {
+      t += dt;
+      const [x, y, z] = at(t), [x2, , z2] = at(t + 0.2);
+      ship.position.set(x - o.x, y - o.y, z - o.z);
+      ship.rotation.y = Math.atan2(x2 - x, z2 - z);
+      ship.rotation.z = Math.sin(t * 1.3) * 0.05;
+      if (t >= T[T.length - 1]) { Z.updaters.splice(Z.updaters.indexOf(u), 1); Z.group.remove(ship); this.ship = null; }
+    };
+    Z.updaters.push(u);
+    this.ship = ship;
+  }
+  // the end of the chapter, at the platform console (the name is older than the story: tests and saves call it): hours
+  // after Vesk flew, the console reads the shaft at Citadel's station sealed from below; Arthur and Zoé saw his ship come
+  // down in the old fort. Baldino sends Twinsen south to learn what the shell is (chapter 4, Desert Island): Doran flies
+  // him home to Citadel Spaceport and takes the ferry south from there.
   toShell() {
     const g = this.game, f = this.f;
     if (f.c2_done) { g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); return; }
-    g.audio.play('door'); g.camRig.shake(0.35);
-    const lines = [['narrator', 'c2_sealed_1'], ['hero', 'c2_tw_sealed0']];
-    if (this.npc('baldino')?.present) lines.push(['baldino', 'c2_bal_sealed1'], ['hero', 'c2_tw_sealed'], ['baldino', 'c2_bal_sealed2']);
-    else lines.push(['radio', 'c2_bal_sealed1'], ['hero', 'c2_tw_sealed'], ['radio', 'c2_bal_sealed2']);
-    lines.push(['doran', 'c2_doran_sealed']);
+    g.audio.play('select');
+    const bal = this.npc('baldino')?.present ? 'baldino' : 'radio';
+    const lines = [['narrator', 'c2_sealed_0'], ['narrator', 'c2_sealed_1'], ['arthurradio', 'c2_ar_sealed'], ['zoeradio', 'c2_zoe_sealed'], ['hero', 'c2_tw_sealed0'],
+      [bal, 'c2_bal_sealed1'], ['hero', 'c2_tw_sealed'], [bal, 'c2_bal_sealed2'], ['doran', 'c2_doran_sealed']];
     this.chain(lines, () => {
       f.c2_done = true;
+      this.game.world.station?.setSealed?.(true, true);
       g.save(false);
       g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
-    });
+    }, (i, id, key) => { if (key === 'c2_sealed_1') g.audio.play('deny'); });
   }
 
 
@@ -425,6 +475,9 @@ export class Chapter2 extends ChapterBase {
   }
   applyFlags() {
     const f = this.f, RG = this.game.regions;
+    // SHAFT-CITADEL: the blast doors over the shaft at Citadel's station are shut from the end of this chapter until the
+    // network's code opens them (chapter 10)
+    this.game.world.station?.setSealed?.((f.c2_done || this.story.index > this.pos) && !f.c10_done && this.story.index <= this.story.chapters.findIndex((c) => c.key === 'network'), true);
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
     RG.whenBuilt('zeelich', (Z) => Z.ferry?.setVisible?.(false));   // (the dock's sky-ferry stays away: Twinsun and Zeelich are joined by spaceship only)
@@ -470,6 +523,7 @@ export class Chapter2 extends ChapterBase {
       { key: 'c2_j_zoe', done: !!f.c2_broadcast },
       { key: 'c2_j_shield', done: !!f.c2_shield },
       { key: 'c2_j_vesk', done: !!f.c2_veskDown },
+      { key: 'c2_j_sealed', done: !!f.c2_done || this.story.index > this.pos },
     ].filter((l) => l.done);
   }
 }

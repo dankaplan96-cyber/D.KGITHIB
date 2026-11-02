@@ -1,8 +1,8 @@
 // Chapter 10 (Baldino's Network): five relays. Zeelich: the old mill (Oku; brake it with the ball, the relay at
 // the top). The spaceship to Citadel (PLANET-1: the planets are joined by spaceship only): the valve room (Mira;
 // three valves), the lighthouse (Zoé; the dials). Hesk's glider to Desert Island: the bore (Ilka; the drones). To
-// the Hamalayi: the dome (Pim, the keeper, the telescope). The glider to Citadel, the spaceship back to Zeelich:
-// the platform console → chapter 11. (Hesk's glider menu: Citadel 0, Desert Island 1, the Hamalayi 2.)
+// the Hamalayi: the dome (Pim, the keeper, the telescope). The glider to Citadel, on foot into the station's yard:
+// Baldino's code box at the bore (SHAFT-CITADEL) → chapter 11. (Hesk's glider menu: Citadel 0, Desert Island 1, the Hamalayi 2.)
 export const steps = [
   ['continue', () => { P.settle(); return { chapter: game.flags.chapterKey, room: game.room?.id }; }],
   ['Oku', () => { if (P.here() !== 'zeelich') P.enter('zeelich'); return { ...P.talk('oku', { run: true }), ask: game.flags.c10_okuAsk }; }],
@@ -53,6 +53,7 @@ export const steps = [
     let kt = null; for (let k = 0; k < 2 && !f.c10_keeper; k++) kt = P.talk('keeper');
     const t = G.rooms.obsv.telescope; const r1 = P.use(t.x, t.z, { kind: 'c10domeRelay' }); P.wait(1); P.settle(); const r2 = P.use(t.x, t.z, { kind: 'c10scope' }); P.settle();
     return { room: G.room?.id, pim: f.c10_pim, keeper: f.c10_keeper, kt: kt?.r, relay: f.c10_domeRelay, r1: r1.r, r2: r2.r, dome: f.c10_dome, fail: f.c10_dome ? null : 'dome' }; }],
-  ['fly to Citadel, the spaceship to Zeelich', () => { if (game.room?.id === 'obsv') { const e = game.room.exits[0]; P.through(e.x, e.z); } const r1 = P.flyTo(0); const r2 = P.shipTo('citadel_port'); return { glider: r1.room, ...r2, fail: r2.room === 'zeelich' ? null : 'to Zeelich' }; }],
-  ['the platform console → chapter 11', () => { const c = game.rooms.zeelich.platform.console; const r = P.use(c.x, c.z, { run: true }); P.settle(60); P.settle(30); return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'shell' ? null : 'no chapter 11' }; }],
+  // (SHAFT-CITADEL: the shaft's top is the bore in Citadel's station; Baldino waits there with his code box)
+  ['fly to Citadel', () => { if (game.room?.id === 'obsv') { const e = game.room.exits[0]; P.through(e.x, e.z); } const r1 = P.flyTo(0); return { glider: r1.room, fail: !game.room ? null : 'to Citadel' }; }],
+  ['the code box at the station\'s bore → chapter 11', () => { const b = game.world.station.bore; const r = P.use(b.x, b.z + 3.6, { run: true, kind: 'c10console' }); P.settle(60); P.settle(30); return { ...r, chapter: game.flags.chapterKey, room: game.room?.id, fail: game.flags.chapterKey === 'shell' ? null : 'no chapter 11' }; }],
 ];

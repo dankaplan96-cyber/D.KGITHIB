@@ -2,6 +2,7 @@
 // a corrupt save is set aside (never deleted) and a new game starts with a message. A format-4 save from before the
 // final chapter was split in two (The Shell, The Core) loads into the right half: the core room or a begun fight →
 // chapter 12; Sendell's chamber and earlier → chapter 11; the epilogue keeps its place (its position moved one on).
+// SHAFT-CITADEL: a save on Zeelich's drill platform during The Shell comes out at the shaft's new top, Citadel's station.
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker, expectError } from './lib/boot.mjs';
 const { check, done } = checker({ info: 'always' });
@@ -18,7 +19,9 @@ async function run(name, save) {
   const r = await page.evaluate(() => {
     const ls = Object.keys(localStorage).filter((k) => k.startsWith('lba3_save')).sort();
     const cur = JSON.parse(localStorage.getItem('lba3_save_v1') || 'null');
-    return { state: game.state, room: game.room?.id || null, chapter: game.flags.chapter, chapterKey: game.flags.chapterKey, cur: game.story.cur.key, keys: ls, savedV: cur?.v ?? null, toast: document.querySelector('#toast')?.textContent?.slice(0, 80) };
+    const st = game.world.station, h = game.hero;
+    return { state: game.state, room: game.room?.id || null, chapter: game.flags.chapter, chapterKey: game.flags.chapterKey, cur: game.story.cur.key, keys: ls, savedV: cur?.v ?? null, toast: document.querySelector('#toast')?.textContent?.slice(0, 80),
+      bore: st ? +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1) : null, interact: game.findInteractable()?.kind ?? null };
   });
   results.push([name, r, errs.length ? errs : 'no errors']);
   await ctx.close();
@@ -37,8 +40,16 @@ await run('v4 in Sendell\'s chamber, her words done', { ...v4, room: 'c3sendell'
 await run('v4 in the gallery', { ...v4, room: 'c3gallery', flags: { ...shellFlags, c3_sendell: false } });
 await run('v4 fight begun (pylon 1)', { ...v4, room: 'c3core', flags: { ...shellFlags, c3_fight: true, c3_pylon0: true } });
 await run('v4 the epilogue', { ...v4, room: null, flags: { prologueDone: true, intro: true, chapter: 11, chapterKey: 'home', c3_done: true, ep_dinner: true, ep_free: true } });
+// SHAFT-CITADEL: a format-5 save from before the shaft moved to Citadel's station, made on Zeelich's drill platform during
+// The Shell (he had come up the old lift there): it comes out beside the station's bore on Citadel; one in the shaft's room
+// stays in it, and one in the street on Zeelich (by spaceship, not the lift) stays where it was
+const v5 = { ...v4, v: 5 };
+const shellNow = { ...shellFlags, chapter: 10, c3_cooled: false, c3_pillar0: false, c3_pillar1: false, c3_pillar2: false, c3_sendell: false };
+await run('v5 shell, on Zeelich\'s platform', { ...v5, room: 'zeelich', hero: { ...v5.hero, x: 2452, z: 2 }, flags: { ...shellNow } });
+await run('v5 shell, in the shaft\'s room', { ...v5, room: 'c3shaft', hero: { ...v5.hero, x: 1797, z: -1 }, flags: { ...shellNow } });
+await run('v5 shell, in Zeelich\'s street', { ...v5, room: 'zeelich', hero: { ...v5.hero, x: 2400, z: 0 }, flags: { ...shellNow } });
 for (const r of results) console.log(JSON.stringify(r));
-const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home]] = results;
+const [[, a], [, b], [, c], [, d4core], [, d4sendell], [, d4gallery], [, d4fight], [, d4home], [, e5plat], [, e5shaft], [, e5street]] = results;
 check('a v1 save (no lists) loads into play in chapter project, upgraded, the v1 kept as a backup', a.state === 'play' && a.chapterKey === 'project' && a.cur === 'project' && a.keys.includes('lba3_save_v1_backup_v1') && a.savedV > 1, a);
 check('a save in a missing room lands outdoors in play, the old save kept as a backup', b.state === 'play' && b.room === null && b.chapterKey === 'project' && b.keys.includes('lba3_save_v1_backup_v2'), b);
 check('a corrupt save is set aside (never deleted), a new game starts with a message', c.keys.includes('lba3_save_v1_unreadable') && c.chapterKey === 'well' && c.chapter === 0 && c.toast.length > 0, c);
@@ -47,6 +58,9 @@ check('a v4 save in Sendell\'s chamber stays in chapter 11 (The Shell)', d4sende
 check('a v4 save in the gallery stays in chapter 11 (The Shell)', ['play', 'dialog'].includes(d4gallery.state) && d4gallery.room === 'c3gallery' && d4gallery.cur === 'shell' && d4gallery.chapter === 10, d4gallery);
 check('a v4 save with the core fight begun loads into chapter 12 (The Core)', d4fight.state === 'play' && d4fight.cur === 'core' && d4fight.chapter === 11 && d4fight.room === 'c3core', d4fight);
 check('a v4 save in the epilogue stays in the epilogue (its position moves from 11 to 12)', d4home.state === 'play' && d4home.chapterKey === 'home' && d4home.cur === 'home' && d4home.chapter === 12, d4home);
+check('a v5 save on Zeelich\'s drill platform during The Shell comes out on Citadel beside the station\'s bore, in chapter 11', e5plat.state === 'play' && e5plat.room === null && e5plat.cur === 'shell' && e5plat.bore < 6, e5plat);
+check('a v5 save in the shaft\'s room stays there, in chapter 11', ['play', 'dialog'].includes(e5shaft.state) && e5shaft.room === 'c3shaft' && e5shaft.cur === 'shell', e5shaft);
+check('a v5 save in Zeelich\'s street during The Shell stays on Zeelich (only the platform moved)', e5street.state === 'play' && e5street.room === 'zeelich' && e5street.cur === 'shell', e5street);
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);

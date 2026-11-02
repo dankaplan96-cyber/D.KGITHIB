@@ -1,4 +1,5 @@
-// Chapter 3 — "The Shell": the underground region under Zeelich's drill shaft. Five interior rooms built
+// Chapters 11–12 — "The Shell", "The Core": the underground region under the drill shaft at Citadel's station (the
+// bore in the old fort's yard: SHAFT-CITADEL, the planets are joined by spaceship only). Five interior rooms built
 // with the interiors' RoomBuilder (fixed iso camera, far walls drawn, near walls cut down to a rim), placed
 // far from everything else at x = 1800…2200, z = 0.
 //
@@ -10,7 +11,7 @@
 //
 // CONTRACT for the story (src/game/story/chapter3.js). Every x/z is a WORLD coordinate; y is world height.
 //   all rooms   R.spawn {x,z,a}, R.exits [{x,z,r,to}], R.music, R.ballTargets, R.searches, R.updaters
-//   c3shaft     exits 'c3-up' (lift pad), 'c3-deep' (tunnel); R.lift {x,z} pad centre
+//   c3shaft     exits 'c3-up' (lift pad: up to Citadel's station, story/chapter3.js SHAFT_UP), 'c3-deep' (tunnel); R.lift {x,z} pad centre
 //   c3deep      R.valves [{id:'A'|'B'|'C', x,z,y, open, setOpen(b)}]; R.diagram {x,z} (+ searches id 'diagram')
 //               R.coolDoor {x,z, isOpen, open(instant?)} — its collider is disabled when opened
 //               R.patrol [[x,z]…] drone loop on the lower floor; R.cover [{x,z,r}]
@@ -326,7 +327,7 @@ const ang = (ax, az, bx, bz) => Math.atan2(bx - ax, bz - az);
 const polar = (phi, r, cx = 0, cz = 0) => [cx + Math.sin(phi) * r, cz + Math.cos(phi) * r];
 
 // ================================================================ 1. c3shaft — bottom of the drill shaft
-// Raw rock round a project landing: the lift (Zeelich's pad, empty, under its liner on four guide columns),
+// Raw rock round a project landing: the lift (the station's pad, empty, under its liner on four guide columns),
 // the bore column turning inside its lattice casing, a tunnel mouth on to the deep installation.
 function buildShaft(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'c3shaft', 1800, 0);
@@ -338,7 +339,7 @@ function buildShaft(scene, physics) {
   caveShell(B, { W, D, H, floor: floorMat('#776b68', 'rgba(40,30,36,0.4)', 'shaft'), slabMat: MAT.rubble('grey'), rock, seed: 11, openings: [{ wall: 'back', at: tunnelX + W / 2 + 0.7, w: 2.8, h: 3.1 }] });
   const BZ = -D / 2, LX = -W / 2;
 
-  // --- the lift: Zeelich's pad at the bottom of its shaft, under a teal liner on four guide columns
+  // --- the lift: the station's pad at the bottom of its shaft, under a teal liner on four guide columns
   const LS = { x: -4.7, z: -1.7 }, LR = 2.05, padR = 1.7;
   k.add(cyl(LR + 1.0, LR + 1.05, 0.08, 40), deck(), LS.x, 0.04, LS.z);
   k.add(cyl(LR + 1.08, LR + 1.08, 0.06, 40, true), hazard(), LS.x, 0.05, LS.z);
