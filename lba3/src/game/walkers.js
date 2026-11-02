@@ -429,7 +429,7 @@ export class Resident extends NPC {
   // stands on and a little back, at a walk, through the physics (never into a wall or off its ground); seated, talking,
   // at its door or indoors it stays where it is
   giveWay(hx, hz, vx, vz) {
-    if (this.engaged || this.sit || this.inside || this.away || this.st === 'knock' || this.st === 'seated') return;
+    if (this.engaged || this.held || this.sit || this.inside || this.away || this.st === 'knock' || this.st === 'seated') return;
     if (this.yieldT > 0.2) return;
     const dx = this.pos.x - hx, dz = this.pos.z - hz, d = Math.hypot(dx, dz) || 1, v = Math.hypot(vx, vz) || 1;
     const ux = vx / v, uz = vz / v, side = Math.sign(ux * dz - uz * dx) || (this.rnd() < 0.5 ? -1 : 1);
@@ -458,6 +458,8 @@ export class Resident extends NPC {
   _update(dt) {
     const W = this.W;
     W.prep();
+    if (this.controlled) return;   // (a few steps the story walks it itself: story/survey.js stroll)
+    if (this.held) { this.heldTick(dt); return; }   // (OREN-GUARDIAN OG-2: kept where the story stood it)
     if (this.away || W.frozen || !this.stops.length) return;   // (no round yet: its area is not built)
     if (this.engaged) { this.engagedTick(dt); return; }
     const tier = W.tierOf(this);
@@ -484,6 +486,21 @@ export class Resident extends NPC {
     else if (!this.inside) this.pos.y = this.game.physics.groundAt(this.pos.x, this.pos.z, this.groundHint(this.pos.x, this.pos.z));
     this.vy = 0; this.onGround = true;
     this.sync();
+  }
+  // OREN-GUARDIAN OG-2: a chapter keeps a resident standing where it put it (a queue at the square's gate), off its round
+  // and spoken to by the chapter (story/citizens.js leaves it alone); when the chapter no longer places it, citizens.js
+  // gives it its round back (reset). storyHold(p): put it there; heldTick: stand, turn to him when he is near.
+  storyHold(p) {
+    this.held = true; this.heldA = p.a ?? this.angle;
+    this.engaged = false; this.sit = null; this.inside = false; this.insideT = 0; this.st = 'dwell'; this.path = null; this.job = null;
+    this.yieldT = 0; this.hold = 0; this.vel = 0; this.gait = 0;
+    this.rig.root.visible = true;
+  }
+  heldTick(dt) {
+    const h = this.game.hero, near = this.talking || this.listenTo || Math.hypot(h.pos.x - this.pos.x, h.pos.z - this.pos.z) < 4;
+    const want = this.listenTo && this.listenTo !== this ? this.angleTo(this.listenTo) : near ? this.angleTo(h) : this.heldA;
+    this.angle = dampAngle(this.angle, want, 6, dt);
+    this.animate(this.talking ? 'talk' : this.listenTo ? 'listen' : 'idle', dt, 0);
   }
   // being talked to: stop, turn to him, and the talk animation when it is the one speaking
   engagedTick(dt) {

@@ -86,6 +86,39 @@ export function buildOrenPresence() {
   return api;
 }
 
+// the shared glaze and bronze (OG-2's lock and draw-off are the same Balance Works ware as the governor)
+export const orenMats = () => mats();
+
+let LAMP = null;
+// OG-2: the fence gate's lock, a Balance Works actuator the project bolted to the square's fence (chapter 8) and cabled
+// to its line: an iron post, a glazed box between bronze bands, three lamps on its face (+z, toward the queue), no hand
+// lever anywhere on it. ≈0.42 m wide, LOCK_TOP tall from its foot. Seven meshes on five shared materials, no lights.
+//   buildGateLock() → { group, setLamps(n 0..3, open), flicker(on) }
+export const LOCK_TOP = 1.32;
+export function buildGateLock() {
+  const m = mats(), g = new THREE.Group();
+  LAMP ??= {
+    off: new THREE.MeshStandardMaterial({ color: '#3a3833', roughness: 0.6 }),
+    amber: m.bead,
+    open: new THREE.MeshStandardMaterial({ color: '#9cc8b4', emissive: '#7ab89c', emissiveIntensity: 0.7, roughness: 0.35 }),
+    iron: new THREE.MeshStandardMaterial({ color: '#4a4c54', roughness: 0.5, metalness: 0.5 }),
+  };
+  const add = (geo, mat, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = false; g.add(o); return o; };
+  add(cyl(0.05, 0.06, 0.8, 8), LAMP.iron, 0, 0.4, 0);                                       // the post
+  add(cyl(0.2, 0.2, 0.06, 14), m.bronze, 0, 0.83, 0);                                       // the lower band
+  add(lathe([[0.17, 0], [0.21, 0.08], [0.21, 0.32], [0.17, 0.4]], 14), m.glaze, 0, 0.86, 0).castShadow = true;   // the glazed box
+  add(cyl(0.19, 0.15, 0.08, 14), m.bronze, 0, 1.26, 0);                                     // the cap
+  const lamps = [-0.075, 0, 0.075].map((x) => add(sphere(0.026, 8, 6), LAMP.off, x, 1.07, 0.205));
+  let n0 = 0, open0 = false;
+  const api = {
+    group: g, lamps,
+    setLamps(n, open = false) { n0 = n; open0 = open; lamps.forEach((l, i) => { l.material = open ? LAMP.open : i < n ? LAMP.amber : LAMP.off; }); },
+    // a shock shakes the hold: the lamps blink out for a moment
+    flicker(on) { if (on) lamps.forEach((l) => { l.material = LAMP.off; }); else api.setLamps(n0, open0); },
+  };
+  return api;
+}
+
 let PLATE = null;
 export function buildGovernor() {
   const m = mats(), g = new THREE.Group();

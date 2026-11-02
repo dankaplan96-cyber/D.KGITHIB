@@ -965,7 +965,8 @@ Labels as in the header: **[canon]** LBA1/LBA2, **[approved]** this sequel's app
 |---|---|---|
 | Ch. 1–9 (`well` … `council`) | playable, base game | tests chapter1, chapter2 … chapter9; playthrough 01–12 |
 | Ch. 10 `throttle` "Borrowed Time" | **OG-1 playable** (increment B, below); BR-1…BR-4 documents only | `tests/oren-first.mjs` |
-| Ch. 11–13 `survey`, `ballastra`, `balances` | empty shells: the story passes straight through (batch 1) | save-migration |
+| Ch. 11 `survey` "Under the Well" | **OG-2 playable** (increment D, below); SV-1…SV-3 documents only | `tests/oren-square.mjs` |
+| Ch. 12–13 `ballastra`, `balances` | empty shells: the story passes straight through (batch 1) | save-migration |
 | Ch. 14 `network`, 15 `shell`, 16 `core`, epilogue `home` | playable, base game (no bands, no Wound, base core) | chapter10, chapter3 |
 | Every card in §4 except OG-1 (BR, SV, N1–N6, NW, UR, CORE-1, EP-1, OP-1…7, DP-*) | **documents only** | — |
 | W-1 … W-8 | orders; nothing built (W-1 waits on the user's approval of its pictures) | `EXPANSION_WORLD_SPEC.md` |
@@ -1165,7 +1166,8 @@ A* walking and every line read at once, `tests/oren-first.mjs`) — **implemente
   his name, where he is, a count of the people in the shelters by weight. Mira tries wheel IV for Gilbert's washroom;
   it turns itself back ("Green holds. Above green, the old joints split."). Mira: "He's right. I hate that he's right."
 - Outcome: Gilbert and the children thank him, and thank Oren aloud; "the little ones slept right through".
-  Baldino calls him back to Zeelich; the chapter ends when he lands there (the network begins in the workshop).
+  ~~Baldino calls him back to Zeelich; the chapter ends when he lands there.~~ Since increment D the thanks end the
+  chapter, and chapter 11 (OG-2) begins at the same door; Baldino's call ends OG-2 instead.
 - Mechanics: talk, use (valve wheels), reading a timing signal, the existing spaceship route. No new controls.
 - Clues: Mira's instruction (one line), the needles, the bang, the shudder; a nudge toast after 45 s without a bleed;
   the objective counts bleeds; the journal records the call, the steadying and the thanks.
@@ -1187,6 +1189,32 @@ A* walking and every line read at once, `tests/oren-first.mjs`) — **implemente
 - Turn: help that needs everyone's consent; Twinsen notices that nobody was asked whether they wanted a ration.
 - Failure/retry: none; each errand can be done in any order. Saves: `og2_bram`, `og2_ume`, `og2_pico`, `og2_open`.
 - After: the fence stays open; the gate's lamp is celadon from now on; Bram's lever line returns in OG-5.
+- **As built (increment D, `story/survey.js`, `tests/oren-square.mjs`).** Decisions where the card left a choice:
+  - *Entry:* chapter 10 now ends at the fortress shelter's thanks (`og_done`); chapter 11 begins at the same door with
+    Gilbert asking for his well (his own complaint in ch. 8: "They fenced my well"). Baldino's call (and the ship to
+    Zeelich that ends the chapter) moved from OG-1's end to OG-2's end; it moves again to SV-3's end when SV is built.
+    Until BR-4 exists the "why he goes" is Gilbert's well; SV-1's need for the well adds to it later.
+  - *The pump:* "the square's pump" is the project's **draw-off** beside the gate: a riser from the well's pipe, a
+    Balance Works valve, a spout over a cask, an iron hand lever (a draw-off must have one). The gate's **lock** is a
+    Balance Works actuator with **no hand lever** (central command, Vesk's stock): so a held lever beats Oren at the
+    draw-off (rule 4), but the gate needs his consent, and the ball's shock (Pico) shakes his hold without opening a
+    bolt that nothing drives by hand. Both cite R1.4 rules 2–4; the lock is cabled along the fence into the project's
+    line (rule 2, visible).
+  - *Why three:* Oren counts the people standing on the gate's footplate (rule 3: weight through a frame bolted to
+    the part) and hears only speech at the lock (a metre or two), so each of the queue steps up to the lock to agree;
+    he cannot see faces, so "one cask a family" is a promise, not a lock: why he asks for consent (rule 5: conditions
+    rather than force).
+  - *The lever's lesson, played:* E throws the lever and Twinsen holds it (a scene: no save); on the drill's stroke
+    (every 3.6 s) it shoves back and he keeps it; let go before a stroke and the next stroke slams it shut (Bram:
+    "Shut the moment you let go") — the failure and retry. Then Bram feels it himself and lets go; Oren shuts it.
+  - *Ume's errand* shows the cost of the help before anyone complains: Mira's tap runs a bottle a minute since Oren
+    holds the mains at green (OG-1's "Green holds").
+  - *The turn* is said at the gate (three agreed for the whole town; Oren: "Three were here.") and answered by
+    Gilbert, a person: a board on the gate, "SAY SO IF NOT" (a visible change; four people have said no to him).
+  - Flags: `og2_started`, `og2_met`, `og2_bramAsk`, `og2_bram`, `og2_umeAsk`, `og2_tonic` (item `tonic`), `og2_ume`,
+    `og2_picoAsk`, `og2_bell`, `og2_pico`, `og2_open`, `og2_asked`, `og2_done`.
+  - The lock, the draw-off and the gate's state show only in the expanded campaign, from chapter 11 on (the base
+    campaign's square is unchanged). W-8's fence gate actuator (R1.16) is the story's own prop until the laptop's.
 
 **OG-3 · The Low Terrace** (ch. 12 `ballastra`, after N2) — Min 15 — needs W-9 (no stand-in: not built before W-9)
 - Pre: `bl_n2`. Wenna (met in N2) shows the notice board at the lift foot: her visit requests, DEFERRED, twelve years
@@ -1317,6 +1345,13 @@ No sequel tease. Then the end card and Keep Exploring. Flags `ep_bl*`.
 | The Cradles and the deferred wakings | never | OG-5 (radio from Twinsen) | OG-3, WK-1 | ch. 14 | OG-7 | always |
 | Oren means to hush the young one | F (core) | ch. 15 | OG-7 | ch. 15 | OG-7 | Nan Odra suspects |
 | Rule 4 (a hand on a lever beats him) | never | OG-5 | OG-2 | OG-6 | — | Garrow (WK-1) |
+| A shock shakes his hold; a part with no lever stays as it is | never | OG-5 | OG-2 (the bell) | OG-6 | — | Garrow (WK-1) |
+| Oren rations the mains (a bottle a minute) | never | OG-5 | OG-2 (Mira) | NW-1 | — | — |
+
+Twinsun residents (OG-2): Bram knows rule 4 from OG-2 (he held the draw-off's lever himself; his line returns in
+OG-5); Ume and Pico know the box counts and talks, not the rules; Mira knows the tap's rate and blames the governor;
+Gilbert knows the ration was agreed by three people at the gate and put up his board. Nobody on Twinsun knows of the
+Cradles, the paired stone or the young one before the R1.14 points above.
 
 Before these points nobody mentions them.
 

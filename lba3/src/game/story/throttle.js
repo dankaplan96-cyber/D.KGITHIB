@@ -10,11 +10,13 @@
 // rule 4: a shock beyond the part's range shakes Oren's hold loose): it rings, Oren's rings rise out of it and the
 // needles settle on green. Oren speaks: his name, where he is, a count of the people in the shelters by weight. Mira
 // asks for a little more on wheel IV; it turns itself back ("Green holds."). At the fortress shelter Gilbert and the
-// children thank him, and thank Oren aloud. Baldino calls him back; the chapter ends when he lands on Zeelich (the
-// network begins in Baldino's workshop).
+// children thank him, and thank Oren aloud; the chapter ends there and chapter 11 (story/survey.js, OG-2 "The Fenced
+// Square") begins at the same door with Gilbert asking for his well. (OG-2: Baldino's call, which ended this chapter in
+// increment B, now ends chapter 11.)
 //
 // Flags (og_): og_started (the call heard), og_home (the crossing made), og_arrived (on Citadel, saved), og_room (Mira
-// took him down), og_bleed 0-3, og_steady (Oren holds the mains), og_thanks (the shelter), og_done (Baldino's call).
+// took him down), og_bleed 0-3, og_steady (Oren holds the mains), og_thanks (the shelter), og_done (the chapter's end;
+// a save with it set — increment B's, waiting for the ship to Zeelich — goes on to chapter 11 at its first frame).
 // Only the expanded campaign plays this chapter (Story.inCampaign); the governor shows only there.
 import { ChapterBase } from './base.js';
 import { t } from '../i18n.js';
@@ -31,7 +33,7 @@ const BASE = 0.35;                  // where the needles sag between kicks (the 
 const GOV = { x: 5.15, z: -3.45 };  // the governor in the valve room's own frame (valveroom.js: the manifold's inlet end)
 const FORT = { x: -50, z: -71, ry: 0.3 };   // FunFrock's fortress shelter (story/evacuation.js FORT, FORT_RY)
 const FORT_F = shelterFrame(FORT.x, FORT.z, FORT.ry);
-const ZEELICH_ROOMS = new Set(['zeelich', 'workshop', 'upper', 'council', 'archive']);
+export const ZEELICH_ROOMS = new Set(['zeelich', 'workshop', 'upper', 'council', 'archive']);
 const gold = '#ffcf4a';
 
 export class Throttle extends ChapterBase {
@@ -153,8 +155,8 @@ export class Throttle extends ChapterBase {
     // home: on Citadel (by the story's ship, or a save that took the travel menu itself)
     if (f.og_started && !f.og_arrived && free && !this.onZeelich()) { f.og_home = f.og_arrived = true; g.updateObjective(); g.save(false); }
     this.nudge(dt, 'og_bleed', this.hammering() && !(f.og_bleed > 0), 45, 'og_nudge');
-    // Baldino's call answered: the chapter ends when he lands on Zeelich
-    if (f.og_done && free && this.onZeelich() && !this.leaving) { this.leaving = true; g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); }
+    // the shelter's thanks: chapter 11 (OG-2) begins (a save made after them, from increment B, too)
+    if (f.og_done && free && !this.leaving) this.end();
   }
 
   // ---------------------------------------------------------------- moving about
@@ -248,8 +250,9 @@ export class Throttle extends ChapterBase {
         return false;
       case 'gilbert':
         if (f.og_steady && !f.og_thanks) {
-          return c([['gilbert', 'og_gil_1'], ['hero', 'og_tw_g1'], ['gilbert', 'og_gil_2'], ['tim', 'og_tim_1'], ['lulu', 'og_lulu_1'], ['gilbert', 'og_gil_3'], ['balradio', 'og_bal_1'], ['hero', 'og_tw_b1']], () => {
+          return c([['gilbert', 'og_gil_1'], ['hero', 'og_tw_g1'], ['gilbert', 'og_gil_2'], ['tim', 'og_tim_1'], ['lulu', 'og_lulu_1'], ['gilbert', 'og_gil_3']], () => {
             f.og_thanks = true; f.og_done = true; g.updateObjective(); g.save(false);
+            this.end();
           });
         }
         return c([['gilbert', f.og_thanks ? 'og_gil_after' : 'og_gil_wait']]);
@@ -259,6 +262,12 @@ export class Throttle extends ChapterBase {
       case 'arthur': return c([['arthur', f.og_steady ? 'og_ar_2' : 'og_ar_1']]);
     }
     return false;
+  }
+  // the chapter's end: chapter 11 begins (behind a scene change, its card, at the shelter's door: survey.js begin)
+  end() {
+    if (this.leaving) return;
+    this.leaving = true;
+    this.game.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
   }
   // Mira takes him down from the Water Office to FunFrock's valve room (as the network does, network.js)
   downstairs() {
@@ -284,7 +293,6 @@ export class Throttle extends ChapterBase {
   objective() {
     const f = this.f;
     if (!f.og_started) return '';
-    if (f.og_done) return this.goal('og_obj_back');
     if (f.og_steady) return this.goal('og_obj_gilbert');
     if (f.og_room) return this.goal('og_obj_hammer') + this.sub((f.og_bleed | 0) >= 3, 'og_sub_bleed', { n: f.og_bleed | 0 });
     if (this.onZeelich()) return this.goal('og_obj_ship');
@@ -295,7 +303,6 @@ export class Throttle extends ChapterBase {
     if (!this.isCur() || !f.og_started || this.onZeelich()) return m;
     if (!f.og_room) { const o = W.houses?.find((x) => x.id === 'water'); if (o) m.push({ x: o.door.x, z: o.door.z, kind: 'star', color: gold, r: 7, edge: true, label: t('og_mk_office') }); }
     else if (f.og_steady && !f.og_thanks) { const p = FORT_F.at(2.0, 0); m.push({ x: p.x, z: p.z, kind: 'star', color: gold, r: 7, edge: true, label: t('og_mk_shelter') }); }
-    else if (f.og_done && W.spaceport) m.push({ x: W.spaceport.pad.x, z: W.spaceport.pad.z, kind: 'star', color: gold, r: 7, edge: true, label: t('og_mk_port') });
     return m;
   }
   journal() {

@@ -31,6 +31,7 @@ export class Citizens extends ChapterBase {
   place(id) {
     const n = this.game.npcs.find((x) => x.def.id === id);
     if (!n?.ambient || n.def.indoor) return undefined;   // (INTERIOR-LIFE: the rooms' and the ports' people are story/interiors.js's)
+    if (n.held) { n.held = false; if (!this.gone) return n.reset(); }   // (OREN-GUARDIAN OG-2: a chapter stood it somewhere and has let it go)
     if (this.gone && !EVAC_STAY.has(id)) { n.away = 'story'; return null; }
     if (n.away === 'story') { n.away = null; return n.reset(); }
     return undefined;
@@ -57,7 +58,7 @@ export class Citizens extends ChapterBase {
     return keys;
   }
   talkFirst(npc) {
-    if (!npc.ambient) return false;
+    if (!npc.ambient || npc.held) return false;   // (a resident a chapter is holding is the chapter's to speak for)
     const keys = this.linesFor(npc);
     if (!keys.length) return false;
     const n = (npc.talkN = (npc.talkN ?? -1) + 1);

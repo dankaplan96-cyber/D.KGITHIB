@@ -26,6 +26,7 @@ import { Evacuation } from './evacuation.js';
 import { Council } from './council.js';
 import { Network } from './network.js';
 import { Throttle } from './throttle.js';   // (OREN-GUARDIAN B: chapter 10 of the expanded campaign, OG-1 so far)
+import { Survey } from './survey.js';       // (OREN-GUARDIAN D: chapter 11 of the expanded campaign, OG-2 so far)
 import { Epilogue } from './epilogue.js';
 import { IslandShuttle } from './islands.js';
 import { TownLife } from './life.js';
@@ -72,7 +73,7 @@ export const OLD_ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
 export class Story {
   constructor(game) {
     this.game = game;
-    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, throttle: Throttle, survey: ChapterShell, ballastra: ChapterShell, balances: ChapterShell, network: Network, shell: Chapter3, core: ChapterCore, home: Epilogue };
+    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, throttle: Throttle, survey: Survey, ballastra: ChapterShell, balances: ChapterShell, network: Network, shell: Chapter3, core: ChapterCore, home: Epilogue };
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
     this.isles = new IslandShuttle(this);
     this.life = new TownLife(this);   // Citadel twelve years on: its people and small stories (life.js)

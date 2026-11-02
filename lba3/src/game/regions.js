@@ -82,6 +82,7 @@ export const CHAPTER_AREAS = {
   evacuation: [],
   council: ['zeelich', 'upper', 'workshop'],
   throttle: ['office', 'valves'],   // (OREN-GUARDIAN OG-1: the Water Office, FunFrock's valve room)
+  survey: ['office'],               // (OREN-GUARDIAN OG-2: Mira's tap at the Water Office)
   network: ['zeelich', 'desert', 'hamalayi', 'valves', 'lighttop', 'obsv', 'workshop'],
   home: ['house'],
 };

@@ -5,8 +5,8 @@
 //   → the Water Office (walked to) → Mira takes him down → FunFrock's valve room: the hammer (needles, the bang);
 //   a wheel opened between kicks kicks back (no damage, no progress); opened during a kick it bleeds the kick (×3)
 //   → the governor rings: Oren's rings rise, he speaks, the needles settle on green; wheel IV turns itself back
-//   → the fortress shelter (walked to): Gilbert, Tim and Lulu thank him and Oren; Baldino's call
-//   → the ship to Zeelich (the travel menu) → the chapter ends, the network begins in Baldino's workshop.
+//   → the fortress shelter (walked to): Gilbert, Tim and Lulu thank him and Oren → the chapter ends there: chapter 11
+//   (OG-2, tests/oren-square.mjs) begins at the same door. (Baldino's call and the ship to Zeelich moved to OG-2's end.)
 // Recovery: Save → Continue mid-hammer (the bleeds kept) and after Oren (needles on green, the rings up); a save in
 // chapter 10 from before this chapter had content (batch 1's empty shell) resumes it; a resume already on Citadel
 // skips the flight; the base campaign (exp_base) never shows the governor. Cost: the valve room's draws with and
@@ -112,16 +112,13 @@ check('Save → Continue after Oren: the needles load on green, the rings are up
 const look = await timed(() => { const ch = game.story.cur, V = game.rooms.valves, c = V.group.position; const r = P.use(c.x + 5.15 - 0.2, c.z - 3.45 + 0.7, { near: 0.9 }); P.settle(); return { r: r.r, kind: r.target?.kind, said: window.__said.slice(-1) }; });
 check('the governor can be inspected afterwards (BALANCE WORKS · BALLASTRA)', look.said.some((l) => /BALANCE WORKS · BALLASTRA/.test(l)), look);
 
-// ---------------------------------------------------------------- the fortress shelter (walked) and Baldino's call
-const s3 = await timed(() => { const a = P.exitTo('valves-out'); const b = P.exitTo('outdoor-office'); const t = P.talk('gilbert', { run: true }); P.settle(); return { a: a.to, b: b.to, t, ...T.view(), said: window.__said.slice(-8) }; });
+// ---------------------------------------------------------------- the fortress shelter (walked): the chapter's end
+// (OG-2: Baldino's call moved to the end of chapter 11, tests/oren-square.mjs; chapter 11 begins at this door)
+const s3 = await timed(() => { const a = P.exitTo('valves-out'); const b = P.exitTo('outdoor-office'); const t = P.talk('gilbert', { run: true }); P.settle(); for (let i = 0; i < 30; i++) game.step(0.1); P.settle(); return { a: a.to, b: b.to, t, ...T.view(), og: { thanks: !!game.flags.og_thanks, done: !!game.flags.og_done }, cards: [...window.__cards], said: window.__said.slice(-10) }; });
 console.log('the shelter:', JSON.stringify(s3));
-check('walked out and up to the fortress shelter: Gilbert, Tim and Lulu thank him and Oren; Baldino calls him back', s3.t.r === 'talked' && s3.thanks && s3.done && s3.said.some((l) => /Oren, if you can hear this: thank you/.test(l)) && s3.said.some((l) => /slept right through/.test(l)) && /back to Zeelich/.test(s3.obj), s3);
-
-// ---------------------------------------------------------------- the ship to Zeelich → the network
-const s4 = await timed(() => { const r = P.shipTo('citadel_port'); for (let i = 0; i < 40; i++) { game.step(0.1); P.settle(); } return { r, ...T.view(), c10: !!game.flags.c10_started }; });
-console.log('to the network:', JSON.stringify(s4));
-check('the travel menu\'s ship to Zeelich ends the chapter: the network begins in Baldino\'s workshop (chapter 14)', s4.key === 'network' && s4.room === 'workshop' && s4.c10, s4);
-console.log(`OG-1 bot game time, the vote to the network's start: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor: the bot walks A* routes and reads every line at once; not a first-time estimate)`);
+check('walked out and up to the fortress shelter: Gilbert, Tim and Lulu thank him and Oren; no call from Baldino there', s3.t.r === 'talked' && s3.og.thanks && s3.og.done && s3.said.some((l) => /Oren, if you can hear this: thank you/.test(l)) && s3.said.some((l) => /slept right through/.test(l)) && !s3.said.some((l) => /Baldino\. The council's done its bit/.test(l)), s3);
+check('the thanks end chapter 10: chapter 11 "Under the Well" begins at the same door (OG-2: Gilbert asks for his well)', s3.key === 'survey' && s3.cards.some((c) => /Chapter 11 · Under the Well/.test(c)) && s3.said.some((l) => /I want my well back/.test(l)), { key: s3.key, cards: s3.cards });
+console.log(`OG-1 bot game time, the vote to chapter 11's start: ${played.toFixed(0)} s (${(played / 60).toFixed(1)} min; a floor: the bot walks A* routes and reads every line at once; not a first-time estimate)`);
 
 // ---------------------------------------------------------------- other ways in
 // a save from batch 1, standing in chapter 10 when it was an empty shell (the council chamber): resumes the chapter
