@@ -49,6 +49,7 @@ export class LightPool {
     }
     this.slots = this.lights.map(() => ({ s: null, w: 0 })); this._t = null;
   }
+  // (the battery profile's flag; LAMP-FADE: the fades are on for every profile now, so this only clears the slots)
   setFade(on) { on = !!on; if (on !== this.fade) { this.fade = on; for (const S of this.slots) { S.s = null; S.w = 0; } this._t = null; } }
   // take in every point light the builders placed (call again if lamps are added later)
   collect() {
@@ -74,14 +75,11 @@ export class LightPool {
       if (edge > 25) continue;
       cand.push({ s, edge, near: d / reach, x: _p.x, y: _p.y, z: _p.z });
     }
-    if (this.fade) return this.nearest(cand, time);
-    cand.sort((a, b) => a.edge - b.edge);
-    for (let i = 0; i < this.lights.length; i++) {
-      const L = this.lights[i], c = cand[i];
-      if (!c) { L.intensity = 0; continue; }
-      L.position.set(c.x, c.y, c.z);
-      L.color.copy(c.s.color); L.intensity = c.s.intensity; L.distance = c.s.distance; L.decay = c.s.decay;
-    }
+    // LAMP-FADE (the user, 2.11.2026: "the lamps switch on and off, it looks odd"): every profile now hands its lights
+    // between lamps with the battery profile's hysteresis and fades. Before, plugged in, the SIZE nearest lamps were
+    // re-sorted each frame and a light jumped to its new lamp at full strength, so walking or the title's camera
+    // made lamp pools pop on and off. A call without a time (a scene change, a warm-up) still takes the final state.
+    return this.nearest(cand, time);
   }
   // (PERF-BATTERY-2) the lamps nearest the focus (by distance as a share of the lamp's reach: the lamp whose light is
   // strongest where he stands), each light fading between them

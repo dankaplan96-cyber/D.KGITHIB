@@ -51,7 +51,8 @@ export class TownBits {
       const posts = merge([
         part(new THREE.CylinderGeometry(0.045, 0.055, LINE_H + 0.1, 6), '#7a5a3a', M4(L.a.x, ya + (LINE_H + 0.1) / 2, L.a.z)),
         part(new THREE.CylinderGeometry(0.045, 0.055, LINE_H + 0.1, 6), '#7a5a3a', M4(L.b.x, yb + (LINE_H + 0.1) / 2, L.b.z)),
-        part(new THREE.CylinderGeometry(0.008, 0.008, len, 4), '#e8e2d0', M4((L.a.x + L.b.x) / 2, top - 0.03, (L.a.z + L.b.z) / 2, Math.PI / 2, ry, 0)),
+        // (the rope: laid along z, then turned to the line's heading; an Euler (π/2, ry, 0) only did that for a line along z)
+        part(new THREE.CylinderGeometry(0.008, 0.008, len, 4).rotateX(Math.PI / 2).rotateY(ry), '#e8e2d0', M4((L.a.x + L.b.x) / 2, top - 0.03, (L.a.z + L.b.z) / 2)),
       ]);
       const pm = new THREE.Mesh(posts, MATL); pm.name = L.name + 'Posts'; pm.castShadow = true; pm.matrixAutoUpdate = false; parent.add(pm);
       for (const q of [L.a, L.b]) P.add({ type: 'cyl', x: q.x, z: q.z, r: 0.08, top: top + 0.05, seeThrough: true, noStand: true });

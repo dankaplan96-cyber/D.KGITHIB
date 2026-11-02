@@ -48,7 +48,7 @@ export class IslandShuttle {
       for (const q of all) items.push({ key: q.name, id: q.id, point: q, disabled: q === p, note: q === p ? 'isle_here' : '' });
     }
     g.audio.play('select');
-    g.openMenu(TITLE[p.mode], items, (o) => travelTo(g, o.point));
+    g.openMenu(TITLE[p.mode], items, (o) => travelTo(g, o.point, p));   // (TRAVEL-1: from this point: its craft's film)
     return true;
   }
   go(id) { const p = this.game.travel?.points[id === 'citadel' ? 'citadel_port' : id === 'zeelich' ? 'zeelich_shuttle' : id]; if (p) travelTo(this.game, p); }

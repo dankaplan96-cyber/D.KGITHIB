@@ -60,6 +60,9 @@ const PIER = { x0: -64, x1: -49.4, hw: 2.25 };
 const FERRY = { x: -57.6, z: 5.05 };
 const DEPOT = { x0: 4, x1: 24, z0: 9, z1: 25.2, gate: [10.0, 14.0] };
 const PLAZA = { x: -24, z: 0, r: 8.2 };
+// the street's benches [x, z, ry] (local; ry: the way a sitter faces), for walkrounds.js too (BENCHES-1: the north row's two
+// between the lamps, at −14.5 and 11 — they were at −17 and 14, on the lamps' line)
+export const ZEELICH_SEATS = [[-31, -4.6, 0], [-14.5, 4.6, Math.PI], [3, -4.6, 0], [11, 4.6, Math.PI], [PLAZA.x - 7.0, PLAZA.z + 2.2, Math.PI / 2 + 0.25], [26, -4.6, 0]];
 const MILLS = [
   { id: 'north', x: -2, z: -20, old: true, face: -0.95, brake: 0.0 },
   { id: 'east', x: 22, z: -17.5, face: -0.55, brake: 0.25 },
@@ -1308,7 +1311,9 @@ export function* buildZeelichSteps(scene, physics) {
       col({ type: 'cyl', x, z, r: 0.22, top: Y0 + 3.4, seeThrough: true, noStand: true });
     }
     // benches: stone ends, plank seat, tiled back
-    const benches = [[-31, -4.6, 0], [-17, 4.6, Math.PI], [3, -4.6, 0], [14, 4.6, Math.PI], [PLAZA.x - 7.0, PLAZA.z + 2.2, Math.PI / 2 + 0.25], [26, -4.6, 0]];
+    // (BENCHES-1: two of the north row's stood on the lamps' line — one with a lamp post through its end and the plaza's
+    //  planter 0.9 m before its seat, one with a post before its middle — and stand between the lamps now: ZEELICH_SEATS)
+    const benches = ZEELICH_SEATS;
     for (const [x, z, ry] of benches) {
       const f = frame(x, z, ry), at = (lx, ly, lz) => { const [a, b] = f(lx, lz); return [a, Y0 + ly, b]; };
       for (const s of [-1, 1]) B.add(boxUV(bbox(0.24, 0.48, 0.55, 0.05, 1), 1), tm('stone', { color: '#ead8e4' }), ...at(s * 0.75, 0.24, 0), 0, ry, 0);
@@ -1316,8 +1321,8 @@ export function* buildZeelichSteps(scene, physics) {
       B.add(boxUV(bbox(1.9, 0.5, 0.1, 0.03, 1), TILE.tiles), tm(tileTex(), { rough: 0.5 }), ...at(0, 0.82, -0.3), -0.1, ry, 0);
       col({ type: 'box', ...wpos(f, 0, 0), hw: 0.95, hd: 0.35, rot: ry, top: Y0 + 0.55, seeThrough: true });
     }
-    // planters with odd Zeelich plants
-    const planters = [[-44, -5.6], [-44, 5.6], [-30.5, -5.2], [-18.4, -5.2], [-6, 5.2], [8, -5.2], [17.5, 5.2], [33, -5.0], [33, 5.0], [PLAZA.x + 6.6, PLAZA.z - 4], [PLAZA.x + 7.3, PLAZA.z + 2.6]];
+    // planters with odd Zeelich plants (BENCHES-1: the one by the boulevard's west bench stood half through its end, at −30.5: 1.5 m off it now)
+    const planters = [[-44, -5.6], [-44, 5.6], [-27.8, -5.2], [-18.4, -5.2], [-6, 5.2], [8, -5.2], [17.5, 5.2], [33, -5.0], [33, 5.0], [PLAZA.x + 6.6, PLAZA.z - 4], [PLAZA.x + 7.3, PLAZA.z + 2.6]];
     const pot = cached('planter', () => lathe([[0, 0.05], [0.62, 0], [0.72, 0.08], [0.7, 0.5], [0.8, 0.56], [0.8, 0.68], [0.62, 0.68], [0.62, 0.6], [0, 0.6]], 8, 1.2));
     for (const [x, z] of planters) {
       B.add(pot, tm('stone', { color: '#ead4dc' }), x, Y0, z, 0, Math.PI / 8, 0);

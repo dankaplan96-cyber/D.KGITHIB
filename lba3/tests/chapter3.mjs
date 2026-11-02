@@ -59,6 +59,11 @@ await ev(() => { const G = game; Object.assign(G.flags, { c2_plan: true, c2_plan
   for (let i = 0; i < 12 && G.story.cur.key !== 'shell'; i++) { G.story.nextChapter(); G.step(0.5); T.talkAll(); } });
 is('chapter 15 (shell; 11 on the base campaign) starts in the shaft, in play, an objective set', await ev(() => [game.flags.chapter, game.flags.c3_started, game.room?.id, game.state, T.obj()]), (v) => v[0] === 14 && v[1] === true && v[2] === 'c3shaft' && v[3] === 'play' && v[4].length > 0);
 await shot('C3-00-shaft.png');
+// SHAFT-CITADEL: the shaft's top is the bore in Citadel's station, not Zeelich's platform: the lift comes up in the station's
+// yard beside the collar (the blast doors open since the network's code), and the collar takes him back down
+is('up the lift: out in the station\'s yard on Citadel, beside the bore\'s collar, the blast doors open', await ev(() => { const r = T.exit('c3-up'); const st = game.world.station, h = game.hero; return [r, game.room?.id ?? null, +Math.hypot(h.pos.x - st.bore.x, h.pos.z - st.bore.z).toFixed(1), !!st.sealed, game.findInteractable()?.kind, game.state]; }),
+  (v) => v[1] === null && v[2] < 5.5 && v[3] === false && v[4] === 'c3down' && v[5] === 'play');
+is('the collar takes him back down the shaft', await ev(() => { T.tap('KeyE'); game.step(1.6); T.talkAll(); return [game.room?.id, game.flags.chapterKey]; }), (v) => v[0] === 'c3shaft' && v[1] === 'shell');
 
 // the deep installation
 is('down to the deep installation', await ev(() => T.exit('c3-deep')), (v) => v === 'c3deep');

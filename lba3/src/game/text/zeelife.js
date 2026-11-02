@@ -17,8 +17,8 @@ Object.assign(STR.en, {
   zl_flue_hot: 'Hot air shimmers out of the flue.',
   zl_tag_pelleck: 'A tag on the dark post: CONNECTION NEXT QUARTER. Mr Pelleck\'s house.',
   zl_tag_sw: 'Another dark post, another tag: CONNECTION NEXT QUARTER. The lit ones are by the council house, the depot and the bakery.',
-  zl_tag_burrow: 'CONNECTION NEXT QUARTER, over the moles\' burrow. Warm air comes out of their vent anyway.',
-  zl_burrow: 'Warm air breathes out of the moles\' vent. It smells of earth and root tea.',
+  zl_tag_burrow: 'CONNECTION NEXT QUARTER, over the Wannies\' burrow. Warm air comes out of their vent anyway.',
+  zl_burrow: 'Warm air breathes out of the Wannies\' vent. It smells of earth and root tea.',
   zl_flowers: 'Nara\'s cloud flowers, crated for Citadel. A project tag: HELD. The shuttles are grounded, and the project\'s ship takes project cargo first.',
 
   // ---- the roof
@@ -118,7 +118,7 @@ Object.assign(STR.en, {
     'Up top they wait for heat. Down below we open the vents.',
   ],
   zl_grumm_council: [
-    'Tell the council the moles say stop. Nobody asks moles. Ask anyway.',
+    'Tell the council the Wannies say stop. Nobody asks Wannies. Ask anyway.',
     'The vent breathes warmer every week.',
   ],
   zl_grumm_network: [

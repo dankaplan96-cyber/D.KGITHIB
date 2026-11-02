@@ -885,6 +885,15 @@ export function* buildWorldSteps(parentScene) {
   // (WA-15: none where the harbour front's Zeelich buildings stand)
   for (const t of trees) if (!t.gone && zhClear(t.x, t.z, 0.6 + 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
   for (const b of bushes) if (!b.gone && zhClear(b.x, b.z, 0.3 + 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
+  // (BENCHES-1: the original's benches, citadel-layout.js PROPS.benches, keep their room: no scattered bush and no
+  //  scattered tree's trunk within 1.2 m of one — a bush stood 0.9 m before the harbour path's bench, a pine's trunk before
+  //  the lighthouse's. The original's own trees stay; filtered after the scatter, so no random draw moves)
+  const benchRoom = (x, z, pad) => PROPS.benches.some(([bx, bz, f]) => {
+    const ry = f * Math.PI / 2, dx = x - bx, dz = z - bz, u = dx * Math.cos(ry) - dz * Math.sin(ry), v = dx * Math.sin(ry) + dz * Math.cos(ry);
+    return Math.abs(u) < 0.85 + 1.2 + pad && Math.abs(v) < 0.3 + 1.2 + pad;
+  });
+  for (const t of trees) if (!t.gone && !t.orig && benchRoom(t.x, t.z, 0.42 * t.s)) { t.s = 1e-4; t.gone = true; }
+  for (const b of bushes) if (!b.gone && benchRoom(b.x, b.z, 0.6 * b.s)) { b.s = 1e-4; b.gone = true; }
   yield 'tree spots';
   const VARS = { round: 3, fruit: 2, tall: 2, pine: 2 };
   for (const [kind, nv] of Object.entries(VARS)) for (let v = 0; v < nv; v++) {

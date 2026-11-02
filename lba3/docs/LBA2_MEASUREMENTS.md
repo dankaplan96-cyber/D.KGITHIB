@@ -110,6 +110,36 @@ smooth normals is kept.
   normal walk 1, athletic run 67, aggressive walk 83, discreet walk 94; throw (LANCE) 6 in every behaviour;
   jump 71; punches 87–89; dodges 52–55 (78/79 athletic, 100/101 discreet); idle 0 / 66 / 82 / 93.
   Walk footsteps: F_RIGHT_STEP on key 2, F_LEFT_STEP on key 4.
+- 94 discreet walk (DISCREET-WALK, measured 2.11.2026 for the user's "the discreet walk looks odd next to LBA2's"):
+  10 keys, 2 start keys (400 + 400 ms), then a loop of 8 keys = **2.6 s for two steps (1.3 s a step)**; steps per key
+  239, 100, 100, 100 | 200, 100, 100, 100 units (1039 a loop = 0.84 H, 0.32 H/s: our `discreet.fwd` 0.67 m/s already
+  matches). Each step is a **slow high tiptoe**, not a crouch: the original never stays low, it lifts and creeps.
+  Ours (rig.js `sneak`, before DISCREET-WALK) was a constant deep crouch (hips 0.74, knees +0.65) with an even shuffle.
+  (Read with `tools/lba-source/measure.py --body 1 --clips 94`; numbers only.)
+  Re-derived with forward kinematics on body 1 (`lbadata.pose2`; groups as the walk's: 2 pelvis, 3 chest, 4/5 left
+  upper arm / forearm, 6/7 right, 8/9/10 left thigh / shin / foot, 11/12/13 right, 14 head; **15/16 are the hair bun's
+  two spheres under the head, not a leg** — their 102–111° is the bun flopping). +x is his left; angles absolute from
+  the vertical, + forward. Key times from the loop start (key 2, the left lift): 0, 300, 600, 900 | 1300, 1600, 1900,
+  2200 ms. Per step, in order:
+  - **lift** (keys 2 / 6): the stepping thigh 95° / 72° forward with the knee bent 99° / 100°, the ankle 0.16 H up; the
+    standing leg near vertical under the hip; the pelvis at its highest (0.447 / 0.460 H; 0.457 standing); the chest
+    hunched 44° forward; the upper arms along the chest (−8…+22° on it, so they hang back 35–65° in the world), elbows
+    bent 48–94°;
+  - **reach** (3 / 7): the thigh 111° / 114° forward (above the horizontal), the knee opened to 36° / 67°, the ankle
+    0.29 / 0.27 H up, 0.31 H ahead of the hip; the pelvis sinks on the standing knee (0.372 / 0.431 H); the chest
+    comes back to 11° behind the vertical;
+  - **contact** (4 / 8, the foot down ~50 ms before the key): the foot set down 0.17 H ahead of the hip (thigh 46° / 53°, knee
+    24° / 34°); pelvis 0.406 H; the chest leans back 59°, the head nods 46° forward against it; the arm opposite the
+    stepping leg forward (−37…−39° on the chest; 102–104° above the hang in the world), the same-side arm back (+60…+65°);
+  - **transfer** (5 / 9): the chest 15° back, the pelvis rising (0.422 / 0.428 H), the weight creeping onto the front foot.
+  The g1 translate (−106 / −63 units at the deepest of each step) is the pelvis's own drop; the pelvis rises and falls
+  0.088 / 0.054 H within the two steps (0.071 H mean). Each foot stands ~1.65 s of the 2.6 s (both down ~0.4 s after
+  each contact); the stance foot lifts its heel before it leaves (a tiptoe), and slides ~0.07 H in the original.
+  DISCREET-WALK (rig.js `SNEAK`, `Rig._sneak`): the swing keyed on these (knee 100°, thigh 83° at the lift, 104° at the
+  reach), the chest and head at 0.6–0.7 of the original's rock, the arms as measured, the cycle 0.84 H; the standing leg
+  solved from where its foot stands (58 % of the cycle), the pelvis as the original's, kept within the planted legs'
+  reach. Measured in the game (tests/anim-polish.mjs 5b): 2.58–2.60 s a cycle, knee 98.7°, thigh 107°, the pelvis
+  rising and falling 0.067–0.069 H a step, the planted foot still (< 0.01 m/s) at 30 / 60 / 120 fps.
 - 67 athletic run: 4 start keys, then 6 keys × 140 ms (cycle 0.84 s, 1.94 H per cycle, 2.3 H/s). The pelvis
   tilts 11–36° forward and the legs with it: absolute thigh (+ = back) −62, −33, +23, +33, −12, −58; knee 8, 2,
   4, 47, 102, 90; arms relative to the torso +69 … −54 with the elbow bent 34–122°; torso twist ±20°; the body

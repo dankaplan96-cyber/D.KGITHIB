@@ -18,6 +18,12 @@
 //     posts lit). A resident skips the other state's stops, and when the state changes the ones standing at the wrong
 //     stops move on within a few seconds. Nothing is saved: the state is read from the story's own flags each frame.
 // A resident's state is not saved: after a load every resident starts its round again at its first stop.
+//   - Indoors (INTERIOR-LIFE, src/game/roomlife.js): the people of Citadel's interiors are Residents too, with a manager of
+//     their own (game.roomWalkers: `new Walkers(game, { indoor: true })`; a definition with `indoor: true` joins it). Its
+//     planner walks the rooms' floors (walknav.js addFloor) on a finer grid; a resident of the room the hero is in is
+//     simulated every frame, every other one is stepped in the abstract state (no physics, no animation), as a street
+//     resident far off is. The two spaceports' people (`outdoor`) are in it too, tiered as the street's are (near the hero
+//     and in view: in full). The street's manager and its residents are unchanged by it.
 import * as THREE from 'three';
 import { NPC, contactRadius } from './actors.js';
 import { LOOKS } from './characters.js';
@@ -62,6 +68,17 @@ const CARRY = {
     g.add(body, spout, arch);
     return g;
   },
+  // INTERIOR-LIFE: a traveller's case (the spaceports, the ticket office): a small leather case with a handle and straps
+  case: () => {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.3, 0.13), mat('#7a4a2a'));
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 5, 10, Math.PI), mat('#3a2414'));
+    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.31, 0.14), mat('#c8a050'));
+    body.position.y = -0.2; handle.position.y = -0.05; strap.position.set(0.1, -0.2, 0);
+    const strap2 = strap.clone(); strap2.position.x = -0.1;
+    g.add(body, handle, strap, strap2);
+    return g;
+  },
   sack: () => {
     const g = new THREE.Group();
     const s = new THREE.Mesh(new THREE.SphereGeometry(0.17, 9, 7), mat('#c8b48a'));
@@ -74,21 +91,26 @@ const CARRY = {
 
 // ------------------------------------------------------------------ the manager (one per game)
 export class Walkers {
-  constructor(game) {
+  constructor(game, { indoor = false } = {}) {
     this.game = game;
     this.res = [];
-    this.nav = new WalkNav(game);
-    this.nav.pathDist = game.world.pathDist;
+    this.indoor = indoor;
+    // (INTERIOR-LIFE: indoors a 0.25 m grid — a bar's back, a shop's counter gap are narrower than any lane — and the
+    //  body's own 0.45 m reach (the physics pushes a body that close off a stool or a counter: a route planned nearer
+    //  stuck there), the walls' shoulders costed from 0.8 m; a chair or a stool's foot given a 0.3 m berth, not the street's
+    //  half metre round a bench: the tables' chairs would close the room)
+    this.nav = indoor ? new WalkNav(game, { cell: 0.25, safeR: 0.45, hugR: 0.8, lowR: 0.3 }) : new WalkNav(game);
+    this.nav.pathDist = indoor ? null : game.world.pathDist;
     this.rounds = null;           // set by walkrounds.js
     this.pairs = new Map();
     this.stamp = -1; this.frozen = false; this.statics = [];
     this.frustum = new THREE.Frustum(); this._m = new THREE.Matrix4(); this._v = new THREE.Vector3();
-    this.hero = { x: 0, z: 0, inside: false };
+    this.hero = { x: 0, z: 0, inside: false, room: null };
     this.dayT = 0;
     this.stage = this.stageNow(); this.pippa = null;
     this.stats = { full: 0, reduced: 0, abstract: 0, ms: 0, frames: 0 };
     this.measure = false;         // (tests / the perf probe: time every resident's update)
-    this.doors = (game.world.houses || []).filter((h) => h.door).map((h) => ({ x: h.door.x, z: h.door.z, r: 1.0 }));
+    this.doors = indoor ? [] : (game.world.houses || []).filter((h) => h.door).map((h) => ({ x: h.door.x, z: h.door.z, r: 1.0 }));
     this.nav.keepOut = this.doors;
   }
   // the nearest doorway to a point (a house's own, and the story's: a resident does not stand in one)
@@ -107,7 +129,7 @@ export class Walkers {
     this.stamp = g.time;
     this.dayT = ((g.time / DAY) % 1 + 1) % 1;
     const h = g.hero, R = g.room;
-    this.hero.x = h.pos.x; this.hero.z = h.pos.z; this.hero.inside = !!R && !R.outdoor;
+    this.hero.x = h.pos.x; this.hero.z = h.pos.z; this.hero.inside = !!R && !R.outdoor; this.hero.room = this.hero.inside ? R.id : null;
     // the town's state: 0 the well is dry, 1 the water is back (hot)
     const stage = this.stageNow();
     if (stage !== this.stage) { this.stage = stage; this.stageChanged(); }
@@ -125,6 +147,8 @@ export class Walkers {
       if (dx * dx + dz * dz < 4900) this.statics.push(n);
     }
     // the story's people on Citadel (where they stand now): routes keep clear of them; the cast's make-up is part of a route's key
+    // (INTERIOR-LIFE: indoors none of this, nor the stall keeper's sorting below: the street's manager does it)
+    if (this.indoor) { this.nav.step(120); return; }
     if (g.time - (this._castT ?? -9) > 0.5) {   // (twice a second is plenty: they stand where they are put)
       this._castT = g.time;
       const soft = this.nav.soft; soft.length = 0; let sig = '';
@@ -166,6 +190,7 @@ export class Walkers {
   _sphere(r) { const s = _sph; s.center.copy(this._v); s.radius = r; return this.frustum.intersectsSphere(s); }
   tierOf(r) {
     if (this.force != null) return this.force;   // (tests: simulate every resident in full, wherever the hero is)
+    if (this.indoor && !r.def.outdoor) return r.def.room && r.def.room === this.hero.room ? 0 : 2;   // (INTERIOR-LIFE: the hero's room in full, the others abstract; a spaceport's people as the street's, below)
     const dx = r.pos.x - this.hero.x, dz = r.pos.z - this.hero.z, d = Math.hypot(dx, dz);
     if (this.hero.inside || d > REDUCED_R + 40) return 2;
     if (d < NEAR_R) return 0;
@@ -175,6 +200,7 @@ export class Walkers {
   // can the camera not see this point (a place to put a stuck resident back on its way)?
   unseen(x, z, y) {
     const d = Math.hypot(x - this.hero.x, z - this.hero.z);
+    if (this.indoor && this.hero.inside) return d > 40 || (d > 6 && !this.inView(x, y, z, 2.2));   // (another room: out of sight; outdoors, the street's rule below)
     if (this.hero.inside || d > 70) return true;
     return d > 6 && !this.inView(x, y, z, 2.2);
   }
@@ -197,7 +223,7 @@ export class Resident extends NPC {
   constructor(game, def) {
     super(game, def);
     this.ambient = true;
-    const W = (game.walkers ||= new Walkers(game));
+    const W = def.indoor ? (game.roomWalkers ||= new Walkers(game, { indoor: true })) : (game.walkers ||= new Walkers(game));
     W.add(this);
     this.W = W;
     this.speed = def.speed || 1.1;
@@ -262,7 +288,7 @@ export class Resident extends NPC {
     this.sync();
   }
   // the height to look for the ground from: the terrain's, or the level of a world whose ground is floor bricks (Zeelich)
-  groundHint(x, z) { const L = this.W.nav.levelAt(x); return (L != null ? L : this.game.physics.terrain.heightAt(x, z)) + 0.3; }
+  groundHint(x, z) { const L = this.W.nav.levelAt(x, z); return (L != null ? L : this.game.physics.terrain.heightAt(x, z)) + 0.3; }
   nextIndex(from) {
     const n = this.stops.length, day = this.W.dayT, stage = this.W.stage;
     for (let k = 1; k <= n; k++) {
@@ -285,6 +311,7 @@ export class Resident extends NPC {
     this.st = 'dwell';
     if (s.seat) this.targetAngle = s.seat.a;   // (one who cannot sit stands by the bench, looking where a sitter would)
     else if (s.a != null) this.targetAngle = s.a;
+    if (instant && this.targetAngle != null) this.angle = this.targetAngle;   // (INTERIOR-LIFE: reached unseen, in the abstract state: it faces its stop's way when it comes into view)
     this.note('at ' + (s.id || s.act));
   }
   leave() {
@@ -332,7 +359,9 @@ export class Resident extends NPC {
   }
   // an Esmer's body is one robe from the shoulders to the ground (rig.robeLegs, no hips to bend): it cannot sit on a
   // bench without the robe going through the seat, so at a bench stop it stands by the bench instead
-  canSit() { return LOOKS[this.def.char]?.race !== 'esmer'; }
+  // (the same for a long dress or robe down to the ankles (hem under 0.3: Oda's, the user's photo of 2.11 by the statue): its
+  //  rigid skirt panels hang through the seat's slats; a knee-length tunic or coat sits as before)
+  canSit() { const L = LOOKS[this.def.char]; return L?.race !== 'esmer' && !((L?.outfit === 'dress' || L?.outfit === 'robe') && (L?.hem ?? 1) < 0.3); }
   // two rounds may share a bench (Brix's and Ume's by the lane's planter): one seat to a bench, the second stands by it
   benchTaken(seat) { return this.W.res.some((r) => r !== this && !r.away && r.sit?.seat && Math.hypot(r.sit.seat.x - seat.x, r.sit.seat.z - seat.z) < 0.3 && r.st !== 'sitout'); }
   sitDown(s, instant) {
@@ -695,7 +724,28 @@ export class Resident extends NPC {
       if (dd > reachD || dd < 1e-3) continue;
       const w = (reachD - dd) / reachD, ahead = (-rx * ux - rz * uz) / dd;   // > 0: in front of it
       if (ahead > 0.1) {
-        ax += -uz * w * 1.7; az += ux * w * 1.7;
+        // (BENCHES-1: round the hero or a story person it steps to the usual side unless that side is the more crowded — a
+        //  wall or a trunk at the two places it would pass through, or someone else standing by them: Twinsen in the 2.2 m
+        //  gap between the south house's corner and the original's tree, which the lane's old bench used to close (the child
+        //  stepped into the wall and waited), or between Twinsen and Sphero at the square's south corner (a wide circle).
+        //  The same round a resident standing still (Ume by a bench she does not sit on: Pico stepped in between her and the
+        //  bench and stuck); two walking residents keep the one rule, so two who meet head on pass. The side is chosen once,
+        //  as it comes up to them along its route, and kept while they stay in its way: chosen again from where it has stepped
+        //  to, it turned back and forth, wedged between Twinsen and Gilbert by the well)
+        let side = 1;
+        if (!b.ambient || b.st !== 'walk') {
+          const ms = (this.passSides ||= new Map()), mem = ms.get(b);
+          if (mem && g.time - mem.t < 1.0) side = mem.side;
+          else {
+            const me = this.bodyR || 0.45, o = (b.bodyR ?? b.radius ?? 0.45) + me + 0.1, y = this.pos.y + 0.05;
+            const crowd = (sd) => { let n = 0; for (let k = 1; k <= 2; k++) { const px = b.pos.x - uz * o * k * sd, pz = b.pos.z + ux * o * k * sd;
+              if (P.blockedAt(px, pz, y, me)) n += 2;
+              for (const c of _others) if (c !== b && !c.ambient && Math.hypot(c.pos.x - px, c.pos.z - pz) < me + (c.bodyR ?? c.radius ?? 0.45) + 1.3) n += 2; } return n; };   // (a person by it as much as a wall: it keeps a berth of 0.8 m from them, and half a metre more to pass between)
+            if (crowd(1) > crowd(-1)) side = -1;
+          }
+          ms.set(b, { side, t: g.time });
+        }
+        ax += -uz * w * 1.7 * side; az += ux * w * 1.7 * side;
         const gap = dd - rr;
         // (the hero and the story's people it waits for; another resident standing about it just steps round, slowly)
         if (ahead > 0.55 && gap < 1.0) { slow = Math.min(slow, Math.max(b.ambient ? 0.45 : 0, clamp(gap / 1.0, 0.0, 1))); if (gap < 0.3 && !b.ambient) blocked = true; }
@@ -850,7 +900,7 @@ export class Resident extends NPC {
   }
 }
 const _others = [];
-const CARRY_DROP = { basket: 0.235, crate: 0.335, can: 0.25, sack: 0.37 };   // (from the item's hand point down to its base)
+const CARRY_DROP = { basket: 0.235, crate: 0.335, can: 0.25, sack: 0.37, case: 0.35 };   // (from the item's hand point down to its base)
 const SIT_SHAPES = new Map(), _m4 = new THREE.Matrix4(), _v1 = new THREE.Vector3();
 // the red slatted bench (town.js, island.js): the seat's top over its feet, the backrest's front face and the seat's
 // front edge along the way the sitter faces (m, from the bench's middle); other benches give their own (seat.spec)

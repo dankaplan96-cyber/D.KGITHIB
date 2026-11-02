@@ -29,7 +29,7 @@ what the player knows / doesn't know · the turn · what the player does · the 
 |---|---|---|---|---|
 | 1 | The Well | Citadel Island | 35 | ✅ (was the prologue) |
 | 2 | The Joint Project | Citadel Island | 55 | ✅ |
-| 3 | Zeelich | Zeelich | 55 | ✅ (new ending: the shaft is sealed) |
+| 3 | Zeelich | Zeelich | 55 | ✅ (ending: Vesk flies home and seals the shaft at Citadel's station) |
 | 4 | The Dig | Desert Island | 55 | ✅ (first version; tests/chapter4.mjs) |
 | 5 | Steam and Sand | Desert Island | 50 | ✅ (first version; tests/chapter5.mjs) |
 | 6 | The Pass | Hamalayi | 55 | ✅ (first version; tests/chapter6.mjs) |
@@ -74,12 +74,16 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 
 ### 3 — Zeelich ✅ (ending changes)
 - **Wants:** reach Baldino, stop Vesk. **The other side:** Zeelich lives on the project. **Setback:** the plan
-  is confiscated by a project guard who meets the ship on Zeelich Spaceport, recovered in the depot. **Revelation (Baldino):** the shell; stopping halfway
-  cracks it. **Does:** mill cog, code cylinder, three mill brakes; Zoé tunes the lighthouse.
-- **New ending:** the shield drops, Vesk descends and **seals the shaft** behind him (blast doors, a code only
-  the bore's own network can open). Baldino: "We can't follow him, and we don't know enough to reverse a bore
-  through a shell nobody has seen. The first crystals were dug up on Desert Island. Start there." Doran flies
-  him home to Citadel Spaceport and takes the project's ferry south from there (chapter 4 opens at Kesh's pier).
+  is confiscated by a project guard who meets the ship on Zeelich Spaceport, recovered in the depot. **Revelation (Baldino):** the shell
+  around Twinsun; Vesk's bore at Citadel's station is drilling through it, stopping halfway cracks it, and Vesk steers
+  the whole bore from his platform on Zeelich. **Does:** mill cog, code cylinder, three mill brakes; Zoé tunes the lighthouse.
+- **Ending (SHAFT-CITADEL, the user's decision of 2.11.2026: the planets are joined by spaceship only):** the shield
+  drops; Vesk will not listen, takes the platform's lift down to his ship's berth under the deck and **flies home to
+  Twinsun** (his ship is seen leaving over the clouds). Hours later the platform console reads the shaft at Citadel's
+  station **sealed from below** (blast doors, a code only the bore's own network can open); Arthur, on the project's
+  channel, heard the ship land inside the old fort ("Seal it behind me"), and Zoé saw it come down from the lighthouse.
+  Baldino: we can't open it yet, so learn what the shell is; the first crystals were dug up on Desert Island. Doran
+  flies Twinsen home to Citadel Spaceport and takes the project's ferry south from there (chapter 4 opens at Kesh's pier).
 
 ### 4 — The Dig ✅ (Desert Island)
 - **Wants:** learn what the shell is. **Knows:** crystals came from a dig. **Doesn't know:** that the heat
@@ -156,11 +160,13 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
   Desert Island (Ilka and Dallan hold the vent open), Hamalayi (Yorna and Pim keep the mirror array aimed).
   Baldino's inventions have limits: the relay radio needs line of sight, the coupler overheats. Hesk's glider
   flies between Twinsun's regions only; between Zeelich and Twinsun Twinsen takes the spaceship.
-- **Result:** all stations online; the shaft code opens the blast doors.
+- **Result:** all stations online. Baldino takes a ship to Citadel and waits at the bore in the station's yard (the
+  shaft's top); his code box on the project's own code line sends the code, and the blast doors over the collar open.
+  Twinsen reaches the station by Twinsun's own routes (Hesk's glider, then on foot).
 
 ### 11 — The Shell 🔧 (rooms built)
-- **Wants:** reach the core. **Does:** the shaft, the deep installation (cooling valves, ladder, drone), the
-  crystal galleries (pillars, stones). **Result:** Sendell's chamber.
+- **Wants:** reach the core. **Does:** the shaft from Citadel's station (its lift comes back up beside the collar), the
+  deep installation (cooling valves, ladder, drone), the crystal galleries (pillars, stones). **Result:** Sendell's chamber.
 
 ### 12 — The Core 🔧
 - **Revelation part 2 (Sendell):** "She" is young and not ready; turning off is not enough; push the other way.
@@ -176,7 +182,7 @@ the plan becomes real at home (8) → the other world's choice (9) → building 
 |---|---|---|---|---|---|
 | **Twinsen** | a quiet life; to help | being a legend people wait for | the world's history; not the science | the player | from fixing a well to saving two worlds, still practical |
 | **Zoé** | the truth; family safe | being told to stay home | town gossip, how to sneak | finds the plan, broadcasts the warning, playable twice | from worried to the one who moves the island |
-| **Arthur** | to be included | being treated as a baby | radios, kids' secrets | fixes the radio, relays in the finale | gets his real job, not a chosen-one moment |
+| **Arthur** | to be included | being treated as a baby | radios, kids' secrets | fixes the radio, hears Vesk's ship land in the old fort on the project's channel (ch. 3), relays in the finale | gets his real job, not a chosen-one moment |
 | **Baldino** | to build the thing that works | being ignored | the shell, machines | inventions with limits (override key; the network) | proves the reversal works |
 | **Vesk** (villain) | the power under the shell, for the project and Zeelich's upper districts | losing control, being made small | the readings, and what they mean | charming and useful at first (valves, water, the project's ferry round Twinsun), then obstructs (link cut, guards, the evacuation he chose) | does not turn: overloads the guardian in the core, is beaten and handed to the joint council |
 | **Sendell** | to protect "her" | waking her too soon | everything below | warnings, then the plain truth | asks for help instead of saving everyone |
@@ -213,7 +219,7 @@ the twelve-year gap (this sequel's inventions, not the originals' canon; impleme
 - **Zeelich's street** (fourth set; src/game/zeelife.js, story/zeelife.js): Mother Snuff bakes the street's bread in
   the old watch house (older than the council, its crest chiselled off), on the project's heat; Bzizz lands his nectar
   crates on its roof. The project's heat posts are lit at the bakery, the council house and the depot, and dark (next
-  quarter) at the west end and over the moles' burrow; Mr Pelleck re-tiles his dome with his wages from the depot's
+  quarter) at the west end and over the Wannies' burrow; Mr Pelleck re-tiles his dome with his wages from the depot's
   books. The Second Bake (optional, from ch. 3): a crate on the flue trips the oven's heat box; shove it off on the roof
   or knock it off with the ball. The street argues about the project in every chapter it is visited.
 
@@ -222,7 +228,7 @@ the twelve-year gap (this sequel's inventions, not the originals' canon; impleme
   Nara, Oku, Xil, the clerk, the observatory keeper and Councillor Amaru are Esmers.
 - **Mosquibees:** upright insects with a big banded abdomen, great eyes, a long proboscis and wings. They fly
   cargo and keep hives, and they know when the ground is wrong.
-- **Moles:** a robed, pear-shaped people with a long pale snout and pale arms and feet. They live in burrows
+- **Wannies ("moles" in older notes):** a robed, pear-shaped people with a long pale snout and pale arms and feet. They live in burrows
   below the streets (cosy homes with green stone furniture) and feel the bore's heat in the old tunnels.
 - **Triangle-headed townsfolk:** tall and thin, in suits and shirtsleeves, with a big inverted-triangle head,
   pointed ears and a flat top. Clerks, shopkeepers, passers-by.
@@ -294,6 +300,11 @@ goal. Important scenes are played, not narrated.
 - The platform shield is fed by Zeelich's three mills; the override key = old mill cog + project code cylinder.
 - Vesk left from the beam pad at the station: the beam lifted him to his ship, which took him to Zeelich; he
   cut the link.
+- The only shaft through Twinsun's shell starts at Citadel's station: the bore's collar under the derrick in the old
+  fort's yard (SHAFT-CITADEL). Vesk sealed it at the end of chapter 3, after flying home from Zeelich; the network's
+  code opens it in chapter 10. Zeelich's drill platform is the project's command post: its console steers and hears
+  the bore on Twinsun by the project's channel, its shield is fed by the three mills, and its lift goes down only to
+  the ship berth under the deck. No shaft, lift or passage joins the two planets.
 
 ## Open questions
 - The being's name (Sendell only says "her"). Keep it unnamed unless a scene needs a name.

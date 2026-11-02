@@ -29,6 +29,7 @@ import { Epilogue } from './epilogue.js';
 import { IslandShuttle } from './islands.js';
 import { TownLife } from './life.js';
 import { Citizens } from './citizens.js';
+import { InteriorLife } from './interiors.js';
 import { WorkshopLife } from './workshop.js';
 import { KeshLife } from './kesh.js';
 import { ZeelichLife } from './zeelife.js';
@@ -75,6 +76,7 @@ export class Story {
     this.isles = new IslandShuttle(this);
     this.life = new TownLife(this);   // Citadel twelve years on: its people and small stories (life.js)
     this.citizens = new Citizens(this);   // WORLD-LIFE: the residents who walk round Citadel (citizens.js)
+    this.interiors = new InteriorLife(this);   // INTERIOR-LIFE: the interiors' and the spaceports' people, the household rounds (interiors.js)
     this.workshop = new WorkshopLife(this);   // Baldino's workshop years on: the test pair and the looks (workshop.js)
     this.kesh = new KeshLife(this);   // Kesh on Desert Island twelve years on: the cool room's wind-catcher (kesh.js)
     this.zlife = new ZeelichLife(this);   // Zeelich's street twelve years on: the watch house bakery (zeelife.js)
@@ -98,7 +100,7 @@ export class Story {
   // ---- construction
   npcDefs() {
     const seen = new Map();
-    for (const c of [...this.chapters, this.life, this.citizens]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
+    for (const c of [...this.chapters, this.life, this.citizens, this.interiors]) for (const d of c.npcDefs()) if (!seen.has(d.id)) seen.set(d.id, d);
     return [...seen.values()];
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
@@ -203,10 +205,15 @@ export class Story {
       if (wait) { n.setPresent(false); continue; }
       if (n.def.pending && p === undefined) continue;   // (his own area not built yet: he stays hidden: Game.addActors)
       if (p === undefined) p = this.life.place(n.def.id);
+      if (p === undefined) p = this.interiors.place(n.def.id);   // (INTERIOR-LIFE: a room's or a port's people out of their chapter, or back)
       if (p === undefined) p = this.citizens.place(n.def.id);   // (WORLD-LIFE: a resident the story takes off the streets, or gives them back)
       if (p === undefined) continue;
       n.setPresent(!!p);
-      if (p) n.placeAt(p);
+      // (INTERIOR-LIFE: the place the story gave is remembered; a household round's person whose place is still their
+      //  usual mark carries on with the round instead of being put back on it: roomlife.js StoryRounds.keeps)
+      const keep = !!p && this.interiors.keeps(n, p);
+      n.placed = p;
+      if (p && !keep) n.placeAt(p);
     }
     for (const e of g.enemies) if (e.def?.when) e.setPresent(!!e.def.when(this.f));
   }
@@ -252,7 +259,7 @@ export class Story {
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
   ballTargets() { return this.cur.ballTargets(); }
-  update(dt) { this.cur.update(dt); this.life.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.sewers.update(dt); }
+  update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.sewers.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); }
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {

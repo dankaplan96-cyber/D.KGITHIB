@@ -6,7 +6,7 @@ Object.assign(STR.en, {
   p_cabinet: 'Search', p_coat: 'Take', p_counter: 'Hand in',
   chapter_council: 'The Council',
 
-  c9_narr: 'The project ship sets down on Zeelich Spaceport in a gust of pink cloud. Its passengers hurry off toward the drill platform. Nobody looks twice at one more traveller.',
+  c9_narr: "The project ship sets down on Zeelich Spaceport in a gust of pink cloud. Its passengers hurry off toward the project's platform. Nobody looks twice at one more traveller.",
   c9_tw_arrive: "Three days. Baldino first. He'll know how the council works.",
 
   c9_bal_1: "Twinsen! I heard Zoé on the relay, every word. So did half the island. So did the council, and they did what councils do: they formed a committee.",
@@ -65,7 +65,7 @@ Object.assign(STR.en, {
   c9_dallan_3: "I was project security. I stood guard over that dig for a year. I'm telling you: the professor is right, and the project knew enough to stop asking.",
   c9_councilC_3: "...My cousin works on the bore. If it cracks the shell, he's at the bottom of it.",
   c9_chair_3: "The council has heard enough. By vote of this council: the Joint Project is ordered to reverse the bore.",
-  c9_chair_4: "But understand, Twinsen: an order is paper. Vesk is already below, and only the console at the bottom can switch the bore. The shaft's blast doors answer to a code sent from all the project's stations at once.",
+  c9_chair_4: "But understand, Twinsen: an order is paper. Vesk is already below Citadel, and only the console at the bottom can switch the bore. The shaft's blast doors answer to a code sent from all the project's stations at once.",
   c9_bal_c2: "All the stations at once? I built half of those stations. Every one of them has a valve, a mill, a mirror or a radio I can talk to.",
   c9_bal_c3: "A network! Five places, five friends, one signal. Twinsen, we'll need everybody.",
   c9_tw_c3: "Then let's call everybody.",

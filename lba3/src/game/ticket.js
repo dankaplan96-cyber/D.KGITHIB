@@ -10,7 +10,7 @@
 //   - the public's side in front: red chairs along the left wall and the front, two white globe lamps on short posts
 //   - the left wall: a poster of the Temple of Bù and a round wall clock above it, the arched door at its front end;
 //     the back wall: two windows with red blinds and a poster of a ship between them
-// Twelve years on (ours): the office sells the project's ferry to Zeelich now (the ship on the poster is the ferry), a
+// Twelve years on (ours): the office sells the ferry to Desert Island now (ships to Zeelich leave from the spaceport only) (the ship on the poster is the ferry), a
 // timetable board hangs by the door; the old Temple poster has faded but stayed.
 //
 // CONTRACT

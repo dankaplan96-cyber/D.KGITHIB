@@ -8,7 +8,7 @@ import { createCharacter } from './characters.js';
 import { BEHAVIOURS } from './actors.js';
 import { t } from './i18n.js';
 
-const POSE = { normal: ['idle', 0], athletic: ['run', 6.5], aggressive: ['punch', 0], discreet: ['sneak', 1.6] };
+const POSE = { normal: ['idle', 0], athletic: ['run', 6.5], aggressive: ['punch', 0], discreet: ['sneak', 0.67] };
 
 export class BehaviourMenu {
   constructor(game, heroLook) {

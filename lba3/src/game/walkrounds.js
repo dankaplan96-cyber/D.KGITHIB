@@ -17,6 +17,7 @@
 // stall's counter (Pippa), the lane's pump (Bram), the harbour's customs (Odile) and Nell's shop, and every front door
 // used is a house the story never sends Twinsen into (tests/walkers.mjs checks the stops against the doors and the cast).
 import { WalkNav } from './walknav.js';
+import { ZEELICH_SEATS } from './zeelich.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // Zeelich's benches (zeelich.js: stone ends, a plank seat at 0.5 m, a tiled back): the seat's top, the back's front face
@@ -106,9 +107,9 @@ export function citadelRoster(game) {
       bench('brix_benchE', -35.8, 2.6, [28, 44]),
       look('brix_warm', -34.0, -3.85, -33.87, -2.83, [10, 16], { stage: 1, act: 'warm', gest: ['sigh'] }),   // (the shop's heat post, once it is lit)
       look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10], { gest: ['sigh', 'shrug'] }),
-      bench('brix_lane', -42.3, 19.5, [28, 44]),
+      bench('brix_lane', -47.8, 19.5, [28, 44]),
       look('brix_pump', -45.6, 58.6, -42, 65, [8, 12]),
-      bench('brix_lane2', -48.2, 50.8, [24, 36]),
+      bench('brix_lane2', -43.3, 43.4, [24, 36]),
     ]) },
     // two neighbours who meet between the plaza's benches and talk
     { id: 'maro', char: 'farmerB', tint: '#ffffff', speed: 1.05, start: 1, color: '#e8a0e0', stops: ok([
@@ -139,7 +140,7 @@ export function citadelRoster(game) {
       look('gar_rest', -36.2, 8.4, BED.x, BED.z, [6, 9], { act: 'rest', carry: null }),
     ]) },
     // the children: Pico up and down the lane, Dot round the square; TOWN-LIFE-3: tag together on the lawn west of the square,
-    // Pico runs at the stall's gulls, Dot plays hopscotch on the plaza and swings her legs on its bench
+    // Pico runs at the stall's gulls, Dot plays hopscotch on the plaza and swings her legs on the bench by the spaceport bridge
     { id: 'pico', char: 'desertkid', tint: '#ffe8d8', speed: 1.6, start: 0, color: '#ffd080', stops: ok([
       D('pico_a', -38.8, -9.4, { a: 0, dur: [2, 4] }),
       D('pico_b', -44.0, 12.8, { a: 3, dur: [2, 4] }),
@@ -159,7 +160,7 @@ export function citadelRoster(game) {
       D('dot_d', -41.0, 4.6, { a: 3, dur: [2, 4] }),
       look('dot_tag', TAG.x + 1.2, TAG.z, TAG.x, TAG.z, [24, 34], { pair: 'tag', mate: 'pico', play: 'tag', field: TAG }),
       D('dot_hop', hopStart.x, hopStart.z, { a: HOP.a, dur: [16, 24], play: 'hop' }),
-      bench('dot_bench', -48.3, 34.4, [14, 20], { play: 'swing' }),
+      bench('dot_bench', -34.6, 43.6, [14, 20], { play: 'swing' }),   // (BENCHES-1: the bench by the spaceport bridge's foot, looking at the shuttles: Ume's, who stands, so it is free; on the plaza's she found Tilde seated as often as not)
     ]) },
     // the harbour walker: the plaza's sign, the benches along the harbour path, the quay's gate
     { id: 'marda', char: 'yorna', tint: '#ffffff', speed: 1.1, start: 1, color: '#e08a8a', stops: ok([
@@ -188,7 +189,7 @@ export function citadelRoster(game) {
     { id: 'ume', char: 'lharElder', tint: '#ffffff', speed: 0.75, start: 0, color: '#c8a0f0', stops: ok([
       bench('ume_b1', -34.6, 43.6, [30, 46]),
       look('ume_look', -41.0, 38.5, -44, 33, [6, 10]),
-      bench('ume_b2', -48.2, 50.8, [30, 46]),
+      bench('ume_b2', -43.3, 43.4, [30, 46]),
       look('ume_pump', -46.6, 56.4, -43, 64, [6, 10]),
     ]) },
   ];
@@ -204,7 +205,7 @@ export function zeelichRoster(game) {
   if (!R) return null;
   const ox = R.group?.position.x ?? 2400, Y0 = R.group?.position.y ?? 0;
   game.walkers?.nav.addLevel(ox - 62, ox + 66, 6.0);
-  const Wz = { seats: [[-31, -4.6, 0], [-17, 4.6, Math.PI], [3, -4.6, 0], [14, 4.6, Math.PI], [-31, 2.2, Math.PI / 2 + 0.25], [26, -4.6, 0]].map(([x, z, ry]) => ({ x: ox + x, z, ry, spec: ZEELICH_BENCH })),
+  const Wz = { seats: ZEELICH_SEATS.map(([x, z, ry]) => ({ x: ox + x, z, ry, spec: ZEELICH_BENCH })),
     houses: (R.houseDoors || []).map((d, i) => ({ door: d, ry: d.z < 0 ? 0 : Math.PI, x: d.x, z: d.z + (d.z < 0 ? -2.6 : 2.6), skip: i === 1 || i === 4 })).filter((h) => !h.skip) };
   const bench = (id, x, z, dur, o = {}) => { const b = seatAt(Wz, ox + x, z); if (!b) return null; return { id, x: b.slot.x, z: b.slot.z, a: b.ry + Math.PI, act: 'stand', seat: b.seat, dur, ...o }; };
   const home = (id, x, z, dur) => { const d = doorAt(Wz, ox + x, z); if (!d) return null; return { id, x: d.x, z: d.z, a: d.a, act: 'knock', door: d.door, dur }; };

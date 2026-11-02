@@ -8,7 +8,8 @@
 // works in both, so a room can be walked back through in either; only what starts, ends, shows and journals a part
 // differs.
 //
-// Twinsen follows Vesk down the drill shaft. In the project's deep installation he cools the bore's heat
+// Twinsen follows Vesk down the drill shaft at Citadel's station (SHAFT-CITADEL: its top is the bore's collar in the old
+// fort's yard; the network's code opened its blast doors in chapter 10, and the lift comes back up there). In the project's deep installation he cools the bore's heat
 // exchanger to free a jammed shutter (a cooling diagram on the wall gives the circuit: valves A and C to
 // the exchanger, B to a drain; valve C sits on a catwalk reached by knocking a ladder down with the ball),
 // past a maintenance drone. In the crystal galleries the well's crystals have grown huge; waking three
@@ -24,6 +25,7 @@ import { ChapterBase } from './base.js';
 import '../text/ch3.js';
 import { FinaleFx, COIL_Y, COIL_R } from './finale-fx.js';
 import { revealBeat, twoShot, solidAt } from './revealcam.js';
+import { SHAFT_TOP } from '../island.js';
 
 const ROOMS = { 'c3-shaft': 'c3shaft', 'c3-deep': 'c3deep', 'c3-gallery': 'c3gallery', 'c3-sendell': 'c3sendell', 'c3-core': 'c3core' };
 const CIRCUIT = { A: true, B: false, C: true }; // the diagram: A and C to the exchanger, B to the drain
@@ -33,6 +35,10 @@ const ALLIES = [['zoeradio', 'c3_pylon_1'], ['miraradio', 'c3_pylon_2'], ['okura
 // (the third plate: a shot from where it first stood (bankFrom - 1 m) struck the bay's shield wall; the shot clears it from
 //  0.5-1.0 m right of there. tests/chapter3.mjs throws from each plate's centre and wants the first throw to hit)
 const PLATE = [{ dx: 0, dz: 0, k: 7 }, { dx: -0.5, dz: 0, k: 5 }, { dx: -0.25, dz: 0, k: 3 }];
+// SHAFT-CITADEL: where the lift brings him up (on the bore's deck, south of the collar, facing it) and how near the collar
+// the way down is offered, facing it (the collar is 2.85 m round; its deck runs to 4.8 m)
+export const SHAFT_UP = { x: SHAFT_TOP.x + 1.4, z: SHAFT_TOP.z + 4.3, a: Math.PI };
+const SHAFT_REACH = 5.0;
 
 export class Chapter3 extends ChapterBase {
   get part() { return 1; }   // 1: The Shell (to Sendell), 2: The Core (ChapterCore)
@@ -73,6 +79,7 @@ export class Chapter3 extends ChapterBase {
       g.enterRoom('c3core', to?.x != null ? to : null, true);
       return;
     }
+    g.world.station?.setSealed?.(false, true);   // (SHAFT-CITADEL: the network's code opened the collar's blast doors)
     if (!this.R.c3shaft) return; // (rooms missing in this build)
     g.enterRoom('c3shaft', null, true);
     this.chain([['narrator', 'c3_arrive'], ['hero', 'c3_tw_arrive'], ['balradio', 'c3_bal_radio1']], () => {
@@ -82,11 +89,7 @@ export class Chapter3 extends ChapterBase {
 
   // ---------------------------------------------------------------- moving between rooms
   exitTo(to) {
-    if (to === 'c3-up') {
-      const P = this.R.zeelich?.platform;
-      if (!P) return null;
-      return { room: 'zeelich', x: P.pad.x + 2.2, z: P.pad.z, a: Math.PI / 2 };
-    }
+    if (to === 'c3-up') return { ...SHAFT_UP };   // (up the lift to the station's yard on Citadel)
     const id = ROOMS[to];
     if (!id || !this.R[id]) return null;
     const T = this.R[id], from = this.game.room?.id;
@@ -116,9 +119,8 @@ export class Chapter3 extends ChapterBase {
   interactables(consider, dist) {
     const g = this.game, f = this.f, room = g.room?.id, h = g.hero;
     if (!this.on()) return;
-    if (room === 'zeelich') {
-      const P = this.R.zeelich.platform;
-      if (this.R.c3shaft) consider(dist(P.pad.x, P.pad.z), 2.0, { kind: 'c3down', label: 'p_down' });
+    if (!room) {   // (Citadel, outdoors: the shaft's collar in the station's yard)
+      if (this.R.c3shaft) consider(dist(SHAFT_TOP.x, SHAFT_TOP.z), SHAFT_REACH, { kind: 'c3down', label: 'p_down' });
     } else if (room === 'c3deep') {
       const D = this.R.c3deep;
       if (D.diagram) consider(dist(D.diagram.x, D.diagram.z), 1.9, { kind: 'c3diagram', label: 'p_read' });

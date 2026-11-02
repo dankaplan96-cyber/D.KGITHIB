@@ -8,10 +8,13 @@
 // come for the relay), and Sefa's dome on the Hamalayi (Pim holds the big mirror's chain; ice mites on the
 // ridge). Hesk's glider flies Twinsen between Twinsun's regions (Citadel, Desert Island, the Hamalayi), in any
 // order; between Zeelich and Twinsun he takes the spaceship, Zeelich Spaceport ⇄ Citadel Spaceport (travel.js: the
-// planets are joined by spaceship only, PLANET-1). With all five lamps lit, the console
-// on the drill platform sends the code; every friend holds for a minute; the blast doors open → chapter 11.
+// planets are joined by spaceship only, PLANET-1). With all five lamps lit, Baldino takes a ship to Citadel and waits
+// at the station in the old fort, by the bore's collar: the top of the shaft through Twinsun's shell (SHAFT-CITADEL, the
+// user's decision of 2.11.2026). His code box on the project's own code line sends the code; every friend holds for a
+// minute; the blast doors over the collar open → chapter 11.
 import { ChapterBase } from './base.js';
 import { VALVE_EFFECT, buildGlider, buildRelay } from '../valveroom.js';
+import { SHAFT_TOP } from '../island.js';
 import '../text/ch10.js';
 
 const STATIONS = ['mill', 'valves', 'light', 'bore', 'dome'];
@@ -27,6 +30,10 @@ const LIGHTHOUSE_DOOR = { x: -107.5, z: 94.2 };
 // round, of the stair top and of the stairs down (tests/chapter10.mjs walks to each dial). Degrees round the room
 // as interiors.js buildLightTop (0 = +z, 90 = +x), metres from the lens.
 const LIGHT_CAST = { zoe: [64, 2.3], arthur: [86, 2.45], relay: [108, 2.6] };
+// SHAFT-CITADEL: at the bore in the station's yard, south of the collar (2.85 m round; the deck runs to 4.8 m): Baldino's
+// code box on the project's code line, and Baldino beside it, facing it
+const CODE_BOX = { x: SHAFT_TOP.x, z: SHAFT_TOP.z + 3.6 };
+const BAL_AT_SHAFT = { x: SHAFT_TOP.x - 1.6, z: SHAFT_TOP.z + 4.4, a: Math.atan2(1.6, -0.8) };
 const REGION_OF = { zeelich: 'zeelich', workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', desert: 'desert', condA: 'desert', condB: 'desert', hamalayi: 'hamalayi', obsv: 'hamalayi' };
 
 export class Network extends ChapterBase {
@@ -82,6 +89,8 @@ export class Network extends ChapterBase {
     if (D?.bore && !this.relays.bore) this.relays.bore = put(buildRelay(), D.group, D.bore.x + 1.4, (D.bore.y ?? gy(D.bore.x, D.bore.z)), D.bore.z - 1.2, 0);
     const O = this.R.obsv;
     if (O?.telescope && !this.relays.dome) this.relays.dome = put(buildRelay(), O.group, O.telescope.x - 1.3, 0, O.telescope.z - 0.4, 0);
+    // Baldino's code box at the shaft's collar (Citadel)
+    if (g.world?.root && !this.codeBox) { this.codeBox = put(buildRelay(), g.world.root, CODE_BOX.x, gy(CODE_BOX.x, CODE_BOX.z), CODE_BOX.z, Math.PI); this.codeBox.userData.setOn?.(true); }
   }
 
   // ---------------------------------------------------------------- cast
@@ -128,12 +137,13 @@ export class Network extends ChapterBase {
     if (!['baldino', 'hesk', 'oku', 'mira', 'zoe', 'arthur', 'ilka', 'dallan', 'pim'].includes(id)) return undefined;
     // (LAZY-REGIONS: the area is read only for this chapter's own cast: an NPC whose spot is in an area not built
     //  yet waits for it, Story.refreshCast)
+    // (all five lit: he has taken a ship to Citadel and waits at the shaft's collar in the station's yard, through the
+    //  next two chapters too)
+    if (id === 'baldino' && this.done() >= 5) return { ...BAL_AT_SHAFT };
     const Z = this.Z, D = id === 'ilka' || id === 'dallan' ? this.D : null;
     if (!Z) return undefined;
-    const plat = Z.platform;
     switch (id) {
       case 'baldino':
-        if (this.done() >= 5) return { x: plat.gate.x - 1.6, z: plat.gate.z + 1.4, a: Math.PI / 2 };
         return R.workshop?.npcSpots?.baldino ?? Z.npcSpots.baldinoOut;
       case 'hesk': return f.c10_started ? this.heskSpot(this.region()) : null;
       case 'oku': return f.c10_okuAsk ? { x: Z.millTop.x + 2.2, z: Z.millTop.z + 3.0, a: Math.PI } : Z.npcSpots.esmer2;
@@ -149,6 +159,7 @@ export class Network extends ChapterBase {
 
   begin() {
     const g = this.game, f = this.f;
+    g.world.station?.setSealed?.(true, true);   // (SHAFT-CITADEL: still shut since chapter 3; the code below opens it)
     g.hero.swapBody?.('twinsen'); g.hero.hasBall = true; g.hero.disguised = false;
     if (this.R.workshop) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
     this.story.refreshCast();
@@ -217,7 +228,8 @@ export class Network extends ChapterBase {
     if (r === 'zeelich') {
       const mt = this.Z.millTop;
       if (f.c10_millBraked && !f.c10_mill && Math.abs(h.pos.y - mt.y) < 1.3) consider(dist(mt.x, mt.z), 1.8, { kind: 'c10mill', label: 'p_relay' });
-      if (this.done() >= 5 && !f.c10_done) consider(dist(this.Z.platform.console.x, this.Z.platform.console.z), 1.8, { kind: 'c10console', label: 'p_station' });
+    } else if (!r) {   // (Citadel, outdoors: Baldino's code box at the shaft's collar)
+      if (this.done() >= 5 && !f.c10_done) consider(dist(CODE_BOX.x, CODE_BOX.z), 1.8, { kind: 'c10console', label: 'p_station' });
     } else if (r === 'valves' && f.c10_miraAsk && !f.c10_valves) {
       for (const v of this.R.valves.valves) consider(dist(v.x, v.z), 1.1, { kind: 'c10valve', valve: v, label: 'p_valve' });
     } else if (r === 'lighttop' && f.c10_zoeAsk && !f.c10_light) {
@@ -295,7 +307,7 @@ export class Network extends ChapterBase {
     const n = this.done();
     g.hud.toast('c10_toast_station', { n });
     this.story.refreshCast();
-    if (n >= 5) this.chain([['balradio', 'c10_all_1']], () => { this.story.refreshCast(); g.updateObjective(); g.save(false); });
+    if (n >= 5) this.chain([['balradio', 'c10_all_1']], () => { this.story.refreshCast(); this.showProps(); g.updateObjective(); g.save(false); });
     else { g.updateObjective(); g.save(false); }
   }
 
@@ -373,6 +385,7 @@ export class Network extends ChapterBase {
     g.audio.cue?.('revelation');
     this.chain([['baldino', 'c10_bal_p1'], ['hero', 'c10_tw_p1'], ['miraradio', 'c10_radio_mira'], ['zoeradio', 'c10_radio_zoe'], ['okuradio', 'c10_radio_oku'], ['ilkaradio', 'c10_radio_ilka'], ['pimradio', 'c10_radio_pim'], ['baldino', 'c10_bal_p2']], () => {
       g.camRig.shake(0.8); g.audio.play('horn');
+      this.game.world.station?.setSealed?.(false);   // (the blast doors over the collar draw back)
       // MAGIC-LEVELS (story/magic.js): the five stations' heat comes up the open shaft: level 4, the fire ball
       const rest = () => this.chain([['baldino', 'c10_bal_p3'], ['hero', 'c10_tw_p2']], () => {
         g.audio.endCue?.(); this.sending = false;
@@ -439,6 +452,8 @@ export class Network extends ChapterBase {
   showProps() {
     const f = this.f, on = this.isCur();
     for (const gl of this.gliders || []) gl.visible = on;
+    // (Baldino's code box stays on the code line while he waits at the collar: through The Shell and The Core too)
+    if (this.codeBox) this.codeBox.visible = this.done() >= 5 && ['network', 'shell', 'core'].includes(this.story.cur?.key);
     for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && (!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); r.userData.setOn?.(!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); }
   }
   regionBuilt() { this.showProps(); }

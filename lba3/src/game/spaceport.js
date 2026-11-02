@@ -14,7 +14,7 @@
 // Everything static is merged per material (one Kit for the platform, one for its furniture).
 //
 // CONTRACT (world coordinates, Citadel outdoors): buildSpaceport(root, physics, W) → W.spaceport =
-//   { pad {x,z,y} (the shuttle: its interactable), landing {x,z,a} (where he steps off), deck {x0,x1,z0,z1,y} }
+//   { pad {x,z,y} (the shuttle: its interactable), landing {x,z,a} (where he steps off), deck {x0,x1,z0,z1,y}, ship (its Group) }
 import * as THREE from 'three';
 import * as P from './props.js';
 import { Kit, rbox, cyl, lathe, plane, torus, sphere, canvasTex, MAT, paintVC, tinted } from './props.js';
@@ -102,7 +102,9 @@ export function buildSpaceport(root, physics, W) {
   for (let i = 0; i < 16; i++) { const a = (i + 0.5) * Math.PI / 8; add(rbox(0.5, 0.02, 0.14, 0.01), i % 2 ? pad : yellow, PAD.x + Math.sin(a) * 4.62, Y + 0.125, PAD.z + Math.cos(a) * 4.62, a + Math.PI / 2); }
   for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; add(cyl(0.1, 0.12, 0.12, 8), MAT.glow('#fff4c0', '#ffd860', 1.6), PAD.x + Math.sin(a) * 5.2, Y + 0.06, PAD.z + Math.cos(a) * 5.2); }
   for (const s of [-1, 1]) for (let x = DECK.x0 + 0.6; x < PAD.x - 5.6; x += 1.4) pv(k, rbox(0.9, 0.012, 0.1, 0.005), '#e8c040', x + 0.45, Y + 0.006, BRIDGE.z + s * 1.75);
-  const sh = esmerShuttle({ landed: true }); sh.position.set(PAD.x, Y + 0.12, PAD.z); sh.rotation.y = -Math.PI / 2; g.add(sh);
+  // (TRAVEL-1: the ship is merged on its own and joins the port after the port's merge: the journey film hides it while
+  //  its twin flies)
+  const sh = esmerShuttle({ landed: true }); sh.position.set(PAD.x, Y + 0.12, PAD.z); sh.rotation.y = -Math.PI / 2; mergeStatic(sh);
   physics.add({ type: 'cyl', x: PAD.x, z: PAD.z, r: 3.2, top: Y + 4.4, noStand: true });
 
   // --- the terminal on the north side: stone walls, a glass band, a flat roof with an Esmer dome
@@ -131,11 +133,12 @@ export function buildSpaceport(root, physics, W) {
   occOf(W).add({ kind: 'rev', x: tcx, z: tcz, y0: Y + th, base: Y + th + 0.25, profile: [[0, 2.1], [0.03, 2.1], [0.4, 1.8], [1.0, 1.45], [1.6, 0.9], [1.75, 0.35]], name: 'spaceport dome' });
 
   // --- the waiting area in front of the terminal: benches facing the pad between a tub, a planter and bins
-  for (const bx of [-10.9, -7.7]) put((kk) => P.waitingBench(kk, { w: 1.9 }), bx, T.z1 + 1.45);
+  // (BENCHES-1: the tub stood 0.28 m off both benches' ends and the bins 0.1 and 0.26: the benches 0.3 m further apart,
+  //  0.6 m clear of the tub, and one bin, at the east bench's outer end: the west one's is 0.75 m from the deck's lamp)
+  for (const bx of [-11.2, -7.4]) put((kk) => P.waitingBench(kk, { w: 1.9 }), bx, T.z1 + 1.45);
   put((kk) => P.flowerTub(kk, { seed: 4 }), -9.3, T.z1 + 1.3);
   put((kk) => P.planterBox(kk, { w: 1.5, d: 0.55, seed: 5, color: '#2f6a9a', flowers: ['#e8343a', '#ffffff', '#f2c94c'] }), -5.45, T.z1 + 0.55);
-  put((kk) => P.litterBin(kk), -12.55, T.z1 + 1.15);
-  put((kk) => P.litterBin(kk), -6.2, T.z1 + 1.6);
+  put((kk) => P.litterBin(kk), -5.95, T.z1 + 1.55);
   put((kk) => P.pottedPlant(kk, { kind: 'spiky', s: 1.3, potColor: '#2f6a9a' }), 0.7, T.z1 + 0.6);
   put((kk) => P.drinkingFountain(kk), -0.9, T.z1 + 0.6);
 
@@ -199,6 +202,7 @@ export function buildSpaceport(root, physics, W) {
   // (PERF-IGPU) the two kits share most materials, and the landed shuttle never moves: one mesh per material for
   // the whole port (the departures board and the blinking beacon stay their own meshes)
   mergeStatic(g);
+  g.add(sh);
   // the tower's beacon blinks (its own mesh)
   const beacon = new THREE.Mesh(sphere(0.16, 10, 8), MAT.glow('#ff6050', '#ff3020', 2.2)); beacon.position.set(CT.x, Y + 11.85, CT.z); g.add(beacon);
   W.updaters.push((dt, t) => { beacon.visible = (t % 1.6) < 0.8; });
@@ -206,7 +210,7 @@ export function buildSpaceport(root, physics, W) {
   const S = W.spaceport = {
     pad: { x: PAD.x, z: PAD.z, y: Y },
     landing: { x: PAD.x - 6.2, z: PAD.z - 1.5, a: -Math.PI / 2 },
-    deck: { ...DECK, y: Y }, bridge: { ...BRIDGE }, board: B, group: g,
+    deck: { ...DECK, y: Y }, bridge: { ...BRIDGE }, board: B, group: g, ship: sh,
   };
   return S;
 }

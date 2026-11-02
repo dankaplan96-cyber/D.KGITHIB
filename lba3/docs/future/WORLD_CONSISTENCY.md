@@ -1,0 +1,66 @@
+# World consistency: chapters 3–12 get what chapters 1–4 got (the user, 2.11.2026)
+
+The user: "I'm afraid of what chapters 3 onward will be like. Make sure every change made to the world, and the reason
+for it, is carried into the other chapters." The user plays chapters 1–2 only, so this file is for the team. Report to
+the user only by chapter number and kind of gap, never by place, person or event.
+
+## The rules the user's feedback set (each with its source)
+| # | Rule | Where it was set | Engine-wide? |
+|---|---|---|---|
+| R1 | Every place the story uses is inhabited: residents with rounds, not an empty set | TOWN-LIFE-1..3, Citadel (ch 1–2) | no, per region |
+| R2 | Story characters move when no scene needs them (a small round), stop and turn when spoken to | INTERIOR-LIFE part 2 (Zoé, 2.11) | machinery yes, cast per chapter |
+| R3 | Rooms you can enter have their keeper and regulars; empty only when the story empties them | INTERIOR-LIFE part 1 (tavern, 2.11) | per room |
+| R4 | Crossing between planets is seen: the ship's take-off, the cabin, space; ferries and gliders are seen too | TRAVEL-1 (2.11) | the films yes, the story's crossings per chapter |
+| R5 | Spaceports have people and terminals you walk into, with the right crowd for the chapter | SPACEPORT-1, INTERIOR-LIFE part 3 (2.11) | per chapter |
+| R6 | 80 % likeness to LBA1/LBA2 for places kept; only places with a story purpose | ALIGNMENT.md (2.11) | per place |
+| R7 | Names: Esmer for Zeelich's peoples, Wannies for the moles; no Earth-style night; FunFrock dead; Vesk the villain | e768a8c, 89f9c6e | text |
+| R8 | Lamps hand over with fades; weather per planet held by the story's scenes; never dark | LAMP-FADE, WEATHER-1 | yes |
+| R9 | LBA2's gaits (discreet walk), planted feet, busy NPCs turn only when spoken to | DISCREET-WALK, STOP-ROBUST, GAME-1 | yes |
+| R10 | The story connects: the shaft starts at Citadel's station, every later chapter agrees | SHAFT-CITADEL (da0f308) | text and story |
+
+R8 and R9 live in the engine, so every chapter has them already (DISCREET-WALK lands with its merge). R7 was checked
+on 2.11 (`grep` over `src/game/text`): no "mole", and the only "night" is chapter 2's dial riddle, kept on purpose.
+R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL merge.
+
+## Audit at 014cf8e (2.11.2026)
+✅ in place · ⚠ partly · ❌ missing · — not relevant
+
+| Ch | R1 residents | R2 cast moves | R3 rooms | R4 crossing seen | R5 spaceport |
+|---|---|---|---|---|---|
+| 3 Zeelich | ⚠ hub street yes; the eight original islands empty (ZEELICH_GAP) | ❌ Baldino, Oku and the others stand | ⚠ workshop has its life; ZEELICH-1 rooms not built | ❌ the end (home, then the ferry south) is a plain fade | ⚠ arrival deck only; SPACEPORT-1 ordered |
+| 4 The Dig | ⚠ Kesh yes; the research post, School, Temple: no | ❌ 16 speakers, 1 moves | — | — (same island) | — |
+| 5 Steam and Sand | ⚠ as 4 | ⚠ some scenes move people; the rest stand | — | ❌ Hesk's glider north is a plain fade | — |
+| 6 The Pass | ❌ Lhar: three villagers on marks, no one else | ❌ | — | — | — |
+| 7 The Observatory | ❌ | ❌ | ⚠ the room has its keeper, standing | ❌ Hesk's glider home is a plain fade | — |
+| 8 Evacuation | ⚠ two residents packing; everyone else mustered | ⚠ | ⚠ INTERIOR-LIFE empties rooms here | ✅ ship film | ⚠ the queue for the ships wants SPACEPORT-1 |
+| 9 The Council | ⚠ hub street yes; the upper districts thin | ❌ the council stands | ⚠ | ✅ arrives off the ship | ⚠ |
+| 10 The Network | ⚠ by region as above | ⚠ | ⚠ | ✅ the travel menu plays its films | ⚠ |
+| 11 The Shell | — (no one lives there) | — | — | — | — |
+| 12 The Core | — | — | — | — | — |
+| Epilogue | ✅ the town is back | ❌ the family stand in free roam | ⚠ rooms follow INTERIOR-LIFE's states | — | — |
+
+## Progress
+- **WC-2 done (2.11):** 31 story characters in chapters 3–10 walk small rounds (`src/game/castrounds.js`, `roomlife.js StoryRounds`, `tests/cast-rounds.mjs`); the epilogue family uses the household rounds. Kept still on purpose: the stealth, disguise, dial-bank, puzzle and fight places, guards (the list is in the merge commit). Doran and Zeelich's street folk go to WC-3.
+
+## Work orders (in this order; at most two agents at a time)
+1. **WC-1 Journeys.** Chapter 3's end: `crossByShip` from Zeelich Spaceport with Doran aboard, then the ferry's film to
+   Kesh's pier. Chapters 5 and 7: Hesk's glider through `playJourney(mode 'glider')` between the travel points. Chapter
+   10: Baldino's ship leaving Zeelich as a spot (`launchShip`'s pattern) when he sets off. Small; after INTERIOR-LIFE
+   merges (it may touch `story/chapter2.js`).
+2. **WC-2 The cast moves.** After INTERIOR-LIFE's round machinery is merged, give every standing story character in
+   chapters 3–10 and the epilogue a small round when no scene needs them: Baldino at his bench, Oku at the mills, Ilka
+   and Dallan at the post, Mother Tarra, Hesk at his yacht and glider, Yorna and Pim, the observatory's keeper, the
+   council between sittings, the family in the epilogue. Same rules: talk and scenes win, nothing saved.
+3. **WC-3 Residents where the story goes.** Rosters like `desertRoster` for the dig's research post (project workers),
+   the School and Ker'aooc, Lhar and the monastery (villagers moving in, then settled), the upper districts (clerks,
+   guards). Zeelich's original islands follow phase A of ALIGNMENT.md (island life by identity), as already planned.
+4. **WC-4 Spaceports per chapter.** When SPACEPORT-1 lands: the crowd by chapter (grounded in 1–3, passengers in 4–7,
+   the queue in 8, the council's guards in 9, Baldino's departure in 10), and every story crossing walks through the
+   terminal.
+5. **WC-5 A guard test.** `tests/world-consistency.mjs`: for each chapter's start state, count residents in each area
+   the chapter uses, the share of present story characters that moved in 30 s of free play, and that every planet or
+   region change in the chapter's code goes through a journey film. Run it in each future merge's regression set, so a
+   new chapter or a change cannot drop what chapters 1–4 gained.
+
+Each order keeps the standing rules: numbers and descriptions only from the originals, no spoilers to the user,
+honest measurements (SwiftShader here: no fps claims).

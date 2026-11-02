@@ -7,6 +7,7 @@ import { Renderer } from './engine/renderer.js';
 import { loadBake } from './engine/sculpt.js';
 import { preloadCharacters } from './game/characters.js';
 import { Environment } from './engine/environment.js';
+import { Weather, weatherEnabled } from './game/weather.js';
 import { AudioEngine } from './engine/audio.js';
 import { driveMouth } from './engine/voice.js';
 import { Perf, gpuQuality, oldGpuQuality, integratedGpu, startupMark, startupReport } from './engine/perf.js';
@@ -38,6 +39,8 @@ import { buildCitadelContainers, buildRegionContainers, ContainerCues } from './
 import { enterArena } from './game/arena.js';
 import { Regions, CITADEL_REF, CHAPTER_AREAS } from './game/regions.js';
 import { travelRegion } from './game/travel.js';
+import { SHAFT_TOP } from './game/island.js';
+import { ZEELICH } from './game/zeelich.js';
 import { updateKitLod, enableBatching, LOD_BATCHES, KIT_LOD } from './game/kit.js';
 import { ShadowCache } from './engine/shadowcache.js';
 import { Power } from './engine/power.js';
@@ -130,6 +133,16 @@ export function migrateSave(raw) {
     else if (at >= 0) { f.exp = 1; delete f.exp_base; }
     if (at >= 0) f.chapter = at;
     v = 6;
+  }
+  // SHAFT-CITADEL (not a format change, so no version step; idempotent): the shaft through Twinsun's shell starts at
+  // Citadel's station now, not on Zeelich's drill platform, and the underground's lift comes up there. A save made on
+  // the platform during The Shell or The Core (he had come up the old lift) comes out beside the station's bore instead.
+  {
+    const f = s.flags && typeof s.flags === 'object' ? s.flags : null;
+    const lx = (s.hero.x ?? 0) - ZEELICH.x, lz = (s.hero.z ?? 0) - ZEELICH.z;
+    if (f && (f.chapterKey === 'shell' || f.chapterKey === 'core') && s.room === 'zeelich' && lx > 33 && lx < 62 && Math.abs(lz) < 13) {
+      s.room = null; s.hero.x = SHAFT_TOP.x + 1.4; s.hero.z = SHAFT_TOP.z + 4.3;
+    }
   }
   // a key this build doesn't have: the last one before it in the order the save was written with (s.order, from
   // format 6) that this build knows; without that order, the stored position, as far as this build's order goes
@@ -228,7 +241,7 @@ const SHOP = [
 
 class Game {
   constructor() {
-    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'far', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
+    this.settings = { lang: 'en', controls: 'classic', camera: 'follow', autoControls: 'on', camDist: 'far', hud: 'lba', visual: '2026', quality: 'high', res: 'auto', fps: 'auto', aa: 'msaa', music: 0.55, sfx: 0.8, voice: 0.8, textSpeed: 'normal', textSize: 'normal', shake: 'on', weather: 'on', difficulty: 'normal', aimAssist: 'normal', lockMode: 'toggle', minimap: 'north', ...store.get(SET_KEY) };
     if (!['lba', 'follow', 'free'].includes(this.settings.camera)) this.settings.camera = 'lba';
     if (!['near', 'medium', 'far'].includes(this.settings.camDist)) this.settings.camDist = 'far';
     // settings v2: Classic (LBA2's own keys and tank controls) becomes the default, also for settings saved before
@@ -320,6 +333,8 @@ class Game {
     this.shadowCull.shadowsOn = () => this.renderer.renderer.shadowMap.enabled;   // (PERF-CPU: no caster tests without the shadow pass)
     this.syncShadowCells();   // (PERF-HIGH: the cell size for the preset; before any area is built)
     this.renderer.setup(this.scene, this.camera);
+    // (WEATHER-1: the rain lines and the motes compiled with the scene, not on the first rain; with the weather off, as before)
+    { const ex = [this.env.rain, this.env.motes]; this.renderer.warmExtra = () => (weatherEnabled(this.settings) ? ex : null); }
     this.perf = new Perf(this.renderer.renderer); this.perf.game = this;
     // (PERF-BATTERY: the static casters drawn into a cached shadow map only when needed: engine/shadowcache.js)
     this.shadowCache = new ShadowCache(this.renderer.renderer, this.env.sun, () => this.shadowCull.area, () => LOD_BATCHES.map((b) => b.mesh));
@@ -421,7 +436,8 @@ class Game {
     this.state = 'loading';
     this.time = 0;
     this.played = null;   // (SAVE-SLOTS: seconds of play since a new game; null for a game loaded from a save that didn't count them)
-    this.storm = 0;
+    this.storm = 0;   // (WEATHER-1: set by the weather director on Citadel, a rare passing storm; 0 with the weather off)
+    this.weather = new Weather(this);   // (WEATHER-1: the weather and the light cycle, outdoors: src/game/weather.js)
     this.flags = {};
     this.killed = [];
     this.collected = [];
@@ -757,8 +773,10 @@ class Game {
   // so even a slow first frame (buffer uploads) can't skip the fade-in.
   // LAZY-REGIONS: `need` names the rooms the scene change goes to; any not built yet are built while the screen is
   // black, under a loading card (the loading screen's look: "Arriving at Zeelich…" and a bar), before mid() runs.
-  startTransition(mid, need = null) {
-    this.trans = { t: 0, mid, called: false, walk: !!this.walkNext, hold: false, need: need?.filter(Boolean) || null };
+  // TRAVEL-1: `then` (optional) takes over from the fade-in: called on the new scene's first frame, with the screen still
+  // black (a journey's arrival film starts there: src/game/travelfilm.js). Not called when the area failed to load.
+  startTransition(mid, need = null, then = null) {
+    this.trans = { t: 0, mid, called: false, walk: !!this.walkNext, hold: false, need: need?.filter(Boolean) || null, then };
     this.walkNext = false;
     this.hud.prompt(null); // (the last room's prompt would otherwise come back with the new scene's first frames)
   }
@@ -841,6 +859,8 @@ class Game {
         if (!this.testFreeze) { T.held = true; T.heldAt = undefined; f.style.opacity = 1; this._fadeOp = 1; return; }
       }
     }
+    // TRAVEL-1: the scene is ready under the black (the settle frames above are done): `then` instead of the fade-in
+    if (T.then && T.called && !T.failed) { const then = T.then; T.then = null; this.trans = null; f.style.opacity = ''; f.style.transition = ''; this._fadeOp = 1; then(); return; }
     const op = T.t < 0.35 ? T.t / 0.35 : Math.max(0, 1 - (T.t - 0.35) / 0.35);
     f.style.opacity = op; this._fadeOp = op;
     if (T.t >= 0.7) { this.trans = null; f.style.opacity = ''; f.style.transition = ''; }
@@ -2571,11 +2591,14 @@ class Game {
         break;
     }
 
-    this.world.storm = this.storm;
+    // WEATHER-1: the director first (it sets this.storm on Citadel, and the environment's modifiers); off, as before
+    const W = this.weather;
+    W?.update(dt);
+    this.world.storm = Math.max(this.storm, W?.sway ?? 0);   // (the trees, laundry and boats sway with a wind as with a storm)
     this.env.setStorm(this.storm);
-    this.audio.setStorm(this.storm);
+    this.audio.setStorm(this.storm, Math.max(this.storm, W?.rainSnd ?? 0), Math.max(this.storm, W?.windSnd ?? 0));
     const focus = this.cine?.focus || this.hero.pos;
-    this.env.update(dt, this.camera, this.state === 'title' ? new THREE.Vector3(0, 0, 0) : focus);
+    this.env.update(dt, this.camera, this.state === 'title' ? (this._origin ??= new THREE.Vector3()) : focus);
     // (TITLE-LOAD: the title's own fog end, a visible option: off unless TITLE_VIEW.far is set)
     if (TITLE_VIEW.far > 0 && (this.state === 'title' || this.state === 'loading') && !this.room) this.scene.fog.far = Math.min(this.scene.fog.far, TITLE_VIEW.far);
     // (RENDER-INV: detail levels and the lamps' lights serve the picture only: once per displayed frame, not per catch-up step)

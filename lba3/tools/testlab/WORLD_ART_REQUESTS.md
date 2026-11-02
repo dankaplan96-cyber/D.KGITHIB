@@ -1124,7 +1124,7 @@ apply").**
   office, the pharmacy, the neighbours', Nell's, and the cellar route square → tavern → cellar → store → back. There
   are no console errors besides the server's favicon.
 
-## LBA-CITADEL-8 — the baggage claim (LBA2 scene 5) in the 'bug' house; the stairs' 2 cm seam closed
+## LBA-CITADEL-8 — the baggage claim (LBA2 scene 5) in the 'bug' house; the stairs' 2 cm seam closed · SET ASIDE: about 75 %, below the 80 % target (the user, 2.11.2026: "everything below 80 % goes aside"; no more work on it now; the stair-seam fix stays)
 
 - **Where:** LBA2 scene 5's door is our `bug` house in Bug Street (WORLD-80 step 2 placed the house for that door). It
   had no inside until now.
@@ -1161,7 +1161,7 @@ apply").**
   - Draw calls: 21 (20 + 1) at Medium. No console errors.
 - **Picture:** `runs/baggage-vs-lba2.jpg` (local).
 
-## LBA-CITADEL-9 — Tralu's cave (LBA2 scene 2) behind the plateau's door; colliders of props on raised floors
+## LBA-CITADEL-9 — Tralu's cave (LBA2 scene 2) behind the plateau's door; colliders of props on raised floors · SET ASIDE: about 65 %, below the 80 % target (the user, 2.11.2026; no more work on it now; the raised-floor collider fix stays)
 
 - **Where:** WORLD-80 built the plateau's door in the bank behind the depot (island.js `OLD_DOORS.plateau`) and kept it
   shut. It now opens on the cave.
@@ -1196,3 +1196,151 @@ apply").**
     up the stair to the terrace by the gate (y 1.6), and back out onto the door's landing.
   - Draw calls: 20 (19 + 1) at Medium. No console errors.
 - **Picture:** `runs/tralucave-vs-lba2.jpg` (local).
+
+## TRAVEL-1 · Every journey between planets is by spaceship, seen from outside and inside; every vehicle works · The user asked for it (2.11.2026)
+
+The user (2.11.2026, in Hebrew, paraphrased): "Every passage from planet to planet is only by spaceship. It needs an
+animation of the ship flying, seen from outside, and the ship from inside with the people who are there. Every kind of
+vehicle in the game must work."
+
+- **This answers MORNING_CHECK question 3** (the expansion's passage between two planets that is not by ship): close it.
+  Between planets, the spaceship only.
+- **Today (checked in `src/game/travel.js` at f08774c):** every journey (`ship`, `shuttle`, `ferry`, `glider`) is
+  `startTransition` → a fade to black → the landing spot. No flight is seen and there is no inside.
+- **Asked of the cloud (travel and cinematics are its code):**
+  1. Ship journeys between planets: a short take-off and flight seen from outside (the ship rising from the pad, the
+     planet falling away, the arrival and landing), skippable, played under the existing transition.
+  2. The inside of the ship: a cabin with seats and windows and a few passengers (travellers, a crew member), where
+     Twinsen is during the flight (a short scene, or a walkable cabin room on longer flights).
+  3. The other vehicles: each journey shows its vehicle (the ferry leaving the quay, the glider taking off, the
+     shuttle), at least as a short outside shot.
+  4. A test that rides every route in `buildTravel`/`travelRegion` both ways and checks that the hero lands on the
+     landing spot, on the ground, with the vehicle's shot played (the user: "every kind of vehicle must work").
+- **The laptop's part (World Art, after the LBA1 places on Citadel):** the ship's outside model if a better one is
+  needed, the cabin room (seats, windows, luggage racks) and the passengers' spots, as a request with a diff and
+  pictures, like LBA-CITADEL-*. Spoilers: pictures only of the Citadel spaceport side.
+- **Cloud: built (branch `travel-1`).** The journey films are in `src/game/travelfilm.js`, played around the existing
+  scene change (`Game.startTransition(mid, need, then)`: the area swap under the black, the region's loading card,
+  the landing spot and the save are as before; `then` starts the arrival film on the new area's first frame). Hold
+  the skip key (E / the pad's action) to skip; a skip ends the whole journey's film. `?nocine` turns the films off.
+  - Ship (Citadel Spaceport ⇄ Zeelich Spaceport): the ship lifts off the pad and climbs away (2.8 s), the cabin (4 s),
+    the planet falling away and the other one ahead (2.4 s, a backdrop of stars and two painted planets), then the
+    ship coming down onto the other pad (3 s) and Twinsen stepping off (0.9 s), and the camera back to play (0.9 s).
+  - Ferry, glider, Esmer shuttle: the craft leaving (2.6 s), then arriving (2.6 / 2.6 / 2.4 s) and he steps off. The
+    craft flown is a twin of the one parked at the stop (the parked one hidden meanwhile); a glider takes the clearest
+    of 16 headings off its field; the camera is the first of a few places with nothing standing in its frame.
+  - **The cabin hook:** `buildShipCabin({ view: { planet } })` in `src/game/shipcabin.js` returns a handle; the film
+    reads only the handle, so a new room replaces the body of that file and keeps the handle:
+    `{ group, size: {w, l, h}, seats: [{x, y, z, a}], windows: [{x, y, z, a, r}], stand: [{x, z, a, window}],
+    passengers: [{ role, look, seat | stand, anim, lookAt }], hero: {x, z, a, lookAt}, shots: [{pos, look, fov}] ×2,
+    update(dt), dispose() }`. Local coordinates: origin on the cabin floor at its centre, the nose toward +z; `a` is an
+    actor's angle (0 faces +z). Passengers are existing bodies (`characters.js` LOOKS: today a Twinsun traveller
+    dozing, a woman at a window, a Mosquibee steward by the flight-deck door); Twinsen stands at the front-left window.
+    The cabin is lit by its own materials (no new light: a light would recompile every material) and casts no shadow.
+  - **Left for the laptop:** the proper cabin room (the placeholder is a cream vaulted tube with red seats, brass
+    racks with cases, eight round windows showing a drifting starfield), maybe a better ship model (today the Esmer
+    saucer of `shuttle.js` at scale 1.4 at Zeelich, 1 at Citadel), the passengers' spots. The ship at Citadel's pad is
+    `W.spaceport.ship`, at Zeelich's pad `game.travel.vehicles.zeelich_port`.
+  - Test: `tests/travel.mjs` (section TRAVEL-1) rides every route both ways with the films on.
+
+## PURPOSE-CHECK (2.11) · The cloud's answers: which places have a purpose
+
+Asked by the laptop for the user, before building. Key: **(a)** used by the story now, **(b)** planned, **(c)** no
+purpose, so don't build. The user's rules stay: no more LBA1 Citadel places; under 80 % likeness goes aside.
+
+1. **The School of Magic: (a), the great hall only.**
+   - Used now:
+     - the rector (`magus`): the magic-level lines (`story/magic.js`) and the pearl errand (`story/arsenal.js`);
+     - Ker'aooc: the protection ward for 20 kashes, and healing (`arsenal.js`, `prologue.js`);
+     - the `sm_remedies` giver.
+   - No other School scene is in the story or in EXPANSION_PLAN.md.
+   - **Scene 27, the two-level great hall: yes**, as a likeness upgrade of a room the player does visit. Push it if it
+     reaches 80 % and keeps:
+     - `npcSpots.magus` and `npcSpots.keraooc`, both reachable on foot from the door;
+     - the giver;
+     - the exit;
+     - `tests/wizards.mjs` and `arsenal.mjs` passing.
+   - **Scene 28 (entrance hall) and scene 33 (test hall): (c)**, no purpose; don't build.
+2. **The Temple of Bù: (a)**, chapter 4's climax room (`rooms.butemple`, `story/dig.js`). **A multi-level rebuild is
+   welcome only as a likeness upgrade (b-priority, after the School)**, under these conditions:
+   - Handles that must stay, by name: `carving` (x, z), `npcSpots.ilka`, `npcSpots.dallan`, `mites` (an array of
+     spots), the spawn and the `bu-out` exit, and any `searches`/`ballTargets` that `temple.js` exports today.
+   - Positions may move, but:
+     - the carving is reachable on foot from the entrance without a jump puzzle (it is the chapter's reading scene);
+     - Ilka's and Dallan's spots stand within 3 m of the carving, clear of the way to it (solid NPCs: see B-1 in
+       GATE_REPORT.md);
+     - the mites' spots share one floor with room to fight, with no railing between them and the hero;
+     - every ball target has a standing spot with a clear line to it.
+   - Railed walkways, mine rails, statues and the fountain: fine as scenery.
+   - `tests/chapter4.mjs` must pass; write the new spot positions in your Built note.
+3. **The Hamalayi's LBA1 FunFrock interiors (scenes 64, 66, 70): (c).** Chapters 6–7 and the plan's deepening cards
+   (DP-6a/b, DP-7a/b/c, OP-3) use the outdoors, the monastery, the dome and the shrine, and none of these rooms. Skip.
+4. **Desert Island's LBA2 interiors (the Hacienda 24/25/29/30/32, the shop 36, the beach bar 39, the ticket office 40,
+   Leone's house 35, Baldino's house 38): (c).** None is in the story or planned (the plan's Desert Island work is Kesh,
+   Ilka's post, the dig and DP-4/DP-5, OP-6). Don't build. If the user later wants Desert Island livelier, the beach bar
+   or the shop would be the first candidates; ask then.
+
+**What does have a purpose next:**
+- **TRAVEL-1's cabin room and ship model** (the cloud's flight scenes are being built now; the placeholder cabin and its
+  hook land in this file under TRAVEL-1, "Cloud: built");
+- **W-1, the Float Harbor slice** on `expansion/ballastra` (the branch is approved and has the foundation and 0.49.0);
+- **Zeelich likeness:** a research report, `docs/future/ZEELICH_GAP.md`, is on its way. The user will pick from it what
+  to build; wait for that pick.
+
+## ZEELICH-1 · Zeelich closer to LBA2, only what has a purpose · Ordered by the cloud (the user's alignment, 2.11.2026)
+
+Read `docs/future/ALIGNMENT.md` (the principles and your queue: this is item 4) and `docs/future/ZEELICH_GAP.md` (the
+research, with scene numbers). Each item: ≥ 80 % likeness, twelve years on, its own file under `src/game/`, handles for
+the story, a diff and pictures like LBA-CITADEL-*. **Spoilers:** Zeelich is past chapter 2, so send the user no
+pictures unless they ask; put them in `docs/future/world/ZEELICH-1/`.
+
+1. **The harbour bar at Otringal** (LBA2 scene 136, the boss's office 137): the stage, the bar and the bouncers' door.
+   It is the hub of OP-7. Handles: `bar.npcSpots` (boss, performer, two bouncers, three regulars), `bar.stage`,
+   `bar.office` (door spot), the door into it from Otringal's harbour; OP-7 also needs `bar.counter` (a search spot
+   behind it) and `bar.winch` (the stage curtain's stuck winch, high on the stage frame: a ball target).
+2. **The Temple of Dark Monk on Celebration** (scene 93): the prophecy murals, a reader's lectern, the door sealed by
+   four fragments (open twelve years on). Handles: `temple.murals` (4 spots with look targets), `temple.lectern`,
+   `temple.sealDoor` (`setOpen(b, instant)`).
+3. **The Imperial Hotel lobby at Otringal** (scene 81): the members' desk, armchairs, two coin machines (life, magic).
+   Handles: `hotel.desk`, `hotel.machines` (2 spots), `hotel.npcSpots` (clerk, explorer, manicurist), `hotel.register`
+   (on the desk: a read spot, for OP-7).
+4. **Celebration's volcano:** the crater, the lava glow, the trail up and the temple's door on its flank, from the
+   island's layout JSON. Handles: `celebration.templeDoor`, `celebration.crater` (look spot), `celebration.trail` (3
+   waypoints).
+5. **The Wannies' island under the gas** (the `platform` region, re-dressed): the mine mouth, the company office front,
+   the village of low houses, a chapel front, a darker, thinner gas sky. It is reached by the lift from ASCENCE (the
+   `liftdock` region): the lift's cage must ride down to it. Handles: `wannie.liftBottom` (spawn), `wannie.npcSpots`
+   (6), `wannie.mine`, `wannie.chapelDoor`; `liftdock.lift.setLevel(t)` and `liftdock.liftTop`; for OP-7 also `liftdock.lever` (the cage's
+   lever, where a plate can hang) and `wannie.crates` (the ore crates by the lift's foot).
+6. **A sky and grade per island** (`R.grade`, `R.gradeTint`, the sky's colours): Otringal overcast pale grey; Celebration
+   warm with a lava glow; the Wannies' island dim under the gas; the others as the research describes.
+
+The cloud does the island life, names, travel characters, music and OP-7 meanwhile (OP-7 "The Lift Below" is written
+in `docs/future/EXPANSION_PLAN.md` §4.5: it is why these rooms exist). Write **Built** notes here per item,
+as before.
+
+---
+
+## SPACEPORT-1 · The terminals you can walk into · Ordered by the cloud (the user, 2.11.2026)
+
+The user: "the SPACEPORT is empty, no people, you can't go in anywhere." The cloud is putting people outdoors at both
+spaceports (INTERIOR-LIFE). This order is the rooms. **Purpose (PURPOSE-CHECK a, used now):** every planet crossing
+starts here (TRAVEL-1); Doran's flight at the end of chapter 1 leaves from Citadel's. It moves ahead of ZEELICH-1 in your
+queue: after the School's great hall and TRAVEL-1's cabin.
+
+1. **Citadel Spaceport's terminal** (`spaceport.js`: the small terminal, Twinsun stone below, an Esmer dome above).
+   LBA2 had no port on Citadel. Take LBA2's Otringal astroport departure hall (scene 78) as the 80 % model, smaller and
+   in Twinsun stone: a ticket counter, a departures board inside, rows of waiting seats, a luggage weighing scale, a
+   gate to the pad, a small café corner, the Joint Project's GROUNDED notice (chapters 1–3).
+   Handles: `terminal.door` (from the deck), `terminal.gate` (to the pad: leaves to the ship's interactable),
+   `terminal.counter` (the clerk's spot + the travel menu's interactable), `terminal.board` (read spot),
+   `terminal.seats` (8+ sitting spots {x,z,a}), `terminal.npcSpots` (clerk, guard, café keeper), `terminal.notice`
+   (`setVisible(b)`).
+2. **Zeelich Spaceport's terminal** (the hub's spaceport deck): LBA2's departure hall (78) and arrival hall (82), here
+   as one Esmer hall with both sides. Same handles under `zterminal.*`, plus `zterminal.arrivals` (where he steps in
+   from the pad).
+
+Each: its own file under `src/game/`, a region in `regions.js` like the LBA-CITADEL rooms, doors that use the
+existing door transitions, ≥ 80 % likeness to scene 78/82's layout and furniture (numbers and descriptions only), a
+diff and pictures in `docs/future/world/SPACEPORT-1/` (Zeelich's: no pictures to the user — past chapter 2). The cloud
+wires the travel menu, the people and the lines after you push.

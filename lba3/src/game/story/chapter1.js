@@ -20,6 +20,7 @@ import { POI } from '../world.js';
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
 import { Watcher } from '../enemies.js';
+import { crossByShip } from '../travelfilm.js';
 import '../text/ch1.js';
 
 const V = POI.village;
@@ -550,9 +551,11 @@ export class Chapter1 extends ChapterBase {
   }
 
   // Doran flies Twinsen to Zeelich in the project's ship, from Citadel Spaceport
+  // (TRAVEL-1: the project's ship takes off with them — the take-off, the cabin, space: src/game/travelfilm.js — then
+  //  the chapter changes under the black as before)
   toZeelich() {
     const g = this.game, f = this.f;
-    g.startTransition(() => {
+    crossByShip(g, () => g.startTransition(() => {
       if (this.story.chapters.length > 2) { this.story.nextChapter(); return; }
       // chapter 2 isn't in this build yet: close the chapter properly
       f.c1_done = true;
@@ -561,7 +564,7 @@ export class Chapter1 extends ChapterBase {
       g.hud.show(false);
       g.showScreen('ending');
       g.audio.setMood('ending');
-    }, this.story.nextAreas());   // (LAZY-REGIONS: Zeelich built behind the black, under its card)
+    }, this.story.nextAreas()), { aboard: [this.npc('doran')] });   // (LAZY-REGIONS: Zeelich built behind the black, under its card)
   }
   afterEnding() { this.game.updateObjective(); }
 
