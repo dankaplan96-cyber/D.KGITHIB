@@ -308,6 +308,13 @@ Measured first on 0d045bf, each body alone at its own walking speeds (residents 
   (the 10 cm off-spot step only while the other foot stands). Swept (40 phases × 2 idle clocks, 12 bodies, 30/60/120 fps): 747 of
   2880 stops had both feet off the ground over 0.05 s, 1 a step at 0.63 s; now 0 of 6720 (4 idle clocks, 14 bodies): at most two
   steps, planted by 0.37 s, never both feet off the ground.
+  The turn where they stand failed now and then too (the Spheros, "the feet step in turn", once the slide): not the gait's phase but
+  the idle clock, random per body. The idle's weight shift tilts the pelvis up to 0.05 rad; on the Spheros' 0.58 m hips that lifts
+  one hip 1.5 cm, so that leg stood on a foot hanging in the air (1.02-1.04 leg lengths) and the turn ended in two closing steps,
+  the same foot twice. A planting character's pelvis now sits lower by that lift (`hipsY`, the others only; Twinsen unchanged).
+  Swept over 40 clocks: the Spheros at 30 fps 3 of 40 runs failed (2 not alternating, 1 slide 3.1 cm), at 60 fps 1; now 1 at 30 fps
+  (that slide, 3.1 cm against < 3: the controller turns them 0.57 rad in the first 30 fps frame, and the standing foot, 0.29 m out
+  from the middle, is dragged before the first step can land) and 0 at 60 / 120 fps; Arthur, Bram, Zoé, Pim, the Grobo guard 0 of 40.
 - **Turning where they stand** (to face Twinsen when he comes near or talks to them, to face each other, a guard turning to him):
   their controllers only turn them (an exponential turn, up to 6 rad/s at first), so the rig reads the turn from the facing: standing,
   talking or listening while it turns faster than ~45°/s it is a stepping turn as his turn anims (on until under 20°/s): the lead

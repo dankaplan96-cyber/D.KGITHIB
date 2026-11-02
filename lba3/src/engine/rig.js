@@ -918,6 +918,12 @@ export class Rig {
       // slow weight shift from one leg to the other (every ~7 s)
       const ws = Math.sin(this.t * 0.9) * Math.max(0, Math.sin(this.t * 0.31)) ;
       torsoZ = ws * 0.03; this.hipShift = ws;
+      // (STOP-ROBUST, another character planting its feet: the shift tilts the pelvis 0.05 rad at most (below), which lifts the hip on
+      // the high side by tilt × the hip's half-width; the pelvis sits that much lower, so that leg still reaches the ground. A wide body
+      // on short legs (the Spheros, hips 0.58 m wide: up to 1.5 cm) stood on a foot hanging in the air, its leg 1.02-1.04 of its length,
+      // and took two closing steps after a turn on the spot (the same foot twice), by where the shift was when it turned (the idle clock
+      // is random: tests/npc-feet.mjs sweeps it))
+      if (this.plantLite) hipsY -= Math.abs(ws) * 0.05 * Math.abs(this.j.legL.hip.position.x) * 0.95 / this.hipsRest;
       T.armL = 0.06 + b * 0.06; T.armR = 0.06 + b * 0.05;
       T.elL = -0.18; T.elR = -0.18;
       T.legL = 0.02; T.legR = -0.02; T.kneeL = 0.03; T.kneeR = 0.03;

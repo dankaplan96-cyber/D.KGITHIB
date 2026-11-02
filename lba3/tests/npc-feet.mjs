@@ -6,7 +6,7 @@
 //     (the lower foot on the ground < 0.12 m/s; it slid 0.2-0.7 m/s unplanted), the leg reaches it; a stop ends in at most two steps,
 //     planted within 0.45 s, none after 0.6 s; turning where it stands (to face someone) the feet step in turn instead of spinning
 //     round with the body, a planted foot sliding < 3 cm; the stop let go at 16 phases of the gait, the same rules and one foot
-//     at a time (STOP-ROBUST);
+//     at a time, and the turn at 8 idle clocks (the weight shift) (STOP-ROBUST);
 //  3. the residents walking round Citadel in play: the same on the ground (< 0.15 m/s each), their stops at most two steps;
 //  4. the depot guard: planted walk and stops on its patrol, and its gameplay frame for frame the same with or without planting
 //     (position, facing, state, its blows on Twinsen), patrolling and fighting;
@@ -69,10 +69,11 @@ await ev(async () => {
   };
   // one body alone (not in the scene): stand, walk straight at v, stop, turn 180° the way a person turns to face someone (dampAngle 6),
   // then 90° to a set facing (4). The view gate is off for it (PLANT_VIEW.cam: nobody's camera).
-  const body = (look, v, fps, plant = true) => {
+  const body = (look, v, fps, plant = true, it = null) => {
     const dt = 1 / fps, rig = C.createCharacter(look), cam = RG.PLANT_VIEW.cam; RG.PLANT_VIEW.cam = null;
     if (plant) rig.plantIfFits(); else rig.plantLite = false;
     rig.fidgetT = 99;   // (no idle fidget in the measured windows)
+    if (it != null) rig.t = it;   // (the idle clock, random otherwise: the weight shift it drives is swept in 2c)
     let x = 0, z = 0, ang = 0, t = 0; const S = [];
     const step = (anim, sp, target, k) => {
       if (target != null) ang = dampAngle(ang, target, k, dt);
@@ -166,6 +167,24 @@ for (const fps of [60, 30, 120]) {
   const most = (f) => Math.max(...R.map(f));
   measure('stop phase sweep', { stops: R.length, bad: bad.length, maxSteps: most((r) => r.steps.length), lastStep: most((r) => r.steps.length ? r.steps[r.steps.length - 1][1] : 0), maxSettled: most((r) => r.settled ?? 9), maxBothOff: most((r) => r.bothOff), maxSlideCm: most((r) => r.slideCm) });
   check(`bodies: the stop at ${N} phases of the gait × 30 / 60 / 120 fps, 12 bodies: every one in at most two steps, planted within 0.45 s, none after 0.6 s, one foot at a time (both off the ground ≤ 0.05 s), no slide`, bad.length === 0, { bad: bad.slice(0, 8) });
+}
+
+// ---- 2c. (STOP-ROBUST) the turn where it stands at different idle clocks: the clock is random per body (Rig's t), and the idle's weight
+// shift it drives tilted the pelvis enough that a short-legged body (the Spheros) stood on a foot hanging in the air and took two
+// closing steps after the turn (the same foot twice), at some clocks only. Each body's whole run above, at 8 clocks × 30 / 60 / 120 fps
+{
+  const R = await ev(() => {
+    const B = [['sphero1', 1.1], ['arthur', 1.6], ['zoe', 1.1], ['pim', 1.3], ['bram', 1.1], ['vguardG', 1.4]], out = [];
+    for (const [k, v] of B) for (const fps of [30, 60, 120]) for (let i = 0; i < 8; i++) {
+      const on = NF.body(k, v, fps, true, i * 2.5);
+      out.push({ body: `${k}@${v}`, fps, it: i * 2.5, t180: on.turn180.seq, alternate: on.turn180.alternate, slide180: on.turn180.slideCm, t90: on.turn90.steps, slide90: on.turn90.slideCm, stop: on.stopSteps.length, late: on.stopLate, settled: on.stopSettled,
+        ok: on.turn180.steps >= 3 && on.turn180.alternate && on.turn180.slideCm < 3 && on.turn90.steps >= 2 && on.turn90.slideCm < 3 && !on.nan && on.stopSteps.length <= 2 && on.stopLate === 0 && on.stopSettled != null && on.stopSettled <= 0.45 });
+    }
+    return out;
+  });
+  const bad = R.filter((r) => !r.ok), most = (f) => Math.max(...R.map(f));
+  measure('turn idle-clock sweep', { runs: R.length, bad: bad.length, notAlternating: R.filter((r) => !r.alternate).length, maxSlide180: most((r) => r.slide180), maxSlide90: most((r) => r.slide90) });
+  check('bodies: turning where it stands at 8 idle clocks × 30 / 60 / 120 fps, 6 bodies: the feet step in turn (at most one closing step), a planted foot slides < 3 cm; the stop before it as above', bad.length === 0, { bad: bad.slice(0, 8) });
 }
 
 // ---- 3. the residents walking round Citadel in play (every resident simulated in full, 60 fps)
