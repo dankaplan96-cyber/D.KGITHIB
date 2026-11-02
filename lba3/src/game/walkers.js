@@ -740,7 +740,7 @@ export class Resident extends NPC {
             const me = this.bodyR || 0.45, o = (b.bodyR ?? b.radius ?? 0.45) + me + 0.1, y = this.pos.y + 0.05;
             const crowd = (sd) => { let n = 0; for (let k = 1; k <= 2; k++) { const px = b.pos.x - uz * o * k * sd, pz = b.pos.z + ux * o * k * sd;
               if (P.blockedAt(px, pz, y, me)) n += 2;
-              for (const c of _others) if (c !== b && !c.ambient && Math.hypot(c.pos.x - px, c.pos.z - pz) < me + (c.bodyR ?? c.radius ?? 0.45) + 0.8) n += 2; } return n; };   // (a person there as much as a wall: it keeps its berth from them too)
+              for (const c of _others) if (c !== b && !c.ambient && Math.hypot(c.pos.x - px, c.pos.z - pz) < me + (c.bodyR ?? c.radius ?? 0.45) + 1.3) n += 2; } return n; };   // (a person by it as much as a wall: it keeps a berth of 0.8 m from them, and half a metre more to pass between)
             if (crowd(1) > crowd(-1)) side = -1;
           }
           ms.set(b, { side, t: g.time });
