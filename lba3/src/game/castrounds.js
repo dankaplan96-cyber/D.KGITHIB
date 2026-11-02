@@ -23,7 +23,8 @@
 // chapter 6's Yorna at the winch and the crank (the lift), Hesk at the landing (his mark is inside the glider's box); chapter 8's Gilbert at the fort's shelter (the drones'
 // lever), Zoé's segment's farmers once told (they march); chapter 9's archivist (the disguise), the clerk (the door's
 // keeper) and Dallan; chapter 10's Zoé and Arthur at the lamp room's dial bank, Mira in the valve room, Pim at the
-// dome's mirror chain, Oku on the mill top, Ilka and Dallan while the bore's fight is on; Baldino at the shaft.
+// dome's mirror chain, Oku on the mill top, Ilka and Dallan while the bore's fight is on; Baldino in his workshop (the hop-pack's peg leaves no free
+// spot) and at the shaft.
 const M = (dur, o = {}) => ({ id: 'mark', mark: true, dur, ...o });
 const T = (id, dx, dz, face, act, dur, o = {}) => ({ id, dx, dz, face, act, dur, ...o });
 // the usual marks, read from the same spots the chapters place them on (a round runs only while the chapter's place for
@@ -48,13 +49,15 @@ export const CAST_FLOORS = {
 
 const ZEELICH = ['zeelich', 'council'];
 export const CAST_ROUNDS = [
-  // ---------------------------------------------------------------- Zeelich (chapters 3 and 9; Oku and Baldino 10)
+  // ---------------------------------------------------------------- Zeelich (chapters 3 and 9; Oku 10)
   // Baldino at his bench (workshop: the bench is his mark) and a few steps off it, looking his flying machine over; the
   // room is full (the bench's, the globe's, the test pair's and the looks' prompts, the way to the lever and the tap):
-  // that one spot keeps clear of all of them and of the doorway (a stop by the curio shelves blocked the way to a look)
-  { id: 'baldino', ch: ['zeelich', 'council', 'network'], room: 'workshop', indoor: true, mark: spot('workshop', 'baldino'), speed: 0.75,
-    when: (f, g) => (g.story.cur.key === 'zeelich' ? !f.c2_shield : g.story.cur.key === 'council' ? !f.c9_heard : g.story.cur.done?.() < 5),
-    stops: [M([14, 22], { act: 'tinker', gest: ['nod'] }), T('flyer', 2.8, 1.7, [3.6, 3.6], 'stand', [6, 9], { gest: ['nod', 'shrug'] })] },
+  // that one spot keeps clear of all of them and of the doorway (a stop by the curio shelves blocked the way to a look).
+  // Chapter 10 has none: Baldino's hop-pack on its peg by the door (story/arsenal.js, from chapter 10) takes that spot's
+  // room, and nowhere else in the workshop is clear
+  { id: 'baldino', ch: ['zeelich', 'council'], room: 'workshop', indoor: true, mark: spot('workshop', 'baldino'), speed: 0.75,
+    when: (f, g) => (g.story.cur.key === 'zeelich' ? !f.c2_shield : !f.c9_heard),
+    stops: [M([14, 22], { act: 'tinker', gest: ['nod'] }), T('flyer', 2.6, 1.8, [3.6, 3.6], 'stand', [6, 9], { gest: ['nod', 'shrug'] })] },
   // Oku keeps the stall by the fountain: his goods, a look at the south mill (his mills), the fountain's rim
   { id: 'oku', ch: [...ZEELICH, 'network'], room: 'zeelich', mark: spot('zeelich', 'esmer2'), speed: 0.85,
     when: (f, g) => g.story.cur.key !== 'network' || !f.c10_okuAsk,
@@ -64,6 +67,13 @@ export const CAST_ROUNDS = [
     stops: [M([12, 18]), T('south', -2.0, 3.6, [-2.0, 9.0], 'stand', [6, 9], { gest: ['shrug'] }), T('street', 2.0, 2.4, [10, 2.4], 'stand', [5, 8], { gest: ['nod'] })] },
 
   // ---------------------------------------------------------------- Desert Island (chapters 4 and 5)
+  // Brosk the trader at his wares and a look across the water, Sani darting about the square (chapters 4 and 5; Sani's
+  // spot moves to the cool room's doorway once it draws — story/kesh.js — and there he has no round); both keep clear of
+  // the pump and its gears
+  { id: 'dtrader', ch: ['dig', 'steam'], room: 'desert', mark: spot('desert', 'trader'), speed: 0.8,
+    stops: [M([12, 18]), T('wares', -1.8, 0.8, [-2.6, 1.6], 'tinker', [8, 12]), T('water', 1.2, -2.6, [8, -11.6], 'stand', [5, 8], { gest: ['shrug'] })] },
+  { id: 'dkid', ch: ['dig', 'steam'], room: 'desert', mark: spot('desert', 'kid'), speed: 1.5,
+    stops: [M([6, 9]), T('pump', 2.6, 2.6, [14, -3], 'stand', [3, 5], { gest: ['nod'] }), T('pebble', -1.6, -2.0, [-1.6, -3.0], 'pickup', [3, 5])] },
   // Hesk at his sand-yacht in Kesh: the runner, the sail's sheet
   { id: 'hesk', ch: ['dig', 'steam'], room: 'desert', mark: spot('desert', 'hesk'), speed: 1.0,
     when: (f, g) => (g.story.cur.key === 'dig' ? (f.c4_yacht || 'village') === 'village' : !!f.c5_planned && !f.c5_glider),
@@ -119,6 +129,14 @@ export const CAST_ROUNDS = [
     stops: [M([12, 18]), T('telescope', 5.9, 1.4, [7.5, 0], 'stand', [8, 12], { gest: ['nod'] }), T('wall', 1.5, 1.6, [1.5, 2.6], 'tinker', [6, 9])] },
 
   // ---------------------------------------------------------------- Citadel in the evacuation (chapter 8)
+  // the hill farms' farmers at their fields (story/evacuation.js FARMS, the same spots) until Zoé tells them; then they
+  // march to the gather point (driven by the chapter: no round)
+  { id: 'farmer1', ch: ['evacuation'], room: 'citadel', mark: () => ({ x: -50, z: 30 }), speed: 0.8, when: (f) => !f.c8_farmer1,
+    stops: [M([10, 16]), T('rows', 2.4, 1.2, [2.4, 2.4], 'kneelWork', [10, 14]), T('look', -1.6, 2.2, [-1.6, 6], 'stand', [5, 8], { gest: ['sigh'] })] },
+  { id: 'farmer2', ch: ['evacuation'], room: 'citadel', mark: () => ({ x: -30, z: 45 }), speed: 0.8, when: (f) => !f.c8_farmer2,
+    stops: [M([10, 16]), T('rows', -2.2, 1.4, [-2.2, 2.6], 'kneelWork', [10, 14]), T('look', 1.8, -1.8, [6, -1.8], 'stand', [5, 8], { gest: ['shrug'] })] },
+  { id: 'farmer3', ch: ['evacuation'], room: 'citadel', mark: () => ({ x: -60, z: 55 }), speed: 0.8, when: (f) => !f.c8_farmer3,
+    stops: [M([10, 16]), T('rows', 2.2, -1.6, [2.2, -2.8], 'kneelWork', [10, 14]), T('look', -2.0, -1.4, [-6, -1.4], 'stand', [5, 8], { gest: ['sigh'] })] },
   // Gilbert at the well (before he is asked for the shelters), the children and Xil on the quay (before Pippa sends the
   // children to the depot's shelter)
   { id: 'gilbert', ch: ['evacuation'], room: 'citadel', mark: near(well, 3.5, 8.0), speed: 0.85, when: (f) => !f.c8_gilbert,

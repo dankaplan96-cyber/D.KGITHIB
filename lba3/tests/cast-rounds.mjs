@@ -106,6 +106,7 @@ const CASES = [
   { label: 'chapter 3, Zeelich\'s street', key: 'zeelich', flags: { c2_started: true, c2_planTaken: true }, room: 'zeelich', ids: ['nara', 'oku'] },
   { label: 'chapter 3, Baldino\'s workshop', key: 'zeelich', flags: { c2_started: true, c2_planTaken: true, c2_plan: true }, room: 'workshop', ids: ['baldino'], ways: { to: 'prompts' } },
   { label: 'chapter 4, Kesh', key: 'dig', flags: { c4_started: true }, room: 'desert', ids: ['hesk', 'tarra'] },
+  { label: 'chapter 4, Kesh\'s square', key: 'dig', flags: { c4_started: true }, room: 'desert', ids: ['dtrader', 'dkid'] },
   { label: 'chapter 4, Ilka\'s camp', key: 'dig', flags: { c4_started: true, c4_pumpTask: true, c4_pump: true, c4_trust: true }, room: 'desert', ids: ['ilka'] },
   { label: 'chapter 5, Kesh (the plan made)', key: 'steam', flags: { c5_planned: true, c5_ferryTaken: true }, room: 'desert', ids: ['ilka', 'tarra', 'hesk'] },
   { label: 'chapter 5, Kesh (the steam through)', key: 'steam', flags: { c5_planned: true, c5_ferryTaken: true, c5_dug: true, c5_routed: true, c5_dallanOK: true, c5_hatch: true, c5_relief: true, c5_vent: true }, room: 'desert', ids: ['dallan'] },
@@ -113,11 +114,11 @@ const CASES = [
   { label: 'chapter 7, the monastery\'s yard', key: 'observatory', flags: { ...DONE6, c7_started: true }, room: 'hamalayi', ids: ['yorna', 'pim', 'lhar1', 'lhar2', 'lhar3'], keepOff: 'yard', ways: { from: 'gate', to: 'yard' } },
   { label: 'chapter 7, the observatory', key: 'observatory', flags: { ...DONE6, c7_started: true, c7_keeper: true }, room: 'obsv', ids: ['keeper'], ways: { to: 'prompts' } },
   { label: 'chapter 8, the well', key: 'evacuation', flags: { c8_started: true }, room: 'citadel', ids: ['gilbert'] },
+  { label: 'chapter 8, the hill farms', key: 'evacuation', flags: { c8_started: true }, room: 'citadel', ids: ['farmer1', 'farmer2', 'farmer3'] },
   { label: 'chapter 8, the quay', key: 'evacuation', flags: { c8_started: true }, room: 'citadel', ids: ['tim', 'lulu', 'xil'], ways: { to: 'ferry' } },
   { label: 'chapter 9, Zeelich\'s street', key: 'council', flags: { c9_started: true, c9_form: true }, room: 'zeelich', ids: ['nara', 'oku'] },
   { label: 'chapter 9, Baldino\'s workshop', key: 'council', flags: { c9_started: true }, room: 'workshop', ids: ['baldino'] },
   { label: 'chapter 9, the council between sittings', key: 'council', flags: { c9_started: true, c9_form: true, c9_nara: true, c9_oku: true, c9_clerk: true, c9_heard: true }, room: 'council', ids: ['chair', 'councilB', 'councilC'], ways: { to: 'dais' } },
-  { label: 'chapter 10, Baldino\'s workshop', key: 'network', flags: { c10_started: true, c10_pulse: true }, room: 'workshop', ids: ['baldino'] },
   { label: 'chapter 10, Zeelich\'s street', key: 'network', flags: { c10_started: true, c10_pulse: true }, room: 'zeelich', ids: ['oku'] },
   { label: 'chapter 10, the bore\'s post', key: 'network', flags: { c10_started: true, c10_pulse: true, c10_ilka: true }, room: 'desert', ids: ['ilka', 'dallan'] },
   { label: 'chapter 10, the glider at Desert Island', key: 'network', flags: { c10_started: true, c10_pulse: true }, room: 'desert', ids: ['hesk'] },
@@ -153,7 +154,7 @@ for (const C of CASES) {
         // (chapter 7: the way from the gate to the yard's middle, PATHS in hamalayi.js: x 34 ± 1.6 m, z −33 … −40, local)
         if (C.keepOff === 'yard' && yard && Math.abs(s.x - yard.x) < 1.6 + 0.5 && s.z > yard.z - 0.5) bad.push(`${s.id} on the way from the gate`);
       }
-      out.people[id] = { round: so.D.ch ? 'cast' : 'household', stops: stops.map((s) => s.id), placed: { x: +n.placed.x.toFixed(2), z: +n.placed.z.toFixed(2) }, bad };
+      out.people[id] = { round: so.D.ch ? 'cast' : 'household', stops: stops.map((s) => s.id), at: stops.map((s) => `${s.x.toFixed(2)},${s.z.toFixed(2)}`), placed: { x: +n.placed.x.toFixed(2), z: +n.placed.z.toFixed(2) }, bad };
     }
     return out;
   }, [C]);
@@ -293,6 +294,29 @@ for (const C of CASES) {
   }
 }
 
+// ---- chapter 8, Zoé's run: a farmer told while on his round sets off from where he stands (the chapter's march takes
+//      him: no jump back to his mark) and ends at the gather point
+if (!ONLY || ONLY.test('chapter 8, the hill farms')) {
+  const mf = await ev(() => {
+    // (a load resumes before Zoé's run — evacuation.js applyFlags —: her run is set after it, as starting it does)
+    setChapter('evacuation', { c8_started: true, c8_home: true });
+    goTo('citadel', ['farmer1']); game.flags.c8_zoeStart = true;
+    const G = game, n = G.npcs.find((q) => q.def.id === 'farmer1'), R = RS(), out = {};
+    for (let i = 0; i < 400 && !(R.st.get('farmer1')?.active && Math.hypot(n.pos.x - n.placed.x, n.pos.z - n.placed.z) > 1.0); i++) G.step(0.1);
+    out.offMark = +Math.hypot(n.pos.x - n.placed.x, n.pos.z - n.placed.z).toFixed(2);
+    // (any placement of him between the talk and the march's end would be a jump: counted)
+    let jumps = 0; const own = n.placeAt; n.placeAt = function (p) { jumps++; return own.call(this, p); };
+    const r = P.talk('farmer1'); out.talk = r.r;
+    out.jump = jumps; out.marching = !!n.controlled; out.told = !!G.flags.c8_farmer1;
+    n.placeAt = own;
+    G.story.cur.finishMarch(); G.step(0.2);
+    const k = 0, gx = -66 + k * 1.6 - 1.6, gz = -55 + 1;
+    out.atGather = +Math.hypot(n.pos.x - gx, n.pos.z - gz).toFixed(2); out.round = R.defFor(n)?.id ?? null;
+    return out;
+  });
+  check('chapter 8, Zoé\'s run (flags): a farmer told while off his mark sets off from there (no jump back), marches, ends at the gather point with no round', mf.told && mf.marching && mf.jump === 0 && mf.atGather < 0.3 && mf.round === null, mf);
+}
+
 // ---- left out on purpose: the sneak, the disguise, the dial bank (and the gate keepers): they stand
 const still = await ev(() => {
   const G = game, R = RS(), out = {};
@@ -308,6 +332,7 @@ const still = await ev(() => {
   goTo('archive', ['archivist']); out.archive = { watcher: !!G.story.cur.watcher?.active }; watch('chapter 9, the archive (the disguise): the archivist (the watcher walks him)', ['archivist'], 5);
   goTo('upper', ['clerk']); watch('chapter 9, the antechamber: the clerk at his counter', ['clerk']);
   setChapter('network', { c10_started: true, c10_pulse: true });
+  goTo('workshop', ['baldino']); watch('chapter 10, the workshop (the hop-pack\'s peg by the door leaves no free spot): Baldino at his bench', ['baldino']);
   goTo('lighttop', ['zoe']); watch('chapter 10, the lamp room (the dial bank): Zoé and Arthur', ['zoe', 'arthur']);
   return out;
 });

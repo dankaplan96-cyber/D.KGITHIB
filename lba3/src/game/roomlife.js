@@ -450,7 +450,8 @@ export class StoryRounds {
   // still their place (a new place is given by refreshCast itself)
   release(n, S) {
     S.active = false;
-    if (!S.def?.ch || !S.mark || !n.placed || !samePlace(n.placed, S.mark)) return;
+    // (a person the chapter drives itself — a farmer marching off — is the chapter's: left where it takes them from)
+    if (!S.def?.ch || !S.mark || n.controlled || !n.placed || !samePlace(n.placed, S.mark)) return;
     if (Math.hypot(n.pos.x - S.mark.x, n.pos.z - S.mark.z) > SAME || n.forceAnim !== (n.placed.anim ?? null)) {
       n.placeAt(n.placed); n.gait = 0;
       S.log.push(`${this.game.time.toFixed(1)} back on the mark`); if (S.log.length > 30) S.log.shift();
