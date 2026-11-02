@@ -240,8 +240,9 @@ const office = await ev(() => {
   const ppl = ['gilbert', 'mira'].map((id) => G.npcs.find((n) => n.def.id === id));
   for (let i = 0; i < 900; i++) { G.step(0.1); for (const n of ppl) for (const c of cols) if (PH._inside(c, n.pos.x, n.pos.z, 0.1) && c.top > n.pos.y + 0.05 && c.bottom < n.pos.y + 1.6) hits.push(n.def.id + ' ' + (n.pos.x - R.center.x).toFixed(1) + ',' + (n.pos.z - R.center.z).toFixed(1)); }
   const st = G.story.interiors.rounds.st, stops = (id) => [...new Set((st.get(id)?.log || []).filter((l) => / at /.test(l)).map((l) => l.split(' at ')[1]))];
-  return { enter: e, room: G.room?.id, gilbert: stops('gilbert'), mira: stops('mira'), hits: [...new Set(hits)].slice(0, 6) }; });
-check('Gilbert and Mira: their rounds at the Water Office in chapter 2 (counter, files, pipes; desk, wall map, shelf), never through the furniture', office.gilbert.length >= 2 && office.mira.length >= 2 && office.hits.length === 0, office);
+  const map = R.searches.find((q) => q.id === 'pipemap'), nearMap = RL.HOUSE_ROUNDS.filter((D) => D.room === 'office').flatMap((D) => D.stops.filter((q) => !q.mark && Math.hypot(q.x + R.center.x - map.x, q.z + R.center.z - map.z) < 2.0).map((q) => D.id + ':' + q.id));
+  return { enter: e, room: G.room?.id, gilbert: stops('gilbert'), mira: stops('mira'), hits: [...new Set(hits)].slice(0, 6), nearMap }; });
+check('Gilbert and Mira: their rounds at the Water Office in chapter 2 (counter, files, pipes; desk, plant, north wall), never through the furniture, none of them by the pipe map\'s reading place', office.gilbert.length >= 2 && office.mira.length >= 2 && office.hits.length === 0 && office.nearMap.length === 0, office);
 await shot('office-gilbert-mira');
 
 await browser.close();

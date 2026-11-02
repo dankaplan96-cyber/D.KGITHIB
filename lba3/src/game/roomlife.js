@@ -33,7 +33,7 @@
 //    the house, Gilbert and Mira in the Water Office (chapter 2) — walk a small round when no scene needs them: Zoé from
 //    the sink to the stove, the table, the window, the stairwell and her desk in the bedroom; Arthur from his boat to his
 //    workbench and the window of his room; Gilbert from his counter to the files and the pipes; Mira from her desk to
-//    the wall map and the shelf. A round
+//    the plant and the north wall. A round
 //    runs only while the chapter's place for them is their usual mark (their own pose there, no scene's), the hero is in
 //    the house and play is on; a talk, a conversation they are in, a cut-scene or a new place from the chapter wins at
 //    once (refreshCast puts them where the chapter says; a placement that is still the mark leaves them on their way:
@@ -317,13 +317,15 @@ export const HOUSE_ROUNDS = [
   // the Water Office (chapter 2 until the water is back, Gilbert; all chapter 2, Mira: story/chapter1.js place)
   { id: 'gilbert', room: 'office', speed: 0.85, markAnims: [null, 'idle'], stops: [
     { id: 'counter', mark: true, act: 'browse', dur: [12, 18] },
-    { id: 'cabinet', x: -3.0, z: -2.25, a: Math.PI, act: 'reach', dur: [5, 8], gest: ['shrug'] },
+    // (every stop keeps 2 m and more from the pipe map's reading place, LX + 1.05 by the left wall, and out of the lane
+    //  from the door)
+    { id: 'files', x: -2.75, z: 2.95, a: -Math.PI / 2, act: 'reach', dur: [5, 8], gest: ['shrug'] },   // (the bookcase's files)
     { id: 'pipes', x: 0.3, z: -2.3, a: Math.PI, act: 'stand', dur: [5, 8], gest: ['shrug'] },
   ] },
   { id: 'mira', room: 'office', speed: 0.9, markAnims: [null, 'idle'], stops: [
     { id: 'desk', mark: true, act: 'browse', dur: [14, 20] },
-    { id: 'map', x: -3.2, z: -0.6, a: -Math.PI / 2, act: 'stand', dur: [6, 9], gest: ['nod'] },
-    { id: 'shelf', x: 2.4, z: 1.0, a: Math.PI / 2, act: 'reach', dur: [5, 8] },
+    { id: 'plant', x: 2.6, z: 2.4, a: A(2.6, 2.4, 3.6, 2.8), act: 'potting', dur: [6, 9] },
+    { id: 'board', x: -1.0, z: -2.3, a: Math.PI, act: 'stand', dur: [5, 8], gest: ['nod'] },
   ] },
 ];
 // the rooms' floors the rounds walk (the room's frame)
