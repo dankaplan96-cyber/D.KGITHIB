@@ -21,6 +21,7 @@ node tests/anim-combat.mjs     # Twinsen's combat animation: release/contact tim
 node tests/autoquality.mjs     # AUTO-QUALITY: the governor and calibration fed synthetic CPU/GPU/display-paced traces (Node only, no browser)
 node tests/autoquality-game.mjs # AUTO-QUALITY in the game: Auto setting, migration, Settings line, knobs, commit points, power, calibration cache, Auto benchmark
 node tests/weather.mjs         # WEATHER-1: the default test boot is today's look; every state on each planet, smooth blends, the light's floor, indoors, holds (sandstorm), Settings, quality caps, cost
+node tests/rocks.mjs           # ROCKS-1: Citadel's cliff rocks closed and outward-wound, triangle budget (+30 % max), the 509 placements, even texel density, no stretch, clear of the paths, deterministic; SHOTS=dir for four cliff views
 ```
 
 Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);
