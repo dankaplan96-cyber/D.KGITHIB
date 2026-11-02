@@ -948,3 +948,417 @@ questions:
   finale is not replaced while the new content is incomplete.
 - **Waiting for:** the rest of the brief (after section 12, "Show…"). Mapping and planning may start; building waits
   for the full brief.
+
+---
+
+## Revision R1 · OREN-GUARDIAN integration (2.11.2026)
+
+Written by the cloud's OREN-GUARDIAN session (increment A) on `exp-oren` (from `expansion/ballastra`, merged with the
+base at `8c6c213`). It **revises** this plan; it is not a parallel plan. Where R1 and §1–§9 disagree, R1 wins, because
+it carries the user's later decisions of 2.11.2026 (OREN-GUARDIAN). Everything not mentioned here stands as written.
+Labels as in the header: **[canon]** LBA1/LBA2, **[approved]** this sequel's approved story and the user's decisions,
+**[new]** proposed here. Every Oren, Halden, sleeper and keeper detail below is **[new]** unless marked otherwise.
+
+### R1.1 What is actually playable today
+
+| Part | State on `exp-oren` | Evidence |
+|---|---|---|
+| Ch. 1–9 (`well` … `council`) | playable, base game | tests chapter1, chapter2 … chapter9; playthrough 01–12 |
+| Ch. 10 `throttle` "Borrowed Time" | **OG-1 playable** (increment B, below); BR-1…BR-4 documents only | `tests/oren-first.mjs` |
+| Ch. 11–13 `survey`, `ballastra`, `balances` | empty shells: the story passes straight through (batch 1) | save-migration |
+| Ch. 14 `network`, 15 `shell`, 16 `core`, epilogue `home` | playable, base game (no bands, no Wound, base core) | chapter10, chapter3 |
+| Every card in §4 except OG-1 (BR, SV, N1–N6, NW, UR, CORE-1, EP-1, OP-1…7, DP-*) | **documents only** | — |
+| W-1 … W-8 | orders; nothing built (W-1 waits on the user's approval of its pictures) | `EXPANSION_WORLD_SPEC.md` |
+
+**Reachable endpoint today:** the base finale (the core: Vesk, the bore's guardian machine, three pylons, the coil,
+shield mode, the arrest) and the base epilogue (dinner, end card, Keep Exploring), in both campaigns. The base finale
+stays the ending until FIN-1 (R1.12) plays end to end (the user's rule).
+
+### R1.2 Names and continuity fixes
+
+- **Oren** is now the guardian of Ballastra (the user's decision). The human former designer of Ballastra's water
+  system is renamed **Halden** everywhere in §4.3 (N3, N5, N6), §5.1, §5.3, EP-1's letter and W-2/W-7 (`bl_oren` →
+  `bl_halden`, `oren_*` stand spots → `halden_*`). His role, lines and arc stay; the default for Q3 now reads "Halden
+  stays on Ballastra, repairing the lower row, tolerated, not forgiven".
+- **Wenna** was used twice: the Ballastra grower (N2, N6) and Grumm's Wannie sister in OP-7. The grower keeps the
+  name (she is now also the sleeping brother's sister, R1.11 WK-1). OP-7's sister becomes **Mossa**.
+- **"The guardian"** in the base core is Vesk's bore machine (enemy kind `guardian`, `c3_j_core`). Player text never
+  calls Oren "the guardian"; people say "Oren", Sendell says "a keeper, like me".
+- **Prefixes:** `og_` (Oren's main-path quests), `wk_` (Wake Jory), `fin_` (finale additions), `ep_bl*` (the
+  aftermath on Ballastra). Checked: none is used in the code or this plan.
+- **New residents** (Ballastra, the Low Terrace): Jory (Wenna's brother), Garrow (keepers' foreman), Nan Odra (elder
+  keeper), Sammo (teenage keeper). Checked against the code and docs: no collision.
+
+### R1.3 Oren
+
+**Who** [new]: the keeper of Ballastra, as Sendell is Twinsun's [canon: Sendell]. He protected the young life inside
+Ballastra. Eighty-one years ago that young one stirred too early, the sea broke the terraces' walls (the Flood), and
+he put it back to sleep and took the injured and the homeless into sleep beside it, in glazed shelters called the
+Cradles. He has held them asleep ever since. He believes, sincerely, that sleep is the only safe state; his wrong is
+overriding the sleepers' own terms and calling a permanent lock "safety".
+
+**Presence** (not Sendell recoloured; Sendell is cyan-white light inside living stone):
+- Silhouette: four horizontal glazed rings stacked a hand apart, widest at the bottom (about 0.9 m down to 0.45 m),
+  like a float gauge; one bronze bead travels round them. He rises out of the Ballastra-made part he speaks through.
+  On Ballastra (W-12) a fixed 4 m version, the Rings, stands in the Cradle Control.
+- Colour: celadon glaze (pale grey-green) with bronze rims; his only light is the bead's low amber.
+- Sound: a low two-note bowl tone (about 98 and 147 Hz, slow swell); a soft tick while he listens.
+- Animation: the rings turn slowly at different rates; when he speaks they stop in line and the bead stops facing the
+  listener (attention). Later, refusing, the rings lock with a soft clack. No shaking, no glow pulses.
+- Voice: calm, plain, attentive, often a number or a state ("Sixty-one people. Nine are lying down."). Increasingly
+  short and fixed ("No." "Not ready."). No riddles, no speeches.
+- Cost: five meshes (four tori, one bead) on two cached materials, no lights, no transparency, no particles; drawn
+  only in the room he speaks in. First version built in B: `src/game/orenpresence.js`.
+
+### R1.4 Oren's rules of reach (used consistently; every later card cites them)
+
+1. **What allows contact.** The keepers once set paired stones: two crystals cut from one, one in each world's shell,
+   so a stroke on one rings the other. Twinsun's lies in the shell beside the young one Sendell guards. Sendell has
+   not had the strength to ring it; Oren stopped calling after the Flood. Since chapter 3 Vesk's bore at Citadel's
+   station strikes the rock beside it with every drill stroke, and the stone rings. While the drill runs, the line is
+   open. It carries a voice and a will, never matter or people: the planets are still joined only by spaceship.
+2. **What carries his influence.** Only things fired from Ballastra's terrace clay (Balance Works ware: coils, gate
+   actuators, governors, glazed floats), because that clay has lain under his hush for eighty years ("the steady" in
+   Ballastra ware: Corvin's line "I never asked where the steady came from" now means it). A part carries him only
+   while it is joined to the bore by a continuous metal path: the project's feed pipes and cables. Twinsun brass,
+   oak, leather and Twinsun clay are deaf to him. The B-7 regulator on Zoé's table is connected to nothing: inert.
+3. **What he senses and controls.** Through a carrying part he feels what it feels: pressure, flow, load, heat,
+   vibration; through the floors and frames it is bolted to, people's weight and steps (he counts people; he does not
+   see faces). He hears speech within a metre or two of the ceramic and answers through it. He controls only what the
+   part itself drives: a governor's setting, an actuator's lock, a coil's pull. He makes no power (he balances or
+   withholds what flows), moves nothing that a carrying part does not drive, and cannot harm anyone directly. His hush
+   (the Cradles' sleep tone) sounds through any carrying part, but it only puts someone to sleep who stays within a few
+   metres of one, in a closed room, for hours.
+4. **What interrupts his control.**
+   - A break in the path: a closed feed wheel, a cut cable, a **dead coupling** (Baldino's oak-and-leather pipe sleeve,
+     OG-5 and OG-6). A throttled station rings weakly: he can steady it, not lock it.
+   - **A hand on a lever.** A part with a local hand lever obeys a held lever over his tone. He can push, not overrule.
+     (Zoé's local-override decision, NW-2, pays off twice.)
+   - **The drill's rhythm.** He holds only on the strokes (a readable thump and tremor every few seconds); between them
+     his hold relaxes, and a held part can be reset.
+   - **Shock beyond the part's range** (water hammer, a magic-ball strike on the ceramic) shakes his hold loose for a
+     few seconds. This is why OG-1 needs Twinsen first, and it is a finale mechanic.
+   - **Sendell's living stone.** He cannot pass through rock she holds; only through made things.
+5. **Why he cannot seize everything at once.**
+   - He reaches only carrying parts already fitted and joined to the bore. Their number grows only as Vesk buys and
+     fits more (N4's standing order; `vm_1…3` are also his growth steps).
+   - A new part answers him loosely for days before it holds (early: he steadies; later: he locks).
+   - His strength is shared: about 1,200 sleepers and the young one on Ballastra need his hush without a break. Every
+     push on Twinsun is taken from them, so he acts in short holds and prefers conditions to force.
+   - The line exists only while the drill strikes; the throttle (BR-3) narrows it, a stopped drill closes it.
+
+### R1.5 Ballastra, combined [new; the user's decision "combined"]
+
+Ballastra is Oren's world. The water story (N1–N6) is the human layer of the same catastrophe: who was given
+protection, and what kind.
+
+| When (before the game's present) | What |
+|---|---|
+| 81 years | The Flood: the young one stirs, the sea breaks the terraces. Oren takes it and about 900 people into sleep in the Cradles, on the Low Terrace above the gardens. Families who stay awake become the keepers. |
+| 81 → 34 years | Halden's central water system; the upper terrace keeps its gates, the lower row floods "every time" (Mags). Keepers' families keep the Cradles and live beside them; three generations grow up around sleeping relatives, promised waking "when conditions improve". |
+| 34 years | The Second Rising. The council will not open the lower row's spill gate (Halden's drawn safeguard, chained under seal). Instead it offers the lower row's young people places in the Cradles "until the water settles": about 300 more sleepers. **Jory Mell (19)** goes in; his terms card: "Wake me in ten years, or when my sister asks." His sister **Wenna is 9**. |
+| 24 years | Both of Jory's terms are met: ten years pass, and Wenna, 19, signs her first petition. Oren defers the waking ("conditions"). He has deferred it every year since: 24 times. |
+| 20 years | The Bay 2 incident: a waking with the shared ring left open; two neighbouring cradles cooled, keepers held them by hand for a day; both lived. Oren closes the waking bay for good. |
+| 12 years | A storm; Oren stops the terrace lift's upward run. The harbour stops seeing lamps on the Low Terrace and half believes the keepers left. Wenna's visit requests are posted DEFERRED, again and again. |
+| Now | Wenna 43, Tib (her son) 11, Jory still about 20: in the Cradles a year of sleep ages the body by about a week. |
+
+Residents' positions (shown by requests, access, favours and behaviour):
+- want their families woken: Wenna; Mags's row (the Second Rising's families);
+- depend on the protection: Nan Odra (her mother has slept since the Flood and would wake to a daughter of 84);
+- benefit from maintaining it: Garrow (the keepers' stipend from the harbour council; his workshop is the only paid
+  work on the terrace);
+- fear Twinsen will leave after disrupting them: Sammo ("You'll fix it, fly home, and we'll be the ones he locks in.");
+- disagree with Oren while respecting what he did: Nan Odra ("He held my mother through the Flood. I won't say a word
+  against that. I'll say one against the lock.").
+
+### R1.6 Vesk and Oren, A–F (observable, by chapter; Vesk's wrongs stay his)
+
+| Beat | Where the player sees it | What Vesk decides himself |
+|---|---|---|
+| A. Oren's systems steady damaged machinery | Before the game: the bore, sealed below in ch. 3, shook its drive apart; Vesk fitted the Balance Works coils he bought after rejecting the B-7, and they held "as if someone were holding them". Shown in ch. 10 (OG-1: a Balance Works governor steadies the mains). Documented in N4 (his letter to Balance Works). | He buys central-command parts and rejects the local regulator (BR-4, unchanged). |
+| B. Genuine benefits | Ch. 10–12: the shelters' water steady (OG-1); Zeelich's mills, pumps and ferry steadier where coils are fitted (return visits after BR-3); Oren opens the fenced square (OG-2) and the terrace lift (OG-3). | — |
+| C. Restrictions and dependency appear | Ch. 10–13: a governor that turns its operator back (OG-1, Mira); a gate that opens only on everyone's agreement (OG-2); Wenna's travel requests deferred (OG-3); stations that cannot be shut down without hammering (OG-6). | — |
+| D. Vesk conceals them and expands the link | Ch. 13 (N4): his standing order (every coil and actuator, no regulators), project incident sheets OVERRIDE REFUSED refiled as "calibration", and "Do not send your engineers." | Conceals, buys more, fits more. |
+| E. Oren imposes safeguards Vesk cannot direct | Ch. 14: on the project channel Vesk orders full feed; the bore's coils refuse him ("for the young one"). His crews cannot cut coils Oren holds. The shelters' governors hush and lock (OG-5). | He tries to force it, then hides the failure from the council. |
+| F. Interests split | Ch. 15–16: Oren moves to hush the young one for good, which ends Vesk's prize; Vesk wants it awake enough to tap. In the core Vesk turns his own key to drop the coil (FIN-1): a concrete decision with a cost (his bore and central command, gone; the act goes in the report). He is arrested as before, unrepentant: "If it isn't mine, it isn't his either." | His choice, his motive (control), his cost. Not redemption. |
+
+### R1.7 Sendell's arc and her specific limits
+
+- Ch. 7 [approved, built]: "I cannot do this alone."
+- Ch. 11 SV-3 (an added beat): the casing bangs and the layers carry a second tone. Sendell: "Someone is answering on
+  an old line." Twinsen names Oren (OG-1). Her hope: "Oren kept Ballastra's water still. We lost each other after its
+  Flood. If he can hold water, he might hold this." She asks Twinsen to carry her word to him. She does not know about
+  the Cradles' locks; she is not sending him into a trap.
+- Ch. 12 OG-3: Oren receives her word with respect ("She held her world alone. I know the cost.").
+- Ch. 15 OG-7: at the paired stone they speak. Oren offers to hush the young one "as I hushed mine". Sendell refuses:
+  "Yours has not grown in eighty years. That is not keeping." The disagreement is plain: protection that removes
+  choice, against refusing to preserve life by imprisoning it.
+- Her limits, as obstacles, never "she lost her powers":
+  - she reaches only living stone: she cannot touch a coil, a valve or a lever (so Twinsen must);
+  - her light holds the cracks: light spent on a path (SV-3) or on the stone (OG-7) is light taken from a crack, so she
+    does one thing at a time and says which;
+  - she cannot ring or still the paired stone while Vesk's coil clamps it (FIN-1): the coil is a made thing;
+  - she cannot see Ballastra; she hears Oren only on the drill's strokes.
+- Ch. 16: after the coil falls she stills the stone. "She is asleep again. Her own sleep, this time." (Replaces
+  `c3_sendell_end` in the expanded campaign only.)
+
+### R1.8 Each world's role (no repeated "disable three generators")
+
+| World | Role | What the player does there |
+|---|---|---|
+| Twinsun | practical benefits, subtle disturbances, later protection that closes routes and keeps people asleep | OG-1 (help), OG-2 (a condition), OG-5 (Zoé opens the shelters by hand and gets the town up) |
+| Zeelich | communities using improved water, transport and industry, with credible reasons to oppose a sudden shutdown | OG-6: swap coils for deaf floats one station at a time, with the street's agreement and a person at each lever |
+| Ballastra | the long-term consequence of protection becoming control | OG-3, WK-1 (one safe local waking), N3/N5 (the human layer) |
+| Sendell's underground | the knowledge and the physical route to separate Oren's control from the systems keeping people alive | SV-3 (the second tone), UR-1, OG-7 (the paired stone, the order of separation) |
+
+### R1.9 Escalation through the network, by chapter
+
+| Ch. | Step | Familiar place that changes | Discoverable next step (no softlock) |
+|---|---|---|---|
+| 10 | assistance | the valve room: a celadon governor on the inlet, the needles steady on green | Mira and Gilbert point onward; the objective names the place |
+| 11 | conditions | the square's fence gate opens only when the pump queue agrees to a ration | each resident's objection is a visible errand; the gate's lamp counts agreements |
+| 12–13 | restricted access | the terrace lift runs down only; the Register Room shut by an actuator; after WK-1 the lift stops for everyone | the service passages (a route nobody can lock: no ceramic in them) |
+| 14 | forced protection | Citadel's shelters hush and lock; some heat posts lock at low; Zeelich's coils refuse shutdown | a hand on each lever (Zoé's roll call) opens every locked way; the objective lists what changed |
+| 15–16 | attempted expansion of protected sleep | the core's coil grows rings; the pylons' governors lock in turn; the shelters hum | each locked thing has a lever or a ball latch already taught (R1.4) |
+
+Softlock rule: any gate Oren can close has a hand lever or a deaf route beside it, introduced before it closes. A
+resident who moves is placed where the objective says. Machinery that changes hands keeps its flags; a reload sets it.
+
+### R1.10 Revised chapter order and dependency graph
+
+Keys and display numbers stay as §2.1. New content sits inside them.
+
+```
+c9_vote
+ └ ch.10 throttle: BR-1 order → BR-2 bench → BR-3 say it back → (ship home) OG-1 A Steady Hand → BR-4 Zoé's run
+    └ ch.11 survey: OG-2 The Fenced Square → SV-1 → SV-2 → SV-3 (+ Sendell's hope)            [vm_1]
+       └ ch.12 ballastra: arrival → N1 → N2 ─┬→ N3 (Halden, the chained gate)                  [vm_2]
+                                             └→ OG-3 The Low Terrace (WK-1 steps 1–2 open here)
+          └ ch.13 balances: { N4 → N5 → N6 } and { WK-1 steps 3–8 } in either order; both before the flight home
+             └ ch.14 network: NW-1 bands; OG-6 Coils and Consent (Zeelich); OG-5 Shelters (Zoé, Citadel); NW-2 roll call  [vm_3]
+                └ ch.15 shell: UR-1 The Wound → OG-7 The Paired Stone → Sendell
+                   └ ch.16 core: FIN-1
+                      └ home: dinner (base) → EP-BL Ballastra visit → end card → Keep Exploring
+```
+
+Alternate order: inside ch. 13 and among ch. 14's stations (as today). Increment B ships OG-1 alone at the start of
+ch. 10 (its trigger is "after the vote", from the council chamber, with a seen spaceship crossing); when BR-1…3 are
+built, OG-1's entry moves to Twinsen's arrival home after BR-3 and Mira's call line gains the throttle (OG-1's own
+steps do not change).
+
+### R1.11 Quest cards
+
+Minutes are **estimates** (no first-time player has been timed). Recovery always includes: a save inside a puzzle
+loads at that room's safe spot with every moving part set from flags.
+
+**OG-1 · A Steady Hand** (ch. 10 `throttle`, `og_`) — Min 10 (estimate) — **implemented in increment B**
+- Pre/entry: `c9_vote`. In the council chamber Mira calls over the lighthouse relay (ch. 8's link): the mains under
+  town are hammering since the vote; the shelters' pipes jump with every kick. A seen spaceship crossing takes him home.
+- Where/who: Citadel Spaceport, the Water Office (Mira), FunFrock's valve room (the real room, no stand-in), the
+  fortress shelter's door (Gilbert, Tim, Lulu). Oren speaks through a Balance Works governor the project bolted to the
+  inlet "last month" (a new prop, made by the story).
+- Player does: reads the hammer (the needles leap, a bang, a shudder, every 3.2 s); opens a valve wheel *during* a kick
+  to bleed it down the drain (three bleeds). Opened between kicks, the wheel kicks back and pushes him off (no damage).
+  Mira names the cost: every bleed is water the shelters do not get.
+- Turn: with the line quiet, the governor rings; Oren's rings rise; the needles settle on green and stay. Oren speaks:
+  his name, where he is, a count of the people in the shelters by weight. Mira tries wheel IV for Gilbert's washroom;
+  it turns itself back ("Green holds. Above green, the old joints split."). Mira: "He's right. I hate that he's right."
+- Outcome: Gilbert and the children thank him, and thank Oren aloud; "the little ones slept right through".
+  Baldino calls him back to Zeelich; the chapter ends when he lands there (the network begins in the workshop).
+- Mechanics: talk, use (valve wheels), reading a timing signal, the existing spaceship route. No new controls.
+- Clues: Mira's instruction (one line), the needles, the bang, the shudder; a nudge toast after 45 s without a bleed;
+  the objective counts bleeds; the journal records the call, the steadying and the thanks.
+- Failure/retry: nothing can be lost; a mistimed wheel only pushes him back. Unlimited tries.
+- Saves: `og_started`, `og_home`, `og_arrived`, `og_room`, `og_bleed` (0–3), `og_steady`, `og_thanks`, `og_done`. A save
+  in the valve room keeps the bleeds; after `og_steady` the needles load on green and the governor stays warm.
+- State after: the governor stays on the inlet (expanded campaign only); Mira's and Gilbert's later lines; OG-2 (Oren
+  knows Twinsen's step), OG-5 (the same line feeds the shelters' air), NW-1 (the valve room's relay must work past it).
+
+**OG-2 · The Fenced Square** (ch. 11 `survey`) — Min 12
+- Pre: BR-4 done (until then: `og_done`). Why he goes: SV-1 needs the well; the project's ch.-8 fence round the square
+  is locked by a Balance Works actuator, and Vesk refuses the council's order for the key.
+- Who: Bram, Granny Ume, Pico (existing walkers, standing in the pump queue), Oren through the actuator.
+- Player does: Oren offers to open it on one condition: the square's pump goes to one cask per family while the bore
+  pulls. A small lamp on the gate counts agreements (0/3). Bram fears the pump is being taken: Twinsen shows him the
+  pump's hand lever beats the tone (rule 4, taught here, used in OG-5 and FIN-1). Ume needs her tonic water: Twinsen
+  fetches it from Mira's tap (Water Office). Pico wants to see Twinsen ring the gate's bell latch with the ball first.
+  With three agreements the gate opens.
+- Turn: help that needs everyone's consent; Twinsen notices that nobody was asked whether they wanted a ration.
+- Failure/retry: none; each errand can be done in any order. Saves: `og2_bram`, `og2_ume`, `og2_pico`, `og2_open`.
+- After: the fence stays open; the gate's lamp is celadon from now on; Bram's lever line returns in OG-5.
+
+**OG-3 · The Low Terrace** (ch. 12 `ballastra`, after N2) — Min 15 — needs W-9 (no stand-in: not built before W-9)
+- Pre: `bl_n2`. Wenna (met in N2) shows the notice board at the lift foot: her visit requests, DEFERRED, twelve years
+  of them (the travel request denied again and again). The harbour thinks the Low Terrace emptied.
+- Player does: Twinsen speaks at the lift's ceramic call-horn, carrying Sendell's word. Oren opens the lift for him
+  (a settlement believed lost) and lets Wenna ride down with him. On the terrace: Garrow's workshop, Nan Odra, Sammo,
+  the keepers' garden (one bed per sleeper, tended for generations), the Cradle Hall's glazed windows. The keepers
+  thank Oren sincerely in front of him.
+- Turn: Wenna asks Oren to wake Jory. "Not ready." She asks Twinsen. (WK-1 begins.)
+- Saves: `og3_board`, `og3_lift`, `og3_terrace`. The lift runs down for visitors and up "when the water is right";
+  after WK-1 it stops for everyone until FIN-1 (the service passages stay open: no ceramic in them).
+
+**WK-1 · Wake Jory** (ch. 12–13, main path, `wk_`) — Min 55 over 8 steps (estimate)
+1. *Meet her, her immediate problem* (OG-3): she cannot even visit his cradle; then "Not ready." `wk_ask`.
+2. *A believable way into the maintenance area*: Garrow keeps the service passages; he lets Twinsen in as a day keeper
+   if he clears the flooded passage pump nobody wants to touch (wade, a ball latch to free the float, a wheel).
+   Sammo tags along to see "what a hero is for". `wk_garrow`, `wk_pump`.
+3. *The old request and the records*: the passages reach the Register Room's back hatch (the front door is an actuator
+   Oren keeps shut). The index drum gives J-17. Jory's terms card ("Wake me in ten years, or when my sister asks. —
+   Jory Mell"), the deferral ledger (24 entries: "conditions"), Wenna's petitions (received, filed), and the Bay 2
+   record: why waking is dangerous. Three sources; the card is the one he carries. `wk_card`, `wk_ledger`, `wk_bay2`.
+4. *A safe local waking system*: the waking bay off the Cradle Hall. Roll J-17 into the bay on its rail (crank). Close
+   the isolating valve, then watch the ring gauge for one full cycle: the neighbours' lamps must stay green (Bay 2's
+   mistake, avoided). A lamp goes amber: the old seal leaks; cut the swollen gasket out (sword) and fit Garrow's spare.
+   The bay's warmer has a Balance Works element Oren holds cold: Tessa swaps in a brass one (deaf to him: rule 2), and
+   says its limit: "Brass can't feel anything. Somebody has to watch the gauge." That somebody is Wenna. `wk_rail`,
+   `wk_iso`, `wk_seal`, `wk_safe`, `wk_brass`.
+5. *An obstacle through gameplay*: as the warmer runs, Oren sends the Cradles' two keeper automatons (W-7) to reopen
+   the ring valve "for protection". Wenna holds the hand lever (rule 4); Twinsen keeps the automatons off it (ball,
+   sword; they are pushed back, never destroyed). If one reaches the valve, the warming pauses where it was and Jory
+   stays safely asleep. Retry from the pause. `wk_warm` (0–3 stages).
+6. *Wake him*: the glaze lid lifts. Jory, who takes Wenna for their aunt: "You got old." Wenna: "You got lazy." Tib
+   meets an uncle eight years older than himself. `wk_awake`.
+7. *Oren's response*: through the bay's ring. He tells Bay 2 in three lines, then locks the bay from the control
+   side; the brass warmer and the hand isolation still work locally, so he cannot undo what was done. "Then the next
+   one is yours to answer for." He stops the terrace lift for everyone. `wk_oren`.
+8. *Consequences, later*: at the end of ch. 13 Jory sits on Wenna's raft, legs weak, Tib teaching him the new floats;
+   Nan Odra asks Garrow for the bay's key, not yet; Sammo stays. In the aftermath (EP-BL) Jory walks the harbour with
+   his sister. `wk_after`.
+- Mechanics: exploration, wading, the ball on latches, the sword on a seal, a crank, a hand lever held by an ally,
+  light combat (pushback only). New mechanics: none beyond the established use, ball and sword.
+- Clues: the terms card's text is essential and must survive text cleanup word for word in meaning; the Bay 2 record
+  and Garrow's line both state the isolation rule; the gauge's lamps show it.
+- Failure/retry: nothing missable; the sleeper is never at risk from a player error (the bay fails safe: asleep).
+- Saves: all flags above; a reload mid-warming restarts the warming from its last stage with the automatons reset.
+
+**N3, N4, N5, N6 (changes only).** N3: Mags adds the human layer: "They didn't open the gate. They gave our children a
+bed instead." N4: Vesk's letter and the refiled OVERRIDE REFUSED sheets (beat D). N5: the allocation log carries
+Halden's bypass order and the Second Rising's transfer list to the Cradles. N6: with Corvin's glazed float the rig
+steadies itself even when Twinsen sets the bands wrong (a contradiction seen in play); Tessa fits a brass float and the
+rig behaves honestly, slower, needing a person at each band. That is the network's rule. Time: +5 min over §4.3.
+
+**OG-5 · Shelters** (ch. 14 `network`, Zoé playable, Citadel) — Min 18 — needs a W-8 shelter interior
+- Pre: `c10_started` and the ship home. A tremor; Oren hushes and locks both shelters "for protection" through the
+  air governors the project fitted at the evacuation (the same line as OG-1). Inside, people sleep through the bell.
+- As Zoé: her register shows who is inside (the unlisted). She gets Gilbert to hold the fortress door's ch.-8 cistern
+  lever (rule 4), has Tim, Lulu and Bram walk the drowsy home, and fits Baldino's dead coupling on each governor's
+  pipe (he hands her two and says their limit: "Leather and oak. They don't carry a thing, including warmth. Blankets.").
+- Playable consequence: the shelters stand open; the town comes up; the fence comes down; Twinsen's roll call later
+  has "Shelters" as a station with a hand on its lever.
+- Saves: `og5_*`; Zoé's run restarts at its start on reload (as `c8_zoeStart`).
+
+**OG-6 · Coils and Consent** (ch. 14, Zeelich) — Min 15
+- The mill, the depot pumps and the ferry have run steadier on coils since ch. 10. Brum's constituents and Tavo object
+  to pulling them (heat cells, grain, the timetable): credible, and shown.
+- Twinsen and Baldino swap one coil at the mill for a brass float and a dead coupling, with Oku at the band; it keeps
+  turning, a little rougher. The street meeting agrees: one station at a time, a person at each lever.
+- Saves: `og6_*`. Accept: the mill station is completable without the street's vote (the vote changes lines and the
+  Zeelich aftermath, not access).
+
+**OG-7 · The Paired Stone** (ch. 15 `shell`, after UR-1) — Min 15 — needs a W-6 addition
+- The stone: a crystal column beside the bore's path, ringing on every stroke; Vesk's core coil clamps its base.
+- Sendell gives the order of separation in two lines: still the stone now and every carrying part on two worlds goes
+  slack at once (the mains hammer, the bore runs wild); first put every essential station under a hand or a deaf part,
+  then break the clamp, then she stills the stone.
+- She and Oren speak (R1.7). Twinsen decides nothing here; he learns the order he will play in FIN-1.
+
+**FIN-1** and **EP-BL**: R1.12 and R1.13.
+
+### R1.12 The revised finale (checked against `chapter3.js`, `finale-fx.js`, `epilogue.js`)
+
+The base core stays the frame: Vesk at his console, the bore's guardian machine, three pylons converted by bank shots
+while Zoé, Mira and Oku answer by radio, the coil (three ball hits), shield mode, the arrest. CORE-1 (stress lamps,
+roll call, central command refused) stays. FIN-1 adds Oren in three phases inside that room; nothing is a health bar.
+
+1. **The installation changes.** After the second pylon, the coil grows Oren's rings; the pylons' governors lock one by
+   one (their lamps turn celadon) on the drill's strokes. The core's map board shows each station's state.
+2. **Separate, in the order learned.** Between strokes (a thump, then a quiet beat), Twinsen strikes a locked governor
+   with the ball (shock frees it, rule 4) and throws its hand lever. Allies answer the roll call ("Mains, hand on the
+   lever." "Heard."); their lamps turn amber (a hand) and stay. Oren tries to retake a pylon through a second feed:
+   Twinsen redirects its power to Baldino's relay (a switch already taught at the network's stations). The bore's
+   maintenance drones carry Balance Works actuators: Oren moves two of them toward the levers; Twinsen keeps them off
+   (protecting access). The shelters' governors hum: Zoé's team (OG-5) answers "Shelters, hands on."
+3. **Vesk's decision.** The coil's clamp releases only from Vesk's console with his key. Oren is slowing the bore to
+   hush the young one, which ends Vesk's prize. Vesk turns the key: "If it isn't mine, it isn't his either." The
+   clamp drops; three hits break the coil (as now). Every station is under a hand, so nothing hammers. Sendell stills
+   the stone. Twinsen switches to shield mode (as now). Vesk is arrested (as now). His key turn is in the report;
+   nobody thanks him.
+- Recovery: each phase is a checkpoint (`fin_p1…3`); a fall or a lost fight restarts the phase with the levers already
+  held kept. A failed phase lets the shelters hum (drowsy, never harmed; Ballastra's sleepers are not on this line).
+- Resolved: the drilling damage (shield mode, the local network), Oren's access (the stone stilled, the coils dead
+  ceramic), the sleepers' immediate safety (Ballastra's untouched and the bay working locally; Twinsun's woken), Vesk's
+  role and consequences (his act recorded, arrested), the communities going on (hand levers, deaf floats, the lift).
+- Kept: the base finale plays unchanged on `exp_base` saves; FIN-1 replaces it on the expanded campaign only once it
+  plays end to end.
+
+### R1.13 Aftermath (EP-BL) — Min 8
+
+After the base dinner (unchanged), "A week later." The family take a ship to Ballastra (a seen crossing). A short walk
+from the pad to the terrace lift:
+- Nan Odra's tea stand on the Low Terrace reopens, now that people can ride up (a shop reopening);
+- Sammo rides the lift down to the harbour market with Garrow's order list, his first trip down since he was
+  five (a resident travelling freely);
+- the lift runs on its new hand lever, Garrow minding it (a machine without central control);
+- Jory and Wenna walk the harbour, arguing about beans (the woken brother outside with his sister);
+- Arthur and Tib race model boats while Zoé haggles over a sack of Wenna's beans and Twinsen holds everyone's coats
+  (an ordinary family moment). Oren's rings are quiet in the Cradle Control; the Register's requests are being read.
+
+No sequel tease. Then the end card and Keep Exploring. Flags `ep_bl*`.
+
+### R1.14 Knowledge timeline (additions to §5.3)
+
+| Fact | Vesk | Zoé | Twinsen | Baldino | Sendell | Ballastra (Wenna, keepers) |
+|---|---|---|---|---|---|---|
+| Ballastra coils "steady themselves" | before the game | OG-5 | OG-1 (sees it), N4 (reads it) | NW-1 | — | always (the steady) |
+| Someone called Oren speaks through them | ch. 14 (E) | after OG-1 (Twinsen tells her, BR-4) | OG-1 | BR-4 end | SV-3 | always |
+| The paired stone and the drill | — | ch. 15 radio | SV-3 (a hint), OG-7 | OG-7 radio | always | keepers: legend |
+| The Cradles and the deferred wakings | never | OG-5 (radio from Twinsen) | OG-3, WK-1 | ch. 14 | OG-7 | always |
+| Oren means to hush the young one | F (core) | ch. 15 | OG-7 | ch. 15 | OG-7 | Nan Odra suspects |
+| Rule 4 (a hand on a lever beats him) | never | OG-5 | OG-2 | OG-6 | — | Garrow (WK-1) |
+
+Before these points nobody mentions them.
+
+### R1.15 Saves and tests
+
+- New flags only (`og_`, `og2_`…`og7_`, `wk_`, `fin_`, `ep_bl*`); no format step. The user's rule (2.11): an old save
+  must not crash (a clean fallback to a new game with a message is enough); new saves in the expansion must save and
+  load.
+- Tests: `tests/oren-first.mjs` (B); one test per later card, each with a save → reload inside its puzzle, a retry
+  where it has one, and the re-entry of every changed place.
+
+### R1.16 World orders
+
+Added to `EXPANSION_WORLD_SPEC.md`: **W-9** the Low Terrace (Cradle Row, the keepers' garden, the terrace lift, the
+Cradle Hall: the sleeping quarters), **W-10** the keepers' workshop and the service passages, **W-11** the Register
+Room (the restricted archive), **W-12** the Cradle Control (the shelter control installation and the waking bay). W-6
+gains the paired stone; W-7 gains Halden (the designer's old Oren entry) and the keeper automatons' cradle duty; W-8
+gains the fence gate actuator (OG-2), one shelter interior (OG-5) and the core's ring housing (FIN-1).
+
+### R1.17 Pacing, risks, questions
+
+| Added | Min (estimate) |
+|---|---:|
+| OG-1, OG-2, OG-3 | 37 |
+| WK-1 | 55 |
+| N3–N6 changes, the SV-3 beat | 6 |
+| OG-5, OG-6, OG-7 | 48 |
+| FIN-1 over the base core | 12 |
+| EP-BL | 8 |
+| **Total** | **~166** |
+
+This lifts the main-path estimate from ~720 to ~886 min (14.8 h), over the 12 h main-path target. At the first real
+timings the cuts come from overlap, not from Oren's thread: BR-2 folds into BR-1's scene (−5), N4's stealth shortens
+(−10), OP-5 stays optional, and DP-6a, DP-7a and DP-7c are the first candidates (−30). No padding is added to reach a
+number.
+
+Risks:
+- Ballastra's places (W-1, W-9…W-12) gate OG-3 and WK-1; none of it can be honestly played before W-1 is approved.
+- OG-5 needs a shelter interior (W-8); a stand-in from an existing interior kit is possible but must say so.
+- Rule creep: every new Oren effect must cite R1.4; an effect that cannot is cut.
+- Two antagonists can blur Vesk: each Vesk beat in R1.6 is his decision and stays in his voice.
+
+Questions for the user (no spoilers needed to answer them):
+1. The young life inside Ballastra, kept asleep since the Flood (R1.3, R1.5), is new. It explains Oren's fixation and
+   the finale's stake. Keep it, or keep the Flood without it?
+2. EP-BL makes the epilogue a family visit to Ballastra after the dinner. Keep it, or end on Citadel as now?

@@ -534,6 +534,197 @@ budget.
 
 **Built:** _(the builder)_
 
+## W-9 … W-12 · Oren's Ballastra (Draft, the coordinator reviews; OREN-GUARDIAN, 2.11.2026)
+
+Written by the cloud's OREN-GUARDIAN session from `EXPANSION_PLAN.md` Revision R1 (the user's decisions of 2.11:
+Oren is Ballastra's guardian; his sleepers sleep in shelters by the terraces; same places and people, with the
+sleepers added). Same shared rules as W-2 … W-8 (own lazy group, pure setters with `instant`, the story owns the
+rules, `safe` spots, day only, measured views, pictures to `docs/future/world/<W-id>/`). Build after W-1 is accepted,
+in the coordinator's order. Cards: OG-3, WK-1 and EP-BL in R1.11 and R1.13.
+
+**Oren's look in the world.** Wherever a part is "Ballastra ware" (fired from the terrace clay), use one shared glaze:
+celadon (pale grey-green) with bronze rims, so a player learns to see what Oren can reach. Twinsun-made parts that
+replace it are brass, oak and leather. Oren himself is not a character model: he is a ring presence (`src/game/
+orenpresence.js`, built by the cloud, see R1.3). The large fixed Rings in W-12 are the builder's, in the same language.
+
+---
+
+## W-9 · The Low Terrace: Cradle Row, the keepers' garden, the Cradle Hall (Draft)
+
+The residential street beside the sleeping quarters. Three generations of keepers have lived here beside relatives
+who sleep. Lived in, close, a little cut off: about 15–20 minutes of play (OG-3, WK-1 steps 1–2, 6–8), and the
+aftermath's last stop.
+
+**The place.** Its own lazy group, `bl_terrace`, a shelf on the arch's flank above the Water Gardens (W-3), reached by
+the **terrace lift** from a lift foot on the gardens' upper edge.
+- **The terrace lift:** a counterweighted cage on two glazed-ceramic guide posts (Ballastra ware) and a bronze call-horn
+  at each end (the one Oren answers through). A notice board at the lift foot.
+- **Cradle Row:** one street of narrow keepers' houses (two storeys, tile and plaster, shutters, washing), Nan Odra's
+  tea stand (shut since the lift stopped; it reopens in the aftermath), Garrow's workshop front
+  (W-10's door), benches, potted herbs, cats.
+- **The keepers' garden:** a long terraced public garden kept across generations: **one small planted bed per
+  sleeper**, each with a glazed name tile; paths between; an old fountain that runs (or not, by state); seats.
+- **The Cradle Hall** (`bl_cradles`, interior): the sleeping quarters. A long vaulted hall of glazed cradles in rows
+  (about 60 visible; the rest implied beyond arches), each a lidded ceramic tub on a rail with a lamp and a number
+  plate (J-17 is Jory's). The shared **ring** (a pipe loop along the floor) joins them. Glazed windows from the street
+  look in. At the hall's end, the doors to the waking bay (W-12) and to the Cradle Control (W-12).
+- **Life (props; the story adds the people):** washing, a ladder against a gutter, children's chalk on the street, a
+  keepers' duty rota on a board, tools on hooks.
+
+**The puzzle's physical parts.**
+- The lift: three run states: `none`, `down` (visitors down, no way up), `both`.
+- The notice board: a stack of request slips that can show DEFERRED stamps (count set by the story).
+- Cradle lamps: per cradle `off|green|amber|red` (the story drives them; most green).
+- J-17's lid: shut / open; Jory's cradle on its rail can be rolled into the bay (W-12) and back.
+
+**Handles to export:** `BALLASTRA.terrace` from `src/game/ballastra/terrace.js`.
+- **Rooms and spots:**
+  - `rooms`: `bl_terrace` (outdoor), `bl_cradles`;
+  - `spawns`: `liftFoot` (at the gardens), `liftTop`, `cradlesIn`, `cradlesOut`, `garden`, `workshopOut`;
+  - `exits`: `toGardens` (via the lift ride), `toWorkshop` (W-10), `toBay`, `toControl` (W-12);
+  - doors both ways.
+- **Stand spots:** `wenna_board`, `wenna_lift`, `wenna_j17`, `jory_bench`, `jory_raft` (at W-3, the aftermath),
+  `garrow_shop`, `odra_garden`, `odra_lift` (aftermath), `sammo_lift`, `tib_street`, `keeper1`…`keeper4`.
+- **Interactive spots:** `noticeBoard`, `callHornFoot`, `callHornTop`, `liftCage`, `gardenBed_J17`, `cradleWindow`,
+  `j17`, `safe` (several).
+- **Methods:**
+  - `lift.setRun('none'|'down'|'both', instant)`, `lift.ride(dir)` (a short ride, then the story changes the scene);
+  - `board.setDeferred(n, instant)`;
+  - `cradle.setLamp(id, state)`, `cradle.setLid(id, open, instant)`, `cradle.roll(id, 'hall'|'bay', instant)`;
+  - `fountain.setRunning(b, instant)`, `street.setLife(level 0|1|2, instant)` (shutters, washing, chalk).
+- **Collision:** the cage is a platform; the garden's beds are low (step over not allowed: walk the paths); cradles
+  are solid.
+
+**Characters:** Wenna, Tib (W-7, already ordered), and for W-9: **Jory** (a young canal dweller, slight, hair grown
+long in sleep, a keeper's blanket over a sleeper's smock; after waking: a borrowed coat too big for him), **Garrow**
+(broad, leather apron, a keeper's bronze tag on a cord), **Nan Odra** (old, small, a shawl, a garden trowel),
+**Sammo** (a lanky teenager, a keeper's tag worn as a bracelet), two keeper residents (outfits on a shared body).
+
+**Budget and measures:** views of the street with the garden, the lift foot, the Cradle Hall down its length.
+**Pictures:** the street (closed and lived in), the garden, the hall, J-17 shut and open.
+**Built:** _(the builder)_
+
+---
+
+## W-10 · The keepers' workshop and the service passages (Draft)
+
+The terrace's only paid work, and the way into the places Oren keeps shut: the passages have no Ballastra ware in them,
+so nothing in them answers him (R1.4 rule 2). About 10 minutes (WK-1 step 2, the route of step 3).
+
+**The place.** Inside the `bl_terrace` group.
+- **`bl_kshop`** (interior): Garrow's workshop. Benches, cradle spares (lids, gaskets on pegs, a crate of glazed
+  heating elements), a forge corner, the keepers' tag board, a hatch in the floor to the passages.
+- **`bl_passages`** (interior): narrow brick service passages under the street and the Cradle Hall: pipes along the
+  walls (the ring's feed), knee-deep water in one stretch, ladders, three hatches:
+  1. up into the workshop;
+  2. up into the Register Room's back (W-11);
+  3. up into the waking bay (W-12).
+- **The flooded passage pump:** a float pump whose float is jammed high (a **ball latch** on its rod frees it), and a
+  wheel that runs it; the water falls from knee to ankle depth over a few seconds.
+
+**Handles to export:** `BALLASTRA.passages` from `src/game/ballastra/passages.js`.
+- **Rooms and spots:** `rooms`: `bl_kshop`, `bl_passages`; `spawns`: `shopIn`, `shopOut`, `passIn`, `toRegister`,
+  `toBay`; `exits`/doors and the three hatches both ways; `safe` spots.
+- **Stand spots:** `garrow_bench`, `garrow_hatch`, `sammo_pass`.
+- **Interactive spots:** `tagBoard`, `spares`, `pumpWheel`, `hatchRegister`, `hatchBay`.
+- **Ball target:** `pumpLatch`.
+- **Methods:** `pump.free(instant)`, `pump.setRunning(b, instant)`, `water.setLevel(0..1, instant)` (knee to ankle),
+  `hatch.setOpen(id, b, instant)`.
+- **Collision:** deep stretch (knee) walkable but slow; never deep enough to drown.
+
+**Budget and measures:** the workshop, the flooded stretch. **Pictures:** both, before and after the pump.
+**Built:** _(the builder)_
+
+---
+
+## W-11 · The Register Room, the restricted archive (Draft)
+
+Where the Cradles' paperwork has piled up for eighty years, behind a door Oren keeps shut. Quiet, dry, crowded,
+human: the place where the wrong is found in the sleepers' own handwriting. About 8 minutes (WK-1 step 3).
+
+**The place.** Inside the `bl_terrace` group: **`bl_register`** (interior), entered from the passages' hatch (the
+front door, onto Cradle Row, has a celadon actuator lock and stays shut: `frontDoor.setLocked`).
+- Shelves of register books floor to ceiling, two library ladders.
+- **The index drum:** a big rotating drum of cards (by sleeper number); turning it to J brings a card up.
+- **The terms cabinet:** small drawers, one per sleeper, with the signed terms card.
+- **The deferral ledger** on a lectern: one line per year per sleeper, stamped.
+- **The petitions box:** bundles of family petitions, tied, marked RECEIVED.
+- **The incident shelf:** the Bay 2 record, a slim bound report.
+- A window high up (light), dust in the beam (a baked shaft, no volumetrics).
+
+**Handles to export:** `BALLASTRA.register` from `src/game/ballastra/register.js`.
+- **Rooms and spots:** `rooms`: `bl_register`; `spawns`: `fromPassages`, `safe`.
+- **Interactive spots:** `drum`, `termsDrawer` (J-17), `ledger`, `petitions`, `bay2`, `frontDoor`.
+- **Methods:** `drum.turnTo(letter, instant)`, `drawer.setOpen(id, b, instant)`, `ledger.setOpen(b, instant)`,
+  `frontDoor.setLocked(b, instant)`.
+- No readable story text in the world; the story shows the card and the ledger as dialogue/inspect text.
+
+**Budget and measures:** one view. **Pictures:** the room, the drum, the drawer open.
+**Built:** _(the builder)_
+
+---
+
+## W-12 · The Cradle Control and the waking bay (Draft)
+
+The shelter control installation: Oren's fullest presence on Ballastra, and the bay where one sleeper can be woken
+safely by hand. About 20 minutes (WK-1 steps 4–7) and the aftermath's quiet glimpse.
+
+**The place.** Inside the `bl_terrace` group.
+- **`bl_control`** (interior): a round glazed chamber under a dome. At its centre the **Rings**: Oren's fixed presence,
+  four great celadon rings (about 4 m tall in all) slowly turning round a bronze bead (same language as R1.3; the
+  builder's model; it must read as Oren at a glance after seeing the small version). Round the wall: the **ring-pressure
+  board** (the shared ring's gauge and a lamp per cradle row), the hush horns (glazed mouths), the bay's control-side
+  valve (Oren locks it), the terrace lift's control wheel (celadon).
+- **`bl_bay`** (interior): the waking bay off the Cradle Hall. A rail spur brings one cradle in. Parts:
+  - **the isolating valve** (a hand wheel plus a **hand lever** that can be held: an NPC stand spot beside it);
+  - **the ring gauge** with the two neighbours' lamps beside it;
+  - **the seal**: an old swollen gasket at the isolation flange (sword target), and a seat where the spare fits;
+  - **the warmer**: a heating cabinet with an **element slot** (glazed element in; brass element swap);
+  - **the lid release** on the cradle's end;
+  - two **keeper automaton** alcoves (W-7's keepers, given cradle duty: the same bodies) and their path to the valve.
+
+**Handles to export:** `BALLASTRA.control` from `src/game/ballastra/control.js`.
+- **Rooms and spots:** `rooms`: `bl_control`, `bl_bay`; `spawns`: `controlIn`, `bayIn`, `bayFromPassages` (hatch),
+  `safe` spots; exits to the Cradle Hall (W-9) and the passages (W-10).
+- **Stand spots:** `wenna_lever`, `tessa_warmer`, `garrow_bay`, `sammo_bay`, `jory_wake` (sitting up), `keeperA`,
+  `keeperB` (alcoves), `odra_control` (aftermath).
+- **Interactive spots:** `rail` (crank), `isoWheel`, `isoLever`, `ringGauge`, `sealSeat`, `warmer`, `elementSlot`,
+  `lidRelease`, `boardRow` (look), `controlValve` (look).
+- **Sword target:** `seal`. **Ball targets:** none required (the keepers are enemies with their own hit rules).
+- **Methods:**
+  - `rings.setState('turning'|'attending'|'locked', instant)` (the Rings: turn, stop in line, lock with a clack);
+  - `ring.setGauge(0..1)`, `ring.setNeighbour(i, 'green'|'amber'|'red')`;
+  - `iso.set(open 0..1, instant)`, `iso.setHeld(b)` (the lever down while someone holds it);
+  - `seal.setState('swollen'|'cut'|'new', instant)`;
+  - `warmer.setElement('glazed'|'none'|'brass', instant)`, `warmer.setRunning(b)`, `warmer.setStage(0..3, instant)`;
+  - `cradle.setLid(open, instant)` (J-17 in the bay);
+  - `controlValve.setLocked(b, instant)`; `lift.setRun` mirrored from W-9.
+- **Keepers:** spawn points and a short path each from alcove to the valve; the story drives them (pushback rules).
+- **Collision:** the rail spur is solid except at its crank; the warmer and the cradle solid.
+
+**Budget and measures:** the control with the Rings turning, the bay with four people and two keepers.
+**Pictures:** the Rings, the board, the bay before and after the brass swap, J-17 open.
+**Built:** _(the builder)_
+
+---
+
+## W-6, W-7, W-8 additions (OREN-GUARDIAN)
+
+- **W-6 · the paired stone** (OG-7): in `uw_wound`, a crystal column (about 6 m) beside the bore's path, banded like the
+  layers but clear at its heart; it rings (`stone.ring()`: a brief brightening and a low note) on the story's drill
+  stroke, and stills (`stone.setStill(b, instant)`). Its base disappears into the bore's casing toward the core.
+- **W-7 · Halden** replaces the old "Oren (D9)" entry word for word (the designer's look is unchanged: taller, upper
+  district coat, keeps from the water). The **keepers** (automatons) gain cradle duty in W-12: same bodies.
+- **W-8a · the fence gate** (OG-2): the ch.-8 fence round Citadel's square gets one gate with a celadon actuator box and
+  a three-light counter (`fenceGate.setOpen(b, instant)`, `fenceGate.setCount(0..3)`), plus a small bell latch high on
+  its post (ball target, `fenceGate.bell`).
+- **W-8 · a shelter interior** (OG-5): one interior `shelter` used for both of FunFrock's shelters (bunks, the air
+  governor on its pipe with a celadon body, a hand lever at the door, a dead-coupling seat on the governor's pipe).
+  Handles: `governor.setHush(b)`, `governor.setCoupled(b, instant)`, `door.setLocked(b, instant)`, `bunks[0..n]`.
+- **W-8b · the core's rings** (FIN-1): a ring housing round Vesk's coil (the same Ballastra ware), each pylon's
+  governor with a hand lever and a lamp `off|celadon|amber`, and a map board of the stations
+  (`coil.setRings(b)`, `pylonGov(i).setState(...)`, `board.setStation(id, state)`).
+
 ## Hooks (shared files touched, by either side)
 
 _(file, line or function, why)_
