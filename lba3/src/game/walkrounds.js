@@ -109,7 +109,7 @@ export function citadelRoster(game) {
       look('brix_well', -39.4, -7.6, WELL.x, WELL.z, [6, 10], { gest: ['sigh', 'shrug'] }),
       bench('brix_lane', -47.8, 19.5, [28, 44]),
       look('brix_pump', -45.6, 58.6, -42, 65, [8, 12]),
-      bench('brix_lane2', -43.3, 45.4, [24, 36]),
+      bench('brix_lane2', -43.3, 43.4, [24, 36]),
     ]) },
     // two neighbours who meet between the plaza's benches and talk
     { id: 'maro', char: 'farmerB', tint: '#ffffff', speed: 1.05, start: 1, color: '#e8a0e0', stops: ok([
@@ -189,7 +189,7 @@ export function citadelRoster(game) {
     { id: 'ume', char: 'lharElder', tint: '#ffffff', speed: 0.75, start: 0, color: '#c8a0f0', stops: ok([
       bench('ume_b1', -34.6, 43.6, [30, 46]),
       look('ume_look', -41.0, 38.5, -44, 33, [6, 10]),
-      bench('ume_b2', -43.3, 45.4, [30, 46]),
+      bench('ume_b2', -43.3, 43.4, [30, 46]),
       look('ume_pump', -46.6, 56.4, -43, 64, [6, 10]),
     ]) },
   ];

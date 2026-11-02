@@ -174,10 +174,11 @@ export function buildCityDressing(root, physics, W) {
   board(-42.8, 34.6, -Math.PI / 2);
   bin(-50.8, 34.4);   // (BENCHES-1: the second, at the east bench's end, was pushed against its back: one bin between them)
   place('fountain', (k) => P.drinkingFountain(k), -43.4, 37.4, -Math.PI / 2, FP.fountain);
-  // further down, a second resting spot: on the field's edge east of the lane, facing it and the tulip beds across it
+  // further down, a second resting spot: on the field's edge east of the lane, facing it and the tulip beds across it, its
+  // slot (where a resident stands to sit down) 2.7 m north of Pico's lane stop
   // (BENCHES-1: it stood west of the lane wedged between the original's tulip bed, a tree's trunk 0.7 m behind it and its
   //  bin; the planter that went with it stays where it was, by the blue bed)
-  rest(-43.3, 45.4, -Math.PI / 2, { color: '#c8452f', bin: -1, tub: 1, seed: 22 });
+  rest(-43.3, 43.4, -Math.PI / 2, { color: '#c8452f', bin: -1, tub: 1, seed: 22 });
   planter(-48.3, 47.9, Math.PI / 2, 9);
   // the lighthouse junction (BENCHES-1: no street bin by Twinsen's own bench: it stood in his front garden, at the bench's end,
   // between it and his door)
