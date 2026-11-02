@@ -477,7 +477,24 @@ export class Renderer {
   setGrade(grade = null, tint = null) {
     const U = this.output?.uniforms; if (!U?.grade) return;
     U.grade.value = grade ?? GRADE;
-    if (tint) U.gradeTint.value.set(tint[0], tint[1], tint[2]); else U.gradeTint.value.set(1, 1, 1);
+    const A = (this._areaTint ??= new THREE.Vector3(1, 1, 1));
+    if (tint) A.set(tint[0], tint[1], tint[2]); else A.set(1, 1, 1);
+    this._tint();
+  }
+  // WEATHER-1: the light cycle's gentle tint of the whole frame (morning a touch cool, golden hour a touch warm), so the
+  // people — lit by their own fixed ramp (characters.js LbaMaterial), not by the sun's colour — warm and cool with the
+  // world. Multiplies the area's own tint; (1, 1, 1): exactly the area's grade as before. One uniform, no new program.
+  setLightTint(r = 1, g = 1, b = 1) {
+    const L = (this._lightTint ??= new THREE.Vector3(1, 1, 1));
+    if (L.x === r && L.y === g && L.z === b) return;
+    L.set(r, g, b); this._tint();
+  }
+  _tint() {
+    const U = this.output?.uniforms; if (!U?.gradeTint) return;
+    const A = this._areaTint, L = this._lightTint;
+    U.gradeTint.value.set(1, 1, 1);
+    if (A) U.gradeTint.value.copy(A);
+    if (L) U.gradeTint.value.multiply(L);
   }
   setOldEdges(on) { this._edgeOld = !!on; this._outDefs(); }
   // SHADE-COST: the output pass's own pixel read through the filter as before (EDGE_CENTRE_OLD), and the five lumas'
@@ -629,8 +646,12 @@ export class Renderer {
     const R = this.renderer, prev = R.getRenderTarget();
     this.applyResize();
     R.setRenderTarget(this.composer.renderTarget1);
+    // (WEATHER-1: what is hidden until the weather shows it — the rain lines, the motes: warmExtra — is compiled with
+    //  the rest, not on the first rainy frame. three walks only what is visible; its programs are made in the call)
+    const ex = scene === this.scene ? this.warmExtra?.() : null, vis = this._warmVis ??= [];
+    if (ex) for (let i = 0; i < ex.length; i++) { vis[i] = ex[i].visible; ex[i].visible = true; }
     let p;
-    try { p = R.compileAsync(scene, camera); } finally { R.setRenderTarget(prev); }
+    try { p = R.compileAsync(scene, camera); } finally { R.setRenderTarget(prev); if (ex) for (let i = 0; i < ex.length; i++) ex[i].visible = vis[i]; }
     return p;
   }
 
