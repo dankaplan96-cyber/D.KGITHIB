@@ -1151,7 +1151,8 @@ steps do not change).
 Minutes are **estimates** (no first-time player has been timed). Recovery always includes: a save inside a puzzle
 loads at that room's safe spot with every moving part set from flags.
 
-**OG-1 · A Steady Hand** (ch. 10 `throttle`, `og_`) — Min 10 (estimate) — **implemented in increment B**
+**OG-1 · A Steady Hand** (ch. 10 `throttle`, `og_`) — Min 10 (estimate; measured bot floor 3.1 min of game time,
+A* walking and every line read at once, `tests/oren-first.mjs`) — **implemented in increment B**
 - Pre/entry: `c9_vote`. In the council chamber Mira calls over the lighthouse relay (ch. 8's link): the mains under
   town are hammering since the vote; the shelters' pipes jump with every kick. A seen spaceship crossing takes him home.
 - Where/who: Citadel Spaceport, the Water Office (Mira), FunFrock's valve room (the real room, no stand-in), the

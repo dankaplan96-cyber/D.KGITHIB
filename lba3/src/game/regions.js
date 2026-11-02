@@ -81,6 +81,7 @@ export const CHAPTER_AREAS = {
   observatory: ['hamalayi', 'obsv'],
   evacuation: [],
   council: ['zeelich', 'upper', 'workshop'],
+  throttle: ['office', 'valves'],   // (OREN-GUARDIAN OG-1: the Water Office, FunFrock's valve room)
   network: ['zeelich', 'desert', 'hamalayi', 'valves', 'lighttop', 'obsv', 'workshop'],
   home: ['house'],
 };

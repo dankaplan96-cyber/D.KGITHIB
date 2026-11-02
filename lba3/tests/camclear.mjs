@@ -160,7 +160,7 @@ const CASES = [
     targets: [['hatch wheel', `game.story.cur.wheelSpot`, `() => game.flags.c8_depot`, { r: 4 }]] },
   { name: 'ch9 Zeelich, the council: a mill freed', setup: START({ prologueDone: true, intro: true, chapter: 7, chapterKey: 'evacuation', c1_water: true, c1_done: true, c2_shield: true, c2_mill_north: true, c8_started: true, c8_vesk: true, c8_done: true }) + `; game.flags.c9_form = true; game.flags.c9_okuAsk = true; if (game.room?.id !== 'zeelich') game.enterRoom('zeelich', null, true); game.step(0.5); T.talkAll()`,
     targets: [['mill brake', `game.rooms.zeelich.mills.find((m) => !game.flags['c9_free_' + m.id]).brake`, `() => game.rooms.zeelich.mills.some((m) => game.flags['c9_free_' + m.id])`]] },
-  { name: 'ch10 the network: the north mill braked', setup: START({ prologueDone: true, intro: true, chapter: 8, chapterKey: 'council', c1_water: true, c1_done: true, c1_plan: true, c2_shield: true, c2_mill_north: true, c2_mill_east: true, c2_mill_south: true,
+  { name: 'ch10 the network: the north mill braked', setup: START({ prologueDone: true, intro: true, chapter: 12, chapterKey: 'balances', c1_water: true, c1_done: true, c1_plan: true, c2_shield: true, c2_mill_north: true, c2_mill_east: true, c2_mill_south: true,
       c5_dallanOK: true, c5_relief: true, c5_vent: true, c6_up: true, c6_trip2: true, c6_thawed: true, c7_vent: true, c8_mira: true, c8_fort: true, c8_depot: true, c8_zoeDone: true, c9_started: true, c9_vote: true }) + `; game.flags.c10_okuAsk = true; if (game.room?.id !== 'zeelich') game.enterRoom('zeelich', null, true); game.step(0.5); T.talkAll()`,
     targets: [['north mill brake', `game.rooms.zeelich.mills[0].brake`, `() => game.flags.c10_millBraked`]] },
 ];

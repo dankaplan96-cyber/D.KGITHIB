@@ -320,6 +320,8 @@ export class AudioEngine {
       case 'yap': [0, 0.12, 0.24].forEach((at) => { this._tone({ type: 'square', f0: 980, f1: 640, dur: 0.06, vol: 0.035, at }); this._burst({ dur: 0.05, vol: 0.06, f: 2200, f1: 1200, type: 'bandpass', q: 3, at }); }); break;
       case 'yelp': this._tone({ type: 'triangle', f0: 1300, f1: 700, dur: 0.16, vol: 0.06 }); this._burst({ dur: 0.1, vol: 0.06, f: 2400, f1: 1200, type: 'bandpass', q: 3 }); break;
       case 'growl': this._tone({ type: 'sawtooth', f0: 95, f1: 110, dur: 0.5, vol: 0.07 }); this._burst({ dur: 0.5, vol: 0.06, f: 420, f1: 300, type: 'bandpass', q: 4 }); break;
+      // OREN-GUARDIAN: Oren's tone, a low struck bowl (two partials and a faint octave, a long fall)
+      case 'orenTone': this._tone({ f0: 98, dur: 2.8, vol: 0.12 }); this._tone({ f0: 147, dur: 2.2, vol: 0.07, at: 0.05 }); this._tone({ f0: 294, dur: 1.2, vol: 0.025, at: 0.05 }); break;
       case 'clunk': this._tone({ f0: 150, f1: 90, dur: 0.12, vol: 0.12 }); this._burst({ dur: 0.08, vol: 0.12, f: 1800, f1: 400 }); break;
       // SEWER-LIFT: the old lift's winch, ~1.6 s: the brake let go (a clunk), the chain clanking link by link over
       // the pulleys, a low grinding drum under it, a heavier clunk as it stops

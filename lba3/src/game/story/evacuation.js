@@ -326,7 +326,7 @@ export class Evacuation extends ChapterBase {
     const f = this.f, W = this.W;
     // (the fences and the open shelters stay through chapter 10, while the town waits underground; and through 11 and 12,
     //  when the shaft's lift brings him up in the station's yard (SHAFT-CITADEL), as they are when he comes up in play)
-    const key = this.story.cur?.key, on = this.isCur() || key === 'network';
+    const key = this.story.cur?.key, on = this.isCur() || ['throttle', 'survey', 'ballastra', 'balances', 'network'].includes(key);   // (and the expanded campaign's chapters before the network: the town still waits in the shelters)
     this.showProps(on || key === 'shell' || key === 'core');
     if (!on) return;
     W.station?.setActive?.(false);

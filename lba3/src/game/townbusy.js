@@ -38,7 +38,7 @@ export function townState(game) {
     case 'project': return !f.c1_water ? 'dry' : f.c1_veskGone ? 'gone' : 'hot';
     case 'evacuation': return 'evac';
     case 'council': return 'council';
-    case 'network': return 'network';
+    case 'network': case 'throttle': case 'survey': case 'ballastra': case 'balances': return 'network';   // (the expanded campaign's chapters 10-13: the town as in the network's)
     case 'shell': case 'core': return 'deep';
     case 'home': return 'home';
   }
