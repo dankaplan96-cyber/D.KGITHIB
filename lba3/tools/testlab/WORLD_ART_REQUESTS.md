@@ -1219,3 +1219,47 @@ vehicle in the game must work."
 - **The laptop's part (World Art, after the LBA1 places on Citadel):** the ship's outside model if a better one is
   needed, the cabin room (seats, windows, luggage racks) and the passengers' spots, as a request with a diff and
   pictures, like LBA-CITADEL-*. Spoilers: pictures only of the Citadel spaceport side.
+
+## PURPOSE-CHECK (2.11) · The cloud's answers: which places have a purpose
+
+Asked by the laptop for the user, before building. Key: **(a)** used by the story now, **(b)** planned, **(c)** no
+purpose, so don't build. The user's rules stay: no more LBA1 Citadel places; under 80 % likeness goes aside.
+
+1. **The School of Magic: (a), the great hall only.**
+   - Used now:
+     - the rector (`magus`): the magic-level lines (`story/magic.js`) and the pearl errand (`story/arsenal.js`);
+     - Ker'aooc: the protection ward for 20 kashes, and healing (`arsenal.js`, `prologue.js`);
+     - the `sm_remedies` giver.
+   - No other School scene is in the story or in EXPANSION_PLAN.md.
+   - **Scene 27, the two-level great hall: yes**, as a likeness upgrade of a room the player does visit. Push it if it
+     reaches 80 % and keeps:
+     - `npcSpots.magus` and `npcSpots.keraooc`, both reachable on foot from the door;
+     - the giver;
+     - the exit;
+     - `tests/wizards.mjs` and `arsenal.mjs` passing.
+   - **Scene 28 (entrance hall) and scene 33 (test hall): (c)**, no purpose; don't build.
+2. **The Temple of Bù: (a)**, chapter 4's climax room (`rooms.butemple`, `story/dig.js`). **A multi-level rebuild is
+   welcome only as a likeness upgrade (b-priority, after the School)**, under these conditions:
+   - Handles that must stay, by name: `carving` (x, z), `npcSpots.ilka`, `npcSpots.dallan`, `mites` (an array of
+     spots), the spawn and the `bu-out` exit, and any `searches`/`ballTargets` that `temple.js` exports today.
+   - Positions may move, but:
+     - the carving is reachable on foot from the entrance without a jump puzzle (it is the chapter's reading scene);
+     - Ilka's and Dallan's spots stand within 3 m of the carving, clear of the way to it (solid NPCs: see B-1 in
+       GATE_REPORT.md);
+     - the mites' spots share one floor with room to fight, with no railing between them and the hero;
+     - every ball target has a standing spot with a clear line to it.
+   - Railed walkways, mine rails, statues and the fountain: fine as scenery.
+   - `tests/chapter4.mjs` must pass; write the new spot positions in your Built note.
+3. **The Hamalayi's LBA1 FunFrock interiors (scenes 64, 66, 70): (c).** Chapters 6–7 and the plan's deepening cards
+   (DP-6a/b, DP-7a/b/c, OP-3) use the outdoors, the monastery, the dome and the shrine, and none of these rooms. Skip.
+4. **Desert Island's LBA2 interiors (the Hacienda 24/25/29/30/32, the shop 36, the beach bar 39, the ticket office 40,
+   Leone's house 35, Baldino's house 38): (c).** None is in the story or planned (the plan's Desert Island work is Kesh,
+   Ilka's post, the dig and DP-4/DP-5, OP-6). Don't build. If the user later wants Desert Island livelier, the beach bar
+   or the shop would be the first candidates; ask then.
+
+**What does have a purpose next:**
+- **TRAVEL-1's cabin room and ship model** (the cloud's flight scenes are being built now; the placeholder cabin and its
+  hook land in this file under TRAVEL-1, "Cloud: built");
+- **W-1, the Float Harbor slice** on `expansion/ballastra` (the branch is approved and has the foundation and 0.49.0);
+- **Zeelich likeness:** a research report, `docs/future/ZEELICH_GAP.md`, is on its way. The user will pick from it what
+  to build; wait for that pick.
