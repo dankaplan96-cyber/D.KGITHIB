@@ -178,10 +178,12 @@ const zoe = await ev(() => {
   out.start = { d: +Math.hypot(z.pos.x - mark.x, z.pos.z - mark.z).toFixed(2), placed: z.placed };
   const RS = G.story.interiors.rounds; RS.measure = true; RS.stats.ms = 0; RS.stats.frames = 0;
   const cols = R.colliders.filter((c) => c.enabled && c.top > 0.05 && !c.stair);
-  const hits = []; let moved = 0, prev = [z.pos.x, z.pos.z], maxV = 0;
+  // (her pace over each half second: a walk, not a run; a single frame may carry a wall's push-out as she slides by it)
+  const hits = [], trail = []; let moved = 0, prev = [z.pos.x, z.pos.z], maxV = 0;
   for (let i = 0; i < 600; i++) {
     G.step(0.1);
-    const v = Math.hypot(z.pos.x - prev[0], z.pos.z - prev[1]) / 0.1; maxV = Math.max(maxV, v); moved += v * 0.1; prev = [z.pos.x, z.pos.z];
+    moved += Math.hypot(z.pos.x - prev[0], z.pos.z - prev[1]); prev = [z.pos.x, z.pos.z]; trail.push(prev);
+    if (trail.length > 5) { const q = trail[trail.length - 6]; maxV = Math.max(maxV, Math.hypot(prev[0] - q[0], prev[1] - q[1]) / 0.5); }
     for (const c of cols) if (PH._inside(c, z.pos.x, z.pos.z, 0.1) && c.top > z.pos.y + 0.05 && c.bottom < z.pos.y + 1.6) hits.push(`${(z.pos.x - R.center.x).toFixed(1)},${(z.pos.z - R.center.z).toFixed(1)} in ${(c.x - R.center.x).toFixed(1)},${(c.z - R.center.z).toFixed(1)} top ${c.top.toFixed(2)}`);
   }
   const S = RS.st.get('zoe');
@@ -191,7 +193,7 @@ const zoe = await ev(() => {
   return out;
 });
 check('Zoé: in 60 s of free play at home she goes round at least 3 stops of her household round (sink, stove, table, window, stairs, desk)', zoe.stops.length >= 3, zoe);
-check('Zoé: she never walks through a wall or the furniture, at a walk (≤ 1.6 m/s)', zoe.hits.length === 0 && zoe.maxV <= 1.6 && zoe.moved > 5, { hits: zoe.hits, maxV: zoe.maxV, moved: zoe.moved });
+check('Zoé: she never walks through a wall or the furniture, at a walk (≤ 1.6 m/s over any half second)', zoe.hits.length === 0 && zoe.maxV <= 1.6 && zoe.moved > 5, { hits: zoe.hits, maxV: zoe.maxV, moved: zoe.moved });
 console.log(`MEASURE household round: ${zoe.ms} ms per driven frame (Zoé and Arthur)`);
 // a talk while she walks: she stops and turns to Twinsen
 const talkZ = await ev(() => {
@@ -242,7 +244,7 @@ const office = await ev(() => {
   const st = G.story.interiors.rounds.st, stops = (id) => [...new Set((st.get(id)?.log || []).filter((l) => / at /.test(l)).map((l) => l.split(' at ')[1]))];
   const map = R.searches.find((q) => q.id === 'pipemap'), nearMap = RL.HOUSE_ROUNDS.filter((D) => D.room === 'office').flatMap((D) => D.stops.filter((q) => !q.mark && Math.hypot(q.x + R.center.x - map.x, q.z + R.center.z - map.z) < 2.0).map((q) => D.id + ':' + q.id));
   return { enter: e, room: G.room?.id, gilbert: stops('gilbert'), mira: stops('mira'), hits: [...new Set(hits)].slice(0, 6), nearMap }; });
-check('Gilbert and Mira: their rounds at the Water Office in chapter 2 (counter, files, pipes; desk, plant, north wall), never through the furniture, none of them by the pipe map\'s reading place', office.gilbert.length >= 2 && office.mira.length >= 2 && office.hits.length === 0 && office.nearMap.length === 0, office);
+check('Gilbert and Mira: their rounds at the Water Office in chapter 2 (counter, pipes, the far end of the counter; desk, plant, north wall), never through the furniture, none of them by the pipe map\'s reading place', office.gilbert.length >= 2 && office.mira.length >= 2 && office.hits.length === 0 && office.nearMap.length === 0, office);
 await shot('office-gilbert-mira');
 
 await browser.close();

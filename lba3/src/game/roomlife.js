@@ -32,7 +32,7 @@
 // 3. Household rounds (StoryRounds): the story's own people who stand all chapter at home or at work — Zoé and Arthur in
 //    the house, Gilbert and Mira in the Water Office (chapter 2) — walk a small round when no scene needs them: Zoé from
 //    the sink to the stove, the table, the window, the stairwell and her desk in the bedroom; Arthur from his boat to his
-//    workbench and the window of his room; Gilbert from his counter to the files and the pipes; Mira from her desk to
+//    workbench and the window of his room; Gilbert from his counter to the pipes and the counter's far end; Mira from her desk to
 //    the plant and the north wall. A round
 //    runs only while the chapter's place for them is their usual mark (their own pose there, no scene's), the hero is in
 //    the house and play is on; a talk, a conversation they are in, a cut-scene or a new place from the chapter wins at
@@ -319,8 +319,8 @@ export const HOUSE_ROUNDS = [
     { id: 'counter', mark: true, act: 'browse', dur: [12, 18] },
     // (every stop keeps 2 m and more from the pipe map's reading place, LX + 1.05 by the left wall, and out of the lane
     //  from the door)
-    { id: 'files', x: -2.75, z: 2.95, a: -Math.PI / 2, act: 'reach', dur: [5, 8], gest: ['shrug'] },   // (the bookcase's files)
     { id: 'pipes', x: 0.3, z: -2.3, a: Math.PI, act: 'stand', dur: [5, 8], gest: ['shrug'] },
+    { id: 'counterEnd', x: 1.5, z: 2.75, a: Math.PI, act: 'browse', dur: [6, 9] },   // (the counter's far end: the ledgers)
   ] },
   { id: 'mira', room: 'office', speed: 0.9, markAnims: [null, 'idle'], stops: [
     { id: 'desk', mark: true, act: 'browse', dur: [14, 20] },
@@ -431,7 +431,11 @@ export class StoryRounds {
     // (there; or held a step short of it by the furniture it stands at — a stove's front, a counter: that is the stop)
     if (last && (d < 0.12 || (d < 0.6 && S.stuckT > 0.6))) { if (d < 0.04) { n.pos.x = s.x; n.pos.z = s.z; } this.arrive(n, S); n.rig.play(s.act === 'stand' ? 'idle' : s.act); return; }
     let ux = gx / (d || 1), uz = gz / (d || 1), slow = 1;
-    const others = [g.hero, ...g.npcs.filter((o) => o !== n && o.present && !o.away && Math.abs(o.pos.x - n.pos.x) < 3 && Math.abs(o.pos.z - n.pos.z) < 3)];
+    // (two on their rounds who meet head on in a narrow way would each wait for the other: after a moment the one whose
+    //  name comes first in the alphabet goes on past, the other keeps waiting; for the hero it waits, and in the end takes
+    //  the stop where it stands, below)
+    const passing = (S.blockT || 0) > 1.0;
+    const others = [g.hero, ...g.npcs.filter((o) => o !== n && o.present && !o.away && Math.abs(o.pos.x - n.pos.x) < 3 && Math.abs(o.pos.z - n.pos.z) < 3 && !(passing && this.st.get(o.def.id)?.active && n.def.id < o.def.id))];
     let ax = 0, az = 0;
     for (const b of others) {
       const rx = n.pos.x - b.pos.x, rz = n.pos.z - b.pos.z, dd = Math.hypot(rx, rz), rr = (n.bodyR || 0.45) + (b.bodyR ?? b.radius ?? 0.45) + 0.25;
@@ -460,6 +464,7 @@ export class StoryRounds {
     n.placeRig();
     // stuck (not held up by someone): plan again; again and again: take up the stop where it stands
     if (slow > 0.5 && v < 0.2 * Math.max(sp, 0.3)) S.stuckT += dt; else S.stuckT = Math.max(0, S.stuckT - dt);
+    if (slow <= 0.5) { S.blockT = (S.blockT || 0) + dt; if (S.blockT > 6) { S.blockT = 0; S.stuckT = 0; S.log.push(`${g.time.toFixed(1)} held up: takes the stop here`); S.stops[S.ri] = { ...s, x: n.pos.x, z: n.pos.z }; this.arrive(n, S); return; } } else S.blockT = 0;
     if (S.stuckT > 1.5) {
       S.stuckT = 0; S.replans++;
       S.log.push(`${g.time.toFixed(1)} stuck at ${n.pos.x.toFixed(1)},${n.pos.z.toFixed(1)}`);
