@@ -43,7 +43,7 @@
 // with no physics and no animation: walkers.js abstract tier); a port's only near the hero and in view; the household
 // rounds only while the hero is in the house. tests/interior-life.mjs measures it.
 import { Walkers } from './walkers.js';
-import { dampAngle, clamp } from '../engine/math.js';
+import { dampAngle, clamp, rng } from '../engine/math.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // the seats a person sits on, as walkers.js BENCH_RED: the seat's top over the floor, its back's front face and its front
@@ -385,7 +385,7 @@ export class StoryRounds {
       const stops = this.stops(D, R);
       const W = roomWalkers(g), F = ROUND_FLOORS[D.room]; register(g, D.room, [{ x0: F.x0 + R.center.x, x1: F.x1 + R.center.x, z0: F.z0 + R.center.z, z1: F.z1 + R.center.z, y: F.y }], R.exits);
       let ri = 0, bd = 1e9; stops.forEach((s, i) => { const d = Math.hypot(s.x - n.pos.x, s.z - n.pos.z); if (d < bd) { bd = d; ri = i; } });
-      S = { active: true, stops, ri, st: bd < 0.8 ? 'dwell' : 'walk', tmr: 0, path: null, wi: 0, vel: 0, gait: 0, gestT: 2, stuckT: 0, replans: 0, visits: (S?.visits || 0), log: S?.log || [], nav: W.nav };
+      S = { active: true, rnd: S?.rnd || rng([...D.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)), stops, ri, st: bd < 0.8 ? 'dwell' : 'walk', tmr: 0, path: null, wi: 0, vel: 0, gait: 0, gestT: 2, stuckT: 0, replans: 0, visits: (S?.visits || 0), log: S?.log || [], nav: W.nav };
       if (S.st === 'dwell') this.arrive(n, S, true); else this.plan(n, S);
       this.st.set(D.id, S);
     }
@@ -399,8 +399,8 @@ export class StoryRounds {
   arrive(n, S, first = false) {
     const s = S.stops[S.ri], d = s.dur;
     S.st = 'dwell'; S.path = null; S.vel = 0; S.stuckT = 0; S.replans = 0;
-    S.tmr = d[0] + (d[1] - d[0]) * Math.random() * (first ? 0.6 : 1);
-    S.gestT = 1 + Math.random() * 2;
+    S.tmr = d[0] + (d[1] - d[0]) * S.rnd() * (first ? 0.6 : 1);
+    S.gestT = 1 + S.rnd() * 2;
     n.targetAngle = s.a; n.forceAnim = s.act === 'stand' ? null : s.act;
     S.visits++; S.log.push(`${this.game.time.toFixed(1)} at ${s.id}`); if (S.log.length > 30) S.log.shift();
   }
@@ -416,7 +416,7 @@ export class StoryRounds {
     // standing about (not busy with her hands), she turns to Twinsen when he comes close, as the story's people do
     const near = Math.hypot(h.pos.x - n.pos.x, h.pos.z - n.pos.z) < 2.6 && s.act === 'stand';
     n.angle = dampAngle(n.angle, near ? n.angleTo(h) : s.a, 4, dt);
-    if (s.gest && (S.gestT -= dt) <= 0) { n.rig.doGesture(s.gest[Math.floor(Math.random() * s.gest.length)]); S.gestT = 4 + Math.random() * 4; }
+    if (s.gest && (S.gestT -= dt) <= 0) { n.rig.doGesture(s.gest[Math.floor(S.rnd() * s.gest.length)]); S.gestT = 4 + S.rnd() * 4; }
     n.rig.play(s.act === 'stand' ? 'idle' : s.act);
     n.placeRig();
     if ((S.tmr -= dt) <= 0) { S.ri = (S.ri + 1) % S.stops.length; this.plan(n, S); }

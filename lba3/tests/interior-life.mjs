@@ -195,6 +195,7 @@ const zoe = await ev(() => {
 check('Zoé: in 60 s of free play at home she goes round at least 3 stops of her household round (sink, stove, table, window, stairs, desk)', zoe.stops.length >= 3, zoe);
 check('Zoé: she never walks through a wall or the furniture, at a walk (≤ 1.6 m/s over any half second)', zoe.hits.length === 0 && zoe.maxV <= 1.6 && zoe.moved > 5, { hits: zoe.hits, maxV: zoe.maxV, moved: zoe.moved });
 console.log(`MEASURE household round: ${zoe.ms} ms per driven frame (Zoé and Arthur)`);
+console.log(`  Zoé in 60 s: stops ${zoe.stops.join(' → ')}; walked ${zoe.moved} m, fastest half second ${zoe.maxV} m/s, ${zoe.hits.length} collider overlaps`);
 // a talk while she walks: she stops and turns to Twinsen
 const talkZ = await ev(() => {
   const G = game, z = G.npcs.find((n) => n.def.id === 'zoe'), S = G.story.interiors.rounds.st.get('zoe'), h = G.hero;
