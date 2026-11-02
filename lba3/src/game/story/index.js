@@ -35,21 +35,41 @@ import { ZeelichLife } from './zeelife.js';
 import { Arsenal } from './arsenal.js';
 import { MagicLevels } from './magic.js';
 import { SewerLife } from './sewers.js';
+import { ChapterBase } from './base.js';
 import '../text/common.js';
 
 // The story in order. Each chapter has a stable key; saves store the key (flags.chapterKey) as well as the
 // position, so chapters can be inserted between existing ones without breaking saves. Chapter numbers shown
-// to the player come from STORY_BIBLE.md's 12-chapter plan (the epilogue has no number). 'shell' (11) and 'core' (12)
-// are the two halves of the final story (chapter3.js); saves before format 5 had them as one chapter (main.js migrateSave).
-export const ORDER = ['well', 'project', 'zeelich', 'dig', 'steam', 'pass', 'observatory', 'evacuation', 'council', 'network', 'shell', 'core', 'home'];
-export const NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, network: 10, shell: 11, core: 12 };
-// the order saves before format 3 used (flags.chapter was a position in this list)
+// to the player come from STORY_BIBLE.md's plan (the epilogue has no number). 'shell' and 'core' are the two halves
+// of the final story (chapter3.js); saves before format 5 had them as one chapter (main.js migrateSave).
+// EXP-PLAN §2.1 (save format 6): the expanded campaign (flags.exp) puts four chapters between the council and the
+// network (EXP_KEYS). A save from before them that had already reached the network, the shell, the core or the end
+// (flags.exp_base, main.js migrateSave) goes on as the base game: those four are not in its campaign and its chapters
+// keep their old numbers (BASE_NUMBER). Until a new chapter is written it is an empty shell (ChapterShell) that the
+// story passes straight through.
+export const ORDER = ['well', 'project', 'zeelich', 'dig', 'steam', 'pass', 'observatory', 'evacuation', 'council', 'throttle', 'survey', 'ballastra', 'balances', 'network', 'shell', 'core', 'home'];
+export const EXP_KEYS = ['throttle', 'survey', 'ballastra', 'balances'];
+export const BASE_ORDER = ORDER.filter((k) => !EXP_KEYS.includes(k));
+// the numbers shown: the expanded campaign's, and the base game's (a save on exp_base)
+export const NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, throttle: 10, survey: 11, ballastra: 12, balances: 13, network: 14, shell: 15, core: 16 };
+export const BASE_NUMBER = { well: 1, project: 2, zeelich: 3, dig: 4, steam: 5, pass: 6, observatory: 7, evacuation: 8, council: 9, network: 10, shell: 11, core: 12 };
+// the campaign a set of flags plays: the base game's on exp_base, otherwise the expanded one
+export const isBaseCampaign = (f) => !!f?.exp_base;
+export const campaignOrder = (f) => (isBaseCampaign(f) ? BASE_ORDER : ORDER);
+export const chapterNumber = (key, f) => (isBaseCampaign(f) ? BASE_NUMBER : NUMBER)[key];
+// a chapter of the expanded campaign not written yet: no cast, no places, no lines; the story passes it straight on
+// (Story.nextIndex skips it; a save standing in one, such as the expanded campaign's chapter-10 start, moves on at
+// its first frame of play: Story.afterLoad)
+export class ChapterShell extends ChapterBase {
+  get passThrough() { return true; }
+  update() { if (this.isCur() && this.game.state === 'play') this.story.afterLoad(); }
+}
 export const OLD_ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
 
 export class Story {
   constructor(game) {
     this.game = game;
-    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, network: Network, shell: Chapter3, core: ChapterCore, home: Epilogue };
+    const make = { well: Prologue, project: Chapter1, zeelich: Chapter2, dig: Dig, steam: Steam, pass: Pass, observatory: Observatory, evacuation: Evacuation, council: Council, throttle: ChapterShell, survey: ChapterShell, ballastra: ChapterShell, balances: ChapterShell, network: Network, shell: Chapter3, core: ChapterCore, home: Epilogue };
     this.chapters = ORDER.map((k) => { const c = new make[k](this); c.key = k; return c; });
     this.isles = new IslandShuttle(this);
     this.life = new TownLife(this);   // Citadel twelve years on: its people and small stories (life.js)
@@ -86,23 +106,43 @@ export class Story {
   // ---- flow
   start() {
     this.f.chapter = 0; this.f.chapterKey = ORDER[0];
+    this.f.exp = 1; delete this.f.exp_base;   // (a new game plays the expanded campaign)
     this.refreshCast();
     this.chapters[0].start();
   }
   // move on to the next chapter: title card, the chapter sets up the world
   // LAZY-REGIONS: the areas the next chapter works in (src/game/regions.js CHAPTER_AREAS): a scene change into it
   // builds them behind its black, under the loading card (startTransition's need)
-  nextAreas() { return CHAPTER_AREAS[ORDER[Math.min(this.index + 1, this.chapters.length - 1)]] || null; }
+  nextAreas() { return CHAPTER_AREAS[ORDER[this.nextIndex()]] || null; }
+  // is this key part of the campaign the save plays (the base game's on exp_base)
+  inCampaign(key, f = this.f) { return campaignOrder(f).includes(key); }
+  // the chapter number shown for a key in this save's campaign (none for the epilogue)
+  number(key, f = this.f) { return chapterNumber(key, f); }
+  // the position of the chapter after `from`: the next one in this save's campaign that has something to play (an
+  // empty shell completes at once: the story goes straight on to the chapter after it)
+  nextIndex(from = this.index) {
+    const last = this.chapters.length - 1;
+    for (let i = from + 1; i <= last; i++) { const c = this.chapters[i]; if (this.inCampaign(c.key) && !c.passThrough) return i; }
+    return Math.min(from + 1, last);
+  }
+  // a save standing in an empty shell (the expanded campaign's chapter-10 start, a key moved back to by the loader)
+  // goes on to the chapter after it, behind a scene change as a chapter's end does (ChapterShell.update)
+  afterLoad() {
+    const g = this.game;
+    if (!this.cur?.passThrough || g.trans) return false;
+    g.startTransition(() => this.nextChapter(), this.nextAreas());
+    return true;
+  }
   nextChapter() {
     const g = this.game;
-    const i = Math.min(this.index + 1, this.chapters.length - 1);
+    const i = this.nextIndex();
     this.f.chapter = i; this.f.chapterKey = ORDER[i];
     const c = this.cur;
     for (const id of CHAPTER_AREAS[c.key] || []) g.regions?.ensure(id, 'chapter');   // (built already when a scene change led here)
     this.magic.catchUp();   // (MAGIC-LEVELS: a step behind him that he hasn't had — normally none)
     this.refreshCast();
     // (the epilogue's card shows only its title)
-    const n = NUMBER[c.key];
+    const n = this.number(c.key);
     g.hud.chapterCard(n ? t('chapter_n', { n }) : '', t('chapter_' + c.key));
     // the chapter sets up its scene now (under the fade); its first line waits for the card (below)
     // (say is put back exactly as it was: a wrapper someone set on the game, e.g. a test recording lines, stays)
@@ -174,7 +214,8 @@ export class Story {
   objective() { return this.cur.objective(); }
   markers() { return this.cur.markers(); }
   journal() {
-    const out = this.chapters.slice(0, this.index + 1).map((c) => ({ title: (NUMBER[c.key] ? NUMBER[c.key] + '. ' : '') + t('chapter_' + c.key), lines: c.journal() }));
+    // (an empty shell, and a chapter not in this save's campaign, have no page)
+    const out = this.chapters.slice(0, this.index + 1).filter((c) => !c.passThrough && this.inCampaign(c.key)).map((c) => { const n = this.number(c.key); return { title: (n ? n + '. ' : '') + t('chapter_' + c.key), lines: c.journal() }; });
     const life = this.life.journal();
     if (life.length) out.push({ title: t('life_title'), lines: life });
     const ws = this.workshop.journal();

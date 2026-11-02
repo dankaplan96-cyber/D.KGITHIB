@@ -91,6 +91,9 @@ export const STR = {
     slot_overwrite_q: 'Overwrite Slot {n}?', slot_overwrite_yes: 'Overwrite', slot_delete_q: 'Delete Slot {n}?', slot_delete_yes: 'Delete',
     slot_saved: 'Saved in Slot {n}.', slot_deleted: 'Slot {n} deleted.', slot_unreadable: "That save couldn't be read. It was set aside.",
     slot_full: 'Not enough storage space. Save over an old slot, or delete slots from Load Game on the title screen.', slot_fail: "Can't save: the browser's storage isn't available.",
+    // (EXP-PLAN §6: a finished or late base-game save can start the expanded campaign in another slot)
+    exp_start: 'Expanded campaign: start at chapter 10', exp_title: 'Expanded Campaign', exp_pick: 'Pick a slot for the new save. {slot} stays as it is.',
+    exp_over_q: 'Put the new save in Slot {n}?', exp_written: 'Chapter 10 saved in Slot {n}. Load it to play.',
     nosave_scene: "You can't save during a story scene.", nosave_fight: "You can't save during a fight.", nosave_dead: "You can't save right now.", nosave_here: "You can't save here.", nosave_wait: 'Wait a moment, then save.',
     quit_full: "Storage is full, so this spot wasn't saved. Press Save & Quit again to quit anyway.",
     language: 'Language', auto_controls: 'Controls by device', ac_on: 'Auto', ac_off: 'Off', control_scheme: 'Movement', ctrl_modern: 'Modern', ctrl_classic: 'Classic (LBA2)',

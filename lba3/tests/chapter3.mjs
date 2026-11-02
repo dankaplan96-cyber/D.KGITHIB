@@ -57,7 +57,7 @@ await ev(() => { const G = game; Object.assign(G.flags, { c2_plan: true, c2_plan
   G.story.cur.toShell?.(); G.step(1.5); T.talkAll(); G.step(0.5); T.talkAll();
   // chapters between Zeelich and the shell (Desert Island, …) have their own tests: skip to the shell
   for (let i = 0; i < 12 && G.story.cur.key !== 'shell'; i++) { G.story.nextChapter(); G.step(0.5); T.talkAll(); } });
-is('chapter 11 (shell) starts in the shaft, in play, an objective set', await ev(() => [game.flags.chapter, game.flags.c3_started, game.room?.id, game.state, T.obj()]), (v) => v[0] === 10 && v[1] === true && v[2] === 'c3shaft' && v[3] === 'play' && v[4].length > 0);
+is('chapter 15 (shell; 11 on the base campaign) starts in the shaft, in play, an objective set', await ev(() => [game.flags.chapter, game.flags.c3_started, game.room?.id, game.state, T.obj()]), (v) => v[0] === 14 && v[1] === true && v[2] === 'c3shaft' && v[3] === 'play' && v[4].length > 0);
 await shot('C3-00-shaft.png');
 
 // the deep installation
@@ -83,7 +83,7 @@ await shot('C3-04-stones.png');
 const before = await ev(() => { game.save(false); return JSON.stringify(['c3_cooled', 'c3_ladder', 'c3_pillar0', 'c3_pillar1', 'c3_pillar2'].map((k) => !!game.flags[k])); });
 await boot('continue');
 const after = await ev(() => { T.talkAll(); return JSON.stringify(['c3_cooled', 'c3_ladder', 'c3_pillar0', 'c3_pillar1', 'c3_pillar2'].map((k) => !!game.flags[k])); });
-is('save → Continue: the chapter-11 progress survives, back in the galleries', [before === after, after, ...await ev(() => [game.room?.id, game.flags.chapter, T.obj()])], (v) => v[0] && v[2] === 'c3gallery' && v[3] === 10);
+is('save → Continue: the shell's progress survives, back in the galleries', [before === after, after, ...await ev(() => [game.room?.id, game.flags.chapter, T.obj()])], (v) => v[0] && v[2] === 'c3gallery' && v[3] === 14);
 
 // Sendell
 is('on to Sendell', await ev(() => { if (game.room?.id !== 'c3gallery') T.exit('c3-gallery'); return T.exit('c3-sendell'); }), (v) => v === 'c3sendell');
@@ -98,9 +98,9 @@ is("Sendell's door: chapter 12 (The Core) begins under its own title card, in th
   let card = null; for (let i = 0; i < 60 && game.flags.chapterKey !== 'core'; i++) game.step(0.1);
   game.step(0.3); const el = document.querySelector('#chapter'); card = el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
   return { j0, key: game.flags.chapterKey, chapter: game.flags.chapter, card, room: game.room?.id, state: game.state }; }),
-  (v) => v.key === 'core' && v.chapter === 11 && /Chapter 12/.test(v.card) && /The Core/.test(v.card) && v.room === 'c3core' && v.j0.includes('11. The Shell') && !v.j0.includes('12. The Core'));
+  (v) => v.key === 'core' && v.chapter === 15 && /Chapter 16/.test(v.card) && /The Core/.test(v.card) && v.room === 'c3core' && v.j0.includes('15. The Shell') && !v.j0.includes('16. The Core'));
 is('in the core: the fight starts, an objective set', await ev(() => { T.talkAll(); return [game.room?.id, game.flags.c3_fight, T.obj()]; }), (v) => v[0] === 'c3core' && v[1] === true && v[2].length > 0);
-is('the journal keeps both chapters: 11 The Shell (its four lines) and 12 The Core (its first line only, the fight begun; the pylons are still the objective)', await ev(() => game.story.journal().filter((c) => /Shell|Core/.test(c.title)).map((c) => [c.title, c.lines.length])), (v) => v.length === 2 && v[0][0] === '11. The Shell' && v[0][1] === 4 && v[1][0] === '12. The Core' && v[1][1] === 1);
+is('the journal keeps both chapters: 15 The Shell (its four lines) and 16 The Core (its first line only, the fight begun; the pylons are still the objective)', await ev(() => game.story.journal().filter((c) => /Shell|Core/.test(c.title)).map((c) => [c.title, c.lines.length])), (v) => v.length === 2 && v[0][0] === '15. The Shell' && v[0][1] === 4 && v[1][0] === '16. The Core' && v[1][1] === 1);
 is('the guardian is there and alive', await ev(() => { const g = game.story.cur.guardian; return g ? [g.present, g.state, g.alive] : 'none'; }), (v) => Array.isArray(v) && v[0] === true && v[2] === true);
 is("the core can't be left during the fight", await ev(() => { const e = game.room.exits[0]; T.tp(e.x, e.z); game.step(1.6); T.talkAll(); return game.room?.id; }), (v) => v === 'c3core');
 await shot('C3-06-core.png');
@@ -122,7 +122,7 @@ is("each plate's first bank shot, thrown from its centre, hits its pylon", plate
 is('the overload: the coil appears, an objective set', await ev(() => { T.talkAll(); game.step(1); T.talkAll(); const tg = game.room.ballTargets.find((x) => x.coil); return [game.flags.c3_overload, !!tg, T.obj()]; }), (v) => v[0] === true && v[1] === true && v[2].length > 0);
 // Vesk's coil: three hits (real throws first, T.hit forces a hit only if the throws miss)
 is("Vesk's coil broken", await ev(() => { const tg = game.room.ballTargets.find((x) => x.coil); const r = []; for (let k = 0; tg && k < 3 && !tg.done; k++) r.push(T.hit(tg)); T.talkAll(); return [tg ? r : 'no coil', game.flags.c3_coil, tg?.done]; }), (v) => v[1] && v[2] === true);
-is('the chapter ends: the epilogue (after chapter 12, home) reached', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state, game.flags.chapterKey]; }), (v) => v[0] === true && v[1] === true && v[2] === 12 && v[5] === 'home');
+is('the chapter ends: the epilogue (after chapter 16, home) reached', await ev(() => { T.talkAll(); game.step(2); T.talkAll(); return [game.flags.c3_turned, game.flags.c3_done, game.flags.chapter, game.room?.id, game.state, game.flags.chapterKey]; }), (v) => v[0] === true && v[1] === true && v[2] === 16 && v[5] === 'home');
 
 // epilogue: dinner → end screen
 is("the epilogue's dinner, then the end screen", await ev(() => { const G = game; for (let i = 0; i < 10 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); } return [G.flags.chapter, G.flags.ep_dinner, G.state, document.querySelector('#ending h1')?.textContent]; }), (v) => v[1] === true && v[2] === 'ending');

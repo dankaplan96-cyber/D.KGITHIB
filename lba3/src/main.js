@@ -52,12 +52,13 @@ import { HUD } from './game/hud.js';
 import { Inventory } from './game/inventory.js';
 import { FoundObject } from './game/found.js';
 import { stage as itemStage } from './game/itemlook.js';
-import { Story, ORDER, OLD_ORDER, NUMBER as CH_NUMBER } from './game/story/index.js';
+import { Story, ORDER, OLD_ORDER, EXP_KEYS, chapterNumber } from './game/story/index.js';
+import { MAGIC_STEPS } from './game/story/magic.js';
 import { t, setLang, getLang } from './game/i18n.js';
 import { roomName } from './game/mapdraw.js';
 
 const SAVE_KEY = 'lba3_save_v1'; // (storage key kept stable; the format version lives inside the save)
-const SAVE_VERSION = 5;
+const SAVE_VERSION = 6;
 // SAVE-SLOTS: the autosave keeps SAVE_KEY (slot 0: an old single save shows as the Autosave); six manual slots of
 // their own. Every save is the same snapshot() plus `at` (when, ms since 1970), `played` (seconds of play, when the
 // game has counted them from a new game) and, in a manual slot, `thumb`: a small JPEG of the picture as the pause
@@ -76,7 +77,7 @@ const THUMB_WORKER = `onmessage = async (e) => {
     postMessage({ url, token });
   } catch (err) { postMessage({ url: null, token }); }
 };`;
-const SLOT_SCREENS = new Set(['savegame', 'loadgame', 'slotconfirm']);
+const SLOT_SCREENS = new Set(['savegame', 'loadgame', 'slotconfirm', 'expslot']);
 // the states that count as play time (not the title, the pause menus, game over or the ending screen)
 const PLAYED = new Set(['play', 'dialog', 'shop', 'inventory', 'map', 'cutscene', 'cinematic', 'cinematicEnd', 'found']);
 // an enemy in one of these states, near him, is a fight in progress: no manual save then
@@ -86,7 +87,9 @@ const TALK_ABOVE = 1.8;   // no Talk prompt for someone more than this far below
 // Bring an older save up to the current format. Returns null when the data can't be a save.
 // v1 → v2: lists that early saves could lack are filled in; v2 → v3: the chapter's key is stored; v3 → v4: the hero
 // carries his weapons and gadgets (hero.arms, weapons.js; an older save carries none); v4 → v5: the final chapter is two
-// (The Shell, The Core): a save in the core's part of the old one goes to The Core, and the stored position follows ORDER.
+// (The Shell, The Core): a save in the core's part of the old one goes to The Core, and the stored position follows ORDER;
+// v5 → v6: the expanded campaign (EXP-PLAN §6, below). On every load: a chapter key this build doesn't know (a save from
+// a later or another branch's build) falls back to the last chapter before it that this build has, and says so.
 export function migrateSave(raw) {
   if (!raw || typeof raw !== 'object' || !raw.hero || typeof raw.hero !== 'object') return null;
   const s = JSON.parse(JSON.stringify(raw));
@@ -115,7 +118,67 @@ export function migrateSave(raw) {
     if (i >= 0) f.chapter = i;
     v = 5;
   }
-  s.v = v;
+  if (v < 6) {
+    // v5 → v6 (EXP-PLAN §6): four chapters come between the council and the network (story/index.js EXP_KEYS).
+    // A save still before them (well … council) plays the expanded campaign (exp) and reaches them after the vote.
+    // A save in the network, the shell, the core or the epilogue (a finished game too) goes on exactly as the base
+    // game (exp_base): the new chapters are never set after what it has already played. (Load Game offers such a save
+    // a fresh start of the expanded campaign at chapter 10 in another slot: expandedStart.) The position is redone.
+    const f = s.flags && typeof s.flags === 'object' ? s.flags : (s.flags = {});
+    const at = ORDER.indexOf(f.chapterKey), cut = ORDER.indexOf(EXP_KEYS[0]);
+    if (at >= cut) { f.exp_base = 1; delete f.exp; }
+    else if (at >= 0) { f.exp = 1; delete f.exp_base; }
+    if (at >= 0) f.chapter = at;
+    v = 6;
+  }
+  // a key this build doesn't have: the last one before it in the order the save was written with (s.order, from
+  // format 6) that this build knows; without that order, the stored position, as far as this build's order goes
+  const f = s.flags;
+  if (f && typeof f === 'object' && f.chapterKey != null && !ORDER.includes(f.chapterKey)) {
+    const theirs = Array.isArray(s.order) ? s.order : null, k0 = f.chapterKey;
+    let key = null;
+    if (theirs && theirs.includes(k0)) for (let i = theirs.indexOf(k0) - 1; i >= 0 && !key; i--) if (ORDER.includes(theirs[i])) key = theirs[i];
+    if (!key) key = ORDER[Math.max(0, Math.min((f.chapter | 0) - 1, ORDER.length - 1))];
+    console.warn(`save: chapter '${k0}' is not in this build; continuing from '${key}'`);
+    f.chapterKey = key; f.chapter = ORDER.indexOf(key);
+  }
+  s.v = Math.max(v, s.v || 0);
+  return s;
+}
+// EXP-PLAN §6 step 3: the expanded campaign from chapter 10 for a save that goes on as the base game (exp_base). A new
+// save made from it (never written over it): every flag up to the council kept; the network's, the shell's, the core's,
+// the epilogue's and the underground's (c10_, c3_, ep_, ur_; and the new chapters' own families, which it can't have)
+// gone, with the rewards they still owed; the hop-pack and the pulse tool taken back; the enemies of those chapters
+// back on their feet; chapter 'throttle' in the expanded campaign, in the council chamber, the magic level the story
+// has given by the end of chapter 9; health, kashes and the other weapons and gadgets kept. Returns null when `raw`
+// isn't a save on exp_base.
+const EXP_START_DROP = /^(c10_|c3_|ep_|ur_|th_|sv_|bl_|vm_\d|a_jetHint$)/;   // (a_jetHint: the hop-pack's first-wear mark, arsenal.js)
+const EXP_START_REVIVE = /^(ndrone\d+|nclone|nguard|nsentry|ncrawler|nmite\d+|c3drone|c3mite\d+|guardian)$/;
+export const EXP_START_KEY = EXP_KEYS[0];
+export const COUNCIL_SPOT = { x: 4844, z: 4.5 };   // (the council chamber's spawn by its door: upper.js buildCouncil)
+export function expandedStart(raw) {
+  const src = migrateSave(raw);
+  if (!src || !src.flags?.exp_base) return null;
+  const s = JSON.parse(JSON.stringify(src));
+  const f = s.flags;
+  for (const k of Object.keys(f)) if (EXP_START_DROP.test(k)) delete f[k];
+  delete f.exp_base; f.exp = 1;
+  f.chapterKey = EXP_START_KEY; f.chapter = ORDER.indexOf(EXP_START_KEY);
+  // the magic: the level of the steps in chapters before this one (MAGIC_STEPS); a later step's mark goes
+  const at = ORDER.indexOf(EXP_START_KEY);
+  let lv = 1;
+  for (const st of MAGIC_STEPS) { const i = ORDER.indexOf(st.chapter); if (i >= 0 && i < at) lv = Math.max(lv, st.level); else delete f['ml_' + st.level]; }
+  const h = s.hero;
+  h.magicLevel = lv; h.mp = Math.max(0, Math.min(Number.isFinite(h.mp) ? h.mp : 0, 6 + lv * 2));   // (Hero.mpMax)
+  h.hasPulse = false;
+  h.arms = freshArms({ ...h.arms, jetpack: false, jetpackOn: false });
+  if (h.weapon === 'pulse' || h.weapon === 'jetpack') h.weapon = 'ball';
+  if (h.prevWeapon === 'pulse' || h.prevWeapon === 'jetpack') h.prevWeapon = 'fists';
+  s.room = 'council'; h.x = COUNCIL_SPOT.x; h.z = COUNCIL_SPOT.z;
+  s.killed = (s.killed || []).filter((id) => !EXP_START_REVIVE.test(id));
+  s.loot = (Array.isArray(s.loot) ? s.loot : []).filter((L) => !/^(c10|c3|ep)-/.test(L?.k || ''));   // (those chapters' bonuses come again with them)
+  delete s.thumb; delete s.at;
+  s.v = SAVE_VERSION; s.order = ORDER;
   return s;
 }
 // music per interior (mood names, see src/engine/music.js MOODS); outdoors it follows the area (see updatePlay)
@@ -1171,6 +1234,7 @@ class Game {
     const air = !h.onGround && (!this.room || this.room.outdoor) && this.lastSafe;
     return {
       v: SAVE_VERSION,
+      order: ORDER,   // (the chapter order this build plays: a build without a key in it falls back by it, migrateSave)
       room: this.room?.id || null,
       hero: { x: this.room && !air ? h.pos.x : this.lastSafe.x, z: this.room && !air ? h.pos.z : this.lastSafe.z, hp: Math.max(h.hp, 4), mp: h.mp, magicLevel: h.magicLevel, clovers: h.clovers, coins: h.coins, hasBall: h.hasBall, behaviour: h.behaviour, hasSword: h.hasSword, hasPulse: h.hasPulse, weapon: h.weapon, prevWeapon: h.prevWeapon, arms: freshArms(h.arms) },
       flags: this.flags, killed: this.killed, collected: this.collected, searched: this.searched, crates: this.brokenCrates,
@@ -1334,7 +1398,7 @@ class Game {
     if (id === 'title') { const any = this.anySave(); $('#btn-continue').disabled = !any; $('#btn-load').disabled = !any; }
     this.screen = id;
     if (id === 'settings') { this.syncSettingsUI(); this.setTabTo(this.setTab || 'game'); }
-    if (id === 'savegame' || id === 'loadgame') this.buildSlots(id);
+    if (id === 'savegame' || id === 'loadgame' || id === 'expslot') this.buildSlots(id);
     if (id === 'slotconfirm') this.buildSlotConfirm();
     if (id === 'pause') { $('#pause-msg').textContent = ''; $('#btn-save').classList.toggle('blocked', !!this.saveBlockReason()); }
     this.screenT = 0;
@@ -1527,10 +1591,13 @@ class Game {
         break;
       }
       case 'slot': this.pickSlot(+btn?.dataset.slot); break;
+      // EXP-PLAN §6: a base-game save (exp_base) can start the expanded campaign at chapter 10, in another slot
+      case 'slotexp': if (expandedStart(slotInfo(+btn?.dataset.slot)?.raw)) { this.expFrom = +btn.dataset.slot; this.openChild('expslot'); } break;
       case 'slotdel': if (slotInfo(+btn?.dataset.slot)) { this.slotAsk = { kind: 'delete', n: +btn.dataset.slot }; this.openChild('slotconfirm'); } break;
       case 'slotyes': {
         const A = this.slotAsk; this.slotAsk = null;
         if (!A) { this.closeChild(); break; }
+        if (A.kind === 'expover') { this.closeChild(); this.writeExpSlot(A.n); break; }
         if (A.kind === 'overwrite') this.writeSlot(A.n);
         else { store.del(slotKey(A.n)); this.slotMsg = t('slot_deleted', { n: A.n }); this.slotMsgBad = false; }
         this.closeChild();
@@ -1658,10 +1725,33 @@ class Game {
     if (r !== 'ok') this.audio.play('deny');
     return r;
   }
-  // a slot pressed: Save Game writes it (asking first over an occupied one), Load Game loads it
+  // EXP-PLAN §6: the expanded campaign's chapter-10 start, made from the base-game save in slot `expFrom` (expandedStart),
+  // written to manual slot n (never the source), then back on the Load list with the new slot selected
+  writeExpSlot(n) {
+    const from = this.expFrom, data = from != null && n && n !== from ? expandedStart(slotInfo(from)?.raw) : null;
+    let r = 'fail';
+    if (data) r = store.put(slotKey(n), this.stamp(data));
+    this.slotMsg = r === 'ok' ? t('exp_written', { n }) : t(r === 'quota' ? 'slot_full' : 'slot_fail');
+    this.slotMsgBad = r !== 'ok';
+    if (r !== 'ok') this.audio.play('deny');
+    this.expFrom = null;
+    // (the slot list it was picked on closes too: the Load list again)
+    while (this.menuStack?.length && this.menuStack[this.menuStack.length - 1].id !== 'loadgame') this.menuStack.pop();
+    this.closeChild();
+    this.selectSlot(n);
+    return r;
+  }
+  // a slot pressed: Save Game writes it (asking first over an occupied one), Load Game loads it; on the expanded
+  // campaign's slot list (expslot) an empty slot takes the new save, an occupied one asks first, the source can't be picked
   pickSlot(n) {
     if (!(n >= 0 && n <= SLOT_COUNT)) return;
     if (this.screen === 'loadgame') { if (store.get(slotKey(n))) this.startContinue(slotKey(n)); return; }
+    if (this.screen === 'expslot') {
+      if (!n || n === this.expFrom) return;
+      if (slotInfo(n)) { this.slotAsk = { kind: 'expover', n }; this.openChild('slotconfirm'); return; }
+      this.writeExpSlot(n);
+      return;
+    }
     if (this.screen !== 'savegame' || !n) return;
     if (slotInfo(n)) { this.slotAsk = { kind: 'overwrite', n }; this.openChild('slotconfirm'); return; }
     this.writeSlot(n);
@@ -1685,7 +1775,7 @@ class Game {
     if (!I) txt.append(mk('span', 'slot-ch', t('slot_empty')));
     else if (!s) txt.append(mk('span', 'slot-ch', t('slot_bad')));
     else {
-      const key = s.flags.chapterKey, num = CH_NUMBER[key];
+      const key = s.flags.chapterKey, num = chapterNumber(key, s.flags);
       txt.append(mk('span', 'slot-ch', (num ? t('chapter_n', { n: num }) + ' · ' : '') + t('chapter_' + key)));
       const meta = [placeName(s.room)];
       if (Number.isFinite(s.played)) meta.push(playedText(s.played));
@@ -1696,24 +1786,34 @@ class Game {
     el.append(pic, txt);
   }
   // the Save Game list (the six slots) or the Load Game list (the Autosave and the six slots, a Delete on each
-  // manual one), then Back
+  // manual one; under a base-game save the expanded campaign's start), or the slot list for that start (expslot: the six
+  // slots, the source dimmed), then Back
   buildSlots(id) {
-    const load = id === 'loadgame', list = $(`#${id} .slot-list`), latest = load ? this.newestSlot() : null;
+    const load = id === 'loadgame', exp = id === 'expslot', list = $(`#${id} .slot-list`), latest = load ? this.newestSlot() : null;
     list.textContent = '';
     for (let n = load ? 0 : 1; n <= SLOT_COUNT; n++) {
       const I = slotInfo(n), row = document.createElement('div'), b = document.createElement('button');
       row.className = 'slot-row';
       b.className = 'slot'; b.dataset.act = 'slot'; b.dataset.slot = n;
       this.slotCard(b, n, I, load && I && n === latest);
-      if (load && !I) b.disabled = true;
+      if ((load && !I) || (exp && n === this.expFrom)) b.disabled = true;
       row.append(b);
       if (load && n && I) { const d = document.createElement('button'); d.className = 'slot-del'; d.dataset.act = 'slotdel'; d.dataset.slot = n; d.textContent = t('slot_delete'); d.setAttribute('aria-label', t('slot_delete') + ' ' + t('slot_n', { n })); row.append(d); }
       list.append(row);
+      // EXP-PLAN §6: under a save that goes on as the base game (exp_base), the expanded campaign from chapter 10
+      if (load && I?.s?.flags?.exp_base) {
+        const xr = document.createElement('div'), x = document.createElement('button');
+        xr.className = 'slot-row slot-exp-row';
+        x.className = 'slot-exp'; x.dataset.act = 'slotexp'; x.dataset.slot = n; x.textContent = t('exp_start');
+        x.setAttribute('aria-label', t('exp_start') + ', ' + (n ? t('slot_n', { n }) : t('slot_auto')));
+        xr.append(x);
+        list.append(xr);
+      }
     }
     const back = document.createElement('button'); back.dataset.act = 'back'; back.className = 'slot-back'; back.textContent = t('back');
     list.append(back);
     const m = $(`#${id} .menu-msg`);
-    m.textContent = this.slotMsg || ''; m.classList.toggle('bad', !!this.slotMsgBad);
+    m.textContent = this.slotMsg || (exp ? t('exp_pick', { slot: this.expFrom ? t('slot_n', { n: this.expFrom }) : t('slot_auto') }) : ''); m.classList.toggle('bad', !!this.slotMsgBad);
     this.slotMsg = ''; this.slotMsgBad = false;
   }
   buildSlotConfirm() {
@@ -1722,6 +1822,7 @@ class Game {
     const card = S.querySelector('.slot-card'); card.textContent = '';
     this.slotCard(card, A.n, slotInfo(A.n), false);
     S.querySelector('[data-act="slotyes"]').textContent = t(A.kind === 'delete' ? 'slot_delete_yes' : 'slot_overwrite_yes');
+    if (A.kind === 'expover') S.querySelector('h1').textContent = t('exp_over_q', { n: A.n });
   }
   // the Load list: up / down go from slot to slot (past the Delete buttons), right / left between a slot and its Delete
   slotNav(btns) {
