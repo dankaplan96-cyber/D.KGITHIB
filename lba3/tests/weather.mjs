@@ -250,7 +250,8 @@ check('quality: High 320 motes and all 2400 rain lines (as before), Medium 160 m
 const res1 = await ev(() => {
   const G = game, W = G.weather, R = G.renderer.renderer, out = {};
   G.exitRoom({ x: -42, z: -2, a: 0.6 }, true, true); G.step(0.3);
-  W.force('clear', 0); W.setPhase(0.4); G.step(0.3); G.renderer.render();
+  // (a few drawn frames first: the shadow cache, rebuilt over several frames after the quality changes above, settles)
+  W.force('clear', 0); W.setPhase(0.4); for (let i = 0; i < 8; i++) { G.step(0.2); G.renderer.render(); }
   out.before = { programs: R.info.programs.length, textures: R.info.memory.textures, geometries: R.info.memory.geometries };
   // (the same frame of the world each time — nobody walks between the renders — only the weather changed)
   const calls = (s, ph) => { W.force(s, 0); W.setPhase(ph); W.update(0); G.env.setStorm(G.storm); G.env.update(0, G.camera, G.hero.pos); R.info.reset(); G.renderer.render(); return R.info.render.calls; };
