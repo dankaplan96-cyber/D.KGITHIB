@@ -301,7 +301,7 @@ console.log('solid small props on Citadel (block colliders):', props.n, JSON.str
 const propWalk = await ev(() => { const G = game, Pk = G.physics, h = G.hero, keys = G.input.keys, out = [];
   const pick = (x, z) => Pk.colliders.filter((c) => c.enabled && c.block).sort((a, b) => Math.hypot(a.x - x, a.z - z) - Math.hypot(b.x - x, b.z - z))[0];
   const twin = (lx, lz) => { const H = G.world.houses.find((q) => q.id === 'twinsen'); return [H.x + Math.cos(H.ry) * lx + Math.sin(H.ry) * lz, H.z - Math.sin(H.ry) * lx + Math.cos(H.ry) * lz]; };
-  const targets = [['planter box (the spaceport bridge\'s foot)', -36.0, 36.6], ['planter box (the lane)', -48.3, 47.9], ['flower tub (the lane\'s resting spot)', -46.67, 19.5], ['flower tub (yellow, the bridge\'s foot)', -33.6, 36.2],
+  const targets = [['planter box (the spaceport bridge\'s foot)', -36.0, 36.6], ['planter box (the lane)', -48.3, 47.9], ['flower tub (the lane\'s resting spot)', -43.3, 45.23], ['flower tub (yellow, the bridge\'s foot)', -33.6, 36.2],
     ['red bench (a red slatted one)', 'redbench'], ['flower pot (Twinsen\'s garden)', ...twin(1.6, 4.3)], ['flower pot (Twinsen\'s garden, by the fence)', ...twin(-0.6, 5.0)], ['Bug St. sign', ...twin(4.6, 6.0)], ['garden fence', ...twin(-3.0, 5.6)]];
   for (const [name, tx, tz] of targets) {
     const cands = tx === 'redbench' ? Pk.colliders.filter((q) => q.enabled && q.block && q.type === 'box' && Math.abs(q.hw - 0.85) < 0.01 && Math.abs(q.hd - 0.3) < 0.01 && Math.abs(q.x) < 300) : [pick(tx, tz)];
