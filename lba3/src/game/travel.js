@@ -12,7 +12,9 @@
 // CONTRACT
 //   buildTravel(game) → game.travel = { points, routes }   (props and colliders added to the regions)
 //   travelPointAt(game, consider, dist)                    interactables (story/islands.js)
-//   destinations(game, point) → [{ point, mode }] open from a point; travelTo(game, point)
+//   destinations(game, point) → [{ point, mode }] open from a point; travelTo(game, point, from) (from: the point he
+//                                                          took the craft at: its journey film, src/game/travelfilm.js)
+//   game.travel.vehicles[pointId]                          the craft parked at a point (the films fly its twin)
 //   regionOf(game) → 'citadel' | 'desert' | 'hamalayi' | 'zeelich' | 'isle_<name>' (indoors: the region outside)
 //   planetOf(region) → 'twinsun' | 'zeelich';  PLANETS {twinsun: [...], zeelich: [...]}
 import * as THREE from 'three';
@@ -25,6 +27,7 @@ import { ZEELICH } from './zeelich.js';
 import { ORDER } from './story/index.js';
 import { ctex, cached, bbox, cyl, lathe, pm, tm, brassM, Batch } from './kit.js';
 import { t } from './i18n.js';
+import { playJourney, FILMS } from './travelfilm.js';
 import './text/islands.js';
 
 export const PLANETS = { twinsun: ['citadel', 'desert', 'hamalayi'], zeelich: ['zeelich', ...ISLES.map((n) => 'isle_' + n)] };
@@ -84,7 +87,7 @@ function fieldRing(parent, x, y, z, r) {
 
 export function buildTravel(game) {
   const G = game, W = G.world, P = G.physics, points = {}, routes = [];
-  G.travel = { points, routes, done: new Set() };
+  G.travel = { points, routes, done: new Set(), vehicles: {}, films: FILMS };   // (vehicles: the craft parked at a point, for the journey films)
   const updaters = W.updaters;
   const gy = (x, z) => P.groundAt(x, z, 60);
   const pt = (id, o) => (points[id] = { id, ...o });
@@ -96,7 +99,7 @@ export function buildTravel(game) {
     boardMesh(W.root, f.board[0], gy(f.board[0], f.board[1]), f.board[1], f.board[2], { title: 'FERRY', lines: ['DESERT ISLAND', 'FROM THIS QUAY'] });
     P.add({ type: 'box', x: f.board[0], z: f.board[1], hw: 0.15, hd: 1.1, top: gy(f.board[0], f.board[1]) + 2.7, noStand: true });
     const g = CIT.glider; pt('citadel_glider', { region: 'citadel', mode: 'glider', x: g.x, z: g.z, r: 4.0, landing: g.land, name: 'tr_citadel_field' });
-    const pl = buildGlider(); pl.position.set(g.plane[0], gy(g.plane[0], g.plane[1]), g.plane[1]); pl.rotation.y = g.plane[2]; W.root.add(pl);
+    const pl = buildGlider(); pl.position.set(g.plane[0], gy(g.plane[0], g.plane[1]), g.plane[1]); pl.rotation.y = g.plane[2]; W.root.add(pl); G.travel.vehicles.citadel_glider = pl;
     P.add({ type: 'box', x: g.plane[0], z: g.plane[1], hw: 0.9, hd: 2.9, rot: g.plane[2], top: gy(g.plane[0], g.plane[1]) + 1.7, noStand: true });
     boardMesh(W.root, g.board[0], gy(g.board[0], g.board[1]), g.board[1], g.board[2], { title: 'GLIDER FIELD', lines: ['DESERT ISLAND', 'THE HAMALAYI'] });
     P.add({ type: 'box', x: g.board[0], z: g.board[1], hw: 1.1, hd: 0.15, rot: g.board[2], top: gy(g.board[0], g.board[1]) + 2.7, noStand: true });
@@ -151,7 +154,7 @@ export function travelRegion(game, id) {
     put(boardMesh(new THREE.Group(), 0, 0, 0, 0, { title: 'FERRY', lines: ['CITADEL HARBOUR', 'FROM THE PIER'], frame: '#a86a3a' }).parent, f.board[0], f.board[1], f.board[2]);
     P.add({ type: 'box', x: f.board[0], z: f.board[1], hw: 1.1, hd: 0.15, top: gy(f.board[0], f.board[1]) + 2.7, noStand: true });
     const g = DES.glider; pt('desert_glider', { region: 'desert', mode: 'glider', x: g.x, z: g.z, r: 4.0, landing: g.land, name: 'tr_desert_field' });
-    put(buildGlider(), g.plane[0], g.plane[1], g.plane[2]);
+    T.vehicles.desert_glider = put(buildGlider(), g.plane[0], g.plane[1], g.plane[2]);
     P.add({ type: 'box', x: g.plane[0], z: g.plane[1], hw: 0.9, hd: 2.9, rot: g.plane[2], top: gy(g.plane[0], g.plane[1]) + 1.7, noStand: true });
     put(boardMesh(new THREE.Group(), 0, 0, 0, 0, { title: 'GLIDER FIELD', lines: ['CITADEL', 'THE HAMALAYI'], frame: '#a86a3a' }).parent, g.board[0], g.board[1], g.board[2]);
     P.add({ type: 'box', x: g.board[0], z: g.board[1], hw: 1.1, hd: 0.15, rot: g.board[2], top: gy(g.board[0], g.board[1]) + 2.7, noStand: true });
@@ -195,7 +198,7 @@ export function travelRegion(game, id) {
     // the pad and the starship (a bigger Esmer craft, for the long crossing), lamps, the board
     const pd = new THREE.Mesh(cached('zppad', () => new THREE.CylinderGeometry(5.6, 5.8, 0.14, 32)), pm('#8a8f9a', 0.7, { metalness: 0.2 })); pd.position.set(p.pad.x, Y + 0.07, p.pad.z); pd.receiveShadow = true; Z.group.add(pd);
     const ring = new THREE.Mesh(cached('zpring', () => new THREE.TorusGeometry(5.1, 0.08, 6, 40)), pm('#e8c040', 0.5)); ring.rotation.x = Math.PI / 2; ring.position.set(p.pad.x, Y + 0.15, p.pad.z); Z.group.add(ring);
-    const ship = esmerShuttle({ landed: true, scale: 1.4 }); ship.position.set(p.pad.x, Y + 0.14, p.pad.z); ship.rotation.y = Math.PI; Z.group.add(ship);
+    const ship = esmerShuttle({ landed: true, scale: 1.4 }); ship.position.set(p.pad.x, Y + 0.14, p.pad.z); ship.rotation.y = Math.PI; Z.group.add(ship); T.vehicles.zeelich_port = ship;
     P.add({ type: 'cyl', x: o.x + p.pad.x, z: o.z + p.pad.z, r: 4.4, top: Y + 6, noStand: true });
     for (const [lx, lz] of [[p.x0 + 0.6, p.z0 + 0.6], [p.x1 - 0.6, p.z0 + 0.6], [p.x0 + 0.6, p.z1 - 0.6], [p.x1 - 0.6, p.z1 - 0.6]]) {
       B.add(cached('zplamp', () => cyl(0.06, 0.08, 3.2, 8)), brass, lx, Y + 1.6, lz);
@@ -245,9 +248,11 @@ export const TITLE = { ship: 'tr_title_ship', shuttle: 'isle_title', ferry: 'tr_
 export const LABEL = { ship: 'p_ship', shuttle: 'p_shuttle', ferry: 'p_ferry', glider: 'p_glider' };
 
 // go: under the fade, to the destination's landing; the story is told (cast, objective). No arrival toast: he picked the place in the menu (CLAR-2)
-export function travelTo(game, p) {
+// TRAVEL-1: around the scene change, the journey's film (src/game/travelfilm.js): the craft leaving `from` (the point he
+// took it at), the cabin on the ship, the craft arriving. The swap under the black is the same with or without it.
+export function travelTo(game, p, from = null) {
   const g = game;
-  g.startTransition(() => {
+  const swap = () => {
     const l = p.landing || { x: p.x, z: p.z, a: 0 };
     if (p.region === 'citadel') {
       if (g.room) g.exitRoom(l, true);
@@ -256,6 +261,8 @@ export function travelTo(game, p) {
     g.story.refreshCast();
     g.audio.play('door');
     g.updateObjective();
-  }, p.region === 'citadel' ? null : [p.region]);   // (LAZY-REGIONS: a region not built yet is built behind the black, under its card)
+  };
+  const need = p.region === 'citadel' ? null : [p.region];   // (LAZY-REGIONS: a region not built yet is built behind the black, under its card)
+  playJourney(g, { from: from && from !== p ? from : null, to: p, mode: from?.mode || p.mode }, (then) => g.startTransition(swap, need, then));
 }
 export const label = (p) => t(p.name);

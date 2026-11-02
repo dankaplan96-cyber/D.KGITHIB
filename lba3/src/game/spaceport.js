@@ -14,7 +14,7 @@
 // Everything static is merged per material (one Kit for the platform, one for its furniture).
 //
 // CONTRACT (world coordinates, Citadel outdoors): buildSpaceport(root, physics, W) → W.spaceport =
-//   { pad {x,z,y} (the shuttle: its interactable), landing {x,z,a} (where he steps off), deck {x0,x1,z0,z1,y} }
+//   { pad {x,z,y} (the shuttle: its interactable), landing {x,z,a} (where he steps off), deck {x0,x1,z0,z1,y}, ship (its Group) }
 import * as THREE from 'three';
 import * as P from './props.js';
 import { Kit, rbox, cyl, lathe, plane, torus, sphere, canvasTex, MAT, paintVC, tinted } from './props.js';
@@ -102,7 +102,9 @@ export function buildSpaceport(root, physics, W) {
   for (let i = 0; i < 16; i++) { const a = (i + 0.5) * Math.PI / 8; add(rbox(0.5, 0.02, 0.14, 0.01), i % 2 ? pad : yellow, PAD.x + Math.sin(a) * 4.62, Y + 0.125, PAD.z + Math.cos(a) * 4.62, a + Math.PI / 2); }
   for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; add(cyl(0.1, 0.12, 0.12, 8), MAT.glow('#fff4c0', '#ffd860', 1.6), PAD.x + Math.sin(a) * 5.2, Y + 0.06, PAD.z + Math.cos(a) * 5.2); }
   for (const s of [-1, 1]) for (let x = DECK.x0 + 0.6; x < PAD.x - 5.6; x += 1.4) pv(k, rbox(0.9, 0.012, 0.1, 0.005), '#e8c040', x + 0.45, Y + 0.006, BRIDGE.z + s * 1.75);
-  const sh = esmerShuttle({ landed: true }); sh.position.set(PAD.x, Y + 0.12, PAD.z); sh.rotation.y = -Math.PI / 2; g.add(sh);
+  // (TRAVEL-1: the ship is merged on its own and joins the port after the port's merge: the journey film hides it while
+  //  its twin flies)
+  const sh = esmerShuttle({ landed: true }); sh.position.set(PAD.x, Y + 0.12, PAD.z); sh.rotation.y = -Math.PI / 2; mergeStatic(sh);
   physics.add({ type: 'cyl', x: PAD.x, z: PAD.z, r: 3.2, top: Y + 4.4, noStand: true });
 
   // --- the terminal on the north side: stone walls, a glass band, a flat roof with an Esmer dome
@@ -199,6 +201,7 @@ export function buildSpaceport(root, physics, W) {
   // (PERF-IGPU) the two kits share most materials, and the landed shuttle never moves: one mesh per material for
   // the whole port (the departures board and the blinking beacon stay their own meshes)
   mergeStatic(g);
+  g.add(sh);
   // the tower's beacon blinks (its own mesh)
   const beacon = new THREE.Mesh(sphere(0.16, 10, 8), MAT.glow('#ff6050', '#ff3020', 2.2)); beacon.position.set(CT.x, Y + 11.85, CT.z); g.add(beacon);
   W.updaters.push((dt, t) => { beacon.visible = (t % 1.6) < 0.8; });
@@ -206,7 +209,7 @@ export function buildSpaceport(root, physics, W) {
   const S = W.spaceport = {
     pad: { x: PAD.x, z: PAD.z, y: Y },
     landing: { x: PAD.x - 6.2, z: PAD.z - 1.5, a: -Math.PI / 2 },
-    deck: { ...DECK, y: Y }, bridge: { ...BRIDGE }, board: B, group: g,
+    deck: { ...DECK, y: Y }, bridge: { ...BRIDGE }, board: B, group: g, ship: sh,
   };
   return S;
 }

@@ -10,7 +10,7 @@
 // the ice vent (chapter 7).
 //
 // CONTRACT used by src/game/story/pass.js (chapter 6) and observatory.js (chapter 7). World coordinates.
-//   R.landing {x,z,a}; R.glider {x,z}; R.hut {x,z}
+//   R.landing {x,z,a}; R.glider {x,z}; R.gliderObj (its Group); R.hut {x,z}
 //   R.gorge {tree:{x,y,z, fallen, fell(instant?)}}  ballTargets entry {…, tree:true}
 //   R.lhar {x,z}; R.npcSpots {yorna, pim, v1, v2, v3, keeper, hesk} {x,z,a}
 //   R.lift {bottom:{x,z}, top:{x,z}, y0, y1, frozen, thaw(), up, ride(up, riders, done)}; R.heatPost {x,z, on, setOn(b)}
@@ -281,6 +281,7 @@ export function* buildHamalayiSteps(scene, physics) {
   }
   R.landing = { ...W(LANDING.x, LANDING.z), a: Math.PI };
   R.glider = W(LANDING.x + 5, LANDING.z - 2);
+  R.gliderObj = glider;   // (TRAVEL-1: the journey film flies its twin)
   // a stone house (props-mountain.js): placed on the lowest ground under its footprint; door spot as before
   // (door·w − w/2 + 0.5 along the front, 0.9 m out), so R.hut and the village's doors don't move
   const smokes = [], houses = [];

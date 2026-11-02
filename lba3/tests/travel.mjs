@@ -11,6 +11,10 @@
 //     chapter 2 (Doran at the harbour → the project's ship at Citadel Spaceport → Zeelich Spaceport's deck), chapter 8
 //     (no ship at the quay; the project ship at the spaceport), chapter 10 (no Hesk on Zeelich; the spaceship to
 //     Citadel; Hesk's glider menu names only Twinsun)
+//   - TRAVEL-1: with the journey films on, every route both ways by input: the craft's films played (the ship's with
+//     its cabin and passengers), the landing on the spot, on the ground, in no collider, in play, Save → Continue;
+//     the skip (hold E) in a departure, in the cabin, in an arrival; a short press does not skip; none mid-dialogue.
+//     FILMS_ONLY=<substring of "from>to"> rides only those (and skips the skip checks).
 // ISO (logged): the chapter is set by its flags; before walking to a travel point he is put ~8 m from it (the walk,
 // the menu and the arrival are by input).
 import { launch, open, menu, checker } from './lib/boot.mjs';
@@ -159,6 +163,132 @@ for (const [region, pid] of [['citadel', 'citadel_port'], ['desert', 'desert_fer
   holo.push({ region, open: r.s === 'map', ...r.H, dotIn: r.H && r.H.x > 0 && r.H.y > 0 && r.H.x < r.W && r.H.y < r.W, title: r.title });
 }
 check('the Holomap shows the planet he is on (Twinsun: Citadel, Desert Island, the Hamalayi; Zeelich: its spaceport island and islands) with his dot on the map', holo.every((o) => o.open && o.dotIn && o.region === o.region && o.planet === (['citadel', 'desert', 'hamalayi'].includes(o.region) ? 'twinsun' : 'zeelich')), holo);
+
+// ---------------------------------------------------------------- TRAVEL-1: every journey shows its craft
+// (the user: "every passage from planet to planet is only by spaceship ... the ship flying, seen from outside, and from
+// inside with the people there; every kind of vehicle must work"). The films are on here (?nocine turns them off for
+// the other suites). Every route of the network, both ways, by input: walk to the stop, E, pick the destination in
+// the menu, the films play out; then the craft's shots were played, he stands on the landing spot, on the ground and
+// in no collider, in the right region, in play, nothing of the films is left in the scene, and Save → Continue puts
+// him back there. Then the skip (hold E) in each film, a short press that does not skip, and no journey mid-dialogue.
+const FILMS_ONLY = process.env.FILMS_ONLY;   // (a route filter for quick runs: a substring of "from>to")
+await setChapter('home', { ep_free: true });
+await ev(() => {
+  const G = game; G.travel.films.on = true; G.travel.films.log.length = 0;
+  // (the menu's own items, to pick a destination by its point and not its label)
+  if (!G._menuSpy) { G._menuSpy = true; const om = G.openMenu; G.openMenu = function (k, items, cb) { window._menuItems = items; return om.call(this, k, items, cb); }; }
+});
+const ROUTES = await ev(() => game.travel.routes.map((r) => ({ a: r.a, b: r.b, mode: r.mode })));
+// one journey by input; hold: { at: 'depart' | 'arrive', t } holds E from that film's time t (skip), else it plays out
+const ride = async (from, to, hold = null) => {
+  const r0 = await ev(([from, to]) => {
+    const G = game, T = G.travel, p = T.points[from];
+    const here = () => { const it = G.findInteractable(); return it?.kind === 'isleShuttle' && it.point?.id === from; };
+    if (!here()) {
+      const L = p.landing || p, a = Math.atan2(L.x - p.x, L.z - p.z), d = Math.min(8, Math.hypot(L.x - p.x, L.z - p.z) + 3);
+      const x = p.x + Math.sin(a) * d, z = p.z + Math.cos(a) * d;
+      if ((G.room?.id ?? 'citadel') !== p.region) { if (p.region === 'citadel') G.exitRoom({ x, z, a: a + Math.PI }, true); else G.enterRoom(p.region, { x, z, a: a + Math.PI }, true); P.settle(); }
+      P.go(p.x, p.z, { tol: Math.max(1.5, p.r - 1.2), run: true, stopWhen: here, maxT: 150 }); P.face(p.x, p.z);
+      if (!here() && G.findInteractable()?.kind === 'npc') P.go(p.x, p.z, { tol: 0.4, maxT: 30 });
+    }
+    if (!here()) { P.release(); return { fail: 'no menu at ' + from, near: G.findInteractable()?.kind ?? null }; }
+    window._menuItems = null; P.tap('KeyE', 0.1);
+    const i = (window._menuItems || []).findIndex((it) => it.point?.id === to);
+    if (i < 0) { document.querySelector('#shop .leave')?.click(); G.step(0.2); return { fail: 'no menu item ' + to }; }
+    window._ride = { n0: T.films.n || 0, kids: G.scene.children.length, cabin: false, cast: 0, states: [] };
+    document.querySelector(`#shop .item[data-i="${i}"]`).click();
+    return { ok: true, state: G.state };
+  }, [from, to]);
+  if (r0.fail) return r0;
+  if (hold) {
+    // play to the time, then hold the skip key the way a player does (the skip's dip to black runs on the clock)
+    await ev((hold) => { const G = game, F = G.travel.films; for (let k = 0; k < 2000; k++) { const e = F.log.at(-1); if (G.cine && e?.part === hold.at && G.cine.t >= hold.t && (F.n || 0) > window._ride.n0) break; G.step(1 / 30); } }, hold);
+    await page.keyboard.down('KeyE');
+    await ev(() => { for (let i = 0; i < 36; i++) game.frame(1 / 30, false); });
+    await page.keyboard.up('KeyE');
+    await page.waitForTimeout(700);
+  }
+  return ev(([from, to]) => {
+    const G = game, T = G.travel, F = T.films, q = T.points[to], h = G.hero, PH = G.physics, R = window._ride;
+    for (let k = 0; k < 900 && !(G.state === 'play' && !G.trans && !G.cine); k++) {
+      G.step(1 / 30);
+      if (!R.states.includes(G.state)) R.states.push(G.state);
+      const cab = G.scene.getObjectByName('shipCabin'); if (cab?.visible) { R.cabin = true; R.cast = Math.max(R.cast, cab.children.filter((o) => o.type === 'Group' && o.children.some((c) => c.isSkinnedMesh)).length); }
+    }
+    G.step(0.3);
+    const parts = F.log.filter((e) => e.n > R.n0), L = q.landing || q, x = h.pos.x, z = h.pos.z;
+    const gy = PH.groundAt(x, z, h.pos.y + 0.5);
+    const inside = PH.near(x, z).filter((c) => c.enabled !== false && c.top > h.pos.y + 0.3 && (c.bottom == null || c.bottom < h.pos.y + 1.6) && PH._inside(c, x, z, -0.1)).map((c) => [c.type, +c.x.toFixed(1), +c.z.toFixed(1)]);
+    const out = {
+      parts: parts.map((e) => ({ part: e.part, mode: e.mode, len: e.length, t: e.t, skipped: e.skipped, parked: e.parked })),
+      region: G.room?.id ?? 'citadel', want: q.region, state: G.state, trans: !!G.trans, cine: !!G.cine,
+      d: +Math.hypot(x - L.x, z - L.z).toFixed(2), dy: +(h.pos.y - gy).toFixed(2), inside,
+      heroShown: h.rig.root.visible, hud: !document.querySelector('#hud').classList.contains('hidden'), fade: getComputedStyle(document.querySelector('#fade')).opacity,
+      left: ['filmCraft', 'shipCabin', 'filmSpace'].filter((n) => G.scene.getObjectByName(n)), kids: G.scene.children.length - R.kids,
+      cabin: R.cabin, cast: R.cast, states: R.states,
+    };
+    // Save → Continue: he is back on the landing spot, in that region, in play
+    G.save(false); G.startContinue(); G.step(0.5); P.settle();
+    out.cont = { region: G.room?.id ?? 'citadel', state: G.state, d: +Math.hypot(h.pos.x - L.x, h.pos.z - L.z).toFixed(2) };
+    G.travel.films.on = true;
+    return out;
+  }, [from, to]);
+};
+const landedOK = (r) => r.region === r.want && r.state === 'play' && !r.trans && !r.cine && r.d < 1.5 && Math.abs(r.dy) < 0.3 && !r.inside.length && r.heroShown && r.hud
+  && !r.left.length && r.cont.region === r.want && r.cont.state === 'play' && r.cont.d < 1.5;
+const played = (r, mode) => {
+  const dep = r.parts.find((e) => e.part === 'depart'), arr = r.parts.find((e) => e.part === 'arrive');
+  return !!dep && !!arr && dep.mode === mode && !dep.skipped && !arr.skipped && dep.t >= dep.len - 0.05 && arr.t >= arr.len - 0.05 && dep.parked && arr.parked
+    && dep.len >= 2 && arr.len >= 2 && (mode !== 'ship' || (r.cabin && r.cast >= 2 && dep.len >= 6));
+};
+const legs = [];
+for (const rt of ROUTES) for (const [a, b] of [[rt.a, rt.b], [rt.b, rt.a]]) if (!FILMS_ONLY || `${a}>${b}`.includes(FILMS_ONLY)) legs.push({ a, b, mode: rt.mode });
+const results = [];
+for (const L of legs) {
+  const r = await ride(L.a, L.b);
+  const ok = !r.fail && played(r, L.mode) && landedOK(r);
+  results.push({ ...L, ok });
+  if (!ok) console.log('ride', `${L.a}>${L.b}`, JSON.stringify(r).slice(0, 900));
+}
+const byMode = (m) => results.filter((x) => x.mode === m);
+for (const m of ['ship', 'ferry', 'glider', 'shuttle']) {
+  const rs = byMode(m);
+  if (!rs.length && FILMS_ONLY) continue;
+  check(`TRAVEL-1 ${m}: every route both ways shows its craft leaving and arriving${m === 'ship' ? ' (with the cabin and its passengers)' : ''}; he lands on the landing spot, on the ground, in no collider, in the right region, in play; Save → Continue keeps it (${rs.length} rides)`,
+    rs.length > 0 && rs.every((x) => x.ok), rs.filter((x) => !x.ok).map((x) => `${x.a}>${x.b}`));
+}
+check('TRAVEL-1: every route of the network was ridden both ways', FILMS_ONLY || results.length === ROUTES.length * 2, { routes: ROUTES.length, rides: results.length });
+// the skip: in the ship's cabin (the whole journey's film ends: the plain transition follows), in an arrival
+if (!FILMS_ONLY) {
+  const sk1 = await ride('citadel_port', 'zeelich_port', { at: 'depart', t: 4.0 });
+  check('TRAVEL-1 skip: holding E in the ship\'s cabin ends the journey\'s film (no arrival film); he lands on Zeelich Spaceport\'s deck in play, nothing of the film left',
+    !sk1.fail && sk1.parts.length === 1 && sk1.parts[0].skipped && sk1.parts[0].t < sk1.parts[0].len && landedOK(sk1), sk1);
+  const sk2 = await ride('zeelich_port', 'citadel_port', { at: 'arrive', t: 1.0 });
+  check('TRAVEL-1 skip: holding E during the arrival puts him on the landing spot at once, in play',
+    !sk2.fail && sk2.parts.length === 2 && !sk2.parts[0].skipped && sk2.parts[1].skipped && landedOK(sk2), sk2);
+  const sk3 = await ride('citadel_ferry', 'desert_ferry', { at: 'depart', t: 0.5 });
+  check('TRAVEL-1 skip: holding E as the ferry leaves the quay: he lands on Desert Island\'s pier in play',
+    !sk3.fail && sk3.parts.length === 1 && sk3.parts[0].skipped && landedOK(sk3), sk3);
+  // a short press does not skip
+  const sp = await ev(() => { const G = game, T = G.travel, p = T.points.desert_ferry; P.go(p.x, p.z, { tol: Math.max(1.5, p.r - 1.2), run: true, maxT: 60, stopWhen: () => G.findInteractable()?.point?.id === 'desert_ferry' }); P.face(p.x, p.z); window._menuItems = null; P.tap('KeyE', 0.1); const i = (window._menuItems || []).findIndex((it) => it.point?.id === 'citadel_ferry'); document.querySelector(`#shop .item[data-i="${i}"]`)?.click(); G.step(0.5); return { state: G.state }; });
+  await page.keyboard.down('KeyE'); await ev(() => { for (let i = 0; i < 9; i++) game.frame(1 / 30, false); }); await page.keyboard.up('KeyE'); await ev(() => { for (let i = 0; i < 6; i++) game.frame(1 / 30, false); });
+  const sp2 = await ev(() => ({ state: game.state, run: game.cine?.state, t: game.cine?.t }));
+  check('TRAVEL-1: a short press (0.3 s) does not skip the film', sp.state === 'cinematic' && sp2.state === 'cinematic' && sp2.run === 'run', { sp, sp2 });
+  await ev(() => P.settle(60));
+  // no journey mid-dialogue: at the stop with a line on screen, E reads on; no menu, no film
+  const dl = await ev(() => {
+    const G = game, T = G.travel, p = T.points.citadel_ferry, F = T.films, n0 = F.n || 0;
+    if ((G.room?.id ?? 'citadel') !== 'citadel') { G.exitRoom(p.landing, true); P.settle(); }
+    P.go(p.x, p.z, { tol: Math.max(1.5, p.r - 1.2), run: true, maxT: 60, stopWhen: () => G.findInteractable()?.point?.id === 'citadel_ferry' });
+    G.say('', ['A test line.', 'And another.']);
+    const s0 = G.state, seen = new Set();
+    for (let k = 0; k < 10 && G.state === 'dialog'; k++) { P.tap('KeyE', 0.15); seen.add(G.state); }
+    G.step(0.5); seen.add(G.state);
+    return { s0, seen: [...seen], films: (F.n || 0) - n0, menu: !document.querySelector('#shop').classList.contains('hidden') };
+  });
+  check('TRAVEL-1: no journey starts mid-dialogue (E at the stop reads the line on; no menu, no film)', dl.s0 === 'dialog' && !dl.seen.includes('shop') && !dl.seen.includes('cinematic') && dl.films === 0, dl);
+  await ev(() => P.settle());
+}
 
 if (process.env.MATRIX) fs.writeFileSync(process.env.MATRIX, JSON.stringify({ matrix, holo }, null, 1));
 const fails = done(errs);

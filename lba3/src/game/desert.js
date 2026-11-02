@@ -4,7 +4,7 @@
 // limit, which actors may not enter.
 //
 // CONTRACT used by src/game/story/dig.js (chapter 4) and steam.js (chapter 5). World coordinates.
-//   R.dock {x,z,a}            arrival from the ferry; R.ferry {setVisible(b)}
+//   R.dock {x,z,a}            arrival from the ferry; R.ferry {group, setVisible(b)}
 //   R.npcSpots {hesk, tarra, ilka, dallan, guard, kid, trader, weaver} {x,z,a}
 //   R.oasis {x,z,r, level, setLevel(0..1)}          the pond: dry (0) → full (1); palms green up with it
 //   R.pump {x,z, gears:[{x,y,z,i,jam,turning,setTurning(b),kick()}], jam, state, setState('jammed'|'leak'|'running'),
@@ -541,7 +541,7 @@ export function* buildDesertSteps(scene, physics) {
     FB.add(cyl(0.9, 0.9, 0.3, 24, 0), pm('#9ff4ff', 0.3, { emissive: '#35d8ff', emissiveIntensity: 1.5 }), 0, 0.05, 0);
     FB.build();
   }
-  R.ferry = { setVisible(b) { ferry.visible = !!b; } };
+  R.ferry = { group: ferry, setVisible(b) { ferry.visible = !!b; } };
 
   // ================================================================ the village of Kesh
   const houseDoors = [];
