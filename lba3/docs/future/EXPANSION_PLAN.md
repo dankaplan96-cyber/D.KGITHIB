@@ -887,3 +887,15 @@ standing order, the band rule) are listed in each card and must survive text cle
 - **Night words in the text** ("at night", "evening"): to fix in the base game (a text pass), keeping the dial riddle's
   answer.
 - **STORY_BIBLE.md** (chapters 9–10 "to build", five pylons, Dalan/Dallan) is being updated by GATE-FIX.
+
+## The user's decisions (2.11.2026)
+
+- **Q1 · the shaft's planet: (c), close the passage between the planets.** Between planets, the spaceship only
+  (relayed by the laptop session, TRAVEL-1, WORLD_ART_REQUESTS.md). The shaft's top moves to Citadel's station (the
+  fort that "drills"); chapter 3's ending changes so Vesk flies home and seals it there; the network's "the shaft
+  opens" and The Shell start from Citadel. Base-game change, done on the base branch before the bridge batches.
+- **The expansion branch** `expansion/ballastra` is approved; batch 1 is on it. The laptop builds the LBA1 places on
+  Citadel first, then W-1.
+- **TRAVEL-1:** every journey between planets is by spaceship, with a flight seen from outside and a cabin inside;
+  every vehicle shows its journey and works. Cloud: travel and cinematics; laptop: the cabin room and the ship model.
+- **LBA-CITADEL-8 and -9** (the baggage claim, Tralu's cave) set aside: below the 80 % likeness target.
