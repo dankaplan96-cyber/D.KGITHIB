@@ -34,7 +34,7 @@ import './text/islands.js';
 export const PLANETS = { twinsun: ['citadel', 'desert', 'hamalayi'], zeelich: ['zeelich', ...ISLES.map((n) => 'isle_' + n)] };
 export const planetOf = (region) => (PLANETS.zeelich.includes(region) ? 'zeelich' : 'twinsun');
 // interiors and the regions they open from (the rest of the interiors are on Citadel)
-const INSIDE = { workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', condA: 'desert', condB: 'desert', butemple: 'desert', bumaze: 'desert', buhalls: 'desert', school: 'desert', obsv: 'hamalayi' };
+const INSIDE = { workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', zterminal: 'zeelich', condA: 'desert', condB: 'desert', butemple: 'desert', bumaze: 'desert', buhalls: 'desert', school: 'desert', obsv: 'hamalayi' };
 let lastOut = 'citadel', lastPos = null;
 export function regionOf(game) {
   const R = game.room;

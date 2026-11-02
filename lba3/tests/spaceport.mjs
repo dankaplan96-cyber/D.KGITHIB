@@ -120,6 +120,34 @@ check('with the films on: from the counter he goes out through the gate, the shi
 const g2 = await ev(() => { const G = game; P.enter('zterminal'); const H = TT.zterminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const l = G.regions.built('zeelich').spaceport.landing, h = G.hero; return { r: r.r, room: G.room?.id, d: +Math.hypot(h.pos.x - l.x, h.pos.z - l.z).toFixed(2) }; });
 check('Zeelich\'s terminal gate (INPUT) leads out onto the deck at the pad\'s landing spot', g2.room === 'zeelich' && g2.d < 1.5, g2);
 
+// out by the doors (INPUT: walked through), and he stays out (standing a while by the door does not take him back in)
+const outDoor = (room) => ev((room) => { const G = game; if (G.room?.id !== room) P.enter(room); const H = TT[room]; const r = P.through(H.door.x, H.door.z); P.settle();
+  const at = G.room?.id ?? 'citadel'; for (let i = 0; i < 30; i++) G.step(0.1); const d = G.story.doors().find((x) => x.room === room), h = G.hero;
+  return { r: r.r, at, after: G.room?.id ?? 'citadel', fromDoor: +Math.hypot(h.pos.x - d.x, h.pos.z - d.z).toFixed(2), doorR: d.r }; }, room);
+const o1 = await outDoor('terminal');
+check('out of Citadel\'s terminal by its door: on the deck before it, and he stays out', o1.at === 'citadel' && o1.after === 'citadel' && o1.fromDoor > o1.doorR, o1);
+await ev(() => { const G = game; G.regions.ensure('zeelich', 'test'); G.step(0.3); G.enterRoom('zeelich', G.regions.built('zeelich').spaceport.landing, true); P.settle(); });
+const o2 = await outDoor('zterminal');
+check('out of Zeelich\'s terminal by its door: on the deck before the pavilion, and he stays out', o2.at === 'zeelich' && o2.after === 'zeelich' && o2.fromDoor > o2.doorR, o2);
+
+// save and reload in a terminal (a real page reload, Continue): back in the hall with its people and its notice
+const reloadIn = async (key, room, ids) => {
+  await setChapter(key);
+  await toDoor(room);
+  await ev(() => { for (let i = 0; i < 20; i++) game.step(0.5); game.save(false); });
+  await page.reload(); await open(page, '?nocine'); await menu(page, 'continue');
+  return ev(async ([room, ids]) => { const G = game; for (let i = 0; i < 40; i++) { G.step(0.25); if (G.state !== 'play') P.settle(); }
+    const a = await import('/src/game/terminal.js'), b = await import('/src/game/zterminal.js'); window.TT = { terminal: a.TERMINAL, zterminal: b.ZTERMINAL };
+    const here = (G.roomWalkers?.res || []).filter((r) => r.def.room === room && r.present && !r.away && !r.def.pending).map((r) => r.def.id);
+    return { room: G.room?.id, chapter: G.flags.chapterKey, here, want: ids, notice: TT[room].notice?.visible, state: G.state }; }, [room, ids]);
+};
+const rl1 = await reloadIn('project', 'terminal', ['ama', 'tavi', 'bern', 'lomba']);
+check('save and reload (Continue) in Citadel\'s terminal, chapter 2: back in the hall, its grounded people there, the notice up', rl1.room === 'terminal' && JSON.stringify([...rl1.here].sort()) === JSON.stringify([...rl1.want].sort()) && rl1.notice === true, rl1);
+const c5 = await counter('terminal');
+check('… and the counter still answers (grounded)', c5.st !== 'shop' && c5.said.some((x) => /^n_ama: .*grounded/i.test(x)), c5);
+const rl2 = await reloadIn('council', 'zterminal', ['velo', 'pask']);
+check('save and reload in Zeelich\'s terminal, chapter 9: back in the hall with Velo and Pask, the notice down', rl2.room === 'zterminal' && JSON.stringify([...rl2.here].sort()) === JSON.stringify([...rl2.want].sort()) && rl2.notice === false, rl2);
+
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);
