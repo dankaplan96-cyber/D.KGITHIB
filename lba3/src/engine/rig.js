@@ -545,7 +545,8 @@ export class Rig {
   // it stands. Turning on the spot is a stepping turn: from the turn's first frames the feet step in turn, the one on the
   // side he turns to first, each lifted 7.5 cm and put down a little ahead of the body by the turn it makes meanwhile.
   _plant(dt, a) {
-    const j = this.j, gait = this.plantFrame && a === 'walk', on = this.plantFrame && (this.footPlant ? PLANT : PLANT_LITE).has(a);
+    // (DISCREET-WALK: the sneak's stance foot is held as the walk's, over its own longer stance, SNEAK.stance)
+    const j = this.j, sneak = a === 'sneak', gait = this.plantFrame && (a === 'walk' || sneak), on = this.plantFrame && (this.footPlant ? PLANT : PLANT_LITE).has(a);
     this.plantFrame = false;
     // (ANIM-POLISH-3: another character moved more than 0.35 m since its last planted frame — posed coarsely while far or out of view,
     // or put somewhere by the story — starts its planting afresh instead of reaching back for where its feet stood)
@@ -591,8 +592,10 @@ export class Rig {
       if (gait) {
         // the walk's stance: phase 0 (the heel strikes) .. 0.5 (push-off), on the pose the joints have reached (lagPhase behind)
         const ph = ((this.phase / (Math.PI * 2) - (this._lagPhase || 0) + (s === 'L' ? 0 : 0.5)) % 1 + 1) % 1;
-        const stance = ph < 0.5;
-        const rel = this.plantLite ? PLANT_LITE_RELEASE : [0.38, 0.12];
+        // (the sneak holds its foot to the end of its stance and lets it go over the next 3 % of the cycle, while the heel is already
+        // peeling up: turning, the pose it goes back to stands a few cm off the held spot, and it slid there along the ground)
+        const stance = ph < (sneak ? SNEAK.stance + 0.03 : 0.5);
+        const rel = sneak ? [SNEAK.stance, 0.03] : this.plantLite ? PLANT_LITE_RELEASE : [0.38, 0.12];
         let wgt = stance ? smooth(ph / 0.05) * (1 - smooth((ph - rel[0]) / rel[1])) : 0;
         if (st.on && (this.accel ?? 0) < -4) wgt = Math.max(wgt, st.w);   // (braking to a stop: the foot it stands on is not let go)
         // (the heel strikes when the leg can reach the ground below the foot: where the pose puts it far ahead of a high hip it
@@ -741,6 +744,87 @@ export class Rig {
     return out.set(cx + (x * c + z * n) * sc, groundY, cz + (z * c - x * n) * sc);
   }
 
+  // (DISCREET-WALK) the sneak's pose at its phase (SNEAK). Fills the legs' and arms' targets in T; returns the pelvis and the chest.
+  // Lengths in the body's own units (before the root's scale); `speed` m/s. The planted leg is solved from where its foot stands: put
+  // down ahead of the hip the way he travels, then carried back (and round, turning) by the body's own motion over the phase since.
+  _sneak(T, speed) {
+    const j = this.j, S = SNEAK, hr = this.hipsRest, k = hr / 0.95, sc = this.root.scale.y;
+    const L1 = j.legL.knee.position.length(), L2 = j.legL.foot.position.length(), Lr = S.reach * (L1 + L2);
+    const hip0 = hr + j.legL.hip.position.y, a0 = hip0 + j.legL.knee.position.y + j.legL.foot.position.y, hx = Math.abs(j.legL.hip.position.x);
+    // the way he travels in his own frame (+x his left, +z ahead: aiming, Classic's back-step) and his turn (rad/s, + to his left)
+    const fx = Math.cos(this.moveRel || 0), sx = Math.sin(this.moveRel || 0), w = this._yawRate || 0;
+    // (the pelvis surges along his facing — not travelling sideways, where it cannot — and the step is shorter by that much)
+    const C = S.cyc * hr / 0.46, A = S.surge * k * Math.abs(fx), st = S.stance, X0 = (st * C - 2 * A) / 2;
+    const hz = (c) => sneakSurge(c) * S.surge * k * fx;
+    // over one unit of phase the body travels `trav` and turns `turn` (rad): the whole cycle C going straight
+    const v = speed / sc, den = Math.max(1e-4, v + S.turnStep * k * Math.abs(w)), trav = C * v / den, turn = w * C / den;
+    const p = ((this.phase / (Math.PI * 2)) % 1 + 1) % 1;
+    // a foot of side `s` (+1 left) at its phase c in [0, st] (clamped: just before it lands, where it will; just after it lifts, where it
+    // stood): [left, ahead] of its hip. Put down X0 ahead of the hip along the travel; the body then moves along its arc and turns
+    const at = (c, s) => {
+      c = clamp(c, 0, st);
+      const px = s * hx + sx * X0, pz = hz(0) + fx * X0, a = turn * c, ca = Math.cos(a), sa = Math.sin(a);
+      // the body's displacement in the frame it had at the contact: ∫ R(ωt)·u dt
+      const f1 = Math.abs(a) > 1e-5 ? sa / a : 1, f2 = Math.abs(a) > 1e-5 ? (1 - ca) / a : 0, d = trav * c;
+      const dx = d * (sx * f1 + fx * f2), dz = d * (-sx * f2 + fx * f1);
+      // the planted point in the body's frame now (turned back by the turn made), less the hip
+      const qx = px - dx, qz = pz - dz;
+      return [qx * ca - qz * sa - s * hx, qx * sa + qz * ca - hz(c)];
+    };
+    // the pelvis: the measured rise and dip, but never higher than both planted legs reach
+    const hipAt = (c) => {
+      let h = hip0 + keyP(S.hT, S.hips, c, 0.5) * k;
+      for (const [cc, s] of [[c, 1], [c + 0.5, -1]]) {
+        let u = ((cc % 1) + 1) % 1; if (u > 0.92) u -= 1;
+        if (u > st + 0.04) continue;
+        const [x, z] = at(u, s); h = Math.min(h, a0 + Math.sqrt(Math.max(0, Lr * Lr - x * x - z * z)));
+      }
+      return h;
+    };
+    // a leg whose ankle is [left, ahead, down] of its hip: [thigh swing (- forward), spread (+ out to his left), knee], the knee bent
+    // forward in the leg's own plane (the hip spreads it, then swings it, as its rotation orders: XYZ / YXZ with no turn)
+    const solve = (x, z, y) => {
+      const d = clamp(Math.hypot(x, y, z), 0.05, 0.999 * (L1 + L2));
+      const kn = Math.PI - Math.acos(clamp((L1 * L1 + L2 * L2 - d * d) / (2 * L1 * L2), -1, 1));
+      const a = L1 + L2 * Math.cos(kn), b = L2 * Math.sin(kn), sd = Math.asin(clamp(x / a, -1, 1));
+      return [wrap(Math.atan2(z, -y) - Math.atan2(-b, -a * Math.cos(sd))), sd, kn];
+    };
+    const hipP = hipAt(p); let hipH = hipP;
+    // (where the feet really stand, the plant holding them: a turn faster or slower than the one read here, a push, a slope; the pelvis
+    // comes down for the leg to reach, at most 0.15 m more. Going straight these sit just outside the reach above)
+    const F = this._feet;
+    if (F && this.planting && F.w > 0) for (const [sd, leg] of [['L', j.legL], ['R', j.legR]]) {
+      const f = F[sd]; if (!f.on || f.stepping || f.w < 0.3) continue;
+      leg.hip.getWorldPosition(_hp);
+      const d = Math.hypot(f.P.x - _hp.x, f.P.z - _hp.z) / sc, Lp = (S.reach + 0.01) * (L1 + L2);
+      hipH = Math.min(hipH, Math.max(hipP - 0.15 * k, a0 + Math.sqrt(Math.max(0, Lp * Lp - d * d))));
+    }
+    for (const [sd, c, s] of [['L', p, 1], ['R', (p + 0.5) % 1, -1]]) {
+      let x, z, y, toe;
+      if (c <= st) {
+        [x, z] = at(c, s); y = hipH - a0;
+        toe = c < 0.08 ? S.swToe[5] * (1 - smooth(c / 0.08)) : c > st - 0.15 ? S.swToe[0] * smooth((c - st + 0.15) / 0.15) : 0;
+      } else {
+        // the swing: the ankle from where it lifted to where it will land (both on the ground under the pelvis as it is now), through
+        // the keyed poses (their reach ahead turned the way he travels); the first key peels the heel up behind before the knee comes
+        // through, so the toe clears the ground
+        const [x0, z0] = at(st, s), [x1, z1] = at(0, s), y0 = hipH - a0, y1 = hipH - a0, ts = [st, ...S.swT, 1];
+        const X = [x0], Z = [z0], Y = [y0];
+        S.swThigh.forEach((th, i) => {
+          if (th == null) { X.push(x0 + sx * 0.05 * k); Z.push(z0 + fx * 0.05 * k); Y.push(y0 - 0.07 * k); return; }
+          const kk = S.swKnee[i], h = -L1 * Math.sin(th) - L2 * Math.sin(th + kk);
+          X.push(h * sx); Z.push(h * fx); Y.push(L1 * Math.cos(th) + L2 * Math.cos(th + kk));
+        });
+        X.push(x1); Z.push(z1); Y.push(y1);
+        x = keyH(ts, X, c); z = keyH(ts, Z, c); y = keyH(ts, Y, c); toe = keyH(ts, S.swToe, c);
+      }
+      const [leg, side, kn] = solve(x, z, y);
+      T['leg' + sd] = leg; T['side' + sd] = side; T['knee' + sd] = kn; T['foot' + sd] = -(leg + kn) + toe;
+      T['arm' + sd] = keyP(S.aT, S.arm, c); T['el' + sd] = keyP(S.aT, S.elbow, c);   // (against its own leg: keyed from its contact)
+    }
+    return { hipsY: 0.95 + (hipH - hip0) / k, hipsZ: sneakSurge(p) * S.surge * fx, torsoX: keyP(S.hT, S.torso, p, 0.5), headX: keyP(S.hT, S.head, p, 0.5) };
+  }
+
   hitFlash() { this.flash = 1; }
   // a landing: `strength` 0.3 (a hop down a step) .. 1.2 (a long drop) sets how deep the knees take it and how long it lasts (0.22 s × strength, as before)
   // (Hero: from the height he fell, not only the speed). A quick compression, a hold and a rebound that rises a little past
@@ -831,9 +915,8 @@ export class Rig {
       const amp = a === 'run' ? 0.62 + Math.min(speed, 8) * 0.03 : a === 'sneak' ? 0.42 : 0.42 + Math.min(speed, 4) * 0.035;
       const legL = this.hipsRest * this.root.scale.y * 0.95;
       const stride = 4 * legL * Math.sin(amp) * (a === 'run' ? 1.55 : 1); // runs have a flight phase (LBA2: 1.9 H per cycle)
-      // the sneak lingers on each contact (careful placing), the others are even
       const dph = (speed * dt / stride) * Math.PI * 2;
-      this.phase += a === 'sneak' ? dph * (0.55 + 0.9 * Math.abs(Math.sin(this.phase))) : dph;
+      this.phase += dph;
       const s = Math.sin(this.phase), c = Math.cos(this.phase);
       T.legL = s * amp; T.legR = -s * amp;
       T.kneeL = Math.max(0, -c) * amp * 1.6 + 0.08;
@@ -878,6 +961,16 @@ export class Rig {
         if (this.planting) hipsY += key(W.bobPlant, p * 2 % 1);
         torsoY = key(W.twist, p); headY = -torsoY;
         torsoX = 0.02 + key(W.lean, p * 2 % 1);
+      } else if (a === 'sneak') {
+        // (DISCREET-WALK) LBA2's discreet walk (SNEAK, Rig._sneak): one cycle per SNEAK.cyc body heights travelled, so the planted foot
+        // keeps its place on the ground at any speed (2.6 s at Discreet's 0.67 m/s)
+        // (turning as he goes, the feet step quicker, as the turn carries them round as well: at Discreet's 90°/s round a 0.4 m circle a
+        // foot held for the straight stride's 1.5 s would end up out of the leg's reach beside him)
+        const C = SNEAK.cyc * this.hipsRest * this.root.scale.y / 0.46, v = speed + SNEAK.turnStep * this.hipsRest / 0.95 * this.root.scale.y * Math.abs(this._yawRate || 0);
+        this.phase += (v * dt / C) * Math.PI * 2 - dph;
+        this._cycHz = v / C;
+        const P = this._sneak(T, speed);
+        hipsY = P.hipsY; hipsZ = P.hipsZ; torsoX = P.torsoX; headX = P.headX; torsoY = 0; headY = 0; armOut = 0.06;
       } else if (a === 'run' && (!this.j.skirt || this.legCloth)) {
         // LBA2's athletic run, from its six key poses (1.94 body heights per cycle): the body leans well into
         // it, the knee drives high in front, the heel kicks up behind on the pass, the arms pump bent
@@ -898,15 +991,10 @@ export class Rig {
       }
       // aiming while moving: the body faces the aim and the legs step the way it travels (sideways: the swing
       // turns out to the side; backwards: the cycle runs in reverse), so the feet don't skate
-      if (this.moveRel) {
+      if (this.moveRel && a !== 'sneak') {   // (the sneak turns its legs itself: Rig._sneak)
         const fx = Math.cos(this.moveRel), sx = Math.sin(this.moveRel);
         for (const sd of ['L', 'R']) { const l = T['leg' + sd]; T['leg' + sd] = l * fx; T['side' + sd] = -l * sx; T['foot' + sd] *= Math.abs(fx); }
         torsoX *= Math.max(0, fx);
-      }
-      if (a === 'sneak') {
-        hipsY = 0.74; torsoX = 0.45; headX = -0.38;
-        T.armL = 0.6 + s * 0.15; T.armR = 0.6 - s * 0.15; T.elL = -1.3; T.elR = -1.3;
-        T.kneeL += 0.65; T.kneeR += 0.65; T.legL -= 0.35; T.legR -= 0.35;
       }
     } else if (a === 'idle' || a === 'talk' || a === 'listen') {
       // LBA2's idle (measured): a slow rock forward and back on the ankles, 2.4 s, the pelvis tipping with it
@@ -1334,7 +1422,7 @@ export class Rig {
     // (a throw or a charge on the upper-body layer: the arms and the chest follow its keys as closely as a planted throw,
     // so the hand is where the keys put it when the ball leaves; the legs keep the walk's own rate)
     const Ru = this.over ? Math.max(R, 55) : a === 'jumpPrep' || a === 'jump' ? Math.min(R, 18) : R;
-    this._lagPhase = a === 'walk' ? (this._cycHz || 0) / R : 0;   // (the legs ease toward their keys at R: their pose lags the phase by 1/R s)
+    this._lagPhase = a === 'walk' || a === 'sneak' ? (this._cycHz || 0) / R : 0;   // (the legs ease toward their keys at R: their pose lags the phase by 1/R s)
     // (a knock-out follows its keys closely, but no joint ever turns faster than KO_HUMAN.maxRate: no pop from
     // whatever pose the blow interrupted)
     const lim = ko ? KO_HUMAN.maxRate * dt : Infinity;
@@ -1758,6 +1846,55 @@ const RUN_KEYS = {
   bob: [0.03, -0.035, 0.0],     // up off the push, down on landing (× pelvis height / 0.95; LBA2 drops further, its feet sink)
   lean: 0.4,                    // ≈ 23° into the run
 };
+// (DISCREET-WALK) LBA2's discreet walk (ANIM 94, measured on the hero's robe body 1; docs/LBA2_MEASUREMENTS.md): a slow high
+// tiptoe, 2.6 s for two steps. Each step: the knee comes up high (thigh ~83° forward, knee ~100°) with the chest hunched over the
+// standing foot and both arms swung back, the foot reaches far out in front at nearly hip height (thigh 111-114°; 104° here, under
+// the robe's front panel), the body sinks on the standing knee and the foot is set down well ahead while the chest rocks back; then
+// the weight creeps over it and he rises onto it for the next lift. The cycle's phase is 0 at the left foot's contact (as the walk's); a key time is a fraction of the cycle (LBA2's
+// keys: 300, 400, 300, 300 ms per step). Here the stance leg is not keyed but solved from where its foot stands (the ground moves
+// under him at his speed, so the planted foot cannot skate), and the pelvis rides as high as the planted feet allow, below the
+// measured rise and dip; the swing leg, the chest, the head and the arms are keyed.
+const SNEAK = {
+  cyc: 0.84,                    // body heights a cycle (LBA2: 1039 units a loop = 0.84 H; 0.32 H/s at Discreet's 0.67 m/s → 2.6 s)
+  stance: 0.58,                 // each foot stands 58 % of the cycle (both down for 0.21 s after each contact)
+  surge: 0.09,                  // (× pelvis height / 0.95) the pelvis eases 9 cm ahead of the body's place at a contact and 9 cm behind
+                                // at the other foot's lift: it creeps while both feet are down and surges over the standing one (LBA2's
+                                // root moves 0.6 units/ms over the lift keys, 0.33 over the others)
+  reach: 0.975,                 // the planted leg is never asked past 97.5 % of its length
+  turnStep: 0.35,               // (m at a pelvis of 0.95) turning as he goes, each rad/s of turn adds this much to the pace the feet step at
+  // the swing, from the lift-off (its pose solved) to the contact (solved): the heel peels up behind (the knee folds before the thigh
+  // comes through, so the toe clears the ground), the knee rises, peaks, the foot reaches out, sets down
+  swT: [0.62, 0.69, 0.77, 0.885],
+  swThigh: [null, -48 * D, -83 * D, -104 * D],   // (null: the lift-off's own thigh, 6° on)
+  swKnee: [70 * D, 88 * D, 100 * D, 50 * D],
+  swToe: [0.3, 0.4, 0.45, 0.5, 0.55, 0.12],   // the foot pointed: at the lift-off, the keys, the contact (rad, + = toes down)
+  // the pelvis over half a cycle from a contact (× pelvis height / 0.95, m at 0.95): LBA2's 0.406, 0.425, 0.454, 0.402 of H against
+  // 0.457 standing — low at the contact, rising through the transfer to the lift, sinking as the other foot reaches
+  hT: [0, 0.115, 0.269, 0.385], hips: [-0.105, -0.066, -0.007, -0.115],
+  // the chest's absolute lean (+ forward) and the head's nod against it over half a cycle from a contact: LBA2's chest rocks from
+  // 59° back at the contact to 44° forward at the other's lift (× 0.6-0.7 here: our chest is longer above a pelvis that does not tilt)
+  torso: [-35 * D, -9 * D, 32 * D, -7 * D], head: [30 * D, 0, -17 * D, 0],
+  // an arm over a whole cycle from its own side's contact (relative to the chest, + back): back as its leg reaches, forward with the
+  // other leg, the elbows bent (LBA2's groups 4-7, both sides averaged)
+  aT: [0, 0.115, 0.269, 0.385, 0.5, 0.615, 0.769, 0.885],
+  arm: [63 * D, 26 * D, 17 * D, -10 * D, -38 * D, -27 * D, 3 * D, 42 * D],
+  elbow: [-46 * D, -60 * D, -58 * D, -54 * D, -30 * D, -25 * D, -82 * D, -68 * D],
+};
+// periodic, through unevenly timed keys (Catmull-Rom tangents): `ts` from 0, rising, within one `period`
+function keyP(ts, vs, t, period = 1) {
+  const n = ts.length; t = ((t % period) + period) % period;
+  let i = n - 1; while (i > 0 && t < ts[i]) i--;
+  const T = (k) => ts[((k % n) + n) % n] + Math.floor(k / n) * period, V = (k) => vs[((k % n) + n) % n];
+  const t0 = T(i), t1 = T(i + 1), h = t1 - t0, u = (t - t0) / h, u2 = u * u, u3 = u2 * u;
+  const m = (k) => (V(k + 1) - V(k - 1)) / (T(k + 1) - T(k - 1)) * h;
+  return (2 * u3 - 3 * u2 + 1) * V(i) + (u3 - 2 * u2 + u) * m(i) + (-2 * u3 + 3 * u2) * V(i + 1) + (u3 - u2) * m(i + 1);
+}
+// (DISCREET-WALK) the pelvis's surge over half a cycle from a contact (-1 .. 1): +1 at the contact, -1 at the other foot's lift-off
+// (SNEAK.stance - 0.5 later), back to +1 at the next contact
+function sneakSurge(c) {
+  const h = ((c % 0.5) + 0.5) % 0.5, d = SNEAK.stance - 0.5;
+  return h < d ? 1 - 2 * smooth(h / d) : -1 + 2 * smooth((h - d) / (0.5 - d));
+}
 // periodic Catmull-Rom through evenly spaced keys (smooth, passes through every measured pose)
 function key(k, t) {
   const n = k.length, x = t * n, i = Math.floor(x) % n, u = x - Math.floor(x);
