@@ -359,7 +359,9 @@ export class Resident extends NPC {
   }
   // an Esmer's body is one robe from the shoulders to the ground (rig.robeLegs, no hips to bend): it cannot sit on a
   // bench without the robe going through the seat, so at a bench stop it stands by the bench instead
-  canSit() { return LOOKS[this.def.char]?.race !== 'esmer'; }
+  // (the same for a long dress or robe down to the ankles (hem under 0.3: Oda's, the user's photo of 2.11 by the statue): its
+  //  rigid skirt panels hang through the seat's slats; a knee-length tunic or coat sits as before)
+  canSit() { const L = LOOKS[this.def.char]; return L?.race !== 'esmer' && !((L?.outfit === 'dress' || L?.outfit === 'robe') && (L?.hem ?? 1) < 0.3); }
   // two rounds may share a bench (Brix's and Ume's by the lane's planter): one seat to a bench, the second stands by it
   benchTaken(seat) { return this.W.res.some((r) => r !== this && !r.away && r.sit?.seat && Math.hypot(r.sit.seat.x - seat.x, r.sit.seat.z - seat.z) < 0.3 && r.st !== 'sitout'); }
   sitDown(s, instant) {
