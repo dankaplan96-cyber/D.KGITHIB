@@ -4,6 +4,8 @@ Every desktop build is tagged `desktop-build-N` on the exact commit it was built
 
 From 27.10 a build is made only for a version meant for the user: a commit whose message contains `[build]`, or a run by hand.
 
+From 2.11 (the user): **no desktop build for small changes.** Day to day the user plays the published Artifact page (claude.ai/artifact/EjPMQXPwbmre2kDevMC4tA), updated with the changed files after each tested merge. A `[build]` commit only for a very large change, or when the user asks.
+
 | Build | Commit | Date | What changed |
 |---|---|---|---|
 | 213 | cee615f | 27.10 12:44 | Desktop builds: run artifacts kept 5 days instead of 30 (the installers stay on the release; the artifacts only carry them to it) |
