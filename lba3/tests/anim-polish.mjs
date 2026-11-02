@@ -12,7 +12,9 @@
 //  4. melee: the fist / foot reaches out, and the blade crosses in front of him, within 25 ms of the moment combat.js strikes a
 //     body there (35 ms for the kick); the attack begins on the press frame (combat.move set);
 //  5. interruptions: a hit mid-turn, mid-walk and mid-step, the pause, and a dialogue leave no NaN, no stuck plant (the
-//     feet stand planted again within 0.6 s of play), no stuck pose.
+//     feet stand planted again within 0.6 s of play), no stuck pose;
+//  5b. (DISCREET-WALK) Discreet's sneak against LBA2's discreet walk (ANIM 94): its cycle, knee lift, reach and the pelvis's rise and
+//     fall within 15 %; the planted foot stays put straight on (30 / 60 / 120 fps), back-stepping and turning; the stop, hiding, a hit.
 // Prints MEASURE lines with the numbers. GAME_URL (default http://localhost:8123/).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
@@ -290,6 +292,79 @@ for (const fps of [30, 60, 120]) {
   measure('interruptions', r);
   check('interruptions: a hit mid-turn, mid-walk and on the stop leaves the feet planted again within 0.6 s of play', [r.turnHit, r.walkHit, r.stopHit].every((x) => x != null && x <= 0.6) && !r.nan, r);
   check('interruptions: the pause freezes a turning step and it completes after; a dialogue mid-walk ends with the feet planted', r.pauseFrozen && r.pauseSettle != null && r.dialogSettle != null, r);
+}
+
+// ---- 5b. (DISCREET-WALK) Discreet's sneak, after LBA2's discreet walk (ANIM 94, measured on the hero's body: docs/LBA2_MEASUREMENTS.md):
+// a cycle of 2.6 s at Discreet's 0.67 m/s, the knee lifted to ~100°, the foot reaching out with the thigh ~112° forward, the pelvis
+// rising and falling 0.071 H within each step. Each within 15 %. And the feet: the planted one stays put (straight on, at 30 / 60 / 120
+// fps; back-stepping in Classic; turning as he goes), the stop stands him on both feet, a start moves on the frame of the key, holding
+// Space still hides him, a hit mid-step leaves no stuck plant
+{
+  const LBA = { period: 2.6, knee: 99.7, thigh: 112.5, dip: 0.071 };   // (knee: 99.0 / 100.4 at the two lifts; thigh: 111.1 / 113.9 at the reaches)
+  const runs = await ev(() => {
+    const G = A.G, h = G.hero, r = h.rig, j = r.j, out = {};
+    const ex = (s) => Object.assign(s, { ph: ((r.phase / (2 * Math.PI)) % 1 + 1) % 1, kL: j.legL.knee.rotation.x, kR: j.legR.knee.rotation.x, tL: j.legL.hip.rotation.x, tR: j.legR.hip.rotation.x });
+    const go = (fps, keys, secs, after = 0) => {
+      const dt = 1 / fps, S = []; let t = 0;
+      A.reset('discreet'); r.phase = 0; r._startFoot = false; S.push(ex(A.sample(0)));
+      for (let i = 0; i < Math.round(secs / dt); i++) { A.frame(keys, dt); t += dt; S.push(ex(A.sample(t))); }
+      for (let i = 0; i < Math.round(after / dt); i++) { A.frame([], dt); t += dt; S.push(ex(A.sample(t))); }
+      return S;
+    };
+    for (const fps of [30, 60, 120]) out['fwd' + fps] = go(fps, ['ArrowUp'], 6.0, fps === 60 ? 1.2 : 0);
+    out.back = go(60, ['ArrowDown'], 6.0);
+    out.turn = go(60, ['ArrowUp', 'ArrowLeft'], 6.0);
+    // holding Space (Discreet's action) mid-sneak: he hides, as before; let go, he sneaks on
+    A.reset('discreet'); A.play([{ keys: ['ArrowUp'], secs: 1.5 }], 1 / 60);
+    const hide = A.play([{ keys: ['ArrowUp', 'Space'], secs: 0.8 }], 1 / 60).slice(-1)[0];
+    const on = A.play([{ keys: ['ArrowUp'], secs: 0.6 }], 1 / 60).slice(-1)[0];
+    out.hide = { anim: hide.anim, hips: +hide.hips.toFixed(3), moved: hide.speed, then: on.anim, nan: hide.nan || on.nan };
+    // a hit mid-step (a foot up): the plant comes back
+    A.reset('discreet'); A.play([{ keys: ['ArrowUp'], secs: 2.2 }], 1 / 60); h.damage(1, { x: h.pos.x + 1, z: h.pos.z }); A.play([{ secs: 0.05 }], 1 / 60);
+    let hitSettle = null;
+    for (let i = 0; i < 60 && hitSettle == null; i++) { A.frame([], 1 / 60); const F = r._feet; if (F && F.L.on && F.R.on && !F.L.stepping && !F.R.stepping && F.L.w > 0.99 && F.R.w > 0.99) hitSettle = +(i / 60).toFixed(3); }
+    out.hitSettle = hitSettle; out.H = r.hipsRest * r.root.scale.y / 0.46;
+    return out;
+  });
+  const D = 180 / Math.PI, H = runs.H;
+  const cyc = (S, from, to) => {
+    const W = S.filter((s) => s.t >= from && s.t <= to), wraps = [];
+    for (let i = 1; i < W.length; i++) if (W[i].ph < W[i - 1].ph - 0.5) wraps.push(W[i].t);
+    // the pelvis's rise and fall within each step (half a cycle, between its contacts)
+    const halves = []; let cur = null;
+    for (const s of W) { const k = Math.floor(s.ph * 2); if (!cur || cur.k !== k) { if (cur && cur.n > 5) halves.push(cur); cur = { k, lo: 9, hi: -9, n: 0 }; } cur.lo = Math.min(cur.lo, s.hips); cur.hi = Math.max(cur.hi, s.hips); cur.n++; }
+    const steps = halves.slice(1);   // (the first may start part-way)
+    return {
+      period: wraps.length > 1 ? +((wraps[wraps.length - 1] - wraps[0]) / (wraps.length - 1)).toFixed(3) : null,
+      knee: +(Math.max(...W.map((s) => Math.max(s.kL, s.kR))) * D).toFixed(1), thigh: +(Math.max(...W.map((s) => -Math.min(s.tL, s.tR))) * D).toFixed(1),
+      dipH: steps.length ? +(steps.reduce((a, s) => a + s.hi - s.lo, 0) / steps.length / H).toFixed(4) : null,
+      ground: contactSlip(S, from, to), planted: slip(S, from, to), bothUpS: +W.filter((s) => s.L[1] > 0.13 && s.R[1] > 0.13).reduce((a, s, i, arr) => a + (i ? s.t - arr[i - 1].t : 0), 0).toFixed(3),
+      anims: [...new Set(W.map((s) => s.anim))], nan: S.some((s) => s.nan),
+    };
+  };
+  const near = (v, m) => v != null && Math.abs(v - m) <= 0.15 * m;
+  for (const fps of [30, 60, 120]) {
+    const S = runs['fwd' + fps], c = cyc(S, 1.2, 6.0), first = S.find((s) => s.t > 1e-6);
+    c.startMovedCm = +(Math.hypot(first.pos[0] - S[0].pos[0], first.pos[2] - S[0].pos[2]) * 100).toFixed(2);
+    measure(`sneak ${fps} fps`, c);
+    check(`sneak ${fps} fps: LBA2's discreet walk within 15 %: the cycle (${c.period} s against 2.6), the knee's lift (${c.knee}° against ${LBA.knee}), the reach (thigh ${c.thigh}° against ${LBA.thigh}), the pelvis's rise and fall in a step (${c.dipH} H against ${LBA.dip})`, near(c.period, LBA.period) && near(c.knee, LBA.knee) && near(c.thigh, LBA.thigh) && near(c.dipH, LBA.dip) && c.anims.length === 1 && c.anims[0] === 'sneak', c);
+    check(`sneak ${fps} fps: the foot he stands on stays where it was put down (the lower foot on the ground < 0.05 m/s, the planted one < 2 cm in 4.8 s), always one foot on the ground; he moves on the frame of the key`, c.ground.meanSpeed != null && c.ground.meanSpeed < 0.05 && c.planted.cm < 2 && c.bothUpS === 0 && c.startMovedCm > 0.01 && !c.nan, c);
+  }
+  {
+    // the stop (60 fps, let go after 6 s): both feet down and planted within 0.6 s, at most two steps, none after 0.7 s, no slide
+    const S = runs.fwd60, stopAt = 6.0;
+    const done2 = S.find((s) => s.t > stopAt + 0.05 && s.speed < 0.01 && s.pl.every((p) => p.on && !p.st && p.w > 0.99) && lowFoot(s, 'L') && lowFoot(s, 'R'));
+    const r = { settledAfter: done2 ? +(done2.t - stopAt).toFixed(3) : null, steps: steps(S, stopAt, 99), late: steps(S, stopAt + 0.7, 99), slip: slip(S, stopAt, 99), nan: S.some((s) => s.nan) };
+    measure('sneak stop', r);
+    check('sneak: the stop stands him on both feet within 0.6 s, in at most two steps, none after 0.7 s; no slide', r.settledAfter != null && r.settledAfter <= 0.6 && r.steps.length <= 2 && !r.late.length && r.slip.cm < 3 && !r.nan, r);
+  }
+  for (const k of ['back', 'turn']) {
+    const c = cyc(runs[k], 1.2, 6.0);
+    measure(`sneak ${k}`, c);
+    check(`sneak ${k === 'back' ? 'back-stepping (Classic)' : 'turning as he goes (90°/s)'}: the planted foot stays put (the lower foot on the ground < 0.05 m/s, the planted one < 2 cm), always one foot down${k === 'back' ? ', the same cycle' : ''}`, c.ground.meanSpeed != null && c.ground.meanSpeed < 0.05 && c.planted.cm < 2 && c.bothUpS === 0 && (k !== 'back' || near(c.period, LBA.period)) && !c.nan, c);
+  }
+  measure('sneak hide / hit', { hide: runs.hide, hitSettle: runs.hitSettle });
+  check('sneak: holding Space still hides him (the crouch, standing still), and he sneaks on after; a hit mid-step leaves the feet planted within 0.6 s', runs.hide.anim === 'hide' && runs.hide.hips < 0.6 && runs.hide.moved < 0.05 && runs.hide.then === 'sneak' && !runs.hide.nan && runs.hitSettle != null && runs.hitSettle <= 0.6, { hide: runs.hide, hitSettle: runs.hitSettle });
 }
 
 // ---- 6. the cellar stairs in his house (chapter 1-2): a tread is a step for the drawn body, not a jump
