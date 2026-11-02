@@ -1273,21 +1273,25 @@ pictures unless they ask; put them in `docs/future/world/ZEELICH-1/`.
 
 1. **The harbour bar at Otringal** (LBA2 scene 136, the boss's office 137): the stage, the bar and the bouncers' door.
    It is the hub of OP-7. Handles: `bar.npcSpots` (boss, performer, two bouncers, three regulars), `bar.stage`,
-   `bar.office` (door spot), the door into it from Otringal's harbour.
+   `bar.office` (door spot), the door into it from Otringal's harbour; OP-7 also needs `bar.counter` (a search spot
+   behind it) and `bar.winch` (the stage curtain's stuck winch, high on the stage frame: a ball target).
 2. **The Temple of Dark Monk on Celebration** (scene 93): the prophecy murals, a reader's lectern, the door sealed by
    four fragments (open twelve years on). Handles: `temple.murals` (4 spots with look targets), `temple.lectern`,
    `temple.sealDoor` (`setOpen(b, instant)`).
 3. **The Imperial Hotel lobby at Otringal** (scene 81): the members' desk, armchairs, two coin machines (life, magic).
-   Handles: `hotel.desk`, `hotel.machines` (2 spots), `hotel.npcSpots` (clerk, explorer, manicurist).
+   Handles: `hotel.desk`, `hotel.machines` (2 spots), `hotel.npcSpots` (clerk, explorer, manicurist), `hotel.register`
+   (on the desk: a read spot, for OP-7).
 4. **Celebration's volcano:** the crater, the lava glow, the trail up and the temple's door on its flank, from the
    island's layout JSON. Handles: `celebration.templeDoor`, `celebration.crater` (look spot), `celebration.trail` (3
    waypoints).
 5. **The Wannies' island under the gas** (the `platform` region, re-dressed): the mine mouth, the company office front,
    the village of low houses, a chapel front, a darker, thinner gas sky. It is reached by the lift from ASCENCE (the
    `liftdock` region): the lift's cage must ride down to it. Handles: `wannie.liftBottom` (spawn), `wannie.npcSpots`
-   (6), `wannie.mine`, `wannie.chapelDoor`; `liftdock.lift.setLevel(t)` and `liftdock.liftTop`.
+   (6), `wannie.mine`, `wannie.chapelDoor`; `liftdock.lift.setLevel(t)` and `liftdock.liftTop`; for OP-7 also `liftdock.lever` (the cage's
+   lever, where a plate can hang) and `wannie.crates` (the ore crates by the lift's foot).
 6. **A sky and grade per island** (`R.grade`, `R.gradeTint`, the sky's colours): Otringal overcast pale grey; Celebration
    warm with a lava glow; the Wannies' island dim under the gas; the others as the research describes.
 
-The cloud does the island life, names, travel characters, music and OP-7 meanwhile. Write **Built** notes here per item,
+The cloud does the island life, names, travel characters, music and OP-7 meanwhile (OP-7 "The Lift Below" is written
+in `docs/future/EXPANSION_PLAN.md` §4.5: it is why these rooms exist). Write **Built** notes here per item,
 as before.
