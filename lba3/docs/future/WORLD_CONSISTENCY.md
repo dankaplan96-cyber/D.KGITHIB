@@ -64,3 +64,16 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
 
 Each order keeps the standing rules: numbers and descriptions only from the originals, no spoilers to the user,
 honest measurements (SwiftShader here: no fps claims).
+
+## The cloud's queue from the user's asks (2.11.2026, via the laptop's USER-ASKS and the chat)
+1. **Shops you can buy in:** Mr Bazoo (goods), the pharmacy (potions: life), the ticket office (the ferry ticket), as
+   LBA2's; through the existing shop (`#shop`, `main.js openShop`), modest prices.
+2. **The Esmer trading house (WA-15b):** a keeper, goods to buy or trade, a reason to go in.
+3. **The round tower's raised door** (the lighthouse?): the sill against the ground, and a reason to go in or a word at
+   the door. (The connections audit, `CONNECTIONS_AUDIT.md`, covers it.)
+4. **EQUIP-2, LBA3's own weapons and gadgets** (the user: "weapons and accessories that make the third game its own, not
+   only copies of the first and second"). Weapons do NOT need to come earlier (the user: only that there are some
+   through the game). Design and build 3–5 signature items rooted in this game's world (the heat and the crystals, the
+   shell, Baldino's twelve-years-on workshop, Arthur's radio, the Esmers' craft; later the expansion's world), each with
+   a job in puzzles and fights that the old arsenal does not do, taught safely, spread over the chapters, saved with the
+   hero (`hero.arms`), no paid assets, the performance rules. The old favourites stay. Agent: `lba3-equipment-designer`.
