@@ -931,3 +931,20 @@ standing order, the band rule) are listed in each card and must survive text cle
 - **TRAVEL-1:** every journey between planets is by spaceship, with a flight seen from outside and a cabin inside;
   every vehicle shows its journey and works. Cloud: travel and cinematics; laptop: the cabin room and the ship model.
 - **LBA-CITADEL-8 and -9** (the baggage claim, Tralu's cave) set aside: below the 80 % likeness target.
+
+## The user's decisions (2.11.2026, later): OREN-GUARDIAN
+The user sent a task brief (in English, sections 1–12; the rest to follow) that turns **Oren into a guardian of a lost
+world** and a second antagonist beside Vesk: he preserved part of his planet's people in protected sleep after a
+catastrophe and now refuses to wake them; Vesk's drilling and network touch old inter-world infrastructure that gives
+him a limited reach into Twinsun and Zeelich; Sendell knew him (lost contact, hopes he can help, then they disagree:
+protection vs choice); a central side story of a sister who wants her sleeping brother woken. Answers to the cloud's
+questions:
+- **The name:** the guardian is **Oren**. The human former designer of Ballastra's water system in this plan gets a
+  new name; his role in the water story (N3, N5, N6, the allocation log, the letter) stays.
+- **The planet:** **combined.** Ballastra is Oren's world: the flood was its catastrophe; part of its people sleep in
+  shelters by the terraces; the unequal water allocation stays as the human layer of the same world (who was given
+  protection and who was not). Same places and people, with the sleepers' depth added. No second new planet.
+- **Where it is built:** on `expansion/ballastra` (or behind a disabled flag); the base game stays playable and its
+  finale is not replaced while the new content is incomplete.
+- **Waiting for:** the rest of the brief (after section 12, "Show…"). Mapping and planning may start; building waits
+  for the full brief.
