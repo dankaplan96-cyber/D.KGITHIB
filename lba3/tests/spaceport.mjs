@@ -120,6 +120,13 @@ check('with the films on: from the counter he goes out through the gate, the shi
 const g2 = await ev(() => { const G = game; P.enter('zterminal'); const H = TT.zterminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const l = G.regions.built('zeelich').spaceport.landing, h = G.hero; return { r: r.r, room: G.room?.id, d: +Math.hypot(h.pos.x - l.x, h.pos.z - l.z).toFixed(2) }; });
 check('Zeelich\'s terminal gate (INPUT) leads out onto the deck at the pad\'s landing spot', g2.room === 'zeelich' && g2.d < 1.5, g2);
 
+// the films on, the other way: from Zeelich's counter out through its gate, the film from Zeelich's pad, home to Citadel
+const film2 = await ev(() => { const G = game; P.enter('zterminal'); G.travel.films.on = true; return G.travel.films.log.length; });
+const c6 = await counter('zterminal', 'Twinsun');
+const fl2 = await ev((n0) => { const G = game; for (let i = 0; i < 400 && (G.state !== 'play' || G.trans); i++) G.step(0.1); const F = G.travel.films; F.on = false; return { log: F.log.slice(n0).map((e) => `${e.part} ${e.mode} ${e.from}>${e.to}${e.skipped ? ' skipped' : ''}`), room: G.room?.id ?? 'citadel', state: G.state }; }, film2);
+const n6 = await near('citadel');
+check('with the films on, from Zeelich\'s counter: the departure film from Zeelich\'s pad and the arrival at Citadel\'s; he stands at the landing spot', fl2.log.includes('depart ship zeelich_port>citadel_port') && fl2.log.includes('arrive ship zeelich_port>citadel_port') && fl2.room === 'citadel' && n6.d < 1.0 && n6.state === 'play', { c6, fl2, n6 });
+
 // out by the doors (INPUT: walked through), and he stays out (standing a while by the door does not take him back in)
 const outDoor = (room) => ev((room) => { const G = game; if (G.room?.id !== room) P.enter(room); const H = TT[room]; const r = P.through(H.door.x, H.door.z); P.settle();
   const at = G.room?.id ?? 'citadel'; for (let i = 0; i < 30; i++) G.step(0.1); const d = G.story.doors().find((x) => x.room === room), h = G.hero;
