@@ -140,7 +140,7 @@ export function citadelRoster(game) {
       look('gar_rest', -36.2, 8.4, BED.x, BED.z, [6, 9], { act: 'rest', carry: null }),
     ]) },
     // the children: Pico up and down the lane, Dot round the square; TOWN-LIFE-3: tag together on the lawn west of the square,
-    // Pico runs at the stall's gulls, Dot plays hopscotch on the plaza and swings her legs on its bench
+    // Pico runs at the stall's gulls, Dot plays hopscotch on the plaza and swings her legs on the bench by the spaceport bridge
     { id: 'pico', char: 'desertkid', tint: '#ffe8d8', speed: 1.6, start: 0, color: '#ffd080', stops: ok([
       D('pico_a', -38.8, -9.4, { a: 0, dur: [2, 4] }),
       D('pico_b', -44.0, 12.8, { a: 3, dur: [2, 4] }),
@@ -160,7 +160,7 @@ export function citadelRoster(game) {
       D('dot_d', -41.0, 4.6, { a: 3, dur: [2, 4] }),
       look('dot_tag', TAG.x + 1.2, TAG.z, TAG.x, TAG.z, [24, 34], { pair: 'tag', mate: 'pico', play: 'tag', field: TAG }),
       D('dot_hop', hopStart.x, hopStart.z, { a: HOP.a, dur: [16, 24], play: 'hop' }),
-      bench('dot_bench', -48.3, 34.4, [14, 20], { play: 'swing' }),
+      bench('dot_bench', -34.6, 43.6, [14, 20], { play: 'swing' }),   // (BENCHES-1: the bench by the spaceport bridge's foot, looking at the shuttles: Ume's, who stands, so it is free; on the plaza's she found Tilde seated as often as not)
     ]) },
     // the harbour walker: the plaza's sign, the benches along the harbour path, the quay's gate
     { id: 'marda', char: 'yorna', tint: '#ffffff', speed: 1.1, start: 1, color: '#e08a8a', stops: ok([
