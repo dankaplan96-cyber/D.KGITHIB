@@ -39,6 +39,9 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
 | 12 The Core | — | — | — | — | — |
 | Epilogue | ✅ the town is back | ❌ the family stand in free roam | ⚠ rooms follow INTERIOR-LIFE's states | — | — |
 
+## Progress
+- **WC-2 done (2.11):** 31 story characters in chapters 3–10 walk small rounds (`src/game/castrounds.js`, `roomlife.js StoryRounds`, `tests/cast-rounds.mjs`); the epilogue family uses the household rounds. Kept still on purpose: the stealth, disguise, dial-bank, puzzle and fight places, guards (the list is in the merge commit). Doran and Zeelich's street folk go to WC-3.
+
 ## Work orders (in this order; at most two agents at a time)
 1. **WC-1 Journeys.** Chapter 3's end: `crossByShip` from Zeelich Spaceport with Doran aboard, then the ferry's film to
    Kesh's pier. Chapters 5 and 7: Hesk's glider through `playJourney(mode 'glider')` between the travel points. Chapter

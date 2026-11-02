@@ -38,11 +38,19 @@
 //    the house and play is on; a talk, a conversation they are in, a cut-scene or a new place from the chapter wins at
 //    once (refreshCast puts them where the chapter says; a placement that is still the mark leaves them on their way:
 //    keeps()). Nothing of a round is saved: after a load they start on their mark.
+// 4. WC-2, the cast's rounds (castrounds.js): the same machinery for the story's people of chapters 3–10, outdoors (the
+//    street's planner, walkers.js) and in their rooms (the workshop, the observatory, the council's dais). A cast round
+//    belongs to chapters and states (`ch`, `when`) and to an area; its mark is the person's usual spot (`mark`), its
+//    stops are round it. It runs only with the hero in the area and within CAST_NEAR of the mark, in play, with no foe
+//    near; talk, scenes and fights hold the person where they stand; the hero gone or the state moved on puts them back
+//    on the mark (release), so a scene that needs them finds them there. The household rounds above are unchanged.
 //
 // Cost: a room's people are simulated only while the hero is in that room (elsewhere they are stepped twice a second
 // with no physics and no animation: walkers.js abstract tier); a port's only near the hero and in view; the household
-// rounds only while the hero is in the house. tests/interior-life.mjs measures it.
+// rounds only while the hero is in the house (a cast round: in its area and near). tests/interior-life.mjs and
+// tests/cast-rounds.mjs measure it.
 import { Walkers } from './walkers.js';
+import { CAST_ROUNDS, CAST_FLOORS } from './castrounds.js';
 import { dampAngle, clamp, rng } from '../engine/math.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
@@ -332,19 +340,61 @@ export const HOUSE_ROUNDS = [
 export const ROUND_FLOORS = { house: { x0: -13.5, x1: 4.5, z0: -3.5, z1: 11.5, y: 0 }, office: { x0: -4, x1: 4, z0: -3.5, z1: 3.5, y: 0 } };
 
 const FREE = 0.3;   // m: a placement within this of the mark is the mark
+// WC-2 (cast rounds, castrounds.js)
+const SAME = 0.05;       // m: the chapter's place is still the mark the round started from
+const CAST_NEAR = 40;    // m: outdoors a round runs only with the hero this near its mark (farther: back on the mark, unseen)
+const FIGHT_R = 25;      // m: no round with a foe this near that is after someone (not on its calm patrol)
+const PATROL_R = 12;     // m: nor with any foe this near (a watch, a patrol: the sneaks)
+const CALM = new Set(['patrol', 'idle', 'guard', 'home', 'return', 'dead', 'dormant']);   // (enemies.js states with no one chased)
+const DOOR_CLEAR = 1.0;  // m: a stop keeps this clear of a door's trigger (its reach and this)
+const samePlace = (p, m) => !!p && !!m && Math.hypot(p.x - m.x, p.z - m.z) < SAME;
+// a cast round's stops in the world: the mark (the chapter's place: its pose, its angle) and the others round it (dx, dz
+// from the mark; facing `a`, or the point `face` [dx, dz] from the mark, or the mark's way). A stop that is no way for
+// the planner moves to the nearest that is (within 0.75 m) or is left out; one in a door's reach is left out.
+export function castStops(g, D, m, nav) {
+  const doors = [...(g.story?.doors?.() || []), ...(g.room?.exits || [])].filter((d) => Math.abs(d.x - m.x) < 15 && Math.abs(d.z - m.z) < 15);
+  const out = [];
+  for (const s of D.stops) {
+    if (s.mark) { out.push({ ...s, x: m.x, z: m.z, a: m.a ?? 0, act: m.anim || s.act || 'stand' }); continue; }
+    let x = m.x + s.dx, z = m.z + s.dz;
+    if (!nav.walkable(x, z)) { const c = nav.nearest(x, z, 0.75); if (!c) continue; x = c.x; z = c.z; }
+    if (doors.some((d) => Math.hypot(d.x - x, d.z - z) < (d.r || 0.9) + DOOR_CLEAR)) continue;
+    const a = s.a ?? (s.face ? Math.atan2(m.x + s.face[0] - x, m.z + s.face[1] - z) : (m.a ?? 0));
+    out.push({ ...s, x, z, a });
+  }
+  return out;
+}
 export class StoryRounds {
   constructor(game) {
     this.game = game;
     this.st = new Map();   // id → state
     this.stats = { frames: 0, ms: 0 };
+    // WC-2: every round of a person: the cast rounds of the later chapters first (castrounds.js), then the household one
+    this.byId = new Map();
+    for (const D of [...CAST_ROUNDS, ...HOUSE_ROUNDS]) { if (!this.byId.has(D.id)) this.byId.set(D.id, []); this.byId.get(D.id).push(D); }
   }
   def(id) { return HOUSE_ROUNDS.find((r) => r.id === id) || null; }
+  // the round this person walks now: a cast round of the chapter in progress, in the area or room the hero is in, whose
+  // state holds (castrounds.js `ch`, `room`, `when`), else their household round, else none
+  defFor(n) {
+    const L = this.byId.get(n.def.id);
+    if (!L) return null;
+    const g = this.game, key = g.story?.cur?.key, room = g.room?.id ?? 'citadel';
+    for (const D of L) {
+      if (!D.ch) return D;
+      if (D.room === room && D.ch.includes(key) && (!D.when || D.when(g.flags, g))) return D;
+    }
+    return null;
+  }
   // the round's mark (world) for the room as built, or null
   mark(D, R) { const s = R?.npcSpots?.[D.id]; return s ? { x: s.x, z: s.z, a: s.a } : null; }
   // refreshCast: does a placement leave this person on their round (the mark, in the mark's own pose)? Then they are not
-  // put back on it (they carry on where they are); otherwise the placement wins.
+  // put back on it (they carry on where they are); otherwise the placement wins. (A cast round's mark is the place the
+  // chapter gave when the round started: the same place again leaves them on their way.)
   keeps(n, p) {
-    const D = this.def(n.def.id), S = this.st.get(n.def.id);
+    const S = this.st.get(n.def.id);
+    if (S?.def?.ch) return !!(S.active && p && n.present && samePlace(p, S.mark));
+    const D = this.def(n.def.id);
     if (!D || !S?.active || !p || !n.present) return false;
     return this.onMark(D, p);
   }
@@ -359,8 +409,11 @@ export class StoryRounds {
   }
   update(dt) {
     const g = this.game;
-    for (const D of HOUSE_ROUNDS) {
-      const n = g.npcs?.find((x) => x.def.id === D.id);
+    // (each person's update is wrapped once; the cast is looked over again twice a second, for anyone added since)
+    if ((this.scanT = (this.scanT ?? 0) - dt) > 0 && g.npcs?.length === this.scanN) return;
+    this.scanT = 0.5; this.scanN = g.npcs?.length;
+    for (const id of this.byId.keys()) {
+      const n = g.npcs?.find((x) => x.def.id === id);
       if (!n) continue;
       if (n._round !== this) { const base = n.update; n._round = this; n.update = (d) => { if (!this.drive(n, d)) base.call(n, d); }; }
     }
@@ -374,10 +427,45 @@ export class StoryRounds {
     if (g.room?.id !== D.room || g.hero?.body === D.id) return false;
     return this.onMark(D, p);
   }
+  // WC-2: why a cast round may not run this frame: null (it may), 'pause' (they stand where they are: a talk, a
+  // conversation, a scene, a fight near) or 'away' (the hero is not about: they go back to their mark, unseen)
+  castBlock(n, D) {
+    const g = this.game, p = n.placed, h = g.hero;
+    if (!n.present || !p) return 'away';
+    if (D.room === 'citadel' ? !!g.room : g.room?.id !== D.room) return 'away';
+    // (the chapter's place for them is their usual mark — castrounds.js `mark`, read from the chapter's own spots — not a
+    //  scene's: a round never starts round a place a scene gave)
+    const mk = D.mark(g);
+    if (!mk || Math.hypot(p.x - mk.x, p.z - mk.z) > FREE) return 'away';
+    if (!D.indoor && Math.hypot(h.pos.x - p.x, h.pos.z - p.z) > (D.near || CAST_NEAR)) return 'away';
+    if (n.controlled || g.state !== 'play' || g.cutscene || g.trans || g.reveal?.on || h.body === D.id || n.talking || n.listenTo) return 'pause';
+    // (no round in a fight or near a watch: a foe up and about within FIGHT_R of them that is after someone, or one on
+    //  its patrol within PATROL_R)
+    for (const e of g.enemies || []) {
+      if (!e.present || e.alive === false) continue;
+      const d = Math.hypot(e.pos.x - n.pos.x, e.pos.z - n.pos.z);
+      if (d < PATROL_R || (d < FIGHT_R && !CALM.has(e.state))) { this.blockedBy = e.def?.id || e.id || '?'; return 'pause'; }
+    }
+    return null;
+  }
+  // a cast round ends (the hero has gone, the chapter's state moved on): back on the mark the chapter gave, if that is
+  // still their place (a new place is given by refreshCast itself)
+  release(n, S) {
+    S.active = false;
+    // (a person the chapter drives itself — a farmer marching off — is the chapter's: left where it takes them from)
+    if (!S.def?.ch || !S.mark || n.controlled || !n.placed || !samePlace(n.placed, S.mark)) return;
+    if (Math.hypot(n.pos.x - S.mark.x, n.pos.z - S.mark.z) > SAME || n.forceAnim !== (n.placed.anim ?? null)) {
+      n.placeAt(n.placed); n.gait = 0;
+      S.log.push(`${this.game.time.toFixed(1)} back on the mark`); if (S.log.length > 30) S.log.shift();
+    }
+  }
   // one frame of the person: true when the round moved and drew them (else their own NPC update runs)
   drive(n, dt) {
-    const D = this.def(n.def.id), g = this.game;
-    let S = this.st.get(D.id);
+    const g = this.game, D = this.defFor(n);
+    let S = this.st.get(n.def.id);
+    if (S && S.def && S.def !== D) { this.release(n, S); this.st.delete(n.def.id); S = null; }   // (another round, or none, from now)
+    if (!D) return false;
+    if (D.ch) return this.driveCast(n, dt, D, S);
     if (!this.allowed(n, D)) { if (S) S.active = false; return false; }
     if (n.talking || n.listenTo) return false;   // (a talk or a conversation: he turns to them and stops: NPC.update)
     const t0 = this.measure ? performance.now() : 0;
@@ -387,7 +475,7 @@ export class StoryRounds {
       const stops = this.stops(D, R);
       const W = roomWalkers(g), F = ROUND_FLOORS[D.room]; register(g, D.room, [{ x0: F.x0 + R.center.x, x1: F.x1 + R.center.x, z0: F.z0 + R.center.z, z1: F.z1 + R.center.z, y: F.y }], R.exits);
       let ri = 0, bd = 1e9; stops.forEach((s, i) => { const d = Math.hypot(s.x - n.pos.x, s.z - n.pos.z); if (d < bd) { bd = d; ri = i; } });
-      S = { active: true, rnd: S?.rnd || rng([...D.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)), stops, ri, st: bd < 0.8 ? 'dwell' : 'walk', tmr: 0, path: null, wi: 0, vel: 0, gait: 0, gestT: 2, stuckT: 0, replans: 0, visits: (S?.visits || 0), log: S?.log || [], nav: W.nav };
+      S = { def: D, active: true, rnd: S?.rnd || rng([...D.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)), stops, ri, st: bd < 0.8 ? 'dwell' : 'walk', tmr: 0, path: null, wi: 0, vel: 0, gait: 0, gestT: 2, stuckT: 0, replans: 0, visits: (S?.visits || 0), log: S?.log || [], nav: W.nav };
       if (S.st === 'dwell') this.arrive(n, S, true); else this.plan(n, S);
       this.st.set(D.id, S);
     }
@@ -397,6 +485,53 @@ export class StoryRounds {
     n.sync();
     if (this.measure) { this.stats.ms += performance.now() - t0; this.stats.frames++; }
     return true;
+  }
+  // WC-2: a cast round (castrounds.js). Its mark is the place the chapter gives them now (n.placed); its stops are round
+  // that mark, on the street's planner outdoors or the room's indoors; a stop that is no way for the planner, or too near
+  // a door, is left out (castStops). Talk, scenes and fights hold them where they are; the hero gone (out of the area,
+  // or CAST_NEAR off), or the chapter's state moved on, puts them back on the mark.
+  driveCast(n, dt, D, S) {
+    const g = this.game, why = this.castBlock(n, D);
+    if (S && S.mark && (!n.placed || !samePlace(n.placed, S.mark))) { S.active = false; S.none = false; S.mark = null; }   // (placed elsewhere by refreshCast)
+    if (why === 'away') { if (S) this.release(n, S); return false; }
+    if (why) { if (S) S.active = false; return false; }
+    if (!S || !S.active) {
+      const m = n.placed;
+      if (S?.none && S.mark && samePlace(m, S.mark)) return false;   // (no round fits round this mark: they stand)
+      const t0 = this.measure ? performance.now() : 0;
+      const nav = this.castNav(D), stops = castStops(g, D, m, nav);
+      const rnd = S?.rnd || rng([...D.id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)), log = S?.log || [];
+      if (stops.length < 2) {
+        log.push(`${g.time.toFixed(1)} no round here (${stops.length} stop)`);
+        this.st.set(D.id, { def: D, active: false, none: true, mark: { x: m.x, z: m.z }, rnd, visits: S?.visits || 0, log });
+        return false;
+      }
+      let ri = 0, bd = 1e9; stops.forEach((s, i) => { const d = Math.hypot(s.x - n.pos.x, s.z - n.pos.z); if (d < bd) { bd = d; ri = i; } });
+      S = { def: D, mark: { x: m.x, z: m.z }, active: true, rnd, stops, ri, st: bd < 0.8 ? 'dwell' : 'walk', tmr: 0, path: null, wi: 0, vel: 0, gait: 0, gestT: 2, stuckT: 0, replans: 0, visits: S?.visits || 0, log, nav };
+      if (S.st === 'dwell') this.arrive(n, S, true); else this.plan(n, S);
+      this.st.set(D.id, S);
+      if (this.measure) this.stats.ms += performance.now() - t0;
+    }
+    const t0 = this.measure ? performance.now() : 0;
+    if (S.st === 'dwell') this.dwell(n, S, dt);
+    else this.walk(n, S, dt, D);
+    n.rig.update(dt, S.st === 'walk' && S.gait > 0.12 ? S.gait : 0);
+    n.sync();
+    if (this.measure) { this.stats.ms += performance.now() - t0; this.stats.frames++; this.stats.cast = (this.stats.cast || 0) + 1; }
+    return true;
+  }
+  // the planner a cast round walks with: a room's (the interiors' manager, the floors castrounds.js gives the room) or the
+  // street's (outdoors: walkers.js, with Zeelich's floor level as its residents have it)
+  castNav(D) {
+    const g = this.game;
+    if (D.indoor) {
+      const R = g.regions.built(D.room), F = CAST_FLOORS[D.room] || [];
+      register(g, D.room, F.map((f) => ({ x0: f.x0 + R.center.x, x1: f.x1 + R.center.x, z0: f.z0 + R.center.z, z1: f.z1 + R.center.z, y: f.y })), R.exits);
+      return roomWalkers(g).nav;
+    }
+    const W = (g.walkers ||= new Walkers(g)), nav = W.nav;
+    if (D.room === 'zeelich') { const ox = g.regions.built('zeelich')?.group?.position.x ?? 2400; nav.addLevel(ox - 62, ox + 66, 6.0); }
+    return nav;
   }
   arrive(n, S, first = false) {
     const s = S.stops[S.ri], d = s.dur;
