@@ -1456,3 +1456,19 @@ make it less tiring". `requests/VOICE-1.diff` (`voice.js`; applies on origin):
   lazyregions PASS. `tests/travel.mjs` and `doorcull.mjs` crash the headless page on this laptop with or without the
   terminal (environment, not this diff); prologue's well-mites check fails as on origin.
 - Part 2 (Zeelich's terminal) next, after TRAVEL-1's cabin.
+
+### TRAVEL-1 · Built (the laptop's cabin room) · 3.11.2026
+`requests/TRAVEL-1-CABIN.diff` against origin (replaces the body of `src/game/shipcabin.js`, keeps its handle exactly:
+`group, size, seats, windows, stand, passengers, hero, shots, update, dispose`; `travelfilm.js` unchanged). After LBA2's
+Esmer spacecraft (scene 41), about 80 % alike:
+- a square cabin 6.2 × 6.2 m under a low cream shell with a ring of light at its crown; oval windows, two in each side
+  wall and two in the nose (one view mesh as before, the stars drifting, the planet's limb low);
+- a deep red U of padded seats at the back facing the nose (7 seats: 3 across, 2 down each side); the two pilots' pods
+  in the nose corners (blue consoles under glass domes, a red light each); the engine's glass column in the middle
+  behind a teal railing, its core pulsing (`update`); the hatch with a yellow-and-black sill in the left wall.
+- Passengers: the dozing traveller at the back's middle (seat 1), the woman on the right side's front seat looking out
+  of window 3, the Mosquibee steward between the pods; Twinsen at the front-left window (window 1). Two shots: from the
+  back right past the engine to Twinsen, and along the left wall.
+- Lit by its own materials (no light added), no shadows; geometries and the two engine meshes disposed in `dispose()`.
+- Checked: rendered from both shots in the game's renderer (the laptop); `tests/travel.mjs` crashes the headless page
+  on this laptop with or without it (environment), so the films' timing with the new room is untested here.
