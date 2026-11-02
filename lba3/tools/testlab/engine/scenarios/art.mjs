@@ -493,3 +493,12 @@ export const artOtrHotel = placeWalk({ id: 'art-otrhotel', title: 'The Imperial 
   { name: 'out', pts: [[-3.0, 3.2], [-7.0, 5.2], [-10.6, 5.2]] },
 ] });
 ART.push(artOtrHotel);
+// the Temple of the Dark Monk under Celebration's summit (ZEELICH-1 item 2, LBA2 scene 93): to the first mural, the
+// lectern, up the stair to the open sealed door, and back out to the plaza
+export const artCelTemple = placeWalk({ id: 'art-celtemple', title: "The Dark Monk's temple: a mural, the lectern, the sealed door, out", suite: 'artceltemple', room: 'celtemple', direct: true, backTo: 'isle_celebration', legs: [
+  { name: 'the first mural', pts: [[-6.0, 4.0], [-5.6, 1.0], [-5.0, -3.6], [-3.6, -5.0]] },
+  { name: 'the lectern', pts: [[-0.2, -5.0], [1.5, -4.0]] },
+  { name: 'the sealed door', pts: [[-1.0, -4.6], [-6.5, -4.6], [-8.3, -4.6]], minY: 0.35 },
+  { name: 'out', pts: [[-6.5, -4.6], [-5.6, 1.0], [-7.5, 4.4], [-8.7, 4.4]] },
+] });
+ART.push(artCelTemple);
