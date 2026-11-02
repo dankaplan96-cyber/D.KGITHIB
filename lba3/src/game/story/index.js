@@ -64,6 +64,7 @@ export class ChapterShell extends ChapterBase {
   get passThrough() { return true; }
   update() { if (this.isCur() && this.game.state === 'play') this.story.afterLoad(); }
 }
+// the order saves before format 3 used (flags.chapter was a position in this list)
 export const OLD_ORDER = ['well', 'project', 'zeelich', 'shell', 'home'];
 
 export class Story {
