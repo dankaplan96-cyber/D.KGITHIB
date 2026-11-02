@@ -1344,3 +1344,96 @@ Each: its own file under `src/game/`, a region in `regions.js` like the LBA-CITA
 existing door transitions, ≥ 80 % likeness to scene 78/82's layout and furniture (numbers and descriptions only), a
 diff and pictures in `docs/future/world/SPACEPORT-1/` (Zeelich's: no pictures to the user — past chapter 2). The cloud
 wires the travel menu, the people and the lines after you push.
+
+## BIGGER-1 · Every LBA2 room 1.5 times bigger, the camera close and following · The user asked for it (2.11.2026)
+
+The user (2.11, in Hebrew): "make them bigger, it's really small" (answered "everything": the School and the nine
+Citadel rooms). Twinsen is 2.065 m in our scale (H, `actors.js`) and the original's cell 0.867 m; the first cuts used
+about 0.42–0.48 m a cell, half the original's proportion.
+
+- **What changed** (`requests/BIGGER-1.diff` against origin 8c6c213; `git apply --check` passes on a clean checkout):
+  `tavern.js`, `tavcellar.js`, `bazoo.js`, `ticket.js`, `pharmacy.js`, `nbrhouse.js`, `nellhouse.js`, `baggage.js`
+  (1.5 × wide, 1.25 × long: it was long already), `tralucave.js`.
+  - Floor 1.5 times the first cut, rooms a little higher (the tavern's gallery 3.0 m, its hall 7 m).
+  - Furniture keeps its size; longer walls get a few more shelves, tables and stools.
+  - The camera: `R.view` 10–12.5 and `R.follow` 0.55–0.7, as in Twinsen's house (10.8 / 0.8), not the whole room at
+    once.
+  - Every room's door, exit, entries, `npcSpots` (luc, bazoo, clerk, pharmacist, neighbour, nell, clerk) and the
+    cellar's link to the tavern move with it.
+- **The stair seam, closed for good:** every step collider overlaps its neighbours and the floor at its top by 12 cm
+  (`run / 2 + 0.12`). With +0.08 the top step left a 2 cm seam against the landing (each brick shrinks 5 cm under
+  `groundAt`): Twinsen dropped onto the room's floor and walked under the stair. Measured in the School: 10 of 15 climbs
+  fell through at +0.08; 0 of 72 now (6 stairs × 4 frame rates × 3 lanes, all rooms). A first fix in `physics.js`
+  (looking 6 cm further for a floor over a drop) broke `tests/deaths.mjs` (a guard falling down a stair counted
+  "in the ground"): withdrawn; the engine is unchanged. This is very likely the tavern's 1-in-4 walk-through.
+- **Checked on the laptop** (results below under "Verification 2.11").
+
+## LBA-DESERT-1 · The School of Magic's great hall after LBA2's scene 27 · PURPOSE-CHECK: yes (the cloud, 2.11)
+
+`requests/LBA-DESERT-1.diff` (`wizards.js` `buildSchoolRoom` only; applies on origin). About 80 % alike, 1.5 × the
+first cut (0.63 m a cell, 0.4 m a layer):
+- the classroom 3.2 m up in the back-left corner (the teacher's dais 4.0 m with a red-clothed table, two benches, a
+  star on the floor; the blackboard; two rows of three benches), an arch between two columns and two round star
+  windows in the left wall;
+- a stair down to a walkway 2.0 m up along a ridge of rock, an iron fence on its open side, a stair down into the hall
+  between two gargoyle posts, globe lamps at its front end;
+- the dining hall: eight long tables with bowls, bottles and candles; a dais 1.2 m up at the back with the star chest
+  and candle stands, a stepped pyramid up to it; seven tall teal windows along the back wall; the door in front.
+- Kept: `npcSpots.magus` (on the teacher's dais), `npcSpots.keraooc` (by her cot and cabinet near the door),
+  `sm_remedies`, the `school-out` exit; `tests/wizards.mjs` passes. Spoilers: no pictures to the user (Desert Island).
+- Test Lab: `node engine/cli.mjs artschool` (door → walkway → classroom → dais → out).
+
+## ANIM-AGGR-1 · Aggressive mode moves as in LBA2 · The user asked for it (2.11.2026)
+
+The user: "Twinsen's movement in aggressive mode is not like LBA2". Measured on LBA2's own anims (ANIM.HQR, numbers
+only): the Aggressive walk (83) is a boxer's strut (fists up before the chest, elbows bent 50–72°, the knee up to 90°,
+the chest twisting up to ±45°, the head turning); the Aggressive idle (82) is a guard that shifts and looks round
+(the head ±50°). Ours played the normal walk at 2.52 m/s and the normal idle unless engaged.
+`requests/ANIM-AGGR-1.diff` (`rig.js`, `actors.js`; applies on origin): in Aggressive, `rig.aggro`; the idle is always
+the fists' guard (the sword's with the sword) and looks round; the walk keeps the fists up and pumping, the knees
+higher, the chest leaning and twisting more (milder than the original). No speed, timing, hit or input changed.
+`tests/anim-combat.mjs`, `anim-polish.mjs`, `combat.mjs` pass.
+
+## VOICE-1 · The gibberish softer, men and women told apart · The user asked for it (2.11.2026)
+
+The user: "the gibberish is too annoying, too robotic, it feels like a clipped voice; tell men and women apart more and
+make it less tiring". `requests/VOICE-1.diff` (`voice.js`; applies on origin):
+- a person's syllables join at least 55 % (`leg`; the triangle-heads and machines stay clipped by design); slightly
+  softer attack and release; ±8 % loudness from syllable to syllable; the level 0.21 → 0.19;
+- VOICE-SEX: grown women in the ambiguous middle move up to ≥ ~215 Hz with a smaller head's formants and a little more
+  breath; grown men above 160 Hz move down; children, Twinsen, Zoé, Spheros, bees and moles are untouched. A speaker
+  with no voice of their own now gets a clearly male or female voice (from the WOMEN/MEN lists, else the name's hash),
+  never the ambiguous middle. Mira 205 → 214 Hz (she sat on Twinsen's 195).
+- The lists are the laptop's reading of names and titles (Mother, Madam, Mrs, Granny, Officer Odile, Pippa "הסוחרת"…):
+  **please check them**, and say whether Sefa the trader, Esren, Ennu, Velo, Kip and the Pharmacist are women or men.
+- `tests/voices.mjs`: everything passes but "every named speaker has an own voice": it fails on origin too (27 speakers
+  without one: luc, mrbazoo, pharmacist, sefa …). Giving each their own voice entry is the cloud's.
+
+## USER-ASKS (2.11.2026) · What the user asked today that is the cloud's
+
+1. **Shops you can buy in.** "The shops: you must be able to buy in them." Pippa's stall sells; Mr Bazoo's shop, the
+   pharmacy and the ticket office (LBA-CITADEL-2/3/4) are rooms with a keeper's spot and nothing to buy. LBA2: Bazoo
+   sells goods, the pharmacy sells potions (life), the ticket office sells the ferry ticket.
+2. **The Esmer trading house (WA-15b) does nothing.** "Does the Zeelich building give anything?" Its purpose section
+   (WA-15b, "The purpose") was for the cloud: a keeper, goods to buy or trade, a reason to go in.
+3. **A round stone tower with a door in the air.** The user's photo: an arched door raised above the ground on a round
+   tower's stone plinth, "in the air, and it's not clear what it gives in the game". Probably the lighthouse (its lamp
+   room is Zoé's in chapter 2): check the door's sill against the ground, and give Twinsen a reason to go in (or say
+   so at the door).
+4. **New accessories and special weapons, the jetpack, exploding penguins, the important items of LBA1 and LBA2.** The
+   arsenal has most (blowgun/Blowtron, laser, glove, lightning, protection, conch, lantern, Nitro-Meca-Penguins at
+   Pippa's, Baldino's hop-pack from chapter 10), but in chapters 1–2 the user sees almost none. Consider something
+   earlier, and new twelve-years-on gadgets.
+5. **Pre-existing test failures seen on origin** (not from these diffs): `tests/prologue.mjs` "the well's mites beaten
+   with the ball"; `tests/solidnpc.mjs` setup "no free approach to tobb|marda|brix|dot"; `tests/chapter4.mjs` and
+   `tests/controls.mjs` print no verdict.
+
+### Verification 2.11 (the laptop, origin 8c6c213 + BIGGER-1 + LBA-DESERT-1 + ANIM-AGGR-1 + VOICE-1)
+- Game tests: wizards, house, deaths, anim-combat, anim-polish, combat, chapter1, prologue PASS. voices: only "every
+  named speaker has an own voice" (fails on origin too). npc-feet: "stops into standing take at most two steps" for Oda
+  (fails identically on a clean origin).
+- Test Lab walks (`artplaces`, `artschool`): tavern, bazoo, ticket, pharmacy, nbrhouse, nellhouse, tavcellar, baggage,
+  tralucave, school: all pass; the stair probe 72/72 climbs (6 stairs, 1/60–1/10 s frames, 3 lanes).
+- The School: its blocks overlap 6 cm (a 10 cm seam between the dais step and the dais dropped Twinsen to the
+  classroom floor, from where the dais was too high).
+- Draw calls (Medium): the tavern 34 main + 1 shadow; the School 25 + 1.
