@@ -1472,3 +1472,21 @@ Esmer spacecraft (scene 41), about 80 % alike:
 - Lit by its own materials (no light added), no shadows; geometries and the two engine meshes disposed in `dispose()`.
 - Checked: rendered from both shots in the game's renderer (the laptop); `tests/travel.mjs` crashes the headless page
   on this laptop with or without it (environment), so the films' timing with the new room is untested here.
+
+### SPACEPORT-1 · Built (part 2: Zeelich's terminal; the diff now holds both) · the laptop, 3.11.2026
+`requests/SPACEPORT-1.diff` (supersedes part 1's; applies on origin 64c14f3): `terminal.js` and `zterminal.js` (new), the
+`regions.js` hooks (`terminal` AT [8600, 0], `zterminal` AT [8800, 0]), the director's `doors()` / `exitTo()`, and one
+hook line in `travel.js` (Zeelich's port block: `buildZTerminalOutside(Z.group, P, Y)`).
+- Outside: the port's deck had no building at all; a small domed Esmer pavilion now stands on the deck's free strip
+  east of the footbridge's end (local x 0.6…4.8, z 34.0…38.6; clear of the pad's ring, the lamp, the board and the
+  rail), its door toward the bridge (`esmerBuilding`, lilac dome).
+- Inside, one Esmer hall 18 × 12 m after LBA2's departure hall (78, left) and arrival hall (82, right): the glass-block
+  band and rounded pilasters; the ticket counter on its platform with two DEPARTURES signs, the departures board
+  (TWINSUN: CITADEL / BY SPACESHIP / ISLANDS: SHUTTLE OUTSIDE), a notice, two rows of four orange seats, fountain plants;
+  the arrivals deck 0.8 m up with its glass-block front and railing, a stair at each end (steps overlap 12 cm), four round
+  lifts to the town behind it, the arrivals board, a red bench; the gate to the pad between two pillars with red lights.
+- Handles: `ZTERMINAL`: `door`, `gate`, `counter`, `board`, `seats` (8), `npcSpots` {clerk, guard, porter},
+  `arrivals` {x,z,a} (inside the gate: where he steps in from the pad), `notice.setVisible(b)`.
+- Checked: Test Lab `artzterminal` (board, counter, up one stair to the arrivals deck, down the other, out) passes; the
+  pavilion's door leads in (region zeelich), the gate out to the pad's landing spot on the deck. Spoilers: no pictures to
+  the user (Zeelich).

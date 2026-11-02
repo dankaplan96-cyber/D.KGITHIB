@@ -464,3 +464,13 @@ export const artTerminal = placeWalk({ id: 'art-terminal', title: 'The spaceport
   { name: 'out', pts: [[-5.0, 2.8], [-6.6, 3.6], [-7.6, 3.6]] },
 ] });
 ART.push(artTerminal);
+// Zeelich Spaceport's terminal (SPACEPORT-1 part 2, after LBA2's scenes 78 and 82): the departures board, the counter,
+// up to the arrivals deck by one stair and down the other, out to the deck
+export const artZTerminal = placeWalk({ id: 'art-zterminal', title: "Zeelich's terminal: the board, the counter, the arrivals deck, out", suite: 'artzterminal', room: 'zterminal', direct: true, backTo: 'zeelich', legs: [
+  { name: 'the board', pts: [[-6.5, 3.0], [-7.0, -0.5]] },
+  { name: 'the ticket counter', pts: [[-6.6, -2.2], [-3.2, -2.4]] },
+  { name: 'the arrivals deck', pts: [[-1.0, 0.2], [1.8, 0.2], [1.8, -3.0], [5.0, -3.0]], minY: 0.75 },
+  { name: 'down the far stair', pts: [[8.1, -3.0], [8.1, 0.4]], maxY: 0.1 },
+  { name: 'out', pts: [[3.0, 1.2], [-6.6, 3.6], [-8.6, 3.6]] },
+] });
+ART.push(artZTerminal);
