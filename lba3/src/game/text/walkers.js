@@ -49,7 +49,7 @@ Object.assign(STR.en, {
   rs_tobb_0: "Crates from the quay to the stall, stall to the quay. They get heavier. I'm sure of it.",
   rs_tobb_1: "Customs kept me half the morning. Ask Officer Odile about her paperwork. Actually, don't.",
   rs_tobb_2: "The Esmers pay on time. Their crates are still heavy.",
-  rs_sefa_0: "Zeelich glaze, Zeelich spice. The ferry brings a hold of it every week now.",
+  rs_sefa_0: "Zeelich glaze, Zeelich spice. The ships bring a hold of it every week now.",
   rs_sefa_1: "Officer Odile stamps each crate twice. Once for Twinsun, once for luck, I think.",
   rs_sefa_2: "Your rain is loud on our dome. We like it. It doesn't rain like this above the clouds.",
   rs_tobb_work: "Mind your toes. It's heavy, and I'm not looking.",

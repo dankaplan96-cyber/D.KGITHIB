@@ -73,31 +73,33 @@ function boulder(k, s = 1) {
 export function buildTraluCaveRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'tralucave', TRALUCAVE_AT.x, TRALUCAVE_AT.z);
   const R = B.room, k = B.k;
-  const W = 18, D = 14, H = 4.6;
-  R.view = 17; R.follow = 0.35; R.music = 'home';
+  // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the terrace a little higher, the camera
+  //  close and following Twinsen; the props keep their size)
+  const F = 1.5, W = 18 * F, D = 14 * F, H = 5.4;
+  R.view = 12.5; R.follow = 0.65; R.music = 'home';
   const rock = rockM(), block = blockM(), cap = capM();
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 4.8;
+  const LX = -W / 2, BZ = -D / 2, DOORZ = 4.8 * F;
   B.shell({ floor: floorM(), slab: rock, body: rock, low: rock, rail: rustM(), cap: rock, H, t: 0.7, dado: 0.6, rimH: 0.6, rimMat: rock, W, D,
     left: [{ at: DOORZ, w: 1.6, h: 2.6, y0: 0, kind: 'door' }] });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.8, to: 'tralucave-out' });
   R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
 
   // the worn paved patches in the rock floor (the original's darker brick)
-  for (const [x, z, w, d] of [[-3.0, 3.6, 4.2, 2.6], [1.0, 1.4, 3.0, 1.6], [-4.6, 5.8, 2.0, 1.2]]) k.add(plane(w, d), paveM(), x, 0.006, z, 0, { rx: -Math.PI / 2 });
+  for (const [x, z, w, d] of [[-3.0, 3.6, 4.2, 2.6], [1.0, 1.4, 3.0, 1.6], [-4.6, 5.8, 2.0, 1.2]]) k.add(plane(w * F, d * F), paveM(), x * F, 0.006, z * F, 0, { rx: -Math.PI / 2 });
   // --- the rock terrace at the back left, 1.6 m up, its face rough rock with boulders at its foot
-  const TY = 1.6, TX1 = -1.0, TZ1 = -1.6;
+  const TY = 1.8, TX1 = -1.0 * F, TZ1 = -1.6 * F;
   k.add(rbox(TX1 - LX, TY, TZ1 - BZ, 0.06), rock, (LX + TX1) / 2, TY / 2, (BZ + TZ1) / 2);
   k.add(plane(TX1 - LX - 0.1, TZ1 - BZ - 0.1), floorM(), (LX + TX1) / 2, TY + 0.004, (BZ + TZ1) / 2, 0, { rx: -Math.PI / 2 });
-  k.add(plane(3.6, 2.4), paveM(), -5.0, TY + 0.008, -3.4, 0, { rx: -Math.PI / 2 });
+  k.add(plane(3.6 * F, 2.4 * F), paveM(), -5.0 * F, TY + 0.008, -3.4 * F, 0, { rx: -Math.PI / 2 });
   B.col((LX + TX1) / 2, (BZ + TZ1) / 2, (TX1 - LX) / 2, (TZ1 - BZ) / 2, TY);
-  for (const [x, z, s] of [[-8.0, -1.3, 0.8], [-6.4, -1.25, 0.6], [-4.6, -1.3, 0.7]]) B.put(x, z, x, (kk) => boulder(kk, s));
+  for (const [x, z, s] of [[-8.0, -1.3, 0.8], [-6.4, -1.25, 0.6], [-4.6, -1.3, 0.7]]) B.put(x * F, TZ1 + 0.3, x, (kk) => boulder(kk, s));
   // the stair down at its right end, from the terrace's edge toward the front
-  const SX0 = -2.5, SX1 = TX1 - 0.05, N = 5, run = 0.52, rise = TY / N;
+  const SX0 = TX1 - 1.45 * F, SX1 = TX1 - 0.05, N = 6, run = 0.6, rise = TY / N;
   for (let i = 0; i < N; i++) {
     const top = rise * (N - i), z = TZ1 + (i + 0.5) * run;
     k.add(rbox(SX1 - SX0, top, run + 0.02, 0.02), block, (SX0 + SX1) / 2, top / 2, z);
     k.add(rbox(SX1 - SX0 + 0.04, 0.05, run + 0.04, 0.01), cap, (SX0 + SX1) / 2, top - 0.025, z);
-    B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.08, top, { stair: true });   // (+0.08: the steps overlap under groundAt's 5 cm shrink)
+    B.col((SX0 + SX1) / 2, z, (SX1 - SX0) / 2, run / 2 + 0.12, top, { stair: true });   // (+0.12: the steps overlap each other and the floor at their top under groundAt's 5 cm shrink)
   }
   // rusted railings: along the terrace's edge (open over the stair), down its right side, and down the stair
   const rail = rustM();
@@ -108,7 +110,7 @@ export function buildTraluCaveRoom(scene, physics) {
   railing(k, [[SX0 - 0.05, TZ1], [SX0 - 0.05, TZ1 + N * run]], { h: 0.95 + TY / 2, mat: rail, step: 0.45 });
   B.col(SX0 - 0.05, TZ1 + N * run / 2, 0.06, N * run / 2, TY + 1.0, { seeThrough: true, noStand: true });
   // the barred gate in the back rock: a stone arch with rusted bars, shut
-  const GX = -5.0, gw = 1.6, gh = 2.4;
+  const GX = -5.0 * F, gw = 1.8, gh = 2.7;
   k.add(rbox(gw + 0.9, gh + 0.5, 0.5, 0.05), block, GX, TY + (gh + 0.5) / 2, BZ + 0.2);
   k.add(rbox(gw, gh - gw / 2, 0.06, 0.01), MAT.flat('#141618', 0.9), GX, TY + (gh - gw / 2) / 2, BZ + 0.46);
   k.add(new THREE.CircleGeometry(gw / 2, 16, 0, Math.PI), MAT.flat('#141618', 0.9), GX, TY + gh - gw / 2, BZ + 0.46);
@@ -116,16 +118,16 @@ export function buildTraluCaveRoom(scene, physics) {
   for (let i = 0; i < 7; i++) { const x = GX - gw / 2 + 0.15 + i * (gw - 0.3) / 6, h = gh - 0.15 - Math.max(0, Math.abs(x - GX) - 0.25) * 0.9; k.add(cyl(0.025, 0.025, h, 6), rail, x, TY + h / 2, BZ + 0.52); }
   for (const y of [0.5, 1.4]) k.add(rbox(gw - 0.1, 0.06, 0.04, 0.01), rail, GX, TY + y, BZ + 0.52);
   // on the terrace: the egg clutches (empty shells), spikes, a globe post at each end of the edge
-  for (const [x, z, n] of [[-7.6, -6.2, 5], [-3.0, -6.0, 3], [-8.2, -3.4, 4]]) B.put(x, z, x, (kk) => eggs(kk, n), { y: TY });
-  for (const [x, z, s] of [[-6.6, -5.2, 0.9], [-2.0, -4.2, 0.8]]) B.put(x, z, 0, (kk) => spikes(kk, 5, s), { y: TY });
+  for (const [x, z, n] of [[-7.6, -6.2, 5], [-3.0, -6.0, 3], [-8.2, -3.4, 4], [-3.6, -4.4, 4]]) B.put(x * F, z * F, x, (kk) => eggs(kk, n), { y: TY });
+  for (const [x, z, s] of [[-6.6, -5.2, 0.9], [-2.0, -4.2, 0.8], [-8.6, -5.6, 1.0]]) B.put(x * F, z * F, 0, (kk) => spikes(kk, 5, s), { y: TY });
   for (const x of [LX + 0.45, SX0 - 0.35]) B.put(x, TZ1 - 0.35, 0, (kk) => globePost(kk), { y: TY });
 
   // --- the old guard house at the back right: squared blocks, a doorway and barred windows in its front
-  const HX0 = 0.2, HZ1 = -0.8, HH = 3.0;
+  const HX0 = 0.2 * F, HZ1 = -0.8 * F, HH = 3.3;
   const wall = { h: HH, t: 0.4, body: block, cap, dado: 0 };
   B.partition(HX0, BZ, HX0, HZ1, wall);
-  B.partition(HX0, HZ1, W / 2, HZ1, { ...wall, doors: [{ at: 1.9, w: 1.3 }] });
-  for (const x of [4.2, 6.0, 7.8]) {   // (the barred windows, both faces)
+  B.partition(HX0, HZ1, W / 2, HZ1, { ...wall, doors: [{ at: 1.9 * F, w: 1.4 }] });
+  for (const x of [4.2 * F, 6.0 * F, 7.8 * F, 9.6 * F]) {   // (the barred windows, both faces)
     for (const s of [-1, 1]) {
       k.add(rbox(0.9, 1.0, 0.04, 0.01), MAT.flat('#141618', 0.9), x, 1.6, HZ1 + s * 0.21);
       for (let i = 0; i < 4; i++) k.add(cyl(0.022, 0.022, 1.0, 6), rail, x - 0.3 + i * 0.2, 1.6, HZ1 + s * 0.24);
@@ -134,27 +136,27 @@ export function buildTraluCaveRoom(scene, physics) {
   // its pillars of blocks at the corners
   for (const [x, z] of [[HX0, HZ1], [W / 2 - 0.3, HZ1]]) { k.add(rbox(0.6, HH + 0.4, 0.6, 0.04), block, x, (HH + 0.4) / 2, z); k.add(rbox(0.7, 0.12, 0.7, 0.03), cap, x, HH + 0.46, z); B.col(x, z, 0.3, 0.3, HH + 0.5); }
   // inside: barrels, the table with plates and a bottle, a bench, candle stands; a lantern, rope and a crate (ours)
-  for (const [x, z] of [[1.0, -6.3], [1.75, -6.4], [1.3, -5.6], [8.3, -2.0]]) B.put(x, z, x, (kk) => barrel(kk, { pal: 'honey' }));
-  B.put(5.4, -4.8, 0, (kk) => { const r = table(kk, { w: 1.7, d: 0.85, pal: 'honey' }); plate(kk, -0.4, 0.78, 0); plate(kk, 0.35, 0.78, 0.05); jar(kk, 0, 0.78, -0.1, 'bottle', '#2f8a9a', 1.0); return r; });
-  B.put(5.4, -3.9, 0, (kk) => bench(kk, { w: 1.5, pal: 'honey' }));
-  for (const x of [3.6, 7.2]) B.put(x, -5.0, 0, (kk) => candleStand(kk));
-  B.put(8.2, -6.2, 0.3, (kk) => { kk.add(rbox(0.75, 0.6, 0.6, 0.02), MAT.paint('#7a5a36', 0.8), 0, 0.3, 0); kk.add(cyl(0.2, 0.2, 0.12, 14, true), MAT.paint('#b89a6a', 0.9), 0, 0.66, 0); kk.add(rbox(0.12, 0.2, 0.12, 0.02), MAT.glow('#ffe0a0', '#ffb040', 0.9), 0.2, 0.7, 0.15); return { hw: 0.38, hd: 0.3, top: 0.75 }; });
+  for (const [x, z] of [[1.0, -6.3], [1.6, -6.4], [1.25, -5.8], [8.3, -2.0]]) B.put(x * F, z * F, x, (kk) => barrel(kk, { pal: 'honey' }));
+  B.put(5.4 * F, -4.8 * F, 0, (kk) => { const r = table(kk, { w: 1.7, d: 0.85, pal: 'honey' }); plate(kk, -0.4, 0.78, 0); plate(kk, 0.35, 0.78, 0.05); jar(kk, 0, 0.78, -0.1, 'bottle', '#2f8a9a', 1.0); return r; });
+  B.put(5.4 * F, -4.8 * F + 0.9, 0, (kk) => bench(kk, { w: 1.5, pal: 'honey' }));
+  for (const x of [3.6, 7.2]) B.put(x * F, -5.0 * F, 0, (kk) => candleStand(kk));
+  B.put(8.2 * F, -6.2 * F, 0.3, (kk) => { kk.add(rbox(0.75, 0.6, 0.6, 0.02), MAT.paint('#7a5a36', 0.8), 0, 0.3, 0); kk.add(cyl(0.2, 0.2, 0.12, 14, true), MAT.paint('#b89a6a', 0.9), 0, 0.66, 0); kk.add(rbox(0.12, 0.2, 0.12, 0.02), MAT.glow('#ffe0a0', '#ffb040', 0.9), 0.2, 0.7, 0.15); return { hw: 0.38, hd: 0.3, top: 0.75 }; });
 
   // --- the lower cave: the railed pool at the front right, globe posts at its corners, spike clusters, boulders
-  const PX0 = 3.0, PX1 = 7.4, PZ0 = 2.0, PZ1 = 5.4, kerb = 0.3;
+  const PX0 = 3.0 * F, PX1 = 7.4 * F, PZ0 = 2.0 * F, PZ1 = 5.4 * F, kerb = 0.3;
   for (const [x0, z0, x1, z1] of [[PX0, PZ0, PX1, PZ0 + 0.3], [PX0, PZ1 - 0.3, PX1, PZ1], [PX0, PZ0, PX0 + 0.3, PZ1], [PX1 - 0.3, PZ0, PX1, PZ1]]) k.add(rbox(x1 - x0, kerb, z1 - z0, 0.03), block, (x0 + x1) / 2, kerb / 2, (z0 + z1) / 2);
   k.add(plane(PX1 - PX0 - 0.6, PZ1 - PZ0 - 0.6), waterM(), (PX0 + PX1) / 2, kerb - 0.08, (PZ0 + PZ1) / 2, 0, { rx: -Math.PI / 2 });
   k.at(0, kerb, 0, 0, () => railing(k, [[PX0 + 0.15, PZ0 + 0.15], [PX1 - 0.15, PZ0 + 0.15], [PX1 - 0.15, PZ1 - 0.15], [PX0 + 0.15, PZ1 - 0.15], [PX0 + 0.15, PZ0 + 0.15]], { h: 0.9, mat: rail, step: 0.45 }));
   B.col((PX0 + PX1) / 2, (PZ0 + PZ1) / 2, (PX1 - PX0) / 2, (PZ1 - PZ0) / 2, kerb + 1.0, { seeThrough: true, noStand: true });
   for (const [x, z] of [[PX0 - 0.3, PZ0 - 0.3], [PX1 + 0.3, PZ0 - 0.3], [PX0 - 0.3, PZ1 + 0.3]]) B.put(x, z, 0, (kk) => globePost(kk));
-  for (const [x, z, s] of [[-6.2, 2.6, 1], [-4.2, 6.2, 0.8], [1.2, 6.0, 0.9], [8.2, 1.0, 1.1], [-0.5, -6.4, 0.9], [8.3, 6.1, 0.8]]) B.put(x, z, 0, (kk) => spikes(kk, 6, s));
-  for (const [x, z, s] of [[LX + 0.5, 1.2, 0.9], [LX + 0.5, 6.4, 0.7], [W / 2 - 0.4, 3.6, 0.8]]) B.put(x, z, x, (kk) => boulder(kk, s));
+  for (const [x, z, s] of [[-6.2, 2.6, 1], [-4.2, 6.2, 0.8], [1.2, 6.0, 0.9], [8.2, 1.0, 1.1], [-0.5, -6.4, 0.9], [8.3, 6.1, 0.8], [-8.0, 0.4, 0.9]]) B.put(x * F, z * F, 0, (kk) => spikes(kk, 6, s));
+  for (const [x, z, s] of [[LX + 0.5, 1.2, 0.9], [LX + 0.5, 6.4, 0.7], [W / 2 - 0.4, 3.6, 0.8]]) B.put(x, z * F, x, (kk) => boulder(kk, s));
   // a clutch of shells down here too, by the pool
-  B.put(2.2, 4.4, 1, (kk) => eggs(kk, 3));
+  B.put(2.2 * F, 4.4 * F, 1, (kk) => eggs(kk, 3));
 
   // light: cold from the globes, warm in the guard house
-  B.light('#bfe6ff', 4, 10, 5.2, 2.6, 3.6); B.light('#bfe6ff', 3.5, 10, -5.0, TY + 2.4, -4.0); B.light('#bfe6ff', 3, 9, -4.0, 2.8, 4.0);
-  B.light('#ffd8a0', 3.5, 8, 5.4, 2.4, -4.0);
+  B.light('#bfe6ff', 4.5, 15, 5.2 * F, 3.0, 3.6 * F); B.light('#bfe6ff', 4, 15, -5.0 * F, TY + 2.6, -4.0 * F); B.light('#bfe6ff', 3.5, 13, -4.0 * F, 3.0, 4.0 * F);
+  B.light('#ffd8a0', 4, 12, 5.4 * F, 2.6, -4.0 * F);
   return { tralucave: B.finish() };
 }
 

@@ -268,7 +268,8 @@ ART.push(artBusy);
 // reports a stick toward the next waypoint: the physics, steps and colliders as by hand; the story cancels hero.walkTo
 // indoors), out by its own door — with its frames and draw calls. evidence/<room>/*.jpg, walk.json.
 //   legs: [{ name, pts: [[x, z] room-local], minY? }]; the last leg ends at the room's exit.
-function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
+function placeWalk({ id, title, suite, room, house, legs, flags = null, direct = false, backTo = 'citadel' }) {
+  // (direct: a room whose door is outside Citadel (the School on Desert Island): stood in it at its spawn, and out to backTo)
   // (a leg may walk in another room reached from this one: leg.room; leg.thenRoom: the room it must end in)
   return { ...artShots, id, title, suites: [suite, 'artplaces'], timeoutS: 600,
     async run(ctx) {
@@ -326,18 +327,20 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
       // (a place that opens only from a point of the story on: those flags set first)
       // (and, as a new game's people still stand where the earlier story put them, anyone within 2.5 m of the door is
       //  stood aside: the prologue's Zoé at the neighbours' door)
-      if (flags) await page.evaluate(({ flags, house }) => { Object.assign(game.flags, flags); const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))); for (const n of game.npcs || []) if (n.present && Math.hypot(n.pos.x - h.door.x, n.pos.z - h.door.z) < 2.5) n.setPresent(false); }, { flags, house });
+      if (flags) await page.evaluate(({ flags, house }) => { Object.assign(game.flags, flags); const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house)) || (typeof house === 'object' ? house : null)); for (const n of game.npcs || []) if (n.present && Math.hypot(n.pos.x - h.door.x, n.pos.z - h.door.z) < 2.5) n.setPresent(false); }, { flags, house });
+      if (direct) { await page.evaluate((room) => { game.resetCombat?.('drop'); game.enterRoom(room, null, true, true); game.camRig.recenter?.(); }, room); await sleep(2500); } else {
       // 1. outside, a few steps before the house's door; walk in
-      const door = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
+      const door = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house)) || (typeof house === 'object' ? house : null)); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
       await sleep(2500); await shot('01-outside-door');
       // what the game offers at the door, 1.3 m before it and facing it (a "locked" prompt there would contradict the open door)
-      const offer = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
+      const offer = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house)) || (typeof house === 'object' ? house : null)), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
       log.push({ offerAtDoor: offer });
       assert(rec, `no "locked" prompt at the ${house} building's open door`, offer?.kind !== 'locked' && offer?.kind !== 'shut', 'not locked or shut', offer?.kind ?? 'none');
       await keyTo(door.x, door.z, 10); await sleep(1500);
       // (the scene change: a first visit builds the room behind the black first; wait until it has faded in)
       for (let t = 0; t < 30 && await page.evaluate(() => !!game.trans); t++) await sleep(500);
       await sleep(1500);
+      }
       let s = await st(); log.push({ step: 'in by the door', ...s }); await shot('02-inside');
       if (s.room !== room) log.push({ doorsNear: await page.evaluate(() => game.story.doors().filter((d) => Math.hypot(d.x - game.hero.pos.x, d.z - game.hero.pos.z) < 4).map((d) => ({ room: d.room, house: d.house, x: +d.x.toFixed(2), z: +d.z.toFixed(2), r: d.r, dist: +Math.hypot(d.x - game.hero.pos.x, d.z - game.hero.pos.z).toFixed(2) }))), doorCool: await page.evaluate(() => game.doorCool), regionsHas: await page.evaluate((r) => game.regions.has?.(r), room) });
       log.push({ calls: await page.evaluate(() => new Promise((res) => {
@@ -345,7 +348,7 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
         requestAnimationFrame(() => { R.renderBufferDirect = (cam, scene, ...a) => { n[scene ? 'main' : 'shadow']++; return orig(cam, scene, ...a); };
           requestAnimationFrame(() => { R.renderBufferDirect = orig; res({ ...n, total: n.main + n.shadow, quality: game.settings?.quality }); }); });
       })) });
-      assert(rec, `the ${house} building's door leads into ${room}`, s.room === room, room, s.room);
+      assert(rec, direct ? `stood in ${room}` : `the ${house} building's door leads into ${room}`, s.room === room, room, s.room);
       if (s.room !== room) { fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify(log, null, 1)); return; }
       // 2. the route inside, leg by leg; 3. the last leg out by the room's own door
       for (const [n, leg] of legs.entries()) {
@@ -358,84 +361,144 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null }) {
         if (leg.maxY != null) assert(rec, `${leg.name}: y ≤ ${leg.maxY}`, s.y <= leg.maxY, `<= ${leg.maxY}`, s.y);
       }
       await sleep(3500); s = await st(); log.push({ step: 'out by the door', ...s }); await shot('99-out');
-      assert(rec, `${room}'s door leads back to Citadel`, s.room === 'citadel', 'citadel', s.room);
+      assert(rec, `${room}'s door leads back to ${backTo}`, s.room === backTo, backTo, s.room);
       fs.writeFileSync(path.join(out, 'walk.json'), JSON.stringify(log, null, 1));
     } };
 }
 // Chez Luc (LBA-CITADEL-1, LBA2 scene 3, the 'south' house): past the bar to the stair's foot, up to the landing and
 // the gallery, down again and out
 export const artTavern = placeWalk({ id: 'art-tavern', title: 'Chez Luc: in by the door, up to the gallery, out again', suite: 'arttavern', room: 'tavern', house: 'south', legs: [
-  { name: 'stair foot', pts: [[-1.5, 5.0], [-1.2, 0.5], [2.2, -0.2], [2.2, -2.35]] },
-  { name: 'landing', pts: [[1.0, -2.35], [-2.6, -2.35], [-3.8, -2.35]], minY: 2.2 },
-  { name: 'gallery', pts: [[-3.8, -3.6], [0.3, -3.8]], minY: 2.2 },
-  { name: 'out', pts: [[-3.8, -3.6], [-3.8, -2.35], [1.0, -2.35], [2.2, -2.35], [2.2, -0.2], [-1.2, 0.5], [-1.5, 5.0], [-4.6, 6.1]] },
+  // (the tavern 1.5 times bigger, the user 2.11)
+  { name: 'stair foot', pts: [[-2.0, 7.5], [-1.5, 0.5], [2.9, -1.0], [2.9, -3.7]] },
+  { name: 'landing', pts: [[1.0, -3.7], [-3.4, -3.7], [-5.0, -3.7]], minY: 2.9 },
+  { name: 'gallery', pts: [[-5.0, -5.5], [0.5, -6.0]], minY: 2.9 },
+  { name: 'out', pts: [[-5.0, -5.5], [-5.0, -3.7], [1.0, -3.7], [2.9, -3.7], [2.9, -1.0], [-1.5, 0.5], [-2.0, 7.5], [-7.0, 9.15]] },
 ] });
 ART.push(artTavern);
 // Mr Bazoo's shop (LBA-CITADEL-2, LBA2 scene 14, the 'museum' building): round the counter to the goods along the
 // back wall, past the Zeelich table, and out
 export const artBazoo = placeWalk({ id: 'art-bazoo', title: "Mr Bazoo's shop: in by the door, round the counter, out again", suite: 'artbazoo', room: 'bazoo', house: 'museum', legs: [
-  { name: 'behind the counter', pts: [[-2.2, 1.8], [-2.4, -1.6], [0.2, -1.7]] },
-  { name: 'by the Zeelich goods', pts: [[2.6, -1.4], [3.0, -0.9]] },
-  { name: 'out', pts: [[2.8, 1.6], [0.2, 1.7], [-2.6, 1.8], [-3.9, 1.8]] },
+  { name: 'behind the counter', pts: [[-3.3, 2.7], [-3.6, -2.4], [0.3, -2.55]] },
+  { name: 'by the Zeelich goods', pts: [[3.9, -2.1], [4.5, -1.35]] },
+  { name: 'out', pts: [[4.2, 2.4], [0.3, 2.55], [-3.9, 2.7], [-5.85, 2.7]] },
 ] });
 ART.push(artBazoo);
 // the ticket office (LBA-CITADEL-3, LBA2 scene 8, the 'baggage' building): along the waiting chairs, round the counter's
 // right end to the staff's side, and out
 export const artTicket = placeWalk({ id: 'art-ticket', title: 'The ticket office: in by the door, behind the counter, out again', suite: 'artticket', room: 'ticket', house: 'baggage', legs: [
-  { name: 'the public side', pts: [[-0.8, 1.6], [2.6, 1.2]] },
-  { name: 'behind the counter', pts: [[2.7, -0.9], [2.0, -2.0]] },
-  { name: 'out', pts: [[2.7, -0.9], [2.6, 1.2], [-1.5, 1.9], [-2.8, 1.9]] },
+  { name: 'the public side', pts: [[-1.2, 2.4], [3.9, 1.8]] },
+  { name: 'behind the counter', pts: [[4.05, -1.35], [3.0, -3.0]] },
+  { name: 'out', pts: [[4.05, -1.35], [3.9, 1.8], [-2.25, 2.85], [-4.2, 2.85]] },
 ] });
 ART.push(artTicket);
 // the pharmacy (LBA-CITADEL-4, LBA2 scene 22, the 'bug2' house): past the shelves and the ladder to the counter's far
 // side, along the back shelves, and out
 export const artPharmacy = placeWalk({ id: 'art-pharmacy', title: 'The pharmacy: in by the door, round the counter, out again', suite: 'artpharmacy', room: 'pharmacy', house: 'bug2', legs: [
-  { name: 'the front', pts: [[-1.2, 1.6], [2.3, 1.4]] },
-  { name: 'behind the counter', pts: [[2.6, 0.1], [2.2, -1.2], [0.2, -1.5]] },
-  { name: 'out', pts: [[-2.4, -0.9], [-2.4, 1.3], [-2.2, 2.1], [-3.2, 2.1]] },
+  { name: 'the front', pts: [[-1.8, 2.4], [3.45, 2.1]] },
+  { name: 'behind the counter', pts: [[3.9, 0.15], [3.3, -1.8], [0.3, -2.25]] },
+  { name: 'out', pts: [[-3.6, -1.35], [-3.6, 1.95], [-3.3, 3.15], [-4.8, 3.15]] },
 ] });
 ART.push(artPharmacy);
 // the neighbours' house (LBA-CITADEL-5, LBA2 scene 9, the 'nbr' house; open once the prologue is done): past the table
 // to the bed and the desk, round to the kitchen corner, and out
 export const artNbrHouse = placeWalk({ id: 'art-nbrhouse', title: "The neighbours' house: in by the door, round the room, out again", suite: 'artnbrhouse', room: 'nbrhouse', house: 'nbr', flags: { prologueDone: true }, legs: [
-  { name: 'by the bed and desk', pts: [[-1.6, 2.6], [-1.8, -0.2], [1.2, -1.6]] },
-  { name: 'the kitchen corner', pts: [[1.6, 0.9], [2.1, 2.6]] },
-  { name: 'out', pts: [[0.2, 2.9], [-2.4, 3.0], [-3.2, 3.0]] },
+  { name: 'by the bed and desk', pts: [[-2.4, 3.9], [-2.7, -0.3], [1.8, -2.4]] },
+  { name: 'the kitchen corner', pts: [[2.4, 1.35], [3.15, 3.9]] },
+  { name: 'out', pts: [[0.3, 4.35], [-3.6, 4.5], [-4.8, 4.5]] },
 ] });
 ART.push(artNbrHouse);
 // Paul's house, now Nell's (LBA-CITADEL-6, LBA2 scene 7, the 'wing2' house): past the bed to the armchair and the
 // sailboat, round the table to her workbench, and out
 export const artNellHouse = placeWalk({ id: 'art-nellhouse', title: "Nell's (Paul's house): in by the door, round the room, out again", suite: 'artnellhouse', room: 'nellhouse', house: 'wing2', legs: [
-  { name: 'by the armchair and sailboat', pts: [[-1.0, 3.0], [-0.9, -1.6], [1.6, -2.6]] },
-  { name: 'at the workbench', pts: [[2.0, -0.8], [1.6, 2.0]] },
-  { name: 'out', pts: [[-1.0, 3.2], [-3.2, 3.3]] },
+  { name: 'by the armchair and sailboat', pts: [[-1.5, 4.5], [-1.35, -2.4], [2.4, -3.9]] },
+  { name: 'at the workbench', pts: [[3.0, -1.2], [2.4, 3.0]] },
+  { name: 'out', pts: [[-1.5, 4.8], [-4.8, 4.95]] },
 ] });
 ART.push(artNellHouse);
 // Chez Luc's cellar (LBA-CITADEL-7, LBA2 scene 4, under the tavern): from the square into the tavern, through the arched
 // door under the gallery, along the cellar's walkway, down its stair to the store, back up, and out again to Citadel
 export const artTavCellar = placeWalk({ id: 'art-tavcellar', title: "Chez Luc's cellar: down from the tavern and back", suite: 'arttavcellar', room: 'tavern', house: 'south', legs: [
-  { name: 'to the arched door', pts: [[-1.5, 5.0], [-1.2, 0.5], [2.2, -0.2], [2.2, -2.35], [3.6, -2.45]], thenRoom: 'tavcellar' },
-  { name: 'the walkway', room: 'tavcellar', pts: [[-6.75, -3.6], [-1.3, -3.65]], minY: 1.9 },
-  { name: 'down in the store', room: 'tavcellar', pts: [[1.9, -3.65], [2.3, -2.4], [4.4, -2.4]], minY: 0.9, maxY: 1.1 },
-  { name: 'back up to the tavern', room: 'tavcellar', pts: [[2.3, -2.4], [1.9, -3.65], [-1.3, -3.65], [-6.75, -3.6], [-6.75, 3.0], [-7.1, 3.4]], thenRoom: 'tavern' },
-  { name: 'out', pts: [[1.9, -1.5], [1.9, 0.2], [-1.2, 0.5], [-1.5, 5.0], [-4.6, 6.1]] },
+  { name: 'to the arched door', pts: [[-2.0, 7.5], [-1.5, 0.5], [2.9, -1.0], [5.2, -1.0], [5.4, -3.7]], thenRoom: 'tavcellar' },
+  { name: 'the walkway', room: 'tavcellar', pts: [[-10.1, -5.5], [-2.0, -5.5]], minY: 2.3 },
+  { name: 'down in the store', room: 'tavcellar', pts: [[2.3, -5.5], [3.0, -3.6], [5.0, -3.6]], minY: 1.1, maxY: 1.3 },
+  { name: 'back up to the tavern', room: 'tavcellar', pts: [[3.0, -3.6], [2.3, -5.5], [-2.0, -5.5], [-10.1, -5.5], [-10.1, 4.5], [-10.8, 5.1]], thenRoom: 'tavern' },
+  { name: 'out', pts: [[5.2, -1.0], [2.9, -1.0], [-1.5, 0.5], [-2.0, 7.5], [-7.0, 9.15]] },
 ] });
 ART.push(artTavCellar);
 // the baggage claim (LBA-CITADEL-8, LBA2 scene 5, the 'bug' house): from the front hall up the stair to the office,
 // through an arch into the claim hall to the belt, back down, and out
 export const artBaggage = placeWalk({ id: 'art-baggage', title: 'The baggage claim: up to the office and the belt, out again', suite: 'artbaggage', room: 'baggage', house: 'bug', legs: [
-  { name: 'stair foot', pts: [[-1.2, 7.4], [-1.0, 4.2], [-3.05, 4.2]] },
-  { name: 'the office', pts: [[-3.05, 1.2], [-3.0, 0.3], [-1.0, -0.4]], minY: 1.4 },
-  { name: 'the claim hall', pts: [[1.4, -2.8], [2.0, -3.9], [2.0, -5.4], [0.2, -7.6]], minY: 1.4 },
-  { name: 'out', pts: [[2.0, -5.4], [2.0, -3.9], [-1.0, -0.4], [-3.0, 0.3], [-3.05, 1.2], [-3.05, 4.2], [-1.0, 4.2], [-1.2, 7.4], [-3.4, 8.6]] },
+  // (the baggage claim 1.5 times wider and a quarter longer, the user 2.11)
+  { name: 'stair foot', pts: [[-1.8, 9.25], [-1.5, 5.6], [-4.6, 5.6]] },
+  { name: 'the office', pts: [[-4.6, 1.5], [-4.5, 0.4], [-1.5, 0.2], [2.4, 0.2]], minY: 1.7 },
+  { name: 'the claim hall', pts: [[3.0, -4.9], [3.0, -6.75], [0.3, -9.5]], minY: 1.7 },
+  { name: 'out', pts: [[3.0, -6.75], [3.0, -4.9], [2.4, 0.2], [-1.5, 0.2], [-4.5, 0.4], [-4.6, 1.5], [-4.6, 5.6], [-1.5, 5.6], [-1.8, 9.25], [-5.4, 10.75]] },
 ] });
 ART.push(artBaggage);
 // Tralu's cave (LBA-CITADEL-9, LBA2 scene 2, behind the plateau's shut door, WORLD-80): round the pool, into the guard
 // house, up the stair to the terrace by the barred gate, and out
 export const artTraluCave = placeWalk({ id: 'art-tralucave', title: "Tralu's cave: the pool, the guard house, the terrace, out", suite: 'arttralucave', room: 'tralucave', house: 'plateau', legs: [
-  { name: 'by the pool', pts: [[-5.0, 4.4], [-1.0, 3.4], [2.0, 0.9], [6.5, 0.9]], maxY: 0.1 },
-  { name: 'the guard house', pts: [[2.1, 0.4], [2.1, -1.8], [5.4, -2.9]], maxY: 0.1 },
-  { name: 'up to the terrace', pts: [[2.1, -1.8], [2.1, 0.4], [-1.75, 1.6], [-1.75, -1.2], [-1.75, -2.4], [-3.5, -2.6], [-5.0, -3.0]], minY: 1.5 },
-  { name: 'out', pts: [[-3.5, -2.6], [-1.75, -2.4], [-1.75, 1.6], [-5.0, 4.4], [-8.4, 4.8]] },
+  // (the cave 1.5 times bigger, the user 2.11)
+  { name: 'by the pool', pts: [[-7.5, 6.6], [-1.5, 5.1], [3.0, 1.35], [9.75, 1.35]], maxY: 0.1 },
+  { name: 'the guard house', pts: [[3.15, 0.6], [3.15, -2.7], [8.1, -4.35]], maxY: 0.1 },
+  { name: 'up to the terrace', pts: [[3.15, -2.7], [3.15, 0.6], [-2.6, 2.0], [-2.6, -1.8], [-2.6, -3.6], [-5.25, -3.9], [-7.5, -4.5]], minY: 1.7 },
+  { name: 'out', pts: [[-5.25, -3.9], [-2.6, -3.6], [-2.6, 2.0], [-7.5, 6.6], [-12.6, 7.2]] },
 ] });
 ART.push(artTraluCave);
+// The School of Magic's great hall (LBA-DESERT-1, LBA2 scene 27): from the door up the walkway's stair, along the
+// walkway, up to the classroom and the teacher's dais, and back out to Desert Island
+export const artSchool = placeWalk({ id: 'art-school', title: 'The School of Magic: the walkway, the classroom, the dais, out', suite: 'artschool', room: 'school', direct: true, backTo: 'desert', legs: [
+  { name: 'hall', pts: [[10.08, 8.85], [5.4, 8.82]], maxY: 0.1 },
+  { name: 'walkway', pts: [[1.26, 8.82], [1.26, -4.5]], minY: 1.95 },
+  { name: 'classroom', pts: [[1.26, -7.5], [-2.4, -7.5], [-4.5, -7.5]], minY: 3.15 },
+  { name: 'dais', pts: [[-7.5, -7.0], [-9.3, -7.0]], minY: 3.95 },   // (beside the rector, who is solid)
+  { name: 'out', pts: [[-7.5, -7.0], [-4.5, -7.5], [-2.4, -7.5], [1.26, -7.5], [1.26, 8.82], [3.0, 8.82], [5.4, 8.82], [10.08, 8.85], [10.08, 12.3]] },
+] });
+ART.push(artSchool);
+// Citadel Spaceport's terminal (SPACEPORT-1, after LBA2's scene 78): in by the blue door on the deck, to the departures
+// board, round the seats to the ticket counter, to the café corner, and out by the door
+export const artTerminal = placeWalk({ id: 'art-terminal', title: 'The spaceport terminal: the board, the counter, the café, out', suite: 'artterminal', room: 'terminal', house: { door: { x: -2.5, z: 31.95 }, ry: 0 }, legs: [
+  { name: 'the board', pts: [[-5.5, 3.0], [-6.0, -0.5]] },
+  { name: 'the ticket counter', pts: [[-5.0, 2.6], [0.0, 2.6], [4.45, -2.35]] },
+  { name: 'the cafe corner', pts: [[1.0, -2.9], [-5.0, -3.4]] },
+  { name: 'out', pts: [[-5.0, 2.8], [-6.6, 3.6], [-7.6, 3.6]] },
+] });
+ART.push(artTerminal);
+// Zeelich Spaceport's terminal (SPACEPORT-1 part 2, after LBA2's scenes 78 and 82): the departures board, the counter,
+// up to the arrivals deck by one stair and down the other, out to the deck
+export const artZTerminal = placeWalk({ id: 'art-zterminal', title: "Zeelich's terminal: the board, the counter, the arrivals deck, out", suite: 'artzterminal', room: 'zterminal', direct: true, backTo: 'zeelich', legs: [
+  { name: 'the board', pts: [[-6.5, 3.0], [-7.0, -0.5]] },
+  { name: 'the ticket counter', pts: [[-6.6, -2.2], [-3.2, -2.4]] },
+  { name: 'the arrivals deck', pts: [[-1.0, 0.2], [1.8, 0.2], [1.8, -3.0], [5.0, -3.0]], minY: 0.75 },
+  { name: 'down the far stair', pts: [[8.1, -3.0], [8.1, 0.4]], maxY: 0.1 },
+  { name: 'out', pts: [[3.0, 1.2], [-6.6, 3.6], [-8.6, 3.6]] },
+] });
+ART.push(artZTerminal);
+// Otringal's harbour bar (ZEELICH-1 item 1, LBA2 scenes 136/137): behind the bar, up on the stage, into the boss's
+// office and round it, back through the bar and out to the harbour
+export const artOtrBar = placeWalk({ id: 'art-otrbar', title: "Otringal's harbour bar: the bar, the stage, the office, out", suite: 'artotrbar', room: 'otrbar', direct: true, backTo: 'isle_otringal', legs: [
+  { name: 'behind the bar', pts: [[-8.0, 3.6], [-5.1, 3.6]] },
+  { name: 'the stage', pts: [[-1.5, 3.6], [1.5, 3.6], [2.2, -0.8], [3.8, -1.0], [3.8, -4.2]], minY: 0.85 },
+  { name: 'to the office', pts: [[3.8, -1.5], [1.0, -1.0], [1.0, -6.6]], thenRoom: 'otroffice' },
+  { name: 'in the office', room: 'otroffice', pts: [[-2.5, -1.0], [-2.5, 2.2], [-4.1, 2.2]], thenRoom: 'otrbar' },
+  { name: 'out', pts: [[1.6, -0.5], [1.6, 3.2], [-1.5, 3.4], [-8.6, 2.6], [-9.7, 1.8]] },
+] });
+ART.push(artOtrBar);
+// the Imperial Hotel's lobby at Otringal (ZEELICH-1 item 3, LBA2 scene 81): up the left strip's stair to the round
+// tables, along the back strip to the members' desk and the coin machines, down to the lounge, out to the plaza
+export const artOtrHotel = placeWalk({ id: 'art-otrhotel', title: 'The Imperial Hotel: the tables, the desk, the lounge, out', suite: 'artotrhotel', room: 'otrhotel', direct: true, backTo: 'isle_otringal', legs: [
+  { name: 'the round tables', pts: [[-7.0, 5.0], [-3.0, 2.0], [-3.0, 1.4], [-5.6, 1.4], [-5.8, -1.6]], minY: 0.85 },
+  { name: 'the members desk', pts: [[-5.8, -3.4], [1.2, -4.2], [3.6, -6.3]], minY: 0.85 },
+  { name: 'down to the lounge', pts: [[6.4, -3.6], [6.4, -1.0], [5.4, 1.8], [0.0, 1.9]], maxY: 0.1 },
+  { name: 'out', pts: [[-3.0, 3.2], [-7.0, 5.2], [-10.6, 5.2]] },
+] });
+ART.push(artOtrHotel);
+// the Temple of the Dark Monk under Celebration's summit (ZEELICH-1 item 2, LBA2 scene 93): to the first mural, the
+// lectern, up the stair to the open sealed door, and back out to the plaza
+export const artCelTemple = placeWalk({ id: 'art-celtemple', title: "The Dark Monk's temple: a mural, the lectern, the sealed door, out", suite: 'artceltemple', room: 'celtemple', direct: true, backTo: 'isle_celebration', legs: [
+  { name: 'the first mural', pts: [[-6.0, 4.0], [-5.6, 1.0], [-5.0, -3.6], [-3.6, -5.0]] },
+  { name: 'the lectern', pts: [[-0.2, -5.0], [1.5, -4.0]] },
+  { name: 'the sealed door', pts: [[-1.0, -4.6], [-6.5, -4.6], [-8.3, -4.6]], minY: 0.35 },
+  { name: 'out', pts: [[-6.5, -4.6], [-5.6, 1.0], [-7.5, 4.4], [-8.7, 4.4]] },
+] });
+ART.push(artCelTemple);

@@ -1344,3 +1344,214 @@ Each: its own file under `src/game/`, a region in `regions.js` like the LBA-CITA
 existing door transitions, ≥ 80 % likeness to scene 78/82's layout and furniture (numbers and descriptions only), a
 diff and pictures in `docs/future/world/SPACEPORT-1/` (Zeelich's: no pictures to the user — past chapter 2). The cloud
 wires the travel menu, the people and the lines after you push.
+
+## BIGGER-1 · Every LBA2 room 1.5 times bigger, the camera close and following · The user asked for it (2.11.2026)
+
+The user (2.11, in Hebrew): "make them bigger, it's really small" (answered "everything": the School and the nine
+Citadel rooms). Twinsen is 2.065 m in our scale (H, `actors.js`) and the original's cell 0.867 m; the first cuts used
+about 0.42–0.48 m a cell, half the original's proportion.
+
+- **What changed** (`requests/BIGGER-1.diff` against origin 8c6c213; `git apply --check` passes on a clean checkout):
+  `tavern.js`, `tavcellar.js`, `bazoo.js`, `ticket.js`, `pharmacy.js`, `nbrhouse.js`, `nellhouse.js`, `baggage.js`
+  (1.5 × wide, 1.25 × long: it was long already), `tralucave.js`.
+  - Floor 1.5 times the first cut, rooms a little higher (the tavern's gallery 3.0 m, its hall 7 m).
+  - Furniture keeps its size; longer walls get a few more shelves, tables and stools.
+  - The camera: `R.view` 10–12.5 and `R.follow` 0.55–0.7, as in Twinsen's house (10.8 / 0.8), not the whole room at
+    once.
+  - Every room's door, exit, entries, `npcSpots` (luc, bazoo, clerk, pharmacist, neighbour, nell, clerk) and the
+    cellar's link to the tavern move with it.
+- **The stair seam, closed for good:** every step collider overlaps its neighbours and the floor at its top by 12 cm
+  (`run / 2 + 0.12`). With +0.08 the top step left a 2 cm seam against the landing (each brick shrinks 5 cm under
+  `groundAt`): Twinsen dropped onto the room's floor and walked under the stair. Measured in the School: 10 of 15 climbs
+  fell through at +0.08; 0 of 72 now (6 stairs × 4 frame rates × 3 lanes, all rooms). A first fix in `physics.js`
+  (looking 6 cm further for a floor over a drop) broke `tests/deaths.mjs` (a guard falling down a stair counted
+  "in the ground"): withdrawn; the engine is unchanged. This is very likely the tavern's 1-in-4 walk-through.
+- **Checked on the laptop** (results below under "Verification 2.11").
+
+## LBA-DESERT-1 · The School of Magic's great hall after LBA2's scene 27 · PURPOSE-CHECK: yes (the cloud, 2.11)
+
+`requests/LBA-DESERT-1.diff` (`wizards.js` `buildSchoolRoom` only; applies on origin). About 80 % alike, 1.5 × the
+first cut (0.63 m a cell, 0.4 m a layer):
+- the classroom 3.2 m up in the back-left corner (the teacher's dais 4.0 m with a red-clothed table, two benches, a
+  star on the floor; the blackboard; two rows of three benches), an arch between two columns and two round star
+  windows in the left wall;
+- a stair down to a walkway 2.0 m up along a ridge of rock, an iron fence on its open side, a stair down into the hall
+  between two gargoyle posts, globe lamps at its front end;
+- the dining hall: eight long tables with bowls, bottles and candles; a dais 1.2 m up at the back with the star chest
+  and candle stands, a stepped pyramid up to it; seven tall teal windows along the back wall; the door in front.
+- Kept: `npcSpots.magus` (on the teacher's dais), `npcSpots.keraooc` (by her cot and cabinet near the door),
+  `sm_remedies`, the `school-out` exit; `tests/wizards.mjs` passes. Spoilers: no pictures to the user (Desert Island).
+- Test Lab: `node engine/cli.mjs artschool` (door → walkway → classroom → dais → out).
+
+## ANIM-AGGR-1 · Aggressive mode moves as in LBA2 · The user asked for it (2.11.2026)
+
+The user: "Twinsen's movement in aggressive mode is not like LBA2". Measured on LBA2's own anims (ANIM.HQR, numbers
+only): the Aggressive walk (83) is a boxer's strut (fists up before the chest, elbows bent 50–72°, the knee up to 90°,
+the chest twisting up to ±45°, the head turning); the Aggressive idle (82) is a guard that shifts and looks round
+(the head ±50°). Ours played the normal walk at 2.52 m/s and the normal idle unless engaged.
+`requests/ANIM-AGGR-1.diff` (`rig.js`, `actors.js`; applies on origin): in Aggressive, `rig.aggro`; the idle is always
+the fists' guard (the sword's with the sword) and looks round; the walk keeps the fists up and pumping, the knees
+higher, the chest leaning and twisting more (milder than the original). No speed, timing, hit or input changed.
+`tests/anim-combat.mjs`, `anim-polish.mjs`, `combat.mjs` pass.
+
+## VOICE-1 · The gibberish softer, men and women told apart · The user asked for it (2.11.2026)
+
+The user: "the gibberish is too annoying, too robotic, it feels like a clipped voice; tell men and women apart more and
+make it less tiring". `requests/VOICE-1.diff` (`voice.js`; applies on origin):
+- a person's syllables join at least 55 % (`leg`; the triangle-heads and machines stay clipped by design); slightly
+  softer attack and release; ±8 % loudness from syllable to syllable; the level 0.21 → 0.19;
+- VOICE-SEX: grown women in the ambiguous middle move up to ≥ ~215 Hz with a smaller head's formants and a little more
+  breath; grown men above 160 Hz move down; children, Twinsen, Zoé, Spheros, bees and moles are untouched. A speaker
+  with no voice of their own now gets a clearly male or female voice (from the WOMEN/MEN lists, else the name's hash),
+  never the ambiguous middle. Mira 205 → 214 Hz (she sat on Twinsen's 195).
+- The lists are the laptop's reading of names and titles (Mother, Madam, Mrs, Granny, Officer Odile, Pippa "הסוחרת"…):
+  **please check them**, and say whether Sefa the trader, Esren, Ennu, Velo, Kip and the Pharmacist are women or men.
+- `tests/voices.mjs`: everything passes but "every named speaker has an own voice": it fails on origin too (27 speakers
+  without one: luc, mrbazoo, pharmacist, sefa …). Giving each their own voice entry is the cloud's.
+
+## USER-ASKS (2.11.2026) · What the user asked today that is the cloud's
+
+1. **Shops you can buy in.** "The shops: you must be able to buy in them." Pippa's stall sells; Mr Bazoo's shop, the
+   pharmacy and the ticket office (LBA-CITADEL-2/3/4) are rooms with a keeper's spot and nothing to buy. LBA2: Bazoo
+   sells goods, the pharmacy sells potions (life), the ticket office sells the ferry ticket.
+2. **The Esmer trading house (WA-15b) does nothing.** "Does the Zeelich building give anything?" Its purpose section
+   (WA-15b, "The purpose") was for the cloud: a keeper, goods to buy or trade, a reason to go in.
+3. **A round stone tower with a door in the air.** The user's photo: an arched door raised above the ground on a round
+   tower's stone plinth, "in the air, and it's not clear what it gives in the game". Probably the lighthouse (its lamp
+   room is Zoé's in chapter 2): check the door's sill against the ground, and give Twinsen a reason to go in (or say
+   so at the door).
+4. **New accessories and special weapons, the jetpack, exploding penguins, the important items of LBA1 and LBA2.** The
+   arsenal has most (blowgun/Blowtron, laser, glove, lightning, protection, conch, lantern, Nitro-Meca-Penguins at
+   Pippa's, Baldino's hop-pack from chapter 10), but in chapters 1–2 the user sees almost none. Consider something
+   earlier, and new twelve-years-on gadgets.
+5. **Pre-existing test failures seen on origin** (not from these diffs): `tests/prologue.mjs` "the well's mites beaten
+   with the ball"; `tests/solidnpc.mjs` setup "no free approach to tobb|marda|brix|dot"; `tests/chapter4.mjs` and
+   `tests/controls.mjs` print no verdict.
+
+### Verification 2.11 (the laptop, origin 8c6c213 + BIGGER-1 + LBA-DESERT-1 + ANIM-AGGR-1 + VOICE-1)
+- Game tests: wizards, house, deaths, anim-combat, anim-polish, combat, chapter1, prologue PASS. voices: only "every
+  named speaker has an own voice" (fails on origin too). npc-feet: "stops into standing take at most two steps" for Oda
+  (fails identically on a clean origin).
+- Test Lab walks (`artplaces`, `artschool`): tavern, bazoo, ticket, pharmacy, nbrhouse, nellhouse, tavcellar, baggage,
+  tralucave, school: all pass; the stair probe 72/72 climbs (6 stairs, 1/60–1/10 s frames, 3 lanes).
+- The School: its blocks overlap 6 cm (a 10 cm seam between the dais step and the dais dropped Twinsen to the
+  classroom floor, from where the dais was too high).
+- Draw calls (Medium): the tavern 34 main + 1 shadow; the School 25 + 1.
+
+### SPACEPORT-1 · Built (part 1: Citadel's terminal) · the laptop, 3.11.2026
+`requests/SPACEPORT-1.diff` against origin cccfc20 (`git apply --check` passes): `src/game/terminal.js` (new), the
+`regions.js` hook (room `terminal`, REF 90, AT [8600, 0]) and the director's `doors()` / `exitTo()` hooks.
+- About 80 % alike to LBA2's departure hall (scene 78), in Twinsun sandstone with Esmer touches: the band of glass blocks
+  under the back wall's cornice; the ticket counter on a platform two steps up in the back right, two hanging TICKETS
+  signs, a luggage scale at its foot, lamps on posts; the departures board on the left wall between the doors, the
+  GROUNDED notice beside it; two rows of five orange seats facing the board, planters with Esmer fountain plants, a
+  luggage trolley; the café corner at the back left (counter, coffee machine, stools, a round table); the gate to the
+  pad between two security pillars with green screens. 16 × 12 m (the BIGGER-1 scale), `R.view` 12 / `R.follow` 0.6.
+- The way in: the blue door on the deck (spaceport.js, (−2.5, 31.6)) is a door now (`house: 'spaceport'`); out again
+  1.2 m before it; the gate leads out to the pad's landing spot (−1.7, 39.5), beside the shuttle.
+- Handles: `TERMINAL` (exported, filled when the room is built): `door`, `gate`, `counter` {x,z,r} (the travel menu's
+  interactable), `board` {x,z,r}, `seats` (10 {x,z,a}), `npcSpots` {clerk, guard, cafe}, `notice.setVisible(b)`.
+- Checked (origin cccfc20 + this): the Test Lab's new `artterminal` walk (in by the deck's door, the board, the counter,
+  the café, out) passes; the gate leads to the deck by the pad; `tests/spaceport.mjs`, chapter1, transitions, house,
+  lazyregions PASS. `tests/travel.mjs` and `doorcull.mjs` crash the headless page on this laptop with or without the
+  terminal (environment, not this diff); prologue's well-mites check fails as on origin.
+- Part 2 (Zeelich's terminal) next, after TRAVEL-1's cabin.
+
+### TRAVEL-1 · Built (the laptop's cabin room) · 3.11.2026
+`requests/TRAVEL-1-CABIN.diff` against origin (replaces the body of `src/game/shipcabin.js`, keeps its handle exactly:
+`group, size, seats, windows, stand, passengers, hero, shots, update, dispose`; `travelfilm.js` unchanged). After LBA2's
+Esmer spacecraft (scene 41), about 80 % alike:
+- a square cabin 6.2 × 6.2 m under a low cream shell with a ring of light at its crown; oval windows, two in each side
+  wall and two in the nose (one view mesh as before, the stars drifting, the planet's limb low);
+- a deep red U of padded seats at the back facing the nose (7 seats: 3 across, 2 down each side); the two pilots' pods
+  in the nose corners (blue consoles under glass domes, a red light each); the engine's glass column in the middle
+  behind a teal railing, its core pulsing (`update`); the hatch with a yellow-and-black sill in the left wall.
+- Passengers: the dozing traveller at the back's middle (seat 1), the woman on the right side's front seat looking out
+  of window 3, the Mosquibee steward between the pods; Twinsen at the front-left window (window 1). Two shots: from the
+  back right past the engine to Twinsen, and along the left wall.
+- Lit by its own materials (no light added), no shadows; geometries and the two engine meshes disposed in `dispose()`.
+- Checked: rendered from both shots in the game's renderer (the laptop); `tests/travel.mjs` crashes the headless page
+  on this laptop with or without it (environment), so the films' timing with the new room is untested here.
+
+### SPACEPORT-1 · Built (part 2: Zeelich's terminal; the diff now holds both) · the laptop, 3.11.2026
+`requests/SPACEPORT-1.diff` (supersedes part 1's; applies on origin 64c14f3): `terminal.js` and `zterminal.js` (new), the
+`regions.js` hooks (`terminal` AT [8600, 0], `zterminal` AT [8800, 0]), the director's `doors()` / `exitTo()`, and one
+hook line in `travel.js` (Zeelich's port block: `buildZTerminalOutside(Z.group, P, Y)`).
+- Outside: the port's deck had no building at all; a small domed Esmer pavilion now stands on the deck's free strip
+  east of the footbridge's end (local x 0.6…4.8, z 34.0…38.6; clear of the pad's ring, the lamp, the board and the
+  rail), its door toward the bridge (`esmerBuilding`, lilac dome).
+- Inside, one Esmer hall 18 × 12 m after LBA2's departure hall (78, left) and arrival hall (82, right): the glass-block
+  band and rounded pilasters; the ticket counter on its platform with two DEPARTURES signs, the departures board
+  (TWINSUN: CITADEL / BY SPACESHIP / ISLANDS: SHUTTLE OUTSIDE), a notice, two rows of four orange seats, fountain plants;
+  the arrivals deck 0.8 m up with its glass-block front and railing, a stair at each end (steps overlap 12 cm), four round
+  lifts to the town behind it, the arrivals board, a red bench; the gate to the pad between two pillars with red lights.
+- Handles: `ZTERMINAL`: `door`, `gate`, `counter`, `board`, `seats` (8), `npcSpots` {clerk, guard, porter},
+  `arrivals` {x,z,a} (inside the gate: where he steps in from the pad), `notice.setVisible(b)`.
+- Checked: Test Lab `artzterminal` (board, counter, up one stair to the arrivals deck, down the other, out) passes; the
+  pavilion's door leads in (region zeelich), the gate out to the pad's landing spot on the deck. Spoilers: no pictures to
+  the user (Zeelich).
+
+### ZEELICH-1 item 1 · Built: the harbour bar at Otringal and its office · the laptop, 3.11.2026
+`requests/ZEELICH-1-BAR.diff` against origin 8db08db (applies alone; with SPACEPORT-1 applied first its hook lines in
+`regions.js` / `story/index.js` need `git apply -3`): `src/game/otrbar.js` (new), regions `otrbar` (REF 120, AT [9000,
+0]) and `otroffice` (REF 40, AT [9200, 0]), the director's `doors()` / `exitTo()`.
+- **The door:** Otringal's own harbour is the low west terrace with the pier into the clouds; the bar is the domed house
+  there, `house (-42.2, -0.4)` in the island's building list (`worldfit.js` FIT; its door faces the island's middle,
+  (1857.8, 1804.3) at y 4.4). The door is read from FIT, with the measured place as a fallback before the island is
+  built (a save made in the bar). Walking in from the terrace and out again: checked.
+- **The bar** (LBA2 scene 136, about 80 %), 20 × 14 m: sky-blue walls with a band of clouds over a dark stone dado,
+  grey-and-teal tiles; the stage at the back right 0.9 m up (a stair of three, two orange curtains in a dark frame,
+  footlights), the curtain's winch high on the frame's right post; green leather booths with tables on a raised floor at
+  the back left behind turned balusters (a stair down), two slot machines; booths in the middle, the aquarium with its
+  creature, leaf plants, globe sconces, a picture; the L-shaped bar at the front left (green top, urns and bottles,
+  stools, the bottle shelf behind it); the office door in the back wall between the raised floor and the stage.
+- **The office** (scene 137), 9 × 7.5 m: dark walls with a painted wave, the curtained alcove with a basin, the desk
+  with a globe lamp, two cream armchairs, a picture, a plant; `npcSpots.boss` behind the desk.
+- **Handles** (`BAR`): `npcSpots` {boss (the corner booth on the raised floor), performer (on the stage), bouncer1,
+  bouncer2 (either side of the office door), regular1, regular2 (the bar's stools), regular3 (the middle booth)},
+  `stage`, `office` (the door's spot), `counter` (behind the bar, a search spot), `winch` {x, y, z, r} (the ball target:
+  the cloud adds it to `R.ballTargets` with OP-7's effect).
+- Checked: Test Lab `artotrbar` (behind the bar, up on the stage, into the office and round it, back, out to the
+  harbour) passes. Spoilers: no pictures to the user (Zeelich).
+
+### ZEELICH-1 item 3 · Built: the Imperial Hotel's lobby at Otringal · the laptop, 3.11.2026
+`requests/ZEELICH-1-HOTEL.diff` against origin (applies alone; with the bar or SPACEPORT-1 applied first, its hook lines
+need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, AT [9400, 0]), the director's hooks.
+- **The door:** the pink-domed house on the plaza's north-west side, `house (-15.4, -10.2)` (its door faces the plaza;
+  read from FIT, the measured place as the fallback). Out again onto the plaza: checked.
+- **The lobby** (LBA2 scene 81, about 80 %), 22 × 16 m: dark teal walls with gilded scrolls under a patterned frieze, a
+  terracotta floor; an L of raised floor 0.9 m up along the back and the left with brass posts and a rope along its
+  edge, two stairs down; on it the members' desk (two curved counters, stools, a bowl, the register), shelves of tall
+  vases, three round tables with their stools, tiered globe lamps, bushy plants in brass urns, two tall doorways
+  between twisted columns, the two coin machines (life, magic) between them; the sunken lounge with four cream
+  armchairs between globe lamps on blocks; the pool at the front right behind its kerb, two striped deck chairs.
+- **Handles** (`HOTEL`): `desk`, `register` (a read spot on the desk, for OP-7), `machines` [{x,z,a,kind}] (life,
+  magic: where Twinsen stands to use them), `npcSpots` {clerk (behind the desk), explorer (in a lounge armchair),
+  manicurist (by a round table)}.
+- Checked: Test Lab `artotrhotel` (the left strip's stair to the tables, along the back strip to the desk and the
+  machines, down the other stair to the lounge, out to the plaza) passes. No pictures to the user (Zeelich).
+
+### ZEELICH-1 item 2 · Built: the Temple of the Dark Monk (and the way in, part of item 4) · the laptop, 3.11.2026
+`requests/ZEELICH-1-TEMPLE.diff` against origin (applies alone; with others applied first, `git apply -3`):
+`src/game/celtemple.js` (new), region `celtemple` (REF 120, AT [9600, 0]), the director's hooks, and one hook line in
+`zislands.js` (`if (name === 'celebration') R.templePortal = buildCelPortal(group, physics)`).
+- **Where:** our Celebration's top is the paved plaza round the great figure (9.5–10 m; measured: the ground falls to
+  the sea on every side, so the "crater" is filled and paved as the island's own design says). The temple lies under
+  the summit; its **portal** stands on the plaza's north edge at local (2.2, −9.2), facing the figure: a plinth, two
+  dark granite pillars, a lintel with two horned heads, a dark stairwell between them (a see-through collider keeps
+  Twinsen out of the hole; the door takes him down). Clear of the festival masts (the nearest 4 m off). Checked: in
+  through the portal, out again onto the plaza.
+- **The hall** (LBA2 scene 93, about 80 %), 18 × 15 m: dark granite, rosettes in the floor; nine carved columns with
+  four dark globes in gold clasps; two horned heads with glowing eyes and mouths on the left wall; three lava pools
+  (railed off by see-through colliders); the lava altar with two white orbs between the Dark Monk's statue and the
+  insect figure; the prophecy murals (four framed panels with turquoise medallions) over a stepped bench on the back
+  wall, the reader's lectern before them; the sealed door up a short stair in the left wall at the back (its stone
+  leaf rises into the lintel when open; four empty sockets over it).
+- **Handles** (`TEMPLE`): `murals` [4 × {x, z, a, look: {x, y, z}}], `lectern` {x, z, r}, `sealDoor` {x, z, open,
+  setOpen(b, instant)} (open by default: twelve years on; shut, its collider blocks the doorway).
+- **Item 4 (the volcano):** the summit is already the island's plaza and the slopes fall away round it; I did not
+  carve a crater or add lava there (it would undo the festival plaza the cloud designed). `celebration.templeDoor` is
+  `R.templePortal.door`. The trail (three waypoints) and a lava glow on the flanks are left: say if they are still
+  wanted on this shape.
+- Checked: Test Lab `artceltemple` (a mural, the lectern, up to the open sealed door, out) passes. No pictures to the
+  user (Zeelich).

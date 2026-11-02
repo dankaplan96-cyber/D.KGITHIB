@@ -42,6 +42,12 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
 ## Progress
 - **WC-2 done (2.11):** 31 story characters in chapters 3–10 walk small rounds (`src/game/castrounds.js`, `roomlife.js StoryRounds`, `tests/cast-rounds.mjs`); the epilogue family uses the household rounds. Kept still on purpose: the stealth, disguise, dial-bank, puzzle and fight places, guards (the list is in the merge commit). Doran and Zeelich's street folk go to WC-3.
 
+- **WORLD-AUDIT (2.11, on `17ef25a`; docs/future/CONNECTIONS_AUDIT.md):** the open orders confirmed, not fixed. WC-1: the
+  ends of chapters 3 (`chapter3.js`), 5 (`steam.js`) and 7 (`observatory.js`) still go through a plain `startTransition`.
+  WC-3: in the chapter-6 save the Hamalayi has its story villagers and no residents; Desert Island's chapter-4 save has 3.
+  WC-4: not re-measured (interior-life covers chapters 1, 2, 4 and 8). R7 in Hebrew: three lines of chapters 1 and 3
+  still spoke of a whole night; fixed. The chapter-3 Hebrew is still the old story (the shaft on Zeelich): open.
+
 ## Work orders (in this order; at most two agents at a time)
 1. **WC-1 Journeys.** Chapter 3's end: `crossByShip` from Zeelich Spaceport with Doran aboard, then the ferry's film to
    Kesh's pier. Chapters 5 and 7: Hesk's glider through `playJourney(mode 'glider')` between the travel points. Chapter
@@ -64,3 +70,17 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
 
 Each order keeps the standing rules: numbers and descriptions only from the originals, no spoilers to the user,
 honest measurements (SwiftShader here: no fps claims).
+
+## The cloud's queue from the user's asks (2.11.2026, via the laptop's USER-ASKS and the chat)
+1. **Shops you can buy in:** Mr Bazoo (goods), the pharmacy (potions: life), the ticket office (the ferry ticket), as
+   LBA2's; through the existing shop (`#shop`, `main.js openShop`), modest prices.
+2. **The Esmer trading house (WA-15b):** a keeper, goods to buy or trade, a reason to go in.
+3. **The round tower's raised door** (the lighthouse?): the sill against the ground, and a reason to go in or a word at
+   the door. (The connections audit, `CONNECTIONS_AUDIT.md`, covers it.)
+4. **EQUIP-2, LBA3's own weapons and gadgets** (the user: "weapons and accessories that make the third game its own, not
+   only copies of the first and second"). Weapons do NOT need to come earlier (the user: only that there are some
+   through the game). Design and build 3–5 signature items rooted in this game's world (the heat and the crystals, the
+   shell, Baldino's twelve-years-on workshop, Arthur's radio, the Esmers' craft; later the expansion's world), each with
+   a job in puzzles and fights that the old arsenal does not do, taught safely, spread over the chapters, saved with the
+   hero (`hero.arms`), no paid assets, the performance rules. The old favourites stay. Agent: `lba3-equipment-designer`.
+5. **BIGGER-1: done (265a870).** The rooms 1.5x; the interiors' people read from each room's exported plan (`*_PLAN`).

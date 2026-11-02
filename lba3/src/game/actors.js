@@ -445,8 +445,11 @@ export class Hero extends Actor {
     // is his combat stance for the weapon in hand; with a lock his head and chest turn to the target
     const C = this.combat, lock = g.targeting?.lock;
     this.engagedT = lock || C.busy || C.holding || this.hurtT > 0 ? 2.5 : Math.max(0, (this.engagedT || 0) - dt);
-    this.rig.guard = this.engagedT > 0 && this.body !== 'zoe' && this.body !== 'worker';
-    this.rig.guardKind = C.weapon;
+    // (ANIM-AGGR: in Aggressive he stands in his boxer's guard and struts with his fists up, as LBA2's anims 82/83)
+    const aggro = beh === 'aggressive' && this.body !== 'zoe' && this.body !== 'worker';
+    this.rig.aggro = aggro;
+    this.rig.guard = (this.engagedT > 0 || aggro) && this.body !== 'zoe' && this.body !== 'worker';
+    this.rig.guardKind = aggro && this.engagedT <= 0 && C.weapon !== 'sword' ? 'fists' : C.weapon;
     if (lock?.alive && lock.pos) (this._lookV ??= new THREE.Vector3()).set(lock.pos.x, lock.pos.y + (lock.aimY ?? 0.9), lock.pos.z);
     this.rig.combatLook = lock?.alive && lock.pos ? this._lookV : null;
     this.rig.update(dt, this.speed);
