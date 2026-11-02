@@ -18,20 +18,31 @@
 //   nbrhouseDoors(W, flags) / nbrhouseExit(to, W)   the 'nbr' house's door leads in (once flags.prologueDone);
 //                              'nbrhouse-out' leads back out before it
 //   R.npcSpots.neighbour        by the stove (the story layer may put the neighbours there)
+//   NBRHOUSE_PLAN               the layout in the room's frame (the builder's own numbers): roomlife.js places the
+//                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, TEX, rbox, plane, cyl, sphere, table, chair, armchair, bed, bookcase, counter, desk, deskLamp, floorLamp, stove, kettle, rug, candle, frame, jar } from './props.js';
 
 export const NBRHOUSE_AT = { x: 7600, z: 0 };
+// (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the furniture its own size)
+export const NBRHOUSE_PLAN = (() => {
+  const F = 1.5, W = 7.2 * F, D = 8.2 * F, LX = -W / 2, BZ = -D / 2, TX = 0.1 * F, TZ = 1.3 * F, stoveZ = 3.1 * F;
+  return { F, W, D, LX, BZ, DOORZ: 3.0 * F,
+    stove: { x: W / 2 - 0.5, z: stoveZ }, basin: { x: W / 2 - 0.45, z: stoveZ - 1.2 },   // (the kitchen corner on the right wall)
+    spot: { x: W / 2 - 1.4, z: stoveZ, a: Math.PI / 2 },                                // (the neighbour's spot: at the stove)
+    table: { x: TX, z: TZ }, chairs: [{ x: TX - 0.7, z: TZ, a: Math.PI / 2 }, { x: TX + 0.7, z: TZ, a: -Math.PI / 2 }],   // (the table and its chairs)
+    desk: { x: 2.4 * F, z: BZ + 0.5 }, deskChair: { x: 2.4 * F, z: BZ + 1.25, a: Math.PI } };   // (the writing desk by the back wall)
+})();
 
 export function buildNbrHouseRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'nbrhouse', NBRHOUSE_AT.x, NBRHOUSE_AT.z);
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen as in his own
   //  house; the furniture keeps its size)
-  const F = 1.5, W = 7.2 * F, D = 8.2 * F, H = 3.4;
+  const P = NBRHOUSE_PLAN, { F, W, D } = P, H = 3.4;
   R.view = 10.8; R.follow = 0.7; R.music = 'home';
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 3.0 * F;
+  const { LX, BZ, DOORZ } = P;
   // (Twinsen's house's own materials: the teal paper, the terracotta tiles, the dark wood)
   B.shell({ W, D, H, t: 0.4,
     floor: MAT.tiles('#ac866a', '#9a6e52', '#5e4232', false, 4), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
@@ -51,33 +62,32 @@ export function buildNbrHouseRoom(scene, physics) {
   k.at(-0.7 * F, 2.0, BZ + 0.05, 0, () => frame(k, 0.7, 0.85, TEX.paper('#d8c8a0', '#6a5a4a', 'leaf'), { mat: MAT.brass() }));
   k.add(sphere(0.12, 12, 8), MAT.glow('#fff0d0', '#ffc070', 1.0), 0.9 * F, 2.3, BZ + 0.15);
   k.add(cyl(0.03, 0.03, 0.2, 6), MAT.brass(), 0.9 * F, 2.3, BZ + 0.08, 0, { rx: Math.PI / 2 });
-  B.put(2.4 * F, BZ + 0.5, 0, (kk) => desk(kk, { w: 1.4, d: 0.7, pal: 'honey' }));
-  k.at(2.4 * F - 0.4, 0.78, BZ + 0.4, 0, () => deskLamp(k, { shade: '#3f8a8a' }));
-  B.put(2.4 * F, BZ + 1.25, Math.PI, (kk) => chair(kk, { pal: 'honey', cushion: '#2f6f78' }));
+  B.put(P.desk.x, P.desk.z, 0, (kk) => desk(kk, { w: 1.4, d: 0.7, pal: 'honey' }));
+  k.at(P.desk.x - 0.4, 0.78, P.desk.z - 0.1, 0, () => deskLamp(k, { shade: '#3f8a8a' }));
+  B.put(P.deskChair.x, P.deskChair.z, P.deskChair.a, (kk) => chair(kk, { pal: 'honey', cushion: '#2f6f78' }));
   k.at(3.15 * F, 1.9, BZ + 0.05, 0, () => frame(k, 0.5, 0.5, TEX.paper('#3f6a9a', '#e8dcc0', 'star'), { mat: MAT.brass() }));
   B.put(3.2 * F, BZ + 1.5, 0, (kk) => { kk.add(cyl(0.2, 0.17, 0.4, 12, true), MAT.wood('honey'), 0, 0.2, 0); for (let i = 0; i < 5; i++) kk.add(cyl(0.035, 0.035, 0.7, 8), MAT.paper('#efe2c0', '#6a4a2a', 'leaf'), Math.sin(i * 1.3) * 0.08, 0.5, Math.cos(i * 1.3) * 0.08, 0, { rz: (i - 2) * 0.08 }); return { r: 0.22, top: 0.85 }; });
   // --- the middle: the table with its candle and two chairs on a rug, an armchair each side
-  const TX = 0.1 * F, TZ = 1.3 * F;
+  const { x: TX, z: TZ } = P.table;
   k.at(TX, 0.01, TZ, 0, () => rug(k, 2.4, 1.8, ['#2f6f78', '#e8dcc0', '#c8a050', '#1f4a50', '#f2ead6'], 4));
   B.put(TX, TZ, 0, (kk) => table(kk, { w: 1.1, d: 0.9, pal: 'honey' }));
   candle(k, TX, 0.78, TZ);
-  B.put(TX - 0.7, TZ, Math.PI / 2, (kk) => chair(kk, { pal: 'honey', cushion: '#2f6f78' }));
-  B.put(TX + 0.7, TZ, -Math.PI / 2, (kk) => chair(kk, { pal: 'honey', cushion: '#2f6f78' }));
+  for (const c of P.chairs) B.put(c.x, c.z, c.a, (kk) => chair(kk, { pal: 'honey', cushion: '#2f6f78' }));
   B.put(-2.5 * F, 1.0 * F, Math.PI / 2, (kk) => armchair(kk, { fabric: '#2f6f78', pal: 'honey' }));
   B.put(2.6 * F, 0.2 * F, -Math.PI / 2, (kk) => armchair(kk, { fabric: '#2f6f78', pal: 'honey' }));
   // --- twelve years on: the kitchen corner — the stove with the kettle, the basin and its tap, a heat radiator
-  B.put(W / 2 - 0.5, 3.1 * F, -Math.PI / 2, (kk) => { const r = stove(kk); return r || { hw: 0.45, hd: 0.35, top: 0.9 }; });
-  kettle(k, W / 2 - 0.5, 0.92, 3.1 * F);
-  B.put(W / 2 - 0.45, 3.1 * F - 1.2, -Math.PI / 2, (kk) => {
+  B.put(P.stove.x, P.stove.z, -Math.PI / 2, (kk) => { const r = stove(kk); return r || { hw: 0.45, hd: 0.35, top: 0.9 }; });
+  kettle(k, P.stove.x, 0.92, P.stove.z);
+  B.put(P.basin.x, P.basin.z, -Math.PI / 2, (kk) => {
     kk.add(rbox(0.9, 0.85, 0.55, 0.02), MAT.wood('honey'), 0, 0.425, 0);
     kk.add(rbox(0.7, 0.08, 0.4, 0.04), MAT.paint('#e8e8e4', 0.3), 0, 0.88, 0.02);
     kk.add(cyl(0.02, 0.02, 0.32, 8), MAT.copper(), 0, 1.06, -0.2); kk.add(cyl(0.015, 0.015, 0.16, 8), MAT.copper(), 0, 1.2, -0.13, 0, { rx: Math.PI / 2 });
     return { hw: 0.45, hd: 0.28, top: 0.92 };
   });
-  for (let i = 0; i < 3; i++) jar(k, W / 2 - 0.35, 0.92, 3.1 * F - 1.55 + i * 0.12, 'crock', ['#c8a050', '#3f8a8a', '#c8452f'][i], 0.8);
+  for (let i = 0; i < 3; i++) jar(k, W / 2 - 0.35, 0.92, P.basin.z - 0.35 + i * 0.12, 'crock', ['#c8a050', '#3f8a8a', '#c8452f'][i], 0.8);
   k.add(rbox(1.4, 0.55, 0.12, 0.03), MAT.copper(), 1.0, 0.42, BZ + 0.1);
   for (let i = 0; i < 6; i++) k.add(rbox(0.05, 0.5, 0.14, 0.01), MAT.copper(), 0.45 + i * 0.22, 0.42, BZ + 0.11);
-  R.npcSpots = { neighbour: { x: B.cx + W / 2 - 1.4, z: B.cz + 3.1 * F, a: Math.PI / 2 } };
+  R.npcSpots = { neighbour: { x: B.cx + P.spot.x, z: B.cz + P.spot.z, a: P.spot.a } };
 
   B.light('#ffe2b8', 4.5, 13, -0.5 * F, 2.8, 0.5 * F); B.light('#ffd8a0', 2.5, 6, TX, 1.4, TZ); B.light('#ffe8c8', 3, 9, 2.6 * F, 2.6, 2.5 * F);
   return { nbrhouse: B.finish() };

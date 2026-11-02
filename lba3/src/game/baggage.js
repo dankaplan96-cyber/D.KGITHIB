@@ -15,11 +15,23 @@
 //   buildBaggageRoom(scene, physics) → { baggage }   (regions.js group 'baggage')
 //   baggageDoors(W) / baggageExit(to, W)   the 'bug' house's door leads in; 'baggage-out' leads back out before it
 //   R.npcSpots.clerk            at the office table (the story layer may put the clerk there)
+//   BAGGAGE_PLAN                the layout in the room's frame (the builder's own numbers): roomlife.js places the
+//                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, railing, noticeBoard } from './props.js';
 
 export const BAGGAGE_AT = { x: 8200, z: 0 };
+// (the user 2.11, "make them bigger": 1.5 times as wide and a quarter longer than the first cut (it was long already),
+//  the upper level a fifth higher; the furniture its own size)
+export const BAGGAGE_PLAN = (() => {
+  const FX = 1.5, FZ = 1.25, W = 7.8 * FX, D = 21 * FZ, BZ = -D / 2, desk = { x: 0.4 * FX, z: -1.6 * FZ, a: 0.05 };
+  return { FX, FZ, W, D, LX: -W / 2, BZ, UY: 1.8, UZ1: 1.0 * FZ, DOORZ: 8.6 * FZ,   // (the upper level: from the back wall to UZ1, UY up)
+    belt: { x: 1.4 * FX, z: BZ + 0.8, hw: 2.0, hd: 0.5 },          // (the luggage belt along the claim hall's back wall)
+    desk, spot: { x: desk.x, z: desk.z - 0.9, a: 0 },              // (the office table; the clerk's spot behind it)
+    stool: { x: 0.5 * FX, z: -0.8 * FZ },
+    crates: [[3.2, -3.4], [3.2, -2.5]].map(([x, z]) => ({ x: x * FX, z: z * FZ, s: 0.7 })) };   // (by the office's right wall)
+})();
 
 const RED = () => MAT.paint('#b0302c', 0.45), TEAL = () => MAT.paint('#2f6f74', 0.5), METAL = () => MAT.paint('#cfcdd6', 0.35), DARK = () => MAT.paint('#7c7a86', 0.4);
 
@@ -57,12 +69,12 @@ export function buildBaggageRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": 1.5 times as wide and a quarter longer than the first cut (it was long
   //  already), the upper level a fifth higher, the camera close and following Twinsen; the furniture keeps its size)
-  const FX = 1.5, FZ = 1.25, W = 7.8 * FX, D = 21 * FZ, H = 5.6;
+  const P = BAGGAGE_PLAN, { FX, FZ, W, D } = P, H = 5.6;
   R.view = 12; R.follow = 0.65; R.music = 'home';
   // (the tavern's pale grey blocks: Citadel's stone inside)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4), floor = MAT.tiles('#a7a5a0', '#9a9893', '#3c3c40', false, 6);
-  const LX = -W / 2, BZ = -D / 2, UY = 1.8, UZ1 = 1.0 * FZ, DOORZ = 8.6 * FZ;
+  const { LX, BZ, UY, UZ1, DOORZ } = P;
   B.shell({ floor, slab: rough, body: stone, low: stone, rail: MAT.iron(), cap, H, t: 0.55, dado: 1.0, rimH: 0.45, rimMat: rough, W, D,
     left: [{ at: DOORZ, w: 1.4, h: 2.5, y0: 0, kind: 'door' }, { kind: 'window', at: -8.4 * FZ, w: 0.8, h: 0.9, y0: UY + 1.1 }] });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.8, to: 'baggage-out' });
@@ -99,17 +111,17 @@ export function buildBaggageRoom(scene, physics) {
     x0 = a.x + a.w / 2;
   }
   // --- the claim hall: the belt along the back wall with cases and Zeelich parcels on it, red benches, boxes and crates
-  k.at(1.4 * FX, UY, BZ + 0.8, 0, () => { belt(k, 4.0); const cases = [[-1.4, '#7a4a2a'], [-0.6, '#2f8a9a'], [0.3, '#a8302a'], [1.1, '#2f8a9a']]; cases.forEach(([x, c]) => k.add(rbox(0.5, 0.3, 0.38, 0.04), MAT.paint(c, 0.55), x, 1.0, 0)); });
-  B.col(1.4 * FX, BZ + 0.8, 2.0, 0.5, UY + 0.9, { noStand: true });
+  k.at(P.belt.x, UY, P.belt.z, 0, () => { belt(k, P.belt.hw * 2); const cases = [[-1.4, '#7a4a2a'], [-0.6, '#2f8a9a'], [0.3, '#a8302a'], [1.1, '#2f8a9a']]; cases.forEach(([x, c]) => k.add(rbox(0.5, 0.3, 0.38, 0.04), MAT.paint(c, 0.55), x, 1.0, 0)); });
+  B.col(P.belt.x, P.belt.z, P.belt.hw, P.belt.hd, UY + 0.9, { noStand: true });
   B.put(-2.4 * FX, BZ + 0.55, 0, (kk) => bench(kk), { y: UY });
   B.put(3.3 * FX, -6.6 * FZ, -Math.PI / 2, (kk) => bench(kk), { y: UY });
   B.put(LX + 0.55, -6.2 * FZ, 0, (kk) => { kk.add(rbox(0.6, 0.5, 0.5, 0.02), MAT.paint('#b88a5a', 0.8), 0, 0.25, 0); kk.add(rbox(0.55, 0.45, 0.45, 0.02), MAT.paint('#c89a6a', 0.8), 0.02, 0.73, 0); kk.add(rbox(0.5, 0.4, 0.4, 0.02), MAT.paint('#b88a5a', 0.8), -0.03, 1.15, 0); return { hw: 0.3, hd: 0.25, top: 1.35 }; }, { y: UY });
   B.put(LX + 1.35, -6.4 * FZ, 0.1, (kk) => crate(kk, 0.7, true), { y: UY });
   // --- the office: the table with papers and a red stool, crates by the right wall
-  B.put(0.4 * FX, -1.6 * FZ, 0.05, (kk) => { kk.add(rbox(1.3, 0.05, 0.8, 0.01), METAL(), 0, 0.76, 0); for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) kk.add(cyl(0.025, 0.025, 0.74, 6), DARK(), sx * 0.58, 0.37, sz * 0.34); for (let i = 0; i < 3; i++) kk.add(rbox(0.24, 0.01, 0.32, 0.003), MAT.paint(['#f2ead6', '#e8d8a8', '#f2ead6'][i], 0.7), -0.3 + i * 0.05, 0.79 + i * 0.01, 0.05); return { hw: 0.65, hd: 0.4, top: 0.8 }; }, { y: UY });
-  B.put(0.5 * FX, -0.8 * FZ, 0, (kk) => { kk.add(lathe([[0.001, 0], [0.19, 0], [0.2, 0.04], [0.17, 0.09], [0.001, 0.1]], 14), RED(), 0, 0.55, 0); kk.add(cyl(0.035, 0.035, 0.55, 8), MAT.steel(), 0, 0.275, 0); return { r: 0.22, top: 0.65 }; }, { y: UY });
-  for (const [x, z] of [[3.2, -3.4], [3.2, -2.5]]) B.put(x * FX, z * FZ, 0, (kk) => crate(kk, 0.7), { y: UY });
-  R.npcSpots = { clerk: { x: B.cx + 0.4 * FX, z: B.cz - 1.6 * FZ - 0.9, a: 0 } };
+  B.put(P.desk.x, P.desk.z, P.desk.a, (kk) => { kk.add(rbox(1.3, 0.05, 0.8, 0.01), METAL(), 0, 0.76, 0); for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) kk.add(cyl(0.025, 0.025, 0.74, 6), DARK(), sx * 0.58, 0.37, sz * 0.34); for (let i = 0; i < 3; i++) kk.add(rbox(0.24, 0.01, 0.32, 0.003), MAT.paint(['#f2ead6', '#e8d8a8', '#f2ead6'][i], 0.7), -0.3 + i * 0.05, 0.79 + i * 0.01, 0.05); return { hw: 0.65, hd: 0.4, top: 0.8 }; }, { y: UY });
+  B.put(P.stool.x, P.stool.z, 0, (kk) => { kk.add(lathe([[0.001, 0], [0.19, 0], [0.2, 0.04], [0.17, 0.09], [0.001, 0.1]], 14), RED(), 0, 0.55, 0); kk.add(cyl(0.035, 0.035, 0.55, 8), MAT.steel(), 0, 0.275, 0); return { r: 0.22, top: 0.65 }; }, { y: UY });
+  for (const c of P.crates) B.put(c.x, c.z, 0, (kk) => crate(kk, c.s), { y: UY });
+  R.npcSpots = { clerk: { x: B.cx + P.spot.x, z: B.cz + P.spot.z, a: P.spot.a } };
   // --- the front hall: barrels, a small railed platform with a lamp, the black arrows on the floor, the notice board
   for (const [x, z] of [[-2.7, 5.4], [-2.0, 5.9]]) B.put(x * FX, z * FZ, 0, (kk) => drum(kk));
   const PX = 2.5 * FX, PZ = 4.2 * FZ;

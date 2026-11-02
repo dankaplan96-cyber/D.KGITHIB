@@ -17,11 +17,21 @@
 //   buildNellHouseRoom(scene, physics) → { nellhouse }   (regions.js group 'nellhouse')
 //   nellhouseDoors(W) / nellhouseExit(to, W)   the 'wing2' house's door leads in; 'nellhouse-out' leads back out before it
 //   R.npcSpots.nell             at her workbench (the story layer may put Nell there)
+//   NELLHOUSE_PLAN              the layout in the room's frame (the builder's own numbers): roomlife.js places the
+//                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, TEX, rbox, plane, cyl, sphere, lathe, table, chair, armchair, bed, counter, floorLamp, frame, jar, candle } from './props.js';
 
 export const NELLHOUSE_AT = { x: 7800, z: 0 };
+// (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the furniture its own size)
+export const NELLHOUSE_PLAN = (() => {
+  const F = 1.5, W = 7.2 * F, D = 8.2 * F, TX = 0.6 * F, TZ = 0.4 * F, bench = { x: 2.3 * F, z: 2.9 * F };
+  return { F, W, D, LX: -W / 2, BZ: -D / 2, DOORZ: 3.3 * F,
+    bench, spot: { x: bench.x, z: bench.z - 0.85, a: Math.PI },     // (the workbench at the front; the spot before it)
+    parts: { x: 3.2 * F, z: 1.7 * F, a: 0.2 },                     // (the crate of spare parts)
+    table: { x: TX, z: TZ, a: 0.15 }, chairs: [{ x: TX - 0.7, z: TZ + 0.1, a: Math.PI / 2 }, { x: TX + 0.6, z: TZ - 0.6, a: -0.6 }] };
+})();
 
 // a model sailboat on a stand: a dark hull, a mast, two pale sails
 function sailboat(k) {
@@ -54,9 +64,9 @@ export function buildNellHouseRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen as in his own
   //  house; the furniture keeps its size)
-  const F = 1.5, W = 7.2 * F, D = 8.2 * F, H = 3.4;
+  const P = NELLHOUSE_PLAN, { F, W, D } = P, H = 3.4;
   R.view = 10.8; R.follow = 0.7; R.music = 'home';
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 3.3 * F;
+  const { LX, BZ, DOORZ } = P;
   // (Twinsen's house's own materials: the teal paper, the terracotta tiles, the dark wood)
   B.shell({ W, D, H, t: 0.4,
     floor: MAT.tiles('#ac866a', '#9a6e52', '#5e4232', false, 4), slab: MAT.rubble('grey'), rimMat: MAT.stone('sand', 1.4),
@@ -83,16 +93,15 @@ export function buildNellHouseRoom(scene, physics) {
   candle(k, SBX - 0.7, 0.86, BZ + 0.3); candle(k, SBX + 0.7, 0.86, BZ + 0.3);
   k.at(3.2 * F, 1.95, BZ + 0.02, 0, () => wallLamp(k));
   // --- the middle: the table with a bowl of flowers and two chairs
-  const TX = 0.6 * F, TZ = 0.4 * F;
-  B.put(TX, TZ, 0.15, (kk) => table(kk, { w: 1.2, d: 0.85, pal: 'honey' }));
+  const { x: TX, z: TZ } = P.table;
+  B.put(TX, TZ, P.table.a, (kk) => table(kk, { w: 1.2, d: 0.85, pal: 'honey' }));
   jar(k, TX, 0.78, TZ, 'urn', '#3f8a9a', 0.7);
   for (let i = 0; i < 6; i++) k.add(sphere(0.045, 8, 6), MAT.flat(['#e8b830', '#e85a3a'][i % 2], 0.5), TX + Math.sin(i) * 0.1, 1.06 + (i % 3) * 0.03, TZ + Math.cos(i) * 0.1);
-  B.put(TX - 0.7, TZ + 0.1, Math.PI / 2, (kk) => chair(kk, { pal: 'honey', cushion: '#2f6f78' }));
-  B.put(TX + 0.6, TZ - 0.6, -0.6, (kk) => chair(kk, { pal: 'honey', cushion: '#2f6f78' }));
+  for (const c of P.chairs) B.put(c.x, c.z, c.a, (kk) => chair(kk, { pal: 'honey', cushion: '#2f6f78' }));
   // --- twelve years on: Nell's workbench at the front with the Esmer engine she is mending, a crate of spare parts
-  B.put(2.3 * F, 2.9 * F, 0, (kk) => workbench(kk));
-  B.put(3.2 * F, 1.7 * F, 0.2, (kk) => { kk.add(rbox(0.7, 0.45, 0.5, 0.03), MAT.wood('honey'), 0, 0.225, 0); for (let i = 0; i < 4; i++) kk.add(cyl(0.06, 0.06, 0.1, 10), [MAT.brass(), MAT.copper(), MAT.iron(), MAT.brass()][i], -0.2 + i * 0.13, 0.5, 0.05); return { hw: 0.35, hd: 0.25, top: 0.55 }; });
-  R.npcSpots = { nell: { x: B.cx + 2.3 * F, z: B.cz + 2.9 * F - 0.85, a: Math.PI } };
+  B.put(P.bench.x, P.bench.z, 0, (kk) => workbench(kk));
+  B.put(P.parts.x, P.parts.z, P.parts.a, (kk) => { kk.add(rbox(0.7, 0.45, 0.5, 0.03), MAT.wood('honey'), 0, 0.225, 0); for (let i = 0; i < 4; i++) kk.add(cyl(0.06, 0.06, 0.1, 10), [MAT.brass(), MAT.copper(), MAT.iron(), MAT.brass()][i], -0.2 + i * 0.13, 0.5, 0.05); return { hw: 0.35, hd: 0.25, top: 0.55 }; });
+  R.npcSpots = { nell: { x: B.cx + P.spot.x, z: B.cz + P.spot.z, a: P.spot.a } };
 
   B.light('#ffe2b8', 4.5, 13, -0.5 * F, 2.8, 0.0); B.light('#ffe8c8', 3, 9, 2.3 * F, 2.6, 2.6 * F); B.light('#ffd8a0', 1.8, 5, LX + 0.4, 1.9, -0.1 * F);
   return { nellhouse: B.finish() };

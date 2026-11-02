@@ -19,9 +19,21 @@
 //   buildPharmacyRoom(scene, physics) → { pharmacy }   (regions.js group 'pharmacy')
 //   pharmacyDoors(W) / pharmacyExit(to, W)   the 'bug2' house's door leads in; 'pharmacy-out' leads back out before it
 //   R.npcSpots.pharmacist       behind the counter (the story layer may put the pharmacist there)
+//   PHARMACY_PLAN               the layout in the room's frame (the builder's own numbers): roomlife.js places the
+//                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, jar, chair, noticeBoard, pottedPlant } from './props.js';
+
+// (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the shelves, counter and jars their own size,
+//  a few more shelves on the longer walls)
+export const PHARMACY_PLAN = (() => {
+  const F = 1.5, W = 7.2 * F, D = 6.6 * F, LX = -W / 2, BZ = -D / 2, CX = 0.15 * F, CZ = 0.1 * F;
+  return { F, W, D, LX, BZ, DOORZ: 2.1 * F, CX, CZ, CW: 3.8,
+    spot: { x: CX, z: CZ - 0.85, a: 0 },          // (the pharmacist's spot behind the oval counter)
+    wallX: LX + 0.2, wallShelves: [-3.9, -2.1, 0.3], ladderZ: -1.0,   // (the left wall's shelves of jars: their middles' z)
+    backZ: BZ + 0.2, backShelves: [-4.2, -2.4], honeyShelves: [1.2, 3.6], ladderX: 2.6 };   // (the back wall's: their x)
+})();
 
 export const PHARMACY_AT = { x: 6900, z: 0 };
 
@@ -69,12 +81,12 @@ export function buildPharmacyRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the
   //  shelves, counter and jars keep their size, a few more shelves fill the longer walls)
-  const F = 1.5, W = 7.2 * F, D = 6.6 * F, H = 4.0;
+  const P = PHARMACY_PLAN, { F, W, D } = P, H = 4.0;
   R.view = 10.5; R.follow = 0.55; R.music = 'home';
   // (the same pale grey blocks as the tavern, the shop and the ticket office)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 2.1 * F;
+  const { LX, BZ, DOORZ } = P;
   B.shell({ floor: MAT.tiles('#b8b6b0', '#aeaca6', '#4a4a50', false, 6), slab: rough, body: stone, low: stone, rail: MAT.iron(), cap, H, t: 0.5, dado: 1.0, rimH: 0.45, rimMat: rough, W, D,
     left: [{ at: DOORZ, w: 1.3, h: 2.4, y0: 0, kind: 'door' }] });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.75, to: 'pharmacy-out' });
@@ -85,18 +97,18 @@ export function buildPharmacyRoom(scene, physics) {
 
   // --- the shelves of apothecary jars, a ladder on each wall, the plant against the back wall
   const honey = (row, i) => (row === 1 ? ['jar', ['#e8a030', '#d88a20'][i % 2], 1.15] : apothecary(row, i));   // (twelve years on: the Mosquibees' honey)
-  for (const z of [-3.9, -2.1, 0.3]) B.put(LX + 0.2, z, Math.PI / 2, (kk) => shelves(kk, 1.7, apothecary));
-  B.put(LX + 0.22, -1.0, Math.PI / 2, (kk) => ladder(kk));
-  for (const x of [-4.2, -2.4]) B.put(x, BZ + 0.2, 0, (kk) => shelves(kk, 1.7, apothecary));
-  B.put(1.2, BZ + 0.2, 0, (kk) => shelves(kk, 1.7, honey));
-  B.put(2.6, BZ + 0.22, 0, (kk) => ladder(kk));
-  B.put(3.6, BZ + 0.2, 0, (kk) => shelves(kk, 1.7, honey));
+  for (const z of P.wallShelves) B.put(P.wallX, z, Math.PI / 2, (kk) => shelves(kk, 1.7, apothecary));
+  B.put(LX + 0.22, P.ladderZ, Math.PI / 2, (kk) => ladder(kk));
+  for (const x of P.backShelves) B.put(x, P.backZ, 0, (kk) => shelves(kk, 1.7, apothecary));
+  B.put(P.honeyShelves[0], P.backZ, 0, (kk) => shelves(kk, 1.7, honey));
+  B.put(P.ladderX, BZ + 0.22, 0, (kk) => ladder(kk));
+  B.put(P.honeyShelves[1], P.backZ, 0, (kk) => shelves(kk, 1.7, honey));
   k.at(-0.65, 0, BZ + 0.55, 0, () => pottedPlant(k, { kind: 'leafy', s: 1.5, potColor: '#5e5c66' }));
   for (let i = 0; i < 5; i++) k.add(sphere(0.06, 8, 6), MAT.flat('#c8302a', 0.4), -0.65 + Math.sin(i * 1.9) * 0.3, 1.05 + (i % 2) * 0.12, BZ + 0.55 + Math.cos(i * 1.9) * 0.25);
   B.ccol(-0.65, BZ + 0.55, 0.45, 1.2);
 
   // --- the oval counter in the middle: the till, a green flask and glasses, a bauble tree at each end
-  const CX = 0.15 * F, CZ = 0.1 * F, CW = 3.8;
+  const { CX, CZ, CW } = P;
   k.add(rbox(CW, 0.95, 0.75, 0.36), METAL(), CX, 0.475, CZ);
   k.add(rbox(CW + 0.06, 0.05, 0.81, 0.38), DARK(), CX, 0.97, CZ);
   B.col(CX, CZ, CW / 2, 0.4, 1.0, { noStand: true });
@@ -105,7 +117,7 @@ export function buildPharmacyRoom(scene, physics) {
   for (const dx of [-0.95, -0.3]) jar(k, CX + dx, 0.995, CZ - 0.1, 'bottle', '#d8e8ec', 0.7);
   k.at(CX - CW / 2 + 0.3, 0.995, CZ, 0, () => baubleTree(k, '#2f6aa8'));
   k.at(CX + CW / 2 - 0.3, 0.995, CZ, 0, () => baubleTree(k, '#c83a3a'));
-  R.npcSpots = { pharmacist: { x: B.cx + CX, z: B.cz + CZ - 0.85, a: 0 } };
+  R.npcSpots = { pharmacist: { x: B.cx + P.spot.x, z: B.cz + P.spot.z, a: P.spot.a } };
 
   // --- the lamps, the front: red chairs, a second plant, two teal jars on the floor; the notice board by the door
   for (const [x, z] of [[LX + 0.5, 1.2 * F], [W / 2 - 0.5, -0.6 * F]]) B.put(x, z, 0, (kk) => postLamp(kk));

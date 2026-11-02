@@ -37,7 +37,8 @@ await ev(async () => {
     const G = game, PH = G.physics, h = G.hero, out = [];
     for (const r of people(place)) {
       if (!r.present || r.away) continue;
-      const p = r.pos, st = r.st, seated = st === 'seated' || st === 'sitin', s = r.stop, bad = [];
+      // (sitting down, sitting, or getting up again — walkers.js sitTick, 0.8 s each way — a sitter is over its seat)
+      const p = r.pos, st = r.st, seated = st === 'seated' || st === 'sitin' || st === 'sitout', s = r.stop, bad = [];
       if (floors && !floors.some((f) => p.x >= f.x0 - 0.01 && p.x <= f.x1 + 0.01 && p.z >= f.z0 - 0.01 && p.z <= f.z1 + 0.01)) bad.push('off the floor');
       const fy = floors?.find((f) => p.x >= f.x0 - 0.01 && p.x <= f.x1 + 0.01 && p.z >= f.z0 - 0.01 && p.z <= f.z1 + 0.01)?.y ?? p.y;
       for (const c of PH.near(p.x, p.z)) {

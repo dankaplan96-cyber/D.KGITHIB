@@ -17,11 +17,23 @@
 //   buildBazooRoom(scene, physics) → { bazoo }   (regions.js group 'bazoo')
 //   bazooDoors(W) / bazooExit(to, W)   the 'museum' building's door leads in; 'bazoo-out' leads back out before it
 //   R.npcSpots.bazoo            behind the counter (the story layer may put Mr Bazoo there)
+//   BAZOO_PLAN                  the layout in the room's frame (the builder's own numbers): roomlife.js places the
+//                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, jar, plate, noticeBoard, pottedPlant, barrel } from './props.js';
 
 export const BAZOO_AT = { x: 6700, z: 0 };
+// (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the goods and the tables their own size)
+export const BAZOO_PLAN = (() => {
+  const F = 1.5, W = 8.4 * F, D = 6.0 * F, LX = -W / 2, BZ = -D / 2, CX = 0.2 * F, CZ = 0.5 * F, CW = 3.6, CD = 1.5;
+  return { F, W, D, LX, BZ, DOORZ: 1.8 * F, CX, CZ, CW, CD,
+    till: { x: CX, z: CZ - 0.25, a: 0 },          // (Mr Bazoo's spot inside the counter's U, at the till)
+    front: CZ + CD / 2 - 0.25 + 0.27,             // (the counter's front face, toward the door's side of the room)
+    // the display tables along the walls: [x, z, the way it is turned, its width]
+    tables: { rabbit: [LX + 0.45, -0.6 * F, Math.PI / 2, 1.6], corner: [-2.6 * F, BZ + 0.45, 0, 1.5], fruit: [0.2 * F, BZ + 0.45, 0, 1.6],
+      bottle: [2.6 * F, BZ + 0.45, 0, 1.6], bowl: [W / 2 - 0.5, 0.0, -Math.PI / 2, 1.4], zeelich: [W / 2 - 0.5, -2.0 * F, -Math.PI / 2, 1.2] } };
+})();
 
 const METAL = () => MAT.paint('#cfcdd6', 0.35), DARK = () => MAT.paint('#7c7a86', 0.4);   // (the original's pale metal)
 
@@ -68,19 +80,19 @@ export function buildBazooRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the goods and
   //  the tables keep their size)
-  const F = 1.5, W = 8.4 * F, D = 6.0 * F, H = 4.2;
+  const P = BAZOO_PLAN, { F, W, D } = P, H = 4.2;
   R.view = 10.5; R.follow = 0.6; R.music = 'home';
   // (the same pale grey blocks as the tavern: Citadel's stone inside, lit a little from within)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 1.8 * F;
+  const { LX, BZ, DOORZ } = P;
   B.shell({ floor: MAT.tiles('#a7a5a0', '#9a9893', '#3c3c40', false, 5), slab: rough, body: stone, low: stone, rail: MAT.iron(), cap, H, t: 0.5, dado: 1.0, rimH: 0.45, rimMat: rough, W, D,
     left: [{ at: DOORZ, w: 1.4, h: 2.4, y0: 0, kind: 'door' }] });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.75, to: 'bazoo-out' });
   R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
 
   // --- the counter in the middle: a rounded U of pale metal, the till on it, a bauble tree at each end
-  const CX = 0.2 * F, CZ = 0.5 * F, CW = 3.6, CD = 1.5;
+  const { CX, CZ, CW, CD } = P;
   k.add(rbox(CW, 0.95, 0.5, 0.2), METAL(), CX, 0.475, CZ + CD / 2 - 0.25);
   for (const s of [-1, 1]) k.add(rbox(0.5, 0.95, CD, 0.2), METAL(), CX + s * (CW / 2 - 0.25), 0.475, CZ);
   k.add(rbox(CW + 0.08, 0.05, 0.56, 0.02), DARK(), CX, 0.97, CZ + CD / 2 - 0.25);
@@ -90,22 +102,22 @@ export function buildBazooRoom(scene, physics) {
   k.at(CX, 0.995, CZ + CD / 2 - 0.25, 0, () => till(k));
   k.at(CX - CW / 2 + 0.25, 0.995, CZ - 0.2, 0, () => baubleTree(k, '#c83a3a'));
   k.at(CX + CW / 2 - 0.25, 0.995, CZ - 0.2, 0, () => baubleTree(k, '#2f8a9a'));
-  R.npcSpots = { bazoo: { x: B.cx + CX, z: B.cz + CZ - 0.25, a: 0 } };
+  R.npcSpots = { bazoo: { x: B.cx + P.till.x, z: B.cz + P.till.z, a: P.till.a } };
 
   // --- display tables along the walls, each with its goods
-  const tables = [
+  const T = P.tables, tables = [
     // the left wall: the terracotta rabbit and the teal figure
-    [LX + 0.45, -0.6 * F, Math.PI / 2, 1.6, (kk) => { kk.at(-0.4, 0.76, 0, 0, () => rabbit(kk)); kk.at(0.35, 0.76, 0, 0, () => figure(kk)); }],
+    [...T.rabbit, (kk) => { kk.at(-0.4, 0.76, 0, 0, () => rabbit(kk)); kk.at(0.35, 0.76, 0, 0, () => figure(kk)); }],
     // the back corner: a teal vase, a red pot, a glass
-    [-2.6 * F, BZ + 0.45, 0, 1.5, (kk) => { jar(kk, -0.45, 0.76, 0, 'vase', '#3f9a9a', 1.3); jar(kk, 0.1, 0.76, 0, 'urn', '#b83a2a', 0.9); jar(kk, 0.5, 0.76, 0.05, 'bottle', '#d8e8ec', 0.8); }],
+    [...T.corner, (kk) => { jar(kk, -0.45, 0.76, 0, 'vase', '#3f9a9a', 1.3); jar(kk, 0.1, 0.76, 0, 'urn', '#b83a2a', 0.9); jar(kk, 0.5, 0.76, 0.05, 'bottle', '#d8e8ec', 0.8); }],
     // the back wall: red fruit in a bowl, a tall candle in its dish
-    [0.2 * F, BZ + 0.45, 0, 1.6, (kk) => { plate(kk, -0.35, 0.77, 0, 0, '#8a8a94', 0.18, false); for (let i = 0; i < 5; i++) kk.add(sphere(0.06, 8, 6), MAT.flat('#c8302a', 0.35), -0.35 + Math.sin(i * 1.3) * 0.09, 0.84, Math.cos(i * 1.3) * 0.08); plate(kk, 0.35, 0.77, 0, 0, '#3a3a40', 0.12, false); kk.add(cyl(0.05, 0.05, 0.36, 10), MAT.flat('#e8d870', 0.6), 0.35, 0.96, 0); kk.add(sphere(0.03, 6, 6), MAT.glow('#fff0b0', '#ffc040', 1.4), 0.35, 1.16, 0); }],
+    [...T.fruit, (kk) => { plate(kk, -0.35, 0.77, 0, 0, '#8a8a94', 0.18, false); for (let i = 0; i < 5; i++) kk.add(sphere(0.06, 8, 6), MAT.flat('#c8302a', 0.35), -0.35 + Math.sin(i * 1.3) * 0.09, 0.84, Math.cos(i * 1.3) * 0.08); plate(kk, 0.35, 0.77, 0, 0, '#3a3a40', 0.12, false); kk.add(cyl(0.05, 0.05, 0.36, 10), MAT.flat('#e8d870', 0.6), 0.35, 0.96, 0); kk.add(sphere(0.03, 6, 6), MAT.glow('#fff0b0', '#ffc040', 1.4), 0.35, 1.16, 0); }],
     // the back wall: the big green bottle, a clay pot, a red box
-    [2.6 * F, BZ + 0.45, 0, 1.6, (kk) => { jar(kk, -0.45, 0.76, 0, 'urn', '#3f8a6a', 1.5); jar(kk, 0.1, 0.76, 0, 'urn', '#a8683a', 0.95); kk.add(rbox(0.3, 0.16, 0.2, 0.02), MAT.paint('#a8302a', 0.5), 0.5, 0.84, 0); }],
+    [...T.bottle, (kk) => { jar(kk, -0.45, 0.76, 0, 'urn', '#3f8a6a', 1.5); jar(kk, 0.1, 0.76, 0, 'urn', '#a8683a', 0.95); kk.add(rbox(0.3, 0.16, 0.2, 0.02), MAT.paint('#a8302a', 0.5), 0.5, 0.84, 0); }],
     // by the door's side of the room: a teal bottle and a bowl
-    [W / 2 - 0.5, 0.0, -Math.PI / 2, 1.4, (kk) => { jar(kk, -0.3, 0.76, 0, 'bottle', '#2f8a9a', 1.3); plate(kk, 0.3, 0.77, 0, 0, '#c8a070', 0.16, false); }],
+    [...T.bowl, (kk) => { jar(kk, -0.3, 0.76, 0, 'bottle', '#2f8a9a', 1.3); plate(kk, 0.3, 0.77, 0, 0, '#c8a070', 0.16, false); }],
     // twelve years on: Zeelich goods, glazed jars in the Esmers' colours and a little domed lamp
-    [W / 2 - 0.5, -2.0 * F, -Math.PI / 2, 1.2, (kk) => { jar(kk, -0.35, 0.76, 0, 'jar', '#2f8a9a', 1.2); jar(kk, 0.0, 0.76, 0.05, 'jar', '#c84a7a', 1.1); kk.add(cyl(0.08, 0.1, 0.12, 10), MAT.brass(), 0.35, 0.82, 0); kk.add(new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), MAT.glow('#ffe8c8', '#e8a060', 0.8), 0.35, 0.88, 0); }],
+    [...T.zeelich, (kk) => { jar(kk, -0.35, 0.76, 0, 'jar', '#2f8a9a', 1.2); jar(kk, 0.0, 0.76, 0.05, 'jar', '#c84a7a', 1.1); kk.add(cyl(0.08, 0.1, 0.12, 10), MAT.brass(), 0.35, 0.82, 0); kk.add(new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), MAT.glow('#ffe8c8', '#e8a060', 0.8), 0.35, 0.88, 0); }],
   ];
   for (const [x, z, ry, w, goods] of tables) { B.put(x, z, ry, (kk) => displayTable(kk, w)); k.at(x, 0, z, ry, () => goods(k)); }
   // the great plant by the back wall, between the tables
