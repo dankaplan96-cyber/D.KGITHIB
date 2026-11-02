@@ -15,10 +15,14 @@ away from the user, who plays chapters 1–2 only.
   spaceship; FunFrock is dead; no Earth-style night; Esmer and Wannies; English player text, short turns; numbers and
   descriptions only from the originals; honest measurements (SwiftShader here, no fps claims); at most two agents.
 
+- **Saves (the user, 2.11):** "Saves are not very critical; I always play a little, just to see chapter 1's mechanics
+  and some of chapter 2." So: old saves must not crash the game (a clean fallback to a new game with a message is
+  enough); no elaborate migration of mid-expansion saves. New saves made in the expansion must still save and load.
+
 ## Increments (the brief's §17)
 | # | Increment | State | Branch / commit | Notes |
 |---|---|---|---|---|
-| 0 | Bring `expansion/ballastra` up to the base (it is 37 commits behind; `tests/save-migration.mjs` conflicts: v6 campaign tests vs SHAFT-CITADEL v5 tests, both must stay) | **next** | | |
+| 0 | Bring `expansion/ballastra` up to the base (it is 37 commits behind; `tests/save-migration.mjs` conflicts: v6 campaign tests vs SHAFT-CITADEL v5 tests; keep what is cheap, saves are not critical to the user) | **next** | | |
 | A | Story integration map and dependency graph; Oren's rules of reach (what allows contact, what carries it, what he senses and controls, what interrupts it, why not everything at once); the revised chapter order and quest cards (IDs, prerequisites, mechanics, failure/retry, saves, consequences, estimates) | to do | | written into `EXPANSION_PLAN.md` as a revision, not a new parallel plan |
 | B | First encounter with Oren, with a genuine act of help | to do | | |
 | C | The sleeping brother: a complete playable quest | to do | | needs Ballastra's places (W-1… from the laptop) or stand-ins |
