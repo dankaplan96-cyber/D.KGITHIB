@@ -369,6 +369,8 @@ export class StoryRounds {
   allowed(n, D) {
     const g = this.game, p = n.placed;
     if (!n.present || n.controlled || !p || g.state !== 'play' || g.cutscene || g.trans || g.reveal?.on) return false;
+    // (a track someone gave them since: a scene, or a test walking them, drives them; the round waits)
+    if (n.track && n.track.cmds[n.track.pc]) return false;
     if (g.room?.id !== D.room || g.hero?.body === D.id) return false;
     return this.onMark(D, p);
   }
