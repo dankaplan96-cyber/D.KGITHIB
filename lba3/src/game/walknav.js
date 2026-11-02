@@ -11,6 +11,15 @@
 //
 // The grid is 0.5 m; a cell is looked at once and remembered. A route is smoothed to its corners (a string pull over
 // cells that were checked) and cached by its two ends, so each stop-to-stop leg of a daily round is planned once.
+//
+// INTERIOR-LIFE: the same planner indoors. A room is a FLOOR here (addFloor: a box of the world and the height of its
+// floor): every interior stands on floor bricks out over the sea, at y 0 (or a raised level: the baggage claim's upper
+// hall), where the open-air rules (ground under MIN_GROUND is the shore, a low brick on land is a bench) do not apply. On a
+// floor a cell is walkable when the ground there is that floor (not a stair, a platform or a gallery), nothing taller
+// than a step stands within the body's reach (walls, counters, tables) and no low piece of furniture is underfoot
+// (chairs, stools, a plant's stand: a person walks round them, as on the street round a bench). An indoor planner may use
+// a finer grid and a tighter reach (options: cell, safeR, hugR, lowR: the berth given low furniture): a room's ways are narrower than the street's
+// (src/game/walkers.js, Walkers indoor).
 import { WATER_FLOOR } from '../engine/physics.js';
 import { streetDist } from './town.js';
 
@@ -18,8 +27,10 @@ const CELL = 0.5, SAFE_R = 0.42, HUG_R = 0.95, MIN_GROUND = 0.35, MAX_SLOPE = 0.
 const K = (ix, iz) => (ix + 8192) * 16384 + (iz + 8192);
 
 export class WalkNav {
-  constructor(game) {
+  constructor(game, { cell = CELL, safeR = SAFE_R, hugR = HUG_R, lowR = 0.5 } = {}) {
     this.game = game;
+    this.cell = cell; this.safeR = safeR; this.hugR = hugR; this.lowR = lowR;
+    this.floors = [];           // INTERIOR-LIFE: [{x0, x1, z0, z1, y}] rooms' floors (addFloor)
     this.cells = new Map();     // key → {ok, h, c}
     this.cache = new Map();     // 'x,z>x,z' → pts
     this.jobs = [];
@@ -31,18 +42,31 @@ export class WalkNav {
     this.levels = [];           // [{x0, x1, y}] where the ground is floor bricks over open sea (Zeelich): the level people walk at
   }
   addLevel(x0, x1, y) { if (!this.levels.some((l) => l.x0 === x0 && l.x1 === x1)) { this.levels.push({ x0, x1, y }); this.cells.clear(); this.cache.clear(); } }
-  levelAt(x) { for (const l of this.levels) if (x >= l.x0 && x <= l.x1) return l.y; return null; }
+  levelAt(x, z) {
+    if (z != null && this.floors.length) { const F = this.floorAt(x, z); if (F) return F.y; }
+    for (const l of this.levels) if (x >= l.x0 && x <= l.x1) return l.y;
+    return null;
+  }
+  // INTERIOR-LIFE: a room's floor (or a level of it), once; and the floor a point is on
+  addFloor(F) {
+    if (this.floors.some((f) => f.x0 === F.x0 && f.x1 === F.x1 && f.z0 === F.z0 && f.z1 === F.z1 && f.y === F.y)) return;
+    this.floors.push({ x0: F.x0, x1: F.x1, z0: F.z0, z1: F.z1, y: F.y });
+    this.cells.clear(); this.cache.clear();
+  }
+  floorAt(x, z) { for (const f of this.floors) if (x >= f.x0 && x <= f.x1 && z >= f.z0 && z <= f.z1) return f; return null; }
   get P() { return this.game.physics; }
-  cellOf(x, z) { return [Math.round(x / CELL), Math.round(z / CELL)]; }
+  cellOf(x, z) { return [Math.round(x / this.cell), Math.round(z / this.cell)]; }
 
   // everything the planner knows about one cell
   info(ix, iz) {
     const k = K(ix, iz);
     let c = this.cells.get(k);
     if (c) return c;
-    const P = this.P, x = ix * CELL, z = iz * CELL;
+    const P = this.P, x = ix * this.cell, z = iz * this.cell;
     c = { ok: false, h: 0, c: 1, x, z };
     this.stats.cellsMade++;
+    const F = this.floors.length ? this.floorAt(x, z) : null;
+    if (F) { this.cells.set(k, this.floorCell(c, F)); return c; }
     const th = P.terrain.heightAt(x, z);
     let yref = th + 0.3, live = th >= WATER_FLOOR - 1;   // (deep water is never a way: skip the brick tests)
     if (!live) { const L = this.levelAt(x); if (L != null) { yref = L + 0.3; live = true; } }
@@ -52,12 +76,12 @@ export class WalkNav {
       // (a low brick standing on land — a bench, a step-up crate, a planter's rim — is something to walk round, not over: the
       //  hero may climb it, a resident does not; a pier's planks over water, and a quay's floor, are the way)
       const base = th >= WATER_FLOOR - 1 ? th : yref - 0.3;
-      let ok = g >= MIN_GROUND && !(base >= MIN_GROUND && ((gi.brick && g - base > 0.3) || this.lowBrick(x, z, base))) && !P.blockedAt(x, z, g, SAFE_R) && !P.steepAt(x, z, g + 0.05, MAX_SLOPE);
+      let ok = g >= MIN_GROUND && !(base >= MIN_GROUND && ((gi.brick && g - base > 0.3) || this.lowBrick(x, z, base))) && !P.blockedAt(x, z, g, this.safeR) && !P.steepAt(x, z, g + 0.05, MAX_SLOPE);
       if (ok) for (const d of this.keepOut) if (Math.hypot(x - d.x, z - d.z) < d.r) { ok = false; break; }
       c.ok = ok;
       if (ok) {
         let m = 1;
-        if (P.blockedAt(x, z, g, HUG_R)) m += 0.7;            // a wall's shoulder, a tree's branches
+        if (P.blockedAt(x, z, g, this.hugR)) m += 0.7;        // a wall's shoulder, a tree's branches
         const pd = this.pathDist ? Math.min(this.pathDist(x, z), Math.max(0, streetDist(x, z)) + 0.6) : 9;
         if (pd > 1.7) m += Math.min(1, (pd - 1.7) / 5) * 0.9; // a path is the better way when one runs alongside
         for (const d of this.keepOut) { const dd = Math.hypot(x - d.x, z - d.z) - d.r; if (dd < 1.6) m += (1.6 - dd) * 2; }
@@ -67,11 +91,28 @@ export class WalkNav {
     this.cells.set(k, c);
     return c;
   }
+  // INTERIOR-LIFE: a cell on a room's floor: that floor underfoot (within 0.12 m: not a step of a stair, not a platform),
+  // no wall or tall furniture within reach, no low furniture underfoot, not in a doorway; a wall's or a counter's
+  // shoulder costs more, so a route keeps to the middle of the room's ways
+  floorCell(c, F) {
+    const P = this.P, x = c.x, z = c.z, g = P.groundInfo(x, z, F.y + 0.3).h;
+    c.h = g;
+    let ok = Math.abs(g - F.y) < 0.12 && !P.blockedAt(x, z, g, this.safeR) && !this.lowBrick(x, z, g, this.lowR);
+    if (ok) for (const d of this.keepOut) if (Math.hypot(x - d.x, z - d.z) < d.r) { ok = false; break; }
+    c.ok = ok;
+    if (ok) {
+      let m = 1;
+      if (P.blockedAt(x, z, g, this.hugR)) m += 0.7;
+      for (const d of this.keepOut) { const dd = Math.hypot(x - d.x, z - d.z) - d.r; if (dd < 1.0) m += (1.0 - dd) * 2; }
+      c.c = m;
+    }
+    return c;
+  }
   // a low solid within reach (a bench, a crate, a planter's rim: not tall enough to push anyone aside, tall enough to climb)
-  lowBrick(x, z, base) {
+  lowBrick(x, z, base, r = 0.5) {
     for (const c of this.P.near(x, z)) {
       if (!c.enabled || c.stair || c.top - base < 0.25 || c.top - base > 0.7 || c.bottom > base + 0.4) continue;
-      if (this.P._inside(c, x, z, 0.5)) return true;
+      if (this.P._inside(c, x, z, r)) return true;
     }
     return false;
   }
@@ -81,7 +122,7 @@ export class WalkNav {
     const [cx, cz] = this.cellOf(x, z);
     const c0 = this.info(cx, cz);
     if (c0.ok) return c0;
-    const R = Math.ceil(maxR / CELL);
+    const R = Math.ceil(maxR / this.cell);
     let best = null, bd = 1e9;
     for (let r = 1; r <= R; r++) {
       for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
@@ -125,7 +166,7 @@ export class WalkNav {
     const s = this.nearest(job.from.x, job.from.z, 5), g = this.nearest(job.to.x, job.to.z, 5);
     if (!s || !g) { job.done = true; job.ok = false; job.pts = null; return; }
     job.s = s; job.g = g; job.open = []; job.best = new Map(); job.prev = new Map(); job.closed = new Set();
-    const k0 = K(Math.round(s.x / CELL), Math.round(s.z / CELL));
+    const k0 = K(Math.round(s.x / this.cell), Math.round(s.z / this.cell));
     job.best.set(k0, 0); job.node = new Map([[k0, s]]);
     this._push(job.open, [this._h(s, g), k0]);
   }
@@ -139,7 +180,7 @@ export class WalkNav {
     if (!job.open) this._begin(job);
     if (job.done) return true;
     const { open, best, prev, closed, node, g } = job;
-    const gk = K(Math.round(g.x / CELL), Math.round(g.z / CELL));
+    const gk = K(Math.round(g.x / this.cell), Math.round(g.z / this.cell));
     for (let it = 0; it < n; it++) {
       if (!open.length) { job.done = true; job.ok = false; this._finish(job, job.closestK); return true; }
       const k = this._pop(open)[1];
@@ -151,7 +192,7 @@ export class WalkNav {
       if (job.closestD == null || dg < job.closestD) { job.closestD = dg; job.closestK = k; }
       if (k === gk || dg < 0.3) { job.done = true; job.ok = true; this._finish(job, k); return true; }
       if (job.n > 9000) { job.done = true; job.ok = false; this._finish(job, job.closestK); return true; }
-      const cx = Math.round(c.x / CELL), cz = Math.round(c.z / CELL), gc = best.get(k);
+      const cx = Math.round(c.x / this.cell), cz = Math.round(c.z / this.cell), gc = best.get(k);
       for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
         if (!dx && !dz) continue;
         const nb = this.info(cx + dx, cz + dz);
@@ -161,7 +202,7 @@ export class WalkNav {
         if (closed.has(nk)) continue;
         let sm = 0;
         for (let si = 0, S = this.soft; si < S.length; si++) { const s = S[si], sd = Math.hypot(nb.x - s.x, nb.z - s.z); if (sd < 2.4) sm += (2.4 - sd) * 1.5; }
-        const ng = gc + Math.hypot(dx, dz) * CELL * (c.c + nb.c + sm) * 0.5;
+        const ng = gc + Math.hypot(dx, dz) * this.cell * (c.c + nb.c + sm) * 0.5;
         if (ng >= (best.get(nk) ?? 1e18)) continue;
         best.set(nk, ng); prev.set(nk, k); node.set(nk, nb);
         this._push(open, [ng + this._h(nb, g), nk]);

@@ -30,7 +30,7 @@ export class Citizens extends ChapterBase {
   get gone() { return this.story.cur?.key === 'evacuation'; }
   place(id) {
     const n = this.game.npcs.find((x) => x.def.id === id);
-    if (!n?.ambient) return undefined;
+    if (!n?.ambient || n.def.indoor) return undefined;   // (INTERIOR-LIFE: the rooms' and the ports' people are story/interiors.js's)
     if (this.gone && !EVAC_STAY.has(id)) { n.away = 'story'; return null; }
     if (n.away === 'story') { n.away = null; return n.reset(); }
     return undefined;
@@ -50,6 +50,9 @@ export class Citizens extends ChapterBase {
     if (dry && has(`rs_${id}_dry`)) keys.push(`rs_${id}_dry`);
     if (gone && has(`rs_${id}_gone`)) keys.push(`rs_${id}_gone`);
     if (hot && has(`rs_${id}_hot`)) keys.push(`rs_${id}_hot`);
+    // (INTERIOR-LIFE: the spaceports' people: `_g0…` while passenger flights are grounded, chapters 1–3; `_f0…` once they run)
+    const fl = this.story.index >= 3 ? 'f' : 'g';
+    for (let i = 0; i < 4 && has(`rs_${id}_${fl}${i}`); i++) keys.push(`rs_${id}_${fl}${i}`);
     for (let i = 0; i < 6 && has(`rs_${id}_${i}`); i++) keys.push(`rs_${id}_${i}`);
     return keys;
   }
