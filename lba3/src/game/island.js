@@ -681,7 +681,7 @@ function buildHarbour(W0, root, r) {
   lamp(W, g, -70.5, 1.8);
   lamp(W, g, -63.2, -11.2);
   { const tacc = { list: [], cups: [], parent: g }; tulipBed(W, g, -64.8, -9.0, 4.2, 1.4, 0, r, tacc); tulipBed(W, g, -63.6, 1.2, 1.4, 3.4, 0, r, tacc); tulipFlush(tacc); }
-  bench(W, g, -65.0, -7.0, Math.PI, r);
+  bench(W, g, -65.0, -6.6, Math.PI, r);   // (BENCHES-1: 0.4 m back from the tulip bed before it: 1.2 m clear for the sitter's feet)
   barrels(W, g, [[-73.1, 5.6], [-72.3, 6.1], [-73.2, 4.7], [-69.8, 6.2, true]], r);
   W.givers.push({ id: 'quay-barrels', x: -72.6 + d.x, z: 5.4 + d.z, r: 1.8, top: 1.1, kinds: ['money', 'life'], n: 2 });
   crateStack(W, g, [[-71.6, -11.6, 2], [-70.5, -12.0, 1], [-72.6, -10.6, 1, 0.8]], r);
@@ -1192,7 +1192,10 @@ function bench(W, parent, x, z, ry) {
     mesh(g, bbox(0.06, 0.06, 0.5, 0.01, 1), iron, sx, 0.44, -0.06);
   }
   W.physics.add({ type: 'box', x, z, hw: 0.85, hd: 0.3, rot: ry, top: y + 0.5, noStand: true, block: true, seeThrough: true });   // (block: SOLID-NPC, not walked through)
-  (W.seats ||= []).push({ x, z, ry });   // WORLD-LIFE: a resident may sit here
+  // WORLD-LIFE: a resident may sit here. (BENCHES-1: in world coordinates — a site's W shifts the collider and the
+  // ground but not this list: the quay's bench was listed at the harbour's design place, on a roof 60 m away)
+  const d = W._shift || { x: 0, z: 0 };
+  (W.seats ||= []).push({ x: x + d.x, z: z + d.z, ry });
 }
 
 // ================================================================== more geometry helpers

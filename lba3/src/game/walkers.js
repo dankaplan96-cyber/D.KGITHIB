@@ -724,7 +724,28 @@ export class Resident extends NPC {
       if (dd > reachD || dd < 1e-3) continue;
       const w = (reachD - dd) / reachD, ahead = (-rx * ux - rz * uz) / dd;   // > 0: in front of it
       if (ahead > 0.1) {
-        ax += -uz * w * 1.7; az += ux * w * 1.7;
+        // (BENCHES-1: round the hero or a story person it steps to the usual side unless that side is the more crowded — a
+        //  wall or a trunk at the two places it would pass through, or someone else standing by them: Twinsen in the 2.2 m
+        //  gap between the south house's corner and the original's tree, which the lane's old bench used to close (the child
+        //  stepped into the wall and waited), or between Twinsen and Sphero at the square's south corner (a wide circle).
+        //  The same round a resident standing still (Ume by a bench she does not sit on: Pico stepped in between her and the
+        //  bench and stuck); two walking residents keep the one rule, so two who meet head on pass. The side is chosen once,
+        //  as it comes up to them along its route, and kept while they stay in its way: chosen again from where it has stepped
+        //  to, it turned back and forth, wedged between Twinsen and Gilbert by the well)
+        let side = 1;
+        if (!b.ambient || b.st !== 'walk') {
+          const ms = (this.passSides ||= new Map()), mem = ms.get(b);
+          if (mem && g.time - mem.t < 1.0) side = mem.side;
+          else {
+            const me = this.bodyR || 0.45, o = (b.bodyR ?? b.radius ?? 0.45) + me + 0.1, y = this.pos.y + 0.05;
+            const crowd = (sd) => { let n = 0; for (let k = 1; k <= 2; k++) { const px = b.pos.x - uz * o * k * sd, pz = b.pos.z + ux * o * k * sd;
+              if (P.blockedAt(px, pz, y, me)) n += 2;
+              for (const c of _others) if (c !== b && !c.ambient && Math.hypot(c.pos.x - px, c.pos.z - pz) < me + (c.bodyR ?? c.radius ?? 0.45) + 1.3) n += 2; } return n; };   // (a person by it as much as a wall: it keeps a berth of 0.8 m from them, and half a metre more to pass between)
+            if (crowd(1) > crowd(-1)) side = -1;
+          }
+          ms.set(b, { side, t: g.time });
+        }
+        ax += -uz * w * 1.7 * side; az += ux * w * 1.7 * side;
         const gap = dd - rr;
         // (the hero and the story's people it waits for; another resident standing about it just steps round, slowly)
         if (ahead > 0.55 && gap < 1.0) { slow = Math.min(slow, Math.max(b.ambient ? 0.45 : 0, clamp(gap / 1.0, 0.0, 1))); if (gap < 0.3 && !b.ambient) blocked = true; }

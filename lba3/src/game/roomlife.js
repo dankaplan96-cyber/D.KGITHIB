@@ -183,7 +183,7 @@ export const ROOMS = {
 // the pad; the pad at (4.5, 41), its ring 5 m; the board at (−11.2, 36.2), read from (−10.6, 36.2); the benches at z 33.05
 // facing the pad; the kiosk at (−10.4, 45.5), its hatch to the walkway). `when`: 'grounded' (chapters 1–3, before
 // passenger flights run) or 'flying' (from chapter 4).
-const CB = [-10.9, -7.7], CBZ = 33.05;   // (the two benches' middles)
+const CB = [-11.2, -7.4], CBZ = 33.05;   // (the two benches' middles: spaceport.js; BENCHES-1, 0.3 m further apart, clear of the tub between them)
 const SB = (id, bx, side, dur, o = {}) => S(id, [bx + side * 0.45, CBZ + 0.95], [bx + side * 0.45, CBZ, 0, SEAT.portBench], dur, o);
 const CITADEL_PORT = [
   { id: 'ama', char: 'councilB', tint: '#e4ecff', color: '#a0b8f0', speed: 0.85, start: 0, stops: [

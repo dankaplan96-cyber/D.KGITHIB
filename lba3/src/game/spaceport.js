@@ -133,11 +133,12 @@ export function buildSpaceport(root, physics, W) {
   occOf(W).add({ kind: 'rev', x: tcx, z: tcz, y0: Y + th, base: Y + th + 0.25, profile: [[0, 2.1], [0.03, 2.1], [0.4, 1.8], [1.0, 1.45], [1.6, 0.9], [1.75, 0.35]], name: 'spaceport dome' });
 
   // --- the waiting area in front of the terminal: benches facing the pad between a tub, a planter and bins
-  for (const bx of [-10.9, -7.7]) put((kk) => P.waitingBench(kk, { w: 1.9 }), bx, T.z1 + 1.45);
+  // (BENCHES-1: the tub stood 0.28 m off both benches' ends and the bins 0.1 and 0.26: the benches 0.3 m further apart,
+  //  0.6 m clear of the tub, and one bin, at the east bench's outer end: the west one's is 0.75 m from the deck's lamp)
+  for (const bx of [-11.2, -7.4]) put((kk) => P.waitingBench(kk, { w: 1.9 }), bx, T.z1 + 1.45);
   put((kk) => P.flowerTub(kk, { seed: 4 }), -9.3, T.z1 + 1.3);
   put((kk) => P.planterBox(kk, { w: 1.5, d: 0.55, seed: 5, color: '#2f6a9a', flowers: ['#e8343a', '#ffffff', '#f2c94c'] }), -5.45, T.z1 + 0.55);
-  put((kk) => P.litterBin(kk), -12.55, T.z1 + 1.15);
-  put((kk) => P.litterBin(kk), -6.2, T.z1 + 1.6);
+  put((kk) => P.litterBin(kk), -5.95, T.z1 + 1.55);
   put((kk) => P.pottedPlant(kk, { kind: 'spiky', s: 1.3, potColor: '#2f6a9a' }), 0.7, T.z1 + 0.6);
   put((kk) => P.drinkingFountain(kk), -0.9, T.z1 + 0.6);
 
