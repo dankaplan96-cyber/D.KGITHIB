@@ -728,14 +728,21 @@ export class Resident extends NPC {
         //  wall or a trunk at the two places it would pass through, or someone else standing by them: Twinsen in the 2.2 m
         //  gap between the south house's corner and the original's tree, which the lane's old bench used to close (the child
         //  stepped into the wall and waited), or between Twinsen and Sphero at the square's south corner (a wide circle).
-        //  Residents among themselves keep the one rule, so two who meet head on pass)
+        //  Residents among themselves keep the one rule, so two who meet head on pass. The side is chosen once, as it comes
+        //  up to them along its route, and kept while they stay in its way: chosen again from where it has stepped to, it
+        //  turned back and forth, wedged between Twinsen and Gilbert by the well)
         let side = 1;
         if (!b.ambient) {
-          const me = this.bodyR || 0.45, o = (b.bodyR ?? b.radius ?? 0.45) + me + 0.1, y = this.pos.y + 0.05;
-          const crowd = (sd) => { let n = 0; for (let k = 1; k <= 2; k++) { const px = b.pos.x - uz * o * k * sd, pz = b.pos.z + ux * o * k * sd;
-            if (P.blockedAt(px, pz, y, me)) n += 2;
-            for (const c of _others) if (c !== b && !c.ambient && Math.hypot(c.pos.x - px, c.pos.z - pz) < me + (c.bodyR ?? c.radius ?? 0.45) + 0.8) n++; } return n; };
-          if (crowd(1) > crowd(-1)) side = -1;
+          const mem = this.passSide;
+          if (mem && mem.b === b && g.time - mem.t < 1.0) side = mem.side;
+          else {
+            const me = this.bodyR || 0.45, o = (b.bodyR ?? b.radius ?? 0.45) + me + 0.1, y = this.pos.y + 0.05;
+            const crowd = (sd) => { let n = 0; for (let k = 1; k <= 2; k++) { const px = b.pos.x - uz * o * k * sd, pz = b.pos.z + ux * o * k * sd;
+              if (P.blockedAt(px, pz, y, me)) n += 2;
+              for (const c of _others) if (c !== b && !c.ambient && Math.hypot(c.pos.x - px, c.pos.z - pz) < me + (c.bodyR ?? c.radius ?? 0.45) + 0.8) n += 2; } return n; };   // (a person there as much as a wall: it keeps its berth from them too)
+            if (crowd(1) > crowd(-1)) side = -1;
+          }
+          this.passSide = { b, side, t: g.time };
         }
         ax += -uz * w * 1.7 * side; az += ux * w * 1.7 * side;
         const gap = dd - rr;
