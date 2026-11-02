@@ -255,6 +255,14 @@ fall height) was in place; what was still wrong, measured in Citadel's square by
   both feet then shuffled (up to three steps over 0.6 s; the run's stop slid both feet in). Now a foot nearly down is
   put down where it is, a foot in the air comes down in one 0.17 s step to where he will stand (under his hip), the
   other closes after it, one foot at a time: two steps, planted within ~0.4 s. The braking dip and lean are as before.
+  **STOP-ROBUST** (later): that held at some phases of the gait only. A step started before the blend to the stance was done (in
+  the first 0.1 s, or by another rule: the leg out of reach) went to the blend's passing pose and was not counted as the foot's stop
+  step; once the blend was done the foot stood 4-20 cm off its stance and stepped again at 0.4-0.8 s (three steps). Swept over 40
+  phases × 3 idle clocks, 30/60/120 fps, Classic/Modern: 226 of 720 stops broke a rule (third step, or planted after 0.45 s).
+  Now, in the stop's window, every step goes to the spot the foot will stand on in the stance being blended to (`Rig._stanceAt`:
+  the leg's target angles from the pelvis at rest, tilted by the idle's weight shift; within 0.7 cm of the converged pose),
+  whatever rule starts it, and is the foot's one stop step (taken in the first 0.45 s); a stop's step lasts 0.1-0.15 s by its
+  length (was 0.17-0.2). 0 of 720 now: at most two steps, planted by 0.34-0.4 s, the last step starting by 0.4 s.
 - **Landings**: the absorb (pelvis down 9–15 cm by fall height, 0.1–0.26 s) was there, but the soles sank 2–3 cm into
   the ground while the plant came in; both feet now stand where they touched down on that frame. The jump's crouch
   (`jumpPrep`) plants too (its soles slid and sank 4 cm). A step down of more than 0.3 m that the ground takes in one
@@ -294,6 +302,19 @@ Measured first on 0d045bf, each body alone at its own walking speeds (residents 
   10 cm off the spot it will stand on steps there at once; one waiting for the other's step is held in the air where it is; the
   other closes after it. 1-2 steps, both planted within 0.35 s; none later (standing, their feet may sit up to 9 cm off the stance
   pose before a shuffle, his 5 cm; a leg straight in standing up to 1.03 of its length, his 1.01).
+  **STOP-ROBUST** (later): the same blend's-pose targets as his, the same fix (`Rig._stanceAt`, one step a foot); and with both feet
+  in the air at the stop (30-40 % of their cycle) the foot waiting for the other's step was held in the air: standing on neither foot
+  for 0.1-0.17 s in about a quarter of all stops. Now the lower foot is put down where it is and the other steps to its spot first
+  (the 10 cm off-spot step only while the other foot stands). Swept (40 phases × 2 idle clocks, 12 bodies, 30/60/120 fps): 747 of
+  2880 stops had both feet off the ground over 0.05 s, 1 a step at 0.63 s; now 0 of 6720 (4 idle clocks, 14 bodies): at most two
+  steps, planted by 0.37 s, never both feet off the ground.
+  The turn where they stand failed now and then too (the Spheros, "the feet step in turn", once the slide): not the gait's phase but
+  the idle clock, random per body. The idle's weight shift tilts the pelvis up to 0.05 rad; on the Spheros' 0.58 m hips that lifts
+  one hip 1.5 cm, so that leg stood on a foot hanging in the air (1.02-1.04 leg lengths) and the turn ended in two closing steps,
+  the same foot twice. A planting character's pelvis now sits lower by that lift (`hipsY`, the others only; Twinsen unchanged).
+  Swept over 40 clocks: the Spheros at 30 fps 3 of 40 runs failed (2 not alternating, 1 slide 3.1 cm), at 60 fps 1; now 1 at 30 fps
+  (that slide, 3.1 cm against < 3: the controller turns them 0.57 rad in the first 30 fps frame, and the standing foot, 0.29 m out
+  from the middle, is dragged before the first step can land) and 0 at 60 / 120 fps; Arthur, Bram, Zoé, Pim, the Grobo guard 0 of 40.
 - **Turning where they stand** (to face Twinsen when he comes near or talks to them, to face each other, a guard turning to him):
   their controllers only turn them (an exponential turn, up to 6 rad/s at first), so the rig reads the turn from the facing: standing,
   talking or listening while it turns faster than ~45°/s it is a stepping turn as his turn anims (on until under 20°/s): the lead
