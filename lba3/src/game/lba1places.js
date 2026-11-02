@@ -39,6 +39,35 @@ function asylumDoor(scene, physics) {
   return { x: x + 1.65, z };
 }
 
+// WORLD-AUDIT: the way up to the block-house. The ground round the fort's south and east walls, where the door stands,
+// is a terrace 1–2.5 m above the plateau, and every way onto it (the dirt path at the south-west tower, the ledge west
+// of it) rises 2–2.6 m in about 1.5–2.5 m: too steep to walk and above a jump, so the asylum could not be reached at all
+// (a flood fill of the walkable ground from the town and the depot never met the door's). A short flight of the
+// block-house's stone steps from the plateau's flat up the ledge onto the terrace, east toward the fort. Each riser is
+// within a walking step (physics STEP_UP 0.55), read from the terrain at both ends when it is built; each tread is deeper
+// than his body (radius 0.4 m) and above the slope it covers; each step's collider runs on under the steps above it, so
+// the seam between two treads never reads as the ground below them.
+// (x0 → xt: the treads up the ledge, ~0.6 m each; xt → x1: the top step, out over the terrace's flat)
+export const ASYLUM_STEPS = { x0: -32.0, xt: -29.0, x1: -27.6, z: -45.0, w: 1.0, n: 6 };
+function asylumSteps(scene, physics) {
+  const S = ASYLUM_STEPS, T = (x, z) => physics.terrain.heightAt(x, z);
+  const y0 = T(S.x0 - 0.3, S.z), y1 = T(S.x1 + 0.2, S.z), rise = (y1 - y0) / S.n, run = (S.xt - S.x0) / (S.n - 1);
+  const g = new THREE.Group(); g.name = 'asylum-steps'; scene.add(g);
+  const stone = MAT.stone('grey', 2);
+  let last = y0;
+  for (let i = 0; i < S.n; i++) {
+    const xs = S.x0 + i * run, xe = i < S.n - 1 ? xs + run : S.x1;
+    let under = -Infinity;   // the slope's highest point under the tread
+    for (let u = 0; u <= 1; u += 0.25) for (let v = -0.5; v <= 0.5; v += 0.25) under = Math.max(under, T(xs + u * (xe - xs), S.z + v * S.w));
+    const top = Math.max(y0 + (i + 1) * rise, under + 0.03, last);
+    last = top;
+    const bottom = Math.min(T(xs, S.z), y0) - 0.4;
+    const o = new THREE.Mesh(rbox(xe - xs + 0.02, top - bottom, S.w, 0.03), stone);
+    o.position.set((xs + xe) / 2, (top + bottom) / 2, S.z); o.castShadow = o.receiveShadow = true; g.add(o);
+    physics.add({ type: 'box', x: (xs + S.x1) / 2, z: S.z, hw: (S.x1 - xs) / 2, hd: S.w / 2, rot: 0, top });
+  }
+}
+
 let DOOR = null;
 export function buildLba1Places(scene, physics) {
   buildLba1Door(scene, physics);
@@ -46,7 +75,7 @@ export function buildLba1Places(scene, physics) {
 }
 // LAZY-REGIONS (src/game/regions.js): the asylum's block-house stands on Citadel (built with it); the asylum, and the
 // temple's maze and halls together, are built the first time they are needed
-export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DOOR) DOOR = asylumDoor(scene, physics); }
+export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DOOR) { DOOR = asylumDoor(scene, physics); asylumSteps(scene, physics); } }
 export function buildLba1Asylum(scene, physics) {
   const A = LBA1_AT, out = {};
   if (hasLba1Room('asylum')) {

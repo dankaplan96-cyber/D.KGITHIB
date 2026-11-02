@@ -47,7 +47,7 @@ Object.assign(STR.en, {
   mp_basin: 'Glacier basin',
   mp_hut: "Shepherd's hut",
   mp_gorge: 'Gorge',
-  mp_zdock: 'Ferry dock',
+  mp_zdock: 'Sky pier',
   mp_street: 'Esmer street',
   mp_mills: 'Windmills',
   mp_zdepot: 'Project depot',

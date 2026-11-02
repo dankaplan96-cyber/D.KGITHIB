@@ -4,6 +4,7 @@
 // halls with their crystal mites, and back up at the far end).
 import { chromium } from '/opt/node-tools/node_modules/playwright/index.mjs';
 import { watch, checker } from './lib/boot.mjs';
+import { fileURLToPath } from 'node:url';
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } });
 const errs = watch(page);
@@ -45,6 +46,18 @@ check('out by the stair-well, back on Citadel', r.out === 'citadel', r);
 check("the Temple of Bù: down the stair into the maze", r.maze === 'bumaze' && r.mazeFloor, r);
 check("through the maze to the halls, the crystal mites there", r.halls === 'buhalls' && r.mites >= 4, r);
 check('the far end of the halls leads back up to the temple', r.back === 'butemple', r);
+// WORLD-AUDIT: the block-house can be walked to. It stands on a terrace round the fort, above the plateau; the stair
+// up the ledge west of the fort (lba1places.js ASYLUM_STEPS) is the way. By input: the harness's A* over the game's
+// collision and the keys, from the plateau below the ledge, in through the door and out again.
+await page.addScriptTag({ path: fileURLToPath(new URL('./lib/player.js', import.meta.url)) });
+const w = await page.evaluate(() => {
+  const G = game;
+  G.exitRoom({ x: -40.5, z: -46.5, a: 0 }, true, true); G.step(0.3); P.settle();
+  const r = P.enter('asylum'), here = P.here();
+  if (here === 'asylum') { const e = G.room.exits.find((x) => x.to); P.through(e.x, e.z); }
+  return { r: r.r, here, back: P.here(), pos: [G.hero.pos.x, G.hero.pos.y, G.hero.pos.z].map((v) => +v.toFixed(1)) };
+});
+check("the asylum can be walked to: from the plateau up the stair onto the fort's terrace, in and out (input)", w.here === 'asylum' && w.back === 'citadel', w);
 const fails = done();
 await browser.close();
 process.exit(fails ? 1 : 0);
