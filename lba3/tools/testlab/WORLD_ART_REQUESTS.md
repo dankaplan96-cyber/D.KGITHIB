@@ -1219,6 +1219,29 @@ vehicle in the game must work."
 - **The laptop's part (World Art, after the LBA1 places on Citadel):** the ship's outside model if a better one is
   needed, the cabin room (seats, windows, luggage racks) and the passengers' spots, as a request with a diff and
   pictures, like LBA-CITADEL-*. Spoilers: pictures only of the Citadel spaceport side.
+- **Cloud: built (branch `travel-1`).** The journey films are in `src/game/travelfilm.js`, played around the existing
+  scene change (`Game.startTransition(mid, need, then)`: the area swap under the black, the region's loading card,
+  the landing spot and the save are as before; `then` starts the arrival film on the new area's first frame). Hold
+  the skip key (E / the pad's action) to skip; a skip ends the whole journey's film. `?nocine` turns the films off.
+  - Ship (Citadel Spaceport ⇄ Zeelich Spaceport): the ship lifts off the pad and climbs away (2.8 s), the cabin (4 s),
+    the planet falling away and the other one ahead (2.4 s, a backdrop of stars and two painted planets), then the
+    ship coming down onto the other pad (3 s) and Twinsen stepping off (0.9 s), and the camera back to play (0.9 s).
+  - Ferry, glider, Esmer shuttle: the craft leaving (2.6 s), then arriving (2.6 / 2.6 / 2.4 s) and he steps off. The
+    craft flown is a twin of the one parked at the stop (the parked one hidden meanwhile); a glider takes the clearest
+    of 16 headings off its field; the camera is the first of a few places with nothing standing in its frame.
+  - **The cabin hook:** `buildShipCabin({ view: { planet } })` in `src/game/shipcabin.js` returns a handle; the film
+    reads only the handle, so a new room replaces the body of that file and keeps the handle:
+    `{ group, size: {w, l, h}, seats: [{x, y, z, a}], windows: [{x, y, z, a, r}], stand: [{x, z, a, window}],
+    passengers: [{ role, look, seat | stand, anim, lookAt }], hero: {x, z, a, lookAt}, shots: [{pos, look, fov}] ×2,
+    update(dt), dispose() }`. Local coordinates: origin on the cabin floor at its centre, the nose toward +z; `a` is an
+    actor's angle (0 faces +z). Passengers are existing bodies (`characters.js` LOOKS: today a Twinsun traveller
+    dozing, a woman at a window, a Mosquibee steward by the flight-deck door); Twinsen stands at the front-left window.
+    The cabin is lit by its own materials (no new light: a light would recompile every material) and casts no shadow.
+  - **Left for the laptop:** the proper cabin room (the placeholder is a cream vaulted tube with red seats, brass
+    racks with cases, eight round windows showing a drifting starfield), maybe a better ship model (today the Esmer
+    saucer of `shuttle.js` at scale 1.4 at Zeelich, 1 at Citadel), the passengers' spots. The ship at Citadel's pad is
+    `W.spaceport.ship`, at Zeelich's pad `game.travel.vehicles.zeelich_port`.
+  - Test: `tests/travel.mjs` (section TRAVEL-1) rides every route both ways with the films on.
 
 ## PURPOSE-CHECK (2.11) · The cloud's answers: which places have a purpose
 

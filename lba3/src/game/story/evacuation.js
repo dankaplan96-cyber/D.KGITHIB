@@ -13,6 +13,7 @@ import { ChapterBase } from './base.js';
 import { tm, pm, bbox, cyl, mesh, Batch } from '../kit.js';
 import '../text/ch8.js';
 import { buildShelter, centreForWheel, shelterFrame, addCart, addBundle, addBale } from './shelters.js';
+import { crossByShip } from '../travelfilm.js';
 
 // (the farmers work the fields south of town; the landing and the fort on the northern plateau)
 const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -50, z: 30, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: -30, z: 45, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: -60, z: 55, a: 2.6 }];
@@ -187,7 +188,7 @@ export class Evacuation extends ChapterBase {
       case 'c8hatch': this.chain([['hero', 'c8_wheel_hint']]); return true;
       case 'c8ship':
         f.c8_done = true; g.save(false);
-        g.startTransition(() => this.story.nextChapter(), this.story.nextAreas());
+        crossByShip(g, () => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()));   // (TRAVEL-1: the ship's departure film first)
         return true;
     }
     return false;

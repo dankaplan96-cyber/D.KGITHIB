@@ -706,8 +706,10 @@ class Game {
   // so even a slow first frame (buffer uploads) can't skip the fade-in.
   // LAZY-REGIONS: `need` names the rooms the scene change goes to; any not built yet are built while the screen is
   // black, under a loading card (the loading screen's look: "Arriving at Zeelich…" and a bar), before mid() runs.
-  startTransition(mid, need = null) {
-    this.trans = { t: 0, mid, called: false, walk: !!this.walkNext, hold: false, need: need?.filter(Boolean) || null };
+  // TRAVEL-1: `then` (optional) takes over from the fade-in: called on the new scene's first frame, with the screen still
+  // black (a journey's arrival film starts there: src/game/travelfilm.js). Not called when the area failed to load.
+  startTransition(mid, need = null, then = null) {
+    this.trans = { t: 0, mid, called: false, walk: !!this.walkNext, hold: false, need: need?.filter(Boolean) || null, then };
     this.walkNext = false;
     this.hud.prompt(null); // (the last room's prompt would otherwise come back with the new scene's first frames)
   }
@@ -790,6 +792,8 @@ class Game {
         if (!this.testFreeze) { T.held = true; T.heldAt = undefined; f.style.opacity = 1; this._fadeOp = 1; return; }
       }
     }
+    // TRAVEL-1: the scene is ready under the black (the settle frames above are done): `then` instead of the fade-in
+    if (T.then && T.called && !T.failed) { const then = T.then; T.then = null; this.trans = null; f.style.opacity = ''; f.style.transition = ''; this._fadeOp = 1; then(); return; }
     const op = T.t < 0.35 ? T.t / 0.35 : Math.max(0, 1 - (T.t - 0.35) / 0.35);
     f.style.opacity = op; this._fadeOp = op;
     if (T.t >= 0.7) { this.trans = null; f.style.opacity = ''; f.style.transition = ''; }
