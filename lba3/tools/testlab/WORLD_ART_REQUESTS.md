@@ -1437,3 +1437,22 @@ make it less tiring". `requests/VOICE-1.diff` (`voice.js`; applies on origin):
 - The School: its blocks overlap 6 cm (a 10 cm seam between the dais step and the dais dropped Twinsen to the
   classroom floor, from where the dais was too high).
 - Draw calls (Medium): the tavern 34 main + 1 shadow; the School 25 + 1.
+
+### SPACEPORT-1 · Built (part 1: Citadel's terminal) · the laptop, 3.11.2026
+`requests/SPACEPORT-1.diff` against origin cccfc20 (`git apply --check` passes): `src/game/terminal.js` (new), the
+`regions.js` hook (room `terminal`, REF 90, AT [8600, 0]) and the director's `doors()` / `exitTo()` hooks.
+- About 80 % alike to LBA2's departure hall (scene 78), in Twinsun sandstone with Esmer touches: the band of glass blocks
+  under the back wall's cornice; the ticket counter on a platform two steps up in the back right, two hanging TICKETS
+  signs, a luggage scale at its foot, lamps on posts; the departures board on the left wall between the doors, the
+  GROUNDED notice beside it; two rows of five orange seats facing the board, planters with Esmer fountain plants, a
+  luggage trolley; the café corner at the back left (counter, coffee machine, stools, a round table); the gate to the
+  pad between two security pillars with green screens. 16 × 12 m (the BIGGER-1 scale), `R.view` 12 / `R.follow` 0.6.
+- The way in: the blue door on the deck (spaceport.js, (−2.5, 31.6)) is a door now (`house: 'spaceport'`); out again
+  1.2 m before it; the gate leads out to the pad's landing spot (−1.7, 39.5), beside the shuttle.
+- Handles: `TERMINAL` (exported, filled when the room is built): `door`, `gate`, `counter` {x,z,r} (the travel menu's
+  interactable), `board` {x,z,r}, `seats` (10 {x,z,a}), `npcSpots` {clerk, guard, cafe}, `notice.setVisible(b)`.
+- Checked (origin cccfc20 + this): the Test Lab's new `artterminal` walk (in by the deck's door, the board, the counter,
+  the café, out) passes; the gate leads to the deck by the pad; `tests/spaceport.mjs`, chapter1, transitions, house,
+  lazyregions PASS. `tests/travel.mjs` and `doorcull.mjs` crash the headless page on this laptop with or without the
+  terminal (environment, not this diff); prologue's well-mites check fails as on origin.
+- Part 2 (Zeelich's terminal) next, after TRAVEL-1's cabin.

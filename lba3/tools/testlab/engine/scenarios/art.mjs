@@ -327,13 +327,13 @@ function placeWalk({ id, title, suite, room, house, legs, flags = null, direct =
       // (a place that opens only from a point of the story on: those flags set first)
       // (and, as a new game's people still stand where the earlier story put them, anyone within 2.5 m of the door is
       //  stood aside: the prologue's Zoé at the neighbours' door)
-      if (flags) await page.evaluate(({ flags, house }) => { Object.assign(game.flags, flags); const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))); for (const n of game.npcs || []) if (n.present && Math.hypot(n.pos.x - h.door.x, n.pos.z - h.door.z) < 2.5) n.setPresent(false); }, { flags, house });
+      if (flags) await page.evaluate(({ flags, house }) => { Object.assign(game.flags, flags); const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house)) || (typeof house === 'object' ? house : null)); for (const n of game.npcs || []) if (n.present && Math.hypot(n.pos.x - h.door.x, n.pos.z - h.door.z) < 2.5) n.setPresent(false); }, { flags, house });
       if (direct) { await page.evaluate((room) => { game.resetCombat?.('drop'); game.enterRoom(room, null, true, true); game.camRig.recenter?.(); }, room); await sleep(2500); } else {
       // 1. outside, a few steps before the house's door; walk in
-      const door = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
+      const door = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house)) || (typeof house === 'object' ? house : null)); game.resetCombat?.('drop'); game.exitRoom({ x: h.door.x + Math.sin(h.ry) * 3, z: h.door.z + Math.cos(h.ry) * 3, a: h.ry + Math.PI }, true, true); game.camRig.recenter?.(); return { x: h.door.x, z: h.door.z }; }, house);
       await sleep(2500); await shot('01-outside-door');
       // what the game offers at the door, 1.3 m before it and facing it (a "locked" prompt there would contradict the open door)
-      const offer = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house))), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
+      const offer = await page.evaluate((house) => { const h = (game.world.houses.find((x) => x.id === house) || ((d) => d && { door: { x: d.x - Math.sin(d.ry), z: d.z - Math.cos(d.ry) }, ry: d.ry })(game.world.shutDoors?.find((x) => x.id === house)) || (typeof house === 'object' ? house : null)), H = game.hero; H.pos.set(h.door.x + Math.sin(h.ry) * 1.3, game.physics.groundAt(h.door.x + Math.sin(h.ry) * 1.3, h.door.z + Math.cos(h.ry) * 1.3), h.door.z + Math.cos(h.ry) * 1.3); H.angle = h.ry + Math.PI; const it = game.findInteractable(); return it ? { kind: it.kind, label: it.label } : null; }, house);
       log.push({ offerAtDoor: offer });
       assert(rec, `no "locked" prompt at the ${house} building's open door`, offer?.kind !== 'locked' && offer?.kind !== 'shut', 'not locked or shut', offer?.kind ?? 'none');
       await keyTo(door.x, door.z, 10); await sleep(1500);
@@ -455,3 +455,12 @@ export const artSchool = placeWalk({ id: 'art-school', title: 'The School of Mag
   { name: 'out', pts: [[-7.5, -7.0], [-4.5, -7.5], [-2.4, -7.5], [1.26, -7.5], [1.26, 8.82], [3.0, 8.82], [5.4, 8.82], [10.08, 8.85], [10.08, 12.3]] },
 ] });
 ART.push(artSchool);
+// Citadel Spaceport's terminal (SPACEPORT-1, after LBA2's scene 78): in by the blue door on the deck, to the departures
+// board, round the seats to the ticket counter, to the café corner, and out by the door
+export const artTerminal = placeWalk({ id: 'art-terminal', title: 'The spaceport terminal: the board, the counter, the café, out', suite: 'artterminal', room: 'terminal', house: { door: { x: -2.5, z: 31.95 }, ry: 0 }, legs: [
+  { name: 'the board', pts: [[-5.5, 3.0], [-6.0, -0.5]] },
+  { name: 'the ticket counter', pts: [[-5.0, 2.6], [0.0, 2.6], [4.45, -2.35]] },
+  { name: 'the cafe corner', pts: [[1.0, -2.9], [-5.0, -3.4]] },
+  { name: 'out', pts: [[-5.0, 2.8], [-6.6, 3.6], [-7.6, 3.6]] },
+] });
+ART.push(artTerminal);
