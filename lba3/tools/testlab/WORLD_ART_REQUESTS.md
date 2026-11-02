@@ -1530,3 +1530,28 @@ need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, 
   manicurist (by a round table)}.
 - Checked: Test Lab `artotrhotel` (the left strip's stair to the tables, along the back strip to the desk and the
   machines, down the other stair to the lounge, out to the plaza) passes. No pictures to the user (Zeelich).
+
+### ZEELICH-1 item 2 · Built: the Temple of the Dark Monk (and the way in, part of item 4) · the laptop, 3.11.2026
+`requests/ZEELICH-1-TEMPLE.diff` against origin (applies alone; with others applied first, `git apply -3`):
+`src/game/celtemple.js` (new), region `celtemple` (REF 120, AT [9600, 0]), the director's hooks, and one hook line in
+`zislands.js` (`if (name === 'celebration') R.templePortal = buildCelPortal(group, physics)`).
+- **Where:** our Celebration's top is the paved plaza round the great figure (9.5–10 m; measured: the ground falls to
+  the sea on every side, so the "crater" is filled and paved as the island's own design says). The temple lies under
+  the summit; its **portal** stands on the plaza's north edge at local (2.2, −9.2), facing the figure: a plinth, two
+  dark granite pillars, a lintel with two horned heads, a dark stairwell between them (a see-through collider keeps
+  Twinsen out of the hole; the door takes him down). Clear of the festival masts (the nearest 4 m off). Checked: in
+  through the portal, out again onto the plaza.
+- **The hall** (LBA2 scene 93, about 80 %), 18 × 15 m: dark granite, rosettes in the floor; nine carved columns with
+  four dark globes in gold clasps; two horned heads with glowing eyes and mouths on the left wall; three lava pools
+  (railed off by see-through colliders); the lava altar with two white orbs between the Dark Monk's statue and the
+  insect figure; the prophecy murals (four framed panels with turquoise medallions) over a stepped bench on the back
+  wall, the reader's lectern before them; the sealed door up a short stair in the left wall at the back (its stone
+  leaf rises into the lintel when open; four empty sockets over it).
+- **Handles** (`TEMPLE`): `murals` [4 × {x, z, a, look: {x, y, z}}], `lectern` {x, z, r}, `sealDoor` {x, z, open,
+  setOpen(b, instant)} (open by default: twelve years on; shut, its collider blocks the doorway).
+- **Item 4 (the volcano):** the summit is already the island's plaza and the slopes fall away round it; I did not
+  carve a crater or add lava there (it would undo the festival plaza the cloud designed). `celebration.templeDoor` is
+  `R.templePortal.door`. The trail (three waypoints) and a lava glow on the flanks are left: say if they are still
+  wanted on this shape.
+- Checked: Test Lab `artceltemple` (a mural, the lectern, up to the open sealed door, out) passes. No pictures to the
+  user (Zeelich).
