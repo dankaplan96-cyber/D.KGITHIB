@@ -104,6 +104,7 @@ export const STR = {
     text_speed: 'Text Speed', ts_slow: 'Slow', ts_normal: 'Normal', ts_fast: 'Fast', ts_instant: 'Instant',
     text_size: 'Subtitle Size', tsz_normal: 'Normal', tsz_large: 'Large',
     shake_set: 'Camera Shake', sh_on: 'Full', sh_reduced: 'Reduced', sh_off: 'Off',
+    weather_set: 'Weather and light changes', wx_on: 'On', wx_off: 'Off',   // (WEATHER-1; the Hebrew table falls back to these)
     controls_html: `
       <tr><td colspan="2"><b>Classic (LBA2's keys, the default)</b></td></tr>
       <tr><td>↑ / ↓</td><td>Walk forward / back</td></tr>

@@ -109,7 +109,7 @@ void main() {
   gl_Position.z = gl_Position.w * 0.99999;   // (at the far end of the depth range: behind everything drawn)
 }`;
 const SKY_FS = /* glsl */`
-uniform vec3 uHorizon, uZenith, uCloud; uniform sampler2D uTex; uniform vec2 uOff;
+uniform vec3 uHorizon, uZenith, uCloud; uniform sampler2D uTex; uniform vec2 uOff; uniform float uCover;
 varying vec3 vDir;
 void main() {
   vec3 d = normalize(vDir);
@@ -117,7 +117,8 @@ void main() {
   vec3 col = mix(uHorizon, uZenith, smoothstep(0.03, 0.55, h));
   // the cloud ceiling, a flat plane overhead seen in perspective, thinning into the haze near the horizon
   vec2 uv = d.xz / (h + 0.12) * 0.32 + uOff;
-  float c = smoothstep(0.58, 0.95, texture2D(uTex, uv).r) * smoothstep(0.04, 0.3, h);
+  // (WEATHER-1: uCover thickens the ceiling for rain and overcast spells; 0 = the thresholds as they were)
+  float c = smoothstep(0.58 - uCover * 0.42, 0.95 - uCover * 0.3, texture2D(uTex, uv).r) * smoothstep(0.04, 0.3, h);
   col = mix(col, uCloud, c * 0.85);
   gl_FragColor = vec4(col, 1.0);
   #include <colorspace_fragment>
@@ -130,6 +131,36 @@ const PAL = {
   // more cyan (LBA2's saturated cyan-blue rather than royal blue).
   clear: { fog: C('#a8d2f2'), zenith: C('#4f8fd6'), clouds: C('#ffffff'), sun: C('#fff0d2'), hemiSky: C('#c8dcff'), hemiGround: C('#77745a'), deep: C('#1a76b0'), shallow: C('#3fc8c6'), sky: C('#bfe0ff') },
   storm: { fog: C('#6f8094'), zenith: C('#4a586c'), clouds: C('#59667a'), sun: C('#b3c2dc'), hemiSky: C('#a9b8d0'), hemiGround: C('#4c5a46'), deep: C('#1a3f5c'), shallow: C('#2f7c86'), sky: C('#7d8ea2') },
+};
+
+// WEATHER-1: the frame's light measure (the luma of each light's colour times its intensity, summed): what the light
+// cycle and the weather may never take below the storm palette's (Environment.lightFloor)
+const LUM = (c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+const FLOOR_CITADEL = 0.7 * LUM(PAL.storm.sun) + 1.05 * LUM(PAL.storm.hemiSky);   // (the storm palette: update()'s s = 1)
+const CLEAR_CITADEL = 2.6 * LUM(PAL.clear.sun) + 1.42 * LUM(PAL.clear.hemiSky);
+const FLOOR_RATIO = FLOOR_CITADEL / CLEAR_CITADEL;   // (a region's floor: its own clear light × the same ratio)
+const FLASH_FOG = C('#e8eeff'), WHITE = C('#ffffff');
+// WEATHER-1: the modifiers src/game/weather.js writes each frame and update() lays over the palette (Citadel's storm mix
+// or a region's own env). `on` false (the default, weather off, the tests' boot): nothing is applied, the picture is
+// exactly as before. Never applied indoors.
+export function weatherMods() {
+  const one = () => new THREE.Color(1, 1, 1), c = () => new THREE.Color(0, 0, 0);
+  return {
+    on: false,
+    sunK: 1, hemiK: 1, fogK: 1, sunTint: one(), hemiTint: one(), grey: 0,   // light: intensity, colour multipliers, toward grey
+    lFog: c(), lFogK: 0, wFog: c(), wFogK: 0,                              // fog colour: the light cycle's tint, then the weather's
+    skyTint: one(), skyFlat: 0, cover: 0, cloudTo: c(), cloudK: 0, cloudTint: one(), wind: 0, seaTint: one(),   // Citadel's sky and sea
+    rain: 0, rainN: 0,                                                     // rain lines: opacity amount, share of the lines drawn
+    motes: 0, moteCol: c(), moteSize: 0.4, moteFall: 0, moteDrift: 0, moteFlutter: 0, moteAlpha: 0.9,   // leaves, dust, snow, petals, mist
+  };
+}
+const MOTES = 320;   // (High; Medium draws half, Low none: weather.js sets moteCap)
+const moteTex = () => {
+  const S = 32, cv = document.createElement('canvas'); cv.width = cv.height = S;
+  const x = cv.getContext('2d'), g = x.createRadialGradient(S / 2, S / 2, 1, S / 2, S / 2, S / 2);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.45, 'rgba(255,255,255,0.85)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, S, S);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
 };
 
 export class Environment {
@@ -168,7 +199,7 @@ export class Environment {
     // texture read a sky pixel, no new texture (the cloud ceiling's own)
     const ct = TX.clouds.clone(); ct.needsUpdate = true; ct.wrapS = ct.wrapT = THREE.RepeatWrapping;
     this.cloudTex = ct;
-    this.skyU = { uHorizon: { value: new THREE.Color() }, uZenith: { value: new THREE.Color() }, uCloud: { value: new THREE.Color() }, uTex: { value: ct }, uOff: { value: new THREE.Vector2() } };
+    this.skyU = { uHorizon: { value: new THREE.Color() }, uZenith: { value: new THREE.Color() }, uCloud: { value: new THREE.Color() }, uTex: { value: ct }, uOff: { value: new THREE.Vector2() }, uCover: { value: 0 } };
     this.clouds = new THREE.Mesh(new THREE.SphereGeometry(900, 24, 12), new THREE.ShaderMaterial({
       uniforms: this.skyU, side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false,
       vertexShader: SKY_VS, fragmentShader: SKY_FS,
@@ -211,6 +242,68 @@ export class Environment {
     this.rain = new THREE.LineSegments(rgeo, new THREE.LineBasicMaterial({ color: '#c4d6ea', transparent: true, opacity: 0.45, depthWrite: false }));
     this.rain.frustumCulled = false;
     scene.add(this.rain);
+    this.rainCap = 1;   // (WEATHER-1: the share of the lines a quality preset allows: weather.js)
+
+    // WEATHER-1: the weather's modifiers (weatherMods) and its motes — leaves, dust, snow or petals drifting round the
+    // hero: one draw of up to MOTES points, world-anchored and wrapped round him, shown only while a state has them
+    this.wx = weatherMods();
+    this.moteCap = 1;
+    this.moteData = new Float32Array(MOTES * 4);
+    for (let i = 0; i < MOTES; i++) { this.moteData[i * 4] = (Math.random() - 0.5) * 44; this.moteData[i * 4 + 1] = Math.random() * 14; this.moteData[i * 4 + 2] = (Math.random() - 0.5) * 44; this.moteData[i * 4 + 3] = Math.random() * 6.283; }
+    const mgeo = new THREE.BufferGeometry();
+    mgeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MOTES * 3), 3));
+    this.motes = new THREE.Points(mgeo, new THREE.PointsMaterial({ size: 0.2, map: moteTex(), transparent: true, opacity: 0, depthWrite: false, color: '#ffffff' }));
+    this.motes.frustumCulled = false;
+    this.motes.visible = false;
+    this._moteInit = false;
+    scene.add(this.motes);
+    this._cloud = new THREE.Vector2();   // (the cloud ceiling's drift, accumulated: a change of speed never jumps it)
+    this._pc = new THREE.Color(); this._gc = new THREE.Color();
+    this.lightLevel = 0; this.lightFloor = 0; this.floorCitadel = FLOOR_CITADEL;   // (tests: the storm palette's light)
+  }
+
+  // (the palette between clear and storm, into a scratch colour: no allocation a frame)
+  _pal(k, s) { return this._pc.copy(PAL.clear[k]).lerp(PAL.storm[k], s); }
+  // WEATHER-1: the light's measure now; below `floor`, both lights are raised together to meet it
+  _light(floor) {
+    const sun = this.sun, hemi = this.hemi;
+    const lv = sun.intensity * LUM(sun.color) + hemi.intensity * LUM(hemi.color);
+    if (lv < floor && lv > 0) { const k = floor / lv; sun.intensity *= k; hemi.intensity *= k; }
+    this.lightLevel = Math.max(lv, floor); this.lightFloor = floor;
+  }
+  // WEATHER-1: the weather's light modifiers on the sun and the sky fill
+  _wxLight(W) {
+    const sun = this.sun, hemi = this.hemi;
+    sun.color.multiply(W.sunTint); hemi.color.multiply(W.hemiTint); hemi.groundColor.multiply(W.hemiTint);
+    if (W.grey > 0) {
+      sun.color.lerp(this._gc.setScalar(LUM(sun.color)), W.grey);
+      hemi.color.lerp(this._gc.setScalar(LUM(hemi.color)), W.grey * 0.5);
+    }
+    sun.intensity *= W.sunK; hemi.intensity *= W.hemiK;
+  }
+  // WEATHER-1: the motes, world-anchored round the focus (wrapped in a 44 × 14 × 44 m box), drifting with the wind
+  _motes(dt, focus, on) {
+    const W = this.wx, M = this.motes, n = on ? Math.round(MOTES * Math.min(1, W.motes) * this.moteCap) : 0;
+    M.visible = n > 0 && W.motes > 0.01;
+    if (!M.visible) return;
+    const d = this.moteData, pos = M.geometry.attributes.position.array, t = this.time;
+    const fx = focus.x, fy = focus.y - 2, fz = focus.z;
+    if (!this._moteInit) { this._moteInit = true; for (let i = 0; i < MOTES; i++) { d[i * 4] += fx; d[i * 4 + 1] += fy; d[i * 4 + 2] += fz; } }
+    const fall = W.moteFall, drift = W.moteDrift, fl = W.moteFlutter;
+    for (let i = 0; i < n; i++) {
+      const k = i * 4, ph = d[k + 3];
+      let x = d[k] + (drift + fl * Math.sin(t * 1.7 + ph)) * dt, y = d[k + 1] - (fall + fl * 0.4 * Math.sin(t * 2.3 + ph * 1.3)) * dt, z = d[k + 2] + fl * 0.6 * Math.cos(t * 1.3 + ph) * dt;
+      if (x - fx > 22) x -= 44; else if (x - fx < -22) x += 44;
+      if (z - fz > 22) z -= 44; else if (z - fz < -22) z += 44;
+      if (y - fy > 14) y -= 14; else if (y - fy < 0) y += 14;
+      d[k] = x; d[k + 1] = y; d[k + 2] = z;
+      pos[i * 3] = x; pos[i * 3 + 1] = y; pos[i * 3 + 2] = z;
+    }
+    M.geometry.setDrawRange(0, n);
+    M.geometry.attributes.position.needsUpdate = true;
+    M.material.color.copy(W.moteCol);
+    M.material.size = W.moteSize;
+    M.material.opacity = Math.min(1, W.motes * 1.6) * W.moteAlpha;
   }
 
   setStorm(s) { this.storm = s; }
@@ -264,41 +357,55 @@ export class Environment {
     if (this._double > 0) { this._double -= dt; if (this._double <= 0) this.flash = 0.8; }
     this.flash = Math.max(0, this.flash - dt * 5);
     const f = this.flash * s;
-    const mix = (k) => PAL.clear[k].clone().lerp(PAL.storm[k], s);
+    // WEATHER-1: the weather's modifiers (src/game/weather.js), outdoors only; off, every value below is as before
+    const W = this.wx, on = W.on && !this.interior;
 
     this.waterU.uTime.value = this.time;
     this.waterU.uStorm.value = s;
     this.waterU.uFlash.value = f;
-    this.waterU.uSky.value.copy(mix('sky'));
-    this.waterU.uDeep.value.copy(mix('deep'));
-    this.waterU.uShallow.value.copy(mix('shallow'));
+    this.waterU.uSky.value.copy(this._pal('sky', s));
+    this.waterU.uDeep.value.copy(this._pal('deep', s));
+    this.waterU.uShallow.value.copy(this._pal('shallow', s));
+    if (on) { this.waterU.uSky.value.multiply(W.skyTint); this.waterU.uDeep.value.multiply(W.seaTint); this.waterU.uShallow.value.multiply(W.seaTint); }
 
-    this.fog.color.copy(mix('fog')).lerp(C('#e8eeff'), f * 0.6);
-    const k = lerp(1, 0.75, s);
+    this.fog.color.copy(this._pal('fog', s));
+    if (on) this.fog.color.lerp(W.lFog, W.lFogK).lerp(W.wFog, W.wFogK);
+    this.fog.color.lerp(FLASH_FOG, f * 0.6);
+    const k = lerp(1, 0.75, s) * (on ? W.fogK : 1);
     this.fog.near = this.interior ? 400 : this.fogRange[0] * k;
     this.fog.far = this.interior ? 900 : this.fogRange[1] * k;
-    this.skyU.uCloud.value.copy(mix('clouds')).lerp(C('#ffffff'), f * 0.5);
+    this.skyU.uCloud.value.copy(this._pal('clouds', s));
+    if (on) this.skyU.uCloud.value.lerp(W.cloudTo, W.cloudK).multiply(W.cloudTint);
+    this.skyU.uCloud.value.lerp(WHITE, f * 0.5);
     this.skyU.uHorizon.value.copy(this.fog.color);
-    this.skyU.uZenith.value.copy(mix('zenith')).lerp(this.fog.color, f * 0.6);
-    this.skyU.uOff.value.set(this.time * (0.004 + s * 0.01), this.time * 0.002);
+    this.skyU.uZenith.value.copy(this._pal('zenith', s));
+    if (on) this.skyU.uZenith.value.multiply(W.skyTint).lerp(this.fog.color, W.skyFlat);
+    this.skyU.uZenith.value.lerp(this.fog.color, f * 0.6);
+    this.skyU.uCover.value = on ? W.cover : 0;
+    // (the ceiling's drift, accumulated: its speed may change — a storm, a gust — without the clouds jumping)
+    this._cloud.x += dt * (0.004 + s * 0.01 + (on ? W.wind * 0.012 : 0)); this._cloud.y += dt * 0.002;
+    this.skyU.uOff.value.copy(this._cloud);
     // (the dome stays centred on the camera: its own matrix, set here, never walked)
     this.clouds.position.copy(camera.position); this.clouds.updateMatrix(); this.clouds.updateMatrixWorld(true);
 
     this.sun.intensity = lerp(2.6, 0.7, s) + f * 3;
-    this.sun.color.copy(mix('sun'));
+    this.sun.color.copy(this._pal('sun', s));
     this.hemi.intensity = lerp(1.42, 1.05, s) + f * 2;   // (GFX-LOOK-2: 1.25 → 1.42 with the bluer fill, see PAL)
-    this.hemi.color.copy(mix('hemiSky'));
-    this.hemi.groundColor.copy(mix('hemiGround'));
+    this.hemi.color.copy(this._pal('hemiSky', s));
+    this.hemi.groundColor.copy(this._pal('hemiGround', s));
+    if (on) { this._wxLight(W); this._light(FLOOR_CITADEL); }
 
     // PERF-BATTERY: the sea's grid follows the camera in whole grid steps (see seaGeometry)
     this.water.position.set(Math.round(camera.position.x / SEA_STEP) * SEA_STEP, 0, Math.round(camera.position.z / SEA_STEP) * SEA_STEP);
     // the shadow camera follows the focus in whole shadow-map texels, so shadow edges don't crawl as he walks
-    // GFX-LOOK-2: Citadel's own sun direction (see SUN_CITADEL)
+    // GFX-LOOK-2: Citadel's own sun direction (see SUN_CITADEL). WEATHER-1: the light cycle never moves it: ShadowCache
+    // keys its cached static casters on this direction, so a moving sun would redraw all of them every frame
     const sd = this.region || this.interior ? (this.region?.sunDir ? (this._rsd ??= new THREE.Vector3()).fromArray(this.region.sunDir).normalize() : SUN_BASE) : SUN_CITADEL;
     if (!this.sunDir.equals(sd)) this.sunDir.copy(sd);
     const sf = this.snapShadow(focus);
     this.sun.position.copy(sf).addScaledVector(this.sunDir, 80);
     this.sun.target.position.copy(sf);
+    this._motes(dt, focus, on);
 
     if (this.region) {
       // the region's fixed palette (no storm there)
@@ -307,18 +414,29 @@ export class Environment {
       this.fog.near = (R.fogRange || this.fogRange)[0]; this.fog.far = (R.fogRange || this.fogRange)[1];
       this.sun.color.copy(P.sun); this.sun.intensity = R.sunI ?? 2.4;
       this.hemi.color.copy(P.hemiSky); this.hemi.groundColor.copy(P.hemiGround); this.hemi.intensity = R.hemiI ?? 1.2;
+      // WEATHER-1: the weather and the light cycle laid over the region's own env (whose fog may be driven live)
+      if (on) {
+        this.fog.color.lerp(W.lFog, W.lFogK).lerp(W.wFog, W.wFogK);
+        this.fog.near *= W.fogK; this.fog.far *= W.fogK;
+        const base = this.sun.intensity * LUM(this.sun.color) + this.hemi.intensity * LUM(this.hemi.color);
+        this._wxLight(W); this._light(base * FLOOR_RATIO);
+      }
       this.scene.background = this.fog.color;
       this.rain.visible = false;
       return;
     }
-    const op = s * 0.5;
+    // WEATHER-1: the rain's opacity from the storm or the weather's rain, whichever is more; a light rain draws a share
+    // of the lines (a storm all of them, as before), never more than the preset allows
+    const op = Math.max(s, on ? W.rain : 0) * 0.5;
     this.rain.visible = op > 0.02 && !this.interior;
     if (this.rain.visible) {
+      const n = Math.round(this.rainN * Math.min(this.rainCap, Math.max(s > 0.04 ? 1 : 0, on ? W.rainN : 0)));
       this.rain.material.opacity = op;
+      this.rain.geometry.setDrawRange(0, n * 2);
       const pos = this.rain.geometry.attributes.position.array;
       const d = this.rainData;
       const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
-      for (let i = 0; i < this.rainN; i++) {
+      for (let i = 0; i < n; i++) {
         d[i * 4 + 1] -= d[i * 4 + 3] * dt;
         if (d[i * 4 + 1] < -12) { d[i * 4 + 1] += 40; d[i * 4] = (Math.random() - 0.5) * 70; d[i * 4 + 2] = (Math.random() - 0.5) * 70; }
         const x = cx + d[i * 4], y = cy + d[i * 4 + 1] - 10, z = cz + d[i * 4 + 2];

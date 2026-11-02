@@ -18,6 +18,7 @@ node tests/walkers.mjs        # WORLD-LIFE: the residents who walk round Citadel
 node tests/anim-combat.mjs     # Twinsen's combat animation: release/contact timing at 30/60/120 fps, planted feet, interruptions
 node tests/autoquality.mjs     # AUTO-QUALITY: the governor and calibration fed synthetic CPU/GPU/display-paced traces (Node only, no browser)
 node tests/autoquality-game.mjs # AUTO-QUALITY in the game: Auto setting, migration, Settings line, knobs, commit points, power, calibration cache, Auto benchmark
+node tests/weather.mjs         # WEATHER-1: the default test boot is today's look; every state on each planet, smooth blends, the light's floor, indoors, holds (sandstorm), Settings, quality caps, cost
 ```
 
 Playwright is imported from `/opt/node-tools/node_modules/playwright/index.mjs` (the environment's copy);

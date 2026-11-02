@@ -155,7 +155,7 @@ export class AudioEngine {
     this.windGain = ctx.createGain(); this.windGain.gain.value = 0;
     wind.connect(bp).connect(this.windGain).connect(this.ambBus);
     wind.start();
-    this.setStorm(this.storm);
+    this.setStorm(this.storm, this.rainAmt ?? this.storm, this.windAmt ?? this.storm);
     // positional loops: running water and machinery, faded by distance (see setSources / updateSources)
     this.loops = {};
     {
@@ -189,7 +189,7 @@ export class AudioEngine {
     this.surfPlace.gain.setTargetAtTime(kind === 'island' ? 1 : 0, t, 0.6);
     this.music.placeChanged(); // (indoors a silence between two pieces ends)
     this.placeWind = kind === 'sky' ? 0.12 : 0;
-    this._glide(this.windGain.gain, 0.25 * this.storm + 0.03 + this.placeWind, t, 0.6);
+    this._glide(this.windGain.gain, 0.25 * (this.windAmt ?? this.storm) + 0.03 + this.placeWind, t, 0.6);
   }
   // sources: [{kind: 'water'|'machine', x, z, r, vol}] near the listener; louder as it gets closer
   updateSources(sources, pos) {
@@ -212,12 +212,14 @@ export class AudioEngine {
     param.setTargetAtTime(v, t, tc);
   }
 
-  setStorm(f) {
-    this.storm = f;
+  // f: the storm (0 clear … 1 tempest). WEATHER-1: rain and wind, the weather's own (src/game/weather.js: a light rain,
+  // a gust), each the storm's when not given — as before
+  setStorm(f, rain = f, wind = f) {
+    this.storm = f; this.rainAmt = rain; this.windAmt = wind;
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
-    this._glide(this.rainGain.gain, 0.22 * f, t, 0.5);
-    this._glide(this.windGain.gain, 0.25 * f + 0.03 + (this.placeWind || 0), t, 0.5);
+    this._glide(this.rainGain.gain, 0.22 * rain, t, 0.5);
+    this._glide(this.windGain.gain, 0.25 * wind + 0.03 + (this.placeWind || 0), t, 0.5);
   }
 
   // ---- music (see music.js) ----
