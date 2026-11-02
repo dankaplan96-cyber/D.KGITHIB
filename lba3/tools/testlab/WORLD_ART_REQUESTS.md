@@ -1490,3 +1490,26 @@ hook line in `travel.js` (Zeelich's port block: `buildZTerminalOutside(Z.group, 
 - Checked: Test Lab `artzterminal` (board, counter, up one stair to the arrivals deck, down the other, out) passes; the
   pavilion's door leads in (region zeelich), the gate out to the pad's landing spot on the deck. Spoilers: no pictures to
   the user (Zeelich).
+
+### ZEELICH-1 item 1 · Built: the harbour bar at Otringal and its office · the laptop, 3.11.2026
+`requests/ZEELICH-1-BAR.diff` against origin 8db08db (applies alone; with SPACEPORT-1 applied first its hook lines in
+`regions.js` / `story/index.js` need `git apply -3`): `src/game/otrbar.js` (new), regions `otrbar` (REF 120, AT [9000,
+0]) and `otroffice` (REF 40, AT [9200, 0]), the director's `doors()` / `exitTo()`.
+- **The door:** Otringal's own harbour is the low west terrace with the pier into the clouds; the bar is the domed house
+  there, `house (-42.2, -0.4)` in the island's building list (`worldfit.js` FIT; its door faces the island's middle,
+  (1857.8, 1804.3) at y 4.4). The door is read from FIT, with the measured place as a fallback before the island is
+  built (a save made in the bar). Walking in from the terrace and out again: checked.
+- **The bar** (LBA2 scene 136, about 80 %), 20 × 14 m: sky-blue walls with a band of clouds over a dark stone dado,
+  grey-and-teal tiles; the stage at the back right 0.9 m up (a stair of three, two orange curtains in a dark frame,
+  footlights), the curtain's winch high on the frame's right post; green leather booths with tables on a raised floor at
+  the back left behind turned balusters (a stair down), two slot machines; booths in the middle, the aquarium with its
+  creature, leaf plants, globe sconces, a picture; the L-shaped bar at the front left (green top, urns and bottles,
+  stools, the bottle shelf behind it); the office door in the back wall between the raised floor and the stage.
+- **The office** (scene 137), 9 × 7.5 m: dark walls with a painted wave, the curtained alcove with a basin, the desk
+  with a globe lamp, two cream armchairs, a picture, a plant; `npcSpots.boss` behind the desk.
+- **Handles** (`BAR`): `npcSpots` {boss (the corner booth on the raised floor), performer (on the stage), bouncer1,
+  bouncer2 (either side of the office door), regular1, regular2 (the bar's stools), regular3 (the middle booth)},
+  `stage`, `office` (the door's spot), `counter` (behind the bar, a search spot), `winch` {x, y, z, r} (the ball target:
+  the cloud adds it to `R.ballTargets` with OP-7's effect).
+- Checked: Test Lab `artotrbar` (behind the bar, up on the stage, into the office and round it, back, out to the
+  harbour) passes. Spoilers: no pictures to the user (Zeelich).

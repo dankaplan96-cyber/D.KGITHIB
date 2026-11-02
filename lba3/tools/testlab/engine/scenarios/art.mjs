@@ -474,3 +474,13 @@ export const artZTerminal = placeWalk({ id: 'art-zterminal', title: "Zeelich's t
   { name: 'out', pts: [[3.0, 1.2], [-6.6, 3.6], [-8.6, 3.6]] },
 ] });
 ART.push(artZTerminal);
+// Otringal's harbour bar (ZEELICH-1 item 1, LBA2 scenes 136/137): behind the bar, up on the stage, into the boss's
+// office and round it, back through the bar and out to the harbour
+export const artOtrBar = placeWalk({ id: 'art-otrbar', title: "Otringal's harbour bar: the bar, the stage, the office, out", suite: 'artotrbar', room: 'otrbar', direct: true, backTo: 'isle_otringal', legs: [
+  { name: 'behind the bar', pts: [[-8.0, 3.6], [-5.1, 3.6]] },
+  { name: 'the stage', pts: [[-1.5, 3.6], [1.5, 3.6], [2.2, -0.8], [3.8, -1.0], [3.8, -4.2]], minY: 0.85 },
+  { name: 'to the office', pts: [[3.8, -1.5], [1.0, -1.0], [1.0, -6.6]], thenRoom: 'otroffice' },
+  { name: 'in the office', room: 'otroffice', pts: [[-2.5, -1.0], [-2.5, 2.2], [-4.1, 2.2]], thenRoom: 'otrbar' },
+  { name: 'out', pts: [[1.6, -0.5], [1.6, 3.2], [-1.5, 3.4], [-8.6, 2.6], [-9.7, 1.8]] },
+] });
+ART.push(artOtrBar);
