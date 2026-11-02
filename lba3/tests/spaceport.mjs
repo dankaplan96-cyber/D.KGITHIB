@@ -55,6 +55,69 @@ check('Zeelich Spaceport\'s spaceship (its menu: Citadel only) flies back to Cit
 const f3 = await fly('Otringal');
 check('no Zeelich island from Citadel: Otringal is not on the spaceport\'s menu', f3.picked === false && f3.room === 'citadel', f3);
 
+// ---- SPACEPORT-1: the terminals (terminal.js, zterminal.js). He walks in by their doors (INPUT); while passenger
+// flights are grounded the counter's clerk says so and the GROUNDED notice is up; from chapter 4 the counter sells the
+// same spaceship as the pad (its menu, the same places), and he boards through the gate; the gate leads out onto the
+// deck by the pad; the departures boards read.
+const T = await ev(async () => { const a = await import('/src/game/terminal.js'), b = await import('/src/game/zterminal.js'); window.TT = { terminal: a.TERMINAL, zterminal: b.ZTERMINAL }; return true; });
+void T;
+const toDoor = (room) => ev((room) => { const G = game;
+  if (room === 'terminal') G.exitRoom({ x: -2.5, z: 35.5, a: Math.PI }, true);
+  else { G.regions.ensure('zeelich', 'test'); G.step(0.3); const S = G.regions.built('zeelich').spaceport; G.enterRoom('zeelich', S.landing, true); }
+  P.settle(); const e = P.enter(room); P.settle(); return { r: e.r, room: G.room?.id ?? 'citadel' }; }, room);
+// at the counter (INPUT): walk up, E; what is said, or the menu's items (the menu then picks `pick`, or is left)
+const counter = (room, pick) => ev(([room, pick]) => {
+  const G = game, H = TT[room], said = [], sv = G.say;
+  G.say = function (n, lines, ...a) { said.push(n + ': ' + lines.join(' ')); return sv.call(this, n, lines, ...a); };
+  const ready = () => P.target()?.kind === 'termCounter';
+  const r = P.go(H.counter.x, H.counter.z, { tol: 0.6, stopWhen: ready, maxT: 40 }); P.face(H.counter.x, H.counter.z - 1);
+  for (let k = 0; k < 12 && !ready(); k++) G.step(0.25);
+  if (!ready()) { G.say = sv; return { fail: 'no counter prompt', r: r.r, target: P.target() }; }
+  P.tap('KeyE', 0.1);
+  const st = G.state, items = st === 'shop' ? [...document.querySelectorAll('#shop .item')].map((b) => b.querySelector('span').textContent) : [];
+  if (st !== 'shop') { P.settle(); G.say = sv; return { st, said, items, notice: H.notice.visible, room: G.room?.id }; }
+  G.say = sv;
+  const i = pick ? items.findIndex((x) => x.startsWith(pick)) : -1;
+  if (i < 0) { document.querySelector('#shop .leave')?.click(); P.settle(); return { st, items, picked: false, notice: H.notice.visible }; }
+  const notice = H.notice.visible;
+  P.menuPick(i); P.settle(60);
+  const h = G.hero; return { st, items, picked: true, notice, room: G.room?.id ?? 'citadel', state: G.state, pos: [h.pos.x, h.pos.y, h.pos.z].map((v) => +v.toFixed(2)) };
+}, [room, pick]);
+const near = (room) => ev((room) => { const G = game, h = G.hero, l = room === 'citadel' ? G.world.spaceport.landing : G.regions.built('zeelich').spaceport.landing; return { room: G.room?.id ?? 'citadel', d: +Math.hypot(h.pos.x - l.x, h.pos.z - l.z).toFixed(2), state: G.state }; }, room);
+
+await setChapter('project');
+const in1 = await toDoor('terminal');
+check('SPACEPORT-1: from the deck he walks into Citadel Spaceport\'s terminal by its blue door (INPUT)', in1.room === 'terminal', in1);
+const c1 = await counter('terminal');
+check('chapter 2 (grounded): at the terminal\'s ticket counter Ama says the flights are grounded; no menu; the GROUNDED notice is up', c1.st !== 'shop' && c1.said.some((x) => /^n_ama: .*grounded/i.test(x)) && c1.notice === true, c1);
+const bd1 = await ev(() => { const H = TT.terminal; const r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
+check('the terminal\'s departures board reads', bd1.kind === 'termBoard' && bd1.lines >= 1, bd1);
+const g1 = await ev(() => { const H = TT.terminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const S = game.world.spaceport, h = game.hero; return { r: r.r, room: game.room?.id ?? 'citadel', d: +Math.hypot(h.pos.x - S.landing.x, h.pos.z - S.landing.z).toFixed(2), y: +(h.pos.y - S.deck.y).toFixed(2) }; });
+check('the terminal\'s gate (INPUT: walked through) leads out onto the deck by the pad', g1.room === 'citadel' && g1.d < 1.5 && Math.abs(g1.y) < 0.2, g1);
+
+await setChapter('dig');
+await toDoor('terminal');
+const c2 = await counter('terminal', 'Zeelich');
+check('chapter 4: the terminal\'s counter sells the spaceship (menu: Zeelich Spaceport only; the notice down) and he lands on Zeelich Spaceport\'s deck', JSON.stringify(c2.items) === JSON.stringify(['Zeelich Spaceport']) && c2.notice === false && c2.room === 'zeelich' && c2.state === 'play', c2);
+const n2 = await near('zeelich');
+check('… beside Zeelich\'s pad, at its landing spot', n2.d < 1.0, n2);
+const in2 = await toDoor('zterminal');
+check('Zeelich Spaceport\'s pavilion door leads into its terminal (INPUT)', in2.room === 'zterminal', in2);
+const bd2 = await ev(() => { const H = TT.zterminal; const r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
+check('Zeelich\'s terminal board reads', bd2.kind === 'termBoard' && bd2.lines >= 1, bd2);
+const c3 = await counter('zterminal', 'Twinsun');
+const n3 = await near('citadel');
+check('Zeelich\'s terminal counter: the spaceship to Citadel only; he lands beside Citadel\'s pad', JSON.stringify(c3.items) === JSON.stringify(['Twinsun: Citadel Spaceport']) && c3.room === 'citadel' && n3.d < 1.0 && n3.state === 'play', { c3, n3 });
+// with the journey films on (as a player has them): out through the gate under the black, the film from the pad
+await toDoor('terminal');
+const film = await ev(() => { const G = game; G.travel.films.on = true; return G.travel.films.log.length; });
+const c4 = await counter('terminal', 'Zeelich');
+const fl = await ev((n0) => { const G = game; for (let i = 0; i < 400 && (G.state !== 'play' || G.trans); i++) G.step(0.1); const F = G.travel.films; F.on = false; return { log: F.log.slice(n0).map((e) => `${e.part} ${e.mode} ${e.from}>${e.to}${e.skipped ? ' skipped' : ''}`), room: G.room?.id, state: G.state }; }, film);
+const n4 = await near('zeelich');
+check('with the films on: from the counter he goes out through the gate, the ship\'s departure film plays from Citadel\'s pad (take-off, cabin, space) and its arrival on Zeelich; he stands at the landing spot', fl.log.includes('depart ship citadel_port>zeelich_port') && fl.log.includes('arrive ship citadel_port>zeelich_port') && fl.room === 'zeelich' && n4.d < 1.0 && n4.state === 'play', { c4, fl, n4 });
+const g2 = await ev(() => { const G = game; P.enter('zterminal'); const H = TT.zterminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const l = G.regions.built('zeelich').spaceport.landing, h = G.hero; return { r: r.r, room: G.room?.id, d: +Math.hypot(h.pos.x - l.x, h.pos.z - l.z).toFixed(2) }; });
+check('Zeelich\'s terminal gate (INPUT) leads out onto the deck at the pad\'s landing spot', g2.room === 'zeelich' && g2.d < 1.5, g2);
+
 const fails = done(errs);
 await browser.close();
 process.exit(fails ? 1 : 0);

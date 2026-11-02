@@ -5,10 +5,15 @@
 //     evacuation: only Luc and Mr Bazoo, packing); every one stands on the room's floor, off its walls and furniture (a
 //     sitter on their seat, inside the walls), faces their work, a seat's way, a partner or Twinsen; each answers a talk
 //     (P.talk, by input: he walks to them and presses E) with a line of their own; their rounds go on (stops visited)
-//   - Citadel Spaceport: chapters 1–3 the grounded set (stranded travellers, the clerk, a port guard, the mechanic), from
-//     chapter 4 the flying set (passengers, a visitor at the board, a family), none in the evacuation; nobody stands on
-//     the walkway from the bridge to the ship, in the pad's ring or on the board's reading spot; each answers a talk.
-//     Zeelich Spaceport: its Esmer agent and travellers, the same rules
+//   - Citadel Spaceport: chapters 1–3 the grounded set (a stranded traveller, the mechanic), from chapter 4 the flying
+//     set (a visitor at the board, a family, the mechanic), none in the evacuation; nobody stands on the walkway from the
+//     bridge to the ship, in the pad's ring or on the board's reading spot; each answers a talk. Zeelich Spaceport: two
+//     Esmer travellers, the same rules
+//   - SPACEPORT-1, the terminals (walked into by their doors, INPUT): Citadel's in chapters 1, 2 (grounded: the clerk,
+//     the café's keeper, the port guard, a stranded traveller; the GROUNDED notice up), 4 (flying: the clerk, the café's
+//     keeper, two passengers; the notice down) and the evacuation (nobody); Zeelich's in chapters 3 and 9 (the clerk,
+//     the porter); each on the hall's floor or the counter's platform, off the furniture, clear of the counter's, the
+//     board's, the door's and the gate's spots; each answers a talk; their rounds go on
 //   - Zoé in chapter 2's free play (story/chapter1.js: her mark at home): she moves between at least 3 stops in 60 s,
 //     never through a wall or the furniture; a talk stops her and she faces Twinsen; a scene's place for her (the gate,
 //     chapter 2's "meet Zoé") puts her there at once, and back home she is on her mark; Arthur's round too
@@ -63,8 +68,8 @@ const ROOMS = ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse',
 const roomInfo = await ev(() => Object.fromEntries(Object.entries(RL.ROOMS).map(([k, R]) => [k, { ids: R.people.map((p) => p.id), stays: R.people.filter((p) => p.stays).map((p) => p.id) }])));
 
 // ---- the cast: everyone listed, hidden until their place is built (nothing built for them)
-const cast = await ev(() => { const W = game.roomWalkers, G = game; return { n: W.res.length, ids: W.res.map((r) => r.def.id), pending: W.res.filter((r) => r.def.pending).map((r) => r.def.id), built: ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'zeelich'].filter((id) => G.regions.built(id)), street: G.walkers.res.length, clash: W.res.filter((r) => G.npcs.some((n) => n !== r && n.def.id === r.def.id)).map((r) => r.def.id) }; });
-check('the rooms\' and the ports\' people are in the cast (26), none sharing an id; those of places not built yet wait hidden; nothing was built for them; the street\'s residents are their own (17)', cast.n === 26 && cast.clash.length === 0 && cast.built.length === 0 && cast.pending.length === 16 && cast.street === 17, cast);
+const cast = await ev(() => { const W = game.roomWalkers, G = game; return { n: W.res.length, ids: W.res.map((r) => r.def.id), pending: W.res.filter((r) => r.def.pending).map((r) => r.def.id), built: ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich'].filter((id) => G.regions.built(id)), street: G.walkers.res.length, clash: W.res.filter((r) => G.npcs.some((n) => n !== r && n.def.id === r.def.id)).map((r) => r.def.id) }; });
+check('the rooms\' and the ports\' people are in the cast (28: the terminals\' 8 among them), none sharing an id; those of places not built yet wait hidden (23); nothing was built for them; the street\'s residents are their own (17)', cast.n === 28 && cast.clash.length === 0 && cast.built.length === 0 && cast.pending.length === 23 && cast.street === 17, cast);
 const names = await ev(async () => { const { t } = await import('/src/game/i18n.js'); return game.roomWalkers.res.filter((r) => t('n_' + r.def.id) === 'n_' + r.def.id).map((r) => r.def.id); });
 check('every one of them has a name', names.length === 0, names);
 
@@ -109,7 +114,7 @@ for (const [label, key, extra] of STATES) {
     }
   }
 }
-check('the rooms\' people keep their rounds: each visited stops of their round (seated, at a stop, a chat)', roomInfo && Object.values(roomInfo).flatMap((r) => r.ids).every((id) => (visits[id] || 0) >= 1), visits);
+check('the rooms\' people keep their rounds: each visited stops of their round (seated, at a stop, a chat)', roomInfo && Object.entries(roomInfo).filter(([k]) => ROOMS.includes(k)).flatMap(([, r]) => r.ids).every((id) => (visits[id] || 0) >= 1), visits);
 
 // ---- the cost: the rooms' people with the hero in the tavern; the street; every room's people abstract then
 const cost = await ev(() => { const G = game, W = G.roomWalkers;
@@ -126,7 +131,7 @@ console.log(`MEASURE rooms' and ports' people (${cost.people}): hero in the tave
 check('cost: in the tavern its people are simulated in full; with the hero on the street no room\'s person is (they are stepped twice a second, abstract)', cost.inFull.length === 0 && cost.tavern.full > 0, cost);
 
 // ---- Citadel Spaceport
-const portSets = await ev(() => ({ all: RL.PORT_IDS.citadel, grounded: ['ama', 'gurt', 'bern', 'lomba', 'dov'], flying: ['ama', 'gurt', 'ressa', 'ollo', 'esren', 'gunda', 'bibi'] }));
+const portSets = await ev(() => ({ all: RL.PORT_IDS.citadel, grounded: ['gurt', 'dov'], flying: ['gurt', 'esren', 'gunda', 'bibi'] }));
 const portCheck = async (label, key, extra, want, talk) => {
   await ev(([key, extra]) => { setChapter(key, extra); const G = game; G.exitRoom({ x: -16, z: 40, a: Math.PI / 2 }, true, true); G.step(0.3); }, [key, extra]);
   iso(`Citadel Spaceport, ${label}: the hero put on the deck by the bridge (exitRoom)`);
@@ -162,12 +167,58 @@ for (const [label, key] of [['chapter 3 (flights grounded)', 'zeelich'], ['chapt
     let a = audit('port_zeelich', [d]); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(1.5); a = audit('port_zeelich', [d]); }
     const clear = people('port_zeelich').filter((q) => q.present && q.st !== 'walk' && q.st !== 'plan').map((q) => ({ id: q.def.id, walkway: Math.abs(q.pos.x - S.pad.x) < 2.2 && q.pos.z < S.landing.z + 0.5, ring: Math.hypot(q.pos.x - S.pad.x, q.pos.z - S.pad.z) < 6.0 })).filter((q) => q.walkway || q.ring);
     return { here: people('port_zeelich').filter((q) => q.present && !q.away).map((q) => q.def.id), bad: a.filter((q) => q.bad.length), clear, all: a }; });
-  check(`Zeelich Spaceport, ${label}: its Esmer agent and travellers are there, on the deck, clear of the walkway and the pad's ring`, r.here.length === 3 && r.bad.length === 0 && r.clear.length === 0, r);
+  check(`Zeelich Spaceport, ${label}: its two Esmer travellers are there, on the deck, clear of the walkway and the pad's ring`, r.here.length === 2 && r.bad.length === 0 && r.clear.length === 0, r);
   const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
   check(`Zeelich Spaceport, ${label}: each answers a talk (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
   console.log(`  zeelich port ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
   if (key === 'council') { await ev(() => { const G = game, S = G.regions.built('zeelich').spaceport; G.enterRoom('zeelich', { x: S.landing.x - 3, z: S.landing.z + 2, a: Math.PI * 0.8 }, true); for (let i = 0; i < 10; i++) G.step(0.5); }); await shot('spaceport-zeelich'); }
 }
+
+// ---- SPACEPORT-1: the terminals' people (terminal.js, zterminal.js; roomlife.js ROOMS.terminal / zterminal)
+const TERM = [
+  ['terminal', 'chapter 1 (grounded)', 'well', {}, ['ama', 'tavi', 'bern', 'lomba'], true],
+  ['terminal', 'chapter 2 (grounded)', 'project', { c1_water: true }, ['ama', 'tavi', 'bern', 'lomba'], true],
+  ['terminal', 'chapter 4 (flying)', 'dig', {}, ['ama', 'tavi', 'ressa', 'ollo'], false],
+  ['terminal', 'the evacuation', 'evacuation', {}, [], null],
+  ['zterminal', 'chapter 3 (grounded)', 'zeelich', {}, ['velo', 'pask'], true],
+  ['zterminal', 'chapter 9 (flying)', 'council', {}, ['velo', 'pask'], false],
+];
+for (const [room, label, key, extra, want, notice] of TERM) {
+  const r = await ev(async ([room, key, extra]) => {
+    setChapter(key, extra); const G = game, out = {};
+    if (room === 'terminal') G.exitRoom({ x: -2.5, z: 35.5, a: Math.PI }, true, true);
+    else { G.regions.ensure('zeelich', 'test'); G.step(0.3); G.enterRoom('zeelich', G.regions.built('zeelich').spaceport.landing, true, true); }
+    G.step(0.3); out.enter = P.enter(room).r; out.room = G.room?.id;
+    const mod = await import(room === 'terminal' ? '/src/game/terminal.js' : '/src/game/zterminal.js'), H = mod.TERMINAL || mod.ZTERMINAL;
+    for (let i = 0; i < 60; i++) G.step(0.5);
+    const R = G.regions.built(room), c = R.center;
+    const floors = RL.ROOMS[room].floors.map((f) => ({ x0: f.x0 + c.x, x1: f.x1 + c.x, z0: f.z0 + c.z, z1: f.z1 + c.z, y: f.y }));
+    let a = audit(room, floors); if (a.some((q) => q.bad.some((b) => b.startsWith('faces')))) { G.step(1.5); a = audit(room, floors); }
+    out.here = people(room).filter((q) => q.present && !q.away).map((q) => q.def.id);
+    out.bad = a.filter((q) => q.bad.length); out.all = a;
+    // (standing or sitting, not walking: clear of where Twinsen stands to use the counter and read the board, of the
+    //  door's and the gate's triggers and the gate's way in)
+    const spots = { counter: [H.counter, 0.9], board: [H.board, 0.9], door: [H.door, 1.6], gate: [H.gate, 1.6], gateIn: [R.entries.gate, 1.0] };
+    out.clear = people(room).filter((q) => q.present && !q.away && q.st !== 'walk' && q.st !== 'plan').flatMap((q) => Object.entries(spots).filter(([, [p, d]]) => Math.hypot(q.pos.x - p.x, q.pos.z - p.z) < d).map(([k]) => q.def.id + '@' + k));
+    out.stopsClear = people(room).flatMap((q) => q.stops.flatMap((s) => Object.entries(spots).filter(([, [p, d]]) => Math.hypot(s.x - p.x, s.z - p.z) < d).map(([k]) => s.id + '@' + k)));
+    out.notice = H.notice.visible;
+    out.logs = Object.fromEntries(people(room).map((q) => [q.def.id, q.log.filter((l) => / at |seated|chat over/.test(l)).length]));
+    return out;
+  }, [room, key, extra]);
+  iso(`${room}, ${label}: chapter set by its flags; the hero put on the deck before its door and walked in (INPUT: ${r.enter})`);
+  check(`${room}, ${label}: the right people are there (${want.join(', ') || 'nobody'})`, r.room === room && JSON.stringify([...r.here].sort()) === JSON.stringify([...want].sort()), r);
+  check(`${room}, ${label}: each on the hall's floor or the counter's platform, off the walls and the furniture, facing sensibly; nobody (and no stop) on the counter's or the board's spot, the door or the gate`, r.bad.length === 0 && r.clear.length === 0 && r.stopsClear.length === 0, { bad: r.bad, clear: r.clear, stopsClear: r.stopsClear });
+  if (notice !== null) check(`${room}, ${label}: the GROUNDED notice is ${notice ? 'up' : 'down'}`, r.notice === notice, r.notice);
+  for (const [id, n] of Object.entries(r.logs)) visits[id] = (visits[id] || 0) + n;
+  if (want.length) {
+    const talks = await ev(([ids]) => { const out = {}; for (const id of ids) { window.said.length = 0; const q = P.talk(id); out[id] = { r: q.r, said: window.said.filter((s) => s.n === 'n_' + id).map((s) => s.lines.join(' ')) }; } return out; }, [r.here]);
+    check(`${room}, ${label}: each answers a talk with a line of their own (INPUT)`, Object.values(talks).every((q) => q.r === 'talked' && q.said.length > 0), talks);
+    console.log(`  ${room} ${label}: ` + Object.entries(talks).map(([id, q]) => `${id}: "${q.said[0]}"`).join(' · '));
+    await ev(() => { for (let i = 0; i < 6; i++) game.step(0.5); });
+    await shot(`${room}-${key}`);
+  }
+}
+check('the terminals\' people keep their rounds: each visited a stop (seated, at a stop)', ['ama', 'tavi', 'bern', 'lomba', 'ressa', 'ollo', 'velo', 'pask'].every((id) => (visits[id] || 0) >= 1), visits);
 
 // ---- Zoé's household round (chapter 2's free play: story/chapter1.js puts her on her mark at home)
 await ev(() => { setChapter('project'); const G = game;

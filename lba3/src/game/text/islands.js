@@ -48,4 +48,9 @@ Object.assign(STR.en, {
   map_to_twinsun: 'spaceship to Twinsun',
   port_board: 'CITADEL SPACEPORT · Departures: Zeelich Spaceport, by spaceship. For Zeelich\'s islands, change there to an Esmer shuttle.',
   port_grounded: 'A note on the ship\'s hatch: "All passenger flights grounded by order of the Joint Project. Project crews only."',
+  // SPACEPORT-1: the terminals' counters and boards
+  p_tickets: 'Tickets',
+  tm_grounded: "No passenger flights, I'm afraid. The Joint Project has grounded them. Project ships only, until they say otherwise.",
+  zt_grounded: 'Passenger ships to Twinsun are held by the project. When they fly again, this counter will be the first to know.',
+  zt_board: 'ZEELICH SPACEPORT · Departures: Twinsun, Citadel Spaceport, by spaceship from pad one. Zeelich\'s islands: Esmer shuttles from the dock.',
 });

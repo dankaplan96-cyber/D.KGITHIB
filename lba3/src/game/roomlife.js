@@ -19,16 +19,23 @@
 //      nbrhouse   Hedda, the neighbour (the kettle of chapter 1), at her stove, her tap, her table, her desk
 //      nellhouse  Wim, Nell's apprentice (Nell herself keeps her stall outside: story/life.js), at the workbench
 //      baggage    Osk the baggage clerk upstairs: his table, the belt, the crates
+//      terminal   (SPACEPORT-1, Citadel Spaceport's terminal: terminal.js TERMINAL_PLAN) Ama at the ticket counter, the
+//                 printer and the forms; Tavi at the café's counter, its machine and shelf; chapters 1–3 the port guard
+//                 by the shut gate and at the GROUNDED notice, Mrs Lomba on a seat with her case, asking at the counter,
+//                 at the café's table; from chapter 4 Old Ressa (a seat, the café) and Ollo (a seat, his ticket, a coffee)
+//      zterminal  (Zeelich Spaceport's: zterminal.js ZTERMINAL_PLAN) Velo at the departures counter; Pask the porter
+//                 taking cases off the arrivals deck to the gate
 //    The tavern's cellar is a store: nobody lives there (Luc's lines mention it).
 //    The town's states: before the water (chapter 1, chapter 2 until the valves), with it, and the evacuation
 //    (chapter 8), when the rooms empty except for Luc and Mr Bazoo packing (story/interiors.js: place).
 // 2. The spaceports' people (outdoors, the same manager: a resident of a place, simulated in full only near the hero).
-//    Citadel Spaceport (spaceport.js): chapters 1–3, passenger flights grounded by the project — two stranded travellers
-//    on the benches grumbling, the kiosk's clerk, a port guard by the ship's hatch, a mechanic at the pad's far side;
-//    from chapter 4 flights run — two passengers on the benches, an Esmer visitor at the board, a family with a case,
-//    the clerk, the mechanic. Gone in the evacuation (the project's queue is on the bridge then: story/evacuation.js).
-//    Zeelich Spaceport (travel.js builds its deck): an Esmer port agent and two Esmer travellers. Every stop keeps off
-//    the painted walkway from the bridge to the ship, the pad's ring and the departures board's reading spot.
+//    SPACEPORT-1 moved the staff and the waiting passengers into the terminals (above); on the decks:
+//    Citadel Spaceport (spaceport.js): chapters 1–3, passenger flights grounded by the project — a stranded traveller on
+//    the bench watching the ship that will not go, a mechanic at the pad's far side; from chapter 4 flights run — an
+//    Esmer visitor at the board, a family with a case on the bench, the mechanic. Gone in the evacuation (the project's
+//    queue is on the bridge then: story/evacuation.js). Zeelich Spaceport (travel.js builds its deck): two Esmer
+//    travellers, one with his case by the rail. Every stop keeps off the painted walkway from the bridge to the ship,
+//    the pad's ring and the departures board's reading spot.
 // 3. Household rounds (StoryRounds): the story's own people who stand all chapter at home or at work — Zoé and Arthur in
 //    the house, Gilbert and Mira in the Water Office (chapter 2) — walk a small round when no scene needs them: Zoé from
 //    the sink to the stove, the table, the window, the stairwell and her desk in the bedroom; Arthur from his boat to his
@@ -59,6 +66,8 @@ import { PHARMACY_PLAN } from './pharmacy.js';
 import { NBRHOUSE_PLAN } from './nbrhouse.js';
 import { NELLHOUSE_PLAN } from './nellhouse.js';
 import { BAGGAGE_PLAN } from './baggage.js';
+import { TERMINAL_PLAN } from './terminal.js';
+import { ZTERMINAL_PLAN } from './zterminal.js';
 
 const A = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
 // the seats a person sits on, as walkers.js BENCH_RED: the seat's top over the floor, its back's front face and its front
@@ -69,6 +78,8 @@ export const SEAT = {
   lowStool: { seatY: 0.72, back: -0.6, front: 0.2 },         // ticket.js stool
   sofa: { seatY: 0.47, back: -0.17, front: 0.35 },           // tavern.js sofa (the back cushion's face)
   portBench: { seatY: 0.49, back: -0.24, front: 0.235 },     // props.js waitingBench
+  termSeat: { seatY: 0.46, back: -0.21, front: 0.23 },       // terminal.js seatRow (a moulded seat: its middle, the plan's seats)
+  cafeStool: { seatY: 0.75, back: -0.6, front: 0.2 },        // terminal.js café stool (no back)
 };
 
 // ------------------------------------------------------------------ the rooms
@@ -96,6 +107,19 @@ const tvSanna = { x: TV.tables[0][0], z: TV.tables[0][1] }, tvJuke = TV.juke, tv
 const bzAt = (k, d) => { const [x, z, ry] = BA.tables[k], ux = Math.sin(ry), uz = Math.cos(ry); return [x + ux * d, z + uz * d, Math.atan2(-ux, -uz)]; };
 // the baggage claim's crates by the office's right wall: their middle
 const bgCrates = { x: BG.crates[0].x, z: (BG.crates[0].z + BG.crates[1].z) / 2 };
+
+// SPACEPORT-1: the two terminals (terminal.js, zterminal.js: TERMINAL_PLAN, ZTERMINAL_PLAN). A counter's keeper stays on
+// its raised platform (its own floor: the step up to it is no floor of the planner's, so nobody else wanders up there);
+// travellers sit on the first row of seats (the second row faces its back, closed at both ends by the planters), ask at
+// the counter from the floor below its step and keep clear of the counter's and the board's spots where Twinsen stands
+// (the travel menu, the departures), the door's and the gate's way.
+const TM = TERMINAL_PLAN, ZT = ZTERMINAL_PLAN;
+const deck = (x0, x1, z0, z1, y) => ({ x0: x0 + 0.02, x1: x1 - 0.02, z0: z0 + 0.02, z1: z1 - 0.02, y });   // (a raised floor's top)
+const tmSeat = (i) => TM.seats[i];   // (row 1's seats: the first ROWN)
+// at the ticket counter from the floor below its step (dx along it from its middle), facing the clerk's side
+const ask = (id, dx, dur, o = {}) => L(id, TM.CX + dx, TM.PZ1 + 1.05, TM.CX + dx, TM.CZ, 'stand', dur, o);
+// the place to stand beside a chair (s: which side, d from its middle), to sit down from
+const beside = (c, s, d = 0.65) => [c.x + s * d * Math.cos(c.a), c.z - s * d * Math.sin(c.a)];
 
 export const ROOMS = {
   tavern: {
@@ -206,6 +230,58 @@ export const ROOMS = {
       ] },
     ],
   },
+  // Citadel Spaceport's terminal (chapters 1–3 grounded, from chapter 4 flying; nobody in the evacuation: the project's
+  // queue is outside on the bridge). Ama sells the tickets (or does not); Tavi keeps the café; the port guard keeps the
+  // gate while it is shut; Mrs Lomba waits it out, then Old Ressa and Ollo wait for their flight.
+  terminal: {
+    floors: [deck(TM.PX0, TM.PX1, TM.BZ + 0.3, TM.PZ1, TM.PH), hall(TM)],
+    people: [
+      { id: 'ama', char: 'councilB', tint: '#e4ecff', color: '#a0b8f0', speed: 0.85, start: 0, stops: [
+        D('ama_till', TM.clerk.x, TM.clerk.z, TM.clerk.a, 'browse', [14, 22], { spot: 'clerk' }),   // (her spot, at the till)
+        D('ama_print', TM.printer.x, TM.clerk.z, 0, 'put', [5, 8], { gest: ['nod'] }),               // (the ticket printer)
+        D('ama_forms', TM.cabinet.x, TM.cabinet.z + TM.cabinet.d / 2 + 0.5, Math.PI, 'reach', [6, 9]),   // (the cabinet of forms)
+      ] },
+      { id: 'tavi', char: 'farmerB', tint: '#fff0e0', color: '#e8a878', speed: 0.85, start: 0, stops: [
+        D('tavi_counter', TM.cafe.x, TM.cafe.z, TM.cafe.a, 'browse', [14, 20], { spot: 'cafe' }),     // (behind the café's counter)
+        D('tavi_machine', TM.machine.x, TM.cafe.z, 0, 'reach', [6, 9], { gest: ['nod'] }),           // (the coffee machine)
+        D('tavi_shelf', TM.shelf.x + 0.35, TM.cafe.z, Math.PI, 'reachHigh', [5, 8]),                // (the shelf of bottles behind)
+      ] },
+      { id: 'bern', char: 'archivist', tint: '#d4dcee', color: '#90a8d0', speed: 0.85, start: 0, when: 'grounded', stops: [
+        D('bern_gate', TM.guard.x, TM.guard.z, TM.guard.a, 'stand', [20, 30], { spot: 'guard' }),   // (by the shut gate)
+        L('bern_notice', TM.notice.x + 1.3, TM.notice.z, TM.notice.x, TM.notice.z, 'stand', [8, 12], { gest: ['nod'] }),   // (the GROUNDED notice: "read it")
+      ] },
+      { id: 'lomba', char: 'weaver', tint: '#fff0e6', color: '#e8b0c0', speed: 0.8, start: 0, when: 'grounded', stops: [
+        S('lomba_seat', by(tmSeat(1), -0.75, 0), seatOf(tmSeat(1), SEAT.termSeat), [30, 45], { carry: 'case' }),
+        ask('lomba_ask', 1.3, [8, 12], { gest: ['shrug', 'sigh'] }),                                  // (at the counter, again)
+        S('lomba_cafe', beside(TM.chairs[0], -1), seatOf(TM.chairs[0], SEAT.chair), [20, 30]),
+      ] },
+      { id: 'ressa', char: 'tarra', tint: '#f0e8ff', color: '#c8a8e8', speed: 0.7, start: 0, when: 'flying', stops: [
+        S('ressa_seat', by(tmSeat(0), -0.75, 0), seatOf(tmSeat(0), SEAT.termSeat), [40, 60]),
+        S('ressa_cafe', beside(TM.chairs[1], -1), seatOf(TM.chairs[1], SEAT.chair), [30, 45]),
+      ] },
+      { id: 'ollo', char: 'lharMan', tint: '#f4ecdc', color: '#d8c090', speed: 1.0, start: 0, when: 'flying', stops: [
+        S('ollo_seat', by(tmSeat(3), -0.75, 0), seatOf(tmSeat(3), SEAT.termSeat), [30, 45]),
+        ask('ollo_ticket', 1.3, [6, 9]),                                                               // (his ticket)
+        S('ollo_coffee', by(TM.stools[2], 0, 0.7), [TM.stools[2].x, TM.stools[2].z, Math.PI, SEAT.cafeStool], [20, 30]),
+      ] },
+    ],
+  },
+  // Zeelich Spaceport's terminal: Velo at the departures counter, Pask the porter taking cases down from the arrivals
+  // deck to the gate (the travellers wait outside on the deck: ZEELICH_PORT)
+  zterminal: {
+    floors: [deck(ZT.PX0, ZT.PX1, ZT.BZ + 0.3, ZT.PZ1, ZT.PH), deck(ZT.AX0, ZT.AX1, ZT.BZ + 0.3, ZT.AZ1, ZT.AH), hall(ZT)],
+    people: [
+      { id: 'velo', char: 'councilChair', tint: '#f2ecff', color: '#c0a8f0', speed: 0.8, start: 0, stops: [
+        D('velo_till', ZT.clerk.x, ZT.clerk.z, ZT.clerk.a, 'browse', [14, 20], { spot: 'clerk' }),
+        D('velo_print', ZT.printer.x, ZT.clerk.z, 0, 'put', [5, 8], { gest: ['nod'] }),
+      ] },
+      { id: 'pask', char: 'oku', tint: '#f6f0e6', color: '#d8c0a0', speed: 0.85, start: 0, stops: [
+        D('pask_wait', ZT.porter.x, ZT.porter.z, ZT.porter.a, 'stand', [10, 16], { spot: 'porter' }),   // (at the arrivals stair's foot)
+        D('pask_case', ZT.porter.x + 1.4, ZT.AZ1 + 0.6, Math.PI, 'reach', [4, 6], { carry: 'case' }),   // (a case off the arrivals deck's lip)
+        L('pask_gate', ZT.LX + 2.6, ZT.GATEZ + 1.4, ZT.LX, ZT.GATEZ, 'put', [5, 7], { carry: null }),   // (set by the gate for the next ship)
+      ] },
+    ],
+  },
 };
 
 // ------------------------------------------------------------------ the spaceports (outdoors)
@@ -216,39 +292,18 @@ export const ROOMS = {
 const CB = [-11.2, -7.4], CBZ = 33.05;   // (the two benches' middles: spaceport.js; BENCHES-1, 0.3 m further apart, clear of the tub between them)
 const SB = (id, bx, side, dur, o = {}) => S(id, [bx + side * 0.45, CBZ + 0.95], [bx + side * 0.45, CBZ, 0, SEAT.portBench], dur, o);
 const CITADEL_PORT = [
-  { id: 'ama', char: 'councilB', tint: '#e4ecff', color: '#a0b8f0', speed: 0.85, start: 0, stops: [
-    D('ama_kiosk', -8.75, 44.9, Math.PI, 'stand', [16, 24]),
-    L('ama_leaflets', -7.0, 43.2, -7.7, 44.1, 'browse', [6, 9]),
-    S('ama_break', [-9.6, 51.65], [-9.6, 52.6, Math.PI, SEAT.portBench], [14, 20]),
-  ] },
   { id: 'gurt', char: 'hesk', tint: '#dfe6fb', color: '#e0a060', speed: 0.9, start: 1, stops: [
     L('gurt_crates', 9.0, 30.4, 10.45, 28.75, 'put', [5, 8], { carry: 'crate' }),
     L('gurt_trolley', 9.6, 35.4, 10.4, 34.4, 'put', [5, 7], { carry: null }),
     L('gurt_cargo', 11.0, 46.3, 12.6, 45.6, 'browse', [10, 14]),
     L('gurt_ship', 9.6, 37.0, 4.5, 41, 'reach', [6, 9]),
   ] },
-  { id: 'bern', char: 'archivist', tint: '#d4dcee', color: '#90a8d0', speed: 0.85, start: 0, when: 'grounded', stops: [
-    L('bern_hatch', -1.0, 45.6, 4.5, 41, 'stand', [20, 30]),
-    L('bern_round', -3.0, 35.8, 4.5, 41, 'stand', [12, 18]),
-  ] },
-  { id: 'lomba', char: 'weaver', tint: '#fff0e6', color: '#e8b0c0', speed: 0.8, start: 0, when: 'grounded', stops: [
-    SB('lomba_bench', CB[0], -1, [30, 45], { carry: 'case' }),
-    L('lomba_grumble', -7.6, 35.8, -6.6, 35.8, 'stand', [20, 28], { pair: 'grounded', mate: 'dov' }),
-    L('lomba_kiosk', -9.0, 43.6, -10.4, 45.5, 'stand', [8, 12], { gest: ['shrug', 'sigh'] }),
-  ] },
+  // (SPACEPORT-1: the clerk, the port guard and Mrs Lomba went inside, to the terminal's counter, gate and seats; Dov
+  //  stays out on the bench, watching the grounded ship)
   { id: 'dov', char: 'lharMan', tint: '#e6f6e6', color: '#b0d8a0', speed: 0.95, start: 0, when: 'grounded', stops: [
     SB('dov_bench', CB[1], 1, [30, 45]),
-    L('dov_grumble', -6.6, 35.8, -7.6, 35.8, 'stand', [20, 28], { pair: 'grounded', mate: 'lomba' }),
-    L('dov_guard', -1.8, 44.0, -1.0, 45.6, 'stand', [6, 9], { gest: ['shrug'] }),
-  ] },
-  { id: 'ressa', char: 'tarra', tint: '#f0e8ff', color: '#c8a8e8', speed: 0.7, start: 0, when: 'flying', stops: [
-    SB('ressa_bench', CB[0], -1, [40, 60]),
-    S('ressa_red', [-9.15, 51.65], [-9.15, 52.6, Math.PI, SEAT.portBench], [30, 45]),
-  ] },
-  { id: 'ollo', char: 'lharMan', tint: '#f4ecdc', color: '#d8c090', speed: 1.0, start: 0, when: 'flying', stops: [
-    SB('ollo_bench', CB[1], 1, [30, 45]),
-    L('ollo_kiosk', -9.0, 43.6, -10.4, 45.5, 'browse', [6, 9]),
-    L('ollo_board', -9.8, 35.0, -11.2, 36.2, 'stand', [6, 9]),
+    L('dov_ship', -3.0, 35.8, 4.5, 41, 'stand', [12, 18], { gest: ['shrug'] }),
+    L('dov_kiosk', -9.0, 43.6, -10.4, 45.5, 'stand', [8, 12], { gest: ['sigh'] }),
   ] },
   { id: 'esren', char: 'keeper', tint: '#fff6ee', color: '#e8a8d0', speed: 0.8, start: 0, when: 'flying', stops: [
     L('esren_board', -9.8, 35.0, -11.2, 36.2, 'stand', [12, 18]),
@@ -268,10 +323,7 @@ const CITADEL_PORT = [
 // at x −4 from z 26; the landing (−4, 36.8); the pad (−4, 44), its ring 5.8 m; the board at (−0.6, 35.2), read from its
 // south-east). Esmers do not sit (walkers.js canSit): they stand.
 const ZEELICH_PORT = [
-  { id: 'velo', char: 'councilChair', tint: '#f2ecff', color: '#c0a8f0', speed: 0.8, start: 0, stops: [
-    D('velo_post', 3.5, 38.0, -Math.PI / 2, 'stand', [14, 20]),
-    L('velo_cargo', 3.5, 47.5, -4, 44, 'browse', [10, 14]),
-  ] },
+  // (SPACEPORT-1: Velo, the port agent, went inside to the terminal's counter: zterminal above)
   { id: 'ennu', char: 'oku', tint: '#eef8ff', color: '#a8d8f0', speed: 0.75, start: 0, stops: [
     D('ennu_wait', -11.5, 40.0, Math.PI / 2, 'stand', [20, 30], { carry: 'case', gest: ['sigh'] }),
     L('ennu_ship', -11.5, 47.0, -4, 44, 'stand', [14, 20]),

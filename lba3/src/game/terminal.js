@@ -27,12 +27,36 @@
 //     seats [{x,z,a}]   10 sitting spots (a: facing)
 //     npcSpots {clerk, guard, cafe} {x,z,a}
 //     notice {setVisible(b)}   the GROUNDED notice on the left wall
+//   TERMINAL_PLAN                       the layout in the room's frame (the builder's own numbers): roomlife.js places the
+//                                       terminal's people from it (BIGGER-1's way), so a change of the layout carries them
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, canvasTex, table, chair, counter, pottedPlant, jar, luggageTrolley } from './props.js';
 
 export const TERMINAL_AT = { x: 8600, z: 0 };
 export const TERMINAL = {};
+// (SPACEPORT-1 wiring: the café corner stood across the gate's way in — its stools and round table 0.4 m from the gate's
+//  pillar, the hero stuck there walking to the gate: it moves along the back wall between the second and third
+//  pilasters, its table before it; the gate's side of the hall is open floor)
+export const TERMINAL_PLAN = (() => {
+  const W = 16, D = 12, H = 5.0, LX = -W / 2, BZ = -D / 2, DOORZ = 3.6, GATEZ = -4.2, BRDZ = -0.5;
+  const PX0 = 1.2, PX1 = W / 2 - 0.3, PZ1 = BZ + 3.4, PH = 0.36, CX = (PX0 + PX1) / 2, CZ = PZ1 - 0.6;   // (the ticket platform, its counter)
+  const KX = -1.9, KZ = BZ + 1.2;                                                                     // (the café's counter)
+  const ROWS = [-3.4, -1.2], ROWZ = -0.3, ROWN = 5, TX = KX - 2.0, TZ = KZ + 1.9;
+  return { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ, ROWS, ROWZ, ROWN,
+    counterW: 4.2, counterD: 0.62, cafeW: 2.4,
+    printer: { x: CX - 0.8, z: CZ }, cabinet: { x: CX + 1.2, z: BZ + 0.55, w: 1.6, d: 0.45 },
+    scale: { x: PX1 - 0.6, z: PZ1 + 0.95 }, notice: { x: LX + 0.04, z: BRDZ + 2.1 },
+    // the waiting seats' middles (two rows of five facing the board: the rows' seats run along z), the way they face
+    seats: ROWS.flatMap((x) => Array.from({ length: ROWN }, (_, i) => ({ x: x - 0.02, z: ROWZ - 0.6 * (ROWN - 1) / 2 + i * 0.6, a: -Math.PI / 2 }))),
+    seatDepth: 0.3,   // (a row's half depth across its seats)
+    plants: [[-2.3, -2.25], [-2.3, 1.65], [3.2, 1.6]], trolley: { x: 0.9, z: 3.4, ry: 0.3 },
+    machine: { x: KX - 0.7, z: KZ }, shelf: { x: KX, z: BZ + 0.15, w: 1.8 },
+    stools: [-0.8, 0, 0.8].map((dx) => ({ x: KX + dx, z: KZ + 0.75 })),
+    table: { x: TX, z: TZ }, chairs: [-1.2, 1.9].map((a) => ({ x: TX + Math.sin(a) * 0.75, z: TZ + Math.cos(a) * 0.75, a: a + Math.PI })),
+    clerk: { x: CX, z: CZ - 0.75, a: 0 }, guard: { x: LX + 1.5, z: GATEZ + 1.7, a: Math.PI / 2 }, cafe: { x: KX, z: KZ - 0.55, a: 0 },
+  };
+})();
 
 // the terminal's blue door on the deck (spaceport.js: tcx + 3 on the block's south face, z = 31.6)
 const DOOR_OUT = { x: -2.5, z: 31.6 };
@@ -109,12 +133,11 @@ function luggageScale(k) {
 export function buildTerminalRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'terminal', TERMINAL_AT.x, TERMINAL_AT.z);
   const R = B.room, k = B.k;
-  const W = 16, D = 12, H = 5.0;
+  const P = TERMINAL_PLAN, { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, KX, KZ } = P;
   R.view = 12; R.follow = 0.6; R.music = 'home';
   // (Twinsun's pale sandstone below a white plaster band, as the terminal outside; lit a little from within)
   const stone = M('tm_stone', () => { const t = TEX.stone('sand'), m = new THREE.MeshStandardMaterial({ map: t, color: '#f2e8d8', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.25 }); m.userData.tile = 2; return m; });
   const cap = MAT.stone('sand', 1.2), floor = MAT.tiles('#d8d2c4', '#c8c0b0', '#5a7a9a', false, 5);
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 3.6, GATEZ = -4.2;
   B.shell({ floor, slab: MAT.rubble('grey'), body: stone, low: MAT.plaster('#f4efe2'), rail: BLUE(), cap, H, t: 0.5, dado: 1.1, rimH: 0.45, rimMat: cap, W, D,
     left: [{ at: DOORZ, w: 1.5, h: 2.4, y0: 0, kind: 'door', frame: BLUE() }, { at: GATEZ, w: 1.6, h: 2.5, y0: 0, kind: 'door', frame: BLUE() }] });
   // the band of glass blocks under the back wall's cornice, lit from outside
@@ -130,61 +153,57 @@ export function buildTerminalRoom(scene, physics) {
   k.add(plane(1.2, 0.35), MAT.map(signTex('GATE · PAD 1'), 0.6), LX + 0.03, 2.75, GATEZ, Math.PI / 2);
 
   // --- the ticket counter on its platform in the back right: two steps up, the counter across its front
-  const PX0 = 1.2, PX1 = W / 2 - 0.3, PZ1 = BZ + 3.4, PH = 0.36;
   k.add(rbox(PX1 - PX0, PH, PZ1 - BZ - 0.3, 0.03), cap, (PX0 + PX1) / 2, PH / 2, (BZ + 0.3 + PZ1) / 2);
   k.add(rbox(PX1 - PX0 - 0.1, 0.02, PZ1 - BZ - 0.4, 0.01), MAT.tiles('#c8c0b0', '#b8b0a0', '#5a7a9a', true, 4), (PX0 + PX1) / 2, PH + 0.005, (BZ + 0.3 + PZ1) / 2);
   B.col((PX0 + PX1) / 2, (BZ + 0.3 + PZ1) / 2, (PX1 - PX0) / 2 + 0.06, (PZ1 - BZ - 0.3) / 2 + 0.06, PH);
   k.add(rbox(PX1 - PX0, PH / 2, 0.5, 0.02), cap, (PX0 + PX1) / 2, PH / 4, PZ1 + 0.25);
   B.col((PX0 + PX1) / 2, PZ1 + 0.25, (PX1 - PX0) / 2 + 0.06, 0.25 + 0.06, PH / 2);
-  const CX = (PX0 + PX1) / 2, CZ = PZ1 - 0.6;
-  k.at(CX, PH, CZ, 0, () => counter(k, { w: 4.2, d: 0.62, h: 1.08, pal: 'pale', top: MAT.steel() }));
+  k.at(CX, PH, CZ, 0, () => counter(k, { w: P.counterW, d: P.counterD, h: 1.08, pal: 'pale', top: MAT.steel() }));
   B.col(CX, CZ, 2.1, 0.33, PH + 1.1, { noStand: true });
   k.add(rbox(4.24, 0.12, 0.08, 0.02), ORANGE(), CX, PH + 0.6, CZ + 0.33);
   // on it: the ticket printer, a stack of tickets, a little Esmer dome lamp
-  k.add(rbox(0.36, 0.22, 0.3, 0.04), MAT.paint('#3a3a40', 0.4), CX - 0.8, PH + 1.19, CZ);
-  k.add(plane(0.2, 0.12), MAT.glow('#9fe0ff', '#5fc0e8', 0.8), CX - 0.8, PH + 1.25, CZ + 0.155);
+  k.add(rbox(0.36, 0.22, 0.3, 0.04), MAT.paint('#3a3a40', 0.4), P.printer.x, PH + 1.19, P.printer.z);
+  k.add(plane(0.2, 0.12), MAT.glow('#9fe0ff', '#5fc0e8', 0.8), P.printer.x, PH + 1.25, P.printer.z + 0.155);
   for (let i = 0; i < 4; i++) k.add(rbox(0.16, 0.01, 0.08, 0.003), MAT.paint(['#f2ead6', '#e8d8a8'][i % 2], 0.7), CX + 0.4 + (i % 2) * 0.02, PH + 1.09 + i * 0.01, CZ + 0.05);
   k.add(cyl(0.07, 0.09, 0.1, 10), MAT.brass(), CX + 1.4, PH + 1.13, CZ);
   k.add(new THREE.SphereGeometry(0.1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), MAT.glow('#ffe8c8', '#e8a060', 0.8), CX + 1.4, PH + 1.18, CZ);
   // behind it: the clerk's stool, a cabinet of forms, the port's name on two hanging signs (LBA2 hangs two over its desk)
-  k.add(rbox(1.6, 1.3, 0.45, 0.04), MAT.wood('pale'), CX + 1.2, PH + 0.65, BZ + 0.55);
+  k.add(rbox(P.cabinet.w, 1.3, P.cabinet.d, 0.04), MAT.wood('pale'), P.cabinet.x, PH + 0.65, P.cabinet.z);
   for (const dx of [-1.2, 1.2]) {
     for (const s of [-0.5, 0.5]) k.add(cyl(0.012, 0.012, 1.1, 4), MAT.steel(), CX + dx + s, H - 0.55, CZ + 0.1);
     k.add(plane(1.4, 0.44), MAT.map(signTex('TICKETS', dx < 0 ? 'CITADEL SPACEPORT' : 'TO ZEELICH'), 0.6, { side: THREE.DoubleSide }), CX + dx, H - 1.3, CZ + 0.1);
   }
-  B.put(PX1 - 0.6, PZ1 + 0.95, 0, (kk) => luggageScale(kk));
+  B.put(P.scale.x, P.scale.z, 0, (kk) => luggageScale(kk));
   for (const x of [PX0 + 0.15, PX1 - 0.15]) { k.add(cyl(0.05, 0.06, 1.0, 8), BLUE(), x, PH + 0.5, PZ1 - 0.15); k.add(sphere(0.16, 12, 8), MAT.glow('#fff4d8', '#ffd890', 1.0), x, PH + 1.12, PZ1 - 0.15); }
 
   // --- the departures board on the left wall between the doors, a lamp over it; the GROUNDED notice beside it
-  const BRDZ = -0.5;
   k.add(rbox(0.14, 1.7, 3.0, 0.03), MAT.paint('#2a2e36', 0.4), LX + 0.08, 2.35, BRDZ);
   k.add(plane(2.8, 1.5), MAT.map(boardTex(), 0.7, { emissive: '#ffffff', emissiveMap: boardTex(), emissiveIntensity: 0.35 }), LX + 0.16, 2.35, BRDZ, Math.PI / 2);
   k.add(cyl(0.18, 0.28, 0.24, 12, true), MAT.steel(), LX + 0.5, 3.55, BRDZ, 0, { rz: -0.9 });
-  const notice = k.mesh(plane(0.62, 0.78), MAT.map(noticeTex(), 0.8), LX + 0.04, 1.75, BRDZ + 2.1, Math.PI / 2);
+  const notice = k.mesh(plane(0.62, 0.78), MAT.map(noticeTex(), 0.8), P.notice.x, 1.75, P.notice.z, Math.PI / 2);
 
   // --- the waiting seats: two rows of five facing the board, planters at their ends, a luggage trolley
   const seats = [];
-  for (const x of [-3.4, -1.2]) {
-    B.put(x, -0.3, -Math.PI / 2, (kk) => seatRow(kk, 5));
-    for (let i = 0; i < 5; i++) seats.push({ x: B.cx + x - 0.3, z: B.cz - 1.5 + i * 0.6, a: -Math.PI / 2 });
+  for (const x of P.ROWS) {
+    B.put(x, P.ROWZ, -Math.PI / 2, (kk) => seatRow(kk, P.ROWN));
+    for (let i = 0; i < P.ROWN; i++) seats.push({ x: B.cx + x - 0.3, z: B.cz + P.ROWZ - 0.6 * (P.ROWN - 1) / 2 + i * 0.6, a: -Math.PI / 2 });
   }
-  for (const [x, z] of [[-2.3, -2.25], [-2.3, 1.65], [3.2, 1.6]]) B.put(x, z, 0, (kk) => fountainPlant(kk));
-  B.put(0.9, 3.4, 0.3, (kk) => luggageTrolley(kk, { seed: 4, load: 3 }));
+  for (const [x, z] of P.plants) B.put(x, z, 0, (kk) => fountainPlant(kk));
+  B.put(P.trolley.x, P.trolley.z, P.trolley.ry, (kk) => luggageTrolley(kk, { seed: 4, load: 3 }));
   k.at(W / 2 - 0.6, 0, D / 2 - 0.6, 0, () => pottedPlant(k, { kind: 'spiky', s: 1.3, potColor: '#2f6a9a' }));
   B.ccol(W / 2 - 0.6, D / 2 - 0.6, 0.35, 1.0);
 
-  // --- the café corner at the back left: a counter with the coffee machine, stools, a round table
-  const KX = LX + 1.9, KZ = BZ + 1.2;
-  k.at(KX, 0, KZ, 0, () => counter(k, { w: 2.4, d: 0.6, h: 1.02, pal: 'pale', top: MAT.paint('#d8682a', 0.4) }));
-  B.col(KX, KZ, 1.2, 0.32, 1.05, { noStand: true });
-  k.add(rbox(0.4, 0.5, 0.36, 0.05), MAT.steel(), KX - 0.7, 1.27, KZ - 0.05);
-  k.add(cyl(0.03, 0.03, 0.12, 6), MAT.brass(), KX - 0.7, 1.08, KZ + 0.16, 0, { rx: Math.PI / 2 });
+  // --- the café corner on the back wall: a counter with the coffee machine, stools, a round table before it
+  k.at(KX, 0, KZ, 0, () => counter(k, { w: P.cafeW, d: 0.6, h: 1.02, pal: 'pale', top: MAT.paint('#d8682a', 0.4) }));
+  B.col(KX, KZ, P.cafeW / 2, 0.32, 1.05, { noStand: true });
+  k.add(rbox(0.4, 0.5, 0.36, 0.05), MAT.steel(), P.machine.x, 1.27, P.machine.z - 0.05);
+  k.add(cyl(0.03, 0.03, 0.12, 6), MAT.brass(), P.machine.x, 1.08, P.machine.z + 0.16, 0, { rx: Math.PI / 2 });
   [-0.2, 0.15, 0.5].forEach((dx, i) => jar(k, KX + dx, 1.03, KZ, 'jar', ['#f2ead6', '#2f8a9a', '#c84a7a'][i], 0.7));
-  k.add(rbox(1.8, 0.04, 0.26, 0.01), MAT.wood('pale'), KX, 1.7, BZ + 0.15); for (let i = 0; i < 5; i++) jar(k, KX - 0.7 + i * 0.35, 1.72, BZ + 0.15, 'bottle', ['#2f8a9a', '#c8a050', '#7a3a2a'][i % 3], 0.8);
+  k.add(rbox(P.shelf.w, 0.04, 0.26, 0.01), MAT.wood('pale'), P.shelf.x, 1.7, P.shelf.z); for (let i = 0; i < 5; i++) jar(k, P.shelf.x - 0.7 + i * 0.35, 1.72, P.shelf.z, 'bottle', ['#2f8a9a', '#c8a050', '#7a3a2a'][i % 3], 0.8);
   k.add(plane(1.2, 0.35), MAT.map(signTex('CAFÉ'), 0.6), KX, 2.4, BZ + 0.04);
-  for (const dx of [-0.8, 0, 0.8]) B.put(KX + dx, KZ + 0.75, 0, (kk) => { kk.add(cyl(0.18, 0.18, 0.06, 12), ORANGE(), 0, 0.72, 0); kk.add(cyl(0.035, 0.035, 0.7, 6), MAT.steel(), 0, 0.35, 0); kk.add(cyl(0.18, 0.2, 0.03, 12), MAT.steel(), 0, 0.015, 0); return { r: 0.2, top: 0.78 }; });
-  B.put(LX + 1.4, BZ + 3.4, 0, (kk) => table(kk, { w: 0.8, h: 0.76, round: true, pal: 'pale' }));
-  for (const a of [0.6, 2.6]) B.put(LX + 1.4 + Math.sin(a) * 0.75, BZ + 3.4 + Math.cos(a) * 0.75, a + Math.PI, (kk) => chair(kk, { pal: 'pale', cushion: '#d8682a' }));
+  for (const s of P.stools) B.put(s.x, s.z, 0, (kk) => { kk.add(cyl(0.18, 0.18, 0.06, 12), ORANGE(), 0, 0.72, 0); kk.add(cyl(0.035, 0.035, 0.7, 6), MAT.steel(), 0, 0.35, 0); kk.add(cyl(0.18, 0.2, 0.03, 12), MAT.steel(), 0, 0.015, 0); return { r: 0.2, top: 0.78 }; });
+  B.put(P.table.x, P.table.z, 0, (kk) => table(kk, { w: 0.8, h: 0.76, round: true, pal: 'pale' }));
+  for (const c of P.chairs) B.put(c.x, c.z, c.a, (kk) => chair(kk, { pal: 'pale', cushion: '#d8682a' }));
 
   B.light('#fff0d8', 6, 16, -2.0, 4.2, 0.5); B.light('#fff0d8', 5, 13, CX, 4.0, BZ + 2.5); B.light('#bfe6ff', 3, 12, 0, H - 1, BZ + 1); B.light('#ffd8a0', 2.5, 7, KX, 2.4, KZ + 1);
 
@@ -194,12 +213,8 @@ export function buildTerminalRoom(scene, physics) {
     counter: { x: B.cx + CX, z: B.cz + CZ + 0.85, r: 1.0 },
     board: { x: B.cx + LX + 1.6, z: B.cz + BRDZ, r: 1.2 },
     seats,
-    npcSpots: {
-      clerk: { x: B.cx + CX, z: B.cz + CZ - 0.75, a: 0 },
-      guard: { x: B.cx + LX + 1.5, z: B.cz + GATEZ + 1.7, a: Math.PI / 2 },
-      cafe: { x: B.cx + KX, z: B.cz + KZ - 0.55, a: 0 },
-    },
-    notice: { setVisible(b) { notice.visible = !!b; } },
+    npcSpots: Object.fromEntries(['clerk', 'guard', 'cafe'].map((k) => [k, { x: B.cx + P[k].x, z: B.cz + P[k].z, a: P[k].a }])),
+    notice: { setVisible(b) { notice.visible = !!b; }, get visible() { return notice.visible; } },
   });
   R.npcSpots = TERMINAL.npcSpots;
   return { terminal: B.finish() };

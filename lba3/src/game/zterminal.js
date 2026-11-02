@@ -21,6 +21,8 @@
 //                                       before it; 'zterminal-gate' out to the pad's landing spot
 //   ZTERMINAL (filled when the room is built): door, gate, counter {x,z,r}, board {x,z,r}, seats [{x,z,a}] (8),
 //     npcSpots {clerk, guard, porter}, arrivals {x,z,a} (where he steps in from the pad), notice {setVisible(b)}
+//   ZTERMINAL_PLAN                       the layout in the room's frame (the builder's own numbers): roomlife.js places
+//                                        the hall's people from it (BIGGER-1's way)
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
 import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, torus, canvasTex, counter } from './props.js';
@@ -31,6 +33,23 @@ import { ZEELICH } from './zeelich.js';
 
 export const ZTERMINAL_AT = { x: 8800, z: 0 };
 export const ZTERMINAL = {};
+export const ZTERMINAL_PLAN = (() => {
+  const W = 18, D = 12, H = 5.4, LX = -W / 2, BZ = -D / 2, DOORZ = 3.6, GATEZ = -4.2, BRDZ = -0.5;
+  const PX0 = LX + 3.2, PX1 = -0.6, PZ1 = BZ + 3.2, PH = 0.36, CX = (PX0 + PX1) / 2, CZ = PZ1 - 0.6;   // (departures: the platform, its counter)
+  const AX0 = 1.2, AX1 = W / 2 - 0.3, AZ1 = BZ + 3.6, AH = 0.8;                                      // (arrivals: the deck)
+  const ROWS = [-5.6, -3.6], ROWZ = 0.7, ROWN = 4;
+  return { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, AX0, AX1, AZ1, AH, ROWS, ROWZ, ROWN,
+    counterW: 3.8, printer: { x: CX - 0.8, z: CZ }, notice: { x: LX + 0.04, z: BRDZ + 2.1 },
+    seats: ROWS.flatMap((x) => Array.from({ length: ROWN }, (_, i) => ({ x: x - 0.02, z: ROWZ - 0.6 * (ROWN - 1) / 2 + i * 0.6, a: -Math.PI / 2 }))),
+    plants: [[-4.6, -1.0], [-4.6, 2.6], [-1.6, 3.4], [W / 2 - 0.6, AZ1 + 5.0], [3.6, 2.4]],
+    stair: { run: 0.4, n: 4, w: 1.2, xs: [AX0 + 0.6, AX1 - 0.6] },   // (a stair down from each end of the deck, toward +z)
+    lifts: Array.from({ length: 4 }, (_, i) => ({ x: AX0 + 1.2 + i * ((AX1 - AX0 - 2.4) / 3), z: BZ + 1.1 })),
+    bench: { x: AX0 + 0.3, z: D / 2 - 1.2, ry: Math.PI },
+    arrivalsBoard: { x: (AX0 + AX1) / 2, z: BZ + 0.06 },
+    clerk: { x: CX, z: CZ - 0.75, a: 0 }, guard: { x: LX + 1.5, z: GATEZ + 1.7, a: Math.PI / 2 }, porter: { x: AX0 + 1.4, z: AZ1 + 1.2, a: Math.PI },
+    arrivals: { x: LX + 1.6, z: GATEZ, a: Math.PI / 2 },
+  };
+})();
 
 // the pavilion on the deck (Zeelich's local frame, travel.js ZPORT: the deck x −14…6, z 33…51, the bridge at x −4)
 const PAV = { x: 2.7, z: 36.3, w: 4.6, d: 4.2, h: 5.2, wallH: 3.4, ry: -Math.PI / 2, doorX: 0.8 };
@@ -85,12 +104,11 @@ function fountainPlant(k) {
 export function buildZTerminalRoom(scene, physics) {
   const B = new RoomBuilder(scene, physics, 'zterminal', ZTERMINAL_AT.x, ZTERMINAL_AT.z);
   const R = B.room, k = B.k;
-  const W = 18, D = 12, H = 5.4;
+  const P = ZTERMINAL_PLAN, { W, D, H, LX, BZ, DOORZ, GATEZ, BRDZ, PX0, PX1, PZ1, PH, CX, CZ, AX0, AX1, AZ1, AH } = P;
   R.view = 12.5; R.follow = 0.6; R.music = 'home';
   // (Otringal's pale lilac plaster, lit a little from within; turquoise trim; a pale grey grille floor with lit studs)
   const wallM = M('zt_wall', () => { const t = TEX.plaster('#efe2ee'), m = new THREE.MeshStandardMaterial({ map: t, color: '#f4eaf2', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.22 }); m.userData.tile = 2; return m; });
   const cap = MAT.paint('#d8ccd8', 0.55), floor = MAT.tiles('#c8c4cc', '#b4b0ba', '#3a5a6a', false, 5);
-  const LX = -W / 2, BZ = -D / 2, DOORZ = 3.6, GATEZ = -4.2;
   B.shell({ floor, slab: MAT.rubble('grey'), body: wallM, low: MAT.paint('#bfb2c4', 0.6), rail: TURQ(), cap, H, t: 0.5, dado: 1.0, rimH: 0.45, rimMat: cap, W, D,
     left: [{ at: DOORZ, w: 1.6, h: 2.5, y0: 0, kind: 'door', frame: TURQ() }, { at: GATEZ, w: 1.6, h: 2.5, y0: 0, kind: 'door', frame: TURQ() }] });
   const blocks = MAT.map(blocksTex(), 0.4, { emissive: '#ffffff', emissiveMap: blocksTex(), emissiveIntensity: 0.55 });
@@ -99,45 +117,41 @@ export function buildZTerminalRoom(scene, physics) {
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + DOORZ, r: 0.8, to: 'zterminal-out' });
   R.exits.push({ x: B.cx + LX + 0.45, z: B.cz + GATEZ, r: 0.8, to: 'zterminal-gate' });
   R.spawn = { x: B.cx + LX + 1.4, z: B.cz + DOORZ, a: Math.PI / 2 };
-  R.entries = { gate: { x: B.cx + LX + 1.6, z: B.cz + GATEZ, a: Math.PI / 2 } };
+  R.entries = { gate: { x: B.cx + P.arrivals.x, z: B.cz + P.arrivals.z, a: P.arrivals.a } };
   for (const dz of [-1.15, 1.15]) B.put(LX + 0.6, GATEZ + dz, 0, (kk) => gatePillar(kk));
   k.add(plane(1.3, 0.4), MAT.map(signTex('PAD · TWINSUN'), 0.6), LX + 0.03, 2.8, GATEZ, Math.PI / 2);
 
   // --- departures (left): the ticket counter on its platform at the back, the board on the left wall, the seats
-  const PX0 = LX + 3.2, PX1 = -0.6, PZ1 = BZ + 3.2, PH = 0.36;
   k.add(rbox(PX1 - PX0, PH, PZ1 - BZ - 0.3, 0.03), cap, (PX0 + PX1) / 2, PH / 2, (BZ + 0.3 + PZ1) / 2);
   B.col((PX0 + PX1) / 2, (BZ + 0.3 + PZ1) / 2, (PX1 - PX0) / 2 + 0.06, (PZ1 - BZ - 0.3) / 2 + 0.06, PH);
   k.add(rbox(PX1 - PX0, PH / 2, 0.5, 0.02), cap, (PX0 + PX1) / 2, PH / 4, PZ1 + 0.25);
   B.col((PX0 + PX1) / 2, PZ1 + 0.25, (PX1 - PX0) / 2 + 0.06, 0.31, PH / 2);
-  const CX = (PX0 + PX1) / 2, CZ = PZ1 - 0.6;
-  k.at(CX, PH, CZ, 0, () => counter(k, { w: 3.8, d: 0.62, h: 1.08, pal: 'pale', top: MAT.steel() }));
+  k.at(CX, PH, CZ, 0, () => counter(k, { w: P.counterW, d: 0.62, h: 1.08, pal: 'pale', top: MAT.steel() }));
   B.col(CX, CZ, 1.9, 0.33, PH + 1.1, { noStand: true });
   k.add(rbox(3.84, 0.12, 0.08, 0.02), TURQ(), CX, PH + 0.6, CZ + 0.33);
-  k.add(rbox(0.36, 0.22, 0.3, 0.04), MAT.paint('#3a3a40', 0.4), CX - 0.8, PH + 1.19, CZ);
-  k.add(plane(0.2, 0.12), MAT.glow('#9fe0ff', '#5fc0e8', 0.8), CX - 0.8, PH + 1.25, CZ + 0.155);
+  k.add(rbox(0.36, 0.22, 0.3, 0.04), MAT.paint('#3a3a40', 0.4), P.printer.x, PH + 1.19, P.printer.z);
+  k.add(plane(0.2, 0.12), MAT.glow('#9fe0ff', '#5fc0e8', 0.8), P.printer.x, PH + 1.25, P.printer.z + 0.155);
   for (const dx of [-1.1, 1.1]) {
     for (const s of [-0.5, 0.5]) k.add(cyl(0.012, 0.012, 1.2, 4), MAT.steel(), CX + dx + s, H - 0.6, CZ + 0.1);
     k.add(plane(1.4, 0.44), MAT.map(signTex('DEPARTURES', dx < 0 ? 'TICKETS' : 'TWINSUN'), 0.6, { side: THREE.DoubleSide }), CX + dx, H - 1.4, CZ + 0.1);
   }
-  const BRDZ = -0.5;
   k.add(rbox(0.14, 1.7, 3.0, 0.03), MAT.paint('#2a2e36', 0.4), LX + 0.08, 2.35, BRDZ);
   k.add(plane(2.8, 1.5), MAT.map(boardTex('DEPARTURES', [['TWINSUN: CITADEL', 'PAD 1'], ['BY SPACESHIP', ''], ['ISLANDS: SHUTTLE', 'OUTSIDE']]), 0.7, { emissive: '#ffffff', emissiveMap: boardTex('DEPARTURES', [['TWINSUN: CITADEL', 'PAD 1'], ['BY SPACESHIP', ''], ['ISLANDS: SHUTTLE', 'OUTSIDE']]), emissiveIntensity: 0.35 }), LX + 0.16, 2.35, BRDZ, Math.PI / 2);
-  const notice = k.mesh(plane(0.62, 0.78), MAT.paper('#f2ead6', '#7a3a8a', 'star'), LX + 0.04, 1.75, BRDZ + 2.1, Math.PI / 2);
+  const notice = k.mesh(plane(0.62, 0.78), MAT.paper('#f2ead6', '#7a3a8a', 'star'), P.notice.x, 1.75, P.notice.z, Math.PI / 2);
   const seats = [];
-  for (const x of [-5.6, -3.6]) {
-    B.put(x, 0.7, -Math.PI / 2, (kk) => seatRow(kk, 4));
-    for (let i = 0; i < 4; i++) seats.push({ x: B.cx + x - 0.3, z: B.cz + 0.7 - 0.9 + i * 0.6, a: -Math.PI / 2 });
+  for (const x of P.ROWS) {
+    B.put(x, P.ROWZ, -Math.PI / 2, (kk) => seatRow(kk, P.ROWN));
+    for (let i = 0; i < P.ROWN; i++) seats.push({ x: B.cx + x - 0.3, z: B.cz + P.ROWZ - 0.6 * (P.ROWN - 1) / 2 + i * 0.6, a: -Math.PI / 2 });
   }
-  for (const [x, z] of [[-4.6, -1.0], [-4.6, 2.6], [-1.6, 3.4]]) B.put(x, z, 0, (kk) => fountainPlant(kk));
+  for (const [x, z] of P.plants.slice(0, 3)) B.put(x, z, 0, (kk) => fountainPlant(kk));
 
   // --- arrivals (right): the deck 0.8 m up at the back, glass-block front under a railing, a stair down at each end
-  const AX0 = 1.2, AX1 = W / 2 - 0.3, AZ1 = BZ + 3.6, AH = 0.8;
   k.add(rbox(AX1 - AX0, AH, AZ1 - BZ - 0.3, 0.03), cap, (AX0 + AX1) / 2, AH / 2, (BZ + 0.3 + AZ1) / 2);
   k.add(plane(AX1 - AX0 - 2.4, AH - 0.12), blocks, (AX0 + AX1) / 2, AH / 2, AZ1 + 0.005);
   B.col((AX0 + AX1) / 2, (BZ + 0.3 + AZ1) / 2, (AX1 - AX0) / 2 + 0.06, (AZ1 - BZ - 0.3) / 2 + 0.06, AH);
-  const run = 0.4, N = 4, rise = AH / N;
-  for (const [sx0, dir] of [[AX0, 1], [AX1, -1]]) for (let i = 0; i < N; i++) {
-    const top = rise * (N - i), z = AZ1 + (i + 0.5) * run, x = sx0 + dir * 0.6;
+  const run = P.stair.run, N = P.stair.n, rise = AH / N;
+  for (const x of P.stair.xs) for (let i = 0; i < N; i++) {
+    const top = rise * (N - i), z = AZ1 + (i + 0.5) * run;
     k.add(rbox(1.2, top, run + 0.02, 0.015), cap, x, top / 2, z);
     B.col(x, z, 0.6, run / 2 + 0.12, top, { stair: true });   // (+0.12: the steps overlap each other and the deck: no seam to drop through)
   }
@@ -145,8 +159,7 @@ export function buildZTerminalRoom(scene, physics) {
   k.add(cyl(0.03, 0.03, AX1 - AX0 - 2.4, 6), MAT.steel(), (AX0 + AX1) / 2, AH + 0.9, AZ1 - 0.06, 0, { rz: Math.PI / 2 });
   B.col((AX0 + AX1) / 2, AZ1 - 0.06, (AX1 - AX0) / 2 - 1.2, 0.06, AH + 1.0, { seeThrough: true, noStand: true });
   // the four lifts to the town along the back wall: ribbed glass shafts, lit rims, a dark car door in each
-  for (let i = 0; i < 4; i++) {
-    const x = AX0 + 1.2 + i * ((AX1 - AX0 - 2.4) / 3), z = BZ + 1.1;
+  for (const { x, z } of P.lifts) {
     for (let r = 0; r < 9; r++) k.add(torus(0.62, 0.035, 5, 20), MAT.paint('#9fb4c4', 0.4), x, AH + 0.25 + r * 0.42, z, 0, { rx: Math.PI / 2 });
     k.add(torus(0.62, 0.06, 6, 22), MAT.glow('#9fe0ff', '#5fc0e8', 0.9), x, AH + 4.0, z, 0, { rx: Math.PI / 2 });
     k.add(cyl(0.58, 0.58, 0.1, 20), MAT.paint('#e8e2ea', 0.5), x, AH + 0.05, z);
@@ -155,9 +168,8 @@ export function buildZTerminalRoom(scene, physics) {
   }
   k.add(plane(2.6, 1.3), MAT.map(boardTex('ARRIVALS', [['TWINSUN: CITADEL', 'LANDED'], ['- - - - - -', '']]), 0.7, { emissive: '#ffffff', emissiveMap: boardTex('ARRIVALS', [['TWINSUN: CITADEL', 'LANDED'], ['- - - - - -', '']]), emissiveIntensity: 0.35 }), (AX0 + AX1) / 2, H - 2.1, BZ + 0.06);
   // round windows in the right half of the back wall's band are the lifts' glass; a red bench and a plant by the stair
-  B.put(AX0 + 0.3, D / 2 - 1.2, Math.PI, (kk) => { kk.add(rbox(1.6, 0.42, 0.55, 0.12), MAT.paint('#c8452f', 0.5), 0, 0.21, 0); kk.add(rbox(1.6, 0.5, 0.14, 0.08), MAT.paint('#c8452f', 0.5), 0, 0.6, -0.22); return { hw: 0.8, hd: 0.28, top: 0.85 }; });
-  B.put(W / 2 - 0.6, AZ1 + 5.0, 0, (kk) => fountainPlant(kk));   // (clear of the far stair's foot)
-  B.put(3.6, 2.4, 0, (kk) => fountainPlant(kk));
+  B.put(P.bench.x, P.bench.z, P.bench.ry, (kk) => { kk.add(rbox(1.6, 0.42, 0.55, 0.12), MAT.paint('#c8452f', 0.5), 0, 0.21, 0); kk.add(rbox(1.6, 0.5, 0.14, 0.08), MAT.paint('#c8452f', 0.5), 0, 0.6, -0.22); return { hw: 0.8, hd: 0.28, top: 0.85 }; });
+  for (const [x, z] of P.plants.slice(3)) B.put(x, z, 0, (kk) => fountainPlant(kk));   // (the first clear of the far stair's foot)
 
   B.light('#fff0e8', 6, 16, -4.5, 4.4, 0.5); B.light('#fff0e8', 5.5, 16, 4.5, 4.6, 0.5); B.light('#bfe6ff', 3, 12, 4.5, 3.5, BZ + 1.2); B.light('#ffd8a0', 2.5, 8, CX, 3.0, CZ + 1);
 
@@ -167,13 +179,9 @@ export function buildZTerminalRoom(scene, physics) {
     counter: { x: B.cx + CX, z: B.cz + CZ + 0.85, r: 1.0 },
     board: { x: B.cx + LX + 1.6, z: B.cz + BRDZ, r: 1.2 },
     seats,
-    npcSpots: {
-      clerk: { x: B.cx + CX, z: B.cz + CZ - 0.75, a: 0 },
-      guard: { x: B.cx + LX + 1.5, z: B.cz + GATEZ + 1.7, a: Math.PI / 2 },
-      porter: { x: B.cx + AX0 + 1.4, z: B.cz + AZ1 + 1.2, a: Math.PI },
-    },
+    npcSpots: Object.fromEntries(['clerk', 'guard', 'porter'].map((k) => [k, { x: B.cx + P[k].x, z: B.cz + P[k].z, a: P[k].a }])),
     arrivals: { ...R.entries.gate },
-    notice: { setVisible(b) { notice.visible = !!b; } },
+    notice: { setVisible(b) { notice.visible = !!b; }, get visible() { return notice.visible; } },
   });
   R.npcSpots = ZTERMINAL.npcSpots;
   return { zterminal: B.finish() };
