@@ -11,7 +11,8 @@
 // pieces (bins, tubs, bollards, benches) are solid but see-through for the camera, tall ones solid; none can be
 // stood on. Static parts merge per material into one Kit per 40 m cell of the town.
 //
-// CONTRACT: buildCityDressing(root, physics, W) → W.cityDress = { placed, kinds {name: n}, skipped: ['name (x, z): why'] }
+// CONTRACT: buildCityDressing(root, physics, W) → W.cityDress = { placed, kinds {name: n}, skipped: ['name (x, z): why'],
+//           items: [{ name, x, z, ry, r | hw, hd }] (each piece placed, BENCHES-1) }
 import * as THREE from 'three';
 import { mergeStatic } from '../engine/merge.js';
 import * as P from './props.js';
@@ -80,6 +81,7 @@ export function buildCityDressing(root, physics, W) {
   const skipped = [];
   let count = 0;
   const kinds = {};
+  const items = [];   // (each piece placed: name, where, its footprint; W.cityDress.items)
   // place(name, builder, x, z, ry, fp, opts): fp is the footprint the builder will return (to fit before building)
   const place = (name, fn, x, z, ry, fp, o = {}) => {
     const tries = [[0, 0]];
@@ -100,9 +102,10 @@ export function buildCityDressing(root, physics, W) {
       if (got.r != null) physics.add({ type: 'cyl', x: cx, z: cz, r: got.r, top: y + got.top, noStand: true, block: true, seeThrough: !tall });
       else physics.add({ type: 'box', x: cx, z: cz, hw: got.hw, hd: got.hd, rot: ry, top: y + got.top, noStand: true, block: true, seeThrough: !tall });
       count++; kinds[name] = (kinds[name] || 0) + 1;
+      items.push({ name, x: cx, z: cz, ry, ...(got.r != null ? { r: got.r } : { hw: got.hw, hd: got.hd }) });
       return [cx, cz];
     }
-    skipped.push(`${name} (${x.toFixed(1)}, ${z.toFixed(1)}): ${first}`);
+    if (!o.quiet) skipped.push(`${name} (${x.toFixed(1)}, ${z.toFixed(1)}): ${first}`);
     return null;
   };
   // NPCs' places: every NPC defined for Citadel (present now or in some chapter), the townlife spots
@@ -113,18 +116,38 @@ export function buildCityDressing(root, physics, W) {
   const FP = { bin: { r: 0.29 }, tub: { r: 0.37 }, tubS: { r: 0.33 }, bollard: { r: 0.17 }, post: { r: 0.2 }, bench: { hw: 0.9, hd: 0.34 }, board: { hw: 0.77, hd: 0.2 }, planter: { hw: 0.73, hd: 0.31 }, fountain: { r: 0.34 }, cart: { hw: 1.1, hd: 0.55 }, info: { hw: 0.45, hd: 0.34 }, kiosk: { hw: 1.06, hd: 0.76 } };
   const BIN_COLORS = ['#2a8a7a', '#2f6a9a', '#3f8a4a'];
   let binN = 0;
-  const bin = (x, z, ry = 0) => place('bin', (k) => P.litterBin(k, { color: BIN_COLORS[binN++ % 3] }), x, z, ry, FP.bin);
-  const tub = (x, z, seed = 1, color) => place('tub', (k) => P.flowerTub(k, { seed, r: 0.32, color: color || '#b8623a' }), x, z, seed, FP.tubS);
+  const bin = (x, z, ry = 0, o) => place('bin', (k) => P.litterBin(k, { color: BIN_COLORS[binN++ % 3] }), x, z, ry, FP.bin, o);
+  const tub = (x, z, seed = 1, color, o) => place('tub', (k) => P.flowerTub(k, { seed, r: 0.32, color: color || '#b8623a' }), x, z, seed, FP.tubS, o);
   const post = (x, z, boards) => place('signpost', (k) => P.signPost(k, boards), x, z, 0, FP.post, { pad: 0.15 });
-  const bench = (x, z, ry, color = '#2f6a9a') => { const at = place('bench', (k) => P.waitingBench(k, { w: 1.7, color }), x, z, ry, FP.bench); if (at) (W.seats ||= []).push({ x: at[0], z: at[1], ry, spec: WAITING_BENCH }); return at; };   // (WORLD-LIFE: a resident may sit on it; its seat's shape, props.js waitingBench, for walkers.js seatPose)
+  const bench = (x, z, ry, color = '#2f6a9a', o) => { const at = place('bench', (k) => P.waitingBench(k, { w: 1.7, color }), x, z, ry, FP.bench, o); if (at) (W.seats ||= []).push({ x: at[0], z: at[1], ry, spec: WAITING_BENCH }); return at; };   // (WORLD-LIFE: a resident may sit on it; its seat's shape, props.js waitingBench, for walkers.js seatPose)
   const board = (x, z, ry, kind = 'notices') => place('board-' + kind, (k) => P.streetNoticeBoard(k, { kind, w: 1.3, h: 0.9 }), x, z, ry, FP.board, { pad: 0.2 });
   const planter = (x, z, ry, seed = 1) => place('planter', (k) => P.planterBox(k, { w: 1.4, d: 0.55, seed }), x, z, ry, FP.planter);
-  // a bin at one end of an existing bench (collider {x,z,rot,hw}), along its length
-  const binBy = (bx, bz, rot, side = 1) => bin(bx + Math.cos(rot) * side * 1.35, bz - Math.sin(rot) * side * 1.35);
+  // BENCHES-1 (the user, 2.11: "the benches' placement is sometimes odd": the lane's bench jammed between a tree, a tulip bed,
+  // a tub at its end and a house's corner). A bench's things go with the bench as it actually stands: the bin at one end, in
+  // line with it, 0.25–0.3 m off; a tub 0.6 m past the other end; nothing before the seat (1.2 m kept clear for knees and
+  // feet). They are fitted where they are put or not at all (no shift that could bring one before the seat or against
+  // another piece). u: along the bench (cos ry, −sin ry); v: the way the sitter faces (sin ry, cos ry).
+  const onBench = (bx, bz, ry, u, v = 0) => [bx + Math.cos(ry) * u + Math.sin(ry) * v, bz - Math.sin(ry) * u + Math.cos(ry) * v];
+  // a bin at one end (side ±1 along u) of a bench already built (W.seats: the nearest within 1.5 m of the hint): in line, else a
+  // touch further out or a touch behind the line
+  const binEnd = (x, z, side) => {
+    let s = null, bd = 1.5; for (const q of W.seats || []) { const d = Math.hypot(q.x - x, q.z - z); if (d < bd) { bd = d; s = q; } }
+    if (!s) { skipped.push(`bin (${x.toFixed(1)}, ${z.toFixed(1)}): no bench`); return null; }
+    const out = (s.spec ? 0.9 : 0.85) + 0.3 + FP.bin.r;
+    for (const [du, v] of [[0, 0], [0.15, 0], [0, -0.15], [0.15, -0.25]]) { const at = bin(...onBench(s.x, s.z, s.ry, side * (out + du), v), 0, { shift: 0, quiet: true }); if (at) return at; }
+    skipped.push(`bin (${x.toFixed(1)}, ${z.toFixed(1)}): no room at the bench's end`); return null;
+  };
+  // a resting spot of ours: the bench (facing ry), a bin at its `bin` end, a tub past its `tub` end (either may be left out)
+  const rest = (x, z, ry, { color, bin: bs, tub: ts, seed = 1, tubColor } = {}) => {
+    const at = bench(x, z, ry, color, { shift: 0 }); if (!at) return null;
+    if (bs) bin(...onBench(at[0], at[1], ry, bs * (FP.bench.hw + 0.25 + FP.bin.r)), 0, { shift: 0 });
+    if (ts) tub(...onBench(at[0], at[1], ry, ts * (FP.bench.hw + 0.6 + FP.tubS.r)), seed, tubColor, { shift: 0 });
+    return at;
+  };
 
   // ---------------------------------------------------------------- the square and its edges
-  binBy(-49, -7.4, 1.119, 1);
-  binBy(-35.8, 2.6, -2.387, -1);
+  binEnd(-49, -7.4, 1);
+  binEnd(-35.8, 2.6, -1);
   const sqx = -44.6, sqz = 6.6;   // where the south lane leaves the square
   post(sqx, sqz, [{ text: 'HARBOUR', a: heading(sqx, sqz, ...TO.lane), color: '#2a8a7a' }, { text: 'SPACEPORT', a: heading(sqx, sqz, ...TO.lane), color: '#7a52b0' }, { text: 'LIGHTHOUSE', a: heading(sqx, sqz, ...TO.lane), color: '#c8452f' }]);
   board(-36.4, -15.2, 0.35);                      // a notice board at the square's north-east corner, read from the square
@@ -137,28 +160,36 @@ export function buildCityDressing(root, physics, W) {
     for (const s of [-1, 1]) tub(d.x + nx * 0.5 + ax * s * 1.65, d.z + nz * 0.5 + az * s * 1.65, seed++, s > 0 ? '#b8623a' : '#2f6a9a');
   }
   // ---------------------------------------------------------------- the lane south from the square
-  // a resting spot on the way down (bench facing the lane, a bin, a tub)
-  bench(-42.3, 19.5, -Math.PI / 2); bin(-42.3, 21.0); tub(-42.3, 18.0, 21);
-  // where the harbour path leaves the lane: a sign post, a notice board, bins between the two benches
+  // a resting spot on the way down: against the south house's blank north wall, looking up the lane to the square; a bin at
+  // its west end (the house's crate 0.6 m beyond), a tub past its east end
+  // (BENCHES-1: it stood at the house's north-east corner, facing the corner 1 m off, a tub against one end, the bin against
+  //  the other, the original's tree and a white tulip bed behind: the user's photo of 2.11)
+  rest(-48.5, 19.5, Math.PI, { bin: 1, tub: -1, seed: 21 });
+  // where the harbour path leaves the lane: a sign post, a notice board, a bin between the two benches
   { const x = -43.2, z = 30.9;
     post(x, z, [{ text: 'HARBOUR', a: heading(x, z, ...TO.harbour), color: '#2a8a7a' }, { text: 'SPACEPORT', a: heading(x, z, ...TO.spaceport), color: '#7a52b0' }, { text: 'SQUARE', a: heading(x, z, ...TO.lane), color: '#c8452f' }, { text: 'LIGHTHOUSE', a: heading(x, z, ...TO.laneS) }]); }
   board(-42.8, 34.6, -Math.PI / 2);
-  bin(-50.8, 34.4); binBy(-48.3, 34.4, Math.PI, -1);
+  bin(-50.8, 34.4);   // (BENCHES-1: the second, at the east bench's end, was pushed against its back: one bin between them)
   place('fountain', (k) => P.drinkingFountain(k), -43.4, 37.4, -Math.PI / 2, FP.fountain);
-  // further down, a second resting spot facing the lane from the west
-  bench(-48.2, 50.0, Math.PI / 2, '#c8452f'); bin(-48.2, 51.6); planter(-48.3, 47.9, Math.PI / 2, 9);
-  // by Twinsen's bench at the lane's end, and the lighthouse junction
-  binBy(-46.3, 82.1, 1.571, 1);
+  // further down, a second resting spot: on the field's edge east of the lane, facing it and the tulip beds across it
+  // (BENCHES-1: it stood west of the lane wedged between the original's tulip bed, a tree's trunk 0.7 m behind it and its
+  //  bin; the planter that went with it stays where it was, by the blue bed)
+  rest(-43.3, 45.4, -Math.PI / 2, { color: '#c8452f', bin: -1, tub: 1, seed: 22 });
+  planter(-48.3, 47.9, Math.PI / 2, 9);
+  // the lighthouse junction (BENCHES-1: no street bin by Twinsen's own bench: it stood in his front garden, at the bench's end,
+  // between it and his door)
   { const x = -43.3, z = 73.0;
     post(x, z, [{ text: 'LIGHTHOUSE', a: heading(x, z, ...TO.lighthouse), color: '#c8452f' }, { text: 'SQUARE', a: heading(x, z, -45.6, 60), color: '#2a8a7a' }]); }
   // ---------------------------------------------------------------- the harbour path and the quay
-  binBy(-95.11, 29.59, 0, 1); binBy(-67.9, 28.4, 1.571, -1);
+  binEnd(-94.4, 30.3, 1); binEnd(-67.9, 28.4, -1);   // (BENCHES-1: the first was against the bench's back: its old place)
   place('handcart', (k) => P.handCart(k, { load: 'sacks', seed: 7 }), -58.4, 30.2, 0.15, FP.cart);
   { const x = -105.6, z = 41.6;
     post(x, z, [{ text: 'PIER', a: -Math.PI / 2, color: '#2a8a7a' }, { text: 'SQUARE', a: heading(x, z, -90, 38), color: '#c8452f' }, { text: 'SPACEPORT', a: heading(x, z, -90, 38), color: '#7a52b0' }]); }
   board(-110.4, 46.6, Math.PI / 2, 'ferry');     // the ferry timetable, in the open quay (read from its east side)
-  bin(-109.15, 40.0); bin(-111.85, 40.0);         // either end of the quay's bench
-  bench(-109.8, 53.1, 0, '#2a8a7a'); bin(-108.3, 53.2); tub(-111.3, 53.2, 31, '#2f6a9a');   // a bench looking out to sea
+  binEnd(-110.5, 40.0, -1);   // the quay's bench (island.js): a bin at its east end (BENCHES-1: the west one was against a board)
+  // a bench looking out over the basin, its back to the harbour master's shed, a bin at its south end
+  // (BENCHES-1: it faced the sea from the quay's edge squeezed between the shed's corner, its bin, its tub and a bollard)
+  rest(-109.5, 51.5, Math.PI / 2, { color: '#2a8a7a', bin: -1 });
   // mooring bollards along the quay's east edge (where it drops to the basin)
   for (const z of [46.6, 49.4, 52.2]) place('bollard', (k) => P.bollard(k), -107.4, z, 0, FP.bollard, { minH: 1.5 });
   place('handcart-quay', (k) => P.handCart(k, { load: 'crates', seed: 9 }), -113.4, 46.0, 1.2, FP.cart);   // (I-3: it stood on the harbour master's shed's east side, now the shed's door side: parked by its north-east corner)
@@ -169,6 +200,6 @@ export function buildCityDressing(root, physics, W) {
   // (PERF-2: then across the kits' cells, the colours, roughness and textures of one kind folded together — merge.js
   // recolor/retex; every piece here is static and no material of the dressing changes at runtime)
   mergeStatic(g, { recolor: true, retex: true, cell: 64 });
-  W.cityDress = { placed: count, kinds, skipped };
+  W.cityDress = { placed: count, kinds, skipped, items };
   return W.cityDress;
 }
