@@ -452,7 +452,8 @@ export class Network extends ChapterBase {
   showProps() {
     const f = this.f, on = this.isCur();
     for (const gl of this.gliders || []) gl.visible = on;
-    if (this.codeBox) this.codeBox.visible = on && this.done() >= 5;
+    // (Baldino's code box stays on the code line while he waits at the collar: through The Shell and The Core too)
+    if (this.codeBox) this.codeBox.visible = this.done() >= 5 && ['network', 'shell', 'core'].includes(this.story.cur?.key);
     for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && (!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); r.userData.setOn?.(!!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay)); }
   }
   regionBuilt() { this.showProps(); }

@@ -26,6 +26,7 @@ export class Epilogue extends ChapterBase {
 
   begin() {
     const g = this.game, h = g.hero;
+    this.story.chapters.find((c) => c.key === 'network')?.showProps?.();   // (Baldino's code box leaves the bore with him)
     h.swapBody?.('twinsen');
     h.hasBall = true; h.noBehaviours = false;
     this.sheathe();   // (at the family table he is unarmed; the weapon he chose is still equipped for free play)
