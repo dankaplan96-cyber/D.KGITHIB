@@ -77,3 +77,9 @@ honest measurements (SwiftShader here: no fps claims).
    shell, Baldino's twelve-years-on workshop, Arthur's radio, the Esmers' craft; later the expansion's world), each with
    a job in puzzles and fights that the old arsenal does not do, taught safely, spread over the chapters, saved with the
    hero (`hero.arms`), no paid assets, the performance rules. The old favourites stay. Agent: `lba3-equipment-designer`.
+5. **BIGGER-1 (the laptop's 1.5x rooms, `tools/testlab/requests/BIGGER-1.diff`): held.** It applies cleanly, but
+   `tests/interior-life.mjs` fails 9 checks on it: the interiors' people (`src/game/roomlife.js` ROOMS: floors and stops
+   in each room's first-cut frame) stand where the furniture was, not where it is now (the keeper's mark is
+   `R.npcSpots`, moved by the diff; the baggage claim's upper floor moved). Apply the diff and re-place each room's
+   floors and stops on the new layout (from the room's own handles where it has them), then interior-life, walkers,
+   chapter1/2, stability. LBA-DESERT-1, ANIM-AGGR-1 and VOICE-1 are merged (1e47f91).
