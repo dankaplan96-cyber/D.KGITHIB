@@ -28,7 +28,7 @@ process.on('SIGTERM', requestStop);
 
 const only = opt('only'), stopAt = opt('stop-at-battery'); const base = { runsDir, game, project, target, ...(only ? { only: only.split(',') } : {}), ...(stopAt ? { stopAtBattery: +stopAt } : {}) };
 try {
-  if (['quick', 'full', 'visual', 'diagnose', 'npcs', 'sweep', 'art', 'artshots', 'artrooms', 'artall', 'artharbour', 'artbusy', 'arttavern', 'artbazoo', 'artticket', 'artpharmacy', 'artnbrhouse', 'artnellhouse', 'arttavcellar', 'artbaggage', 'arttralucave', 'artschool', 'artterminal', 'artzterminal', 'artotrbar', 'artplaces'].includes(cmd)) await runSuite({ ...base, suite: cmd });
+  if (['quick', 'full', 'visual', 'diagnose', 'npcs', 'sweep', 'art', 'artshots', 'artrooms', 'artall', 'artharbour', 'artbusy', 'arttavern', 'artbazoo', 'artticket', 'artpharmacy', 'artnbrhouse', 'artnellhouse', 'arttavcellar', 'artbaggage', 'arttralucave', 'artschool', 'artterminal', 'artzterminal', 'artotrbar', 'artotrhotel', 'artplaces'].includes(cmd)) await runSuite({ ...base, suite: cmd });
   else if (cmd === 'reproduce') {
     const file = argv[1];
     if (!file || !fs.existsSync(file)) throw new Error(`no reproduction scenario at ${file || '(none given)'}`);

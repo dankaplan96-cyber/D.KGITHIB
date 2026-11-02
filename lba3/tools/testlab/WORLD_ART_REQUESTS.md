@@ -1513,3 +1513,20 @@ hook line in `travel.js` (Zeelich's port block: `buildZTerminalOutside(Z.group, 
   the cloud adds it to `R.ballTargets` with OP-7's effect).
 - Checked: Test Lab `artotrbar` (behind the bar, up on the stage, into the office and round it, back, out to the
   harbour) passes. Spoilers: no pictures to the user (Zeelich).
+
+### ZEELICH-1 item 3 · Built: the Imperial Hotel's lobby at Otringal · the laptop, 3.11.2026
+`requests/ZEELICH-1-HOTEL.diff` against origin (applies alone; with the bar or SPACEPORT-1 applied first, its hook lines
+need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, AT [9400, 0]), the director's hooks.
+- **The door:** the pink-domed house on the plaza's north-west side, `house (-15.4, -10.2)` (its door faces the plaza;
+  read from FIT, the measured place as the fallback). Out again onto the plaza: checked.
+- **The lobby** (LBA2 scene 81, about 80 %), 22 × 16 m: dark teal walls with gilded scrolls under a patterned frieze, a
+  terracotta floor; an L of raised floor 0.9 m up along the back and the left with brass posts and a rope along its
+  edge, two stairs down; on it the members' desk (two curved counters, stools, a bowl, the register), shelves of tall
+  vases, three round tables with their stools, tiered globe lamps, bushy plants in brass urns, two tall doorways
+  between twisted columns, the two coin machines (life, magic) between them; the sunken lounge with four cream
+  armchairs between globe lamps on blocks; the pool at the front right behind its kerb, two striped deck chairs.
+- **Handles** (`HOTEL`): `desk`, `register` (a read spot on the desk, for OP-7), `machines` [{x,z,a,kind}] (life,
+  magic: where Twinsen stands to use them), `npcSpots` {clerk (behind the desk), explorer (in a lounge armchair),
+  manicurist (by a round table)}.
+- Checked: Test Lab `artotrhotel` (the left strip's stair to the tables, along the back strip to the desk and the
+  machines, down the other stair to the lounge, out to the plaza) passes. No pictures to the user (Zeelich).

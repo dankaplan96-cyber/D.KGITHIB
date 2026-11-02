@@ -484,3 +484,12 @@ export const artOtrBar = placeWalk({ id: 'art-otrbar', title: "Otringal's harbou
   { name: 'out', pts: [[1.6, -0.5], [1.6, 3.2], [-1.5, 3.4], [-8.6, 2.6], [-9.7, 1.8]] },
 ] });
 ART.push(artOtrBar);
+// the Imperial Hotel's lobby at Otringal (ZEELICH-1 item 3, LBA2 scene 81): up the left strip's stair to the round
+// tables, along the back strip to the members' desk and the coin machines, down to the lounge, out to the plaza
+export const artOtrHotel = placeWalk({ id: 'art-otrhotel', title: 'The Imperial Hotel: the tables, the desk, the lounge, out', suite: 'artotrhotel', room: 'otrhotel', direct: true, backTo: 'isle_otringal', legs: [
+  { name: 'the round tables', pts: [[-7.0, 5.0], [-3.0, 2.0], [-3.0, 1.4], [-5.6, 1.4], [-5.8, -1.6]], minY: 0.85 },
+  { name: 'the members desk', pts: [[-5.8, -3.4], [1.2, -4.2], [3.6, -6.3]], minY: 0.85 },
+  { name: 'down to the lounge', pts: [[6.4, -3.6], [6.4, -1.0], [5.4, 1.8], [0.0, 1.9]], maxY: 0.1 },
+  { name: 'out', pts: [[-3.0, 3.2], [-7.0, 5.2], [-10.6, 5.2]] },
+] });
+ART.push(artOtrHotel);
