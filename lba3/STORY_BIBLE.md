@@ -219,7 +219,7 @@ the twelve-year gap (this sequel's inventions, not the originals' canon; impleme
 - **Zeelich's street** (fourth set; src/game/zeelife.js, story/zeelife.js): Mother Snuff bakes the street's bread in
   the old watch house (older than the council, its crest chiselled off), on the project's heat; Bzizz lands his nectar
   crates on its roof. The project's heat posts are lit at the bakery, the council house and the depot, and dark (next
-  quarter) at the west end and over the moles' burrow; Mr Pelleck re-tiles his dome with his wages from the depot's
+  quarter) at the west end and over the Wannies' burrow; Mr Pelleck re-tiles his dome with his wages from the depot's
   books. The Second Bake (optional, from ch. 3): a crate on the flue trips the oven's heat box; shove it off on the roof
   or knock it off with the ball. The street argues about the project in every chapter it is visited.
 
@@ -228,7 +228,7 @@ the twelve-year gap (this sequel's inventions, not the originals' canon; impleme
   Nara, Oku, Xil, the clerk, the observatory keeper and Councillor Amaru are Esmers.
 - **Mosquibees:** upright insects with a big banded abdomen, great eyes, a long proboscis and wings. They fly
   cargo and keep hives, and they know when the ground is wrong.
-- **Moles:** a robed, pear-shaped people with a long pale snout and pale arms and feet. They live in burrows
+- **Wannies ("moles" in older notes):** a robed, pear-shaped people with a long pale snout and pale arms and feet. They live in burrows
   below the streets (cosy homes with green stone furniture) and feel the bore's heat in the old tunnels.
 - **Triangle-headed townsfolk:** tall and thin, in suits and shirtsleeves, with a big inverted-triangle head,
   pointed ears and a flat top. Clerks, shopkeepers, passers-by.

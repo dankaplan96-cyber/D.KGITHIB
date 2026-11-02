@@ -474,12 +474,12 @@ opinions about ballast."). The return label on the B-7 crate reads TESSA'S FLOAT
   unmodified.
 
 **NW-2 · Local Override** (Zoé's decision; the roll call) — Min 6
-- At the lighthouse station, Baldino (radio) proposes a master key at the platform console "to keep it simple".
+- At the lighthouse station, Baldino (radio) proposes a master key on the project's code line at the station's bore on Citadel "to keep it simple" (SHAFT-CITADEL).
 - Zoé decides against it: every station keeps the right to refuse a central command. "He sent the regulator back
   for exactly this reason." Baldino agrees, grumbling.
 - Zoé relays Vesk's trial note and standing order to the council over the lighthouse link. Amaru: "Then it wasn't a
-  mistake. It was a decision." The council sends its guards to the platform.
-- At the platform, the roll call uses Arthur's call signs and the say-back ("Mains, holding." "Heard: mains
+  mistake. It was a decision." The council sends its guards to hold Vesk's command post, the platform on Zeelich.
+- At the bore in the station's yard on Citadel, the roll call uses Arthur's call signs and the say-back ("Mains, holding." "Heard: mains
   holding."), then the blast doors open.
 - States: `c10_override`, `c10_council2`, `c10_roll`. Accept: the call signs match BR-3. The council's guards in
   ch. 16 now have a cause the player saw.
@@ -621,6 +621,38 @@ opinions about ballast."). The return label on the B-7 crate reads TESSA'S FLOAT
 - Turn: action over confession. Lumi: "The sail's straight. That's something."
 - Consequence: the shade back; Dallan's later lines change slightly.
 - Accept: no apology speech; Lumi is not won over.
+
+**OP-7 · The Lift Below** (`zo_`, its own `story/zeelichop.js`) — Min 25 · the cloud's card (ALIGNMENT, 2.11.2026)
+- Purpose: the reason Twinsen walks into the four places ZEELICH-1 builds: the harbour bar and the Imperial Hotel at
+  Otringal, the Wannies' island under the gas, and the Temple of Dark Monk on Celebration. Nothing in the main line
+  needs it.
+- Window: from `dig` (the spaceship runs between the planets again) through postgame; the outcome is kept. People: Old
+  Grumm (the Wannie on Esmer street), the Francos' lift operator at ASCENCE, the hotel clerk and an old explorer guest,
+  the bar's boss and performer, Grumm's sister Wenna and the foreman in the mine village, the chaplain.
+- Actions:
+  1. Grumm has had no word from his sister since the project refitted the Francos' lift. Down there is the mine he
+     left.
+  2. At ASCENCE, the operator won't run the cage: a project plate on the lever reads LIFT RESERVED, and the project's
+     buyer holds its key.
+  3. The Imperial Hotel's register shows where the buyer drinks. The explorer guest went down twelve years ago and
+     says the cage has a hand brake for the last stretch, for when the gas makes the motor cough.
+  4. In the harbour bar, the buyer left the lift key behind the counter against his tab. The boss wants the tab paid.
+     Either Twinsen pays it in kashes, or he helps the performer fix the stage's stuck curtain winch with the ball,
+     and the boss calls it square.
+  5. The cage rides down under the thinned gas, and Twinsen sets the hand brake for the last stretch. In the village
+     the mine still sends its ore up to the project every week, out of habit and fear. Wenna is fine, and angry.
+  6. The foreman asks what the ore is for. The chaplain answers from the Temple of Dark Monk's murals: the old
+     pictures of the shell. Twinsen reads them at the lectern on Celebration and brings back what they show. The
+     foreman stops the shipments.
+- Turn: the Wannies decide for themselves. Twinsen only brings them the facts.
+- States: `zo_start`, `zo_reserved`, `zo_register`, `zo_key`, `zo_down`, `zo_murals`, `zo_done`.
+- Recovery: the tab can be paid or worked off at any time; the lift runs both ways once the key is turned.
+- Consequence: Wenna comes up and stands with Grumm by his burrow; the lift runs for anyone, and the operator calls
+  it out. The project's empty ore crates sit at ASCENCE. In `shell`, one journal line notes the deep installation's
+  stacked crates were stamped with the Wannies' mine.
+- Reward: the hotel's two coin machines (life, magic) work for Twinsen from then on, at the members' price.
+- Accept: the main line is completable without it; nothing in it adds a way between the planets; the murals add no
+  fact the main line has not already told.
 
 ### 4.6 Deepening additions (chapters 1–9)
 
