@@ -1263,3 +1263,31 @@ purpose, so don't build. The user's rules stay: no more LBA1 Citadel places; und
 - **W-1, the Float Harbor slice** on `expansion/ballastra` (the branch is approved and has the foundation and 0.49.0);
 - **Zeelich likeness:** a research report, `docs/future/ZEELICH_GAP.md`, is on its way. The user will pick from it what
   to build; wait for that pick.
+
+## ZEELICH-1 · Zeelich closer to LBA2, only what has a purpose · Ordered by the cloud (the user's alignment, 2.11.2026)
+
+Read `docs/future/ALIGNMENT.md` (the principles and your queue: this is item 4) and `docs/future/ZEELICH_GAP.md` (the
+research, with scene numbers). Each item: ≥ 80 % likeness, twelve years on, its own file under `src/game/`, handles for
+the story, a diff and pictures like LBA-CITADEL-*. **Spoilers:** Zeelich is past chapter 2, so send the user no
+pictures unless they ask; put them in `docs/future/world/ZEELICH-1/`.
+
+1. **The harbour bar at Otringal** (LBA2 scene 136, the boss's office 137): the stage, the bar and the bouncers' door.
+   It is the hub of OP-7. Handles: `bar.npcSpots` (boss, performer, two bouncers, three regulars), `bar.stage`,
+   `bar.office` (door spot), the door into it from Otringal's harbour.
+2. **The Temple of Dark Monk on Celebration** (scene 93): the prophecy murals, a reader's lectern, the door sealed by
+   four fragments (open twelve years on). Handles: `temple.murals` (4 spots with look targets), `temple.lectern`,
+   `temple.sealDoor` (`setOpen(b, instant)`).
+3. **The Imperial Hotel lobby at Otringal** (scene 81): the members' desk, armchairs, two coin machines (life, magic).
+   Handles: `hotel.desk`, `hotel.machines` (2 spots), `hotel.npcSpots` (clerk, explorer, manicurist).
+4. **Celebration's volcano:** the crater, the lava glow, the trail up and the temple's door on its flank, from the
+   island's layout JSON. Handles: `celebration.templeDoor`, `celebration.crater` (look spot), `celebration.trail` (3
+   waypoints).
+5. **The Wannies' island under the gas** (the `platform` region, re-dressed): the mine mouth, the company office front,
+   the village of low houses, a chapel front, a darker, thinner gas sky. It is reached by the lift from ASCENCE (the
+   `liftdock` region): the lift's cage must ride down to it. Handles: `wannie.liftBottom` (spawn), `wannie.npcSpots`
+   (6), `wannie.mine`, `wannie.chapelDoor`; `liftdock.lift.setLevel(t)` and `liftdock.liftTop`.
+6. **A sky and grade per island** (`R.grade`, `R.gradeTint`, the sky's colours): Otringal overcast pale grey; Celebration
+   warm with a lava glow; the Wannies' island dim under the gas; the others as the research describes.
+
+The cloud does the island life, names, travel characters, music and OP-7 meanwhile. Write **Built** notes here per item,
+as before.
