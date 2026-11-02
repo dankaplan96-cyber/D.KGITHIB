@@ -39,6 +39,26 @@ function asylumDoor(scene, physics) {
   return { x: x + 1.65, z };
 }
 
+// WORLD-AUDIT: the way up to the block-house. The ground round the fort's south and east walls, where the door stands,
+// is a terrace 1–2.5 m above the plateau, and the dirt path that climbs onto it at the south-west tower rises 2.4 m in
+// about 1.5 m: too steep to walk and above a jump, so the asylum could not be reached at all (a flood fill of the walkable
+// ground from the town and the depot never met the door's). A short flight of the block-house's stone steps on that path,
+// from the plateau up onto the terrace; each riser within a walking step (physics STEP_UP 0.55), its height read from the
+// ground at both ends when it is built.
+export const ASYLUM_STEPS = { x0: -38.9, x1: -35.9, z: -49.15, w: 1.4 };
+function asylumSteps(scene, physics) {
+  const S = ASYLUM_STEPS, y0 = physics.groundAt(S.x0 - 0.3, S.z, 40), y1 = physics.groundAt(S.x1 + 0.3, S.z, 40);
+  const n = Math.max(2, Math.ceil((y1 - y0) / 0.45)), run = (S.x1 - S.x0) / n, rise = (y1 - y0) / n;
+  const g = new THREE.Group(); g.name = 'asylum-steps'; scene.add(g);
+  const stone = MAT.stone('grey', 2);
+  for (let i = 0; i < n; i++) {
+    const x = S.x0 + (i + 0.5) * run, top = y0 + (i + 1) * rise, bottom = Math.min(physics.groundAt(x, S.z, top), y0) - 0.4;
+    const o = new THREE.Mesh(rbox(run + 0.02, top - bottom, S.w, 0.03), stone);
+    o.position.set(x, (top + bottom) / 2, S.z); o.castShadow = o.receiveShadow = true; g.add(o);
+    physics.add({ type: 'box', x, z: S.z, hw: run / 2, hd: S.w / 2, rot: 0, top });
+  }
+}
+
 let DOOR = null;
 export function buildLba1Places(scene, physics) {
   buildLba1Door(scene, physics);
@@ -46,7 +66,7 @@ export function buildLba1Places(scene, physics) {
 }
 // LAZY-REGIONS (src/game/regions.js): the asylum's block-house stands on Citadel (built with it); the asylum, and the
 // temple's maze and halls together, are built the first time they are needed
-export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DOOR) DOOR = asylumDoor(scene, physics); }
+export function buildLba1Door(scene, physics) { if (hasLba1Room('asylum') && !DOOR) { DOOR = asylumDoor(scene, physics); asylumSteps(scene, physics); } }
 export function buildLba1Asylum(scene, physics) {
   const A = LBA1_AT, out = {};
   if (hasLba1Room('asylum')) {
