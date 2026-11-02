@@ -570,7 +570,7 @@ function renderTop(){
   else{txt=S.conn==='setup'?'הקמת מערכת':'לא מחובר'}
   pill.innerHTML=`<span class="dot ${cls}"></span><span>${esc(txt)}</span>`;
   const ua=$('#userArea');
-  if(S.me&&me())ua.innerHTML=`<span class="user-chip">👤 ${esc(displayName())}${me().title?' · '+esc(me().title):isAdmin()?' · מנהל/ת':''}</span><button class="btn ghost sm" data-act="changePw">שינוי סיסמה</button><button class="btn light sm" data-act="logout">יציאה</button>`;
+  if(S.me&&me())ua.innerHTML=`<span class="user-chip">👤 ${esc(displayName())}${(()=>{const t=me().title||(myEmpId()&&empById(myEmpId())?.group)||(isAdmin()?'מנהל/ת':'');return t?' · '+esc(t):''})()}</span><button class="btn ghost sm" data-act="changePw">שינוי סיסמה</button><button class="btn light sm" data-act="logout">יציאה</button>`;
   else if(S.conn==='connected'&&S.data)ua.innerHTML=`<button class="btn light sm" data-act="login">🔑 כניסה אישית</button>`;
   else ua.innerHTML='';
   renderBanner();
@@ -854,7 +854,7 @@ PAGES.overview=()=>{
 };
 
 /* ---- month calendar ---- */
-function groupFilterHTML(){const gs=groups();if(gs.length<2)return '';return `<select class="input" style="width:auto" data-on="setGroup" aria-label="סינון לפי קבוצה"><option value="">כל הקבוצות</option>${gs.map(g=>`<option ${S.group===g?'selected':''}>${esc(g)}</option>`).join('')}</select>`}
+function groupFilterHTML(){const gs=groups();if(gs.length<2)return '';return `<select class="input" style="width:auto" data-on="setGroup" aria-label="סינון לפי תפקיד"><option value="">כל התפקידים</option>${gs.map(g=>`<option ${S.group===g?'selected':''}>${esc(g)}</option>`).join('')}</select>`}
 ON.setGroup=el=>{S.group=el.value;renderPage()};
 const inGroup=r=>!S.group||empById(r.employeeId)?.group===S.group;
 PAGES.calendar=()=>{
@@ -1111,16 +1111,16 @@ PAGES.leaves=()=>{
   return head('כל החופשות',`${rs.length} רשומות`,`<button class="btn green" data-act="adminAddLeave">➕ הוספת חופשה</button><button class="btn outline" data-act="exportLeaves">⬇ ייצוא לאקסל (CSV)</button>`)+
   `<div class="card"><div class="filters">
     <input class="input" placeholder="🔎 חיפוש שם / הערה" value="${esc(f.q)}" data-on="filter" data-k="q">
-    <select class="input" data-on="filter" data-k="group"><option value="">כל הקבוצות</option>${groups().map(g=>`<option ${f.group===g?'selected':''}>${esc(g)}</option>`).join('')}</select>
+    <select class="input" data-on="filter" data-k="group"><option value="">כל התפקידים</option>${groups().map(g=>`<option ${f.group===g?'selected':''}>${esc(g)}</option>`).join('')}</select>
     <select class="input" data-on="filter" data-k="status"><option value="">כל הסטטוסים</option>${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${f.status===k?'selected':''}>${v}</option>`).join('')}</select>
     <select class="input" data-on="filter" data-k="type"><option value="">כל הסוגים</option>${LEAVE_TYPES.map(t=>`<option value="${t.id}" ${f.type===t.id?'selected':''}>${t.name}</option>`).join('')}</select>
     <input class="input" type="date" title="מתאריך" value="${f.from}" data-on="filter" data-k="from">
     <input class="input" type="date" title="עד תאריך" value="${f.to}" data-on="filter" data-k="to"></div>
-    ${rs.length?`<div class="table-wrap"><table class="table"><thead><tr><th>עובד/ת</th><th>קבוצה</th><th>תאריכים</th><th>סוג</th><th>ימי עבודה</th><th>סטטוס</th><th>הערות</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>${rs.length>500?'<div class="small muted" style="margin-top:6px">מוצגות 500 הרשומות הראשונות – צמצם/י את הסינון.</div>':''}`:'<div class="empty">אין רשומות תואמות</div>'}</div>`;
+    ${rs.length?`<div class="table-wrap"><table class="table"><thead><tr><th>עובד/ת</th><th>תפקיד</th><th>תאריכים</th><th>סוג</th><th>ימי עבודה</th><th>סטטוס</th><th>הערות</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>${rs.length>500?'<div class="small muted" style="margin-top:6px">מוצגות 500 הרשומות הראשונות – צמצם/י את הסינון.</div>':''}`:'<div class="empty">אין רשומות תואמות</div>'}</div>`;
 };
 let filterT=null;
 ON.filter=(el,e)=>{S.filters[el.dataset.k]=el.value;clearTimeout(filterT);const isText=el.dataset.k==='q';filterT=setTimeout(()=>{renderPage();if(isText){const i=document.querySelector('[data-k=q]');i.focus();i.setSelectionRange(i.value.length,i.value.length)}},isText?250:0)};
-ACT.exportLeaves=()=>{const rows=[['עובד/ת','קבוצה','מתאריך','עד תאריך','סוג','ימי עבודה','ימים קלנדריים','סטטוס','הערת עובד/ת','הערת מנהל/ת','הוגש']];for(const r of filteredLeaves()){const e=empById(r.employeeId);rows.push([e?.name,e?.group,fmt(r.start),fmt(r.end),typeOf(r.type).name,workDays(r.start,r.end),calDays(r.start,r.end),STATUS[r.status],r.note,r.adminNote,fmtDT(r.createdAt)])}downloadFile(`חופשות_${todayISO()}.csv`,toCSV(rows))};
+ACT.exportLeaves=()=>{const rows=[['עובד/ת','תפקיד','מתאריך','עד תאריך','סוג','ימי עבודה','ימים קלנדריים','סטטוס','הערת עובד/ת','הערת מנהל/ת','הוגש']];for(const r of filteredLeaves()){const e=empById(r.employeeId);rows.push([e?.name,e?.group,fmt(r.start),fmt(r.end),typeOf(r.type).name,workDays(r.start,r.end),calDays(r.start,r.end),STATUS[r.status],r.note,r.adminNote,fmtDT(r.createdAt)])}downloadFile(`חופשות_${todayISO()}.csv`,toCSV(rows))};
 ACT.adminAddLeave=async d=>{
   if(!isAdmin())return;
   const date=d?.date||'';
@@ -1167,10 +1167,10 @@ PAGES.reports=()=>{
   const others=LEAVE_TYPES.filter(t=>!t.balance);
   const rows=emps.map(e=>{const b=balance(e.id,y);return `<tr><td><b>${esc(e.name)}</b></td><td class="small">${esc(e.group)}</td><td>${b.allowance}</td><td>${b.carry||''}</td><td><b>${b.total}</b></td><td>${b.used}</td><td>${b.pending||''}</td><td><b style="color:${b.remaining<0?'var(--red)':b.remaining<=3?'var(--amber)':'var(--green)'}">${b.remaining}</b></td>${others.map(t=>`<td>${b.byType[t.id]||''}</td>`).join('')}</tr>`}).join('');
   return head('דוח יתרות חופשה',`שנת ${y} · ימי עבודה (ללא סופי שבוע${S.data.settings.excludeHolidays?' וחגים':''})`,`<select class="input" style="width:auto" data-on="reportYear">${years.map(x=>`<option ${x===y?'selected':''}>${x}</option>`).join('')}</select>${groupFilterHTML()}<button class="btn outline" data-act="exportReport">⬇ CSV</button><button class="btn outline" data-act="print">🖨️ הדפסה</button>`)+
-  `<div class="card">${emps.length?`<div class="table-wrap"><table class="table"><thead><tr><th>עובד/ת</th><th>קבוצה</th><th>מכסה</th><th>צבירה</th><th>סה״כ</th><th>נוצל</th><th>ממתין</th><th>יתרה</th>${others.map(t=>`<th>${t.icon} ${t.name}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><div class="small muted" style="margin-top:8px">מכסה וצבירה לכל עובד/ת ניתנים לעריכה בעמוד "עובדים והרשאות". יתרה שלילית מסומנת באדום, 3 ימים ומטה בכתום.</div>`:'<div class="empty">אין עובדים</div>'}</div>`;
+  `<div class="card">${emps.length?`<div class="table-wrap"><table class="table"><thead><tr><th>עובד/ת</th><th>תפקיד</th><th>מכסה</th><th>צבירה</th><th>סה״כ</th><th>נוצל</th><th>ממתין</th><th>יתרה</th>${others.map(t=>`<th>${t.icon} ${t.name}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><div class="small muted" style="margin-top:8px">מכסה וצבירה לכל עובד/ת ניתנים לעריכה בעמוד "עובדים והרשאות". יתרה שלילית מסומנת באדום, 3 ימים ומטה בכתום.</div>`:'<div class="empty">אין עובדים</div>'}</div>`;
 };
 ON.reportYear=el=>{S.reportYear=Number(el.value);renderPage()};
-ACT.exportReport=()=>{const y=S.reportYear,others=LEAVE_TYPES.filter(t=>!t.balance);const rows=[['עובד/ת','קבוצה','מכסה','צבירה','סה״כ','נוצל','ממתין','יתרה',...others.map(t=>t.name)]];for(const e of activeEmps().filter(e=>!S.group||e.group===S.group)){const b=balance(e.id,y);rows.push([e.name,e.group,b.allowance,b.carry,b.total,b.used,b.pending,b.remaining,...others.map(t=>b.byType[t.id]||0)])}downloadFile(`יתרות_חופשה_${y}.csv`,toCSV(rows))};
+ACT.exportReport=()=>{const y=S.reportYear,others=LEAVE_TYPES.filter(t=>!t.balance);const rows=[['עובד/ת','תפקיד','מכסה','צבירה','סה״כ','נוצל','ממתין','יתרה',...others.map(t=>t.name)]];for(const e of activeEmps().filter(e=>!S.group||e.group===S.group)){const b=balance(e.id,y);rows.push([e.name,e.group,b.allowance,b.carry,b.total,b.used,b.pending,b.remaining,...others.map(t=>b.byType[t.id]||0)])}downloadFile(`יתרות_חופשה_${y}.csv`,toCSV(rows))};
 
 /* ---- employees & users (admin) ---- */
 PAGES.employees=()=>{
@@ -1183,26 +1183,26 @@ PAGES.employees=()=>{
     <td class="small">${u?(u.mustChange?'<span class="badge st-pending">ממתין לסיסמה אישית</span>':'<span class="badge st-approved">פעיל</span>'):'<span class="muted">אין משתמש</span>'}${u?.manager?' <span class="badge st-cancelreq">מנהל/ת</span>':''}</td>
     <td class="small muted">${u?.lastLogin?fmtDT(u.lastLogin):'—'}</td>
     <td><div class="actions"><button class="btn sm outline" data-act="editEmp" data-id="${e.id}">עריכה</button><button class="btn sm outline" data-act="resetPw" data-id="${e.id}">איפוס סיסמה</button><button class="btn sm ${e.active?'gray':'green'}" data-act="toggleEmp" data-id="${e.id}">${e.active?'השבתה':'הפעלה'}</button><button class="btn sm red" data-act="deleteEmp" data-id="${e.id}" title="מחיקה">🗑</button></div></td></tr>`}).join('');
-  return head('עובדים והרשאות',`${es.filter(e=>e.active).length} עובדים פעילים · סיסמה ראשונית לכל עובד/ת חדש/ה: <b dir="ltr">${INITIAL_PASSWORD}</b> – בכניסה הראשונה מחליפים לסיסמה אישית`,`<button class="btn green" data-act="addEmp">➕ עובד/ת חדש/ה</button><button class="btn outline" data-act="importEmps">📥 ייבוא רשימה</button>`)+
-  `<div class="card">${es.length?`<div class="table-wrap"><table class="table"><thead><tr><th>שם</th><th>קבוצה</th><th>מכסה ${y}</th><th>יתרה</th><th>משתמש</th><th>כניסה אחרונה</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="empty">עדיין אין עובדים. התחל/י ב<b>ייבוא רשימה</b> (הדבקה מאקסל) או בהוספה ידנית.</div>`}</div>
+  return head('עובדים והרשאות',`${es.filter(e=>e.active).length} עובדים פעילים · סיסמה ראשונית לכל עובד/ת חדש/ה: <b dir="ltr">${INITIAL_PASSWORD}</b> – בכניסה הראשונה מחליפים לסיסמה אישית`,`<button class="btn green" data-act="addEmp">➕ עובד/ת חדש/ה</button><button class="btn" data-act="importEmps">📋 הזנת שמות מסידור העבודה</button>`)+
+  `<div class="card">${es.length?`<div class="table-wrap"><table class="table"><thead><tr><th>שם</th><th>תפקיד</th><th>מכסה ${y}</th><th>יתרה</th><th>משתמש</th><th>כניסה אחרונה</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="empty" style="padding:30px"><div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:6px">עדיין אין עובדים במערכת</div><div style="margin-bottom:14px">הדרך המהירה: מעתיקים את סידור העבודה ומדביקים. המערכת מזהה את השמות, ונשאר רק לקבוע תפקיד לכל אחד/ת.</div><button class="btn lg" data-act="importEmps">📋 הזנת שמות מסידור העבודה</button></div>`}</div>
   <div class="card"><h3>חשבונות מנהל/ת מערכת <button class="btn sm outline" data-act="addAdmin">➕ מנהל/ת נוסף/ת</button></h3><div class="list">${admins.map(a=>`<div class="row"><div><div class="row-title">${esc(a.displayName)}${a.id===S.me.id?' (את/ה)':''}</div><div class="row-sub">${esc(a.title||'מנהל/ת מערכת')} · כניסה אחרונה: ${a.lastLogin?fmtDT(a.lastLogin):'—'}${a.active?'':' · מושבת'}</div></div>${isSysAdmin()&&a.id===S.me.id?`<div class="actions"><button class="btn sm outline" data-act="editAdmin" data-id="${esc(a.id)}">עריכת הפרטים שלי</button></div>`:''}${isSysAdmin()&&a.id!==S.me.id?`<div class="actions" style="display:flex;gap:6px"><button class="btn sm outline" data-act="editAdmin" data-id="${esc(a.id)}">עריכה</button><button class="btn sm outline" data-act="resetAdminPw" data-id="${esc(a.id)}">איפוס סיסמה</button><button class="btn sm ${a.active?'gray':'green'}" data-act="toggleAdmin" data-id="${esc(a.id)}">${a.active?'השבתה':'הפעלה'}</button></div>`:''}</div>`).join('')}</div>
   <div class="small muted" style="margin-top:8px">ניתן גם לתת לעובד/ת הרשאת <b>מנהל/ת</b> (אישור בקשות וניהול) דרך "עריכה" – כך הוא/היא יכול/ה גם להגיש בקשות וגם לאשר בקשות של אחרים.</div></div>`;
 };
 function credentialsModal(list,title='פרטי כניסה'){
   openModal(`<h3>${title}</h3><div class="notice warn" style="margin-bottom:10px">הסיסמה הראשונית של כולם היא <b dir="ltr">${INITIAL_PASSWORD}</b>. בכניסה הראשונה כל אחד/ת יתבקש/תתבקש לבחור סיסמה אישית חדשה.</div>
-   <div class="table-wrap" style="max-height:340px"><table class="table"><thead><tr><th>שם</th><th>קבוצה</th><th>סיסמה זמנית</th></tr></thead><tbody>${list.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.group||'')}</td><td dir="ltr" style="font-family:Consolas,monospace;text-align:right">${esc(x.password)}</td></tr>`).join('')}</tbody></table></div>
+   <div class="table-wrap" style="max-height:340px"><table class="table"><thead><tr><th>שם</th><th>תפקיד</th><th>סיסמה ראשונית</th></tr></thead><tbody>${list.map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.group||'')}</td><td dir="ltr" style="font-family:Consolas,monospace;text-align:right">${esc(x.password)}</td></tr>`).join('')}</tbody></table></div>
    <div class="modal-actions"><button class="btn" data-act="dlCreds">⬇ הורדה (CSV)</button><button class="btn outline" data-act="printCreds">🖨️ הדפסת פתקים</button><button class="btn outline" data-act="closeModal">סגירה</button></div>`,{wide:true});
-  ACT.dlCreds=()=>downloadFile(`פרטי_כניסה_${todayISO()}.csv`,toCSV([['שם','קבוצה','סיסמה זמנית'],...list.map(x=>[x.name,x.group,x.password])]));
+  ACT.dlCreds=()=>downloadFile(`פרטי_כניסה_${todayISO()}.csv`,toCSV([['שם','תפקיד','סיסמה ראשונית'],...list.map(x=>[x.name,x.group,x.password])]));
   ACT.printCreds=()=>{const w=window.open('','_blank');if(!w){toast('חלון ההדפסה נחסם ע״י הדפדפן','err');return}w.document.write(`<html dir="rtl"><head><meta charset="utf-8"><title>פרטי כניסה</title><style>body{font-family:Arial;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}.s{border:1px dashed #999;padding:12px;border-radius:8px;break-inside:avoid}.p{font-family:Consolas,monospace;font-size:18px;direction:ltr;text-align:right}</style></head><body>${list.map(x=>`<div class="s"><b>מערכת חופשות – ${esc(S.data.settings.department)}</b><br>שם משתמש: ${esc(x.name)}<br>סיסמה זמנית: <span class="p">${esc(x.password)}</span><br><small>בכניסה הראשונה תתבקש/י לבחור סיסמה אישית.</small></div>`).join('')}</body></html>`);w.document.close();w.focus();w.print()};
 }
 function empFields(e={}){const y=new Date().getFullYear();return `<div class="form-grid"><div class="field"><label>שם מלא</label><input name="name" value="${esc(e.name||'')}" required maxlength="80"></div>
- <div class="field"><label>קבוצה / תפקיד</label><input name="group" value="${esc(e.group||'')}" list="grpList" placeholder="צוות סיעודי"><datalist id="grpList">${groups().map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>
+ <div class="field"><label>תפקיד</label><input name="group" value="${esc(e.group||'')}" list="grpList" placeholder="לדוגמה: אח/ות" required maxlength="60">${empRoleList('grpList')}</div>
  <div class="field"><label>מכסה שנתית (ימי עבודה)</label><input name="allowance" type="number" min="0" max="80" step="0.5" value="${e.allowance??''}" placeholder="ברירת מחדל: ${S.data.settings.defaultAllowance}"></div>
  <div class="field"><label>צבירה משנה קודמת ל-${y}</label><input name="carry" type="number" min="-50" max="200" step="0.5" value="${e.carry?.[y]??''}" placeholder="0"></div></div>`}
 ACT.addEmp=async()=>{
   let cred=null;
   const v=await formModal({title:'עובד/ת חדש/ה',ok:'הוספה',body:empFields(),onSubmit:async v=>{
-    if(!v.name)throw new Error('יש להזין שם');
+    if(!v.name)throw new Error('יש להזין שם');if(!v.group)throw new Error('יש להזין תפקיד');
     if(S.data.employees.some(e=>e.name.toLocaleLowerCase('he')===v.name.toLocaleLowerCase('he')))throw new Error('כבר קיים/ת עובד/ת בשם זה');
     const password=tempPassword(),rec=await passwordRecord(password),y=new Date().getFullYear();
     await mutate((st,a)=>{
@@ -1217,40 +1217,142 @@ ACT.addEmp=async()=>{
   }});
   if(v&&cred)credentialsModal(cred,'העובד/ת נוספ/ה');
 };
-ACT.importEmps=async()=>{
-  let creds=null,skipped=0;
-  const v=await formModal({title:'ייבוא רשימת עובדים',ok:'ייבוא',wide:true,
-    body:`<div class="notice" style="margin-bottom:10px">הדבק/י עמודות מאקסל: <b>שם</b> ואופציונלית <b>קבוצה</b> ו<b>מכסה</b> (מופרדים בטאב, פסיק או נקודה-פסיק). שורת כותרת ושמות קיימים ידולגו.</div>
-    <div class="field"><label>רשימה</label><textarea name="raw" id="importRaw" style="min-height:180px" placeholder="שרה כהן\tצוות סיעודי\t24&#10;משה לוי\tכוח עזר"></textarea></div>
-    <div class="form-grid"><div class="field"><label>קבוצה ברירת מחדל</label><input name="group" value="צוות סיעודי"></div><div class="field"><label>או קובץ CSV / TXT</label><input type="file" accept=".csv,.txt" data-on="importFile"></div></div>`,
-    onSubmit:async v=>{
-      const parsed=[];const seen=new Set(S.data.employees.map(e=>e.name.toLocaleLowerCase('he')));
-      for(const line of v.raw.split(/\r?\n/)){
-        const L=line.replace(/^\uFEFF/,'').trim();if(!L)continue;
-        const parts=(L.includes('\t')?L.split('\t'):L.includes(';')?L.split(';'):L.split(',')).map(s=>s.trim().replace(/^"|"$/g,'').trim());
-        const name=parts[0];if(!name||['שם','שם מלא','עובד','עובד/ת','name'].includes(name.toLowerCase()))continue;
-        const k=name.toLocaleLowerCase('he');if(seen.has(k)){skipped++;continue}seen.add(k);
-        const al=parts[2]!==undefined&&parts[2]!==''&&!isNaN(Number(parts[2]))?Number(parts[2]):null;
-        parsed.push({name,group:parts[1]||v.group||'צוות',allowance:al});
-      }
-      if(!parsed.length)throw new Error(skipped?'כל השמות כבר קיימים במערכת':'לא נמצאו שמות לייבוא');
-      if(parsed.length>300)throw new Error('ניתן לייבא עד 300 עובדים בפעם אחת');
-      $('#mok').textContent=`מכין ${parsed.length} חשבונות…`;
-      for(const p of parsed){p.password=tempPassword();p.rec=await passwordRecord(p.password)}
-      await mutate((st,a)=>{
-        if(!(a.role==='admin'||a.manager))throw new Error('נדרשת הרשאת מנהל/ת');
-        for(const p of parsed){if(st.employees.some(e=>e.name.toLocaleLowerCase('he')===p.name.toLocaleLowerCase('he')))continue;const id=st.nextEmployeeId++;st.employees.push({id,name:p.name,group:p.group,active:true,allowance:p.allowance,carry:{}});st.users.push({id:`emp-${id}`,displayName:p.name,role:'employee',employeeId:id,active:true,mustChange:true,createdAt:nowISO(),...p.rec})}
-        audit(st,a,'employees_imported',`${parsed.length} עובדים`);
-      });
-      creds=parsed.map(p=>({name:p.name,group:p.group,password:p.password}));
-    }});
-  if(v&&creds){credentialsModal(creds,`יובאו ${creds.length} עובדים${skipped?` (${skipped} קיימים דולגו)`:''}`)}
+/* ---- bulk entry from a work schedule (סידור עבודה) ---- */
+const EMP_ROLES=['אח/ות','אח/ות מוסמך/ת','אח/ות מעשי/ת','אח/ות אחראי/ת','כוח עזר','רופא/ה','מתמחה','מזכיר/ת','פיזיותרפיסט/ית','מרפא/ה בעיסוק','עובד/ת סוציאלי/ת','דיאטנ/ית'];
+const empRoleList=id=>`<datalist id="${id}">${[...new Set([...EMP_ROLES,...(S.data?groups():[])])].map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`;
+const normKey=t=>String(t||'').replace(/[׳'״"`]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+const ROLE_ALIASES=(()=>{const m={};const add=(role,...keys)=>keys.forEach(k=>m[normKey(k)]=role);
+  add('אח/ות','אח','אחות','אחים','אחיות','אח/ות','אחיות ואחים','צוות סיעודי','סיעוד');
+  add('אח/ות מוסמך/ת','אח מוסמך','אחות מוסמכת','אחים מוסמכים','אחיות מוסמכות');
+  add('אח/ות מעשי/ת','אח מעשי','אחות מעשית','אחיות מעשיות');
+  add('אח/ות אחראי/ת','אח אחראי','אחות אחראית','אחראי','אחראית','אחראי משמרת','אחראית משמרת','ראש צוות');
+  add('כוח עזר','כוח עזר','כח עזר','כוחות עזר','כ"ע','כע','סניטר','סניטרית','סניטרים','מטפל','מטפלת','מטפלים');
+  add('רופא/ה','רופא','רופאה','רופאים','רופאות','רופא תורן','רופא/ה');
+  add('מתמחה','מתמחה','מתמחים','מתמחות');
+  add('מזכיר/ת','מזכיר','מזכירה','מזכירות','מזכירת מחלקה','מזכיר רפואי','מזכירה רפואית');
+  add('פיזיותרפיסט/ית','פיזיותרפיסט','פיזיותרפיסטית','פיזיותרפיה','פיזיו');
+  add('מרפא/ה בעיסוק','מרפא בעיסוק','מרפאה בעיסוק','ריפוי בעיסוק');
+  add('עובד/ת סוציאלי/ת','עובד סוציאלי','עובדת סוציאלית','עו"ס','עוס');
+  add('דיאטנ/ית','דיאטן','דיאטנית','תזונאי','תזונאית');
+  return m})();
+const SCHEDULE_STOP=new Set(['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת','יום','ימים','בוקר','ערב','לילה','צהריים','צהרים','כפולה','משמרת','משמרות','תורנות','תורן','תורנית','כונן','כוננות','כוננים','חופש','חופשה','חופשות','מחלה','מילואים','השתלמות','קורס','חג','ערב חג','סידור','סידור עבודה','שבוע','חודש','תאריך','שם','שמות','שם מלא','שם העובד','עובד','עובדת','עובד/ת','עובדים','צוות','הערות','הערה','סהכ','סה כ','סיכום','שעות','שעה','מ','עד','אין','ריק','פנוי','פנויה','x','ok','off','name','total','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר','ב','ע','ל','ח','א','ג','ד','ה','ו','ש','בוקר ערב','ערב לילה','בוקר לילה','החלפה','החלפות','בקשות','אילוצים','אילוץ','מחלקה','מחלקת','חדר','חדרים','ראש','ראשית','גריאטריה','פנימית','עבודה','עבודות','דר','פרופ','פרופסור','גב','מר','מרת','רשימה','רשימת','שבועי','חודשי','נוכחות','שיבוץ','לוח']);
+function extractNamesFromSchedule(raw){
+  const out=[],seen=new Map();let currentRole='';
+  const isStopWord=w=>{const k=normKey(w);return !k||SCHEDULE_STOP.has(k)||!!ROLE_ALIASES[k]||/^[א-ת]$/.test(k)};
+  for(const line of String(raw||'').replace(/^﻿/,'').split(/\r?\n/)){
+    const cells=line.split(/[\t;,|:]+|\s+\/\s+|\s*\+\s*|\s+-\s+/).map(c=>c.replace(/[‎‏]/g,'').replace(/\([^)]*\)|\[[^\]]*\]/g,' ').replace(/["“”״]/g,'').replace(/[*•·_]/g,' ').replace(/\s+/g,' ').trim().replace(/^[-–—.,'׳\s]+|[-–—.,\s]+$/g,'')).filter(Boolean);
+    const named=cells.filter(c=>!/\d/.test(c));
+    // שורת כותרת של תפקיד (למשל "אחיות") – משמשת כהצעת תפקיד לשמות שאחריה
+    if(named.length&&named.length===cells.length&&named.every(c=>ROLE_ALIASES[normKey(c)])&&named.length<=2){currentRole=ROLE_ALIASES[normKey(named[0])];continue}
+    for(let i=0;i<cells.length;i++){
+      let c=cells[i];
+      if(/\d/.test(c)||c.length<2||c.length>40||!/[א-תa-zA-Z]/.test(c))continue;
+      let words=c.split(' ');
+      while(words.length>1&&isStopWord(words[words.length-1]))words.pop(); // "שרה כהן בוקר"
+      while(words.length>1&&isStopWord(words[0]))words.shift();             // "בוקר שרה כהן"
+      if(words.length>4||words.every(isStopWord))continue;
+      const name=words.join(' ');if(name.length<2)continue;
+      const key=normKey(name);
+      const nextRole=cells[i+1]?ROLE_ALIASES[normKey(cells[i+1])]:'';
+      if(seen.has(key)){const r=out[seen.get(key)];if(!r.role&&(nextRole||currentRole))r.role=nextRole||currentRole;continue}
+      seen.set(key,out.length);out.push({name,role:nextRole||currentRole||''});
+    }
+  }
+  return out;
+}
+let W=null;
+ACT.importEmps=()=>{if(!isAdmin())return;W={raw:W?.raw||'',rows:[],skipped:[]};wizStep1()};
+function wizStep1(){
+  openModal(`<h3>📋 הזנת עובדים מסידור העבודה <span class="small muted">· שלב 1 מתוך 2</span></h3>
+   <div class="notice" style="margin-bottom:10px">העתק/י מסידור העבודה (אקסל, וורד, מייל) את <b>כל הטבלה</b> או רק את עמודת השמות, והדבק/י כאן. המערכת מזהה את השמות לבד: מסננת שעות, תאריכים, ימים ומשמרות, ומשאירה כל שם פעם אחת בלבד.<br>אפשר גם להקליד שם בכל שורה.</div>
+   <div class="field"><label>הדבקה מהסידור</label><textarea id="wizRaw" style="min-height:230px;font-size:13px" placeholder="לדוגמה:&#10;שם\tא׳\tב׳\tג׳&#10;שרה כהן\tבוקר\tערב\t&#10;משה לוי\tלילה\t\tבוקר&#10;&#10;או פשוט שם בכל שורה">${esc(W.raw)}</textarea></div>
+   <div class="field"><label>או קובץ CSV / TXT</label><input type="file" accept=".csv,.txt" data-on="importFile"></div>
+   <div class="merr hidden" id="wizErr"></div>
+   <div class="modal-actions"><button class="btn" data-act="wizParse">זיהוי שמות ←</button><button class="btn outline" data-act="closeModal">ביטול</button></div>`,{wide:true});
+}
+ON.importFile=async el=>{const f=el.files?.[0];if(!f)return;if(!/\.(csv|txt)$/i.test(f.name)){toast('ניתן לטעון קובץ CSV או TXT. מאקסל – פשוט העתק/י והדבק/י את הטבלה.','err');el.value='';return}$('#wizRaw').value=await f.text()};
+ACT.wizParse=()=>{
+  W.raw=$('#wizRaw').value;
+  const found=extractNamesFromSchedule(W.raw);
+  const existing=new Set(S.data.employees.map(e=>normKey(e.name)));
+  W.rows=found.filter(r=>!existing.has(normKey(r.name))).map(r=>({...r,sel:false}));
+  W.skipped=found.filter(r=>existing.has(normKey(r.name))).map(r=>r.name);
+  if(!W.rows.length){const e=$('#wizErr');e.textContent=W.skipped.length?`כל ${W.skipped.length} השמות שנמצאו כבר קיימים במערכת.`:'לא נמצאו שמות בטקסט שהודבק.';e.classList.remove('hidden');return}
+  wizStep2();
 };
-ON.importFile=async el=>{const f=el.files?.[0];if(!f)return;if(!/\.(csv|txt)$/i.test(f.name)){toast('ניתן לייבא קובץ CSV או TXT. מאקסל – העתק/י והדבק/י את העמודות.','err');el.value='';return}$('#importRaw').value=await f.text()};
+function wizStep2(){
+  openModal(`<h3>📋 בדיקת השמות וקביעת תפקיד <span class="small muted">· שלב 2 מתוך 2</span></h3>
+   <div class="notice" style="margin-bottom:10px">נמצאו <b>${W.rows.length}</b> שמות${W.skipped.length?` (ועוד ${W.skipped.length} שכבר קיימים במערכת ודולגו: ${W.skipped.slice(0,6).map(esc).join(', ')}${W.skipped.length>6?'…':''})`:''}.
+   מחק/י 🗑 שורות שאינן עובדים, תקן/י שמות אם צריך, וקבע/י <b>תפקיד לכל אחד/ת</b>. כדי לחסוך זמן: סמן/י כמה שורות, בחר/י תפקיד ולחץ/י "קביעה לנבחרים".</div>
+   <div class="toolbar" style="margin-bottom:8px;background:#f7fafc;border:1px solid var(--line);border-radius:10px;padding:8px">
+    <button class="btn sm outline" data-act="wizSel" data-m="all">סימון הכל</button><button class="btn sm outline" data-act="wizSel" data-m="norole">סימון חסרי תפקיד</button><button class="btn sm outline" data-act="wizSel" data-m="none">ניקוי סימון</button>
+    <span style="flex:1"></span>
+    <input class="input" id="wizBulkRole" list="wizRoles" placeholder="תפקיד…" style="width:170px">${empRoleList('wizRoles')}
+    <button class="btn sm" data-act="wizBulk">קביעה לנבחרים (<span id="wizSelN">0</span>)</button></div>
+   <div class="table-wrap" style="max-height:min(52vh,460px)"><table class="table"><thead><tr><th style="width:34px"></th><th style="width:34px">#</th><th>שם</th><th>תפקיד</th><th style="width:44px"></th></tr></thead><tbody id="wizBody"></tbody></table></div>
+   <div style="margin-top:6px"><button class="linkbtn" data-act="wizAdd">➕ הוספת שורה</button></div>
+   <div class="notice warn small" style="margin-top:10px">כל העובדים יקבלו את הסיסמה הראשונית <b dir="ltr">${INITIAL_PASSWORD}</b>. בכניסה הראשונה כל אחד/ת יחויב/תחויב לבחור סיסמה אישית.</div>
+   <div class="merr hidden" id="wizErr"></div>
+   <div class="modal-actions"><button class="btn green" data-act="wizSave" id="wizSaveBtn">✔ הוספת העובדים</button><button class="btn outline" data-act="wizBack">→ חזרה להדבקה</button><button class="btn outline" data-act="closeModal">ביטול</button></div>`,{wide:true});
+  wizRenderRows();
+}
+function wizRenderRows(){
+  $('#wizBody').innerHTML=W.rows.map((r,i)=>`<tr><td><input type="checkbox" data-on="wizRow" data-i="${i}" data-f="sel" ${r.sel?'checked':''} aria-label="בחירה"></td><td class="muted small">${i+1}</td>
+   <td><input class="input" value="${esc(r.name)}" data-on="wizRow" data-i="${i}" data-f="name" maxlength="80"></td>
+   <td><input class="input wiz-role" value="${esc(r.role)}" data-on="wizRow" data-i="${i}" data-f="role" list="wizRoles" placeholder="בחר/י או הקלד/י תפקיד" maxlength="60"></td>
+   <td><button class="btn sm outline" data-act="wizDel" data-i="${i}" title="הסרה" aria-label="הסרת השורה">🗑</button></td></tr>`).join('');
+  wizCounts();
+}
+function wizCounts(){
+  const sel=W.rows.filter(r=>r.sel).length,miss=W.rows.filter(r=>!r.role.trim()).length;
+  $('#wizSelN').textContent=sel;
+  const b=$('#wizSaveBtn');b.textContent=`✔ הוספת ${W.rows.length} עובדים${miss?` (חסר תפקיד ל-${miss})`:''}`;
+}
+ON.wizRow=el=>{const r=W.rows[Number(el.dataset.i)];if(!r)return;const f=el.dataset.f;r[f]=f==='sel'?el.checked:el.value;if(f==='role')el.style.borderColor='';wizCounts()};
+ACT.wizSel=d=>{W.rows.forEach(r=>r.sel=d.m==='all'?true:d.m==='none'?false:!r.role.trim());wizRenderRows()};
+ACT.wizBulk=()=>{const role=$('#wizBulkRole').value.trim();if(!role){toast('בחר/י תפקיד','err');return}const n=W.rows.filter(r=>r.sel).length;if(!n){toast('סמן/י קודם את השורות','err');return}W.rows.forEach(r=>{if(r.sel){r.role=role;r.sel=false}});wizRenderRows();toast(`נקבע תפקיד "${role}" ל-${n} עובדים`,'ok')};
+ACT.wizDel=d=>{W.rows.splice(Number(d.i),1);wizRenderRows()};
+ACT.wizAdd=()=>{W.rows.push({name:'',role:'',sel:false});wizRenderRows();const ins=document.querySelectorAll('#wizBody input[data-f=name]');ins[ins.length-1]?.focus()};
+ACT.wizBack=()=>wizStep1();
+ACT.wizSave=async()=>{
+  const err=$('#wizErr');err.classList.add('hidden');const show=m=>{err.textContent=m;err.classList.remove('hidden')};
+  W.rows=W.rows.map(r=>({...r,name:r.name.replace(/\s+/g,' ').trim(),role:r.role.replace(/\s+/g,' ').trim()})).filter(r=>r.name);
+  wizRenderRows();
+  if(!W.rows.length)return show('אין שמות להוספה');
+  if(W.rows.length>300)return show('ניתן להוסיף עד 300 עובדים בפעם אחת');
+  const keys=new Map();for(const r of W.rows){const k=normKey(r.name);keys.set(k,(keys.get(k)||0)+1)}
+  const dup=[...keys].filter(([,n])=>n>1).map(([k])=>W.rows.find(r=>normKey(r.name)===k).name);
+  if(dup.length)return show('שמות כפולים ברשימה: '+dup.join(', '));
+  const existing=W.rows.filter(r=>S.data.employees.some(e=>normKey(e.name)===normKey(r.name)));
+  if(existing.length)return show('כבר קיימים במערכת: '+existing.map(r=>r.name).join(', '));
+  const missing=W.rows.map((r,i)=>r.role?null:i).filter(i=>i!==null);
+  if(missing.length){document.querySelectorAll('#wizBody .wiz-role').forEach((el,i)=>{if(missing.includes(i))el.style.borderColor='var(--red)'});document.querySelectorAll('#wizBody .wiz-role')[missing[0]]?.focus();return show(`חסר תפקיד ל-${missing.length} עובדים (מסומנים באדום). אפשר ללחוץ "סימון חסרי תפקיד" ולקבוע לכולם בבת אחת.`)}
+  const btn=$('#wizSaveBtn');btn.disabled=true;btn.textContent='שומר…';
+  try{
+    const rec=await passwordRecord(INITIAL_PASSWORD); // אותה סיסמה ראשונית לכולם – מספיק חישוב אחד
+    const rows=W.rows.map(r=>({name:r.name,role:r.role}));
+    const added=await mutate((st,a)=>{
+      if(!(a.role==='admin'||a.manager))throw new Error('נדרשת הרשאת מנהל/ת');
+      let n=0;
+      for(const r of rows){
+        if(st.employees.some(e=>normKey(e.name)===normKey(r.name)))continue;
+        const id=st.nextEmployeeId++;
+        st.employees.push({id,name:r.name,group:r.role,active:true,allowance:null,carry:{}});
+        st.users.push({id:`emp-${id}`,displayName:r.name,role:'employee',employeeId:id,active:true,mustChange:true,createdAt:nowISO(),...rec});
+        n++;
+      }
+      audit(st,a,'employees_imported',`${n} עובדים מסידור העבודה`);
+      return n;
+    });
+    const list=rows.map(r=>({name:r.name,group:r.role,password:INITIAL_PASSWORD}));
+    W=null;
+    credentialsModal(list,`✔ נוספו ${added} עובדים`);
+  }catch(e){btn.disabled=false;wizCounts();show(e.message)}
+};
 ACT.editEmp=async d=>{
   const e=empById(Number(d.id));if(!e)return;const u=S.data.users.find(x=>x.employeeId===e.id);const y=new Date().getFullYear();
   const v=await formModal({title:`עריכת עובד/ת – ${esc(e.name)}`,body:empFields(e)+(u?`<label class="check"><input type="checkbox" name="manager" ${u.manager?'checked':''}> הרשאת מנהל/ת (אישור בקשות וניהול עובדים)</label>`:''),
-    onSubmit:v=>{if(!v.name)throw new Error('יש להזין שם');return mutate((st,a)=>{
+    onSubmit:v=>{if(!v.name)throw new Error('יש להזין שם');if(!v.group)throw new Error('יש להזין תפקיד');return mutate((st,a)=>{
       if(!(a.role==='admin'||a.manager))throw new Error('נדרשת הרשאת מנהל/ת');
       const x=st.employees.find(q=>q.id===e.id);if(!x)throw new Error('העובד/ת לא נמצא/ה');
       if(st.employees.some(q=>q.id!==x.id&&q.name.toLocaleLowerCase('he')===v.name.toLocaleLowerCase('he')))throw new Error('קיים/ת עובד/ת אחר/ת בשם זה');
