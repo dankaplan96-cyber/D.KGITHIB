@@ -51,6 +51,7 @@ Object.assign(STR.en, {
   // SPACEPORT-1: the terminals' counters and boards
   p_tickets: 'Tickets',
   tm_grounded: "No passenger flights, I'm afraid. The Joint Project has grounded them. Project ships only, until they say otherwise.",
+  tm_pilot: "Unless you're the one Doran's waiting for. He's by the project ship, out through the gate.",
   zt_grounded: 'Passenger ships to Twinsun are held by the project. When they fly again, this counter will be the first to know.',
   zt_board: 'ZEELICH SPACEPORT · Departures: Twinsun, Citadel Spaceport, by spaceship from pad one. Zeelich\'s islands: Esmer shuttles from the dock.',
 });

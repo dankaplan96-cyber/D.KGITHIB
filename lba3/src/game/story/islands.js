@@ -80,8 +80,10 @@ export class IslandShuttle {
     const g = this.game, from = g.travel?.points[tm.point], dests = from ? destinations(g, from) : [];
     if (!dests.length) {
       g.audio.play('deny');
-      const clerk = this.story.interiors.speaker(tm.clerk);
-      if (clerk?.present && !clerk.away) this.story.interiors.chain([[tm.clerk, tm.grounded]]);
+      const clerk = this.story.interiors.speaker(tm.clerk), doran = this.story.interiors.speaker('doran');
+      // (chapter 2: Doran has the project ship's start code and waits by its hatch: the clerk points him out there)
+      const pilot = tm.point === 'citadel_port' && g.flags.c1_ship && this.story.index <= 1 && doran?.present;
+      if (clerk?.present && !clerk.away) this.story.interiors.chain(pilot ? [[tm.clerk, tm.grounded], [tm.clerk, 'tm_pilot']] : [[tm.clerk, tm.grounded]]);
       else g.say('', [t('port_grounded')]);
       return true;
     }

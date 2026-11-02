@@ -70,7 +70,7 @@ const counter = (room, pick) => ev(([room, pick]) => {
   const G = game, H = TT[room], said = [], sv = G.say;
   G.say = function (n, lines, ...a) { said.push(n + ': ' + lines.join(' ')); return sv.call(this, n, lines, ...a); };
   const ready = () => P.target()?.kind === 'termCounter';
-  const r = P.go(H.counter.x, H.counter.z, { tol: 0.6, stopWhen: ready, maxT: 40 }); P.face(H.counter.x, H.counter.z - 1);
+  const r = P.go(H.counter.x, H.counter.z, { tol: 0.35, maxT: 40 }); P.face(H.counter.x, H.counter.z - 1);   // (up to the counter, facing the clerk's side)
   for (let k = 0; k < 12 && !ready(); k++) G.step(0.25);
   if (!ready()) { G.say = sv; return { fail: 'no counter prompt', r: r.r, target: P.target() }; }
   P.tap('KeyE', 0.1);
@@ -90,6 +90,8 @@ const in1 = await toDoor('terminal');
 check('SPACEPORT-1: from the deck he walks into Citadel Spaceport\'s terminal by its blue door (INPUT)', in1.room === 'terminal', in1);
 const c1 = await counter('terminal');
 check('chapter 2 (grounded): at the terminal\'s ticket counter Ama says the flights are grounded; no menu; the GROUNDED notice is up', c1.st !== 'shop' && c1.said.some((x) => /^n_ama: .*grounded/i.test(x)) && c1.notice === true, c1);
+const c1b = await (async () => { await ev(() => { game.flags.c1_ship = true; game.story.refreshCast(); }); const r = await counter('terminal'); await ev(() => { game.flags.c1_ship = false; game.story.refreshCast(); }); return r; })();
+check('chapter 2, Doran waiting with the project ship: Ama points Twinsen out through the gate to him', c1b.st !== 'shop' && c1b.said.some((x) => /^n_ama: .*Doran/.test(x)), c1b);
 const bd1 = await ev(() => { const H = TT.terminal; const r = P.use(H.board.x, H.board.z, { kind: 'termBoard', near: 0.8 }); return { r: r.r, lines: r.lines, kind: r.target?.kind }; });
 check('the terminal\'s departures board reads', bd1.kind === 'termBoard' && bd1.lines >= 1, bd1);
 const g1 = await ev(() => { const H = TT.terminal, r = P.through(H.gate.x, H.gate.z); P.settle(); const S = game.world.spaceport, h = game.hero; return { r: r.r, room: game.room?.id ?? 'citadel', d: +Math.hypot(h.pos.x - S.landing.x, h.pos.z - S.landing.z).toFixed(2), y: +(h.pos.y - S.deck.y).toFixed(2) }; });
