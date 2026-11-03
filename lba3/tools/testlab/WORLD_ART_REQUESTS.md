@@ -1746,3 +1746,18 @@ DOORS-1 and TEMPLE are merged, so WANNIE was rebuilt on them: apply `ZEELICH-1-S
 `buildIsland`: the temple's portal line and the platform's `R.wannie` block, both kept. With DOORS-1's houses in
 place the planner puts the mine and the lift's foot where it did before; every `R.wannie` handle stands on ground,
 clear of colliders; the lift goes to 0 and to 1 and its lever pulls. `tests/zislands.mjs` PASS on origin + SKY + WANNIE.
+
+## LINE-CLEAR-1 · A street lamp inside a pennant line · the laptop, 3.11.2026 (the user's picture)
+The user's picture (an Esmer island street): a lamp's head inside the pennant line strung from it. The lines are
+strung between neighbouring lamps and banner poles (`api.street`, `lines: true`), tied to a lamp's pole at 3.3 m,
+under its arm; a line leaving the lamp on the arm's side runs through the lamp's head. Counted from the planner's own
+plan on origin 3ea2f99: Otringal 1, Knartas 1, Tralu 4 such lines. Nothing checked what stands under a line either
+(lamps, poles and banners are not in the planner's height map, for the camera's sake). `requests/LINE-CLEAR-1.diff`
+(`zislands.js` only; applies alone on 3ea2f99, and after SKY → WANNIE → CAMPAIGN-2):
+- a line leaves a lamp only on the side away from its arm (the arm reaches along the lamp's local +x);
+- `clearUnder`: along the line (a metre clear of its posts), at its height under the sag less 0.45 m for the
+  pennants, nothing within 0.8 m either side stands higher: the height map (roofs, trees) and the thin uprights
+  (lamps with their arms, poles, banners, posts, the original's and ours);
+- a pair that fails is not strung; the others are as before.
+- After: no line through a lamp's head on any island; the lines left: Otringal 2 → 1, Knartas 1 → 0, Celebration
+  14 → 13, Tralu 11 → 9 (the rest have none). `tests/zislands.mjs` PASS.
