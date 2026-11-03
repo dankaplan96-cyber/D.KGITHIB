@@ -30,6 +30,8 @@ away from the user, who plays chapters 1–2 only.
 | D | Regional consequences (OG-2, OG-5, OG-6) and the Vesk/Oren split | **OG-2 done** (3.11); OG-5, OG-6 to do | `exp-og2` `4037a8e`, `0d2d5a5` | on `0d2d5a5`'s tree: oren-square 29/29, oren-first 21/21, walkers 37/37, chapter10 26/26, save-migration 33/33 (one expectation moved: after chapter 10 comes 11, not the network). Draw cost at the square +23 main / +7 shadow calls (SwiftShader counts, no fps). chapter 11 `survey` = OG-2 "The Fenced Square": `story/survey.js`, `text/oren.js` (og2_), `orenpresence.js` (`buildGateLock`), flags `og2_`; `tests/oren-square.mjs`. Chapter 10 now ends at the shelter's thanks; Baldino's call ends chapter 11. Bot floor 4.7 min game time (card to the network); first-time estimate stays R1's 12 min (not timed) |
 | 0c | Base merge for OG-6 | **done** (3.11) | `exp-og6` `90090b0` (merge of `ccr-adf00ea7-37ebl3` at `16247cb`: SHOPS-1, SPACEPORT-1 walk-in terminals, TRAVEL-1 cabin, ZEELICH-1 sky/Wannie requests, voices) | one conflict, `story/index.js` imports (kept `ChapterBase` and `Shops`). On the merge: chapter1 23/23, oren-first 21/21, oren-square 29/29, save-migration 33/33 |
 | D2 | OG-6 "Coils and Consent" | **done** (3.11) | `exp-og6` `8d0a5b8` | on `8d0a5b8`'s tree: oren-coils 33/33, chapter10 26/26 (now the base campaign), oren-square 29/29, oren-first 21/21, save-migration 33/33. Chapter 14 `network`'s mill station in the expanded campaign: `story/coils.js` (owned by `network.js` as `og6`), `text/oren.js` (og6_), flags `og6_`; `tests/oren-coils.mjs`. Draw cost at the mill +13 main / +2 shadow calls (SwiftShader counts, no fps). Bot floor (game time): the mill 5.1 min from the workshop door, 7.0 min with the street and the meeting; R1.11's 15 min stays the first-time estimate (not timed) |
+| 0d | Base merge for NW-1 | **done** (3.11) | `exp-nw1` `7f7cb9e` (merge of `ccr-adf00ea7-37ebl3` at `731a70d`: WC-1 story journeys, C-4 locked-door lines, EQUIP-2 concept doc) | no conflicts. On the merge: chapter1 23/23, oren-first 21/21, oren-square 29/29, oren-coils 33/33, save-migration 33/33, story-journeys 19/19 |
+| D3 | NW-1 "Bands" (the other four stations) and the stale tests | **done** (3.11) | `exp-nw1` `f0aa59d` (tests), `80a7a2d` (NW-1), `b82a834` (Oren's voice) | verdicts below ("Verdicts, NW-1"). Chapter 14's valve room, lighthouse, bore and dome in the expanded campaign: `story/bands.js` (owned by `network.js` as `nw1`), `text/bands.js`, flags `c10_lit_/c10_bandAt_/c10_band_/c10_shift_<s>`, `vm_3`; `tests/oren-bands.mjs`; playthrough `12b-throttle`, `12c-survey`, `13-network` (expanded). Bot floor (game time, relay on → station done, every line read at once): light 36 s, valves 33 s, dome 28 s, bore 17 s, 1.9 min for the four; the card's +10 min stays the first-time estimate (not timed) |
 | E | Underground discovery and preparation (SV-3 beat, UR-1, OG-7) | to do | | needs W-5, W-6 |
 | F | Finale and aftermath (FIN-1, EP-BL) | to do | | the base finale stays until F works end to end |
 
@@ -71,18 +73,58 @@ away from the user, who plays chapters 1–2 only.
 - `story/coils.js` is a helper the network owns (`net.og6`), not a chapter; every hook is inert on `exp_base`.
 - `tests/chapter10.mjs` now plays the base campaign (`exp_base`): its purpose is the base network; the expanded mill
   station is `tests/oren-coils.mjs`.
-- Known, not fixed here: `tests/zeelich-life.mjs` and playthrough segment 13 still go from the council straight to
-  the network, which the expanded campaign no longer does (since OG-1); they need `exp_base` or the new chapters.
+- ~~Known, not fixed here: `tests/zeelich-life.mjs` and playthrough segment 13 still go from the council straight to
+  the network~~ Fixed in NW-1 (below).
+
+## Standing decisions made in NW-1 (the cloud's; reversible; details in `EXPANSION_PLAN.md` §4.4 NW-1 "As built")
+- **No Tessa yet**: Baldino's briefing carries the floats ("every relay carries one of my brass floats now… somebody at
+  each station has to set its band"). Tessa's "Your relays shout. Mine listen." waits for N6.
+- **`vm_3`'s line** names what the player has seen ("The council's order has sat on Vesk's desk for days. His drill
+  hasn't missed a stroke, so we're back to my wire."), not BR-3's unbuilt throttles; it returns to the card's line with BR.
+- **Bands** LOW · MID · HIGH on the four relays' floats (the mill keeps CALM · BREEZE · GALE); Baldino's preset wrong;
+  "set too low" → higher, "set too high" → lower; one change of conditions per station: Oren trims the valve room
+  relay's share through the inlet governor on a stroke (R1.4 rules 2–4; he speaks once, Mira hears him), Zoé decides the
+  fog call (haze, no night), the bore's vent breathes out hard once, a cloud over the dome's peak. Each friend takes the
+  job (Mira, Arthur with Zoé's leave, Ilka, Pim). Baldino learns on the radio that Oren rations the mains.
+- **A wrong band is heard by a neighbour**: the first wrong reading at a station brings one radio line from the
+  nearest station already on the line, once a station (the mill too, `coils.js read()`).
+- **Each station's own task is unchanged**; the band follows it (`c10_lit_<s>`), the mill counted at `og6_band >= 2`.
+  The bore's fight ends at its band. "Station ready" (Arthur) moves after the lighthouse band.
+- **Reach**: floats hang on the relays (no new collider; B-1 untouched). The people-aware reach check of every band spot
+  is `tests/oren-bands.mjs` (chapter10 plays the base campaign and keeps B-1's dial checks).
+- **Tests**: `tests/zeelich-life.mjs` plays the base campaign's network (`exp_base`, as chapter10: its purpose is the
+  base street). The playthrough chain plays the expanded campaign, as a new game does: segment 12 ends at chapter 10
+  "Borrowed Time", new segments `12b-throttle` (OG-1) and `12c-survey` (OG-2), and `13-network` plays OG-6's mill
+  steps and every NW-1 band by input (no story flags set). Run order: … 12 → 12b → 12c → 13 → 14.
+- **Oren's voice** (`engine/voice.js` VOICES `oren`): spirit race, 98 Hz (his bowl tone), level and slow, no vibrato.
+  Another session is restyling `voice.js` (VOICE-STYLE); the one-line entry may need a trivial merge.
 
 ## Blockers
 - Ballastra's places are the laptop's world orders (W-1 … W-12 in `EXPANSION_WORLD_SPEC.md`); W-1 waits on the user's
   approval of its pictures. C needs W-9…W-12 or labelled stand-ins.
 
+## Verdicts, NW-1 (on `80a7a2d`'s tree, voices on `b82a834`'s; served from /dev/shm snapshots; SwiftShader, no fps)
+| Test | Verdict | Notes |
+|---|---|---|
+| `tests/oren-bands.mjs` (new) | **25/25** | every band by input with the station's people in place; a failure and retry at each; Save → Continue mid-task (lamp room, after the haze) and after (valve room); a band saved right is read on arrival (bore); an older save's station kept; the base campaign shows none of it. Valve room draws with the float shown / hidden: 81+12 vs 78+14 (main+shadow; +3 main, the shadow pass varies by a call or two) |
+| playthrough `12b-throttle` → `12c-survey` → `13-network` → `14-shell` | **pass each** (12b 205 s, 12c 217 s, 13 723 s, 14 137 s wall) | chained by their kept saves from an ISO start (a new game set by flags to the vote, then `nextChapter()`: `mk-ch10`); no segment sets story flags; 13: 0 deaths, the bore fight's declared ISO assist once (bot at 2 HP, as in GATE); 14 from 13's save reaches its end |
+| chapter10 (base campaign) | 26/26 | |
+| oren-coils | 33/33 | |
+| oren-square | 29/29 | |
+| oren-first | 21/21 | |
+| save-migration | 33/33 | |
+| voices | 24/24 after `b82a834` (Oren's VOICES entry); 23/24 before: "every named speaker" missing `oren` since OG-1 | |
+| zeelich-life | **37/38**: its network step (now `exp_base`) passes; one check fails in **chapter 9** ("the street argues about the council": no line from Pelleck, Snuff or Grumm after Nara's stamp) | **pre-existing**: the same 37/38 on `eaa9a7b` (the branch before this task) with this test file; a short probe of the same talks on `eaa9a7b` gets all three lines, so it is the test's route (state left by its earlier chapters), not NW-1. Not fixed here |
+| merge `7f7cb9e` | chapter1 23/23, oren-first 21/21, oren-square 29/29, oren-coils 33/33, save-migration 33/33, story-journeys 19/19 | |
+
 ## Next executable task
-OG-6 is done. Every remaining OREN-GUARDIAN card now waits on a laptop-built place: OG-5 (a W-8 shelter interior),
-OG-3 / WK-1 / EP-BL (W-1, W-9…W-12), BR-1…BR-4 (W-8a). The next task that needs no new place is **NW-1 "Bands" for the
-other four stations** (`network.js`: Mira the gauge, Arthur the needle, Ilka the steam, Pim the mirror; a wrong band
-lights amber and a neighbour complains by radio; no fail), built the way OG-6 built the mill's band (`coils.js`
-`state()`/`read()`), with the mill taken as done when `og6_band >= 2`; plus `vm_3` and the B-1 lamp-room check per the
-NW-1 card. If the laptop's W-8 shelter interior lands first, OG-5 goes first: Baldino's dead coupling is introduced
-and its limits said in OG-6, as OG-5 needs.
+NW-1 is done. Every remaining OREN-GUARDIAN card still waits on a laptop-built place: OG-5 (a W-8 shelter interior),
+OG-3 / WK-1 / EP-BL (W-1, W-9…W-12), BR-1…BR-4 (W-8a). The next task that needs no new place is **NW-2 "Local
+Override"** (`network.js`: at the lighthouse station Baldino on the radio proposes a master key on the project's code
+line; Zoé refuses it, every station keeps the right to refuse a central command; she relays Vesk's trial note and
+standing order to the council over the lighthouse link (Amaru: "Then it wasn't a mistake. It was a decision."); the roll
+call at the station's bore with Arthur's call signs and the say-back, each friend at the band they keep, before the code
+box opens the blast doors). Open points for it: the trial note and the standing order are N4/BR-4 evidence (documents
+only): NW-2 needs a stand-in source the player has seen (the SUPPLIERS receipt of ch. 9, or a project sheet found at a
+station) or waits for BR-4; BR-3's call signs do not exist yet (the roll call can introduce them, Arthur's idea). If the
+laptop's W-8 shelter interior lands first, OG-5 goes first (Baldino's dead coupling and its limits were said in OG-6).
