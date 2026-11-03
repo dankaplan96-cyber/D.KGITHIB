@@ -158,3 +158,20 @@ honest measurements (SwiftShader here: no fps claims).
    hero (`hero.arms`), no paid assets, the performance rules. The old favourites stay. Agent: `lba3-equipment-designer`.
    Concepts: `EQUIP2_CONCEPTS.md` (five items, waiting for the user's approval).
 5. **BIGGER-1: done (265a870).** The rooms 1.5x; the interiors' people read from each room's exported plan (`*_PLAN`).
+6. **ASYLUM-LATER (written only; nothing built).** ASYLUM-1 gave FunFrock's asylum (LBA1 room 0) its reason in
+   chapters 1–2: bricked up after FunFrock fell, broken back into by the Joint Project's dig under the fort (the breach
+   in its west wall, the project's cable, Madam Rondo's line), and Twinsen's old cell as a memory (`as_cell`). Two later
+   uses, each needing a real playable path, quest state, save compatibility and an aftermath:
+   - **The secret way into the fort that only Twinsen knows** (he escaped this asylum in LBA1). The dig's breach (west
+     wall, `R.wayIn.breach` in `src/game/lba1places.js`) would open on a tunnel up into the station yard. Hosts: chapter 8
+     (`src/game/story/evacuation.js`: the station yard's cistern lever and its drones, the station's control room where
+     Vesk announces the depth) — a quiet way past the drones; chapter 10 (`src/game/story/network.js`: the blast doors
+     over the collar at Citadel's station, `W.station.setSealed`) — the collar reached from below while the yard is
+     held. Chapter 1's station tour (`src/game/story/chapter1.js`, `W.gate`) keeps the front gate as the only way in, so
+     the tunnel opens only from chapter 8 (a flag set when Gilbert, who knows FunFrock's shelters, names the dig's cut).
+   - **A shelter in the crisis.** Chapter 8 already has FunFrock's two shelters (`src/game/story/shelters.js`: the fort's
+     by the lever, the depot bunker's hatch wheel) and Zoé's plan sends the town underground; the asylum could take the
+     families the shelters cannot hold (its halls and cells, the block-house door outside the fort's east wall). Chapter
+     9's council cabinet already lists "FunFrock's old tunnels on every island" (`src/game/text/ch9.js`
+     `c9_cab_tunnels`), the place for the evidence. Needs: who goes there (a resident group from `citizens.js`), the
+     asylum's guards (`lba1EnemyDefs`, posted from the prologue's end) withdrawn first, the people seen there afterwards.

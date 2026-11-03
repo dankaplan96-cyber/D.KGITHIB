@@ -334,7 +334,7 @@ export class Prologue extends ChapterBase {
       for (const d of W.shutDoors || []) if (!open.has(d.id) && Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', id: d.id, label: 'p_door' });
       if (!W.chest.open) consider(dist(W.chest.x, W.chest.z), 2.2, { kind: 'chest', label: 'p_open' });
     } else {
-      for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
+      for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: s.label || 'p_search' });
       // (WORLD-80 step 3: an outdoor region's shut doors, Desert Island's old places: desertold.js)
       // (DOORS-1: every house door on Zeelich's islands and street is one; where the story has a door into the same
       //  house (a bar, a hotel, a temple) that one is offered, not "Locked.")
@@ -361,11 +361,7 @@ export class Prologue extends ChapterBase {
     const g = this.game, f = this.f, h = g.hero;
     switch (it.kind) {
       case 'roomsearch':
-        if (it.spot.id === 'asylum_register') {   // FunFrock's asylum (LBA1): the old register in the office
-          g.searched.push(it.spot.id); g.audio.play('chest');
-          this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
-          return true;
-        }
+        if (this.asylumSearch(it)) return true;
         if (it.spot.id !== 'cupboard') return false;
         g.searched.push(it.spot.id);
         h.hasBall = true;
@@ -417,6 +413,26 @@ export class Prologue extends ChapterBase {
     return false;
   }
 
+  // FunFrock's asylum (LBA1), in every chapter (ASYLUM-1: from chapter 1 on, the generic search below took them and
+  // said "Nothing here."): the old register in the office; Twinsen's old cell, his marks, the warm pipe, a find
+  asylumSearch(it) {
+    const g = this.game, f = this.f, h = g.hero;
+    if (it.spot.id === 'asylum_register') {
+      g.searched.push(it.spot.id); g.audio.play('chest');
+      this.chain([['hero', 'asy_register1'], ['hero', 'asy_register2']], () => { h.clovers = Math.min(9, h.clovers + 1); g.hud.toast('toast_clover_found'); g.save(false); });
+      return true;
+    }
+    if (it.spot.id === 'as_cell') {
+      g.searched.push(it.spot.id); f.as_cell = true;
+      this.chain([['hero', 'as_cell1'], ['hero', 'as_cell2'], ['hero', 'as_cell3']], () => {
+        g.audio.play('chest');
+        for (let i = 0; i < 5; i++) g.pickups.spawn('coin', it.spot.x, g.physics.groundAt(it.spot.x, it.spot.z, h.pos.y + 1) + 1, it.spot.z, { pop: true });
+        g.save(false);
+      });
+      return true;
+    }
+    return false;
+  }
   baseInteract(it) {
     const g = this.game, f = this.f, h = g.hero;
     switch (it.kind) {
@@ -440,6 +456,7 @@ export class Prologue extends ChapterBase {
         g.say('', [t('pr_chest')]);
         return true;
       case 'roomsearch':
+        if (this.asylumSearch(it)) return true;
         g.searched.push(it.spot.id);
         g.audio.play('chest');
         if (it.spot.reward) g.pickups.spawn(it.spot.reward, it.spot.x, g.physics.groundAt(it.spot.x, it.spot.z) + 1, it.spot.z, { pop: true });
