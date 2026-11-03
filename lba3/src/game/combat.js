@@ -67,13 +67,15 @@ export const MOVES = {
 export const COMBOS = { fists: ['jab', 'jab2', 'kick'], sword: ['slash1', 'slash2', 'slash3'], glove: ['glove1', 'glove2'] };
 export const HEAVY_HOLD = 0.72; // s from the press, holding attack with the sword through the first strike → a heavy strike on release
 
-export const WEAPONS = ['ball', 'sword', 'pulse', 'fists', 'blowgun', 'laser', 'glove', 'lightning'];
+export const WEAPONS = ['ball', 'sword', 'pulse', 'fists', 'blowgun', 'laser', 'glove', 'lightning', 'pocketset', 'lance'];
 export const WEAPON_INFO = {
   fists: { icon: '✊' }, ball: { icon: '✦' }, sword: { icon: '⚔' }, pulse: { icon: '⌁' },
   blowgun: { icon: '➶' }, laser: { icon: '✺' }, glove: { icon: '✋' }, lightning: { icon: '☇' },
+  pocketset: { icon: '♫' }, lance: { icon: '≈' },   // (EQUIP-2a: tools.js)
 };
 const MELEE = new Set(['fists', 'sword', 'glove']);
 const SHOOT = new Set(['blowgun', 'laser', 'lightning']);   // fired by weapons.js
+const TOOLS = new Set(['pocketset', 'lance']);              // worked by tools.js (EQUIP-2a)
 
 // ------------------------------------------------------------------ input buffer
 export class InputBuffer {
@@ -319,7 +321,7 @@ export class HeroCombat {
 
   // the equipped weapon (fists when nothing better is allowed)
   get weapon() { const h = this.hero, w = h.weapon; return this.has(w) ? w : (h.hasBall ? 'ball' : 'fists'); }
-  has(w) { const h = this.hero; return w === 'fists' || (w === 'ball' && h.hasBall) || (w === 'sword' && h.hasSword) || (w === 'pulse' && h.hasPulse) || (SHOOT.has(w) || w === 'glove') && !!this.g.weapons?.owns(w); }
+  has(w) { const h = this.hero; return w === 'fists' || (w === 'ball' && h.hasBall) || (w === 'sword' && h.hasSword) || (w === 'pulse' && h.hasPulse) || (SHOOT.has(w) || w === 'glove' || TOOLS.has(w)) && !!this.g.weapons?.owns(w); }
   owned() { return WEAPONS.filter((w) => this.has(w)); }
   equip(w, silent = false) {
     const h = this.hero;
@@ -432,6 +434,12 @@ export class HeroCombat {
         if (this.shotCool > 0) { if (input.pressed('attack')) this.notReady(); }
         else if (g.weapons?.fire(w, aim)) { const D = g.weapons.def(w); this.shotCool = D.cool; this.pulseT = D.lock; }
         else this.notReady();
+      } else if (TOOLS.has(w)) {
+        // Arthur's pocket set (a squeal), Bram's pump lance (a jet): tools.js keeps their cooldowns and the tank
+        this.buf.take('attack', this.now);
+        const T = g.gadgets?.tools;
+        if (T?.fire(w, aim)) this.pulseT = w === 'lance' ? 0.3 : 0.35;
+        else if (input.pressed('attack')) this.notReady();
       } else {
         this.buf.take('attack', this.now);
         this.pressT = this.now;

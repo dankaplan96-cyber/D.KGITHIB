@@ -191,6 +191,20 @@ export class TownLife extends ChapterBase {
     }
     return false;
   }
+  // EQUIP-2a: a jet from Bram's pump lance (story/kit2.js) on the coupler glowing on the bench: it settles where it
+  // stands (the other way to the barrel's dip); still cold, the water only runs off it
+  jetCool() {
+    const g = this.game, f = this.f, L = this.L, C = L.shop.coupler;
+    if (this.cs !== 'bench') return false;
+    if (this.heat < HEAT_GLOW) { g.hud.toast('e2_toast_notyet'); return true; }
+    this.cs = 'done'; f.l_coupler = true; f.e2_couplerJet = true; this.heat = 0; this.holdT = 0;
+    C.setVisible(true); C.setHeat(0, 'settled'); L.shop.engine.setRunning(true); g.audio.play('chest');
+    g.particles.burst(C.x, (C.y ?? g.physics.groundAt(C.x, C.z) + 1) + 0.1, C.z, '#f4f4f4', 18, 1.2);
+    g.gadgets?.tools?.sound('steam');
+    this.story.refreshCast();
+    this.chain([['hero', 'e2_coupler_jet'], ['nell', 'l_nell_runs']], () => { g.save(false); });
+    return true;
+  }
   // the house's board and meter follow the story: 0 before the project's heat, 1 with it on, 2 once Zoé has seen the plan
   stage() { const f = this.f; return f.c1_plan ? 2 : (f.c1_water || this.story.index >= 2) ? 1 : 0; }
   homeStage() { this.game.rooms?.house?.life?.setStage?.(this.stage()); }
@@ -238,6 +252,7 @@ export class TownLife extends ChapterBase {
         if (f.l_pump && !f.l_bramThanks) {
           return c([['bram', 'l_bram_done1'], ['bram', 'l_bram_done2']], () => {
             f.l_bramThanks = true; this.reward('l_oweClover', 'clover', 1, npc.pos.x, npc.pos.y + 1, npc.pos.z, { pop: true }); g.save(false);
+            this.story.kit2?.giveLance();   // (EQUIP-2a: and his spare pump, the lance: story/kit2.js)
           });
         }
         if (f.l_pump) return one('bram', this.evac ? 'l_bram_evac' : 'l_bram_after');

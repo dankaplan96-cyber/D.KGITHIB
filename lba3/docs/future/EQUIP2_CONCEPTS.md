@@ -1,4 +1,4 @@
-# EQUIP-2: LBA3's own weapons and gadgets (concepts for the user's approval)
+# EQUIP-2: LBA3's own weapons and gadgets (concepts; items 1 and 2 approved and built as EQ2-a)
 
 The user (2.11.2026): "Weapons and accessories that make the third game its own, not only copies of the first and
 second." Weapons need not come earlier; there must be some through the game. Nothing here is built until the user
@@ -48,3 +48,31 @@ the pocket set finds what the fork then opens.
 EQ2-a pocket set + pump lance (chapter 2: the user will see them), EQ2-b heat flask + fork, EQ2-c the Esmer line.
 Agent: `lba3-equipment-designer`, one item pair per card, `tests/equip2.mjs` per item (found, taught, used, saved,
 reloaded, no main-path dependency).
+
+## EQ2-a: built (the pocket set and the pump lance)
+Code: `src/game/tools.js` (rules, models, sounds), `src/game/story/kit2.js` (where they come from, lessons, puzzles),
+`src/game/text/kit2.js`; test `tests/equip2.mjs`. Both are held tools: the weapon wheel (two small slots either side
+of the pulse tool; the stick between down and a lower diagonal) or E in the inventory puts one in Twinsen's right hand;
+the attack key works it. Saved with the hero (`hero.arms.pocketset`, `lance`, `water`); an older save has neither.
+No new lights; effects from the soft particle pool; synth sounds that end by themselves.
+
+- **Pocket set.** Rug in Arthur's toy corner, chapter 2 on (Arthur calls out to it once when Twinsen comes home;
+  his explanation, or his note). Held: pips quicken and rise in pitch toward the nearest hum within 12 m; a small
+  arrow at his feet points to it. Lesson: the cellar's loose tile (south-east corner) hides Twinsen's old tin: a
+  clover (10 kashes with nine), once; without the set in hand the tile shows no prompt. Squeal: drones within 10 m
+  lose aim 3 s (no wind-up, the head wanders; `Drone.squeal`); people, animals and the bore's guardian unaffected;
+  8 s cooldown; no damage. First fight use: chapter 2's depot drones.
+- **Pump lance.** Bram, after his clover for The Old Pump (or on the next talk for a save that already had the
+  thanks). 8 jets, given full; filled (E) at Bram's trough, his basin, the square's well, Nell's barrel, the sea's
+  edge. Jet: 6.5 m, stopped by walls; pushes the first enemy 3 m (stepped through collision; the guardian 0.8 m);
+  crystal mites freeze 2 s (`Mite.freeze`); no damage. Lesson: Bram's old stop-cock beside the heat pipe is too hot
+  to touch; a jet cools it for 25 s; turned, it fills his basin (5 kashes from Bram, once). Second chapter-2 use:
+  Nell's coupler glowing on her bench settles under one jet (the barrel's dip still works).
+
+### Later uses (notes only; not built)
+- Pocket set: the dig's buried relay (4) as a hum; a live pipe among dead ones in the steam halls (5) and their
+  drones; the network's relays behind walls (10); the Wannie mine's hidden seam (optional). `kit2.hums()` is where a
+  chapter adds a hum ({ id, room, x, y, z }).
+- Pump lance: the condensers' overheated valves (5), the meltwater basin that weighs a gate open (6), the evacuation's
+  tunnels (8: a jammed wheel turned by a jet; dust), the core's cooling valves (11, optional help). A chapter takes a
+  jet through its own `jetHit(o)` (story/index.js asks the chapter first, then kit2).
