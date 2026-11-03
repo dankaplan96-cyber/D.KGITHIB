@@ -411,7 +411,8 @@ export class Coils extends ChapterBase {
   // Oku's reading of the sails against the band
   read() {
     const g = this.game, f = this.f, s = this.state();
-    if (s !== 'right') { this.chain([['oku', s === 'race' ? 'og6_oku_race' : 'og6_oku_crawl']]); return; }
+    // (NW-1: the first wrong band here is heard on the line by a station already on it, story/bands.js)
+    if (s !== 'right') { this.chain([['oku', s === 'race' ? 'og6_oku_race' : 'og6_oku_crawl'], ...(this.net.nw1?.complain('mill') || [])]); return; }
     if (!f.og6_lull) { f.og6_band = 1; this.lullT = 0; this.chain([['oku', 'og6_oku_right1']], () => { g.updateObjective(); g.save(false); }); return; }
     f.og6_band = 2;
     this.chain([['oku', 'og6_oku_right2'], ['baldino', 'og6_bal_end'], ['hero', 'og6_tw_end'], ['oku', 'c10_oku_2']], () => {

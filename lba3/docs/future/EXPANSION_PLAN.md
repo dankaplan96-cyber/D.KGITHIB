@@ -472,6 +472,54 @@ opinions about ballast."). The return label on the B-7 crate reads TESSA'S FLOAT
 - States: `c10_band_mill|valves|light|bore|dome`. Pulse tool and hop-pack unchanged (still this chapter).
 - Accept: tests/chapter10 gains a people-aware reach check for every dial and band spot; segment 13 passes
   unmodified.
+- **As built (NW-1, `story/bands.js` owned by `story/network.js` as `net.nw1`, `text/bands.js`, `tests/oren-bands.mjs`;
+  the expanded campaign only, every hook inert on `exp_base`).** Decisions where the card left a choice or the game
+  disagreed (the smallest consistent answer each time):
+  - *No Tessa yet.* She is met on Ballastra (N1–N6, documents only), so Baldino's briefing carries the floats himself:
+    "And every relay carries one of my brass floats now, to keep its power steady. Somebody at each station has to set
+    its band." Her "Your relays shout. Mine listen." waits for N6; when it is built her line can join the briefing and
+    the floats become hers, with no flag change.
+  - *`vm_3`'s line.* The card's "He's bypassed the last throttle" refers to BR-3's throttles, which are not built. As
+    built: "The council's order has sat on Vesk's desk for days. His drill hasn't missed a stroke, so we're back to my
+    wire." (first in the briefing; `vm_3` set with `c10_started`, also on a load of an expanded save that had begun the
+    network). When BR-1…3 exist the card's line returns. It is R1.4 rule 5's growth step as a flag; nothing reads it yet.
+  - *The band.* Every relay's float reads LOW · MID · HIGH (the mill keeps OG-6's CALM · BREEZE · GALE), one notch a
+    press and round again. Baldino's preset is wrong for the day. The friend's reading says which way: "set too low"
+    (the source runs past what the band expects) wants a higher band, "set too high" a lower one; the float's lamp is
+    amber while wrong, green when right. Once right, after 6 s of play at the station the conditions change once and the
+    band must follow; right again, the friend takes the job and the station is done. No fail, no timer that matters.
+
+    | Station | Reads | Preset → right → after the change | The change (who decides) | Takes the job |
+    |---|---|---|---|---|
+    | valve room | Mira, the three needles (above green: too low; under: too high; drawn every frame) | HIGH → MID → LOW | Oren trims the relay's share through the inlet governor on a drill stroke: "Your box drinks. The shelters drink first." (R1.4 rule 3, a governor's setting; rule 4, on the stroke; rule 2, the brass float is deaf to him, so the band is the hand that follows) | Mira: "So he trims, and I follow." Baldino on the radio learns he rations the mains (R1.14 row, NW-1) |
+    | lighthouse | Arthur, the needle | LOW → HIGH → MID | haze off the sea: Zoé decides to put the fog call out to the boats; it takes some of the set's power (her decision; Twinsen: "The boats first.") | Arthur asks to mind the band, Zoé lets him; then his "Station ready" (moved after the band) |
+    | bore | Ilka, the steam (puffs at the relay) | LOW → MID → HIGH | the vent breathes out hard once ("She does that every so often") | Ilka: "Reading this vent is my trade anyway." Dallan's line as before |
+    | dome | Pim, the light | MID → HIGH → LOW | a cloud over the peak | Pim keeps the band and the chain; Sefa's line as before |
+
+  - *The neighbour's complaint.* The first wrong reading at a station (its first, Baldino's preset, included) brings one
+    radio line from the nearest station already on the line (a fixed neighbour order; the relays "hear each other",
+    `c10_bal_2`), once per station a session; the mill's wrong readings in OG-6 do the same (`coils.js` `read()`). The
+    first station done hears nothing: nobody is on the line yet.
+  - *Each station's own task is unchanged* and ends where it did; then the relay comes on (`c10_lit_<s>`) and the band
+    follows. The wheels, the dials and the telescope rest once the band is to set. The bore's fight ends at the band
+    (`c10_lit_bore` ends its waves); Ilka's "Go, go!" is replaced there by "Now look at your relay."
+  - *Oren in the valve room* speaks once (his rings attend, then turn): he feels the relay drink (rule 3: flow) and
+    answers through the governor; he does not hear Twinsen there and touches neither the relay nor the float. Mira's
+    knowledge after: he trims without asking. Nobody else learns anything new about him here.
+  - *B-1 and reach.* The floats hang on the relays' sides (no new collider), so the lamp room's way round, the stair
+    top and the dial bank are as GATE-FIX left them. The card's "tests/chapter10 gains a people-aware reach check for
+    every band spot" moved to `tests/oren-bands.mjs`, because chapter10 now plays the base campaign (OG-6): there every
+    band spot is walked to by input with the station's people standing as placed (Zoé and Arthur in the lamp room, Mira,
+    Ilka and Dallan, Pim and Sefa), and chapter10 keeps B-1's dial checks.
+  - *States.* The card's `c10_band_mill|valves|light|bore|dome` → `c10_band_<s>` 0–2 for the four (1: right for the
+    first conditions, 2: done), the mill counted done at `og6_band >= 2` (OG-6); plus `c10_lit_<s>`, `c10_bandAt_<s>`
+    0–2 (LOW, MID, HIGH) and `c10_shift_<s>`; `vm_3`. Each notch saves at once; a load sets the floats, the needles and
+    the people from the flags, and a band already right is read on arrival. A save that finished a station the old way
+    (`c10_<s>` without `c10_lit_<s>`) keeps it: no float, no band.
+  - *Segment 13* cannot pass unmodified (the card predates R1): it now plays the expanded network (OG-6's mill steps,
+    then each NW-1 band by input), and the chain gains `12b-throttle` (OG-1) and `12c-survey` (OG-2) between the
+    council (segment 12, which now ends at chapter 10 "Borrowed Time") and the network.
+  - *Cost.* One float: five meshes (one casting a shadow), no light, no transparency; shown only at its own station.
 
 **NW-2 · Local Override** (Zoé's decision; the roll call) — Min 6
 - At the lighthouse station, Baldino (radio) proposes a master key on the project's code line at the station's bore on Citadel "to keep it simple" (SHAFT-CITADEL).
@@ -967,9 +1015,9 @@ Labels as in the header: **[canon]** LBA1/LBA2, **[approved]** this sequel's app
 | Ch. 10 `throttle` "Borrowed Time" | **OG-1 playable** (increment B, below); BR-1…BR-4 documents only | `tests/oren-first.mjs` |
 | Ch. 11 `survey` "Under the Well" | **OG-2 playable** (increment D, below); SV-1…SV-3 documents only | `tests/oren-square.mjs` |
 | Ch. 12–13 `ballastra`, `balances` | empty shells: the story passes straight through (batch 1) | save-migration |
-| Ch. 14 `network` | playable; **OG-6 at the mill station** in the expanded campaign (the mill's band only; the other NW-1 bands are documents) | `tests/oren-coils.mjs`; chapter10 (base campaign) |
+| Ch. 14 `network` | playable; **OG-6 at the mill station** and **NW-1's bands at the other four** in the expanded campaign (NW-2 and OG-5 are documents) | `tests/oren-coils.mjs`, `tests/oren-bands.mjs`; chapter10 (base campaign); playthrough 12b, 12c, 13 |
 | Ch. 15 `shell`, 16 `core`, epilogue `home` | playable, base game (no Wound, base core) | chapter3 |
-| Every card in §4 except OG-1 (BR, SV, N1–N6, NW, UR, CORE-1, EP-1, OP-1…7, DP-*) | **documents only** | — |
+| Every card in §4 except OG-1 and NW-1 (BR, SV, N1–N6, NW-2, UR, CORE-1, EP-1, OP-1…7, DP-*) | **documents only** | — |
 | W-1 … W-8 | orders; nothing built (W-1 waits on the user's approval of its pictures) | `EXPANSION_WORLD_SPEC.md` |
 
 **Reachable endpoint today:** the base finale (the core: Vesk, the bore's guardian machine, three pylons, the coil,
@@ -1406,6 +1454,11 @@ OG-6 (Zeelich): Baldino hears of Oren from Twinsen in his briefing and learns ru
 dead coupling's and the float's limits because he made them. Oku, Snuff, Pelleck, Tavo and Brum know the coils tick on
 "the project's beat" and that a person must stand at each swapped station; they never hear Oren's name (he cannot
 speak on Zeelich). Oku knows the band. Nobody on Zeelich knows of the Cradles or the young one.
+
+NW-1 (the four Twinsun stations, ch. 14): Mira hears Oren once, through the inlet governor, and knows he trims the
+relay's share without asking; Baldino learns on the radio that he rations the mains (the table's NW-1 row). Arthur,
+Zoé, Ilka and Pim know their band and that a person keeps it; Zoé decided the fog call. None of them learns of the
+Cradles, the paired stone or the young one, and nobody but Mira hears Oren speak.
 
 Before these points nobody mentions them.
 

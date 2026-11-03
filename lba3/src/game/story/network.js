@@ -12,10 +12,13 @@
 // at the station in the old fort, by the bore's collar: the top of the shaft through Twinsun's shell (SHAFT-CITADEL, the
 // user's decision of 2.11.2026). His code box on the project's own code line sends the code; every friend holds for a
 // minute; the blast doors over the collar open → chapter 11.
+// The expanded campaign adds OG-6 at the mill (story/coils.js) and NW-1's bands at the other four stations
+// (story/bands.js): after a station's own task its relay's brass float needs its band set from the friend's reading.
 import { ChapterBase } from './base.js';
 import { VALVE_EFFECT, buildGlider, buildRelay } from '../valveroom.js';
 import { SHAFT_TOP } from '../island.js';
 import { Coils } from './coils.js';   // (OREN-GUARDIAN OG-6 "Coils and Consent": the mill station in the expanded campaign)
+import { Bands } from './bands.js';   // (NW-1 "Bands": the other four stations' bands in the expanded campaign)
 import '../text/ch10.js';
 
 const STATIONS = ['mill', 'valves', 'light', 'bore', 'dome'];
@@ -38,8 +41,8 @@ const BAL_AT_SHAFT = { x: SHAFT_TOP.x - 1.6, z: SHAFT_TOP.z + 4.4, a: Math.atan2
 const REGION_OF = { zeelich: 'zeelich', workshop: 'zeelich', upper: 'zeelich', council: 'zeelich', archive: 'zeelich', desert: 'desert', condA: 'desert', condB: 'desert', hamalayi: 'hamalayi', obsv: 'hamalayi' };
 
 export class Network extends ChapterBase {
-  // (OG-6, story/coils.js: asked first at each hook; inert in the base campaign)
-  constructor(story) { super(story); this.og6 = new Coils(this); }
+  // (OG-6, story/coils.js, and NW-1, story/bands.js: asked first at each hook; inert in the base campaign)
+  constructor(story) { super(story); this.og6 = new Coils(this); this.nw1 = new Bands(this); }
   get R() { return this.game.rooms; }
   get Z() { return this.R.zeelich; }
   get D() { return this.R.desert; }
@@ -95,6 +98,7 @@ export class Network extends ChapterBase {
     // Baldino's code box at the shaft's collar (Citadel)
     if (g.world?.root && !this.codeBox) { this.codeBox = put(buildRelay(), g.world.root, CODE_BOX.x, gy(CODE_BOX.x, CODE_BOX.z), CODE_BOX.z, Math.PI); this.codeBox.userData.setOn?.(true); }
     this.og6.decorate();
+    this.nw1.decorate();
   }
 
   // ---------------------------------------------------------------- cast
@@ -106,7 +110,7 @@ export class Network extends ChapterBase {
     // Wave 2, once the drones are down (f.c10_boreW2: a heart and a flask, a breath, the save): Vesk's clone and Grobo
     // guard out of the two north cabins' doors, and the sentry at the gate (the old pad's six, in two groups).
     // The station is done when all of them are down.
-    const live = (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore;
+    const live = (f) => this.isCur(f) && !!f.c10_boreRelay && !f.c10_bore && !f.c10_lit_bore;   // (NW-1: over once its band is on)
     if (D?.bore) {
       const b = D.bore, post = D.post, R = 7, ring = [0, 1, 2, 3, 4, 5].map((k) => { const a = (k / 6) * Math.PI * 2; return [b.x + Math.cos(a) * R, b.z + Math.sin(a) * R]; });
       // (the three come over the east fence, 3 m inside it; spread along it, never inside a cabin or the tank)
@@ -169,8 +173,8 @@ export class Network extends ChapterBase {
     if (this.R.workshop) g.enterRoom('workshop', null, true); else g.enterRoom('zeelich', this.Z.workshopDoor, true);
     this.story.refreshCast();
     // (Twinsen got Baldino's test pair talking in chapter 3: he remembers it)
-    this.chain([['narrator', 'c10_narr'], ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ['baldino', 'c10_bal_4'], ...this.og6.briefLines(), ['heskradio', 'c10_hesk_1']], () => {
-      f.c10_started = true; f.c10_pulse = true; this.og6.briefDone();
+    this.chain([['narrator', 'c10_narr'], ...this.nw1.vmLines(), ['baldino', 'c10_bal_1'], ['baldino', 'c10_bal_2'], ['baldino', 'c10_bal_3'], ...this.nw1.floatLines(), ...(f.w_pair ? [['baldino', 'c10_bal_pair']] : []), ['hero', 'c10_tw_b1'], ['baldino', 'c10_bal_pulse1'], ['baldino', 'c10_bal_pulse2'], ['baldino', 'c10_bal_4'], ...this.og6.briefLines(), ['heskradio', 'c10_hesk_1']], () => {
+      f.c10_started = true; f.c10_pulse = true; this.og6.briefDone(); this.nw1.briefDone();
       g.hero.hasPulse = true;
       this.story.refreshCast(); g.updateObjective(); g.save(false);
       g.found('pulse', 'it_pulse', () => g.hud.toast('c10_toast_pulse', { k: g.hud.key('weapons') }));   // (the relays: the objective panel names them)
@@ -231,27 +235,28 @@ export class Network extends ChapterBase {
     const g = this.game, f = this.f, r = this.room(), h = g.hero;
     if (!this.isCur() || !f.c10_started) return;
     this.og6.interactables(consider, dist);
+    this.nw1.interactables(consider, dist);
     if (r === 'zeelich') {
       const mt = this.Z.millTop;
       // (OG-6: the relay waits for the coil's swap at her foot, and is set once)
       if (f.c10_millBraked && !f.c10_mill && !f.og6_relay && Math.abs(h.pos.y - mt.y) < 1.3) consider(dist(mt.x, mt.z), 1.8, { kind: this.og6.relayWaits() ? 'og6relayWait' : 'c10mill', label: 'p_relay' });
     } else if (!r) {   // (Citadel, outdoors: Baldino's code box at the shaft's collar)
       if (this.done() >= 5 && !f.c10_done) consider(dist(CODE_BOX.x, CODE_BOX.z), 1.8, { kind: 'c10console', label: 'p_station' });
-    } else if (r === 'valves' && f.c10_miraAsk && !f.c10_valves) {
+    } else if (r === 'valves' && f.c10_miraAsk && !f.c10_valves && !f.c10_lit_valves) {   // (NW-1: the wheels rest once the band is to set)
       for (const v of this.R.valves.valves) consider(dist(v.x, v.z), 1.1, { kind: 'c10valve', valve: v, label: 'p_valve' });
-    } else if (r === 'lighttop' && f.c10_zoeAsk && !f.c10_light) {
+    } else if (r === 'lighttop' && f.c10_zoeAsk && !f.c10_light && !f.c10_lit_light) {
       for (const s of this.R.lighttop.searches || []) { const m = /^dial(\d)$/.exec(s.id); if (m) consider(dist(s.x, s.z), s.r + 0.2, { kind: 'c10dial', i: +m[1] - 1, label: 'p_dial' }); }
     } else if (r === 'desert' && f.c10_ilka && !f.c10_boreRelay) {
       const b = this.D.bore; consider(dist(b.x, b.z), 2.6, { kind: 'c10bore', label: 'p_relay' });
     } else if (r === 'obsv' && f.c10_pim && !f.c10_dome) {
       const T = this.R.obsv.telescope;
       if (f.c10_keeper && !f.c10_domeRelay) consider(dist(T.x, T.z), 2.0, { kind: 'c10domeRelay', label: 'p_relay' });
-      if (f.c10_domeRelay) consider(dist(T.x, T.z), 2.0, { kind: 'c10scope', label: 'p_scope' });
+      if (f.c10_domeRelay && !f.c10_lit_dome) consider(dist(T.x, T.z), 2.0, { kind: 'c10scope', label: 'p_scope' });
     }
   }
   interact(it) {
     const g = this.game, f = this.f, h = g.hero;
-    if (this.og6.interact(it)) return true;
+    if (this.og6.interact(it) || this.nw1.interact(it)) return true;
     switch (it.kind) {
       case 'og6relayWait': this.chain([['hero', 'og6_tw_relaywait']]); return true;
       case 'c10mill':
@@ -269,7 +274,8 @@ export class Network extends ChapterBase {
           const lv = this.gaugeLevels(); this.R.valves.gauges.set(lv);
           if (lv.every((x) => x === 2)) {
             this.lightRelay('valves'); g.audio.play('shard');
-            this.chain([['narrator', 'c10_valves_ok'], ['mira', 'c10_mira_3']], () => this.stationDone('valves'));
+            if (this.nw1.takes('valves')) this.nw1.lit('valves', [['narrator', 'c10_valves_ok']]);   // (NW-1: the band next)
+            else this.chain([['narrator', 'c10_valves_ok'], ['mira', 'c10_mira_3']], () => this.stationDone('valves'));
           }
         }, 0.3);
         return true;
@@ -281,7 +287,8 @@ export class Network extends ChapterBase {
           const right = f.c10_dials.filter((v, i) => v === LIGHT_CODE[i]).length;
           if (right === 3) {
             this.R.lighttop.transmitter?.setOn?.(true); this.lightRelay('light');
-            this.chain([['arthur', 'c10_ar_right'], ['arthur', 'c10_ar_mic'], ['zoe', 'c10_zoe_3']], () => this.stationDone('light'));
+            if (this.nw1.takes('light')) this.nw1.lit('light', [['arthur', 'c10_ar_right']]);   // (NW-1: the band, then "Station ready")
+            else this.chain([['arthur', 'c10_ar_right'], ['arthur', 'c10_ar_mic'], ['zoe', 'c10_zoe_3']], () => this.stationDone('light'));
           } else g.hud.toast(right === 2 ? 'c10_ar_close' : 'c10_ar_wrong');
         }, 0.3);
         return true;
@@ -298,7 +305,8 @@ export class Network extends ChapterBase {
         return true;
       case 'c10scope':
         f.c10_domeLit = true; g.audio.play('door'); g.camRig.shake(0.3); this.lightRelay('dome');
-        this.chain([['narrator', 'c10_scope'], ['pim', 'c10_pim_2'], ['keeper', 'c10_keeper_2']], () => this.stationDone('dome'));
+        if (this.nw1.takes('dome')) this.nw1.lit('dome', [['narrator', 'c10_scope'], ['pim', 'c10_pim_2']]);   // (NW-1: the band next)
+        else this.chain([['narrator', 'c10_scope'], ['pim', 'c10_pim_2'], ['keeper', 'c10_keeper_2']], () => this.stationDone('dome'));
         return true;
       case 'c10console': this.sendCode(); return true;
     }
@@ -352,7 +360,7 @@ export class Network extends ChapterBase {
   talk(npc) {
     const g = this.game, f = this.f, id = npc.def.id;
     if (!this.isCur()) return false;
-    if (this.og6.talk(npc)) return true;
+    if (this.og6.talk(npc) || this.nw1.talk(npc)) return true;
     const c = (lines, done) => { this.chain(lines, done); return true; };
     const ok = () => { this.story.refreshCast(); g.updateObjective(); g.save(false); };
     switch (id) {
@@ -430,8 +438,9 @@ export class Network extends ChapterBase {
     const g = this.game, f = this.f;
     if (!this.isCur()) return;
     this.og6.update(dt);
+    this.nw1.update(dt);
     if (this.room() === 'hamalayi') this.M.snow.focus = g.hero.pos;
-    if (!f.c10_boreRelay || f.c10_bore) { if (this.boreWant != null) { this.boreWant = undefined; this.boreT = 0; } }
+    if (!f.c10_boreRelay || f.c10_bore || f.c10_lit_bore) { if (this.boreWant != null) { this.boreWant = undefined; this.boreT = 0; } }
     else if (g.state === 'play') {
       const ds = this.boreDrones();
       if (!f.c10_boreW2) {
@@ -453,7 +462,10 @@ export class Network extends ChapterBase {
         }
         if (want !== this.boreWant) { this.boreWant = want; this.story.refreshCast(); }
         const foes = this.boreFoes();
-        if (foes.length && foes.every((e) => !e.alive)) { f.c10_bore = 'pending'; this.chain([['ilka', 'c10_ilka_3'], ['dallan', 'c10_dallan_1']], () => { f.c10_bore = false; this.stationDone('bore'); }); }
+        if (foes.length && foes.every((e) => !e.alive)) {
+          if (this.nw1.takes('bore')) this.nw1.lit('bore', [['ilka', 'nw1_ilka_won']]);   // (NW-1: the relay spits steam; the band next)
+          else { f.c10_bore = 'pending'; this.chain([['ilka', 'c10_ilka_3'], ['dallan', 'c10_dallan_1']], () => { f.c10_bore = false; this.stationDone('bore'); }); }
+        }
       }
     }
     if (f.c10_pim && !f.c10_mitesSeen && this.room() === 'hamalayi' && g.state === 'play' && this.ridgeMites().some((e) => e.present && e.alive && e.distTo?.(g.hero) < 12)) {
@@ -467,16 +479,17 @@ export class Network extends ChapterBase {
     // (Baldino's code box stays on the code line while he waits at the collar: through The Shell and The Core too)
     if (this.codeBox) this.codeBox.visible = this.done() >= 5 && ['network', 'shell', 'core'].includes(this.story.cur?.key);
     // (the bore's relay is up once set, the drones still to come; OG-6's mill relay once set, the band still to find)
-    const up = (s) => !!f['c10_' + s] || (s === 'bore' && !!f.c10_boreRelay) || (s === 'mill' && !!f.og6_relay);
+    const up = (s) => !!f['c10_' + s] || !!f['c10_lit_' + s] || (s === 'bore' && !!f.c10_boreRelay) || (s === 'mill' && !!f.og6_relay);
     for (const [s, r] of Object.entries(this.relays || {})) { r.visible = on && up(s); r.userData.setOn?.(up(s)); }
   }
-  regionBuilt() { this.showProps(); this.og6.regionBuilt(); }
+  regionBuilt() { this.showProps(); this.og6.regionBuilt(); this.nw1.regionBuilt(); }
   applyFlags() {
     const f = this.f, on = this.isCur();
     // the pulse tool is Twinsen's from here on (older saves past this chapter get it too)
     if (f.c10_pulse || this.story.index > this.pos) this.game.hero.hasPulse = true;
     this.showProps();
     this.og6.applyFlags();
+    this.nw1.applyFlags();
     if (!on) return;
     // (LAZY-REGIONS: the flags are set now; what they change in an area goes on it when it is built — at once if it
     //  is: regions.whenBuilt. A load builds the save's area and its chapter's first.)
@@ -496,7 +509,8 @@ export class Network extends ChapterBase {
     const n = this.done();
     if (n >= 5) return this.goal('c10_obj_platform');
     const ms = this.og6.millSub();   // (OG-6: the mill's step, in the expanded campaign)
-    return this.goal('c10_obj_stations', { n }) + this.sub(!!f.c10_mill, ...(ms || ['c10_sub_mill'])) + this.sub(!!f.c10_valves, 'c10_sub_valves') + this.sub(!!f.c10_light, 'c10_sub_light') + this.sub(!!f.c10_bore, 'c10_sub_bore') + this.sub(!!f.c10_dome, 'c10_sub_dome') + (n === 0 && this.region() === 'zeelich' ? this.sub(false, 'c10_sub_fly') : '') + this.og6.voteSub();
+    const b = (s) => this.nw1.sub(s) || ['c10_sub_' + s];   // (NW-1: a station's band step, in the expanded campaign)
+    return this.goal('c10_obj_stations', { n }) + this.sub(!!f.c10_mill, ...(ms || ['c10_sub_mill'])) + this.sub(!!f.c10_valves, ...b('valves')) + this.sub(!!f.c10_light, ...b('light')) + this.sub(!!f.c10_bore, ...b('bore')) + this.sub(!!f.c10_dome, ...b('dome')) + (n === 0 && this.region() === 'zeelich' ? this.sub(false, 'c10_sub_fly') : '') + this.og6.voteSub();
   }
   items() {
     if (!this.reached() || !this.f.c10_started) return [];
@@ -509,6 +523,7 @@ export class Network extends ChapterBase {
       { key: 'c10_j_plan', done: !!f.c10_started },
       { key: 'c10_j_fly', done: !!f.c10_started },
       ...this.og6.journal(),   // (OG-6's steps, in the expanded campaign)
+      ...this.nw1.journal(),   // (NW-1's bands, in the expanded campaign)
       { key: 'c10_j_all', done: !!f.c10_done },
     ].filter((l) => l.done);   // (G1-NARR: what has happened, in the past tense; the step ahead is the objective)
   }
