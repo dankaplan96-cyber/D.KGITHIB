@@ -1600,3 +1600,51 @@ alone applies, then WANNIE applies on it (WANNIE alone does not).
 Items 1 (bar), 2 (temple + its portal), 3 (hotel), 5 (the Wannies' island, the lift) and 6 (skies) are built as request
 diffs. Item 4: see item 2's note (the summit is already the festival plaza; say if a carved crater, a lava glow or the
 trail are still wanted).
+
+### The laptop's pending diffs · apply order (3.11.2026, against origin 5b0491c)
+SPACEPORT-1 is merged, so BAR, HOTEL and TEMPLE were rebuilt on top of it (their hook lines in `regions.js` and
+`story/index.js` follow the two terminals). Apply in this order; each was checked with `git apply --check` on a fresh
+worktree of origin 5b0491c with the ones before it applied: `ZEELICH-1-SKY` → `ZEELICH-1-WANNIE` → `ZEELICH-1-BAR` →
+`ZEELICH-1-HOTEL` → `ZEELICH-1-TEMPLE` → `DOORS-1`. SKY and DOORS-1 also apply alone; the other four need the ones
+before them (or `git apply -3`, keeping both sides of each list). On the whole chain: the game boots, every new room
+builds and is entered (terminal, zterminal, otrbar, otroffice, otrhotel, celtemple, the platform, Otringal,
+Celebration, the Lift Dock), no page errors; the bar's and the hotel's doors still lead in (no "Locked." there).
+
+## DOORS-1 · Every building an entrance and windows; every door answers · the laptop, 3.11.2026 (the user's ask)
+The user: "every place has people, every building has an entrance and windows". The audit (every building in the
+FIT registry, every outdoor area; numbers only) found on Zeelich's islands 107 houses: 44 with a door and windows, 29
+hollow ones with no door (packed between others, or too low for a door under the frieze), and no island or Zeelich door
+that answered anything (walking up to one did nothing). `requests/DOORS-1.diff` (`props-esmer.js`, `zislands.js`,
+`zeelich.js`, `desert.js`, `story/prologue.js`):
+- **Low houses (walls under 2.6 m):** no frieze; the door and windows reach up under the cornice (taller houses as
+  before).
+- **Packed houses:** when no side has open ground before it, the door goes onto the alley beside it (ground a metre
+  out within 0.3 m of the floor, a narrow strip free of other houses); none where the ground before it falls away
+  (the rule tests/worldfit.mjs uses: 0.5–1 m out, more than 0.1 m under the floor).
+- **Every door answers:** each island house door, Zeelich's street houses, Kesh's houses and the post's cabins are in
+  `R.shutDoors` ("Locked."). Where the story has a door into the same house (the bar, the hotel, the council, Tarra's
+  house, the workshop) that door is offered instead: the room branch of `baseInteractables` skips a shut door within
+  2.2 m of a story door entry.
+- **`R.peopleSpots`** on every island: up to 10 places for people (before house doors facing the street, at the
+  landmarks, beside the pad), on ground, clear of colliders, 4 m apart: Otringal 10, Knartas 10, the platform 7,
+  Mosquibee 5, Tralu 5, the orchard 3, Under the Gas 3, Celebration 2, the Lift Dock 2, the Old Watch 2, the CX
+  islet 1. See PEOPLE-1.
+- After: 65 houses with a door and windows, 6 hollow ones without a door (no side with ground at the floor's level),
+  0 doors without an answer on the islands and Zeelich. Left as they are: 34 solid pieces (6 × 1.3 m garden walls
+  and low blocks under 2.3 m), the 2 doors that would hang over a drop.
+- Checked (on origin 731a70d + DOORS-1): zislands, doorcull, desert-life, chapter1 pass; worldfit fails only on
+  Citadel's neighbours' house ("door overlaps window", the same on clean origin); in the game, P.target() is "shut" at
+  16 of 16 doors tried (Otringal 4, Knartas 4, Zeelich 4, Kesh 4). zeelich-life: under the laptop's load the reload
+  after save-and-quit did not finish in 5 minutes, the same on clean origin at the same time (15 checks passed before
+  it on both); earlier, unloaded, on the full copy it ran through with only the existing chapter-9 failure.
+- Not done here: Citadel's harbour shed and the project building's office doors (no answer; Citadel's doors are
+  C-4's), Hamalayi (its buildings are not in the FIT registry), Kesh's and the post's windows (drawn, but missing from
+  the registry only).
+
+## PEOPLE-1 · People on Zeelich's islands · for the cloud (the user's ask: "every place has people")
+No one stands on any of the 11 islands: no npcDefs there in any chapter (the cast by area: Citadel 30, Zeelich 12,
+Desert Island 10, Hamalayi 5, the islands 0). Please give each island its residents, with a purpose each (a trade, a
+line about the island, a small favour), on `R.peopleSpots` (DOORS-1) and the item-5 handles (`R.wannie.npcSpots` on
+the platform, the bar's and hotel's `npcSpots`). Rooms with nobody, for you to judge (most are caves, mazes, sewers
+or machine rooms where that is right): well, office, control, workshop, lighttop, cellar, the c3 rooms, the
+condensers, butemple, asylum, bumaze/buhalls, valves, arena, sewer, tralucave.

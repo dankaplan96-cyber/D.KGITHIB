@@ -1,0 +1,168 @@
+diff --git a/lba3/src/game/desert.js b/lba3/src/game/desert.js
+index 8711650b..7111d0ff 100644
+--- a/lba3/src/game/desert.js
++++ b/lba3/src/game/desert.js
+@@ -942,6 +942,7 @@ export function* buildDesertSteps(scene, physics) {
+       const em = new THREE.Mesh(emq(), emblemMaterial()); em.scale.setScalar(0.9);
+       em.position.set(cb.x, postY + 2.1, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2 + 0.06)); if (cb.ry) em.rotation.y = Math.PI; group.add(em);
+       col({ type: 'box', x: cb.x, z: cb.z, hw: cb.w / 2, hd: cb.d / 2, top: postY + 3 });
++      (R.postDoors ||= []).push({ id: 'post-cabin' + ci, ...W(cb.x + cb.w / 2 - 0.9, cb.z + (cb.ry ? -1 : 1) * (cb.d / 2 + 0.8)), y: postY });
+       cover.push({ x: ox + cb.x, z: oz + cb.z, r: Math.max(cb.w, cb.d) / 2 });
+     }
+     R.post = {
+@@ -1461,6 +1462,10 @@ export function* buildDesertSteps(scene, physics) {
+     col({ type: 'box', x, z, hw: 1.3, hd: 0.15, rot: ry, top: y + 1.9, noStand: true, seeThrough: true });
+   };
+   buildOldPlaces({ R, B, col, H, W, palm: staticPalm, signAt });
++  // (DOORS-1: Kesh's houses and the post's cabins say "Locked." where they lead nowhere; Tarra's door and the
++  //  post's office are the story's doors in their chapters, offered instead there: story/prologue.js)
++  for (const d of R.houseDoors) R.shutDoors.push({ id: 'kesh-house' + d.house, x: d.x, z: d.z, y: H(d.x - ox, d.z - oz) });
++  for (const d of R.postDoors || []) R.shutDoors.push(d);
+   yield;   // (TITLE-LOAD: a step of the build: the loading card paints between steps, regions.js buildAsync)
+ 
+   B.build();
+diff --git a/lba3/src/game/props-esmer.js b/lba3/src/game/props-esmer.js
+index 0b772097..45f39928 100644
+--- a/lba3/src/game/props-esmer.js
++++ b/lba3/src/game/props-esmer.js
+@@ -1106,11 +1106,13 @@ export function esmerBuilding(P, o) {
+   // openings (panel-local: x along, y up from the plinth)
+   // (WORLD-FIX: nothing on a wall reaches into the tiled frieze under the cornice (its foot at friezeY) or across the
+   // string course between the floors; a sign board takes the alfiz's place over a door; see tests/worldfit.mjs)
+-  const friezeY = ph - 0.66, row2 = ph >= 4.9 ? { y: 3.1, h: 1.15 } : null, courseY = row2 ? row2.y - 0.37 : Infinity;
++  // (DOORS-1: a low house (walls under 2.6 m, too low for a door under the frieze) has no frieze: its door and
++  // windows reach up under the cornice; taller houses are as before)
++  const low = ph < 2.6, friezeY = low ? ph - 0.22 : ph - 0.66, row2 = ph >= 4.9 ? { y: 3.1, h: 1.15 } : null, courseY = row2 ? row2.y - 0.37 : Infinity;
+   const dw = role === 'store' ? Math.min(2.1, W - 1.2) : Math.min(1.2, W - 0.8);
+-  const dh = Math.min(role === 'store' ? 2.6 : 2.35, ph - 0.9, courseY - 0.22, o.sign ? friezeY - 0.85 : Infinity);
++  const dh = Math.min(role === 'store' ? 2.6 : 2.35, low ? ph - 0.46 : ph - 0.9, courseY - 0.22, o.sign ? friezeY - 0.85 : Infinity);
+   const hasDoor = o.door !== false && dh >= 1.7 && dw >= 0.8, doorX = o.doorX ?? 0;
+-  const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: 0.82, h: Math.min(1.25, friezeY - 0.96, courseY - 0.96) };
++  const ww = small < 3.2 ? 0.6 : 0.74, row1 = { y: low ? 0.78 : 0.82, h: Math.min(1.25, friezeY - (low ? 0.92 : 0.96), courseY - 0.96) };
+   const ops = { front: [], back: [], left: [], right: [] };
+   if (hasDoor) ops.front.push({ x: doorX, y: 0, w: dw, h: dh, door: true });
+   const balconySide = !solid && row2 && r() < 0.55 ? ['left', 'right', 'back'][Math.floor(r() * 3)] : null;
+@@ -1118,7 +1120,7 @@ export function esmerBuilding(P, o) {
+     if (o.blind?.includes(sd.n)) continue;   // (WORLD-FIX: a wall set into the rise behind it has no windows)
+     const n = Math.max(0, Math.floor((sd.len - 0.9) / 2.1));
+     for (const row of [row1, row2]) {
+-      if (!row || row.h < 0.8 || row.y + row.h + 0.14 > (row === row1 ? Math.min(friezeY, courseY) : friezeY)) continue;
++      if (!row || row.h < (low ? 0.55 : 0.8) || row.y + row.h + 0.14 > (row === row1 ? Math.min(friezeY, courseY) : friezeY)) continue;
+       for (let q = 0; q < n; q++) {
+         const u = (q - (n - 1) / 2) * 2.1;
+         if (Math.abs(u) + ww / 2 > sd.len / 2 - 0.42) continue;
+@@ -1154,7 +1156,7 @@ export function esmerBuilding(P, o) {
+     add(panelGeo(+sd.len.toFixed(3), ph, t, ops[sd.n].map((op) => ({ x: op.x, y: op.y, w: op.w, h: op.h, horse: true }))), wallM, m);
+     // the tiled frieze under the cornice, a string course between the floors
+     const fl = sd.face - 0.5;
+-    add(bbox(fl, 0.32, 0.05, 0.01, 1), EM.tiles(), T(m, 0, ph - 0.5, t + 0.02));
++    if (!low) add(bbox(fl, 0.32, 0.05, 0.01, 1), EM.tiles(), T(m, 0, ph - 0.5, t + 0.02));
+     if (row2) add(bbox(fl, 0.1, 0.12, 0.02, 1.8), stone, T(m, 0, row2.y - 0.32, t + 0.04));
+     if (row2) fx(sd.n, 'band', -fl / 2, fl / 2, row2.y - 0.37, row2.y - 0.27);
+     for (const op of ops[sd.n]) {
+@@ -1240,7 +1242,7 @@ export function esmerBuilding(P, o) {
+     const [cx, cz] = P.pt(0, 0), piers = small >= 1.2 ? rp * 1.25 : 0, { ox = 0, oz = 0, ...reg } = o.fit;   // (ox, oz: the caller's group's place)
+     fitAdd({ ...reg, x: cx + ox, z: cz + oz, ry: P.ry, oy: P.y + base, w, d, base: -base - bury, plinth: 0, floor: 0, steps: base + 0.1,
+       sides: { front: W / 2 - piers, back: W / 2 - piers, left: D / 2 - piers, right: D / 2 - piers },
+-      top: solid ? null : { front: ph - 0.66, back: ph - 0.66, left: ph - 0.66, right: ph - 0.66 },
++      top: solid ? null : { front: friezeY, back: friezeY, left: friezeY, right: friezeY },
+       openings: solid ? [] : fitOps.filter((e) => e.kind !== 'band' || fitOps.some((q) => q.side === e.side && q.kind !== 'band')), solid, door: hasDoor && !solid, banked: o.blind || [] });
+   }
+   return { top, domed, solid, door: hasDoor ? { x: doorX, z: D / 2 } : null };
+diff --git a/lba3/src/game/story/prologue.js b/lba3/src/game/story/prologue.js
+index a365f9d6..1ebe5669 100644
+--- a/lba3/src/game/story/prologue.js
++++ b/lba3/src/game/story/prologue.js
+@@ -329,12 +329,15 @@ export class Prologue extends ChapterBase {
+       // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
+       // from the door's own level, not from the slope above it)
+       // (LBA-CITADEL-9: a shut door the director opens, the plateau's to Tralu's cave, is a door now: { house: its id })
+-      for (const d of W.shutDoors || []) if (!open.has(d.id) && Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', id: d.id, label: 'p_door' });
++      for (const d of W.shutDoors || []) if (!open.has(d.id) && Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
+       if (!W.chest.open) consider(dist(W.chest.x, W.chest.z), 2.2, { kind: 'chest', label: 'p_open' });
+     } else {
+       for (const s of g.room.searches) if (!g.searched.includes(s.id)) consider(dist(s.x, s.z), s.r, { kind: 'roomsearch', spot: s, label: 'p_search' });
+       // (WORLD-80 step 3: an outdoor region's shut doors, Desert Island's old places: desertold.js)
+-      for (const d of g.room.shutDoors || []) if (Math.abs(g.hero.pos.y - d.y) < 1.6) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
++      // (DOORS-1: every house door on Zeelich's islands and street is one; where the story has a door into the same
++      //  house (a bar, a hotel, a temple) that one is offered, not "Locked.")
++      const live = g.room.shutDoors?.length ? [...cur.doors(), ...(this.story.doors?.() || [])].filter((e) => e.x != null) : [];
++      for (const d of g.room.shutDoors || []) if (Math.abs(g.hero.pos.y - d.y) < 1.6 && !live.some((e) => Math.hypot(e.x - d.x, e.z - d.z) < 2.2)) consider(dist(d.x, d.z), 1.6, { kind: 'shut', label: 'p_door' });
+     }
+   }
+   interactables(consider, dist) {
+diff --git a/lba3/src/game/zeelich.js b/lba3/src/game/zeelich.js
+index 4b20e911..042b16d9 100644
+--- a/lba3/src/game/zeelich.js
++++ b/lba3/src/game/zeelich.js
+@@ -649,6 +649,9 @@ export function* buildZeelichSteps(scene, physics) {
+     workshopDoor: W(ws[0], ws[1]),
+     councilDoor: W(houses[1].door[0], houses[1].door[1]),
+     houseDoors: houses.filter((h) => h.door).map((h) => W(h.door[0], h.door[1])),   // (every house's door: tests/doorcull.mjs)
++    // (DOORS-1: a house door that leads nowhere says "Locked."; the council's and the workshop's are the story's
++    // doors in their chapters, offered instead there: story/prologue.js)
++    shutDoors: houses.filter((h) => h.door).map((h, i) => ({ id: 'zeelich-house' + i, ...W(h.door[0], h.door[1]), y: Y0 })),
+     npcSpots: {
+       esmer1: { ...W(-34.5, -3.2), a: Math.PI / 2 },
+       esmer2: { ...W(-24, 7.0), a: Math.PI },
+diff --git a/lba3/src/game/zislands.js b/lba3/src/game/zislands.js
+index 3a235ad0..90174732 100644
+--- a/lba3/src/game/zislands.js
++++ b/lba3/src/game/zislands.js
+@@ -235,6 +235,16 @@ function fitBuildings(decor, H, { nx, nz, cell, w, d, gx, gz, cx, cz, S, decks }
+       const sc = Math.abs(g1 - o.y) + 0.5 * Math.max(0, Math.abs(g2 - o.y) - 1) + (f === mid ? 0 : 0.35);
+       if (sc < best - 1e-6) { best = sc; o.face = f; }
+     }
++    // (DOORS-1: a house packed in on every side still has its door: onto the alley or lane beside it, where the
++    // ground goes on a metre out and no other house stands in a narrow strip before the door)
++    if (!o.face) for (const f of [mid, [1, 0], [-1, 0], [0, 1], [0, -1]]) {
++      const g1 = at(o.x + f[0] * (o.sx / 2 + 0.9), o.z + f[1] * (o.sz / 2 + 0.9));
++      const r = f[0] ? { x0: Math.min(o.x + f[0] * o.sx / 2, o.x + f[0] * (o.sx / 2 + 1.0)), x1: Math.max(o.x + f[0] * o.sx / 2, o.x + f[0] * (o.sx / 2 + 1.0)), z0: o.z - 0.7, z1: o.z + 0.7 }
++        : { x0: o.x - 0.7, x1: o.x + 0.7, z0: Math.min(o.z + f[1] * o.sz / 2, o.z + f[1] * (o.sz / 2 + 1.0)), z1: Math.max(o.z + f[1] * o.sz / 2, o.z + f[1] * (o.sz / 2 + 1.0)) };
++      if (g1 == null || Math.abs(g1 - o.y) > 0.3 || [at(r.x0, r.z0), at(r.x1, r.z0), at(r.x0, r.z1), at(r.x1, r.z1)].some((v) => v == null) || blocked(r)) continue;
++      const sc = Math.abs(g1 - o.y) + (f === mid ? 0 : 0.35);
++      if (sc < best - 1e-6) { best = sc; o.face = f; }
++    }
+     if (S.grand && Math.hypot(o.x - S.grand.x, o.z - S.grand.z) < 1) o.face = mid;   // (the Grand Hall's portico stands toward the plaza)
+     o.noDoor = !o.face; o.face ??= mid;
+     const i0 = Math.max(0, Math.floor(gx(o.x - o.sx / 2 - FIT_M))), i1 = Math.min(nx - 1, Math.ceil(gx(o.x + o.sx / 2 + FIT_M)));
+@@ -1412,7 +1422,14 @@ function buildIsland(scene, physics, name, L, at) {
+         // (sides banked into a rise behind them get no windows; world direction → the building's own sides)
+         const sideOf = ([vx, vz]) => vx === toward[0] && vz === toward[1] ? 'front' : vx === -toward[0] && vz === -toward[1] ? 'back' : vx === toward[1] && vz === -toward[0] ? 'right' : 'left';
+         const blind = (o.banked || []).map(sideOf);
+-        EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor ? { door: false } : {}), ...look(o), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
++        // (DOORS-1: no door where the ground before it falls away well past a step)
++        // (as tests/worldfit.mjs measures it: 0.5–1 m out and 0.4 m either side, ground more than 0.1 under the floor)
++        const half = (toward[0] ? ex : ez) / 2;
++        const hangs = [0.5, 1.0].some((v) => [-0.4, 0, 0.4].some((u) => { const g = gy(o.x + toward[0] * (half + v) + toward[1] * u, o.z + toward[1] * (half + v) - toward[0] * u); return g != null && y0 - g > 0.1; }));
++        const built = EP.esmerBuilding(P, { w: toward[0] ? ez : ex, d: toward[0] ? ex : ez, h: o.sy, wallH, bury: o.bury, blind, ...(o.noDoor || hangs ? { door: false } : {}), ...look(o), fit: { region: 'isle_' + name, name: `house (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`, ox, oz } });
++        // (DOORS-1: a door that leads nowhere says so: "Locked." (the story's shut doors; a story door at the same
++        // place is offered instead))
++        if (built.door) { const [dx, dz] = P.pt(built.door.x, built.door.z + 0.8); (R.shutDoors ||= []).push({ id: `${name}-${o.x.toFixed(0)}-${o.z.toFixed(0)}`, x: ox + dx, y: y0, z: oz + dz, ry: P.ry }); }
+         col({ type: 'box', x: o.x, z: o.z, hw: ex / 2 - 0.05, hd: ez / 2 - 0.05, top, noStand: true });
+         break;
+       }
+@@ -1677,6 +1694,23 @@ function buildIsland(scene, physics, name, L, at) {
+   // LBA2's zone givers: a hop on the spot shakes out a bonus, once (game.giverHop; ids kept in the save)
+   R.givers = (plan.givers || []).map((g, i) => ({ id: name + '-' + i, x: ox + g.x, z: oz + g.z, y: g.y, r: 1.1, kinds: g.kinds, n: g.n }));
+   R.board = plan.board ? { x: ox + plan.board.x, z: oz + plan.board.z } : null;
++  // DOORS-1 / PEOPLE-1: where people may stand (world x, z, y and a heading): before the house doors (facing out
++  // to the street), at the landmarks and beside the pad; on ground, clear of colliders, 4 m apart, up to 10. The
++  // story's people for the islands are the cloud's (none stand here yet); these are their places.
++  {
++    const cand = [];
++    for (const d of R.shutDoors || []) cand.push({ x: d.x + Math.sin(d.ry) * 1.0, z: d.z + Math.cos(d.ry) * 1.0, a: d.ry, y0: d.y, near: 'door' });
++    for (const p of R.pois) cand.push({ x: p.x, z: p.z, a: Math.atan2(R.pad.x - p.x, R.pad.z - p.z), near: 'landmark' });
++    for (const [dx, dz] of [[3.4, 0], [-3.4, 0], [0, 3.4], [0, -3.4]]) cand.push({ x: R.pad.x + dx, z: R.pad.z + dz, a: Math.atan2(-dx, -dz), near: 'pad' });
++    R.peopleSpots = [];
++    for (const c of cand) {
++      if (R.peopleSpots.length >= 10) break;
++      const y = physics.groundAt(c.x, c.z, (c.y0 ?? 50) + 2);
++      if (!(y > -1) || (c.y0 != null && Math.abs(y - c.y0) > 0.6) || !R.land(c.x, c.z) || physics.blockedAt(c.x, c.z, y + 0.3, 0.35)) continue;
++      if (R.peopleSpots.some((q) => Math.hypot(q.x - c.x, q.z - c.z) < 4)) continue;
++      R.peopleSpots.push({ x: +c.x.toFixed(2), z: +c.z.toFixed(2), y: +y.toFixed(2), a: +c.a.toFixed(3), near: c.near });
++    }
++  }
+   R.ours = OURS.has(name);
+   R.route = (plan.routes[0] || []).filter((_, i) => i % 4 === 0).map(([x, z]) => ({ x: ox + x, z: oz + z }));
+   R.sample = R.sample.filter((p) => Math.hypot(p.x - R.pad.x, p.z - R.pad.z) > 4.4 && plan.items.every((it) => {
