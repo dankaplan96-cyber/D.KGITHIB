@@ -1491,7 +1491,7 @@ hook line in `travel.js` (Zeelich's port block: `buildZTerminalOutside(Z.group, 
   pavilion's door leads in (region zeelich), the gate out to the pad's landing spot on the deck. Spoilers: no pictures to
   the user (Zeelich).
 
-### ZEELICH-1 item 1 · Built: the harbour bar at Otringal and its office · the laptop, 3.11.2026
+### ZEELICH-1 item 1 · Built: the harbour bar at Otringal and its office · the laptop, 3.11.2026 · Applied (the cloud, 3.11.2026, laptop-req)
 `requests/ZEELICH-1-BAR.diff` against origin 8db08db (applies alone; with SPACEPORT-1 applied first its hook lines in
 `regions.js` / `story/index.js` need `git apply -3`): `src/game/otrbar.js` (new), regions `otrbar` (REF 120, AT [9000,
 0]) and `otroffice` (REF 40, AT [9200, 0]), the director's `doors()` / `exitTo()`.
@@ -1514,7 +1514,7 @@ hook line in `travel.js` (Zeelich's port block: `buildZTerminalOutside(Z.group, 
 - Checked: Test Lab `artotrbar` (behind the bar, up on the stage, into the office and round it, back, out to the
   harbour) passes. Spoilers: no pictures to the user (Zeelich).
 
-### ZEELICH-1 item 3 · Built: the Imperial Hotel's lobby at Otringal · the laptop, 3.11.2026
+### ZEELICH-1 item 3 · Built: the Imperial Hotel's lobby at Otringal · the laptop, 3.11.2026 · Applied (the cloud, 3.11.2026, laptop-req)
 `requests/ZEELICH-1-HOTEL.diff` against origin (applies alone; with the bar or SPACEPORT-1 applied first, its hook lines
 need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, AT [9400, 0]), the director's hooks.
 - **The door:** the pink-domed house on the plaza's north-west side, `house (-15.4, -10.2)` (its door faces the plaza;
@@ -1531,7 +1531,7 @@ need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, 
 - Checked: Test Lab `artotrhotel` (the left strip's stair to the tables, along the back strip to the desk and the
   machines, down the other stair to the lounge, out to the plaza) passes. No pictures to the user (Zeelich).
 
-### ZEELICH-1 item 2 · Built: the Temple of the Dark Monk (and the way in, part of item 4) · the laptop, 3.11.2026
+### ZEELICH-1 item 2 · Built: the Temple of the Dark Monk (and the way in, part of item 4) · the laptop, 3.11.2026 · Applied (the cloud, 3.11.2026, laptop-req)
 `requests/ZEELICH-1-TEMPLE.diff` against origin (applies alone; with others applied first, `git apply -3`):
 `src/game/celtemple.js` (new), region `celtemple` (REF 120, AT [9600, 0]), the director's hooks, and one hook line in
 `zislands.js` (`if (name === 'celebration') R.templePortal = buildCelPortal(group, physics)`).
@@ -1610,7 +1610,7 @@ before them (or `git apply -3`, keeping both sides of each list). On the whole c
 builds and is entered (terminal, zterminal, otrbar, otroffice, otrhotel, celtemple, the platform, Otringal,
 Celebration, the Lift Dock), no page errors; the bar's and the hotel's doors still lead in (no "Locked." there).
 
-## DOORS-1 · Every building an entrance and windows; every door answers · the laptop, 3.11.2026 (the user's ask)
+## DOORS-1 · Every building an entrance and windows; every door answers · the laptop, 3.11.2026 (the user's ask) · Applied (the cloud, 3.11.2026, laptop-req)
 The user: "every place has people, every building has an entrance and windows". The audit (every building in the
 FIT registry, every outdoor area; numbers only) found on Zeelich's islands 107 houses: 44 with a door and windows, 29
 hollow ones with no door (packed between others, or too low for a door under the frieze), and no island or Zeelich door
@@ -1641,7 +1641,7 @@ that answered anything (walking up to one did nothing). `requests/DOORS-1.diff` 
   C-4's), Hamalayi (its buildings are not in the FIT registry), Kesh's and the post's windows (drawn, but missing from
   the registry only).
 
-## PEOPLE-1 · People on Zeelich's islands · for the cloud (the user's ask: "every place has people")
+## PEOPLE-1 · People on Zeelich's islands · for the cloud (the user's ask: "every place has people") · NOT applied (see below)
 No one stands on any of the 11 islands: no npcDefs there in any chapter (the cast by area: Citadel 30, Zeelich 12,
 Desert Island 10, Hamalayi 5, the islands 0). Please give each island its residents, with a purpose each (a trade, a
 line about the island, a small favour), on `R.peopleSpots` (DOORS-1) and the item-5 handles (`R.wannie.npcSpots` on
@@ -1649,7 +1649,7 @@ the platform, the bar's and hotel's `npcSpots`). Rooms with nobody, for you to j
 or machine rooms where that is right): well, office, control, workshop, lighttop, cellar, the c3 rooms, the
 condensers, butemple, asylum, bumaze/buhalls, valves, arena, sewer, tralucave.
 
-## CAMPAIGN-1 · The campaign director's fixes · the laptop, 3.11.2026 (the user's ask: the lba-campaign-director agent)
+## CAMPAIGN-1 · The campaign director's fixes · the laptop, 3.11.2026 (the user's ask: the lba-campaign-director agent) · Applied (the cloud, 3.11.2026, laptop-req)
 `requests/CAMPAIGN-1.diff` (story/epilogue.js, evacuation.js, network.js, zeelife.js, storylife.js, guards.js,
 roomlife.js, text ch3/ch8/ch10; tests chapter8, chapter10, cast-rounds, playthrough/11, the new epilogue-home.mjs; and
 docs/campaign/CAMPAIGN_DIRECTOR.md: the story as now played, the coverage table, every fix with its before/after and
@@ -1677,6 +1677,26 @@ by ISO, logged).
   (the Core inside the Shell) not updated; Dallan's chapter-9 trip thin, no Vesk scene after the coil; the lighthouse
   lamp room shut after the ending.
 
+### The cloud applied the laptop's chain · 3.11.2026 (branch `laptop-req` from ccr-adf00ea7-37ebl3 895deb1; not pushed)
+One commit per request, in this order: CAMPAIGN-1 → DOORS-1 → ZEELICH-1-BAR → ZEELICH-1-HOTEL → ZEELICH-1-TEMPLE.
+- **CAMPAIGN-1:** applied as delivered (clean). No new speaker keys (`n_*`), so no new `VOICES` entry was needed.
+- **DOORS-1:** applied, one line adapted: the diff took the `id` off Citadel's shut doors in `story/prologue.js`
+  baseInteractables, which would have turned C-4's own lines (`text/world.js` `w_door_<id>`) back into "Locked.".
+  The `id` stays; the room branch (islands, Zeelich, Kesh, the post) is the diff's, with its 2.2 m story-door rule.
+- **BAR, HOTEL, TEMPLE:** the new files as delivered; the hook lines in `regions.js` (REF, AT, `add`) and
+  `story/index.js` (`doors()`, `exitTo()`) merged by hand onto the base (SEWERS-1 had changed `sewerDoors` /
+  `sewerExit` and added `sewerglobe` on the same lines). TEMPLE's `zislands.js` lines (the import and
+  `R.templePortal = buildCelPortal(...)`) applied by hand (the base moved). SKY and WANNIE were not part of this
+  batch and are still not applied; BAR, HOTEL and TEMPLE do not need them.
+- **Checked** (a snapshot of the chain's head, SwiftShader container): epilogue-home, chapter1, chapter2, chapter8,
+  chapter10, cast-rounds, world-consistency, interior-life, voices, sewers-ways, occluders, stability, zislands,
+  doorcull PASS. A scratch probe (not committed): the bar, the hotel and the temple are each walked into by their
+  door and out again (input); before the bar's door its house's shut door gives no "Locked." prompt; an Otringal
+  house door says "Locked." and Citadel's dome door still says its C-4 line (both with him placed a metre before the
+  door, ISO: the test harness's path planner reported "stuck" walking to 8 Otringal house doors, not looked into).
+- **PEOPLE-1: not applied.** There is no diff, and the entry asks for the islands' residents to be written (who,
+  what trade, what line, which chapters): story content of its own, not a mechanical change. The handles it needs
+  are now in (`R.peopleSpots`, the bar's and the hotel's `npcSpots`; `R.wannie.npcSpots` waits for WANNIE).
 ### The laptop's pending diffs · apply order, again (3.11.2026, against origin 895deb15, after SEWERS-1)
 SEWERS-1 changed the same hook lines, so BAR, HOTEL and TEMPLE were rebuilt once more: their `doors()` / `exitTo()`
 lines and regions.js's REF / AT lines are now origin's lines with only the request's own entries added (checked: no
@@ -1685,7 +1705,7 @@ entry twice). Order, each checked with `git apply --check` on a fresh worktree o
 `CAMPAIGN-1` → `BG-STUCK-1`. SKY, DOORS-1, CAMPAIGN-1 and BG-STUCK-1 also apply alone. On the whole chain the game
 boots and every new room builds and is entered (and the sewer and tavern still do), no page errors.
 
-## BG-STUCK-1 · 8 fps after Esc in the desktop app · the laptop, 3.11.2026 (the user's report)
+## BG-STUCK-1 · 8 fps after Esc in the desktop app · the laptop, 3.11.2026 (the user's report) — applied by the cloud (3.11)
 The user: after Esc the game runs at 8 fps (first blamed on a talk with Pippa, then found to be Esc). 8 is `BG_FPS`,
 the frame rate PERF-BATTERY draws at while the window is in the background (`setBackground`: document hidden, the DOM
 blur, or the desktop app's `lba3:window` report not focused). A "not focused" that is never followed by its "focus"
