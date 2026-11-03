@@ -87,7 +87,7 @@ export class Story {
     return [...seen.values()];
   }
   enemyDefs() { return this.chapters.flatMap((c) => c.enemyDefs()); }
-  decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); }
+  decorate() { for (const c of this.chapters) c.decorate(); this.arsenal.decorate(); this.citizens.decorate(); }
 
   // ---- flow
   start() {
@@ -226,7 +226,7 @@ export class Story {
   meleeHit(o) { return this.cur.meleeHit?.(o) || this.arsenal.meleeHit(o); }
   pulseHit(o) { return this.cur.pulseHit?.(o) || false; }
   ballTargets() { return this.cur.ballTargets(); }
-  update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.sewers.update(dt); this.shops.update(dt); }
+  update(dt) { this.cur.update(dt); this.life.update(dt); this.interiors.update(dt); this.workshop.update(dt); this.kesh.update(dt); this.zlife.update(dt); this.arsenal.update(dt); this.sewers.update(dt); this.shops.update(dt); this.citizens.update(dt); }
   onEnterRoom(id) { this.cur.onEnterRoom(id); }
   onExitRoom(id) { this.cur.onExitRoom(id); this.sewers.onExitRoom(id); }   // (SEWER-LIFT: up the shaft onto the deck)
   applyFlags() {

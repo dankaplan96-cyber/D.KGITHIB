@@ -7,7 +7,7 @@
 //                └─ voice (the characters' gibberish voices, voice.js)
 
 import { Music } from './music.js';
-import { Babble } from './voice.js';
+import { Babble, voiceStyle } from './voice.js';
 const VOICE_BOOST = 2.2, MUSIC_DUCK = 0.5; // VOICE-MIX
 const VOICE_MAKEUP = 2.2; // VOICE-MIX-2: after the voice compressor (see the voice chain below)
 const REVERB_SEC = 0.25; // AUDIO-CRACKLE-2: the effects' room (see init)
@@ -82,7 +82,7 @@ export class AudioEngine {
     // boost back down (lines at about -27 dBFS RMS). The gain now comes after it, with a little presence for laptop
     // speakers and a limiter so peaks stay under -3 dBFS: about +8 dB, lines at about -17 to -19 dBFS RMS
     this.voicePres = ctx.createBiquadFilter(); this.voicePres.type = 'peaking';
-    this.voicePres.frequency.value = 2500; this.voicePres.Q.value = 0.8; this.voicePres.gain.value = 3;
+    this.voicePres.frequency.value = 2500; this.voicePres.Q.value = 0.8; this.voicePres.gain.value = voiceStyle().pres;   // (VOICE-STYLE: soft takes no lift)
     this.voiceMakeup = ctx.createGain(); this.voiceMakeup.gain.value = VOICE_MAKEUP;
     this.voiceLim = ctx.createDynamicsCompressor();
     this.voiceLim.threshold.value = -4; this.voiceLim.knee.value = 4; this.voiceLim.ratio.value = 12;
