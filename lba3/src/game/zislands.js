@@ -28,6 +28,7 @@ import { cloudTex, puffTex, domeTex } from './zeelich.js';
 import * as EP from './props-esmer.js';
 import { placeLayout, PLACES, TRALU, OLDWATCH, watchAt, BUILDINGS } from './zplaces.js';
 import { fitAdd } from './worldfit.js';
+import { buildCelPortal } from './celtemple.js';
 
 // The original's Zeelich islands (assets/lba2/islands, numbers from the user's files: tools/lba2-islands.py), then
 // our own places (src/game/zplaces.js). (Appended at the end: an island's place in the world is its index, and
@@ -1731,5 +1732,6 @@ function buildIsland(scene, physics, name, L, at) {
     }
     shuttleTraffic(group, updaters, { cx: 0, cz: 0, y: 30 + L.maxH, r: Math.max(w, d) * 0.7 + 30, n: 2, speed: 0.04 });
   }
+  if (name === 'celebration') R.templePortal = buildCelPortal(group, physics);   // (ZEELICH-1: the Dark Monk's temple's portal on the plaza; the hall is celtemple.js)
   return R;
 }
