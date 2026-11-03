@@ -6,12 +6,16 @@
 //
 // Who is there when:
 //   - the rooms: always, except in the evacuation (chapter 8), when only Luc and Mr Bazoo stay, packing (`stays`);
-//   - Citadel Spaceport: the grounded set (a port guard, two stranded travellers) in chapters 1–3, the flying set
-//     (passengers, a visitor at the board, a family) from chapter 4; the clerk and the mechanic in both; nobody in the
+//   - Citadel Spaceport and its terminal (SPACEPORT-1): the grounded set (a port guard at the shut gate, two stranded
+//     travellers) in chapters 1–3, with the GROUNDED notice up in the terminal; the flying set (passengers, a visitor at
+//     the board, a family) from chapter 4; the clerk, the café's keeper and the mechanic in both; nobody in the
 //     evacuation (the project's boarding queue is the story's: evacuation.js);
-//   - Zeelich Spaceport: whenever Zeelich is built, but the evacuation.
+//   - Zeelich Spaceport and its terminal: whenever Zeelich is built, but the evacuation (the terminal's notice too in
+//     chapters 1–3).
 import { ChapterBase } from './base.js';
 import { placeDefs, StoryRounds } from '../roomlife.js';
+import { TERMINAL } from '../terminal.js';
+import { ZTERMINAL } from '../zterminal.js';
 import '../text/interiors.js';
 
 export class InteriorLife extends ChapterBase {
@@ -21,7 +25,7 @@ export class InteriorLife extends ChapterBase {
   }
   npcDefs() {
     // (rebuilt when a place its people live in has just been built; otherwise the same list)
-    const R = this.game.regions, ids = ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'zeelich'];
+    const R = this.game.regions, ids = ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich'];
     const key = ids.map((id) => (R?.built(id) ? 1 : 0)).join('') + (this.game.world?.spaceport ? 1 : 0) + (R?.built('zeelich')?.spaceport ? 1 : 0);
     if (!this._defs || this._key !== key) { this._key = key; this._defs = placeDefs(this.game); }
     return this._defs;
@@ -43,5 +47,12 @@ export class InteriorLife extends ChapterBase {
   }
   // refreshCast: a placement that leaves a household round's person on their mark does not put them back on it
   keeps(n, p) { return this.rounds.keeps(n, p); }
-  update(dt) { this.rounds.update(dt); }
+  // the terminals' GROUNDED notices: up while passenger flights are grounded (chapters 1–3), as the clerks say
+  get grounded() { return this.story.index < 3; }
+  update(dt) {
+    this.rounds.update(dt);
+    const g = this.grounded;
+    // (each notice once per change, or when its room was built anew)
+    for (const T of [TERMINAL, ZTERMINAL]) if (T.notice && T.notice._shown !== g) { T.notice._shown = g; T.notice.setVisible(g); }
+  }
 }

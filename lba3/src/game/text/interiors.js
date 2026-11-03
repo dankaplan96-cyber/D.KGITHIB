@@ -14,7 +14,7 @@ Object.assign(STR.en, {
   n_hedda: 'Hedda', n_wim: 'Wim', n_osk: 'Osk',
   n_ama: 'Ama', n_gurt: 'Gurt', n_bern: 'Port Guard', n_lomba: 'Mrs Lomba', n_dov: 'Dov',
   n_ressa: 'Old Ressa', n_ollo: 'Ollo', n_esren: 'Esren', n_gunda: 'Gunda', n_bibi: 'Bibi',
-  n_velo: 'Velo', n_ennu: 'Ennu', n_oshra: 'Oshra',
+  n_velo: 'Velo', n_ennu: 'Ennu', n_oshra: 'Oshra', n_tavi: 'Tavi', n_pask: 'Pask',
 
   // ---- Chez Luc
   rs_luc_dry: "No water in the well, so it's all bottled from the harbour. Prices up, tempers down. Mostly.",
@@ -102,7 +102,7 @@ Object.assign(STR.en, {
   rs_osk_0: 'Parcels for Zeelich go to the spaceport. Parcels from Zeelich come here. Eventually.',
   rs_osk_1: "That teal crate's been on the belt all week. Nobody claims it. I've started saying good morning to it.",
 
-  // ---- Citadel Spaceport
+  // ---- Citadel Spaceport (SPACEPORT-1: Ama at the terminal's ticket counter, Tavi at its café, the guard at its gate)
   rs_ama_g0: "No passenger flights to Zeelich. The project's grounded them. I still sell the tickets, just not the flights.",
   rs_ama_g1: 'Refunds at this window, complaints at that one. That one is also this one.',
   rs_ama_f0: 'Zeelich Spaceport, pad one. For the islands, change there to an Esmer shuttle.',
@@ -114,15 +114,21 @@ Object.assign(STR.en, {
   rs_gurt_f0: "She came in this morning. I'm checking her over before she goes out again.",
   rs_gurt_f1: 'Crates for Zeelich on this side, crates from Zeelich on that side. Mixing them up is the fun part.',
 
-  rs_bern_g0: 'The hatch stays shut. Project orders. Read the note. It says the same, only longer.',
+  rs_bern_g0: 'The gate stays shut. Project orders. Read the notice. It says the same, only longer.',
   rs_bern_g1: "Only project flights this week. I don't make the rules. I just stand next to them.",
 
   rs_lomba_work: "Mind the case. It's presents. Mostly jam.",
-  rs_lomba_g0: "I've a sister on Zeelich and a ticket in my hand. And a bench. I've got a bench.",
+  rs_lomba_g0: "I've a sister on Zeelich and a ticket in my hand. And a seat. I've got a seat.",
   rs_lomba_g1: 'Grounded! By a project! Since when do projects ground people?',
 
   rs_dov_g0: "I've been here since the first sun came up. The ship hasn't moved. Neither have I.",
-  rs_dov_g1: "Ask the guard when we fly. He'll say 'not today'. He's been right every day so far.",
+  rs_dov_g1: "Ask the guard inside when we fly. He'll say 'not today'. He's been right every day so far.",
+
+  rs_tavi_work: 'Coffee, tea, or the Zeelich stuff that glows a bit. The glow is free.',
+  rs_tavi_g0: 'No flights means nobody in a hurry. Best week for the café since it opened.',
+  rs_tavi_g1: 'Mrs Lomba has had six teas. I have started giving her the pot.',
+  rs_tavi_f0: 'Ten minutes to boarding and everyone wants a coffee. Nine minutes, and they want it now.',
+  rs_tavi_f1: 'The cups go to Zeelich and back more than I do. I get postcards from them. Not really.',
 
   rs_ressa_f0: 'My first flight in thirty years. I packed a cushion. Esmer seats are firm.',
   rs_ressa_f1: 'My grandson works on Zeelich now. He says the clouds are lovely from underneath. Or above. One of those.',
@@ -140,11 +146,17 @@ Object.assign(STR.en, {
   rs_bibi_f0: "We're going in a SPACESHIP. Have you ever been in a spaceship? Oh. You have.",
   rs_bibi_f1: "I'm going to wave at Citadel from the window. You have to wave back.",
 
-  // ---- Zeelich Spaceport
+  // ---- Zeelich Spaceport (SPACEPORT-1: Velo at the terminal's counter, Pask the porter inside)
   rs_velo_g0: 'Passenger ships to Twinsun are held by the project. The project says when. I say sorry.',
-  rs_velo_g1: 'Welcome to Zeelich Spaceport. Mind the rail. The clouds look soft. They are not.',
-  rs_velo_f0: 'Ships to Citadel leave from this pad. For the islands, take an Esmer shuttle from the dock.',
-  rs_velo_f1: 'Welcome to Zeelich Spaceport. Mind the rail. The clouds look soft. They are not.',
+  rs_velo_g1: 'Welcome to Zeelich Spaceport. The clouds outside look soft. They are not.',
+  rs_velo_f0: 'Ships to Citadel leave from the pad, through that gate. For the islands, take an Esmer shuttle from the dock.',
+  rs_velo_f1: 'Welcome to Zeelich Spaceport. The clouds outside look soft. They are not.',
+
+  rs_pask_work: 'Mind your feet. This one is heavier than it looks. They always are.',
+  rs_pask_g0: 'No ships, but the cases keep coming down the lifts. People pack in hope.',
+  rs_pask_g1: 'Twelve cases by the gate, all for Twinsun. I know them all by name now.',
+  rs_pask_f0: 'Off the ship, down to the gate, up the lifts. Repeat until the suns change.',
+  rs_pask_f1: 'A Twinsun case is always heavier. They pack fruit. They always pack fruit.',
 
   rs_ennu_work: 'Everything I own for a week, in one case. It was a very careful week.',
   rs_ennu_g0: 'I was to see Twinsun and its two suns this week. The ship is not to see anywhere.',
