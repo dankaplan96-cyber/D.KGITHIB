@@ -13,10 +13,13 @@
 //    recompiles); it shows what the dark places hide (story/arsenal.js: the nooks).
 //  - Baldino's hop-pack (EQ-1, chapter 10): worn or taken off from here; it flies from Athletic's jump key. Its
 //    rules, model and flight live in jetpack.js (this.jet: updated and reset with the other gadgets).
+//  - EQUIP-2a, Arthur's pocket set and Bram's pump lance: held tools, worked with the attack key (tools.js; this.tools,
+//    updated and reset here too). E in the inventory puts one in his hand.
 import * as THREE from 'three';
 import { writeBodyStencil } from './characters.js';
 import { hitEnemy } from './weapons.js';
 import { Jetpack } from './jetpack.js';
+import { Tools } from './tools.js';
 import { offScene, CALM } from './offscene.js';
 
 export const GADGET = {
@@ -77,6 +80,7 @@ export class Gadgets {
     this.light.name = 'lantern';
     game.scene.add(this.light);
     this.jet = new Jetpack(game);   // Baldino's hop-pack (Hero.update calls jet.step)
+    this.tools = new Tools(game);   // EQUIP-2a: the pocket set and the pump lance (tools.js)
   }
   get h() { return this.game.hero; }
   get arms() { return this.h.arms; }
@@ -91,8 +95,17 @@ export class Gadgets {
       case 'conch': return this.blowConch();
       case 'lantern': return this.toggleLantern();
       case 'jetpack': return this.jet.toggleWorn();
+      case 'pocketset': case 'lance': return this.hold(id);
     }
     return false;
+  }
+
+  // a tool into his hand (the wheel does the same): already there, it says so
+  hold(id) {
+    const c = this.h.combat;
+    if (!c?.has(id)) { this.game.audio.play('deny'); return false; }
+    if (c.weapon !== id) c.equip(id); else this.game.hud.weapon?.(this.h);
+    return true;
   }
 
   placePenguin() {
@@ -277,6 +290,7 @@ export class Gadgets {
     }
     this.updateLantern();
     this.jet.update(dt);
+    this.tools.update(dt);
   }
   // a scene change: the penguin stays behind (it is gone), the shell and the lantern go with him
   reset() {
@@ -284,6 +298,7 @@ export class Gadgets {
     for (const L of this.looks) if (L.npc.listenTo === this.h) L.npc.listenTo = null;
     this.looks = [];
     this.jet.reset();
+    this.tools.reset();
   }
   sound(kind) {
     const au = this.game.audio;
