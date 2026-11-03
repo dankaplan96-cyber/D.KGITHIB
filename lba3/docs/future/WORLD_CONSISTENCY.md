@@ -27,11 +27,11 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
 
 | Ch | R1 residents | R2 cast moves | R3 rooms | R4 crossing seen | R5 spaceport |
 |---|---|---|---|---|---|
-| 3 Zeelich | ⚠ hub street yes; the eight original islands empty (ZEELICH_GAP) | ❌ Baldino, Oku and the others stand | ⚠ workshop has its life; ZEELICH-1 rooms not built | ❌ the end (home, then the ferry south) is a plain fade | ⚠ arrival deck only; SPACEPORT-1 ordered |
+| 3 Zeelich | ⚠ hub street yes; the eight original islands empty (ZEELICH_GAP) | ❌ Baldino, Oku and the others stand | ⚠ workshop has its life; ZEELICH-1 rooms not built | ✅ WC-1: the ship's film from Zeelich Spaceport, then the ferry arriving at Kesh's pier | ⚠ arrival deck only; SPACEPORT-1 ordered |
 | 4 The Dig | ⚠ Kesh yes; the research post, School, Temple: no | ❌ 16 speakers, 1 moves | — | — (same island) | — |
-| 5 Steam and Sand | ⚠ as 4 | ⚠ some scenes move people; the rest stand | — | ❌ Hesk's glider north is a plain fade | — |
+| 5 Steam and Sand | ⚠ as 4 | ⚠ some scenes move people; the rest stand | — | ✅ WC-1: the glider's film, the dunes over the buried hall → the Hamalayi foothills | — |
 | 6 The Pass | ❌ Lhar: three villagers on marks, no one else | ❌ | — | — | — |
-| 7 The Observatory | ❌ | ❌ | ⚠ the room has its keeper, standing | ❌ Hesk's glider home is a plain fade | — |
+| 7 The Observatory | ❌ | ❌ | ⚠ the room has its keeper, standing | ✅ WC-1: the glider's film, the monastery's terrace → Citadel's glider field | — |
 | 8 Evacuation | ⚠ two residents packing; everyone else mustered | ⚠ | ⚠ INTERIOR-LIFE empties rooms here | ✅ ship film | ⚠ the queue for the ships wants SPACEPORT-1 |
 | 9 The Council | ⚠ hub street yes; the upper districts thin | ❌ the council stands | ⚠ | ✅ arrives off the ship | ⚠ |
 | 10 The Network | ⚠ by region as above | ⚠ | ⚠ | ✅ the travel menu plays its films | ⚠ |
@@ -48,8 +48,32 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
   WC-4: not re-measured (interior-life covers chapters 1, 2, 4 and 8). R7 in Hebrew: three lines of chapters 1 and 3
   still spoke of a whole night; fixed. The chapter-3 Hebrew is still the old story (the shaft on Zeelich): open.
 
+- **WC-1 done (3.11, branch `wc-1`):** the three story crossings that were plain fades now play their journey films
+  around the story's own scene change (`src/game/travelfilm.js` `storyJourney`, `storyArrival`, `crossByShip`'s
+  `onward` leg; `tests/story-journeys.mjs`).
+  - Chapter 3's end (`story/chapter2.js toShell`): Doran's ship leaves Zeelich Spaceport with them (take-off, cabin,
+    space), then the ferry is seen coming in to Kesh's pier (`desert_ferry`), where chapter 4 starts; Doran steps off.
+    The two films chain cleanly: the ship's departure, the chapter change under the black, the ferry's arrival.
+  - Chapter 5's end (`story/steam.js board`): Hesk's story glider is in FunFrock's hangar (an interior, `condB`); the
+    `desert_glider` field is 110 m away on the beach. Chosen: a story spot on the sand in front of the buried hall
+    (`steam.js ROOF`, where the hangar's roof hatch opens onto the dunes), entered quietly under the film's black (no
+    save, no story hook); the glider is Hesk's (`valveroom.js buildGlider`, the fields' craft) built for the film. The
+    arrival is the travel point `hamalayi_glider`, which is chapter 6's start (`M.landing`) and Hesk's grounded glider.
+  - Chapter 7's end (`story/observatory.js leave`): Hesk said the glider would launch from the monks' slope, not the
+    foothills field. Chosen: a story spot on the terrace's lip east of the monastery's gate (`observatory.js SLOPE`),
+    nose over the drop to Lhar. The arrival is `citadel_glider`; chapter 8 now starts on that field's landing spot
+    instead of 47 m east of it (`evacuation.js begin`; the field is due north of the lighthouse, as its opening line
+    says), so the film ends where the chapter puts him. Hesk's line at the gate is his own now (it repeated chapter
+    6's "I'll stay with her and dig her out").
+  - Each next chapter's title card and first line wait for the arrival film. The skip ends the whole journey's film
+    (the plain transition follows); films off (`?nocine`), a missing point or a failed film: the plain transition as
+    before. Saves are unchanged (nothing new is saved; the quiet scene change saves nothing).
+  - Not done: chapter 10's Baldino departure spot (optional): he has no leaving scene to hang it on (he is simply at
+    the shaft once the network is done), so it is not cheap. No parked glider stands on the monks' slope before the
+    film (the craft is built for the film).
+
 ## Work orders (in this order; at most two agents at a time)
-1. **WC-1 Journeys.** Chapter 3's end: `crossByShip` from Zeelich Spaceport with Doran aboard, then the ferry's film to
+1. **WC-1 Journeys (done 3.11, above).** Chapter 3's end: `crossByShip` from Zeelich Spaceport with Doran aboard, then the ferry's film to
    Kesh's pier. Chapters 5 and 7: Hesk's glider through `playJourney(mode 'glider')` between the travel points. Chapter
    10: Baldino's ship leaving Zeelich as a spot (`launchShip`'s pattern) when he sets off. Small; after INTERIOR-LIFE
    merges (it may touch `story/chapter2.js`).
