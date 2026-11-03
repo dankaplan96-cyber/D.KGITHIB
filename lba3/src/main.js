@@ -1118,6 +1118,7 @@ class Game {
       h.pos.set(sp.x, this.physics.groundAt(sp.x, sp.z), sp.z);
       h.angle = sp.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
+      h.reanchor = true;   // (CAM-DOORS: a direction held through the door keeps his way: Hero.inputYaw)
       this.lastSafe = { x: sp.x, z: sp.z };
       this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
@@ -1146,6 +1147,7 @@ class Game {
       h.pos.set(to.x, this.physics.groundAt(to.x, to.z), to.z);
       h.angle = to.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
+      h.reanchor = true;
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
       this.occSnap = true;   // (Nell's roof takes its faded state at once on the first frame: Game.occluders)
@@ -1158,6 +1160,16 @@ class Game {
       if (this.state !== 'title') this.save(false);
     };
     if (instant) go(); else this.startTransition(go);
+  }
+
+  // ROOMS-FULL: is (x, z) on room R's floor (inside its shell, R.bounds) and clear of everything solid at his height?
+  // (rooms without bounds: yes)
+  onRoomFloor(R, p) {
+    if (!R?.bounds?.length || !Number.isFinite(p?.x) || !Number.isFinite(p?.z)) return !!R && Number.isFinite(p?.x);
+    if (!R.bounds.some((b) => p.x > b.x0 + 0.3 && p.x < b.x1 - 0.3 && p.z > b.z0 + 0.3 && p.z < b.z1 - 0.3)) return false;
+    const P = this.physics, y = P.groundAt(p.x, p.z);
+    for (const c of P.near(p.x, p.z)) if (c.enabled && c.top > y + 0.45 && (c.bottom ?? -Infinity) < y + 1.5 && P._inside(c, p.x, p.z, 0.3)) return false;
+    return true;
   }
 
   // somewhere to put the hero back after a fall: level ground for a metre all round, nothing steep next to it
@@ -1265,7 +1277,9 @@ class Game {
     this.story.applyFlags();
     const at = { x: s.hero.x, z: s.hero.z, a: 0 };
     this.resetCombat('drop'); // (a bonus on the ball from before the load is nobody's)
-    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, at, true);
+    // (ROOMS-FULL: a spot saved in a room that has been drawn smaller since, now off its floor or inside its furniture:
+    //  the room's own spawn instead)
+    if (s.room && this.regions.has(s.room)) this.enterRoom(s.room, (R) => (this.onRoomFloor(R, at) ? at : R.spawn), true);
     else if (s.room) this.exitRoom(this.lastSafe || at, true); // (a room this build doesn't have: back outdoors)
     else this.exitRoom(at, true);
     this.gadgets.jet?.afterLoad();   // (never in the air, the sea or inside something: jetpack.js)

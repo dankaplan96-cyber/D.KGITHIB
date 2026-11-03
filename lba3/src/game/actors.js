@@ -680,10 +680,15 @@ export class Hero extends Actor {
   // swing never turns his way and chases itself (a held side arrow runs him straight on while the view comes round);
   // a new direction (let go, or more than 20° another way: Up after Up-Right) reads the view as it is now, so Up goes
   // where the view looks
+  // CAM-DOORS: after a scene change (a door, an exit: Game.enterRoom/exitRoom set `reanchor`) the direction still held
+  // from the last scene is read as the way he came in, so he walks straight on and the Follow camera stays at his back
+  // (it was read against the old view's heading: out of a room's iso view he turned off his way and the view swung
+  // round after him; into a room he turned to the street's heading)
   inputYaw(mv, g) {
     const yaw = g.camRig.yaw;
-    if (g.camRig.mode !== 'follow' || Math.hypot(mv.x, mv.y) <= 0.08) { this.refYaw = null; return yaw; }
+    if (g.camRig.mode !== 'follow' || Math.hypot(mv.x, mv.y) <= 0.08) { this.refYaw = null; this.reanchor = false; return yaw; }
     const a = Math.atan2(mv.x, mv.y);
+    if (this.reanchor) { this.reanchor = false; this.refStick = a; this.refYaw = this.angle - Math.PI + a; }
     if (this.refYaw == null || Math.abs(angleDiff(this.refStick, a)) > Math.PI / 9) { this.refYaw = yaw; this.refStick = a; }
     return this.refYaw;
   }

@@ -21,12 +21,14 @@
 //                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
-import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, jar, plate, noticeBoard, pottedPlant, barrel } from './props.js';
+import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, jar, plate, noticeBoard, pottedPlant, barrel, wallShelf, hangingLamp, rug, ledger, deskBell, papers, wallClock, crate } from './props.js';
+import { goodsShelf, shelfGoods, sackPile, sack, boxStack, basket, hanging } from './roomdress.js';
 
 export const BAZOO_AT = { x: 6700, z: 0 };
-// (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the goods and the tables their own size)
+// (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the goods and the tables their own size.
+//  ROOMS-FULL, the user 3.11, "the shop feels empty … maybe shrink a little and add detail": 1.25 times, and stocked)
 export const BAZOO_PLAN = (() => {
-  const F = 1.5, W = 8.4 * F, D = 6.0 * F, LX = -W / 2, BZ = -D / 2, CX = 0.2 * F, CZ = 0.5 * F, CW = 3.6, CD = 1.5;
+  const F = 1.25, W = 8.4 * F, D = 6.0 * F, LX = -W / 2, BZ = -D / 2, CX = 0.2 * F, CZ = 0.5 * F, CW = 3.6, CD = 1.5;
   return { F, W, D, LX, BZ, DOORZ: 1.8 * F, CX, CZ, CW, CD,
     till: { x: CX, z: CZ - 0.25, a: 0 },          // (Mr Bazoo's spot inside the counter's U, at the till)
     front: CZ + CD / 2 - 0.25 + 0.27,             // (the counter's front face, toward the door's side of the room)
@@ -80,8 +82,8 @@ export function buildBazooRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the goods and
   //  the tables keep their size)
-  const P = BAZOO_PLAN, { F, W, D } = P, H = 4.2;
-  R.view = 10.5; R.follow = 0.6; R.music = 'home';
+  const P = BAZOO_PLAN, { F, W, D } = P, H = 3.8;
+  R.view = 10; R.follow = 0.6; R.music = 'home';
   // (the same pale grey blocks as the tavern: Citadel's stone inside, lit a little from within)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
@@ -130,6 +132,28 @@ export function buildBazooRoom(scene, physics) {
   B.put(1.4 * F, 2.4 * F, 0.1, (kk) => { kk.add(rbox(0.9, 0.42, 0.6, 0.03), MAT.wood('honey'), 0, 0.21, 0); for (const sx of [-0.2, 0.2]) kk.add(rbox(0.36, 0.06, 0.5, 0.01), MAT.paint('#2a6a8a', 0.6), sx, 0.45, 0); return { hw: 0.45, hd: 0.3, top: 0.48 }; });
   // the prices on a board by the door
   k.at(LX + 0.03, 1.5, DOORZ - 1.3, Math.PI / 2, () => noticeBoard(k, 0.7, 0.5, 11));
+
+  // --- ROOMS-FULL: a shop that is stocked. Shelves of goods over the back tables and in two corners, sacks and
+  // parcels waiting by the walls, his ledger and bell on the counter, lamps over it, a rug where customers stand,
+  // a striped cloth on the wall (all props: no new lights; the walkways and the door stay clear)
+  for (const t of [T.corner, T.fruit, T.bottle]) for (const y of [1.55, 2.15]) k.at(t[0], y, BZ + 0.16, 0, () => { wallShelf(k, { w: t[3] - 0.1, pal: 'dark' }); shelfGoods(k, t[3] - 0.3, 0.022, Math.round(t[0] * 7 + y * 3), 0); });
+  B.put(LX + 0.2, -2.6, Math.PI / 2, (kk) => goodsShelf(kk, { w: 1.3, h: 2.0, pal: 'dark', seed: 3 }));
+  B.put(W / 2 - 0.45, 1.5, 0.15, (kk) => { const f = crate(kk, 0.62, { pal: 'pale' }); kk.at(0, 0.62, 0, 0, () => basket(kk, { r: 0.2, fill: '#e8b84a' })); return f; });
+  B.put(W / 2 - 0.65, D / 2 - 0.55, 0.3, (kk) => sackPile(kk, { seed: 2 }));
+  B.put(W / 2 - 0.55, BZ + 0.38, 0, (kk) => sack(kk, { s: 1.0, c: '#c8b48a' }));
+  B.put(-1.0, D / 2 - 0.45, 0.15, (kk) => boxStack(kk, { n: 3, seed: 4, w: 0.6 }));
+  k.at(1.4 * F, 0.48, 2.4 * F, 0.1, () => basket(k, { r: 0.18, fill: '#e8a030' }));
+  // the counter: his ledger open by the till, the bell, a few receipts, a basket of red fruit on its arm
+  const FZ = CZ + CD / 2 - 0.25;
+  ledger(k, CX + 0.85, 0.995, FZ, 0.1);
+  deskBell(k, CX - 0.5, 0.995, FZ + 0.12);
+  papers(k, CX + 1.35, 0.995, FZ - 0.02, 3, 5);
+  k.at(CX - CW / 2 + 0.25, 0.995, CZ + 0.5, 0, () => basket(k, { r: 0.15, fill: '#c8302a' }));
+  for (const dx of [-0.9, 0.9]) k.at(CX + dx, 0, CZ + 0.4, 0, () => hangingLamp(k, 2.7, H, { shade: '#2f6f74' }));
+  // where customers stand before the counter: a rug; the striped cloth on the back wall over the plant, a clock
+  k.at(CX - 1.15, 0.01, P.front + 0.95, 0, () => rug(k, 2.0, 1.1, ['#b0302c', '#e8dcc0', '#2f6f74', '#7a2a22', '#f2ead6'], 7));
+  k.at(PX, 2.55, BZ + 0.02, 0, () => hanging(k, { w: 1.0, h: 1.1, bands: ['#2f6f74', '#e8dcc0', '#b0302c', '#e8dcc0', '#2f6f74'] }));
+  k.at(LX + 0.04, 2.55, T.rabbit[1], Math.PI / 2, () => wallClock(k, 0.22));
 
   B.light('#ffe8c8', 5.5, 13, -1.0 * F, 3.6, 0.0); B.light('#ffe8c8', 5, 12, 2.6 * F, 3.6, -0.5 * F); B.light('#fff0d8', 3, 9, 3.4 * F, 2.8, 2.0 * F);
   return { bazoo: B.finish() };

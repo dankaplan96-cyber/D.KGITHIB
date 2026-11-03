@@ -133,7 +133,11 @@ const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, 
 // cluttered view waits for the turn to end. A choice is kept unless another is CH_K_KEEP cheaper; back to his back once
 // that has stayed clear CH_SW_HOLD s, and then not swung out again for CH_SW_COOL s unless his back is blocked outright
 // and the arm would come in past CH_COOL_ARM of it (a swing out, back and out again turned the view three ways). The swing is eased (CH_SW_V, CH_SW_A) and the view's whole turn stays within
-// CH_VMAX; a new shot (a door) starts from it at once and holds it CH_FRESH_HOLD s. Drawn in close behind a post (a gantry's leg in the fort yard)
+// CH_VMAX; a new shot not at a door starts from it at once and holds it CH_FRESH_HOLD s. CAM-DOORS (the user on Follow:
+// "the camera doesn't always lock when I go from room to room"): a scene change — a door, an exit, a load — starts
+// right behind his back and keeps there, no swing round him, until he has been CH_DOOR_T s in the new scene and is
+// CH_DOOR_R m from where he came in (out of a house the camera stood 60-80° off his back, the house behind him, and
+// held there 1.5 s while he walked away); the arm comes in as it must meanwhile, over his shoulder at the doorstep. Drawn in close behind a post (a gantry's leg in the fort yard)
 // with the arm it wants clear beyond it, it used to stay there: the swing side-steps the post (CH_SIDE), held while the
 // arm lets out past it to CH_SIDE_OUT m (at most CH_SIDE_HOLD s).
 // The ground's lift stands the camera no steeper than CH_RIM_EL over his pivot: over a cliff's rim the arm comes in
@@ -141,7 +145,7 @@ const CH_SHOULDER = 0.22, CH_LOCK_K = 0.45, CH_LOCK_MAX = 4, CH_LOCK_ARM = 0.3, 
 // its least and look down over his shoulder (CH_OVER_*, as before).
 const CH_SW_STEP = (10 * Math.PI) / 180, CH_SW_MAX = (70 * Math.PI) / 180, CH_SW_FAR = (90 * Math.PI) / 180, CH_RISE = [0, 0.12, 0.24, 0.36, -0.25, -0.45], CH_RISE_TOP = 0.86, CH_DIP_MIN = 0.06, CH_FRAC = [1, 0.8, 0.6, 0.42], CH_SIGHT_G = 0.45, CH_SIGHT_R = 0.7, CH_LOW_WALL = 2.4;
 const CH_K_SW = 1 / CH_SW_MAX, CH_K_RISE = 0.5 / 0.36, CH_K_ARM = 4.4, CH_K_PIPE = 0.6, CH_K_KEEP = 0.2, CH_K_CLUT = 0.15, CH_SEARCH_T = 0.15, CH_SEARCH_N = 24, CH_SW_HOLD = 1.2, CH_SW_DELAY = 0.4, CH_SW_COOL = 3, CH_COOL_ARM = 0.5;
-const CH_SIDE = [0.17, 0.35, 0.52], CH_STUCK_T = 0.3, CH_SIDE_HOLD = 4, CH_SIDE_OUT = 5, CH_FRESH_HOLD = 1.5, CH_SW_STILL = 0.3;
+const CH_SIDE = [0.17, 0.35, 0.52], CH_STUCK_T = 0.3, CH_SIDE_HOLD = 4, CH_SIDE_OUT = 5, CH_FRESH_HOLD = 1.5, CH_SW_STILL = 0.3, CH_DOOR_T = 1.0, CH_DOOR_R = 3, CH_DOOR_OUT_V = 7, CH_DOOR_OUT_A = 18, CH_DOOR_OUT_T = 3;
 const CH_CLUT = [[1.1, 1.0], [-1.1, 1.0], [2.6, 0.7], [-2.6, 0.7], [0, 2.4]];
 // G1-CAM: after the arm is cut in out of something (the camera dropped under an eave with it) the view's tilt eases for
 // CH_KEEP_EASE s instead of flattening in the frame, its look-at point drawn no nearer than CH_KEEP_K of the way
@@ -858,7 +862,7 @@ export class CameraRig {
   // chase's own heading turned this frame (the whole view's turn stays within vmax)
   _chaseClear(dt, C, T, yaw0, full, pq, heroV, fresh, lock, dyc, vmax) {
     if (fresh || C.sw == null) Object.assign(C, { sw: 0, swV: 0, rise: 0, riseV: 0, swGoal: 0, riseGoal: 0, swCost: 0, searchT: 0, baseT: 0, srch: null, sideT: 0, coolT: 0 });
-    if (lock) { C.swGoal = 0; C.riseGoal = 0; C.baseT = 0; C.sideT = 0; }
+    if (lock || C.door) { C.swGoal = 0; C.riseGoal = 0; C.baseT = 0; C.sideT = 0; C.srch = null; }   // (CAM-DOORS: at his back after a scene change)
     else if (!fresh && (C.freshT = Math.max(0, (C.freshT || 0) - dt)) > 0) { /* (a new shot holds its view CH_FRESH_HOLD s: no move just after the cut) */ }
     else if (C.sideT > 0 && (C.arm ?? 0) < Math.min(C.wantOut ?? 0, CH_SIDE_OUT) - 0.1) C.sideT -= dt;   // (a side-step past a post, held: below)
     else {
@@ -945,8 +949,13 @@ export class CameraRig {
     const facing = () => (lock ? Math.atan2(hero.x - tp.x, hero.z - tp.z) + CH_SHOULDER : heroAngle + Math.PI);
     const fresh = snap || !C.init;
     if (fresh) {
-      Object.assign(C, { init: true, yaw: facing(), vyaw: 0, goal: facing(), h: gy, vh: 0, band: gy, hold: false, arm: null, armV: 0, clearT: 0, lift: 0, vlift: 0, pv: null });
+      Object.assign(C, { init: true, yaw: facing(), vyaw: 0, goal: facing(), h: gy, vh: 0, band: gy, hold: false, arm: null, armV: 0, clearT: 0, lift: 0, vlift: 0, pv: null, fPrev: null, steadyT: 0, lowT: 0, stuckT: 0, pT: null });
       cam.fov = CH_FOV;
+      // CAM-DOORS: a scene change (snap) starts at his back and keeps there while he stays by the door (CH_DOOR_*)
+      C.door = snap ? { x: hero.x, z: hero.z, t: 0 } : null; C.doorOutT = snap ? CH_DOOR_OUT_T : 0;
+    } else {
+      C.doorOutT = Math.max(0, (C.doorOutT || 0) - dt);
+      if (C.door && (C.door.t += dt) > CH_DOOR_T && Math.hypot(hero.x - C.door.x, hero.z - C.door.z) > CH_DOOR_R) C.door = null;
     }
     // the heading: his facing (a small steering correction inside CH_DEAD_YAW moves nothing) through the spring;
     // camera-relative controls pushed back (toward the camera) hold it
@@ -1005,7 +1014,7 @@ export class CameraRig {
     }
     // CAM-CLEAR-2: stuck close behind a post (the way out through it blocked, the arm it wants clear beyond it): the
     // swing side-steps it, by the least of CH_SIDE that clears the way out, held until the arm is out past it
-    if (!fresh && !lock && C.stuckT > CH_STUCK_T && C.arm < CH_SHORT + 1.5) {
+    if (!fresh && !lock && !C.door && C.stuckT > CH_STUCK_T && C.arm < CH_SHORT + 1.5) {
       C.stuckT = 0;
       side: for (const d of CH_SIDE) for (const sg of [1, -1]) {
         const sw = C.sw + sg * d, yw = C.yaw + sw;
@@ -1083,10 +1092,13 @@ export class CameraRig {
         C.armV += clamp(vw - C.armV, -CH_IN_A * dt, CH_IN_A * dt);
         C.arm = Math.max(want, C.arm + Math.min(0, C.armV) * dt);
         if (C.arm === want) C.armV = 0;
-      } else if (want > C.arm + 0.05 && (C.clearT += dt) > CH_HOLD) {
+      } else if (want > C.arm + 0.05 && (C.clearT += dt) > (C.doorOutT > 0 ? 0 : CH_HOLD)) {
         // out: only once the way has stayed clear CH_HOLD s, slowly and eased (no pumping in and out past a corner)
-        const e = want - C.arm, vw = Math.min(CH_OUT_V, Math.sqrt(1.6 * CH_OUT_A * e));
-        C.armV += clamp(vw - C.armV, -CH_OUT_A * dt, CH_OUT_A * dt);
+        // (CAM-DOORS: just out of a door, drawn in over his shoulder at the doorstep, it trails out after him as fast as
+        // the way behind him clears: CH_DOOR_OUT_*; it held 0.6 s and then crept out at 2.5 m/s, his back filling the view)
+        const oV = C.doorOutT > 0 ? CH_DOOR_OUT_V : CH_OUT_V, oA = C.doorOutT > 0 ? CH_DOOR_OUT_A : CH_OUT_A;
+        const e = want - C.arm, vw = Math.min(oV, Math.sqrt(1.6 * oA * e));
+        C.armV += clamp(vw - C.armV, -oA * dt, oA * dt);
         C.arm = Math.min(want, C.arm + Math.max(0, C.armV) * dt);
       } else { C.armV = C.armV > 0 ? Math.max(0, C.armV - CH_OUT_A * dt) : Math.min(0, C.armV + CH_IN_A * dt); if (want <= C.arm + 0.05) C.clearT = 0; }
       W.occ = C.arm - a0; C.want = want; C.tight = tier > 0;

@@ -22,12 +22,14 @@
 //                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
-import { MAT, M, TEX, CANV, rbox, plane, cyl, sphere, lathe, canvasTex, chair, noticeBoard, pottedPlant } from './props.js';
+import { MAT, M, TEX, CANV, rbox, plane, cyl, sphere, lathe, canvasTex, chair, noticeBoard, pottedPlant, hangingLamp, rug, ledger, deskBell, papers, coatStand } from './props.js';
+import { sack, boxStack, goodsShelf, hanging } from './roomdress.js';
 
 export const TICKET_AT = { x: 6800, z: 0 };
 // (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the furniture its own size)
+// (ROOMS-FULL, the user 3.11: 1.25 times, and furnished further)
 export const TICKET_PLAN = (() => {
-  const F = 1.5, W = 6.4 * F, D = 6.4 * F, LX = -W / 2, BZ = -D / 2, DOORZ = 1.9 * F, CZ = -0.4 * F;
+  const F = 1.25, W = 6.4 * F, D = 6.4 * F, LX = -W / 2, BZ = -D / 2, DOORZ = 1.9 * F, CZ = -0.4 * F;
   return { F, W, D, LX, BZ, DOORZ, CZ, CX0: LX + 0.9, CX1: W / 2 - 1.0 * F, CHD: 0.32,   // (the counter across the room, half its depth)
     till: { x: 0.6 * F, z: CZ }, tickets: { x: 1.6 * F, z: CZ },
     clerk: { x: 0.6 * F, z: CZ - 0.75, a: 0 },                       // (the clerk's spot: behind the counter at the till)
@@ -86,8 +88,8 @@ export function buildTicketRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen; the
   //  furniture keeps its size)
-  const P = TICKET_PLAN, { F, W, D } = P, H = 4.0;
-  R.view = 10; R.follow = 0.55; R.music = 'home';
+  const P = TICKET_PLAN, { F, W, D } = P, H = 3.7;
+  R.view = 9.5; R.follow = 0.55; R.music = 'home';
   // (the same pale grey blocks as the tavern and the shop: Citadel's stone inside, lit a little from within)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
   const rough = MAT.rubble('grey'), cap = MAT.stone('grey', 1.4);
@@ -125,6 +127,20 @@ export function buildTicketRoom(scene, physics) {
   k.add(plane(1.0, 0.72), shipPoster(), 0.4 * F, 2.05, BZ + 0.03);
   // twelve years on: the ferry's timetable by the door
   k.at(P.board.x, 1.5, P.board.z, Math.PI / 2, () => noticeBoard(k, 0.6, 0.5, 13));
+
+  // --- ROOMS-FULL: the counter's ledger, bell and forms, two lamps over it, a rug on the public side, the staff's
+  // pigeonholes of parcels and a mail sack behind, a coat stand and a pile of luggage at the front (props only)
+  const CXm = (CX0 + CX1) / 2;
+  ledger(k, CXm - 1.4, 1.045, CZ + 0.02, -0.1);
+  deskBell(k, P.till.x + 0.55, 1.045, CZ + 0.18);
+  papers(k, CXm - 0.5, 1.045, CZ + 0.05, 3, 4);
+  for (const dx of [-1.5, 1.3]) k.at(CXm + dx, 0, CZ, 0, () => hangingLamp(k, 2.6, H, { shade: '#b0302c' }));
+  k.at(0.2, 0.01, 1.7, 0, () => rug(k, 2.6, 1.3, ['#b0302c', '#e8dcc0', '#2f6f74', '#7a2a22', '#f2ead6'], 3));
+  B.put(-1.25, BZ + 0.22, 0, (kk) => goodsShelf(kk, { w: 1.2, h: 1.8, d: 0.34, rows: 3, pal: 'honey', seed: 12 }));
+  B.put(-2.2, BZ + 0.35, 0.4, (kk) => sack(kk, { s: 0.95, c: '#8a7a5a', tie: '#b0302c' }));
+  B.put(W / 2 - 0.35, 2.7, 0, (kk) => { coatStand(kk); return { r: 0.25, top: 1.8 }; });
+  B.put(W / 2 - 0.5, D / 2 - 0.45, 0.2, (kk) => boxStack(kk, { n: 3, seed: 9, w: 0.55 }));
+  k.at(-3.0, 2.3, BZ + 0.03, 0, () => hanging(k, { w: 0.8, h: 1.0, bands: ['#2f6f74', '#e8dcc0', '#b0302c', '#e8dcc0', '#2f6f74'] }));
 
   B.light('#ffe8c8', 5, 12, -0.5 * F, 3.4, 0.8 * F); B.light('#ffe8c8', 4, 10, 1.8 * F, 3.4, -1.6 * F);
   return { ticket: B.finish() };
