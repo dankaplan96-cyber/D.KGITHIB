@@ -349,6 +349,20 @@ export class Steam extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- HUD
+  // GUIDE: Brosk, the oasis, the buried hall, the relief valve, Kesh, Hesk on Desert Island's map (base.js star)
+  markers() {
+    const f = this.f, D = this.game.regions?.built('desert');
+    if (!this.isCur() || !f.c5_planned || !D) return [];
+    if (f.c5_glider) return this.stars(D.ruins.door);
+    if (f.c5_radio) return this.stars(this.starNpc('hesk'));
+    if (f.c5_vent) return this.stars(this.starNpc('tarra'));
+    if (f.c5_relief) return [];
+    if (f.c5_routed) return this.stars(D.bore.valve);
+    if (f.c5_dug || f.c5_shovel) return this.stars(D.ruins.door);
+    if (f.c5_jar && !f.c5_water) return this.stars(D.oasisEdge);
+    if (f.c5_needShovel || f.c5_jar) return this.stars(this.starNpc('dtrader'));
+    return this.stars(D.ruins.door);
+  }
   objective() {
     const f = this.f;
     if (!f.c5_planned) return '';

@@ -427,6 +427,20 @@ export class Dig extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- HUD
+  // GUIDE: Kesh's people, the pump, the rope, the post, the dig on Desert Island's map (base.js star)
+  markers() {
+    const f = this.f, D = this.game.regions?.built('desert');
+    if (!this.isCur() || !f.c4_started || !D) return [];
+    if (f.c4_seals3) return this.stars(D.dig.door);
+    if (f.c4_digOpen && f.c4_bottom) return this.stars(D.dig.carvings);
+    if (f.c4_digOpen) return this.stars(D.dig);
+    if (f.c4_notebook) return this.stars(D.dig.gate);
+    if (f.c4_ilka) return this.stars(D.post.desk);
+    if (f.c4_trust) return f.c4_heskAsk && !f.c4_rope ? this.stars(D.rope) : this.stars(this.starNpc('hesk'));
+    if (f.c4_pump) return this.stars(this.starNpc('tarra'));
+    if (f.c4_pumpTask) return this.stars(D.pump.state === 'leak' ? D.pump.joint : D.pump);
+    return this.stars(this.starNpc('tarra'));
+  }
   objective() {
     const f = this.f;
     if (!f.c4_started) return '';

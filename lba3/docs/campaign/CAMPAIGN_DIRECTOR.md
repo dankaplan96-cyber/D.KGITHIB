@@ -52,15 +52,27 @@ relays at five places the player already knows, each held by a friend (Oku, Mira
 and Sefa). At the bore on Desert Island the project's drones and Vesk's men still fight for him; **Dallan orders his old
 guard to stand down**, and only FunFrock's machines keep fighting. The doors open; the shaft, the machinery, the crystal
 galleries, Sendell (the child under the shell is not ready to wake), the core: three pylons powered by Zoé, Mira and Oku
-above, Vesk's guardian, his overload coil broken, and Twinsen switches the bore to a shield himself.
+above, Vesk's guardian, then his overload, which pulls on every station: Ilka and Dallan bleed it through the desert
+vent and Pim and Sefa keep the dome's light on the relay (by radio). The coil broken, the console sparks over Vesk and
+**the player chooses**: pull him clear, or leave him for the council's guards. Twinsen switches the bore to a shield himself.
 
 Four days later, dinner at home. The end card answers the 30 %: the heat posts glow again at half heat for every house,
-Kesh has its oasis, Lhar its village, Vesk waits in a cell. In Keep Exploring everyone is back where they live and says
+Kesh has its oasis, Lhar its village, Vesk waits in a cell (pulled clear, he asks to see the shield's readings every
+day, and sends Baldino corrections). In Keep Exploring everyone is back where they live and says
 so: Gilbert by his cool well, Doran on his quay, the hill families at their farms, Baldino at his bench, Nara and Oku on
 the street, Ilka, Dallan (carrying water for the people he left off his list), Tarra and Hesk in Kesh, Yorna, Pim and
-Lhar's people home in their village.
+Lhar's people home in their village; the lighthouse's lamp room is open, with Arthur's chalk still on the dial.
+
+Throughout, away from Citadel the holomap and minimap now carry the objective's gold star, as Citadel's chapters did.
 
 ## 2. Chapter coverage
+
+**Run 2 (the open items, 3.11 afternoon):** segments 06–14 replayed by input from the run-1 chapter-2 save with the
+guidance stars, the finale's radio, Vesk's choice, Dallan's line and the lamp room in place: all 9 PASS, first try each
+(06 needed no ISO fallback on the mill). ISO assists: the Zeelich depot as before; at the bore one drone and the sentry
+(the clone was beaten by input this time). Vesk's choice made with E (pulled clear).
+
+**Run 1:**
 
 One chain from a new game to Keep Exploring, 3.11.2026, on this branch with the fixes in place (LIGHTHOUSE-GATHER was
 made after segment 11 had run, so that segment was played again from the chain's chapter-7 save), served at
@@ -140,6 +152,47 @@ in the kept save).
 "releasing the mills" that Twinsen freed in chapter 9 and that turned for the relay in chapter 10; now the friends are
 "still at their stations". Played in segment 14.
 
+**6. Away from Citadel the map showed no objective (chapters 3–7, 9, 10; GUIDE, `8331b79c`).**
+*Before (played: each chapter's start from the chain's saves, the map opened by its key):* the region maps name their
+places (Ilka's camp, the research post, the dig, the observatory) but showed no objective; on Desert Island "Find the
+professor who found the crystals" had no pointer at all. Chapters 1, 2 and 8 had gold stars on Citadel.
+*Change:* each chapter's markers follow its objective: the person who can help (Tarra, Hesk, Brosk, Pim, Yorna, Nara,
+Oku), the thing to use (the pump, the rope, the notebook's desk, the dig's gate, the buried hall, the relief valve, the tree,
+the kite, the heating station, the winch, the dome, the vent, the mills, the console), the next door (Baldino's workshop,
+the council house), every unfinished station in chapter 10, the code box at the end. Chapters 11 and 12 are rooms in a
+line and keep their room maps.
+*Verified:* a probe on the chain's saves (a star at every chapter start, holomap screenshots of Desert Island and the
+Hamalayi), then segments 06–14 by input with the stars in every state (run 2: all PASS, no page errors).
+
+**7. The finale did not hear two of the five stations, and Vesk had no last decision (FINALE-ALLIES + VESK-CHOICE,
+`68374b41`).** *Before:* Ilka and Dallan, Pim and Sefa held relays in chapter 10 and were silent at the core; beaten,
+Vesk warned of the cold and was taken away. *Change:* when Vesk orders the overload, Ilka and Dallan bleed it through the
+desert vent and Pim and Sefa turn the dome into the sun (radio). After the coil the console sparks over him and the player
+picks: pull him clear ("Why? I'd have left you down here", then a warning about the shield's coolant loop: the engineer
+first), or leave him for the guards (his pride: "see how long a sketch holds without the man who built it"). The end card
+and Baldino remember it. *Verified:* tests/chapter3.mjs PASS (30), segment 14 by input (run 2, the choice made with E),
+tests/epilogue-home.mjs.
+
+**8. Dallan's way to Zeelich (C9 DALLAN'S WAY, `e1ef2fcc`):** Hesk flew him up from Kesh, then the next project ship.
+Played in segment 12 (run 2).
+
+**9. The lamp room after the ending (LIGHTHOUSE-OPEN, `e2c70258`):** open, with a line at Zoé's microphone; opening it
+found that its stair led back through chapter 3's exit into Baldino's workshop, so the epilogue has its own exit.
+tests/epilogue-home.mjs PASS (12).
+
+**10. Measured, not changed:**
+- *The old mill's stair-stones.* All seven hops are the same: 1.09 m up, 1.71 m between stone centres (zeelich.js:
+  `balY 8.75 / 8`, 30° apart at 3.3 m). The jump rises 1.19 m (actors.js JUMP) and the hero steps onto anything up to
+  0.55 m above his feet (physics.js STEP_UP), so mid-air he lands on a stone once he is 0.54 m above the last: a window of
+  about 0.5 s and 2 m at a run. Not tight for a person; the bot's misses are its run-up (it made the same hop 5/5 from a
+  standing start, first try in chapter 10, and every attempt in run 2).
+- *The two fights finished by ISO.* The Zeelich depot is Citadel's depot fight from chapter 2 (two drones, a guard, a dog)
+  with the Quetch guard (armour 1, 3 HP, a 1-point baton) replaced by a Grobo guard (armour 2: a charged ball at magic
+  level 1, 5 HP, a 2-point baton), against Twinsen's 11 HP and his clover leaves: one step harder, a chapter later, and the
+  bot won it by input once in three runs. The bore's wave 2 is now the clone (4 HP, armour 1) and the sentry, with a heart
+  and a flask between the waves, against 12 HP at magic level 3: lighter than before STAND-DOWN. Neither is clearly
+  harsher than its neighbours; no numbers changed. A person's check is still owed (QA.md).
+
 What each fix carries forward from LBA1/LBA2: a familiar place changed on return (the epilogue's homes, Lhar lived in
 again), a person solving what a fight would (Dallan and his old guard, as LBA2's inhabitants open ways the ball can't),
 and the island's own landmarks meaning what they say (the lighthouse).
@@ -182,28 +235,43 @@ Sendell is not an adversary: she asks for help instead of saving everyone (ch 7,
 | tests/chapter8.mjs | PASS, 13 checks |
 | tests/cast-rounds.mjs `ONLY='chapter 8'` | PASS, 38 checks |
 | tests/save-migration.mjs | PASS, 11 checks |
+| Round 2: the guidance probe on the chain's saves (chapters 3, 4, 5, 6, 7, 9, 10) | a star at every chapter start |
+| Round 2: tests/playthrough 06–14 replayed by input | all 9 PASS |
+| Round 2: tests/chapter3.mjs | PASS, 30 checks |
+| Round 2: tests/epilogue-home.mjs | PASS, 12 checks (first run FAIL: the lamp room's stair led to Baldino's workshop; fixed) |
+| Round 2: tests/save-migration.mjs (last, after every change) | PASS, 11 checks |
 
 Not run (the laptop): the whole of cast-rounds, residents (Lhar's residents now go home after the ending: only that branch
 of storylife.js changed), chapter3.mjs (its epilogue path is segment 14's), the other chapter tests.
 
 ## 7. Unresolved
 
-- **No objective marker on the map outside Citadel.** Chapters 3–7 and 9–12 return no markers (the story modules'
-  `markers()`), and the holomap only shows Citadel (main.js `mapMarkers`). The objective text carries the hints; a player
-  lost on Desert Island or Zeelich has nothing on the map. Source-reviewed only.
-- **The old mill's stair-stones (chapter 3, again in 10):** the bot missed the hop from the 6th to the 7th stone on all
-  attempts in two of three runs of segment 06, and made it in the third; from a standing start it works 5/5. Probably the
-  bot's run-up, but the spot deserves a human try.
-- **Fights finished by ISO:** the Zeelich depot (chapter 3) and the bore (chapter 10, now one enemy fewer), with the bot at
-  1–4 HP. Balance by a human is still untested (as QA.md says).
-- **Allies at the core:** three pylons (Zoé, Mira, Oku); Ilka and Dallan, Pim and Sefa, who held relays in chapter 10, are
-  not heard in the finale. The Hebrew synopsis still describes five pylons and repeats chapters 11 and 12; STORY_MAP.md
-  still says the Core sits inside the Shell. Docs not changed here.
-- **Dallan's way to Zeelich in chapter 9** ("Ilka sent me on the second ship") is thin after he was stranded in Kesh.
-- **Vesk's fate** is told by Baldino's radio line and the end card; there is no scene with him after the coil.
-- **The lighthouse lamp room** stays shut after the ending (CONNECTIONS_AUDIT C-3).
-- **The new gathering spot:** the cart and bundles there were not checked from close up (two wide screenshots show the
-  families on the sand below the headland).
+Closed in the second round: the map's objective away from Citadel (fix 6), the allies at the core and Vesk's last
+decision (fix 7), Dallan's way to Zeelich (fix 8), the lamp room (fix 9), STORY_MAP.md's chapters 11 and 12 (now two
+chapters; chapter 8's walk to the lighthouse, chapter 10's stand-down, the finale and the epilogue updated). Measured and
+left (fix 10): the mill's stair-stones, the two ISO-finished fights.
+
+Still open:
+- **Fights finished by ISO** (the Zeelich depot; the bore's drone and sentry), with the bot at 1–4 HP: the numbers say
+  they are in line with their neighbours, but no person has played them on this build (as QA.md says).
+- **The new gathering spot (chapter 8):** the cart and bundles there were not checked from close up (two wide
+  screenshots show the families on the sand below the headland).
+- **Vesk's choice is read once:** the end card and Baldino after the ending; nobody else mentions it.
 - Chapter 5: after the valves the objective jumps to the relief valve while the hangar's glider and hatch are still in
   front of the player (segment 08); minor.
+- Chapters 11 and 12 have no objective stars (rooms in a line; their room maps show the way out).
 - Text for chapters 3, 8, 10 and the epilogue is English only.
+
+### Corrections for docs/STORY_SYNOPSIS.he.md (not rewritten here)
+- Chapter 3: Vesk does not go down a shaft on Zeelich. He flies home to Twinsun in his ship and seals the shaft at
+  Citadel's station, in the old fort, from below (SHAFT-CITADEL).
+- Chapter 8: Zoé's families gather on the sand below the lighthouse headland (fix 1); Vesk's broadcast now reacts to the
+  opened vents, and he is the one who switched off the heat posts (fix 3).
+- Chapter 9: Dallan arrives by Hesk's glider and a project ship (fix 8).
+- Chapter 10: the lighthouse's network channel is star, sun, wave (not Zoé's sun, wave, star); at the dome Pim holds the
+  big mirror's chain beside Sefa (Yorna stays below); at the bore Dallan stands Vesk's guard down (fix 4).
+- Chapters 11 and 12 appear twice; the first chapter 12 says five pylons, one per station. The game has three pylons
+  (Zoé, Mira, Oku); Ilka and Dallan, Pim and Sefa hold the line by radio during the overload, and the player then decides
+  whether to pull Vesk clear (fix 7).
+- The epilogue: everyone is back where they live, on all four regions, and the lighthouse's lamp room is open (fixes 2, 9).
+- "The current state": chapters 11 and 12 are two chapters; the end card no longer reads the same for everyone.

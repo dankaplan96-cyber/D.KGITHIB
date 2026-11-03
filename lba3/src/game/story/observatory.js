@@ -188,6 +188,14 @@ export class Observatory extends ChapterBase {
       if (f.c7_vent) M.vent.setOpen(true);
     });
   }
+  // GUIDE: the dome, the vent, the monastery's gate on the Hamalayi's map (base.js star)
+  markers() {
+    const f = this.f, M = this.game.regions?.built('hamalayi');
+    if (!this.isCur() || !f.c7_started || !M) return [];
+    if (f.c7_vent) return this.stars(M.monastery.gate);
+    if (f.c7_scope) return this.stars(M.vent);
+    return this.stars(M.observatory.door);
+  }
   objective() {
     const f = this.f, r = this.room();
     if (!f.c7_started) return '';

@@ -1718,7 +1718,7 @@ machine is unknown. `requests/BG-STUCK-1.diff` (main.js, tests/bg-stuck.mjs) mak
 - Checked: `tests/bg-stuck.mjs` PASS (a stale report ends on a key press; on its own within the second; a hidden page
   stays in the background).
 
-## CAMPAIGN-2 · The campaign director's second round · the laptop, 3.11.2026 (the user: "let the agent continue")
+## CAMPAIGN-2 · The campaign director's second round · the laptop, 3.11.2026 (the user: "let the agent continue") — applied by the cloud (3.11, branch laptop-req2)
 `requests/CAMPAIGN-2.diff` (after CAMPAIGN-1, which is merged; applies alone on origin 35aaa16). The agent's open items:
 - **GUIDE:** away from Citadel no chapter showed its objective on the holomap or minimap (Desert Island's "Find the
   professor" had no pointer at all). Each chapter 3–7, 9, 10 now puts a gold star on what its objective needs (the

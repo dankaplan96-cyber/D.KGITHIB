@@ -7,7 +7,8 @@ in QA.md ("Story and progression").
 
 Chapter order (src/game/story/index.js ORDER, saved as flags.chapterKey; the number is the one shown to the
 player): well 1 → project 2 → zeelich 3 → dig 4 → steam 5 → pass 6 → observatory 7 → evacuation 8 → council 9 →
-network 10 → shell 11 (with the Core, 12, inside it for now) → home (epilogue, then Keep Exploring).
+network 10 → shell 11 → core 12 (two chapters since save format 5, both in chapter3.js: `Chapter3` and `ChapterCore`) → home
+(epilogue, then Keep Exploring).
 
 | Chapter (module) | Main path as implemented | Segment |
 |---|---|---|
@@ -18,12 +19,12 @@ network 10 → shell 11 (with the Core, 12, inside it for now) → home (epilogu
 | 5 Steam and Sand (`steam`) | Brosk's jar; oasis water; the shovel; dig out FunFrock's condenser hall; the diagram; the old trooper; valves 1, 3, 4; the hangar (glider, hatch by ball); Dallan; the relief valve; out before the vent blows; Tarra; Hesk's glider north. | 08 |
 | 6 The Pass (`pass`) | Fell the frozen tree over the gorge (ball); Lhar; Yorna; the heating station needs a fuse; Pim's kite (ball) → the fuse; heat on; the frozen mooring rope (sword); two winch trips (ice mites between); ride up; the monastery. | 09 |
 | 7 The Observatory (`observatory`) | Up to the observatory; the keeper; three mirrors carry the light; the telescope; the heavy drone at the vent (ball); the vent opened; back to the monastery gate. | 10 |
-| 8 Evacuation (`evacuation`) | Home to Zoé; Gilbert's tunnels; the fortress shelter's lever; the depot bunker's wheel (ball); Mira's water; Pippa's supplies; Zoé's run to the hill farms; the lighthouse relay; the control room; a project ship to Zeelich. | 11 |
+| 8 Evacuation (`evacuation`) | Home to Zoé; Gilbert's tunnels; the fortress shelter's lever; the depot bunker's wheel (ball); Mira's water; Pippa's supplies; Zoé's run to the hill farms and down to the lighthouse; the relay; the control room; a project ship to Zeelich. | 11 |
 | 9 The Council (`council`) | Street folk; Baldino's petition; Nara's stamp; Oku's stamp (free three mills: ball); the council house; the clerk; the hearing; the archive in a borrowed coat (the BORE cabinet); back to the council. | 12 |
-| 10 Baldino's Network (`network`) | Five relays: the old mill (Zeelich), the valve room and the lighthouse (Citadel, by Hesk's glider), the bore (Desert Island, drones), the dome (Hamalayi, telescope); Hesk's glider to Citadel, on foot into the station's yard: Baldino's code box at the bore's collar sends the code, the blast doors open. | 13 |
+| 10 Baldino's Network (`network`) | Five relays: the old mill (Zeelich), the valve room and the lighthouse (Citadel, by Hesk's glider), the bore (Desert Island: drones, then Dallan stands Vesk's guard down and FunFrock's clone and sentry are fought), the dome (Hamalayi, telescope); Hesk's glider to Citadel, on foot into the station's yard: Baldino's code box at the bore's collar sends the code, the blast doors open. | 13 |
 | 11 The Shell (`shell`, chapter3.js) | Down the shaft from Citadel's station (its lift comes back up beside the collar); the bore's machinery (cooling diagram, valves A and C, ball switch for the ladder); crystal galleries (three pillars: ball); Sendell. Ends at the door from her chamber to the core. | 14 |
-| 12 The Core (`core`, chapter3.js `ChapterCore`) | Chapter 12's card, Vesk, the guardian, three pylons from their plates, Vesk's overload coil. Saves before format 5 (one chapter 'shell') go to `core` when saved in the core room or with the fight begun. | 14 |
-| Epilogue (`home`, epilogue.js) | Dinner at home; the end screen; Keep Exploring (free roam, new lines everywhere). | 14 |
+| 12 The Core (`core`, chapter3.js `ChapterCore`) | Chapter 12's card, Vesk, the guardian, three pylons from their plates (Zoé, Mira, Oku by radio), Vesk's overload (Ilka and Dallan bleed it through the desert vent, Pim and Sefa hold the dome's relay, by radio), his coil; Twinsen pulls Vesk clear of the sparks or leaves him for the guards (the end card and Baldino remember it); shield mode. Saves before format 5 (one chapter 'shell') go to `core` when saved in the core room or with the fight begun. | 14 |
+| Epilogue (`home`, epilogue.js) | Dinner at home; the end screen; Keep Exploring: everyone back where they live with a line about it (Citadel, Zeelich, Kesh, Lhar), Baldino's workshop, Sefa's dome and the lighthouse's lamp room open. | 14 |
 
 Optional side trip (any chapter from 1, story/sewers.js, flags `sw_`): Under the Street. A knocking under the grate north of
 Twinsen's house and Arthur's chalk on its frame; lifted, the old lift under it ("Go down" on its deck: it lowers him down

@@ -494,6 +494,14 @@ export class Network extends ChapterBase {
   }
 
   // ---------------------------------------------------------------- HUD
+  // GUIDE: the five stations, then the code box at the station, each on its own region's map (base.js star)
+  markers() {
+    const f = this.f, g = this.game, RG = g.regions;
+    if (!this.isCur() || !f.c10_started) return [];
+    if (this.done() >= 5) return f.c10_done ? [] : this.stars(CODE_BOX);
+    const Z = RG?.built('zeelich'), D = RG?.built('desert'), M = RG?.built('hamalayi'), office = g.world?.houses?.find((h) => h.id === 'water')?.door;
+    return this.stars(!f.c10_mill && Z?.millTop, !f.c10_valves && office, !f.c10_light && LIGHTHOUSE_DOOR, !f.c10_bore && D?.bore, !f.c10_dome && M?.observatory?.door);
+  }
   objective() {
     const f = this.f;
     if (!f.c10_started) return this.goal('c10_obj_bal');
