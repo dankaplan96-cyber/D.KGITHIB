@@ -79,16 +79,20 @@ export const RACES = {
 // bus's presence lift in dB (audio.js).
 export const STYLES = {
   classic: { bw: 1, cons: 1, tilt: 0, bright: 99999, rate: 1, legato: 0, atk: 1, rel: 1, vib: 1, range: 1, breath: 1, level: 1, pres: 3 },
-  soft: { bw: 2.2, cons: 0.35, tilt: 0.55, bright: 2600, rate: 0.82, legato: 0.8, atk: 1.6, rel: 1.6, vib: 0.7, range: 0.85, breath: 0.6, level: 0.8, pres: 0 },
+  soft: { bw: 2.2, cons: 0.35, tilt: 0.4, bright: 2600, brightK: 0.62, rate: 0.9, legato: 0.8, legAdd: 0.08, atk: 1.6, rel: 1.6, vib: 0.7, range: 1, breath: 0.6, level: 0.8, pres: 0 },
   hum: { bw: 3.2, cons: 0, tilt: 1.1, bright: 1500, rate: 0.68, legato: 0.92, atk: 2.2, rel: 2.2, vib: 0.55, range: 0.75, breath: 0.25, level: 0.28, pres: -2, hum: true },
 };
-let STYLE = STYLES.soft;   // (the user, 3.11: of A classic, B soft, C hum, "B is the closest to the direction")
+let STYLE = STYLES.classic;   // (the user, 3.11, of A classic, B soft, C hum: "B is the closest to the direction"; soft becomes the default with VOICES-1, which keeps the voices apart under it)
 export function setVoiceStyle(name) { STYLE = STYLES[name] || STYLES.classic; return STYLE; }
 export function voiceStyle() { return STYLE; }
 function styled(v) {
   const S = STYLE;
   if (S === STYLES.classic) return v;
-  v.tilt += S.tilt; v.bright = Math.min(v.bright, S.bright * Math.sqrt(v.k)); v.rate *= S.rate; v.legato = Math.max(v.legato, S.legato);
+  // (soft keeps the voices apart: brightness and legato move by the same ratio or step for everyone, not to one ceiling or
+  //  floor, so the voices test's distances between speakers survive; the hum flattens them on purpose)
+  v.tilt += S.tilt; v.rate *= S.rate;
+  if (S.brightK) v.bright = Math.min(v.bright * S.brightK, 3400); else v.bright = Math.min(v.bright, S.bright * Math.sqrt(v.k));
+  v.legato = S.legAdd ? Math.min(1.3, v.legato + S.legAdd) : Math.max(v.legato, S.legato);
   v.atk *= S.atk; v.rel *= S.rel; v.vib = [v.vib[0], v.vib[1] * S.vib]; v.range *= S.range; v.breath *= S.breath; v.level *= S.level;
   if (S.hum) { v.vowel = [v.vowel[0] * 0.85, v.vowel[1] * 0.8]; v.f3 *= 0.4; v.jit *= 0.7; }
   return v;
