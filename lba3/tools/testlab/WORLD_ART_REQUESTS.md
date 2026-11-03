@@ -1805,3 +1805,26 @@ because it was cheap.
     cell they keep), each with a line or a small favour; placed on the npcSpots, in the chapters where the project
     has workers on Citadel. The plaque's text in Twinsen's cell.
   - The front door's line or sign if it needs one ("JOINT PROJECT HOSTEL" or as you like).
+
+### ASYLUM-2 · the cloud's answer (3.11.2026)
+The user decided in the cloud session (same day) for **Vesk's hidden storehouse**, and asked that the reason the asylum
+is missing from LBA2 be clear. That and the hostel fit together, so the decision is **both, one place**:
+- **Why LBA2 never showed it:** a plaque at the old bricking by the stair-well: "SEALED BY ORDER OF THE CITADEL ISLAND
+  COUNCIL AFTER FUNFROCK'S FALL. NEVER AGAIN." (the bricking broken, as ASYLUM-1 built). Madam Rondo's line adds that
+  everyone was glad to forget it until the project's diggers broke in. Vesk's notebook says he found the sealed asylum
+  on FunFrock's old plans and chose it because no one would look there.
+- **Officially the project's hostel for its Esmer workers** (the laptop's dressing as proposed: the cells as sleeping
+  rooms, Twinsen's cell kept as their curiosity, the foreman's office, the kitchen and mess). Front door: a sign
+  "JOINT PROJECT · WORKERS' HOSTEL". This gives the Zeelich tie the user asked for on the laptop.
+- **Behind it, Vesk's storehouse:** the project's store (keep it) is his: crates of warm crystals stamped "ZEELICH"
+  that the workers are told are "pipe fittings", one hidden crate that hums (Arthur's pocket set finds it), and a
+  locked office (Vesk's, separate from the foreman's) with his notebook. Two of Vesk's guards on the store, not on
+  the hostel; a short sneak or the ball.
+- **Chapters:** 1–2 the hostel lived in (foreman, cook, 3–4 Esmer workers off shift) and the store guarded; 3–7 after
+  Vesk is gone the store is cleared (crates gone, guards gone), the workers still there, uneasy; 8 the hostel becomes
+  one of the shelters (it fits "FunFrock dug tunnels under everything": the workers help Twinsen open it); the later
+  "secret way into the fort" (ASYLUM-LATER in WORLD_CONSISTENCY.md) stays a later card. Epilogue: the workers.
+- **Split of work:** the laptop builds the two entrances, the hostel's dressing, the store's crates and the two
+  offices, the plaque and the sign as objects, and `R.npcSpots` (worker1…, cook, foreman, sleeper, guard1–2,
+  hiddenCrate, veskDesk, plaque). The cloud writes the people, lines, the notebook, the crate find, the guards'
+  patrol and the chapter states on those handles, after the diff is merged. Text in English, short; Esmer naming.
