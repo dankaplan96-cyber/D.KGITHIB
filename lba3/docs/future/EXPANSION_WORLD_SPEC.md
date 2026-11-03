@@ -194,12 +194,28 @@ camera's frame ends a few degrees over the horizon, so from the harbour it shows
 and the arch in the water's mirror, never its span. Tessa's lookdev is the character artist's.
 
 *Left / not done:*
-- the people (Tessa, the dockers) and their lookdev; a travel route to Ballastra (`travel.js`, the cloud's): today he
-  gets there only by `enterRoom('ballastra')`.
+- a travel route to Ballastra (`travel.js`, the cloud's): today he gets there only by `enterRoom('ballastra')`;
+  the people are not placed (the stand spots are ready; who stands where is the story's).
 - battery measurements; one run per view (the laptop: no fps chasing).
 - the arch's span is seen only in the water and from a story camera (`W-1-09`); the district is scenery (W-2).
 - the latch, the crank and the dial are spots: the story wires the inputs (the ball's hit, E at the crank).
 
+
+*Characters* (the character artist, branch `exp-w1-chars`, merged; no rig or shared-file change):
+- `tessa` (D9: compact mechanic, rolled sleeves, short teal apron with tools, a hammer at the hip, a headband, a forward
+  lean) and `docker1`–`docker3`: one canal-dweller body (D4: shoulder-high to Twinsen, 1.42–1.53 m against his 2.16,
+  round faces, fan ears on ear bones, broad feet) in three outfits, each with its own face, skin and height (an oilskin
+  smock and knit cap; a vest, shorts, a straw cone hat and a rope, bare feet; an older docker in a leather tabard with
+  a cargo hook). `blTrader` reuses `desertTrader`'s body.
+- Triangles: tessa 3 710, docker1 3 450, docker2 3 664, docker3 3 792 (the cast: mostly 2 400–3 500; Twinsen 3 078).
+  One vertex-coloured material, eye and mouth meshes, no textures, as the cast.
+- They play idle, talk, walk and work (tinker / pump / potting) on the existing rig, with foot planting, ear motion and
+  the talking mouth. Built by `tools/blender/ballastra_poly.py` (Blender is not on this laptop: stand-ins for
+  bpy/mathutils in `tools/blender/nobpy/` rebuild the existing cast's JSON the same).
+- Lookdev: `docs/future/world/W-1/W-1-tessa-lookdev.jpg`, `W-1-dockers-lookdev.jpg`, `W-1-cast-faces-indoor.jpg`,
+  `W-1-cast-pose-tests.jpg`, `W-1-cast-lba2-camera.jpg`, `W-1-cast-in-citadel-*.jpg`.
+- For the animator: a two-handed crank motion, a slower ear motion in talk, a heavier walk (`walkCycle` in the look).
+- **The user's approval of the pictures:** asked 3.11; pending.
 ---
 
 ## W-2 … W-8 · Draft, the coordinator reviews
