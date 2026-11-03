@@ -30,6 +30,7 @@ import { LOOKS } from './characters.js';
 import { WalkNav } from './walknav.js';
 import { mat } from '../engine/rig.js';
 import { dampAngle, rng, clamp } from '../engine/math.js';
+const DIRECT_ACTS = new Set(['tinker', 'kneelWork', 'kneelLook', 'reach', 'reachHigh', 'tapTurn', 'touchWater', 'setDown', 'potting', 'wipe']);
 
 const DAY = 360;                       // seconds in a resident's "day": stops may keep to part of it (when: [from, to] of 0..1)
 const FULL_R = 60, REDUCED_R = 110;    // metres: simulated every frame / a third of the frames; beyond (or out of view): abstract
@@ -532,7 +533,8 @@ export class Resident extends NPC {
       case 'knock': return 'tapTurn';
       case 'dip': return 'touchWater';
       case 'warm': return 'reach';   // (a hand held out to a heat post)
-      default: return 'idle';
+      // (the rooms' rounds name the rig's own work clips: they play as named, not as idle)
+      default: return DIRECT_ACTS.has(s.act) ? s.act : 'idle';
     }
   }
   animate(anim, dt, speed) {
