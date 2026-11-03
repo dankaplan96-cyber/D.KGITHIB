@@ -261,10 +261,10 @@ index 854336c1..7c668b94 100644
      const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
      this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
 diff --git a/lba3/src/game/roomlife.js b/lba3/src/game/roomlife.js
-index 353ec61d..168abdc7 100644
+index 7e4e4ce7..b67decae 100644
 --- a/lba3/src/game/roomlife.js
 +++ b/lba3/src/game/roomlife.js
-@@ -433,7 +433,7 @@ const SAME = 0.05;       // m: the chapter's place is still the mark the round s
+@@ -506,7 +506,7 @@ const SAME = 0.05;       // m: the chapter's place is still the mark the round s
  const CAST_NEAR = 40;    // m: outdoors a round runs only with the hero this near its mark (farther: back on the mark, unseen)
  const FIGHT_R = 25;      // m: no round with a foe this near that is after someone (not on its calm patrol)
  const PATROL_R = 12;     // m: nor with any foe this near (a watch, a patrol: the sneaks)

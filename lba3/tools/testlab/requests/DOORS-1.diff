@@ -70,10 +70,10 @@ index 0b772097..45f39928 100644
    }
    return { top, domed, solid, door: hasDoor ? { x: doorX, z: D / 2 } : null };
 diff --git a/lba3/src/game/story/prologue.js b/lba3/src/game/story/prologue.js
-index a365f9d6..1ebe5669 100644
+index 52ed6783..89a2017f 100644
 --- a/lba3/src/game/story/prologue.js
 +++ b/lba3/src/game/story/prologue.js
-@@ -329,12 +329,15 @@ export class Prologue extends ChapterBase {
+@@ -331,12 +331,15 @@ export class Prologue extends ChapterBase {
        // (WORLD-80: the original's other doors, shut: the islet's dome, the plateau's, the passage's two ends; only
        // from the door's own level, not from the slope above it)
        // (LBA-CITADEL-9: a shut door the director opens, the plateau's to Tralu's cave, is a door now: { house: its id })

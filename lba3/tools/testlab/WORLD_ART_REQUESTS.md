@@ -1676,3 +1676,24 @@ by ISO, logged).
   person; only three allies heard at the core; the Hebrew synopsis (five pylons, chapters 11–12 twice) and STORY_MAP
   (the Core inside the Shell) not updated; Dallan's chapter-9 trip thin, no Vesk scene after the coil; the lighthouse
   lamp room shut after the ending.
+
+### The laptop's pending diffs · apply order, again (3.11.2026, against origin 895deb15, after SEWERS-1)
+SEWERS-1 changed the same hook lines, so BAR, HOTEL and TEMPLE were rebuilt once more: their `doors()` / `exitTo()`
+lines and regions.js's REF / AT lines are now origin's lines with only the request's own entries added (checked: no
+entry twice). Order, each checked with `git apply --check` on a fresh worktree of 895deb15 with the ones before it:
+`ZEELICH-1-SKY` → `ZEELICH-1-WANNIE` → `ZEELICH-1-BAR` → `ZEELICH-1-HOTEL` → `ZEELICH-1-TEMPLE` → `DOORS-1` →
+`CAMPAIGN-1` → `BG-STUCK-1`. SKY, DOORS-1, CAMPAIGN-1 and BG-STUCK-1 also apply alone. On the whole chain the game
+boots and every new room builds and is entered (and the sewer and tavern still do), no page errors.
+
+## BG-STUCK-1 · 8 fps after Esc in the desktop app · the laptop, 3.11.2026 (the user's report)
+The user: after Esc the game runs at 8 fps (first blamed on a talk with Pippa, then found to be Esc). 8 is `BG_FPS`,
+the frame rate PERF-BATTERY draws at while the window is in the background (`setBackground`: document hidden, the DOM
+blur, or the desktop app's `lba3:window` report not focused). A "not focused" that is never followed by its "focus"
+keeps it there until the window is focused again. Not reproduced here: in the installed app 0.48.0 (bench profile)
+synthetic Esc presses left `background` false and the frame rate unchanged. What fires the stray blur on the user's
+machine is unknown. `requests/BG-STUCK-1.diff` (main.js, tests/bg-stuck.mjs) makes the state end on its own:
+- a trusted key press, click, wheel or moved mouse in the window brings it back to the front (`foreground()`);
+- while in the background, once a second: if the page is not hidden and has focus (`document.hasFocus()`), the same;
+- a window that is really hidden or behind another stays at BG_FPS as before.
+- Checked: `tests/bg-stuck.mjs` PASS (a stale report ends on a key press; on its own within the second; a hidden page
+  stays in the background).
