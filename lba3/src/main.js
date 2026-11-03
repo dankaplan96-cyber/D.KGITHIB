@@ -1118,6 +1118,7 @@ class Game {
       h.pos.set(sp.x, this.physics.groundAt(sp.x, sp.z), sp.z);
       h.angle = sp.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
+      h.reanchor = true;   // (CAM-DOORS: a direction held through the door keeps his way: Hero.inputYaw)
       this.lastSafe = { x: sp.x, z: sp.z };
       this.camRig.setIso(R.outdoor ? null : R);
       this.doorCool = 1;
@@ -1146,6 +1147,7 @@ class Game {
       h.pos.set(to.x, this.physics.groundAt(to.x, to.z), to.z);
       h.angle = to.a ?? 0;
       h.vy = 0; h.onGround = true; h.vel?.set(0, 0);
+      h.reanchor = true;
       this.lastSafe = { x: to.x, z: to.z };
       this.camRig.setIso(null);
       this.occSnap = true;   // (Nell's roof takes its faded state at once on the first frame: Game.occluders)
