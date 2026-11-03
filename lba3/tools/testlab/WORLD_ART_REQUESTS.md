@@ -1739,6 +1739,11 @@ machine is unknown. `requests/BG-STUCK-1.diff` (main.js, tests/bg-stuck.mjs) mak
   save-migration PASS; again here: epilogue-home, save-migration, chapter3 PASS.
 - Still open: no person has played the two ISO-finished fights; chapter 8's new gathering spot not looked at closely;
   chapter 5's objective runs ahead of the hangar's glider and hatch; chapters 11–12 have no stars (rooms in a line).
+- Applied by the cloud (branch laptop-req2): the diff applied cleanly on origin after VOICES-PIPER, SEWERS-1 and EQUIP-2a.
+  `tests/epilogue-home.mjs` failed "Keep Exploring" (and so the lamp room) on that base without this diff too: EQUIP-2a's
+  Arthur calls out once in the house, and the test walked to the door with the line still open. The test now hears the
+  line out (`T.talkAll()`) before the door, as a player would; every check as before. Then PASS. `tests/chapter3.mjs`
+  ("Keep Exploring: in play") failed the same way and got the same fix: PASS.
 
 ### ZEELICH-1-WANNIE rebuilt on origin 35aaa16 (3.11.2026)
 DOORS-1 and TEMPLE are merged, so WANNIE was rebuilt on them: apply `ZEELICH-1-SKY` first, then `ZEELICH-1-WANNIE`

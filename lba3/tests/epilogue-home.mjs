@@ -59,6 +59,7 @@ is('ISO: the chapters before set by flags; the epilogue begins (the dinner, the 
 }), (v) => v[0] === 'home' && v[1] === true && v[2] === 'ending' && /readings/.test(v[3]) && !/\{vesk\}/.test(v[3]));
 is('Keep Exploring: free roam, the objective sends him round everyone', await ev(() => {
   const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5);
+  T.talkAll();   // (EQUIP-2a: home in the house, Arthur calls out once about his present; heard out before the door)
   if (game.room) { const e = game.room.exits.find((x) => !x.room) || game.room.exits[0]; const h = game.hero; h.pos.set(e.x, h.pos.y, e.z); game.step(1.6); T.talkAll(); }
   return [game.state, game.flags.ep_free, document.querySelector('#pause-objective')?.textContent || '', game.room?.id ?? 'citadel'];
 }), (v) => v[0] === 'play' && v[1] === true && /everyone/i.test(v[2]) && v[3] === 'citadel');
