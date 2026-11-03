@@ -58,6 +58,9 @@ Object.assign(STR.en, {
   c10_ilka_w2: "Drones down! But Vesk's men are coming out of the cabins, and the sentry's awake at the gate. There's a heart by your feet. Breathe, then take them one at a time.",
   c10_ilka_3: "That's the last of them. Dallan and I will keep the vent clear. Go, go!",
   c10_dallan_1: "I spent a year guarding this bore for the project. I can guard it a little longer for everyone else.",
+  c10_dallan_stand: "Bren! Rifle down. The council has ordered the bore reversed, and you were on my roster for a year. Back inside.",
+  c10_guard_stand: "The guard looks from Dallan to the bore. He lowers his rifle and walks back to his cabin.",
+  c10_tw_stand: "(The clone and the sentry won't listen. They're FunFrock's machines, still keeping old orders.)",
 
   // The Hamalayi: the dome
   c10_yorna_1: "Back again, and with a box on your back. Sefa's dome?",

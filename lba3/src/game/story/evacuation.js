@@ -17,12 +17,18 @@ import { crossByShip } from '../travelfilm.js';
 
 // (the farmers work the fields south of town; the landing and the fort on the northern plateau)
 const FARMS = [{ id: 'farmer1', char: 'farmerA', x: -50, z: 30, a: 0.4 }, { id: 'farmer2', char: 'farmerB', x: -30, z: 45, a: -1.2 }, { id: 'farmer3', char: 'farmerC', x: -60, z: 55, a: 2.6 }];
-const LANDING = { x: -58, z: -60 }, GATHER = { x: -66, z: -55 };
-// the farmers set off for the gather point along the roads (the first stretch is what is seen; out of sight, or after
-// MARCH_T s, they are there)
-const ROAD = [[-39.5, 9], [-42, -4], [-37, -20], [-34, -36], [-42, -50], [-48, -56], [-58, -66], [-66, -58]];
-// (each farmer's first leg: out of his farm to the lane east of the south house, and up it; round the houses and fences)
-const LEAD = [[[-47, 32.5], [-39.5, 32.5], [-39.5, 19]], [[-38, 42], [-39.5, 33], [-39.5, 19]], [[-55, 47], [-48, 43], [-40, 40], [-39.5, 33], [-39.5, 19]]];
+// LIGHTHOUSE-GATHER (the campaign): the hill families gather where Zoé says they will, by the lighthouse on the south-west
+// headland (island.js LIGHTHOUSE, -107.5, 90.5), on the lighthouse path's last flat stretch before the tower (its door at
+// -107.5, 94.2): the way every signpost marks LIGHTHOUSE, a short walk from the family's house. It was on the northern
+// plateau by the glider field (-66, -55), 150 m from the lighthouse, past the town and the fort: a player told "Zoé: go
+// to the lighthouse" followed the signs to the tower and found nothing there.
+const LANDING = { x: -58, z: -60 }, GATHER = { x: -89, z: 96.5 };
+// the farmers set off for the gather point along the lanes (the first stretch is what is seen; out of sight, or after
+// MARCH_T s, they are there). The way the bot's planner walks it from each farm (A* over the collision, 0.5 m cells):
+// down to the house's lane, west past the bay to the lighthouse path.
+const ROAD = [[-70.8, 91.4], [-74, 93.2], [-79.5, 94.2], [-87, 95.6]];
+// (each farmer's first leg: out of his farm and down to the lighthouse path; round the houses and fences)
+const LEAD = [[[-52.1, 35], [-61.1, 44.5], [-67.1, 64.5], [-68.1, 82]], [[-32, 47.7], [-37.5, 55.2], [-42.5, 57.7], [-44, 57.2], [-63.5, 77.2]], [[-68, 72.7], [-68, 81.7]]];
 const MARCH_SPEED = 2.1, MARCH_T = 20, MARCH_FAR = 26;
 // (the lever and its cistern stand on the yard's floor, clear of the station's tanks as rebuilt to the original layout)
 const FORT = { door: { x: -50, z: -71 }, lever: { x: -33, z: -70 } };
@@ -37,6 +43,7 @@ const DEPOT_F = shelterFrame(DEPOT_C.x, DEPOT_C.z, DEPOT_RY);
 
 export class Evacuation extends ChapterBase {
   get W() { return this.game.world; }
+  get gather() { return { ...GATHER }; }   // (where Zoé's run ends: tests read it here)
   outdoors() { return !this.game.room; }
   farmsDone() { return FARMS.filter((p) => this.f['c8_' + p.id]).length; }
   townDone() { const f = this.f; return !!(f.c8_gilbert && f.c8_fort && f.c8_depot && f.c8_mira && f.c8_pippa); }
@@ -128,7 +135,7 @@ export class Evacuation extends ChapterBase {
       if (!this.reached()) return null;
       const k = FARMS.indexOf(farm);
       if (this.march?.some((m) => m.npc.def.id === id)) return undefined;   // (on the road: left where he is)
-      return f['c8_' + id] ? { x: GATHER.x + k * 1.6 - 1.6, z: GATHER.z + 1, a: Math.PI } : { x: farm.x, z: farm.z, a: farm.a };
+      return f['c8_' + id] ? { x: GATHER.x + k * 1.6 - 1.6, z: GATHER.z + 1, a: -Math.PI / 2 } : { x: farm.x, z: farm.z, a: farm.a };   // (facing the lighthouse)
     }
     if (!this.reached()) return undefined;
     const V = W.well, S = W.stall, Q = W.pierStart; // (the quay, where the pier starts)

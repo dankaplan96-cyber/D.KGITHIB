@@ -154,6 +154,13 @@ const guards = await ev((MAXT) => { const G = game; const r = beat(G.story.cur.b
   for (let i = 0; i < 20; i++) { G.step(0.2); T.talkAll(); }
   return [...r, G.story.cur.boreFoes().map((d) => d.alive), G.flags.c10_bore, T.obj()]; }, MAX_THROWS);
 is("wave 2 (clone, guard, sentry) beaten, the bore relay done (4/5)", guards, (v) => v[2].every((a) => a === false) && v[3] === true && v[4].length > 0);
+// STAND-DOWN (docs/campaign/CAMPAIGN_DIRECTOR.md): the Grobo guard is a man of Dallan's old roster. Dallan, at the bore, orders
+// him to stand down; he walks back to his cabin, is not beaten (nothing drops for him) and stays gone. Only FunFrock's machines
+// (the clone, the sentry) are fought.
+is('wave 2: Dallan stood the guard down (not beaten, nothing dropped, gone); the clone and the sentry were fought', await ev(() => {
+  const G = game, gd = G.enemies.find((e) => e.def?.id === 'nguard');
+  return { down: !!G.flags.c10_guardDown, state: gd?.state, gone: !!gd?.gone, visible: !!gd?.rig.root.visible, beaten: !!gd?.ko, foes: G.story.cur.boreFoes().map((e) => e.def.id) };
+}), (v) => v.down && v.state === 'yield' && !v.beaten && !v.visible && !v.foes.includes('nguard'));
 for (const a of guards[1]) { assists.push('guard ' + a); log('ISO  guard ' + a); }
 await shot('C10-06-bore.png');
 is('the glider to the Hamalayi', await ev(() => { const L = game.story.cur.landing('desert'); T.tp(L.x, L.z); return T.fly(2); }), (v) => v === 'hamalayi');

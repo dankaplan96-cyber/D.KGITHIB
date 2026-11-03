@@ -213,11 +213,13 @@ const SCHOOL_PLAZA = { x0: -62.35, x1: -54.7, z0: -80.45, z1: -68.4, min: 0.2 };
 const H3 = { x: -22.59, z: 22.54 }, H4 = { x: 4.29, z: 20.46 };
 export const MON_CAMP = { fire: { x: 50, z: -40 }, rack: { x: 51.5, z: -31.6 }, wood: { x: 57, z: -43.5 }, sledge: { x: 46.6, z: -46 }, crates: { x: 45.6, z: -35.4 }, tag: { x: 55.2, z: -36.6, r: 2.0 } };
 const MC = MON_CAMP, LHAR_TAG = { x: -4, z: 27.5, r: 2.0 };
-// (in Lhar before the lift (and before chapter 6), up at the monastery once the trip that takes them has gone up)
+// (in Lhar before the lift (and before chapter 6), up at the monastery once the trip that takes them has gone up; home in
+//  Lhar again after the ending, with Yorna, Pim and the story's villagers: story/epilogue.js EPILOGUE-HOME)
 const village = (trip) => (f, S) => {
   const i = S.index, p = idx(S, 'pass');
   if (i < p) return 'lhar';
   if (S.cur?.key === 'pass') return f[trip] ? 'mon' : 'lhar';
+  if (S.cur?.key === 'home') return 'lhar';
   return 'mon';
 };
 const HAMALAYI_PEOPLE = [

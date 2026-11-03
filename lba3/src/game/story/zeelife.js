@@ -188,9 +188,10 @@ export class ZeelichLife extends ChapterBase {
       case 'ztri1': return one('ztri1', pk('zl_pel'));     // Mr Pelleck
       case 'zmole1': return one('zmole1', pk('zl_grumm')); // Old Grumm
       case 'ztri2': return f.zl_done ? one('ztri2', 'zl_tavo_done') : false;   // Tavo (his idle lines until then)
-      // Nara and Oku when no chapter needs them (chapters 4–8 and after the network)
-      case 'nara': return ph === 'mid' || ph === 'late' ? one('nara', 'zl_nara') : false;
-      case 'oku': return ph === 'mid' || ph === 'late' ? one('oku', 'zl_oku') : false;
+      // Nara and Oku when no chapter needs them (chapters 4–8 and after the network; after the ending they have their
+      // own word about it: story/epilogue.js EPILOGUE-HOME)
+      case 'nara': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('nara', 'zl_nara') : false;
+      case 'oku': return (ph === 'mid' || ph === 'late') && this.story.cur?.key !== 'home' ? one('oku', 'zl_oku') : false;
     }
     return false;
   }
