@@ -18,7 +18,7 @@ Object.assign(STR.en, {
   n_ama: 'Ama', n_gurt: 'Gurt', n_bern: 'Port Guard', n_lomba: 'Mrs Lomba', n_dov: 'Dov',
   n_ressa: 'Old Ressa', n_ollo: 'Ollo', n_esren: 'Esren', n_gunda: 'Gunda', n_bibi: 'Bibi',
   n_velo: 'Velo', n_ennu: 'Ennu', n_oshra: 'Oshra', n_tavi: 'Tavi', n_pask: 'Pask',
-  n_zt_guard: 'Council Guard', n_zt_guard2: 'Council Guard',
+  n_zt_guard: 'Council Guard', n_zt_guard2: 'Council Guard', n_rollo_q: 'Rollo', n_pell_q: 'Mrs Pell',   // (WC-4: the same two, in the evacuation's queue)
 
   // ---- Chez Luc
   rs_luc_dry: "No water in the well, so it's all bottled from the harbour. Prices up, tempers down. Mostly.",

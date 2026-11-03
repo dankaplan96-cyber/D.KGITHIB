@@ -70,7 +70,7 @@ const roomInfo = await ev(() => Object.fromEntries(Object.entries(RL.ROOMS).map(
 // ---- the cast: everyone listed, hidden until their place is built (nothing built for them)
 const cast = await ev(() => { const W = game.roomWalkers, G = game; return { n: W.res.length, ids: W.res.map((r) => r.def.id), pending: W.res.filter((r) => r.def.pending).map((r) => r.def.id), built: ['tavern', 'bazoo', 'ticket', 'pharmacy', 'nbrhouse', 'nellhouse', 'baggage', 'terminal', 'zterminal', 'zeelich'].filter((id) => G.regions.built(id)), street: G.walkers.res.length, clash: W.res.filter((r) => G.npcs.some((n) => n !== r && n.def.id === r.def.id)).map((r) => r.def.id) }; });
 check('the rooms\' and the ports\' people are in the cast (40: the terminals\' 12 — WC-4\'s evacuation queue and council guards among them — and WC-3\'s School classroom and council antechamber 8), none sharing an id; those of places not built yet wait hidden (35); nothing was built for them; the street\'s residents are their own (41: WC-3\'s 24 among them)', cast.n === 40 && cast.clash.length === 0 && cast.built.length === 0 && cast.pending.length === 35 && cast.street === 41, cast);
-const names = await ev(async () => { const { t } = await import('/src/game/i18n.js'); return game.roomWalkers.res.filter((r) => t(r.def.name) === r.def.name).map((r) => r.def.id); });   // (WC-4: one of the town's people in another place keeps their name: def.name)
+const names = await ev(async () => { const { t } = await import('/src/game/i18n.js'); return game.roomWalkers.res.filter((r) => t(r.def.name) === r.def.name).map((r) => r.def.id); });
 check('every one of them has a name', names.length === 0, names);
 
 // ---- each room in chapter 1, chapter 2 and the evacuation

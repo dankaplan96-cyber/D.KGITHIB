@@ -93,6 +93,34 @@ R10 was carried through chapters 10–12 and the epilogue in the SHAFT-CITADEL m
     sleeps (no update at all). Talk stops and turns them (the existing resident talk); 32 new named speakers, each with
     its own voice.
 
+- **WC-4 done (3.11, branch `wc-4`):** the spaceports' people follow the port's state, derived from the chapter
+  (`roomlife.js portPhase`; nothing saved; a person's `when` names the states they are there in, a stop's `stage` keeps
+  the queue's stops to the evacuation). Citadel's terminal / deck, Zeelich's terminal / deck:
+  - chapters 1–3 (grounded): Ama, Tavi, the port guard, Mrs Lomba / Gurt, Dov; Velo, Pask / Ennu, Oshra; GROUNDED notices.
+  - chapters 4–7 (flying), and 9 on Citadel: Ama, Tavi, Old Ressa, Ollo / Gurt, Esren, Gunda, Bibi; Velo, Pask / Ennu, Oshra.
+  - chapter 8 (evacuation): the queue for the project's ships from the gate (the port guard at its head with the
+    project's list, its sheet on the gate's pillar, the notice "boarding by the list"; Mrs Lomba, Rollo and Mrs Pell in
+    it with their luggage, on the list: Rollo and Mrs Pell out of their emptied rooms, the same people by name and voice;
+    Old Ressa between her seat and the café; Ollo turned away at the list), Ama, Tavi (8) / Gurt readying the ships,
+    Dov (not on the list), Gunda and Bibi (on it) (4); Zeelich quieter: Velo, Pask only (2 / 0). The queue keeps the
+    way from the door to the gate 1.2 m wide, off the board's reading spot and the gate's way in.
+  - chapter 9: two of the council's guards in Zeelich's terminal (the gate, the door; own voices), the council's order on
+    its notice and board: 4 inside / Ennu, Oshra.
+  - chapter 10 and the epilogue: back to normal, Mrs Lomba home from her sister's (Citadel 5 / 4); on Zeelich the guards
+    gone (Velo: "One left his chair").
+  Lines `_e`, `_c`, `_a` (text/interiors.js); boards by state (`port_board_evac`, `zt_board_council`).
+  - The story's crossings between the planets: chapter 2 → 3 walks the bridge and the deck past Citadel's terminal to
+    Doran at the pad (the clerk inside points him there); chapter 8 → 9 the same to the project ship (or through the
+    terminal and its gate); both arrive on Zeelich's deck at the landing beside the pavilion (no landing film: a cut).
+    Chapter 10's travel menu is at the pads and the terminals' counters. Not walked: chapter 3 → 4 starts from the drill
+    platform's console about 70 m east of Zeelich's pad (the ship's film cuts to the pad); not small (it would change
+    the chapter's ending and two tests): listed. Fixed: a save resumed after that console scene (`c2_done`) crossed
+    with a plain fade; it now plays the same films (`chapter2.js crossHome`).
+- **WC-5 done (3.11, branch `wc-4`):** `tests/world-consistency.mjs`, in the regression set (tests/README.md): residents
+  per area at each chapter's start (1–10, the epilogue), the cast with a round moving in 30 s, the story's
+  `startTransition` calls on an allow-list (films checked). Known gap it lists: chapter 10's glider menu
+  (`network.js fly`) between Twinsun's regions is a plain fade (no glider film).
+
 ## Work orders (in this order; at most two agents at a time)
 1. **WC-1 Journeys (done 3.11, above).** Chapter 3's end: `crossByShip` from Zeelich Spaceport with Doran aboard, then the ferry's film to
    Kesh's pier. Chapters 5 and 7: Hesk's glider through `playJourney(mode 'glider')` between the travel points. Chapter

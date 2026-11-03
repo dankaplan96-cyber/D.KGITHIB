@@ -314,7 +314,8 @@ export const ROOMS = {
       ] },
       // WC-4, the evacuation only: two of the town's people whose rooms the evacuation empties (the ticket office's Rollo,
       // Mr Bazoo's customer Mrs Pell: story/interiors.js hides them there) wait in the queue with their luggage: the same
-      // people (`as`: their names and voices) with lines of their own here (`lines`)
+      // people (`as`: their names, text/interiors.js n_rollo_q, and their voices, voice.js ALIAS) with lines of their own
+      // here (`lines`)
       { id: 'rollo_q', as: 'rollo', lines: 'rollo_q', char: 'desertTrader', tint: '#f2e2d2', color: '#d8b090', speed: 0.85, start: 0, when: ['evac'], stops: [
         TQ.stop('rq_queue', 1, [25, 35], { gest: ['sigh'], carry: 'case' }),
         S('rq_seat', by(tmSeat(4), -0.75, 0), seatOf(tmSeat(4), SEAT.termSeat), [20, 30], { carry: 'case', stage: EVAC }),
@@ -438,7 +439,7 @@ export function placeDefs(game) {
   const out = [], G = game.regions;
   const add = (p, place, round, extra = {}) => {
     const s0 = round ? round[p.start % round.length] : null;
-    out.push({ id: p.id, name: 'n_' + (p.as || p.id), ...(p.lines ? { lines: p.lines } : {}), char: p.char, tint: p.tint, speed: p.speed, color: p.color, ambient: true, indoor: true, room: place,
+    out.push({ id: p.id, name: 'n_' + p.id, ...(p.lines ? { lines: p.lines } : {}), char: p.char, tint: p.tint, speed: p.speed, color: p.color, ambient: true, indoor: true, room: place,
       stays: !!p.stays, when: p.when || null, start: p.start || 0, ...(round ? { x: s0.x, z: s0.z, angle: s0.a ?? 0, round } : { x: 0, z: 0, angle: 0, pending: true }), ...extra });
   };
   for (const [rid, R] of Object.entries(ROOMS)) {
