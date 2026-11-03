@@ -1556,7 +1556,7 @@ need `git apply -3`): `src/game/otrhotel.js` (new), region `otrhotel` (REF 120, 
 - Checked: Test Lab `artceltemple` (a mural, the lectern, up to the open sealed door, out) passes. No pictures to the
   user (Zeelich).
 
-### ZEELICH-1 item 6 · Built: a sky and grade per island · the laptop, 3.11.2026
+### ZEELICH-1 item 6 · Built: a sky and grade per island · the laptop, 3.11.2026 — applied by the cloud (3.11, branch laptop-req2)
 `requests/ZEELICH-1-SKY.diff` against origin (`zislands.js` only; applies alone): the island's `R` now carries
 `grade` / `gradeTint` from its style (main.js already calls `setGrade(R.grade, R.gradeTint)` on entering), and the cloud
 sea's three layers and its shore puffs take the style's `cloudTint` (white as before where none is set).
@@ -1568,7 +1568,7 @@ sea's three layers and its shore puffs take the style's `cloudTint` (white as be
 - The others (Knartas, the CX islet, the Lift Dock, Under Celebration's own env) unchanged.
 - Checked: pictures of Otringal, Celebration and the platform from the play camera (on the laptop; none to the user).
 
-### ZEELICH-1 item 5 · Built: the Wannies' island under the gas, the lift's ride down · the laptop, 3.11.2026
+### ZEELICH-1 item 5 · Built: the Wannies' island under the gas, the lift's ride down · the laptop, 3.11.2026 — applied by the cloud (3.11, branch laptop-req2, after SKY)
 `requests/ZEELICH-1-WANNIE.diff` (`props-esmer.js`, `zislands.js`). **Apply `ZEELICH-1-SKY.diff` first**: both touch
 the platform's style line (its env and gas colours are item 6's); checked on a fresh worktree of origin 3e5f458: SKY
 alone applies, then WANNIE applies on it (WANNIE alone does not).
@@ -1718,7 +1718,7 @@ machine is unknown. `requests/BG-STUCK-1.diff` (main.js, tests/bg-stuck.mjs) mak
 - Checked: `tests/bg-stuck.mjs` PASS (a stale report ends on a key press; on its own within the second; a hidden page
   stays in the background).
 
-## CAMPAIGN-2 · The campaign director's second round · the laptop, 3.11.2026 (the user: "let the agent continue")
+## CAMPAIGN-2 · The campaign director's second round · the laptop, 3.11.2026 (the user: "let the agent continue") — applied by the cloud (3.11, branch laptop-req2)
 `requests/CAMPAIGN-2.diff` (after CAMPAIGN-1, which is merged; applies alone on origin 35aaa16). The agent's open items:
 - **GUIDE:** away from Citadel no chapter showed its objective on the holomap or minimap (Desert Island's "Find the
   professor" had no pointer at all). Each chapter 3–7, 9, 10 now puts a gold star on what its objective needs (the
@@ -1739,6 +1739,11 @@ machine is unknown. `requests/BG-STUCK-1.diff` (main.js, tests/bg-stuck.mjs) mak
   save-migration PASS; again here: epilogue-home, save-migration, chapter3 PASS.
 - Still open: no person has played the two ISO-finished fights; chapter 8's new gathering spot not looked at closely;
   chapter 5's objective runs ahead of the hangar's glider and hatch; chapters 11–12 have no stars (rooms in a line).
+- Applied by the cloud (branch laptop-req2): the diff applied cleanly on origin after VOICES-PIPER, SEWERS-1 and EQUIP-2a.
+  `tests/epilogue-home.mjs` failed "Keep Exploring" (and so the lamp room) on that base without this diff too: EQUIP-2a's
+  Arthur calls out once in the house, and the test walked to the door with the line still open. The test now hears the
+  line out (`T.talkAll()`) before the door, as a player would; every check as before. Then PASS. `tests/chapter3.mjs`
+  ("Keep Exploring: in play") failed the same way and got the same fix: PASS.
 
 ### ZEELICH-1-WANNIE rebuilt on origin 35aaa16 (3.11.2026)
 DOORS-1 and TEMPLE are merged, so WANNIE was rebuilt on them: apply `ZEELICH-1-SKY` first, then `ZEELICH-1-WANNIE`

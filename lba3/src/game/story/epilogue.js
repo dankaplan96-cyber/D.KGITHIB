@@ -4,6 +4,7 @@
 // dinner"), then the end screen, and free roam where everyone in town has something new to say.
 import { t } from '../i18n.js';
 import { ChapterBase } from './base.js';
+const LIGHTHOUSE_DOOR = { x: -107.5, z: 94.2 };   // (as network.js: the lamp room's door on the headland)
 import '../text/ch3.js';
 
 const LINES = {
@@ -81,7 +82,7 @@ export class Epilogue extends ChapterBase {
     g.setState('ending');
     g.hud.show(false);
     document.querySelector('#ending h1').textContent = t('ep_end_title');
-    document.querySelector('#ending p').innerHTML = t('ep_end_text');
+    document.querySelector('#ending p').innerHTML = t('ep_end_text', { vesk: t(this.f.c3_veskHelped ? 'ep_vesk_helped' : 'ep_vesk_left') });   // (VESK-CHOICE)
     g.showScreen('ending');
     g.audio.setMood?.('ending');
   }
@@ -89,6 +90,8 @@ export class Epilogue extends ChapterBase {
 
   talk(npc) {
     if (!this.on()) return false;
+    // (VESK-CHOICE: pulled clear at the core, Vesk sends Baldino corrections from his cell)
+    if (npc.def.id === 'baldino' && this.f.c3_veskHelped) { this.chain([['baldino', 'ep_baldino_vesk']]); return true; }
     const key = LINES[npc.def.id];
     if (!key) return false;
     this.chain([[npc.def.id, key]]);
@@ -102,7 +105,23 @@ export class Epilogue extends ChapterBase {
     const out = this.story.townDoors(), RG = this.game.regions, Z = RG.built('zeelich'), M = RG.built('hamalayi');
     if (Z && RG.has('workshop')) out.push({ region: 'zeelich', x: Z.workshopDoor.x, z: Z.workshopDoor.z, r: 0.9, room: 'workshop' });
     if (M?.observatory && RG.has('obsv')) out.push({ region: 'hamalayi', x: M.observatory.door.x, z: M.observatory.door.z, r: 1.0, room: 'obsv' });
+    // (LIGHTHOUSE-OPEN: the lamp room, where Zoé broadcast and Arthur read the needle; its way out: exitTo below)
+    if (RG.has('lighttop')) out.push({ x: LIGHTHOUSE_DOOR.x, z: LIGHTHOUSE_DOOR.z, r: 1.0, room: 'lighttop' });
     return out;
+  }
+  // the lamp room after the ending: the microphone Zoé warned the island through, Arthur's chalk on the dial
+  interactables(consider, dist) {
+    if (!this.on() || !this.f.ep_dinner || this.game.room?.id !== 'lighttop') return;
+    const mic = this.game.room.searches?.find((s) => s.id === 'mic');
+    if (mic) consider(dist(mic.x, mic.z), 0.9, { kind: 'epMic', label: 'p_look' });
+  }
+  // (out of the lamp room onto the headland: chapter 10's exit answers only in chapter 10, and chapter 3's sends Zoé's
+  //  broadcast back to the workshop)
+  exitTo(to) { return to === 'outdoor-lighthouse' ? { x: LIGHTHOUSE_DOOR.x, z: LIGHTHOUSE_DOOR.z + 2.2, a: 0 } : null; }
+  interact(it) {
+    if (it.kind !== 'epMic') return false;
+    this.chain([['hero', 'ep_lighthouse']]);
+    return true;
   }
   objective() { return this.goal(this.f.ep_dinner ? 'ep_obj_free' : 'ep_obj_home'); }
   journal() { return [{ key: 'ep_j_home', done: !!this.f.ep_dinner }]; }

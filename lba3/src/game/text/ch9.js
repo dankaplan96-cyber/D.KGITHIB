@@ -61,7 +61,7 @@ Object.assign(STR.en, {
   c9_councilC_2: "Not assessed is not the same as broken. Plans are not proof that the shell will crack.",
   c9_dallan_1: "Then here's the rest of it. Councillors.",
   c9_tw_d1: 'Dallan?',
-  c9_dallan_2: "Professor Ilka sent me on the second ship. These are her rubbings of the seals at the dig, and her readings from the vents. The carvings are a map of the shell. The bore line goes through the thinnest part of it.",
+  c9_dallan_2: "Hesk flew me up from Kesh, and I came over on the next project ship. Nobody checks a foreman. Professor Ilka sent these: her rubbings of the seals at the dig, and her readings from the vents. The carvings are a map of the shell. The bore line goes through the thinnest part of it.",
   c9_dallan_3: "I was project security. I stood guard over that dig for a year. I'm telling you: the professor is right, and the project knew enough to stop asking.",
   c9_councilC_3: "...My cousin works on the bore. If it cracks the shell, he's at the bottom of it.",
   c9_chair_3: "The council has heard enough. By vote of this council: the Joint Project is ordered to reverse the bore.",

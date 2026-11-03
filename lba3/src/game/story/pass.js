@@ -219,6 +219,24 @@ export class Pass extends ChapterBase {
     if (f.c6_thawed) M.lift.thaw();
     if (f.c6_up) M.lift.ride(true, [], null);
   }
+  // GUIDE: the tree, Lhar, the heating station, Pim and his kite, the winch, the monastery on the Hamalayi's map (base.js star)
+  markers() {
+    const f = this.f, M = this.game.regions?.built('hamalayi');
+    if (!this.isCur() || !f.c6_started || !M) return [];
+    const tg = (k) => M.ballTargets.find((t) => t[k]);
+    if (f.c6_up) return this.stars(M.monastery.gate);
+    if (f.c6_trip2) return this.stars(M.lift.pad);
+    if (f.c6_trip1) return this.mitesLeft() > 0 ? [] : this.stars(M.lift.winch);
+    if (f.c6_liftReady) return this.stars(f.c6_sword && !f.c6_rope ? M.lift.pad : M.lift.winch);
+    if (f.c6_thawed) return this.stars(this.starNpc('yorna'));
+    if (f.c6_heat) return this.stars(M.lift.winch);
+    if (f.c6_yorna) {
+      if (f.c6_needFuse && !f.c6_fuse) return f.c6_kiteAsk && !f.c6_kite ? this.stars(tg('kite')) : this.stars(this.starNpc('pim'));
+      return this.stars(M.heatPost);
+    }
+    if (f.c6_bridge) return this.stars(this.starNpc('yorna') || M.lhar);
+    return this.stars(tg('tree'));
+  }
   objective() {
     const f = this.f;
     if (!f.c6_started) return '';

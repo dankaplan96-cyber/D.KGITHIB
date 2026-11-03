@@ -43,7 +43,7 @@ await ev(() => {
 });
 
 // ISO: the story through chapter 12, with the states that moved people: the shelters, the hill families, the relays
-is('ISO: the chapters before set by flags; the epilogue begins (the dinner, the end screen)', await ev(() => {
+is('ISO: the chapters before set by flags; the epilogue begins (the dinner, the end screen; the card remembers that Vesk was pulled clear)', await ev(() => {
   const G = game; T.talkAll();
   Object.assign(G.flags, { prologueDone: true, intro: true, chapter: 11, chapterKey: 'core',
     c1_started: true, c1_done: true, c1_water: true, c1_radio: true, c1_veskGone: true, c1_plan: true, c2_shield: true, c2_veskDown: true,
@@ -52,13 +52,14 @@ is('ISO: the chapters before set by flags; the epilogue begins (the dinner, the 
     c8_home: true, c8_gilbert: true, c8_pippa: true, c8_farmer1: true, c8_farmer2: true, c8_farmer3: true, c8_zoeDone: true, c8_vesk: true,
     c9_heard: true, c9_dallan: true, c9_vote: true,
     c10_started: true, c10_okuAsk: true, c10_miraAsk: true, c10_pim: true, c10_mill: true, c10_valves: true, c10_light: true, c10_bore: true, c10_dome: true, c10_done: true,
-    c3_turned: true, c3_done: true });
+    c3_turned: true, c3_done: true, c3_veskHelped: true });   // (VESK-CHOICE: he pulled Vesk clear)
   G.hero.hasBall = true; G.story.nextChapter();
   for (let i = 0; i < 20 && G.state !== 'ending'; i++) { G.step(0.5); if (G.state === 'dialog') T.talkAll(); }
-  return [G.flags.chapterKey, G.flags.ep_dinner, G.state];
-}), (v) => v[0] === 'home' && v[1] === true && v[2] === 'ending');
+  return [G.flags.chapterKey, G.flags.ep_dinner, G.state, document.querySelector('#ending p')?.textContent || ''];
+}), (v) => v[0] === 'home' && v[1] === true && v[2] === 'ending' && /readings/.test(v[3]) && !/\{vesk\}/.test(v[3]));
 is('Keep Exploring: free roam, the objective sends him round everyone', await ev(() => {
   const b = [...document.querySelectorAll('#ending button')].find((x) => x.offsetParent && /explor/i.test(x.textContent)); b?.click(); game.step(0.5);
+  T.talkAll();   // (EQUIP-2a: home in the house, Arthur calls out once about his present; heard out before the door)
   if (game.room) { const e = game.room.exits.find((x) => !x.room) || game.room.exits[0]; const h = game.hero; h.pos.set(e.x, h.pos.y, e.z); game.step(1.6); T.talkAll(); }
   return [game.state, game.flags.ep_free, document.querySelector('#pause-objective')?.textContent || '', game.room?.id ?? 'citadel'];
 }), (v) => v[0] === 'play' && v[1] === true && /everyone/i.test(v[2]) && v[3] === 'citadel');
@@ -80,6 +81,19 @@ is('Citadel: Mira back at the water office, not in the valve room', cit, (v) => 
 const citTalk = await ev(() => ['gilbert', 'doran', 'farmer1', 'farmer3'].map((id) => T.talk(id)));
 is('Citadel: they talk about being home (Gilbert, Doran, two farmers)', citTalk, (v) => /refund/i.test(v[0].text) && /back/i.test(v[1].text) && /goats/i.test(v[2].text) && /home/i.test(v[3].text));
 
+// the lighthouse's lamp room opens after the ending (by its door, as a player walks in), the microphone has a line
+const lamp = await ev(() => {
+  const G = game, h = G.hero, d = { x: -107.5, z: 94.2 };
+  h.pos.set(d.x, G.physics.groundAt(d.x, d.z + 2.2, 40), d.z + 2.2); h.onGround = true; G.step(1.2);
+  h.pos.set(d.x, G.physics.groundAt(d.x, d.z, h.pos.y + 2), d.z); G.step(1.6); T.talkAll();
+  const inside = G.room?.id, mic = G.room?.searches?.find((s) => s.id === 'mic');
+  let said = '';
+  if (mic) { h.pos.set(mic.x + 0.5, h.pos.y, mic.z); h.angle = Math.atan2(mic.x - h.pos.x, mic.z - h.pos.z); G.step(0.3); T.said.length = 0; T.tap('KeyE'); G.step(0.1); said = T.said.join(' '); T.talkAll(); }
+  const e = G.room?.exits?.[0]; if (e) { h.pos.set(e.x, h.pos.y, e.z); G.step(1.6); T.talkAll(); }
+  return { inside, said, out: G.room?.id ?? 'citadel' };
+});
+is("Citadel: the lighthouse's lamp room opens after the ending; Arthur's chalk on the dial; the way out", lamp, (v) => v.inside === 'lighttop' && /STATION READY/.test(v.said) && v.out === 'citadel');
+
 // Zeelich (ISO travel: the network's own move)
 const zee = await ev(() => {
   const G = game; G.story.isles.go('zeelich'); for (let i = 0; i < 30 && (G.trans || G.state !== 'play'); i++) { G.step(0.2); T.talkAll(); }
@@ -91,7 +105,7 @@ const zee = await ev(() => {
   const inside = G.room?.id, b = T.npc('baldino'), sp = G.rooms.workshop?.npcSpots?.baldino;
   return { room, inside, baldino: !!b?.present, atBench: sp && b ? +Math.hypot(b.pos.x - sp.x, b.pos.z - sp.z).toFixed(2) : null, talk: [...talk, T.talk('baldino')] };
 });
-is('Zeelich: Nara and Oku on the street, Baldino back at his bench, each with a word about it', zee, (v) => v.room === 'zeelich' && v.inside === 'workshop' && v.baldino && v.atBench != null && v.atBench < 1 && /heat/i.test(v.talk[0].text) && /flour/i.test(v.talk[1].text) && /inventor/i.test(v.talk[2].text));
+is('Zeelich: Nara and Oku on the street, Baldino back at his bench, each with a word about it (Baldino: Vesk, pulled clear at the core, sends corrections from his cell)', zee, (v) => v.room === 'zeelich' && v.inside === 'workshop' && v.baldino && v.atBench != null && v.atBench < 1 && /heat/i.test(v.talk[0].text) && /flour/i.test(v.talk[1].text) && /notes from his cell/i.test(v.talk[2].text));
 
 // Desert Island: Kesh's square
 const des = await ev(() => {
