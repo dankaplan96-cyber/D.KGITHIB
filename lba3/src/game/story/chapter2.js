@@ -449,7 +449,8 @@ export class Chapter2 extends ChapterBase {
   // him home to Citadel Spaceport and takes the ferry south from there.
   toShell() {
     const g = this.game, f = this.f;
-    if (f.c2_done) { g.startTransition(() => this.story.nextChapter(), this.story.nextAreas()); return; }
+    // (WC-4: resumed from a save made after the scene (c2_done): the same crossing, its films and all; it was a plain fade)
+    if (f.c2_done) { this.crossHome(); return; }
     g.audio.play('select');
     const bal = this.npc('baldino')?.present ? 'baldino' : 'radio';
     const lines = [['narrator', 'c2_sealed_0'], ['narrator', 'c2_sealed_1'], ['arthurradio', 'c2_ar_sealed'], ['zoeradio', 'c2_zoe_sealed'], ['hero', 'c2_tw_sealed0'],
@@ -458,14 +459,17 @@ export class Chapter2 extends ChapterBase {
       f.c2_done = true;
       this.game.world.station?.setSealed?.(true, true);
       g.save(false);
-      const go = (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then);
-      // WC-1: the crossing seen (TRAVEL-1): Doran's ship takes off from Zeelich Spaceport with them (the take-off, the
-      // cabin, space: travelfilm.js crossByShip), then the project's ferry is seen coming in to Kesh's pier, where
-      // chapter 4 starts (its card waits for the film). The chapter changes under the black as before.
-      if (g.room?.id !== 'zeelich') { go(); return; }
-      const doran = this.npc('doran');
-      crossByShip(g, go, { aboard: [doran], onward: { to: 'desert_ferry', mode: 'ferry', landWith: [doran] } });
+      this.crossHome();
     }, (i, id, key) => { if (key === 'c2_sealed_1') g.audio.play('deny'); });
+  }
+  // WC-1: the crossing seen (TRAVEL-1): Doran's ship takes off from Zeelich Spaceport with them (the take-off, the
+  // cabin, space: travelfilm.js crossByShip), then the project's ferry is seen coming in to Kesh's pier, where chapter 4
+  // starts (its card waits for the film). The chapter changes under the black as before.
+  crossHome() {
+    const g = this.game, go = (then) => g.startTransition(() => this.story.nextChapter(), this.story.nextAreas(), then);
+    if (g.room?.id !== 'zeelich') { go(); return; }
+    const doran = this.npc('doran');
+    crossByShip(g, go, { aboard: [doran], onward: { to: 'desert_ferry', mode: 'ferry', landWith: [doran] } });
   }
 
 

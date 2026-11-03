@@ -20,7 +20,9 @@
 //   zterminalDoors() / zterminalExit(to)   the pavilion's door leads in (region 'zeelich'); 'zterminal-out' back out
 //                                       before it; 'zterminal-gate' out to the pad's landing spot
 //   ZTERMINAL (filled when the room is built): door, gate, counter {x,z,r}, board {x,z,r}, seats [{x,z,a}] (8),
-//     npcSpots {clerk, guard, porter}, arrivals {x,z,a} (where he steps in from the pad), notice {setVisible(b)}
+//     npcSpots {clerk, guard, porter}, arrivals {x,z,a} (where he steps in from the pad), notice {setVisible(b)}; WC-4:
+//     notice.setKind('grounded' | 'council' | null): in chapter 9 it carries the council's order (every departure
+//     checked); `visible` keeps SPACEPORT-1's meaning (the grounded notice is up), `kind` says which
 //   ZTERMINAL_PLAN                       the layout in the room's frame (the builder's own numbers): roomlife.js places
 //                                        the hall's people from it (BIGGER-1's way)
 import * as THREE from 'three';
@@ -68,6 +70,13 @@ const boardTex = (title, rows) => canvasTex(1024, 512, (x, W, H) => {
   x.fillStyle = 'rgba(240,192,64,0.5)'; x.fillRect(40, 108, W - 80, 4);
   x.font = 'bold 44px monospace'; x.textAlign = 'left';
   rows.forEach(([a, b], i) => { x.fillStyle = '#bfe9ff'; x.fillText(a, 60, 200 + i * 86); x.fillStyle = '#ffd860'; x.fillText(b, 790, 200 + i * 86); });
+});
+// WC-4, chapter 9: the council's order, on the notice's place by the board
+const councilTex = () => canvasTex(256, 320, (x, W) => {
+  x.fillStyle = '#f2ead6'; x.fillRect(0, 0, W, 320); x.strokeStyle = '#7a3a8a'; x.lineWidth = 14; x.strokeRect(7, 7, W - 14, 306);
+  x.fillStyle = '#7a3a8a'; x.font = 'bold 34px sans-serif'; x.textAlign = 'center'; x.fillText('COUNCIL', W / 2, 62); x.fillText('ORDER', W / 2, 100);
+  x.fillStyle = '#3a3a40'; x.font = '22px sans-serif';
+  ['Every departure', 'is checked', 'at the gate.', '', 'Thank you for', 'your patience.'].forEach((t, i) => x.fillText(t, W / 2, 148 + i * 28));
 });
 const blocksTex = () => canvasTex(256, 128, (x, W, H) => {
   x.fillStyle = '#e8eef2'; x.fillRect(0, 0, W, H);
@@ -138,6 +147,7 @@ export function buildZTerminalRoom(scene, physics) {
   k.add(rbox(0.14, 1.7, 3.0, 0.03), MAT.paint('#2a2e36', 0.4), LX + 0.08, 2.35, BRDZ);
   k.add(plane(2.8, 1.5), MAT.map(boardTex('DEPARTURES', [['TWINSUN: CITADEL', 'PAD 1'], ['BY SPACESHIP', ''], ['ISLANDS: SHUTTLE', 'OUTSIDE']]), 0.7, { emissive: '#ffffff', emissiveMap: boardTex('DEPARTURES', [['TWINSUN: CITADEL', 'PAD 1'], ['BY SPACESHIP', ''], ['ISLANDS: SHUTTLE', 'OUTSIDE']]), emissiveIntensity: 0.35 }), LX + 0.16, 2.35, BRDZ, Math.PI / 2);
   const notice = k.mesh(plane(0.62, 0.78), MAT.paper('#f2ead6', '#7a3a8a', 'star'), P.notice.x, 1.75, P.notice.z, Math.PI / 2);
+  const noticeMat = { grounded: notice.material, council: null };
   const seats = [];
   for (const x of P.ROWS) {
     B.put(x, P.ROWZ, -Math.PI / 2, (kk) => seatRow(kk, P.ROWN));
@@ -181,7 +191,17 @@ export function buildZTerminalRoom(scene, physics) {
     seats,
     npcSpots: Object.fromEntries(['clerk', 'guard', 'porter'].map((k) => [k, { x: B.cx + P[k].x, z: B.cz + P[k].z, a: P[k].a }])),
     arrivals: { ...R.entries.gate },
-    notice: { setVisible(b) { notice.visible = !!b; }, get visible() { return notice.visible; } },
+    notice: {
+      setKind(kind) {
+        if (kind === 'council') notice.material = (noticeMat.council ||= MAT.map(councilTex(), 0.8));
+        else if (kind) notice.material = noticeMat.grounded;
+        notice.visible = !!kind; this._kind = kind || null;
+      },
+      setVisible(b) { this.setKind(b ? 'grounded' : null); },
+      get visible() { return notice.visible && this._kind === 'grounded'; },
+      get kind() { return notice.visible ? this._kind : null; },
+      _kind: 'grounded',
+    },
   });
   R.npcSpots = ZTERMINAL.npcSpots;
   return { zterminal: B.finish() };
