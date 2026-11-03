@@ -21,12 +21,14 @@
 //                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
-import { MAT, TEX, rbox, plane, cyl, sphere, lathe, table, chair, armchair, bed, counter, floorLamp, frame, jar, candle } from './props.js';
+import { MAT, TEX, rbox, plane, cyl, sphere, lathe, table, chair, armchair, bed, counter, floorLamp, frame, jar, candle, rug, hangingLamp, crate } from './props.js';
+import { goodsShelf, boxStack, hanging } from './roomdress.js';
 
 export const NELLHOUSE_AT = { x: 7800, z: 0 };
 // (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the furniture its own size)
+// (ROOMS-FULL, the user 3.11: 1.25 times, and her trade's clutter)
 export const NELLHOUSE_PLAN = (() => {
-  const F = 1.5, W = 7.2 * F, D = 8.2 * F, TX = 0.6 * F, TZ = 0.4 * F, bench = { x: 2.3 * F, z: 2.9 * F };
+  const F = 1.25, W = 7.2 * F, D = 8.2 * F, TX = 0.6 * F, TZ = 0.4 * F, bench = { x: 2.3 * F, z: 2.9 * F };
   return { F, W, D, LX: -W / 2, BZ: -D / 2, DOORZ: 3.3 * F,
     bench, spot: { x: bench.x, z: bench.z - 0.85, a: Math.PI },     // (the workbench at the front; the spot before it)
     parts: { x: 3.2 * F, z: 1.7 * F, a: 0.2 },                     // (the crate of spare parts)
@@ -65,7 +67,7 @@ export function buildNellHouseRoom(scene, physics) {
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen as in his own
   //  house; the furniture keeps its size)
   const P = NELLHOUSE_PLAN, { F, W, D } = P, H = 3.4;
-  R.view = 10.8; R.follow = 0.7; R.music = 'home';
+  R.view = 10.2; R.follow = 0.7; R.music = 'home';
   const { LX, BZ, DOORZ } = P;
   // (Twinsen's house's own materials: the teal paper, the terracotta tiles, the dark wood)
   B.shell({ W, D, H, t: 0.4,
@@ -101,6 +103,27 @@ export function buildNellHouseRoom(scene, physics) {
   // --- twelve years on: Nell's workbench at the front with the Esmer engine she is mending, a crate of spare parts
   B.put(P.bench.x, P.bench.z, 0, (kk) => workbench(kk));
   B.put(P.parts.x, P.parts.z, P.parts.a, (kk) => { kk.add(rbox(0.7, 0.45, 0.5, 0.03), MAT.wood('honey'), 0, 0.225, 0); for (let i = 0; i < 4; i++) kk.add(cyl(0.06, 0.06, 0.1, 10), [MAT.brass(), MAT.copper(), MAT.iron(), MAT.brass()][i], -0.2 + i * 0.13, 0.5, 0.05); return { hw: 0.35, hd: 0.25, top: 0.55 }; });
+  // --- ROOMS-FULL: her trade: a shelf of parts and tins in the back corner, boxed parts and a crate of scrap by the
+  // workbench, springs and cogs on the floor by it, a rug under the table and a lamp over it, a striped cloth (props)
+  B.put(LX + 0.6, BZ + 0.22, 0, (kk) => goodsShelf(kk, { w: 1.0, h: 1.9, d: 0.34, rows: 4, pal: 'dark', seed: 31 }));
+  B.put(W / 2 - 0.45, D / 2 - 0.45, 0.2, (kk) => boxStack(kk, { n: 2, seed: 13, w: 0.55 }));
+  B.put(P.bench.x - 1.45, D / 2 - 0.4, -0.2, (kk) => { const f = crate(kk, 0.55, { pal: 'pale', h: 0.42 }); for (let i = 0; i < 5; i++) kk.add(cyl(0.05, 0.05, 0.04, 8), MAT.iron(), -0.15 + (i % 3) * 0.15, 0.44, -0.1 + Math.floor(i / 3) * 0.2, 0, { rx: 0.4 * i }); return f; });
+  for (let i = 0; i < 4; i++) k.add(new THREE.TorusGeometry(0.05, 0.012, 4, 10), MAT.brass(), P.bench.x - 0.5 + i * 0.35, 0.012, P.bench.z + 0.55 + (i % 2) * 0.12, 0, { rx: Math.PI / 2 });
+  k.at(TX, 0.01, TZ, 0, () => rug(k, 2.4, 1.7, ['#2f6f78', '#e8dcc0', '#c8a050', '#1f4a50', '#f2ead6'], 9));
+  k.at(TX, 0, TZ, 0, () => hangingLamp(k, 2.3, H, { shade: '#c8a050' }));
+  k.at(0.25, 1.85, BZ + 0.02, 0, () => hanging(k, { w: 0.9, h: 1.0 }));
+  // (what she is building: a frame with a great brass cog, a copper boiler and a crank, half put together)
+  B.put(-1.0 * F, -2.2 * F, 0.5, (kk) => {
+    kk.add(rbox(0.9, 0.12, 0.6, 0.02), MAT.wood('dark'), 0, 0.06, 0);
+    for (const sx of [-0.38, 0.38]) kk.add(rbox(0.06, 1.3, 0.06, 0.01), MAT.iron(), sx, 0.75, 0);
+    kk.add(rbox(0.82, 0.06, 0.06, 0.01), MAT.iron(), 0, 1.38, 0);
+    kk.add(new THREE.TorusGeometry(0.32, 0.045, 6, 20), MAT.brass(), 0, 0.8, 0.06);
+    for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; kk.add(rbox(0.07, 0.08, 0.06, 0.01), MAT.brass(), Math.sin(a) * 0.38, 0.8 + Math.cos(a) * 0.38, 0.06, 0, { rz: -a }); }
+    kk.add(cyl(0.05, 0.05, 0.2, 8), MAT.iron(), 0, 0.8, 0.06, 0, { rx: Math.PI / 2 });
+    kk.add(cyl(0.16, 0.16, 0.45, 12), MAT.copper(), 0.2, 0.35, -0.15);
+    kk.add(cyl(0.03, 0.03, 0.5, 6), MAT.copper(), 0.2, 0.75, -0.15);
+    return { hw: 0.48, hd: 0.32, top: 1.4 };
+  });
   R.npcSpots = { nell: { x: B.cx + P.spot.x, z: B.cz + P.spot.z, a: P.spot.a } };
 
   B.light('#ffe2b8', 4.5, 13, -0.5 * F, 2.8, 0.0); B.light('#ffe8c8', 3, 9, 2.3 * F, 2.6, 2.6 * F); B.light('#ffd8a0', 1.8, 5, LX + 0.4, 1.9, -0.1 * F);

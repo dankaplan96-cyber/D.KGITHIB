@@ -22,12 +22,14 @@
 //                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
-import { MAT, TEX, rbox, plane, cyl, sphere, table, chair, armchair, bed, bookcase, counter, desk, deskLamp, floorLamp, stove, kettle, rug, candle, frame, jar } from './props.js';
+import { MAT, TEX, rbox, plane, cyl, sphere, table, chair, armchair, bed, bookcase, counter, desk, deskLamp, floorLamp, stove, kettle, rug, candle, frame, jar, plate, pot, hangingLamp, wallShelf, bookStack, chest, pottedPlant } from './props.js';
+import { sack, basket, hanging, shelfGoods } from './roomdress.js';
 
 export const NBRHOUSE_AT = { x: 7600, z: 0 };
 // (the user 2.11, "make them bigger": the floor 1.5 times the first cut; the furniture its own size)
+// (ROOMS-FULL, the user 3.11: 1.25 times, and lived in further)
 export const NBRHOUSE_PLAN = (() => {
-  const F = 1.5, W = 7.2 * F, D = 8.2 * F, LX = -W / 2, BZ = -D / 2, TX = 0.1 * F, TZ = 1.3 * F, stoveZ = 3.1 * F;
+  const F = 1.25, W = 7.2 * F, D = 8.2 * F, LX = -W / 2, BZ = -D / 2, TX = 0.1 * F, TZ = 1.3 * F, stoveZ = 3.1 * F;
   return { F, W, D, LX, BZ, DOORZ: 3.0 * F,
     stove: { x: W / 2 - 0.5, z: stoveZ }, basin: { x: W / 2 - 0.45, z: stoveZ - 1.2 },   // (the kitchen corner on the right wall)
     spot: { x: W / 2 - 1.4, z: stoveZ, a: Math.PI / 2 },                                // (the neighbour's spot: at the stove)
@@ -41,7 +43,7 @@ export function buildNbrHouseRoom(scene, physics) {
   // (the user 2.11, "make them bigger": the floor 1.5 times the first cut, the camera following Twinsen as in his own
   //  house; the furniture keeps its size)
   const P = NBRHOUSE_PLAN, { F, W, D } = P, H = 3.4;
-  R.view = 10.8; R.follow = 0.7; R.music = 'home';
+  R.view = 10.2; R.follow = 0.7; R.music = 'home';
   const { LX, BZ, DOORZ } = P;
   // (Twinsen's house's own materials: the teal paper, the terracotta tiles, the dark wood)
   B.shell({ W, D, H, t: 0.4,
@@ -87,6 +89,19 @@ export function buildNbrHouseRoom(scene, physics) {
   for (let i = 0; i < 3; i++) jar(k, W / 2 - 0.35, 0.92, P.basin.z - 0.35 + i * 0.12, 'crock', ['#c8a050', '#3f8a8a', '#c8452f'][i], 0.8);
   k.add(rbox(1.4, 0.55, 0.12, 0.03), MAT.copper(), 1.0, 0.42, BZ + 0.1);
   for (let i = 0; i < 6; i++) k.add(rbox(0.05, 0.5, 0.14, 0.01), MAT.copper(), 0.45 + i * 0.22, 0.42, BZ + 0.11);
+  // --- ROOMS-FULL: a lamp over the table and its plates, a shelf of jars over the desk with books on the desk, a rug
+  // by the bed, the kitchen's flour sack, pot and basket of vegetables, a striped cloth between the windows (props)
+  k.at(TX, 0, TZ, 0, () => hangingLamp(k, 2.3, H, { shade: '#2f6f78' }));
+  for (const s of [-1, 1]) plate(k, TX + s * 0.32, 0.78, TZ + 0.05, 0, '#f2ead6', 0.11, false);
+  k.at(P.desk.x, 1.75, BZ + 0.15, 0, () => { wallShelf(k, { w: 1.3, pal: 'honey' }); shelfGoods(k, 1.1, 0.022, 21, 0); });
+  bookStack(k, P.desk.x + 0.35, 0.78, P.desk.z + 0.05, 3, 4);
+  B.put(-0.7 * F, BZ + 2.55, 0, (kk) => chest(kk, { w: 1.0, d: 0.5, h: 0.45, pal: 'honey' }));
+  B.put(2.0, BZ + 0.5, 0, (kk) => pottedPlant(kk, { kind: 'spiky', s: 1.1, potColor: '#b8623a' }));
+  k.at(-0.7 * F + 1.35, 0.01, BZ + 1.4, Math.PI / 2, () => rug(k, 1.7, 0.9, ['#b0302c', '#e8dcc0', '#2f6f78', '#7a2a22', '#f2ead6'], 6));
+  B.put(P.stove.x + 0.05, D / 2 - 0.4, 0.4, (kk) => sack(kk, { s: 0.9, c: '#e8dcc0' }));
+  pot(k, P.basin.x - 0.12, 0.92, P.basin.z + 0.22, { r: 0.1, h: 0.12 });
+  k.at(P.basin.x - 0.1, 0, P.basin.z - 0.75, 0, () => basket(k, { r: 0.2, fill: '#c8602a' }));
+  k.at(LX + 0.04, 1.7, -1.6 * F, Math.PI / 2, () => hanging(k, { w: 0.9, h: 1.0, bands: ['#2f6f78', '#e8dcc0', '#c8a050', '#e8dcc0', '#2f6f78'] }));
   R.npcSpots = { neighbour: { x: B.cx + P.spot.x, z: B.cz + P.spot.z, a: P.spot.a } };
 
   B.light('#ffe2b8', 4.5, 13, -0.5 * F, 2.8, 0.5 * F); B.light('#ffd8a0', 2.5, 6, TX, 1.4, TZ); B.light('#ffe8c8', 3, 9, 2.6 * F, 2.6, 2.5 * F);

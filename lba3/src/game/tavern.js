@@ -25,21 +25,24 @@
 //                               room's people from it, so a change of the layout carries them along
 import * as THREE from 'three';
 import { RoomBuilder } from './interiors.js';
-import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, table, chair, jar, counter, noticeBoard, pottedPlant, railing, barrel } from './props.js';
+import { MAT, M, TEX, rbox, plane, cyl, sphere, lathe, table, chair, jar, plate, counter, noticeBoard, pottedPlant, railing, barrel, hangingLamp, crate } from './props.js';
+import { hanging, sackPile } from './roomdress.js';
 
 export const TAVERN_AT = { x: 6600, z: 0 };
 // (the user 2.11, "make them bigger, it's really small": the floor 1.5 times the first cut; the furniture its own size)
+// (ROOMS-FULL, the user 3.11, "the rooms feel empty … maybe shrink a little and add detail": 1.25 times; the places
+//  first set on the 1.5 floor — the tables, the gallery's tables, the lamps — drawn in with it by S)
 export const TAVERN_PLAN = (() => {
-  const F = 1.5, W = 10 * F, D = 15 * F, LX = -W / 2, BZ = -D / 2, GZ1 = BZ + 4.5 * F, SZ1 = GZ1 + 1.6, SX0 = 1.6 * F;
+  const F = 1.25, S = F / 1.5, W = 10 * F, D = 15 * F, LX = -W / 2, BZ = -D / 2, GZ1 = BZ + 4.5 * F, SZ1 = GZ1 + 1.6, SX0 = 1.6 * F;
   const BARX = LX + 1.6, BZ0 = 0.6 * F, BZ1 = 4.6 * F;
-  return { F, W, D, LX, BZ, DOORZ: 6.1 * F, GZ1, SZ1, SX0, BARX, BZ0, BZ1,
+  return { F, S, W, D, LX, BZ, DOORZ: 6.1 * F, GZ1, SZ1, SX0, BARX, BZ0, BZ1,
     tap: { x: BARX, z: BZ0 + 0.8 },                                                              // (the tap barrel on the bar)
-    stools: Array.from({ length: 7 }, (_, i) => ({ x: BARX + 0.8, z: BZ0 + 0.5 + i * 0.8 })),   // (the red stools along the bar)
+    stools: Array.from({ length: Math.floor((BZ1 - BZ0 - 0.5) / 0.8) + 1 }, (_, i) => ({ x: BARX + 0.8, z: BZ0 + 0.5 + i * 0.8 })),   // (the red stools along the bar)
     lone: { x: BARX + 1.6, z: BZ0 - 0.9 },                                                       // (the lone stool by the bar's turn)
     luc: { x: LX + 0.85, z: 2.7 * F, a: Math.PI / 2 },                                           // (Luc's spot behind the bar)
     shelfZ: [BZ0 + 0.3, BZ1 - 0.3],                                                              // (the bottle shelf behind him)
     juke: { x: SX0 + 1.4, z: SZ1 + 0.8 }, sofa: { x: -0.9 * F, z: SZ1 + 0.42, w: 2.2 },
-    tables: [[1.35, 5.1], [4.95, 8.1], [5.1, 2.4], [1.5, 9.3]],                                 // (the square tables in front)
+    tables: [[1.35, 5.1], [4.95, 8.1], [5.1, 2.4], [1.5, 9.3]].map(([x, z]) => [x * S, z * S]),                                 // (the square tables in front)
     chairs: [[0, -0.75, 0], [0, 0.75, Math.PI], [-0.85, 0, Math.PI / 2], [0.85, 0, -Math.PI / 2]] };   // (round each: dx, dz, the way its sitter faces)
 })();
 
@@ -76,8 +79,8 @@ export function buildTavernRoom(scene, physics) {
   const R = B.room, k = B.k;
   // (the user 2.11, "make them bigger, it's really small": the floor 1.5 times the first cut, the hall and gallery a
   //  quarter higher, the camera closer and following Twinsen as in his own house; the furniture keeps its size)
-  const P = TAVERN_PLAN, { F, W, D } = P, H = 7.0;
-  R.view = 12; R.follow = 0.65; R.music = 'home';
+  const P = TAVERN_PLAN, { F, S, W, D } = P, H = 6.2;
+  R.view = 11.5; R.follow = 0.65; R.music = 'home';
   // (the original's walls are pale grey blocks with a cool cast: the grey stone texture lightened toward them, lit a
   //  little from within as the sewers' masonry is, so a face turned from every lamp still reads as stone)
   const stone = M('tv_stone', () => { const t = TEX.stone('grey'), m = new THREE.MeshStandardMaterial({ map: t, color: '#e6e4ea', roughness: 0.9, emissive: '#ffffff', emissiveMap: t, emissiveIntensity: 0.32 }); m.userData.tile = 2; return m; });
@@ -130,7 +133,7 @@ export function buildTavernRoom(scene, physics) {
     k.add(sphere(0.17, 14, 10), MAT.glow('#fff8ee', '#ffe8c0', 1.2), x, y + 1.22, z);
   }
   // up there: round tables with red stools, a plant in each corner
-  for (const [x, z] of [[-4.2, BZ + 3.2], [-0.9, BZ + 2.4], [2.85, BZ + 4.35], [5.55, BZ + 1.95]]) {
+  for (const [x, z] of [[-4.2, 3.2], [-0.9, 2.4], [2.85, 4.35], [5.55, 1.95]].map(([x, z]) => [x * S, BZ + z * S])) {
     B.put(x, z, 0, (kk) => table(kk, { w: 0.8, h: 0.95, round: true, pal: 'pale' }), { y: GH });
     for (let s = 0; s < 3; s++) { const a = s * 2.1 + 0.4; B.put(x + Math.sin(a) * 0.65, z + Math.cos(a) * 0.65, 0, (kk) => stool(kk, 0.62), { y: GH }); }
   }
@@ -144,13 +147,14 @@ export function buildTavernRoom(scene, physics) {
   k.at(BARX + 0.65, 0, BZ0 - 0.1, 0, () => counter(k, { w: 1.6, d: 0.7, h: 1.08, pal: 'grey', top: MAT.steel() }));
   B.col(BARX + 0.65, BZ0 - 0.1, 0.8, 0.36, 1.1, { noStand: true });
   k.at(P.tap.x, 1.08, P.tap.z, 0, () => { barrel(k, { r: 0.26, h: 0.62, pal: 'dark' }); k.add(cyl(0.02, 0.02, 0.2, 6), MAT.brass(), 0.27, 0.35, 0, 0, { rz: Math.PI / 2 }); });
-  for (const [z, c, kind] of [[2.0, '#2f8a7a', 'bottle'], [2.4, '#7a3a2a', 'bottle'], [3.0, '#2f6f74', 'bottle'], [3.6, '#c8a050', 'jar'], [4.6, '#2f8a7a', 'bottle'], [5.4, '#7a3a2a', 'bottle']]) jar(k, BARX - 0.05, 1.1, z, kind, c, 1.1);
+  for (const [z, c, kind] of [[1.15, '#2f8a7a', 'bottle'], [1.5, '#7a3a2a', 'bottle'], [2.0, '#2f6f74', 'bottle'], [2.5, '#c8a050', 'jar'], [3.4, '#2f8a7a', 'bottle'], [4.1, '#7a3a2a', 'bottle']]) jar(k, BARX - 0.05, 1.1, BZ0 + z, kind, c, 1.1);   // (from the bar's back end, past the tap)
   for (const s of P.stools) B.put(s.x, s.z, 0, (kk) => stool(kk));
   B.put(P.lone.x, P.lone.z, 0, (kk) => stool(kk));
   // the shelf behind the bar: bottles and, twelve years on, glazed Esmer jars from the harbour; the bar's name board
   for (const y of [1.6, 2.15]) k.add(rbox(0.3, 0.05, P.shelfZ[1] - P.shelfZ[0], 0.01), MAT.wood('dark'), LX + 0.32, y, (P.shelfZ[0] + P.shelfZ[1]) / 2);
-  for (let i = 0; i < 10; i++) jar(k, LX + 0.32, 1.63, BZ0 + 0.45 + i * 0.52, i % 3 === 1 ? 'urn' : 'bottle', ['#2f8a9a', '#c84a7a', '#e8b84a', '#3a72c4', '#2f8a7a', '#7a3a2a', '#8a5ac0'][i % 7], i % 3 === 1 ? 0.8 : 1.0);
-  for (let i = 0; i < 9; i++) jar(k, LX + 0.32, 2.18, BZ0 + 0.55 + i * 0.55, 'bottle', ['#2f6f74', '#c8a050', '#7a3a2a'][i % 3], 0.95);
+  const shL = P.shelfZ[1] - P.shelfZ[0];
+  for (let i = 0; i < 10; i++) jar(k, LX + 0.32, 1.63, P.shelfZ[0] + 0.15 + i * ((shL - 0.3) / 9), i % 3 === 1 ? 'urn' : 'bottle', ['#2f8a9a', '#c84a7a', '#e8b84a', '#3a72c4', '#2f8a7a', '#7a3a2a', '#8a5ac0'][i % 7], i % 3 === 1 ? 0.8 : 1.0);
+  for (let i = 0; i < 9; i++) jar(k, LX + 0.32, 2.18, P.shelfZ[0] + 0.25 + i * ((shL - 0.5) / 8), 'bottle', ['#2f6f74', '#c8a050', '#7a3a2a'][i % 3], 0.95);
   k.add(plane(1.6, 0.5), MAT.paper('#f2e6c8', '#b0302c', 'leaf'), LX + 0.03, 2.75, (BZ0 + BZ1) / 2, Math.PI / 2);
   R.npcSpots = { luc: { x: B.cx + P.luc.x, z: B.cz + P.luc.z, a: P.luc.a } };
 
@@ -173,7 +177,19 @@ export function buildTavernRoom(scene, physics) {
   k.add(rbox(0.14, 0.6, 1.6, 0.03), MAT.copper(), LX + 0.12, 0.45, -1.0 * F);
   for (let i = 0; i < 8; i++) k.add(rbox(0.16, 0.55, 0.05, 0.01), MAT.copper(), LX + 0.13, 0.45, -1.0 * F - 0.7 + i * 0.2);
 
-  B.light('#ffe2b8', 7, 18, -2.25, 5.5, 5.25); B.light('#ffe2b8', 6.5, 18, 3.75, 5.7, -3.0); B.light('#fff0d8', 3.5, 10, 2.25, GH + 2.4, BZ + 3.0); B.light('#ffd8a0', 3, 7, BARX + 0.4, 2.6, 3.9);
+  // --- ROOMS-FULL: lamps over the tables, cups and plates on them, barrels and a crate of the harbour's bottles by the
+  // right wall, sacks by the cellar's arched door, a striped cloth over the radiator (props: no new lights)
+  P.tables.forEach(([x, z], i) => {
+    k.at(x, 0, z, 0, () => hangingLamp(k, 1.95, H, { shade: '#b0302c' }));
+    plate(k, x - 0.25, 0.8, z + 0.15, 0, '#f2ead6', 0.11, false);
+    for (const [dx, dz] of [[0.2, -0.15], [-0.05, 0.2 * (i % 2 ? 1 : -1)]]) k.add(cyl(0.045, 0.04, 0.11, 10), MAT.paint('#e8e4d8', 0.6), x + dx, 0.855, z + dz);
+  });
+  for (const z of [4.4, 5.1]) B.put(W / 2 - 0.55, z, 0, (kk) => barrel(kk, { r: 0.3, h: 0.75, pal: 'dark' }));
+  B.put(W / 2 - 0.6, 3.6, 0.2, (kk) => { const f = crate(kk, 0.6, { pal: 'honey' }); for (let i = 0; i < 4; i++) jar(kk, -0.15 + (i % 2) * 0.3, 0.6, -0.12 + Math.floor(i / 2) * 0.24, 'bottle', ['#2f8a7a', '#7a3a2a'][i % 2], 0.9); return f; });
+  B.put(AX + 1.25, GZ1 + 0.55, 0.4, (kk) => sackPile(kk, { seed: 4 }));
+  k.at(LX + 0.04, 2.0, -1.0 * F, Math.PI / 2, () => hanging(k, { w: 1.4, h: 1.0 }));
+
+  B.light('#ffe2b8', 7, 18, -2.25 * S, 5.4, 5.25 * S); B.light('#ffe2b8', 6.5, 18, 3.75 * S, 5.5, -3.0 * S); B.light('#fff0d8', 3.5, 10, 2.25 * S, GH + 2.3, BZ + 3.0 * S); B.light('#ffd8a0', 3, 7, BARX + 0.4, 2.6, 3.9 * S);
   return { tavern: B.finish() };
 }
 

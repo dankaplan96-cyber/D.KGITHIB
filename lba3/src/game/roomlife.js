@@ -111,7 +111,8 @@ export const SEAT = {
 // ------------------------------------------------------------------ the rooms
 // each room: its walkable floors (its own frame; y the floor's height), and its people. A stop is walkrounds.js's
 // { id, x, z, a, act, dur, seat?, pair?/mate?, carry?, stage?, gest?, spot? } in the room's frame.
-// BIGGER-1 (the user 2.11, "make them bigger": every room 1.5 times the first cut, the furniture its own size): every
+// BIGGER-1 (the user 2.11, "make them bigger": every room 1.5 times the first cut, the furniture its own size; ROOMS-FULL,
+// the user 3.11: Citadel's rooms 1.25 times and furnished further): every
 // floor and stop is read from the room's own layout (its *_PLAN, the numbers its builder uses), so a change of the layout
 // carries its people along; the keeper's first stop names the room's spot for them (`spot`: R.npcSpots), and is put on
 // it as the room is built. Each stop keeps its own distance from the thing it is at (a counter's face, a shelf, a seat).
