@@ -1,6 +1,6 @@
 // MAP-1: the Holomap (M) and the minimap, drawn from the world the game built (src/game/mapdraw.js, hud.js).
 //   - opened by a real key press in Citadel, Desert Island, the Hamalayi, Zeelich's spaceport island and two of its
-//     islands (Tralu Rock, Otringal): the drawn ground matches the world (walkable sample points are land on the map,
+//     islands (the Nectar Orchard, Otringal): the drawn ground matches the world (walkable sample points are land on the map,
 //     open sea is water), Twinsen's arrow sits on his real position and shows his facing, no two labels overlap and
 //     none leaves the map; a JPEG of each to docs/lba3-production/reviews/MAP-1/
 //   - zoom and pan by mouse wheel, drag, keyboard (+/−, the move keys), a gamepad (RT/LT, the stick) and touch
@@ -43,7 +43,7 @@ const place = (where) => ev((where) => {
   G.enterRoom(p.region, { x, z, a: a + Math.PI * 0.75 }, true); P.settle(); return { region: p.region };
 }, where);
 
-const REGIONS = [['citadel', 'citadel'], ['desert', 'desert_ferry'], ['hamalayi', 'hamalayi_glider'], ['zeelich', 'zeelich_port'], ['isle_tralu', 'isle_tralu'], ['isle_otringal', 'isle_otringal']];
+const REGIONS = [['citadel', 'citadel'], ['desert', 'desert_ferry'], ['hamalayi', 'hamalayi_glider'], ['zeelich', 'zeelich_port'], ['isle_orchard', 'isle_orchard'], ['isle_otringal', 'isle_otringal']];
 const rows = [];
 for (const [region, where] of REGIONS) {
   await place(where);

@@ -190,6 +190,13 @@ const DESERT_PEOPLE = [
       L('c_dip', -61.85, -79.6, -63.7, -79.6, 'dip', [4, 6]),
       L('c_pillar', -59.3, -76.0, -60.2, -75.1, 'stand', [5, 8], { gest: ['shrug'] }),
     ] } },
+  // PURPOSES (3.11.2026): Oni, a pupil, on the rim walk before the dormitory's door (the great hall in the pool,
+  // desertold.js: its door (−67.8, −66.4), the study crystal on its bracket (−66.05, −65.5)); a look up at the crystal
+  { id: 'oni', char: 'desertkid', tint: '#eef0ff', speed: 1.1, color: '#b8c8ff', start: 0, area: 'desert', phase: school, rounds: {
+    school: [
+      L('oni_door', -70.4, -67.4, -67.8, -66.0, 'stand', [20, 30], { gest: ['sigh'] }),
+      L('oni_look', -64.9, -67.5, -66.05, -65.5, 'stand', [8, 12], { gest: ['shrug'] }),
+    ] } },
 ];
 // the School's herb bed (built here): long side along z, by the plaza's east wall
 const HERB_BED = { x: -56.4, z: -74.4, w: 0.9, l: 1.9 };
@@ -319,6 +326,14 @@ const HAMALAYI_PEOPLE = [
 const COUNCIL_DOOR = { x: -25.5, z: -7.65 };
 const council = (f, S) => (S.cur?.key === 'council' ? 'council' : null);
 const ZEELICH_PEOPLE = [
+  // PURPOSES (3.11.2026): Marl, who trains the project's guard dogs in the yard behind the north houses (zeelich.js: the
+  // palisade round (−28, −21), 11 × 6.8 m, its gate gap on the south side at z −17.6); from chapter 3 on
+  { id: 'marl', char: 'keeper', tint: '#fff0dc', speed: 0.8, color: '#e8b070', start: 0, area: 'zeelich',
+    phase: (f, S) => (S.index >= idx(S, 'zeelich') ? 'yard' : null), rounds: {
+      yard: [
+        L('marl_gate', -29.8, -15.6, -28, -21, 'stand', [24, 34], { gest: ['nod'] }),
+        L('marl_side', -24.6, -15.9, -26, -21, 'stand', [10, 14]),
+      ] } },
   // a council guard on post either side of the council house's door, crossing over now and then
   { id: 'zc_guard', char: 'keeper', tint: '#dfe4ff', speed: 0.6, color: '#a0a8e8', start: 0, area: 'zeelich', phase: council, rounds: {
     council: [
@@ -355,7 +370,7 @@ export const STORY_GROUP = {
   dig: DESERT_PEOPLE.filter((p) => p.id.startsWith('dg_')).map((p) => p.id),
   school: DESERT_PEOPLE.filter((p) => p.id.startsWith('sc_')).map((p) => p.id),
   village: HAMALAYI_PEOPLE.map((p) => p.id),
-  council: ZEELICH_PEOPLE.map((p) => p.id),
+  council: ZEELICH_PEOPLE.filter((p) => p.phase === council).map((p) => p.id),
 };
 const shift = (s, ox, oz) => ({ ...s, x: s.x + ox, z: s.z + oz, ...(s.door ? { door: { x: s.door.x + ox, z: s.door.z + oz } } : {}), ...(s.field ? { field: { ...s.field, x: s.field.x + ox, z: s.field.z + oz } } : {}) });
 // every outdoor story resident's definition (story/citizens.js npcDefs): its rounds by state in the world, or pending (its

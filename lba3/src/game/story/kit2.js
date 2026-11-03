@@ -123,7 +123,8 @@ export class Kit2 extends ChapterBase {
   // the water within reach of where he stands (null: none): { x, y, z, what }
   waterNear() {
     const g = this.game, h = g.hero, f = this.f, L = g.world?.life, near = (x, z, r) => Math.hypot(x - h.pos.x, z - h.pos.z) < r;
-    if (g.room) return null;
+    // (PURPOSES: on Desert Island, the old corral's troughs north of the post: desertold.js R.troughs)
+    if (g.room) { for (const T of (g.room.id === 'desert' && g.room.troughs) || []) if (near(T.x, T.z, FILL_R + 1.0)) return { x: T.x, z: T.z, what: 'trough' }; return null; }
     if (L?.trough && f.l_pump) { const x = L.trough.x + 0.75, z = L.trough.z; if (near(x, z, FILL_R)) return { x: L.trough.x, z, what: 'trough' }; }
     if (this.valve && f.e2_valve && near(this.valve.basin.x, this.valve.basin.z, FILL_R + 0.3)) return { x: this.valve.basin.x, z: this.valve.basin.z, what: 'basin' };
     const W = g.world;
@@ -147,6 +148,7 @@ export class Kit2 extends ChapterBase {
     if (!this.canUse()) return;
     if (here === 'house' && this.set && !A.pocketset && this.setReady) consider(dist(this.set.x, this.set.z), 1.15, { kind: 'e2_set', label: 'p_take' });
     if (here === 'cellar' && this.tin && !f.e2_tin && A.pocketset && g.gadgets?.tools?.held() === 'pocketset') consider(dist(this.tin.x, this.tin.z), 1.3, { kind: 'e2_tin', label: 'p_lift' });
+    if (here === 'desert' && A.lance && A.water < LANCE.tank) { const w = this.waterNear(); if (w) consider(Math.max(0.05, dist(w.x, w.z) - 0.8), 1.6, { kind: 'e2_fill', water: w, label: 'p_fill' }); }
     if (here !== 'citadel') return;
     if (this.valve && this.open) consider(dist(this.valve.x, this.valve.z), 1.25, { kind: 'e2_valve', label: !f.e2_valve && this.valveCool > 0 ? 'p_turn' : 'p_look' });
     if (A.lance && A.water < LANCE.tank) { const w = this.waterNear(); if (w) consider(Math.max(0.05, dist(w.x, w.z) - 0.8), 1.6, { kind: 'e2_fill', water: w, label: 'p_fill' }); }

@@ -4,24 +4,19 @@
 // dresses and edges it exactly like Otringal or Knartas. Shapes are made from rounded outlines, domes, cliffs and
 // curved ramps (no boxes): the ground is a sum of smooth pieces, sampled on the grid.
 //
-//   tralu     Tralu Rock — an Esmer trading post on a tall rock: the market on its crown, a quay shelf below where
-//             the cloud skiffs tie up, a ramp curving round the rock's south face between them.
 //   orchard   The Nectar Orchard — a broad rounded hill of nectar trees in rows along its contours, a press
 //             house at its foot, a cloud-catcher on the crown; the north side breaks off in a cliff.
 //   oldwatch  The Old Watch — a crescent ridge with a ruined watchtower on its north horn (older than the
 //             council), fallen stones along the crest, and an old telescope on the south horn looking out.
 //
-// placeLayout(name) → the layout object (or null); PLACES lists the names; TRALU/ORCHARD/OLDWATCH hold the
+// placeLayout(name) → the layout object (or null); PLACES lists the names (Tralu Rock was cut: DECLUTTER, 3.11.2026); ORCHARD/OLDWATCH hold the
 // numbers their dressing (zislands.js STYLE) needs. Pure numbers: runs in node too.
 import { rng } from '../engine/math.js';
 
-export const PLACES = ['tralu', 'orchard', 'oldwatch'];
+export const PLACES = ['orchard', 'oldwatch'];   // (DECLUTTER: Tralu Rock is cut; zislands.js SLOTS keeps its index)
 // what our buildings are for, by body (zislands.js draws each with props-esmer.js esmerBuilding): a store has a
 // wide door and a hoist beam over it; a sign names the house over its door (a word of the sign atlas)
 export const BUILDINGS = {
-  901: { role: 'house', sign: 'TRADING POST' },   // Tralu: the trading house (domed)
-  903: { role: 'house' },                         // Tralu: the clerk's office
-  905: { role: 'store' },                         // Tralu: the quay's warehouse
   921: { role: 'store', sign: 'PRESS HOUSE' },    // the Orchard: the press house
   922: { role: 'store' },                         // the Orchard: its store
 };
@@ -53,43 +48,6 @@ function sample(name, n, hf, decor, note) {
     o[2] = lo < 1e8 ? +(lo - 0.05).toFixed(2) : 0.3;
   }
   return { name, size: [+(n * CELL).toFixed(1), +(n * CELL).toFixed(1)], cell: CELL, nx: n, nz: n, maxH, heights, decor, ours: true, note };
-}
-
-// ================================================================== Tralu Rock: the trading post
-export const TRALU = { TOP: 12.2, QUAY: 2.4, ramp: { r: 21.0, hw: 3.3, a0: 0.3, a1: 2.6 }, quayA: -0.3 };
-function tralu() {
-  const { TOP, QUAY, ramp } = TRALU, rTop = lobes(31, 15.8, 0.08), rOut = lobes(37, 28, 0.06), top = bumps(5, 0.35, 6);
-  const hf = (x, z) => {
-    const r = Math.hypot(x, z), a = Math.atan2(z, x);   // (a = 0 east, + toward the south)
-    // the rock: a rounded crown, its sides a cliff
-    const rt = rTop(a), crown = TOP + top(x, z) - (r / rt) ** 4 * 0.6;
-    let h = r <= rt ? crown : crown - (r - rt) * 4.2;
-    // the landing at the ramp's head joins the crown
-    for (const rr of [ramp.r, ramp.r - 3.0, ramp.r - 6.0]) {
-      const hx = Math.cos(ramp.a1 + 0.08) * rr, hz = Math.sin(ramp.a1 + 0.08) * rr, hd = Math.hypot(x - hx, z - hz);
-      if (hd < 5.0) h = Math.max(h, TOP - 0.2 - ss(3.6, 5.0, hd) * 30);
-    }
-    // the quay: a crescent shelf on the east side, low over the clouds
-    const qa = Math.abs(angDiff(a, TRALU.quayA)), qOut = rOut(a) * 0.98;
-    if (qa < 1.05 && r > rt + 1.5 && r < qOut) h = Math.max(h, QUAY + 0.15 * Math.sin(x * 0.4) - ss(0.85, 1.05, qa) * 6);
-    // the ramp round the south face: a shelf rising from the quay to the crown (gentle: ≈ 0.25)
-    if (a > ramp.a0 - 0.45 && a < ramp.a1 + 0.1) {
-      const t = ss(ramp.a0, ramp.a1, a) * 0.6 + Math.min(1, Math.max(0, (a - ramp.a0) / (ramp.a1 - ramp.a0))) * 0.4;
-      const rh = QUAY + (TOP - 0.25 - QUAY) * t, d = Math.abs(r - ramp.r);
-      // (inward the shelf runs flat to the cliff's foot, no trench; outward it breaks off over the clouds)
-      if (r < ramp.r && r > rt - 1) h = Math.max(h, rh);
-      else if (d < ramp.hw + 1.2) h = Math.max(h, rh - ss(ramp.hw, ramp.hw + 1.2, d) * 20);
-    }
-    if (r > rOut(a) && h < TOP - 1) h = Math.min(h, -1);   // (the sea beyond the outline)
-    return h;
-  };
-  const D = [
-    obj(-3.0, -8.2, 7.6, 7.4, 6.2, 'building', 901),          // the trading house (domed)
-    obj(7.0, 9.6, 3.8, 3.4, 3.4, 'building', 903),            // the clerk's office
-    obj(-12.6, -5.2, 2.6, 8.2, 2.6, 'building', 904),          // the lookout tower (west rim)
-    obj(22.6, -11.4, 5.4, 4.0, 4.0, 'building', 905),          // the quay's warehouse
-  ];
-  return sample('tralu', 53, hf, D, 'Ours (not LBA2): Tralu Rock, an Esmer trading post. Generated layout numbers (src/game/zplaces.js).');
 }
 
 // ================================================================== the Nectar Orchard
@@ -165,5 +123,5 @@ function oldwatch() {
   return sample('oldwatch', 45, hf, D, 'Ours (not LBA2): the Old Watch, a ruined watch platform. Generated layout numbers (src/game/zplaces.js).');
 }
 
-const MAKE = { tralu, orchard, oldwatch };
+const MAKE = { orchard, oldwatch };
 export function placeLayout(name) { return MAKE[name] ? MAKE[name]() : null; }

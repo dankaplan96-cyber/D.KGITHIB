@@ -15,7 +15,6 @@
     { "name": "the lighthouse", "orig": { "body": 75 }, "ours": { "spot": "POI.lighthouse" }, "w": 2 },
     { "name": "the statue of Twinsen and Zoé", "orig": { "body": 24 }, "ours": { "spot": "spots.statue" }, "w": 2 },
     { "name": "Bersimon's tent (S21)", "orig": { "body": 3 }, "ours": { "spot": "spots.wizTent" }, "w": 2 },
-    { "name": "the great dome on the west islet (S26)", "orig": { "body": 21 }, "ours": { "fit": "the west islet dome" }, "w": 2, "note": "a 19 × 19 m dome 12 m up on the islet (WORLD-80 step 2: built, island.js buildWestIslet)" },
     { "name": "the plateau's door (S2)", "orig": { "door": 2 }, "ours": { "door": true } },
     { "name": "the passage through the plateau, south door (S51)", "orig": { "door": 51, "i": 0 }, "ours": { "door": true }, "w": 0.5 },
     { "name": "the passage through the plateau, north door (S51)", "orig": { "door": 51, "i": 1 }, "ours": { "door": true }, "w": 0.5 },
@@ -32,18 +31,12 @@
     { "name": "village house (S36)", "orig": { "body": 22 }, "ours": { "fit": "house kesh3" }, "note": "the original's S36 stands where our oasis basin is; our nearest house is 30 m off" },
     { "name": "the big house by the village (S40)", "orig": { "body": 24 }, "ours": { "fit": "house s40" }, "w": 2, "note": "WORLD-80 step 3: built (desertold.js), its door shut" },
     { "name": "the tall building at S28", "orig": { "body": 52 }, "ours": { "fit": "tower s28" }, "w": 2, "note": "WORLD-80 step 3: a tower in its hollow under the ridge, its door shut" },
-    { "name": "the walled compound (S24), its main house", "orig": { "body": 94 }, "ours": { "fit": "compound house 94" }, "w": 2, "note": "WORLD-80 step 3: built, with the second house, the yard walls and the well" },
-    { "name": "the walled compound (S24), its second house", "orig": { "body": 95 }, "ours": { "fit": "compound house 95" } },
     { "name": "the great hall (body 48)", "orig": { "body": 48 }, "ours": { "fit": "the school hall" }, "w": 2, "note": "WORLD-80 step 3: the School of Magic's hall in the pool (the user's decision)" },
     { "name": "the high façade beside it (body 43)", "orig": { "body": 43 }, "ours": { "fit": "the school mask" }, "note": "WORLD-80 step 3: the School of Magic's stone mask, its door in the chin (the user's decision)" },
-    { "name": "the house at body 49", "orig": { "body": 49 }, "ours": { "fit": "house b49" }, "note": "WORLD-80 step 3: built, its door shut" },
-    { "name": "the house on the north-west plateau (S113)", "orig": { "body": 3 }, "ours": { "fit": "hut s113" }, "note": "WORLD-80 step 3: built, its door shut" },
     { "name": "the house at S10 / S127", "orig": { "body": 92 }, "ours": { "fit": "post cabin 1" }, "note": "inside the research post (an addition): the post's east cabin stands 13 m from the original's house and is named for it here (docs/WORLD_SIMILARITY.md #5)" },
-    { "name": "the islet's door (S183)", "orig": { "door": 183 }, "ours": { "door": true }, "note": "WORLD-80 step 3: a shut door in the cove's cliff" },
     { "name": "the 5.2 m standing figure or pillar west of the village (body 0)", "orig": { "body": 0 }, "ours": { "spot": "spots.figures", "i": 0 }, "note": "WORLD-80 step 3: a hooded stone figure on its knoll (desertold.js)" },
     { "name": "its twin, 35 m east (body 33)", "orig": { "body": 33 }, "ours": { "spot": "spots.figures", "i": 1 }, "note": "WORLD-80 step 3: a hooded stone figure on the promontory" },
     { "name": "the gateway: two posts (5.2 and 6.1 m) under a 9 m beam", "orig": { "body": 64 }, "ours": { "spot": "spots.gateway" }, "note": "WORLD-80 step 3: the gate over the track to the dig, centred on the track (1.6 m from the original's centre)" },
-    { "name": "the twin 5.2 m pillars (bodies 80, 81)", "orig": { "body": 80 }, "ours": { "spot": "spots.figures", "i": 2 }, "note": "WORLD-80 step 3: two horned stone pillars north of the post" },
-    { "name": "the 4.6 m figure on the islet (body 104)", "orig": { "body": 104 }, "ours": { "spot": "spots.figures", "i": 4 }, "note": "WORLD-80 step 3: a hooded stone figure in the islet's cove" }
+    { "name": "the twin 5.2 m pillars (bodies 80, 81)", "orig": { "body": 80 }, "ours": { "spot": "spots.figures", "i": 2 }, "note": "WORLD-80 step 3: two horned stone pillars north of the post" }
   ]
 }

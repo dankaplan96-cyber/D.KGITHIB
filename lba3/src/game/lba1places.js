@@ -8,9 +8,9 @@
 //            (and its rubble by the block-house door), the dig's breach gapes in the west wall with the project's
 //            cable out of it. Twinsen's own cell (where LBA1 starts him) has his scratch marks, a warm pipe through
 //            it, and a find (flag as_cell). The rooms are cut open over him as in LBA1 (lba1room.js, lids).
-//   bumaze   the Temple of Bù's spiked maze (LBA1 room 57), down a stair from our Temple of Bù (chapter 4)
-//   buhalls  the temple's dark halls (LBA1 room 40), past the maze; crystal mites where LBA1 had its creatures,
-//            and at the far end the way back up
+//   bumaze   the Temple of Bù's spiked maze (LBA1 room 57), down a stair from our Temple of Bù (chapter 4); at its
+//            far end the chest and the way back up (DECLUTTER, 3.11.2026: the dark halls, LBA1 room 40, that came
+//            after it are merged into it: one optional room, one chest)
 // Doors and exits are open in every chapter (src/game/story/index.js via lba1Doors / lba1Exit).
 import * as THREE from 'three';
 import { buildLba1Room, hasLba1Room } from './lba1room.js';
@@ -18,7 +18,7 @@ export { hasLba1Room };
 import { MAT, rbox, plane, cyl, canvasTex } from './props.js';
 import { tube } from './kit.js';
 
-export const LBA1_AT = { asylum: { x: 7000, z: 0 }, bumaze: { x: 7200, z: 0 }, buhalls: { x: 7400, z: 0 } };
+export const LBA1_AT = { asylum: { x: 7000, z: 0 }, bumaze: { x: 7200, z: 0 } };
 export const ASYLUM_DOOR = { x: -11.2, z: -65, a: Math.PI / 2 };   // (outside the fort's east wall, facing east)
 
 // ASYLUM-1's decals (drawn: no words but the project's sign): Twinsen's tally marks, scratched in groups of five
@@ -204,21 +204,13 @@ export function buildLba1Temple(scene, physics) {
     R.cave = true; R.music = 'cave';
     const back = R.cell(14, 1, 19.0), goal = R.cell(14, 1, 11);
     R.exits.push({ x: back.x, z: back.z, r: 0.9, room: 'butemple' });
-    R.exits.push({ x: goal.x, z: goal.z, r: 0.8, room: 'buhalls' });
-    R.goal = goal;
-  }
-  if (hasLba1Room('buhalls')) {
-    const R = out.buhalls = buildLba1Room(scene, physics, 'buhalls', 'buhalls', A.buhalls.x, A.buhalls.z, { stone: 'slate', lamp: '#9fc8ff', lampI: 12, view: 24, tint: 1.6, topCol: '#f0d0a4' });   // (WORLD-ART-7: sandy worn floors against the slate walls)
-    R.grade = 0.32;   // (WA-13b: LBA1's rooms are grey stone; measured on the laptop against LBA1: chroma 4-6)
-    R.cave = true; R.music = 'cave';
-    const st = R.cell(3, 17, 3.2), far = R.cell(61, 17, 1.4), give = R.cell(61, 17, 4);
-    R.spawn = { x: st.x, z: st.z, a: 0 };
-    R.entries = { bumaze: R.spawn };
-    R.exits.push({ x: far.x, z: far.z, r: 1.0, room: 'butemple' });
+    // the far end: the chest the dark halls had, and the way back up to the temple
+    const give = R.cell(14, 1, 12.4);
+    R.exits.push({ x: goal.x, z: goal.z, r: 0.8, room: 'butemple' });
     R.givers.push({ id: 'bu_halls', x: give.x, z: give.z, y: give.y, r: 1.2, top: 1, kinds: ['life', 'magic', 'clover'], n: 3 });
-    R.mites = (R.spots || []).filter((s) => s.body === 59).slice(0, 6);
+    R.goal = goal;
+    R.entries = { butemple: R.spawn };
   }
-  if (out.bumaze && out.buhalls) out.bumaze.entries = { butemple: out.bumaze.spawn };
   return out;
 }
 
@@ -228,9 +220,9 @@ export function lba1Exit(to) {
   return null;
 }
 
-// the asylum's guards, where LBA1's nurses (bodies 9, 11) and clone (13) stood; the halls' crystal mites
+// the asylum's guards, where LBA1's nurses (bodies 9, 11) and clone (13) stood
 export function lba1EnemyDefs(rooms) {
-  const out = [], A = rooms.asylum, H = rooms.buhalls;
+  const out = [], A = rooms.asylum;
   const after = (f) => !!f.prologueDone;
   if (A?.spots) {
     let n = 0;
@@ -242,6 +234,5 @@ export function lba1EnemyDefs(rooms) {
     out.push({ id: 'asy_dog1', kind: 'gdog', coat: 'grey', group: 'asylum', x: d1.x, z: d1.z, patrol: [[d1.x, d1.z], [d1.x + 3, d1.z]], when: after });
     out.push({ id: 'asy_dog2', kind: 'gdog', coat: 'brown', group: 'asylum', x: d2.x, z: d2.z, patrol: [[d2.x, d2.z], [d2.x, d2.z + 3]], when: after });
   }
-  if (H?.mites) H.mites.forEach((m, i) => out.push({ id: 'buh_mite' + i, kind: 'mite', group: 'buhalls', x: m.x, z: m.z }));
   return out;
 }

@@ -15,7 +15,7 @@ import { TEX } from './props.js';
 
 export const CELL = 2.1 / 1240 * 512, CH = 2.1 / 1240 * 256;   // 0.867 m, 0.434 m
 const LAYOUTS = {};
-export async function preloadLba1Rooms(names = ['asylum', 'bumaze', 'buhalls']) {
+export async function preloadLba1Rooms(names = ['asylum', 'bumaze']) {
   await Promise.all(names.map(async (n) => {
     try { const r = await fetch(`assets/lba1/${n}.json`); if (r.ok) LAYOUTS[n] = await r.json(); } catch { /* the room is left out */ }
   }));

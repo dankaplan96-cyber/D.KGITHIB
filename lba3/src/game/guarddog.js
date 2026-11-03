@@ -35,11 +35,14 @@ export class GuardDog extends Actor {
 
   melee(D, h) { this.damage(D.dmg + (D.heavy ? 1 : 0), h.pos); return 'hit'; }
   ballHit(ball, p) { this.damage(ball.damage, p); return 'hit'; }
+  // PURPOSES (Marl's long call, story/purposes.js): the conch's long note sends it home to lie down, deaf to Twinsen for
+  // t seconds unless something hurts it (a stun only startles; this one stands it down)
+  calm(t) { if (!this.alive) return; if (this.state === 'windup' || this.state === 'lunge') this.game.combatDir?.done(this); this.calmT = t; this.state = 'home'; this.stateT = 0; }
   pulse(C) { if (!this.alive) return; this.stunT = C.stun || 2.6; if (this.state === 'windup' || this.state === 'lunge') this.game.combatDir?.done(this); this.state = 'stunned'; this.stateT = 0; }
   damage(n, from) {
     if (!this.alive) return;
     const g = this.game;
-    this.hp -= n; this.rig.hitFlash(); this.hurtT = 0.4; this.recentHitT = 2.5;
+    this.hp -= n; this.rig.hitFlash(); this.hurtT = 0.4; this.recentHitT = 2.5; this.calmT = 0;
     if (this.state === 'windup' || this.state === 'lunge') g.combatDir?.done(this);
     if (from) { const a = Math.atan2(this.pos.x - from.x, this.pos.z - from.z); this.kb.set(Math.sin(a) * 6, Math.cos(a) * 6); }
     g.particles.burst(this.pos.x, this.pos.y + 0.8, this.pos.z, '#fff2b0', 8, 3);
@@ -71,13 +74,15 @@ export class GuardDog extends Actor {
     const g = this.game, hero = g.hero, P = g.physics, DF = g.combatDir?.diff || { windup: 1, cool: 1 };
     this.stateT += dt; this.coolT = Math.max(0, this.coolT - dt); this.hurtT = Math.max(0, this.hurtT - dt);
     this.recentHitT = Math.max(0, this.recentHitT - dt);
-    const d = this.distTo(hero), sees = this.notices(hero);
+    this.calmT = Math.max(0, (this.calmT || 0) - dt);
+    const d = this.distTo(hero), sees = this.calmT > 0 ? false : this.notices(hero);
     let sp = 0, face = null, anim = 'idle';
     switch (this.state) {
       case 'guard': {
         const [tx, tz] = this.patrol[this.wp % this.patrol.length];
         const dd = Math.hypot(tx - this.pos.x, tz - this.pos.z);
-        if (this.waitT > 0) { this.waitT -= dt; anim = 'sniff'; }
+        if (this.calmT > 0) { anim = 'idle'; }
+        else if (this.waitT > 0) { this.waitT -= dt; anim = 'sniff'; }
         else if (dd < 0.4 || this.patrol.length < 2) { this.wp = (this.wp + 1) % this.patrol.length; this.waitT = this.patrol.length < 2 ? 1e9 : 1.5; }
         else { face = Math.atan2(tx - this.pos.x, tz - this.pos.z); sp = 1.5; anim = 'walk'; }
         if (sees) { this.state = 'warn'; this.stateT = 0; g.hud?.float?.('!', { x: this.pos.x, y: this.pos.y + 1.5, z: this.pos.z }, '#ffb060'); }

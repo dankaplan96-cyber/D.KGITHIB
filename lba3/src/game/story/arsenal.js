@@ -464,11 +464,15 @@ export class Arsenal extends ChapterBase {
       case 'keraooc':
         if (!this.at('dig') || A.protect) return false;
         if (h.hp < h.maxHp) { h.hp = h.maxHp; g.audio.play('heal'); g.hud.toast('wz_toast_heal'); }
-        return c([['keraooc', 'a_ker_offer']], () => g.openMenu('a_menu_ward', [{ key: 'a_menu_learn', note: 'a_note_20' }], () => {
-          if (h.coins < PRICE.ward) { this.chain([['keraooc', 'a_ker_poor']]); g.audio.play('deny'); return; }
-          h.coins -= PRICE.ward;
+      {
+        // (PURPOSES: the pupils' lamp woken, the ward is half price: story/purposes.js)
+        const price = this.story.purposes?.wardPrice(PRICE.ward) ?? PRICE.ward, half = price < PRICE.ward;
+        return c([['keraooc', half ? 'pp_ker_offer' : 'a_ker_offer']], () => g.openMenu('a_menu_ward', [{ key: 'a_menu_learn', note: half ? 'pp_note_10' : 'a_note_20' }], () => {
+          if (h.coins < price) { this.chain([['keraooc', half ? 'pp_ker_poor' : 'a_ker_poor']]); g.audio.play('deny'); return; }
+          h.coins -= price;
           this.chain([['keraooc', 'a_ker_learn']], () => { this.gain('protect', 'it_protect'); g.save(false); });
         }));
+      }
     }
     return false;
   }

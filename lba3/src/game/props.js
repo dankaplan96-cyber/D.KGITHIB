@@ -2513,7 +2513,7 @@ const BOARD_FACES = {
     x.fillStyle = '#e8c040'; x.font = 'bold 54px Rubik, sans-serif'; x.textAlign = 'center'; x.fillText('DEPARTURES · ESMER SHUTTLE', W / 2, 78);
     x.fillStyle = 'rgba(232,192,64,0.5)'; x.fillRect(40, 100, W - 80, 4);
     x.font = 'bold 40px monospace'; x.textAlign = 'left';
-    ['ZEELICH', 'OTRINGAL', 'KNARTAS', 'MOSQUIBEE', 'CELEBRATION', 'UNDER CELEBRATION', 'CX ISLET', 'THE PLATFORM'].forEach((a, i) => {
+    ['ZEELICH', 'OTRINGAL', 'KNARTAS', 'MOSQUIBEE', 'CELEBRATION', 'UNDER CELEBRATION', 'THE PLATFORM'].forEach((a, i) => {
       const y = 150 + i * 45; x.fillStyle = i % 2 ? '#bfe9ff' : '#9fe0ff'; x.fillText(a, 50, y); x.fillStyle = '#ffd860'; x.fillText('PAD 1', 760, y);
     });
   }),

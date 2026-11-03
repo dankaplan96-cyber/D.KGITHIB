@@ -197,6 +197,10 @@ export const VOICES = {
   sc_in1: { race: 'quetch', seed: 1113, kid: true, f0: 318, k: 1.27, rate: 1.04, contour: 'arc', legato: 0.62 },
   sc_in2: { race: 'quetch', seed: 1114, kid: true, f0: 276, k: 1.16, rate: 1.0, contour: 'fall', legato: 0.58 },
   sc_in3: { race: 'quetch', seed: 1115, kid: true, f0: 326, k: 1.3, rate: 1.14, contour: 'bounce', legato: 0.54 },
+  // PURPOSES (3.11.2026): Tibbo at his counter, Marl at her dog yard, Oni at the dormitory
+  tibbo: { race: 'quetch', seed: 1301, f0: 132, k: 0.97, rate: 1.22, contour: 'zigzag', legato: 0.42, range: 6 },
+  marl: { race: 'esmer', seed: 1302, f0: 236, k: 1.1, rate: 0.92, contour: 'fall', legato: 0.78, vib: [4.5, 16] },
+  oni: { race: 'quetch', seed: 1303, kid: true, f0: 302, k: 1.23, rate: 0.94, contour: 'fall', legato: 0.7 },
   lh_bero: { race: 'quetch', seed: 1116, f0: 112, k: 0.92, rate: 0.9, contour: 'arc', legato: 0.66 },
   lh_sana: { race: 'quetch', seed: 1117, f0: 232, k: 1.14, rate: 1.0, contour: 'fall', legato: 0.64 },
   lh_old: { race: 'bunny', seed: 1118, f0: 132, k: 1.04, rate: 0.72, contour: 'fall', legato: 0.82, vib: [5.4, 24] },
@@ -266,13 +270,13 @@ const WOMEN = new Set(['councilB', 'lhar2', 'tarra', 'nell', 'yorna', 'marda', '
   'weaver', 'odile', 'nara', 'maro',
   // (those still without a voice of their own: the fallback below gives them a woman's)
   'sanna', 'pell', 'ines', 'hedda', 'ama', 'lomba', 'ressa', 'gunda', 'oshra', 'bibi', 'tavi',
-  'dg_cook', 'lh_sana', 'lh_mira', 'zc_courier', 'zc_petit', 'up_wait']);
+  'dg_cook', 'lh_sana', 'lh_mira', 'zc_courier', 'zc_petit', 'up_wait', 'marl']);
 const MEN = new Set(['baldino', 'vesk', 'gilbert', 'worker', 'archivist', 'farmer1', 'lhar1', 'dallan', 'sage', 'resident', 'doran', 'guard', 'councilC',
   'farmer3', 'hesk', 'dtrader', 'bram', 'garrick', 'brix', 'tobb', 'aven', 'bashir', 'bersimon', 'magus', 'lhar3', 'oku', 'xil', 'chair',
   'clerk', 'keeper', 'joe', 'keraooc', 'ztri1', 'ztri2',
   'luc', 'hobb', 'fenn', 'fosse', 'mrbazoo', 'rollo', 'wim', 'osk', 'gurt', 'bern', 'dov', 'ollo', 'pask',
   'dg_surv', 'dg_rod', 'dg_haul', 'dg_porter', 'dg_mech', 'dg_dig', 'dg_clerk', 'sc_master', 'lh_bero', 'lh_old', 'lh_tam', 'lh_grum',
-  'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard', 'zt_guard', 'zt_guard2']);
+  'zc_guard', 'zc_clerk', 'up_clerk', 'up_courier', 'up_esmer', 'up_guard', 'zt_guard', 'zt_guard2', 'tibbo']);
 const PEOPLE = new Set(['quetch', 'grobo', 'bunny', 'esmer', 'elf', 'tri']);   // (Spheros, Mosquibees and moles keep their own kind of voice)
 function sexed(v, sex) {
   if (v.kid || v.id === 'hero' || v.id === 'zoe' || !PEOPLE.has(v.race)) return v;

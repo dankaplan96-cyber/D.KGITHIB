@@ -53,7 +53,7 @@ const MARGIN = 16;           // grid points of sea sampled round the original's 
 const AREA = 27.4;           // the objects part's cell (half an original section)
 
 // ------------------------------------------------------------------ the islands
-const ZISLES = ['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'cxislet', 'platform', 'liftdock'];
+const ZISLES = ['otringal', 'knartas', 'mosquibee', 'celebration', 'undergas', 'platform', 'liftdock'];   // (DECLUTTER: the CX islet is cut)
 const SPECS = [
   { id: 'citadel', name: 'Citadel Island', ref: 'tools/worldscore/ref/citadel.json', frame: 'citadel' },
   { id: 'desert', name: 'Desert Island', ref: 'tools/worldscore/ref/desert.json', frame: 'desert' },

@@ -135,9 +135,9 @@ const s1 = await leg('citadel_port', 'Zeelich Spaceport', 'zeelich', 'zeelich_po
 check('Citadel Spaceport\'s menu lists only Zeelich Spaceport; the spaceship lands him on Zeelich\'s spaceport deck', JSON.stringify(s1.r.items) === JSON.stringify(['Zeelich Spaceport']) && matrix.at(-1).ok, { r: s1.r, l: s1.l });
 // from the spaceport deck over the footbridge to the shuttle pad (INPUT, no ISO), and the shuttle's menu
 const zwalk = await take('zeelich_shuttle', null);
-check('on Zeelich he walks from the spaceport deck over the footbridge to the shuttle pad; its menu: the spaceport island (here) and the 11 islands, nothing of Twinsun', zwalk.prompt === 'menu' && zwalk.items.length === 12 && zwalk.items[0].endsWith('*') && zwalk.items.every((t) => !/Twinsun|Citadel|Desert|Hamalayi/.test(t)), zwalk);
+check('on Zeelich he walks from the spaceport deck over the footbridge to the shuttle pad; its menu: the spaceport island (here) and the 9 islands, nothing of Twinsun', zwalk.prompt === 'menu' && zwalk.items.length === 10 && zwalk.items[0].endsWith('*') && zwalk.items.every((t) => !/Twinsun|Citadel|Desert|Hamalayi/.test(t)), zwalk);
 // every Zeelich place by shuttle: a chain from pad to pad, then back to the spaceport island
-const NAME = { isle_otringal: 'Otringal', isle_knartas: 'Knartas Island', isle_mosquibee: 'Mosquibee Island', isle_celebration: 'Celebration Island', isle_undergas: 'Under Celebration', isle_cxislet: 'The CX Islet', isle_platform: 'The Platform', isle_liftdock: 'The Lift Dock', isle_tralu: 'Tralu Rock', isle_orchard: 'The Nectar Orchard', isle_oldwatch: 'The Old Watch' };
+const NAME = { isle_otringal: 'Otringal', isle_knartas: 'Knartas Island', isle_mosquibee: 'Mosquibee Island', isle_celebration: 'Celebration Island', isle_undergas: 'Under Celebration', isle_platform: 'The Platform', isle_liftdock: 'The Lift Dock', isle_orchard: 'The Nectar Orchard', isle_oldwatch: 'The Old Watch' };
 const ISLES = await ev(() => Object.keys(game.travel.points).filter((k) => k.startsWith('isle_')));
 let from = 'zeelich_shuttle';
 const zl = [];
@@ -147,7 +147,7 @@ for (const id of ISLES) {
   from = id;
 }
 const back = await leg(from, 'Zeelich: the spaceport island', 'zeelich', 'zeelich_shuttle');
-check('every Zeelich place reached by shuttle, pad to pad (11 islands), and back to the spaceport island; no Twinsun stop on any menu', zl.length === 11 && zl.every((z) => z.ok && !z.twinsun) && matrix.at(-1).ok, { zl, back: matrix.at(-1) });
+check('every Zeelich place reached by shuttle, pad to pad (9 islands: DECLUTTER cut the CX islet and Tralu Rock), and back to the spaceport island; no Twinsun stop on any menu', zl.length === 9 && zl.every((z) => z.ok && !z.twinsun) && matrix.at(-1).ok, { zl, back: matrix.at(-1) });
 const s2 = await take('zeelich_port', null);
 check('Zeelich Spaceport\'s menu lists only Twinsun: Citadel Spaceport', JSON.stringify(s2.items) === JSON.stringify(['Twinsun: Citadel Spaceport']), s2);
 const s3 = await leg('zeelich_port', 'Twinsun: Citadel Spaceport', 'citadel', 'citadel_port');
@@ -155,7 +155,7 @@ check('the spaceship flies back: Zeelich Spaceport → Citadel Spaceport, on the
 
 // ---------------------------------------------------------------- the Holomap per planet
 const holo = [];
-for (const [region, pid] of [['citadel', 'citadel_port'], ['desert', 'desert_ferry'], ['hamalayi', 'hamalayi_glider'], ['zeelich', 'zeelich_port'], ['isle_tralu', 'isle_tralu'], ['isle_liftdock', 'isle_liftdock']]) {
+for (const [region, pid] of [['citadel', 'citadel_port'], ['desert', 'desert_ferry'], ['hamalayi', 'hamalayi_glider'], ['zeelich', 'zeelich_port'], ['isle_orchard', 'isle_orchard'], ['isle_liftdock', 'isle_liftdock']]) {
   await near(pid);
   const r = await ev(() => { P.tap('KeyM', 0.3); const s = game.state, H = game.hud.holoHero, W = game.hud.holo.width, title = document.querySelector('#holomap .title').textContent; return { s, H, W, title }; });
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/holomap-${region}.jpg`, type: 'jpeg', quality: 70 });
